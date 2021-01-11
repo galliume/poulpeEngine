@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Include">
+      <UniqueIdentifier>{6917EFFE-D5F6-6D9A-DE0E-F9704A6DD4FB}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Include\vulkan">
+      <UniqueIdentifier>{E9A8E30A-D576-D710-BE0A-4837AA77B375}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Lib">
+      <UniqueIdentifier>{1C04880B-880D-887C-1189-9E7C7D91937C}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Include\vulkan\vk_icd.h">
+      <Filter>Include\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\vulkan\vk_layer.h">
+      <Filter>Include\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\vulkan\vk_platform.h">
+      <Filter>Include\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\vulkan\vk_sdk_platform.h">
+      <Filter>Include\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\vulkan\vulkan.h">
+      <Filter>Include\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\vulkan\vulkan_android.h">
+      <Filter>Include\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\vulkan\vulkan_beta.h">
+      <Filter>Include\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\vulkan\vulkan_core.h">
+      <Filter>Include\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\vulkan\vulkan_directfb.h">
+      <Filter>Include\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\vulkan\vulkan_fuchsia.h">
+      <Filter>Include\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\vulkan\vulkan_ggp.h">
+      <Filter>Include\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\vulkan\vulkan_ios.h">
+      <Filter>Include\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\vulkan\vulkan_macos.h">
+      <Filter>Include\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\vulkan\vulkan_metal.h">
+      <Filter>Include\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\vulkan\vulkan_vi.h">
+      <Filter>Include\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\vulkan\vulkan_wayland.h">
+      <Filter>Include\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\vulkan\vulkan_win32.h">
+      <Filter>Include\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\vulkan\vulkan_xcb.h">
+      <Filter>Include\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\vulkan\vulkan_xlib.h">
+      <Filter>Include\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\vulkan\vulkan_xlib_xrandr.h">
+      <Filter>Include\vulkan</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Lib\vulkan-1.lib">
+      <Filter>Lib</Filter>
+    </None>
+  </ItemGroup>
+</Project>
