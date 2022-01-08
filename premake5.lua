@@ -22,7 +22,7 @@ project "Rebulkan"
 	location ""
 	kind "ConsoleApp"
 	language "C++"
-	cppdialect "C++17"
+	cppdialect "C++20"
 	staticruntime "on"
 
 	targetdir  ("bin/" .. outputdir  .. "/%{prj.name}")
@@ -65,9 +65,8 @@ project "Rebulkan"
 
 		defines
 		{
-			"RBL_PLATFORM_WINDOWS",
-			"RBL_BUILD_DLL",
-			"GLFW_INCLUDE_NONE"
+			"GLFW_INCLUDE_NONE",
+			"_CRT_SECURE_NO_WARNINGS"
 		}
 
 	filter "configurations:Debug"
@@ -85,5 +84,11 @@ project "Rebulkan"
 		runtime "Release"
 		symbols "on"
 
+	filter { "system:windows", "configurations:Debug" }
+        buildoptions { "/MTd" }
+
 	filter { "system:windows", "configurations:Release" }
-        buildoptions "/MTd"
+        buildoptions { "/MT" }
+
+	filter { "system:windows", "configurations:Dist" }
+        buildoptions {"/MT" }
