@@ -114,6 +114,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="Include\vulkan\vk_enum_string_helper.h" />
     <ClInclude Include="Include\vulkan\vk_icd.h" />
     <ClInclude Include="Include\vulkan\vk_layer.h" />
     <ClInclude Include="Include\vulkan\vk_platform.h" />
@@ -129,6 +130,7 @@
     <ClInclude Include="Include\vulkan\vulkan_ios.h" />
     <ClInclude Include="Include\vulkan\vulkan_macos.h" />
     <ClInclude Include="Include\vulkan\vulkan_metal.h" />
+    <ClInclude Include="Include\vulkan\vulkan_screen.h" />
     <ClInclude Include="Include\vulkan\vulkan_vi.h" />
     <ClInclude Include="Include\vulkan\vulkan_wayland.h" />
     <ClInclude Include="Include\vulkan\vulkan_win32.h" />
