@@ -18,8 +18,7 @@ namespace Rebulk {
 		ImGui::StyleColorsDark();
 
 		ImGuiStyle& style = ImGui::GetStyle();
-		if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
-		{
+		if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
 			style.WindowRounding = 0.0f;
 			style.Colors[ImGuiCol_WindowBg].w = 1.0f;
 		}
@@ -36,14 +35,9 @@ namespace Rebulk {
 		ImGui::NewFrame();
 	}
 
-	void Im::Begin(const char* title)
+	void Im::Begin(const char* name, bool* p_open, ImGuiWindowFlags flags)
 	{
-		ImGui::Begin(title);
-	}
-	
-	void Im::Text(const char* text)
-	{
-		ImGui::Text(text);
+		ImGui::Begin(name, p_open, flags);
 	}
 	
 	void Im::End()
@@ -67,8 +61,7 @@ namespace Rebulk {
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 		ImGuiIO& io = ImGui::GetIO();
 
-		if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
-		{
+		if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
 			GLFWwindow* backup_current_context = glfwGetCurrentContext();
 			ImGui::UpdatePlatformWindows();
 			ImGui::RenderPlatformWindowsDefault();
