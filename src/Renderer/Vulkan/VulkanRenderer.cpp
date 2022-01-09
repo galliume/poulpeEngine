@@ -10,8 +10,15 @@ namespace Rebulk {
 
 	void VulkanRenderer::CreateInstance(uint32_t extensionCount, const char* const* extensions)
 	{
-		const std::vector<const char*> validationLayers = { "VK_LAYER_KHRONOS_validation" };
-		const std::vector<const char*> deviceExtensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
+#ifdef NDEBUG
+		const bool enableValidationLayers = false;
+#else
+		const bool enableValidationLayers = true;
+#endif
+
+		if (enableValidationLayers && !CheckValidationLayerSupport()) {
+			throw std::runtime_error("Validations layers not available !");
+		}
 
 		VkApplicationInfo appInfo{};
 
@@ -26,15 +33,14 @@ namespace Rebulk {
 		createInfo.pApplicationInfo = &appInfo;
 		createInfo.enabledExtensionCount = extensionCount;
 		createInfo.ppEnabledExtensionNames = extensions;
-		createInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
-		createInfo.ppEnabledLayerNames = validationLayers.data();
+		createInfo.enabledLayerCount = static_cast<uint32_t>(m_ValidationLayers.size());
+		createInfo.ppEnabledLayerNames = m_ValidationLayers.data();
 
 		VkResult result = VK_SUCCESS;
 
 		result = vkCreateInstance(&createInfo, nullptr, &m_Instance);
 
-		if (VK_SUCCESS != result)
-		{
+		if (VK_SUCCESS != result) {
 			Rebulk::Log::GetLogger()->critical("Can't create VK instance : {}", result);
 			exit(-1);
 		}
@@ -56,6 +62,32 @@ namespace Rebulk {
 		}
 
 		m_Extensions = extensions;
+	}
+
+	bool VulkanRenderer::CheckValidationLayerSupport()
+	{
+		uint32_t layerCount;
+		vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
+
+		std::vector<VkLayerProperties> availableLayers(layerCount);
+		vkEnumerateInstanceLayerProperties(&layerCount, availableLayers.data());
+
+		for (const char* layerName : m_ValidationLayers) {
+			bool layerFound = false;
+
+			for (const auto& layerProperties : availableLayers) {
+				if (strcmp(layerName, layerProperties.layerName) == 0) {
+					layerFound = true;
+					break;
+				}
+			}
+
+			if (!layerFound) {
+				return false;
+			}
+		}
+
+		return true;
 	}
 
 	VulkanRenderer::~VulkanRenderer()

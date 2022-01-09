@@ -24,8 +24,7 @@ int main(int argc, char** argv)
 	Rebulk::Im::Init(window);
 	Rebulk::VulkanLayer* vulkanLayer = new Rebulk::VulkanLayer(window, renderer);
 
-	while (!glfwWindowShouldClose(window))
-	{
+	while (!glfwWindowShouldClose(window)) {
 		glfwPollEvents();
 
 		vulkanLayer->Create();
