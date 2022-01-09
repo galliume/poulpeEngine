@@ -3,10 +3,11 @@
 #include "spdlog/spdlog.h"
 #include "spdlog/fmt/ostr.h"
 #include "spdlog/sinks/stdout_color_sinks.h"
+#include "spdlog/details/log_msg.h"
 
-namespace Rebulk
+namespace Rebulk 
 {
-	class Log
+	class Log 
 	{
 	public:
 		static void Init();
