@@ -1,5 +1,4 @@
 #include "VulkanRenderer.h"
-#include "rebulkpch.h"
 
 namespace Rebulk {
 
@@ -45,17 +44,18 @@ namespace Rebulk {
 
 	void VulkanRenderer::EnumerateExtensions()
 	{
-		uint32_t extensionCount = 0;
-		vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr);
+		vkEnumerateInstanceExtensionProperties(nullptr, &m_ExtensionCount, nullptr);
 
-		std::vector<VkExtensionProperties> extensions(extensionCount);
-		vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, extensions.data());
+		std::vector<VkExtensionProperties> extensions(m_ExtensionCount);
+		vkEnumerateInstanceExtensionProperties(nullptr, &m_ExtensionCount, extensions.data());
 
-		Rebulk::Log::GetLogger()->trace("{} available extensions:\n", extensionCount);
+		Rebulk::Log::GetLogger()->trace("{} available extensions:\n", m_ExtensionCount);
 
 		for (const auto& extension : extensions) {
 			Rebulk::Log::GetLogger()->trace("\t {} \n", extension.extensionName);
 		}
+
+		m_Extensions = extensions;
 	}
 
 	VulkanRenderer::~VulkanRenderer()

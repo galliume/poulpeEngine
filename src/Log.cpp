@@ -1,11 +1,11 @@
-#include "Log.h"
 #include "rebulkpch.h"
+#include "Log.h"
 
 namespace Rebulk {
 
 	std::shared_ptr<spdlog::logger> Log::s_Logger;
 
-	void Rebulk::Log::Init()
+	void Log::Init()
 	{
 		spdlog::set_pattern("%^[%T] %n: %v%$");
 

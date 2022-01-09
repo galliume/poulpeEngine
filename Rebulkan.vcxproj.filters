@@ -1290,6 +1290,8 @@
     <ClInclude Include="vendor\stb_image\stb_image.h">
       <Filter>vendor\stb_image</Filter>
     </ClInclude>
+    <ClInclude Include="src\GUI\Renderer\Im.h" />
+    <ClInclude Include="src\GUI\VulkanLayer.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Log.cpp">
@@ -1325,5 +1327,7 @@
     <ClCompile Include="vendor\stb_image\stb_image.cpp">
       <Filter>vendor\stb_image</Filter>
     </ClCompile>
+    <ClCompile Include="src\GUI\Renderer\Im.cpp" />
+    <ClCompile Include="src\GUI\VulkanLayer.cpp" />
   </ItemGroup>
 </Project>
