@@ -129,6 +129,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="src\Pattern\ISubject.h" />
+    <ClInclude Include="src\Pattern\IObserver.h" />
     <ClInclude Include="src\GUI\Renderer\Im.h" />
     <ClInclude Include="src\Log.h" />
     <ClInclude Include="src\Renderer\Vulkan\VulkanRenderer.h" />

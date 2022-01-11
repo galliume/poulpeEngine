@@ -1292,6 +1292,8 @@
     </ClInclude>
     <ClInclude Include="src\GUI\Renderer\Im.h" />
     <ClInclude Include="src\GUI\VulkanLayer.h" />
+    <ClInclude Include="src\Pattern\IObserver.h" />
+    <ClInclude Include="src\Pattern\ISubject.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Log.cpp">

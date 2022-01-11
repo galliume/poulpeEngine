@@ -8,12 +8,6 @@ int main(int argc, char** argv)
 
 	glfwInit();
 
-	uint32_t glfwExtensionCount = 0;
-	const char** glfwExtensions;
-	glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
-	
-	Rebulk::VulkanRenderer* renderer = new Rebulk::VulkanRenderer(glfwExtensionCount, glfwExtensions);
-
 	const uint32_t WIDTH = 2560;
 	const uint32_t HEIGHT = 1440;
 
@@ -22,7 +16,9 @@ int main(int argc, char** argv)
 	glfwSwapInterval(1);
 
 	Rebulk::Im::Init(window);
+	Rebulk::VulkanRenderer* renderer = new Rebulk::VulkanRenderer();
 	Rebulk::VulkanLayer* vulkanLayer = new Rebulk::VulkanLayer(window, renderer);
+	renderer->Init();
 
 	while (!glfwWindowShouldClose(window)) {
 		glfwPollEvents();
