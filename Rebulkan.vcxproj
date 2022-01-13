@@ -129,10 +129,11 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="src\Pattern\ISubject.h" />
-    <ClInclude Include="src\Pattern\IObserver.h" />
     <ClInclude Include="src\GUI\Renderer\Im.h" />
+    <ClInclude Include="src\GUI\VulkanLayer.h" />
     <ClInclude Include="src\Log.h" />
+    <ClInclude Include="src\Pattern\IObserver.h" />
+    <ClInclude Include="src\Pattern\ISubject.h" />
     <ClInclude Include="src\Renderer\Vulkan\VulkanRenderer.h" />
     <ClInclude Include="src\rebulkpch.h" />
     <ClInclude Include="vendor\GLM\glm\common.hpp" />
@@ -548,10 +549,10 @@
     <ClInclude Include="vendor\imgui\backends\imgui_impl_opengl3_loader.h" />
     <ClInclude Include="vendor\imgui\imgui.h" />
     <ClInclude Include="vendor\stb_image\stb_image.h" />
-    <ClInclude Include="src\GUI\VulkanLayer.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\GUI\Renderer\Im.cpp" />
+    <ClCompile Include="src\GUI\VulkanLayer.cpp" />
     <ClCompile Include="src\Log.cpp" />
     <ClCompile Include="src\Rebulkan.cpp" />
     <ClCompile Include="src\Renderer\Vulkan\VulkanRenderer.cpp" />
@@ -559,11 +560,11 @@
     <ClCompile Include="vendor\imgui\backends\imgui_impl_glfw.cpp" />
     <ClCompile Include="vendor\imgui\backends\imgui_impl_opengl3.cpp" />
     <ClCompile Include="vendor\imgui\imgui.cpp" />
+    <ClCompile Include="vendor\imgui\imgui_demo.cpp" />
     <ClCompile Include="vendor\imgui\imgui_draw.cpp" />
     <ClCompile Include="vendor\imgui\imgui_tables.cpp" />
     <ClCompile Include="vendor\imgui\imgui_widgets.cpp" />
     <ClCompile Include="vendor\stb_image\stb_image.cpp" />
-    <ClCompile Include="src\GUI\VulkanLayer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="vendor\GLFW\GLFW.vcxproj">

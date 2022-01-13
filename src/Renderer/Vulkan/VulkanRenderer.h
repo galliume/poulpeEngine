@@ -34,7 +34,6 @@ namespace Rebulk {
 
 	private:
 		std::list<IObserver*> m_Observers;
-		std::string m_Title;
 		std::vector<std::string> m_Messages;
 		const std::vector<const char*> m_ValidationLayers = { "VK_LAYER_KHRONOS_validation" };
 		const std::vector<const char*> m_DeviceExtensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };

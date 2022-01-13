@@ -10,6 +10,6 @@ namespace Rebulk
 	public:
 		virtual ~IObserver() {};
 		//@todo use json
-		virtual void Update(std::string& title, std::vector<std::string>& messages) = 0;
+		virtual void Update(std::vector<std::string>& messages) = 0;
 	};
 }

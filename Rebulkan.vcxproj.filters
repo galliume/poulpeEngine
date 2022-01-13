@@ -4,6 +4,15 @@
     <Filter Include="src">
       <UniqueIdentifier>{2DAB880B-99B4-887C-2230-9F7C8E38947C}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\GUI">
+      <UniqueIdentifier>{C1782FA9-2D58-AE44-3670-391BA2CE14A6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\GUI\Renderer">
+      <UniqueIdentifier>{872599E4-731E-B836-9C50-9DBB88A89742}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\Pattern">
+      <UniqueIdentifier>{FA71E505-6627-5EFB-EF1B-58D25BD054FF}</UniqueIdentifier>
+    </Filter>
     <Filter Include="src\Renderer">
       <UniqueIdentifier>{73D1DFBF-5F34-6F64-08BA-A71AF4FB3AE7}</UniqueIdentifier>
     </Filter>
@@ -42,8 +51,20 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\GUI\Renderer\Im.h">
+      <Filter>src\GUI\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="src\GUI\VulkanLayer.h">
+      <Filter>src\GUI</Filter>
+    </ClInclude>
     <ClInclude Include="src\Log.h">
       <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Pattern\IObserver.h">
+      <Filter>src\Pattern</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Pattern\ISubject.h">
+      <Filter>src\Pattern</Filter>
     </ClInclude>
     <ClInclude Include="src\Renderer\Vulkan\VulkanRenderer.h">
       <Filter>src\Renderer\Vulkan</Filter>
@@ -1290,12 +1311,14 @@
     <ClInclude Include="vendor\stb_image\stb_image.h">
       <Filter>vendor\stb_image</Filter>
     </ClInclude>
-    <ClInclude Include="src\GUI\Renderer\Im.h" />
-    <ClInclude Include="src\GUI\VulkanLayer.h" />
-    <ClInclude Include="src\Pattern\IObserver.h" />
-    <ClInclude Include="src\Pattern\ISubject.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\GUI\Renderer\Im.cpp">
+      <Filter>src\GUI\Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="src\GUI\VulkanLayer.cpp">
+      <Filter>src\GUI</Filter>
+    </ClCompile>
     <ClCompile Include="src\Log.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -1317,6 +1340,9 @@
     <ClCompile Include="vendor\imgui\imgui.cpp">
       <Filter>vendor\imgui</Filter>
     </ClCompile>
+    <ClCompile Include="vendor\imgui\imgui_demo.cpp">
+      <Filter>vendor\imgui</Filter>
+    </ClCompile>
     <ClCompile Include="vendor\imgui\imgui_draw.cpp">
       <Filter>vendor\imgui</Filter>
     </ClCompile>
@@ -1329,7 +1355,5 @@
     <ClCompile Include="vendor\stb_image\stb_image.cpp">
       <Filter>vendor\stb_image</Filter>
     </ClCompile>
-    <ClCompile Include="src\GUI\Renderer\Im.cpp" />
-    <ClCompile Include="src\GUI\VulkanLayer.cpp" />
   </ItemGroup>
 </Project>
