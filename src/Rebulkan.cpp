@@ -19,11 +19,13 @@ int main(int argc, char** argv)
 	Rebulk::VulkanRenderer* renderer = new Rebulk::VulkanRenderer();
 	Rebulk::VulkanLayer* vulkanLayer = new Rebulk::VulkanLayer(window, renderer);
 	renderer->Init();
+	//bool show_demo_window = true;
 
 	while (!glfwWindowShouldClose(window)) {
 		glfwPollEvents();
 
 		vulkanLayer->Create();
+		//ImGui::ShowDemoWindow(&show_demo_window);
 		vulkanLayer->Render();
 
 		glfwSwapBuffers(window);

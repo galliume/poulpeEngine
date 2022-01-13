@@ -13,11 +13,12 @@ namespace Rebulk
 		void Create();
 		void Render();
 		void Destroy();
-		void Update(std::string& title, std::vector<std::string>& messages);
+		void Update(std::vector<std::string>& messages);
 
 	private:
 		std::string m_Message;
-
+		bool m_HasBeenUpdated = false;
+		std::vector<std::string>m_Messages = {};
 		GLFWwindow* m_Window = nullptr;
 		VulkanRenderer* m_VulkanRenderer = nullptr;
 	};

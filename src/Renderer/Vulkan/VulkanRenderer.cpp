@@ -36,15 +36,19 @@ namespace Rebulk {
 
 	void VulkanRenderer::Init()
 	{
+		EnumerateExtensions();
 		LoadRequiredExtensions();
 		CreateInstance();
-		EnumerateExtensions();
 	}
 
 	void VulkanRenderer::CreateInstance()
 	{
-		if (IsValidationLayersEnabled() && !CheckValidationLayerSupport()) {
-			throw std::runtime_error("Validations layers not available !");
+		if (!IsValidationLayersEnabled() && !CheckValidationLayerSupport()) {
+			std::string message = std::string("Validations layers not available !");
+			m_Messages.push_back(message);
+			Notify();
+			//throw std::runtime_error("Validations layers not available !");
+			return;
 		}
 
 		VkApplicationInfo appInfo{};
@@ -76,12 +80,19 @@ namespace Rebulk {
 
 		if (VK_SUCCESS != result) {
 			Rebulk::Log::GetLogger()->critical("Can't create VK instance : {}", result);
-			exit(-1);
+			std::string message = std::string("Can't create VK instance : " + result);
+			m_Messages.push_back(message);
+			Notify();
+			return;
 		}
 
 		m_InstanceCreated = true;
 		//m_Message = "VK instance created";
 		Rebulk::Log::GetLogger()->trace("VK instance created");
+		std::string message = std::string("VK instance created successfully");
+		m_Messages.push_back(message);
+
+		Notify();
 	}
 
 	void VulkanRenderer::EnumerateExtensions()
@@ -95,9 +106,12 @@ namespace Rebulk {
 
 		for (const auto& extension : extensions) {
 			Rebulk::Log::GetLogger()->trace("\t {} \n", extension.extensionName);
+			std::string message = std::string("extension available : ") + extension.extensionName;
+			m_Messages.push_back(message);
 		}
 
 		m_Extensions = extensions;
+		Notify();
 	}
 
 	bool VulkanRenderer::CheckValidationLayerSupport()
@@ -141,9 +155,8 @@ namespace Rebulk {
 		}
 
 		m_RequiredExtensions = extensions;
-		m_Title = std::string("extensions loaded");
 		for_each(extensions.begin(), extensions.end(), [this](const char* text) { 
-			std::string message = std::string(text);
+			std::string message = std::string("required extension loaded : ") + text;
 			m_Messages.push_back(message);
 		});
 		Notify();
@@ -193,8 +206,10 @@ namespace Rebulk {
 		std::list<IObserver*>::iterator iterator = m_Observers.begin();
 		
 		while (iterator != m_Observers.end()) {
-			(*iterator)->Update(m_Title, m_Messages);
+			(*iterator)->Update(m_Messages);
 			++iterator;
 		}
+
+		m_Messages.clear();
 	}
 }
