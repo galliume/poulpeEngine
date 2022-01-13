@@ -2,27 +2,58 @@
 
 namespace Rebulk {
 
-	VulkanRenderer::VulkanRenderer(uint32_t extensionCount, const char* const* extensions)
-	{
-		CreateInstance(extensionCount, extensions);
-		EnumerateExtensions();
+	VKAPI_ATTR VkBool32 VKAPI_CALL VulkanRenderer::DebugCallback(
+		VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
+		VkDebugUtilsMessageTypeFlagsEXT messageType,
+		const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
+		void* pUserData) {
+
+		//m_Message = pCallbackData->pMessage;
+
+		Notify();
+		return VK_FALSE;
 	}
 
-	void VulkanRenderer::CreateInstance(uint32_t extensionCount, const char* const* extensions)
+	VkResult CreateDebugUtilsMessengerEXT(VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDebugUtilsMessengerEXT* pCallback)
+	{
+		auto func = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT");
+		if (func != nullptr) {
+			return func(instance, pCreateInfo, pAllocator, pCallback);
+		}
+		else {
+			return VK_ERROR_EXTENSION_NOT_PRESENT;
+		}
+	}
+
+	VulkanRenderer::VulkanRenderer()
 	{
 #ifdef NDEBUG
-		const bool enableValidationLayers = false;
+		m_EnableValidationLayers = false;
 #else
-		const bool enableValidationLayers = true;
+		m_EnableValidationLayers = true;
 #endif
+	}
 
-		if (enableValidationLayers && !CheckValidationLayerSupport()) {
-			throw std::runtime_error("Validations layers not available !");
+	void VulkanRenderer::Init()
+	{
+		EnumerateExtensions();
+		LoadRequiredExtensions();
+		CreateInstance();
+	}
+
+	void VulkanRenderer::CreateInstance()
+	{
+		if (!IsValidationLayersEnabled() && !CheckValidationLayerSupport()) {
+			std::string message = std::string("Validations layers not available !");
+			m_Messages.push_back(message);
+			Notify();
+			//throw std::runtime_error("Validations layers not available !");
+			return;
 		}
 
 		VkApplicationInfo appInfo{};
 
-		appInfo.apiVersion = VK_API_VERSION_1_0;
+		appInfo.apiVersion = VK_API_VERSION_1_2;
 		appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
 		appInfo.pApplicationName = "Rebulkan";
 		appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
@@ -31,10 +62,17 @@ namespace Rebulk {
 		VkInstanceCreateInfo createInfo{};
 		createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
 		createInfo.pApplicationInfo = &appInfo;
-		createInfo.enabledExtensionCount = extensionCount;
-		createInfo.ppEnabledExtensionNames = extensions;
-		createInfo.enabledLayerCount = static_cast<uint32_t>(m_ValidationLayers.size());
-		createInfo.ppEnabledLayerNames = m_ValidationLayers.data();
+
+		createInfo.enabledExtensionCount = static_cast<uint32_t>(m_RequiredExtensions.size());;
+		createInfo.ppEnabledExtensionNames = m_RequiredExtensions.data();
+
+		if (m_EnableValidationLayers) {
+			createInfo.enabledLayerCount = static_cast<uint32_t>(m_ValidationLayers.size());
+			createInfo.ppEnabledLayerNames = m_ValidationLayers.data();
+		}
+		else {
+			createInfo.enabledLayerCount = 0;
+		}
 
 		VkResult result = VK_SUCCESS;
 
@@ -42,10 +80,19 @@ namespace Rebulk {
 
 		if (VK_SUCCESS != result) {
 			Rebulk::Log::GetLogger()->critical("Can't create VK instance : {}", result);
-			exit(-1);
+			std::string message = std::string("Can't create VK instance : " + result);
+			m_Messages.push_back(message);
+			Notify();
+			return;
 		}
 
+		m_InstanceCreated = true;
+		//m_Message = "VK instance created";
 		Rebulk::Log::GetLogger()->trace("VK instance created");
+		std::string message = std::string("VK instance created successfully");
+		m_Messages.push_back(message);
+
+		Notify();
 	}
 
 	void VulkanRenderer::EnumerateExtensions()
@@ -59,9 +106,12 @@ namespace Rebulk {
 
 		for (const auto& extension : extensions) {
 			Rebulk::Log::GetLogger()->trace("\t {} \n", extension.extensionName);
+			std::string message = std::string("extension available : ") + extension.extensionName;
+			m_Messages.push_back(message);
 		}
 
 		m_Extensions = extensions;
+		Notify();
 	}
 
 	bool VulkanRenderer::CheckValidationLayerSupport()
@@ -87,12 +137,79 @@ namespace Rebulk {
 			}
 		}
 
+		m_LayersAvailable = availableLayers;
+
 		return true;
+	}
+
+	void VulkanRenderer::LoadRequiredExtensions()
+	{
+		uint32_t glfwExtensionCount = 0;
+		const char** glfwExtensions;
+		glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
+
+		std::vector<const char*> extensions(glfwExtensions, glfwExtensions + glfwExtensionCount);
+
+		if (m_EnableValidationLayers) {
+			extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
+		}
+
+		m_RequiredExtensions = extensions;
+		for_each(extensions.begin(), extensions.end(), [this](const char* text) { 
+			std::string message = std::string("required extension loaded : ") + text;
+			m_Messages.push_back(message);
+		});
+		Notify();
+	}
+
+	void VulkanRenderer::PopulateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo)
+	{
+		createInfo = {};
+		createInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
+		createInfo.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
+		createInfo.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
+		//createInfo.pfnUserCallback = Rebulk::VulkanLayer::DebugCallback;
+
+	}
+
+	void VulkanRenderer::SetupDebugMessenger()
+	{
+		if (!m_EnableValidationLayers) return;
+
+		VkDebugUtilsMessengerCreateInfoEXT createInfo{};
+		PopulateDebugMessengerCreateInfo(createInfo);
+
+		if (CreateDebugUtilsMessengerEXT(m_Instance, &createInfo, nullptr, &callback) != VK_SUCCESS)
+		{
+			throw std::runtime_error("can't create debug messenger");
+		}
 	}
 
 	VulkanRenderer::~VulkanRenderer()
 	{
 		vkDestroyInstance(m_Instance, 0);
 		Rebulk::Log::GetLogger()->debug("VK instance destroyed");
+	}
+
+	void VulkanRenderer::Attach(IObserver* observer)
+	{
+		m_Observers.push_back(observer);
+	}
+
+	void VulkanRenderer::Detach(IObserver* observer)
+	{
+		m_Observers.remove(observer);
+	}
+
+	void VulkanRenderer::Notify()
+	{
+		std::list<IObserver*>::iterator iterator = m_Observers.begin();
+		
+		while (iterator != m_Observers.end()) {
+			(*iterator)->Update(m_Messages);
+			++iterator;
+		}
+
+		m_Messages.clear();
 	}
 }
