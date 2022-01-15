@@ -21,6 +21,9 @@ namespace Rebulk {
 			VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity, VkDebugUtilsMessageTypeFlagsEXT messageType,
 			const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData
 		);
+		VkResult CreateDebugUtilsMessengerEXT(VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo,
+			const VkAllocationCallbacks* pAllocator, VkDebugUtilsMessengerEXT* pCallback
+		);
 		void Attach(IObserver* observer) override;
 		void Detach(IObserver* observer) override;
 		void Notify() override;
@@ -44,6 +47,6 @@ namespace Rebulk {
 		bool m_EnableValidationLayers = false;
 		bool m_InstanceCreated = false;
 		std::vector<const char*> m_RequiredExtensions = {};
-		VkDebugUtilsMessengerEXT callback = VK_NULL_HANDLE;
+		VkDebugUtilsMessengerEXT m_Callback = VK_NULL_HANDLE;
 	};
 }

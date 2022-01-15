@@ -8,19 +8,20 @@ namespace Rebulk {
 		const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
 		void* pUserData) {
 
-		//m_Message = pCallbackData->pMessage;
-
+		m_Messages.emplace_back(pCallbackData->pMessage);
 		Notify();
 		return VK_FALSE;
 	}
 
-	VkResult CreateDebugUtilsMessengerEXT(VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDebugUtilsMessengerEXT* pCallback)
+	VkResult VulkanRenderer::CreateDebugUtilsMessengerEXT(VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDebugUtilsMessengerEXT* pCallback)
 	{
 		auto func = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT");
 		if (func != nullptr) {
 			return func(instance, pCreateInfo, pAllocator, pCallback);
 		}
 		else {
+			m_Messages.emplace_back("Debug utils extension not present");
+			Notify();
 			return VK_ERROR_EXTENSION_NOT_PRESENT;
 		}
 	}
@@ -36,18 +37,20 @@ namespace Rebulk {
 
 	void VulkanRenderer::Init()
 	{
+		CreateInstance();
+		SetupDebugMessenger();
 		EnumerateExtensions();
 		LoadRequiredExtensions();
-		CreateInstance();
+
 	}
 
 	void VulkanRenderer::CreateInstance()
 	{
+		std::string message;
+
 		if (!IsValidationLayersEnabled() && !CheckValidationLayerSupport()) {
-			std::string message = std::string("Validations layers not available !");
-			m_Messages.push_back(message);
+			m_Messages.emplace_back("Validations layers not available !");
 			Notify();
-			//throw std::runtime_error("Validations layers not available !");
 			return;
 		}
 
@@ -69,28 +72,33 @@ namespace Rebulk {
 		if (m_EnableValidationLayers) {
 			createInfo.enabledLayerCount = static_cast<uint32_t>(m_ValidationLayers.size());
 			createInfo.ppEnabledLayerNames = m_ValidationLayers.data();
+			message = std::string("Validations enabled");
 		}
 		else {
+			message = std::string("Validations disabled");
 			createInfo.enabledLayerCount = 0;
 		}
+
+		m_Messages.emplace_back(message);
+		Notify();
 
 		VkResult result = VK_SUCCESS;
 
 		result = vkCreateInstance(&createInfo, nullptr, &m_Instance);
 
 		if (VK_SUCCESS != result) {
-			Rebulk::Log::GetLogger()->critical("Can't create VK instance : {}", result);
 			std::string message = std::string("Can't create VK instance : " + result);
-			m_Messages.push_back(message);
+			Rebulk::Log::GetLogger()->critical("{}", message.c_str());
+			m_Messages.emplace_back(message);
 			Notify();
 			return;
 		}
 
 		m_InstanceCreated = true;
-		//m_Message = "VK instance created";
-		Rebulk::Log::GetLogger()->trace("VK instance created");
-		std::string message = std::string("VK instance created successfully");
-		m_Messages.push_back(message);
+
+		message = std::string("VK instance created successfully");
+		Rebulk::Log::GetLogger()->trace(message);
+		m_Messages.emplace_back(message);
 
 		Notify();
 	}
@@ -105,9 +113,9 @@ namespace Rebulk {
 		Rebulk::Log::GetLogger()->trace("{} available extensions:\n", m_ExtensionCount);
 
 		for (const auto& extension : extensions) {
-			Rebulk::Log::GetLogger()->trace("\t {} \n", extension.extensionName);
 			std::string message = std::string("extension available : ") + extension.extensionName;
-			m_Messages.push_back(message);
+			Rebulk::Log::GetLogger()->trace("\t {} \n", message.c_str());
+			m_Messages.emplace_back(message);
 		}
 
 		m_Extensions = extensions;
@@ -139,7 +147,7 @@ namespace Rebulk {
 
 		m_LayersAvailable = availableLayers;
 
-		return true;
+		return false;
 	}
 
 	void VulkanRenderer::LoadRequiredExtensions()
@@ -157,7 +165,7 @@ namespace Rebulk {
 		m_RequiredExtensions = extensions;
 		for_each(extensions.begin(), extensions.end(), [this](const char* text) { 
 			std::string message = std::string("required extension loaded : ") + text;
-			m_Messages.push_back(message);
+			m_Messages.emplace_back(message);
 		});
 		Notify();
 	}
@@ -168,8 +176,7 @@ namespace Rebulk {
 		createInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
 		createInfo.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
 		createInfo.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
-		//createInfo.pfnUserCallback = Rebulk::VulkanLayer::DebugCallback;
-
+		//createInfo.pfnUserCallback = 
 	}
 
 	void VulkanRenderer::SetupDebugMessenger()
@@ -179,16 +186,20 @@ namespace Rebulk {
 		VkDebugUtilsMessengerCreateInfoEXT createInfo{};
 		PopulateDebugMessengerCreateInfo(createInfo);
 
-		if (CreateDebugUtilsMessengerEXT(m_Instance, &createInfo, nullptr, &callback) != VK_SUCCESS)
+		if (CreateDebugUtilsMessengerEXT(m_Instance, &createInfo, nullptr, &m_Callback) != VK_SUCCESS)
 		{
-			throw std::runtime_error("can't create debug messenger");
+			m_Messages.emplace_back("Can't create debug messenger.");
+			Notify();
 		}
 	}
 
 	VulkanRenderer::~VulkanRenderer()
 	{
 		vkDestroyInstance(m_Instance, 0);
-		Rebulk::Log::GetLogger()->debug("VK instance destroyed");
+		std::string message = "VK instance destroyed";
+		m_Messages.emplace_back(message);
+		Notify();
+		Rebulk::Log::GetLogger()->debug(message);
 	}
 
 	void VulkanRenderer::Attach(IObserver* observer)
