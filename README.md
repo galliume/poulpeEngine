@@ -7,5 +7,7 @@
 
 ### Resources
 [Game Engine Architecture](https://www.amazon.fr/Engine-Architecture-Third-Jason-Gregory/dp/1138035459/)
+
 [Vulkan Tutorial](https://vulkan-tutorial.com/)
+
 [Do's and Don't](https://developer.nvidia.com/blog/vulkan-dos-donts/)
