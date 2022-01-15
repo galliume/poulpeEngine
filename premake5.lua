@@ -78,7 +78,8 @@ project "Rebulkan"
 		defines
 		{
 			"GLFW_INCLUDE_NONE",
-			"_CRT_SECURE_NO_WARNINGS"
+			"_CRT_SECURE_NO_WARNINGS",
+			"_NO_DEBUG_HEAP=1"
 		}
 
 	filter "configurations:Debug"

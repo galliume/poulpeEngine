@@ -10,15 +10,16 @@ namespace Rebulk
 	{
 	public:
 		VulkanLayer(GLFWwindow* window, VulkanRenderer* vulkanRenderer);
-		void Create();
 		void Render();
+		void DisplayLogs();
 		void Destroy();
 		void Update(std::vector<std::string>& messages);
+		void DisplayFpsCounter(double timeStep);
 
 	private:
 		std::string m_Message;
-		bool m_HasBeenUpdated = false;
 		std::vector<std::string>m_Messages = {};
+		int m_MaxMessages = 500;
 		GLFWwindow* m_Window = nullptr;
 		VulkanRenderer* m_VulkanRenderer = nullptr;
 	};

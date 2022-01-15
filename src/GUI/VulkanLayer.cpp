@@ -9,54 +9,27 @@ namespace Rebulk
 		m_VulkanRenderer->Attach(this);
 	}
 	
-	void VulkanLayer::Create()
-	{
-		std::vector<VkExtensionProperties>extensions = m_VulkanRenderer->GetExtensions();
-
-		Rebulk::Im::NewFrame();
-		Rebulk::Im::Begin("Vulkan Infos");
-
-		const float footer_height_to_reserve = ImGui::GetStyle().ItemSpacing.y + ImGui::GetFrameHeightWithSpacing();
-		ImGui::BeginChild("ScrollingRegion", ImVec2(0, -footer_height_to_reserve), false, ImGuiWindowFlags_HorizontalScrollbar);
-
-		for (const auto& message : m_Messages) {
-			Rebulk::Log::GetLogger()->debug(message);
-			Rebulk::Im::Text("\t%s", message.c_str());
-			ImGui::Separator();
-		}
-
-		//Rebulk::Im::Text("Extensions count : %u", m_VulkanRenderer->GetExtensionCount());
-
-		//Rebulk::Im::Text("\nExtensions loaded : ");
-		//for (const auto& extension : extensions) {
-		//	Rebulk::Im::Text("\t%s", extension.extensionName);
-		//}
-
-		//std::vector<VkLayerProperties> layersAvailable = m_VulkanRenderer->GetLayersAvailable();
-
-		//Rebulk::Im::Text("\nAvailable layers");
-		//for (const auto& layer : layersAvailable) {
-		//	Rebulk::Im::Text("\t%s", layer);
-		//}
-
-		//const std::vector<const char*> validationLayers = m_VulkanRenderer->GetValidationLayers();
-
-		//Rebulk::Im::Text("\nValidation layers status : %s", m_VulkanRenderer->IsValidationLayersEnabled() ? "enabled" : "disabled");
-
-		//Rebulk::Im::Text("\nValidation layers loaded : ");
-		//for (const auto& validation : validationLayers) {
-		//	Rebulk::Im::Text("\t%s", validation);
-		//}
-
-		//Rebulk::Im::Text("\nVulkan cration instance status : %s", m_VulkanRenderer->IsInstanceCreated() ? "created" : "failed");
-		ImGui::EndChild();
-		Rebulk::Im::End();
-		m_HasBeenUpdated = true;
-	}
-
 	void VulkanLayer::Render()
 	{
-		Rebulk::Im::Render(m_Window);
+		Im::Render(m_Window);
+	}
+
+	void VulkanLayer::DisplayLogs()
+	{
+		Rebulk::Im::Begin("Vulkan Infos");
+		ImGui::PushID("##VulkanInfos");
+		const float footer_height_to_reserve = ImGui::GetStyle().ItemSpacing.y + ImGui::GetFrameHeightWithSpacing();
+
+		Rebulk::Im::BeginChild("VulkanLogs", ImVec2(0, -footer_height_to_reserve), true, ImGuiWindowFlags_HorizontalScrollbar);
+
+		for (auto& message : m_Messages) {
+			Rebulk::Im::Text("\t%s", message.c_str());
+			Rebulk::Im::Separator();
+		}
+	
+		Rebulk::Im::EndChild();
+		ImGui::PopID();
+		Rebulk::Im::End();
 	}
 
 	void VulkanLayer::Destroy()
@@ -66,8 +39,21 @@ namespace Rebulk
 
 	void VulkanLayer::Update(std::vector<std::string>& messages)
 	{		
-		for (const auto& message : messages) {
-			m_Messages.push_back(message);
+		Rebulk::Log::GetLogger()->debug(m_Messages.size());
+		if (m_Messages.size() >= m_MaxMessages) {
+			m_Messages.erase(m_Messages.begin(), m_Messages.begin() + messages.size());
 		}
+
+		for (const auto& message : messages) {
+			m_Messages.emplace_back(message);
+		}
+	}
+
+	void VulkanLayer::DisplayFpsCounter(double timeStep)
+	{
+		Rebulk::Im::Begin("Performances stats");
+		Rebulk::Im::Text("FPS : %f", 1/timeStep);
+		Rebulk::Im::Text("Frametime : %f", timeStep);
+		Rebulk::Im::End();
 	}
 }
