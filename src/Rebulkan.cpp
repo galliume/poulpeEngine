@@ -13,18 +13,29 @@ int main(int argc, char** argv)
 
 	GLFWwindow* window = glfwCreateWindow(WIDTH, HEIGHT, "Rebulkan", nullptr, nullptr);
 	glfwMakeContextCurrent(window);
-	glfwSwapInterval(1);
+	glfwSwapInterval(1);//vsync
 
 	Rebulk::Im::Init(window);
 	Rebulk::VulkanRenderer* renderer = new Rebulk::VulkanRenderer();
 	Rebulk::VulkanLayer* vulkanLayer = new Rebulk::VulkanLayer(window, renderer);
 	renderer->Init();
 	//bool show_demo_window = true;
+	double lastTime = glfwGetTime();
 
 	while (!glfwWindowShouldClose(window)) {
+
+		Rebulk::Im::NewFrame();
+
+		double currentTime = glfwGetTime();
+		float timeStep = currentTime - lastTime;
+
+		vulkanLayer->DisplayFpsCounter(timeStep);
+		lastTime = currentTime;
+
+		vulkanLayer->DisplayLogs();
+		
 		glfwPollEvents();
 
-		vulkanLayer->Create();
 		//ImGui::ShowDemoWindow(&show_demo_window);
 		vulkanLayer->Render();
 

@@ -12,9 +12,13 @@ namespace Rebulk {
 		IMGUI_CHECKVERSION();
 		ImGui::CreateContext();
 		ImGuiIO& io = ImGui::GetIO(); (void)io;
+		
 		io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
-		io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;           // Enable Docking
-		io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;         // Enable Multi-Viewport / Platform Windows
+		io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;           
+		io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;         
+		io.ConfigDockingWithShift = false;
+		io.BackendFlags |= ImGuiBackendFlags_HasMouseCursors;
+
 		ImGui::StyleColorsDark();
 
 		ImGuiStyle& style = ImGui::GetStyle();
@@ -45,11 +49,30 @@ namespace Rebulk {
 		ImGui::End();
 	}
 
+	void Im::EndFrame()
+	{
+		ImGui::EndFrame();
+	}
+
+	void Im::EndChild()
+	{
+		ImGui::EndChild();
+	}
+
+	void Im::Separator()
+	{
+		ImGui::Separator();
+	}
+
+	void Im::BeginChild(const char* str_id, const ImVec2& size_arg, bool border, ImGuiWindowFlags extra_flags)
+	{
+		ImGui::BeginChild(str_id, size_arg, border, extra_flags);
+	}
+
 	void Im::Render(GLFWwindow* window)
 	{
 		ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
-		// Render dear imgui into screen
 		ImGui::Render();
 		int display_w, display_h;
 		glfwGetFramebufferSize(window, &display_w, &display_h);
