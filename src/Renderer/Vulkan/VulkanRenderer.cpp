@@ -69,6 +69,7 @@ namespace Rebulk {
 		LoadRequiredExtensions();
 		CreateInstance();
 		SetupDebugMessenger();
+		PickPhysicalDevice();
 	}
 
 	void VulkanRenderer::CreateInstance()
@@ -227,6 +228,54 @@ namespace Rebulk {
 		}
 
 		Notify();
+	}
+
+	void VulkanRenderer::PickPhysicalDevice()
+	{
+		uint32_t deviceCount = 0;
+		vkEnumeratePhysicalDevices(m_Instance, &deviceCount, nullptr);
+
+		if (deviceCount == 0) {
+			m_Messages.emplace_back("failed to find GPUs with Vulkan support!");
+			return;
+		}
+
+		std::vector<VkPhysicalDevice> devices(deviceCount);
+		vkEnumeratePhysicalDevices(m_Instance, &deviceCount, devices.data());
+
+		for (const auto& device : devices) {
+			if (IsDeviceSuitable(device)) {
+				m_PhysicalDevice = device;
+				break;
+			}
+		}
+
+		if (m_PhysicalDevice == VK_NULL_HANDLE) {
+			m_Messages.emplace_back("failed to find a suitable GPU");
+			return;
+		}
+
+		Notify();
+	}
+
+	bool VulkanRenderer::IsDeviceSuitable(VkPhysicalDevice device)
+	{
+		bool isSuitable;
+
+		VkPhysicalDeviceProperties deviceProperties;
+		VkPhysicalDeviceFeatures deviceFeatures;
+
+		vkGetPhysicalDeviceProperties(device, &deviceProperties);
+		vkGetPhysicalDeviceFeatures(device, &deviceFeatures);
+
+		isSuitable = deviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU && deviceFeatures.geometryShader;
+
+		if (isSuitable) {
+			m_DeviceProps = deviceProperties;
+			m_DeviceFeatures = deviceFeatures;
+		}
+
+		return isSuitable;
 	}
 
 	VulkanRenderer::~VulkanRenderer()
