@@ -70,6 +70,7 @@ namespace Rebulk {
 		CreateInstance();
 		SetupDebugMessenger();
 		PickPhysicalDevice();
+		CreateLogicalDevice();
 	}
 
 	void VulkanRenderer::CreateInstance()
@@ -246,6 +247,16 @@ namespace Rebulk {
 		for (const auto& device : devices) {
 			if (IsDeviceSuitable(device)) {
 				m_PhysicalDevice = device;
+
+				VkPhysicalDeviceProperties deviceProperties;
+				VkPhysicalDeviceFeatures deviceFeatures;
+
+				vkGetPhysicalDeviceProperties(device, &deviceProperties);
+				vkGetPhysicalDeviceFeatures(device, &deviceFeatures);
+
+				m_DeviceProps = deviceProperties;
+				m_DeviceFeatures = deviceFeatures;
+
 				break;
 			}
 		}
@@ -260,26 +271,73 @@ namespace Rebulk {
 
 	bool VulkanRenderer::IsDeviceSuitable(VkPhysicalDevice device)
 	{
-		bool isSuitable;
+		QueueFamilyIndices indices = FindQueueFamilies(device);
 
-		VkPhysicalDeviceProperties deviceProperties;
-		VkPhysicalDeviceFeatures deviceFeatures;
+		return indices.isComplete();
+	}
 
-		vkGetPhysicalDeviceProperties(device, &deviceProperties);
-		vkGetPhysicalDeviceFeatures(device, &deviceFeatures);
+	QueueFamilyIndices VulkanRenderer::FindQueueFamilies(VkPhysicalDevice device) 
+	{
+		QueueFamilyIndices indices;
+		
+		uint32_t queueFamilyCount = 0;
+		vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, nullptr);
 
-		isSuitable = deviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU && deviceFeatures.geometryShader;
+		std::vector<VkQueueFamilyProperties> queueFamilies(queueFamilyCount);
+		vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, queueFamilies.data());
 
-		if (isSuitable) {
-			m_DeviceProps = deviceProperties;
-			m_DeviceFeatures = deviceFeatures;
+		int i = 0;
+		for (const auto& queueFamily : queueFamilies) {
+			if (queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT) {
+				indices.graphicsFamily = i;
+			}
+
+			if (indices.isComplete()) {
+				break;
+			}
+			i++;
 		}
 
-		return isSuitable;
+		return indices;
+	}
+
+	void VulkanRenderer::CreateLogicalDevice()
+	{
+		QueueFamilyIndices indices = FindQueueFamilies(m_PhysicalDevice);
+
+		VkDeviceQueueCreateInfo queueCreateInfo{};
+		queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+		queueCreateInfo.queueFamilyIndex = indices.graphicsFamily.value();
+		queueCreateInfo.queueCount = 1;
+
+		float queuePriority = 1.0f;
+		queueCreateInfo.pQueuePriorities = &queuePriority;
+
+		VkPhysicalDeviceFeatures deviceFeatures{};
+
+		VkDeviceCreateInfo createInfo{};
+		createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+
+		createInfo.pQueueCreateInfos = &queueCreateInfo;
+		createInfo.queueCreateInfoCount = 1;
+
+		createInfo.pEnabledFeatures = &deviceFeatures;
+
+		if (vkCreateDevice(m_PhysicalDevice, &createInfo, nullptr, &m_Device) != VK_SUCCESS) {
+			m_Messages.emplace_back("failed to create logical device!");
+			return;
+		} 
+		
+		vkGetDeviceQueue(m_Device, indices.graphicsFamily.value(), 0, &m_GraphicsQueue);
+		m_Messages.emplace_back("successfully create logical device!");
+		
+		Notify();
 	}
 
 	VulkanRenderer::~VulkanRenderer()
 	{
+		vkDestroyDevice(m_Device, nullptr);
+
 		if (m_EnableValidationLayers) {
 			DestroyDebugUtilsMessengerEXT(m_Instance, m_DebugMessengerCallback, nullptr);
 		}
