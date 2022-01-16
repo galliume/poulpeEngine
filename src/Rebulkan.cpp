@@ -1,5 +1,4 @@
 #include "rebulkpch.h"
-#include "spdlog/details/null_mutex.h"
 #include "GUI/VulkanLayer.h"
 
 int main(int argc, char** argv)
