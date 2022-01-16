@@ -34,3 +34,5 @@
 .vs/
 bin/
 bin-int/
+
+imgui.ini
