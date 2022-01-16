@@ -30,9 +30,10 @@ int main(int argc, char** argv)
 		double timeStep = currentTime - lastTime;
 
 		vulkanLayer->DisplayFpsCounter(timeStep);
-		lastTime = currentTime;
-
 		vulkanLayer->DisplayLogs();
+		vulkanLayer->DisplayAPI(renderer->GetDeviceProperties());
+
+		lastTime = currentTime;
 		
 		glfwPollEvents();
 

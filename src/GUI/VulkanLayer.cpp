@@ -55,4 +55,14 @@ namespace Rebulk
 		Rebulk::Im::Text("Frametime : %f", timeStep);
 		Rebulk::Im::End();
 	}
+
+	void VulkanLayer::DisplayAPI(VkPhysicalDeviceProperties devicesProps)
+	{
+		Rebulk::Im::Begin("API");
+		Rebulk::Im::Text("API Version : %d", devicesProps.apiVersion);
+		Rebulk::Im::Text("Drivers version : %d", devicesProps.driverVersion);
+		Rebulk::Im::Text("Vendor id : %d", devicesProps.vendorID);
+		Rebulk::Im::Text("GPU : %s" , devicesProps.deviceName);
+		Rebulk::Im::End();
+	}
 }
