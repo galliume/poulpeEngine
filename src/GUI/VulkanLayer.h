@@ -15,6 +15,7 @@ namespace Rebulk
 		void Destroy();
 		void Update(std::vector<std::string>& messages);
 		void DisplayFpsCounter(double timeStep);
+		void DisplayAPI(VkPhysicalDeviceProperties devicesProps);
 
 	private:
 		std::string m_Message;

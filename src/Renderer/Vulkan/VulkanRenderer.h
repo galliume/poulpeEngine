@@ -10,13 +10,21 @@ namespace Rebulk {
 	public:
 		VulkanRenderer();
 		~VulkanRenderer();
+		
 		void Init();
+		inline bool IsInstanceCreated() { return m_InstanceCreated; };
+
 		inline uint32_t GetExtensionCount() { return m_ExtensionCount; };
 		inline std::vector<VkExtensionProperties> GetExtensions() { return m_Extensions; };
+
 		inline std::vector<VkLayerProperties> GetLayersAvailable() { return m_LayersAvailable; };
 		inline const std::vector<const char*> GetValidationLayers() { return m_ValidationLayers; };
 		inline bool IsValidationLayersEnabled() { return m_EnableValidationLayers; };
-		inline bool IsInstanceCreated() { return m_InstanceCreated; };
+
+		void PickPhysicalDevice();
+		inline VkPhysicalDeviceProperties GetDeviceProperties() { return m_DeviceProps; };
+		inline VkPhysicalDeviceFeatures GetDeviceFeatures() { return m_DeviceFeatures; };
+
 		void Attach(IObserver* observer) override;
 		void Detach(IObserver* observer) override;
 		void Notify() override;
@@ -27,19 +35,29 @@ namespace Rebulk {
 		bool CheckValidationLayerSupport();
 		void LoadRequiredExtensions();
 		void SetupDebugMessenger();
+		bool IsDeviceSuitable(VkPhysicalDevice device);
 
 	private:
 		std::list<IObserver*> m_Observers;
 		std::vector<std::string> m_Messages;
-		const std::vector<const char*> m_ValidationLayers = { "VK_LAYER_KHRONOS_validation" };
-		const std::vector<const char*> m_DeviceExtensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
-		VkInstance m_Instance = VK_NULL_HANDLE;
-		uint32_t m_ExtensionCount = 0;
-		std::vector<VkExtensionProperties> m_Extensions = {};
-		std::vector<VkLayerProperties> m_LayersAvailable = {};
-		bool m_EnableValidationLayers = false;
+
 		bool m_InstanceCreated = false;
+		VkInstance m_Instance = VK_NULL_HANDLE;
+		
+		VkPhysicalDevice m_PhysicalDevice = VK_NULL_HANDLE;
+		VkPhysicalDeviceProperties m_DeviceProps;
+		VkPhysicalDeviceFeatures m_DeviceFeatures;
+
+		bool m_EnableValidationLayers = false;
+		const std::vector<const char*> m_ValidationLayers = { "VK_LAYER_KHRONOS_validation" };
+		std::vector<VkLayerProperties> m_LayersAvailable = {};
+		
+		const std::vector<const char*> m_DeviceExtensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
+		std::vector<VkExtensionProperties> m_Extensions = {};
 		std::vector<const char*> m_RequiredExtensions = {};
+		uint32_t m_ExtensionCount = 0;
+		
 		VkDebugUtilsMessengerEXT m_DebugMessengerCallback = VK_NULL_HANDLE;
+
 	};
 }
