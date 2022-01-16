@@ -17,22 +17,15 @@ namespace Rebulk {
 		inline const std::vector<const char*> GetValidationLayers() { return m_ValidationLayers; };
 		inline bool IsValidationLayersEnabled() { return m_EnableValidationLayers; };
 		inline bool IsInstanceCreated() { return m_InstanceCreated; };
-		VKAPI_ATTR VkBool32 VKAPI_CALL DebugCallback(
-			VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity, VkDebugUtilsMessageTypeFlagsEXT messageType,
-			const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData
-		);
-		VkResult CreateDebugUtilsMessengerEXT(VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo,
-			const VkAllocationCallbacks* pAllocator, VkDebugUtilsMessengerEXT* pCallback
-		);
 		void Attach(IObserver* observer) override;
 		void Detach(IObserver* observer) override;
 		void Notify() override;
+	
 	private:
 		void CreateInstance();
 		void EnumerateExtensions();
 		bool CheckValidationLayerSupport();
 		void LoadRequiredExtensions();
-		void PopulateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo);
 		void SetupDebugMessenger();
 
 	private:
@@ -47,6 +40,6 @@ namespace Rebulk {
 		bool m_EnableValidationLayers = false;
 		bool m_InstanceCreated = false;
 		std::vector<const char*> m_RequiredExtensions = {};
-		VkDebugUtilsMessengerEXT m_Callback = VK_NULL_HANDLE;
+		VkDebugUtilsMessengerEXT m_DebugMessengerCallback = VK_NULL_HANDLE;
 	};
 }

@@ -27,7 +27,7 @@ int main(int argc, char** argv)
 		Rebulk::Im::NewFrame();
 
 		double currentTime = glfwGetTime();
-		float timeStep = currentTime - lastTime;
+		double timeStep = currentTime - lastTime;
 
 		vulkanLayer->DisplayFpsCounter(timeStep);
 		lastTime = currentTime;

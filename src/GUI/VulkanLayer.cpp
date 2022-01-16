@@ -26,7 +26,7 @@ namespace Rebulk
 			Rebulk::Im::Text("\t%s", message.c_str());
 			Rebulk::Im::Separator();
 		}
-	
+
 		Rebulk::Im::EndChild();
 		ImGui::PopID();
 		Rebulk::Im::End();
@@ -39,7 +39,6 @@ namespace Rebulk
 
 	void VulkanLayer::Update(std::vector<std::string>& messages)
 	{		
-		Rebulk::Log::GetLogger()->debug(m_Messages.size());
 		if (m_Messages.size() >= m_MaxMessages) {
 			m_Messages.erase(m_Messages.begin(), m_Messages.begin() + messages.size());
 		}
