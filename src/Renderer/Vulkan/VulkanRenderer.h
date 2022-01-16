@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <optional>
 #include <set>
+#include <cstdint> 
 
 #include "rebulkpch.h"
 #include "vulkan\vulkan.h"
@@ -15,6 +16,12 @@ namespace Rebulk {
 		bool isComplete() {
 			return graphicsFamily.has_value() && presentFamily.has_value();
 		}
+	};
+
+	struct SwapChainSupportDetails {
+		VkSurfaceCapabilitiesKHR capabilities;
+		std::vector<VkSurfaceFormatKHR> formats;
+		std::vector<VkPresentModeKHR> presentModes;
 	};
 
 	class VulkanRenderer : public ISubject
@@ -50,8 +57,13 @@ namespace Rebulk {
 		void LoadRequiredExtensions();
 		void SetupDebugMessenger();
 		bool IsDeviceSuitable(VkPhysicalDevice device);
+		bool CheckDeviceExtensionSupport(VkPhysicalDevice device);
 		void CreateLogicalDevice();
 		QueueFamilyIndices FindQueueFamilies(VkPhysicalDevice device);
+		SwapChainSupportDetails QuerySwapChainSupport(VkPhysicalDevice device);
+		VkSurfaceFormatKHR ChooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats);
+		VkPresentModeKHR ChooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes);
+		VkExtent2D ChooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities);
 
 	private:
 		std::list<IObserver*> m_Observers = {};
