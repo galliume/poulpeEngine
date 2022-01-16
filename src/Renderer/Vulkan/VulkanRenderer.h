@@ -1,9 +1,17 @@
 #include <algorithm>
 #include "rebulkpch.h"
+#include <optional>
 #include "vulkan/vulkan.h"
 #include "Pattern\ISubject.h"
 
 namespace Rebulk {
+
+	struct QueueFamilyIndices {
+		std::optional<uint32_t> graphicsFamily;
+		bool isComplete() {
+			return graphicsFamily.has_value();
+		}
+	};
 
 	class VulkanRenderer : public ISubject
 	{
@@ -36,6 +44,7 @@ namespace Rebulk {
 		void LoadRequiredExtensions();
 		void SetupDebugMessenger();
 		bool IsDeviceSuitable(VkPhysicalDevice device);
+		void CreateLogicalDevice();
 
 	private:
 		std::list<IObserver*> m_Observers;
@@ -47,6 +56,9 @@ namespace Rebulk {
 		VkPhysicalDevice m_PhysicalDevice = VK_NULL_HANDLE;
 		VkPhysicalDeviceProperties m_DeviceProps;
 		VkPhysicalDeviceFeatures m_DeviceFeatures;
+		
+		VkDevice m_Device;
+		VkQueue m_GraphicsQueue;
 
 		bool m_EnableValidationLayers = false;
 		const std::vector<const char*> m_ValidationLayers = { "VK_LAYER_KHRONOS_validation" };
@@ -57,6 +69,8 @@ namespace Rebulk {
 		std::vector<const char*> m_RequiredExtensions = {};
 		uint32_t m_ExtensionCount = 0;
 		
+		QueueFamilyIndices FindQueueFamilies(VkPhysicalDevice device);
+
 		VkDebugUtilsMessengerEXT m_DebugMessengerCallback = VK_NULL_HANDLE;
 
 	};
