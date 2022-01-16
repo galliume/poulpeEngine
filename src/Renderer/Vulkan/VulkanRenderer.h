@@ -1,22 +1,26 @@
 #include <algorithm>
-#include "rebulkpch.h"
 #include <optional>
-#include "vulkan/vulkan.h"
+#include <set>
+
+#include "rebulkpch.h"
+#include "vulkan\vulkan.h"
 #include "Pattern\ISubject.h"
 
 namespace Rebulk {
 
 	struct QueueFamilyIndices {
 		std::optional<uint32_t> graphicsFamily;
+		std::optional<uint32_t> presentFamily;
+
 		bool isComplete() {
-			return graphicsFamily.has_value();
+			return graphicsFamily.has_value() && presentFamily.has_value();
 		}
 	};
 
 	class VulkanRenderer : public ISubject
 	{
 	public:
-		VulkanRenderer();
+		VulkanRenderer(GLFWwindow* window);
 		~VulkanRenderer();
 		
 		void Init();
@@ -33,6 +37,8 @@ namespace Rebulk {
 		inline VkPhysicalDeviceProperties GetDeviceProperties() { return m_DeviceProps; };
 		inline VkPhysicalDeviceFeatures GetDeviceFeatures() { return m_DeviceFeatures; };
 
+		void CreateSurface();
+
 		void Attach(IObserver* observer) override;
 		void Detach(IObserver* observer) override;
 		void Notify() override;
@@ -45,20 +51,25 @@ namespace Rebulk {
 		void SetupDebugMessenger();
 		bool IsDeviceSuitable(VkPhysicalDevice device);
 		void CreateLogicalDevice();
+		QueueFamilyIndices FindQueueFamilies(VkPhysicalDevice device);
 
 	private:
-		std::list<IObserver*> m_Observers;
-		std::vector<std::string> m_Messages;
+		std::list<IObserver*> m_Observers = {};
+		std::vector<std::string> m_Messages = {};
 
 		bool m_InstanceCreated = false;
 		VkInstance m_Instance = VK_NULL_HANDLE;
 		
 		VkPhysicalDevice m_PhysicalDevice = VK_NULL_HANDLE;
-		VkPhysicalDeviceProperties m_DeviceProps;
-		VkPhysicalDeviceFeatures m_DeviceFeatures;
+		VkPhysicalDeviceProperties m_DeviceProps = {};
+		VkPhysicalDeviceFeatures m_DeviceFeatures = {};
 		
-		VkDevice m_Device;
-		VkQueue m_GraphicsQueue;
+		VkDevice m_Device = VK_NULL_HANDLE;
+		VkQueue m_GraphicsQueue = VK_NULL_HANDLE;
+
+		GLFWwindow* m_Window = VK_NULL_HANDLE;
+		VkSurfaceKHR m_Surface = VK_NULL_HANDLE;
+		VkQueue m_PresentQueue = VK_NULL_HANDLE;
 
 		bool m_EnableValidationLayers = false;
 		const std::vector<const char*> m_ValidationLayers = { "VK_LAYER_KHRONOS_validation" };
@@ -68,10 +79,7 @@ namespace Rebulk {
 		std::vector<VkExtensionProperties> m_Extensions = {};
 		std::vector<const char*> m_RequiredExtensions = {};
 		uint32_t m_ExtensionCount = 0;
-		
-		QueueFamilyIndices FindQueueFamilies(VkPhysicalDevice device);
-
+	
 		VkDebugUtilsMessengerEXT m_DebugMessengerCallback = VK_NULL_HANDLE;
-
 	};
 }
