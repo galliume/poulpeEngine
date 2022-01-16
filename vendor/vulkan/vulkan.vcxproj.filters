@@ -72,10 +72,8 @@
     <ClInclude Include="Include\vulkan\vulkan_xlib_xrandr.h">
       <Filter>Include\vulkan</Filter>
     </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Lib\vulkan-1.lib">
-      <Filter>Lib</Filter>
-    </None>
+    <ClInclude Include="Include\vulkan\vk_enum_string_helper.h" />
+    <ClInclude Include="Include\vulkan\vulkan.hpp" />
+    <ClInclude Include="Include\vulkan\vulkan_screen.h" />
   </ItemGroup>
 </Project>
