@@ -65,15 +65,15 @@ project "Rebulkan"
 		"%{IncludeDir.GLM}",
 		"%{IncludeDir.vulkan}",
 	}
-
-	links 
-	{		
-		"GLFW",
-		"vendor/vulkan/Lib/vulkan-1.lib"
-	}
 	
 	filter "system:windows"
 		systemversion "latest"
+
+		links 
+		{		
+			"GLFW",
+			"vendor/vulkan/Lib/vulkan-1.lib"
+		}
 
 		defines
 		{
@@ -83,17 +83,14 @@ project "Rebulkan"
 		}
 
 	filter "configurations:Debug"
-		defines "RBL_DEBUG"
 		runtime "Debug"
 		symbols "on"
 
 	filter "configurations:Release"
-		defines "RBL_RELEASE"
 		runtime "Release"
 		symbols "on"
 
 	filter "configurations:Dist"
-		defines "RBL_DIST"
 		runtime "Release"
 		symbols "on"
 
@@ -105,3 +102,6 @@ project "Rebulkan"
 
 	filter { "system:windows", "configurations:Dist" }
         buildoptions {"/MT" }
+
+	filter { "system:linux", "configurations:Debug" }
+		links { "glfw", "vulkan", "GL", "GLU", "dl",  "pthread" }
