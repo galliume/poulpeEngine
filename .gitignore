@@ -36,3 +36,5 @@ bin/
 bin-int/
 
 imgui.ini
+*.make
+Makefile
