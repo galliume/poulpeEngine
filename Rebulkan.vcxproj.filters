@@ -1340,9 +1340,6 @@
     <ClCompile Include="vendor\imgui\imgui.cpp">
       <Filter>vendor\imgui</Filter>
     </ClCompile>
-    <ClCompile Include="vendor\imgui\imgui_demo.cpp">
-      <Filter>vendor\imgui</Filter>
-    </ClCompile>
     <ClCompile Include="vendor\imgui\imgui_draw.cpp">
       <Filter>vendor\imgui</Filter>
     </ClCompile>
