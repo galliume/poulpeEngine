@@ -15,8 +15,10 @@ IncludeDir["GLFW"] = "vendor/GLFW/include"
 IncludeDir["GLM"] = "vendor/GLM"
 IncludeDir["vulkan"] = "vendor/vulkan/include"
 
-include "vendor/GLFW"
-include "vendor/vulkan"
+if os.host() == "windows" then
+	include "vendor/GLFW"
+	include "vendor/vulkan"
+end
 
 project "Rebulkan"
 	location ""
@@ -60,6 +62,7 @@ project "Rebulkan"
 	}
 
 	filter "system:windows"
+
 		systemversion "latest"
 
 		includedirs
