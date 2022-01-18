@@ -11,10 +11,12 @@ workspace "Rebulkan"
 outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
 
 IncludeDir = {}
-
+IncludeDir["GLFW"] = "vendor/GLFW/include"
 IncludeDir["GLM"] = "vendor/GLM"
+IncludeDir["vulkan"] = "vendor/vulkan/include"
 
-
+include "vendor/GLFW"
+include "vendor/vulkan"
 
 project "Rebulkan"
 	location ""
@@ -46,11 +48,6 @@ project "Rebulkan"
 		"vendor/imgui/backends/imgui_impl_opengl3_loader.h"
 	}
 
-	defines
-	{
-		"_CRT_SECURE_NO_WARNINGS"
-	}
-
 	includedirs
 	{
 		"src",
@@ -65,6 +62,13 @@ project "Rebulkan"
 	filter "system:windows"
 		systemversion "latest"
 
+		includedirs
+		{
+			"%{IncludeDir.GLFW}",
+			"%{IncludeDir.GLM}",
+			"%{IncludeDir.vulkan}",
+		}
+
 		links 
 		{		
 			"GLFW",
@@ -73,8 +77,7 @@ project "Rebulkan"
 		
 		defines
 		{
-			"GLFW_INCLUDE_NONE",
-			"_CRT_SECURE_NO_WARNINGS"
+			"GLFW_INCLUDE_NONE"
 		}
 
 	filter "configurations:Debug"
