@@ -1,0 +1,1 @@
+./vendor/premake/premake5 --cc=clang gmake2

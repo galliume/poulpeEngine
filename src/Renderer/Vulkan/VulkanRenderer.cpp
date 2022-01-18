@@ -125,7 +125,7 @@ namespace Rebulk {
 		result = vkCreateInstance(&createInfo, nullptr, &m_Instance);
 
 		if (VK_SUCCESS != result) {
-			std::string message = std::string("Can't create VK instance : " + result);
+			std::string message = std::string("Can't create VK instance : " + std::to_string(result));
 			Rebulk::Log::GetLogger()->critical("{}", message.c_str());
 			m_Messages.emplace_back(message);
 			Notify();

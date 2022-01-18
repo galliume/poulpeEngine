@@ -79,7 +79,7 @@
       <AdditionalIncludeDirectories>Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Disabled</Optimization>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
-      <AdditionalOptions>-std=c11 -lgdi32 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>-std=c14 -lgdi32 /MT %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -93,7 +93,7 @@
       <AdditionalIncludeDirectories>Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Disabled</Optimization>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
-      <AdditionalOptions>-std=c11 -lgdi32 /MT %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>-std=c14 -lgdi32 /MT %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -107,7 +107,7 @@
       <AdditionalIncludeDirectories>Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Disabled</Optimization>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
-      <AdditionalOptions>-std=c11 -lgdi32 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>-std=c14 -lgdi32 /MT %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -125,12 +125,17 @@
     <ClInclude Include="Include\vulkan\vulkan_beta.h" />
     <ClInclude Include="Include\vulkan\vulkan_core.h" />
     <ClInclude Include="Include\vulkan\vulkan_directfb.h" />
+    <ClInclude Include="Include\vulkan\vulkan_enums.hpp" />
     <ClInclude Include="Include\vulkan\vulkan_fuchsia.h" />
+    <ClInclude Include="Include\vulkan\vulkan_funcs.hpp" />
     <ClInclude Include="Include\vulkan\vulkan_ggp.h" />
+    <ClInclude Include="Include\vulkan\vulkan_handles.hpp" />
     <ClInclude Include="Include\vulkan\vulkan_ios.h" />
     <ClInclude Include="Include\vulkan\vulkan_macos.h" />
     <ClInclude Include="Include\vulkan\vulkan_metal.h" />
+    <ClInclude Include="Include\vulkan\vulkan_raii.hpp" />
     <ClInclude Include="Include\vulkan\vulkan_screen.h" />
+    <ClInclude Include="Include\vulkan\vulkan_structs.hpp" />
     <ClInclude Include="Include\vulkan\vulkan_vi.h" />
     <ClInclude Include="Include\vulkan\vulkan_wayland.h" />
     <ClInclude Include="Include\vulkan\vulkan_win32.h" />

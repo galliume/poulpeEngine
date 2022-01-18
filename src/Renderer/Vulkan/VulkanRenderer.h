@@ -2,7 +2,7 @@
 #include "rebulkpch.h"
 #include <optional>
 #include "vulkan/vulkan.h"
-#include "Pattern\ISubject.h"
+#include "Pattern/ISubject.h"
 
 namespace Rebulk {
 
