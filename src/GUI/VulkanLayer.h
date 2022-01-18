@@ -1,8 +1,8 @@
 #pragma once
 #include "rebulkpch.h"
-#include "Renderer\Vulkan\VulkanRenderer.h"
-#include "GUI\Renderer\Im.h"
-#include "Pattern\IObserver.h"
+#include "Renderer/Vulkan/VulkanRenderer.h"
+#include "GUI/Renderer/Im.h"
+#include "Pattern/IObserver.h"
 
 namespace Rebulk 
 {

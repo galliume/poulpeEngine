@@ -1,9 +1,9 @@
 #pragma once
 #include "rebulkpch.h"
 #include "imgui.h"
-#include "backends\imgui_impl_opengl3_loader.h"
-#include "backends\imgui_impl_glfw.h"
-#include "backends\imgui_impl_opengl3.h"
+#include "backends/imgui_impl_opengl3_loader.h"
+#include "backends/imgui_impl_glfw.h"
+#include "backends/imgui_impl_opengl3.h"
 
 namespace Rebulk
 {

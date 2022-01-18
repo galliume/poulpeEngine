@@ -8,27 +8,30 @@ project "vulkan"
 	files
 	{
         "Include/vulkan/*.h",
-		"Include/vulkan/vulkan.hpp"
+		"Include/vulkan/*.hpp",
     }
 
-    includedirs 
+    includedirs
 	{
         "Include"
     }
-    
-	buildoptions { "-std=c14", "-lgdi32" }
-	systemversion "latest"
-	staticruntime "on"
 
 	filter { "system:windows" }    
+		buildoptions { "-std=c14", "-lgdi32" }
+		systemversion "latest"
+		staticruntime "on"
+
 		defines 
 		{ 
 			"_GLFW_WIN32",
 			"_CRT_SECURE_NO_WARNINGS"
 		}
-
-    filter { "system:windows" }
+		
 		buildoptions "/MT"
-       
-    filter { "system:linux" }
-        links { "dl", "pthread" }
+
+	filter { "system:linux" }    
+		buildoptions { "-std=c14" }
+		systemversion "latest"
+		staticruntime "on"
+
+		links { "dl", "pthread" }
