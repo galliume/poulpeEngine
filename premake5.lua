@@ -11,7 +11,7 @@ workspace "Rebulkan"
 outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
 
 IncludeDir = {}
-IncludeDir["GLFW"] = "vendor/GLFW/include"
+IncludeDir["GLFW"] = "vendor/GLFW"
 IncludeDir["GLM"] = "vendor/GLM"
 IncludeDir["vulkan"] = "vendor/vulkan/include"
 
@@ -22,7 +22,7 @@ project "Rebulkan"
 	location ""
 	kind "ConsoleApp"
 	language "C++"
-	cppdialect "C++20"
+	cppdialect "C++17"
 	staticruntime "on"
 
 	targetdir  ("bin/" .. outputdir  .. "/%{prj.name}")
@@ -46,7 +46,7 @@ project "Rebulkan"
 		"vendor/imgui/backends/imgui_impl_opengl3.h",
 		"vendor/imgui/backends/imgui_impl_glfw.cpp",
 		"vendor/imgui/backends/imgui_impl_opengl3.cpp",
-		"vendor/imgui/backends/imgui_impl_opengl3_loader.h"
+		"vendor/imgui/backends/imgui_impl_opengl3_loader.h",
 	}
 
 	defines
@@ -61,8 +61,9 @@ project "Rebulkan"
 		"vendor/imgui",
 		"vendor/stb_image",
 		"vendor/tiny_obj_loader",
-		"%{IncludeDir.GLFW}",
 		"%{IncludeDir.GLM}",
+		"%{IncludeDir.GLFW}/src",
+		"%{IncludeDir.GLFW}/include",
 		"%{IncludeDir.vulkan}",
 	}
 	
@@ -78,8 +79,7 @@ project "Rebulkan"
 		defines
 		{
 			"GLFW_INCLUDE_NONE",
-			"_CRT_SECURE_NO_WARNINGS",
-			"_NO_DEBUG_HEAP=1"
+			"_CRT_SECURE_NO_WARNINGS"
 		}
 
 	filter "configurations:Debug"
@@ -103,5 +103,22 @@ project "Rebulkan"
 	filter { "system:windows", "configurations:Dist" }
         buildoptions {"/MT" }
 
+
+	filter "system:linux"
+		systemversion "latest"
+
+		links 
+		{
+			"GLFW",
+			"vulkan"
+		}
+
+		defines
+		{
+			"GLFW_INCLUDE_NONE",
+			"_GLFW_WAYLAND",
+			"_CRT_SECURE_NO_WARNINGS"
+		}
+	
 	filter { "system:linux", "configurations:Debug" }
-		links { "glfw", "vulkan", "GL", "GLU", "dl",  "pthread" }
+		links { "dl",  "pthread" }
