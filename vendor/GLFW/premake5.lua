@@ -35,7 +35,7 @@ project "GLFW"
 
 
     filter "system:linux"
-        buildoptions { "-std=c11" }
+        buildoptions { "-std=c17" }
         systemversion "latest"
         staticruntime "on"
         

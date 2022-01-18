@@ -18,9 +18,17 @@ endif
 # Configurations
 # #############################################
 
-RESCOMP = windres
-DEFINES += -DGLFW_INCLUDE_NONE -D_GLFW_WAYLAND -D_CRT_SECURE_NO_WARNINGS
-INCLUDES += -Isrc -Ivendor/spdlog/include -Ivendor/imgui -Ivendor/stb_image -Ivendor/tiny_obj_loader -Ivendor/GLM -Ivendor/GLFW/src -Ivendor/GLFW/include -Ivendor/vulkan/include
+ifeq ($(origin CC), default)
+  CC = clang
+endif
+ifeq ($(origin CXX), default)
+  CXX = clang++
+endif
+ifeq ($(origin AR), default)
+  AR = ar
+endif
+DEFINES +=
+INCLUDES += -Isrc -Ivendor/spdlog/include -Ivendor/tiny_obj_loader -Ivendor/GLFW/include -Ivendor/GLM -Ivendor/vulkan/include -Ivendor/imgui
 FORCE_INCLUDE +=
 ALL_CPPFLAGS += $(CPPFLAGS) -MMD -MP $(DEFINES) $(INCLUDES)
 ALL_CFLAGS += $(CFLAGS) $(ALL_CPPFLAGS) -m64 -g
@@ -39,22 +47,22 @@ ifeq ($(config),debug)
 TARGETDIR = bin/Debug-linux-x86_64/Rebulkan
 TARGET = $(TARGETDIR)/Rebulkan
 OBJDIR = bin-int/Debug-linux-x86_64/Rebulkan
-LIBS += vendor/GLFW/bin/Debug-linux-x86_64/GLFW/libGLFW.a vendor/vulkan/bin/Debug-linux-x86_64/vulkan/libvulkan.a -ldl -lpthread
+LIBS += vendor/GLFW/bin/Debug-linux-x86_64/GLFW/libGLFW.a vendor/vulkan/bin/Debug-linux-x86_64/vulkan/libvulkan.a -lGLU -ldl -lpthread
 LDDEPS += vendor/GLFW/bin/Debug-linux-x86_64/GLFW/libGLFW.a vendor/vulkan/bin/Debug-linux-x86_64/vulkan/libvulkan.a
 
 else ifeq ($(config),release)
 TARGETDIR = bin/Release-linux-x86_64/Rebulkan
 TARGET = $(TARGETDIR)/Rebulkan
 OBJDIR = bin-int/Release-linux-x86_64/Rebulkan
-LIBS += vendor/GLFW/bin/Release-linux-x86_64/GLFW/libGLFW.a vendor/vulkan/bin/Release-linux-x86_64/vulkan/libvulkan.a
-LDDEPS += vendor/GLFW/bin/Release-linux-x86_64/GLFW/libGLFW.a vendor/vulkan/bin/Release-linux-x86_64/vulkan/libvulkan.a
+LIBS +=
+LDDEPS +=
 
 else ifeq ($(config),dist)
 TARGETDIR = bin/Dist-linux-x86_64/Rebulkan
 TARGET = $(TARGETDIR)/Rebulkan
 OBJDIR = bin-int/Dist-linux-x86_64/Rebulkan
-LIBS += vendor/GLFW/bin/Dist-linux-x86_64/GLFW/libGLFW.a vendor/vulkan/bin/Dist-linux-x86_64/vulkan/libvulkan.a
-LDDEPS += vendor/GLFW/bin/Dist-linux-x86_64/GLFW/libGLFW.a vendor/vulkan/bin/Dist-linux-x86_64/vulkan/libvulkan.a
+LIBS +=
+LDDEPS +=
 
 endif
 
