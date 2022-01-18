@@ -27,13 +27,15 @@ endif
 ifeq ($(origin AR), default)
   AR = ar
 endif
-DEFINES +=
-INCLUDES += -Isrc -Ivendor/spdlog/include -Ivendor/tiny_obj_loader -Ivendor/GLFW/include -Ivendor/GLM -Ivendor/vulkan/include -Ivendor/imgui
+DEFINES += -D_CRT_SECURE_NO_WARNINGS -DGLFW_INCLUDE_NONE
+INCLUDES += -Isrc -Ivendor/spdlog/include -Ivendor/imgui -Ivendor/imgui/backends -Ivendor/stb_image -Ivendor/tiny_obj_loader -Ivendor/GLM
 FORCE_INCLUDE +=
 ALL_CPPFLAGS += $(CPPFLAGS) -MMD -MP $(DEFINES) $(INCLUDES)
 ALL_CFLAGS += $(CFLAGS) $(ALL_CPPFLAGS) -m64 -g
 ALL_CXXFLAGS += $(CXXFLAGS) $(ALL_CPPFLAGS) -m64 -g -std=c++17
 ALL_RESFLAGS += $(RESFLAGS) $(DEFINES) $(INCLUDES)
+LIBS += -lglfw -lvulkan -lGL -lGLU -ldl -lpthread
+LDDEPS +=
 ALL_LDFLAGS += $(LDFLAGS) -L/usr/lib64 -m64
 LINKCMD = $(CXX) -o "$@" $(OBJECTS) $(RESOURCES) $(ALL_LDFLAGS) $(LIBS)
 define PREBUILDCMDS
@@ -47,22 +49,16 @@ ifeq ($(config),debug)
 TARGETDIR = bin/Debug-linux-x86_64/Rebulkan
 TARGET = $(TARGETDIR)/Rebulkan
 OBJDIR = bin-int/Debug-linux-x86_64/Rebulkan
-LIBS += vendor/GLFW/bin/Debug-linux-x86_64/GLFW/libGLFW.a vendor/vulkan/bin/Debug-linux-x86_64/vulkan/libvulkan.a -lGLU -ldl -lpthread
-LDDEPS += vendor/GLFW/bin/Debug-linux-x86_64/GLFW/libGLFW.a vendor/vulkan/bin/Debug-linux-x86_64/vulkan/libvulkan.a
 
 else ifeq ($(config),release)
 TARGETDIR = bin/Release-linux-x86_64/Rebulkan
 TARGET = $(TARGETDIR)/Rebulkan
 OBJDIR = bin-int/Release-linux-x86_64/Rebulkan
-LIBS +=
-LDDEPS +=
 
 else ifeq ($(config),dist)
 TARGETDIR = bin/Dist-linux-x86_64/Rebulkan
 TARGET = $(TARGETDIR)/Rebulkan
 OBJDIR = bin-int/Dist-linux-x86_64/Rebulkan
-LIBS +=
-LDDEPS +=
 
 endif
 
@@ -82,7 +78,6 @@ GENERATED += $(OBJDIR)/Rebulkan.o
 GENERATED += $(OBJDIR)/VulkanLayer.o
 GENERATED += $(OBJDIR)/VulkanRenderer.o
 GENERATED += $(OBJDIR)/imgui.o
-GENERATED += $(OBJDIR)/imgui_demo.o
 GENERATED += $(OBJDIR)/imgui_draw.o
 GENERATED += $(OBJDIR)/imgui_impl_glfw.o
 GENERATED += $(OBJDIR)/imgui_impl_opengl3.o
@@ -96,7 +91,6 @@ OBJECTS += $(OBJDIR)/Rebulkan.o
 OBJECTS += $(OBJDIR)/VulkanLayer.o
 OBJECTS += $(OBJDIR)/VulkanRenderer.o
 OBJECTS += $(OBJDIR)/imgui.o
-OBJECTS += $(OBJDIR)/imgui_demo.o
 OBJECTS += $(OBJDIR)/imgui_draw.o
 OBJECTS += $(OBJDIR)/imgui_impl_glfw.o
 OBJECTS += $(OBJDIR)/imgui_impl_opengl3.o
@@ -192,9 +186,6 @@ $(OBJDIR)/imgui_impl_opengl3.o: vendor/imgui/backends/imgui_impl_opengl3.cpp
 	@echo $(notdir $<)
 	$(SILENT) $(CXX) $(ALL_CXXFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
 $(OBJDIR)/imgui.o: vendor/imgui/imgui.cpp
-	@echo $(notdir $<)
-	$(SILENT) $(CXX) $(ALL_CXXFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
-$(OBJDIR)/imgui_demo.o: vendor/imgui/imgui_demo.cpp
 	@echo $(notdir $<)
 	$(SILENT) $(CXX) $(ALL_CXXFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
 $(OBJDIR)/imgui_draw.o: vendor/imgui/imgui_draw.cpp

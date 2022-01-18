@@ -9,51 +9,31 @@ ifndef verbose
 endif
 
 ifeq ($(config),debug)
-  GLFW_config = debug
-  vulkan_config = debug
   Rebulkan_config = debug
 
 else ifeq ($(config),release)
-  GLFW_config = release
-  vulkan_config = release
   Rebulkan_config = release
 
 else ifeq ($(config),dist)
-  GLFW_config = dist
-  vulkan_config = dist
   Rebulkan_config = dist
 
 else
   $(error "invalid configuration $(config)")
 endif
 
-PROJECTS := GLFW vulkan Rebulkan
+PROJECTS := Rebulkan
 
 .PHONY: all clean help $(PROJECTS) 
 
 all: $(PROJECTS)
 
-GLFW:
-ifneq (,$(GLFW_config))
-	@echo "==== Building GLFW ($(GLFW_config)) ===="
-	@${MAKE} --no-print-directory -C vendor/GLFW -f Makefile config=$(GLFW_config)
-endif
-
-vulkan:
-ifneq (,$(vulkan_config))
-	@echo "==== Building vulkan ($(vulkan_config)) ===="
-	@${MAKE} --no-print-directory -C vendor/vulkan -f Makefile config=$(vulkan_config)
-endif
-
-Rebulkan: GLFW vulkan
+Rebulkan:
 ifneq (,$(Rebulkan_config))
 	@echo "==== Building Rebulkan ($(Rebulkan_config)) ===="
 	@${MAKE} --no-print-directory -C . -f Rebulkan.make config=$(Rebulkan_config)
 endif
 
 clean:
-	@${MAKE} --no-print-directory -C vendor/GLFW -f Makefile clean
-	@${MAKE} --no-print-directory -C vendor/vulkan -f Makefile clean
 	@${MAKE} --no-print-directory -C . -f Rebulkan.make clean
 
 help:
@@ -67,8 +47,6 @@ help:
 	@echo "TARGETS:"
 	@echo "   all (default)"
 	@echo "   clean"
-	@echo "   GLFW"
-	@echo "   vulkan"
 	@echo "   Rebulkan"
 	@echo ""
 	@echo "For more information, see https://github.com/premake/premake-core/wiki"

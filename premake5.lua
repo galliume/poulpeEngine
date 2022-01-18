@@ -11,12 +11,10 @@ workspace "Rebulkan"
 outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
 
 IncludeDir = {}
-IncludeDir["GLFW"] = "vendor/GLFW/include"
-IncludeDir["GLM"] = "vendor/GLM"
-IncludeDir["vulkan"] = "vendor/vulkan/include"
 
-include "vendor/GLFW"
-include "vendor/vulkan"
+IncludeDir["GLM"] = "vendor/GLM"
+
+
 
 project "Rebulkan"
 	location ""
@@ -41,34 +39,38 @@ project "Rebulkan"
 		"vendor/imgui/imgui_draw.cpp",
 		"vendor/imgui/imgui_tables.cpp",
 		"vendor/imgui/imgui_widgets.cpp",
-		"vendor/imgui/imgui_demo.cpp",
 		"vendor/imgui/backends/imgui_impl_glfw.h",
 		"vendor/imgui/backends/imgui_impl_opengl3.h",
 		"vendor/imgui/backends/imgui_impl_glfw.cpp",
 		"vendor/imgui/backends/imgui_impl_opengl3.cpp",
-		"vendor/imgui/backends/imgui_impl_opengl3_loader.h",
+		"vendor/imgui/backends/imgui_impl_opengl3_loader.h"
+	}
+
+	defines
+	{
+		"_CRT_SECURE_NO_WARNINGS"
 	}
 
 	includedirs
 	{
 		"src",
 		"vendor/spdlog/include",
-		"vendor/tiny_obj_loader",
-		"%{IncludeDir.GLFW}",
-		"%{IncludeDir.GLM}",
-		"%{IncludeDir.vulkan}",
 		"vendor/imgui",
+		"vendor/imgui/backends",
+		"vendor/stb_image",
+		"vendor/tiny_obj_loader",
+		"%{IncludeDir.GLM}",
 	}
-	
+
 	filter "system:windows"
 		systemversion "latest"
-		
+
 		links 
 		{		
 			"GLFW",
 			"vendor/vulkan/Lib/vulkan-1.lib"
 		}
-
+		
 		defines
 		{
 			"GLFW_INCLUDE_NONE",
@@ -96,15 +98,12 @@ project "Rebulkan"
 	filter { "system:windows", "configurations:Dist" }
         buildoptions {"/MT" }
 
-
-	filter { "system:linux", "configurations:Debug" }
+	filter "system:linux"
 		systemversion "latest"
-        
-		links 
+
+		defines
 		{
-			"GLFW",
-			"vulkan",
-			"GLU",
-			"dl",
-			"pthread"
+			"GLFW_INCLUDE_NONE",
 		}
+	
+		links { "glfw", "vulkan", "GL", "GLU", "dl",  "pthread" }
