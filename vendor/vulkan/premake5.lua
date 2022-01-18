@@ -30,7 +30,7 @@ project "vulkan"
 		buildoptions "/MT"
 
 	filter { "system:linux" }    
-		buildoptions { "-std=c14" }
+		buildoptions { "-std=c17" }
 		systemversion "latest"
 		staticruntime "on"
 
