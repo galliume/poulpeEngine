@@ -570,6 +570,11 @@
       <Project>{154B857C-0182-860D-AA6E-6C109684020F}</Project>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup>
+    <Text Include="shaders\shader.vert" />
+    <Text Include="shaders\shader.frag" />
+    <Text Include="shaders\WindowsShadersCompile.bat" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
