@@ -2,6 +2,7 @@
 #include <optional>
 #include <set>
 #include <cstdint> 
+#include <fstream>
 
 #include "rebulkpch.h"
 #include "vulkan/vulkan.h"
@@ -65,6 +66,8 @@ namespace Rebulk {
 		void CreateSurface();
 		void CreateSwapChain();
 		void CreateImageViews();
+		void CreateGraphicsPipeline();
+		VkShaderModule CreateShaderModule(const std::vector<char>& code);
 
 	private:
 		std::list<IObserver*> m_Observers = {};

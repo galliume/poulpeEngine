@@ -1353,4 +1353,9 @@
       <Filter>vendor\stb_image</Filter>
     </ClCompile>
   </ItemGroup>
+  <ItemGroup>
+    <Text Include="shaders\shader.vert" />
+    <Text Include="shaders\shader.frag" />
+    <Text Include="shaders\WindowsShadersCompile.bat" />
+  </ItemGroup>
 </Project>
