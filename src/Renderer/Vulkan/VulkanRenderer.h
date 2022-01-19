@@ -48,6 +48,9 @@ namespace Rebulk {
 		void Detach(IObserver* observer) override;
 		void Notify() override;
 	
+	public:
+		bool m_FramebufferResized = false;
+
 	private:
 		bool IsDeviceSuitable(VkPhysicalDevice device);
 		bool CheckDeviceExtensionSupport(VkPhysicalDevice device);
@@ -66,6 +69,9 @@ namespace Rebulk {
 		void CreateFramebuffers();
 		void CreateCommandPool();
 		void CreateCommandBuffers();
+		void CreateSyncObjects();
+		void RecreateSwapChain();
+		void CleanupSwapChain();
 
 		QueueFamilyIndices FindQueueFamilies(VkPhysicalDevice device);
 		SwapChainSupportDetails QuerySwapChainSupport(VkPhysicalDevice device);
@@ -75,12 +81,14 @@ namespace Rebulk {
 		VkShaderModule CreateShaderModule(const std::vector<char>& code);
 
 	private:
+		const int m_MAX_FRAMES_IN_FLIGHT = 2;
+		size_t m_CurrentFrame = 0;
+		uint32_t m_ExtensionCount = 0;
+
 		GLFWwindow* m_Window = VK_NULL_HANDLE;
 
 		const std::vector<const char*> m_ValidationLayers = { "VK_LAYER_KHRONOS_validation" };
 		const std::vector<const char*> m_DeviceExtensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
-
-		uint32_t m_ExtensionCount = 0;
 
 		bool m_InstanceCreated = false;
 		bool m_EnableValidationLayers = false;
@@ -91,8 +99,8 @@ namespace Rebulk {
 		VkPhysicalDeviceFeatures m_DeviceFeatures = {};		
 		VkDevice m_Device = VK_NULL_HANDLE;
 		VkQueue m_GraphicsQueue = VK_NULL_HANDLE;
-		VkSurfaceKHR m_Surface = VK_NULL_HANDLE;
 		VkQueue m_PresentQueue = VK_NULL_HANDLE;
+		VkSurfaceKHR m_Surface = VK_NULL_HANDLE;
 		VkSwapchainKHR m_SwapChain;
 		VkFormat m_SwapChainImageFormat;
 		VkExtent2D m_SwapChainExtent;		
@@ -113,5 +121,9 @@ namespace Rebulk {
 		std::vector<VkImageView> m_SwapChainImageViews;
 		std::vector<VkFramebuffer> m_SwapChainFramebuffers;
 		std::vector<VkCommandBuffer> m_CommandBuffers;
+		std::vector<VkSemaphore> m_ImageAvailableSemaphores;
+		std::vector<VkSemaphore> m_RenderFinishedSemaphores;
+		std::vector<VkFence> m_InFlightFences;
+		std::vector<VkFence> m_ImagesInFlight;
 	};
 }
