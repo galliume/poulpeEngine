@@ -15,14 +15,16 @@ IncludeDir["GLFW"] = "vendor/GLFW/include"
 IncludeDir["GLM"] = "vendor/GLM"
 IncludeDir["vulkan"] = "vendor/vulkan/include"
 
-include "vendor/GLFW"
-include "vendor/vulkan"
+if os.host() == "windows" then
+	include "vendor/GLFW"
+	include "vendor/vulkan"
+end
 
 project "Rebulkan"
 	location ""
 	kind "ConsoleApp"
 	language "C++"
-	cppdialect "C++20"
+	cppdialect "C++17"
 	staticruntime "on"
 
 	targetdir  ("bin/" .. outputdir  .. "/%{prj.name}")
@@ -41,7 +43,6 @@ project "Rebulkan"
 		"vendor/imgui/imgui_draw.cpp",
 		"vendor/imgui/imgui_tables.cpp",
 		"vendor/imgui/imgui_widgets.cpp",
-		"vendor/imgui/imgui_demo.cpp",
 		"vendor/imgui/backends/imgui_impl_glfw.h",
 		"vendor/imgui/backends/imgui_impl_opengl3.h",
 		"vendor/imgui/backends/imgui_impl_glfw.cpp",
@@ -49,51 +50,48 @@ project "Rebulkan"
 		"vendor/imgui/backends/imgui_impl_opengl3_loader.h"
 	}
 
-	defines
-	{
-		"_CRT_SECURE_NO_WARNINGS"
-	}
-
 	includedirs
 	{
 		"src",
 		"vendor/spdlog/include",
 		"vendor/imgui",
+		"vendor/imgui/backends",
 		"vendor/stb_image",
 		"vendor/tiny_obj_loader",
-		"%{IncludeDir.GLFW}",
 		"%{IncludeDir.GLM}",
-		"%{IncludeDir.vulkan}",
 	}
 
-	links 
-	{		
-		"GLFW",
-		"vendor/vulkan/Lib/vulkan-1.lib"
-	}
-	
 	filter "system:windows"
+
 		systemversion "latest"
 
+		includedirs
+		{
+			"%{IncludeDir.GLFW}",
+			"%{IncludeDir.GLM}",
+			"%{IncludeDir.vulkan}",
+		}
+
+		links 
+		{		
+			"GLFW",
+			"vendor/vulkan/Lib/vulkan-1.lib"
+		}
+		
 		defines
 		{
-			"GLFW_INCLUDE_NONE",
-			"_CRT_SECURE_NO_WARNINGS",
-			"_NO_DEBUG_HEAP=1"
+			"GLFW_INCLUDE_NONE"
 		}
 
 	filter "configurations:Debug"
-		defines "RBL_DEBUG"
 		runtime "Debug"
 		symbols "on"
 
 	filter "configurations:Release"
-		defines "RBL_RELEASE"
 		runtime "Release"
 		symbols "on"
 
 	filter "configurations:Dist"
-		defines "RBL_DIST"
 		runtime "Release"
 		symbols "on"
 
@@ -105,3 +103,13 @@ project "Rebulkan"
 
 	filter { "system:windows", "configurations:Dist" }
         buildoptions {"/MT" }
+
+	filter "system:linux"
+		systemversion "latest"
+
+		defines
+		{
+			"GLFW_INCLUDE_NONE",
+		}
+	
+		links { "glfw", "vulkan", "GL", "GLU", "dl",  "pthread" }

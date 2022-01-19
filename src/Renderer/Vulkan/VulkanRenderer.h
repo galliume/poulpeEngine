@@ -1,10 +1,11 @@
 #include <algorithm>
 #include <optional>
 #include <set>
+#include <cstdint> 
 
 #include "rebulkpch.h"
-#include "vulkan\vulkan.h"
-#include "Pattern\ISubject.h"
+#include "vulkan/vulkan.h"
+#include "Pattern/ISubject.h"
 
 namespace Rebulk {
 
@@ -15,6 +16,12 @@ namespace Rebulk {
 		bool isComplete() {
 			return graphicsFamily.has_value() && presentFamily.has_value();
 		}
+	};
+
+	struct SwapChainSupportDetails {
+		VkSurfaceCapabilitiesKHR capabilities;
+		std::vector<VkSurfaceFormatKHR> formats;
+		std::vector<VkPresentModeKHR> presentModes;
 	};
 
 	class VulkanRenderer : public ISubject
@@ -38,6 +45,7 @@ namespace Rebulk {
 		inline VkPhysicalDeviceFeatures GetDeviceFeatures() { return m_DeviceFeatures; };
 
 		void CreateSurface();
+		void CreateSwapChain();
 
 		void Attach(IObserver* observer) override;
 		void Detach(IObserver* observer) override;
@@ -50,8 +58,13 @@ namespace Rebulk {
 		void LoadRequiredExtensions();
 		void SetupDebugMessenger();
 		bool IsDeviceSuitable(VkPhysicalDevice device);
+		bool CheckDeviceExtensionSupport(VkPhysicalDevice device);
 		void CreateLogicalDevice();
 		QueueFamilyIndices FindQueueFamilies(VkPhysicalDevice device);
+		SwapChainSupportDetails QuerySwapChainSupport(VkPhysicalDevice device);
+		VkSurfaceFormatKHR ChooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats);
+		VkPresentModeKHR ChooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes);
+		VkExtent2D ChooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities);
 
 	private:
 		std::list<IObserver*> m_Observers = {};
@@ -79,7 +92,12 @@ namespace Rebulk {
 		std::vector<VkExtensionProperties> m_Extensions = {};
 		std::vector<const char*> m_RequiredExtensions = {};
 		uint32_t m_ExtensionCount = 0;
-	
+
+		VkSwapchainKHR m_SwapChain;
+		std::vector<VkImage> m_SwapChainImages;
+		VkFormat m_SwapChainImageFormat;
+		VkExtent2D m_SwapChainExtent;
+
 		VkDebugUtilsMessengerEXT m_DebugMessengerCallback = VK_NULL_HANDLE;
 	};
 }
