@@ -44,6 +44,8 @@ namespace Rebulk {
 		inline VkPhysicalDeviceProperties GetDeviceProperties() { return m_DeviceProps; };
 		inline VkPhysicalDeviceFeatures GetDeviceFeatures() { return m_DeviceFeatures; };
 
+		void Destroy();
+
 		void Attach(IObserver* observer) override;
 		void Detach(IObserver* observer) override;
 		void Notify() override;
@@ -66,6 +68,7 @@ namespace Rebulk {
 		void CreateSurface();
 		void CreateSwapChain();
 		void CreateImageViews();
+		void CreateRenderPass();
 		void CreateGraphicsPipeline();
 		VkShaderModule CreateShaderModule(const std::vector<char>& code);
 
@@ -101,6 +104,10 @@ namespace Rebulk {
 		VkFormat m_SwapChainImageFormat;
 		VkExtent2D m_SwapChainExtent;
 		
+		VkRenderPass m_RenderPass;
+		VkPipelineLayout m_PipelineLayout;
+		VkPipeline m_GraphicsPipeline;
+
 		std::vector<VkImageView> m_SwapChainImageViews;
 
 		VkDebugUtilsMessengerEXT m_DebugMessengerCallback = VK_NULL_HANDLE;
