@@ -40,12 +40,8 @@ namespace Rebulk {
 		inline const std::vector<const char*> GetValidationLayers() { return m_ValidationLayers; };
 		inline bool IsValidationLayersEnabled() { return m_EnableValidationLayers; };
 
-		void PickPhysicalDevice();
 		inline VkPhysicalDeviceProperties GetDeviceProperties() { return m_DeviceProps; };
 		inline VkPhysicalDeviceFeatures GetDeviceFeatures() { return m_DeviceFeatures; };
-
-		void CreateSurface();
-		void CreateSwapChain();
 
 		void Attach(IObserver* observer) override;
 		void Detach(IObserver* observer) override;
@@ -60,11 +56,15 @@ namespace Rebulk {
 		bool IsDeviceSuitable(VkPhysicalDevice device);
 		bool CheckDeviceExtensionSupport(VkPhysicalDevice device);
 		void CreateLogicalDevice();
+		void PickPhysicalDevice();
 		QueueFamilyIndices FindQueueFamilies(VkPhysicalDevice device);
 		SwapChainSupportDetails QuerySwapChainSupport(VkPhysicalDevice device);
 		VkSurfaceFormatKHR ChooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats);
 		VkPresentModeKHR ChooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes);
 		VkExtent2D ChooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities);
+		void CreateSurface();
+		void CreateSwapChain();
+		void CreateImageViews();
 
 	private:
 		std::list<IObserver*> m_Observers = {};
@@ -97,6 +97,8 @@ namespace Rebulk {
 		std::vector<VkImage> m_SwapChainImages;
 		VkFormat m_SwapChainImageFormat;
 		VkExtent2D m_SwapChainExtent;
+		
+		std::vector<VkImageView> m_SwapChainImageViews;
 
 		VkDebugUtilsMessengerEXT m_DebugMessengerCallback = VK_NULL_HANDLE;
 	};
