@@ -96,6 +96,13 @@ namespace Rebulk {
 		CreateSwapChain();
 		CreateRenderPass();
 		CreateGraphicsPipeline();
+		CreateFramebuffers();
+		CreateCommandPool();
+	}
+
+	void VulkanRenderer::DrawFrame()
+	{
+
 	}
 
 	void VulkanRenderer::CreateInstance()
@@ -789,8 +796,121 @@ namespace Rebulk {
 		Notify();
 	}
 
+	void VulkanRenderer::CreateFramebuffers()
+	{
+		m_SwapChainFramebuffers.resize(m_SwapChainImageViews.size());
+
+		for (size_t i = 0; i < m_SwapChainImageViews.size(); i++) {
+
+			VkImageView attachments[] = { m_SwapChainImageViews[i] };
+
+			VkFramebufferCreateInfo framebufferInfo{};
+			framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+			framebufferInfo.renderPass = m_RenderPass;
+			framebufferInfo.attachmentCount = 1;
+			framebufferInfo.pAttachments = attachments;
+			framebufferInfo.width = m_SwapChainExtent.width;
+			framebufferInfo.height = m_SwapChainExtent.height;
+			framebufferInfo.layers = 1;
+
+			VkResult result = vkCreateFramebuffer(m_Device, &framebufferInfo, nullptr, &m_SwapChainFramebuffers[i]);
+
+			if (result != VK_SUCCESS) {
+				m_Messages.emplace_back("failed to create framebuffer!");
+			}
+			else {
+				m_Messages.emplace_back("created successfully framebuffer!");
+			}
+
+			Notify();
+		}
+	}
+
+
+	void VulkanRenderer::CreateCommandPool() 
+	{
+		QueueFamilyIndices queueFamilyIndices = FindQueueFamilies(m_PhysicalDevice);
+
+		VkCommandPoolCreateInfo poolInfo{};
+		poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+		poolInfo.queueFamilyIndex = queueFamilyIndices.graphicsFamily.value();
+		poolInfo.flags = 0;
+
+		VkResult result = vkCreateCommandPool(m_Device, &poolInfo, nullptr, &m_CommandPool);
+		
+		if (result != VK_SUCCESS) {
+			m_Messages.emplace_back("failed to create command pool!");
+		} else {
+			m_Messages.emplace_back("created successfully command pool!");
+		}
+
+		Notify();
+	}
+
+	void VulkanRenderer::CreateCommandBuffers()
+	{
+		m_CommandBuffers.resize(m_SwapChainFramebuffers.size());
+
+		VkCommandBufferAllocateInfo allocInfo{};
+		allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+		allocInfo.commandPool = m_CommandPool;
+		allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+		allocInfo.commandBufferCount = (uint32_t)m_CommandBuffers.size();
+
+		VkResult result = vkAllocateCommandBuffers(m_Device, &allocInfo, m_CommandBuffers.data());
+		
+		if (result  != VK_SUCCESS) {
+			m_Messages.emplace_back("failed to allocate command buffers!");
+		} else {
+			m_Messages.emplace_back("allocated successfully command buffers!");
+		}
+
+		for (size_t i = 0; i < m_CommandBuffers.size(); i++) {
+			VkCommandBufferBeginInfo beginInfo{};
+			beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+			beginInfo.flags = 0;
+			beginInfo.pInheritanceInfo = nullptr;
+
+			result = vkBeginCommandBuffer(m_CommandBuffers[i], &beginInfo);
+
+			if (result != VK_SUCCESS) {
+				m_Messages.emplace_back("failed to begin recording command buffer!");
+			} else {
+				m_Messages.emplace_back("begin recording command buffer!");
+			}
+
+			VkRenderPassBeginInfo renderPassInfo{};
+			renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+			renderPassInfo.renderPass = m_RenderPass;
+			renderPassInfo.framebuffer = m_SwapChainFramebuffers[i];
+			renderPassInfo.renderArea.offset = { 0, 0 };
+			renderPassInfo.renderArea.extent = m_SwapChainExtent;
+
+			VkClearValue clearColor = { {{0.0f, 0.0f, 0.0f, 1.0f}} };
+			renderPassInfo.clearValueCount = 1;
+			renderPassInfo.pClearValues = &clearColor;
+
+			vkCmdBeginRenderPass(m_CommandBuffers[i], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+			vkCmdBindPipeline(m_CommandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, m_GraphicsPipeline);
+			vkCmdDraw(m_CommandBuffers[i], 3, 1, 0, 0);
+			vkCmdEndRenderPass(m_CommandBuffers[i]);
+
+			if (vkEndCommandBuffer(m_CommandBuffers[i]) != VK_SUCCESS) {
+				m_Messages.emplace_back("failed to record command buffer!");
+			}
+		}
+
+		Notify();
+	}
+
 	void VulkanRenderer::Destroy()
 	{
+		vkDestroyCommandPool(m_Device, m_CommandPool, nullptr);
+
+		for (auto framebuffer : m_SwapChainFramebuffers) {
+			vkDestroyFramebuffer(m_Device, framebuffer, nullptr);
+		}
+
 		vkDestroyPipeline(m_Device, m_GraphicsPipeline, nullptr);
 		vkDestroyPipelineLayout(m_Device, m_PipelineLayout, nullptr);
 		vkDestroyPipelineLayout(m_Device, m_PipelineLayout, nullptr);
@@ -810,7 +930,7 @@ namespace Rebulk {
 		vkDestroySurfaceKHR(m_Instance, m_Surface, nullptr);
 		vkDestroyInstance(m_Instance, 0);
 
-		m_Messages.emplace_back("VK instance destroyed");
+		m_Messages.emplace_back("VK instance destroyed and cleaned");
 		Notify();
 	}
 
