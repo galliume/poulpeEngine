@@ -4,8 +4,8 @@
 #include <cstdint> 
 
 #include "rebulkpch.h"
-#include "vulkan\vulkan.h"
-#include "Pattern\ISubject.h"
+#include "vulkan/vulkan.h"
+#include "Pattern/ISubject.h"
 
 namespace Rebulk {
 
