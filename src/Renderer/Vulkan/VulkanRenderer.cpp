@@ -18,7 +18,8 @@ namespace Rebulk {
 		}
 	}
 
-	static void DestroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT debugMessenger, const VkAllocationCallbacks* pAllocator) {
+	static void DestroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT debugMessenger, const VkAllocationCallbacks* pAllocator) 
+	{
 		auto func = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkDestroyDebugUtilsMessengerEXT");
 		if (func != nullptr) {
 			func(instance, debugMessenger, pAllocator);
@@ -29,7 +30,8 @@ namespace Rebulk {
 		VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
 		VkDebugUtilsMessageTypeFlagsEXT messageType,
 		const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
-		void* pUserData) {
+		void* pUserData) 
+	{
 
 		spdlog::set_pattern("%^[%T] %n: %v%$");
 
@@ -54,6 +56,25 @@ namespace Rebulk {
 		return VK_FALSE;
 	}
 
+	static std::vector<char> ReadFile(const std::string& filename) 
+	{
+		std::ifstream file(filename, std::ios::ate | std::ios::binary);
+
+		if (!file.is_open()) {
+			throw std::runtime_error("failed to open file!");
+		}
+
+		size_t fileSize = (size_t)file.tellg();
+		std::vector<char> buffer(fileSize);
+
+		file.seekg(0);
+		file.read(buffer.data(), fileSize);
+
+		file.close();
+
+		return buffer;
+	}
+
 	VulkanRenderer::VulkanRenderer(GLFWwindow* window) : m_Window(window)
 	{
 #ifdef NDEBUG
@@ -73,6 +94,7 @@ namespace Rebulk {
 		PickPhysicalDevice();
 		CreateLogicalDevice();
 		CreateSwapChain();
+		CreateGraphicsPipeline();
 	}
 
 	void VulkanRenderer::CreateInstance()
@@ -526,26 +548,6 @@ namespace Rebulk {
 		Notify();
 	}
 
-	VulkanRenderer::~VulkanRenderer()
-	{
-		for (auto imageView : m_SwapChainImageViews) {
-			vkDestroyImageView(m_Device, imageView, nullptr);
-		}
-
-		vkDestroySwapchainKHR(m_Device, m_SwapChain, nullptr);
-		vkDestroyDevice(m_Device, nullptr);
-
-		if (m_EnableValidationLayers) {
-			DestroyDebugUtilsMessengerEXT(m_Instance, m_DebugMessengerCallback, nullptr);
-		}
-
-		vkDestroySurfaceKHR(m_Instance, m_Surface, nullptr);
-		vkDestroyInstance(m_Instance, 0);
-
-		m_Messages.emplace_back("VK instance destroyed");
-		Notify();
-	}
-
 	void VulkanRenderer::CreateImageViews()
 	{
 		m_SwapChainImageViews.resize(m_SwapChainImages.size());
@@ -578,6 +580,76 @@ namespace Rebulk {
 
 			Notify();
 		}
+	}
+
+	void VulkanRenderer::CreateGraphicsPipeline()
+	{
+		auto vertShaderCode = ReadFile("shaders/spv/vert.spv");
+		auto fragShaderCode = ReadFile("shaders/spv/frag.spv");
+
+		VkShaderModule vertShaderModule = CreateShaderModule(vertShaderCode);
+		VkShaderModule fragShaderModule = CreateShaderModule(fragShaderCode);
+		
+		VkPipelineShaderStageCreateInfo vertShaderStageInfo{};
+		vertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+		vertShaderStageInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
+
+		vertShaderStageInfo.module = vertShaderModule;
+		vertShaderStageInfo.pName = "main";
+
+		VkPipelineShaderStageCreateInfo fragShaderStageInfo{};
+		fragShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+		fragShaderStageInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
+		fragShaderStageInfo.module = fragShaderModule;
+		fragShaderStageInfo.pName = "main";
+
+		VkPipelineShaderStageCreateInfo shaderStages[] = { vertShaderStageInfo, fragShaderStageInfo };
+
+		vkDestroyShaderModule(m_Device, fragShaderModule, nullptr);
+		vkDestroyShaderModule(m_Device, vertShaderModule, nullptr);
+	}
+
+	VkShaderModule VulkanRenderer::CreateShaderModule(const std::vector<char>& code) 
+	{
+		VkShaderModuleCreateInfo createInfo{};
+		createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
+		createInfo.codeSize = code.size();
+		createInfo.pCode = reinterpret_cast<const uint32_t*>(code.data());
+
+		VkShaderModule shaderModule;
+		VkResult result;
+
+		result = vkCreateShaderModule(m_Device, &createInfo, nullptr, &shaderModule);
+			
+		if (result != VK_SUCCESS) {
+			m_Messages.emplace_back("failed to create shader module!");
+		} else {
+			m_Messages.emplace_back("created shader module successfully !");
+		}
+
+		Notify();
+
+		return shaderModule;
+	}
+
+	VulkanRenderer::~VulkanRenderer()
+	{
+		for (auto imageView : m_SwapChainImageViews) {
+			vkDestroyImageView(m_Device, imageView, nullptr);
+		}
+
+		vkDestroySwapchainKHR(m_Device, m_SwapChain, nullptr);
+		vkDestroyDevice(m_Device, nullptr);
+
+		if (m_EnableValidationLayers) {
+			DestroyDebugUtilsMessengerEXT(m_Instance, m_DebugMessengerCallback, nullptr);
+		}
+
+		vkDestroySurfaceKHR(m_Instance, m_Surface, nullptr);
+		vkDestroyInstance(m_Instance, 0);
+
+		m_Messages.emplace_back("VK instance destroyed");
+		Notify();
 	}
 
 	void VulkanRenderer::Attach(IObserver* observer)
