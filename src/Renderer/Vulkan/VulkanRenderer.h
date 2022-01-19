@@ -45,6 +45,7 @@ namespace Rebulk {
 		inline VkPhysicalDeviceFeatures GetDeviceFeatures() { return m_DeviceFeatures; };
 
 		void CreateSurface();
+		void CreateSwapChain();
 
 		void Attach(IObserver* observer) override;
 		void Detach(IObserver* observer) override;
@@ -91,7 +92,12 @@ namespace Rebulk {
 		std::vector<VkExtensionProperties> m_Extensions = {};
 		std::vector<const char*> m_RequiredExtensions = {};
 		uint32_t m_ExtensionCount = 0;
-	
+
+		VkSwapchainKHR m_SwapChain;
+		std::vector<VkImage> m_SwapChainImages;
+		VkFormat m_SwapChainImageFormat;
+		VkExtent2D m_SwapChainExtent;
+
 		VkDebugUtilsMessengerEXT m_DebugMessengerCallback = VK_NULL_HANDLE;
 	};
 }

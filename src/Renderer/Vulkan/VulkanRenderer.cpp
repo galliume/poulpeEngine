@@ -72,6 +72,7 @@ namespace Rebulk {
 		CreateSurface();
 		PickPhysicalDevice();
 		CreateLogicalDevice();
+		CreateSwapChain();
 	}
 
 	void VulkanRenderer::CreateInstance()
@@ -463,8 +464,71 @@ namespace Rebulk {
 		return actualExtent;
 	}
 
+	void VulkanRenderer::CreateSwapChain()
+	{
+		SwapChainSupportDetails swapChainSupport = QuerySwapChainSupport(m_PhysicalDevice);
+
+		VkSurfaceFormatKHR surfaceFormat = ChooseSwapSurfaceFormat(swapChainSupport.formats);
+		VkPresentModeKHR presentMode = ChooseSwapPresentMode(swapChainSupport.presentModes);
+		VkExtent2D extent = ChooseSwapExtent(swapChainSupport.capabilities);
+
+		uint32_t imageCount = swapChainSupport.capabilities.minImageCount + 1;
+
+		if (swapChainSupport.capabilities.maxImageCount > 0 && imageCount > swapChainSupport.capabilities.maxImageCount) {
+			imageCount = swapChainSupport.capabilities.maxImageCount;
+		}
+
+		VkSwapchainCreateInfoKHR createInfo{};
+		createInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
+		createInfo.surface = m_Surface;
+		createInfo.minImageCount = imageCount;
+		createInfo.imageFormat = surfaceFormat.format;
+		createInfo.imageColorSpace = surfaceFormat.colorSpace;
+		createInfo.imageExtent = extent;
+		createInfo.imageArrayLayers = 1;//1 unless stereoscopic app
+		//use of VK_IMAGE_USAGE_TRANSFER_DST_BIT if post process is needed
+		createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+		createInfo.preTransform = swapChainSupport.capabilities.currentTransform;
+		createInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
+		createInfo.presentMode = presentMode;
+		createInfo.clipped = VK_TRUE;
+		createInfo.oldSwapchain = VK_NULL_HANDLE;
+
+		QueueFamilyIndices indices = FindQueueFamilies(m_PhysicalDevice);
+		uint32_t queueFamilyIndices[] = { indices.graphicsFamily.value(), indices.presentFamily.value() };
+
+		if (indices.graphicsFamily != indices.presentFamily) {
+			createInfo.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
+			createInfo.queueFamilyIndexCount = 2;
+			createInfo.pQueueFamilyIndices = queueFamilyIndices;
+		} else {
+			createInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
+			createInfo.queueFamilyIndexCount = 0;
+			createInfo.pQueueFamilyIndices = nullptr; 
+		}
+
+		VkResult result;
+
+		result = vkCreateSwapchainKHR(m_Device, &createInfo, nullptr, &m_SwapChain);
+		
+		if (result != VK_SUCCESS) {
+			m_Messages.emplace_back("Swap chain failed " + std::to_string(result));
+		} else {
+			m_Messages.emplace_back("Swap chain created successfully");
+		}
+
+		vkGetSwapchainImagesKHR(m_Device, m_SwapChain, &imageCount, nullptr);
+		m_SwapChainImages.resize(imageCount);
+		vkGetSwapchainImagesKHR(m_Device, m_SwapChain, &imageCount, m_SwapChainImages.data());
+		m_SwapChainImageFormat = surfaceFormat.format;
+		m_SwapChainExtent = extent;
+
+		Notify();
+	}
+
 	VulkanRenderer::~VulkanRenderer()
 	{
+		vkDestroySwapchainKHR(m_Device, m_SwapChain, nullptr);
 		vkDestroyDevice(m_Device, nullptr);
 
 		if (m_EnableValidationLayers) {
