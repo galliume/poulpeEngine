@@ -1,6 +1,12 @@
 #include "rebulkpch.h"
 #include "GUI/VulkanLayer.h"
 
+static void FramebufferResizeCallback(GLFWwindow* window, int width, int height)
+{
+	auto renderer = reinterpret_cast<Rebulk::VulkanRenderer*>(glfwGetWindowUserPointer(window));
+	renderer->m_FramebufferResized = true;
+}
+
 int main(int argc, char** argv)
 {
 	Rebulk::Log::Init();
@@ -10,7 +16,7 @@ int main(int argc, char** argv)
 
 	glfwInit();
 	glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-	glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+	glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
 
 	GLFWwindow* window = glfwCreateWindow(WIDTH, HEIGHT, "Rebulkan", nullptr, nullptr);
 
@@ -19,6 +25,8 @@ int main(int argc, char** argv)
 
 	//Rebulk::Im::Init(window);
 	Rebulk::VulkanRenderer* renderer = new Rebulk::VulkanRenderer(window);
+	glfwSetWindowUserPointer(window, renderer);
+	glfwSetFramebufferSizeCallback(window, FramebufferResizeCallback);
 	//Rebulk::VulkanLayer* vulkanLayer = new Rebulk::VulkanLayer(window, renderer);
 	
 	renderer->Init();
@@ -31,6 +39,7 @@ int main(int argc, char** argv)
 
 		double currentTime = glfwGetTime();
 		double timeStep = currentTime - lastTime;
+		renderer->DrawFrame();
 
 		//vulkanLayer->DisplayFpsCounter(timeStep);
 		//vulkanLayer->DisplayLogs();
@@ -46,7 +55,7 @@ int main(int argc, char** argv)
 		glfwSwapBuffers(window);
 	}
 
-	delete renderer;
+	renderer->Destroy();	
 	//vulkanLayer->Destroy();
 	glfwDestroyWindow(window);
 	glfwTerminate();
