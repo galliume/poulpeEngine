@@ -34,13 +34,23 @@ namespace Rebulk {
 		void Init();
 		void DrawFrame();
 		void Destroy();
+		void EndSingleTimeCommands(VkCommandBuffer commandBuffer);
+
+		VkCommandBuffer BeginSingleTimeCommands();
 
 		inline const std::vector<const char*> GetValidationLayers() { return m_ValidationLayers; };
-		inline uint32_t GetExtensionCount() { return m_ExtensionCount; };
-		inline bool IsInstanceCreated() { return m_InstanceCreated; };
-		inline bool IsValidationLayersEnabled() { return m_EnableValidationLayers; };
 		inline std::vector<VkExtensionProperties> GetExtensions() { return m_Extensions; };
 		inline std::vector<VkLayerProperties> GetLayersAvailable() { return m_LayersAvailable; };
+		inline bool IsInstanceCreated() { return m_InstanceCreated; };
+		inline bool IsValidationLayersEnabled() { return m_EnableValidationLayers; };
+		inline uint32_t GetExtensionCount() { return m_ExtensionCount; };
+		inline uint32_t GetQueueFamily() { return m_QueueFamilyIndices.graphicsFamily.value(); };
+		inline VkInstance GetInstance() { return m_Instance; };
+		inline VkRenderPass GetRenderPass() { return m_RenderPass; };
+		inline VkPhysicalDevice GetPhysicalDevice() { return m_PhysicalDevice; };
+		inline VkDevice GetDevice() { return m_Device; };
+		inline VkQueue GetGraphicsQueue() { return m_GraphicsQueue; };
+		inline VkDescriptorPool GetDescriptorPool() { return m_DescriptorPool; };
 		inline VkPhysicalDeviceProperties GetDeviceProperties() { return m_DeviceProps; };
 		inline VkPhysicalDeviceFeatures GetDeviceFeatures() { return m_DeviceFeatures; };
 
@@ -72,6 +82,7 @@ namespace Rebulk {
 		void CreateSyncObjects();
 		void RecreateSwapChain();
 		void CleanupSwapChain();
+		void CreateDescriptorPool();
 
 		QueueFamilyIndices FindQueueFamilies(VkPhysicalDevice device);
 		SwapChainSupportDetails QuerySwapChainSupport(VkPhysicalDevice device);
@@ -101,29 +112,31 @@ namespace Rebulk {
 		VkQueue m_GraphicsQueue = VK_NULL_HANDLE;
 		VkQueue m_PresentQueue = VK_NULL_HANDLE;
 		VkSurfaceKHR m_Surface = VK_NULL_HANDLE;
-		VkSwapchainKHR m_SwapChain;
+		VkSwapchainKHR m_SwapChain = VK_NULL_HANDLE;
 		VkFormat m_SwapChainImageFormat;
 		VkExtent2D m_SwapChainExtent;		
-		VkRenderPass m_RenderPass;
-		VkPipelineLayout m_PipelineLayout;
-		VkPipeline m_GraphicsPipeline;
-		VkSemaphore m_ImageAvailableSemaphore;
-		VkSemaphore m_RenderFinishedSemaphore;
+		VkRenderPass m_RenderPass = VK_NULL_HANDLE;
+		VkPipelineLayout m_PipelineLayout = VK_NULL_HANDLE;
+		VkPipeline m_GraphicsPipeline = VK_NULL_HANDLE;
+		VkSemaphore m_ImageAvailableSemaphore = VK_NULL_HANDLE;
+		VkSemaphore m_RenderFinishedSemaphore = VK_NULL_HANDLE;
 		VkDebugUtilsMessengerEXT m_DebugMessengerCallback = VK_NULL_HANDLE;
-		VkCommandPool m_CommandPool;
+		VkCommandPool m_CommandPool = VK_NULL_HANDLE;
+		QueueFamilyIndices m_QueueFamilyIndices = {};
+		VkDescriptorPool m_DescriptorPool = VK_NULL_HANDLE;
 
 		std::list<IObserver*> m_Observers = {};
 		std::vector<std::string> m_Messages = {};
 		std::vector<VkLayerProperties> m_LayersAvailable = {};		
 		std::vector<VkExtensionProperties> m_Extensions = {};
 		std::vector<const char*> m_RequiredExtensions = {};
-		std::vector<VkImage> m_SwapChainImages;
-		std::vector<VkImageView> m_SwapChainImageViews;
-		std::vector<VkFramebuffer> m_SwapChainFramebuffers;
-		std::vector<VkCommandBuffer> m_CommandBuffers;
-		std::vector<VkSemaphore> m_ImageAvailableSemaphores;
-		std::vector<VkSemaphore> m_RenderFinishedSemaphores;
-		std::vector<VkFence> m_InFlightFences;
-		std::vector<VkFence> m_ImagesInFlight;
+		std::vector<VkImage> m_SwapChainImages = {};
+		std::vector<VkImageView> m_SwapChainImageViews = {};
+		std::vector<VkFramebuffer> m_SwapChainFramebuffers = {};
+		std::vector<VkCommandBuffer> m_CommandBuffers = {};
+		std::vector<VkSemaphore> m_ImageAvailableSemaphores = {};
+		std::vector<VkSemaphore> m_RenderFinishedSemaphores = {};
+		std::vector<VkFence> m_InFlightFences = {};
+		std::vector<VkFence> m_ImagesInFlight = {};
 	};
 }

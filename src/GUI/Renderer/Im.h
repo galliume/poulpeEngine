@@ -2,17 +2,19 @@
 #include "rebulkpch.h"
 #include "imgui.h"
 #include "backends/imgui_impl_glfw.h"
-#include "backends/imgui_impl_opengl3_loader.h"
-#include "backends/imgui_impl_opengl3.h"
+//#include "backends/imgui_impl_opengl3_loader.h"
+//#include "backends/imgui_impl_opengl3.h"
+#include "backends/imgui_impl_vulkan.h"
 
 namespace Rebulk
 {
 	class Im
 	{
 	public:
-		static void Init(GLFWwindow* window);
+		static void Init(GLFWwindow* window, ImGui_ImplVulkan_InitInfo* initInfo, VkRenderPass renderPass);
 		static void NewFrame();
 		static void Begin(const char* name, bool* p_open = NULL, ImGuiWindowFlags flags = 0);
+		static void CreateFontsTexture(VkCommandBuffer commandBuffer);
 		template <typename T, typename... Types>
 		void static Text(T arg, Types... args) { ImGui::Text(arg, args...); };
 		void static EndChild();

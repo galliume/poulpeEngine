@@ -23,40 +23,66 @@ int main(int argc, char** argv)
 	glfwMakeContextCurrent(window);
 	glfwSwapInterval(1);//vsync
 
-	//Rebulk::Im::Init(window);
 	Rebulk::VulkanRenderer* renderer = new Rebulk::VulkanRenderer(window);
+	renderer->Init();
+
+	ImGui_ImplVulkan_InitInfo info = {};
+
+	info.Instance = renderer->GetInstance();
+	info.PhysicalDevice = renderer->GetPhysicalDevice();
+	info.Device = renderer->GetDevice();
+	info.QueueFamily = renderer->GetQueueFamily();
+	info.Queue = renderer->GetGraphicsQueue();
+	info.PipelineCache = nullptr;//to implement VkPipelineCache                 
+	info.DescriptorPool = renderer->GetDescriptorPool();
+	info.Subpass = 0;
+	info.MinImageCount = 2;
+	info.ImageCount = 2;
+	info.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
+	info.Allocator = nullptr;
+	info.CheckVkResultFn = [](VkResult err) {
+		std::cerr << "IMGUI VULKAN ERROR " + std::to_string(err) << std::endl;
+	};
+
+	Rebulk::Im::Init(window, &info, renderer->GetRenderPass());
+	VkCommandBuffer commandBuffer = renderer->BeginSingleTimeCommands();
+	Rebulk::Im::CreateFontsTexture(commandBuffer);
+	renderer->EndSingleTimeCommands(commandBuffer);
+
+
 	glfwSetWindowUserPointer(window, renderer);
 	glfwSetFramebufferSizeCallback(window, FramebufferResizeCallback);
-	//Rebulk::VulkanLayer* vulkanLayer = new Rebulk::VulkanLayer(window, renderer);
+	Rebulk::VulkanLayer* vulkanLayer = new Rebulk::VulkanLayer(window, renderer);
 	
-	renderer->Init();
 	double lastTime = glfwGetTime();
-	//bool show_demo_window = true;
+	bool show_demo_window = true;
 
 	while (!glfwWindowShouldClose(window)) {
 
-		//Rebulk::Im::NewFrame();
+		Rebulk::Im::NewFrame();
 
 		double currentTime = glfwGetTime();
 		double timeStep = currentTime - lastTime;
 		renderer->DrawFrame();
 
-		//vulkanLayer->DisplayFpsCounter(timeStep);
-		//vulkanLayer->DisplayLogs();
-		//vulkanLayer->DisplayAPI(renderer->GetDeviceProperties());
+		vulkanLayer->DisplayFpsCounter(timeStep);
+		vulkanLayer->DisplayLogs();
+		vulkanLayer->DisplayAPI(renderer->GetDeviceProperties());
 
 		lastTime = currentTime;
 		
 		glfwPollEvents();
 
-		//ImGui::ShowDemoWindow(&show_demo_window);
-		//vulkanLayer->Render();
+		ImGui::ShowDemoWindow(&show_demo_window);
+		
+		vulkanLayer->Render();
+		renderer->DrawFrame();
 
 		glfwSwapBuffers(window);
 	}
 
 	renderer->Destroy();	
-	//vulkanLayer->Destroy();
+	vulkanLayer->Destroy();
 	glfwDestroyWindow(window);
 	glfwTerminate();
 

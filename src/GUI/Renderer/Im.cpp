@@ -2,7 +2,7 @@
 
 namespace Rebulk {
 
-	void Im::Init(GLFWwindow* window)
+	void Im::Init(GLFWwindow* window, ImGui_ImplVulkan_InitInfo* initInfo, VkRenderPass renderPass)
 	{
 		const char* glsl_version = "#version 150";
 		glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -15,7 +15,7 @@ namespace Rebulk {
 		
 		io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
 		io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;           
-		io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;         
+		//io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;         
 		io.ConfigDockingWithShift = false;
 		io.BackendFlags |= ImGuiBackendFlags_HasMouseCursors;
 
@@ -27,16 +27,24 @@ namespace Rebulk {
 			style.Colors[ImGuiCol_WindowBg].w = 1.0f;
 		}
 
-		ImGui_ImplGlfw_InitForOpenGL(window, true);
-		ImGui_ImplOpenGL3_Init(glsl_version);
+		//ImGui_ImplGlfw_InitForOpenGL(window, true);
+		//ImGui_ImplOpenGL3_Init(glsl_version);
+		ImGui_ImplGlfw_InitForVulkan(window, true);
+		ImGui_ImplVulkan_Init(initInfo, renderPass);
 	}
 
 	void Im::NewFrame()
 	{
 		// Feed inputs to dear imgui, start new frame
+		ImGui_ImplVulkan_NewFrame();
 		ImGui_ImplGlfw_NewFrame();
-		ImGui_ImplOpenGL3_NewFrame();
+		//ImGui_ImplOpenGL3_NewFrame();
 		ImGui::NewFrame();
+	}
+	
+	void Im::CreateFontsTexture(VkCommandBuffer commandBuffer)
+	{
+		ImGui_ImplVulkan_CreateFontsTexture(commandBuffer);
 	}
 
 	void Im::Begin(const char* name, bool* p_open, ImGuiWindowFlags flags)
@@ -77,11 +85,13 @@ namespace Rebulk {
 		int display_w, display_h;
 		glfwGetFramebufferSize(window, &display_w, &display_h);
 
-		glViewport(0, 0, display_w, display_h);
-		glClearColor(clear_color.x * clear_color.w, clear_color.y * clear_color.w, clear_color.z * clear_color.w, clear_color.w);
-		glClear(GL_COLOR_BUFFER_BIT);
+		//glViewport(0, 0, display_w, display_h);
+		//glClearColor(clear_color.x * clear_color.w, clear_color.y * clear_color.w, clear_color.z * clear_color.w, clear_color.w);
+		//glClear(GL_COLOR_BUFFER_BIT);
 
-		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+		//ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+		ImDrawData* main_draw_data = ImGui::GetDrawData();
+
 		ImGuiIO& io = ImGui::GetIO();
 
 		if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
@@ -94,8 +104,8 @@ namespace Rebulk {
 
 	void Im::Destroy()
 	{
-		ImGui_ImplGlfw_Shutdown();
-		ImGui_ImplOpenGL3_Shutdown();
+		/*ImGui_ImplGlfw_Shutdown();
+		ImGui_ImplOpenGL3_Shutdown();*/
 		ImGui::DestroyContext();
 	}
 }

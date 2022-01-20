@@ -1299,10 +1299,7 @@
     <ClInclude Include="vendor\imgui\backends\imgui_impl_glfw.h">
       <Filter>vendor\imgui\backends</Filter>
     </ClInclude>
-    <ClInclude Include="vendor\imgui\backends\imgui_impl_opengl3.h">
-      <Filter>vendor\imgui\backends</Filter>
-    </ClInclude>
-    <ClInclude Include="vendor\imgui\backends\imgui_impl_opengl3_loader.h">
+    <ClInclude Include="vendor\imgui\backends\imgui_impl_vulkan.h">
       <Filter>vendor\imgui\backends</Filter>
     </ClInclude>
     <ClInclude Include="vendor\imgui\imgui.h">
@@ -1334,10 +1331,13 @@
     <ClCompile Include="vendor\imgui\backends\imgui_impl_glfw.cpp">
       <Filter>vendor\imgui\backends</Filter>
     </ClCompile>
-    <ClCompile Include="vendor\imgui\backends\imgui_impl_opengl3.cpp">
+    <ClCompile Include="vendor\imgui\backends\imgui_impl_vulkan.cpp">
       <Filter>vendor\imgui\backends</Filter>
     </ClCompile>
     <ClCompile Include="vendor\imgui\imgui.cpp">
+      <Filter>vendor\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="vendor\imgui\imgui_demo.cpp">
       <Filter>vendor\imgui</Filter>
     </ClCompile>
     <ClCompile Include="vendor\imgui\imgui_draw.cpp">
@@ -1352,10 +1352,5 @@
     <ClCompile Include="vendor\stb_image\stb_image.cpp">
       <Filter>vendor\stb_image</Filter>
     </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <Text Include="shaders\shader.vert" />
-    <Text Include="shaders\shader.frag" />
-    <Text Include="shaders\WindowsShadersCompile.bat" />
   </ItemGroup>
 </Project>
