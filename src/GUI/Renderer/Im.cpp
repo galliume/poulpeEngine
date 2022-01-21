@@ -77,7 +77,7 @@ namespace Rebulk {
 		ImGui::BeginChild(str_id, size_arg, border, extra_flags);
 	}
 
-	void Im::Render(GLFWwindow* window)
+	void Im::Render(GLFWwindow* window, VkCommandBuffer commandBuffer)
 	{
 		ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
@@ -90,7 +90,9 @@ namespace Rebulk {
 		//glClear(GL_COLOR_BUFFER_BIT);
 
 		//ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-		ImDrawData* main_draw_data = ImGui::GetDrawData();
+		//ImDrawData* main_draw_data = ImGui::GetDrawData();
+
+		ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), commandBuffer);
 
 		ImGuiIO& io = ImGui::GetIO();
 
@@ -104,8 +106,10 @@ namespace Rebulk {
 
 	void Im::Destroy()
 	{
-		/*ImGui_ImplGlfw_Shutdown();
-		ImGui_ImplOpenGL3_Shutdown();*/
+		ImGui_ImplVulkan_DestroyFontUploadObjects();
+		ImGui_ImplVulkan_Shutdown();
+		ImGui_ImplGlfw_Shutdown();
+		//ImGui_ImplOpenGL3_Shutdown();
 		ImGui::DestroyContext();
 	}
 }

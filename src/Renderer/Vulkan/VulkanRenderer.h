@@ -32,11 +32,22 @@ namespace Rebulk {
 		~VulkanRenderer();
 		
 		void Init();
-		void DrawFrame();
+		void DrawFrame(VkSwapchainKHR swapChain, std::vector<VkCommandBuffer> commandBuffers, std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>> semaphores);
 		void Destroy();
 		void EndSingleTimeCommands(VkCommandBuffer commandBuffer);
+		void DrawSingleTimeCommands(VkCommandBuffer commandBuffer);
+		void RecreateSwapChain();
 
+		VkRenderPass CreateRenderPass();
 		VkCommandBuffer BeginSingleTimeCommands();
+		VkSwapchainKHR CreateSwapChain();
+		std::vector<VkImageView> CreateImageViews();
+		std::pair<VkPipeline, VkPipelineLayout> CreateGraphicsPipeline(VkRenderPass renderPass);
+		std::vector<VkFramebuffer> CreateFramebuffers(VkRenderPass renderPass, std::vector<VkImageView> swapChainImageViews);
+		VkCommandPool CreateCommandPool();
+		VkDescriptorPool CreateDescriptorPool();
+		std::vector<VkCommandBuffer> CreateCommandBuffers(VkRenderPass renderPass, VkCommandPool commandPool, std::pair<VkPipeline, VkPipelineLayout>pipeline, std::vector<VkFramebuffer> swapChainFramebuffers);
+		std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>> CreateSyncObjects();
 
 		inline const std::vector<const char*> GetValidationLayers() { return m_ValidationLayers; };
 		inline std::vector<VkExtensionProperties> GetExtensions() { return m_Extensions; };
@@ -71,18 +82,8 @@ namespace Rebulk {
 		void SetupDebugMessenger();
 		void CreateLogicalDevice();
 		void PickPhysicalDevice();
-		void CreateSurface();
-		void CreateSwapChain();
-		void CreateImageViews();
-		void CreateRenderPass();
-		void CreateGraphicsPipeline();
-		void CreateFramebuffers();
-		void CreateCommandPool();
-		void CreateCommandBuffers();
-		void CreateSyncObjects();
-		void RecreateSwapChain();
-		void CleanupSwapChain();
-		void CreateDescriptorPool();
+		void CreateSurface();						
+		void CleanupSwapChain();		
 
 		QueueFamilyIndices FindQueueFamilies(VkPhysicalDevice device);
 		SwapChainSupportDetails QuerySwapChainSupport(VkPhysicalDevice device);
@@ -116,8 +117,8 @@ namespace Rebulk {
 		VkFormat m_SwapChainImageFormat;
 		VkExtent2D m_SwapChainExtent;		
 		VkRenderPass m_RenderPass = VK_NULL_HANDLE;
-		VkPipelineLayout m_PipelineLayout = VK_NULL_HANDLE;
 		VkPipeline m_GraphicsPipeline = VK_NULL_HANDLE;
+		VkPipelineLayout m_PipelineLayout = VK_NULL_HANDLE;
 		VkSemaphore m_ImageAvailableSemaphore = VK_NULL_HANDLE;
 		VkSemaphore m_RenderFinishedSemaphore = VK_NULL_HANDLE;
 		VkDebugUtilsMessengerEXT m_DebugMessengerCallback = VK_NULL_HANDLE;

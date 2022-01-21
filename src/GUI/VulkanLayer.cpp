@@ -11,7 +11,10 @@ namespace Rebulk
 	
 	void VulkanLayer::Render()
 	{
-		Im::Render(m_Window);
+		VkCommandBuffer commandBuffer = m_VulkanRenderer->BeginSingleTimeCommands();
+		Im::Render(m_Window, commandBuffer);
+		m_VulkanRenderer->DrawSingleTimeCommands(commandBuffer);
+		m_VulkanRenderer->EndSingleTimeCommands(commandBuffer);	
 	}
 
 	void VulkanLayer::DisplayLogs()
