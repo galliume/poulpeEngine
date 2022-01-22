@@ -15,7 +15,7 @@ namespace Rebulk {
 		
 		io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
 		io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;           
-		//io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;         
+		io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;         
 		io.ConfigDockingWithShift = false;
 		io.BackendFlags |= ImGuiBackendFlags_HasMouseCursors;
 
@@ -77,7 +77,7 @@ namespace Rebulk {
 		ImGui::BeginChild(str_id, size_arg, border, extra_flags);
 	}
 
-	void Im::Render(GLFWwindow* window, VkCommandBuffer commandBuffer)
+	void Im::Render(GLFWwindow* window, VkCommandBuffer commandBuffer, VkPipeline pipeline)
 	{
 		ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
@@ -92,7 +92,7 @@ namespace Rebulk {
 		//ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 		//ImDrawData* main_draw_data = ImGui::GetDrawData();
 
-		ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), commandBuffer);
+		//ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), commandBuffer, pipeline);
 
 		ImGuiIO& io = ImGui::GetIO();
 

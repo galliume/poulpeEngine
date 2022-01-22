@@ -10,7 +10,7 @@ namespace Rebulk
 	{
 	public:
 		VulkanLayer(GLFWwindow* window, VulkanRenderer* vulkanRenderer);
-		void Render();
+		void Render(VkRenderPass renderPass, VkCommandPool commandPool, VkSwapchainKHR swapChain, std::vector<VkFramebuffer> swapChainFramebuffers, VkPipeline pipeline);
 		void DisplayLogs();
 		void Destroy();
 		void Update(std::vector<std::string>& messages);

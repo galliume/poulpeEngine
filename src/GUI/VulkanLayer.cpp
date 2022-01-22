@@ -9,12 +9,12 @@ namespace Rebulk
 		m_VulkanRenderer->Attach(this);
 	}
 	
-	void VulkanLayer::Render()
+	void VulkanLayer::Render(VkRenderPass renderPass, VkCommandPool commandPool, VkSwapchainKHR swapChain, std::vector<VkFramebuffer> swapChainFramebuffers, VkPipeline pipeline)
 	{
-		VkCommandBuffer commandBuffer = m_VulkanRenderer->BeginSingleTimeCommands();
-		Im::Render(m_Window, commandBuffer);
-		m_VulkanRenderer->DrawSingleTimeCommands(commandBuffer);
-		m_VulkanRenderer->EndSingleTimeCommands(commandBuffer);	
+		VkCommandBuffer commandBuffer = m_VulkanRenderer->BeginSingleTimeCommands(renderPass, commandPool, swapChainFramebuffers);
+		Im::Render(m_Window, commandBuffer, pipeline);
+		m_VulkanRenderer->DrawSingleTimeCommands(commandBuffer, swapChain);
+		m_VulkanRenderer->EndSingleTimeCommands(commandBuffer, commandPool);
 	}
 
 	void VulkanLayer::DisplayLogs()
