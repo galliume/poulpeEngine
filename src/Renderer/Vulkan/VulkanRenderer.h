@@ -32,14 +32,17 @@ namespace Rebulk {
 		~VulkanRenderer();
 		
 		void Init();
-		void DrawFrame(VkSwapchainKHR swapChain, std::vector<VkCommandBuffer> commandBuffers, std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>> semaphores);
-		void Destroy();
-		void EndSingleTimeCommands(VkCommandBuffer commandBuffer);
-		void DrawSingleTimeCommands(VkCommandBuffer commandBuffer);
+		bool DrawFrame(VkSwapchainKHR swapChain, std::vector<VkCommandBuffer> commandBuffers, std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>> semaphores);
+		bool DrawSingleTimeCommands(VkCommandBuffer commandBuffer, VkSwapchainKHR swapChain);
+		void CleanupSwapChain(VkSwapchainKHR swapChain, VkRenderPass renderPass, VkCommandPool commandPool, std::pair<VkPipeline, VkPipelineLayout>pipeline, std::vector<VkImageView> swapChainImageViews, std::vector<VkCommandBuffer> commandBuffers, std::vector<VkFramebuffer> swapChainFramebuffers);
 		void RecreateSwapChain();
+		void Destroy(VkCommandPool commandPool, std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>> semaphores);
+		void EndSingleTimeCommands(VkCommandBuffer commandBuffer, VkCommandPool commandPool);
 
 		VkRenderPass CreateRenderPass();
-		VkCommandBuffer BeginSingleTimeCommands();
+		VkCommandBuffer CreateCommandBuffer(VkCommandPool commandPool);
+		void BeginRenderPass(VkRenderPass renderPass, VkCommandBuffer commandBuffer, std::vector<VkFramebuffer> swapChainFramebuffers);
+		VkCommandBuffer BeginSingleTimeCommands(VkRenderPass renderPass, VkCommandPool commandPool, std::vector<VkFramebuffer> swapChainFramebuffers);
 		VkSwapchainKHR CreateSwapChain();
 		std::vector<VkImageView> CreateImageViews();
 		std::pair<VkPipeline, VkPipelineLayout> CreateGraphicsPipeline(VkRenderPass renderPass);
@@ -83,7 +86,6 @@ namespace Rebulk {
 		void CreateLogicalDevice();
 		void PickPhysicalDevice();
 		void CreateSurface();						
-		void CleanupSwapChain();		
 
 		QueueFamilyIndices FindQueueFamilies(VkPhysicalDevice device);
 		SwapChainSupportDetails QuerySwapChainSupport(VkPhysicalDevice device);
@@ -95,6 +97,7 @@ namespace Rebulk {
 	private:
 		const int m_MAX_FRAMES_IN_FLIGHT = 2;
 		size_t m_CurrentFrame = 0;
+		size_t m_SingleTimeCurrentFrame = 0;
 		uint32_t m_ExtensionCount = 0;
 
 		GLFWwindow* m_Window = VK_NULL_HANDLE;
@@ -139,5 +142,6 @@ namespace Rebulk {
 		std::vector<VkSemaphore> m_RenderFinishedSemaphores = {};
 		std::vector<VkFence> m_InFlightFences = {};
 		std::vector<VkFence> m_ImagesInFlight = {};
+		std::vector<VkFence>m_SingleTimeInFlightFences = {};
 	};
 }

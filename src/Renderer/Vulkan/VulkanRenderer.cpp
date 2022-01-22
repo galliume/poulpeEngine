@@ -118,7 +118,7 @@ namespace Rebulk {
 		m_RenderFinishedSemaphores = semaphores.second;
 	}
 
-	void VulkanRenderer::DrawFrame(VkSwapchainKHR swapChain, std::vector<VkCommandBuffer> commandBuffers, std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>> semaphores)
+	bool VulkanRenderer::DrawFrame(VkSwapchainKHR swapChain, std::vector<VkCommandBuffer> commandBuffers, std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>> semaphores)
 	{
 		std::vector<VkSemaphore> imageAvailableSemaphores = semaphores.first;
 		std::vector<VkSemaphore> renderFinishedSemaphores = semaphores.second;
@@ -129,8 +129,8 @@ namespace Rebulk {
 		VkResult result = vkAcquireNextImageKHR(m_Device, swapChain, UINT64_MAX, imageAvailableSemaphores[m_CurrentFrame], VK_NULL_HANDLE, &imageIndex);
 
 		if (result == VK_ERROR_OUT_OF_DATE_KHR) {
-			RecreateSwapChain();
-			return;
+			//out of date
+			return true;
 		} else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
 			throw std::runtime_error("failed to acquire swap chain image!");
 		}
@@ -180,12 +180,16 @@ namespace Rebulk {
 
 		if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || m_FramebufferResized) {
 			m_FramebufferResized = false;
-			RecreateSwapChain();
+			//out of date
+			return true;
 		} else if (result != VK_SUCCESS) {
 			throw std::runtime_error("failed to present swap chain image!");
 		}
 
 		m_CurrentFrame = (m_CurrentFrame + 1) % m_MAX_FRAMES_IN_FLIGHT;
+
+		//not out of date
+		return false;
 	}
 
 	void VulkanRenderer::CreateInstance()
@@ -681,9 +685,9 @@ namespace Rebulk {
 
 	std::pair<VkPipeline, VkPipelineLayout> VulkanRenderer::CreateGraphicsPipeline(VkRenderPass renderPass)
 	{
-		std::pair<VkPipeline, VkPipelineLayout>pipeline;
+		std::pair<VkPipeline, VkPipelineLayout>pipeline = {};
 
-		VkPipelineLayout graphicsPipelineLayout;
+		VkPipelineLayout graphicsPipelineLayout = VK_NULL_HANDLE;
 
 		auto vertShaderCode = ReadFile("shaders/spv/vert.spv");
 		auto fragShaderCode = ReadFile("shaders/spv/frag.spv");
@@ -795,6 +799,12 @@ namespace Rebulk {
 			m_Messages.emplace_back("create successfully pipeline layout!");
 		}
 
+		VkDynamicState dynamic_states[2] = { VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR };
+		VkPipelineDynamicStateCreateInfo dynamic_state = {};
+		dynamic_state.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
+		dynamic_state.dynamicStateCount = 2;
+		dynamic_state.pDynamicStates = dynamic_states;
+
 		VkGraphicsPipelineCreateInfo pipelineInfo{};
 		pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
 		pipelineInfo.stageCount = 2;
@@ -812,6 +822,7 @@ namespace Rebulk {
 		pipelineInfo.subpass = 0;
 		pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
 		pipelineInfo.basePipelineIndex = -1;
+		pipelineInfo.pDynamicState = &dynamic_state;
 
 		VkPipeline graphicsPipeline;
 
@@ -880,25 +891,25 @@ namespace Rebulk {
 		subpass.colorAttachmentCount = 1;
 		subpass.pColorAttachments = &colorAttachmentRef;
 
+		VkSubpassDependency dependency{};
+        dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
+        dependency.dstSubpass = 0;
+        dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        dependency.srcAccessMask = 0;
+        dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+
 		VkRenderPassCreateInfo renderPassInfo{};
 		renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
 		renderPassInfo.attachmentCount = 1;
 		renderPassInfo.pAttachments = &colorAttachment;
 		renderPassInfo.subpassCount = 1;
 		renderPassInfo.pSubpasses = &subpass;
-
-		VkSubpassDependency dependency{};
-		dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
-		dependency.dstSubpass = 0;
-		dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-		dependency.srcAccessMask = 0;
-		dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-		dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
 		renderPassInfo.dependencyCount = 1;
 		renderPassInfo.pDependencies = &dependency;
 
-		VkResult result = vkCreateRenderPass(m_Device, &renderPassInfo, nullptr, &renderPass)
-			;
+		VkResult result = vkCreateRenderPass(m_Device, &renderPassInfo, nullptr, &renderPass);
+
 		if (result != VK_SUCCESS) {
 			m_Messages.emplace_back("failed to create render pass!");
 		} else {
@@ -1016,6 +1027,19 @@ namespace Rebulk {
 
 			vkCmdBeginRenderPass(commandBuffers[i], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 			vkCmdBindPipeline(commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline.first);
+
+			VkViewport viewport;
+			viewport.x = 0;
+			viewport.y = 0;
+			viewport.width = (float)m_SwapChainExtent.width;
+			viewport.height = (float)m_SwapChainExtent.height;
+			viewport.minDepth = 0.0f;
+			viewport.maxDepth = 1.0f;
+			vkCmdSetViewport(commandBuffers[i], 0, 1, &viewport);
+
+			VkRect2D scissor = { { 0, 0 }, { (uint32_t)m_SwapChainExtent.width, (uint32_t)m_SwapChainExtent.height } };
+			vkCmdSetScissor(commandBuffers[i], 0, 1, &scissor);
+
 			vkCmdDraw(commandBuffers[i], 3, 1, 0, 0);
 			vkCmdEndRenderPass(commandBuffers[i]);
 
@@ -1091,25 +1115,6 @@ namespace Rebulk {
 		m_CommandBuffers = CreateCommandBuffers(m_RenderPass, m_CommandPool, pipeline, m_SwapChainFramebuffers);
 	}
 
-	void VulkanRenderer::CleanupSwapChain()
-	{
-		for (size_t i = 0; i < m_SwapChainFramebuffers.size(); i++) {
-			vkDestroyFramebuffer(m_Device, m_SwapChainFramebuffers[i], nullptr);
-		}
-
-		vkFreeCommandBuffers(m_Device, m_CommandPool, static_cast<uint32_t>(m_CommandBuffers.size()), m_CommandBuffers.data());
-
-		vkDestroyPipeline(m_Device, m_GraphicsPipeline, nullptr);
-		vkDestroyPipelineLayout(m_Device, m_PipelineLayout, nullptr);
-		vkDestroyRenderPass(m_Device, m_RenderPass, nullptr);
-
-		for (size_t i = 0; i < m_SwapChainImageViews.size(); i++) {
-			vkDestroyImageView(m_Device, m_SwapChainImageViews[i], nullptr);
-		}
-
-		vkDestroySwapchainKHR(m_Device, m_SwapChain, nullptr);
-	}
-
 	VkDescriptorPool VulkanRenderer::CreateDescriptorPool()
 	{
 		VkDescriptorPool descriptorPool;
@@ -1134,12 +1139,48 @@ namespace Rebulk {
 		return descriptorPool;
 	}
 
-	VkCommandBuffer VulkanRenderer::BeginSingleTimeCommands() 
+	VkCommandBuffer VulkanRenderer::CreateCommandBuffer(VkCommandPool commandPool)
 	{
 		VkCommandBufferAllocateInfo allocInfo{};
 		allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
 		allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-		allocInfo.commandPool = m_CommandPool;
+		allocInfo.commandPool = commandPool;
+		allocInfo.commandBufferCount = 1;
+
+		VkCommandBuffer commandBuffer;
+		vkAllocateCommandBuffers(m_Device, &allocInfo, &commandBuffer);
+
+		VkCommandBufferBeginInfo beginInfo{};
+		beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+		beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+
+		vkBeginCommandBuffer(commandBuffer, &beginInfo);
+
+		return commandBuffer;
+	}
+
+	void VulkanRenderer::BeginRenderPass(VkRenderPass renderPass, VkCommandBuffer commandBuffer, std::vector<VkFramebuffer> swapChainFramebuffers)
+	{
+		VkRenderPassBeginInfo renderPassInfo{};
+		renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+		renderPassInfo.renderPass = renderPass;
+		renderPassInfo.framebuffer = swapChainFramebuffers[1];
+		renderPassInfo.renderArea.offset = { 0, 0 };
+		renderPassInfo.renderArea.extent = m_SwapChainExtent;
+
+		VkClearValue clearColor = { {{0.0f, 0.0f, 0.0f, 1.0f}} };
+		renderPassInfo.clearValueCount = 1;
+		renderPassInfo.pClearValues = &clearColor;
+
+		vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+	}
+
+	VkCommandBuffer VulkanRenderer::BeginSingleTimeCommands(VkRenderPass renderPass, VkCommandPool commandPool, std::vector<VkFramebuffer> swapChainFramebuffers)
+	{
+		VkCommandBufferAllocateInfo allocInfo{};
+		allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+		allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+		allocInfo.commandPool = commandPool;
 		allocInfo.commandBufferCount = 1;
 
 		VkCommandBuffer commandBuffer;
@@ -1153,8 +1194,8 @@ namespace Rebulk {
 
 		VkRenderPassBeginInfo renderPassInfo{};
 		renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-		renderPassInfo.renderPass = m_RenderPass;
-		renderPassInfo.framebuffer = m_SwapChainFramebuffers[1];
+		renderPassInfo.renderPass = renderPass;
+		renderPassInfo.framebuffer = swapChainFramebuffers[1];
 		renderPassInfo.renderArea.offset = { 0, 0 };
 		renderPassInfo.renderArea.extent = m_SwapChainExtent;
 
@@ -1167,7 +1208,7 @@ namespace Rebulk {
 		return commandBuffer;
 	}
 
-	void VulkanRenderer::EndSingleTimeCommands(VkCommandBuffer commandBuffer)
+	void VulkanRenderer::EndSingleTimeCommands(VkCommandBuffer commandBuffer, VkCommandPool commandPool)
 	{
 		vkCmdEndRenderPass(commandBuffer);
 		VkResult result = vkEndCommandBuffer(commandBuffer);
@@ -1180,22 +1221,30 @@ namespace Rebulk {
 		submitInfo.pCommandBuffers = &commandBuffer;
 
 		result = vkQueueSubmit(m_GraphicsQueue, 1, &submitInfo, VK_NULL_HANDLE);
-		vkQueueWaitIdle(m_GraphicsQueue);
-		std::cout << "EndSingleTimeCommands vkQueueSubmit result " << std::to_string(result) << std::endl;
 
-		vkFreeCommandBuffers(m_Device, m_CommandPool, 1, &commandBuffer);
+		if (result != VK_SUCCESS) {
+			std::cout << "EndSingleTimeCommands vkQueueSubmit result " << std::to_string(result) << std::endl;
+		} 
+
+		result = vkQueueWaitIdle(m_GraphicsQueue);
+
+		if (result != VK_SUCCESS) {
+			std::cout << "EndSingleTimeCommands vkQueueWaitIdle result " << std::to_string(result) << std::endl;
+		}
+
+		vkFreeCommandBuffers(m_Device, commandPool, 1, &commandBuffer);
 	}
 
-	void VulkanRenderer::DrawSingleTimeCommands(VkCommandBuffer commandBuffer)
+	bool VulkanRenderer::DrawSingleTimeCommands(VkCommandBuffer commandBuffer, VkSwapchainKHR swapChain)
 	{
 		vkWaitForFences(m_Device, 1, &m_InFlightFences[m_CurrentFrame], VK_TRUE, UINT64_MAX);
 
 		uint32_t imageIndex;
-		VkResult result = vkAcquireNextImageKHR(m_Device, m_SwapChain, UINT64_MAX, m_ImageAvailableSemaphores[m_CurrentFrame], VK_NULL_HANDLE, &imageIndex);
+		VkResult result = vkAcquireNextImageKHR(m_Device, swapChain, UINT64_MAX, m_ImageAvailableSemaphores[m_CurrentFrame], VK_NULL_HANDLE, &imageIndex);
 
 		if (result == VK_ERROR_OUT_OF_DATE_KHR) {
-			RecreateSwapChain();
-			return;
+			//out of date
+			return true;
 		}
 		else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
 			throw std::runtime_error("failed to acquire swap chain image!");
@@ -1236,7 +1285,7 @@ namespace Rebulk {
 		presentInfo.waitSemaphoreCount = 1;
 		presentInfo.pWaitSemaphores = signalSemaphores;
 
-		VkSwapchainKHR swapChains[] = { m_SwapChain };
+		VkSwapchainKHR swapChains[] = { swapChain };
 		presentInfo.swapchainCount = 1;
 		presentInfo.pSwapchains = swapChains;
 		presentInfo.pImageIndices = &imageIndex;
@@ -1246,26 +1295,47 @@ namespace Rebulk {
 
 		if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || m_FramebufferResized) {
 			m_FramebufferResized = false;
-			RecreateSwapChain();
+			//out of date
+			return true;
 		}
 		else if (result != VK_SUCCESS) {
 			throw std::runtime_error("failed to present swap chain image!");
 		}
 
 		m_CurrentFrame = (m_CurrentFrame + 1) % m_MAX_FRAMES_IN_FLIGHT;
+
+		//not out of date
+		return false;
 	}
 
-	void VulkanRenderer::Destroy()
+	void VulkanRenderer::CleanupSwapChain(VkSwapchainKHR swapChain, VkRenderPass renderPass, VkCommandPool commandPool, std::pair<VkPipeline, VkPipelineLayout>pipeline, std::vector<VkImageView> swapChainImageViews, std::vector<VkCommandBuffer> commandBuffers, std::vector<VkFramebuffer> swapChainFramebuffers)
 	{
-		CleanupSwapChain();
+		for (size_t i = 0; i < swapChainFramebuffers.size(); i++) {
+			vkDestroyFramebuffer(m_Device, swapChainFramebuffers[i], nullptr);
+		}
 
+		vkFreeCommandBuffers(m_Device, commandPool, static_cast<uint32_t>(commandBuffers.size()), commandBuffers.data());
+
+		vkDestroyPipeline(m_Device, pipeline.first, nullptr);
+		vkDestroyPipelineLayout(m_Device, pipeline.second, nullptr);
+		vkDestroyRenderPass(m_Device, renderPass, nullptr);
+
+		for (size_t i = 0; i < swapChainImageViews.size(); i++) {
+			vkDestroyImageView(m_Device, swapChainImageViews[i], nullptr);
+		}
+
+		vkDestroySwapchainKHR(m_Device, swapChain, nullptr);
+	}
+
+	void VulkanRenderer::Destroy(VkCommandPool commandPool, std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>> semaphores)
+	{
 		for (size_t i = 0; i < m_MAX_FRAMES_IN_FLIGHT; i++) {
-			vkDestroySemaphore(m_Device, m_RenderFinishedSemaphores[i], nullptr);
-			vkDestroySemaphore(m_Device, m_ImageAvailableSemaphores[i], nullptr);
+			vkDestroySemaphore(m_Device, semaphores.first[i], nullptr);
+			vkDestroySemaphore(m_Device, semaphores.second[i], nullptr);
 			vkDestroyFence(m_Device, m_InFlightFences[i], nullptr);
 		}
 
-		vkDestroyCommandPool(m_Device, m_CommandPool, nullptr);
+		vkDestroyCommandPool(m_Device, commandPool, nullptr);
 
 		vkDestroyDevice(m_Device, nullptr);
 
@@ -1282,7 +1352,7 @@ namespace Rebulk {
 
 	VulkanRenderer::~VulkanRenderer()
 	{
-		vkDeviceWaitIdle(m_Device);
+
 	}
 
 	void VulkanRenderer::Attach(IObserver* observer)
