@@ -34,21 +34,28 @@ namespace Rebulk {
 		void Init();
 		bool DrawFrame(VkSwapchainKHR swapChain, std::vector<VkCommandBuffer> commandBuffers, std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>> semaphores);
 		bool DrawSingleTimeCommands(VkCommandBuffer commandBuffer, VkSwapchainKHR swapChain);
-		void CleanupSwapChain(VkSwapchainKHR swapChain, VkRenderPass renderPass, VkCommandPool commandPool, std::pair<VkPipeline, VkPipelineLayout>pipeline, std::vector<VkImageView> swapChainImageViews, std::vector<VkCommandBuffer> commandBuffers, std::vector<VkFramebuffer> swapChainFramebuffers);
+		void CleanupSwapChain(
+			VkSwapchainKHR swapChain, VkRenderPass renderPass, VkCommandPool commandPool, std::pair<VkPipeline, VkPipelineLayout>pipeline,
+			std::vector<VkImageView> swapChainImageViews, std::vector<VkCommandBuffer> commandBuffers, std::vector<VkFramebuffer> swapChainFramebuffers,
+			VkDescriptorPool descriptorPool, VkDescriptorSetLayout descriptorSetLayout
+		);
+
 		void RecreateSwapChain();
 		void Destroy(VkCommandPool commandPool, std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>> semaphores);
-		void EndSingleTimeCommands(VkCommandBuffer commandBuffer, VkCommandPool commandPool);
 
 		VkRenderPass CreateRenderPass();
-		VkCommandBuffer CreateCommandBuffer(VkCommandPool commandPool);
 		void BeginRenderPass(VkRenderPass renderPass, VkCommandBuffer commandBuffer, std::vector<VkFramebuffer> swapChainFramebuffers);
-		VkCommandBuffer BeginSingleTimeCommands(VkRenderPass renderPass, VkCommandPool commandPool, std::vector<VkFramebuffer> swapChainFramebuffers);
+		void EndRenderPass(VkCommandBuffer commandBuffer, VkCommandPool commandPool);
+
+		VkCommandBuffer CreateCommandBuffer(VkCommandPool commandPool);
 		VkSwapchainKHR CreateSwapChain();
 		std::vector<VkImageView> CreateImageViews();
-		std::pair<VkPipeline, VkPipelineLayout> CreateGraphicsPipeline(VkRenderPass renderPass);
+		std::pair<VkPipeline, VkPipelineLayout> CreateGraphicsPipeline(VkRenderPass renderPass, VkCommandBuffer commandBuffer, VkDescriptorSetLayout descriptorSetLayout);
 		std::vector<VkFramebuffer> CreateFramebuffers(VkRenderPass renderPass, std::vector<VkImageView> swapChainImageViews);
 		VkCommandPool CreateCommandPool();
 		VkDescriptorPool CreateDescriptorPool();
+		VkDescriptorSetLayout CreateDescriptorSetLayout();
+		std::vector<VkDescriptorSet> CreateDescriptorSets(VkDescriptorPool descriptorPool, VkDescriptorSetLayout descriptorSetLayout);
 		std::vector<VkCommandBuffer> CreateCommandBuffers(VkRenderPass renderPass, VkCommandPool commandPool, std::pair<VkPipeline, VkPipelineLayout>pipeline, std::vector<VkFramebuffer> swapChainFramebuffers);
 		std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>> CreateSyncObjects();
 

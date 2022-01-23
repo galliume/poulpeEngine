@@ -27,18 +27,14 @@ namespace Rebulk {
 			style.Colors[ImGuiCol_WindowBg].w = 1.0f;
 		}
 
-		//ImGui_ImplGlfw_InitForOpenGL(window, true);
-		//ImGui_ImplOpenGL3_Init(glsl_version);
 		ImGui_ImplGlfw_InitForVulkan(window, true);
 		ImGui_ImplVulkan_Init(initInfo, renderPass);
 	}
 
 	void Im::NewFrame()
 	{
-		// Feed inputs to dear imgui, start new frame
 		ImGui_ImplVulkan_NewFrame();
 		ImGui_ImplGlfw_NewFrame();
-		//ImGui_ImplOpenGL3_NewFrame();
 		ImGui::NewFrame();
 	}
 	
@@ -80,19 +76,9 @@ namespace Rebulk {
 	void Im::Render(GLFWwindow* window, VkCommandBuffer commandBuffer, VkPipeline pipeline)
 	{
 		ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
-
+		
 		ImGui::Render();
-		int display_w, display_h;
-		glfwGetFramebufferSize(window, &display_w, &display_h);
-
-		//glViewport(0, 0, display_w, display_h);
-		//glClearColor(clear_color.x * clear_color.w, clear_color.y * clear_color.w, clear_color.z * clear_color.w, clear_color.w);
-		//glClear(GL_COLOR_BUFFER_BIT);
-
-		//ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-		//ImDrawData* main_draw_data = ImGui::GetDrawData();
-
-		//ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), commandBuffer, pipeline);
+		ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), commandBuffer, pipeline);
 
 		ImGuiIO& io = ImGui::GetIO();
 
@@ -102,6 +88,7 @@ namespace Rebulk {
 			ImGui::RenderPlatformWindowsDefault();
 			glfwMakeContextCurrent(backup_current_context);
 		}
+
 	}
 
 	void Im::Destroy()
@@ -109,7 +96,6 @@ namespace Rebulk {
 		ImGui_ImplVulkan_DestroyFontUploadObjects();
 		ImGui_ImplVulkan_Shutdown();
 		ImGui_ImplGlfw_Shutdown();
-		//ImGui_ImplOpenGL3_Shutdown();
 		ImGui::DestroyContext();
 	}
 }

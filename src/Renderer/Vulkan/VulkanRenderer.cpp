@@ -94,28 +94,29 @@ namespace Rebulk {
 
 	void VulkanRenderer::Init()
 	{
-		EnumerateExtensions();
-		LoadRequiredExtensions();
-		CreateInstance();
-		SetupDebugMessenger();
-		CreateSurface();
-		PickPhysicalDevice();
-		CreateLogicalDevice();
-		m_SwapChain = CreateSwapChain();
-		m_SwapChainImageViews = CreateImageViews();
-		m_RenderPass = CreateRenderPass();
+		//EnumerateExtensions();
+		//LoadRequiredExtensions();
+		//CreateInstance();
+		//SetupDebugMessenger();
+		//CreateSurface();
+		//PickPhysicalDevice();
+		//CreateLogicalDevice();
+		//m_SwapChain = CreateSwapChain();
+		//m_SwapChainImageViews = CreateImageViews();
+		//m_RenderPass = CreateRenderPass();
+		//m_CommandPool = CreateCommandPool();
+		//VkCommandBuffer commandBuffer = CreateCommandBuffer(m_CommandPool);
 
-		std::pair<VkPipeline, VkPipelineLayout>pipeline = CreateGraphicsPipeline(m_RenderPass);
-		m_GraphicsPipeline = pipeline.first;
-		m_PipelineLayout = pipeline.second;
+		//std::pair<VkPipeline, VkPipelineLayout>pipeline = CreateGraphicsPipeline(m_RenderPass, commandBuffer);
+		//m_GraphicsPipeline = pipeline.first;
+		//m_PipelineLayout = pipeline.second;
 
-		m_SwapChainFramebuffers = CreateFramebuffers(m_RenderPass, m_SwapChainImageViews);
-		m_CommandPool = CreateCommandPool();
-		m_DescriptorPool = CreateDescriptorPool();
-		m_CommandBuffers = CreateCommandBuffers(m_RenderPass, m_CommandPool, pipeline, m_SwapChainFramebuffers);
-		std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>> semaphores = CreateSyncObjects();
-		m_ImageAvailableSemaphores = semaphores.first;
-		m_RenderFinishedSemaphores = semaphores.second;
+		//m_SwapChainFramebuffers = CreateFramebuffers(m_RenderPass, m_SwapChainImageViews);
+		//m_DescriptorPool = CreateDescriptorPool();
+		//m_CommandBuffers = CreateCommandBuffers(m_RenderPass, m_CommandPool, pipeline, m_SwapChainFramebuffers);
+		//std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>> semaphores = CreateSyncObjects();
+		//m_ImageAvailableSemaphores = semaphores.first;
+		//m_RenderFinishedSemaphores = semaphores.second;
 	}
 
 	bool VulkanRenderer::DrawFrame(VkSwapchainKHR swapChain, std::vector<VkCommandBuffer> commandBuffers, std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>> semaphores)
@@ -683,7 +684,7 @@ namespace Rebulk {
 		return swapChainImageViews;
 	}
 
-	std::pair<VkPipeline, VkPipelineLayout> VulkanRenderer::CreateGraphicsPipeline(VkRenderPass renderPass)
+	std::pair<VkPipeline, VkPipelineLayout> VulkanRenderer::CreateGraphicsPipeline(VkRenderPass renderPass, VkCommandBuffer commandBuffer, VkDescriptorSetLayout descriptorSetLayout)
 	{
 		std::pair<VkPipeline, VkPipelineLayout>pipeline = {};
 
@@ -786,10 +787,10 @@ namespace Rebulk {
 
 		VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
 		pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-		pipelineLayoutInfo.setLayoutCount = 0; // Optional
-		pipelineLayoutInfo.pSetLayouts = nullptr; // Optional
 		pipelineLayoutInfo.pushConstantRangeCount = 0; // Optional
 		pipelineLayoutInfo.pPushConstantRanges = nullptr; // Optional
+		pipelineLayoutInfo.setLayoutCount = 1;
+		pipelineLayoutInfo.pSetLayouts = &descriptorSetLayout;
 
 		VkResult result = vkCreatePipelineLayout(m_Device, &pipelineLayoutInfo, nullptr, &graphicsPipelineLayout);
 
@@ -816,7 +817,6 @@ namespace Rebulk {
 		pipelineInfo.pMultisampleState = &multisampling;
 		pipelineInfo.pDepthStencilState = nullptr; 
 		pipelineInfo.pColorBlendState = &colorBlending;
-		pipelineInfo.pDynamicState = nullptr; 
 		pipelineInfo.layout = graphicsPipelineLayout;
 		pipelineInfo.renderPass = renderPass;
 		pipelineInfo.subpass = 0;
@@ -833,6 +833,14 @@ namespace Rebulk {
 		} else {
 			m_Messages.emplace_back("created successfully graphics pipeline!");
 		}
+
+		vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
+
+		VkRect2D scissors[1] = {};
+		scissors[0].extent.width = m_SwapChainExtent.width;
+		scissors[0].extent.height = m_SwapChainExtent.height;
+
+		vkCmdSetScissor(commandBuffer, 0, 1, scissors);
 
 		vkDestroyShaderModule(m_Device, fragShaderModule, nullptr);
 		vkDestroyShaderModule(m_Device, vertShaderModule, nullptr);
@@ -1104,13 +1112,15 @@ namespace Rebulk {
 		m_SwapChain = CreateSwapChain();
 		m_SwapChainImageViews = CreateImageViews();
 		m_RenderPass = CreateRenderPass();
+		m_CommandPool = CreateCommandPool();
+		VkCommandBuffer commandBuffer = CreateCommandBuffer(m_CommandPool);
+		VkDescriptorSetLayout descriptorSetLayout = CreateDescriptorSetLayout();
 
-		std::pair<VkPipeline, VkPipelineLayout>pipeline = CreateGraphicsPipeline(m_RenderPass);
+		std::pair<VkPipeline, VkPipelineLayout>pipeline = CreateGraphicsPipeline(m_RenderPass, commandBuffer, descriptorSetLayout);
 		m_GraphicsPipeline = pipeline.first;
 		m_PipelineLayout = pipeline.second;
 
 		m_SwapChainFramebuffers = CreateFramebuffers(m_RenderPass, m_SwapChainImageViews);
-		m_CommandPool = CreateCommandPool();
 		m_DescriptorPool = CreateDescriptorPool();
 		m_CommandBuffers = CreateCommandBuffers(m_RenderPass, m_CommandPool, pipeline, m_SwapChainFramebuffers);
 	}
@@ -1137,6 +1147,91 @@ namespace Rebulk {
 		}
 
 		return descriptorPool;
+	}
+
+	VkDescriptorSetLayout VulkanRenderer::CreateDescriptorSetLayout()
+	{
+		VkDescriptorSetLayout descriptorSetLayout;
+
+		VkDescriptorSetLayoutBinding uboLayoutBinding{};
+		uboLayoutBinding.binding = 0;
+		uboLayoutBinding.descriptorCount = 1;
+		uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+		uboLayoutBinding.pImmutableSamplers = nullptr;
+		uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+
+		VkDescriptorSetLayoutBinding samplerLayoutBinding{};
+		samplerLayoutBinding.binding = 1;
+		samplerLayoutBinding.descriptorCount = 1;
+		samplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+		samplerLayoutBinding.pImmutableSamplers = nullptr;
+		samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+		std::array<VkDescriptorSetLayoutBinding, 2> bindings = { uboLayoutBinding, samplerLayoutBinding };
+		VkDescriptorSetLayoutCreateInfo layoutInfo{};
+		layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+		layoutInfo.bindingCount = static_cast<uint32_t>(bindings.size());
+		layoutInfo.pBindings = bindings.data();
+
+		if (vkCreateDescriptorSetLayout(m_Device, &layoutInfo, nullptr, &descriptorSetLayout) != VK_SUCCESS)
+		{
+			throw std::runtime_error("failed to create descriptor set layout!");
+		}
+
+		return descriptorSetLayout;
+	}
+
+	std::vector<VkDescriptorSet> VulkanRenderer::CreateDescriptorSets(VkDescriptorPool descriptorPool, VkDescriptorSetLayout descriptorSetLayout)
+	{
+		std::vector<VkDescriptorSet> descriptorSets;
+		std::vector<VkDescriptorSetLayout> layouts(m_SwapChainImages.size(), descriptorSetLayout);
+
+		//VkDescriptorSetAllocateInfo allocInfo{};
+		//allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+		//allocInfo.descriptorPool = descriptorPool;
+		//allocInfo.descriptorSetCount = static_cast<uint32_t>(m_SwapChainImages.size());
+		//allocInfo.pSetLayouts = layouts.data();
+
+		//descriptorSets.resize(m_SwapChainImages.size());
+		//if (vkAllocateDescriptorSets(m_Device, &allocInfo, descriptorSets.data()) != VK_SUCCESS)
+		//{
+		//	throw std::runtime_error("failed to allocate descriptor sets");
+		//}
+
+		//for (size_t i = 0; i < m_SwapChainImages.size(); i++)
+		//{
+		//	VkDescriptorBufferInfo bufferInfo{};
+		//	bufferInfo.buffer = uniformBuffers[i];
+		//	bufferInfo.offset = 0;
+		//	bufferInfo.range = sizeof(UniformBufferObject);
+
+		//	VkDescriptorImageInfo imageInfo{};
+		//	imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+		//	imageInfo.imageView = textureImageView;
+		//	imageInfo.sampler = textureSampler;
+
+		//	std::array<VkWriteDescriptorSet, 2> descriptorWrites{};
+
+		//	descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+		//	descriptorWrites[0].dstSet = descriptorSets[i];
+		//	descriptorWrites[0].dstBinding = 0;
+		//	descriptorWrites[0].dstArrayElement = 0;
+		//	descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+		//	descriptorWrites[0].descriptorCount = 1;
+		//	descriptorWrites[0].pBufferInfo = &bufferInfo;
+
+		//	descriptorWrites[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+		//	descriptorWrites[1].dstSet = descriptorSets[i];
+		//	descriptorWrites[1].dstBinding = 1;
+		//	descriptorWrites[1].dstArrayElement = 0;
+		//	descriptorWrites[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+		//	descriptorWrites[1].descriptorCount = 1;
+		//	descriptorWrites[1].pImageInfo = &imageInfo;
+
+		//	vkUpdateDescriptorSets(m_Device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
+		//}
+
+		return descriptorSets;
 	}
 
 	VkCommandBuffer VulkanRenderer::CreateCommandBuffer(VkCommandPool commandPool)
@@ -1175,40 +1270,7 @@ namespace Rebulk {
 		vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 	}
 
-	VkCommandBuffer VulkanRenderer::BeginSingleTimeCommands(VkRenderPass renderPass, VkCommandPool commandPool, std::vector<VkFramebuffer> swapChainFramebuffers)
-	{
-		VkCommandBufferAllocateInfo allocInfo{};
-		allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-		allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-		allocInfo.commandPool = commandPool;
-		allocInfo.commandBufferCount = 1;
-
-		VkCommandBuffer commandBuffer;
-		vkAllocateCommandBuffers(m_Device, &allocInfo, &commandBuffer);
-
-		VkCommandBufferBeginInfo beginInfo{};
-		beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-		beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-
-		vkBeginCommandBuffer(commandBuffer, &beginInfo);
-
-		VkRenderPassBeginInfo renderPassInfo{};
-		renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-		renderPassInfo.renderPass = renderPass;
-		renderPassInfo.framebuffer = swapChainFramebuffers[1];
-		renderPassInfo.renderArea.offset = { 0, 0 };
-		renderPassInfo.renderArea.extent = m_SwapChainExtent;
-
-		VkClearValue clearColor = { {{0.0f, 0.0f, 0.0f, 1.0f}} };
-		renderPassInfo.clearValueCount = 1;
-		renderPassInfo.pClearValues = &clearColor;
-
-		vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
-
-		return commandBuffer;
-	}
-
-	void VulkanRenderer::EndSingleTimeCommands(VkCommandBuffer commandBuffer, VkCommandPool commandPool)
+	void VulkanRenderer::EndRenderPass(VkCommandBuffer commandBuffer, VkCommandPool commandPool)
 	{
 		vkCmdEndRenderPass(commandBuffer);
 		VkResult result = vkEndCommandBuffer(commandBuffer);
@@ -1308,17 +1370,23 @@ namespace Rebulk {
 		return false;
 	}
 
-	void VulkanRenderer::CleanupSwapChain(VkSwapchainKHR swapChain, VkRenderPass renderPass, VkCommandPool commandPool, std::pair<VkPipeline, VkPipelineLayout>pipeline, std::vector<VkImageView> swapChainImageViews, std::vector<VkCommandBuffer> commandBuffers, std::vector<VkFramebuffer> swapChainFramebuffers)
+	void VulkanRenderer::CleanupSwapChain(
+		VkSwapchainKHR swapChain, VkRenderPass renderPass, VkCommandPool commandPool, std::pair<VkPipeline, VkPipelineLayout>pipeline, 
+		std::vector<VkImageView> swapChainImageViews, std::vector<VkCommandBuffer> commandBuffers, std::vector<VkFramebuffer> swapChainFramebuffers,
+		VkDescriptorPool descriptorPool, VkDescriptorSetLayout descriptorSetLayout
+	)
 	{
 		for (size_t i = 0; i < swapChainFramebuffers.size(); i++) {
 			vkDestroyFramebuffer(m_Device, swapChainFramebuffers[i], nullptr);
 		}
-
+		
 		vkFreeCommandBuffers(m_Device, commandPool, static_cast<uint32_t>(commandBuffers.size()), commandBuffers.data());
 
+		vkDestroyDescriptorSetLayout(m_Device, descriptorSetLayout, nullptr);
 		vkDestroyPipeline(m_Device, pipeline.first, nullptr);
 		vkDestroyPipelineLayout(m_Device, pipeline.second, nullptr);
 		vkDestroyRenderPass(m_Device, renderPass, nullptr);
+		vkDestroyDescriptorPool(m_Device, descriptorPool, nullptr);
 
 		for (size_t i = 0; i < swapChainImageViews.size(); i++) {
 			vkDestroyImageView(m_Device, swapChainImageViews[i], nullptr);
@@ -1333,9 +1401,11 @@ namespace Rebulk {
 			vkDestroySemaphore(m_Device, semaphores.first[i], nullptr);
 			vkDestroySemaphore(m_Device, semaphores.second[i], nullptr);
 			vkDestroyFence(m_Device, m_InFlightFences[i], nullptr);
+			vkDestroyFence(m_Device, m_ImagesInFlight[i], nullptr);
 		}
 
 		vkDestroyCommandPool(m_Device, commandPool, nullptr);
+
 
 		vkDestroyDevice(m_Device, nullptr);
 
