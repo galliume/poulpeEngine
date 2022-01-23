@@ -33,7 +33,7 @@ namespace Rebulk {
 		
 		void Init();
 		bool DrawFrame(VkSwapchainKHR swapChain, std::vector<VkCommandBuffer> commandBuffers, std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>> semaphores);
-		bool DrawSingleTimeCommands(VkCommandBuffer commandBuffer, VkSwapchainKHR swapChain);
+		bool Draw(VkCommandBuffer commandBuffer, VkSwapchainKHR swapChain);
 		void CleanupSwapChain(
 			VkSwapchainKHR swapChain, VkRenderPass renderPass, VkCommandPool commandPool, std::pair<VkPipeline, VkPipelineLayout>pipeline,
 			std::vector<VkImageView> swapChainImageViews, std::vector<VkCommandBuffer> commandBuffers, std::vector<VkFramebuffer> swapChainFramebuffers,
@@ -58,6 +58,8 @@ namespace Rebulk {
 		std::vector<VkDescriptorSet> CreateDescriptorSets(VkDescriptorPool descriptorPool, VkDescriptorSetLayout descriptorSetLayout);
 		std::vector<VkCommandBuffer> CreateCommandBuffers(VkRenderPass renderPass, VkCommandPool commandPool, std::pair<VkPipeline, VkPipelineLayout>pipeline, std::vector<VkFramebuffer> swapChainFramebuffers);
 		std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>> CreateSyncObjects();
+		SwapChainSupportDetails QuerySwapChainSupport(VkPhysicalDevice device);
+		VkExtent2D ChooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities);
 
 		inline const std::vector<const char*> GetValidationLayers() { return m_ValidationLayers; };
 		inline std::vector<VkExtensionProperties> GetExtensions() { return m_Extensions; };
@@ -95,10 +97,8 @@ namespace Rebulk {
 		void CreateSurface();						
 
 		QueueFamilyIndices FindQueueFamilies(VkPhysicalDevice device);
-		SwapChainSupportDetails QuerySwapChainSupport(VkPhysicalDevice device);
 		VkSurfaceFormatKHR ChooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats);
 		VkPresentModeKHR ChooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes);
-		VkExtent2D ChooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities);
 		VkShaderModule CreateShaderModule(const std::vector<char>& code);
 
 	private:

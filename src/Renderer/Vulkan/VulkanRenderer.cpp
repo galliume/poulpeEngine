@@ -787,8 +787,8 @@ namespace Rebulk {
 
 		VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
 		pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-		pipelineLayoutInfo.pushConstantRangeCount = 0; // Optional
-		pipelineLayoutInfo.pPushConstantRanges = nullptr; // Optional
+		pipelineLayoutInfo.pushConstantRangeCount = 0; 
+		pipelineLayoutInfo.pPushConstantRanges = nullptr;
 		pipelineLayoutInfo.setLayoutCount = 1;
 		pipelineLayoutInfo.pSetLayouts = &descriptorSetLayout;
 
@@ -1271,33 +1271,27 @@ namespace Rebulk {
 	}
 
 	void VulkanRenderer::EndRenderPass(VkCommandBuffer commandBuffer, VkCommandPool commandPool)
-	{
-		vkCmdEndRenderPass(commandBuffer);
-		VkResult result = vkEndCommandBuffer(commandBuffer);
-
-		std::cout << "EndSingleTimeCommands vkEndCommandBuffer result " << std::to_string(result) << std::endl;
-
+	{	
 		VkSubmitInfo submitInfo{};
 		submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 		submitInfo.commandBufferCount = 1;
 		submitInfo.pCommandBuffers = &commandBuffer;
 
-		result = vkQueueSubmit(m_GraphicsQueue, 1, &submitInfo, VK_NULL_HANDLE);
+		vkCmdEndRenderPass(commandBuffer);
+		VkResult result = vkEndCommandBuffer(commandBuffer);
 
-		if (result != VK_SUCCESS) {
-			std::cout << "EndSingleTimeCommands vkQueueSubmit result " << std::to_string(result) << std::endl;
-		} 
+		std::cout << "EndRenderPass vkEndCommandBuffer result " << std::to_string(result) << std::endl;
 
+		 result = vkQueueSubmit(m_GraphicsQueue, 1, &submitInfo, VK_NULL_HANDLE);
+		std::cout << "EndRenderPass vkQueueSubmit result " << std::to_string(result) << std::endl;
+		
 		result = vkQueueWaitIdle(m_GraphicsQueue);
-
-		if (result != VK_SUCCESS) {
-			std::cout << "EndSingleTimeCommands vkQueueWaitIdle result " << std::to_string(result) << std::endl;
-		}
+		std::cout << "EndRenderPass vkQueueWaitIdle result " << std::to_string(result) << std::endl;
 
 		vkFreeCommandBuffers(m_Device, commandPool, 1, &commandBuffer);
 	}
 
-	bool VulkanRenderer::DrawSingleTimeCommands(VkCommandBuffer commandBuffer, VkSwapchainKHR swapChain)
+	bool VulkanRenderer::Draw(VkCommandBuffer commandBuffer, VkSwapchainKHR swapChain)
 	{
 		vkWaitForFences(m_Device, 1, &m_InFlightFences[m_CurrentFrame], VK_TRUE, UINT64_MAX);
 
