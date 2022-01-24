@@ -74,16 +74,22 @@ namespace Rebulk {
 		ImGui::BeginChild(str_id, size_arg, border, extra_flags);
 	}
 
-	void Im::Render(GLFWwindow* window, VkCommandBuffer commandBuffer, VkPipeline pipeline)
+	void Im::Render(GLFWwindow* window)
 	{
 		ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
 		ImGui::Render();
 		int displayW, displayH;
 		glfwGetFramebufferSize(window, &displayW, &displayH);
+	}
 
+	void Im::RenderDrawData(VkCommandBuffer commandBuffer, VkPipeline pipeline)
+	{
 		ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), commandBuffer, pipeline);
+	}
 
+	void Im::RenderPlatformWindows()
+	{
 		ImGuiIO& io = ImGui::GetIO();
 
 		if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {

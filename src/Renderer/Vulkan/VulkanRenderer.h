@@ -33,7 +33,6 @@ namespace Rebulk {
 		
 		void Init();
 		bool DrawFrame(VkSwapchainKHR swapChain, std::vector<VkCommandBuffer> commandBuffers, std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>> semaphores);
-		bool Draw(VkCommandBuffer commandBuffer, VkSwapchainKHR swapChain);
 		void CleanupSwapChain(
 			VkSwapchainKHR swapChain, VkRenderPass renderPass, VkCommandPool commandPool, std::pair<VkPipeline, VkPipelineLayout>pipeline,
 			std::vector<VkImageView> swapChainImageViews, std::vector<VkCommandBuffer> commandBuffers, std::vector<VkFramebuffer> swapChainFramebuffers,
@@ -44,18 +43,18 @@ namespace Rebulk {
 		void Destroy(VkCommandPool commandPool, std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>> semaphores);
 
 		VkRenderPass CreateRenderPass();
-		void BeginRenderPass(VkRenderPass renderPass, VkCommandBuffer commandBuffer, std::vector<VkFramebuffer> swapChainFramebuffers);
-		void EndRenderPass(VkCommandBuffer commandBuffer, VkCommandPool commandPool);
+		void BeginRenderPass(VkRenderPass renderPass, std::vector<VkCommandBuffer> commandBuffers, std::vector<VkFramebuffer> swapChainFramebuffers, std::pair<VkPipeline, VkPipelineLayout>pipeline);
+		void EndRenderPass(std::vector<VkCommandBuffer> commandBuffers);
 
 		VkCommandBuffer CreateCommandBuffer(VkCommandPool commandPool);
 		VkSwapchainKHR CreateSwapChain();
 		std::vector<VkImageView> CreateImageViews();
-		std::pair<VkPipeline, VkPipelineLayout> CreateGraphicsPipeline(VkRenderPass renderPass, VkCommandBuffer commandBuffer, VkDescriptorSetLayout descriptorSetLayout);
+		std::pair<VkPipeline, VkPipelineLayout> CreateGraphicsPipeline(VkRenderPass renderPass, VkDescriptorSetLayout descriptorSetLayout);
 		std::vector<VkFramebuffer> CreateFramebuffers(VkRenderPass renderPass, std::vector<VkImageView> swapChainImageViews);
 		VkCommandPool CreateCommandPool();
 		VkDescriptorPool CreateDescriptorPool();
 		VkDescriptorSetLayout CreateDescriptorSetLayout();
-		std::vector<VkDescriptorSet> CreateDescriptorSets(VkDescriptorPool descriptorPool, VkDescriptorSetLayout descriptorSetLayout);
+		std::vector<VkDescriptorSet> CreateDescriptorSets(VkDescriptorPool descriptorPool, VkDescriptorSetLayout descriptorSetLayout, std::vector<VkImageView> imageViews);
 		std::vector<VkCommandBuffer> CreateCommandBuffers(VkRenderPass renderPass, VkCommandPool commandPool, std::pair<VkPipeline, VkPipelineLayout>pipeline, std::vector<VkFramebuffer> swapChainFramebuffers);
 		std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>> CreateSyncObjects();
 		SwapChainSupportDetails QuerySwapChainSupport(VkPhysicalDevice device);
@@ -100,6 +99,7 @@ namespace Rebulk {
 		VkSurfaceFormatKHR ChooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats);
 		VkPresentModeKHR ChooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes);
 		VkShaderModule CreateShaderModule(const std::vector<char>& code);
+		uint32_t FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
 
 	private:
 		const int m_MAX_FRAMES_IN_FLIGHT = 2;
