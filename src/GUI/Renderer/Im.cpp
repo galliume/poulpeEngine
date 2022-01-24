@@ -2,7 +2,7 @@
 
 namespace Rebulk {
 
-	void Im::Init(GLFWwindow* window)
+	void Im::Init(GLFWwindow* window, ImGui_ImplVulkan_InitInfo* initInfo, VkRenderPass renderPass)
 	{
 		const char* glsl_version = "#version 150";
 		glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -17,6 +17,7 @@ namespace Rebulk {
 		io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;           
 		io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;         
 		io.ConfigDockingWithShift = false;
+		io.ConfigViewportsNoAutoMerge = true;
 		io.BackendFlags |= ImGuiBackendFlags_HasMouseCursors;
 
 		ImGui::StyleColorsDark();
@@ -27,16 +28,20 @@ namespace Rebulk {
 			style.Colors[ImGuiCol_WindowBg].w = 1.0f;
 		}
 
-		ImGui_ImplGlfw_InitForOpenGL(window, true);
-		ImGui_ImplOpenGL3_Init(glsl_version);
+		ImGui_ImplGlfw_InitForVulkan(window, true);
+		ImGui_ImplVulkan_Init(initInfo, renderPass);
 	}
 
 	void Im::NewFrame()
 	{
-		// Feed inputs to dear imgui, start new frame
 		ImGui_ImplGlfw_NewFrame();
-		ImGui_ImplOpenGL3_NewFrame();
+		ImGui_ImplVulkan_NewFrame();
 		ImGui::NewFrame();
+	}
+	
+	void Im::CreateFontsTexture(VkCommandBuffer commandBuffer)
+	{
+		ImGui_ImplVulkan_CreateFontsTexture(commandBuffer);
 	}
 
 	void Im::Begin(const char* name, bool* p_open, ImGuiWindowFlags flags)
@@ -69,33 +74,29 @@ namespace Rebulk {
 		ImGui::BeginChild(str_id, size_arg, border, extra_flags);
 	}
 
-	void Im::Render(GLFWwindow* window)
+	void Im::Render(GLFWwindow* window, VkCommandBuffer commandBuffer, VkPipeline pipeline)
 	{
 		ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
 		ImGui::Render();
-		int display_w, display_h;
-		glfwGetFramebufferSize(window, &display_w, &display_h);
+		int displayW, displayH;
+		glfwGetFramebufferSize(window, &displayW, &displayH);
 
-		glViewport(0, 0, display_w, display_h);
-		glClearColor(clear_color.x * clear_color.w, clear_color.y * clear_color.w, clear_color.z * clear_color.w, clear_color.w);
-		glClear(GL_COLOR_BUFFER_BIT);
+		ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), commandBuffer, pipeline);
 
-		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 		ImGuiIO& io = ImGui::GetIO();
 
 		if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
-			GLFWwindow* backup_current_context = glfwGetCurrentContext();
 			ImGui::UpdatePlatformWindows();
 			ImGui::RenderPlatformWindowsDefault();
-			glfwMakeContextCurrent(backup_current_context);
 		}
 	}
 
 	void Im::Destroy()
 	{
+		ImGui_ImplVulkan_DestroyFontUploadObjects();
+		ImGui_ImplVulkan_Shutdown();
 		ImGui_ImplGlfw_Shutdown();
-		ImGui_ImplOpenGL3_Shutdown();
 		ImGui::DestroyContext();
 	}
 }
