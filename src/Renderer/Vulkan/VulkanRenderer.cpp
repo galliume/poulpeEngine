@@ -657,7 +657,6 @@ namespace Rebulk {
 
 		for (size_t i = 0; i < m_SwapChainImages.size(); i++) {
 
-			VkImage image;
 			VkDeviceMemory depthImageMemory;
 
 			VkImageCreateInfo info = {};
@@ -671,16 +670,16 @@ namespace Rebulk {
 			info.arrayLayers = 1;
 			info.samples = VK_SAMPLE_COUNT_1_BIT;
 			info.tiling = VK_IMAGE_TILING_OPTIMAL;
-			info.usage = VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+			info.usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
 			info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 			info.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 
-			if (vkCreateImage(m_Device, &info, nullptr, &image) != VK_SUCCESS) {
+			if (vkCreateImage(m_Device, &info, nullptr, &m_SwapChainImages[i]) != VK_SUCCESS) {
 				throw std::runtime_error("failed to create image!");
 			}
 			
 			VkMemoryRequirements memRequirements;
-			vkGetImageMemoryRequirements(m_Device, image, &memRequirements);
+			vkGetImageMemoryRequirements(m_Device, m_SwapChainImages[i], &memRequirements);
 
 			VkMemoryAllocateInfo allocInfo{};
 			allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
@@ -692,11 +691,11 @@ namespace Rebulk {
 				throw std::runtime_error("failed to allocate image memory!");
 			}
 			
-			vkBindImageMemory(m_Device, image, depthImageMemory, 0);
+			vkBindImageMemory(m_Device, m_SwapChainImages[i], depthImageMemory, 0);
 			
 			VkImageViewCreateInfo createInfo{};
 			createInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-			createInfo.image = image;
+			createInfo.image = m_SwapChainImages[i];
 			createInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
 			createInfo.format = m_SwapChainImageFormat;
 			createInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
@@ -949,13 +948,22 @@ namespace Rebulk {
 		subpass.colorAttachmentCount = 1;
 		subpass.pColorAttachments = &colorAttachmentRef;
 
-		VkSubpassDependency dependency{};
-        dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
-        dependency.dstSubpass = 0;
-        dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-        dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-        dependency.srcAccessMask = 0;
-        dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+		VkSubpassDependency dependencies[2]{};
+		dependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL;
+		dependencies[0].dstSubpass = 0;
+		dependencies[0].srcStageMask = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
+		dependencies[0].dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+		dependencies[0].srcAccessMask = VK_ACCESS_MEMORY_READ_BIT;
+		dependencies[0].dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+		dependencies[0].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
+
+		dependencies[1].srcSubpass = 0;
+		dependencies[1].dstSubpass = VK_SUBPASS_EXTERNAL;
+		dependencies[1].srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+		dependencies[1].dstStageMask = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
+		dependencies[1].srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+		dependencies[1].dstAccessMask = VK_ACCESS_MEMORY_READ_BIT;
+		dependencies[1].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
 
 		VkRenderPassCreateInfo renderPassInfo{};
 		renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
@@ -964,7 +972,7 @@ namespace Rebulk {
 		renderPassInfo.subpassCount = 1;
 		renderPassInfo.pSubpasses = &subpass;
 		renderPassInfo.dependencyCount = 1;
-		renderPassInfo.pDependencies = &dependency;
+		renderPassInfo.pDependencies = { dependencies };
 
 		VkResult result = vkCreateRenderPass(m_Device, &renderPassInfo, nullptr, &renderPass);
 
@@ -1321,13 +1329,67 @@ namespace Rebulk {
 
 			VkRect2D scissor = { { 0, 0 }, { (uint32_t)m_SwapChainExtent.width, (uint32_t)m_SwapChainExtent.height } };
 			vkCmdSetScissor(commandBuffers[i], 0, 1, &scissor);
+
+			TransitionLayout(commandBuffers[i], m_SwapChainImages[i], VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
 		}
+	}
+
+	void VulkanRenderer::TransitionLayout(VkCommandBuffer commandBuffer, VkImage image, VkImageLayout oldLayout, VkImageLayout newLayout)
+	{
+		VkImageMemoryBarrier barrier{};
+		barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+		barrier.oldLayout = oldLayout;
+		barrier.newLayout = newLayout;
+		barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+		barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+		barrier.image = image;
+		barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+		barrier.subresourceRange.baseMipLevel = 0;
+		barrier.subresourceRange.levelCount = 1;
+		barrier.subresourceRange.baseArrayLayer = 0;
+		barrier.subresourceRange.layerCount = 1;
+		//barrier.subresourceRange.levelCount = mipLevels;
+
+		VkPipelineStageFlags sourceStage;
+		VkPipelineStageFlags destinationStage;
+
+		if (oldLayout == VK_IMAGE_LAYOUT_UNDEFINED && newLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL)
+		{
+			barrier.srcAccessMask = 0;
+			barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+
+			sourceStage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+			destinationStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+		}
+		else if (oldLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL && newLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
+		{
+			barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+			barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+
+			sourceStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+			destinationStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+		}
+		else
+		{
+			throw std::invalid_argument("unsupported layout transition!");
+		}
+
+		vkCmdPipelineBarrier(
+			commandBuffer,
+			sourceStage, destinationStage,
+			0,
+			0, nullptr,
+			0, nullptr,
+			1, &barrier
+		);
 	}
 
 	void VulkanRenderer::EndRenderPass(std::vector<VkCommandBuffer> commandBuffers)
 	{	
 		for (size_t i = 0; i < commandBuffers.size(); i++) {
-			vkCmdEndRenderPass(commandBuffers[i]);
+			vkCmdEndRenderPass(commandBuffers[i]);			
+
+			TransitionLayout(commandBuffers[i], m_SwapChainImages[i], VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
 			if (vkEndCommandBuffer(commandBuffers[i]) != VK_SUCCESS) {
 				m_Messages.emplace_back("failed to record command buffer!");

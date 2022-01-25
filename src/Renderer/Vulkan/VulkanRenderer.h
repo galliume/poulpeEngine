@@ -94,6 +94,7 @@ namespace Rebulk {
 		void CreateLogicalDevice();
 		void PickPhysicalDevice();
 		void CreateSurface();						
+		void TransitionLayout(VkCommandBuffer commandBuffer, VkImage image, VkImageLayout oldLayout, VkImageLayout newLayout);
 
 		QueueFamilyIndices FindQueueFamilies(VkPhysicalDevice device);
 		VkSurfaceFormatKHR ChooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats);
