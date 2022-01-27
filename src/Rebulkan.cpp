@@ -33,33 +33,34 @@ int main(int argc, char** argv)
 	VkCommandBuffer commandBuffer = renderer->CreateCommandBuffer(commandPool);
 	VkDescriptorSetLayout descriptorSetLayout = renderer->CreateDescriptorSetLayout();
 	std::pair<VkPipeline, VkPipelineLayout>pipeline = renderer->CreateGraphicsPipeline(renderPass, commandBuffer, descriptorSetLayout);
+	renderer->CreateVertexBuffer();
 	VkDescriptorPool descriptorPool = renderer->CreateDescriptorPool();
 	std::vector<VkCommandBuffer> commandBuffers = renderer->CreateCommandBuffers(renderPass, commandPool, pipeline, swapChainFramebuffers);
 	std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>> semaphores = renderer->CreateSyncObjects();
 
-	ImGui_ImplVulkan_InitInfo info = {};
-	info.Instance = renderer->GetInstance();
-	info.PhysicalDevice = renderer->GetPhysicalDevice();
-	info.Device = renderer->GetDevice();
-	info.QueueFamily = renderer->GetQueueFamily();
-	info.Queue = renderer->GetGraphicsQueue();
-	info.PipelineCache = nullptr;               
-	info.DescriptorPool = descriptorPool;
-	info.Subpass = 0;
-	info.MinImageCount = 2;
-	info.ImageCount = 2;
-	info.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
-	info.Allocator = nullptr;
-	info.CheckVkResultFn = [](VkResult err) {
-		std::cerr << "IMGUI VULKAN ERROR " + std::to_string(err) << std::endl;
-	};
+	//ImGui_ImplVulkan_InitInfo info = {};
+	//info.Instance = renderer->GetInstance();
+	//info.PhysicalDevice = renderer->GetPhysicalDevice();
+	//info.Device = renderer->GetDevice();
+	//info.QueueFamily = renderer->GetQueueFamily();
+	//info.Queue = renderer->GetGraphicsQueue();
+	//info.PipelineCache = nullptr;               
+	//info.DescriptorPool = descriptorPool;
+	//info.Subpass = 0;
+	//info.MinImageCount = 2;
+	//info.ImageCount = 2;
+	//info.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
+	//info.Allocator = nullptr;
+	//info.CheckVkResultFn = [](VkResult err) {
+	//	std::cerr << "IMGUI VULKAN ERROR " + std::to_string(err) << std::endl;
+	//};
 
-	Rebulk::Im::Init(window, &info, renderPass);
-	Rebulk::Im::CreateFontsTexture(commandBuffer);
-	renderer->BeginRenderPass(renderPass, commandBuffer, swapChainFramebuffers);
-	renderer->EndRenderPass(commandBuffer, commandPool);
+	//Rebulk::Im::Init(window, &info, renderPass);
+	//Rebulk::Im::CreateFontsTexture(commandBuffer);
+	//renderer->BeginRenderPass(renderPass, commandBuffer, swapChainFramebuffers);
+	//renderer->EndRenderPass(commandBuffer, commandPool);
 
-	Rebulk::VulkanLayer* vulkanLayer = new Rebulk::VulkanLayer(window, renderer);
+	//Rebulk::VulkanLayer* vulkanLayer = new Rebulk::VulkanLayer(window, renderer);
 	
 	glfwSetWindowUserPointer(window, renderer);
 	glfwSetFramebufferSizeCallback(window, FramebufferResizeCallback);
@@ -75,21 +76,21 @@ int main(int argc, char** argv)
 
 		glfwPollEvents();
 			
-		Rebulk::Im::NewFrame();
+		//Rebulk::Im::NewFrame();
 
-		vulkanLayer->DisplayFpsCounter(timeStep);
-		vulkanLayer->DisplayLogs();
-		vulkanLayer->DisplayAPI(renderer->GetDeviceProperties());
+		//vulkanLayer->DisplayFpsCounter(timeStep);
+		//vulkanLayer->DisplayLogs();
+		//vulkanLayer->DisplayAPI(renderer->GetDeviceProperties());
 	
-		Rebulk::Im::Render(window, commandBuffer, pipeline.first);
+		//Rebulk::Im::Render(window, commandBuffer, pipeline.first);
 
-		ImDrawData* main_draw_data = ImGui::GetDrawData();
-		const bool main_is_minimized = (main_draw_data->DisplaySize.x <= 0.0f || main_draw_data->DisplaySize.y <= 0.0f);
+		//ImDrawData* main_draw_data = ImGui::GetDrawData();
+		//const bool main_is_minimized = (main_draw_data->DisplaySize.x <= 0.0f || main_draw_data->DisplaySize.y <= 0.0f);
 	
-		if (!main_is_minimized) {
+		if (true) {
 			renderer->BeginRenderPass(renderPass, commandBuffer, swapChainFramebuffers);
-			bool isExpired = renderer->DrawFrame(swapChain, commandBuffers, semaphores);
 			renderer->EndRenderPass(commandBuffer, commandPool);
+			bool isExpired = renderer->DrawFrame(swapChain, commandBuffers, semaphores);
 
 			if (isExpired ) {
 				renderer->CleanupSwapChain(swapChain, renderPass, commandPool, pipeline, swapChainImageViews, commandBuffers, swapChainFramebuffers, descriptorPool, descriptorSetLayout);
@@ -111,12 +112,12 @@ int main(int argc, char** argv)
 		lastTime = currentTime;		
 	}
 
-	Rebulk::Im::Destroy();
+	//Rebulk::Im::Destroy();
 
 	renderer->CleanupSwapChain(swapChain, renderPass, commandPool, pipeline, swapChainImageViews, commandBuffers, swapChainFramebuffers, descriptorPool, descriptorSetLayout);
 	renderer->Destroy(commandPool, semaphores);
 
-	vulkanLayer->Destroy();
+	//vulkanLayer->Destroy();
 
 	glfwDestroyWindow(window);
 	glfwTerminate();
