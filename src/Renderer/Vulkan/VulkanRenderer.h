@@ -7,8 +7,47 @@
 #include "rebulkpch.h"
 #include "vulkan/vulkan.h"
 #include "Pattern/ISubject.h"
+#include <glm/glm.hpp>
+#include <array>
 
 namespace Rebulk {
+
+	struct Vertex {
+		glm::vec2 pos;
+		glm::vec3 color;
+		
+		static VkVertexInputBindingDescription GetBindingDescription() {
+
+			VkVertexInputBindingDescription bindingDescription{};
+			bindingDescription.binding = 0;
+			bindingDescription.stride = sizeof(Vertex);
+			bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+
+			return bindingDescription;
+		}
+
+		static std::array<VkVertexInputAttributeDescription, 2> GetAttributeDescriptions() {
+
+			std::array<VkVertexInputAttributeDescription, 2> attributeDescriptions{};
+			attributeDescriptions[0].binding = 0;
+			attributeDescriptions[0].location = 0;
+			attributeDescriptions[0].format = VK_FORMAT_R32G32_SFLOAT;
+			attributeDescriptions[0].offset = offsetof(Vertex, pos);
+
+			attributeDescriptions[1].binding = 0;
+			attributeDescriptions[1].location = 1;
+			attributeDescriptions[1].format = VK_FORMAT_R32G32B32_SFLOAT;
+			attributeDescriptions[1].offset = offsetof(Vertex, color);
+
+			return attributeDescriptions;
+		}
+	};
+
+	const std::vector<Vertex> vertices = {
+	{{0.0f, -0.5f}, {1.0f, 1.0f, 1.0f}},
+	{{0.5f, 0.5f}, {0.0f, 1.0f, 0.0f}},
+	{{-0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}}
+	};
 
 	struct QueueFamilyIndices {
 		std::optional<uint32_t> graphicsFamily;
@@ -46,6 +85,7 @@ namespace Rebulk {
 		VkRenderPass CreateRenderPass();
 		void BeginRenderPass(VkRenderPass renderPass, VkCommandBuffer commandBuffer, std::vector<VkFramebuffer> swapChainFramebuffers);
 		void EndRenderPass(VkCommandBuffer commandBuffer, VkCommandPool commandPool);
+		void CreateVertexBuffer();
 
 		VkCommandBuffer CreateCommandBuffer(VkCommandPool commandPool);
 		VkSwapchainKHR CreateSwapChain();
@@ -100,6 +140,7 @@ namespace Rebulk {
 		VkSurfaceFormatKHR ChooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats);
 		VkPresentModeKHR ChooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes);
 		VkShaderModule CreateShaderModule(const std::vector<char>& code);
+		uint32_t FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
 
 	private:
 		const int m_MAX_FRAMES_IN_FLIGHT = 2;
@@ -135,6 +176,8 @@ namespace Rebulk {
 		VkCommandPool m_CommandPool = VK_NULL_HANDLE;
 		QueueFamilyIndices m_QueueFamilyIndices = {};
 		VkDescriptorPool m_DescriptorPool = VK_NULL_HANDLE;
+		VkBuffer m_VertexBuffer;
+		VkDeviceMemory m_VertexBufferMemory;
 
 		std::list<IObserver*> m_Observers = {};
 		std::vector<std::string> m_Messages = {};
