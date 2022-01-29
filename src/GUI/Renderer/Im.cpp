@@ -81,10 +81,9 @@ namespace Rebulk {
 		ImGui::Render();
 		int displayW, displayH;
 		glfwGetFramebufferSize(window, &displayW, &displayH);
+		ImGuiIO& io = ImGui::GetIO();
 
 		ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), commandBuffer, pipeline);
-
-		ImGuiIO& io = ImGui::GetIO();
 
 		if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
 			ImGui::UpdatePlatformWindows();
