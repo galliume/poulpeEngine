@@ -43,12 +43,6 @@ namespace Rebulk {
 		}
 	};
 
-	const std::vector<Vertex> vertices = {
-		{{0.0f, -0.5f}, {1.0f, 1.0f, 1.0f}},
-		{{0.5f, 0.5f}, {0.0f, 1.0f, 0.0f}},
-		{{-0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}}
-	};
-
 	struct QueueFamilyIndices {
 		std::optional<uint32_t> graphicsFamily;
 		std::optional<uint32_t> presentFamily;
@@ -78,15 +72,17 @@ namespace Rebulk {
 		VkDescriptorSetLayout CreateDescriptorSetLayout();
 		VkPipelineLayout CreatePipelineLayout(VkDescriptorSetLayout descriptorSetLayout);
 		VkPipeline CreateGraphicsPipeline(VkRenderPass renderPass, VkPipelineLayout pipelineLayout, VkPipelineCache pipelineCache, VkShaderModule vs, VkShaderModule fs);
-		VkSwapchainKHR CreateSwapChain();
+		VkSwapchainKHR CreateSwapChain(VkSwapchainKHR oldSwapChain = VK_NULL_HANDLE);
 		std::vector<VkImageView> CreateImageViews();
 		std::vector<VkFramebuffer> CreateFramebuffers(VkRenderPass renderPass, std::vector<VkImageView> swapChainImageViews);
 		VkCommandPool CreateCommandPool();
 		std::vector<VkCommandBuffer> AllocateCommandBuffers(VkCommandPool commandPool, uint16_t size = 1);
-		void CreateVertexBuffer();
+		VkBuffer CreateVertexBuffer(std::vector<Rebulk::Vertex> vertices);
 		VkDescriptorPool CreateDescriptorPool();
 		std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>> CreateSyncObjects();
-		
+		VkImageMemoryBarrier SetupImageMemoryBarrier(VkImage image, VkAccessFlags srcAccessMask, VkAccessFlags dstAccessMask, VkImageLayout oldLayout, VkImageLayout newLayout);
+		bool SouldResizeSwapChain(VkSwapchainKHR swapChain);
+
 		/**
 		* Vulkan drawing functions, in main loop
 		**/
@@ -96,7 +92,7 @@ namespace Rebulk {
 		void SetViewPort(VkCommandBuffer commandBuffer);
 		void SetScissor(VkCommandBuffer commandBuffer);
 		void BindPipeline(VkCommandBuffer commandBuffer, VkPipeline pipeline);
-		void Draw(VkCommandBuffer commandBuffer);
+		void Draw(VkCommandBuffer commandBuffer, VkBuffer vertexBuffer, std::vector<Rebulk::Vertex> vertices);
 		void EndRenderPass(VkCommandBuffer commandBuffer);
 		void EndCommandBuffer(VkCommandBuffer commandBuffer);
 		uint32_t AcquireNextImageKHR(VkSwapchainKHR swapChain, std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>>& semaphores);
@@ -113,7 +109,7 @@ namespace Rebulk {
 			VkDescriptorPool descriptorPool, VkDescriptorSetLayout descriptorSetLayout
 		);
 		void Destroy(VkCommandPool commandPool, std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>> semaphores);
-
+		void DestroySwapchain(VkDevice device, VkSwapchainKHR swapChain, std::vector<VkFramebuffer> swapChainFramebuffers, std::vector<VkImageView> swapChainImageViews);
 
 		/*
 		* Helper functions.
@@ -135,6 +131,11 @@ namespace Rebulk {
 		inline VkPhysicalDeviceFeatures GetDeviceFeatures() { return m_DeviceFeatures; };
 		inline bool IsFramebufferResized() { return m_FramebufferResized; };
 		inline void SetFramebufferResized(bool hasBeenResized = false) { m_FramebufferResized = hasBeenResized; };
+		inline std::vector<VkImage> GetSwapChainImages() { return m_SwapChainImages; };
+		inline VkExtent2D GetSwapChainExtent() { return m_SwapChainExtent; };
+		inline VkSurfaceKHR GetSurface() { return m_Surface; };
+
+		SwapChainSupportDetails QuerySwapChainSupport(VkPhysicalDevice device);
 
 		void Attach(IObserver* observer) override;
 		void Detach(IObserver* observer) override;
@@ -159,7 +160,6 @@ namespace Rebulk {
 		VkSurfaceFormatKHR ChooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats);
 		VkPresentModeKHR ChooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes);
 		uint32_t FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
-		SwapChainSupportDetails QuerySwapChainSupport(VkPhysicalDevice device);
 		std::vector<VkDescriptorSet> CreateDescriptorSets(VkDescriptorPool descriptorPool, VkDescriptorSetLayout descriptorSetLayout);
 		VkExtent2D ChooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities);
 
@@ -197,8 +197,6 @@ namespace Rebulk {
 		VkCommandPool m_CommandPool = VK_NULL_HANDLE;
 		QueueFamilyIndices m_QueueFamilyIndices = {};
 		VkDescriptorPool m_DescriptorPool = VK_NULL_HANDLE;
-		VkBuffer m_VertexBuffer;
-		VkDeviceMemory m_VertexBufferMemory;
 
 		std::list<IObserver*> m_Observers = {};
 		std::vector<std::string> m_Messages = {};
