@@ -460,7 +460,7 @@ namespace Rebulk {
 		return actualExtent;
 	}
 
-	VkSwapchainKHR VulkanRenderer::CreateSwapChain()
+	VkSwapchainKHR VulkanRenderer::CreateSwapChain(VkSwapchainKHR oldSwapChain)
 	{
 		VkSwapchainKHR swapChain = VK_NULL_HANDLE;
 
@@ -490,7 +490,7 @@ namespace Rebulk {
 		createInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
 		createInfo.presentMode = presentMode;
 		createInfo.clipped = VK_TRUE;
-		createInfo.oldSwapchain = VK_NULL_HANDLE;
+		createInfo.oldSwapchain = oldSwapChain;
 
 		QueueFamilyIndices indices = FindQueueFamilies(m_PhysicalDevice);
 		uint32_t queueFamilyIndices[] = { indices.graphicsFamily.value(), indices.presentFamily.value() };
@@ -517,13 +517,30 @@ namespace Rebulk {
 
 		vkGetSwapchainImagesKHR(m_Device, swapChain, &imageCount, nullptr);
 		m_SwapChainImages.resize(imageCount);
+
 		vkGetSwapchainImagesKHR(m_Device, swapChain, &imageCount, m_SwapChainImages.data());
+
 		m_SwapChainImageFormat = surfaceFormat.format;
 		m_SwapChainExtent = extent;
 
 		Notify();
 
 		return swapChain;
+	}
+
+	bool VulkanRenderer::SouldResizeSwapChain(VkSwapchainKHR swapChain)
+	{
+		VkExtent2D currentExtent = GetSwapChainExtent();
+
+		SwapChainSupportDetails swapChainSupport = QuerySwapChainSupport(m_PhysicalDevice);
+		VkSurfaceFormatKHR surfaceFormat = ChooseSwapSurfaceFormat(swapChainSupport.formats);
+		VkPresentModeKHR presentMode = ChooseSwapPresentMode(swapChainSupport.presentModes);
+		VkExtent2D extent = ChooseSwapExtent(swapChainSupport.capabilities);
+
+		uint32_t newWidth = extent.width;
+		uint32_t newHeight = extent.height;
+
+		return (currentExtent.width == newWidth && currentExtent.height == newHeight) ? false : true;
 	}
 
 	std::vector<VkImageView> VulkanRenderer::CreateImageViews()
@@ -765,7 +782,7 @@ namespace Rebulk {
 		colorAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
 		colorAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
 		colorAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-		colorAttachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+		colorAttachment.finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
 		VkAttachmentReference colorAttachmentRef{};
 		colorAttachmentRef.attachment = 0;
@@ -1197,9 +1214,9 @@ namespace Rebulk {
 		vkResetCommandPool(m_Device, commandPool, 0);
 	}
 
-	void VulkanRenderer::Draw(VkCommandBuffer commandBuffer)
+	void VulkanRenderer::Draw(VkCommandBuffer commandBuffer, VkBuffer vertexBuffer, std::vector<Rebulk::Vertex> vertices)
 	{
-		VkBuffer vertexBuffers[] = { m_VertexBuffer };
+		VkBuffer vertexBuffers[] = { vertexBuffer };
 		VkDeviceSize offsets[] = { 0 };
 		vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
 		vkCmdDraw(commandBuffer, static_cast<uint32_t>(vertices.size()), 1, 0, 0);
@@ -1211,11 +1228,11 @@ namespace Rebulk {
 		VkDescriptorPool descriptorPool, VkDescriptorSetLayout descriptorSetLayout
 	)
 	{
-		for (size_t i = 0; i < swapChainFramebuffers.size(); i++) {
-			vkDestroyFramebuffer(m_Device, swapChainFramebuffers[i], nullptr);
-		}
+		//for (size_t i = 0; i < swapChainFramebuffers.size(); i++) {
+		//	vkDestroyFramebuffer(m_Device, swapChainFramebuffers[i], nullptr);
+		//}
 		
-		vkFreeCommandBuffers(m_Device, commandPool, static_cast<uint32_t>(commandBuffers.size()), commandBuffers.data());
+		//vkFreeCommandBuffers(m_Device, commandPool, static_cast<uint32_t>(commandBuffers.size()), commandBuffers.data());
 
 		vkDestroyDescriptorSetLayout(m_Device, descriptorSetLayout, nullptr);
 		vkDestroyPipeline(m_Device, pipeline, nullptr);
@@ -1232,8 +1249,8 @@ namespace Rebulk {
 
 	void VulkanRenderer::Destroy(VkCommandPool commandPool, std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>> semaphores)
 	{
-		vkDestroyBuffer(m_Device, m_VertexBuffer, nullptr);
-		vkFreeMemory(m_Device, m_VertexBufferMemory, nullptr);
+		//vkDestroyBuffer(m_Device, m_VertexBuffer, nullptr);
+		//vkFreeMemory(m_Device, m_VertexBufferMemory, nullptr);
 
 		for (size_t i = 0; i < m_MAX_FRAMES_IN_FLIGHT; i++) {
 			vkDestroySemaphore(m_Device, semaphores.first[i], nullptr);
@@ -1258,36 +1275,70 @@ namespace Rebulk {
 		Notify();
 	}
 
-	void VulkanRenderer::CreateVertexBuffer()
+	void VulkanRenderer::DestroySwapchain(VkDevice device, VkSwapchainKHR swapChain, std::vector<VkFramebuffer> swapChainFramebuffers, std::vector<VkImageView> swapChainImageViews)
 	{
+		for (uint32_t i = 0; i < swapChainFramebuffers.size(); ++i)
+			vkDestroyFramebuffer(device, swapChainFramebuffers[i], 0);
+
+		for (uint32_t i = 0; i < swapChainImageViews.size(); ++i)
+			vkDestroyImageView(device, swapChainImageViews[i], 0);
+
+		vkDestroySwapchainKHR(device, swapChain, 0);
+	}
+
+	VkBuffer VulkanRenderer::CreateVertexBuffer(std::vector<Rebulk::Vertex> vertices)
+	{
+		VkBuffer vertexBuffer;
+		VkDeviceMemory vertexBufferMemory;
+
 		VkBufferCreateInfo bufferInfo{};
 		bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
 		bufferInfo.size = sizeof(vertices[0]) * vertices.size();
 		bufferInfo.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
 		bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-		if (vkCreateBuffer(m_Device, &bufferInfo, nullptr, &m_VertexBuffer) != VK_SUCCESS) {
+		if (vkCreateBuffer(m_Device, &bufferInfo, nullptr, &vertexBuffer) != VK_SUCCESS) {
 			throw std::runtime_error("failed to create vertex buffer!");
 		}
 
 		VkMemoryRequirements memRequirements;
-		vkGetBufferMemoryRequirements(m_Device, m_VertexBuffer, &memRequirements);
+		vkGetBufferMemoryRequirements(m_Device, vertexBuffer, &memRequirements);
 
 		VkMemoryAllocateInfo allocInfo{};
 		allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
 		allocInfo.allocationSize = memRequirements.size;
 		allocInfo.memoryTypeIndex = FindMemoryType(memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 		
-		if (vkAllocateMemory(m_Device, &allocInfo, nullptr, &m_VertexBufferMemory) != VK_SUCCESS) {
+		if (vkAllocateMemory(m_Device, &allocInfo, nullptr, &vertexBufferMemory) != VK_SUCCESS) {
 			throw std::runtime_error("failed to allocate vertex buffer memory!");
 		}
 
-		vkBindBufferMemory(m_Device, m_VertexBuffer, m_VertexBufferMemory, 0);
+		vkBindBufferMemory(m_Device, vertexBuffer, vertexBufferMemory, 0);
 
 		void* data;
-		vkMapMemory(m_Device, m_VertexBufferMemory, 0, bufferInfo.size, 0, &data);
+		vkMapMemory(m_Device, vertexBufferMemory, 0, bufferInfo.size, 0, &data);
 		memcpy(data, vertices.data(), (size_t)bufferInfo.size);
-		vkUnmapMemory(m_Device, m_VertexBufferMemory);
+		vkUnmapMemory(m_Device, vertexBufferMemory);
+
+		return vertexBuffer;
+	}
+
+	VkImageMemoryBarrier VulkanRenderer::SetupImageMemoryBarrier(VkImage image, VkAccessFlags srcAccessMask, VkAccessFlags dstAccessMask, VkImageLayout oldLayout, VkImageLayout newLayout)
+	{
+		VkImageMemoryBarrier result = { VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER };
+		result.srcAccessMask = srcAccessMask;
+		result.dstAccessMask = dstAccessMask;
+		result.oldLayout = oldLayout;
+		result.newLayout = newLayout;
+		result.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+		result.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+		result.image = image;
+		result.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+		//those constants don't work on android 
+		result.subresourceRange.levelCount = VK_REMAINING_MIP_LEVELS;
+		result.subresourceRange.layerCount = VK_REMAINING_ARRAY_LAYERS;
+
+		return result;
 	}
 
 	uint32_t VulkanRenderer::FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties)
