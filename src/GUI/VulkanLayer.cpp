@@ -11,9 +11,9 @@ namespace Rebulk
 	
 	void VulkanLayer::Render(VkRenderPass renderPass, VkCommandPool commandPool, VkSwapchainKHR swapChain, std::vector<VkFramebuffer> swapChainFramebuffers, VkPipeline pipeline)
 	{
-		VkCommandBuffer commandBuffer = m_VulkanRenderer->CreateCommandBuffer(commandPool);
-		m_VulkanRenderer->BeginRenderPass(renderPass, commandBuffer, swapChainFramebuffers);
-		Im::Render(m_Window, commandBuffer, pipeline);
+		//VkCommandBuffer commandBuffer = m_VulkanRenderer->CreateCommandBuffer(commandPool);
+		//m_VulkanRenderer->BeginRenderPass(renderPass, commandBuffer, swapChainFramebuffers);
+		//Im::Render(m_Window, commandBuffer, pipeline);
 		//m_VulkanRenderer->DrawSingleTimeCommands(commandBuffer, swapChain);
 		//m_VulkanRenderer->EndRenderPass(commandBuffer, commandPool);
 	}

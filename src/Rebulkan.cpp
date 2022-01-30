@@ -7,6 +7,25 @@ static void FramebufferResizeCallback(GLFWwindow* window, int width, int height)
 	renderer->m_FramebufferResized = true;
 }
 
+static std::vector<char> ReadFile(const std::string& filename)
+{
+	std::ifstream file(filename, std::ios::ate | std::ios::binary);
+
+	if (!file.is_open()) {
+		throw std::runtime_error("failed to open file!");
+	}
+
+	size_t fileSize = (size_t)file.tellg();
+	std::vector<char> buffer(fileSize);
+
+	file.seekg(0);
+	file.read(buffer.data(), fileSize);
+
+	file.close();
+
+	return buffer;
+}
+
 int main(int argc, char** argv)
 {
 	Rebulk::Log::Init();
@@ -25,99 +44,99 @@ int main(int argc, char** argv)
 
 	Rebulk::VulkanRenderer* renderer = new Rebulk::VulkanRenderer(window);
 
+	VkRenderPass renderPass = renderer->CreateRenderPass();
+
+	auto vertShaderCode = ReadFile("shaders/spv/vert.spv");
+	auto fragShaderCode = ReadFile("shaders/spv/frag.spv");
+
+	VkShaderModule vertShaderModule = renderer->CreateShaderModule(vertShaderCode);
+	VkShaderModule fragShaderModule = renderer->CreateShaderModule(fragShaderCode);
+
+	VkDescriptorSetLayout descriptorSetLayout = renderer->CreateDescriptorSetLayout();
+	VkPipelineLayout pipelineLayout = renderer->CreatePipelineLayout(descriptorSetLayout);
+	VkPipelineCache pipelineCache = 0;
+	VkPipeline pipeline = renderer->CreateGraphicsPipeline(renderPass, pipelineLayout, pipelineCache, vertShaderModule, fragShaderModule);
 	VkSwapchainKHR swapChain = renderer->CreateSwapChain();
 	std::vector<VkImageView> swapChainImageViews = renderer->CreateImageViews();
-	VkRenderPass renderPass = renderer->CreateRenderPass();
 	std::vector<VkFramebuffer> swapChainFramebuffers = renderer->CreateFramebuffers(renderPass, swapChainImageViews);
 	VkCommandPool commandPool = renderer->CreateCommandPool();
-	VkCommandBuffer commandBuffer = renderer->CreateCommandBuffer(commandPool);
-	VkDescriptorSetLayout descriptorSetLayout = renderer->CreateDescriptorSetLayout();
-	std::pair<VkPipeline, VkPipelineLayout>pipeline = renderer->CreateGraphicsPipeline(renderPass, commandBuffer, descriptorSetLayout);
-	renderer->CreateVertexBuffer();
+	std::vector<VkCommandBuffer> commandBuffers = renderer->AllocateCommandBuffers(commandPool, swapChainFramebuffers.size());
 	VkDescriptorPool descriptorPool = renderer->CreateDescriptorPool();
-	std::vector<VkCommandBuffer> commandBuffers = renderer->CreateCommandBuffers(renderPass, commandPool, pipeline, swapChainFramebuffers);
-	std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>> semaphores = renderer->CreateSyncObjects();
+	std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>> semaphores = renderer->CreateSyncObjects();	
 
-	//ImGui_ImplVulkan_InitInfo info = {};
-	//info.Instance = renderer->GetInstance();
-	//info.PhysicalDevice = renderer->GetPhysicalDevice();
-	//info.Device = renderer->GetDevice();
-	//info.QueueFamily = renderer->GetQueueFamily();
-	//info.Queue = renderer->GetGraphicsQueue();
-	//info.PipelineCache = nullptr;               
-	//info.DescriptorPool = descriptorPool;
-	//info.Subpass = 0;
-	//info.MinImageCount = 2;
-	//info.ImageCount = 2;
-	//info.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
-	//info.Allocator = nullptr;
-	//info.CheckVkResultFn = [](VkResult err) {
-	//	std::cerr << "IMGUI VULKAN ERROR " + std::to_string(err) << std::endl;
-	//};
+	const std::vector<Rebulk::Vertex> vertices = {
+		{{0.0f, -0.5f}, {1.0f, 1.0f, 1.0f}},
+		{{0.5f, 0.5f}, {0.0f, 1.0f, 0.0f}},
+		{{-0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}}
+	};
 
-	//Rebulk::Im::Init(window, &info, renderPass);
-	//Rebulk::Im::CreateFontsTexture(commandBuffer);
-	//renderer->BeginRenderPass(renderPass, commandBuffer, swapChainFramebuffers);
-	//renderer->EndRenderPass(commandBuffer, commandPool);
+	VkBuffer vertexBuffer = renderer->CreateVertexBuffer(vertices);
 
-	//Rebulk::VulkanLayer* vulkanLayer = new Rebulk::VulkanLayer(window, renderer);
-	
 	glfwSetWindowUserPointer(window, renderer);
 	glfwSetFramebufferSizeCallback(window, FramebufferResizeCallback);
 
 	double lastTime = glfwGetTime();
 	bool show_demo_window = true;
 
+	uint32_t imageIndex = 0;
+
+
 	while (!glfwWindowShouldClose(window)) {
 
-		commandBuffer = renderer->CreateCommandBuffer(commandPool);
-		double currentTime = glfwGetTime();
-		double timeStep = currentTime - lastTime;
-
 		glfwPollEvents();
-			
-		//Rebulk::Im::NewFrame();
 
-		//vulkanLayer->DisplayFpsCounter(timeStep);
-		//vulkanLayer->DisplayLogs();
-		//vulkanLayer->DisplayAPI(renderer->GetDeviceProperties());
-	
-		//Rebulk::Im::Render(window, commandBuffer, pipeline.first);
+		//renderer->ResetCommandPool(commandPool);
 
-		//ImDrawData* main_draw_data = ImGui::GetDrawData();
-		//const bool main_is_minimized = (main_draw_data->DisplaySize.x <= 0.0f || main_draw_data->DisplaySize.y <= 0.0f);
-	
-		if (true) {
-			renderer->BeginRenderPass(renderPass, commandBuffer, swapChainFramebuffers);
-			renderer->EndRenderPass(commandBuffer, commandPool);
-			bool isExpired = renderer->DrawFrame(swapChain, commandBuffers, semaphores);
-
-			if (isExpired ) {
-				renderer->CleanupSwapChain(swapChain, renderPass, commandPool, pipeline, swapChainImageViews, commandBuffers, swapChainFramebuffers, descriptorPool, descriptorSetLayout);
-				commandBuffer = renderer->CreateCommandBuffer(commandPool);
-				swapChain = renderer->CreateSwapChain();
-				swapChainImageViews = renderer->CreateImageViews();
-				renderPass = renderer->CreateRenderPass();
-				descriptorSetLayout = renderer->CreateDescriptorSetLayout();
-				pipeline = renderer->CreateGraphicsPipeline(renderPass, commandBuffer, descriptorSetLayout);
-				swapChainFramebuffers = renderer->CreateFramebuffers(renderPass, swapChainImageViews);
-				commandPool = renderer->CreateCommandPool();
-				commandBuffers = renderer->CreateCommandBuffers(renderPass, commandPool, pipeline, swapChainFramebuffers);
-				semaphores = renderer->CreateSyncObjects();
-				descriptorPool = renderer->CreateDescriptorPool();
-			}
+		if (renderer->SouldResizeSwapChain(swapChain)) {
+			VkSwapchainKHR old = swapChain;
+			swapChain = renderer->CreateSwapChain(old);
+			renderer->DestroySwapchain(renderer->GetDevice(), old, swapChainFramebuffers, swapChainImageViews);
+			swapChainImageViews = renderer->CreateImageViews();
+			swapChainFramebuffers = renderer->CreateFramebuffers(renderPass, swapChainImageViews);
 		}
 
-		glfwSwapBuffers(window);
-		lastTime = currentTime;		
+		for (size_t i = 0; i < commandBuffers.size(); i++) {
+			renderer->BeginCommandBuffer(commandBuffers[i]);
+
+			VkImageMemoryBarrier renderBeginBarrier = renderer->SetupImageMemoryBarrier(
+				renderer->GetSwapChainImages()[i], 0, VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL
+			);
+
+			vkCmdPipelineBarrier(
+				commandBuffers[i], VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+				VK_DEPENDENCY_BY_REGION_BIT, 0, 0, 0, 0, 1, &renderBeginBarrier
+			);
+
+			renderer->BeginRenderPass(renderPass, commandBuffers[i], swapChainFramebuffers[i]);
+			renderer->SetViewPort(commandBuffers[i]);
+			renderer->SetScissor(commandBuffers[i]);
+			renderer->BindPipeline(commandBuffers[i], pipeline);
+			renderer->Draw(commandBuffers[i], vertexBuffer, vertices);
+			renderer->EndRenderPass(commandBuffers[i]);
+
+			VkImageMemoryBarrier renderEndBarrier = renderer->SetupImageMemoryBarrier(
+				renderer->GetSwapChainImages()[i], VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT, 0, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR
+			);
+
+			vkCmdPipelineBarrier(
+				commandBuffers[i], VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_DEPENDENCY_BY_REGION_BIT, 0, 0, 0, 0, 1, &renderEndBarrier
+			);
+
+			renderer->EndCommandBuffer(commandBuffers[i]);
+			imageIndex = renderer->AcquireNextImageKHR(swapChain, semaphores);
+
+			if (-1 != imageIndex) {
+				renderer->QueueSubmit(i, commandBuffers[i], semaphores);
+				renderer->QueuePresent(i, swapChain, semaphores);
+			}	
+		}
+
+		//glfwSwapBuffers(window);
+		renderer->WaitIdle();
 	}
-
-	//Rebulk::Im::Destroy();
-
-	renderer->CleanupSwapChain(swapChain, renderPass, commandPool, pipeline, swapChainImageViews, commandBuffers, swapChainFramebuffers, descriptorPool, descriptorSetLayout);
+	
+	renderer->CleanupSwapChain(swapChain, renderPass, commandPool, pipeline, pipelineLayout, swapChainImageViews, commandBuffers, swapChainFramebuffers, descriptorPool, descriptorSetLayout);
 	renderer->Destroy(commandPool, semaphores);
-
-	//vulkanLayer->Destroy();
 
 	glfwDestroyWindow(window);
 	glfwTerminate();

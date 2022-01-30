@@ -80,7 +80,9 @@ project "Rebulkan"
 		
 		defines
 		{
-			"GLFW_INCLUDE_NONE"
+			"GLFW_INCLUDE_NONE",
+			"WIN32_LEAN_AND_MEAN",
+			"_NO_DEBUG_HEAP=1"
 		}
 
 	filter "configurations:Debug"
