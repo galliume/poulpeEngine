@@ -39,3 +39,7 @@ imgui.ini
 *.make
 Makefile
 *.spv
+*.vcxproj
+*.vcxproj.filters
+*.vcxproj.user
+*.sln
