@@ -28,6 +28,7 @@ namespace Rebulk {
 			style.Colors[ImGuiCol_WindowBg].w = 1.0f;
 		}
 
+		ImGui::CreateContext();
 		ImGui_ImplGlfw_InitForVulkan(window, true);
 		ImGui_ImplVulkan_Init(initInfo, renderPass);
 	}
