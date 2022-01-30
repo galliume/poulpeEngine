@@ -3,19 +3,24 @@
 #include <set>
 #include <cstdint> 
 #include <fstream>
+#include <unordered_map>
+#include <array>
 
 #include "rebulkpch.h"
 #include "vulkan/vulkan.h"
 #include "Pattern/ISubject.h"
 #include <glm/glm.hpp>
-#include <array>
+#include "glm/gtc/matrix_transform.hpp"
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtx/hash.hpp>
 
 namespace Rebulk {
 
 	struct Vertex {
-		glm::vec2 pos;
+		glm::vec3 pos;
 		glm::vec3 color;
-		
+		glm::vec2 texCoord;
+
 		static VkVertexInputBindingDescription GetBindingDescription() {
 
 			VkVertexInputBindingDescription bindingDescription{};
@@ -26,12 +31,12 @@ namespace Rebulk {
 			return bindingDescription;
 		}
 
-		static std::array<VkVertexInputAttributeDescription, 2> GetAttributeDescriptions() {
+		static std::array<VkVertexInputAttributeDescription, 3> GetAttributeDescriptions() {
 
-			std::array<VkVertexInputAttributeDescription, 2> attributeDescriptions{};
+			std::array<VkVertexInputAttributeDescription, 3> attributeDescriptions{};
 			attributeDescriptions[0].binding = 0;
 			attributeDescriptions[0].location = 0;
-			attributeDescriptions[0].format = VK_FORMAT_R32G32_SFLOAT;
+			attributeDescriptions[0].format = VK_FORMAT_R32G32B32_SFLOAT;
 			attributeDescriptions[0].offset = offsetof(Vertex, pos);
 
 			attributeDescriptions[1].binding = 0;
@@ -39,7 +44,17 @@ namespace Rebulk {
 			attributeDescriptions[1].format = VK_FORMAT_R32G32B32_SFLOAT;
 			attributeDescriptions[1].offset = offsetof(Vertex, color);
 
+			attributeDescriptions[0].binding = 0;
+			attributeDescriptions[2].location = 2;
+			attributeDescriptions[2].format = VK_FORMAT_R32G32_SFLOAT;
+			attributeDescriptions[2].offset = offsetof(Vertex, texCoord);;
+
 			return attributeDescriptions;
+		}
+
+		bool operator==(const Vertex& other) const
+		{
+			return pos == other.pos && color == other.color && texCoord == other.texCoord;
 		}
 	};
 
@@ -196,5 +211,15 @@ namespace Rebulk {
 		std::vector<const char*> m_RequiredExtensions = {};		
 		std::vector<VkFence> m_InFlightFences = {};
 		std::vector<VkFence> m_ImagesInFlight = {};
+	};
+}
+
+namespace std {
+	template<> struct hash<Rebulk::Vertex> {
+		size_t operator()(Rebulk::Vertex const& vertex) const {
+			return ((hash<glm::vec3>()(vertex.pos) ^
+				(hash<glm::vec3>()(vertex.color) << 1)) >> 1) ^
+				(hash<glm::vec2>()(vertex.texCoord) << 1);
+		}
 	};
 }
