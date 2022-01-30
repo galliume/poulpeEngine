@@ -72,15 +72,18 @@ namespace Rebulk {
 		VkDescriptorSetLayout CreateDescriptorSetLayout();
 		VkPipelineLayout CreatePipelineLayout(VkDescriptorSetLayout descriptorSetLayout);
 		VkPipeline CreateGraphicsPipeline(VkRenderPass renderPass, VkPipelineLayout pipelineLayout, VkPipelineCache pipelineCache, VkShaderModule vs, VkShaderModule fs);
-		VkSwapchainKHR CreateSwapChain(VkSwapchainKHR oldSwapChain = VK_NULL_HANDLE);
-		std::vector<VkImageView> CreateImageViews();
+		VkSwapchainKHR CreateSwapChain(std::vector<VkImage>& swapChainImages, VkSwapchainKHR oldSwapChain = VK_NULL_HANDLE);
+		std::vector<VkImageView> CreateImageViews(std::vector<VkImage> swapChainImages);
 		std::vector<VkFramebuffer> CreateFramebuffers(VkRenderPass renderPass, std::vector<VkImageView> swapChainImageViews);
 		VkCommandPool CreateCommandPool();
 		std::vector<VkCommandBuffer> AllocateCommandBuffers(VkCommandPool commandPool, uint16_t size = 1);
-		std::pair<VkBuffer, VkDeviceMemory> CreateVertexBuffer(std::vector<Rebulk::Vertex> vertices);
-		VkDescriptorPool CreateDescriptorPool();
-		std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>> CreateSyncObjects();
+		void CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory);
+		std::pair<VkBuffer, VkDeviceMemory> CreateVertexBuffer(VkCommandPool commandPool, std::vector<Rebulk::Vertex> vertices);
+		std::pair<VkBuffer, VkDeviceMemory> CreateIndexBuffer(VkCommandPool commandPool, std::vector<uint16_t> indices);
+		VkDescriptorPool CreateDescriptorPool(std::vector<VkImage> swapChainImages);
+		std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>> CreateSyncObjects(std::vector<VkImage> swapChainImages);
 		VkImageMemoryBarrier SetupImageMemoryBarrier(VkImage image, VkAccessFlags srcAccessMask, VkAccessFlags dstAccessMask, VkImageLayout oldLayout, VkImageLayout newLayout);
+		void CopyBuffer(VkCommandPool commandPool, VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
 		bool SouldResizeSwapChain(VkSwapchainKHR swapChain);
 
 		/**
@@ -92,7 +95,7 @@ namespace Rebulk {
 		void SetViewPort(VkCommandBuffer commandBuffer);
 		void SetScissor(VkCommandBuffer commandBuffer);
 		void BindPipeline(VkCommandBuffer commandBuffer, VkPipeline pipeline);
-		void Draw(VkCommandBuffer commandBuffer, VkBuffer vertexBuffer, std::vector<Rebulk::Vertex> vertices);
+		void Draw(VkCommandBuffer commandBuffer, VkBuffer vertexBuffer, std::vector<Rebulk::Vertex> vertices, VkBuffer indexBuffer, std::vector<uint16_t> indices);
 		void EndRenderPass(VkCommandBuffer commandBuffer);
 		void EndCommandBuffer(VkCommandBuffer commandBuffer);
 		uint32_t AcquireNextImageKHR(VkSwapchainKHR swapChain, std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>>& semaphores);
@@ -108,7 +111,8 @@ namespace Rebulk {
 		void DestroySwapchain(VkDevice device, VkSwapchainKHR swapChain, std::vector<VkFramebuffer> swapChainFramebuffers, std::vector<VkImageView> swapChainImageViews);
 		void DestroySemaphores(std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>> semaphores);
 		void DestroyVertexBuffer(VkBuffer vertexBuffer, VkDeviceMemory vertexBufferMemory);
-		void Destroy(VkRenderPass renderPass, VkCommandPool commandPool, std::vector<VkCommandBuffer> commandBuffers);
+		void DestroyRenderPass(VkRenderPass renderPass, VkCommandPool commandPool, std::vector<VkCommandBuffer> commandBuffers);
+		void Destroy();
 
 		/*
 		* Helper functions.
@@ -121,16 +125,12 @@ namespace Rebulk {
 		inline uint32_t GetExtensionCount() { return m_ExtensionCount; };
 		inline uint32_t GetQueueFamily() { return m_QueueFamilyIndices.graphicsFamily.value(); };
 		inline VkInstance GetInstance() { return m_Instance; };
-		inline VkRenderPass GetRenderPass() { return m_RenderPass; };
 		inline VkPhysicalDevice GetPhysicalDevice() { return m_PhysicalDevice; };
 		inline VkDevice GetDevice() { return m_Device; };
 		inline VkQueue GetGraphicsQueue() { return m_GraphicsQueue; };
-		inline VkDescriptorPool GetDescriptorPool() { return m_DescriptorPool; };
 		inline VkPhysicalDeviceProperties GetDeviceProperties() { return m_DeviceProps; };
 		inline VkPhysicalDeviceFeatures GetDeviceFeatures() { return m_DeviceFeatures; };
 		inline bool IsFramebufferResized() { return m_FramebufferResized; };
-		inline void SetFramebufferResized(bool hasBeenResized = false) { m_FramebufferResized = hasBeenResized; };
-		inline std::vector<VkImage> GetSwapChainImages() { return m_SwapChainImages; };
 		inline VkExtent2D GetSwapChainExtent() { return m_SwapChainExtent; };
 		inline VkSurfaceKHR GetSurface() { return m_Surface; };
 		inline void ResetCurrentFrameIndex() { m_CurrentFrame = 0; };
@@ -160,13 +160,12 @@ namespace Rebulk {
 		VkSurfaceFormatKHR ChooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats);
 		VkPresentModeKHR ChooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes);
 		uint32_t FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
-		std::vector<VkDescriptorSet> CreateDescriptorSets(VkDescriptorPool descriptorPool, VkDescriptorSetLayout descriptorSetLayout);
+		std::vector<VkDescriptorSet> CreateDescriptorSets(VkDescriptorPool descriptorPool, VkDescriptorSetLayout descriptorSetLayout, std::vector<VkImage> swapChainImages);
 		VkExtent2D ChooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities);
 
 	private:
 		const int m_MAX_FRAMES_IN_FLIGHT = 2;
 		size_t m_CurrentFrame = 0;
-		size_t m_SingleTimeCurrentFrame = 0;
 		uint32_t m_ExtensionCount = 0;
 
 		GLFWwindow* m_Window = VK_NULL_HANDLE;
@@ -185,32 +184,17 @@ namespace Rebulk {
 		VkQueue m_GraphicsQueue = VK_NULL_HANDLE;
 		VkQueue m_PresentQueue = VK_NULL_HANDLE;
 		VkSurfaceKHR m_Surface = VK_NULL_HANDLE;
-		VkSwapchainKHR m_SwapChain = VK_NULL_HANDLE;
 		VkFormat m_SwapChainImageFormat;
 		VkExtent2D m_SwapChainExtent;		
-		VkRenderPass m_RenderPass = VK_NULL_HANDLE;
-		VkPipeline m_GraphicsPipeline = VK_NULL_HANDLE;
-		VkPipelineLayout m_PipelineLayout = VK_NULL_HANDLE;
-		VkSemaphore m_ImageAvailableSemaphore = VK_NULL_HANDLE;
-		VkSemaphore m_RenderFinishedSemaphore = VK_NULL_HANDLE;
 		VkDebugUtilsMessengerEXT m_DebugMessengerCallback = VK_NULL_HANDLE;
-		VkCommandPool m_CommandPool = VK_NULL_HANDLE;
 		QueueFamilyIndices m_QueueFamilyIndices = {};
-		VkDescriptorPool m_DescriptorPool = VK_NULL_HANDLE;
 
 		std::list<IObserver*> m_Observers = {};
 		std::vector<std::string> m_Messages = {};
 		std::vector<VkLayerProperties> m_LayersAvailable = {};		
 		std::vector<VkExtensionProperties> m_Extensions = {};
-		std::vector<const char*> m_RequiredExtensions = {};
-		std::vector<VkImage> m_SwapChainImages = {};
-		std::vector<VkImageView> m_SwapChainImageViews = {};
-		std::vector<VkFramebuffer> m_SwapChainFramebuffers = {};
-		std::vector<VkCommandBuffer> m_CommandBuffers = {};
-		std::vector<VkSemaphore> m_ImageAvailableSemaphores = {};
-		std::vector<VkSemaphore> m_RenderFinishedSemaphores = {};
+		std::vector<const char*> m_RequiredExtensions = {};		
 		std::vector<VkFence> m_InFlightFences = {};
 		std::vector<VkFence> m_ImagesInFlight = {};
-		std::vector<VkFence>m_SingleTimeInFlightFences = {};
 	};
 }

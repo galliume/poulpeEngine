@@ -460,7 +460,7 @@ namespace Rebulk {
 		return actualExtent;
 	}
 
-	VkSwapchainKHR VulkanRenderer::CreateSwapChain(VkSwapchainKHR oldSwapChain)
+	VkSwapchainKHR VulkanRenderer::CreateSwapChain(std::vector<VkImage>& swapChainImages, VkSwapchainKHR oldSwapChain)
 	{
 		VkSwapchainKHR swapChain = VK_NULL_HANDLE;
 
@@ -516,9 +516,9 @@ namespace Rebulk {
 		}
 
 		vkGetSwapchainImagesKHR(m_Device, swapChain, &imageCount, nullptr);
-		m_SwapChainImages.resize(imageCount);
+		swapChainImages.resize(imageCount);
 
-		vkGetSwapchainImagesKHR(m_Device, swapChain, &imageCount, m_SwapChainImages.data());
+		vkGetSwapchainImagesKHR(m_Device, swapChain, &imageCount, swapChainImages.data());
 
 		m_SwapChainImageFormat = surfaceFormat.format;
 		m_SwapChainExtent = extent;
@@ -543,16 +543,16 @@ namespace Rebulk {
 		return (currentExtent.width == newWidth && currentExtent.height == newHeight) ? false : true;
 	}
 
-	std::vector<VkImageView> VulkanRenderer::CreateImageViews()
+	std::vector<VkImageView> VulkanRenderer::CreateImageViews(std::vector<VkImage> swapChainImages)
 	{
 		std::vector<VkImageView> swapChainImageViews = {};
 
-		swapChainImageViews.resize(m_SwapChainImages.size());
+		swapChainImageViews.resize(swapChainImages.size());
 
-		for (size_t i = 0; i < m_SwapChainImages.size(); i++) {
+		for (size_t i = 0; i < swapChainImages.size(); i++) {
 			VkImageViewCreateInfo createInfo{};
 			createInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-			createInfo.image = m_SwapChainImages[i];
+			createInfo.image = swapChainImages[i];
 			createInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
 			createInfo.format = m_SwapChainImageFormat;
 			createInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
@@ -579,6 +579,38 @@ namespace Rebulk {
 		}
 
 		return swapChainImageViews;
+	}
+
+	VkDescriptorSetLayout VulkanRenderer::CreateDescriptorSetLayout()
+	{
+		VkDescriptorSetLayout descriptorSetLayout;
+
+		VkDescriptorSetLayoutBinding uboLayoutBinding{};
+		uboLayoutBinding.binding = 0;
+		uboLayoutBinding.descriptorCount = 1;
+		uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+		uboLayoutBinding.pImmutableSamplers = nullptr;
+		uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+
+		VkDescriptorSetLayoutBinding samplerLayoutBinding{};
+		samplerLayoutBinding.binding = 1;
+		samplerLayoutBinding.descriptorCount = 1;
+		samplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+		samplerLayoutBinding.pImmutableSamplers = nullptr;
+		samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+		std::array<VkDescriptorSetLayoutBinding, 2> bindings = { uboLayoutBinding, samplerLayoutBinding };
+		VkDescriptorSetLayoutCreateInfo layoutInfo{};
+		layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+		layoutInfo.bindingCount = static_cast<uint32_t>(bindings.size());
+		layoutInfo.pBindings = bindings.data();
+
+		if (vkCreateDescriptorSetLayout(m_Device, &layoutInfo, nullptr, &descriptorSetLayout) != VK_SUCCESS)
+		{
+			throw std::runtime_error("failed to create descriptor set layout!");
+		}
+
+		return descriptorSetLayout;
 	}
 
 	VkPipelineLayout VulkanRenderer::CreatePipelineLayout(VkDescriptorSetLayout descriptorSetLayout)
@@ -892,7 +924,7 @@ namespace Rebulk {
 		allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
 		allocInfo.commandPool = commandPool;
 		allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-		allocInfo.commandBufferCount = (uint32_t)commandBuffers.size();
+		allocInfo.commandBufferCount = (uint16_t)commandBuffers.size();
 
 		VkResult result = vkAllocateCommandBuffers(m_Device, &allocInfo, commandBuffers.data());
 
@@ -943,7 +975,7 @@ namespace Rebulk {
 		vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
 	}
 
-	std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>> VulkanRenderer::CreateSyncObjects()
+	std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>> VulkanRenderer::CreateSyncObjects(std::vector<VkImage> swapChainImages)
 	{
 		std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>> semaphores;
 
@@ -953,7 +985,7 @@ namespace Rebulk {
 		imageAvailableSemaphores.resize(m_MAX_FRAMES_IN_FLIGHT);
 		renderFinishedSemaphores.resize(m_MAX_FRAMES_IN_FLIGHT);
 		m_InFlightFences.resize(m_MAX_FRAMES_IN_FLIGHT);
-		m_ImagesInFlight.resize(m_SwapChainImages.size(), VK_NULL_HANDLE);
+		m_ImagesInFlight.resize(swapChainImages.size(), VK_NULL_HANDLE);
 
 		VkSemaphoreCreateInfo semaphoreInfo{};
 		semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
@@ -979,21 +1011,21 @@ namespace Rebulk {
 		return semaphores;
 	}
 
-	VkDescriptorPool VulkanRenderer::CreateDescriptorPool()
+	VkDescriptorPool VulkanRenderer::CreateDescriptorPool(std::vector<VkImage> swapChainImages)
 	{
 		VkDescriptorPool descriptorPool;
 
 		std::array<VkDescriptorPoolSize, 2> poolSizes{};
 		poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-		poolSizes[0].descriptorCount = static_cast<uint32_t>(m_SwapChainImages.size());
+		poolSizes[0].descriptorCount = static_cast<uint32_t>(swapChainImages.size());
 		poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-		poolSizes[1].descriptorCount = static_cast<uint32_t>(m_SwapChainImages.size());
+		poolSizes[1].descriptorCount = static_cast<uint32_t>(swapChainImages.size());
 
 		VkDescriptorPoolCreateInfo poolInfo{};
 		poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
 		poolInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
 		poolInfo.pPoolSizes = poolSizes.data();
-		poolInfo.maxSets = static_cast<uint32_t>(m_SwapChainImages.size());
+		poolInfo.maxSets = static_cast<uint32_t>(swapChainImages.size());
 
 		if (vkCreateDescriptorPool(m_Device, &poolInfo, nullptr, &descriptorPool) != VK_SUCCESS)
 		{
@@ -1003,56 +1035,24 @@ namespace Rebulk {
 		return descriptorPool;
 	}
 
-	VkDescriptorSetLayout VulkanRenderer::CreateDescriptorSetLayout()
-	{
-		VkDescriptorSetLayout descriptorSetLayout;
-
-		VkDescriptorSetLayoutBinding uboLayoutBinding{};
-		uboLayoutBinding.binding = 0;
-		uboLayoutBinding.descriptorCount = 1;
-		uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-		uboLayoutBinding.pImmutableSamplers = nullptr;
-		uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-
-		VkDescriptorSetLayoutBinding samplerLayoutBinding{};
-		samplerLayoutBinding.binding = 1;
-		samplerLayoutBinding.descriptorCount = 1;
-		samplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-		samplerLayoutBinding.pImmutableSamplers = nullptr;
-		samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-
-		std::array<VkDescriptorSetLayoutBinding, 2> bindings = { uboLayoutBinding, samplerLayoutBinding };
-		VkDescriptorSetLayoutCreateInfo layoutInfo{};
-		layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-		layoutInfo.bindingCount = static_cast<uint32_t>(bindings.size());
-		layoutInfo.pBindings = bindings.data();
-
-		if (vkCreateDescriptorSetLayout(m_Device, &layoutInfo, nullptr, &descriptorSetLayout) != VK_SUCCESS)
-		{
-			throw std::runtime_error("failed to create descriptor set layout!");
-		}
-
-		return descriptorSetLayout;
-	}
-
-	std::vector<VkDescriptorSet> VulkanRenderer::CreateDescriptorSets(VkDescriptorPool descriptorPool, VkDescriptorSetLayout descriptorSetLayout)
+	std::vector<VkDescriptorSet> VulkanRenderer::CreateDescriptorSets(VkDescriptorPool descriptorPool, VkDescriptorSetLayout descriptorSetLayout, std::vector<VkImage> swapChainImages)
 	{
 		std::vector<VkDescriptorSet> descriptorSets;
-		std::vector<VkDescriptorSetLayout> layouts(m_SwapChainImages.size(), descriptorSetLayout);
+		std::vector<VkDescriptorSetLayout> layouts(swapChainImages.size(), descriptorSetLayout);
 
 		//VkDescriptorSetAllocateInfo allocInfo{};
 		//allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
 		//allocInfo.descriptorPool = descriptorPool;
-		//allocInfo.descriptorSetCount = static_cast<uint32_t>(m_SwapChainImages.size());
+		//allocInfo.descriptorSetCount = static_cast<uint32_t>(swapChainImages.size());
 		//allocInfo.pSetLayouts = layouts.data();
 
-		//descriptorSets.resize(m_SwapChainImages.size());
+		//descriptorSets.resize(swapChainImages.size());
 		//if (vkAllocateDescriptorSets(m_Device, &allocInfo, descriptorSets.data()) != VK_SUCCESS)
 		//{
 		//	throw std::runtime_error("failed to allocate descriptor sets");
 		//}
 
-		//for (size_t i = 0; i < m_SwapChainImages.size(); i++)
+		//for (size_t i = 0; i < swapChainImages.size(); i++)
 		//{
 		//	VkDescriptorBufferInfo bufferInfo{};
 		//	bufferInfo.buffer = uniformBuffers[i];
@@ -1214,12 +1214,14 @@ namespace Rebulk {
 		vkResetCommandPool(m_Device, commandPool, 0);
 	}
 
-	void VulkanRenderer::Draw(VkCommandBuffer commandBuffer, VkBuffer vertexBuffer, std::vector<Rebulk::Vertex> vertices)
+	void VulkanRenderer::Draw(VkCommandBuffer commandBuffer, VkBuffer vertexBuffer, std::vector<Rebulk::Vertex> vertices, VkBuffer indexBuffer, std::vector<uint16_t> indices)
 	{
 		VkBuffer vertexBuffers[] = { vertexBuffer };
 		VkDeviceSize offsets[] = { 0 };
 		vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
-		vkCmdDraw(commandBuffer, static_cast<uint32_t>(vertices.size()), 1, 0, 0);
+		vkCmdBindIndexBuffer(commandBuffer, indexBuffer, 0, VK_INDEX_TYPE_UINT16);
+		//vkCmdDraw(commandBuffer, static_cast<uint32_t>(vertices.size()), 1, 0, 0);
+		vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(indices.size()), 1, 0, 0, 0);
 	}
 
 	void VulkanRenderer::AddPipelineBarrier(VkCommandBuffer commandBuffer, VkImageMemoryBarrier renderBarrier, VkPipelineStageFlags srcStageMask, VkPipelineStageFlags dstStageMask, VkDependencyFlags dependencyFlags)
@@ -1227,42 +1229,118 @@ namespace Rebulk {
 		vkCmdPipelineBarrier(commandBuffer, srcStageMask, dstStageMask, dependencyFlags, 0, 0, 0, 0, 1, &renderBarrier);
 	}
 
-
-	std::pair<VkBuffer, VkDeviceMemory> VulkanRenderer::CreateVertexBuffer(std::vector<Rebulk::Vertex> vertices)
-	{
-		VkBuffer vertexBuffer;
-		VkDeviceMemory vertexBufferMemory;
-
+	void VulkanRenderer::CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory) 
+	{		
 		VkBufferCreateInfo bufferInfo{};
 		bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-		bufferInfo.size = sizeof(vertices[0]) * vertices.size();
-		bufferInfo.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
+		bufferInfo.size = size;
+		bufferInfo.usage = usage;
 		bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-		if (vkCreateBuffer(m_Device, &bufferInfo, nullptr, &vertexBuffer) != VK_SUCCESS) {
-			throw std::runtime_error("failed to create vertex buffer!");
+		if (vkCreateBuffer(m_Device, &bufferInfo, nullptr, &buffer) != VK_SUCCESS) {
+			throw std::runtime_error("failed to create buffer!");
 		}
 
 		VkMemoryRequirements memRequirements;
-		vkGetBufferMemoryRequirements(m_Device, vertexBuffer, &memRequirements);
+		vkGetBufferMemoryRequirements(m_Device, buffer, &memRequirements);
 
 		VkMemoryAllocateInfo allocInfo{};
 		allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
 		allocInfo.allocationSize = memRequirements.size;
-		allocInfo.memoryTypeIndex = FindMemoryType(memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-		
-		if (vkAllocateMemory(m_Device, &allocInfo, nullptr, &vertexBufferMemory) != VK_SUCCESS) {
-			throw std::runtime_error("failed to allocate vertex buffer memory!");
+		allocInfo.memoryTypeIndex = FindMemoryType(memRequirements.memoryTypeBits, properties);
+
+		if (vkAllocateMemory(m_Device, &allocInfo, nullptr, &bufferMemory) != VK_SUCCESS) {
+			throw std::runtime_error("failed to allocate buffer memory!");
 		}
 
-		vkBindBufferMemory(m_Device, vertexBuffer, vertexBufferMemory, 0);
+		vkBindBufferMemory(m_Device, buffer, bufferMemory, 0);
+	}
+
+	std::pair<VkBuffer, VkDeviceMemory> VulkanRenderer::CreateIndexBuffer(VkCommandPool commandPool, std::vector<uint16_t> indices)
+	{
+		std::pair<VkBuffer, VkDeviceMemory> indexBuffer;
+
+		VkDeviceSize bufferSize = sizeof(indices[0]) * indices.size();
+
+		VkBuffer stagingBuffer;
+		VkDeviceMemory stagingBufferMemory;
+		CreateBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
 
 		void* data;
-		vkMapMemory(m_Device, vertexBufferMemory, 0, bufferInfo.size, 0, &data);
-		memcpy(data, vertices.data(), (size_t)bufferInfo.size);
-		vkUnmapMemory(m_Device, vertexBufferMemory);
+		vkMapMemory(m_Device, stagingBufferMemory, 0, bufferSize, 0, &data);
+		memcpy(data, indices.data(), (size_t)bufferSize);
+		vkUnmapMemory(m_Device, stagingBufferMemory);
 
-		return std::make_pair(vertexBuffer, vertexBufferMemory);
+		CreateBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, indexBuffer.first, indexBuffer.second);
+
+		CopyBuffer(commandPool, stagingBuffer, indexBuffer.first, bufferSize);
+
+		vkDestroyBuffer(m_Device, stagingBuffer, nullptr);
+		vkFreeMemory(m_Device, stagingBufferMemory, nullptr);
+
+		return indexBuffer;
+	}
+
+	std::pair<VkBuffer, VkDeviceMemory> VulkanRenderer::CreateVertexBuffer(VkCommandPool commandPool, std::vector<Rebulk::Vertex> vertices)
+	{
+
+		std::pair<VkBuffer, VkDeviceMemory> vertexBuffer;
+		VkDeviceSize bufferSize = sizeof(vertices[0])* vertices.size();
+		VkBuffer stagingBuffer;
+		VkDeviceMemory stagingBufferMemory;
+
+		CreateBuffer(
+			bufferSize, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+			stagingBuffer, stagingBufferMemory
+		);
+
+		void* data;
+		vkMapMemory(m_Device, stagingBufferMemory, 0, bufferSize, 0, &data);
+		memcpy(data, vertices.data(), (size_t)bufferSize);
+		vkUnmapMemory(m_Device, stagingBufferMemory);
+
+		CreateBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, vertexBuffer.first, vertexBuffer.second);
+
+		CopyBuffer(commandPool, stagingBuffer, vertexBuffer.first, bufferSize);
+
+		vkDestroyBuffer(m_Device, stagingBuffer, nullptr);
+		vkFreeMemory(m_Device, stagingBufferMemory, nullptr);
+
+		return  vertexBuffer;
+	}
+
+	void VulkanRenderer::CopyBuffer(VkCommandPool commandPool, VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size)
+	{
+		VkCommandBufferAllocateInfo allocInfo{};
+		allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+		allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+		allocInfo.commandPool = commandPool;
+		allocInfo.commandBufferCount = 1;
+
+		VkCommandBuffer commandBuffer;
+		vkAllocateCommandBuffers(m_Device, &allocInfo, &commandBuffer);
+
+		VkCommandBufferBeginInfo beginInfo{};
+		beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+		beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+
+		vkBeginCommandBuffer(commandBuffer, &beginInfo);
+
+		VkBufferCopy copyRegion{};
+		copyRegion.srcOffset = 0; // Optional
+		copyRegion.dstOffset = 0; // Optional
+		copyRegion.size = size;
+		vkCmdCopyBuffer(commandBuffer, srcBuffer, dstBuffer, 1, &copyRegion);
+		vkEndCommandBuffer(commandBuffer);
+
+		VkSubmitInfo submitInfo{};
+		submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+		submitInfo.commandBufferCount = 1;
+		submitInfo.pCommandBuffers = &commandBuffer;
+
+		vkQueueSubmit(m_GraphicsQueue, 1, &submitInfo, VK_NULL_HANDLE);
+		vkQueueWaitIdle(m_GraphicsQueue);
+		vkFreeCommandBuffers(m_Device, commandPool, 1, &commandBuffer);
 	}
 
 	VkImageMemoryBarrier VulkanRenderer::SetupImageMemoryBarrier(VkImage image, VkAccessFlags srcAccessMask, VkAccessFlags dstAccessMask, VkImageLayout oldLayout, VkImageLayout newLayout)
@@ -1322,12 +1400,15 @@ namespace Rebulk {
 		vkFreeMemory(m_Device, vertexBufferMemory, nullptr);
 	}
 
-	void VulkanRenderer::Destroy(VkRenderPass renderPass, VkCommandPool commandPool, std::vector<VkCommandBuffer> commandBuffers)
+	void VulkanRenderer::DestroyRenderPass(VkRenderPass renderPass, VkCommandPool commandPool, std::vector<VkCommandBuffer> commandBuffers)
 	{
 		vkFreeCommandBuffers(m_Device, commandPool, static_cast<uint32_t>(commandBuffers.size()), commandBuffers.data());
 		vkDestroyRenderPass(m_Device, renderPass, nullptr);
 		vkDestroyCommandPool(m_Device, commandPool, nullptr);
+	}
 
+	void VulkanRenderer::Destroy()
+	{
 		vkDestroyDevice(m_Device, nullptr);
 
 		if (m_EnableValidationLayers) {
