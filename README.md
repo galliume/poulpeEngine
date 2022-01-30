@@ -5,6 +5,19 @@
 
 [State of the project](https://github.com/galliume/rebulkan/projects/1)
 
+### To execute 
+
+Windows : WindowsGenerateProject.bat generate a visual studio code 2022 sln. 
+Load in VS Studio and hit F5... (you can change the .bat file and use an older version of visual studio)
+
+Linux   : LinuxGenerateProject.sh generate a make file.
+Then :
+```
+clear && make clean && make && ./bin/your_archi/Rebulkan/Rebulkan
+```
+
+Thanks to [premake](https://premake.github.io/)
+
 ### Resources
 
 [Game Engine Architecture](https://www.amazon.fr/Engine-Architecture-Third-Jason-Gregory/dp/1138035459/)
