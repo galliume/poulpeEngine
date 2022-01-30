@@ -1198,7 +1198,7 @@ namespace Rebulk {
 		uint32_t imageIndex = 0;
 		VkResult result = vkAcquireNextImageKHR(m_Device, swapChain, UINT64_MAX, imageAvailableSemaphores[m_CurrentFrame], VK_NULL_HANDLE, &imageIndex);
 
-		if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || m_FramebufferResized) {
+		if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR) {
 			return -1;
 		}
 
@@ -1222,71 +1222,13 @@ namespace Rebulk {
 		vkCmdDraw(commandBuffer, static_cast<uint32_t>(vertices.size()), 1, 0, 0);
 	}
 
-	void VulkanRenderer::CleanupSwapChain(
-		VkSwapchainKHR swapChain, VkRenderPass renderPass, VkCommandPool commandPool, VkPipeline pipeline, VkPipelineLayout pipelineLayout, 
-		std::vector<VkImageView> swapChainImageViews, std::vector<VkCommandBuffer> commandBuffers, std::vector<VkFramebuffer> swapChainFramebuffers,
-		VkDescriptorPool descriptorPool, VkDescriptorSetLayout descriptorSetLayout
-	)
+	void VulkanRenderer::AddPipelineBarrier(VkCommandBuffer commandBuffer, VkImageMemoryBarrier renderBarrier, VkPipelineStageFlags srcStageMask, VkPipelineStageFlags dstStageMask, VkDependencyFlags dependencyFlags)
 	{
-		//for (size_t i = 0; i < swapChainFramebuffers.size(); i++) {
-		//	vkDestroyFramebuffer(m_Device, swapChainFramebuffers[i], nullptr);
-		//}
-		
-		//vkFreeCommandBuffers(m_Device, commandPool, static_cast<uint32_t>(commandBuffers.size()), commandBuffers.data());
-
-		vkDestroyDescriptorSetLayout(m_Device, descriptorSetLayout, nullptr);
-		vkDestroyPipeline(m_Device, pipeline, nullptr);
-		vkDestroyPipelineLayout(m_Device, pipelineLayout, nullptr);
-		vkDestroyRenderPass(m_Device, renderPass, nullptr);
-		vkDestroyDescriptorPool(m_Device, descriptorPool, nullptr);
-
-		for (size_t i = 0; i < swapChainImageViews.size(); i++) {
-			vkDestroyImageView(m_Device, swapChainImageViews[i], nullptr);
-		}
-
-		vkDestroySwapchainKHR(m_Device, swapChain, nullptr);
+		vkCmdPipelineBarrier(commandBuffer, srcStageMask, dstStageMask, dependencyFlags, 0, 0, 0, 0, 1, &renderBarrier);
 	}
 
-	void VulkanRenderer::Destroy(VkCommandPool commandPool, std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>> semaphores)
-	{
-		//vkDestroyBuffer(m_Device, m_VertexBuffer, nullptr);
-		//vkFreeMemory(m_Device, m_VertexBufferMemory, nullptr);
 
-		for (size_t i = 0; i < m_MAX_FRAMES_IN_FLIGHT; i++) {
-			vkDestroySemaphore(m_Device, semaphores.first[i], nullptr);
-			vkDestroySemaphore(m_Device, semaphores.second[i], nullptr);
-			vkDestroyFence(m_Device, m_InFlightFences[i], nullptr);
-			vkDestroyFence(m_Device, m_ImagesInFlight[i], nullptr);
-		}
-
-		vkDestroyCommandPool(m_Device, commandPool, nullptr);
-
-
-		vkDestroyDevice(m_Device, nullptr);
-
-		if (m_EnableValidationLayers) {
-			DestroyDebugUtilsMessengerEXT(m_Instance, m_DebugMessengerCallback, nullptr);
-		}
-
-		vkDestroySurfaceKHR(m_Instance, m_Surface, nullptr);
-		vkDestroyInstance(m_Instance, nullptr);
-
-		m_Messages.emplace_back("VK instance destroyed and cleaned");
-		Notify();
-	}
-
-	void VulkanRenderer::DestroySwapchain(VkDevice device, VkSwapchainKHR swapChain, std::vector<VkFramebuffer> swapChainFramebuffers, std::vector<VkImageView> swapChainImageViews)
-	{
-		for (uint32_t i = 0; i < swapChainFramebuffers.size(); ++i)
-			vkDestroyFramebuffer(device, swapChainFramebuffers[i], 0);
-
-		for (uint32_t i = 0; i < swapChainImageViews.size(); ++i)
-			vkDestroyImageView(device, swapChainImageViews[i], 0);
-
-		vkDestroySwapchainKHR(device, swapChain, 0);
-	}
-
-	VkBuffer VulkanRenderer::CreateVertexBuffer(std::vector<Rebulk::Vertex> vertices)
+	std::pair<VkBuffer, VkDeviceMemory> VulkanRenderer::CreateVertexBuffer(std::vector<Rebulk::Vertex> vertices)
 	{
 		VkBuffer vertexBuffer;
 		VkDeviceMemory vertexBufferMemory;
@@ -1320,7 +1262,7 @@ namespace Rebulk {
 		memcpy(data, vertices.data(), (size_t)bufferInfo.size);
 		vkUnmapMemory(m_Device, vertexBufferMemory);
 
-		return vertexBuffer;
+		return std::make_pair(vertexBuffer, vertexBufferMemory);
 	}
 
 	VkImageMemoryBarrier VulkanRenderer::SetupImageMemoryBarrier(VkImage image, VkAccessFlags srcAccessMask, VkAccessFlags dstAccessMask, VkImageLayout oldLayout, VkImageLayout newLayout)
@@ -1353,6 +1295,61 @@ namespace Rebulk {
 		}
 
 		throw std::runtime_error("failed to find suitable memory type!");
+	}
+
+
+	void VulkanRenderer::DestroyPipeline(VkPipeline pipeline, VkPipelineLayout pipelineLayout, VkDescriptorPool descriptorPool, VkDescriptorSetLayout descriptorSetLayout)
+	{
+		vkDestroyDescriptorSetLayout(m_Device, descriptorSetLayout, nullptr);
+		vkDestroyPipeline(m_Device, pipeline, nullptr);
+		vkDestroyPipelineLayout(m_Device, pipelineLayout, nullptr);
+		vkDestroyDescriptorPool(m_Device, descriptorPool, nullptr);
+	}
+
+	void VulkanRenderer::DestroySemaphores(std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>> semaphores)
+	{
+		for (size_t i = 0; i < m_MAX_FRAMES_IN_FLIGHT; i++) {
+			vkDestroySemaphore(m_Device, semaphores.first[i], nullptr);
+			vkDestroySemaphore(m_Device, semaphores.second[i], nullptr);
+			vkDestroyFence(m_Device, m_InFlightFences[i], nullptr);
+			vkDestroyFence(m_Device, m_ImagesInFlight[i], nullptr);
+		}
+	}
+
+	void VulkanRenderer::DestroyVertexBuffer(VkBuffer vertexBuffer, VkDeviceMemory vertexBufferMemory)
+	{
+		vkDestroyBuffer(m_Device, vertexBuffer, nullptr);
+		vkFreeMemory(m_Device, vertexBufferMemory, nullptr);
+	}
+
+	void VulkanRenderer::Destroy(VkRenderPass renderPass, VkCommandPool commandPool, std::vector<VkCommandBuffer> commandBuffers)
+	{
+		vkFreeCommandBuffers(m_Device, commandPool, static_cast<uint32_t>(commandBuffers.size()), commandBuffers.data());
+		vkDestroyRenderPass(m_Device, renderPass, nullptr);
+		vkDestroyCommandPool(m_Device, commandPool, nullptr);
+
+		vkDestroyDevice(m_Device, nullptr);
+
+		if (m_EnableValidationLayers) {
+			DestroyDebugUtilsMessengerEXT(m_Instance, m_DebugMessengerCallback, nullptr);
+		}
+
+		vkDestroySurfaceKHR(m_Instance, m_Surface, nullptr);
+		vkDestroyInstance(m_Instance, nullptr);
+
+		m_Messages.emplace_back("VK instance destroyed and cleaned");
+		Notify();
+	}
+
+	void VulkanRenderer::DestroySwapchain(VkDevice device, VkSwapchainKHR swapChain, std::vector<VkFramebuffer> swapChainFramebuffers, std::vector<VkImageView> swapChainImageViews)
+	{
+		for (uint32_t i = 0; i < swapChainFramebuffers.size(); ++i)
+			vkDestroyFramebuffer(device, swapChainFramebuffers[i], 0);
+
+		for (uint32_t i = 0; i < swapChainImageViews.size(); ++i)
+			vkDestroyImageView(device, swapChainImageViews[i], 0);
+
+		vkDestroySwapchainKHR(device, swapChain, 0);
 	}
 
 	VulkanRenderer::~VulkanRenderer()
