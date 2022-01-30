@@ -70,7 +70,7 @@ int main(int argc, char** argv)
 		{{-0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}}
 	};
 
-	VkBuffer vertexBuffer = renderer->CreateVertexBuffer(vertices);
+	std::pair<VkBuffer, VkDeviceMemory> vertexBuffer = renderer->CreateVertexBuffer(vertices);
 
 	glfwSetWindowUserPointer(window, renderer);
 	glfwSetFramebufferSizeCallback(window, FramebufferResizeCallback);
@@ -85,49 +85,52 @@ int main(int argc, char** argv)
 
 		glfwPollEvents();
 
-		//renderer->ResetCommandPool(commandPool);
-
 		if (renderer->SouldResizeSwapChain(swapChain)) {
 			VkSwapchainKHR old = swapChain;
 			swapChain = renderer->CreateSwapChain(old);
 			renderer->DestroySwapchain(renderer->GetDevice(), old, swapChainFramebuffers, swapChainImageViews);
+			renderer->DestroySemaphores(semaphores);
+			renderer->ResetCurrentFrameIndex();
 			swapChainImageViews = renderer->CreateImageViews();
 			swapChainFramebuffers = renderer->CreateFramebuffers(renderPass, swapChainImageViews);
+			semaphores = renderer->CreateSyncObjects();
+			renderer->ResetCommandPool(commandPool);
+			commandBuffers = renderer->AllocateCommandBuffers(commandPool, swapChainFramebuffers.size());
 		}
 
 		for (size_t i = 0; i < commandBuffers.size(); i++) {
-			renderer->BeginCommandBuffer(commandBuffers[i]);
-
-			VkImageMemoryBarrier renderBeginBarrier = renderer->SetupImageMemoryBarrier(
-				renderer->GetSwapChainImages()[i], 0, VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL
-			);
-
-			vkCmdPipelineBarrier(
-				commandBuffers[i], VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-				VK_DEPENDENCY_BY_REGION_BIT, 0, 0, 0, 0, 1, &renderBeginBarrier
-			);
-
-			renderer->BeginRenderPass(renderPass, commandBuffers[i], swapChainFramebuffers[i]);
-			renderer->SetViewPort(commandBuffers[i]);
-			renderer->SetScissor(commandBuffers[i]);
-			renderer->BindPipeline(commandBuffers[i], pipeline);
-			renderer->Draw(commandBuffers[i], vertexBuffer, vertices);
-			renderer->EndRenderPass(commandBuffers[i]);
-
-			VkImageMemoryBarrier renderEndBarrier = renderer->SetupImageMemoryBarrier(
-				renderer->GetSwapChainImages()[i], VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT, 0, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR
-			);
-
-			vkCmdPipelineBarrier(
-				commandBuffers[i], VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_DEPENDENCY_BY_REGION_BIT, 0, 0, 0, 0, 1, &renderEndBarrier
-			);
-
-			renderer->EndCommandBuffer(commandBuffers[i]);
 			imageIndex = renderer->AcquireNextImageKHR(swapChain, semaphores);
 
+			renderer->BeginCommandBuffer(commandBuffers[imageIndex]);
+
+			VkImageMemoryBarrier renderBeginBarrier = renderer->SetupImageMemoryBarrier(
+				renderer->GetSwapChainImages()[imageIndex], 0, VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL
+			);
+
+			renderer->AddPipelineBarrier(
+				commandBuffers[imageIndex], renderBeginBarrier, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, VK_DEPENDENCY_BY_REGION_BIT
+			);
+
+			renderer->BeginRenderPass(renderPass, commandBuffers[imageIndex], swapChainFramebuffers[imageIndex]);
+			renderer->SetViewPort(commandBuffers[imageIndex]);
+			renderer->SetScissor(commandBuffers[imageIndex]);
+			renderer->BindPipeline(commandBuffers[imageIndex], pipeline);
+			renderer->Draw(commandBuffers[imageIndex], vertexBuffer.first, vertices);
+			renderer->EndRenderPass(commandBuffers[imageIndex]);
+
+			VkImageMemoryBarrier renderEndBarrier = renderer->SetupImageMemoryBarrier(
+				renderer->GetSwapChainImages()[imageIndex], VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT, 0, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR
+			);
+
+			renderer->AddPipelineBarrier(
+				commandBuffers[imageIndex], renderEndBarrier, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_DEPENDENCY_BY_REGION_BIT
+			);
+
+			renderer->EndCommandBuffer(commandBuffers[imageIndex]);
+
 			if (-1 != imageIndex) {
-				renderer->QueueSubmit(i, commandBuffers[i], semaphores);
-				renderer->QueuePresent(i, swapChain, semaphores);
+				renderer->QueueSubmit(imageIndex, commandBuffers[imageIndex], semaphores);
+				renderer->QueuePresent(imageIndex, swapChain, semaphores);
 			}	
 		}
 
@@ -135,8 +138,11 @@ int main(int argc, char** argv)
 		renderer->WaitIdle();
 	}
 	
-	renderer->CleanupSwapChain(swapChain, renderPass, commandPool, pipeline, pipelineLayout, swapChainImageViews, commandBuffers, swapChainFramebuffers, descriptorPool, descriptorSetLayout);
-	renderer->Destroy(commandPool, semaphores);
+	renderer->DestroySwapchain(renderer->GetDevice(), swapChain, swapChainFramebuffers, swapChainImageViews);
+	renderer->DestroySemaphores(semaphores);
+	renderer->DestroyVertexBuffer(vertexBuffer.first, vertexBuffer.second);
+	renderer->DestroyPipeline(pipeline, pipelineLayout, descriptorPool, descriptorSetLayout);
+	renderer->Destroy(renderPass, commandPool, commandBuffers);
 
 	glfwDestroyWindow(window);
 	glfwTerminate();

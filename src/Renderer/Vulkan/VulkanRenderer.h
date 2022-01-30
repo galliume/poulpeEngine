@@ -77,7 +77,7 @@ namespace Rebulk {
 		std::vector<VkFramebuffer> CreateFramebuffers(VkRenderPass renderPass, std::vector<VkImageView> swapChainImageViews);
 		VkCommandPool CreateCommandPool();
 		std::vector<VkCommandBuffer> AllocateCommandBuffers(VkCommandPool commandPool, uint16_t size = 1);
-		VkBuffer CreateVertexBuffer(std::vector<Rebulk::Vertex> vertices);
+		std::pair<VkBuffer, VkDeviceMemory> CreateVertexBuffer(std::vector<Rebulk::Vertex> vertices);
 		VkDescriptorPool CreateDescriptorPool();
 		std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>> CreateSyncObjects();
 		VkImageMemoryBarrier SetupImageMemoryBarrier(VkImage image, VkAccessFlags srcAccessMask, VkAccessFlags dstAccessMask, VkImageLayout oldLayout, VkImageLayout newLayout);
@@ -98,18 +98,17 @@ namespace Rebulk {
 		uint32_t AcquireNextImageKHR(VkSwapchainKHR swapChain, std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>>& semaphores);
 		void QueueSubmit(uint32_t imageIndex, VkCommandBuffer commandBuffer, std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>>& semaphores);
 		size_t QueuePresent(uint32_t imageIndex, VkSwapchainKHR swapChain, std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>>& semaphores);
+		void AddPipelineBarrier(VkCommandBuffer commandBuffer, VkImageMemoryBarrier renderBarrier, VkPipelineStageFlags srcStageMask, VkPipelineStageFlags dstStageMask, VkDependencyFlags dependencyFlags);
 		void WaitIdle();
 
 		/**
 		* Vulkan clean and destroy
 		**/
-		void CleanupSwapChain(
-			VkSwapchainKHR swapChain, VkRenderPass renderPass, VkCommandPool commandPool, VkPipeline pipeline, VkPipelineLayout pipelineLayout,
-			std::vector<VkImageView> swapChainImageViews, std::vector<VkCommandBuffer> commandBuffers, std::vector<VkFramebuffer> swapChainFramebuffers,
-			VkDescriptorPool descriptorPool, VkDescriptorSetLayout descriptorSetLayout
-		);
-		void Destroy(VkCommandPool commandPool, std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>> semaphores);
+		void DestroyPipeline(VkPipeline pipeline, VkPipelineLayout pipelineLayout, VkDescriptorPool descriptorPool, VkDescriptorSetLayout descriptorSetLayout);
 		void DestroySwapchain(VkDevice device, VkSwapchainKHR swapChain, std::vector<VkFramebuffer> swapChainFramebuffers, std::vector<VkImageView> swapChainImageViews);
+		void DestroySemaphores(std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>> semaphores);
+		void DestroyVertexBuffer(VkBuffer vertexBuffer, VkDeviceMemory vertexBufferMemory);
+		void Destroy(VkRenderPass renderPass, VkCommandPool commandPool, std::vector<VkCommandBuffer> commandBuffers);
 
 		/*
 		* Helper functions.
@@ -134,6 +133,7 @@ namespace Rebulk {
 		inline std::vector<VkImage> GetSwapChainImages() { return m_SwapChainImages; };
 		inline VkExtent2D GetSwapChainExtent() { return m_SwapChainExtent; };
 		inline VkSurfaceKHR GetSurface() { return m_Surface; };
+		inline void ResetCurrentFrameIndex() { m_CurrentFrame = 0; };
 
 		SwapChainSupportDetails QuerySwapChainSupport(VkPhysicalDevice device);
 
