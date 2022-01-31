@@ -54,15 +54,15 @@ project "GLFW"
             "src/posix_thread.c",
             "src/posix_time.c",
             "src/linux_joystick.c",
-            "src/wl_init.c",
-            "src/wl_platform.h",
-            "src/wl_monitor.c",
-            "src/wl_window.c",
+            "src/x11_init.c",
+            "src/x11_platform.h",
+            "src/x11_monitor.c",
+            "src/x11_window.c",
         }
         
         defines 
         { 
-            "_GLFW_WAYLAND" 
+            
         }
 
         links { "dl", "pthread" }
