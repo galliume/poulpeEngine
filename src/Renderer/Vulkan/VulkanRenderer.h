@@ -6,6 +6,10 @@
 #include <unordered_map>
 #include <array>
 
+#define GLM_FORCE_DEFAULT_ALIGNED_GENTYPES
+#define GLM_FORCE_RADIANS
+#define GLM_FORCE_DEPTH_ZERO_TO_ONE
+
 #include "rebulkpch.h"
 #include "vulkan/vulkan.h"
 #include "Pattern/ISubject.h"
@@ -15,6 +19,12 @@
 #include <glm/gtx/hash.hpp>
 
 namespace Rebulk {
+
+	struct UniformBufferObject {
+		alignas(16) glm::mat4 model;
+		alignas(16) glm::mat4 view;
+		alignas(16) glm::mat4 proj;
+	};
 
 	struct Vertex {
 		glm::vec3 pos;
@@ -44,7 +54,7 @@ namespace Rebulk {
 			attributeDescriptions[1].format = VK_FORMAT_R32G32B32_SFLOAT;
 			attributeDescriptions[1].offset = offsetof(Vertex, color);
 
-			attributeDescriptions[0].binding = 0;
+			attributeDescriptions[2].binding = 0;
 			attributeDescriptions[2].location = 2;
 			attributeDescriptions[2].format = VK_FORMAT_R32G32_SFLOAT;
 			attributeDescriptions[2].offset = offsetof(Vertex, texCoord);;
@@ -91,15 +101,18 @@ namespace Rebulk {
 		std::vector<VkImageView> CreateImageViews(std::vector<VkImage> swapChainImages);
 		std::vector<VkFramebuffer> CreateFramebuffers(VkRenderPass renderPass, std::vector<VkImageView> swapChainImageViews);
 		VkCommandPool CreateCommandPool();
-		std::vector<VkCommandBuffer> AllocateCommandBuffers(VkCommandPool commandPool, uint16_t size = 1);
+		std::vector<VkCommandBuffer> AllocateCommandBuffers(VkCommandPool commandPool, uint32_t size = 1);
 		void CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory);
 		std::pair<VkBuffer, VkDeviceMemory> CreateVertexBuffer(VkCommandPool commandPool, std::vector<Rebulk::Vertex> vertices);
-		std::pair<VkBuffer, VkDeviceMemory> CreateIndexBuffer(VkCommandPool commandPool, std::vector<uint16_t> indices);
+		std::pair<VkBuffer, VkDeviceMemory> CreateIndexBuffer(VkCommandPool commandPool, std::vector<uint32_t> indices);
 		VkDescriptorPool CreateDescriptorPool(std::vector<VkImage> swapChainImages);
 		std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>> CreateSyncObjects(std::vector<VkImage> swapChainImages);
 		VkImageMemoryBarrier SetupImageMemoryBarrier(VkImage image, VkAccessFlags srcAccessMask, VkAccessFlags dstAccessMask, VkImageLayout oldLayout, VkImageLayout newLayout);
 		void CopyBuffer(VkCommandPool commandPool, VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
 		bool SouldResizeSwapChain(VkSwapchainKHR swapChain);
+		std::pair<std::vector<VkBuffer>, std::vector<VkDeviceMemory>> CreateUniformBuffers(std::vector<VkImageView> swapChainImages);
+		void UpdateUniformBuffer(VkDeviceMemory uniformBufferMemory);
+		std::vector<VkDescriptorSet> CreateDescriptorSets(VkDescriptorPool descriptorPool, VkDescriptorSetLayout descriptorSetLayout, std::vector<VkImage> swapChainImages, std::pair<std::vector<VkBuffer>, std::vector<VkDeviceMemory>> uniformBuffers);
 
 		/**
 		* Vulkan drawing functions, in main loop
@@ -110,7 +123,8 @@ namespace Rebulk {
 		void SetViewPort(VkCommandBuffer commandBuffer);
 		void SetScissor(VkCommandBuffer commandBuffer);
 		void BindPipeline(VkCommandBuffer commandBuffer, VkPipeline pipeline);
-		void Draw(VkCommandBuffer commandBuffer, VkBuffer vertexBuffer, std::vector<Rebulk::Vertex> vertices, VkBuffer indexBuffer, std::vector<uint16_t> indices);
+		void Draw(VkCommandBuffer commandBuffer, VkBuffer vertexBuffer, std::vector<Rebulk::Vertex> vertices, VkBuffer indexBuffer, std::vector<uint32_t> indices,
+			VkBuffer uniformBuffer, VkDescriptorSet descriptorSet, VkPipelineLayout pipelineLayout);
 		void EndRenderPass(VkCommandBuffer commandBuffer);
 		void EndCommandBuffer(VkCommandBuffer commandBuffer);
 		uint32_t AcquireNextImageKHR(VkSwapchainKHR swapChain, std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>>& semaphores);
@@ -174,8 +188,7 @@ namespace Rebulk {
 		QueueFamilyIndices FindQueueFamilies(VkPhysicalDevice device);
 		VkSurfaceFormatKHR ChooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats);
 		VkPresentModeKHR ChooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes);
-		uint32_t FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
-		std::vector<VkDescriptorSet> CreateDescriptorSets(VkDescriptorPool descriptorPool, VkDescriptorSetLayout descriptorSetLayout, std::vector<VkImage> swapChainImages);
+		uint32_t FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);		
 		VkExtent2D ChooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities);
 
 	private:

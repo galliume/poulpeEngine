@@ -34,7 +34,7 @@ static std::vector<char> ReadFile(const std::string& filename)
 struct Mesh
 {
 	std::vector<Rebulk::Vertex> vertices;
-	std::vector<uint16_t> indices;
+	std::vector<uint32_t> indices;
 };
 
 bool LoadMesh(Mesh& mesh, const char* path)
@@ -61,10 +61,12 @@ bool LoadMesh(Mesh& mesh, const char* path)
 				attrib.vertices[3 * index.vertex_index + 2]
 			};
 
-			vertex.texCoord = {
-				attrib.texcoords[2 * index.texcoord_index + 0],
-				1.0f - attrib.texcoords[2 * index.texcoord_index + 1]
-			};
+			if (attrib.texcoords.size() > 0) {
+				vertex.texCoord = {
+					attrib.texcoords[2 * index.texcoord_index + 0],
+					1.0f - attrib.texcoords[2 * index.texcoord_index + 1]
+				};
+			}
 
 			vertex.color = { 1.0f, 1.0f, 1.0f };
 			mesh.vertices.push_back(vertex);
@@ -119,19 +121,19 @@ int main(int argc, char** argv)
 	VkDescriptorPool descriptorPool = renderer->CreateDescriptorPool(swapChainImages);
 	std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>> semaphores = renderer->CreateSyncObjects(swapChainImages);
 
-	const std::vector<Rebulk::Vertex> vertices = {
-		{{-0.5f, -0.5f, 0.0f}, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
-		{{0.5f, -0.5f, 0.0f}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f}},
-		{{0.5f, 0.5f, 0.0f}, {0.0f, 0.0f, 1.0f}, {0.0f, 1.0f}},
-		{{-0.5f, 0.5f, 0.0f}, {1.0f, 1.0f, 1.0f}, {1.0f, 1.0f}}
-	};
+	//const std::vector<Rebulk::Vertex> vertices = {
+	//	{{-0.5f, -0.5f, 0.0f}, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
+	//	{{0.5f, -0.5f, 0.0f}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f}},
+	//	{{0.5f, 0.5f, 0.0f}, {0.0f, 0.0f, 1.0f}, {0.0f, 1.0f}},
+	//	{{-0.5f, 0.5f, 0.0f}, {1.0f, 1.0f, 1.0f}, {1.0f, 1.0f}}
+	//};
 
-	const std::vector<uint16_t> indices = {
-		0, 1, 2, 2, 3, 0
-	};
+	//const std::vector<uint16_t> indices = {
+	//	0, 1, 2, 2, 3, 0
+	//};
 
-	std::pair<VkBuffer, VkDeviceMemory> vertexBuffer = renderer->CreateVertexBuffer(commandPool, vertices);
-	std::pair<VkBuffer, VkDeviceMemory> indexBuffer = renderer->CreateIndexBuffer(commandPool, indices);
+	//std::pair<VkBuffer, VkDeviceMemory> vertexBuffer = renderer->CreateVertexBuffer(commandPool, vertices);
+	//std::pair<VkBuffer, VkDeviceMemory> indexBuffer = renderer->CreateIndexBuffer(commandPool, indices);
 
 	glfwSetWindowUserPointer(window, renderer);
 	glfwSetFramebufferSizeCallback(window, FramebufferResizeCallback);
@@ -144,8 +146,11 @@ int main(int argc, char** argv)
 	Mesh meshObj;
 	LoadMesh(meshObj, "mesh/moon.obj");
 
-	std::pair<VkBuffer, VkDeviceMemory> tvBuffer = renderer->CreateVertexBuffer(commandPool, meshObj.vertices);
-	std::pair<VkBuffer, VkDeviceMemory> tiBuffer = renderer->CreateIndexBuffer(commandPool, meshObj.indices);
+	std::pair<VkBuffer, VkDeviceMemory> meshVBuffer = renderer->CreateVertexBuffer(commandPool, meshObj.vertices);
+	std::pair<VkBuffer, VkDeviceMemory> meshIBuffer = renderer->CreateIndexBuffer(commandPool, meshObj.indices);
+	std::pair<std::vector<VkBuffer>, std::vector<VkDeviceMemory>> uniformBuffers = renderer->CreateUniformBuffers(swapChainImageViews);
+
+	std::vector<VkDescriptorSet> descriptorSets = renderer->CreateDescriptorSets(descriptorPool, descriptorSetLayout, swapChainImages, uniformBuffers);
 
 	while (!glfwWindowShouldClose(window)) {
 
@@ -185,7 +190,8 @@ int main(int argc, char** argv)
 			renderer->SetViewPort(commandBuffers[imageIndex]);
 			renderer->SetScissor(commandBuffers[imageIndex]);
 			renderer->BindPipeline(commandBuffers[imageIndex], pipeline);
-			renderer->Draw(commandBuffers[imageIndex], tvBuffer.first, meshObj.vertices, tiBuffer.first, meshObj.indices);
+			renderer->Draw(commandBuffers[imageIndex], meshVBuffer.first, meshObj.vertices, meshIBuffer.first, meshObj.indices, uniformBuffers.first[imageIndex], descriptorSets[imageIndex], pipelineLayout);
+			renderer->UpdateUniformBuffer(uniformBuffers.second[imageIndex]);
 			renderer->EndRenderPass(commandBuffers[imageIndex]);
 
 			VkImageMemoryBarrier renderEndBarrier = renderer->SetupImageMemoryBarrier(
@@ -215,10 +221,11 @@ int main(int argc, char** argv)
 	//renderer->DestroyRenderPass(imguiRenderPass, imguiCommandPool, imguiCommandBuffers);
 	renderer->DestroySwapchain(renderer->GetDevice(), swapChain, swapChainFramebuffers, swapChainImageViews);
 	renderer->DestroySemaphores(semaphores);
-	renderer->DestroyVertexBuffer(tvBuffer.first, tvBuffer.second);
-	renderer->DestroyVertexBuffer(tiBuffer.first, tiBuffer.second);
-	renderer->DestroyVertexBuffer(vertexBuffer.first, vertexBuffer.second);
-	renderer->DestroyVertexBuffer(indexBuffer.first, indexBuffer.second);
+	renderer->DestroyVertexBuffer(meshVBuffer.first, meshVBuffer.second);
+	renderer->DestroyVertexBuffer(meshIBuffer.first, meshIBuffer.second);
+	
+	/*renderer->DestroyVertexBuffer(vertexBuffer.first, vertexBuffer.second);
+	renderer->DestroyVertexBuffer(indexBuffer.first, indexBuffer.second);*/
 	renderer->DestroyPipeline(pipeline, pipelineLayout, descriptorPool, descriptorSetLayout);
 	renderer->DestroyRenderPass(renderPass, commandPool, commandBuffers);
 	renderer->Destroy();
