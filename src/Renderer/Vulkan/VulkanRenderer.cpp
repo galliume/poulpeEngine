@@ -61,7 +61,7 @@ namespace Rebulk {
 #ifdef NDEBUG
 		m_EnableValidationLayers = false;
 #else
-		m_EnableValidationLayers = true;
+		m_EnableValidationLayers = false;
 #endif
 		
 		LoadRequiredExtensions();
