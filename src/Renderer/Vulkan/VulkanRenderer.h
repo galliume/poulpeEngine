@@ -6,9 +6,6 @@
 #include <unordered_map>
 #include <array>
 
-#define GLM_FORCE_DEFAULT_ALIGNED_GENTYPES
-#define GLM_FORCE_RADIANS
-#define GLM_FORCE_DEPTH_ZERO_TO_ONE
 
 #include "rebulkpch.h"
 #include "vulkan/vulkan.h"
@@ -124,7 +121,8 @@ namespace Rebulk {
 		void SetScissor(VkCommandBuffer commandBuffer);
 		void BindPipeline(VkCommandBuffer commandBuffer, VkPipeline pipeline);
 		void Draw(VkCommandBuffer commandBuffer, VkBuffer vertexBuffer, std::vector<Rebulk::Vertex> vertices, VkBuffer indexBuffer, std::vector<uint32_t> indices,
-			VkBuffer uniformBuffer, VkDescriptorSet descriptorSet, VkPipelineLayout pipelineLayout);
+			VkBuffer uniformBuffer, VkDescriptorSet descriptorSet, VkPipelineLayout pipelineLayout
+		);
 		void EndRenderPass(VkCommandBuffer commandBuffer);
 		void EndCommandBuffer(VkCommandBuffer commandBuffer);
 		uint32_t AcquireNextImageKHR(VkSwapchainKHR swapChain, std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>>& semaphores);
