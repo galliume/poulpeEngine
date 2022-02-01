@@ -1,5 +1,9 @@
+#define TINYOBJLOADER_IMPLEMENTATION
+#include "tiny_obj_loader.h"
+
 #include "rebulkpch.h"
 #include "GUI/VulkanLayer.h"
+
 
 static void FramebufferResizeCallback(GLFWwindow* window, int width, int height)
 {
@@ -24,6 +28,57 @@ static std::vector<char> ReadFile(const std::string& filename)
 	file.close();
 
 	return buffer;
+}
+
+
+struct Mesh
+{
+	std::vector<Rebulk::Vertex> vertices;
+	std::vector<uint32_t> indices;
+};
+
+bool LoadMesh(Mesh& mesh, const char* path)
+{
+	tinyobj::attrib_t attrib;
+	std::vector<tinyobj::shape_t> shapes;
+	std::vector<tinyobj::material_t> materials;
+	std::string warn, err;
+
+	if (!tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, path)) {
+		throw std::runtime_error(warn + err);
+	}
+	
+	std::unordered_map<Rebulk::Vertex, uint16_t> uniqueVertices{};
+
+	for (const auto& shape : shapes) {
+		for (const auto& index : shape.mesh.indices) {
+
+			Rebulk::Vertex vertex{};
+
+			vertex.pos = {
+				attrib.vertices[3 * index.vertex_index + 0],
+				attrib.vertices[3 * index.vertex_index + 1],
+				attrib.vertices[3 * index.vertex_index + 2]
+			};
+
+			if (attrib.texcoords.size() > 0) {
+				vertex.texCoord = {
+					attrib.texcoords[2 * index.texcoord_index + 0],
+					1.0f - attrib.texcoords[2 * index.texcoord_index + 1]
+				};
+			}
+
+			vertex.color = { 1.0f, 1.0f, 1.0f };
+			mesh.vertices.push_back(vertex);
+
+			if (uniqueVertices.count(vertex) == 0) {
+				uniqueVertices[vertex] = static_cast<uint16_t>(mesh.vertices.size());
+				mesh.vertices.push_back(vertex);
+			}
+
+			mesh.indices.push_back(uniqueVertices[vertex]);
+		}
+	}
 }
 
 int main(int argc, char** argv)
@@ -66,19 +121,19 @@ int main(int argc, char** argv)
 	VkDescriptorPool descriptorPool = renderer->CreateDescriptorPool(swapChainImages);
 	std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>> semaphores = renderer->CreateSyncObjects(swapChainImages);
 
-	const std::vector<Rebulk::Vertex> vertices = {
-		{{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}},
-		{{0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}},
-		{{0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}},
-		{{-0.5f, 0.5f}, {1.0f, 1.0f, 1.0f}}
-	};
+	//const std::vector<Rebulk::Vertex> vertices = {
+	//	{{-0.5f, -0.5f, 0.0f}, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
+	//	{{0.5f, -0.5f, 0.0f}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f}},
+	//	{{0.5f, 0.5f, 0.0f}, {0.0f, 0.0f, 1.0f}, {0.0f, 1.0f}},
+	//	{{-0.5f, 0.5f, 0.0f}, {1.0f, 1.0f, 1.0f}, {1.0f, 1.0f}}
+	//};
 
-	const std::vector<uint16_t> indices = {
-	0, 1, 2, 2, 3, 0
-	};
+	//const std::vector<uint16_t> indices = {
+	//	0, 1, 2, 2, 3, 0
+	//};
 
-	std::pair<VkBuffer, VkDeviceMemory> vertexBuffer = renderer->CreateVertexBuffer(commandPool, vertices);
-	std::pair<VkBuffer, VkDeviceMemory> indexBuffer = renderer->CreateIndexBuffer(commandPool, indices);
+	//std::pair<VkBuffer, VkDeviceMemory> vertexBuffer = renderer->CreateVertexBuffer(commandPool, vertices);
+	//std::pair<VkBuffer, VkDeviceMemory> indexBuffer = renderer->CreateIndexBuffer(commandPool, indices);
 
 	glfwSetWindowUserPointer(window, renderer);
 	glfwSetFramebufferSizeCallback(window, FramebufferResizeCallback);
@@ -88,24 +143,14 @@ int main(int argc, char** argv)
 
 	uint32_t imageIndex = 0;
 
-	ImGui_ImplVulkan_InitInfo info = {};
-	info.Instance = renderer->GetInstance();
-	info.PhysicalDevice = renderer->GetPhysicalDevice();
-	info.Device = renderer->GetDevice();
-	info.QueueFamily = renderer->GetQueueFamily();
-	info.Queue = renderer->GetGraphicsQueue();
-	info.PipelineCache = nullptr;
-	info.DescriptorPool = descriptorPool;
-	info.Subpass = 0;
-	info.MinImageCount = 2;
-	info.ImageCount = 2;
-	info.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
-	info.Allocator = nullptr;
-	info.CheckVkResultFn = [](VkResult err) {
-		std::cerr << "IMGUI VULKAN ERROR " + std::to_string(err) << std::endl;
-	};
+	Mesh meshObj;
+	LoadMesh(meshObj, "mesh/kitty.obj");
 
-	Rebulk::VulkanLayer* vulkanLayer = new Rebulk::VulkanLayer(window, renderer);
+	std::pair<VkBuffer, VkDeviceMemory> meshVBuffer = renderer->CreateVertexBuffer(commandPool, meshObj.vertices);
+	std::pair<VkBuffer, VkDeviceMemory> meshIBuffer = renderer->CreateIndexBuffer(commandPool, meshObj.indices);
+	std::pair<std::vector<VkBuffer>, std::vector<VkDeviceMemory>> uniformBuffers = renderer->CreateUniformBuffers(swapChainImageViews);
+
+	std::vector<VkDescriptorSet> descriptorSets = renderer->CreateDescriptorSets(descriptorPool, descriptorSetLayout, swapChainImages, uniformBuffers);
 
 	while (!glfwWindowShouldClose(window)) {
 
@@ -127,7 +172,8 @@ int main(int argc, char** argv)
 			commandBuffers = renderer->AllocateCommandBuffers(commandPool, swapChainFramebuffers.size());
 		}
 
-		for (size_t i = 0; i < commandBuffers.size(); i++) {
+		for (size_t i = 0; i < commandBuffers.size() -1 ; i++) {
+
 			imageIndex = renderer->AcquireNextImageKHR(swapChain, semaphores);
 
 			renderer->BeginCommandBuffer(commandBuffers[imageIndex]);
@@ -144,7 +190,8 @@ int main(int argc, char** argv)
 			renderer->SetViewPort(commandBuffers[imageIndex]);
 			renderer->SetScissor(commandBuffers[imageIndex]);
 			renderer->BindPipeline(commandBuffers[imageIndex], pipeline);
-			renderer->Draw(commandBuffers[imageIndex], vertexBuffer.first, vertices, indexBuffer.first, indices);
+			renderer->Draw(commandBuffers[imageIndex], meshVBuffer.first, meshObj.vertices, meshIBuffer.first, meshObj.indices, uniformBuffers.first[imageIndex], descriptorSets[imageIndex], pipelineLayout);
+			renderer->UpdateUniformBuffer(uniformBuffers.second[imageIndex]);
 			renderer->EndRenderPass(commandBuffers[imageIndex]);
 
 			VkImageMemoryBarrier renderEndBarrier = renderer->SetupImageMemoryBarrier(
@@ -174,8 +221,11 @@ int main(int argc, char** argv)
 	//renderer->DestroyRenderPass(imguiRenderPass, imguiCommandPool, imguiCommandBuffers);
 	renderer->DestroySwapchain(renderer->GetDevice(), swapChain, swapChainFramebuffers, swapChainImageViews);
 	renderer->DestroySemaphores(semaphores);
-	renderer->DestroyVertexBuffer(vertexBuffer.first, vertexBuffer.second);
-	renderer->DestroyVertexBuffer(indexBuffer.first, indexBuffer.second);
+	renderer->DestroyVertexBuffer(meshVBuffer.first, meshVBuffer.second);
+	renderer->DestroyVertexBuffer(meshIBuffer.first, meshIBuffer.second);
+	
+	/*renderer->DestroyVertexBuffer(vertexBuffer.first, vertexBuffer.second);
+	renderer->DestroyVertexBuffer(indexBuffer.first, indexBuffer.second);*/
 	renderer->DestroyPipeline(pipeline, pipelineLayout, descriptorPool, descriptorSetLayout);
 	renderer->DestroyRenderPass(renderPass, commandPool, commandBuffers);
 	renderer->Destroy();

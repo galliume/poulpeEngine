@@ -3,19 +3,31 @@
 #include <set>
 #include <cstdint> 
 #include <fstream>
+#include <unordered_map>
+#include <array>
+
 
 #include "rebulkpch.h"
 #include "vulkan/vulkan.h"
 #include "Pattern/ISubject.h"
 #include <glm/glm.hpp>
-#include <array>
+#include "glm/gtc/matrix_transform.hpp"
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtx/hash.hpp>
 
 namespace Rebulk {
 
+	struct UniformBufferObject {
+		alignas(16) glm::mat4 model;
+		alignas(16) glm::mat4 view;
+		alignas(16) glm::mat4 proj;
+	};
+
 	struct Vertex {
-		glm::vec2 pos;
+		glm::vec3 pos;
 		glm::vec3 color;
-		
+		glm::vec2 texCoord;
+
 		static VkVertexInputBindingDescription GetBindingDescription() {
 
 			VkVertexInputBindingDescription bindingDescription{};
@@ -26,12 +38,12 @@ namespace Rebulk {
 			return bindingDescription;
 		}
 
-		static std::array<VkVertexInputAttributeDescription, 2> GetAttributeDescriptions() {
+		static std::array<VkVertexInputAttributeDescription, 3> GetAttributeDescriptions() {
 
-			std::array<VkVertexInputAttributeDescription, 2> attributeDescriptions{};
+			std::array<VkVertexInputAttributeDescription, 3> attributeDescriptions{};
 			attributeDescriptions[0].binding = 0;
 			attributeDescriptions[0].location = 0;
-			attributeDescriptions[0].format = VK_FORMAT_R32G32_SFLOAT;
+			attributeDescriptions[0].format = VK_FORMAT_R32G32B32_SFLOAT;
 			attributeDescriptions[0].offset = offsetof(Vertex, pos);
 
 			attributeDescriptions[1].binding = 0;
@@ -39,7 +51,17 @@ namespace Rebulk {
 			attributeDescriptions[1].format = VK_FORMAT_R32G32B32_SFLOAT;
 			attributeDescriptions[1].offset = offsetof(Vertex, color);
 
+			attributeDescriptions[2].binding = 0;
+			attributeDescriptions[2].location = 2;
+			attributeDescriptions[2].format = VK_FORMAT_R32G32_SFLOAT;
+			attributeDescriptions[2].offset = offsetof(Vertex, texCoord);;
+
 			return attributeDescriptions;
+		}
+
+		bool operator==(const Vertex& other) const
+		{
+			return pos == other.pos && color == other.color && texCoord == other.texCoord;
 		}
 	};
 
@@ -76,15 +98,18 @@ namespace Rebulk {
 		std::vector<VkImageView> CreateImageViews(std::vector<VkImage> swapChainImages);
 		std::vector<VkFramebuffer> CreateFramebuffers(VkRenderPass renderPass, std::vector<VkImageView> swapChainImageViews);
 		VkCommandPool CreateCommandPool();
-		std::vector<VkCommandBuffer> AllocateCommandBuffers(VkCommandPool commandPool, uint16_t size = 1);
+		std::vector<VkCommandBuffer> AllocateCommandBuffers(VkCommandPool commandPool, uint32_t size = 1);
 		void CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory);
 		std::pair<VkBuffer, VkDeviceMemory> CreateVertexBuffer(VkCommandPool commandPool, std::vector<Rebulk::Vertex> vertices);
-		std::pair<VkBuffer, VkDeviceMemory> CreateIndexBuffer(VkCommandPool commandPool, std::vector<uint16_t> indices);
+		std::pair<VkBuffer, VkDeviceMemory> CreateIndexBuffer(VkCommandPool commandPool, std::vector<uint32_t> indices);
 		VkDescriptorPool CreateDescriptorPool(std::vector<VkImage> swapChainImages);
 		std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>> CreateSyncObjects(std::vector<VkImage> swapChainImages);
 		VkImageMemoryBarrier SetupImageMemoryBarrier(VkImage image, VkAccessFlags srcAccessMask, VkAccessFlags dstAccessMask, VkImageLayout oldLayout, VkImageLayout newLayout);
 		void CopyBuffer(VkCommandPool commandPool, VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
 		bool SouldResizeSwapChain(VkSwapchainKHR swapChain);
+		std::pair<std::vector<VkBuffer>, std::vector<VkDeviceMemory>> CreateUniformBuffers(std::vector<VkImageView> swapChainImages);
+		void UpdateUniformBuffer(VkDeviceMemory uniformBufferMemory);
+		std::vector<VkDescriptorSet> CreateDescriptorSets(VkDescriptorPool descriptorPool, VkDescriptorSetLayout descriptorSetLayout, std::vector<VkImage> swapChainImages, std::pair<std::vector<VkBuffer>, std::vector<VkDeviceMemory>> uniformBuffers);
 
 		/**
 		* Vulkan drawing functions, in main loop
@@ -95,7 +120,9 @@ namespace Rebulk {
 		void SetViewPort(VkCommandBuffer commandBuffer);
 		void SetScissor(VkCommandBuffer commandBuffer);
 		void BindPipeline(VkCommandBuffer commandBuffer, VkPipeline pipeline);
-		void Draw(VkCommandBuffer commandBuffer, VkBuffer vertexBuffer, std::vector<Rebulk::Vertex> vertices, VkBuffer indexBuffer, std::vector<uint16_t> indices);
+		void Draw(VkCommandBuffer commandBuffer, VkBuffer vertexBuffer, std::vector<Rebulk::Vertex> vertices, VkBuffer indexBuffer, std::vector<uint32_t> indices,
+			VkBuffer uniformBuffer, VkDescriptorSet descriptorSet, VkPipelineLayout pipelineLayout
+		);
 		void EndRenderPass(VkCommandBuffer commandBuffer);
 		void EndCommandBuffer(VkCommandBuffer commandBuffer);
 		uint32_t AcquireNextImageKHR(VkSwapchainKHR swapChain, std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>>& semaphores);
@@ -159,8 +186,7 @@ namespace Rebulk {
 		QueueFamilyIndices FindQueueFamilies(VkPhysicalDevice device);
 		VkSurfaceFormatKHR ChooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats);
 		VkPresentModeKHR ChooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes);
-		uint32_t FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
-		std::vector<VkDescriptorSet> CreateDescriptorSets(VkDescriptorPool descriptorPool, VkDescriptorSetLayout descriptorSetLayout, std::vector<VkImage> swapChainImages);
+		uint32_t FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);		
 		VkExtent2D ChooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities);
 
 	private:
@@ -196,5 +222,15 @@ namespace Rebulk {
 		std::vector<const char*> m_RequiredExtensions = {};		
 		std::vector<VkFence> m_InFlightFences = {};
 		std::vector<VkFence> m_ImagesInFlight = {};
+	};
+}
+
+namespace std {
+	template<> struct hash<Rebulk::Vertex> {
+		size_t operator()(Rebulk::Vertex const& vertex) const {
+			return ((hash<glm::vec3>()(vertex.pos) ^
+				(hash<glm::vec3>()(vertex.color) << 1)) >> 1) ^
+				(hash<glm::vec2>()(vertex.texCoord) << 1);
+		}
 	};
 }
