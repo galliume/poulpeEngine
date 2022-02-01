@@ -144,7 +144,7 @@ int main(int argc, char** argv)
 	uint32_t imageIndex = 0;
 
 	Mesh meshObj;
-	LoadMesh(meshObj, "mesh/moon.obj");
+	LoadMesh(meshObj, "mesh/kitty.obj");
 
 	std::pair<VkBuffer, VkDeviceMemory> meshVBuffer = renderer->CreateVertexBuffer(commandPool, meshObj.vertices);
 	std::pair<VkBuffer, VkDeviceMemory> meshIBuffer = renderer->CreateIndexBuffer(commandPool, meshObj.indices);
