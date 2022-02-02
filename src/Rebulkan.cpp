@@ -97,7 +97,7 @@ int main(int argc, char** argv)
 	glfwMakeContextCurrent(window);
 	glfwSwapInterval(1);//vsync
 
-	Rebulk::VulkanRenderer* renderer = new Rebulk::VulkanRenderer(window);
+	std::unique_ptr<Rebulk::VulkanRenderer> renderer = std::make_unique<Rebulk::VulkanRenderer>(Rebulk::VulkanRenderer(window));
 
 	VkRenderPass renderPass = renderer->CreateRenderPass();
 
@@ -135,7 +135,7 @@ int main(int argc, char** argv)
 	//std::pair<VkBuffer, VkDeviceMemory> vertexBuffer = renderer->CreateVertexBuffer(commandPool, vertices);
 	//std::pair<VkBuffer, VkDeviceMemory> indexBuffer = renderer->CreateIndexBuffer(commandPool, indices);
 
-	glfwSetWindowUserPointer(window, renderer);
+	glfwSetWindowUserPointer(window, renderer.get());
 	glfwSetFramebufferSizeCallback(window, FramebufferResizeCallback);
 
 	double lastTime = glfwGetTime();
