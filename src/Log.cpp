@@ -1,7 +1,7 @@
 #include "rebulkpch.h"
 #include "Log.h"
 
-namespace Rebulk {
+namespace Rbk {
 
 	std::shared_ptr<spdlog::logger> Log::s_Logger;
 

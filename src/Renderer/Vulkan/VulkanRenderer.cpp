@@ -1,7 +1,7 @@
 #include "VulkanRenderer.h"
 #include <chrono>
 
-namespace Rebulk {
+namespace Rbk {
 
 	VkResult CreateDebugUtilsMessengerEXT(VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDebugUtilsMessengerEXT* pCallback)
 	{
@@ -39,17 +39,17 @@ namespace Rebulk {
 		{
 		case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT:
 		{
-			Rebulk::Log::GetLogger()->critical(pCallbackData->pMessage);
+			Rbk::Log::GetLogger()->critical(pCallbackData->pMessage);
 			break;
 		}
 		case VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT:
 		{
-			Rebulk::Log::GetLogger()->warn(pCallbackData->pMessage);
+			Rbk::Log::GetLogger()->warn(pCallbackData->pMessage);
 			break;
 		}
 		default:
 		{
-			Rebulk::Log::GetLogger()->trace(pCallbackData->pMessage);
+			Rbk::Log::GetLogger()->trace(pCallbackData->pMessage);
 		}
 		}
 
@@ -79,7 +79,7 @@ namespace Rebulk {
 
 		if (!IsValidationLayersEnabled() && !CheckValidationLayerSupport()) {
 			m_Messages.emplace_back("Validations layers not available !");
-			Notify();
+
 			return;
 		}
 
@@ -87,7 +87,7 @@ namespace Rebulk {
 
 		appInfo.apiVersion = VK_API_VERSION_1_2;
 		appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
-		appInfo.pApplicationName = "Rebulkan";
+		appInfo.pApplicationName = "Rbkan";
 		appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
 		appInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
 
@@ -126,7 +126,7 @@ namespace Rebulk {
 
 		if (VK_SUCCESS != result) {
 			std::string message = std::string("Can't create VK instance : " + std::to_string(result));
-			Rebulk::Log::GetLogger()->critical("{}", message.c_str());
+			Rbk::Log::GetLogger()->critical("{}", message.c_str());
 			m_Messages.emplace_back(message);
 			Notify();
 			return;
@@ -135,7 +135,7 @@ namespace Rebulk {
 		m_InstanceCreated = true;
 
 		message = std::string("VK instance created successfully");
-		Rebulk::Log::GetLogger()->trace(message);
+		Rbk::Log::GetLogger()->trace(message);
 		m_Messages.emplace_back(message);
 
 		Notify();
@@ -148,11 +148,11 @@ namespace Rebulk {
 		std::vector<VkExtensionProperties> extensions(m_ExtensionCount);
 		vkEnumerateInstanceExtensionProperties(nullptr, &m_ExtensionCount, extensions.data());
 
-		Rebulk::Log::GetLogger()->trace("{} available extensions:\n", m_ExtensionCount);
+		Rbk::Log::GetLogger()->trace("{} available extensions:\n", m_ExtensionCount);
 
 		for (const auto& extension : extensions) {
 			std::string message = std::string("extension available : ") + extension.extensionName;
-			Rebulk::Log::GetLogger()->trace("\t {} \n", message.c_str());
+			Rbk::Log::GetLogger()->trace("\t {} \n", message.c_str());
 			m_Messages.emplace_back(message);
 		}
 
@@ -1319,7 +1319,7 @@ namespace Rebulk {
 		return indexBuffer;
 	}
 
-	std::pair<VkBuffer, VkDeviceMemory> VulkanRenderer::CreateVertexBuffer(VkCommandPool commandPool, std::vector<Rebulk::Vertex> vertices)
+	std::pair<VkBuffer, VkDeviceMemory> VulkanRenderer::CreateVertexBuffer(VkCommandPool commandPool, std::vector<Rbk::Vertex> vertices)
 	{
 
 		std::pair<VkBuffer, VkDeviceMemory> vertexBuffer;

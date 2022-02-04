@@ -15,7 +15,7 @@
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/hash.hpp>
 
-namespace Rebulk {
+namespace Rbk {
 
 	struct UniformBufferObject {
 		glm::mat4 model;
@@ -100,7 +100,7 @@ namespace Rebulk {
 		VkCommandPool CreateCommandPool();
 		std::vector<VkCommandBuffer> AllocateCommandBuffers(VkCommandPool commandPool, uint32_t size = 1);
 		void CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory);
-		std::pair<VkBuffer, VkDeviceMemory> CreateVertexBuffer(VkCommandPool commandPool, std::vector<Rebulk::Vertex> vertices);
+		std::pair<VkBuffer, VkDeviceMemory> CreateVertexBuffer(VkCommandPool commandPool, std::vector<Rbk::Vertex> vertices);
 		std::pair<VkBuffer, VkDeviceMemory> CreateIndexBuffer(VkCommandPool commandPool, std::vector<uint32_t> indices);
 		VkDescriptorPool CreateDescriptorPool(std::vector<VkImage> swapChainImages);
 		std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>> CreateSyncObjects(std::vector<VkImage> swapChainImages);
@@ -227,8 +227,8 @@ namespace Rebulk {
 }
 
 namespace std {
-	template<> struct hash<Rebulk::Vertex> {
-		size_t operator()(Rebulk::Vertex const& vertex) const {
+	template<> struct hash<Rbk::Vertex> {
+		size_t operator()(Rbk::Vertex const& vertex) const {
 			return ((hash<glm::vec3>()(vertex.pos) ^
 				(hash<glm::vec3>()(vertex.color) << 1)) >> 1) ^
 				(hash<glm::vec2>()(vertex.texCoord) << 1);

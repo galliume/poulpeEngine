@@ -48,7 +48,10 @@ project "Rebulkan"
 		"vendor/imgui/backends/imgui_impl_glfw.cpp",
 		"vendor/imgui/backends/imgui_impl_vulkan.h",
 		"vendor/imgui/backends/imgui_impl_vulkan.cpp",
-		"vendor/tiny_obj_loader/tiny_obj_loader.h"
+		"vendor/tiny_obj_loader/tiny_obj_loader.h",
+		"shaders/*",
+		"mesh/*",
+		"*.lua"
 	}
 
 	includedirs
