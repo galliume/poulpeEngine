@@ -23,4 +23,5 @@
 
 #include "vulkan/vulkan.h"
 
+#include "Rebulk/Core/Tools.h"
 #include "Rebulk/Core/Log.h"
