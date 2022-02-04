@@ -2,16 +2,22 @@
 
 namespace Rbk
 {
-	static void FramebufferResizeCallback(GLFWwindow* window, int width, int height)
-	{
-		auto renderer = reinterpret_cast<Rbk::VulkanRenderer*>(glfwGetWindowUserPointer(window));
-		renderer->m_FramebufferResized = true;
-	}
-	
 	Application* Application::s_Instance = nullptr;
+	std::unique_ptr<Rbk::Window>window = nullptr;
+	std::unique_ptr<Rbk::VulkanRenderer>renderer = nullptr;
 
 	Application::Application()
 	{
+		Rbk::Log::Init();
+
+		if (window == nullptr) {
+			window = std::make_unique<Rbk::Window>(Window());
+		}
+
+		if (renderer == nullptr) {
+			renderer = std::make_unique<Rbk::VulkanRenderer>(Rbk::VulkanRenderer(window->Get()));
+		}
+
 		if (s_Instance == nullptr) {
 			s_Instance = this;
 		}
@@ -24,22 +30,6 @@ namespace Rbk
 
 	void Application::Run()
 	{
-		Rbk::Log::Init();
-
-		const uint32_t WIDTH = 2560;
-		const uint32_t HEIGHT = 1440;
-
-		glfwInit();
-		glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-		glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
-
-		GLFWwindow* window = glfwCreateWindow(WIDTH, HEIGHT, "Rbkan", nullptr, nullptr);
-
-		glfwMakeContextCurrent(window);
-		glfwSwapInterval(1);//vsync
-
-		std::unique_ptr<Rbk::VulkanRenderer> renderer = std::make_unique<Rbk::VulkanRenderer>(Rbk::VulkanRenderer(window));
-
 		VkRenderPass renderPass = renderer->CreateRenderPass();
 
 		auto vertShaderCode = ReadFile("shaders/spv/vert.spv");
@@ -62,8 +52,7 @@ namespace Rbk
 		VkDescriptorPool descriptorPool = renderer->CreateDescriptorPool(swapChainImages);
 		std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>> semaphores = renderer->CreateSyncObjects(swapChainImages);
 
-		glfwSetWindowUserPointer(window, renderer.get());
-		glfwSetFramebufferSizeCallback(window, FramebufferResizeCallback);
+		glfwSetWindowUserPointer(window->Get(), renderer.get());
 
 		double lastTime = glfwGetTime();
 		bool show_demo_window = true;
@@ -79,7 +68,7 @@ namespace Rbk
 
 		std::vector<VkDescriptorSet> descriptorSets = renderer->CreateDescriptorSets(descriptorPool, descriptorSetLayout, swapChainImages, uniformBuffers);
 
-		while (!glfwWindowShouldClose(window)) {
+		while (!glfwWindowShouldClose(window->Get())) {
 
 			double currentTime = glfwGetTime();
 			double timeStep = currentTime - lastTime;
@@ -142,7 +131,7 @@ namespace Rbk
 			renderer->WaitIdle();
 			renderer->ResetCommandPool(commandPool);
 
-			glfwSwapBuffers(window);
+			glfwSwapBuffers(window->Get());
 			lastTime = currentTime;
 		}
 
@@ -168,7 +157,7 @@ namespace Rbk
 		renderer->DestroyRenderPass(renderPass, commandPool, commandBuffers);
 		renderer->Destroy();
 
-		glfwDestroyWindow(window);
+		glfwDestroyWindow(window->Get());
 		glfwTerminate();
 	}
 }
