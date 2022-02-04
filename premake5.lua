@@ -40,7 +40,6 @@ project "Rebulkan"
 		"vendor/GLM/glm/**.inl",
 		"vendor/imgui/imgui.h",
 		"vendor/imgui/imgui.cpp",
-		"vendor/imgui/imgui_demo.cpp",
 		"vendor/imgui/imgui_draw.cpp",
 		"vendor/imgui/imgui_tables.cpp",
 		"vendor/imgui/imgui_widgets.cpp",
