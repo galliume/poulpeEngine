@@ -1,5 +1,5 @@
 #pragma once
-#include "Pattern/IObserver.h"
+#include "Rebulk/Pattern/IObserver.h"
 
 namespace Rbk
 {
