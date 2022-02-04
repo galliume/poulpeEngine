@@ -4,7 +4,7 @@
 #include "GUI/Renderer/Im.h"
 #include "Pattern/IObserver.h"
 
-namespace Rebulk 
+namespace Rbk 
 {
 	class VulkanLayer : public IObserver
 	{
