@@ -1,5 +1,5 @@
-#include "Pattern/ISubject.h"
-#include "Renderer/Mesh.h"
+#include "Rebulk/Pattern/ISubject.h"
+#include "Rebulk/Renderer/Mesh.h"
 
 namespace Rbk {
 
