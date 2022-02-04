@@ -1,5 +1,4 @@
 #include "VulkanRenderer.h"
-#include <chrono>
 
 namespace Rbk {
 

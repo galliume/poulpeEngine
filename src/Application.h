@@ -1,5 +1,9 @@
 #pragma once
+
 #include "rebulkpch.h"
+#include "Renderer/Vulkan/VulkanRenderer.h"
+#include "Renderer/Mesh.h"
+#include "Core/TinyObjLoader.h"
 
 namespace Rbk 
 {
