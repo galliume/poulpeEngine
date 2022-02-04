@@ -21,6 +21,11 @@
 #include "glm/gtc/matrix_transform.hpp"
 #include <glm/gtx/hash.hpp>
 
+#include "spdlog/spdlog.h"
+#include "spdlog/fmt/ostr.h"
+#include "spdlog/sinks/stdout_color_sinks.h"
+#include "spdlog/details/log_msg.h"
+
 #include "vulkan/vulkan.h"
 
 #include "Rebulk/Core/Tools.h"
