@@ -1,7 +1,7 @@
 #include "VulkanLayer.h"
 #include <inttypes.h>
 
-namespace Rebulk
+namespace Rbk
 {
 	VulkanLayer::VulkanLayer(GLFWwindow* window, VulkanRenderer* vulkanRenderer)
 		: m_Window(window), m_VulkanRenderer(vulkanRenderer)
@@ -20,25 +20,25 @@ namespace Rebulk
 
 	void VulkanLayer::DisplayLogs()
 	{
-		Rebulk::Im::Begin("Vulkan Infos");
+		Rbk::Im::Begin("Vulkan Infos");
 		ImGui::PushID("##VulkanInfos");
 		const float footer_height_to_reserve = ImGui::GetStyle().ItemSpacing.y + ImGui::GetFrameHeightWithSpacing();
 
-		Rebulk::Im::BeginChild("VulkanLogs", ImVec2(0, -footer_height_to_reserve), true, ImGuiWindowFlags_HorizontalScrollbar);
+		Rbk::Im::BeginChild("VulkanLogs", ImVec2(0, -footer_height_to_reserve), true, ImGuiWindowFlags_HorizontalScrollbar);
 
 		for (auto& message : m_Messages) {
-			Rebulk::Im::Text("\t%s", message.c_str());
-			Rebulk::Im::Separator();
+			Rbk::Im::Text("\t%s", message.c_str());
+			Rbk::Im::Separator();
 		}
 
-		Rebulk::Im::EndChild();
+		Rbk::Im::EndChild();
 		ImGui::PopID();
-		Rebulk::Im::End();
+		Rbk::Im::End();
 	}
 
 	void VulkanLayer::Destroy()
 	{
-		Rebulk::Im::Destroy();
+		Rbk::Im::Destroy();
 	}
 
 	void VulkanLayer::Update(std::vector<std::string>& messages)
@@ -54,19 +54,19 @@ namespace Rebulk
 
 	void VulkanLayer::DisplayFpsCounter(double timeStep)
 	{
-		Rebulk::Im::Begin("Performances stats");
-		Rebulk::Im::Text("FPS : %f", 1/timeStep);
-		Rebulk::Im::Text("Frametime : %f", timeStep);
-		Rebulk::Im::End();
+		Rbk::Im::Begin("Performances stats");
+		Rbk::Im::Text("FPS : %f", 1/timeStep);
+		Rbk::Im::Text("Frametime : %f", timeStep);
+		Rbk::Im::End();
 	}
 
 	void VulkanLayer::DisplayAPI(VkPhysicalDeviceProperties devicesProps)
 	{
-		Rebulk::Im::Begin("API");
-		Rebulk::Im::Text("API Version : %d", devicesProps.apiVersion);
-		Rebulk::Im::Text("Drivers version : %d", devicesProps.driverVersion);
-		Rebulk::Im::Text("Vendor id : %d", devicesProps.vendorID);
-		Rebulk::Im::Text("GPU : %s" , devicesProps.deviceName);
-		Rebulk::Im::End();
+		Rbk::Im::Begin("API");
+		Rbk::Im::Text("API Version : %d", devicesProps.apiVersion);
+		Rbk::Im::Text("Drivers version : %d", devicesProps.driverVersion);
+		Rbk::Im::Text("Vendor id : %d", devicesProps.vendorID);
+		Rbk::Im::Text("GPU : %s" , devicesProps.deviceName);
+		Rbk::Im::End();
 	}
 }
