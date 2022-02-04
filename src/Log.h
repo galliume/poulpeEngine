@@ -5,7 +5,7 @@
 #include "spdlog/sinks/stdout_color_sinks.h"
 #include "spdlog/details/log_msg.h"
 
-namespace Rebulk 
+namespace Rbk 
 {
 	class Log 
 	{

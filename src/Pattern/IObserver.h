@@ -3,7 +3,7 @@
 #include <list>
 #include <string>
 
-namespace Rebulk
+namespace Rbk
 {
 	class IObserver
 	{

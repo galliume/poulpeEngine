@@ -1,6 +1,6 @@
 #include "Im.h"
 
-namespace Rebulk {
+namespace Rbk {
 
 	void Im::Init(GLFWwindow* window, ImGui_ImplVulkan_InitInfo* initInfo, VkRenderPass renderPass)
 	{
