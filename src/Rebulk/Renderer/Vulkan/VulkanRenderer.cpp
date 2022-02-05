@@ -356,7 +356,7 @@ namespace Rbk {
 		queueCreateInfo.pQueuePriorities = &queuePriority;
 
 		VkPhysicalDeviceFeatures deviceFeatures{};
-		deviceFeatures.fillModeNonSolid = VK_TRUE; //VK_FALSE
+		deviceFeatures.fillModeNonSolid = VK_FALSE; //VK_FALSE
 
 		VkDeviceCreateInfo createInfo{};
 		createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
@@ -1156,7 +1156,9 @@ namespace Rbk {
 
 		vkResetFences(m_Device, 1, &m_InFlightFences[m_CurrentFrame]);
 
-		if (vkQueueSubmit(m_GraphicsQueue, 1, &submitInfo, m_InFlightFences[m_CurrentFrame]) != VK_SUCCESS) {
+		VkResult result = vkQueueSubmit(m_GraphicsQueue, 1, &submitInfo, m_InFlightFences[m_CurrentFrame]);
+
+		if (result != VK_SUCCESS) {
 			throw std::runtime_error("failed to submit draw command buffer!");
 		}
 	}
@@ -1225,12 +1227,9 @@ namespace Rbk {
 		vkResetCommandPool(m_Device, commandPool, 0);
 	}
 
-	void VulkanRenderer::Draw(
-		VkCommandBuffer commandBuffer, VkBuffer vertexBuffer, VkBuffer indexBuffer, std::vector<uint32_t> indices,
-		VkBuffer uniformBuffer, VkDescriptorSet descriptorSet, VkPipelineLayout pipelineLayout
-	)
+	void VulkanRenderer::Draw(VkCommandBuffer commandBuffer, VulkanMesh vMesh, VkBuffer uniformBuffer, VkDescriptorSet descriptorSet, VkPipelineLayout pipelineLayout)
 	{
-		VkBuffer vertexBuffers[] = { vertexBuffer };
+		VkBuffer vertexBuffers[] = { vMesh.meshVBuffer.first };
 		VkDeviceSize offsets[] = { 0 };
 
 		VkDescriptorBufferInfo bufferInfo{};
@@ -1252,13 +1251,18 @@ namespace Rbk {
 		descriptorWrite.pTexelBufferView = nullptr; // Optional
 
 		vkUpdateDescriptorSets(m_Device, 1, &descriptorWrite, 0, nullptr);
-
-
+		
 		vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
-		vkCmdBindIndexBuffer(commandBuffer, indexBuffer, 0, VK_INDEX_TYPE_UINT32);
+		vkCmdBindIndexBuffer(commandBuffer, vMesh.meshIBuffer.first, 0, VK_INDEX_TYPE_UINT32);
 		vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &descriptorSet, 0, nullptr);
-		//vkCmdDraw(commandBuffer, static_cast<uint32_t>(vertices.size()), 1, 0, 0);
-		vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(indices.size()), 1, 0, 0, 0);
+
+		uint32_t offsetIndex = 0;
+
+		for (size_t i = 0; i < vMesh.count; i++) {
+
+			offsetIndex = (i == 0) ? 0 : vMesh.vertexOffset[i - 1];
+			vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(vMesh.indexCount[i]), 1, 0, offsetIndex, 0);
+		}
 	}
 
 	void VulkanRenderer::AddPipelineBarrier(VkCommandBuffer commandBuffer, VkImageMemoryBarrier renderBarrier, VkPipelineStageFlags srcStageMask, VkPipelineStageFlags dstStageMask, VkDependencyFlags dependencyFlags)
@@ -1370,11 +1374,11 @@ namespace Rbk {
 		float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
 
 		UniformBufferObject ubo{};
-		ubo.model = glm::scale(glm::mat4(1.0f), glm::vec3(0.5f, 0.5f, 0.5f));
+		ubo.model = glm::mat4(1.0f);
 		//ubo.model = glm::rotate(ubo.model, time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
 		ubo.view = glm::lookAt(glm::vec3(0.0f, 1.5f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
 
-		ubo.proj = glm::perspective(glm::radians(45.0f), m_SwapChainExtent.width / (float)m_SwapChainExtent.height, 0.5f, 30.0f);
+		ubo.proj = glm::perspective(glm::radians(45.0f), m_SwapChainExtent.width / (float)m_SwapChainExtent.height, 0.5f, 05.0f);
 
 		ubo.proj[1][1] *= -1;
 

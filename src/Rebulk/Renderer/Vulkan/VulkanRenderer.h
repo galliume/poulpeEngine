@@ -3,6 +3,23 @@
 
 namespace Rbk {
 
+	struct VulkanShader
+	{
+		VkShaderModule vertex;
+		VkShaderModule frag;
+		VkPipeline pipeline;
+	};
+
+	struct VulkanMesh
+	{
+		Rbk::Mesh mesh;
+		std::vector<uint32_t>indexCount = {};
+		std::vector<uint32_t>vertexOffset = {};
+		std::pair<VkBuffer, VkDeviceMemory> meshVBuffer = { nullptr, nullptr };
+		std::pair<VkBuffer, VkDeviceMemory> meshIBuffer = { nullptr, nullptr };
+		uint32_t count = 0;
+	};
+
 	struct QueueFamilyIndices {
 		std::optional<uint32_t> graphicsFamily;
 		std::optional<uint32_t> presentFamily;
@@ -58,9 +75,7 @@ namespace Rbk {
 		void SetViewPort(VkCommandBuffer commandBuffer);
 		void SetScissor(VkCommandBuffer commandBuffer);
 		void BindPipeline(VkCommandBuffer commandBuffer, VkPipeline pipeline);
-		void Draw(VkCommandBuffer commandBuffer, VkBuffer vertexBuffer, VkBuffer indexBuffer, std::vector<uint32_t> indices,
-			VkBuffer uniformBuffer, VkDescriptorSet descriptorSet, VkPipelineLayout pipelineLayout
-		);
+		void Draw(VkCommandBuffer commandBuffer, VulkanMesh vMesh, VkBuffer uniformBuffer, VkDescriptorSet descriptorSet, VkPipelineLayout pipelineLayout);
 		void EndRenderPass(VkCommandBuffer commandBuffer);
 		void EndCommandBuffer(VkCommandBuffer commandBuffer);
 		uint32_t AcquireNextImageKHR(VkSwapchainKHR swapChain, std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>>& semaphores);
