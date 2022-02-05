@@ -51,7 +51,7 @@ namespace Rbk
 
 			glfwPollEvents();
 
-			renderManager->Rdr()->Draw();
+			renderManager->Draw();
 
 			glfwSwapBuffers(window->Get());
 			lastTime = currentTime;

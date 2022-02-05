@@ -4,20 +4,6 @@
 
 namespace Rbk
 {
-	struct VulkanShader
-	{
-		VkShaderModule vertex;
-		VkShaderModule frag;
-		VkPipeline pipeline;
-	};
-
-	struct VulkanMesh
-	{
-		Rbk::Mesh mesh;
-		std::pair<VkBuffer, VkDeviceMemory> meshVBuffer;
-		std::pair<VkBuffer, VkDeviceMemory> meshIBuffer;
-	};
-
 	class VulkanAdapter : public IRendererAdapter
 	{
 	public:
@@ -29,8 +15,9 @@ namespace Rbk
 		virtual void AddShader(std::vector<char> vertexShaderCode, std::vector<char> fragShaderCode) override;
 		virtual void AddMesh(Rbk::Mesh mesh) override;
 		virtual void Draw() override;
+		virtual void Draw(VulkanShader vShader, VulkanMesh vMesh);
 		virtual void Destroy() override;
-
+		void Clear();
 		void SouldResizeSwapChain();
 
 	private:
@@ -52,6 +39,6 @@ namespace Rbk
 		VkDescriptorSetLayout m_DescriptorSetLayout = nullptr;
 
 		std::vector<VulkanShader>m_Shaders;
-		std::vector<VulkanMesh>m_Meshes;
+		VulkanMesh m_Meshes;
 	};
 }
