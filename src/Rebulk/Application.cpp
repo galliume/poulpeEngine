@@ -3,23 +3,14 @@
 
 namespace Rbk
 {
+	std::shared_ptr<Rbk::Window>window = nullptr;
+	std::shared_ptr<Rbk::RenderManager>renderManager = nullptr;
+	std::shared_ptr<Rbk::IRendererAdapter>rendererAdapter = nullptr;
+
 	Application* Application::s_Instance = nullptr;
 
 	Application::Application()
 	{
-		Rbk::Log::Init();
-
-		if (window == nullptr) {
-			window = std::make_shared<Rbk::Window>(Rbk::Window());
-		}
-
-		if (renderManager == nullptr) {
-
-			rendererAdapter = std::make_shared<Rbk::VulkanAdapter>(Rbk::VulkanAdapter(window->Get()));
-			rendererAdapter->Init();
-			renderManager = std::make_shared<Rbk::RenderManager>(Rbk::RenderManager(window->Get(), rendererAdapter.get()));
-		}
-
 		if (s_Instance == nullptr) {
 			s_Instance = this;
 		}
@@ -30,10 +21,23 @@ namespace Rbk
 		std::cout << "Application deleted" << std::endl;
 	}
 
+	void Application::Init()
+	{
+		Rbk::Log::Init();
+
+		if (window == nullptr) {
+			window = std::make_shared<Rbk::Window>(Rbk::Window());
+		}
+
+		if (renderManager == nullptr) {
+			rendererAdapter = std::make_shared<Rbk::VulkanAdapter>(Rbk::VulkanAdapter(window->Get()));
+			renderManager = std::make_shared<Rbk::RenderManager>(Rbk::RenderManager(window->Get(), rendererAdapter.get()));
+		}
+	}
+
 	void Application::Run()
 	{
 		renderManager->Init();
-
 		//todo move to Window
 		glfwSetWindowUserPointer(window->Get(), renderManager->Rdr());
 
