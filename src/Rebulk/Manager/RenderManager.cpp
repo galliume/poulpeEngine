@@ -20,6 +20,26 @@ namespace Rbk
 
 	void RenderManager::Init()
 	{
+		m_Renderer->Init();
 
+		auto vertShaderCode = ReadFile("shaders/spv/vert.spv");
+		auto fragShaderCode = ReadFile("shaders/spv/frag.spv");
+
+		AddShader(vertShaderCode, fragShaderCode);
+
+		AddMesh("mesh/moon.obj");
+	}
+
+	void RenderManager::AddMesh(const char* path)
+	{
+		Mesh mesh;
+		Rbk::TinyObjLoader::LoadMesh(mesh, path);
+
+		m_Renderer->AddMesh(mesh);
+	}
+
+	void RenderManager::AddShader(std::vector<char> vertShaderCode, std::vector<char> fragShaderCode)
+	{
+		m_Renderer->AddShader(vertShaderCode, fragShaderCode);
 	}
 }

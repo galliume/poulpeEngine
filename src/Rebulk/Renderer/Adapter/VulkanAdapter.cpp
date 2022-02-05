@@ -15,17 +15,8 @@ namespace Rbk
 	void VulkanAdapter::Init()
 	{
 		m_RenderPass = m_Renderer->CreateRenderPass();
-
-		auto vertShaderCode = ReadFile("shaders/spv/vert.spv");
-		auto fragShaderCode = ReadFile("shaders/spv/frag.spv");
-
-		VkShaderModule vertShaderModule = m_Renderer->CreateShaderModule(vertShaderCode);
-		VkShaderModule fragShaderModule = m_Renderer->CreateShaderModule(fragShaderCode);
-
 		m_DescriptorSetLayout = m_Renderer->CreateDescriptorSetLayout();
 		m_PipelineLayout = m_Renderer->CreatePipelineLayout(m_DescriptorSetLayout);
-		VkPipelineCache pipelineCache = 0;
-		m_Pipeline = m_Renderer->CreateGraphicsPipeline(m_RenderPass, m_PipelineLayout, pipelineCache, vertShaderModule, fragShaderModule);
 		m_SwapChain = m_Renderer->CreateSwapChain(m_SwapChainImages);
 		m_SwapChainImageViews = m_Renderer->CreateImageViews(m_SwapChainImages);
 		m_SwapChainFramebuffers = m_Renderer->CreateFramebuffers(m_RenderPass, m_SwapChainImageViews);
@@ -33,14 +24,7 @@ namespace Rbk
 		m_CommandBuffers = m_Renderer->AllocateCommandBuffers(m_CommandPool, (uint32_t)m_SwapChainFramebuffers.size());
 		m_DescriptorPool = m_Renderer->CreateDescriptorPool(m_SwapChainImages);
 		m_Semaphores = m_Renderer->CreateSyncObjects(m_SwapChainImages);
-
-		m_MeshObj;
-		Rbk::TinyObjLoader::LoadMesh(m_MeshObj, "mesh/moon.obj");
-
-		m_MeshVBuffer = m_Renderer->CreateVertexBuffer(m_CommandPool, m_MeshObj.vertices);
-		m_MeshIBuffer = m_Renderer->CreateIndexBuffer(m_CommandPool, m_MeshObj.indices);
 		m_UniformBuffers = m_Renderer->CreateUniformBuffers(m_SwapChainImageViews);
-
 		m_DescriptorSets = m_Renderer->CreateDescriptorSets(m_DescriptorPool, m_DescriptorSetLayout, m_SwapChainImages, m_UniformBuffers);
 	}
 
@@ -58,6 +42,32 @@ namespace Rbk
 			m_Renderer->ResetCommandPool(m_CommandPool);
 			m_CommandBuffers = m_Renderer->AllocateCommandBuffers(m_CommandPool, (uint32_t)m_SwapChainFramebuffers.size());
 		}
+	}
+
+	void VulkanAdapter::AddMesh(Rbk::Mesh mesh)
+	{
+		VulkanMesh vMesh;
+		vMesh.mesh = mesh;
+		vMesh.meshVBuffer = m_Renderer->CreateVertexBuffer(m_CommandPool, mesh.vertices);
+		vMesh.meshIBuffer = m_Renderer->CreateIndexBuffer(m_CommandPool, mesh.indices);
+
+		m_Meshes.emplace_back(vMesh);
+	}
+
+	void VulkanAdapter::AddShader(std::vector<char> vertexShaderCode, std::vector<char> fragShaderCode)
+	{
+		VkShaderModule vertexShaderModule = m_Renderer->CreateShaderModule(vertexShaderCode);
+		VkShaderModule fragShaderModule = m_Renderer->CreateShaderModule(fragShaderCode);
+
+		VkPipelineCache pipelineCache = 0;
+		VkPipeline pipeline = m_Renderer->CreateGraphicsPipeline(m_RenderPass, m_PipelineLayout, pipelineCache, vertexShaderModule, fragShaderModule);
+
+		VulkanShader shader;
+		shader.vertex = vertexShaderModule;
+		shader.frag = fragShaderModule;
+		shader.pipeline = pipeline;
+
+		m_Shaders.emplace_back(shader);
 	}
 
 	void VulkanAdapter::Draw()
@@ -79,9 +89,22 @@ namespace Rbk
 			m_Renderer->BeginRenderPass(m_RenderPass, m_CommandBuffers[m_ImageIndex], m_SwapChainFramebuffers[m_ImageIndex]);
 			m_Renderer->SetViewPort(m_CommandBuffers[m_ImageIndex]);
 			m_Renderer->SetScissor(m_CommandBuffers[m_ImageIndex]);
-			m_Renderer->BindPipeline(m_CommandBuffers[m_ImageIndex], m_Pipeline);
 
-			m_Renderer->Draw(m_CommandBuffers[m_ImageIndex], m_MeshVBuffer.first, m_MeshIBuffer.first, m_MeshObj.indices, m_UniformBuffers.first[m_ImageIndex], m_DescriptorSets[m_ImageIndex], m_PipelineLayout);
+			for (auto vShader : m_Shaders) {
+				m_Renderer->BindPipeline(m_CommandBuffers[m_ImageIndex], vShader.pipeline);
+			}
+
+			for (auto vMesh : m_Meshes) {
+				m_Renderer->Draw(
+					m_CommandBuffers[m_ImageIndex],
+					vMesh.meshVBuffer.first,
+					vMesh.meshIBuffer .first,
+					vMesh.mesh.indices,
+					m_UniformBuffers.first[m_ImageIndex], 
+					m_DescriptorSets[m_ImageIndex], 
+					m_PipelineLayout
+				);
+			}
 
 			m_Renderer->UpdateUniformBuffer(m_UniformBuffers.second[m_ImageIndex]);
 			m_Renderer->EndRenderPass(m_CommandBuffers[m_ImageIndex]);
@@ -113,10 +136,18 @@ namespace Rbk
 		m_Renderer->DestroySwapchain(m_Renderer->GetDevice(), m_SwapChain, m_SwapChainFramebuffers, m_SwapChainImageViews);
 		m_Renderer->DestroySemaphores(m_Semaphores);
 
-		m_Renderer->DestroyBuffer(m_MeshVBuffer.first);
-		m_Renderer->DestroyDeviceMemory(m_MeshVBuffer.second);
-		m_Renderer->DestroyBuffer(m_MeshIBuffer.first);
-		m_Renderer->DestroyDeviceMemory(m_MeshIBuffer.second);
+		for (auto vShader : m_Shaders) {
+			m_Renderer->DestroyPipeline(vShader.pipeline);
+		}
+
+		for (auto vMesh : m_Meshes) {
+			m_Renderer->DestroyBuffer(vMesh.meshVBuffer.first);
+			m_Renderer->DestroyDeviceMemory(vMesh.meshVBuffer.second);
+
+			m_Renderer->DestroyBuffer(vMesh.meshIBuffer.first);
+			m_Renderer->DestroyDeviceMemory(vMesh.meshIBuffer.second);
+		}
+
 		for (auto& buffer : m_UniformBuffers.first) {
 			m_Renderer->DestroyBuffer(buffer);
 		}
@@ -126,7 +157,7 @@ namespace Rbk
 
 		/*renderer->DestroyVertexBuffer(vertexBuffer.first, vertexBuffer.second);
 		renderer->DestroyVertexBuffer(indexBuffer.first, indexBuffer.second);*/
-		m_Renderer->DestroyPipeline(m_Pipeline, m_PipelineLayout, m_DescriptorPool, m_DescriptorSetLayout);
+		m_Renderer->DestroyPipelineData(m_PipelineLayout, m_DescriptorPool, m_DescriptorSetLayout);
 		m_Renderer->DestroyRenderPass(m_RenderPass, m_CommandPool, m_CommandBuffers);
 		m_Renderer->Destroy();
 	}

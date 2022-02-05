@@ -14,13 +14,11 @@ namespace Rbk
 		~Application();
 
 		inline static Application* Get() { return s_Instance; };
+		void Init();
 		void Run();
 
 	private:
 		static Application* s_Instance;
-		std::shared_ptr<Rbk::Window>window = nullptr;
-		std::shared_ptr<Rbk::RenderManager>renderManager = nullptr;
-		std::shared_ptr<Rbk::IRendererAdapter>rendererAdapter = nullptr;
 		bool m_Running = true;
 	};
 }
