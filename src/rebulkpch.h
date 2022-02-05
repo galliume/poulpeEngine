@@ -12,6 +12,7 @@
 #include <set>
 #include <string>
 #include <unordered_map>
+#include <numeric>
 
 #define GLFW_INCLUDE_VULKAN
 #include "GLFW/glfw3.h"
