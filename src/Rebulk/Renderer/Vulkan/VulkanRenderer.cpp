@@ -1514,7 +1514,7 @@ namespace Rbk {
 
 	VulkanRenderer::~VulkanRenderer()
 	{
-
+		std::cout << "VulkanRenderer deleted." << std::endl;
 	}
 
 	void VulkanRenderer::Attach(IObserver* observer)
