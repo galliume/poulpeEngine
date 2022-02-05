@@ -1,7 +1,7 @@
 #pragma once
 #include "rebulkpch.h"
 #include "Rebulk/Renderer/Vulkan/VulkanRenderer.h"
-#include "Rebulk/GUI/Renderer/Im.h"
+#include "Rebulk/GUI/ImGui/Im.h"
 #include "Rebulk/Pattern/IObserver.h"
 
 namespace Rbk 
