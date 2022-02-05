@@ -1451,10 +1451,14 @@ namespace Rbk {
 	}
 
 
-	void VulkanRenderer::DestroyPipeline(VkPipeline pipeline, VkPipelineLayout pipelineLayout, VkDescriptorPool descriptorPool, VkDescriptorSetLayout descriptorSetLayout)
+	void VulkanRenderer::DestroyPipeline(VkPipeline pipeline)
+	{
+		vkDestroyPipeline(m_Device, pipeline, nullptr);
+	}
+
+	void VulkanRenderer::DestroyPipelineData(VkPipelineLayout pipelineLayout, VkDescriptorPool descriptorPool, VkDescriptorSetLayout descriptorSetLayout)
 	{
 		vkDestroyDescriptorSetLayout(m_Device, descriptorSetLayout, nullptr);
-		vkDestroyPipeline(m_Device, pipeline, nullptr);
 		vkDestroyPipelineLayout(m_Device, pipelineLayout, nullptr);
 		vkDestroyDescriptorPool(m_Device, descriptorPool, nullptr);
 	}
