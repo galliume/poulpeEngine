@@ -18,7 +18,14 @@ namespace Rbk {
 		std::vector<uint32_t>vertexOffset = {};
 		std::pair<VkBuffer, VkDeviceMemory> meshVBuffer = { nullptr, nullptr };
 		std::pair<VkBuffer, VkDeviceMemory> meshIBuffer = { nullptr, nullptr };
+		std::vector<VkDescriptorSet> descriptorSets;
+		std::vector<std::pair<VkBuffer, VkDeviceMemory>>uniformBuffers;
+		std::vector<VkDescriptorSetLayout>descriptorSetLayouts;
 		uint32_t count = 0;
+		std::vector<VkImage> textureImages;
+		std::vector<VkDeviceMemory> textureImageMemorys;
+		std::vector<VkImageView> textureImageViews;
+		std::vector< VkSampler> samplers;
 	};
 
 	struct QueueFamilyIndices {
@@ -48,7 +55,7 @@ namespace Rbk {
 		VkRenderPass CreateRenderPass();
 		VkShaderModule CreateShaderModule(const std::vector<char>& code);
 		VkDescriptorSetLayout CreateDescriptorSetLayout();
-		VkPipelineLayout CreatePipelineLayout(VkDescriptorSetLayout descriptorSetLayout);
+		VkPipelineLayout CreatePipelineLayout(VulkanMesh vMesh);
 		VkPipeline CreateGraphicsPipeline(VkRenderPass renderPass, VkPipelineLayout pipelineLayout, VkPipelineCache pipelineCache, VkShaderModule vs, VkShaderModule fs);
 		VkSwapchainKHR CreateSwapChain(std::vector<VkImage>& swapChainImages, VkSwapchainKHR oldSwapChain = VK_NULL_HANDLE);
 		std::vector<VkImageView> CreateImageViews(std::vector<VkImage> swapChainImages);
@@ -64,13 +71,12 @@ namespace Rbk {
 		VkImageMemoryBarrier SetupImageMemoryBarrier(VkImage image, VkAccessFlags srcAccessMask, VkAccessFlags dstAccessMask, VkImageLayout oldLayout, VkImageLayout newLayout);
 		void CopyBuffer(VkCommandPool commandPool, VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
 		bool SouldResizeSwapChain(VkSwapchainKHR swapChain);
-		std::pair<std::vector<VkBuffer>, std::vector<VkDeviceMemory>> CreateUniformBuffers(std::vector<VkImageView> swapChainImages);
-		void UpdateUniformBuffer(VkDeviceMemory uniformBufferMemory);
-		std::vector<VkDescriptorSet> CreateDescriptorSets(VkDescriptorPool descriptorPool,
+		std::pair<VkBuffer, VkDeviceMemory> VulkanRenderer::CreateUniformBuffers();
+		void UpdateUniformBuffer(VulkanMesh vMesh);
+		VkDescriptorSet CreateDescriptorSets(
+			VkDescriptorPool descriptorPool,
 			VkDescriptorSetLayout descriptorSetLayout,
-			std::vector<VkImage> swapChainImages,
-			std::pair<std::vector<VkBuffer>,
-			std::vector<VkDeviceMemory>> uniformBuffers,
+			std::pair<VkBuffer, VkDeviceMemory> uniformBuffer,
 			VkImageView textureImageView,
 			VkSampler textureSampler
 		);
@@ -90,7 +96,7 @@ namespace Rbk {
 		void SetViewPort(VkCommandBuffer commandBuffer);
 		void SetScissor(VkCommandBuffer commandBuffer);
 		void BindPipeline(VkCommandBuffer commandBuffer, VkPipeline pipeline);
-		void Draw(VkCommandBuffer commandBuffer, VulkanMesh vMesh, VkBuffer uniformBuffer, VkDescriptorSet descriptorSet, VkPipelineLayout pipelineLayout);
+		void Draw(VkCommandBuffer commandBuffer, VulkanMesh vMesh, VkPipelineLayout pipelineLayout);
 		uint32_t AcquireNextImageKHR(VkSwapchainKHR swapChain, std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>>& semaphores);
 		void QueueSubmit(VkCommandBuffer commandBuffer);
 		void QueueSubmit(uint32_t imageIndex, VkCommandBuffer commandBuffer, std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>>& semaphores);

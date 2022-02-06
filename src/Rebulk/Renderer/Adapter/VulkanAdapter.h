@@ -22,7 +22,7 @@ namespace Rbk
 		virtual void Init() override;
 		virtual void AddShader(std::vector<char> vertexShaderCode, std::vector<char> fragShaderCode) override;
 		virtual void AddMesh(Rbk::Mesh mesh) override;
-		virtual void AddTexture(const char* texturePath) override;
+		virtual void AddTexture(Rbk::Mesh& mesh, const char* texturePath) override;
 		virtual void Draw() override;
 		virtual void Destroy() override;
 		
@@ -56,10 +56,5 @@ namespace Rbk
 		VkDescriptorSetLayout m_DescriptorSetLayout = nullptr;
 		std::vector<VulkanShader>m_Shaders;
 		VulkanMesh m_Meshes;
-		std::vector<VkImage> m_TextureImages;
-		std::vector<VkDeviceMemory> m_TextureImageMemorys;
-		std::vector<VkImageView> m_TextureImageViews;
-		std::vector< VkSampler>m_Samplers;
-
 	};
 }
