@@ -52,6 +52,7 @@ namespace Rbk {
 		VkPipeline CreateGraphicsPipeline(VkRenderPass renderPass, VkPipelineLayout pipelineLayout, VkPipelineCache pipelineCache, VkShaderModule vs, VkShaderModule fs);
 		VkSwapchainKHR CreateSwapChain(std::vector<VkImage>& swapChainImages, VkSwapchainKHR oldSwapChain = VK_NULL_HANDLE);
 		std::vector<VkImageView> CreateImageViews(std::vector<VkImage> swapChainImages);
+		VkImageView VulkanRenderer::CreateTextureImageView(VkImage textureImage);
 		std::vector<VkFramebuffer> CreateFramebuffers(VkRenderPass renderPass, std::vector<VkImageView> swapChainImageViews);
 		VkCommandPool CreateCommandPool();
 		std::vector<VkCommandBuffer> AllocateCommandBuffers(VkCommandPool commandPool, uint32_t size = 1);
@@ -65,7 +66,18 @@ namespace Rbk {
 		bool SouldResizeSwapChain(VkSwapchainKHR swapChain);
 		std::pair<std::vector<VkBuffer>, std::vector<VkDeviceMemory>> CreateUniformBuffers(std::vector<VkImageView> swapChainImages);
 		void UpdateUniformBuffer(VkDeviceMemory uniformBufferMemory);
-		std::vector<VkDescriptorSet> CreateDescriptorSets(VkDescriptorPool descriptorPool, VkDescriptorSetLayout descriptorSetLayout, std::vector<VkImage> swapChainImages, std::pair<std::vector<VkBuffer>, std::vector<VkDeviceMemory>> uniformBuffers);
+		std::vector<VkDescriptorSet> CreateDescriptorSets(VkDescriptorPool descriptorPool,
+			VkDescriptorSetLayout descriptorSetLayout,
+			std::vector<VkImage> swapChainImages,
+			std::pair<std::vector<VkBuffer>,
+			std::vector<VkDeviceMemory>> uniformBuffers,
+			VkImageView textureImageView,
+			VkSampler textureSampler
+		);
+		void CreateImage(uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image, VkDeviceMemory& imageMemory);
+		void CreateTextureImage(VkCommandBuffer commandBuffer, const char* path, VkImage& textureImage, VkDeviceMemory& textureImageMemory);
+		void CopyBufferToImage(VkCommandBuffer commandBuffer, VkBuffer buffer, VkImage image, uint32_t width, uint32_t height);
+		VkSampler CreateTextureSampler(VkImageView textureImageView);
 
 		/**
 		* Vulkan drawing functions, in main loop
@@ -80,6 +92,7 @@ namespace Rbk {
 		void BindPipeline(VkCommandBuffer commandBuffer, VkPipeline pipeline);
 		void Draw(VkCommandBuffer commandBuffer, VulkanMesh vMesh, VkBuffer uniformBuffer, VkDescriptorSet descriptorSet, VkPipelineLayout pipelineLayout);
 		uint32_t AcquireNextImageKHR(VkSwapchainKHR swapChain, std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>>& semaphores);
+		void QueueSubmit(VkCommandBuffer commandBuffer);
 		void QueueSubmit(uint32_t imageIndex, VkCommandBuffer commandBuffer, std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>>& semaphores);
 		size_t QueuePresent(uint32_t imageIndex, VkSwapchainKHR swapChain, std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>>& semaphores);
 		void AddPipelineBarrier(VkCommandBuffer commandBuffer, VkImageMemoryBarrier renderBarrier, VkPipelineStageFlags srcStageMask, VkPipelineStageFlags dstStageMask, VkDependencyFlags dependencyFlags);

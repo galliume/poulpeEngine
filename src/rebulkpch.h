@@ -27,6 +27,8 @@
 #include "spdlog/sinks/stdout_color_sinks.h"
 #include "spdlog/details/log_msg.h"
 
+#include "stb_image.h"
+
 #include "vulkan/vulkan.h"
 
 #include "imgui.h"

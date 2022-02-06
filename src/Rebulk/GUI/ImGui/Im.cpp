@@ -19,6 +19,7 @@ namespace Rbk {
 		io.ConfigDockingWithShift = false;
 		io.ConfigViewportsNoAutoMerge = true;
 		io.BackendFlags |= ImGuiBackendFlags_HasMouseCursors;
+		io.IniFilename = NULL;
 
 		ImGui::StyleColorsDark();
 
@@ -87,8 +88,9 @@ namespace Rbk {
 		ImGuiIO& io = ImGui::GetIO();
 
 		ImDrawData* d = ImGui::GetDrawData();
-		//ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), commandBuffer, pipeline);
-		
+
+		ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), commandBuffer, pipeline);
+		ImDrawData* a = ImGui::GetDrawData();
 
 		if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
 			ImGui::UpdatePlatformWindows();
