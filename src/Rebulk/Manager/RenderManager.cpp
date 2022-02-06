@@ -27,8 +27,7 @@ namespace Rbk
 
 		AddShader(vertShaderCode, fragShaderCode);
 
-		//AddMesh("mesh/moon.obj");
-		//AddMesh("mesh/kitty.obj");
+		AddMesh("mesh/moon/moon.obj", "mesh/moon/diffuse.jpg");
 		AddMesh("mesh/backpack/backpack.obj", "mesh/backpack/diffuse.jpg");
 	}
 
@@ -37,8 +36,8 @@ namespace Rbk
 		Mesh mesh;
 		Rbk::TinyObjLoader::LoadMesh(mesh, path);
 
+		m_Renderer->AddTexture(mesh, texturePath);
 		m_Renderer->AddMesh(mesh);
-		m_Renderer->AddTexture(texturePath);
 	}
 
 	void RenderManager::AddShader(std::vector<char> vertShaderCode, std::vector<char> fragShaderCode)

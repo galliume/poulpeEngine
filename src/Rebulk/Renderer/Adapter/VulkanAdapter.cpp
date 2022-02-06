@@ -15,8 +15,6 @@ namespace Rbk
 	void VulkanAdapter::Init()
 	{
 		m_RenderPass = m_Renderer->CreateRenderPass();
-		m_DescriptorSetLayout = m_Renderer->CreateDescriptorSetLayout();
-		m_PipelineLayout = m_Renderer->CreatePipelineLayout(m_DescriptorSetLayout);
 		m_SwapChain = m_Renderer->CreateSwapChain(m_SwapChainImages);
 		m_SwapChainImageViews = m_Renderer->CreateImageViews(m_SwapChainImages);
 		m_SwapChainFramebuffers = m_Renderer->CreateFramebuffers(m_RenderPass, m_SwapChainImageViews);
@@ -24,7 +22,6 @@ namespace Rbk
 		m_CommandBuffers = m_Renderer->AllocateCommandBuffers(m_CommandPool, (uint32_t)m_SwapChainFramebuffers.size());
 		m_DescriptorPool = m_Renderer->CreateDescriptorPool(m_SwapChainImages);
 		m_Semaphores = m_Renderer->CreateSyncObjects(m_SwapChainImages);
-		m_UniformBuffers = m_Renderer->CreateUniformBuffers(m_SwapChainImageViews);
 	}
 
 	void VulkanAdapter::SouldResizeSwapChain()
@@ -54,7 +51,7 @@ namespace Rbk
 		m_Meshes.count += 1;
 	}
 
-	void VulkanAdapter::AddTexture(const char* texturePath)
+	void VulkanAdapter::AddTexture(Rbk::Mesh& mesh, const char* texturePath)
 	{
 		VkImage textureImage;
 		VkDeviceMemory textureImageMemory;
@@ -65,15 +62,20 @@ namespace Rbk
 
 		VkImageView textureImageView = m_Renderer->CreateTextureImageView(textureImage);
 		VkSampler textureSampler = m_Renderer->CreateTextureSampler(textureImageView);
-
-		m_DescriptorSets = m_Renderer->CreateDescriptorSets(
-			m_DescriptorPool, m_DescriptorSetLayout, m_SwapChainImages, m_UniformBuffers, textureImageView, textureSampler
+		
+		VkDescriptorSetLayout descriptorSetLayout = m_Renderer->CreateDescriptorSetLayout();
+		std::pair<VkBuffer, VkDeviceMemory> uniformBuffer = m_Renderer->CreateUniformBuffers();
+		VkDescriptorSet descriptorSet = m_Renderer->CreateDescriptorSets(
+			m_DescriptorPool, descriptorSetLayout, uniformBuffer, textureImageView, textureSampler
 		);
 
-		m_TextureImages.emplace_back(textureImage);
-		m_TextureImageMemorys.emplace_back(textureImageMemory);
-		m_TextureImageViews.emplace_back(textureImageView);
-		m_Samplers.emplace_back(textureSampler);
+		m_Meshes.descriptorSetLayouts.emplace_back(descriptorSetLayout);
+		m_Meshes.descriptorSets.emplace_back(descriptorSet);
+		m_Meshes.uniformBuffers.emplace_back(uniformBuffer);
+		m_Meshes.textureImages.emplace_back(textureImage);
+		m_Meshes.textureImageMemorys.emplace_back(textureImageMemory);
+		m_Meshes.textureImageViews.emplace_back(textureImageView);
+		m_Meshes.samplers.emplace_back(textureSampler);
 	}
 
 	void VulkanAdapter::AddShader(std::vector<char> vertexShaderCode, std::vector<char> fragShaderCode)
@@ -81,13 +83,9 @@ namespace Rbk
 		VkShaderModule vertexShaderModule = m_Renderer->CreateShaderModule(vertexShaderCode);
 		VkShaderModule fragShaderModule = m_Renderer->CreateShaderModule(fragShaderCode);
 
-		VkPipelineCache pipelineCache = 0;
-		VkPipeline pipeline = m_Renderer->CreateGraphicsPipeline(m_RenderPass, m_PipelineLayout, pipelineCache, vertexShaderModule, fragShaderModule);
-
 		VulkanShader shader;
 		shader.vertex = vertexShaderModule;
 		shader.frag = fragShaderModule;
-		shader.pipeline = pipeline;
 
 		m_Shaders.emplace_back(shader);
 	}
@@ -110,6 +108,14 @@ namespace Rbk
 		if (nullptr == m_Meshes.meshIBuffer.first) 
 			m_Meshes.meshIBuffer = m_Renderer->CreateIndexBuffer(m_CommandPool, m_Meshes.mesh.indices);
 	
+		m_PipelineLayout = m_Renderer->CreatePipelineLayout(m_Meshes);
+
+		VkPipelineCache pipelineCache = 0;
+
+		for (auto& shader : m_Shaders) {
+			shader.pipeline = m_Renderer->CreateGraphicsPipeline(m_RenderPass, m_PipelineLayout, pipelineCache, shader.vertex, shader.frag);
+		}
+
 		Draw(m_Shaders[0], m_Meshes);
 	}
 
@@ -131,14 +137,8 @@ namespace Rbk
 			m_Renderer->SetViewPort(m_CommandBuffers[m_ImageIndex]);
 			m_Renderer->SetScissor(m_CommandBuffers[m_ImageIndex]);
 			m_Renderer->BindPipeline(m_CommandBuffers[m_ImageIndex], vShader.pipeline);			
-			m_Renderer->Draw(
-				m_CommandBuffers[m_ImageIndex],
-				vMesh,
-				m_UniformBuffers.first[m_ImageIndex], 
-				m_DescriptorSets[m_ImageIndex], 
-				m_PipelineLayout
-			);
-			m_Renderer->UpdateUniformBuffer(m_UniformBuffers.second[m_ImageIndex]);
+			m_Renderer->Draw(m_CommandBuffers[m_ImageIndex], vMesh, m_PipelineLayout);
+			m_Renderer->UpdateUniformBuffer(vMesh);
 			m_Renderer->EndRenderPass(m_CommandBuffers[m_ImageIndex]);
 
 			VkImageMemoryBarrier renderEndBarrier = m_Renderer->SetupImageMemoryBarrier(
@@ -154,8 +154,8 @@ namespace Rbk
 				m_Renderer->QueueSubmit(m_ImageIndex, m_CommandBuffers[m_ImageIndex], m_Semaphores);
 				m_Renderer->QueuePresent(m_ImageIndex, m_SwapChain, m_Semaphores);
 			}
+			m_Renderer->WaitIdle();
 		}
-		m_Renderer->WaitIdle();
 		m_Renderer->ResetCommandPool(m_CommandPool);
 	}
 
@@ -165,16 +165,16 @@ namespace Rbk
 		m_Renderer->DestroySwapchain(m_Renderer->GetDevice(), m_SwapChain, m_SwapChainFramebuffers, m_SwapChainImageViews);
 		m_Renderer->DestroySemaphores(m_Semaphores);
 
-		for (auto sampler : m_Samplers) {
+		for (auto sampler : m_Meshes.samplers) {
 			vkDestroySampler(m_Renderer->GetDevice(), sampler, nullptr);
 		}
-		for (auto textureView : m_TextureImageViews) {
+		for (auto textureView : m_Meshes.textureImageViews) {
 			vkDestroyImageView(m_Renderer->GetDevice(), textureView, nullptr);
 		}
-		for (auto texture : m_TextureImages) {
+		for (auto texture : m_Meshes.textureImages) {
 			vkDestroyImage(m_Renderer->GetDevice(), texture, nullptr);
 		}
-		for (auto textureMemory : m_TextureImageMemorys) {
+		for (auto textureMemory : m_Meshes.textureImageMemorys) {
 			m_Renderer->DestroyDeviceMemory(textureMemory);
 		}
 		for (auto vShader : m_Shaders) {
