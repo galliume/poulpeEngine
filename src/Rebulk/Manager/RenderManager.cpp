@@ -29,15 +29,16 @@ namespace Rbk
 
 		//AddMesh("mesh/moon.obj");
 		//AddMesh("mesh/kitty.obj");
-		AddMesh("mesh/backpack/backpack.obj");
+		AddMesh("mesh/backpack/backpack.obj", "mesh/backpack/diffuse.jpg");
 	}
 
-	void RenderManager::AddMesh(const char* path)
+	void RenderManager::AddMesh(const char* path, const char* texturePath)
 	{
 		Mesh mesh;
 		Rbk::TinyObjLoader::LoadMesh(mesh, path);
 
 		m_Renderer->AddMesh(mesh);
+		m_Renderer->AddTexture(texturePath);
 	}
 
 	void RenderManager::AddShader(std::vector<char> vertShaderCode, std::vector<char> fragShaderCode)

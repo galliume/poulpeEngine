@@ -13,7 +13,7 @@ namespace Rbk
 		~RenderManager();
 
 		void Init();
-		void AddMesh(const char* path);
+		void AddMesh(const char* path, const char* texturePath);
 		void AddShader(std::vector<char> vertShaderCode, std::vector<char> fragShaderCode);
 		void Draw();
 

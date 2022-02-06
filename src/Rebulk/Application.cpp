@@ -54,7 +54,7 @@ namespace Rbk
 
 		if (vImGui == nullptr)
 		{		
-			vImGuiInfo = rendererAdapter.get()->GetVImGuiInfo();		
+			//vImGuiInfo = rendererAdapter.get()->GetVImGuiInfo();		
 		}
 	}
 
@@ -67,11 +67,10 @@ namespace Rbk
 		bool show_demo_window = true;
 		bool show_another_window = true;
 
-		Rbk::Im::Init(window->Get(), vImGuiInfo.info, rendererAdapter.get()->RdrPass());
-
-		rendererAdapter.get()->Rdr()->BeginCommandBuffer(vImGuiInfo.cmdBuffer);
-		Rbk::Im::CreateFontsTexture(vImGuiInfo.cmdBuffer);
-		rendererAdapter.get()->Rdr()->EndCommandBuffer(vImGuiInfo.cmdBuffer);
+		//Rbk::Im::Init(window->Get(), vImGuiInfo.info, rendererAdapter.get()->RdrPass());
+		//rendererAdapter.get()->Rdr()->BeginCommandBuffer(vImGuiInfo.cmdBuffer);
+		//Rbk::Im::CreateFontsTexture(vImGuiInfo.cmdBuffer);
+		//rendererAdapter.get()->Rdr()->EndCommandBuffer(vImGuiInfo.cmdBuffer);
 
 		while (!glfwWindowShouldClose(window->Get())) {
 
@@ -80,29 +79,20 @@ namespace Rbk
 			double timeStep = currentTime - lastTime;
 
 			glfwPollEvents();
-
 			
-			Rbk::Im::NewFrame();
-			ImGui::ShowDemoWindow(&show_demo_window);
-
-			rendererAdapter.get()->Rdr()->BeginCommandBuffer(vImGuiInfo.cmdBuffer);
+			//Rbk::Im::NewFrame();
 			//layerManager->InitLayers();
+			//rendererAdapter.get()->Rdr()->BeginCommandBuffer(vImGuiInfo.cmdBuffer);
+			//Rbk::Im::Render(window->Get(), vImGuiInfo.cmdBuffer, vImGuiInfo.pipeline);
+			//rendererAdapter.get()->Rdr()->EndCommandBuffer(vImGuiInfo.cmdBuffer);
 
-			ImGui::Begin("Another Window", &show_another_window);   // Pass a pointer to our bool variable (the window will have a closing button that will clear the bool when clicked)
-			ImGui::Text("Hello from another window!");
-			if (ImGui::Button("Close Me"))
-				show_another_window = false;
-			ImGui::End();
-
-			Rbk::Im::Render(window->Get(), vImGuiInfo.cmdBuffer, vImGuiInfo.pipeline);
-			
-			//renderManager->Draw();
+			renderManager->Draw();
 
 			glfwSwapBuffers(window->Get());
 			lastTime = currentTime;
 		}
 
-		Rbk::Im::Destroy();
+		//Rbk::Im::Destroy();
 
 		renderManager->Adp()->Destroy();
 
