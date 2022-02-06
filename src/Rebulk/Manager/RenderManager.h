@@ -18,7 +18,7 @@ namespace Rbk
 		void Draw();
 
 		inline static RenderManager& Get() { return *s_Instance; };
-		inline IRendererAdapter* Rdr() { return m_Renderer; };
+		inline IRendererAdapter* Adp() { return m_Renderer; };
 
 	private:
 		static RenderManager* s_Instance;

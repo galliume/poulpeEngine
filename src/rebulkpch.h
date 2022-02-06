@@ -29,5 +29,9 @@
 
 #include "vulkan/vulkan.h"
 
+#include "imgui.h"
+#include "backends/imgui_impl_glfw.h"
+#include "backends/imgui_impl_vulkan.h"
+
 #include "Rebulk/Core/Tools.h"
 #include "Rebulk/Core/Log.h"

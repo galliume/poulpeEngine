@@ -1,15 +1,12 @@
 #pragma once
 #include "rebulkpch.h"
-#include "imgui.h"
-#include "backends/imgui_impl_glfw.h"
-#include "backends/imgui_impl_vulkan.h"
 
 namespace Rbk
 {
 	class Im
 	{
 	public:
-		static void Init(GLFWwindow* window, ImGui_ImplVulkan_InitInfo* initInfo, VkRenderPass renderPass);
+		static void Init(GLFWwindow* window, ImGui_ImplVulkan_InitInfo initInfo, VkRenderPass renderPass);
 		static void NewFrame();
 		static void Begin(const char* name, bool* p_open = NULL, ImGuiWindowFlags flags = 0);
 		static void CreateFontsTexture(VkCommandBuffer commandBuffer);

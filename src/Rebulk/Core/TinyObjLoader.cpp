@@ -19,28 +19,33 @@ namespace Rbk
 		std::unordered_map<Rbk::Vertex, uint32_t> uniqueVertices{};
 
 		for (const auto& shape : shapes) {
+			
 			for (const auto& index : shape.mesh.indices) {
 
 				Rbk::Vertex vertex{};
+				uint32_t i = 3 * index.vertex_index;
+				uint32_t j = 2 * index.texcoord_index;
 
 				vertex.pos = {
-					attrib.vertices[3 * index.vertex_index + 0],
-					attrib.vertices[3 * index.vertex_index + 1],
-					attrib.vertices[3 * index.vertex_index + 2]
+					attrib.vertices[i + 0],
+					attrib.vertices[i + 1],
+					attrib.vertices[i + 2]
 				};
+					
+				if (j < attrib.texcoords.size()) {
+					vertex.texCoord = {
+						attrib.texcoords[j + 0],
+						1.0f - attrib.texcoords[j + 1]
+					};
+				}
 
-
-				/*			vertex.texCoord = {
-								attrib.texcoords[2 * index.texcoord_index + 0],
-								1.0f - attrib.texcoords[2 * index.texcoord_index + 1]
-							};*/
-
-
-				vertex.color = {
-					attrib.normals[3 * index.vertex_index + 0],
-					attrib.normals[3 * index.vertex_index + 1],
-					attrib.normals[3 * index.vertex_index + 2]
-				};
+				if (i < attrib.normals.size()) {
+					vertex.color = {
+						attrib.normals[i + 0],
+						attrib.normals[i + 1],
+						attrib.normals[i + 2]
+					};
+				}
 
 				mesh.vertices.push_back(vertex);
 
