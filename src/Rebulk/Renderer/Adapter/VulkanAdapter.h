@@ -1,9 +1,17 @@
+#include "rebulkpch.h"
 #include "IRendererAdapter.h"
 #include "Rebulk/Renderer/Vulkan/VulkanRenderer.h"
 #include "Rebulk/Renderer/Mesh.h"
 
 namespace Rbk
 {
+	struct VImGuiInfo
+	{
+		ImGui_ImplVulkan_InitInfo info = {};
+		VkCommandBuffer cmdBuffer = nullptr;
+		VkPipeline pipeline = nullptr;
+	};
+
 	class VulkanAdapter : public IRendererAdapter
 	{
 	public:
@@ -15,10 +23,18 @@ namespace Rbk
 		virtual void AddShader(std::vector<char> vertexShaderCode, std::vector<char> fragShaderCode) override;
 		virtual void AddMesh(Rbk::Mesh mesh) override;
 		virtual void Draw() override;
-		virtual void Draw(VulkanShader vShader, VulkanMesh vMesh);
 		virtual void Destroy() override;
+		
+		inline VulkanRenderer* Rdr() { return m_Renderer; };
+		inline VkRenderPass RdrPass() { return m_RenderPass; };
+
 		void Clear();
 		void SouldResizeSwapChain();
+
+		VImGuiInfo GetVImGuiInfo();
+
+	private:
+		void Draw(VulkanShader vShader, VulkanMesh vMesh);
 
 	private:
 		VulkanRenderer* m_Renderer = nullptr;

@@ -168,4 +168,33 @@ namespace Rbk
 		m_Renderer->DestroyRenderPass(m_RenderPass, m_CommandPool, m_CommandBuffers);
 		m_Renderer->Destroy();
 	}
+
+	VImGuiInfo VulkanAdapter::GetVImGuiInfo()
+	{
+		ImGui_ImplVulkan_InitInfo info = {};
+
+		info.Instance = m_Renderer->GetInstance();
+		info.PhysicalDevice = m_Renderer->GetPhysicalDevice();
+		info.Device = m_Renderer->GetDevice();
+		info.QueueFamily = m_Renderer->GetQueueFamily();
+		info.Queue = m_Renderer->GetGraphicsQueue();
+		info.PipelineCache = nullptr;//to implement VkPipelineCache                 
+		info.DescriptorPool = m_Renderer->CreateDescriptorPool(m_SwapChainImages);
+		info.Subpass = 0;
+		info.MinImageCount = 2;
+		info.ImageCount = 2;
+		info.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
+		info.Allocator = nullptr;
+		info.CheckVkResultFn = [](VkResult err) {
+			std::cerr << "IMGUI VULKAN ERROR " + std::to_string(err) << std::endl;
+		};
+
+
+		VImGuiInfo vImGuiInfo;
+		vImGuiInfo.info = info;
+		vImGuiInfo.cmdBuffer = m_Renderer->AllocateCommandBuffers(m_CommandPool)[0];
+		vImGuiInfo.pipeline = m_Pipeline;
+
+		return vImGuiInfo;
+	}
 }
