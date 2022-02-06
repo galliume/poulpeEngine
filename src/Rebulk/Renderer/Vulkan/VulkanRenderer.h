@@ -1,5 +1,6 @@
 #include "Rebulk/Pattern/ISubject.h"
 #include "Rebulk/Renderer/Mesh.h"
+#include "Rebulk/Renderer/IRenderer.h"
 
 namespace Rbk {
 
@@ -35,7 +36,7 @@ namespace Rbk {
 		std::vector<VkPresentModeKHR> presentModes;
 	};
 
-	class VulkanRenderer : public ISubject
+	class VulkanRenderer : public IRenderer, public ISubject
 	{
 	public:
 		VulkanRenderer(GLFWwindow* window);
@@ -71,13 +72,13 @@ namespace Rbk {
 		**/
 		void ResetCommandPool(VkCommandPool commandPool);
 		void BeginCommandBuffer(VkCommandBuffer commandBuffer);
+		void EndCommandBuffer(VkCommandBuffer commandBuffer);
 		void BeginRenderPass(VkRenderPass renderPass, VkCommandBuffer commandBuffer, VkFramebuffer swapChainFramebuffer);
+		void EndRenderPass(VkCommandBuffer commandBuffer);
 		void SetViewPort(VkCommandBuffer commandBuffer);
 		void SetScissor(VkCommandBuffer commandBuffer);
 		void BindPipeline(VkCommandBuffer commandBuffer, VkPipeline pipeline);
 		void Draw(VkCommandBuffer commandBuffer, VulkanMesh vMesh, VkBuffer uniformBuffer, VkDescriptorSet descriptorSet, VkPipelineLayout pipelineLayout);
-		void EndRenderPass(VkCommandBuffer commandBuffer);
-		void EndCommandBuffer(VkCommandBuffer commandBuffer);
 		uint32_t AcquireNextImageKHR(VkSwapchainKHR swapChain, std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>>& semaphores);
 		void QueueSubmit(uint32_t imageIndex, VkCommandBuffer commandBuffer, std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>>& semaphores);
 		size_t QueuePresent(uint32_t imageIndex, VkSwapchainKHR swapChain, std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>>& semaphores);

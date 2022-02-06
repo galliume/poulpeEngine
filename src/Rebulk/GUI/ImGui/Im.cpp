@@ -2,7 +2,7 @@
 
 namespace Rbk {
 
-	void Im::Init(GLFWwindow* window, ImGui_ImplVulkan_InitInfo* initInfo, VkRenderPass renderPass)
+	void Im::Init(GLFWwindow* window, ImGui_ImplVulkan_InitInfo initInfo, VkRenderPass renderPass)
 	{
 		const char* glsl_version = "#version 150";
 		glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -28,9 +28,11 @@ namespace Rbk {
 			style.Colors[ImGuiCol_WindowBg].w = 1.0f;
 		}
 
+		ImGui::SetNextWindowPos(ImVec2(650, 20), ImGuiCond_FirstUseEver);
+
 		ImGui::CreateContext();
 		ImGui_ImplGlfw_InitForVulkan(window, true);
-		ImGui_ImplVulkan_Init(initInfo, renderPass);
+		ImGui_ImplVulkan_Init(&initInfo, renderPass);
 	}
 
 	void Im::NewFrame()
@@ -84,7 +86,9 @@ namespace Rbk {
 		glfwGetFramebufferSize(window, &displayW, &displayH);
 		ImGuiIO& io = ImGui::GetIO();
 
-		ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), commandBuffer, pipeline);
+		ImDrawData* d = ImGui::GetDrawData();
+		//ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), commandBuffer, pipeline);
+		
 
 		if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
 			ImGui::UpdatePlatformWindows();
