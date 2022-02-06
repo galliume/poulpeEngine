@@ -25,7 +25,6 @@ namespace Rbk
 		m_DescriptorPool = m_Renderer->CreateDescriptorPool(m_SwapChainImages);
 		m_Semaphores = m_Renderer->CreateSyncObjects(m_SwapChainImages);
 		m_UniformBuffers = m_Renderer->CreateUniformBuffers(m_SwapChainImageViews);
-		m_DescriptorSets = m_Renderer->CreateDescriptorSets(m_DescriptorPool, m_DescriptorSetLayout, m_SwapChainImages, m_UniformBuffers);
 	}
 
 	void VulkanAdapter::SouldResizeSwapChain()
@@ -53,6 +52,28 @@ namespace Rbk
 		uint32_t vertexOffset = (m_Meshes.vertexOffset.size() > 0) ? m_Meshes.vertexOffset.back() + mesh.vertices.size() : mesh.vertices.size();
 		m_Meshes.vertexOffset.emplace_back(vertexOffset);
 		m_Meshes.count += 1;
+	}
+
+	void VulkanAdapter::AddTexture(const char* texturePath)
+	{
+		VkImage textureImage;
+		VkDeviceMemory textureImageMemory;
+
+		VkCommandBuffer commandBuffer = m_Renderer->AllocateCommandBuffers(m_CommandPool)[0];
+		m_Renderer->BeginCommandBuffer(commandBuffer);
+		m_Renderer->CreateTextureImage(commandBuffer, texturePath, textureImage, textureImageMemory);
+
+		VkImageView textureImageView = m_Renderer->CreateTextureImageView(textureImage);
+		VkSampler textureSampler = m_Renderer->CreateTextureSampler(textureImageView);
+
+		m_DescriptorSets = m_Renderer->CreateDescriptorSets(
+			m_DescriptorPool, m_DescriptorSetLayout, m_SwapChainImages, m_UniformBuffers, textureImageView, textureSampler
+		);
+
+		m_TextureImages.emplace_back(textureImage);
+		m_TextureImageMemorys.emplace_back(textureImageMemory);
+		m_TextureImageViews.emplace_back(textureImageView);
+		m_Samplers.emplace_back(textureSampler);
 	}
 
 	void VulkanAdapter::AddShader(std::vector<char> vertexShaderCode, std::vector<char> fragShaderCode)
@@ -140,11 +161,22 @@ namespace Rbk
 
 	void VulkanAdapter::Destroy()
 	{
-		//renderer->DestroySwapchain(renderer->GetDevice(), imguiSwapChain, imguiSwapChainFramebuffers, imguiSwapChainImageViews);
-		//renderer->DestroyRenderPass(imguiRenderPass, imguiCommandPool, imguiCommandBuffers);
+		//@todo refactor all the destroy system...
 		m_Renderer->DestroySwapchain(m_Renderer->GetDevice(), m_SwapChain, m_SwapChainFramebuffers, m_SwapChainImageViews);
 		m_Renderer->DestroySemaphores(m_Semaphores);
 
+		for (auto sampler : m_Samplers) {
+			vkDestroySampler(m_Renderer->GetDevice(), sampler, nullptr);
+		}
+		for (auto textureView : m_TextureImageViews) {
+			vkDestroyImageView(m_Renderer->GetDevice(), textureView, nullptr);
+		}
+		for (auto texture : m_TextureImages) {
+			vkDestroyImage(m_Renderer->GetDevice(), texture, nullptr);
+		}
+		for (auto textureMemory : m_TextureImageMemorys) {
+			m_Renderer->DestroyDeviceMemory(textureMemory);
+		}
 		for (auto vShader : m_Shaders) {
 			m_Renderer->DestroyPipeline(vShader.pipeline);
 		}
@@ -162,8 +194,6 @@ namespace Rbk
 			m_Renderer->DestroyDeviceMemory(deviceMemory);
 		}
 
-		/*renderer->DestroyVertexBuffer(vertexBuffer.first, vertexBuffer.second);
-		renderer->DestroyVertexBuffer(indexBuffer.first, indexBuffer.second);*/
 		m_Renderer->DestroyPipelineData(m_PipelineLayout, m_DescriptorPool, m_DescriptorSetLayout);
 		m_Renderer->DestroyRenderPass(m_RenderPass, m_CommandPool, m_CommandBuffers);
 		m_Renderer->Destroy();
