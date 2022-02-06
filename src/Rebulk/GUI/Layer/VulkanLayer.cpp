@@ -3,19 +3,15 @@
 
 namespace Rbk
 {
-	VulkanLayer::VulkanLayer(GLFWwindow* window, VulkanRenderer* vulkanRenderer)
-		: m_Window(window), m_VulkanRenderer(vulkanRenderer)
+	VulkanLayer::VulkanLayer()
 	{
-		m_VulkanRenderer->Attach(this);
 	}
-	
-	void VulkanLayer::Render(VkRenderPass renderPass, VkCommandPool commandPool, VkSwapchainKHR swapChain, std::vector<VkFramebuffer> swapChainFramebuffers, VkPipeline pipeline)
+
+	void VulkanLayer::Init()
 	{
-		//VkCommandBuffer commandBuffer = m_VulkanRenderer->CreateCommandBuffer(commandPool);
-		//m_VulkanRenderer->BeginRenderPass(renderPass, commandBuffer, swapChainFramebuffers);
-		//Im::Render(m_Window, commandBuffer, pipeline);
-		//m_VulkanRenderer->DrawSingleTimeCommands(commandBuffer, swapChain);
-		//m_VulkanRenderer->EndRenderPass(commandBuffer, commandPool);
+		//DisplayFpsCounter(timeStep);
+		DisplayLogs();
+		//DisplayAPI(renderer->GetDeviceProperties());
 	}
 
 	void VulkanLayer::DisplayLogs()

@@ -43,6 +43,7 @@ project "Rebulkan"
 		"vendor/imgui/imgui_draw.cpp",
 		"vendor/imgui/imgui_tables.cpp",
 		"vendor/imgui/imgui_widgets.cpp",
+		"vendor/imgui/imgui_demo.cpp",
 		"vendor/imgui/backends/imgui_impl_glfw.h",
 		"vendor/imgui/backends/imgui_impl_glfw.cpp",
 		"vendor/imgui/backends/imgui_impl_vulkan.h",

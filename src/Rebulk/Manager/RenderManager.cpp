@@ -27,9 +27,9 @@ namespace Rbk
 
 		AddShader(vertShaderCode, fragShaderCode);
 
-		AddMesh("mesh/moon.obj");
-		AddMesh("mesh/kitty.obj");
-		//AddMesh("mesh/backpack/backpack.obj");
+		//AddMesh("mesh/moon.obj");
+		//AddMesh("mesh/kitty.obj");
+		AddMesh("mesh/backpack/backpack.obj");
 	}
 
 	void RenderManager::AddMesh(const char* path)
