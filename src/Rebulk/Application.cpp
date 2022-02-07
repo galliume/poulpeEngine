@@ -86,6 +86,7 @@ namespace Rbk
 			//Rbk::Im::Render(window->Get(), vImGuiInfo.cmdBuffer, vImGuiInfo.pipeline);
 			//rendererAdapter.get()->Rdr()->EndCommandBuffer(vImGuiInfo.cmdBuffer);
 
+			renderManager->PrepareDraw();
 			renderManager->Draw();
 
 			glfwSwapBuffers(window->Get());

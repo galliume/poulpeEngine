@@ -49,6 +49,7 @@ project "Rebulkan"
 		"vendor/imgui/backends/imgui_impl_vulkan.h",
 		"vendor/imgui/backends/imgui_impl_vulkan.cpp",
 		"vendor/tiny_obj_loader/tiny_obj_loader.h",
+		"vendor/tiny_obj_loader/mapbox/earcut.hpp",
 		"shaders/*",
 		"mesh/*",
 		"*.lua"
@@ -63,6 +64,7 @@ project "Rebulkan"
 		"vendor/stb_image",
 		"vendor/tiny_obj_loader",
 		"%{IncludeDir.GLM}",
+		"%{IncludeDir.assimp}",
 	}
 
 	filter "system:windows"

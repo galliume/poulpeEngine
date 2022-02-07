@@ -16,24 +16,25 @@ namespace Rbk
 	{
 		m_RenderPass = m_Renderer->CreateRenderPass();
 		m_SwapChain = m_Renderer->CreateSwapChain(m_SwapChainImages);
-		m_SwapChainImageViews = m_Renderer->CreateImageViews(m_SwapChainImages);
-		m_SwapChainFramebuffers = m_Renderer->CreateFramebuffers(m_RenderPass, m_SwapChainImageViews);
-		m_CommandPool = m_Renderer->CreateCommandPool();
-		m_CommandBuffers = m_Renderer->AllocateCommandBuffers(m_CommandPool, (uint32_t)m_SwapChainFramebuffers.size());
 		m_DescriptorPool = m_Renderer->CreateDescriptorPool(m_SwapChainImages);
-		m_Semaphores = m_Renderer->CreateSyncObjects(m_SwapChainImages);
+		m_CommandPool = m_Renderer->CreateCommandPool();
 	}
 
 	void VulkanAdapter::SouldResizeSwapChain()
 	{
 		if (m_Renderer->SouldResizeSwapChain(m_SwapChain)) {
+			m_Renderer->InitDetails();
 			VkSwapchainKHR old = m_SwapChain;
 			m_SwapChain = m_Renderer->CreateSwapChain(m_SwapChainImages, old);
 			m_Renderer->DestroySwapchain(m_Renderer->GetDevice(), old, m_SwapChainFramebuffers, m_SwapChainImageViews);
 			m_Renderer->DestroySemaphores(m_Semaphores);
 			m_Renderer->ResetCurrentFrameIndex();
-			m_SwapChainImageViews = m_Renderer->CreateImageViews(m_SwapChainImages);
-			m_SwapChainFramebuffers = m_Renderer->CreateFramebuffers(m_RenderPass, m_SwapChainImageViews);
+			m_SwapChainImageViews.resize(m_SwapChainImages.size());
+
+			for (uint32_t i = 0; i < m_SwapChainImages.size(); i++) {
+				m_SwapChainImageViews[i] = m_Renderer->CreateImageView(m_SwapChainImages[i], m_Renderer->GetSwapChainImageFormat(), VK_IMAGE_ASPECT_COLOR_BIT);
+			}
+			m_SwapChainFramebuffers = m_Renderer->CreateFramebuffers(m_RenderPass, m_SwapChainImageViews, m_Meshes.depthImageView);
 			m_Semaphores = m_Renderer->CreateSyncObjects(m_SwapChainImages);
 			m_Renderer->ResetCommandPool(m_CommandPool);
 			m_CommandBuffers = m_Renderer->AllocateCommandBuffers(m_CommandPool, (uint32_t)m_SwapChainFramebuffers.size());
@@ -60,15 +61,16 @@ namespace Rbk
 		m_Renderer->BeginCommandBuffer(commandBuffer);
 		m_Renderer->CreateTextureImage(commandBuffer, texturePath, textureImage, textureImageMemory);
 
-		VkImageView textureImageView = m_Renderer->CreateTextureImageView(textureImage);
+		VkImageView textureImageView = m_Renderer->CreateImageView(textureImage, VK_FORMAT_R8G8B8A8_SRGB);
 		VkSampler textureSampler = m_Renderer->CreateTextureSampler(textureImageView);
-		
+
 		VkDescriptorSetLayout descriptorSetLayout = m_Renderer->CreateDescriptorSetLayout();
 		std::pair<VkBuffer, VkDeviceMemory> uniformBuffer = m_Renderer->CreateUniformBuffers();
+
 		VkDescriptorSet descriptorSet = m_Renderer->CreateDescriptorSets(
 			m_DescriptorPool, descriptorSetLayout, uniformBuffer, textureImageView, textureSampler
 		);
-
+		
 		m_Meshes.descriptorSetLayouts.emplace_back(descriptorSetLayout);
 		m_Meshes.descriptorSets.emplace_back(descriptorSet);
 		m_Meshes.uniformBuffers.emplace_back(uniformBuffer);
@@ -103,9 +105,29 @@ namespace Rbk
 		m_Meshes.vertexOffset.clear();
 	}
 
-	void VulkanAdapter::Draw()
+	void VulkanAdapter::PrepareDraw()
 	{
-		SouldResizeSwapChain();
+		if (m_IsPrepared) return;
+
+		VkImage depthImage;
+		VkDeviceMemory depthImageMemory;
+		m_Renderer->CreateImage(m_Renderer->GetSwapChainExtent().width, m_Renderer->GetSwapChainExtent().height, m_Renderer->FindDepthFormat(), VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, depthImage, depthImageMemory);
+		VkImageView depthImageView = m_Renderer->CreateImageView(depthImage, m_Renderer->FindDepthFormat(), VK_IMAGE_ASPECT_DEPTH_BIT);
+
+		m_Meshes.depthImage = depthImage;
+		m_Meshes.depthImageView = depthImageView;
+		m_Meshes.depthImageMemory = depthImageMemory;
+
+		m_SwapChainImageViews.resize(m_SwapChainImages.size());
+
+		for (uint32_t i = 0; i < m_SwapChainImages.size(); i++) {
+			m_SwapChainImageViews[i] = m_Renderer->CreateImageView(m_SwapChainImages[i], m_Renderer->GetSwapChainImageFormat(), VK_IMAGE_ASPECT_COLOR_BIT);
+		}
+
+		m_SwapChainFramebuffers = m_Renderer->CreateFramebuffers(m_RenderPass, m_SwapChainImageViews, depthImageView);
+
+		m_CommandBuffers = m_Renderer->AllocateCommandBuffers(m_CommandPool, (uint32_t)m_SwapChainFramebuffers.size());
+		m_Semaphores = m_Renderer->CreateSyncObjects(m_SwapChainImages);
 
 		if (nullptr == m_Meshes.meshVBuffer.first) 
 			m_Meshes.meshVBuffer = m_Renderer->CreateVertexBuffer(m_CommandPool, m_Meshes.mesh.vertices);
@@ -124,11 +146,20 @@ namespace Rbk
 			}
 		}
 
-		Draw(m_Shaders[0], m_Meshes);
+		m_IsPrepared = true;
 	}
 
-	void VulkanAdapter::Draw(VulkanShader vShader, VulkanMesh vMesh)
+	void VulkanAdapter::Draw()
 	{
+		if (!m_IsPrepared) {
+			throw std::runtime_error("Draw is not prepared. Forgot to calle Prepare() ?");
+		}
+
+		VulkanShader vShader = m_Shaders[0];
+		VulkanMesh vMesh = m_Meshes;
+
+		SouldResizeSwapChain();
+
 		for (size_t i = 0; i < m_CommandBuffers.size() - 1; i++) {
 
 			m_ImageIndex = m_Renderer->AcquireNextImageKHR(m_SwapChain, m_Semaphores);
@@ -173,15 +204,18 @@ namespace Rbk
 		m_Renderer->DestroySwapchain(m_Renderer->GetDevice(), m_SwapChain, m_SwapChainFramebuffers, m_SwapChainImageViews);
 		m_Renderer->DestroySemaphores(m_Semaphores);
 
+	
+		vkDestroyImageView(m_Renderer->GetDevice(), m_Meshes.depthImageView, nullptr);
+		m_Renderer->DestroyDeviceMemory(m_Meshes.depthImageMemory);
+		vkDestroyImage(m_Renderer->GetDevice(), m_Meshes.depthImage, nullptr);
+
 		for (auto buffer : m_Meshes.uniformBuffers) {
 			m_Renderer->DestroyBuffer(buffer.first);
 			m_Renderer->DestroyDeviceMemory(buffer.second);
 		}
-
 		for (auto desc : m_Meshes.descriptorSetLayouts) {
 			vkDestroyDescriptorSetLayout(m_Renderer->GetDevice(), desc, nullptr);
 		}
-
 		for (auto sampler : m_Meshes.samplers) {
 			vkDestroySampler(m_Renderer->GetDevice(), sampler, nullptr);
 		}
