@@ -24,6 +24,7 @@ namespace Rbk
 		virtual void AddMesh(Rbk::Mesh mesh) override;
 		virtual void AddTexture(Rbk::Mesh& mesh, const char* texturePath) override;
 		virtual void AddUniformObject(UniformBufferObject ubo) override;
+		virtual void PrepareDraw() override;
 		virtual void Draw() override;
 		virtual void Destroy() override;
 		
@@ -57,5 +58,6 @@ namespace Rbk
 		VkDescriptorSetLayout m_DescriptorSetLayout = nullptr;
 		std::vector<VulkanShader>m_Shaders;
 		VulkanMesh m_Meshes;
+		bool m_IsPrepared = false;
 	};
 }

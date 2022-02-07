@@ -25,6 +25,9 @@ namespace Rbk {
 		std::vector<VkImage> textureImages;
 		std::vector<VkDeviceMemory> textureImageMemorys;
 		std::vector<VkImageView> textureImageViews;
+		VkImage depthImage;
+		VkDeviceMemory depthImageMemory;
+		VkImageView depthImageView;
 		std::vector<VkSampler> samplers;
 		uint32_t count = 0;
 	};
@@ -59,9 +62,8 @@ namespace Rbk {
 		VkPipelineLayout CreatePipelineLayout(VulkanMesh vMesh);
 		VkPipeline CreateGraphicsPipeline(VkRenderPass renderPass, VkPipelineLayout pipelineLayout, VkPipelineCache pipelineCache, VkShaderModule vs, VkShaderModule fs);
 		VkSwapchainKHR CreateSwapChain(std::vector<VkImage>& swapChainImages, VkSwapchainKHR oldSwapChain = VK_NULL_HANDLE);
-		std::vector<VkImageView> CreateImageViews(std::vector<VkImage> swapChainImages);
-		VkImageView CreateTextureImageView(VkImage textureImage);
-		std::vector<VkFramebuffer> CreateFramebuffers(VkRenderPass renderPass, std::vector<VkImageView> swapChainImageViews);
+		VkImageView CreateImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags = VK_IMAGE_ASPECT_COLOR_BIT);
+		std::vector<VkFramebuffer> CreateFramebuffers(VkRenderPass renderPass, std::vector<VkImageView> swapChainImageViews, VkImageView depthImageView);
 		VkCommandPool CreateCommandPool();
 		std::vector<VkCommandBuffer> AllocateCommandBuffers(VkCommandPool commandPool, uint32_t size = 1);
 		void CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory);
@@ -69,7 +71,7 @@ namespace Rbk {
 		std::pair<VkBuffer, VkDeviceMemory> CreateIndexBuffer(VkCommandPool commandPool, std::vector<uint32_t> indices);
 		VkDescriptorPool CreateDescriptorPool(std::vector<VkImage> swapChainImages);
 		std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>> CreateSyncObjects(std::vector<VkImage> swapChainImages);
-		VkImageMemoryBarrier SetupImageMemoryBarrier(VkImage image, VkAccessFlags srcAccessMask, VkAccessFlags dstAccessMask, VkImageLayout oldLayout, VkImageLayout newLayout);
+		VkImageMemoryBarrier SetupImageMemoryBarrier(VkImage image, VkAccessFlags srcAccessMask, VkAccessFlags dstAccessMask, VkImageLayout oldLayout, VkImageLayout newLayout, VkImageAspectFlags aspectMask = VK_IMAGE_ASPECT_COLOR_BIT);
 		void CopyBuffer(VkCommandPool commandPool, VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
 		bool SouldResizeSwapChain(VkSwapchainKHR swapChain);
 		std::pair<VkBuffer, VkDeviceMemory> CreateUniformBuffers();
@@ -85,6 +87,10 @@ namespace Rbk {
 		void CreateTextureImage(VkCommandBuffer commandBuffer, const char* path, VkImage& textureImage, VkDeviceMemory& textureImageMemory);
 		void CopyBufferToImage(VkCommandBuffer commandBuffer, VkBuffer buffer, VkImage image, uint32_t width, uint32_t height);
 		VkSampler CreateTextureSampler(VkImageView textureImageView);
+		VkImageView CreateDepthResources(VkCommandBuffer commandBuffer);
+		VkFormat FindSupportedFormat(const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features);
+		VkFormat FindDepthFormat();
+		bool HasStencilComponent(VkFormat format);
 
 		/**
 		* Vulkan drawing functions, in main loop
@@ -137,6 +143,8 @@ namespace Rbk {
 		inline VkExtent2D GetSwapChainExtent() { return m_SwapChainExtent; };
 		inline VkSurfaceKHR GetSurface() { return m_Surface; };
 		inline void ResetCurrentFrameIndex() { m_CurrentFrame = 0; };
+		inline VkFormat GetSwapChainImageFormat() { return m_SwapChainImageFormat; };
+		void InitDetails();
 
 		SwapChainSupportDetails QuerySwapChainSupport(VkPhysicalDevice device);
 
@@ -190,6 +198,9 @@ namespace Rbk {
 		VkExtent2D m_SwapChainExtent;		
 		VkDebugUtilsMessengerEXT m_DebugMessengerCallback = VK_NULL_HANDLE;
 		QueueFamilyIndices m_QueueFamilyIndices = {};
+		VkSurfaceFormatKHR m_SurfaceFormat;
+		VkPresentModeKHR m_PresentMode;
+		SwapChainSupportDetails m_SwapChainSupport;
 
 		std::list<IObserver*> m_Observers = {};
 		std::vector<std::string> m_Messages = {};
