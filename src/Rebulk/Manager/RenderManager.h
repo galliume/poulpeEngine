@@ -13,7 +13,7 @@ namespace Rbk
 		~RenderManager();
 
 		void Init();
-		void AddMesh(const char* path, const char* texturePath);
+		void AddMesh(const char* path, const char* texturePath, UniformBufferObject ubo);
 		void AddShader(std::vector<char> vertShaderCode, std::vector<char> fragShaderCode);
 		void Draw();
 
@@ -23,5 +23,6 @@ namespace Rbk
 	private:
 		static RenderManager* s_Instance;
 		IRendererAdapter* m_Renderer = nullptr;
+		GLFWwindow* m_Window;
 	};
 }
