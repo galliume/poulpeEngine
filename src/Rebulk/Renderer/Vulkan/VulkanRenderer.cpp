@@ -1385,24 +1385,9 @@ namespace Rbk {
 	void VulkanRenderer::UpdateUniformBuffer(VulkanMesh vMesh)
 	{
 		for (size_t i = 0; i < vMesh.count; i++) {
-
-			static auto startTime = std::chrono::high_resolution_clock::now();
-
-			auto currentTime = std::chrono::high_resolution_clock::now();
-			float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
-
-			UniformBufferObject ubo{};
-			ubo.model = glm::scale(glm::mat4(1.0f), glm::vec3(0.4f, 0.4f, 0.4f));
-			//ubo.model = glm::rotate(ubo.model, time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-			ubo.view = glm::lookAt(glm::vec3(2.0f, 0.5f, 0.5f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-
-			ubo.proj = glm::perspective(glm::radians(45.0f), m_SwapChainExtent.width / (float)m_SwapChainExtent.height, 0.0f, 10.0f);
-
-			ubo.proj[1][1] *= -1;
-
 			void* data; 
-			vkMapMemory(m_Device, vMesh.uniformBuffers[i].second, 0, sizeof(ubo), 0, &data);
-			memcpy(data, &ubo, sizeof(ubo));
+			vkMapMemory(m_Device, vMesh.uniformBuffers[i].second, 0, sizeof(vMesh.ubos[i]), 0, &data);
+			memcpy(data, &vMesh.ubos[i], sizeof(vMesh.ubos[i]));
 			vkUnmapMemory(m_Device, vMesh.uniformBuffers[i].second);
 		}
 	}

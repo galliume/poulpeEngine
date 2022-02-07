@@ -6,9 +6,9 @@ namespace Rbk {
 
 	struct VulkanShader
 	{
-		VkShaderModule vertex;
-		VkShaderModule frag;
-		VkPipeline pipeline;
+		VkShaderModule vertex = nullptr;
+		VkShaderModule frag = nullptr;
+		VkPipeline pipeline = nullptr;
 	};
 
 	struct VulkanMesh
@@ -19,13 +19,14 @@ namespace Rbk {
 		std::pair<VkBuffer, VkDeviceMemory> meshVBuffer = { nullptr, nullptr };
 		std::pair<VkBuffer, VkDeviceMemory> meshIBuffer = { nullptr, nullptr };
 		std::vector<VkDescriptorSet> descriptorSets;
+		std::vector<UniformBufferObject> ubos;
 		std::vector<std::pair<VkBuffer, VkDeviceMemory>>uniformBuffers;
 		std::vector<VkDescriptorSetLayout>descriptorSetLayouts;
-		uint32_t count = 0;
 		std::vector<VkImage> textureImages;
 		std::vector<VkDeviceMemory> textureImageMemorys;
 		std::vector<VkImageView> textureImageViews;
-		std::vector< VkSampler> samplers;
+		std::vector<VkSampler> samplers;
+		uint32_t count = 0;
 	};
 
 	struct QueueFamilyIndices {
