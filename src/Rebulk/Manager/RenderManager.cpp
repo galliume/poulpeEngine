@@ -32,20 +32,30 @@ namespace Rbk
 		glfwGetWindowSize(m_Window, &width, &height);
 
 		UniformBufferObject ubo{};
-		//ubo.model = glm::scale(glm::mat4(1.0f), glm::vec3(0.4f, 0.4f, 0.4f));
-		//ubo.view = glm::lookAt(glm::vec3(2.0f, 0.5f, 0.5f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-		//ubo.proj = glm::perspective(glm::radians(122.0f), 500.0f / 240.0f, 0.0f, 1.0f);
-
-		//ubo.proj[1][1] *= -1;
-		//AddMesh("mesh/moon/moon.obj", "mesh/moon/diffuse.jpg", ubo);
-
-		ubo.model = glm::scale(glm::mat4(1.0f), glm::vec3(1.0f, 1.0f, 1.0f));
-		ubo.view = glm::lookAt(glm::vec3(1.0f, 1.0f, 1.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-		ubo.proj = glm::perspective(glm::radians(122.0f), 500.0f / 240.0f, 0.0f, 1.0f);
-
+		ubo.model = glm::mat4(1.0f), glm::radians(180.0f), glm::vec3(0.0f, 0.0f, 1.0f);
+		ubo.view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+		ubo.proj = glm::perspective(glm::radians(45.0f), width / (float)height, 0.1f, 10.0f);
 		ubo.proj[1][1] *= -1;
 
-		AddMesh("mesh/backpack/backpack.obj", "mesh/backpack/diffuse.jpg", ubo);
+		//AddMesh("mesh/moon/moon.obj", "mesh/moon/diffuse.jpg", ubo);
+
+		UniformBufferObject ubo2{};
+		ubo2.model = glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 1.0f);
+		ubo2.model = glm::scale(ubo2.model, glm::vec3(0.5f, 0.5f, 0.5f));
+		ubo2.view = glm::lookAt(glm::vec3(0.0f, -0.5f, 3.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+		ubo2.proj = glm::perspective(glm::radians(45.0f), width / (float)height, 0.1f, 10.0f);
+		ubo2.proj[1][1] *= -1;
+
+		//AddMesh("mesh/backpack/backpack.obj", "mesh/backpack/backpack.jpg", ubo2);
+		//AddMesh("mesh/moon/moon.obj", "mesh/moon/diffuse.jpg", ubo2);
+
+		UniformBufferObject ubo3{};
+		ubo3.model = glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f);
+		ubo3.view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+		ubo3.proj = glm::perspective(glm::radians(45.0f), width / (float)height, 0.1f, 10.0f);
+		ubo3.proj[1][1] *= -1;
+
+		AddMesh("mesh/viking/viking_room.obj", "mesh/viking/viking_room.png", ubo3);
 	}
 
 	void RenderManager::AddMesh(const char* path, const char* texturePath, UniformBufferObject ubo)
@@ -61,6 +71,11 @@ namespace Rbk
 	void RenderManager::AddShader(std::vector<char> vertShaderCode, std::vector<char> fragShaderCode)
 	{
 		m_Renderer->AddShader(vertShaderCode, fragShaderCode);
+	}
+
+	void RenderManager::PrepareDraw()
+	{
+		m_Renderer->PrepareDraw();
 	}
 
 	void RenderManager::Draw()
