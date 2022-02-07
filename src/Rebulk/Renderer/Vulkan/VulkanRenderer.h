@@ -59,7 +59,7 @@ namespace Rbk {
 		VkPipeline CreateGraphicsPipeline(VkRenderPass renderPass, VkPipelineLayout pipelineLayout, VkPipelineCache pipelineCache, VkShaderModule vs, VkShaderModule fs);
 		VkSwapchainKHR CreateSwapChain(std::vector<VkImage>& swapChainImages, VkSwapchainKHR oldSwapChain = VK_NULL_HANDLE);
 		std::vector<VkImageView> CreateImageViews(std::vector<VkImage> swapChainImages);
-		VkImageView VulkanRenderer::CreateTextureImageView(VkImage textureImage);
+		VkImageView CreateTextureImageView(VkImage textureImage);
 		std::vector<VkFramebuffer> CreateFramebuffers(VkRenderPass renderPass, std::vector<VkImageView> swapChainImageViews);
 		VkCommandPool CreateCommandPool();
 		std::vector<VkCommandBuffer> AllocateCommandBuffers(VkCommandPool commandPool, uint32_t size = 1);
@@ -71,7 +71,7 @@ namespace Rbk {
 		VkImageMemoryBarrier SetupImageMemoryBarrier(VkImage image, VkAccessFlags srcAccessMask, VkAccessFlags dstAccessMask, VkImageLayout oldLayout, VkImageLayout newLayout);
 		void CopyBuffer(VkCommandPool commandPool, VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
 		bool SouldResizeSwapChain(VkSwapchainKHR swapChain);
-		std::pair<VkBuffer, VkDeviceMemory> VulkanRenderer::CreateUniformBuffers();
+		std::pair<VkBuffer, VkDeviceMemory> CreateUniformBuffers();
 		void UpdateUniformBuffer(VulkanMesh vMesh);
 		VkDescriptorSet CreateDescriptorSets(
 			VkDescriptorPool descriptorPool,
