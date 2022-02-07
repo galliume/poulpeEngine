@@ -90,6 +90,11 @@ namespace Rbk
 		m_Shaders.emplace_back(shader);
 	}
 
+	void VulkanAdapter::AddUniformObject(UniformBufferObject ubo)
+	{
+		m_Meshes.ubos.emplace_back(ubo);
+	}
+
 	void VulkanAdapter::Clear()
 	{
 		m_Meshes.mesh.vertices.clear();
@@ -108,12 +113,15 @@ namespace Rbk
 		if (nullptr == m_Meshes.meshIBuffer.first) 
 			m_Meshes.meshIBuffer = m_Renderer->CreateIndexBuffer(m_CommandPool, m_Meshes.mesh.indices);
 	
-		m_PipelineLayout = m_Renderer->CreatePipelineLayout(m_Meshes);
-
-		VkPipelineCache pipelineCache = 0;
+		if (nullptr == m_PipelineLayout) {
+			m_PipelineLayout = m_Renderer->CreatePipelineLayout(m_Meshes);
+		}
 
 		for (auto& shader : m_Shaders) {
-			shader.pipeline = m_Renderer->CreateGraphicsPipeline(m_RenderPass, m_PipelineLayout, pipelineCache, shader.vertex, shader.frag);
+			if (nullptr == shader.pipeline) {
+				VkPipelineCache pipelineCache = 0;
+				shader.pipeline = m_Renderer->CreateGraphicsPipeline(m_RenderPass, m_PipelineLayout, pipelineCache, shader.vertex, shader.frag);
+			}
 		}
 
 		Draw(m_Shaders[0], m_Meshes);
@@ -165,6 +173,15 @@ namespace Rbk
 		m_Renderer->DestroySwapchain(m_Renderer->GetDevice(), m_SwapChain, m_SwapChainFramebuffers, m_SwapChainImageViews);
 		m_Renderer->DestroySemaphores(m_Semaphores);
 
+		for (auto buffer : m_Meshes.uniformBuffers) {
+			m_Renderer->DestroyBuffer(buffer.first);
+			m_Renderer->DestroyDeviceMemory(buffer.second);
+		}
+
+		for (auto desc : m_Meshes.descriptorSetLayouts) {
+			vkDestroyDescriptorSetLayout(m_Renderer->GetDevice(), desc, nullptr);
+		}
+
 		for (auto sampler : m_Meshes.samplers) {
 			vkDestroySampler(m_Renderer->GetDevice(), sampler, nullptr);
 		}
@@ -179,6 +196,8 @@ namespace Rbk
 		}
 		for (auto vShader : m_Shaders) {
 			m_Renderer->DestroyPipeline(vShader.pipeline);
+			vkDestroyShaderModule(m_Renderer->GetDevice(), vShader.vertex, nullptr);
+			vkDestroyShaderModule(m_Renderer->GetDevice(), vShader.frag, nullptr);
 		}
 
 		m_Renderer->DestroyBuffer(m_Meshes.meshVBuffer.first);
