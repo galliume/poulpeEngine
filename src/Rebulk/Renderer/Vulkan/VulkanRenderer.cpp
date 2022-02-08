@@ -60,7 +60,7 @@ namespace Rbk {
 #ifdef NDEBUG
 		m_EnableValidationLayers = false;
 #else
-		m_EnableValidationLayers = false;
+		m_EnableValidationLayers = true;
 #endif
 		
 		LoadRequiredExtensions();
@@ -79,15 +79,13 @@ namespace Rbk {
 
 		if (!IsValidationLayersEnabled() && !CheckValidationLayerSupport()) {
 			m_Messages.emplace_back("Validations layers not available !");
-
-			return;
 		}
 
 		VkApplicationInfo appInfo{};
 
 		appInfo.apiVersion = VK_API_VERSION_1_2;
 		appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
-		appInfo.pApplicationName = "Rbkan";
+		appInfo.pApplicationName = "Rebulkan";
 		appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
 		appInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
 
