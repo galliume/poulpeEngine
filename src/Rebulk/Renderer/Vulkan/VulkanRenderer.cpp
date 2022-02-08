@@ -1231,13 +1231,17 @@ namespace Rbk {
 		vkCmdBindIndexBuffer(commandBuffer, vMesh.meshIBuffer.first, 0, VK_INDEX_TYPE_UINT32);
 		
 		std::array<VkWriteDescriptorSet, 2> descriptorWrites{};
-		VkDescriptorBufferInfo bufferInfo{};
-		bufferInfo.buffer = vMesh.uniformBuffer.first;
-		bufferInfo.offset = 0;
-		bufferInfo.range = sizeof(UniformBufferObject);
+		std::vector<VkDescriptorImageInfo>imageInfos;
+		std::vector<VkDescriptorBufferInfo> bufferInfos;
 
-		std::vector< VkDescriptorImageInfo>imageInfos;
 		for (int i = 0; i < vMesh.count; i++) {
+
+			VkDescriptorBufferInfo bufferInfo{};
+			bufferInfo.buffer = vMesh.uniformBuffers[i].first;
+			bufferInfo.offset = 0;
+			bufferInfo.range = sizeof(UniformBufferObject);
+			bufferInfos.emplace_back(bufferInfo);
+
 			VkDescriptorImageInfo imageInfo{};
 			imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 			imageInfo.imageView = vMesh.textureImageViews[i];
@@ -1251,7 +1255,7 @@ namespace Rbk {
 		descriptorWrites[0].dstArrayElement = 0;
 		descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
 		descriptorWrites[0].descriptorCount = 1;
-		descriptorWrites[0].pBufferInfo = &bufferInfo;
+		descriptorWrites[0].pBufferInfo = bufferInfos.data();
 
 		descriptorWrites[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
 		descriptorWrites[1].dstSet = pipeline.descriptorSets[0];
@@ -1268,8 +1272,8 @@ namespace Rbk {
 			VK_PIPELINE_BIND_POINT_GRAPHICS, 
 			pipeline.pipelineLayout,
 			0, 
-			1,
-			&pipeline.descriptorSets[0],
+			pipeline.descriptorSets.size(),
+			pipeline.descriptorSets.data(),
 			0, 
 			nullptr
 		);
@@ -1380,9 +1384,9 @@ namespace Rbk {
 	{
 		for (size_t i = 0; i < vMesh.count; i++) {
 			void* data; 
-			vkMapMemory(m_Device, vMesh.uniformBuffer.second, 0, sizeof(vMesh.ubos[i]), 0, &data);
+			vkMapMemory(m_Device, vMesh.uniformBuffers[i].second, 0, sizeof(vMesh.ubos[i]), 0, &data);
 			memcpy(data, &vMesh.ubos[i], sizeof(vMesh.ubos[i]));
-			vkUnmapMemory(m_Device, vMesh.uniformBuffer.second);
+			vkUnmapMemory(m_Device, vMesh.uniformBuffers[i].second);
 		}
 	}
 
