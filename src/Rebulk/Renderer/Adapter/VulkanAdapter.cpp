@@ -16,8 +16,9 @@ namespace Rbk
 	{
 		m_RenderPass = m_Renderer->CreateRenderPass();
 		m_SwapChain = m_Renderer->CreateSwapChain(m_SwapChainImages);
-		m_DescriptorPool = m_Renderer->CreateDescriptorPool(m_SwapChainImages);
 		m_CommandPool = m_Renderer->CreateCommandPool();
+		//m_DescriptorPool = m_Renderer->CreateDescriptorPool(m_SwapChainImages);
+		VulkanShaders m_Shaders;
 	}
 
 	void VulkanAdapter::SouldResizeSwapChain()
@@ -64,16 +65,6 @@ namespace Rbk
 		VkImageView textureImageView = m_Renderer->CreateImageView(textureImage, VK_FORMAT_R8G8B8A8_SRGB);
 		VkSampler textureSampler = m_Renderer->CreateTextureSampler(textureImageView);
 
-		VkDescriptorSetLayout descriptorSetLayout = m_Renderer->CreateDescriptorSetLayout();
-		std::pair<VkBuffer, VkDeviceMemory> uniformBuffer = m_Renderer->CreateUniformBuffers();
-
-		VkDescriptorSet descriptorSet = m_Renderer->CreateDescriptorSets(
-			m_DescriptorPool, descriptorSetLayout, uniformBuffer, textureImageView, textureSampler
-		);
-		
-		m_Meshes.descriptorSetLayouts.emplace_back(descriptorSetLayout);
-		m_Meshes.descriptorSets.emplace_back(descriptorSet);
-		m_Meshes.uniformBuffers.emplace_back(uniformBuffer);
 		m_Meshes.textureImages.emplace_back(textureImage);
 		m_Meshes.textureImageMemorys.emplace_back(textureImageMemory);
 		m_Meshes.textureImageViews.emplace_back(textureImageView);
@@ -84,12 +75,7 @@ namespace Rbk
 	{
 		VkShaderModule vertexShaderModule = m_Renderer->CreateShaderModule(vertexShaderCode);
 		VkShaderModule fragShaderModule = m_Renderer->CreateShaderModule(fragShaderCode);
-
-		VulkanShader shader;
-		shader.vertex = vertexShaderModule;
-		shader.frag = fragShaderModule;
-
-		m_Shaders.emplace_back(shader);
+		m_Shaders.shaders.emplace(vertexShaderModule, fragShaderModule);
 	}
 
 	void VulkanAdapter::AddUniformObject(UniformBufferObject ubo)
@@ -108,6 +94,9 @@ namespace Rbk
 	void VulkanAdapter::PrepareDraw()
 	{
 		if (m_IsPrepared) return;
+
+		std::pair<VkBuffer, VkDeviceMemory> uniformBuffer = m_Renderer->CreateUniformBuffers();
+		m_Meshes.uniformBuffer = uniformBuffer;
 
 		VkImage depthImage;
 		VkDeviceMemory depthImageMemory;
@@ -135,15 +124,16 @@ namespace Rbk
 		if (nullptr == m_Meshes.meshIBuffer.first) 
 			m_Meshes.meshIBuffer = m_Renderer->CreateIndexBuffer(m_CommandPool, m_Meshes.mesh.indices);
 	
-		if (nullptr == m_PipelineLayout) {
-			m_PipelineLayout = m_Renderer->CreatePipelineLayout(m_Meshes);
-		}
+		if (0 == m_Pipelines.size()) {
+			VulkanPipeline vPipeline;
+			vPipeline.pipelineCache = 0;
+			vPipeline.descriptorPool = m_Renderer->CreateDescriptorPool(m_SwapChainImages);
+			vPipeline.descriptorSetLayouts.emplace_back(m_Renderer->CreateDescriptorSetLayout());
+			vPipeline.descriptorSets.emplace_back(m_Renderer->CreateDescriptorSets(vPipeline.descriptorPool, m_SwapChainImages, vPipeline.descriptorSetLayouts));
+			vPipeline.pipelineLayout = m_Renderer->CreatePipelineLayout(vPipeline.descriptorSets, vPipeline.descriptorSetLayouts);			
+			vPipeline.graphicsPipeline = m_Renderer->CreateGraphicsPipeline(m_RenderPass, vPipeline, m_Shaders);
 
-		for (auto& shader : m_Shaders) {
-			if (nullptr == shader.pipeline) {
-				VkPipelineCache pipelineCache = 0;
-				shader.pipeline = m_Renderer->CreateGraphicsPipeline(m_RenderPass, m_PipelineLayout, pipelineCache, shader.vertex, shader.frag);
-			}
+			m_Pipelines.emplace_back(vPipeline);
 		}
 
 		m_IsPrepared = true;
@@ -154,9 +144,6 @@ namespace Rbk
 		if (!m_IsPrepared) {
 			throw std::runtime_error("Draw is not prepared. Forgot to calle Prepare() ?");
 		}
-
-		VulkanShader vShader = m_Shaders[0];
-		VulkanMesh vMesh = m_Meshes;
 
 		SouldResizeSwapChain();
 
@@ -175,9 +162,9 @@ namespace Rbk
 			m_Renderer->BeginRenderPass(m_RenderPass, m_CommandBuffers[m_ImageIndex], m_SwapChainFramebuffers[m_ImageIndex]);
 			m_Renderer->SetViewPort(m_CommandBuffers[m_ImageIndex]);
 			m_Renderer->SetScissor(m_CommandBuffers[m_ImageIndex]);
-			m_Renderer->BindPipeline(m_CommandBuffers[m_ImageIndex], vShader.pipeline);			
-			m_Renderer->Draw(m_CommandBuffers[m_ImageIndex], vMesh, m_PipelineLayout);
-			m_Renderer->UpdateUniformBuffer(vMesh);
+			m_Renderer->BindPipeline(m_CommandBuffers[m_ImageIndex], m_Pipelines[0].graphicsPipeline);
+			m_Renderer->Draw(m_CommandBuffers[m_ImageIndex], m_Meshes, m_Pipelines[0]);
+			m_Renderer->UpdateUniformBuffer(m_Meshes);
 			m_Renderer->EndRenderPass(m_CommandBuffers[m_ImageIndex]);
 
 			VkImageMemoryBarrier renderEndBarrier = m_Renderer->SetupImageMemoryBarrier(
@@ -209,13 +196,11 @@ namespace Rbk
 		m_Renderer->DestroyDeviceMemory(m_Meshes.depthImageMemory);
 		vkDestroyImage(m_Renderer->GetDevice(), m_Meshes.depthImage, nullptr);
 
-		for (auto buffer : m_Meshes.uniformBuffers) {
-			m_Renderer->DestroyBuffer(buffer.first);
-			m_Renderer->DestroyDeviceMemory(buffer.second);
-		}
-		for (auto desc : m_Meshes.descriptorSetLayouts) {
-			vkDestroyDescriptorSetLayout(m_Renderer->GetDevice(), desc, nullptr);
-		}
+		m_Renderer->DestroyBuffer(m_Meshes.uniformBuffer.first);
+		m_Renderer->DestroyDeviceMemory(m_Meshes.uniformBuffer.second);
+
+		//vkDestroyDescriptorSetLayout(m_Renderer->GetDevice(), m_DescriptorSetLayout, nullptr);
+
 		for (auto sampler : m_Meshes.samplers) {
 			vkDestroySampler(m_Renderer->GetDevice(), sampler, nullptr);
 		}
@@ -228,10 +213,20 @@ namespace Rbk
 		for (auto textureMemory : m_Meshes.textureImageMemorys) {
 			m_Renderer->DestroyDeviceMemory(textureMemory);
 		}
-		for (auto vShader : m_Shaders) {
-			m_Renderer->DestroyPipeline(vShader.pipeline);
-			vkDestroyShaderModule(m_Renderer->GetDevice(), vShader.vertex, nullptr);
-			vkDestroyShaderModule(m_Renderer->GetDevice(), vShader.frag, nullptr);
+		
+		for (auto pipeline : m_Pipelines) {
+			m_Renderer->DestroyPipeline(pipeline.graphicsPipeline);
+			vkDestroyDescriptorPool(m_Renderer->GetDevice(), pipeline.descriptorPool, nullptr);
+			vkDestroyPipelineLayout(m_Renderer->GetDevice(), pipeline.pipelineLayout, nullptr);
+
+			for (auto descriptorSetLayout : pipeline.descriptorSetLayouts) {
+				vkDestroyDescriptorSetLayout(m_Renderer->GetDevice(), descriptorSetLayout, nullptr);
+			}
+		}
+
+		for (auto [vertex, frag] : m_Shaders.shaders) {
+			vkDestroyShaderModule(m_Renderer->GetDevice(), vertex, nullptr);
+			vkDestroyShaderModule(m_Renderer->GetDevice(), frag, nullptr);
 		}
 
 		m_Renderer->DestroyBuffer(m_Meshes.meshVBuffer.first);
@@ -247,7 +242,7 @@ namespace Rbk
 			m_Renderer->DestroyDeviceMemory(deviceMemory);
 		}
 
-		m_Renderer->DestroyPipelineData(m_PipelineLayout, m_DescriptorPool, m_DescriptorSetLayout);
+		//m_Renderer->DestroyPipelineData(m_PipelineLayout, m_DescriptorPool, m_DescriptorSetLayout);
 		m_Renderer->DestroyRenderPass(m_RenderPass, m_CommandPool, m_CommandBuffers);
 		m_Renderer->Destroy();
 	}
@@ -276,7 +271,7 @@ namespace Rbk
 		VImGuiInfo vImGuiInfo;
 		vImGuiInfo.info = info;
 		vImGuiInfo.cmdBuffer = m_Renderer->AllocateCommandBuffers(m_CommandPool)[0];
-		vImGuiInfo.pipeline = m_Pipeline;
+		vImGuiInfo.pipeline = m_Pipelines[0].graphicsPipeline;
 
 		return vImGuiInfo;
 	}

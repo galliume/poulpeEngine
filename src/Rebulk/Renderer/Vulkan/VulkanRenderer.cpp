@@ -610,7 +610,7 @@ namespace Rbk {
 		return descriptorSetLayout;
 	}
 
-	VkPipelineLayout VulkanRenderer::CreatePipelineLayout(VulkanMesh vMesh)
+	VkPipelineLayout VulkanRenderer::CreatePipelineLayout(std::vector<VkDescriptorSet> descriptorSets, std::vector<VkDescriptorSetLayout> descriptorSetLayouts)
 	{
 		VkPipelineLayout graphicsPipelineLayout = VK_NULL_HANDLE;
 
@@ -618,8 +618,8 @@ namespace Rbk {
 		pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
 		pipelineLayoutInfo.pushConstantRangeCount = 0;
 		pipelineLayoutInfo.pPushConstantRanges = nullptr;
-		pipelineLayoutInfo.setLayoutCount = vMesh.descriptorSets.size();
-		pipelineLayoutInfo.pSetLayouts = vMesh.descriptorSetLayouts.data();
+		pipelineLayoutInfo.setLayoutCount = descriptorSets.size();
+		pipelineLayoutInfo.pSetLayouts = descriptorSetLayouts.data();
 
 		VkResult result = vkCreatePipelineLayout(m_Device, &pipelineLayoutInfo, nullptr, &graphicsPipelineLayout);
 
@@ -633,25 +633,25 @@ namespace Rbk {
 		return graphicsPipelineLayout;
 	}
 
-	VkPipeline VulkanRenderer::CreateGraphicsPipeline(
-		VkRenderPass renderPass, VkPipelineLayout pipelineLayout, VkPipelineCache pipelineCache, VkShaderModule vs, VkShaderModule fs
-	)
+	VkPipeline VulkanRenderer::CreateGraphicsPipeline(VkRenderPass renderPass, VulkanPipeline pipeline, VulkanShaders shaders)
 	{
-		std::pair<VkPipeline, VkPipelineLayout>pipeline = {};
+		std::vector<VkPipelineShaderStageCreateInfo>shaderStageInfos;
 
-		VkPipelineShaderStageCreateInfo vertShaderStageInfo{};
-		vertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-		vertShaderStageInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
-		vertShaderStageInfo.module = vs;
-		vertShaderStageInfo.pName = "main";
-
-		VkPipelineShaderStageCreateInfo fragShaderStageInfo{};
-		fragShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-		fragShaderStageInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
-		fragShaderStageInfo.module = fs;
-		fragShaderStageInfo.pName = "main";
-
-		VkPipelineShaderStageCreateInfo shaderStages[] = { vertShaderStageInfo, fragShaderStageInfo };
+		for (auto& [vertex, frag]: shaders.shaders) {
+			VkPipelineShaderStageCreateInfo vertShaderStageInfo{};
+			vertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+			vertShaderStageInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
+			vertShaderStageInfo.module = vertex;
+			vertShaderStageInfo.pName = "main";
+			shaderStageInfos.emplace_back(vertShaderStageInfo);
+		
+			VkPipelineShaderStageCreateInfo fragShaderStageInfo{};
+			fragShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+			fragShaderStageInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
+			fragShaderStageInfo.module = frag;
+			fragShaderStageInfo.pName = "main";
+			shaderStageInfos.emplace_back(fragShaderStageInfo);
+		}
 
 		auto bindingDescription = Vertex::GetBindingDescription();
 		auto attributeDescriptions = Vertex::GetAttributeDescriptions();
@@ -749,8 +749,8 @@ namespace Rbk {
 
 		VkGraphicsPipelineCreateInfo pipelineInfo{};
 		pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
-		pipelineInfo.stageCount = 2;
-		pipelineInfo.pStages = shaderStages;
+		pipelineInfo.stageCount = shaderStageInfos.size();
+		pipelineInfo.pStages = shaderStageInfos.data();
 		pipelineInfo.pVertexInputState = &vertexInputInfo;
 		pipelineInfo.pInputAssemblyState = &inputAssembly;
 		pipelineInfo.pViewportState = &viewportState;
@@ -758,7 +758,7 @@ namespace Rbk {
 		pipelineInfo.pMultisampleState = &multisampling;
 		pipelineInfo.pDepthStencilState = &depthStencil;
 		pipelineInfo.pColorBlendState = &colorBlending;
-		pipelineInfo.layout = pipelineLayout;
+		pipelineInfo.layout = pipeline.pipelineLayout;
 		pipelineInfo.renderPass = renderPass;
 		pipelineInfo.subpass = 0;
 		pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
@@ -767,7 +767,7 @@ namespace Rbk {
 
 		VkPipeline graphicsPipeline;
 
-		VkResult result = vkCreateGraphicsPipelines(m_Device, pipelineCache, 1, &pipelineInfo, nullptr, &graphicsPipeline);
+		VkResult result = vkCreateGraphicsPipelines(m_Device, pipeline.pipelineCache, 1, &pipelineInfo, nullptr, &graphicsPipeline);
 		
 		if (result != VK_SUCCESS) {
 			m_Messages.emplace_back("failed to create graphics pipeline!");
@@ -1062,13 +1062,7 @@ namespace Rbk {
 		return descriptorPool;
 	}
 
-	VkDescriptorSet VulkanRenderer::CreateDescriptorSets(
-		VkDescriptorPool descriptorPool, 
-		VkDescriptorSetLayout descriptorSetLayout, 
-		std::pair<VkBuffer, VkDeviceMemory> uniformBuffer,
-		VkImageView textureImageView,
-		VkSampler textureSampler
-	)
+	VkDescriptorSet VulkanRenderer::CreateDescriptorSets(VkDescriptorPool descriptorPool, std::vector<VkImage> swapChainImages, std::vector<VkDescriptorSetLayout> descriptorSetLayouts)
 	{
 		VkDescriptorSet descriptorSet;
 
@@ -1076,10 +1070,11 @@ namespace Rbk {
 		allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
 		allocInfo.descriptorPool = descriptorPool;
 		allocInfo.descriptorSetCount = 1;
-		allocInfo.pSetLayouts = &descriptorSetLayout;
+		allocInfo.pSetLayouts = descriptorSetLayouts.data();
 
-		if (vkAllocateDescriptorSets(m_Device, &allocInfo, &descriptorSet) != VK_SUCCESS)
-		{
+		VkResult result = vkAllocateDescriptorSets(m_Device, &allocInfo, &descriptorSet);
+
+		if (result != VK_SUCCESS) {
 			throw std::runtime_error("failed to allocate descriptor sets");
 		}
 
@@ -1227,7 +1222,7 @@ namespace Rbk {
 		vkResetCommandPool(m_Device, commandPool, 0);
 	}
 
-	void VulkanRenderer::Draw(VkCommandBuffer commandBuffer, VulkanMesh vMesh, VkPipelineLayout pipelineLayout)
+	void VulkanRenderer::Draw(VkCommandBuffer commandBuffer, VulkanMesh vMesh, VulkanPipeline pipeline)
 	{	
 		VkBuffer vertexBuffers[] = { vMesh.meshVBuffer.first };
 		VkDeviceSize offsets[] = { 0 };
@@ -1235,51 +1230,52 @@ namespace Rbk {
 		vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
 		vkCmdBindIndexBuffer(commandBuffer, vMesh.meshIBuffer.first, 0, VK_INDEX_TYPE_UINT32);
 		
-	
+		std::array<VkWriteDescriptorSet, 2> descriptorWrites{};
+		VkDescriptorBufferInfo bufferInfo{};
+		bufferInfo.buffer = vMesh.uniformBuffer.first;
+		bufferInfo.offset = 0;
+		bufferInfo.range = sizeof(UniformBufferObject);
+
+		std::vector< VkDescriptorImageInfo>imageInfos;
 		for (int i = 0; i < vMesh.count; i++) {
-
-			std::array<VkWriteDescriptorSet, 2> descriptorWrites{};
-			VkDescriptorBufferInfo bufferInfo{};
-			bufferInfo.buffer = vMesh.uniformBuffers[i].first;
-			bufferInfo.offset = 0;
-			bufferInfo.range = sizeof(UniformBufferObject);
-
 			VkDescriptorImageInfo imageInfo{};
 			imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 			imageInfo.imageView = vMesh.textureImageViews[i];
 			imageInfo.sampler = vMesh.samplers[i];
+			imageInfos.emplace_back(imageInfo);
+		}
 
-			descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-			descriptorWrites[0].dstSet = vMesh.descriptorSets[i];
-			descriptorWrites[0].dstBinding = 0;
-			descriptorWrites[0].dstArrayElement = 0;
-			descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-			descriptorWrites[0].descriptorCount = 1;
-			descriptorWrites[0].pBufferInfo = &bufferInfo;
+		descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+		descriptorWrites[0].dstSet = pipeline.descriptorSets[0];
+		descriptorWrites[0].dstBinding = 0;
+		descriptorWrites[0].dstArrayElement = 0;
+		descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+		descriptorWrites[0].descriptorCount = 1;
+		descriptorWrites[0].pBufferInfo = &bufferInfo;
 
-			descriptorWrites[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-			descriptorWrites[1].dstSet = vMesh.descriptorSets[i];
-			descriptorWrites[1].dstBinding = 1;
-			descriptorWrites[1].dstArrayElement = 0;
-			descriptorWrites[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-			descriptorWrites[1].descriptorCount = 1;
-			descriptorWrites[1].pImageInfo = &imageInfo;
+		descriptorWrites[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+		descriptorWrites[1].dstSet = pipeline.descriptorSets[0];
+		descriptorWrites[1].dstBinding = 1;
+		descriptorWrites[1].dstArrayElement = 0;
+		descriptorWrites[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+		descriptorWrites[1].descriptorCount = 1;
+		descriptorWrites[1].pImageInfo = imageInfos.data();
 	
-			vkUpdateDescriptorSets(m_Device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
+		vkUpdateDescriptorSets(m_Device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
 
-			vkCmdBindDescriptorSets(
-				commandBuffer, 
-				VK_PIPELINE_BIND_POINT_GRAPHICS, 
-				pipelineLayout, 
-				0, 
-				1,
-				&vMesh.descriptorSets[i],
-				0, 
-				nullptr
-			);
+		vkCmdBindDescriptorSets(
+			commandBuffer, 
+			VK_PIPELINE_BIND_POINT_GRAPHICS, 
+			pipeline.pipelineLayout,
+			0, 
+			1,
+			&pipeline.descriptorSets[0],
+			0, 
+			nullptr
+		);
 
-			uint32_t offsetIndex = 0;
-
+		uint32_t offsetIndex = 0;
+		for (int i = 0; i < vMesh.count; i++) {
 			offsetIndex = (i == 0) ? 0 : vMesh.vertexOffset[i - 1];
 			vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(vMesh.indexCount[i]), 1, 0, offsetIndex, 0);
 		}
@@ -1384,9 +1380,9 @@ namespace Rbk {
 	{
 		for (size_t i = 0; i < vMesh.count; i++) {
 			void* data; 
-			vkMapMemory(m_Device, vMesh.uniformBuffers[i].second, 0, sizeof(vMesh.ubos[i]), 0, &data);
+			vkMapMemory(m_Device, vMesh.uniformBuffer.second, 0, sizeof(vMesh.ubos[i]), 0, &data);
 			memcpy(data, &vMesh.ubos[i], sizeof(vMesh.ubos[i]));
-			vkUnmapMemory(m_Device, vMesh.uniformBuffers[i].second);
+			vkUnmapMemory(m_Device, vMesh.uniformBuffer.second);
 		}
 	}
 
