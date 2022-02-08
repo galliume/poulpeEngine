@@ -17,7 +17,7 @@ namespace Rbk {
 		std::pair<VkBuffer, VkDeviceMemory> meshVBuffer = { nullptr, nullptr };
 		std::pair<VkBuffer, VkDeviceMemory> meshIBuffer = { nullptr, nullptr };
 		std::vector<UniformBufferObject> ubos;
-		std::pair<VkBuffer, VkDeviceMemory>uniformBuffer;
+		std::vector<std::pair<VkBuffer, VkDeviceMemory>>uniformBuffers;
 		std::vector<VkImage> textureImages;
 		std::vector<VkDeviceMemory> textureImageMemorys;
 		std::vector<VkImageView> textureImageViews;

@@ -95,8 +95,10 @@ namespace Rbk
 	{
 		if (m_IsPrepared) return;
 
-		std::pair<VkBuffer, VkDeviceMemory> uniformBuffer = m_Renderer->CreateUniformBuffers();
-		m_Meshes.uniformBuffer = uniformBuffer;
+		for (int i = 0; i < m_Meshes.count; i++) {
+			std::pair<VkBuffer, VkDeviceMemory> uniformBuffer = m_Renderer->CreateUniformBuffers();
+			m_Meshes.uniformBuffers.emplace_back(uniformBuffer);
+		}
 
 		VkImage depthImage;
 		VkDeviceMemory depthImageMemory;
@@ -196,8 +198,10 @@ namespace Rbk
 		m_Renderer->DestroyDeviceMemory(m_Meshes.depthImageMemory);
 		vkDestroyImage(m_Renderer->GetDevice(), m_Meshes.depthImage, nullptr);
 
-		m_Renderer->DestroyBuffer(m_Meshes.uniformBuffer.first);
-		m_Renderer->DestroyDeviceMemory(m_Meshes.uniformBuffer.second);
+		for (int i = 0; i < m_Meshes.count; i++) {
+			m_Renderer->DestroyBuffer(m_Meshes.uniformBuffers[i].first);
+			m_Renderer->DestroyDeviceMemory(m_Meshes.uniformBuffers[i].second);
+		}
 
 		//vkDestroyDescriptorSetLayout(m_Renderer->GetDevice(), m_DescriptorSetLayout, nullptr);
 
