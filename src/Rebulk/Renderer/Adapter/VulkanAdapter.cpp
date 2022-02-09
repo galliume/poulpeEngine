@@ -197,7 +197,7 @@ namespace Rbk
 		m_Renderer->DestroyDeviceMemory(m_Meshes.depthImageMemory);
 		vkDestroyImage(m_Renderer->GetDevice(), m_Meshes.depthImage, nullptr);
 
-		for (int i = 0; i < m_Meshes.count; i++) {
+		for (int i = 0; i < m_Meshes.uniformBuffers.size(); i++) {
 			m_Renderer->DestroyBuffer(m_Meshes.uniformBuffers[i].first);
 			m_Renderer->DestroyDeviceMemory(m_Meshes.uniformBuffers[i].second);
 		}
