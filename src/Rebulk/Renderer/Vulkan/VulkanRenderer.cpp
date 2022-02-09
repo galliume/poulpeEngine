@@ -1240,7 +1240,18 @@ namespace Rbk {
 		std::vector<VkDescriptorImageInfo>imageInfos;
 		std::vector<VkDescriptorBufferInfo> bufferInfos;
 
+		int index = 0;
 		for (int i = 0; i < vMesh.count; i++) {
+
+			static auto startTime = std::chrono::high_resolution_clock::now();
+
+			auto currentTime = std::chrono::high_resolution_clock::now();
+			float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
+			float rand = std::rand() % 10;
+			std::cout << "mesh " << i << " pos " << rand << std::endl;
+			vMesh.mesh.ubos[i].model *= glm::scale(glm::mat4(1.0f), glm::vec3(0.6f, 0.6f, 0.6f));
+			vMesh.mesh.ubos[i].model *= glm::translate(glm::mat4(1.0f), glm::vec3(std::sin(time)));
+			vMesh.mesh.ubos[i].model *= glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
 
 			VkDescriptorBufferInfo bufferInfo{};
 			bufferInfo.buffer = vMesh.uniformBuffers[0].first;
@@ -1254,7 +1265,7 @@ namespace Rbk {
 			imageInfo.sampler = vMesh.samplers[i];
 			imageInfos.emplace_back(imageInfo);
 
-			UpdateUniformBuffer(vMesh.uniformBuffers[0], vMesh.uniformBufferObject[0]);
+			UpdateUniformBuffer(vMesh.uniformBuffers[0], vMesh.mesh.ubos[i]);
 		}
 
 		descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;

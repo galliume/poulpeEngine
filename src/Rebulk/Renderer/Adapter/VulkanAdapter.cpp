@@ -42,10 +42,11 @@ namespace Rbk
 		}
 	}
 
-	void VulkanAdapter::AddMesh(Rbk::Mesh mesh)
+	void VulkanAdapter::AddMesh(Rbk::Mesh mesh, UniformBufferObject ubo)
 	{			
 		m_Meshes.mesh.vertices.insert(m_Meshes.mesh.vertices.end(), mesh.vertices.begin(), mesh.vertices.end());
 		m_Meshes.mesh.indices.insert(m_Meshes.mesh.indices.end(), mesh.indices.begin(), mesh.indices.end());
+		m_Meshes.mesh.ubos.emplace_back(ubo);
 		m_Meshes.indexCount.emplace_back(mesh.indices.size());
 
 		uint32_t vertexOffset = (m_Meshes.vertexOffset.size() > 0) ? m_Meshes.vertexOffset.back() + mesh.vertices.size() : mesh.vertices.size();
@@ -79,18 +80,12 @@ namespace Rbk
 		m_Shaders.shaders.emplace(name, module);
 	}
 
-	void VulkanAdapter::AddUniformObject(UniformBufferObject ubo)
-	{
-		m_Meshes.uniformBufferObject.emplace_back(ubo);
-	}
-
 	void VulkanAdapter::Clear()
 	{
 		m_Meshes.mesh.vertices.clear();
 		m_Meshes.mesh.indices.clear();
 		m_Meshes.indexCount.clear();
 		m_Meshes.vertexOffset.clear();
-		m_Meshes.uniformBufferObject.clear();
 	}
 
 	void VulkanAdapter::PrepareDraw()
@@ -202,8 +197,6 @@ namespace Rbk
 			m_Renderer->DestroyDeviceMemory(m_Meshes.uniformBuffers[i].second);
 		}
 
-		//vkDestroyDescriptorSetLayout(m_Renderer->GetDevice(), m_DescriptorSetLayout, nullptr);
-
 		for (auto sampler : m_Meshes.samplers) {
 			vkDestroySampler(m_Renderer->GetDevice(), sampler, nullptr);
 		}
@@ -244,8 +237,6 @@ namespace Rbk
 		for (auto& deviceMemory : m_UniformBuffers.second) {
 			m_Renderer->DestroyDeviceMemory(deviceMemory);
 		}
-
-		//m_Renderer->DestroyPipelineData(m_PipelineLayout, m_DescriptorPool, m_DescriptorSetLayout);
 		m_Renderer->DestroyRenderPass(m_RenderPass, m_CommandPool, m_CommandBuffers);
 		m_Renderer->Destroy();
 	}

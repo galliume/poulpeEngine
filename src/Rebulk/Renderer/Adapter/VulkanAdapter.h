@@ -21,9 +21,8 @@ namespace Rbk
 
 		virtual void Init() override;
 		virtual void AddShader(std::string name, std::vector<char> vertexShaderCode, std::vector<char> fragShaderCode) override;
-		virtual void AddMesh(Rbk::Mesh mesh) override;
+		virtual void AddMesh(Rbk::Mesh mesh, UniformBufferObject ubo) override;
 		virtual void AddTexture(Rbk::Mesh& mesh, const char* texturePath) override;
-		virtual void AddUniformObject(UniformBufferObject ubo) override;
 		virtual void PrepareDraw() override;
 		virtual void Draw() override;
 		virtual void Destroy() override;

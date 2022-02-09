@@ -41,18 +41,21 @@ namespace Rbk
 
 		UniformBufferObject ubo2{};
 		ubo2.model = glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 1.0f);
-		ubo2.model = glm::scale(ubo2.model, glm::vec3(0.3f, 0.3f, 0.3f));
+		ubo2.model = glm::scale(ubo2.model, glm::vec3(0.1f, 0.1f, 0.1f));
 		ubo2.view = glm::lookAt(glm::vec3(0.0f, -0.5f, 3.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
 		ubo2.proj = glm::perspective(glm::radians(45.0f), width / (float)height, 0.1f, 10.0f);
 		ubo2.proj[1][1] *= -1;
 
 		UniformBufferObject ubo3{};
-		ubo3.model = glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f);
-		ubo3.view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+		ubo3.model = glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 1.0f);
+		ubo3.model = glm::scale(ubo3.model, glm::vec3(0.5f, 0.5f, 0.5f));
+		ubo3.model *= glm::translate(glm::mat4(1.0f), glm::vec3(5.0f, 10.0f, -3.0f));
+		ubo3.view = glm::lookAt(glm::vec3(0.0f, -0.5f, 3.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
 		ubo3.proj = glm::perspective(glm::radians(45.0f), width / (float)height, 0.1f, 10.0f);
 		ubo3.proj[1][1] *= -1;
 
 		//AddMesh("mesh/viking/viking_room.obj", "mesh/viking/viking_room.png", ubo3);
+		AddMesh("mesh/moon/moon.obj", "mesh/moon/diffuse.jpg", ubo3);
 		AddMesh("mesh/moon/moon.obj", "mesh/moon/diffuse.jpg", ubo2);
 		//AddMesh("mesh/kitty/kitty.obj", "mesh/kitty/diffuse.jpg", ubo3);
 		//AddMesh("mesh/moon/moon.obj", "mesh/moon/diffuse.jpg", ubo2);
@@ -64,12 +67,8 @@ namespace Rbk
 	{
 		Mesh mesh;
 		Rbk::TinyObjLoader::LoadMesh(mesh, path);
-
-		for (int i = 0; i < 100; i++) {
-			m_Renderer->AddTexture(mesh, texturePath);
-			m_Renderer->AddUniformObject(ubo);
-			m_Renderer->AddMesh(mesh);
-		}
+		m_Renderer->AddTexture(mesh, texturePath);
+		m_Renderer->AddMesh(mesh, ubo);
 	}
 
 	void RenderManager::AddShader(std::string name, std::vector<char> vertShaderCode, std::vector<char> fragShaderCode)
