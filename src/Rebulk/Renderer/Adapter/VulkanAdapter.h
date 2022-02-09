@@ -20,7 +20,7 @@ namespace Rbk
 		~VulkanAdapter();
 
 		virtual void Init() override;
-		virtual void AddShader(std::vector<char> vertexShaderCode, std::vector<char> fragShaderCode) override;
+		virtual void AddShader(std::string name, std::vector<char> vertexShaderCode, std::vector<char> fragShaderCode) override;
 		virtual void AddMesh(Rbk::Mesh mesh) override;
 		virtual void AddTexture(Rbk::Mesh& mesh, const char* texturePath) override;
 		virtual void AddUniformObject(UniformBufferObject ubo) override;
