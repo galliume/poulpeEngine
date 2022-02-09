@@ -14,7 +14,7 @@ namespace Rbk
 
 		void Init();
 		void AddMesh(const char* path, const char* texturePath, UniformBufferObject ubo);
-		void AddShader(std::vector<char> vertShaderCode, std::vector<char> fragShaderCode);
+		void AddShader(std::string name, std::vector<char> vertShaderCode, std::vector<char> fragShaderCode);
 		void PrepareDraw();
 		void Draw();
 

@@ -601,6 +601,7 @@ namespace Rbk {
 		layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
 		layoutInfo.bindingCount = static_cast<uint32_t>(bindings.size());
 		layoutInfo.pBindings = bindings.data();
+		layoutInfo.flags = VK_DESCRIPTOR_SET_LAYOUT_CREATE_UPDATE_AFTER_BIND_POOL_BIT;
 
 		if (vkCreateDescriptorSetLayout(m_Device, &layoutInfo, nullptr, &descriptorSetLayout) != VK_SUCCESS)
 		{
@@ -614,10 +615,15 @@ namespace Rbk {
 	{
 		VkPipelineLayout graphicsPipelineLayout = VK_NULL_HANDLE;
 
+		VkPushConstantRange pushConstantRange = {};
+		pushConstantRange.offset = 0;
+		pushConstantRange.size = sizeof(int);
+		pushConstantRange.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
 		VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
 		pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-		pipelineLayoutInfo.pushConstantRangeCount = 0;
-		pipelineLayoutInfo.pPushConstantRanges = nullptr;
+		pipelineLayoutInfo.pushConstantRangeCount = 1;
+		pipelineLayoutInfo.pPushConstantRanges = &pushConstantRange;
 		pipelineLayoutInfo.setLayoutCount = descriptorSets.size();
 		pipelineLayoutInfo.pSetLayouts = descriptorSetLayouts.data();
 
@@ -637,19 +643,19 @@ namespace Rbk {
 	{
 		std::vector<VkPipelineShaderStageCreateInfo>shaderStageInfos;
 
-		for (auto& [vertex, frag]: shaders.shaders) {
+		for (auto& shader : shaders.shaders) {
 			VkPipelineShaderStageCreateInfo vertShaderStageInfo{};
 			vertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
 			vertShaderStageInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
-			vertShaderStageInfo.module = vertex;
-			vertShaderStageInfo.pName = "main";
+			vertShaderStageInfo.module = shader.second[0];
+			vertShaderStageInfo.pName = shader.first.c_str();
 			shaderStageInfos.emplace_back(vertShaderStageInfo);
 		
 			VkPipelineShaderStageCreateInfo fragShaderStageInfo{};
 			fragShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
 			fragShaderStageInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
-			fragShaderStageInfo.module = frag;
-			fragShaderStageInfo.pName = "main";
+			fragShaderStageInfo.module = shader.second[1];
+			fragShaderStageInfo.pName = shader.first.c_str();
 			shaderStageInfos.emplace_back(fragShaderStageInfo);
 		}
 
@@ -1041,18 +1047,18 @@ namespace Rbk {
 	VkDescriptorPool VulkanRenderer::CreateDescriptorPool(std::vector<VkImage> swapChainImages)
 	{
 		VkDescriptorPool descriptorPool;
-
 		std::array<VkDescriptorPoolSize, 2> poolSizes{};
 		poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-		poolSizes[0].descriptorCount = static_cast<uint32_t>(swapChainImages.size());
+		poolSizes[0].descriptorCount = swapChainImages.size();
 		poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-		poolSizes[1].descriptorCount = static_cast<uint32_t>(swapChainImages.size());
+		poolSizes[1].descriptorCount = swapChainImages.size();
 
 		VkDescriptorPoolCreateInfo poolInfo{};
 		poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-		poolInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
+		poolInfo.poolSizeCount = poolSizes.size();
 		poolInfo.pPoolSizes = poolSizes.data();
-		poolInfo.maxSets = static_cast<uint32_t>(swapChainImages.size());
+		poolInfo.maxSets = swapChainImages.size();
+		poolInfo.flags = VK_DESCRIPTOR_POOL_CREATE_UPDATE_AFTER_BIND_BIT;
 
 		if (vkCreateDescriptorPool(m_Device, &poolInfo, nullptr, &descriptorPool) != VK_SUCCESS)
 		{
@@ -1237,7 +1243,7 @@ namespace Rbk {
 		for (int i = 0; i < vMesh.count; i++) {
 
 			VkDescriptorBufferInfo bufferInfo{};
-			bufferInfo.buffer = vMesh.uniformBuffers[i].first;
+			bufferInfo.buffer = vMesh.uniformBuffers[0].first;
 			bufferInfo.offset = 0;
 			bufferInfo.range = sizeof(UniformBufferObject);
 			bufferInfos.emplace_back(bufferInfo);
@@ -1247,6 +1253,8 @@ namespace Rbk {
 			imageInfo.imageView = vMesh.textureImageViews[i];
 			imageInfo.sampler = vMesh.samplers[i];
 			imageInfos.emplace_back(imageInfo);
+
+			UpdateUniformBuffer(vMesh.uniformBuffers[0], vMesh.uniformBufferObject[0]);
 		}
 
 		descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
@@ -1254,7 +1262,7 @@ namespace Rbk {
 		descriptorWrites[0].dstBinding = 0;
 		descriptorWrites[0].dstArrayElement = 0;
 		descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-		descriptorWrites[0].descriptorCount = 1;
+		descriptorWrites[0].descriptorCount = pipeline.descriptorSets.size();
 		descriptorWrites[0].pBufferInfo = bufferInfos.data();
 
 		descriptorWrites[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
@@ -1262,14 +1270,14 @@ namespace Rbk {
 		descriptorWrites[1].dstBinding = 1;
 		descriptorWrites[1].dstArrayElement = 0;
 		descriptorWrites[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-		descriptorWrites[1].descriptorCount = 1;
+		descriptorWrites[1].descriptorCount = pipeline.descriptorSets.size();
 		descriptorWrites[1].pImageInfo = imageInfos.data();
-	
+		
 		vkUpdateDescriptorSets(m_Device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
-
+		
 		vkCmdBindDescriptorSets(
 			commandBuffer, 
-			VK_PIPELINE_BIND_POINT_GRAPHICS, 
+			VK_PIPELINE_BIND_POINT_GRAPHICS,
 			pipeline.pipelineLayout,
 			0, 
 			pipeline.descriptorSets.size(),
@@ -1280,6 +1288,8 @@ namespace Rbk {
 
 		uint32_t offsetIndex = 0;
 		for (int i = 0; i < vMesh.count; i++) {
+			vkCmdPushConstants(commandBuffer, pipeline.pipelineLayout, VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(int), &i);
+
 			offsetIndex = (i == 0) ? 0 : vMesh.vertexOffset[i - 1];
 			vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(vMesh.indexCount[i]), 1, 0, offsetIndex, 0);
 		}
@@ -1380,14 +1390,12 @@ namespace Rbk {
 		return uniformBuffers;
 	}
 
-	void VulkanRenderer::UpdateUniformBuffer(VulkanMesh vMesh)
+	void VulkanRenderer::UpdateUniformBuffer(std::pair<VkBuffer, VkDeviceMemory>uniformBuffer, UniformBufferObject uniformBufferObject)
 	{
-		for (size_t i = 0; i < vMesh.count; i++) {
-			void* data; 
-			vkMapMemory(m_Device, vMesh.uniformBuffers[i].second, 0, sizeof(vMesh.ubos[i]), 0, &data);
-			memcpy(data, &vMesh.ubos[i], sizeof(vMesh.ubos[i]));
-			vkUnmapMemory(m_Device, vMesh.uniformBuffers[i].second);
-		}
+		void* data; 
+		vkMapMemory(m_Device, uniformBuffer.second, 0, sizeof(uniformBufferObject), 0, &data);
+		memcpy(data, &uniformBufferObject, sizeof(uniformBufferObject));
+		vkUnmapMemory(m_Device, uniformBuffer.second);
 	}
 
 	void VulkanRenderer::CopyBuffer(VkCommandPool commandPool, VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size)
