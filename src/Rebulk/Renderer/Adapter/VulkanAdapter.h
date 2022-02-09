@@ -20,7 +20,7 @@ namespace Rbk
 		~VulkanAdapter();
 
 		virtual void Init() override;
-		virtual void AddShader(std::vector<char> vertexShaderCode, std::vector<char> fragShaderCode) override;
+		virtual void AddShader(std::string name, std::vector<char> vertexShaderCode, std::vector<char> fragShaderCode) override;
 		virtual void AddMesh(Rbk::Mesh mesh) override;
 		virtual void AddTexture(Rbk::Mesh& mesh, const char* texturePath) override;
 		virtual void AddUniformObject(UniformBufferObject ubo) override;
@@ -37,7 +37,7 @@ namespace Rbk
 		VImGuiInfo GetVImGuiInfo();
 
 	private:
-		void Draw(VulkanShader vShader, VulkanMesh vMesh);
+		void Draw(VulkanShaders vShader, VulkanMesh vMesh);
 
 	private:
 		VulkanRenderer* m_Renderer = nullptr;
@@ -49,15 +49,15 @@ namespace Rbk
 		std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>> m_Semaphores = {};
 		VkCommandPool m_CommandPool = nullptr;
 		std::vector<VkCommandBuffer> m_CommandBuffers = {};
-		VkPipeline m_Pipeline = nullptr;
 		uint32_t m_ImageIndex = 0;
 		std::pair<std::vector<VkBuffer>, std::vector<VkDeviceMemory>> m_UniformBuffers = {};
-		std::vector<VkDescriptorSet> m_DescriptorSets = {};
+		VkDescriptorSet m_DescriptorSet = nullptr;
+		VkDescriptorSetLayout m_DescriptorSetLayout = nullptr;
 		VkPipelineLayout m_PipelineLayout = nullptr;
 		VkDescriptorPool m_DescriptorPool = nullptr;
-		VkDescriptorSetLayout m_DescriptorSetLayout = nullptr;
-		std::vector<VulkanShader>m_Shaders;
+		VulkanShaders m_Shaders;
 		VulkanMesh m_Meshes;
+		std::vector<VulkanPipeline>m_Pipelines;
 		bool m_IsPrepared = false;
 	};
 }
