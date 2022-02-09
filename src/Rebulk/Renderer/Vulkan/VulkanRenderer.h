@@ -16,7 +16,6 @@ namespace Rbk {
 		std::vector<uint32_t>vertexOffset = {};
 		std::pair<VkBuffer, VkDeviceMemory> meshVBuffer = { nullptr, nullptr };
 		std::pair<VkBuffer, VkDeviceMemory> meshIBuffer = { nullptr, nullptr };
-		std::vector<UniformBufferObject> uniformBufferObject;
 		std::vector<std::pair<VkBuffer, VkDeviceMemory>>uniformBuffers;
 		std::vector<VkImage> textureImages;
 		std::vector<VkDeviceMemory> textureImageMemorys;
