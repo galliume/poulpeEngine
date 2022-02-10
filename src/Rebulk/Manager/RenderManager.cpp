@@ -60,7 +60,7 @@ namespace Rbk
 		//AddMesh("mesh/kitty/kitty.obj", "mesh/kitty/diffuse.jpg", ubo3);
 		//AddMesh("mesh/moon/moon.obj", "mesh/moon/diffuse.jpg", ubo2);
 		//AddMesh("mesh/moon/moon.obj", "mesh/moon/diffuse.jpg", ubo2);
-		//AddMesh("mesh/backpack/backpack.obj", "mesh/backpack/diffuse.png", ubo2);
+		AddMesh("mesh/backpack/backpack.obj", "mesh/backpack/diffuse.png", ubo2);
 	}
 
 	void RenderManager::AddMesh(const char* path, const char* texturePath, UniformBufferObject ubo)
