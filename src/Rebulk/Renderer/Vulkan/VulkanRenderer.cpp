@@ -578,20 +578,20 @@ namespace Rbk {
 		return swapChainImageView;
 	}
 
-	VkDescriptorSetLayout VulkanRenderer::CreateDescriptorSetLayout()
+	VkDescriptorSetLayout VulkanRenderer::CreateDescriptorSetLayout(uint32_t meshCount)
 	{
 		VkDescriptorSetLayout descriptorSetLayout;
 
 		VkDescriptorSetLayoutBinding uboLayoutBinding{};
 		uboLayoutBinding.binding = 0;
-		uboLayoutBinding.descriptorCount = 1;
+		uboLayoutBinding.descriptorCount = meshCount;
 		uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
 		uboLayoutBinding.pImmutableSamplers = nullptr;
 		uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
 
 		VkDescriptorSetLayoutBinding samplerLayoutBinding{};
 		samplerLayoutBinding.binding = 1;
-		samplerLayoutBinding.descriptorCount = 2;
+		samplerLayoutBinding.descriptorCount = meshCount;
 		samplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
 		samplerLayoutBinding.pImmutableSamplers = nullptr;
 		samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
@@ -618,7 +618,7 @@ namespace Rbk {
 		VkPushConstantRange pushConstantRange = {};
 		pushConstantRange.offset = 0;
 		pushConstantRange.size = sizeof(int);
-		pushConstantRange.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+		pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
 
 		VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
 		pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
@@ -1249,15 +1249,13 @@ namespace Rbk {
 
 			auto currentTime = std::chrono::high_resolution_clock::now();
 			float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
-			float rand = std::rand() % 10;
+			float rand = std::rand() % 1;
 
-			if (i == 0) {
-				vMesh.mesh.ubos[i].model *= glm::translate(glm::mat4(1.0f), glm::vec3(std::sin(time)));
-				vMesh.mesh.ubos[i].model *= glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-			}
+			vMesh.mesh.ubos[i].model *= glm::translate(glm::mat4(1.0f), glm::vec3(std::sin(time)));
+			vMesh.mesh.ubos[i].model *= glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
 			
 			VkDescriptorBufferInfo bufferInfo{};
-			bufferInfo.buffer = vMesh.uniformBuffers[0].first;
+			bufferInfo.buffer = vMesh.uniformBuffers[i].first;
 			bufferInfo.offset = 0;
 			bufferInfo.range = sizeof(UniformBufferObject);
 			bufferInfos.emplace_back(bufferInfo);
@@ -1268,7 +1266,7 @@ namespace Rbk {
 			imageInfo.sampler = vMesh.samplers[i];
 			imageInfos.emplace_back(imageInfo);
 
-			UpdateUniformBuffer(vMesh.uniformBuffers[0], vMesh.mesh.ubos[i]);
+			UpdateUniformBuffer(vMesh.uniformBuffers[i], vMesh.mesh.ubos[i]);
 		}
 
 		descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
@@ -1276,7 +1274,7 @@ namespace Rbk {
 		descriptorWrites[0].dstBinding = 0;
 		descriptorWrites[0].dstArrayElement = 0;
 		descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-		descriptorWrites[0].descriptorCount = 1;
+		descriptorWrites[0].descriptorCount = vMesh.count;
 		descriptorWrites[0].pBufferInfo = bufferInfos.data();
 
 		descriptorWrites[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
@@ -1284,7 +1282,7 @@ namespace Rbk {
 		descriptorWrites[1].dstBinding = 1;
 		descriptorWrites[1].dstArrayElement = 0;
 		descriptorWrites[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-		descriptorWrites[1].descriptorCount = 2;
+		descriptorWrites[1].descriptorCount = vMesh.count;
 		descriptorWrites[1].pImageInfo = imageInfos.data();
 	
 		vkUpdateDescriptorSets(m_Device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
@@ -1301,7 +1299,7 @@ namespace Rbk {
 		);
 
 		for (int i = 0; i < vMesh.count; i++) {
-			vkCmdPushConstants(commandBuffer, pipeline.pipelineLayout, VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(int), &i);
+			vkCmdPushConstants(commandBuffer, pipeline.pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(int), &i);
 
 			offsetIndex = (i == 0) ? 0 : vMesh.vertexOffset[i - 1];
 			vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(vMesh.indexCount[i]), 1, 0, offsetIndex, 0);

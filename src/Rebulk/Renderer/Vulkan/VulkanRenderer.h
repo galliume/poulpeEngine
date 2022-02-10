@@ -24,7 +24,7 @@ namespace Rbk {
 		VkDeviceMemory depthImageMemory;
 		VkImageView depthImageView;
 		std::vector<VkSampler> samplers;
-		uint32_t count = 0;
+		int32_t count = 0;
 	};
 
 	struct VulkanPipeline
@@ -64,7 +64,7 @@ namespace Rbk {
 		VkRenderPass CreateRenderPass();
 		VkShaderModule CreateShaderModule(const std::vector<char>& code);
 		VkDescriptorPool CreateDescriptorPool(std::vector<VkImage> swapChainImages);
-		VkDescriptorSetLayout CreateDescriptorSetLayout();
+		VkDescriptorSetLayout CreateDescriptorSetLayout(uint32_t meshCount);
 		VkDescriptorSet CreateDescriptorSets(VkDescriptorPool descriptorPool, std::vector<VkImage> swapChainImages, std::vector<VkDescriptorSetLayout> descriptorSetLayouts);
 		VkPipelineLayout CreatePipelineLayout(std::vector<VkDescriptorSet> descriptorSets, std::vector<VkDescriptorSetLayout> descriptorSetLayouts);
 		VkPipeline CreateGraphicsPipeline(VkRenderPass renderPass, VulkanPipeline pipeline, VulkanShaders shaders);

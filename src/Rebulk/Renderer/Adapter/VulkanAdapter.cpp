@@ -92,8 +92,10 @@ namespace Rbk
 	{
 		if (m_IsPrepared) return;
 
-		std::pair<VkBuffer, VkDeviceMemory> uniformBuffer = m_Renderer->CreateUniformBuffers(m_Meshes.count);
-		m_Meshes.uniformBuffers.emplace_back(uniformBuffer);
+		for (int i = 0; i < m_Meshes.count; i++) {
+			std::pair<VkBuffer, VkDeviceMemory> uniformBuffer = m_Renderer->CreateUniformBuffers(m_Meshes.count);
+			m_Meshes.uniformBuffers.emplace_back(uniformBuffer);
+		}
 
 		VkImage depthImage;
 		VkDeviceMemory depthImageMemory;
@@ -123,7 +125,7 @@ namespace Rbk
 			VulkanPipeline vPipeline;
 			vPipeline.pipelineCache = 0;
 			vPipeline.descriptorPool = m_Renderer->CreateDescriptorPool(m_SwapChainImages);			
-			vPipeline.descriptorSetLayouts.emplace_back(m_Renderer->CreateDescriptorSetLayout());
+			vPipeline.descriptorSetLayouts.emplace_back(m_Renderer->CreateDescriptorSetLayout(m_Meshes.count));
 			vPipeline.descriptorSets.emplace_back(m_Renderer->CreateDescriptorSets(vPipeline.descriptorPool, m_SwapChainImages, vPipeline.descriptorSetLayouts));		
 			vPipeline.pipelineLayout = m_Renderer->CreatePipelineLayout(vPipeline.descriptorSets, vPipeline.descriptorSetLayouts);			
 			vPipeline.graphicsPipeline = m_Renderer->CreateGraphicsPipeline(m_RenderPass, vPipeline, m_Shaders);
