@@ -54,9 +54,9 @@ namespace Rbk
 		ubo3.proj = glm::perspective(glm::radians(45.0f), width / (float)height, 0.1f, 10.0f);
 		ubo3.proj[1][1] *= -1;
 
+		//AddMesh("mesh/moon/moon.obj", "mesh/moon/diffuse.jpg", ubo3);
 		AddMesh("mesh/viking/viking_room.obj", "mesh/viking/viking_room.png", ubo);
 		AddMesh("mesh/moon/moon.obj", "mesh/moon/diffuse.jpg", ubo3);
-		AddMesh("mesh/moon/moon.obj", "mesh/moon/diffuse.jpg", ubo2);
 		//AddMesh("mesh/kitty/kitty.obj", "mesh/kitty/diffuse.jpg", ubo3);
 		//AddMesh("mesh/moon/moon.obj", "mesh/moon/diffuse.jpg", ubo2);
 		//AddMesh("mesh/moon/moon.obj", "mesh/moon/diffuse.jpg", ubo2);

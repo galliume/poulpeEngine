@@ -122,11 +122,9 @@ namespace Rbk
 		if (0 == m_Pipelines.size()) {
 			VulkanPipeline vPipeline;
 			vPipeline.pipelineCache = 0;
-			vPipeline.descriptorPool = m_Renderer->CreateDescriptorPool(m_SwapChainImages);
-			
+			vPipeline.descriptorPool = m_Renderer->CreateDescriptorPool(m_SwapChainImages);			
 			vPipeline.descriptorSetLayouts.emplace_back(m_Renderer->CreateDescriptorSetLayout());
-			vPipeline.descriptorSets.emplace_back(m_Renderer->CreateDescriptorSets(vPipeline.descriptorPool, m_SwapChainImages, vPipeline.descriptorSetLayouts));
-		
+			vPipeline.descriptorSets.emplace_back(m_Renderer->CreateDescriptorSets(vPipeline.descriptorPool, m_SwapChainImages, vPipeline.descriptorSetLayouts));		
 			vPipeline.pipelineLayout = m_Renderer->CreatePipelineLayout(vPipeline.descriptorSets, vPipeline.descriptorSetLayouts);			
 			vPipeline.graphicsPipeline = m_Renderer->CreateGraphicsPipeline(m_RenderPass, vPipeline, m_Shaders);
 
@@ -144,7 +142,7 @@ namespace Rbk
 
 		SouldResizeSwapChain();
 
-		for (size_t i = 0; i < m_CommandBuffers.size() - 1; i++) {
+		for (size_t i = 0; i < m_SwapChainImages.size(); i++) {
 
 			m_ImageIndex = m_Renderer->AcquireNextImageKHR(m_SwapChain, m_Semaphores);
 			m_Renderer->BeginCommandBuffer(m_CommandBuffers[m_ImageIndex]);
