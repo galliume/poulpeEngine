@@ -591,7 +591,7 @@ namespace Rbk {
 
 		VkDescriptorSetLayoutBinding samplerLayoutBinding{};
 		samplerLayoutBinding.binding = 1;
-		samplerLayoutBinding.descriptorCount = 1;
+		samplerLayoutBinding.descriptorCount = 2;
 		samplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
 		samplerLayoutBinding.pImmutableSamplers = nullptr;
 		samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
@@ -601,7 +601,7 @@ namespace Rbk {
 		layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
 		layoutInfo.bindingCount = static_cast<uint32_t>(bindings.size());
 		layoutInfo.pBindings = bindings.data();
-		layoutInfo.flags = VK_DESCRIPTOR_SET_LAYOUT_CREATE_UPDATE_AFTER_BIND_POOL_BIT;
+		//layoutInfo.flags = VK_DESCRIPTOR_SET_LAYOUT_CREATE_UPDATE_AFTER_BIND_POOL_BIT;
 
 		if (vkCreateDescriptorSetLayout(m_Device, &layoutInfo, nullptr, &descriptorSetLayout) != VK_SUCCESS)
 		{
@@ -624,7 +624,7 @@ namespace Rbk {
 		pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
 		pipelineLayoutInfo.pushConstantRangeCount = 1;
 		pipelineLayoutInfo.pPushConstantRanges = &pushConstantRange;
-		pipelineLayoutInfo.setLayoutCount = descriptorSetLayouts.size();
+		pipelineLayoutInfo.setLayoutCount = descriptorSets.size();
 		pipelineLayoutInfo.pSetLayouts = descriptorSetLayouts.data();
 
 		VkResult result = vkCreatePipelineLayout(m_Device, &pipelineLayoutInfo, nullptr, &graphicsPipelineLayout);
@@ -1058,7 +1058,7 @@ namespace Rbk {
 		poolInfo.poolSizeCount = poolSizes.size();
 		poolInfo.pPoolSizes = poolSizes.data();
 		poolInfo.maxSets = swapChainImages.size();
-		poolInfo.flags = VK_DESCRIPTOR_POOL_CREATE_UPDATE_AFTER_BIND_BIT;
+		//poolInfo.flags = VK_DESCRIPTOR_POOL_CREATE_UPDATE_AFTER_BIND_BIT;
 
 		if (vkCreateDescriptorPool(m_Device, &poolInfo, nullptr, &descriptorPool) != VK_SUCCESS)
 		{
@@ -1237,10 +1237,12 @@ namespace Rbk {
 		vkCmdBindIndexBuffer(commandBuffer, vMesh.meshIBuffer.first, 0, VK_INDEX_TYPE_UINT32);
 		
 		std::array<VkWriteDescriptorSet, 2> descriptorWrites{};
-		std::vector<VkDescriptorImageInfo>imageInfos;
+		std::vector<VkDescriptorImageInfo> imageInfos;
 		std::vector<VkDescriptorBufferInfo> bufferInfos;
 
 		int index = 0;
+		uint32_t offsetIndex = 0;
+
 		for (int i = 0; i < vMesh.count; i++) {
 
 			static auto startTime = std::chrono::high_resolution_clock::now();
@@ -1248,11 +1250,12 @@ namespace Rbk {
 			auto currentTime = std::chrono::high_resolution_clock::now();
 			float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
 			float rand = std::rand() % 10;
-			std::cout << "mesh " << i << " pos " << rand << std::endl;
-			
-	/*		vMesh.mesh.ubos[i].model *= glm::translate(glm::mat4(1.0f), glm::vec3(std::sin(time)));
-			vMesh.mesh.ubos[i].model *= glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));*/
 
+			if (i == 0) {
+				vMesh.mesh.ubos[i].model *= glm::translate(glm::mat4(1.0f), glm::vec3(std::sin(time)));
+				vMesh.mesh.ubos[i].model *= glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+			}
+			
 			VkDescriptorBufferInfo bufferInfo{};
 			bufferInfo.buffer = vMesh.uniformBuffers[0].first;
 			bufferInfo.offset = 0;
@@ -1267,12 +1270,13 @@ namespace Rbk {
 
 			UpdateUniformBuffer(vMesh.uniformBuffers[0], vMesh.mesh.ubos[i]);
 		}
+
 		descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
 		descriptorWrites[0].dstSet = pipeline.descriptorSets[0];
 		descriptorWrites[0].dstBinding = 0;
 		descriptorWrites[0].dstArrayElement = 0;
 		descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-		descriptorWrites[0].descriptorCount = pipeline.descriptorSets.size();
+		descriptorWrites[0].descriptorCount = 1;
 		descriptorWrites[0].pBufferInfo = bufferInfos.data();
 
 		descriptorWrites[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
@@ -1280,12 +1284,11 @@ namespace Rbk {
 		descriptorWrites[1].dstBinding = 1;
 		descriptorWrites[1].dstArrayElement = 0;
 		descriptorWrites[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-		descriptorWrites[1].descriptorCount = pipeline.descriptorSets.size();
+		descriptorWrites[1].descriptorCount = 2;
 		descriptorWrites[1].pImageInfo = imageInfos.data();
-		
+	
 		vkUpdateDescriptorSets(m_Device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
 
-		
 		vkCmdBindDescriptorSets(
 			commandBuffer, 
 			VK_PIPELINE_BIND_POINT_GRAPHICS,
@@ -1297,9 +1300,7 @@ namespace Rbk {
 			nullptr
 		);
 
-		uint32_t offsetIndex = 0;
 		for (int i = 0; i < vMesh.count; i++) {
-
 			vkCmdPushConstants(commandBuffer, pipeline.pipelineLayout, VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(int), &i);
 
 			offsetIndex = (i == 0) ? 0 : vMesh.vertexOffset[i - 1];
