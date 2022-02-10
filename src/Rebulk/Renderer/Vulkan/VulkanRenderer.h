@@ -16,7 +16,6 @@ namespace Rbk {
 		std::vector<uint32_t>vertexOffset = {};
 		std::pair<VkBuffer, VkDeviceMemory> meshVBuffer = { nullptr, nullptr };
 		std::pair<VkBuffer, VkDeviceMemory> meshIBuffer = { nullptr, nullptr };
-		std::vector<UniformBufferObject> uniformBufferObject;
 		std::vector<std::pair<VkBuffer, VkDeviceMemory>>uniformBuffers;
 		std::vector<VkImage> textureImages;
 		std::vector<VkDeviceMemory> textureImageMemorys;
@@ -25,7 +24,7 @@ namespace Rbk {
 		VkDeviceMemory depthImageMemory;
 		VkImageView depthImageView;
 		std::vector<VkSampler> samplers;
-		uint32_t count = 0;
+		int32_t count = 0;
 	};
 
 	struct VulkanPipeline
@@ -65,7 +64,7 @@ namespace Rbk {
 		VkRenderPass CreateRenderPass();
 		VkShaderModule CreateShaderModule(const std::vector<char>& code);
 		VkDescriptorPool CreateDescriptorPool(std::vector<VkImage> swapChainImages);
-		VkDescriptorSetLayout CreateDescriptorSetLayout();
+		VkDescriptorSetLayout CreateDescriptorSetLayout(uint32_t meshCount);
 		VkDescriptorSet CreateDescriptorSets(VkDescriptorPool descriptorPool, std::vector<VkImage> swapChainImages, std::vector<VkDescriptorSetLayout> descriptorSetLayouts);
 		VkPipelineLayout CreatePipelineLayout(std::vector<VkDescriptorSet> descriptorSets, std::vector<VkDescriptorSetLayout> descriptorSetLayouts);
 		VkPipeline CreateGraphicsPipeline(VkRenderPass renderPass, VulkanPipeline pipeline, VulkanShaders shaders);
@@ -81,7 +80,7 @@ namespace Rbk {
 		VkImageMemoryBarrier SetupImageMemoryBarrier(VkImage image, VkAccessFlags srcAccessMask, VkAccessFlags dstAccessMask, VkImageLayout oldLayout, VkImageLayout newLayout, VkImageAspectFlags aspectMask = VK_IMAGE_ASPECT_COLOR_BIT);
 		void CopyBuffer(VkCommandPool commandPool, VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
 		bool SouldResizeSwapChain(VkSwapchainKHR swapChain);
-		std::pair<VkBuffer, VkDeviceMemory> CreateUniformBuffers();
+		std::pair<VkBuffer, VkDeviceMemory> CreateUniformBuffers(uint32_t uniformBuffersCount);
 		void UpdateUniformBuffer(std::pair<VkBuffer, VkDeviceMemory>uniformBuffer, UniformBufferObject uniformBufferObject);
 		void CreateImage(uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image, VkDeviceMemory& imageMemory);
 		void CreateTextureImage(VkCommandBuffer commandBuffer, const char* path, VkImage& textureImage, VkDeviceMemory& textureImageMemory);
