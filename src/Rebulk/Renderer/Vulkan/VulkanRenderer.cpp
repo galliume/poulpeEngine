@@ -624,7 +624,7 @@ namespace Rbk {
 		pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
 		pipelineLayoutInfo.pushConstantRangeCount = 1;
 		pipelineLayoutInfo.pPushConstantRanges = &pushConstantRange;
-		pipelineLayoutInfo.setLayoutCount = descriptorSets.size();
+		pipelineLayoutInfo.setLayoutCount = descriptorSetLayouts.size();
 		pipelineLayoutInfo.pSetLayouts = descriptorSetLayouts.data();
 
 		VkResult result = vkCreatePipelineLayout(m_Device, &pipelineLayoutInfo, nullptr, &graphicsPipelineLayout);
@@ -1249,9 +1249,9 @@ namespace Rbk {
 			float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
 			float rand = std::rand() % 10;
 			std::cout << "mesh " << i << " pos " << rand << std::endl;
-			vMesh.mesh.ubos[i].model *= glm::scale(glm::mat4(1.0f), glm::vec3(0.6f, 0.6f, 0.6f));
-			vMesh.mesh.ubos[i].model *= glm::translate(glm::mat4(1.0f), glm::vec3(std::sin(time)));
-			vMesh.mesh.ubos[i].model *= glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+			
+	/*		vMesh.mesh.ubos[i].model *= glm::translate(glm::mat4(1.0f), glm::vec3(std::sin(time)));
+			vMesh.mesh.ubos[i].model *= glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));*/
 
 			VkDescriptorBufferInfo bufferInfo{};
 			bufferInfo.buffer = vMesh.uniformBuffers[0].first;
@@ -1267,7 +1267,6 @@ namespace Rbk {
 
 			UpdateUniformBuffer(vMesh.uniformBuffers[0], vMesh.mesh.ubos[i]);
 		}
-
 		descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
 		descriptorWrites[0].dstSet = pipeline.descriptorSets[0];
 		descriptorWrites[0].dstBinding = 0;
@@ -1285,6 +1284,7 @@ namespace Rbk {
 		descriptorWrites[1].pImageInfo = imageInfos.data();
 		
 		vkUpdateDescriptorSets(m_Device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
+
 		
 		vkCmdBindDescriptorSets(
 			commandBuffer, 
@@ -1299,6 +1299,7 @@ namespace Rbk {
 
 		uint32_t offsetIndex = 0;
 		for (int i = 0; i < vMesh.count; i++) {
+
 			vkCmdPushConstants(commandBuffer, pipeline.pipelineLayout, VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(int), &i);
 
 			offsetIndex = (i == 0) ? 0 : vMesh.vertexOffset[i - 1];
@@ -1391,11 +1392,11 @@ namespace Rbk {
 		return vertexBuffer;
 	}
 
-	std::pair<VkBuffer, VkDeviceMemory> VulkanRenderer::CreateUniformBuffers()
+	std::pair<VkBuffer, VkDeviceMemory> VulkanRenderer::CreateUniformBuffers(uint32_t uniformBuffersCount)
 	{
 		std::pair<VkBuffer, VkDeviceMemory> uniformBuffers;
 
-		VkDeviceSize bufferSize = sizeof(UniformBufferObject);
+		VkDeviceSize bufferSize = sizeof(UniformBufferObject) * uniformBuffersCount;
 		CreateBuffer(bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, uniformBuffers.first, uniformBuffers.second);
 
 		return uniformBuffers;
