@@ -48,13 +48,13 @@ namespace Rbk
 
 		UniformBufferObject ubo3{};
 		ubo3.model = glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 1.0f);
-		ubo3.model = glm::scale(ubo3.model, glm::vec3(0.5f, 0.5f, 0.5f));
-		ubo3.model *= glm::translate(glm::mat4(1.0f), glm::vec3(5.0f, 10.0f, -3.0f));
+		ubo3.model = glm::scale(ubo3.model, glm::vec3(0.2f, 0.2f, 0.2f));
+		ubo3.model *= glm::translate(glm::mat4(1.0f), glm::vec3(-6.0f, 0.0f, 0.0f));
 		ubo3.view = glm::lookAt(glm::vec3(0.0f, -0.5f, 3.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
 		ubo3.proj = glm::perspective(glm::radians(45.0f), width / (float)height, 0.1f, 10.0f);
 		ubo3.proj[1][1] *= -1;
 
-		//AddMesh("mesh/viking/viking_room.obj", "mesh/viking/viking_room.png", ubo3);
+		AddMesh("mesh/viking/viking_room.obj", "mesh/viking/viking_room.png", ubo);
 		AddMesh("mesh/moon/moon.obj", "mesh/moon/diffuse.jpg", ubo3);
 		AddMesh("mesh/moon/moon.obj", "mesh/moon/diffuse.jpg", ubo2);
 		//AddMesh("mesh/kitty/kitty.obj", "mesh/kitty/diffuse.jpg", ubo3);
