@@ -10,42 +10,17 @@ namespace Rbk
 	void VulkanLayer::Init()
 	{
 		//DisplayFpsCounter(timeStep);
-		DisplayLogs();
 		//DisplayAPI(renderer->GetDeviceProperties());
 	}
 
-	void VulkanLayer::DisplayLogs()
+	void VulkanLayer::Render(double timeStep, VkPhysicalDeviceProperties devicesProps)
 	{
-		Rbk::Im::Begin("Vulkan Infos");
-		ImGui::PushID("##VulkanInfos");
-		const float footer_height_to_reserve = ImGui::GetStyle().ItemSpacing.y + ImGui::GetFrameHeightWithSpacing();
-
-		Rbk::Im::BeginChild("VulkanLogs", ImVec2(0, -footer_height_to_reserve), true, ImGuiWindowFlags_HorizontalScrollbar);
-
-		for (auto& message : m_Messages) {
-			Rbk::Im::Text("\t%s", message.c_str());
-			Rbk::Im::Separator();
-		}
-
-		Rbk::Im::EndChild();
-		ImGui::PopID();
-		Rbk::Im::End();
+		DisplayFpsCounter(timeStep);
+		DisplayAPI(devicesProps);		
 	}
-
 	void VulkanLayer::Destroy()
 	{
 		Rbk::Im::Destroy();
-	}
-
-	void VulkanLayer::Update(std::vector<std::string>& messages)
-	{		
-		if (m_Messages.size() >= m_MaxMessages) {
-			m_Messages.erase(m_Messages.begin(), m_Messages.begin() + messages.size());
-		}
-
-		for (const auto& message : messages) {
-			m_Messages.emplace_back(message);
-		}
 	}
 
 	void VulkanLayer::DisplayFpsCounter(double timeStep)

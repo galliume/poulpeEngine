@@ -65,75 +65,26 @@ namespace Rbk
 
 		double lastTime = glfwGetTime();
 		
-		ImGui::CreateContext();
-
-		vImGuiInfo = rendererAdapter.get()->GetVImGuiInfo();
-		const char* glsl_version = "#version 150";
-		glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-		glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-		glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
-		IMGUI_CHECKVERSION();
-		ImGui::CreateContext();
-		ImGuiIO& io = ImGui::GetIO(); (void)io;
-
-		io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
-		io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
-		io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
-		io.ConfigDockingWithShift = false;
-		io.ConfigViewportsNoAutoMerge = true;
-		io.BackendFlags |= ImGuiBackendFlags_HasMouseCursors;
-
-		ImGui::StyleColorsDark();
-
-		ImGuiStyle& style = ImGui::GetStyle();
-		if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
-			style.WindowRounding = 0.0f;
-			style.Colors[ImGuiCol_WindowBg].w = 1.0f;
-		}
-
-		ImGui::SetNextWindowPos(ImVec2(650, 20), ImGuiCond_FirstUseEver);
-
-		ImGui::CreateContext();
-		ImGui_ImplGlfw_InitForVulkan(window->Get(), true);
-		ImGui_ImplVulkan_Init(&vImGuiInfo.info, rendererAdapter.get()->RdrPass());
+		Rbk::Im::Init(window->Get(), rendererAdapter->GetVImGuiInfo().info, rendererAdapter.get()->RdrPass());
 
 		rendererAdapter->ImmediateSubmit([&](VkCommandBuffer cmd) {
 			ImGui_ImplVulkan_CreateFontsTexture(cmd);
 		});
 
 		ImGui_ImplVulkan_DestroyFontUploadObjects();
-		
-		while (!glfwWindowShouldClose(window->Get())) {
 
+		while (!glfwWindowShouldClose(window->Get())) {
 
 			double currentTime = glfwGetTime();
 			double timeStep = currentTime - lastTime;
 
 			glfwPollEvents();
-			
-			ImGui_ImplGlfw_NewFrame();
-			ImGui_ImplVulkan_NewFrame();
-			ImGui::NewFrame();
-			
-			vulkanLayer->DisplayFpsCounter(timeStep);
-			vulkanLayer->DisplayAPI(rendererAdapter->Rdr()->GetDeviceProperties());
-			vulkanLayer->DisplayLogs();
 
-			ImGui::Render();
-
-			ImDrawData* main_draw_data = ImGui::GetDrawData();
-			ImGuiIO& io = ImGui::GetIO();
-
-			if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
-			{
-				ImGui::UpdatePlatformWindows();
-				ImGui::RenderPlatformWindowsDefault();
-			}
-
+			Rbk::Im::NewFrame();
+			vulkanLayer->Render(timeStep, rendererAdapter->Rdr()->GetDeviceProperties());
+			Rbk::Im::Render();
 
 			renderManager->PrepareDraw();
-
 			renderManager->Draw();
 
 			glfwSwapBuffers(window->Get());
