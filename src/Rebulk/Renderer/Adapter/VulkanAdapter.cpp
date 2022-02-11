@@ -138,7 +138,8 @@ namespace Rbk
 			vPipeline.descriptorSetLayouts.emplace_back(m_Renderer->CreateDescriptorSetLayout(m_Meshes.count));
 			vPipeline.descriptorSets.emplace_back(m_Renderer->CreateDescriptorSets(vPipeline.descriptorPool, m_SwapChainImages, vPipeline.descriptorSetLayouts));		
 			vPipeline.pipelineLayout = m_Renderer->CreatePipelineLayout(vPipeline.descriptorSets, vPipeline.descriptorSetLayouts);			
-			vPipeline.graphicsPipeline = m_Renderer->CreateGraphicsPipeline(m_RenderPass, vPipeline, m_Shaders);
+			vPipeline.graphicsPipeline.emplace_back(m_Renderer->CreateGraphicsPipeline(m_RenderPass, vPipeline, m_Shaders));
+			vPipeline.graphicsPipeline.emplace_back(m_Renderer->CreateGraphicsPipeline(m_RenderPass, vPipeline, m_Shaders, true));
 
 			m_Pipelines.emplace_back(vPipeline);
 		}
@@ -169,7 +170,7 @@ namespace Rbk
 			m_Renderer->BeginRenderPass(m_RenderPass, m_CommandBuffers[m_ImageIndex], m_SwapChainFramebuffers[m_ImageIndex]);
 			m_Renderer->SetViewPort(m_CommandBuffers[m_ImageIndex]);
 			m_Renderer->SetScissor(m_CommandBuffers[m_ImageIndex]);
-			m_Renderer->BindPipeline(m_CommandBuffers[m_ImageIndex], m_Pipelines[0].graphicsPipeline);
+			m_Renderer->BindPipeline(m_CommandBuffers[m_ImageIndex], (!m_WireFrameModeOn) ? m_Pipelines[0].graphicsPipeline[0] : m_Pipelines[0].graphicsPipeline[1]);
 			m_Renderer->Draw(m_CommandBuffers[m_ImageIndex], m_Meshes, m_Textures, m_Pipelines[0]);
 			ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), m_CommandBuffers[m_ImageIndex]);
 			m_Renderer->EndRenderPass(m_CommandBuffers[m_ImageIndex]);
@@ -217,7 +218,9 @@ namespace Rbk
 		}
 		
 		for (auto pipeline : m_Pipelines) {
-			m_Renderer->DestroyPipeline(pipeline.graphicsPipeline);
+			for (auto gp : pipeline.graphicsPipeline) {
+				m_Renderer->DestroyPipeline(gp);
+			}
 			vkDestroyDescriptorPool(m_Renderer->GetDevice(), pipeline.descriptorPool, nullptr);
 			vkDestroyPipelineLayout(m_Renderer->GetDevice(), pipeline.pipelineLayout, nullptr);
 

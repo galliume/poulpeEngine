@@ -27,6 +27,7 @@ namespace Rbk
 		virtual void Draw() override;
 		virtual void Destroy() override;
 		void ImmediateSubmit(std::function<void(VkCommandBuffer cmd)>&& function);
+		void SetWireFrameMode(bool wireFrameModeOn) { m_WireFrameModeOn = wireFrameModeOn; };
 
 		inline VulkanRenderer* Rdr() { return m_Renderer; };
 		inline VkRenderPass RdrPass() { return m_RenderPass; };
@@ -60,5 +61,6 @@ namespace Rbk
 		std::map<const char*, VulkanTexture> m_Textures;
 		std::vector<VulkanPipeline>m_Pipelines;
 		bool m_IsPrepared = false;
+		bool m_WireFrameModeOn = false;
 	};
 }

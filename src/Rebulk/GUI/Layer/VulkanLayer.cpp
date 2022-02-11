@@ -25,19 +25,33 @@ namespace Rbk
 
 	void VulkanLayer::DisplayFpsCounter(double timeStep)
 	{
-		Rbk::Im::Begin("Performances stats");
-		Rbk::Im::Text("FPS : %f", 1/timeStep);
-		Rbk::Im::Text("Frametime : %f", timeStep);
-		Rbk::Im::End();
+		if (ImGui::CollapsingHeader("Performances stats"))
+		{
+			Rbk::Im::Text("FPS : %f", 1 / timeStep);
+			Rbk::Im::Text("Frametime : %f", timeStep);
+		}
 	}
 
 	void VulkanLayer::DisplayAPI(VkPhysicalDeviceProperties devicesProps)
 	{
-		Rbk::Im::Begin("API");
-		Rbk::Im::Text("API Version : %d", devicesProps.apiVersion);
-		Rbk::Im::Text("Drivers version : %d", devicesProps.driverVersion);
-		Rbk::Im::Text("Vendor id : %d", devicesProps.vendorID);
-		Rbk::Im::Text("GPU : %s" , devicesProps.deviceName);
-		Rbk::Im::End();
+		if (ImGui::CollapsingHeader("Informations"))
+		{
+			Rbk::Im::Text("API Version : %d", devicesProps.apiVersion);
+			Rbk::Im::Text("Drivers version : %d", devicesProps.driverVersion);
+			Rbk::Im::Text("Vendor id : %d", devicesProps.vendorID);
+			Rbk::Im::Text("GPU : %s", devicesProps.deviceName);
+		}
+	}
+
+	void VulkanLayer::DisplayOptions(bool &wireFrameModeOn)
+	{
+		if (ImGui::CollapsingHeader("Rendering options"))
+		{
+			if (ImGui::BeginTable("split", 3))
+			{
+				ImGui::TableNextColumn(); ImGui::Checkbox("Wireframe", &wireFrameModeOn);
+				ImGui::EndTable();
+			}
+		}
 	}
 }
