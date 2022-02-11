@@ -4,22 +4,18 @@ namespace Rbk {
 
 	void Im::Init(GLFWwindow* window, ImGui_ImplVulkan_InitInfo initInfo, VkRenderPass renderPass)
 	{
-		const char* glsl_version = "#version 150";
-		glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-		glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-		glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+		ImGui::CreateContext();
 
 		IMGUI_CHECKVERSION();
 		ImGui::CreateContext();
 		ImGuiIO& io = ImGui::GetIO(); (void)io;
-		
+
 		io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
-		io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;           
-		io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;         
+		io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+		io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
 		io.ConfigDockingWithShift = false;
 		io.ConfigViewportsNoAutoMerge = true;
 		io.BackendFlags |= ImGuiBackendFlags_HasMouseCursors;
-		io.IniFilename = NULL;
 
 		ImGui::StyleColorsDark();
 
@@ -78,21 +74,15 @@ namespace Rbk {
 		ImGui::BeginChild(str_id, size_arg, border, extra_flags);
 	}
 
-	void Im::Render(GLFWwindow* window, VkCommandBuffer commandBuffer, VkPipeline pipeline)
+	void Im::Render()
 	{
-		ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
-
 		ImGui::Render();
-		int displayW, displayH;
-		glfwGetFramebufferSize(window, &displayW, &displayH);
+
+		ImDrawData* main_draw_data = ImGui::GetDrawData();
 		ImGuiIO& io = ImGui::GetIO();
 
-		ImDrawData* d = ImGui::GetDrawData();
-
-		ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), commandBuffer, pipeline);
-		ImDrawData* a = ImGui::GetDrawData();
-
-		if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
+		if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+		{
 			ImGui::UpdatePlatformWindows();
 			ImGui::RenderPlatformWindowsDefault();
 		}
