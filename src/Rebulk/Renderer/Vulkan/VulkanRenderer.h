@@ -1,4 +1,3 @@
-#include "Rebulk/Pattern/ISubject.h"
 #include "Rebulk/Renderer/Mesh.h"
 #include "Rebulk/Renderer/IRenderer.h"
 
@@ -57,7 +56,7 @@ namespace Rbk {
 		std::vector<VkPresentModeKHR> presentModes;
 	};
 
-	class VulkanRenderer : public IRenderer, public ISubject
+	class VulkanRenderer : public IRenderer
 	{
 	public:
 		VulkanRenderer(GLFWwindow* window);
@@ -100,7 +99,7 @@ namespace Rbk {
 		* Vulkan drawing functions, in main loop
 		**/
 		void ResetCommandPool(VkCommandPool commandPool);
-		void BeginCommandBuffer(VkCommandBuffer commandBuffer);
+		void BeginCommandBuffer(VkCommandBuffer commandBuffer, VkCommandBufferUsageFlagBits flags = VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT);
 		void EndCommandBuffer(VkCommandBuffer commandBuffer);
 		void BeginRenderPass(VkRenderPass renderPass, VkCommandBuffer commandBuffer, VkFramebuffer swapChainFramebuffer);
 		void EndRenderPass(VkCommandBuffer commandBuffer);
@@ -149,13 +148,11 @@ namespace Rbk {
 		inline void ResetCurrentFrameIndex() { m_CurrentFrame = 0; };
 		inline VkFormat GetSwapChainImageFormat() { return m_SwapChainImageFormat; };
 		void InitDetails();
+		void CreateFence();
+		void WaitForFence();
 
 		SwapChainSupportDetails QuerySwapChainSupport(VkPhysicalDevice device);
 
-		void Attach(IObserver* observer) override;
-		void Detach(IObserver* observer) override;
-		void Notify() override;
-	
 	public:
 		bool m_FramebufferResized = false;
 
@@ -206,12 +203,11 @@ namespace Rbk {
 		VkPresentModeKHR m_PresentMode;
 		SwapChainSupportDetails m_SwapChainSupport;
 
-		std::list<IObserver*> m_Observers = {};
-		std::vector<std::string> m_Messages = {};
 		std::vector<VkLayerProperties> m_LayersAvailable = {};		
 		std::vector<VkExtensionProperties> m_Extensions = {};
 		std::vector<const char*> m_RequiredExtensions = {};		
 		std::vector<VkFence> m_InFlightFences = {};
 		std::vector<VkFence> m_ImagesInFlight = {};
+		VkFence m_Fence;
 	};
 }

@@ -71,6 +71,7 @@ namespace Rbk {
 		PickPhysicalDevice();
 		CreateLogicalDevice();
 		InitDetails();
+		CreateFence();
 	}
 
 	void VulkanRenderer::CreateInstance()
@@ -78,7 +79,7 @@ namespace Rbk {
 		std::string message;
 
 		if (!IsValidationLayersEnabled() && !CheckValidationLayerSupport()) {
-			m_Messages.emplace_back("Validations layers not available !");
+			Rbk::Log::GetLogger()->warn("Validations layers not available !");
 		}
 
 		VkApplicationInfo appInfo{};
@@ -108,15 +109,11 @@ namespace Rbk {
 			createInfo.enabledLayerCount = static_cast<uint32_t>(m_ValidationLayers.size());
 			createInfo.ppEnabledLayerNames = m_ValidationLayers.data();
 			createInfo.pNext = (VkDebugUtilsMessengerCreateInfoEXT*)&debugCreateInfo;
-			message = std::string("Validations enabled");
-		}
-		else {
-			message = std::string("Validations disabled");
+			Rbk::Log::GetLogger()->debug("Validations enabled");
+		} else {
+			Rbk::Log::GetLogger()->debug("Validations disabled");
 			createInfo.enabledLayerCount = 0;
-		}
-
-		m_Messages.emplace_back(message);
-		Notify();
+		}		
 
 		VkResult result = VK_SUCCESS;
 
@@ -125,8 +122,6 @@ namespace Rbk {
 		if (VK_SUCCESS != result) {
 			std::string message = std::string("Can't create VK instance : " + std::to_string(result));
 			Rbk::Log::GetLogger()->critical("{}", message.c_str());
-			m_Messages.emplace_back(message);
-			Notify();
 			return;
 		}
 
@@ -134,9 +129,6 @@ namespace Rbk {
 
 		message = std::string("VK instance created successfully");
 		Rbk::Log::GetLogger()->trace(message);
-		m_Messages.emplace_back(message);
-
-		Notify();
 	}
 
 	void VulkanRenderer::InitDetails()
@@ -161,11 +153,9 @@ namespace Rbk {
 		for (const auto& extension : extensions) {
 			std::string message = std::string("extension available : ") + extension.extensionName;
 			Rbk::Log::GetLogger()->trace("\t {} \n", message.c_str());
-			m_Messages.emplace_back(message);
 		}
 
 		m_Extensions = extensions;
-		Notify();
 	}
 
 	bool VulkanRenderer::CheckValidationLayerSupport()
@@ -211,9 +201,8 @@ namespace Rbk {
 
 		for_each(extensions.begin(), extensions.end(), [this](const char* text) { 
 			std::string message = std::string("required extension loaded : ") + text;
-			m_Messages.emplace_back(message);
+			Rbk::Log::GetLogger()->debug(message);
 		});
-		Notify();
 
 		m_RequiredExtensions = extensions;
 	}
@@ -230,13 +219,10 @@ namespace Rbk {
 		createInfo.pUserData = nullptr;
 
 		if (CreateDebugUtilsMessengerEXT(m_Instance, &createInfo, nullptr, &m_DebugMessengerCallback) != VK_SUCCESS) {
-			m_Messages.emplace_back("Can't create debug messenger.");
-
+			Rbk::Log::GetLogger()->warn("Can't create debug messenger.");
 		} else {
-			m_Messages.emplace_back("Debug messenger created");
+			Rbk::Log::GetLogger()->debug("Debug messenger created");
 		}
-
-		Notify();
 	}
 
 	void VulkanRenderer::PickPhysicalDevice()
@@ -245,7 +231,7 @@ namespace Rbk {
 		vkEnumeratePhysicalDevices(m_Instance, &deviceCount, nullptr);
 
 		if (deviceCount == 0) {
-			m_Messages.emplace_back("failed to find GPUs with Vulkan support!");
+			Rbk::Log::GetLogger()->critical("failed to find GPUs with Vulkan support!");
 			return;
 		}
 
@@ -270,11 +256,9 @@ namespace Rbk {
 		}
 
 		if (m_PhysicalDevice == VK_NULL_HANDLE) {
-			m_Messages.emplace_back("failed to find a suitable GPU");
+			Rbk::Log::GetLogger()->critical("failed to find a suitable GPU");
 			return;
 		}
-
-		Notify();
 	}
 
 	bool VulkanRenderer::IsDeviceSuitable(VkPhysicalDevice device)
@@ -377,17 +361,14 @@ namespace Rbk {
 		createInfo.ppEnabledExtensionNames = m_DeviceExtensions.data();
 
 		if (vkCreateDevice(m_PhysicalDevice, &createInfo, nullptr, &m_Device) != VK_SUCCESS) {
-			m_Messages.emplace_back("failed to create logical device!");
-			Notify();
+			Rbk::Log::GetLogger()->critical("failed to create logical device!");
 			return;
 		} 
 		
 		vkGetDeviceQueue(m_Device, indices.graphicsFamily.value(), 0, &m_GraphicsQueue);
 		vkGetDeviceQueue(m_Device, indices.presentFamily.value(), 0, &m_PresentQueue);
 
-		m_Messages.emplace_back("successfully create logical device!");
-		
-		Notify();
+		Rbk::Log::GetLogger()->debug("successfully create logical device!");
 	}
 
 	void VulkanRenderer::CreateSurface()
@@ -395,13 +376,11 @@ namespace Rbk {
 		VkResult result = glfwCreateWindowSurface(m_Instance, m_Window, nullptr, &m_Surface);
 
 		if (result != VK_SUCCESS) {
-			m_Messages.emplace_back("failed to create window surface!");
-			Notify();
+			Rbk::Log::GetLogger()->critical("failed to create window surface!");
 			return;
 		}
 
-		m_Messages.emplace_back("successfully create window surface!");
-		Notify();
+		Rbk::Log::GetLogger()->debug("successfully create window surface!");
 	}
 
 	SwapChainSupportDetails VulkanRenderer::QuerySwapChainSupport(VkPhysicalDevice device) 
@@ -516,17 +495,14 @@ namespace Rbk {
 		result = vkCreateSwapchainKHR(m_Device, &createInfo, nullptr, &swapChain);
 		
 		if (result != VK_SUCCESS) {
-			m_Messages.emplace_back("Swap chain failed " + std::to_string(result));
+			Rbk::Log::GetLogger()->critical("Swap chain failed " + std::to_string(result));
 		} else {
-			m_Messages.emplace_back("Swap chain created successfully");
+			Rbk::Log::GetLogger()->debug("Swap chain created successfully");
 		}
 
 		vkGetSwapchainImagesKHR(m_Device, swapChain, &imageCount, nullptr);
 		swapChainImages.resize(imageCount);
-
 		vkGetSwapchainImagesKHR(m_Device, swapChain, &imageCount, swapChainImages.data());
-
-		Notify();
 
 		return swapChain;
 	}
@@ -570,9 +546,9 @@ namespace Rbk {
 		result = vkCreateImageView(m_Device, &createInfo, nullptr, &swapChainImageView);
 			
 		if (result != VK_SUCCESS) {
-			m_Messages.emplace_back("failed to create image views!");
+			Rbk::Log::GetLogger()->critical("failed to create image views!");
 		} else {
-			m_Messages.emplace_back("created image views sucessfully");
+			Rbk::Log::GetLogger()->debug("created image views sucessfully");
 		}
 
 		return swapChainImageView;
@@ -630,10 +606,9 @@ namespace Rbk {
 		VkResult result = vkCreatePipelineLayout(m_Device, &pipelineLayoutInfo, nullptr, &graphicsPipelineLayout);
 
 		if (result != VK_SUCCESS) {
-			m_Messages.emplace_back("failed to create pipeline layout!");
-		}
-		else {
-			m_Messages.emplace_back("create successfully pipeline layout!");
+			Rbk::Log::GetLogger()->critical("failed to create pipeline layout!");
+		} else {
+			Rbk::Log::GetLogger()->debug("create successfully pipeline layout!");
 		}
 
 		return graphicsPipelineLayout;
@@ -776,16 +751,11 @@ namespace Rbk {
 		VkResult result = vkCreateGraphicsPipelines(m_Device, pipeline.pipelineCache, 1, &pipelineInfo, nullptr, &graphicsPipeline);
 		
 		if (result != VK_SUCCESS) {
-			m_Messages.emplace_back("failed to create graphics pipeline!");
+			Rbk::Log::GetLogger()->critical("failed to create graphics pipeline!");
 		} else {
-			m_Messages.emplace_back("created successfully graphics pipeline!");
+			Rbk::Log::GetLogger()->debug("created successfully graphics pipeline!");
 		}
 
-		//vkDestroyShaderModule(m_Device, fs, nullptr);
-		//vkDestroyShaderModule(m_Device, vs, nullptr);
-
-		Notify();
-		
 		return graphicsPipeline;
 	}
 
@@ -802,12 +772,10 @@ namespace Rbk {
 		result = vkCreateShaderModule(m_Device, &createInfo, nullptr, &shaderModule);
 			
 		if (result != VK_SUCCESS) {
-			m_Messages.emplace_back("failed to create shader module!");
+			Rbk::Log::GetLogger()->critical("failed to create shader module!");
 		} else {
-			m_Messages.emplace_back("created shader module successfully !");
+			Rbk::Log::GetLogger()->debug("created shader module successfully !");
 		}
-
-		Notify();
 
 		return shaderModule;
 	}
@@ -875,12 +843,10 @@ namespace Rbk {
 		VkResult result = vkCreateRenderPass(m_Device, &renderPassInfo, nullptr, &renderPass);
 
 		if (result != VK_SUCCESS) {
-			m_Messages.emplace_back("failed to create render pass!");
+			Rbk::Log::GetLogger()->critical("failed to create render pass!");
 		} else {
-			m_Messages.emplace_back("created successfully render pass!");
+			Rbk::Log::GetLogger()->debug("created successfully render pass!");
 		}
-
-		Notify();
 
 		return renderPass;
 	}
@@ -910,13 +876,11 @@ namespace Rbk {
 			VkResult result = vkCreateFramebuffer(m_Device, &framebufferInfo, nullptr, &swapChainFramebuffers[i]);
 
 			if (result != VK_SUCCESS) {
-				m_Messages.emplace_back("failed to create framebuffer!");
+				Rbk::Log::GetLogger()->critical("failed to create framebuffer!");
 			}
 			else {
-				m_Messages.emplace_back("created successfully framebuffer!");
+				Rbk::Log::GetLogger()->debug("created successfully framebuffer!");
 			}
-
-			Notify();
 		}
 
 		return swapChainFramebuffers;
@@ -937,12 +901,10 @@ namespace Rbk {
 		VkResult result = vkCreateCommandPool(m_Device, &poolInfo, nullptr, &commandPool);
 		
 		if (result != VK_SUCCESS) {
-			m_Messages.emplace_back("failed to create command pool!");
+			Rbk::Log::GetLogger()->critical("failed to create command pool!");
 		} else {
-			m_Messages.emplace_back("created successfully command pool!");
+			Rbk::Log::GetLogger()->debug("created successfully command pool!");
 		}
-
-		Notify();
 
 		return commandPool;
 	}
@@ -962,25 +924,24 @@ namespace Rbk {
 		VkResult result = vkAllocateCommandBuffers(m_Device, &allocInfo, commandBuffers.data());
 
 		if (result != VK_SUCCESS) {
-			m_Messages.emplace_back("failed to allocate command buffers!");
-		}
-		else {
-			m_Messages.emplace_back("allocated successfully command buffers!");
+			Rbk::Log::GetLogger()->critical("failed to allocate command buffers!");
+		} else {
+			Rbk::Log::GetLogger()->debug("allocated successfully command buffers!");
 		}
 
 		return commandBuffers;
 	}
 
-	void VulkanRenderer::BeginCommandBuffer(VkCommandBuffer commandBuffer)
+	void VulkanRenderer::BeginCommandBuffer(VkCommandBuffer commandBuffer, VkCommandBufferUsageFlagBits flags)
 	{
-			VkCommandBufferBeginInfo beginInfo{};
-			beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-			beginInfo.flags = 0;
-			beginInfo.pInheritanceInfo = nullptr;
+		VkCommandBufferBeginInfo beginInfo{};
+		beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+		beginInfo.flags = flags;
+		beginInfo.pInheritanceInfo = nullptr;
 
-			if (VK_SUCCESS != vkBeginCommandBuffer(commandBuffer, &beginInfo)) {
-				throw std::runtime_error("failed to create descriptor pool");
-			}
+		if (VK_SUCCESS != vkBeginCommandBuffer(commandBuffer, &beginInfo)) {
+			throw std::runtime_error("failed to create descriptor pool");
+		}
 	}
 
 	void VulkanRenderer::SetViewPort(VkCommandBuffer commandBuffer)
@@ -1032,11 +993,9 @@ namespace Rbk {
 			if (vkCreateSemaphore(m_Device, &semaphoreInfo, nullptr, &imageAvailableSemaphores[i]) != VK_SUCCESS ||
 				vkCreateSemaphore(m_Device, &semaphoreInfo, nullptr, &renderFinishedSemaphores[i]) != VK_SUCCESS ||
 				vkCreateFence(m_Device, &fenceInfo, nullptr, &m_InFlightFences[i]) != VK_SUCCESS) {
-				m_Messages.emplace_back("failed to create semaphores!");
+				Rbk::Log::GetLogger()->critical("failed to create semaphores!");
 			}
 		}
-
-		Notify();
 
 		semaphores.first = imageAvailableSemaphores;
 		semaphores.second = renderFinishedSemaphores;
@@ -1656,6 +1615,22 @@ namespace Rbk {
 		return format == VK_FORMAT_D32_SFLOAT_S8_UINT || format == VK_FORMAT_D24_UNORM_S8_UINT;
 	}
 
+	void VulkanRenderer::CreateFence()
+	{
+		VkFenceCreateInfo fenceInfo{};
+		fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+		fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+		fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
+
+		vkCreateFence(m_Device, &fenceInfo, nullptr, &m_Fence);
+	}
+
+	void VulkanRenderer::WaitForFence()
+	{
+		vkWaitForFences(m_Device, 1, &m_Fence, true, 9999999999);
+		vkResetFences(m_Device, 1, &m_Fence);
+	}
+
 	void VulkanRenderer::DestroyPipeline(VkPipeline pipeline)
 	{
 		vkDestroyPipeline(m_Device, pipeline, nullptr);
@@ -1697,6 +1672,7 @@ namespace Rbk {
 
 	void VulkanRenderer::Destroy()
 	{
+		vkDestroyFence(m_Device, m_Fence, nullptr);
 		vkDestroyDevice(m_Device, nullptr);
 
 		if (m_EnableValidationLayers) {
@@ -1706,8 +1682,7 @@ namespace Rbk {
 		vkDestroySurfaceKHR(m_Instance, m_Surface, nullptr);
 		vkDestroyInstance(m_Instance, nullptr);
 
-		m_Messages.emplace_back("VK instance destroyed and cleaned");
-		Notify();
+		Rbk::Log::GetLogger()->debug("VK instance destroyed and cleaned");
 	}
 
 	void VulkanRenderer::DestroySwapchain(VkDevice device, VkSwapchainKHR swapChain, std::vector<VkFramebuffer> swapChainFramebuffers, std::vector<VkImageView> swapChainImageViews)
@@ -1724,27 +1699,5 @@ namespace Rbk {
 	VulkanRenderer::~VulkanRenderer()
 	{
 		std::cout << "VulkanRenderer deleted." << std::endl;
-	}
-
-	void VulkanRenderer::Attach(IObserver* observer)
-	{
-		m_Observers.push_back(observer);
-	}
-
-	void VulkanRenderer::Detach(IObserver* observer)
-	{
-		m_Observers.remove(observer);
-	}
-
-	void VulkanRenderer::Notify()
-	{
-		std::list<IObserver*>::iterator iterator = m_Observers.begin();
-		
-		while (iterator != m_Observers.end()) {
-			(*iterator)->Update(m_Messages);
-			++iterator;
-		}
-
-		m_Messages.clear();
 	}
 }
