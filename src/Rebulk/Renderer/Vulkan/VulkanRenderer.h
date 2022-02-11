@@ -38,7 +38,7 @@ namespace Rbk {
 		std::vector<VkDescriptorSet> descriptorSets;
 		std::vector<VkDescriptorSetLayout> descriptorSetLayouts;
 		VkPipelineCache pipelineCache;
-		VkPipeline graphicsPipeline;
+		std::vector<VkPipeline> graphicsPipeline;
 	};
 
 	struct QueueFamilyIndices {
@@ -71,7 +71,7 @@ namespace Rbk {
 		VkDescriptorSetLayout CreateDescriptorSetLayout(uint32_t meshCount);
 		VkDescriptorSet CreateDescriptorSets(VkDescriptorPool descriptorPool, std::vector<VkImage> swapChainImages, std::vector<VkDescriptorSetLayout> descriptorSetLayouts);
 		VkPipelineLayout CreatePipelineLayout(std::vector<VkDescriptorSet> descriptorSets, std::vector<VkDescriptorSetLayout> descriptorSetLayouts);
-		VkPipeline CreateGraphicsPipeline(VkRenderPass renderPass, VulkanPipeline pipeline, VulkanShaders shaders);
+		VkPipeline CreateGraphicsPipeline(VkRenderPass renderPass, VulkanPipeline pipeline, VulkanShaders shaders, bool wireFrameModeOn = false);
 		VkSwapchainKHR CreateSwapChain(std::vector<VkImage>& swapChainImages, VkSwapchainKHR oldSwapChain = VK_NULL_HANDLE);
 		VkImageView CreateImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags = VK_IMAGE_ASPECT_COLOR_BIT);
 		std::vector<VkFramebuffer> CreateFramebuffers(VkRenderPass renderPass, std::vector<VkImageView> swapChainImageViews, VkImageView depthImageView);
@@ -113,7 +113,7 @@ namespace Rbk {
 		size_t QueuePresent(uint32_t imageIndex, VkSwapchainKHR swapChain, std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>>& semaphores);
 		void AddPipelineBarrier(VkCommandBuffer commandBuffer, VkImageMemoryBarrier renderBarrier, VkPipelineStageFlags srcStageMask, VkPipelineStageFlags dstStageMask, VkDependencyFlags dependencyFlags);
 		void WaitIdle();
-
+	
 		/**
 		* Vulkan clean and destroy
 		**/
@@ -155,7 +155,7 @@ namespace Rbk {
 
 	public:
 		bool m_FramebufferResized = false;
-
+	
 	private:
 		bool IsDeviceSuitable(VkPhysicalDevice device);
 		bool CheckDeviceExtensionSupport(VkPhysicalDevice device);
@@ -186,7 +186,7 @@ namespace Rbk {
 
 		bool m_InstanceCreated = false;
 		bool m_EnableValidationLayers = false;
-
+	
 		VkInstance m_Instance = VK_NULL_HANDLE;		
 		VkPhysicalDevice m_PhysicalDevice = VK_NULL_HANDLE;
 		VkPhysicalDeviceProperties m_DeviceProps = {};

@@ -59,9 +59,9 @@ namespace Rbk
 		AddTexture("diffuse_moon", "mesh/moon/diffuse.jpg");
 		AddTexture("viking_room", "mesh/viking/viking_room.png");
 
-		//AddMesh("mesh/backpack/backpack.obj", "diffuse_backpack", ubo2);
+		AddMesh("mesh/backpack/backpack.obj", "diffuse_backpack", ubo2);
 		//AddMesh("mesh/moon/moon.obj", "diffuse_moon", ubo);
-		AddMesh("mesh/kitty/kitty.obj", "diffuse_moon", ubo2);
+		//AddMesh("mesh/kitty/kitty.obj", "diffuse_moon", ubo2);
 		//AddMesh("mesh/viking/viking_room.obj", "viking_room", ubo);
 	}
 
