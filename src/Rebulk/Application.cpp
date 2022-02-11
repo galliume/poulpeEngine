@@ -51,11 +51,6 @@ namespace Rbk
 			renderManager = std::make_shared<Rbk::RenderManager>(Rbk::RenderManager(window->Get(), rendererAdapter.get()));
 			renderManager->Init();
 		}
-
-		if (vImGui == nullptr)
-		{		
-			//vImGuiInfo = rendererAdapter.get()->GetVImGuiInfo();		
-		}
 	}
 
 	void Application::Run()
@@ -72,6 +67,7 @@ namespace Rbk
 		});
 
 		ImGui_ImplVulkan_DestroyFontUploadObjects();
+		bool wireFrameModeOn = false;
 
 		while (!glfwWindowShouldClose(window->Get())) {
 
@@ -82,8 +78,12 @@ namespace Rbk
 
 			Rbk::Im::NewFrame();
 			vulkanLayer->Render(timeStep, rendererAdapter->Rdr()->GetDeviceProperties());
+			vulkanLayer->DisplayOptions(wireFrameModeOn);
+
+			ImGui::ShowDemoWindow();
 			Rbk::Im::Render();
 
+			rendererAdapter->SetWireFrameMode(wireFrameModeOn);
 			renderManager->PrepareDraw();
 			renderManager->Draw();
 
