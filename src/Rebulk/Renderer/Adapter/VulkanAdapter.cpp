@@ -42,8 +42,9 @@ namespace Rbk
 		}
 	}
 
-	void VulkanAdapter::AddMesh(Rbk::Mesh mesh, UniformBufferObject ubo)
+	void VulkanAdapter::AddMesh(Rbk::Mesh mesh, const char* textureName, UniformBufferObject ubo)
 	{			
+		m_Meshes.mesh.textureNames.emplace(m_Meshes.count, textureName);
 		m_Meshes.mesh.vertices.insert(m_Meshes.mesh.vertices.end(), mesh.vertices.begin(), mesh.vertices.end());
 		m_Meshes.mesh.indices.insert(m_Meshes.mesh.indices.end(), mesh.indices.begin(), mesh.indices.end());
 		m_Meshes.mesh.ubos.emplace_back(ubo);
@@ -54,22 +55,31 @@ namespace Rbk
 		m_Meshes.count += 1;
 	}
 
-	void VulkanAdapter::AddTexture(Rbk::Mesh& mesh, const char* texturePath)
+	void VulkanAdapter::AddTexture(const char* name, const char* path)
 	{
+		if (0 != m_Textures.count(name)) {
+			std::cout << "Texture name " << name << " already imported" << std::endl;
+			return;
+		}
+
 		VkImage textureImage;
 		VkDeviceMemory textureImageMemory;
 
 		VkCommandBuffer commandBuffer = m_Renderer->AllocateCommandBuffers(m_CommandPool)[0];
 		m_Renderer->BeginCommandBuffer(commandBuffer);
-		m_Renderer->CreateTextureImage(commandBuffer, texturePath, textureImage, textureImageMemory);
+		m_Renderer->CreateTextureImage(commandBuffer, path, textureImage, textureImageMemory);
 
 		VkImageView textureImageView = m_Renderer->CreateImageView(textureImage, VK_FORMAT_R8G8B8A8_SRGB);
 		VkSampler textureSampler = m_Renderer->CreateTextureSampler(textureImageView);
 
-		m_Meshes.textureImages.emplace_back(textureImage);
-		m_Meshes.textureImageMemorys.emplace_back(textureImageMemory);
-		m_Meshes.textureImageViews.emplace_back(textureImageView);
-		m_Meshes.samplers.emplace_back(textureSampler);
+		VulkanTexture vTexture;
+		vTexture.name = name;
+		vTexture.textureImage = textureImage;
+		vTexture.textureImageMemory = textureImageMemory;
+		vTexture.textureImageView = textureImageView;
+		vTexture.sampler = textureSampler;
+
+		m_Textures.emplace(name, vTexture);
 	}
 
 	void VulkanAdapter::AddShader(std::string name, std::vector<char> vertexShaderCode, std::vector<char> fragShaderCode)
@@ -160,7 +170,7 @@ namespace Rbk
 			m_Renderer->SetViewPort(m_CommandBuffers[m_ImageIndex]);
 			m_Renderer->SetScissor(m_CommandBuffers[m_ImageIndex]);
 			m_Renderer->BindPipeline(m_CommandBuffers[m_ImageIndex], m_Pipelines[0].graphicsPipeline);
-			m_Renderer->Draw(m_CommandBuffers[m_ImageIndex], m_Meshes, m_Pipelines[0]);
+			m_Renderer->Draw(m_CommandBuffers[m_ImageIndex], m_Meshes, m_Textures, m_Pipelines[0]);
 			m_Renderer->EndRenderPass(m_CommandBuffers[m_ImageIndex]);
 
 			VkImageMemoryBarrier renderEndBarrier = m_Renderer->SetupImageMemoryBarrier(
@@ -197,17 +207,12 @@ namespace Rbk
 			m_Renderer->DestroyDeviceMemory(m_Meshes.uniformBuffers[i].second);
 		}
 
-		for (auto sampler : m_Meshes.samplers) {
-			vkDestroySampler(m_Renderer->GetDevice(), sampler, nullptr);
-		}
-		for (auto textureView : m_Meshes.textureImageViews) {
-			vkDestroyImageView(m_Renderer->GetDevice(), textureView, nullptr);
-		}
-		for (auto texture : m_Meshes.textureImages) {
-			vkDestroyImage(m_Renderer->GetDevice(), texture, nullptr);
-		}
-		for (auto textureMemory : m_Meshes.textureImageMemorys) {
-			m_Renderer->DestroyDeviceMemory(textureMemory);
+		for (auto item : m_Textures) {
+			vkDestroySampler(m_Renderer->GetDevice(), item.second.sampler, nullptr);
+			vkDestroyImageView(m_Renderer->GetDevice(), item.second.textureImageView, nullptr);
+			vkDestroyImage(m_Renderer->GetDevice(), item.second.textureImage, nullptr);
+			m_Renderer->DestroyDeviceMemory(item.second.textureImageMemory);
+
 		}
 		
 		for (auto pipeline : m_Pipelines) {
