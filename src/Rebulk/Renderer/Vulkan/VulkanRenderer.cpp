@@ -1228,7 +1228,7 @@ namespace Rbk {
 		vkResetCommandPool(m_Device, commandPool, 0);
 	}
 
-	void VulkanRenderer::Draw(VkCommandBuffer commandBuffer, VulkanMesh vMesh, VulkanPipeline pipeline)
+	void VulkanRenderer::Draw(VkCommandBuffer commandBuffer, VulkanMesh vMesh, std::map<const char*, VulkanTexture> vTextures, VulkanPipeline pipeline)
 	{	
 		VkBuffer vertexBuffers[] = { vMesh.meshVBuffer.first };
 		VkDeviceSize offsets[] = { 0 };
@@ -1251,8 +1251,8 @@ namespace Rbk {
 			float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
 			float rand = std::rand() % 1;
 
-			vMesh.mesh.ubos[i].model *= glm::translate(glm::mat4(1.0f), glm::vec3(std::sin(time)));
-			vMesh.mesh.ubos[i].model *= glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+			//vMesh.mesh.ubos[i].model *= glm::translate(glm::mat4(1.0f), glm::vec3(std::sin(time)));
+			vMesh.mesh.ubos[i].model *= glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 			
 			VkDescriptorBufferInfo bufferInfo{};
 			bufferInfo.buffer = vMesh.uniformBuffers[i].first;
@@ -1262,8 +1262,8 @@ namespace Rbk {
 
 			VkDescriptorImageInfo imageInfo{};
 			imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-			imageInfo.imageView = vMesh.textureImageViews[i];
-			imageInfo.sampler = vMesh.samplers[i];
+			imageInfo.imageView = vTextures[vMesh.mesh.textureNames[i]].textureImageView;
+			imageInfo.sampler = vTextures[vMesh.mesh.textureNames[i]].sampler;
 			imageInfos.emplace_back(imageInfo);
 
 			UpdateUniformBuffer(vMesh.uniformBuffers[i], vMesh.mesh.ubos[i]);

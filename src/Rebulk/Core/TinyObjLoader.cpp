@@ -6,7 +6,12 @@
 
 namespace Rbk
 {
-	bool TinyObjLoader::LoadMesh(Rbk::Mesh& mesh, const char* path)
+	struct LoadInfo
+	{
+		bool shouldInverseTextureY = false;
+	};
+
+	bool TinyObjLoader::LoadMesh(Rbk::Mesh& mesh, const char* path, bool shouldInverseTextureY)
 	{
 		tinyobj::ObjReader reader;
 		tinyobj::ObjReaderConfig reader_config;
@@ -61,7 +66,8 @@ namespace Rbk
 						tinyobj::real_t tx = attrib.texcoords[2 * size_t(idx.texcoord_index) + 0];
 						tinyobj::real_t ty = attrib.texcoords[2 * size_t(idx.texcoord_index) + 1];
 
-						vertex.texCoord = { tx, 1.0f - ty };
+						vertex.texCoord = { tx, ty };
+						if (shouldInverseTextureY) vertex.texCoord.y *= -1.0f;
 					}
 
 					// Optional: vertex colors
@@ -69,7 +75,6 @@ namespace Rbk
 					// tinyobj::real_t green = attrib.colors[3*size_t(idx.vertex_index)+1];
 					// tinyobj::real_t blue  = attrib.colors[3*size_t(idx.vertex_index)+2];
 
-					mesh.vertices.push_back(vertex);
 					if (uniqueVertices.count(vertex) == 0) {
 						uniqueVertices[vertex] = static_cast<uint32_t>(mesh.vertices.size());
 						mesh.vertices.push_back(vertex);
