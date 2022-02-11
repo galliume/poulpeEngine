@@ -26,7 +26,8 @@ namespace Rbk
 		virtual void PrepareDraw() override;
 		virtual void Draw() override;
 		virtual void Destroy() override;
-		
+		void ImmediateSubmit(std::function<void(VkCommandBuffer cmd)>&& function);
+
 		inline VulkanRenderer* Rdr() { return m_Renderer; };
 		inline VkRenderPass RdrPass() { return m_RenderPass; };
 

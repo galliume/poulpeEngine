@@ -171,6 +171,7 @@ namespace Rbk
 			m_Renderer->SetScissor(m_CommandBuffers[m_ImageIndex]);
 			m_Renderer->BindPipeline(m_CommandBuffers[m_ImageIndex], m_Pipelines[0].graphicsPipeline);
 			m_Renderer->Draw(m_CommandBuffers[m_ImageIndex], m_Meshes, m_Textures, m_Pipelines[0]);
+			ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), m_CommandBuffers[m_ImageIndex]);
 			m_Renderer->EndRenderPass(m_CommandBuffers[m_ImageIndex]);
 
 			VkImageMemoryBarrier renderEndBarrier = m_Renderer->SetupImageMemoryBarrier(
@@ -246,8 +247,43 @@ namespace Rbk
 		m_Renderer->Destroy();
 	}
 
+	void VulkanAdapter::ImmediateSubmit(std::function<void(VkCommandBuffer cmd)>&& function)
+	{
+		VkCommandBuffer cmd = m_Renderer->AllocateCommandBuffers(m_CommandPool)[0];
+		m_Renderer->BeginCommandBuffer(cmd, VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
+		function(cmd);
+		m_Renderer->EndCommandBuffer(cmd);
+		m_Renderer->QueueSubmit(cmd);
+		m_Renderer->WaitForFence();
+	}
+
 	VImGuiInfo VulkanAdapter::GetVImGuiInfo()
 	{
+		VkDescriptorPoolSize pool_sizes[] =
+		{
+			{ VK_DESCRIPTOR_TYPE_SAMPLER, 1000 },
+			{ VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1000 },
+			{ VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 1000 },
+			{ VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 1000 },
+			{ VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER, 1000 },
+			{ VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER, 1000 },
+			{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1000 },
+			{ VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1000 },
+			{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, 1000 },
+			{ VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC, 1000 },
+			{ VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, 1000 }
+		};
+
+		VkDescriptorPoolCreateInfo pool_info = {};
+		pool_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+		pool_info.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
+		pool_info.maxSets = 1000;
+		pool_info.poolSizeCount = std::size(pool_sizes);
+		pool_info.pPoolSizes = pool_sizes;
+
+		VkDescriptorPool imguiPool;
+		vkCreateDescriptorPool(m_Renderer->GetDevice(), &pool_info, nullptr, &imguiPool);
+
 		ImGui_ImplVulkan_InitInfo info = {};
 
 		info.Instance = m_Renderer->GetInstance();
@@ -256,21 +292,21 @@ namespace Rbk
 		info.QueueFamily = m_Renderer->GetQueueFamily();
 		info.Queue = m_Renderer->GetGraphicsQueue();
 		info.PipelineCache = nullptr;//to implement VkPipelineCache                 
-		info.DescriptorPool = m_Renderer->CreateDescriptorPool(m_SwapChainImages);
+		info.DescriptorPool = imguiPool;
 		info.Subpass = 0;
-		info.MinImageCount = 2;
-		info.ImageCount = 2;
+		info.MinImageCount = 3;
+		info.ImageCount = 3;
 		info.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
 		info.Allocator = nullptr;
-		info.CheckVkResultFn = [](VkResult err) {
-			std::cerr << "IMGUI VULKAN ERROR " + std::to_string(err) << std::endl;
-		};
+		//info.CheckVkResultFn = [](VkResult err) {
+		//	std::cerr << "IMGUI VULKAN ERROR " + std::to_string(err) << std::endl;
+		//};
 
 
 		VImGuiInfo vImGuiInfo;
 		vImGuiInfo.info = info;
 		vImGuiInfo.cmdBuffer = m_Renderer->AllocateCommandBuffers(m_CommandPool)[0];
-		vImGuiInfo.pipeline = m_Pipelines[0].graphicsPipeline;
+		//vImGuiInfo.pipeline = m_Pipelines[0].graphicsPipeline;
 
 		return vImGuiInfo;
 	}
