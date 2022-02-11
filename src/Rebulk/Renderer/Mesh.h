@@ -56,6 +56,7 @@ namespace Rbk
 		std::vector<Rbk::Vertex> vertices;
 		std::vector<uint32_t> indices;
 		std::vector<UniformBufferObject> ubos;
+		std::map<int32_t, const char*> textureNames;
 	};
 }
 

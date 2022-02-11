@@ -9,6 +9,15 @@ namespace Rbk {
 		std::map<std::string, std::array<VkShaderModule, 2>> shaders;
 	};
 
+	struct VulkanTexture
+	{
+		const char* name;
+		VkImage textureImage;
+		VkDeviceMemory textureImageMemory;
+		VkImageView textureImageView;
+		VkSampler sampler;
+	};
+
 	struct VulkanMesh
 	{
 		Rbk::Mesh mesh;
@@ -17,13 +26,9 @@ namespace Rbk {
 		std::pair<VkBuffer, VkDeviceMemory> meshVBuffer = { nullptr, nullptr };
 		std::pair<VkBuffer, VkDeviceMemory> meshIBuffer = { nullptr, nullptr };
 		std::vector<std::pair<VkBuffer, VkDeviceMemory>>uniformBuffers;
-		std::vector<VkImage> textureImages;
-		std::vector<VkDeviceMemory> textureImageMemorys;
-		std::vector<VkImageView> textureImageViews;
 		VkImage depthImage;
 		VkDeviceMemory depthImageMemory;
 		VkImageView depthImageView;
-		std::vector<VkSampler> samplers;
 		int32_t count = 0;
 	};
 
@@ -102,7 +107,7 @@ namespace Rbk {
 		void SetViewPort(VkCommandBuffer commandBuffer);
 		void SetScissor(VkCommandBuffer commandBuffer);
 		void BindPipeline(VkCommandBuffer commandBuffer, VkPipeline pipeline);
-		void Draw(VkCommandBuffer commandBuffer, VulkanMesh vMesh, VulkanPipeline pipeline);
+		void Draw(VkCommandBuffer commandBuffer, VulkanMesh vMesh, std::map<const char*, VulkanTexture>, VulkanPipeline pipeline);
 		uint32_t AcquireNextImageKHR(VkSwapchainKHR swapChain, std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>>& semaphores);
 		void QueueSubmit(VkCommandBuffer commandBuffer);
 		void QueueSubmit(uint32_t imageIndex, VkCommandBuffer commandBuffer, std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>>& semaphores);

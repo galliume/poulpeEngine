@@ -21,8 +21,8 @@ namespace Rbk
 
 		virtual void Init() override;
 		virtual void AddShader(std::string name, std::vector<char> vertexShaderCode, std::vector<char> fragShaderCode) override;
-		virtual void AddMesh(Rbk::Mesh mesh, UniformBufferObject ubo) override;
-		virtual void AddTexture(Rbk::Mesh& mesh, const char* texturePath) override;
+		virtual void AddMesh(Rbk::Mesh mesh, const char* textureName, UniformBufferObject ubo) override;
+		virtual void AddTexture(const char* name, const char* path) override;
 		virtual void PrepareDraw() override;
 		virtual void Draw() override;
 		virtual void Destroy() override;
@@ -56,6 +56,7 @@ namespace Rbk
 		VkDescriptorPool m_DescriptorPool = nullptr;
 		VulkanShaders m_Shaders;
 		VulkanMesh m_Meshes;
+		std::map<const char*, VulkanTexture> m_Textures;
 		std::vector<VulkanPipeline>m_Pipelines;
 		bool m_IsPrepared = false;
 	};

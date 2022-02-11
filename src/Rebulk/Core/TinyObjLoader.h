@@ -8,6 +8,6 @@ namespace Rbk
 	class TinyObjLoader
 	{
 	public:
-		static bool LoadMesh(Rbk::Mesh& mesh, const char* path);
+		static bool LoadMesh(Rbk::Mesh& mesh, const char* path, bool shouldInverseTextureY = false);
 	};
 }
