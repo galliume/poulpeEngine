@@ -66,10 +66,10 @@ namespace Rbk
 		minecraftGrass.proj = glm::perspective(glm::radians(45.0f), width / (float)height, 0.1f, 10.0f);
 		minecraftGrass.proj[1][1] *= -1;
 
-		//AddMesh("mesh/viking/viking_room.obj", "viking_room", ubo);
-		AddMesh("mesh/backpack/backpack.obj", "diffuse_backpack", ubo2);
+		AddMesh("mesh/viking/viking_room.obj", "viking_room", ubo);
+		//AddMesh("mesh/backpack/backpack.obj", "diffuse_backpack", ubo2);
+		//AddMesh("mesh/backpack/backpack.obj", "diffuse_backpack", ubo3);
 		//AddMesh("mesh/minecraft/Grass_Block.obj", "minecraft_grass", minecraftGrass);
-		AddMesh("mesh/backpack/backpack.obj", "diffuse_backpack", ubo3);
 		//AddMesh("mesh/kitty/kitty.obj", "diffuse_moon", ubo2);
 	}
 

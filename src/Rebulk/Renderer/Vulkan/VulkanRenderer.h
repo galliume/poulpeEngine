@@ -19,6 +19,10 @@ namespace Rbk {
 		uint32_t texWidth;
 		uint32_t texHeight;
 		uint32_t texChannels;
+		VkImageView colorImageView;
+		VkImage depthImage;
+		VkDeviceMemory depthImageMemory;
+		VkImageView depthImageView;
 	};
 
 	struct VulkanMesh
@@ -29,9 +33,6 @@ namespace Rbk {
 		std::pair<VkBuffer, VkDeviceMemory> meshVBuffer = { nullptr, nullptr };
 		std::pair<VkBuffer, VkDeviceMemory> meshIBuffer = { nullptr, nullptr };
 		std::vector<std::pair<VkBuffer, VkDeviceMemory>>uniformBuffers;
-		VkImage depthImage;
-		VkDeviceMemory depthImageMemory;
-		VkImageView depthImageView;
 		int32_t count = 0;
 	};
 
@@ -77,7 +78,7 @@ namespace Rbk {
 		VkPipelineLayout CreatePipelineLayout(std::vector<VkDescriptorSet> descriptorSets, std::vector<VkDescriptorSetLayout> descriptorSetLayouts);
 		VkPipeline CreateGraphicsPipeline(VkRenderPass renderPass, VulkanPipeline pipeline, VulkanShaders shaders, bool wireFrameModeOn = false);
 		VkSwapchainKHR CreateSwapChain(std::vector<VkImage>& swapChainImages, VkSwapchainKHR oldSwapChain = VK_NULL_HANDLE);
-		std::vector<VkFramebuffer> CreateFramebuffers(VkRenderPass renderPass, std::vector<VkImageView> swapChainImageViews, VkImageView depthImageView);
+		std::vector<VkFramebuffer> CreateFramebuffers(VkRenderPass renderPass, std::vector<VkImageView> swapChainImageViews, std::vector<VkImageView> depthImageView, std::vector<VkImageView> colorImageView);
 		VkCommandPool CreateCommandPool();
 		std::vector<VkCommandBuffer> AllocateCommandBuffers(VkCommandPool commandPool, uint32_t size = 1);
 		void CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory);
@@ -89,7 +90,7 @@ namespace Rbk {
 		bool SouldResizeSwapChain(VkSwapchainKHR swapChain);
 		std::pair<VkBuffer, VkDeviceMemory> CreateUniformBuffers(uint32_t uniformBuffersCount);
 		void UpdateUniformBuffer(std::pair<VkBuffer, VkDeviceMemory>uniformBuffer, UniformBufferObject uniformBufferObject);
-		void CreateImage(uint32_t width, uint32_t height, uint32_t mipLevels, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image, VkDeviceMemory& imageMemory);
+		void CreateImage(uint32_t width, uint32_t height, uint32_t mipLevels, VkSampleCountFlagBits numSamples, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image, VkDeviceMemory& imageMemory);
 		VkImageView CreateImageView(VkImage image, VkFormat format, uint32_t mipLevels, VkImageAspectFlags aspectFlags = VK_IMAGE_ASPECT_COLOR_BIT);
 		void CreateTextureImage(VkCommandBuffer commandBuffer, stbi_uc* pixels, int texWidth, int texHeight, uint32_t mipLevels, VkImage& textureImage, VkDeviceMemory& textureImageMemory, VkFormat format);
 		void CopyBufferToImage(VkCommandBuffer commandBuffer, VkBuffer buffer, VkImage image, uint32_t width, uint32_t height);
@@ -118,7 +119,8 @@ namespace Rbk {
 		void AddPipelineBarrier(VkCommandBuffer commandBuffer, VkImageMemoryBarrier renderBarrier, VkPipelineStageFlags srcStageMask, VkPipelineStageFlags dstStageMask, VkDependencyFlags dependencyFlags);
 		void WaitIdle();
 		void GenerateMipmaps(VkCommandBuffer commandBuffer, VkFormat imageFormat, VkImage image, int32_t texWidth, int32_t texHeight, uint32_t mipLevels);
-	
+		VkImageView CreateColorResources(VkImage colorImage, VkDeviceMemory colorImageMemory);
+
 		/**
 		* Vulkan clean and destroy
 		**/
@@ -152,9 +154,11 @@ namespace Rbk {
 		inline VkSurfaceKHR GetSurface() { return m_Surface; };
 		inline void ResetCurrentFrameIndex() { m_CurrentFrame = 0; };
 		inline VkFormat GetSwapChainImageFormat() { return m_SwapChainImageFormat; };
+		inline VkSampleCountFlagBits GetMsaaSamples() { return m_MsaaSamples; };
 		void InitDetails();
 		void CreateFence();
 		void WaitForFence();
+		VkSampleCountFlagBits GetMaxUsableSampleCount();
 
 		SwapChainSupportDetails QuerySwapChainSupport(VkPhysicalDevice device);
 
@@ -214,5 +218,7 @@ namespace Rbk {
 		std::vector<VkFence> m_InFlightFences = {};
 		std::vector<VkFence> m_ImagesInFlight = {};
 		VkFence m_Fence;
+
+		VkSampleCountFlagBits m_MsaaSamples = VK_SAMPLE_COUNT_1_BIT;
 	};
 }
