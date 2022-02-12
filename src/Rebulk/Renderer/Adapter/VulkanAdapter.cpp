@@ -23,6 +23,7 @@ namespace Rbk
 	void VulkanAdapter::SouldResizeSwapChain()
 	{
 		if (m_Renderer->SouldResizeSwapChain(m_SwapChain)) {
+
 			m_Renderer->InitDetails();
 			VkSwapchainKHR old = m_SwapChain;
 			m_SwapChain = m_Renderer->CreateSwapChain(m_SwapChainImages, old);
@@ -34,7 +35,16 @@ namespace Rbk
 			for (uint32_t i = 0; i < m_SwapChainImages.size(); i++) {
 				m_SwapChainImageViews[i] = m_Renderer->CreateImageView(m_SwapChainImages[i], m_Renderer->GetSwapChainImageFormat(), VK_IMAGE_ASPECT_COLOR_BIT);
 			}
-			m_SwapChainFramebuffers = m_Renderer->CreateFramebuffers(m_RenderPass, m_SwapChainImageViews, m_Meshes.depthImageView);
+			std::vector<VkImageView> depthImageViews;
+			std::vector<VkImageView> colorImageViews;
+
+			for (auto&& [textName, tex] : m_Textures) {
+				m_Renderer->CreateImage(tex.texWidth, tex.texHeight, tex.mipLevels, VK_SAMPLE_COUNT_1_BIT, m_Renderer->FindDepthFormat(), VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, tex.depthImage, tex.depthImageMemory);
+				depthImageViews.emplace_back(tex.depthImageView);
+				colorImageViews.emplace_back(tex.colorImageView);
+			}
+
+			m_SwapChainFramebuffers = m_Renderer->CreateFramebuffers(m_RenderPass, m_SwapChainImageViews, depthImageViews, colorImageViews);
 			m_Semaphores = m_Renderer->CreateSyncObjects(m_SwapChainImages);
 			m_Renderer->ResetCommandPool(m_CommandPool);
 			m_CommandBuffers = m_Renderer->AllocateCommandBuffers(m_CommandPool, (uint32_t)m_SwapChainFramebuffers.size());
@@ -80,6 +90,13 @@ namespace Rbk
 		VkImageView textureImageView = m_Renderer->CreateImageView(textureImage, VK_FORMAT_R8G8B8A8_SRGB, mipLevels);
 		VkSampler textureSampler = m_Renderer->CreateTextureSampler(textureImageView, mipLevels);
 
+		VkImageView colorImageView = m_Renderer->CreateColorResources(textureImage, textureImageMemory);
+
+		VkImage depthImage;
+		VkDeviceMemory depthImageMemory;
+		m_Renderer->CreateImage(m_Renderer->GetSwapChainExtent().width, m_Renderer->GetSwapChainExtent().height, 1, m_Renderer->GetMsaaSamples(), m_Renderer->FindDepthFormat(), VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, depthImage, depthImageMemory);
+		VkImageView depthImageView = m_Renderer->CreateImageView(depthImage, m_Renderer->FindDepthFormat(), 1, VK_IMAGE_ASPECT_DEPTH_BIT);
+
 		VulkanTexture vTexture;
 		vTexture.name = name;
 		vTexture.textureImage = textureImage;
@@ -90,6 +107,11 @@ namespace Rbk
 		vTexture.texWidth = texWidth;
 		vTexture.texHeight = texHeight;
 		vTexture.texChannels = texChannels;
+		vTexture.colorImageView = colorImageView;
+		vTexture.depthImage = depthImage;
+		vTexture.depthImageView = depthImageView;
+		vTexture.depthImageMemory = depthImageMemory;
+
 
 		m_Textures.emplace(name, vTexture);
 	}
@@ -119,26 +141,27 @@ namespace Rbk
 			m_Meshes.uniformBuffers.emplace_back(uniformBuffer);
 		}
 
-		VkImage depthImage;
-		VkDeviceMemory depthImageMemory;
-		m_Renderer->CreateImage(m_Renderer->GetSwapChainExtent().width, m_Renderer->GetSwapChainExtent().height, 1, m_Renderer->FindDepthFormat(), VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, depthImage, depthImageMemory);
-		VkImageView depthImageView = m_Renderer->CreateImageView(depthImage, m_Renderer->FindDepthFormat(), 1, VK_IMAGE_ASPECT_DEPTH_BIT);
-
-		m_Meshes.depthImage = depthImage;
-		m_Meshes.depthImageView = depthImageView;
-		m_Meshes.depthImageMemory = depthImageMemory;
-
 		m_SwapChainImageViews.resize(m_SwapChainImages.size());
 
 		for (uint32_t i = 0; i < m_SwapChainImages.size(); i++) {
 			m_SwapChainImageViews[i] = m_Renderer->CreateImageView(m_SwapChainImages[i], m_Renderer->GetSwapChainImageFormat(), VK_IMAGE_ASPECT_COLOR_BIT);
 		}
 
+		std::vector<VkImageView> depthImageViews;
+		std::vector<VkImageView> colorImageViews;
+		VkImage depthImage;
+		VkDeviceMemory depthImageMemory;
+
 		for (auto&& [textName, tex]: m_Textures) {
-			m_Renderer->CreateImage(tex.texWidth, tex.texHeight, tex.mipLevels, m_Renderer->FindDepthFormat(), VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, depthImage, depthImageMemory);			
+			depthImage = tex.depthImage;
+			depthImageMemory = tex.depthImageMemory;
+
+			m_Renderer->CreateImage(tex.texWidth, tex.texHeight, tex.mipLevels, VK_SAMPLE_COUNT_1_BIT, m_Renderer->FindDepthFormat(), VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, depthImage, depthImageMemory);
+			depthImageViews.emplace_back(tex.depthImageView);
+			colorImageViews.emplace_back(tex.colorImageView);
 		}
 
-		m_SwapChainFramebuffers = m_Renderer->CreateFramebuffers(m_RenderPass, m_SwapChainImageViews, depthImageView);
+		m_SwapChainFramebuffers = m_Renderer->CreateFramebuffers(m_RenderPass, m_SwapChainImageViews, depthImageViews, colorImageViews);
 
 		m_CommandBuffers = m_Renderer->AllocateCommandBuffers(m_CommandPool, (uint32_t)m_SwapChainFramebuffers.size());
 		m_Semaphores = m_Renderer->CreateSyncObjects(m_SwapChainImages);
@@ -204,13 +227,13 @@ namespace Rbk
 			ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), m_CommandBuffers[m_ImageIndex]);
 			m_Renderer->EndRenderPass(m_CommandBuffers[m_ImageIndex]);
 
-			VkImageMemoryBarrier renderEndBarrier = m_Renderer->SetupImageMemoryBarrier(
-				m_SwapChainImages[m_ImageIndex], VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT, 0, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR
-			);
+			//VkImageMemoryBarrier renderEndBarrier = m_Renderer->SetupImageMemoryBarrier(
+			//	m_SwapChainImages[m_ImageIndex], VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT, 0, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR
+			//);
 
-			m_Renderer->AddPipelineBarrier(
-				m_CommandBuffers[m_ImageIndex], renderEndBarrier, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_DEPENDENCY_BY_REGION_BIT
-			);
+			//m_Renderer->AddPipelineBarrier(
+			//	m_CommandBuffers[m_ImageIndex], renderEndBarrier, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_DEPENDENCY_BY_REGION_BIT
+			//);
 			m_Renderer->EndCommandBuffer(m_CommandBuffers[m_ImageIndex]);
 
 			if (-1 != m_ImageIndex) {
@@ -227,12 +250,7 @@ namespace Rbk
 		//@todo refactor all the destroy system...
 		m_Renderer->DestroySwapchain(m_Renderer->GetDevice(), m_SwapChain, m_SwapChainFramebuffers, m_SwapChainImageViews);
 		m_Renderer->DestroySemaphores(m_Semaphores);
-
 	
-		vkDestroyImageView(m_Renderer->GetDevice(), m_Meshes.depthImageView, nullptr);
-		m_Renderer->DestroyDeviceMemory(m_Meshes.depthImageMemory);
-		vkDestroyImage(m_Renderer->GetDevice(), m_Meshes.depthImage, nullptr);
-
 		for (int i = 0; i < m_Meshes.uniformBuffers.size(); i++) {
 			m_Renderer->DestroyBuffer(m_Meshes.uniformBuffers[i].first);
 			m_Renderer->DestroyDeviceMemory(m_Meshes.uniformBuffers[i].second);
@@ -240,10 +258,16 @@ namespace Rbk
 
 		for (auto item : m_Textures) {
 			vkDestroySampler(m_Renderer->GetDevice(), item.second.sampler, nullptr);
-			vkDestroyImageView(m_Renderer->GetDevice(), item.second.textureImageView, nullptr);
+
 			vkDestroyImage(m_Renderer->GetDevice(), item.second.textureImage, nullptr);
 			m_Renderer->DestroyDeviceMemory(item.second.textureImageMemory);
+			vkDestroyImageView(m_Renderer->GetDevice(), item.second.textureImageView, nullptr);
 
+			vkDestroyImage(m_Renderer->GetDevice(), item.second.depthImage, nullptr);
+			m_Renderer->DestroyDeviceMemory(item.second.depthImageMemory);
+			vkDestroyImageView(m_Renderer->GetDevice(), item.second.depthImageView, nullptr);
+
+			vkDestroyImageView(m_Renderer->GetDevice(), item.second.colorImageView, nullptr);
 		}
 		
 		for (auto pipeline : m_Pipelines) {
@@ -328,7 +352,7 @@ namespace Rbk
 		info.Subpass = 0;
 		info.MinImageCount = 3;
 		info.ImageCount = 3;
-		info.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
+		info.MSAASamples = m_Renderer->GetMsaaSamples();
 		info.Allocator = nullptr;
 		//info.CheckVkResultFn = [](VkResult err) {
 		//	std::cerr << "IMGUI VULKAN ERROR " + std::to_string(err) << std::endl;
