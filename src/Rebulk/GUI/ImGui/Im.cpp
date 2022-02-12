@@ -15,6 +15,7 @@ namespace Rbk {
 		io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
 		io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 		io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
+
 		io.ConfigDockingWithShift = false;
 		io.ConfigViewportsNoAutoMerge = true;
 		io.BackendFlags |= ImGuiBackendFlags_HasMouseCursors;

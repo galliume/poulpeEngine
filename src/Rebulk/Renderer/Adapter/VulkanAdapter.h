@@ -1,3 +1,4 @@
+#pragma once
 #include "rebulkpch.h"
 #include "IRendererAdapter.h"
 #include "Rebulk/Renderer/Vulkan/VulkanRenderer.h"
@@ -28,7 +29,10 @@ namespace Rbk
 		virtual void Destroy() override;
 		void ImmediateSubmit(std::function<void(VkCommandBuffer cmd)>&& function);
 		void SetWireFrameMode(bool wireFrameModeOn) { m_WireFrameModeOn = wireFrameModeOn; };
-
+		inline VulkanMesh GetMesh() { return m_Meshes; };
+		inline std::map<const char*, VulkanTexture> GetTextures() { return m_Textures; };
+		inline VulkanShaders GetShaders() { return m_Shaders; };
+		inline uint32_t GetSwapImageIndex() { return m_ImageIndex; };
 		inline VulkanRenderer* Rdr() { return m_Renderer; };
 		inline VkRenderPass RdrPass() { return m_RenderPass; };
 

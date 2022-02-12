@@ -2,6 +2,7 @@
 
 #define TINYOBJLOADER_IMPLEMENTATION
 //#define TINYOBJLOADER_USE_MAPBOX_EARCUT
+//#include "mapbox/earcut.hpp"
 #include "tiny_obj_loader.h"
 
 namespace Rbk

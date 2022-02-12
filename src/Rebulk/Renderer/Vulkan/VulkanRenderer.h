@@ -19,6 +19,8 @@ namespace Rbk {
 		uint32_t texWidth;
 		uint32_t texHeight;
 		uint32_t texChannels;
+		VkImage colorImage;
+		VkDeviceMemory colorImageMemory;
 		VkImageView colorImageView;
 		VkImage depthImage;
 		VkDeviceMemory depthImageMemory;
@@ -94,7 +96,7 @@ namespace Rbk {
 		VkImageView CreateImageView(VkImage image, VkFormat format, uint32_t mipLevels, VkImageAspectFlags aspectFlags = VK_IMAGE_ASPECT_COLOR_BIT);
 		void CreateTextureImage(VkCommandBuffer commandBuffer, stbi_uc* pixels, int texWidth, int texHeight, uint32_t mipLevels, VkImage& textureImage, VkDeviceMemory& textureImageMemory, VkFormat format);
 		void CopyBufferToImage(VkCommandBuffer commandBuffer, VkBuffer buffer, VkImage image, uint32_t width, uint32_t height);
-		VkSampler CreateTextureSampler(VkImageView textureImageView, uint32_t mipLevels);
+		VkSampler CreateTextureSampler(uint32_t mipLevels);
 		VkImageView CreateDepthResources(VkCommandBuffer commandBuffer);
 		VkFormat FindSupportedFormat(const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features);
 		VkFormat FindDepthFormat();
@@ -119,7 +121,6 @@ namespace Rbk {
 		void AddPipelineBarrier(VkCommandBuffer commandBuffer, VkImageMemoryBarrier renderBarrier, VkPipelineStageFlags srcStageMask, VkPipelineStageFlags dstStageMask, VkDependencyFlags dependencyFlags);
 		void WaitIdle();
 		void GenerateMipmaps(VkCommandBuffer commandBuffer, VkFormat imageFormat, VkImage image, int32_t texWidth, int32_t texHeight, uint32_t mipLevels);
-		VkImageView CreateColorResources(VkImage colorImage, VkDeviceMemory colorImageMemory);
 
 		/**
 		* Vulkan clean and destroy
@@ -153,13 +154,13 @@ namespace Rbk {
 		inline VkExtent2D GetSwapChainExtent() { return m_SwapChainExtent; };
 		inline VkSurfaceKHR GetSurface() { return m_Surface; };
 		inline void ResetCurrentFrameIndex() { m_CurrentFrame = 0; };
+		inline uint32_t GetCurrentFrame() { return m_CurrentFrame; };
 		inline VkFormat GetSwapChainImageFormat() { return m_SwapChainImageFormat; };
 		inline VkSampleCountFlagBits GetMsaaSamples() { return m_MsaaSamples; };
 		void InitDetails();
 		void CreateFence();
 		void WaitForFence();
 		VkSampleCountFlagBits GetMaxUsableSampleCount();
-
 		SwapChainSupportDetails QuerySwapChainSupport(VkPhysicalDevice device);
 
 	public:
