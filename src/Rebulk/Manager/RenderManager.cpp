@@ -33,6 +33,7 @@ namespace Rbk
 
 		UniformBufferObject ubo{};
 		ubo.model = glm::mat4(1.0f);
+		ubo.model *= glm::translate(glm::mat4(1.0f), glm::vec3(-1.0f, 0.0f, 0.0f));
 		ubo.view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
 		ubo.proj = glm::perspective(glm::radians(45.0f), width / (float)height, 0.1f, 10.0f);
 		ubo.proj[1][1] *= -1;
@@ -53,30 +54,31 @@ namespace Rbk
 		ubo3.proj[1][1] *= -1;
 
 
+		AddTexture("viking_room", "mesh/viking/viking_room.png");
 		AddTexture("diffuse_backpack",  "mesh/backpack/diffuse.png");
 		AddTexture("diffuse_moon", "mesh/moon/diffuse.jpg");
 		AddTexture("minecraft_grass", "mesh/minecraft/Grass_Block_TEX.png");
-		AddTexture("viking_room", "mesh/viking/viking_room.png");
 
 		UniformBufferObject minecraftGrass{};
 		minecraftGrass.model = glm::mat4(1.0f);
-		minecraftGrass.model *= glm::scale(glm::mat4(1.0f), glm::vec3(0.1f, 0.1f, 0.1f));
-		
+		minecraftGrass.model *= glm::scale(glm::mat4(1.0f), glm::vec3(0.4f, 0.4f, 0.4f));		
+		//minecraftGrass.model *= glm::rotate(glm::mat4(1.0f), glm::radians(180.0f), glm::vec3(0.0f, 0.0f, 1.0f));
 		minecraftGrass.view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 0.0f, 1.0f));
 		minecraftGrass.proj = glm::perspective(glm::radians(45.0f), width / (float)height, 0.1f, 10.0f);
 		minecraftGrass.proj[1][1] *= -1;
 
-		AddMesh("mesh/viking/viking_room.obj", "viking_room", ubo);
-		//AddMesh("mesh/backpack/backpack.obj", "diffuse_backpack", ubo2);
-		//AddMesh("mesh/backpack/backpack.obj", "diffuse_backpack", ubo3);
 		//AddMesh("mesh/minecraft/Grass_Block.obj", "minecraft_grass", minecraftGrass);
-		//AddMesh("mesh/kitty/kitty.obj", "diffuse_moon", ubo2);
+		AddMesh("mesh/moon/moon.obj", "diffuse_moon", ubo2);
+		//AddMesh("mesh/backpack/backpack.obj", "diffuse_backpack", ubo3, false);
+		//AddMesh("mesh/viking/viking_room.obj", "viking_room", ubo);
+		//AddMesh("mesh/backpack/backpack.obj", "diffuse_backpack", ubo3, false);
+		AddMesh("mesh/backpack/backpack.obj", "diffuse_backpack", ubo3, false);
 	}
 
 	void RenderManager::AddMesh(const char* path, const char* textureName, UniformBufferObject ubo, bool shouldInverseTextureY)
 	{
 		Mesh mesh;
-		Rbk::TinyObjLoader::LoadMesh(mesh, path);
+		Rbk::TinyObjLoader::LoadMesh(mesh, path, shouldInverseTextureY);
 
 		//@todo Add MeshManager
 		m_Renderer->AddMesh(mesh, textureName, ubo);
