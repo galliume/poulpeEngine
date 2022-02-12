@@ -953,6 +953,8 @@ namespace Rbk {
 
 	void VulkanRenderer::BeginCommandBuffer(VkCommandBuffer commandBuffer, VkCommandBufferUsageFlagBits flags)
 	{
+		vkResetCommandBuffer(commandBuffer, VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
+
 		VkCommandBufferBeginInfo beginInfo{};
 		beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 		beginInfo.flags = flags;
@@ -1218,18 +1220,16 @@ namespace Rbk {
 		std::vector<VkDescriptorImageInfo> imageInfos;
 		std::vector<VkDescriptorBufferInfo> bufferInfos;
 
-		int index = 0;
 		uint32_t offsetIndex = 0;
 
 		for (int i = 0; i < vMesh.count; i++) {
 
-			//static auto startTime = std::chrono::high_resolution_clock::now();
-			//auto currentTime = std::chrono::high_resolution_clock::now();
-			//float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
-			//float rand = std::rand() % 1;
+			static auto startTime = std::chrono::high_resolution_clock::now();
+			auto currentTime = std::chrono::high_resolution_clock::now();
+			float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
 			//vMesh.mesh.ubos[i].model *= glm::translate(glm::mat4(1.0f), glm::vec3(std::sin(time)));
-			//vMesh.mesh.ubos[i].model *= glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-			//
+			vMesh.mesh.ubos[i].model *= glm::rotate(glm::mat4(1.0f), time * glm::radians(45.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+		
 			VkDescriptorBufferInfo bufferInfo{};
 			bufferInfo.buffer = vMesh.uniformBuffers[i].first;
 			bufferInfo.offset = 0;
@@ -1250,7 +1250,7 @@ namespace Rbk {
 		descriptorWrites[0].dstBinding = 0;
 		descriptorWrites[0].dstArrayElement = 0;
 		descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-		descriptorWrites[0].descriptorCount = vMesh.count;
+		descriptorWrites[0].descriptorCount = bufferInfos.size();
 		descriptorWrites[0].pBufferInfo = bufferInfos.data();
 
 		descriptorWrites[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
@@ -1258,7 +1258,7 @@ namespace Rbk {
 		descriptorWrites[1].dstBinding = 1;
 		descriptorWrites[1].dstArrayElement = 0;
 		descriptorWrites[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-		descriptorWrites[1].descriptorCount = vMesh.count;
+		descriptorWrites[1].descriptorCount = imageInfos.size();
 		descriptorWrites[1].pImageInfo = imageInfos.data();
 	
 		vkUpdateDescriptorSets(m_Device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
@@ -1662,7 +1662,7 @@ namespace Rbk {
 		return depthImageView;
 	}
 
-	VkSampler VulkanRenderer::CreateTextureSampler(VkImageView textureImageView, uint32_t mipLevels)
+	VkSampler VulkanRenderer::CreateTextureSampler(uint32_t mipLevels)
 	{
 		VkSampler textureSampler;
 
@@ -1733,17 +1733,6 @@ namespace Rbk {
 		if (counts & VK_SAMPLE_COUNT_2_BIT) { return VK_SAMPLE_COUNT_2_BIT; }
 
 		return VK_SAMPLE_COUNT_1_BIT;
-	}
-
-	VkImageView VulkanRenderer::CreateColorResources(VkImage colorImage, VkDeviceMemory colorImageMemory)
-	{
-		VkFormat colorFormat = m_SwapChainImageFormat;
-		VkImageView colorImageView;
-
-		CreateImage(m_SwapChainExtent.width, m_SwapChainExtent.height, 1, m_MsaaSamples, colorFormat, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, colorImage, colorImageMemory);
-		colorImageView = CreateImageView(colorImage, colorFormat, VK_IMAGE_ASPECT_COLOR_BIT, 1);
-
-		return colorImageView;
 	}
 
 	void VulkanRenderer::CreateFence()

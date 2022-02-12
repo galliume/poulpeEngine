@@ -88,9 +88,12 @@ namespace Rbk
 		m_Renderer->CreateTextureImage(commandBuffer, pixels, texWidth, texHeight, mipLevels, textureImage, textureImageMemory, VK_FORMAT_R8G8B8A8_SRGB);
 
 		VkImageView textureImageView = m_Renderer->CreateImageView(textureImage, VK_FORMAT_R8G8B8A8_SRGB, mipLevels);
-		VkSampler textureSampler = m_Renderer->CreateTextureSampler(textureImageView, mipLevels);
+		VkSampler textureSampler = m_Renderer->CreateTextureSampler(mipLevels);
 
-		VkImageView colorImageView = m_Renderer->CreateColorResources(textureImage, textureImageMemory);
+		VkDeviceMemory colorImageMemory;
+		VkImage colorImage;
+		m_Renderer->CreateImage(m_Renderer->GetSwapChainExtent().width, m_Renderer->GetSwapChainExtent().height, 1, m_Renderer->GetMsaaSamples(), m_Renderer->GetSwapChainImageFormat(), VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, colorImage, colorImageMemory);
+		VkImageView colorImageView = m_Renderer->CreateImageView(colorImage, m_Renderer->GetSwapChainImageFormat(), VK_IMAGE_ASPECT_COLOR_BIT, 1);
 
 		VkImage depthImage;
 		VkDeviceMemory depthImageMemory;
@@ -108,10 +111,11 @@ namespace Rbk
 		vTexture.texHeight = texHeight;
 		vTexture.texChannels = texChannels;
 		vTexture.colorImageView = colorImageView;
+		vTexture.colorImage = colorImage;
+		vTexture.colorImageMemory = colorImageMemory;
 		vTexture.depthImage = depthImage;
 		vTexture.depthImageView = depthImageView;
 		vTexture.depthImageMemory = depthImageMemory;
-
 
 		m_Textures.emplace(name, vTexture);
 	}
@@ -206,6 +210,7 @@ namespace Rbk
 
 		for (size_t i = 0; i < m_SwapChainImages.size(); i++) {
 
+
 			m_ImageIndex = m_Renderer->AcquireNextImageKHR(m_SwapChain, m_Semaphores);
 			m_Renderer->BeginCommandBuffer(m_CommandBuffers[m_ImageIndex]);
 
@@ -226,14 +231,6 @@ namespace Rbk
 			m_Renderer->Draw(m_CommandBuffers[m_ImageIndex], m_Meshes, m_Textures, ppline);
 			ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), m_CommandBuffers[m_ImageIndex]);
 			m_Renderer->EndRenderPass(m_CommandBuffers[m_ImageIndex]);
-
-			//VkImageMemoryBarrier renderEndBarrier = m_Renderer->SetupImageMemoryBarrier(
-			//	m_SwapChainImages[m_ImageIndex], VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT, 0, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR
-			//);
-
-			//m_Renderer->AddPipelineBarrier(
-			//	m_CommandBuffers[m_ImageIndex], renderEndBarrier, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_DEPENDENCY_BY_REGION_BIT
-			//);
 			m_Renderer->EndCommandBuffer(m_CommandBuffers[m_ImageIndex]);
 
 			if (-1 != m_ImageIndex) {
@@ -267,6 +264,8 @@ namespace Rbk
 			m_Renderer->DestroyDeviceMemory(item.second.depthImageMemory);
 			vkDestroyImageView(m_Renderer->GetDevice(), item.second.depthImageView, nullptr);
 
+			vkDestroyImage(m_Renderer->GetDevice(), item.second.colorImage, nullptr);
+			m_Renderer->DestroyDeviceMemory(item.second.colorImageMemory);
 			vkDestroyImageView(m_Renderer->GetDevice(), item.second.colorImageView, nullptr);
 		}
 		

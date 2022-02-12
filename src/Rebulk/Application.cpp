@@ -77,13 +77,13 @@ namespace Rbk
 			glfwPollEvents();
 
 			Rbk::Im::NewFrame();
+			vulkanLayer->AddRenderAdapter(rendererAdapter.get());
 			vulkanLayer->Render(timeStep, rendererAdapter->Rdr()->GetDeviceProperties());
-			vulkanLayer->DisplayOptions(wireFrameModeOn);
+			vulkanLayer->DisplayOptions();
 
 			ImGui::ShowDemoWindow();
 			Rbk::Im::Render();
 
-			rendererAdapter->SetWireFrameMode(wireFrameModeOn);
 			renderManager->PrepareDraw();
 			renderManager->Draw();
 
