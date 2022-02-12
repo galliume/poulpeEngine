@@ -35,7 +35,7 @@ namespace Rbk
 	void VulkanLayer::DisplayAPI(VkPhysicalDeviceProperties devicesProps)
 	{
 		if (ImGui::CollapsingHeader("Informations"))
-		{
+		{			
 			Rbk::Im::Text("API Version : %d", devicesProps.apiVersion);
 			Rbk::Im::Text("Drivers version : %d", devicesProps.driverVersion);
 			Rbk::Im::Text("Vendor id : %d", devicesProps.vendorID);
@@ -47,11 +47,7 @@ namespace Rbk
 	{
 		if (ImGui::CollapsingHeader("Rendering options"))
 		{
-			if (ImGui::BeginTable("split", 3))
-			{
-				ImGui::TableNextColumn(); ImGui::Checkbox("Wireframe", &wireFrameModeOn);
-				ImGui::EndTable();
-			}
+			ImGui::TableNextColumn(); ImGui::Checkbox("Wireframe", &wireFrameModeOn);
 		}
 	}
 }
