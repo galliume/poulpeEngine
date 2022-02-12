@@ -17,7 +17,6 @@ namespace Rbk
 		m_RenderPass = m_Renderer->CreateRenderPass();
 		m_SwapChain = m_Renderer->CreateSwapChain(m_SwapChainImages);
 		m_CommandPool = m_Renderer->CreateCommandPool();
-		//m_DescriptorPool = m_Renderer->CreateDescriptorPool(m_SwapChainImages);
 		VulkanShaders m_Shaders;
 	}
 
@@ -58,19 +57,28 @@ namespace Rbk
 	void VulkanAdapter::AddTexture(const char* name, const char* path)
 	{
 		if (0 != m_Textures.count(name)) {
-			std::cout << "Texture name " << name << " already imported" << std::endl;
+			std::cout << "Texture " << name << " already imported" << std::endl;
+			return;
+		}
+
+		int texWidth, texHeight, texChannels;
+		stbi_uc* pixels = stbi_load(path, &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
+
+		if (!pixels) {
+			Rbk::Log::GetLogger()->warn("failed to load texture image %s", name);
 			return;
 		}
 
 		VkImage textureImage;
 		VkDeviceMemory textureImageMemory;
+		uint32_t mipLevels = static_cast<uint32_t>(std::floor(std::log2(std::max(texWidth, texHeight)))) + 1;
 
 		VkCommandBuffer commandBuffer = m_Renderer->AllocateCommandBuffers(m_CommandPool)[0];
 		m_Renderer->BeginCommandBuffer(commandBuffer);
-		m_Renderer->CreateTextureImage(commandBuffer, path, textureImage, textureImageMemory);
+		m_Renderer->CreateTextureImage(commandBuffer, pixels, texWidth, texHeight, mipLevels, textureImage, textureImageMemory, VK_FORMAT_R8G8B8A8_SRGB);
 
-		VkImageView textureImageView = m_Renderer->CreateImageView(textureImage, VK_FORMAT_R8G8B8A8_SRGB);
-		VkSampler textureSampler = m_Renderer->CreateTextureSampler(textureImageView);
+		VkImageView textureImageView = m_Renderer->CreateImageView(textureImage, VK_FORMAT_R8G8B8A8_SRGB, mipLevels);
+		VkSampler textureSampler = m_Renderer->CreateTextureSampler(textureImageView, mipLevels);
 
 		VulkanTexture vTexture;
 		vTexture.name = name;
@@ -78,6 +86,10 @@ namespace Rbk
 		vTexture.textureImageMemory = textureImageMemory;
 		vTexture.textureImageView = textureImageView;
 		vTexture.sampler = textureSampler;
+		vTexture.mipLevels = mipLevels;
+		vTexture.texWidth = texWidth;
+		vTexture.texHeight = texHeight;
+		vTexture.texChannels = texChannels;
 
 		m_Textures.emplace(name, vTexture);
 	}
@@ -109,8 +121,8 @@ namespace Rbk
 
 		VkImage depthImage;
 		VkDeviceMemory depthImageMemory;
-		m_Renderer->CreateImage(m_Renderer->GetSwapChainExtent().width, m_Renderer->GetSwapChainExtent().height, m_Renderer->FindDepthFormat(), VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, depthImage, depthImageMemory);
-		VkImageView depthImageView = m_Renderer->CreateImageView(depthImage, m_Renderer->FindDepthFormat(), VK_IMAGE_ASPECT_DEPTH_BIT);
+		m_Renderer->CreateImage(m_Renderer->GetSwapChainExtent().width, m_Renderer->GetSwapChainExtent().height, 1, m_Renderer->FindDepthFormat(), VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, depthImage, depthImageMemory);
+		VkImageView depthImageView = m_Renderer->CreateImageView(depthImage, m_Renderer->FindDepthFormat(), 1, VK_IMAGE_ASPECT_DEPTH_BIT);
 
 		m_Meshes.depthImage = depthImage;
 		m_Meshes.depthImageView = depthImageView;
@@ -121,7 +133,13 @@ namespace Rbk
 		for (uint32_t i = 0; i < m_SwapChainImages.size(); i++) {
 			m_SwapChainImageViews[i] = m_Renderer->CreateImageView(m_SwapChainImages[i], m_Renderer->GetSwapChainImageFormat(), VK_IMAGE_ASPECT_COLOR_BIT);
 		}
+
+		for (auto&& [textName, tex]: m_Textures) {
+			m_Renderer->CreateImage(tex.texWidth, tex.texHeight, tex.mipLevels, m_Renderer->FindDepthFormat(), VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, depthImage, depthImageMemory);			
+		}
+
 		m_SwapChainFramebuffers = m_Renderer->CreateFramebuffers(m_RenderPass, m_SwapChainImageViews, depthImageView);
+
 		m_CommandBuffers = m_Renderer->AllocateCommandBuffers(m_CommandPool, (uint32_t)m_SwapChainFramebuffers.size());
 		m_Semaphores = m_Renderer->CreateSyncObjects(m_SwapChainImages);
 
@@ -139,9 +157,17 @@ namespace Rbk
 			vPipeline.descriptorSets.emplace_back(m_Renderer->CreateDescriptorSets(vPipeline.descriptorPool, m_SwapChainImages, vPipeline.descriptorSetLayouts));		
 			vPipeline.pipelineLayout = m_Renderer->CreatePipelineLayout(vPipeline.descriptorSets, vPipeline.descriptorSetLayouts);			
 			vPipeline.graphicsPipeline.emplace_back(m_Renderer->CreateGraphicsPipeline(m_RenderPass, vPipeline, m_Shaders));
-			vPipeline.graphicsPipeline.emplace_back(m_Renderer->CreateGraphicsPipeline(m_RenderPass, vPipeline, m_Shaders, true));
-
 			m_Pipelines.emplace_back(vPipeline);
+
+			VulkanPipeline vPipelineWireFramed;
+			vPipelineWireFramed.pipelineCache = 0;
+			vPipelineWireFramed.descriptorPool = m_Renderer->CreateDescriptorPool(m_SwapChainImages);
+			vPipelineWireFramed.descriptorSetLayouts.emplace_back(m_Renderer->CreateDescriptorSetLayout(m_Meshes.count));
+			vPipelineWireFramed.descriptorSets.emplace_back(m_Renderer->CreateDescriptorSets(vPipeline.descriptorPool, m_SwapChainImages, vPipeline.descriptorSetLayouts));
+			vPipelineWireFramed.pipelineLayout = m_Renderer->CreatePipelineLayout(vPipeline.descriptorSets, vPipeline.descriptorSetLayouts);
+			vPipelineWireFramed.graphicsPipeline.emplace_back(m_Renderer->CreateGraphicsPipeline(m_RenderPass, vPipeline, m_Shaders, true));
+
+			m_Pipelines.emplace_back(vPipelineWireFramed);
 		}
 
 		m_IsPrepared = true;
@@ -170,8 +196,11 @@ namespace Rbk
 			m_Renderer->BeginRenderPass(m_RenderPass, m_CommandBuffers[m_ImageIndex], m_SwapChainFramebuffers[m_ImageIndex]);
 			m_Renderer->SetViewPort(m_CommandBuffers[m_ImageIndex]);
 			m_Renderer->SetScissor(m_CommandBuffers[m_ImageIndex]);
-			m_Renderer->BindPipeline(m_CommandBuffers[m_ImageIndex], (!m_WireFrameModeOn) ? m_Pipelines[0].graphicsPipeline[0] : m_Pipelines[0].graphicsPipeline[1]);
-			m_Renderer->Draw(m_CommandBuffers[m_ImageIndex], m_Meshes, m_Textures, m_Pipelines[0]);
+
+			VulkanPipeline ppline = (!m_WireFrameModeOn) ? m_Pipelines[0] : m_Pipelines[1];
+
+			m_Renderer->BindPipeline(m_CommandBuffers[m_ImageIndex], ppline.graphicsPipeline[0]);
+			m_Renderer->Draw(m_CommandBuffers[m_ImageIndex], m_Meshes, m_Textures, ppline);
 			ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), m_CommandBuffers[m_ImageIndex]);
 			m_Renderer->EndRenderPass(m_CommandBuffers[m_ImageIndex]);
 
