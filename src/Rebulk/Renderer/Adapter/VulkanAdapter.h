@@ -11,6 +11,7 @@ namespace Rbk
 		ImGui_ImplVulkan_InitInfo info = {};
 		VkCommandBuffer cmdBuffer = nullptr;
 		VkPipeline pipeline = nullptr;
+		VkRenderPass* rdrPass = nullptr;
 	};
 
 	class VulkanAdapter : public IRendererAdapter
@@ -35,7 +36,7 @@ namespace Rbk
 		inline uint32_t GetSwapImageIndex() { return m_ImageIndex; };
 		inline VulkanRenderer* Rdr() { return m_Renderer; };
 		inline VkRenderPass RdrPass() { return m_RenderPass; };
-		VkRenderPass CreateImGuiRenderPass();
+		VkRenderPass* CreateImGuiRenderPass();
 
 		void Clear();
 		void SouldResizeSwapChain();
