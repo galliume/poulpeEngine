@@ -5,7 +5,7 @@ namespace Rbk
 {
 	VulkanLayer::VulkanLayer()
 	{
-		m_WireframeModeOn = false;
+
 	}
 
 	void VulkanLayer::Init()
@@ -27,8 +27,8 @@ namespace Rbk
 	void VulkanLayer::DisplayFpsCounter(double timeStep)
 	{
 		ImGui::Begin("Performances stats");	
-		Rbk::Im::Text("FPS : %f", 1 / timeStep);
-		Rbk::Im::Text("Frametime : %f", timeStep);	
+		Rbk::Im::Text("FPS : %.2f", 1 / timeStep);
+		Rbk::Im::Text("Frametime : %.2f ms", timeStep * 1000);	
 		ImGui::End();
 	}
 
@@ -62,11 +62,18 @@ namespace Rbk
 	{
 		ImGui::Begin("Rendering options");
 		
-		ImGui::TableNextColumn(); ImGui::Checkbox("Wireframe", &m_WireframeModeOn);
+		ImGui::Checkbox("VSync", &m_VSync);
+		ImGui::Checkbox("Wireframe", &m_WireframeModeOn);
+		ImGui::Checkbox("Show ImGui demo", &m_ShowDemo);
 
 		ImGui::End();
 		
 		m_Adapter->SetWireFrameMode(m_WireframeModeOn);
+		m_Window->SetVSync(m_VSync);
+
+		if (m_ShowDemo) {
+			ImGui::ShowDemoWindow();
+		}
 	}
 
 	void VulkanLayer::AddRenderAdapter(VulkanAdapter* renderAdapter)

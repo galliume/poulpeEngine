@@ -308,7 +308,7 @@ namespace Rbk
 	}
 
 
-	VkRenderPass VulkanAdapter::CreateImGuiRenderPass()
+	VkRenderPass* VulkanAdapter::CreateImGuiRenderPass()
 	{
 		VkRenderPass renderPass;
 
@@ -346,7 +346,7 @@ namespace Rbk
 
 		vkCreateRenderPass(m_Renderer->GetDevice(), &info, nullptr, &renderPass);
 
-		return renderPass;
+		return &renderPass;
 	}
 
 	VImGuiInfo VulkanAdapter::GetVImGuiInfo()
@@ -398,6 +398,7 @@ namespace Rbk
 
 		VImGuiInfo vImGuiInfo;
 		vImGuiInfo.info = info;
+		vImGuiInfo.rdrPass = CreateImGuiRenderPass();
 		vImGuiInfo.cmdBuffer = m_Renderer->AllocateCommandBuffers(m_CommandPool)[0];
 		//vImGuiInfo.pipeline = m_Pipelines[0].graphicsPipeline;
 
