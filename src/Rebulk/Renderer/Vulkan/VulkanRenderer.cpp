@@ -379,7 +379,7 @@ namespace Rbk {
 
 		if (result != VK_SUCCESS) {
 			Rbk::Log::GetLogger()->critical("failed to create window surface!");
-			return;
+			throw std::runtime_error("failed to create window surface!");
 		}
 
 		Rbk::Log::GetLogger()->debug("successfully create window surface!");
@@ -1077,7 +1077,7 @@ namespace Rbk {
 		renderPassInfo.renderArea.extent = m_SwapChainExtent;
 
 		std::array<VkClearValue, 2> clearValues{};
-		clearValues[0].color = { {0.0f, 0.0f, 0.0f, 1.0f} };
+		clearValues[0].color = { {0.2745f, 0.3725f, 0.4705f, 1.0f} };
 		clearValues[1].depthStencil = { 1.0f, 0 };
 
 		renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
@@ -1223,13 +1223,6 @@ namespace Rbk {
 		uint32_t offsetIndex = 0;
 
 		for (int i = 0; i < vMesh.count; i++) {
-
-			static auto startTime = std::chrono::high_resolution_clock::now();
-			auto currentTime = std::chrono::high_resolution_clock::now();
-			float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
-			//vMesh.mesh.ubos[i].model *= glm::translate(glm::mat4(1.0f), glm::vec3(std::sin(time)));
-			//vMesh.mesh.ubos[i].model *= glm::rotate(glm::mat4(1.0f), time * glm::radians(45.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-		
 			VkDescriptorBufferInfo bufferInfo{};
 			bufferInfo.buffer = vMesh.uniformBuffers[i].first;
 			bufferInfo.offset = 0;

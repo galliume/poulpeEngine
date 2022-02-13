@@ -22,8 +22,9 @@ namespace Rbk
 		~VulkanAdapter();
 
 		virtual void Init() override;
+		virtual void AddCamera(Camera* camera) override;
 		virtual void AddShader(std::string name, std::vector<char> vertexShaderCode, std::vector<char> fragShaderCode) override;
-		virtual void AddMesh(Rbk::Mesh mesh, const char* textureName, UniformBufferObject ubo) override;
+		virtual void AddMesh(Rbk::Mesh mesh, const char* textureName, glm::vec3 pos) override;
 		virtual void AddTexture(const char* name, const char* path) override;
 		virtual void PrepareDraw() override;
 		virtual void Draw() override;
@@ -44,6 +45,7 @@ namespace Rbk
 		VImGuiInfo GetVImGuiInfo();
 
 	private:
+		void UpdatePositions();
 		void Draw(VulkanShaders vShader, VulkanMesh vMesh);
 
 	private:
@@ -68,5 +70,6 @@ namespace Rbk
 		std::vector<VulkanPipeline>m_Pipelines;
 		bool m_IsPrepared = false;
 		bool m_WireFrameModeOn = false;
+		Camera* m_Camera;
 	};
 }

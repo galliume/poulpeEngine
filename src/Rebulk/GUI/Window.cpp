@@ -4,6 +4,10 @@ namespace Rbk
 {
 	Window::Window()
 	{
+	}
+
+	void Window::Init()
+	{
 		const uint32_t WIDTH = 2560;
 		const uint32_t HEIGHT = 1440;
 
