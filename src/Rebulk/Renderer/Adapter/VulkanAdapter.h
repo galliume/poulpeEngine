@@ -35,6 +35,7 @@ namespace Rbk
 		inline uint32_t GetSwapImageIndex() { return m_ImageIndex; };
 		inline VulkanRenderer* Rdr() { return m_Renderer; };
 		inline VkRenderPass RdrPass() { return m_RenderPass; };
+		VkRenderPass CreateImGuiRenderPass();
 
 		void Clear();
 		void SouldResizeSwapChain();

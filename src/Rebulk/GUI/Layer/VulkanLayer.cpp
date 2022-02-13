@@ -26,46 +26,46 @@ namespace Rbk
 
 	void VulkanLayer::DisplayFpsCounter(double timeStep)
 	{
-		if (ImGui::CollapsingHeader("Performances stats"), ImGuiTreeNodeFlags_DefaultOpen)
-		{
-			Rbk::Im::Text("FPS : %f", 1 / timeStep);
-			Rbk::Im::Text("Frametime : %f", timeStep);
-		}
+		ImGui::Begin("Performances stats");	
+		Rbk::Im::Text("FPS : %f", 1 / timeStep);
+		Rbk::Im::Text("Frametime : %f", timeStep);	
+		ImGui::End();
 	}
 
 	void VulkanLayer::DisplayAPI(VkPhysicalDeviceProperties devicesProps)
 	{
-		if (ImGui::CollapsingHeader("Informations"), ImGuiTreeNodeFlags_DefaultOpen)
-		{			
-			Rbk::Im::Text("API Version : %d", devicesProps.apiVersion);
-			Rbk::Im::Text("Drivers version : %d", devicesProps.driverVersion);
-			Rbk::Im::Text("Vendor id : %d", devicesProps.vendorID);
-			Rbk::Im::Text("GPU : %s", devicesProps.deviceName);
-			ImGui::Separator();
-			Rbk::Im::Text("Current frame %d", m_Adapter->Rdr()->GetCurrentFrame());
-			ImGui::Separator();
-			Rbk::Im::Text("Mesh count %d", m_Adapter->GetMesh().count);
-			Rbk::Im::Text("Vertex count %d", m_Adapter->GetMesh().mesh.vertices.size());
-			Rbk::Im::Text("Index count %d", m_Adapter->GetMesh().mesh.indices.size());
-			ImGui::Separator();
-			Rbk::Im::Text("Shader count %d", m_Adapter->GetShaders().shaders.size());
-			ImGui::Separator();
-			Rbk::Im::Text("Texture count %d", m_Adapter->GetTextures().size());
-			Rbk::Im::Text("Loaded textures :");
-			for (auto tex : m_Adapter->GetTextures()) {
-				Rbk::Im::Text("\t%s", tex.first);
-			}
-
+		ImGui::Begin("Informations");
+					
+		Rbk::Im::Text("API Version : %d", devicesProps.apiVersion);
+		Rbk::Im::Text("Drivers version : %d", devicesProps.driverVersion);
+		Rbk::Im::Text("Vendor id : %d", devicesProps.vendorID);
+		Rbk::Im::Text("GPU : %s", devicesProps.deviceName);
+		ImGui::Separator();
+		Rbk::Im::Text("Current frame %d", m_Adapter->Rdr()->GetCurrentFrame());
+		ImGui::Separator();
+		Rbk::Im::Text("Mesh count %d", m_Adapter->GetMesh().count);
+		Rbk::Im::Text("Vertex count %d", m_Adapter->GetMesh().mesh.vertices.size());
+		Rbk::Im::Text("Index count %d", m_Adapter->GetMesh().mesh.indices.size());
+		ImGui::Separator();
+		Rbk::Im::Text("Shader count %d", m_Adapter->GetShaders().shaders.size());
+		ImGui::Separator();
+		Rbk::Im::Text("Texture count %d", m_Adapter->GetTextures().size());
+		Rbk::Im::Text("Loaded textures :");
+		for (auto tex : m_Adapter->GetTextures()) {
+			Rbk::Im::Text("\t%s", tex.first);
 		}
+
+		ImGui::End();
 	}
 
 	void VulkanLayer::DisplayOptions()
 	{
-		if (ImGui::CollapsingHeader("Rendering options"), ImGuiTreeNodeFlags_DefaultOpen)
-		{
-			ImGui::TableNextColumn(); ImGui::Checkbox("Wireframe", &m_WireframeModeOn);
-		}
+		ImGui::Begin("Rendering options");
+		
+		ImGui::TableNextColumn(); ImGui::Checkbox("Wireframe", &m_WireframeModeOn);
 
+		ImGui::End();
+		
 		m_Adapter->SetWireFrameMode(m_WireframeModeOn);
 	}
 

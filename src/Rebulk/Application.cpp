@@ -60,7 +60,9 @@ namespace Rbk
 
 		double lastTime = glfwGetTime();
 		
-		Rbk::Im::Init(window->Get(), rendererAdapter->GetVImGuiInfo().info, rendererAdapter.get()->RdrPass());
+
+		VImGuiInfo imguiInfo = rendererAdapter->GetVImGuiInfo();
+		Rbk::Im::Init(window->Get(), imguiInfo.info, rendererAdapter.get()->CreateImGuiRenderPass());
 
 		rendererAdapter->ImmediateSubmit([&](VkCommandBuffer cmd) {
 			ImGui_ImplVulkan_CreateFontsTexture(cmd);
@@ -86,6 +88,11 @@ namespace Rbk
 
 			renderManager->PrepareDraw();
 			renderManager->Draw();
+
+
+			rendererAdapter->Rdr()->BeginCommandBuffer(imguiInfo.cmdBuffer);
+			ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), imguiInfo.cmdBuffer);
+			rendererAdapter->Rdr()->EndCommandBuffer(imguiInfo.cmdBuffer);
 
 			glfwSwapBuffers(window->Get());
 			lastTime = currentTime;

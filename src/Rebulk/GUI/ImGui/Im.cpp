@@ -4,8 +4,6 @@ namespace Rbk {
 
 	void Im::Init(GLFWwindow* window, ImGui_ImplVulkan_InitInfo initInfo, VkRenderPass renderPass)
 	{
-		ImGui::CreateContext();
-
 		IMGUI_CHECKVERSION();
 		ImGui::CreateContext();
 		ImGuiIO& io = ImGui::GetIO(); (void)io;
@@ -29,8 +27,6 @@ namespace Rbk {
 		}
 
 		ImGui::SetNextWindowPos(ImVec2(650, 20), ImGuiCond_FirstUseEver);
-
-		ImGui::CreateContext();
 		ImGui_ImplGlfw_InitForVulkan(window, true);
 		ImGui_ImplVulkan_Init(&initInfo, renderPass);
 	}
@@ -81,7 +77,6 @@ namespace Rbk {
 	{
 		ImGui::Render();
 
-		ImDrawData* main_draw_data = ImGui::GetDrawData();
 		ImGuiIO& io = ImGui::GetIO();
 
 		if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
