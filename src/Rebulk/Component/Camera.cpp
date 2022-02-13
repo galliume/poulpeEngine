@@ -53,4 +53,25 @@ namespace Rbk
 	{
 		m_Speed = 2.5f * timeStep;
 	}
+
+	void Camera::UpdateYP(float xoffset, float yoffset)
+	{
+		Rbk::Log::GetLogger()->debug("Mouse xoffset {} yoffset {}", xoffset, yoffset);
+
+		m_Yaw += xoffset;
+		m_Pitch += yoffset;
+
+		if (m_Pitch > 89.0f) {
+			m_Pitch = 89.0f;
+		}
+		if (m_Pitch < -89.0f) {
+			m_Pitch = -89.0f;
+		}
+
+		glm::vec3 direction;
+		direction.x = cos(glm::radians(m_Yaw)) * cos(glm::radians(m_Pitch));
+		direction.y = sin(glm::radians(m_Pitch));
+		direction.z = sin(glm::radians(m_Yaw)) * cos(glm::radians(m_Pitch));
+		m_Front = glm::normalize(direction);
+	}
 }

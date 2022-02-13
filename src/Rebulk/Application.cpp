@@ -5,7 +5,7 @@ namespace Rbk
 	std::shared_ptr<Rbk::Window>window = nullptr;
 	std::shared_ptr<Rbk::RenderManager>renderManager = nullptr;
 	std::shared_ptr<Rbk::Camera>camera= nullptr;
-	std::shared_ptr<Rbk::KeyManager>keyManager = nullptr;
+	std::shared_ptr<Rbk::InputManager>inputManager = nullptr;
 	std::shared_ptr<Rbk::VulkanAdapter>rendererAdapter = nullptr;
 	std::shared_ptr<Rbk::LayerManager>layerManager = nullptr;
 	std::shared_ptr<Rbk::VulkanLayer>vulkanLayer = nullptr;
@@ -43,9 +43,9 @@ namespace Rbk
 			camera->Init(width, height);
 		}
 
-		if (keyManager == nullptr) {
-			keyManager = std::make_shared<Rbk::KeyManager>(Rbk::KeyManager(window.get(), camera.get()));
-			keyManager->Init();
+		if (inputManager == nullptr) {
+			inputManager = std::make_shared<Rbk::InputManager>(Rbk::InputManager(window.get(), camera.get()));
+			inputManager->Init();
 		}
 
 		if (layerManager == nullptr) {

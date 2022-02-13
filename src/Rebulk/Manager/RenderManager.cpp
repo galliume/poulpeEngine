@@ -36,7 +36,7 @@ namespace Rbk
 		//AddMesh("mesh/viking/viking_room.obj", "viking_room", ubo);
 		//AddMesh("mesh/backpack/backpack.obj", "diffuse_backpack", ubo3, false);
 
-		glm::vec3 pos1 = glm::vec3(0.5f, 0.5f, 0.5f);
+		glm::vec3 pos1 = glm::vec3(0.1f, 0.1f, 0.1f);
 		glm::vec3 pos2 = glm::vec3(-0.5f, -0.5f, -0.5f);
 		glm::vec3 pos3 = glm::vec3(0.1f, -0.8f, 0.0f);
 
@@ -45,9 +45,9 @@ namespace Rbk
 		AddTexture("diffuse_moon", "mesh/moon/diffuse.jpg");
 		AddTexture("minecraft_grass", "mesh/minecraft/Grass_Block_TEX.png");
 
-		AddMesh("mesh/backpack/backpack.obj", "diffuse_backpack", pos1, false);
+		AddMesh("mesh/viking/viking_room.obj", "viking_room", pos1);
 		AddMesh("mesh/backpack/backpack.obj", "diffuse_backpack", pos2, false);
-		AddMesh("mesh/backpack/backpack.obj", "diffuse_backpack", pos3, false);
+		AddMesh("mesh/moon/moon.obj", "diffuse_moon", pos3);
 	}
 
 	void RenderManager::AddCamera(Camera* camera)

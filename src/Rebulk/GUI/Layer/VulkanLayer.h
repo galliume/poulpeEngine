@@ -23,6 +23,7 @@ namespace Rbk
 		bool m_WireframeModeOn = false;
 		bool m_VSync = false;
 		bool m_ShowDemo = false;
+		bool m_MakeSpin = false;
 		VulkanAdapter* m_Adapter;
 		Window* m_Window;
 	};
