@@ -86,6 +86,8 @@ namespace Rbk
 			double currentTime = glfwGetTime();
 			double timeStep = currentTime - lastTime;
 
+			camera->UpdateSpeed(timeStep);
+
 			glfwPollEvents();
 
 			renderManager->PrepareDraw();

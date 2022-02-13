@@ -13,6 +13,7 @@ namespace Rbk
 		void Left();	
 		void Right();
 		glm::mat4 LookAt();
+		void UpdateSpeed(float timeStep);
 
 	private:
 		glm::vec3 m_Pos;
@@ -23,6 +24,6 @@ namespace Rbk
 		glm::vec3 m_CameraUp;
 		glm::mat4 m_View;
 		glm::vec3 m_Front;
-		const float m_Speed = 0.05f;
+		float m_Speed;
 	};
 }
