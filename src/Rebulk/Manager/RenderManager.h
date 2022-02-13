@@ -16,7 +16,7 @@ namespace Rbk
 		void Init();
 		void AddCamera(Camera* camera);
 		void AddTexture(const char* name, const char* path);
-		void AddMesh(const char* path, const char* textureName, UniformBufferObject ubo, bool shouldInverseTextureY = true);
+		void AddMesh(const char* path, const char* textureName, glm::vec3 pos, bool shouldInverseTextureY = true);
 		void AddShader(std::string name, std::vector<char> vertShaderCode, std::vector<char> fragShaderCode);
 		void PrepareDraw();
 		void Draw();

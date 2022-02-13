@@ -2,7 +2,7 @@
 
 namespace Rbk
 {
-	void Camera::Init()
+	void Camera::Init(float width, float height)
 	{
 		m_Pos = glm::vec3(0.0f, 0.0f, 3.0f);
 		m_Target = glm::vec3(0.0f, 0.0f, 0.0f);
@@ -28,7 +28,7 @@ namespace Rbk
 	void Camera::Down()
 	{
 		Rbk::Log::GetLogger()->debug("go down");
-		m_Pos -= m_Pos * m_Front;
+		m_Pos -= m_Speed * m_Front;
 	}
 
 	void Camera::Left()
@@ -45,6 +45,7 @@ namespace Rbk
 
 	glm::mat4 Camera::LookAt()
 	{
-		return glm::lookAt(m_Pos, m_Pos + m_Front, m_CameraUp);
+		m_View = glm::lookAt(m_Pos, m_Pos + m_Front, m_CameraUp);
+		return m_View;
 	}
 }

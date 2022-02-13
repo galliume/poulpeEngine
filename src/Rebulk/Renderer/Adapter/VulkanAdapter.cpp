@@ -56,11 +56,23 @@ namespace Rbk
 		m_Camera = camera;
 	}
 
-	void VulkanAdapter::AddMesh(Rbk::Mesh mesh, const char* textureName, UniformBufferObject ubo)
+	void VulkanAdapter::AddMesh(Rbk::Mesh mesh, const char* textureName, glm::vec3 pos)
 	{			
-		ubo.view = m_Camera->LookAt();
-		ubo.proj = glm::perspective(glm::radians(45.0f), m_Renderer->GetSwapChainExtent().width / (float)m_Renderer->GetSwapChainExtent().height, 0.1f, 30.0f);
+		glm::mat4 view = glm::mat4(1.0f);
+
+		UniformBufferObject ubo;
+		ubo.model = glm::mat4(1.0f);
+		ubo.model = glm::translate(ubo.model, pos);
+		ubo.model = glm::scale(ubo.model, glm::vec3(0.1f, 0.1f, 0.1f));
+		ubo.view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
+
+		glm::mat4 projection;
+		ubo.proj = glm::perspective(glm::radians(45.0f), 800 / (float) 600, 0.1f, 100.0f);
 		ubo.proj[1][1] *= -1;
+
+		//ubo.view = m_Camera->LookAt();
+		//ubo.proj = glm::perspective(glm::radians(45.0f), m_Renderer->GetSwapChainExtent().width / (float)m_Renderer->GetSwapChainExtent().height, 0.1f, 30.0f);
+		
 
 		m_Meshes.mesh.textureNames.emplace(m_Meshes.count, textureName);
 		m_Meshes.mesh.vertices.insert(m_Meshes.mesh.vertices.end(), mesh.vertices.begin(), mesh.vertices.end());
@@ -207,7 +219,7 @@ namespace Rbk
 
 	void VulkanAdapter::UpdatePositions()
 	{
-		for (auto ubo : m_Meshes.mesh.ubos) {
+		for (auto& ubo : m_Meshes.mesh.ubos) {
 			ubo.view = m_Camera->LookAt();
 		}
 	}
