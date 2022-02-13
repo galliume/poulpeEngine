@@ -15,8 +15,10 @@ namespace Rbk
 	{
 		public:
 			Window();
+			void Init();
 			inline GLFWwindow* Get() { return m_Window; };
 			inline void SetVSync(bool active) { m_ActiveVSync = active; };
+
 	private:
 		GLFWwindow* m_Window;
 		bool m_ActiveVSync = false;
