@@ -60,9 +60,10 @@ namespace Rbk
 
 		double lastTime = glfwGetTime();
 		
-
 		VImGuiInfo imguiInfo = rendererAdapter->GetVImGuiInfo();
-		Rbk::Im::Init(window->Get(), imguiInfo.info, rendererAdapter.get()->CreateImGuiRenderPass());
+		imguiInfo.rdrPass = rendererAdapter.get()->CreateImGuiRenderPass();
+
+		Rbk::Im::Init(window->Get(), imguiInfo.info, *imguiInfo.rdrPass);
 
 		rendererAdapter->ImmediateSubmit([&](VkCommandBuffer cmd) {
 			ImGui_ImplVulkan_CreateFontsTexture(cmd);
@@ -71,6 +72,8 @@ namespace Rbk
 		ImGui_ImplVulkan_DestroyFontUploadObjects();
 		bool wireFrameModeOn = false;
 
+		vulkanLayer->AddWindow(window.get());
+
 		while (!glfwWindowShouldClose(window->Get())) {
 
 			double currentTime = glfwGetTime();
@@ -78,17 +81,16 @@ namespace Rbk
 
 			glfwPollEvents();
 
-			Rbk::Im::NewFrame();
-			vulkanLayer->AddRenderAdapter(rendererAdapter.get());
-			vulkanLayer->Render(timeStep, rendererAdapter->Rdr()->GetDeviceProperties());
-			vulkanLayer->DisplayOptions();
-
-			ImGui::ShowDemoWindow();
-			Rbk::Im::Render();
 
 			renderManager->PrepareDraw();
 			renderManager->Draw();
 
+
+			Rbk::Im::NewFrame();
+			vulkanLayer->AddRenderAdapter(rendererAdapter.get());
+			vulkanLayer->Render(timeStep, rendererAdapter->Rdr()->GetDeviceProperties());
+			vulkanLayer->DisplayOptions();
+			Rbk::Im::Render();
 
 			rendererAdapter->Rdr()->BeginCommandBuffer(imguiInfo.cmdBuffer);
 			ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), imguiInfo.cmdBuffer);
