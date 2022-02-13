@@ -6,7 +6,7 @@ namespace Rbk
 	class Camera
 	{
 	public:
-		void Init();
+		void Init(float width, float height);
 		inline glm::mat4 GetView() { return m_View; };
 		void Up();
 		void Down();
