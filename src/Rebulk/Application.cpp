@@ -1,16 +1,12 @@
 #include "Application.h"
-#include "Renderer/Adapter/VulkanAdapter.h"
-
-#include "GUI/LayerManager.h"
-#include "GUI/Layer/VulkanLayer.h"
-#include "GUI/ImGui/Im.h"
 
 namespace Rbk
 {
 	std::shared_ptr<Rbk::Window>window = nullptr;
 	std::shared_ptr<Rbk::RenderManager>renderManager = nullptr;
+	std::shared_ptr<Rbk::Camera>camera= nullptr;
+	std::shared_ptr<Rbk::KeyManager>keyManager = nullptr;
 	std::shared_ptr<Rbk::VulkanAdapter>rendererAdapter = nullptr;
-
 	std::shared_ptr<Rbk::LayerManager>layerManager = nullptr;
 	std::shared_ptr<Rbk::VulkanLayer>vulkanLayer = nullptr;
 	std::shared_ptr<Rbk::Im>vImGui = nullptr;
@@ -37,6 +33,16 @@ namespace Rbk
 
 		if (window == nullptr) {
 			window = std::make_shared<Rbk::Window>(Rbk::Window());
+			window.get()->Init();
+		}
+
+		if (camera == nullptr) {
+			camera = std::make_shared<Rbk::Camera>(Rbk::Camera());
+		}
+
+		if (keyManager == nullptr) {
+			keyManager = std::make_shared<Rbk::KeyManager>(Rbk::KeyManager(window.get(), camera.get()));
+			keyManager->Init();
 		}
 
 		if (layerManager == nullptr) {
@@ -50,14 +56,12 @@ namespace Rbk
 			rendererAdapter = std::make_shared<Rbk::VulkanAdapter>(Rbk::VulkanAdapter(window->Get()));
 			renderManager = std::make_shared<Rbk::RenderManager>(Rbk::RenderManager(window->Get(), rendererAdapter.get()));
 			renderManager->Init();
+			renderManager->AddCamera(camera.get());
 		}
 	}
 
 	void Application::Run()
 	{
-		//todo move to Window
-		glfwSetWindowUserPointer(window->Get(), renderManager->Adp());
-
 		double lastTime = glfwGetTime();
 		
 		VImGuiInfo imguiInfo = rendererAdapter->GetVImGuiInfo();
@@ -81,10 +85,8 @@ namespace Rbk
 
 			glfwPollEvents();
 
-
 			renderManager->PrepareDraw();
 			renderManager->Draw();
-
 
 			Rbk::Im::NewFrame();
 			vulkanLayer->AddRenderAdapter(rendererAdapter.get());

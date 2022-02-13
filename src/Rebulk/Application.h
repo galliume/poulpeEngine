@@ -1,7 +1,15 @@
 #pragma once
 
 #include "rebulkpch.h"
+
 #include "Manager/RenderManager.h"
+#include "Manager/KeyManager.h"
+
+#include "Renderer/Adapter/VulkanAdapter.h"
+
+#include "GUI/LayerManager.h"
+#include "GUI/Layer/VulkanLayer.h"
+#include "GUI/ImGui/Im.h"
 #include "Rebulk/GUI/Window.h"
 
 namespace Rbk 

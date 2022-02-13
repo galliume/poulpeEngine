@@ -28,31 +28,21 @@ namespace Rbk
 
 		AddShader("main", vertShaderCode, fragShaderCode);
 
-		int width, height;
-		glfwGetWindowSize(m_Window, &width, &height);
-
 		UniformBufferObject ubo{};
 		ubo.model = glm::mat4(1.0f);
 		ubo.model *= glm::translate(glm::mat4(1.0f), glm::vec3(-1.0f, 0.0f, 0.0f));
-		ubo.view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-		ubo.proj = glm::perspective(glm::radians(45.0f), width / (float)height, 0.1f, 10.0f);
-		ubo.proj[1][1] *= -1;
+		ubo.view = glm::mat4(1.0f);
 
 		UniformBufferObject ubo2{};
 		ubo2.model = glm::mat4(1.0f);
 		ubo2.model = glm::scale(ubo2.model, glm::vec3(0.3f, 0.3f, 0.3f));
-		ubo2.view = glm::lookAt(glm::vec3(0.0f, -0.5f, 3.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-		ubo2.proj = glm::perspective(glm::radians(45.0f), width / (float)height, 0.1f, 10.0f);
-		ubo2.proj[1][1] *= -1;
+		ubo2.view = glm::mat4(1.0f);
 
 		UniformBufferObject ubo3{};
 		ubo3.model = glm::mat4(1.0f);
 		ubo3.model = glm::scale(ubo3.model, glm::vec3(0.2f, 0.2f, 0.2f));
 		ubo3.model *= glm::translate(glm::mat4(1.0f), glm::vec3(-6.0f, 0.0f, 0.0f));
-		ubo3.view = glm::lookAt(glm::vec3(0.0f, -0.5f, 3.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-		ubo3.proj = glm::perspective(glm::radians(45.0f), width / (float)height, 0.1f, 10.0f);
-		ubo3.proj[1][1] *= -1;
-
+		ubo3.view = glm::mat4(1.0f);	
 
 		AddTexture("viking_room", "mesh/viking/viking_room.png");
 		AddTexture("diffuse_backpack",  "mesh/backpack/diffuse.png");
@@ -63,9 +53,7 @@ namespace Rbk
 		minecraftGrass.model = glm::mat4(1.0f);
 		minecraftGrass.model *= glm::scale(glm::mat4(1.0f), glm::vec3(0.4f, 0.4f, 0.4f));		
 		//minecraftGrass.model *= glm::rotate(glm::mat4(1.0f), glm::radians(180.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-		minecraftGrass.view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 0.0f, 1.0f));
-		minecraftGrass.proj = glm::perspective(glm::radians(45.0f), width / (float)height, 0.1f, 10.0f);
-		minecraftGrass.proj[1][1] *= -1;
+		minecraftGrass.view = glm::mat4(1.0f);
 
 		//AddMesh("mesh/minecraft/Grass_Block.obj", "minecraft_grass", minecraftGrass);
 		AddMesh("mesh/moon/moon.obj", "diffuse_moon", ubo2);
@@ -73,6 +61,11 @@ namespace Rbk
 		AddMesh("mesh/viking/viking_room.obj", "viking_room", ubo);
 		//AddMesh("mesh/backpack/backpack.obj", "diffuse_backpack", ubo3, false);
 		AddMesh("mesh/backpack/backpack.obj", "diffuse_backpack", ubo3, false);
+	}
+
+	void RenderManager::AddCamera(Camera* camera)
+	{
+		m_Renderer->AddCamera(camera);
 	}
 
 	void RenderManager::AddMesh(const char* path, const char* textureName, UniformBufferObject ubo, bool shouldInverseTextureY)
