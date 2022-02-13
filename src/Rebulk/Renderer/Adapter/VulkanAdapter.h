@@ -38,6 +38,7 @@ namespace Rbk
 		inline VulkanRenderer* Rdr() { return m_Renderer; };
 		inline VkRenderPass RdrPass() { return m_RenderPass; };
 		VkRenderPass* CreateImGuiRenderPass();
+		inline void MakeSpin(bool spin) { m_MakeSpin = spin; };
 
 		void Clear();
 		void SouldResizeSwapChain();
@@ -70,6 +71,7 @@ namespace Rbk
 		std::vector<VulkanPipeline>m_Pipelines;
 		bool m_IsPrepared = false;
 		bool m_WireFrameModeOn = false;
+		bool m_MakeSpin = false;
 		Camera* m_Camera;
 	};
 }

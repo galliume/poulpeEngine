@@ -14,6 +14,7 @@ namespace Rbk
 		void Right();
 		glm::mat4 LookAt();
 		void UpdateSpeed(float timeStep);
+		void UpdateYP(float xoffset, float yoffset);
 
 	private:
 		glm::vec3 m_Pos;
@@ -24,6 +25,9 @@ namespace Rbk
 		glm::vec3 m_CameraUp;
 		glm::mat4 m_View;
 		glm::vec3 m_Front;
+		float m_Yaw = -90.0f;
+		float m_Pitch;
+
 		float m_Speed;
 	};
 }
