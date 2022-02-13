@@ -72,7 +72,7 @@ namespace Rbk {
 		/**
 		* Vulkan init functions, before main loop.
 		**/
-		VkRenderPass CreateRenderPass();
+		VkRenderPass CreateRenderPass(VkSampleCountFlagBits msaaSamples);
 		VkShaderModule CreateShaderModule(const std::vector<char>& code);
 		VkDescriptorPool CreateDescriptorPool(std::vector<VkImage> swapChainImages);
 		VkDescriptorSetLayout CreateDescriptorSetLayout(uint32_t meshCount);

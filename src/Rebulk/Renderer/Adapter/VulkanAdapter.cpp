@@ -14,7 +14,7 @@ namespace Rbk
 
 	void VulkanAdapter::Init()
 	{
-		m_RenderPass = m_Renderer->CreateRenderPass();
+		m_RenderPass = m_Renderer->CreateRenderPass(m_Renderer->GetMsaaSamples());
 		m_SwapChain = m_Renderer->CreateSwapChain(m_SwapChainImages);
 		m_CommandPool = m_Renderer->CreateCommandPool();
 		VulkanShaders m_Shaders;
@@ -205,8 +205,7 @@ namespace Rbk
 		SouldResizeSwapChain();
 
 		for (size_t i = 0; i < m_SwapChainImages.size(); i++) {
-
-
+		
 			m_ImageIndex = m_Renderer->AcquireNextImageKHR(m_SwapChain, m_Semaphores);
 			m_Renderer->BeginCommandBuffer(m_CommandBuffers[m_ImageIndex]);
 
@@ -225,7 +224,6 @@ namespace Rbk
 
 			m_Renderer->BindPipeline(m_CommandBuffers[m_ImageIndex], ppline.graphicsPipeline[0]);
 			m_Renderer->Draw(m_CommandBuffers[m_ImageIndex], m_Meshes, m_Textures, ppline);
-			ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), m_CommandBuffers[m_ImageIndex]);
 			m_Renderer->EndRenderPass(m_CommandBuffers[m_ImageIndex]);
 			m_Renderer->EndCommandBuffer(m_CommandBuffers[m_ImageIndex]);
 
@@ -233,6 +231,7 @@ namespace Rbk
 				m_Renderer->QueueSubmit(m_ImageIndex, m_CommandBuffers[m_ImageIndex], m_Semaphores);
 				m_Renderer->QueuePresent(m_ImageIndex, m_SwapChain, m_Semaphores);
 			}
+
 			m_Renderer->WaitIdle();
 		}
 		m_Renderer->ResetCommandPool(m_CommandPool);
@@ -308,6 +307,48 @@ namespace Rbk
 		m_Renderer->WaitForFence();
 	}
 
+
+	VkRenderPass VulkanAdapter::CreateImGuiRenderPass()
+	{
+		VkRenderPass renderPass;
+
+		VkAttachmentDescription attachment = {};
+		attachment.format = VK_FORMAT_B8G8R8A8_UNORM;
+		attachment.samples = VK_SAMPLE_COUNT_1_BIT;
+		attachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+		attachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+		attachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+		attachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+		attachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+		attachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+		VkAttachmentReference color_attachment = {};
+		color_attachment.attachment = 0;
+		color_attachment.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+		VkSubpassDescription subpass = {};
+		subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+		subpass.colorAttachmentCount = 1;
+		subpass.pColorAttachments = &color_attachment;
+		VkSubpassDependency dependency = {};
+		dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
+		dependency.dstSubpass = 0;
+		dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+		dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+		dependency.srcAccessMask = 0;
+		dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+		VkRenderPassCreateInfo info = {};
+		info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+		info.attachmentCount = 1;
+		info.pAttachments = &attachment;
+		info.subpassCount = 1;
+		info.pSubpasses = &subpass;
+		info.dependencyCount = 1;
+		info.pDependencies = &dependency;
+
+		vkCreateRenderPass(m_Renderer->GetDevice(), &info, nullptr, &renderPass);
+
+		return renderPass;
+	}
+
 	VImGuiInfo VulkanAdapter::GetVImGuiInfo()
 	{
 		VkDescriptorPoolSize pool_sizes[] =
@@ -347,7 +388,7 @@ namespace Rbk
 		info.Subpass = 0;
 		info.MinImageCount = 3;
 		info.ImageCount = 3;
-		//info.MSAASamples = m_Renderer->GetMsaaSamples();
+		info.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
 		info.Allocator = nullptr;
 		info.CheckVkResultFn = [](VkResult err) {
 			if (0 == err) return;

@@ -68,9 +68,9 @@ namespace Rbk
 		minecraftGrass.proj[1][1] *= -1;
 
 		//AddMesh("mesh/minecraft/Grass_Block.obj", "minecraft_grass", minecraftGrass);
-		//AddMesh("mesh/moon/moon.obj", "diffuse_moon", ubo2);
+		AddMesh("mesh/moon/moon.obj", "diffuse_moon", ubo2);
 		//AddMesh("mesh/backpack/backpack.obj", "diffuse_backpack", ubo3, false);
-		//AddMesh("mesh/viking/viking_room.obj", "viking_room", ubo);
+		AddMesh("mesh/viking/viking_room.obj", "viking_room", ubo);
 		//AddMesh("mesh/backpack/backpack.obj", "diffuse_backpack", ubo3, false);
 		AddMesh("mesh/backpack/backpack.obj", "diffuse_backpack", ubo3, false);
 	}
