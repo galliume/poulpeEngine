@@ -24,6 +24,7 @@ namespace Rbk
 
 		switch (action)
 		{
+			case GLFW_REPEAT:
 			case GLFW_PRESS:
 			{
 				if (glfwGetKey(m_Window->Get(), GLFW_KEY_W) == GLFW_PRESS) {
@@ -42,11 +43,6 @@ namespace Rbk
 				break;
 			}
 			case GLFW_RELEASE:
-			{
-
-				break;
-			}
-			case GLFW_REPEAT:
 			{
 
 				break;

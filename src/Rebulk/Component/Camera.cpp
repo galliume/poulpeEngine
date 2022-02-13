@@ -48,4 +48,9 @@ namespace Rbk
 		m_View = glm::lookAt(m_Pos, m_Pos + m_Front, m_CameraUp);
 		return m_View;
 	}
+
+	void Camera::UpdateSpeed(float timeStep)
+	{
+		m_Speed = 2.5f * timeStep;
+	}
 }
