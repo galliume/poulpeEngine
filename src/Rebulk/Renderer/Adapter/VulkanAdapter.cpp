@@ -70,10 +70,6 @@ namespace Rbk
 		ubo.proj = glm::perspective(glm::radians(45.0f), 800 / (float) 600, 0.1f, 100.0f);
 		ubo.proj[1][1] *= -1;
 
-		//ubo.view = m_Camera->LookAt();
-		//ubo.proj = glm::perspective(glm::radians(45.0f), m_Renderer->GetSwapChainExtent().width / (float)m_Renderer->GetSwapChainExtent().height, 0.1f, 30.0f);
-		
-
 		m_Meshes.mesh.textureNames.emplace(m_Meshes.count, textureName);
 		m_Meshes.mesh.vertices.insert(m_Meshes.mesh.vertices.end(), mesh.vertices.begin(), mesh.vertices.end());
 		m_Meshes.mesh.indices.insert(m_Meshes.mesh.indices.end(), mesh.indices.begin(), mesh.indices.end());
@@ -221,6 +217,10 @@ namespace Rbk
 	{
 		for (auto& ubo : m_Meshes.mesh.ubos) {
 			ubo.view = m_Camera->LookAt();
+			
+			if (m_MakeSpin) {		
+				ubo.model = glm::rotate(ubo.model, (float)glfwGetTime() * glm::radians(50.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+			}
 		}
 	}
 
@@ -231,11 +231,10 @@ namespace Rbk
 		}
 
 		SouldResizeSwapChain();
+		UpdatePositions();
 
 		for (size_t i = 0; i < m_SwapChainImages.size(); i++) {
-			
-			UpdatePositions();
-
+						
 			m_ImageIndex = m_Renderer->AcquireNextImageKHR(m_SwapChain, m_Semaphores);
 			m_Renderer->BeginCommandBuffer(m_CommandBuffers[m_ImageIndex]);
 

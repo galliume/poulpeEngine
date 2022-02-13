@@ -21,6 +21,6 @@ namespace Rbk
 
 	private:
 		GLFWwindow* m_Window;
-		bool m_ActiveVSync = false;
+		bool m_ActiveVSync = true;
 	};
 }

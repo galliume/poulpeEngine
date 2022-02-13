@@ -5,15 +5,18 @@
 
 namespace Rbk
 {
-	class KeyManager
+	class InputManager
 	{
 	public:
-		KeyManager(Window* window, Camera* camera);
+		InputManager(Window* window, Camera* camera);
 		void Init();
-		void Event(int key, int scancode, int action, int mods);
+		void Key(int key, int scancode, int action, int mods);
+		void Mouse(double xPos, double yPo);
 
 	private:
 		Window* m_Window;
 		Camera* m_Camera;
+		float m_LastX;
+		float m_LastY;
 	};
 }

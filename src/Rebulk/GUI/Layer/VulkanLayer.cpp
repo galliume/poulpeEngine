@@ -65,10 +65,12 @@ namespace Rbk
 		ImGui::Checkbox("VSync", &m_VSync);
 		ImGui::Checkbox("Wireframe", &m_WireframeModeOn);
 		ImGui::Checkbox("Show ImGui demo", &m_ShowDemo);
+		ImGui::Checkbox("Make spin", &m_MakeSpin);
 
 		ImGui::End();
 		
 		m_Adapter->SetWireFrameMode(m_WireframeModeOn);
+		m_Adapter->MakeSpin(m_MakeSpin);
 		m_Window->SetVSync(m_VSync);
 
 		if (m_ShowDemo) {
