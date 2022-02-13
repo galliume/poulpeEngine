@@ -157,10 +157,6 @@ namespace Rbk
 		VkDeviceMemory depthImageMemory;
 
 		for (auto&& [textName, tex]: m_Textures) {
-			depthImage = tex.depthImage;
-			depthImageMemory = tex.depthImageMemory;
-
-			m_Renderer->CreateImage(tex.texWidth, tex.texHeight, tex.mipLevels, VK_SAMPLE_COUNT_1_BIT, m_Renderer->FindDepthFormat(), VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, depthImage, depthImageMemory);
 			depthImageViews.emplace_back(tex.depthImageView);
 			colorImageViews.emplace_back(tex.colorImageView);
 		}
@@ -351,11 +347,12 @@ namespace Rbk
 		info.Subpass = 0;
 		info.MinImageCount = 3;
 		info.ImageCount = 3;
-		info.MSAASamples = m_Renderer->GetMsaaSamples();
+		//info.MSAASamples = m_Renderer->GetMsaaSamples();
 		info.Allocator = nullptr;
-		//info.CheckVkResultFn = [](VkResult err) {
-		//	std::cerr << "IMGUI VULKAN ERROR " + std::to_string(err) << std::endl;
-		//};
+		info.CheckVkResultFn = [](VkResult err) {
+			if (0 == err) return;
+			Rbk::Log::GetLogger()->warn("ImGui error {}", err);
+		};
 
 
 		VImGuiInfo vImGuiInfo;
