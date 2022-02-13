@@ -51,8 +51,17 @@ namespace Rbk
 		}
 	}
 
+	void VulkanAdapter::AddCamera(Camera* camera)
+	{
+		m_Camera = camera;
+	}
+
 	void VulkanAdapter::AddMesh(Rbk::Mesh mesh, const char* textureName, UniformBufferObject ubo)
 	{			
+		ubo.view = m_Camera->LookAt();
+		ubo.proj = glm::perspective(glm::radians(45.0f), m_Renderer->GetSwapChainExtent().width / (float)m_Renderer->GetSwapChainExtent().height, 0.1f, 30.0f);
+		ubo.proj[1][1] *= -1;
+
 		m_Meshes.mesh.textureNames.emplace(m_Meshes.count, textureName);
 		m_Meshes.mesh.vertices.insert(m_Meshes.mesh.vertices.end(), mesh.vertices.begin(), mesh.vertices.end());
 		m_Meshes.mesh.indices.insert(m_Meshes.mesh.indices.end(), mesh.indices.begin(), mesh.indices.end());
@@ -196,6 +205,13 @@ namespace Rbk
 		m_IsPrepared = true;
 	}
 
+	void VulkanAdapter::UpdatePositions()
+	{
+		for (auto ubo : m_Meshes.mesh.ubos) {
+			ubo.view = m_Camera->LookAt();
+		}
+	}
+
 	void VulkanAdapter::Draw()
 	{
 		if (!m_IsPrepared) {
@@ -205,7 +221,9 @@ namespace Rbk
 		SouldResizeSwapChain();
 
 		for (size_t i = 0; i < m_SwapChainImages.size(); i++) {
-		
+			
+			UpdatePositions();
+
 			m_ImageIndex = m_Renderer->AcquireNextImageKHR(m_SwapChain, m_Semaphores);
 			m_Renderer->BeginCommandBuffer(m_CommandBuffers[m_ImageIndex]);
 

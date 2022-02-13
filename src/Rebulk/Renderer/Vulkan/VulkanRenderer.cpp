@@ -379,7 +379,7 @@ namespace Rbk {
 
 		if (result != VK_SUCCESS) {
 			Rbk::Log::GetLogger()->critical("failed to create window surface!");
-			return;
+			throw std::runtime_error("failed to create window surface!");
 		}
 
 		Rbk::Log::GetLogger()->debug("successfully create window surface!");
@@ -1227,9 +1227,14 @@ namespace Rbk {
 			static auto startTime = std::chrono::high_resolution_clock::now();
 			auto currentTime = std::chrono::high_resolution_clock::now();
 			float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
-			//vMesh.mesh.ubos[i].model *= glm::translate(glm::mat4(1.0f), glm::vec3(std::sin(time)));
-			//vMesh.mesh.ubos[i].model *= glm::rotate(glm::mat4(1.0f), time * glm::radians(45.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-		
+			/*vMesh.mesh.ubos[i].model *= glm::translate(glm::mat4(1.0f), glm::vec3(std::sin(time)));
+			vMesh.mesh.ubos[i].model *= glm::rotate(glm::mat4(1.0f), time * glm::radians(45.0f), glm::vec3(0.0f, 1.0f, 0.0f));*/
+			const float radius = 10.0f;
+			float camX = sin(glfwGetTime()) * radius;
+			float camZ = cos(glfwGetTime()) * radius;
+			glm::mat4 view;
+			//vMesh.mesh.ubos[i].view = glm::lookAt(glm::vec3(camX, 0.0, camZ), glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.0, 1.0, 0.0));
+
 			VkDescriptorBufferInfo bufferInfo{};
 			bufferInfo.buffer = vMesh.uniformBuffers[i].first;
 			bufferInfo.offset = 0;
