@@ -13,18 +13,22 @@ namespace Rbk
 	
 	void InputManager::Init()
 	{
-
 		glfwSetWindowUserPointer(m_Window->Get(), this);
 
 		glfwSetKeyCallback(m_Window->Get(), [](GLFWwindow* window, int key, int scancode, int action, int mods) {
 			InputManager inputManager = *(InputManager*)glfwGetWindowUserPointer(window);
 			inputManager.Key(key, scancode, action, mods);
-		});
+			});
 
 		glfwSetCursorPosCallback(m_Window->Get(), [](GLFWwindow* window, double xPos, double yPos) {
 			InputManager inputManager = *(InputManager*)glfwGetWindowUserPointer(window);
 			inputManager.Mouse(xPos, yPos);
-		});
+			});
+
+		glfwSetMouseButtonCallback(m_Window->Get(), [](GLFWwindow* window, int button, int action, int mods) {
+			InputManager inputManager = *(InputManager*)glfwGetWindowUserPointer(window);
+			inputManager.MouseButton(button, action, mods);
+			});
 	}
 
 	void InputManager::Key(int key, int scancode, int action, int mods)
@@ -33,19 +37,26 @@ namespace Rbk
 
 		switch (action)
 		{
-			case GLFW_REPEAT:
 			case GLFW_PRESS:
+				if (glfwGetKey(m_Window->Get(), GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS) {
+					Rbk::m_CanMoveCamera = true;
+				}
+				if (glfwGetKey(m_Window->Get(), GLFW_KEY_C) == GLFW_PRESS) {
+					m_Camera->Recenter();
+				}
+				break;
+			case GLFW_REPEAT:
 			{
-				if (glfwGetKey(m_Window->Get(), GLFW_KEY_W) == GLFW_PRESS) {
+				if (glfwGetKey(m_Window->Get(), GLFW_KEY_W) == GLFW_REPEAT) {
 					m_Camera->Up();
 				}
-				if (glfwGetKey(m_Window->Get(), GLFW_KEY_S) == GLFW_PRESS) {
+				if (glfwGetKey(m_Window->Get(), GLFW_KEY_S) == GLFW_REPEAT) {
 					m_Camera->Down();					
 				}
-				if (glfwGetKey(m_Window->Get(), GLFW_KEY_A) == GLFW_PRESS) {
+				if (glfwGetKey(m_Window->Get(), GLFW_KEY_A) == GLFW_REPEAT) {
 					m_Camera->Left();
 				}
-				if (glfwGetKey(m_Window->Get(), GLFW_KEY_D) == GLFW_PRESS) {
+				if (glfwGetKey(m_Window->Get(), GLFW_KEY_D) == GLFW_REPEAT) {
 					m_Camera->Right();
 				}
 
@@ -53,7 +64,9 @@ namespace Rbk
 			}
 			case GLFW_RELEASE:
 			{
-
+				if (glfwGetKey(m_Window->Get(), GLFW_KEY_LEFT_CONTROL) == GLFW_RELEASE) {
+					Rbk::m_CanMoveCamera = false;
+				}
 				break;
 			}
 		}
@@ -61,6 +74,8 @@ namespace Rbk
 
 	void InputManager::Mouse(double x, double y)
 	{
+		if (!Rbk::m_CanMoveCamera) return;
+
 		float xPos = static_cast<float>(x);
 		float yPos = static_cast<float>(y);
 
@@ -74,5 +89,10 @@ namespace Rbk
 		yoffset *= sensitivity;
 	
 		m_Camera->UpdateYP(xoffset, yoffset);
+	}
+
+	void InputManager::MouseButton(int button, int action, int mods)
+	{
+
 	}
 }

@@ -5,6 +5,8 @@
 
 namespace Rbk
 {
+	static bool m_CanMoveCamera;
+
 	class InputManager
 	{
 	public:
@@ -12,7 +14,7 @@ namespace Rbk
 		void Init();
 		void Key(int key, int scancode, int action, int mods);
 		void Mouse(double xPos, double yPo);
-
+		void InputManager::MouseButton(int button, int action, int mods);
 	private:
 		Window* m_Window;
 		Camera* m_Camera;
