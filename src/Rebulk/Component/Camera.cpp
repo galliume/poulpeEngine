@@ -10,7 +10,7 @@ namespace Rbk
 		m_Up = glm::vec3(0.0f, 1.0f, 0.0f);
 		m_CameraRight = glm::normalize(glm::cross(m_Up, m_Direction));
 		m_CameraUp = glm::cross(m_Direction, m_CameraRight);
-		m_Front = glm::vec3(0.0f, 0.0f, -1.0f);
+		m_CameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
 
 		m_View = glm::lookAt(
 			glm::vec3(0.0f, 0.0f, 3.0f),
@@ -22,36 +22,36 @@ namespace Rbk
 	void Camera::Up()
 	{
 		Rbk::Log::GetLogger()->debug("go up");
-		m_Pos += m_Speed * m_Front;
+		m_Pos += m_Speed * m_CameraFront;
 	}
 
 	void Camera::Down()
 	{
 		Rbk::Log::GetLogger()->debug("go down");
-		m_Pos -= m_Speed * m_Front;
+		m_Pos -= m_Speed * m_CameraFront;
 	}
 
 	void Camera::Left()
 	{
 		Rbk::Log::GetLogger()->debug("go left");
-		m_Pos -= glm::normalize(glm::cross(m_Front, m_CameraUp)) * m_Speed;
+		m_Pos -= glm::normalize(glm::cross(m_CameraFront, m_CameraUp)) * m_Speed;
 	}
 
 	void Camera::Right()
 	{
 		Rbk::Log::GetLogger()->debug("go right");
-		 m_Pos += glm::normalize(glm::cross(m_Front, m_CameraUp)) * m_Speed;
+		 m_Pos += glm::normalize(glm::cross(m_CameraFront, m_CameraUp)) * m_Speed;
 	}
 
 	glm::mat4 Camera::LookAt()
 	{
-		m_View = glm::lookAt(m_Pos, m_Pos + m_Front, m_CameraUp);
+		m_View = glm::lookAt(m_Pos, m_Pos + m_CameraFront, m_CameraUp);
 		return m_View;
 	}
 
 	void Camera::UpdateSpeed(float timeStep)
 	{
-		m_Speed = 2.5f * timeStep;
+		m_Speed = 1.5f * timeStep;
 	}
 
 	void Camera::UpdateYP(float xoffset, float yoffset)
@@ -72,6 +72,11 @@ namespace Rbk
 		direction.x = cos(glm::radians(m_Yaw)) * cos(glm::radians(m_Pitch));
 		direction.y = sin(glm::radians(m_Pitch));
 		direction.z = sin(glm::radians(m_Yaw)) * cos(glm::radians(m_Pitch));
-		m_Front = glm::normalize(direction);
+		m_CameraFront = glm::normalize(direction);
+	}
+
+	void Camera::Recenter()
+	{
+		m_CameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
 	}
 }

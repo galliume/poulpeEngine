@@ -22,5 +22,7 @@ namespace Rbk
 
 		glfwMakeContextCurrent(m_Window);
 		glfwSwapInterval(m_ActiveVSync);
+		//glfwSetInputMode(m_Window, GLFW_STICKY_MOUSE_BUTTONS, GLFW_TRUE);
+		//glfwSetInputMode(m_Window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 	}
 }
