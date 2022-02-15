@@ -64,10 +64,10 @@ namespace Rbk
 		ubo.model = glm::mat4(1.0f);
 		ubo.model = glm::translate(ubo.model, pos);
 		ubo.model = glm::scale(ubo.model, glm::vec3(0.1f, 0.1f, 0.1f));
-		ubo.view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
+		ubo.view = glm::translate(view, glm::vec3(0.0f, 0.0f, -0.0f));
 
 		glm::mat4 projection;
-		ubo.proj = glm::perspective(glm::radians(45.0f), 800 / (float) 600, 0.1f, 100.0f);
+		ubo.proj = glm::perspective(glm::radians(45.0f), m_Renderer->GetSwapChainExtent().width / (float)m_Renderer->GetSwapChainExtent().height, 0.1f, 100.0f);
 		ubo.proj[1][1] *= -1;
 
 		m_Meshes.mesh.textureNames.emplace(m_Meshes.count, textureName);
@@ -77,7 +77,9 @@ namespace Rbk
 		m_Meshes.indexCount.emplace_back(mesh.indices.size());
 
 		uint32_t vertexOffset = (m_Meshes.vertexOffset.size() > 0) ? m_Meshes.vertexOffset.back() + mesh.vertices.size() : mesh.vertices.size();
+		uint32_t indicesOffset = (m_Meshes.indicesOffset.size() > 0) ? m_Meshes.indicesOffset.back() + mesh.indices.size() : mesh.indices.size();
 		m_Meshes.vertexOffset.emplace_back(vertexOffset);
+		m_Meshes.indicesOffset.emplace_back(indicesOffset);
 		m_Meshes.count += 1;
 	}
 
@@ -158,7 +160,7 @@ namespace Rbk
 		if (m_IsPrepared) return;
 
 		for (int i = 0; i < m_Meshes.count; i++) {
-			std::pair<VkBuffer, VkDeviceMemory> uniformBuffer = m_Renderer->CreateUniformBuffers(m_Meshes.count);
+			std::pair<VkBuffer, VkDeviceMemory> uniformBuffer = m_Renderer->CreateUniformBuffers(1);
 			m_Meshes.uniformBuffers.emplace_back(uniformBuffer);
 		}
 
@@ -335,7 +337,6 @@ namespace Rbk
 		m_Renderer->QueueSubmit(cmd);
 		m_Renderer->WaitForFence();
 	}
-
 
 	VkRenderPass* VulkanAdapter::CreateImGuiRenderPass()
 	{
