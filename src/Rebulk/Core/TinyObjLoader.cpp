@@ -12,8 +12,9 @@ namespace Rbk
 		bool shouldInverseTextureY = false;
 	};
 
-	bool TinyObjLoader::LoadMesh(Rbk::Mesh& mesh, const char* path, bool shouldInverseTextureY)
+	Rbk::Mesh TinyObjLoader::LoadMesh(const char* path, bool shouldInverseTextureY)
 	{
+		Rbk::Mesh mesh;
 		tinyobj::ObjReader reader;
 		tinyobj::ObjReaderConfig reader_config;
 		//reader_config.mtl_search_path = "./"; 
@@ -34,6 +35,7 @@ namespace Rbk
 		auto& materials = reader.GetMaterials();
 
 		std::unordered_map<Rbk::Vertex, uint32_t> uniqueVertices{};
+		uniqueVertices.clear();
 
 		for (size_t s = 0; s < shapes.size(); s++) {
 			// Loop over faces(polygon)
@@ -91,6 +93,6 @@ namespace Rbk
 			}
 		}
 
-		return true;
+		return mesh;
 	}
 }
