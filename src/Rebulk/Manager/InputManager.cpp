@@ -38,25 +38,24 @@ namespace Rbk
 		switch (action)
 		{
 			case GLFW_PRESS:
-				if (glfwGetKey(m_Window->Get(), GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS) {
-					Rbk::m_CanMoveCamera = true;
+				if (glfwGetKey(m_Window->Get(), GLFW_KEY_LEFT_CONTROL)) {
+					Rbk::m_CanMoveCamera = !Rbk::m_CanMoveCamera;
 				}
-				if (glfwGetKey(m_Window->Get(), GLFW_KEY_C) == GLFW_PRESS) {
-					m_Camera->Recenter();
-				}
-				break;
 			case GLFW_REPEAT:
 			{
-				if (glfwGetKey(m_Window->Get(), GLFW_KEY_W) == GLFW_REPEAT) {
+				if (glfwGetKey(m_Window->Get(), GLFW_KEY_C)) {
+					m_Camera->Recenter();
+				}
+				if (glfwGetKey(m_Window->Get(), GLFW_KEY_W) ) {
 					m_Camera->Up();
 				}
-				if (glfwGetKey(m_Window->Get(), GLFW_KEY_S) == GLFW_REPEAT) {
+				if (glfwGetKey(m_Window->Get(), GLFW_KEY_S)) {
 					m_Camera->Down();					
 				}
-				if (glfwGetKey(m_Window->Get(), GLFW_KEY_A) == GLFW_REPEAT) {
+				if (glfwGetKey(m_Window->Get(), GLFW_KEY_A)) {
 					m_Camera->Left();
 				}
-				if (glfwGetKey(m_Window->Get(), GLFW_KEY_D) == GLFW_REPEAT) {
+				if (glfwGetKey(m_Window->Get(), GLFW_KEY_D)) {
 					m_Camera->Right();
 				}
 
@@ -64,10 +63,7 @@ namespace Rbk
 			}
 			case GLFW_RELEASE:
 			{
-				if (glfwGetKey(m_Window->Get(), GLFW_KEY_LEFT_CONTROL) == GLFW_RELEASE) {
-					Rbk::m_CanMoveCamera = false;
-				}
-				break;
+				
 			}
 		}
 	}

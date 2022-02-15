@@ -45,9 +45,9 @@ namespace Rbk
 		AddTexture("diffuse_moon", "mesh/moon/diffuse.jpg");
 		AddTexture("minecraft_grass", "mesh/minecraft/Grass_Block_TEX.png");
 
-		AddMesh("mesh/viking/viking_room.obj", "viking_room", pos1);
-		AddMesh("mesh/backpack/backpack.obj", "diffuse_backpack", pos2, false);
-		AddMesh("mesh/moon/moon.obj", "diffuse_moon", pos3);
+		//AddMesh("mesh/backpack/backpack.obj", "diffuse_backpack", pos2, false);
+		//AddMesh("mesh/viking/viking_room.obj", "viking_room", pos1);
+		AddMesh("mesh/minecraft/Grass_Block.obj", "minecraft_grass", pos3);
 	}
 
 	void RenderManager::AddCamera(Camera* camera)
@@ -57,11 +57,16 @@ namespace Rbk
 
 	void RenderManager::AddMesh(const char* path, const char* textureName, glm::vec3 pos, bool shouldInverseTextureY)
 	{
-		Mesh mesh;
-		Rbk::TinyObjLoader::LoadMesh(mesh, path, shouldInverseTextureY);
+		Mesh mesh = Rbk::TinyObjLoader::LoadMesh(path, shouldInverseTextureY);
 
 		//@todo Add MeshManager
-		m_Renderer->AddMesh(mesh, textureName, pos);
+		for (int x = 0; x < 10; x++) {
+			for (int y = 0; y < 10; y++) {
+				pos = glm::vec3(0.3f * x, -0.5f, -0.3f * y);
+
+				m_Renderer->AddMesh(mesh, textureName, pos);
+			}
+		}
 	}
 
 	void RenderManager::AddTexture(const char* name, const char* path)
