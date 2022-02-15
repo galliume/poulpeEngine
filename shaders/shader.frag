@@ -7,7 +7,7 @@ layout(location = 0) in vec4 fragColor;
 layout(location = 1) in vec2 fragTexCoord;
 layout(location = 2) flat in int index;
 
-layout(binding = 1) uniform sampler2D texSampler[10];
+layout(binding = 1) uniform sampler2D texSampler[100];
 
 layout(push_constant) uniform PER_OBJECT
 {

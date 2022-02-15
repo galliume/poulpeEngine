@@ -579,7 +579,7 @@ namespace Rbk {
 		layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
 		layoutInfo.bindingCount = static_cast<uint32_t>(bindings.size());
 		layoutInfo.pBindings = bindings.data();
-		//layoutInfo.flags = VK_DESCRIPTOR_SET_LAYOUT_CREATE_UPDATE_AFTER_BIND_POOL_BIT;
+		layoutInfo.flags = VK_DESCRIPTOR_SET_LAYOUT_CREATE_UPDATE_AFTER_BIND_POOL_BIT;
 
 		if (vkCreateDescriptorSetLayout(m_Device, &layoutInfo, nullptr, &descriptorSetLayout) != VK_SUCCESS)
 		{
@@ -1038,7 +1038,7 @@ namespace Rbk {
 		poolInfo.poolSizeCount = poolSizes.size();
 		poolInfo.pPoolSizes = poolSizes.data();
 		poolInfo.maxSets = swapChainImages.size();
-		//poolInfo.flags = VK_DESCRIPTOR_POOL_CREATE_UPDATE_AFTER_BIND_BIT;
+		poolInfo.flags = VK_DESCRIPTOR_POOL_CREATE_UPDATE_AFTER_BIND_BIT;
 
 		if (vkCreateDescriptorPool(m_Device, &poolInfo, nullptr, &descriptorPool) != VK_SUCCESS)
 		{
@@ -1220,7 +1220,8 @@ namespace Rbk {
 		std::vector<VkDescriptorImageInfo> imageInfos;
 		std::vector<VkDescriptorBufferInfo> bufferInfos;
 
-		uint32_t offsetIndex = 0;
+		uint32_t verticesOffsetIndex = 0;
+		uint32_t indicesOffsetIndex = 0;
 
 		for (int i = 0; i < vMesh.count; i++) {
 			VkDescriptorBufferInfo bufferInfo{};
@@ -1270,8 +1271,9 @@ namespace Rbk {
 		for (int i = 0; i < vMesh.count; i++) {
 			vkCmdPushConstants(commandBuffer, pipeline.pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(int), &i);
 
-			offsetIndex = (i == 0) ? 0 : vMesh.vertexOffset[i - 1];
-			vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(vMesh.indexCount[i]), 1, 0, offsetIndex, 0);
+			verticesOffsetIndex = (i == 0) ? 0 : vMesh.vertexOffset[i - 1];
+			indicesOffsetIndex = (i == 0) ? 0 : vMesh.indicesOffset[i - 1];
+			vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(vMesh.indexCount[i]), 1, indicesOffsetIndex, verticesOffsetIndex, 0);
 		}
 	}
 
@@ -1336,7 +1338,7 @@ namespace Rbk {
 	{
 
 		std::pair<VkBuffer, VkDeviceMemory> vertexBuffer;
-		VkDeviceSize bufferSize = sizeof(vertices[0])* vertices.size();
+		VkDeviceSize bufferSize = sizeof(vertices) * vertices.size();
 		VkBuffer stagingBuffer;
 		VkDeviceMemory stagingBufferMemory;
 
