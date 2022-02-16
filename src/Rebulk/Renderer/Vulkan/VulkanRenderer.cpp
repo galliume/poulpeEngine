@@ -354,6 +354,13 @@ namespace Rbk {
 		deviceFeatures.samplerAnisotropy = VK_TRUE;
 		deviceFeatures.sampleRateShading = VK_FALSE;
 
+		VkPhysicalDeviceDescriptorIndexingFeatures descriptorIndexing{};
+		descriptorIndexing.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES;
+		descriptorIndexing.shaderSampledImageArrayNonUniformIndexing = VK_TRUE;
+		descriptorIndexing.runtimeDescriptorArray = VK_TRUE;
+		descriptorIndexing.descriptorBindingVariableDescriptorCount = VK_TRUE;
+		descriptorIndexing.descriptorBindingPartiallyBound = VK_TRUE;
+
 		VkDeviceCreateInfo createInfo{};
 		createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
 		createInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfos.size());
@@ -361,6 +368,7 @@ namespace Rbk {
 		createInfo.pEnabledFeatures = &deviceFeatures;
 		createInfo.enabledExtensionCount = static_cast<uint32_t>(m_DeviceExtensions.size());
 		createInfo.ppEnabledExtensionNames = m_DeviceExtensions.data();
+		createInfo.pNext = &descriptorIndexing;
 
 		if (vkCreateDevice(m_PhysicalDevice, &createInfo, nullptr, &m_Device) != VK_SUCCESS) {
 			Rbk::Log::GetLogger()->critical("failed to create logical device!");
@@ -1067,6 +1075,47 @@ namespace Rbk {
 		return descriptorSet;
 	}
 
+	void VulkanRenderer::UpdateDescriptorSets(VulkanMesh vMesh, std::map<const char*, VulkanTexture> vTextures, VulkanPipeline pipeline)
+	{
+		std::array<VkWriteDescriptorSet, 2> descriptorWrites{};
+		std::vector<VkDescriptorImageInfo> imageInfos;
+		std::vector<VkDescriptorBufferInfo> bufferInfos;
+
+		for (int i = 0; i < vMesh.count; i++) {
+			VkDescriptorBufferInfo bufferInfo{};
+			bufferInfo.buffer = vMesh.uniformBuffers[i].first;
+			bufferInfo.offset = 0;
+			bufferInfo.range = sizeof(UniformBufferObject);
+			bufferInfos.emplace_back(bufferInfo);
+
+			VkDescriptorImageInfo imageInfo{};
+			imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+			imageInfo.imageView = vTextures[vMesh.mesh.textureNames[i]].textureImageView;
+			imageInfo.sampler = vTextures[vMesh.mesh.textureNames[i]].sampler;
+			imageInfos.emplace_back(imageInfo);
+
+			UpdateUniformBuffer(vMesh.uniformBuffers[i], vMesh.mesh.ubos[i]);
+		}
+
+		descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+		descriptorWrites[0].dstSet = pipeline.descriptorSets[0];
+		descriptorWrites[0].dstBinding = 0;
+		descriptorWrites[0].dstArrayElement = 0;
+		descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+		descriptorWrites[0].descriptorCount = bufferInfos.size();
+		descriptorWrites[0].pBufferInfo = bufferInfos.data();
+
+		descriptorWrites[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+		descriptorWrites[1].dstSet = pipeline.descriptorSets[0];
+		descriptorWrites[1].dstBinding = 1;
+		descriptorWrites[1].dstArrayElement = 0;
+		descriptorWrites[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+		descriptorWrites[1].descriptorCount = imageInfos.size();
+		descriptorWrites[1].pImageInfo = imageInfos.data();
+
+		vkUpdateDescriptorSets(m_Device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
+	}
+
 	void VulkanRenderer::BeginRenderPass(VkRenderPass renderPass, VkCommandBuffer commandBuffer, VkFramebuffer swapChainFramebuffer)
 	{
 		VkRenderPassBeginInfo renderPassInfo{};
@@ -1208,54 +1257,13 @@ namespace Rbk {
 		vkResetCommandPool(m_Device, commandPool, 0);
 	}
 
-	void VulkanRenderer::Draw(VkCommandBuffer commandBuffer, VulkanMesh vMesh, std::map<const char*, VulkanTexture> vTextures, VulkanPipeline pipeline)
+	void VulkanRenderer::Draw(VkCommandBuffer commandBuffer, VulkanMesh vMesh, VulkanPipeline pipeline)
 	{	
 		VkBuffer vertexBuffers[] = { vMesh.meshVBuffer.first };
 		VkDeviceSize offsets[] = { 0 };
 
 		vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
 		vkCmdBindIndexBuffer(commandBuffer, vMesh.meshIBuffer.first, 0, VK_INDEX_TYPE_UINT32);
-		
-		std::array<VkWriteDescriptorSet, 2> descriptorWrites{};
-		std::vector<VkDescriptorImageInfo> imageInfos;
-		std::vector<VkDescriptorBufferInfo> bufferInfos;
-
-		uint32_t verticesOffsetIndex = 0;
-		uint32_t indicesOffsetIndex = 0;
-
-		for (int i = 0; i < vMesh.count; i++) {
-			VkDescriptorBufferInfo bufferInfo{};
-			bufferInfo.buffer = vMesh.uniformBuffers[i].first;
-			bufferInfo.offset = 0;
-			bufferInfo.range = sizeof(UniformBufferObject);
-			bufferInfos.emplace_back(bufferInfo);
-
-			VkDescriptorImageInfo imageInfo{};
-			imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-			imageInfo.imageView = vTextures[vMesh.mesh.textureNames[i]].textureImageView;
-			imageInfo.sampler = vTextures[vMesh.mesh.textureNames[i]].sampler;
-			imageInfos.emplace_back(imageInfo);
-
-			UpdateUniformBuffer(vMesh.uniformBuffers[i], vMesh.mesh.ubos[i]);
-		}
-
-		descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-		descriptorWrites[0].dstSet = pipeline.descriptorSets[0];
-		descriptorWrites[0].dstBinding = 0;
-		descriptorWrites[0].dstArrayElement = 0;
-		descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-		descriptorWrites[0].descriptorCount = bufferInfos.size();
-		descriptorWrites[0].pBufferInfo = bufferInfos.data();
-
-		descriptorWrites[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-		descriptorWrites[1].dstSet = pipeline.descriptorSets[0];
-		descriptorWrites[1].dstBinding = 1;
-		descriptorWrites[1].dstArrayElement = 0;
-		descriptorWrites[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-		descriptorWrites[1].descriptorCount = imageInfos.size();
-		descriptorWrites[1].pImageInfo = imageInfos.data();
-	
-		vkUpdateDescriptorSets(m_Device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
 
 		vkCmdBindDescriptorSets(
 			commandBuffer, 
@@ -1267,6 +1275,9 @@ namespace Rbk {
 			0, 
 			nullptr
 		);
+
+		uint32_t verticesOffsetIndex = 0;
+		uint32_t indicesOffsetIndex = 0;
 
 		for (int i = 0; i < vMesh.count; i++) {
 			vkCmdPushConstants(commandBuffer, pipeline.pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(int), &i);
@@ -1374,7 +1385,7 @@ namespace Rbk {
 
 	void VulkanRenderer::UpdateUniformBuffer(std::pair<VkBuffer, VkDeviceMemory>uniformBuffer, UniformBufferObject uniformBufferObject)
 	{
-		void* data; 
+		void* data;
 		vkMapMemory(m_Device, uniformBuffer.second, 0, sizeof(uniformBufferObject), 0, &data);
 		memcpy(data, &uniformBufferObject, sizeof(uniformBufferObject));
 		vkUnmapMemory(m_Device, uniformBuffer.second);
