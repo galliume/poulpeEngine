@@ -588,7 +588,7 @@ namespace Rbk {
 		layoutInfo.bindingCount = static_cast<uint32_t>(bindings.size());
 		layoutInfo.pBindings = bindings.data();
 		layoutInfo.flags = VK_DESCRIPTOR_SET_LAYOUT_CREATE_UPDATE_AFTER_BIND_POOL_BIT;
-
+		
 		if (vkCreateDescriptorSetLayout(m_Device, &layoutInfo, nullptr, &descriptorSetLayout) != VK_SUCCESS)
 		{
 			throw std::runtime_error("failed to create descriptor set layout!");
@@ -1063,7 +1063,7 @@ namespace Rbk {
 		VkDescriptorSetAllocateInfo allocInfo{};
 		allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
 		allocInfo.descriptorPool = descriptorPool;
-		allocInfo.descriptorSetCount = 1;
+		allocInfo.descriptorSetCount = descriptorSetLayouts.size();
 		allocInfo.pSetLayouts = descriptorSetLayouts.data();
 
 		VkResult result = vkAllocateDescriptorSets(m_Device, &allocInfo, &descriptorSet);
@@ -1094,7 +1094,6 @@ namespace Rbk {
 			imageInfo.sampler = vTextures[vMesh.mesh.textureNames[i]].sampler;
 			imageInfos.emplace_back(imageInfo);
 
-			UpdateUniformBuffer(vMesh.uniformBuffers[i], vMesh.mesh.ubos[i]);
 		}
 
 		descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;

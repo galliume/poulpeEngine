@@ -40,9 +40,9 @@ namespace Rbk
 		glm::vec3 pos2 = glm::vec3(-0.5f, -0.5f, -0.5f);
 		glm::vec3 pos3 = glm::vec3(0.1f, -0.8f, 0.0f);
 
-		AddTexture("viking_room", "mesh/viking/viking_room.png");
-		AddTexture("diffuse_backpack", "mesh/backpack/diffuse.png");
-		AddTexture("diffuse_moon", "mesh/moon/diffuse.jpg");
+		//AddTexture("viking_room", "mesh/viking/viking_room.png");
+		//AddTexture("diffuse_backpack", "mesh/backpack/diffuse.png");
+		//AddTexture("diffuse_moon", "mesh/moon/diffuse.jpg");
 		AddTexture("minecraft_grass", "mesh/minecraft/Grass_Block_TEX.png");
 
 		//AddMesh("mesh/backpack/backpack.obj", "diffuse_backpack", pos2, false);

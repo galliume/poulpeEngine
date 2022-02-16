@@ -212,17 +212,22 @@ namespace Rbk
 			m_Pipelines.emplace_back(vPipelineWireFramed);
 		}
 
+
+
 		m_IsPrepared = true;
 	}
 
 	void VulkanAdapter::UpdatePositions()
 	{
-		for (auto& ubo : m_Meshes.mesh.ubos) {
-			ubo.view = m_Camera->LookAt();
+		for (int i = 0; i < m_Meshes.count; i++) {
+
+			m_Meshes.mesh.ubos[i].view = m_Camera->LookAt();
 			
 			if (m_MakeSpin) {		
-				ubo.model = glm::rotate(ubo.model, (float)glfwGetTime() * glm::radians(50.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+				m_Meshes.mesh.ubos[i].model = glm::rotate(m_Meshes.mesh.ubos[i].model, (float)glfwGetTime() * glm::radians(50.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 			}
+
+			m_Renderer->UpdateUniformBuffer(m_Meshes.uniformBuffers[i], m_Meshes.mesh.ubos[i]);
 		}
 	}
 
@@ -234,6 +239,7 @@ namespace Rbk
 
 		SouldResizeSwapChain();
 		UpdatePositions();
+		VulkanPipeline ppline = (!m_WireFrameModeOn) ? m_Pipelines[0] : m_Pipelines[1];
 
 		for (size_t i = 0; i < m_SwapChainImages.size(); i++) {
 						
@@ -250,9 +256,6 @@ namespace Rbk
 			m_Renderer->BeginRenderPass(m_RenderPass, m_CommandBuffers[m_ImageIndex], m_SwapChainFramebuffers[m_ImageIndex]);
 			m_Renderer->SetViewPort(m_CommandBuffers[m_ImageIndex]);
 			m_Renderer->SetScissor(m_CommandBuffers[m_ImageIndex]);
-
-			VulkanPipeline ppline = (!m_WireFrameModeOn) ? m_Pipelines[0] : m_Pipelines[1];
-
 			m_Renderer->BindPipeline(m_CommandBuffers[m_ImageIndex], ppline.graphicsPipeline[0]);
 			m_Renderer->UpdateDescriptorSets(m_Meshes, m_Textures, ppline);
 			m_Renderer->Draw(m_CommandBuffers[m_ImageIndex], m_Meshes, ppline);
