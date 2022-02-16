@@ -163,7 +163,7 @@ namespace Rbk
 			std::pair<VkBuffer, VkDeviceMemory> uniformBuffer = m_Renderer->CreateUniformBuffers(1);
 			m_Meshes.uniformBuffers.emplace_back(uniformBuffer);
 		}
-
+		
 		m_SwapChainImageViews.resize(m_SwapChainImages.size());
 
 		for (uint32_t i = 0; i < m_SwapChainImages.size(); i++) {
@@ -196,7 +196,7 @@ namespace Rbk
 			vPipeline.pipelineCache = 0;
 			vPipeline.descriptorPool = m_Renderer->CreateDescriptorPool(m_SwapChainImages);			
 			vPipeline.descriptorSetLayouts.emplace_back(m_Renderer->CreateDescriptorSetLayout(m_Meshes.count));
-			vPipeline.descriptorSets.emplace_back(m_Renderer->CreateDescriptorSets(vPipeline.descriptorPool, m_SwapChainImages, vPipeline.descriptorSetLayouts));		
+			vPipeline.descriptorSets.emplace_back(m_Renderer->CreateDescriptorSets(vPipeline.descriptorPool, m_SwapChainImages, vPipeline.descriptorSetLayouts));	
 			vPipeline.pipelineLayout = m_Renderer->CreatePipelineLayout(vPipeline.descriptorSets, vPipeline.descriptorSetLayouts);			
 			vPipeline.graphicsPipeline.emplace_back(m_Renderer->CreateGraphicsPipeline(m_RenderPass, vPipeline, m_Shaders));
 			m_Pipelines.emplace_back(vPipeline);
@@ -254,7 +254,8 @@ namespace Rbk
 			VulkanPipeline ppline = (!m_WireFrameModeOn) ? m_Pipelines[0] : m_Pipelines[1];
 
 			m_Renderer->BindPipeline(m_CommandBuffers[m_ImageIndex], ppline.graphicsPipeline[0]);
-			m_Renderer->Draw(m_CommandBuffers[m_ImageIndex], m_Meshes, m_Textures, ppline);
+			m_Renderer->UpdateDescriptorSets(m_Meshes, m_Textures, ppline);
+			m_Renderer->Draw(m_CommandBuffers[m_ImageIndex], m_Meshes, ppline);
 			m_Renderer->EndRenderPass(m_CommandBuffers[m_ImageIndex]);
 			m_Renderer->EndCommandBuffer(m_CommandBuffers[m_ImageIndex]);
 
