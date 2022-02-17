@@ -86,7 +86,7 @@ detroy all elements in reverse order of creation
 
 vkDestroyInstance
 
-###General info
+### General info
 
 ImageLayout 
 
