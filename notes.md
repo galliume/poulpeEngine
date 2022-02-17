@@ -1,6 +1,6 @@
-#Notes about my understanding of Vulkan.
+# Notes about my understanding of Vulkan.
 
-###Preparation
+### Preparation
 glfwCreateWindow
 glfwGetWindowSize
 glfwGetRequiredInstanceExtensions
@@ -32,7 +32,7 @@ vkCreateFramebuffer (as much as swapChainImages.size())
 vkCreateCommandPool
 vkAllocateCommandBuffers
 
-###Main loop
+### Main loop
 while (true) {
 
 	glfwPollEvents
@@ -52,7 +52,7 @@ while (true) {
 }
 
 
-###Destroy
+### Destroy
 glfwDestroyWindow
 detroy all elements in reverse order of creation
 vkDestroyInstance
