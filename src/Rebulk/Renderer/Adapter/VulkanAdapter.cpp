@@ -74,7 +74,7 @@ namespace Rbk
 		m_Meshes.mesh.vertices.insert(m_Meshes.mesh.vertices.end(), mesh.vertices.begin(), mesh.vertices.end());
 		m_Meshes.mesh.indices.insert(m_Meshes.mesh.indices.end(), mesh.indices.begin(), mesh.indices.end());
 		m_Meshes.mesh.ubos.emplace_back(ubo);
-		m_Meshes.indexCount.emplace_back(mesh.indices.size());
+		m_Meshes.vertexIndicesCount += mesh.indices.size();
 
 		uint32_t vertexOffset = (m_Meshes.vertexOffset.size() > 0) ? m_Meshes.vertexOffset.back() + mesh.vertices.size() : mesh.vertices.size();
 		uint32_t indicesOffset = (m_Meshes.indicesOffset.size() > 0) ? m_Meshes.indicesOffset.back() + mesh.indices.size() : mesh.indices.size();
@@ -151,7 +151,6 @@ namespace Rbk
 	{
 		m_Meshes.mesh.vertices.clear();
 		m_Meshes.mesh.indices.clear();
-		m_Meshes.indexCount.clear();
 		m_Meshes.vertexOffset.clear();
 	}
 
@@ -159,8 +158,17 @@ namespace Rbk
 	{
 		if (m_IsPrepared) return;
 
-		for (int i = 0; i < m_Meshes.count; i++) {
-			std::pair<VkBuffer, VkDeviceMemory> uniformBuffer = m_Renderer->CreateUniformBuffers(1);
+		uint32_t maxUniformBufferRange = m_Renderer->GetDeviceProperties().limits.maxUniformBufferRange;
+		m_Meshes.uniformBufferChunkSize = maxUniformBufferRange / sizeof(UniformBufferObject);
+		m_Meshes.uniformBuffersCount = std::ceil(m_Meshes.count / (float) m_Meshes.uniformBufferChunkSize);
+
+		std::cout << "maxUniformBufferRange : " << maxUniformBufferRange << std::endl;
+		std::cout << "uniformBufferChunkSize : " << m_Meshes.uniformBufferChunkSize << std::endl;
+		std::cout << "uniformBuffersCount : " << m_Meshes.uniformBuffersCount << std::endl;
+		std::cout << "mesh count  : " << m_Meshes.count << std::endl;
+
+		for (int i = 0; i < m_Meshes.uniformBuffersCount; i++) {
+			std::pair<VkBuffer, VkDeviceMemory> uniformBuffer = m_Renderer->CreateUniformBuffers(m_Meshes.uniformBufferChunkSize);
 			m_Meshes.uniformBuffers.emplace_back(uniformBuffer);
 		}
 		
@@ -195,7 +203,7 @@ namespace Rbk
 			VulkanPipeline vPipeline;
 			vPipeline.pipelineCache = 0;
 			vPipeline.descriptorPool = m_Renderer->CreateDescriptorPool(m_SwapChainImages);			
-			vPipeline.descriptorSetLayouts.emplace_back(m_Renderer->CreateDescriptorSetLayout(m_Meshes.count));
+			vPipeline.descriptorSetLayouts.emplace_back(m_Renderer->CreateDescriptorSetLayout(1));
 			vPipeline.descriptorSets.emplace_back(m_Renderer->CreateDescriptorSets(vPipeline.descriptorPool, m_SwapChainImages, vPipeline.descriptorSetLayouts));	
 			vPipeline.pipelineLayout = m_Renderer->CreatePipelineLayout(vPipeline.descriptorSets, vPipeline.descriptorSetLayouts);			
 			vPipeline.graphicsPipeline.emplace_back(m_Renderer->CreateGraphicsPipeline(m_RenderPass, vPipeline, m_Shaders));
@@ -204,7 +212,7 @@ namespace Rbk
 			VulkanPipeline vPipelineWireFramed;
 			vPipelineWireFramed.pipelineCache = 0;
 			vPipelineWireFramed.descriptorPool = m_Renderer->CreateDescriptorPool(m_SwapChainImages);
-			vPipelineWireFramed.descriptorSetLayouts.emplace_back(m_Renderer->CreateDescriptorSetLayout(m_Meshes.count));
+			vPipelineWireFramed.descriptorSetLayouts.emplace_back(m_Renderer->CreateDescriptorSetLayout(1));
 			vPipelineWireFramed.descriptorSets.emplace_back(m_Renderer->CreateDescriptorSets(vPipeline.descriptorPool, m_SwapChainImages, vPipeline.descriptorSetLayouts));
 			vPipelineWireFramed.pipelineLayout = m_Renderer->CreatePipelineLayout(vPipeline.descriptorSets, vPipeline.descriptorSetLayouts);
 			vPipelineWireFramed.graphicsPipeline.emplace_back(m_Renderer->CreateGraphicsPipeline(m_RenderPass, vPipeline, m_Shaders, true));
@@ -212,13 +220,15 @@ namespace Rbk
 			m_Pipelines.emplace_back(vPipelineWireFramed);
 		}
 
-
-
 		m_IsPrepared = true;
 	}
 
 	void VulkanAdapter::UpdatePositions()
 	{
+		int32_t uboCount = 1, uboIndex = 0;
+		std::vector<UniformBufferObject> chunk;
+		int32_t beginRange, endRange = 0;
+
 		for (int i = 0; i < m_Meshes.count; i++) {
 
 			m_Meshes.mesh.ubos[i].view = m_Camera->LookAt();
@@ -227,7 +237,16 @@ namespace Rbk
 				m_Meshes.mesh.ubos[i].model = glm::rotate(m_Meshes.mesh.ubos[i].model, (float)glfwGetTime() * glm::radians(50.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 			}
 
-			m_Renderer->UpdateUniformBuffer(m_Meshes.uniformBuffers[i], m_Meshes.mesh.ubos[i]);
+			if (i == m_Meshes.uniformBufferChunkSize) {
+
+				endRange = m_Meshes.uniformBufferChunkSize * uboCount;
+				beginRange = endRange - m_Meshes.uniformBufferChunkSize;
+
+				chunk = { m_Meshes.mesh.ubos.begin() + beginRange, m_Meshes.mesh.ubos.begin() + endRange };
+				m_Renderer->UpdateUniformBuffer(m_Meshes.uniformBuffers[uboIndex], chunk, i);
+				uboIndex += 1;
+				uboCount += 1;
+			}
 		}
 	}
 

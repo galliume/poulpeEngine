@@ -570,14 +570,14 @@ namespace Rbk {
 
 		VkDescriptorSetLayoutBinding uboLayoutBinding{};
 		uboLayoutBinding.binding = 0;
-		uboLayoutBinding.descriptorCount = meshCount;
+		uboLayoutBinding.descriptorCount = 1;
 		uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
 		uboLayoutBinding.pImmutableSamplers = nullptr;
 		uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
 
 		VkDescriptorSetLayoutBinding samplerLayoutBinding{};
 		samplerLayoutBinding.binding = 1;
-		samplerLayoutBinding.descriptorCount = meshCount;
+		samplerLayoutBinding.descriptorCount = 1;
 		samplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
 		samplerLayoutBinding.pImmutableSamplers = nullptr;
 		samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
@@ -608,8 +608,8 @@ namespace Rbk {
 
 		VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
 		pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-		pipelineLayoutInfo.pushConstantRangeCount = 1;
-		pipelineLayoutInfo.pPushConstantRanges = &pushConstantRange;
+		//pipelineLayoutInfo.pushConstantRangeCount = 0;
+		//pipelineLayoutInfo.pPushConstantRanges = &pushConstantRange;
 		pipelineLayoutInfo.setLayoutCount = descriptorSets.size();
 		pipelineLayoutInfo.pSetLayouts = descriptorSetLayouts.data();
 
@@ -1063,7 +1063,7 @@ namespace Rbk {
 		VkDescriptorSetAllocateInfo allocInfo{};
 		allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
 		allocInfo.descriptorPool = descriptorPool;
-		allocInfo.descriptorSetCount = descriptorSetLayouts.size();
+		allocInfo.descriptorSetCount = 1;
 		allocInfo.pSetLayouts = descriptorSetLayouts.data();
 
 		VkResult result = vkAllocateDescriptorSets(m_Device, &allocInfo, &descriptorSet);
@@ -1081,27 +1081,33 @@ namespace Rbk {
 		std::vector<VkDescriptorImageInfo> imageInfos;
 		std::vector<VkDescriptorBufferInfo> bufferInfos;
 
-		for (int i = 0; i < vMesh.count; i++) {
+		int32_t offset = 0;
+
+		for (int i = 0; i < vMesh.uniformBuffers.size(); i++) {
+
+			if (i > 0) {
+				offset = sizeof(UniformBufferObject) * i;
+			}
+
 			VkDescriptorBufferInfo bufferInfo{};
 			bufferInfo.buffer = vMesh.uniformBuffers[i].first;
-			bufferInfo.offset = 0;
-			bufferInfo.range = sizeof(UniformBufferObject);
+			bufferInfo.offset = offset;
+			bufferInfo.range = VK_WHOLE_SIZE;
 			bufferInfos.emplace_back(bufferInfo);
-
-			VkDescriptorImageInfo imageInfo{};
-			imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-			imageInfo.imageView = vTextures[vMesh.mesh.textureNames[i]].textureImageView;
-			imageInfo.sampler = vTextures[vMesh.mesh.textureNames[i]].sampler;
-			imageInfos.emplace_back(imageInfo);
-
 		}
+
+		VkDescriptorImageInfo imageInfo{};
+		imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+		imageInfo.imageView = vTextures[vMesh.mesh.textureNames[0]].textureImageView;
+		imageInfo.sampler = vTextures[vMesh.mesh.textureNames[0]].sampler;
+		imageInfos.emplace_back(imageInfo);
 
 		descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
 		descriptorWrites[0].dstSet = pipeline.descriptorSets[0];
 		descriptorWrites[0].dstBinding = 0;
 		descriptorWrites[0].dstArrayElement = 0;
 		descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-		descriptorWrites[0].descriptorCount = bufferInfos.size();
+		descriptorWrites[0].descriptorCount = 1;
 		descriptorWrites[0].pBufferInfo = bufferInfos.data();
 
 		descriptorWrites[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
@@ -1109,7 +1115,7 @@ namespace Rbk {
 		descriptorWrites[1].dstBinding = 1;
 		descriptorWrites[1].dstArrayElement = 0;
 		descriptorWrites[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-		descriptorWrites[1].descriptorCount = imageInfos.size();
+		descriptorWrites[1].descriptorCount = 1;
 		descriptorWrites[1].pImageInfo = imageInfos.data();
 
 		vkUpdateDescriptorSets(m_Device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
@@ -1278,13 +1284,14 @@ namespace Rbk {
 		uint32_t verticesOffsetIndex = 0;
 		uint32_t indicesOffsetIndex = 0;
 
-		for (int i = 0; i < vMesh.count; i++) {
-			vkCmdPushConstants(commandBuffer, pipeline.pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(int), &i);
+		//for (int i = 0; i < vMesh.count; i++) {
+		int i = 0;
+		//vkCmdPushConstants(commandBuffer, pipeline.pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(push.data()), push.data());
 
-			verticesOffsetIndex = (i == 0) ? 0 : vMesh.vertexOffset[i - 1];
-			indicesOffsetIndex = (i == 0) ? 0 : vMesh.indicesOffset[i - 1];
-			vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(vMesh.indexCount[i]), 1, indicesOffsetIndex, verticesOffsetIndex, 0);
-		}
+			//verticesOffsetIndex = (i == 0) ? 0 : vMesh.vertexOffset[i - 1];
+			//indicesOffsetIndex = (i == 0) ? 0 : vMesh.indicesOffset[i - 1];
+		vkCmdDrawIndexed(commandBuffer, vMesh.vertexIndicesCount, vMesh.count, 0, 0, 0);
+		//
 	}
 
 	void VulkanRenderer::AddPipelineBarrier(VkCommandBuffer commandBuffer, VkImageMemoryBarrier renderBarrier, VkPipelineStageFlags srcStageMask, VkPipelineStageFlags dstStageMask, VkDependencyFlags dependencyFlags)
@@ -1382,11 +1389,11 @@ namespace Rbk {
 		return uniformBuffers;
 	}
 
-	void VulkanRenderer::UpdateUniformBuffer(std::pair<VkBuffer, VkDeviceMemory>uniformBuffer, UniformBufferObject uniformBufferObject)
+	void VulkanRenderer::UpdateUniformBuffer(std::pair<VkBuffer, VkDeviceMemory>uniformBuffer, std::vector<UniformBufferObject> uniformBufferObjects, uint32_t uniformBuffersCount)
 	{
 		void* data;
-		vkMapMemory(m_Device, uniformBuffer.second, 0, sizeof(uniformBufferObject), 0, &data);
-		memcpy(data, &uniformBufferObject, sizeof(uniformBufferObject));
+		vkMapMemory(m_Device, uniformBuffer.second, 0, sizeof(UniformBufferObject) * uniformBuffersCount, 0, &data);
+		memcpy(data, uniformBufferObjects.data(), sizeof(UniformBufferObject) * uniformBuffersCount);
 		vkUnmapMemory(m_Device, uniformBuffer.second);
 	}
 
