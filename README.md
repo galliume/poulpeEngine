@@ -27,11 +27,15 @@ Thanks to [premake](https://premake.github.io/)
 
 ### Resources
 
+[Vulkan Programming Guide](https://www.amazon.fr/Vulkan-Programming-Guide-Official-Learning/dp/0134464540/)
+
 [Game Engine Architecture](https://www.amazon.fr/Engine-Architecture-Third-Jason-Gregory/dp/1138035459/)
 
 [Vulkan API](https://www.khronos.org/registry/vulkan/specs/1.2-extensions/html/index.html)
 
 [LunarG Vulkan](https://vulkan.lunarg.com/doc/sdk/1.2.162.1/linux/tutorial/html/00-intro.html)
+
+[Foundations of Game Engine Development (vol 1&2)](https://foundationsofgameenginedev.com/)
 
 [Vulkan Tutorial](https://vulkan-tutorial.com/)
 
