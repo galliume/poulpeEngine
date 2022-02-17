@@ -1,7 +1,6 @@
-Notes about my understanding of Vulkan.
-should be enough to draw a triangle...
+#Notes about my understanding of Vulkan.
 
-//preparation
+###Preparation
 glfwCreateWindow
 glfwGetWindowSize
 glfwGetRequiredInstanceExtensions
@@ -26,12 +25,14 @@ vkCreateRenderPass
 vkCreatePipelineLayout
 vkCreateGraphicsPipelines
 vkGetSwapchainImagesKHR
-vkCreateImageView (as much as swapChainImages.size())
+vkCreateBufferView -> used by shader (a.k.a texel view)
+	-> maxTexelBufferElements
+vkCreateImageView (as much as swapChainImages.size()) 
 vkCreateFramebuffer (as much as swapChainImages.size())
 vkCreateCommandPool
 vkAllocateCommandBuffers
 
-//main loop
+###Main loop
 while (true) {
 
 	glfwPollEvents
@@ -42,20 +43,21 @@ while (true) {
 	vkCmdSetViewport
 	vkCmdSetScissor
 	vkCmdBindPipeline
-	vkCmdDraw
+	vkCmdDraw / vkCmdDrawIndexed
 	vkCmdEndRenderPass
 	vkEndCommandBuffer
 	vkQueueSubmit
 	vkQueuePresentKHR
 	vkDeviceWaitIdle
-	
 }
 
+
+###Destroy
 glfwDestroyWindow
+detroy all elements in reverse order of creation
 vkDestroyInstance
 
-
-
+###General info
 ImageLayout -> how image data is stored in GPU
 	color_attachment_optimal -> fastest on GPU
 	shader_read_optimal -> fastest for shader
@@ -76,7 +78,6 @@ operation to determine by state
 	shader_read
 	
 those data are transfered through pipeline barrier
-
 
 RenderPass to texture
 	read texture from frag shader
