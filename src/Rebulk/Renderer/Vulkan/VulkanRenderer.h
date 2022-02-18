@@ -80,7 +80,7 @@ namespace Rbk {
 		VkShaderModule CreateShaderModule(const std::vector<char>& code);
 		VkDescriptorPool CreateDescriptorPool(uint32_t size);
 		VkDescriptorSetLayout CreateDescriptorSetLayout();
-		VkDescriptorSet CreateDescriptorSets(VkDescriptorPool descriptorPool, std::vector<VkImage> swapChainImages, std::vector<VkDescriptorSetLayout> descriptorSetLayouts);
+		VkDescriptorSet CreateDescriptorSets(VkDescriptorPool descriptorPool, std::vector<VkDescriptorSetLayout> descriptorSetLayouts);
 		void UpdateDescriptorSets(VulkanMesh vMesh, std::pair<VkBuffer, VkDeviceMemory> uniformBuffer, std::map<const char*, VulkanTexture> vTextures, VkDescriptorSet descriptorSet);
 		VkPipelineLayout CreatePipelineLayout(std::vector<VkDescriptorSet> descriptorSets, std::vector<VkDescriptorSetLayout> descriptorSetLayouts);
 		VkPipeline CreateGraphicsPipeline(VkRenderPass renderPass, VulkanPipeline pipeline, VulkanShaders shaders, bool wireFrameModeOn = false);

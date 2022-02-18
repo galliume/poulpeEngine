@@ -60,8 +60,8 @@ namespace Rbk
 		Mesh mesh = Rbk::TinyObjLoader::LoadMesh(path, shouldInverseTextureY);
 
 		//@todo Add MeshManager
-		for (int x = 0; x < 20; x++) {
-			for (int y = 0; y < 20; y++) {
+		for (int x = 0; x < 100; x++) {
+			for (int y = 0; y < 100; y++) {
 				pos = glm::vec3(0.3f * x, -0.5f, -0.3f * y);
 
 				m_Renderer->AddMesh(name, mesh, textureName, pos);
