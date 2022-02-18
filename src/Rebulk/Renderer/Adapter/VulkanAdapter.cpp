@@ -202,11 +202,11 @@ namespace Rbk
 		if (0 == m_Pipelines.size()) {
 			VulkanPipeline vPipeline;
 			vPipeline.pipelineCache = 0;
-			vPipeline.descriptorPool = m_Renderer->CreateDescriptorPool(m_SwapChainImages.size());			
+			vPipeline.descriptorPool = m_Renderer->CreateDescriptorPool(m_Meshes.uniformBuffersCount);
 
-			for (int i = 0; i < m_SwapChainImages.size(); i++) {
-				vPipeline.descriptorSetLayouts.emplace_back(m_Renderer->CreateDescriptorSetLayout());
-				vPipeline.descriptorSets.emplace_back(m_Renderer->CreateDescriptorSets(vPipeline.descriptorPool, m_SwapChainImages, vPipeline.descriptorSetLayouts));
+			vPipeline.descriptorSetLayouts.emplace_back(m_Renderer->CreateDescriptorSetLayout());
+			for (int i = 0; i < m_Meshes.uniformBuffersCount; i++) {
+				vPipeline.descriptorSets.emplace_back(m_Renderer->CreateDescriptorSets(vPipeline.descriptorPool, vPipeline.descriptorSetLayouts));
 			}
 
 			vPipeline.pipelineLayout = m_Renderer->CreatePipelineLayout(vPipeline.descriptorSets, vPipeline.descriptorSetLayouts);			
@@ -215,11 +215,11 @@ namespace Rbk
 
 			VulkanPipeline vPipelineWireFramed;
 			vPipelineWireFramed.pipelineCache = 0;
-			vPipelineWireFramed.descriptorPool = m_Renderer->CreateDescriptorPool(m_SwapChainImages.size());
+			vPipelineWireFramed.descriptorPool = m_Renderer->CreateDescriptorPool(m_Meshes.uniformBuffersCount);
 
-			for (int i = 0; i < m_SwapChainImages.size(); i++) {
-				vPipelineWireFramed.descriptorSetLayouts.emplace_back(m_Renderer->CreateDescriptorSetLayout());
-				vPipelineWireFramed.descriptorSets.emplace_back(m_Renderer->CreateDescriptorSets(vPipelineWireFramed.descriptorPool, m_SwapChainImages, vPipelineWireFramed.descriptorSetLayouts));
+			vPipelineWireFramed.descriptorSetLayouts.emplace_back(m_Renderer->CreateDescriptorSetLayout());
+			for (int i = 0; i < m_Meshes.uniformBuffersCount; i++) {
+				vPipelineWireFramed.descriptorSets.emplace_back(m_Renderer->CreateDescriptorSets(vPipelineWireFramed.descriptorPool, vPipelineWireFramed.descriptorSetLayouts));
 			}
 
 			vPipelineWireFramed.pipelineLayout = m_Renderer->CreatePipelineLayout(vPipelineWireFramed.descriptorSets, vPipelineWireFramed.descriptorSetLayouts);
