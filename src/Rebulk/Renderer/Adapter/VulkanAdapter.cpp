@@ -56,7 +56,7 @@ namespace Rbk
 		m_Camera = camera;
 	}
 
-	void VulkanAdapter::AddMesh(Rbk::Mesh mesh, const char* textureName, glm::vec3 pos)
+	void VulkanAdapter::AddMesh(const char* name, Rbk::Mesh mesh, const char* textureName, glm::vec3 pos)
 	{			
 		glm::mat4 view = glm::mat4(1.0f);
 
@@ -69,17 +69,18 @@ namespace Rbk
 		glm::mat4 projection;
 		ubo.proj = glm::perspective(glm::radians(45.0f), m_Renderer->GetSwapChainExtent().width / (float)m_Renderer->GetSwapChainExtent().height, 0.1f, 100.0f);
 		ubo.proj[1][1] *= -1;
+		m_Meshes.mesh.ubos.emplace_back(ubo);
+
+		if (0 != m_Meshes.mesh.meshNames.count(name)) {		
+			m_Meshes.mesh.meshNames[name] += 1;
+			return;
+		}
 
 		m_Meshes.mesh.textureNames.emplace(m_Meshes.count, textureName);
 		m_Meshes.mesh.vertices.insert(m_Meshes.mesh.vertices.end(), mesh.vertices.begin(), mesh.vertices.end());
 		m_Meshes.mesh.indices.insert(m_Meshes.mesh.indices.end(), mesh.indices.begin(), mesh.indices.end());
-		m_Meshes.mesh.ubos.emplace_back(ubo);
 		m_Meshes.vertexIndicesCount += mesh.indices.size();
-
-		uint32_t vertexOffset = (m_Meshes.vertexOffset.size() > 0) ? m_Meshes.vertexOffset.back() + mesh.vertices.size() : mesh.vertices.size();
-		uint32_t indicesOffset = (m_Meshes.indicesOffset.size() > 0) ? m_Meshes.indicesOffset.back() + mesh.indices.size() : mesh.indices.size();
-		m_Meshes.vertexOffset.emplace_back(vertexOffset);
-		m_Meshes.indicesOffset.emplace_back(indicesOffset);
+		m_Meshes.mesh.meshNames.insert({name, 1});
 		m_Meshes.count += 1;
 	}
 
@@ -151,21 +152,25 @@ namespace Rbk
 	{
 		m_Meshes.mesh.vertices.clear();
 		m_Meshes.mesh.indices.clear();
-		m_Meshes.vertexOffset.clear();
 	}
 
 	void VulkanAdapter::PrepareDraw()
 	{
 		if (m_IsPrepared) return;
 
+		for (auto item : m_Meshes.mesh.meshNames) {
+			m_Meshes.totalInstances += item.second;
+		}
+
 		uint32_t maxUniformBufferRange = m_Renderer->GetDeviceProperties().limits.maxUniformBufferRange;
 		m_Meshes.uniformBufferChunkSize = maxUniformBufferRange / sizeof(UniformBufferObject);
-		m_Meshes.uniformBuffersCount = std::ceil(m_Meshes.count / (float) m_Meshes.uniformBufferChunkSize);
+		m_Meshes.uniformBuffersCount = std::ceil(m_Meshes.totalInstances / (float) m_Meshes.uniformBufferChunkSize);
 
 		std::cout << "maxUniformBufferRange : " << maxUniformBufferRange << std::endl;
 		std::cout << "uniformBufferChunkSize : " << m_Meshes.uniformBufferChunkSize << std::endl;
 		std::cout << "uniformBuffersCount : " << m_Meshes.uniformBuffersCount << std::endl;
 		std::cout << "mesh count  : " << m_Meshes.count << std::endl;
+		std::cout << "intances count  : " << m_Meshes.totalInstances << std::endl;
 
 		for (int i = 0; i < m_Meshes.uniformBuffersCount; i++) {
 			std::pair<VkBuffer, VkDeviceMemory> uniformBuffer = m_Renderer->CreateUniformBuffers(m_Meshes.uniformBufferChunkSize);
@@ -229,7 +234,7 @@ namespace Rbk
 		std::vector<UniformBufferObject> chunk;
 		int32_t beginRange, endRange = 0;
 
-		for (int i = 0; i < m_Meshes.count; i++) {
+		for (int i = 0; i < m_Meshes.totalInstances; i++) {
 
 			m_Meshes.mesh.ubos[i].view = m_Camera->LookAt();
 			
