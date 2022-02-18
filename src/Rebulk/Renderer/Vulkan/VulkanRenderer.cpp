@@ -1083,15 +1083,10 @@ namespace Rbk {
 
 		int32_t offset = 0;
 
-		for (int i = 0; i < vMesh.uniformBuffers.size(); i++) {
-
-			if (i > 0) {
-				offset = sizeof(UniformBufferObject) * i;
-			}
-
+		for (int i = 0; i < vMesh.uniformBuffersCount; i++) {
 			VkDescriptorBufferInfo bufferInfo{};
 			bufferInfo.buffer = vMesh.uniformBuffers[i].first;
-			bufferInfo.offset = offset;
+			bufferInfo.offset = 0;
 			bufferInfo.range = VK_WHOLE_SIZE;
 			bufferInfos.emplace_back(bufferInfo);
 		}
