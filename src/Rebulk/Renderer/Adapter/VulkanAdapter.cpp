@@ -162,11 +162,11 @@ namespace Rbk
 			m_Meshes.totalInstances += item.second;
 		}
 
-		uint32_t maxUniformBufferRange = m_Renderer->GetDeviceProperties().limits.maxUniformBufferRange;
-		m_Meshes.uniformBufferChunkSize = maxUniformBufferRange / sizeof(UniformBufferObject);
+		m_Meshes.maxUniformBufferRange = m_Renderer->GetDeviceProperties().limits.maxUniformBufferRange;
+		m_Meshes.uniformBufferChunkSize = m_Meshes.maxUniformBufferRange / sizeof(UniformBufferObject);
 		m_Meshes.uniformBuffersCount = std::ceil(m_Meshes.totalInstances / (float) m_Meshes.uniformBufferChunkSize);
 
-		std::cout << "maxUniformBufferRange : " << maxUniformBufferRange << std::endl;
+		std::cout << "maxUniformBufferRange : " << m_Meshes.maxUniformBufferRange << std::endl;
 		std::cout << "uniformBufferChunkSize : " << m_Meshes.uniformBufferChunkSize << std::endl;
 		std::cout << "uniformBuffersCount : " << m_Meshes.uniformBuffersCount << std::endl;
 		std::cout << "mesh count  : " << m_Meshes.count << std::endl;
@@ -233,8 +233,9 @@ namespace Rbk
 		int32_t uboCount = 1, uboIndex = 0;
 		std::vector<UniformBufferObject> chunk;
 		int32_t beginRange, endRange = 0;
+		int32_t nextChunk = m_Meshes.totalInstances - m_Meshes.uniformBufferChunkSize;
 
-		for (int i = 0; i < m_Meshes.totalInstances; i++) {
+		for (int i = m_Meshes.totalInstances - 1; i >= 0; i--) {
 
 			m_Meshes.mesh.ubos[i].view = m_Camera->LookAt();
 			
@@ -242,13 +243,20 @@ namespace Rbk
 				m_Meshes.mesh.ubos[i].model = glm::rotate(m_Meshes.mesh.ubos[i].model, (float)glfwGetTime() * glm::radians(50.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 			}
 
-			if (i == m_Meshes.uniformBufferChunkSize) {
+			if (i == nextChunk) {
 
+				nextChunk -= m_Meshes.uniformBufferChunkSize;
+
+				if (nextChunk < 0) nextChunk = 0;
 				endRange = m_Meshes.uniformBufferChunkSize * uboCount;
 				beginRange = endRange - m_Meshes.uniformBufferChunkSize;
 
-				chunk = { m_Meshes.mesh.ubos.begin() + beginRange, m_Meshes.mesh.ubos.begin() + endRange };
-				m_Renderer->UpdateUniformBuffer(m_Meshes.uniformBuffers[uboIndex], chunk, i);
+				if (endRange > m_Meshes.totalInstances) endRange = m_Meshes.totalInstances;
+
+				chunk = { m_Meshes.mesh.ubos.rbegin() + beginRange, m_Meshes.mesh.ubos.rbegin() + endRange };
+
+				m_Renderer->UpdateUniformBuffer(m_Meshes.uniformBuffers[uboIndex], chunk, chunk.size());
+				m_Meshes.uniformUBOCount.emplace_back(chunk.size());
 				uboIndex += 1;
 				uboCount += 1;
 			}

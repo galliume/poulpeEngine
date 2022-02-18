@@ -34,10 +34,12 @@ namespace Rbk {
 		std::pair<VkBuffer, VkDeviceMemory> meshVBuffer = { nullptr, nullptr };
 		std::pair<VkBuffer, VkDeviceMemory> meshIBuffer = { nullptr, nullptr };
 		std::vector<std::pair<VkBuffer, VkDeviceMemory>>uniformBuffers;
+		std::vector<int32_t>uniformUBOCount;
 		int32_t count = 0;
 		int32_t totalInstances = 0;
 		int32_t uniformBuffersCount = 0;
 		int32_t uniformBufferChunkSize = 0;
+		int32_t maxUniformBufferRange = 0;
 	};
 
 	struct VulkanPipeline
