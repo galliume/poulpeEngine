@@ -24,7 +24,7 @@ namespace Rbk
 		virtual void Init() override;
 		virtual void AddCamera(Camera* camera) override;
 		virtual void AddShader(std::string name, std::vector<char> vertexShaderCode, std::vector<char> fragShaderCode) override;
-		virtual void AddMesh(Rbk::Mesh mesh, const char* textureName, glm::vec3 pos) override;
+		virtual void AddMesh(const char* name, Rbk::Mesh mesh, const char* textureName, glm::vec3 pos) override;
 		virtual void AddTexture(const char* name, const char* path) override;
 		virtual void PrepareDraw() override;
 		virtual void Draw() override;

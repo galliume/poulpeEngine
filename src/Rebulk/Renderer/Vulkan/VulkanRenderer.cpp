@@ -1281,17 +1281,7 @@ namespace Rbk {
 			nullptr
 		);
 
-		uint32_t verticesOffsetIndex = 0;
-		uint32_t indicesOffsetIndex = 0;
-
-		//for (int i = 0; i < vMesh.count; i++) {
-		int i = 0;
-		//vkCmdPushConstants(commandBuffer, pipeline.pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(push.data()), push.data());
-
-			//verticesOffsetIndex = (i == 0) ? 0 : vMesh.vertexOffset[i - 1];
-			//indicesOffsetIndex = (i == 0) ? 0 : vMesh.indicesOffset[i - 1];
-		vkCmdDrawIndexed(commandBuffer, vMesh.vertexIndicesCount, vMesh.count, 0, 0, 0);
-		//
+		vkCmdDrawIndexed(commandBuffer, vMesh.vertexIndicesCount, vMesh.totalInstances, 0, 0, 0);
 	}
 
 	void VulkanRenderer::AddPipelineBarrier(VkCommandBuffer commandBuffer, VkImageMemoryBarrier renderBarrier, VkPipelineStageFlags srcStageMask, VkPipelineStageFlags dstStageMask, VkDependencyFlags dependencyFlags)
