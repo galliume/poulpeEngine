@@ -564,7 +564,7 @@ namespace Rbk {
 		return swapChainImageView;
 	}
 
-	VkDescriptorSetLayout VulkanRenderer::CreateDescriptorSetLayout(uint32_t meshCount)
+	VkDescriptorSetLayout VulkanRenderer::CreateDescriptorSetLayout()
 	{
 		VkDescriptorSetLayout descriptorSetLayout;
 
@@ -610,7 +610,7 @@ namespace Rbk {
 		pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
 		//pipelineLayoutInfo.pushConstantRangeCount = 0;
 		//pipelineLayoutInfo.pPushConstantRanges = &pushConstantRange;
-		pipelineLayoutInfo.setLayoutCount = descriptorSets.size();
+		pipelineLayoutInfo.setLayoutCount = descriptorSetLayouts.size();
 		pipelineLayoutInfo.pSetLayouts = descriptorSetLayouts.data();
 
 		VkResult result = vkCreatePipelineLayout(m_Device, &pipelineLayoutInfo, nullptr, &graphicsPipelineLayout);
@@ -1032,20 +1032,20 @@ namespace Rbk {
 		return semaphores;
 	}
 
-	VkDescriptorPool VulkanRenderer::CreateDescriptorPool(std::vector<VkImage> swapChainImages)
+	VkDescriptorPool VulkanRenderer::CreateDescriptorPool(uint32_t size)
 	{
 		VkDescriptorPool descriptorPool;
 		std::array<VkDescriptorPoolSize, 2> poolSizes{};
 		poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-		poolSizes[0].descriptorCount = swapChainImages.size();
+		poolSizes[0].descriptorCount = size;
 		poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-		poolSizes[1].descriptorCount = swapChainImages.size();
+		poolSizes[1].descriptorCount = size;
 
 		VkDescriptorPoolCreateInfo poolInfo{};
 		poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
 		poolInfo.poolSizeCount = poolSizes.size();
 		poolInfo.pPoolSizes = poolSizes.data();
-		poolInfo.maxSets = swapChainImages.size();
+		poolInfo.maxSets = size;
 		poolInfo.flags = VK_DESCRIPTOR_POOL_CREATE_UPDATE_AFTER_BIND_BIT;
 
 		if (vkCreateDescriptorPool(m_Device, &poolInfo, nullptr, &descriptorPool) != VK_SUCCESS)
@@ -1075,21 +1075,17 @@ namespace Rbk {
 		return descriptorSet;
 	}
 
-	void VulkanRenderer::UpdateDescriptorSets(VulkanMesh vMesh, std::map<const char*, VulkanTexture> vTextures, VulkanPipeline pipeline)
+	void VulkanRenderer::UpdateDescriptorSets(VulkanMesh vMesh, std::pair<VkBuffer, VkDeviceMemory>uniformBuffer, std::map<const char*, VulkanTexture> vTextures, VkDescriptorSet descriptorSet)
 	{
 		std::array<VkWriteDescriptorSet, 2> descriptorWrites{};
 		std::vector<VkDescriptorImageInfo> imageInfos;
 		std::vector<VkDescriptorBufferInfo> bufferInfos;
 
-		int32_t offset = 0;
-
-		for (int i = 0; i < vMesh.uniformBuffersCount; i++) {
-			VkDescriptorBufferInfo bufferInfo{};
-			bufferInfo.buffer = vMesh.uniformBuffers[i].first;
-			bufferInfo.offset = 0;
-			bufferInfo.range = VK_WHOLE_SIZE;
-			bufferInfos.emplace_back(bufferInfo);
-		}
+		VkDescriptorBufferInfo bufferInfo{};
+		bufferInfo.buffer = uniformBuffer.first;
+		bufferInfo.offset = 0;
+		bufferInfo.range = VK_WHOLE_SIZE;
+		bufferInfos.emplace_back(bufferInfo);
 
 		VkDescriptorImageInfo imageInfo{};
 		imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
@@ -1098,7 +1094,7 @@ namespace Rbk {
 		imageInfos.emplace_back(imageInfo);
 
 		descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-		descriptorWrites[0].dstSet = pipeline.descriptorSets[0];
+		descriptorWrites[0].dstSet = descriptorSet;
 		descriptorWrites[0].dstBinding = 0;
 		descriptorWrites[0].dstArrayElement = 0;
 		descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
@@ -1106,7 +1102,7 @@ namespace Rbk {
 		descriptorWrites[0].pBufferInfo = bufferInfos.data();
 
 		descriptorWrites[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-		descriptorWrites[1].dstSet = pipeline.descriptorSets[0];
+		descriptorWrites[1].dstSet = descriptorSet;
 		descriptorWrites[1].dstBinding = 1;
 		descriptorWrites[1].dstArrayElement = 0;
 		descriptorWrites[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
@@ -1257,26 +1253,31 @@ namespace Rbk {
 		vkResetCommandPool(m_Device, commandPool, 0);
 	}
 
-	void VulkanRenderer::Draw(VkCommandBuffer commandBuffer, VulkanMesh vMesh, VulkanPipeline pipeline)
+	void VulkanRenderer::Draw(VkCommandBuffer commandBuffer, VulkanMesh vMesh, std::map<const char*, VulkanTexture> vTextures, VulkanPipeline pipeline)
 	{	
 		VkBuffer vertexBuffers[] = { vMesh.meshVBuffer.first };
 		VkDeviceSize offsets[] = { 0 };
 
-		vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
-		vkCmdBindIndexBuffer(commandBuffer, vMesh.meshIBuffer.first, 0, VK_INDEX_TYPE_UINT32);
+		for (int i = 0; i < vMesh.uniformBuffersCount; i++) {
 
-		vkCmdBindDescriptorSets(
-			commandBuffer, 
-			VK_PIPELINE_BIND_POINT_GRAPHICS,
-			pipeline.pipelineLayout,
-			0, 
-			pipeline.descriptorSets.size(),
-			pipeline.descriptorSets.data(),
-			0, 
-			nullptr
-		);
+			UpdateDescriptorSets(vMesh, vMesh.uniformBuffers[i], vTextures, pipeline.descriptorSets[i]);
 
-		vkCmdDrawIndexed(commandBuffer, vMesh.vertexIndicesCount, vMesh.totalInstances, 0, 0, 0);
+			vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
+			vkCmdBindIndexBuffer(commandBuffer, vMesh.meshIBuffer.first, 0, VK_INDEX_TYPE_UINT32);
+
+			vkCmdBindDescriptorSets(
+				commandBuffer,
+				VK_PIPELINE_BIND_POINT_GRAPHICS,
+				pipeline.pipelineLayout,
+				0,
+				1,
+				&pipeline.descriptorSets[i],
+				0,
+				nullptr
+			);
+
+			vkCmdDrawIndexed(commandBuffer, vMesh.vertexIndicesCount, vMesh.uniformUBOCount[i], 0, 0, 0);
+		}
 	}
 
 	void VulkanRenderer::AddPipelineBarrier(VkCommandBuffer commandBuffer, VkImageMemoryBarrier renderBarrier, VkPipelineStageFlags srcStageMask, VkPipelineStageFlags dstStageMask, VkDependencyFlags dependencyFlags)
