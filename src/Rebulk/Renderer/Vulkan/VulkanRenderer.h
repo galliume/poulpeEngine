@@ -31,12 +31,11 @@ namespace Rbk {
 	{
 		Rbk::Mesh mesh;
 		uint32_t vertexIndicesCount = 0;
-		std::vector<uint32_t>vertexOffset = {};
-		std::vector<uint32_t>indicesOffset = {};
 		std::pair<VkBuffer, VkDeviceMemory> meshVBuffer = { nullptr, nullptr };
 		std::pair<VkBuffer, VkDeviceMemory> meshIBuffer = { nullptr, nullptr };
 		std::vector<std::pair<VkBuffer, VkDeviceMemory>>uniformBuffers;
 		int32_t count = 0;
+		int32_t totalInstances = 0;
 		int32_t uniformBuffersCount = 0;
 		int32_t uniformBufferChunkSize = 0;
 	};
