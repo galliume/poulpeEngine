@@ -69,6 +69,7 @@ namespace Rbk
 		glm::mat4 projection;
 		ubo.proj = glm::perspective(glm::radians(45.0f), m_Renderer->GetSwapChainExtent().width / (float)m_Renderer->GetSwapChainExtent().height, 0.1f, 100.0f);
 		ubo.proj[1][1] *= -1;
+
 		m_Meshes.mesh.ubos.emplace_back(ubo);
 
 		if (0 != m_Meshes.mesh.meshNames.count(name)) {		
@@ -166,12 +167,6 @@ namespace Rbk
 		m_Meshes.uniformBufferChunkSize = m_Meshes.maxUniformBufferRange / sizeof(UniformBufferObject);
 		m_Meshes.uniformBuffersCount = std::ceil(m_Meshes.totalInstances / (float) m_Meshes.uniformBufferChunkSize);
 
-		std::cout << "maxUniformBufferRange : " << m_Meshes.maxUniformBufferRange << std::endl;
-		std::cout << "uniformBufferChunkSize : " << m_Meshes.uniformBufferChunkSize << std::endl;
-		std::cout << "uniformBuffersCount : " << m_Meshes.uniformBuffersCount << std::endl;
-		std::cout << "mesh count  : " << m_Meshes.count << std::endl;
-		std::cout << "intances count  : " << m_Meshes.totalInstances << std::endl;
-
 		for (int i = 0; i < m_Meshes.uniformBuffersCount; i++) {
 			std::pair<VkBuffer, VkDeviceMemory> uniformBuffer = m_Renderer->CreateUniformBuffers(m_Meshes.uniformBufferChunkSize);
 			m_Meshes.uniformBuffers.emplace_back(uniformBuffer);
@@ -207,20 +202,28 @@ namespace Rbk
 		if (0 == m_Pipelines.size()) {
 			VulkanPipeline vPipeline;
 			vPipeline.pipelineCache = 0;
-			vPipeline.descriptorPool = m_Renderer->CreateDescriptorPool(m_SwapChainImages);			
-			vPipeline.descriptorSetLayouts.emplace_back(m_Renderer->CreateDescriptorSetLayout(1));
-			vPipeline.descriptorSets.emplace_back(m_Renderer->CreateDescriptorSets(vPipeline.descriptorPool, m_SwapChainImages, vPipeline.descriptorSetLayouts));	
+			vPipeline.descriptorPool = m_Renderer->CreateDescriptorPool(m_SwapChainImages.size());			
+
+			for (int i = 0; i < m_SwapChainImages.size(); i++) {
+				vPipeline.descriptorSetLayouts.emplace_back(m_Renderer->CreateDescriptorSetLayout());
+				vPipeline.descriptorSets.emplace_back(m_Renderer->CreateDescriptorSets(vPipeline.descriptorPool, m_SwapChainImages, vPipeline.descriptorSetLayouts));
+			}
+
 			vPipeline.pipelineLayout = m_Renderer->CreatePipelineLayout(vPipeline.descriptorSets, vPipeline.descriptorSetLayouts);			
 			vPipeline.graphicsPipeline.emplace_back(m_Renderer->CreateGraphicsPipeline(m_RenderPass, vPipeline, m_Shaders));
 			m_Pipelines.emplace_back(vPipeline);
 
 			VulkanPipeline vPipelineWireFramed;
 			vPipelineWireFramed.pipelineCache = 0;
-			vPipelineWireFramed.descriptorPool = m_Renderer->CreateDescriptorPool(m_SwapChainImages);
-			vPipelineWireFramed.descriptorSetLayouts.emplace_back(m_Renderer->CreateDescriptorSetLayout(1));
-			vPipelineWireFramed.descriptorSets.emplace_back(m_Renderer->CreateDescriptorSets(vPipeline.descriptorPool, m_SwapChainImages, vPipeline.descriptorSetLayouts));
-			vPipelineWireFramed.pipelineLayout = m_Renderer->CreatePipelineLayout(vPipeline.descriptorSets, vPipeline.descriptorSetLayouts);
-			vPipelineWireFramed.graphicsPipeline.emplace_back(m_Renderer->CreateGraphicsPipeline(m_RenderPass, vPipeline, m_Shaders, true));
+			vPipelineWireFramed.descriptorPool = m_Renderer->CreateDescriptorPool(m_SwapChainImages.size());
+
+			for (int i = 0; i < m_SwapChainImages.size(); i++) {
+				vPipelineWireFramed.descriptorSetLayouts.emplace_back(m_Renderer->CreateDescriptorSetLayout());
+				vPipelineWireFramed.descriptorSets.emplace_back(m_Renderer->CreateDescriptorSets(vPipelineWireFramed.descriptorPool, m_SwapChainImages, vPipelineWireFramed.descriptorSetLayouts));
+			}
+
+			vPipelineWireFramed.pipelineLayout = m_Renderer->CreatePipelineLayout(vPipelineWireFramed.descriptorSets, vPipelineWireFramed.descriptorSetLayouts);
+			vPipelineWireFramed.graphicsPipeline.emplace_back(m_Renderer->CreateGraphicsPipeline(m_RenderPass, vPipelineWireFramed, m_Shaders, true));
 
 			m_Pipelines.emplace_back(vPipelineWireFramed);
 		}
@@ -289,8 +292,11 @@ namespace Rbk
 			m_Renderer->SetViewPort(m_CommandBuffers[m_ImageIndex]);
 			m_Renderer->SetScissor(m_CommandBuffers[m_ImageIndex]);
 			m_Renderer->BindPipeline(m_CommandBuffers[m_ImageIndex], ppline.graphicsPipeline[0]);
-			m_Renderer->UpdateDescriptorSets(m_Meshes, m_Textures, ppline);
-			m_Renderer->Draw(m_CommandBuffers[m_ImageIndex], m_Meshes, ppline);
+
+			//for (auto chunk : m_Meshes.uniformBuffers) {
+				m_Renderer->Draw(m_CommandBuffers[m_ImageIndex], m_Meshes, m_Textures, ppline);
+			//}			
+
 			m_Renderer->EndRenderPass(m_CommandBuffers[m_ImageIndex]);
 			m_Renderer->EndCommandBuffer(m_CommandBuffers[m_ImageIndex]);
 
