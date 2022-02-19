@@ -1,6 +1,7 @@
 #include "rebulkpch.h"
 
 #include "Rebulk/Renderer/Adapter/IRendererAdapter.h"
+#include "TextureManager.h"
 #include "Rebulk/Renderer/Mesh.h"
 #include "Rebulk/Core/TinyObjLoader.h"
 #include "Rebulk/Component/Camera.h"
@@ -10,7 +11,7 @@ namespace Rbk
 	class RenderManager
 	{
 	public:
-		RenderManager(GLFWwindow* window, IRendererAdapter* renderer);
+		RenderManager(GLFWwindow* window, IRendererAdapter* renderer, TextureManager* textureManager);
 		~RenderManager();
 
 		void Init();
@@ -28,5 +29,6 @@ namespace Rbk
 		static RenderManager* s_Instance;
 		IRendererAdapter* m_Renderer = nullptr;
 		GLFWwindow* m_Window;
+		TextureManager* m_TextureManager;
 	};
 }
