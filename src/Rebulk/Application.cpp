@@ -9,6 +9,7 @@ namespace Rbk
 	std::shared_ptr<Rbk::VulkanAdapter>rendererAdapter = nullptr;
 	std::shared_ptr<Rbk::LayerManager>layerManager = nullptr;
 	std::shared_ptr<Rbk::TextureManager>textureManager = nullptr;
+	std::shared_ptr<Rbk::MeshManager>meshManager = nullptr;
 	std::shared_ptr<Rbk::VulkanLayer>vulkanLayer = nullptr;
 	std::shared_ptr<Rbk::Im>vImGui = nullptr;
 
@@ -64,8 +65,14 @@ namespace Rbk
 			textureManager = std::make_shared<Rbk::TextureManager>(Rbk::TextureManager(rendererAdapter.get()->Rdr()));
 		}
 
+		if (meshManager == nullptr) {
+			meshManager = std::make_shared<Rbk::MeshManager>(Rbk::MeshManager(rendererAdapter.get()->Rdr()));
+		}
+
 		if (renderManager == nullptr) {
-			renderManager = std::make_shared<Rbk::RenderManager>(Rbk::RenderManager(window->Get(), rendererAdapter.get(), textureManager.get()));
+			renderManager = std::make_shared<Rbk::RenderManager>(Rbk::RenderManager(
+				window->Get(), rendererAdapter.get(), textureManager.get(), meshManager.get()
+			));
 			renderManager->Init();
 			renderManager->AddCamera(camera.get());
 		}
@@ -75,6 +82,9 @@ namespace Rbk
 	{
 
 		textureManager->AddTexture("minecraft_grass", "mesh/minecraft/Grass_Block_TEX.png");
+
+		glm::vec3 pos3 = glm::vec3(0.1f, -0.8f, 0.0f);
+		meshManager->AddMesh("cube", "mesh/minecraft/Grass_Block.obj", "minecraft_grass", pos3);
 
 		double lastTime = glfwGetTime();
 		
@@ -92,6 +102,7 @@ namespace Rbk
 
 		vulkanLayer->AddWindow(window.get());
 		vulkanLayer->AddTextureManager(textureManager.get());
+		vulkanLayer->AddMeshManager(meshManager.get());
 
 		while (!glfwWindowShouldClose(window->Get())) {
 
