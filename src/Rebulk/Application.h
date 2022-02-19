@@ -5,6 +5,7 @@
 #include "Manager/RenderManager.h"
 #include "Manager/InputManager.h"
 #include "Manager/TextureManager.h"
+#include "Manager/MeshManager.h"
 
 #include "Renderer/Adapter/VulkanAdapter.h"
 

@@ -3,6 +3,7 @@
 #include "Rebulk/Renderer/Mesh.h"
 #include "Rebulk/Component/Camera.h"
 #include "Rebulk/Manager/TextureManager.h"
+#include "Rebulk/Manager/MeshManager.h"
 
 namespace Rbk
 {
@@ -11,9 +12,9 @@ namespace Rbk
 	public:
 		virtual void Init() = 0;
 		virtual void AddTextureManager(TextureManager* textureManager) = 0;
+		virtual void AddMeshManager(MeshManager* meshManager) = 0;
 		virtual void AddShader(std::string name, std::vector<char> vertexShaderCode, std::vector<char> fragShaderCode) = 0;
 		virtual void AddCamera(Camera* camera) = 0;
-		virtual void AddMesh(const char* name, Rbk::Mesh mesh, const char* textureName, glm::vec3 pos) = 0;
 		virtual void PrepareDraw() = 0;
 		virtual void Draw() = 0;
 		virtual void Destroy() = 0;

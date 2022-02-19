@@ -43,16 +43,16 @@ namespace Rbk
 		ImGui::Separator();
 		Rbk::Im::Text("Current frame %d", m_Adapter->Rdr()->GetCurrentFrame());
 		ImGui::Separator();
-		Rbk::Im::Text("Total mesh loaded %d", m_Adapter->GetMesh().count);
-		Rbk::Im::Text("Total mesh instanced %d", m_Adapter->GetMesh().totalInstances);
-		Rbk::Im::Text("Total vertex count %d", m_Adapter->GetMesh().mesh.vertices.size());
-		Rbk::Im::Text("Total index count %d", m_Adapter->GetMesh().mesh.indices.size());
-		Rbk::Im::Text("Max UBO buffer size by chunk %d", m_Adapter->GetMesh().maxUniformBufferRange);
-		Rbk::Im::Text("UBO buffer size by chunk %d", m_Adapter->GetMesh().uniformBufferChunkSize);
-		Rbk::Im::Text("Total UBO buffer %d", m_Adapter->GetMesh().uniformBuffersCount);
+		Rbk::Im::Text("Total mesh loaded %d", m_MeshManager->GetMeshes()->count);
+		Rbk::Im::Text("Total mesh instanced %d", m_MeshManager->GetMeshes()->totalInstances);
+		Rbk::Im::Text("Total vertex count %d", m_MeshManager->GetMeshes()->mesh.vertices.size());
+		Rbk::Im::Text("Total index count %d", m_MeshManager->GetMeshes()->mesh.indices.size());
+		Rbk::Im::Text("Max UBO buffer size by chunk %d", m_MeshManager->GetMeshes()->maxUniformBufferRange);
+		Rbk::Im::Text("UBO buffer size by chunk %d", m_MeshManager->GetMeshes()->uniformBufferChunkSize);
+		Rbk::Im::Text("Total UBO buffer %d", m_MeshManager->GetMeshes()->uniformBuffersCount);
 
 		Rbk::Im::Text("Stats per mesh :");
-		for (auto item : m_Adapter->GetMesh().mesh.meshNames) {
+		for (auto item : m_MeshManager->GetMeshes()->mesh.meshNames) {
 			Rbk::Im::Text("\tMesh named %s with %d instances", item.first, item.second);
 		}
 		ImGui::Separator();

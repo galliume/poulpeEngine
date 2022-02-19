@@ -20,6 +20,8 @@ namespace Rbk
 		void AddRenderAdapter(VulkanAdapter* renderAdapter);
 		void AddWindow(Window* window) { m_Window = window; };
 		void AddTextureManager(TextureManager* textureManager) { m_TextureManager = textureManager; };
+		void AddMeshManager(MeshManager* meshManager) { m_MeshManager = meshManager; };
+
 	private:
 		bool m_WireframeModeOn = false;
 		bool m_VSync = false;
@@ -28,5 +30,6 @@ namespace Rbk
 		VulkanAdapter* m_Adapter;
 		Window* m_Window;
 		TextureManager* m_TextureManager;
+		MeshManager* m_MeshManager;
 	};
 }
