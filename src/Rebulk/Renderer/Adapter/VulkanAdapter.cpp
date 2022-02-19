@@ -169,7 +169,7 @@ namespace Rbk
 		int32_t beginRange, endRange = 0;
 		int32_t nextChunk = m_MeshManager->GetMeshes()->totalInstances - m_MeshManager->GetMeshes()->uniformBufferChunkSize;
 
-		if (nextChunk < 0) nextChunk = m_MeshManager->GetMeshes()->totalInstances - 1;
+		if (nextChunk < 0) nextChunk = 0;
 
 		for (int i = m_MeshManager->GetMeshes()->totalInstances - 1; i >= 0; i--) {
 
