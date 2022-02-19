@@ -226,7 +226,12 @@ namespace Rbk
 			vPipelineWireFramed.graphicsPipeline.emplace_back(m_Renderer->CreateGraphicsPipeline(m_RenderPass, vPipelineWireFramed, m_Shaders, true));
 
 			m_Pipelines.emplace_back(vPipelineWireFramed);
+
+			for (int i = 0; i < m_Meshes.uniformBuffersCount; i++) {
+				m_Renderer->UpdateDescriptorSets(m_Meshes, m_Meshes.uniformBuffers[i], m_Textures, vPipeline.descriptorSets[i]);
+			}
 		}
+
 
 		m_IsPrepared = true;
 	}
@@ -276,6 +281,9 @@ namespace Rbk
 		UpdatePositions();
 		VulkanPipeline ppline = (!m_WireFrameModeOn) ? m_Pipelines[0] : m_Pipelines[1];
 
+		VkBuffer vertexBuffers[] = { m_Meshes.meshVBuffer.first };
+		VkDeviceSize offsets[] = { 0 };
+
 		for (size_t i = 0; i < m_SwapChainImages.size(); i++) {
 						
 			m_ImageIndex = m_Renderer->AcquireNextImageKHR(m_SwapChain, m_Semaphores);
@@ -292,11 +300,7 @@ namespace Rbk
 			m_Renderer->SetViewPort(m_CommandBuffers[m_ImageIndex]);
 			m_Renderer->SetScissor(m_CommandBuffers[m_ImageIndex]);
 			m_Renderer->BindPipeline(m_CommandBuffers[m_ImageIndex], ppline.graphicsPipeline[0]);
-
-			//for (auto chunk : m_Meshes.uniformBuffers) {
-				m_Renderer->Draw(m_CommandBuffers[m_ImageIndex], m_Meshes, m_Textures, ppline);
-			//}			
-
+			m_Renderer->Draw(m_CommandBuffers[m_ImageIndex], m_Meshes, m_Textures, ppline);
 			m_Renderer->EndRenderPass(m_CommandBuffers[m_ImageIndex]);
 			m_Renderer->EndCommandBuffer(m_CommandBuffers[m_ImageIndex]);
 
@@ -305,9 +309,9 @@ namespace Rbk
 				m_Renderer->QueuePresent(m_ImageIndex, m_SwapChain, m_Semaphores);
 			}
 
-			m_Renderer->WaitIdle();
+			//m_Renderer->WaitIdle();
 		}
-		m_Renderer->ResetCommandPool(m_CommandPool);
+		//m_Renderer->ResetCommandPool(m_CommandPool);
 	}
 
 	void VulkanAdapter::Destroy()
