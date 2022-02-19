@@ -1258,11 +1258,7 @@ namespace Rbk {
 		VkBuffer vertexBuffers[] = { vMesh.meshVBuffer.first };
 		VkDeviceSize offsets[] = { 0 };
 
-		int j = 0;
-
 		for (int i = 0; i < vMesh.uniformBuffersCount; i++) {
-
-			UpdateDescriptorSets(vMesh, vMesh.uniformBuffers[i], vTextures, pipeline.descriptorSets[i]);
 
 			vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
 			vkCmdBindIndexBuffer(commandBuffer, vMesh.meshIBuffer.first, 0, VK_INDEX_TYPE_UINT32);
