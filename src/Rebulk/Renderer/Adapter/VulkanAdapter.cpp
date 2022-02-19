@@ -56,7 +56,7 @@ namespace Rbk
 		m_Camera = camera;
 	}
 
-	void VulkanAdapter::AddMesh(Rbk::Mesh mesh, const char* textureName, glm::vec3 pos)
+	void VulkanAdapter::AddMesh(const char* name, Rbk::Mesh mesh, const char* textureName, glm::vec3 pos)
 	{			
 		glm::mat4 view = glm::mat4(1.0f);
 
@@ -70,16 +70,18 @@ namespace Rbk
 		ubo.proj = glm::perspective(glm::radians(45.0f), m_Renderer->GetSwapChainExtent().width / (float)m_Renderer->GetSwapChainExtent().height, 0.1f, 100.0f);
 		ubo.proj[1][1] *= -1;
 
+		m_Meshes.mesh.ubos.emplace_back(ubo);
+
+		if (0 != m_Meshes.mesh.meshNames.count(name)) {		
+			m_Meshes.mesh.meshNames[name] += 1;
+			return;
+		}
+
 		m_Meshes.mesh.textureNames.emplace(m_Meshes.count, textureName);
 		m_Meshes.mesh.vertices.insert(m_Meshes.mesh.vertices.end(), mesh.vertices.begin(), mesh.vertices.end());
 		m_Meshes.mesh.indices.insert(m_Meshes.mesh.indices.end(), mesh.indices.begin(), mesh.indices.end());
-		m_Meshes.mesh.ubos.emplace_back(ubo);
-		m_Meshes.indexCount.emplace_back(mesh.indices.size());
-
-		uint32_t vertexOffset = (m_Meshes.vertexOffset.size() > 0) ? m_Meshes.vertexOffset.back() + mesh.vertices.size() : mesh.vertices.size();
-		uint32_t indicesOffset = (m_Meshes.indicesOffset.size() > 0) ? m_Meshes.indicesOffset.back() + mesh.indices.size() : mesh.indices.size();
-		m_Meshes.vertexOffset.emplace_back(vertexOffset);
-		m_Meshes.indicesOffset.emplace_back(indicesOffset);
+		m_Meshes.vertexIndicesCount += mesh.indices.size();
+		m_Meshes.mesh.meshNames.insert({name, 1});
 		m_Meshes.count += 1;
 	}
 
@@ -151,19 +153,25 @@ namespace Rbk
 	{
 		m_Meshes.mesh.vertices.clear();
 		m_Meshes.mesh.indices.clear();
-		m_Meshes.indexCount.clear();
-		m_Meshes.vertexOffset.clear();
 	}
 
 	void VulkanAdapter::PrepareDraw()
 	{
 		if (m_IsPrepared) return;
 
-		for (int i = 0; i < m_Meshes.count; i++) {
-			std::pair<VkBuffer, VkDeviceMemory> uniformBuffer = m_Renderer->CreateUniformBuffers(1);
-			m_Meshes.uniformBuffers.emplace_back(uniformBuffer);
+		for (auto item : m_Meshes.mesh.meshNames) {
+			m_Meshes.totalInstances += item.second;
 		}
 
+		m_Meshes.maxUniformBufferRange = m_Renderer->GetDeviceProperties().limits.maxUniformBufferRange;
+		m_Meshes.uniformBufferChunkSize = m_Meshes.maxUniformBufferRange / sizeof(UniformBufferObject);
+		m_Meshes.uniformBuffersCount = std::ceil(m_Meshes.totalInstances / (float) m_Meshes.uniformBufferChunkSize);
+
+		for (int i = 0; i < m_Meshes.uniformBuffersCount; i++) {
+			std::pair<VkBuffer, VkDeviceMemory> uniformBuffer = m_Renderer->CreateUniformBuffers(m_Meshes.uniformBufferChunkSize);
+			m_Meshes.uniformBuffers.emplace_back(uniformBuffer);
+		}
+		
 		m_SwapChainImageViews.resize(m_SwapChainImages.size());
 
 		for (uint32_t i = 0; i < m_SwapChainImages.size(); i++) {
@@ -194,34 +202,71 @@ namespace Rbk
 		if (0 == m_Pipelines.size()) {
 			VulkanPipeline vPipeline;
 			vPipeline.pipelineCache = 0;
-			vPipeline.descriptorPool = m_Renderer->CreateDescriptorPool(m_SwapChainImages);			
-			vPipeline.descriptorSetLayouts.emplace_back(m_Renderer->CreateDescriptorSetLayout(m_Meshes.count));
-			vPipeline.descriptorSets.emplace_back(m_Renderer->CreateDescriptorSets(vPipeline.descriptorPool, m_SwapChainImages, vPipeline.descriptorSetLayouts));		
+			vPipeline.descriptorPool = m_Renderer->CreateDescriptorPool(m_Meshes.uniformBuffersCount);
+
+			vPipeline.descriptorSetLayouts.emplace_back(m_Renderer->CreateDescriptorSetLayout());
+			for (int i = 0; i < m_Meshes.uniformBuffersCount; i++) {
+				vPipeline.descriptorSets.emplace_back(m_Renderer->CreateDescriptorSets(vPipeline.descriptorPool, vPipeline.descriptorSetLayouts));
+			}
+
 			vPipeline.pipelineLayout = m_Renderer->CreatePipelineLayout(vPipeline.descriptorSets, vPipeline.descriptorSetLayouts);			
 			vPipeline.graphicsPipeline.emplace_back(m_Renderer->CreateGraphicsPipeline(m_RenderPass, vPipeline, m_Shaders));
 			m_Pipelines.emplace_back(vPipeline);
 
 			VulkanPipeline vPipelineWireFramed;
 			vPipelineWireFramed.pipelineCache = 0;
-			vPipelineWireFramed.descriptorPool = m_Renderer->CreateDescriptorPool(m_SwapChainImages);
-			vPipelineWireFramed.descriptorSetLayouts.emplace_back(m_Renderer->CreateDescriptorSetLayout(m_Meshes.count));
-			vPipelineWireFramed.descriptorSets.emplace_back(m_Renderer->CreateDescriptorSets(vPipeline.descriptorPool, m_SwapChainImages, vPipeline.descriptorSetLayouts));
-			vPipelineWireFramed.pipelineLayout = m_Renderer->CreatePipelineLayout(vPipeline.descriptorSets, vPipeline.descriptorSetLayouts);
-			vPipelineWireFramed.graphicsPipeline.emplace_back(m_Renderer->CreateGraphicsPipeline(m_RenderPass, vPipeline, m_Shaders, true));
+			vPipelineWireFramed.descriptorPool = m_Renderer->CreateDescriptorPool(m_Meshes.uniformBuffersCount);
+
+			vPipelineWireFramed.descriptorSetLayouts.emplace_back(m_Renderer->CreateDescriptorSetLayout());
+			for (int i = 0; i < m_Meshes.uniformBuffersCount; i++) {
+				vPipelineWireFramed.descriptorSets.emplace_back(m_Renderer->CreateDescriptorSets(vPipelineWireFramed.descriptorPool, vPipelineWireFramed.descriptorSetLayouts));
+			}
+
+			vPipelineWireFramed.pipelineLayout = m_Renderer->CreatePipelineLayout(vPipelineWireFramed.descriptorSets, vPipelineWireFramed.descriptorSetLayouts);
+			vPipelineWireFramed.graphicsPipeline.emplace_back(m_Renderer->CreateGraphicsPipeline(m_RenderPass, vPipelineWireFramed, m_Shaders, true));
 
 			m_Pipelines.emplace_back(vPipelineWireFramed);
+
+			for (int i = 0; i < m_Meshes.uniformBuffersCount; i++) {
+				m_Renderer->UpdateDescriptorSets(m_Meshes, m_Meshes.uniformBuffers[i], m_Textures, vPipeline.descriptorSets[i]);
+			}
 		}
+
 
 		m_IsPrepared = true;
 	}
 
 	void VulkanAdapter::UpdatePositions()
 	{
-		for (auto& ubo : m_Meshes.mesh.ubos) {
-			ubo.view = m_Camera->LookAt();
+		int32_t uboCount = 1, uboIndex = 0;
+		std::vector<UniformBufferObject> chunk;
+		int32_t beginRange, endRange = 0;
+		int32_t nextChunk = m_Meshes.totalInstances - m_Meshes.uniformBufferChunkSize;
+
+		for (int i = m_Meshes.totalInstances - 1; i >= 0; i--) {
+
+			m_Meshes.mesh.ubos[i].view = m_Camera->LookAt();
 			
 			if (m_MakeSpin) {		
-				ubo.model = glm::rotate(ubo.model, (float)glfwGetTime() * glm::radians(50.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+				m_Meshes.mesh.ubos[i].model = glm::rotate(m_Meshes.mesh.ubos[i].model, (float)glfwGetTime() * glm::radians(50.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+			}
+
+			if (i == nextChunk) {
+
+				nextChunk -= m_Meshes.uniformBufferChunkSize;
+
+				if (nextChunk < 0) nextChunk = 0;
+				endRange = m_Meshes.uniformBufferChunkSize * uboCount;
+				beginRange = endRange - m_Meshes.uniformBufferChunkSize;
+
+				if (endRange > m_Meshes.totalInstances) endRange = m_Meshes.totalInstances;
+
+				chunk = { m_Meshes.mesh.ubos.rbegin() + beginRange, m_Meshes.mesh.ubos.rbegin() + endRange };
+
+				m_Renderer->UpdateUniformBuffer(m_Meshes.uniformBuffers[uboIndex], chunk, chunk.size());
+				m_Meshes.uniformUBOCount.emplace_back(chunk.size());
+				uboIndex += 1;
+				uboCount += 1;
 			}
 		}
 	}
@@ -234,6 +279,10 @@ namespace Rbk
 
 		SouldResizeSwapChain();
 		UpdatePositions();
+		VulkanPipeline ppline = (!m_WireFrameModeOn) ? m_Pipelines[0] : m_Pipelines[1];
+
+		VkBuffer vertexBuffers[] = { m_Meshes.meshVBuffer.first };
+		VkDeviceSize offsets[] = { 0 };
 
 		for (size_t i = 0; i < m_SwapChainImages.size(); i++) {
 						
@@ -250,9 +299,6 @@ namespace Rbk
 			m_Renderer->BeginRenderPass(m_RenderPass, m_CommandBuffers[m_ImageIndex], m_SwapChainFramebuffers[m_ImageIndex]);
 			m_Renderer->SetViewPort(m_CommandBuffers[m_ImageIndex]);
 			m_Renderer->SetScissor(m_CommandBuffers[m_ImageIndex]);
-
-			VulkanPipeline ppline = (!m_WireFrameModeOn) ? m_Pipelines[0] : m_Pipelines[1];
-
 			m_Renderer->BindPipeline(m_CommandBuffers[m_ImageIndex], ppline.graphicsPipeline[0]);
 			m_Renderer->Draw(m_CommandBuffers[m_ImageIndex], m_Meshes, m_Textures, ppline);
 			m_Renderer->EndRenderPass(m_CommandBuffers[m_ImageIndex]);
@@ -263,9 +309,9 @@ namespace Rbk
 				m_Renderer->QueuePresent(m_ImageIndex, m_SwapChain, m_Semaphores);
 			}
 
-			m_Renderer->WaitIdle();
+			//m_Renderer->WaitIdle();
 		}
-		m_Renderer->ResetCommandPool(m_CommandPool);
+		//m_Renderer->ResetCommandPool(m_CommandPool);
 	}
 
 	void VulkanAdapter::Destroy()
