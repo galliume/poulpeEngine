@@ -4,11 +4,12 @@ namespace Rbk
 {
 	RenderManager* RenderManager::s_Instance = nullptr;
 
-	RenderManager::RenderManager(GLFWwindow* window, IRendererAdapter* renderer, TextureManager* textureManager)
+	RenderManager::RenderManager(GLFWwindow* window, IRendererAdapter* renderer, TextureManager* textureManager, MeshManager* meshManager)
 	{
 		m_Window = window;
 		m_Renderer = renderer;
 		m_TextureManager = textureManager;
+		m_MeshManager = meshManager;
 
 		if (s_Instance == nullptr) {
 			s_Instance = this;
@@ -24,6 +25,7 @@ namespace Rbk
 	{
 		m_Renderer->Init();
 		m_Renderer->AddTextureManager(m_TextureManager);
+		m_Renderer->AddMeshManager(m_MeshManager);
 
 		auto vertShaderCode = ReadFile("shaders/spv/vert.spv");
 		auto fragShaderCode = ReadFile("shaders/spv/frag.spv");
@@ -48,31 +50,11 @@ namespace Rbk
 
 		//AddMesh("mesh/backpack/backpack.obj", "diffuse_backpack", pos2, false);
 		//AddMesh("mesh/viking/viking_room.obj", "viking_room", pos1);
-		AddMesh("cube", "mesh/minecraft/Grass_Block.obj", "minecraft_grass", pos3);
 	}
 
 	void RenderManager::AddCamera(Camera* camera)
 	{
 		m_Renderer->AddCamera(camera);
-	}
-
-	void RenderManager::AddMesh(const char* name, const char* path, const char* textureName, glm::vec3 pos, bool shouldInverseTextureY)
-	{
-		Mesh mesh = Rbk::TinyObjLoader::LoadMesh(path, shouldInverseTextureY);
-
-		//@todo Add MeshManager
-		for (int x = 0; x < 100; x++) {
-			for (int y = 0; y < 100; y++) {
-				pos = glm::vec3(0.3f * x, -0.5f, -0.3f * y);
-
-				m_Renderer->AddMesh(name, mesh, textureName, pos);
-			}
-		}
-	}
-
-	void RenderManager::AddTexture(const char* name, const char* path)
-	{
-		m_TextureManager->AddTexture(name, path);
 	}
 
 	void RenderManager::AddShader(std::string name, std::vector<char> vertShaderCode, std::vector<char> fragShaderCode)
