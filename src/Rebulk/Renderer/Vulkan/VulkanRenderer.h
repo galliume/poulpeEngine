@@ -30,13 +30,16 @@ namespace Rbk {
 	struct VulkanMesh
 	{
 		Rbk::Mesh mesh;
-		std::vector<uint32_t>indexCount = {};
-		std::vector<uint32_t>vertexOffset = {};
-		std::vector<uint32_t>indicesOffset = {};
+		uint32_t vertexIndicesCount = 0;
 		std::pair<VkBuffer, VkDeviceMemory> meshVBuffer = { nullptr, nullptr };
 		std::pair<VkBuffer, VkDeviceMemory> meshIBuffer = { nullptr, nullptr };
 		std::vector<std::pair<VkBuffer, VkDeviceMemory>>uniformBuffers;
+		std::vector<int32_t>uniformUBOCount;
 		int32_t count = 0;
+		int32_t totalInstances = 0;
+		int32_t uniformBuffersCount = 0;
+		int32_t uniformBufferChunkSize = 0;
+		int32_t maxUniformBufferRange = 0;
 	};
 
 	struct VulkanPipeline
@@ -75,9 +78,10 @@ namespace Rbk {
 		**/
 		VkRenderPass CreateRenderPass(VkSampleCountFlagBits msaaSamples);
 		VkShaderModule CreateShaderModule(const std::vector<char>& code);
-		VkDescriptorPool CreateDescriptorPool(std::vector<VkImage> swapChainImages);
-		VkDescriptorSetLayout CreateDescriptorSetLayout(uint32_t meshCount);
-		VkDescriptorSet CreateDescriptorSets(VkDescriptorPool descriptorPool, std::vector<VkImage> swapChainImages, std::vector<VkDescriptorSetLayout> descriptorSetLayouts);
+		VkDescriptorPool CreateDescriptorPool(uint32_t size);
+		VkDescriptorSetLayout CreateDescriptorSetLayout();
+		VkDescriptorSet CreateDescriptorSets(VkDescriptorPool descriptorPool, std::vector<VkDescriptorSetLayout> descriptorSetLayouts);
+		void UpdateDescriptorSets(VulkanMesh vMesh, std::pair<VkBuffer, VkDeviceMemory> uniformBuffer, std::map<const char*, VulkanTexture> vTextures, VkDescriptorSet descriptorSet);
 		VkPipelineLayout CreatePipelineLayout(std::vector<VkDescriptorSet> descriptorSets, std::vector<VkDescriptorSetLayout> descriptorSetLayouts);
 		VkPipeline CreateGraphicsPipeline(VkRenderPass renderPass, VulkanPipeline pipeline, VulkanShaders shaders, bool wireFrameModeOn = false);
 		VkSwapchainKHR CreateSwapChain(std::vector<VkImage>& swapChainImages, VkSwapchainKHR oldSwapChain = VK_NULL_HANDLE);
@@ -92,7 +96,7 @@ namespace Rbk {
 		void CopyBuffer(VkCommandPool commandPool, VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
 		bool SouldResizeSwapChain(VkSwapchainKHR swapChain);
 		std::pair<VkBuffer, VkDeviceMemory> CreateUniformBuffers(uint32_t uniformBuffersCount);
-		void UpdateUniformBuffer(std::pair<VkBuffer, VkDeviceMemory>uniformBuffer, UniformBufferObject uniformBufferObject);
+		void UpdateUniformBuffer(std::pair<VkBuffer, VkDeviceMemory>uniformBuffer, std::vector<UniformBufferObject> uniformBufferObjects, uint32_t uniformBuffersCount);
 		void CreateImage(uint32_t width, uint32_t height, uint32_t mipLevels, VkSampleCountFlagBits numSamples, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image, VkDeviceMemory& imageMemory);
 		VkImageView CreateImageView(VkImage image, VkFormat format, uint32_t mipLevels, VkImageAspectFlags aspectFlags = VK_IMAGE_ASPECT_COLOR_BIT);
 		void CreateTextureImage(VkCommandBuffer commandBuffer, stbi_uc* pixels, int texWidth, int texHeight, uint32_t mipLevels, VkImage& textureImage, VkDeviceMemory& textureImageMemory, VkFormat format);
@@ -114,7 +118,7 @@ namespace Rbk {
 		void SetViewPort(VkCommandBuffer commandBuffer);
 		void SetScissor(VkCommandBuffer commandBuffer);
 		void BindPipeline(VkCommandBuffer commandBuffer, VkPipeline pipeline);
-		void Draw(VkCommandBuffer commandBuffer, VulkanMesh vMesh, std::map<const char*, VulkanTexture>, VulkanPipeline pipeline);
+		void Draw(VkCommandBuffer commandBuffer, VulkanMesh vMesh, std::map<const char*, VulkanTexture> vTextures, VulkanPipeline pipeline);
 		uint32_t AcquireNextImageKHR(VkSwapchainKHR swapChain, std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>>& semaphores);
 		void QueueSubmit(VkCommandBuffer commandBuffer);
 		void QueueSubmit(uint32_t imageIndex, VkCommandBuffer commandBuffer, std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>>& semaphores);
@@ -193,7 +197,7 @@ namespace Rbk {
 		GLFWwindow* m_Window = VK_NULL_HANDLE;
 
 		const std::vector<const char*> m_ValidationLayers = { "VK_LAYER_KHRONOS_validation" };
-		const std::vector<const char*> m_DeviceExtensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
+		const std::vector<const char*> m_DeviceExtensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME, VK_KHR_PUSH_DESCRIPTOR_EXTENSION_NAME };
 
 		bool m_InstanceCreated = false;
 		bool m_EnableValidationLayers = false;

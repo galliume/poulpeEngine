@@ -57,6 +57,7 @@ namespace Rbk
 		std::vector<uint32_t> indices;
 		std::vector<UniformBufferObject> ubos;
 		std::map<int32_t, const char*> textureNames;
+		std::map<const char*, int32_t> meshNames;
 	};
 }
 
