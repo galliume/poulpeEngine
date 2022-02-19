@@ -4,10 +4,11 @@ namespace Rbk
 {
 	RenderManager* RenderManager::s_Instance = nullptr;
 
-	RenderManager::RenderManager(GLFWwindow* window, IRendererAdapter* renderer)
+	RenderManager::RenderManager(GLFWwindow* window, IRendererAdapter* renderer, TextureManager* textureManager)
 	{
-		m_Renderer = renderer;
 		m_Window = window;
+		m_Renderer = renderer;
+		m_TextureManager = textureManager;
 
 		if (s_Instance == nullptr) {
 			s_Instance = this;
@@ -22,6 +23,7 @@ namespace Rbk
 	void RenderManager::Init()
 	{
 		m_Renderer->Init();
+		m_Renderer->AddTextureManager(m_TextureManager);
 
 		auto vertShaderCode = ReadFile("shaders/spv/vert.spv");
 		auto fragShaderCode = ReadFile("shaders/spv/frag.spv");
@@ -43,7 +45,6 @@ namespace Rbk
 		//AddTexture("viking_room", "mesh/viking/viking_room.png");
 		//AddTexture("diffuse_backpack", "mesh/backpack/diffuse.png");
 		//AddTexture("diffuse_moon", "mesh/moon/diffuse.jpg");
-		AddTexture("minecraft_grass", "mesh/minecraft/Grass_Block_TEX.png");
 
 		//AddMesh("mesh/backpack/backpack.obj", "diffuse_backpack", pos2, false);
 		//AddMesh("mesh/viking/viking_room.obj", "viking_room", pos1);
@@ -71,8 +72,7 @@ namespace Rbk
 
 	void RenderManager::AddTexture(const char* name, const char* path)
 	{
-		//@todo add TextureManager
-		m_Renderer->AddTexture(name, path);
+		m_TextureManager->AddTexture(name, path);
 	}
 
 	void RenderManager::AddShader(std::string name, std::vector<char> vertShaderCode, std::vector<char> fragShaderCode)

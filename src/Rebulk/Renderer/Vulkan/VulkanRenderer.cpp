@@ -1075,7 +1075,7 @@ namespace Rbk {
 		return descriptorSet;
 	}
 
-	void VulkanRenderer::UpdateDescriptorSets(VulkanMesh vMesh, std::pair<VkBuffer, VkDeviceMemory>uniformBuffer, std::map<const char*, VulkanTexture> vTextures, VkDescriptorSet descriptorSet)
+	void VulkanRenderer::UpdateDescriptorSets(VulkanMesh vMesh, std::pair<VkBuffer, VkDeviceMemory>uniformBuffer, std::map<const char*, Texture> vTextures, VkDescriptorSet descriptorSet)
 	{
 		std::array<VkWriteDescriptorSet, 2> descriptorWrites{};
 		std::vector<VkDescriptorImageInfo> imageInfos;
@@ -1089,7 +1089,7 @@ namespace Rbk {
 
 		VkDescriptorImageInfo imageInfo{};
 		imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-		imageInfo.imageView = vTextures[vMesh.mesh.textureNames[0]].textureImageView;
+		imageInfo.imageView = vTextures[vMesh.mesh.textureNames[0]].imageView;
 		imageInfo.sampler = vTextures[vMesh.mesh.textureNames[0]].sampler;
 		imageInfos.emplace_back(imageInfo);
 
@@ -1253,7 +1253,7 @@ namespace Rbk {
 		vkResetCommandPool(m_Device, commandPool, 0);
 	}
 
-	void VulkanRenderer::Draw(VkCommandBuffer commandBuffer, VulkanMesh vMesh, std::map<const char*, VulkanTexture> vTextures, VulkanPipeline pipeline)
+	void VulkanRenderer::Draw(VkCommandBuffer commandBuffer, VulkanMesh vMesh, VulkanPipeline pipeline)
 	{	
 		VkBuffer vertexBuffers[] = { vMesh.meshVBuffer.first };
 		VkDeviceSize offsets[] = { 0 };
