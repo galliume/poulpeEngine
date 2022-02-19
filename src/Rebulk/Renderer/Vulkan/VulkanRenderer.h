@@ -1,3 +1,4 @@
+#pragma once
 #include "Rebulk/Renderer/Mesh.h"
 #include "Rebulk/Renderer/IRenderer.h"
 
@@ -6,25 +7,6 @@ namespace Rbk {
 	struct VulkanShaders
 	{
 		std::map<std::string, std::array<VkShaderModule, 2>> shaders;
-	};
-
-	struct VulkanTexture
-	{
-		const char* name;
-		VkImage textureImage;
-		VkDeviceMemory textureImageMemory;
-		VkImageView textureImageView;
-		VkSampler sampler;
-		uint32_t mipLevels;
-		uint32_t texWidth;
-		uint32_t texHeight;
-		uint32_t texChannels;
-		VkImage colorImage;
-		VkDeviceMemory colorImageMemory;
-		VkImageView colorImageView;
-		VkImage depthImage;
-		VkDeviceMemory depthImageMemory;
-		VkImageView depthImageView;
 	};
 
 	struct VulkanMesh
@@ -81,7 +63,7 @@ namespace Rbk {
 		VkDescriptorPool CreateDescriptorPool(uint32_t size);
 		VkDescriptorSetLayout CreateDescriptorSetLayout();
 		VkDescriptorSet CreateDescriptorSets(VkDescriptorPool descriptorPool, std::vector<VkDescriptorSetLayout> descriptorSetLayouts);
-		void UpdateDescriptorSets(VulkanMesh vMesh, std::pair<VkBuffer, VkDeviceMemory> uniformBuffer, std::map<const char*, VulkanTexture> vTextures, VkDescriptorSet descriptorSet);
+		void UpdateDescriptorSets(VulkanMesh vMesh, std::pair<VkBuffer, VkDeviceMemory> uniformBuffer, std::map<const char*, Texture> vTextures, VkDescriptorSet descriptorSet);
 		VkPipelineLayout CreatePipelineLayout(std::vector<VkDescriptorSet> descriptorSets, std::vector<VkDescriptorSetLayout> descriptorSetLayouts);
 		VkPipeline CreateGraphicsPipeline(VkRenderPass renderPass, VulkanPipeline pipeline, VulkanShaders shaders, bool wireFrameModeOn = false);
 		VkSwapchainKHR CreateSwapChain(std::vector<VkImage>& swapChainImages, VkSwapchainKHR oldSwapChain = VK_NULL_HANDLE);
@@ -118,7 +100,7 @@ namespace Rbk {
 		void SetViewPort(VkCommandBuffer commandBuffer);
 		void SetScissor(VkCommandBuffer commandBuffer);
 		void BindPipeline(VkCommandBuffer commandBuffer, VkPipeline pipeline);
-		void Draw(VkCommandBuffer commandBuffer, VulkanMesh vMesh, std::map<const char*, VulkanTexture> vTextures, VulkanPipeline pipeline);
+		void Draw(VkCommandBuffer commandBuffer, VulkanMesh vMesh, VulkanPipeline pipeline);
 		uint32_t AcquireNextImageKHR(VkSwapchainKHR swapChain, std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>>& semaphores);
 		void QueueSubmit(VkCommandBuffer commandBuffer);
 		void QueueSubmit(uint32_t imageIndex, VkCommandBuffer commandBuffer, std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>>& semaphores);

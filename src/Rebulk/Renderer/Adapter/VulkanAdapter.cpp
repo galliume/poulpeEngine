@@ -20,6 +20,11 @@ namespace Rbk
 		VulkanShaders m_Shaders;
 	}
 
+	void VulkanAdapter::AddTextureManager(TextureManager* textureManager)
+	{
+		m_TextureManager = textureManager;
+	}
+
 	void VulkanAdapter::SouldResizeSwapChain()
 	{
 		if (m_Renderer->SouldResizeSwapChain(m_SwapChain)) {
@@ -38,8 +43,8 @@ namespace Rbk
 			std::vector<VkImageView> depthImageViews;
 			std::vector<VkImageView> colorImageViews;
 
-			for (auto&& [textName, tex] : m_Textures) {
-				m_Renderer->CreateImage(tex.texWidth, tex.texHeight, tex.mipLevels, VK_SAMPLE_COUNT_1_BIT, m_Renderer->FindDepthFormat(), VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, tex.depthImage, tex.depthImageMemory);
+			for (auto&& [textName, tex] : m_TextureManager->GetTextures()) {
+				m_Renderer->CreateImage(tex.width, tex.height, tex.mipLevels, VK_SAMPLE_COUNT_1_BIT, m_Renderer->FindDepthFormat(), VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, tex.depthImage, tex.depthImageMemory);
 				depthImageViews.emplace_back(tex.depthImageView);
 				colorImageViews.emplace_back(tex.colorImageView);
 			}
@@ -85,62 +90,6 @@ namespace Rbk
 		m_Meshes.count += 1;
 	}
 
-	void VulkanAdapter::AddTexture(const char* name, const char* path)
-	{
-		if (0 != m_Textures.count(name)) {
-			std::cout << "Texture " << name << " already imported" << std::endl;
-			return;
-		}
-
-		int texWidth, texHeight, texChannels;
-		stbi_uc* pixels = stbi_load(path, &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
-
-		if (!pixels) {
-			Rbk::Log::GetLogger()->warn("failed to load texture image %s", name);
-			return;
-		}
-
-		VkImage textureImage;
-		VkDeviceMemory textureImageMemory;
-		uint32_t mipLevels = static_cast<uint32_t>(std::floor(std::log2(std::max(texWidth, texHeight)))) + 1;
-
-		VkCommandBuffer commandBuffer = m_Renderer->AllocateCommandBuffers(m_CommandPool)[0];
-		m_Renderer->BeginCommandBuffer(commandBuffer);
-		m_Renderer->CreateTextureImage(commandBuffer, pixels, texWidth, texHeight, mipLevels, textureImage, textureImageMemory, VK_FORMAT_R8G8B8A8_SRGB);
-
-		VkImageView textureImageView = m_Renderer->CreateImageView(textureImage, VK_FORMAT_R8G8B8A8_SRGB, mipLevels);
-		VkSampler textureSampler = m_Renderer->CreateTextureSampler(mipLevels);
-
-		VkDeviceMemory colorImageMemory;
-		VkImage colorImage;
-		m_Renderer->CreateImage(m_Renderer->GetSwapChainExtent().width, m_Renderer->GetSwapChainExtent().height, 1, m_Renderer->GetMsaaSamples(), m_Renderer->GetSwapChainImageFormat(), VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, colorImage, colorImageMemory);
-		VkImageView colorImageView = m_Renderer->CreateImageView(colorImage, m_Renderer->GetSwapChainImageFormat(), VK_IMAGE_ASPECT_COLOR_BIT, 1);
-
-		VkImage depthImage;
-		VkDeviceMemory depthImageMemory;
-		m_Renderer->CreateImage(m_Renderer->GetSwapChainExtent().width, m_Renderer->GetSwapChainExtent().height, 1, m_Renderer->GetMsaaSamples(), m_Renderer->FindDepthFormat(), VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, depthImage, depthImageMemory);
-		VkImageView depthImageView = m_Renderer->CreateImageView(depthImage, m_Renderer->FindDepthFormat(), 1, VK_IMAGE_ASPECT_DEPTH_BIT);
-
-		VulkanTexture vTexture;
-		vTexture.name = name;
-		vTexture.textureImage = textureImage;
-		vTexture.textureImageMemory = textureImageMemory;
-		vTexture.textureImageView = textureImageView;
-		vTexture.sampler = textureSampler;
-		vTexture.mipLevels = mipLevels;
-		vTexture.texWidth = texWidth;
-		vTexture.texHeight = texHeight;
-		vTexture.texChannels = texChannels;
-		vTexture.colorImageView = colorImageView;
-		vTexture.colorImage = colorImage;
-		vTexture.colorImageMemory = colorImageMemory;
-		vTexture.depthImage = depthImage;
-		vTexture.depthImageView = depthImageView;
-		vTexture.depthImageMemory = depthImageMemory;
-
-		m_Textures.emplace(name, vTexture);
-	}
-
 	void VulkanAdapter::AddShader(std::string name, std::vector<char> vertexShaderCode, std::vector<char> fragShaderCode)
 	{
 		VkShaderModule vertexShaderModule = m_Renderer->CreateShaderModule(vertexShaderCode);
@@ -183,7 +132,7 @@ namespace Rbk
 		VkImage depthImage;
 		VkDeviceMemory depthImageMemory;
 
-		for (auto&& [textName, tex]: m_Textures) {
+		for (auto&& [textName, tex]: m_TextureManager->GetTextures()) {
 			depthImageViews.emplace_back(tex.depthImageView);
 			colorImageViews.emplace_back(tex.colorImageView);
 		}
@@ -228,7 +177,8 @@ namespace Rbk
 			m_Pipelines.emplace_back(vPipelineWireFramed);
 
 			for (int i = 0; i < m_Meshes.uniformBuffersCount; i++) {
-				m_Renderer->UpdateDescriptorSets(m_Meshes, m_Meshes.uniformBuffers[i], m_Textures, vPipeline.descriptorSets[i]);
+				m_Renderer->UpdateDescriptorSets(m_Meshes, m_Meshes.uniformBuffers[i], m_TextureManager->GetTextures(), vPipeline.descriptorSets[i]);
+				m_Renderer->UpdateDescriptorSets(m_Meshes, m_Meshes.uniformBuffers[i], m_TextureManager->GetTextures(), vPipelineWireFramed.descriptorSets[i]);
 			}
 		}
 
@@ -242,6 +192,8 @@ namespace Rbk
 		std::vector<UniformBufferObject> chunk;
 		int32_t beginRange, endRange = 0;
 		int32_t nextChunk = m_Meshes.totalInstances - m_Meshes.uniformBufferChunkSize;
+
+		if (nextChunk < 0) nextChunk = m_Meshes.totalInstances - 1;
 
 		for (int i = m_Meshes.totalInstances - 1; i >= 0; i--) {
 
@@ -300,7 +252,7 @@ namespace Rbk
 			m_Renderer->SetViewPort(m_CommandBuffers[m_ImageIndex]);
 			m_Renderer->SetScissor(m_CommandBuffers[m_ImageIndex]);
 			m_Renderer->BindPipeline(m_CommandBuffers[m_ImageIndex], ppline.graphicsPipeline[0]);
-			m_Renderer->Draw(m_CommandBuffers[m_ImageIndex], m_Meshes, m_Textures, ppline);
+			m_Renderer->Draw(m_CommandBuffers[m_ImageIndex], m_Meshes, ppline);
 			m_Renderer->EndRenderPass(m_CommandBuffers[m_ImageIndex]);
 			m_Renderer->EndCommandBuffer(m_CommandBuffers[m_ImageIndex]);
 
@@ -325,12 +277,12 @@ namespace Rbk
 			m_Renderer->DestroyDeviceMemory(m_Meshes.uniformBuffers[i].second);
 		}
 
-		for (auto item : m_Textures) {
+		for (auto item : m_TextureManager->GetTextures()) {
 			vkDestroySampler(m_Renderer->GetDevice(), item.second.sampler, nullptr);
 
-			vkDestroyImage(m_Renderer->GetDevice(), item.second.textureImage, nullptr);
-			m_Renderer->DestroyDeviceMemory(item.second.textureImageMemory);
-			vkDestroyImageView(m_Renderer->GetDevice(), item.second.textureImageView, nullptr);
+			vkDestroyImage(m_Renderer->GetDevice(), item.second.image, nullptr);
+			m_Renderer->DestroyDeviceMemory(item.second.imageMemory);
+			vkDestroyImageView(m_Renderer->GetDevice(), item.second.imageView, nullptr);
 
 			vkDestroyImage(m_Renderer->GetDevice(), item.second.depthImage, nullptr);
 			m_Renderer->DestroyDeviceMemory(item.second.depthImageMemory);

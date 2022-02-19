@@ -19,6 +19,7 @@ namespace Rbk
 		void DisplayOptions();
 		void AddRenderAdapter(VulkanAdapter* renderAdapter);
 		void AddWindow(Window* window) { m_Window = window; };
+		void AddTextureManager(TextureManager* textureManager) { m_TextureManager = textureManager; };
 	private:
 		bool m_WireframeModeOn = false;
 		bool m_VSync = false;
@@ -26,5 +27,6 @@ namespace Rbk
 		bool m_MakeSpin = false;
 		VulkanAdapter* m_Adapter;
 		Window* m_Window;
+		TextureManager* m_TextureManager;
 	};
 }

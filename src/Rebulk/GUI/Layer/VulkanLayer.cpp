@@ -58,9 +58,9 @@ namespace Rbk
 		ImGui::Separator();
 		Rbk::Im::Text("Shader count %d", m_Adapter->GetShaders().shaders.size());
 		ImGui::Separator();
-		Rbk::Im::Text("Texture count %d", m_Adapter->GetTextures().size());
+		Rbk::Im::Text("Texture count %d", m_TextureManager->GetTextures().size());
 		Rbk::Im::Text("Loaded textures :");
-		for (auto tex : m_Adapter->GetTextures()) {
+		for (auto tex : m_TextureManager->GetTextures()) {
 			Rbk::Im::Text("\t%s", tex.first);
 		}
 
