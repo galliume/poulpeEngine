@@ -9,21 +9,6 @@ namespace Rbk {
 		std::map<const char*, std::array<VkShaderModule, 2>> shaders;
 	};
 
-	struct VulkanMesh
-	{
-		Rbk::Mesh mesh;
-		uint32_t vertexIndicesCount = 0;
-		std::pair<VkBuffer, VkDeviceMemory> meshVBuffer = { nullptr, nullptr };
-		std::pair<VkBuffer, VkDeviceMemory> meshIBuffer = { nullptr, nullptr };
-		std::vector<std::pair<VkBuffer, VkDeviceMemory>>uniformBuffers;
-		std::vector<int32_t>uniformUBOCount;
-		int32_t count = 0;
-		int32_t totalInstances = 0;
-		int32_t uniformBuffersCount = 0;
-		int32_t uniformBufferChunkSize = 0;
-		int32_t maxUniformBufferRange = 0;
-	};
-
 	struct VulkanPipeline
 	{
 		VkPipelineLayout pipelineLayout;
@@ -60,12 +45,15 @@ namespace Rbk {
 		**/
 		VkRenderPass CreateRenderPass(VkSampleCountFlagBits msaaSamples);
 		VkShaderModule CreateShaderModule(const std::vector<char>& code);
-		VkDescriptorPool CreateDescriptorPool(uint32_t size);
-		VkDescriptorSetLayout CreateDescriptorSetLayout();
-		VkDescriptorSet CreateDescriptorSets(VkDescriptorPool descriptorPool, std::vector<VkDescriptorSetLayout> descriptorSetLayouts);
-		void UpdateDescriptorSets(VulkanMesh vMesh, std::pair<VkBuffer, VkDeviceMemory> uniformBuffer, std::map<const char*, Texture> vTextures, VkDescriptorSet descriptorSet);
-		VkPipelineLayout CreatePipelineLayout(std::vector<VkDescriptorSet> descriptorSets, std::vector<VkDescriptorSetLayout> descriptorSetLayouts);
-		VkPipeline CreateGraphicsPipeline(VkRenderPass renderPass, VulkanPipeline pipeline, VulkanShaders shaders, bool wireFrameModeOn = false);
+
+		VkDescriptorPool CreateDescriptorPool(std::array<VkDescriptorPoolSize, 2> poolSizes, uint32_t maxSets = 100);
+		VkDescriptorSetLayout CreateDescriptorSetLayout(std::vector<VkDescriptorSetLayoutBinding> pBindings, VkDescriptorSetLayoutCreateFlagBits flags);
+		VkDescriptorSet CreateDescriptorSets(VkDescriptorPool descriptorPool, std::vector<VkDescriptorSetLayout> descriptorSetLayouts, uint32_t count = 100);
+		void UpdateDescriptorSets(std::vector<std::pair<VkBuffer, VkDeviceMemory>>uniformBuffers, Texture texture, VkDescriptorSet descriptorSet);
+		
+		VkPipelineLayout CreatePipelineLayout(std::vector<VkDescriptorSet> descriptorSets, std::vector<VkDescriptorSetLayout> descriptorSetLayouts, std::vector<VkPushConstantRange> pushConstants = {});
+		VkPipeline CreateGraphicsPipeline(VkRenderPass renderPass, VkPipelineLayout pipelineLayout, VkPipelineCache pipelineCache, std::vector<VkPipelineShaderStageCreateInfo>shadersCreateInfos, bool wireFrameModeOn = false);
+		
 		VkSwapchainKHR CreateSwapChain(std::vector<VkImage>& swapChainImages, VkSwapchainKHR oldSwapChain = VK_NULL_HANDLE);
 		std::vector<VkFramebuffer> CreateFramebuffers(VkRenderPass renderPass, std::vector<VkImageView> swapChainImageViews, std::vector<VkImageView> depthImageView, std::vector<VkImageView> colorImageView);
 		VkCommandPool CreateCommandPool();
@@ -100,7 +88,7 @@ namespace Rbk {
 		void SetViewPort(VkCommandBuffer commandBuffer);
 		void SetScissor(VkCommandBuffer commandBuffer);
 		void BindPipeline(VkCommandBuffer commandBuffer, VkPipeline pipeline);
-		void Draw(VkCommandBuffer commandBuffer, VulkanMesh vMesh, VulkanPipeline pipeline);
+		void Draw(VkCommandBuffer commandBuffer, Mesh* mesh, uint32_t frameIndex);
 		uint32_t AcquireNextImageKHR(VkSwapchainKHR swapChain, std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>>& semaphores);
 		void QueueSubmit(VkCommandBuffer commandBuffer);
 		void QueueSubmit(uint32_t imageIndex, VkCommandBuffer commandBuffer, std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>>& semaphores);

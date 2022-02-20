@@ -72,12 +72,18 @@ namespace Rbk
 
 	struct Mesh
 	{
-		std::vector<Rbk::Vertex> vertices;
+		std::vector<Vertex> vertices;
 		std::vector<uint32_t> indices;
+		const char* texture;
+		const char* name;
 		std::vector<UniformBufferObject> ubos;
-		std::map<int32_t, const char*> textureNames;
-		std::map<const char*, int32_t> meshNames;
-		std::map<const char*, const char*>meshTextures;
+		std::pair<VkBuffer, VkDeviceMemory> vertexBuffer = { nullptr, nullptr };
+		std::pair<VkBuffer, VkDeviceMemory> indicesBuffer = { nullptr, nullptr };
+		std::vector<std::pair<VkBuffer, VkDeviceMemory>> uniformBuffers;
+		std::vector<VkDescriptorSet> descriptorSets;
+		VkPipelineLayout pipelineLayout;
+		VkPipeline graphicsPipeline;
+		VkPipelineCache pipelineCache = 0;
 	};
 }
 
