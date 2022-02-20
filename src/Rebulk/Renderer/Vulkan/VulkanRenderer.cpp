@@ -564,30 +564,15 @@ namespace Rbk {
 		return swapChainImageView;
 	}
 
-	VkDescriptorSetLayout VulkanRenderer::CreateDescriptorSetLayout()
+	VkDescriptorSetLayout VulkanRenderer::CreateDescriptorSetLayout(std::vector<VkDescriptorSetLayoutBinding> pBindings, VkDescriptorSetLayoutCreateFlagBits flags)
 	{
 		VkDescriptorSetLayout descriptorSetLayout;
 
-		VkDescriptorSetLayoutBinding uboLayoutBinding{};
-		uboLayoutBinding.binding = 0;
-		uboLayoutBinding.descriptorCount = 1;
-		uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-		uboLayoutBinding.pImmutableSamplers = nullptr;
-		uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-
-		VkDescriptorSetLayoutBinding samplerLayoutBinding{};
-		samplerLayoutBinding.binding = 1;
-		samplerLayoutBinding.descriptorCount = 1;
-		samplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-		samplerLayoutBinding.pImmutableSamplers = nullptr;
-		samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-
-		std::array<VkDescriptorSetLayoutBinding, 2> bindings = { uboLayoutBinding, samplerLayoutBinding };
 		VkDescriptorSetLayoutCreateInfo layoutInfo{};
 		layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-		layoutInfo.bindingCount = static_cast<uint32_t>(bindings.size());
-		layoutInfo.pBindings = bindings.data();
-		layoutInfo.flags = VK_DESCRIPTOR_SET_LAYOUT_CREATE_UPDATE_AFTER_BIND_POOL_BIT;
+		layoutInfo.bindingCount = static_cast<uint32_t>(pBindings.size());
+		layoutInfo.pBindings = pBindings.data();
+		layoutInfo.flags = flags;
 		
 		if (vkCreateDescriptorSetLayout(m_Device, &layoutInfo, nullptr, &descriptorSetLayout) != VK_SUCCESS)
 		{
@@ -597,19 +582,18 @@ namespace Rbk {
 		return descriptorSetLayout;
 	}
 
-	VkPipelineLayout VulkanRenderer::CreatePipelineLayout(std::vector<VkDescriptorSet> descriptorSets, std::vector<VkDescriptorSetLayout> descriptorSetLayouts)
+	VkPipelineLayout VulkanRenderer::CreatePipelineLayout(std::vector<VkDescriptorSet> descriptorSets, std::vector<VkDescriptorSetLayout> descriptorSetLayouts, std::vector<VkPushConstantRange> pushConstants)
 	{
 		VkPipelineLayout graphicsPipelineLayout = VK_NULL_HANDLE;
 
-		VkPushConstantRange pushConstantRange = {};
-		pushConstantRange.offset = 0;
-		pushConstantRange.size = sizeof(int);
-		pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-
 		VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
 		pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-		//pipelineLayoutInfo.pushConstantRangeCount = 0;
-		//pipelineLayoutInfo.pPushConstantRanges = &pushConstantRange;
+
+		if (0 != pushConstants.size()) {
+			pipelineLayoutInfo.pushConstantRangeCount = pushConstants.size();
+			pipelineLayoutInfo.pPushConstantRanges = pushConstants.data();
+		}
+
 		pipelineLayoutInfo.setLayoutCount = descriptorSetLayouts.size();
 		pipelineLayoutInfo.pSetLayouts = descriptorSetLayouts.data();
 
@@ -1032,20 +1016,15 @@ namespace Rbk {
 		return semaphores;
 	}
 
-	VkDescriptorPool VulkanRenderer::CreateDescriptorPool(uint32_t size)
+	VkDescriptorPool VulkanRenderer::CreateDescriptorPool(std::array<VkDescriptorPoolSize, 2> poolSizes, uint32_t maxSets)
 	{
 		VkDescriptorPool descriptorPool;
-		std::array<VkDescriptorPoolSize, 2> poolSizes{};
-		poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-		poolSizes[0].descriptorCount = size;
-		poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-		poolSizes[1].descriptorCount = size;
 
 		VkDescriptorPoolCreateInfo poolInfo{};
 		poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
 		poolInfo.poolSizeCount = poolSizes.size();
 		poolInfo.pPoolSizes = poolSizes.data();
-		poolInfo.maxSets = size;
+		poolInfo.maxSets = maxSets;
 		poolInfo.flags = VK_DESCRIPTOR_POOL_CREATE_UPDATE_AFTER_BIND_BIT;
 
 		if (vkCreateDescriptorPool(m_Device, &poolInfo, nullptr, &descriptorPool) != VK_SUCCESS)
@@ -1056,14 +1035,14 @@ namespace Rbk {
 		return descriptorPool;
 	}
 
-	VkDescriptorSet VulkanRenderer::CreateDescriptorSets(VkDescriptorPool descriptorPool, std::vector<VkDescriptorSetLayout> descriptorSetLayouts)
+	VkDescriptorSet VulkanRenderer::CreateDescriptorSets(VkDescriptorPool descriptorPool, std::vector<VkDescriptorSetLayout> descriptorSetLayouts, uint32_t count)
 	{
 		VkDescriptorSet descriptorSet;
 
 		VkDescriptorSetAllocateInfo allocInfo{};
 		allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
 		allocInfo.descriptorPool = descriptorPool;
-		allocInfo.descriptorSetCount = 1;
+		allocInfo.descriptorSetCount = count;
 		allocInfo.pSetLayouts = descriptorSetLayouts.data();
 
 		VkResult result = vkAllocateDescriptorSets(m_Device, &allocInfo, &descriptorSet);
