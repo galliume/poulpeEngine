@@ -76,79 +76,132 @@ namespace Rbk
 	{
 		if (m_IsPrepared) return;
 
-		for (auto item : m_MeshManager->GetMeshes()->mesh.meshNames) {
-			m_MeshManager->GetMeshes()->totalInstances += item.second;
+		//prepare for one mesh
+		std::array<VkDescriptorPoolSize, 2> poolSizes{};
+		poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+		poolSizes[0].descriptorCount = m_MeshManager->GetMeshes()->totalInstances;
+		poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+		poolSizes[1].descriptorCount = m_MeshManager->GetMeshes()->totalInstances;
+
+		VkDescriptorPool descriptorPool = m_Renderer->CreateDescriptorPool(poolSizes, m_MeshManager->GetMeshes()->totalInstances * 2);
+
+		VkDescriptorSetLayoutBinding uboLayoutBinding{};
+		uboLayoutBinding.binding = 0;
+		uboLayoutBinding.descriptorCount = 1;
+		uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+		uboLayoutBinding.pImmutableSamplers = nullptr;
+		uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+
+		VkDescriptorSetLayoutBinding samplerLayoutBinding{};
+		samplerLayoutBinding.binding = 1;
+		samplerLayoutBinding.descriptorCount = 1;
+		samplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+		samplerLayoutBinding.pImmutableSamplers = nullptr;
+		samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+		std::vector<VkDescriptorSetLayoutBinding> bindings = { uboLayoutBinding, samplerLayoutBinding };
+
+		VkDescriptorSetLayout desriptorSetLayout = m_Renderer->CreateDescriptorSetLayout(
+			bindings, VK_DESCRIPTOR_SET_LAYOUT_CREATE_UPDATE_AFTER_BIND_POOL_BIT
+		);
+
+		std::vector<VkDescriptorSet>listDescriptorSet;
+
+		//1 descriptor set per swapChainImage
+		for (int i = 0; i < m_SwapChainImages.size(); i++) {
+			listDescriptorSet.emplace_back(m_Renderer->CreateDescriptorSets(descriptorPool, { desriptorSetLayout }, 1));
 		}
 
-		m_MeshManager->GetMeshes()->maxUniformBufferRange = m_Renderer->GetDeviceProperties().limits.maxUniformBufferRange;
-		m_MeshManager->GetMeshes()->uniformBufferChunkSize = m_MeshManager->GetMeshes()->maxUniformBufferRange / sizeof(UniformBufferObject);
-		m_MeshManager->GetMeshes()->uniformBuffersCount = std::ceil(m_MeshManager->GetMeshes()->totalInstances / (float)m_MeshManager->GetMeshes()->uniformBufferChunkSize);
+		//VkPushConstantRange pushConstantRange = {};
+		/*pushConstantRange.offset = 0;
+		pushConstantRange.size = sizeof(int);
+		pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;*/
 
-		for (int i = 0; i < m_MeshManager->GetMeshes()->uniformBuffersCount; i++) {
-			std::pair<VkBuffer, VkDeviceMemory> uniformBuffer = m_Renderer->CreateUniformBuffers(m_MeshManager->GetMeshes()->uniformBufferChunkSize);
-			m_MeshManager->GetMeshes()->uniformBuffers.emplace_back(uniformBuffer);
-		}
-		
-		m_SwapChainImageViews.resize(m_SwapChainImages.size());
+		VkPipelineLayout pipelineLayout = m_Renderer->CreatePipelineLayout(listDescriptorSet, { desriptorSetLayout });
 
-		for (uint32_t i = 0; i < m_SwapChainImages.size(); i++) {
-			m_SwapChainImageViews[i] = m_Renderer->CreateImageView(m_SwapChainImages[i], m_Renderer->GetSwapChainImageFormat(), VK_IMAGE_ASPECT_COLOR_BIT);
-		}
+		VulkanPipeline vPipeline;
+		vPipeline.descriptorPool = descriptorPool;
+		vPipeline.descriptorSets = listDescriptorSet;
+		vPipeline.descriptorSetLayouts = { desriptorSetLayout };
+		vPipeline.pipelineLayout = pipelineLayout;
+		vPipeline.graphicsPipeline.emplace_back(m_Renderer->CreateGraphicsPipeline(m_RenderPass, vPipeline, m_ShaderManager->GetShaders()));
 
-		std::vector<VkImageView> depthImageViews;
-		std::vector<VkImageView> colorImageViews;
-		VkImage depthImage;
-		VkDeviceMemory depthImageMemory;
 
-		for (auto&& [textName, tex]: m_TextureManager->GetTextures()) {
-			depthImageViews.emplace_back(tex.depthImageView);
-			colorImageViews.emplace_back(tex.colorImageView);
-		}
 
-		m_SwapChainFramebuffers = m_Renderer->CreateFramebuffers(m_RenderPass, m_SwapChainImageViews, depthImageViews, colorImageViews);
 
-		m_CommandBuffers = m_Renderer->AllocateCommandBuffers(m_CommandPool, (uint32_t)m_SwapChainFramebuffers.size());
-		m_Semaphores = m_Renderer->CreateSyncObjects(m_SwapChainImages);
+		//for (auto item : m_MeshManager->GetMeshes()->mesh.meshNames) {
+		//	m_MeshManager->GetMeshes()->totalInstances += item.second;
+		//}
 
-		if (nullptr == m_MeshManager->GetMeshes()->meshVBuffer.first)
-			m_MeshManager->GetMeshes()->meshVBuffer = m_Renderer->CreateVertexBuffer(m_CommandPool, m_MeshManager->GetMeshes()->mesh.vertices);
+		//m_MeshManager->GetMeshes()->maxUniformBufferRange = m_Renderer->GetDeviceProperties().limits.maxUniformBufferRange;
+		//m_MeshManager->GetMeshes()->uniformBufferChunkSize = m_MeshManager->GetMeshes()->maxUniformBufferRange / sizeof(UniformBufferObject);
+		//m_MeshManager->GetMeshes()->uniformBuffersCount = std::ceil(m_MeshManager->GetMeshes()->totalInstances / (float)m_MeshManager->GetMeshes()->uniformBufferChunkSize);
 
-		if (nullptr == m_MeshManager->GetMeshes()->meshIBuffer.first)
-			m_MeshManager->GetMeshes()->meshIBuffer = m_Renderer->CreateIndexBuffer(m_CommandPool, m_MeshManager->GetMeshes()->mesh.indices);
+		//for (int i = 0; i < m_MeshManager->GetMeshes()->uniformBuffersCount; i++) {
+		//	std::pair<VkBuffer, VkDeviceMemory> uniformBuffer = m_Renderer->CreateUniformBuffers(m_MeshManager->GetMeshes()->uniformBufferChunkSize);
+		//	m_MeshManager->GetMeshes()->uniformBuffers.emplace_back(uniformBuffer);
+		//}
+		//
+		//m_SwapChainImageViews.resize(m_SwapChainImages.size());
+
+		//for (uint32_t i = 0; i < m_SwapChainImages.size(); i++) {
+		//	m_SwapChainImageViews[i] = m_Renderer->CreateImageView(m_SwapChainImages[i], m_Renderer->GetSwapChainImageFormat(), VK_IMAGE_ASPECT_COLOR_BIT);
+		//}
+
+		//std::vector<VkImageView> depthImageViews;
+		//std::vector<VkImageView> colorImageViews;
+		//VkImage depthImage;
+		//VkDeviceMemory depthImageMemory;
+
+		//for (auto&& [textName, tex]: m_TextureManager->GetTextures()) {
+		//	depthImageViews.emplace_back(tex.depthImageView);
+		//	colorImageViews.emplace_back(tex.colorImageView);
+		//}
+
+		//m_SwapChainFramebuffers = m_Renderer->CreateFramebuffers(m_RenderPass, m_SwapChainImageViews, depthImageViews, colorImageViews);
+
+		//m_CommandBuffers = m_Renderer->AllocateCommandBuffers(m_CommandPool, (uint32_t)m_SwapChainFramebuffers.size());
+		//m_Semaphores = m_Renderer->CreateSyncObjects(m_SwapChainImages);
+
+		//if (nullptr == m_MeshManager->GetMeshes()->meshVBuffer.first)
+		//	m_MeshManager->GetMeshes()->meshVBuffer = m_Renderer->CreateVertexBuffer(m_CommandPool, m_MeshManager->GetMeshes()->mesh.vertices);
+
+		//if (nullptr == m_MeshManager->GetMeshes()->meshIBuffer.first)
+		//	m_MeshManager->GetMeshes()->meshIBuffer = m_Renderer->CreateIndexBuffer(m_CommandPool, m_MeshManager->GetMeshes()->mesh.indices);
 	
-		if (0 == m_Pipelines.size()) {
-			VulkanPipeline vPipeline;
-			vPipeline.pipelineCache = 0;
-			vPipeline.descriptorPool = m_Renderer->CreateDescriptorPool(m_MeshManager->GetMeshes()->uniformBuffersCount);
+		//if (0 == m_Pipelines.size()) {
+		//	VulkanPipeline vPipeline;
+		//	vPipeline.pipelineCache = 0;
+		//	vPipeline.descriptorPool = m_Renderer->CreateDescriptorPool(m_MeshManager->GetMeshes()->uniformBuffersCount);
 
-			vPipeline.descriptorSetLayouts.emplace_back(m_Renderer->CreateDescriptorSetLayout());
-			for (int i = 0; i < m_MeshManager->GetMeshes()->uniformBuffersCount; i++) {
-				vPipeline.descriptorSets.emplace_back(m_Renderer->CreateDescriptorSets(vPipeline.descriptorPool, vPipeline.descriptorSetLayouts));
-			}
+		//	vPipeline.descriptorSetLayouts.emplace_back(m_Renderer->CreateDescriptorSetLayout());
+		//	for (int i = 0; i < m_MeshManager->GetMeshes()->uniformBuffersCount; i++) {
+		//		vPipeline.descriptorSets.emplace_back(m_Renderer->CreateDescriptorSets(vPipeline.descriptorPool, vPipeline.descriptorSetLayouts));
+		//	}
 
-			vPipeline.pipelineLayout = m_Renderer->CreatePipelineLayout(vPipeline.descriptorSets, vPipeline.descriptorSetLayouts);			
-			vPipeline.graphicsPipeline.emplace_back(m_Renderer->CreateGraphicsPipeline(m_RenderPass, vPipeline, m_ShaderManager->GetShaders()));
-			m_Pipelines.emplace_back(vPipeline);
+		//	vPipeline.pipelineLayout = m_Renderer->CreatePipelineLayout(vPipeline.descriptorSets, vPipeline.descriptorSetLayouts);			
+		//	vPipeline.graphicsPipeline.emplace_back(m_Renderer->CreateGraphicsPipeline(m_RenderPass, vPipeline, m_ShaderManager->GetShaders()));
+		//	m_Pipelines.emplace_back(vPipeline);
 
-			VulkanPipeline vPipelineWireFramed;
-			vPipelineWireFramed.pipelineCache = 0;
-			vPipelineWireFramed.descriptorPool = m_Renderer->CreateDescriptorPool(m_MeshManager->GetMeshes()->uniformBuffersCount);
+		//	VulkanPipeline vPipelineWireFramed;
+		//	vPipelineWireFramed.pipelineCache = 0;
+		//	vPipelineWireFramed.descriptorPool = m_Renderer->CreateDescriptorPool(m_MeshManager->GetMeshes()->uniformBuffersCount);
 
-			vPipelineWireFramed.descriptorSetLayouts.emplace_back(m_Renderer->CreateDescriptorSetLayout());
-			for (int i = 0; i < m_MeshManager->GetMeshes()->uniformBuffersCount; i++) {
-				vPipelineWireFramed.descriptorSets.emplace_back(m_Renderer->CreateDescriptorSets(vPipelineWireFramed.descriptorPool, vPipelineWireFramed.descriptorSetLayouts));
-			}
+		//	vPipelineWireFramed.descriptorSetLayouts.emplace_back(m_Renderer->CreateDescriptorSetLayout());
+		//	for (int i = 0; i < m_MeshManager->GetMeshes()->uniformBuffersCount; i++) {
+		//		vPipelineWireFramed.descriptorSets.emplace_back(m_Renderer->CreateDescriptorSets(vPipelineWireFramed.descriptorPool, vPipelineWireFramed.descriptorSetLayouts));
+		//	}
 
-			vPipelineWireFramed.pipelineLayout = m_Renderer->CreatePipelineLayout(vPipelineWireFramed.descriptorSets, vPipelineWireFramed.descriptorSetLayouts);
-			vPipelineWireFramed.graphicsPipeline.emplace_back(m_Renderer->CreateGraphicsPipeline(m_RenderPass, vPipelineWireFramed, m_ShaderManager->GetShaders(), true));
+		//	vPipelineWireFramed.pipelineLayout = m_Renderer->CreatePipelineLayout(vPipelineWireFramed.descriptorSets, vPipelineWireFramed.descriptorSetLayouts);
+		//	vPipelineWireFramed.graphicsPipeline.emplace_back(m_Renderer->CreateGraphicsPipeline(m_RenderPass, vPipelineWireFramed, m_ShaderManager->GetShaders(), true));
 
-			m_Pipelines.emplace_back(vPipelineWireFramed);
+		//	m_Pipelines.emplace_back(vPipelineWireFramed);
 
-			for (int i = 0; i < m_MeshManager->GetMeshes()->uniformBuffersCount; i++) {
-				m_Renderer->UpdateDescriptorSets(*m_MeshManager->GetMeshes(), m_MeshManager->GetMeshes()->uniformBuffers[i], m_TextureManager->GetTextures(), vPipeline.descriptorSets[i]);
-				m_Renderer->UpdateDescriptorSets(*m_MeshManager->GetMeshes(), m_MeshManager->GetMeshes()->uniformBuffers[i], m_TextureManager->GetTextures(), vPipelineWireFramed.descriptorSets[i]);
-			}
-		}
+		//	for (int i = 0; i < m_MeshManager->GetMeshes()->uniformBuffersCount; i++) {
+		//		m_Renderer->UpdateDescriptorSets(*m_MeshManager->GetMeshes(), m_MeshManager->GetMeshes()->uniformBuffers[i], m_TextureManager->GetTextures(), vPipeline.descriptorSets[i]);
+		//		m_Renderer->UpdateDescriptorSets(*m_MeshManager->GetMeshes(), m_MeshManager->GetMeshes()->uniformBuffers[i], m_TextureManager->GetTextures(), vPipelineWireFramed.descriptorSets[i]);
+		//	}
+		//}
 
 
 		m_IsPrepared = true;
