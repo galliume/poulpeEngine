@@ -59,7 +59,7 @@ namespace Rbk
 		}
 
 		if (rendererAdapter == nullptr) {
-			rendererAdapter = std::make_shared<Rbk::VulkanAdapter>(Rbk::VulkanAdapter(window->Get()));
+			rendererAdapter = std::make_shared<Rbk::VulkanAdapter>(Rbk::VulkanAdapter(window.get()));
 		}
 
 		if (textureManager == nullptr) {

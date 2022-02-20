@@ -3,13 +3,7 @@
 
 namespace Rbk
 {
-	//static void FramebufferResizeCallback(GLFWwindow* window, int width, int height)
-	//{
-	//	auto renderer = reinterpret_cast<Rbk::VulkanRenderer*>(glfwGetWindowUserPointer(window));
-	//	renderer->m_FramebufferResized = true;
-	//};
-
-	//glfwSetFramebufferSizeCallback(window->Get(), FramebufferResizeCallback);
+	static bool m_FramebufferResized;
 
 	class Window
 	{
@@ -18,7 +12,7 @@ namespace Rbk
 			void Init();
 			inline GLFWwindow* Get() { return m_Window; };
 			inline void SetVSync(bool active) { m_ActiveVSync = active; };
-
+	
 	private:
 		GLFWwindow* m_Window;
 		bool m_ActiveVSync = true;
