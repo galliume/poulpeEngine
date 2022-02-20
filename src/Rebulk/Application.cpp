@@ -141,6 +141,7 @@ namespace Rbk
 			renderManager->PrepareDraw();
 			renderManager->Draw();
 
+			//@todo move to LayerManager
 			Rbk::Im::NewFrame();
 			vulkanLayer->AddRenderAdapter(rendererAdapter.get());
 			vulkanLayer->Render(timeStep, rendererAdapter->Rdr()->GetDeviceProperties());
@@ -150,6 +151,7 @@ namespace Rbk
 			rendererAdapter->Rdr()->BeginCommandBuffer(imguiInfo.cmdBuffer);
 			ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), imguiInfo.cmdBuffer);
 			rendererAdapter->Rdr()->EndCommandBuffer(imguiInfo.cmdBuffer);
+			//end @todo
 
 			glfwSwapBuffers(window->Get());
 			lastTime = currentTime;
