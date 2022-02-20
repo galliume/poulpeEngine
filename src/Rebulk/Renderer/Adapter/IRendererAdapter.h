@@ -16,6 +16,7 @@ namespace Rbk
 		virtual void AddMeshManager(MeshManager* meshManager) = 0;
 		virtual void AddShaderManager(ShaderManager* shaderManager) = 0;
 		virtual void AddCamera(Camera* camera) = 0;
+		virtual void PrepareWorld() = 0;
 		virtual void PrepareDraw() = 0;
 		virtual void Draw() = 0;
 		virtual void Destroy() = 0;

@@ -7,14 +7,27 @@ namespace Rbk
 
 	}
 
-	void MeshManager::AddMesh(const char* name, const char* path, const char* textureName, glm::vec3 pos, bool shouldInverseTextureY)
+	Mesh MeshManager::Load(const char* path, bool shouldInverseTextureY)
 	{
 		if (!std::filesystem::exists(path)) {
 			Rbk::Log::GetLogger()->critical("mesh file {} does not exits.", path);
-			return;
+			throw std::runtime_error("error loading a mesh file.");
 		}
 
-		Mesh mesh = Rbk::TinyObjLoader::LoadMesh(path, shouldInverseTextureY);
+		return Rbk::TinyObjLoader::LoadMesh(path, shouldInverseTextureY);
+	}
+
+	void MeshManager::AddWorldMesh(const char* name, const char* path, const char* textureName, glm::vec3 pos, bool shouldInverseTextureY)
+	{		
+		Mesh mesh;
+
+		if (0 == m_WorldMeshesLoaded.count(name)) {
+			mesh = Load(path, shouldInverseTextureY);
+			mesh.name = name;
+			mesh.texture = textureName;
+		} else {
+			mesh = m_WorldMeshes[m_WorldMeshesLoaded[name][1]];
+		}
 
 		glm::mat4 view = glm::mat4(1.0f);
 
@@ -23,27 +36,55 @@ namespace Rbk
 		ubo.model = glm::translate(ubo.model, pos);
 		ubo.model = glm::scale(ubo.model, glm::vec3(0.1f, 0.1f, 0.1f));
 		ubo.view = glm::translate(view, glm::vec3(0.0f, 0.0f, -0.0f));
-
 		glm::mat4 projection;
 		ubo.proj = glm::perspective(glm::radians(45.0f), m_Renderer->GetSwapChainExtent().width / (float)m_Renderer->GetSwapChainExtent().height, 0.1f, 100.0f);
 		ubo.proj[1][1] *= -1;
 
-		m_Meshes.mesh.ubos.emplace_back(ubo);
-		
+		mesh.ubos.emplace_back(ubo);
 
-		if (0 != m_Meshes.mesh.meshNames.count(name)) {
-			m_Meshes.mesh.meshNames[name] += 1;
+		if (0 != m_WorldMeshesLoaded.count(name)) {
+			m_WorldMeshesLoaded[name][0] += 1;
+			m_WorldMeshes[m_WorldMeshesLoaded[name][1]] = mesh;
 			return;
+		} 
+		
+		uint32_t index = m_WorldMeshes.size();
+		m_WorldMeshesLoaded.insert({ name, { 1, index }});	
+		m_WorldMeshes.emplace_back(mesh);
+
+		Rbk::Log::GetLogger()->debug("Added mesh to the world {} from {}", name, path);
+	}
+
+	uint32_t MeshManager::GetWorldVerticesCount()
+	{
+		uint32_t total = 0;
+
+		for (Mesh mesh : m_WorldMeshes) {
+			total += mesh.vertices.size();
 		}
 
-		m_Meshes.mesh.meshTextures.emplace(name, textureName);
-		m_Meshes.mesh.textureNames.emplace(m_Meshes.count, textureName);
-		m_Meshes.mesh.vertices.insert(m_Meshes.mesh.vertices.end(), mesh.vertices.begin(), mesh.vertices.end());
-		m_Meshes.mesh.indices.insert(m_Meshes.mesh.indices.end(), mesh.indices.begin(), mesh.indices.end());
-		m_Meshes.vertexIndicesCount += mesh.indices.size();
-		m_Meshes.mesh.meshNames.insert({ name, 1 });
-		m_Meshes.count += 1;
+		return total;
+	}
 
-		Rbk::Log::GetLogger()->debug("Added mesh {} from {}", name, path);
+	uint32_t MeshManager::GetWorldIndicesCount()
+	{
+		uint32_t total = 0;
+
+		for (Mesh mesh : m_WorldMeshes) {
+			total += mesh.indices.size();
+		}
+
+		return total;
+	}
+
+	uint32_t MeshManager::GetWorldInstancedCount()
+	{
+		uint32_t total = 0;
+
+		for (Mesh mesh : m_WorldMeshes) {
+			total += mesh.ubos.size();
+		}
+
+		return total;
 	}
 }
