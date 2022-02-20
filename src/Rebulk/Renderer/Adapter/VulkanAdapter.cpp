@@ -25,7 +25,6 @@ namespace Rbk
 		m_TextureManager = textureManager;
 	}
 
-
 	void VulkanAdapter::AddShaderManager(ShaderManager* shaderManager)
 	{
 		m_ShaderManager = shaderManager;
@@ -74,21 +73,6 @@ namespace Rbk
 
 	void VulkanAdapter::PrepareWorld()
 	{
-		VulkanMesh* worldMeshes = m_MeshManager->GetWorld();
-
-		for (auto item : worldMeshes->mesh.meshNames) {
-			worldMeshes->totalInstances += item.second;
-		}
-
-		worldMeshes->maxUniformBufferRange = m_Renderer->GetDeviceProperties().limits.maxUniformBufferRange;
-		worldMeshes->uniformBufferChunkSize = worldMeshes->maxUniformBufferRange / sizeof(UniformBufferObject);
-		worldMeshes->uniformBuffersCount = std::ceil(worldMeshes->totalInstances / (float)worldMeshes->uniformBufferChunkSize);
-
-		for (int i = 0; i < worldMeshes->uniformBuffersCount; i++) {
-			std::pair<VkBuffer, VkDeviceMemory> uniformBuffer = m_Renderer->CreateUniformBuffers(worldMeshes->uniformBufferChunkSize);
-			worldMeshes->uniformBuffers.emplace_back(uniformBuffer);
-		}
-
 		m_SwapChainImageViews.resize(m_SwapChainImages.size());
 
 		for (uint32_t i = 0; i < m_SwapChainImages.size(); i++) {
@@ -110,204 +94,151 @@ namespace Rbk
 		m_CommandBuffers = m_Renderer->AllocateCommandBuffers(m_CommandPool, (uint32_t)m_SwapChainFramebuffers.size());
 		m_Semaphores = m_Renderer->CreateSyncObjects(m_SwapChainImages);
 
-		if (nullptr == worldMeshes->meshVBuffer.first)
-			worldMeshes->meshVBuffer = m_Renderer->CreateVertexBuffer(m_CommandPool, worldMeshes->mesh.vertices);
+		std::vector<Mesh>* worldMeshes = m_MeshManager->GetWorldMeshes();
+		std::map<const char*, std::array<uint32_t, 2>> worldMeshesLoaded = m_MeshManager->GetWoldMeshesLoaded();
 
-		if (nullptr == worldMeshes->meshIBuffer.first)
-			worldMeshes->meshIBuffer = m_Renderer->CreateIndexBuffer(m_CommandPool, worldMeshes->mesh.indices);
+		uint32_t maxUniformBufferRange = 0;
+		uint32_t uniformBufferChunkSize = 0;
+		uint32_t uniformBuffersCount = 0;
 
-		//prepare for one mesh
-		std::array<VkDescriptorPoolSize, 2> poolSizes{};
-		poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-		poolSizes[0].descriptorCount = worldMeshes->totalInstances;
-		poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-		poolSizes[1].descriptorCount = worldMeshes->totalInstances;
+		for (Mesh& mesh : *worldMeshes) {
+			uint32_t totalInstances = worldMeshesLoaded[mesh.name][1];
 
-		VkDescriptorPool descriptorPool = m_Renderer->CreateDescriptorPool(poolSizes, worldMeshes->totalInstances * 4);
+			maxUniformBufferRange = m_Renderer->GetDeviceProperties().limits.maxUniformBufferRange;
+			uniformBufferChunkSize = maxUniformBufferRange / sizeof(UniformBufferObject);
+			uniformBuffersCount = std::ceil(totalInstances / (float)uniformBufferChunkSize);
 
-		VkDescriptorSetLayoutBinding uboLayoutBinding{};
-		uboLayoutBinding.binding = 0;
-		uboLayoutBinding.descriptorCount = 1;
-		uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-		uboLayoutBinding.pImmutableSamplers = nullptr;
-		uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+			for (int i = 0; i < uniformBuffersCount; i++) {
+				std::pair<VkBuffer, VkDeviceMemory> uniformBuffer = m_Renderer->CreateUniformBuffers(uniformBufferChunkSize);
+				mesh.uniformBuffers.emplace_back(uniformBuffer);
+			}
 
-		VkDescriptorSetLayoutBinding samplerLayoutBinding{};
-		samplerLayoutBinding.binding = 1;
-		samplerLayoutBinding.descriptorCount = 1;
-		samplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-		samplerLayoutBinding.pImmutableSamplers = nullptr;
-		samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+			mesh.vertexBuffer = m_Renderer->CreateVertexBuffer(m_CommandPool, mesh.vertices);
+			mesh.indicesBuffer = m_Renderer->CreateIndexBuffer(m_CommandPool, mesh.indices);
 
-		std::vector<VkDescriptorSetLayoutBinding> bindings = { uboLayoutBinding, samplerLayoutBinding };
+			std::array<VkDescriptorPoolSize, 2> poolSizes{};
+			poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+			poolSizes[0].descriptorCount = 1;
+			poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+			poolSizes[1].descriptorCount = 1;
 
-		VkDescriptorSetLayout desriptorSetLayout = m_Renderer->CreateDescriptorSetLayout(
-			bindings, VK_DESCRIPTOR_SET_LAYOUT_CREATE_UPDATE_AFTER_BIND_POOL_BIT
-		);
+			VkDescriptorPool descriptorPool = m_Renderer->CreateDescriptorPool(poolSizes, m_MeshManager->GetWorldInstancedCount() * 2);
 
-		std::vector<VkDescriptorSet>listDescriptorSet;
+			VkDescriptorSetLayoutBinding uboLayoutBinding{};
+			uboLayoutBinding.binding = 0;
+			uboLayoutBinding.descriptorCount = 1;
+			uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+			uboLayoutBinding.pImmutableSamplers = nullptr;
+			uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
 
-		//1 descriptor set per swapChainImage
-		for (int i = 0; i < m_SwapChainImages.size(); i++) {
-			listDescriptorSet.emplace_back(m_Renderer->CreateDescriptorSets(descriptorPool, { desriptorSetLayout }, 1));
-		}
+			VkDescriptorSetLayoutBinding samplerLayoutBinding{};
+			samplerLayoutBinding.binding = 1;
+			samplerLayoutBinding.descriptorCount = 1;
+			samplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+			samplerLayoutBinding.pImmutableSamplers = nullptr;
+			samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 
-		//VkPushConstantRange pushConstantRange = {};
-		/*pushConstantRange.offset = 0;
-		pushConstantRange.size = sizeof(int);
-		pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;*/
+			std::vector<VkDescriptorSetLayoutBinding> bindings = { uboLayoutBinding, samplerLayoutBinding };
 
-		VkPipelineLayout pipelineLayout = m_Renderer->CreatePipelineLayout(listDescriptorSet, { desriptorSetLayout });
+			VkDescriptorSetLayout desriptorSetLayout = m_Renderer->CreateDescriptorSetLayout(
+				bindings, VK_DESCRIPTOR_SET_LAYOUT_CREATE_UPDATE_AFTER_BIND_POOL_BIT
+			);
 
-		VulkanPipeline vPipeline;
-		vPipeline.descriptorPool = descriptorPool;
-		vPipeline.descriptorSets = listDescriptorSet;
-		vPipeline.descriptorSetLayouts = { desriptorSetLayout };
-		vPipeline.pipelineLayout = pipelineLayout;
-		vPipeline.pipelineCache = 0;
+			for (int i = 0; i < m_SwapChainImages.size(); i++) {
+				VkDescriptorSet descriptorSet = m_Renderer->CreateDescriptorSets(descriptorPool, { desriptorSetLayout }, 1);
+				m_Renderer->UpdateDescriptorSets(mesh.uniformBuffers, m_TextureManager->GetTextures()[mesh.texture] , descriptorSet);
+				mesh.descriptorSets.emplace_back(descriptorSet);
+			}
 
-		std::vector<VkPipelineShaderStageCreateInfo>shadersStageInfos;
+			mesh.pipelineLayout = m_Renderer->CreatePipelineLayout(mesh.descriptorSets, { desriptorSetLayout });
 
-		for (auto& shader : m_ShaderManager->GetShaders().shaders) {
+			VulkanShaders shaders = m_ShaderManager->GetShaders();
+			const char* shaderName = "main";
+			std::array<VkShaderModule, 2> shader = shaders.shaders[shaderName];
+
+			std::vector<VkPipelineShaderStageCreateInfo>shadersStageInfos;
+
 			VkPipelineShaderStageCreateInfo vertShaderStageInfo{};
 			vertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
 			vertShaderStageInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
-			vertShaderStageInfo.module = shader.second[0];
-			vertShaderStageInfo.pName = shader.first;
+			vertShaderStageInfo.module = shader[0];
+			vertShaderStageInfo.pName = shaderName;
 			shadersStageInfos.emplace_back(vertShaderStageInfo);
 
 			VkPipelineShaderStageCreateInfo fragShaderStageInfo{};
 			fragShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
 			fragShaderStageInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
-			fragShaderStageInfo.module = shader.second[1];
-			fragShaderStageInfo.pName = shader.first;
+			fragShaderStageInfo.module = shader[1];
+			fragShaderStageInfo.pName = shaderName;
 			shadersStageInfos.emplace_back(fragShaderStageInfo);
+
+			mesh.graphicsPipeline = m_Renderer->CreateGraphicsPipeline(m_RenderPass, mesh.pipelineLayout, mesh.pipelineCache, shadersStageInfos);
+
 		}
 
-		vPipeline.graphicsPipeline.emplace_back(m_Renderer->CreateGraphicsPipeline(m_RenderPass, vPipeline, shadersStageInfos));
-
-		m_Pipelines.emplace_back(vPipeline);
-
-		for (int i = 0; i < worldMeshes->uniformBuffersCount; i++) {
-			m_Renderer->UpdateDescriptorSets(*worldMeshes, worldMeshes->uniformBuffers[i], m_TextureManager->GetTextures(), vPipeline.descriptorSets[i]);
-		}
-
+		//VkPushConstantRange pushConstantRange = {};
+		//pushConstantRange.offset = 0;
+		//pushConstantRange.size = sizeof(int);
+		//pushConstantRange.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 		UpdateWorldPositions();
 	}
 
 	void VulkanAdapter::PrepareDraw()
 	{
 		if (m_IsPrepared) return;
- 
-		//for (auto item : m_MeshManager->GetMeshes()->mesh.meshNames) {
-		//	m_MeshManager->GetMeshes()->totalInstances += item.second;
-		//}
-
-		//m_MeshManager->GetMeshes()->maxUniformBufferRange = m_Renderer->GetDeviceProperties().limits.maxUniformBufferRange;
-		//m_MeshManager->GetMeshes()->uniformBufferChunkSize = m_MeshManager->GetMeshes()->maxUniformBufferRange / sizeof(UniformBufferObject);
-		//m_MeshManager->GetMeshes()->uniformBuffersCount = std::ceil(m_MeshManager->GetMeshes()->totalInstances / (float)m_MeshManager->GetMeshes()->uniformBufferChunkSize);
-
-		//for (int i = 0; i < m_MeshManager->GetMeshes()->uniformBuffersCount; i++) {
-		//	std::pair<VkBuffer, VkDeviceMemory> uniformBuffer = m_Renderer->CreateUniformBuffers(m_MeshManager->GetMeshes()->uniformBufferChunkSize);
-		//	m_MeshManager->GetMeshes()->uniformBuffers.emplace_back(uniformBuffer);
-		//}
-		//
-		//m_SwapChainImageViews.resize(m_SwapChainImages.size());
-
-		//for (uint32_t i = 0; i < m_SwapChainImages.size(); i++) {
-		//	m_SwapChainImageViews[i] = m_Renderer->CreateImageView(m_SwapChainImages[i], m_Renderer->GetSwapChainImageFormat(), VK_IMAGE_ASPECT_COLOR_BIT);
-		//}
-
-		//std::vector<VkImageView> depthImageViews;
-		//std::vector<VkImageView> colorImageViews;
-		//VkImage depthImage;
-		//VkDeviceMemory depthImageMemory;
-
-		//for (auto&& [textName, tex]: m_TextureManager->GetTextures()) {
-		//	depthImageViews.emplace_back(tex.depthImageView);
-		//	colorImageViews.emplace_back(tex.colorImageView);
-		//}
-
-		//m_SwapChainFramebuffers = m_Renderer->CreateFramebuffers(m_RenderPass, m_SwapChainImageViews, depthImageViews, colorImageViews);
-
-		//m_CommandBuffers = m_Renderer->AllocateCommandBuffers(m_CommandPool, (uint32_t)m_SwapChainFramebuffers.size());
-		//m_Semaphores = m_Renderer->CreateSyncObjects(m_SwapChainImages);
-
-		//if (nullptr == m_MeshManager->GetMeshes()->meshVBuffer.first)
-		//	m_MeshManager->GetMeshes()->meshVBuffer = m_Renderer->CreateVertexBuffer(m_CommandPool, m_MeshManager->GetMeshes()->mesh.vertices);
-
-		//if (nullptr == m_MeshManager->GetMeshes()->meshIBuffer.first)
-		//	m_MeshManager->GetMeshes()->meshIBuffer = m_Renderer->CreateIndexBuffer(m_CommandPool, m_MeshManager->GetMeshes()->mesh.indices);
-	
-		//if (0 == m_Pipelines.size()) {
-		//	VulkanPipeline vPipeline;
-		//	vPipeline.pipelineCache = 0;
-		//	vPipeline.descriptorPool = m_Renderer->CreateDescriptorPool(m_MeshManager->GetMeshes()->uniformBuffersCount);
-
-		//	vPipeline.descriptorSetLayouts.emplace_back(m_Renderer->CreateDescriptorSetLayout());
-		//	for (int i = 0; i < m_MeshManager->GetMeshes()->uniformBuffersCount; i++) {
-		//		vPipeline.descriptorSets.emplace_back(m_Renderer->CreateDescriptorSets(vPipeline.descriptorPool, vPipeline.descriptorSetLayouts));
-		//	}
-
-		//	vPipeline.pipelineLayout = m_Renderer->CreatePipelineLayout(vPipeline.descriptorSets, vPipeline.descriptorSetLayouts);			
-		//	vPipeline.graphicsPipeline.emplace_back(m_Renderer->CreateGraphicsPipeline(m_RenderPass, vPipeline, m_ShaderManager->GetShaders()));
-		//	m_Pipelines.emplace_back(vPipeline);
-
-		//	VulkanPipeline vPipelineWireFramed;
-		//	vPipelineWireFramed.pipelineCache = 0;
-		//	vPipelineWireFramed.descriptorPool = m_Renderer->CreateDescriptorPool(m_MeshManager->GetMeshes()->uniformBuffersCount);
-
-		//	vPipelineWireFramed.descriptorSetLayouts.emplace_back(m_Renderer->CreateDescriptorSetLayout());
-		//	for (int i = 0; i < m_MeshManager->GetMeshes()->uniformBuffersCount; i++) {
-		//		vPipelineWireFramed.descriptorSets.emplace_back(m_Renderer->CreateDescriptorSets(vPipelineWireFramed.descriptorPool, vPipelineWireFramed.descriptorSetLayouts));
-		//	}
-
-		//	vPipelineWireFramed.pipelineLayout = m_Renderer->CreatePipelineLayout(vPipelineWireFramed.descriptorSets, vPipelineWireFramed.descriptorSetLayouts);
-		//	vPipelineWireFramed.graphicsPipeline.emplace_back(m_Renderer->CreateGraphicsPipeline(m_RenderPass, vPipelineWireFramed, m_ShaderManager->GetShaders(), true));
-
-		//	m_Pipelines.emplace_back(vPipelineWireFramed);
-
-		//	for (int i = 0; i < m_MeshManager->GetMeshes()->uniformBuffersCount; i++) {
-		//		m_Renderer->UpdateDescriptorSets(*m_MeshManager->GetMeshes(), m_MeshManager->GetMeshes()->uniformBuffers[i], m_TextureManager->GetTextures(), vPipeline.descriptorSets[i]);
-		//		m_Renderer->UpdateDescriptorSets(*m_MeshManager->GetMeshes(), m_MeshManager->GetMeshes()->uniformBuffers[i], m_TextureManager->GetTextures(), vPipelineWireFramed.descriptorSets[i]);
-		//	}
-		//}
-
+		
+		//@todo prepare data for Camera / Player
 
 		m_IsPrepared = true;
 	}
 
 	void VulkanAdapter::UpdateWorldPositions()
 	{
-		VulkanMesh* worldMeshes = m_MeshManager->GetWorld();
+		std::vector<Mesh>* worldMeshes = m_MeshManager->GetWorldMeshes();
+		std::map<const char*, std::array<uint32_t, 2>> worldMeshesLoaded = m_MeshManager->GetWoldMeshesLoaded();
 
 		int32_t uboCount = 1, uboIndex = 0;
 		std::vector<UniformBufferObject> chunk;
 		int32_t beginRange, endRange = 0;
-		int32_t nextChunk = worldMeshes->totalInstances - worldMeshes->uniformBufferChunkSize;
+		uint32_t totalInstances = 0;
+		uint32_t maxUniformBufferRange = 0;
+		uint32_t uniformBufferChunkSize = 0;
+		int32_t nextChunk = 0;
 
-		if (nextChunk < 0) nextChunk = 0;
+		for (Mesh& mesh : *worldMeshes) {
 
-		for (int i = worldMeshes->totalInstances - 1; i >= 0; i--) {
+			uboCount = 1, uboIndex = 0;
+			chunk = {};
+			beginRange, endRange = 0;
+			totalInstances = worldMeshesLoaded[mesh.name][1];
+			maxUniformBufferRange = m_Renderer->GetDeviceProperties().limits.maxUniformBufferRange;
+			uniformBufferChunkSize = maxUniformBufferRange / sizeof(UniformBufferObject);
+			nextChunk = totalInstances - uniformBufferChunkSize;
 
-			worldMeshes->mesh.ubos[i].view = m_Camera->LookAt();
+			if (nextChunk < 0) nextChunk = 0;
 
-			if (i == nextChunk) {
+			for (int i = totalInstances - 1; i >= 0; i--) {
 
-				nextChunk -= worldMeshes->uniformBufferChunkSize;
+				mesh.ubos[i].view = m_Camera->LookAt();
 
-				if (nextChunk < 0) nextChunk = 0;
-				endRange = worldMeshes->uniformBufferChunkSize * uboCount;
-				beginRange = endRange - worldMeshes->uniformBufferChunkSize;
+				if (i == nextChunk) {
 
-				if (endRange > worldMeshes->totalInstances) endRange = worldMeshes->totalInstances;
+					nextChunk -= uniformBufferChunkSize;
 
-				chunk = { worldMeshes->mesh.ubos.rbegin() + beginRange, worldMeshes->mesh.ubos.rbegin() + endRange };
+					if (nextChunk < 0) nextChunk = 0;
+					endRange = uniformBufferChunkSize * uboCount;
+					beginRange = endRange - uniformBufferChunkSize;
 
-				m_Renderer->UpdateUniformBuffer(worldMeshes->uniformBuffers[uboIndex], chunk, chunk.size());
-				worldMeshes->uniformUBOCount.emplace_back(chunk.size());
-				uboIndex += 1;
-				uboCount += 1;
+					if (endRange > totalInstances) endRange = totalInstances;
+
+					chunk = { mesh.ubos.rbegin() + beginRange, mesh.ubos.rbegin() + endRange };
+
+					m_ChunksIndexes.emplace_back(beginRange, endRange);
+
+					m_Renderer->UpdateUniformBuffer(mesh.uniformBuffers[uboIndex], chunk, chunk.size());
+					uboIndex += 1;
+					uboCount += 1;
+				}
 			}
 		}
 	}
@@ -319,13 +250,11 @@ namespace Rbk
 		}
 
 		SouldResizeSwapChain();
-		
+		UpdateWorldPositions();
+
 		VulkanPipeline ppline = m_Pipelines[0];
 
-		VkBuffer vertexBuffers[] = { m_MeshManager->GetWorld()->meshVBuffer.first};
-		VkDeviceSize offsets[] = { 0 };
-
-		for (size_t i = 0; i < m_SwapChainImages.size(); i++) {
+			for (size_t i = 0; i < m_SwapChainImages.size(); i++) {
 						
 			m_ImageIndex = m_Renderer->AcquireNextImageKHR(m_SwapChain, m_Semaphores);
 			m_Renderer->BeginCommandBuffer(m_CommandBuffers[m_ImageIndex]);
@@ -341,7 +270,12 @@ namespace Rbk
 			m_Renderer->SetViewPort(m_CommandBuffers[m_ImageIndex]);
 			m_Renderer->SetScissor(m_CommandBuffers[m_ImageIndex]);
 			m_Renderer->BindPipeline(m_CommandBuffers[m_ImageIndex], ppline.graphicsPipeline[0]);
-			m_Renderer->Draw(m_CommandBuffers[m_ImageIndex], *m_MeshManager->GetWorld(), ppline);
+
+			//draw the world !
+			for (Mesh mesh : *m_MeshManager->GetWorldMeshes()) {
+				m_Renderer->Draw(m_CommandBuffers[m_ImageIndex], &mesh, m_ImageIndex);
+			}
+		
 			m_Renderer->EndRenderPass(m_CommandBuffers[m_ImageIndex]);
 			m_Renderer->EndCommandBuffer(m_CommandBuffers[m_ImageIndex]);
 
@@ -361,9 +295,17 @@ namespace Rbk
 		m_Renderer->DestroySwapchain(m_Renderer->GetDevice(), m_SwapChain, m_SwapChainFramebuffers, m_SwapChainImageViews);
 		m_Renderer->DestroySemaphores(m_Semaphores);
 	
-		for (int i = 0; i < m_MeshManager->GetWorld()->uniformBuffers.size(); i++) {
-			m_Renderer->DestroyBuffer(m_MeshManager->GetWorld()->uniformBuffers[i].first);
-			m_Renderer->DestroyDeviceMemory(m_MeshManager->GetWorld()->uniformBuffers[i].second);
+		for (Mesh mesh : *m_MeshManager->GetWorldMeshes()) {
+			for (auto buffer : mesh.uniformBuffers) {
+				m_Renderer->DestroyBuffer(buffer.first);
+				m_Renderer->DestroyDeviceMemory(buffer.second);
+			}
+
+			m_Renderer->DestroyBuffer(mesh.vertexBuffer.first);
+			m_Renderer->DestroyDeviceMemory(mesh.vertexBuffer.second);
+
+			m_Renderer->DestroyBuffer(mesh.indicesBuffer.first);
+			m_Renderer->DestroyDeviceMemory(mesh.indicesBuffer.second);
 		}
 
 		for (auto item : m_TextureManager->GetTextures()) {
@@ -398,12 +340,6 @@ namespace Rbk
 			vkDestroyShaderModule(m_Renderer->GetDevice(), shader.second[0], nullptr);
 			vkDestroyShaderModule(m_Renderer->GetDevice(), shader.second[1], nullptr);
 		}
-
-		m_Renderer->DestroyBuffer(m_MeshManager->GetWorld()->meshVBuffer.first);
-		m_Renderer->DestroyDeviceMemory(m_MeshManager->GetWorld()->meshVBuffer.second);
-
-		m_Renderer->DestroyBuffer(m_MeshManager->GetWorld()->meshIBuffer.first);
-		m_Renderer->DestroyDeviceMemory(m_MeshManager->GetWorld()->meshIBuffer.second);
 
 		for (auto& buffer : m_UniformBuffers.first) {
 			m_Renderer->DestroyBuffer(buffer);
