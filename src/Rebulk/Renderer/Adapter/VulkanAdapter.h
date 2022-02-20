@@ -3,6 +3,7 @@
 #include "IRendererAdapter.h"
 #include "Rebulk/Renderer/Vulkan/VulkanRenderer.h"
 #include "Rebulk/Renderer/Mesh.h"
+#include "Rebulk/GUI/Window.h"
 
 namespace Rbk
 {
@@ -19,7 +20,7 @@ namespace Rbk
 
 	public:
 
-		VulkanAdapter(GLFWwindow* window);
+		VulkanAdapter(Window* window);
 		~VulkanAdapter();
 
 		virtual void Init() override;
@@ -69,10 +70,10 @@ namespace Rbk
 		bool m_IsPrepared = false;
 		bool m_WireFrameModeOn = false;
 		bool m_MakeSpin = false;
-		Camera* m_Camera;
-
-		TextureManager* m_TextureManager;
-		MeshManager* m_MeshManager;
-		ShaderManager* m_ShaderManager;
+		Camera* m_Camera = nullptr;
+		Window* m_Window = nullptr;
+		TextureManager* m_TextureManager = nullptr;
+		MeshManager* m_MeshManager = nullptr;
+		ShaderManager* m_ShaderManager = nullptr;
 	};
 }
