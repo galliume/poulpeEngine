@@ -16,6 +16,7 @@ namespace Rbk
 
 	class VulkanAdapter : public IRendererAdapter
 	{
+
 	public:
 
 		VulkanAdapter(GLFWwindow* window);
@@ -47,7 +48,6 @@ namespace Rbk
 
 	private:
 		void UpdateWorldPositions();
-		void Draw(VulkanShaders vShader, VulkanMesh vMesh);
 
 	private:
 		VulkanRenderer* m_Renderer = nullptr;
@@ -74,5 +74,6 @@ namespace Rbk
 		TextureManager* m_TextureManager;
 		MeshManager* m_MeshManager;
 		ShaderManager* m_ShaderManager;
+		std::vector<uint32_t, uint32_t> m_ChunksIndexes;
 	};
 }
