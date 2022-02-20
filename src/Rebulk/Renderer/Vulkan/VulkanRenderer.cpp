@@ -608,26 +608,8 @@ namespace Rbk {
 		return graphicsPipelineLayout;
 	}
 
-	VkPipeline VulkanRenderer::CreateGraphicsPipeline(VkRenderPass renderPass, VulkanPipeline pipeline, VulkanShaders shaders, bool wireFrameModeOn)
+	VkPipeline VulkanRenderer::CreateGraphicsPipeline(VkRenderPass renderPass, VulkanPipeline pipeline, std::vector<VkPipelineShaderStageCreateInfo>shadersCreateInfos, bool wireFrameModeOn)
 	{
-		std::vector<VkPipelineShaderStageCreateInfo>shaderStageInfos;
-
-		for (auto& shader : shaders.shaders) {
-			VkPipelineShaderStageCreateInfo vertShaderStageInfo{};
-			vertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-			vertShaderStageInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
-			vertShaderStageInfo.module = shader.second[0];
-			vertShaderStageInfo.pName = shader.first;
-			shaderStageInfos.emplace_back(vertShaderStageInfo);
-		
-			VkPipelineShaderStageCreateInfo fragShaderStageInfo{};
-			fragShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-			fragShaderStageInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
-			fragShaderStageInfo.module = shader.second[1];
-			fragShaderStageInfo.pName = shader.first;
-			shaderStageInfos.emplace_back(fragShaderStageInfo);
-		}
-
 		auto bindingDescription = Vertex::GetBindingDescription();
 		auto attributeDescriptions = Vertex::GetAttributeDescriptions();
 
@@ -725,8 +707,8 @@ namespace Rbk {
 
 		VkGraphicsPipelineCreateInfo pipelineInfo{};
 		pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
-		pipelineInfo.stageCount = shaderStageInfos.size();
-		pipelineInfo.pStages = shaderStageInfos.data();
+		pipelineInfo.stageCount = shadersCreateInfos.size();
+		pipelineInfo.pStages = shadersCreateInfos.data();
 		pipelineInfo.pVertexInputState = &vertexInputInfo;
 		pipelineInfo.pInputAssemblyState = &inputAssembly;
 		pipelineInfo.pViewportState = &viewportState;
