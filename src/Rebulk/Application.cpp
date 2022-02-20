@@ -108,7 +108,7 @@ namespace Rbk
 		textureManager->AddTexture("minecraft_grass", "mesh/minecraft/Grass_Block_TEX.png");
 
 		//meshManager->AddMesh("room", "mesh/viking/viking_room.obj", "viking_room", pos1);
-		meshManager->AddMesh("cube", "mesh/minecraft/Grass_Block.obj", "minecraft_grass", pos3);
+		meshManager->AddWorldMesh("cube", "mesh/minecraft/Grass_Block.obj", "minecraft_grass", pos3);
 
 		double lastTime = glfwGetTime();
 		
@@ -128,6 +128,8 @@ namespace Rbk
 		vulkanLayer->AddTextureManager(textureManager.get());
 		vulkanLayer->AddMeshManager(meshManager.get());
 		vulkanLayer->AddShaderManager(shaderManager.get());
+
+		rendererAdapter->PrepareWorld();
 
 		while (!glfwWindowShouldClose(window->Get())) {
 
