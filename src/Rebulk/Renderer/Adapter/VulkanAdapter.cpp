@@ -76,6 +76,58 @@ namespace Rbk
 	{
 		if (m_IsPrepared) return;
 
+
+
+		for (auto item : m_MeshManager->GetMeshes()->mesh.meshNames) {
+			m_MeshManager->GetMeshes()->totalInstances += item.second;
+		}
+
+
+		m_MeshManager->GetMeshes()->maxUniformBufferRange = m_Renderer->GetDeviceProperties().limits.maxUniformBufferRange;
+		m_MeshManager->GetMeshes()->uniformBufferChunkSize = m_MeshManager->GetMeshes()->maxUniformBufferRange / sizeof(UniformBufferObject);
+		m_MeshManager->GetMeshes()->uniformBuffersCount = std::ceil(m_MeshManager->GetMeshes()->totalInstances / (float)m_MeshManager->GetMeshes()->uniformBufferChunkSize);
+
+		for (int i = 0; i < m_MeshManager->GetMeshes()->uniformBuffersCount; i++) {
+			std::pair<VkBuffer, VkDeviceMemory> uniformBuffer = m_Renderer->CreateUniformBuffers(m_MeshManager->GetMeshes()->uniformBufferChunkSize);
+			m_MeshManager->GetMeshes()->uniformBuffers.emplace_back(uniformBuffer);
+		}
+		
+		m_SwapChainImageViews.resize(m_SwapChainImages.size());
+
+		for (uint32_t i = 0; i < m_SwapChainImages.size(); i++) {
+			m_SwapChainImageViews[i] = m_Renderer->CreateImageView(m_SwapChainImages[i], m_Renderer->GetSwapChainImageFormat(), VK_IMAGE_ASPECT_COLOR_BIT);
+		}
+
+		std::vector<VkImageView> depthImageViews;
+		std::vector<VkImageView> colorImageViews;
+		VkImage depthImage;
+		VkDeviceMemory depthImageMemory;
+
+		for (auto&& [textName, tex]: m_TextureManager->GetTextures()) {
+			depthImageViews.emplace_back(tex.depthImageView);
+			colorImageViews.emplace_back(tex.colorImageView);
+		}
+
+		m_SwapChainFramebuffers = m_Renderer->CreateFramebuffers(m_RenderPass, m_SwapChainImageViews, depthImageViews, colorImageViews);
+
+		m_CommandBuffers = m_Renderer->AllocateCommandBuffers(m_CommandPool, (uint32_t)m_SwapChainFramebuffers.size());
+		m_Semaphores = m_Renderer->CreateSyncObjects(m_SwapChainImages);
+
+		if (nullptr == m_MeshManager->GetMeshes()->meshVBuffer.first)
+			m_MeshManager->GetMeshes()->meshVBuffer = m_Renderer->CreateVertexBuffer(m_CommandPool, m_MeshManager->GetMeshes()->mesh.vertices);
+
+		if (nullptr == m_MeshManager->GetMeshes()->meshIBuffer.first)
+			m_MeshManager->GetMeshes()->meshIBuffer = m_Renderer->CreateIndexBuffer(m_CommandPool, m_MeshManager->GetMeshes()->mesh.indices);
+
+
+
+
+
+
+
+
+
+
 		//prepare for one mesh
 		std::array<VkDescriptorPoolSize, 2> poolSizes{};
 		poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
@@ -83,7 +135,7 @@ namespace Rbk
 		poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
 		poolSizes[1].descriptorCount = m_MeshManager->GetMeshes()->totalInstances;
 
-		VkDescriptorPool descriptorPool = m_Renderer->CreateDescriptorPool(poolSizes, m_MeshManager->GetMeshes()->totalInstances * 2);
+		VkDescriptorPool descriptorPool = m_Renderer->CreateDescriptorPool(poolSizes, m_MeshManager->GetMeshes()->totalInstances * 4);
 
 		VkDescriptorSetLayoutBinding uboLayoutBinding{};
 		uboLayoutBinding.binding = 0;
@@ -124,11 +176,34 @@ namespace Rbk
 		vPipeline.descriptorSets = listDescriptorSet;
 		vPipeline.descriptorSetLayouts = { desriptorSetLayout };
 		vPipeline.pipelineLayout = pipelineLayout;
-		vPipeline.graphicsPipeline.emplace_back(m_Renderer->CreateGraphicsPipeline(m_RenderPass, vPipeline, m_ShaderManager->GetShaders()));
+		vPipeline.pipelineCache = 0;
 
+		std::vector<VkPipelineShaderStageCreateInfo>shadersStageInfos;
 
+		for (auto& shader : m_ShaderManager->GetShaders().shaders) {
+			VkPipelineShaderStageCreateInfo vertShaderStageInfo{};
+			vertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+			vertShaderStageInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
+			vertShaderStageInfo.module = shader.second[0];
+			vertShaderStageInfo.pName = shader.first;
+			shadersStageInfos.emplace_back(vertShaderStageInfo);
 
+			VkPipelineShaderStageCreateInfo fragShaderStageInfo{};
+			fragShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+			fragShaderStageInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
+			fragShaderStageInfo.module = shader.second[1];
+			fragShaderStageInfo.pName = shader.first;
+			shadersStageInfos.emplace_back(fragShaderStageInfo);
+		}
 
+		vPipeline.graphicsPipeline.emplace_back(m_Renderer->CreateGraphicsPipeline(m_RenderPass, vPipeline, shadersStageInfos));
+
+		m_Pipelines.emplace_back(vPipeline);
+
+		for (int i = 0; i < m_MeshManager->GetMeshes()->uniformBuffersCount; i++) {
+			m_Renderer->UpdateDescriptorSets(*m_MeshManager->GetMeshes(), m_MeshManager->GetMeshes()->uniformBuffers[i], m_TextureManager->GetTextures(), vPipeline.descriptorSets[i]);
+		}
+ 
 		//for (auto item : m_MeshManager->GetMeshes()->mesh.meshNames) {
 		//	m_MeshManager->GetMeshes()->totalInstances += item.second;
 		//}
@@ -252,7 +327,7 @@ namespace Rbk
 
 		SouldResizeSwapChain();
 		UpdatePositions();
-		VulkanPipeline ppline = (!m_WireFrameModeOn) ? m_Pipelines[0] : m_Pipelines[1];
+		VulkanPipeline ppline = m_Pipelines[0];
 
 		VkBuffer vertexBuffers[] = { m_MeshManager->GetMeshes()->meshVBuffer.first };
 		VkDeviceSize offsets[] = { 0 };
