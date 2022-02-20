@@ -102,7 +102,7 @@ namespace Rbk
 		uint32_t uniformBuffersCount = 0;
 
 		for (Mesh& mesh : *worldMeshes) {
-			uint32_t totalInstances = worldMeshesLoaded[mesh.name][1];
+			uint32_t totalInstances = worldMeshesLoaded[mesh.name][0];
 
 			maxUniformBufferRange = m_Renderer->GetDeviceProperties().limits.maxUniformBufferRange;
 			uniformBufferChunkSize = maxUniformBufferRange / sizeof(UniformBufferObject);
@@ -122,7 +122,7 @@ namespace Rbk
 			poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
 			poolSizes[1].descriptorCount = 1;
 
-			VkDescriptorPool descriptorPool = m_Renderer->CreateDescriptorPool(poolSizes, m_MeshManager->GetWorldInstancedCount() * 2);
+			VkDescriptorPool descriptorPool = m_Renderer->CreateDescriptorPool(poolSizes, m_MeshManager->GetWorldInstancedCount() * m_SwapChainImages.size());
 
 			VkDescriptorSetLayoutBinding uboLayoutBinding{};
 			uboLayoutBinding.binding = 0;
@@ -233,8 +233,6 @@ namespace Rbk
 
 					chunk = { mesh.ubos.rbegin() + beginRange, mesh.ubos.rbegin() + endRange };
 
-					m_ChunksIndexes.emplace_back(beginRange, endRange);
-
 					m_Renderer->UpdateUniformBuffer(mesh.uniformBuffers[uboIndex], chunk, chunk.size());
 					uboIndex += 1;
 					uboCount += 1;
@@ -252,8 +250,6 @@ namespace Rbk
 		SouldResizeSwapChain();
 		UpdateWorldPositions();
 
-		VulkanPipeline ppline = m_Pipelines[0];
-
 			for (size_t i = 0; i < m_SwapChainImages.size(); i++) {
 						
 			m_ImageIndex = m_Renderer->AcquireNextImageKHR(m_SwapChain, m_Semaphores);
@@ -269,10 +265,10 @@ namespace Rbk
 			m_Renderer->BeginRenderPass(m_RenderPass, m_CommandBuffers[m_ImageIndex], m_SwapChainFramebuffers[m_ImageIndex]);
 			m_Renderer->SetViewPort(m_CommandBuffers[m_ImageIndex]);
 			m_Renderer->SetScissor(m_CommandBuffers[m_ImageIndex]);
-			m_Renderer->BindPipeline(m_CommandBuffers[m_ImageIndex], ppline.graphicsPipeline[0]);
 
 			//draw the world !
 			for (Mesh mesh : *m_MeshManager->GetWorldMeshes()) {
+				m_Renderer->BindPipeline(m_CommandBuffers[m_ImageIndex], mesh.graphicsPipeline);
 				m_Renderer->Draw(m_CommandBuffers[m_ImageIndex], &mesh, m_ImageIndex);
 			}
 		

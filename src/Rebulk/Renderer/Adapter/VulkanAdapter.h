@@ -74,6 +74,5 @@ namespace Rbk
 		TextureManager* m_TextureManager;
 		MeshManager* m_MeshManager;
 		ShaderManager* m_ShaderManager;
-		std::vector<uint32_t, uint32_t> m_ChunksIndexes;
 	};
 }
