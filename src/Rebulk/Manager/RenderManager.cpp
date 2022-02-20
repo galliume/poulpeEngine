@@ -37,6 +37,7 @@ namespace Rbk
 
 	void RenderManager::PrepareDraw()
 	{
+		
 		m_Renderer->PrepareDraw();
 	}
 
