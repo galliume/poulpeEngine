@@ -44,17 +44,14 @@ namespace Rbk
 		Rbk::Im::Text("Current frame %d", m_Adapter->Rdr()->GetCurrentFrame());
 		ImGui::Separator();
 		Rbk::Im::Text("World meshes stats");
-		Rbk::Im::Text("Total mesh loaded %d", m_MeshManager->GetWorld()->count);
-		Rbk::Im::Text("Total mesh instanced %d", m_MeshManager->GetWorld()->totalInstances);
-		Rbk::Im::Text("Total vertex count %d", m_MeshManager->GetWorld()->mesh.vertices.size());
-		Rbk::Im::Text("Total index count %d", m_MeshManager->GetWorld()->mesh.indices.size());
-		Rbk::Im::Text("Max UBO buffer size by chunk %d", m_MeshManager->GetWorld()->maxUniformBufferRange);
-		Rbk::Im::Text("UBO buffer size by chunk %d", m_MeshManager->GetWorld()->uniformBufferChunkSize);
-		Rbk::Im::Text("Total UBO buffer %d", m_MeshManager->GetWorld()->uniformBuffersCount);
+		Rbk::Im::Text("Total mesh loaded %d", m_MeshManager->GetWorldMeshes()->size());
+		Rbk::Im::Text("Total mesh instanced %d", m_MeshManager->GetWorldInstancedCount());
+		Rbk::Im::Text("Total vertex count %d", m_MeshManager->GetWorldVerticesCount());
+		Rbk::Im::Text("Total index count %d", m_MeshManager->GetWorldIndicesCount());		
 
 		Rbk::Im::Text("Stats per mesh :");
-		for (auto item : m_MeshManager->GetWorld()->mesh.meshNames) {
-			Rbk::Im::Text("\tMesh named %s with %d instances", item.first, item.second);
+		for (Mesh mesh : *m_MeshManager->GetWorldMeshes()) {
+			Rbk::Im::Text("\tMesh named %s with %d instances", mesh.name, mesh.ubos.size());
 		}
 		ImGui::Separator();
 		Rbk::Im::Text("Shader count %d", m_ShaderManager->GetShaders().shaders.size());
