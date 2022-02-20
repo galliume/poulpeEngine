@@ -27,6 +27,7 @@ namespace Rbk
 		virtual void AddMeshManager(MeshManager* meshManager) override;
 		virtual void AddShaderManager(ShaderManager* shaderManager) override;
 
+		virtual void PrepareWorld() override;
 		virtual void PrepareDraw() override;
 		virtual void Draw() override;
 		virtual void Destroy() override;
@@ -45,7 +46,7 @@ namespace Rbk
 		VImGuiInfo GetVImGuiInfo();
 
 	private:
-		void UpdatePositions();
+		void UpdateWorldPositions();
 		void Draw(VulkanShaders vShader, VulkanMesh vMesh);
 
 	private:
