@@ -633,14 +633,14 @@ namespace Rbk {
 			vertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
 			vertShaderStageInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
 			vertShaderStageInfo.module = shader.second[0];
-			vertShaderStageInfo.pName = shader.first.c_str();
+			vertShaderStageInfo.pName = shader.first;
 			shaderStageInfos.emplace_back(vertShaderStageInfo);
 		
 			VkPipelineShaderStageCreateInfo fragShaderStageInfo{};
 			fragShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
 			fragShaderStageInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
 			fragShaderStageInfo.module = shader.second[1];
-			fragShaderStageInfo.pName = shader.first.c_str();
+			fragShaderStageInfo.pName = shader.first;
 			shaderStageInfos.emplace_back(fragShaderStageInfo);
 		}
 

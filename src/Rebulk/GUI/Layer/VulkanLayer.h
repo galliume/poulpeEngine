@@ -21,6 +21,7 @@ namespace Rbk
 		void AddWindow(Window* window) { m_Window = window; };
 		void AddTextureManager(TextureManager* textureManager) { m_TextureManager = textureManager; };
 		void AddMeshManager(MeshManager* meshManager) { m_MeshManager = meshManager; };
+		void AddShaderManager(ShaderManager* shaderManager) { m_ShaderManager = shaderManager; };
 
 	private:
 		bool m_WireframeModeOn = false;
@@ -31,5 +32,6 @@ namespace Rbk
 		Window* m_Window;
 		TextureManager* m_TextureManager;
 		MeshManager* m_MeshManager;
+		ShaderManager* m_ShaderManager;
 	};
 }

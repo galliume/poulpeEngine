@@ -9,7 +9,7 @@ namespace Rbk
 	{
 	public:
 		MeshManager(VulkanRenderer* renderer);
-		void MeshManager::AddMesh(const char* name, const char* path, const char* textureName, glm::vec3 pos, bool shouldInverseTextureY = true);
+		void AddMesh(const char* name, const char* path, const char* textureName, glm::vec3 pos, bool shouldInverseTextureY = true);
 		inline VulkanMesh* GetMeshes() { return &m_Meshes; };
 
 	private:

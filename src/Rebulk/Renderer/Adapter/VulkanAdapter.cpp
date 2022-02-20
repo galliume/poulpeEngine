@@ -25,6 +25,12 @@ namespace Rbk
 		m_TextureManager = textureManager;
 	}
 
+
+	void VulkanAdapter::AddShaderManager(ShaderManager* shaderManager)
+	{
+		m_ShaderManager = shaderManager;
+	}
+
 	void VulkanAdapter::AddCamera(Camera* camera)
 	{
 		m_Camera = camera;
@@ -64,20 +70,6 @@ namespace Rbk
 			m_Renderer->ResetCommandPool(m_CommandPool);
 			m_CommandBuffers = m_Renderer->AllocateCommandBuffers(m_CommandPool, (uint32_t)m_SwapChainFramebuffers.size());
 		}
-	}
-
-	void VulkanAdapter::AddShader(std::string name, std::vector<char> vertexShaderCode, std::vector<char> fragShaderCode)
-	{
-		VkShaderModule vertexShaderModule = m_Renderer->CreateShaderModule(vertexShaderCode);
-		VkShaderModule fragShaderModule = m_Renderer->CreateShaderModule(fragShaderCode);
-		std::array<VkShaderModule, 2> module = { vertexShaderModule, fragShaderModule };
-		m_Shaders.shaders.emplace(name, module);
-	}
-
-	void VulkanAdapter::Clear()
-	{
-		m_MeshManager->GetMeshes()->mesh.vertices.clear();
-		m_MeshManager->GetMeshes()->mesh.indices.clear();
 	}
 
 	void VulkanAdapter::PrepareDraw()
@@ -135,7 +127,7 @@ namespace Rbk
 			}
 
 			vPipeline.pipelineLayout = m_Renderer->CreatePipelineLayout(vPipeline.descriptorSets, vPipeline.descriptorSetLayouts);			
-			vPipeline.graphicsPipeline.emplace_back(m_Renderer->CreateGraphicsPipeline(m_RenderPass, vPipeline, m_Shaders));
+			vPipeline.graphicsPipeline.emplace_back(m_Renderer->CreateGraphicsPipeline(m_RenderPass, vPipeline, m_ShaderManager->GetShaders()));
 			m_Pipelines.emplace_back(vPipeline);
 
 			VulkanPipeline vPipelineWireFramed;
@@ -148,7 +140,7 @@ namespace Rbk
 			}
 
 			vPipelineWireFramed.pipelineLayout = m_Renderer->CreatePipelineLayout(vPipelineWireFramed.descriptorSets, vPipelineWireFramed.descriptorSetLayouts);
-			vPipelineWireFramed.graphicsPipeline.emplace_back(m_Renderer->CreateGraphicsPipeline(m_RenderPass, vPipelineWireFramed, m_Shaders, true));
+			vPipelineWireFramed.graphicsPipeline.emplace_back(m_Renderer->CreateGraphicsPipeline(m_RenderPass, vPipelineWireFramed, m_ShaderManager->GetShaders(), true));
 
 			m_Pipelines.emplace_back(vPipelineWireFramed);
 
@@ -281,7 +273,7 @@ namespace Rbk
 			}
 		}
 
-		for (auto shader : m_Shaders.shaders) {
+		for (auto shader : m_ShaderManager->GetShaders().shaders) {
 			vkDestroyShaderModule(m_Renderer->GetDevice(), shader.second[0], nullptr);
 			vkDestroyShaderModule(m_Renderer->GetDevice(), shader.second[1], nullptr);
 		}
