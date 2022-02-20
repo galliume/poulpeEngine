@@ -176,10 +176,6 @@ namespace Rbk
 
 		}
 
-		//VkPushConstantRange pushConstantRange = {};
-		//pushConstantRange.offset = 0;
-		//pushConstantRange.size = sizeof(int);
-		//pushConstantRange.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 		UpdateWorldPositions();
 	}
 

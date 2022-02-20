@@ -52,27 +52,6 @@ namespace Rbk
 		m_WorldMeshesLoaded.insert({ name, { 1, index }});	
 		m_WorldMeshes.emplace_back(mesh);
 
-		//m_World.mesh.ubos.emplace_back(ubo);
-
-		/*uint32_t vertexOffset = (m_World.vertexOffset.size() > 0) ? m_World.vertexOffset.back() + mesh.vertices.size() : mesh.vertices.size();
-		uint32_t indicesOffset = (m_World.indicesOffset.size() > 0) ? m_World.indicesOffset.back() + mesh.indices.size() : mesh.indices.size();
-
-		m_World.vertexOffset.emplace_back(vertexOffset);
-		m_World.indicesOffset.emplace_back(indicesOffset);*/
-
-		//if (0 != m_World.mesh.meshNames.count(name)) {
-		//	m_World.mesh.meshNames[name] += 1;
-		//	return;
-		//}
-
-		//m_World.mesh.meshTextures.emplace(name, textureName);
-		//m_World.mesh.textureNames.emplace(m_World.count, textureName);
-		//m_World.mesh.vertices.insert(m_World.mesh.vertices.end(), mesh.vertices.begin(), mesh.vertices.end());
-		//m_World.mesh.indices.insert(m_World.mesh.indices.end(), mesh.indices.begin(), mesh.indices.end());
-		//m_World.vertexIndicesCount += mesh.indices.size();
-		//m_World.mesh.meshNames.insert({ name, 1 });
-		//m_World.count += 1;
-
 		Rbk::Log::GetLogger()->debug("Added mesh to the world {} from {}", name, path);
 	}
 

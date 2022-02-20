@@ -84,34 +84,22 @@ namespace Rbk
 	}
 
 	void Application::Run()
-	{
-
-		//AddMesh("mesh/minecraft/Grass_Block.obj", "minecraft_grass", minecraftGrass);
-		//AddMesh("mesh/moon/moon.obj", "diffuse_moon", ubo2);
-		//AddMesh("mesh/backpack/backpack.obj", "diffuse_backpack", ubo3, false);
-		//AddMesh("mesh/viking/viking_room.obj", "viking_room", ubo);
-		//AddMesh("mesh/backpack/backpack.obj", "diffuse_backpack", ubo3, false);
-
+	{		
 		glm::vec3 pos1 = glm::vec3(0.1f, 0.1f, 0.1f);
 		glm::vec3 pos2 = glm::vec3(-0.5f, -0.5f, -0.5f);
 		glm::vec3 pos3 = glm::vec3(0.1f, -0.8f, 0.0f);
-
-		//AddTexture("viking_room", "mesh/viking/viking_room.png");
-		//AddTexture("diffuse_backpack", "mesh/backpack/diffuse.png");
-		//AddTexture("diffuse_moon", "mesh/moon/diffuse.jpg");
-
-		//AddMesh("mesh/backpack/backpack.obj", "diffuse_backpack", pos2, false);
+		glm::vec3 pos4 = glm::vec3(0.6f, -0.18f, 0.5f);
+		glm::vec3 pos5 = glm::vec3(1.6f, -0.55f, 1.5f);		
 
 		shaderManager->AddShader("main", "shaders/spv/vert.spv", "shaders/spv/frag.spv");
 
+		textureManager->AddTexture("diffuse_moon", "mesh/moon/diffuse.jpg");
 		textureManager->AddTexture("minecraft_grass", "mesh/minecraft/Grass_Block_TEX.png");
-		//textureManager->AddTexture("viking_room", "mesh/viking/viking_room.png");
-
-		meshManager->AddWorldMesh("cube", "mesh/minecraft/Grass_Block.obj", "minecraft_grass", pos1);
-		meshManager->AddWorldMesh("cube", "mesh/minecraft/Grass_Block.obj", "minecraft_grass", pos2);
-		meshManager->AddWorldMesh("cube", "mesh/minecraft/Grass_Block.obj", "minecraft_grass", pos3);
-
-		//meshManager->AddWorldMesh("room", "mesh/viking/viking_room.obj", "viking_room", pos1);
+		textureManager->AddTexture("viking_room", "mesh/viking/viking_room.png");
+		
+		meshManager->AddWorldMesh("cube", "mesh/minecraft/Grass_Block.obj", "minecraft_grass", pos1);		
+		meshManager->AddWorldMesh("room", "mesh/viking/viking_room.obj", "viking_room", pos4);
+		meshManager->AddWorldMesh("moon", "mesh/moon/moon.obj", "diffuse_moon", pos2);
 
 		double lastTime = glfwGetTime();
 		
