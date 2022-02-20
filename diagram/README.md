@@ -3,4 +3,4 @@
 
 Work in progress
 
-![Rebulk](diagrams/rebulkEngine.jpg?raw=true "Rebulk")
+![Rebulk](diagram/rebulkEngine.jpg?raw=true "Rebulk")
