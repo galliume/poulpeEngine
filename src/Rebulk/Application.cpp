@@ -104,11 +104,11 @@ namespace Rbk
 
 		shaderManager->AddShader("main", "shaders/spv/vert.spv", "shaders/spv/frag.spv");
 
-		//textureManager->AddTexture("viking_room", "mesh/viking/viking_room.png");
 		textureManager->AddTexture("minecraft_grass", "mesh/minecraft/Grass_Block_TEX.png");
+		//textureManager->AddTexture("viking_room", "mesh/viking/viking_room.png");
 
-		//meshManager->AddMesh("room", "mesh/viking/viking_room.obj", "viking_room", pos1);
 		meshManager->AddWorldMesh("cube", "mesh/minecraft/Grass_Block.obj", "minecraft_grass", pos3);
+		//meshManager->AddWorldMesh("room", "mesh/viking/viking_room.obj", "viking_room", pos1);
 
 		double lastTime = glfwGetTime();
 		

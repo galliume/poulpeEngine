@@ -608,7 +608,7 @@ namespace Rbk {
 		return graphicsPipelineLayout;
 	}
 
-	VkPipeline VulkanRenderer::CreateGraphicsPipeline(VkRenderPass renderPass, VulkanPipeline pipeline, std::vector<VkPipelineShaderStageCreateInfo>shadersCreateInfos, bool wireFrameModeOn)
+	VkPipeline VulkanRenderer::CreateGraphicsPipeline(VkRenderPass renderPass, VkPipelineLayout pipelineLayout, VkPipelineCache pipelineCache, std::vector<VkPipelineShaderStageCreateInfo>shadersCreateInfos, bool wireFrameModeOn)
 	{
 		auto bindingDescription = Vertex::GetBindingDescription();
 		auto attributeDescriptions = Vertex::GetAttributeDescriptions();
@@ -716,7 +716,7 @@ namespace Rbk {
 		pipelineInfo.pMultisampleState = &multisampling;
 		pipelineInfo.pDepthStencilState = &depthStencil;
 		pipelineInfo.pColorBlendState = &colorBlending;
-		pipelineInfo.layout = pipeline.pipelineLayout;
+		pipelineInfo.layout = pipelineLayout;
 		pipelineInfo.renderPass = renderPass;
 		pipelineInfo.subpass = 0;
 		pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
@@ -725,7 +725,7 @@ namespace Rbk {
 
 		VkPipeline graphicsPipeline;
 
-		VkResult result = vkCreateGraphicsPipelines(m_Device, pipeline.pipelineCache, 1, &pipelineInfo, nullptr, &graphicsPipeline);
+		VkResult result = vkCreateGraphicsPipelines(m_Device, pipelineCache, 1, &pipelineInfo, nullptr, &graphicsPipeline);
 		
 		if (result != VK_SUCCESS) {
 			Rbk::Log::GetLogger()->critical("failed to create graphics pipeline!");
@@ -1036,22 +1036,24 @@ namespace Rbk {
 		return descriptorSet;
 	}
 
-	void VulkanRenderer::UpdateDescriptorSets(VulkanMesh vMesh, std::pair<VkBuffer, VkDeviceMemory>uniformBuffer, std::map<const char*, Texture> vTextures, VkDescriptorSet descriptorSet)
+	void VulkanRenderer::UpdateDescriptorSets(std::vector<std::pair<VkBuffer, VkDeviceMemory>>uniformBuffers, Texture texture, VkDescriptorSet descriptorSet)
 	{
 		std::array<VkWriteDescriptorSet, 2> descriptorWrites{};
 		std::vector<VkDescriptorImageInfo> imageInfos;
 		std::vector<VkDescriptorBufferInfo> bufferInfos;
 
-		VkDescriptorBufferInfo bufferInfo{};
-		bufferInfo.buffer = uniformBuffer.first;
-		bufferInfo.offset = 0;
-		bufferInfo.range = VK_WHOLE_SIZE;
-		bufferInfos.emplace_back(bufferInfo);
+		for (auto uniformBuffer : uniformBuffers) {
+			VkDescriptorBufferInfo bufferInfo{};
+			bufferInfo.buffer = uniformBuffer.first;
+			bufferInfo.offset = 0;
+			bufferInfo.range = VK_WHOLE_SIZE;
+			bufferInfos.emplace_back(bufferInfo);
+		}
 
 		VkDescriptorImageInfo imageInfo{};
 		imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-		imageInfo.imageView = vTextures[vMesh.mesh.textureNames[0]].imageView;
-		imageInfo.sampler = vTextures[vMesh.mesh.textureNames[0]].sampler;
+		imageInfo.imageView = texture.imageView;
+		imageInfo.sampler = texture.sampler;
 		imageInfos.emplace_back(imageInfo);
 
 		descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
@@ -1214,29 +1216,29 @@ namespace Rbk {
 		vkResetCommandPool(m_Device, commandPool, 0);
 	}
 
-	void VulkanRenderer::Draw(VkCommandBuffer commandBuffer, VulkanMesh vMesh, VulkanPipeline pipeline)
+	void VulkanRenderer::Draw(VkCommandBuffer commandBuffer, Mesh* mesh, uint32_t frameIndex)
 	{	
-		VkBuffer vertexBuffers[] = { vMesh.meshVBuffer.first };
+		VkBuffer vertexBuffers[] = { mesh->vertexBuffer.first };
 		VkDeviceSize offsets[] = { 0 };
+		uint32_t verticesOffsetIndex = 0;
+		uint32_t indicesOffsetIndex = 0;
 
-		for (int i = 0; i < vMesh.uniformBuffersCount; i++) {
+		vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
+		vkCmdBindIndexBuffer(commandBuffer, mesh->indicesBuffer.first, 0, VK_INDEX_TYPE_UINT32);
 
-			vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
-			vkCmdBindIndexBuffer(commandBuffer, vMesh.meshIBuffer.first, 0, VK_INDEX_TYPE_UINT32);
+		vkCmdBindDescriptorSets(
+			commandBuffer,
+			VK_PIPELINE_BIND_POINT_GRAPHICS,
+			mesh->pipelineLayout,
+			0,
+			1,
+			&mesh->descriptorSets[frameIndex],
+			0,
+			nullptr
+		);
 
-			vkCmdBindDescriptorSets(
-				commandBuffer,
-				VK_PIPELINE_BIND_POINT_GRAPHICS,
-				pipeline.pipelineLayout,
-				0,
-				1,
-				&pipeline.descriptorSets[i],
-				0,
-				nullptr
-			);
-
-			vkCmdDrawIndexed(commandBuffer, vMesh.vertexIndicesCount, vMesh.uniformUBOCount[i], 0, 0, 0);
-		}
+		//vkCmdPushConstants(commandBuffer, pipeline.pipelineLayout, VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(int), &j);
+		vkCmdDrawIndexed(commandBuffer, mesh->indices.size(), mesh->ubos.size(), 0, 0, 0);
 	}
 
 	void VulkanRenderer::AddPipelineBarrier(VkCommandBuffer commandBuffer, VkImageMemoryBarrier renderBarrier, VkPipelineStageFlags srcStageMask, VkPipelineStageFlags dstStageMask, VkDependencyFlags dependencyFlags)
