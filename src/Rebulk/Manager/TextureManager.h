@@ -8,7 +8,7 @@ namespace Rbk
 	{
 	public:
 		TextureManager(VulkanRenderer* renderer);
-		void TextureManager::AddTexture(const char* name, const char* path);
+		void AddTexture(const char* name, const char* path);
 		inline std::map<const char*, Texture> GetTextures() { return m_Textures; };
 
 	private:
