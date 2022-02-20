@@ -210,7 +210,7 @@ namespace Rbk
 			uboCount = 1, uboIndex = 0;
 			chunk = {};
 			beginRange, endRange = 0;
-			totalInstances = worldMeshesLoaded[mesh.name][1];
+			totalInstances = worldMeshesLoaded[mesh.name][0];
 			maxUniformBufferRange = m_Renderer->GetDeviceProperties().limits.maxUniformBufferRange;
 			uniformBufferChunkSize = maxUniformBufferRange / sizeof(UniformBufferObject);
 			nextChunk = totalInstances - uniformBufferChunkSize;
