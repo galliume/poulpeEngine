@@ -11,12 +11,11 @@ namespace Rbk
 	class RenderManager
 	{
 	public:
-		RenderManager(GLFWwindow* window, IRendererAdapter* renderer, TextureManager* textureManager, MeshManager* meshManager);
+		RenderManager(GLFWwindow* window, IRendererAdapter* renderer, TextureManager* textureManager, MeshManager* meshManager, ShaderManager* shaderManager);
 		~RenderManager();
 
 		void Init();
 		void AddCamera(Camera* camera);
-		void AddShader(std::string name, std::vector<char> vertShaderCode, std::vector<char> fragShaderCode);
 		void PrepareDraw();
 		void Draw();
 
@@ -29,5 +28,6 @@ namespace Rbk
 		GLFWwindow* m_Window;
 		TextureManager* m_TextureManager;
 		MeshManager* m_MeshManager;
+		ShaderManager* m_ShaderManager;
 	};
 }

@@ -77,6 +77,7 @@ namespace Rbk
 		std::vector<UniformBufferObject> ubos;
 		std::map<int32_t, const char*> textureNames;
 		std::map<const char*, int32_t> meshNames;
+		std::map<const char*, const char*>meshTextures;
 	};
 }
 

@@ -3,7 +3,6 @@
 #include "IRendererAdapter.h"
 #include "Rebulk/Renderer/Vulkan/VulkanRenderer.h"
 #include "Rebulk/Renderer/Mesh.h"
-#include "Rebulk/Manager/TextureManager.h"
 
 namespace Rbk
 {
@@ -26,22 +25,23 @@ namespace Rbk
 		virtual void AddCamera(Camera* camera) override;
 		virtual void AddTextureManager(TextureManager* textureManager) override;
 		virtual void AddMeshManager(MeshManager* meshManager) override;
-		virtual void AddShader(std::string name, std::vector<char> vertexShaderCode, std::vector<char> fragShaderCode) override;
+		virtual void AddShaderManager(ShaderManager* shaderManager) override;
+
 		virtual void PrepareDraw() override;
 		virtual void Draw() override;
 		virtual void Destroy() override;
+
 		void ImmediateSubmit(std::function<void(VkCommandBuffer cmd)>&& function);
 		void SetWireFrameMode(bool wireFrameModeOn) { m_WireFrameModeOn = wireFrameModeOn; };
-		inline VulkanShaders GetShaders() { return m_Shaders; };
+		void SouldResizeSwapChain();
+
 		inline uint32_t GetSwapImageIndex() { return m_ImageIndex; };
 		inline VulkanRenderer* Rdr() { return m_Renderer; };
 		inline VkRenderPass RdrPass() { return m_RenderPass; };
-		VkRenderPass* CreateImGuiRenderPass();
 		inline void MakeSpin(bool spin) { m_MakeSpin = spin; };
 
-		void Clear();
-		void SouldResizeSwapChain();
-
+		//@todo add GuiManager
+		VkRenderPass* CreateImGuiRenderPass();
 		VImGuiInfo GetVImGuiInfo();
 
 	private:
@@ -64,13 +64,14 @@ namespace Rbk
 		VkDescriptorSetLayout m_DescriptorSetLayout = nullptr;
 		VkPipelineLayout m_PipelineLayout = nullptr;
 		VkDescriptorPool m_DescriptorPool = nullptr;
-		VulkanShaders m_Shaders;
 		std::vector<VulkanPipeline>m_Pipelines;
 		bool m_IsPrepared = false;
 		bool m_WireFrameModeOn = false;
 		bool m_MakeSpin = false;
 		Camera* m_Camera;
+
 		TextureManager* m_TextureManager;
 		MeshManager* m_MeshManager;
+		ShaderManager* m_ShaderManager;
 	};
 }

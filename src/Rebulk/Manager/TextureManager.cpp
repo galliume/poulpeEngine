@@ -9,6 +9,11 @@ namespace Rbk
 
 	void TextureManager::AddTexture(const char* name, const char* path)
 	{
+		if (!std::filesystem::exists(path)) {
+			Rbk::Log::GetLogger()->critical("texture file {} does not exits.", path);
+			return;
+		}
+
 		if (0 != m_Textures.count(name)) {
 			std::cout << "Texture " << name << " already imported" << std::endl;
 			return;

@@ -3,6 +3,12 @@
 
 namespace Rbk
 {
+	struct CameraUBO {
+		alignas(16) glm::mat4 view;
+		alignas(16) glm::mat4 proj;
+		alignas(16) glm::mat4 projXview;
+	};
+
 	class Camera
 	{
 	public:
@@ -16,6 +22,7 @@ namespace Rbk
 		void UpdateSpeed(float timeStep);
 		void UpdateYP(float xoffset, float yoffset);
 		void Recenter();
+
 	private:
 		glm::vec3 m_Pos;
 		glm::vec3 m_Target;
@@ -27,7 +34,6 @@ namespace Rbk
 		glm::vec3 m_CameraFront;
 		float m_Yaw = -90.0f;
 		float m_Pitch;
-
 		float m_Speed;
 	};
 }

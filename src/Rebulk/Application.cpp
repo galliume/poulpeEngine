@@ -10,6 +10,7 @@ namespace Rbk
 	std::shared_ptr<Rbk::LayerManager>layerManager = nullptr;
 	std::shared_ptr<Rbk::TextureManager>textureManager = nullptr;
 	std::shared_ptr<Rbk::MeshManager>meshManager = nullptr;
+	std::shared_ptr<Rbk::ShaderManager>shaderManager = nullptr;
 	std::shared_ptr<Rbk::VulkanLayer>vulkanLayer = nullptr;
 	std::shared_ptr<Rbk::Im>vImGui = nullptr;
 
@@ -69,9 +70,13 @@ namespace Rbk
 			meshManager = std::make_shared<Rbk::MeshManager>(Rbk::MeshManager(rendererAdapter.get()->Rdr()));
 		}
 
+		if (shaderManager == nullptr) {
+			shaderManager = std::make_shared<Rbk::ShaderManager>(Rbk::ShaderManager(rendererAdapter.get()->Rdr()));
+		}
+
 		if (renderManager == nullptr) {
 			renderManager = std::make_shared<Rbk::RenderManager>(Rbk::RenderManager(
-				window->Get(), rendererAdapter.get(), textureManager.get(), meshManager.get()
+				window->Get(), rendererAdapter.get(), textureManager.get(), meshManager.get(), shaderManager.get()
 			));
 			renderManager->Init();
 			renderManager->AddCamera(camera.get());
@@ -81,9 +86,28 @@ namespace Rbk
 	void Application::Run()
 	{
 
+		//AddMesh("mesh/minecraft/Grass_Block.obj", "minecraft_grass", minecraftGrass);
+		//AddMesh("mesh/moon/moon.obj", "diffuse_moon", ubo2);
+		//AddMesh("mesh/backpack/backpack.obj", "diffuse_backpack", ubo3, false);
+		//AddMesh("mesh/viking/viking_room.obj", "viking_room", ubo);
+		//AddMesh("mesh/backpack/backpack.obj", "diffuse_backpack", ubo3, false);
+
+		glm::vec3 pos1 = glm::vec3(0.1f, 0.1f, 0.1f);
+		glm::vec3 pos2 = glm::vec3(-0.5f, -0.5f, -0.5f);
+		glm::vec3 pos3 = glm::vec3(0.1f, -0.8f, 0.0f);
+
+		//AddTexture("viking_room", "mesh/viking/viking_room.png");
+		//AddTexture("diffuse_backpack", "mesh/backpack/diffuse.png");
+		//AddTexture("diffuse_moon", "mesh/moon/diffuse.jpg");
+
+		//AddMesh("mesh/backpack/backpack.obj", "diffuse_backpack", pos2, false);
+
+		shaderManager->AddShader("main", "shaders/spv/vert.spv", "shaders/spv/frag.spv");
+
+		textureManager->AddTexture("viking_room", "mesh/viking/viking_room.png");
 		textureManager->AddTexture("minecraft_grass", "mesh/minecraft/Grass_Block_TEX.png");
 
-		glm::vec3 pos3 = glm::vec3(0.1f, -0.8f, 0.0f);
+		meshManager->AddMesh("room", "mesh/viking/viking_room.obj", "viking_room", pos1);
 		meshManager->AddMesh("cube", "mesh/minecraft/Grass_Block.obj", "minecraft_grass", pos3);
 
 		double lastTime = glfwGetTime();
@@ -103,6 +127,7 @@ namespace Rbk
 		vulkanLayer->AddWindow(window.get());
 		vulkanLayer->AddTextureManager(textureManager.get());
 		vulkanLayer->AddMeshManager(meshManager.get());
+		vulkanLayer->AddShaderManager(shaderManager.get());
 
 		while (!glfwWindowShouldClose(window->Get())) {
 

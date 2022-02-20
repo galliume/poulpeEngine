@@ -6,7 +6,7 @@ namespace Rbk {
 
 	struct VulkanShaders
 	{
-		std::map<std::string, std::array<VkShaderModule, 2>> shaders;
+		std::map<const char*, std::array<VkShaderModule, 2>> shaders;
 	};
 
 	struct VulkanMesh
