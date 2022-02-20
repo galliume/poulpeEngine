@@ -2,9 +2,10 @@
 
 namespace Rbk
 {
-	VulkanAdapter::VulkanAdapter(GLFWwindow* window)
+	VulkanAdapter::VulkanAdapter(Window* window)
 	{
-		m_Renderer = new VulkanRenderer(window);
+		m_Window = window;
+		m_Renderer = new VulkanRenderer(window->Get());
 	}
 
 	VulkanAdapter::~VulkanAdapter()
@@ -42,7 +43,8 @@ namespace Rbk
 
 	void VulkanAdapter::SouldResizeSwapChain()
 	{
-		if (m_Renderer->SouldResizeSwapChain(m_SwapChain)) {
+
+		if (Rbk::m_FramebufferResized == true) {
 
 			m_Renderer->InitDetails();
 			VkSwapchainKHR old = m_SwapChain;
@@ -68,6 +70,8 @@ namespace Rbk
 			m_Semaphores = m_Renderer->CreateSyncObjects(m_SwapChainImages);
 			m_Renderer->ResetCommandPool(m_CommandPool);
 			m_CommandBuffers = m_Renderer->AllocateCommandBuffers(m_CommandPool, (uint32_t)m_SwapChainFramebuffers.size());
+
+			Rbk::m_FramebufferResized = false;
 		}
 	}
 
@@ -243,10 +247,10 @@ namespace Rbk
 			throw std::runtime_error("Draw is not prepared. Forgot to calle Prepare() ?");
 		}
 
-		SouldResizeSwapChain();
 		UpdateWorldPositions();
 
-			for (size_t i = 0; i < m_SwapChainImages.size(); i++) {
+		for (size_t i = 0; i < m_SwapChainImages.size(); i++) {
+			SouldResizeSwapChain();
 						
 			m_ImageIndex = m_Renderer->AcquireNextImageKHR(m_SwapChain, m_Semaphores);
 			m_Renderer->BeginCommandBuffer(m_CommandBuffers[m_ImageIndex]);
