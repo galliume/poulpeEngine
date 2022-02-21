@@ -1,5 +1,5 @@
 # Diagram
-## Some very simplistic diagrams to help me keeping a clear idea. 
+## Some very simplistic diagrams. 
 
 Work in progress
 
