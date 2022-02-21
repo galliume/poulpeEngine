@@ -35,10 +35,26 @@ namespace Rbk
 		ubo.model = glm::mat4(1.0f);
 		ubo.model = glm::translate(ubo.model, pos);
 		ubo.model = glm::scale(ubo.model, glm::vec3(0.1f, 0.1f, 0.1f));
-		ubo.view = glm::translate(view, glm::vec3(0.0f, 0.0f, -0.0f));
-		glm::mat4 projection;
-		ubo.proj = glm::perspective(glm::radians(45.0f), m_Renderer->GetSwapChainExtent().width / (float)m_Renderer->GetSwapChainExtent().height, 0.1f, 100.0f);
-		ubo.proj[1][1] *= -1;
+		//ubo.view = glm::translate(view, glm::vec3(0.0f, 0.0f, -0.0f));
+		/*glm::mat4 projection;*/
+		//ubo.proj = glm::perspective(glm::radians(45.0f), m_Renderer->GetSwapChainExtent().width / (float)m_Renderer->GetSwapChainExtent().height, 0.1f, 100.0f);
+		glm::mat4 frustumProj;
+		float fovy = 60.0f;
+		float n = 0.01f;
+		float f = 100.0f;
+		float s = 2560 / (float) 1440;
+		float g = 1.0f / std::tan(fovy * 0.5f);
+		float k = f / (f - n);
+
+		frustumProj = glm::mat4(
+			g / s, 0.0f, 0.0f, 0.0f,
+			0.0f, g, 0.0f, 0.0f,
+			0.0f, 0.0f, k, -n * k,
+			0.0f, 0.0f, 1.0f, 0.0f
+		);
+
+		ubo.proj = frustumProj;
+		//ubo.proj[1][1] *= -1;
 
 		mesh.ubos.emplace_back(ubo);
 

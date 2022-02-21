@@ -17,6 +17,66 @@ namespace Rbk
 			glm::vec3(0.0f, 0.0f, 0.0f),
 			glm::vec3(0.0f, 1.0f, 0.0f)
 		);
+		//m_View = FrustumProj(45, 2560/1440, 0.1f, 100.0f);
+	}
+
+	/**
+		fovy : viertical field of view
+		s : aspect ratio viewport
+		n : near distance
+		f : far distance
+	**/
+	glm::mat4 Camera::FrustumProj(float fovy, float s, float n, float f)
+	{
+		glm::mat4 frustumProj;
+
+		//infine reverse frustum projection
+		/*float g = 1.0f / tan(fovy * 0.5f);
+		float e = 0.1f;
+
+		frustumProj = glm::mat4(
+			g / s, 0.0f, 0.0f, 0.0f,
+			0.0f, g, 0.0f, 0.0f,
+			0.0f, 0.0f, e, n * (1.0f - e),
+			0.0f, 0.0f, 1.0f, 0.0f
+		);*/
+
+		//infine frustum projection
+		//glm::mat4 frustumProj;
+		//float g = 1.0f / tan(fovy * 0.5f);
+		//float e = 1.0f - 0.00001f;
+
+		//frustumProj = glm::mat4(
+		//	g / s, 0.0f, 0.0f, 0.0f,
+		//	0.0f, g, 0.0f, 0.0f,
+		//	0.0f, 0.0f, e, -n * e,
+		//	0.0f, 0.0f, 1.0f, 0.0f
+		//);
+
+		//frustum projection
+		float g = 1.0f / std::tan(fovy * 0.5f);
+		float k = f / (f - n);
+
+		frustumProj = glm::mat4(
+			g / s, 0.0f, 0.0f, 0.0f,
+			0.0f, g, 0.0f, 0.0f,
+			0.0f, 0.0f, k, -n * k,
+			0.0f, 0.0f, 1.0f, 0.0f
+		);
+
+
+		//reverse frustum projection
+		//float g = 1.0f / std::tan(fovy * 0.5f);
+		//float k = n / (n - f);
+
+		//frustumProj = glm::mat4(
+		//	g / s, 0.0f, 0.0f, 0.0f,
+		//	0.0f, g, 0.0f, 0.0f,
+		//	0.0f, 0.0f, k, -f * k,
+		//	0.0f, 0.0f, 1.0f, 0.0f
+		//);
+
+		return frustumProj;
 	}
 
 	void Camera::Up()
@@ -46,6 +106,7 @@ namespace Rbk
 	glm::mat4 Camera::LookAt()
 	{
 		m_View = glm::lookAt(m_Pos, m_Pos + m_CameraFront, m_CameraUp);
+		//m_View *= FrustumProj(45, 16 / 9, 0.1f, 100.0f);
 		return m_View;
 	}
 

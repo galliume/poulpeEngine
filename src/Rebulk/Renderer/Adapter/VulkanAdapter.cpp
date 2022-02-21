@@ -220,7 +220,11 @@ namespace Rbk
 			for (int i = totalInstances - 1; i >= 0; i--) {
 
 				mesh.ubos[i].view = m_Camera->LookAt();
-
+				glm::mat4 projection;
+				//mesh.ubos[i].proj = glm::perspective(glm::radians(45.0f), m_Renderer->GetSwapChainExtent().width / (float)m_Renderer->GetSwapChainExtent().height, 0.1f, 100.0f);
+				mesh.ubos[i].proj = m_Camera->FrustumProj(60.0f, m_Renderer->GetSwapChainExtent().width / (float)m_Renderer->GetSwapChainExtent().height, 0.1f, 100.0f);
+				//mesh.ubos[i].proj[1][1] *= -1;
+				
 				if (i == nextChunk) {
 
 					nextChunk -= uniformBufferChunkSize;
