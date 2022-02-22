@@ -54,17 +54,18 @@ namespace Rbk
 		//);
 
 		//frustum projection
-		float g = 1.0f / std::tan(fovy * 0.5f);
-		float k = f / (f - n);
+		//float g = 1.0f / std::tan(fovy * 0.5f);
+		//float k = f / (f - n);
 
-		frustumProj = glm::mat4(
-			g / s, 0.0f, 0.0f, 0.0f,
-			0.0f, g, 0.0f, 0.0f,
-			0.0f, 0.0f, k, -n * k,
-			0.0f, 0.0f, 1.0f, 0.0f
-		);
-
-
+		//frustumProj = glm::mat4(
+		//	g / s, 0.0f, 0.0f, 0.0f,
+		//	0.0f, g, 0.0f, 0.0f,
+		//	0.0f, 0.0f, k, -n * k,
+		//	0.0f, 0.0f, 1.0f, 0.0f
+		//);
+		//float z = (2 * n * f) / (f + n);
+		//m_Pos.z = z;
+		
 		//reverse frustum projection
 		//float g = 1.0f / std::tan(fovy * 0.5f);
 		//float k = n / (n - f);
