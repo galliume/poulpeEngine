@@ -85,7 +85,7 @@ namespace Rbk
 
 	void Application::Run()
 	{		
-		glm::vec3 pos1 = glm::vec3(0.01f, 0.01f, 0.01f);
+		glm::vec3 pos1 = glm::vec3(0.001f, 0.001f, 0.001f);
 		glm::vec3 pos2 = glm::vec3(-0.5f, -0.5f, -0.5f);
 		glm::vec3 pos3 = glm::vec3(0.1f, -0.8f, 0.0f);
 		glm::vec3 pos4 = glm::vec3(0.6f, -0.18f, 0.5f);
