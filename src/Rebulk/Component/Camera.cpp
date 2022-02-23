@@ -107,7 +107,6 @@ namespace Rbk
 	glm::mat4 Camera::LookAt()
 	{
 		m_View = glm::lookAt(m_Pos, m_Pos + m_CameraFront, m_CameraUp);
-		//m_View *= FrustumProj(45, 16 / 9, 0.1f, 100.0f);
 		return m_View;
 	}
 
