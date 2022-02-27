@@ -36,23 +36,9 @@ namespace Rbk
 		ubo.model = glm::translate(ubo.model, pos);
 		ubo.model = glm::scale(ubo.model, glm::vec3(0.05f, 0.05f, 0.05f));
 		
-		float fovy = glm::radians(60.0f);
-		float f = 100.0f;
-		float n = 0.1f;
-		float s = 2560.0f / 1440.0f;
-		float k = f / (f - n);
-
-		float g = 1.0f / tan(fovy * 0.5f);
-		float e = 0.0f;
-
-		glm::mat4 frustumProj = glm::mat4(0.0f);
-		frustumProj[0][0] = g / s;
-		frustumProj[1][1] = g;
-		frustumProj[2][2] = e;
-		frustumProj[2][3] = n * (1.0f - e);
-		frustumProj[3][3] = 1.0f;
-
-		ubo.proj = frustumProj;
+		float s = m_Renderer->GetSwapChainExtent().width / (float)m_Renderer->GetSwapChainExtent().height;
+		
+		ubo.proj = Rbk::Camera::FrustumProj(glm::radians(60.0f), s, 0.1f, 100.0f);
 		//ubo.proj[1][1] *= -1;
 		
 		mesh.ubos.emplace_back(ubo);
