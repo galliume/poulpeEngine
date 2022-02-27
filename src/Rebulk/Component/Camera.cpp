@@ -17,7 +17,6 @@ namespace Rbk
 			glm::vec3(0.0f, 0.0f, 0.0f),
 			glm::vec3(0.0f, 1.0f, 0.0f)
 		);
-		//m_View = FrustumProj(45, 2560/1440, 0.1f, 100.0f);
 	}
 
 	/**
@@ -28,8 +27,6 @@ namespace Rbk
 	**/
 	glm::mat4 Camera::FrustumProj(float fovy, float s, float n, float f)
 	{
-		glm::mat4 frustumProj;
-
 		//infine reverse frustum projection
 		/*float g = 1.0f / tan(fovy * 0.5f);
 		float e = 0.1f;
@@ -76,6 +73,17 @@ namespace Rbk
 		//	0.0f, 0.0f, k, -f * k,
 		//	0.0f, 0.0f, 1.0f, 0.0f
 		//);
+		float k = f / (f - n);
+
+		float g = 1.0f / tan(fovy * 0.5f);
+		float e = 0.0f;
+
+		glm::mat4 frustumProj = glm::mat4(0.0f);
+		frustumProj[0][0] = g / s;
+		frustumProj[1][1] = g;
+		frustumProj[2][2] = e;
+		frustumProj[2][3] = n * (1.0f - e);
+		frustumProj[3][3] = 1.0f;
 
 		return frustumProj;
 	}
@@ -83,13 +91,13 @@ namespace Rbk
 	void Camera::Up()
 	{
 		Rbk::Log::GetLogger()->debug("go up");
-		m_Pos += m_Speed * m_CameraFront;
+		m_Pos -= m_Speed * m_CameraFront;
 	}
 
 	void Camera::Down()
 	{
 		Rbk::Log::GetLogger()->debug("go down");
-		m_Pos -= m_Speed * m_CameraFront;
+		m_Pos += m_Speed * m_CameraFront;
 	}
 
 	void Camera::Left()
