@@ -97,15 +97,15 @@ namespace Rbk
 		textureManager->AddTexture("minecraft_grass", "mesh/minecraft/Grass_Block_TEX.png");
 		textureManager->AddTexture("viking_room", "mesh/viking/viking_room.png");
 		
-		//for (int x = 0; x < 3; x++) {
-		//	for (int y = 0; y < 3; y++) {
-				//glm::vec3 posCube = glm::vec3(0.3f / x, -0.32f, 1.0f / y);
+		for (int x = 0; x < 3; x++) {
+			for (int y = 0; y < 3; y++) {
+				glm::vec3 posCube = glm::vec3(0.3f / x, -0.32f, 1.0f / y);
 				//glm::vec3 posMoon = glm::vec3(0.3f / x, -0.15f, 1.0f / y);
 
-				meshManager->AddWorldMesh("cube", "mesh/minecraft/Grass_Block.obj", "minecraft_grass", pos1);
+				meshManager->AddWorldMesh("cube", "mesh/minecraft/Grass_Block.obj", "minecraft_grass", posCube);
 				//meshManager->AddWorldMesh("moon", "mesh/moon/moon.obj", "diffuse_moon", posMoon);
-		//	}
-		//}
+			}
+		}
 
 		//meshManager->AddWorldMesh("room", "mesh/viking/viking_room.obj", "viking_room", pos4);
 
