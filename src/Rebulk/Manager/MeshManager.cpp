@@ -34,14 +34,14 @@ namespace Rbk
 		UniformBufferObject ubo;
 		ubo.model = glm::mat4(1.0f);
 		ubo.model = glm::translate(ubo.model, pos);
-		ubo.model = glm::scale(ubo.model, glm::vec3(0.1f, 0.1f, 0.1f));
-		ubo.view = glm::translate(view, glm::vec3(0.0f, 0.0f, -0.0f));
-		glm::mat4 projection;
-		ubo.proj = glm::perspective(glm::radians(45.0f), m_Renderer->GetSwapChainExtent().width / (float)m_Renderer->GetSwapChainExtent().height, 0.1f, 100.0f);
-		ubo.proj[1][1] *= -1;
-
+		ubo.model = glm::scale(ubo.model, glm::vec3(0.05f, 0.05f, 0.05f));
+		
+		float s = m_Renderer->GetSwapChainExtent().width / (float)m_Renderer->GetSwapChainExtent().height;
+		
+		ubo.proj = Rbk::Camera::FrustumProj(glm::radians(60.0f), s, 0.1f, 100.0f);
+		//ubo.proj[1][1] *= -1;
+		
 		mesh.ubos.emplace_back(ubo);
-
 		if (0 != m_WorldMeshesLoaded.count(name)) {
 			m_WorldMeshesLoaded[name][0] += 1;
 			m_WorldMeshes[m_WorldMeshesLoaded[name][1]] = mesh;
