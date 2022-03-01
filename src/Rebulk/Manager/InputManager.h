@@ -6,6 +6,7 @@
 namespace Rbk
 {
 	static bool m_CanMoveCamera;
+	static bool m_FirtMouseMove;
 
 	class InputManager
 	{

@@ -9,6 +9,7 @@ namespace Rbk
 		glfwGetWindowSize(m_Window->Get(), &width, &height);
 		m_LastX = 800;
 		m_LastY = 600;
+		Rbk::m_FirtMouseMove = true;
 	}
 	
 	void InputManager::Init()
@@ -75,12 +76,18 @@ namespace Rbk
 		float xPos = static_cast<float>(x);
 		float yPos = static_cast<float>(y);
 
+		if (Rbk::m_FirtMouseMove) {
+			m_LastX = xPos;
+			m_LastY = yPos;
+			Rbk::m_FirtMouseMove = false;
+		}
+
 		float xoffset = xPos - m_LastX;
 		float yoffset = m_LastY - yPos;
 		m_LastX = xPos;
 		m_LastY = yPos;
 	
-		const float sensitivity = 0.00001f;
+		const float sensitivity = 0.001f;
 		xoffset *= sensitivity;
 		yoffset *= sensitivity;
 	

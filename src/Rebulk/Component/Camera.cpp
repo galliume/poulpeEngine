@@ -7,10 +7,11 @@ namespace Rbk
 		m_Pos = glm::vec3(0.0f, 0.0f, 3.0f);
 		m_Target = glm::vec3(0.0f, 0.0f, 0.0f);
 		m_Direction = glm::normalize(m_Pos - m_Target);
-		m_Up = glm::vec3(0.0f, 1.0f, 0.0f);
+		m_Up = glm::vec3(0.0f, 10.0f, 0.0f);
 		m_CameraRight = glm::normalize(glm::cross(m_Up, m_Direction));
-		m_CameraUp = glm::cross(m_Direction, m_CameraRight);
-		m_CameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
+		//m_CameraUp = glm::cross(m_Direction, m_CameraRight);
+		m_CameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
+		m_CameraFront = glm::vec3(0.0f, 0.0f, -10.0f);
 
 		m_View = glm::lookAt(
 			glm::vec3(0.0f, 0.0f, 3.0f),
@@ -73,16 +74,16 @@ namespace Rbk
 		//	0.0f, 0.0f, k, -f * k,
 		//	0.0f, 0.0f, 1.0f, 0.0f
 		//);
-		float k = f / (f - n);
+		//float k = f / (f - n);
 
 		float g = 1.0f / tan(fovy * 0.5f);
-		float e = 0.0f;
+		float e = 1.0f - 0.0f;
 
 		glm::mat4 frustumProj = glm::mat4(0.0f);
 		frustumProj[0][0] = g / s;
 		frustumProj[1][1] = g;
 		frustumProj[2][2] = e;
-		frustumProj[2][3] = n * (1.0f - e);
+		frustumProj[2][3] = -n * e;
 		frustumProj[3][3] = 1.0f;
 
 		return frustumProj;
@@ -91,13 +92,13 @@ namespace Rbk
 	void Camera::Up()
 	{
 		Rbk::Log::GetLogger()->debug("go up");
-		m_Pos -= m_Speed * m_CameraFront;
+		m_Pos += m_Speed * m_CameraFront;
 	}
 
 	void Camera::Down()
 	{
 		Rbk::Log::GetLogger()->debug("go down");
-		m_Pos += m_Speed * m_CameraFront;
+		m_Pos -= m_Speed * m_CameraFront;
 	}
 
 	void Camera::Left()
@@ -109,7 +110,7 @@ namespace Rbk
 	void Camera::Right()
 	{
 		Rbk::Log::GetLogger()->debug("go right");
-		 m_Pos += glm::normalize(glm::cross(m_CameraFront, m_CameraUp)) * m_Speed;
+		m_Pos += glm::normalize(glm::cross(m_CameraFront, m_CameraUp)) * m_Speed;
 	}
 
 	glm::mat4 Camera::LookAt()

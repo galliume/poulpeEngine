@@ -11,7 +11,7 @@ namespace Rbk
 	public:
 
 		MeshManager(VulkanRenderer* renderer);
-		void AddWorldMesh(const char* name, const char* path, const char* textureName, glm::vec3 pos, bool shouldInverseTextureY = true);
+		void AddWorldMesh(const char* name, const char* path, const char* textureName, glm::vec3 pos, glm::vec3 scale, bool shouldInverseTextureY = true);
 		inline std::vector<Mesh>* GetWorldMeshes() { return &m_WorldMeshes; };
 		inline std::map<const char*, std::array<uint32_t, 2>> GetWoldMeshesLoaded() { return m_WorldMeshesLoaded; };
 		uint32_t GetWorldVerticesCount();
