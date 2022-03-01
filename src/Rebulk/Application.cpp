@@ -85,7 +85,6 @@ namespace Rbk
 
 	void Application::Run()
 	{		
-		glm::vec3 pos3 = glm::vec3(0.1f, -0.8f, 0.0f);
 		glm::vec3 pos4 = glm::vec3(0.6f, -0.18f, 0.5f);
 		glm::vec3 pos5 = glm::vec3(1.6f, -0.55f, 1.5f);
 
@@ -124,6 +123,10 @@ namespace Rbk
 
 		pos2 = glm::vec3(1.2f, -1.3f, -0.9f);
 		meshManager->AddWorldMesh("tree", "mesh/tree/tree.obj", "tree_tex", pos2, scaleTree);
+
+		glm::vec3 pos3 = glm::vec3(0.1f, -0.8f, 0.0f);
+		glm::vec3 scaleSkybox = glm::vec3(1.0f, 1.0f, 1.0f);
+		meshManager->AddWorldMesh("skybox", "mesh/cube/cube.obj", "sky_skybox_texture", pos3, scaleSkybox);
 
 		double lastTime = glfwGetTime();
 		
