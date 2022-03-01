@@ -85,29 +85,45 @@ namespace Rbk
 
 	void Application::Run()
 	{		
-		glm::vec3 pos1 = glm::vec3(0.001f, 0.001f, 0.001f);
-		glm::vec3 pos2 = glm::vec3(-0.5f, -0.5f, -0.5f);
 		glm::vec3 pos3 = glm::vec3(0.1f, -0.8f, 0.0f);
 		glm::vec3 pos4 = glm::vec3(0.6f, -0.18f, 0.5f);
-		glm::vec3 pos5 = glm::vec3(1.6f, -0.55f, 1.5f);		
+		glm::vec3 pos5 = glm::vec3(1.6f, -0.55f, 1.5f);
 
 		shaderManager->AddShader("main", "shaders/spv/vert.spv", "shaders/spv/frag.spv");
 
-		textureManager->AddTexture("diffuse_moon", "mesh/moon/diffuse.jpg");
 		textureManager->AddTexture("minecraft_grass", "mesh/minecraft/Grass_Block_TEX.png");
-		textureManager->AddTexture("viking_room", "mesh/viking/viking_room.png");
-		
-		for (int x = 0; x < 3; x++) {
-			for (int y = 0; y < 3; y++) {
-				glm::vec3 posCube = glm::vec3(0.3f / x, -0.32f, 1.0f / y);
-				//glm::vec3 posMoon = glm::vec3(0.3f / x, -0.15f, 1.0f / y);
+		textureManager->AddTexture("sky_skybox_texture", "texture/skybox/sky_skybox_texture.jpg");
+		textureManager->AddTexture("campfire_tex", "mesh/campfire/Campfire_MAT_BaseColor_01.jpg");
+		textureManager->AddTexture("tree_tex", "mesh/tree/tree.jpg");
 
-				meshManager->AddWorldMesh("cube", "mesh/minecraft/Grass_Block.obj", "minecraft_grass", posCube);
-				//meshManager->AddWorldMesh("moon", "mesh/moon/moon.obj", "diffuse_moon", posMoon);
+		glm::vec3 scaleMinecraft = glm::vec3(0.1f, 0.1f, 0.1f);
+
+		for (int x = -5; x < 5; x++) {
+			for (int y = 0; y < 10; y++) {
+				glm::vec3 posCube = glm::vec3(-0.25f * x, -1.5f, -0.25f * y);
+				meshManager->AddWorldMesh("cube", "mesh/minecraft/Grass_Block.obj", "minecraft_grass", posCube, scaleMinecraft);
 			}
 		}
 
-		//meshManager->AddWorldMesh("room", "mesh/viking/viking_room.obj", "viking_room", pos4);
+		glm::vec3 pos1 = glm::vec3(0.25f, -1.3f, -0.75f);
+		glm::vec3 scaleCamp = glm::vec3(0.002f, 0.002f, 0.002f);
+		meshManager->AddWorldMesh("campfire", "mesh/campfire/Campfire.obj", "campfire_tex", pos1, scaleCamp);
+
+		glm::vec3 pos2 = glm::vec3(-1.0f, -1.3f, -1.4f);
+		glm::vec3 scaleTree = glm::vec3(0.0008f, 0.0008f, 0.0008f);
+		meshManager->AddWorldMesh("tree", "mesh/tree/tree.obj", "tree_tex", pos2, scaleTree);
+
+		pos2 = glm::vec3(-0.7f, -1.3f, -1.9f);
+		meshManager->AddWorldMesh("tree", "mesh/tree/tree.obj", "tree_tex", pos2, scaleTree);
+
+		pos2 = glm::vec3(-0.25f, -1.3f, -1.2f);
+		meshManager->AddWorldMesh("tree", "mesh/tree/tree.obj", "tree_tex", pos2, scaleTree);
+
+		pos2 = glm::vec3(0.7f, -1.3f, -1.6f);
+		meshManager->AddWorldMesh("tree", "mesh/tree/tree.obj", "tree_tex", pos2, scaleTree);
+
+		pos2 = glm::vec3(1.2f, -1.3f, -0.9f);
+		meshManager->AddWorldMesh("tree", "mesh/tree/tree.obj", "tree_tex", pos2, scaleTree);
 
 		double lastTime = glfwGetTime();
 		
