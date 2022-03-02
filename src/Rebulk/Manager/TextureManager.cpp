@@ -7,6 +7,57 @@ namespace Rbk
 
 	}
 
+	void TextureManager::AddSkyBox(std::vector<const char*> skyboxImages)
+	{	
+		int texWidth, texHeight, texChannels;
+		std::vector<stbi_uc*>skyboxPixels;
+
+		for (const char* path : skyboxImages) {
+			if (!std::filesystem::exists(path)) {
+				Rbk::Log::GetLogger()->critical("texture file {} does not exits.", path);
+				return;
+			}
+
+			stbi_uc* pixels = stbi_load(path, &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
+
+			if (!pixels) {
+				Rbk::Log::GetLogger()->warn("failed to load skybox texture image %s", path);
+				return;
+			}
+
+			skyboxPixels.emplace_back(pixels);
+		}
+
+
+		VkImage skyboxImage;
+		VkDeviceMemory textureImageMemory;
+		uint32_t mipLevels = 1;
+
+
+		VkCommandPool commandPool = m_Renderer->CreateCommandPool();
+
+		VkCommandBuffer commandBuffer = m_Renderer->AllocateCommandBuffers(commandPool)[0];
+		m_Renderer->BeginCommandBuffer(commandBuffer);
+		m_Renderer->CreateSkyboxTextureImage(commandBuffer, skyboxPixels, texWidth, texHeight, mipLevels, skyboxImage, textureImageMemory, VK_FORMAT_R8G8B8A8_SRGB);
+
+
+		VkImageView textureImageView = m_Renderer->CreateSkyboxImageView(skyboxImage, VK_FORMAT_R8G8B8A8_SRGB, mipLevels);
+		VkSampler textureSampler = m_Renderer->CreateSkyboxTextureSampler(mipLevels);
+
+		m_Skybox.image = skyboxImage;
+		m_Skybox.imageMemory = textureImageMemory;
+		m_Skybox.imageView = textureImageView;
+		m_Skybox.sampler = textureSampler;
+		m_Skybox.mipLevels = mipLevels;
+		m_Skybox.width = texWidth;
+		m_Skybox.height = texHeight;
+		//m_Skybox.channels = texChannels;
+
+		Rbk::Log::GetLogger()->debug("Added skybox ");
+
+		vkDestroyCommandPool(m_Renderer->GetDevice(), commandPool, nullptr);
+	}
+
 	void TextureManager::AddTexture(const char* name, const char* path)
 	{
 		if (!std::filesystem::exists(path)) {

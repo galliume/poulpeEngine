@@ -22,6 +22,24 @@ namespace Rbk
 		VkImageView depthImageView;
 	};
 
+	struct Skybox
+	{
+		VkImage image;
+		VkDeviceMemory imageMemory;
+		VkImageView imageView;
+		VkSampler sampler;
+		uint32_t mipLevels;
+		uint32_t width;
+		uint32_t height;
+		uint32_t channels;
+		VkImage colorImage;
+		VkDeviceMemory colorImageMemory;
+		VkImageView colorImageView;
+		VkImage depthImage;
+		VkDeviceMemory depthImageMemory;
+		VkImageView depthImageView;
+	};
+
 	struct UniformBufferObject {
 		alignas(16) glm::mat4 model;
 		alignas(16) glm::mat4 view;
