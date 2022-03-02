@@ -17,6 +17,33 @@ namespace Rbk
 		return Rbk::TinyObjLoader::LoadMesh(path, shouldInverseTextureY);
 	}
 
+	void MeshManager::AddSkyboxMesh(const char* name, const char* path, glm::vec3 pos, glm::vec3 scale, bool shouldInverseTextureY)
+	{
+		Mesh mesh;
+		mesh = Load(path, shouldInverseTextureY);
+		mesh.name = name;
+		
+		glm::mat4 view = glm::mat4(1.0f);
+
+		UniformBufferObject ubo;
+		ubo.model = glm::mat4(1.0f);
+		ubo.model = glm::translate(ubo.model, pos);
+		ubo.model = glm::scale(ubo.model, scale);
+		ubo.view = glm::translate(view, glm::vec3(0.0f, 0.0f, 0.0f));
+
+		float s = (float)m_Renderer->GetSwapChainExtent().width / (float)m_Renderer->GetSwapChainExtent().height;
+
+		//ubo.proj = Rbk::Camera::FrustumProj(glm::radians(60.0f), s, 0.1f, 100.0f);
+		ubo.proj = glm::perspective(glm::radians(60.0f), m_Renderer->GetSwapChainExtent().width / (float)m_Renderer->GetSwapChainExtent().height, 0.1f, 100.0f);
+		ubo.proj[1][1] *= -1;
+
+		mesh.ubos.emplace_back(ubo);
+
+		m_SkyboxMesh = mesh;
+
+		Rbk::Log::GetLogger()->debug("Added skybox mesh to the world {} from {}", name, path);
+	}
+
 	void MeshManager::AddWorldMesh(const char* name, const char* path, const char* textureName, glm::vec3 pos, glm::vec3 scale, bool shouldInverseTextureY)
 	{		
 		Mesh mesh;

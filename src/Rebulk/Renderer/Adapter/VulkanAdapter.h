@@ -30,6 +30,7 @@ namespace Rbk
 		virtual void AddShaderManager(ShaderManager* shaderManager) override;
 
 		virtual void PrepareWorld() override;
+		void PrepareSkyBox();
 		virtual void PrepareDraw() override;
 		virtual void Draw() override;
 		virtual void Destroy() override;

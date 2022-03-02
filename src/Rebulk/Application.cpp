@@ -89,6 +89,7 @@ namespace Rbk
 		glm::vec3 pos5 = glm::vec3(1.6f, -0.55f, 1.5f);
 
 		shaderManager->AddShader("main", "shaders/spv/vert.spv", "shaders/spv/frag.spv");
+		shaderManager->AddShader("skybox", "shaders/spv/skybox_vert.spv", "shaders/spv/skybox_frag.spv");
 
 		textureManager->AddTexture("minecraft_grass", "mesh/minecraft/Grass_Block_TEX.png");
 		textureManager->AddTexture("campfire_tex", "mesh/campfire/Campfire_MAT_BaseColor_01.jpg");
@@ -135,7 +136,7 @@ namespace Rbk
 		textureManager->AddSkyBox(skyboxImages);
 		glm::vec3 pos3 = glm::vec3(0.1f, -0.8f, 0.0f);
 		glm::vec3 scaleSkybox = glm::vec3(1.0f, 1.0f, 1.0f);
-		//meshManager->AddWorldMesh("skybox", "mesh/cube/cube.obj", "sky_skybox_texture", pos3, scaleSkybox);
+		meshManager->AddSkyboxMesh("skybox", "mesh/cube/cube.obj", pos3, scaleSkybox);
 
 		double lastTime = glfwGetTime();
 		

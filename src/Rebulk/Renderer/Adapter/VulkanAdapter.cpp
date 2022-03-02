@@ -183,11 +183,81 @@ namespace Rbk
 		UpdateWorldPositions();
 	}
 
+	void VulkanAdapter::PrepareSkyBox()
+	{
+		Mesh* mesh = m_MeshManager->GetSkyboxMesh();
+
+		std::pair<VkBuffer, VkDeviceMemory> uniformBuffer = m_Renderer->CreateUniformBuffers(1);
+		mesh->uniformBuffers.emplace_back(uniformBuffer);
+
+		mesh->vertexBuffer = m_Renderer->CreateVertexBuffer(m_CommandPool, mesh->vertices);
+		mesh->indicesBuffer = m_Renderer->CreateIndexBuffer(m_CommandPool, mesh->indices);
+
+		std::array<VkDescriptorPoolSize, 2> poolSizes{};
+		poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+		poolSizes[0].descriptorCount = 1;
+		poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+		poolSizes[1].descriptorCount = 1;
+
+		VkDescriptorPool descriptorPool = m_Renderer->CreateDescriptorPool(poolSizes, m_SwapChainImages.size());
+
+		VkDescriptorSetLayoutBinding uboLayoutBinding{};
+		uboLayoutBinding.binding = 0;
+		uboLayoutBinding.descriptorCount = 1;
+		uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+		uboLayoutBinding.pImmutableSamplers = nullptr;
+		uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+
+		VkDescriptorSetLayoutBinding samplerLayoutBinding{};
+		samplerLayoutBinding.binding = 1;
+		samplerLayoutBinding.descriptorCount = 1;
+		samplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+		samplerLayoutBinding.pImmutableSamplers = nullptr;
+		samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+		std::vector<VkDescriptorSetLayoutBinding> bindings = { uboLayoutBinding, samplerLayoutBinding };
+
+		VkDescriptorSetLayout desriptorSetLayout = m_Renderer->CreateDescriptorSetLayout(
+			bindings, VK_DESCRIPTOR_SET_LAYOUT_CREATE_UPDATE_AFTER_BIND_POOL_BIT
+		);
+
+		for (int i = 0; i < m_SwapChainImages.size(); i++) {
+			VkDescriptorSet descriptorSet = m_Renderer->CreateDescriptorSets(descriptorPool, { desriptorSetLayout }, 1);
+			m_Renderer->UpdateDescriptorSets(mesh->uniformBuffers, m_TextureManager->GetSkyboxTexture(), descriptorSet);
+			mesh->descriptorSets.emplace_back(descriptorSet);
+		}
+
+		mesh->pipelineLayout = m_Renderer->CreatePipelineLayout(mesh->descriptorSets, { desriptorSetLayout });
+
+		VulkanShaders shaders = m_ShaderManager->GetShaders();
+		const char* shaderName = "skybox";
+		std::array<VkShaderModule, 2> shader = shaders.shaders[shaderName];
+
+		std::vector<VkPipelineShaderStageCreateInfo>shadersStageInfos;
+
+		VkPipelineShaderStageCreateInfo vertShaderStageInfo{};
+		vertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+		vertShaderStageInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
+		vertShaderStageInfo.module = shader[0];
+		vertShaderStageInfo.pName = "main";
+		shadersStageInfos.emplace_back(vertShaderStageInfo);
+
+		VkPipelineShaderStageCreateInfo fragShaderStageInfo{};
+		fragShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+		fragShaderStageInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
+		fragShaderStageInfo.module = shader[1];
+		fragShaderStageInfo.pName = "main";
+		shadersStageInfos.emplace_back(fragShaderStageInfo);
+
+		mesh->graphicsPipeline = m_Renderer->CreateGraphicsPipeline(m_RenderPass, mesh->pipelineLayout, mesh->pipelineCache, shadersStageInfos);
+	}
+
 	void VulkanAdapter::PrepareDraw()
 	{
 		if (m_IsPrepared) return;
 		
 		//@todo prepare data for Camera / Player
+		PrepareSkyBox();
 
 		m_IsPrepared = true;
 	}
@@ -272,6 +342,10 @@ namespace Rbk
 				m_Renderer->Draw(m_CommandBuffers[m_ImageIndex], &mesh, m_ImageIndex);
 			}
 		
+			//draw the skybox !
+			m_Renderer->BindPipeline(m_CommandBuffers[m_ImageIndex], m_MeshManager->GetSkyboxMesh()->graphicsPipeline);
+			m_Renderer->Draw(m_CommandBuffers[m_ImageIndex], m_MeshManager->GetSkyboxMesh(), m_ImageIndex);
+
 			m_Renderer->EndRenderPass(m_CommandBuffers[m_ImageIndex]);
 			m_Renderer->EndCommandBuffer(m_CommandBuffers[m_ImageIndex]);
 

@@ -28,18 +28,15 @@ namespace Rbk
 			skyboxPixels.emplace_back(pixels);
 		}
 
-
 		VkImage skyboxImage;
 		VkDeviceMemory textureImageMemory;
 		uint32_t mipLevels = 1;
-
 
 		VkCommandPool commandPool = m_Renderer->CreateCommandPool();
 
 		VkCommandBuffer commandBuffer = m_Renderer->AllocateCommandBuffers(commandPool)[0];
 		m_Renderer->BeginCommandBuffer(commandBuffer);
 		m_Renderer->CreateSkyboxTextureImage(commandBuffer, skyboxPixels, texWidth, texHeight, mipLevels, skyboxImage, textureImageMemory, VK_FORMAT_R8G8B8A8_SRGB);
-
 
 		VkImageView textureImageView = m_Renderer->CreateSkyboxImageView(skyboxImage, VK_FORMAT_R8G8B8A8_SRGB, mipLevels);
 		VkSampler textureSampler = m_Renderer->CreateSkyboxTextureSampler(mipLevels);
@@ -53,7 +50,7 @@ namespace Rbk
 		m_Skybox.height = texHeight;
 		//m_Skybox.channels = texChannels;
 
-		Rbk::Log::GetLogger()->debug("Added skybox ");
+		Rbk::Log::GetLogger()->debug("Added skybox");
 
 		vkDestroyCommandPool(m_Renderer->GetDevice(), commandPool, nullptr);
 	}
