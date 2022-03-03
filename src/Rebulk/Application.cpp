@@ -140,7 +140,7 @@ namespace Rbk
 		textureManager->AddSkyBox(skyboxImages);
 		glm::vec3 pos3 = glm::vec3(1.6f, -0.55f, 1.5f);
 		glm::vec3 scaleSkybox = glm::vec3(1.0f, 1.0f, 1.0f);
-		meshManager->AddSkyboxMesh("skybox", "mesh/cube/cube.obj", pos3, scaleSkybox);
+		meshManager->AddSkyboxMesh("skybox", pos3, scaleSkybox);
 
 		double lastTime = glfwGetTime();
 		

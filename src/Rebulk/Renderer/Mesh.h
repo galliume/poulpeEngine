@@ -28,6 +28,10 @@ namespace Rbk
 		alignas(16) glm::mat4 proj;
 	};
 
+	struct CubeUniformBufferObject : UniformBufferObject {
+		alignas(16) glm::vec4 index;
+	};
+
 	struct Vertex {
 		glm::vec3 pos;
 		glm::vec3 color;

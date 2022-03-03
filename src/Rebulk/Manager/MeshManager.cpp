@@ -17,7 +17,7 @@ namespace Rbk
 		return Rbk::TinyObjLoader::LoadMesh(path, shouldInverseTextureY);
 	}
 
-	void MeshManager::AddSkyboxMesh(const char* name, const char* path, glm::vec3 pos, glm::vec3 scale, bool shouldInverseTextureY)
+	void MeshManager::AddSkyboxMesh(const char* name, glm::vec3 pos, glm::vec3 scale, bool shouldInverseTextureY)
 	{
 		float skyboxVertices[][3] = { 
 			{ -1.0f, -1.0f,  1.0f },
@@ -68,13 +68,12 @@ namespace Rbk
 		for (uint32_t i : indices) {
 			mesh.indices.emplace_back(i);
 		}
-		//mesh = Load(path, shouldInverseTextureY);
 
 		mesh.name = name;
 		
 		glm::mat4 view = glm::mat4(1.0f);
 
-		UniformBufferObject ubo;
+		CubeUniformBufferObject ubo;
 		ubo.model = glm::mat4(1.0f);
 		ubo.view = glm::mat4(glm::mat3(glm::lookAt(
 			glm::vec3(0.0f, 0.0f, 3.0f),
@@ -92,12 +91,14 @@ namespace Rbk
 		float center = (6 * offset) / 2.0f - (offset * 0.5f);
 		for (uint32_t i = 0; i < 6; i++) {
 			ubo.model = glm::translate(glm::mat4(1.0f), glm::vec3(i * offset - center, 0.0f, 0.0f));
+			ubo.model = glm::scale(ubo.model, glm::vec3(0.5f));
+			ubo.index.x = (float)i;
 			mesh.ubos.emplace_back(ubo);
 		}
 
 		m_SkyboxMesh = mesh;
 
-		Rbk::Log::GetLogger()->debug("Added skybox mesh to the world {} from {}", name, path);
+		Rbk::Log::GetLogger()->debug("Added skybox mesh to the world {}", name);
 	}
 
 	void MeshManager::AddWorldMesh(const char* name, const char* path, const char* textureName, glm::vec3 pos, glm::vec3 scale, bool shouldInverseTextureY)

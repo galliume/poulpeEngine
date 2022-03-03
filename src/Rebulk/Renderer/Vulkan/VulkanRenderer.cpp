@@ -353,6 +353,7 @@ namespace Rbk {
 		deviceFeatures.fillModeNonSolid =  VK_TRUE;
 		deviceFeatures.samplerAnisotropy = VK_TRUE;
 		deviceFeatures.sampleRateShading = VK_FALSE;
+		deviceFeatures.imageCubeArray = VK_TRUE;
 
 		VkPhysicalDeviceDescriptorIndexingFeatures descriptorIndexing{};
 		descriptorIndexing.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES;
@@ -571,7 +572,7 @@ namespace Rbk {
 		VkImageViewCreateInfo createInfo{};
 		createInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
 		createInfo.image = image;
-		createInfo.viewType = VK_IMAGE_VIEW_TYPE_CUBE;
+		createInfo.viewType = VK_IMAGE_VIEW_TYPE_CUBE_ARRAY;
 		createInfo.format = format;
 		createInfo.components.r = VK_COMPONENT_SWIZZLE_R;
 		createInfo.components.g = VK_COMPONENT_SWIZZLE_G;
@@ -1393,6 +1394,16 @@ namespace Rbk {
 		std::pair<VkBuffer, VkDeviceMemory> uniformBuffers;
 
 		VkDeviceSize bufferSize = sizeof(UniformBufferObject) * uniformBuffersCount;
+		CreateBuffer(bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, uniformBuffers.first, uniformBuffers.second);
+
+		return uniformBuffers;
+	}
+
+	std::pair<VkBuffer, VkDeviceMemory> VulkanRenderer::CreateCubeUniformBuffers(uint32_t uniformBuffersCount)
+	{
+		std::pair<VkBuffer, VkDeviceMemory> uniformBuffers;
+
+		VkDeviceSize bufferSize = sizeof(CubeUniformBufferObject) * uniformBuffersCount;
 		CreateBuffer(bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, uniformBuffers.first, uniformBuffers.second);
 
 		return uniformBuffers;
