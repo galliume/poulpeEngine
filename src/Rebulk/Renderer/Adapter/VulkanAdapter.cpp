@@ -185,13 +185,13 @@ namespace Rbk
 
 	void VulkanAdapter::PrepareSkyBox()
 	{
-		Mesh* mesh = m_MeshManager->GetSkyboxMesh();
+		Mesh& mesh = *m_MeshManager->GetSkyboxMesh();
 
-		std::pair<VkBuffer, VkDeviceMemory> uniformBuffer = m_Renderer->CreateUniformBuffers(1);
-		mesh->uniformBuffers.emplace_back(uniformBuffer);
+		std::pair<VkBuffer, VkDeviceMemory> uniformBuffer = m_Renderer->CreateUniformBuffers(6);
+		mesh.uniformBuffers.emplace_back(uniformBuffer);
 
-		mesh->vertexBuffer = m_Renderer->CreateVertexBuffer(m_CommandPool, mesh->vertices);
-		mesh->indicesBuffer = m_Renderer->CreateIndexBuffer(m_CommandPool, mesh->indices);
+		mesh.vertexBuffer = m_Renderer->CreateVertexBuffer(m_CommandPool, mesh.vertices);
+		mesh.indicesBuffer = m_Renderer->CreateIndexBuffer(m_CommandPool, mesh.indices);
 
 		std::array<VkDescriptorPoolSize, 2> poolSizes{};
 		poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
@@ -223,11 +223,11 @@ namespace Rbk
 
 		for (int i = 0; i < m_SwapChainImages.size(); i++) {
 			VkDescriptorSet descriptorSet = m_Renderer->CreateDescriptorSets(descriptorPool, { desriptorSetLayout }, 1);
-			m_Renderer->UpdateDescriptorSets(mesh->uniformBuffers, m_TextureManager->GetSkyboxTexture(), descriptorSet);
-			mesh->descriptorSets.emplace_back(descriptorSet);
+			m_Renderer->UpdateDescriptorSets(mesh.uniformBuffers, m_TextureManager->GetSkyboxTexture(), descriptorSet);
+			mesh.descriptorSets.emplace_back(descriptorSet);
 		}
 
-		mesh->pipelineLayout = m_Renderer->CreatePipelineLayout(mesh->descriptorSets, { desriptorSetLayout });
+		mesh.pipelineLayout = m_Renderer->CreatePipelineLayout(mesh.descriptorSets, { desriptorSetLayout });
 
 		VulkanShaders shaders = m_ShaderManager->GetShaders();
 		const char* shaderName = "skybox";
@@ -249,7 +249,7 @@ namespace Rbk
 		fragShaderStageInfo.pName = "main";
 		shadersStageInfos.emplace_back(fragShaderStageInfo);
 
-		mesh->graphicsPipeline = m_Renderer->CreateGraphicsPipeline(m_RenderPass, mesh->pipelineLayout, mesh->pipelineCache, shadersStageInfos);
+		mesh.graphicsPipeline = m_Renderer->CreateGraphicsPipeline(m_RenderPass, mesh.pipelineLayout, mesh.pipelineCache, shadersStageInfos);
 	}
 
 	void VulkanAdapter::PrepareDraw()
@@ -344,7 +344,7 @@ namespace Rbk
 		
 			//draw the skybox !
 			m_Renderer->BindPipeline(m_CommandBuffers[m_ImageIndex], m_MeshManager->GetSkyboxMesh()->graphicsPipeline);
-			m_Renderer->Draw(m_CommandBuffers[m_ImageIndex], m_MeshManager->GetSkyboxMesh(), m_ImageIndex);
+			m_Renderer->DrawSkybox(m_CommandBuffers[m_ImageIndex], m_MeshManager->GetSkyboxMesh(), m_ImageIndex);
 
 			m_Renderer->EndRenderPass(m_CommandBuffers[m_ImageIndex]);
 			m_Renderer->EndCommandBuffer(m_CommandBuffers[m_ImageIndex]);

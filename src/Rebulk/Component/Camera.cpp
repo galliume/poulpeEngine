@@ -91,25 +91,21 @@ namespace Rbk
 
 	void Camera::Up()
 	{
-		Rbk::Log::GetLogger()->debug("go up");
 		m_Pos += m_Speed * m_CameraFront;
 	}
 
 	void Camera::Down()
 	{
-		Rbk::Log::GetLogger()->debug("go down");
 		m_Pos -= m_Speed * m_CameraFront;
 	}
 
 	void Camera::Left()
 	{
-		Rbk::Log::GetLogger()->debug("go left");
 		m_Pos -= glm::normalize(glm::cross(m_CameraFront, m_CameraUp)) * m_Speed;
 	}
 
 	void Camera::Right()
 	{
-		Rbk::Log::GetLogger()->debug("go right");
 		m_Pos += glm::normalize(glm::cross(m_CameraFront, m_CameraUp)) * m_Speed;
 	}
 
@@ -126,7 +122,7 @@ namespace Rbk
 
 	void Camera::UpdateYP(float xoffset, float yoffset)
 	{
-		Rbk::Log::GetLogger()->debug("Mouse xoffset {} yoffset {}", xoffset, yoffset);
+		//Rbk::Log::GetLogger()->debug("Mouse xoffset {} yoffset {}", xoffset, yoffset);
 
 		m_Yaw += xoffset;
 		m_Pitch += yoffset;

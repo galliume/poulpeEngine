@@ -9,7 +9,7 @@ namespace Rbk
 
 	void TextureManager::AddSkyBox(std::vector<const char*> skyboxImages)
 	{	
-		int texWidth, texHeight, texChannels;
+		int texWidth = 0, texHeight = 0, texChannels = 0;
 		std::vector<stbi_uc*>skyboxPixels;
 
 		for (const char* path : skyboxImages) {

@@ -19,25 +19,81 @@ namespace Rbk
 
 	void MeshManager::AddSkyboxMesh(const char* name, const char* path, glm::vec3 pos, glm::vec3 scale, bool shouldInverseTextureY)
 	{
+		float skyboxVertices[][3] = { 
+			{ -1.0f, -1.0f,  1.0f },
+			{  1.0f, -1.0f,  1.0f },
+			{  1.0f,  1.0f,  1.0f },
+			{ -1.0f,  1.0f,  1.0f },
+
+			{  1.0f,  1.0f,  1.0f },
+			{  1.0f,  1.0f, -1.0f },
+			{  1.0f, -1.0f, -1.0f },
+			{  1.0f, -1.0f,  1.0f },
+
+			{ -1.0f, -1.0f, -1.0f },
+			{  1.0f, -1.0f, -1.0f },
+			{  1.0f,  1.0f, -1.0f },
+			{ -1.0f,  1.0f, -1.0f },
+
+			{ -1.0f, -1.0f, -1.0f },
+			{ -1.0f, -1.0f,  1.0f },
+			{ -1.0f,  1.0f,  1.0f },
+			{ -1.0f,  1.0f, -1.0f },
+
+			{  1.0f,  1.0f,  1.0f },
+			{ -1.0f,  1.0f,  1.0f },
+			{ -1.0f,  1.0f, -1.0f },
+			{  1.0f,  1.0f, -1.0f },
+
+			{ -1.0f, -1.0f, -1.0f },
+			{  1.0f, -1.0f, -1.0f },
+			{  1.0f, -1.0f,  1.0f },
+			{ -1.0f, -1.0f,  1.0f },
+		};
+
+		std::vector<uint32_t> indices = {
+			0,1,2, 0,2,3, 4,5,6,  4,6,7, 8,9,10, 8,10,11, 12,13,14, 12,14,15, 16,17,18, 16,18,19, 20,21,22, 20,22,23
+		};
+
 		Mesh mesh;
-		mesh = Load(path, shouldInverseTextureY);
+
+		for (auto vert : skyboxVertices) {
+			Vertex vertex;
+			vertex.pos = glm::vec3(vert[0], vert[1], vert[2]);
+			vertex.texCoord = glm::vec3(vert[0], vert[1], vert[2]);
+			vertex.color = glm::vec3(0.5f, 0.5f, 0.5);
+			mesh.vertices.emplace_back(vertex);
+		}
+
+		for (uint32_t i : indices) {
+			mesh.indices.emplace_back(i);
+		}
+		//mesh = Load(path, shouldInverseTextureY);
+
 		mesh.name = name;
 		
 		glm::mat4 view = glm::mat4(1.0f);
 
 		UniformBufferObject ubo;
 		ubo.model = glm::mat4(1.0f);
-		ubo.model = glm::translate(ubo.model, pos);
-		ubo.model = glm::scale(ubo.model, scale);
-		ubo.view = glm::translate(view, glm::vec3(0.0f, 0.0f, 0.0f));
+		ubo.view = glm::mat4(glm::mat3(glm::lookAt(
+			glm::vec3(0.0f, 0.0f, 3.0f),
+			glm::vec3(0.0f, 0.0f, 0.0f),
+			glm::vec3(0.0f, 1.0f, 0.0f)
+		)));
 
 		float s = (float)m_Renderer->GetSwapChainExtent().width / (float)m_Renderer->GetSwapChainExtent().height;
 
 		//ubo.proj = Rbk::Camera::FrustumProj(glm::radians(60.0f), s, 0.1f, 100.0f);
 		ubo.proj = glm::perspective(glm::radians(60.0f), m_Renderer->GetSwapChainExtent().width / (float)m_Renderer->GetSwapChainExtent().height, 0.1f, 100.0f);
-		ubo.proj[1][1] *= -1;
+		//ubo.proj[1][1] *= -1;
 
-		mesh.ubos.emplace_back(ubo);
+		float offset = -1.5f;
+		float center = (6 * offset) / 2.0f - (offset * 0.5f);
+		for (uint32_t i = 0; i < 6; i++) {
+			ubo.model = glm::translate(glm::mat4(1.0f), glm::vec3(i * offset - center, 0.0f, 0.0f));
+			mesh.ubos.emplace_back(ubo);
+		}
 
 		m_SkyboxMesh = mesh;
 
@@ -71,6 +127,7 @@ namespace Rbk
 		ubo.proj[1][1] *= -1;
 		
 		mesh.ubos.emplace_back(ubo);
+
 		if (0 != m_WorldMeshesLoaded.count(name)) {
 			m_WorldMeshesLoaded[name][0] += 1;
 			m_WorldMeshes[m_WorldMeshesLoaded[name][1]] = mesh;
