@@ -319,44 +319,39 @@ namespace Rbk
 
 		UpdateWorldPositions();
 
-		for (size_t i = 0; i < m_SwapChainImages.size(); i++) {
-			SouldResizeSwapChain();
+		SouldResizeSwapChain();
 						
-			m_ImageIndex = m_Renderer->AcquireNextImageKHR(m_SwapChain, m_Semaphores);
-			m_Renderer->BeginCommandBuffer(m_CommandBuffers[m_ImageIndex]);
+		m_ImageIndex = m_Renderer->AcquireNextImageKHR(m_SwapChain, m_Semaphores);
+		m_Renderer->BeginCommandBuffer(m_CommandBuffers[m_ImageIndex]);
 
-			VkImageMemoryBarrier renderBeginBarrier = m_Renderer->SetupImageMemoryBarrier(
-				m_SwapChainImages[m_ImageIndex], 0, VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL
-			);
-			m_Renderer->AddPipelineBarrier(
-				m_CommandBuffers[m_ImageIndex], renderBeginBarrier, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, VK_DEPENDENCY_BY_REGION_BIT
-			);
+		VkImageMemoryBarrier renderBeginBarrier = m_Renderer->SetupImageMemoryBarrier(
+			m_SwapChainImages[m_ImageIndex], 0, VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL
+		);
+		m_Renderer->AddPipelineBarrier(
+			m_CommandBuffers[m_ImageIndex], renderBeginBarrier, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, VK_DEPENDENCY_BY_REGION_BIT
+		);
 
-			m_Renderer->BeginRenderPass(m_RenderPass, m_CommandBuffers[m_ImageIndex], m_SwapChainFramebuffers[m_ImageIndex]);
-			m_Renderer->SetViewPort(m_CommandBuffers[m_ImageIndex]);
-			m_Renderer->SetScissor(m_CommandBuffers[m_ImageIndex]);
+		m_Renderer->BeginRenderPass(m_RenderPass, m_CommandBuffers[m_ImageIndex], m_SwapChainFramebuffers[m_ImageIndex]);
+		m_Renderer->SetViewPort(m_CommandBuffers[m_ImageIndex]);
+		m_Renderer->SetScissor(m_CommandBuffers[m_ImageIndex]);
 
-			//draw the world !
-			for (Mesh mesh : *m_MeshManager->GetWorldMeshes()) {
-				m_Renderer->BindPipeline(m_CommandBuffers[m_ImageIndex], mesh.graphicsPipeline);
-				m_Renderer->Draw(m_CommandBuffers[m_ImageIndex], &mesh, m_ImageIndex);
-			}
-		
-			//draw the skybox !
-			m_Renderer->BindPipeline(m_CommandBuffers[m_ImageIndex], m_MeshManager->GetSkyboxMesh()->graphicsPipeline);
-			m_Renderer->DrawSkybox(m_CommandBuffers[m_ImageIndex], m_MeshManager->GetSkyboxMesh(), m_ImageIndex);
-
-			m_Renderer->EndRenderPass(m_CommandBuffers[m_ImageIndex]);
-			m_Renderer->EndCommandBuffer(m_CommandBuffers[m_ImageIndex]);
-
-			if (-1 != m_ImageIndex) {
-				m_Renderer->QueueSubmit(m_ImageIndex, m_CommandBuffers[m_ImageIndex], m_Semaphores);
-				m_Renderer->QueuePresent(m_ImageIndex, m_SwapChain, m_Semaphores);
-			}
-
-			//m_Renderer->WaitIdle();
+		//draw the world !
+		for (Mesh mesh : *m_MeshManager->GetWorldMeshes()) {
+			m_Renderer->BindPipeline(m_CommandBuffers[m_ImageIndex], mesh.graphicsPipeline);
+			m_Renderer->Draw(m_CommandBuffers[m_ImageIndex], &mesh, m_ImageIndex);
 		}
-		//m_Renderer->ResetCommandPool(m_CommandPool);
+		
+		//draw the skybox !
+		m_Renderer->BindPipeline(m_CommandBuffers[m_ImageIndex], m_MeshManager->GetSkyboxMesh()->graphicsPipeline);
+		m_Renderer->DrawSkybox(m_CommandBuffers[m_ImageIndex], m_MeshManager->GetSkyboxMesh(), m_ImageIndex);
+
+		m_Renderer->EndRenderPass(m_CommandBuffers[m_ImageIndex]);
+		m_Renderer->EndCommandBuffer(m_CommandBuffers[m_ImageIndex]);
+
+		if (-1 != m_ImageIndex) {
+			m_Renderer->QueueSubmit(m_ImageIndex, m_CommandBuffers[m_ImageIndex], m_Semaphores);
+			m_Renderer->QueuePresent(m_ImageIndex, m_SwapChain, m_Semaphores);
+		}
 	}
 
 	void VulkanAdapter::Destroy()

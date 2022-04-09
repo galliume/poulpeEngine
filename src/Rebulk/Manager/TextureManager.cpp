@@ -48,7 +48,7 @@ namespace Rbk
 		m_Skybox.mipLevels = mipLevels;
 		m_Skybox.width = texWidth;
 		m_Skybox.height = texHeight;
-		//m_Skybox.channels = texChannels;
+		m_Skybox.channels = texChannels;
 
 		Rbk::Log::GetLogger()->debug("Added skybox");
 

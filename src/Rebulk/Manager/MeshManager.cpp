@@ -83,16 +83,15 @@ namespace Rbk
 
 		float s = (float)m_Renderer->GetSwapChainExtent().width / (float)m_Renderer->GetSwapChainExtent().height;
 
-		//ubo.proj = Rbk::Camera::FrustumProj(glm::radians(60.0f), s, 0.1f, 100.0f);
 		ubo.proj = glm::perspective(glm::radians(60.0f), m_Renderer->GetSwapChainExtent().width / (float)m_Renderer->GetSwapChainExtent().height, 0.1f, 100.0f);
-		//ubo.proj[1][1] *= -1;
+		ubo.proj[1][1] *= -1;
 
-		float offset = -1.5f;
+		float offset = 1.0f;
 		float center = (6 * offset) / 2.0f - (offset * 0.5f);
 		for (uint32_t i = 0; i < 6; i++) {
 			ubo.model = glm::translate(glm::mat4(1.0f), glm::vec3(i * offset - center, 0.0f, 0.0f));
-			ubo.model = glm::scale(ubo.model, glm::vec3(0.5f));
-			ubo.index.x = (float)i;
+			ubo.model = glm::scale(ubo.model, glm::vec3(1.0f));
+			ubo.index = i;
 			mesh.ubos.emplace_back(ubo);
 		}
 

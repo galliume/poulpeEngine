@@ -18,6 +18,6 @@ layout(set = 0, binding = 0) uniform CubeUniformBufferObject {
 };
 
 void main() { 
-    outputColor = textureLod(texSampler, vec4(fragTexCoord, ubo.index), 1.0f); 
+    outputColor = textureLod(texSampler, vec4(fragTexCoord, 1), 1.0f); 
     //outputColor = vec4(fragTexCoord, 1.0);
 }

@@ -29,7 +29,7 @@ namespace Rbk
 	};
 
 	struct CubeUniformBufferObject : UniformBufferObject {
-		alignas(16) glm::vec4 index;
+		int index;
 	};
 
 	struct Vertex {

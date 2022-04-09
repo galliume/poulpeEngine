@@ -47,37 +47,37 @@ namespace Rbk
 		}
 
 		if (inputManager == nullptr) {
-			inputManager = std::make_shared<Rbk::InputManager>(Rbk::InputManager(window.get(), camera.get()));
+			inputManager = std::make_shared<Rbk::InputManager>(window.get(), camera.get());
 			inputManager->Init();
 		}
 
 		if (layerManager == nullptr) {
-			vulkanLayer = std::make_shared<Rbk::VulkanLayer>(Rbk::VulkanLayer());
-			layerManager = std::make_shared<Rbk::LayerManager>(Rbk::LayerManager());
+			vulkanLayer = std::make_shared<Rbk::VulkanLayer>();
+			layerManager = std::make_shared<Rbk::LayerManager>();
 
 			layerManager->Add(vulkanLayer.get());
 		}
 
 		if (rendererAdapter == nullptr) {
-			rendererAdapter = std::make_shared<Rbk::VulkanAdapter>(Rbk::VulkanAdapter(window.get()));
+			rendererAdapter = std::make_shared<Rbk::VulkanAdapter>(window.get());
 		}
 
 		if (textureManager == nullptr) {
-			textureManager = std::make_shared<Rbk::TextureManager>(Rbk::TextureManager(rendererAdapter.get()->Rdr()));
+			textureManager = std::make_shared<Rbk::TextureManager>(rendererAdapter.get()->Rdr());
 		}
 
 		if (meshManager == nullptr) {
-			meshManager = std::make_shared<Rbk::MeshManager>(Rbk::MeshManager(rendererAdapter.get()->Rdr()));
+			meshManager = std::make_shared<Rbk::MeshManager>(rendererAdapter.get()->Rdr());
 		}
 
 		if (shaderManager == nullptr) {
-			shaderManager = std::make_shared<Rbk::ShaderManager>(Rbk::ShaderManager(rendererAdapter.get()->Rdr()));
+			shaderManager = std::make_shared<Rbk::ShaderManager>(rendererAdapter.get()->Rdr());
 		}
 
 		if (renderManager == nullptr) {
-			renderManager = std::make_shared<Rbk::RenderManager>(Rbk::RenderManager(
+			renderManager = std::make_shared<Rbk::RenderManager>(
 				window->Get(), rendererAdapter.get(), textureManager.get(), meshManager.get(), shaderManager.get()
-			));
+			);
 			renderManager->Init();
 			renderManager->AddCamera(camera.get());
 		}
@@ -138,8 +138,8 @@ namespace Rbk
 		skyboxImages.emplace_back("texture/skybox/green/LightGreen_back6.png");
 
 		textureManager->AddSkyBox(skyboxImages);
-		glm::vec3 pos3 = glm::vec3(1.6f, -0.55f, 1.5f);
-		glm::vec3 scaleSkybox = glm::vec3(1.0f, 1.0f, 1.0f);
+		glm::vec3 pos3 = glm::vec3(0.25f, -1.3f, -0.75f);
+		glm::vec3 scaleSkybox = glm::vec3(0.25f, -1.3f, -0.75f);
 		meshManager->AddSkyboxMesh("skybox", pos3, scaleSkybox);
 
 		double lastTime = glfwGetTime();
@@ -187,7 +187,6 @@ namespace Rbk
 			rendererAdapter->Rdr()->EndCommandBuffer(imguiInfo.cmdBuffer);
 			//end @todo
 
-			glfwSwapBuffers(window->Get());
 			lastTime = currentTime;
 		}
 

@@ -460,17 +460,22 @@ namespace Rbk {
 		return actualExtent;
 	}
 
-	VkSwapchainKHR VulkanRenderer::CreateSwapChain(std::vector<VkImage>& swapChainImages, VkSwapchainKHR oldSwapChain)
+	uint32_t VulkanRenderer::GetImageCount()
 	{
-		VkSwapchainKHR swapChain = VK_NULL_HANDLE;
-
-	
-
 		uint32_t imageCount = m_SwapChainSupport.capabilities.minImageCount + 1;
 
 		if (m_SwapChainSupport.capabilities.maxImageCount > 0 && imageCount > m_SwapChainSupport.capabilities.maxImageCount) {
 			imageCount = m_SwapChainSupport.capabilities.maxImageCount;
 		}
+
+		return imageCount;
+	}
+
+	VkSwapchainKHR VulkanRenderer::CreateSwapChain(std::vector<VkImage>& swapChainImages, VkSwapchainKHR oldSwapChain)
+	{
+		VkSwapchainKHR swapChain = VK_NULL_HANDLE;
+
+		uint32_t imageCount = GetImageCount();
 		
 		VkSwapchainCreateInfoKHR createInfo{};
 		createInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;

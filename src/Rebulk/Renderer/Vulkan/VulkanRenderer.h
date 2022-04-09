@@ -144,6 +144,7 @@ namespace Rbk {
 		void WaitForFence();
 		VkSampleCountFlagBits GetMaxUsableSampleCount();
 		SwapChainSupportDetails QuerySwapChainSupport(VkPhysicalDevice device);
+		uint32_t GetImageCount();
 
 	public:
 		bool m_FramebufferResized = false;
