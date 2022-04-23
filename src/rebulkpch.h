@@ -18,9 +18,6 @@
 #include <map>
 #include <filesystem>
 
-#define GLFW_INCLUDE_VULKAN
-#include "GLFW/glfw3.h"
-
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #define GLM_ENABLE_EXPERIMENTAL
@@ -34,12 +31,6 @@
 #include "spdlog/details/log_msg.h"
 
 #include "stb_image.h"
-
-#include "vulkan/vulkan.h"
-
-#include "imgui.h"
-#include "backends/imgui_impl_glfw.h"
-#include "backends/imgui_impl_vulkan.h"
 
 #include "Rebulk/Core/Tools.h"
 #include "Rebulk/Core/Log.h"

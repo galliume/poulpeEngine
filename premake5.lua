@@ -12,13 +12,9 @@ outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
 
 IncludeDir = {}
 IncludeDir["GLFW"] = "vendor/GLFW/include"
+IncludeDir["GLM"] = "vendor/glad"
 IncludeDir["GLM"] = "vendor/GLM"
-IncludeDir["vulkan"] = "vendor/vulkan/include"
-
-if os.host() == "windows" then
-	include "vendor/GLFW"
-	include "vendor/vulkan"
-end
+IncludeDir["volk"] = "vendor/volk"
 
 project "Rebulkan"
 	location ""
@@ -29,6 +25,17 @@ project "Rebulkan"
 
 	targetdir  ("bin/" .. outputdir  .. "/%{prj.name}")
 	objdir  ("bin-int/" .. outputdir  .. "/%{prj.name}")
+
+	flags
+    {
+        "MultiProcessorCompile"
+    }
+
+    defines
+    {
+        "_CRT_SECURE_NO_WARNINGS",
+        "IMGUI_IMPL_VULKAN_NO_PROTOTYPES"
+    }
 
 	files 
 	{
@@ -51,8 +58,7 @@ project "Rebulkan"
 		"vendor/tiny_obj_loader/tiny_obj_loader.h",
 		"vendor/tiny_obj_loader/mapbox/earcut.hpp",
 		"shaders/*",
-		"mesh/*",
-		"*.lua"
+		"mesh/*"
 	}
 
 	includedirs
@@ -63,32 +69,25 @@ project "Rebulkan"
 		"vendor/imgui/backends",
 		"vendor/stb_image",
 		"vendor/tiny_obj_loader",
-		"%{IncludeDir.GLM}",
-		"%{IncludeDir.assimp}",
+		"%{IncludeDir.GLFW}",
+		"%{IncludeDir.glad}",
+        "%{IncludeDir.volk}",
+        os.getenv("VULKAN_SDK").."/Include",
+		"%{IncludeDir.GLM}"
 	}
 
 	filter "system:windows"
 
 		systemversion "latest"
 
-		includedirs
-		{
-			"%{IncludeDir.GLFW}",
-			"%{IncludeDir.GLM}",
-			"%{IncludeDir.vulkan}",
-		}
-
 		links 
 		{		
-			"GLFW",
-			"vendor/vulkan/Lib/vulkan-1.lib"
+			"GLFW"
 		}
 		
 		defines
 		{
-			"GLFW_INCLUDE_NONE",
-			"WIN32_LEAN_AND_MEAN",
-			"_NO_DEBUG_HEAP=1"
+			"WIN32_LEAN_AND_MEAN"
 		}
 
 	filter "configurations:Debug"
@@ -114,10 +113,5 @@ project "Rebulkan"
 
 	filter "system:linux"
 		systemversion "latest"
-
-		defines
-		{
-			"GLFW_INCLUDE_NONE",
-		}
 	
 		links { "glfw", "vulkan", "GL", "GLU", "dl",  "pthread" }

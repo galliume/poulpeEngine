@@ -1,5 +1,10 @@
 #include "VulkanRenderer.h"
 
+#include <GLFW/glfw3.h>
+
+#define VOLK_IMPLEMENTATION
+#include <volk.h>
+
 namespace Rbk {
 
 	VkResult CreateDebugUtilsMessengerEXT(VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDebugUtilsMessengerEXT* pCallback)
@@ -63,6 +68,17 @@ namespace Rbk {
 		m_EnableValidationLayers = true;
 #endif
 		
+		bool vulkanSupported = glfwVulkanSupported();
+
+		if (!vulkanSupported) {
+			throw std::runtime_error("vulkan not supported");
+		}
+
+		VkResult volkInit = volkInitialize();
+		if (volkInit != VK_SUCCESS) {
+			throw std::runtime_error("Failed to initialize volk");
+		} 
+
 		LoadRequiredExtensions();
 		EnumerateExtensions();
 		CreateInstance();
@@ -129,6 +145,7 @@ namespace Rbk {
 
 		message = std::string("VK instance created successfully");
 		Rbk::Log::GetLogger()->trace(message);
+		volkLoadInstance(m_Instance);
 	}
 
 	void VulkanRenderer::InitDetails()
@@ -378,6 +395,8 @@ namespace Rbk {
 		
 		vkGetDeviceQueue(m_Device, indices.graphicsFamily.value(), 0, &m_GraphicsQueue);
 		vkGetDeviceQueue(m_Device, indices.presentFamily.value(), 0, &m_PresentQueue);
+
+		volkLoadDevice(m_Device);
 
 		Rbk::Log::GetLogger()->debug("successfully create logical device!");
 	}
@@ -1625,7 +1644,7 @@ namespace Rbk {
 
 		AddPipelineBarrier(commandBuffer, renderBarrier, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_DEPENDENCY_BY_REGION_BIT);
 
-		CopyBufferToImageSkybox(commandBuffer, stagingBuffer, textureImage, static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight), skyboxPixels);
+		CopyBufferToImageSkybox(commandBuffer, stagingBuffer, textureImage, static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight), skyboxPixels, mipLevels);
 
 		GenerateMipmapsSkybox(commandBuffer, format, textureImage, texWidth, texHeight, mipLevels, 6);
 
@@ -1781,25 +1800,30 @@ namespace Rbk {
 		vkCmdCopyBufferToImage(commandBuffer, buffer, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
 	}
 
-	void VulkanRenderer::CopyBufferToImageSkybox(VkCommandBuffer commandBuffer, VkBuffer buffer, VkImage image, uint32_t width, uint32_t height, std::vector<stbi_uc*>skyboxPixels)
+	void VulkanRenderer::CopyBufferToImageSkybox(VkCommandBuffer commandBuffer, VkBuffer buffer, VkImage image, uint32_t width, uint32_t height, std::vector<stbi_uc*>skyboxPixels, uint32_t mipLevels)
 	{
 		std::vector<VkBufferImageCopy> bufferCopyRegions;
 
 		for (uint32_t i = 0; i < skyboxPixels.size(); i++) {
 
-			VkBufferImageCopy region{};
-			region.bufferOffset = sizeof(skyboxPixels[i]) * i;
-			region.bufferRowLength = 0;
-			region.bufferImageHeight = 0;
+			for (uint32_t mipLevel = 0; mipLevel < mipLevels; mipLevel++) {
 
-			region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-			region.imageSubresource.mipLevel = 0;
-			region.imageSubresource.baseArrayLayer = i;
-			region.imageSubresource.layerCount = 1;
-			region.imageOffset = { 0, 0, 0 };
-			region.imageExtent = { width >> i, height >> i, 1 };
+				VkBufferImageCopy region{};
+				region.bufferOffset = sizeof(skyboxPixels[i]) * i;
+				region.bufferRowLength = 0;
+				region.bufferImageHeight = 0;
 
-			bufferCopyRegions.emplace_back(region);
+				region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+				region.imageSubresource.mipLevel = mipLevel;
+				region.imageSubresource.baseArrayLayer = i;
+				region.imageSubresource.layerCount = 1;
+				//region.imageOffset = { 0, 0, 0 };
+				region.imageExtent.width >> mipLevel;
+				region.imageExtent.height >> mipLevel;
+				region.imageExtent.depth = 1;
+			
+				bufferCopyRegions.emplace_back(region);
+			}
 		}
 
 		vkCmdCopyBufferToImage(commandBuffer, buffer, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, bufferCopyRegions.size(), bufferCopyRegions.data());

@@ -1,4 +1,5 @@
 #include "Im.h"
+#include <volk.h>
 
 namespace Rbk {
 
@@ -25,6 +26,12 @@ namespace Rbk {
             style.WindowRounding = 0.0f;
             style.Colors[ImGuiCol_WindowBg].w = 1.0f;
         }
+
+        ImGui_ImplVulkan_LoadFunctions(
+            [](const char* name, void*) {
+                return vkGetInstanceProcAddr(volkGetLoadedInstance(), name);
+            }
+        );
 
         ImGui::SetNextWindowPos(ImVec2(650, 20), ImGuiCond_FirstUseEver);
         ImGui_ImplGlfw_InitForVulkan(window, true);

@@ -1,6 +1,8 @@
 #pragma once
+
 #include "Rebulk/Renderer/Mesh.h"
 #include "Rebulk/Renderer/IRenderer.h"
+#include <GLFW/glfw3.h>
 
 namespace Rbk {
 
@@ -75,7 +77,7 @@ namespace Rbk {
 		void CreateTextureImage(VkCommandBuffer commandBuffer, stbi_uc* pixels, int texWidth, int texHeight, uint32_t mipLevels, VkImage& textureImage, VkDeviceMemory& textureImageMemory, VkFormat format);
 		void CreateSkyboxTextureImage(VkCommandBuffer commandBuffer, std::vector<stbi_uc*>skyboxPixels, int texWidth, int texHeight, uint32_t mipLevels, VkImage& textureImage, VkDeviceMemory& textureImageMemory, VkFormat format);
 		void CopyBufferToImage(VkCommandBuffer commandBuffer, VkBuffer buffer, VkImage image, uint32_t width, uint32_t height);
-		void CopyBufferToImageSkybox(VkCommandBuffer commandBuffer, VkBuffer buffer, VkImage image, uint32_t width, uint32_t height, std::vector<stbi_uc*>skyboxPixels);
+		void CopyBufferToImageSkybox(VkCommandBuffer commandBuffer, VkBuffer buffer, VkImage image, uint32_t width, uint32_t height, std::vector<stbi_uc*>skyboxPixels, uint32_t mipLevels);
 		VkSampler CreateTextureSampler(uint32_t mipLevels);
 		VkSampler CreateSkyboxTextureSampler(uint32_t mipLevels);
 		VkImageView CreateDepthResources(VkCommandBuffer commandBuffer);

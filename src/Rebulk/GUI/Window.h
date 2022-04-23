@@ -1,5 +1,6 @@
 #pragma once
 #include "rebulkpch.h"
+#include <GLFW/glfw3.h>
 
 namespace Rbk
 {

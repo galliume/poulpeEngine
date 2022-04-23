@@ -1,4 +1,5 @@
 #include "VulkanAdapter.h"
+#include <volk.h>
 
 namespace Rbk
 {

@@ -5,6 +5,15 @@
 #include "Rebulk/Renderer/Mesh.h"
 #include "Rebulk/GUI/Window.h"
 
+#include <GLFW/glfw3.h>
+
+#define VOLK_IMPLEMENTATION
+#include <volk.h>
+
+#include "imgui.h"
+#include "backends/imgui_impl_glfw.h"
+#include "backends/imgui_impl_vulkan.h"
+
 namespace Rbk
 {
 	struct VImGuiInfo

@@ -1,5 +1,6 @@
 #pragma once
 #include "rebulkpch.h"
+#include <volk.h>
 
 namespace Rbk
 {
