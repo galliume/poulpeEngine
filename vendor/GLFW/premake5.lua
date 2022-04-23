@@ -1,12 +1,12 @@
 project "GLFW"
     kind "StaticLib"
     language "C"
-    
-	targetdir ("bin/" .. outputdir .. "/%{prj.name}")
-    objdir ("bin-int/" .. outputdir .. "/%{prj.name}")
 
-	files
-	{
+    targetdir ("bin/" .. outputdir .. "/%{prj.name}")
+    objdir ("bin/int/" .. outputdir .. "/%{prj.name}")
+
+    files
+    {
         "include/GLFW/glfw3.h",
         "include/GLFW/glfw3native.h",
         "src/context.c",
@@ -18,13 +18,13 @@ project "GLFW"
         "src/internal.h",
         "src/mappings.h",
     }
-    
-	filter "system:windows"
+
+    filter "system:windows"
         systemversion "latest"
-        
+
         files
         {
-			"src/win32_init.c",
+            "src/win32_init.c",
             "src/win32_joystick.c",
             "src/win32_monitor.c",
             "src/win32_time.c",
@@ -39,19 +39,26 @@ project "GLFW"
             "src/osmesa_context.h"
         }
 
-		defines 
-		{ 
+        defines 
+        { 
             "_GLFW_WIN32",
             "_CRT_SECURE_NO_WARNINGS"
         }
+        
+    filter "configurations:Debug"
+        runtime "Debug"
+        symbols "on"
 
+    filter "configurations:Release"
+        runtime "Release"
+        optimize "on"
 
     filter "system:linux"
         systemversion "latest"
         
         files
         {
-			"src/posix_thread.c",
+            "src/posix_thread.c",
             "src/posix_time.c",
             "src/egl_context.c",
             "src/egl_context.h",
@@ -74,7 +81,8 @@ project "GLFW"
         
         defines 
         { 
-            "_GLFW_WAYLAND" 
+            "GLFW_USE_WAYLAND",
+            "_GLFW_WAYLAND",
         }
 
         links { "wayland-client", "dl", "GL", "pthread" }

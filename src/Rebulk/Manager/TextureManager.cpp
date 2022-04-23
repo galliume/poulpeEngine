@@ -1,8 +1,5 @@
 #include "TextureManager.h"
 
-#define VOLK_IMPLEMENTATION
-#include <volk.h>
-
 namespace Rbk
 {
 	TextureManager::TextureManager(VulkanRenderer* renderer) : m_Renderer(renderer)

@@ -193,12 +193,12 @@ static void pointerHandleMotion(void* data,
         return;
     x = wl_fixed_to_double(sx);
     y = wl_fixed_to_double(sy);
-    window->wl.cursorPosX = x;
-    window->wl.cursorPosY = y;
 
     switch (window->wl.decorations.focus)
     {
         case mainWindow:
+            window->wl.cursorPosX = x;
+            window->wl.cursorPosY = y;
             _glfwInputCursorPos(window, x, y);
             _glfw.wl.cursorPreviousName = NULL;
             return;
@@ -298,7 +298,6 @@ static void pointerHandleButton(void* data,
             else
                 wl_shell_surface_resize(window->wl.shellSurface, _glfw.wl.seat,
                                         serial, edges);
-            return;
         }
     }
     else if (button == BTN_RIGHT)
@@ -374,8 +373,12 @@ static void keyboardHandleKeymap(void* data,
 {
     struct xkb_keymap* keymap;
     struct xkb_state* state;
+
+#ifdef HAVE_XKBCOMMON_COMPOSE_H
     struct xkb_compose_table* composeTable;
     struct xkb_compose_state* composeState;
+#endif
+
     char* mapStr;
     const char* locale;
 
@@ -423,6 +426,7 @@ static void keyboardHandleKeymap(void* data,
     if (!locale)
         locale = "C";
 
+#ifdef HAVE_XKBCOMMON_COMPOSE_H
     composeTable =
         xkb_compose_table_new_from_locale(_glfw.wl.xkb.context, locale,
                                           XKB_COMPOSE_COMPILE_NO_FLAGS);
@@ -442,6 +446,7 @@ static void keyboardHandleKeymap(void* data,
         _glfwInputError(GLFW_PLATFORM_ERROR,
                         "Wayland: Failed to create XKB compose table");
     }
+#endif
 
     xkb_keymap_unref(_glfw.wl.xkb.keymap);
     xkb_state_unref(_glfw.wl.xkb.state);
@@ -495,22 +500,20 @@ static void keyboardHandleLeave(void* data,
     if (!window)
         return;
 
-    struct itimerspec timer = {};
-    timerfd_settime(_glfw.wl.timerfd, 0, &timer, NULL);
-
     _glfw.wl.serial = serial;
     _glfw.wl.keyboardFocus = NULL;
     _glfwInputWindowFocus(window, GLFW_FALSE);
 }
 
-static int translateKey(uint32_t scancode)
+static int toGLFWKeyCode(uint32_t key)
 {
-    if (scancode < sizeof(_glfw.wl.keycodes) / sizeof(_glfw.wl.keycodes[0]))
-        return _glfw.wl.keycodes[scancode];
+    if (key < sizeof(_glfw.wl.keycodes) / sizeof(_glfw.wl.keycodes[0]))
+        return _glfw.wl.keycodes[key];
 
     return GLFW_KEY_UNKNOWN;
 }
 
+#ifdef HAVE_XKBCOMMON_COMPOSE_H
 static xkb_keysym_t composeSymbol(xkb_keysym_t sym)
 {
     if (sym == XKB_KEY_NoSymbol || !_glfw.wl.xkb.composeState)
@@ -530,65 +533,77 @@ static xkb_keysym_t composeSymbol(xkb_keysym_t sym)
             return sym;
     }
 }
+#endif
 
-GLFWbool _glfwInputTextWayland(_GLFWwindow* window, uint32_t scancode)
+static GLFWbool inputChar(_GLFWwindow* window, uint32_t key)
 {
-    const xkb_keysym_t* keysyms;
-    const xkb_keycode_t keycode = scancode + 8;
+    uint32_t code, numSyms;
+    long cp;
+    const xkb_keysym_t *syms;
+    xkb_keysym_t sym;
 
-    if (xkb_state_key_get_syms(_glfw.wl.xkb.state, keycode, &keysyms) == 1)
+    code = key + 8;
+    numSyms = xkb_state_key_get_syms(_glfw.wl.xkb.state, code, &syms);
+
+    if (numSyms == 1)
     {
-        const xkb_keysym_t keysym = composeSymbol(keysyms[0]);
-        const uint32_t codepoint = _glfwKeySym2Unicode(keysym);
-        if (codepoint != GLFW_INVALID_CODEPOINT)
+#ifdef HAVE_XKBCOMMON_COMPOSE_H
+        sym = composeSymbol(syms[0]);
+#else
+        sym = syms[0];
+#endif
+        cp = _glfwKeySym2Unicode(sym);
+        if (cp != -1)
         {
             const int mods = _glfw.wl.xkb.modifiers;
             const int plain = !(mods & (GLFW_MOD_CONTROL | GLFW_MOD_ALT));
-            _glfwInputChar(window, codepoint, mods, plain);
+            _glfwInputChar(window, cp, mods, plain);
         }
     }
 
-    return xkb_keymap_key_repeats(_glfw.wl.xkb.keymap, keycode);
+    return xkb_keymap_key_repeats(_glfw.wl.xkb.keymap, code);
 }
 
 static void keyboardHandleKey(void* data,
                               struct wl_keyboard* keyboard,
                               uint32_t serial,
                               uint32_t time,
-                              uint32_t scancode,
+                              uint32_t key,
                               uint32_t state)
 {
+    int keyCode;
+    int action;
     _GLFWwindow* window = _glfw.wl.keyboardFocus;
+    GLFWbool shouldRepeat;
+    struct itimerspec timer = {};
+
     if (!window)
         return;
 
-    const int key = translateKey(scancode);
-    const int action =
-        state == WL_KEYBOARD_KEY_STATE_PRESSED ? GLFW_PRESS : GLFW_RELEASE;
+    keyCode = toGLFWKeyCode(key);
+    action = state == WL_KEYBOARD_KEY_STATE_PRESSED
+            ? GLFW_PRESS : GLFW_RELEASE;
 
     _glfw.wl.serial = serial;
-    _glfwInputKey(window, key, scancode, action, _glfw.wl.xkb.modifiers);
-
-    struct itimerspec timer = {};
+    _glfwInputKey(window, keyCode, key, action,
+                  _glfw.wl.xkb.modifiers);
 
     if (action == GLFW_PRESS)
     {
-        const GLFWbool shouldRepeat = _glfwInputTextWayland(window, scancode);
+        shouldRepeat = inputChar(window, key);
 
         if (shouldRepeat && _glfw.wl.keyboardRepeatRate > 0)
         {
-            _glfw.wl.keyboardLastKey = key;
-            _glfw.wl.keyboardLastScancode = scancode;
+            _glfw.wl.keyboardLastKey = keyCode;
+            _glfw.wl.keyboardLastScancode = key;
             if (_glfw.wl.keyboardRepeatRate > 1)
                 timer.it_interval.tv_nsec = 1000000000 / _glfw.wl.keyboardRepeatRate;
             else
                 timer.it_interval.tv_sec = 1;
-
             timer.it_value.tv_sec = _glfw.wl.keyboardRepeatDelay / 1000;
             timer.it_value.tv_nsec = (_glfw.wl.keyboardRepeatDelay % 1000) * 1000000;
         }
     }
-
     timerfd_settime(_glfw.wl.timerfd, 0, &timer, NULL);
 }
 
@@ -600,6 +615,9 @@ static void keyboardHandleModifiers(void* data,
                                     uint32_t modsLocked,
                                     uint32_t group)
 {
+    xkb_mod_mask_t mask;
+    unsigned int modifiers = 0;
+
     _glfw.wl.serial = serial;
 
     if (!_glfw.wl.xkb.keymap)
@@ -613,29 +631,24 @@ static void keyboardHandleModifiers(void* data,
                           0,
                           group);
 
-    const xkb_mod_mask_t mask =
-        xkb_state_serialize_mods(_glfw.wl.xkb.state,
-                                 XKB_STATE_MODS_DEPRESSED |
-                                 XKB_STATE_LAYOUT_DEPRESSED |
-                                 XKB_STATE_MODS_LATCHED |
-                                 XKB_STATE_LAYOUT_LATCHED);
-
-    unsigned int mods = 0;
-
+    mask = xkb_state_serialize_mods(_glfw.wl.xkb.state,
+                                    XKB_STATE_MODS_DEPRESSED |
+                                    XKB_STATE_LAYOUT_DEPRESSED |
+                                    XKB_STATE_MODS_LATCHED |
+                                    XKB_STATE_LAYOUT_LATCHED);
     if (mask & _glfw.wl.xkb.controlMask)
-        mods |= GLFW_MOD_CONTROL;
+        modifiers |= GLFW_MOD_CONTROL;
     if (mask & _glfw.wl.xkb.altMask)
-        mods |= GLFW_MOD_ALT;
+        modifiers |= GLFW_MOD_ALT;
     if (mask & _glfw.wl.xkb.shiftMask)
-        mods |= GLFW_MOD_SHIFT;
+        modifiers |= GLFW_MOD_SHIFT;
     if (mask & _glfw.wl.xkb.superMask)
-        mods |= GLFW_MOD_SUPER;
+        modifiers |= GLFW_MOD_SUPER;
     if (mask & _glfw.wl.xkb.capsLockMask)
-        mods |= GLFW_MOD_CAPS_LOCK;
+        modifiers |= GLFW_MOD_CAPS_LOCK;
     if (mask & _glfw.wl.xkb.numLockMask)
-        mods |= GLFW_MOD_NUM_LOCK;
-
-    _glfw.wl.xkb.modifiers = mods;
+        modifiers |= GLFW_MOD_NUM_LOCK;
+    _glfw.wl.xkb.modifiers = modifiers;
 }
 
 #ifdef WL_KEYBOARD_REPEAT_INFO_SINCE_VERSION
@@ -960,7 +973,7 @@ static void createKeyTables(void)
     _glfw.wl.keycodes[KEY_RIGHTALT]   = GLFW_KEY_RIGHT_ALT;
     _glfw.wl.keycodes[KEY_LEFTMETA]   = GLFW_KEY_LEFT_SUPER;
     _glfw.wl.keycodes[KEY_RIGHTMETA]  = GLFW_KEY_RIGHT_SUPER;
-    _glfw.wl.keycodes[KEY_COMPOSE]    = GLFW_KEY_MENU;
+    _glfw.wl.keycodes[KEY_MENU]       = GLFW_KEY_MENU;
     _glfw.wl.keycodes[KEY_NUMLOCK]    = GLFW_KEY_NUM_LOCK;
     _glfw.wl.keycodes[KEY_CAPSLOCK]   = GLFW_KEY_CAPS_LOCK;
     _glfw.wl.keycodes[KEY_PRINT]      = GLFW_KEY_PRINT_SCREEN;
@@ -1003,7 +1016,7 @@ static void createKeyTables(void)
     _glfw.wl.keycodes[KEY_F23]        = GLFW_KEY_F23;
     _glfw.wl.keycodes[KEY_F24]        = GLFW_KEY_F24;
     _glfw.wl.keycodes[KEY_KPSLASH]    = GLFW_KEY_KP_DIVIDE;
-    _glfw.wl.keycodes[KEY_KPASTERISK] = GLFW_KEY_KP_MULTIPLY;
+    _glfw.wl.keycodes[KEY_KPDOT]      = GLFW_KEY_KP_MULTIPLY;
     _glfw.wl.keycodes[KEY_KPMINUS]    = GLFW_KEY_KP_SUBTRACT;
     _glfw.wl.keycodes[KEY_KPPLUS]     = GLFW_KEY_KP_ADD;
     _glfw.wl.keycodes[KEY_KP0]        = GLFW_KEY_KP_0;
@@ -1016,10 +1029,9 @@ static void createKeyTables(void)
     _glfw.wl.keycodes[KEY_KP7]        = GLFW_KEY_KP_7;
     _glfw.wl.keycodes[KEY_KP8]        = GLFW_KEY_KP_8;
     _glfw.wl.keycodes[KEY_KP9]        = GLFW_KEY_KP_9;
-    _glfw.wl.keycodes[KEY_KPDOT]      = GLFW_KEY_KP_DECIMAL;
+    _glfw.wl.keycodes[KEY_KPCOMMA]    = GLFW_KEY_KP_DECIMAL;
     _glfw.wl.keycodes[KEY_KPEQUAL]    = GLFW_KEY_KP_EQUAL;
     _glfw.wl.keycodes[KEY_KPENTER]    = GLFW_KEY_KP_ENTER;
-    _glfw.wl.keycodes[KEY_102ND]      = GLFW_KEY_WORLD_2;
 
     for (scancode = 0;  scancode < 256;  scancode++)
     {
@@ -1093,8 +1105,6 @@ int _glfwPlatformInit(void)
         _glfw_dlsym(_glfw.wl.xkb.handle, "xkb_keymap_mod_get_index");
     _glfw.wl.xkb.keymap_key_repeats = (PFN_xkb_keymap_key_repeats)
         _glfw_dlsym(_glfw.wl.xkb.handle, "xkb_keymap_key_repeats");
-    _glfw.wl.xkb.keymap_key_get_syms_by_level = (PFN_xkb_keymap_key_get_syms_by_level)
-        _glfw_dlsym(_glfw.wl.xkb.handle, "xkb_keymap_key_get_syms_by_level");
     _glfw.wl.xkb.state_new = (PFN_xkb_state_new)
         _glfw_dlsym(_glfw.wl.xkb.handle, "xkb_state_new");
     _glfw.wl.xkb.state_unref = (PFN_xkb_state_unref)
@@ -1105,9 +1115,8 @@ int _glfwPlatformInit(void)
         _glfw_dlsym(_glfw.wl.xkb.handle, "xkb_state_update_mask");
     _glfw.wl.xkb.state_serialize_mods = (PFN_xkb_state_serialize_mods)
         _glfw_dlsym(_glfw.wl.xkb.handle, "xkb_state_serialize_mods");
-    _glfw.wl.xkb.state_key_get_layout = (PFN_xkb_state_key_get_layout)
-        _glfw_dlsym(_glfw.wl.xkb.handle, "xkb_state_key_get_layout");
 
+#ifdef HAVE_XKBCOMMON_COMPOSE_H
     _glfw.wl.xkb.compose_table_new_from_locale = (PFN_xkb_compose_table_new_from_locale)
         _glfw_dlsym(_glfw.wl.xkb.handle, "xkb_compose_table_new_from_locale");
     _glfw.wl.xkb.compose_table_unref = (PFN_xkb_compose_table_unref)
@@ -1122,6 +1131,7 @@ int _glfwPlatformInit(void)
         _glfw_dlsym(_glfw.wl.xkb.handle, "xkb_compose_state_get_status");
     _glfw.wl.xkb.compose_state_get_one_sym = (PFN_xkb_compose_state_get_one_sym)
         _glfw_dlsym(_glfw.wl.xkb.handle, "xkb_compose_state_get_one_sym");
+#endif
 
     _glfw.wl.display = wl_display_connect(NULL);
     if (!_glfw.wl.display)
@@ -1159,7 +1169,7 @@ int _glfwPlatformInit(void)
 
     _glfw.wl.timerfd = -1;
     if (_glfw.wl.seatVersion >= 4)
-        _glfw.wl.timerfd = timerfd_create(CLOCK_MONOTONIC, TFD_CLOEXEC | TFD_NONBLOCK);
+        _glfw.wl.timerfd = timerfd_create(CLOCK_MONOTONIC, TFD_CLOEXEC);
 
     if (_glfw.wl.pointer && _glfw.wl.shm)
     {
@@ -1186,7 +1196,7 @@ int _glfwPlatformInit(void)
             wl_cursor_theme_load(cursorTheme, 2 * cursorSize, _glfw.wl.shm);
         _glfw.wl.cursorSurface =
             wl_compositor_create_surface(_glfw.wl.compositor);
-        _glfw.wl.cursorTimerfd = timerfd_create(CLOCK_MONOTONIC, TFD_CLOEXEC | TFD_NONBLOCK);
+        _glfw.wl.cursorTimerfd = timerfd_create(CLOCK_MONOTONIC, TFD_CLOEXEC);
     }
 
     if (_glfw.wl.seat && _glfw.wl.dataDeviceManager)
@@ -1195,15 +1205,14 @@ int _glfwPlatformInit(void)
             wl_data_device_manager_get_data_device(_glfw.wl.dataDeviceManager,
                                                    _glfw.wl.seat);
         wl_data_device_add_listener(_glfw.wl.dataDevice, &dataDeviceListener, NULL);
-
-        _glfw.wl.clipboardSize = 4096;
-        _glfw.wl.clipboardString = calloc(_glfw.wl.clipboardSize, 1);
+        _glfw.wl.clipboardString = malloc(4096);
         if (!_glfw.wl.clipboardString)
         {
-            _glfwInputError(GLFW_OUT_OF_MEMORY,
+            _glfwInputError(GLFW_PLATFORM_ERROR,
                             "Wayland: Unable to allocate clipboard memory");
             return GLFW_FALSE;
         }
+        _glfw.wl.clipboardSize = 4096;
     }
 
     return GLFW_TRUE;
@@ -1221,8 +1230,10 @@ void _glfwPlatformTerminate(void)
         _glfw.wl.egl.handle = NULL;
     }
 
+#ifdef HAVE_XKBCOMMON_COMPOSE_H
     if (_glfw.wl.xkb.composeState)
         xkb_compose_state_unref(_glfw.wl.xkb.composeState);
+#endif
     if (_glfw.wl.xkb.keymap)
         xkb_keymap_unref(_glfw.wl.xkb.keymap);
     if (_glfw.wl.xkb.state)
@@ -1294,8 +1305,10 @@ void _glfwPlatformTerminate(void)
     if (_glfw.wl.cursorTimerfd >= 0)
         close(_glfw.wl.cursorTimerfd);
 
-    free(_glfw.wl.clipboardString);
-    free(_glfw.wl.clipboardSendString);
+    if (_glfw.wl.clipboardString)
+        free(_glfw.wl.clipboardString);
+    if (_glfw.wl.clipboardSendString)
+        free(_glfw.wl.clipboardSendString);
 }
 
 const char* _glfwPlatformGetVersionString(void)

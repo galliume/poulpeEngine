@@ -27,16 +27,12 @@
 // It is fine to use C99 in this file because it will not be built with VS
 //========================================================================
 
-#define _GNU_SOURCE
-
 #include "internal.h"
 
 #include <X11/cursorfont.h>
 #include <X11/Xmd.h>
 
-#include <poll.h>
-#include <signal.h>
-#include <time.h>
+#include <sys/select.h>
 
 #include <string.h>
 #include <stdio.h>
@@ -60,126 +56,50 @@
 
 #define _GLFW_XDND_VERSION 5
 
-// Wait for data to arrive on any of the specified file descriptors
+
+// Wait for data to arrive using select
+// This avoids blocking other threads via the per-display Xlib lock that also
+// covers GLX functions
 //
-static GLFWbool waitForData(struct pollfd* fds, nfds_t count, double* timeout)
+static GLFWbool waitForEvent(double* timeout)
 {
+    fd_set fds;
+    const int fd = ConnectionNumber(_glfw.x11.display);
+    int count = fd + 1;
+
+#if defined(__linux__)
+    if (_glfw.linjs.inotify > fd)
+        count = _glfw.linjs.inotify + 1;
+#endif
     for (;;)
     {
+        FD_ZERO(&fds);
+        FD_SET(fd, &fds);
+#if defined(__linux__)
+        if (_glfw.linjs.inotify > 0)
+            FD_SET(_glfw.linjs.inotify, &fds);
+#endif
+
         if (timeout)
         {
+            const long seconds = (long) *timeout;
+            const long microseconds = (long) ((*timeout - seconds) * 1e6);
+            struct timeval tv = { seconds, microseconds };
             const uint64_t base = _glfwPlatformGetTimerValue();
 
-#if defined(__linux__) || defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__CYGWIN__)
-            const time_t seconds = (time_t) *timeout;
-            const long nanoseconds = (long) ((*timeout - seconds) * 1e9);
-            const struct timespec ts = { seconds, nanoseconds };
-            const int result = ppoll(fds, count, &ts, NULL);
-#elif defined(__NetBSD__)
-            const time_t seconds = (time_t) *timeout;
-            const long nanoseconds = (long) ((*timeout - seconds) * 1e9);
-            const struct timespec ts = { seconds, nanoseconds };
-            const int result = pollts(fds, count, &ts, NULL);
-#else
-            const int milliseconds = (int) (*timeout * 1e3);
-            const int result = poll(fds, count, milliseconds);
-#endif
-            const int error = errno; // clock_gettime may overwrite our error
+            const int result = select(count, &fds, NULL, NULL, &tv);
+            const int error = errno;
 
             *timeout -= (_glfwPlatformGetTimerValue() - base) /
                 (double) _glfwPlatformGetTimerFrequency();
 
             if (result > 0)
                 return GLFW_TRUE;
-            else if (result == -1 && error != EINTR && error != EAGAIN)
-                return GLFW_FALSE;
-            else if (*timeout <= 0.0)
+            if ((result == -1 && error == EINTR) || *timeout <= 0.0)
                 return GLFW_FALSE;
         }
-        else
-        {
-            const int result = poll(fds, count, -1);
-            if (result > 0)
-                return GLFW_TRUE;
-            else if (result == -1 && errno != EINTR && errno != EAGAIN)
-                return GLFW_FALSE;
-        }
-    }
-}
-
-// Wait for event data to arrive on the X11 display socket
-// This avoids blocking other threads via the per-display Xlib lock that also
-// covers GLX functions
-//
-static GLFWbool waitForX11Event(double* timeout)
-{
-    struct pollfd fd = { ConnectionNumber(_glfw.x11.display), POLLIN };
-
-    while (!XPending(_glfw.x11.display))
-    {
-        if (!waitForData(&fd, 1, timeout))
-            return GLFW_FALSE;
-    }
-
-    return GLFW_TRUE;
-}
-
-// Wait for event data to arrive on any event file descriptor
-// This avoids blocking other threads via the per-display Xlib lock that also
-// covers GLX functions
-//
-static GLFWbool waitForAnyEvent(double* timeout)
-{
-    nfds_t count = 2;
-    struct pollfd fds[3] =
-    {
-        { ConnectionNumber(_glfw.x11.display), POLLIN },
-        { _glfw.x11.emptyEventPipe[0], POLLIN }
-    };
-
-#if defined(__linux__)
-    if (_glfw.linjs.inotify > 0)
-        fds[count++] = (struct pollfd) { _glfw.linjs.inotify, POLLIN };
-#endif
-
-    while (!XPending(_glfw.x11.display))
-    {
-        if (!waitForData(fds, count, timeout))
-            return GLFW_FALSE;
-
-        for (int i = 1; i < count; i++)
-        {
-            if (fds[i].revents & POLLIN)
-                return GLFW_TRUE;
-        }
-    }
-
-    return GLFW_TRUE;
-}
-
-// Writes a byte to the empty event pipe
-//
-static void writeEmptyEvent(void)
-{
-    for (;;)
-    {
-        const char byte = 0;
-        const int result = write(_glfw.x11.emptyEventPipe[1], &byte, 1);
-        if (result == 1 || (result == -1 && errno != EINTR))
-            break;
-    }
-}
-
-// Drains available data from the empty event pipe
-//
-static void drainEmptyEvents(void)
-{
-    for (;;)
-    {
-        char dummy[64];
-        const int result = read(_glfw.x11.emptyEventPipe[0], dummy, sizeof(dummy));
-        if (result == -1 && errno != EINTR)
-            break;
+        else if (select(count, &fds, NULL, NULL, NULL) != -1 || errno != EINTR)
+            return GLFW_TRUE;
     }
 }
 
@@ -196,7 +116,7 @@ static GLFWbool waitForVisibilityNotify(_GLFWwindow* window)
                                    VisibilityNotify,
                                    &dummy))
     {
-        if (!waitForX11Event(&timeout))
+        if (!waitForEvent(&timeout))
             return GLFW_FALSE;
     }
 
@@ -509,14 +429,45 @@ static char** parseUriList(char* text, int* count)
     return paths;
 }
 
+// Encode a Unicode code point to a UTF-8 stream
+// Based on cutef8 by Jeff Bezanson (Public Domain)
+//
+static size_t encodeUTF8(char* s, unsigned int ch)
+{
+    size_t count = 0;
+
+    if (ch < 0x80)
+        s[count++] = (char) ch;
+    else if (ch < 0x800)
+    {
+        s[count++] = (ch >> 6) | 0xc0;
+        s[count++] = (ch & 0x3f) | 0x80;
+    }
+    else if (ch < 0x10000)
+    {
+        s[count++] = (ch >> 12) | 0xe0;
+        s[count++] = ((ch >> 6) & 0x3f) | 0x80;
+        s[count++] = (ch & 0x3f) | 0x80;
+    }
+    else if (ch < 0x110000)
+    {
+        s[count++] = (ch >> 18) | 0xf0;
+        s[count++] = ((ch >> 12) & 0x3f) | 0x80;
+        s[count++] = ((ch >> 6) & 0x3f) | 0x80;
+        s[count++] = (ch & 0x3f) | 0x80;
+    }
+
+    return count;
+}
+
 // Decode a Unicode code point from a UTF-8 stream
 // Based on cutef8 by Jeff Bezanson (Public Domain)
 //
 #if defined(X_HAVE_UTF8_STRING)
-static uint32_t decodeUTF8(const char** s)
+static unsigned int decodeUTF8(const char** s)
 {
-    uint32_t codepoint = 0, count = 0;
-    static const uint32_t offsets[] =
+    unsigned int ch = 0, count = 0;
+    static const unsigned int offsets[] =
     {
         0x00000000u, 0x00003080u, 0x000e2080u,
         0x03c82080u, 0xfa082080u, 0x82082080u
@@ -524,13 +475,13 @@ static uint32_t decodeUTF8(const char** s)
 
     do
     {
-        codepoint = (codepoint << 6) + (unsigned char) **s;
+        ch = (ch << 6) + (unsigned char) **s;
         (*s)++;
         count++;
     } while ((**s & 0xc0) == 0x80);
 
     assert(count <= 6);
-    return codepoint - offsets[count - 1];
+    return ch - offsets[count - 1];
 }
 #endif /*X_HAVE_UTF8_STRING*/
 
@@ -548,7 +499,7 @@ static char* convertLatin1toUTF8(const char* source)
     char* tp = target;
 
     for (sp = source;  *sp;  sp++)
-        tp += _glfwEncodeUTF8(tp, *sp);
+        tp += encodeUTF8(tp, *sp);
 
     return target;
 }
@@ -1051,7 +1002,7 @@ static const char* getSelectionString(Atom selection)
                                        SelectionNotify,
                                        &notification))
         {
-            waitForX11Event(NULL);
+            waitForEvent(NULL);
         }
 
         if (notification.xselection.property == None)
@@ -1087,7 +1038,7 @@ static const char* getSelectionString(Atom selection)
                                       isSelPropNewValueNotify,
                                       (XPointer) &notification))
                 {
-                    waitForX11Event(NULL);
+                    waitForEvent(NULL);
                 }
 
                 XFree(data);
@@ -1332,7 +1283,7 @@ static void processEvent(XEvent *event)
                 //       (the server never sends a timestamp of zero)
                 // NOTE: Timestamp difference is compared to handle wrap-around
                 Time diff = event->xkey.time - window->x11.keyPressTimes[keycode];
-                if (diff == event->xkey.time || (diff > 0 && diff < ((Time)1 << 31)))
+                if (diff == event->xkey.time || (diff > 0 && diff < (1 << 31)))
                 {
                     if (keycode)
                         _glfwInputKey(window, key, keycode, GLFW_PRESS, mods);
@@ -1408,9 +1359,9 @@ static void processEvent(XEvent *event)
 
                 _glfwInputKey(window, key, keycode, GLFW_PRESS, mods);
 
-                const uint32_t codepoint = _glfwKeySym2Unicode(keysym);
-                if (codepoint != GLFW_INVALID_CODEPOINT)
-                    _glfwInputChar(window, codepoint, mods, plain);
+                const long character = _glfwKeySym2Unicode(keysym);
+                if (character != -1)
+                    _glfwInputChar(window, character, mods, plain);
             }
 
             return;
@@ -2018,7 +1969,7 @@ void _glfwPushSelectionToManagerX11(void)
             }
         }
 
-        waitForX11Event(NULL);
+        waitForEvent(NULL);
     }
 }
 
@@ -2336,7 +2287,7 @@ void _glfwPlatformGetWindowFrameSize(_GLFWwindow* window,
                               isFrameExtentsEvent,
                               (XPointer) window))
         {
-            if (!waitForX11Event(&timeout))
+            if (!waitForEvent(&timeout))
             {
                 _glfwInputError(GLFW_PLATFORM_ERROR,
                                 "X11: The window manager has a broken _NET_REQUEST_FRAME_EXTENTS implementation; please report this issue");
@@ -2828,7 +2779,7 @@ GLFWbool _glfwPlatformRawMouseMotionSupported(void)
 
 void _glfwPlatformPollEvents(void)
 {
-    drainEmptyEvents();
+    _GLFWwindow* window;
 
 #if defined(__linux__)
     _glfwDetectJoystickConnectionLinux();
@@ -2842,7 +2793,7 @@ void _glfwPlatformPollEvents(void)
         processEvent(&event);
     }
 
-    _GLFWwindow* window = _glfw.x11.disabledCursorWindow;
+    window = _glfw.x11.disabledCursorWindow;
     if (window)
     {
         int width, height;
@@ -2862,19 +2813,32 @@ void _glfwPlatformPollEvents(void)
 
 void _glfwPlatformWaitEvents(void)
 {
-    waitForAnyEvent(NULL);
+    while (!XPending(_glfw.x11.display))
+        waitForEvent(NULL);
+
     _glfwPlatformPollEvents();
 }
 
 void _glfwPlatformWaitEventsTimeout(double timeout)
 {
-    waitForAnyEvent(&timeout);
+    while (!XPending(_glfw.x11.display))
+    {
+        if (!waitForEvent(&timeout))
+            break;
+    }
+
     _glfwPlatformPollEvents();
 }
 
 void _glfwPlatformPostEmptyEvent(void)
 {
-    writeEmptyEvent();
+    XEvent event = { ClientMessage };
+    event.xclient.window = _glfw.x11.helperWindowHandle;
+    event.xclient.format = 32; // Data is 32-bit longs
+    event.xclient.message_type = _glfw.x11.NULL_;
+
+    XSendEvent(_glfw.x11.display, _glfw.x11.helperWindowHandle, False, 0, &event);
+    XFlush(_glfw.x11.display);
 }
 
 void _glfwPlatformGetCursorPos(_GLFWwindow* window, double* xpos, double* ypos)
@@ -2938,11 +2902,11 @@ const char* _glfwPlatformGetScancodeName(int scancode)
     if (keysym == NoSymbol)
         return NULL;
 
-    const uint32_t codepoint = _glfwKeySym2Unicode(keysym);
-    if (codepoint == GLFW_INVALID_CODEPOINT)
+    const long ch = _glfwKeySym2Unicode(keysym);
+    if (ch == -1)
         return NULL;
 
-    const size_t count = _glfwEncodeUTF8(_glfw.x11.keynames[key], codepoint);
+    const size_t count = encodeUTF8(_glfw.x11.keynames[key], (unsigned int) ch);
     if (count == 0)
         return NULL;
 

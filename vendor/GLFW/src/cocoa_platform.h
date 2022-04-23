@@ -42,10 +42,8 @@ typedef void* id;
 #endif
 
 // NOTE: Many Cocoa enum values have been renamed and we need to build across
-//       SDK versions where one is unavailable or deprecated.
-//       We use the newer names in code and replace them with the older names if
-//       the base SDK does not provide the newer names.
-
+//       SDK versions where one is unavailable or the other deprecated
+//       We use the newer names in code and these macros to handle compatibility
 #if MAC_OS_X_VERSION_MAX_ALLOWED < 101200
  #define NSBitmapFormatAlphaNonpremultiplied NSAlphaNonpremultipliedBitmapFormat
  #define NSEventMaskAny NSAnyEventMask
@@ -62,15 +60,6 @@ typedef void* id;
  #define NSWindowStyleMaskMiniaturizable NSMiniaturizableWindowMask
  #define NSWindowStyleMaskResizable NSResizableWindowMask
  #define NSWindowStyleMaskTitled NSTitledWindowMask
-#endif
-
-// NOTE: Many Cocoa dynamically linked constants have been renamed and we need
-//       to build across SDK versions where one is unavailable or deprecated.
-//       We use the newer names in code and replace them with the older names if
-//       the deployment target is older than the newer names.
-
-#if MAC_OS_X_VERSION_MIN_REQUIRED < 101300
- #define NSPasteboardTypeURL NSURLPboardType
 #endif
 
 typedef VkFlags VkMacOSSurfaceCreateFlagsMVK;
