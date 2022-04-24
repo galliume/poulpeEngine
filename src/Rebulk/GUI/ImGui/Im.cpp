@@ -1,96 +1,104 @@
+#include "rebulkpch.h"
 #include "Im.h"
+#include <volk.h>
 
 namespace Rbk {
 
-	void Im::Init(GLFWwindow* window, ImGui_ImplVulkan_InitInfo initInfo, VkRenderPass renderPass)
-	{
-		IMGUI_CHECKVERSION();
-		ImGui::CreateContext();
-		ImGuiIO& io = ImGui::GetIO(); (void)io;
+    void Im::Init(GLFWwindow* window, ImGui_ImplVulkan_InitInfo initInfo, VkRenderPass renderPass)
+    {
+        IMGUI_CHECKVERSION();
+        ImGui::CreateContext();
+        ImGuiIO& io = ImGui::GetIO(); (void)io;
 
-		io.Fonts->AddFontFromFileTTF("./fonts/montserrat/Montserrat-Regular.ttf", 20.0f);
+        io.Fonts->AddFontFromFileTTF("./fonts/montserrat/Montserrat-Regular.ttf", 20.0f);
 
-		io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
-		io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
-		io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
+        io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+        io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+        io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
 
-		io.ConfigDockingWithShift = false;
-		io.ConfigViewportsNoAutoMerge = true;
-		io.BackendFlags |= ImGuiBackendFlags_HasMouseCursors;
+        io.ConfigDockingWithShift = false;
+        io.ConfigViewportsNoAutoMerge = true;
+        io.BackendFlags |= ImGuiBackendFlags_HasMouseCursors;
 
-		ImGui::StyleColorsDark();
+        ImGui::StyleColorsDark();
 
-		ImGuiStyle& style = ImGui::GetStyle();
-		if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
-			style.WindowRounding = 0.0f;
-			style.Colors[ImGuiCol_WindowBg].w = 1.0f;
-		}
+        ImGuiStyle& style = ImGui::GetStyle();
+        if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
+            style.WindowRounding = 0.0f;
+            style.Colors[ImGuiCol_WindowBg].w = 1.0f;
+        }
 
-		ImGui::SetNextWindowPos(ImVec2(650, 20), ImGuiCond_FirstUseEver);
-		ImGui_ImplGlfw_InitForVulkan(window, true);
-		ImGui_ImplVulkan_Init(&initInfo, renderPass);
-	}
+        ImGui_ImplVulkan_LoadFunctions(
+            [](const char* name, void*) {
+                return vkGetInstanceProcAddr(volkGetLoadedInstance(), name);
+            }
+        );
 
-	void Im::NewFrame()
-	{
-		ImGui_ImplGlfw_NewFrame();
-		ImGui_ImplVulkan_NewFrame();
-		ImGui::NewFrame();
-	}
-	
-	void Im::CreateFontsTexture(VkCommandBuffer commandBuffer)
-	{
-		ImGui_ImplVulkan_CreateFontsTexture(commandBuffer);
-	}
+        ImGui::SetNextWindowPos(ImVec2(650, 20), ImGuiCond_FirstUseEver);
+        ImGui_ImplGlfw_InitForVulkan(window, true);
+        ImGui_ImplVulkan_Init(&initInfo, renderPass);
+    }
 
-	void Im::Begin(const char* name, bool* p_open, ImGuiWindowFlags flags)
-	{
-		ImGui::Begin(name, p_open, flags);
-	}
-	
-	void Im::End()
-	{
-		ImGui::End();
-	}
+    void Im::NewFrame()
+    {
+        ImGui_ImplGlfw_NewFrame();
+        ImGui_ImplVulkan_NewFrame();
+        ImGui::NewFrame();
+    }
+    
+    void Im::CreateFontsTexture(VkCommandBuffer commandBuffer)
+    {
+        ImGui_ImplVulkan_CreateFontsTexture(commandBuffer);
+    }
 
-	void Im::EndFrame()
-	{
-		ImGui::EndFrame();
-	}
+    void Im::Begin(const char* name, bool* p_open, ImGuiWindowFlags flags)
+    {
+        ImGui::Begin(name, p_open, flags);
+    }
+    
+    void Im::End()
+    {
+        ImGui::End();
+    }
 
-	void Im::EndChild()
-	{
-		ImGui::EndChild();
-	}
+    void Im::EndFrame()
+    {
+        ImGui::EndFrame();
+    }
 
-	void Im::Separator()
-	{
-		ImGui::Separator();
-	}
+    void Im::EndChild()
+    {
+        ImGui::EndChild();
+    }
 
-	void Im::BeginChild(const char* str_id, const ImVec2& size_arg, bool border, ImGuiWindowFlags extra_flags)
-	{
-		ImGui::BeginChild(str_id, size_arg, border, extra_flags);
-	}
+    void Im::Separator()
+    {
+        ImGui::Separator();
+    }
 
-	void Im::Render()
-	{
-		ImGui::Render();
+    void Im::BeginChild(const char* str_id, const ImVec2& size_arg, bool border, ImGuiWindowFlags extra_flags)
+    {
+        ImGui::BeginChild(str_id, size_arg, border, extra_flags);
+    }
 
-		ImGuiIO& io = ImGui::GetIO();
+    void Im::Render()
+    {
+        ImGui::Render();
 
-		if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
-		{
-			ImGui::UpdatePlatformWindows();
-			ImGui::RenderPlatformWindowsDefault();
-		}
-	}
+        ImGuiIO& io = ImGui::GetIO();
 
-	void Im::Destroy()
-	{
-		ImGui_ImplVulkan_DestroyFontUploadObjects();
-		ImGui_ImplVulkan_Shutdown();
-		ImGui_ImplGlfw_Shutdown();
-		ImGui::DestroyContext();
-	}
+        if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+        {
+            ImGui::UpdatePlatformWindows();
+            ImGui::RenderPlatformWindowsDefault();
+        }
+    }
+
+    void Im::Destroy()
+    {
+        ImGui_ImplVulkan_DestroyFontUploadObjects();
+        ImGui_ImplVulkan_Shutdown();
+        ImGui_ImplGlfw_Shutdown();
+        ImGui::DestroyContext();
+    }
 }
