@@ -82,7 +82,7 @@ project "Rebulkan"
         buildoptions { "/MDd" }
 
     filter { "system:windows", "configurations:Release" }
-        buildoptions { "/MT" }
+        buildoptions { "/MD" }
 
     filter "configurations:Debug"
         runtime "Debug"
