@@ -26,12 +26,12 @@
 #include "glm/gtc/matrix_transform.hpp"
 #include <glm/gtx/hash.hpp>
 
+#include "stb_image.h"
+
 #include "spdlog/spdlog.h"
 #include "spdlog/fmt/ostr.h"
 #include "spdlog/sinks/stdout_color_sinks.h"
 #include "spdlog/details/log_msg.h"
-
-#include "stb_image.h"
 
 #include "Rebulk/Core/Tools.h"
 #include "Rebulk/Core/Log.h"

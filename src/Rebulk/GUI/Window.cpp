@@ -19,7 +19,7 @@ namespace Rbk
         glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
         glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
         
-        m_Window = glfwCreateWindow(WIDTH, HEIGHT, "Rebulkan Engine", glfwGetPrimaryMonitor(), nullptr);
+        m_Window = glfwCreateWindow(WIDTH, HEIGHT, "Rebulkan Engine", nullptr, nullptr);
 
         glfwMakeContextCurrent(m_Window);
         glfwSwapInterval(m_ActiveVSync);
