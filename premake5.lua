@@ -1,7 +1,7 @@
 workspace "Rebulkan"
     architecture "x64"
     startproject "Rebulkan"
-	
+    
     configurations
     {
         "Debug",
@@ -18,10 +18,10 @@ IncludeDir["imgui"] = "vendor/imgui"
 IncludeDir["spdlog"] = "vendor/spdlog/include"
 IncludeDir["tiny_obj_loader"] = "vendor/tiny_obj_loader"
 IncludeDir["stb_image"] = "vendor/stb_image"
-		
+
 include "vendor/glfw"
 include "vendor/imgui"
-	
+
 project "Rebulkan"
     location ""
     kind "ConsoleApp"
@@ -54,8 +54,8 @@ project "Rebulkan"
         "vendor/stb_image/**.cpp",
         "vendor/GLM/glm/**.hpp",
         "vendor/GLM/glm/**.inl",
-	    "vendor/imgui/imgui_build.cpp",
-		"vendor/stb_image/stb_image.cpp",
+        "vendor/imgui/imgui_build.cpp",
+        "vendor/stb_image/stb_image.cpp",
         "vendor/tiny_obj_loader/tiny_obj_loader.h",
         "vendor/tiny_obj_loader/mapbox/earcut.hpp",
         "shaders/*",
@@ -64,7 +64,7 @@ project "Rebulkan"
 
     includedirs
     {
-		"src",
+        "src",
         IncludeDir,
         os.getenv("VULKAN_SDK").."/Include"
     }
@@ -74,14 +74,14 @@ project "Rebulkan"
         systemversion "latest"
 
         links
-        {   
-			"GLFW", "ImGui"		
+        {
+            "GLFW", "ImGui"
         }
 
-	filter { "system:windows", "configurations:Debug" }
+    filter { "system:windows", "configurations:Debug" }
         buildoptions { "/MDd" }
 
-	filter { "system:windows", "configurations:Release" }
+    filter { "system:windows", "configurations:Release" }
         buildoptions { "/MT" }
 
     filter "configurations:Debug"

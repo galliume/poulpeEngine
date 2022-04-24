@@ -1,4 +1,4 @@
-# REBULKAN
+# Rebulkan
 ## Game Engine with a vulkan renderer
 
 ### This project is a never ending educationnal exercice about game engine and vulkan.
@@ -9,9 +9,9 @@
 
 First compile shaders
 
-Windows : ./shaders/WindowsShadersCompile.bat
+Windows : .\scripts\WindowsShadersCompile.bat
 
-Linux   : ./shaders/LinuxShadersCompile.sh 
+Linux   : ./scripts/LinuxShadersCompile.sh 
 
 Then compile the project
 
