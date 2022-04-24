@@ -1,98 +1,102 @@
 #pragma once
-#include "rebulkpch.h"
+#include <volk.h>
 
 namespace Rbk
 {
-	struct Texture
-	{
-		const char* name;
-		VkImage image;
-		VkDeviceMemory imageMemory;
-		VkImageView imageView;
-		VkSampler sampler;
-		uint32_t mipLevels;
-		uint32_t width;
-		uint32_t height;
-		uint32_t channels;
-		VkImage colorImage;
-		VkDeviceMemory colorImageMemory;
-		VkImageView colorImageView;
-		VkImage depthImage;
-		VkDeviceMemory depthImageMemory;
-		VkImageView depthImageView;
-	};
+    struct Texture
+    {
+        const char* name;
+        VkImage image;
+        VkDeviceMemory imageMemory;
+        VkImageView imageView;
+        VkSampler sampler;
+        uint32_t mipLevels;
+        uint32_t width;
+        uint32_t height;
+        uint32_t channels;
+        VkImage colorImage;
+        VkDeviceMemory colorImageMemory;
+        VkImageView colorImageView;
+        VkImage depthImage;
+        VkDeviceMemory depthImageMemory;
+        VkImageView depthImageView;
+    };
 
-	struct UniformBufferObject {
-		alignas(16) glm::mat4 model;
-		alignas(16) glm::mat4 view;
-		alignas(16) glm::mat4 proj;
-	};
+    struct UniformBufferObject {
+        alignas(16) glm::mat4 model;
+        alignas(16) glm::mat4 view;
+        alignas(16) glm::mat4 proj;
+    };
 
-	struct Vertex {
-		glm::vec3 pos;
-		glm::vec3 color;
-		glm::vec2 texCoord;
+    struct CubeUniformBufferObject : UniformBufferObject {
+        int index;
+    };
 
-		static VkVertexInputBindingDescription GetBindingDescription() {
+    struct Vertex {
+        glm::vec3 pos;
+        glm::vec3 color;
+        glm::vec2 texCoord;
 
-			VkVertexInputBindingDescription bindingDescription{};
-			bindingDescription.binding = 0;
-			bindingDescription.stride = sizeof(Vertex);
-			bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+        static VkVertexInputBindingDescription GetBindingDescription() {
 
-			return bindingDescription;
-		}
+            VkVertexInputBindingDescription bindingDescription{};
+            bindingDescription.binding = 0;
+            bindingDescription.stride = sizeof(Vertex);
+            bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
 
-		static std::array<VkVertexInputAttributeDescription, 3> GetAttributeDescriptions() {
+            return bindingDescription;
+        }
 
-			std::array<VkVertexInputAttributeDescription, 3> attributeDescriptions{};
-			attributeDescriptions[0].binding = 0;
-			attributeDescriptions[0].location = 0;
-			attributeDescriptions[0].format = VK_FORMAT_R32G32B32_SFLOAT;
-			attributeDescriptions[0].offset = offsetof(Vertex, pos);
+        static std::array<VkVertexInputAttributeDescription, 3> GetAttributeDescriptions() {
 
-			attributeDescriptions[1].binding = 0;
-			attributeDescriptions[1].location = 1;
-			attributeDescriptions[1].format = VK_FORMAT_R32G32B32_SFLOAT;
-			attributeDescriptions[1].offset = offsetof(Vertex, color);
+            std::array<VkVertexInputAttributeDescription, 3> attributeDescriptions{};
+            attributeDescriptions[0].binding = 0;
+            attributeDescriptions[0].location = 0;
+            attributeDescriptions[0].format = VK_FORMAT_R32G32B32_SFLOAT;
+            attributeDescriptions[0].offset = offsetof(Vertex, pos);
 
-			attributeDescriptions[2].binding = 0;
-			attributeDescriptions[2].location = 2;
-			attributeDescriptions[2].format = VK_FORMAT_R32G32_SFLOAT;
-			attributeDescriptions[2].offset = offsetof(Vertex, texCoord);;
+            attributeDescriptions[1].binding = 0;
+            attributeDescriptions[1].location = 1;
+            attributeDescriptions[1].format = VK_FORMAT_R32G32B32_SFLOAT;
+            attributeDescriptions[1].offset = offsetof(Vertex, color);
 
-			return attributeDescriptions;
-		}
+            attributeDescriptions[2].binding = 0;
+            attributeDescriptions[2].location = 2;
+            attributeDescriptions[2].format = VK_FORMAT_R32G32_SFLOAT;
+            attributeDescriptions[2].offset = offsetof(Vertex, texCoord);;
 
-		bool operator==(const Vertex& other) const
-		{
-			return pos == other.pos && color == other.color && texCoord == other.texCoord;
-		}
-	};
+            return attributeDescriptions;
+        }
 
-	struct Mesh
-	{
-		std::vector<Vertex> vertices;
-		std::vector<uint32_t> indices;
-		const char* texture;
-		const char* name;
-		std::vector<UniformBufferObject> ubos;
-		std::pair<VkBuffer, VkDeviceMemory> vertexBuffer = { nullptr, nullptr };
-		std::pair<VkBuffer, VkDeviceMemory> indicesBuffer = { nullptr, nullptr };
-		std::vector<std::pair<VkBuffer, VkDeviceMemory>> uniformBuffers;
-		std::vector<VkDescriptorSet> descriptorSets;
-		VkPipelineLayout pipelineLayout;
-		VkPipeline graphicsPipeline;
-		VkPipelineCache pipelineCache = 0;
-	};
+        bool operator==(const Vertex& other) const
+        {
+            return pos == other.pos && color == other.color && texCoord == other.texCoord;
+        }
+    };
+
+    struct Mesh
+    {
+        std::vector<Vertex> vertices;
+        std::vector<uint32_t> indices;
+        const char* texture;
+        const char* name;
+        std::vector<UniformBufferObject> ubos;
+        std::pair<VkBuffer, VkDeviceMemory> vertexBuffer = { nullptr, nullptr };
+        std::pair<VkBuffer, VkDeviceMemory> indicesBuffer = { nullptr, nullptr };
+        std::vector<std::pair<VkBuffer, VkDeviceMemory>> uniformBuffers;
+        std::vector<VkDescriptorSet> descriptorSets;
+        VkPipelineLayout pipelineLayout;
+        VkPipeline graphicsPipeline;
+        VkPipelineCache pipelineCache = 0;
+    };
 }
 
 namespace std {
-	template<> struct hash<Rbk::Vertex> {
-		size_t operator()(Rbk::Vertex const& vertex) const {
-			return ((hash<glm::vec3>()(vertex.pos) ^
-				(hash<glm::vec3>()(vertex.color) << 1)) >> 1) ^
-				(hash<glm::vec2>()(vertex.texCoord) << 1);
-		}
-	};
+    template<> struct hash<Rbk::Vertex> {
+        size_t operator()(Rbk::Vertex const& vertex) const {
+            return ((hash<glm::vec3>()(vertex.pos) ^
+                (hash<glm::vec3>()(vertex.color) << 1)) >> 1) ^
+                (hash<glm::vec2>()(vertex.texCoord) << 1);
+        }
+    };
 }

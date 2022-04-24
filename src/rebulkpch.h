@@ -13,13 +13,11 @@
 #include <optional>
 #include <set>
 #include <string>
+#include <string.h>
 #include <unordered_map>
 #include <numeric>
 #include <map>
 #include <filesystem>
-
-#define GLFW_INCLUDE_VULKAN
-#include "GLFW/glfw3.h"
 
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
@@ -28,18 +26,12 @@
 #include "glm/gtc/matrix_transform.hpp"
 #include <glm/gtx/hash.hpp>
 
+#include "stb_image.h"
+
 #include "spdlog/spdlog.h"
 #include "spdlog/fmt/ostr.h"
 #include "spdlog/sinks/stdout_color_sinks.h"
 #include "spdlog/details/log_msg.h"
-
-#include "stb_image.h"
-
-#include "vulkan/vulkan.h"
-
-#include "imgui.h"
-#include "backends/imgui_impl_glfw.h"
-#include "backends/imgui_impl_vulkan.h"
 
 #include "Rebulk/Core/Tools.h"
 #include "Rebulk/Core/Log.h"

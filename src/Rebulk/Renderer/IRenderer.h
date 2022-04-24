@@ -2,8 +2,8 @@
 
 namespace Rbk
 {
-	class IRenderer
-	{
+    class IRenderer
+    {
 
-	};
+    };
 }

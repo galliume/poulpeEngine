@@ -1,3 +1,4 @@
+#include "rebulkpch.h"
 #include "Rebulk/Application.h"
 
 int main(int argc, char** argv)

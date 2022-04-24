@@ -1,184 +1,201 @@
+#include "rebulkpch.h"
 #include "Application.h"
 
 namespace Rbk
 {
-	std::shared_ptr<Rbk::Window>window = nullptr;
-	std::shared_ptr<Rbk::RenderManager>renderManager = nullptr;
-	std::shared_ptr<Rbk::Camera>camera= nullptr;
-	std::shared_ptr<Rbk::InputManager>inputManager = nullptr;
-	std::shared_ptr<Rbk::VulkanAdapter>rendererAdapter = nullptr;
-	std::shared_ptr<Rbk::LayerManager>layerManager = nullptr;
-	std::shared_ptr<Rbk::TextureManager>textureManager = nullptr;
-	std::shared_ptr<Rbk::MeshManager>meshManager = nullptr;
-	std::shared_ptr<Rbk::ShaderManager>shaderManager = nullptr;
-	std::shared_ptr<Rbk::VulkanLayer>vulkanLayer = nullptr;
-	std::shared_ptr<Rbk::Im>vImGui = nullptr;
+    std::shared_ptr<Rbk::Window>window = nullptr;
+    std::shared_ptr<Rbk::RenderManager>renderManager = nullptr;
+    std::shared_ptr<Rbk::Camera>camera= nullptr;
+    std::shared_ptr<Rbk::InputManager>inputManager = nullptr;
+    std::shared_ptr<Rbk::VulkanAdapter>rendererAdapter = nullptr;
+    std::shared_ptr<Rbk::LayerManager>layerManager = nullptr;
+    std::shared_ptr<Rbk::TextureManager>textureManager = nullptr;
+    std::shared_ptr<Rbk::MeshManager>meshManager = nullptr;
+    std::shared_ptr<Rbk::ShaderManager>shaderManager = nullptr;
+    std::shared_ptr<Rbk::VulkanLayer>vulkanLayer = nullptr;
+    std::shared_ptr<Rbk::Im>vImGui = nullptr;
 
-	Application* Application::s_Instance = nullptr;
+    Application* Application::s_Instance = nullptr;
 
-	VImGuiInfo vImGuiInfo;
+    VImGuiInfo vImGuiInfo;
 
-	Application::Application()
-	{
-		if (s_Instance == nullptr) {
-			s_Instance = this;
-		}
-	}
+    Application::Application()
+    {
+        if (s_Instance == nullptr) {
+            s_Instance = this;
+        }
+    }
 
-	Application::~Application()
-	{
-		std::cout << "Application deleted" << std::endl;
-	}
+    Application::~Application()
+    {
+        std::cout << "Application deleted" << std::endl;
+    }
 
-	void Application::Init()
-	{
-		Rbk::Log::Init();
+    void Application::Init()
+    {
+        Rbk::Log::Init();
 
-		if (window == nullptr) {
-			window = std::make_shared<Rbk::Window>(Rbk::Window());
-			window.get()->Init();
-		}
+        if (window == nullptr) {
+            window = std::make_shared<Rbk::Window>(Rbk::Window());
+            window.get()->Init();
+        }
 
-		if (camera == nullptr) {
-			int width, height;
-			glfwGetWindowSize(window->Get(), &width, &height);
-			camera = std::make_shared<Rbk::Camera>(Rbk::Camera());
-			camera->Init(width, height);
-		}
+        if (camera == nullptr) {
+            int width, height;
+            glfwGetWindowSize(window->Get(), &width, &height);
+            camera = std::make_shared<Rbk::Camera>(Rbk::Camera());
+            camera->Init(width, height);
+        }
 
-		if (inputManager == nullptr) {
-			inputManager = std::make_shared<Rbk::InputManager>(Rbk::InputManager(window.get(), camera.get()));
-			inputManager->Init();
-		}
+        if (inputManager == nullptr) {
+            inputManager = std::make_shared<Rbk::InputManager>(window.get(), camera.get());
+            inputManager->Init();
+        }
 
-		if (layerManager == nullptr) {
-			vulkanLayer = std::make_shared<Rbk::VulkanLayer>(Rbk::VulkanLayer());
-			layerManager = std::make_shared<Rbk::LayerManager>(Rbk::LayerManager());
+        if (layerManager == nullptr) {
+            vulkanLayer = std::make_shared<Rbk::VulkanLayer>();
+            layerManager = std::make_shared<Rbk::LayerManager>();
 
-			layerManager->Add(vulkanLayer.get());
-		}
+            layerManager->Add(vulkanLayer.get());
+        }
 
-		if (rendererAdapter == nullptr) {
-			rendererAdapter = std::make_shared<Rbk::VulkanAdapter>(Rbk::VulkanAdapter(window.get()));
-		}
+        if (rendererAdapter == nullptr) {
+            rendererAdapter = std::make_shared<Rbk::VulkanAdapter>(window.get());
+        }
 
-		if (textureManager == nullptr) {
-			textureManager = std::make_shared<Rbk::TextureManager>(Rbk::TextureManager(rendererAdapter.get()->Rdr()));
-		}
+        if (textureManager == nullptr) {
+            textureManager = std::make_shared<Rbk::TextureManager>(rendererAdapter.get()->Rdr());
+        }
 
-		if (meshManager == nullptr) {
-			meshManager = std::make_shared<Rbk::MeshManager>(Rbk::MeshManager(rendererAdapter.get()->Rdr()));
-		}
+        if (meshManager == nullptr) {
+            meshManager = std::make_shared<Rbk::MeshManager>(rendererAdapter.get()->Rdr());
+        }
 
-		if (shaderManager == nullptr) {
-			shaderManager = std::make_shared<Rbk::ShaderManager>(Rbk::ShaderManager(rendererAdapter.get()->Rdr()));
-		}
+        if (shaderManager == nullptr) {
+            shaderManager = std::make_shared<Rbk::ShaderManager>(rendererAdapter.get()->Rdr());
+        }
 
-		if (renderManager == nullptr) {
-			renderManager = std::make_shared<Rbk::RenderManager>(Rbk::RenderManager(
-				window->Get(), rendererAdapter.get(), textureManager.get(), meshManager.get(), shaderManager.get()
-			));
-			renderManager->Init();
-			renderManager->AddCamera(camera.get());
-		}
-	}
+        if (renderManager == nullptr) {
+            renderManager = std::make_shared<Rbk::RenderManager>(
+                window->Get(), rendererAdapter.get(), textureManager.get(), meshManager.get(), shaderManager.get()
+            );
+            renderManager->Init();
+            renderManager->AddCamera(camera.get());
+        }
+    }
 
-	void Application::Run()
-	{		
-		glm::vec3 pos3 = glm::vec3(0.1f, -0.8f, 0.0f);
-		glm::vec3 pos4 = glm::vec3(0.6f, -0.18f, 0.5f);
-		glm::vec3 pos5 = glm::vec3(1.6f, -0.55f, 1.5f);
+    void Application::Run()
+    {		
+        glm::vec3 pos4 = glm::vec3(0.6f, -0.18f, 0.5f);
+        glm::vec3 pos5 = glm::vec3(1.6f, -0.55f, 1.5f);
 
-		shaderManager->AddShader("main", "shaders/spv/vert.spv", "shaders/spv/frag.spv");
+        shaderManager->AddShader("main", "shaders/spv/vert.spv", "shaders/spv/frag.spv");
+        shaderManager->AddShader("skybox", "shaders/spv/skybox_vert.spv", "shaders/spv/skybox_frag.spv");
 
-		textureManager->AddTexture("minecraft_grass", "mesh/minecraft/Grass_Block_TEX.png");
-		textureManager->AddTexture("sky_skybox_texture", "texture/skybox/sky_skybox_texture.jpg");
-		textureManager->AddTexture("campfire_tex", "mesh/campfire/Campfire_MAT_BaseColor_01.jpg");
-		textureManager->AddTexture("tree_tex", "mesh/tree/tree.jpg");
+        textureManager->AddTexture("minecraft_grass", "mesh/minecraft/Grass_Block_TEX.png");
+        textureManager->AddTexture("campfire_tex", "mesh/campfire/Campfire_MAT_BaseColor_01.jpg");
+        textureManager->AddTexture("tree_tex", "mesh/tree/tree.jpg");
+        textureManager->AddTexture("skybox_tex", "texture/skybox/green/LightGreen_front5.png");
 
-		glm::vec3 scaleMinecraft = glm::vec3(0.1f, 0.1f, 0.1f);
+        glm::vec3 scaleMinecraft = glm::vec3(0.1f, 0.1f, 0.1f);
 
-		for (int x = -5; x < 5; x++) {
-			for (int y = 0; y < 10; y++) {
-				glm::vec3 posCube = glm::vec3(-0.25f * x, -1.5f, -0.25f * y);
-				meshManager->AddWorldMesh("cube", "mesh/minecraft/Grass_Block.obj", "minecraft_grass", posCube, scaleMinecraft);
-			}
-		}
+        for (int x = -5; x < 5; x++) {
+            for (int y = 0; y < 10; y++) {
+                glm::vec3 posCube = glm::vec3(-0.25f * x, -1.5f, -0.25f * y);
+                meshManager->AddWorldMesh("cube", "mesh/minecraft/Grass_Block.obj", "minecraft_grass", posCube, scaleMinecraft);
+            }
+        }
 
-		glm::vec3 pos1 = glm::vec3(0.25f, -1.3f, -0.75f);
-		glm::vec3 scaleCamp = glm::vec3(0.002f, 0.002f, 0.002f);
-		meshManager->AddWorldMesh("campfire", "mesh/campfire/Campfire.obj", "campfire_tex", pos1, scaleCamp);
+        glm::vec3 pos1 = glm::vec3(0.25f, -1.3f, -0.75f);
+        glm::vec3 scaleCamp = glm::vec3(0.002f, 0.002f, 0.002f);
+        meshManager->AddWorldMesh("campfire", "mesh/campfire/Campfire.obj", "campfire_tex", pos1, scaleCamp);
 
-		glm::vec3 pos2 = glm::vec3(-1.0f, -1.3f, -1.4f);
-		glm::vec3 scaleTree = glm::vec3(0.0008f, 0.0008f, 0.0008f);
-		meshManager->AddWorldMesh("tree", "mesh/tree/tree.obj", "tree_tex", pos2, scaleTree);
+        glm::vec3 pos2 = glm::vec3(-1.0f, -1.3f, -1.4f);
+        glm::vec3 scaleTree = glm::vec3(0.0008f, 0.0008f, 0.0008f);
+        meshManager->AddWorldMesh("tree", "mesh/tree/tree.obj", "tree_tex", pos2, scaleTree);
 
-		pos2 = glm::vec3(-0.7f, -1.3f, -1.9f);
-		meshManager->AddWorldMesh("tree", "mesh/tree/tree.obj", "tree_tex", pos2, scaleTree);
+        pos2 = glm::vec3(-0.7f, -1.3f, -1.9f);
+        meshManager->AddWorldMesh("tree", "mesh/tree/tree.obj", "tree_tex", pos2, scaleTree);
 
-		pos2 = glm::vec3(-0.25f, -1.3f, -1.2f);
-		meshManager->AddWorldMesh("tree", "mesh/tree/tree.obj", "tree_tex", pos2, scaleTree);
+        pos2 = glm::vec3(-0.25f, -1.3f, -1.2f);
+        meshManager->AddWorldMesh("tree", "mesh/tree/tree.obj", "tree_tex", pos2, scaleTree);
 
-		pos2 = glm::vec3(0.7f, -1.3f, -1.6f);
-		meshManager->AddWorldMesh("tree", "mesh/tree/tree.obj", "tree_tex", pos2, scaleTree);
+        pos2 = glm::vec3(0.7f, -1.3f, -1.6f);
+        meshManager->AddWorldMesh("tree", "mesh/tree/tree.obj", "tree_tex", pos2, scaleTree);
 
-		pos2 = glm::vec3(1.2f, -1.3f, -0.9f);
-		meshManager->AddWorldMesh("tree", "mesh/tree/tree.obj", "tree_tex", pos2, scaleTree);
+        pos2 = glm::vec3(1.2f, -1.3f, -0.9f);
+        meshManager->AddWorldMesh("tree", "mesh/tree/tree.obj", "tree_tex", pos2, scaleTree);
 
-		double lastTime = glfwGetTime();
-		
-		VImGuiInfo imguiInfo = rendererAdapter->GetVImGuiInfo();
-		imguiInfo.rdrPass = rendererAdapter.get()->CreateImGuiRenderPass();
+        //glm::vec3 scaleCubeTest = glm::vec3(0.5f, 0.5f, 0.5f);
+        //meshManager->AddWorldMesh("cubeTest", "mesh/cube/cube.obj", "skybox_tex", pos5, scaleCubeTest);
 
-		Rbk::Im::Init(window->Get(), imguiInfo.info, *imguiInfo.rdrPass);
 
-		rendererAdapter->ImmediateSubmit([&](VkCommandBuffer cmd) {
-			ImGui_ImplVulkan_CreateFontsTexture(cmd);
-		});
+        std::vector<const char*>skyboxImages;
+        skyboxImages.emplace_back("texture/skybox/green/LightGreen_right1.png");
+        skyboxImages.emplace_back("texture/skybox/green/LightGreen_left2.png");
+        skyboxImages.emplace_back("texture/skybox/green/LightGreen_top3.png");
+        skyboxImages.emplace_back("texture/skybox/green/LightGreen_bottom4.png");
+        skyboxImages.emplace_back("texture/skybox/green/LightGreen_front5.png");
+        skyboxImages.emplace_back("texture/skybox/green/LightGreen_back6.png");
 
-		ImGui_ImplVulkan_DestroyFontUploadObjects();
-		bool wireFrameModeOn = false;
+        textureManager->AddSkyBox(skyboxImages);
+        glm::vec3 pos3 = glm::vec3(0.25f, -1.3f, -0.75f);
+        glm::vec3 scaleSkybox = glm::vec3(0.25f, -1.3f, -0.75f);
+        meshManager->AddSkyboxMesh("skybox", pos3, scaleSkybox);
 
-		vulkanLayer->AddWindow(window.get());
-		vulkanLayer->AddTextureManager(textureManager.get());
-		vulkanLayer->AddMeshManager(meshManager.get());
-		vulkanLayer->AddShaderManager(shaderManager.get());
+        double lastTime = glfwGetTime();
+        
+        VImGuiInfo imguiInfo = rendererAdapter->GetVImGuiInfo();
+        imguiInfo.rdrPass = rendererAdapter.get()->CreateImGuiRenderPass();
 
-		rendererAdapter->PrepareWorld();
+        Rbk::Im::Init(window->Get(), imguiInfo.info, *imguiInfo.rdrPass);
 
-		while (!glfwWindowShouldClose(window->Get())) {
+        rendererAdapter->ImmediateSubmit([&](VkCommandBuffer cmd) {
+            ImGui_ImplVulkan_CreateFontsTexture(cmd);
+        });
 
-			double currentTime = glfwGetTime();
-			double timeStep = currentTime - lastTime;
+        ImGui_ImplVulkan_DestroyFontUploadObjects();
+        bool wireFrameModeOn = false;
 
-			camera->UpdateSpeed(timeStep);
+        vulkanLayer->AddWindow(window.get());
+        vulkanLayer->AddTextureManager(textureManager.get());
+        vulkanLayer->AddMeshManager(meshManager.get());
+        vulkanLayer->AddShaderManager(shaderManager.get());
 
-			glfwPollEvents();
+        rendererAdapter->PrepareWorld();
 
-			renderManager->PrepareDraw();
-			renderManager->Draw();
+        while (!glfwWindowShouldClose(window->Get())) {
 
-			//@todo move to LayerManager
-			Rbk::Im::NewFrame();
-			vulkanLayer->AddRenderAdapter(rendererAdapter.get());
-			vulkanLayer->Render(timeStep, rendererAdapter->Rdr()->GetDeviceProperties());
-			vulkanLayer->DisplayOptions();
-			Rbk::Im::Render();
+            double currentTime = glfwGetTime();
+            double timeStep = currentTime - lastTime;
 
-			rendererAdapter->Rdr()->BeginCommandBuffer(imguiInfo.cmdBuffer);
-			ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), imguiInfo.cmdBuffer);
-			rendererAdapter->Rdr()->EndCommandBuffer(imguiInfo.cmdBuffer);
-			//end @todo
+            camera->UpdateSpeed(timeStep);
 
-			glfwSwapBuffers(window->Get());
-			lastTime = currentTime;
-		}
+            glfwPollEvents();
 
-		Rbk::Im::Destroy();
+            renderManager->PrepareDraw();
+            renderManager->Draw();
 
-		renderManager->Adp()->Destroy();
+            //@todo move to LayerManager
+            Rbk::Im::NewFrame();
+            vulkanLayer->AddRenderAdapter(rendererAdapter.get());
+            vulkanLayer->Render(timeStep, rendererAdapter->Rdr()->GetDeviceProperties());
+            vulkanLayer->DisplayOptions();
+            Rbk::Im::Render();
 
-		glfwDestroyWindow(window->Get());
-		glfwTerminate();
-	}
+            rendererAdapter->Rdr()->BeginCommandBuffer(imguiInfo.cmdBuffer);
+            ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), imguiInfo.cmdBuffer);
+            rendererAdapter->Rdr()->EndCommandBuffer(imguiInfo.cmdBuffer);
+            //end @todo
+
+            lastTime = currentTime;
+        }
+
+        Rbk::Im::Destroy();
+
+        renderManager->Adp()->Destroy();
+
+        glfwDestroyWindow(window->Get());
+        glfwTerminate();
+    }
 }
