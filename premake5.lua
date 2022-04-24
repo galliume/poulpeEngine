@@ -65,6 +65,7 @@ project "Rebulkan"
 
     includedirs
     {
+		"src",
         "%{IncludeDir.GLFW}",
         "%{IncludeDir.volk}",
         "%{IncludeDir.GLM}",
@@ -73,8 +74,7 @@ project "Rebulkan"
         "vendor/imgui/backends",
         "vendor/stb_image",
         "vendor/tiny_obj_loader",        
-        os.getenv("VULKAN_SDK").."/Include",
-        "src"
+        os.getenv("VULKAN_SDK").."/Include"
     }
 
     filter "system:windows"
@@ -92,10 +92,6 @@ project "Rebulkan"
         symbols "on"
 
     filter "configurations:Release"
-        runtime "Release"
-        symbols "on"
-
-    filter "configurations:Dist"
         runtime "Release"
         symbols "on"
 
