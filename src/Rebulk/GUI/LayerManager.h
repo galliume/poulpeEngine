@@ -1,5 +1,4 @@
 #pragma once
-#include "rebulkpch.h"
 #include "Rebulk/GUI/Layer/ILayer.h"
 
 namespace Rbk

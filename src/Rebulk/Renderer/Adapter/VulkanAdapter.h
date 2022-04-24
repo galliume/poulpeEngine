@@ -1,5 +1,4 @@
 #pragma once
-#include "rebulkpch.h"
 #include "IRendererAdapter.h"
 #include "Rebulk/Renderer/Vulkan/VulkanRenderer.h"
 #include "Rebulk/Renderer/Mesh.h"

@@ -1,5 +1,4 @@
-#include "rebulkpch.h"
-
+#pragma once
 #include "Rebulk/Renderer/Adapter/IRendererAdapter.h"
 #include "TextureManager.h"
 #include "MeshManager.h"

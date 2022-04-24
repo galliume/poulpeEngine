@@ -1,6 +1,7 @@
 workspace "Rebulkan"
     architecture "x64"
     startproject "Rebulkan"
+	
     configurations
     {
         "Debug",
@@ -27,6 +28,9 @@ project "Rebulkan"
 
     targetdir  ("bin/" .. outputdir  .. "/%{prj.name}")
     objdir  ("bin-int/" .. outputdir  .. "/%{prj.name}")
+
+    pchheader "rebulkpch.h"
+    pchsource "src/rebulkpch.cpp"
 
     flags
     {
@@ -66,9 +70,7 @@ project "Rebulkan"
     includedirs
     {
 		"src",
-        "%{IncludeDir.GLFW}",
-        "%{IncludeDir.volk}",
-        "%{IncludeDir.GLM}",
+        IncludeDir,
         "vendor/spdlog/include",
         "vendor/imgui",
         "vendor/imgui/backends",
@@ -85,7 +87,12 @@ project "Rebulkan"
         {       
             "GLFW"
         }
-        
+
+	filter { "system:windows", "configurations:Debug" }
+        buildoptions { "/MTd" }
+
+	filter { "system:windows", "configurations:Release" }
+        buildoptions { "/MT" }
 
     filter "configurations:Debug"
         runtime "Debug"

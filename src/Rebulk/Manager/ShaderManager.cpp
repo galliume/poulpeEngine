@@ -1,3 +1,4 @@
+#include "rebulkpch.h"
 #include "ShaderManager.h"
 
 namespace Rbk

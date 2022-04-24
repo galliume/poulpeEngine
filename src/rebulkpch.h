@@ -13,6 +13,7 @@
 #include <optional>
 #include <set>
 #include <string>
+#include <string.h>
 #include <unordered_map>
 #include <numeric>
 #include <map>
