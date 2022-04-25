@@ -10,7 +10,7 @@ namespace Rbk {
         ImGui::CreateContext();
         ImGuiIO& io = ImGui::GetIO(); (void)io;
 
-        io.Fonts->AddFontFromFileTTF("./fonts/montserrat/Montserrat-Regular.ttf", 20.0f);
+        io.Fonts->AddFontFromFileTTF("./assets/fonts/montserrat/Montserrat-Regular.ttf", 20.0f);
 
         io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
         io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
