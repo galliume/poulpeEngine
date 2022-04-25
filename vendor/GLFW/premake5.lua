@@ -43,14 +43,6 @@ project "GLFW"
         { 
             "_GLFW_WIN32",
         }
-        
-    filter "configurations:Debug"
-        runtime "Debug"
-        symbols "on"
-
-    filter "configurations:Release"
-        runtime "Release"
-        optimize "on"
 
     filter "system:linux"
         systemversion "latest"
@@ -59,11 +51,11 @@ project "GLFW"
         {
             "src/posix_thread.c",
             "src/posix_time.c",
+            "src/linux_joystick.c",
             "src/egl_context.c",
             "src/egl_context.h",
             "src/osmesa_context.c",
             "src/osmesa_context.h",
-            "src/linux_joystick.c",
             "src/wl_init.c",
             "src/wl_platform.h",
             "src/wl_monitor.c",
@@ -85,3 +77,11 @@ project "GLFW"
         }
 
         links { "wayland-client", "dl", "GL", "pthread" }
+    
+    filter "configurations:Debug"
+        runtime "Debug"
+        symbols "on"
+
+    filter "configurations:Release"
+        runtime "Release"
+        optimize "on"
