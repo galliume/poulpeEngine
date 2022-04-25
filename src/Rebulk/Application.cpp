@@ -140,11 +140,9 @@ namespace Rbk
 
         textureManager->AddSkyBox(skyboxImages);
         glm::vec3 pos3 = glm::vec3(0.25f, -1.3f, -0.75f);
-        glm::vec3 scaleSkybox = glm::vec3(0.25f, -1.3f, -0.75f);
+        glm::vec3 scaleSkybox = glm::vec3(1.0f, 1.0f, 1.0f);
         meshManager->AddSkyboxMesh("skybox", pos3, scaleSkybox);
-
-        double lastTime = glfwGetTime();
-        
+     
         VImGuiInfo imguiInfo = rendererAdapter->GetVImGuiInfo();
         imguiInfo.rdrPass = rendererAdapter.get()->CreateImGuiRenderPass();
 
@@ -164,10 +162,22 @@ namespace Rbk
 
         rendererAdapter->PrepareWorld();
 
+        double lastTime = glfwGetTime();
+        double timeStepSum = 0.0f;
+        uint32_t frameCount = 0;
+
         while (!glfwWindowShouldClose(window->Get())) {
 
             double currentTime = glfwGetTime();
             double timeStep = currentTime - lastTime;
+            timeStepSum += timeStep;
+            frameCount++;
+
+            if (1.0f <= timeStepSum) {
+                Rbk::Log::GetLogger()->debug("{} fps/sec", frameCount);
+                timeStepSum = 0.0f;
+                frameCount = 0;
+            }
 
             camera->UpdateSpeed(timeStep);
 
@@ -180,7 +190,6 @@ namespace Rbk
             Rbk::Im::NewFrame();
             vulkanLayer->AddRenderAdapter(rendererAdapter.get());
             vulkanLayer->Render(timeStep, rendererAdapter->Rdr()->GetDeviceProperties());
-            vulkanLayer->DisplayOptions();
             Rbk::Im::Render();
 
             rendererAdapter->Rdr()->BeginCommandBuffer(imguiInfo.cmdBuffer);

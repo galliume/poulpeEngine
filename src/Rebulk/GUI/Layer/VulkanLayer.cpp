@@ -17,8 +17,15 @@ namespace Rbk
 
     void VulkanLayer::Render(double timeStep, VkPhysicalDeviceProperties devicesProps)
     {
+        ImGui::Begin("Performances stats");
+
         DisplayFpsCounter(timeStep);
-        DisplayAPI(devicesProps);		
+        ImGui::Separator();
+        DisplayAPI(devicesProps);
+        ImGui::Separator();
+        DisplayOptions();
+
+        ImGui::End();
     }
     void VulkanLayer::Destroy()
     {
@@ -27,19 +34,15 @@ namespace Rbk
 
     void VulkanLayer::DisplayFpsCounter(double timeStep)
     {
-        ImGui::Begin("Performances stats");	
         Rbk::Im::Text("FPS : %.2f", 1 / timeStep);
         Rbk::Im::Text("Frametime : %.2f ms", timeStep * 1000);	
-        ImGui::End();
     }
 
     void VulkanLayer::DisplayAPI(VkPhysicalDeviceProperties devicesProps)
-    {
-        ImGui::Begin("Informations");
-                    
-        Rbk::Im::Text("API Version : %d", devicesProps.apiVersion);
-        Rbk::Im::Text("Drivers version : %d", devicesProps.driverVersion);
-        Rbk::Im::Text("Vendor id : %d", devicesProps.vendorID);
+    {                    
+        Rbk::Im::Text("API Version : %s", m_Adapter->Rdr()->GetAPIVersion().c_str());
+        //Rbk::Im::Text("Drivers version : %d", devicesProps.driverVersion);
+        Rbk::Im::Text("Vendor id : %s", m_Adapter->Rdr()->GetVendor(devicesProps.vendorID));
         Rbk::Im::Text("GPU : %s", devicesProps.deviceName);
         ImGui::Separator();
         Rbk::Im::Text("Current frame %d", m_Adapter->Rdr()->GetCurrentFrame());
@@ -62,20 +65,14 @@ namespace Rbk
         for (auto tex : m_TextureManager->GetTextures()) {
             Rbk::Im::Text("\t%s", tex.first);
         }
-
-        ImGui::End();
     }
 
     void VulkanLayer::DisplayOptions()
-    {
-        ImGui::Begin("Rendering options");
-        
+    {        
         ImGui::Checkbox("VSync", &m_VSync);
         ImGui::Checkbox("Wireframe", &m_WireframeModeOn);
         ImGui::Checkbox("Show ImGui demo", &m_ShowDemo);
         ImGui::Checkbox("Make spin", &m_MakeSpin);
-
-        ImGui::End();
         
         m_Adapter->SetWireFrameMode(m_WireframeModeOn);
         m_Adapter->MakeSpin(m_MakeSpin);

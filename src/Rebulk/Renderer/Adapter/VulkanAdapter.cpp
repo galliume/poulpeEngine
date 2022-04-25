@@ -338,14 +338,14 @@ namespace Rbk
         m_Renderer->SetScissor(m_CommandBuffers[m_ImageIndex]);
 
         //draw the world !
-        for (Mesh mesh : *m_MeshManager->GetWorldMeshes()) {
+        /*for (Mesh mesh : *m_MeshManager->GetWorldMeshes()) {
             m_Renderer->BindPipeline(m_CommandBuffers[m_ImageIndex], mesh.graphicsPipeline);
             m_Renderer->Draw(m_CommandBuffers[m_ImageIndex], &mesh, m_ImageIndex);
-        }
+        }*/
         
         //draw the skybox !
         m_Renderer->BindPipeline(m_CommandBuffers[m_ImageIndex], m_MeshManager->GetSkyboxMesh()->graphicsPipeline);
-        m_Renderer->DrawSkybox(m_CommandBuffers[m_ImageIndex], m_MeshManager->GetSkyboxMesh(), m_ImageIndex);
+        m_Renderer->Draw(m_CommandBuffers[m_ImageIndex], m_MeshManager->GetSkyboxMesh(), m_ImageIndex);
 
         m_Renderer->EndRenderPass(m_CommandBuffers[m_ImageIndex]);
         m_Renderer->EndCommandBuffer(m_CommandBuffers[m_ImageIndex]);

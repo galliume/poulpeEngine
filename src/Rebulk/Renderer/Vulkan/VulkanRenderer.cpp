@@ -89,6 +89,26 @@ namespace Rbk {
         CreateFence();
     }
 
+    std::string VulkanRenderer::GetAPIVersion()
+    {
+        if (m_apiVersion.empty()) {
+            uint32_t instanceVersion = VK_API_VERSION_1_2;
+            auto FN_vkEnumerateInstanceVersion = PFN_vkEnumerateInstanceVersion(vkGetInstanceProcAddr(nullptr, "vkEnumerateInstanceVersion"));
+
+            if (vkEnumerateInstanceVersion) {
+                vkEnumerateInstanceVersion(&instanceVersion);
+            }
+            
+            uint32_t major = VK_VERSION_MAJOR(instanceVersion);
+            uint32_t minor = VK_VERSION_MINOR(instanceVersion);
+            uint32_t patch = VK_VERSION_PATCH(instanceVersion);
+
+            m_apiVersion = std::to_string(major) + "." + std::to_string(minor) + "." + std::to_string(patch);
+        }
+
+        return m_apiVersion;
+    }
+
     void VulkanRenderer::CreateInstance()
     {
         std::string message;
@@ -1277,9 +1297,7 @@ namespace Rbk {
     {	
         VkBuffer vertexBuffers[] = { mesh->vertexBuffer.first };
         VkDeviceSize offsets[] = { 0 };
-        uint32_t verticesOffsetIndex = 0;
-        uint32_t indicesOffsetIndex = 0;
-
+      
         vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
         vkCmdBindIndexBuffer(commandBuffer, mesh->indicesBuffer.first, 0, VK_INDEX_TYPE_UINT32);
 
@@ -1304,9 +1322,7 @@ namespace Rbk {
     {
         VkBuffer vertexBuffers[] = { mesh->vertexBuffer.first };
         VkDeviceSize offsets[] = { 0 };
-        uint32_t verticesOffsetIndex = 0;
-        uint32_t indicesOffsetIndex = 0;
-
+    
         vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
         vkCmdBindIndexBuffer(commandBuffer, mesh->indicesBuffer.first, 0, VK_INDEX_TYPE_UINT32);
 
@@ -1626,7 +1642,7 @@ namespace Rbk {
         VkDeviceSize layerSize = imageSize / 6;
 
         for (int i = 0; i < skyboxPixels.size(); i++) {
-            memcpy((void*)(data + layerSize * i), skyboxPixels[i], layerSize);
+            memcpy((void*)(data + (layerSize * i)), skyboxPixels[i], layerSize);
         }
 
         vkUnmapMemory(m_Device, stagingBufferMemory);
@@ -1635,7 +1651,7 @@ namespace Rbk {
             stbi_image_free(pixels);
         }
 
-        CreateSkyboxImage(texWidth, texHeight, mipLevels, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, textureImage, textureImageMemory);
+        CreateSkyboxImage(texWidth, texHeight, mipLevels, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, textureImage, textureImageMemory);
 
         VkImageMemoryBarrier renderBarrier = SetupImageMemoryBarrier(
             textureImage, 0, VK_ACCESS_TRANSFER_WRITE_BIT, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL
@@ -1809,16 +1825,12 @@ namespace Rbk {
 
                 VkBufferImageCopy region{};
                 region.bufferOffset = sizeof(skyboxPixels[i]) * i;
-                region.bufferRowLength = 0;
-                region.bufferImageHeight = 0;
-
                 region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
                 region.imageSubresource.mipLevel = mipLevel;
                 region.imageSubresource.baseArrayLayer = i;
                 region.imageSubresource.layerCount = 1;
-                //region.imageOffset = { 0, 0, 0 };
-                region.imageExtent.width >> mipLevel;
-                region.imageExtent.height >> mipLevel;
+                region.imageExtent.width =  width >> mipLevel;
+                region.imageExtent.height = height >> mipLevel;
                 region.imageExtent.depth = 1;
             
                 bufferCopyRegions.emplace_back(region);

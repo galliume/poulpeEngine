@@ -37,9 +37,9 @@ namespace Rbk
 
         VkCommandBuffer commandBuffer = m_Renderer->AllocateCommandBuffers(commandPool)[0];
         m_Renderer->BeginCommandBuffer(commandBuffer);
-        m_Renderer->CreateSkyboxTextureImage(commandBuffer, skyboxPixels, texWidth, texHeight, mipLevels, skyboxImage, textureImageMemory, VK_FORMAT_R8G8B8A8_SRGB);
+        m_Renderer->CreateSkyboxTextureImage(commandBuffer, skyboxPixels, texWidth, texHeight, mipLevels, skyboxImage, textureImageMemory, VK_FORMAT_R8G8B8A8_UNORM);
 
-        VkImageView textureImageView = m_Renderer->CreateSkyboxImageView(skyboxImage, VK_FORMAT_R8G8B8A8_SRGB, mipLevels);
+        VkImageView textureImageView = m_Renderer->CreateSkyboxImageView(skyboxImage, VK_FORMAT_R8G8B8A8_UNORM, mipLevels);
         VkSampler textureSampler = m_Renderer->CreateSkyboxTextureSampler(mipLevels);
 
         m_Skybox.image = skyboxImage;

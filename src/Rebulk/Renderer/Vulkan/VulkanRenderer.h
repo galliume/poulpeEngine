@@ -41,7 +41,7 @@ namespace Rbk {
     {
     public:
         VulkanRenderer(GLFWwindow* window);
-        ~VulkanRenderer();		
+        ~VulkanRenderer();
 
         /**
         * Vulkan init functions, before main loop.
@@ -107,6 +107,7 @@ namespace Rbk {
         void WaitIdle();
         void GenerateMipmaps(VkCommandBuffer commandBuffer, VkFormat imageFormat, VkImage image, int32_t texWidth, int32_t texHeight, uint32_t mipLevels, uint32_t layerCount = 1);
         void GenerateMipmapsSkybox(VkCommandBuffer commandBuffer, VkFormat imageFormat, VkImage image, int32_t texWidth, int32_t texHeight, uint32_t mipLevels, uint32_t layerCount);
+       
         /**
         * Vulkan clean and destroy
         **/
@@ -148,6 +149,20 @@ namespace Rbk {
         VkSampleCountFlagBits GetMaxUsableSampleCount();
         SwapChainSupportDetails QuerySwapChainSupport(VkPhysicalDevice device);
         uint32_t GetImageCount();
+        std::string GetAPIVersion();
+
+        static char* GetVendor(int vendorID)
+        {
+            std::map<int, char*> vendors;
+            vendors[0x1002] = "AMD";
+            vendors[0x1010] = "ImgTec";
+            vendors[0x10DE] = "NVIDIA";
+            vendors[0x13B5] = "ARM";
+            vendors[0x5143] = "Qualcomm";
+            vendors[0x8086] = "INTEL";
+
+            return vendors[vendorID];
+        }
 
     public:
         bool m_FramebufferResized = false;
@@ -162,18 +177,19 @@ namespace Rbk {
         void SetupDebugMessenger();
         void CreateLogicalDevice();
         void PickPhysicalDevice();
-        void CreateSurface();						
+        void CreateSurface();
 
         QueueFamilyIndices FindQueueFamilies(VkPhysicalDevice device);
         VkSurfaceFormatKHR ChooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats);
         VkPresentModeKHR ChooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes);
-        uint32_t FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);		
+        uint32_t FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
         VkExtent2D ChooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities);
 
     private:
         const int m_MAX_FRAMES_IN_FLIGHT = 2;
         size_t m_CurrentFrame = 0;
         uint32_t m_ExtensionCount = 0;
+        std::string m_apiVersion = "";
 
         GLFWwindow* m_Window = VK_NULL_HANDLE;
 
@@ -183,25 +199,25 @@ namespace Rbk {
         bool m_InstanceCreated = false;
         bool m_EnableValidationLayers = false;
     
-        VkInstance m_Instance = VK_NULL_HANDLE;		
+        VkInstance m_Instance = VK_NULL_HANDLE;
         VkPhysicalDevice m_PhysicalDevice = VK_NULL_HANDLE;
         VkPhysicalDeviceProperties m_DeviceProps = {};
-        VkPhysicalDeviceFeatures m_DeviceFeatures = {};		
+        VkPhysicalDeviceFeatures m_DeviceFeatures = {};
         VkDevice m_Device = VK_NULL_HANDLE;
         VkQueue m_GraphicsQueue = VK_NULL_HANDLE;
         VkQueue m_PresentQueue = VK_NULL_HANDLE;
         VkSurfaceKHR m_Surface = VK_NULL_HANDLE;
         VkFormat m_SwapChainImageFormat;
-        VkExtent2D m_SwapChainExtent;		
+        VkExtent2D m_SwapChainExtent;
         VkDebugUtilsMessengerEXT m_DebugMessengerCallback = VK_NULL_HANDLE;
         QueueFamilyIndices m_QueueFamilyIndices = {};
         VkSurfaceFormatKHR m_SurfaceFormat;
         VkPresentModeKHR m_PresentMode;
         SwapChainSupportDetails m_SwapChainSupport;
 
-        std::vector<VkLayerProperties> m_LayersAvailable = {};		
+        std::vector<VkLayerProperties> m_LayersAvailable = {};
         std::vector<VkExtensionProperties> m_Extensions = {};
-        std::vector<const char*> m_RequiredExtensions = {};		
+        std::vector<const char*> m_RequiredExtensions = {};
         std::vector<VkFence> m_InFlightFences = {};
         std::vector<VkFence> m_ImagesInFlight = {};
         VkFence m_Fence;
