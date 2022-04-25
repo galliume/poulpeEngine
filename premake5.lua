@@ -19,7 +19,7 @@ IncludeDir["spdlog"] = "vendor/spdlog/include"
 IncludeDir["tiny_obj_loader"] = "vendor/tiny_obj_loader"
 IncludeDir["stb_image"] = "vendor/stb_image"
 
-include "vendor/glfw"
+include "vendor/GLFW"
 include "vendor/imgui"
 
 project "Rebulkan"
@@ -95,4 +95,4 @@ project "Rebulkan"
     filter "system:linux"
         systemversion "latest"
     
-        links { "glfw", "vulkan", "GL", "GLU", "dl",  "pthread" }
+        links { "GLFW", "ImGui", "wayland-client", "dl", "pthread" }
