@@ -89,54 +89,54 @@ namespace Rbk
         glm::vec3 pos4 = glm::vec3(0.6f, -0.18f, 0.5f);
         glm::vec3 pos5 = glm::vec3(1.6f, -0.55f, 1.5f);
 
-        shaderManager->AddShader("main", "shaders/spv/vert.spv", "shaders/spv/frag.spv");
-        shaderManager->AddShader("skybox", "shaders/spv/skybox_vert.spv", "shaders/spv/skybox_frag.spv");
+        shaderManager->AddShader("main", "assets/shaders/spv/vert.spv", "assets/shaders/spv/frag.spv");
+        shaderManager->AddShader("skybox", "assets/shaders/spv/skybox_vert.spv", "assets/shaders/spv/skybox_frag.spv");
 
-        textureManager->AddTexture("minecraft_grass", "mesh/minecraft/Grass_Block_TEX.png");
-        textureManager->AddTexture("campfire_tex", "mesh/campfire/Campfire_MAT_BaseColor_01.jpg");
-        textureManager->AddTexture("tree_tex", "mesh/tree/tree.jpg");
-        textureManager->AddTexture("skybox_tex", "texture/skybox/green/LightGreen_front5.png");
+        textureManager->AddTexture("minecraft_grass", "assets/mesh/minecraft/Grass_Block_TEX.png");
+        textureManager->AddTexture("campfire_tex", "assets/mesh/campfire/Campfire_MAT_BaseColor_01.jpg");
+        textureManager->AddTexture("tree_tex", "assets/mesh/tree/tree.jpg");
+        textureManager->AddTexture("skybox_tex", "assets/texture/skybox/green/LightGreen_front5.png");
 
         glm::vec3 scaleMinecraft = glm::vec3(0.1f, 0.1f, 0.1f);
 
         for (int x = -5; x < 5; x++) {
             for (int y = 0; y < 10; y++) {
                 glm::vec3 posCube = glm::vec3(-0.25f * x, -1.5f, -0.25f * y);
-                meshManager->AddWorldMesh("cube", "mesh/minecraft/Grass_Block.obj", "minecraft_grass", posCube, scaleMinecraft);
+                meshManager->AddWorldMesh("cube", "assets/mesh/minecraft/Grass_Block.obj", "minecraft_grass", posCube, scaleMinecraft);
             }
         }
 
         glm::vec3 pos1 = glm::vec3(0.25f, -1.3f, -0.75f);
         glm::vec3 scaleCamp = glm::vec3(0.002f, 0.002f, 0.002f);
-        meshManager->AddWorldMesh("campfire", "mesh/campfire/Campfire.obj", "campfire_tex", pos1, scaleCamp);
+        meshManager->AddWorldMesh("campfire", "assets/mesh/campfire/Campfire.obj", "campfire_tex", pos1, scaleCamp);
 
         glm::vec3 pos2 = glm::vec3(-1.0f, -1.3f, -1.4f);
         glm::vec3 scaleTree = glm::vec3(0.0008f, 0.0008f, 0.0008f);
-        meshManager->AddWorldMesh("tree", "mesh/tree/tree.obj", "tree_tex", pos2, scaleTree);
+        meshManager->AddWorldMesh("tree", "assets/mesh/tree/tree.obj", "tree_tex", pos2, scaleTree);
 
         pos2 = glm::vec3(-0.7f, -1.3f, -1.9f);
-        meshManager->AddWorldMesh("tree", "mesh/tree/tree.obj", "tree_tex", pos2, scaleTree);
+        meshManager->AddWorldMesh("tree", "assets/mesh/tree/tree.obj", "tree_tex", pos2, scaleTree);
 
         pos2 = glm::vec3(-0.25f, -1.3f, -1.2f);
-        meshManager->AddWorldMesh("tree", "mesh/tree/tree.obj", "tree_tex", pos2, scaleTree);
+        meshManager->AddWorldMesh("tree", "assets/mesh/tree/tree.obj", "tree_tex", pos2, scaleTree);
 
         pos2 = glm::vec3(0.7f, -1.3f, -1.6f);
-        meshManager->AddWorldMesh("tree", "mesh/tree/tree.obj", "tree_tex", pos2, scaleTree);
+        meshManager->AddWorldMesh("tree", "assets/mesh/tree/tree.obj", "tree_tex", pos2, scaleTree);
 
         pos2 = glm::vec3(1.2f, -1.3f, -0.9f);
-        meshManager->AddWorldMesh("tree", "mesh/tree/tree.obj", "tree_tex", pos2, scaleTree);
+        meshManager->AddWorldMesh("tree", "assets/mesh/tree/tree.obj", "tree_tex", pos2, scaleTree);
 
         //glm::vec3 scaleCubeTest = glm::vec3(0.5f, 0.5f, 0.5f);
         //meshManager->AddWorldMesh("cubeTest", "mesh/cube/cube.obj", "skybox_tex", pos5, scaleCubeTest);
 
 
         std::vector<const char*>skyboxImages;
-        skyboxImages.emplace_back("texture/skybox/green/LightGreen_right1.png");
-        skyboxImages.emplace_back("texture/skybox/green/LightGreen_left2.png");
-        skyboxImages.emplace_back("texture/skybox/green/LightGreen_top3.png");
-        skyboxImages.emplace_back("texture/skybox/green/LightGreen_bottom4.png");
-        skyboxImages.emplace_back("texture/skybox/green/LightGreen_front5.png");
-        skyboxImages.emplace_back("texture/skybox/green/LightGreen_back6.png");
+        skyboxImages.emplace_back("assets/texture/skybox/green/LightGreen_right1.png");
+        skyboxImages.emplace_back("assets/texture/skybox/green/LightGreen_left2.png");
+        skyboxImages.emplace_back("assets/texture/skybox/green/LightGreen_top3.png");
+        skyboxImages.emplace_back("assets/texture/skybox/green/LightGreen_bottom4.png");
+        skyboxImages.emplace_back("assets/texture/skybox/green/LightGreen_front5.png");
+        skyboxImages.emplace_back("assets/texture/skybox/green/LightGreen_back6.png");
 
         textureManager->AddSkyBox(skyboxImages);
         glm::vec3 pos3 = glm::vec3(0.25f, -1.3f, -0.75f);
