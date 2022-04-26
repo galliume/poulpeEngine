@@ -23,6 +23,8 @@ Linux   : LinuxGenerateProject.sh generate a make file. Then "make" it
 clear && make clean && make && ./bin/your_archi/Rebulkan/Rebulkan
 ```
 
+[help to configure the project](https://github.com/galliume/rebulkan/wiki/Env-config)
+
 Thanks to [premake](https://premake.github.io/)
 
 ### Resources
