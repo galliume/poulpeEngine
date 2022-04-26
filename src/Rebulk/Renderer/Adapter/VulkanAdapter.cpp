@@ -107,6 +107,35 @@ namespace Rbk
         uint32_t uniformBufferChunkSize = 0;
         uint32_t uniformBuffersCount = 0;
 
+        std::array<VkDescriptorPoolSize, 2> poolSizes{};
+        poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        poolSizes[0].descriptorCount = 1;
+        poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        poolSizes[1].descriptorCount = 1;
+
+        VkDescriptorPool descriptorPool = m_Renderer->CreateDescriptorPool(poolSizes, m_MeshManager->GetWorldInstancedCount() * m_SwapChainImages.size());
+
+        VkDescriptorSetLayoutBinding uboLayoutBinding{};
+        uboLayoutBinding.binding = 0;
+        uboLayoutBinding.descriptorCount = 1;
+        uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        uboLayoutBinding.pImmutableSamplers = nullptr;
+        uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+
+        VkDescriptorSetLayoutBinding samplerLayoutBinding{};
+        samplerLayoutBinding.binding = 1;
+        samplerLayoutBinding.descriptorCount = 1;
+        samplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        samplerLayoutBinding.pImmutableSamplers = nullptr;
+        samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+        std::vector<VkDescriptorSetLayoutBinding> bindings = { uboLayoutBinding, samplerLayoutBinding };
+
+        VkDescriptorSetLayout desriptorSetLayout = m_Renderer->CreateDescriptorSetLayout(
+            bindings, VK_DESCRIPTOR_SET_LAYOUT_CREATE_UPDATE_AFTER_BIND_POOL_BIT
+        );
+
+
         for (Mesh& mesh : *worldMeshes) {
             uint32_t totalInstances = worldMeshesLoaded[mesh.name][0];
 
@@ -122,37 +151,17 @@ namespace Rbk
             mesh.vertexBuffer = m_Renderer->CreateVertexBuffer(m_CommandPool, mesh.vertices);
             mesh.indicesBuffer = m_Renderer->CreateIndexBuffer(m_CommandPool, mesh.indices);
 
-            std::array<VkDescriptorPoolSize, 2> poolSizes{};
-            poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-            poolSizes[0].descriptorCount = 1;
-            poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-            poolSizes[1].descriptorCount = 1;
-
-            VkDescriptorPool descriptorPool = m_Renderer->CreateDescriptorPool(poolSizes, m_MeshManager->GetWorldInstancedCount() * m_SwapChainImages.size());
-
-            VkDescriptorSetLayoutBinding uboLayoutBinding{};
-            uboLayoutBinding.binding = 0;
-            uboLayoutBinding.descriptorCount = 1;
-            uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-            uboLayoutBinding.pImmutableSamplers = nullptr;
-            uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-
-            VkDescriptorSetLayoutBinding samplerLayoutBinding{};
-            samplerLayoutBinding.binding = 1;
-            samplerLayoutBinding.descriptorCount = 1;
-            samplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-            samplerLayoutBinding.pImmutableSamplers = nullptr;
-            samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-
-            std::vector<VkDescriptorSetLayoutBinding> bindings = { uboLayoutBinding, samplerLayoutBinding };
-
-            VkDescriptorSetLayout desriptorSetLayout = m_Renderer->CreateDescriptorSetLayout(
-                bindings, VK_DESCRIPTOR_SET_LAYOUT_CREATE_UPDATE_AFTER_BIND_POOL_BIT
-            );
-
             for (int i = 0; i < m_SwapChainImages.size(); i++) {
                 VkDescriptorSet descriptorSet = m_Renderer->CreateDescriptorSets(descriptorPool, { desriptorSetLayout }, 1);
-                m_Renderer->UpdateDescriptorSets(mesh.uniformBuffers, m_TextureManager->GetTextures()[mesh.texture] , descriptorSet);
+
+                Texture tex = m_TextureManager->GetTextures()[mesh.texture];
+
+                VkDescriptorImageInfo imageInfo{};
+                imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+                imageInfo.imageView = tex.imageView;
+                imageInfo.sampler = tex.sampler;
+
+                m_Renderer->UpdateDescriptorSets(mesh.uniformBuffers, tex, descriptorSet, imageInfo);
                 mesh.descriptorSets.emplace_back(descriptorSet);
             }
 
@@ -179,57 +188,61 @@ namespace Rbk
             shadersStageInfos.emplace_back(fragShaderStageInfo);
 
             mesh.graphicsPipeline = m_Renderer->CreateGraphicsPipeline(m_RenderPass, mesh.pipelineLayout, mesh.pipelineCache, shadersStageInfos);
-
         }
 
-        UpdateWorldPositions();
-    }
-
-    void VulkanAdapter::PrepareSkyBox()
-    {
-        Mesh& mesh = *m_MeshManager->GetSkyboxMesh();
+        /// SKYBOX ///
+        Mesh& skyboxMesh = *m_MeshManager->GetSkyboxMesh();
 
         std::pair<VkBuffer, VkDeviceMemory> uniformBuffer = m_Renderer->CreateCubeUniformBuffers(6);
-        mesh.uniformBuffers.emplace_back(uniformBuffer);
+        skyboxMesh.uniformBuffers.emplace_back(uniformBuffer);
 
-        mesh.vertexBuffer = m_Renderer->CreateVertexBuffer(m_CommandPool, mesh.vertices);
-        mesh.indicesBuffer = m_Renderer->CreateIndexBuffer(m_CommandPool, mesh.indices);
+        skyboxMesh.vertexBuffer = m_Renderer->CreateVertexBuffer(m_CommandPool, skyboxMesh.vertices);
+        skyboxMesh.indicesBuffer = m_Renderer->CreateIndexBuffer(m_CommandPool, skyboxMesh.indices);
 
-        std::array<VkDescriptorPoolSize, 2> poolSizes{};
-        poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        poolSizes[0].descriptorCount = 1;
-        poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        poolSizes[1].descriptorCount = 1;
+        Texture tex = m_TextureManager->GetSkyboxTexture();
+        
+        std::array<VkDescriptorPoolSize, 2> skyPoolSizes{};
+        skyPoolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        skyPoolSizes[0].descriptorCount = 1;
+        skyPoolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        skyPoolSizes[1].descriptorCount = 1;
 
-        VkDescriptorPool descriptorPool = m_Renderer->CreateDescriptorPool(poolSizes, m_SwapChainImages.size());
+        VkDescriptorPool skyDescriptorPool = m_Renderer->CreateDescriptorPool(poolSizes, m_SwapChainImages.size());
 
-        VkDescriptorSetLayoutBinding uboLayoutBinding{};
-        uboLayoutBinding.binding = 0;
-        uboLayoutBinding.descriptorCount = 1;
-        uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        uboLayoutBinding.pImmutableSamplers = nullptr;
-        uboLayoutBinding.stageFlags = VK_SHADER_STAGE_ALL;
 
-        VkDescriptorSetLayoutBinding samplerLayoutBinding{};
-        samplerLayoutBinding.binding = 1;
-        samplerLayoutBinding.descriptorCount = 1;
-        samplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        samplerLayoutBinding.pImmutableSamplers = nullptr;
-        samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_ALL;
+        VkDescriptorSetLayoutBinding skyUboLayoutBinding{};
+        skyUboLayoutBinding.binding = 0;
+        skyUboLayoutBinding.descriptorCount = 1;
+        skyUboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        skyUboLayoutBinding.pImmutableSamplers = nullptr;
+        skyUboLayoutBinding.stageFlags = VK_SHADER_STAGE_ALL;
 
-        std::vector<VkDescriptorSetLayoutBinding> bindings = { uboLayoutBinding, samplerLayoutBinding };
+        VkDescriptorSetLayoutBinding skySamplerLayoutBinding{};
+        skySamplerLayoutBinding.binding = 1;
+        skySamplerLayoutBinding.descriptorCount = 1;
+        skySamplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        skySamplerLayoutBinding.pImmutableSamplers = nullptr;
+        skySamplerLayoutBinding.stageFlags = VK_SHADER_STAGE_ALL;
 
-        VkDescriptorSetLayout desriptorSetLayout = m_Renderer->CreateDescriptorSetLayout(
-            bindings, VK_DESCRIPTOR_SET_LAYOUT_CREATE_UPDATE_AFTER_BIND_POOL_BIT
+        std::vector<VkDescriptorSetLayoutBinding> skyBindings = { skyUboLayoutBinding, skySamplerLayoutBinding };
+
+        VkDescriptorSetLayout skyDesriptorSetLayout = m_Renderer->CreateDescriptorSetLayout(
+            skyBindings, VK_DESCRIPTOR_SET_LAYOUT_CREATE_UPDATE_AFTER_BIND_POOL_BIT
         );
 
+        VkDescriptorImageInfo skyDescriptorImageInfo{};
+        skyDescriptorImageInfo.sampler = tex.sampler;
+        skyDescriptorImageInfo.imageView = tex.imageView;
+        skyDescriptorImageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+
+        VkDescriptorSet skyDescriptorSet = m_Renderer->CreateDescriptorSets(skyDescriptorPool, { skyDesriptorSetLayout }, 1);
+
         for (int i = 0; i < m_SwapChainImages.size(); i++) {
-            VkDescriptorSet descriptorSet = m_Renderer->CreateDescriptorSets(descriptorPool, { desriptorSetLayout }, 1);
-            m_Renderer->UpdateDescriptorSets(mesh.uniformBuffers, m_TextureManager->GetSkyboxTexture(), descriptorSet);
-            mesh.descriptorSets.emplace_back(descriptorSet);
+            m_Renderer->UpdateDescriptorSets(skyboxMesh.uniformBuffers, tex, skyDescriptorSet, skyDescriptorImageInfo);
+            skyboxMesh.descriptorSets.emplace_back(skyDescriptorSet);
         }
 
-        mesh.pipelineLayout = m_Renderer->CreatePipelineLayout(mesh.descriptorSets, { desriptorSetLayout });
+        skyboxMesh.pipelineLayout = m_Renderer->CreatePipelineLayout(skyboxMesh.descriptorSets, { skyDesriptorSetLayout });
 
         VulkanShaders shaders = m_ShaderManager->GetShaders();
         const char* shaderName = "skybox";
@@ -251,15 +264,14 @@ namespace Rbk
         fragShaderStageInfo.pName = "main";
         shadersStageInfos.emplace_back(fragShaderStageInfo);
 
-        mesh.graphicsPipeline = m_Renderer->CreateGraphicsPipeline(m_RenderPass, mesh.pipelineLayout, mesh.pipelineCache, shadersStageInfos);
+        skyboxMesh.graphicsPipeline = m_Renderer->CreateGraphicsPipeline(m_RenderPass, skyboxMesh.pipelineLayout, skyboxMesh.pipelineCache, shadersStageInfos, VK_CULL_MODE_BACK_BIT, false, false, true);
+
+        UpdateWorldPositions();
     }
 
     void VulkanAdapter::PrepareDraw()
     {
         if (m_IsPrepared) return;
-        
-        //@todo prepare data for Camera / Player
-        PrepareSkyBox();
 
         m_IsPrepared = true;
     }
@@ -338,10 +350,10 @@ namespace Rbk
         m_Renderer->SetScissor(m_CommandBuffers[m_ImageIndex]);
 
         //draw the world !
-        /*for (Mesh mesh : *m_MeshManager->GetWorldMeshes()) {
-            m_Renderer->BindPipeline(m_CommandBuffers[m_ImageIndex], mesh.graphicsPipeline);
-            m_Renderer->Draw(m_CommandBuffers[m_ImageIndex], &mesh, m_ImageIndex);
-        }*/
+        //for (Mesh mesh : *m_MeshManager->GetWorldMeshes()) {
+        //    m_Renderer->BindPipeline(m_CommandBuffers[m_ImageIndex], mesh.graphicsPipeline);
+        //    m_Renderer->Draw(m_CommandBuffers[m_ImageIndex], &mesh, m_ImageIndex);
+        //}
         
         //draw the skybox !
         m_Renderer->BindPipeline(m_CommandBuffers[m_ImageIndex], m_MeshManager->GetSkyboxMesh()->graphicsPipeline);

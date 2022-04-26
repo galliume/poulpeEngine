@@ -615,7 +615,7 @@ namespace Rbk {
         VkImageViewCreateInfo createInfo{};
         createInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
         createInfo.image = image;
-        createInfo.viewType = VK_IMAGE_VIEW_TYPE_CUBE_ARRAY;
+        createInfo.viewType = VK_IMAGE_VIEW_TYPE_CUBE;
         createInfo.format = format;
         createInfo.components.r = VK_COMPONENT_SWIZZLE_R;
         createInfo.components.g = VK_COMPONENT_SWIZZLE_G;
@@ -685,7 +685,16 @@ namespace Rbk {
         return graphicsPipelineLayout;
     }
 
-    VkPipeline VulkanRenderer::CreateGraphicsPipeline(VkRenderPass renderPass, VkPipelineLayout pipelineLayout, VkPipelineCache pipelineCache, std::vector<VkPipelineShaderStageCreateInfo>shadersCreateInfos, bool wireFrameModeOn)
+    VkPipeline VulkanRenderer::CreateGraphicsPipeline(
+        VkRenderPass renderPass, 
+        VkPipelineLayout pipelineLayout, 
+        VkPipelineCache pipelineCache, 
+        std::vector<VkPipelineShaderStageCreateInfo>shadersCreateInfos, 
+        VkCullModeFlagBits cullMode,
+        bool depthTestEnable,
+        bool depthWriteEnable,
+        bool wireFrameModeOn
+    )
     {
         auto bindingDescription = Vertex::GetBindingDescription();
         auto attributeDescriptions = Vertex::GetAttributeDescriptions();
@@ -728,7 +737,7 @@ namespace Rbk {
         //VK_POLYGON_MODE_LINE VK_POLYGON_MODE_POINT VK_POLYGON_MODE_FILL
         rasterizer.polygonMode = (!wireFrameModeOn) ? VK_POLYGON_MODE_FILL : VK_POLYGON_MODE_LINE; 
         rasterizer.lineWidth = 1.0f;
-        rasterizer.cullMode = VK_CULL_MODE_BACK_BIT;
+        rasterizer.cullMode = cullMode;
         rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
         rasterizer.depthBiasEnable = VK_FALSE;
         rasterizer.depthBiasConstantFactor = 0.0f;
@@ -746,8 +755,8 @@ namespace Rbk {
 
         VkPipelineDepthStencilStateCreateInfo depthStencil{};
         depthStencil.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
-        depthStencil.depthTestEnable = VK_TRUE;
-        depthStencil.depthWriteEnable = VK_TRUE;
+        depthStencil.depthTestEnable = (depthTestEnable) ? VK_TRUE : VK_FALSE;
+        depthStencil.depthWriteEnable = (depthWriteEnable) ? VK_TRUE : VK_FALSE;
         depthStencil.depthCompareOp = VK_COMPARE_OP_LESS;
         depthStencil.depthBoundsTestEnable = VK_FALSE;
         depthStencil.minDepthBounds = 0.0f;
@@ -1113,7 +1122,7 @@ namespace Rbk {
         return descriptorSet;
     }
 
-    void VulkanRenderer::UpdateDescriptorSets(std::vector<std::pair<VkBuffer, VkDeviceMemory>>uniformBuffers, Texture texture, VkDescriptorSet descriptorSet)
+    void VulkanRenderer::UpdateDescriptorSets(std::vector<std::pair<VkBuffer, VkDeviceMemory>>uniformBuffers, Texture texture, VkDescriptorSet descriptorSet, VkDescriptorImageInfo imageInfo)
     {
         std::array<VkWriteDescriptorSet, 2> descriptorWrites{};
         std::vector<VkDescriptorImageInfo> imageInfos;
@@ -1127,10 +1136,6 @@ namespace Rbk {
             bufferInfos.emplace_back(bufferInfo);
         }
 
-        VkDescriptorImageInfo imageInfo{};
-        imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-        imageInfo.imageView = texture.imageView;
-        imageInfo.sampler = texture.sampler;
         imageInfos.emplace_back(imageInfo);
 
         descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
@@ -1296,7 +1301,7 @@ namespace Rbk {
     void VulkanRenderer::Draw(VkCommandBuffer commandBuffer, Mesh* mesh, uint32_t frameIndex)
     {	
         VkBuffer vertexBuffers[] = { mesh->vertexBuffer.first };
-        VkDeviceSize offsets[] = { 0 };
+        VkDeviceSize offsets[1] = { 0 };
       
         vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
         vkCmdBindIndexBuffer(commandBuffer, mesh->indicesBuffer.first, 0, VK_INDEX_TYPE_UINT32);

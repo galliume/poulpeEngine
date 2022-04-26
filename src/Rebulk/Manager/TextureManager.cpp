@@ -42,6 +42,16 @@ namespace Rbk
         VkImageView textureImageView = m_Renderer->CreateSkyboxImageView(skyboxImage, VK_FORMAT_R8G8B8A8_UNORM, mipLevels);
         VkSampler textureSampler = m_Renderer->CreateSkyboxTextureSampler(mipLevels);
 
+        VkDeviceMemory colorImageMemory;
+        VkImage colorImage;
+        m_Renderer->CreateImage(m_Renderer->GetSwapChainExtent().width, m_Renderer->GetSwapChainExtent().height, 1, m_Renderer->GetMsaaSamples(), m_Renderer->GetSwapChainImageFormat(), VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, colorImage, colorImageMemory);
+        VkImageView colorImageView = m_Renderer->CreateImageView(colorImage, m_Renderer->GetSwapChainImageFormat(), VK_IMAGE_ASPECT_COLOR_BIT, 1);
+
+        VkImage depthImage;
+        VkDeviceMemory depthImageMemory;
+        m_Renderer->CreateImage(m_Renderer->GetSwapChainExtent().width, m_Renderer->GetSwapChainExtent().height, 1, m_Renderer->GetMsaaSamples(), m_Renderer->FindDepthFormat(), VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, depthImage, depthImageMemory);
+        VkImageView depthImageView = m_Renderer->CreateImageView(depthImage, m_Renderer->FindDepthFormat(), 1, VK_IMAGE_ASPECT_DEPTH_BIT);
+
         m_Skybox.image = skyboxImage;
         m_Skybox.imageMemory = textureImageMemory;
         m_Skybox.imageView = textureImageView;
@@ -50,6 +60,12 @@ namespace Rbk
         m_Skybox.width = texWidth;
         m_Skybox.height = texHeight;
         m_Skybox.channels = texChannels;
+        m_Skybox.colorImageView = colorImageView;
+        m_Skybox.colorImage = colorImage;
+        m_Skybox.colorImageMemory = colorImageMemory;
+        m_Skybox.depthImage = depthImage;
+        m_Skybox.depthImageView = depthImageView;
+        m_Skybox.depthImageMemory = depthImageMemory;
 
         Rbk::Log::GetLogger()->debug("Added skybox");
 

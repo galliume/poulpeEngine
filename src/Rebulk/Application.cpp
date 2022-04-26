@@ -140,7 +140,7 @@ namespace Rbk
 
         textureManager->AddSkyBox(skyboxImages);
         glm::vec3 pos3 = glm::vec3(0.25f, -1.3f, -0.75f);
-        glm::vec3 scaleSkybox = glm::vec3(1.0f, 1.0f, 1.0f);
+        glm::vec3 scaleSkybox = glm::vec3(0.1f, 0.1f, 0.1f);
         meshManager->AddSkyboxMesh("skybox", pos3, scaleSkybox);
      
         VImGuiInfo imguiInfo = rendererAdapter->GetVImGuiInfo();
