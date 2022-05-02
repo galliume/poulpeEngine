@@ -119,7 +119,7 @@ namespace Rbk {
 
         VkApplicationInfo appInfo{};
 
-        appInfo.apiVersion = VK_API_VERSION_1_2;
+        appInfo.apiVersion = VK_API_VERSION_1_0;
         appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
         appInfo.pApplicationName = "Rebulkan";
         appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
@@ -155,15 +155,13 @@ namespace Rbk {
         result = vkCreateInstance(&createInfo, nullptr, &m_Instance);
 
         if (VK_SUCCESS != result) {
-            std::string message = std::string("Can't create VK instance : " + std::to_string(result));
-            Rbk::Log::GetLogger()->critical("{}", message.c_str());
-            return;
+            Rbk::Log::GetLogger()->critical("Can't create VK instance : {}", result);
+            throw std::runtime_error("Can't create VK instance.");
         }
 
         m_InstanceCreated = true;
 
-        message = std::string("VK instance created successfully");
-        Rbk::Log::GetLogger()->trace(message);
+        Rbk::Log::GetLogger()->trace("VK instance created successfully");
         volkLoadInstance(m_Instance);
     }
 
@@ -268,7 +266,7 @@ namespace Rbk {
 
         if (deviceCount == 0) {
             Rbk::Log::GetLogger()->critical("failed to find GPUs with Vulkan support!");
-            return;
+            exit(-1);
         }
 
         std::vector<VkPhysicalDevice> devices(deviceCount);
@@ -294,8 +292,9 @@ namespace Rbk {
 
         if (m_PhysicalDevice == VK_NULL_HANDLE) {
             Rbk::Log::GetLogger()->critical("failed to find a suitable GPU");
-            return;
+            exit(-1);
         }
+        Rbk::Log::GetLogger()->debug("find GPU : {}", m_DeviceProps.deviceName);
     }
 
     bool VulkanRenderer::IsDeviceSuitable(VkPhysicalDevice device)
@@ -809,7 +808,7 @@ namespace Rbk {
         pipelineInfo.basePipelineIndex = -1;
         pipelineInfo.pDynamicState = &dynamicState;
 
-        VkPipeline graphicsPipeline;
+        VkPipeline graphicsPipeline = nullptr;
 
         VkResult result = vkCreateGraphicsPipelines(m_Device, pipelineCache, 1, &pipelineInfo, nullptr, &graphicsPipeline);
         

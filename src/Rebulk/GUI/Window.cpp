@@ -22,7 +22,7 @@ namespace Rbk
         m_Window = glfwCreateWindow(WIDTH, HEIGHT, "Rebulkan Engine", nullptr, nullptr);
 
         glfwMakeContextCurrent(m_Window);
-        glfwSwapInterval(m_ActiveVSync);
+        glfwSwapInterval(false);
 
         glfwSetWindowUserPointer(m_Window, this);
 

@@ -94,5 +94,12 @@ project "Rebulkan"
 
     filter "system:linux"
         systemversion "latest"
+
+        links { "GLFW", "ImGui", "X11", "dl", "pthread" }
+
     
-        links { "GLFW", "ImGui", "wayland-client", "dl", "pthread" }
+        postbuildcommands 
+        {
+            '{COPY} "./assets" "%{cfg.targetdir}/assets"'
+        }
+    

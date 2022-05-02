@@ -15,7 +15,7 @@ namespace Rbk
         ImGui_ImplVulkan_InitInfo info = {};
         VkCommandBuffer cmdBuffer = nullptr;
         VkPipeline pipeline = nullptr;
-        VkRenderPass* rdrPass = nullptr;
+        VkRenderPass rdrPass = nullptr;
     };
 
     class VulkanAdapter : public IRendererAdapter
@@ -47,7 +47,7 @@ namespace Rbk
         inline void MakeSpin(bool spin) { m_MakeSpin = spin; };
 
         //@todo add GuiManager
-        VkRenderPass* CreateImGuiRenderPass();
+        VkRenderPass CreateImGuiRenderPass();
         VImGuiInfo GetVImGuiInfo();
 
     private:

@@ -56,27 +56,22 @@ project "GLFW"
             "src/egl_context.h",
             "src/osmesa_context.c",
             "src/osmesa_context.h",
-            "src/wl_init.c",
-            "src/wl_platform.h",
-            "src/wl_monitor.c",
-            "src/wl_window.c",
-            "src/wayland-xdg-shell-protocol.c",
-            "src/wayland-xdg-decoration-protocol.c",
-            "src/wayland-viewporter-protocol.c",
-            "src/wayland-relative-pointer-unstable-v1-protocol.c",
-            "src/wayland-pointer-constraints-unstable-v1-protocol.c",
-            "src/wayland-idle-inhibit-unstable-v1-protocol.c",
+            "src/glx_context.h",
+            "src/glx_context.c",
+            "src/x11_init.c",
+            "src/x11_platform.h",
+            "src/x11_monitor.c",
+            "src/x11_window.c",
             "src/xkb_unicode.h",
             "src/xkb_unicode.c"
         }
         
         defines 
         { 
-            "GLFW_USE_WAYLAND",
-            "_GLFW_WAYLAND",
+            "_GLFW_X11",
         }
 
-        links { "wayland-client", "dl", "GL", "pthread" }
+        links { "x11", "dl", "GL", "pthread" }
     
     filter "configurations:Debug"
         runtime "Debug"

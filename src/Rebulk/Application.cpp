@@ -144,9 +144,7 @@ namespace Rbk
         meshManager->AddSkyboxMesh("skybox", pos3, scaleSkybox);
      
         VImGuiInfo imguiInfo = rendererAdapter->GetVImGuiInfo();
-        imguiInfo.rdrPass = rendererAdapter.get()->CreateImGuiRenderPass();
-
-        Rbk::Im::Init(window->Get(), imguiInfo.info, *imguiInfo.rdrPass);
+        Rbk::Im::Init(window->Get(), imguiInfo.info, imguiInfo.rdrPass);
 
         rendererAdapter->ImmediateSubmit([&](VkCommandBuffer cmd) {
             ImGui_ImplVulkan_CreateFontsTexture(cmd);

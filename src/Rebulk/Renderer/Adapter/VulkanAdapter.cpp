@@ -445,7 +445,7 @@ namespace Rbk
         m_Renderer->WaitForFence();
     }
 
-    VkRenderPass* VulkanAdapter::CreateImGuiRenderPass()
+    VkRenderPass VulkanAdapter::CreateImGuiRenderPass()
     {
         VkRenderPass renderPass;
 
@@ -481,9 +481,15 @@ namespace Rbk
         info.dependencyCount = 1;
         info.pDependencies = &dependency;
 
-        vkCreateRenderPass(m_Renderer->GetDevice(), &info, nullptr, &renderPass);
+        VkResult result = vkCreateRenderPass(m_Renderer->GetDevice(), &info, nullptr, &renderPass);
 
-        return &renderPass;
+        if (result != VK_SUCCESS) {
+            Rbk::Log::GetLogger()->critical("failed to create imgui render pass : {}", result);
+        } else {
+            Rbk::Log::GetLogger()->debug("created successfully imgui render pass");
+        }
+
+        return renderPass;
     }
 
     VImGuiInfo VulkanAdapter::GetVImGuiInfo()
