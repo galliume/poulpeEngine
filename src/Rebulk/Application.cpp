@@ -127,7 +127,7 @@ namespace Rbk
         meshManager->AddWorldMesh("tree", "assets/mesh/tree/tree.obj", "tree_tex", pos2, scaleTree);
 
        glm::vec3 scaleCubeTest = glm::vec3(1.0f, 1.0f, 1.0f);
-       meshManager->AddWorldMesh("cubeTest", "assets/mesh/cube/cube.obj", "skybox_tex", pos5, scaleCubeTest);
+       //meshManager->AddWorldMesh("cubeTest", "assets/mesh/cube/cube.obj", "skybox_tex", pos5, scaleCubeTest);
        
 
         std::vector<const char*>skyboxImages;
@@ -139,7 +139,7 @@ namespace Rbk
         skyboxImages.emplace_back("assets/texture/skybox/green/LightGreen_back6.png");
 
         textureManager->AddSkyBox(skyboxImages);
-        glm::vec3 pos3 = glm::vec3(0.5f, 0.5f, 0.5f);;
+        glm::vec3 pos3 = glm::vec3(1.0f, -0.55f, 0.3f);
         glm::vec3 scaleSkybox = glm::vec3(1.0f, 1.0f, 1.0f);
         meshManager->AddSkyboxMesh("skybox", pos3, scaleSkybox);
      

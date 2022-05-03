@@ -109,11 +109,11 @@ namespace Rbk
 
         std::array<VkDescriptorPoolSize, 2> poolSizes{};
         poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        poolSizes[0].descriptorCount = 1;
+        poolSizes[0].descriptorCount = 1000;
         poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        poolSizes[1].descriptorCount = 1;
+        poolSizes[1].descriptorCount = 1000;
 
-        VkDescriptorPool descriptorPool = m_Renderer->CreateDescriptorPool(poolSizes, m_MeshManager->GetWorldInstancedCount() * m_SwapChainImages.size());
+        VkDescriptorPool descriptorPool = m_Renderer->CreateDescriptorPool(poolSizes, 1000);
 
         VkDescriptorSetLayoutBinding uboLayoutBinding{};
         uboLayoutBinding.binding = 0;
@@ -135,13 +135,13 @@ namespace Rbk
             bindings, VK_DESCRIPTOR_SET_LAYOUT_CREATE_UPDATE_AFTER_BIND_POOL_BIT
         );
 
-
         for (Mesh& mesh : *worldMeshes) {
             uint32_t totalInstances = worldMeshesLoaded[mesh.name][0];
 
             maxUniformBufferRange = m_Renderer->GetDeviceProperties().limits.maxUniformBufferRange;
             uniformBufferChunkSize = maxUniformBufferRange / sizeof(UniformBufferObject);
             uniformBuffersCount = std::ceil(totalInstances / (float)uniformBufferChunkSize);
+
 
             for (int i = 0; i < uniformBuffersCount; i++) {
                 std::pair<VkBuffer, VkDeviceMemory> uniformBuffer = m_Renderer->CreateUniformBuffers(uniformBufferChunkSize);
@@ -152,8 +152,8 @@ namespace Rbk
             mesh.indicesBuffer = m_Renderer->CreateIndexBuffer(m_CommandPool, mesh.indices);
 
             for (int i = 0; i < m_SwapChainImages.size(); i++) {
-                VkDescriptorSet descriptorSet = m_Renderer->CreateDescriptorSets(descriptorPool, { desriptorSetLayout }, 1);
 
+                VkDescriptorSet descriptorSet = m_Renderer->CreateDescriptorSets(descriptorPool, { desriptorSetLayout }, 1);
                 Texture tex = m_TextureManager->GetTextures()[mesh.texture];
 
                 VkDescriptorImageInfo imageInfo{};
@@ -167,13 +167,6 @@ namespace Rbk
 
             mesh.pipelineLayout = m_Renderer->CreatePipelineLayout(mesh.descriptorSets, { desriptorSetLayout });
 
-//            for (const auto& [key, value] : m_ShaderManager->GetShaders().get()->shaders) {
-//                std::cout << key << " - " << std::endl;
-//                if (a.compare(key) == 0) {
-//                     m = value;
-//                }
-//            }
-
             std::string shaderName = "main";
 
             std::vector<VkPipelineShaderStageCreateInfo>shadersStageInfos;
@@ -182,14 +175,14 @@ namespace Rbk
             vertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
             vertShaderStageInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
             vertShaderStageInfo.module = m_ShaderManager->GetShaders()->shaders[shaderName][0];
-            vertShaderStageInfo.pName = shaderName.c_str();
+            vertShaderStageInfo.pName = "main";
             shadersStageInfos.emplace_back(vertShaderStageInfo);
 
             VkPipelineShaderStageCreateInfo fragShaderStageInfo{};
             fragShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
             fragShaderStageInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
             fragShaderStageInfo.module = m_ShaderManager->GetShaders()->shaders[shaderName][1];
-            fragShaderStageInfo.pName = shaderName.c_str();
+            fragShaderStageInfo.pName = "main";
             shadersStageInfos.emplace_back(fragShaderStageInfo);
 
             mesh.graphicsPipeline = m_Renderer->CreateGraphicsPipeline(m_RenderPass, mesh.pipelineLayout, mesh.pipelineCache, shadersStageInfos);
@@ -209,12 +202,11 @@ namespace Rbk
 
         std::array<VkDescriptorPoolSize, 2> skyPoolSizes{};
         skyPoolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        skyPoolSizes[0].descriptorCount = 1;
+        skyPoolSizes[0].descriptorCount = 10;
         skyPoolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        skyPoolSizes[1].descriptorCount = 1;
+        skyPoolSizes[1].descriptorCount = 10;
 
-        VkDescriptorPool skyDescriptorPool = m_Renderer->CreateDescriptorPool(poolSizes, m_SwapChainImages.size());
-
+        VkDescriptorPool skyDescriptorPool = m_Renderer->CreateDescriptorPool(poolSizes, 100);
 
         VkDescriptorSetLayoutBinding skyUboLayoutBinding{};
         skyUboLayoutBinding.binding = 0;
@@ -242,15 +234,16 @@ namespace Rbk
         skyDescriptorImageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
 
+        VkDescriptorSet skyDescriptorSet = m_Renderer->CreateDescriptorSets(skyDescriptorPool, { skyDesriptorSetLayout }, 1);
+
         for (int i = 0; i < m_SwapChainImages.size(); i++) {
-            VkDescriptorSet skyDescriptorSet = m_Renderer->CreateDescriptorSets(skyDescriptorPool, { skyDesriptorSetLayout }, 1);
             m_Renderer->UpdateDescriptorSets(skyboxMesh.uniformBuffers, tex, skyDescriptorSet, skyDescriptorImageInfo);
             skyboxMesh.descriptorSets.emplace_back(skyDescriptorSet);
         }
 
         skyboxMesh.pipelineLayout = m_Renderer->CreatePipelineLayout(skyboxMesh.descriptorSets, { skyDesriptorSetLayout });
 
-        const char* shaderName = "main";
+        const char* shaderName = "skybox";
 
         std::vector<VkPipelineShaderStageCreateInfo>shadersStageInfos;
 
@@ -258,17 +251,17 @@ namespace Rbk
         vertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
         vertShaderStageInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
         vertShaderStageInfo.module = m_ShaderManager->GetShaders()->shaders[shaderName][0];
-        vertShaderStageInfo.pName = shaderName;
+        vertShaderStageInfo.pName = "main";
         shadersStageInfos.emplace_back(vertShaderStageInfo);
 
         VkPipelineShaderStageCreateInfo fragShaderStageInfo{};
         fragShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
         fragShaderStageInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
         fragShaderStageInfo.module = m_ShaderManager->GetShaders()->shaders[shaderName][1];
-        fragShaderStageInfo.pName = shaderName;
+        fragShaderStageInfo.pName = "main";
         shadersStageInfos.emplace_back(fragShaderStageInfo);
 
-        skyboxMesh.graphicsPipeline = m_Renderer->CreateGraphicsPipeline(m_RenderPass, skyboxMesh.pipelineLayout, skyboxMesh.pipelineCache, shadersStageInfos);
+        skyboxMesh.graphicsPipeline = m_Renderer->CreateGraphicsPipeline(m_RenderPass, skyboxMesh.pipelineLayout, skyboxMesh.pipelineCache, shadersStageInfos, VK_CULL_MODE_FRONT_BIT, false, false, false);
 
         UpdateWorldPositions();
     }

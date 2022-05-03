@@ -64,7 +64,7 @@ namespace Rbk {
 #ifdef NDEBUG
         m_EnableValidationLayers = false;
 #else
-        m_EnableValidationLayers = false;
+        m_EnableValidationLayers = true;
 #endif
         
         bool vulkanSupported = glfwVulkanSupported();
@@ -387,7 +387,7 @@ namespace Rbk {
         VkPhysicalDeviceFeatures deviceFeatures{};
         deviceFeatures.fillModeNonSolid =  VK_TRUE;
         deviceFeatures.samplerAnisotropy = VK_TRUE;
-        deviceFeatures.sampleRateShading = VK_FALSE;
+        deviceFeatures.sampleRateShading = VK_TRUE;
         deviceFeatures.imageCubeArray = VK_TRUE;
 
         VkPhysicalDeviceDescriptorIndexingFeatures descriptorIndexing{};
@@ -614,7 +614,7 @@ namespace Rbk {
         VkImageViewCreateInfo createInfo{};
         createInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
         createInfo.image = image;
-        createInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+        createInfo.viewType = VK_IMAGE_VIEW_TYPE_CUBE;
         createInfo.format = format;
         createInfo.components.r = VK_COMPONENT_SWIZZLE_R;
         createInfo.components.g = VK_COMPONENT_SWIZZLE_G;
@@ -624,7 +624,7 @@ namespace Rbk {
         createInfo.subresourceRange.baseMipLevel = 0;
         createInfo.subresourceRange.levelCount = mipLevels;
         createInfo.subresourceRange.baseArrayLayer = 0;
-        createInfo.subresourceRange.layerCount = 1;
+        createInfo.subresourceRange.layerCount = 6;
 
         VkResult result;
 
@@ -1490,7 +1490,7 @@ namespace Rbk {
         submitInfo.pCommandBuffers = &commandBuffer;
 
         vkQueueSubmit(m_GraphicsQueue, 1, &submitInfo, VK_NULL_HANDLE);
-        vkQueueWaitIdle(m_GraphicsQueue);
+        //vkQueueWaitIdle(m_GraphicsQueue);
         vkFreeCommandBuffers(m_Device, commandPool, 1, &commandBuffer);
     }
 
@@ -1640,13 +1640,14 @@ namespace Rbk {
         VkDeviceMemory stagingBufferMemory;
         CreateBuffer(imageSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
 
-        unsigned char* data;
-        vkMapMemory(m_Device, stagingBufferMemory, 0, imageSize, 0, (void**)& data);
+        void* data;
+        vkMapMemory(m_Device, stagingBufferMemory, 0, imageSize, 0, &data);
 
         VkDeviceSize layerSize = imageSize / 6;
 
         for (int i = 0; i < skyboxPixels.size(); i++) {
-            memcpy((void*)(data + (layerSize * i)), skyboxPixels[i], layerSize);
+//            memcpy((void*)(data + (layerSize * i)), skyboxPixels[i], layerSize);
+            memcpy(static_cast<byte*>(data) + (layerSize * i), skyboxPixels[i], layerSize);
         }
 
         vkUnmapMemory(m_Device, stagingBufferMemory);
@@ -1909,9 +1910,8 @@ namespace Rbk {
         samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
         samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
         samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
-        samplerInfo.maxAnisotropy = m_DeviceProps.limits.maxSamplerAnisotropy;
-        samplerInfo.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
-        samplerInfo.unnormalizedCoordinates = VK_FALSE;
+        samplerInfo.anisotropyEnable = VK_TRUE;
+        samplerInfo.maxAnisotropy = 1.0f;
         samplerInfo.compareEnable = VK_FALSE;
         samplerInfo.compareOp = VK_COMPARE_OP_NEVER;
         samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
