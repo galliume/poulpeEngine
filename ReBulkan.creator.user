@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE QtCreatorProject>
-<!-- Written by QtCreator 6.0.0, 2022-05-03T15:07:11. -->
+<!-- Written by QtCreator 6.0.0, 2022-05-03T17:05:43. -->
 <qtcreator>
  <data>
   <variable>EnvironmentId</variable>
@@ -127,7 +127,9 @@
     <value type="bool" key="ProjectExplorer.BuildConfiguration.ClearSystemEnvironment">false</value>
     <valuelist type="QVariantList" key="ProjectExplorer.BuildConfiguration.CustomParsers"/>
     <value type="bool" key="ProjectExplorer.BuildConfiguration.ParseStandardOutput">false</value>
-    <valuelist type="QVariantList" key="ProjectExplorer.BuildConfiguration.UserEnvironmentChanges"/>
+    <valuelist type="QVariantList" key="ProjectExplorer.BuildConfiguration.UserEnvironmentChanges">
+     <value type="QString">config=debug</value>
+    </valuelist>
     <value type="QString" key="ProjectExplorer.ProjectConfiguration.DisplayName">Default</value>
     <value type="QString" key="ProjectExplorer.ProjectConfiguration.Id">GenericProjectManager.GenericBuildConfiguration</value>
    </valuemap>
@@ -154,6 +156,7 @@
     <valuelist type="QVariantList" key="PE.EnvironmentAspect.Changes">
      <value type="QString">VK_ICD_FILENAMES=/usr/share/vulkan/icd.d/nvidia_icd.json</value>
      <value type="QString">VK_LOADER_DEBUG=all</value>
+     <value type="QString">config=debug</value>
     </valuelist>
     <value type="QString" key="ProjectExplorer.CustomExecutableRunConfiguration.Executable">/home/gpercepied/Documents/workspace/personnel/rebulkan/bin/Debug-linux-x86_64/Rebulkan/Rebulkan</value>
     <value type="QString" key="ProjectExplorer.ProjectConfiguration.Id">ProjectExplorer.CustomExecutableRunConfiguration</value>
