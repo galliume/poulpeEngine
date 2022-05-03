@@ -193,14 +193,15 @@ namespace Rbk
         /// SKYBOX ///
         Mesh& skyboxMesh = *m_MeshManager->GetSkyboxMesh();
 
-        std::pair<VkBuffer, VkDeviceMemory> uniformBuffer = m_Renderer->CreateCubeUniformBuffers(6);
+        std::pair<VkBuffer, VkDeviceMemory> uniformBuffer = m_Renderer->CreateUniformBuffers(1);
         skyboxMesh.uniformBuffers.emplace_back(uniformBuffer);
 
         skyboxMesh.vertexBuffer = m_Renderer->CreateVertexBuffer(m_CommandPool, skyboxMesh.vertices);
         skyboxMesh.indicesBuffer = m_Renderer->CreateIndexBuffer(m_CommandPool, skyboxMesh.indices);
 
         Texture tex = m_TextureManager->GetSkyboxTexture();
-        
+        //Texture tex = m_TextureManager->GetTextures()["skybox_tex"];
+
         std::array<VkDescriptorPoolSize, 2> skyPoolSizes{};
         skyPoolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
         skyPoolSizes[0].descriptorCount = 1;
@@ -215,14 +216,14 @@ namespace Rbk
         skyUboLayoutBinding.descriptorCount = 1;
         skyUboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
         skyUboLayoutBinding.pImmutableSamplers = nullptr;
-        skyUboLayoutBinding.stageFlags = VK_SHADER_STAGE_ALL;
+        skyUboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
 
         VkDescriptorSetLayoutBinding skySamplerLayoutBinding{};
         skySamplerLayoutBinding.binding = 1;
         skySamplerLayoutBinding.descriptorCount = 1;
         skySamplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
         skySamplerLayoutBinding.pImmutableSamplers = nullptr;
-        skySamplerLayoutBinding.stageFlags = VK_SHADER_STAGE_ALL;
+        skySamplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 
         std::vector<VkDescriptorSetLayoutBinding> skyBindings = { skyUboLayoutBinding, skySamplerLayoutBinding };
 
@@ -235,9 +236,9 @@ namespace Rbk
         skyDescriptorImageInfo.imageView = tex.imageView;
         skyDescriptorImageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
-        VkDescriptorSet skyDescriptorSet = m_Renderer->CreateDescriptorSets(skyDescriptorPool, { skyDesriptorSetLayout }, 1);
 
         for (int i = 0; i < m_SwapChainImages.size(); i++) {
+            VkDescriptorSet skyDescriptorSet = m_Renderer->CreateDescriptorSets(skyDescriptorPool, { skyDesriptorSetLayout }, 1);
             m_Renderer->UpdateDescriptorSets(skyboxMesh.uniformBuffers, tex, skyDescriptorSet, skyDescriptorImageInfo);
             skyboxMesh.descriptorSets.emplace_back(skyDescriptorSet);
         }
@@ -245,7 +246,7 @@ namespace Rbk
         skyboxMesh.pipelineLayout = m_Renderer->CreatePipelineLayout(skyboxMesh.descriptorSets, { skyDesriptorSetLayout });
 
         VulkanShaders shaders = m_ShaderManager->GetShaders();
-        const char* shaderName = "skybox";
+        const char* shaderName = "main";
         std::array<VkShaderModule, 2> shader = shaders.shaders[shaderName];
 
         std::vector<VkPipelineShaderStageCreateInfo>shadersStageInfos;
@@ -254,17 +255,17 @@ namespace Rbk
         vertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
         vertShaderStageInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
         vertShaderStageInfo.module = shader[0];
-        vertShaderStageInfo.pName = "main";
+        vertShaderStageInfo.pName = shaderName;
         shadersStageInfos.emplace_back(vertShaderStageInfo);
 
         VkPipelineShaderStageCreateInfo fragShaderStageInfo{};
         fragShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
         fragShaderStageInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
         fragShaderStageInfo.module = shader[1];
-        fragShaderStageInfo.pName = "main";
+        fragShaderStageInfo.pName = shaderName;
         shadersStageInfos.emplace_back(fragShaderStageInfo);
 
-        skyboxMesh.graphicsPipeline = m_Renderer->CreateGraphicsPipeline(m_RenderPass, skyboxMesh.pipelineLayout, skyboxMesh.pipelineCache, shadersStageInfos, VK_CULL_MODE_BACK_BIT, false, false, true);
+        skyboxMesh.graphicsPipeline = m_Renderer->CreateGraphicsPipeline(m_RenderPass, skyboxMesh.pipelineLayout, skyboxMesh.pipelineCache, shadersStageInfos);
 
         UpdateWorldPositions();
     }
@@ -278,6 +279,10 @@ namespace Rbk
 
     void VulkanAdapter::UpdateWorldPositions()
     {
+        Mesh* skyMesh = m_MeshManager->GetSkyboxMesh();
+        skyMesh->ubos[0].view = m_Camera->LookAt();
+        m_Renderer->UpdateUniformBuffer(skyMesh->uniformBuffers[0], skyMesh->ubos, skyMesh->ubos.size());
+
         std::vector<Mesh>* worldMeshes = m_MeshManager->GetWorldMeshes();
         std::map<const char*, std::array<uint32_t, 2>> worldMeshesLoaded = m_MeshManager->GetWoldMeshesLoaded();
 
@@ -350,10 +355,10 @@ namespace Rbk
         m_Renderer->SetScissor(m_CommandBuffers[m_ImageIndex]);
 
         //draw the world !
-        //for (Mesh mesh : *m_MeshManager->GetWorldMeshes()) {
-        //    m_Renderer->BindPipeline(m_CommandBuffers[m_ImageIndex], mesh.graphicsPipeline);
-        //    m_Renderer->Draw(m_CommandBuffers[m_ImageIndex], &mesh, m_ImageIndex);
-        //}
+        for (Mesh mesh : *m_MeshManager->GetWorldMeshes()) {
+            m_Renderer->BindPipeline(m_CommandBuffers[m_ImageIndex], mesh.graphicsPipeline);
+            m_Renderer->Draw(m_CommandBuffers[m_ImageIndex], &mesh, m_ImageIndex);
+        }
         
         //draw the skybox !
         m_Renderer->BindPipeline(m_CommandBuffers[m_ImageIndex], m_MeshManager->GetSkyboxMesh()->graphicsPipeline);

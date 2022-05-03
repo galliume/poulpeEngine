@@ -21,20 +21,26 @@ namespace Rbk
     void MeshManager::AddSkyboxMesh(const char* name, glm::vec3 pos, glm::vec3 scale, bool shouldInverseTextureY)
     {
         Mesh mesh;
-        mesh = Load("assets/mesh/minecraft/Grass_Block.obj", shouldInverseTextureY);
-  
+        mesh = Load("assets/mesh/cube/cube.obj", shouldInverseTextureY);
+        mesh.texture = "skybox";
+
         glm::mat4 view = glm::mat4(1.0f);
 
-        CubeUniformBufferObject ubo;
+        UniformBufferObject ubo;
         ubo.model = glm::mat4(1.0f);
         ubo.model = glm::translate(ubo.model, pos);
         ubo.model = glm::scale(ubo.model, scale);
         ubo.view = glm::translate(view, glm::vec3(0.0f, 0.0f, 0.0f));
+        //ubo.view = glm::translate(view, glm::vec3(0.0f, 0.0f, 0.0f));
+        //ubo.view = glm::lookAt(
+        //    glm::vec3(0.0f, 0.0f, 3.0f),
+        //    glm::vec3(0.0f, 0.0f, 0.0f),
+        //    glm::vec3(0.0f, 1.0f, 0.0f)
+        //);
 
-        float s = (float)m_Renderer->GetSwapChainExtent().width / (float)m_Renderer->GetSwapChainExtent().height;
-
+        //float s = (float)m_Renderer->GetSwapChainExtent().width / (float)m_Renderer->GetSwapChainExtent().height;
         //ubo.proj = Rbk::Camera::FrustumProj(glm::radians(60.0f), s, 0.1f, 100.0f);
-        ubo.proj = glm::perspective(glm::radians(60.0f), m_Renderer->GetSwapChainExtent().width / (float)m_Renderer->GetSwapChainExtent().height, 0.1f, 100.0f);
+        ubo.proj = glm::perspective(glm::radians(60.0f), m_Renderer->GetSwapChainExtent().width / (float)m_Renderer->GetSwapChainExtent().height, 0.1f, 256.0f);
         ubo.proj[1][1] *= -1;
 
         mesh.ubos.emplace_back(ubo);
@@ -64,8 +70,7 @@ namespace Rbk
         ubo.model = glm::scale(ubo.model, scale);
         ubo.view = glm::translate(view, glm::vec3(0.0f, 0.0f, 0.0f));
         
-        float s = (float) m_Renderer->GetSwapChainExtent().width /  (float) m_Renderer->GetSwapChainExtent().height;
-        
+        //float s = (float) m_Renderer->GetSwapChainExtent().width /  (float) m_Renderer->GetSwapChainExtent().height;        
         //ubo.proj = Rbk::Camera::FrustumProj(glm::radians(60.0f), s, 0.1f, 100.0f);
         ubo.proj = glm::perspective(glm::radians(60.0f), m_Renderer->GetSwapChainExtent().width / (float)m_Renderer->GetSwapChainExtent().height, 0.1f, 100.0f);
         ubo.proj[1][1] *= -1;

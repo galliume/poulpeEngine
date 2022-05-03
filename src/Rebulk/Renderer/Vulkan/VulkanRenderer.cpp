@@ -615,7 +615,7 @@ namespace Rbk {
         VkImageViewCreateInfo createInfo{};
         createInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
         createInfo.image = image;
-        createInfo.viewType = VK_IMAGE_VIEW_TYPE_CUBE;
+        createInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
         createInfo.format = format;
         createInfo.components.r = VK_COMPONENT_SWIZZLE_R;
         createInfo.components.g = VK_COMPONENT_SWIZZLE_G;
@@ -625,7 +625,7 @@ namespace Rbk {
         createInfo.subresourceRange.baseMipLevel = 0;
         createInfo.subresourceRange.levelCount = mipLevels;
         createInfo.subresourceRange.baseArrayLayer = 0;
-        createInfo.subresourceRange.layerCount = 6;
+        createInfo.subresourceRange.layerCount = 1;
 
         VkResult result;
 
