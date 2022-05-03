@@ -5,10 +5,9 @@ namespace Rbk
 {
     ShaderManager::ShaderManager(VulkanRenderer* renderer) : m_Renderer(renderer)
     {
-
+        m_Shaders = std::make_shared<VulkanShaders>();
     }
-
-    void ShaderManager::AddShader(const char* name, const char* vertPath, const char* fragPath)
+    void ShaderManager::AddShader(std::string name, const char* vertPath, const char* fragPath)
     {
 
         if (!std::filesystem::exists(vertPath)) {
@@ -29,6 +28,6 @@ namespace Rbk
 
         std::array<VkShaderModule, 2> module = { vertexShaderModule, fragShaderModule };
 
-        m_Shaders.shaders.emplace(name, module);
+        m_Shaders->shaders[name] = module;
     }
 }

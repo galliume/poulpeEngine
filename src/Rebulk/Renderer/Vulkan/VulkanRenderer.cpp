@@ -64,7 +64,7 @@ namespace Rbk {
 #ifdef NDEBUG
         m_EnableValidationLayers = false;
 #else
-        m_EnableValidationLayers = true;
+        m_EnableValidationLayers = false;
 #endif
         
         bool vulkanSupported = glfwVulkanSupported();
@@ -685,7 +685,7 @@ namespace Rbk {
     }
 
     VkPipeline VulkanRenderer::CreateGraphicsPipeline(
-        VkRenderPass renderPass, 
+        std::shared_ptr<VkRenderPass> renderPass,
         VkPipelineLayout pipelineLayout, 
         VkPipelineCache pipelineCache, 
         std::vector<VkPipelineShaderStageCreateInfo>shadersCreateInfos, 
@@ -802,7 +802,7 @@ namespace Rbk {
         pipelineInfo.pDepthStencilState = &depthStencil;
         pipelineInfo.pColorBlendState = &colorBlending;
         pipelineInfo.layout = pipelineLayout;
-        pipelineInfo.renderPass = renderPass;
+        pipelineInfo.renderPass = *renderPass.get();
         pipelineInfo.subpass = 0;
         pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
         pipelineInfo.basePipelineIndex = -1;
@@ -842,12 +842,12 @@ namespace Rbk {
         return shaderModule;
     }
 
-    VkRenderPass VulkanRenderer::CreateRenderPass(VkSampleCountFlagBits msaaSamples)
+    std::shared_ptr<VkRenderPass> VulkanRenderer::CreateRenderPass(VkSampleCountFlagBits msaaSamples)
     {
         SwapChainSupportDetails swapChainSupport = QuerySwapChainSupport(m_PhysicalDevice);
         VkSurfaceFormatKHR surfaceFormat = ChooseSwapSurfaceFormat(swapChainSupport.formats);
 
-        VkRenderPass renderPass;
+        std::shared_ptr<VkRenderPass> renderPass = std::make_shared<VkRenderPass>();
 
         VkAttachmentDescription colorAttachment{};
         colorAttachment.format = surfaceFormat.format;
@@ -917,7 +917,7 @@ namespace Rbk {
         renderPassInfo.dependencyCount = 1;
         renderPassInfo.pDependencies = &dependency;
 
-        VkResult result = vkCreateRenderPass(m_Device, &renderPassInfo, nullptr, &renderPass);
+        VkResult result = vkCreateRenderPass(m_Device, &renderPassInfo, nullptr, renderPass.get());
 
         if (result != VK_SUCCESS) {
             Rbk::Log::GetLogger()->critical("failed to create render pass!");
@@ -928,7 +928,7 @@ namespace Rbk {
         return renderPass;
     }
 
-    std::vector<VkFramebuffer> VulkanRenderer::CreateFramebuffers(VkRenderPass renderPass, std::vector<VkImageView> swapChainImageViews, std::vector<VkImageView> depthImageView, std::vector<VkImageView> colorImageView)
+    std::vector<VkFramebuffer> VulkanRenderer::CreateFramebuffers(std::shared_ptr<VkRenderPass> renderPass, std::vector<VkImageView> swapChainImageViews, std::vector<VkImageView> depthImageView, std::vector<VkImageView> colorImageView)
     {
         std::vector<VkFramebuffer> swapChainFramebuffers;
 
@@ -944,7 +944,7 @@ namespace Rbk {
 
             VkFramebufferCreateInfo framebufferInfo{};
             framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-            framebufferInfo.renderPass = renderPass;
+            framebufferInfo.renderPass = *renderPass.get();
             framebufferInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
             framebufferInfo.pAttachments = attachments.data();
             framebufferInfo.width = m_SwapChainExtent.width;
@@ -1156,11 +1156,11 @@ namespace Rbk {
         vkUpdateDescriptorSets(m_Device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
     }
 
-    void VulkanRenderer::BeginRenderPass(VkRenderPass renderPass, VkCommandBuffer commandBuffer, VkFramebuffer swapChainFramebuffer)
+    void VulkanRenderer::BeginRenderPass(std::shared_ptr<VkRenderPass> renderPass, VkCommandBuffer commandBuffer, VkFramebuffer swapChainFramebuffer)
     {
         VkRenderPassBeginInfo renderPassInfo{};
         renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-        renderPassInfo.renderPass = renderPass;
+        renderPassInfo.renderPass = *renderPass.get();
         renderPassInfo.framebuffer = swapChainFramebuffer;
         renderPassInfo.renderArea.offset = { 0, 0 };
         renderPassInfo.renderArea.extent = m_SwapChainExtent;
@@ -2020,10 +2020,10 @@ namespace Rbk {
         vkDestroyBuffer(m_Device, buffer, nullptr);
     }
 
-    void VulkanRenderer::DestroyRenderPass(VkRenderPass renderPass, VkCommandPool commandPool, std::vector<VkCommandBuffer> commandBuffers)
+    void VulkanRenderer::DestroyRenderPass(std::shared_ptr<VkRenderPass> renderPass, VkCommandPool commandPool, std::vector<VkCommandBuffer> commandBuffers)
     {
         vkFreeCommandBuffers(m_Device, commandPool, static_cast<uint32_t>(commandBuffers.size()), commandBuffers.data());
-        vkDestroyRenderPass(m_Device, renderPass, nullptr);
+        vkDestroyRenderPass(m_Device, *renderPass.get(), nullptr);
         vkDestroyCommandPool(m_Device, commandPool, nullptr);
     }
 

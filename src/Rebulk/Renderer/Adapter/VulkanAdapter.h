@@ -43,7 +43,7 @@ namespace Rbk
 
         inline uint32_t GetSwapImageIndex() { return m_ImageIndex; };
         inline VulkanRenderer* Rdr() { return m_Renderer; };
-        inline VkRenderPass RdrPass() { return m_RenderPass; };
+        inline std::shared_ptr<VkRenderPass> RdrPass() { return m_RenderPass; };
         inline void MakeSpin(bool spin) { m_MakeSpin = spin; };
 
         //@todo add GuiManager
@@ -55,7 +55,7 @@ namespace Rbk
 
     private:
         VulkanRenderer* m_Renderer = nullptr;
-        VkRenderPass m_RenderPass = nullptr;
+        std::shared_ptr<VkRenderPass> m_RenderPass = nullptr;
         VkSwapchainKHR m_SwapChain = nullptr;
         std::vector<VkImage> m_SwapChainImages = {};
         std::vector<VkFramebuffer> m_SwapChainFramebuffers = {};

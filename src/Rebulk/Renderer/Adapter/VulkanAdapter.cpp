@@ -167,24 +167,29 @@ namespace Rbk
 
             mesh.pipelineLayout = m_Renderer->CreatePipelineLayout(mesh.descriptorSets, { desriptorSetLayout });
 
-            VulkanShaders shaders = m_ShaderManager->GetShaders();
-            const char* shaderName = "main";
-            std::array<VkShaderModule, 2> shader = shaders.shaders[shaderName];
+//            for (const auto& [key, value] : m_ShaderManager->GetShaders().get()->shaders) {
+//                std::cout << key << " - " << std::endl;
+//                if (a.compare(key) == 0) {
+//                     m = value;
+//                }
+//            }
+
+            std::string shaderName = "main";
 
             std::vector<VkPipelineShaderStageCreateInfo>shadersStageInfos;
 
             VkPipelineShaderStageCreateInfo vertShaderStageInfo{};
             vertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
             vertShaderStageInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
-            vertShaderStageInfo.module = shader[0];
-            vertShaderStageInfo.pName = shaderName;
+            vertShaderStageInfo.module = m_ShaderManager->GetShaders()->shaders[shaderName][0];
+            vertShaderStageInfo.pName = shaderName.c_str();
             shadersStageInfos.emplace_back(vertShaderStageInfo);
 
             VkPipelineShaderStageCreateInfo fragShaderStageInfo{};
             fragShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
             fragShaderStageInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
-            fragShaderStageInfo.module = shader[1];
-            fragShaderStageInfo.pName = shaderName;
+            fragShaderStageInfo.module = m_ShaderManager->GetShaders()->shaders[shaderName][1];
+            fragShaderStageInfo.pName = shaderName.c_str();
             shadersStageInfos.emplace_back(fragShaderStageInfo);
 
             mesh.graphicsPipeline = m_Renderer->CreateGraphicsPipeline(m_RenderPass, mesh.pipelineLayout, mesh.pipelineCache, shadersStageInfos);
@@ -245,23 +250,21 @@ namespace Rbk
 
         skyboxMesh.pipelineLayout = m_Renderer->CreatePipelineLayout(skyboxMesh.descriptorSets, { skyDesriptorSetLayout });
 
-        VulkanShaders shaders = m_ShaderManager->GetShaders();
         const char* shaderName = "main";
-        std::array<VkShaderModule, 2> shader = shaders.shaders[shaderName];
 
         std::vector<VkPipelineShaderStageCreateInfo>shadersStageInfos;
 
         VkPipelineShaderStageCreateInfo vertShaderStageInfo{};
         vertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
         vertShaderStageInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
-        vertShaderStageInfo.module = shader[0];
+        vertShaderStageInfo.module = m_ShaderManager->GetShaders()->shaders[shaderName][0];
         vertShaderStageInfo.pName = shaderName;
         shadersStageInfos.emplace_back(vertShaderStageInfo);
 
         VkPipelineShaderStageCreateInfo fragShaderStageInfo{};
         fragShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
         fragShaderStageInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
-        fragShaderStageInfo.module = shader[1];
+        fragShaderStageInfo.module = m_ShaderManager->GetShaders()->shaders[shaderName][1];
         fragShaderStageInfo.pName = shaderName;
         shadersStageInfos.emplace_back(fragShaderStageInfo);
 
@@ -361,8 +364,8 @@ namespace Rbk
         }
         
         //draw the skybox !
-        m_Renderer->BindPipeline(m_CommandBuffers[m_ImageIndex], m_MeshManager->GetSkyboxMesh()->graphicsPipeline);
-        m_Renderer->Draw(m_CommandBuffers[m_ImageIndex], m_MeshManager->GetSkyboxMesh(), m_ImageIndex);
+//        m_Renderer->BindPipeline(m_CommandBuffers[m_ImageIndex], m_MeshManager->GetSkyboxMesh()->graphicsPipeline);
+//        m_Renderer->Draw(m_CommandBuffers[m_ImageIndex], m_MeshManager->GetSkyboxMesh(), m_ImageIndex);
 
         m_Renderer->EndRenderPass(m_CommandBuffers[m_ImageIndex]);
         m_Renderer->EndCommandBuffer(m_CommandBuffers[m_ImageIndex]);
@@ -420,7 +423,7 @@ namespace Rbk
             }
         }
 
-        for (auto shader : m_ShaderManager->GetShaders().shaders) {
+        for (auto shader : m_ShaderManager->GetShaders()->shaders) {
             vkDestroyShaderModule(m_Renderer->GetDevice(), shader.second[0], nullptr);
             vkDestroyShaderModule(m_Renderer->GetDevice(), shader.second[1], nullptr);
         }

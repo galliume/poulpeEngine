@@ -58,7 +58,7 @@ namespace Rbk
             Rbk::Im::Text("\tMesh named %s with %d instances", mesh.name, mesh.ubos.size());
         }
         ImGui::Separator();
-        Rbk::Im::Text("Shader count %d", m_ShaderManager->GetShaders().shaders.size());
+        Rbk::Im::Text("Shader count %d", m_ShaderManager->GetShaders()->shaders.size());
         ImGui::Separator();
         Rbk::Im::Text("Texture count %d", m_TextureManager->GetTextures().size());
         Rbk::Im::Text("Loaded textures :");

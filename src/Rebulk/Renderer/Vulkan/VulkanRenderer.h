@@ -7,11 +7,6 @@
 
 namespace Rbk {
 
-    struct VulkanShaders
-    {
-        std::map<const char*, std::array<VkShaderModule, 2>> shaders;
-    };
-
     struct VulkanPipeline
     {
         VkPipelineLayout pipelineLayout;
@@ -46,7 +41,7 @@ namespace Rbk {
         /**
         * Vulkan init functions, before main loop.
         **/
-        VkRenderPass CreateRenderPass(VkSampleCountFlagBits msaaSamples);
+        std::shared_ptr<VkRenderPass> CreateRenderPass(VkSampleCountFlagBits msaaSamples);
         VkShaderModule CreateShaderModule(const std::vector<char>& code);
 
         VkDescriptorPool CreateDescriptorPool(std::array<VkDescriptorPoolSize, 2> poolSizes, uint32_t maxSets = 100);
@@ -56,7 +51,7 @@ namespace Rbk {
         
         VkPipelineLayout CreatePipelineLayout(std::vector<VkDescriptorSet> descriptorSets, std::vector<VkDescriptorSetLayout> descriptorSetLayouts, std::vector<VkPushConstantRange> pushConstants = {});
         VkPipeline CreateGraphicsPipeline(
-            VkRenderPass renderPass, 
+            std::shared_ptr<VkRenderPass> renderPass,
             VkPipelineLayout pipelineLayout, 
             VkPipelineCache pipelineCache, 
             std::vector<VkPipelineShaderStageCreateInfo>shadersCreateInfos, 
@@ -67,7 +62,7 @@ namespace Rbk {
         );
         
         VkSwapchainKHR CreateSwapChain(std::vector<VkImage>& swapChainImages, VkSwapchainKHR oldSwapChain = VK_NULL_HANDLE);
-        std::vector<VkFramebuffer> CreateFramebuffers(VkRenderPass renderPass, std::vector<VkImageView> swapChainImageViews, std::vector<VkImageView> depthImageView, std::vector<VkImageView> colorImageView);
+        std::vector<VkFramebuffer> CreateFramebuffers(std::shared_ptr<VkRenderPass> renderPass, std::vector<VkImageView> swapChainImageViews, std::vector<VkImageView> depthImageView, std::vector<VkImageView> colorImageView);
         VkCommandPool CreateCommandPool();
         std::vector<VkCommandBuffer> AllocateCommandBuffers(VkCommandPool commandPool, uint32_t size = 1);
         void CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory);
@@ -101,7 +96,7 @@ namespace Rbk {
         void ResetCommandPool(VkCommandPool commandPool);
         void BeginCommandBuffer(VkCommandBuffer commandBuffer, VkCommandBufferUsageFlagBits flags = VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT);
         void EndCommandBuffer(VkCommandBuffer commandBuffer);
-        void BeginRenderPass(VkRenderPass renderPass, VkCommandBuffer commandBuffer, VkFramebuffer swapChainFramebuffer);
+        void BeginRenderPass(std::shared_ptr<VkRenderPass> renderPass, VkCommandBuffer commandBuffer, VkFramebuffer swapChainFramebuffer);
         void EndRenderPass(VkCommandBuffer commandBuffer);
         void SetViewPort(VkCommandBuffer commandBuffer);
         void SetScissor(VkCommandBuffer commandBuffer);
@@ -126,7 +121,7 @@ namespace Rbk {
         void DestroySemaphores(std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>> semaphores);
         void DestroyBuffer(VkBuffer buffer);
         void DestroyDeviceMemory(VkDeviceMemory deviceMemory);
-        void DestroyRenderPass(VkRenderPass renderPass, VkCommandPool commandPool, std::vector<VkCommandBuffer> commandBuffers);
+        void DestroyRenderPass(std::shared_ptr<VkRenderPass> renderPass, VkCommandPool commandPool, std::vector<VkCommandBuffer> commandBuffers);
         void Destroy();
 
         /*
@@ -160,9 +155,9 @@ namespace Rbk {
         uint32_t GetImageCount();
         std::string GetAPIVersion();
 
-        static char* GetVendor(int vendorID)
+        static const char* GetVendor(int vendorID)
         {
-            std::map<int, char*> vendors;
+            std::map<int, const char*> vendors;
             vendors[0x1002] = "AMD";
             vendors[0x1010] = "ImgTec";
             vendors[0x10DE] = "NVIDIA";
@@ -203,7 +198,7 @@ namespace Rbk {
         GLFWwindow* m_Window = VK_NULL_HANDLE;
 
         const std::vector<const char*> m_ValidationLayers = { "VK_LAYER_KHRONOS_validation" };
-        const std::vector<const char*> m_DeviceExtensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME, VK_KHR_PUSH_DESCRIPTOR_EXTENSION_NAME };
+        const std::vector<const char*> m_DeviceExtensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME, VK_KHR_PUSH_DESCRIPTOR_EXTENSION_NAME, VK_EXT_DESCRIPTOR_INDEXING_EXTENSION_NAME };
 
         bool m_InstanceCreated = false;
         bool m_EnableValidationLayers = false;

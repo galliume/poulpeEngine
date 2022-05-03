@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE QtCreatorProject>
-<!-- Written by QtCreator 6.0.0, 2022-04-27T14:55:17. -->
+<!-- Written by QtCreator 6.0.0, 2022-05-03T15:07:11. -->
 <qtcreator>
  <data>
   <variable>EnvironmentId</variable>
@@ -153,6 +153,7 @@
     <value type="int" key="PE.EnvironmentAspect.Base">2</value>
     <valuelist type="QVariantList" key="PE.EnvironmentAspect.Changes">
      <value type="QString">VK_ICD_FILENAMES=/usr/share/vulkan/icd.d/nvidia_icd.json</value>
+     <value type="QString">VK_LOADER_DEBUG=all</value>
     </valuelist>
     <value type="QString" key="ProjectExplorer.CustomExecutableRunConfiguration.Executable">/home/gpercepied/Documents/workspace/personnel/rebulkan/bin/Debug-linux-x86_64/Rebulkan/Rebulkan</value>
     <value type="QString" key="ProjectExplorer.ProjectConfiguration.Id">ProjectExplorer.CustomExecutableRunConfiguration</value>
