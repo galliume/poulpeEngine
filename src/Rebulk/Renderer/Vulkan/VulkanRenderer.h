@@ -7,6 +7,8 @@
 
 namespace Rbk {
 
+    VkResult CreateDebugUtilsMessengerEXT(VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDebugUtilsMessengerEXT* pCallback);
+
     struct VulkanPipeline
     {
         VkPipelineLayout pipelineLayout;
@@ -109,7 +111,7 @@ namespace Rbk {
         void AddPipelineBarrier(VkCommandBuffer commandBuffer, VkImageMemoryBarrier renderBarrier, VkPipelineStageFlags srcStageMask, VkPipelineStageFlags dstStageMask, VkDependencyFlags dependencyFlags);
         void WaitIdle();
         void GenerateMipmaps(VkCommandBuffer commandBuffer, VkFormat imageFormat, VkImage image, int32_t texWidth, int32_t texHeight, uint32_t mipLevels, uint32_t layerCount = 1);
-        void GenerateMipmapsSkybox(VkCommandBuffer commandBuffer, VkFormat imageFormat, VkImage image, int32_t texWidth, int32_t texHeight, uint32_t mipLevels, uint32_t layerCount);
+        void GenerateMipmapsSkybox(VkCommandBuffer commandBuffer, VkFormat imageFormat, VkImage image, uint32_t layerCount);
        
         /**
         * Vulkan clean and destroy

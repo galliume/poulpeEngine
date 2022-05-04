@@ -86,9 +86,6 @@ namespace Rbk
 
     void Application::Run()
     {		
-        glm::vec3 pos4 = glm::vec3(0.6f, -0.18f, 0.5f);
-        glm::vec3 pos5 = glm::vec3(1.6f, -0.55f, 1.5f);
-
         shaderManager->AddShader("main", "assets/shaders/spv/vert.spv", "assets/shaders/spv/frag.spv");
         shaderManager->AddShader("skybox", "assets/shaders/spv/skybox_vert.spv", "assets/shaders/spv/skybox_frag.spv");
 
@@ -126,7 +123,7 @@ namespace Rbk
         pos2 = glm::vec3(1.2f, -1.3f, -0.9f);
         meshManager->AddWorldMesh("tree", "assets/mesh/tree/tree.obj", "tree_tex", pos2, scaleTree);
 
-       glm::vec3 scaleCubeTest = glm::vec3(1.0f, 1.0f, 1.0f);
+       //glm::vec3 scaleCubeTest = glm::vec3(1.0f, 1.0f, 1.0f);
        //meshManager->AddWorldMesh("cubeTest", "assets/mesh/cube/cube.obj", "skybox_tex", pos5, scaleCubeTest);
        
 
@@ -151,7 +148,6 @@ namespace Rbk
         });
 
         ImGui_ImplVulkan_DestroyFontUploadObjects();
-        bool wireFrameModeOn = false;
 
         vulkanLayer->AddWindow(window.get());
         vulkanLayer->AddTextureManager(textureManager.get());

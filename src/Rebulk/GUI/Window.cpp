@@ -1,10 +1,12 @@
 #include "rebulkpch.h" 
-#include "Window.h"
+#include "Rebulk/GUI/Window.h"
 
 namespace Rbk
 {
+    bool Window::m_FramebufferResized = false;
+
     Window::Window()
-    {
+    {        
     }
 
     void Window::Init()
@@ -13,6 +15,7 @@ namespace Rbk
         const uint32_t HEIGHT = 1440;
 
         const char* glsl_version = "#version 150";
+
         glfwInit();
         glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
         glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
@@ -27,10 +30,9 @@ namespace Rbk
         glfwSetWindowUserPointer(m_Window, this);
 
         glfwSetFramebufferSizeCallback(m_Window, [](GLFWwindow* glfwWindow, int width, int height) {
-            Rbk::m_FramebufferResized = true;
+            Rbk::Window::m_FramebufferResized = true;
         });
 
-        Rbk::m_FramebufferResized = false;
         //glfwSetInputMode(m_Window, GLFW_STICKY_MOUSE_BUTTONS, GLFW_TRUE);
         //glfwSetInputMode(m_Window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     }

@@ -61,6 +61,7 @@ src/Rebulk/Core/Log.cpp
 src/Rebulk/Core/Log.h
 src/Rebulk/Core/TinyObjLoader.cpp
 src/Rebulk/Core/TinyObjLoader.h
+src/Rebulk/Core/Tools.cpp
 src/Rebulk/Core/Tools.h
 src/Rebulk/GUI/ImGui/Im.cpp
 src/Rebulk/GUI/ImGui/Im.h

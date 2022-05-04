@@ -16,6 +16,7 @@
 #include <numeric>
 #include <map>
 #include <filesystem>
+#include <cstddef>
 
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
@@ -31,5 +32,4 @@
 #include "spdlog/sinks/stdout_color_sinks.h"
 #include "spdlog/details/log_msg.h"
 
-#include "Rebulk/Core/Tools.h"
 #include "Rebulk/Core/Log.h"

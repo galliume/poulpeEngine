@@ -1,5 +1,6 @@
 #include "rebulkpch.h"
 #include "VulkanAdapter.h"
+#include "Rebulk/GUI/Window.h"
 #include <volk.h>
 
 namespace Rbk
@@ -45,8 +46,7 @@ namespace Rbk
 
     void VulkanAdapter::SouldResizeSwapChain()
     {
-
-        if (Rbk::m_FramebufferResized == true) {
+        if (Rbk::Window::m_FramebufferResized == true) {
 
             m_Renderer->InitDetails();
             VkSwapchainKHR old = m_SwapChain;
@@ -73,7 +73,7 @@ namespace Rbk
             m_Renderer->ResetCommandPool(m_CommandPool);
             m_CommandBuffers = m_Renderer->AllocateCommandBuffers(m_CommandPool, (uint32_t)m_SwapChainFramebuffers.size());
 
-            Rbk::m_FramebufferResized = false;
+            Rbk::Window::m_FramebufferResized = false;
         }
     }
 
@@ -87,8 +87,6 @@ namespace Rbk
 
         std::vector<VkImageView> depthImageViews;
         std::vector<VkImageView> colorImageViews;
-        VkImage depthImage;
-        VkDeviceMemory depthImageMemory;
 
         for (auto&& [textName, tex] : m_TextureManager->GetTextures()) {
             depthImageViews.emplace_back(tex.depthImageView);
@@ -143,7 +141,7 @@ namespace Rbk
             uniformBuffersCount = std::ceil(totalInstances / (float)uniformBufferChunkSize);
 
 
-            for (int i = 0; i < uniformBuffersCount; i++) {
+            for (uint32_t i = 0; i < uniformBuffersCount; i++) {
                 std::pair<VkBuffer, VkDeviceMemory> uniformBuffer = m_Renderer->CreateUniformBuffers(uniformBufferChunkSize);
                 mesh.uniformBuffers.emplace_back(uniformBuffer);
             }
@@ -151,7 +149,7 @@ namespace Rbk
             mesh.vertexBuffer = m_Renderer->CreateVertexBuffer(m_CommandPool, mesh.vertices);
             mesh.indicesBuffer = m_Renderer->CreateIndexBuffer(m_CommandPool, mesh.indices);
 
-            for (int i = 0; i < m_SwapChainImages.size(); i++) {
+            for (uint32_t i = 0; i < m_SwapChainImages.size(); i++) {
 
                 VkDescriptorSet descriptorSet = m_Renderer->CreateDescriptorSets(descriptorPool, { desriptorSetLayout }, 1);
                 Texture tex = m_TextureManager->GetTextures()[mesh.texture];
@@ -236,7 +234,7 @@ namespace Rbk
 
         VkDescriptorSet skyDescriptorSet = m_Renderer->CreateDescriptorSets(skyDescriptorPool, { skyDesriptorSetLayout }, 1);
 
-        for (int i = 0; i < m_SwapChainImages.size(); i++) {
+        for (uint32_t i = 0; i < m_SwapChainImages.size(); i++) {
             m_Renderer->UpdateDescriptorSets(skyboxMesh.uniformBuffers, tex, skyDescriptorSet, skyDescriptorImageInfo);
             skyboxMesh.descriptorSets.emplace_back(skyDescriptorSet);
         }
@@ -284,25 +282,22 @@ namespace Rbk
 
         int32_t uboCount = 1, uboIndex = 0;
         std::vector<UniformBufferObject> chunk;
-        int32_t beginRange, endRange = 0;
         uint32_t totalInstances = 0;
         uint32_t maxUniformBufferRange = 0;
         uint32_t uniformBufferChunkSize = 0;
-        int32_t nextChunk = 0;
+        uint32_t nextChunk = 0;
 
         for (Mesh& mesh : *worldMeshes) {
 
             uboCount = 1, uboIndex = 0;
             chunk = {};
-            beginRange, endRange = 0;
+            uint32_t beginRange = 0, endRange = 0;
             totalInstances = worldMeshesLoaded[mesh.name][0];
             maxUniformBufferRange = m_Renderer->GetDeviceProperties().limits.maxUniformBufferRange;
             uniformBufferChunkSize = maxUniformBufferRange / sizeof(UniformBufferObject);
             nextChunk = totalInstances - uniformBufferChunkSize;
 
-            if (nextChunk < 0) nextChunk = 0;
-
-            for (int i = totalInstances - 1; i >= 0; i--) {
+            for (uint32_t i = totalInstances - 1; i > 0; i--) {
 
                 mesh.ubos[i].view = m_Camera->LookAt();
 
@@ -310,7 +305,6 @@ namespace Rbk
 
                     nextChunk -= uniformBufferChunkSize;
 
-                    if (nextChunk < 0) nextChunk = 0;
                     endRange = uniformBufferChunkSize * uboCount;
                     beginRange = endRange - uniformBufferChunkSize;
 
@@ -363,7 +357,7 @@ namespace Rbk
         m_Renderer->EndRenderPass(m_CommandBuffers[m_ImageIndex]);
         m_Renderer->EndCommandBuffer(m_CommandBuffers[m_ImageIndex]);
 
-        if (-1 != m_ImageIndex) {
+        if ((unsigned int)-1 != m_ImageIndex) {
             m_Renderer->QueueSubmit(m_ImageIndex, m_CommandBuffers[m_ImageIndex], m_Semaphores);
             m_Renderer->QueuePresent(m_ImageIndex, m_SwapChain, m_Semaphores);
         }

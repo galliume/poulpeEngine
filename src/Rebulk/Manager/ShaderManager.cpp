@@ -1,5 +1,6 @@
 #include "rebulkpch.h"
 #include "ShaderManager.h"
+#include "Rebulk/Core/Tools.h"
 
 namespace Rbk
 {
@@ -20,8 +21,8 @@ namespace Rbk
             return;
         }
 
-        auto vertShaderCode = ReadFile(vertPath);
-        auto fragShaderCode = ReadFile(fragPath);
+        auto vertShaderCode = Rbk::Tools::ReadFile(vertPath);
+        auto fragShaderCode = Rbk::Tools::ReadFile(fragPath);
     
         VkShaderModule vertexShaderModule = m_Renderer->CreateShaderModule(vertShaderCode);
         VkShaderModule fragShaderModule = m_Renderer->CreateShaderModule(fragShaderCode);
