@@ -10,7 +10,7 @@ struct UBO
 };
 
 layout(set = 0, binding = 0) uniform UniformBufferObject {
-   UBO ubos[10000];
+   UBO ubos[500];
 };
 
 layout(location = 0) in vec3 pos;

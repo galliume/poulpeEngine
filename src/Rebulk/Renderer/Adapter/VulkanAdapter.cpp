@@ -183,7 +183,7 @@ namespace Rbk
             fragShaderStageInfo.pName = "main";
             shadersStageInfos.emplace_back(fragShaderStageInfo);
 
-            mesh.graphicsPipeline = m_Renderer->CreateGraphicsPipeline(m_RenderPass, mesh.pipelineLayout, mesh.pipelineCache, shadersStageInfos);
+            mesh.graphicsPipeline = m_Renderer->CreateGraphicsPipeline(m_RenderPass, mesh.pipelineLayout, mesh.pipelineCache, shadersStageInfos, VK_CULL_MODE_NONE, true, true, true);
         }
 
         /// SKYBOX ///
@@ -241,7 +241,7 @@ namespace Rbk
 
         skyboxMesh.pipelineLayout = m_Renderer->CreatePipelineLayout(skyboxMesh.descriptorSets, { skyDesriptorSetLayout });
 
-        const char* shaderName = "skybox";
+        const char* shaderName = "main";
 
         std::vector<VkPipelineShaderStageCreateInfo>shadersStageInfos;
 
@@ -273,19 +273,19 @@ namespace Rbk
 
     void VulkanAdapter::UpdateWorldPositions()
     {
-        Mesh* skyMesh = m_MeshManager->GetSkyboxMesh();
-        skyMesh->ubos[0].view = m_Camera->LookAt();
-        m_Renderer->UpdateUniformBuffer(skyMesh->uniformBuffers[0], skyMesh->ubos, skyMesh->ubos.size());
+//        Mesh* skyMesh = m_MeshManager->GetSkyboxMesh();
+//        skyMesh->ubos[0].view = m_Camera->LookAt();
+//        m_Renderer->UpdateUniformBuffer(skyMesh->uniformBuffers[0], skyMesh->ubos, skyMesh->ubos.size());
 
         std::vector<Mesh>* worldMeshes = m_MeshManager->GetWorldMeshes();
         std::map<const char*, std::array<uint32_t, 2>> worldMeshesLoaded = m_MeshManager->GetWoldMeshesLoaded();
 
-        int32_t uboCount = 1, uboIndex = 0;
+        uint32_t uboCount = 1, uboIndex = 0;
         std::vector<UniformBufferObject> chunk;
         uint32_t totalInstances = 0;
         uint32_t maxUniformBufferRange = 0;
         uint32_t uniformBufferChunkSize = 0;
-        uint32_t nextChunk = 0;
+        int32_t nextChunk = 0;
 
         for (Mesh& mesh : *worldMeshes) {
 
@@ -296,15 +296,16 @@ namespace Rbk
             maxUniformBufferRange = m_Renderer->GetDeviceProperties().limits.maxUniformBufferRange;
             uniformBufferChunkSize = maxUniformBufferRange / sizeof(UniformBufferObject);
             nextChunk = totalInstances - uniformBufferChunkSize;
+            if (nextChunk < 0) nextChunk = 0;
 
-            for (uint32_t i = totalInstances - 1; i > 0; i--) {
+            for (int32_t i = totalInstances - 1; i >= 0; i--) {
 
                 mesh.ubos[i].view = m_Camera->LookAt();
 
                 if (i == nextChunk) {
 
                     nextChunk -= uniformBufferChunkSize;
-
+                    if (nextChunk < 0) nextChunk = 0;
                     endRange = uniformBufferChunkSize * uboCount;
                     beginRange = endRange - uniformBufferChunkSize;
 
@@ -357,10 +358,11 @@ namespace Rbk
         m_Renderer->EndRenderPass(m_CommandBuffers[m_ImageIndex]);
         m_Renderer->EndCommandBuffer(m_CommandBuffers[m_ImageIndex]);
 
-        if ((unsigned int)-1 != m_ImageIndex) {
+        //@todo properly fix casting type with -1 and uint imageIndex needed by Vulkan
+        //if (-1 != m_ImageIndex) {
             m_Renderer->QueueSubmit(m_ImageIndex, m_CommandBuffers[m_ImageIndex], m_Semaphores);
             m_Renderer->QueuePresent(m_ImageIndex, m_SwapChain, m_Semaphores);
-        }
+        //}
     }
 
     void VulkanAdapter::Destroy()

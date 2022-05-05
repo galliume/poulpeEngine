@@ -88,24 +88,26 @@ project "Rebulkan"
     filter "configurations:Debug"
         runtime "Debug"
         symbols "on"
-	buildoptions { 
-		"-Wall", 
-		"-Wextra",
-		"-Wfloat-equal",
-		"-Wundef", 
-		"-Wcast-align",
-		"-Wwrite-strings",
-		"-Wlogical-op",
-		"-Wmissing-declarations",
-		"-Wredundant-decls",
-		"-Wshadow",
-		"-Woverloaded-virtual"
-	}
+
+        buildoptions {
+                "-Wall",
+                "-Wextra",
+                "-Wfloat-equal",
+                "-Wundef",
+                "-Wcast-align",
+                "-Wwrite-strings",
+                "-Wlogical-op",
+                "-Wmissing-declarations",
+                "-Wredundant-decls",
+                "-Wshadow",
+                "-Woverloaded-virtual"
+        }
 	
     filter "configurations:Release"
         runtime "Release"
         symbols "on"
 	optimize "On"
+
 	buildoptions { 
 		"-Wall", 
 		"-Wextra",

@@ -44,7 +44,7 @@ namespace Rbk
             int width, height;
             glfwGetWindowSize(window->Get(), &width, &height);
             camera = std::make_shared<Rbk::Camera>(Rbk::Camera());
-            camera->Init(width, height);
+            camera->Init();
         }
 
         if (inputManager == nullptr) {

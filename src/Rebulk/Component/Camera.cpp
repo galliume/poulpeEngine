@@ -3,7 +3,7 @@
 
 namespace Rbk
 {
-    void Camera::Init(float width, float height)
+    void Camera::Init()
     {
         m_Pos = glm::vec3(0.0f, 0.0f, 3.0f);
         m_Target = glm::vec3(0.0f, 0.0f, 0.0f);
@@ -27,7 +27,7 @@ namespace Rbk
         n : near distance
         f : far distance
     **/
-    glm::mat4 Camera::FrustumProj(float fovy, float s, float n, float f)
+    glm::mat4 Camera::FrustumProj(float fovy, float s, float n)
     {
         //infine reverse frustum projection
         /*float g = 1.0f / tan(fovy * 0.5f);
