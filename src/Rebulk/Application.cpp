@@ -88,11 +88,13 @@ namespace Rbk
     {		
         shaderManager->AddShader("main", "assets/shaders/spv/vert.spv", "assets/shaders/spv/frag.spv");
         shaderManager->AddShader("skybox", "assets/shaders/spv/skybox_vert.spv", "assets/shaders/spv/skybox_frag.spv");
+        shaderManager->AddShader("2d", "assets/shaders/spv/2d_vert.spv", "assets/shaders/spv/2d_frag.spv");
 
         textureManager->AddTexture("minecraft_grass", "assets/mesh/minecraft/Grass_Block_TEX.png");
         textureManager->AddTexture("campfire_tex", "assets/mesh/campfire/Campfire_MAT_BaseColor_01.jpg");
         textureManager->AddTexture("tree_tex", "assets/mesh/tree/tree.jpg");
         textureManager->AddTexture("skybox_tex", "assets/texture/skybox/green/LightGreen_front5.png");
+        textureManager->AddTexture("crosshair", "assets/texture/crosshair/predator.png");
 
         glm::vec3 scaleMinecraft = glm::vec3(0.1f, 0.1f, 0.1f);
 
@@ -123,10 +125,9 @@ namespace Rbk
         pos2 = glm::vec3(1.2f, -1.3f, -0.9f);
         meshManager->AddWorldMesh("tree", "assets/mesh/tree/tree.obj", "tree_tex", pos2, scaleTree);
 
-       glm::vec3 scaleCubeTest = glm::vec3(1.0f, 1.0f, 1.0f);
-       glm::vec3 pos5 = glm::vec3(0.25f, -1.3f, -0.75f);
-       //meshManager->AddWorldMesh("cubeTest", "assets/mesh/cube/cube.obj", "skybox_tex", pos5, scaleCubeTest);
-       
+        glm::vec3 scaleCubeTest = glm::vec3(1.0f, 1.0f, 1.0f);
+        glm::vec3 pos5 = glm::vec3(0.25f, -1.3f, -0.75f);
+        //meshManager->AddWorldMesh("cubeTest", "assets/mesh/cube/cube.obj", "skybox_tex", pos5, scaleCubeTest);
 
         std::vector<const char*>skyboxImages;
         skyboxImages.emplace_back("assets/texture/skybox/green/LightGreen_right1.png");
