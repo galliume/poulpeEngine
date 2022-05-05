@@ -183,7 +183,7 @@ namespace Rbk
             fragShaderStageInfo.pName = "main";
             shadersStageInfos.emplace_back(fragShaderStageInfo);
 
-            mesh.graphicsPipeline = m_Renderer->CreateGraphicsPipeline(m_RenderPass, mesh.pipelineLayout, mesh.pipelineCache, shadersStageInfos, VK_CULL_MODE_NONE, true, true, true);
+            mesh.graphicsPipeline = m_Renderer->CreateGraphicsPipeline(m_RenderPass, mesh.pipelineLayout, mesh.pipelineCache, shadersStageInfos, VK_CULL_MODE_BACK_BIT, true, true, false);
         }
 
         /// SKYBOX ///
@@ -241,7 +241,7 @@ namespace Rbk
 
         skyboxMesh.pipelineLayout = m_Renderer->CreatePipelineLayout(skyboxMesh.descriptorSets, { skyDesriptorSetLayout });
 
-        const char* shaderName = "main";
+        const char* shaderName = "skybox";
 
         std::vector<VkPipelineShaderStageCreateInfo>shadersStageInfos;
 

@@ -64,7 +64,7 @@ namespace Rbk {
 #ifdef NDEBUG
         m_EnableValidationLayers = false;
 #else
-        m_EnableValidationLayers = false;
+        m_EnableValidationLayers = true;
 #endif
 
         bool vulkanSupported = glfwVulkanSupported();
@@ -1307,7 +1307,7 @@ namespace Rbk {
         VkDeviceSize offsets[1] = { 0 };
 
         vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
-        vkCmdBindIndexBuffer(commandBuffer, mesh->indicesBuffer.first, 0, VK_INDEX_TYPE_MAX_ENUM);
+        vkCmdBindIndexBuffer(commandBuffer, mesh->indicesBuffer.first, 0, VK_INDEX_TYPE_UINT32);
 
         vkCmdBindDescriptorSets(
             commandBuffer,
@@ -1603,7 +1603,7 @@ namespace Rbk {
         vkBindImageMemory(m_Device, image, imageMemory, 0);
     }
 
-    void VulkanRenderer::CreateTextureImage(VkCommandBuffer commandBuffer, stbi_uc* pixels, int texWidth, int texHeight, uint32_t mipLevels, VkImage& textureImage, VkDeviceMemory& textureImageMemory, VkFormat format)
+    void VulkanRenderer::CreateTextureImage(VkCommandBuffer commandBuffer, stbi_uc* pixels, uint32_t texWidth, uint32_t texHeight, uint32_t mipLevels, VkImage& textureImage, VkDeviceMemory& textureImageMemory, VkFormat format)
     {
         VkDeviceSize imageSize = texWidth * texHeight * 4;
         VkBuffer stagingBuffer;

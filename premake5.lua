@@ -83,54 +83,51 @@ project "Rebulkan"
         buildoptions { "/MDd" }
 
     filter { "system:windows", "configurations:Release" }
-        buildoptions { "/MD" }
-        optimize "On"
-
+        buildoptions { "/MDd" }
+   
     filter "configurations:Debug"
         runtime "Debug"
-        symbols "on"
+        symbols "On"
 
         buildoptions {
-                "-Wall",
-                "-Wextra",
-                "-Wfloat-equal",
-                "-Wundef",
-                "-Wcast-align",
-                "-Wwrite-strings",
-                "-Wlogical-op",
-                "-Wmissing-declarations",
-                "-Wredundant-decls",
-                "-Wshadow",
-                "-Woverloaded-virtual"
+            "-Wall",
+            "-Wextra",
+            "-Wfloat-equal",
+            "-Wundef",
+            "-Wcast-align",
+            "-Wwrite-strings",
+            "-Wlogical-op",
+            "-Wmissing-declarations",
+            "-Wredundant-decls",
+            "-Wshadow",
+            "-Woverloaded-virtual"
         }
-	
+    
     filter "configurations:Release"
         runtime "Release"
-        symbols "on"
-	optimize "On"
+        symbols "On"
+        optimize "On"
 
-	buildoptions { 
-		"-Wall", 
-		"-Wextra",
-		"-Wfloat-equal",
-		"-Wundef", 
-		"-Wcast-align",
-		"-Wwrite-strings",
-		"-Wlogical-op",
-		"-Wmissing-declarations",
-		"-Wredundant-decls",
-		"-Wshadow",
-		"-Woverloaded-virtual"
-	}	
-	
+        buildoptions {
+            "-Wall",
+            "-Wextra",
+            "-Wfloat-equal",
+            "-Wundef", 
+            "-Wcast-align",
+            "-Wwrite-strings",
+            "-Wlogical-op",
+            "-Wmissing-declarations",
+            "-Wredundant-decls",
+            "-Wshadow",
+            "-Woverloaded-virtual"
+        }
+
     filter "system:linux"
         systemversion "latest"
 
         links { "GLFW", "ImGui", "X11", "dl", "pthread" }
-
-    
+ 
         postbuildcommands 
         {
             '{COPY} "./assets" "%{cfg.targetdir}/assets"'
         }
-    
