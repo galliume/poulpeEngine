@@ -1,9 +1,11 @@
-#pragma once
 #include "rebulkpch.h"
 #include "InputManager.h"
 
 namespace Rbk
 {
+    static bool m_CanMoveCamera;
+    static bool m_FirtMouseMove;
+
     InputManager::InputManager(Window* window, Camera* camera) : m_Window(window), m_Camera(camera)
     {
         int width, height;

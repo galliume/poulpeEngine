@@ -44,7 +44,7 @@ namespace Rbk
             int width, height;
             glfwGetWindowSize(window->Get(), &width, &height);
             camera = std::make_shared<Rbk::Camera>(Rbk::Camera());
-            camera->Init(width, height);
+            camera->Init();
         }
 
         if (inputManager == nullptr) {
@@ -86,9 +86,6 @@ namespace Rbk
 
     void Application::Run()
     {		
-        glm::vec3 pos4 = glm::vec3(0.6f, -0.18f, 0.5f);
-        glm::vec3 pos5 = glm::vec3(1.6f, -0.55f, 1.5f);
-
         shaderManager->AddShader("main", "assets/shaders/spv/vert.spv", "assets/shaders/spv/frag.spv");
         shaderManager->AddShader("skybox", "assets/shaders/spv/skybox_vert.spv", "assets/shaders/spv/skybox_frag.spv");
 
@@ -126,9 +123,10 @@ namespace Rbk
         pos2 = glm::vec3(1.2f, -1.3f, -0.9f);
         meshManager->AddWorldMesh("tree", "assets/mesh/tree/tree.obj", "tree_tex", pos2, scaleTree);
 
-        //glm::vec3 scaleCubeTest = glm::vec3(0.5f, 0.5f, 0.5f);
-        //meshManager->AddWorldMesh("cubeTest", "mesh/cube/cube.obj", "skybox_tex", pos5, scaleCubeTest);
-
+       glm::vec3 scaleCubeTest = glm::vec3(1.0f, 1.0f, 1.0f);
+       glm::vec3 pos5 = glm::vec3(0.25f, -1.3f, -0.75f);
+       //meshManager->AddWorldMesh("cubeTest", "assets/mesh/cube/cube.obj", "skybox_tex", pos5, scaleCubeTest);
+       
 
         std::vector<const char*>skyboxImages;
         skyboxImages.emplace_back("assets/texture/skybox/green/LightGreen_right1.png");
@@ -139,23 +137,18 @@ namespace Rbk
         skyboxImages.emplace_back("assets/texture/skybox/green/LightGreen_back6.png");
 
         textureManager->AddSkyBox(skyboxImages);
-        glm::vec3 pos3 = glm::vec3(0.25f, -1.3f, -0.75f);
-        glm::vec3 scaleSkybox = glm::vec3(0.25f, -1.3f, -0.75f);
+        glm::vec3 pos3 = glm::vec3(1.0f, -0.55f, 0.3f);
+        glm::vec3 scaleSkybox = glm::vec3(1.0f, 1.0f, 1.0f);
         meshManager->AddSkyboxMesh("skybox", pos3, scaleSkybox);
-
-        double lastTime = glfwGetTime();
-        
+     
         VImGuiInfo imguiInfo = rendererAdapter->GetVImGuiInfo();
-        imguiInfo.rdrPass = rendererAdapter.get()->CreateImGuiRenderPass();
-
-        Rbk::Im::Init(window->Get(), imguiInfo.info, *imguiInfo.rdrPass);
+        Rbk::Im::Init(window->Get(), imguiInfo.info, imguiInfo.rdrPass);
 
         rendererAdapter->ImmediateSubmit([&](VkCommandBuffer cmd) {
             ImGui_ImplVulkan_CreateFontsTexture(cmd);
         });
 
         ImGui_ImplVulkan_DestroyFontUploadObjects();
-        bool wireFrameModeOn = false;
 
         vulkanLayer->AddWindow(window.get());
         vulkanLayer->AddTextureManager(textureManager.get());
@@ -164,10 +157,22 @@ namespace Rbk
 
         rendererAdapter->PrepareWorld();
 
+        double lastTime = glfwGetTime();
+        double timeStepSum = 0.0f;
+        uint32_t frameCount = 0;
+
         while (!glfwWindowShouldClose(window->Get())) {
 
             double currentTime = glfwGetTime();
             double timeStep = currentTime - lastTime;
+            timeStepSum += timeStep;
+            frameCount++;
+
+            if (1.0f <= timeStepSum) {
+                Rbk::Log::GetLogger()->debug("{} fps/sec", frameCount);
+                timeStepSum = 0.0f;
+                frameCount = 0;
+            }
 
             camera->UpdateSpeed(timeStep);
 
@@ -180,7 +185,6 @@ namespace Rbk
             Rbk::Im::NewFrame();
             vulkanLayer->AddRenderAdapter(rendererAdapter.get());
             vulkanLayer->Render(timeStep, rendererAdapter->Rdr()->GetDeviceProperties());
-            vulkanLayer->DisplayOptions();
             Rbk::Im::Render();
 
             rendererAdapter->Rdr()->BeginCommandBuffer(imguiInfo.cmdBuffer);

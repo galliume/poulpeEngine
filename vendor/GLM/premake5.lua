@@ -3,18 +3,18 @@ project "GLM"
     language "C++"
     staticruntime "on"
 
-	targetdir ("bin/" .. outputdir .. "/%{prj.name}")
+    targetdir ("bin/" .. outputdir .. "/%{prj.name}")
     objdir ("bin-int/" .. outputdir .. "/%{prj.name}")
 
-	files
-	{
-        "glm/*.h",        
+    files
+    {
+        "glm/*.h",
     }
     
-	filter "system:windows"
+    filter "system:windows"
         systemversion "latest"
 
-	filter "configurations:Debug"
+    filter "configurations:Debug"
         runtime "Debug"
         symbols "on"
 
