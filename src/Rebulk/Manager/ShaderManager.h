@@ -3,15 +3,20 @@
 
 namespace Rbk
 {
+    struct VulkanShaders
+    {
+        std::map<std::string, std::array<VkShaderModule, 2>> shaders;
+    };
+
     class ShaderManager
     {
     public:
         ShaderManager(VulkanRenderer* renderer);
-        void AddShader(const char* name, const char* vertPath, const char* fragPath);
-        inline VulkanShaders GetShaders() { return m_Shaders; };
+        void AddShader(std::string name, const char* vertPath, const char* fragPath);
+        inline std::shared_ptr<VulkanShaders> GetShaders() { return m_Shaders; };
 
     private:
-        VulkanShaders m_Shaders;
+        std::shared_ptr<VulkanShaders> m_Shaders = nullptr;
         VulkanRenderer* m_Renderer = nullptr;
     };
 }

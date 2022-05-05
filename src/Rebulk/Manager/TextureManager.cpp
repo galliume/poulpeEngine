@@ -35,12 +35,26 @@ namespace Rbk
 
         VkCommandPool commandPool = m_Renderer->CreateCommandPool();
 
+        texWidth = static_cast<uint32_t>(texWidth);
+        texHeight = static_cast<uint32_t>(texHeight);
+        texChannels = static_cast<uint32_t>(texChannels);
+
         VkCommandBuffer commandBuffer = m_Renderer->AllocateCommandBuffers(commandPool)[0];
         m_Renderer->BeginCommandBuffer(commandBuffer);
-        m_Renderer->CreateSkyboxTextureImage(commandBuffer, skyboxPixels, texWidth, texHeight, mipLevels, skyboxImage, textureImageMemory, VK_FORMAT_R8G8B8A8_SRGB);
+        m_Renderer->CreateSkyboxTextureImage(commandBuffer, skyboxPixels, texWidth, texHeight, mipLevels, skyboxImage, textureImageMemory, VK_FORMAT_R8G8B8A8_UNORM);
 
-        VkImageView textureImageView = m_Renderer->CreateSkyboxImageView(skyboxImage, VK_FORMAT_R8G8B8A8_SRGB, mipLevels);
+        VkImageView textureImageView = m_Renderer->CreateSkyboxImageView(skyboxImage, VK_FORMAT_R8G8B8A8_UNORM, mipLevels);
         VkSampler textureSampler = m_Renderer->CreateSkyboxTextureSampler(mipLevels);
+
+        VkDeviceMemory colorImageMemory;
+        VkImage colorImage;
+        m_Renderer->CreateSkyboxImage(texWidth, texWidth, 1, VK_SAMPLE_COUNT_1_BIT, m_Renderer->GetSwapChainImageFormat(), VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, colorImage, colorImageMemory);
+        VkImageView colorImageView = m_Renderer->CreateSkyboxImageView(colorImage, m_Renderer->GetSwapChainImageFormat(), VK_IMAGE_ASPECT_COLOR_BIT, 1);
+
+        VkImage depthImage;
+        VkDeviceMemory depthImageMemory;
+        m_Renderer->CreateSkyboxImage(texWidth, texWidth, 1, VK_SAMPLE_COUNT_1_BIT, m_Renderer->FindDepthFormat(), VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, depthImage, depthImageMemory);
+        VkImageView depthImageView = m_Renderer->CreateSkyboxImageView(depthImage, m_Renderer->FindDepthFormat(), 1, VK_IMAGE_ASPECT_DEPTH_BIT);
 
         m_Skybox.image = skyboxImage;
         m_Skybox.imageMemory = textureImageMemory;
@@ -50,6 +64,12 @@ namespace Rbk
         m_Skybox.width = texWidth;
         m_Skybox.height = texHeight;
         m_Skybox.channels = texChannels;
+        m_Skybox.colorImageView = colorImageView;
+        m_Skybox.colorImage = colorImage;
+        m_Skybox.colorImageMemory = colorImageMemory;
+        m_Skybox.depthImage = depthImage;
+        m_Skybox.depthImageView = depthImageView;
+        m_Skybox.depthImageMemory = depthImageMemory;
 
         Rbk::Log::GetLogger()->debug("Added skybox");
 

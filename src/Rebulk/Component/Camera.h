@@ -11,7 +11,7 @@ namespace Rbk
     class Camera
     {
     public:
-        void Init(float width, float height);
+        void Init();
         inline glm::mat4 GetView() { return m_View; };
         void Up();
         void Down();
@@ -21,7 +21,7 @@ namespace Rbk
         void UpdateSpeed(float timeStep);
         void UpdateYP(float xoffset, float yoffset);
         void Recenter();
-        static glm::mat4 FrustumProj(float fovy, float s, float n, float f);
+        static glm::mat4 FrustumProj(float fovy, float s, float n);
 
     private:
         glm::vec3 m_Pos;
