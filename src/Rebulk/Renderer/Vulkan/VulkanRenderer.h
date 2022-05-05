@@ -7,10 +7,7 @@
 
 namespace Rbk {
 
-    struct VulkanShaders
-    {
-        std::map<const char*, std::array<VkShaderModule, 2>> shaders;
-    };
+    VkResult CreateDebugUtilsMessengerEXT(VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDebugUtilsMessengerEXT* pCallback);
 
     struct VulkanPipeline
     {
@@ -41,24 +38,32 @@ namespace Rbk {
     {
     public:
         VulkanRenderer(GLFWwindow* window);
-        ~VulkanRenderer();		
+        ~VulkanRenderer();
 
         /**
         * Vulkan init functions, before main loop.
         **/
-        VkRenderPass CreateRenderPass(VkSampleCountFlagBits msaaSamples);
+        std::shared_ptr<VkRenderPass> CreateRenderPass(VkSampleCountFlagBits msaaSamples);
         VkShaderModule CreateShaderModule(const std::vector<char>& code);
 
         VkDescriptorPool CreateDescriptorPool(std::array<VkDescriptorPoolSize, 2> poolSizes, uint32_t maxSets = 100);
         VkDescriptorSetLayout CreateDescriptorSetLayout(std::vector<VkDescriptorSetLayoutBinding> pBindings, VkDescriptorSetLayoutCreateFlagBits flags);
         VkDescriptorSet CreateDescriptorSets(VkDescriptorPool descriptorPool, std::vector<VkDescriptorSetLayout> descriptorSetLayouts, uint32_t count = 100);
-        void UpdateDescriptorSets(std::vector<std::pair<VkBuffer, VkDeviceMemory>>uniformBuffers, Texture texture, VkDescriptorSet descriptorSet);
+        void UpdateDescriptorSets(std::vector<std::pair<VkBuffer, VkDeviceMemory>>uniformBuffers, Texture texture, VkDescriptorSet descriptorSet, VkDescriptorImageInfo imageInfo);
         
         VkPipelineLayout CreatePipelineLayout(std::vector<VkDescriptorSet> descriptorSets, std::vector<VkDescriptorSetLayout> descriptorSetLayouts, std::vector<VkPushConstantRange> pushConstants = {});
-        VkPipeline CreateGraphicsPipeline(VkRenderPass renderPass, VkPipelineLayout pipelineLayout, VkPipelineCache pipelineCache, std::vector<VkPipelineShaderStageCreateInfo>shadersCreateInfos, bool wireFrameModeOn = false);
-        
+        VkPipeline CreateGraphicsPipeline(
+            std::shared_ptr<VkRenderPass> renderPass,
+            VkPipelineLayout pipelineLayout, 
+            VkPipelineCache pipelineCache, 
+            std::vector<VkPipelineShaderStageCreateInfo>shadersCreateInfos, 
+            VkCullModeFlagBits cullMode = VK_CULL_MODE_BACK_BIT,
+            bool depthTestEnable = true,
+            bool depthWriteEnable = true,
+            bool wireFrameModeOn = false
+        );
         VkSwapchainKHR CreateSwapChain(std::vector<VkImage>& swapChainImages, VkSwapchainKHR oldSwapChain = VK_NULL_HANDLE);
-        std::vector<VkFramebuffer> CreateFramebuffers(VkRenderPass renderPass, std::vector<VkImageView> swapChainImageViews, std::vector<VkImageView> depthImageView, std::vector<VkImageView> colorImageView);
+        std::vector<VkFramebuffer> CreateFramebuffers(std::shared_ptr<VkRenderPass> renderPass, std::vector<VkImageView> swapChainImageViews, std::vector<VkImageView> depthImageView, std::vector<VkImageView> colorImageView);
         VkCommandPool CreateCommandPool();
         std::vector<VkCommandBuffer> AllocateCommandBuffers(VkCommandPool commandPool, uint32_t size = 1);
         void CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory);
@@ -75,8 +80,8 @@ namespace Rbk {
         void CreateSkyboxImage(uint32_t width, uint32_t height, uint32_t mipLevels, VkSampleCountFlagBits numSamples, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image, VkDeviceMemory& imageMemory);
         VkImageView CreateImageView(VkImage image, VkFormat format, uint32_t mipLevels, VkImageAspectFlags aspectFlags = VK_IMAGE_ASPECT_COLOR_BIT);
         VkImageView CreateSkyboxImageView(VkImage image, VkFormat format, uint32_t mipLevels, VkImageAspectFlags aspectFlags = VK_IMAGE_ASPECT_COLOR_BIT);
-        void CreateTextureImage(VkCommandBuffer commandBuffer, stbi_uc* pixels, int texWidth, int texHeight, uint32_t mipLevels, VkImage& textureImage, VkDeviceMemory& textureImageMemory, VkFormat format);
-        void CreateSkyboxTextureImage(VkCommandBuffer commandBuffer, std::vector<stbi_uc*>skyboxPixels, int texWidth, int texHeight, uint32_t mipLevels, VkImage& textureImage, VkDeviceMemory& textureImageMemory, VkFormat format);
+        void CreateTextureImage(VkCommandBuffer commandBuffer, stbi_uc* pixels, uint32_t texWidth, uint32_t texHeight, uint32_t mipLevels, VkImage& textureImage, VkDeviceMemory& textureImageMemory, VkFormat format);
+        void CreateSkyboxTextureImage(VkCommandBuffer commandBuffer, std::vector<stbi_uc*>skyboxPixels, uint32_t texWidth, uint32_t texHeight, uint32_t mipLevels, VkImage& textureImage, VkDeviceMemory& textureImageMemory, VkFormat format);
         void CopyBufferToImage(VkCommandBuffer commandBuffer, VkBuffer buffer, VkImage image, uint32_t width, uint32_t height);
         void CopyBufferToImageSkybox(VkCommandBuffer commandBuffer, VkBuffer buffer, VkImage image, uint32_t width, uint32_t height, std::vector<stbi_uc*>skyboxPixels, uint32_t mipLevels);
         VkSampler CreateTextureSampler(uint32_t mipLevels);
@@ -92,7 +97,7 @@ namespace Rbk {
         void ResetCommandPool(VkCommandPool commandPool);
         void BeginCommandBuffer(VkCommandBuffer commandBuffer, VkCommandBufferUsageFlagBits flags = VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT);
         void EndCommandBuffer(VkCommandBuffer commandBuffer);
-        void BeginRenderPass(VkRenderPass renderPass, VkCommandBuffer commandBuffer, VkFramebuffer swapChainFramebuffer);
+        void BeginRenderPass(std::shared_ptr<VkRenderPass> renderPass, VkCommandBuffer commandBuffer, VkFramebuffer swapChainFramebuffer);
         void EndRenderPass(VkCommandBuffer commandBuffer);
         void SetViewPort(VkCommandBuffer commandBuffer);
         void SetScissor(VkCommandBuffer commandBuffer);
@@ -106,7 +111,8 @@ namespace Rbk {
         void AddPipelineBarrier(VkCommandBuffer commandBuffer, VkImageMemoryBarrier renderBarrier, VkPipelineStageFlags srcStageMask, VkPipelineStageFlags dstStageMask, VkDependencyFlags dependencyFlags);
         void WaitIdle();
         void GenerateMipmaps(VkCommandBuffer commandBuffer, VkFormat imageFormat, VkImage image, int32_t texWidth, int32_t texHeight, uint32_t mipLevels, uint32_t layerCount = 1);
-        void GenerateMipmapsSkybox(VkCommandBuffer commandBuffer, VkFormat imageFormat, VkImage image, int32_t texWidth, int32_t texHeight, uint32_t mipLevels, uint32_t layerCount);
+        void GenerateMipmapsSkybox(VkCommandBuffer commandBuffer, VkFormat imageFormat, VkImage image, uint32_t layerCount);
+       
         /**
         * Vulkan clean and destroy
         **/
@@ -116,7 +122,7 @@ namespace Rbk {
         void DestroySemaphores(std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>> semaphores);
         void DestroyBuffer(VkBuffer buffer);
         void DestroyDeviceMemory(VkDeviceMemory deviceMemory);
-        void DestroyRenderPass(VkRenderPass renderPass, VkCommandPool commandPool, std::vector<VkCommandBuffer> commandBuffers);
+        void DestroyRenderPass(std::shared_ptr<VkRenderPass> renderPass, VkCommandPool commandPool, std::vector<VkCommandBuffer> commandBuffers);
         void Destroy();
 
         /*
@@ -148,6 +154,20 @@ namespace Rbk {
         VkSampleCountFlagBits GetMaxUsableSampleCount();
         SwapChainSupportDetails QuerySwapChainSupport(VkPhysicalDevice device);
         uint32_t GetImageCount();
+        std::string GetAPIVersion();
+
+        static const char* GetVendor(int vendorID)
+        {
+            std::map<int, const char*> vendors;
+            vendors[0x1002] = "AMD";
+            vendors[0x1010] = "ImgTec";
+            vendors[0x10DE] = "NVIDIA";
+            vendors[0x13B5] = "ARM";
+            vendors[0x5143] = "Qualcomm";
+            vendors[0x8086] = "INTEL";
+
+            return vendors[vendorID];
+        }
 
     public:
         bool m_FramebufferResized = false;
@@ -162,46 +182,47 @@ namespace Rbk {
         void SetupDebugMessenger();
         void CreateLogicalDevice();
         void PickPhysicalDevice();
-        void CreateSurface();						
+        void CreateSurface();
 
         QueueFamilyIndices FindQueueFamilies(VkPhysicalDevice device);
         VkSurfaceFormatKHR ChooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats);
         VkPresentModeKHR ChooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes);
-        uint32_t FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);		
+        uint32_t FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
         VkExtent2D ChooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities);
 
     private:
         const int m_MAX_FRAMES_IN_FLIGHT = 2;
         size_t m_CurrentFrame = 0;
         uint32_t m_ExtensionCount = 0;
+        std::string m_apiVersion = "";
 
         GLFWwindow* m_Window = VK_NULL_HANDLE;
 
         const std::vector<const char*> m_ValidationLayers = { "VK_LAYER_KHRONOS_validation" };
-        const std::vector<const char*> m_DeviceExtensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME, VK_KHR_PUSH_DESCRIPTOR_EXTENSION_NAME };
+        const std::vector<const char*> m_DeviceExtensions = { VK_EXT_DESCRIPTOR_INDEXING_EXTENSION_NAME, VK_KHR_SWAPCHAIN_EXTENSION_NAME, VK_KHR_PUSH_DESCRIPTOR_EXTENSION_NAME };
 
         bool m_InstanceCreated = false;
         bool m_EnableValidationLayers = false;
     
-        VkInstance m_Instance = VK_NULL_HANDLE;		
+        VkInstance m_Instance = VK_NULL_HANDLE;
         VkPhysicalDevice m_PhysicalDevice = VK_NULL_HANDLE;
         VkPhysicalDeviceProperties m_DeviceProps = {};
-        VkPhysicalDeviceFeatures m_DeviceFeatures = {};		
+        VkPhysicalDeviceFeatures m_DeviceFeatures = {};
         VkDevice m_Device = VK_NULL_HANDLE;
         VkQueue m_GraphicsQueue = VK_NULL_HANDLE;
         VkQueue m_PresentQueue = VK_NULL_HANDLE;
         VkSurfaceKHR m_Surface = VK_NULL_HANDLE;
         VkFormat m_SwapChainImageFormat;
-        VkExtent2D m_SwapChainExtent;		
+        VkExtent2D m_SwapChainExtent;
         VkDebugUtilsMessengerEXT m_DebugMessengerCallback = VK_NULL_HANDLE;
         QueueFamilyIndices m_QueueFamilyIndices = {};
         VkSurfaceFormatKHR m_SurfaceFormat;
         VkPresentModeKHR m_PresentMode;
         SwapChainSupportDetails m_SwapChainSupport;
 
-        std::vector<VkLayerProperties> m_LayersAvailable = {};		
+        std::vector<VkLayerProperties> m_LayersAvailable = {};
         std::vector<VkExtensionProperties> m_Extensions = {};
-        std::vector<const char*> m_RequiredExtensions = {};		
+        std::vector<const char*> m_RequiredExtensions = {};
         std::vector<VkFence> m_InFlightFences = {};
         std::vector<VkFence> m_ImagesInFlight = {};
         VkFence m_Fence;

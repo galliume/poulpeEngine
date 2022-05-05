@@ -1,5 +1,3 @@
-#pragma once
-
 #define NOMINMAX
 
 #include <algorithm>
@@ -18,8 +16,10 @@
 #include <numeric>
 #include <map>
 #include <filesystem>
+#include <cstddef>
 
 #define GLM_FORCE_RADIANS
+//#define GLM_FORCE_DEFAULT_ALIGNED_GENTYPES
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/glm.hpp>
@@ -33,5 +33,4 @@
 #include "spdlog/sinks/stdout_color_sinks.h"
 #include "spdlog/details/log_msg.h"
 
-#include "Rebulk/Core/Tools.h"
 #include "Rebulk/Core/Log.h"

@@ -34,7 +34,7 @@ namespace Rbk {
             }
         );
 
-        ImGui::SetNextWindowPos(ImVec2(650, 20), ImGuiCond_FirstUseEver);
+       // ImGui::SetNextWindowPos(ImVec2(650, 20), ImGuiCond_FirstUseEver);
         ImGui_ImplGlfw_InitForVulkan(window, true);
         ImGui_ImplVulkan_Init(&initInfo, renderPass);
     }

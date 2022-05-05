@@ -1,23 +1,13 @@
- #version 450 
+#version 450 
+#extension GL_ARB_separate_shader_objects : enable
+#extension GL_EXT_nonuniform_qualifier : enable
 
 layout(location = 0) out vec4 outputColor;
 layout(location = 0) in vec3 fragTexCoord;
 
-layout(binding = 1) uniform samplerCubeArray texSampler;
+layout(binding = 1) uniform samplerCube texSampler;
 
-struct UBO 
-{
-    mat4 model;
-    mat4 view;
-    mat4 proj;
-    int index;
-}; 
-
-layout(set = 0, binding = 0) uniform CubeUniformBufferObject {
-   UBO ubo;
-};
-
-void main() { 
-    outputColor = textureLod(texSampler, vec4(fragTexCoord, 1), 1.0f); 
-    //outputColor = vec4(fragTexCoord, 1.0);
+void main() 
+{ 
+    outputColor = texture(texSampler, fragTexCoord);
 }

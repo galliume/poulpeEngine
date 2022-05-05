@@ -1,7 +1,8 @@
 workspace "Rebulkan"
     architecture "x64"
     startproject "Rebulkan"
-    
+    toolset "clang"
+
     configurations
     {
         "Debug",
@@ -82,17 +83,51 @@ project "Rebulkan"
         buildoptions { "/MDd" }
 
     filter { "system:windows", "configurations:Release" }
-        buildoptions { "/MD" }
-
+        buildoptions { "/MDd" }
+   
     filter "configurations:Debug"
         runtime "Debug"
-        symbols "on"
+        symbols "On"
 
+        buildoptions {
+            "-Wall",
+            "-Wextra",
+            "-Wfloat-equal",
+            "-Wundef",
+            "-Wcast-align",
+            "-Wwrite-strings",
+            "-Wlogical-op",
+            "-Wmissing-declarations",
+            "-Wredundant-decls",
+            "-Wshadow",
+            "-Woverloaded-virtual"
+        }
+    
     filter "configurations:Release"
         runtime "Release"
-        symbols "on"
+        symbols "On"
+        optimize "On"
+
+        buildoptions {
+            "-Wall",
+            "-Wextra",
+            "-Wfloat-equal",
+            "-Wundef", 
+            "-Wcast-align",
+            "-Wwrite-strings",
+            "-Wlogical-op",
+            "-Wmissing-declarations",
+            "-Wredundant-decls",
+            "-Wshadow",
+            "-Woverloaded-virtual"
+        }
 
     filter "system:linux"
         systemversion "latest"
-    
-        links { "GLFW", "ImGui", "wayland-client", "dl", "pthread" }
+
+        links { "GLFW", "ImGui", "X11", "dl", "pthread" }
+ 
+        postbuildcommands 
+        {
+            '{COPY} "./assets" "%{cfg.targetdir}/assets"'
+        }
