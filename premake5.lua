@@ -1,7 +1,8 @@
 workspace "Rebulkan"
     architecture "x64"
     startproject "Rebulkan"
-    
+    toolset "clang"
+
     configurations
     {
         "Debug",

@@ -35,6 +35,10 @@ namespace Rbk
 
         VkCommandPool commandPool = m_Renderer->CreateCommandPool();
 
+        texWidth = static_cast<uint32_t>(texWidth);
+        texHeight = static_cast<uint32_t>(texHeight);
+        texChannels = static_cast<uint32_t>(texChannels);
+
         VkCommandBuffer commandBuffer = m_Renderer->AllocateCommandBuffers(commandPool)[0];
         m_Renderer->BeginCommandBuffer(commandBuffer);
         m_Renderer->CreateSkyboxTextureImage(commandBuffer, skyboxPixels, texWidth, texHeight, mipLevels, skyboxImage, textureImageMemory, VK_FORMAT_R8G8B8A8_UNORM);

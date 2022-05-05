@@ -337,7 +337,7 @@ namespace Rbk {
         std::vector<VkQueueFamilyProperties> queueFamilies(queueFamilyCount);
         vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, queueFamilies.data());
 
-        int i = 0;
+        uint32_t i = 0;
         for (const auto& queueFamily : queueFamilies) {
             if (queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT) {
                 m_QueueFamilyIndices.graphicsFamily = i;
@@ -577,7 +577,7 @@ namespace Rbk {
 
     VkImageView VulkanRenderer::CreateImageView(VkImage image, VkFormat format, uint32_t mipLevels, VkImageAspectFlags aspectFlags)
     {
-        VkImageView swapChainImageView = {};
+        VkImageView swapChainImageView{};
 
         VkImageViewCreateInfo createInfo{};
         createInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
@@ -609,7 +609,7 @@ namespace Rbk {
 
     VkImageView VulkanRenderer::CreateSkyboxImageView(VkImage image, VkFormat format, uint32_t mipLevels, VkImageAspectFlags aspectFlags)
     {
-        VkImageView swapChainImageView = {};
+        VkImageView swapChainImageView{};
 
         VkImageViewCreateInfo createInfo{};
         createInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
@@ -785,7 +785,7 @@ namespace Rbk {
         colorBlending.blendConstants[3] = 1.0f;
 
         VkDynamicState dynamicStates[2] = { VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR };
-        VkPipelineDynamicStateCreateInfo dynamicState = {};
+        VkPipelineDynamicStateCreateInfo dynamicState{};
         dynamicState.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
         dynamicState.dynamicStateCount = 2;
         dynamicState.pDynamicStates = dynamicStates;
@@ -1051,10 +1051,10 @@ namespace Rbk {
 
     std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>> VulkanRenderer::CreateSyncObjects(std::vector<VkImage> swapChainImages)
     {
-        std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>> semaphores;
+        std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>> semaphores{};
 
-        std::vector<VkSemaphore> imageAvailableSemaphores = {};
-        std::vector<VkSemaphore> renderFinishedSemaphores = {};
+        std::vector<VkSemaphore> imageAvailableSemaphores{};
+        std::vector<VkSemaphore> renderFinishedSemaphores{};
 
         imageAvailableSemaphores.resize(m_MAX_FRAMES_IN_FLIGHT);
         renderFinishedSemaphores.resize(m_MAX_FRAMES_IN_FLIGHT);
@@ -1127,13 +1127,15 @@ namespace Rbk {
         std::vector<VkDescriptorImageInfo> imageInfos;
         std::vector<VkDescriptorBufferInfo> bufferInfos;
 
-        for (auto uniformBuffer : uniformBuffers) {
+        std::for_each(std::begin(uniformBuffers), std::end(uniformBuffers), 
+            [&bufferInfos](const std::pair<VkBuffer, VkDeviceMemory>& uniformBuffer)
+        {
             VkDescriptorBufferInfo bufferInfo{};
             bufferInfo.buffer = uniformBuffer.first;
             bufferInfo.offset = 0;
             bufferInfo.range = VK_WHOLE_SIZE;
             bufferInfos.emplace_back(bufferInfo);
-        }
+        });
 
         imageInfos.emplace_back(imageInfo);
 
@@ -1381,7 +1383,7 @@ namespace Rbk {
 
     std::pair<VkBuffer, VkDeviceMemory> VulkanRenderer::CreateIndexBuffer(VkCommandPool commandPool, std::vector<uint32_t> indices)
     {
-        std::pair<VkBuffer, VkDeviceMemory> indexBuffer;
+        std::pair<VkBuffer, VkDeviceMemory> indexBuffer{};
 
         VkDeviceSize bufferSize = sizeof(indices[0]) * indices.size();
 
@@ -1407,7 +1409,7 @@ namespace Rbk {
     std::pair<VkBuffer, VkDeviceMemory> VulkanRenderer::CreateVertexBuffer(VkCommandPool commandPool, std::vector<Rbk::Vertex> vertices)
     {
 
-        std::pair<VkBuffer, VkDeviceMemory> vertexBuffer;
+        std::pair<VkBuffer, VkDeviceMemory> vertexBuffer{};
         VkDeviceSize bufferSize = sizeof(vertices) * vertices.size();
         VkBuffer stagingBuffer;
         VkDeviceMemory stagingBufferMemory;
@@ -1434,7 +1436,7 @@ namespace Rbk {
 
     std::pair<VkBuffer, VkDeviceMemory> VulkanRenderer::CreateUniformBuffers(uint32_t uniformBuffersCount)
     {
-        std::pair<VkBuffer, VkDeviceMemory> uniformBuffers;
+        std::pair<VkBuffer, VkDeviceMemory> uniformBuffers{};
 
         VkDeviceSize bufferSize = sizeof(UniformBufferObject) * uniformBuffersCount;
         CreateBuffer(bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, uniformBuffers.first, uniformBuffers.second);
@@ -1444,7 +1446,7 @@ namespace Rbk {
 
     std::pair<VkBuffer, VkDeviceMemory> VulkanRenderer::CreateCubeUniformBuffers(uint32_t uniformBuffersCount)
     {
-        std::pair<VkBuffer, VkDeviceMemory> uniformBuffers;
+        std::pair<VkBuffer, VkDeviceMemory> uniformBuffers{};
 
         VkDeviceSize bufferSize = sizeof(CubeUniformBufferObject) * uniformBuffersCount;
         CreateBuffer(bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, uniformBuffers.first, uniformBuffers.second);
@@ -1633,7 +1635,7 @@ namespace Rbk {
         vkFreeMemory(m_Device, stagingBufferMemory, nullptr);
     }
 
-    void VulkanRenderer::CreateSkyboxTextureImage(VkCommandBuffer commandBuffer, std::vector<stbi_uc*>skyboxPixels, int texWidth, int texHeight, uint32_t mipLevels, VkImage& textureImage, VkDeviceMemory& textureImageMemory, VkFormat format)
+    void VulkanRenderer::CreateSkyboxTextureImage(VkCommandBuffer commandBuffer, std::vector<stbi_uc*>skyboxPixels, uint32_t texWidth, uint32_t texHeight, uint32_t mipLevels, VkImage& textureImage, VkDeviceMemory& textureImageMemory, VkFormat format)
     {
         VkDeviceSize imageSize = texWidth * texHeight * 4 * 6;
         VkBuffer stagingBuffer;
