@@ -64,7 +64,7 @@ namespace Rbk {
 #ifdef NDEBUG
         m_EnableValidationLayers = false;
 #else
-        m_EnableValidationLayers = true;
+        m_EnableValidationLayers = false;
 #endif
 
         bool vulkanSupported = glfwVulkanSupported();
@@ -74,6 +74,7 @@ namespace Rbk {
         }
 
         VkResult volkInit = volkInitialize();
+
         if (volkInit != VK_SUCCESS) {
             throw std::runtime_error("Failed to initialize volk");
         }
@@ -648,7 +649,7 @@ namespace Rbk {
         layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
         layoutInfo.bindingCount = static_cast<uint32_t>(pBindings.size());
         layoutInfo.pBindings = pBindings.data();
-        layoutInfo.flags = flags;
+        //layoutInfo.flags = flags;
 
         if (vkCreateDescriptorSetLayout(m_Device, &layoutInfo, nullptr, &descriptorSetLayout) != VK_SUCCESS)
         {
@@ -1283,9 +1284,10 @@ namespace Rbk {
         uint32_t imageIndex = 0;
         VkResult result = vkAcquireNextImageKHR(m_Device, swapChain, UINT64_MAX, imageAvailableSemaphores[m_CurrentFrame], VK_NULL_HANDLE, &imageIndex);
 
-        if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR) {
-            return -1;
-        }
+        //@todo properly fix casting type with -1 and uint imageIndex needed by Vulkan
+       //        if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR) {
+//            return -1;
+//        }
 
         if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
             throw std::runtime_error("failed to acquire swap chain image!");
@@ -1305,7 +1307,7 @@ namespace Rbk {
         VkDeviceSize offsets[1] = { 0 };
 
         vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
-        vkCmdBindIndexBuffer(commandBuffer, mesh->indicesBuffer.first, 0, VK_INDEX_TYPE_UINT32);
+        vkCmdBindIndexBuffer(commandBuffer, mesh->indicesBuffer.first, 0, VK_INDEX_TYPE_MAX_ENUM);
 
         vkCmdBindDescriptorSets(
             commandBuffer,
