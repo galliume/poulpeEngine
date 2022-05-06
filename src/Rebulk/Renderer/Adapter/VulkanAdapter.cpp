@@ -79,6 +79,8 @@ namespace Rbk
 
     void VulkanAdapter::PrepareWorld()
     {
+        bool wireFrame = false;
+
         m_SwapChainImageViews.resize(m_SwapChainImages.size());
         VkVertexInputBindingDescription bDesc = Vertex::GetBindingDescription();
 
@@ -194,7 +196,7 @@ namespace Rbk
                 shadersStageInfos,
                 vertexInputInfo,
                 VK_CULL_MODE_BACK_BIT,
-                true, true, false
+                true, true, wireFrame
             );
         }
 
@@ -287,34 +289,37 @@ namespace Rbk
             shadersStageInfos,
             vertexInputInfo,
             VK_CULL_MODE_FRONT_BIT,
-            false, false, false
+            false, false, wireFrame
         );
 
         //crosshair
         const std::vector<Vertex2D> vertices = {
-            {{0.0f, -0.5f}, {1.0f, 0.0f, 0.0f}},
-            {{0.5f, 0.5f}, {0.0f, 1.0f, 0.0f}},
-            {{-0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}}
+            {{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
+            {{0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f}},
+            {{0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}, {0.0f, 1.0f}},
+            {{-0.5f, 0.5f}, {1.0f, 1.0f, 1.0f}, {1.0f, 1.0f}}
         };
         const std::vector<uint32_t> indices = {
             0, 1, 2, 2, 3, 0
         };
 
         m_Crosshair = std::make_shared<Mesh2D>();
+        m_Crosshair->texture = "crosshair";
         m_Crosshair.get()->vertexBuffer = m_Renderer->CreateVertex2DBuffer(m_CommandPool, vertices);
         m_Crosshair.get()->indicesBuffer = m_Renderer->CreateIndexBuffer(m_CommandPool, indices);
         std::pair<VkBuffer, VkDeviceMemory> crossHairuniformBuffer = m_Renderer->CreateUniformBuffers(1);
         m_Crosshair.get()->uniformBuffers.emplace_back(crossHairuniformBuffer);
 
         glm::mat4 view = glm::mat4(1.0f);
-        glm::vec3 scale = glm::vec3(1.0f, 1.0f, 1.0f);
-        glm::vec3 pos = glm::vec3(0.25f, -1.3f, -0.75f);
+        glm::vec3 scale = glm::vec3(0.5f, 0.5f, 0.5f);
+        glm::vec3 pos = glm::vec3(0.0f, 0.0f, 0.0f);
 
         UniformBufferObject ubo;
         ubo.model = glm::mat4(1.0f);
         ubo.model = glm::translate(ubo.model, pos);
         ubo.model = glm::scale(ubo.model, scale);
         ubo.view = glm::translate(view, glm::vec3(0.0f, 0.0f, 0.0f));
+
         ubo.proj = glm::perspective(glm::radians(60.0f), m_Renderer->GetSwapChainExtent().width / (float)m_Renderer->GetSwapChainExtent().height, 0.1f, 256.0f);
         ubo.proj[1][1] *= -1;
 
@@ -351,14 +356,14 @@ namespace Rbk
         for (uint32_t i = 0; i < m_SwapChainImages.size(); i++) {
 
             VkDescriptorSet cdescriptorSet = m_Renderer->CreateDescriptorSets(cdescriptorPool, { cdesriptorSetLayout }, 1);
-            Texture tex = m_TextureManager->GetTextures()["crosshair"];
+            Texture ctex = m_TextureManager->GetTextures()["crosshair"];
 
-            VkDescriptorImageInfo imageInfo{};
-            imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-            imageInfo.imageView = tex.imageView;
-            imageInfo.sampler = tex.sampler;
+            VkDescriptorImageInfo cimageInfo{};
+            cimageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+            cimageInfo.imageView = ctex.imageView;
+            cimageInfo.sampler = ctex.sampler;
 
-            m_Renderer->UpdateDescriptorSets(m_Crosshair.get()->uniformBuffers, tex, cdescriptorSet, imageInfo);
+            m_Renderer->UpdateDescriptorSets(m_Crosshair.get()->uniformBuffers, ctex, cdescriptorSet, cimageInfo);
             m_Crosshair.get()->descriptorSets.emplace_back(cdescriptorSet);
         }
 
@@ -394,8 +399,8 @@ namespace Rbk
             m_Crosshair.get()->pipelineCache,
             cshadersStageInfos,
             vertexInputInfo2D,
-            VK_CULL_MODE_NONE,
-            false, false, false
+            VK_CULL_MODE_BACK_BIT,
+            true, true, wireFrame
         );
 
         //command buffer
@@ -418,8 +423,8 @@ namespace Rbk
         skyMesh->ubos[0].view = m_Camera->LookAt();
         m_Renderer->UpdateUniformBuffer(skyMesh->uniformBuffers[0], skyMesh->ubos, skyMesh->ubos.size());
 
-        m_Crosshair.get()->ubos[0].view = m_Camera->LookAt();
-        m_Renderer->UpdateUniformBuffer(m_Crosshair.get()->uniformBuffers[0], m_Crosshair.get()->ubos, m_Crosshair.get()->ubos.size());
+        /*m_Crosshair.get()->ubos[0].view = m_Camera->LookAt();
+        m_Renderer->UpdateUniformBuffer(m_Crosshair.get()->uniformBuffers[0], m_Crosshair.get()->ubos, m_Crosshair.get()->ubos.size());*/
 
         std::vector<Mesh>* worldMeshes = m_MeshManager->GetWorldMeshes();
         std::map<const char*, std::array<uint32_t, 2>> worldMeshesLoaded = m_MeshManager->GetWoldMeshesLoaded();
@@ -493,6 +498,7 @@ namespace Rbk
         for (Mesh mesh : *m_MeshManager->GetWorldMeshes()) {
             m_Renderer->BindPipeline(m_CommandBuffers[m_ImageIndex], mesh.graphicsPipeline);
             m_Renderer->Draw(m_CommandBuffers[m_ImageIndex], &mesh, m_ImageIndex);
+
         }
 
         //draw the crosshair
@@ -501,12 +507,22 @@ namespace Rbk
 
         VkDeviceSize offsets[] = { 0 };
         vkCmdBindVertexBuffers(m_CommandBuffers[m_ImageIndex], 0, 1, vertexBuffers, offsets);
-        vkCmdBindIndexBuffer(m_CommandBuffers[m_ImageIndex], m_Crosshair.get()->indicesBuffer.first, 0, VK_INDEX_TYPE_UINT16);
+        vkCmdBindIndexBuffer(m_CommandBuffers[m_ImageIndex], m_Crosshair.get()->indicesBuffer.first, 0, VK_INDEX_TYPE_UINT32);
+        vkCmdBindDescriptorSets(
+            m_CommandBuffers[m_ImageIndex],
+            VK_PIPELINE_BIND_POINT_GRAPHICS,
+            m_Crosshair.get()->pipelineLayout,
+            0,
+            1,
+            &m_Crosshair.get()->descriptorSets[m_ImageIndex],
+            0,
+            nullptr
+        );
         vkCmdDrawIndexed(m_CommandBuffers[m_ImageIndex], static_cast<uint32_t>(6), 1, 0, 0, 0);
 
         ////draw the skybox !
-        m_Renderer->BindPipeline(m_CommandBuffers[m_ImageIndex], m_MeshManager->GetSkyboxMesh()->graphicsPipeline);
-        m_Renderer->Draw(m_CommandBuffers[m_ImageIndex], m_MeshManager->GetSkyboxMesh(), m_ImageIndex);
+        //m_Renderer->BindPipeline(m_CommandBuffers[m_ImageIndex], m_MeshManager->GetSkyboxMesh()->graphicsPipeline);
+        //m_Renderer->Draw(m_CommandBuffers[m_ImageIndex], m_MeshManager->GetSkyboxMesh(), m_ImageIndex);
 
         m_Renderer->EndRenderPass(m_CommandBuffers[m_ImageIndex]);
         m_Renderer->EndCommandBuffer(m_CommandBuffers[m_ImageIndex]);
@@ -671,7 +687,7 @@ namespace Rbk
         info.Device = m_Renderer->GetDevice();
         info.QueueFamily = m_Renderer->GetQueueFamily();
         info.Queue = m_Renderer->GetGraphicsQueue();
-        info.PipelineCache = nullptr;//to implement VkPipelineCache                 
+        info.PipelineCache = nullptr;//to implement VkPipelineCache
         info.DescriptorPool = imguiPool;
         info.Subpass = 0;
         info.MinImageCount = 3;
@@ -682,7 +698,6 @@ namespace Rbk
             if (0 == err) return;
             Rbk::Log::GetLogger()->warn("ImGui error {}", err);
         };
-
 
         VImGuiInfo vImGuiInfo;
         vImGuiInfo.info = info;

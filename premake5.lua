@@ -78,6 +78,9 @@ project "Rebulkan"
         {
             "GLFW", "ImGui"
         }
+        
+        buildmessage 'Compiling shaders'
+        prebuildcommands { "./scripts/WindowsShadersCompile.bat" }
 
     filter { "system:windows", "configurations:Debug" }
         buildoptions { "/MDd" }
@@ -127,6 +130,10 @@ project "Rebulkan"
 
         links { "GLFW", "ImGui", "X11", "dl", "pthread" }
  
+        buildmessage 'Compiling shaders'
+        prebuildcommands { "./scripts/LinuxShadersCompile.bat" }
+
+        buildmessage 'Copying assets'
         postbuildcommands 
         {
             '{COPY} "./assets" "%{cfg.targetdir}/assets"'

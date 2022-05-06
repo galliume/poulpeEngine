@@ -64,7 +64,7 @@ namespace Rbk
             attributeDescriptions[2].binding = 0;
             attributeDescriptions[2].location = 2;
             attributeDescriptions[2].format = VK_FORMAT_R32G32_SFLOAT;
-            attributeDescriptions[2].offset = offsetof(Vertex, texCoord);;
+            attributeDescriptions[2].offset = offsetof(Vertex, texCoord);
 
             return attributeDescriptions;
         }
@@ -79,6 +79,7 @@ namespace Rbk
     {
         glm::vec2 pos;
         glm::vec3 color;
+        glm::vec2 texCoord;
 
         static VkVertexInputBindingDescription GetBindingDescription() {
 
@@ -90,9 +91,9 @@ namespace Rbk
             return bindingDescription;
         }
 
-        static std::array<VkVertexInputAttributeDescription, 2> GetAttributeDescriptions() {
+        static std::array<VkVertexInputAttributeDescription, 3> GetAttributeDescriptions() {
 
-            std::array<VkVertexInputAttributeDescription, 2> attributeDescriptions{};
+            std::array<VkVertexInputAttributeDescription, 3> attributeDescriptions{};
             attributeDescriptions[0].binding = 0;
             attributeDescriptions[0].location = 0;
             attributeDescriptions[0].format = VK_FORMAT_R32G32_SFLOAT;
@@ -103,12 +104,17 @@ namespace Rbk
             attributeDescriptions[1].format = VK_FORMAT_R32G32B32_SFLOAT;
             attributeDescriptions[1].offset = offsetof(Vertex2D, color);
 
+            attributeDescriptions[2].binding = 0;
+            attributeDescriptions[2].location = 2;
+            attributeDescriptions[2].format = VK_FORMAT_R32G32_SFLOAT;
+            attributeDescriptions[2].offset = offsetof(Vertex, texCoord);
+
             return attributeDescriptions;
         }
 
         bool operator==(const Vertex2D& other) const
         {
-            return pos == other.pos && color == other.color;
+            return pos == other.pos && color == other.color && texCoord == other.texCoord;
         }
     };
 
@@ -145,7 +151,8 @@ namespace std {
     template<> struct hash<Rbk::Vertex2D> {
         size_t operator()(Rbk::Vertex2D const& vertex) const {
             return ((hash<glm::vec2>()(vertex.pos) ^
-                (hash<glm::vec3>()(vertex.color) << 1)) >> 1);
+                (hash<glm::vec3>()(vertex.color) << 1)) >> 1) ^
+                (hash<glm::vec2>()(vertex.texCoord) << 1);
         }
     };
 }

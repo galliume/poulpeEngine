@@ -64,7 +64,7 @@ namespace Rbk {
 #ifdef NDEBUG
         m_EnableValidationLayers = false;
 #else
-        m_EnableValidationLayers = false;
+        m_EnableValidationLayers = true;
 #endif
 
         bool vulkanSupported = glfwVulkanSupported();
