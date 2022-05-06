@@ -80,6 +80,7 @@ namespace Rbk
     void VulkanAdapter::PrepareWorld()
     {
         m_SwapChainImageViews.resize(m_SwapChainImages.size());
+        VkVertexInputBindingDescription bDesc = Vertex::GetBindingDescription();
 
         for (uint32_t i = 0; i < m_SwapChainImages.size(); i++) {
             m_SwapChainImageViews[i] = m_Renderer->CreateImageView(m_SwapChainImages[i], m_Renderer->GetSwapChainImageFormat(), VK_IMAGE_ASPECT_COLOR_BIT);
@@ -183,7 +184,7 @@ namespace Rbk
             vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
             vertexInputInfo.vertexBindingDescriptionCount = 1;
             vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(Vertex::GetAttributeDescriptions().size());
-            vertexInputInfo.pVertexBindingDescriptions = &Vertex::GetBindingDescription();
+            vertexInputInfo.pVertexBindingDescriptions = &bDesc;
             vertexInputInfo.pVertexAttributeDescriptions = Vertex::GetAttributeDescriptions().data();
 
             mesh.graphicsPipeline = m_Renderer->CreateGraphicsPipeline(
@@ -276,7 +277,7 @@ namespace Rbk
         vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
         vertexInputInfo.vertexBindingDescriptionCount = 1;
         vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(Vertex::GetAttributeDescriptions().size());
-        vertexInputInfo.pVertexBindingDescriptions = &Vertex::GetBindingDescription();
+        vertexInputInfo.pVertexBindingDescriptions = &bDesc;
         vertexInputInfo.pVertexAttributeDescriptions = Vertex::GetAttributeDescriptions().data();
 
         skyboxMesh.graphicsPipeline = m_Renderer->CreateGraphicsPipeline(
@@ -379,11 +380,12 @@ namespace Rbk
         cfragShaderStageInfo.pName = "main";
         cshadersStageInfos.emplace_back(cfragShaderStageInfo);
 
+        VkVertexInputBindingDescription bDesc2D = Vertex::GetBindingDescription();
         VkPipelineVertexInputStateCreateInfo vertexInputInfo2D{};
         vertexInputInfo2D.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
         vertexInputInfo2D.vertexBindingDescriptionCount = 1;
         vertexInputInfo2D.vertexAttributeDescriptionCount = static_cast<uint32_t>(Vertex2D::GetAttributeDescriptions().size());
-        vertexInputInfo2D.pVertexBindingDescriptions = &Vertex2D::GetBindingDescription();
+        vertexInputInfo2D.pVertexBindingDescriptions = &bDesc2D;
         vertexInputInfo2D.pVertexAttributeDescriptions = Vertex2D::GetAttributeDescriptions().data();
 
         m_Crosshair.get()->graphicsPipeline = m_Renderer->CreateGraphicsPipeline(
