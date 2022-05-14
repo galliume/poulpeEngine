@@ -71,7 +71,7 @@ namespace Rbk
         m_Skybox.depthImageView = depthImageView;
         m_Skybox.depthImageMemory = depthImageMemory;
 
-        Rbk::Log::GetLogger()->debug("Added skybox");
+        Rbk::Log::GetLogger()->trace("Added skybox");
 
         vkDestroyCommandPool(m_Renderer.get()->GetDevice(), commandPool, nullptr);
     }
@@ -138,7 +138,7 @@ namespace Rbk
 
         m_Textures.emplace(name, texture);
 
-        Rbk::Log::GetLogger()->debug("Added texture {} from {}. w {} h {} a {}", name, path, texWidth, texHeight, texChannels);
+        Rbk::Log::GetLogger()->trace("Added texture {} from {}. w {} h {} a {}", name, path, texWidth, texHeight, texChannels);
 
         vkDestroyCommandPool(m_Renderer->GetDevice(), commandPool, nullptr);
     }
