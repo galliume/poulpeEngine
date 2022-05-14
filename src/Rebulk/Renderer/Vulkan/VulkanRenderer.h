@@ -2,6 +2,7 @@
 
 #include "Rebulk/Renderer/Mesh.h"
 #include "Rebulk/Renderer/IRenderer.h"
+#include "Rebulk/GUI/Window.h"
 
 #include <GLFW/glfw3.h>
 
@@ -37,7 +38,7 @@ namespace Rbk {
     class VulkanRenderer : public IRenderer
     {
     public:
-        VulkanRenderer(GLFWwindow* window);
+        VulkanRenderer(std::shared_ptr<Window> window);
         ~VulkanRenderer();
 
         /**
@@ -198,7 +199,7 @@ namespace Rbk {
         uint32_t m_ExtensionCount = 0;
         std::string m_apiVersion = "";
 
-        GLFWwindow* m_Window = VK_NULL_HANDLE;
+        std::shared_ptr<Window> m_Window = VK_NULL_HANDLE;
 
         const std::vector<const char*> m_ValidationLayers = { "VK_LAYER_KHRONOS_validation" };
         const std::vector<const char*> m_DeviceExtensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME, VK_KHR_PUSH_DESCRIPTOR_EXTENSION_NAME };

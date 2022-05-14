@@ -59,7 +59,7 @@ namespace Rbk {
         return VK_FALSE;
     }
 
-    VulkanRenderer::VulkanRenderer(GLFWwindow* window) : m_Window(window)
+    VulkanRenderer::VulkanRenderer(std::shared_ptr<Window> window) : m_Window(window)
     {
 #ifdef NDEBUG
         m_EnableValidationLayers = false;
@@ -423,7 +423,7 @@ namespace Rbk {
 
     void VulkanRenderer::CreateSurface()
     {
-        VkResult result = glfwCreateWindowSurface(m_Instance, m_Window, nullptr, &m_Surface);
+        VkResult result = glfwCreateWindowSurface(m_Instance, m_Window.get()->Get(), nullptr, &m_Surface);
 
         if (result != VK_SUCCESS) {
             Rbk::Log::GetLogger()->critical("failed to create window surface!");
@@ -486,7 +486,7 @@ namespace Rbk {
         }
 
         int width, height;
-        glfwGetFramebufferSize(m_Window, &width, &height);
+        glfwGetFramebufferSize(m_Window.get()->Get(), &width, &height);
 
         VkExtent2D actualExtent = {
             static_cast<uint32_t>(width),

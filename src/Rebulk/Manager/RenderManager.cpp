@@ -5,7 +5,13 @@ namespace Rbk
 {
     RenderManager* RenderManager::s_Instance = nullptr;
 
-    RenderManager::RenderManager(GLFWwindow* window, IRendererAdapter* renderer, TextureManager* textureManager, MeshManager* meshManager, ShaderManager* shaderManager)
+    RenderManager::RenderManager(
+        std::shared_ptr<Window> window, 
+        std::shared_ptr<IRendererAdapter> renderer, 
+        std::shared_ptr<TextureManager> textureManager, 
+        std::shared_ptr<MeshManager> meshManager, 
+        std::shared_ptr<ShaderManager> shaderManager
+    )
     {
         m_Window = window;
         m_Renderer = renderer;
@@ -31,7 +37,7 @@ namespace Rbk
         m_Renderer->AddShaderManager(m_ShaderManager);
     }
 
-    void RenderManager::AddCamera(Camera* camera)
+    void RenderManager::AddCamera(std::shared_ptr<Camera> camera)
     {
         m_Renderer->AddCamera(camera);
     }

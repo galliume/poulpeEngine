@@ -6,7 +6,7 @@ namespace Rbk
     class TextureManager
     {
     public:
-        TextureManager(VulkanRenderer* renderer);
+        TextureManager(std::shared_ptr<VulkanRenderer> renderer);
         void AddSkyBox(std::vector<const char*> skyboxImages);
         inline Texture GetSkyboxTexture() { return m_Skybox; };
         void AddTexture(const char* name, const char* path);
@@ -15,6 +15,6 @@ namespace Rbk
     private:
         std::map<const char*, Texture> m_Textures;
         Texture m_Skybox;
-        VulkanRenderer* m_Renderer = nullptr;
+        std::shared_ptr<VulkanRenderer> m_Renderer = nullptr;
     };
 }
