@@ -43,6 +43,12 @@ namespace Rbk
         {
             case GLFW_PRESS:
                 if (glfwGetKey(m_Window->Get(), GLFW_KEY_LEFT_CONTROL)) {
+
+                    if (!Rbk::m_CanMoveCamera) {
+                        glfwSetInputMode(m_Window->Get(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+                    } else {
+                        glfwSetInputMode(m_Window->Get(), GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+                    }
                     Rbk::m_CanMoveCamera = !Rbk::m_CanMoveCamera;
                 }
             case GLFW_REPEAT:

@@ -293,10 +293,10 @@ namespace Rbk
 
         //crosshair
         const std::vector<Vertex2D> vertices = {
-            {{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
-            {{0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f}},
-            {{0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}, {0.0f, 1.0f}},
-            {{-0.5f, 0.5f}, {1.0f, 1.0f, 1.0f}, {1.0f, 1.0f}}
+            {{-0.025f, -0.025f}, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
+            {{0.025f, -0.025f}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f}},
+            {{0.025f, 0.025f}, {0.0f, 0.0f, 1.0f}, {0.0f, 1.0f}},
+            {{-0.025f, 0.025f}, {1.0f, 1.0f, 1.0f}, {1.0f, 1.0f}}
         };
         const std::vector<uint32_t> indices = {
             0, 1, 2, 2, 3, 0
@@ -311,18 +311,8 @@ namespace Rbk
         m_Crosshair.get()->uniformBuffers.emplace_back(crossHairuniformBuffer);
 
         glm::mat4 view = glm::mat4(1.0f);
-        glm::vec3 scale = glm::vec3(0.2f, 0.2f, 0.2f);
-        glm::vec3 pos = glm::vec3(0.0f, 0.0f, 0.0f);
-
         UniformBufferObject ubo;
-        ubo.model = glm::mat4(1.0f);
-        //ubo.model = glm::translate(ubo.model, pos);
-        ubo.model = glm::scale(ubo.model, scale);
         ubo.view = glm::translate(view, glm::vec3(0.0f, 0.0f, 0.0f));
-
-        ubo.proj = glm::perspective(glm::radians(60.0f), m_Renderer->GetSwapChainExtent().width / (float)m_Renderer->GetSwapChainExtent().height, 0.1f, 256.0f);
-        ubo.proj[1][1] *= -1;
-
         m_Crosshair.get()->ubos.emplace_back(ubo);
 
         std::array<VkDescriptorPoolSize, 2> cpoolSizes{};
@@ -400,8 +390,7 @@ namespace Rbk
             m_Crosshair.get()->pipelineCache,
             cshadersStageInfos,
             vertexInputInfo2D,
-            VK_CULL_MODE_NONE,
-            true, true, false
+            VK_CULL_MODE_NONE
         );
 
         //command buffer
