@@ -183,11 +183,11 @@ namespace Rbk {
         std::vector<VkExtensionProperties> extensions(m_ExtensionCount);
         vkEnumerateInstanceExtensionProperties(nullptr, &m_ExtensionCount, extensions.data());
 
-        Rbk::Log::GetLogger()->trace("{} available extensions:\n", m_ExtensionCount);
+        Rbk::Log::GetLogger()->debug("{} available extensions:\n", m_ExtensionCount);
 
         for (const auto& extension : extensions) {
             std::string message = std::string("extension available : ") + extension.extensionName;
-            Rbk::Log::GetLogger()->trace("\t {} \n", message.c_str());
+            Rbk::Log::GetLogger()->debug("{}", message.c_str());
         }
 
         m_Extensions = extensions;
@@ -228,14 +228,15 @@ namespace Rbk {
         glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
 
         std::vector<const char*> extensions(glfwExtensions, glfwExtensions + glfwExtensionCount);
-
+        
         if (m_EnableValidationLayers) {
             extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
             extensions.push_back(VK_EXT_DEBUG_REPORT_EXTENSION_NAME);
+            extensions.push_back(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME);
         }
 
         for_each(extensions.begin(), extensions.end(), [this](const char* text) {
-            std::string message = std::string("required extension loaded : ") + text;
+            std::string message = std::string("required extension needed : ") + text;
             Rbk::Log::GetLogger()->debug(message);
         });
 
@@ -295,7 +296,7 @@ namespace Rbk {
             Rbk::Log::GetLogger()->critical("failed to find a suitable GPU");
             exit(-1);
         }
-        Rbk::Log::GetLogger()->debug("find GPU : {}", m_DeviceProps.deviceName);
+        Rbk::Log::GetLogger()->debug("found GPU : {}", m_DeviceProps.deviceName);
     }
 
     bool VulkanRenderer::IsDeviceSuitable(VkPhysicalDevice device)
@@ -405,7 +406,7 @@ namespace Rbk {
         createInfo.pEnabledFeatures = &deviceFeatures;
         createInfo.enabledExtensionCount = static_cast<uint32_t>(m_DeviceExtensions.size());
         createInfo.ppEnabledExtensionNames = m_DeviceExtensions.data();
-        createInfo.pNext = &descriptorIndexing;
+        //createInfo.pNext = &descriptorIndexing;
 
         if (vkCreateDevice(m_PhysicalDevice, &createInfo, nullptr, &m_Device) != VK_SUCCESS) {
             Rbk::Log::GetLogger()->critical("failed to create logical device!");
@@ -690,22 +691,13 @@ namespace Rbk {
         VkPipelineLayout pipelineLayout,
         VkPipelineCache pipelineCache,
         std::vector<VkPipelineShaderStageCreateInfo>shadersCreateInfos,
+        VkPipelineVertexInputStateCreateInfo vertexInputInfo,
         VkCullModeFlagBits cullMode,
         bool depthTestEnable,
         bool depthWriteEnable,
         bool wireFrameModeOn
     )
     {
-        auto bindingDescription = Vertex::GetBindingDescription();
-        auto attributeDescriptions = Vertex::GetAttributeDescriptions();
-
-        VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
-        vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-        vertexInputInfo.vertexBindingDescriptionCount = 1;
-        vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescriptions.size());
-        vertexInputInfo.pVertexBindingDescriptions = &bindingDescription;
-        vertexInputInfo.pVertexAttributeDescriptions = attributeDescriptions.data();
-
         VkPipelineInputAssemblyStateCreateInfo inputAssembly{};
         inputAssembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
         inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
@@ -746,7 +738,7 @@ namespace Rbk {
 
         VkPipelineMultisampleStateCreateInfo multisampling{};
         multisampling.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
-        multisampling.sampleShadingEnable = VK_FALSE;
+        multisampling.sampleShadingEnable = VK_TRUE;
         multisampling.rasterizationSamples = m_MsaaSamples;
         multisampling.minSampleShading = 0.2f;
         multisampling.pSampleMask = nullptr;
@@ -761,7 +753,7 @@ namespace Rbk {
         depthStencil.depthBoundsTestEnable = VK_FALSE;
         depthStencil.minDepthBounds = 0.0f;
         depthStencil.maxDepthBounds = 1.0f;
-        depthStencil.stencilTestEnable = VK_FALSE;
+        depthStencil.stencilTestEnable = VK_TRUE;
         depthStencil.front = {};
         depthStencil.back = {};
 
@@ -1304,7 +1296,7 @@ namespace Rbk {
     void VulkanRenderer::Draw(VkCommandBuffer commandBuffer, Mesh* mesh, uint32_t frameIndex)
     {
         VkBuffer vertexBuffers[] = { mesh->vertexBuffer.first };
-        VkDeviceSize offsets[1] = { 0 };
+        VkDeviceSize offsets[] = { 0 };
 
         vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
         vkCmdBindIndexBuffer(commandBuffer, mesh->indicesBuffer.first, 0, VK_INDEX_TYPE_UINT32);
@@ -1410,9 +1402,35 @@ namespace Rbk {
 
     std::pair<VkBuffer, VkDeviceMemory> VulkanRenderer::CreateVertexBuffer(VkCommandPool commandPool, std::vector<Rbk::Vertex> vertices)
     {
-
         std::pair<VkBuffer, VkDeviceMemory> vertexBuffer{};
-        VkDeviceSize bufferSize = sizeof(vertices) * vertices.size();
+        VkDeviceSize bufferSize = sizeof(Vertex) * vertices.size();
+        VkBuffer stagingBuffer;
+        VkDeviceMemory stagingBufferMemory;
+
+        CreateBuffer(
+            bufferSize, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+            stagingBuffer, stagingBufferMemory
+        );
+
+        void* data;
+        vkMapMemory(m_Device, stagingBufferMemory, 0, bufferSize, 0, &data);
+        memcpy(data, vertices.data(), (size_t)bufferSize);
+        vkUnmapMemory(m_Device, stagingBufferMemory);
+
+        CreateBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, vertexBuffer.first, vertexBuffer.second);
+
+        CopyBuffer(commandPool, stagingBuffer, vertexBuffer.first, bufferSize);
+
+        vkDestroyBuffer(m_Device, stagingBuffer, nullptr);
+        vkFreeMemory(m_Device, stagingBufferMemory, nullptr);
+
+        return vertexBuffer;
+    }
+
+    std::pair<VkBuffer, VkDeviceMemory> VulkanRenderer::CreateVertex2DBuffer(VkCommandPool commandPool, std::vector<Rbk::Vertex2D> vertices)
+    {
+        std::pair<VkBuffer, VkDeviceMemory> vertexBuffer{};
+        VkDeviceSize bufferSize = sizeof(Vertex2D) * vertices.size();
         VkBuffer stagingBuffer;
         VkDeviceMemory stagingBufferMemory;
 
@@ -1494,7 +1512,7 @@ namespace Rbk {
         submitInfo.pCommandBuffers = &commandBuffer;
 
         vkQueueSubmit(m_GraphicsQueue, 1, &submitInfo, VK_NULL_HANDLE);
-        //vkQueueWaitIdle(m_GraphicsQueue);
+        vkQueueWaitIdle(m_GraphicsQueue);
         vkFreeCommandBuffers(m_Device, commandPool, 1, &commandBuffer);
     }
 

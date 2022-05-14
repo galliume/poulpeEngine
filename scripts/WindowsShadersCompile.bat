@@ -3,3 +3,6 @@ glslc.exe assets/shaders/shader.frag -o assets/shaders/spv/frag.spv
 
 glslc.exe assets/shaders/skybox.vert -o assets/shaders/spv/skybox_vert.spv
 glslc.exe assets/shaders/skybox.frag -o assets/shaders/spv/skybox_frag.spv
+
+glslc.exe assets/shaders/2d.vert -o assets/shaders/spv/2d_vert.spv
+glslc.exe assets/shaders/2d.frag -o assets/shaders/spv/2d_frag.spv

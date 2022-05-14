@@ -78,5 +78,7 @@ namespace Rbk
         TextureManager* m_TextureManager = nullptr;
         MeshManager* m_MeshManager = nullptr;
         ShaderManager* m_ShaderManager = nullptr;
+        //@todo move to meshManager
+        std::shared_ptr<Mesh> m_Crosshair = nullptr;
     };
 }
