@@ -106,17 +106,8 @@ project "Rebulkan"
         buildoptions { "/MDd" }
 
     filter { "system:windows", "configurations:Release" }
-        buildoptions { "/MDd" }
+        buildoptions { "/MD" }
    
-    filter "configurations:Debug"
-        runtime "Debug"
-        symbols "On"
-
-    filter "configurations:Release"
-        runtime "Release"
-        symbols "On"
-        optimize "On"
-
     filter "system:linux"
         systemversion "latest"
 
@@ -130,3 +121,14 @@ project "Rebulkan"
         {
             '{COPY} "./assets" "%{cfg.targetdir}/assets"'
         }
+
+    filter "configurations:Debug"
+        runtime "Debug"
+        symbols "On"
+
+        defines { "RBK_DEBUG" }
+
+    filter "configurations:Release"
+        runtime "Release"
+        symbols "On"
+        optimize "Off"

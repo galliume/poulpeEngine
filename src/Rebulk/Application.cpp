@@ -53,10 +53,7 @@ namespace Rbk
         }
 
         if (layerManager == nullptr) {
-            vulkanLayer = std::make_shared<Rbk::VulkanLayer>();
             layerManager = std::make_shared<Rbk::LayerManager>();
-
-            layerManager->Add(vulkanLayer.get());
         }
 
         if (rendererAdapter == nullptr) {
@@ -142,6 +139,10 @@ namespace Rbk
         glm::vec3 scaleSkybox = glm::vec3(1.0f, 1.0f, 1.0f);
         meshManager->AddSkyboxMesh("skybox", pos3, scaleSkybox);
      
+#ifdef RBK_DEBUG
+        vulkanLayer = std::make_shared<Rbk::VulkanLayer>();
+        layerManager->Add(vulkanLayer.get());
+
         VImGuiInfo imguiInfo = rendererAdapter->GetVImGuiInfo();
         Rbk::Im::Init(window->Get(), imguiInfo.info, imguiInfo.rdrPass);
 
@@ -155,6 +156,7 @@ namespace Rbk
         vulkanLayer->AddTextureManager(textureManager.get());
         vulkanLayer->AddMeshManager(meshManager.get());
         vulkanLayer->AddShaderManager(shaderManager.get());
+#endif
 
         rendererAdapter->PrepareWorld();
 
@@ -182,6 +184,7 @@ namespace Rbk
             renderManager->PrepareDraw();
             renderManager->Draw();
 
+#ifdef RBK_DEBUG
             //@todo move to LayerManager
             Rbk::Im::NewFrame();
             vulkanLayer->AddRenderAdapter(rendererAdapter.get());
@@ -192,12 +195,13 @@ namespace Rbk
             ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), imguiInfo.cmdBuffer);
             rendererAdapter->Rdr()->EndCommandBuffer(imguiInfo.cmdBuffer);
             //end @todo
-
+#endif
             lastTime = currentTime;
         }
 
+#ifdef RBK_DEBUG
         Rbk::Im::Destroy();
-
+#endif
         renderManager->Adp()->Destroy();
 
         glfwDestroyWindow(window->Get());
