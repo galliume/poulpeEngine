@@ -9,7 +9,7 @@ namespace Rbk
     {
     public:
 
-        MeshManager(VulkanRenderer* renderer);
+        MeshManager(std::shared_ptr<VulkanRenderer> renderer);
         void AddWorldMesh(const char* name, const char* path, const char* textureName, glm::vec3 pos, glm::vec3 scale, bool shouldInverseTextureY = true);
         void AddSkyboxMesh(const char* name, glm::vec3 pos, glm::vec3 scale, bool shouldInverseTextureY = true);
         inline std::vector<std::shared_ptr<Mesh>>* GetWorldMeshes() { return &m_WorldMeshes; };
@@ -27,6 +27,6 @@ namespace Rbk
         std::vector<std::shared_ptr<Mesh>> m_WorldMeshes;
         std::shared_ptr<Mesh> m_SkyboxMesh = nullptr;
         std::map<const char*, std::array<uint32_t, 2>> m_WorldMeshesLoaded;
-        VulkanRenderer* m_Renderer = nullptr;
+        std::shared_ptr<VulkanRenderer> m_Renderer = nullptr;
     };
 }

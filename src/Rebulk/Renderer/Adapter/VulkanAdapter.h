@@ -23,14 +23,14 @@ namespace Rbk
 
     public:
 
-        VulkanAdapter(Window* window);
+        VulkanAdapter(std::shared_ptr<Window> window);
         ~VulkanAdapter();
 
         virtual void Init() override;
-        virtual void AddCamera(Camera* camera) override;
-        virtual void AddTextureManager(TextureManager* textureManager) override;
-        virtual void AddMeshManager(MeshManager* meshManager) override;
-        virtual void AddShaderManager(ShaderManager* shaderManager) override;
+        virtual void AddCamera(std::shared_ptr<Camera> camera) override;
+        virtual void AddTextureManager(std::shared_ptr<TextureManager> textureManager) override;
+        virtual void AddMeshManager(std::shared_ptr<MeshManager> meshManager) override;
+        virtual void AddShaderManager(std::shared_ptr<ShaderManager> shaderManager) override;
 
         virtual void PrepareWorld() override;
         virtual void PrepareDraw() override;
@@ -42,7 +42,7 @@ namespace Rbk
         void SouldResizeSwapChain();
 
         inline uint32_t GetSwapImageIndex() { return m_ImageIndex; };
-        inline VulkanRenderer* Rdr() { return m_Renderer; };
+        inline std::shared_ptr<VulkanRenderer> Rdr() { return m_Renderer; };
         inline std::shared_ptr<VkRenderPass> RdrPass() { return m_RenderPass; };
         inline void MakeSpin(bool spin) { m_MakeSpin = spin; };
 
@@ -54,7 +54,7 @@ namespace Rbk
         void UpdateWorldPositions();
 
     private:
-        VulkanRenderer* m_Renderer = nullptr;
+        std::shared_ptr<VulkanRenderer> m_Renderer = nullptr;
         std::shared_ptr<VkRenderPass> m_RenderPass = nullptr;
         VkSwapchainKHR m_SwapChain = nullptr;
         std::vector<VkImage> m_SwapChainImages = {};
@@ -73,11 +73,11 @@ namespace Rbk
         bool m_IsPrepared = false;
         bool m_WireFrameModeOn = false;
         bool m_MakeSpin = false;
-        Camera* m_Camera = nullptr;
-        Window* m_Window = nullptr;
-        TextureManager* m_TextureManager = nullptr;
-        MeshManager* m_MeshManager = nullptr;
-        ShaderManager* m_ShaderManager = nullptr;
+        std::shared_ptr<Camera> m_Camera = nullptr;
+        std::shared_ptr<Window> m_Window = nullptr;
+        std::shared_ptr<TextureManager> m_TextureManager = nullptr;
+        std::shared_ptr<MeshManager> m_MeshManager = nullptr;
+        std::shared_ptr<ShaderManager> m_ShaderManager = nullptr;
         //@todo move to meshManager
         std::shared_ptr<Mesh> m_Crosshair = nullptr;
     };

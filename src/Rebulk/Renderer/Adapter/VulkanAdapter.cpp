@@ -5,10 +5,10 @@
 
 namespace Rbk
 {
-    VulkanAdapter::VulkanAdapter(Window* window)
+    VulkanAdapter::VulkanAdapter(std::shared_ptr<Window> window)
     {
         m_Window = window;
-        m_Renderer = new VulkanRenderer(window->Get());
+        m_Renderer = std::make_shared<VulkanRenderer>(window);
     }
 
     VulkanAdapter::~VulkanAdapter()
@@ -24,22 +24,22 @@ namespace Rbk
         VulkanShaders m_Shaders;
     }
 
-    void VulkanAdapter::AddTextureManager(TextureManager* textureManager)
+    void VulkanAdapter::AddTextureManager(std::shared_ptr<TextureManager> textureManager)
     {
         m_TextureManager = textureManager;
     }
 
-    void VulkanAdapter::AddShaderManager(ShaderManager* shaderManager)
+    void VulkanAdapter::AddShaderManager(std::shared_ptr<ShaderManager> shaderManager)
     {
         m_ShaderManager = shaderManager;
     }
 
-    void VulkanAdapter::AddCamera(Camera* camera)
+    void VulkanAdapter::AddCamera(std::shared_ptr<Camera> camera)
     {
         m_Camera = camera;
     }
 
-    void VulkanAdapter::AddMeshManager(MeshManager* meshManager)
+    void VulkanAdapter::AddMeshManager(std::shared_ptr<MeshManager> meshManager)
     {
         m_MeshManager = meshManager;
     }
