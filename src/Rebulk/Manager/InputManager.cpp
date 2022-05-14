@@ -43,6 +43,12 @@ namespace Rbk
         {
             case GLFW_PRESS:
                 if (glfwGetKey(m_Window->Get(), GLFW_KEY_LEFT_CONTROL)) {
+
+                    if (!Rbk::m_CanMoveCamera) {
+                        glfwSetInputMode(m_Window->Get(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+                    } else {
+                        glfwSetInputMode(m_Window->Get(), GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+                    }
                     Rbk::m_CanMoveCamera = !Rbk::m_CanMoveCamera;
                 }
             case GLFW_REPEAT:
@@ -51,10 +57,10 @@ namespace Rbk
                     m_Camera->Recenter();
                 }
                 if (glfwGetKey(m_Window->Get(), GLFW_KEY_W) ) {
-                    m_Camera->Up();
+                    m_Camera->Forward();
                 }
                 if (glfwGetKey(m_Window->Get(), GLFW_KEY_S)) {
-                    m_Camera->Down();					
+                    m_Camera->Backward();
                 }
                 if (glfwGetKey(m_Window->Get(), GLFW_KEY_A)) {
                     m_Camera->Left();
@@ -62,7 +68,12 @@ namespace Rbk
                 if (glfwGetKey(m_Window->Get(), GLFW_KEY_D)) {
                     m_Camera->Right();
                 }
-
+                if (glfwGetKey(m_Window->Get(), GLFW_KEY_Q)) {
+                    m_Camera->Up();
+                }
+                if (glfwGetKey(m_Window->Get(), GLFW_KEY_E)) {
+                    m_Camera->Down();
+                }
                 break;
             }
             case GLFW_RELEASE:

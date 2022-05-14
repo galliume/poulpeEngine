@@ -138,7 +138,7 @@ namespace Rbk
 
         m_Textures.emplace(name, texture);
 
-        Rbk::Log::GetLogger()->debug("Added texture {} from {}", name, path);
+        Rbk::Log::GetLogger()->debug("Added texture {} from {}. w {} h {} a {}", name, path, texWidth, texHeight, texChannels);
 
         vkDestroyCommandPool(m_Renderer->GetDevice(), commandPool, nullptr);
     }

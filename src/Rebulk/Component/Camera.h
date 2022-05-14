@@ -13,9 +13,11 @@ namespace Rbk
     public:
         void Init();
         inline glm::mat4 GetView() { return m_View; };
+        void Forward();
+        void Backward();
         void Up();
         void Down();
-        void Left();	
+        void Left();
         void Right();
         glm::mat4 LookAt();
         void UpdateSpeed(float timeStep);
