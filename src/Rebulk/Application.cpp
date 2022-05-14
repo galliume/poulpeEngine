@@ -136,9 +136,9 @@ namespace Rbk
         skyboxImages.emplace_back("assets/texture/skybox/green/LightGreen_bottom4.png");
         skyboxImages.emplace_back("assets/texture/skybox/green/LightGreen_front5.png");
         skyboxImages.emplace_back("assets/texture/skybox/green/LightGreen_back6.png");
-
         textureManager->AddSkyBox(skyboxImages);
-        glm::vec3 pos3 = glm::vec3(1.0f, -0.55f, 0.3f);
+
+        glm::vec3 pos3 = glm::vec3(0.0f, 0.0f, 0.0f);
         glm::vec3 scaleSkybox = glm::vec3(1.0f, 1.0f, 1.0f);
         meshManager->AddSkyboxMesh("skybox", pos3, scaleSkybox);
      

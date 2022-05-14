@@ -54,8 +54,8 @@ namespace Rbk
         Rbk::Im::Text("Total index count %d", m_MeshManager->GetWorldIndicesCount());		
 
         Rbk::Im::Text("Stats per mesh :");
-        for (Mesh mesh : *m_MeshManager->GetWorldMeshes()) {
-            Rbk::Im::Text("\tMesh named %s with %d instances", mesh.name, mesh.ubos.size());
+        for (std::shared_ptr<Mesh> mesh : *m_MeshManager->GetWorldMeshes()) {
+            Rbk::Im::Text("\tMesh named %s with %d instances", mesh.get()->name, mesh.get()->ubos.size());
         }
         ImGui::Separator();
         Rbk::Im::Text("Shader count %d", m_ShaderManager->GetShaders()->shaders.size());
