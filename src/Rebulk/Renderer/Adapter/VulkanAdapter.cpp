@@ -598,7 +598,7 @@ namespace Rbk
         if (result != VK_SUCCESS) {
             Rbk::Log::GetLogger()->critical("failed to create imgui render pass : {}", result);
         } else {
-            Rbk::Log::GetLogger()->debug("created successfully imgui render pass");
+            Rbk::Log::GetLogger()->trace("created successfully imgui render pass");
         }
 
         return renderPass;

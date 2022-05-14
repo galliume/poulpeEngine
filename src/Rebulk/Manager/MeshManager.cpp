@@ -35,7 +35,7 @@ namespace Rbk
 
         m_SkyboxMesh.get()->ubos.emplace_back(ubo);
 
-        Rbk::Log::GetLogger()->debug("Added skybox mesh to the world {}", name);
+        Rbk::Log::GetLogger()->trace("Added skybox mesh to the world {}", name);
     }
 
     void MeshManager::AddWorldMesh(const char* name, const char* path, const char* textureName, glm::vec3 pos, glm::vec3 scale, bool shouldInverseTextureY)
@@ -72,7 +72,7 @@ namespace Rbk
         m_WorldMeshesLoaded.insert({ name, { 1, index }});	
         m_WorldMeshes.emplace_back(mesh);
 
-        Rbk::Log::GetLogger()->debug("Added mesh to the world {} from {}", name, path);
+        Rbk::Log::GetLogger()->trace("Added mesh to the world {} from {}", name, path);
     }
 
     uint32_t MeshManager::GetWorldVerticesCount()

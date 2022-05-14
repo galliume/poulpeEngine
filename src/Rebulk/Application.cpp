@@ -28,7 +28,7 @@ namespace Rbk
 
     Application::~Application()
     {
-        std::cout << "Application deleted" << std::endl;
+
     }
 
     void Application::Init()
