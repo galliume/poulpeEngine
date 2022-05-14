@@ -247,11 +247,10 @@ namespace Rbk
         skyDescriptorImageInfo.imageView = tex.imageView;
         skyDescriptorImageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
-
         VkDescriptorSet skyDescriptorSet = m_Renderer->CreateDescriptorSets(skyDescriptorPool, { skyDesriptorSetLayout }, 1);
 
         for (uint32_t i = 0; i < m_SwapChainImages.size(); i++) {
-            m_Renderer->UpdateDescriptorSets(skyboxMesh.uniformBuffers, tex, skyDescriptorSet, skyDescriptorImageInfo);
+            //m_Renderer->UpdateDescriptorSets(skyboxMesh.uniformBuffers, tex, skyDescriptorSet, skyDescriptorImageInfo);
             skyboxMesh.descriptorSets.emplace_back(skyDescriptorSet);
         }
 
@@ -305,18 +304,19 @@ namespace Rbk
 
         m_Crosshair = std::make_shared<Mesh2D>();
         m_Crosshair->texture = "crosshair";
+        m_Crosshair->indices = indices;
         m_Crosshair.get()->vertexBuffer = m_Renderer->CreateVertex2DBuffer(m_CommandPool, vertices);
         m_Crosshair.get()->indicesBuffer = m_Renderer->CreateIndexBuffer(m_CommandPool, indices);
         std::pair<VkBuffer, VkDeviceMemory> crossHairuniformBuffer = m_Renderer->CreateUniformBuffers(1);
         m_Crosshair.get()->uniformBuffers.emplace_back(crossHairuniformBuffer);
 
         glm::mat4 view = glm::mat4(1.0f);
-        glm::vec3 scale = glm::vec3(0.5f, 0.5f, 0.5f);
+        glm::vec3 scale = glm::vec3(0.2f, 0.2f, 0.2f);
         glm::vec3 pos = glm::vec3(0.0f, 0.0f, 0.0f);
 
         UniformBufferObject ubo;
         ubo.model = glm::mat4(1.0f);
-        ubo.model = glm::translate(ubo.model, pos);
+        //ubo.model = glm::translate(ubo.model, pos);
         ubo.model = glm::scale(ubo.model, scale);
         ubo.view = glm::translate(view, glm::vec3(0.0f, 0.0f, 0.0f));
 
@@ -327,11 +327,11 @@ namespace Rbk
 
         std::array<VkDescriptorPoolSize, 2> cpoolSizes{};
         cpoolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        cpoolSizes[0].descriptorCount = 1000;
+        cpoolSizes[0].descriptorCount = 10;
         cpoolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        cpoolSizes[1].descriptorCount = 1000;
+        cpoolSizes[1].descriptorCount = 10;
 
-        VkDescriptorPool cdescriptorPool = m_Renderer->CreateDescriptorPool(cpoolSizes, 1000);
+        VkDescriptorPool cdescriptorPool = m_Renderer->CreateDescriptorPool(cpoolSizes, 10);
 
         VkDescriptorSetLayoutBinding cuboLayoutBinding{};
         cuboLayoutBinding.binding = 0;
@@ -353,10 +353,11 @@ namespace Rbk
             cbindings, VK_DESCRIPTOR_SET_LAYOUT_CREATE_UPDATE_AFTER_BIND_POOL_BIT
         );
 
+        Texture ctex = m_TextureManager->GetTextures()["crosshair"];
+
         for (uint32_t i = 0; i < m_SwapChainImages.size(); i++) {
 
             VkDescriptorSet cdescriptorSet = m_Renderer->CreateDescriptorSets(cdescriptorPool, { cdesriptorSetLayout }, 1);
-            Texture ctex = m_TextureManager->GetTextures()["crosshair"];
 
             VkDescriptorImageInfo cimageInfo{};
             cimageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
@@ -399,15 +400,13 @@ namespace Rbk
             m_Crosshair.get()->pipelineCache,
             cshadersStageInfos,
             vertexInputInfo2D,
-            VK_CULL_MODE_BACK_BIT,
-            true, true, wireFrame
+            VK_CULL_MODE_NONE,
+            true, true, false
         );
 
         //command buffer
         m_SwapChainFramebuffers = m_Renderer->CreateFramebuffers(m_RenderPass, m_SwapChainImageViews, depthImageViews, colorImageViews);
         m_CommandBuffers = m_Renderer->AllocateCommandBuffers(m_CommandPool, (uint32_t)m_SwapChainFramebuffers.size());
-
-        UpdateWorldPositions();
     }
 
     void VulkanAdapter::PrepareDraw()
@@ -419,53 +418,22 @@ namespace Rbk
 
     void VulkanAdapter::UpdateWorldPositions()
     {
-        Mesh* skyMesh = m_MeshManager->GetSkyboxMesh();
-        skyMesh->ubos[0].view = m_Camera->LookAt();
-        m_Renderer->UpdateUniformBuffer(skyMesh->uniformBuffers[0], skyMesh->ubos, skyMesh->ubos.size());
+        //Mesh* skyMesh = m_MeshManager->GetSkyboxMesh();
+        //skyMesh->ubos[0].view = m_Camera->LookAt();
+        //m_Renderer->UpdateUniformBuffer(skyMesh->uniformBuffers[0], skyMesh->ubos, skyMesh->ubos.size());
 
-        /*m_Crosshair.get()->ubos[0].view = m_Camera->LookAt();
-        m_Renderer->UpdateUniformBuffer(m_Crosshair.get()->uniformBuffers[0], m_Crosshair.get()->ubos, m_Crosshair.get()->ubos.size());*/
+        for (uint32_t i = 0; i < m_Crosshair.get()->uniformBuffers.size(); i++) {
+            m_Crosshair.get()->ubos[i].view = m_Camera->LookAt();
+            m_Renderer->UpdateUniformBuffer(m_Crosshair.get()->uniformBuffers[i], { m_Crosshair.get()->ubos[i] }, 1);
+        }
 
         std::vector<Mesh>* worldMeshes = m_MeshManager->GetWorldMeshes();
-        std::map<const char*, std::array<uint32_t, 2>> worldMeshesLoaded = m_MeshManager->GetWoldMeshesLoaded();
-
-        uint32_t uboCount = 1, uboIndex = 0;
-        std::vector<UniformBufferObject> chunk;
-        uint32_t totalInstances = 0;
-        uint32_t maxUniformBufferRange = 0;
-        uint32_t uniformBufferChunkSize = 0;
-        int32_t nextChunk = 0;
-
         for (Mesh& mesh : *worldMeshes) {
-
-            uboCount = 1, uboIndex = 0;
-            chunk = {};
-            uint32_t beginRange = 0, endRange = 0;
-            totalInstances = worldMeshesLoaded[mesh.name][0];
-            maxUniformBufferRange = m_Renderer->GetDeviceProperties().limits.maxUniformBufferRange;
-            uniformBufferChunkSize = maxUniformBufferRange / sizeof(UniformBufferObject);
-            nextChunk = totalInstances - uniformBufferChunkSize;
-            if (nextChunk < 0) nextChunk = 0;
-
-            for (int32_t i = totalInstances - 1; i >= 0; i--) {
-
+            for (uint32_t i = 0; i < mesh.ubos.size(); i++) {
                 mesh.ubos[i].view = m_Camera->LookAt();
-
-                if (i == nextChunk) {
-
-                    nextChunk -= uniformBufferChunkSize;
-                    if (nextChunk < 0) nextChunk = 0;
-                    endRange = uniformBufferChunkSize * uboCount;
-                    beginRange = endRange - uniformBufferChunkSize;
-
-                    if (endRange > totalInstances) endRange = totalInstances;
-
-                    chunk = { mesh.ubos.rbegin() + beginRange, mesh.ubos.rbegin() + endRange };
-
-                    m_Renderer->UpdateUniformBuffer(mesh.uniformBuffers[uboIndex], chunk, chunk.size());
-                    uboIndex += 1;
-                    uboCount += 1;
-                }
+            }
+            for (uint32_t i = 0; i < mesh.uniformBuffers.size(); i++) {
+                m_Renderer->UpdateUniformBuffer(mesh.uniformBuffers[i], mesh.ubos, mesh.ubos.size());
             }
         }
     }
@@ -476,11 +444,10 @@ namespace Rbk
             throw std::runtime_error("Draw is not prepared. Forgot to calle Prepare() ?");
         }
 
-        UpdateWorldPositions();
-
         //SouldResizeSwapChain();
-                        
+
         m_ImageIndex = m_Renderer->AcquireNextImageKHR(m_SwapChain, m_Semaphores);
+
         m_Renderer->BeginCommandBuffer(m_CommandBuffers[m_ImageIndex]);
 
         VkImageMemoryBarrier renderBeginBarrier = m_Renderer->SetupImageMemoryBarrier(
@@ -498,27 +465,11 @@ namespace Rbk
         for (Mesh mesh : *m_MeshManager->GetWorldMeshes()) {
             m_Renderer->BindPipeline(m_CommandBuffers[m_ImageIndex], mesh.graphicsPipeline);
             m_Renderer->Draw(m_CommandBuffers[m_ImageIndex], &mesh, m_ImageIndex);
-
         }
 
         //draw the crosshair
-        vkCmdBindPipeline(m_CommandBuffers[m_ImageIndex], VK_PIPELINE_BIND_POINT_GRAPHICS, m_Crosshair.get()->graphicsPipeline);
-        VkBuffer vertexBuffers[] = { m_Crosshair.get()->vertexBuffer.first };
-
-        VkDeviceSize offsets[] = { 0 };
-        vkCmdBindVertexBuffers(m_CommandBuffers[m_ImageIndex], 0, 1, vertexBuffers, offsets);
-        vkCmdBindIndexBuffer(m_CommandBuffers[m_ImageIndex], m_Crosshair.get()->indicesBuffer.first, 0, VK_INDEX_TYPE_UINT32);
-        vkCmdBindDescriptorSets(
-            m_CommandBuffers[m_ImageIndex],
-            VK_PIPELINE_BIND_POINT_GRAPHICS,
-            m_Crosshair.get()->pipelineLayout,
-            0,
-            1,
-            &m_Crosshair.get()->descriptorSets[m_ImageIndex],
-            0,
-            nullptr
-        );
-        vkCmdDrawIndexed(m_CommandBuffers[m_ImageIndex], static_cast<uint32_t>(6), 1, 0, 0, 0);
+        m_Renderer->BindPipeline(m_CommandBuffers[m_ImageIndex], m_Crosshair.get()->graphicsPipeline);
+        m_Renderer->Draw(m_CommandBuffers[m_ImageIndex], m_Crosshair.get(), m_ImageIndex);
 
         ////draw the skybox !
         //m_Renderer->BindPipeline(m_CommandBuffers[m_ImageIndex], m_MeshManager->GetSkyboxMesh()->graphicsPipeline);
@@ -532,6 +483,8 @@ namespace Rbk
             m_Renderer->QueueSubmit(m_ImageIndex, m_CommandBuffers[m_ImageIndex], m_Semaphores);
             m_Renderer->QueuePresent(m_ImageIndex, m_SwapChain, m_Semaphores);
         //}
+
+        UpdateWorldPositions();
     }
 
     void VulkanAdapter::Destroy()

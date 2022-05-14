@@ -34,9 +34,9 @@ namespace Rbk
 
     struct Vertex
     {
-        glm::vec3 pos;
-        glm::vec3 color;
-        glm::vec2 texCoord;
+        alignas(16) glm::vec3 pos;
+        alignas(16) glm::vec3 color;
+        alignas(8) glm::vec2 texCoord;
 
         static VkVertexInputBindingDescription GetBindingDescription() {
 
@@ -77,9 +77,9 @@ namespace Rbk
 
     struct Vertex2D
     {
-        glm::vec2 pos;
-        glm::vec3 color;
-        glm::vec2 texCoord;
+        alignas(8) glm::vec2 pos;
+        alignas(16) glm::vec3 color;
+        alignas(8) glm::vec2 texCoord;
 
         static VkVertexInputBindingDescription GetBindingDescription() {
 

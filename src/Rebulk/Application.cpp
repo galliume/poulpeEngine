@@ -94,7 +94,7 @@ namespace Rbk
         textureManager->AddTexture("campfire_tex", "assets/mesh/campfire/Campfire_MAT_BaseColor_01.jpg");
         textureManager->AddTexture("tree_tex", "assets/mesh/tree/tree.jpg");
         textureManager->AddTexture("skybox_tex", "assets/texture/skybox/green/LightGreen_front5.png");
-        textureManager->AddTexture("crosshair", "assets/texture/crosshair/predator.png");
+        textureManager->AddTexture("crosshair", "assets/texture/crosshair/simple_crosshair.png");
 
         glm::vec3 scaleMinecraft = glm::vec3(0.1f, 0.1f, 0.1f);
 

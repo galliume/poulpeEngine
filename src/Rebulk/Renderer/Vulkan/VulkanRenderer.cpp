@@ -738,7 +738,7 @@ namespace Rbk {
 
         VkPipelineMultisampleStateCreateInfo multisampling{};
         multisampling.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
-        multisampling.sampleShadingEnable = VK_FALSE;
+        multisampling.sampleShadingEnable = VK_TRUE;
         multisampling.rasterizationSamples = m_MsaaSamples;
         multisampling.minSampleShading = 0.2f;
         multisampling.pSampleMask = nullptr;
@@ -753,7 +753,7 @@ namespace Rbk {
         depthStencil.depthBoundsTestEnable = VK_FALSE;
         depthStencil.minDepthBounds = 0.0f;
         depthStencil.maxDepthBounds = 1.0f;
-        depthStencil.stencilTestEnable = VK_FALSE;
+        depthStencil.stencilTestEnable = VK_TRUE;
         depthStencil.front = {};
         depthStencil.back = {};
 
@@ -1296,7 +1296,7 @@ namespace Rbk {
     void VulkanRenderer::Draw(VkCommandBuffer commandBuffer, Mesh* mesh, uint32_t frameIndex)
     {
         VkBuffer vertexBuffers[] = { mesh->vertexBuffer.first };
-        VkDeviceSize offsets[1] = { 0 };
+        VkDeviceSize offsets[] = { 0 };
 
         vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
         vkCmdBindIndexBuffer(commandBuffer, mesh->indicesBuffer.first, 0, VK_INDEX_TYPE_UINT32);
@@ -1403,7 +1403,7 @@ namespace Rbk {
     std::pair<VkBuffer, VkDeviceMemory> VulkanRenderer::CreateVertexBuffer(VkCommandPool commandPool, std::vector<Rbk::Vertex> vertices)
     {
         std::pair<VkBuffer, VkDeviceMemory> vertexBuffer{};
-        VkDeviceSize bufferSize = sizeof(vertices) * vertices.size();
+        VkDeviceSize bufferSize = sizeof(Vertex) * vertices.size();
         VkBuffer stagingBuffer;
         VkDeviceMemory stagingBufferMemory;
 
@@ -1430,7 +1430,7 @@ namespace Rbk {
     std::pair<VkBuffer, VkDeviceMemory> VulkanRenderer::CreateVertex2DBuffer(VkCommandPool commandPool, std::vector<Rbk::Vertex2D> vertices)
     {
         std::pair<VkBuffer, VkDeviceMemory> vertexBuffer{};
-        VkDeviceSize bufferSize = sizeof(vertices) * vertices.size();
+        VkDeviceSize bufferSize = sizeof(Vertex2D) * vertices.size();
         VkBuffer stagingBuffer;
         VkDeviceMemory stagingBufferMemory;
 

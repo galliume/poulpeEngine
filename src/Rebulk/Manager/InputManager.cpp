@@ -51,10 +51,10 @@ namespace Rbk
                     m_Camera->Recenter();
                 }
                 if (glfwGetKey(m_Window->Get(), GLFW_KEY_W) ) {
-                    m_Camera->Up();
+                    m_Camera->Forward();
                 }
                 if (glfwGetKey(m_Window->Get(), GLFW_KEY_S)) {
-                    m_Camera->Down();					
+                    m_Camera->Backward();
                 }
                 if (glfwGetKey(m_Window->Get(), GLFW_KEY_A)) {
                     m_Camera->Left();
@@ -62,7 +62,12 @@ namespace Rbk
                 if (glfwGetKey(m_Window->Get(), GLFW_KEY_D)) {
                     m_Camera->Right();
                 }
-
+                if (glfwGetKey(m_Window->Get(), GLFW_KEY_Q)) {
+                    m_Camera->Up();
+                }
+                if (glfwGetKey(m_Window->Get(), GLFW_KEY_E)) {
+                    m_Camera->Down();
+                }
                 break;
             }
             case GLFW_RELEASE:
