@@ -8,7 +8,7 @@ namespace Rbk
 
     }
 
-    Mesh MeshManager::Load(const char* path, bool shouldInverseTextureY)
+    std::shared_ptr<Mesh> MeshManager::Load(const char* path, bool shouldInverseTextureY)
     {
         if (!std::filesystem::exists(path)) {
             Rbk::Log::GetLogger()->critical("mesh file {} does not exits.", path);
@@ -20,9 +20,8 @@ namespace Rbk
 
     void MeshManager::AddSkyboxMesh(const char* name, glm::vec3 pos, glm::vec3 scale, bool shouldInverseTextureY)
     {
-        Mesh mesh;
-        mesh = Load("assets/mesh/cube/cube.obj", shouldInverseTextureY);
-        mesh.texture = "skybox";
+        m_SkyboxMesh = Load("assets/mesh/cube/cube.obj", shouldInverseTextureY);
+        m_SkyboxMesh.get()->texture = "skybox";
 
         glm::mat4 view = glm::mat4(1.0f);
 
@@ -31,33 +30,22 @@ namespace Rbk
         ubo.model = glm::translate(ubo.model, pos);
         ubo.model = glm::scale(ubo.model, scale);
         ubo.view = glm::translate(view, glm::vec3(0.0f, 0.0f, 0.0f));
-        //ubo.view = glm::translate(view, glm::vec3(0.0f, 0.0f, 0.0f));
-        //ubo.view = glm::lookAt(
-        //    glm::vec3(0.0f, 0.0f, 3.0f),
-        //    glm::vec3(0.0f, 0.0f, 0.0f),
-        //    glm::vec3(0.0f, 1.0f, 0.0f)
-        //);
-
-        //float s = (float)m_Renderer->GetSwapChainExtent().width / (float)m_Renderer->GetSwapChainExtent().height;
-        //ubo.proj = Rbk::Camera::FrustumProj(glm::radians(60.0f), s, 0.1f, 100.0f);
         ubo.proj = glm::perspective(glm::radians(60.0f), m_Renderer->GetSwapChainExtent().width / (float)m_Renderer->GetSwapChainExtent().height, 0.1f, 256.0f);
         ubo.proj[1][1] *= -1;
 
-        mesh.ubos.emplace_back(ubo);
-
-        m_SkyboxMesh = mesh;
+        m_SkyboxMesh.get()->ubos.emplace_back(ubo);
 
         Rbk::Log::GetLogger()->debug("Added skybox mesh to the world {}", name);
     }
 
     void MeshManager::AddWorldMesh(const char* name, const char* path, const char* textureName, glm::vec3 pos, glm::vec3 scale, bool shouldInverseTextureY)
     {
-        Mesh mesh;
+        std::shared_ptr<Mesh> mesh = nullptr;
 
         if (0 == m_WorldMeshesLoaded.count(name)) {
             mesh = Load(path, shouldInverseTextureY);
-            mesh.name = name;
-            mesh.texture = textureName;
+            mesh.get()->name = name;
+            mesh.get()->texture = textureName;
         } else {
             mesh = m_WorldMeshes[m_WorldMeshesLoaded[name][1]];
         }
@@ -75,7 +63,7 @@ namespace Rbk
         ubo.proj = glm::perspective(glm::radians(60.0f), m_Renderer->GetSwapChainExtent().width / (float)m_Renderer->GetSwapChainExtent().height, 0.1f, 100.0f);
         ubo.proj[1][1] *= -1;
         
-        mesh.ubos.emplace_back(ubo);
+        mesh.get()->ubos.emplace_back(ubo);
 
         if (0 != m_WorldMeshesLoaded.count(name)) {
             m_WorldMeshesLoaded[name][0] += 1;
@@ -94,8 +82,8 @@ namespace Rbk
     {
         uint32_t total = 0;
 
-        for (Mesh mesh : m_WorldMeshes) {
-            total += mesh.vertices.size();
+        for (std::shared_ptr<Mesh> mesh : m_WorldMeshes) {
+            total += mesh.get()->vertices.size();
         }
 
         return total;
@@ -105,8 +93,8 @@ namespace Rbk
     {
         uint32_t total = 0;
 
-        for (Mesh mesh : m_WorldMeshes) {
-            total += mesh.indices.size();
+        for (std::shared_ptr<Mesh>mesh : m_WorldMeshes) {
+            total += mesh.get()->indices.size();
         }
 
         return total;
@@ -116,8 +104,8 @@ namespace Rbk
     {
         uint32_t total = 0;
 
-        for (Mesh mesh : m_WorldMeshes) {
-            total += mesh.ubos.size();
+        for (std::shared_ptr<Mesh> mesh : m_WorldMeshes) {
+            total += mesh.get()->ubos.size();
         }
 
         return total;

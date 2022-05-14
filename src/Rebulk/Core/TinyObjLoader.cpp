@@ -13,9 +13,9 @@ namespace Rbk
         bool shouldInverseTextureY = false;
     };
 
-    Rbk::Mesh TinyObjLoader::LoadMesh(const char* path, bool shouldInverseTextureY)
+    std::shared_ptr<Rbk::Mesh> TinyObjLoader::LoadMesh(const char* path, bool shouldInverseTextureY)
     {
-        Rbk::Mesh mesh;
+        std::shared_ptr<Rbk::Mesh>mesh = std::make_shared<Rbk::Mesh>();
         tinyobj::ObjReader reader;
         tinyobj::ObjReaderConfig reader_config;
         //reader_config.mtl_search_path = "./"; 
@@ -80,11 +80,11 @@ namespace Rbk
                     // tinyobj::real_t blue  = attrib.colors[3*size_t(idx.vertex_index)+2];
 
                     //if (uniqueVertices.count(vertex) == 0) {
-                        uniqueVertices[vertex] = static_cast<uint32_t>(mesh.vertices.size());
-                        mesh.vertices.push_back(vertex);
+                        uniqueVertices[vertex] = static_cast<uint32_t>(mesh.get()->vertices.size());
+                        mesh.get()->vertices.push_back(vertex);
                     //}
 
-                    mesh.indices.push_back(uniqueVertices[vertex]);
+                    mesh.get()->indices.push_back(uniqueVertices[vertex]);
                 }
 
                 index_offset += fv;
