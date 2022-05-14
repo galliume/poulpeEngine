@@ -3,7 +3,7 @@
 
 namespace Rbk
 {
-    MeshManager::MeshManager(VulkanRenderer* renderer) : m_Renderer(renderer)
+    MeshManager::MeshManager(std::shared_ptr<VulkanRenderer> renderer) : m_Renderer(renderer)
     {
 
     }
@@ -30,7 +30,7 @@ namespace Rbk
         ubo.model = glm::translate(ubo.model, pos);
         ubo.model = glm::scale(ubo.model, scale);
         ubo.view = glm::translate(view, glm::vec3(0.0f, 0.0f, 0.0f));
-        ubo.proj = glm::perspective(glm::radians(60.0f), m_Renderer->GetSwapChainExtent().width / (float)m_Renderer->GetSwapChainExtent().height, 0.1f, 256.0f);
+        ubo.proj = glm::perspective(glm::radians(60.0f), m_Renderer.get()->GetSwapChainExtent().width / (float)m_Renderer.get()->GetSwapChainExtent().height, 0.1f, 256.0f);
         ubo.proj[1][1] *= -1;
 
         m_SkyboxMesh.get()->ubos.emplace_back(ubo);
@@ -57,7 +57,7 @@ namespace Rbk
         ubo.model = glm::translate(ubo.model, pos);
         ubo.model = glm::scale(ubo.model, scale);
         ubo.view = glm::translate(view, glm::vec3(0.0f, 0.0f, 0.0f));
-        ubo.proj = glm::perspective(glm::radians(60.0f), m_Renderer->GetSwapChainExtent().width / (float)m_Renderer->GetSwapChainExtent().height, 0.1f, 100.0f);
+        ubo.proj = glm::perspective(glm::radians(60.0f), m_Renderer.get()->GetSwapChainExtent().width / (float)m_Renderer.get()->GetSwapChainExtent().height, 0.1f, 100.0f);
         ubo.proj[1][1] *= -1;
         
         mesh.get()->ubos.emplace_back(ubo);

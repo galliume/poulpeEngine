@@ -36,19 +36,19 @@ namespace Rbk
         Rbk::Log::Init();
 
         if (window == nullptr) {
-            window = std::make_shared<Rbk::Window>(Rbk::Window());
+            window = std::make_shared<Window>();
             window.get()->Init();
         }
 
         if (camera == nullptr) {
             int width, height;
-            glfwGetWindowSize(window->Get(), &width, &height);
-            camera = std::make_shared<Rbk::Camera>(Rbk::Camera());
+            glfwGetWindowSize(window.get()->Get(), &width, &height);
+            camera = std::make_shared<Rbk::Camera>();
             camera->Init();
         }
 
         if (inputManager == nullptr) {
-            inputManager = std::make_shared<Rbk::InputManager>(window.get(), camera.get());
+            inputManager = std::make_shared<Rbk::InputManager>(window, camera);
             inputManager->Init();
         }
 
@@ -57,7 +57,7 @@ namespace Rbk
         }
 
         if (rendererAdapter == nullptr) {
-            rendererAdapter = std::make_shared<Rbk::VulkanAdapter>(window.get());
+            rendererAdapter = std::make_shared<Rbk::VulkanAdapter>(window);
         }
 
         if (textureManager == nullptr) {
@@ -74,10 +74,10 @@ namespace Rbk
 
         if (renderManager == nullptr) {
             renderManager = std::make_shared<Rbk::RenderManager>(
-                window->Get(), rendererAdapter.get(), textureManager.get(), meshManager.get(), shaderManager.get()
+                window, rendererAdapter, textureManager, meshManager, shaderManager
             );
             renderManager->Init();
-            renderManager->AddCamera(camera.get());
+            renderManager->AddCamera(camera);
         }
     }
 
@@ -144,7 +144,7 @@ namespace Rbk
         layerManager->Add(vulkanLayer.get());
 
         VImGuiInfo imguiInfo = rendererAdapter->GetVImGuiInfo();
-        Rbk::Im::Init(window->Get(), imguiInfo.info, imguiInfo.rdrPass);
+        Rbk::Im::Init(window.get()->Get(), imguiInfo.info, imguiInfo.rdrPass);
 
         rendererAdapter->ImmediateSubmit([&](VkCommandBuffer cmd) {
             ImGui_ImplVulkan_CreateFontsTexture(cmd);
@@ -164,7 +164,7 @@ namespace Rbk
         double timeStepSum = 0.0f;
         uint32_t frameCount = 0;
 
-        while (!glfwWindowShouldClose(window->Get())) {
+        while (!glfwWindowShouldClose(window.get()->Get())) {
 
             double currentTime = glfwGetTime();
             double timeStep = currentTime - lastTime;
@@ -204,7 +204,7 @@ namespace Rbk
 #endif
         renderManager->Adp()->Destroy();
 
-        glfwDestroyWindow(window->Get());
+        glfwDestroyWindow(window.get()->Get());
         glfwTerminate();
     }
 }
