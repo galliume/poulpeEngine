@@ -79,7 +79,7 @@ namespace Rbk
 
     void VulkanAdapter::PrepareWorld()
     {
-        bool wireFrame = true;
+        bool wireFrame = false;
 
         m_SwapChainImageViews.resize(m_SwapChainImages.size());
         VkVertexInputBindingDescription bDesc = Vertex::GetBindingDescription();
