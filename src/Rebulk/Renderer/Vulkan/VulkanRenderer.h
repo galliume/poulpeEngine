@@ -54,9 +54,10 @@ namespace Rbk {
         VkPipelineLayout CreatePipelineLayout(std::vector<VkDescriptorSet> descriptorSets, std::vector<VkDescriptorSetLayout> descriptorSetLayouts, std::vector<VkPushConstantRange> pushConstants = {});
         VkPipeline CreateGraphicsPipeline(
             std::shared_ptr<VkRenderPass> renderPass,
-            VkPipelineLayout pipelineLayout, 
-            VkPipelineCache pipelineCache, 
-            std::vector<VkPipelineShaderStageCreateInfo>shadersCreateInfos, 
+            VkPipelineLayout pipelineLayout,
+            VkPipelineCache pipelineCache,
+            std::vector<VkPipelineShaderStageCreateInfo>shadersCreateInfos,
+            VkPipelineVertexInputStateCreateInfo vertexInputInfo,
             VkCullModeFlagBits cullMode = VK_CULL_MODE_BACK_BIT,
             bool depthTestEnable = true,
             bool depthWriteEnable = true,
@@ -68,6 +69,7 @@ namespace Rbk {
         std::vector<VkCommandBuffer> AllocateCommandBuffers(VkCommandPool commandPool, uint32_t size = 1);
         void CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory);
         std::pair<VkBuffer, VkDeviceMemory> CreateVertexBuffer(VkCommandPool commandPool, std::vector<Rbk::Vertex> vertices);
+        std::pair<VkBuffer, VkDeviceMemory> CreateVertex2DBuffer(VkCommandPool commandPool, std::vector<Rbk::Vertex2D> vertices);
         std::pair<VkBuffer, VkDeviceMemory> CreateIndexBuffer(VkCommandPool commandPool, std::vector<uint32_t> indices);
         std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>> CreateSyncObjects(std::vector<VkImage> swapChainImages);
         VkImageMemoryBarrier SetupImageMemoryBarrier(VkImage image, VkAccessFlags srcAccessMask, VkAccessFlags dstAccessMask, VkImageLayout oldLayout, VkImageLayout newLayout, uint32_t mipLevels = VK_REMAINING_MIP_LEVELS, VkImageAspectFlags aspectMask = VK_IMAGE_ASPECT_COLOR_BIT);
@@ -199,7 +201,7 @@ namespace Rbk {
         GLFWwindow* m_Window = VK_NULL_HANDLE;
 
         const std::vector<const char*> m_ValidationLayers = { "VK_LAYER_KHRONOS_validation" };
-        const std::vector<const char*> m_DeviceExtensions = { VK_EXT_DESCRIPTOR_INDEXING_EXTENSION_NAME, VK_KHR_SWAPCHAIN_EXTENSION_NAME, VK_KHR_PUSH_DESCRIPTOR_EXTENSION_NAME };
+        const std::vector<const char*> m_DeviceExtensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME, VK_KHR_PUSH_DESCRIPTOR_EXTENSION_NAME };
 
         bool m_InstanceCreated = false;
         bool m_EnableValidationLayers = false;

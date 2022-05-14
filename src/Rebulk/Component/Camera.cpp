@@ -90,14 +90,23 @@ namespace Rbk
         return frustumProj;
     }
 
-    void Camera::Up()
+    void Camera::Forward()
     {
         m_Pos += m_Speed * m_CameraFront;
     }
 
-    void Camera::Down()
+    void Camera::Backward()
     {
         m_Pos -= m_Speed * m_CameraFront;
+    }
+    void Camera::Up()
+    {
+        m_Pos -= m_CameraUp * m_Speed;
+    }
+
+    void Camera::Down()
+    {
+        m_Pos += m_CameraUp * m_Speed;
     }
 
     void Camera::Left()
