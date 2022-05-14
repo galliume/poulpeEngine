@@ -6,6 +6,6 @@ namespace Rbk
     class TinyObjLoader
     {
     public:
-        static Mesh LoadMesh(const char* path, bool shouldInverseTextureY);
+        static std::shared_ptr<Rbk::Mesh> LoadMesh(const char* path, bool shouldInverseTextureY);
     };
 }
