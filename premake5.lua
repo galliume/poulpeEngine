@@ -82,15 +82,11 @@ project "Rebulkan"
         buildmessage 'Compiling shaders'
         prebuildcommands { "./scripts/WindowsShadersCompile.bat" }
 
-    filter { "system:windows", "configurations:Debug" }
-        buildoptions { "/MDd" }
-
-    filter { "system:windows", "configurations:Release" }
-        buildoptions { "/MDd" }
-   
-    filter "configurations:Debug"
-        runtime "Debug"
-        symbols "On"
+        buildmessage 'Copying assets'
+        postbuildcommands 
+        {
+            '{COPY} "./assets" "%{cfg.targetdir}/assets"'
+        }
 
         buildoptions {
             "-Wall",
@@ -105,25 +101,21 @@ project "Rebulkan"
             "-Wshadow",
             "-Woverloaded-virtual"
         }
-    
+
+    filter { "system:windows", "configurations:Debug" }
+        buildoptions { "/MDd" }
+
+    filter { "system:windows", "configurations:Release" }
+        buildoptions { "/MDd" }
+   
+    filter "configurations:Debug"
+        runtime "Debug"
+        symbols "On"
+
     filter "configurations:Release"
         runtime "Release"
         symbols "On"
         optimize "On"
-
-        buildoptions {
-            "-Wall",
-            "-Wextra",
-            "-Wfloat-equal",
-            "-Wundef", 
-            "-Wcast-align",
-            "-Wwrite-strings",
-            "-Wlogical-op",
-            "-Wmissing-declarations",
-            "-Wredundant-decls",
-            "-Wshadow",
-            "-Woverloaded-virtual"
-        }
 
     filter "system:linux"
         systemversion "latest"
