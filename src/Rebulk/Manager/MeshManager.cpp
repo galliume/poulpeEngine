@@ -64,7 +64,7 @@ namespace Rbk
 
         if (0 != m_WorldMeshesLoaded.count(name)) {
             m_WorldMeshesLoaded[name][0] += 1;
-            m_WorldMeshes[m_WorldMeshesLoaded[name][1]] = mesh;
+            //m_WorldMeshes[m_WorldMeshesLoaded[name][1]] = mesh;
             return;
         } 
         

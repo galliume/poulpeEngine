@@ -5,6 +5,7 @@
 //#define TINYOBJLOADER_USE_MAPBOX_EARCUT
 //#include "mapbox/earcut.hpp"
 #include "tiny_obj_loader.h"
+#include <filesystem>
 
 namespace Rbk
 {
@@ -18,7 +19,9 @@ namespace Rbk
         std::shared_ptr<Rbk::Mesh>mesh = std::make_shared<Rbk::Mesh>();
         tinyobj::ObjReader reader;
         tinyobj::ObjReaderConfig reader_config;
-        //reader_config.mtl_search_path = "./"; 
+
+        std::filesystem::path p = path;
+        reader_config.mtl_search_path = p.remove_filename().string();
 
         if (!reader.ParseFromFile(path, reader_config)) {
             if (!reader.Error().empty()) {
@@ -75,14 +78,15 @@ namespace Rbk
                     }
 
                     // Optional: vertex colors
-                    // tinyobj::real_t red   = attrib.colors[3*size_t(idx.vertex_index)+0];
-                    // tinyobj::real_t green = attrib.colors[3*size_t(idx.vertex_index)+1];
-                    // tinyobj::real_t blue  = attrib.colors[3*size_t(idx.vertex_index)+2];
+                     //tinyobj::real_t red   = attrib.colors[3*size_t(idx.vertex_index)+0];
+                     //tinyobj::real_t green = attrib.colors[3*size_t(idx.vertex_index)+1];
+                     //tinyobj::real_t blue  = attrib.colors[3*size_t(idx.vertex_index)+2];
+                    // vertex.color = { red, green, blue };
 
-                    //if (uniqueVertices.count(vertex) == 0) {
+                    if (uniqueVertices.count(vertex) == 0) {
                         uniqueVertices[vertex] = static_cast<uint32_t>(mesh.get()->vertices.size());
                         mesh.get()->vertices.push_back(vertex);
-                    //}
+                    }
 
                     mesh.get()->indices.push_back(uniqueVertices[vertex]);
                 }
