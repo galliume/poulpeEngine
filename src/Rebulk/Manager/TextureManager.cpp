@@ -41,9 +41,9 @@ namespace Rbk
 
         VkCommandBuffer commandBuffer = m_Renderer.get()->AllocateCommandBuffers(commandPool)[0];
         m_Renderer.get()->BeginCommandBuffer(commandBuffer);
-        m_Renderer.get()->CreateSkyboxTextureImage(commandBuffer, skyboxPixels, texWidth, texHeight, mipLevels, skyboxImage, textureImageMemory, VK_FORMAT_R8G8B8A8_UNORM);
+        m_Renderer.get()->CreateSkyboxTextureImage(commandBuffer, skyboxPixels, texWidth, texHeight, mipLevels, skyboxImage, textureImageMemory, VK_FORMAT_R8G8B8A8_SRGB);
 
-        VkImageView textureImageView = m_Renderer.get()->CreateSkyboxImageView(skyboxImage, VK_FORMAT_R8G8B8A8_UNORM, mipLevels);
+        VkImageView textureImageView = m_Renderer.get()->CreateSkyboxImageView(skyboxImage, VK_FORMAT_R8G8B8A8_SRGB, mipLevels);
         VkSampler textureSampler = m_Renderer.get()->CreateSkyboxTextureSampler(mipLevels);
 
         VkDeviceMemory colorImageMemory;

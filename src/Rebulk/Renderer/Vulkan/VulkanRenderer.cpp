@@ -460,6 +460,7 @@ namespace Rbk {
     VkSurfaceFormatKHR VulkanRenderer::ChooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats)
     {
         for (const auto& availableFormat : availableFormats) {
+            Rbk::Log::GetLogger()->trace("Swap surface format available : {} - {}", availableFormat.format, availableFormat.colorSpace);
             if (availableFormat.format == VK_FORMAT_B8G8R8A8_SRGB && availableFormat.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR) {
                 return availableFormat;
             }
@@ -1662,23 +1663,17 @@ namespace Rbk {
         VkDeviceMemory stagingBufferMemory;
         CreateBuffer(imageSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
 
-        void* data;
-        vkMapMemory(m_Device, stagingBufferMemory, 0, imageSize, 0, &data);
-
+        unsigned char* data;
         VkDeviceSize layerSize = imageSize / 6;
+        vkMapMemory(m_Device, stagingBufferMemory, 0, imageSize, 0, (void**) &data);
 
         for (int i = 0; i < skyboxPixels.size(); i++) {
-//            memcpy((void*)(data + (layerSize * i)), skyboxPixels[i], layerSize);
-            memcpy(static_cast<std::byte*>(data) + (layerSize * i), skyboxPixels[i], layerSize);
+            memcpy(data + (layerSize * i), skyboxPixels[i], (size_t)layerSize);
         }
 
         vkUnmapMemory(m_Device, stagingBufferMemory);
 
-        for (stbi_uc* pixels : skyboxPixels) {
-            stbi_image_free(pixels);
-        }
-
-        CreateSkyboxImage(texWidth, texHeight, mipLevels, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, textureImage, textureImageMemory);
+        CreateSkyboxImage(texWidth, texHeight, mipLevels, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, textureImage, textureImageMemory);
 
         VkImageMemoryBarrier renderBarrier = SetupImageMemoryBarrier(
             textureImage, 0, VK_ACCESS_TRANSFER_WRITE_BIT, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL
@@ -1693,6 +1688,10 @@ namespace Rbk {
         EndCommandBuffer(commandBuffer);
 
         QueueSubmit(commandBuffer);
+        
+        for (uint32_t i = 0; i < skyboxPixels.size(); i++) {
+            stbi_image_free(skyboxPixels[i]);
+        }
 
         vkDestroyBuffer(m_Device, stagingBuffer, nullptr);
         vkFreeMemory(m_Device, stagingBufferMemory, nullptr);
@@ -1848,20 +1847,20 @@ namespace Rbk {
 
         for (uint32_t i = 0; i < skyboxPixels.size(); i++) {
 
-            for (uint32_t mipLevel = 0; mipLevel < mipLevels; mipLevel++) {
+            //for (uint32_t mipLevel = 0; mipLevel < mipLevels; mipLevel++) {
 
                 VkBufferImageCopy region{};
                 region.bufferOffset = sizeof(skyboxPixels[i]) * i;
                 region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-                region.imageSubresource.mipLevel = mipLevel;
+                region.imageSubresource.mipLevel = 0;
                 region.imageSubresource.baseArrayLayer = i;
                 region.imageSubresource.layerCount = 1;
-                region.imageExtent.width =  width >> mipLevel;
-                region.imageExtent.height = height >> mipLevel;
+                region.imageExtent.width =  width;
+                region.imageExtent.height = height;
                 region.imageExtent.depth = 1;
 
                 bufferCopyRegions.emplace_back(region);
-            }
+            //}
         }
 
         vkCmdCopyBufferToImage(commandBuffer, buffer, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, bufferCopyRegions.size(), bufferCopyRegions.data());
@@ -1927,12 +1926,12 @@ namespace Rbk {
 
         VkSamplerCreateInfo samplerInfo{};
         samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
-        samplerInfo.magFilter = VK_FILTER_LINEAR;
+        samplerInfo.magFilter = VK_FILTER_NEAREST;
         samplerInfo.minFilter = VK_FILTER_LINEAR;
-        samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
-        samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
-        samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
-        samplerInfo.anisotropyEnable = VK_TRUE;
+        samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER;
+        samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER;
+        samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER;
+        samplerInfo.anisotropyEnable = VK_FALSE;
         samplerInfo.maxAnisotropy = 1.0f;
         samplerInfo.compareEnable = VK_FALSE;
         samplerInfo.compareOp = VK_COMPARE_OP_NEVER;
@@ -1940,7 +1939,7 @@ namespace Rbk {
         samplerInfo.minLod = 0.0f;
         samplerInfo.maxLod = static_cast<float>(mipLevels);
         samplerInfo.mipLodBias = 0.0f;
-        samplerInfo.borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE;
+        samplerInfo.borderColor = VK_BORDER_COLOR_FLOAT_TRANSPARENT_BLACK;
 
         if (vkCreateSampler(m_Device, &samplerInfo, nullptr, &textureSampler) != VK_SUCCESS) {
             throw std::runtime_error("failed to create texture sampler!");

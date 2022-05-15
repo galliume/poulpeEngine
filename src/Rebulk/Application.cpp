@@ -91,7 +91,7 @@ namespace Rbk
         textureManager->AddTexture("minecraft_water", "assets/mesh/minecraft/water.jpg");
         textureManager->AddTexture("campfire_tex", "assets/mesh/campfire/Campfire_MAT_BaseColor_01.jpg");
         textureManager->AddTexture("tree_tex", "assets/mesh/tree/tree.jpg");
-        textureManager->AddTexture("skybox_tex", "assets/texture/skybox/green/LightGreen_front5.png");
+        textureManager->AddTexture("skybox_tex", "assets/texture/skybox/sky_skybox_texture.jpg");
         textureManager->AddTexture("crosshair", "assets/texture/crosshair/simple_crosshair.png");
         textureManager->AddTexture("moon", "assets/mesh/moon/diffuse.jpg");
         textureManager->AddTexture("trunk_tree_cartoon", "assets/mesh/tree/cartoon/Trunk_4_Cartoon.jpg");
@@ -181,12 +181,12 @@ namespace Rbk
         meshManager->AddWorldMesh("moon", "assets/mesh/moon/moon.obj", "moon", pos6, moonCubeTest, false);
 
         std::vector<const char*>skyboxImages;
-        skyboxImages.emplace_back("assets/texture/skybox/green/LightGreen_right1.png");
-        skyboxImages.emplace_back("assets/texture/skybox/green/LightGreen_left2.png");
-        skyboxImages.emplace_back("assets/texture/skybox/green/LightGreen_top3.png");
-        skyboxImages.emplace_back("assets/texture/skybox/green/LightGreen_bottom4.png");
-        skyboxImages.emplace_back("assets/texture/skybox/green/LightGreen_front5.png");
-        skyboxImages.emplace_back("assets/texture/skybox/green/LightGreen_back6.png");
+        skyboxImages.emplace_back("assets/texture/skybox/green/LightGreen_right1.jpg");
+        skyboxImages.emplace_back("assets/texture/skybox/green/LightGreen_left2.jpg");
+        skyboxImages.emplace_back("assets/texture/skybox/green/LightGreen_top3.jpg");
+        skyboxImages.emplace_back("assets/texture/skybox/green/LightGreen_bottom4.jpg");
+        skyboxImages.emplace_back("assets/texture/skybox/green/LightGreen_front5.jpg");
+        skyboxImages.emplace_back("assets/texture/skybox/green/LightGreen_back6.jpg");
         textureManager->AddSkyBox(skyboxImages);
 
         glm::vec3 pos3 = glm::vec3(0.0f, 0.0f, 0.0f);

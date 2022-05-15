@@ -209,8 +209,8 @@ namespace Rbk
         skyboxMesh.vertexBuffer = m_Renderer->CreateVertexBuffer(m_CommandPool, skyboxMesh.vertices);
         skyboxMesh.indicesBuffer = m_Renderer->CreateIndexBuffer(m_CommandPool, skyboxMesh.indices);
 
-        //Texture tex = m_TextureManager->GetSkyboxTexture();
-        Texture tex = m_TextureManager->GetTextures()["skybox_tex"];
+        Texture tex = m_TextureManager->GetSkyboxTexture();
+        //Texture tex = m_TextureManager->GetTextures()["skybox_tex"];
         depthImageViews.emplace_back(tex.depthImageView);
         colorImageViews.emplace_back(tex.colorImageView);
 
@@ -234,7 +234,7 @@ namespace Rbk
         skySamplerLayoutBinding.descriptorCount = 1;
         skySamplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
         skySamplerLayoutBinding.pImmutableSamplers = nullptr;
-        skySamplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+        skySamplerLayoutBinding.stageFlags = VK_SHADER_STAGE_ALL;
 
         std::vector<VkDescriptorSetLayoutBinding> skyBindings = { skyUboLayoutBinding, skySamplerLayoutBinding };
 
@@ -407,15 +407,6 @@ namespace Rbk
 
     void VulkanAdapter::UpdateWorldPositions()
     {
-        for (uint32_t i = 0; i < m_MeshManager->GetSkyboxMesh()->uniformBuffers.size(); i++) {
-            m_MeshManager->GetSkyboxMesh()->ubos[i].view = m_Camera->LookAt();
-            m_Renderer->UpdateUniformBuffer(
-                m_MeshManager->GetSkyboxMesh()->uniformBuffers[i],
-                { m_MeshManager->GetSkyboxMesh()->ubos },
-                1
-            );
-        }
-
         for (uint32_t i = 0; i < m_Crosshair.get()->uniformBuffers.size(); i++) {
             m_Crosshair.get()->ubos[i].view = m_Camera->LookAt();
             m_Renderer->UpdateUniformBuffer(m_Crosshair.get()->uniformBuffers[i], { m_Crosshair.get()->ubos[i] }, 1);
@@ -433,6 +424,15 @@ namespace Rbk
                     mesh.get()->ubos.size()
                 );
             }
+        }
+
+        for (uint32_t i = 0; i < m_MeshManager->GetSkyboxMesh()->uniformBuffers.size(); i++) {
+            m_MeshManager->GetSkyboxMesh()->ubos[i].view = m_Camera->LookAt();
+            m_Renderer->UpdateUniformBuffer(
+                m_MeshManager->GetSkyboxMesh()->uniformBuffers[i],
+                { m_MeshManager->GetSkyboxMesh()->ubos },
+                1
+            );
         }
     }
 
@@ -469,9 +469,9 @@ namespace Rbk
         m_Renderer->BindPipeline(m_CommandBuffers[m_ImageIndex], m_Crosshair.get()->graphicsPipeline);
         m_Renderer->Draw(m_CommandBuffers[m_ImageIndex], m_Crosshair.get(), m_ImageIndex);
 
-        ////draw the skybox !
-        //m_Renderer->BindPipeline(m_CommandBuffers[m_ImageIndex], m_MeshManager->GetSkyboxMesh()->graphicsPipeline);
-        //m_Renderer->Draw(m_CommandBuffers[m_ImageIndex], m_MeshManager->GetSkyboxMesh(), m_ImageIndex);
+        //draw the skybox !
+        m_Renderer->BindPipeline(m_CommandBuffers[m_ImageIndex], m_MeshManager.get()->GetSkyboxMesh()->graphicsPipeline);
+        m_Renderer->Draw(m_CommandBuffers[m_ImageIndex], m_MeshManager.get()->GetSkyboxMesh().get(), m_ImageIndex);
 
         m_Renderer->EndRenderPass(m_CommandBuffers[m_ImageIndex]);
         m_Renderer->EndCommandBuffer(m_CommandBuffers[m_ImageIndex]);

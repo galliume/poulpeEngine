@@ -17,8 +17,8 @@ layout(location = 1) out vec3 fragColor;
 
 void main() 
 {
-    gl_Position = vec4(pos.xyz, 1.0);
+    vec4 p = ubo.proj * ubo.view * vec4(pos, 1.0);
+    gl_Position = p.xyww;
+    //gl_Position = vec4(pos.xyz, 1.0);
     fragTexCoord = pos;
-    fragTexCoord.xy *= -1.0;
-    fragColor = color;
 }
