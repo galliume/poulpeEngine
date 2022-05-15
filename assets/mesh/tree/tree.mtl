@@ -2,19 +2,19 @@
 
 newmtl 3
 Ka 1 1 1
-map_Ka Материал_Цвет.tif
+map_Ka ./tree.png
 Kd 0 0.93000000715256 0.35649999976158
 Ke 1 1 1
-map_Ke Материал_Цвет.tif
+map_Ke ./tree.png
 illum 7
 
 newmtl 2
 Ka 1 1 1
-map_Ka ./tex/Mat._BarkЦвет.jpg
+map_Ka ./tree.jpg
 Kd 0.80000001192093 0.80000001192093 0.80000001192093
-map_Kd ./tex/Mat._BarkЦвет.jpg
+map_Kd ./tree.jpg
 Ke 1 1 1
-map_Ke ./tex/Mat._BarkЦвет.jpg
+map_Ke ./tree.jpg
 illum 7
 
 newmtl 1
