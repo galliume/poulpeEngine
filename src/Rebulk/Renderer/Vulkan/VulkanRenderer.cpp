@@ -67,15 +67,11 @@ namespace Rbk {
         m_EnableValidationLayers = true;
 #endif
 
-        bool vulkanSupported = glfwVulkanSupported();
-
-        if (!vulkanSupported) {
+        if (!glfwVulkanSupported()) {
             throw std::runtime_error("vulkan not supported");
         }
 
-        VkResult volkInit = volkInitialize();
-
-        if (volkInit != VK_SUCCESS) {
+        if (volkInitialize() != VK_SUCCESS) {
             throw std::runtime_error("Failed to initialize volk");
         }
 
@@ -623,10 +619,8 @@ namespace Rbk {
         createInfo.components.g = VK_COMPONENT_SWIZZLE_G;
         createInfo.components.b = VK_COMPONENT_SWIZZLE_B;
         createInfo.components.a = VK_COMPONENT_SWIZZLE_A;
-        createInfo.subresourceRange.aspectMask = aspectFlags;
-        createInfo.subresourceRange.baseMipLevel = 0;
+        createInfo.subresourceRange = { aspectFlags, 0, 1, 0, 1 };
         createInfo.subresourceRange.levelCount = mipLevels;
-        createInfo.subresourceRange.baseArrayLayer = 0;
         createInfo.subresourceRange.layerCount = 6;
 
         VkResult result;
@@ -696,6 +690,7 @@ namespace Rbk {
         VkCullModeFlagBits cullMode,
         bool depthTestEnable,
         bool depthWriteEnable,
+        bool stencilTestEnable,
         bool wireFrameModeOn
     )
     {
@@ -750,11 +745,11 @@ namespace Rbk {
         depthStencil.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
         depthStencil.depthTestEnable = (depthTestEnable) ? VK_TRUE : VK_FALSE;
         depthStencil.depthWriteEnable = (depthWriteEnable) ? VK_TRUE : VK_FALSE;
-        depthStencil.depthCompareOp = VK_COMPARE_OP_LESS;
+        depthStencil.depthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL;
         depthStencil.depthBoundsTestEnable = VK_FALSE;
         depthStencil.minDepthBounds = 0.0f;
         depthStencil.maxDepthBounds = 1.0f;
-        depthStencil.stencilTestEnable = VK_TRUE;
+        depthStencil.stencilTestEnable = (stencilTestEnable) ? VK_TRUE : VK_FALSE;
         depthStencil.front = {};
         depthStencil.back = {};
 
@@ -1663,27 +1658,30 @@ namespace Rbk {
         VkDeviceMemory stagingBufferMemory;
         CreateBuffer(imageSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
 
-        unsigned char* data;
+        stbi_uc* data;
         VkDeviceSize layerSize = imageSize / 6;
         vkMapMemory(m_Device, stagingBufferMemory, 0, imageSize, 0, (void**) &data);
 
-        for (int i = 0; i < skyboxPixels.size(); i++) {
-            memcpy(data + (layerSize * i), skyboxPixels[i], (size_t)layerSize);
+        for (uint32_t i = 0; i < skyboxPixels.size(); i++) {
+            memcpy(data + layerSize * i, skyboxPixels[i], layerSize);
         }
 
         vkUnmapMemory(m_Device, stagingBufferMemory);
 
-        CreateSkyboxImage(texWidth, texHeight, mipLevels, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, textureImage, textureImageMemory);
+        CreateSkyboxImage(texWidth, texHeight, mipLevels, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, textureImage, textureImageMemory);
 
         VkImageMemoryBarrier renderBarrier = SetupImageMemoryBarrier(
             textureImage, 0, VK_ACCESS_TRANSFER_WRITE_BIT, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL
         );
 
+        renderBarrier.subresourceRange.layerCount = 6;
+        renderBarrier.subresourceRange.baseMipLevel = 0;
+
         AddPipelineBarrier(commandBuffer, renderBarrier, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_DEPENDENCY_BY_REGION_BIT);
 
         CopyBufferToImageSkybox(commandBuffer, stagingBuffer, textureImage, static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight), skyboxPixels, mipLevels);
 
-        GenerateMipmapsSkybox(commandBuffer, format, textureImage, 6);
+        GenerateMipmaps(commandBuffer, format, textureImage, texWidth, texHeight, mipLevels, 6);
 
         EndCommandBuffer(commandBuffer);
 
@@ -1847,7 +1845,7 @@ namespace Rbk {
 
         for (uint32_t i = 0; i < skyboxPixels.size(); i++) {
 
-            //for (uint32_t mipLevel = 0; mipLevel < mipLevels; mipLevel++) {
+            for (uint32_t mipLevel = 0; mipLevel < mipLevels; mipLevel++) {
 
                 VkBufferImageCopy region{};
                 region.bufferOffset = sizeof(skyboxPixels[i]) * i;
@@ -1855,12 +1853,12 @@ namespace Rbk {
                 region.imageSubresource.mipLevel = 0;
                 region.imageSubresource.baseArrayLayer = i;
                 region.imageSubresource.layerCount = 1;
-                region.imageExtent.width =  width;
-                region.imageExtent.height = height;
+                region.imageExtent.width =  width >> mipLevel;
+                region.imageExtent.height = height >> mipLevel;
                 region.imageExtent.depth = 1;
 
                 bufferCopyRegions.emplace_back(region);
-            //}
+            }
         }
 
         vkCmdCopyBufferToImage(commandBuffer, buffer, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, bufferCopyRegions.size(), bufferCopyRegions.data());
@@ -1928,9 +1926,9 @@ namespace Rbk {
         samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
         samplerInfo.magFilter = VK_FILTER_NEAREST;
         samplerInfo.minFilter = VK_FILTER_LINEAR;
-        samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER;
-        samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER;
-        samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER;
+        samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+        samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+        samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
         samplerInfo.anisotropyEnable = VK_FALSE;
         samplerInfo.maxAnisotropy = 1.0f;
         samplerInfo.compareEnable = VK_FALSE;
@@ -1939,7 +1937,7 @@ namespace Rbk {
         samplerInfo.minLod = 0.0f;
         samplerInfo.maxLod = static_cast<float>(mipLevels);
         samplerInfo.mipLodBias = 0.0f;
-        samplerInfo.borderColor = VK_BORDER_COLOR_FLOAT_TRANSPARENT_BLACK;
+        samplerInfo.borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE;
 
         if (vkCreateSampler(m_Device, &samplerInfo, nullptr, &textureSampler) != VK_SUCCESS) {
             throw std::runtime_error("failed to create texture sampler!");

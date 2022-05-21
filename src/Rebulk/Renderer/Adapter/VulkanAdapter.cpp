@@ -5,10 +5,10 @@
 
 namespace Rbk
 {
-    VulkanAdapter::VulkanAdapter(std::shared_ptr<Window> window)
+    VulkanAdapter::VulkanAdapter(std::shared_ptr<Window> window) :
+        m_Window(window),
+        m_Renderer(std::make_shared<VulkanRenderer>(window))
     {
-        m_Window = window;
-        m_Renderer = std::make_shared<VulkanRenderer>(window);
     }
 
     VulkanAdapter::~VulkanAdapter()
@@ -79,7 +79,7 @@ namespace Rbk
 
     void VulkanAdapter::PrepareWorld()
     {
-        bool wireFrame = false;
+        bool wireFrame = true;
 
         m_SwapChainImageViews.resize(m_SwapChainImages.size());
         VkVertexInputBindingDescription bDesc = Vertex::GetBindingDescription();
@@ -196,18 +196,53 @@ namespace Rbk
                 shadersStageInfos,
                 vertexInputInfo,
                 VK_CULL_MODE_BACK_BIT,
-                true, true, wireFrame
+                true, true, true, wireFrame
             );
         }
 
         /// SKYBOX ///
-        Mesh& skyboxMesh = *m_MeshManager->GetSkyboxMesh();
+        //const std::vector<Vertex> skyVertices = {
+        //    {{-1.0f, -1.0, 0.0f}, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
+        //    {{1.0f, -1.0f, 0.0f}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f}},
+        //    {{1.0f, 1.0f, 0.0f}, {0.0f, 0.0f, 1.0f}, {0.0f, 1.0f}},
+        //    {{-1.0f, 1.0f, 0.0f}, {1.0f, 1.0f, 1.0f}, {1.0f, 1.0f}},
 
+        //    {{-1.0f, -1.0, -1.0f}, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
+        //    {{1.0f, -1.0f, -1.0f}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f}},
+        //    {{1.0f, 1.0f, -1.0f}, {0.0f, 0.0f, 1.0f}, {0.0f, 1.0f}},
+        //    {{-1.0f, 1.0f, -1.0f}, {1.0f, 1.0f, 1.0f}, {1.0f, 1.0f}},
+        //};
+
+        //const std::vector<uint32_t> skyIndices = {
+        //    0, 1, 2, 2, 3, 0, //face
+        //    4, 5, 6, 6, 7, 4, //back
+        //    2, 6, 7, 7, 3, 2, //top
+        //    0, 4, 5, 5, 1, 0, //down
+        //    0, 4, 7, 7, 3, 0, //left
+        //    1, 5, 6, 6, 2, 1  //right
+        //};
+
+
+        std::shared_ptr<Mesh> skyboxMesh = std::make_shared<Mesh>();
+        skyboxMesh = m_MeshManager.get()->Load("assets/mesh/cube/cube.obj", true);
+
+        skyboxMesh.get()->texture = "skybox";
+
+        skyboxMesh.get()->vertexBuffer = m_Renderer->CreateVertexBuffer(m_CommandPool, skyboxMesh->vertices);
+        skyboxMesh.get()->indicesBuffer = m_Renderer->CreateIndexBuffer(m_CommandPool, skyboxMesh->indices);
+     
         std::pair<VkBuffer, VkDeviceMemory> uniformBuffer = m_Renderer->CreateUniformBuffers(1);
-        skyboxMesh.uniformBuffers.emplace_back(uniformBuffer);
+        skyboxMesh.get()->uniformBuffers.emplace_back(uniformBuffer);
 
-        skyboxMesh.vertexBuffer = m_Renderer->CreateVertexBuffer(m_CommandPool, skyboxMesh.vertices);
-        skyboxMesh.indicesBuffer = m_Renderer->CreateIndexBuffer(m_CommandPool, skyboxMesh.indices);
+        glm::vec3 pos = glm::vec3(0.5f, -1.3f, -0.75f);
+        UniformBufferObject skyUbo;
+        skyUbo.model = glm::mat4(1.0f);
+        skyUbo.model = glm::translate(skyUbo.model, pos);
+        skyUbo.view = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
+        skyUbo.proj = glm::perspective(glm::radians(60.0f), m_Renderer.get()->GetSwapChainExtent().width / (float)m_Renderer.get()->GetSwapChainExtent().height, 0.1f, 256.0f);
+        skyUbo.proj[1][1] *= -1;
+
+        skyboxMesh.get()->ubos.emplace_back(skyUbo);
 
         Texture tex = m_TextureManager->GetSkyboxTexture();
         //Texture tex = m_TextureManager->GetTextures()["skybox_tex"];
@@ -234,7 +269,7 @@ namespace Rbk
         skySamplerLayoutBinding.descriptorCount = 1;
         skySamplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
         skySamplerLayoutBinding.pImmutableSamplers = nullptr;
-        skySamplerLayoutBinding.stageFlags = VK_SHADER_STAGE_ALL;
+        skySamplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 
         std::vector<VkDescriptorSetLayoutBinding> skyBindings = { skyUboLayoutBinding, skySamplerLayoutBinding };
 
@@ -250,11 +285,11 @@ namespace Rbk
         VkDescriptorSet skyDescriptorSet = m_Renderer->CreateDescriptorSets(skyDescriptorPool, { skyDesriptorSetLayout }, 1);
 
         for (uint32_t i = 0; i < m_SwapChainImages.size(); i++) {
-            m_Renderer->UpdateDescriptorSets(skyboxMesh.uniformBuffers, tex, skyDescriptorSet, skyDescriptorImageInfo);
-            skyboxMesh.descriptorSets.emplace_back(skyDescriptorSet);
+            m_Renderer->UpdateDescriptorSets(skyboxMesh.get()->uniformBuffers, tex, skyDescriptorSet, skyDescriptorImageInfo);
+            skyboxMesh.get()->descriptorSets.emplace_back(skyDescriptorSet);
         }
 
-        skyboxMesh.pipelineLayout = m_Renderer->CreatePipelineLayout(skyboxMesh.descriptorSets, { skyDesriptorSetLayout });
+        skyboxMesh.get()->pipelineLayout = m_Renderer->CreatePipelineLayout(skyboxMesh.get()->descriptorSets, { skyDesriptorSetLayout });
 
         const char* shaderName = "skybox";
 
@@ -281,15 +316,16 @@ namespace Rbk
         vertexInputInfo.pVertexBindingDescriptions = &bDesc;
         vertexInputInfo.pVertexAttributeDescriptions = Vertex::GetAttributeDescriptions().data();
 
-        skyboxMesh.graphicsPipeline = m_Renderer->CreateGraphicsPipeline(
+        skyboxMesh.get()->graphicsPipeline = m_Renderer->CreateGraphicsPipeline(
             m_RenderPass,
-            skyboxMesh.pipelineLayout,
-            skyboxMesh.pipelineCache,
+            skyboxMesh.get()->pipelineLayout,
+            skyboxMesh.get()->pipelineCache,
             shadersStageInfos,
             vertexInputInfo,
-            VK_CULL_MODE_NONE,
-            false, false, wireFrame
+            VK_CULL_MODE_NONE
         );
+
+        m_MeshManager->SetSkyboxMesh(skyboxMesh);
 
         //crosshair
         const std::vector<Vertex2D> vertices = {
@@ -310,9 +346,8 @@ namespace Rbk
         std::pair<VkBuffer, VkDeviceMemory> crossHairuniformBuffer = m_Renderer->CreateUniformBuffers(1);
         m_Crosshair.get()->uniformBuffers.emplace_back(crossHairuniformBuffer);
 
-        glm::mat4 view = glm::mat4(1.0f);
         UniformBufferObject ubo;
-        ubo.view = glm::translate(view, glm::vec3(0.0f, 0.0f, 0.0f));
+        ubo.view = glm::mat4(0.0f);
         m_Crosshair.get()->ubos.emplace_back(ubo);
 
         std::array<VkDescriptorPoolSize, 2> cpoolSizes{};
@@ -390,7 +425,8 @@ namespace Rbk
             m_Crosshair.get()->pipelineCache,
             cshadersStageInfos,
             vertexInputInfo2D,
-            VK_CULL_MODE_NONE
+            VK_CULL_MODE_NONE,
+            false, false
         );
 
         //command buffer
@@ -428,9 +464,10 @@ namespace Rbk
 
         for (uint32_t i = 0; i < m_MeshManager->GetSkyboxMesh()->uniformBuffers.size(); i++) {
             m_MeshManager->GetSkyboxMesh()->ubos[i].view = m_Camera->LookAt();
+            //m_MeshManager->GetSkyboxMesh()->ubos[i].view[3] = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
             m_Renderer->UpdateUniformBuffer(
                 m_MeshManager->GetSkyboxMesh()->uniformBuffers[i],
-                { m_MeshManager->GetSkyboxMesh()->ubos },
+                { m_MeshManager->GetSkyboxMesh()->ubos[i]},
                 1
             );
         }

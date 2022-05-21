@@ -9,11 +9,6 @@
 
 namespace Rbk
 {
-    struct LoadInfo
-    {
-        bool shouldInverseTextureY = false;
-    };
-
     std::shared_ptr<Rbk::Mesh> TinyObjLoader::LoadMesh(const char* path, bool shouldInverseTextureY)
     {
         std::shared_ptr<Rbk::Mesh>mesh = std::make_shared<Rbk::Mesh>();

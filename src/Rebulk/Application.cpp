@@ -181,17 +181,13 @@ namespace Rbk
         meshManager->AddWorldMesh("moon", "assets/mesh/moon/moon.obj", "moon", pos6, moonCubeTest, false);
 
         std::vector<const char*>skyboxImages;
-        skyboxImages.emplace_back("assets/texture/skybox/green/LightGreen_right1.jpg");
-        skyboxImages.emplace_back("assets/texture/skybox/green/LightGreen_left2.jpg");
-        skyboxImages.emplace_back("assets/texture/skybox/green/LightGreen_top3.jpg");
-        skyboxImages.emplace_back("assets/texture/skybox/green/LightGreen_bottom4.jpg");
-        skyboxImages.emplace_back("assets/texture/skybox/green/LightGreen_front5.jpg");
-        skyboxImages.emplace_back("assets/texture/skybox/green/LightGreen_back6.jpg");
+        skyboxImages.emplace_back("assets/texture/skybox/g/LightGreen_right1.png");
+        skyboxImages.emplace_back("assets/texture/skybox/g/LightGreen_left2.png");
+        skyboxImages.emplace_back("assets/texture/skybox/g/LightGreen_top3.png");
+        skyboxImages.emplace_back("assets/texture/skybox/g/LightGreen_bottom4.png");
+        skyboxImages.emplace_back("assets/texture/skybox/g/LightGreen_front5.png");
+        skyboxImages.emplace_back("assets/texture/skybox/g/LightGreen_back6.png");
         textureManager->AddSkyBox(skyboxImages);
-
-        glm::vec3 pos3 = glm::vec3(0.0f, 0.0f, 0.0f);
-        glm::vec3 scaleSkybox = glm::vec3(1.0f, 1.0f, 1.0f);
-        meshManager->AddSkyboxMesh("skybox", pos3, scaleSkybox);
      
 #ifdef RBK_DEBUG
         vulkanLayer = std::make_shared<Rbk::VulkanLayer>();

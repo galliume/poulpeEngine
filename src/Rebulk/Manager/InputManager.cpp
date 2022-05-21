@@ -3,8 +3,8 @@
 
 namespace Rbk
 {
-    static bool m_CanMoveCamera;
-    static bool m_FirtMouseMove;
+    bool InputManager::m_CanMoveCamera = false;
+    bool InputManager::m_FirtMouseMove = true;
 
     InputManager::InputManager(std::shared_ptr<Window> window, std::shared_ptr<Camera> camera) : m_Window(window), m_Camera(camera)
     {
@@ -13,7 +13,7 @@ namespace Rbk
         glfwGetWindowSize(m_Window.get()->Get(), &width, &height);
         m_LastX = 800;
         m_LastY = 600;
-        Rbk::m_FirtMouseMove = true;
+        InputManager::m_FirtMouseMove = true;
     }
     
     void InputManager::Init()
@@ -45,12 +45,12 @@ namespace Rbk
             case GLFW_PRESS:
                 if (glfwGetKey(m_Window.get()->Get(), GLFW_KEY_LEFT_CONTROL)) {
 
-                    if (!Rbk::m_CanMoveCamera) {
+                    if (!InputManager::m_CanMoveCamera) {
                         glfwSetInputMode(m_Window.get()->Get(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
                     } else {
                         glfwSetInputMode(m_Window.get()->Get(), GLFW_CURSOR, GLFW_CURSOR_NORMAL);
                     }
-                    Rbk::m_CanMoveCamera = !Rbk::m_CanMoveCamera;
+                    InputManager::m_CanMoveCamera = !InputManager::m_CanMoveCamera;
                 }
             case GLFW_REPEAT:
             {
@@ -86,15 +86,15 @@ namespace Rbk
 
     void InputManager::Mouse(double x, double y)
     {
-        if (!Rbk::m_CanMoveCamera) return;
+        if (!InputManager::m_CanMoveCamera) return;
 
         float xPos = static_cast<float>(x);
         float yPos = static_cast<float>(y);
 
-        if (Rbk::m_FirtMouseMove) {
+        if (InputManager::m_FirtMouseMove) {
             m_LastX = xPos;
             m_LastY = yPos;
-            Rbk::m_FirtMouseMove = false;
+            InputManager::m_FirtMouseMove = false;
         }
 
         float xoffset = xPos - m_LastX;

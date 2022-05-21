@@ -62,6 +62,7 @@ namespace Rbk {
             VkCullModeFlagBits cullMode = VK_CULL_MODE_BACK_BIT,
             bool depthTestEnable = true,
             bool depthWriteEnable = true,
+            bool stencilTestEnable = true,
             bool wireFrameModeOn = false
         );
         VkSwapchainKHR CreateSwapChain(std::vector<VkImage>& swapChainImages, VkSwapchainKHR oldSwapChain = VK_NULL_HANDLE);

@@ -11,7 +11,7 @@ namespace Rbk
     class RenderManager
     {
     public:
-        RenderManager(
+        explicit RenderManager(
             std::shared_ptr<Window> window,
             std::shared_ptr<IRendererAdapter> renderer,
             std::shared_ptr<TextureManager> textureManager,

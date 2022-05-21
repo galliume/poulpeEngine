@@ -11,14 +11,13 @@ namespace Rbk
         std::shared_ptr<TextureManager> textureManager, 
         std::shared_ptr<MeshManager> meshManager, 
         std::shared_ptr<ShaderManager> shaderManager
-    )
+    ) :
+        m_Window(window),
+        m_Renderer(renderer),
+        m_TextureManager(textureManager),
+        m_MeshManager(meshManager),
+        m_ShaderManager(shaderManager)
     {
-        m_Window = window;
-        m_Renderer = renderer;
-        m_TextureManager = textureManager;
-        m_MeshManager = meshManager;
-        m_ShaderManager = shaderManager;
-
         if (s_Instance == nullptr) {
             s_Instance = this;
         }
