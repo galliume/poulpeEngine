@@ -79,7 +79,7 @@ namespace Rbk
 
     void VulkanAdapter::PrepareWorld()
     {
-        bool wireFrame = true;
+        bool wireFrame = false;
 
         m_SwapChainImageViews.resize(m_SwapChainImages.size());
         VkVertexInputBindingDescription bDesc = Vertex::GetBindingDescription();
@@ -201,40 +201,62 @@ namespace Rbk
         }
 
         /// SKYBOX ///
-        //const std::vector<Vertex> skyVertices = {
-        //    {{-1.0f, -1.0, 0.0f}, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
-        //    {{1.0f, -1.0f, 0.0f}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f}},
-        //    {{1.0f, 1.0f, 0.0f}, {0.0f, 0.0f, 1.0f}, {0.0f, 1.0f}},
-        //    {{-1.0f, 1.0f, 0.0f}, {1.0f, 1.0f, 1.0f}, {1.0f, 1.0f}},
+        const std::vector<Vertex> skyVertices = {
+            {{-1.0f,  1.0f, -1.0f }, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
+            {{-1.0f, -1.0f, -1.0f }, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
+            {{ 1.0f, -1.0f, -1.0f }, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
+            {{ 1.0f, -1.0f, -1.0f }, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
+            {{ 1.0f,  1.0f, -1.0f }, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
+            {{-1.0f,  1.0f, -1.0f }, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
 
-        //    {{-1.0f, -1.0, -1.0f}, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
-        //    {{1.0f, -1.0f, -1.0f}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f}},
-        //    {{1.0f, 1.0f, -1.0f}, {0.0f, 0.0f, 1.0f}, {0.0f, 1.0f}},
-        //    {{-1.0f, 1.0f, -1.0f}, {1.0f, 1.0f, 1.0f}, {1.0f, 1.0f}},
-        //};
+            {{-1.0f, -1.0f,  1.0f }, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
+            {{-1.0f, -1.0f, -1.0f }, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
+            {{-1.0f,  1.0f, -1.0f }, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
+            {{-1.0f,  1.0f, -1.0f }, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
+            {{-1.0f,  1.0f,  1.0f }, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
+            {{-1.0f, -1.0f,  1.0f }, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
 
-        //const std::vector<uint32_t> skyIndices = {
-        //    0, 1, 2, 2, 3, 0, //face
-        //    4, 5, 6, 6, 7, 4, //back
-        //    2, 6, 7, 7, 3, 2, //top
-        //    0, 4, 5, 5, 1, 0, //down
-        //    0, 4, 7, 7, 3, 0, //left
-        //    1, 5, 6, 6, 2, 1  //right
-        //};
+            {{ 1.0f, -1.0f, -1.0f }, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
+            {{ 1.0f, -1.0f,  1.0f }, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
+            {{ 1.0f,  1.0f,  1.0f }, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
+            {{ 1.0f,  1.0f,  1.0f }, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
+            {{ 1.0f,  1.0f, -1.0f }, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
+            {{ 1.0f, -1.0f, -1.0f }, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
 
+            {{-1.0f, -1.0f,  1.0f }, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
+            {{-1.0f,  1.0f,  1.0f }, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
+            {{ 1.0f,  1.0f,  1.0f }, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
+            {{ 1.0f,  1.0f,  1.0f }, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
+            {{ 1.0f, -1.0f,  1.0f }, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
+            {{-1.0f, -1.0f,  1.0f }, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
+
+            {{-1.0f,  1.0f, -1.0f }, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
+            {{ 1.0f,  1.0f, -1.0f }, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
+            {{ 1.0f,  1.0f,  1.0f }, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
+            {{ 1.0f,  1.0f,  1.0f }, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
+            {{-1.0f,  1.0f,  1.0f }, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
+            {{-1.0f,  1.0f, -1.0f }, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
+
+            {{-1.0f, -1.0f, -1.0f }, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
+            {{-1.0f, -1.0f,  1.0f }, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
+            {{ 1.0f, -1.0f, -1.0f }, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
+            {{ 1.0f, -1.0f, -1.0f }, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
+            {{-1.0f, -1.0f,  1.0f }, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
+            {{ 1.0f, -1.0f,  1.0f }, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}}
+        };
 
         std::shared_ptr<Mesh> skyboxMesh = std::make_shared<Mesh>();
-        skyboxMesh = m_MeshManager.get()->Load("assets/mesh/cube/cube.obj", true);
+        //skyboxMesh = m_MeshManager.get()->Load("assets/mesh/cube/cube.obj", true);
 
         skyboxMesh.get()->texture = "skybox";
-
-        skyboxMesh.get()->vertexBuffer = m_Renderer->CreateVertexBuffer(m_CommandPool, skyboxMesh->vertices);
-        skyboxMesh.get()->indicesBuffer = m_Renderer->CreateIndexBuffer(m_CommandPool, skyboxMesh->indices);
+        skyboxMesh.get()->vertices = skyVertices;
+        skyboxMesh.get()->vertexBuffer = m_Renderer->CreateVertexBuffer(m_CommandPool, skyVertices);
+        //skyboxMesh.get()->indicesBuffer = m_Renderer->CreateIndexBuffer(m_CommandPool, skyboxMesh->indices);
      
         std::pair<VkBuffer, VkDeviceMemory> uniformBuffer = m_Renderer->CreateUniformBuffers(1);
         skyboxMesh.get()->uniformBuffers.emplace_back(uniformBuffer);
 
-        glm::vec3 pos = glm::vec3(0.5f, -1.3f, -0.75f);
+        glm::vec3 pos = glm::vec3(0.0f, 0.0f, 0.0f);
         UniformBufferObject skyUbo;
         skyUbo.model = glm::mat4(1.0f);
         skyUbo.model = glm::translate(skyUbo.model, pos);
@@ -322,7 +344,8 @@ namespace Rbk
             skyboxMesh.get()->pipelineCache,
             shadersStageInfos,
             vertexInputInfo,
-            VK_CULL_MODE_NONE
+            VK_CULL_MODE_NONE,
+            false, false
         );
 
         m_MeshManager->SetSkyboxMesh(skyboxMesh);
@@ -463,7 +486,8 @@ namespace Rbk
         }
 
         for (uint32_t i = 0; i < m_MeshManager->GetSkyboxMesh()->uniformBuffers.size(); i++) {
-            m_MeshManager->GetSkyboxMesh()->ubos[i].view = m_Camera->LookAt();
+            m_MeshManager->GetSkyboxMesh()->ubos[i].view = glm::mat4(glm::mat3(m_Camera->LookAt()));
+            
             //m_MeshManager->GetSkyboxMesh()->ubos[i].view[3] = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
             m_Renderer->UpdateUniformBuffer(
                 m_MeshManager->GetSkyboxMesh()->uniformBuffers[i],
@@ -496,6 +520,10 @@ namespace Rbk
         m_Renderer->SetViewPort(m_CommandBuffers[m_ImageIndex]);
         m_Renderer->SetScissor(m_CommandBuffers[m_ImageIndex]);
 
+        //draw the skybox !
+        m_Renderer->BindPipeline(m_CommandBuffers[m_ImageIndex], m_MeshManager.get()->GetSkyboxMesh()->graphicsPipeline);
+        m_Renderer->Draw(m_CommandBuffers[m_ImageIndex], m_MeshManager.get()->GetSkyboxMesh().get(), m_ImageIndex, false);
+
         //draw the world !
         for (std::shared_ptr<Mesh> mesh : *m_MeshManager->GetWorldMeshes()) {
             m_Renderer->BindPipeline(m_CommandBuffers[m_ImageIndex], mesh.get()->graphicsPipeline);
@@ -505,10 +533,6 @@ namespace Rbk
         //draw the crosshair
         m_Renderer->BindPipeline(m_CommandBuffers[m_ImageIndex], m_Crosshair.get()->graphicsPipeline);
         m_Renderer->Draw(m_CommandBuffers[m_ImageIndex], m_Crosshair.get(), m_ImageIndex);
-
-        //draw the skybox !
-        m_Renderer->BindPipeline(m_CommandBuffers[m_ImageIndex], m_MeshManager.get()->GetSkyboxMesh()->graphicsPipeline);
-        m_Renderer->Draw(m_CommandBuffers[m_ImageIndex], m_MeshManager.get()->GetSkyboxMesh().get(), m_ImageIndex);
 
         m_Renderer->EndRenderPass(m_CommandBuffers[m_ImageIndex]);
         m_Renderer->EndCommandBuffer(m_CommandBuffers[m_ImageIndex]);

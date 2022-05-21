@@ -16,5 +16,5 @@ void main()
 {
     fragTexCoord = pos;
     //gl_Position = vec4(pos.xyz, 1.0);
-    gl_Position = ubo.proj * ubo.model * ubo.view * vec4(pos.xyz, 1.0);
+    gl_Position = ubo.proj * ubo.view * vec4(pos, 1.0);
 }

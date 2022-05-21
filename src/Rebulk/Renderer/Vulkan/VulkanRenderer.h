@@ -106,8 +106,7 @@ namespace Rbk {
         void SetViewPort(VkCommandBuffer commandBuffer);
         void SetScissor(VkCommandBuffer commandBuffer);
         void BindPipeline(VkCommandBuffer commandBuffer, VkPipeline pipeline);
-        void Draw(VkCommandBuffer commandBuffer, Mesh* mesh, uint32_t frameIndex);
-        void DrawSkybox(VkCommandBuffer commandBuffer, Mesh* mesh, uint32_t frameIndex);
+        void Draw(VkCommandBuffer commandBuffer, Mesh* mesh, uint32_t frameIndex, bool drawIndexed = true);
         uint32_t AcquireNextImageKHR(VkSwapchainKHR swapChain, std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>>& semaphores);
         void QueueSubmit(VkCommandBuffer commandBuffer);
         void QueueSubmit(uint32_t imageIndex, VkCommandBuffer commandBuffer, std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>>& semaphores);

@@ -181,12 +181,12 @@ namespace Rbk
         meshManager->AddWorldMesh("moon", "assets/mesh/moon/moon.obj", "moon", pos6, moonCubeTest, false);
 
         std::vector<const char*>skyboxImages;
-        skyboxImages.emplace_back("assets/texture/skybox/g/LightGreen_right1.png");
-        skyboxImages.emplace_back("assets/texture/skybox/g/LightGreen_left2.png");
-        skyboxImages.emplace_back("assets/texture/skybox/g/LightGreen_top3.png");
-        skyboxImages.emplace_back("assets/texture/skybox/g/LightGreen_bottom4.png");
-        skyboxImages.emplace_back("assets/texture/skybox/g/LightGreen_front5.png");
-        skyboxImages.emplace_back("assets/texture/skybox/g/LightGreen_back6.png");
+        skyboxImages.emplace_back("assets/texture/skybox/rainbow/rainbow_rt.png");
+        skyboxImages.emplace_back("assets/texture/skybox/rainbow/rainbow_lf.png");
+        skyboxImages.emplace_back("assets/texture/skybox/rainbow/rainbow_up.png");
+        skyboxImages.emplace_back("assets/texture/skybox/rainbow/rainbow_dn.png");
+        skyboxImages.emplace_back("assets/texture/skybox/rainbow/rainbow_ft.png");
+        skyboxImages.emplace_back("assets/texture/skybox/rainbow/rainbow_bk.png");
         textureManager->AddSkyBox(skyboxImages);
      
 #ifdef RBK_DEBUG
