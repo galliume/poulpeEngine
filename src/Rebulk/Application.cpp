@@ -91,7 +91,6 @@ namespace Rbk
         textureManager->AddTexture("minecraft_water", "assets/mesh/minecraft/water.jpg");
         textureManager->AddTexture("campfire_tex", "assets/mesh/campfire/Campfire_MAT_BaseColor_01.jpg");
         textureManager->AddTexture("tree_tex", "assets/mesh/tree/tree.jpg");
-        textureManager->AddTexture("skybox_tex", "assets/texture/skybox/sky_skybox_texture.jpg");
         textureManager->AddTexture("crosshair", "assets/texture/crosshair/simple_crosshair.png");
         textureManager->AddTexture("moon", "assets/mesh/moon/diffuse.jpg");
         textureManager->AddTexture("trunk_tree_cartoon", "assets/mesh/tree/cartoon/Trunk_4_Cartoon.jpg");
@@ -181,12 +180,12 @@ namespace Rbk
         meshManager->AddWorldMesh("moon", "assets/mesh/moon/moon.obj", "moon", pos6, moonCubeTest, false);
 
         std::vector<const char*>skyboxImages;
-        skyboxImages.emplace_back("assets/texture/skybox/rainbow/rainbow_rt.png");
-        skyboxImages.emplace_back("assets/texture/skybox/rainbow/rainbow_lf.png");
-        skyboxImages.emplace_back("assets/texture/skybox/rainbow/rainbow_up.png");
-        skyboxImages.emplace_back("assets/texture/skybox/rainbow/rainbow_dn.png");
-        skyboxImages.emplace_back("assets/texture/skybox/rainbow/rainbow_ft.png");
-        skyboxImages.emplace_back("assets/texture/skybox/rainbow/rainbow_bk.png");
+        skyboxImages.emplace_back("assets/texture/skybox/bluesky/right.jpg");
+        skyboxImages.emplace_back("assets/texture/skybox/bluesky/left.jpg");
+        skyboxImages.emplace_back("assets/texture/skybox/bluesky/top.jpg");
+        skyboxImages.emplace_back("assets/texture/skybox/bluesky/bottom.jpg");
+        skyboxImages.emplace_back("assets/texture/skybox/bluesky/front.jpg");
+        skyboxImages.emplace_back("assets/texture/skybox/bluesky/back.jpg");
         textureManager->AddSkyBox(skyboxImages);
      
 #ifdef RBK_DEBUG

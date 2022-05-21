@@ -344,8 +344,7 @@ namespace Rbk
             skyboxMesh.get()->pipelineCache,
             shadersStageInfos,
             vertexInputInfo,
-            VK_CULL_MODE_NONE,
-            false, false
+            VK_CULL_MODE_NONE
         );
 
         m_MeshManager->SetSkyboxMesh(skyboxMesh);
@@ -448,8 +447,7 @@ namespace Rbk
             m_Crosshair.get()->pipelineCache,
             cshadersStageInfos,
             vertexInputInfo2D,
-            VK_CULL_MODE_NONE,
-            false, false
+            VK_CULL_MODE_FRONT_BIT
         );
 
         //command buffer
@@ -520,15 +518,15 @@ namespace Rbk
         m_Renderer->SetViewPort(m_CommandBuffers[m_ImageIndex]);
         m_Renderer->SetScissor(m_CommandBuffers[m_ImageIndex]);
 
-        //draw the skybox !
-        m_Renderer->BindPipeline(m_CommandBuffers[m_ImageIndex], m_MeshManager.get()->GetSkyboxMesh()->graphicsPipeline);
-        m_Renderer->Draw(m_CommandBuffers[m_ImageIndex], m_MeshManager.get()->GetSkyboxMesh().get(), m_ImageIndex, false);
-
         //draw the world !
         for (std::shared_ptr<Mesh> mesh : *m_MeshManager->GetWorldMeshes()) {
             m_Renderer->BindPipeline(m_CommandBuffers[m_ImageIndex], mesh.get()->graphicsPipeline);
             m_Renderer->Draw(m_CommandBuffers[m_ImageIndex], mesh.get(), m_ImageIndex);
         }
+
+         //draw the skybox !
+        m_Renderer->BindPipeline(m_CommandBuffers[m_ImageIndex], m_MeshManager.get()->GetSkyboxMesh()->graphicsPipeline);
+        m_Renderer->Draw(m_CommandBuffers[m_ImageIndex], m_MeshManager.get()->GetSkyboxMesh().get(), m_ImageIndex, false);
 
         //draw the crosshair
         m_Renderer->BindPipeline(m_CommandBuffers[m_ImageIndex], m_Crosshair.get()->graphicsPipeline);
