@@ -246,20 +246,18 @@ namespace Rbk
         };
 
         std::shared_ptr<Mesh> skyboxMesh = std::make_shared<Mesh>();
-        //skyboxMesh = m_MeshManager.get()->Load("assets/mesh/cube/cube.obj", true);
-
+   
         skyboxMesh.get()->texture = "skybox";
         skyboxMesh.get()->vertices = skyVertices;
         skyboxMesh.get()->vertexBuffer = m_Renderer->CreateVertexBuffer(m_CommandPool, skyVertices);
-        //skyboxMesh.get()->indicesBuffer = m_Renderer->CreateIndexBuffer(m_CommandPool, skyboxMesh->indices);
      
         std::pair<VkBuffer, VkDeviceMemory> uniformBuffer = m_Renderer->CreateUniformBuffers(1);
         skyboxMesh.get()->uniformBuffers.emplace_back(uniformBuffer);
 
         glm::vec3 pos = glm::vec3(0.0f, 0.0f, 0.0f);
         UniformBufferObject skyUbo;
-        skyUbo.model = glm::mat4(1.0f);
-        skyUbo.model = glm::translate(skyUbo.model, pos);
+        skyUbo.model = glm::mat4(0.0f);
+        //skyUbo.model = glm::translate(skyUbo.model, pos);
         skyUbo.view = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
         skyUbo.proj = glm::perspective(glm::radians(60.0f), m_Renderer.get()->GetSwapChainExtent().width / (float)m_Renderer.get()->GetSwapChainExtent().height, 0.1f, 256.0f);
         skyUbo.proj[1][1] *= -1;
