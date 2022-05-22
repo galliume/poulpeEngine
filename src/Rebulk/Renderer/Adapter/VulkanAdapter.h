@@ -39,7 +39,8 @@ namespace Rbk
 
         void ImmediateSubmit(std::function<void(VkCommandBuffer cmd)>&& function);
         void SetWireFrameMode(bool wireFrameModeOn) { m_WireFrameModeOn = wireFrameModeOn; };
-        void SouldResizeSwapChain();
+        void ShouldRecreateSwapChain();
+        void RecreateSwapChain();
 
         inline uint32_t GetSwapImageIndex() { return m_ImageIndex; };
         inline std::shared_ptr<VulkanRenderer> Rdr() { return m_Renderer; };
