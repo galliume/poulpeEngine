@@ -19,9 +19,22 @@ layout(location = 2) in vec2 texCoord;
 
 layout(location = 0) out vec2 fragTexCoord;
 layout(location = 1) out vec3 fragColor;
+layout(location = 2) out vec4 fogDensity;
 
+float fogDepthMax = 20.0;
+float fogDepthMin = 10.0;
+
+layout(push_constant) uniform constants
+{
+    vec3 cameraPos;
+} PushConstants;
 
 void main() {
+    
+    vec4 depthVert = vec4(PushConstants.cameraPos, 1.0) * vec4(pos, 1.0);
+    float depth = abs(depthVert.z / depthVert.w);
+    fogDensity.x = 1.0 - clamp((fogDepthMax - depth) / (fogDepthMin - fogDepthMax), 0.0, 1.0);
+
     gl_Position = ubos[gl_InstanceIndex].proj * ubos[gl_InstanceIndex].view * ubos[gl_InstanceIndex].model * vec4(pos, 1.0);
     fragTexCoord = texCoord;
     fragColor = color;

@@ -24,6 +24,7 @@ namespace Rbk
         void UpdateYP(float xoffset, float yoffset);
         void Recenter();
         glm::mat4 FrustumProj(float fovy, float s, float n, float f);
+        glm::vec3 GetPos() { return m_Pos; };
 
     private:
         glm::vec3 m_Pos;

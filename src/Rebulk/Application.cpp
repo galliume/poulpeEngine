@@ -160,16 +160,16 @@ namespace Rbk
         pos2 = glm::vec3(1.2f, 0.19f, -0.9f);
         meshManager->AddWorldMesh("tree", "assets/mesh/tree/tree.obj", "tree_tex", pos2, scaleTree);
 
-        glm::vec3 scaleGrass = glm::vec3(0.05f, 0.05f, 0.05f);
+        //glm::vec3 scaleGrass = glm::vec3(0.05f, 0.05f, 0.05f);
 
-        pos2 = glm::vec3(0.2f, 0.19f, -0.9f);
-        meshManager->AddWorldMesh("grass", "assets/mesh/grass/grass.obj", "grass", pos2, scaleGrass);
-        pos2 = glm::vec3(1.2f, 0.19f, 0.9f);
-        meshManager->AddWorldMesh("grass", "assets/mesh/grass/grass.obj", "grass", pos2, scaleGrass);
-        pos2 = glm::vec3(0.8f, 0.19f, -1.9f);
-        meshManager->AddWorldMesh("grass", "assets/mesh/grass/grass.obj", "grass", pos2, scaleGrass);
-        pos2 = glm::vec3(-0.2f, 0.19f, 1.0f);
-        meshManager->AddWorldMesh("grass", "assets/mesh/grass/grass.obj", "grass", pos2, scaleGrass);
+        //pos2 = glm::vec3(0.2f, 0.19f, -0.9f);
+        //meshManager->AddWorldMesh("grass", "assets/mesh/grass/grass.obj", "grass", pos2, scaleGrass);
+        //pos2 = glm::vec3(1.2f, 0.19f, 0.9f);
+        //meshManager->AddWorldMesh("grass", "assets/mesh/grass/grass.obj", "grass", pos2, scaleGrass);
+        //pos2 = glm::vec3(0.8f, 0.19f, -1.9f);
+        //meshManager->AddWorldMesh("grass", "assets/mesh/grass/grass.obj", "grass", pos2, scaleGrass);
+        //pos2 = glm::vec3(-0.2f, 0.19f, 1.0f);
+        //meshManager->AddWorldMesh("grass", "assets/mesh/grass/grass.obj", "grass", pos2, scaleGrass);
 
         //glm::vec3 scaleCubeTest = glm::vec3(0.10f, 0.10f, 0.10f);
         //glm::vec3 pos5 = glm::vec3(0.5f, -1.3f, -0.75f);

@@ -1299,9 +1299,12 @@ namespace Rbk {
             nullptr
         );
 
-        //vkCmdPushConstants(commandBuffer, pipeline.pipelineLayout, VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(int), &j);
         for (int i = 0; i < mesh->uniformBuffers.size(); i++) {
             if (drawIndexed) {
+                if (mesh->name != "crosshair") 
+                {
+                    vkCmdPushConstants(commandBuffer, mesh->pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(glm::vec3), &mesh->cameraPos);
+                }
                 vkCmdBindIndexBuffer(commandBuffer, mesh->indicesBuffer.first, 0, VK_INDEX_TYPE_UINT32);
                 vkCmdDrawIndexed(commandBuffer, mesh->indices.size(), mesh->ubos.size(), 0, 0, 0);
             } else {
