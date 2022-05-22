@@ -48,6 +48,11 @@ namespace Rbk
     {
         if (Rbk::Window::m_FramebufferResized == true) {
 
+            while (m_Window.get()->IsMinimized()) {
+                m_Window.get()->Wait();
+            }
+
+            m_Renderer->WaitIdle();
             m_Renderer->InitDetails();
             VkSwapchainKHR old = m_SwapChain;
             m_SwapChain = m_Renderer->CreateSwapChain(m_SwapChainImages, old);
@@ -483,8 +488,6 @@ namespace Rbk
 
         for (uint32_t i = 0; i < m_MeshManager->GetSkyboxMesh()->uniformBuffers.size(); i++) {
             m_MeshManager->GetSkyboxMesh()->ubos[i].view = glm::mat4(glm::mat3(m_Camera->LookAt()));
-            
-            //m_MeshManager->GetSkyboxMesh()->ubos[i].view[3] = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
             m_Renderer->UpdateUniformBuffer(
                 m_MeshManager->GetSkyboxMesh()->uniformBuffers[i],
                 { m_MeshManager->GetSkyboxMesh()->ubos[i]},
@@ -499,7 +502,7 @@ namespace Rbk
             throw std::runtime_error("Draw is not prepared. Forgot to calle Prepare() ?");
         }
 
-        //SouldResizeSwapChain();
+        SouldResizeSwapChain();
 
         m_ImageIndex = m_Renderer->AcquireNextImageKHR(m_SwapChain, m_Semaphores);
 
