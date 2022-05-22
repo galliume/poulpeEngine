@@ -20,6 +20,7 @@ namespace Rbk
         
         m_Window = glfwCreateWindow(WIDTH, HEIGHT, "Rebulkan Engine", nullptr, nullptr);
 
+        glfwSetWindowSizeLimits(m_Window, 800, 600, 2560, 1440);
         glfwMakeContextCurrent(m_Window);
         glfwSwapInterval(false);
 
@@ -31,5 +32,18 @@ namespace Rbk
 
         //glfwSetInputMode(m_Window, GLFW_STICKY_MOUSE_BUTTONS, GLFW_TRUE);
         //glfwSetInputMode(m_Window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    }
+
+    bool Window::IsMinimized()
+    {
+        int width = 0, height = 0;
+        glfwGetFramebufferSize(m_Window, &width, &height);
+
+        return (width == 0 || height == 0);
+    }
+
+    void Window::Wait()
+    {
+        glfwWaitEvents();
     }
 }
