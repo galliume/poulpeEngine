@@ -44,7 +44,36 @@ namespace Rbk
         m_MeshManager = meshManager;
     }
 
-    void VulkanAdapter::SouldResizeSwapChain()
+    void VulkanAdapter::RecreateSwapChain()
+    {
+        m_Renderer->WaitIdle();
+        m_Renderer->InitDetails();
+        VkSwapchainKHR old = m_SwapChain;
+        m_SwapChain = m_Renderer->CreateSwapChain(m_SwapChainImages, old);
+        m_Renderer->DestroySwapchain(m_Renderer->GetDevice(), old, m_SwapChainFramebuffers, m_SwapChainImageViews);
+        m_Renderer->DestroySemaphores(m_Semaphores);
+        m_Renderer->ResetCurrentFrameIndex();
+        m_SwapChainImageViews.resize(m_SwapChainImages.size());
+
+        for (uint32_t i = 0; i < m_SwapChainImages.size(); i++) {
+            m_SwapChainImageViews[i] = m_Renderer->CreateImageView(m_SwapChainImages[i], m_Renderer->GetSwapChainImageFormat(), VK_IMAGE_ASPECT_COLOR_BIT);
+        }
+        std::vector<VkImageView> depthImageViews;
+        std::vector<VkImageView> colorImageViews;
+
+        for (auto&& [textName, tex] : m_TextureManager->GetTextures()) {
+            m_Renderer->CreateImage(tex.width, tex.height, tex.mipLevels, VK_SAMPLE_COUNT_1_BIT, m_Renderer->FindDepthFormat(), VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, tex.depthImage, tex.depthImageMemory);
+            depthImageViews.emplace_back(tex.depthImageView);
+            colorImageViews.emplace_back(tex.colorImageView);
+        }
+
+        m_SwapChainFramebuffers = m_Renderer->CreateFramebuffers(m_RenderPass, m_SwapChainImageViews, depthImageViews, colorImageViews);
+        m_Semaphores = m_Renderer->CreateSyncObjects(m_SwapChainImages);
+        m_Renderer->ResetCommandPool(m_CommandPool);
+        m_CommandBuffers = m_Renderer->AllocateCommandBuffers(m_CommandPool, (uint32_t)m_SwapChainFramebuffers.size());
+    }
+
+    void VulkanAdapter::ShouldRecreateSwapChain()
     {
         if (Rbk::Window::m_FramebufferResized == true) {
 
@@ -52,31 +81,7 @@ namespace Rbk
                 m_Window.get()->Wait();
             }
 
-            m_Renderer->WaitIdle();
-            m_Renderer->InitDetails();
-            VkSwapchainKHR old = m_SwapChain;
-            m_SwapChain = m_Renderer->CreateSwapChain(m_SwapChainImages, old);
-            m_Renderer->DestroySwapchain(m_Renderer->GetDevice(), old, m_SwapChainFramebuffers, m_SwapChainImageViews);
-            m_Renderer->DestroySemaphores(m_Semaphores);
-            m_Renderer->ResetCurrentFrameIndex();
-            m_SwapChainImageViews.resize(m_SwapChainImages.size());
-
-            for (uint32_t i = 0; i < m_SwapChainImages.size(); i++) {
-                m_SwapChainImageViews[i] = m_Renderer->CreateImageView(m_SwapChainImages[i], m_Renderer->GetSwapChainImageFormat(), VK_IMAGE_ASPECT_COLOR_BIT);
-            }
-            std::vector<VkImageView> depthImageViews;
-            std::vector<VkImageView> colorImageViews;
-
-            for (auto&& [textName, tex] : m_TextureManager->GetTextures()) {
-                m_Renderer->CreateImage(tex.width, tex.height, tex.mipLevels, VK_SAMPLE_COUNT_1_BIT, m_Renderer->FindDepthFormat(), VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, tex.depthImage, tex.depthImageMemory);
-                depthImageViews.emplace_back(tex.depthImageView);
-                colorImageViews.emplace_back(tex.colorImageView);
-            }
-
-            m_SwapChainFramebuffers = m_Renderer->CreateFramebuffers(m_RenderPass, m_SwapChainImageViews, depthImageViews, colorImageViews);
-            m_Semaphores = m_Renderer->CreateSyncObjects(m_SwapChainImages);
-            m_Renderer->ResetCommandPool(m_CommandPool);
-            m_CommandBuffers = m_Renderer->AllocateCommandBuffers(m_CommandPool, (uint32_t)m_SwapChainFramebuffers.size());
+            RecreateSwapChain();
 
             Rbk::Window::m_FramebufferResized = false;
         }
@@ -502,9 +507,13 @@ namespace Rbk
             throw std::runtime_error("Draw is not prepared. Forgot to calle Prepare() ?");
         }
 
-        SouldResizeSwapChain();
+        ShouldRecreateSwapChain();
 
         m_ImageIndex = m_Renderer->AcquireNextImageKHR(m_SwapChain, m_Semaphores);
+
+        if (m_ImageIndex == VK_ERROR_OUT_OF_DATE_KHR || m_ImageIndex == VK_SUBOPTIMAL_KHR) {
+            RecreateSwapChain();
+        }
 
         m_Renderer->BeginCommandBuffer(m_CommandBuffers[m_ImageIndex]);
 
@@ -536,11 +545,12 @@ namespace Rbk
         m_Renderer->EndRenderPass(m_CommandBuffers[m_ImageIndex]);
         m_Renderer->EndCommandBuffer(m_CommandBuffers[m_ImageIndex]);
 
-        //@todo properly fix casting type with -1 and uint imageIndex needed by Vulkan
-        //if (-1 != m_ImageIndex) {
-            m_Renderer->QueueSubmit(m_ImageIndex, m_CommandBuffers[m_ImageIndex], m_Semaphores);
-            m_Renderer->QueuePresent(m_ImageIndex, m_SwapChain, m_Semaphores);
-        //}
+        m_Renderer->QueueSubmit(m_ImageIndex, m_CommandBuffers[m_ImageIndex], m_Semaphores);
+        uint32_t currentFrame = m_Renderer->QueuePresent(m_ImageIndex, m_SwapChain, m_Semaphores);
+
+        if (currentFrame == VK_ERROR_OUT_OF_DATE_KHR || currentFrame == VK_SUBOPTIMAL_KHR) {
+            RecreateSwapChain();
+        }
 
         UpdateWorldPositions();
     }
