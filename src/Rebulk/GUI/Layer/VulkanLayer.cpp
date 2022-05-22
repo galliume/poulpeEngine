@@ -4,11 +4,6 @@
 
 namespace Rbk
 {
-    VulkanLayer::VulkanLayer()
-    {
-
-    }
-
     void VulkanLayer::Init()
     {
         //DisplayFpsCounter(timeStep);

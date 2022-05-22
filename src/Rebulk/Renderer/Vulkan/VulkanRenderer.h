@@ -62,6 +62,7 @@ namespace Rbk {
             VkCullModeFlagBits cullMode = VK_CULL_MODE_BACK_BIT,
             bool depthTestEnable = true,
             bool depthWriteEnable = true,
+            bool stencilTestEnable = true,
             bool wireFrameModeOn = false
         );
         VkSwapchainKHR CreateSwapChain(std::vector<VkImage>& swapChainImages, VkSwapchainKHR oldSwapChain = VK_NULL_HANDLE);
@@ -86,7 +87,7 @@ namespace Rbk {
         void CreateTextureImage(VkCommandBuffer commandBuffer, stbi_uc* pixels, uint32_t texWidth, uint32_t texHeight, uint32_t mipLevels, VkImage& textureImage, VkDeviceMemory& textureImageMemory, VkFormat format);
         void CreateSkyboxTextureImage(VkCommandBuffer commandBuffer, std::vector<stbi_uc*>skyboxPixels, uint32_t texWidth, uint32_t texHeight, uint32_t mipLevels, VkImage& textureImage, VkDeviceMemory& textureImageMemory, VkFormat format);
         void CopyBufferToImage(VkCommandBuffer commandBuffer, VkBuffer buffer, VkImage image, uint32_t width, uint32_t height);
-        void CopyBufferToImageSkybox(VkCommandBuffer commandBuffer, VkBuffer buffer, VkImage image, uint32_t width, uint32_t height, std::vector<stbi_uc*>skyboxPixels, uint32_t mipLevels);
+        void CopyBufferToImageSkybox(VkCommandBuffer commandBuffer, VkBuffer buffer, VkImage image, uint32_t width, uint32_t height, std::vector<stbi_uc*>skyboxPixels, uint32_t mipLevels, uint64_t offset);
         VkSampler CreateTextureSampler(uint32_t mipLevels);
         VkSampler CreateSkyboxTextureSampler(uint32_t mipLevels);
         VkImageView CreateDepthResources(VkCommandBuffer commandBuffer);
@@ -105,16 +106,14 @@ namespace Rbk {
         void SetViewPort(VkCommandBuffer commandBuffer);
         void SetScissor(VkCommandBuffer commandBuffer);
         void BindPipeline(VkCommandBuffer commandBuffer, VkPipeline pipeline);
-        void Draw(VkCommandBuffer commandBuffer, Mesh* mesh, uint32_t frameIndex);
-        void DrawSkybox(VkCommandBuffer commandBuffer, Mesh* mesh, uint32_t frameIndex);
+        void Draw(VkCommandBuffer commandBuffer, Mesh* mesh, uint32_t frameIndex, bool drawIndexed = true);
         uint32_t AcquireNextImageKHR(VkSwapchainKHR swapChain, std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>>& semaphores);
         void QueueSubmit(VkCommandBuffer commandBuffer);
         void QueueSubmit(uint32_t imageIndex, VkCommandBuffer commandBuffer, std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>>& semaphores);
         size_t QueuePresent(uint32_t imageIndex, VkSwapchainKHR swapChain, std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>>& semaphores);
         void AddPipelineBarrier(VkCommandBuffer commandBuffer, VkImageMemoryBarrier renderBarrier, VkPipelineStageFlags srcStageMask, VkPipelineStageFlags dstStageMask, VkDependencyFlags dependencyFlags);
         void WaitIdle();
-        void GenerateMipmaps(VkCommandBuffer commandBuffer, VkFormat imageFormat, VkImage image, int32_t texWidth, int32_t texHeight, uint32_t mipLevels, uint32_t layerCount = 1);
-        void GenerateMipmapsSkybox(VkCommandBuffer commandBuffer, VkFormat imageFormat, VkImage image, uint32_t layerCount);
+        void GenerateMipmaps(VkCommandBuffer commandBuffer, VkFormat imageFormat, VkImage image, uint32_t texWidth, uint32_t texHeight, uint32_t mipLevels, uint32_t layerCount = 1);
        
         /**
         * Vulkan clean and destroy

@@ -23,7 +23,7 @@ namespace Rbk
 
     public:
 
-        VulkanAdapter(std::shared_ptr<Window> window);
+        explicit VulkanAdapter(std::shared_ptr<Window> window);
         ~VulkanAdapter();
 
         virtual void Init() override;
