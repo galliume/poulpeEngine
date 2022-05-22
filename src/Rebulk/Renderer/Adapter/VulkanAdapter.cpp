@@ -481,6 +481,9 @@ namespace Rbk
         for (std::shared_ptr<Mesh> mesh : *worldMeshes) {
             for (uint32_t i = 0; i < mesh.get()->ubos.size(); i++) {
                 mesh.get()->ubos[i].view = m_Camera->LookAt();
+                mesh.get()->ubos[i].proj = glm::perspective(glm::radians(60.0f), m_Renderer.get()->GetSwapChainExtent().width / (float)m_Renderer.get()->GetSwapChainExtent().height, 0.1f, 5.0f);
+                //mesh.get()->ubos[i].proj = m_Camera->FrustumProj(60, m_Renderer.get()->GetSwapChainExtent().width / (float)m_Renderer.get()->GetSwapChainExtent().height, 0.1f, 256.0f);
+                mesh.get()->ubos[i].proj[1][1] *= -1;
             }
             for (uint32_t i = 0; i < mesh.get()->uniformBuffers.size(); i++) {
                 m_Renderer->UpdateUniformBuffer(
