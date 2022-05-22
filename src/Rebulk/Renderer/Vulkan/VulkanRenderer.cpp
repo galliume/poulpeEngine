@@ -67,15 +67,11 @@ namespace Rbk {
         m_EnableValidationLayers = true;
 #endif
 
-        bool vulkanSupported = glfwVulkanSupported();
-
-        if (!vulkanSupported) {
+        if (!glfwVulkanSupported()) {
             throw std::runtime_error("vulkan not supported");
         }
 
-        VkResult volkInit = volkInitialize();
-
-        if (volkInit != VK_SUCCESS) {
+        if (volkInitialize() != VK_SUCCESS) {
             throw std::runtime_error("Failed to initialize volk");
         }
 
@@ -460,6 +456,7 @@ namespace Rbk {
     VkSurfaceFormatKHR VulkanRenderer::ChooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats)
     {
         for (const auto& availableFormat : availableFormats) {
+            Rbk::Log::GetLogger()->trace("Swap surface format available : {} - {}", availableFormat.format, availableFormat.colorSpace);
             if (availableFormat.format == VK_FORMAT_B8G8R8A8_SRGB && availableFormat.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR) {
                 return availableFormat;
             }
@@ -622,10 +619,8 @@ namespace Rbk {
         createInfo.components.g = VK_COMPONENT_SWIZZLE_G;
         createInfo.components.b = VK_COMPONENT_SWIZZLE_B;
         createInfo.components.a = VK_COMPONENT_SWIZZLE_A;
-        createInfo.subresourceRange.aspectMask = aspectFlags;
-        createInfo.subresourceRange.baseMipLevel = 0;
+        createInfo.subresourceRange = { aspectFlags, 0, 1, 0, 1 };
         createInfo.subresourceRange.levelCount = mipLevels;
-        createInfo.subresourceRange.baseArrayLayer = 0;
         createInfo.subresourceRange.layerCount = 6;
 
         VkResult result;
@@ -695,6 +690,7 @@ namespace Rbk {
         VkCullModeFlagBits cullMode,
         bool depthTestEnable,
         bool depthWriteEnable,
+        bool stencilTestEnable,
         bool wireFrameModeOn
     )
     {
@@ -749,11 +745,11 @@ namespace Rbk {
         depthStencil.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
         depthStencil.depthTestEnable = (depthTestEnable) ? VK_TRUE : VK_FALSE;
         depthStencil.depthWriteEnable = (depthWriteEnable) ? VK_TRUE : VK_FALSE;
-        depthStencil.depthCompareOp = VK_COMPARE_OP_LESS;
+        depthStencil.depthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL;
         depthStencil.depthBoundsTestEnable = VK_FALSE;
         depthStencil.minDepthBounds = 0.0f;
         depthStencil.maxDepthBounds = 1.0f;
-        depthStencil.stencilTestEnable = VK_TRUE;
+        depthStencil.stencilTestEnable = (stencilTestEnable) ? VK_TRUE : VK_FALSE;
         depthStencil.front = {};
         depthStencil.back = {};
 
@@ -1293,13 +1289,12 @@ namespace Rbk {
         vkResetCommandPool(m_Device, commandPool, 0);
     }
 
-    void VulkanRenderer::Draw(VkCommandBuffer commandBuffer, Mesh* mesh, uint32_t frameIndex)
+    void VulkanRenderer::Draw(VkCommandBuffer commandBuffer, Mesh* mesh, uint32_t frameIndex, bool drawIndexed)
     {
         VkBuffer vertexBuffers[] = { mesh->vertexBuffer.first };
         VkDeviceSize offsets[] = { 0 };
 
         vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
-        vkCmdBindIndexBuffer(commandBuffer, mesh->indicesBuffer.first, 0, VK_INDEX_TYPE_UINT32);
 
         vkCmdBindDescriptorSets(
             commandBuffer,
@@ -1314,32 +1309,12 @@ namespace Rbk {
 
         //vkCmdPushConstants(commandBuffer, pipeline.pipelineLayout, VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(int), &j);
         for (int i = 0; i < mesh->uniformBuffers.size(); i++) {
-            vkCmdDrawIndexed(commandBuffer, mesh->indices.size(), mesh->ubos.size(), 0, 0, 0);
-        }
-    }
-
-    void VulkanRenderer::DrawSkybox(VkCommandBuffer commandBuffer, Mesh* mesh, uint32_t frameIndex)
-    {
-        VkBuffer vertexBuffers[] = { mesh->vertexBuffer.first };
-        VkDeviceSize offsets[] = { 0 };
-
-        vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
-        vkCmdBindIndexBuffer(commandBuffer, mesh->indicesBuffer.first, 0, VK_INDEX_TYPE_UINT32);
-
-        vkCmdBindDescriptorSets(
-            commandBuffer,
-            VK_PIPELINE_BIND_POINT_GRAPHICS,
-            mesh->pipelineLayout,
-            0,
-            1,
-            &mesh->descriptorSets[frameIndex],
-            0,
-            nullptr
-        );
-
-        //vkCmdPushConstants(commandBuffer, pipeline.pipelineLayout, VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(int), &j);
-        for (uint32_t i = 0; i < mesh->uniformBuffers.size(); i++) {
-            vkCmdDrawIndexed(commandBuffer, mesh->indices.size(), mesh->ubos.size(), 0, 0, 0);
+            if (drawIndexed) {
+                vkCmdBindIndexBuffer(commandBuffer, mesh->indicesBuffer.first, 0, VK_INDEX_TYPE_UINT32);
+                vkCmdDrawIndexed(commandBuffer, mesh->indices.size(), mesh->ubos.size(), 0, 0, 0);
+            } else {
+                vkCmdDraw(commandBuffer, static_cast<uint32_t>(mesh->vertices.size()), 1, 0, 0);
+            }
         }
     }
 
@@ -1662,43 +1637,45 @@ namespace Rbk {
         VkDeviceMemory stagingBufferMemory;
         CreateBuffer(imageSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
 
-        void* data;
-        vkMapMemory(m_Device, stagingBufferMemory, 0, imageSize, 0, &data);
-
+        stbi_uc* data;
         VkDeviceSize layerSize = imageSize / 6;
+        vkMapMemory(m_Device, stagingBufferMemory, 0, imageSize, 0, (void**) &data);
 
-        for (int i = 0; i < skyboxPixels.size(); i++) {
-//            memcpy((void*)(data + (layerSize * i)), skyboxPixels[i], layerSize);
-            memcpy(static_cast<std::byte*>(data) + (layerSize * i), skyboxPixels[i], layerSize);
+        for (uint32_t i = 0; i < skyboxPixels.size(); i++) {
+            memcpy(data + layerSize * i, skyboxPixels[i], layerSize);
         }
 
         vkUnmapMemory(m_Device, stagingBufferMemory);
 
-        for (stbi_uc* pixels : skyboxPixels) {
-            stbi_image_free(pixels);
-        }
-
-        CreateSkyboxImage(texWidth, texHeight, mipLevels, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, textureImage, textureImageMemory);
+        CreateSkyboxImage(texWidth, texHeight, mipLevels, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, textureImage, textureImageMemory);
 
         VkImageMemoryBarrier renderBarrier = SetupImageMemoryBarrier(
             textureImage, 0, VK_ACCESS_TRANSFER_WRITE_BIT, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL
         );
 
+        renderBarrier.subresourceRange.layerCount = 6;
+        renderBarrier.subresourceRange.baseMipLevel = 0;
+        renderBarrier.subresourceRange.levelCount = mipLevels;
+
         AddPipelineBarrier(commandBuffer, renderBarrier, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_DEPENDENCY_BY_REGION_BIT);
 
-        CopyBufferToImageSkybox(commandBuffer, stagingBuffer, textureImage, static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight), skyboxPixels, mipLevels);
+        CopyBufferToImageSkybox(commandBuffer, stagingBuffer, textureImage, static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight), skyboxPixels, mipLevels, layerSize);
 
-        GenerateMipmapsSkybox(commandBuffer, format, textureImage, 6);
+        GenerateMipmaps(commandBuffer, format, textureImage, texWidth, texHeight, mipLevels, 6);
 
         EndCommandBuffer(commandBuffer);
 
         QueueSubmit(commandBuffer);
+        
+        for (uint32_t i = 0; i < skyboxPixels.size(); i++) {
+            stbi_image_free(skyboxPixels[i]);
+        }
 
         vkDestroyBuffer(m_Device, stagingBuffer, nullptr);
         vkFreeMemory(m_Device, stagingBufferMemory, nullptr);
     }
 
-    void VulkanRenderer::GenerateMipmaps(VkCommandBuffer commandBuffer, VkFormat imageFormat, VkImage image, int32_t texWidth, int32_t texHeight, uint32_t mipLevels, uint32_t layerCount) {
+    void VulkanRenderer::GenerateMipmaps(VkCommandBuffer commandBuffer, VkFormat imageFormat, VkImage image, uint32_t texWidth, uint32_t texHeight, uint32_t mipLevels, uint32_t layerCount) {
 
         VkFormatProperties formatProperties;
         vkGetPhysicalDeviceFormatProperties(m_PhysicalDevice, imageFormat, &formatProperties);
@@ -1714,7 +1691,7 @@ namespace Rbk {
         barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
         barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
         barrier.subresourceRange.baseArrayLayer = 0;
-        barrier.subresourceRange.layerCount = layerCount;
+        barrier.subresourceRange.layerCount = VK_REMAINING_ARRAY_LAYERS;
         barrier.subresourceRange.levelCount = 1;
 
         int32_t mipWidth = texWidth;
@@ -1742,7 +1719,7 @@ namespace Rbk {
             blit.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
             blit.srcSubresource.mipLevel = i - 1;
             blit.srcSubresource.baseArrayLayer = 0;
-            blit.srcSubresource.layerCount = 1;
+            blit.srcSubresource.layerCount = layerCount;
             blit.dstOffsets[0] = { 0, 0, 0 };
             blit.dstOffsets[1] = { mipWidth > 1 ? mipWidth / 2 : 1, mipHeight > 1 ? mipHeight / 2 : 1, 1 };
             blit.dstSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
@@ -1790,40 +1767,6 @@ namespace Rbk {
         );
     }
 
-    void VulkanRenderer::GenerateMipmapsSkybox(VkCommandBuffer commandBuffer, VkFormat imageFormat, VkImage image, uint32_t layerCount)
-    {
-        VkFormatProperties formatProperties;
-        vkGetPhysicalDeviceFormatProperties(m_PhysicalDevice, imageFormat, &formatProperties);
-
-        if (!(formatProperties.optimalTilingFeatures & VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_LINEAR_BIT)) {
-            throw std::runtime_error("texture image format does not support linear blitting!");
-        }
-
-        VkImageMemoryBarrier barrier{};
-        barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-        barrier.image = image;
-        barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-        barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-        barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-        barrier.subresourceRange.baseArrayLayer = 0;
-        barrier.subresourceRange.layerCount = layerCount;
-        barrier.subresourceRange.levelCount = 1;
-
-        barrier.subresourceRange.baseMipLevel = 0;
-        barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-        barrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-        barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-        barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
-
-        vkCmdPipelineBarrier(
-            commandBuffer,
-            VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0,
-            0, nullptr,
-            0, nullptr,
-            1, &barrier
-        );
-    }
-
     void VulkanRenderer::CopyBufferToImage(VkCommandBuffer commandBuffer, VkBuffer buffer, VkImage image, uint32_t width, uint32_t height)
     {
         VkBufferImageCopy region{};
@@ -1842,7 +1785,7 @@ namespace Rbk {
         vkCmdCopyBufferToImage(commandBuffer, buffer, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
     }
 
-    void VulkanRenderer::CopyBufferToImageSkybox(VkCommandBuffer commandBuffer, VkBuffer buffer, VkImage image, uint32_t width, uint32_t height, std::vector<stbi_uc*>skyboxPixels, uint32_t mipLevels)
+    void VulkanRenderer::CopyBufferToImageSkybox(VkCommandBuffer commandBuffer, VkBuffer buffer, VkImage image, uint32_t width, uint32_t height, std::vector<stbi_uc*>skyboxPixels, uint32_t mipLevels, uint64_t offset)
     {
         std::vector<VkBufferImageCopy> bufferCopyRegions;
 
@@ -1851,7 +1794,7 @@ namespace Rbk {
             for (uint32_t mipLevel = 0; mipLevel < mipLevels; mipLevel++) {
 
                 VkBufferImageCopy region{};
-                region.bufferOffset = sizeof(skyboxPixels[i]) * i;
+                region.bufferOffset = offset * i;
                 region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
                 region.imageSubresource.mipLevel = mipLevel;
                 region.imageSubresource.baseArrayLayer = i;
@@ -1927,12 +1870,12 @@ namespace Rbk {
 
         VkSamplerCreateInfo samplerInfo{};
         samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
-        samplerInfo.magFilter = VK_FILTER_LINEAR;
+        samplerInfo.magFilter = VK_FILTER_NEAREST;
         samplerInfo.minFilter = VK_FILTER_LINEAR;
         samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
         samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
         samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
-        samplerInfo.anisotropyEnable = VK_TRUE;
+        samplerInfo.anisotropyEnable = VK_FALSE;
         samplerInfo.maxAnisotropy = 1.0f;
         samplerInfo.compareEnable = VK_FALSE;
         samplerInfo.compareOp = VK_COMPARE_OP_NEVER;

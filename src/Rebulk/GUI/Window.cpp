@@ -5,10 +5,6 @@ namespace Rbk
 {
     bool Window::m_FramebufferResized = false;
 
-    Window::Window()
-    {        
-    }
-
     void Window::Init()
     {
         const uint32_t WIDTH = 2560;
