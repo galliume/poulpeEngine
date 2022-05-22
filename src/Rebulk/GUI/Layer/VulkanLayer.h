@@ -9,7 +9,6 @@ namespace Rbk
     class VulkanLayer : public ILayer
     {
     public:
-        VulkanLayer();
         virtual void Init() override;
         void Destroy();
         void DisplayFpsCounter(double timeStep);
