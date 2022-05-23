@@ -39,7 +39,6 @@ namespace Rbk
     void InputManager::Key(int key, int scancode, int action, int mods)
     {
         //Rbk::Log::GetLogger()->debug("Event action {} key {} scancode {} mods {}", action, key, scancode, mods);
-
         switch (action)
         {
             case GLFW_PRESS:

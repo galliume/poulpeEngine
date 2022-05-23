@@ -1157,7 +1157,7 @@ namespace Rbk {
         renderPassInfo.renderArea.extent = m_SwapChainExtent;
 
         std::array<VkClearValue, 2> clearValues{};
-        clearValues[0].color = { {0.2745f, 0.3725f, 0.4705f, 1.0f} };
+        clearValues[0].color = { {0.f, 0.f, 0.f, 1.0f} };
         clearValues[1].depthStencil = { 1.0f, 0 };
 
         renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
@@ -1301,6 +1301,7 @@ namespace Rbk {
 
         for (int i = 0; i < mesh->uniformBuffers.size(); i++) {
             if (drawIndexed) {
+                //@todo temp (for testing frog)
                 if (mesh->name != "crosshair") 
                 {
                     vkCmdPushConstants(commandBuffer, mesh->pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(glm::vec3), &mesh->cameraPos);
