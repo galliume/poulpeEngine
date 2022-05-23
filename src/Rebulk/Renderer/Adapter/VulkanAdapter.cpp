@@ -5,6 +5,13 @@
 
 namespace Rbk
 {
+    float VulkanAdapter::s_AmbiantLight = 1.0;
+
+    struct constants {
+        glm::vec3 cameraPos;
+        float ambiantLight;
+    };
+
     VulkanAdapter::VulkanAdapter(std::shared_ptr<Window> window) :
         m_Window(window),
         m_Renderer(std::make_shared<VulkanRenderer>(window))
@@ -174,11 +181,12 @@ namespace Rbk
             }
 
             std::vector<VkPushConstantRange> pushConstants = {};
-            VkPushConstantRange cameraPos;
-            cameraPos.offset = 0;
-            cameraPos.size = sizeof(glm::vec3);
-            cameraPos.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-            pushConstants.emplace_back(cameraPos);
+            VkPushConstantRange vkPushconstants;
+            vkPushconstants.offset = 0;
+            vkPushconstants.size = sizeof(constants);
+            vkPushconstants.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+
+            pushConstants.emplace_back(vkPushconstants);
 
             mesh.get()->pipelineLayout = m_Renderer->CreatePipelineLayout(mesh.get()->descriptorSets, { desriptorSetLayout }, pushConstants);
 
@@ -489,8 +497,8 @@ namespace Rbk
         std::vector<std::shared_ptr<Mesh>>* worldMeshes = m_MeshManager->GetWorldMeshes();
         for (std::shared_ptr<Mesh> mesh : *worldMeshes) {
             for (uint32_t i = 0; i < mesh.get()->ubos.size(); i++) {
-                mesh.get()->cameraPos = m_Camera->GetPos();
                 mesh.get()->ubos[i].view = m_Camera->LookAt();
+                mesh.get()->cameraPos = m_Camera->GetPos();
                 mesh.get()->ubos[i].proj = glm::perspective(glm::radians(60.0f), m_Renderer.get()->GetSwapChainExtent().width / (float)m_Renderer.get()->GetSwapChainExtent().height, 0.1f, 10.0f);
                 //mesh.get()->ubos[i].proj = m_Camera->FrustumProj(60, m_Renderer.get()->GetSwapChainExtent().width / (float)m_Renderer.get()->GetSwapChainExtent().height, 0.1f, 256.0f);
                 mesh.get()->ubos[i].proj[1][1] *= -1;
@@ -544,6 +552,14 @@ namespace Rbk
         //draw the world !
         for (std::shared_ptr<Mesh> mesh : *m_MeshManager->GetWorldMeshes()) {
             m_Renderer->BindPipeline(m_CommandBuffers[m_ImageIndex], mesh.get()->graphicsPipeline);
+            //@todo temp (for testing frog)
+
+            constants data;
+            data.cameraPos = mesh->cameraPos;
+            data.ambiantLight = Rbk::VulkanAdapter::s_AmbiantLight;
+
+            vkCmdPushConstants(m_CommandBuffers[m_ImageIndex], mesh->pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(constants), &data);
+
             m_Renderer->Draw(m_CommandBuffers[m_ImageIndex], mesh.get(), m_ImageIndex);
         }
 

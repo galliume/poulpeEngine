@@ -39,6 +39,13 @@ namespace Rbk
     void InputManager::Key(int key, int scancode, int action, int mods)
     {
         //Rbk::Log::GetLogger()->debug("Event action {} key {} scancode {} mods {}", action, key, scancode, mods);
+
+        //Rbk::Log::GetLogger()->debug("Camera pos x : {} y : {} z : {}",
+        //    m_Camera->GetPos().x,
+        //    m_Camera->GetPos().y,
+        //    m_Camera->GetPos().z
+        //);
+
         switch (action)
         {
             case GLFW_PRESS:

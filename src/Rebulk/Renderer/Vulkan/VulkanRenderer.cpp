@@ -1298,14 +1298,10 @@ namespace Rbk {
             0,
             nullptr
         );
+        uint32_t pushConstantIndex = 0;
 
         for (int i = 0; i < mesh->uniformBuffers.size(); i++) {
             if (drawIndexed) {
-                //@todo temp (for testing frog)
-                if (mesh->name != "crosshair") 
-                {
-                    vkCmdPushConstants(commandBuffer, mesh->pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(glm::vec3), &mesh->cameraPos);
-                }
                 vkCmdBindIndexBuffer(commandBuffer, mesh->indicesBuffer.first, 0, VK_INDEX_TYPE_UINT32);
                 vkCmdDrawIndexed(commandBuffer, mesh->indices.size(), mesh->ubos.size(), 0, 0, 0);
             } else {

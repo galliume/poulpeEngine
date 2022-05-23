@@ -13,13 +13,14 @@ namespace Rbk
     void VulkanLayer::Render(double timeStep, VkPhysicalDeviceProperties devicesProps)
     {
         ImGui::Begin("Performances stats");
-
         DisplayFpsCounter(timeStep);
         ImGui::Separator();
         DisplayAPI(devicesProps);
         ImGui::Separator();
-        DisplayOptions();
+        ImGui::End();
 
+        ImGui::Begin("Options");
+        DisplayOptions();
         ImGui::End();
     }
     void VulkanLayer::Destroy()
@@ -64,10 +65,8 @@ namespace Rbk
 
     void VulkanLayer::DisplayOptions()
     {        
-        ImGui::Checkbox("VSync", &m_VSync);
-        ImGui::Checkbox("Wireframe", &m_WireframeModeOn);
-        ImGui::Checkbox("Show ImGui demo", &m_ShowDemo);
-        ImGui::Checkbox("Make spin", &m_MakeSpin);
+        ImGui::SliderFloat("Ambiant light", &Rbk::VulkanAdapter::s_AmbiantLight, 0.0f, 1.0f, "%.3f");
+        ImGui::Checkbox("Show ImGui demo", &m_ShowDemo);        
         
         m_Adapter->SetWireFrameMode(m_WireframeModeOn);
         m_Adapter->MakeSpin(m_MakeSpin);

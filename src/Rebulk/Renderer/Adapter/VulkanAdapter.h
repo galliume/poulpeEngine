@@ -51,6 +51,9 @@ namespace Rbk
         VkRenderPass CreateImGuiRenderPass();
         VImGuiInfo GetVImGuiInfo();
 
+        //IMGUI config
+        static float s_AmbiantLight;
+
     private:
         void UpdateWorldPositions();
 
