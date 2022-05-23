@@ -22,11 +22,13 @@ layout(location = 1) out vec3 fragColor;
 layout(location = 2) out vec4 fragCameraPos;
 layout(location = 3) out vec4 fragModelPos;
 layout(location = 4) out float fragAmbiantLight;
+layout(location = 5) out float fragFogDensity;
 
 layout(push_constant) uniform constants
 {
     vec4 cameraPos;
     float ambiantLight;
+    float fogDensity;
 } PushConstants;
 
 void main() {
@@ -37,4 +39,5 @@ void main() {
     fragModelPos = gl_Position;
     fragCameraPos = PushConstants.cameraPos;
     fragAmbiantLight = PushConstants.ambiantLight;
+    fragFogDensity = PushConstants.fogDensity;
 }

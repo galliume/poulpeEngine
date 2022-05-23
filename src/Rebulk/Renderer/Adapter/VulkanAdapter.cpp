@@ -6,10 +6,12 @@
 namespace Rbk
 {
     float VulkanAdapter::s_AmbiantLight = 1.0;
+    float VulkanAdapter::s_FogDensity = 0.0;
 
     struct constants {
         glm::vec3 cameraPos;
         float ambiantLight;
+        float fogDensity;
     };
 
     VulkanAdapter::VulkanAdapter(std::shared_ptr<Window> window) :
@@ -557,6 +559,7 @@ namespace Rbk
             constants data;
             data.cameraPos = mesh->cameraPos;
             data.ambiantLight = Rbk::VulkanAdapter::s_AmbiantLight;
+            data.fogDensity = Rbk::VulkanAdapter::s_FogDensity;
 
             vkCmdPushConstants(m_CommandBuffers[m_ImageIndex], mesh->pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(constants), &data);
 

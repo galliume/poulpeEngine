@@ -64,8 +64,11 @@ namespace Rbk
     }
 
     void VulkanLayer::DisplayOptions()
-    {        
+    {
         ImGui::SliderFloat("Ambiant light", &Rbk::VulkanAdapter::s_AmbiantLight, 0.0f, 1.0f, "%.3f");
+        ImGui::Separator();
+        ImGui::SliderFloat("Fog density", &Rbk::VulkanAdapter::s_FogDensity, 0.0f, 1.0f, "%.3f");
+        ImGui::Separator();
         ImGui::Checkbox("Show ImGui demo", &m_ShowDemo);        
         
         m_Adapter->SetWireFrameMode(m_WireframeModeOn);

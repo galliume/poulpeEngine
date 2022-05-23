@@ -53,7 +53,7 @@ namespace Rbk
 
         //IMGUI config
         static float s_AmbiantLight;
-
+        static float s_FogDensity;
     private:
         void UpdateWorldPositions();
 
