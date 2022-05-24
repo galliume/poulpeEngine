@@ -5,6 +5,15 @@
 
 namespace Rbk
 {
+    float VulkanAdapter::s_AmbiantLight = 1.0;
+    float VulkanAdapter::s_FogDensity = 0.0;
+
+    struct constants {
+        glm::vec3 cameraPos;
+        float ambiantLight;
+        float fogDensity;
+    };
+
     VulkanAdapter::VulkanAdapter(std::shared_ptr<Window> window) :
         m_Window(window),
         m_Renderer(std::make_shared<VulkanRenderer>(window))
@@ -144,6 +153,7 @@ namespace Rbk
         );
 
         for (std::shared_ptr<Mesh> mesh : *worldMeshes) {
+            mesh.get()->cameraPos = m_Camera->GetPos();
             uint32_t totalInstances = worldMeshesLoaded[mesh.get()->name][0];
 
             maxUniformBufferRange = m_Renderer->GetDeviceProperties().limits.maxUniformBufferRange;
@@ -172,7 +182,15 @@ namespace Rbk
                 mesh.get()->descriptorSets.emplace_back(descriptorSet);
             }
 
-            mesh.get()->pipelineLayout = m_Renderer->CreatePipelineLayout(mesh.get()->descriptorSets, { desriptorSetLayout });
+            std::vector<VkPushConstantRange> pushConstants = {};
+            VkPushConstantRange vkPushconstants;
+            vkPushconstants.offset = 0;
+            vkPushconstants.size = sizeof(constants);
+            vkPushconstants.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+
+            pushConstants.emplace_back(vkPushconstants);
+
+            mesh.get()->pipelineLayout = m_Renderer->CreatePipelineLayout(mesh.get()->descriptorSets, { desriptorSetLayout }, pushConstants);
 
             std::string shaderName = "main";
 
@@ -370,6 +388,7 @@ namespace Rbk
 
         m_Crosshair = std::make_shared<Mesh2D>();
         m_Crosshair->texture = "crosshair";
+        m_Crosshair->name = "crosshair";
         m_Crosshair->indices = indices;
         m_Crosshair.get()->vertexBuffer = m_Renderer->CreateVertex2DBuffer(m_CommandPool, vertices);
         m_Crosshair.get()->indicesBuffer = m_Renderer->CreateIndexBuffer(m_CommandPool, indices);
@@ -481,6 +500,10 @@ namespace Rbk
         for (std::shared_ptr<Mesh> mesh : *worldMeshes) {
             for (uint32_t i = 0; i < mesh.get()->ubos.size(); i++) {
                 mesh.get()->ubos[i].view = m_Camera->LookAt();
+                mesh.get()->cameraPos = m_Camera->GetPos();
+                mesh.get()->ubos[i].proj = glm::perspective(glm::radians(60.0f), m_Renderer.get()->GetSwapChainExtent().width / (float)m_Renderer.get()->GetSwapChainExtent().height, 0.1f, 10.0f);
+                //mesh.get()->ubos[i].proj = m_Camera->FrustumProj(60, m_Renderer.get()->GetSwapChainExtent().width / (float)m_Renderer.get()->GetSwapChainExtent().height, 0.1f, 256.0f);
+                mesh.get()->ubos[i].proj[1][1] *= -1;
             }
             for (uint32_t i = 0; i < mesh.get()->uniformBuffers.size(); i++) {
                 m_Renderer->UpdateUniformBuffer(
@@ -531,12 +554,21 @@ namespace Rbk
         //draw the world !
         for (std::shared_ptr<Mesh> mesh : *m_MeshManager->GetWorldMeshes()) {
             m_Renderer->BindPipeline(m_CommandBuffers[m_ImageIndex], mesh.get()->graphicsPipeline);
+            //@todo temp (for testing frog)
+
+            constants data;
+            data.cameraPos = mesh->cameraPos;
+            data.ambiantLight = Rbk::VulkanAdapter::s_AmbiantLight;
+            data.fogDensity = Rbk::VulkanAdapter::s_FogDensity;
+
+            vkCmdPushConstants(m_CommandBuffers[m_ImageIndex], mesh->pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(constants), &data);
+
             m_Renderer->Draw(m_CommandBuffers[m_ImageIndex], mesh.get(), m_ImageIndex);
         }
 
          //draw the skybox !
-        m_Renderer->BindPipeline(m_CommandBuffers[m_ImageIndex], m_MeshManager.get()->GetSkyboxMesh()->graphicsPipeline);
-        m_Renderer->Draw(m_CommandBuffers[m_ImageIndex], m_MeshManager.get()->GetSkyboxMesh().get(), m_ImageIndex, false);
+        //m_Renderer->BindPipeline(m_CommandBuffers[m_ImageIndex], m_MeshManager.get()->GetSkyboxMesh()->graphicsPipeline);
+        //m_Renderer->Draw(m_CommandBuffers[m_ImageIndex], m_MeshManager.get()->GetSkyboxMesh().get(), m_ImageIndex, false);
 
         //draw the crosshair
         m_Renderer->BindPipeline(m_CommandBuffers[m_ImageIndex], m_Crosshair.get()->graphicsPipeline);

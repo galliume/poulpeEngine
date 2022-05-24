@@ -5,7 +5,7 @@ namespace Rbk
 {
     void Camera::Init()
     {
-        m_Pos = glm::vec3(0.0f, 0.0f, 3.0f);
+        m_Pos = glm::vec3(0.0f, 2.0f, 3.0f);
         m_Target = glm::vec3(0.0f, 0.0f, 0.0f);
         m_Direction = glm::normalize(m_Pos - m_Target);
         m_Up = glm::vec3(0.0f, 10.0f, 0.0f);
@@ -27,7 +27,7 @@ namespace Rbk
         n : near distance
         f : far distance
     **/
-    glm::mat4 Camera::FrustumProj(float fovy, float s, float n)
+    glm::mat4 Camera::FrustumProj(float fovy, float s, float n, float f)
     {
         //infine reverse frustum projection
         /*float g = 1.0f / tan(fovy * 0.5f);
@@ -53,39 +53,37 @@ namespace Rbk
         //);
 
         //frustum projection
-        //float g = 1.0f / std::tan(fovy * 0.5f);
-        //float k = f / (f - n);
+        float g = 1.0f / std::tan(fovy * 0.5f);
+        float k = f / (f - n);
 
-        //frustumProj = glm::mat4(
-        //	g / s, 0.0f, 0.0f, 0.0f,
-        //	0.0f, g, 0.0f, 0.0f,
-        //	0.0f, 0.0f, k, -n * k,
-        //	0.0f, 0.0f, 1.0f, 0.0f
-        //);
-        //float z = (2 * n * f) / (f + n);
-        //m_Pos.z = z;
-        
+        glm::mat4 frustumProj = glm::mat4(
+          g / s, 0.0f, 0.0f, 0.0f,
+          0.0f, g, 0.0f, 0.0f,
+          0.0f, 0.0f, k, -n * k,
+          0.0f, 0.0f, 1.0f, 0.0f
+        );
+
         //reverse frustum projection
         //float g = 1.0f / std::tan(fovy * 0.5f);
         //float k = n / (n - f);
 
-        //frustumProj = glm::mat4(
-        //	g / s, 0.0f, 0.0f, 0.0f,
-        //	0.0f, g, 0.0f, 0.0f,
-        //	0.0f, 0.0f, k, -f * k,
-        //	0.0f, 0.0f, 1.0f, 0.0f
+        //glm::mat4 frustumProj = glm::mat4(
+        //  g / s, 0.0f, 0.0f, 0.0f,
+        //  0.0f, g, 0.0f, 0.0f,
+        //  0.0f, 0.0f, k, -f * k,
+        //  0.0f, 0.0f, 1.0f, 0.0f
         //);
         //float k = f / (f - n);
 
-        float g = 1.0f / tan(fovy * 0.5f);
-        float e = 1.0f - 0.0f;
+        //float g = 1.0f / tan(fovy * 0.5f);
+        //float e = 1.0f - 0.0f;
 
-        glm::mat4 frustumProj = glm::mat4(0.0f);
-        frustumProj[0][0] = g / s;
-        frustumProj[1][1] = g;
-        frustumProj[2][2] = e;
-        frustumProj[2][3] = -n * e;
-        frustumProj[3][3] = 1.0f;
+        //glm::mat4 frustumProj = glm::mat4(0.0f);
+        //frustumProj[0][0] = g / s;
+        //frustumProj[1][1] = g;
+        //frustumProj[2][2] = e;
+        //frustumProj[2][3] = -n * e;
+        //frustumProj[3][3] = 1.0f;
 
         return frustumProj;
     }

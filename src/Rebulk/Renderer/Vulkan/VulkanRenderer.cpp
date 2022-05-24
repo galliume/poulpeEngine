@@ -1157,7 +1157,7 @@ namespace Rbk {
         renderPassInfo.renderArea.extent = m_SwapChainExtent;
 
         std::array<VkClearValue, 2> clearValues{};
-        clearValues[0].color = { {0.2745f, 0.3725f, 0.4705f, 1.0f} };
+        clearValues[0].color = { {0.f, 0.f, 0.f, 1.0f} };
         clearValues[1].depthStencil = { 1.0f, 0 };
 
         renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
@@ -1298,8 +1298,8 @@ namespace Rbk {
             0,
             nullptr
         );
+        uint32_t pushConstantIndex = 0;
 
-        //vkCmdPushConstants(commandBuffer, pipeline.pipelineLayout, VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(int), &j);
         for (int i = 0; i < mesh->uniformBuffers.size(); i++) {
             if (drawIndexed) {
                 vkCmdBindIndexBuffer(commandBuffer, mesh->indicesBuffer.first, 0, VK_INDEX_TYPE_UINT32);
