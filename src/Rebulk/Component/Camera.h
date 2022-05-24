@@ -23,7 +23,8 @@ namespace Rbk
         void UpdateSpeed(float timeStep);
         void UpdateYP(float xoffset, float yoffset);
         void Recenter();
-        static glm::mat4 FrustumProj(float fovy, float s, float n);
+        glm::mat4 FrustumProj(float fovy, float s, float n, float f);
+        glm::vec4 GetPos() { return glm::vec4(m_Pos, 1.0f); };
 
     private:
         glm::vec3 m_Pos;
