@@ -152,6 +152,14 @@ namespace Rbk
             bindings, VK_DESCRIPTOR_SET_LAYOUT_CREATE_UPDATE_AFTER_BIND_POOL_BIT
         );
 
+        std::vector<VkPushConstantRange> pushConstants = {};
+        VkPushConstantRange vkPushconstants;
+        vkPushconstants.offset = 0;
+        vkPushconstants.size = sizeof(constants);
+        vkPushconstants.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+
+        pushConstants.emplace_back(vkPushconstants);
+
         for (std::shared_ptr<Mesh> mesh : *worldMeshes) {
             mesh.get()->cameraPos = m_Camera->GetPos();
             uint32_t totalInstances = worldMeshesLoaded[mesh.get()->name][0];
@@ -182,13 +190,6 @@ namespace Rbk
                 mesh.get()->descriptorSets.emplace_back(descriptorSet);
             }
 
-            std::vector<VkPushConstantRange> pushConstants = {};
-            VkPushConstantRange vkPushconstants;
-            vkPushconstants.offset = 0;
-            vkPushconstants.size = sizeof(constants);
-            vkPushconstants.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-
-            pushConstants.emplace_back(vkPushconstants);
 
             mesh.get()->pipelineLayout = m_Renderer->CreatePipelineLayout(mesh.get()->descriptorSets, { desriptorSetLayout }, pushConstants);
 
@@ -337,7 +338,7 @@ namespace Rbk
             skyboxMesh.get()->descriptorSets.emplace_back(skyDescriptorSet);
         }
 
-        skyboxMesh.get()->pipelineLayout = m_Renderer->CreatePipelineLayout(skyboxMesh.get()->descriptorSets, { skyDesriptorSetLayout });
+        skyboxMesh.get()->pipelineLayout = m_Renderer->CreatePipelineLayout(skyboxMesh.get()->descriptorSets, { skyDesriptorSetLayout }, pushConstants);
 
         const char* shaderName = "skybox";
 
@@ -501,7 +502,7 @@ namespace Rbk
             for (uint32_t i = 0; i < mesh.get()->ubos.size(); i++) {
                 mesh.get()->ubos[i].view = m_Camera->LookAt();
                 mesh.get()->cameraPos = m_Camera->GetPos();
-                mesh.get()->ubos[i].proj = glm::perspective(glm::radians(60.0f), m_Renderer.get()->GetSwapChainExtent().width / (float)m_Renderer.get()->GetSwapChainExtent().height, 0.1f, 10.0f);
+                mesh.get()->ubos[i].proj = glm::perspective(glm::radians(60.0f), m_Renderer.get()->GetSwapChainExtent().width / (float)m_Renderer.get()->GetSwapChainExtent().height, 0.1f, 3.5f);
                 //mesh.get()->ubos[i].proj = m_Camera->FrustumProj(60, m_Renderer.get()->GetSwapChainExtent().width / (float)m_Renderer.get()->GetSwapChainExtent().height, 0.1f, 256.0f);
                 mesh.get()->ubos[i].proj[1][1] *= -1;
             }
@@ -567,8 +568,8 @@ namespace Rbk
         }
 
          //draw the skybox !
-        //m_Renderer->BindPipeline(m_CommandBuffers[m_ImageIndex], m_MeshManager.get()->GetSkyboxMesh()->graphicsPipeline);
-        //m_Renderer->Draw(m_CommandBuffers[m_ImageIndex], m_MeshManager.get()->GetSkyboxMesh().get(), m_ImageIndex, false);
+        m_Renderer->BindPipeline(m_CommandBuffers[m_ImageIndex], m_MeshManager.get()->GetSkyboxMesh()->graphicsPipeline);
+        m_Renderer->Draw(m_CommandBuffers[m_ImageIndex], m_MeshManager.get()->GetSkyboxMesh().get(), m_ImageIndex, false);
 
         //draw the crosshair
         m_Renderer->BindPipeline(m_CommandBuffers[m_ImageIndex], m_Crosshair.get()->graphicsPipeline);
