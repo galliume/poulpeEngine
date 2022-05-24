@@ -37,7 +37,7 @@ void main() {
     fragTexCoord = texCoord;
     fragColor = color;
     fragModelPos = gl_Position;
-    fragCameraPos = PushConstants.cameraPos;
+    fragCameraPos = ubos[gl_InstanceIndex].proj * ubos[gl_InstanceIndex].view * ubos[gl_InstanceIndex].model * PushConstants.cameraPos;
     fragAmbiantLight = PushConstants.ambiantLight;
     fragFogDensity = PushConstants.fogDensity;
 }

@@ -11,6 +11,17 @@ layout(set = 0, binding = 0) uniform UniformBufferObject {
 layout(location = 0) in vec3 pos;
 
 layout(location = 0) out vec3 fragTexCoord;
+layout(location = 1) out vec4 fragCameraPos;
+layout(location = 2) out vec4 fragModelPos;
+layout(location = 3) out float fragAmbiantLight;
+layout(location = 4) out float fragFogDensity;
+
+layout(push_constant) uniform constants
+{
+    vec4 cameraPos;
+    float ambiantLight;
+    float fogDensity;
+} PushConstants;
 
 void main() 
 {
@@ -18,4 +29,8 @@ void main()
     //gl_Position = vec4(pos.xyz, 1.0);
     vec4 p = ubo.proj * ubo.view * vec4(pos, 1.0);
     gl_Position = p.xyww;
+    fragAmbiantLight = PushConstants.ambiantLight;
+    fragFogDensity = PushConstants.fogDensity;
+    fragModelPos = gl_Position;
+    fragCameraPos = ubo.proj * ubo.view * ubo.model * PushConstants.cameraPos;
 }
