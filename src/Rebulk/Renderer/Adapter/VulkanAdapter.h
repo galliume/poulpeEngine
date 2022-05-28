@@ -54,6 +54,8 @@ namespace Rbk
         //IMGUI config
         static float s_AmbiantLight;
         static float s_FogDensity;
+        static float s_FogColor[3];
+
     private:
         void UpdateWorldPositions();
 
@@ -84,5 +86,7 @@ namespace Rbk
         std::shared_ptr<ShaderManager> m_ShaderManager = nullptr;
         //@todo move to meshManager
         std::shared_ptr<Mesh> m_Crosshair = nullptr;
+        std::vector<VkImageView>m_DepthImageViews = {};
+        std::vector<VkImageView>m_ColorImageViews = {};
     };
 }

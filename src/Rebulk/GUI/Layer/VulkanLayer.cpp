@@ -12,6 +12,9 @@ namespace Rbk
 
     void VulkanLayer::Render(double timeStep, VkPhysicalDeviceProperties devicesProps)
     {
+        ImGuiID dockspace_id = ImGui::GetID("Dockspace");
+        ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f));
+
         ImGui::Begin("Performances stats");
         DisplayFpsCounter(timeStep);
         ImGui::Separator();
@@ -69,7 +72,9 @@ namespace Rbk
         ImGui::Separator();
         ImGui::SliderFloat("Fog density", &Rbk::VulkanAdapter::s_FogDensity, 0.0f, 1.0f, "%.3f");
         ImGui::Separator();
-        ImGui::Checkbox("Show ImGui demo", &m_ShowDemo);        
+        ImGui::ColorEdit3("Fog color", Rbk::VulkanAdapter::s_FogColor);
+
+        ImGui::Checkbox("Show ImGui demo", &m_ShowDemo);
         
         m_Adapter->SetWireFrameMode(m_WireframeModeOn);
         m_Adapter->MakeSpin(m_MakeSpin);
