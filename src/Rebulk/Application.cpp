@@ -232,14 +232,16 @@ namespace Rbk
 
             renderManager->PrepareDraw();
             renderManager->Draw();
-
+            
 #ifdef RBK_DEBUG
             //@todo move to LayerManager
             Rbk::Im::NewFrame();
+
             vulkanLayer->AddRenderAdapter(rendererAdapter.get());
             vulkanLayer->Render(timeStep, rendererAdapter->Rdr()->GetDeviceProperties());
-            Rbk::Im::Render();
 
+            Rbk::Im::Render();
+            
             rendererAdapter->Rdr()->BeginCommandBuffer(imguiInfo.cmdBuffer);
             ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), imguiInfo.cmdBuffer);
             rendererAdapter->Rdr()->EndCommandBuffer(imguiInfo.cmdBuffer);

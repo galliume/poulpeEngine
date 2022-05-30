@@ -8,12 +8,12 @@ layout(location = 1) in vec4 cameraPos;
 layout(location = 2) in vec4 fragModelPos;
 layout(location = 3) in float fragAmbiantLight; 
 layout(location = 4) in float fragFogDensity; 
+layout(location = 5) in vec3 fragFogColor; 
 
 layout(binding = 1) uniform samplerCube texSampler;
 
 //todo move to push constants
 vec3 lightColor = vec3(1.0f);
-vec4 fogColor = vec4(25/255.0f, 25/255.0f, 25/255.0f, 1.0f);
 const float fogDistanceMax = 1.0;
 const float fogDistanceMin = 0.5;
 
@@ -40,7 +40,7 @@ void main()
         float d = distance(cameraPos, fragModelPos);
         float alpha = getFogFactor(d);
 
-        outputColor = mix(outputColor, fogColor, alpha * fragFogDensity);
+        outputColor = mix(outputColor, vec4(fragFogColor, 1.0), alpha * fragFogDensity);
     }
 
     //outputColor = vec4(fragTexCoord, 1.0);

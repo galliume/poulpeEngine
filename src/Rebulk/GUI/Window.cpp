@@ -46,4 +46,9 @@ namespace Rbk
     {
         glfwWaitEvents();
     }
+
+    void Window::Quit()
+    {
+        glfwSetWindowShouldClose(m_Window, true);
+    }
 }
