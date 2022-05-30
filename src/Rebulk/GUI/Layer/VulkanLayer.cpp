@@ -6,12 +6,35 @@ namespace Rbk
 {
     void VulkanLayer::Init()
     {
-        //DisplayFpsCounter(timeStep);
-        //DisplayAPI(renderer->GetDeviceProperties());
+
     }
 
     void VulkanLayer::Render(double timeStep, VkPhysicalDeviceProperties devicesProps)
     {
+        ImGuiWindowFlags flags = 0;
+        flags |= ImGuiWindowFlags_MenuBar;
+
+        bool open = true;
+
+        ImGui::Begin("Rebulkan Engine", &open, flags);
+
+        ImGuiID dockspace_id = ImGui::GetID("Dockspace");
+        ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f));
+
+        if (ImGui::BeginMenuBar())
+        {
+            if (ImGui::BeginMenu("Rebulk"))
+            {
+                if (ImGui::MenuItem("Quit", "Alt+F4")) 
+                {
+                    m_Window->Quit();
+                }
+                ImGui::Separator();
+                ImGui::EndMenu();
+            }
+        }
+        ImGui::EndMenuBar();
+
         ImGui::Begin("Performances stats");
         DisplayFpsCounter(timeStep);
         ImGui::Separator();
@@ -22,6 +45,12 @@ namespace Rbk
         ImGui::Begin("Options");
         DisplayOptions();
         ImGui::End();
+
+        ImGui::End();
+
+        if (!open) {
+            m_Window->Quit();
+        }
     }
     void VulkanLayer::Destroy()
     {
@@ -69,7 +98,9 @@ namespace Rbk
         ImGui::Separator();
         ImGui::SliderFloat("Fog density", &Rbk::VulkanAdapter::s_FogDensity, 0.0f, 1.0f, "%.3f");
         ImGui::Separator();
-        ImGui::Checkbox("Show ImGui demo", &m_ShowDemo);        
+        ImGui::ColorEdit3("Fog color", Rbk::VulkanAdapter::s_FogColor);
+
+        ImGui::Checkbox("Show ImGui demo", &m_ShowDemo);
         
         m_Adapter->SetWireFrameMode(m_WireframeModeOn);
         m_Adapter->MakeSpin(m_MakeSpin);

@@ -23,12 +23,14 @@ layout(location = 2) out vec4 fragCameraPos;
 layout(location = 3) out vec4 fragModelPos;
 layout(location = 4) out float fragAmbiantLight;
 layout(location = 5) out float fragFogDensity;
+layout(location = 6) out vec3 fragFogColor;
 
 layout(push_constant) uniform constants
 {
     vec4 cameraPos;
     float ambiantLight;
     float fogDensity;
+    vec3 fogColor;
 } PushConstants;
 
 void main() {
@@ -40,4 +42,5 @@ void main() {
     fragCameraPos = ubos[gl_InstanceIndex].proj * ubos[gl_InstanceIndex].view * ubos[gl_InstanceIndex].model * PushConstants.cameraPos;
     fragAmbiantLight = PushConstants.ambiantLight;
     fragFogDensity = PushConstants.fogDensity;
+    fragFogColor = PushConstants.fogColor;
 }
