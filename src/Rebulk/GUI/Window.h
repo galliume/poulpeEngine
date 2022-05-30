@@ -12,6 +12,7 @@ namespace Rbk
         static bool m_FramebufferResized;
         bool IsMinimized();
         void Wait();
+        void Quit();
 
     private:
         GLFWwindow* m_Window;

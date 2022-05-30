@@ -7,11 +7,13 @@ namespace Rbk
 {
     float VulkanAdapter::s_AmbiantLight = 1.0;
     float VulkanAdapter::s_FogDensity = 0.0;
+    float VulkanAdapter::s_FogColor[3] = { 25 / 255.0f, 25 / 255.0f, 25 / 255.0f };
 
     struct constants {
         glm::vec3 cameraPos;
         float ambiantLight;
         float fogDensity;
+        glm::vec3 fogColor;
     };
 
     VulkanAdapter::VulkanAdapter(std::shared_ptr<Window> window) :
@@ -107,12 +109,12 @@ namespace Rbk
             m_SwapChainImageViews[i] = m_Renderer->CreateImageView(m_SwapChainImages[i], m_Renderer->GetSwapChainImageFormat(), VK_IMAGE_ASPECT_COLOR_BIT);
         }
 
-        std::vector<VkImageView> depthImageViews;
-        std::vector<VkImageView> colorImageViews;
+        /*std::vector<VkImageView> depthImageViews;
+        std::vector<VkImageView> colorImageViews;*/
 
         for (auto&& [textName, tex] : m_TextureManager->GetTextures()) {
-            depthImageViews.emplace_back(tex.depthImageView);
-            colorImageViews.emplace_back(tex.colorImageView);
+            m_DepthImageViews.emplace_back(tex.depthImageView);
+            m_ColorImageViews.emplace_back(tex.colorImageView);
         }
 
         m_Semaphores = m_Renderer->CreateSyncObjects(m_SwapChainImages);
@@ -295,8 +297,8 @@ namespace Rbk
 
         Texture tex = m_TextureManager->GetSkyboxTexture();
         //Texture tex = m_TextureManager->GetTextures()["skybox_tex"];
-        depthImageViews.emplace_back(tex.depthImageView);
-        colorImageViews.emplace_back(tex.colorImageView);
+        m_DepthImageViews.emplace_back(tex.depthImageView);
+        m_ColorImageViews.emplace_back(tex.colorImageView);
 
         std::array<VkDescriptorPoolSize, 2> skyPoolSizes{};
         skyPoolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
@@ -479,7 +481,7 @@ namespace Rbk
         );
 
         //command buffer
-        m_SwapChainFramebuffers = m_Renderer->CreateFramebuffers(m_RenderPass, m_SwapChainImageViews, depthImageViews, colorImageViews);
+        m_SwapChainFramebuffers = m_Renderer->CreateFramebuffers(m_RenderPass, m_SwapChainImageViews, m_DepthImageViews, m_ColorImageViews);
         m_CommandBuffers = m_Renderer->AllocateCommandBuffers(m_CommandPool, (uint32_t)m_SwapChainFramebuffers.size());
     }
 
@@ -502,7 +504,7 @@ namespace Rbk
             for (uint32_t i = 0; i < mesh.get()->ubos.size(); i++) {
                 mesh.get()->ubos[i].view = m_Camera->LookAt();
                 mesh.get()->cameraPos = m_Camera->GetPos();
-                mesh.get()->ubos[i].proj = glm::perspective(glm::radians(60.0f), m_Renderer.get()->GetSwapChainExtent().width / (float)m_Renderer.get()->GetSwapChainExtent().height, 0.1f, 3.5f);
+                mesh.get()->ubos[i].proj = glm::perspective(glm::radians(60.0f), m_Renderer.get()->GetSwapChainExtent().width / (float)m_Renderer.get()->GetSwapChainExtent().height, 0.1f, 100.f);
                 //mesh.get()->ubos[i].proj = m_Camera->FrustumProj(60, m_Renderer.get()->GetSwapChainExtent().width / (float)m_Renderer.get()->GetSwapChainExtent().height, 0.1f, 256.0f);
                 mesh.get()->ubos[i].proj[1][1] *= -1;
             }
@@ -561,7 +563,9 @@ namespace Rbk
             data.cameraPos = mesh->cameraPos;
             data.ambiantLight = Rbk::VulkanAdapter::s_AmbiantLight;
             data.fogDensity = Rbk::VulkanAdapter::s_FogDensity;
+            data.fogColor = glm::vec3({ Rbk::VulkanAdapter::s_FogColor[0], Rbk::VulkanAdapter::s_FogColor[1], Rbk::VulkanAdapter::s_FogColor[2] });
 
+            //Rbk::Log::GetLogger()->debug("color {} {} {}", s_FogColor[0], s_FogColor[1], s_FogColor[2]);
             vkCmdPushConstants(m_CommandBuffers[m_ImageIndex], mesh->pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(constants), &data);
 
             m_Renderer->Draw(m_CommandBuffers[m_ImageIndex], mesh.get(), m_ImageIndex);
@@ -577,6 +581,7 @@ namespace Rbk
 
         m_Renderer->EndRenderPass(m_CommandBuffers[m_ImageIndex]);
         m_Renderer->EndCommandBuffer(m_CommandBuffers[m_ImageIndex]);
+
 
         m_Renderer->QueueSubmit(m_ImageIndex, m_CommandBuffers[m_ImageIndex], m_Semaphores);
         uint32_t currentFrame = m_Renderer->QueuePresent(m_ImageIndex, m_SwapChain, m_Semaphores);
