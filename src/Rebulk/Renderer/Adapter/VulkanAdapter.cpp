@@ -120,7 +120,7 @@ namespace Rbk
         m_Semaphores = m_Renderer->CreateSyncObjects(m_SwapChainImages);
 
         std::vector<std::shared_ptr<Mesh>>* worldMeshes = m_MeshManager->GetWorldMeshes();
-        std::map<const char*, std::array<uint32_t, 2>> worldMeshesLoaded = m_MeshManager->GetWoldMeshesLoaded();
+        std::map<std::string, std::array<uint32_t, 2>> worldMeshesLoaded = m_MeshManager->GetWoldMeshesLoaded();
 
         uint32_t maxUniformBufferRange = 0;
         uint32_t uniformBufferChunkSize = 0;
@@ -133,6 +133,12 @@ namespace Rbk
         poolSizes[1].descriptorCount = 1000;
 
         VkDescriptorPool descriptorPool = m_Renderer->CreateDescriptorPool(poolSizes, 1000);
+
+        std::vector<VkPushConstantRange> pushConstants = {};
+        VkPushConstantRange vkPushconstants;
+        vkPushconstants.offset = 0;
+        vkPushconstants.size = sizeof(constants);
+        vkPushconstants.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
 
         VkDescriptorSetLayoutBinding uboLayoutBinding{};
         uboLayoutBinding.binding = 0;
@@ -154,15 +160,11 @@ namespace Rbk
             bindings, VK_DESCRIPTOR_SET_LAYOUT_CREATE_UPDATE_AFTER_BIND_POOL_BIT
         );
 
-        std::vector<VkPushConstantRange> pushConstants = {};
-        VkPushConstantRange vkPushconstants;
-        vkPushconstants.offset = 0;
-        vkPushconstants.size = sizeof(constants);
-        vkPushconstants.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-
         pushConstants.emplace_back(vkPushconstants);
 
         for (std::shared_ptr<Mesh> mesh : *worldMeshes) {
+
+
             mesh.get()->cameraPos = m_Camera->GetPos();
             uint32_t totalInstances = worldMeshesLoaded[mesh.get()->name][0];
 
@@ -181,14 +183,15 @@ namespace Rbk
             for (uint32_t i = 0; i < m_SwapChainImages.size(); i++) {
 
                 VkDescriptorSet descriptorSet = m_Renderer->CreateDescriptorSets(descriptorPool, { desriptorSetLayout }, 1);
+
                 Texture tex = m_TextureManager->GetTextures()[mesh.get()->texture];
 
                 VkDescriptorImageInfo imageInfo{};
                 imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
                 imageInfo.imageView = tex.imageView;
                 imageInfo.sampler = tex.sampler;
-
-                m_Renderer->UpdateDescriptorSets(mesh.get()->uniformBuffers, tex, descriptorSet, imageInfo);
+             
+                m_Renderer->UpdateDescriptorSets(mesh.get()->uniformBuffers, descriptorSet, imageInfo);
                 mesh.get()->descriptorSets.emplace_back(descriptorSet);
             }
 
@@ -336,7 +339,7 @@ namespace Rbk
         VkDescriptorSet skyDescriptorSet = m_Renderer->CreateDescriptorSets(skyDescriptorPool, { skyDesriptorSetLayout }, 1);
 
         for (uint32_t i = 0; i < m_SwapChainImages.size(); i++) {
-            m_Renderer->UpdateDescriptorSets(skyboxMesh.get()->uniformBuffers, tex, skyDescriptorSet, skyDescriptorImageInfo);
+            m_Renderer->UpdateDescriptorSets(skyboxMesh.get()->uniformBuffers, skyDescriptorSet, skyDescriptorImageInfo);
             skyboxMesh.get()->descriptorSets.emplace_back(skyDescriptorSet);
         }
 
@@ -441,7 +444,7 @@ namespace Rbk
             cimageInfo.imageView = ctex.imageView;
             cimageInfo.sampler = ctex.sampler;
 
-            m_Renderer->UpdateDescriptorSets(m_Crosshair.get()->uniformBuffers, ctex, cdescriptorSet, cimageInfo);
+            m_Renderer->UpdateDescriptorSets(m_Crosshair.get()->uniformBuffers, cdescriptorSet, cimageInfo);
             m_Crosshair.get()->descriptorSets.emplace_back(cdescriptorSet);
         }
 

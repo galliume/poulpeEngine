@@ -1110,21 +1110,21 @@ namespace Rbk {
         return descriptorSet;
     }
 
-    void VulkanRenderer::UpdateDescriptorSets(std::vector<std::pair<VkBuffer, VkDeviceMemory>>uniformBuffers, Texture texture, VkDescriptorSet descriptorSet, VkDescriptorImageInfo imageInfo)
+    void VulkanRenderer::UpdateDescriptorSets(std::vector<std::pair<VkBuffer, VkDeviceMemory>>uniformBuffers, VkDescriptorSet descriptorSet, VkDescriptorImageInfo imageInfo)
     {
         std::array<VkWriteDescriptorSet, 2> descriptorWrites{};
         std::vector<VkDescriptorImageInfo> imageInfos;
         std::vector<VkDescriptorBufferInfo> bufferInfos;
 
-        std::for_each(std::begin(uniformBuffers), std::end(uniformBuffers), 
+        std::for_each(std::begin(uniformBuffers), std::end(uniformBuffers),
             [&bufferInfos](const std::pair<VkBuffer, VkDeviceMemory>& uniformBuffer)
-        {
-            VkDescriptorBufferInfo bufferInfo{};
-            bufferInfo.buffer = uniformBuffer.first;
-            bufferInfo.offset = 0;
-            bufferInfo.range = VK_WHOLE_SIZE;
-            bufferInfos.emplace_back(bufferInfo);
-        });
+            {
+                VkDescriptorBufferInfo bufferInfo{};
+                bufferInfo.buffer = uniformBuffer.first;
+                bufferInfo.offset = 0;
+                bufferInfo.range = VK_WHOLE_SIZE;
+                bufferInfos.emplace_back(bufferInfo);
+            });
 
         imageInfos.emplace_back(imageInfo);
 
