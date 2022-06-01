@@ -8,7 +8,7 @@ namespace Rbk
 
     }
 
-    std::shared_ptr<Mesh> MeshManager::Load(const char* path, bool shouldInverseTextureY)
+    std::vector<std::shared_ptr<Mesh>> MeshManager::Load(std::string path, bool shouldInverseTextureY)
     {
         if (!std::filesystem::exists(path)) {
             Rbk::Log::GetLogger()->critical("mesh file {} does not exits.", path);
@@ -18,39 +18,46 @@ namespace Rbk
         return Rbk::TinyObjLoader::LoadMesh(path, shouldInverseTextureY);
     }
 
-    void MeshManager::AddWorldMesh(const char* name, const char* path, const char* textureName, glm::vec3 pos, glm::vec3 scale, bool shouldInverseTextureY)
+    void MeshManager::AddWorldMesh(std::string name, std::string path, std::vector<std::string> textureNames, glm::vec3 pos, glm::vec3 scale, bool shouldInverseTextureY)
     {
-        std::shared_ptr<Mesh> mesh = nullptr;
+        std::vector<std::shared_ptr<Mesh>> meshes = Load(path, shouldInverseTextureY);
 
-        if (0 == m_WorldMeshesLoaded.count(name)) {
-            mesh = Load(path, shouldInverseTextureY);
-            mesh.get()->name = name;
-            mesh.get()->texture = textureName;
-        } else {
-            mesh = m_WorldMeshes[m_WorldMeshesLoaded[name][1]];
+        for (uint32_t i = 0; i < meshes.size(); i++) {
+
+            std::shared_ptr<Mesh> mesh = meshes[i];
+            uint32_t textureIndex = (i >= textureNames.size()) ? textureNames.size() - 1 : i;
+            std::string id = name + '_' + textureNames[textureIndex] + '_' + std::to_string(i);
+
+            if (0 == m_WorldMeshesLoaded.count(id.c_str())) {
+                mesh.get()->name = id;
+                mesh.get()->texture = textureNames[textureIndex];
+            } else {
+                Rbk::Log::GetLogger()->trace("add one more to the world of {} from {}", id, path);
+                mesh = m_WorldMeshes[m_WorldMeshesLoaded[id][1]];
+            }
+
+            glm::mat4 view = glm::mat4(1.0f);
+
+            UniformBufferObject ubo;
+            ubo.model = glm::mat4(1.0f);
+            ubo.model = glm::translate(ubo.model, pos);
+            ubo.model = glm::scale(ubo.model, scale);
+            ubo.view = glm::translate(view, glm::vec3(0.0f, 0.0f, 0.0f));
+
+            mesh.get()->ubos.emplace_back(ubo);
+
+            if (0 != m_WorldMeshesLoaded.count(id.c_str())) {
+                m_WorldMeshesLoaded[id][0] += 1;
+                //m_WorldMeshes[m_WorldMeshesLoaded[name][1]] = mesh;
+            } else {
+
+                uint32_t index = m_WorldMeshes.size();
+                m_WorldMeshesLoaded.insert({ id, { 1, index } });
+                m_WorldMeshes.emplace_back(mesh);
+
+                Rbk::Log::GetLogger()->trace("Added mesh to the world {} from {}", id, path);
+            }
         }
-
-        glm::mat4 view = glm::mat4(1.0f);
-
-        UniformBufferObject ubo;
-        ubo.model = glm::mat4(1.0f);
-        ubo.model = glm::translate(ubo.model, pos);
-        ubo.model = glm::scale(ubo.model, scale);
-        ubo.view = glm::translate(view, glm::vec3(0.0f, 0.0f, 0.0f));
-        
-        mesh.get()->ubos.emplace_back(ubo);
-
-        if (0 != m_WorldMeshesLoaded.count(name)) {
-            m_WorldMeshesLoaded[name][0] += 1;
-            //m_WorldMeshes[m_WorldMeshesLoaded[name][1]] = mesh;
-            return;
-        } 
-        
-        uint32_t index = m_WorldMeshes.size();
-        m_WorldMeshesLoaded.insert({ name, { 1, index }});	
-        m_WorldMeshes.emplace_back(mesh);
-
-        Rbk::Log::GetLogger()->trace("Added mesh to the world {} from {}", name, path);
     }
 
     uint32_t MeshManager::GetWorldVerticesCount()

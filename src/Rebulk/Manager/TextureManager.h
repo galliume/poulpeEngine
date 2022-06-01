@@ -7,13 +7,13 @@ namespace Rbk
     {
     public:
         explicit TextureManager(std::shared_ptr<VulkanRenderer> renderer);
-        void AddSkyBox(std::vector<const char*> skyboxImages);
+        void AddSkyBox(std::vector<std::string> skyboxImages);
         inline Texture GetSkyboxTexture() { return m_Skybox; };
-        void AddTexture(const char* name, const char* path);
-        inline std::map<const char*, Texture> GetTextures() { return m_Textures; };
+        void AddTexture(std::string name, std::string path);
+        inline std::map<std::string, Texture> GetTextures() { return m_Textures; };
 
     private:
-        std::map<const char*, Texture> m_Textures;
+        std::map<std::string, Texture> m_Textures;
         Texture m_Skybox;
         std::shared_ptr<VulkanRenderer> m_Renderer = nullptr;
     };

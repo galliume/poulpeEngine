@@ -80,7 +80,7 @@ namespace Rbk
 
         Rbk::Im::Text("Stats per mesh :");
         for (std::shared_ptr<Mesh> mesh : *m_MeshManager->GetWorldMeshes()) {
-            Rbk::Im::Text("\tMesh named %s with %d instances", mesh.get()->name, mesh.get()->ubos.size());
+            Rbk::Im::Text("\tMesh named %s with %d instances", mesh.get()->name.c_str(), mesh.get()->ubos.size());
         }
         ImGui::Separator();
         Rbk::Im::Text("Shader count %d", m_ShaderManager->GetShaders()->shaders.size());
@@ -88,7 +88,7 @@ namespace Rbk
         Rbk::Im::Text("Texture count %d", m_TextureManager->GetTextures().size());
         Rbk::Im::Text("Loaded textures :");
         for (auto tex : m_TextureManager->GetTextures()) {
-            Rbk::Im::Text("\t%s", tex.first);
+            Rbk::Im::Text("\t%s", tex.first.c_str());
         }
     }
 

@@ -50,7 +50,7 @@ namespace Rbk {
         VkDescriptorPool CreateDescriptorPool(std::array<VkDescriptorPoolSize, 2> poolSizes, uint32_t maxSets = 100);
         VkDescriptorSetLayout CreateDescriptorSetLayout(std::vector<VkDescriptorSetLayoutBinding> pBindings, VkDescriptorSetLayoutCreateFlagBits flags);
         VkDescriptorSet CreateDescriptorSets(VkDescriptorPool descriptorPool, std::vector<VkDescriptorSetLayout> descriptorSetLayouts, uint32_t count = 100);
-        void UpdateDescriptorSets(std::vector<std::pair<VkBuffer, VkDeviceMemory>>uniformBuffers, Texture texture, VkDescriptorSet descriptorSet, VkDescriptorImageInfo imageInfo);
+        void UpdateDescriptorSets(std::vector<std::pair<VkBuffer, VkDeviceMemory>>uniformBuffers, VkDescriptorSet descriptorSet, VkDescriptorImageInfo imageInfo);
         
         VkPipelineLayout CreatePipelineLayout(std::vector<VkDescriptorSet> descriptorSets, std::vector<VkDescriptorSetLayout> descriptorSetLayouts, std::vector<VkPushConstantRange> pushConstants = {});
         VkPipeline CreateGraphicsPipeline(
