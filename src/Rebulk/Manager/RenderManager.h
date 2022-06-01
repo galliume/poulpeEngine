@@ -22,7 +22,6 @@ namespace Rbk
 
         void Init();
         void AddCamera(std::shared_ptr<Camera> camera);
-        void PrepareDraw();
         void Draw();
 
         inline static RenderManager& Get() { return *s_Instance; };

@@ -125,7 +125,7 @@ namespace Rbk
 
     void Camera::UpdateSpeed(float timeStep)
     {
-        m_Speed = 10.0f * timeStep;
+        m_Speed = 5.0f * timeStep;
     }
 
     void Camera::UpdateYP(float xoffset, float yoffset)
