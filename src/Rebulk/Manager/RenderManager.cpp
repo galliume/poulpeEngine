@@ -41,12 +41,6 @@ namespace Rbk
         m_Renderer->AddCamera(camera);
     }
 
-    void RenderManager::PrepareDraw()
-    {
-        
-        m_Renderer->PrepareDraw();
-    }
-
     void RenderManager::Draw()
     {
         m_Renderer->Draw();

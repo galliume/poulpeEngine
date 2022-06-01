@@ -33,7 +33,6 @@ namespace Rbk
         virtual void AddShaderManager(std::shared_ptr<ShaderManager> shaderManager) override;
 
         virtual void PrepareWorld() override;
-        virtual void PrepareDraw() override;
         virtual void Draw() override;
         virtual void Destroy() override;
 
@@ -58,6 +57,8 @@ namespace Rbk
 
     private:
         void UpdateWorldPositions();
+        //@todo temp
+        void SetPerspective();
 
     private:
         std::shared_ptr<VulkanRenderer> m_Renderer = nullptr;
@@ -88,5 +89,7 @@ namespace Rbk
         std::shared_ptr<Mesh> m_Crosshair = nullptr;
         std::vector<VkImageView>m_DepthImageViews = {};
         std::vector<VkImageView>m_ColorImageViews = {};
+        glm::mat4 m_Perspective;
+        glm::mat4 m_lastLookAt;
     };
 }
