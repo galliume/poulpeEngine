@@ -497,19 +497,22 @@ namespace Rbk
 
     void VulkanAdapter::UpdateWorldPositions()
     {
+        glm::mat4 lookAt = m_Camera->LookAt();
+        glm::mat4 proj = glm::perspective(glm::radians(60.0f), m_Renderer.get()->GetSwapChainExtent().width / (float)m_Renderer.get()->GetSwapChainExtent().height, 0.1f, 100.f);
+        proj[1][1] *= -1;
+        glm::vec4 cameraPos = m_Camera->GetPos();
+
         for (uint32_t i = 0; i < m_Crosshair.get()->uniformBuffers.size(); i++) {
-            m_Crosshair.get()->ubos[i].view = m_Camera->LookAt();
+            m_Crosshair.get()->ubos[i].view = lookAt;
             m_Renderer->UpdateUniformBuffer(m_Crosshair.get()->uniformBuffers[i], { m_Crosshair.get()->ubos[i] }, 1);
         }
 
         std::vector<std::shared_ptr<Mesh>>* worldMeshes = m_MeshManager->GetWorldMeshes();
         for (std::shared_ptr<Mesh> mesh : *worldMeshes) {
             for (uint32_t i = 0; i < mesh.get()->ubos.size(); i++) {
-                mesh.get()->ubos[i].view = m_Camera->LookAt();
-                mesh.get()->cameraPos = m_Camera->GetPos();
-                mesh.get()->ubos[i].proj = glm::perspective(glm::radians(60.0f), m_Renderer.get()->GetSwapChainExtent().width / (float)m_Renderer.get()->GetSwapChainExtent().height, 0.1f, 100.f);
-                //mesh.get()->ubos[i].proj = m_Camera->FrustumProj(60, m_Renderer.get()->GetSwapChainExtent().width / (float)m_Renderer.get()->GetSwapChainExtent().height, 0.1f, 256.0f);
-                mesh.get()->ubos[i].proj[1][1] *= -1;
+                mesh.get()->ubos[i].view = lookAt;
+                mesh.get()->cameraPos = cameraPos;
+                mesh.get()->ubos[i].proj = proj;
             }
             for (uint32_t i = 0; i < mesh.get()->uniformBuffers.size(); i++) {
                 m_Renderer->UpdateUniformBuffer(
@@ -520,8 +523,9 @@ namespace Rbk
             }
         }
 
+        glm::mat4 skybowView = glm::mat4(glm::mat3(lookAt));
         for (uint32_t i = 0; i < m_MeshManager->GetSkyboxMesh()->uniformBuffers.size(); i++) {
-            m_MeshManager->GetSkyboxMesh()->ubos[i].view = glm::mat4(glm::mat3(m_Camera->LookAt()));
+            m_MeshManager->GetSkyboxMesh()->ubos[i].view = skybowView;
             m_Renderer->UpdateUniformBuffer(
                 m_MeshManager->GetSkyboxMesh()->uniformBuffers[i],
                 { m_MeshManager->GetSkyboxMesh()->ubos[i]},
