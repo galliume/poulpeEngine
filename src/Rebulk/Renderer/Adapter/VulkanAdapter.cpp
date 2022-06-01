@@ -29,6 +29,7 @@ namespace Rbk
 
     void VulkanAdapter::Init()
     {
+        SetPerspective();
         m_RenderPass = m_Renderer->CreateRenderPass(m_Renderer->GetMsaaSamples());
         m_SwapChain = m_Renderer->CreateSwapChain(m_SwapChainImages);
         m_CommandPool = m_Renderer->CreateCommandPool();
@@ -293,7 +294,7 @@ namespace Rbk
         skyUbo.model = glm::mat4(0.0f);
         //skyUbo.model = glm::translate(skyUbo.model, pos);
         skyUbo.view = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
-        skyUbo.proj = glm::perspective(glm::radians(60.0f), m_Renderer.get()->GetSwapChainExtent().width / (float)m_Renderer.get()->GetSwapChainExtent().height, 0.1f, 256.0f);
+        skyUbo.proj = m_Perspective;
         skyUbo.proj[1][1] *= -1;
 
         skyboxMesh.get()->ubos.emplace_back(skyUbo);
@@ -486,19 +487,27 @@ namespace Rbk
         //command buffer
         m_SwapChainFramebuffers = m_Renderer->CreateFramebuffers(m_RenderPass, m_SwapChainImageViews, m_DepthImageViews, m_ColorImageViews);
         m_CommandBuffers = m_Renderer->AllocateCommandBuffers(m_CommandPool, (uint32_t)m_SwapChainFramebuffers.size());
+
+        m_lastLookAt = glm::mat4(1.0f);
     }
 
-    void VulkanAdapter::PrepareDraw()
-    {
-        if (m_IsPrepared) return;
-
-        m_IsPrepared = true;
+    void VulkanAdapter::SetPerspective()
+    {        
+        m_Perspective = glm::perspective(
+            glm::radians(60.0f), 
+            m_Renderer.get()->GetSwapChainExtent().width / (float)m_Renderer.get()->GetSwapChainExtent().height, 
+            0.1f, 
+            10.f
+        );
     }
 
     void VulkanAdapter::UpdateWorldPositions()
     {
         glm::mat4 lookAt = m_Camera->LookAt();
-        glm::mat4 proj = glm::perspective(glm::radians(60.0f), m_Renderer.get()->GetSwapChainExtent().width / (float)m_Renderer.get()->GetSwapChainExtent().height, 0.1f, 100.f);
+
+        if (lookAt == m_lastLookAt) return;
+
+        glm::mat4 proj = m_Perspective;
         proj[1][1] *= -1;
         glm::vec4 cameraPos = m_Camera->GetPos();
 
@@ -532,14 +541,12 @@ namespace Rbk
                 1
             );
         }
+
+        m_lastLookAt = lookAt;
     }
 
     void VulkanAdapter::Draw()
     {
-        if (!m_IsPrepared) {
-            throw std::runtime_error("Draw is not prepared. Forgot to calle Prepare() ?");
-        }
-
         ShouldRecreateSwapChain();
 
         m_ImageIndex = m_Renderer->AcquireNextImageKHR(m_SwapChain, m_Semaphores);
@@ -561,20 +568,16 @@ namespace Rbk
         m_Renderer->SetViewPort(m_CommandBuffers[m_ImageIndex]);
         m_Renderer->SetScissor(m_CommandBuffers[m_ImageIndex]);
 
+        constants data;
+        data.cameraPos = m_Camera->GetPos();
+        data.ambiantLight = Rbk::VulkanAdapter::s_AmbiantLight;
+        data.fogDensity = Rbk::VulkanAdapter::s_FogDensity;
+        data.fogColor = glm::vec3({ Rbk::VulkanAdapter::s_FogColor[0], Rbk::VulkanAdapter::s_FogColor[1], Rbk::VulkanAdapter::s_FogColor[2] });
+
         //draw the world !
         for (std::shared_ptr<Mesh> mesh : *m_MeshManager->GetWorldMeshes()) {
             m_Renderer->BindPipeline(m_CommandBuffers[m_ImageIndex], mesh.get()->graphicsPipeline);
-            //@todo temp (for testing frog)
-
-            constants data;
-            data.cameraPos = mesh->cameraPos;
-            data.ambiantLight = Rbk::VulkanAdapter::s_AmbiantLight;
-            data.fogDensity = Rbk::VulkanAdapter::s_FogDensity;
-            data.fogColor = glm::vec3({ Rbk::VulkanAdapter::s_FogColor[0], Rbk::VulkanAdapter::s_FogColor[1], Rbk::VulkanAdapter::s_FogColor[2] });
-
-            //Rbk::Log::GetLogger()->debug("color {} {} {}", s_FogColor[0], s_FogColor[1], s_FogColor[2]);
             vkCmdPushConstants(m_CommandBuffers[m_ImageIndex], mesh->pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(constants), &data);
-
             m_Renderer->Draw(m_CommandBuffers[m_ImageIndex], mesh.get(), m_ImageIndex);
         }
 
@@ -588,7 +591,6 @@ namespace Rbk
 
         m_Renderer->EndRenderPass(m_CommandBuffers[m_ImageIndex]);
         m_Renderer->EndCommandBuffer(m_CommandBuffers[m_ImageIndex]);
-
 
         m_Renderer->QueueSubmit(m_ImageIndex, m_CommandBuffers[m_ImageIndex], m_Semaphores);
         uint32_t currentFrame = m_Renderer->QueuePresent(m_ImageIndex, m_SwapChain, m_Semaphores);

@@ -213,42 +213,47 @@ namespace Rbk
         double lastTime = glfwGetTime();
         double timeStepSum = 0.0f;
         uint32_t frameCount = 0;
+        const double maxFPS = 60.0;
+        const double maxPeriod = 1.0 / maxFPS;
 
         while (!glfwWindowShouldClose(window.get()->Get())) {
 
             double currentTime = glfwGetTime();
             double timeStep = currentTime - lastTime;
-            timeStepSum += timeStep;
-            frameCount++;
 
-            if (1.0f <= timeStepSum) {
-                Rbk::Log::GetLogger()->debug("{} fps/sec", frameCount);
-                timeStepSum = 0.0f;
-                frameCount = 0;
-            }
+            if (timeStep >= maxPeriod) {
+                
+                timeStepSum += timeStep;
+                frameCount++;
 
-            camera->UpdateSpeed(timeStep);
+                if (1.0f <= timeStepSum) {
+                    Rbk::Log::GetLogger()->debug("{} fps/sec", frameCount);
+                    timeStepSum = 0.0f;
+                    frameCount = 0;
+                }
 
-            glfwPollEvents();
+                camera->UpdateSpeed(timeStep);
 
-            renderManager->PrepareDraw();
-            renderManager->Draw();
-            
+                glfwPollEvents();
+
+                renderManager->Draw();
+
 #ifdef RBK_DEBUG
-            //@todo move to LayerManager
-            Rbk::Im::NewFrame();
+                //@todo move to LayerManager
+                Rbk::Im::NewFrame();
 
-            vulkanLayer->AddRenderAdapter(rendererAdapter.get());
-            vulkanLayer->Render(timeStep, rendererAdapter->Rdr()->GetDeviceProperties());
+                vulkanLayer->AddRenderAdapter(rendererAdapter.get());
+                vulkanLayer->Render(timeStep, rendererAdapter->Rdr()->GetDeviceProperties());
 
-            Rbk::Im::Render();
-            
-            rendererAdapter->Rdr()->BeginCommandBuffer(imguiInfo.cmdBuffer);
-            ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), imguiInfo.cmdBuffer);
-            rendererAdapter->Rdr()->EndCommandBuffer(imguiInfo.cmdBuffer);
-            //end @todo
+                Rbk::Im::Render();
+
+                rendererAdapter->Rdr()->BeginCommandBuffer(imguiInfo.cmdBuffer);
+                ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), imguiInfo.cmdBuffer);
+                rendererAdapter->Rdr()->EndCommandBuffer(imguiInfo.cmdBuffer);
+                //end @todo
 #endif
-            lastTime = currentTime;
+                lastTime = currentTime;
+            }
         }
 
 #ifdef RBK_DEBUG
