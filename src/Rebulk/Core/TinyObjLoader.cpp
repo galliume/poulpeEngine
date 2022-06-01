@@ -9,9 +9,10 @@
 
 namespace Rbk
 {
-    std::shared_ptr<Rbk::Mesh> TinyObjLoader::LoadMesh(const char* path, bool shouldInverseTextureY)
+    std::vector<std::shared_ptr<Mesh>> TinyObjLoader::LoadMesh(std::string path, bool shouldInverseTextureY)
     {
-        std::shared_ptr<Rbk::Mesh>mesh = std::make_shared<Rbk::Mesh>();
+        std::vector<std::shared_ptr<Mesh>> meshes = {};
+
         tinyobj::ObjReader reader;
         tinyobj::ObjReaderConfig reader_config;
 
@@ -36,7 +37,12 @@ namespace Rbk
         std::unordered_map<Rbk::Vertex, uint32_t> uniqueVertices{};
         uniqueVertices.clear();
 
-        for (size_t s = 0; s < shapes.size(); s++) {
+        glm::vec3 pos = glm::vec3(0.0f);
+
+        for (uint32_t s = 0; s < shapes.size(); s++) {
+
+            std::shared_ptr<Rbk::Mesh>mesh = std::make_shared<Rbk::Mesh>();
+
             // Loop over faces(polygon)
             size_t index_offset = 0;
             for (size_t f = 0; f < shapes[s].mesh.num_face_vertices.size(); f++) {
@@ -84,6 +90,7 @@ namespace Rbk
                     }
 
                     mesh.get()->indices.push_back(uniqueVertices[vertex]);
+                    pos = glm::vec3(vx, vy, vz);
                 }
 
                 index_offset += fv;
@@ -91,8 +98,10 @@ namespace Rbk
                 // per-face material
                 shapes[s].mesh.material_ids[f];
             }
+            
+            meshes.emplace_back(mesh);
         }
 
-        return mesh;
+        return meshes;
     }
 }

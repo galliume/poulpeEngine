@@ -8,18 +8,18 @@ namespace Rbk
 
     }
 
-    void TextureManager::AddSkyBox(std::vector<const char*> skyboxImages)
+    void TextureManager::AddSkyBox(std::vector<std::string> skyboxImages)
     {	
         int texWidth = 0, texHeight = 0, texChannels = 0;
         std::vector<stbi_uc*>skyboxPixels;
 
-        for (const char* path : skyboxImages) {
+        for (std::string path : skyboxImages) {
             if (!std::filesystem::exists(path)) {
                 Rbk::Log::GetLogger()->critical("texture file {} does not exits.", path);
                 return;
             }
 
-            stbi_uc* pixels = stbi_load(path, &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
+            stbi_uc* pixels = stbi_load(path.c_str(), &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
 
             if (!pixels) {
                 Rbk::Log::GetLogger()->warn("failed to load skybox texture image %s", path);
@@ -76,20 +76,20 @@ namespace Rbk
         vkDestroyCommandPool(m_Renderer.get()->GetDevice(), commandPool, nullptr);
     }
 
-    void TextureManager::AddTexture(const char* name, const char* path)
+    void TextureManager::AddTexture(std::string name, std::string path)
     {
-        if (!std::filesystem::exists(path)) {
+        if (!std::filesystem::exists(path.c_str())) {
             Rbk::Log::GetLogger()->critical("texture file {} does not exits.", path);
             return;
         }
 
-        if (0 != m_Textures.count(name)) {
+        if (0 != m_Textures.count(name.c_str())) {
             std::cout << "Texture " << name << " already imported" << std::endl;
             return;
         }
 
         int texWidth, texHeight, texChannels;
-        stbi_uc* pixels = stbi_load(path, &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
+        stbi_uc* pixels = stbi_load(path.c_str(), &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
 
         if (!pixels) {
             Rbk::Log::GetLogger()->warn("failed to load texture image %s", name);

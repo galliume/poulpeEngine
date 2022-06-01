@@ -51,9 +51,9 @@ namespace Rbk {
         ImGui_ImplVulkan_CreateFontsTexture(commandBuffer);
     }
 
-    void Im::Begin(const char* name, bool* p_open, ImGuiWindowFlags flags)
+    void Im::Begin(std::string name, bool* p_open, ImGuiWindowFlags flags)
     {
-        ImGui::Begin(name, p_open, flags);
+        ImGui::Begin(name.c_str(), p_open, flags);
     }
     
     void Im::End()
@@ -76,9 +76,9 @@ namespace Rbk {
         ImGui::Separator();
     }
 
-    void Im::BeginChild(const char* str_id, const ImVec2& size_arg, bool border, ImGuiWindowFlags extra_flags)
+    void Im::BeginChild(std::string str_id, const ImVec2& size_arg, bool border, ImGuiWindowFlags extra_flags)
     {
-        ImGui::BeginChild(str_id, size_arg, border, extra_flags);
+        ImGui::BeginChild(str_id.c_str(), size_arg, border, extra_flags);
     }
 
     void Im::Render()

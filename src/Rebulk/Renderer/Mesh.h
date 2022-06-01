@@ -5,7 +5,7 @@ namespace Rbk
 {
     struct Texture
     {
-        const char* name;
+        std::string name;
         VkImage image;
         VkDeviceMemory imageMemory;
         VkImageView imageView;
@@ -122,8 +122,8 @@ namespace Rbk
     {
         std::vector<Vertex> vertices;
         std::vector<uint32_t> indices;
-        const char* texture;
-        const char* name;
+        std::string texture;
+        std::string name;
         std::vector<UniformBufferObject> ubos;
         std::pair<VkBuffer, VkDeviceMemory> vertexBuffer = { nullptr, nullptr };
         std::pair<VkBuffer, VkDeviceMemory> indicesBuffer = { nullptr, nullptr };
