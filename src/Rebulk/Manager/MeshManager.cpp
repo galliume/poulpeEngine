@@ -32,7 +32,6 @@ namespace Rbk
                 mesh.get()->name = id;
                 mesh.get()->texture = textureNames[textureIndex];
             } else {
-                Rbk::Log::GetLogger()->trace("add one more to the world of {} from {}", id, path);
                 mesh = m_WorldMeshes[m_WorldMeshesLoaded[id][1]];
             }
 
