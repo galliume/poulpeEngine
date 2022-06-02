@@ -98,6 +98,11 @@ namespace Rbk
         textureManager->AddTexture("moon", "assets/mesh/moon/diffuse.jpg");
         textureManager->AddTexture("trunk_tree_cartoon", "assets/mesh/tree/cartoon/Trunk_4_Cartoon.jpg");
         textureManager->AddTexture("grass", "assets/mesh/grass/grass.png");
+        textureManager->AddTexture("rooftiles", "assets/mesh/house/textures/rooftiles/T_darkwood_basecolor.png");
+        textureManager->AddTexture("dark_wood", "assets/mesh/house/textures/wood/T_darkwood_basecolor.png");
+        textureManager->AddTexture("bright_wood", "assets/mesh/house/textures/wood/T_brightwood_basecolor.png");
+        textureManager->AddTexture("rocks", "assets/mesh/house/textures/rocks/rock_bc.jpg");
+        textureManager->AddTexture("dog_base_color", "assets/mesh/doghouse/doghouse0908_PBR_BaseColor.png");
 
         glm::vec3 scaleMinecraft = glm::vec3(0.1f, 0.1f, 0.1f);
 
@@ -136,7 +141,7 @@ namespace Rbk
             }
         }
 
-        glm::vec3 pos1 = glm::vec3(0.25f, 0.2f, -0.75f);
+        glm::vec3 pos1 = glm::vec3(0.8f, 0.2f, -0.4f);
         glm::vec3 scaleCamp = glm::vec3(0.002f, 0.002f, 0.002f);
         meshManager->AddWorldMesh("campfire", "assets/mesh/campfire/Campfire.obj", { "campfire_tex" }, pos1, scaleCamp);
 
@@ -163,24 +168,19 @@ namespace Rbk
         pos2 = glm::vec3(1.2f, 0.19f, -0.9f);
         meshManager->AddWorldMesh("tree", "assets/mesh/tree/tree.obj", { "tree_top_tex", "trunk_tree_cartoon" }, pos2, scaleTree);
 
-        glm::vec3 scalegrass = glm::vec3(0.05f, 0.05f, 0.05f);
-
-        //pos2 = glm::vec3(0.2f, 0.19f, -0.9f);
-        //meshmanager->addworldmesh("grass", "assets/mesh/grass/grass.obj", "grass", pos2, scalegrass);
-        //pos2 = glm::vec3(1.2f, 0.19f, 0.9f);
-        //meshmanager->addworldmesh("grass", "assets/mesh/grass/grass.obj", "grass", pos2, scalegrass);
-        //pos2 = glm::vec3(0.8f, 0.19f, -1.9f);
-        //meshmanager->addworldmesh("grass", "assets/mesh/grass/grass.obj", "grass", pos2, scalegrass);
-        //pos2 = glm::vec3(-0.2f, 0.19f, 1.0f);
-        //meshmanager->addworldmesh("grass", "assets/mesh/grass/grass.obj", "grass", pos2, scalegrass);
-
- /*       glm::vec3 scalecubetest = glm::vec3(0.10f, 0.10f, 0.10f);
-        glm::vec3 pos5 = glm::vec3(0.5f, -1.3f, -0.75f);
-        meshmanager->addworldmesh("backpack", "assets/mesh/backpack/backpack.obj", "backpack", pos5, scalecubetest, false);*/
-
         glm::vec3 moonCubeTest = glm::vec3(0.2f, 0.2f, 0.2f);
         glm::vec3 pos6 = glm::vec3(0.5f, 4.5f, -3.00f);
-        meshManager->AddWorldMesh("moon", "assets/mesh/moon/moon.obj", { "moon" }, pos6, moonCubeTest, false);
+        meshManager->AddWorldMesh("moon", "assets/mesh/moon/moon.obj", { "moon" }, pos6, moonCubeTest, glm::vec3(1.0f), 0.0f, false);
+
+        glm::vec3 houseScale = glm::vec3(0.1f, 0.1f, 0.1f);
+        glm::vec3 posHouse = glm::vec3(-0.5f, 0.19f, -0.20f);
+        glm::vec3 rotHouse = glm::vec3(0.0f, 1.0f, 0.0f);
+        meshManager->AddWorldMesh("house", "assets/mesh/house/midpoly_town_house_01.obj", { "dark_wood", "rocks", "rooftiles", "bright_wood" }, posHouse, houseScale, rotHouse, -80.0f, false);
+
+        glm::vec3 dogScale = glm::vec3(0.3f, 0.3f, 0.3f);
+        glm::vec3 posDog = glm::vec3(0.7f, 0.20f, -2.0f);
+        glm::vec3 rotDog = glm::vec3(0.0f, 1.0f, 0.0f);
+        meshManager->AddWorldMesh("dog_house", "assets/mesh/doghouse/doghouse0908.obj", { "dog_base_color" }, posDog, dogScale, rotDog, -30.0f);
 
         std::vector<std::string>skyboxImages;
         skyboxImages.emplace_back("assets/texture/skybox/bluesky/right.jpg");

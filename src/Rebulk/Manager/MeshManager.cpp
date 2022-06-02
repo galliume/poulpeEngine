@@ -18,14 +18,14 @@ namespace Rbk
         return Rbk::TinyObjLoader::LoadMesh(path, shouldInverseTextureY);
     }
 
-    void MeshManager::AddWorldMesh(std::string name, std::string path, std::vector<std::string> textureNames, glm::vec3 pos, glm::vec3 scale, bool shouldInverseTextureY)
+    void MeshManager::AddWorldMesh(std::string name, std::string path, std::vector<std::string> textureNames, glm::vec3 pos, glm::vec3 scale, glm::vec3 axisRot, float rotAngle, bool shouldInverseTextureY)
     {
         std::vector<std::shared_ptr<Mesh>> meshes = Load(path, shouldInverseTextureY);
 
         for (uint32_t i = 0; i < meshes.size(); i++) {
 
             std::shared_ptr<Mesh> mesh = meshes[i];
-            uint32_t textureIndex = (i >= textureNames.size()) ? textureNames.size() - 1 : i;
+            uint32_t textureIndex = mesh.get()->materialId;
             std::string id = name + '_' + textureNames[textureIndex] + '_' + std::to_string(i);
 
             if (0 == m_WorldMeshesLoaded.count(id.c_str())) {
@@ -41,8 +41,12 @@ namespace Rbk
             ubo.model = glm::mat4(1.0f);
             ubo.model = glm::translate(ubo.model, pos);
             ubo.model = glm::scale(ubo.model, scale);
-            ubo.view = glm::translate(view, glm::vec3(0.0f, 0.0f, 0.0f));
+            
+            if (rotAngle != 0.0f) {
+                ubo.model = glm::rotate(ubo.model, glm::radians(rotAngle), axisRot);
+            }
 
+            ubo.view = glm::translate(view, glm::vec3(0.0f, 0.0f, 0.0f));
             mesh.get()->ubos.emplace_back(ubo);
 
             if (0 != m_WorldMeshesLoaded.count(id.c_str())) {
