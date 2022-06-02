@@ -1,0 +1,16 @@
+# Blender MTL File: 'doghouse0908.blend'
+# Material Count: 1
+
+newmtl PBR
+Ns 225.000000
+Ka 1.000000 1.000000 1.000000
+Kd 0.800000 0.800000 0.800000
+Ks 0.200000 0.200000 0.200000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 2
+map_Bump doghouse0908_PBR_Normal.png
+map_Kd doghouse0908_PBR_BaseColor.png
+map_Ns doghouse0908_PBR_Roughness.png
+refl doghouse0908_PBR_Metallic.png

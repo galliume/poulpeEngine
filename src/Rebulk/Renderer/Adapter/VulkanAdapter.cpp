@@ -5,7 +5,7 @@
 
 namespace Rbk
 {
-    float VulkanAdapter::s_AmbiantLight = 1.0;
+    float VulkanAdapter::s_AmbiantLight = 0.2;
     float VulkanAdapter::s_FogDensity = 0.0;
     float VulkanAdapter::s_FogColor[3] = { 25 / 255.0f, 25 / 255.0f, 25 / 255.0f };
 
@@ -14,6 +14,7 @@ namespace Rbk
         float ambiantLight;
         float fogDensity;
         glm::vec3 fogColor;
+        glm::vec3 lightPos;
     };
 
     VulkanAdapter::VulkanAdapter(std::shared_ptr<Window> window) :
@@ -573,6 +574,7 @@ namespace Rbk
         data.ambiantLight = Rbk::VulkanAdapter::s_AmbiantLight;
         data.fogDensity = Rbk::VulkanAdapter::s_FogDensity;
         data.fogColor = glm::vec3({ Rbk::VulkanAdapter::s_FogColor[0], Rbk::VulkanAdapter::s_FogColor[1], Rbk::VulkanAdapter::s_FogColor[2] });
+        data.lightPos = glm::vec3(0.5f, 4.5f, -3.00f);
 
         //draw the world !
         for (std::shared_ptr<Mesh> mesh : *m_MeshManager->GetWorldMeshes()) {

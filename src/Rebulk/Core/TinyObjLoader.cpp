@@ -66,7 +66,7 @@ namespace Rbk
                         tinyobj::real_t ny = attrib.normals[3 * size_t(idx.normal_index) + 1];
                         tinyobj::real_t nz = attrib.normals[3 * size_t(idx.normal_index) + 2];
 
-                        vertex.color = { nx, ny, nz };
+                        vertex.normal = { nx, ny, nz };
                     }
 
                     // Check if `texcoord_index` is zero or positive. negative = no texcoord data
@@ -90,15 +90,14 @@ namespace Rbk
                     }
 
                     mesh.get()->indices.push_back(uniqueVertices[vertex]);
-                    pos = glm::vec3(vx, vy, vz);
                 }
 
                 index_offset += fv;
 
                 // per-face material
+                mesh.get()->materialId = (-1 != shapes[s].mesh.material_ids[f]) ? shapes[s].mesh.material_ids[f] : 0;
                 shapes[s].mesh.material_ids[f];
             }
-            
             meshes.emplace_back(mesh);
         }
 
