@@ -35,7 +35,7 @@ namespace Rbk
     struct Vertex
     {
         alignas(16) glm::vec3 pos;
-        alignas(16) glm::vec3 color;
+        alignas(16) glm::vec3 normal;
         alignas(8) glm::vec2 texCoord;
 
         static VkVertexInputBindingDescription GetBindingDescription() {
@@ -59,7 +59,7 @@ namespace Rbk
             attributeDescriptions[1].binding = 0;
             attributeDescriptions[1].location = 1;
             attributeDescriptions[1].format = VK_FORMAT_R32G32B32_SFLOAT;
-            attributeDescriptions[1].offset = offsetof(Vertex, color);
+            attributeDescriptions[1].offset = offsetof(Vertex, normal);
 
             attributeDescriptions[2].binding = 0;
             attributeDescriptions[2].location = 2;
@@ -71,14 +71,14 @@ namespace Rbk
 
         bool operator==(const Vertex& other) const
         {
-            return pos == other.pos && color == other.color && texCoord == other.texCoord;
+            return pos == other.pos && normal == other.normal && texCoord == other.texCoord;
         }
     };
 
     struct Vertex2D
     {
         alignas(8) glm::vec2 pos;
-        alignas(16) glm::vec3 color;
+        alignas(16) glm::vec3 normal;
         alignas(8) glm::vec2 texCoord;
 
         static VkVertexInputBindingDescription GetBindingDescription() {
@@ -102,7 +102,7 @@ namespace Rbk
             attributeDescriptions[1].binding = 0;
             attributeDescriptions[1].location = 1;
             attributeDescriptions[1].format = VK_FORMAT_R32G32B32_SFLOAT;
-            attributeDescriptions[1].offset = offsetof(Vertex2D, color);
+            attributeDescriptions[1].offset = offsetof(Vertex2D, normal);
 
             attributeDescriptions[2].binding = 0;
             attributeDescriptions[2].location = 2;
@@ -114,7 +114,7 @@ namespace Rbk
 
         bool operator==(const Vertex2D& other) const
         {
-            return pos == other.pos && color == other.color && texCoord == other.texCoord;
+            return pos == other.pos && normal == other.normal && texCoord == other.texCoord;
         }
     };
 
@@ -122,6 +122,7 @@ namespace Rbk
     {
         std::vector<Vertex> vertices;
         std::vector<uint32_t> indices;
+        uint32_t materialId = 0;
         std::string texture;
         std::string name;
         std::vector<UniformBufferObject> ubos;
@@ -145,14 +146,14 @@ namespace std {
     template<> struct hash<Rbk::Vertex> {
         size_t operator()(Rbk::Vertex const& vertex) const {
             return ((hash<glm::vec3>()(vertex.pos) ^
-                (hash<glm::vec3>()(vertex.color) << 1)) >> 1) ^
+                (hash<glm::vec3>()(vertex.normal) << 1)) >> 1) ^
                 (hash<glm::vec2>()(vertex.texCoord) << 1);
         }
     };
     template<> struct hash<Rbk::Vertex2D> {
         size_t operator()(Rbk::Vertex2D const& vertex) const {
             return ((hash<glm::vec2>()(vertex.pos) ^
-                (hash<glm::vec3>()(vertex.color) << 1)) >> 1) ^
+                (hash<glm::vec3>()(vertex.normal) << 1)) >> 1) ^
                 (hash<glm::vec2>()(vertex.texCoord) << 1);
         }
     };

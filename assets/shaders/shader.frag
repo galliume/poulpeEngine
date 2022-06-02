@@ -4,12 +4,13 @@
 
 layout(location = 0) out vec4 outputColor;
 layout(location = 0) in vec2 fragTexCoord;
-layout(location = 1) in vec3 fragColor;
+layout(location = 1) in vec3 fragNormal;
 layout(location = 2) in vec4 cameraPos;
 layout(location = 3) in vec4 fragModelPos;
 layout(location = 4) in float fragAmbiantLight; 
 layout(location = 5) in float fragFogDensity; 
-layout(location = 6) in vec3 fragFogColor; 
+layout(location = 6) in vec3 fragFogColor;
+layout(location = 7) in vec3 fragLightPos;
 
 layout(binding = 1) uniform sampler2D texSampler;
 
@@ -30,13 +31,16 @@ float getFogFactor(float d)
     return 1 - (FogMax - d) / (FogMax - FogMin);
 }
 
-
 void main() {
 
-    outputColor = texture(texSampler, fragTexCoord);
-
     vec3 ambient = fragAmbiantLight * lightColor;
-    outputColor = vec4(ambient, 1.0f) * outputColor;
+    vec3 norm = normalize(fragNormal);
+    vec3 lightDir = normalize(fragLightPos - fragModelPos.xyz);
+    
+    float diff = max(dot(norm, lightDir), 0.0);
+    vec3 diffuse = diff * lightColor;
+    outputColor = texture(texSampler, fragTexCoord);
+    outputColor = vec4(ambient + diffuse, 1.0f) * outputColor;
     
     if (0 < fragFogDensity) {
         float d = distance(cameraPos, fragModelPos);
