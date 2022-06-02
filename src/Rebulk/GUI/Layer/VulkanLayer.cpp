@@ -94,12 +94,20 @@ namespace Rbk
 
     void VulkanLayer::DisplayOptions()
     {
+        Rbk::Im::Text("Light");
         ImGui::SliderFloat("Ambiant light", &Rbk::VulkanAdapter::s_AmbiantLight, 0.0f, 1.0f, "%.3f");
         ImGui::Separator();
+        Rbk::Im::Text("Fog");
         ImGui::SliderFloat("Fog density", &Rbk::VulkanAdapter::s_FogDensity, 0.0f, 1.0f, "%.3f");
-        ImGui::Separator();
         ImGui::ColorEdit3("Fog color", Rbk::VulkanAdapter::s_FogColor);
+        ImGui::Separator();
+        Rbk::Im::Text("Others");
+        ImGui::RadioButton("60 fps", &Rbk::Application::s_UnlockedFPS, 0); ImGui::SameLine();
+        ImGui::RadioButton("120 fps", &Rbk::Application::s_UnlockedFPS, 1); ImGui::SameLine();
+        ImGui::RadioButton("unlocked", &Rbk::Application::s_UnlockedFPS, 2);
 
+        //ImGui::Checkbox("Unlock FPS", &Rbk::Application::s_UnlockedFPS);
+        ImGui::Separator();
         ImGui::Checkbox("Show ImGui demo", &m_ShowDemo);
         
         m_Adapter->SetWireFrameMode(m_WireframeModeOn);
