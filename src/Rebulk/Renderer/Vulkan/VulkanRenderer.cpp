@@ -89,7 +89,7 @@ namespace Rbk {
     std::string VulkanRenderer::GetAPIVersion()
     {
         if (m_apiVersion.empty()) {
-            uint32_t instanceVersion = VK_API_VERSION_1_2;
+            uint32_t instanceVersion = VK_API_VERSION_1_3;
             auto FN_vkEnumerateInstanceVersion = PFN_vkEnumerateInstanceVersion(vkGetInstanceProcAddr(nullptr, "vkEnumerateInstanceVersion"));
 
             if (vkEnumerateInstanceVersion) {

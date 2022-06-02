@@ -3,6 +3,7 @@
 #include "ILayer.h"
 #include "Rebulk/Renderer/Adapter/VulkanAdapter.h"
 #include "Rebulk/GUI/Window.h"
+#include "Rebulk/Application.h"
 
 namespace Rbk 
 {
