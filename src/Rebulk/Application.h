@@ -25,6 +25,7 @@ namespace Rbk
         void Init();
         void Run();
 
+        static int s_UnlockedFPS;
     private:
         static Application* s_Instance;
         bool m_Running = true;

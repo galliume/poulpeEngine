@@ -3,6 +3,8 @@
 
 namespace Rbk
 {
+    int Application::s_UnlockedFPS = 0;
+
     std::shared_ptr<Rbk::Window>window = nullptr;
     std::shared_ptr<Rbk::RenderManager>renderManager = nullptr;
     std::shared_ptr<Rbk::Camera>camera= nullptr;
@@ -213,15 +215,23 @@ namespace Rbk
         double lastTime = glfwGetTime();
         double timeStepSum = 0.0f;
         uint32_t frameCount = 0;
-        const double maxFPS = 60.0;
-        const double maxPeriod = 1.0 / maxFPS;
+        double maxFPS = 60.0;
+        double maxPeriod = 1.0 / maxFPS;
 
         while (!glfwWindowShouldClose(window.get()->Get())) {
+
+            if (Application::s_UnlockedFPS == 0) {
+                maxFPS = 60.0;
+                maxPeriod = 1.0 / maxFPS;
+            } else if (Application::s_UnlockedFPS == 1) {
+                maxFPS = 120.0;
+                maxPeriod = 1.0 / maxFPS;
+            }
 
             double currentTime = glfwGetTime();
             double timeStep = currentTime - lastTime;
 
-            if (timeStep >= maxPeriod) {
+            if (timeStep >= maxPeriod || Application::s_UnlockedFPS == 2) {
                 
                 timeStepSum += timeStep;
                 frameCount++;
