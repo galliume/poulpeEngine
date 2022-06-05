@@ -18,5 +18,6 @@ namespace Rbk
         virtual void PrepareWorld() = 0;
         virtual void Draw() = 0;
         virtual void Destroy() = 0;
+        virtual void SetDeltatime(float deltaTime) = 0;
     };
 }

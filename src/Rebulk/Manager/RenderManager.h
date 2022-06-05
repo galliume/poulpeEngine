@@ -23,6 +23,7 @@ namespace Rbk
         void Init();
         void AddCamera(std::shared_ptr<Camera> camera);
         void Draw();
+        void SetDeltatime(float deltaTime);
 
         inline static RenderManager& Get() { return *s_Instance; };
         inline std::shared_ptr<IRendererAdapter> Adp() { return m_Renderer; };

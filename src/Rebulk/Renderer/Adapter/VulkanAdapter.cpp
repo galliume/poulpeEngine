@@ -5,7 +5,7 @@
 
 namespace Rbk
 {
-    float VulkanAdapter::s_AmbiantLight = 0.2;
+    float VulkanAdapter::s_AmbiantLight = 0.1;
     float VulkanAdapter::s_FogDensity = 0.0;
     float VulkanAdapter::s_FogColor[3] = { 25 / 255.0f, 25 / 255.0f, 25 / 255.0f };
 
@@ -30,6 +30,7 @@ namespace Rbk
 
     void VulkanAdapter::Init()
     {
+        m_LightsPos.emplace_back(glm::vec3(0.5f, 4.5f, -3.00f));
         SetPerspective();
         m_RenderPass = m_Renderer->CreateRenderPass(m_Renderer->GetMsaaSamples());
         m_SwapChain = m_Renderer->CreateSwapChain(m_SwapChainImages);
@@ -496,15 +497,20 @@ namespace Rbk
             glm::radians(60.0f), 
             m_Renderer.get()->GetSwapChainExtent().width / (float)m_Renderer.get()->GetSwapChainExtent().height, 
             0.1f, 
-            10.f
+            50.f
         );
+    }
+
+    void VulkanAdapter::SetDeltatime(float deltaTime)
+    {
+        m_Deltatime = deltaTime;
     }
 
     void VulkanAdapter::UpdateWorldPositions()
     {
         glm::mat4 lookAt = m_Camera->LookAt();
 
-        if (lookAt == m_lastLookAt) return;
+        //if (lookAt == m_lastLookAt) return;
 
         glm::mat4 proj = m_Perspective;
         proj[1][1] *= -1;
@@ -517,10 +523,19 @@ namespace Rbk
 
         std::vector<std::shared_ptr<Mesh>>* worldMeshes = m_MeshManager->GetWorldMeshes();
         for (std::shared_ptr<Mesh> mesh : *worldMeshes) {
+
             for (uint32_t i = 0; i < mesh.get()->ubos.size(); i++) {
                 mesh.get()->ubos[i].view = lookAt;
-                mesh.get()->cameraPos = cameraPos;
+                mesh.get()->cameraPos = cameraPos * mesh.get()->ubos[i].view * mesh.get()->ubos[i].model * mesh.get()->ubos[i].proj;
                 mesh.get()->ubos[i].proj = proj;
+
+                //if (mesh.get()->name == "moon_moon_0") {
+                //    mesh.get()->ubos[i].model = glm::rotate(mesh.get()->ubos[i].model, 0.05f * m_Deltatime, glm::vec3(1.0f, 0.0f, 0.0f));
+                //    mesh.get()->ubos[i].model = glm::translate(mesh.get()->ubos[i].model, m_Deltatime * glm::vec3(1.0f, 0.0f, 0.0f));
+                //    glm::vec3 lightPos = m_LightsPos.at(0) *  m_Deltatime * glm::vec3(1.0f, 0.0f, 0.0f);
+                //    m_LightsPos.at(0) = lightPos;
+                //} 
+
             }
             for (uint32_t i = 0; i < mesh.get()->uniformBuffers.size(); i++) {
                 m_Renderer->UpdateUniformBuffer(
@@ -547,6 +562,7 @@ namespace Rbk
     void VulkanAdapter::Draw()
     {
         ShouldRecreateSwapChain();
+        UpdateWorldPositions();
 
         m_ImageIndex = m_Renderer->AcquireNextImageKHR(m_SwapChain, m_Semaphores);
 
@@ -572,7 +588,7 @@ namespace Rbk
         data.ambiantLight = Rbk::VulkanAdapter::s_AmbiantLight;
         data.fogDensity = Rbk::VulkanAdapter::s_FogDensity;
         data.fogColor = glm::vec3({ Rbk::VulkanAdapter::s_FogColor[0], Rbk::VulkanAdapter::s_FogColor[1], Rbk::VulkanAdapter::s_FogColor[2] });
-        data.lightPos = glm::vec3(0.5f, 4.5f, -3.00f);
+        data.lightPos = m_LightsPos.at(0);
 
         //draw the world !
         for (std::shared_ptr<Mesh> mesh : *m_MeshManager->GetWorldMeshes()) {
@@ -598,8 +614,6 @@ namespace Rbk
         if (currentFrame == VK_ERROR_OUT_OF_DATE_KHR || currentFrame == VK_SUBOPTIMAL_KHR) {
             RecreateSwapChain();
         }
-
-        UpdateWorldPositions();
     }
 
     void VulkanAdapter::Destroy()
