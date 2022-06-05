@@ -10,7 +10,7 @@ namespace Rbk
     public:
 
         explicit MeshManager(std::shared_ptr<VulkanRenderer> renderer);
-        void AddWorldMesh(std::string name, std::string path, std::vector<std::string> textureNames, glm::vec3 pos, glm::vec3 scale, glm::vec3 axisRot = glm::vec3(1.0f), float rotAngle = 0.0f, bool shouldInverseTextureY = true);
+        void AddMesh(std::string name, std::string path, std::vector<std::string> textureNames, std::string shader, glm::vec3 pos, glm::vec3 scale, glm::vec3 axisRot = glm::vec3(1.0f), float rotAngle = 0.0f, bool shouldInverseTextureY = true);
         inline std::vector<std::shared_ptr<Mesh>>* GetWorldMeshes() { return &m_WorldMeshes; };
         inline std::map<std::string, std::array<uint32_t, 2>> GetWoldMeshesLoaded() { return m_WorldMeshesLoaded; };
         uint32_t GetWorldVerticesCount();

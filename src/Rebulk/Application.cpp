@@ -88,6 +88,7 @@ namespace Rbk
         shaderManager->AddShader("main", "assets/shaders/spv/vert.spv", "assets/shaders/spv/frag.spv");
         shaderManager->AddShader("skybox", "assets/shaders/spv/skybox_vert.spv", "assets/shaders/spv/skybox_frag.spv");
         shaderManager->AddShader("2d", "assets/shaders/spv/2d_vert.spv", "assets/shaders/spv/2d_frag.spv");
+        shaderManager->AddShader("ambient_light", "assets/shaders/spv/ambient_shader_vert.spv", "assets/shaders/spv/ambient_shader_frag.spv");
 
         textureManager->AddTexture("minecraft_grass", "assets/mesh/minecraft/Grass_Block_TEX.png");
         textureManager->AddTexture("minecraft_water", "assets/mesh/minecraft/water.jpg");
@@ -109,78 +110,78 @@ namespace Rbk
         for (int x = -7; x < 7; x++) {
             for (int y = -5; y < 15; y++) {
                 glm::vec3 posCube = glm::vec3(-0.20f * x, 0.0f, -0.20f * y);
-                meshManager->AddWorldMesh("ground_cube", "assets/mesh/minecraft/Grass_Block.obj", { "minecraft_grass" }, posCube, scaleMinecraft);
+                meshManager->AddMesh("ground_cube", "assets/mesh/minecraft/Grass_Block.obj", { "minecraft_grass" }, "main", posCube, scaleMinecraft);
             }
         }
 
         for (int x = -22; x < -7; x++) {
             for (int y = -5; y < 15; y++) {
                 glm::vec3 posCube = glm::vec3(-0.20f * x, 0.0f, -0.20f * y);
-                meshManager->AddWorldMesh("water_cube", "assets/mesh/minecraft/Grass_Block.obj", { "minecraft_water" }, posCube, scaleMinecraft);
+                meshManager->AddMesh("water_cube", "assets/mesh/minecraft/Grass_Block.obj", { "minecraft_water" }, "main", posCube, scaleMinecraft);
             }
         }
 
         for (int x = 7; x < 22; x++) {
             for (int y = -5; y < 15; y++) {
                 glm::vec3 posCube = glm::vec3(-0.20f * x, 0.0f, -0.20f * y);
-                meshManager->AddWorldMesh("water_cube_2", "assets/mesh/minecraft/Grass_Block.obj", { "minecraft_water" }, posCube, scaleMinecraft);
+                meshManager->AddMesh("water_cube_2", "assets/mesh/minecraft/Grass_Block.obj", { "minecraft_water" }, "main", posCube, scaleMinecraft);
             }
         }
 
         for (int x = -22; x < 22; x++) {
             for (int y = 15; y < 22; y++) {
                 glm::vec3 posCube = glm::vec3(-0.20f * x, 0.0f, -0.20f * y);
-                meshManager->AddWorldMesh("water_cube_3", "assets/mesh/minecraft/Grass_Block.obj", { "minecraft_water" }, posCube, scaleMinecraft);
+                meshManager->AddMesh("water_cube_3", "assets/mesh/minecraft/Grass_Block.obj", { "minecraft_water" }, "main", posCube, scaleMinecraft);
             }
         }
 
         for (int x = -22; x < 22; x++) {
             for (int y = 22; y < 29; y++) {
                 glm::vec3 posCube = glm::vec3(-0.20f * x, 0.0f, -0.20f * y);
-                meshManager->AddWorldMesh("water_cube_4", "assets/mesh/minecraft/Grass_Block.obj", { "minecraft_water" }, posCube, scaleMinecraft);
+                meshManager->AddMesh("water_cube_4", "assets/mesh/minecraft/Grass_Block.obj", { "minecraft_water" }, "main", posCube, scaleMinecraft);
             }
         }
 
         glm::vec3 pos1 = glm::vec3(0.8f, 0.2f, -0.4f);
         glm::vec3 scaleCamp = glm::vec3(0.002f, 0.002f, 0.002f);
-        meshManager->AddWorldMesh("campfire", "assets/mesh/campfire/Campfire.obj", { "campfire_tex" }, pos1, scaleCamp);
+        meshManager->AddMesh("campfire", "assets/mesh/campfire/Campfire.obj", { "campfire_tex" }, "main", pos1, scaleCamp);
 
         glm::vec3 pos2 = glm::vec3(-1.0f, 0.19f, -1.4f);
         glm::vec3 scaleDeadTree = glm::vec3(0.01f, 0.01f, 0.01f);
-        meshManager->AddWorldMesh("dead_tree", "assets/mesh/tree/dead_tree.obj", { "trunk_tree_cartoon" }, pos2, scaleDeadTree);
+        meshManager->AddMesh("dead_tree", "assets/mesh/tree/dead_tree.obj", { "trunk_tree_cartoon" }, "main", pos2, scaleDeadTree, glm::vec3(0.0f, 1.0f, 0.0f), 20.0f);
 
         pos2 = glm::vec3(1.0f, 0.19f, 1.0f);
-        meshManager->AddWorldMesh("dead_tree", "assets/mesh/tree/dead_tree.obj", { "trunk_tree_cartoon" }, pos2, scaleDeadTree);
+        meshManager->AddMesh("dead_tree", "assets/mesh/tree/dead_tree.obj", { "trunk_tree_cartoon" }, "main", pos2, scaleDeadTree, glm::vec3(0.0f, 1.0f, 0.0f), -20.0f);
 
         pos2 = glm::vec3(1.0f, 0.18f, -2.0f);
-        meshManager->AddWorldMesh("dead_tree", "assets/mesh/tree/dead_tree.obj", { "trunk_tree_cartoon" }, pos2, scaleDeadTree);
+        meshManager->AddMesh("dead_tree", "assets/mesh/tree/dead_tree.obj", { "trunk_tree_cartoon" }, "main", pos2, scaleDeadTree);
 
         glm::vec3 scaleTree = glm::vec3(0.0008f, 0.0008f, 0.0008f);
         pos2 = glm::vec3(-0.7f, 0.19f, -1.9f);
-        meshManager->AddWorldMesh("tree", "assets/mesh/tree/tree.obj", { "tree_top_tex", "trunk_tree_cartoon" }, pos2, scaleTree);
+        meshManager->AddMesh("tree", "assets/mesh/tree/tree.obj", { "tree_top_tex", "trunk_tree_cartoon" }, "main", pos2, scaleTree, glm::vec3(0.0f, 1.0f, 0.0f), 20.0f);
 
         pos2 = glm::vec3(-0.25f, 0.19f, -1.2f);
-        meshManager->AddWorldMesh("tree", "assets/mesh/tree/tree.obj", { "tree_top_tex", "trunk_tree_cartoon" }, pos2, scaleTree);
+        meshManager->AddMesh("tree", "assets/mesh/tree/tree.obj", { "tree_top_tex", "trunk_tree_cartoon" }, "main", pos2, scaleTree, glm::vec3(0.0f, 1.0f, 0.0f), 10.0f);
 
         pos2 = glm::vec3(0.7f, 0.19f, -1.6f);
-        meshManager->AddWorldMesh("tree", "assets/mesh/tree/tree.obj", { "tree_top_tex", "trunk_tree_cartoon" }, pos2, scaleTree);
+        meshManager->AddMesh("tree", "assets/mesh/tree/tree.obj", { "tree_top_tex", "trunk_tree_cartoon" }, "main", pos2, scaleTree, glm::vec3(0.0f, 1.0f, 0.0f), 80.0f);
 
         pos2 = glm::vec3(1.2f, 0.19f, -0.9f);
-        meshManager->AddWorldMesh("tree", "assets/mesh/tree/tree.obj", { "tree_top_tex", "trunk_tree_cartoon" }, pos2, scaleTree);
+        meshManager->AddMesh("tree", "assets/mesh/tree/tree.obj", { "tree_top_tex", "trunk_tree_cartoon" }, "main", pos2, scaleTree);
 
         glm::vec3 moonCubeTest = glm::vec3(0.2f, 0.2f, 0.2f);
         glm::vec3 pos6 = glm::vec3(0.5f, 4.5f, -3.00f);
-        meshManager->AddWorldMesh("moon", "assets/mesh/moon/moon.obj", { "moon" }, pos6, moonCubeTest, glm::vec3(1.0f), 0.0f, false);
+        meshManager->AddMesh("moon", "assets/mesh/moon/moon.obj", { "moon" }, "ambient_light", pos6, moonCubeTest, glm::vec3(1.0f), 0.0f, false);
 
         glm::vec3 houseScale = glm::vec3(0.1f, 0.1f, 0.1f);
         glm::vec3 posHouse = glm::vec3(-0.5f, 0.19f, -0.20f);
         glm::vec3 rotHouse = glm::vec3(0.0f, 1.0f, 0.0f);
-        meshManager->AddWorldMesh("house", "assets/mesh/house/midpoly_town_house_01.obj", { "dark_wood", "rocks", "rooftiles", "bright_wood" }, posHouse, houseScale, rotHouse, -80.0f, false);
+        meshManager->AddMesh("house", "assets/mesh/house/midpoly_town_house_01.obj", { "dark_wood", "rocks", "rooftiles", "bright_wood" }, "main", posHouse, houseScale, rotHouse, -80.0f, false);
 
         glm::vec3 dogScale = glm::vec3(0.3f, 0.3f, 0.3f);
         glm::vec3 posDog = glm::vec3(0.7f, 0.20f, -2.0f);
         glm::vec3 rotDog = glm::vec3(0.0f, 1.0f, 0.0f);
-        meshManager->AddWorldMesh("dog_house", "assets/mesh/doghouse/doghouse0908.obj", { "dog_base_color" }, posDog, dogScale, rotDog, -30.0f);
+        meshManager->AddMesh("dog_house", "assets/mesh/doghouse/doghouse0908.obj", { "dog_base_color" }, "main", posDog, dogScale, rotDog, -30.0f);
 
         std::vector<std::string>skyboxImages;
         skyboxImages.emplace_back("assets/texture/skybox/bluesky/right.jpg");
