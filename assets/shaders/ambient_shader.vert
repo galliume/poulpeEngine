@@ -24,7 +24,7 @@ layout(location = 3) out vec4 fragModelPos;
 layout(location = 4) out float fragAmbiantLight;
 layout(location = 5) out float fragFogDensity;
 layout(location = 6) out vec3 fragFogColor;
-layout(location = 7) out vec3 fragLightPos;
+layout(location = 7) out vec4 fragLightPos;
 
 layout(push_constant) uniform constants
 {
@@ -32,7 +32,7 @@ layout(push_constant) uniform constants
     float ambiantLight;
     float fogDensity;
     vec3 fogColor;
-    vec3 lightPos;
+    vec4 lightPos;
 } PushConstants;
 
 void main() {

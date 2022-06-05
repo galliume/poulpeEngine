@@ -45,4 +45,9 @@ namespace Rbk
     {
         m_Renderer->Draw();
     }
+
+    void RenderManager::SetDeltatime(float deltaTime)
+    {
+        m_Renderer->SetDeltatime(deltaTime);
+    }
 }
