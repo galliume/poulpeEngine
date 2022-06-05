@@ -134,6 +134,7 @@ namespace Rbk
         VkPipeline graphicsPipeline;
         VkPipelineCache pipelineCache = 0;
         glm::vec4 cameraPos;
+        std::string shader;
     };
 
     struct Mesh2D : Mesh

@@ -200,21 +200,19 @@ namespace Rbk
 
             mesh.get()->pipelineLayout = m_Renderer->CreatePipelineLayout(mesh.get()->descriptorSets, { desriptorSetLayout }, pushConstants);
 
-            std::string shaderName = "main";
-
             std::vector<VkPipelineShaderStageCreateInfo>shadersStageInfos;
 
             VkPipelineShaderStageCreateInfo vertShaderStageInfo{};
             vertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
             vertShaderStageInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
-            vertShaderStageInfo.module = m_ShaderManager->GetShaders()->shaders[shaderName][0];
+            vertShaderStageInfo.module = m_ShaderManager->GetShaders()->shaders[mesh.get()->shader][0];
             vertShaderStageInfo.pName = "main";
             shadersStageInfos.emplace_back(vertShaderStageInfo);
 
             VkPipelineShaderStageCreateInfo fragShaderStageInfo{};
             fragShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
             fragShaderStageInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
-            fragShaderStageInfo.module = m_ShaderManager->GetShaders()->shaders[shaderName][1];
+            fragShaderStageInfo.module = m_ShaderManager->GetShaders()->shaders[mesh.get()->shader][1];
             fragShaderStageInfo.pName = "main";
             shadersStageInfos.emplace_back(fragShaderStageInfo);
 
@@ -347,7 +345,7 @@ namespace Rbk
 
         skyboxMesh.get()->pipelineLayout = m_Renderer->CreatePipelineLayout(skyboxMesh.get()->descriptorSets, { skyDesriptorSetLayout }, pushConstants);
 
-        const char* shaderName = "skybox";
+        std::string shaderName = "skybox";
 
         std::vector<VkPipelineShaderStageCreateInfo>shadersStageInfos;
 

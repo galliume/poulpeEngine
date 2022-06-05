@@ -18,7 +18,7 @@ namespace Rbk
         return Rbk::TinyObjLoader::LoadMesh(path, shouldInverseTextureY);
     }
 
-    void MeshManager::AddWorldMesh(std::string name, std::string path, std::vector<std::string> textureNames, glm::vec3 pos, glm::vec3 scale, glm::vec3 axisRot, float rotAngle, bool shouldInverseTextureY)
+    void MeshManager::AddMesh(std::string name, std::string path, std::vector<std::string> textureNames, std::string shader, glm::vec3 pos, glm::vec3 scale, glm::vec3 axisRot, float rotAngle, bool shouldInverseTextureY)
     {
         std::vector<std::shared_ptr<Mesh>> meshes = Load(path, shouldInverseTextureY);
 
@@ -31,6 +31,7 @@ namespace Rbk
             if (0 == m_WorldMeshesLoaded.count(id.c_str())) {
                 mesh.get()->name = id;
                 mesh.get()->texture = textureNames[textureIndex];
+                mesh.get()->shader = shader;
             } else {
                 mesh = m_WorldMeshes[m_WorldMeshesLoaded[id][1]];
             }
