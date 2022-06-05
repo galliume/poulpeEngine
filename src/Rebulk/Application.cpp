@@ -246,7 +246,7 @@ namespace Rbk
                 camera->UpdateSpeed(timeStep);
 
                 glfwPollEvents();
-
+                renderManager->SetDeltatime(timeStep);
                 renderManager->Draw();
 
 #ifdef RBK_DEBUG

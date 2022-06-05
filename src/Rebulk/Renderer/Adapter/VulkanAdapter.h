@@ -44,7 +44,7 @@ namespace Rbk
         inline uint32_t GetSwapImageIndex() { return m_ImageIndex; };
         inline std::shared_ptr<VulkanRenderer> Rdr() { return m_Renderer; };
         inline std::shared_ptr<VkRenderPass> RdrPass() { return m_RenderPass; };
-        inline void MakeSpin(bool spin) { m_MakeSpin = spin; };
+        void SetDeltatime(float deltaTime);
 
         //@todo add GuiManager
         VkRenderPass CreateImGuiRenderPass();
@@ -79,7 +79,6 @@ namespace Rbk
         std::vector<VulkanPipeline>m_Pipelines;
         bool m_IsPrepared = false;
         bool m_WireFrameModeOn = false;
-        bool m_MakeSpin = false;
         std::shared_ptr<Camera> m_Camera = nullptr;
         std::shared_ptr<Window> m_Window = nullptr;
         std::shared_ptr<TextureManager> m_TextureManager = nullptr;
@@ -91,5 +90,7 @@ namespace Rbk
         std::vector<VkImageView>m_ColorImageViews = {};
         glm::mat4 m_Perspective;
         glm::mat4 m_lastLookAt;
+        float m_Deltatime = 0.0f;
+        std::vector<glm::vec3>m_LightsPos;
     };
 }

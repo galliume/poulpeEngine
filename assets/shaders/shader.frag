@@ -5,8 +5,8 @@
 layout(location = 0) out vec4 outputColor;
 layout(location = 0) in vec2 fragTexCoord;
 layout(location = 1) in vec3 fragNormal;
-layout(location = 2) in vec4 cameraPos;
-layout(location = 3) in vec4 fragModelPos;
+layout(location = 2) in vec3 cameraPos;
+layout(location = 3) in vec3 fragModelPos;
 layout(location = 4) in float fragAmbiantLight; 
 layout(location = 5) in float fragFogDensity; 
 layout(location = 6) in vec3 fragFogColor;
@@ -32,19 +32,20 @@ float getFogFactor(float d)
 }
 
 void main() {
-    float specularStrength = 0.5;
-    vec3 ambient = fragAmbiantLight * lightColor;
+    float specularStrength = 0.5;  
+    vec3 viewDir = normalize(cameraPos - fragModelPos);
+    vec3 lightDir = normalize(fragLightPos - fragModelPos);
     vec3 norm = normalize(fragNormal);
-    vec3 lightDir = normalize(fragLightPos - fragModelPos.xyz);
-    vec3 viewDir = normalize(cameraPos.xyz - fragModelPos.xyz);
     vec3 reflectDir = reflect(-lightDir, norm);
     float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32);
     vec3 specular = specularStrength * spec * lightColor;
+
     float diff = max(dot(norm, lightDir), 0.0);
-    vec3 diffuse = diff * lightColor;
+    vec3 ambient = fragAmbiantLight * lightColor;
+    vec3 diffuse = diff * lightColor * 0.05;
 
     outputColor = texture(texSampler, fragTexCoord);
-    outputColor = vec4(ambient + diffuse + specular, 1.0f) * outputColor;
+    outputColor = vec4((ambient + diffuse), 1.0) * outputColor;
     
     if (0 < fragFogDensity) {
         float d = distance(cameraPos, fragModelPos);
