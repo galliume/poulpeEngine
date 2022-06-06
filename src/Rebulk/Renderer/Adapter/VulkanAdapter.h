@@ -24,7 +24,7 @@ namespace Rbk
     public:
 
         explicit VulkanAdapter(std::shared_ptr<Window> window);
-        ~VulkanAdapter();
+        virtual ~VulkanAdapter();
 
         virtual void Init() override;
         virtual void AddCamera(std::shared_ptr<Camera> camera) override;
@@ -44,7 +44,7 @@ namespace Rbk
         inline uint32_t GetSwapImageIndex() { return m_ImageIndex; };
         inline std::shared_ptr<VulkanRenderer> Rdr() { return m_Renderer; };
         inline std::shared_ptr<VkRenderPass> RdrPass() { return m_RenderPass; };
-        void SetDeltatime(float deltaTime);
+        void SetDeltatime(float deltaTime) override;
 
         //@todo add GuiManager
         VkRenderPass CreateImGuiRenderPass();
@@ -72,12 +72,7 @@ namespace Rbk
         std::vector<VkCommandBuffer> m_CommandBuffers = {};
         uint32_t m_ImageIndex = 0;
         std::pair<std::vector<VkBuffer>, std::vector<VkDeviceMemory>> m_UniformBuffers = {};
-        VkDescriptorSet m_DescriptorSet = nullptr;
-        VkDescriptorSetLayout m_DescriptorSetLayout = nullptr;
-        VkPipelineLayout m_PipelineLayout = nullptr;
-        VkDescriptorPool m_DescriptorPool = nullptr;
         std::vector<VulkanPipeline>m_Pipelines;
-        bool m_IsPrepared = false;
         bool m_WireFrameModeOn = false;
         std::shared_ptr<Camera> m_Camera = nullptr;
         std::shared_ptr<Window> m_Window = nullptr;

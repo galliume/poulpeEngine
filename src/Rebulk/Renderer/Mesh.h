@@ -132,12 +132,12 @@ namespace Rbk
         std::vector<VkDescriptorSet> descriptorSets;
         VkPipelineLayout pipelineLayout;
         VkPipeline graphicsPipeline;
-        VkPipelineCache pipelineCache = 0;
+        VkPipelineCache pipelineCache = nullptr;
         glm::vec4 cameraPos;
         std::string shader;
     };
 
-    struct Mesh2D : Mesh
+    struct Mesh2D : public Mesh
     {
         std::vector<Vertex2D> vertices;
     };

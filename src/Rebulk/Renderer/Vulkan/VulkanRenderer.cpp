@@ -126,7 +126,7 @@ namespace Rbk {
         createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
         createInfo.pApplicationInfo = &appInfo;
 
-        createInfo.enabledExtensionCount = static_cast<uint32_t>(m_RequiredExtensions.size());;
+        createInfo.enabledExtensionCount = static_cast<uint32_t>(m_RequiredExtensions.size());
         createInfo.ppEnabledExtensionNames = m_RequiredExtensions.data();
 
         VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo{};
@@ -197,11 +197,11 @@ namespace Rbk {
         std::vector<VkLayerProperties> availableLayers(layerCount);
         vkEnumerateInstanceLayerProperties(&layerCount, availableLayers.data());
 
-        for (const char* layerName : m_ValidationLayers) {
+        for (const std::string layerName : m_ValidationLayers) {
             bool layerFound = false;
 
             for (const auto& layerProperties : availableLayers) {
-                if (strcmp(layerName, layerProperties.layerName) == 0) {
+                if (strcmp(layerName.c_str(), layerProperties.layerName) == 0) {
                     layerFound = true;
                     break;
                 }
@@ -223,7 +223,7 @@ namespace Rbk {
         const char** glfwExtensions;
         glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
 
-        std::vector<const char*> extensions(glfwExtensions, glfwExtensions + glfwExtensionCount);
+        std::vector<const  char*> extensions(glfwExtensions, glfwExtensions + glfwExtensionCount);
         
         if (m_EnableValidationLayers) {
             extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
@@ -231,9 +231,8 @@ namespace Rbk {
             extensions.push_back(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME);
         }
 
-        for_each(extensions.begin(), extensions.end(), [this](const char* text) {
-            std::string message = std::string("required extension needed : ") + text;
-            Rbk::Log::GetLogger()->trace(message);
+        for_each(extensions.begin(), extensions.end(), [](std::string text) {
+            Rbk::Log::GetLogger()->trace("required extension needed : {}", text);
         });
 
         m_RequiredExtensions = extensions;
@@ -388,12 +387,16 @@ namespace Rbk {
         deviceFeatures.sampleRateShading = VK_TRUE;
         deviceFeatures.imageCubeArray = VK_TRUE;
 
-        VkPhysicalDeviceDescriptorIndexingFeatures descriptorIndexing{};
+   /*     VkPhysicalDeviceDescriptorIndexingFeatures descriptorIndexing{};
         descriptorIndexing.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES;
         descriptorIndexing.shaderSampledImageArrayNonUniformIndexing = VK_TRUE;
         descriptorIndexing.runtimeDescriptorArray = VK_TRUE;
         descriptorIndexing.descriptorBindingVariableDescriptorCount = VK_TRUE;
-        descriptorIndexing.descriptorBindingPartiallyBound = VK_TRUE;
+        descriptorIndexing.descriptorBindingPartiallyBound = VK_TRUE;*/
+
+        VkPhysicalDeviceDynamicRenderingFeaturesKHR dynamicRenderingFeature{};
+        dynamicRenderingFeature.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DYNAMIC_RENDERING_FEATURES_KHR;
+        dynamicRenderingFeature.dynamicRendering = VK_TRUE;
 
         VkDeviceCreateInfo createInfo{};
         createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
@@ -402,7 +405,7 @@ namespace Rbk {
         createInfo.pEnabledFeatures = &deviceFeatures;
         createInfo.enabledExtensionCount = static_cast<uint32_t>(m_DeviceExtensions.size());
         createInfo.ppEnabledExtensionNames = m_DeviceExtensions.data();
-        //createInfo.pNext = &descriptorIndexing;
+        createInfo.pNext = &dynamicRenderingFeature;
 
         if (vkCreateDevice(m_PhysicalDevice, &createInfo, nullptr, &m_Device) != VK_SUCCESS) {
             Rbk::Log::GetLogger()->critical("failed to create logical device!");
@@ -419,7 +422,7 @@ namespace Rbk {
 
     void VulkanRenderer::CreateSurface()
     {
-        VkResult result = glfwCreateWindowSurface(m_Instance, m_Window.get()->Get(), nullptr, &m_Surface);
+        VkResult result = glfwCreateWindowSurface(m_Instance, m_Window->Get(), nullptr, &m_Surface);
 
         if (result != VK_SUCCESS) {
             Rbk::Log::GetLogger()->critical("failed to create window surface!");
@@ -429,7 +432,7 @@ namespace Rbk {
         Rbk::Log::GetLogger()->trace("successfully create window surface!");
     }
 
-    SwapChainSupportDetails VulkanRenderer::QuerySwapChainSupport(VkPhysicalDevice device)
+    const SwapChainSupportDetails VulkanRenderer::QuerySwapChainSupport(VkPhysicalDevice device) const
     {
         SwapChainSupportDetails details;
         vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, m_Surface, &details.capabilities);
@@ -483,7 +486,7 @@ namespace Rbk {
         }
 
         int width, height;
-        glfwGetFramebufferSize(m_Window.get()->Get(), &width, &height);
+        glfwGetFramebufferSize(m_Window->Get(), &width, &height);
 
         VkExtent2D actualExtent = {
             static_cast<uint32_t>(width),
@@ -496,7 +499,7 @@ namespace Rbk {
         return actualExtent;
     }
 
-    uint32_t VulkanRenderer::GetImageCount()
+    uint32_t VulkanRenderer::GetImageCount() const
     {
         uint32_t imageCount = m_SwapChainSupport.capabilities.minImageCount + 1;
 
@@ -564,8 +567,8 @@ namespace Rbk {
         VkExtent2D currentExtent = GetSwapChainExtent();
 
         SwapChainSupportDetails swapChainSupport = QuerySwapChainSupport(m_PhysicalDevice);
-        VkSurfaceFormatKHR surfaceFormat = ChooseSwapSurfaceFormat(swapChainSupport.formats);
-        VkPresentModeKHR presentMode = ChooseSwapPresentMode(swapChainSupport.presentModes);
+        //VkSurfaceFormatKHR surfaceFormat = ChooseSwapSurfaceFormat(swapChainSupport.formats);
+        //VkPresentModeKHR presentMode = ChooseSwapPresentMode(swapChainSupport.presentModes);
         VkExtent2D extent = ChooseSwapExtent(swapChainSupport.capabilities);
 
         uint32_t newWidth = extent.width;
@@ -663,11 +666,11 @@ namespace Rbk {
         pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
 
         if (0 != pushConstants.size()) {
-            pipelineLayoutInfo.pushConstantRangeCount = pushConstants.size();
+            pipelineLayoutInfo.pushConstantRangeCount = static_cast<uint32_t>(pushConstants.size());
             pipelineLayoutInfo.pPushConstantRanges = pushConstants.data();
         }
 
-        pipelineLayoutInfo.setLayoutCount = descriptorSetLayouts.size();
+        pipelineLayoutInfo.setLayoutCount = static_cast<uint32_t>(descriptorSetLayouts.size());
         pipelineLayoutInfo.pSetLayouts = descriptorSetLayouts.data();
 
         VkResult result = vkCreatePipelineLayout(m_Device, &pipelineLayoutInfo, nullptr, &graphicsPipelineLayout);
@@ -910,7 +913,8 @@ namespace Rbk {
 
         if (result != VK_SUCCESS) {
             Rbk::Log::GetLogger()->critical("failed to create render pass!");
-        } else {
+        }
+        else {
             Rbk::Log::GetLogger()->trace("created successfully render pass!");
         }
 
@@ -986,7 +990,7 @@ namespace Rbk {
         allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
         allocInfo.commandPool = commandPool;
         allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-        allocInfo.commandBufferCount = (uint32_t)commandBuffers.size();
+        allocInfo.commandBufferCount = static_cast<uint32_t>(commandBuffers.size());
 
         VkResult result = vkAllocateCommandBuffers(m_Device, &allocInfo, commandBuffers.data());
 
@@ -1018,8 +1022,8 @@ namespace Rbk {
         VkViewport viewport;
         viewport.x = 0;
         viewport.y = 0;
-        viewport.width = (float)m_SwapChainExtent.width;
-        viewport.height = (float)m_SwapChainExtent.height;
+        viewport.width = static_cast<float>(m_SwapChainExtent.width);
+        viewport.height = static_cast<float>(m_SwapChainExtent.height);
         viewport.minDepth = 0.0f;
         viewport.maxDepth = 1.0f;
 
@@ -1028,7 +1032,7 @@ namespace Rbk {
 
     void VulkanRenderer::SetScissor(VkCommandBuffer commandBuffer)
     {
-        VkRect2D scissor = { { 0, 0 }, { (uint32_t)m_SwapChainExtent.width, (uint32_t)m_SwapChainExtent.height } };
+        VkRect2D scissor = { { 0, 0 }, { static_cast<uint32_t>(m_SwapChainExtent.width), static_cast<uint32_t>(m_SwapChainExtent.height) } };
 
         vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
     }
@@ -1171,6 +1175,62 @@ namespace Rbk {
         vkCmdEndRenderPass(commandBuffer);
     }
 
+
+    void VulkanRenderer::BeginRendering(VkCommandBuffer commandBuffer, VkImageView  imageView)
+    {
+        std::array<VkClearValue, 2> clearValues{};
+        clearValues[0].color = { {0.f, 0.f, 0.f, 1.0f} };
+        clearValues[1].depthStencil = { 1.0f, 0 };
+        
+        std::vector<VkRenderingAttachmentInfoKHR> colorAttachments;
+
+        VkRenderingAttachmentInfoKHR colorAttachment{};
+        colorAttachment.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO_KHR;
+        //colorAttachment.pNext;
+        colorAttachment.imageView = imageView;
+        colorAttachment.imageLayout = VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL_KHR;
+        colorAttachment.resolveMode = VK_RESOLVE_MODE_NONE;
+        //colorAttachment.resolveImageView;
+        //colorAttachment.resolveImageLayout;
+        colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+        colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+        colorAttachment.clearValue.color = { { 0.2f, 0.2f, 0.2f, 1.0f} };
+        colorAttachment.clearValue.depthStencil = { 1.0f, 0 };
+        
+        VkRenderingAttachmentInfoKHR depthAttachment{};
+        depthAttachment.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO_KHR;
+        //colorAttachment.pNext;
+        //depthAttachment.imageView = depthImageView[i];
+        depthAttachment.imageLayout = VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL_KHR;
+        depthAttachment.resolveMode = VK_RESOLVE_MODE_NONE;
+        //colorAttachment.resolveImageView;
+        //colorAttachment.resolveImageLayout;
+        depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+        depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+        depthAttachment.clearValue.color = { {0.f, 0.f, 0.f, 1.0f} };
+        depthAttachment.clearValue.depthStencil = { 1.0f, 0 };
+
+        VkRenderingInfoKHR renderingInfo{};
+        renderingInfo.sType = VK_STRUCTURE_TYPE_RENDERING_INFO_KHR;
+        //renderingInfo.pNext;
+        //renderingInfo.flags;
+        renderingInfo.renderArea.offset = { 0, 0 };
+        renderingInfo.renderArea.extent = m_SwapChainExtent;
+        renderingInfo.layerCount = 1;
+        //renderingInfo.viewMask;
+        renderingInfo.colorAttachmentCount = 1;
+        renderingInfo.pColorAttachments = &colorAttachment;
+        renderingInfo.pDepthAttachment = &depthAttachment;
+        //renderingInfo.pStencilAttachment;
+
+        vkCmdBeginRenderingKHR(commandBuffer, &renderingInfo);
+    }
+
+    void VulkanRenderer::EndRendering(VkCommandBuffer commandBuffer)
+    {
+        vkCmdEndRenderingKHR(commandBuffer);
+    }
+
     void VulkanRenderer::EndCommandBuffer(VkCommandBuffer commandBuffer)
     {
         vkEndCommandBuffer(commandBuffer);
@@ -1273,6 +1333,7 @@ namespace Rbk {
             throw std::runtime_error("failed to acquire swap chain image!");
         }
 
+
         return imageIndex;
     }
 
@@ -1298,12 +1359,11 @@ namespace Rbk {
             0,
             nullptr
         );
-        uint32_t pushConstantIndex = 0;
 
-        for (int i = 0; i < mesh->uniformBuffers.size(); i++) {
+        for (size_t i = 0; i < mesh->uniformBuffers.size(); i++) {
             if (drawIndexed) {
                 vkCmdBindIndexBuffer(commandBuffer, mesh->indicesBuffer.first, 0, VK_INDEX_TYPE_UINT32);
-                vkCmdDrawIndexed(commandBuffer, mesh->indices.size(), mesh->ubos.size(), 0, 0, 0);
+                vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(mesh->indices.size()), static_cast<uint32_t>(mesh->ubos.size()), 0, 0, 0);
             } else {
                 vkCmdDraw(commandBuffer, static_cast<uint32_t>(mesh->vertices.size()), 1, 0, 0);
             }
@@ -1312,7 +1372,7 @@ namespace Rbk {
 
     void VulkanRenderer::AddPipelineBarrier(VkCommandBuffer commandBuffer, VkImageMemoryBarrier renderBarrier, VkPipelineStageFlags srcStageMask, VkPipelineStageFlags dstStageMask, VkDependencyFlags dependencyFlags)
     {
-        vkCmdPipelineBarrier(commandBuffer, srcStageMask, dstStageMask, dependencyFlags, 0, 0, 0, 0, 1, &renderBarrier);
+        vkCmdPipelineBarrier(commandBuffer, srcStageMask, dstStageMask, dependencyFlags, 0, nullptr, 0, nullptr, 1, &renderBarrier);
     }
 
     void VulkanRenderer::CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory)
@@ -1354,7 +1414,7 @@ namespace Rbk {
 
         void* data;
         vkMapMemory(m_Device, stagingBufferMemory, 0, bufferSize, 0, &data);
-        memcpy(data, indices.data(), (size_t)bufferSize);
+        memcpy(data, indices.data(), static_cast<size_t>(bufferSize));
         vkUnmapMemory(m_Device, stagingBufferMemory);
 
         CreateBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, indexBuffer.first, indexBuffer.second);
@@ -1381,7 +1441,7 @@ namespace Rbk {
 
         void* data;
         vkMapMemory(m_Device, stagingBufferMemory, 0, bufferSize, 0, &data);
-        memcpy(data, vertices.data(), (size_t)bufferSize);
+        memcpy(data, vertices.data(), static_cast<size_t>(bufferSize));
         vkUnmapMemory(m_Device, stagingBufferMemory);
 
         CreateBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, vertexBuffer.first, vertexBuffer.second);
@@ -1408,7 +1468,7 @@ namespace Rbk {
 
         void* data;
         vkMapMemory(m_Device, stagingBufferMemory, 0, bufferSize, 0, &data);
-        memcpy(data, vertices.data(), (size_t)bufferSize);
+        memcpy(data, vertices.data(), static_cast<size_t>(bufferSize));
         vkUnmapMemory(m_Device, stagingBufferMemory);
 
         CreateBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, vertexBuffer.first, vertexBuffer.second);
@@ -1799,7 +1859,7 @@ namespace Rbk {
             }
         }
 
-        vkCmdCopyBufferToImage(commandBuffer, buffer, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, bufferCopyRegions.size(), bufferCopyRegions.data());
+        vkCmdCopyBufferToImage(commandBuffer, buffer, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, static_cast<uint32_t>(bufferCopyRegions.size()), bufferCopyRegions.data());
     }
 
     VkImageView VulkanRenderer::CreateDepthResources(VkCommandBuffer commandBuffer)
@@ -1959,7 +2019,7 @@ namespace Rbk {
 
     void VulkanRenderer::DestroySemaphores(std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>> semaphores)
     {
-        for (int i = 0; i < m_MAX_FRAMES_IN_FLIGHT; i++) {
+        for (size_t i = 0; i < m_MAX_FRAMES_IN_FLIGHT; i++) {
             vkDestroySemaphore(m_Device, semaphores.first[i], nullptr);
             vkDestroySemaphore(m_Device, semaphores.second[i], nullptr);
             vkDestroyFence(m_Device, m_InFlightFences[i], nullptr);
@@ -1980,7 +2040,7 @@ namespace Rbk {
     void VulkanRenderer::DestroyRenderPass(std::shared_ptr<VkRenderPass> renderPass, VkCommandPool commandPool, std::vector<VkCommandBuffer> commandBuffers)
     {
         vkFreeCommandBuffers(m_Device, commandPool, static_cast<uint32_t>(commandBuffers.size()), commandBuffers.data());
-        vkDestroyRenderPass(m_Device, *renderPass.get(), nullptr);
+        //vkDestroyRenderPass(m_Device, *renderPass.get(), nullptr);
         vkDestroyCommandPool(m_Device, commandPool, nullptr);
     }
 
@@ -2002,12 +2062,12 @@ namespace Rbk {
     void VulkanRenderer::DestroySwapchain(VkDevice device, VkSwapchainKHR swapChain, std::vector<VkFramebuffer> swapChainFramebuffers, std::vector<VkImageView> swapChainImageViews)
     {
         for (uint32_t i = 0; i < swapChainFramebuffers.size(); ++i)
-            vkDestroyFramebuffer(device, swapChainFramebuffers[i], 0);
+            vkDestroyFramebuffer(device, swapChainFramebuffers[i], nullptr);
 
         for (uint32_t i = 0; i < swapChainImageViews.size(); ++i)
-            vkDestroyImageView(device, swapChainImageViews[i], 0);
+            vkDestroyImageView(device, swapChainImageViews[i], nullptr);
 
-        vkDestroySwapchainKHR(device, swapChain, 0);
+        vkDestroySwapchainKHR(device, swapChain, nullptr);
     }
 
     VulkanRenderer::~VulkanRenderer()
