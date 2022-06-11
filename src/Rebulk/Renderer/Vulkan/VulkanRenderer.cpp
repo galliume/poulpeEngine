@@ -691,6 +691,7 @@ namespace Rbk {
         std::vector<VkPipelineShaderStageCreateInfo>shadersCreateInfos,
         VkPipelineVertexInputStateCreateInfo vertexInputInfo,
         VkCullModeFlagBits cullMode,
+        bool dynamicRendering,
         bool depthTestEnable,
         bool depthWriteEnable,
         bool stencilTestEnable,
@@ -705,8 +706,8 @@ namespace Rbk {
         VkViewport viewport{};
         viewport.x = 0.0f;
         viewport.y = 0.0f;
-        viewport.width = (float)m_SwapChainExtent.width;
-        viewport.height = (float)m_SwapChainExtent.height;
+        viewport.width = static_cast<float>(m_SwapChainExtent.width);
+        viewport.height = static_cast<float>(m_SwapChainExtent.height);
         viewport.minDepth = 0.0f;
         viewport.maxDepth = 1.0f;
 
@@ -737,7 +738,7 @@ namespace Rbk {
 
         VkPipelineMultisampleStateCreateInfo multisampling{};
         multisampling.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
-        multisampling.sampleShadingEnable = VK_TRUE;
+        multisampling.sampleShadingEnable = VK_FALSE;
         multisampling.rasterizationSamples = m_MsaaSamples;
         multisampling.minSampleShading = 0.2f;
         multisampling.pSampleMask = nullptr;
@@ -794,11 +795,31 @@ namespace Rbk {
         pipelineInfo.pDepthStencilState = &depthStencil;
         pipelineInfo.pColorBlendState = &colorBlending;
         pipelineInfo.layout = pipelineLayout;
-        pipelineInfo.renderPass = *renderPass.get();
+        pipelineInfo.renderPass = (dynamicRendering) ? nullptr : * renderPass.get();
         pipelineInfo.subpass = 0;
         pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
         pipelineInfo.basePipelineIndex = -1;
         pipelineInfo.pDynamicState = &dynamicState;
+
+        if (dynamicRendering) {
+            //VkAttachmentSampleCountInfoNV sampleCount{};
+            //sampleCount.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_COARSE_SAMPLE_ORDER_STATE_CREATE_INFO_NV;
+            ////sampleCount.pNext;
+            //sampleCount.flags = VK_SAMPLE_COUNT_1_BIT | VK_SAMPLE_COUNT_8_BIT;
+            //sampleCount.colorAttachmentCount;
+            //sampleCount.pColorAttachmentSamples;
+            //sampleCount.depthStencilAttachmentSamples;
+
+            VkFormat format = GetSwapChainImageFormat();
+            VkFormat depthFormat = FindDepthFormat();
+
+            VkPipelineRenderingCreateInfoKHR renderingCreateInfo{};
+            renderingCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO_KHR;
+            renderingCreateInfo.colorAttachmentCount = 1;
+            renderingCreateInfo.pColorAttachmentFormats = &format;
+            renderingCreateInfo.depthAttachmentFormat = depthFormat;
+            pipelineInfo.pNext = &renderingCreateInfo;
+        }
 
         VkPipeline graphicsPipeline = nullptr;
 
@@ -1176,13 +1197,11 @@ namespace Rbk {
     }
 
 
-    void VulkanRenderer::BeginRendering(VkCommandBuffer commandBuffer, VkImageView  imageView)
+    void VulkanRenderer::BeginRendering(VkCommandBuffer commandBuffer, VkImageView  imageView, VkImageView  depthImageView)
     {
-        std::array<VkClearValue, 2> clearValues{};
-        clearValues[0].color = { {0.f, 0.f, 0.f, 1.0f} };
-        clearValues[1].depthStencil = { 1.0f, 0 };
-        
-        std::vector<VkRenderingAttachmentInfoKHR> colorAttachments;
+        VkClearValue clearValues{};
+        clearValues.color = { {0.f, 0.f, 0.f, 1.0f} };
+        clearValues.depthStencil = { 1.0f, 0 };
 
         VkRenderingAttachmentInfoKHR colorAttachment{};
         colorAttachment.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO_KHR;
@@ -1194,21 +1213,19 @@ namespace Rbk {
         //colorAttachment.resolveImageLayout;
         colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
         colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-        colorAttachment.clearValue.color = { { 0.2f, 0.2f, 0.2f, 1.0f} };
-        colorAttachment.clearValue.depthStencil = { 1.0f, 0 };
+        colorAttachment.clearValue = clearValues;
         
         VkRenderingAttachmentInfoKHR depthAttachment{};
         depthAttachment.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO_KHR;
         //colorAttachment.pNext;
-        //depthAttachment.imageView = depthImageView[i];
+        depthAttachment.imageView = depthImageView;
         depthAttachment.imageLayout = VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL_KHR;
         depthAttachment.resolveMode = VK_RESOLVE_MODE_NONE;
         //colorAttachment.resolveImageView;
         //colorAttachment.resolveImageLayout;
         depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
         depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-        depthAttachment.clearValue.color = { {0.f, 0.f, 0.f, 1.0f} };
-        depthAttachment.clearValue.depthStencil = { 1.0f, 0 };
+        depthAttachment.clearValue = clearValues;
 
         VkRenderingInfoKHR renderingInfo{};
         renderingInfo.sType = VK_STRUCTURE_TYPE_RENDERING_INFO_KHR;

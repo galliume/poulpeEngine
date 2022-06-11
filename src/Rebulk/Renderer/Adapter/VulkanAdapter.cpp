@@ -68,20 +68,28 @@ namespace Rbk
         m_Renderer->DestroySemaphores(m_Semaphores);
         m_Renderer->ResetCurrentFrameIndex();
         m_SwapChainImageViews.resize(m_SwapChainImages.size());
+        m_DepthImageViews.resize(m_SwapChainImages.size());
+        m_ColorImageViews.resize(m_SwapChainImages.size());
 
         for (uint32_t i = 0; i < m_SwapChainImages.size(); i++) {
+
             m_SwapChainImageViews[i] = m_Renderer->CreateImageView(m_SwapChainImages[i], m_Renderer->GetSwapChainImageFormat(), VK_IMAGE_ASPECT_COLOR_BIT);
-        }
-        std::vector<VkImageView> depthImageViews;
-        std::vector<VkImageView> colorImageViews;
+            VkDeviceMemory colorImageMemory;
+            VkImage colorImage;
+            m_Renderer.get()->CreateImage(m_Renderer.get()->GetSwapChainExtent().width, m_Renderer.get()->GetSwapChainExtent().height, 1, m_Renderer.get()->GetMsaaSamples(), m_Renderer.get()->GetSwapChainImageFormat(), VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, colorImage, colorImageMemory);
+            VkImageView colorImageView = m_Renderer->CreateImageView(colorImage, m_Renderer->GetSwapChainImageFormat(), VK_IMAGE_ASPECT_COLOR_BIT, 1);
 
-        for (auto&& [textName, tex] : m_TextureManager->GetTextures()) {
-            m_Renderer->CreateImage(tex.width, tex.height, tex.mipLevels, VK_SAMPLE_COUNT_1_BIT, m_Renderer->FindDepthFormat(), VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, tex.depthImage, tex.depthImageMemory);
-            depthImageViews.emplace_back(tex.depthImageView);
-            colorImageViews.emplace_back(tex.colorImageView);
+            m_ColorImageViews[i] = colorImageView;
+
+            VkImage depthImage;
+            VkDeviceMemory depthImageMemory;
+            m_Renderer.get()->CreateImage(m_Renderer.get()->GetSwapChainExtent().width, m_Renderer.get()->GetSwapChainExtent().height, 1, m_Renderer.get()->GetMsaaSamples(), m_Renderer.get()->FindDepthFormat(), VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, depthImage, depthImageMemory);
+            VkImageView depthImageView = m_Renderer.get()->CreateImageView(depthImage, m_Renderer.get()->FindDepthFormat(), 1, VK_IMAGE_ASPECT_DEPTH_BIT);
+
+            m_DepthImageViews[i] = depthImageView;
         }
 
-        m_SwapChainFramebuffers = m_Renderer->CreateFramebuffers(m_RenderPass, m_SwapChainImageViews, depthImageViews, colorImageViews);
+        m_SwapChainFramebuffers = m_Renderer->CreateFramebuffers(m_RenderPass, m_SwapChainImageViews, m_DepthImageViews, m_ColorImageViews);
         m_Semaphores = m_Renderer->CreateSyncObjects(m_SwapChainImages);
         m_Renderer->ResetCommandPool(m_CommandPool);
         m_CommandBuffers = m_Renderer->AllocateCommandBuffers(m_CommandPool, static_cast<uint32_t>(m_SwapChainImageViews.size()));
@@ -103,21 +111,33 @@ namespace Rbk
 
     void VulkanAdapter::PrepareWorld()
     {
-        bool wireFrame = false;
+        bool wireFrame = true;
 
         m_SwapChainImageViews.resize(m_SwapChainImages.size());
+        m_DepthImageViews.resize(m_SwapChainImages.size());
+        m_ColorImageViews.resize(m_SwapChainImages.size());
         VkVertexInputBindingDescription bDesc = Vertex::GetBindingDescription();
 
         for (uint32_t i = 0; i < m_SwapChainImages.size(); i++) {
             m_SwapChainImageViews[i] = m_Renderer->CreateImageView(m_SwapChainImages[i], m_Renderer->GetSwapChainImageFormat(), VK_IMAGE_ASPECT_COLOR_BIT);
-        }
 
-        /*std::vector<VkImageView> depthImageViews;
-        std::vector<VkImageView> colorImageViews;*/
+            VkDeviceMemory colorImageMemory;
+            VkImage colorImage;
+            m_Renderer.get()->CreateImage(m_Renderer.get()->GetSwapChainExtent().width, m_Renderer.get()->GetSwapChainExtent().height, 1, m_Renderer.get()->GetMsaaSamples(), m_Renderer.get()->GetSwapChainImageFormat(), VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, colorImage, colorImageMemory);
+            VkImageView colorImageView = m_Renderer->CreateImageView(colorImage, m_Renderer->GetSwapChainImageFormat(), VK_IMAGE_ASPECT_COLOR_BIT, 1);
 
-        for (auto&& [textName, tex] : m_TextureManager->GetTextures()) {
-            m_DepthImageViews.emplace_back(tex.depthImageView);
-            m_ColorImageViews.emplace_back(tex.colorImageView);
+            m_ColorImageViews[i] = colorImageView;
+
+            VkImage depthImage;
+            VkDeviceMemory depthImageMemory;
+            m_Renderer.get()->CreateImage(m_Renderer.get()->GetSwapChainExtent().width, m_Renderer.get()->GetSwapChainExtent().height, 1, m_Renderer.get()->GetMsaaSamples(), m_Renderer.get()->FindDepthFormat(), VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, depthImage, depthImageMemory);
+            VkImageView depthImageView = m_Renderer.get()->CreateImageView(depthImage, m_Renderer.get()->FindDepthFormat(), 1, VK_IMAGE_ASPECT_DEPTH_BIT);
+            
+            m_DepthImageViews[i]  = depthImageView;
+            //for (auto&& [textName, tex] : m_TextureManager->GetTextures()) {
+            //    m_DepthImageViews.emplace_back(tex.depthImageView);
+            //    m_ColorImageViews.emplace_back(tex.colorImageView);
+            //}
         }
 
         m_Semaphores = m_Renderer->CreateSyncObjects(m_SwapChainImages);
@@ -143,6 +163,8 @@ namespace Rbk
         vkPushconstants.size = sizeof(constants);
         vkPushconstants.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
 
+        pushConstants.emplace_back(vkPushconstants);
+
         VkDescriptorSetLayoutBinding uboLayoutBinding{};
         uboLayoutBinding.binding = 0;
         uboLayoutBinding.descriptorCount = 1;
@@ -162,8 +184,6 @@ namespace Rbk
         VkDescriptorSetLayout desriptorSetLayout = m_Renderer->CreateDescriptorSetLayout(
             bindings, VK_DESCRIPTOR_SET_LAYOUT_CREATE_UPDATE_AFTER_BIND_POOL_BIT
         );
-
-        pushConstants.emplace_back(vkPushconstants);
 
         for (std::shared_ptr<Mesh> mesh : *worldMeshes) {
 
@@ -230,7 +250,7 @@ namespace Rbk
                 shadersStageInfos,
                 vertexInputInfo,
                 VK_CULL_MODE_BACK_BIT,
-                true, true, true, wireFrame
+                false, true, true, wireFrame
             );
         }
 
@@ -300,8 +320,8 @@ namespace Rbk
 
         Texture tex = m_TextureManager->GetSkyboxTexture();
         //Texture tex = m_TextureManager->GetTextures()["skybox_tex"];
-        m_DepthImageViews.emplace_back(tex.depthImageView);
-        m_ColorImageViews.emplace_back(tex.colorImageView);
+        //m_DepthImageViews.emplace_back(tex.depthImageView);
+        //m_ColorImageViews.emplace_back(tex.colorImageView);
 
         std::array<VkDescriptorPoolSize, 2> skyPoolSizes{};
         skyPoolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
@@ -376,7 +396,8 @@ namespace Rbk
             skyboxMesh->pipelineCache,
             shadersStageInfos,
             vertexInputInfo,
-            VK_CULL_MODE_NONE
+            VK_CULL_MODE_NONE,
+            false
         );
 
         m_MeshManager->SetSkyboxMesh(skyboxMesh);
@@ -480,7 +501,8 @@ namespace Rbk
             m_Crosshair->pipelineCache,
             cshadersStageInfos,
             vertexInputInfo2D,
-            VK_CULL_MODE_FRONT_BIT
+            VK_CULL_MODE_FRONT_BIT,
+            false
         );
 
         //command buffer
@@ -579,7 +601,7 @@ namespace Rbk
         );
 
         m_Renderer->BeginRenderPass(m_RenderPass, m_CommandBuffers[m_ImageIndex], m_SwapChainFramebuffers[m_ImageIndex]);
-        //m_Renderer->BeginRendering(m_CommandBuffers[m_ImageIndex], m_SwapChainImageViews[m_ImageIndex]);
+        //m_Renderer->BeginRendering(m_CommandBuffers[m_ImageIndex], m_SwapChainImageViews[m_ImageIndex], m_DepthImageViews[m_ImageIndex]);
         m_Renderer->SetViewPort(m_CommandBuffers[m_ImageIndex]);
         m_Renderer->SetScissor(m_CommandBuffers[m_ImageIndex]);
 
@@ -607,12 +629,12 @@ namespace Rbk
 
         //m_Renderer->EndRendering(m_CommandBuffers[m_ImageIndex]);
 
-        //VkImageMemoryBarrier endRenderBeginBarrier = m_Renderer->SetupImageMemoryBarrier(
-        //    m_SwapChainImages[m_ImageIndex], 0, VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR
-        //);
-        //m_Renderer->AddPipelineBarrier(
-        //    m_CommandBuffers[m_ImageIndex], endRenderBeginBarrier, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, VK_DEPENDENCY_BY_REGION_BIT
-        //);
+       /* VkImageMemoryBarrier endRenderBeginBarrier = m_Renderer->SetupImageMemoryBarrier(
+            m_SwapChainImages[m_ImageIndex], 0, VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR
+        );
+        m_Renderer->AddPipelineBarrier(
+            m_CommandBuffers[m_ImageIndex], endRenderBeginBarrier, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, VK_DEPENDENCY_BY_REGION_BIT
+        );*/
 
         m_Renderer->EndRenderPass(m_CommandBuffers[m_ImageIndex]);
         m_Renderer->EndCommandBuffer(m_CommandBuffers[m_ImageIndex]);
@@ -652,16 +674,15 @@ namespace Rbk
             vkDestroyImage(m_Renderer->GetDevice(), item.second.image, nullptr);
             m_Renderer->DestroyDeviceMemory(item.second.imageMemory);
             vkDestroyImageView(m_Renderer->GetDevice(), item.second.imageView, nullptr);
-
-            vkDestroyImage(m_Renderer->GetDevice(), item.second.depthImage, nullptr);
-            m_Renderer->DestroyDeviceMemory(item.second.depthImageMemory);
-            vkDestroyImageView(m_Renderer->GetDevice(), item.second.depthImageView, nullptr);
-
-            vkDestroyImage(m_Renderer->GetDevice(), item.second.colorImage, nullptr);
-            m_Renderer->DestroyDeviceMemory(item.second.colorImageMemory);
-            vkDestroyImageView(m_Renderer->GetDevice(), item.second.colorImageView, nullptr);
         }
-        
+        for (auto item: m_DepthImageViews) {
+            vkDestroyImageView(m_Renderer->GetDevice(), item, nullptr);
+        }
+
+        for (auto item : m_ColorImageViews) {
+            vkDestroyImageView(m_Renderer->GetDevice(), item, nullptr);
+        }
+
         for (auto pipeline : m_Pipelines) {
             for (auto gp : pipeline.graphicsPipeline) {
                 m_Renderer->DestroyPipeline(gp);

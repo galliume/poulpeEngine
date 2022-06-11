@@ -14,12 +14,6 @@ namespace Rbk
         uint32_t width;
         uint32_t height;
         uint32_t channels;
-        VkImage colorImage;
-        VkDeviceMemory colorImageMemory;
-        VkImageView colorImageView;
-        VkImage depthImage;
-        VkDeviceMemory depthImageMemory;
-        VkImageView depthImageView;
     };
 
     struct UniformBufferObject {

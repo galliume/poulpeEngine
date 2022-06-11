@@ -60,6 +60,7 @@ namespace Rbk {
             std::vector<VkPipelineShaderStageCreateInfo>shadersCreateInfos,
             VkPipelineVertexInputStateCreateInfo vertexInputInfo,
             VkCullModeFlagBits cullMode = VK_CULL_MODE_BACK_BIT,
+            bool dynamicRendering = true,
             bool depthTestEnable = true,
             bool depthWriteEnable = true,
             bool stencilTestEnable = true,
@@ -103,7 +104,7 @@ namespace Rbk {
         void EndCommandBuffer(VkCommandBuffer commandBuffer);
         void BeginRenderPass(std::shared_ptr<VkRenderPass> renderPass, VkCommandBuffer commandBuffer, VkFramebuffer swapChainFramebuffer);
         void EndRenderPass(VkCommandBuffer commandBuffer);
-        void BeginRendering(VkCommandBuffer commandBuffer, VkImageView imageView);
+        void BeginRendering(VkCommandBuffer commandBuffer, VkImageView imageView, VkImageView  depthImageVie);
         void EndRendering(VkCommandBuffer commandBuffer);
         void SetViewPort(VkCommandBuffer commandBuffer);
         void SetScissor(VkCommandBuffer commandBuffer);

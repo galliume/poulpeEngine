@@ -107,7 +107,7 @@ namespace Rbk
         m_LastX = xPos;
         m_LastY = yPos;
     
-        const float sensitivity = 0.001f;
+        const float sensitivity = 0.25f;
         xoffset *= sensitivity;
         yoffset *= sensitivity;
     
