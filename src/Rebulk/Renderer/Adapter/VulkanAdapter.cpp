@@ -5,8 +5,8 @@
 
 namespace Rbk
 {
-    float VulkanAdapter::s_AmbiantLight = 0.1;
-    float VulkanAdapter::s_FogDensity = 0.0;
+    float VulkanAdapter::s_AmbiantLight = 0.1f;
+    float VulkanAdapter::s_FogDensity = 0.0f;
     float VulkanAdapter::s_FogColor[3] = { 25 / 255.0f, 25 / 255.0f, 25 / 255.0f };
 
     struct constants {
@@ -18,8 +18,8 @@ namespace Rbk
     };
 
     VulkanAdapter::VulkanAdapter(std::shared_ptr<Window> window) :
-        m_Window(window),
-        m_Renderer(std::make_shared<VulkanRenderer>(window))
+        m_Renderer(std::make_shared<VulkanRenderer>(window)),
+        m_Window(window)
     {
     }
 
@@ -68,31 +68,39 @@ namespace Rbk
         m_Renderer->DestroySemaphores(m_Semaphores);
         m_Renderer->ResetCurrentFrameIndex();
         m_SwapChainImageViews.resize(m_SwapChainImages.size());
+        m_DepthImageViews.resize(m_SwapChainImages.size());
+        m_ColorImageViews.resize(m_SwapChainImages.size());
 
         for (uint32_t i = 0; i < m_SwapChainImages.size(); i++) {
+
             m_SwapChainImageViews[i] = m_Renderer->CreateImageView(m_SwapChainImages[i], m_Renderer->GetSwapChainImageFormat(), VK_IMAGE_ASPECT_COLOR_BIT);
-        }
-        std::vector<VkImageView> depthImageViews;
-        std::vector<VkImageView> colorImageViews;
+            VkDeviceMemory colorImageMemory;
+            VkImage colorImage;
+            m_Renderer.get()->CreateImage(m_Renderer.get()->GetSwapChainExtent().width, m_Renderer.get()->GetSwapChainExtent().height, 1, m_Renderer.get()->GetMsaaSamples(), m_Renderer.get()->GetSwapChainImageFormat(), VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, colorImage, colorImageMemory);
+            VkImageView colorImageView = m_Renderer->CreateImageView(colorImage, m_Renderer->GetSwapChainImageFormat(), VK_IMAGE_ASPECT_COLOR_BIT, 1);
 
-        for (auto&& [textName, tex] : m_TextureManager->GetTextures()) {
-            m_Renderer->CreateImage(tex.width, tex.height, tex.mipLevels, VK_SAMPLE_COUNT_1_BIT, m_Renderer->FindDepthFormat(), VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, tex.depthImage, tex.depthImageMemory);
-            depthImageViews.emplace_back(tex.depthImageView);
-            colorImageViews.emplace_back(tex.colorImageView);
+            m_ColorImageViews[i] = colorImageView;
+
+            VkImage depthImage;
+            VkDeviceMemory depthImageMemory;
+            m_Renderer.get()->CreateImage(m_Renderer.get()->GetSwapChainExtent().width, m_Renderer.get()->GetSwapChainExtent().height, 1, m_Renderer.get()->GetMsaaSamples(), m_Renderer.get()->FindDepthFormat(), VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, depthImage, depthImageMemory);
+            VkImageView depthImageView = m_Renderer.get()->CreateImageView(depthImage, m_Renderer.get()->FindDepthFormat(), 1, VK_IMAGE_ASPECT_DEPTH_BIT);
+
+            m_DepthImageViews[i] = depthImageView;
         }
 
-        m_SwapChainFramebuffers = m_Renderer->CreateFramebuffers(m_RenderPass, m_SwapChainImageViews, depthImageViews, colorImageViews);
+        m_SwapChainFramebuffers = m_Renderer->CreateFramebuffers(m_RenderPass, m_SwapChainImageViews, m_DepthImageViews, m_ColorImageViews);
         m_Semaphores = m_Renderer->CreateSyncObjects(m_SwapChainImages);
         m_Renderer->ResetCommandPool(m_CommandPool);
-        m_CommandBuffers = m_Renderer->AllocateCommandBuffers(m_CommandPool, (uint32_t)m_SwapChainFramebuffers.size());
+        m_CommandBuffers = m_Renderer->AllocateCommandBuffers(m_CommandPool, static_cast<uint32_t>(m_SwapChainImageViews.size()));
     }
 
     void VulkanAdapter::ShouldRecreateSwapChain()
     {
         if (Rbk::Window::m_FramebufferResized == true) {
 
-            while (m_Window.get()->IsMinimized()) {
-                m_Window.get()->Wait();
+            while (m_Window->IsMinimized()) {
+                m_Window->Wait();
             }
 
             RecreateSwapChain();
@@ -103,21 +111,29 @@ namespace Rbk
 
     void VulkanAdapter::PrepareWorld()
     {
-        bool wireFrame = false;
+        bool wireFrame = true;
 
         m_SwapChainImageViews.resize(m_SwapChainImages.size());
+        m_DepthImageViews.resize(m_SwapChainImages.size());
+        m_ColorImageViews.resize(m_SwapChainImages.size());
         VkVertexInputBindingDescription bDesc = Vertex::GetBindingDescription();
 
         for (uint32_t i = 0; i < m_SwapChainImages.size(); i++) {
             m_SwapChainImageViews[i] = m_Renderer->CreateImageView(m_SwapChainImages[i], m_Renderer->GetSwapChainImageFormat(), VK_IMAGE_ASPECT_COLOR_BIT);
-        }
 
-        /*std::vector<VkImageView> depthImageViews;
-        std::vector<VkImageView> colorImageViews;*/
+            VkDeviceMemory colorImageMemory;
+            VkImage colorImage;
+            m_Renderer.get()->CreateImage(m_Renderer.get()->GetSwapChainExtent().width, m_Renderer.get()->GetSwapChainExtent().height, 1, m_Renderer.get()->GetMsaaSamples(), m_Renderer.get()->GetSwapChainImageFormat(), VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, colorImage, colorImageMemory);
+            VkImageView colorImageView = m_Renderer->CreateImageView(colorImage, m_Renderer->GetSwapChainImageFormat(), VK_IMAGE_ASPECT_COLOR_BIT, 1);
 
-        for (auto&& [textName, tex] : m_TextureManager->GetTextures()) {
-            m_DepthImageViews.emplace_back(tex.depthImageView);
-            m_ColorImageViews.emplace_back(tex.colorImageView);
+            m_ColorImageViews[i] = colorImageView;
+
+            VkImage depthImage;
+            VkDeviceMemory depthImageMemory;
+            m_Renderer.get()->CreateImage(m_Renderer.get()->GetSwapChainExtent().width, m_Renderer.get()->GetSwapChainExtent().height, 1, m_Renderer.get()->GetMsaaSamples(), m_Renderer.get()->FindDepthFormat(), VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, depthImage, depthImageMemory);
+            VkImageView depthImageView = m_Renderer.get()->CreateImageView(depthImage, m_Renderer.get()->FindDepthFormat(), 1, VK_IMAGE_ASPECT_DEPTH_BIT);
+            
+            m_DepthImageViews[i]  = depthImageView;
         }
 
         m_Semaphores = m_Renderer->CreateSyncObjects(m_SwapChainImages);
@@ -143,6 +159,8 @@ namespace Rbk
         vkPushconstants.size = sizeof(constants);
         vkPushconstants.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
 
+        pushConstants.emplace_back(vkPushconstants);
+
         VkDescriptorSetLayoutBinding uboLayoutBinding{};
         uboLayoutBinding.binding = 0;
         uboLayoutBinding.descriptorCount = 1;
@@ -163,57 +181,54 @@ namespace Rbk
             bindings, VK_DESCRIPTOR_SET_LAYOUT_CREATE_UPDATE_AFTER_BIND_POOL_BIT
         );
 
-        pushConstants.emplace_back(vkPushconstants);
-
         for (std::shared_ptr<Mesh> mesh : *worldMeshes) {
 
-
-            mesh.get()->cameraPos = m_Camera->GetPos();
-            uint32_t totalInstances = worldMeshesLoaded[mesh.get()->name][0];
+            mesh->cameraPos = m_Camera->GetPos();
+            uint32_t totalInstances = worldMeshesLoaded[mesh->name][0];
 
             maxUniformBufferRange = m_Renderer->GetDeviceProperties().limits.maxUniformBufferRange;
             uniformBufferChunkSize = maxUniformBufferRange / sizeof(UniformBufferObject);
-            uniformBuffersCount = std::ceil(totalInstances / (float)uniformBufferChunkSize);
+            uniformBuffersCount = static_cast<uint32_t>(std::ceil(static_cast<float>(totalInstances) / static_cast<float>(uniformBufferChunkSize)));
 
             for (uint32_t i = 0; i < uniformBuffersCount; i++) {
                 std::pair<VkBuffer, VkDeviceMemory> uniformBuffer = m_Renderer->CreateUniformBuffers(uniformBufferChunkSize);
-                mesh.get()->uniformBuffers.emplace_back(uniformBuffer);
+                mesh->uniformBuffers.emplace_back(uniformBuffer);
             }
 
-            mesh.get()->vertexBuffer = m_Renderer->CreateVertexBuffer(m_CommandPool, mesh.get()->vertices);
-            mesh.get()->indicesBuffer = m_Renderer->CreateIndexBuffer(m_CommandPool, mesh.get()->indices);
+            mesh->vertexBuffer = m_Renderer->CreateVertexBuffer(m_CommandPool, mesh->vertices);
+            mesh->indicesBuffer = m_Renderer->CreateIndexBuffer(m_CommandPool, mesh->indices);
 
             for (uint32_t i = 0; i < m_SwapChainImages.size(); i++) {
 
                 VkDescriptorSet descriptorSet = m_Renderer->CreateDescriptorSets(descriptorPool, { desriptorSetLayout }, 1);
 
-                Texture tex = m_TextureManager->GetTextures()[mesh.get()->texture];
+                Texture tex = m_TextureManager->GetTextures()[mesh->texture];
 
                 VkDescriptorImageInfo imageInfo{};
                 imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
                 imageInfo.imageView = tex.imageView;
                 imageInfo.sampler = tex.sampler;
              
-                m_Renderer->UpdateDescriptorSets(mesh.get()->uniformBuffers, descriptorSet, imageInfo);
-                mesh.get()->descriptorSets.emplace_back(descriptorSet);
+                m_Renderer->UpdateDescriptorSets(mesh->uniformBuffers, descriptorSet, imageInfo);
+                mesh->descriptorSets.emplace_back(descriptorSet);
             }
 
 
-            mesh.get()->pipelineLayout = m_Renderer->CreatePipelineLayout(mesh.get()->descriptorSets, { desriptorSetLayout }, pushConstants);
+            mesh->pipelineLayout = m_Renderer->CreatePipelineLayout(mesh->descriptorSets, { desriptorSetLayout }, pushConstants);
 
             std::vector<VkPipelineShaderStageCreateInfo>shadersStageInfos;
 
             VkPipelineShaderStageCreateInfo vertShaderStageInfo{};
             vertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
             vertShaderStageInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
-            vertShaderStageInfo.module = m_ShaderManager->GetShaders()->shaders[mesh.get()->shader][0];
+            vertShaderStageInfo.module = m_ShaderManager->GetShaders()->shaders[mesh->shader][0];
             vertShaderStageInfo.pName = "main";
             shadersStageInfos.emplace_back(vertShaderStageInfo);
 
             VkPipelineShaderStageCreateInfo fragShaderStageInfo{};
             fragShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
             fragShaderStageInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
-            fragShaderStageInfo.module = m_ShaderManager->GetShaders()->shaders[mesh.get()->shader][1];
+            fragShaderStageInfo.module = m_ShaderManager->GetShaders()->shaders[mesh->shader][1];
             fragShaderStageInfo.pName = "main";
             shadersStageInfos.emplace_back(fragShaderStageInfo);
 
@@ -224,14 +239,14 @@ namespace Rbk
             vertexInputInfo.pVertexBindingDescriptions = &bDesc;
             vertexInputInfo.pVertexAttributeDescriptions = Vertex::GetAttributeDescriptions().data();
 
-            mesh.get()->graphicsPipeline = m_Renderer->CreateGraphicsPipeline(
+            mesh->graphicsPipeline = m_Renderer->CreateGraphicsPipeline(
                 m_RenderPass,
-                mesh.get()->pipelineLayout,
-                mesh.get()->pipelineCache,
+                mesh->pipelineLayout,
+                mesh->pipelineCache,
                 shadersStageInfos,
                 vertexInputInfo,
                 VK_CULL_MODE_BACK_BIT,
-                true, true, true, wireFrame
+                false, true, true, wireFrame
             );
         }
 
@@ -282,12 +297,12 @@ namespace Rbk
 
         std::shared_ptr<Mesh> skyboxMesh = std::make_shared<Mesh>();
    
-        skyboxMesh.get()->texture = "skybox";
-        skyboxMesh.get()->vertices = skyVertices;
-        skyboxMesh.get()->vertexBuffer = m_Renderer->CreateVertexBuffer(m_CommandPool, skyVertices);
+        skyboxMesh->texture = "skybox";
+        skyboxMesh->vertices = skyVertices;
+        skyboxMesh->vertexBuffer = m_Renderer->CreateVertexBuffer(m_CommandPool, skyVertices);
      
         std::pair<VkBuffer, VkDeviceMemory> uniformBuffer = m_Renderer->CreateUniformBuffers(1);
-        skyboxMesh.get()->uniformBuffers.emplace_back(uniformBuffer);
+        skyboxMesh->uniformBuffers.emplace_back(uniformBuffer);
 
         glm::vec3 pos = glm::vec3(0.0f, 0.0f, 0.0f);
         UniformBufferObject skyUbo;
@@ -297,12 +312,9 @@ namespace Rbk
         skyUbo.proj = m_Perspective;
         skyUbo.proj[1][1] *= -1;
 
-        skyboxMesh.get()->ubos.emplace_back(skyUbo);
+        skyboxMesh->ubos.emplace_back(skyUbo);
 
         Texture tex = m_TextureManager->GetSkyboxTexture();
-        //Texture tex = m_TextureManager->GetTextures()["skybox_tex"];
-        m_DepthImageViews.emplace_back(tex.depthImageView);
-        m_ColorImageViews.emplace_back(tex.colorImageView);
 
         std::array<VkDescriptorPoolSize, 2> skyPoolSizes{};
         skyPoolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
@@ -340,11 +352,11 @@ namespace Rbk
         VkDescriptorSet skyDescriptorSet = m_Renderer->CreateDescriptorSets(skyDescriptorPool, { skyDesriptorSetLayout }, 1);
 
         for (uint32_t i = 0; i < m_SwapChainImages.size(); i++) {
-            m_Renderer->UpdateDescriptorSets(skyboxMesh.get()->uniformBuffers, skyDescriptorSet, skyDescriptorImageInfo);
-            skyboxMesh.get()->descriptorSets.emplace_back(skyDescriptorSet);
+            m_Renderer->UpdateDescriptorSets(skyboxMesh->uniformBuffers, skyDescriptorSet, skyDescriptorImageInfo);
+            skyboxMesh->descriptorSets.emplace_back(skyDescriptorSet);
         }
 
-        skyboxMesh.get()->pipelineLayout = m_Renderer->CreatePipelineLayout(skyboxMesh.get()->descriptorSets, { skyDesriptorSetLayout }, pushConstants);
+        skyboxMesh->pipelineLayout = m_Renderer->CreatePipelineLayout(skyboxMesh->descriptorSets, { skyDesriptorSetLayout }, pushConstants);
 
         std::string shaderName = "skybox";
 
@@ -371,13 +383,14 @@ namespace Rbk
         vertexInputInfo.pVertexBindingDescriptions = &bDesc;
         vertexInputInfo.pVertexAttributeDescriptions = Vertex::GetAttributeDescriptions().data();
 
-        skyboxMesh.get()->graphicsPipeline = m_Renderer->CreateGraphicsPipeline(
+        skyboxMesh->graphicsPipeline = m_Renderer->CreateGraphicsPipeline(
             m_RenderPass,
-            skyboxMesh.get()->pipelineLayout,
-            skyboxMesh.get()->pipelineCache,
+            skyboxMesh->pipelineLayout,
+            skyboxMesh->pipelineCache,
             shadersStageInfos,
             vertexInputInfo,
-            VK_CULL_MODE_NONE
+            VK_CULL_MODE_NONE,
+            false
         );
 
         m_MeshManager->SetSkyboxMesh(skyboxMesh);
@@ -397,14 +410,14 @@ namespace Rbk
         m_Crosshair->texture = "crosshair";
         m_Crosshair->name = "crosshair";
         m_Crosshair->indices = indices;
-        m_Crosshair.get()->vertexBuffer = m_Renderer->CreateVertex2DBuffer(m_CommandPool, vertices);
-        m_Crosshair.get()->indicesBuffer = m_Renderer->CreateIndexBuffer(m_CommandPool, indices);
+        m_Crosshair->vertexBuffer = m_Renderer->CreateVertex2DBuffer(m_CommandPool, vertices);
+        m_Crosshair->indicesBuffer = m_Renderer->CreateIndexBuffer(m_CommandPool, indices);
         std::pair<VkBuffer, VkDeviceMemory> crossHairuniformBuffer = m_Renderer->CreateUniformBuffers(1);
-        m_Crosshair.get()->uniformBuffers.emplace_back(crossHairuniformBuffer);
+        m_Crosshair->uniformBuffers.emplace_back(crossHairuniformBuffer);
 
         UniformBufferObject ubo;
         ubo.view = glm::mat4(0.0f);
-        m_Crosshair.get()->ubos.emplace_back(ubo);
+        m_Crosshair->ubos.emplace_back(ubo);
 
         std::array<VkDescriptorPoolSize, 2> cpoolSizes{};
         cpoolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
@@ -445,11 +458,11 @@ namespace Rbk
             cimageInfo.imageView = ctex.imageView;
             cimageInfo.sampler = ctex.sampler;
 
-            m_Renderer->UpdateDescriptorSets(m_Crosshair.get()->uniformBuffers, cdescriptorSet, cimageInfo);
-            m_Crosshair.get()->descriptorSets.emplace_back(cdescriptorSet);
+            m_Renderer->UpdateDescriptorSets(m_Crosshair->uniformBuffers, cdescriptorSet, cimageInfo);
+            m_Crosshair->descriptorSets.emplace_back(cdescriptorSet);
         }
 
-        m_Crosshair.get()->pipelineLayout = m_Renderer->CreatePipelineLayout(m_Crosshair.get()->descriptorSets, { cdesriptorSetLayout });
+        m_Crosshair->pipelineLayout = m_Renderer->CreatePipelineLayout(m_Crosshair->descriptorSets, { cdesriptorSetLayout });
 
         std::vector<VkPipelineShaderStageCreateInfo>cshadersStageInfos;
 
@@ -475,18 +488,19 @@ namespace Rbk
         vertexInputInfo2D.pVertexBindingDescriptions = &bDesc2D;
         vertexInputInfo2D.pVertexAttributeDescriptions = Vertex2D::GetAttributeDescriptions().data();
 
-        m_Crosshair.get()->graphicsPipeline = m_Renderer->CreateGraphicsPipeline(
+        m_Crosshair->graphicsPipeline = m_Renderer->CreateGraphicsPipeline(
             m_RenderPass,
-            m_Crosshair.get()->pipelineLayout,
-            m_Crosshair.get()->pipelineCache,
+            m_Crosshair->pipelineLayout,
+            m_Crosshair->pipelineCache,
             cshadersStageInfos,
             vertexInputInfo2D,
-            VK_CULL_MODE_FRONT_BIT
+            VK_CULL_MODE_FRONT_BIT,
+            false
         );
 
         //command buffer
         m_SwapChainFramebuffers = m_Renderer->CreateFramebuffers(m_RenderPass, m_SwapChainImageViews, m_DepthImageViews, m_ColorImageViews);
-        m_CommandBuffers = m_Renderer->AllocateCommandBuffers(m_CommandPool, (uint32_t)m_SwapChainFramebuffers.size());
+        m_CommandBuffers = m_Renderer->AllocateCommandBuffers(m_CommandPool, static_cast<uint32_t>(m_SwapChainImageViews.size()));
 
         m_lastLookAt = glm::mat4(1.0f);
     }
@@ -495,7 +509,7 @@ namespace Rbk
     {        
         m_Perspective = glm::perspective(
             glm::radians(60.0f), 
-            m_Renderer.get()->GetSwapChainExtent().width / (float)m_Renderer.get()->GetSwapChainExtent().height, 
+            static_cast<float>(m_Renderer->GetSwapChainExtent().width) / static_cast<float>(m_Renderer->GetSwapChainExtent().height),
             0.1f, 
             50.f
         );
@@ -516,32 +530,32 @@ namespace Rbk
         proj[1][1] *= -1;
         glm::vec4 cameraPos = m_Camera->GetPos();
 
-        for (uint32_t i = 0; i < m_Crosshair.get()->uniformBuffers.size(); i++) {
-            m_Crosshair.get()->ubos[i].view = lookAt;
-            m_Renderer->UpdateUniformBuffer(m_Crosshair.get()->uniformBuffers[i], { m_Crosshair.get()->ubos[i] }, 1);
+        for (uint32_t i = 0; i < m_Crosshair->uniformBuffers.size(); i++) {
+            m_Crosshair->ubos[i].view = lookAt;
+            m_Renderer->UpdateUniformBuffer(m_Crosshair->uniformBuffers[i], { m_Crosshair->ubos[i] }, 1);
         }
 
         std::vector<std::shared_ptr<Mesh>>* worldMeshes = m_MeshManager->GetWorldMeshes();
         for (std::shared_ptr<Mesh> mesh : *worldMeshes) {
 
-            for (uint32_t i = 0; i < mesh.get()->ubos.size(); i++) {
-                mesh.get()->ubos[i].view = lookAt;
-                mesh.get()->cameraPos = cameraPos * mesh.get()->ubos[i].view * mesh.get()->ubos[i].model * mesh.get()->ubos[i].proj;
-                mesh.get()->ubos[i].proj = proj;
+            for (uint32_t i = 0; i < mesh->ubos.size(); i++) {
+                mesh->ubos[i].view = lookAt;
+                mesh->cameraPos = cameraPos * mesh->ubos[i].view * mesh->ubos[i].model * mesh->ubos[i].proj;
+                mesh->ubos[i].proj = proj;
 
-                //if (mesh.get()->name == "moon_moon_0") {
-                //    mesh.get()->ubos[i].model = glm::rotate(mesh.get()->ubos[i].model, 0.05f * m_Deltatime, glm::vec3(1.0f, 0.0f, 0.0f));
-                //    mesh.get()->ubos[i].model = glm::translate(mesh.get()->ubos[i].model, m_Deltatime * glm::vec3(1.0f, 0.0f, 0.0f));
-                //    glm::vec3 lightPos = m_LightsPos.at(0) *  m_Deltatime * glm::vec3(1.0f, 0.0f, 0.0f);
-                //    m_LightsPos.at(0) = lightPos;
-                //} 
+                if (mesh->name == "moon_moon_0") {
+                    mesh->ubos[i].model = glm::rotate(mesh->ubos[i].model, 0.05f * m_Deltatime, glm::vec3(1.0f, 0.0f, 0.0f));
+                    mesh->ubos[i].model = glm::translate(mesh->ubos[i].model, m_Deltatime * glm::vec3(1.0f, 0.0f, 0.0f));
+                    glm::vec3 lightPos = m_LightsPos.at(0) *  m_Deltatime * glm::vec3(1.0f, 0.0f, 0.0f);
+                    m_LightsPos.at(0) = lightPos;
+                } 
 
             }
-            for (uint32_t i = 0; i < mesh.get()->uniformBuffers.size(); i++) {
+            for (uint32_t i = 0; i < mesh->uniformBuffers.size(); i++) {
                 m_Renderer->UpdateUniformBuffer(
-                    mesh.get()->uniformBuffers[i],
-                    mesh.get()->ubos,
-                    mesh.get()->ubos.size()
+                    mesh->uniformBuffers[i],
+                    mesh->ubos,
+                    mesh->ubos.size()
                 );
             }
         }
@@ -580,6 +594,7 @@ namespace Rbk
         );
 
         m_Renderer->BeginRenderPass(m_RenderPass, m_CommandBuffers[m_ImageIndex], m_SwapChainFramebuffers[m_ImageIndex]);
+        //m_Renderer->BeginRendering(m_CommandBuffers[m_ImageIndex], m_SwapChainImageViews[m_ImageIndex], m_DepthImageViews[m_ImageIndex], m_ColorImageViews[m_ImageIndex]);
         m_Renderer->SetViewPort(m_CommandBuffers[m_ImageIndex]);
         m_Renderer->SetScissor(m_CommandBuffers[m_ImageIndex]);
 
@@ -592,18 +607,27 @@ namespace Rbk
 
         //draw the world !
         for (std::shared_ptr<Mesh> mesh : *m_MeshManager->GetWorldMeshes()) {
-            m_Renderer->BindPipeline(m_CommandBuffers[m_ImageIndex], mesh.get()->graphicsPipeline);
+            m_Renderer->BindPipeline(m_CommandBuffers[m_ImageIndex], mesh->graphicsPipeline);
             vkCmdPushConstants(m_CommandBuffers[m_ImageIndex], mesh->pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(constants), &data);
             m_Renderer->Draw(m_CommandBuffers[m_ImageIndex], mesh.get(), m_ImageIndex);
         }
 
-         //draw the skybox !
-        m_Renderer->BindPipeline(m_CommandBuffers[m_ImageIndex], m_MeshManager.get()->GetSkyboxMesh()->graphicsPipeline);
-        m_Renderer->Draw(m_CommandBuffers[m_ImageIndex], m_MeshManager.get()->GetSkyboxMesh().get(), m_ImageIndex, false);
+        //draw the skybox !
+        m_Renderer->BindPipeline(m_CommandBuffers[m_ImageIndex], m_MeshManager->GetSkyboxMesh()->graphicsPipeline);
+        m_Renderer->Draw(m_CommandBuffers[m_ImageIndex], m_MeshManager->GetSkyboxMesh().get(), m_ImageIndex, false);
 
         //draw the crosshair
-        m_Renderer->BindPipeline(m_CommandBuffers[m_ImageIndex], m_Crosshair.get()->graphicsPipeline);
+        m_Renderer->BindPipeline(m_CommandBuffers[m_ImageIndex], m_Crosshair->graphicsPipeline);
         m_Renderer->Draw(m_CommandBuffers[m_ImageIndex], m_Crosshair.get(), m_ImageIndex);
+
+        /*m_Renderer->EndRendering(m_CommandBuffers[m_ImageIndex]);
+
+       VkImageMemoryBarrier endRenderBeginBarrier = m_Renderer->SetupImageMemoryBarrier(
+            m_SwapChainImages[m_ImageIndex], 0, VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR
+        );
+        m_Renderer->AddPipelineBarrier(
+            m_CommandBuffers[m_ImageIndex], endRenderBeginBarrier, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, VK_DEPENDENCY_BY_REGION_BIT
+        );*/
 
         m_Renderer->EndRenderPass(m_CommandBuffers[m_ImageIndex]);
         m_Renderer->EndCommandBuffer(m_CommandBuffers[m_ImageIndex]);
@@ -618,21 +642,23 @@ namespace Rbk
 
     void VulkanAdapter::Destroy()
     {
+        m_Renderer->WaitIdle();
+
         //@todo refactor all the destroy system...
         m_Renderer->DestroySwapchain(m_Renderer->GetDevice(), m_SwapChain, m_SwapChainFramebuffers, m_SwapChainImageViews);
         m_Renderer->DestroySemaphores(m_Semaphores);
     
         for (std::shared_ptr<Mesh> mesh : *m_MeshManager->GetWorldMeshes()) {
-            for (auto buffer : mesh.get()->uniformBuffers) {
+            for (auto buffer : mesh->uniformBuffers) {
                 m_Renderer->DestroyBuffer(buffer.first);
                 m_Renderer->DestroyDeviceMemory(buffer.second);
             }
 
-            m_Renderer->DestroyBuffer(mesh.get()->vertexBuffer.first);
-            m_Renderer->DestroyDeviceMemory(mesh.get()->vertexBuffer.second);
+            m_Renderer->DestroyBuffer(mesh->vertexBuffer.first);
+            m_Renderer->DestroyDeviceMemory(mesh->vertexBuffer.second);
 
-            m_Renderer->DestroyBuffer(mesh.get()->indicesBuffer.first);
-            m_Renderer->DestroyDeviceMemory(mesh.get()->indicesBuffer.second);
+            m_Renderer->DestroyBuffer(mesh->indicesBuffer.first);
+            m_Renderer->DestroyDeviceMemory(mesh->indicesBuffer.second);
         }
 
         for (auto item : m_TextureManager->GetTextures()) {
@@ -641,16 +667,15 @@ namespace Rbk
             vkDestroyImage(m_Renderer->GetDevice(), item.second.image, nullptr);
             m_Renderer->DestroyDeviceMemory(item.second.imageMemory);
             vkDestroyImageView(m_Renderer->GetDevice(), item.second.imageView, nullptr);
-
-            vkDestroyImage(m_Renderer->GetDevice(), item.second.depthImage, nullptr);
-            m_Renderer->DestroyDeviceMemory(item.second.depthImageMemory);
-            vkDestroyImageView(m_Renderer->GetDevice(), item.second.depthImageView, nullptr);
-
-            vkDestroyImage(m_Renderer->GetDevice(), item.second.colorImage, nullptr);
-            m_Renderer->DestroyDeviceMemory(item.second.colorImageMemory);
-            vkDestroyImageView(m_Renderer->GetDevice(), item.second.colorImageView, nullptr);
         }
-        
+        for (auto item: m_DepthImageViews) {
+            vkDestroyImageView(m_Renderer->GetDevice(), item, nullptr);
+        }
+
+        for (auto item : m_ColorImageViews) {
+            vkDestroyImageView(m_Renderer->GetDevice(), item, nullptr);
+        }
+
         for (auto pipeline : m_Pipelines) {
             for (auto gp : pipeline.graphicsPipeline) {
                 m_Renderer->DestroyPipeline(gp);

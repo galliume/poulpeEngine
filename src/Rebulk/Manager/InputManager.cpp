@@ -9,8 +9,7 @@ namespace Rbk
     InputManager::InputManager(std::shared_ptr<Window> window, std::shared_ptr<Camera> camera) : m_Window(window), m_Camera(camera)
     {
         int width, height;
-        //@todo ugly
-        glfwGetWindowSize(m_Window.get()->Get(), &width, &height);
+        glfwGetWindowSize(m_Window->Get(), &width, &height);
         m_LastX = 800;
         m_LastY = 600;
         InputManager::m_FirtMouseMove = true;
@@ -18,22 +17,22 @@ namespace Rbk
     
     void InputManager::Init()
     {
-        glfwSetWindowUserPointer(m_Window.get()->Get(), this);
+        glfwSetWindowUserPointer(m_Window->Get(), this);
 
-        glfwSetKeyCallback(m_Window.get()->Get(), [](GLFWwindow* window, int key, int scancode, int action, int mods) {
-            InputManager inputManager = *(InputManager*)glfwGetWindowUserPointer(window);
-            inputManager.Key(key, scancode, action, mods);
-            });
+        glfwSetKeyCallback(m_Window->Get(), [](GLFWwindow* window, int key, int scancode, int action, int mods) {
+            InputManager* inputManager = static_cast<InputManager*>(glfwGetWindowUserPointer(window));
+            inputManager->Key(key, scancode, action, mods);
+        });
 
-        glfwSetCursorPosCallback(m_Window.get()->Get(), [](GLFWwindow* window, double xPos, double yPos) {
-            InputManager inputManager = *(InputManager*)glfwGetWindowUserPointer(window);
-            inputManager.Mouse(xPos, yPos);
-            });
+        glfwSetCursorPosCallback(m_Window->Get(), [](GLFWwindow* window, double xPos, double yPos) {
+            InputManager* inputManager = static_cast<InputManager*>(glfwGetWindowUserPointer(window));
+            inputManager->Mouse(xPos, yPos);
+        });
 
-        glfwSetMouseButtonCallback(m_Window.get()->Get(), [](GLFWwindow* window, int button, int action, int mods) {
-            InputManager inputManager = *(InputManager*)glfwGetWindowUserPointer(window);
-            inputManager.MouseButton(button, action, mods);
-            });
+        glfwSetMouseButtonCallback(m_Window->Get(), [](GLFWwindow* window, int button, int action, int mods) {
+            InputManager* inputManager = static_cast<InputManager*>(glfwGetWindowUserPointer(window));
+            inputManager->MouseButton(button, action, mods);
+        });
     }
 
     void InputManager::Key(int key, int scancode, int action, int mods)
@@ -49,36 +48,36 @@ namespace Rbk
         switch (action)
         {
             case GLFW_PRESS:
-                if (glfwGetKey(m_Window.get()->Get(), GLFW_KEY_LEFT_CONTROL)) {
+                if (glfwGetKey(m_Window->Get(), GLFW_KEY_LEFT_CONTROL)) {
 
                     if (!InputManager::m_CanMoveCamera) {
-                        glfwSetInputMode(m_Window.get()->Get(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+                        glfwSetInputMode(m_Window->Get(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
                     } else {
-                        glfwSetInputMode(m_Window.get()->Get(), GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+                        glfwSetInputMode(m_Window->Get(), GLFW_CURSOR, GLFW_CURSOR_NORMAL);
                     }
                     InputManager::m_CanMoveCamera = !InputManager::m_CanMoveCamera;
                 }
             case GLFW_REPEAT:
             {
-                if (glfwGetKey(m_Window.get()->Get(), GLFW_KEY_C)) {
+                if (glfwGetKey(m_Window->Get(), GLFW_KEY_C)) {
                     m_Camera->Recenter();
                 }
-                if (glfwGetKey(m_Window.get()->Get(), GLFW_KEY_W) ) {
+                if (glfwGetKey(m_Window->Get(), GLFW_KEY_W) ) {
                     m_Camera->Forward();
                 }
-                if (glfwGetKey(m_Window.get()->Get(), GLFW_KEY_S)) {
+                if (glfwGetKey(m_Window->Get(), GLFW_KEY_S)) {
                     m_Camera->Backward();
                 }
-                if (glfwGetKey(m_Window.get()->Get(), GLFW_KEY_A)) {
+                if (glfwGetKey(m_Window->Get(), GLFW_KEY_A)) {
                     m_Camera->Left();
                 }
-                if (glfwGetKey(m_Window.get()->Get(), GLFW_KEY_D)) {
+                if (glfwGetKey(m_Window->Get(), GLFW_KEY_D)) {
                     m_Camera->Right();
                 }
-                if (glfwGetKey(m_Window.get()->Get(), GLFW_KEY_Q)) {
+                if (glfwGetKey(m_Window->Get(), GLFW_KEY_Q)) {
                     m_Camera->Up();
                 }
-                if (glfwGetKey(m_Window.get()->Get(), GLFW_KEY_E)) {
+                if (glfwGetKey(m_Window->Get(), GLFW_KEY_E)) {
                     m_Camera->Down();
                 }
                 break;
@@ -108,7 +107,7 @@ namespace Rbk
         m_LastX = xPos;
         m_LastY = yPos;
     
-        const float sensitivity = 0.001f;
+        const float sensitivity = 0.25f;
         xoffset *= sensitivity;
         yoffset *= sensitivity;
     

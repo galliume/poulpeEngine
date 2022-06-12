@@ -67,7 +67,7 @@ namespace Rbk
     {                    
         Rbk::Im::Text("API Version : %s", m_Adapter->Rdr()->GetAPIVersion().c_str());
         //Rbk::Im::Text("Drivers version : %d", devicesProps.driverVersion);
-        Rbk::Im::Text("Vendor id : %s", m_Adapter->Rdr()->GetVendor(devicesProps.vendorID));
+        Rbk::Im::Text("Vendor id : %s", m_Adapter->Rdr()->GetVendor(devicesProps.vendorID).c_str());
         Rbk::Im::Text("GPU : %s", devicesProps.deviceName);
         ImGui::Separator();
         Rbk::Im::Text("Current frame %d", m_Adapter->Rdr()->GetCurrentFrame());
@@ -118,7 +118,7 @@ namespace Rbk
         }
     }
 
-    void VulkanLayer::AddRenderAdapter(VulkanAdapter* renderAdapter)
+    void VulkanLayer::AddRenderAdapter(std::shared_ptr<VulkanAdapter> renderAdapter)
     {
         m_Adapter = renderAdapter;
     }
