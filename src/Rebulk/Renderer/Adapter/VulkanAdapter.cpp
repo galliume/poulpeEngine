@@ -134,10 +134,6 @@ namespace Rbk
             VkImageView depthImageView = m_Renderer.get()->CreateImageView(depthImage, m_Renderer.get()->FindDepthFormat(), 1, VK_IMAGE_ASPECT_DEPTH_BIT);
             
             m_DepthImageViews[i]  = depthImageView;
-            //for (auto&& [textName, tex] : m_TextureManager->GetTextures()) {
-            //    m_DepthImageViews.emplace_back(tex.depthImageView);
-            //    m_ColorImageViews.emplace_back(tex.colorImageView);
-            //}
         }
 
         m_Semaphores = m_Renderer->CreateSyncObjects(m_SwapChainImages);
@@ -319,9 +315,6 @@ namespace Rbk
         skyboxMesh->ubos.emplace_back(skyUbo);
 
         Texture tex = m_TextureManager->GetSkyboxTexture();
-        //Texture tex = m_TextureManager->GetTextures()["skybox_tex"];
-        //m_DepthImageViews.emplace_back(tex.depthImageView);
-        //m_ColorImageViews.emplace_back(tex.colorImageView);
 
         std::array<VkDescriptorPoolSize, 2> skyPoolSizes{};
         skyPoolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
@@ -601,7 +594,7 @@ namespace Rbk
         );
 
         m_Renderer->BeginRenderPass(m_RenderPass, m_CommandBuffers[m_ImageIndex], m_SwapChainFramebuffers[m_ImageIndex]);
-        //m_Renderer->BeginRendering(m_CommandBuffers[m_ImageIndex], m_SwapChainImageViews[m_ImageIndex], m_DepthImageViews[m_ImageIndex]);
+        //m_Renderer->BeginRendering(m_CommandBuffers[m_ImageIndex], m_SwapChainImageViews[m_ImageIndex], m_DepthImageViews[m_ImageIndex], m_ColorImageViews[m_ImageIndex]);
         m_Renderer->SetViewPort(m_CommandBuffers[m_ImageIndex]);
         m_Renderer->SetScissor(m_CommandBuffers[m_ImageIndex]);
 
@@ -627,9 +620,9 @@ namespace Rbk
         m_Renderer->BindPipeline(m_CommandBuffers[m_ImageIndex], m_Crosshair->graphicsPipeline);
         m_Renderer->Draw(m_CommandBuffers[m_ImageIndex], m_Crosshair.get(), m_ImageIndex);
 
-        //m_Renderer->EndRendering(m_CommandBuffers[m_ImageIndex]);
+        /*m_Renderer->EndRendering(m_CommandBuffers[m_ImageIndex]);
 
-       /* VkImageMemoryBarrier endRenderBeginBarrier = m_Renderer->SetupImageMemoryBarrier(
+       VkImageMemoryBarrier endRenderBeginBarrier = m_Renderer->SetupImageMemoryBarrier(
             m_SwapChainImages[m_ImageIndex], 0, VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR
         );
         m_Renderer->AddPipelineBarrier(

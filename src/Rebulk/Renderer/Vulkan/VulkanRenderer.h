@@ -104,7 +104,7 @@ namespace Rbk {
         void EndCommandBuffer(VkCommandBuffer commandBuffer);
         void BeginRenderPass(std::shared_ptr<VkRenderPass> renderPass, VkCommandBuffer commandBuffer, VkFramebuffer swapChainFramebuffer);
         void EndRenderPass(VkCommandBuffer commandBuffer);
-        void BeginRendering(VkCommandBuffer commandBuffer, VkImageView imageView, VkImageView  depthImageVie);
+        void BeginRendering(VkCommandBuffer commandBuffer, VkImageView imageView, VkImageView depthImageVie, VkImageView colorImageView);
         void EndRendering(VkCommandBuffer commandBuffer);
         void SetViewPort(VkCommandBuffer commandBuffer);
         void SetScissor(VkCommandBuffer commandBuffer);

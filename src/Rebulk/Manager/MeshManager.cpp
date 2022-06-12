@@ -59,7 +59,7 @@ namespace Rbk
                 m_WorldMeshesLoaded.insert({ id, { 1, index } });
                 m_WorldMeshes.emplace_back(mesh);
 
-                Rbk::Log::GetLogger()->trace("Added mesh to the world {} from {}", id, path);
+               //Rbk::Log::GetLogger()->trace("Added mesh to the world {} from {}", id, path);
             }
         }
     }

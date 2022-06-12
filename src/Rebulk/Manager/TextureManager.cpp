@@ -55,8 +55,6 @@ namespace Rbk
         m_Skybox.height = texHeight;
         m_Skybox.channels = texChannels;
 
-        Rbk::Log::GetLogger()->trace("Added skybox");
-
         vkDestroyCommandPool(m_Renderer.get()->GetDevice(), commandPool, nullptr);
     }
 
@@ -105,9 +103,6 @@ namespace Rbk
         texture.channels = texChannels;
 
         m_Textures.emplace(name, texture);
-
-        Rbk::Log::GetLogger()->trace("Added texture {} from {}. w {} h {} a {}", name, path, texWidth, texHeight, texChannels);
-
         vkDestroyCommandPool(m_Renderer->GetDevice(), commandPool, nullptr);
     }
 }

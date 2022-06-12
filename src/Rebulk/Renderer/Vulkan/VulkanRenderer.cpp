@@ -158,7 +158,6 @@ namespace Rbk {
 
         m_InstanceCreated = true;
 
-        Rbk::Log::GetLogger()->trace("VK instance created successfully");
         volkLoadInstance(m_Instance);
     }
 
@@ -179,11 +178,11 @@ namespace Rbk {
         std::vector<VkExtensionProperties> extensions(m_ExtensionCount);
         vkEnumerateInstanceExtensionProperties(nullptr, &m_ExtensionCount, extensions.data());
 
-        Rbk::Log::GetLogger()->trace("{} available extensions:\n", m_ExtensionCount);
+        //Rbk::Log::GetLogger()->trace("{} available extensions:\n", m_ExtensionCount);
 
         for (const auto& extension : extensions) {
             std::string message = std::string("extension available : ") + extension.extensionName;
-            Rbk::Log::GetLogger()->trace("{}", message.c_str());
+            //Rbk::Log::GetLogger()->trace("{}", message.c_str());
         }
 
         m_Extensions = extensions;
@@ -231,9 +230,9 @@ namespace Rbk {
             extensions.push_back(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME);
         }
 
-        for_each(extensions.begin(), extensions.end(), [](std::string text) {
-            Rbk::Log::GetLogger()->trace("required extension needed : {}", text);
-        });
+        //for_each(extensions.begin(), extensions.end(), [](std::string text) {
+        //    Rbk::Log::GetLogger()->trace("required extension needed : {}", text);
+        //});
 
         m_RequiredExtensions = extensions;
     }
@@ -251,8 +250,6 @@ namespace Rbk {
 
         if (CreateDebugUtilsMessengerEXT(m_Instance, &createInfo, nullptr, &m_DebugMessengerCallback) != VK_SUCCESS) {
             Rbk::Log::GetLogger()->warn("Can't create debug messenger.");
-        } else {
-            Rbk::Log::GetLogger()->trace("Debug messenger created");
         }
     }
 
@@ -291,7 +288,6 @@ namespace Rbk {
             Rbk::Log::GetLogger()->critical("failed to find a suitable GPU");
             exit(-1);
         }
-        Rbk::Log::GetLogger()->trace("found GPU : {}", m_DeviceProps.deviceName);
     }
 
     bool VulkanRenderer::IsDeviceSuitable(VkPhysicalDevice device)
@@ -416,8 +412,6 @@ namespace Rbk {
         vkGetDeviceQueue(m_Device, indices.presentFamily.value(), 0, &m_PresentQueue);
 
         volkLoadDevice(m_Device);
-
-        Rbk::Log::GetLogger()->trace("successfully create logical device!");
     }
 
     void VulkanRenderer::CreateSurface()
@@ -428,8 +422,6 @@ namespace Rbk {
             Rbk::Log::GetLogger()->critical("failed to create window surface!");
             throw std::runtime_error("failed to create window surface!");
         }
-
-        Rbk::Log::GetLogger()->trace("successfully create window surface!");
     }
 
     const SwapChainSupportDetails VulkanRenderer::QuerySwapChainSupport(VkPhysicalDevice device) const
@@ -459,7 +451,6 @@ namespace Rbk {
     VkSurfaceFormatKHR VulkanRenderer::ChooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats)
     {
         for (const auto& availableFormat : availableFormats) {
-            Rbk::Log::GetLogger()->trace("Swap surface format available : {} - {}", availableFormat.format, availableFormat.colorSpace);
             if (availableFormat.format == VK_FORMAT_B8G8R8A8_SRGB && availableFormat.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR) {
                 return availableFormat;
             }
@@ -551,8 +542,6 @@ namespace Rbk {
 
         if (result != VK_SUCCESS) {
             Rbk::Log::GetLogger()->critical("Swap chain failed " + std::to_string(result));
-        } else {
-            Rbk::Log::GetLogger()->trace("Swap chain created successfully");
         }
 
         vkGetSwapchainImagesKHR(m_Device, swapChain, &imageCount, nullptr);
@@ -602,8 +591,6 @@ namespace Rbk {
 
         if (result != VK_SUCCESS) {
             Rbk::Log::GetLogger()->critical("failed to create image views!");
-        } else {
-            Rbk::Log::GetLogger()->trace("created image views sucessfully");
         }
 
         return swapChainImageView;
@@ -632,9 +619,6 @@ namespace Rbk {
 
         if (result != VK_SUCCESS) {
             Rbk::Log::GetLogger()->critical("failed to create image views!");
-        }
-        else {
-            Rbk::Log::GetLogger()->trace("created image views sucessfully");
         }
 
         return swapChainImageView;
@@ -677,8 +661,6 @@ namespace Rbk {
 
         if (result != VK_SUCCESS) {
             Rbk::Log::GetLogger()->critical("failed to create pipeline layout!");
-        } else {
-            Rbk::Log::GetLogger()->trace("create successfully pipeline layout!");
         }
 
         return graphicsPipelineLayout;
@@ -827,8 +809,6 @@ namespace Rbk {
 
         if (result != VK_SUCCESS) {
             Rbk::Log::GetLogger()->critical("failed to create graphics pipeline!");
-        } else {
-            Rbk::Log::GetLogger()->trace("created successfully graphics pipeline!");
         }
 
         return graphicsPipeline;
@@ -848,8 +828,6 @@ namespace Rbk {
 
         if (result != VK_SUCCESS) {
             Rbk::Log::GetLogger()->critical("failed to create shader module!");
-        } else {
-            Rbk::Log::GetLogger()->trace("created shader module successfully !");
         }
 
         return shaderModule;
@@ -935,9 +913,6 @@ namespace Rbk {
         if (result != VK_SUCCESS) {
             Rbk::Log::GetLogger()->critical("failed to create render pass!");
         }
-        else {
-            Rbk::Log::GetLogger()->trace("created successfully render pass!");
-        }
 
         return renderPass;
     }
@@ -969,10 +944,7 @@ namespace Rbk {
 
             if (result != VK_SUCCESS) {
                 Rbk::Log::GetLogger()->critical("failed to create framebuffer!");
-            }
-            else {
-                Rbk::Log::GetLogger()->trace("created successfully framebuffer!");
-            }
+            }            
         }
 
         return swapChainFramebuffers;
@@ -994,8 +966,6 @@ namespace Rbk {
 
         if (result != VK_SUCCESS) {
             Rbk::Log::GetLogger()->critical("failed to create command pool!");
-        } else {
-            Rbk::Log::GetLogger()->trace("created successfully command pool!");
         }
 
         return commandPool;
@@ -1017,8 +987,6 @@ namespace Rbk {
 
         if (result != VK_SUCCESS) {
             Rbk::Log::GetLogger()->critical("failed to allocate command buffers!");
-        } else {
-            Rbk::Log::GetLogger()->trace("allocated successfully command buffers!");
         }
 
         return commandBuffers;
@@ -1197,16 +1165,28 @@ namespace Rbk {
     }
 
 
-    void VulkanRenderer::BeginRendering(VkCommandBuffer commandBuffer, VkImageView  imageView, VkImageView  depthImageView)
+    void VulkanRenderer::BeginRendering(VkCommandBuffer commandBuffer, VkImageView  imageView, VkImageView  depthImageView, VkImageView colorImageView)
     {
         VkClearValue clearValues{};
         clearValues.color = { {0.f, 0.f, 0.f, 1.0f} };
         clearValues.depthStencil = { 1.0f, 0 };
 
+        //VkRenderingAttachmentInfoKHR imageAttachment{};
+        //imageAttachment.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO_KHR;
+        ////imageAttachment.pNext;
+        //imageAttachment.imageView = imageView;
+        //imageAttachment.imageLayout = VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL_KHR;
+        //imageAttachment.resolveMode = VK_RESOLVE_MODE_NONE;
+        ////colorAttachment.resolveImageView;
+        ////colorAttachment.resolveImageLayout;
+        //imageAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+        //imageAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+        //imageAttachment.clearValue = clearValues;
+
         VkRenderingAttachmentInfoKHR colorAttachment{};
         colorAttachment.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO_KHR;
         //colorAttachment.pNext;
-        colorAttachment.imageView = imageView;
+        colorAttachment.imageView = colorImageView;
         colorAttachment.imageLayout = VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL_KHR;
         colorAttachment.resolveMode = VK_RESOLVE_MODE_NONE;
         //colorAttachment.resolveImageView;
