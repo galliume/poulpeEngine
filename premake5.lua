@@ -99,7 +99,9 @@ project "Rebulkan"
             "-Wmissing-declarations",
             "-Wredundant-decls",
             "-Wshadow",
-            "-Woverloaded-virtual"
+            "-Woverloaded-virtual",
+            "-Wno-c++98-compat",
+            "-Wno-c++98-compat-pedantic"
         }
 
     filter { "system:windows", "configurations:Debug" }

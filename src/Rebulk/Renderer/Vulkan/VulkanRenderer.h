@@ -60,6 +60,7 @@ namespace Rbk {
             std::vector<VkPipelineShaderStageCreateInfo>shadersCreateInfos,
             VkPipelineVertexInputStateCreateInfo vertexInputInfo,
             VkCullModeFlagBits cullMode = VK_CULL_MODE_BACK_BIT,
+            bool dynamicRendering = true,
             bool depthTestEnable = true,
             bool depthWriteEnable = true,
             bool stencilTestEnable = true,
@@ -103,6 +104,8 @@ namespace Rbk {
         void EndCommandBuffer(VkCommandBuffer commandBuffer);
         void BeginRenderPass(std::shared_ptr<VkRenderPass> renderPass, VkCommandBuffer commandBuffer, VkFramebuffer swapChainFramebuffer);
         void EndRenderPass(VkCommandBuffer commandBuffer);
+        void BeginRendering(VkCommandBuffer commandBuffer, VkImageView imageView, VkImageView depthImageVie, VkImageView colorImageView);
+        void EndRendering(VkCommandBuffer commandBuffer);
         void SetViewPort(VkCommandBuffer commandBuffer);
         void SetScissor(VkCommandBuffer commandBuffer);
         void BindPipeline(VkCommandBuffer commandBuffer, VkPipeline pipeline);
@@ -130,37 +133,37 @@ namespace Rbk {
         /*
         * Helper functions.
         */
-        inline const std::vector<const char*> GetValidationLayers() { return m_ValidationLayers; };
-        inline std::vector<VkExtensionProperties> GetExtensions() { return m_Extensions; };
-        inline std::vector<VkLayerProperties> GetLayersAvailable() { return m_LayersAvailable; };
-        inline bool IsInstanceCreated() { return m_InstanceCreated; };
-        inline bool IsValidationLayersEnabled() { return m_EnableValidationLayers; };
-        inline uint32_t GetExtensionCount() { return m_ExtensionCount; };
-        inline uint32_t GetQueueFamily() { return m_QueueFamilyIndices.graphicsFamily.value(); };
-        inline VkInstance GetInstance() { return m_Instance; };
-        inline VkPhysicalDevice GetPhysicalDevice() { return m_PhysicalDevice; };
-        inline VkDevice GetDevice() { return m_Device; };
-        inline VkQueue GetGraphicsQueue() { return m_GraphicsQueue; };
-        inline VkPhysicalDeviceProperties GetDeviceProperties() { return m_DeviceProps; };
-        inline VkPhysicalDeviceFeatures GetDeviceFeatures() { return m_DeviceFeatures; };
-        inline bool IsFramebufferResized() { return m_FramebufferResized; };
-        inline VkExtent2D GetSwapChainExtent() { return m_SwapChainExtent; };
-        inline VkSurfaceKHR GetSurface() { return m_Surface; };
-        inline void ResetCurrentFrameIndex() { m_CurrentFrame = 0; };
-        inline uint32_t GetCurrentFrame() { return m_CurrentFrame; };
-        inline VkFormat GetSwapChainImageFormat() { return m_SwapChainImageFormat; };
-        inline VkSampleCountFlagBits GetMsaaSamples() { return m_MsaaSamples; };
+        inline const std::vector<const char*> GetValidationLayers() const { return m_ValidationLayers; }
+        inline const std::vector<VkExtensionProperties> GetExtensions() const { return m_Extensions; }
+        inline const std::vector<VkLayerProperties> GetLayersAvailable() const { return m_LayersAvailable; }
+        inline bool IsInstanceCreated() const { return m_InstanceCreated; }
+        inline bool IsValidationLayersEnabled() const { return m_EnableValidationLayers; }
+        inline uint32_t GetExtensionCount() const { return m_ExtensionCount; }
+        inline uint32_t GetQueueFamily() const { return m_QueueFamilyIndices.graphicsFamily.value(); }
+        inline VkInstance GetInstance() const { return m_Instance; };
+        inline VkPhysicalDevice GetPhysicalDevice() const { return m_PhysicalDevice; }
+        inline VkDevice GetDevice() const { return m_Device; }
+        inline VkQueue GetGraphicsQueue() const { return m_GraphicsQueue; }
+        inline VkPhysicalDeviceProperties GetDeviceProperties() const { return m_DeviceProps; }
+        inline VkPhysicalDeviceFeatures GetDeviceFeatures() const { return m_DeviceFeatures; }
+        inline bool IsFramebufferResized() { return m_FramebufferResized; }
+        inline VkExtent2D GetSwapChainExtent() const { return m_SwapChainExtent; }
+        inline VkSurfaceKHR GetSurface() const { return m_Surface; }
+        inline void ResetCurrentFrameIndex() { m_CurrentFrame = 0; }
+        inline uint32_t GetCurrentFrame() const { return m_CurrentFrame; }
+        inline VkFormat GetSwapChainImageFormat() const { return m_SwapChainImageFormat; }
+        inline VkSampleCountFlagBits GetMsaaSamples() const { return m_MsaaSamples; }
         void InitDetails();
         void CreateFence();
         void WaitForFence();
         VkSampleCountFlagBits GetMaxUsableSampleCount();
-        SwapChainSupportDetails QuerySwapChainSupport(VkPhysicalDevice device);
-        uint32_t GetImageCount();
+        const SwapChainSupportDetails QuerySwapChainSupport(VkPhysicalDevice device) const;
+        uint32_t GetImageCount() const;
         std::string GetAPIVersion();
 
-        static const char* GetVendor(int vendorID)
+        static const std::string GetVendor(int vendorID)
         {
-            std::map<int, const char*> vendors;
+            std::map<int, std::string> vendors;
             vendors[0x1002] = "AMD";
             vendors[0x1010] = "ImgTec";
             vendors[0x10DE] = "NVIDIA";
@@ -195,13 +198,19 @@ namespace Rbk {
     private:
         const int m_MAX_FRAMES_IN_FLIGHT = 2;
         size_t m_CurrentFrame = 0;
-        uint32_t m_ExtensionCount = 0;
-        std::string m_apiVersion = "";
+        uint32_t m_ExtensionCount;
+        std::string m_apiVersion;
 
         std::shared_ptr<Window> m_Window = VK_NULL_HANDLE;
 
         const std::vector<const char*> m_ValidationLayers = { "VK_LAYER_KHRONOS_validation" };
-        const std::vector<const char*> m_DeviceExtensions = { VK_EXT_DEPTH_CLIP_ENABLE_EXTENSION_NAME, VK_KHR_SWAPCHAIN_EXTENSION_NAME, VK_KHR_PUSH_DESCRIPTOR_EXTENSION_NAME };
+        const std::vector<const char*> m_DeviceExtensions = { 
+            VK_EXT_DEPTH_CLIP_ENABLE_EXTENSION_NAME, 
+            VK_KHR_SWAPCHAIN_EXTENSION_NAME, 
+            VK_KHR_PUSH_DESCRIPTOR_EXTENSION_NAME,
+            VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME,
+            VK_NV_FRAMEBUFFER_MIXED_SAMPLES_EXTENSION_NAME
+        };
 
         bool m_InstanceCreated = false;
         bool m_EnableValidationLayers = false;
@@ -229,6 +238,6 @@ namespace Rbk {
         std::vector<VkFence> m_ImagesInFlight = {};
         VkFence m_Fence;
 
-        VkSampleCountFlagBits m_MsaaSamples = VK_SAMPLE_COUNT_1_BIT;
+        VkSampleCountFlagBits m_MsaaSamples = VK_SAMPLE_COUNT_8_BIT;
     };
 }
