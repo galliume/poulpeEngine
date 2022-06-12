@@ -48,113 +48,124 @@ namespace Rbk
     }
 
     void Application::Run()
-    {		
-        m_ShaderManager->AddShader("main", "assets/shaders/spv/vert.spv", "assets/shaders/spv/frag.spv");
-        m_ShaderManager->AddShader("skybox", "assets/shaders/spv/skybox_vert.spv", "assets/shaders/spv/skybox_frag.spv");
-        m_ShaderManager->AddShader("2d", "assets/shaders/spv/2d_vert.spv", "assets/shaders/spv/2d_frag.spv");
-        m_ShaderManager->AddShader("ambient_light", "assets/shaders/spv/ambient_shader_vert.spv", "assets/shaders/spv/ambient_shader_frag.spv");
+    {
+        std::thread loadShaders([this]() {
+            m_ShaderManager->AddShader("main", "assets/shaders/spv/vert.spv", "assets/shaders/spv/frag.spv");
+            m_ShaderManager->AddShader("skybox", "assets/shaders/spv/skybox_vert.spv", "assets/shaders/spv/skybox_frag.spv");
+            m_ShaderManager->AddShader("2d", "assets/shaders/spv/2d_vert.spv", "assets/shaders/spv/2d_frag.spv");
+            m_ShaderManager->AddShader("ambient_light", "assets/shaders/spv/ambient_shader_vert.spv", "assets/shaders/spv/ambient_shader_frag.spv");
+        });
 
-        m_TextureManager->AddTexture("minecraft_grass", "assets/mesh/minecraft/Grass_Block_TEX.png");
-        m_TextureManager->AddTexture("minecraft_water", "assets/mesh/minecraft/water.jpg");
-        m_TextureManager->AddTexture("campfire_tex", "assets/mesh/campfire/Campfire_MAT_BaseColor_01.jpg");
-        m_TextureManager->AddTexture("tree_tex", "assets/mesh/tree/tree.jpg");
-        m_TextureManager->AddTexture("tree_top_tex", "assets/mesh/tree/tree.png");
-        m_TextureManager->AddTexture("crosshair", "assets/texture/crosshair/simple_crosshair.png");
-        m_TextureManager->AddTexture("moon", "assets/mesh/moon/diffuse.jpg");
-        m_TextureManager->AddTexture("trunk_tree_cartoon", "assets/mesh/tree/cartoon/Trunk_4_Cartoon.jpg");
-        m_TextureManager->AddTexture("grass", "assets/mesh/grass/grass.png");
-        m_TextureManager->AddTexture("rooftiles", "assets/mesh/house/textures/rooftiles/T_darkwood_basecolor.png");
-        m_TextureManager->AddTexture("dark_wood", "assets/mesh/house/textures/wood/T_darkwood_basecolor.png");
-        m_TextureManager->AddTexture("bright_wood", "assets/mesh/house/textures/wood/T_brightwood_basecolor.png");
-        m_TextureManager->AddTexture("rocks", "assets/mesh/house/textures/rocks/rock_bc.jpg");
-        m_TextureManager->AddTexture("dog_base_color", "assets/mesh/doghouse/doghouse0908_PBR_BaseColor.png");
+        std::thread loadTextures([this]() {
+            m_TextureManager->AddTexture("minecraft_grass", "assets/mesh/minecraft/Grass_Block_TEX.png");
+            m_TextureManager->AddTexture("minecraft_water", "assets/mesh/minecraft/water.jpg");
+            m_TextureManager->AddTexture("campfire_tex", "assets/mesh/campfire/Campfire_MAT_BaseColor_01.jpg");
+            m_TextureManager->AddTexture("tree_tex", "assets/mesh/tree/tree.jpg");
+            m_TextureManager->AddTexture("tree_top_tex", "assets/mesh/tree/tree.png");
+            m_TextureManager->AddTexture("crosshair", "assets/texture/crosshair/simple_crosshair.png");
+            m_TextureManager->AddTexture("moon", "assets/mesh/moon/diffuse.jpg");
+            m_TextureManager->AddTexture("trunk_tree_cartoon", "assets/mesh/tree/cartoon/Trunk_4_Cartoon.jpg");
+            m_TextureManager->AddTexture("grass", "assets/mesh/grass/grass.png");
+            m_TextureManager->AddTexture("rooftiles", "assets/mesh/house/textures/rooftiles/T_darkwood_basecolor.png");
+            m_TextureManager->AddTexture("dark_wood", "assets/mesh/house/textures/wood/T_darkwood_basecolor.png");
+            m_TextureManager->AddTexture("bright_wood", "assets/mesh/house/textures/wood/T_brightwood_basecolor.png");
+            m_TextureManager->AddTexture("rocks", "assets/mesh/house/textures/rocks/rock_bc.jpg");
+            m_TextureManager->AddTexture("dog_base_color", "assets/mesh/doghouse/doghouse0908_PBR_BaseColor.png");
+        });
 
-        glm::vec3 scaleMinecraft = glm::vec3(0.1f, 0.1f, 0.1f);
+        std::thread loadWorldMeshFloor([this]() {
+            glm::vec3 scaleMinecraft = glm::vec3(0.1f, 0.1f, 0.1f);
 
-        for (int x = -7; x < 7; x++) {
-            for (int y = -5; y < 15; y++) {
-                glm::vec3 posCube = glm::vec3(-0.20f * static_cast<float>(x), 0.0f, -0.20f * static_cast<float>(y));
-                m_MeshManager->AddMesh("ground_cube", "assets/mesh/minecraft/Grass_Block.obj", { "minecraft_grass" }, "main", posCube, scaleMinecraft);
+            for (int x = -7; x < 7; x++) {
+                for (int y = -5; y < 15; y++) {
+                    glm::vec3 posCube = glm::vec3(-0.20f * static_cast<float>(x), 0.0f, -0.20f * static_cast<float>(y));
+                    m_MeshManager->AddMesh("ground_cube", "assets/mesh/minecraft/Grass_Block.obj", { "minecraft_grass" }, "main", posCube, scaleMinecraft);
+                }
             }
-        }
 
-        for (int x = -22; x < -7; x++) {
-            for (int y = -5; y < 15; y++) {
-                glm::vec3 posCube = glm::vec3(-0.20f * static_cast<float>(x), 0.0f, -0.20f * static_cast<float>(y));
-                m_MeshManager->AddMesh("water_cube", "assets/mesh/minecraft/Grass_Block.obj", { "minecraft_water" }, "main", posCube, scaleMinecraft);
+            for (int x = -22; x < -7; x++) {
+                for (int y = -5; y < 15; y++) {
+                    glm::vec3 posCube = glm::vec3(-0.20f * static_cast<float>(x), 0.0f, -0.20f * static_cast<float>(y));
+                    m_MeshManager->AddMesh("water_cube", "assets/mesh/minecraft/Grass_Block.obj", { "minecraft_water" }, "main", posCube, scaleMinecraft);
+                }
             }
-        }
 
-        for (int x = 7; x < 22; x++) {
-            for (int y = -5; y < 15; y++) {
-                glm::vec3 posCube = glm::vec3(-0.20f * static_cast<float>(x), 0.0f, -0.20f * static_cast<float>(y));
-                m_MeshManager->AddMesh("water_cube_2", "assets/mesh/minecraft/Grass_Block.obj", { "minecraft_water" }, "main", posCube, scaleMinecraft);
+            for (int x = 7; x < 22; x++) {
+                for (int y = -5; y < 15; y++) {
+                    glm::vec3 posCube = glm::vec3(-0.20f * static_cast<float>(x), 0.0f, -0.20f * static_cast<float>(y));
+                    m_MeshManager->AddMesh("water_cube_2", "assets/mesh/minecraft/Grass_Block.obj", { "minecraft_water" }, "main", posCube, scaleMinecraft);
+                }
             }
-        }
 
-        for (int x = -22; x < 22; x++) {
-            for (int y = 15; y < 22; y++) {
-                glm::vec3 posCube = glm::vec3(-0.20f * static_cast<float>(x), 0.0f, -0.20f * static_cast<float>(y));
-                m_MeshManager->AddMesh("water_cube_3", "assets/mesh/minecraft/Grass_Block.obj", { "minecraft_water" }, "main", posCube, scaleMinecraft);
+            for (int x = -22; x < 22; x++) {
+                for (int y = 15; y < 22; y++) {
+                    glm::vec3 posCube = glm::vec3(-0.20f * static_cast<float>(x), 0.0f, -0.20f * static_cast<float>(y));
+                    m_MeshManager->AddMesh("water_cube_3", "assets/mesh/minecraft/Grass_Block.obj", { "minecraft_water" }, "main", posCube, scaleMinecraft);
+                }
             }
-        }
 
-        for (int x = -22; x < 22; x++) {
-            for (int y = 22; y < 29; y++) {
-                glm::vec3 posCube = glm::vec3(-0.20f * static_cast<float>(x), 0.0f, -0.20f * static_cast<float>(y));
-                m_MeshManager->AddMesh("water_cube_4", "assets/mesh/minecraft/Grass_Block.obj", { "minecraft_water" }, "main", posCube, scaleMinecraft);
+            for (int x = -22; x < 22; x++) {
+                for (int y = 22; y < 29; y++) {
+                    glm::vec3 posCube = glm::vec3(-0.20f * static_cast<float>(x), 0.0f, -0.20f * static_cast<float>(y));
+                    m_MeshManager->AddMesh("water_cube_4", "assets/mesh/minecraft/Grass_Block.obj", { "minecraft_water" }, "main", posCube, scaleMinecraft);
+                }
             }
-        }
+        });
 
-        glm::vec3 pos1 = glm::vec3(0.8f, 0.2f, -0.4f);
-        glm::vec3 scaleCamp = glm::vec3(0.002f, 0.002f, 0.002f);
-        m_MeshManager->AddMesh("campfire", "assets/mesh/campfire/Campfire.obj", { "campfire_tex" }, "main", pos1, scaleCamp);
+        std::thread loadWorlMesh([this]() {
+            glm::vec3 pos1 = glm::vec3(0.8f, 0.2f, -0.4f);
+            glm::vec3 scaleCamp = glm::vec3(0.002f, 0.002f, 0.002f);
+            m_MeshManager->AddMesh("campfire", "assets/mesh/campfire/Campfire.obj", { "campfire_tex" }, "main", pos1, scaleCamp);
 
-        glm::vec3 pos2 = glm::vec3(-1.0f, 0.19f, -1.4f);
-        glm::vec3 scaleDeadTree = glm::vec3(0.01f, 0.01f, 0.01f);
-        m_MeshManager->AddMesh("dead_tree", "assets/mesh/tree/dead_tree.obj", { "trunk_tree_cartoon" }, "main", pos2, scaleDeadTree, glm::vec3(0.0f, 1.0f, 0.0f), 20.0f);
+            glm::vec3 pos2 = glm::vec3(-1.0f, 0.19f, -1.4f);
+            glm::vec3 scaleDeadTree = glm::vec3(0.01f, 0.01f, 0.01f);
+            m_MeshManager->AddMesh("dead_tree", "assets/mesh/tree/dead_tree.obj", { "trunk_tree_cartoon" }, "main", pos2, scaleDeadTree, glm::vec3(0.0f, 1.0f, 0.0f), 20.0f);
 
-        pos2 = glm::vec3(1.0f, 0.19f, 1.0f);
-        m_MeshManager->AddMesh("dead_tree", "assets/mesh/tree/dead_tree.obj", { "trunk_tree_cartoon" }, "main", pos2, scaleDeadTree, glm::vec3(0.0f, 1.0f, 0.0f), -20.0f);
+            pos2 = glm::vec3(1.0f, 0.19f, 1.0f);
+            m_MeshManager->AddMesh("dead_tree", "assets/mesh/tree/dead_tree.obj", { "trunk_tree_cartoon" }, "main", pos2, scaleDeadTree, glm::vec3(0.0f, 1.0f, 0.0f), -20.0f);
 
-        pos2 = glm::vec3(1.0f, 0.18f, -2.0f);
-        m_MeshManager->AddMesh("dead_tree", "assets/mesh/tree/dead_tree.obj", { "trunk_tree_cartoon" }, "main", pos2, scaleDeadTree);
+            pos2 = glm::vec3(1.0f, 0.18f, -2.0f);
+            m_MeshManager->AddMesh("dead_tree", "assets/mesh/tree/dead_tree.obj", { "trunk_tree_cartoon" }, "main", pos2, scaleDeadTree);
 
-        glm::vec3 scaleTree = glm::vec3(0.0008f, 0.0008f, 0.0008f);
-        pos2 = glm::vec3(-0.7f, 0.19f, -1.9f);
-        m_MeshManager->AddMesh("tree", "assets/mesh/tree/tree.obj", { "tree_top_tex", "trunk_tree_cartoon" }, "main", pos2, scaleTree, glm::vec3(0.0f, 1.0f, 0.0f), 20.0f);
+            glm::vec3 scaleTree = glm::vec3(0.0008f, 0.0008f, 0.0008f);
+            pos2 = glm::vec3(-0.7f, 0.19f, -1.9f);
+            m_MeshManager->AddMesh("tree", "assets/mesh/tree/tree.obj", { "tree_top_tex", "trunk_tree_cartoon" }, "main", pos2, scaleTree, glm::vec3(0.0f, 1.0f, 0.0f), 20.0f);
 
-        pos2 = glm::vec3(-0.25f, 0.19f, -1.2f);
-        m_MeshManager->AddMesh("tree", "assets/mesh/tree/tree.obj", { "tree_top_tex", "trunk_tree_cartoon" }, "main", pos2, scaleTree, glm::vec3(0.0f, 1.0f, 0.0f), 10.0f);
+            pos2 = glm::vec3(-0.25f, 0.19f, -1.2f);
+            m_MeshManager->AddMesh("tree", "assets/mesh/tree/tree.obj", { "tree_top_tex", "trunk_tree_cartoon" }, "main", pos2, scaleTree, glm::vec3(0.0f, 1.0f, 0.0f), 10.0f);
 
-        pos2 = glm::vec3(0.7f, 0.19f, -1.6f);
-        m_MeshManager->AddMesh("tree", "assets/mesh/tree/tree.obj", { "tree_top_tex", "trunk_tree_cartoon" }, "main", pos2, scaleTree, glm::vec3(0.0f, 1.0f, 0.0f), 80.0f);
+            pos2 = glm::vec3(0.7f, 0.19f, -1.6f);
+            m_MeshManager->AddMesh("tree", "assets/mesh/tree/tree.obj", { "tree_top_tex", "trunk_tree_cartoon" }, "main", pos2, scaleTree, glm::vec3(0.0f, 1.0f, 0.0f), 80.0f);
 
-        pos2 = glm::vec3(1.2f, 0.19f, -0.9f);
-        m_MeshManager->AddMesh("tree", "assets/mesh/tree/tree.obj", { "tree_top_tex", "trunk_tree_cartoon" }, "main", pos2, scaleTree);
+            pos2 = glm::vec3(1.2f, 0.19f, -0.9f);
+            m_MeshManager->AddMesh("tree", "assets/mesh/tree/tree.obj", { "tree_top_tex", "trunk_tree_cartoon" }, "main", pos2, scaleTree);
 
-        glm::vec3 moonCubeTest = glm::vec3(0.2f, 0.2f, 0.2f);
-        glm::vec3 pos6 = glm::vec3(0.5f, 4.5f, -3.00f);
-        m_MeshManager->AddMesh("moon", "assets/mesh/moon/moon.obj", { "moon" }, "ambient_light", pos6, moonCubeTest, glm::vec3(1.0f), 0.0f, false);
+            glm::vec3 moonCubeTest = glm::vec3(0.2f, 0.2f, 0.2f);
+            glm::vec3 pos6 = glm::vec3(0.5f, 4.5f, -3.00f);
+            m_MeshManager->AddMesh("moon", "assets/mesh/moon/moon.obj", { "moon" }, "ambient_light", pos6, moonCubeTest, glm::vec3(1.0f), 0.0f, false);
 
-        glm::vec3 houseScale = glm::vec3(0.1f, 0.1f, 0.1f);
-        glm::vec3 posHouse = glm::vec3(-0.5f, 0.19f, -0.20f);
-        glm::vec3 rotHouse = glm::vec3(0.0f, 1.0f, 0.0f);
-        m_MeshManager->AddMesh("house", "assets/mesh/house/midpoly_town_house_01.obj", { "dark_wood", "rocks", "rooftiles", "bright_wood" }, "main", posHouse, houseScale, rotHouse, -80.0f, false);
+            glm::vec3 houseScale = glm::vec3(0.1f, 0.1f, 0.1f);
+            glm::vec3 posHouse = glm::vec3(-0.5f, 0.19f, -0.20f);
+            glm::vec3 rotHouse = glm::vec3(0.0f, 1.0f, 0.0f);
+            m_MeshManager->AddMesh("house", "assets/mesh/house/midpoly_town_house_01.obj", { "dark_wood", "rocks", "rooftiles", "bright_wood" }, "main", posHouse, houseScale, rotHouse, -80.0f, false);
 
-        glm::vec3 dogScale = glm::vec3(0.3f, 0.3f, 0.3f);
-        glm::vec3 posDog = glm::vec3(0.7f, 0.20f, -2.0f);
-        glm::vec3 rotDog = glm::vec3(0.0f, 1.0f, 0.0f);
-        m_MeshManager->AddMesh("dog_house", "assets/mesh/doghouse/doghouse0908.obj", { "dog_base_color" }, "main", posDog, dogScale, rotDog, -30.0f);
+            glm::vec3 dogScale = glm::vec3(0.3f, 0.3f, 0.3f);
+            glm::vec3 posDog = glm::vec3(0.7f, 0.20f, -2.0f);
+            glm::vec3 rotDog = glm::vec3(0.0f, 1.0f, 0.0f);
+            m_MeshManager->AddMesh("dog_house", "assets/mesh/doghouse/doghouse0908.obj", { "dog_base_color" }, "main", posDog, dogScale, rotDog, -30.0f);
+        });
 
-        std::vector<std::string>skyboxImages;
-        skyboxImages.emplace_back("assets/texture/skybox/bluesky/right.jpg");
-        skyboxImages.emplace_back("assets/texture/skybox/bluesky/left.jpg");
-        skyboxImages.emplace_back("assets/texture/skybox/bluesky/top.jpg");
-        skyboxImages.emplace_back("assets/texture/skybox/bluesky/bottom.jpg");
-        skyboxImages.emplace_back("assets/texture/skybox/bluesky/front.jpg");
-        skyboxImages.emplace_back("assets/texture/skybox/bluesky/back.jpg");
-        m_TextureManager->AddSkyBox(skyboxImages);
+        std::thread loadSkybox([this]() {
+
+            std::vector<std::string>skyboxImages;
+            skyboxImages.emplace_back("assets/texture/skybox/bluesky/right.jpg");
+            skyboxImages.emplace_back("assets/texture/skybox/bluesky/left.jpg");
+            skyboxImages.emplace_back("assets/texture/skybox/bluesky/top.jpg");
+            skyboxImages.emplace_back("assets/texture/skybox/bluesky/bottom.jpg");
+            skyboxImages.emplace_back("assets/texture/skybox/bluesky/front.jpg");
+            skyboxImages.emplace_back("assets/texture/skybox/bluesky/back.jpg");
+            m_TextureManager->AddSkyBox(skyboxImages);
+        });
      
 #ifdef RBK_DEBUG
         std::shared_ptr<Rbk::VulkanLayer>vulkanLayer = std::make_shared<Rbk::VulkanLayer>();
@@ -174,6 +185,12 @@ namespace Rbk
         vulkanLayer->AddMeshManager(m_MeshManager);
         vulkanLayer->AddShaderManager(m_ShaderManager);
 #endif
+
+        loadShaders.join();
+        loadTextures.join();
+        loadSkybox.join();
+        loadWorlMesh.join();
+        loadWorldMeshFloor.join();
 
         m_RendererAdapter->PrepareWorld();
 
