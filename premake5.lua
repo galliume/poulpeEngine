@@ -103,6 +103,8 @@ project "Rebulkan"
             "-Wno-c++98-compat",
             "-Wno-c++98-compat-pedantic"
         }
+		
+		defines { "_NO_DEBUG_HEAP=1" }
 
     filter { "system:windows", "configurations:Debug" }
         buildoptions { "/MDd" }
