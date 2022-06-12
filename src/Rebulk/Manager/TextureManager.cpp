@@ -46,16 +46,6 @@ namespace Rbk
         VkImageView textureImageView = m_Renderer.get()->CreateSkyboxImageView(skyboxImage, VK_FORMAT_R8G8B8A8_SRGB, mipLevels);
         VkSampler textureSampler = m_Renderer.get()->CreateSkyboxTextureSampler(mipLevels);
 
-        VkDeviceMemory colorImageMemory;
-        VkImage colorImage;
-        m_Renderer.get()->CreateSkyboxImage(texWidth, texWidth, mipLevels, VK_SAMPLE_COUNT_1_BIT, m_Renderer.get()->GetSwapChainImageFormat(), VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, colorImage, colorImageMemory);
-        VkImageView colorImageView = m_Renderer.get()->CreateSkyboxImageView(colorImage, m_Renderer.get()->GetSwapChainImageFormat(), VK_IMAGE_ASPECT_COLOR_BIT, 1);
-
-        VkImage depthImage;
-        VkDeviceMemory depthImageMemory;
-        m_Renderer.get()->CreateSkyboxImage(texWidth, texWidth, mipLevels, VK_SAMPLE_COUNT_1_BIT, m_Renderer.get()->FindDepthFormat(), VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, depthImage, depthImageMemory);
-        VkImageView depthImageView = m_Renderer.get()->CreateSkyboxImageView(depthImage, m_Renderer.get()->FindDepthFormat(), 1, VK_IMAGE_ASPECT_DEPTH_BIT);
-
         m_Skybox.image = skyboxImage;
         m_Skybox.imageMemory = textureImageMemory;
         m_Skybox.imageView = textureImageView;
@@ -64,14 +54,6 @@ namespace Rbk
         m_Skybox.width = texWidth;
         m_Skybox.height = texHeight;
         m_Skybox.channels = texChannels;
-        m_Skybox.colorImageView = colorImageView;
-        m_Skybox.colorImage = colorImage;
-        m_Skybox.colorImageMemory = colorImageMemory;
-        m_Skybox.depthImage = depthImage;
-        m_Skybox.depthImageView = depthImageView;
-        m_Skybox.depthImageMemory = depthImageMemory;
-
-        Rbk::Log::GetLogger()->trace("Added skybox");
 
         vkDestroyCommandPool(m_Renderer.get()->GetDevice(), commandPool, nullptr);
     }
@@ -109,16 +91,6 @@ namespace Rbk
         VkImageView textureImageView = m_Renderer.get()->CreateImageView(textureImage, VK_FORMAT_R8G8B8A8_SRGB, mipLevels);
         VkSampler textureSampler = m_Renderer.get()->CreateTextureSampler(mipLevels);
 
-        VkDeviceMemory colorImageMemory;
-        VkImage colorImage;
-        m_Renderer.get()->CreateImage(m_Renderer.get()->GetSwapChainExtent().width, m_Renderer.get()->GetSwapChainExtent().height, 1, m_Renderer.get()->GetMsaaSamples(), m_Renderer.get()->GetSwapChainImageFormat(), VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, colorImage, colorImageMemory);
-        VkImageView colorImageView = m_Renderer->CreateImageView(colorImage, m_Renderer->GetSwapChainImageFormat(), VK_IMAGE_ASPECT_COLOR_BIT, 1);
-
-        VkImage depthImage;
-        VkDeviceMemory depthImageMemory;
-        m_Renderer.get()->CreateImage(m_Renderer.get()->GetSwapChainExtent().width, m_Renderer.get()->GetSwapChainExtent().height, 1, m_Renderer.get()->GetMsaaSamples(), m_Renderer.get()->FindDepthFormat(), VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, depthImage, depthImageMemory);
-        VkImageView depthImageView = m_Renderer.get()->CreateImageView(depthImage, m_Renderer.get()->FindDepthFormat(), 1, VK_IMAGE_ASPECT_DEPTH_BIT);
-
         Rbk::Texture texture;
         texture.name = name;
         texture.image = textureImage;
@@ -129,17 +101,8 @@ namespace Rbk
         texture.width = texWidth;
         texture.height = texHeight;
         texture.channels = texChannels;
-        texture.colorImageView = colorImageView;
-        texture.colorImage = colorImage;
-        texture.colorImageMemory = colorImageMemory;
-        texture.depthImage = depthImage;
-        texture.depthImageView = depthImageView;
-        texture.depthImageMemory = depthImageMemory;
 
         m_Textures.emplace(name, texture);
-
-        Rbk::Log::GetLogger()->trace("Added texture {} from {}. w {} h {} a {}", name, path, texWidth, texHeight, texChannels);
-
         vkDestroyCommandPool(m_Renderer->GetDevice(), commandPool, nullptr);
     }
 }

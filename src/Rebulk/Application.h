@@ -10,7 +10,7 @@
 #include "GUI/LayerManager.h"
 #include "GUI/Layer/VulkanLayer.h"
 #include "GUI/ImGui/Im.h"
-#include "Rebulk/GUI/Window.h"
+#include "GUI/Window.h"
 
 namespace Rbk 
 {
@@ -28,6 +28,15 @@ namespace Rbk
         static int s_UnlockedFPS;
     private:
         static Application* s_Instance;
-        bool m_Running = true;
+        std::shared_ptr<Rbk::Window>m_Window;
+        std::shared_ptr<Rbk::RenderManager>m_RenderManager;
+        std::shared_ptr<Rbk::Camera>m_Camera;
+        std::shared_ptr<Rbk::InputManager>m_InputManager;
+        std::shared_ptr<Rbk::VulkanAdapter>m_RendererAdapter;
+        std::shared_ptr<Rbk::LayerManager>m_LayerManager;
+        std::shared_ptr<Rbk::TextureManager>m_TextureManager;
+        std::shared_ptr<Rbk::MeshManager>m_MeshManager;
+        std::shared_ptr<Rbk::ShaderManager>m_ShaderManager;
+        std::shared_ptr<Rbk::Im>m_VImGui;
     };
 }
