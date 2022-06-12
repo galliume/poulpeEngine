@@ -117,11 +117,12 @@ namespace Rbk
         m_DepthImageViews.resize(m_SwapChainImages.size());
         m_ColorImageViews.resize(m_SwapChainImages.size());
         VkVertexInputBindingDescription bDesc = Vertex::GetBindingDescription();
+        VkDeviceMemory colorImageMemory;
+        VkDeviceMemory depthImageMemory;
 
         for (uint32_t i = 0; i < m_SwapChainImages.size(); i++) {
             m_SwapChainImageViews[i] = m_Renderer->CreateImageView(m_SwapChainImages[i], m_Renderer->GetSwapChainImageFormat(), VK_IMAGE_ASPECT_COLOR_BIT);
 
-            VkDeviceMemory colorImageMemory;
             VkImage colorImage;
             m_Renderer.get()->CreateImage(m_Renderer.get()->GetSwapChainExtent().width, m_Renderer.get()->GetSwapChainExtent().height, 1, m_Renderer.get()->GetMsaaSamples(), m_Renderer.get()->GetSwapChainImageFormat(), VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, colorImage, colorImageMemory);
             VkImageView colorImageView = m_Renderer->CreateImageView(colorImage, m_Renderer->GetSwapChainImageFormat(), VK_IMAGE_ASPECT_COLOR_BIT, 1);
@@ -129,7 +130,6 @@ namespace Rbk
             m_ColorImageViews[i] = colorImageView;
 
             VkImage depthImage;
-            VkDeviceMemory depthImageMemory;
             m_Renderer.get()->CreateImage(m_Renderer.get()->GetSwapChainExtent().width, m_Renderer.get()->GetSwapChainExtent().height, 1, m_Renderer.get()->GetMsaaSamples(), m_Renderer.get()->FindDepthFormat(), VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, depthImage, depthImageMemory);
             VkImageView depthImageView = m_Renderer.get()->CreateImageView(depthImage, m_Renderer.get()->FindDepthFormat(), 1, VK_IMAGE_ASPECT_DEPTH_BIT);
             
@@ -152,6 +152,7 @@ namespace Rbk
         poolSizes[1].descriptorCount = 1000;
 
         VkDescriptorPool descriptorPool = m_Renderer->CreateDescriptorPool(poolSizes, 1000);
+        m_DescriptorPools.emplace_back(descriptorPool);
 
         std::vector<VkPushConstantRange> pushConstants = {};
         VkPushConstantRange vkPushconstants;
@@ -180,6 +181,7 @@ namespace Rbk
         VkDescriptorSetLayout desriptorSetLayout = m_Renderer->CreateDescriptorSetLayout(
             bindings, VK_DESCRIPTOR_SET_LAYOUT_CREATE_UPDATE_AFTER_BIND_POOL_BIT
         );
+        m_DescriptorSetLayouts.emplace_back(desriptorSetLayout);
 
         for (std::shared_ptr<Mesh> mesh : *worldMeshes) {
 
@@ -323,6 +325,7 @@ namespace Rbk
         skyPoolSizes[1].descriptorCount = 10;
 
         VkDescriptorPool skyDescriptorPool = m_Renderer->CreateDescriptorPool(poolSizes, 10);
+        m_DescriptorPools.emplace_back(skyDescriptorPool);
 
         VkDescriptorSetLayoutBinding skyUboLayoutBinding{};
         skyUboLayoutBinding.binding = 0;
@@ -343,6 +346,7 @@ namespace Rbk
         VkDescriptorSetLayout skyDesriptorSetLayout = m_Renderer->CreateDescriptorSetLayout(
             skyBindings, VK_DESCRIPTOR_SET_LAYOUT_CREATE_UPDATE_AFTER_BIND_POOL_BIT
         );
+        m_DescriptorSetLayouts.emplace_back(skyDesriptorSetLayout);
 
         VkDescriptorImageInfo skyDescriptorImageInfo{};
         skyDescriptorImageInfo.sampler = tex.sampler;
@@ -426,6 +430,7 @@ namespace Rbk
         cpoolSizes[1].descriptorCount = 10;
 
         VkDescriptorPool cdescriptorPool = m_Renderer->CreateDescriptorPool(cpoolSizes, 10);
+        m_DescriptorPools.emplace_back(cdescriptorPool);
 
         VkDescriptorSetLayoutBinding cuboLayoutBinding{};
         cuboLayoutBinding.binding = 0;
@@ -446,6 +451,7 @@ namespace Rbk
         VkDescriptorSetLayout cdesriptorSetLayout = m_Renderer->CreateDescriptorSetLayout(
             cbindings, VK_DESCRIPTOR_SET_LAYOUT_CREATE_UPDATE_AFTER_BIND_POOL_BIT
         );
+        m_DescriptorSetLayouts.emplace_back(cdesriptorSetLayout);
 
         Texture ctex = m_TextureManager->GetTextures()["crosshair"];
 
@@ -501,6 +507,9 @@ namespace Rbk
         //command buffer
         m_SwapChainFramebuffers = m_Renderer->CreateFramebuffers(m_RenderPass, m_SwapChainImageViews, m_DepthImageViews, m_ColorImageViews);
         m_CommandBuffers = m_Renderer->AllocateCommandBuffers(m_CommandPool, static_cast<uint32_t>(m_SwapChainImageViews.size()));
+        
+        vkFreeMemory(m_Renderer->GetDevice(), colorImageMemory, nullptr);
+        vkFreeMemory(m_Renderer->GetDevice(), depthImageMemory, nullptr);
 
         m_lastLookAt = glm::mat4(1.0f);
     }
@@ -648,7 +657,38 @@ namespace Rbk
         m_Renderer->DestroySwapchain(m_Renderer->GetDevice(), m_SwapChain, m_SwapChainFramebuffers, m_SwapChainImageViews);
         m_Renderer->DestroySemaphores(m_Semaphores);
     
+        std::shared_ptr<Mesh> skyboxMesh = m_MeshManager->GetSkyboxMesh();
+
+        for (auto buffer : skyboxMesh->uniformBuffers) {
+            m_Renderer->DestroyBuffer(buffer.first);
+            m_Renderer->DestroyDeviceMemory(buffer.second);
+        }
+        
+        m_Renderer->DestroyBuffer(skyboxMesh->vertexBuffer.first);
+        m_Renderer->DestroyDeviceMemory(skyboxMesh->vertexBuffer.second);
+
+        m_Renderer->DestroyBuffer(skyboxMesh->indicesBuffer.first);
+        m_Renderer->DestroyDeviceMemory(skyboxMesh->indicesBuffer.second);
+
+        m_Renderer->DestroyPipeline(skyboxMesh->graphicsPipeline);
+        vkDestroyPipelineLayout(m_Renderer->GetDevice(), skyboxMesh->pipelineLayout, nullptr);
+
+        for (auto buffer : m_Crosshair->uniformBuffers) {
+            m_Renderer->DestroyBuffer(buffer.first);
+            m_Renderer->DestroyDeviceMemory(buffer.second);
+        }
+
+        m_Renderer->DestroyBuffer(m_Crosshair->vertexBuffer.first);
+        m_Renderer->DestroyDeviceMemory(m_Crosshair->vertexBuffer.second);
+
+        m_Renderer->DestroyBuffer(m_Crosshair->indicesBuffer.first);
+        m_Renderer->DestroyDeviceMemory(m_Crosshair->indicesBuffer.second);
+
+        m_Renderer->DestroyPipeline(m_Crosshair->graphicsPipeline);
+        vkDestroyPipelineLayout(m_Renderer->GetDevice(), m_Crosshair->pipelineLayout, nullptr);
+
         for (std::shared_ptr<Mesh> mesh : *m_MeshManager->GetWorldMeshes()) {
+
             for (auto buffer : mesh->uniformBuffers) {
                 m_Renderer->DestroyBuffer(buffer.first);
                 m_Renderer->DestroyDeviceMemory(buffer.second);
@@ -659,6 +699,9 @@ namespace Rbk
 
             m_Renderer->DestroyBuffer(mesh->indicesBuffer.first);
             m_Renderer->DestroyDeviceMemory(mesh->indicesBuffer.second);
+
+            m_Renderer->DestroyPipeline(mesh->graphicsPipeline);
+            vkDestroyPipelineLayout(m_Renderer->GetDevice(), mesh->pipelineLayout, nullptr);
         }
 
         for (auto item : m_TextureManager->GetTextures()) {
@@ -668,24 +711,13 @@ namespace Rbk
             m_Renderer->DestroyDeviceMemory(item.second.imageMemory);
             vkDestroyImageView(m_Renderer->GetDevice(), item.second.imageView, nullptr);
         }
+
         for (auto item: m_DepthImageViews) {
             vkDestroyImageView(m_Renderer->GetDevice(), item, nullptr);
         }
 
         for (auto item : m_ColorImageViews) {
             vkDestroyImageView(m_Renderer->GetDevice(), item, nullptr);
-        }
-
-        for (auto pipeline : m_Pipelines) {
-            for (auto gp : pipeline.graphicsPipeline) {
-                m_Renderer->DestroyPipeline(gp);
-            }
-            vkDestroyDescriptorPool(m_Renderer->GetDevice(), pipeline.descriptorPool, nullptr);
-            vkDestroyPipelineLayout(m_Renderer->GetDevice(), pipeline.pipelineLayout, nullptr);
-
-            for (auto descriptorSetLayout : pipeline.descriptorSetLayouts) {
-                vkDestroyDescriptorSetLayout(m_Renderer->GetDevice(), descriptorSetLayout, nullptr);
-            }
         }
 
         for (auto shader : m_ShaderManager->GetShaders()->shaders) {
@@ -696,9 +728,19 @@ namespace Rbk
         for (auto& buffer : m_UniformBuffers.first) {
             m_Renderer->DestroyBuffer(buffer);
         }
+
         for (auto& deviceMemory : m_UniformBuffers.second) {
             m_Renderer->DestroyDeviceMemory(deviceMemory);
         }
+
+        for (VkDescriptorSetLayout descriptorSetLayout : m_DescriptorSetLayouts) {
+            vkDestroyDescriptorSetLayout(m_Renderer->GetDevice(), descriptorSetLayout, nullptr);
+        }
+
+        for (VkDescriptorPool descriptorPool : m_DescriptorPools) {
+            vkDestroyDescriptorPool(m_Renderer->GetDevice(), descriptorPool, nullptr);
+        }
+
         m_Renderer->DestroyRenderPass(m_RenderPass, m_CommandPool, m_CommandBuffers);
         m_Renderer->Destroy();
     }
@@ -753,8 +795,6 @@ namespace Rbk
 
         if (result != VK_SUCCESS) {
             Rbk::Log::GetLogger()->critical("failed to create imgui render pass : {}", result);
-        } else {
-            Rbk::Log::GetLogger()->trace("created successfully imgui render pass");
         }
 
         return renderPass;

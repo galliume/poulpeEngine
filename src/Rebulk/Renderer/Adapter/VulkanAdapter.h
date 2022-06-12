@@ -87,5 +87,7 @@ namespace Rbk
         glm::mat4 m_lastLookAt;
         float m_Deltatime = 0.0f;
         std::vector<glm::vec3>m_LightsPos;
+        std::vector<VkDescriptorPool>m_DescriptorPools;
+        std::vector<VkDescriptorSetLayout>m_DescriptorSetLayouts;
     };
 }

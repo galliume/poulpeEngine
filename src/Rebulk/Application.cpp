@@ -232,6 +232,7 @@ namespace Rbk
         }
 
 #ifdef RBK_DEBUG
+        m_RendererAdapter->Rdr()->WaitIdle();
         Rbk::Im::Destroy();
 #endif
         m_RenderManager->Adp()->Destroy();
