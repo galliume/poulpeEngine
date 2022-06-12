@@ -52,7 +52,7 @@ namespace Rbk {
         }
         default:
         {
-            Rbk::Log::GetLogger()->trace("{} : {}", messageType, pCallbackData->pMessage);
+            //Rbk::Log::GetLogger()->trace("{} : {}", messageType, pCallbackData->pMessage);
         }
         }
 
@@ -177,13 +177,6 @@ namespace Rbk {
 
         std::vector<VkExtensionProperties> extensions(m_ExtensionCount);
         vkEnumerateInstanceExtensionProperties(nullptr, &m_ExtensionCount, extensions.data());
-
-        //Rbk::Log::GetLogger()->trace("{} available extensions:\n", m_ExtensionCount);
-
-        for (const auto& extension : extensions) {
-            std::string message = std::string("extension available : ") + extension.extensionName;
-            //Rbk::Log::GetLogger()->trace("{}", message.c_str());
-        }
 
         m_Extensions = extensions;
     }
@@ -2037,7 +2030,7 @@ namespace Rbk {
     void VulkanRenderer::DestroyRenderPass(std::shared_ptr<VkRenderPass> renderPass, VkCommandPool commandPool, std::vector<VkCommandBuffer> commandBuffers)
     {
         vkFreeCommandBuffers(m_Device, commandPool, static_cast<uint32_t>(commandBuffers.size()), commandBuffers.data());
-        //vkDestroyRenderPass(m_Device, *renderPass.get(), nullptr);
+        vkDestroyRenderPass(m_Device, *renderPass.get(), nullptr);
         vkDestroyCommandPool(m_Device, commandPool, nullptr);
     }
 
