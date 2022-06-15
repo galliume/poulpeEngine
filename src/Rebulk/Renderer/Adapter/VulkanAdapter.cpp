@@ -549,7 +549,7 @@ namespace Rbk
 
             for (uint32_t i = 0; i < mesh->ubos.size(); i++) {
                 mesh->ubos[i].view = lookAt;
-                mesh->cameraPos = cameraPos * mesh->ubos[i].view * mesh->ubos[i].model * mesh->ubos[i].proj;
+                //mesh->cameraPos = cameraPos * mesh->ubos[i].view * mesh->ubos[i].model * mesh->ubos[i].proj;
                 mesh->ubos[i].proj = proj;
 
                 if (mesh->name == "moon_moon_0") {
