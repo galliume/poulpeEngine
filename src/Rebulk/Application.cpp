@@ -49,6 +49,8 @@ namespace Rbk
 
     void Application::Run()
     {
+        double startRun = glfwGetTime();
+
         std::thread loadShaders([this]() {
             m_ShaderManager->AddShader("main", "assets/shaders/spv/vert.spv", "assets/shaders/spv/frag.spv");
             m_ShaderManager->AddShader("skybox", "assets/shaders/spv/skybox_vert.spv", "assets/shaders/spv/skybox_frag.spv");
@@ -71,6 +73,13 @@ namespace Rbk
             m_TextureManager->AddTexture("bright_wood", "assets/mesh/house/textures/wood/T_brightwood_basecolor.png");
             m_TextureManager->AddTexture("rocks", "assets/mesh/house/textures/rocks/rock_bc.jpg");
             m_TextureManager->AddTexture("dog_base_color", "assets/mesh/doghouse/doghouse0908_PBR_BaseColor.png");
+            m_TextureManager->AddTexture("dog", "assets/mesh/dog/Texture_albedo.jpg");
+        });
+
+        std::thread loadAnimals([this]() {
+            glm::vec3 pos = glm::vec3(0.8f, 0.4f, -1.2f);
+            glm::vec3 scale = glm::vec3(0.12f, 0.12f, 0.12f);
+            m_MeshManager->AddMesh("campfire", "assets/mesh/dog/dog.obj", { "dog" }, "main", pos, scale);
         });
 
         std::thread loadWorldMeshFloor([this]() {
@@ -86,7 +95,7 @@ namespace Rbk
             for (int x = -22; x < -7; x++) {
                 for (int y = -5; y < 15; y++) {
                     glm::vec3 posCube = glm::vec3(-0.20f * static_cast<float>(x), 0.0f, -0.20f * static_cast<float>(y));
-                    m_MeshManager->AddMesh("water_cube", "assets/mesh/minecraft/Grass_Block.obj", { "minecraft_water" }, "main", posCube, scaleMinecraft);
+                    m_MeshManager->AddMesh("ground_cube_2", "assets/mesh/minecraft/Grass_Block.obj", { "minecraft_grass" }, "main", posCube, scaleMinecraft);
                 }
             }
 
@@ -127,6 +136,16 @@ namespace Rbk
             pos2 = glm::vec3(1.0f, 0.18f, -2.0f);
             m_MeshManager->AddMesh("dead_tree", "assets/mesh/tree/dead_tree.obj", { "trunk_tree_cartoon" }, "main", pos2, scaleDeadTree);
 
+            pos2 = glm::vec3(3.0f, 0.18f, -2.2f);
+            m_MeshManager->AddMesh("dead_tree", "assets/mesh/tree/dead_tree.obj", { "trunk_tree_cartoon" }, "main", pos2, scaleDeadTree);
+            
+            pos2 = glm::vec3(2.3f, 0.18f, 0.3f);
+            m_MeshManager->AddMesh("dead_tree", "assets/mesh/tree/dead_tree.obj", { "trunk_tree_cartoon" }, "main", pos2, scaleDeadTree);
+
+            pos2 = glm::vec3(3.0f, 0.18f, -0.6f);
+            m_MeshManager->AddMesh("dead_tree", "assets/mesh/tree/dead_tree.obj", { "trunk_tree_cartoon" }, "main", pos2, scaleDeadTree);
+
+
             glm::vec3 scaleTree = glm::vec3(0.0008f, 0.0008f, 0.0008f);
             pos2 = glm::vec3(-0.7f, 0.19f, -1.9f);
             m_MeshManager->AddMesh("tree", "assets/mesh/tree/tree.obj", { "tree_top_tex", "trunk_tree_cartoon" }, "main", pos2, scaleTree, glm::vec3(0.0f, 1.0f, 0.0f), 20.0f);
@@ -139,6 +158,19 @@ namespace Rbk
 
             pos2 = glm::vec3(1.2f, 0.19f, -0.9f);
             m_MeshManager->AddMesh("tree", "assets/mesh/tree/tree.obj", { "tree_top_tex", "trunk_tree_cartoon" }, "main", pos2, scaleTree);
+
+            pos2 = glm::vec3(2.2f, 0.19f, -1.9f);
+            m_MeshManager->AddMesh("tree", "assets/mesh/tree/tree.obj", { "tree_top_tex", "trunk_tree_cartoon" }, "main", pos2, scaleTree);
+
+            pos2 = glm::vec3(3.2f, 0.19f, -0.2f);
+            m_MeshManager->AddMesh("tree", "assets/mesh/tree/tree.obj", { "tree_top_tex", "trunk_tree_cartoon" }, "main", pos2, scaleTree);
+
+            pos2 = glm::vec3(2.8f, 0.19f, 0.5f);
+            m_MeshManager->AddMesh("tree", "assets/mesh/tree/tree.obj", { "tree_top_tex", "trunk_tree_cartoon" }, "main", pos2, scaleTree);
+
+            pos2 = glm::vec3(2.0f, 0.19f, 0.5f);
+            m_MeshManager->AddMesh("tree", "assets/mesh/tree/tree.obj", { "tree_top_tex", "trunk_tree_cartoon" }, "main", pos2, scaleTree);
+
 
             glm::vec3 moonCubeTest = glm::vec3(0.2f, 0.2f, 0.2f);
             glm::vec3 pos6 = glm::vec3(0.5f, 4.5f, -3.00f);
@@ -156,7 +188,6 @@ namespace Rbk
         });
 
         std::thread loadSkybox([this]() {
-
             std::vector<std::string>skyboxImages;
             skyboxImages.emplace_back("assets/texture/skybox/bluesky/right.jpg");
             skyboxImages.emplace_back("assets/texture/skybox/bluesky/left.jpg");
@@ -186,15 +217,20 @@ namespace Rbk
         vulkanLayer->AddShaderManager(m_ShaderManager);
 #endif
 
+        loadAnimals.join();
         loadShaders.join();
         loadTextures.join();
         loadSkybox.join();
         loadWorlMesh.join();
         loadWorldMeshFloor.join();
 
+        double endRun = glfwGetTime();
+
+        Rbk::Log::GetLogger()->debug("Loaded scene in {}", endRun - startRun);
+
         m_RendererAdapter->PrepareWorld();
 
-        double lastTime = glfwGetTime();
+        double lastTime = endRun;
         double timeStepSum = 0.0;
         uint32_t frameCount = 0;
         double maxFPS = 60.0;
