@@ -5,6 +5,10 @@
 
 [State of the project](https://github.com/galliume/rebulkan/projects/1)
 
+![actual_state](screenshots/state.jpg?raw=true "actual status")
+![actual_state2](screenshots/state_2.jpg?raw=true "actual status bis")
+![actual_state3](screenshots/fog_2.gif?raw=true "actual status ter")
+
 ### To execute 
 
 First compile shaders
