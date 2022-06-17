@@ -2,7 +2,7 @@
 #include "Rebulk/Renderer/Adapter/IRendererAdapter.h"
 #include "TextureManager.h"
 #include "MeshManager.h"
-#include "Rebulk/Renderer/Mesh.h"
+#include "Rebulk/Component/Mesh.h"
 #include "Rebulk/Component/Camera.h"
 #include "Rebulk/GUI/Window.h"
 

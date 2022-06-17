@@ -112,8 +112,9 @@ namespace Rbk
         }
     };
 
-    struct Mesh
+    class Mesh
     {
+    public:
         std::vector<Vertex> vertices;
         std::vector<uint32_t> indices;
         uint32_t materialId = 0;
@@ -129,11 +130,6 @@ namespace Rbk
         VkPipelineCache pipelineCache = nullptr;
         glm::vec4 cameraPos;
         std::string shader;
-    };
-
-    struct Mesh2D : public Mesh
-    {
-        std::vector<Vertex2D> vertices;
     };
 }
 

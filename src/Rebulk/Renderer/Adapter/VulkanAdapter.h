@@ -1,7 +1,8 @@
 #pragma once
 #include "IRendererAdapter.h"
 #include "Rebulk/Renderer/Vulkan/VulkanRenderer.h"
-#include "Rebulk/Renderer/Mesh.h"
+#include "Rebulk/Component/Mesh.h"
+#include "Rebulk/Component/Mesh2D.h"
 #include "Rebulk/GUI/Window.h"
 
 #include "imgui.h"
