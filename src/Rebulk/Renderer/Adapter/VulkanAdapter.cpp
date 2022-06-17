@@ -53,9 +53,9 @@ namespace Rbk
         m_Camera = camera;
     }
 
-    void VulkanAdapter::AddMeshManager(std::shared_ptr<MeshManager> meshManager)
+    void VulkanAdapter::AddEntityManager(std::shared_ptr<EntityManager> entityManager)
     {
-        m_MeshManager = meshManager;
+        m_EntityManager = entityManager;
     }
 
     void VulkanAdapter::RecreateSwapChain()
@@ -138,8 +138,8 @@ namespace Rbk
 
         m_Semaphores = m_Renderer->CreateSyncObjects(m_SwapChainImages);
 
-        std::vector<std::shared_ptr<Mesh>>* Meshes = m_MeshManager->GetMeshes();
-        std::map<std::string, std::array<uint32_t, 2>> MeshesLoaded = m_MeshManager->GetMeshesLoaded();
+        std::vector<std::shared_ptr<Mesh>>* Meshes = m_EntityManager->GetMeshes();
+        std::map<std::string, std::array<uint32_t, 2>> MeshesLoaded = m_EntityManager->GetMeshesLoaded();
 
         uint32_t maxUniformBufferRange = 0;
         uint32_t uniformBufferChunkSize = 0;
@@ -397,7 +397,7 @@ namespace Rbk
             false
         );
 
-        m_MeshManager->SetSkyboxMesh(skyboxMesh);
+        m_EntityManager->SetSkyboxMesh(skyboxMesh);
 
         //crosshair
         const std::vector<Vertex2D> vertices = {
@@ -544,7 +544,7 @@ namespace Rbk
             m_Renderer->UpdateUniformBuffer(m_Crosshair->uniformBuffers[i], { m_Crosshair->ubos[i] }, 1);
         }
 
-        std::vector<std::shared_ptr<Mesh>>* Meshes = m_MeshManager->GetMeshes();
+        std::vector<std::shared_ptr<Mesh>>* Meshes = m_EntityManager->GetMeshes();
         for (std::shared_ptr<Mesh> mesh : *Meshes) {
 
             for (uint32_t i = 0; i < mesh->ubos.size(); i++) {
@@ -570,11 +570,11 @@ namespace Rbk
         }
 
         glm::mat4 skybowView = glm::mat4(glm::mat3(lookAt));
-        for (uint32_t i = 0; i < m_MeshManager->GetSkyboxMesh()->uniformBuffers.size(); i++) {
-            m_MeshManager->GetSkyboxMesh()->ubos[i].view = skybowView;
+        for (uint32_t i = 0; i < m_EntityManager->GetSkyboxMesh()->uniformBuffers.size(); i++) {
+            m_EntityManager->GetSkyboxMesh()->ubos[i].view = skybowView;
             m_Renderer->UpdateUniformBuffer(
-                m_MeshManager->GetSkyboxMesh()->uniformBuffers[i],
-                { m_MeshManager->GetSkyboxMesh()->ubos[i]},
+                m_EntityManager->GetSkyboxMesh()->uniformBuffers[i],
+                { m_EntityManager->GetSkyboxMesh()->ubos[i]},
                 1
             );
         }
@@ -615,7 +615,7 @@ namespace Rbk
         data.lightPos = m_LightsPos.at(0);
 
         //draw the  !
-        for (std::shared_ptr<Mesh> mesh : *m_MeshManager->GetMeshes()) {
+        for (std::shared_ptr<Mesh> mesh : *m_EntityManager->GetMeshes()) {
 
             m_Renderer->BindPipeline(m_CommandBuffers[m_ImageIndex], mesh->graphicsPipeline);
             vkCmdPushConstants(m_CommandBuffers[m_ImageIndex], mesh->pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(constants), &data);
@@ -623,8 +623,8 @@ namespace Rbk
         }
 
         //draw the skybox !
-        m_Renderer->BindPipeline(m_CommandBuffers[m_ImageIndex], m_MeshManager->GetSkyboxMesh()->graphicsPipeline);
-        m_Renderer->Draw(m_CommandBuffers[m_ImageIndex], m_MeshManager->GetSkyboxMesh().get(), m_ImageIndex, false);
+        m_Renderer->BindPipeline(m_CommandBuffers[m_ImageIndex], m_EntityManager->GetSkyboxMesh()->graphicsPipeline);
+        m_Renderer->Draw(m_CommandBuffers[m_ImageIndex], m_EntityManager->GetSkyboxMesh().get(), m_ImageIndex, false);
 
         //draw the crosshair
         m_Renderer->BindPipeline(m_CommandBuffers[m_ImageIndex], m_Crosshair->graphicsPipeline);
@@ -658,7 +658,7 @@ namespace Rbk
         m_Renderer->DestroySwapchain(m_Renderer->GetDevice(), m_SwapChain, m_SwapChainFramebuffers, m_SwapChainImageViews);
         m_Renderer->DestroySemaphores(m_Semaphores);
     
-        std::shared_ptr<Mesh> skyboxMesh = m_MeshManager->GetSkyboxMesh();
+        std::shared_ptr<Mesh> skyboxMesh = m_EntityManager->GetSkyboxMesh();
 
         for (auto buffer : skyboxMesh->uniformBuffers) {
             m_Renderer->DestroyBuffer(buffer.first);
@@ -688,7 +688,7 @@ namespace Rbk
         m_Renderer->DestroyPipeline(m_Crosshair->graphicsPipeline);
         vkDestroyPipelineLayout(m_Renderer->GetDevice(), m_Crosshair->pipelineLayout, nullptr);
 
-        for (std::shared_ptr<Mesh> mesh : *m_MeshManager->GetMeshes()) {
+        for (std::shared_ptr<Mesh> mesh : *m_EntityManager->GetMeshes()) {
 
             for (auto buffer : mesh->uniformBuffers) {
                 m_Renderer->DestroyBuffer(buffer.first);

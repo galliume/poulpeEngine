@@ -30,7 +30,7 @@ namespace Rbk
         virtual void Init() override;
         virtual void AddCamera(std::shared_ptr<Camera> camera) override;
         virtual void AddTextureManager(std::shared_ptr<TextureManager> textureManager) override;
-        virtual void AddMeshManager(std::shared_ptr<MeshManager> meshManager) override;
+        virtual void AddEntityManager(std::shared_ptr<EntityManager> entityManager) override;
         virtual void AddShaderManager(std::shared_ptr<ShaderManager> shaderManager) override;
 
         virtual void Prepare() override;
@@ -78,7 +78,7 @@ namespace Rbk
         std::shared_ptr<Camera> m_Camera = nullptr;
         std::shared_ptr<Window> m_Window = nullptr;
         std::shared_ptr<TextureManager> m_TextureManager = nullptr;
-        std::shared_ptr<MeshManager> m_MeshManager = nullptr;
+        std::shared_ptr<EntityManager> m_EntityManager = nullptr;
         std::shared_ptr<ShaderManager> m_ShaderManager = nullptr;
         //@todo move to meshManager
         std::shared_ptr<Mesh> m_Crosshair = nullptr;

@@ -5,10 +5,11 @@
 #include "Buffer.h"
 #include "Vertex.h"
 #include "Vertex2D.h"
+#include "Rebulk/Component/Drawable.h"
 
 namespace Rbk
 {
-    class Mesh
+    class Mesh : public Drawable
     {
     public:
         std::vector<Vertex> vertices;
