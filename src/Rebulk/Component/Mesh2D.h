@@ -7,6 +7,6 @@ namespace Rbk
     class Mesh2D : public Mesh
     {
     public:
-        std::vector<Vertex2D> vertices;
+        std::vector<Vertex2D> m_Vertices;
     };
 }

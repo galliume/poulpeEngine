@@ -8,68 +8,13 @@ namespace Rbk
 
     }
 
-    std::vector<std::shared_ptr<Mesh>> EntityManager::Load(std::string path, bool shouldInverseTextureY)
-    {
-        if (!std::filesystem::exists(path)) {
-            Rbk::Log::GetLogger()->critical("mesh file {} does not exits.", path);
-            throw std::runtime_error("error loading a mesh file.");
-        }
-
-        return Rbk::TinyObjLoader::LoadMesh(path, shouldInverseTextureY);
-    }
-
-    void EntityManager::AddMesh(std::string name, std::string path, std::vector<std::string> textureNames, std::string shader, glm::vec3 pos, glm::vec3 scale, glm::vec3 axisRot, float rotAngle, bool shouldInverseTextureY)
-    {
-        std::vector<std::shared_ptr<Mesh>> meshes = Load(path, shouldInverseTextureY);
-
-        for (uint32_t i = 0; i < meshes.size(); i++) {
-
-            std::shared_ptr<Mesh> mesh = meshes[i];
-            uint32_t textureIndex = mesh.get()->materialId;
-            std::string id = name + '_' + textureNames[textureIndex] + '_' + std::to_string(i);
-
-            if (0 == m_MeshesLoaded.count(id.c_str())) {
-                mesh.get()->name = id;
-                mesh.get()->texture = textureNames[textureIndex];
-                mesh.get()->shader = shader;
-            } else {
-                mesh = m_Meshes[m_MeshesLoaded[id][1]];
-            }
-
-            glm::mat4 view = glm::mat4(1.0f);
-
-            UniformBufferObject ubo;
-            ubo.model = glm::mat4(1.0f);
-            ubo.model = glm::translate(ubo.model, pos);
-            ubo.model = glm::scale(ubo.model, scale);
-            
-            if (rotAngle != 0.0f) {
-                ubo.model = glm::rotate(ubo.model, glm::radians(rotAngle), axisRot);
-            }
-
-            ubo.view = glm::translate(view, glm::vec3(0.0f, 0.0f, 0.0f));
-            mesh.get()->ubos.emplace_back(ubo);
-
-            if (0 != m_MeshesLoaded.count(id.c_str())) {
-                m_MeshesLoaded[id][0] += 1;
-            } else {
-
-                uint32_t index = m_Meshes.size();
-                m_MeshesLoaded.insert({ id, { 1, index } });
-                m_Meshes.emplace_back(mesh);
-
-               //Rbk::Log::GetLogger()->trace("Added mesh to the world {} from {}", id, path);
-            }
-        }
-    }
-
-    uint32_t EntityManager::GetVerticesCount()
+     uint32_t EntityManager::GetVerticesCount()
     {
         uint32_t total = 0;
 
-        for (std::shared_ptr<Mesh> mesh : m_Meshes) {
+       /* for (std::shared_ptr<Mesh> mesh : m_Meshes) {
             total += mesh.get()->vertices.size();
-        }
+        }*/
 
         return total;
     }
@@ -78,9 +23,9 @@ namespace Rbk
     {
         uint32_t total = 0;
 
-        for (std::shared_ptr<Mesh>mesh : m_Meshes) {
-            total += mesh.get()->indices.size();
-        }
+        //for (std::shared_ptr<Mesh>mesh : m_Meshes) {
+        //    total += mesh.get()->indices.size();
+        //}
 
         return total;
     }
@@ -89,10 +34,15 @@ namespace Rbk
     {
         uint32_t total = 0;
 
-        for (std::shared_ptr<Mesh> mesh : m_Meshes) {
-            total += mesh.get()->ubos.size();
-        }
+        //for (std::shared_ptr<Mesh> mesh : m_Meshes) {
+        //    total += mesh.get()->ubos.size();
+        //}
 
         return total;
+    }
+
+    void EntityManager::AddEntity(std::shared_ptr<Entity> entity)
+    {
+        m_Entities.emplace_back(entity);
     }
 }
