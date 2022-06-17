@@ -109,7 +109,7 @@ namespace Rbk
         }
     }
 
-    void VulkanAdapter::PrepareWorld()
+    void VulkanAdapter::Prepare()
     {
         bool wireFrame = true;
 
@@ -138,8 +138,8 @@ namespace Rbk
 
         m_Semaphores = m_Renderer->CreateSyncObjects(m_SwapChainImages);
 
-        std::vector<std::shared_ptr<Mesh>>* worldMeshes = m_MeshManager->GetWorldMeshes();
-        std::map<std::string, std::array<uint32_t, 2>> worldMeshesLoaded = m_MeshManager->GetWoldMeshesLoaded();
+        std::vector<std::shared_ptr<Mesh>>* Meshes = m_MeshManager->GetMeshes();
+        std::map<std::string, std::array<uint32_t, 2>> MeshesLoaded = m_MeshManager->GetMeshesLoaded();
 
         uint32_t maxUniformBufferRange = 0;
         uint32_t uniformBufferChunkSize = 0;
@@ -183,10 +183,10 @@ namespace Rbk
         );
         m_DescriptorSetLayouts.emplace_back(desriptorSetLayout);
 
-        for (std::shared_ptr<Mesh> mesh : *worldMeshes) {
+        for (std::shared_ptr<Mesh> mesh : *Meshes) {
 
             mesh->cameraPos = m_Camera->GetPos();
-            uint32_t totalInstances = worldMeshesLoaded[mesh->name][0];
+            uint32_t totalInstances = MeshesLoaded[mesh->name][0];
 
             maxUniformBufferRange = m_Renderer->GetDeviceProperties().limits.maxUniformBufferRange;
             uniformBufferChunkSize = maxUniformBufferRange / sizeof(UniformBufferObject);
@@ -529,7 +529,7 @@ namespace Rbk
         m_Deltatime = deltaTime;
     }
 
-    void VulkanAdapter::UpdateWorldPositions()
+    void VulkanAdapter::UpdatePositions()
     {
         glm::mat4 lookAt = m_Camera->LookAt();
 
@@ -544,8 +544,8 @@ namespace Rbk
             m_Renderer->UpdateUniformBuffer(m_Crosshair->uniformBuffers[i], { m_Crosshair->ubos[i] }, 1);
         }
 
-        std::vector<std::shared_ptr<Mesh>>* worldMeshes = m_MeshManager->GetWorldMeshes();
-        for (std::shared_ptr<Mesh> mesh : *worldMeshes) {
+        std::vector<std::shared_ptr<Mesh>>* Meshes = m_MeshManager->GetMeshes();
+        for (std::shared_ptr<Mesh> mesh : *Meshes) {
 
             for (uint32_t i = 0; i < mesh->ubos.size(); i++) {
                 mesh->ubos[i].view = lookAt;
@@ -585,7 +585,7 @@ namespace Rbk
     void VulkanAdapter::Draw()
     {
         ShouldRecreateSwapChain();
-        UpdateWorldPositions();
+        UpdatePositions();
 
         m_ImageIndex = m_Renderer->AcquireNextImageKHR(m_SwapChain, m_Semaphores);
 
@@ -614,8 +614,9 @@ namespace Rbk
         data.fogColor = glm::vec3({ Rbk::VulkanAdapter::s_FogColor[0], Rbk::VulkanAdapter::s_FogColor[1], Rbk::VulkanAdapter::s_FogColor[2] });
         data.lightPos = m_LightsPos.at(0);
 
-        //draw the world !
-        for (std::shared_ptr<Mesh> mesh : *m_MeshManager->GetWorldMeshes()) {
+        //draw the  !
+        for (std::shared_ptr<Mesh> mesh : *m_MeshManager->GetMeshes()) {
+
             m_Renderer->BindPipeline(m_CommandBuffers[m_ImageIndex], mesh->graphicsPipeline);
             vkCmdPushConstants(m_CommandBuffers[m_ImageIndex], mesh->pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(constants), &data);
             m_Renderer->Draw(m_CommandBuffers[m_ImageIndex], mesh.get(), m_ImageIndex);
@@ -687,7 +688,7 @@ namespace Rbk
         m_Renderer->DestroyPipeline(m_Crosshair->graphicsPipeline);
         vkDestroyPipelineLayout(m_Renderer->GetDevice(), m_Crosshair->pipelineLayout, nullptr);
 
-        for (std::shared_ptr<Mesh> mesh : *m_MeshManager->GetWorldMeshes()) {
+        for (std::shared_ptr<Mesh> mesh : *m_MeshManager->GetMeshes()) {
 
             for (auto buffer : mesh->uniformBuffers) {
                 m_Renderer->DestroyBuffer(buffer.first);

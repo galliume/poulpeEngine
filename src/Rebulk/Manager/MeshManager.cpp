@@ -28,12 +28,12 @@ namespace Rbk
             uint32_t textureIndex = mesh.get()->materialId;
             std::string id = name + '_' + textureNames[textureIndex] + '_' + std::to_string(i);
 
-            if (0 == m_WorldMeshesLoaded.count(id.c_str())) {
+            if (0 == m_MeshesLoaded.count(id.c_str())) {
                 mesh.get()->name = id;
                 mesh.get()->texture = textureNames[textureIndex];
                 mesh.get()->shader = shader;
             } else {
-                mesh = m_WorldMeshes[m_WorldMeshesLoaded[id][1]];
+                mesh = m_Meshes[m_MeshesLoaded[id][1]];
             }
 
             glm::mat4 view = glm::mat4(1.0f);
@@ -50,47 +50,46 @@ namespace Rbk
             ubo.view = glm::translate(view, glm::vec3(0.0f, 0.0f, 0.0f));
             mesh.get()->ubos.emplace_back(ubo);
 
-            if (0 != m_WorldMeshesLoaded.count(id.c_str())) {
-                m_WorldMeshesLoaded[id][0] += 1;
-                //m_WorldMeshes[m_WorldMeshesLoaded[name][1]] = mesh;
+            if (0 != m_MeshesLoaded.count(id.c_str())) {
+                m_MeshesLoaded[id][0] += 1;
             } else {
 
-                uint32_t index = m_WorldMeshes.size();
-                m_WorldMeshesLoaded.insert({ id, { 1, index } });
-                m_WorldMeshes.emplace_back(mesh);
+                uint32_t index = m_Meshes.size();
+                m_MeshesLoaded.insert({ id, { 1, index } });
+                m_Meshes.emplace_back(mesh);
 
                //Rbk::Log::GetLogger()->trace("Added mesh to the world {} from {}", id, path);
             }
         }
     }
 
-    uint32_t MeshManager::GetWorldVerticesCount()
+    uint32_t MeshManager::GetVerticesCount()
     {
         uint32_t total = 0;
 
-        for (std::shared_ptr<Mesh> mesh : m_WorldMeshes) {
+        for (std::shared_ptr<Mesh> mesh : m_Meshes) {
             total += mesh.get()->vertices.size();
         }
 
         return total;
     }
 
-    uint32_t MeshManager::GetWorldIndicesCount()
+    uint32_t MeshManager::GetIndicesCount()
     {
         uint32_t total = 0;
 
-        for (std::shared_ptr<Mesh>mesh : m_WorldMeshes) {
+        for (std::shared_ptr<Mesh>mesh : m_Meshes) {
             total += mesh.get()->indices.size();
         }
 
         return total;
     }
 
-    uint32_t MeshManager::GetWorldInstancedCount()
+    uint32_t MeshManager::GetInstancedCount()
     {
         uint32_t total = 0;
 
-        for (std::shared_ptr<Mesh> mesh : m_WorldMeshes) {
+        for (std::shared_ptr<Mesh> mesh : m_Meshes) {
             total += mesh.get()->ubos.size();
         }
 
