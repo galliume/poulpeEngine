@@ -1,14 +1,14 @@
 #include "rebulkpch.h"
-#include "MeshManager.h"
+#include "EntityManager.h"
 
 namespace Rbk
 {
-    MeshManager::MeshManager(std::shared_ptr<VulkanRenderer> renderer) : m_Renderer(renderer)
+    EntityManager::EntityManager(std::shared_ptr<VulkanRenderer> renderer) : m_Renderer(renderer)
     {
 
     }
 
-    std::vector<std::shared_ptr<Mesh>> MeshManager::Load(std::string path, bool shouldInverseTextureY)
+    std::vector<std::shared_ptr<Mesh>> EntityManager::Load(std::string path, bool shouldInverseTextureY)
     {
         if (!std::filesystem::exists(path)) {
             Rbk::Log::GetLogger()->critical("mesh file {} does not exits.", path);
@@ -18,7 +18,7 @@ namespace Rbk
         return Rbk::TinyObjLoader::LoadMesh(path, shouldInverseTextureY);
     }
 
-    void MeshManager::AddMesh(std::string name, std::string path, std::vector<std::string> textureNames, std::string shader, glm::vec3 pos, glm::vec3 scale, glm::vec3 axisRot, float rotAngle, bool shouldInverseTextureY)
+    void EntityManager::AddMesh(std::string name, std::string path, std::vector<std::string> textureNames, std::string shader, glm::vec3 pos, glm::vec3 scale, glm::vec3 axisRot, float rotAngle, bool shouldInverseTextureY)
     {
         std::vector<std::shared_ptr<Mesh>> meshes = Load(path, shouldInverseTextureY);
 
@@ -63,7 +63,7 @@ namespace Rbk
         }
     }
 
-    uint32_t MeshManager::GetVerticesCount()
+    uint32_t EntityManager::GetVerticesCount()
     {
         uint32_t total = 0;
 
@@ -74,7 +74,7 @@ namespace Rbk
         return total;
     }
 
-    uint32_t MeshManager::GetIndicesCount()
+    uint32_t EntityManager::GetIndicesCount()
     {
         uint32_t total = 0;
 
@@ -85,7 +85,7 @@ namespace Rbk
         return total;
     }
 
-    uint32_t MeshManager::GetInstancedCount()
+    uint32_t EntityManager::GetInstancedCount()
     {
         uint32_t total = 0;
 

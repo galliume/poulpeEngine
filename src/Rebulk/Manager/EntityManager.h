@@ -6,11 +6,11 @@
 
 namespace Rbk
 {
-    class MeshManager
+    class EntityManager
     {
     public:
 
-        explicit MeshManager(std::shared_ptr<VulkanRenderer> renderer);
+        explicit EntityManager(std::shared_ptr<VulkanRenderer> renderer);
         void AddMesh(std::string name, std::string path, std::vector<std::string> textureNames, std::string shader, glm::vec3 pos, glm::vec3 scale, glm::vec3 axisRot = glm::vec3(1.0f), float rotAngle = 0.0f, bool shouldInverseTextureY = true);
         inline std::vector<std::shared_ptr<Mesh>>* GetMeshes() { return &m_Meshes; };
         inline std::map<std::string, std::array<uint32_t, 2>> GetMeshesLoaded() { return m_MeshesLoaded; };
