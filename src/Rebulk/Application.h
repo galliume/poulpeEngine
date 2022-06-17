@@ -3,7 +3,7 @@
 #include "Manager/RenderManager.h"
 #include "Manager/InputManager.h"
 #include "Manager/TextureManager.h"
-#include "Manager/MeshManager.h"
+#include "Manager/EntityManager.h"
 
 #include "Renderer/Adapter/VulkanAdapter.h"
 
@@ -35,7 +35,7 @@ namespace Rbk
         std::shared_ptr<Rbk::VulkanAdapter>m_RendererAdapter;
         std::shared_ptr<Rbk::LayerManager>m_LayerManager;
         std::shared_ptr<Rbk::TextureManager>m_TextureManager;
-        std::shared_ptr<Rbk::MeshManager>m_MeshManager;
+        std::shared_ptr<Rbk::EntityManager>m_EntityManager;
         std::shared_ptr<Rbk::ShaderManager>m_ShaderManager;
         std::shared_ptr<Rbk::Im>m_VImGui;
     };

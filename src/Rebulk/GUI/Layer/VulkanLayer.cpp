@@ -73,13 +73,13 @@ namespace Rbk
         Rbk::Im::Text("Current frame %d", m_Adapter->Rdr()->GetCurrentFrame());
         ImGui::Separator();
         Rbk::Im::Text("Meshes stats");
-        Rbk::Im::Text("Total mesh loaded %d", m_MeshManager->GetMeshes()->size());
-        Rbk::Im::Text("Total mesh instanced %d", m_MeshManager->GetInstancedCount());
-        Rbk::Im::Text("Total vertex count %d", m_MeshManager->GetVerticesCount());
-        Rbk::Im::Text("Total index count %d", m_MeshManager->GetIndicesCount());		
+        Rbk::Im::Text("Total mesh loaded %d", m_EntityManager->GetMeshes()->size());
+        Rbk::Im::Text("Total mesh instanced %d", m_EntityManager->GetInstancedCount());
+        Rbk::Im::Text("Total vertex count %d", m_EntityManager->GetVerticesCount());
+        Rbk::Im::Text("Total index count %d", m_EntityManager->GetIndicesCount());
 
         Rbk::Im::Text("Stats per mesh :");
-        for (std::shared_ptr<Mesh> mesh : *m_MeshManager->GetMeshes()) {
+        for (std::shared_ptr<Mesh> mesh : *m_EntityManager->GetMeshes()) {
             Rbk::Im::Text("\tMesh named %s with %d instances", mesh.get()->name.c_str(), mesh.get()->ubos.size());
         }
         ImGui::Separator();
