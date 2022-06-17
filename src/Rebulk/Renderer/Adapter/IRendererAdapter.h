@@ -15,7 +15,7 @@ namespace Rbk
         virtual void AddMeshManager(std::shared_ptr<MeshManager> meshManager) = 0;
         virtual void AddShaderManager(std::shared_ptr<ShaderManager> shaderManager) = 0;
         virtual void AddCamera(std::shared_ptr<Camera> camera) = 0;
-        virtual void PrepareWorld() = 0;
+        virtual void Prepare() = 0;
         virtual void Draw() = 0;
         virtual void Destroy() = 0;
         virtual void SetDeltatime(float deltaTime) = 0;

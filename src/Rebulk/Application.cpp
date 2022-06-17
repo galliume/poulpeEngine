@@ -228,7 +228,7 @@ namespace Rbk
 
         Rbk::Log::GetLogger()->debug("Loaded scene in {}", endRun - startRun);
 
-        m_RendererAdapter->PrepareWorld();
+        m_RendererAdapter->Prepare();
 
         double lastTime = endRun;
         double timeStepSum = 0.0;

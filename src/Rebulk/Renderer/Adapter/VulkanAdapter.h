@@ -33,7 +33,7 @@ namespace Rbk
         virtual void AddMeshManager(std::shared_ptr<MeshManager> meshManager) override;
         virtual void AddShaderManager(std::shared_ptr<ShaderManager> shaderManager) override;
 
-        virtual void PrepareWorld() override;
+        virtual void Prepare() override;
         virtual void Draw() override;
         virtual void Destroy() override;
 
@@ -57,7 +57,7 @@ namespace Rbk
         static float s_FogColor[3];
 
     private:
-        void UpdateWorldPositions();
+        void UpdatePositions();
         //@todo temp
         void SetPerspective();
 
