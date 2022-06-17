@@ -3,9 +3,11 @@
 
 namespace Rbk
 {
+    struct Data;
+
     class TinyObjLoader
     {
     public:
-        static std::vector<std::shared_ptr<Mesh>> LoadMesh(std::string path, bool shouldInverseTextureY);
+        static std::vector<Data> LoadData(std::string path, bool shouldInverseTextureY);
     };
 }

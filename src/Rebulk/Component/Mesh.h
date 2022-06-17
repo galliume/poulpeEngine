@@ -5,28 +5,49 @@
 #include "Buffer.h"
 #include "Vertex.h"
 #include "Vertex2D.h"
+#include "Rebulk/Component/Entity.h"
 #include "Rebulk/Component/Drawable.h"
+#include "Rebulk/Core/TinyObjLoader.h"
 
 namespace Rbk
 {
-    class Mesh : public Drawable
+    struct Data
     {
-    public:
         std::vector<Vertex> vertices;
         std::vector<uint32_t> indices;
         uint32_t materialId = 0;
-        std::string texture;
-        std::string name;
-        std::vector<UniformBufferObject> ubos;
-        std::pair<VkBuffer, VkDeviceMemory> vertexBuffer = { nullptr, nullptr };
-        std::pair<VkBuffer, VkDeviceMemory> indicesBuffer = { nullptr, nullptr };
-        std::vector<std::pair<VkBuffer, VkDeviceMemory>> uniformBuffers;
-        std::vector<VkDescriptorSet> descriptorSets;
-        VkPipelineLayout pipelineLayout;
-        VkPipeline graphicsPipeline;
-        VkPipelineCache pipelineCache = nullptr;
-        glm::vec4 cameraPos;
-        std::string shader;
+    };
+
+    class Mesh : public Entity, public Drawable
+    {
+    public:
+        Mesh();
+        ~Mesh();
+
+        void Init(std::string name,
+            std::string path,
+            std::vector<std::string> textureNames,
+            std::string shader,
+            glm::vec3 pos,
+            glm::vec3 scale,
+            glm::vec3 axisRot = glm::vec3(1.0f),
+            float rotAngle = 0.0f,
+            bool shouldInverseTextureY = true);
+
+    //@todo make it private
+    public:
+        std::string m_Texture;
+        std::string m_Name;
+        std::vector<UniformBufferObject> m_Ubos;
+        std::pair<VkBuffer, VkDeviceMemory> m_VertexBuffer = { nullptr, nullptr };
+        std::pair<VkBuffer, VkDeviceMemory> m_IndicesBuffer = { nullptr, nullptr };
+        std::vector<std::pair<VkBuffer, VkDeviceMemory>> m_UniformBuffers;
+        std::vector<VkDescriptorSet> m_DescriptorSets;
+        VkPipelineLayout m_PipelineLayout;
+        VkPipeline m_GraphicsPipeline;
+        VkPipelineCache m_PipelineCache = nullptr;
+        glm::vec4 m_CameraPos;
+        std::string m_Shader;
     };
 }
 

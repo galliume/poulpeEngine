@@ -3,6 +3,8 @@
 
 namespace Rbk
 {
+    class Mesh;
+
     int Application::s_UnlockedFPS = 0;
 
     Application* Application::s_Instance = nullptr;
@@ -34,7 +36,7 @@ namespace Rbk
         m_Camera->Init();
         
         m_InputManager = std::make_shared<Rbk::InputManager>(m_Window, m_Camera);
-        m_InputManager->Init();        
+        m_InputManager->Init();
         m_LayerManager = std::make_shared<Rbk::LayerManager>();
         m_RendererAdapter = std::make_shared<Rbk::VulkanAdapter>(m_Window);
         m_TextureManager = std::make_shared<Rbk::TextureManager>(m_RendererAdapter->Rdr());
@@ -77,114 +79,296 @@ namespace Rbk
         });
 
         std::thread loadAnimals([this]() {
-            glm::vec3 pos = glm::vec3(0.8f, 0.4f, -1.2f);
-            glm::vec3 scale = glm::vec3(0.12f, 0.12f, 0.12f);
-            m_EntityManager->AddMesh("campfire", "assets/mesh/dog/dog.obj", { "dog" }, "main", pos, scale);
+            std::shared_ptr<Mesh> entity = std::make_shared<Mesh>();
+
+            entity->Init(
+                "doggo",
+                "assets/mesh/dog/dog.obj",
+                { "dog" },
+                "main",
+                glm::vec3(0.8f, 0.4f, -1.2f),
+                glm::vec3(0.12f, 0.12f, 0.12f));
+
+            m_EntityManager->AddEntity(entity);
         });
 
         std::thread loadWorldMeshFloor([this]() {
-            glm::vec3 scaleMinecraft = glm::vec3(0.1f, 0.1f, 0.1f);
+
 
             for (int x = -7; x < 7; x++) {
                 for (int y = -5; y < 15; y++) {
-                    glm::vec3 posCube = glm::vec3(-0.20f * static_cast<float>(x), 0.0f, -0.20f * static_cast<float>(y));
-                    m_EntityManager->AddMesh("ground_cube", "assets/mesh/minecraft/Grass_Block.obj", { "minecraft_grass" }, "main", posCube, scaleMinecraft);
+                    std::shared_ptr<Rbk::Mesh> entity = std::make_shared<Rbk::Mesh>();
+
+                    entity->Init(
+                        "ground_cube",
+                        "assets/mesh/minecraft/Grass_Block.obj",
+                        { "minecraft_grass" },
+                        "main",
+                        glm::vec3(-0.20f * static_cast<float>(x), 0.0f, -0.20f * static_cast<float>(y)),
+                        glm::vec3(0.1f, 0.1f, 0.1f));
+
+                    m_EntityManager->AddEntity(entity);
                 }
             }
 
             for (int x = -22; x < -7; x++) {
                 for (int y = -5; y < 15; y++) {
-                    glm::vec3 posCube = glm::vec3(-0.20f * static_cast<float>(x), 0.0f, -0.20f * static_cast<float>(y));
-                    m_EntityManager->AddMesh("ground_cube_2", "assets/mesh/minecraft/Grass_Block.obj", { "minecraft_grass" }, "main", posCube, scaleMinecraft);
+                    std::shared_ptr<Rbk::Mesh> entity = std::make_shared<Rbk::Mesh>();
+                    entity->Init(
+                        "ground_cube_2",
+                        "assets/mesh/minecraft/Grass_Block.obj",
+                        { "minecraft_grass" },
+                        "main",
+                        glm::vec3(-0.20f * static_cast<float>(x), 0.0f, -0.20f * static_cast<float>(y)),
+                        glm::vec3(0.1f, 0.1f, 0.1f));
+
+                    m_EntityManager->AddEntity(entity);
                 }
             }
 
             for (int x = 7; x < 22; x++) {
                 for (int y = -5; y < 15; y++) {
-                    glm::vec3 posCube = glm::vec3(-0.20f * static_cast<float>(x), 0.0f, -0.20f * static_cast<float>(y));
-                    m_EntityManager->AddMesh("water_cube_2", "assets/mesh/minecraft/Grass_Block.obj", { "minecraft_water" }, "main", posCube, scaleMinecraft);
+                    std::shared_ptr<Rbk::Mesh> entity = std::make_shared<Rbk::Mesh>();
+                    entity->Init(
+                        "water_cube_2",
+                        "assets/mesh/minecraft/Grass_Block.obj",
+                        { "minecraft_water" },
+                        "main",
+                        glm::vec3(-0.20f * static_cast<float>(x), 0.0f, -0.20f * static_cast<float>(y)),
+                        glm::vec3(0.1f, 0.1f, 0.1f));
+
+                    m_EntityManager->AddEntity(entity);
                 }
             }
 
             for (int x = -22; x < 22; x++) {
                 for (int y = 15; y < 22; y++) {
-                    glm::vec3 posCube = glm::vec3(-0.20f * static_cast<float>(x), 0.0f, -0.20f * static_cast<float>(y));
-                    m_EntityManager->AddMesh("water_cube_3", "assets/mesh/minecraft/Grass_Block.obj", { "minecraft_water" }, "main", posCube, scaleMinecraft);
+                    std::shared_ptr<Rbk::Mesh> entity = std::make_shared<Rbk::Mesh>();
+                    entity->Init(
+                        "water_cube_3",
+                        "assets/mesh/minecraft/Grass_Block.obj",
+                        { "minecraft_water" },
+                        "main",
+                        glm::vec3(-0.20f * static_cast<float>(x), 0.0f, -0.20f * static_cast<float>(y)),
+                        glm::vec3(0.1f, 0.1f, 0.1f));
+
+                    m_EntityManager->AddEntity(entity);
                 }
             }
 
             for (int x = -22; x < 22; x++) {
                 for (int y = 22; y < 29; y++) {
-                    glm::vec3 posCube = glm::vec3(-0.20f * static_cast<float>(x), 0.0f, -0.20f * static_cast<float>(y));
-                    m_EntityManager->AddMesh("water_cube_4", "assets/mesh/minecraft/Grass_Block.obj", { "minecraft_water" }, "main", posCube, scaleMinecraft);
+                    std::shared_ptr<Rbk::Mesh> entity = std::make_shared<Rbk::Mesh>();
+                    entity->Init(
+                        "water_cube_3",
+                        "assets/mesh/minecraft/Grass_Block.obj",
+                        { "minecraft_water" },
+                        "main",
+                        glm::vec3(-0.20f * static_cast<float>(x), 0.0f, -0.20f * static_cast<float>(y)),
+                        glm::vec3(0.1f, 0.1f, 0.1f));
+
+                    m_EntityManager->AddEntity(entity);
                 }
             }
         });
 
         std::thread loadWorlMesh([this]() {
-            glm::vec3 pos1 = glm::vec3(0.8f, 0.2f, -0.4f);
-            glm::vec3 scaleCamp = glm::vec3(0.002f, 0.002f, 0.002f);
-            m_EntityManager->AddMesh("campfire", "assets/mesh/campfire/Campfire.obj", { "campfire_tex" }, "main", pos1, scaleCamp);
+            std::shared_ptr<Rbk::Mesh> entity = std::make_shared<Rbk::Mesh>();
+            entity->Init(
+                "campfire",
+                "assets/mesh/campfire/Campfire.obj",
+                { "campfire_tex" },
+                "main",
+                glm::vec3(0.8f, 0.2f, -0.4f),
+                glm::vec3(0.002f, 0.002f, 0.002f));
 
-            glm::vec3 pos2 = glm::vec3(-1.0f, 0.19f, -1.4f);
-            glm::vec3 scaleDeadTree = glm::vec3(0.01f, 0.01f, 0.01f);
-            m_EntityManager->AddMesh("dead_tree", "assets/mesh/tree/dead_tree.obj", { "trunk_tree_cartoon" }, "main", pos2, scaleDeadTree, glm::vec3(0.0f, 1.0f, 0.0f), 20.0f);
+            m_EntityManager->AddEntity(entity);
 
-            pos2 = glm::vec3(1.0f, 0.19f, 1.0f);
-            m_EntityManager->AddMesh("dead_tree", "assets/mesh/tree/dead_tree.obj", { "trunk_tree_cartoon" }, "main", pos2, scaleDeadTree, glm::vec3(0.0f, 1.0f, 0.0f), -20.0f);
+            std::shared_ptr<Rbk::Mesh> entity1 = std::make_shared<Rbk::Mesh>();
+            entity1->Init(
+                "dead_tree",
+                "assets/mesh/tree/dead_tree.obj",
+                { "trunk_tree_cartoon" },
+                "main",
+                glm::vec3(-1.0f, 0.19f, -1.4f),
+                glm::vec3(0.01f, 0.01f, 0.01f));
 
-            pos2 = glm::vec3(1.0f, 0.18f, -2.0f);
-            m_EntityManager->AddMesh("dead_tree", "assets/mesh/tree/dead_tree.obj", { "trunk_tree_cartoon" }, "main", pos2, scaleDeadTree);
+            m_EntityManager->AddEntity(entity1);
+      
+            std::shared_ptr<Rbk::Mesh> entity2 = std::make_shared<Rbk::Mesh>();
+            entity2->Init(
+                "dead_tree",
+                "assets/mesh/tree/dead_tree.obj",
+                { "trunk_tree_cartoon" },
+                "main",
+                glm::vec3(1.0f, 0.19f, 1.0f),
+                glm::vec3(0.01f, 0.01f, 0.01f),
+                glm::vec3(0.0f, 1.0f, 0.0f),
+         -20.0f);
 
-            pos2 = glm::vec3(3.0f, 0.18f, -2.2f);
-            m_EntityManager->AddMesh("dead_tree", "assets/mesh/tree/dead_tree.obj", { "trunk_tree_cartoon" }, "main", pos2, scaleDeadTree);
-            
-            pos2 = glm::vec3(2.3f, 0.18f, 0.3f);
-            m_EntityManager->AddMesh("dead_tree", "assets/mesh/tree/dead_tree.obj", { "trunk_tree_cartoon" }, "main", pos2, scaleDeadTree);
+            m_EntityManager->AddEntity(entity2);
 
-            pos2 = glm::vec3(3.0f, 0.18f, -0.6f);
-            m_EntityManager->AddMesh("dead_tree", "assets/mesh/tree/dead_tree.obj", { "trunk_tree_cartoon" }, "main", pos2, scaleDeadTree);
+            std::shared_ptr<Rbk::Mesh> entity3 = std::make_shared<Rbk::Mesh>();
+            entity3->Init(
+                "dead_tree",
+                "assets/mesh/tree/dead_tree.obj",
+                { "trunk_tree_cartoon" },
+                "main",
+                glm::vec3(1.0f, 0.18f, -2.0f),
+                glm::vec3(0.01f, 0.01f, 0.01f));
 
+            m_EntityManager->AddEntity(entity3);
+          
+            std::shared_ptr<Rbk::Mesh> entity4 = std::make_shared<Rbk::Mesh>();
+            entity4->Init(
+                "dead_tree",
+                "assets/mesh/tree/dead_tree.obj",
+                { "trunk_tree_cartoon" },
+                "main",
+                glm::vec3(3.0f, 0.18f, -2.2f),
+                glm::vec3(0.01f, 0.01f, 0.01f));
 
-            glm::vec3 scaleTree = glm::vec3(0.0008f, 0.0008f, 0.0008f);
-            pos2 = glm::vec3(-0.7f, 0.19f, -1.9f);
-            m_EntityManager->AddMesh("tree", "assets/mesh/tree/tree.obj", { "tree_top_tex", "trunk_tree_cartoon" }, "main", pos2, scaleTree, glm::vec3(0.0f, 1.0f, 0.0f), 20.0f);
+            m_EntityManager->AddEntity(entity);
 
-            pos2 = glm::vec3(-0.25f, 0.19f, -1.2f);
-            m_EntityManager->AddMesh("tree", "assets/mesh/tree/tree.obj", { "tree_top_tex", "trunk_tree_cartoon" }, "main", pos2, scaleTree, glm::vec3(0.0f, 1.0f, 0.0f), 10.0f);
+            std::shared_ptr<Rbk::Mesh> entity5 = std::make_shared<Rbk::Mesh>();
+            entity5->Init(
+                "dead_tree",
+                "assets/mesh/tree/dead_tree.obj",
+                { "trunk_tree_cartoon" },
+                "main",
+                glm::vec3(3.0f, 0.18f, -0.6f),
+                glm::vec3(0.01f, 0.01f, 0.01f));
 
-            pos2 = glm::vec3(0.7f, 0.19f, -1.6f);
-            m_EntityManager->AddMesh("tree", "assets/mesh/tree/tree.obj", { "tree_top_tex", "trunk_tree_cartoon" }, "main", pos2, scaleTree, glm::vec3(0.0f, 1.0f, 0.0f), 80.0f);
+            m_EntityManager->AddEntity(entity5);
+       
+            std::shared_ptr<Rbk::Mesh> entity6 = std::make_shared<Rbk::Mesh>();
+            entity6->Init(
+                "tree",
+                "assets/mesh/tree/tree.obj",
+                { "tree_top_tex", "trunk_tree_cartoon" },
+                "main",
+                glm::vec3(3.0f, 0.18f, -0.6f),
+                glm::vec3(0.0008f, 0.0008f, 0.0008f));
 
-            pos2 = glm::vec3(1.2f, 0.19f, -0.9f);
-            m_EntityManager->AddMesh("tree", "assets/mesh/tree/tree.obj", { "tree_top_tex", "trunk_tree_cartoon" }, "main", pos2, scaleTree);
+            m_EntityManager->AddEntity(entity6);
+         
+            std::shared_ptr<Rbk::Mesh> entity7 = std::make_shared<Rbk::Mesh>();
+            entity7->Init(
+                "tree",
+                "assets/mesh/tree/tree.obj",
+                { "tree_top_tex", "trunk_tree_cartoon" },
+                "main",
+                glm::vec3(-0.25f, 0.19f, -1.2f),
+                glm::vec3(0.0008f, 0.0008f, 0.0008f));
 
-            pos2 = glm::vec3(2.2f, 0.19f, -1.9f);
-            m_EntityManager->AddMesh("tree", "assets/mesh/tree/tree.obj", { "tree_top_tex", "trunk_tree_cartoon" }, "main", pos2, scaleTree);
+            m_EntityManager->AddEntity(entity7);
 
-            pos2 = glm::vec3(3.2f, 0.19f, -0.2f);
-            m_EntityManager->AddMesh("tree", "assets/mesh/tree/tree.obj", { "tree_top_tex", "trunk_tree_cartoon" }, "main", pos2, scaleTree);
+            std::shared_ptr<Rbk::Mesh> entity8 = std::make_shared<Rbk::Mesh>();
+            entity8->Init(
+                "tree",
+                "assets/mesh/tree/tree.obj",
+                { "tree_top_tex", "trunk_tree_cartoon" },
+                "main",
+                glm::vec3(0.7f, 0.19f, -1.6f),
+                glm::vec3(0.0008f, 0.0008f, 0.0008f));
 
-            pos2 = glm::vec3(2.8f, 0.19f, 0.5f);
-            m_EntityManager->AddMesh("tree", "assets/mesh/tree/tree.obj", { "tree_top_tex", "trunk_tree_cartoon" }, "main", pos2, scaleTree);
+            m_EntityManager->AddEntity(entity8);
+          
+            std::shared_ptr<Rbk::Mesh> entity9 = std::make_shared<Rbk::Mesh>();
+            entity9->Init(
+                "tree",
+                "assets/mesh/tree/tree.obj",
+                { "tree_top_tex", "trunk_tree_cartoon" },
+                "main",
+                glm::vec3(1.2f, 0.19f, -0.9f),
+                glm::vec3(0.0008f, 0.0008f, 0.0008f));
 
-            pos2 = glm::vec3(2.0f, 0.19f, 0.5f);
-            m_EntityManager->AddMesh("tree", "assets/mesh/tree/tree.obj", { "tree_top_tex", "trunk_tree_cartoon" }, "main", pos2, scaleTree);
+            m_EntityManager->AddEntity(entity9);
 
+            std::shared_ptr<Rbk::Mesh> entity10 = std::make_shared<Rbk::Mesh>();
+            entity10->Init(
+                "tree",
+                "assets/mesh/tree/tree.obj",
+                { "tree_top_tex", "trunk_tree_cartoon" },
+                "main",
+                glm::vec3(2.2f, 0.19f, -1.9f),
+                glm::vec3(0.0008f, 0.0008f, 0.0008f));
 
-            glm::vec3 moonCubeTest = glm::vec3(0.2f, 0.2f, 0.2f);
-            glm::vec3 pos6 = glm::vec3(0.5f, 4.5f, -3.00f);
-            m_EntityManager->AddMesh("moon", "assets/mesh/moon/moon.obj", { "moon" }, "ambient_light", pos6, moonCubeTest, glm::vec3(1.0f), 0.0f, false);
+            m_EntityManager->AddEntity(entity10);
 
-            glm::vec3 houseScale = glm::vec3(0.1f, 0.1f, 0.1f);
-            glm::vec3 posHouse = glm::vec3(-0.5f, 0.19f, -0.20f);
-            glm::vec3 rotHouse = glm::vec3(0.0f, 1.0f, 0.0f);
-            m_EntityManager->AddMesh("house", "assets/mesh/house/midpoly_town_house_01.obj", { "dark_wood", "rocks", "rooftiles", "bright_wood" }, "main", posHouse, houseScale, rotHouse, -80.0f, false);
+            std::shared_ptr<Rbk::Mesh> entity11 = std::make_shared<Rbk::Mesh>();
+            entity11->Init(
+                "tree",
+                "assets/mesh/tree/tree.obj",
+                { "tree_top_tex", "trunk_tree_cartoon" },
+                "main",
+                glm::vec3(3.2f, 0.19f, -0.2f),
+                glm::vec3(0.0008f, 0.0008f, 0.0008f));
 
-            glm::vec3 dogScale = glm::vec3(0.3f, 0.3f, 0.3f);
-            glm::vec3 posDog = glm::vec3(0.7f, 0.20f, -2.0f);
-            glm::vec3 rotDog = glm::vec3(0.0f, 1.0f, 0.0f);
-            m_EntityManager->AddMesh("dog_house", "assets/mesh/doghouse/doghouse0908.obj", { "dog_base_color" }, "main", posDog, dogScale, rotDog, -30.0f);
+            m_EntityManager->AddEntity(entity11);
+         
+            std::shared_ptr<Rbk::Mesh> entity12 = std::make_shared<Rbk::Mesh>();
+            entity12->Init(
+                "tree",
+                "assets/mesh/tree/tree.obj",
+                { "tree_top_tex", "trunk_tree_cartoon" },
+                "main",
+                glm::vec3(2.8f, 0.19f, 0.5f),
+                glm::vec3(0.0008f, 0.0008f, 0.0008f));
+
+            m_EntityManager->AddEntity(entity12);
+          
+            std::shared_ptr<Rbk::Mesh> entity13 = std::make_shared<Rbk::Mesh>();
+            entity13->Init(
+                "tree",
+                "assets/mesh/tree/tree.obj",
+                { "tree_top_tex", "trunk_tree_cartoon" },
+                "main",
+                glm::vec3(2.0f, 0.19f, 0.5f),
+                glm::vec3(0.0008f, 0.0008f, 0.0008f));
+
+            m_EntityManager->AddEntity(entity13);
+
+            std::shared_ptr<Rbk::Mesh> entity14 = std::make_shared<Rbk::Mesh>();
+            entity14->Init(
+                "moon",
+                "assets/mesh/moon/moon.obj",
+                { "moon" },
+                "ambient_light",
+                glm::vec3(0.2f, 0.2f, 0.2f),
+                glm::vec3(0.5f, 4.5f, -3.00f),
+                glm::vec3(1.0f),
+                0.0f,
+                false);
+
+            m_EntityManager->AddEntity(entity14);
+
+            std::shared_ptr<Rbk::Mesh> entity15 = std::make_shared<Rbk::Mesh>();
+            entity15->Init(
+                "house",
+                "assets/mesh/house/midpoly_town_house_01.obj",
+                { "dark_wood", "rocks", "rooftiles", "bright_wood" },
+                "main",
+                glm::vec3(-0.5f, 0.19f, -0.20f),
+                glm::vec3(0.1f, 0.1f, 0.1f),
+                glm::vec3(1.0f),
+                -80.0f,
+                false);
+
+            m_EntityManager->AddEntity(entity15);
+          
+            std::shared_ptr<Rbk::Mesh> entity16 = std::make_shared<Rbk::Mesh>();
+            entity16->Init(
+                "house",
+                "assets/mesh/house/midpoly_town_house_01.obj",
+                { "dark_wood", "rocks", "rooftiles", "bright_wood" },
+                "main",
+                glm::vec3(0.7f, 0.20f, -2.0f),
+                glm::vec3(0.3f, 0.3f, 0.3f),
+                glm::vec3(0.0f, 1.0f, 0.0f),
+                -30.0f);
+
+            m_EntityManager->AddEntity(entity16);
         });
 
         std::thread loadSkybox([this]() {

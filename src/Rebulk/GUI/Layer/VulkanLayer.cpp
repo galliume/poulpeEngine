@@ -78,10 +78,10 @@ namespace Rbk
         Rbk::Im::Text("Total vertex count %d", m_EntityManager->GetVerticesCount());
         Rbk::Im::Text("Total index count %d", m_EntityManager->GetIndicesCount());
 
-        Rbk::Im::Text("Stats per mesh :");
-        for (std::shared_ptr<Mesh> mesh : *m_EntityManager->GetMeshes()) {
-            Rbk::Im::Text("\tMesh named %s with %d instances", mesh.get()->name.c_str(), mesh.get()->ubos.size());
-        }
+        //Rbk::Im::Text("Stats per mesh :");
+        //for (std::shared_ptr<Mesh> mesh : *m_EntityManager->GetMeshes()) {
+        //    Rbk::Im::Text("\tMesh named %s with %d instances", mesh.get()->name.c_str(), mesh.get()->ubos.size());
+        //}
         ImGui::Separator();
         Rbk::Im::Text("Shader count %d", m_ShaderManager->GetShaders()->shaders.size());
         ImGui::Separator();
