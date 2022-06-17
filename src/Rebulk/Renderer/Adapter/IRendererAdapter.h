@@ -1,5 +1,5 @@
 #pragma once
-#include "Rebulk/Renderer/Mesh.h"
+#include "Rebulk/Component/Mesh.h"
 #include "Rebulk/Component/Camera.h"
 #include "Rebulk/Manager/TextureManager.h"
 #include "Rebulk/Manager/MeshManager.h"

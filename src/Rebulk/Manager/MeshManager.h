@@ -2,6 +2,7 @@
 #include "Rebulk/Renderer/Vulkan/VulkanRenderer.h"
 #include "Rebulk/Core/TinyObjLoader.h"
 #include "Rebulk/Component/Camera.h"
+#include "Rebulk/Component/Mesh.h"
 
 namespace Rbk
 {

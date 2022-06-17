@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Rebulk/Renderer/Mesh.h"
+#include "Rebulk/Component/Mesh.h"
 #include "Rebulk/Renderer/IRenderer.h"
 #include "Rebulk/GUI/Window.h"
 
