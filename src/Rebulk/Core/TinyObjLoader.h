@@ -1,5 +1,5 @@
 #pragma once
-#include "Rebulk/Renderer/Mesh.h"
+#include "Rebulk/Component/Mesh.h"
 
 namespace Rbk
 {
