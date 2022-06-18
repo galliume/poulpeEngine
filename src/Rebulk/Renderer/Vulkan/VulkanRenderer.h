@@ -69,7 +69,7 @@ namespace Rbk {
         VkSwapchainKHR CreateSwapChain(std::vector<VkImage>& swapChainImages, VkSwapchainKHR oldSwapChain = VK_NULL_HANDLE);
         std::vector<VkFramebuffer> CreateFramebuffers(std::shared_ptr<VkRenderPass> renderPass, std::vector<VkImageView> swapChainImageViews, std::vector<VkImageView> depthImageView, std::vector<VkImageView> colorImageView);
         VkCommandPool CreateCommandPool();
-        std::vector<VkCommandBuffer> AllocateCommandBuffers(VkCommandPool commandPool, uint32_t size = 1);
+        std::vector<VkCommandBuffer> AllocateCommandBuffers(VkCommandPool commandPool, uint32_t size = 1, bool isSecondary = false);
         void CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory);
         std::pair<VkBuffer, VkDeviceMemory> CreateVertexBuffer(VkCommandPool commandPool, std::vector<Rbk::Vertex> vertices);
         std::pair<VkBuffer, VkDeviceMemory> CreateVertex2DBuffer(VkCommandPool commandPool, std::vector<Rbk::Vertex2D> vertices);
@@ -100,7 +100,9 @@ namespace Rbk {
         * Vulkan drawing functions, in main loop
         **/
         void ResetCommandPool(VkCommandPool commandPool);
-        void BeginCommandBuffer(VkCommandBuffer commandBuffer, VkCommandBufferUsageFlagBits flags = VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT);
+        void BeginCommandBuffer(VkCommandBuffer commandBuffer,
+            VkCommandBufferUsageFlagBits flags = VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT,
+            VkCommandBufferInheritanceInfo inheritanceInfo = {});
         void EndCommandBuffer(VkCommandBuffer commandBuffer);
         void BeginRenderPass(std::shared_ptr<VkRenderPass> renderPass, VkCommandBuffer commandBuffer, VkFramebuffer swapChainFramebuffer);
         void EndRenderPass(VkCommandBuffer commandBuffer);
