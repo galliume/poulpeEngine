@@ -5,7 +5,7 @@ namespace Rbk
 {
     class Mesh;
 
-    int Application::s_UnlockedFPS = 0;
+    int Application::s_UnlockedFPS = 2;
 
     Application* Application::s_Instance = nullptr;
 

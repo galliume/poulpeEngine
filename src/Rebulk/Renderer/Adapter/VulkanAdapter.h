@@ -96,6 +96,6 @@ namespace Rbk
         std::vector<VkCommandBuffer> m_SkyboxCommandBuffers = {};
         VkCommandPool m_CrosshairCommandPool = nullptr;
         std::vector<VkCommandBuffer> m_CrosshairCommandBuffers = {};
-
+        std::shared_ptr<ThreadPool> m_ThreadPool;
     };
 }
