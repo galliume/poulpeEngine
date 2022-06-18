@@ -57,7 +57,6 @@ namespace Rbk
         static float s_FogColor[3];
 
     private:
-        void UpdatePositions();
         //@todo temp
         void SetPerspective();
 
@@ -90,5 +89,13 @@ namespace Rbk
         std::vector<glm::vec3>m_LightsPos;
         std::vector<VkDescriptorPool>m_DescriptorPools;
         std::vector<VkDescriptorSetLayout>m_DescriptorSetLayouts;
+
+        VkCommandPool m_EntitiesCommandPool = nullptr;
+        std::vector<VkCommandBuffer> m_EntitiesCommandBuffers = {};
+        VkCommandPool m_SkyboxCommandPool = nullptr;
+        std::vector<VkCommandBuffer> m_SkyboxCommandBuffers = {};
+        VkCommandPool m_CrosshairCommandPool = nullptr;
+        std::vector<VkCommandBuffer> m_CrosshairCommandBuffers = {};
+
     };
 }
