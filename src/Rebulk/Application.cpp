@@ -47,20 +47,22 @@ namespace Rbk
         );
         m_RenderManager->Init();
         m_RenderManager->AddCamera(m_Camera);
+        m_ThreadPool = std::make_shared<ThreadPool>();
+        m_ThreadPool->Start();
     }
 
     void Application::Run()
     {
         double startRun = glfwGetTime();
 
-        std::thread loadShaders([this]() {
+        m_ThreadPool->Queue([this]() {
             m_ShaderManager->AddShader("main", "assets/shaders/spv/vert.spv", "assets/shaders/spv/frag.spv");
             m_ShaderManager->AddShader("skybox", "assets/shaders/spv/skybox_vert.spv", "assets/shaders/spv/skybox_frag.spv");
             m_ShaderManager->AddShader("2d", "assets/shaders/spv/2d_vert.spv", "assets/shaders/spv/2d_frag.spv");
             m_ShaderManager->AddShader("ambient_light", "assets/shaders/spv/ambient_shader_vert.spv", "assets/shaders/spv/ambient_shader_frag.spv");
         });
 
-        std::thread loadTextures([this]() {
+        m_ThreadPool->Queue([this]() {
             m_TextureManager->AddTexture("minecraft_grass", "assets/mesh/minecraft/Grass_Block_TEX.png");
             m_TextureManager->AddTexture("minecraft_water", "assets/mesh/minecraft/water.jpg");
             m_TextureManager->AddTexture("campfire_tex", "assets/mesh/campfire/Campfire_MAT_BaseColor_01.jpg");
@@ -78,7 +80,7 @@ namespace Rbk
             m_TextureManager->AddTexture("dog", "assets/mesh/dog/Texture_albedo.jpg");
         });
 
-        std::thread loadAnimals([this]() {
+        m_ThreadPool->Queue([this]() {
             std::shared_ptr<Mesh> entity = std::make_shared<Mesh>();
 
             entity->Init(
@@ -92,7 +94,7 @@ namespace Rbk
             m_EntityManager->AddEntity(entity);
         });
 
-        std::thread loadWorldMeshFloor([this]() {
+        m_ThreadPool->Queue([this]() {
 
             for (int x = -7; x < 7; x++) {
                 for (int y = -5; y < 15; y++) {
@@ -170,7 +172,7 @@ namespace Rbk
             }
         });
 
-        std::thread loadWorlMesh([this]() {
+        m_ThreadPool->Queue([this]() {
             std::shared_ptr<Rbk::Mesh> entity = std::make_shared<Rbk::Mesh>();
             entity->Init(
                 "campfire",
@@ -369,7 +371,7 @@ namespace Rbk
             m_EntityManager->AddEntity(entity16);
         });
 
-        std::thread loadSkybox([this]() {
+        m_ThreadPool->Queue([this]() {
             std::vector<std::string>skyboxImages;
             skyboxImages.emplace_back("assets/texture/skybox/bluesky/right.jpg");
             skyboxImages.emplace_back("assets/texture/skybox/bluesky/left.jpg");
@@ -380,6 +382,12 @@ namespace Rbk
             m_TextureManager->AddSkyBox(skyboxImages);
         });
      
+        while (!m_ThreadPool->Busy()) {
+            //Rbk::Log::GetLogger()->debug("still busy");
+        };
+
+        m_ThreadPool->Stop();
+
 #ifdef RBK_DEBUG
         std::shared_ptr<Rbk::VulkanLayer>vulkanLayer = std::make_shared<Rbk::VulkanLayer>();
         m_LayerManager->Add(vulkanLayer.get());
@@ -398,13 +406,6 @@ namespace Rbk
         vulkanLayer->AddEntityManager(m_EntityManager);
         vulkanLayer->AddShaderManager(m_ShaderManager);
 #endif
-
-        loadAnimals.join();
-        loadShaders.join();
-        loadTextures.join();
-        loadSkybox.join();
-        loadWorlMesh.join();
-        loadWorldMeshFloor.join();
 
         double endRun = glfwGetTime();
 
