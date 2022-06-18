@@ -1332,9 +1332,9 @@ namespace Rbk {
         vkResetCommandPool(m_Device, commandPool, 0);
     }
 
-    void VulkanRenderer::Draw(VkCommandBuffer commandBuffer, Mesh* mesh, uint32_t frameIndex, bool drawIndexed)
+    void VulkanRenderer::Draw(VkCommandBuffer commandBuffer, Data data, uint32_t frameIndex, bool drawIndexed)
     {
-        VkBuffer vertexBuffers[] = { mesh->m_VertexBuffer.first };
+        VkBuffer vertexBuffers[] = { data.m_VertexBuffer.first };
         VkDeviceSize offsets[] = { 0 };
 
         vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
@@ -1342,21 +1342,19 @@ namespace Rbk {
         vkCmdBindDescriptorSets(
             commandBuffer,
             VK_PIPELINE_BIND_POINT_GRAPHICS,
-            mesh->m_PipelineLayout,
+            data.m_PipelineLayout,
             0,
             1,
-            &mesh->m_DescriptorSets[frameIndex],
+            &data.m_DescriptorSets[frameIndex],
             0,
             nullptr
         );
 
-        for (size_t i = 0; i < mesh->m_UniformBuffers.size(); i++) {
-            if (drawIndexed) {
-                vkCmdBindIndexBuffer(commandBuffer, mesh->m_IndicesBuffer.first, 0, VK_INDEX_TYPE_UINT32);
-                vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(mesh->m_Indices.size()), static_cast<uint32_t>(mesh->m_Ubos.size()), 0, 0, 0);
-            } else {
-                vkCmdDraw(commandBuffer, static_cast<uint32_t>(mesh->m_Vertices.size()), 1, 0, 0);
-            }
+        if (drawIndexed) {
+            vkCmdBindIndexBuffer(commandBuffer, data.m_IndicesBuffer.first, 0, VK_INDEX_TYPE_UINT32);
+            vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(data.m_Indices.size()), static_cast<uint32_t>(data.m_Ubos.size()), 0, 0, 0);
+        } else {
+            vkCmdDraw(commandBuffer, static_cast<uint32_t>(data.m_Vertices.size()), 1, 0, 0);
         }
     }
 

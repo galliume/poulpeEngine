@@ -2,20 +2,28 @@
 
 #include <volk.h>
 #include "Texture.h"
-#include "Buffer.h"
 #include "Vertex.h"
 #include "Vertex2D.h"
 #include "Rebulk/Component/Entity.h"
 #include "Rebulk/Component/Drawable.h"
 #include "Rebulk/Core/TinyObjLoader.h"
+#include "Rebulk/Core/Buffer.h"
 
 namespace Rbk
 {
     struct Data
     {
-        std::vector<Vertex> vertices;
-        std::vector<uint32_t> indices;
-        uint32_t materialId = 0;
+        std::string m_Name;
+        std::string m_Texture;
+        std::vector<Vertex> m_Vertices;
+        std::vector<uint32_t> m_Indices;
+        std::vector<UniformBufferObject> m_Ubos;
+        std::pair<VkBuffer, VkDeviceMemory> m_VertexBuffer = { nullptr, nullptr };
+        std::pair<VkBuffer, VkDeviceMemory> m_IndicesBuffer = { nullptr, nullptr };
+        std::vector<VkDescriptorSet> m_DescriptorSets;
+        VkPipelineLayout m_PipelineLayout;
+        VkPipeline m_GraphicsPipeline;
+        VkPipelineCache m_PipelineCache = nullptr;
     };
 
     class Mesh : public Entity, public Drawable
@@ -34,38 +42,17 @@ namespace Rbk
             float rotAngle = 0.0f,
             bool shouldInverseTextureY = true);
 
+        std::vector<Data>* GetData() { return &m_Data; };
+        const inline std::string GetShaderName() { return m_ShaderName; };
+        void AddUbos(const std::vector<UniformBufferObject> ubos);
+
     //@todo make it private
     public:
-        std::string m_Texture;
-        std::string m_Name;
-        std::vector<Vertex> m_Vertices;
-        std::vector<uint32_t> m_Indices;
-        std::vector<UniformBufferObject> m_Ubos;
-        std::pair<VkBuffer, VkDeviceMemory> m_VertexBuffer = { nullptr, nullptr };
-        std::pair<VkBuffer, VkDeviceMemory> m_IndicesBuffer = { nullptr, nullptr };
         std::vector<std::pair<VkBuffer, VkDeviceMemory>> m_UniformBuffers;
-        std::vector<VkDescriptorSet> m_DescriptorSets;
-        VkPipelineLayout m_PipelineLayout;
-        VkPipeline m_GraphicsPipeline;
-        VkPipelineCache m_PipelineCache = nullptr;
         glm::vec4 m_CameraPos;
-        std::string m_Shader;
-    };
-}
-
-namespace std {
-    template<> struct hash<Rbk::Vertex> {
-        size_t operator()(Rbk::Vertex const& vertex) const {
-            return ((hash<glm::vec3>()(vertex.pos) ^
-                (hash<glm::vec3>()(vertex.normal) << 1)) >> 1) ^
-                (hash<glm::vec2>()(vertex.texCoord) << 1);
-        }
-    };
-    template<> struct hash<Rbk::Vertex2D> {
-        size_t operator()(Rbk::Vertex2D const& vertex) const {
-            return ((hash<glm::vec2>()(vertex.pos) ^
-                (hash<glm::vec3>()(vertex.normal) << 1)) >> 1) ^
-                (hash<glm::vec2>()(vertex.texCoord) << 1);
-        }
+    
+    private:
+        std::vector<Data> m_Data;
+        std::string m_ShaderName;
     };
 }

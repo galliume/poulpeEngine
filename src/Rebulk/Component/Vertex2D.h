@@ -45,3 +45,13 @@ namespace Rbk
         }
     };
 }
+
+namespace std {
+    template<> struct hash<Rbk::Vertex2D> {
+        size_t operator()(Rbk::Vertex2D const& vertex) const {
+            return ((hash<glm::vec2>()(vertex.pos) ^
+                (hash<glm::vec3>()(vertex.normal) << 1)) >> 1) ^
+                (hash<glm::vec2>()(vertex.texCoord) << 1);
+        }
+    };
+}
