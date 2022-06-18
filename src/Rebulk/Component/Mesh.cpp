@@ -33,6 +33,8 @@ namespace Rbk
             m_Name = id;
             m_Texture = textureNames[textureIndex];
             m_Shader = shader;
+            m_Vertices = listData[i].vertices;
+            m_Indices = listData[i].indices;
 
             glm::mat4 view = glm::mat4(1.0f);
 
