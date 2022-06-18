@@ -73,7 +73,7 @@ namespace Rbk
         Rbk::Im::Text("Current frame %d", m_Adapter->Rdr()->GetCurrentFrame());
         ImGui::Separator();
         Rbk::Im::Text("Meshes stats");
-        Rbk::Im::Text("Total mesh loaded %d", m_EntityManager->GetMeshes()->size());
+        Rbk::Im::Text("Total mesh loaded %d", m_EntityManager->GetEntities().size());
         Rbk::Im::Text("Total mesh instanced %d", m_EntityManager->GetInstancedCount());
         Rbk::Im::Text("Total vertex count %d", m_EntityManager->GetVerticesCount());
         Rbk::Im::Text("Total index count %d", m_EntityManager->GetIndicesCount());
