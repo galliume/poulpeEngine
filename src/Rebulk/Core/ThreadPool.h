@@ -8,6 +8,7 @@ namespace Rbk
         public:
             void Start();
             void Queue(const std::function<void()>& job);
+            void Join();
             void Stop();
             bool Busy();
 

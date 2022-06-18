@@ -37,6 +37,7 @@ namespace Rbk
         m_SwapChain = m_Renderer->CreateSwapChain(m_SwapChainImages);
         m_CommandPool = m_Renderer->CreateCommandPool();
         VulkanShaders m_Shaders;
+        m_ThreadPool = std::make_shared<ThreadPool>();
     }
 
     void VulkanAdapter::AddTextureManager(std::shared_ptr<TextureManager> textureManager)
@@ -553,6 +554,9 @@ namespace Rbk
     {
         ShouldRecreateSwapChain();
 
+        //@todo optim should not be necessary to restart all over again
+        m_ThreadPool->Start();
+
         m_ImageIndex = m_Renderer->AcquireNextImageKHR(m_SwapChain, m_Semaphores);
 
         if (m_ImageIndex == VK_ERROR_OUT_OF_DATE_KHR || m_ImageIndex == VK_SUBOPTIMAL_KHR) {
@@ -599,7 +603,7 @@ namespace Rbk
         inheritanceInfo.subpass = 0;
 
         //draw the mesh entities !
-        std::thread drawEntities([=]() {
+        m_ThreadPool->Queue([=]() {
 
             m_Renderer->BeginCommandBuffer(m_EntitiesCommandBuffers[m_ImageIndex], VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT, inheritanceInfo);
             m_Renderer->SetViewPort(m_EntitiesCommandBuffers[m_ImageIndex]);
@@ -642,7 +646,7 @@ namespace Rbk
         });
 
         //draw the skybox !
-        std::thread drawSkybox([=]() {
+        m_ThreadPool->Queue([=]() {
             m_Renderer->BeginCommandBuffer(m_SkyboxCommandBuffers[m_ImageIndex], VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT, inheritanceInfo);
             m_Renderer->SetViewPort(m_SkyboxCommandBuffers[m_ImageIndex]);
             m_Renderer->SetScissor(m_SkyboxCommandBuffers[m_ImageIndex]);
@@ -665,7 +669,7 @@ namespace Rbk
         });
 
         //draw the crosshair
-        std::thread drawCrosshair([=]() {
+        m_ThreadPool->Queue([=]() {
             m_Renderer->BeginCommandBuffer(m_CrosshairCommandBuffers[m_ImageIndex], VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT, inheritanceInfo);
             m_Renderer->SetViewPort(m_CrosshairCommandBuffers[m_ImageIndex]);
             m_Renderer->SetScissor(m_CrosshairCommandBuffers[m_ImageIndex]);
@@ -690,9 +694,12 @@ namespace Rbk
             m_CommandBuffers[m_ImageIndex], endRenderBeginBarrier, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, VK_DEPENDENCY_BY_REGION_BIT
         );*/
 
-        drawCrosshair.join();
-        drawSkybox.join();
-        drawEntities.join();
+        while (!m_ThreadPool->Busy()) {
+            //Rbk::Log::GetLogger()->debug("still busy");
+        };
+
+        m_ThreadPool->Stop();
+
         std::vector<VkCommandBuffer>secondaryCmdBuffer;
         secondaryCmdBuffer.emplace_back(m_EntitiesCommandBuffers[m_ImageIndex]);
         secondaryCmdBuffer.emplace_back(m_SkyboxCommandBuffers[m_ImageIndex]);
@@ -714,7 +721,7 @@ namespace Rbk
     void VulkanAdapter::Destroy()
     {
         m_Renderer->WaitIdle();
-
+     
         //@todo refactor all the destroy system...
         m_Renderer->DestroySwapchain(m_Renderer->GetDevice(), m_SwapChain, m_SwapChainFramebuffers, m_SwapChainImageViews);
         m_Renderer->DestroySemaphores(m_Semaphores);
