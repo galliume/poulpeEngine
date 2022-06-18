@@ -94,11 +94,9 @@ namespace Rbk
 
         std::thread loadWorldMeshFloor([this]() {
 
-
             for (int x = -7; x < 7; x++) {
                 for (int y = -5; y < 15; y++) {
                     std::shared_ptr<Rbk::Mesh> entity = std::make_shared<Rbk::Mesh>();
-
                     entity->Init(
                         "ground_cube",
                         "assets/mesh/minecraft/Grass_Block.obj",
@@ -130,7 +128,7 @@ namespace Rbk
                 for (int y = -5; y < 15; y++) {
                     std::shared_ptr<Rbk::Mesh> entity = std::make_shared<Rbk::Mesh>();
                     entity->Init(
-                        "water_cube_2",
+                        "water_cube_1",
                         "assets/mesh/minecraft/Grass_Block.obj",
                         { "minecraft_water" },
                         "main",
@@ -145,7 +143,7 @@ namespace Rbk
                 for (int y = 15; y < 22; y++) {
                     std::shared_ptr<Rbk::Mesh> entity = std::make_shared<Rbk::Mesh>();
                     entity->Init(
-                        "water_cube_3",
+                        "water_cube_2",
                         "assets/mesh/minecraft/Grass_Block.obj",
                         { "minecraft_water" },
                         "main",
@@ -204,7 +202,7 @@ namespace Rbk
                 glm::vec3(1.0f, 0.19f, 1.0f),
                 glm::vec3(0.01f, 0.01f, 0.01f),
                 glm::vec3(0.0f, 1.0f, 0.0f),
-         -20.0f);
+                -20.0f);
 
             m_EntityManager->AddEntity(entity2);
 
@@ -335,8 +333,8 @@ namespace Rbk
                 "assets/mesh/moon/moon.obj",
                 { "moon" },
                 "ambient_light",
-                glm::vec3(0.2f, 0.2f, 0.2f),
                 glm::vec3(0.5f, 4.5f, -3.00f),
+                glm::vec3(0.2f, 0.2f, 0.2f),
                 glm::vec3(1.0f),
                 0.0f,
                 false);
@@ -351,7 +349,7 @@ namespace Rbk
                 "main",
                 glm::vec3(-0.5f, 0.19f, -0.20f),
                 glm::vec3(0.1f, 0.1f, 0.1f),
-                glm::vec3(1.0f),
+                glm::vec3(0.0f, 1.0f, 0.0f),
                 -80.0f,
                 false);
 
@@ -359,9 +357,9 @@ namespace Rbk
           
             std::shared_ptr<Rbk::Mesh> entity16 = std::make_shared<Rbk::Mesh>();
             entity16->Init(
-                "house",
-                "assets/mesh/house/midpoly_town_house_01.obj",
-                { "dark_wood", "rocks", "rooftiles", "bright_wood" },
+                "dog_house",
+                "assets/mesh/doghouse/doghouse0908.obj",
+                { "dog_base_color" },
                 "main",
                 glm::vec3(0.7f, 0.20f, -2.0f),
                 glm::vec3(0.3f, 0.3f, 0.3f),

@@ -10,6 +10,6 @@ namespace Rbk
 
     Entity::~Entity()
     {
-        Rbk::Log::GetLogger()->debug("entity deleted");
+
     }
 }

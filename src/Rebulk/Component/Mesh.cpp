@@ -22,19 +22,20 @@ namespace Rbk
             throw std::runtime_error("error loading a mesh file.");
         }
 
-        std::vector<Data> listData = Rbk::TinyObjLoader::LoadData(path, shouldInverseTextureY);
+        std::vector<TinyObjData> listData = Rbk::TinyObjLoader::LoadData(path, shouldInverseTextureY);
         //end todo
 
-        for (int i = 0; i < listData.size(); i++) {
+        m_Name = name;
+        m_ShaderName = shader;
 
-            uint32_t textureIndex = listData[i].materialId;
-            std::string id = name + '_' + textureNames[textureIndex] + '_' + std::to_string(i);
+        for (size_t i = 0; i < listData.size(); i++) {
 
-            m_Name = id;
-            m_Texture = textureNames[textureIndex];
-            m_Shader = shader;
-            m_Vertices = listData[i].vertices;
-            m_Indices = listData[i].indices;
+            Data data;
+
+            data.m_Name = name + '_' + textureNames[listData[i].materialId] + '_' + std::to_string(i);
+            data.m_Texture = textureNames[listData[i].materialId];
+            data.m_Vertices = listData[i].vertices;
+            data.m_Indices = listData[i].indices;
 
             glm::mat4 view = glm::mat4(1.0f);
 
@@ -48,12 +49,18 @@ namespace Rbk
             }
 
             ubo.view = glm::translate(view, glm::vec3(0.0f, 0.0f, 0.0f));
-            m_Ubos.emplace_back(ubo);
+            data.m_Ubos.emplace_back(ubo);
+
+            m_Data.emplace_back(data);
         }
     }
 
-    Mesh::~Mesh()
+    void Mesh::AddUbos(const std::vector<UniformBufferObject> ubos)
     {
-
+        for (auto& data : m_Data) {
+            data.m_Ubos.insert(data.m_Ubos.end(), ubos.begin(), ubos.end());
+        }
     }
+
+    Mesh::~Mesh() { }
 }

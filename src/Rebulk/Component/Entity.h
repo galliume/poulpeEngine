@@ -11,7 +11,12 @@ namespace Rbk
         virtual void Draw();
         virtual ~Entity();
 
+    //@todo make it private
+    public:
+        std::string m_Name;
+
     protected:
         std::unique_ptr<Drawable> m_Drawable;
+
     };
 }

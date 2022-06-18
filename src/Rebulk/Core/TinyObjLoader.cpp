@@ -9,9 +9,9 @@
 
 namespace Rbk
 {
-    std::vector<Data> TinyObjLoader::LoadData(std::string path, bool shouldInverseTextureY)
+    std::vector<TinyObjData> TinyObjLoader::LoadData(std::string path, bool shouldInverseTextureY)
     {
-        std::vector<Data> dataList = {};
+        std::vector<TinyObjData> dataList = {};
 
         tinyobj::ObjReader reader;
         tinyobj::ObjReaderConfig reader_config;
@@ -41,7 +41,7 @@ namespace Rbk
 
         for (uint32_t s = 0; s < shapes.size(); s++) {
 
-            Data data;
+            TinyObjData data;
 
             // Loop over faces(polygon)
             size_t index_offset = 0;
