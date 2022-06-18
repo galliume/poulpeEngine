@@ -38,6 +38,8 @@ namespace Rbk
     public:
         std::string m_Texture;
         std::string m_Name;
+        std::vector<Vertex> m_Vertices;
+        std::vector<uint32_t> m_Indices;
         std::vector<UniformBufferObject> m_Ubos;
         std::pair<VkBuffer, VkDeviceMemory> m_VertexBuffer = { nullptr, nullptr };
         std::pair<VkBuffer, VkDeviceMemory> m_IndicesBuffer = { nullptr, nullptr };

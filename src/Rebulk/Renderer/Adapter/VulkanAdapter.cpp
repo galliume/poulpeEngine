@@ -184,12 +184,12 @@ namespace Rbk
         );
         m_DescriptorSetLayouts.emplace_back(desriptorSetLayout);
 
-        for (auto entity : entities) {
+        for (std::shared_ptr<Entity> entity : entities) {
 
-            auto mesh = dynamic_cast<std::shared_ptr<Mesh>>(entity);
+            std::shared_ptr<Mesh> mesh = std::dynamic_pointer_cast<Mesh>(entity);
 
-            mesh->cameraPos = m_Camera->GetPos();
-            uint32_t totalInstances = MeshesLoaded[mesh->name][0];
+            mesh->m_CameraPos = m_Camera->GetPos();
+            uint32_t totalInstances = MeshesLoaded[mesh->m_Name][0];
 
             maxUniformBufferRange = m_Renderer->GetDeviceProperties().limits.maxUniformBufferRange;
             uniformBufferChunkSize = maxUniformBufferRange / sizeof(UniformBufferObject);
@@ -197,43 +197,43 @@ namespace Rbk
 
             for (uint32_t i = 0; i < uniformBuffersCount; i++) {
                 std::pair<VkBuffer, VkDeviceMemory> uniformBuffer = m_Renderer->CreateUniformBuffers(uniformBufferChunkSize);
-                mesh->uniformBuffers.emplace_back(uniformBuffer);
+                mesh->m_UniformBuffers.emplace_back(uniformBuffer);
             }
 
-            mesh->vertexBuffer = m_Renderer->CreateVertexBuffer(m_CommandPool, mesh->vertices);
-            mesh->indicesBuffer = m_Renderer->CreateIndexBuffer(m_CommandPool, mesh->indices);
+            mesh->m_VertexBuffer = m_Renderer->CreateVertexBuffer(m_CommandPool, mesh->m_Vertices);
+            mesh->m_IndicesBuffer = m_Renderer->CreateIndexBuffer(m_CommandPool, mesh->m_Indices);
 
             for (uint32_t i = 0; i < m_SwapChainImages.size(); i++) {
 
                 VkDescriptorSet descriptorSet = m_Renderer->CreateDescriptorSets(descriptorPool, { desriptorSetLayout }, 1);
 
-                Texture tex = m_TextureManager->GetTextures()[mesh->texture];
+                Texture tex = m_TextureManager->GetTextures()[mesh->m_Texture];
 
                 VkDescriptorImageInfo imageInfo{};
                 imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
                 imageInfo.imageView = tex.imageView;
                 imageInfo.sampler = tex.sampler;
              
-                m_Renderer->UpdateDescriptorSets(mesh->uniformBuffers, descriptorSet, imageInfo);
-                mesh->descriptorSets.emplace_back(descriptorSet);
+                m_Renderer->UpdateDescriptorSets(mesh->m_UniformBuffers, descriptorSet, imageInfo);
+                mesh->m_DescriptorSets.emplace_back(descriptorSet);
             }
 
 
-            mesh->pipelineLayout = m_Renderer->CreatePipelineLayout(mesh->descriptorSets, { desriptorSetLayout }, pushConstants);
+            mesh->m_PipelineLayout = m_Renderer->CreatePipelineLayout(mesh->m_DescriptorSets, { desriptorSetLayout }, pushConstants);
 
             std::vector<VkPipelineShaderStageCreateInfo>shadersStageInfos;
 
             VkPipelineShaderStageCreateInfo vertShaderStageInfo{};
             vertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
             vertShaderStageInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
-            vertShaderStageInfo.module = m_ShaderManager->GetShaders()->shaders[mesh->shader][0];
+            vertShaderStageInfo.module = m_ShaderManager->GetShaders()->shaders[mesh->m_Shader][0];
             vertShaderStageInfo.pName = "main";
             shadersStageInfos.emplace_back(vertShaderStageInfo);
 
             VkPipelineShaderStageCreateInfo fragShaderStageInfo{};
             fragShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
             fragShaderStageInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
-            fragShaderStageInfo.module = m_ShaderManager->GetShaders()->shaders[mesh->shader][1];
+            fragShaderStageInfo.module = m_ShaderManager->GetShaders()->shaders[mesh->m_Shader][1];
             fragShaderStageInfo.pName = "main";
             shadersStageInfos.emplace_back(fragShaderStageInfo);
 
@@ -244,10 +244,10 @@ namespace Rbk
             vertexInputInfo.pVertexBindingDescriptions = &bDesc;
             vertexInputInfo.pVertexAttributeDescriptions = Vertex::GetAttributeDescriptions().data();
 
-            mesh->graphicsPipeline = m_Renderer->CreateGraphicsPipeline(
+            mesh->m_GraphicsPipeline = m_Renderer->CreateGraphicsPipeline(
                 m_RenderPass,
-                mesh->pipelineLayout,
-                mesh->pipelineCache,
+                mesh->m_PipelineLayout,
+                mesh->m_PipelineCache,
                 shadersStageInfos,
                 vertexInputInfo,
                 VK_CULL_MODE_BACK_BIT,
@@ -547,18 +547,18 @@ namespace Rbk
             m_Renderer->UpdateUniformBuffer(m_Crosshair->m_UniformBuffers[i], { m_Crosshair->m_Ubos[i] }, 1);
         }
 
-        std::vector<std::shared_ptr<Entity>> entities = *m_EntityManager->GetEntities();
+        std::vector<std::shared_ptr<Entity>> entities = m_EntityManager->GetEntities();
 
-        for (std::shared_ptr<Entity>&entity : entities) {
+        for (std::shared_ptr<Entity> entity : entities) {
 
-            std::shared_ptr<Mesh>* mesh = dynamic_cast<std::shared_ptr<Mesh>*>(entity);
+            std::shared_ptr<Mesh> mesh = std::dynamic_pointer_cast<Mesh>(entity);
 
             for (uint32_t i = 0; i < mesh->m_Ubos.size(); i++) {
                 mesh->m_Ubos[i].view = lookAt;
                 //mesh->cameraPos = cameraPos * mesh->ubos[i].view * mesh->ubos[i].model * mesh->ubos[i].proj;
                 mesh->m_Ubos[i].proj = proj;
 
-                if (mesh->name == "moon_moon_0") {
+                if (mesh->m_Name == "moon_moon_0") {
                     /*mesh->ubos[i].model = glm::rotate(mesh->ubos[i].model, 0.05f * m_Deltatime, glm::vec3(1.0f, 0.0f, 0.0f));
                     mesh->ubos[i].model = glm::translate(mesh->ubos[i].model, m_Deltatime * glm::vec3(1.0f, 0.0f, 0.0f));
                     glm::vec3 lightPos = m_LightsPos.at(0) *  m_Deltatime * glm::vec3(1.0f, 0.0f, 0.0f);
@@ -621,9 +621,11 @@ namespace Rbk
         data.lightPos = m_LightsPos.at(0);
 
         //draw the mesh entities !
-        for (auto entity : *m_EntityManager->GetEntities()) {
+        std::vector<std::shared_ptr<Entity>> entities = m_EntityManager->GetEntities();
 
-            auto mesh = dynamic_cast<std::shared_ptr<Mesh>>(entity);
+        for (std::shared_ptr<Entity> entity : entities) {
+
+            std::shared_ptr<Mesh> mesh = std::dynamic_pointer_cast<Mesh>(entity);
 
             m_Renderer->BindPipeline(m_CommandBuffers[m_ImageIndex], mesh->m_GraphicsPipeline);
             vkCmdPushConstants(m_CommandBuffers[m_ImageIndex], mesh->m_PipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(constants), &data);
@@ -668,49 +670,53 @@ namespace Rbk
     
         std::shared_ptr<Mesh> skyboxMesh = m_EntityManager->GetSkyboxMesh();
 
-        for (auto buffer : skyboxMesh->uniformBuffers) {
+        for (auto buffer : skyboxMesh->m_UniformBuffers) {
             m_Renderer->DestroyBuffer(buffer.first);
             m_Renderer->DestroyDeviceMemory(buffer.second);
         }
         
-        m_Renderer->DestroyBuffer(skyboxMesh->vertexBuffer.first);
-        m_Renderer->DestroyDeviceMemory(skyboxMesh->vertexBuffer.second);
+        m_Renderer->DestroyBuffer(skyboxMesh->m_VertexBuffer.first);
+        m_Renderer->DestroyDeviceMemory(skyboxMesh->m_VertexBuffer.second);
 
-        m_Renderer->DestroyBuffer(skyboxMesh->indicesBuffer.first);
-        m_Renderer->DestroyDeviceMemory(skyboxMesh->indicesBuffer.second);
+        m_Renderer->DestroyBuffer(skyboxMesh->m_IndicesBuffer.first);
+        m_Renderer->DestroyDeviceMemory(skyboxMesh->m_IndicesBuffer.second);
 
-        m_Renderer->DestroyPipeline(skyboxMesh->graphicsPipeline);
-        vkDestroyPipelineLayout(m_Renderer->GetDevice(), skyboxMesh->pipelineLayout, nullptr);
+        m_Renderer->DestroyPipeline(skyboxMesh->m_GraphicsPipeline);
+        vkDestroyPipelineLayout(m_Renderer->GetDevice(), skyboxMesh->m_PipelineLayout, nullptr);
 
-        for (auto buffer : m_Crosshair->uniformBuffers) {
+        for (auto buffer : m_Crosshair->m_UniformBuffers) {
             m_Renderer->DestroyBuffer(buffer.first);
             m_Renderer->DestroyDeviceMemory(buffer.second);
         }
 
-        m_Renderer->DestroyBuffer(m_Crosshair->vertexBuffer.first);
-        m_Renderer->DestroyDeviceMemory(m_Crosshair->vertexBuffer.second);
+        m_Renderer->DestroyBuffer(m_Crosshair->m_VertexBuffer.first);
+        m_Renderer->DestroyDeviceMemory(m_Crosshair->m_VertexBuffer.second);
 
-        m_Renderer->DestroyBuffer(m_Crosshair->indicesBuffer.first);
-        m_Renderer->DestroyDeviceMemory(m_Crosshair->indicesBuffer.second);
+        m_Renderer->DestroyBuffer(m_Crosshair->m_IndicesBuffer.first);
+        m_Renderer->DestroyDeviceMemory(m_Crosshair->m_IndicesBuffer.second);
 
-        m_Renderer->DestroyPipeline(m_Crosshair->graphicsPipeline);
-        vkDestroyPipelineLayout(m_Renderer->GetDevice(), m_Crosshair->pipelineLayout, nullptr);
+        m_Renderer->DestroyPipeline(m_Crosshair->m_GraphicsPipeline);
+        vkDestroyPipelineLayout(m_Renderer->GetDevice(), m_Crosshair->m_PipelineLayout, nullptr);
 
-        for (std::shared_ptr<Mesh> mesh : *m_EntityManager->GetMeshes()) {
+        std::vector<std::shared_ptr<Entity>> entities = m_EntityManager->GetEntities();
 
-            for (auto buffer : mesh->uniformBuffers) {
+        for (std::shared_ptr<Entity> entity : entities) {
+
+            std::shared_ptr<Mesh> mesh = std::dynamic_pointer_cast<Mesh>(entity);
+
+            for (auto buffer : mesh->m_UniformBuffers) {
                 m_Renderer->DestroyBuffer(buffer.first);
                 m_Renderer->DestroyDeviceMemory(buffer.second);
             }
 
-            m_Renderer->DestroyBuffer(mesh->vertexBuffer.first);
-            m_Renderer->DestroyDeviceMemory(mesh->vertexBuffer.second);
+            m_Renderer->DestroyBuffer(mesh->m_VertexBuffer.first);
+            m_Renderer->DestroyDeviceMemory(mesh->m_VertexBuffer.second);
 
-            m_Renderer->DestroyBuffer(mesh->indicesBuffer.first);
-            m_Renderer->DestroyDeviceMemory(mesh->indicesBuffer.second);
+            m_Renderer->DestroyBuffer(mesh->m_IndicesBuffer.first);
+            m_Renderer->DestroyDeviceMemory(mesh->m_IndicesBuffer.second);
 
-            m_Renderer->DestroyPipeline(mesh->graphicsPipeline);
-            vkDestroyPipelineLayout(m_Renderer->GetDevice(), mesh->pipelineLayout, nullptr);
+            m_Renderer->DestroyPipeline(mesh->m_GraphicsPipeline);
+            vkDestroyPipelineLayout(m_Renderer->GetDevice(), mesh->m_PipelineLayout, nullptr);
         }
 
         for (auto item : m_TextureManager->GetTextures()) {
