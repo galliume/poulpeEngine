@@ -964,7 +964,7 @@ namespace Rbk {
         return commandPool;
     }
 
-    std::vector<VkCommandBuffer> VulkanRenderer::AllocateCommandBuffers(VkCommandPool commandPool, uint32_t size)
+    std::vector<VkCommandBuffer> VulkanRenderer::AllocateCommandBuffers(VkCommandPool commandPool, uint32_t size, bool isSecondary)
     {
         std::vector<VkCommandBuffer> commandBuffers;
 
@@ -973,7 +973,8 @@ namespace Rbk {
         VkCommandBufferAllocateInfo allocInfo{};
         allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
         allocInfo.commandPool = commandPool;
-        allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+        allocInfo.level = (!isSecondary) ? VK_COMMAND_BUFFER_LEVEL_PRIMARY : VK_COMMAND_BUFFER_LEVEL_SECONDARY;
+
         allocInfo.commandBufferCount = static_cast<uint32_t>(commandBuffers.size());
 
         VkResult result = vkAllocateCommandBuffers(m_Device, &allocInfo, commandBuffers.data());
@@ -985,14 +986,14 @@ namespace Rbk {
         return commandBuffers;
     }
 
-    void VulkanRenderer::BeginCommandBuffer(VkCommandBuffer commandBuffer, VkCommandBufferUsageFlagBits flags)
+    void VulkanRenderer::BeginCommandBuffer(VkCommandBuffer commandBuffer, VkCommandBufferUsageFlagBits flags, VkCommandBufferInheritanceInfo inheritanceInfo)
     {
         vkResetCommandBuffer(commandBuffer, VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
 
         VkCommandBufferBeginInfo beginInfo{};
         beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
         beginInfo.flags = flags;
-        beginInfo.pInheritanceInfo = nullptr;
+        beginInfo.pInheritanceInfo = (flags == VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT) ? &inheritanceInfo : nullptr;
 
         if (VK_SUCCESS != vkBeginCommandBuffer(commandBuffer, &beginInfo)) {
             throw std::runtime_error("failed to create descriptor pool");
@@ -1149,7 +1150,7 @@ namespace Rbk {
         renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
         renderPassInfo.pClearValues = clearValues.data();
 
-        vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+        vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS);
     }
 
     void VulkanRenderer::EndRenderPass(VkCommandBuffer commandBuffer)
