@@ -38,5 +38,6 @@ namespace Rbk
         std::shared_ptr<Rbk::EntityManager> m_EntityManager;
         std::shared_ptr<Rbk::ShaderManager> m_ShaderManager;
         std::shared_ptr<Rbk::Im> m_VImGui;
+        std::shared_ptr<ThreadPool> m_ThreadPool;
     };
 }
