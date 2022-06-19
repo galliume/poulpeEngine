@@ -7,10 +7,10 @@ namespace Rbk
     {
         m_ShouldTerminate = false;
 
-        const uint32_t numThreads = 4;//std::thread::hardware_concurrency();
-        m_Threads.resize(numThreads);
+        m_numThreads = 1; //std::thread::hardware_concurrency();
+        m_Threads.resize(m_numThreads);
 
-        for (uint32_t i = 0; i < numThreads; i++) {
+        for (uint32_t i = 0; i < m_numThreads; i++) {
             m_Threads.at(i) = std::thread(&ThreadPool::Loop, this);
         }
     }
@@ -38,8 +38,17 @@ namespace Rbk
 
     void ThreadPool::Queue(const std::function<void()>& job)
     {
+        if (m_Threads.empty()) {
+            m_Threads.resize(m_numThreads);
+            for (uint32_t i = 0; i < m_numThreads; i++) {
+                m_Threads.at(i) = std::thread(&ThreadPool::Loop, this);
+            }
+        }
+
         {
             std::unique_lock<std::mutex> lock(m_QueueMutex);
+            m_ShouldTerminate = false;
+
             m_Jobs.push(job);
         }
 
@@ -55,20 +64,6 @@ namespace Rbk
         }
 
         return poolbusy;
-    }
-
-    void ThreadPool::Join()
-    {
-        {
-            std::unique_lock<std::mutex> lock(m_QueueMutex);
-            m_ShouldTerminate = true;
-        }
-
-        m_MutexCondition.notify_all();
-
-        for (std::thread& activeThread : m_Threads) {
-            activeThread.join();
-        }
     }
 
     void ThreadPool::Stop()

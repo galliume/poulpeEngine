@@ -11,8 +11,9 @@ layout(location = 4) in float fragAmbiantLight;
 layout(location = 5) in float fragFogDensity; 
 layout(location = 6) in vec3 fragFogColor;
 layout(location = 7) in vec3 fragLightPos;
+layout(location = 8) flat in int fragTextureID;
 
-layout(binding = 1) uniform sampler2D texSampler;
+layout(binding = 1) uniform sampler2D texSampler[];
 
 //todo move to push constants
 vec3 lightColor = vec3(1.0f);
@@ -44,9 +45,9 @@ void main() {
     vec3 ambient = fragAmbiantLight * lightColor;
     vec3 diffuse = diff * lightColor * 0.05;
 
-    outputColor = texture(texSampler, fragTexCoord);
+    outputColor = texture(texSampler[fragTextureID], fragTexCoord);
     outputColor = vec4((ambient + diffuse), 1.0) * outputColor;
-    
+
     if (0 < fragFogDensity) {
         float d = distance(cameraPos, fragModelPos);
         float alpha = getFogFactor(d);
