@@ -28,6 +28,7 @@ layout(location = 7) out vec4 fragLightPos;
 
 layout(push_constant) uniform constants
 {
+    int textureID;
     vec4 cameraPos;
     float ambiantLight;
     float fogDensity;

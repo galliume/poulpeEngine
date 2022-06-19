@@ -9,13 +9,19 @@ namespace Rbk
     float VulkanAdapter::s_AmbiantLight = 0.1f;
     float VulkanAdapter::s_FogDensity = 0.0f;
     float VulkanAdapter::s_FogColor[3] = { 25 / 255.0f, 25 / 255.0f, 25 / 255.0f };
+    int VulkanAdapter::s_Crosshair = 0;
 
     struct constants {
+        uint32_t textureID;
         glm::vec3 cameraPos;
         float ambiantLight;
         float fogDensity;
         glm::vec3 fogColor;
         glm::vec3 lightPos;
+    };
+
+    struct cPC {
+        uint32_t textureID;
     };
 
     VulkanAdapter::VulkanAdapter(std::shared_ptr<Window> window) :
@@ -38,6 +44,7 @@ namespace Rbk
         m_CommandPool = m_Renderer->CreateCommandPool();
         VulkanShaders m_Shaders;
         m_ThreadPool = std::make_shared<ThreadPool>();
+        m_ThreadPool->Start();
     }
 
     void VulkanAdapter::AddTextureManager(std::shared_ptr<TextureManager> textureManager)
@@ -148,11 +155,15 @@ namespace Rbk
         uint32_t uniformBufferChunkSize = 0;
         uint32_t uniformBuffersCount = 0;
 
-        std::array<VkDescriptorPoolSize, 2> poolSizes{};
-        poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        poolSizes[0].descriptorCount = 1000;
-        poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        poolSizes[1].descriptorCount = 1000;
+        std::vector<VkDescriptorPoolSize> poolSizes{};
+        VkDescriptorPoolSize cp1;
+        cp1.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        cp1.descriptorCount = 1000;
+        VkDescriptorPoolSize cp2;
+        cp2.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        cp2.descriptorCount = 1000;
+        poolSizes.emplace_back(cp1);
+        poolSizes.emplace_back(cp2);
 
         VkDescriptorPool descriptorPool = m_Renderer->CreateDescriptorPool(poolSizes, 1000);
         m_DescriptorPools.emplace_back(descriptorPool);
@@ -165,28 +176,6 @@ namespace Rbk
 
         pushConstants.emplace_back(vkPushconstants);
 
-        VkDescriptorSetLayoutBinding uboLayoutBinding{};
-        uboLayoutBinding.binding = 0;
-        uboLayoutBinding.descriptorCount = 1;
-        uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        uboLayoutBinding.pImmutableSamplers = nullptr;
-        uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-
-        VkDescriptorSetLayoutBinding samplerLayoutBinding{};
-        samplerLayoutBinding.binding = 1;
-        samplerLayoutBinding.descriptorCount = 1;
-        samplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        samplerLayoutBinding.pImmutableSamplers = nullptr;
-        samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-
-        std::vector<VkDescriptorSetLayoutBinding> bindings = { uboLayoutBinding, samplerLayoutBinding };
-
-        VkDescriptorSetLayout desriptorSetLayout = m_Renderer->CreateDescriptorSetLayout(
-            bindings, VK_DESCRIPTOR_SET_LAYOUT_CREATE_UPDATE_AFTER_BIND_POOL_BIT
-        );
-        
-        m_DescriptorSetLayouts.emplace_back(desriptorSetLayout);
-
         m_EntitiesCommandPool = m_Renderer->CreateCommandPool();
         m_EntitiesCommandBuffers = m_Renderer->AllocateCommandBuffers(m_EntitiesCommandPool, static_cast<uint32_t>(m_SwapChainImageViews.size()), true);
 
@@ -195,7 +184,7 @@ namespace Rbk
             std::shared_ptr<Mesh> mesh = std::dynamic_pointer_cast<Mesh>(entity);
 
             mesh->m_CameraPos = m_Camera->GetPos();
-            uint32_t totalInstances = entities->size();
+            uint32_t totalInstances = static_cast<uint32_t>(entities->size());
 
             maxUniformBufferRange = m_Renderer->GetDeviceProperties().limits.maxUniformBufferRange;
             uniformBufferChunkSize = maxUniformBufferRange / sizeof(UniformBufferObject);
@@ -206,61 +195,89 @@ namespace Rbk
                 mesh->m_UniformBuffers.emplace_back(uniformBuffer);
             }
 
+            std::vector<VkDescriptorImageInfo> imageInfos;
 
+            uint32_t index = 0;
             for (Data& data : *mesh->GetData()) {
 
                 data.m_VertexBuffer = m_Renderer->CreateVertexBuffer(m_EntitiesCommandPool, data.m_Vertices);
                 data.m_IndicesBuffer = m_Renderer->CreateIndexBuffer(m_EntitiesCommandPool, data.m_Indices);
+                data.m_TextureIndex = index;
+                Texture tex = m_TextureManager->GetTextures()[data.m_Texture];
 
-                for (uint32_t i = 0; i < m_SwapChainImages.size(); i++) {
+                VkDescriptorImageInfo imageInfo{};
+                imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+                imageInfo.imageView = tex.imageView;
+                imageInfo.sampler = tex.sampler;
 
-                    VkDescriptorSet descriptorSet = m_Renderer->CreateDescriptorSets(descriptorPool, { desriptorSetLayout }, 1);
-                    Texture tex = m_TextureManager->GetTextures()[data.m_Texture];
-
-                    VkDescriptorImageInfo imageInfo{};
-                    imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-                    imageInfo.imageView = tex.imageView;
-                    imageInfo.sampler = tex.sampler;
-
-                    m_Renderer->UpdateDescriptorSets(mesh->m_UniformBuffers, descriptorSet, imageInfo);
-                    data.m_DescriptorSets.emplace_back(descriptorSet);
-                }
-                
-                data.m_PipelineLayout = m_Renderer->CreatePipelineLayout(data.m_DescriptorSets, { desriptorSetLayout }, pushConstants);
-
-                std::vector<VkPipelineShaderStageCreateInfo>shadersStageInfos;
-
-                VkPipelineShaderStageCreateInfo vertShaderStageInfo{};
-                vertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-                vertShaderStageInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
-                vertShaderStageInfo.module = m_ShaderManager->GetShaders()->shaders[mesh->GetShaderName()][0];
-                vertShaderStageInfo.pName = "main";
-                shadersStageInfos.emplace_back(vertShaderStageInfo);
-
-                VkPipelineShaderStageCreateInfo fragShaderStageInfo{};
-                fragShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-                fragShaderStageInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
-                fragShaderStageInfo.module = m_ShaderManager->GetShaders()->shaders[mesh->GetShaderName()][1];
-                fragShaderStageInfo.pName = "main";
-                shadersStageInfos.emplace_back(fragShaderStageInfo);
-
-                VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
-                vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-                vertexInputInfo.vertexBindingDescriptionCount = 1;
-                vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(Vertex::GetAttributeDescriptions().size());
-                vertexInputInfo.pVertexBindingDescriptions = &bDesc;
-                vertexInputInfo.pVertexAttributeDescriptions = Vertex::GetAttributeDescriptions().data();
-
-                data.m_GraphicsPipeline = m_Renderer->CreateGraphicsPipeline(
-                    m_RenderPass,
-                    data.m_PipelineLayout,
-                    data.m_PipelineCache,
-                    shadersStageInfos,
-                    vertexInputInfo,
-                    VK_CULL_MODE_BACK_BIT,
-                    false, true, true, true, wireFrame
-                );
+                imageInfos.emplace_back(imageInfo);
+                index++;
             }
+
+            VkDescriptorSetLayoutBinding uboLayoutBinding{};
+            uboLayoutBinding.binding = 0;
+            uboLayoutBinding.descriptorCount = 1;
+            uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+            uboLayoutBinding.pImmutableSamplers = nullptr;
+            uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+
+            VkDescriptorSetLayoutBinding samplerLayoutBinding{};
+            samplerLayoutBinding.binding = 1;
+            samplerLayoutBinding.descriptorCount = index;
+            samplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+            samplerLayoutBinding.pImmutableSamplers = nullptr;
+            samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+            std::vector<VkDescriptorSetLayoutBinding> bindings = { uboLayoutBinding, samplerLayoutBinding };
+
+            VkDescriptorSetLayout desriptorSetLayout = m_Renderer->CreateDescriptorSetLayout(
+                bindings, VK_DESCRIPTOR_SET_LAYOUT_CREATE_UPDATE_AFTER_BIND_POOL_BIT
+            );
+
+            m_DescriptorSetLayouts.emplace_back(desriptorSetLayout);
+
+            for (uint32_t i = 0; i < m_SwapChainImages.size(); i++) {
+                VkDescriptorSet meshDescriptorSets = m_Renderer->CreateDescriptorSets(descriptorPool, { desriptorSetLayout }, 1);
+                m_Renderer->UpdateDescriptorSets(mesh->m_UniformBuffers, meshDescriptorSets, imageInfos);
+
+                mesh->m_DescriptorSets.emplace_back(meshDescriptorSets);
+            }
+
+            mesh->m_PipelineLayout = m_Renderer->CreatePipelineLayout(mesh->m_DescriptorSets, { desriptorSetLayout }, pushConstants);
+
+            std::vector<VkPipelineShaderStageCreateInfo>shadersStageInfos;
+
+            VkPipelineShaderStageCreateInfo vertShaderStageInfo{};
+            vertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+            vertShaderStageInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
+            vertShaderStageInfo.module = m_ShaderManager->GetShaders()->shaders[mesh->GetShaderName()][0];
+            vertShaderStageInfo.pName = "main";
+            shadersStageInfos.emplace_back(vertShaderStageInfo);
+
+            VkPipelineShaderStageCreateInfo fragShaderStageInfo{};
+            fragShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+            fragShaderStageInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
+            fragShaderStageInfo.module = m_ShaderManager->GetShaders()->shaders[mesh->GetShaderName()][1];
+            fragShaderStageInfo.pName = "main";
+            shadersStageInfos.emplace_back(fragShaderStageInfo);
+
+            auto desc = Vertex::GetAttributeDescriptions();
+            VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
+            vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
+            vertexInputInfo.vertexBindingDescriptionCount = 1;
+            vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(Vertex::GetAttributeDescriptions().size());
+            vertexInputInfo.pVertexBindingDescriptions = &bDesc;
+            vertexInputInfo.pVertexAttributeDescriptions = desc.data();
+
+            mesh->m_GraphicsPipeline = m_Renderer->CreateGraphicsPipeline(
+                m_RenderPass,
+                mesh->m_PipelineLayout,
+                mesh->m_PipelineCache,
+                shadersStageInfos,
+                vertexInputInfo,
+                VK_CULL_MODE_BACK_BIT,
+                false, true, true, true, wireFrame
+            );
         }
 
         /// SKYBOX ///
@@ -324,18 +341,12 @@ namespace Rbk
         skyboxMeshData.m_Vertices = skyVertices;
         skyboxMeshData.m_VertexBuffer = m_Renderer->CreateVertexBuffer(m_SkyboxCommandPool, skyVertices);
         skyboxMeshData.m_Ubos.emplace_back(skyUbo);
-
+        skyboxMeshData.m_TextureIndex = 0;
 
         std::pair<VkBuffer, VkDeviceMemory> uniformBuffer = m_Renderer->CreateUniformBuffers(1);
         skyboxMesh->m_UniformBuffers.emplace_back(uniformBuffer);
 
         Texture tex = m_TextureManager->GetSkyboxTexture();
-
-        std::array<VkDescriptorPoolSize, 2> skyPoolSizes{};
-        skyPoolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        skyPoolSizes[0].descriptorCount = 10;
-        skyPoolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        skyPoolSizes[1].descriptorCount = 10;
 
         VkDescriptorPool skyDescriptorPool = m_Renderer->CreateDescriptorPool(poolSizes, 10);
         m_DescriptorPools.emplace_back(skyDescriptorPool);
@@ -366,14 +377,13 @@ namespace Rbk
         skyDescriptorImageInfo.imageView = tex.imageView;
         skyDescriptorImageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
-        VkDescriptorSet skyDescriptorSet = m_Renderer->CreateDescriptorSets(skyDescriptorPool, { skyDesriptorSetLayout }, 1);
-
         for (uint32_t i = 0; i < m_SwapChainImages.size(); i++) {
-            m_Renderer->UpdateDescriptorSets(skyboxMesh->m_UniformBuffers, skyDescriptorSet, skyDescriptorImageInfo);
-            skyboxMeshData.m_DescriptorSets.emplace_back(skyDescriptorSet);
+            VkDescriptorSet skyDescriptorSet = m_Renderer->CreateDescriptorSets(skyDescriptorPool, { skyDesriptorSetLayout }, 1);
+            m_Renderer->UpdateDescriptorSets(skyboxMesh->m_UniformBuffers, skyDescriptorSet, { skyDescriptorImageInfo });
+            skyboxMesh->m_DescriptorSets.emplace_back(skyDescriptorSet);
         }
 
-        skyboxMeshData.m_PipelineLayout = m_Renderer->CreatePipelineLayout(skyboxMeshData.m_DescriptorSets, { skyDesriptorSetLayout }, pushConstants);
+        skyboxMesh->m_PipelineLayout = m_Renderer->CreatePipelineLayout(skyboxMesh->m_DescriptorSets, { skyDesriptorSetLayout }, pushConstants);
 
         std::string shaderName = "skybox";
 
@@ -393,17 +403,18 @@ namespace Rbk
         fragShaderStageInfo.pName = "main";
         shadersStageInfos.emplace_back(fragShaderStageInfo);
 
+        auto skyDesc = Vertex::GetAttributeDescriptions();
         VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
         vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
         vertexInputInfo.vertexBindingDescriptionCount = 1;
         vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(Vertex::GetAttributeDescriptions().size());
         vertexInputInfo.pVertexBindingDescriptions = &bDesc;
-        vertexInputInfo.pVertexAttributeDescriptions = Vertex::GetAttributeDescriptions().data();
+        vertexInputInfo.pVertexAttributeDescriptions = skyDesc.data();
 
-        skyboxMeshData.m_GraphicsPipeline = m_Renderer->CreateGraphicsPipeline(
+        skyboxMesh->m_GraphicsPipeline = m_Renderer->CreateGraphicsPipeline(
             m_RenderPass,
-            skyboxMeshData.m_PipelineLayout,
-            skyboxMeshData.m_PipelineCache,
+            skyboxMesh->m_PipelineLayout,
+            skyboxMesh->m_PipelineCache,
             shadersStageInfos,
             vertexInputInfo,
             VK_CULL_MODE_NONE,
@@ -432,6 +443,7 @@ namespace Rbk
 
         Data crossHairData;
         crossHairData.m_Texture = "crosshair";
+        crossHairData.m_TextureIndex = 0;
         crossHairData.m_VertexBuffer = m_Renderer->CreateVertex2DBuffer(m_CrosshairCommandPool, vertices);
         crossHairData.m_IndicesBuffer = m_Renderer->CreateIndexBuffer(m_CrosshairCommandPool, indices);
         crossHairData.m_Ubos.emplace_back(ubo);
@@ -443,14 +455,25 @@ namespace Rbk
         std::pair<VkBuffer, VkDeviceMemory> crossHairuniformBuffer = m_Renderer->CreateUniformBuffers(1);
         m_Crosshair->m_UniformBuffers.emplace_back(crossHairuniformBuffer);
 
-        std::array<VkDescriptorPoolSize, 2> cpoolSizes{};
-        cpoolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        cpoolSizes[0].descriptorCount = 10;
-        cpoolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        cpoolSizes[1].descriptorCount = 10;
-
-        VkDescriptorPool cdescriptorPool = m_Renderer->CreateDescriptorPool(cpoolSizes, 10);
+        VkDescriptorPool cdescriptorPool = m_Renderer->CreateDescriptorPool(poolSizes, 10);
         m_DescriptorPools.emplace_back(cdescriptorPool);
+
+        Texture ctex = m_TextureManager->GetTextures()["crosshair"];
+        Texture ctex2 = m_TextureManager->GetTextures()["crosshair2"];
+
+        std::vector<VkDescriptorImageInfo>cimageInfos;
+        VkDescriptorImageInfo cimageInfo{};
+        cimageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        cimageInfo.imageView = ctex.imageView;
+        cimageInfo.sampler = ctex.sampler;
+
+        VkDescriptorImageInfo cimageInfo2{};
+        cimageInfo2.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        cimageInfo2.imageView = ctex2.imageView;
+        cimageInfo2.sampler = ctex2.sampler;
+
+        cimageInfos.emplace_back(cimageInfo);
+        cimageInfos.emplace_back(cimageInfo2);
 
         VkDescriptorSetLayoutBinding cuboLayoutBinding{};
         cuboLayoutBinding.binding = 0;
@@ -461,7 +484,7 @@ namespace Rbk
 
         VkDescriptorSetLayoutBinding csamplerLayoutBinding{};
         csamplerLayoutBinding.binding = 1;
-        csamplerLayoutBinding.descriptorCount = 1;
+        csamplerLayoutBinding.descriptorCount = cimageInfos.size();
         csamplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
         csamplerLayoutBinding.pImmutableSamplers = nullptr;
         csamplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
@@ -473,22 +496,21 @@ namespace Rbk
         );
         m_DescriptorSetLayouts.emplace_back(cdesriptorSetLayout);
 
-        Texture ctex = m_TextureManager->GetTextures()["crosshair"];
-
         for (uint32_t i = 0; i < m_SwapChainImages.size(); i++) {
-
             VkDescriptorSet cdescriptorSet = m_Renderer->CreateDescriptorSets(cdescriptorPool, { cdesriptorSetLayout }, 1);
-
-            VkDescriptorImageInfo cimageInfo{};
-            cimageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-            cimageInfo.imageView = ctex.imageView;
-            cimageInfo.sampler = ctex.sampler;
-
-            m_Renderer->UpdateDescriptorSets(m_Crosshair->m_UniformBuffers, cdescriptorSet, cimageInfo);
-            crossHairData.m_DescriptorSets.emplace_back(cdescriptorSet);
+            m_Renderer->UpdateDescriptorSets(m_Crosshair->m_UniformBuffers, cdescriptorSet, cimageInfos);
+            m_Crosshair->m_DescriptorSets.emplace_back(cdescriptorSet);
         }
 
-        crossHairData.m_PipelineLayout = m_Renderer->CreatePipelineLayout(crossHairData.m_DescriptorSets, { cdesriptorSetLayout });
+        std::vector<VkPushConstantRange> cpushConstants = {};
+        VkPushConstantRange cPushconstant;
+        cPushconstant.offset = 0;
+        cPushconstant.size = sizeof(cPC);
+        cPushconstant.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+        cpushConstants.emplace_back(cPushconstant);
+
+        m_Crosshair->m_PipelineLayout = m_Renderer->CreatePipelineLayout(m_Crosshair->m_DescriptorSets, { cdesriptorSetLayout }, cpushConstants);
 
         std::vector<VkPipelineShaderStageCreateInfo>cshadersStageInfos;
 
@@ -507,17 +529,19 @@ namespace Rbk
         cshadersStageInfos.emplace_back(cfragShaderStageInfo);
 
         VkVertexInputBindingDescription bDesc2D = Vertex::GetBindingDescription();
+        auto crossDesc = Vertex2D::GetAttributeDescriptions();
+
         VkPipelineVertexInputStateCreateInfo vertexInputInfo2D{};
         vertexInputInfo2D.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
         vertexInputInfo2D.vertexBindingDescriptionCount = 1;
         vertexInputInfo2D.vertexAttributeDescriptionCount = static_cast<uint32_t>(Vertex2D::GetAttributeDescriptions().size());
         vertexInputInfo2D.pVertexBindingDescriptions = &bDesc2D;
-        vertexInputInfo2D.pVertexAttributeDescriptions = Vertex2D::GetAttributeDescriptions().data();
+        vertexInputInfo2D.pVertexAttributeDescriptions = crossDesc.data();
 
-        crossHairData.m_GraphicsPipeline = m_Renderer->CreateGraphicsPipeline(
+        m_Crosshair->m_GraphicsPipeline = m_Renderer->CreateGraphicsPipeline(
             m_RenderPass,
-            crossHairData.m_PipelineLayout,
-            crossHairData.m_PipelineCache,
+            m_Crosshair->m_PipelineLayout,
+            m_Crosshair->m_PipelineCache,
             cshadersStageInfos,
             vertexInputInfo2D,
             VK_CULL_MODE_FRONT_BIT,
@@ -553,9 +577,6 @@ namespace Rbk
     void VulkanAdapter::Draw()
     {
         ShouldRecreateSwapChain();
-
-        //@todo optim should not be necessary to restart all over again
-        m_ThreadPool->Start();
 
         m_ImageIndex = m_Renderer->AcquireNextImageKHR(m_SwapChain, m_Semaphores);
 
@@ -603,7 +624,7 @@ namespace Rbk
         inheritanceInfo.subpass = 0;
 
         //draw the mesh entities !
-        m_ThreadPool->Queue([=]() {
+        m_ThreadPool->Queue([=, &pushConstants]() {
 
             m_Renderer->BeginCommandBuffer(m_EntitiesCommandBuffers[m_ImageIndex], VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT, inheritanceInfo);
             m_Renderer->SetViewPort(m_EntitiesCommandBuffers[m_ImageIndex]);
@@ -637,9 +658,11 @@ namespace Rbk
                         );
                     }
 
-                    m_Renderer->BindPipeline(m_EntitiesCommandBuffers[m_ImageIndex], data.m_GraphicsPipeline);
-                    vkCmdPushConstants(m_EntitiesCommandBuffers[m_ImageIndex], data.m_PipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(constants), &pushConstants);
-                    m_Renderer->Draw(m_EntitiesCommandBuffers[m_ImageIndex], data, m_ImageIndex);
+                    pushConstants.textureID = data.m_TextureIndex;
+
+                    m_Renderer->BindPipeline(m_EntitiesCommandBuffers[m_ImageIndex], mesh->m_GraphicsPipeline);
+                    vkCmdPushConstants(m_EntitiesCommandBuffers[m_ImageIndex], mesh->m_PipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(constants), &pushConstants);
+                    m_Renderer->Draw(m_EntitiesCommandBuffers[m_ImageIndex], mesh.get(), data, m_ImageIndex);
                 }
             }
             m_Renderer->EndCommandBuffer(m_EntitiesCommandBuffers[m_ImageIndex]);
@@ -652,6 +675,7 @@ namespace Rbk
             m_Renderer->SetScissor(m_SkyboxCommandBuffers[m_ImageIndex]);
 
             std::vector<Rbk::Data> skyboxData = *m_EntityManager->GetSkyboxMesh()->GetData();
+           
             glm::mat4 skybowView = glm::mat4(glm::mat3(lookAt));
             for (uint32_t i = 0; i < m_EntityManager->GetSkyboxMesh()->m_UniformBuffers.size(); i++) {
                 skyboxData[0].m_Ubos[i].view = skybowView;
@@ -661,10 +685,9 @@ namespace Rbk
                     1
                 );
             }
-            m_Renderer->BindPipeline(m_SkyboxCommandBuffers[m_ImageIndex], skyboxData[0].m_GraphicsPipeline);
-            vkCmdPushConstants(m_SkyboxCommandBuffers[m_ImageIndex], skyboxData[0].m_PipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(constants), &pushConstants);
-            m_Renderer->Draw(m_SkyboxCommandBuffers[m_ImageIndex], skyboxData[0], m_ImageIndex, false);
-
+            m_Renderer->BindPipeline(m_SkyboxCommandBuffers[m_ImageIndex], m_EntityManager->GetSkyboxMesh()->m_GraphicsPipeline);
+            vkCmdPushConstants(m_SkyboxCommandBuffers[m_ImageIndex], m_EntityManager->GetSkyboxMesh()->m_PipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(constants), &pushConstants);
+            m_Renderer->Draw(m_SkyboxCommandBuffers[m_ImageIndex], m_EntityManager->GetSkyboxMesh().get(), skyboxData[0], m_ImageIndex, false);
             m_Renderer->EndCommandBuffer(m_SkyboxCommandBuffers[m_ImageIndex]);
         });
 
@@ -675,13 +698,18 @@ namespace Rbk
             m_Renderer->SetScissor(m_CrosshairCommandBuffers[m_ImageIndex]);
 
             std::vector<Rbk::Data> crosshairData = *m_Crosshair->GetData();
+            
+            cPC cConst;
+            cConst.textureID = VulkanAdapter::s_Crosshair;
+
             for (uint32_t i = 0; i < m_Crosshair->m_UniformBuffers.size(); i++) {
                 crosshairData[0].m_Ubos[i].view = lookAt;
                 m_Renderer->UpdateUniformBuffer(m_Crosshair->m_UniformBuffers[i], { crosshairData[0].m_Ubos[i] }, 1);
             }
-            m_Renderer->BindPipeline(m_CrosshairCommandBuffers[m_ImageIndex], crosshairData[0].m_GraphicsPipeline);
-            m_Renderer->Draw(m_CrosshairCommandBuffers[m_ImageIndex], crosshairData[0], m_ImageIndex);
 
+            m_Renderer->BindPipeline(m_CrosshairCommandBuffers[m_ImageIndex], m_Crosshair->m_GraphicsPipeline);
+            vkCmdPushConstants(m_CrosshairCommandBuffers[m_ImageIndex], m_Crosshair->m_PipelineLayout, VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(cPC), &cConst);
+            m_Renderer->Draw(m_CrosshairCommandBuffers[m_ImageIndex], m_Crosshair.get(), crosshairData[0], m_ImageIndex);
             m_Renderer->EndCommandBuffer(m_CrosshairCommandBuffers[m_ImageIndex]);
         });
 
@@ -721,7 +749,7 @@ namespace Rbk
     void VulkanAdapter::Destroy()
     {
         m_Renderer->WaitIdle();
-     
+
         //@todo refactor all the destroy system...
         m_Renderer->DestroySwapchain(m_Renderer->GetDevice(), m_SwapChain, m_SwapChainFramebuffers, m_SwapChainImageViews);
         m_Renderer->DestroySemaphores(m_Semaphores);
@@ -739,10 +767,9 @@ namespace Rbk
 
             m_Renderer->DestroyBuffer(data.m_IndicesBuffer.first);
             m_Renderer->DestroyDeviceMemory(data.m_IndicesBuffer.second);
-
-            m_Renderer->DestroyPipeline(data.m_GraphicsPipeline);
-            vkDestroyPipelineLayout(m_Renderer->GetDevice(), data.m_PipelineLayout, nullptr);
         }
+        m_Renderer->DestroyPipeline(skyboxMesh->m_GraphicsPipeline);
+        vkDestroyPipelineLayout(m_Renderer->GetDevice(), skyboxMesh->m_PipelineLayout, nullptr);
 
         for (auto buffer : m_Crosshair->m_UniformBuffers) {
             m_Renderer->DestroyBuffer(buffer.first);
@@ -755,10 +782,9 @@ namespace Rbk
 
             m_Renderer->DestroyBuffer(data.m_IndicesBuffer.first);
             m_Renderer->DestroyDeviceMemory(data.m_IndicesBuffer.second);
-
-            m_Renderer->DestroyPipeline(data.m_GraphicsPipeline);
-            vkDestroyPipelineLayout(m_Renderer->GetDevice(), data.m_PipelineLayout, nullptr);
         }
+        m_Renderer->DestroyPipeline(m_Crosshair->m_GraphicsPipeline);
+        vkDestroyPipelineLayout(m_Renderer->GetDevice(), m_Crosshair->m_PipelineLayout, nullptr);
 
 
         std::vector<std::shared_ptr<Entity>> entities = *m_EntityManager->GetEntities();
@@ -779,10 +805,9 @@ namespace Rbk
 
                 m_Renderer->DestroyBuffer(data.m_IndicesBuffer.first);
                 m_Renderer->DestroyDeviceMemory(data.m_IndicesBuffer.second);
-
-                m_Renderer->DestroyPipeline(data.m_GraphicsPipeline);
-                vkDestroyPipelineLayout(m_Renderer->GetDevice(), data.m_PipelineLayout, nullptr);
             }
+            m_Renderer->DestroyPipeline(mesh->m_GraphicsPipeline);
+            vkDestroyPipelineLayout(m_Renderer->GetDevice(), mesh->m_PipelineLayout, nullptr);
 
         }
 

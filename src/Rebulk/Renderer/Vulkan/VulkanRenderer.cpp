@@ -375,17 +375,18 @@ namespace Rbk {
         deviceFeatures.samplerAnisotropy = VK_TRUE;
         deviceFeatures.sampleRateShading = VK_TRUE;
         deviceFeatures.imageCubeArray = VK_TRUE;
+        deviceFeatures.geometryShader = VK_TRUE;
 
-   /*     VkPhysicalDeviceDescriptorIndexingFeatures descriptorIndexing{};
+        VkPhysicalDeviceDescriptorIndexingFeatures descriptorIndexing{};
         descriptorIndexing.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES;
         descriptorIndexing.shaderSampledImageArrayNonUniformIndexing = VK_TRUE;
         descriptorIndexing.runtimeDescriptorArray = VK_TRUE;
         descriptorIndexing.descriptorBindingVariableDescriptorCount = VK_TRUE;
-        descriptorIndexing.descriptorBindingPartiallyBound = VK_TRUE;*/
+        descriptorIndexing.descriptorBindingPartiallyBound = VK_TRUE;
 
-        VkPhysicalDeviceDynamicRenderingFeaturesKHR dynamicRenderingFeature{};
-        dynamicRenderingFeature.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DYNAMIC_RENDERING_FEATURES_KHR;
-        dynamicRenderingFeature.dynamicRendering = VK_TRUE;
+        //VkPhysicalDeviceDynamicRenderingFeaturesKHR dynamicRenderingFeature{};
+        //dynamicRenderingFeature.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DYNAMIC_RENDERING_FEATURES_KHR;
+        //dynamicRenderingFeature.dynamicRendering = VK_TRUE;
 
         VkDeviceCreateInfo createInfo{};
         createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
@@ -394,7 +395,7 @@ namespace Rbk {
         createInfo.pEnabledFeatures = &deviceFeatures;
         createInfo.enabledExtensionCount = static_cast<uint32_t>(m_DeviceExtensions.size());
         createInfo.ppEnabledExtensionNames = m_DeviceExtensions.data();
-        createInfo.pNext = &dynamicRenderingFeature;
+        createInfo.pNext = &descriptorIndexing;
 
         if (vkCreateDevice(m_PhysicalDevice, &createInfo, nullptr, &m_Device) != VK_SUCCESS) {
             Rbk::Log::GetLogger()->critical("failed to create logical device!");
@@ -760,7 +761,7 @@ namespace Rbk {
 
         VkGraphicsPipelineCreateInfo pipelineInfo{};
         pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
-        pipelineInfo.stageCount = shadersCreateInfos.size();
+        pipelineInfo.stageCount = static_cast<uint32_t>(shadersCreateInfos.size());
         pipelineInfo.pStages = shadersCreateInfos.data();
         pipelineInfo.pVertexInputState = &vertexInputInfo;
         pipelineInfo.pInputAssemblyState = &inputAssembly;
@@ -1046,9 +1047,9 @@ namespace Rbk {
         fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
 
         for (int i = 0; i < m_MAX_FRAMES_IN_FLIGHT; i++) {
-            if (vkCreateSemaphore(m_Device, &semaphoreInfo, nullptr, &imageAvailableSemaphores[i]) != VK_SUCCESS ||
-                vkCreateSemaphore(m_Device, &semaphoreInfo, nullptr, &renderFinishedSemaphores[i]) != VK_SUCCESS ||
-                vkCreateFence(m_Device, &fenceInfo, nullptr, &m_InFlightFences[i]) != VK_SUCCESS) {
+            if (vkCreateSemaphore(m_Device, &semaphoreInfo, nullptr, &imageAvailableSemaphores[static_cast<size_t>(i)]) != VK_SUCCESS ||
+                vkCreateSemaphore(m_Device, &semaphoreInfo, nullptr, &renderFinishedSemaphores[static_cast<size_t>(i)]) != VK_SUCCESS ||
+                vkCreateFence(m_Device, &fenceInfo, nullptr, &m_InFlightFences[static_cast<size_t>(i)]) != VK_SUCCESS) {
                 Rbk::Log::GetLogger()->critical("failed to create semaphores!");
             }
         }
@@ -1059,7 +1060,7 @@ namespace Rbk {
         return semaphores;
     }
 
-    VkDescriptorPool VulkanRenderer::CreateDescriptorPool(std::array<VkDescriptorPoolSize, 2> poolSizes, uint32_t maxSets)
+    VkDescriptorPool VulkanRenderer::CreateDescriptorPool(std::vector<VkDescriptorPoolSize> poolSizes, uint32_t maxSets)
     {
         VkDescriptorPool descriptorPool;
 
@@ -1097,10 +1098,10 @@ namespace Rbk {
         return descriptorSet;
     }
 
-    void VulkanRenderer::UpdateDescriptorSets(std::vector<std::pair<VkBuffer, VkDeviceMemory>>uniformBuffers, VkDescriptorSet descriptorSet, VkDescriptorImageInfo imageInfo)
+    void VulkanRenderer::UpdateDescriptorSets(std::vector<std::pair<VkBuffer, VkDeviceMemory>>uniformBuffers, VkDescriptorSet descriptorSet, std::vector<VkDescriptorImageInfo> imageInfo)
     {
         std::array<VkWriteDescriptorSet, 2> descriptorWrites{};
-        std::vector<VkDescriptorImageInfo> imageInfos;
+        //std::vector<VkDescriptorImageInfo> imageInfos;
         std::vector<VkDescriptorBufferInfo> bufferInfos;
 
         std::for_each(std::begin(uniformBuffers), std::end(uniformBuffers),
@@ -1113,7 +1114,7 @@ namespace Rbk {
                 bufferInfos.emplace_back(bufferInfo);
             });
 
-        imageInfos.emplace_back(imageInfo);
+        //imageInfos.emplace_back(imageInfo);
 
         descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
         descriptorWrites[0].dstSet = descriptorSet;
@@ -1128,8 +1129,8 @@ namespace Rbk {
         descriptorWrites[1].dstBinding = 1;
         descriptorWrites[1].dstArrayElement = 0;
         descriptorWrites[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        descriptorWrites[1].descriptorCount = 1;
-        descriptorWrites[1].pImageInfo = imageInfos.data();
+        descriptorWrites[1].descriptorCount = imageInfo.size();
+        descriptorWrites[1].pImageInfo = imageInfo.data();
 
         vkUpdateDescriptorSets(m_Device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
     }
@@ -1277,7 +1278,6 @@ namespace Rbk {
 
     uint32_t VulkanRenderer::QueuePresent(uint32_t imageIndex, VkSwapchainKHR swapChain, std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>>& semaphores)
     {
-        std::vector<VkSemaphore>& imageAvailableSemaphores = semaphores.first;
         std::vector<VkSemaphore>& renderFinishedSemaphores = semaphores.second;
 
         VkPresentInfoKHR presentInfo{};
@@ -1300,7 +1300,7 @@ namespace Rbk {
             throw std::runtime_error("failed to present swap chain image!");
         }
 
-        m_CurrentFrame = (m_CurrentFrame + 1) % m_MAX_FRAMES_IN_FLIGHT;
+        m_CurrentFrame = (m_CurrentFrame + 1) % static_cast<uint32_t>(m_MAX_FRAMES_IN_FLIGHT);
 
         return m_CurrentFrame;
     }
@@ -1313,7 +1313,6 @@ namespace Rbk {
     uint32_t VulkanRenderer::AcquireNextImageKHR(VkSwapchainKHR swapChain, std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>>& semaphores)
     {
         std::vector<VkSemaphore>& imageAvailableSemaphores = semaphores.first;
-        std::vector<VkSemaphore>& renderFinishedSemaphores = semaphores.second;
 
         vkWaitForFences(m_Device, 1, &m_InFlightFences[m_CurrentFrame], VK_TRUE, UINT64_MAX);
 
@@ -1333,7 +1332,7 @@ namespace Rbk {
         vkResetCommandPool(m_Device, commandPool, 0);
     }
 
-    void VulkanRenderer::Draw(VkCommandBuffer commandBuffer, Data data, uint32_t frameIndex, bool drawIndexed)
+    void VulkanRenderer::Draw(VkCommandBuffer commandBuffer, Mesh* mesh, Data data, uint32_t frameIndex, bool drawIndexed)
     {
         VkBuffer vertexBuffers[] = { data.m_VertexBuffer.first };
         VkDeviceSize offsets[] = { 0 };
@@ -1343,10 +1342,10 @@ namespace Rbk {
         vkCmdBindDescriptorSets(
             commandBuffer,
             VK_PIPELINE_BIND_POINT_GRAPHICS,
-            data.m_PipelineLayout,
+            mesh->m_PipelineLayout,
             0,
             1,
-            &data.m_DescriptorSets[frameIndex],
+            &mesh->m_DescriptorSets[frameIndex],
             0,
             nullptr
         );
@@ -1546,6 +1545,7 @@ namespace Rbk {
         //those constants don't work on android
         result.subresourceRange.levelCount = mipLevels;
         result.subresourceRange.layerCount = VK_REMAINING_ARRAY_LAYERS;
+        result.pNext = nullptr;
 
         return result;
     }
@@ -1735,8 +1735,8 @@ namespace Rbk {
         barrier.subresourceRange.layerCount = VK_REMAINING_ARRAY_LAYERS;
         barrier.subresourceRange.levelCount = 1;
 
-        int32_t mipWidth = texWidth;
-        int32_t mipHeight = texHeight;
+        int32_t mipWidth = static_cast<int32_t>(texWidth);
+        int32_t mipHeight = static_cast<int32_t>(texHeight);
 
         for (uint32_t i = 1; i < mipLevels; i++) {
 
@@ -2009,7 +2009,7 @@ namespace Rbk {
 
     void VulkanRenderer::DestroySemaphores(std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>> semaphores)
     {
-        for (size_t i = 0; i < m_MAX_FRAMES_IN_FLIGHT; i++) {
+        for (int i = 0; i < m_MAX_FRAMES_IN_FLIGHT; i++) {
             vkDestroySemaphore(m_Device, semaphores.first[i], nullptr);
             vkDestroySemaphore(m_Device, semaphores.second[i], nullptr);
             vkDestroyFence(m_Device, m_InFlightFences[i], nullptr);

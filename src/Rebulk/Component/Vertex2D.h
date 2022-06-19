@@ -1,4 +1,7 @@
 #pragma once
+#include <volk.h>
+#include <array>
+#include <glm/glm.hpp>
 
 namespace Rbk
 {
@@ -34,7 +37,7 @@ namespace Rbk
             attributeDescriptions[2].binding = 0;
             attributeDescriptions[2].location = 2;
             attributeDescriptions[2].format = VK_FORMAT_R32G32_SFLOAT;
-            attributeDescriptions[2].offset = offsetof(Vertex, texCoord);
+            attributeDescriptions[2].offset = offsetof(Vertex2D, texCoord);
 
             return attributeDescriptions;
         }

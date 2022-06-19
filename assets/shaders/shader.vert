@@ -25,15 +25,17 @@ layout(location = 4) out float fragAmbiantLight;
 layout(location = 5) out float fragFogDensity;
 layout(location = 6) out vec3 fragFogColor;
 layout(location = 7) out vec3 fragLightPos;
+layout(location = 8) out int fragTextureID;
 
 layout(push_constant) uniform constants
 {
+    int textureID;
     vec4 cameraPos;
     float ambiantLight;
     float fogDensity;
     vec3 fogColor;
     vec4 lightPos;
-} PushConstants;
+} PC;
 
 void main() {
     
@@ -41,9 +43,10 @@ void main() {
     fragTexCoord = texCoord;
     fragNormal =  mat3(transpose(inverse(ubos[gl_InstanceIndex].model))) * normal;
     fragModelPos = vec3(ubos[gl_InstanceIndex].model * vec4(pos, 1.0));
-    fragCameraPos = PushConstants.cameraPos.xyz;
-    fragAmbiantLight = PushConstants.ambiantLight;
-    fragFogDensity = PushConstants.fogDensity;
-    fragFogColor = PushConstants.fogColor;
-    fragLightPos = PushConstants.lightPos.xyz;
+    fragCameraPos = PC.cameraPos.xyz;
+    fragAmbiantLight = PC.ambiantLight;
+    fragFogDensity = PC.fogDensity;
+    fragFogColor = PC.fogColor;
+    fragLightPos = PC.lightPos.xyz;
+    fragTextureID = PC.textureID;
 }

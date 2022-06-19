@@ -5,7 +5,7 @@ namespace Rbk
 {
     class Mesh;
 
-    int Application::s_UnlockedFPS = 2;
+    int Application::s_UnlockedFPS = 0;
 
     Application* Application::s_Instance = nullptr;
 
@@ -69,6 +69,7 @@ namespace Rbk
             m_TextureManager->AddTexture("tree_tex", "assets/mesh/tree/tree.jpg");
             m_TextureManager->AddTexture("tree_top_tex", "assets/mesh/tree/tree.png");
             m_TextureManager->AddTexture("crosshair", "assets/texture/crosshair/simple_crosshair.png");
+            m_TextureManager->AddTexture("crosshair2", "assets/texture/crosshair/crosshair2.png");
             m_TextureManager->AddTexture("moon", "assets/mesh/moon/diffuse.jpg");
             m_TextureManager->AddTexture("trunk_tree_cartoon", "assets/mesh/tree/cartoon/Trunk_4_Cartoon.jpg");
             m_TextureManager->AddTexture("grass", "assets/mesh/grass/grass.png");
