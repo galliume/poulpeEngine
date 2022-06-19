@@ -44,3 +44,7 @@ Makefile
 *.vcxproj.user
 *.sln
 .vscode
+
+GPUCache/
+VTune Profiler Results/
+debug.log

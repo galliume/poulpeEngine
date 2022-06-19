@@ -565,7 +565,7 @@ namespace Rbk
             glm::radians(60.0f), 
             static_cast<float>(m_Renderer->GetSwapChainExtent().width) / static_cast<float>(m_Renderer->GetSwapChainExtent().height),
             0.1f, 
-            50.f
+            10.f
         );
     }
 
