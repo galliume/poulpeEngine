@@ -8,7 +8,6 @@ namespace Rbk
         public:
             void Start();
             void Queue(const std::function<void()>& job);
-            void Join();
             void Stop();
             bool Busy();
 
@@ -20,5 +19,6 @@ namespace Rbk
             std::condition_variable m_MutexCondition;
             std::vector<std::thread> m_Threads;
             std::queue<std::function<void()>> m_Jobs;
+            int m_numThreads;
     };
 }

@@ -134,5 +134,5 @@ project "Rebulkan"
 
     filter "configurations:Release"
         runtime "Release"
-        symbols "Off"
-        optimize "Off"
+        symbols "On"
+        optimize "On"

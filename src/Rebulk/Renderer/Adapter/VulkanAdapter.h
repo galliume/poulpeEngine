@@ -55,6 +55,7 @@ namespace Rbk
         static float s_AmbiantLight;
         static float s_FogDensity;
         static float s_FogColor[3];
+        static int s_Crosshair;
 
     private:
         //@todo temp

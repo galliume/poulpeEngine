@@ -20,10 +20,7 @@ namespace Rbk
         std::vector<UniformBufferObject> m_Ubos;
         std::pair<VkBuffer, VkDeviceMemory> m_VertexBuffer = { nullptr, nullptr };
         std::pair<VkBuffer, VkDeviceMemory> m_IndicesBuffer = { nullptr, nullptr };
-        std::vector<VkDescriptorSet> m_DescriptorSets;
-        VkPipelineLayout m_PipelineLayout;
-        VkPipeline m_GraphicsPipeline;
-        VkPipelineCache m_PipelineCache = nullptr;
+        uint32_t m_TextureIndex = 0;
     };
 
     class Mesh : public Entity, public Drawable
@@ -50,6 +47,10 @@ namespace Rbk
     public:
         std::vector<std::pair<VkBuffer, VkDeviceMemory>> m_UniformBuffers;
         glm::vec4 m_CameraPos;
+        std::vector<VkDescriptorSet> m_DescriptorSets;
+        VkPipelineLayout m_PipelineLayout;
+        VkPipeline m_GraphicsPipeline;
+        VkPipelineCache m_PipelineCache = nullptr;
     
     private:
         std::vector<Data> m_Data;

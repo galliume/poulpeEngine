@@ -106,7 +106,9 @@ namespace Rbk
         ImGui::RadioButton("120 fps", &Rbk::Application::s_UnlockedFPS, 1); ImGui::SameLine();
         ImGui::RadioButton("unlocked", &Rbk::Application::s_UnlockedFPS, 2);
 
-        //ImGui::Checkbox("Unlock FPS", &Rbk::Application::s_UnlockedFPS);
+        ImGui::RadioButton("Crosshair 1", &Rbk::VulkanAdapter::s_Crosshair, 0); ImGui::SameLine();
+        ImGui::RadioButton("Crosshair 2", &Rbk::VulkanAdapter::s_Crosshair, 1);
+
         ImGui::Separator();
         ImGui::Checkbox("Show ImGui demo", &m_ShowDemo);
         
