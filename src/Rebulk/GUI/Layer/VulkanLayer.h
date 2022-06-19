@@ -19,7 +19,7 @@ namespace Rbk
         void AddRenderAdapter(std::shared_ptr<VulkanAdapter> renderAdapter);
         void AddWindow(std::shared_ptr<Window> window) { m_Window = window; };
         void AddTextureManager(std::shared_ptr<TextureManager> textureManager) { m_TextureManager = textureManager; };
-        void AddMeshManager(std::shared_ptr<MeshManager> meshManager) { m_MeshManager = meshManager; };
+        void AddEntityManager(std::shared_ptr<EntityManager> entityManager) { m_EntityManager = entityManager; };
         void AddShaderManager(std::shared_ptr<ShaderManager> shaderManager) { m_ShaderManager = shaderManager; };
 
     private:
@@ -29,7 +29,7 @@ namespace Rbk
         std::shared_ptr<VulkanAdapter> m_Adapter;
         std::shared_ptr<Window> m_Window;
         std::shared_ptr<TextureManager> m_TextureManager;
-        std::shared_ptr<MeshManager> m_MeshManager;
+        std::shared_ptr<EntityManager> m_EntityManager;
         std::shared_ptr<ShaderManager> m_ShaderManager;
     };
 }

@@ -1,7 +1,8 @@
 #pragma once
 #include "IRendererAdapter.h"
 #include "Rebulk/Renderer/Vulkan/VulkanRenderer.h"
-#include "Rebulk/Renderer/Mesh.h"
+#include "Rebulk/Component/Mesh.h"
+#include "Rebulk/Component/Mesh2D.h"
 #include "Rebulk/GUI/Window.h"
 
 #include "imgui.h"
@@ -29,10 +30,10 @@ namespace Rbk
         virtual void Init() override;
         virtual void AddCamera(std::shared_ptr<Camera> camera) override;
         virtual void AddTextureManager(std::shared_ptr<TextureManager> textureManager) override;
-        virtual void AddMeshManager(std::shared_ptr<MeshManager> meshManager) override;
+        virtual void AddEntityManager(std::shared_ptr<EntityManager> entityManager) override;
         virtual void AddShaderManager(std::shared_ptr<ShaderManager> shaderManager) override;
 
-        virtual void PrepareWorld() override;
+        virtual void Prepare() override;
         virtual void Draw() override;
         virtual void Destroy() override;
 
@@ -54,9 +55,9 @@ namespace Rbk
         static float s_AmbiantLight;
         static float s_FogDensity;
         static float s_FogColor[3];
+        static int s_Crosshair;
 
     private:
-        void UpdateWorldPositions();
         //@todo temp
         void SetPerspective();
 
@@ -77,7 +78,7 @@ namespace Rbk
         std::shared_ptr<Camera> m_Camera = nullptr;
         std::shared_ptr<Window> m_Window = nullptr;
         std::shared_ptr<TextureManager> m_TextureManager = nullptr;
-        std::shared_ptr<MeshManager> m_MeshManager = nullptr;
+        std::shared_ptr<EntityManager> m_EntityManager = nullptr;
         std::shared_ptr<ShaderManager> m_ShaderManager = nullptr;
         //@todo move to meshManager
         std::shared_ptr<Mesh> m_Crosshair = nullptr;
@@ -89,5 +90,13 @@ namespace Rbk
         std::vector<glm::vec3>m_LightsPos;
         std::vector<VkDescriptorPool>m_DescriptorPools;
         std::vector<VkDescriptorSetLayout>m_DescriptorSetLayouts;
+
+        VkCommandPool m_EntitiesCommandPool = nullptr;
+        std::vector<VkCommandBuffer> m_EntitiesCommandBuffers = {};
+        VkCommandPool m_SkyboxCommandPool = nullptr;
+        std::vector<VkCommandBuffer> m_SkyboxCommandBuffers = {};
+        VkCommandPool m_CrosshairCommandPool = nullptr;
+        std::vector<VkCommandBuffer> m_CrosshairCommandBuffers = {};
+        std::shared_ptr<ThreadPool> m_ThreadPool;
     };
 }

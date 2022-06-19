@@ -10,7 +10,7 @@ layout(location = 3) in float fragAmbiantLight;
 layout(location = 4) in float fragFogDensity; 
 layout(location = 5) in vec3 fragFogColor; 
 
-layout(binding = 1) uniform samplerCube texSampler;
+layout(binding = 1) uniform samplerCube texSampler[];
 
 //todo move to push constants
 vec3 lightColor = vec3(1.0f);
@@ -31,7 +31,7 @@ float getFogFactor(float d)
 
 void main() 
 { 
-    outputColor = texture(texSampler, fragTexCoord);
+    outputColor = texture(texSampler[0], fragTexCoord);
 
     vec3 ambient = fragAmbiantLight * lightColor;
     outputColor = vec4(ambient, 1.0f) * outputColor;
