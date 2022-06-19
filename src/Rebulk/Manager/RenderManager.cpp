@@ -9,13 +9,13 @@ namespace Rbk
         std::shared_ptr<Window> window, 
         std::shared_ptr<IRendererAdapter> renderer, 
         std::shared_ptr<TextureManager> textureManager, 
-        std::shared_ptr<MeshManager> meshManager, 
+        std::shared_ptr<EntityManager> entityManager, 
         std::shared_ptr<ShaderManager> shaderManager
     ) :
         m_Window(window),
         m_Renderer(renderer),
         m_TextureManager(textureManager),
-        m_MeshManager(meshManager),
+        m_EntityManager(entityManager),
         m_ShaderManager(shaderManager)
     {
         if (s_Instance == nullptr) {
@@ -32,7 +32,7 @@ namespace Rbk
     {
         m_Renderer->Init();
         m_Renderer->AddTextureManager(m_TextureManager);
-        m_Renderer->AddMeshManager(m_MeshManager);
+        m_Renderer->AddEntityManager(m_EntityManager);
         m_Renderer->AddShaderManager(m_ShaderManager);
     }
 

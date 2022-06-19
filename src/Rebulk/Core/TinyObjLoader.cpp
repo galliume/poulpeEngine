@@ -9,9 +9,9 @@
 
 namespace Rbk
 {
-    std::vector<std::shared_ptr<Mesh>> TinyObjLoader::LoadMesh(std::string path, bool shouldInverseTextureY)
+    std::vector<TinyObjData> TinyObjLoader::LoadData(std::string path, bool shouldInverseTextureY)
     {
-        std::vector<std::shared_ptr<Mesh>> meshes = {};
+        std::vector<TinyObjData> dataList = {};
 
         tinyobj::ObjReader reader;
         tinyobj::ObjReaderConfig reader_config;
@@ -41,7 +41,7 @@ namespace Rbk
 
         for (uint32_t s = 0; s < shapes.size(); s++) {
 
-            std::shared_ptr<Rbk::Mesh>mesh = std::make_shared<Rbk::Mesh>();
+            TinyObjData data;
 
             // Loop over faces(polygon)
             size_t index_offset = 0;
@@ -85,22 +85,22 @@ namespace Rbk
                     // vertex.color = { red, green, blue };
 
                     if (uniqueVertices.count(vertex) == 0) {
-                        uniqueVertices[vertex] = static_cast<uint32_t>(mesh.get()->vertices.size());
-                        mesh.get()->vertices.push_back(vertex);
+                        uniqueVertices[vertex] = static_cast<uint32_t>(data.vertices.size());
+                        data.vertices.push_back(vertex);
                     }
 
-                    mesh.get()->indices.push_back(uniqueVertices[vertex]);
+                    data.indices.push_back(uniqueVertices[vertex]);
                 }
 
                 index_offset += fv;
 
                 // per-face material
-                mesh.get()->materialId = (-1 != shapes[s].mesh.material_ids[f]) ? shapes[s].mesh.material_ids[f] : 0;
+                data.materialId = (-1 != shapes[s].mesh.material_ids[f]) ? shapes[s].mesh.material_ids[f] : 0;
                 shapes[s].mesh.material_ids[f];
             }
-            meshes.emplace_back(mesh);
+            dataList.emplace_back(data);
         }
 
-        return meshes;
+        return dataList;
     }
 }

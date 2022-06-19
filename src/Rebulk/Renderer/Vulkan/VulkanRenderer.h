@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Rebulk/Renderer/Mesh.h"
+#include "Rebulk/Component/Mesh.h"
 #include "Rebulk/Renderer/IRenderer.h"
 #include "Rebulk/GUI/Window.h"
 
@@ -46,11 +46,10 @@ namespace Rbk {
         **/
         std::shared_ptr<VkRenderPass> CreateRenderPass(VkSampleCountFlagBits msaaSamples);
         VkShaderModule CreateShaderModule(const std::vector<char>& code);
-
-        VkDescriptorPool CreateDescriptorPool(std::array<VkDescriptorPoolSize, 2> poolSizes, uint32_t maxSets = 100);
+        VkDescriptorPool CreateDescriptorPool(std::vector<VkDescriptorPoolSize> poolSizes, uint32_t maxSets = 100);
         VkDescriptorSetLayout CreateDescriptorSetLayout(std::vector<VkDescriptorSetLayoutBinding> pBindings, VkDescriptorSetLayoutCreateFlagBits flags);
         VkDescriptorSet CreateDescriptorSets(VkDescriptorPool descriptorPool, std::vector<VkDescriptorSetLayout> descriptorSetLayouts, uint32_t count = 100);
-        void UpdateDescriptorSets(std::vector<std::pair<VkBuffer, VkDeviceMemory>>uniformBuffers, VkDescriptorSet descriptorSet, VkDescriptorImageInfo imageInfo);
+        void UpdateDescriptorSets(std::vector<std::pair<VkBuffer, VkDeviceMemory>>uniformBuffers, VkDescriptorSet descriptorSet, std::vector<VkDescriptorImageInfo> imageInfo);
         
         VkPipelineLayout CreatePipelineLayout(std::vector<VkDescriptorSet> descriptorSets, std::vector<VkDescriptorSetLayout> descriptorSetLayouts, std::vector<VkPushConstantRange> pushConstants = {});
         VkPipeline CreateGraphicsPipeline(
@@ -69,7 +68,7 @@ namespace Rbk {
         VkSwapchainKHR CreateSwapChain(std::vector<VkImage>& swapChainImages, VkSwapchainKHR oldSwapChain = VK_NULL_HANDLE);
         std::vector<VkFramebuffer> CreateFramebuffers(std::shared_ptr<VkRenderPass> renderPass, std::vector<VkImageView> swapChainImageViews, std::vector<VkImageView> depthImageView, std::vector<VkImageView> colorImageView);
         VkCommandPool CreateCommandPool();
-        std::vector<VkCommandBuffer> AllocateCommandBuffers(VkCommandPool commandPool, uint32_t size = 1);
+        std::vector<VkCommandBuffer> AllocateCommandBuffers(VkCommandPool commandPool, uint32_t size = 1, bool isSecondary = false);
         void CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory);
         std::pair<VkBuffer, VkDeviceMemory> CreateVertexBuffer(VkCommandPool commandPool, std::vector<Rbk::Vertex> vertices);
         std::pair<VkBuffer, VkDeviceMemory> CreateVertex2DBuffer(VkCommandPool commandPool, std::vector<Rbk::Vertex2D> vertices);
@@ -100,7 +99,9 @@ namespace Rbk {
         * Vulkan drawing functions, in main loop
         **/
         void ResetCommandPool(VkCommandPool commandPool);
-        void BeginCommandBuffer(VkCommandBuffer commandBuffer, VkCommandBufferUsageFlagBits flags = VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT);
+        void BeginCommandBuffer(VkCommandBuffer commandBuffer,
+            VkCommandBufferUsageFlagBits flags = VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT,
+            VkCommandBufferInheritanceInfo inheritanceInfo = {});
         void EndCommandBuffer(VkCommandBuffer commandBuffer);
         void BeginRenderPass(std::shared_ptr<VkRenderPass> renderPass, VkCommandBuffer commandBuffer, VkFramebuffer swapChainFramebuffer);
         void EndRenderPass(VkCommandBuffer commandBuffer);
@@ -109,7 +110,7 @@ namespace Rbk {
         void SetViewPort(VkCommandBuffer commandBuffer);
         void SetScissor(VkCommandBuffer commandBuffer);
         void BindPipeline(VkCommandBuffer commandBuffer, VkPipeline pipeline);
-        void Draw(VkCommandBuffer commandBuffer, Mesh* mesh, uint32_t frameIndex, bool drawIndexed = true);
+        void Draw(VkCommandBuffer commandBuffer, Mesh* mesh, Data data, uint32_t frameIndex, bool drawIndexed = true);
         uint32_t AcquireNextImageKHR(VkSwapchainKHR swapChain, std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>>& semaphores);
         void QueueSubmit(VkCommandBuffer commandBuffer);
         void QueueSubmit(uint32_t imageIndex, VkCommandBuffer commandBuffer, std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>>& semaphores);
@@ -150,7 +151,7 @@ namespace Rbk {
         inline VkExtent2D GetSwapChainExtent() const { return m_SwapChainExtent; }
         inline VkSurfaceKHR GetSurface() const { return m_Surface; }
         inline void ResetCurrentFrameIndex() { m_CurrentFrame = 0; }
-        inline uint32_t GetCurrentFrame() const { return m_CurrentFrame; }
+        inline int32_t GetCurrentFrame() const { return m_CurrentFrame; }
         inline VkFormat GetSwapChainImageFormat() const { return m_SwapChainImageFormat; }
         inline VkSampleCountFlagBits GetMsaaSamples() const { return m_MsaaSamples; }
         void InitDetails();
@@ -197,7 +198,7 @@ namespace Rbk {
 
     private:
         const int m_MAX_FRAMES_IN_FLIGHT = 2;
-        size_t m_CurrentFrame = 0;
+        int32_t m_CurrentFrame = 0;
         uint32_t m_ExtensionCount;
         std::string m_apiVersion;
 
@@ -208,9 +209,11 @@ namespace Rbk {
             VK_EXT_DEPTH_CLIP_ENABLE_EXTENSION_NAME, 
             VK_KHR_SWAPCHAIN_EXTENSION_NAME, 
             VK_KHR_PUSH_DESCRIPTOR_EXTENSION_NAME,
-            VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME,
-            VK_NV_FRAMEBUFFER_MIXED_SAMPLES_EXTENSION_NAME
+            VK_KHR_MAINTENANCE_3_EXTENSION_NAME,
+            VK_EXT_DESCRIPTOR_INDEXING_EXTENSION_NAME
         };
+        //VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME,
+        //VK_NV_FRAMEBUFFER_MIXED_SAMPLES_EXTENSION_NAME,
 
         bool m_InstanceCreated = false;
         bool m_EnableValidationLayers = false;
