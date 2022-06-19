@@ -9,6 +9,8 @@
 ![actual_state2](screenshots/state_2.jpg?raw=true "actual status bis")
 ![actual_state3](screenshots/fog_2.gif?raw=true "actual status ter")
 
+[Status in video](https://www.youtube.com/watch?v=C7p9z6LhAig&list=PL4-Os8BWDCPmZt5HvJrSo6QDHkD9J4fJF)
+
 ### To execute 
 
 First compile shaders

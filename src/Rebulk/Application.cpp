@@ -79,9 +79,11 @@ namespace Rbk
             m_TextureManager->AddTexture("rocks", "assets/mesh/house/textures/rocks/rock_bc.jpg");
             m_TextureManager->AddTexture("dog_base_color", "assets/mesh/doghouse/doghouse0908_PBR_BaseColor.png");
             m_TextureManager->AddTexture("dog", "assets/mesh/dog/Texture_albedo.jpg");
+            m_TextureManager->AddTexture("fence", "assets/mesh/fence/cit_1001_Diffuse.png");
         });
 
         m_ThreadPool->Queue([this]() {
+
             std::shared_ptr<Mesh> entity = std::make_shared<Mesh>();
 
             entity->Init(
@@ -93,9 +95,41 @@ namespace Rbk
                 glm::vec3(0.12f, 0.12f, 0.12f));
 
             m_EntityManager->AddEntity(entity);
-        });
 
-        m_ThreadPool->Queue([this]() {
+
+            float fencePos = -2.4;
+            for (int x = 0; x < 6; x++) {
+                std::shared_ptr<Mesh> entity = std::make_shared<Mesh>();
+                entity->Init(
+                    "fence",
+                    "assets/mesh/fence/fence.obj",
+                    { "fence" },
+                    "main",
+                    glm::vec3(4.0f, 0.22f, fencePos),
+                    glm::vec3(0.005f, 0.005f, 0.005f),
+                    glm::vec3(0.0f, 1.0f, 0.0f),
+                    -90.0f);
+
+                m_EntityManager->AddEntity(entity);
+                fencePos += 0.85f;
+            }
+
+            fencePos = 3.55f;
+            for (int x = 0; x < 6; x++) {
+                std::shared_ptr<Mesh> entity = std::make_shared<Mesh>();
+                entity->Init(
+                    "fence",
+                    "assets/mesh/fence/fence.obj",
+                    { "fence" },
+                    "main",
+                    glm::vec3(fencePos, 0.22f, 2.3f),
+                    glm::vec3(0.005f, 0.005f, 0.005f),
+                    glm::vec3(0.0f, 1.0f, 0.0f),
+                    -180.0f);
+
+                m_EntityManager->AddEntity(entity);
+                fencePos -= 0.85f;
+            }
 
             for (int x = -7; x < 7; x++) {
                 for (int y = -5; y < 15; y++) {
@@ -112,6 +146,20 @@ namespace Rbk
                 }
             }
 
+            for (int x = -7; x < 7; x++) {
+                for (int y = -15; y < -5; y++) {
+                    std::shared_ptr<Rbk::Mesh> entity = std::make_shared<Rbk::Mesh>();
+                    entity->Init(
+                        "ground_cube1",
+                        "assets/mesh/minecraft/Grass_Block.obj",
+                        { "minecraft_grass" },
+                        "main",
+                        glm::vec3(-0.20f * static_cast<float>(x), 0.0f, -0.20f * static_cast<float>(y)),
+                        glm::vec3(0.1f, 0.1f, 0.1f));
+
+                    m_EntityManager->AddEntity(entity);
+                }
+            }
             for (int x = -22; x < -7; x++) {
                 for (int y = -5; y < 15; y++) {
                     std::shared_ptr<Rbk::Mesh> entity = std::make_shared<Rbk::Mesh>();
@@ -126,7 +174,34 @@ namespace Rbk
                     m_EntityManager->AddEntity(entity);
                 }
             }
+            for (int x = -22; x < -7; x++) {
+                for (int y = -15; y < -5; y++) {
+                    std::shared_ptr<Rbk::Mesh> entity = std::make_shared<Rbk::Mesh>();
+                    entity->Init(
+                        "ground_cube3",
+                        "assets/mesh/minecraft/Grass_Block.obj",
+                        { "minecraft_grass" },
+                        "main",
+                        glm::vec3(-0.20f * static_cast<float>(x), 0.0f, -0.20f * static_cast<float>(y)),
+                        glm::vec3(0.1f, 0.1f, 0.1f));
 
+                    m_EntityManager->AddEntity(entity);
+                }
+            }
+            for (int x = 7; x < 22; x++) {
+                for (int y = -15; y < -5; y++) {
+                    std::shared_ptr<Rbk::Mesh> entity = std::make_shared<Rbk::Mesh>();
+                    entity->Init(
+                        "ground_cube4",
+                        "assets/mesh/minecraft/Grass_Block.obj",
+                        { "minecraft_grass" },
+                        "main",
+                        glm::vec3(-0.20f * static_cast<float>(x), 0.0f, -0.20f * static_cast<float>(y)),
+                        glm::vec3(0.1f, 0.1f, 0.1f));
+
+                    m_EntityManager->AddEntity(entity);
+                }
+            }
             for (int x = 7; x < 22; x++) {
                 for (int y = -5; y < 15; y++) {
                     std::shared_ptr<Rbk::Mesh> entity = std::make_shared<Rbk::Mesh>();
@@ -135,7 +210,7 @@ namespace Rbk
                         "assets/mesh/minecraft/Grass_Block.obj",
                         { "minecraft_water" },
                         "main",
-                        glm::vec3(-0.20f * static_cast<float>(x), 0.0f, -0.20f * static_cast<float>(y)),
+                        glm::vec3(-0.20f * static_cast<float>(x), -0.1f, -0.20f * static_cast<float>(y)),
                         glm::vec3(0.1f, 0.1f, 0.1f));
 
                     m_EntityManager->AddEntity(entity);
@@ -150,7 +225,7 @@ namespace Rbk
                         "assets/mesh/minecraft/Grass_Block.obj",
                         { "minecraft_water" },
                         "main",
-                        glm::vec3(-0.20f * static_cast<float>(x), 0.0f, -0.20f * static_cast<float>(y)),
+                        glm::vec3(-0.20f * static_cast<float>(x), -0.1f, -0.20f * static_cast<float>(y)),
                         glm::vec3(0.1f, 0.1f, 0.1f));
 
                     m_EntityManager->AddEntity(entity);
@@ -165,7 +240,7 @@ namespace Rbk
                         "assets/mesh/minecraft/Grass_Block.obj",
                         { "minecraft_water" },
                         "main",
-                        glm::vec3(-0.20f * static_cast<float>(x), 0.0f, -0.20f * static_cast<float>(y)),
+                        glm::vec3(-0.20f * static_cast<float>(x), -0.1f, -0.20f * static_cast<float>(y)),
                         glm::vec3(0.1f, 0.1f, 0.1f));
 
                     m_EntityManager->AddEntity(entity);
