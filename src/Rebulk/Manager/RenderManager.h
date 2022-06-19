@@ -1,8 +1,8 @@
 #pragma once
 #include "Rebulk/Renderer/Adapter/IRendererAdapter.h"
 #include "TextureManager.h"
-#include "MeshManager.h"
-#include "Rebulk/Renderer/Mesh.h"
+#include "EntityManager.h"
+#include "Rebulk/Component/Mesh.h"
 #include "Rebulk/Component/Camera.h"
 #include "Rebulk/GUI/Window.h"
 
@@ -15,7 +15,7 @@ namespace Rbk
             std::shared_ptr<Window> window,
             std::shared_ptr<IRendererAdapter> renderer,
             std::shared_ptr<TextureManager> textureManager,
-            std::shared_ptr<MeshManager> meshManager,
+            std::shared_ptr<EntityManager> entityManager,
             std::shared_ptr<ShaderManager> shaderManager
         );
         ~RenderManager();
@@ -33,7 +33,7 @@ namespace Rbk
         std::shared_ptr<IRendererAdapter> m_Renderer = nullptr;
         std::shared_ptr<Window> m_Window;
         std::shared_ptr<TextureManager> m_TextureManager;
-        std::shared_ptr<MeshManager> m_MeshManager;
+        std::shared_ptr<EntityManager> m_EntityManager;
         std::shared_ptr<ShaderManager> m_ShaderManager;
     };
 }

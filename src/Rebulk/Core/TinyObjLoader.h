@@ -1,11 +1,18 @@
 #pragma once
-#include "Rebulk/Renderer/Mesh.h"
+#include "Rebulk/Component/Mesh.h"
 
 namespace Rbk
 {
+    struct TinyObjData
+    {
+        std::vector<Vertex> vertices;
+        std::vector<uint32_t> indices;
+        uint32_t materialId = 0;
+    };
+
     class TinyObjLoader
     {
     public:
-        static std::vector<std::shared_ptr<Mesh>> LoadMesh(std::string path, bool shouldInverseTextureY);
+        static std::vector<TinyObjData> LoadData(std::string path, bool shouldInverseTextureY);
     };
 }

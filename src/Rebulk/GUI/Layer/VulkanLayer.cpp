@@ -72,16 +72,16 @@ namespace Rbk
         ImGui::Separator();
         Rbk::Im::Text("Current frame %d", m_Adapter->Rdr()->GetCurrentFrame());
         ImGui::Separator();
-        Rbk::Im::Text("World meshes stats");
-        Rbk::Im::Text("Total mesh loaded %d", m_MeshManager->GetWorldMeshes()->size());
-        Rbk::Im::Text("Total mesh instanced %d", m_MeshManager->GetWorldInstancedCount());
-        Rbk::Im::Text("Total vertex count %d", m_MeshManager->GetWorldVerticesCount());
-        Rbk::Im::Text("Total index count %d", m_MeshManager->GetWorldIndicesCount());		
+        Rbk::Im::Text("Meshes stats");
+        Rbk::Im::Text("Total mesh loaded %d", m_EntityManager->GetEntities()->size());
+        Rbk::Im::Text("Total mesh instanced %d", m_EntityManager->GetInstancedCount());
+        Rbk::Im::Text("Total vertex count %d", m_EntityManager->GetVerticesCount());
+        Rbk::Im::Text("Total index count %d", m_EntityManager->GetIndicesCount());
 
-        Rbk::Im::Text("Stats per mesh :");
-        for (std::shared_ptr<Mesh> mesh : *m_MeshManager->GetWorldMeshes()) {
-            Rbk::Im::Text("\tMesh named %s with %d instances", mesh.get()->name.c_str(), mesh.get()->ubos.size());
-        }
+        //Rbk::Im::Text("Stats per mesh :");
+        //for (std::shared_ptr<Mesh> mesh : *m_EntityManager->GetMeshes()) {
+        //    Rbk::Im::Text("\tMesh named %s with %d instances", mesh.get()->name.c_str(), mesh.get()->ubos.size());
+        //}
         ImGui::Separator();
         Rbk::Im::Text("Shader count %d", m_ShaderManager->GetShaders()->shaders.size());
         ImGui::Separator();
@@ -106,7 +106,9 @@ namespace Rbk
         ImGui::RadioButton("120 fps", &Rbk::Application::s_UnlockedFPS, 1); ImGui::SameLine();
         ImGui::RadioButton("unlocked", &Rbk::Application::s_UnlockedFPS, 2);
 
-        //ImGui::Checkbox("Unlock FPS", &Rbk::Application::s_UnlockedFPS);
+        ImGui::RadioButton("Crosshair 1", &Rbk::VulkanAdapter::s_Crosshair, 0); ImGui::SameLine();
+        ImGui::RadioButton("Crosshair 2", &Rbk::VulkanAdapter::s_Crosshair, 1);
+
         ImGui::Separator();
         ImGui::Checkbox("Show ImGui demo", &m_ShowDemo);
         
