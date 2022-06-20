@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Drawable.h"
+#include "Rebulk/Core/IVisitor.h"
 
 namespace Rbk
 {
@@ -9,14 +9,13 @@ namespace Rbk
 
     public:
         virtual void Draw();
+        virtual void Prepare(std::shared_ptr<IVisitor> visitor);
         virtual ~Entity();
 
     //@todo make it private
     public:
         std::string m_Name;
 
-    protected:
-        std::unique_ptr<Drawable> m_Drawable;
 
     };
 }

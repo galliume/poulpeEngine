@@ -47,6 +47,13 @@ namespace Rbk
         inline std::shared_ptr<VkRenderPass> RdrPass() { return m_RenderPass; };
         void SetDeltatime(float deltaTime) override;
 
+        inline VkCommandPool* GetEntitiesCommandPool() { return &m_EntitiesCommandPool; };
+        inline std::vector<VkCommandBuffer>* GetEntitiesCommandBuffers() { return &m_EntitiesCommandBuffers; };
+        inline std::shared_ptr<TextureManager> GetTextureManager() { return m_TextureManager; }
+        inline std::vector<VkDescriptorSetLayout>* GetDescriptorSetLayouts() { return &m_DescriptorSetLayouts; };
+        inline std::vector<VkImage>* GetSwapChainImages() { return &m_SwapChainImages; };
+        inline std::shared_ptr<ShaderManager> GetShaderManager() { return m_ShaderManager; };
+
         //@todo add GuiManager
         VkRenderPass CreateImGuiRenderPass();
         VImGuiInfo GetVImGuiInfo();
