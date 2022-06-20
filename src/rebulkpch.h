@@ -34,4 +34,3 @@
 #include "spdlog/details/log_msg.h"
 
 #include "Rebulk/Core/Log.h"
-#include "Rebulk/Core/ThreadPool.h"

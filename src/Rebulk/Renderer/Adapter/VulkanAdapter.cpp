@@ -3,6 +3,7 @@
 #include "Rebulk/GUI/Window.h"
 #include <volk.h>
 #include "Rebulk/Component/Mesh.h"
+#include <future>
 
 namespace Rbk
 {
@@ -43,8 +44,6 @@ namespace Rbk
         m_SwapChain = m_Renderer->CreateSwapChain(m_SwapChainImages);
         m_CommandPool = m_Renderer->CreateCommandPool();
         VulkanShaders m_Shaders;
-        m_ThreadPool = std::make_shared<ThreadPool>();
-        m_ThreadPool->Start();
     }
 
     void VulkanAdapter::AddTextureManager(std::shared_ptr<TextureManager> textureManager)
@@ -624,7 +623,7 @@ namespace Rbk
         inheritanceInfo.subpass = 0;
 
         //draw the mesh entities !
-        m_ThreadPool->Queue([=, &pushConstants]() {
+        std::future meshFuture = std::async(std::launch::async, [=, &pushConstants]() {
 
             m_Renderer->BeginCommandBuffer(m_EntitiesCommandBuffers[m_ImageIndex], VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT, inheritanceInfo);
             m_Renderer->SetViewPort(m_EntitiesCommandBuffers[m_ImageIndex]);
@@ -669,7 +668,7 @@ namespace Rbk
         });
 
         //draw the skybox !
-        m_ThreadPool->Queue([=]() {
+        std::future skyboxFuture = std::async(std::launch::async, [=]() {
             m_Renderer->BeginCommandBuffer(m_SkyboxCommandBuffers[m_ImageIndex], VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT, inheritanceInfo);
             m_Renderer->SetViewPort(m_SkyboxCommandBuffers[m_ImageIndex]);
             m_Renderer->SetScissor(m_SkyboxCommandBuffers[m_ImageIndex]);
@@ -692,7 +691,7 @@ namespace Rbk
         });
 
         //draw the crosshair
-        m_ThreadPool->Queue([=]() {
+        std::future hudFuture = std::async(std::launch::async, [=]() {
             m_Renderer->BeginCommandBuffer(m_CrosshairCommandBuffers[m_ImageIndex], VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT, inheritanceInfo);
             m_Renderer->SetViewPort(m_CrosshairCommandBuffers[m_ImageIndex]);
             m_Renderer->SetScissor(m_CrosshairCommandBuffers[m_ImageIndex]);
@@ -722,11 +721,9 @@ namespace Rbk
             m_CommandBuffers[m_ImageIndex], endRenderBeginBarrier, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, VK_DEPENDENCY_BY_REGION_BIT
         );*/
 
-        while (!m_ThreadPool->Busy()) {
-            //Rbk::Log::GetLogger()->debug("still busy");
-        };
-
-        m_ThreadPool->Stop();
+        hudFuture.get();
+        skyboxFuture.get();
+        meshFuture.get();
 
         std::vector<VkCommandBuffer>secondaryCmdBuffer;
         secondaryCmdBuffer.emplace_back(m_EntitiesCommandBuffers[m_ImageIndex]);

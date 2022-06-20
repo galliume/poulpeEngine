@@ -1,5 +1,6 @@
 #include "rebulkpch.h"
 #include "Application.h"
+#include <future>
 
 namespace Rbk
 {
@@ -47,22 +48,20 @@ namespace Rbk
         );
         m_RenderManager->Init();
         m_RenderManager->AddCamera(m_Camera);
-        m_ThreadPool = std::make_shared<ThreadPool>();
-        m_ThreadPool->Start();
     }
 
     void Application::Run()
     {
         double startRun = glfwGetTime();
 
-        m_ThreadPool->Queue([this]() {
+        std::future shaderFuture = std::async(std::launch::async, [this]() {
             m_ShaderManager->AddShader("main", "assets/shaders/spv/vert.spv", "assets/shaders/spv/frag.spv");
             m_ShaderManager->AddShader("skybox", "assets/shaders/spv/skybox_vert.spv", "assets/shaders/spv/skybox_frag.spv");
             m_ShaderManager->AddShader("2d", "assets/shaders/spv/2d_vert.spv", "assets/shaders/spv/2d_frag.spv");
             m_ShaderManager->AddShader("ambient_light", "assets/shaders/spv/ambient_shader_vert.spv", "assets/shaders/spv/ambient_shader_frag.spv");
         });
 
-        m_ThreadPool->Queue([this]() {
+        std::future textureFuture = std::async(std::launch::async, [this]() {
             m_TextureManager->AddTexture("minecraft_grass", "assets/mesh/minecraft/Grass_Block_TEX.png");
             m_TextureManager->AddTexture("minecraft_water", "assets/mesh/minecraft/water.jpg");
             m_TextureManager->AddTexture("campfire_tex", "assets/mesh/campfire/Campfire_MAT_BaseColor_01.jpg");
@@ -82,7 +81,7 @@ namespace Rbk
             m_TextureManager->AddTexture("fence", "assets/mesh/fence/cit_1001_Diffuse.png");
         });
 
-        m_ThreadPool->Queue([this]() {
+        std::future worldFuture = std::async(std::launch::async, [this]() {
 
             std::shared_ptr<Mesh> entity = std::make_shared<Mesh>();
 
@@ -248,7 +247,7 @@ namespace Rbk
             }
         });
 
-        m_ThreadPool->Queue([this]() {
+        std::future worldBisFuture = std::async(std::launch::async, [this]() {
             std::shared_ptr<Rbk::Mesh> entity = std::make_shared<Rbk::Mesh>();
             entity->Init(
                 "campfire",
@@ -447,7 +446,7 @@ namespace Rbk
             m_EntityManager->AddEntity(entity16);
         });
 
-        m_ThreadPool->Queue([this]() {
+        std::future skyboxFuture = std::async(std::launch::async, [this]() {
             std::vector<std::string>skyboxImages;
             skyboxImages.emplace_back("assets/texture/skybox/bluesky/right.jpg");
             skyboxImages.emplace_back("assets/texture/skybox/bluesky/left.jpg");
@@ -458,11 +457,11 @@ namespace Rbk
             m_TextureManager->AddSkyBox(skyboxImages);
         });
      
-        while (!m_ThreadPool->Busy()) {
-            //Rbk::Log::GetLogger()->debug("still busy");
-        };
-
-        m_ThreadPool->Stop();
+        skyboxFuture.get();
+        shaderFuture.get();
+        textureFuture.get();
+        worldBisFuture.get();
+        worldFuture.get();
 
 #ifdef RBK_DEBUG
         std::shared_ptr<Rbk::VulkanLayer>vulkanLayer = std::make_shared<Rbk::VulkanLayer>();
