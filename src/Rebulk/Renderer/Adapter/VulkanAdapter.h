@@ -81,7 +81,7 @@ namespace Rbk
         std::shared_ptr<EntityManager> m_EntityManager = nullptr;
         std::shared_ptr<ShaderManager> m_ShaderManager = nullptr;
         //@todo move to meshManager
-        std::shared_ptr<Mesh> m_Crosshair = nullptr;
+        std::shared_ptr<Mesh> m_HUD = nullptr;
         std::vector<VkImageView>m_DepthImageViews = {};
         std::vector<VkImageView>m_ColorImageViews = {};
         glm::mat4 m_Perspective;
@@ -95,7 +95,7 @@ namespace Rbk
         std::vector<VkCommandBuffer> m_EntitiesCommandBuffers = {};
         VkCommandPool m_SkyboxCommandPool = nullptr;
         std::vector<VkCommandBuffer> m_SkyboxCommandBuffers = {};
-        VkCommandPool m_CrosshairCommandPool = nullptr;
-        std::vector<VkCommandBuffer> m_CrosshairCommandBuffers = {};
+        VkCommandPool m_HUDCommandPool = nullptr;
+        std::vector<VkCommandBuffer> m_HUDCommandBuffers = {};
     };
 }
