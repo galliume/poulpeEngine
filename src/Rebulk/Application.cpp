@@ -62,7 +62,6 @@ namespace Rbk
         });
 
         std::future textureFuture = std::async(std::launch::async, [this]() {
-            m_TextureManager->AddTexture("minecraft_grass", "assets/mesh/minecraft/Grass_Block_TEX.png");
             m_TextureManager->AddTexture("minecraft_water", "assets/mesh/minecraft/water.jpg");
             m_TextureManager->AddTexture("campfire_tex", "assets/mesh/campfire/Campfire_MAT_BaseColor_01.jpg");
             m_TextureManager->AddTexture("tree_tex", "assets/mesh/tree/tree.jpg");
@@ -79,6 +78,7 @@ namespace Rbk
             m_TextureManager->AddTexture("dog_base_color", "assets/mesh/doghouse/doghouse0908_PBR_BaseColor.png");
             m_TextureManager->AddTexture("dog", "assets/mesh/dog/Texture_albedo.jpg");
             m_TextureManager->AddTexture("fence", "assets/mesh/fence/cit_1001_Diffuse.png");
+            m_TextureManager->AddTexture("minecraft_grass", "assets/mesh/minecraft/Grass_Block_TEX.png");
         });
 
         std::future worldFuture = std::async(std::launch::async, [this]() {
@@ -94,7 +94,6 @@ namespace Rbk
                 glm::vec3(0.12f, 0.12f, 0.12f));
 
             m_EntityManager->AddEntity(entity);
-
 
             float fencePos = -2.4;
             for (int x = 0; x < 6; x++) {
@@ -201,6 +200,10 @@ namespace Rbk
                     m_EntityManager->AddEntity(entity);
                 }
             }
+        });
+
+        std::future worldFutureTer = std::async(std::launch::async, [this]() {
+
             for (int x = 7; x < 22; x++) {
                 for (int y = -5; y < 15; y++) {
                     std::shared_ptr<Rbk::Mesh> entity = std::make_shared<Rbk::Mesh>();
@@ -245,9 +248,7 @@ namespace Rbk
                     m_EntityManager->AddEntity(entity);
                 }
             }
-        });
 
-        std::future worldBisFuture = std::async(std::launch::async, [this]() {
             std::shared_ptr<Rbk::Mesh> entity = std::make_shared<Rbk::Mesh>();
             entity->Init(
                 "campfire",
@@ -269,7 +270,7 @@ namespace Rbk
                 glm::vec3(0.01f, 0.01f, 0.01f));
 
             m_EntityManager->AddEntity(entity1);
-      
+
             std::shared_ptr<Rbk::Mesh> entity2 = std::make_shared<Rbk::Mesh>();
             entity2->Init(
                 "dead_tree",
@@ -293,7 +294,7 @@ namespace Rbk
                 glm::vec3(0.01f, 0.01f, 0.01f));
 
             m_EntityManager->AddEntity(entity3);
-          
+
             std::shared_ptr<Rbk::Mesh> entity4 = std::make_shared<Rbk::Mesh>();
             entity4->Init(
                 "dead_tree",
@@ -304,6 +305,10 @@ namespace Rbk
                 glm::vec3(0.01f, 0.01f, 0.01f));
 
             m_EntityManager->AddEntity(entity);
+        });
+
+        std::future worldBisFuture = std::async(std::launch::async, [this]() {
+           
 
             std::shared_ptr<Rbk::Mesh> entity5 = std::make_shared<Rbk::Mesh>();
             entity5->Init(
@@ -461,6 +466,7 @@ namespace Rbk
         shaderFuture.get();
         textureFuture.get();
         worldBisFuture.get();
+        worldFutureTer.get();
         worldFuture.get();
 
 #ifdef RBK_DEBUG
