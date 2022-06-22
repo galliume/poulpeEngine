@@ -8,35 +8,15 @@ namespace Rbk
 
     }
 
-     uint32_t EntityManager::GetVerticesCount()
-    {
-        uint32_t total = 0;
-
-       /* for (std::shared_ptr<Mesh> mesh : m_Meshes) {
-            total += mesh.get()->vertices.size();
-        }*/
-
-        return total;
-    }
-
-    uint32_t EntityManager::GetIndicesCount()
-    {
-        uint32_t total = 0;
-
-        //for (std::shared_ptr<Mesh>mesh : m_Meshes) {
-        //    total += mesh.get()->indices.size();
-        //}
-
-        return total;
-    }
-
     uint32_t EntityManager::GetInstancedCount()
     {
         uint32_t total = 0;
 
-        //for (std::shared_ptr<Mesh> mesh : m_Meshes) {
-        //    total += mesh.get()->ubos.size();
-        //}
+        for (std::shared_ptr<Entity> entity : m_Entities) {
+            std::shared_ptr<Mesh> mesh = std::dynamic_pointer_cast<Mesh>(entity);
+
+            if (mesh) total += 1;
+        }
 
         return total;
     }

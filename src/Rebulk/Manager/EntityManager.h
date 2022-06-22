@@ -14,8 +14,6 @@ namespace Rbk
         explicit EntityManager(std::shared_ptr<VulkanRenderer> renderer);
         void AddEntity(const std::shared_ptr<Entity> entity);
         inline std::map<std::string, std::array<uint32_t, 2>> GetLoadedEntities() { return m_LoadedEntities; };
-        uint32_t GetVerticesCount();
-        uint32_t GetIndicesCount();
         uint32_t GetInstancedCount();
         inline uint32_t GetTotalEntities() { return m_Entities.size(); };
         inline std::shared_ptr<Mesh> GetSkyboxMesh() { return m_SkyboxMesh; };
