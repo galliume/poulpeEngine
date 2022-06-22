@@ -19,7 +19,7 @@ namespace Rbk
         VkRenderPass rdrPass = nullptr;
     };
 
-    class VulkanAdapter : public IRendererAdapter
+    class VulkanAdapter : public IRendererAdapter, public std::enable_shared_from_this<VulkanAdapter>
     {
 
     public:
