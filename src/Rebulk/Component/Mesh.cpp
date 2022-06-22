@@ -3,7 +3,7 @@
 
 namespace Rbk
 {
-    Mesh::Mesh() : Entity(), Drawable() { }
+    Mesh::Mesh() : Entity() { }
 
     void Mesh::Init(
          std::string name,

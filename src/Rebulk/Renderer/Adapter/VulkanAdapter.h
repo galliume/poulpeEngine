@@ -19,7 +19,7 @@ namespace Rbk
         VkRenderPass rdrPass = nullptr;
     };
 
-    class VulkanAdapter : public IRendererAdapter
+    class VulkanAdapter : public IRendererAdapter, public std::enable_shared_from_this<VulkanAdapter>
     {
 
     public:
@@ -46,6 +46,18 @@ namespace Rbk
         inline std::shared_ptr<VulkanRenderer> Rdr() { return m_Renderer; };
         inline std::shared_ptr<VkRenderPass> RdrPass() { return m_RenderPass; };
         void SetDeltatime(float deltaTime) override;
+
+        inline VkCommandPool* GetEntitiesCommandPool() { return &m_EntitiesCommandPool; };
+        inline std::vector<VkCommandBuffer>* GetEntitiesCommandBuffers() { return &m_EntitiesCommandBuffers; };
+        inline VkCommandPool* GetSkyboxCommandPool() { return &m_SkyboxCommandPool; };
+        inline std::vector<VkCommandBuffer>* GetSkyboxCommandBuffers() { return &m_SkyboxCommandBuffers; };
+        inline VkCommandPool* GetHUDCommandPool() { return &m_HUDCommandPool; };
+        inline std::vector<VkCommandBuffer>* GetHUDCommandBuffers() { return &m_HUDCommandBuffers; };
+        inline std::shared_ptr<TextureManager> GetTextureManager() { return m_TextureManager; };
+        inline std::vector<VkDescriptorSetLayout>* GetDescriptorSetLayouts() { return &m_DescriptorSetLayouts; };
+        inline std::vector<VkImage>* GetSwapChainImages() { return &m_SwapChainImages; };
+        inline std::shared_ptr<ShaderManager> GetShaderManager() { return m_ShaderManager; };
+        inline glm::mat4 GetPerspective() { return m_Perspective; };
 
         //@todo add GuiManager
         VkRenderPass CreateImGuiRenderPass();
@@ -81,7 +93,7 @@ namespace Rbk
         std::shared_ptr<EntityManager> m_EntityManager = nullptr;
         std::shared_ptr<ShaderManager> m_ShaderManager = nullptr;
         //@todo move to meshManager
-        std::shared_ptr<Mesh> m_Crosshair = nullptr;
+        std::shared_ptr<Mesh> m_HUD = nullptr;
         std::vector<VkImageView>m_DepthImageViews = {};
         std::vector<VkImageView>m_ColorImageViews = {};
         glm::mat4 m_Perspective;
@@ -95,7 +107,7 @@ namespace Rbk
         std::vector<VkCommandBuffer> m_EntitiesCommandBuffers = {};
         VkCommandPool m_SkyboxCommandPool = nullptr;
         std::vector<VkCommandBuffer> m_SkyboxCommandBuffers = {};
-        VkCommandPool m_CrosshairCommandPool = nullptr;
-        std::vector<VkCommandBuffer> m_CrosshairCommandBuffers = {};
+        VkCommandPool m_HUDCommandPool = nullptr;
+        std::vector<VkCommandBuffer> m_HUDCommandBuffers = {};
     };
 }

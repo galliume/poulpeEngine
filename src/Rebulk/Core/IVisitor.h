@@ -1,16 +1,14 @@
 #pragma once
 #include <memory>
 
-#include "Rebulk/Component/Drawable.h"
-
 namespace Rbk
 {
-    class Drawable;
+    class Entity;
 
     class IVisitor
     {
     public:
-        //@todo make it weak ptr
-        virtual void VisitDrawable(Drawable* drawable) = 0;
+        virtual void Visit(std::shared_ptr<Entity> entity) = 0;
+        virtual ~IVisitor() = 0;
     };
 }
