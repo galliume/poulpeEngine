@@ -1,10 +1,11 @@
 #include "rebulkpch.h"
+#include <future>
+#include <memory>
+#include <volk.h>
 #include "VulkanAdapter.h"
 #include "Rebulk/GUI/Window.h"
-#include <volk.h>
 #include "Rebulk/Component/Mesh.h"
-#include <future>
-#include "Rebulk/Core/VisitorStrategy/VisitorVulkan.h"
+#include "Rebulk/Core/VisitorStrategy/VulkanInit.h"
 #include "Rebulk/Component/Entity.h"
 
 namespace Rbk
@@ -153,10 +154,6 @@ namespace Rbk
 
         std::vector<std::shared_ptr<Entity>>* entities = m_EntityManager->GetEntities();
 
-        uint32_t maxUniformBufferRange = 0;
-        uint32_t uniformBufferChunkSize = 0;
-        uint32_t uniformBuffersCount = 0;
-
         std::vector<VkDescriptorPoolSize> poolSizes{};
         VkDescriptorPoolSize cp1;
         cp1.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
@@ -178,12 +175,10 @@ namespace Rbk
         pushConstants.emplace_back(vkPushconstants);
 
         VkVertexInputBindingDescription bDesc = Vertex::GetBindingDescription();
-        std::shared_ptr<VisitorVulkan> vulkanisator = std::make_shared<VisitorVulkan>(this, descriptorPool);
+        std::shared_ptr<VulkanInit> vulkanisator = std::make_shared<VulkanInit>(shared_from_this(), descriptorPool);
     
         for (std::shared_ptr<Entity>& entity : *entities) {
-            std::shared_ptr<Mesh> mesh = std::dynamic_pointer_cast<Mesh>(entity);
-            if (!mesh) continue;
-            mesh->Prepare(vulkanisator);
+            entity->Accept(vulkanisator);
         }
 
         /// SKYBOX ///
