@@ -32,6 +32,11 @@ namespace Rbk
         glm::vec3 lightPos;
     };
 
+    struct cPC
+    {
+        uint32_t textureID;
+    };
+
     class Mesh : public Entity
     {
     public:
