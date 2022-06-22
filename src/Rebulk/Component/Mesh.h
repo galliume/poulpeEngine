@@ -5,7 +5,6 @@
 #include "Vertex.h"
 #include "Vertex2D.h"
 #include "Rebulk/Component/Entity.h"
-#include "Rebulk/Component/Drawable.h"
 #include "Rebulk/Core/TinyObjLoader.h"
 #include "Rebulk/Core/Buffer.h"
 
@@ -23,7 +22,22 @@ namespace Rbk
         uint32_t m_TextureIndex = 0;
     };
 
-    class Mesh : public Entity, public Drawable
+    struct constants 
+    {
+        uint32_t textureID;
+        glm::vec3 cameraPos;
+        float ambiantLight;
+        float fogDensity;
+        glm::vec3 fogColor;
+        glm::vec3 lightPos;
+    };
+
+    struct cPC
+    {
+        uint32_t textureID;
+    };
+
+    class Mesh : public Entity
     {
     public:
         Mesh();
