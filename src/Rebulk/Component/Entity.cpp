@@ -8,9 +8,9 @@ namespace Rbk
         Rbk::Log::GetLogger()->debug("Draw nothing");
     }
 
-    void Entity::Prepare(std::shared_ptr<IVisitor> visitor)
+    void Entity::Accept(std::shared_ptr<IVisitor> visitor)
     {
-        visitor->VisitPrepare(this);
+        visitor->Visit(shared_from_this());
     }
 
     Entity::~Entity()

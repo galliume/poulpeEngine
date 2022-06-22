@@ -1,12 +1,12 @@
 #include "rebulkpch.h"
-#include "VisitorVulkan.h"
+#include "VulkanInit.h"
 
 namespace Rbk
 {
     struct constants;
 
-    VisitorVulkan::VisitorVulkan(
-        std::shared_ptr<VulkanAdapter> adapter, 
+    VulkanInit::VulkanInit(
+        std::shared_ptr<VulkanAdapter> adapter,
         VkDescriptorPool descriptorPool) :
         m_Adapter(adapter),
         m_DescriptorPool(descriptorPool)
@@ -14,21 +14,20 @@ namespace Rbk
 
     }
 
-    void VisitorVulkan::VisitPrepare(Mesh* mesh)
+    void VulkanInit::Visit(std::shared_ptr<Entity> entity)
     {
+        std::shared_ptr<Mesh> mesh = std::dynamic_pointer_cast<Mesh>(entity);
+        if (!mesh) return;
+
         Rbk::Log::GetLogger()->debug("Visiting VisitorVulkanInit");
 
-        /*uint32_t totalInstances = static_cast<uint32_t>(entities->size());
+        uint32_t totalInstances = static_cast<uint32_t>(mesh->GetData()->size());
+        uint32_t maxUniformBufferRange = m_Adapter->Rdr()->GetDeviceProperties().limits.maxUniformBufferRange;
+        uint32_t uniformBufferChunkSize = maxUniformBufferRange / sizeof(UniformBufferObject);
+        uint32_t uniformBuffersCount = static_cast<uint32_t>(std::ceil(static_cast<float>(totalInstances) / static_cast<float>(uniformBufferChunkSize)));
+        //mesh->m_CameraPos = m_Camera->GetPos();
 
-        maxUniformBufferRange = m_Renderer->GetDeviceProperties().limits.maxUniformBufferRange;
-        uniformBufferChunkSize = maxUniformBufferRange / sizeof(UniformBufferObject);
-        uniformBuffersCount = static_cast<uint32_t>(std::ceil(static_cast<float>(totalInstances) / static_cast<float>(uniformBufferChunkSize)));
-        mesh->m_CameraPos = m_Camera->GetPos();*/
-
-        uint32_t uniformBuffersCount = 50;
-        uint32_t uniformBufferChunkSize = 340;
-
-        for (uint32_t i = 0; i < uniformBuffersCount; i++) {
+         for (uint32_t i = 0; i < uniformBuffersCount; i++) {
             std::pair<VkBuffer, VkDeviceMemory> uniformBuffer = m_Adapter->Rdr()->CreateUniformBuffers(uniformBufferChunkSize);
             mesh->m_UniformBuffers.emplace_back(uniformBuffer);
         }
@@ -126,10 +125,5 @@ namespace Rbk
             VK_CULL_MODE_BACK_BIT,
             false, true, true, true, false
         );
-    }
-
-    void VisitorVulkan::VisitDraw(Mesh* entity)
-    {
-
     }
 }
