@@ -19,8 +19,6 @@ namespace Rbk
         std::shared_ptr<Mesh> mesh = std::dynamic_pointer_cast<Mesh>(entity);
         if (!mesh) return;
 
-        Rbk::Log::GetLogger()->debug("Visiting VisitorVulkanInit");
-
         uint32_t totalInstances = static_cast<uint32_t>(mesh->GetData()->size());
         uint32_t maxUniformBufferRange = m_Adapter->Rdr()->GetDeviceProperties().limits.maxUniformBufferRange;
         uint32_t uniformBufferChunkSize = maxUniformBufferRange / sizeof(UniformBufferObject);
@@ -91,8 +89,8 @@ namespace Rbk
 
         mesh->m_PipelineLayout = m_Adapter->Rdr()->CreatePipelineLayout(mesh->m_DescriptorSets, { desriptorSetLayout }, pushConstants);
 
-        std::vector<VkPipelineShaderStageCreateInfo>shadersStageInfos;
         VkVertexInputBindingDescription bDesc = Vertex::GetBindingDescription();
+        std::vector<VkPipelineShaderStageCreateInfo>shadersStageInfos;
 
         VkPipelineShaderStageCreateInfo vertShaderStageInfo{};
         vertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;

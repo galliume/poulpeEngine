@@ -6,6 +6,7 @@
 #include "Rebulk/GUI/Window.h"
 #include "Rebulk/Component/Mesh.h"
 #include "Rebulk/Core/VisitorStrategy/VulkanInit.h"
+#include "Rebulk/Core/VisitorStrategy/VulkanSkybox.h"
 #include "Rebulk/Component/Entity.h"
 
 namespace Rbk
@@ -175,152 +176,18 @@ namespace Rbk
         pushConstants.emplace_back(vkPushconstants);
 
         VkVertexInputBindingDescription bDesc = Vertex::GetBindingDescription();
+
         std::shared_ptr<VulkanInit> vulkanisator = std::make_shared<VulkanInit>(shared_from_this(), descriptorPool);
     
         for (std::shared_ptr<Entity>& entity : *entities) {
             entity->Accept(vulkanisator);
         }
 
-        /// SKYBOX ///
-        const std::vector<Vertex> skyVertices = {
-            {{-1.0f,  1.0f, -1.0f }, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
-            {{-1.0f, -1.0f, -1.0f }, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
-            {{ 1.0f, -1.0f, -1.0f }, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
-            {{ 1.0f, -1.0f, -1.0f }, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
-            {{ 1.0f,  1.0f, -1.0f }, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
-            {{-1.0f,  1.0f, -1.0f }, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
-
-            {{-1.0f, -1.0f,  1.0f }, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
-            {{-1.0f, -1.0f, -1.0f }, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
-            {{-1.0f,  1.0f, -1.0f }, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
-            {{-1.0f,  1.0f, -1.0f }, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
-            {{-1.0f,  1.0f,  1.0f }, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
-            {{-1.0f, -1.0f,  1.0f }, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
-
-            {{ 1.0f, -1.0f, -1.0f }, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
-            {{ 1.0f, -1.0f,  1.0f }, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
-            {{ 1.0f,  1.0f,  1.0f }, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
-            {{ 1.0f,  1.0f,  1.0f }, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
-            {{ 1.0f,  1.0f, -1.0f }, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
-            {{ 1.0f, -1.0f, -1.0f }, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
-
-            {{-1.0f, -1.0f,  1.0f }, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
-            {{-1.0f,  1.0f,  1.0f }, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
-            {{ 1.0f,  1.0f,  1.0f }, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
-            {{ 1.0f,  1.0f,  1.0f }, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
-            {{ 1.0f, -1.0f,  1.0f }, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
-            {{-1.0f, -1.0f,  1.0f }, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
-
-            {{-1.0f,  1.0f, -1.0f }, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
-            {{ 1.0f,  1.0f, -1.0f }, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
-            {{ 1.0f,  1.0f,  1.0f }, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
-            {{ 1.0f,  1.0f,  1.0f }, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
-            {{-1.0f,  1.0f,  1.0f }, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
-            {{-1.0f,  1.0f, -1.0f }, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
-
-            {{-1.0f, -1.0f, -1.0f }, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
-            {{-1.0f, -1.0f,  1.0f }, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
-            {{ 1.0f, -1.0f, -1.0f }, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
-            {{ 1.0f, -1.0f, -1.0f }, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
-            {{-1.0f, -1.0f,  1.0f }, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
-            {{ 1.0f, -1.0f,  1.0f }, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}}
-        };
-
-    
-        std::shared_ptr<Mesh> skyboxMesh = std::make_shared<Mesh>();
-   
-        UniformBufferObject skyUbo;
-        skyUbo.model = glm::mat4(0.0f);
-        skyUbo.view = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
-        skyUbo.proj = m_Perspective;
-        skyUbo.proj[1][1] *= -1;
-
-        Data skyboxMeshData;
-        skyboxMeshData.m_Texture = "skybox";
-        skyboxMeshData.m_Vertices = skyVertices;
-        skyboxMeshData.m_VertexBuffer = m_Renderer->CreateVertexBuffer(m_SkyboxCommandPool, skyVertices);
-        skyboxMeshData.m_Ubos.emplace_back(skyUbo);
-        skyboxMeshData.m_TextureIndex = 0;
-
-        std::pair<VkBuffer, VkDeviceMemory> uniformBuffer = m_Renderer->CreateUniformBuffers(1);
-        skyboxMesh->m_UniformBuffers.emplace_back(uniformBuffer);
-
-        Texture tex = m_TextureManager->GetSkyboxTexture();
-
-        VkDescriptorPool skyDescriptorPool = m_Renderer->CreateDescriptorPool(poolSizes, 10);
+        VkDescriptorPool skyDescriptorPool = m_Renderer->CreateDescriptorPool(poolSizes, 1000);
         m_DescriptorPools.emplace_back(skyDescriptorPool);
-
-        VkDescriptorSetLayoutBinding skyUboLayoutBinding{};
-        skyUboLayoutBinding.binding = 0;
-        skyUboLayoutBinding.descriptorCount = 1;
-        skyUboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        skyUboLayoutBinding.pImmutableSamplers = nullptr;
-        skyUboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-
-        VkDescriptorSetLayoutBinding skySamplerLayoutBinding{};
-        skySamplerLayoutBinding.binding = 1;
-        skySamplerLayoutBinding.descriptorCount = 1;
-        skySamplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        skySamplerLayoutBinding.pImmutableSamplers = nullptr;
-        skySamplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-
-        std::vector<VkDescriptorSetLayoutBinding> skyBindings = { skyUboLayoutBinding, skySamplerLayoutBinding };
-
-        VkDescriptorSetLayout skyDesriptorSetLayout = m_Renderer->CreateDescriptorSetLayout(
-            skyBindings, VK_DESCRIPTOR_SET_LAYOUT_CREATE_UPDATE_AFTER_BIND_POOL_BIT
-        );
-        m_DescriptorSetLayouts.emplace_back(skyDesriptorSetLayout);
-
-        VkDescriptorImageInfo skyDescriptorImageInfo{};
-        skyDescriptorImageInfo.sampler = tex.sampler;
-        skyDescriptorImageInfo.imageView = tex.imageView;
-        skyDescriptorImageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-
-        for (uint32_t i = 0; i < m_SwapChainImages.size(); i++) {
-            VkDescriptorSet skyDescriptorSet = m_Renderer->CreateDescriptorSets(skyDescriptorPool, { skyDesriptorSetLayout }, 1);
-            m_Renderer->UpdateDescriptorSets(skyboxMesh->m_UniformBuffers, skyDescriptorSet, { skyDescriptorImageInfo });
-            skyboxMesh->m_DescriptorSets.emplace_back(skyDescriptorSet);
-        }
-
-        skyboxMesh->m_PipelineLayout = m_Renderer->CreatePipelineLayout(skyboxMesh->m_DescriptorSets, { skyDesriptorSetLayout }, pushConstants);
-
-        std::string shaderName = "skybox";
-
-        std::vector<VkPipelineShaderStageCreateInfo>shadersStageInfos;
-
-        VkPipelineShaderStageCreateInfo vertShaderStageInfo{};
-        vertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-        vertShaderStageInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
-        vertShaderStageInfo.module = m_ShaderManager->GetShaders()->shaders[shaderName][0];
-        vertShaderStageInfo.pName = "main";
-        shadersStageInfos.emplace_back(vertShaderStageInfo);
-
-        VkPipelineShaderStageCreateInfo fragShaderStageInfo{};
-        fragShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-        fragShaderStageInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
-        fragShaderStageInfo.module = m_ShaderManager->GetShaders()->shaders[shaderName][1];
-        fragShaderStageInfo.pName = "main";
-        shadersStageInfos.emplace_back(fragShaderStageInfo);
-
-        auto skyDesc = Vertex::GetAttributeDescriptions();
-        VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
-        vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-        vertexInputInfo.vertexBindingDescriptionCount = 1;
-        vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(Vertex::GetAttributeDescriptions().size());
-        vertexInputInfo.pVertexBindingDescriptions = &bDesc;
-        vertexInputInfo.pVertexAttributeDescriptions = skyDesc.data();
-
-        skyboxMesh->m_GraphicsPipeline = m_Renderer->CreateGraphicsPipeline(
-            m_RenderPass,
-            skyboxMesh->m_PipelineLayout,
-            skyboxMesh->m_PipelineCache,
-            shadersStageInfos,
-            vertexInputInfo,
-            VK_CULL_MODE_NONE,
-            false
-        );
-
-        skyboxMesh->GetData()->emplace_back(skyboxMeshData);
+        std::shared_ptr<VulkanSkybox> skyboxVulkanisator = std::make_shared<VulkanSkybox>(shared_from_this(), skyDescriptorPool);
+        std::shared_ptr<Mesh> skyboxMesh = std::make_shared<Mesh>();
+        skyboxMesh->Accept(skyboxVulkanisator);
         m_EntityManager->SetSkyboxMesh(skyboxMesh);
 
         //crosshair
