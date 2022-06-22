@@ -49,10 +49,15 @@ namespace Rbk
 
         inline VkCommandPool* GetEntitiesCommandPool() { return &m_EntitiesCommandPool; };
         inline std::vector<VkCommandBuffer>* GetEntitiesCommandBuffers() { return &m_EntitiesCommandBuffers; };
-        inline std::shared_ptr<TextureManager> GetTextureManager() { return m_TextureManager; }
+        inline VkCommandPool* GetSkyboxCommandPool() { return &m_SkyboxCommandPool; };
+        inline std::vector<VkCommandBuffer>* GetSkyboxCommandBuffers() { return &m_SkyboxCommandBuffers; };
+        inline VkCommandPool* GetHUDCommandPool() { return &m_HUDCommandPool; };
+        inline std::vector<VkCommandBuffer>* GetHUDCommandBuffers() { return &m_HUDCommandBuffers; };
+        inline std::shared_ptr<TextureManager> GetTextureManager() { return m_TextureManager; };
         inline std::vector<VkDescriptorSetLayout>* GetDescriptorSetLayouts() { return &m_DescriptorSetLayouts; };
         inline std::vector<VkImage>* GetSwapChainImages() { return &m_SwapChainImages; };
         inline std::shared_ptr<ShaderManager> GetShaderManager() { return m_ShaderManager; };
+        inline glm::mat4 GetPerspective() { return m_Perspective; };
 
         //@todo add GuiManager
         VkRenderPass CreateImGuiRenderPass();
