@@ -7,6 +7,7 @@
 #include "Rebulk/Component/Mesh.h"
 #include "Rebulk/Core/VisitorStrategy/VulkanInit.h"
 #include "Rebulk/Core/VisitorStrategy/VulkanSkybox.h"
+#include "Rebulk/Core/VisitorStrategy/VulkanHUD.h"
 #include "Rebulk/Component/Entity.h"
 
 namespace Rbk
@@ -15,10 +16,6 @@ namespace Rbk
     float VulkanAdapter::s_FogDensity = 0.0f;
     float VulkanAdapter::s_FogColor[3] = { 25 / 255.0f, 25 / 255.0f, 25 / 255.0f };
     int VulkanAdapter::s_Crosshair = 0;
-
-    struct cPC {
-        uint32_t textureID;
-    };
 
     VulkanAdapter::VulkanAdapter(std::shared_ptr<Window> window) :
         m_Renderer(std::make_shared<VulkanRenderer>(window)),
@@ -151,8 +148,6 @@ namespace Rbk
 
     void VulkanAdapter::Prepare()
     {
-        bool wireFrame = false;
-
         std::vector<std::shared_ptr<Entity>>* entities = m_EntityManager->GetEntities();
 
         std::vector<VkDescriptorPoolSize> poolSizes{};
@@ -190,129 +185,12 @@ namespace Rbk
         skyboxMesh->Accept(skyboxVulkanisator);
         m_EntityManager->SetSkyboxMesh(skyboxMesh);
 
-        //crosshair
-        const std::vector<Vertex2D> vertices = {
-            {{-0.025f, -0.025f}, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
-            {{0.025f, -0.025f}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f}},
-            {{0.025f, 0.025f}, {0.0f, 0.0f, 1.0f}, {0.0f, 1.0f}},
-            {{-0.025f, 0.025f}, {1.0f, 1.0f, 1.0f}, {1.0f, 1.0f}}
-        };
-        const std::vector<uint32_t> indices = {
-            0, 1, 2, 2, 3, 0
-        };
-
-        UniformBufferObject ubo;
-        ubo.view = glm::mat4(0.0f);
-
-       
-        Data crossHairData;
-        crossHairData.m_Texture = "crosshair";
-        crossHairData.m_TextureIndex = 0;
-        crossHairData.m_VertexBuffer = m_Renderer->CreateVertex2DBuffer(m_HUDCommandPool, vertices);
-        crossHairData.m_IndicesBuffer = m_Renderer->CreateIndexBuffer(m_HUDCommandPool, indices);
-        crossHairData.m_Ubos.emplace_back(ubo);
-        crossHairData.m_Indices = indices;
-
+     
+        VkDescriptorPool HUDDescriptorPool = m_Renderer->CreateDescriptorPool(poolSizes, 1000);
+        m_DescriptorPools.emplace_back(HUDDescriptorPool);
+        std::shared_ptr<VulkanHUD> HUDVulkanisator = std::make_shared<VulkanHUD>(shared_from_this(), HUDDescriptorPool);
         m_HUD = std::make_shared<Mesh2D>();
-        m_HUD->m_Name = "hud";
-      
-        std::pair<VkBuffer, VkDeviceMemory> crossHairuniformBuffer = m_Renderer->CreateUniformBuffers(1);
-        m_HUD->m_UniformBuffers.emplace_back(crossHairuniformBuffer);
-
-        VkDescriptorPool cdescriptorPool = m_Renderer->CreateDescriptorPool(poolSizes, 10);
-        m_DescriptorPools.emplace_back(cdescriptorPool);
-
-        Texture ctex = m_TextureManager->GetTextures()["crosshair"];
-        Texture ctex2 = m_TextureManager->GetTextures()["crosshair2"];
-
-        std::vector<VkDescriptorImageInfo>cimageInfos;
-        VkDescriptorImageInfo cimageInfo{};
-        cimageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-        cimageInfo.imageView = ctex.imageView;
-        cimageInfo.sampler = ctex.sampler;
-
-        VkDescriptorImageInfo cimageInfo2{};
-        cimageInfo2.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-        cimageInfo2.imageView = ctex2.imageView;
-        cimageInfo2.sampler = ctex2.sampler;
-
-        cimageInfos.emplace_back(cimageInfo);
-        cimageInfos.emplace_back(cimageInfo2);
-
-        VkDescriptorSetLayoutBinding cuboLayoutBinding{};
-        cuboLayoutBinding.binding = 0;
-        cuboLayoutBinding.descriptorCount = 1;
-        cuboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        cuboLayoutBinding.pImmutableSamplers = nullptr;
-        cuboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-
-        VkDescriptorSetLayoutBinding csamplerLayoutBinding{};
-        csamplerLayoutBinding.binding = 1;
-        csamplerLayoutBinding.descriptorCount = cimageInfos.size();
-        csamplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        csamplerLayoutBinding.pImmutableSamplers = nullptr;
-        csamplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-
-        std::vector<VkDescriptorSetLayoutBinding> cbindings = { cuboLayoutBinding, csamplerLayoutBinding };
-
-        VkDescriptorSetLayout cdesriptorSetLayout = m_Renderer->CreateDescriptorSetLayout(
-            cbindings, VK_DESCRIPTOR_SET_LAYOUT_CREATE_UPDATE_AFTER_BIND_POOL_BIT
-        );
-        m_DescriptorSetLayouts.emplace_back(cdesriptorSetLayout);
-
-        for (uint32_t i = 0; i < m_SwapChainImages.size(); i++) {
-            VkDescriptorSet cdescriptorSet = m_Renderer->CreateDescriptorSets(cdescriptorPool, { cdesriptorSetLayout }, 1);
-            m_Renderer->UpdateDescriptorSets(m_HUD->m_UniformBuffers, cdescriptorSet, cimageInfos);
-            m_HUD->m_DescriptorSets.emplace_back(cdescriptorSet);
-        }
-
-        std::vector<VkPushConstantRange> cpushConstants = {};
-        VkPushConstantRange cPushconstant;
-        cPushconstant.offset = 0;
-        cPushconstant.size = sizeof(cPC);
-        cPushconstant.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-
-        cpushConstants.emplace_back(cPushconstant);
-
-        m_HUD->m_PipelineLayout = m_Renderer->CreatePipelineLayout(m_HUD->m_DescriptorSets, { cdesriptorSetLayout }, cpushConstants);
-
-        std::vector<VkPipelineShaderStageCreateInfo>cshadersStageInfos;
-
-        VkPipelineShaderStageCreateInfo cvertShaderStageInfo{};
-        cvertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-        cvertShaderStageInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
-        cvertShaderStageInfo.module = m_ShaderManager->GetShaders()->shaders["2d"][0];
-        cvertShaderStageInfo.pName = "main";
-        cshadersStageInfos.emplace_back(cvertShaderStageInfo);
-
-        VkPipelineShaderStageCreateInfo cfragShaderStageInfo{};
-        cfragShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-        cfragShaderStageInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
-        cfragShaderStageInfo.module = m_ShaderManager->GetShaders()->shaders["2d"][1];
-        cfragShaderStageInfo.pName = "main";
-        cshadersStageInfos.emplace_back(cfragShaderStageInfo);
-
-        VkVertexInputBindingDescription bDesc2D = Vertex::GetBindingDescription();
-        auto crossDesc = Vertex2D::GetAttributeDescriptions();
-
-        VkPipelineVertexInputStateCreateInfo vertexInputInfo2D{};
-        vertexInputInfo2D.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-        vertexInputInfo2D.vertexBindingDescriptionCount = 1;
-        vertexInputInfo2D.vertexAttributeDescriptionCount = static_cast<uint32_t>(Vertex2D::GetAttributeDescriptions().size());
-        vertexInputInfo2D.pVertexBindingDescriptions = &bDesc2D;
-        vertexInputInfo2D.pVertexAttributeDescriptions = crossDesc.data();
-
-        m_HUD->m_GraphicsPipeline = m_Renderer->CreateGraphicsPipeline(
-            m_RenderPass,
-            m_HUD->m_PipelineLayout,
-            m_HUD->m_PipelineCache,
-            cshadersStageInfos,
-            vertexInputInfo2D,
-            VK_CULL_MODE_FRONT_BIT,
-            false
-        );
-
-        m_HUD->GetData()->emplace_back(crossHairData);
+        m_HUD->Accept(HUDVulkanisator);
 
         //swap chain frame buffers
         m_SwapChainFramebuffers = m_Renderer->CreateFramebuffers(m_RenderPass, m_SwapChainImageViews, m_DepthImageViews, m_ColorImageViews);
