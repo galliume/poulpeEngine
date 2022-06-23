@@ -11,7 +11,7 @@ namespace Rbk
         inline Texture GetSkyboxTexture() { return m_Skybox; };
         void AddTexture(std::string name, std::string path);
         inline std::map<std::string, Texture> GetTextures() { return m_Textures; };
-
+        void Load();
     private:
         std::map<std::string, Texture> m_Textures;
         Texture m_Skybox;
