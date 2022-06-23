@@ -20,6 +20,7 @@ namespace Rbk
         inline void SetSkyboxMesh(std::shared_ptr<Mesh> skyboxMesh) { m_SkyboxMesh = skyboxMesh; };
         inline std::vector<std::shared_ptr<Entity>>* GetEntities() { return &m_Entities; };
         std::shared_ptr<Entity> GetEntityByName(const std::string name);
+        void Load();
 
     private:
         std::vector<std::shared_ptr<Entity>> m_Entities;
