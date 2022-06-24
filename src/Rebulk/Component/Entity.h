@@ -15,7 +15,5 @@ namespace Rbk
     //@todo make it private
     public:
         std::string m_Name;
-
-
     };
 }

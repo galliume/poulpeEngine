@@ -7,10 +7,10 @@
 
 namespace Rbk
 {
-    class VulkanInit : public IVisitor
+    class VulkanInitEntity : public IVisitor
     {
     public:
-        VulkanInit(std::shared_ptr<VulkanAdapter> adapter, VkDescriptorPool descriptorPool);
+        VulkanInitEntity(std::shared_ptr<VulkanAdapter> adapter, VkDescriptorPool descriptorPool);
         void Visit(std::shared_ptr<Entity> entity) override;
 
     private:

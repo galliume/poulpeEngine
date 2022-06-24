@@ -5,7 +5,7 @@
 #include "VulkanAdapter.h"
 #include "Rebulk/GUI/Window.h"
 #include "Rebulk/Component/Mesh.h"
-#include "Rebulk/Core/VisitorStrategy/VulkanInit.h"
+#include "Rebulk/Core/VisitorStrategy/VulkanInitEntity.h"
 #include "Rebulk/Core/VisitorStrategy/VulkanSkybox.h"
 #include "Rebulk/Core/VisitorStrategy/VulkanHUD.h"
 #include "Rebulk/Component/Entity.h"
@@ -172,7 +172,7 @@ namespace Rbk
 
         VkVertexInputBindingDescription bDesc = Vertex::GetBindingDescription();
 
-        std::shared_ptr<VulkanInit> vulkanisator = std::make_shared<VulkanInit>(shared_from_this(), descriptorPool);
+        std::shared_ptr<VulkanInitEntity> vulkanisator = std::make_shared<VulkanInitEntity>(shared_from_this(), descriptorPool);
     
         for (std::shared_ptr<Entity>& entity : *entities) {
             entity->Accept(vulkanisator);
@@ -231,9 +231,6 @@ namespace Rbk
         );
 
         m_Renderer->BeginRenderPass(m_RenderPass, m_CommandBuffers[m_ImageIndex], m_SwapChainFramebuffers[m_ImageIndex]);
-        //m_Renderer->BeginRendering(m_CommandBuffers[m_ImageIndex], m_SwapChainImageViews[m_ImageIndex], m_DepthImageViews[m_ImageIndex], m_ColorImageViews[m_ImageIndex]);
-        //m_Renderer->SetViewPort(m_CommandBuffers[m_ImageIndex]);
-        //m_Renderer->SetScissor(m_CommandBuffers[m_ImageIndex]);
 
         constants pushConstants;
         pushConstants.cameraPos = m_Camera->GetPos();
@@ -243,8 +240,6 @@ namespace Rbk
         pushConstants.lightPos = m_LightsPos.at(0);
 
         glm::mat4 lookAt = m_Camera->LookAt();
-
-        //if (lookAt == m_lastLookAt) return;
 
         glm::mat4 proj = m_Perspective;
         proj[1][1] *= -1;
@@ -351,15 +346,6 @@ namespace Rbk
             m_Renderer->Draw(m_HUDCommandBuffers[m_ImageIndex], m_HUD.get(), crosshairData[0], m_ImageIndex);
             m_Renderer->EndCommandBuffer(m_HUDCommandBuffers[m_ImageIndex]);
         });
-
-        /*m_Renderer->EndRendering(m_CommandBuffers[m_ImageIndex]);
-
-       VkImageMemoryBarrier endRenderBeginBarrier = m_Renderer->SetupImageMemoryBarrier(
-            m_SwapChainImages[m_ImageIndex], 0, VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR
-        );
-        m_Renderer->AddPipelineBarrier(
-            m_CommandBuffers[m_ImageIndex], endRenderBeginBarrier, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, VK_DEPENDENCY_BY_REGION_BIT
-        );*/
 
         hudFuture.get();
         skyboxFuture.get();
