@@ -1,11 +1,11 @@
 #include "rebulkpch.h"
-#include "VulkanInit.h"
+#include "VulkanInitEntity.h"
 
 namespace Rbk
 {
     struct constants;
 
-    VulkanInit::VulkanInit(
+    VulkanInitEntity::VulkanInitEntity(
         std::shared_ptr<VulkanAdapter> adapter,
         VkDescriptorPool descriptorPool) :
         m_Adapter(adapter),
@@ -14,7 +14,7 @@ namespace Rbk
 
     }
 
-    void VulkanInit::Visit(std::shared_ptr<Entity> entity)
+    void VulkanInitEntity::Visit(std::shared_ptr<Entity> entity)
     {
         std::shared_ptr<Mesh> mesh = std::dynamic_pointer_cast<Mesh>(entity);
         if (!mesh) return;

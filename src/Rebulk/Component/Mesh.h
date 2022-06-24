@@ -54,7 +54,7 @@ namespace Rbk
             bool shouldInverseTextureY = true);
 
         std::vector<Data>* GetData() { return &m_Data; };
-        const inline std::string GetShaderName() { return m_ShaderName; };
+        inline std::string GetShaderName() { return m_ShaderName; };
         void AddUbos(const std::vector<UniformBufferObject> ubos);
 
     //@todo make it private
