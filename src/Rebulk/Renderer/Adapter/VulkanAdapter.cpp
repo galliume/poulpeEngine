@@ -50,14 +50,14 @@ namespace Rbk
             m_SwapChainImageViews[i] = m_Renderer->CreateImageView(m_SwapChainImages[i], m_Renderer->GetSwapChainImageFormat(), VK_IMAGE_ASPECT_COLOR_BIT);
 
             VkImage colorImage;
-            m_Renderer.get()->CreateImage(m_Renderer.get()->GetSwapChainExtent().width, m_Renderer.get()->GetSwapChainExtent().height, 1, m_Renderer.get()->GetMsaaSamples(), m_Renderer.get()->GetSwapChainImageFormat(), VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, colorImage, colorImageMemory);
+            m_Renderer->CreateImage(m_Renderer->GetSwapChainExtent().width, m_Renderer->GetSwapChainExtent().height, 1, m_Renderer->GetMsaaSamples(), m_Renderer->GetSwapChainImageFormat(), VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, colorImage, colorImageMemory);
             VkImageView colorImageView = m_Renderer->CreateImageView(colorImage, m_Renderer->GetSwapChainImageFormat(), VK_IMAGE_ASPECT_COLOR_BIT, 1);
 
             m_ColorImageViews[i] = colorImageView;
 
             VkImage depthImage;
-            m_Renderer.get()->CreateImage(m_Renderer.get()->GetSwapChainExtent().width, m_Renderer.get()->GetSwapChainExtent().height, 1, m_Renderer.get()->GetMsaaSamples(), m_Renderer.get()->FindDepthFormat(), VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, depthImage, depthImageMemory);
-            VkImageView depthImageView = m_Renderer.get()->CreateImageView(depthImage, m_Renderer.get()->FindDepthFormat(), 1, VK_IMAGE_ASPECT_DEPTH_BIT);
+            m_Renderer->CreateImage(m_Renderer->GetSwapChainExtent().width, m_Renderer->GetSwapChainExtent().height, 1, m_Renderer->GetMsaaSamples(), m_Renderer->FindDepthFormat(), VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, depthImage, depthImageMemory);
+            VkImageView depthImageView = m_Renderer->CreateImageView(depthImage, m_Renderer->FindDepthFormat(), 1, VK_IMAGE_ASPECT_DEPTH_BIT);
 
             m_DepthImageViews[i] = depthImageView;
         }
@@ -113,15 +113,15 @@ namespace Rbk
             m_SwapChainImageViews[i] = m_Renderer->CreateImageView(m_SwapChainImages[i], m_Renderer->GetSwapChainImageFormat(), VK_IMAGE_ASPECT_COLOR_BIT);
             VkDeviceMemory colorImageMemory;
             VkImage colorImage;
-            m_Renderer.get()->CreateImage(m_Renderer.get()->GetSwapChainExtent().width, m_Renderer.get()->GetSwapChainExtent().height, 1, m_Renderer.get()->GetMsaaSamples(), m_Renderer.get()->GetSwapChainImageFormat(), VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, colorImage, colorImageMemory);
+            m_Renderer->CreateImage(m_Renderer->GetSwapChainExtent().width, m_Renderer->GetSwapChainExtent().height, 1, m_Renderer->GetMsaaSamples(), m_Renderer->GetSwapChainImageFormat(), VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, colorImage, colorImageMemory);
             VkImageView colorImageView = m_Renderer->CreateImageView(colorImage, m_Renderer->GetSwapChainImageFormat(), VK_IMAGE_ASPECT_COLOR_BIT, 1);
 
             m_ColorImageViews[i] = colorImageView;
 
             VkImage depthImage;
             VkDeviceMemory depthImageMemory;
-            m_Renderer.get()->CreateImage(m_Renderer.get()->GetSwapChainExtent().width, m_Renderer.get()->GetSwapChainExtent().height, 1, m_Renderer.get()->GetMsaaSamples(), m_Renderer.get()->FindDepthFormat(), VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, depthImage, depthImageMemory);
-            VkImageView depthImageView = m_Renderer.get()->CreateImageView(depthImage, m_Renderer.get()->FindDepthFormat(), 1, VK_IMAGE_ASPECT_DEPTH_BIT);
+            m_Renderer->CreateImage(m_Renderer->GetSwapChainExtent().width, m_Renderer->GetSwapChainExtent().height, 1, m_Renderer->GetMsaaSamples(), m_Renderer->FindDepthFormat(), VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, depthImage, depthImageMemory);
+            VkImageView depthImageView = m_Renderer->CreateImageView(depthImage, m_Renderer->FindDepthFormat(), 1, VK_IMAGE_ASPECT_DEPTH_BIT);
 
             m_DepthImageViews[i] = depthImageView;
         }
@@ -173,7 +173,6 @@ namespace Rbk
         VkVertexInputBindingDescription bDesc = Vertex::GetBindingDescription();
 
         std::shared_ptr<VulkanInitEntity> vulkanisator = std::make_shared<VulkanInitEntity>(shared_from_this(), descriptorPool);
-    
         for (std::shared_ptr<Entity>& entity : *entities) {
             entity->Accept(vulkanisator);
         }
@@ -256,7 +255,7 @@ namespace Rbk
         inheritanceInfo.subpass = 0;
 
         //draw the mesh entities !
-        std::future meshFuture = std::async(std::launch::async, [=, &pushConstants]() {
+        auto meshFuture = std::async(std::launch::async, [=, &pushConstants]() {
 
             m_Renderer->BeginCommandBuffer(m_EntitiesCommandBuffers[m_ImageIndex], VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT, inheritanceInfo);
             m_Renderer->SetViewPort(m_EntitiesCommandBuffers[m_ImageIndex]);
@@ -300,10 +299,11 @@ namespace Rbk
                 }
             }
             m_Renderer->EndCommandBuffer(m_EntitiesCommandBuffers[m_ImageIndex]);
+
         });
 
         //draw the skybox !
-        std::future skyboxFuture = std::async(std::launch::async, [=]() {
+        auto skyboxFuture = std::async(std::launch::async, [=]() {
             m_Renderer->BeginCommandBuffer(m_SkyboxCommandBuffers[m_ImageIndex], VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT, inheritanceInfo);
             m_Renderer->SetViewPort(m_SkyboxCommandBuffers[m_ImageIndex]);
             m_Renderer->SetScissor(m_SkyboxCommandBuffers[m_ImageIndex]);
@@ -326,7 +326,7 @@ namespace Rbk
         });
 
         //draw the crosshair
-        std::future hudFuture = std::async(std::launch::async, [=]() {
+        auto hudFuture = std::async(std::launch::async, [=]() {
             m_Renderer->BeginCommandBuffer(m_HUDCommandBuffers[m_ImageIndex], VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT, inheritanceInfo);
             m_Renderer->SetViewPort(m_HUDCommandBuffers[m_ImageIndex]);
             m_Renderer->SetScissor(m_HUDCommandBuffers[m_ImageIndex]);
