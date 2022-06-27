@@ -22,8 +22,9 @@
 // (minor and older changes stripped away, please see git history for details)
 //  2022-XX-XX: Platform: Added support for multiple windows via the ImGuiPlatformIO interface.
 //  2022-03-22: Inputs: Fix mouse position issues when dragging outside of boundaries. SDL_CaptureMouse() erroneously still gives out LEAVE events when hovering OS decorations.
+//  2022-03-22: Inputs: Added support for extra mouse buttons (SDL_BUTTON_X1/SDL_BUTTON_X2).
 //  2022-02-04: Added SDL_Renderer* parameter to ImGui_ImplSDL2_InitForSDLRenderer(), so we can use SDL_GetRendererOutputSize() instead of SDL_GL_GetDrawableSize() when bound to a SDL_Renderer.
-//  2022-01-26: Inputs: replaced short-lived io.AddKeyModsEvent() (added two weeks ago)with io.AddKeyEvent() using ImGuiKey_ModXXX flags. Sorry for the confusion.
+//  2022-01-26: Inputs: replaced short-lived io.AddKeyModsEvent() (added two weeks ago) with io.AddKeyEvent() using ImGuiKey_ModXXX flags. Sorry for the confusion.
 //  2021-01-20: Inputs: calling new io.AddKeyAnalogEvent() for gamepad support, instead of writing directly to io.NavInputs[].
 //  2022-01-17: Inputs: calling new io.AddMousePosEvent(), io.AddMouseButtonEvent(), io.AddMouseWheelEvent() API (1.87+).
 //  2022-01-17: Inputs: always update key mods next and before key event (not in NewFrame) to fix input queue with very low framerates.
@@ -73,7 +74,7 @@
 #include <TargetConditionals.h>
 #endif
 
-#if SDL_VERSION_ATLEAST(2,0,4) && !defined(__EMSCRIPTEN__) && !defined(__ANDROID__) && !(defined(__APPLE__) && TARGET_OS_IOS)
+#if SDL_VERSION_ATLEAST(2,0,4) && !defined(__EMSCRIPTEN__) && !defined(__ANDROID__) && !(defined(__APPLE__) && TARGET_OS_IOS) && !defined(__amigaos4__)
 #define SDL_HAS_CAPTURE_AND_GLOBAL_MOUSE    1
 #else
 #define SDL_HAS_CAPTURE_AND_GLOBAL_MOUSE    0
@@ -102,7 +103,7 @@ struct ImGui_ImplSDL2_Data
     bool            MouseCanUseGlobalState;
     bool            UseVulkan;
 
-    ImGui_ImplSDL2_Data()   { memset(this, 0, sizeof(*this)); }
+    ImGui_ImplSDL2_Data()   { memset((void*)this, 0, sizeof(*this)); }
 };
 
 // Backend data stored in io.BackendPlatformUserData to allow support for multiple Dear ImGui contexts
@@ -257,8 +258,8 @@ static void ImGui_ImplSDL2_UpdateKeyModifiers(SDL_Keymod sdl_key_mods)
 }
 
 // You can read the io.WantCaptureMouse, io.WantCaptureKeyboard flags to tell if dear imgui wants to use your inputs.
-// - When io.WantCaptureMouse is true, do not dispatch mouse input data to your main application.
-// - When io.WantCaptureKeyboard is true, do not dispatch keyboard input data to your main application.
+// - When io.WantCaptureMouse is true, do not dispatch mouse input data to your main application, or clear/overwrite your copy of the mouse data.
+// - When io.WantCaptureKeyboard is true, do not dispatch keyboard input data to your main application, or clear/overwrite your copy of the keyboard data.
 // Generally you may always pass all inputs to dear imgui, and hide them from your application based on those two flags.
 // If you have multiple SDL events and some of them are not meant to be used by dear imgui, you may need to filter events based on their windowID field.
 bool ImGui_ImplSDL2_ProcessEvent(const SDL_Event* event)
@@ -295,6 +296,8 @@ bool ImGui_ImplSDL2_ProcessEvent(const SDL_Event* event)
             if (event->button.button == SDL_BUTTON_LEFT) { mouse_button = 0; }
             if (event->button.button == SDL_BUTTON_RIGHT) { mouse_button = 1; }
             if (event->button.button == SDL_BUTTON_MIDDLE) { mouse_button = 2; }
+            if (event->button.button == SDL_BUTTON_X1) { mouse_button = 3; }
+            if (event->button.button == SDL_BUTTON_X2) { mouse_button = 4; }
             if (mouse_button == -1)
                 break;
             io.AddMouseButtonEvent(mouse_button, (event->type == SDL_MOUSEBUTTONDOWN));
@@ -405,12 +408,16 @@ static bool ImGui_ImplSDL2_Init(SDL_Window* window, SDL_Renderer* renderer, void
     // Our mouse update function expect PlatformHandle to be filled for the main viewport
     ImGuiViewport* main_viewport = ImGui::GetMainViewport();
     main_viewport->PlatformHandle = (void*)window;
-#ifdef _WIN32
     SDL_SysWMinfo info;
     SDL_VERSION(&info.version);
     if (SDL_GetWindowWMInfo(window, &info))
+    {
+#ifdef _WIN32
         main_viewport->PlatformHandleRaw = (void*)info.info.win.window;
+#elif defined(__APPLE__)
+        main_viewport->PlatformHandleRaw = (void*)info.info.cocoa.window;
 #endif
+    }
 
     // Set SDL hint to receive mouse click events on window focus, otherwise SDL doesn't emit the event.
     // Without this, when clicking to gain focus, our widgets wouldn't activate even though they showed as hovered.
@@ -636,6 +643,8 @@ static void ImGui_ImplSDL2_UpdateMonitors()
         monitor.WorkSize = ImVec2((float)r.w, (float)r.h);
 #endif
 #if SDL_HAS_PER_MONITOR_DPI
+        // FIXME-VIEWPORT: On MacOS SDL reports actual monitor DPI scale, ignoring OS configuration. We may want to set
+        //  DpiScale to cocoa_window.backingScaleFactor here.
         float dpi = 0.0f;
         if (!SDL_GetDisplayDPI(n, &dpi, NULL, NULL))
             monitor.DpiScale = dpi / 96.0f;
@@ -745,12 +754,16 @@ static void ImGui_ImplSDL2_CreateWindow(ImGuiViewport* viewport)
         SDL_GL_MakeCurrent(vd->Window, backup_context);
 
     viewport->PlatformHandle = (void*)vd->Window;
-#if defined(_WIN32)
     SDL_SysWMinfo info;
     SDL_VERSION(&info.version);
     if (SDL_GetWindowWMInfo(vd->Window, &info))
+    {
+#if defined(_WIN32)
         viewport->PlatformHandleRaw = info.info.win.window;
+#elif defined(__APPLE__)
+        viewport->PlatformHandleRaw = (void*)info.info.cocoa.window;
 #endif
+    }
 }
 
 static void ImGui_ImplSDL2_DestroyWindow(ImGuiViewport* viewport)
