@@ -53,10 +53,8 @@ namespace Rbk
         inline std::vector<VkCommandBuffer>* GetSkyboxCommandBuffers() { return &m_SkyboxCommandBuffers; };
         inline VkCommandPool* GetHUDCommandPool() { return &m_HUDCommandPool; };
         inline std::vector<VkCommandBuffer>* GetHUDCommandBuffers() { return &m_HUDCommandBuffers; };
-        inline std::shared_ptr<TextureManager> GetTextureManager() { return m_TextureManager; };
         inline std::vector<VkDescriptorSetLayout>* GetDescriptorSetLayouts() { return &m_DescriptorSetLayouts; };
         inline std::vector<VkImage>* GetSwapChainImages() { return &m_SwapChainImages; };
-        inline std::shared_ptr<ShaderManager> GetShaderManager() { return m_ShaderManager; };
         inline glm::mat4 GetPerspective() { return m_Perspective; };
 
         //@todo add GuiManager
@@ -68,6 +66,10 @@ namespace Rbk
         static float s_FogDensity;
         static float s_FogColor[3];
         static int s_Crosshair;
+
+        std::shared_ptr<TextureManager> GetTextureManager() { return m_TextureManager; };
+        std::shared_ptr<EntityManager> GetEntityManager() { return m_EntityManager; };
+        std::shared_ptr<ShaderManager> GetShaderManager() { return m_ShaderManager; };
 
     private:
         //@todo temp
@@ -89,9 +91,11 @@ namespace Rbk
         bool m_WireFrameModeOn = false;
         std::shared_ptr<Camera> m_Camera = nullptr;
         std::shared_ptr<Window> m_Window = nullptr;
+
         std::shared_ptr<TextureManager> m_TextureManager = nullptr;
         std::shared_ptr<EntityManager> m_EntityManager = nullptr;
         std::shared_ptr<ShaderManager> m_ShaderManager = nullptr;
+
         //@todo move to meshManager
         std::shared_ptr<Mesh> m_HUD = nullptr;
         std::vector<VkImageView>m_DepthImageViews = {};

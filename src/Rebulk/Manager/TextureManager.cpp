@@ -79,14 +79,14 @@ namespace Rbk
         VkImageView textureImageView = m_Renderer->CreateSkyboxImageView(skyboxImage, VK_FORMAT_R8G8B8A8_SRGB, mipLevels);
         VkSampler textureSampler = m_Renderer->CreateSkyboxTextureSampler(mipLevels);
 
-        m_Skybox.image = skyboxImage;
-        m_Skybox.imageMemory = textureImageMemory;
-        m_Skybox.imageView = textureImageView;
-        m_Skybox.sampler = textureSampler;
-        m_Skybox.mipLevels = mipLevels;
-        m_Skybox.width = texWidth;
-        m_Skybox.height = texHeight;
-        m_Skybox.channels = texChannels;
+        m_Skybox.SetImage(skyboxImage);
+        m_Skybox.SetImageMemory(textureImageMemory);
+        m_Skybox.SetImageView(textureImageView);
+        m_Skybox.SetSampler(textureSampler);
+        m_Skybox.SetMipLevels(mipLevels);
+        m_Skybox.SetWidth(texWidth);
+        m_Skybox.SetHeight(texHeight);
+        m_Skybox.SetChannels(texChannels);
 
         vkFreeCommandBuffers(m_Renderer->GetDevice(), commandPool, 1, &commandBuffer);
         vkDestroyCommandPool(m_Renderer->GetDevice(), commandPool, nullptr);
@@ -103,6 +103,8 @@ namespace Rbk
             std::cout << "Texture " << name << " already imported" << std::endl;
             return;
         }
+
+        m_Paths.insert({ name, path });
 
         int texWidth, texHeight, texChannels;
         stbi_uc* pixels = stbi_load(path.c_str(), &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
@@ -125,15 +127,15 @@ namespace Rbk
         VkSampler textureSampler = m_Renderer->CreateTextureSampler(mipLevels);
 
         Rbk::Texture texture;
-        texture.name = name;
-        texture.image = textureImage;
-        texture.imageMemory = textureImageMemory;
-        texture.imageView = textureImageView;
-        texture.sampler = textureSampler;
-        texture.mipLevels = mipLevels;
-        texture.width = texWidth;
-        texture.height = texHeight;
-        texture.channels = texChannels;
+        texture.SetName(name);
+        texture.SetImage(textureImage);
+        texture.SetImageMemory(textureImageMemory);
+        texture.SetImageView(textureImageView);
+        texture.SetSampler(textureSampler);
+        texture.SetMipLevels(mipLevels);
+        texture.SetWidth(texWidth);
+        texture.SetHeight(texHeight);
+        texture.SetChannels(texChannels);
 
         m_Textures.emplace(name, texture);
         vkFreeCommandBuffers(m_Renderer->GetDevice(), commandPool, 1, &commandBuffer);

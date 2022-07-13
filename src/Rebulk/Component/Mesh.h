@@ -43,19 +43,22 @@ namespace Rbk
         Mesh();
         ~Mesh();
 
-        void Init(std::string name,
-            std::string path,
-            std::vector<std::string> textureNames,
-            std::string shader,
-            glm::vec3 pos,
-            glm::vec3 scale,
+        void Init(const std::string& name,
+            const std::string& path,
+            const std::vector<std::string>& textureNames,
+            const std::string& shader,
+            const glm::vec3& pos,
+            const glm::vec3& scale,
             glm::vec3 axisRot = glm::vec3(1.0f),
             float rotAngle = 0.0f,
             bool shouldInverseTextureY = true);
 
         std::vector<Data>* GetData() { return &m_Data; };
-        inline std::string GetShaderName() { return m_ShaderName; };
-        void AddUbos(const std::vector<UniformBufferObject> ubos);
+        
+        inline const std::string GetShaderName() const { return m_ShaderName; };
+        inline const std::vector<VkDescriptorSet> GetDescriptorSets() const { return m_DescriptorSets; };
+
+        void AddUbos(const std::vector<UniformBufferObject>& ubos);
 
     //@todo make it private
     public:
