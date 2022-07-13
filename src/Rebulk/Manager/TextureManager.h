@@ -12,9 +12,12 @@ namespace Rbk
         void AddTexture(std::string name, std::string path);
         inline std::map<std::string, Texture> GetTextures() { return m_Textures; };
         void Load();
+        inline std::map<std::string, std::string> GetPaths() { return m_Paths; };
+
     private:
         std::map<std::string, Texture> m_Textures;
         Texture m_Skybox;
         std::shared_ptr<VulkanRenderer> m_Renderer = nullptr;
+        std::map<std::string, std::string>m_Paths;
     };
 }

@@ -11,9 +11,11 @@ namespace Rbk
         virtual void Draw();
         virtual void Accept(std::shared_ptr<IVisitor> visitor);
         virtual ~Entity();
+        
+        inline const std::string& GetName() const { return m_Name; }
+        void SetName(const std::string& name) { m_Name = name; }
 
-    //@todo make it private
-    public:
+    private:
         std::string m_Name;
     };
 }

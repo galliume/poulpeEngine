@@ -103,8 +103,8 @@ namespace Rbk
         );
 
         VkDescriptorImageInfo skyDescriptorImageInfo{};
-        skyDescriptorImageInfo.sampler = tex.sampler;
-        skyDescriptorImageInfo.imageView = tex.imageView;
+        skyDescriptorImageInfo.sampler = tex.GetSampler();
+        skyDescriptorImageInfo.imageView = tex.GetImageView();
         skyDescriptorImageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
         for (uint32_t i = 0; i < m_Adapter->GetSwapChainImages()->size(); i++) {

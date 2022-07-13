@@ -5,16 +5,15 @@ namespace Rbk
 {
     Mesh::Mesh() : Entity() { }
 
-    void Mesh::Init(
-         std::string name,
-         std::string path,
-         std::vector<std::string> textureNames,
-         std::string shader,
-         glm::vec3 pos,
-         glm::vec3 scale,
-         glm::vec3 axisRot,
-         float rotAngle,
-         bool shouldInverseTextureY)
+    void Mesh::Init(const std::string& name,
+        const std::string& path,
+        const std::vector<std::string>& textureNames,
+        const std::string& shader,
+        const glm::vec3& pos,
+        const glm::vec3& scale,
+        glm::vec3 axisRot,
+        float rotAngle,
+        bool shouldInverseTextureY)
     {
         //@todo move out of Mesh
         if (!std::filesystem::exists(path)) {
@@ -25,7 +24,7 @@ namespace Rbk
         std::vector<TinyObjData> listData = Rbk::TinyObjLoader::LoadData(path, shouldInverseTextureY);
         //end todo
 
-        m_Name = name;
+        SetName(name);
         m_ShaderName = shader;
 
         for (size_t i = 0; i < listData.size(); i++) {
@@ -55,7 +54,7 @@ namespace Rbk
         }
     }
 
-    void Mesh::AddUbos(const std::vector<UniformBufferObject> ubos)
+    void Mesh::AddUbos(const std::vector<UniformBufferObject>& ubos)
     {
         for (auto& data : m_Data) {
             data.m_Ubos.insert(data.m_Ubos.end(), ubos.begin(), ubos.end());

@@ -384,9 +384,9 @@ namespace Rbk {
         descriptorIndexing.descriptorBindingVariableDescriptorCount = VK_TRUE;
         descriptorIndexing.descriptorBindingPartiallyBound = VK_TRUE;
 
-        //VkPhysicalDeviceDynamicRenderingFeaturesKHR dynamicRenderingFeature{};
-        //dynamicRenderingFeature.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DYNAMIC_RENDERING_FEATURES_KHR;
-        //dynamicRenderingFeature.dynamicRendering = VK_TRUE;
+        VkPhysicalDeviceDynamicRenderingFeaturesKHR dynamicRenderingFeature{};
+        dynamicRenderingFeature.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DYNAMIC_RENDERING_FEATURES_KHR;
+        dynamicRenderingFeature.dynamicRendering = VK_TRUE;
 
         VkDeviceCreateInfo createInfo{};
         createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
@@ -1166,17 +1166,17 @@ namespace Rbk {
         clearValues.color = { {0.f, 0.f, 0.f, 1.0f} };
         clearValues.depthStencil = { 1.0f, 0 };
 
-        //VkRenderingAttachmentInfoKHR imageAttachment{};
-        //imageAttachment.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO_KHR;
-        ////imageAttachment.pNext;
-        //imageAttachment.imageView = imageView;
-        //imageAttachment.imageLayout = VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL_KHR;
-        //imageAttachment.resolveMode = VK_RESOLVE_MODE_NONE;
-        ////colorAttachment.resolveImageView;
-        ////colorAttachment.resolveImageLayout;
-        //imageAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-        //imageAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-        //imageAttachment.clearValue = clearValues;
+        VkRenderingAttachmentInfoKHR imageAttachment{};
+        imageAttachment.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO_KHR;
+        //imageAttachment.pNext;
+        imageAttachment.imageView = imageView;
+        imageAttachment.imageLayout = VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL_KHR;
+        imageAttachment.resolveMode = VK_RESOLVE_MODE_NONE;
+        //colorAttachment.resolveImageView;
+        //colorAttachment.resolveImageLayout;
+        imageAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+        imageAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+        imageAttachment.clearValue = clearValues;
 
         VkRenderingAttachmentInfoKHR colorAttachment{};
         colorAttachment.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO_KHR;
