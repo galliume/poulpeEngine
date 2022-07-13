@@ -43,8 +43,8 @@ namespace Rbk
 
             VkDescriptorImageInfo imageInfo{};
             imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-            imageInfo.imageView = tex.imageView;
-            imageInfo.sampler = tex.sampler;
+            imageInfo.imageView = tex.GetImageView();
+            imageInfo.sampler = tex.GetSampler();
 
             imageInfos.emplace_back(imageInfo);
             index++;

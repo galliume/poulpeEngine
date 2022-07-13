@@ -41,7 +41,7 @@ namespace Rbk
         crossHairData.m_Ubos.emplace_back(ubo);
         crossHairData.m_Indices = indices;
 
-        mesh->m_Name = "hud";
+        mesh->SetName("hud");
 
         std::pair<VkBuffer, VkDeviceMemory> crossHairuniformBuffer = m_Adapter->Rdr()->CreateUniformBuffers(1);
         mesh->m_UniformBuffers.emplace_back(crossHairuniformBuffer);
@@ -52,13 +52,13 @@ namespace Rbk
         std::vector<VkDescriptorImageInfo>cimageInfos;
         VkDescriptorImageInfo cimageInfo{};
         cimageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-        cimageInfo.imageView = ctex.imageView;
-        cimageInfo.sampler = ctex.sampler;
+        cimageInfo.imageView = ctex.GetImageView();
+        cimageInfo.sampler = ctex.GetSampler();
 
         VkDescriptorImageInfo cimageInfo2{};
         cimageInfo2.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-        cimageInfo2.imageView = ctex2.imageView;
-        cimageInfo2.sampler = ctex2.sampler;
+        cimageInfo2.imageView = ctex2.GetImageView();
+        cimageInfo2.sampler = ctex2.GetSampler();
 
         cimageInfos.emplace_back(cimageInfo);
         cimageInfos.emplace_back(cimageInfo2);

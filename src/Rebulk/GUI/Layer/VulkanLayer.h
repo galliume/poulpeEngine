@@ -16,6 +16,7 @@ namespace Rbk
         void DisplayAPI(VkPhysicalDeviceProperties devicesProps);
         void Render(double timeStep, VkPhysicalDeviceProperties devicesProps);
         void DisplayOptions();
+        void DisplayTextures();
         void AddRenderAdapter(std::shared_ptr<VulkanAdapter> renderAdapter);
         void AddWindow(std::shared_ptr<Window> window) { m_Window = window; };
         void AddTextureManager(std::shared_ptr<TextureManager> textureManager) { m_TextureManager = textureManager; };

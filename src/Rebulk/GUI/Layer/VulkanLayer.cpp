@@ -18,34 +18,37 @@ namespace Rbk
 
         ImGui::Begin("Rebulkan Engine", &open, flags);
 
-        ImGuiID dockspace_id = ImGui::GetID("Dockspace");
-        ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f));
+            ImGuiID dockspace_id = ImGui::GetID("Dockspace");
+            ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f));
 
-        if (ImGui::BeginMenuBar())
-        {
-            if (ImGui::BeginMenu("Rebulk"))
+            if (ImGui::BeginMenuBar())
             {
-                if (ImGui::MenuItem("Quit", "Alt+F4")) 
+                if (ImGui::BeginMenu("Rebulk"))
                 {
-                    m_Window->Quit();
+                    if (ImGui::MenuItem("Quit", "Alt+F4")) 
+                    {
+                        m_Window->Quit();
+                    }
+                    ImGui::Separator();
+                    ImGui::EndMenu();
                 }
-                ImGui::Separator();
-                ImGui::EndMenu();
             }
-        }
-        ImGui::EndMenuBar();
+            ImGui::EndMenuBar();
 
-        ImGui::Begin("Performances stats");
-        DisplayFpsCounter(timeStep);
-        ImGui::Separator();
-        DisplayAPI(devicesProps);
-        ImGui::Separator();
-        ImGui::End();
+            ImGui::Begin("Performances stats");
+                DisplayFpsCounter(timeStep);
+                ImGui::Separator();
+                DisplayAPI(devicesProps);
+                ImGui::Separator();
+            ImGui::End();
 
-        ImGui::Begin("Options");
-        DisplayOptions();
-        ImGui::End();
+            ImGui::Begin("Options");
+                DisplayOptions();
+            ImGui::End();
 
+            ImGui::Begin("Textures");
+                DisplayTextures();
+            ImGui::End();
         ImGui::End();
 
         if (!open) {
@@ -55,6 +58,47 @@ namespace Rbk
     void VulkanLayer::Destroy()
     {
         Rbk::Im::Destroy();
+    }
+
+    void VulkanLayer::DisplayTextures()
+    {
+        //ImGui::TreeNode("Grid");
+        //int x = 0;
+        //
+        //ImGui::BeginTable("table1", 4);
+        //const auto entities = m_Adapter->GetEntityManager()->GetEntities();
+
+        //for (const auto entity : *entities) {
+
+        //    std::shared_ptr<Mesh> mesh = std::dynamic_pointer_cast<Mesh>(entity);
+        //    if (!mesh) return;
+
+        //    if (0 == x) {
+        //        ImGui::TableNextRow();
+        //    }
+
+        //    ImGui::TableSetColumnIndex(x);
+
+        //    float my_tex_w = 25;
+        //    float my_tex_h = 25;
+        //    ImVec2 uv_min = ImVec2(0.0f, 0.0f);                 // Top-left
+        //    ImVec2 uv_max = ImVec2(1.0f, 1.0f);                 // Lower-right
+        //    ImVec4 tint_col = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);   // No tint
+        //    ImVec4 border_col = ImVec4(1.0f, 1.0f, 1.0f, 0.5f); // 50% opaque white
+        //    for (const auto desc : mesh->GetDescriptorSets()) 
+        //        ImGui::Image(desc, ImVec2(my_tex_w, my_tex_h), uv_min, uv_max, tint_col, border_col);
+
+        //    Rbk::Im::Text("\t%s", mesh->m_Name.c_str());
+        //    //Rbk::Im::Text("\t%s", path.c_str());
+
+        //    if (3 > x) {
+        //        x++;
+        //    } else {
+        //        x = 0;
+        //    }
+        //}
+
+        //ImGui::EndTable();
     }
 
     void VulkanLayer::DisplayFpsCounter(double timeStep)
