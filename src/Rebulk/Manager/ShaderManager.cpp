@@ -19,7 +19,7 @@ namespace Rbk
         });
     }
 
-    void ShaderManager::AddShader(std::string name, const char* vertPath, const char* fragPath)
+    void ShaderManager::AddShader(const std::string& name, const char* vertPath, const char* fragPath)
     {
 
         if (!std::filesystem::exists(vertPath)) {
