@@ -18,7 +18,6 @@ namespace Rbk
 
     public:
         Application();
-        ~Application();
 
         inline static Application* Get() { return s_Instance; };
         void Init();

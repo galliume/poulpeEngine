@@ -42,7 +42,7 @@ namespace Rbk
         });
     }
 
-    void TextureManager::AddSkyBox(std::vector<std::string> skyboxImages)
+    void TextureManager::AddSkyBox(const std::vector<std::string>& skyboxImages)
     {
         int texWidth = 0, texHeight = 0, texChannels = 0;
         std::vector<stbi_uc*>skyboxPixels;
@@ -92,7 +92,7 @@ namespace Rbk
         vkDestroyCommandPool(m_Renderer->GetDevice(), commandPool, nullptr);
     }
 
-    void TextureManager::AddTexture(std::string name, std::string path)
+    void TextureManager::AddTexture(const std::string& name, const std::string& path)
     {
         if (!std::filesystem::exists(path.c_str())) {
             Rbk::Log::GetLogger()->critical("texture file {} does not exits.", path);

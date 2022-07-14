@@ -11,10 +11,12 @@ namespace Rbk
     class ShaderManager
     {
     public:
-        explicit ShaderManager(std::shared_ptr<VulkanRenderer> renderer);
-        void AddShader(std::string name, const char* vertPath, const char* fragPath);
-        inline std::shared_ptr<VulkanShaders> GetShaders() { return m_Shaders; };
+        
+explicit ShaderManager(std::shared_ptr<VulkanRenderer> renderer);
+        void AddShader(const std::string& name, const char* vertPath, const char* fragPath);
         void Load();
+
+        inline const std::shared_ptr<VulkanShaders> GetShaders() const { return m_Shaders; };
 
     private:
         std::shared_ptr<VulkanShaders> m_Shaders = nullptr;
