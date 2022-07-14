@@ -3,12 +3,12 @@
 
 namespace Rbk
 {
-    EntityManager::EntityManager(std::shared_ptr<VulkanRenderer> renderer) : m_Renderer(renderer)
+    EntityManager::EntityManager(const std::shared_ptr<VulkanRenderer>& renderer) : m_Renderer(renderer)
     {
 
     }
 
-    uint32_t EntityManager::GetInstancedCount()
+    const uint32_t EntityManager::GetInstancedCount()
     {
         uint32_t total = 0;
 
@@ -21,7 +21,7 @@ namespace Rbk
         return total;
     }
 
-    void EntityManager::AddEntity(const std::shared_ptr<Entity> entity)
+    void EntityManager::AddEntity(const std::shared_ptr<Entity>& entity)
     {
         uint64_t count = m_LoadedEntities.count(entity->GetName().c_str());
 
@@ -46,12 +46,12 @@ namespace Rbk
         }
     }
 
-    std::shared_ptr<Entity> EntityManager::GetEntityByName(const std::string name)
+    const std::shared_ptr<Entity> EntityManager::GetEntityByName(const std::string& name) const
     {
-        std::vector<std::shared_ptr<Entity>>::iterator it = std::find_if(
-            m_Entities.begin(),
-            m_Entities.end(),
-            [name](std::shared_ptr<Entity> entity) -> bool { return entity->GetName() == name; });
+        auto it = std::find_if(
+            m_Entities.cbegin(),
+            m_Entities.cend(),
+            [name](const std::shared_ptr<Entity>& entity) -> bool { return entity->GetName() == name; });
 
         return *it;
     }

@@ -16,11 +16,6 @@ namespace Rbk
         }
     }
 
-    Application::~Application()
-    {
-
-    }
-
     void Application::Init()
     {
         Rbk::Log::Init();

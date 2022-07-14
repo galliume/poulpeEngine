@@ -11,16 +11,17 @@ namespace Rbk
     {
     public:
 
-        explicit EntityManager(std::shared_ptr<VulkanRenderer> renderer);
-        void AddEntity(const std::shared_ptr<Entity> entity);
-        inline std::map<std::string, std::array<uint32_t, 2>> GetLoadedEntities() { return m_LoadedEntities; };
-        uint32_t GetInstancedCount();
-        inline uint32_t GetTotalEntities() { return m_Entities.size(); };
-        inline std::shared_ptr<Mesh> GetSkyboxMesh() { return m_SkyboxMesh; };
-        inline void SetSkyboxMesh(std::shared_ptr<Mesh> skyboxMesh) { m_SkyboxMesh = skyboxMesh; };
-        inline std::vector<std::shared_ptr<Entity>>* GetEntities() { return &m_Entities; };
-        std::shared_ptr<Entity> GetEntityByName(const std::string name);
+        explicit EntityManager(const std::shared_ptr<VulkanRenderer>& renderer);
+        void AddEntity(const std::shared_ptr<Entity>& entity);
         void Load();
+        const std::shared_ptr<Entity> GetEntityByName(const std::string& name) const;
+        const uint32_t GetInstancedCount();
+
+        inline const std::map<std::string, std::array<uint32_t, 2>> GetLoadedEntities() const { return m_LoadedEntities; };
+        inline const uint32_t GetTotalEntities() const { return m_Entities.size(); };
+        inline std::shared_ptr<Mesh> GetSkyboxMesh() { return m_SkyboxMesh; };
+        inline std::vector<std::shared_ptr<Entity>>* GetEntities() { return &m_Entities; };
+        inline void SetSkyboxMesh(std::shared_ptr<Mesh> skyboxMesh) { m_SkyboxMesh = skyboxMesh; };
 
     private:
         std::vector<std::shared_ptr<Entity>> m_Entities;
