@@ -99,8 +99,9 @@ namespace Rbk
         cPushconstant.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 
         cpushConstants.emplace_back(cPushconstant);
+        std::vector<VkDescriptorSetLayout>dSetLayout = { cdesriptorSetLayout };
 
-        mesh->m_PipelineLayout = m_Adapter->Rdr()->CreatePipelineLayout(mesh->m_DescriptorSets, { cdesriptorSetLayout }, cpushConstants);
+        mesh->m_PipelineLayout = m_Adapter->Rdr()->CreatePipelineLayout(mesh->m_DescriptorSets, dSetLayout, cpushConstants);
 
         std::vector<VkPipelineShaderStageCreateInfo>cshadersStageInfos;
 

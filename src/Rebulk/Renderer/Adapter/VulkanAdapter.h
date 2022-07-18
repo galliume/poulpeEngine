@@ -99,7 +99,7 @@ namespace Rbk
         //@todo move to meshManager
         std::shared_ptr<Mesh> m_HUD = nullptr;
         std::vector<VkImageView>m_DepthImageViews = {};
-        std::vector<VkImageView>m_ColorImageViews = {};
+        std::vector<VkImage>m_DepthImages = {};
         glm::mat4 m_Perspective;
         glm::mat4 m_lastLookAt;
         float m_Deltatime = 0.0f;

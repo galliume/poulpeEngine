@@ -61,10 +61,10 @@ namespace Rbk {
 
     VulkanRenderer::VulkanRenderer(std::shared_ptr<Window> window) : m_Window(window)
     {
-#ifdef NDEBUG
-        m_EnableValidationLayers = false;
-#else
+#ifdef RBK_DEBUG
         m_EnableValidationLayers = true;
+#else
+        m_EnableValidationLayers = false;
 #endif
 
         if (!glfwVulkanSupported()) {
@@ -497,7 +497,7 @@ namespace Rbk {
         return imageCount;
     }
 
-    VkSwapchainKHR VulkanRenderer::CreateSwapChain(std::vector<VkImage>& swapChainImages, VkSwapchainKHR oldSwapChain)
+    VkSwapchainKHR VulkanRenderer::CreateSwapChain(std::vector<VkImage>& swapChainImages, const VkSwapchainKHR& oldSwapChain)
     {
         VkSwapchainKHR swapChain = VK_NULL_HANDLE;
 
@@ -620,7 +620,7 @@ namespace Rbk {
         return swapChainImageView;
     }
 
-    VkDescriptorSetLayout VulkanRenderer::CreateDescriptorSetLayout(std::vector<VkDescriptorSetLayoutBinding> pBindings, VkDescriptorSetLayoutCreateFlagBits flags)
+    VkDescriptorSetLayout VulkanRenderer::CreateDescriptorSetLayout(const std::vector<VkDescriptorSetLayoutBinding>& pBindings, const VkDescriptorSetLayoutCreateFlagBits& flags)
     {
         VkDescriptorSetLayout descriptorSetLayout;
 
@@ -638,7 +638,7 @@ namespace Rbk {
         return descriptorSetLayout;
     }
 
-    VkPipelineLayout VulkanRenderer::CreatePipelineLayout(std::vector<VkDescriptorSet> descriptorSets, std::vector<VkDescriptorSetLayout> descriptorSetLayouts, std::vector<VkPushConstantRange> pushConstants)
+    VkPipelineLayout VulkanRenderer::CreatePipelineLayout(const std::vector<VkDescriptorSet>& descriptorSets, const std::vector<VkDescriptorSetLayout>& descriptorSetLayouts, const std::vector<VkPushConstantRange>& pushConstants)
     {
         VkPipelineLayout graphicsPipelineLayout = VK_NULL_HANDLE;
 
@@ -717,7 +717,7 @@ namespace Rbk {
         VkPipelineMultisampleStateCreateInfo multisampling{};
         multisampling.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
         multisampling.sampleShadingEnable = VK_FALSE;
-        multisampling.rasterizationSamples = m_MsaaSamples;
+        multisampling.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;//m_MsaaSamples;
         multisampling.minSampleShading = 0.2f;
         multisampling.pSampleMask = nullptr;
         multisampling.alphaToCoverageEnable = VK_FALSE;
@@ -779,25 +779,16 @@ namespace Rbk {
         pipelineInfo.basePipelineIndex = -1;
         pipelineInfo.pDynamicState = &dynamicState;
 
-        if (dynamicRendering) {
-            VkFormat format = GetSwapChainImageFormat();
-            VkFormat depthFormat = FindDepthFormat();
 
-            std::array<VkFormat, 1> colorAttachmentFormats = { m_SurfaceFormat.format };
+        VkFormat format = GetSwapChainImageFormat();
+        VkFormat depthFormat = FindDepthFormat();
 
-/*            VkAttachmentSampleCountInfoNV sampleCount{};
-            sampleCount.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_COARSE_SAMPLE_ORDER_STATE_CREATE_INFO_NV;
-            sampleCount.colorAttachmentCount = 1;
-            sampleCount.pColorAttachmentSamples = samplesFlags.data();
-            sampleCount.depthStencilAttachmentSamples = VK_SAMPLE_COUNT_8_BIT*/;
+        VkPipelineRenderingCreateInfoKHR renderingCreateInfo = { VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO_KHR };
+        renderingCreateInfo.colorAttachmentCount = 1;
+        renderingCreateInfo.pColorAttachmentFormats = &format;
+        renderingCreateInfo.depthAttachmentFormat = depthFormat; //(VK_FORMAT_D32_SFLOAT) 
 
-            VkPipelineRenderingCreateInfoKHR renderingCreateInfo{};
-            renderingCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO_KHR;
-            renderingCreateInfo.colorAttachmentCount = 1;
-            renderingCreateInfo.pColorAttachmentFormats = colorAttachmentFormats.data();
-            renderingCreateInfo.depthAttachmentFormat = depthFormat;
-            pipelineInfo.pNext = &renderingCreateInfo;
-        }
+        pipelineInfo.pNext = &renderingCreateInfo;
 
         VkPipeline graphicsPipeline = nullptr;
 
@@ -948,7 +939,7 @@ namespace Rbk {
         return shaderModule;
     }
 
-    std::shared_ptr<VkRenderPass> VulkanRenderer::CreateRenderPass(VkSampleCountFlagBits msaaSamples)
+    std::shared_ptr<VkRenderPass> VulkanRenderer::CreateRenderPass(const VkSampleCountFlagBits& msaaSamples)
     {
         SwapChainSupportDetails swapChainSupport = QuerySwapChainSupport(m_PhysicalDevice);
         VkSurfaceFormatKHR surfaceFormat = ChooseSwapSurfaceFormat(swapChainSupport.formats);
@@ -1003,7 +994,6 @@ namespace Rbk {
         VkAttachmentReference depthAttachmentRef{};
         depthAttachmentRef.attachment = 1;
         depthAttachmentRef.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-
 
         VkSubpassDescription subpass{};
         subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
@@ -1181,7 +1171,7 @@ namespace Rbk {
         return semaphores;
     }
 
-    VkDescriptorPool VulkanRenderer::CreateDescriptorPool(std::vector<VkDescriptorPoolSize> poolSizes, uint32_t maxSets)
+    VkDescriptorPool VulkanRenderer::CreateDescriptorPool(const std::vector<VkDescriptorPoolSize>& poolSizes, uint32_t maxSets)
     {
         VkDescriptorPool descriptorPool;
 
@@ -1200,7 +1190,7 @@ namespace Rbk {
         return descriptorPool;
     }
 
-    VkDescriptorSet VulkanRenderer::CreateDescriptorSets(VkDescriptorPool descriptorPool, std::vector<VkDescriptorSetLayout> descriptorSetLayouts, uint32_t count)
+    VkDescriptorSet VulkanRenderer::CreateDescriptorSets(const VkDescriptorPool& descriptorPool, const std::vector<VkDescriptorSetLayout>& descriptorSetLayouts, uint32_t count)
     {
         VkDescriptorSet descriptorSet;
 
@@ -1219,10 +1209,9 @@ namespace Rbk {
         return descriptorSet;
     }
 
-    void VulkanRenderer::UpdateDescriptorSets(std::vector<std::pair<VkBuffer, VkDeviceMemory>>uniformBuffers, VkDescriptorSet descriptorSet, std::vector<VkDescriptorImageInfo> imageInfo)
+    void VulkanRenderer::UpdateDescriptorSets(const std::vector<std::pair<VkBuffer, VkDeviceMemory>>& uniformBuffers, const VkDescriptorSet& descriptorSet, const std::vector<VkDescriptorImageInfo>& imageInfo)
     {
         std::array<VkWriteDescriptorSet, 2> descriptorWrites{};
-        //std::vector<VkDescriptorImageInfo> imageInfos;
         std::vector<VkDescriptorBufferInfo> bufferInfos;
 
         std::for_each(std::begin(uniformBuffers), std::end(uniformBuffers),
@@ -1234,8 +1223,6 @@ namespace Rbk {
                 bufferInfo.range = VK_WHOLE_SIZE;
                 bufferInfos.emplace_back(bufferInfo);
             });
-
-        //imageInfos.emplace_back(imageInfo);
 
         descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
         descriptorWrites[0].dstSet = descriptorSet;
@@ -1280,63 +1267,34 @@ namespace Rbk {
         vkCmdEndRenderPass(commandBuffer);
     }
 
-
-    void VulkanRenderer::BeginRendering(VkCommandBuffer commandBuffer, VkImageView  imageView, VkImageView  depthImageView, VkImageView colorImageView)
+    void VulkanRenderer::BeginRendering(const VkCommandBuffer& commandBuffer, const VkImageView& colorImageView, const VkImageView& depthImageView)
     {
-        VkClearValue clearValues{};
-        clearValues.color = { {1.f, 0.f, 0.f, 1.0f} };
-        clearValues.depthStencil = { 1.0f, 0 };
+        VkClearColorValue colorClear = { 48.f / 255.f, 10.f / 255.f, 36.f / 255.f, 1 };
+        VkClearDepthStencilValue depthStencil = { 0.f, 0 };
 
-        VkRenderingAttachmentInfoKHR imageAttachment{};
-        imageAttachment.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO_KHR;
-        //imageAttachment.pNext;
-        imageAttachment.imageView = imageView;
-        imageAttachment.imageLayout = VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL_KHR;
-        imageAttachment.resolveMode = VK_RESOLVE_MODE_NONE;
-        //colorAttachment.resolveImageView;
-        //colorAttachment.resolveImageLayout;
-        imageAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-        imageAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-        imageAttachment.clearValue = clearValues;
-
-        VkRenderingAttachmentInfoKHR colorAttachment{};
-        colorAttachment.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO_KHR;
-        //colorAttachment.pNext;
+        VkRenderingAttachmentInfo colorAttachment{ VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO  };
         colorAttachment.imageView = colorImageView;
-        colorAttachment.imageLayout = VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL_KHR;
-        colorAttachment.resolveMode = VK_RESOLVE_MODE_NONE;
-        //colorAttachment.resolveImageView;
-        //colorAttachment.resolveImageLayout;
+        colorAttachment.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
         colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
         colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-        colorAttachment.clearValue = clearValues;
+        colorAttachment.clearValue.color = colorClear;
         
-        VkRenderingAttachmentInfoKHR depthAttachment{};
-        depthAttachment.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO_KHR;
-        //colorAttachment.pNext;
+        VkRenderingAttachmentInfo depthAttachment{ VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO };
         depthAttachment.imageView = depthImageView;
-        depthAttachment.imageLayout = VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL_KHR;
-        depthAttachment.resolveMode = VK_RESOLVE_MODE_NONE;
-        //colorAttachment.resolveImageView;
-        //colorAttachment.resolveImageLayout;
+        depthAttachment.imageLayout = VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL;
         depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
         depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-        depthAttachment.clearValue = clearValues;
+        depthAttachment.clearValue.depthStencil = depthStencil;
 
-        VkRenderingInfoKHR renderingInfo{};
-        renderingInfo.sType = VK_STRUCTURE_TYPE_RENDERING_INFO_KHR;
-        //renderingInfo.pNext;
-        //renderingInfo.flags;
-        renderingInfo.renderArea.offset = { 0, 0 };
+        VkRenderingInfo renderingInfo{ VK_STRUCTURE_TYPE_RENDERING_INFO };
         renderingInfo.renderArea.extent = m_SwapChainExtent;
         renderingInfo.layerCount = 1;
-        renderingInfo.viewMask = 0;
         renderingInfo.colorAttachmentCount = 1;
         renderingInfo.pColorAttachments = &colorAttachment;
         renderingInfo.pDepthAttachment = &depthAttachment;
         //renderingInfo.pStencilAttachment;
 
-        vkCmdBeginRenderingKHR(commandBuffer, &renderingInfo);
+        vkCmdBeginRendering(commandBuffer, &renderingInfo);
     }
 
     void VulkanRenderer::EndRendering(VkCommandBuffer commandBuffer)
@@ -1443,7 +1401,6 @@ namespace Rbk {
         if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
             throw std::runtime_error("failed to acquire swap chain image!");
         }
-
 
         return imageIndex;
     }

@@ -86,8 +86,9 @@ namespace Rbk
         vkPushconstants.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
 
         pushConstants.emplace_back(vkPushconstants);
+        std::vector<VkDescriptorSetLayout>dSetLayout = { desriptorSetLayout };
 
-        mesh->m_PipelineLayout = m_Adapter->Rdr()->CreatePipelineLayout(mesh->m_DescriptorSets, { desriptorSetLayout }, pushConstants);
+        mesh->m_PipelineLayout = m_Adapter->Rdr()->CreatePipelineLayout(mesh->m_DescriptorSets, dSetLayout, pushConstants);
 
         VkVertexInputBindingDescription bDesc = Vertex::GetBindingDescription();
         std::vector<VkPipelineShaderStageCreateInfo>shadersStageInfos;
