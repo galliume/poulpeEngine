@@ -116,7 +116,7 @@ namespace Rbk {
 
         VkApplicationInfo appInfo{};
 
-        appInfo.apiVersion = VK_API_VERSION_1_0;
+        appInfo.apiVersion = VK_API_VERSION_1_3;
         appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
         appInfo.pApplicationName = "Rebulkan";
         appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
@@ -384,14 +384,11 @@ namespace Rbk {
         descriptorIndexing.descriptorBindingVariableDescriptorCount = VK_TRUE;
         descriptorIndexing.descriptorBindingPartiallyBound = VK_TRUE;
 
-        VkPhysicalDevicePipelineCreationCacheControlFeatures cacheControl{};
-        cacheControl.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PIPELINE_CREATION_CACHE_CONTROL_FEATURES;
-        cacheControl.pipelineCreationCacheControl = VK_TRUE;
-        cacheControl.pNext = &descriptorIndexing;
-
-        VkPhysicalDeviceDynamicRenderingFeaturesKHR dynamicRenderingFeature{};
-        dynamicRenderingFeature.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DYNAMIC_RENDERING_FEATURES_KHR;
-        dynamicRenderingFeature.dynamicRendering = VK_TRUE;
+        VkPhysicalDeviceVulkan13Features vkFeatures13 = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES };
+        vkFeatures13.dynamicRendering = VK_TRUE;
+        vkFeatures13.synchronization2 = VK_TRUE;
+        vkFeatures13.pipelineCreationCacheControl = VK_TRUE;
+        vkFeatures13.pNext = &descriptorIndexing;
 
         VkDeviceCreateInfo createInfo{};
         createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
@@ -400,7 +397,7 @@ namespace Rbk {
         createInfo.pEnabledFeatures = &deviceFeatures;
         createInfo.enabledExtensionCount = static_cast<uint32_t>(m_DeviceExtensions.size());
         createInfo.ppEnabledExtensionNames = m_DeviceExtensions.data();
-        createInfo.pNext = &cacheControl;
+        createInfo.pNext = &vkFeatures13;
 
         if (vkCreateDevice(m_PhysicalDevice, &createInfo, nullptr, &m_Device) != VK_SUCCESS) {
             Rbk::Log::GetLogger()->critical("failed to create logical device!");
@@ -776,28 +773,28 @@ namespace Rbk {
         pipelineInfo.pDepthStencilState = &depthStencil;
         pipelineInfo.pColorBlendState = &colorBlending;
         pipelineInfo.layout = pipelineLayout;
-        pipelineInfo.renderPass = (dynamicRendering) ? nullptr : * renderPass.get();
+        pipelineInfo.renderPass = (dynamicRendering) ? VK_NULL_HANDLE : * renderPass.get();
         pipelineInfo.subpass = 0;
         pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
         pipelineInfo.basePipelineIndex = -1;
         pipelineInfo.pDynamicState = &dynamicState;
 
         if (dynamicRendering) {
-            //VkAttachmentSampleCountInfoNV sampleCount{};
-            //sampleCount.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_COARSE_SAMPLE_ORDER_STATE_CREATE_INFO_NV;
-            ////sampleCount.pNext;
-            //sampleCount.flags = VK_SAMPLE_COUNT_1_BIT | VK_SAMPLE_COUNT_8_BIT;
-            //sampleCount.colorAttachmentCount;
-            //sampleCount.pColorAttachmentSamples;
-            //sampleCount.depthStencilAttachmentSamples;
-
             VkFormat format = GetSwapChainImageFormat();
             VkFormat depthFormat = FindDepthFormat();
+
+            std::array<VkFormat, 1> colorAttachmentFormats = { m_SurfaceFormat.format };
+
+/*            VkAttachmentSampleCountInfoNV sampleCount{};
+            sampleCount.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_COARSE_SAMPLE_ORDER_STATE_CREATE_INFO_NV;
+            sampleCount.colorAttachmentCount = 1;
+            sampleCount.pColorAttachmentSamples = samplesFlags.data();
+            sampleCount.depthStencilAttachmentSamples = VK_SAMPLE_COUNT_8_BIT*/;
 
             VkPipelineRenderingCreateInfoKHR renderingCreateInfo{};
             renderingCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO_KHR;
             renderingCreateInfo.colorAttachmentCount = 1;
-            renderingCreateInfo.pColorAttachmentFormats = &format;
+            renderingCreateInfo.pColorAttachmentFormats = colorAttachmentFormats.data();
             renderingCreateInfo.depthAttachmentFormat = depthFormat;
             pipelineInfo.pNext = &renderingCreateInfo;
         }
@@ -1098,7 +1095,7 @@ namespace Rbk {
         VkCommandBufferAllocateInfo allocInfo{};
         allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
         allocInfo.commandPool = commandPool;
-        allocInfo.level = (!isSecondary) ? VK_COMMAND_BUFFER_LEVEL_PRIMARY : VK_COMMAND_BUFFER_LEVEL_SECONDARY;
+        //allocInfo.level = (!isSecondary) ? VK_COMMAND_BUFFER_LEVEL_PRIMARY : VK_COMMAND_BUFFER_LEVEL_SECONDARY;
 
         allocInfo.commandBufferCount = static_cast<uint32_t>(commandBuffers.size());
 
@@ -1269,7 +1266,7 @@ namespace Rbk {
         renderPassInfo.renderArea.extent = m_SwapChainExtent;
 
         std::array<VkClearValue, 2> clearValues{};
-        clearValues[0].color = { {0.f, 0.f, 0.f, 1.0f} };
+        clearValues[0].color = { {0.f, 1.f, 0.f, 1.0f} };
         clearValues[1].depthStencil = { 1.0f, 0 };
 
         renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
@@ -1287,7 +1284,7 @@ namespace Rbk {
     void VulkanRenderer::BeginRendering(VkCommandBuffer commandBuffer, VkImageView  imageView, VkImageView  depthImageView, VkImageView colorImageView)
     {
         VkClearValue clearValues{};
-        clearValues.color = { {0.f, 0.f, 0.f, 1.0f} };
+        clearValues.color = { {1.f, 0.f, 0.f, 1.0f} };
         clearValues.depthStencil = { 1.0f, 0 };
 
         VkRenderingAttachmentInfoKHR imageAttachment{};
@@ -1333,7 +1330,7 @@ namespace Rbk {
         renderingInfo.renderArea.offset = { 0, 0 };
         renderingInfo.renderArea.extent = m_SwapChainExtent;
         renderingInfo.layerCount = 1;
-        //renderingInfo.viewMask;
+        renderingInfo.viewMask = 0;
         renderingInfo.colorAttachmentCount = 1;
         renderingInfo.pColorAttachments = &colorAttachment;
         renderingInfo.pDepthAttachment = &depthAttachment;

@@ -135,7 +135,7 @@ namespace Rbk
             cshadersStageInfos,
             vertexInputInfo2D,
             VK_CULL_MODE_FRONT_BIT,
-            false
+            true
         );
 
         mesh->GetData()->emplace_back(crossHairData);

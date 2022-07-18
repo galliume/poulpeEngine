@@ -157,7 +157,7 @@ namespace Rbk
             shadersStageInfos,
             vertexInputInfo,
             VK_CULL_MODE_NONE,
-            false
+            true
         );
 
         mesh->GetData()->emplace_back(data);

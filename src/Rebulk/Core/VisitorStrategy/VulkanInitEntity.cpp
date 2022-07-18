@@ -121,7 +121,7 @@ namespace Rbk
             shadersStageInfos,
             vertexInputInfo,
             VK_CULL_MODE_BACK_BIT,
-            false, true, true, true, false
+            true, true, true, true, false
         );
     }
 }
