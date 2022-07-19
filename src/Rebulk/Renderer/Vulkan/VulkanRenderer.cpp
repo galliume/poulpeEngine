@@ -384,6 +384,11 @@ namespace Rbk {
         descriptorIndexing.descriptorBindingVariableDescriptorCount = VK_TRUE;
         descriptorIndexing.descriptorBindingPartiallyBound = VK_TRUE;
 
+        VkPhysicalDevicePipelineCreationCacheControlFeatures cacheControl{};
+        cacheControl.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PIPELINE_CREATION_CACHE_CONTROL_FEATURES;
+        cacheControl.pipelineCreationCacheControl = VK_PIPELINE_CREATE_EARLY_RETURN_ON_FAILURE_BIT;
+        cacheControl.pNext = &descriptorIndexing;
+
         VkPhysicalDeviceDynamicRenderingFeaturesKHR dynamicRenderingFeature{};
         dynamicRenderingFeature.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DYNAMIC_RENDERING_FEATURES_KHR;
         dynamicRenderingFeature.dynamicRendering = VK_TRUE;
@@ -395,7 +400,7 @@ namespace Rbk {
         createInfo.pEnabledFeatures = &deviceFeatures;
         createInfo.enabledExtensionCount = static_cast<uint32_t>(m_DeviceExtensions.size());
         createInfo.ppEnabledExtensionNames = m_DeviceExtensions.data();
-        createInfo.pNext = &descriptorIndexing;
+        createInfo.pNext = &cacheControl;
 
         if (vkCreateDevice(m_PhysicalDevice, &createInfo, nullptr, &m_Device) != VK_SUCCESS) {
             Rbk::Log::GetLogger()->critical("failed to create logical device!");
@@ -663,7 +668,6 @@ namespace Rbk {
     VkPipeline VulkanRenderer::CreateGraphicsPipeline(
         std::shared_ptr<VkRenderPass> renderPass,
         VkPipelineLayout pipelineLayout,
-        VkPipelineCache pipelineCache,
         std::vector<VkPipelineShaderStageCreateInfo>shadersCreateInfos,
         VkPipelineVertexInputStateCreateInfo vertexInputInfo,
         VkCullModeFlagBits cullMode,
@@ -799,10 +803,49 @@ namespace Rbk {
 
         VkPipeline graphicsPipeline = nullptr;
 
-        VkResult result = vkCreateGraphicsPipelines(m_Device, pipelineCache, 1, &pipelineInfo, nullptr, &graphicsPipeline);
+
+        //first impl of pipeline cache
+        VkPipelineCacheHeaderVersionOne cacheHeader;
+        cacheHeader.headerVersion = VK_PIPELINE_CACHE_HEADER_VERSION_ONE;
+        cacheHeader.vendorID = GetDeviceProperties().vendorID;
+        cacheHeader.deviceID = GetDeviceProperties().deviceID;
+        cacheHeader.pipelineCacheUUID[VK_UUID_SIZE] = GetDeviceProperties().pipelineCacheUUID[VK_UUID_SIZE];
+        cacheHeader.headerSize = sizeof(cacheHeader);
+
+        VkPipelineCache pipelineCache;
+        VkPipelineCacheCreateInfo pCreateInfo = { VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO  };
+        pCreateInfo.initialDataSize = 0;// sizeof(cacheHeader);
+        //pCreateInfo.pInitialData = &cacheHeader;
+
+        VkAllocationCallbacks* pAllocator;
+
+        VkResult result = vkCreatePipelineCache(m_Device, &pCreateInfo, nullptr, &pipelineCache);
 
         if (result != VK_SUCCESS) {
-            Rbk::Log::GetLogger()->critical("failed to create graphics pipeline!");
+            Rbk::Log::GetLogger()->critical("failed to create graphics pipeline cache!");
+        }
+
+        result = vkCreateGraphicsPipelines(m_Device, pipelineCache, 1, &pipelineInfo, nullptr, &graphicsPipeline);
+
+        if (result != VK_SUCCESS) {
+            Rbk::Log::GetLogger()->critical("failed to create graphics pipeline cache!");
+        }
+
+        size_t pDataSize = 0;
+        VkBuffer data = nullptr;
+
+        //VkBuffer buffer;
+        //VkDeviceMemory bufferMemory;
+        //CreateBuffer(cacheHeader.headerSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, buffer, bufferMemory);
+
+        //vkMapMemory(m_Device, bufferMemory, 0, cacheHeader.headerSize, 0, &data);
+        //memcpy(data, &cacheHeader, cacheHeader.headerSize);
+        //vkUnmapMemory(m_Device, bufferMemory);
+
+        result = vkGetPipelineCacheData(m_Device, pipelineCache, &pDataSize, &data);
+
+        if (result != VK_SUCCESS) {
+            Rbk::Log::GetLogger()->critical("failed to get graphics pipeline cache!");
         }
 
         return graphicsPipeline;
@@ -1021,7 +1064,7 @@ namespace Rbk {
         vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
     }
 
-    void VulkanRenderer::BindPipeline(VkCommandBuffer commandBuffer, VkPipeline pipeline)
+    void VulkanRenderer::BindPipeline(const VkCommandBuffer& commandBuffer, const VkPipeline& pipeline)
     {
         vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
     }
