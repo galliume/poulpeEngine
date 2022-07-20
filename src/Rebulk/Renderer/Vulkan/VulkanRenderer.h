@@ -55,7 +55,6 @@ namespace Rbk {
         VkPipeline CreateGraphicsPipeline(
             std::shared_ptr<VkRenderPass> renderPass,
             VkPipelineLayout pipelineLayout,
-            VkPipelineCache pipelineCache,
             std::vector<VkPipelineShaderStageCreateInfo>shadersCreateInfos,
             VkPipelineVertexInputStateCreateInfo vertexInputInfo,
             VkCullModeFlagBits cullMode = VK_CULL_MODE_BACK_BIT,
@@ -109,7 +108,7 @@ namespace Rbk {
         void EndRendering(VkCommandBuffer commandBuffer);
         void SetViewPort(VkCommandBuffer commandBuffer);
         void SetScissor(VkCommandBuffer commandBuffer);
-        void BindPipeline(VkCommandBuffer commandBuffer, VkPipeline pipeline);
+        void BindPipeline(const VkCommandBuffer& commandBuffer, const VkPipeline& pipeline);
         void Draw(VkCommandBuffer commandBuffer, Mesh* mesh, Data data, uint32_t frameIndex, bool drawIndexed = true);
         uint32_t AcquireNextImageKHR(VkSwapchainKHR swapChain, std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>>& semaphores);
         void QueueSubmit(VkCommandBuffer commandBuffer);
@@ -212,6 +211,7 @@ namespace Rbk {
             VK_KHR_MAINTENANCE_3_EXTENSION_NAME,
             VK_EXT_DESCRIPTOR_INDEXING_EXTENSION_NAME,
             VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME,
+            VK_EXT_PIPELINE_CREATION_CACHE_CONTROL_EXTENSION_NAME
         };
         //VK_NV_FRAMEBUFFER_MIXED_SAMPLES_EXTENSION_NAME,
 

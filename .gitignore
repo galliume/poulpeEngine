@@ -48,3 +48,4 @@ Makefile
 GPUCache/
 VTune Profiler Results/
 debug.log
+*.bin

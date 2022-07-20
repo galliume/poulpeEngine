@@ -67,10 +67,9 @@ namespace Rbk
         std::vector<VkDescriptorSet> m_DescriptorSets;
         VkPipelineLayout m_PipelineLayout;
         VkPipeline m_GraphicsPipeline;
-        VkPipelineCache m_PipelineCache = nullptr;
     
     private:
-        std::vector<Data> m_Data;
+        std::vector<Data> m_Data = {};
         std::string m_ShaderName;
     };
 }
