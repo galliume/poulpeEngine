@@ -5,11 +5,11 @@
 
 [State of the project](https://github.com/galliume/rebulkan/projects/1)
 
+[In video](https://www.youtube.com/watch?v=C7p9z6LhAig&list=PL4-Os8BWDCPmZt5HvJrSo6QDHkD9J4fJF)
+
 ![actual_state](screenshots/state.jpg?raw=true "actual status")
 ![actual_state2](screenshots/state_2.jpg?raw=true "actual status bis")
 ![actual_state3](screenshots/fog_2.gif?raw=true "actual status ter")
-
-[Status in video](https://www.youtube.com/watch?v=C7p9z6LhAig&list=PL4-Os8BWDCPmZt5HvJrSo6QDHkD9J4fJF)
 
 ### To execute 
 
@@ -17,7 +17,7 @@ First compile shaders
 
 Windows : .\scripts\WindowsShadersCompile.bat
 
-Linux   : ./scripts/LinuxShadersCompile.sh 
+Linux   : ./scripts/LinuxShadersCompile.sh (broken)
 
 Then compile the project
 
@@ -40,6 +40,8 @@ Thanks to [premake](https://premake.github.io/)
 [Game Engine Architecture](https://www.amazon.fr/Engine-Architecture-Third-Jason-Gregory/dp/1138035459/)
 
 [Vulkan API](https://www.khronos.org/registry/vulkan/specs/1.2-extensions/html/index.html)
+
+[Vulkan API Samples](https://github.com/LunarG/VulkanSamples/tree/master/API-Samples)
 
 [LunarG Vulkan](https://vulkan.lunarg.com/doc/sdk/1.2.162.1/linux/tutorial/html/00-intro.html)
 
