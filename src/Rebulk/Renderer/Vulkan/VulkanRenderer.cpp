@@ -803,17 +803,22 @@ namespace Rbk {
 
         VkPipeline graphicsPipeline = nullptr;
 
-
         //first impl of pipeline cache
+        //see @https://github.com/LunarG/VulkanSamples/blob/master/API-Samples/pipeline_cache/pipeline_cache.cpp
+        
         VkPipelineCacheHeaderVersionOne cacheHeader;
         cacheHeader.headerVersion = VK_PIPELINE_CACHE_HEADER_VERSION_ONE;
         cacheHeader.vendorID = GetDeviceProperties().vendorID;
         cacheHeader.deviceID = GetDeviceProperties().deviceID;
         cacheHeader.pipelineCacheUUID[VK_UUID_SIZE] = GetDeviceProperties().pipelineCacheUUID[VK_UUID_SIZE];
-        cacheHeader.headerSize = sizeof(cacheHeader);
+        cacheHeader.headerSize = sizeof(cacheHeader); //32
 
         VkPipelineCache pipelineCache;
         VkPipelineCacheCreateInfo pCreateInfo = { VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO  };
+        
+        //@todo :
+        //- check if cache file exists and if data are valid (with header) load them
+        //- if not valid initialDataSize = 0 and pInitialData = null
         pCreateInfo.initialDataSize = 0;// sizeof(cacheHeader);
         //pCreateInfo.pInitialData = &cacheHeader;
 
@@ -832,22 +837,21 @@ namespace Rbk {
         }
 
         size_t pDataSize = 0;
-        VkBuffer data = nullptr;
+        void* data = nullptr;
 
-        //VkBuffer buffer;
-        //VkDeviceMemory bufferMemory;
-        //CreateBuffer(cacheHeader.headerSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, buffer, bufferMemory);
-
-        //vkMapMemory(m_Device, bufferMemory, 0, cacheHeader.headerSize, 0, &data);
-        //memcpy(data, &cacheHeader, cacheHeader.headerSize);
-        //vkUnmapMemory(m_Device, bufferMemory);
-
-        result = vkGetPipelineCacheData(m_Device, pipelineCache, &pDataSize, &data);
+        //first call to get cache size with nullptr
+        result = vkGetPipelineCacheData(m_Device, pipelineCache, &pDataSize, nullptr);
 
         if (result != VK_SUCCESS) {
-            Rbk::Log::GetLogger()->critical("failed to get graphics pipeline cache!");
+            Rbk::Log::GetLogger()->critical("failed to get graphics pipeline cache size!");
         }
 
+        //@todo :
+        //- if cache resize data pointer
+        //- second call to vkGetPipelineCacheData to get cache data
+        //- write data to file
+        //- check if I really need to create a pipeline for per mesh
+        
         return graphicsPipeline;
     }
 
