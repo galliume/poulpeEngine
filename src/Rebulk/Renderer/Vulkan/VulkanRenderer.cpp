@@ -803,31 +803,89 @@ namespace Rbk {
 
         VkPipeline graphicsPipeline = nullptr;
 
-        //first impl of pipeline cache
-        //see @https://github.com/LunarG/VulkanSamples/blob/master/API-Samples/pipeline_cache/pipeline_cache.cpp
-        
-        VkPipelineCacheHeaderVersionOne cacheHeader;
-        cacheHeader.headerVersion = VK_PIPELINE_CACHE_HEADER_VERSION_ONE;
-        cacheHeader.vendorID = GetDeviceProperties().vendorID;
-        cacheHeader.deviceID = GetDeviceProperties().deviceID;
-        cacheHeader.pipelineCacheUUID[VK_UUID_SIZE] = GetDeviceProperties().pipelineCacheUUID[VK_UUID_SIZE];
-        cacheHeader.headerSize = sizeof(cacheHeader); //32
+        //@todo move to a FileManager
+        //@todo option to enable / disable pipeline cache
+        std::string cacheFileName = "cache/pipeline_cache_data.bin";
+        bool badCache = false;
+        size_t cacheFileSize = 0;
+        void* cacheFileData = nullptr;
+        std::string pReadFile = "";
+
+        if (std::filesystem::exists(cacheFileName)) {
+            std::ifstream fStream(cacheFileName, std::ios::in | std::ios::binary);
+            cacheFileSize = std::filesystem::file_size(cacheFileName);
+            pReadFile.resize(cacheFileSize);
+            fStream.read(pReadFile.data(), cacheFileSize);
+        } else {
+            Rbk::Log::GetLogger()->debug("Pipeline cache miss!");
+            badCache = true;
+        }
+
+        if (!pReadFile.empty()) {
+            cacheFileData = (char*)malloc(sizeof(char) * cacheFileSize);
+
+            if (cacheFileData == nullptr) {
+                Rbk::Log::GetLogger()->critical("Cannot allocate memory to pipeline cache");
+            }
+
+            Rbk::Log::GetLogger()->debug("Pipeline cache HIT from {}", cacheFileName);
+        } 
+
+        if (cacheFileData != nullptr) {
+            uint32_t headerLength = 0;
+            uint32_t cacheHeaderVersion = 0;
+            uint32_t vendorID = 0;
+            uint32_t deviceID = 0;
+            uint8_t pipelineCacheUUID[VK_UUID_SIZE] = {};
+
+            memcpy(&headerLength, static_cast<uint8_t*>(cacheFileData) + 0, 4);
+            memcpy(&cacheHeaderVersion, static_cast<uint8_t*>(cacheFileData) + 4, 4);
+            memcpy(&vendorID, static_cast<uint8_t*>(cacheFileData) + 8, 4);
+            memcpy(&deviceID, static_cast<uint8_t*>(cacheFileData) + 12, 4);
+            memcpy(pipelineCacheUUID, static_cast<uint8_t*>(cacheFileData) + 16, VK_UUID_SIZE);
+
+            if (headerLength <= 0) {
+                badCache = true;
+                Rbk::Log::GetLogger()->critical("Bad header length in {} - {}", cacheFileName, headerLength);
+            }
+            if (cacheHeaderVersion != VK_PIPELINE_CACHE_HEADER_VERSION_ONE) {
+                badCache = true;
+                Rbk::Log::GetLogger()->critical("Unsupported cache header version in {} got {}", cacheFileName, cacheHeaderVersion);
+            }
+            if (vendorID != GetDeviceProperties().vendorID) {
+                badCache = true;
+                Rbk::Log::GetLogger()->critical("Vendor ID mismatch in {} got {} expect {}", cacheFileName, vendorID, GetDeviceProperties().vendorID);
+            }
+            if (deviceID != GetDeviceProperties().deviceID) {
+                badCache = true;
+                Rbk::Log::GetLogger()->critical("Device ID mismatch in {} got {} expect {}", cacheFileName, deviceID, GetDeviceProperties().deviceID);
+            }
+            if (memcmp(pipelineCacheUUID, GetDeviceProperties().pipelineCacheUUID, sizeof(pipelineCacheUUID)) != 0) {
+                badCache = true;
+                Rbk::Log::GetLogger()->critical("UUID mismatch in {} got {} expect {}", cacheFileName, pipelineCacheUUID, GetDeviceProperties().pipelineCacheUUID);
+            }
+            if (badCache) {
+                free(cacheFileData);
+                cacheFileSize = 0;
+                cacheFileData = nullptr;
+
+                Rbk::Log::GetLogger()->debug("Deleting cache entry {} to repopulate.", cacheFileName);
+
+                if (remove(cacheFileName.c_str()) != 0) {
+                    Rbk::Log::GetLogger()->critical("Reading error");
+                }
+            }
+        }
 
         VkPipelineCache pipelineCache;
         VkPipelineCacheCreateInfo pCreateInfo = { VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO  };
-        
-        //@todo :
-        //- check if cache file exists and if data are valid (with header) load them
-        //- if not valid initialDataSize = 0 and pInitialData = null
-        pCreateInfo.initialDataSize = 0;// sizeof(cacheHeader);
-        //pCreateInfo.pInitialData = &cacheHeader;
-
-        VkAllocationCallbacks* pAllocator;
+        pCreateInfo.initialDataSize = cacheFileSize;
+        pCreateInfo.pInitialData = &cacheFileData;
 
         VkResult result = vkCreatePipelineCache(m_Device, &pCreateInfo, nullptr, &pipelineCache);
 
         if (result != VK_SUCCESS) {
-            Rbk::Log::GetLogger()->critical("failed to create graphics pipeline cache!");
+            Rbk::Log::GetLogger()->critical("failed to get graphics pipeline cache size!");
         }
 
         result = vkCreateGraphicsPipelines(m_Device, pipelineCache, 1, &pipelineInfo, nullptr, &graphicsPipeline);
@@ -835,23 +893,35 @@ namespace Rbk {
         if (result != VK_SUCCESS) {
             Rbk::Log::GetLogger()->critical("failed to create graphics pipeline cache!");
         }
-
-        size_t pDataSize = 0;
-        void* data = nullptr;
-
-        //first call to get cache size with nullptr
-        result = vkGetPipelineCacheData(m_Device, pipelineCache, &pDataSize, nullptr);
-
-        if (result != VK_SUCCESS) {
-            Rbk::Log::GetLogger()->critical("failed to get graphics pipeline cache size!");
-        }
-
-        //@todo :
-        //- if cache resize data pointer
-        //- second call to vkGetPipelineCacheData to get cache data
-        //- write data to file
-        //- check if I really need to create a pipeline for per mesh
         
+        if (result == VK_SUCCESS && badCache) {
+            size_t pDataSize = 0;
+            void* data = nullptr;
+
+            //first call to get cache size with nullptr
+            result = vkGetPipelineCacheData(m_Device, pipelineCache, &pDataSize, nullptr);
+
+            if (result != VK_SUCCESS) {
+                Rbk::Log::GetLogger()->critical("failed to get graphics pipeline cache size!");
+            }
+
+            data = (char*)malloc(sizeof(char) * pDataSize);
+
+            if (!data) {
+                Rbk::Log::GetLogger()->critical("failed to resize cache buffer!");
+            } else {
+                result = vkGetPipelineCacheData(m_Device, pipelineCache, &pDataSize, data);
+
+                //@todo move to a FileManager
+                if (result == VK_SUCCESS) {
+                    {
+                        std::ofstream ostrm(cacheFileName, std::ios::binary);
+                        ostrm.write(reinterpret_cast<char*>(&data), pDataSize);
+                        Rbk::Log::GetLogger()->debug("cacheData written to {}", cacheFileName);
+                    }
+                }
+            }
+        }
         return graphicsPipeline;
     }
 
