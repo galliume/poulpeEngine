@@ -56,6 +56,7 @@ namespace Rbk
         std::vector<Data>* GetData() { return &m_Data; };
         
         inline const std::string GetShaderName() const { return m_ShaderName; };
+        inline void SetShaderName(std::string_view name) { m_ShaderName = name; };
         inline const std::vector<VkDescriptorSet> GetDescriptorSets() const { return m_DescriptorSets; };
 
         void AddUbos(const std::vector<UniformBufferObject>& ubos);

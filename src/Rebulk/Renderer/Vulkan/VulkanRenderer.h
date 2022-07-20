@@ -55,6 +55,7 @@ namespace Rbk {
         VkPipeline CreateGraphicsPipeline(
             std::shared_ptr<VkRenderPass> renderPass,
             VkPipelineLayout pipelineLayout,
+            std::string_view name,
             std::vector<VkPipelineShaderStageCreateInfo>shadersCreateInfos,
             VkPipelineVertexInputStateCreateInfo vertexInputInfo,
             VkCullModeFlagBits cullMode = VK_CULL_MODE_BACK_BIT,
@@ -204,16 +205,19 @@ namespace Rbk {
         std::shared_ptr<Window> m_Window = VK_NULL_HANDLE;
 
         const std::vector<const char*> m_ValidationLayers = { "VK_LAYER_KHRONOS_validation" };
-        const std::vector<const char*> m_DeviceExtensions = { 
-            VK_EXT_DEPTH_CLIP_ENABLE_EXTENSION_NAME, 
-            VK_KHR_SWAPCHAIN_EXTENSION_NAME, 
+        const std::vector<const char*> m_DeviceExtensions = {
+            VK_EXT_DEPTH_CLIP_ENABLE_EXTENSION_NAME,
+            VK_KHR_SWAPCHAIN_EXTENSION_NAME,
             VK_KHR_PUSH_DESCRIPTOR_EXTENSION_NAME,
             VK_KHR_MAINTENANCE_3_EXTENSION_NAME,
             VK_EXT_DESCRIPTOR_INDEXING_EXTENSION_NAME,
             VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME,
-            VK_EXT_PIPELINE_CREATION_CACHE_CONTROL_EXTENSION_NAME
+            VK_KHR_CREATE_RENDERPASS_2_EXTENSION_NAME,
+            VK_KHR_DEPTH_STENCIL_RESOLVE_EXTENSION_NAME,
+            VK_EXT_PIPELINE_CREATION_CACHE_CONTROL_EXTENSION_NAME,
+            VK_KHR_MULTIVIEW_EXTENSION_NAME,
+            VK_KHR_MAINTENANCE_2_EXTENSION_NAME
         };
-        //VK_NV_FRAMEBUFFER_MIXED_SAMPLES_EXTENSION_NAME,
 
         bool m_InstanceCreated = false;
         bool m_EnableValidationLayers = false;
