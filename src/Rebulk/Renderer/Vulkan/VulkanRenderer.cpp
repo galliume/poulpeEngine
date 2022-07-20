@@ -386,7 +386,7 @@ namespace Rbk {
 
         VkPhysicalDevicePipelineCreationCacheControlFeatures cacheControl{};
         cacheControl.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PIPELINE_CREATION_CACHE_CONTROL_FEATURES;
-        cacheControl.pipelineCreationCacheControl = VK_PIPELINE_CREATE_EARLY_RETURN_ON_FAILURE_BIT;
+        cacheControl.pipelineCreationCacheControl = VK_TRUE;
         cacheControl.pNext = &descriptorIndexing;
 
         VkPhysicalDeviceDynamicRenderingFeaturesKHR dynamicRenderingFeature{};
@@ -668,6 +668,7 @@ namespace Rbk {
     VkPipeline VulkanRenderer::CreateGraphicsPipeline(
         std::shared_ptr<VkRenderPass> renderPass,
         VkPipelineLayout pipelineLayout,
+        std::string_view name,
         std::vector<VkPipelineShaderStageCreateInfo>shadersCreateInfos,
         VkPipelineVertexInputStateCreateInfo vertexInputInfo,
         VkCullModeFlagBits cullMode,
@@ -805,7 +806,12 @@ namespace Rbk {
 
         //@todo move to a FileManager
         //@todo option to enable / disable pipeline cache
-        std::string cacheFileName = "cache/pipeline_cache_data.bin";
+        std::string cacheFileName = std::format(
+            "cache/pipeline_cache_data_{}_{}_{}.bin",
+            GetDeviceProperties().vendorID,
+            GetDeviceProperties().deviceID,
+            name
+        );
         bool badCache = false;
         size_t cacheFileSize = 0;
         void* cacheFileData = nullptr;
@@ -816,6 +822,7 @@ namespace Rbk {
             cacheFileSize = std::filesystem::file_size(cacheFileName);
             pReadFile.resize(cacheFileSize);
             fStream.read(pReadFile.data(), cacheFileSize);
+            fStream.close();
         } else {
             Rbk::Log::GetLogger()->debug("Pipeline cache miss!");
             badCache = true;
@@ -823,6 +830,7 @@ namespace Rbk {
 
         if (!pReadFile.empty()) {
             cacheFileData = (char*)malloc(sizeof(char) * cacheFileSize);
+            cacheFileData = pReadFile.data();
 
             if (cacheFileData == nullptr) {
                 Rbk::Log::GetLogger()->critical("Cannot allocate memory to pipeline cache");
@@ -914,11 +922,10 @@ namespace Rbk {
 
                 //@todo move to a FileManager
                 if (result == VK_SUCCESS) {
-                    {
-                        std::ofstream ostrm(cacheFileName, std::ios::binary);
-                        ostrm.write(reinterpret_cast<char*>(&data), pDataSize);
-                        Rbk::Log::GetLogger()->debug("cacheData written to {}", cacheFileName);
-                    }
+                    std::ofstream ostrm(cacheFileName, std::ios::binary);
+                    ostrm.write(static_cast<const char*>(data), pDataSize);
+                    ostrm.close();
+                    Rbk::Log::GetLogger()->debug("cacheData written to {}", cacheFileName);
                 }
             }
         }
