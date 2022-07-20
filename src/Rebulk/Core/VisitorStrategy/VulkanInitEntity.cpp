@@ -117,7 +117,6 @@ namespace Rbk
         mesh->m_GraphicsPipeline = m_Adapter->Rdr()->CreateGraphicsPipeline(
             m_Adapter->RdrPass(),
             mesh->m_PipelineLayout,
-            mesh->m_PipelineCache,
             shadersStageInfos,
             vertexInputInfo,
             VK_CULL_MODE_BACK_BIT,
