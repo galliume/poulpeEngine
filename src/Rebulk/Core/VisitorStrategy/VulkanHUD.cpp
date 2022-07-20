@@ -42,6 +42,7 @@ namespace Rbk
         crossHairData.m_Indices = indices;
 
         mesh->SetName("hud");
+        mesh->SetShaderName("2d");
 
         std::pair<VkBuffer, VkDeviceMemory> crossHairuniformBuffer = m_Adapter->Rdr()->CreateUniformBuffers(1);
         mesh->m_UniformBuffers.emplace_back(crossHairuniformBuffer);
@@ -106,14 +107,14 @@ namespace Rbk
         VkPipelineShaderStageCreateInfo cvertShaderStageInfo{};
         cvertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
         cvertShaderStageInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
-        cvertShaderStageInfo.module = m_Adapter->GetShaderManager()->GetShaders()->shaders["2d"][0];
+        cvertShaderStageInfo.module = m_Adapter->GetShaderManager()->GetShaders()->shaders[mesh->GetShaderName()][0];
         cvertShaderStageInfo.pName = "main";
         cshadersStageInfos.emplace_back(cvertShaderStageInfo);
 
         VkPipelineShaderStageCreateInfo cfragShaderStageInfo{};
         cfragShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
         cfragShaderStageInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
-        cfragShaderStageInfo.module = m_Adapter->GetShaderManager()->GetShaders()->shaders["2d"][1];
+        cfragShaderStageInfo.module = m_Adapter->GetShaderManager()->GetShaders()->shaders[mesh->GetShaderName()][1];
         cfragShaderStageInfo.pName = "main";
         cshadersStageInfos.emplace_back(cfragShaderStageInfo);
 
@@ -130,6 +131,7 @@ namespace Rbk
         mesh->m_GraphicsPipeline = m_Adapter->Rdr()->CreateGraphicsPipeline(
             m_Adapter->RdrPass(),
             mesh->m_PipelineLayout,
+            mesh->GetShaderName(),
             cshadersStageInfos,
             vertexInputInfo2D,
             VK_CULL_MODE_FRONT_BIT,
