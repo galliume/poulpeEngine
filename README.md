@@ -35,7 +35,7 @@ Thanks to [premake](https://premake.github.io/)
 
 ### Keyboard shortcuts (azerty)
 
-free / lock mouse : ctrl
+free / lock mouse : left ctrl
 
 forward : Z 
 
