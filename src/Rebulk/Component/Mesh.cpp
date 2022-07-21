@@ -35,6 +35,7 @@ namespace Rbk
             data.m_Texture = textureNames[listData[i].materialId];
             data.m_Vertices = listData[i].vertices;
             data.m_Indices = listData[i].indices;
+            data.m_Pos = pos;
 
             glm::mat4 view = glm::mat4(1.0f);
 

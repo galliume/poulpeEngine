@@ -30,7 +30,7 @@ namespace Rbk
 
     void VulkanAdapter::Init()
     {
-        m_LightsPos.emplace_back(glm::vec3(0.5f, 4.5f, -3.00f));
+        m_LightsPos.emplace_back(glm::vec3(0.0f, 0.0f, 0.00f));
         SetPerspective();
         m_RenderPass = m_Renderer->CreateRenderPass(m_Renderer->GetMsaaSamples());
         m_SwapChain = m_Renderer->CreateSwapChain(m_SwapChainImages);
@@ -231,18 +231,22 @@ namespace Rbk
 
         m_Renderer->BeginRenderPass(m_RenderPass, m_CommandBuffers[m_ImageIndex], m_SwapChainFramebuffers[m_ImageIndex]);
 
+        glm::mat4 lookAt = m_Camera->LookAt();
+        glm::mat4 proj = m_Perspective;
+        proj[1][1] *= -1;
+        glm::vec4 cameraPos = m_Camera->GetPos();
+        //Rbk::Log::GetLogger()->critical("camera pos x {} y {} z{}", cameraPos.x, cameraPos.y, cameraPos.z);
+
         constants pushConstants;
-        pushConstants.cameraPos = m_Camera->GetPos();
+        pushConstants.cameraPos = cameraPos;
         pushConstants.ambiantLight = Rbk::VulkanAdapter::s_AmbiantLight;
         pushConstants.fogDensity = Rbk::VulkanAdapter::s_FogDensity;
         pushConstants.fogColor = glm::vec3({ Rbk::VulkanAdapter::s_FogColor[0], Rbk::VulkanAdapter::s_FogColor[1], Rbk::VulkanAdapter::s_FogColor[2] });
         pushConstants.lightPos = m_LightsPos.at(0);
-
-        glm::mat4 lookAt = m_Camera->LookAt();
-
-        glm::mat4 proj = m_Perspective;
-        proj[1][1] *= -1;
-        glm::vec4 cameraPos = m_Camera->GetPos();
+        pushConstants.ambient = glm::vec3(1.0f, 0.5f, 0.31f);
+        pushConstants.diffuse = glm::vec3(1.0f, 0.5f, 0.31f);
+        pushConstants.specular = glm::vec3(0.1f, 0.1f, 0.1f);
+        pushConstants.shininess = 0.0f;
 
         VkCommandBufferInheritanceInfo inheritanceInfo;
         inheritanceInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_INHERITANCE_INFO;
@@ -271,16 +275,7 @@ namespace Rbk
 
                         for (uint32_t i = 0; i < data.m_Ubos.size(); i++) {
                             data.m_Ubos[i].view = lookAt;
-                            //mesh->cameraPos = cameraPos * mesh->ubos[i].view * mesh->ubos[i].model * mesh->ubos[i].proj;
                             data.m_Ubos[i].proj = proj;
-
-                            if (mesh->GetName() == "moon_moon_0") {
-                                /*mesh->ubos[i].model = glm::rotate(mesh->ubos[i].model, 0.05f * m_Deltatime, glm::vec3(1.0f, 0.0f, 0.0f));
-                                mesh->ubos[i].model = glm::translate(mesh->ubos[i].model, m_Deltatime * glm::vec3(1.0f, 0.0f, 0.0f));
-                                glm::vec3 lightPos = m_LightsPos.at(0) *  m_Deltatime * glm::vec3(1.0f, 0.0f, 0.0f);
-                                m_LightsPos.at(0) = lightPos;*/
-                            }
-
                         }
                         for (uint32_t i = 0; i < mesh->m_UniformBuffers.size(); i++) {
                             m_Renderer->UpdateUniformBuffer(
@@ -293,7 +288,8 @@ namespace Rbk
                         pushConstants.textureID = data.m_TextureIndex;
 
                         m_Renderer->BindPipeline(m_EntitiesCommandBuffers[m_ImageIndex], mesh->m_GraphicsPipeline);
-                        vkCmdPushConstants(m_EntitiesCommandBuffers[m_ImageIndex], mesh->m_PipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(constants), &pushConstants);
+                        vkCmdPushConstants(m_EntitiesCommandBuffers[m_ImageIndex], mesh->m_PipelineLayout, VK_SHADER_STAGE_ALL, 0, sizeof(constants), &pushConstants);
+
                         m_Renderer->Draw(m_EntitiesCommandBuffers[m_ImageIndex], mesh.get(), data, m_ImageIndex);
                     }
                 }
@@ -320,7 +316,7 @@ namespace Rbk
                 );
             }
             m_Renderer->BindPipeline(m_SkyboxCommandBuffers[m_ImageIndex], m_EntityManager->GetSkyboxMesh()->m_GraphicsPipeline);
-            vkCmdPushConstants(m_SkyboxCommandBuffers[m_ImageIndex], m_EntityManager->GetSkyboxMesh()->m_PipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(constants), &pushConstants);
+            vkCmdPushConstants(m_SkyboxCommandBuffers[m_ImageIndex], m_EntityManager->GetSkyboxMesh()->m_PipelineLayout, VK_SHADER_STAGE_ALL, 0, sizeof(constants), &pushConstants);
             m_Renderer->Draw(m_SkyboxCommandBuffers[m_ImageIndex], m_EntityManager->GetSkyboxMesh().get(), skyboxData[0], m_ImageIndex, false);
             m_Renderer->EndCommandBuffer(m_SkyboxCommandBuffers[m_ImageIndex]);
         });

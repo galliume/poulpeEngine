@@ -117,5 +117,9 @@ namespace Rbk
     void InputManager::MouseButton(int button, int action, int mods)
     {
 
+        if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS) {
+            Rbk::Log::GetLogger()->debug("MouseButton button {} action {} mods {}", button, action, mods);
+
+        }
     }
 }

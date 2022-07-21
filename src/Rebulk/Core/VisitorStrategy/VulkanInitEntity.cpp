@@ -83,7 +83,7 @@ namespace Rbk
         VkPushConstantRange vkPushconstants;
         vkPushconstants.offset = 0;
         vkPushconstants.size = sizeof(constants);
-        vkPushconstants.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+        vkPushconstants.stageFlags = VK_SHADER_STAGE_ALL;
 
         pushConstants.emplace_back(vkPushconstants);
 

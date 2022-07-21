@@ -20,9 +20,10 @@ namespace Rbk
         std::pair<VkBuffer, VkDeviceMemory> m_VertexBuffer = { nullptr, nullptr };
         std::pair<VkBuffer, VkDeviceMemory> m_IndicesBuffer = { nullptr, nullptr };
         uint32_t m_TextureIndex = 0;
+        glm::vec3 m_Pos;
     };
 
-    struct constants 
+    struct constants
     {
         uint32_t textureID;
         glm::vec3 cameraPos;
@@ -30,6 +31,10 @@ namespace Rbk
         float fogDensity;
         glm::vec3 fogColor;
         glm::vec3 lightPos;
+        glm::vec3 ambient;
+        glm::vec3 diffuse;
+        glm::vec3 specular;
+        float shininess;
     };
 
     struct cPC
@@ -64,7 +69,6 @@ namespace Rbk
     //@todo make it private
     public:
         std::vector<std::pair<VkBuffer, VkDeviceMemory>> m_UniformBuffers;
-        glm::vec4 m_CameraPos;
         std::vector<VkDescriptorSet> m_DescriptorSets;
         VkPipelineLayout m_PipelineLayout;
         VkPipeline m_GraphicsPipeline;
