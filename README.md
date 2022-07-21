@@ -33,9 +33,9 @@ clear && make clean && make && ./bin/your_archi/Rebulkan/Rebulkan
 
 Thanks to [premake](https://premake.github.io/)
 
-### Keyboard shortcuts
+### Keyboard shortcuts (azerty)
 
-ctrl : free / lock mouse
+free / lock mouse : ctrl
 
 forward : Z 
 
