@@ -33,6 +33,22 @@ clear && make clean && make && ./bin/your_archi/Rebulkan/Rebulkan
 
 Thanks to [premake](https://premake.github.io/)
 
+### Keyboard shortcuts
+
+ctrl : free / lock mouse
+
+forward : Z 
+
+backward : Q
+
+left : Q
+
+right : D
+
+up : E
+
+down : A
+
 ### Resources
 
 [Vulkan Programming Guide](https://www.amazon.fr/Vulkan-Programming-Guide-Official-Learning/dp/0134464540/)
