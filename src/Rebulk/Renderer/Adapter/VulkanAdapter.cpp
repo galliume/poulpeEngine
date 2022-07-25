@@ -30,7 +30,7 @@ namespace Rbk
 
     void VulkanAdapter::Init()
     {
-        m_LightsPos.emplace_back(glm::vec3(0.0f, 0.0f, 0.00f));
+        m_LightsPos.emplace_back(glm::vec3(0.5f, 4.5f, -3.00f));
         SetPerspective();
         m_RenderPass = m_Renderer->CreateRenderPass(m_Renderer->GetMsaaSamples());
         m_SwapChain = m_Renderer->CreateSwapChain(m_SwapChainImages);
@@ -238,15 +238,15 @@ namespace Rbk
         //Rbk::Log::GetLogger()->critical("camera pos x {} y {} z{}", cameraPos.x, cameraPos.y, cameraPos.z);
 
         constants pushConstants;
-        pushConstants.cameraPos = cameraPos;
+        pushConstants.viewPos = glm::vec3(0.0f);
         pushConstants.ambiantLight = Rbk::VulkanAdapter::s_AmbiantLight;
         pushConstants.fogDensity = Rbk::VulkanAdapter::s_FogDensity;
         pushConstants.fogColor = glm::vec3({ Rbk::VulkanAdapter::s_FogColor[0], Rbk::VulkanAdapter::s_FogColor[1], Rbk::VulkanAdapter::s_FogColor[2] });
-        pushConstants.lightPos = m_LightsPos.at(0);
+        pushConstants.lightPos = glm::vec4(glm::vec3(0.8f, 0.2f, -0.4f), 1.0f) * proj; //campfire pos
         pushConstants.ambient = glm::vec3(1.0f, 0.5f, 0.31f);
         pushConstants.diffuse = glm::vec3(1.0f, 0.5f, 0.31f);
         pushConstants.specular = glm::vec3(0.1f, 0.1f, 0.1f);
-        pushConstants.shininess = 0.0f;
+        pushConstants.shininess = 256.0f;
 
         VkCommandBufferInheritanceInfo inheritanceInfo;
         inheritanceInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_INHERITANCE_INFO;
@@ -295,7 +295,6 @@ namespace Rbk
                 }
             }
             m_Renderer->EndCommandBuffer(m_EntitiesCommandBuffers[m_ImageIndex]);
-
         });
 
         //draw the skybox !

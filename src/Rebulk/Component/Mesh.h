@@ -26,7 +26,7 @@ namespace Rbk
     struct constants
     {
         uint32_t textureID;
-        glm::vec3 cameraPos;
+        glm::vec3 viewPos;
         float ambiantLight;
         float fogDensity;
         glm::vec3 fogColor;

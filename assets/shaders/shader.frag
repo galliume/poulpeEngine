@@ -13,7 +13,7 @@ layout(binding = 1) uniform sampler2D texSampler[];
 layout(push_constant) uniform constants
 {
     int textureID;
-    vec4 cameraPos;
+    vec3 viewPos;
     float ambiantLight;
     float fogDensity;
     vec3 fogColor;
@@ -43,27 +43,27 @@ float getFogFactor(float d)
 
 void main() {
   
-    vec3 viewDir = normalize(PC.cameraPos.xyz - fragModelPos);
+    vec3 viewDir = normalize(PC.viewPos - fragModelPos);
     vec3 lightDir = normalize(PC.lightPos.xyz - fragModelPos);
     vec3 norm = normalize(fragNormal);
     vec3 reflectDir = reflect(-lightDir, norm);
     float spec = pow(max(dot(viewDir, reflectDir), 0.0), PC.shininess);
     vec3 specular = spec * PC.specular * lightColor;
 
-    vec3 ambient = PC.ambiantLight * lightColor;
+    vec3 ambient = PC.fogDensity * lightColor;
     float diff = max(dot(norm, lightDir), 0.0);
     vec3 diffuse = diff * lightColor * PC.diffuse;
 
     outputColor = texture(texSampler[PC.textureID], fragTexCoord);
-    outputColor.xyz = outputColor.xyz * (ambient + diffuse + specular);
+    outputColor = vec4(outputColor.xyz * ambient, 1.0) ;
     //outputColor.xyz = outputColor.xyz * diffuse;
     //outputColor.xyz = outputColor.xyz * specular;
-    if (0 < PC.fogDensity) {
-        float d = distance(PC.cameraPos.xyz, fragModelPos);
-        float alpha = getFogFactor(d);
-
-        outputColor = mix(outputColor, vec4(PC.fogColor, 1.0), alpha * PC.fogDensity);
-    }
+//    if (0 < PC.fogDensity) {
+//        float d = distance(PC.viewPos, fragModelPos);
+//        float alpha = getFogFactor(d);
+//
+//        outputColor = mix(outputColor, vec4(PC.fogColor, 1.0), alpha * PC.fogDensity);
+//    }
 
     //outputColor = vec4(fragColor, 1.0);
 }

@@ -384,19 +384,19 @@ namespace Rbk
 
             AddEntity(entity13);
 
-            //std::shared_ptr<Rbk::Mesh> entity14 = std::make_shared<Rbk::Mesh>();
-            //entity14->Init(
-            //    "moon",
-            //    "assets/mesh/moon/moon.obj",
-            //    { "moon" },
-            //    "ambient_light",
-            //    glm::vec3(0.5f, 4.5f, -3.00f),
-            //    glm::vec3(0.2f, 0.2f, 0.2f),
-            //    glm::vec3(1.0f),
-            //    0.0f,
-            //    false);
+            std::shared_ptr<Rbk::Mesh> entity14 = std::make_shared<Rbk::Mesh>();
+            entity14->Init(
+                "moon",
+                "assets/mesh/moon/moon.obj",
+                { "moon" },
+                "ambient_light",
+                glm::vec3(0.5f, 4.5f, -3.00f),
+                glm::vec3(0.2f, 0.2f, 0.2f),
+                glm::vec3(1.0f),
+                0.0f,
+                false);
 
-            //AddEntity(entity14);
+            AddEntity(entity14);
 
             std::shared_ptr<Rbk::Mesh> entity15 = std::make_shared<Rbk::Mesh>();
             entity15->Init(
