@@ -673,7 +673,7 @@ namespace Rbk {
         bool depthTestEnable,
         bool depthWriteEnable,
         bool stencilTestEnable,
-        bool wireFrameModeOn
+        int polygoneMode
     )
     {
         VkPipelineInputAssemblyStateCreateInfo inputAssembly{};
@@ -704,8 +704,7 @@ namespace Rbk {
         rasterizer.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
         rasterizer.depthClampEnable = VK_FALSE;
         rasterizer.rasterizerDiscardEnable = VK_FALSE;
-        //VK_POLYGON_MODE_LINE VK_POLYGON_MODE_POINT VK_POLYGON_MODE_FILL
-        rasterizer.polygonMode = (!wireFrameModeOn) ? VK_POLYGON_MODE_FILL : VK_POLYGON_MODE_LINE;
+        rasterizer.polygonMode = static_cast<VkPolygonMode>(polygoneMode);
         rasterizer.lineWidth = 1.0f;
         rasterizer.cullMode = cullMode;
         rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
@@ -773,7 +772,7 @@ namespace Rbk {
         pipelineInfo.pDepthStencilState = &depthStencil;
         pipelineInfo.pColorBlendState = &colorBlending;
         pipelineInfo.layout = pipelineLayout;
-        pipelineInfo.renderPass = (dynamicRendering) ? VK_NULL_HANDLE : * renderPass.get();
+        pipelineInfo.renderPass = (dynamicRendering) ? VK_NULL_HANDLE : *renderPass.get();
         pipelineInfo.subpass = 0;
         pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
         pipelineInfo.basePipelineIndex = -1;
@@ -1269,8 +1268,8 @@ namespace Rbk {
 
     void VulkanRenderer::BeginRendering(const VkCommandBuffer& commandBuffer, const VkImageView& colorImageView, const VkImageView& depthImageView)
     {
-        VkClearColorValue colorClear = { 48.f / 255.f, 10.f / 255.f, 36.f / 255.f, 1 };
-        VkClearDepthStencilValue depthStencil = { 0.f, 0 };
+        VkClearColorValue colorClear = { 0.f, 255.f, 255.f, 0.90f };
+        VkClearDepthStencilValue depthStencil = { 1.f, 0 };
 
         VkRenderingAttachmentInfo colorAttachment{ VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO  };
         colorAttachment.imageView = colorImageView;
@@ -1294,7 +1293,7 @@ namespace Rbk {
         renderingInfo.pDepthAttachment = &depthAttachment;
         //renderingInfo.pStencilAttachment;
 
-        vkCmdBeginRendering(commandBuffer, &renderingInfo);
+        vkCmdBeginRenderingKHR(commandBuffer, &renderingInfo);
     }
 
     void VulkanRenderer::EndRendering(VkCommandBuffer commandBuffer)
@@ -1436,9 +1435,9 @@ namespace Rbk {
         }
     }
 
-    void VulkanRenderer::AddPipelineBarrier(VkCommandBuffer commandBuffer, VkImageMemoryBarrier renderBarrier, VkPipelineStageFlags srcStageMask, VkPipelineStageFlags dstStageMask, VkDependencyFlags dependencyFlags)
+    void VulkanRenderer::AddPipelineBarriers(VkCommandBuffer commandBuffer, std::vector<VkImageMemoryBarrier> renderBarriers, VkPipelineStageFlags srcStageMask, VkPipelineStageFlags dstStageMask, VkDependencyFlags dependencyFlags)
     {
-        vkCmdPipelineBarrier(commandBuffer, srcStageMask, dstStageMask, dependencyFlags, 0, nullptr, 0, nullptr, 1, &renderBarrier);
+        vkCmdPipelineBarrier(commandBuffer, srcStageMask, dstStageMask, dependencyFlags, 0, 0, 0, 0, static_cast<uint32_t>(renderBarriers.size()), renderBarriers.data());
     }
 
     void VulkanRenderer::CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory)
@@ -1468,7 +1467,7 @@ namespace Rbk {
         vkBindBufferMemory(m_Device, buffer, bufferMemory, 0);
     }
 
-    std::pair<VkBuffer, VkDeviceMemory> VulkanRenderer::CreateIndexBuffer(VkCommandPool commandPool, std::vector<uint32_t> indices)
+    std::pair<VkBuffer, VkDeviceMemory> VulkanRenderer::CreateIndexBuffer(const VkCommandPool& commandPool, const std::vector<uint32_t>& indices)
     {
         std::pair<VkBuffer, VkDeviceMemory> indexBuffer{};
 
@@ -1520,7 +1519,7 @@ namespace Rbk {
         return vertexBuffer;
     }
 
-    std::pair<VkBuffer, VkDeviceMemory> VulkanRenderer::CreateVertex2DBuffer(VkCommandPool commandPool, std::vector<Rbk::Vertex2D> vertices)
+    std::pair<VkBuffer, VkDeviceMemory> VulkanRenderer::CreateVertex2DBuffer(const VkCommandPool& commandPool, const std::vector<Rbk::Vertex2D>& vertices)
     {
         std::pair<VkBuffer, VkDeviceMemory> vertexBuffer{};
         VkDeviceSize bufferSize = sizeof(Vertex2D) * vertices.size();
@@ -1735,7 +1734,7 @@ namespace Rbk {
             textureImage, 0, VK_ACCESS_TRANSFER_WRITE_BIT, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL
         );
 
-        AddPipelineBarrier(commandBuffer, renderBarrier, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_DEPENDENCY_BY_REGION_BIT);
+        AddPipelineBarriers(commandBuffer, { renderBarrier }, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_DEPENDENCY_BY_REGION_BIT);
 
         CopyBufferToImage(commandBuffer, stagingBuffer, textureImage, static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight));
 
@@ -1776,7 +1775,7 @@ namespace Rbk {
         renderBarrier.subresourceRange.baseMipLevel = 0;
         renderBarrier.subresourceRange.levelCount = mipLevels;
 
-        AddPipelineBarrier(commandBuffer, renderBarrier, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_DEPENDENCY_BY_REGION_BIT);
+        AddPipelineBarriers(commandBuffer, { renderBarrier }, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_DEPENDENCY_BY_REGION_BIT);
 
         CopyBufferToImageSkybox(commandBuffer, stagingBuffer, textureImage, static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight), skyboxPixels, mipLevels, layerSize);
 
@@ -1949,7 +1948,7 @@ namespace Rbk {
             depthImage, 0, VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, aspectMask
         );
 
-        AddPipelineBarrier(commandBuffer, renderBarrier, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT, VK_DEPENDENCY_BY_REGION_BIT);
+        AddPipelineBarriers(commandBuffer, { renderBarrier }, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT, VK_DEPENDENCY_BY_REGION_BIT);
 
         return depthImageView;
     }

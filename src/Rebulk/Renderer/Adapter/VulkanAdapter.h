@@ -47,15 +47,10 @@ namespace Rbk
         inline std::shared_ptr<VkRenderPass> RdrPass() { return m_RenderPass; };
         void SetDeltatime(float deltaTime) override;
 
-        inline VkCommandPool* GetEntitiesCommandPool() { return &m_EntitiesCommandPool; };
-        inline std::vector<VkCommandBuffer>* GetEntitiesCommandBuffers() { return &m_EntitiesCommandBuffers; };
-        inline VkCommandPool* GetSkyboxCommandPool() { return &m_SkyboxCommandPool; };
-        inline std::vector<VkCommandBuffer>* GetSkyboxCommandBuffers() { return &m_SkyboxCommandBuffers; };
-        inline VkCommandPool* GetHUDCommandPool() { return &m_HUDCommandPool; };
-        inline std::vector<VkCommandBuffer>* GetHUDCommandBuffers() { return &m_HUDCommandBuffers; };
         inline std::vector<VkDescriptorSetLayout>* GetDescriptorSetLayouts() { return &m_DescriptorSetLayouts; };
         inline std::vector<VkImage>* GetSwapChainImages() { return &m_SwapChainImages; };
         inline glm::mat4 GetPerspective() { return m_Perspective; };
+        void Refresh();
 
         //@todo add GuiManager
         VkRenderPass CreateImGuiRenderPass();
@@ -66,6 +61,7 @@ namespace Rbk
         static float s_FogDensity;
         static float s_FogColor[3];
         static int s_Crosshair;
+        static int s_PolygoneMode;
 
         std::shared_ptr<TextureManager> GetTextureManager() { return m_TextureManager; };
         std::shared_ptr<EntityManager> GetEntityManager() { return m_EntityManager; };
@@ -106,12 +102,5 @@ namespace Rbk
         std::vector<glm::vec3>m_LightsPos;
         std::vector<VkDescriptorPool>m_DescriptorPools;
         std::vector<VkDescriptorSetLayout>m_DescriptorSetLayouts;
-
-        VkCommandPool m_EntitiesCommandPool = nullptr;
-        std::vector<VkCommandBuffer> m_EntitiesCommandBuffers = {};
-        VkCommandPool m_SkyboxCommandPool = nullptr;
-        std::vector<VkCommandBuffer> m_SkyboxCommandBuffers = {};
-        VkCommandPool m_HUDCommandPool = nullptr;
-        std::vector<VkCommandBuffer> m_HUDCommandBuffers = {};
     };
 }

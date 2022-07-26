@@ -70,12 +70,16 @@ namespace Rbk
         ubo.proj = m_Adapter->GetPerspective();
         ubo.proj[1][1] *= -1;
 
+        auto commandPool = m_Adapter->Rdr()->CreateCommandPool();
+
         Data data;
         data.m_Texture = "skybox";
         data.m_Vertices = skyVertices;
-        data.m_VertexBuffer = m_Adapter->Rdr()->CreateVertexBuffer(*m_Adapter->GetSkyboxCommandPool(), skyVertices);
+        data.m_VertexBuffer = m_Adapter->Rdr()->CreateVertexBuffer(commandPool, skyVertices);
         data.m_Ubos.emplace_back(ubo);
         data.m_TextureIndex = 0;
+
+        vkDestroyCommandPool(m_Adapter->Rdr()->GetDevice(), commandPool, nullptr);
 
         std::pair<VkBuffer, VkDeviceMemory> uniformBuffer = m_Adapter->Rdr()->CreateUniformBuffers(1);
         mesh->m_UniformBuffers.emplace_back(uniformBuffer);
@@ -158,7 +162,8 @@ namespace Rbk
             shadersStageInfos,
             vertexInputInfo,
             VK_CULL_MODE_NONE,
-            true
+            true, true, true, true,
+            VulkanAdapter::s_PolygoneMode
         );
 
         mesh->GetData()->emplace_back(data);

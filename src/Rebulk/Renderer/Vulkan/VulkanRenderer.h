@@ -64,7 +64,7 @@ namespace Rbk {
             bool depthTestEnable = true,
             bool depthWriteEnable = true,
             bool stencilTestEnable = true,
-            bool wireFrameModeOn = false
+            int polygoneMode = VK_POLYGON_MODE_FILL
         );
         VkSwapchainKHR CreateSwapChain(std::vector<VkImage>& swapChainImages, const VkSwapchainKHR& oldSwapChain = VK_NULL_HANDLE);
         std::vector<VkFramebuffer> CreateFramebuffers(std::shared_ptr<VkRenderPass> renderPass, std::vector<VkImageView> swapChainImageViews, std::vector<VkImageView> depthImageView, std::vector<VkImageView> colorImageView);
@@ -72,8 +72,8 @@ namespace Rbk {
         std::vector<VkCommandBuffer> AllocateCommandBuffers(VkCommandPool commandPool, uint32_t size = 1, bool isSecondary = false);
         void CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory);
         std::pair<VkBuffer, VkDeviceMemory> CreateVertexBuffer(VkCommandPool commandPool, std::vector<Rbk::Vertex> vertices);
-        std::pair<VkBuffer, VkDeviceMemory> CreateVertex2DBuffer(VkCommandPool commandPool, std::vector<Rbk::Vertex2D> vertices);
-        std::pair<VkBuffer, VkDeviceMemory> CreateIndexBuffer(VkCommandPool commandPool, std::vector<uint32_t> indices);
+        std::pair<VkBuffer, VkDeviceMemory> CreateVertex2DBuffer(const VkCommandPool& commandPool, const std::vector<Rbk::Vertex2D>& vertices);
+        std::pair<VkBuffer, VkDeviceMemory> CreateIndexBuffer(const VkCommandPool& commandPool, const std::vector<uint32_t>& indices);
         std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>> CreateSyncObjects(std::vector<VkImage> swapChainImages);
         VkImageMemoryBarrier SetupImageMemoryBarrier(VkImage image, VkAccessFlags srcAccessMask, VkAccessFlags dstAccessMask, VkImageLayout oldLayout, VkImageLayout newLayout, uint32_t mipLevels = VK_REMAINING_MIP_LEVELS, VkImageAspectFlags aspectMask = VK_IMAGE_ASPECT_COLOR_BIT);
         void CopyBuffer(VkCommandPool commandPool, VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
@@ -116,10 +116,10 @@ namespace Rbk {
         void QueueSubmit(VkCommandBuffer commandBuffer);
         void QueueSubmit(uint32_t imageIndex, VkCommandBuffer commandBuffer, std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>>& semaphores);
         uint32_t QueuePresent(uint32_t imageIndex, VkSwapchainKHR swapChain, std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>>& semaphores);
-        void AddPipelineBarrier(VkCommandBuffer commandBuffer, VkImageMemoryBarrier renderBarrier, VkPipelineStageFlags srcStageMask, VkPipelineStageFlags dstStageMask, VkDependencyFlags dependencyFlags);
+        void AddPipelineBarriers(VkCommandBuffer commandBuffer, std::vector<VkImageMemoryBarrier> renderBarriers, VkPipelineStageFlags srcStageMask, VkPipelineStageFlags dstStageMask, VkDependencyFlags dependencyFlags);
         void WaitIdle();
         void GenerateMipmaps(VkCommandBuffer commandBuffer, VkFormat imageFormat, VkImage image, uint32_t texWidth, uint32_t texHeight, uint32_t mipLevels, uint32_t layerCount = 1);
-       
+
         /**
         * Vulkan clean and destroy
         **/

@@ -33,10 +33,13 @@ namespace Rbk
         std::vector<VkDescriptorImageInfo> imageInfos;
 
         uint32_t index = 0;
+        //a cmd pool per entity ?
+        auto commandPool = m_Adapter->Rdr()->CreateCommandPool();
+
         for (Data& data : *mesh->GetData()) {
 
-            data.m_VertexBuffer = m_Adapter->Rdr()->CreateVertexBuffer(*m_Adapter->GetEntitiesCommandPool(), data.m_Vertices);
-            data.m_IndicesBuffer = m_Adapter->Rdr()->CreateIndexBuffer(*m_Adapter->GetEntitiesCommandPool(), data.m_Indices);
+            data.m_VertexBuffer = m_Adapter->Rdr()->CreateVertexBuffer(commandPool, data.m_Vertices);
+            data.m_IndicesBuffer = m_Adapter->Rdr()->CreateIndexBuffer(commandPool, data.m_Indices);
             data.m_TextureIndex = index;
 
             Texture tex = m_Adapter->GetTextureManager()->GetTextures()[data.m_Texture];
@@ -49,6 +52,8 @@ namespace Rbk
             imageInfos.emplace_back(imageInfo);
             index++;
         }
+
+        vkDestroyCommandPool(m_Adapter->Rdr()->GetDevice(), commandPool, nullptr);
 
         VkDescriptorSetLayoutBinding uboLayoutBinding{};
         uboLayoutBinding.binding = 0;
@@ -122,7 +127,8 @@ namespace Rbk
             shadersStageInfos,
             vertexInputInfo,
             VK_CULL_MODE_BACK_BIT,
-            true, true, true, true, false
+            true, true, true, true,
+            VulkanAdapter::s_PolygoneMode
         );
     }
 }

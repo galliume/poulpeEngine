@@ -14,6 +14,9 @@
 // CHANGELOG
 // (minor and older changes stripped away, please see git history for details)
 //  2022-XX-XX: Metal: Added support for multiple windows via the ImGuiPlatformIO interface.
+//  2022-08-23: Metal: Update deprecated property 'sampleCount'->'rasterSampleCount'.
+//  2022-07-05: Metal: Add dispatch synchronization.
+//  2022-06-30: Metal: Use __bridge for ARC based systems.
 //  2022-06-01: Metal: Fixed null dereference on exit inside command buffer completion handler.
 //  2022-04-27: Misc: Store backend data in a per-context struct, allowing to use this backend with multiple contexts.
 //  2022-01-03: Metal: Ignore ImDrawCmd where ElemCount == 0 (very rare but can technically be manufactured by user code).
@@ -92,12 +95,12 @@ static inline CFTimeInterval    GetMachAbsoluteTimeInSeconds()      { return (CF
 
 bool ImGui_ImplMetal_Init(MTL::Device* device)
 {
-    return ImGui_ImplMetal_Init((id<MTLDevice>)(device));
+    return ImGui_ImplMetal_Init((__bridge id<MTLDevice>)(device));
 }
 
 void ImGui_ImplMetal_NewFrame(MTL::RenderPassDescriptor* renderPassDescriptor)
 {
-    ImGui_ImplMetal_NewFrame((MTLRenderPassDescriptor*)(renderPassDescriptor));
+    ImGui_ImplMetal_NewFrame((__bridge MTLRenderPassDescriptor*)(renderPassDescriptor));
 }
 
 void ImGui_ImplMetal_RenderDrawData(ImDrawData* draw_data,
@@ -105,19 +108,19 @@ void ImGui_ImplMetal_RenderDrawData(ImDrawData* draw_data,
                                     MTL::RenderCommandEncoder* commandEncoder)
 {
     ImGui_ImplMetal_RenderDrawData(draw_data,
-                                   (id<MTLCommandBuffer>)(commandBuffer),
-                                   (id<MTLRenderCommandEncoder>)(commandEncoder));
+                                   (__bridge id<MTLCommandBuffer>)(commandBuffer),
+                                   (__bridge id<MTLRenderCommandEncoder>)(commandEncoder));
 
 }
 
 bool ImGui_ImplMetal_CreateFontsTexture(MTL::Device* device)
 {
-    return ImGui_ImplMetal_CreateFontsTexture((id<MTLDevice>)(device));
+    return ImGui_ImplMetal_CreateFontsTexture((__bridge id<MTLDevice>)(device));
 }
 
 bool ImGui_ImplMetal_CreateDeviceObjects(MTL::Device* device)
 {
-    return ImGui_ImplMetal_CreateDeviceObjects((id<MTLDevice>)(device));
+    return ImGui_ImplMetal_CreateDeviceObjects((__bridge id<MTLDevice>)(device));
 }
 
 #endif // #ifdef IMGUI_IMPL_METAL_CPP
@@ -309,8 +312,11 @@ void ImGui_ImplMetal_RenderDrawData(ImDrawData* drawData, id<MTLCommandBuffer> c
             ImGui_ImplMetal_Data* bd = ImGui_ImplMetal_GetBackendData();
             if (bd != NULL)
             {
-                [bd->SharedMetalContext.bufferCache addObject:vertexBuffer];
-                [bd->SharedMetalContext.bufferCache addObject:indexBuffer];
+                @synchronized(bd->SharedMetalContext.bufferCache)
+                {
+                    [bd->SharedMetalContext.bufferCache addObject:vertexBuffer];
+                    [bd->SharedMetalContext.bufferCache addObject:indexBuffer];
+                }
             }
         });
     }];
@@ -413,7 +419,7 @@ static void ImGui_ImplMetal_CreateWindow(ImGuiViewport* viewport)
     CAMetalLayer* layer = [CAMetalLayer layer];
     layer.device = device;
     layer.framebufferOnly = YES;
-    layer.pixelFormat = MTLPixelFormatBGRA8Unorm;
+    layer.pixelFormat = bd->SharedMetalContext.framebufferDescriptor.colorPixelFormat;
 #if TARGET_OS_OSX
     NSWindow* window = (__bridge NSWindow*)handle;
     NSView* view = window.contentView;
@@ -589,8 +595,8 @@ static void ImGui_ImplMetal_InvalidateDeviceObjectsForPlatformWindows()
 {
     if ((self = [super init]))
     {
-        _renderPipelineStateCache = [NSMutableDictionary dictionary];
-        _bufferCache = [NSMutableArray array];
+        self.renderPipelineStateCache = [NSMutableDictionary dictionary];
+        self.bufferCache = [NSMutableArray array];
         _lastBufferCachePurge = GetMachAbsoluteTimeInSeconds();
     }
     return self;
@@ -600,28 +606,31 @@ static void ImGui_ImplMetal_InvalidateDeviceObjectsForPlatformWindows()
 {
     uint64_t now = GetMachAbsoluteTimeInSeconds();
 
-    // Purge old buffers that haven't been useful for a while
-    if (now - self.lastBufferCachePurge > 1.0)
+    @synchronized(self.bufferCache)
     {
-        NSMutableArray* survivors = [NSMutableArray array];
+        // Purge old buffers that haven't been useful for a while
+        if (now - self.lastBufferCachePurge > 1.0)
+        {
+            NSMutableArray* survivors = [NSMutableArray array];
+            for (MetalBuffer* candidate in self.bufferCache)
+                if (candidate.lastReuseTime > self.lastBufferCachePurge)
+                    [survivors addObject:candidate];
+            self.bufferCache = [survivors mutableCopy];
+            self.lastBufferCachePurge = now;
+        }
+
+        // See if we have a buffer we can reuse
+        MetalBuffer* bestCandidate = nil;
         for (MetalBuffer* candidate in self.bufferCache)
-            if (candidate.lastReuseTime > self.lastBufferCachePurge)
-                [survivors addObject:candidate];
-        self.bufferCache = [survivors mutableCopy];
-        self.lastBufferCachePurge = now;
-    }
+            if (candidate.buffer.length >= length && (bestCandidate == nil || bestCandidate.lastReuseTime > candidate.lastReuseTime))
+                bestCandidate = candidate;
 
-    // See if we have a buffer we can reuse
-    MetalBuffer* bestCandidate = nil;
-    for (MetalBuffer* candidate in self.bufferCache)
-        if (candidate.buffer.length >= length && (bestCandidate == nil || bestCandidate.lastReuseTime > candidate.lastReuseTime))
-            bestCandidate = candidate;
-
-    if (bestCandidate != nil)
-    {
-        [self.bufferCache removeObject:bestCandidate];
-        bestCandidate.lastReuseTime = now;
-        return bestCandidate;
+        if (bestCandidate != nil)
+        {
+            [self.bufferCache removeObject:bestCandidate];
+            bestCandidate.lastReuseTime = now;
+            return bestCandidate;
+        }
     }
 
     // No luck; make a new buffer
@@ -704,7 +713,7 @@ static void ImGui_ImplMetal_InvalidateDeviceObjectsForPlatformWindows()
     pipelineDescriptor.vertexFunction = vertexFunction;
     pipelineDescriptor.fragmentFunction = fragmentFunction;
     pipelineDescriptor.vertexDescriptor = vertexDescriptor;
-    pipelineDescriptor.sampleCount = self.framebufferDescriptor.sampleCount;
+    pipelineDescriptor.rasterSampleCount = self.framebufferDescriptor.sampleCount;
     pipelineDescriptor.colorAttachments[0].pixelFormat = self.framebufferDescriptor.colorPixelFormat;
     pipelineDescriptor.colorAttachments[0].blendingEnabled = YES;
     pipelineDescriptor.colorAttachments[0].rgbBlendOperation = MTLBlendOperationAdd;
