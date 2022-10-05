@@ -61,10 +61,10 @@ namespace Rbk {
 
     VulkanRenderer::VulkanRenderer(std::shared_ptr<Window> window) : m_Window(window)
     {
-#ifdef NDEBUG
-        m_EnableValidationLayers = false;
-#else
+#ifdef RBK_DEBUG
         m_EnableValidationLayers = true;
+#else
+        m_EnableValidationLayers = false;
 #endif
 
         if (!glfwVulkanSupported()) {
@@ -116,7 +116,7 @@ namespace Rbk {
 
         VkApplicationInfo appInfo{};
 
-        appInfo.apiVersion = VK_API_VERSION_1_0;
+        appInfo.apiVersion = VK_API_VERSION_1_3;
         appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
         appInfo.pApplicationName = "Rebulkan";
         appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
@@ -384,14 +384,11 @@ namespace Rbk {
         descriptorIndexing.descriptorBindingVariableDescriptorCount = VK_TRUE;
         descriptorIndexing.descriptorBindingPartiallyBound = VK_TRUE;
 
-        VkPhysicalDevicePipelineCreationCacheControlFeatures cacheControl{};
-        cacheControl.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PIPELINE_CREATION_CACHE_CONTROL_FEATURES;
-        cacheControl.pipelineCreationCacheControl = VK_TRUE;
-        cacheControl.pNext = &descriptorIndexing;
-
-        VkPhysicalDeviceDynamicRenderingFeaturesKHR dynamicRenderingFeature{};
-        dynamicRenderingFeature.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DYNAMIC_RENDERING_FEATURES_KHR;
-        dynamicRenderingFeature.dynamicRendering = VK_TRUE;
+        VkPhysicalDeviceVulkan13Features vkFeatures13 = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES };
+        vkFeatures13.dynamicRendering = VK_TRUE;
+        vkFeatures13.synchronization2 = VK_TRUE;
+        vkFeatures13.pipelineCreationCacheControl = VK_TRUE;
+        vkFeatures13.pNext = &descriptorIndexing;
 
         VkDeviceCreateInfo createInfo{};
         createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
@@ -400,7 +397,7 @@ namespace Rbk {
         createInfo.pEnabledFeatures = &deviceFeatures;
         createInfo.enabledExtensionCount = static_cast<uint32_t>(m_DeviceExtensions.size());
         createInfo.ppEnabledExtensionNames = m_DeviceExtensions.data();
-        createInfo.pNext = &cacheControl;
+        createInfo.pNext = &vkFeatures13;
 
         if (vkCreateDevice(m_PhysicalDevice, &createInfo, nullptr, &m_Device) != VK_SUCCESS) {
             Rbk::Log::GetLogger()->critical("failed to create logical device!");
@@ -500,7 +497,7 @@ namespace Rbk {
         return imageCount;
     }
 
-    VkSwapchainKHR VulkanRenderer::CreateSwapChain(std::vector<VkImage>& swapChainImages, VkSwapchainKHR oldSwapChain)
+    VkSwapchainKHR VulkanRenderer::CreateSwapChain(std::vector<VkImage>& swapChainImages, const VkSwapchainKHR& oldSwapChain)
     {
         VkSwapchainKHR swapChain = VK_NULL_HANDLE;
 
@@ -623,7 +620,7 @@ namespace Rbk {
         return swapChainImageView;
     }
 
-    VkDescriptorSetLayout VulkanRenderer::CreateDescriptorSetLayout(std::vector<VkDescriptorSetLayoutBinding> pBindings, VkDescriptorSetLayoutCreateFlagBits flags)
+    VkDescriptorSetLayout VulkanRenderer::CreateDescriptorSetLayout(const std::vector<VkDescriptorSetLayoutBinding>& pBindings, const VkDescriptorSetLayoutCreateFlagBits& flags)
     {
         VkDescriptorSetLayout descriptorSetLayout;
 
@@ -641,7 +638,7 @@ namespace Rbk {
         return descriptorSetLayout;
     }
 
-    VkPipelineLayout VulkanRenderer::CreatePipelineLayout(std::vector<VkDescriptorSet> descriptorSets, std::vector<VkDescriptorSetLayout> descriptorSetLayouts, std::vector<VkPushConstantRange> pushConstants)
+    VkPipelineLayout VulkanRenderer::CreatePipelineLayout(const std::vector<VkDescriptorSet>& descriptorSets, const std::vector<VkDescriptorSetLayout>& descriptorSetLayouts, const std::vector<VkPushConstantRange>& pushConstants)
     {
         VkPipelineLayout graphicsPipelineLayout = VK_NULL_HANDLE;
 
@@ -676,7 +673,7 @@ namespace Rbk {
         bool depthTestEnable,
         bool depthWriteEnable,
         bool stencilTestEnable,
-        bool wireFrameModeOn
+        int polygoneMode
     )
     {
         VkPipelineInputAssemblyStateCreateInfo inputAssembly{};
@@ -707,8 +704,7 @@ namespace Rbk {
         rasterizer.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
         rasterizer.depthClampEnable = VK_FALSE;
         rasterizer.rasterizerDiscardEnable = VK_FALSE;
-        //VK_POLYGON_MODE_LINE VK_POLYGON_MODE_POINT VK_POLYGON_MODE_FILL
-        rasterizer.polygonMode = (!wireFrameModeOn) ? VK_POLYGON_MODE_FILL : VK_POLYGON_MODE_LINE;
+        rasterizer.polygonMode = static_cast<VkPolygonMode>(polygoneMode);
         rasterizer.lineWidth = 1.0f;
         rasterizer.cullMode = cullMode;
         rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
@@ -720,7 +716,7 @@ namespace Rbk {
         VkPipelineMultisampleStateCreateInfo multisampling{};
         multisampling.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
         multisampling.sampleShadingEnable = VK_FALSE;
-        multisampling.rasterizationSamples = m_MsaaSamples;
+        multisampling.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;//m_MsaaSamples;
         multisampling.minSampleShading = 0.2f;
         multisampling.pSampleMask = nullptr;
         multisampling.alphaToCoverageEnable = VK_FALSE;
@@ -776,31 +772,22 @@ namespace Rbk {
         pipelineInfo.pDepthStencilState = &depthStencil;
         pipelineInfo.pColorBlendState = &colorBlending;
         pipelineInfo.layout = pipelineLayout;
-        pipelineInfo.renderPass = (dynamicRendering) ? nullptr : * renderPass.get();
+        pipelineInfo.renderPass = (dynamicRendering) ? VK_NULL_HANDLE : *renderPass.get();
         pipelineInfo.subpass = 0;
         pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
         pipelineInfo.basePipelineIndex = -1;
         pipelineInfo.pDynamicState = &dynamicState;
 
-        if (dynamicRendering) {
-            //VkAttachmentSampleCountInfoNV sampleCount{};
-            //sampleCount.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_COARSE_SAMPLE_ORDER_STATE_CREATE_INFO_NV;
-            ////sampleCount.pNext;
-            //sampleCount.flags = VK_SAMPLE_COUNT_1_BIT | VK_SAMPLE_COUNT_8_BIT;
-            //sampleCount.colorAttachmentCount;
-            //sampleCount.pColorAttachmentSamples;
-            //sampleCount.depthStencilAttachmentSamples;
 
-            VkFormat format = GetSwapChainImageFormat();
-            VkFormat depthFormat = FindDepthFormat();
+        VkFormat format = GetSwapChainImageFormat();
+        VkFormat depthFormat = FindDepthFormat();
 
-            VkPipelineRenderingCreateInfoKHR renderingCreateInfo{};
-            renderingCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO_KHR;
-            renderingCreateInfo.colorAttachmentCount = 1;
-            renderingCreateInfo.pColorAttachmentFormats = &format;
-            renderingCreateInfo.depthAttachmentFormat = depthFormat;
-            pipelineInfo.pNext = &renderingCreateInfo;
-        }
+        VkPipelineRenderingCreateInfoKHR renderingCreateInfo = { VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO_KHR };
+        renderingCreateInfo.colorAttachmentCount = 1;
+        renderingCreateInfo.pColorAttachmentFormats = &format;
+        renderingCreateInfo.depthAttachmentFormat = depthFormat; //(VK_FORMAT_D32_SFLOAT) 
+
+        pipelineInfo.pNext = &renderingCreateInfo;
 
         VkPipeline graphicsPipeline = nullptr;
 
@@ -951,7 +938,7 @@ namespace Rbk {
         return shaderModule;
     }
 
-    std::shared_ptr<VkRenderPass> VulkanRenderer::CreateRenderPass(VkSampleCountFlagBits msaaSamples)
+    std::shared_ptr<VkRenderPass> VulkanRenderer::CreateRenderPass(const VkSampleCountFlagBits& msaaSamples)
     {
         SwapChainSupportDetails swapChainSupport = QuerySwapChainSupport(m_PhysicalDevice);
         VkSurfaceFormatKHR surfaceFormat = ChooseSwapSurfaceFormat(swapChainSupport.formats);
@@ -1006,7 +993,6 @@ namespace Rbk {
         VkAttachmentReference depthAttachmentRef{};
         depthAttachmentRef.attachment = 1;
         depthAttachmentRef.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-
 
         VkSubpassDescription subpass{};
         subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
@@ -1098,7 +1084,7 @@ namespace Rbk {
         VkCommandBufferAllocateInfo allocInfo{};
         allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
         allocInfo.commandPool = commandPool;
-        allocInfo.level = (!isSecondary) ? VK_COMMAND_BUFFER_LEVEL_PRIMARY : VK_COMMAND_BUFFER_LEVEL_SECONDARY;
+        //allocInfo.level = (!isSecondary) ? VK_COMMAND_BUFFER_LEVEL_PRIMARY : VK_COMMAND_BUFFER_LEVEL_SECONDARY;
 
         allocInfo.commandBufferCount = static_cast<uint32_t>(commandBuffers.size());
 
@@ -1184,7 +1170,7 @@ namespace Rbk {
         return semaphores;
     }
 
-    VkDescriptorPool VulkanRenderer::CreateDescriptorPool(std::vector<VkDescriptorPoolSize> poolSizes, uint32_t maxSets)
+    VkDescriptorPool VulkanRenderer::CreateDescriptorPool(const std::vector<VkDescriptorPoolSize>& poolSizes, uint32_t maxSets)
     {
         VkDescriptorPool descriptorPool;
 
@@ -1203,7 +1189,7 @@ namespace Rbk {
         return descriptorPool;
     }
 
-    VkDescriptorSet VulkanRenderer::CreateDescriptorSets(VkDescriptorPool descriptorPool, std::vector<VkDescriptorSetLayout> descriptorSetLayouts, uint32_t count)
+    VkDescriptorSet VulkanRenderer::CreateDescriptorSets(const VkDescriptorPool& descriptorPool, const std::vector<VkDescriptorSetLayout>& descriptorSetLayouts, uint32_t count)
     {
         VkDescriptorSet descriptorSet;
 
@@ -1222,10 +1208,9 @@ namespace Rbk {
         return descriptorSet;
     }
 
-    void VulkanRenderer::UpdateDescriptorSets(std::vector<std::pair<VkBuffer, VkDeviceMemory>>uniformBuffers, VkDescriptorSet descriptorSet, std::vector<VkDescriptorImageInfo> imageInfo)
+    void VulkanRenderer::UpdateDescriptorSets(const std::vector<std::pair<VkBuffer, VkDeviceMemory>>& uniformBuffers, const VkDescriptorSet& descriptorSet, const std::vector<VkDescriptorImageInfo>& imageInfo)
     {
         std::array<VkWriteDescriptorSet, 2> descriptorWrites{};
-        //std::vector<VkDescriptorImageInfo> imageInfos;
         std::vector<VkDescriptorBufferInfo> bufferInfos;
 
         std::for_each(std::begin(uniformBuffers), std::end(uniformBuffers),
@@ -1237,8 +1222,6 @@ namespace Rbk {
                 bufferInfo.range = VK_WHOLE_SIZE;
                 bufferInfos.emplace_back(bufferInfo);
             });
-
-        //imageInfos.emplace_back(imageInfo);
 
         descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
         descriptorWrites[0].dstSet = descriptorSet;
@@ -1269,7 +1252,7 @@ namespace Rbk {
         renderPassInfo.renderArea.extent = m_SwapChainExtent;
 
         std::array<VkClearValue, 2> clearValues{};
-        clearValues[0].color = { {0.f, 0.f, 0.f, 1.0f} };
+        clearValues[0].color = { {0.f, 1.f, 0.f, 1.0f} };
         clearValues[1].depthStencil = { 1.0f, 0 };
 
         renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
@@ -1283,57 +1266,28 @@ namespace Rbk {
         vkCmdEndRenderPass(commandBuffer);
     }
 
-
-    void VulkanRenderer::BeginRendering(VkCommandBuffer commandBuffer, VkImageView  imageView, VkImageView  depthImageView, VkImageView colorImageView)
+    void VulkanRenderer::BeginRendering(const VkCommandBuffer& commandBuffer, const VkImageView& colorImageView, const VkImageView& depthImageView)
     {
-        VkClearValue clearValues{};
-        clearValues.color = { {0.f, 0.f, 0.f, 1.0f} };
-        clearValues.depthStencil = { 1.0f, 0 };
+        VkClearColorValue colorClear = { 0.f, 255.f, 255.f, 0.90f };
+        VkClearDepthStencilValue depthStencil = { 1.f, 0 };
 
-        VkRenderingAttachmentInfoKHR imageAttachment{};
-        imageAttachment.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO_KHR;
-        //imageAttachment.pNext;
-        imageAttachment.imageView = imageView;
-        imageAttachment.imageLayout = VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL_KHR;
-        imageAttachment.resolveMode = VK_RESOLVE_MODE_NONE;
-        //colorAttachment.resolveImageView;
-        //colorAttachment.resolveImageLayout;
-        imageAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-        imageAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-        imageAttachment.clearValue = clearValues;
-
-        VkRenderingAttachmentInfoKHR colorAttachment{};
-        colorAttachment.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO_KHR;
-        //colorAttachment.pNext;
+        VkRenderingAttachmentInfo colorAttachment{ VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO  };
         colorAttachment.imageView = colorImageView;
-        colorAttachment.imageLayout = VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL_KHR;
-        colorAttachment.resolveMode = VK_RESOLVE_MODE_NONE;
-        //colorAttachment.resolveImageView;
-        //colorAttachment.resolveImageLayout;
+        colorAttachment.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
         colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
         colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-        colorAttachment.clearValue = clearValues;
+        colorAttachment.clearValue.color = colorClear;
         
-        VkRenderingAttachmentInfoKHR depthAttachment{};
-        depthAttachment.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO_KHR;
-        //colorAttachment.pNext;
+        VkRenderingAttachmentInfo depthAttachment{ VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO };
         depthAttachment.imageView = depthImageView;
-        depthAttachment.imageLayout = VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL_KHR;
-        depthAttachment.resolveMode = VK_RESOLVE_MODE_NONE;
-        //colorAttachment.resolveImageView;
-        //colorAttachment.resolveImageLayout;
+        depthAttachment.imageLayout = VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL;
         depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
         depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-        depthAttachment.clearValue = clearValues;
+        depthAttachment.clearValue.depthStencil = depthStencil;
 
-        VkRenderingInfoKHR renderingInfo{};
-        renderingInfo.sType = VK_STRUCTURE_TYPE_RENDERING_INFO_KHR;
-        //renderingInfo.pNext;
-        //renderingInfo.flags;
-        renderingInfo.renderArea.offset = { 0, 0 };
+        VkRenderingInfo renderingInfo{ VK_STRUCTURE_TYPE_RENDERING_INFO };
         renderingInfo.renderArea.extent = m_SwapChainExtent;
         renderingInfo.layerCount = 1;
-        //renderingInfo.viewMask;
         renderingInfo.colorAttachmentCount = 1;
         renderingInfo.pColorAttachments = &colorAttachment;
         renderingInfo.pDepthAttachment = &depthAttachment;
@@ -1447,7 +1401,6 @@ namespace Rbk {
             throw std::runtime_error("failed to acquire swap chain image!");
         }
 
-
         return imageIndex;
     }
 
@@ -1482,9 +1435,9 @@ namespace Rbk {
         }
     }
 
-    void VulkanRenderer::AddPipelineBarrier(VkCommandBuffer commandBuffer, VkImageMemoryBarrier renderBarrier, VkPipelineStageFlags srcStageMask, VkPipelineStageFlags dstStageMask, VkDependencyFlags dependencyFlags)
+    void VulkanRenderer::AddPipelineBarriers(VkCommandBuffer commandBuffer, std::vector<VkImageMemoryBarrier> renderBarriers, VkPipelineStageFlags srcStageMask, VkPipelineStageFlags dstStageMask, VkDependencyFlags dependencyFlags)
     {
-        vkCmdPipelineBarrier(commandBuffer, srcStageMask, dstStageMask, dependencyFlags, 0, nullptr, 0, nullptr, 1, &renderBarrier);
+        vkCmdPipelineBarrier(commandBuffer, srcStageMask, dstStageMask, dependencyFlags, 0, 0, 0, 0, static_cast<uint32_t>(renderBarriers.size()), renderBarriers.data());
     }
 
     void VulkanRenderer::CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory)
@@ -1514,7 +1467,7 @@ namespace Rbk {
         vkBindBufferMemory(m_Device, buffer, bufferMemory, 0);
     }
 
-    std::pair<VkBuffer, VkDeviceMemory> VulkanRenderer::CreateIndexBuffer(VkCommandPool commandPool, std::vector<uint32_t> indices)
+    std::pair<VkBuffer, VkDeviceMemory> VulkanRenderer::CreateIndexBuffer(const VkCommandPool& commandPool, const std::vector<uint32_t>& indices)
     {
         std::pair<VkBuffer, VkDeviceMemory> indexBuffer{};
 
@@ -1566,7 +1519,7 @@ namespace Rbk {
         return vertexBuffer;
     }
 
-    std::pair<VkBuffer, VkDeviceMemory> VulkanRenderer::CreateVertex2DBuffer(VkCommandPool commandPool, std::vector<Rbk::Vertex2D> vertices)
+    std::pair<VkBuffer, VkDeviceMemory> VulkanRenderer::CreateVertex2DBuffer(const VkCommandPool& commandPool, const std::vector<Rbk::Vertex2D>& vertices)
     {
         std::pair<VkBuffer, VkDeviceMemory> vertexBuffer{};
         VkDeviceSize bufferSize = sizeof(Vertex2D) * vertices.size();
@@ -1781,7 +1734,7 @@ namespace Rbk {
             textureImage, 0, VK_ACCESS_TRANSFER_WRITE_BIT, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL
         );
 
-        AddPipelineBarrier(commandBuffer, renderBarrier, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_DEPENDENCY_BY_REGION_BIT);
+        AddPipelineBarriers(commandBuffer, { renderBarrier }, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_DEPENDENCY_BY_REGION_BIT);
 
         CopyBufferToImage(commandBuffer, stagingBuffer, textureImage, static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight));
 
@@ -1822,7 +1775,7 @@ namespace Rbk {
         renderBarrier.subresourceRange.baseMipLevel = 0;
         renderBarrier.subresourceRange.levelCount = mipLevels;
 
-        AddPipelineBarrier(commandBuffer, renderBarrier, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_DEPENDENCY_BY_REGION_BIT);
+        AddPipelineBarriers(commandBuffer, { renderBarrier }, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_DEPENDENCY_BY_REGION_BIT);
 
         CopyBufferToImageSkybox(commandBuffer, stagingBuffer, textureImage, static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight), skyboxPixels, mipLevels, layerSize);
 
@@ -1995,7 +1948,7 @@ namespace Rbk {
             depthImage, 0, VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, aspectMask
         );
 
-        AddPipelineBarrier(commandBuffer, renderBarrier, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT, VK_DEPENDENCY_BY_REGION_BIT);
+        AddPipelineBarriers(commandBuffer, { renderBarrier }, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT, VK_DEPENDENCY_BY_REGION_BIT);
 
         return depthImageView;
     }

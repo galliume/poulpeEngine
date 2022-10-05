@@ -33,13 +33,17 @@ namespace Rbk
         UniformBufferObject ubo;
         ubo.view = glm::mat4(0.0f);
 
+        auto commandPool = m_Adapter->Rdr()->CreateCommandPool();
+
         Data crossHairData;
         crossHairData.m_Texture = "crosshair";
         crossHairData.m_TextureIndex = 0;
-        crossHairData.m_VertexBuffer = m_Adapter->Rdr()->CreateVertex2DBuffer(*m_Adapter->GetHUDCommandPool(), vertices);
-        crossHairData.m_IndicesBuffer = m_Adapter->Rdr()->CreateIndexBuffer(*m_Adapter->GetHUDCommandPool(), indices);
+        crossHairData.m_VertexBuffer = m_Adapter->Rdr()->CreateVertex2DBuffer(commandPool, vertices);
+        crossHairData.m_IndicesBuffer = m_Adapter->Rdr()->CreateIndexBuffer(commandPool, indices);
         crossHairData.m_Ubos.emplace_back(ubo);
         crossHairData.m_Indices = indices;
+
+        vkDestroyCommandPool(m_Adapter->Rdr()->GetDevice(), commandPool, nullptr);
 
         mesh->SetName("hud");
         mesh->SetShaderName("2d");
@@ -99,8 +103,9 @@ namespace Rbk
         cPushconstant.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 
         cpushConstants.emplace_back(cPushconstant);
+        std::vector<VkDescriptorSetLayout>dSetLayout = { cdesriptorSetLayout };
 
-        mesh->m_PipelineLayout = m_Adapter->Rdr()->CreatePipelineLayout(mesh->m_DescriptorSets, { cdesriptorSetLayout }, cpushConstants);
+        mesh->m_PipelineLayout = m_Adapter->Rdr()->CreatePipelineLayout(mesh->m_DescriptorSets, dSetLayout, cpushConstants);
 
         std::vector<VkPipelineShaderStageCreateInfo>cshadersStageInfos;
 
@@ -135,7 +140,8 @@ namespace Rbk
             cshadersStageInfos,
             vertexInputInfo2D,
             VK_CULL_MODE_FRONT_BIT,
-            false
+            true, true, true, true,
+            VulkanAdapter::s_PolygoneMode
         );
 
         mesh->GetData()->emplace_back(crossHairData);
