@@ -131,6 +131,21 @@ namespace Rbk
 
     void VulkanLayer::DisplayOptions()
     {
+        Rbk::Im::Text("Polygon mode");
+
+        if (ImGui::RadioButton("Fill", &Rbk::VulkanAdapter::s_PolygoneMode, VK_POLYGON_MODE_FILL)) {
+            m_Adapter->Refresh();
+        }; 
+        ImGui::SameLine();
+        if (ImGui::RadioButton("Line", &Rbk::VulkanAdapter::s_PolygoneMode, VK_POLYGON_MODE_LINE)) {
+            m_Adapter->Refresh();
+        }; 
+        ImGui::SameLine();
+        if (ImGui::RadioButton("Point", &Rbk::VulkanAdapter::s_PolygoneMode, VK_POLYGON_MODE_POINT)) {
+            m_Adapter->Refresh();
+        }
+        ImGui::Separator();
+
         Rbk::Im::Text("Light");
         ImGui::SliderFloat("Ambiant light", &Rbk::VulkanAdapter::s_AmbiantLight, 0.0f, 1.0f, "%.3f");
         ImGui::Separator();
