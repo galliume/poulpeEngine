@@ -7,14 +7,15 @@
 
 namespace Rbk
 {
-    class VulkanHUD : public IVisitor
+    class VulkanGrid : public IVisitor
     {
     public:
-        VulkanHUD(std::shared_ptr<VulkanAdapter> adapter, VkDescriptorPool descriptorPool);
+        VulkanGrid(std::shared_ptr<VulkanAdapter> adapter, VkDescriptorPool descriptorPool);
         void Visit(std::shared_ptr<Entity> entity) override;
 
     private:
         std::shared_ptr<VulkanAdapter> m_Adapter;
         VkDescriptorPool m_DescriptorPool;
+
     };
 }

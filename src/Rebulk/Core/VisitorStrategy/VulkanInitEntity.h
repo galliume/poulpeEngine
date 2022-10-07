@@ -9,6 +9,16 @@ namespace Rbk
 {
     class VulkanInitEntity : public IVisitor
     {
+        struct pc
+        {
+            uint32_t textureID;
+            glm::vec3 cameraPos;
+            float ambiantLight;
+            float fogDensity;
+            glm::vec3 fogColor;
+            glm::vec3 lightPos;
+        };
+
     public:
         VulkanInitEntity(std::shared_ptr<VulkanAdapter> adapter, VkDescriptorPool descriptorPool);
         void Visit(std::shared_ptr<Entity> entity) override;

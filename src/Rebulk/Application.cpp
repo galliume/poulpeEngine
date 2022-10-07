@@ -50,7 +50,6 @@ namespace Rbk
         m_TextureManager->Load();
         m_EntityManager->Load();
 
-#ifdef RBK_DEBUG
         std::shared_ptr<Rbk::VulkanLayer>vulkanLayer = std::make_shared<Rbk::VulkanLayer>();
         m_LayerManager->Add(vulkanLayer.get());
 
@@ -67,7 +66,6 @@ namespace Rbk
         vulkanLayer->AddTextureManager(m_TextureManager);
         vulkanLayer->AddEntityManager(m_EntityManager);
         vulkanLayer->AddShaderManager(m_ShaderManager);
-#endif
 
         double endRun = glfwGetTime();
 
@@ -111,7 +109,7 @@ namespace Rbk
                 m_RenderManager->SetDeltatime(timeStep);
                 m_RenderManager->Draw();
 
-#ifdef RBK_DEBUG
+
                 //@todo move to LayerManager
                 Rbk::Im::NewFrame();
 
@@ -124,15 +122,14 @@ namespace Rbk
                 ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), imguiInfo.cmdBuffer);
                 m_RendererAdapter->Rdr()->EndCommandBuffer(imguiInfo.cmdBuffer);
                 //end @todo
-#endif
+
                 lastTime = currentTime;
             }
         }
 
-#ifdef RBK_DEBUG
         m_RendererAdapter->Rdr()->WaitIdle();
         Rbk::Im::Destroy();
-#endif
+
         m_RenderManager->Adp()->Destroy();
 
         glfwDestroyWindow(m_Window.get()->Get());

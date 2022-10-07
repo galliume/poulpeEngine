@@ -67,6 +67,9 @@ namespace Rbk
         std::shared_ptr<EntityManager> GetEntityManager() { return m_EntityManager; };
         std::shared_ptr<ShaderManager> GetShaderManager() { return m_ShaderManager; };
 
+        std::shared_ptr<Camera> GetCamera() { return m_Camera; };
+        std::vector<glm::vec3> GetLights() { return m_LightsPos; };
+
     private:
         //@todo temp
         void SetPerspective();
@@ -93,7 +96,7 @@ namespace Rbk
         std::shared_ptr<ShaderManager> m_ShaderManager = nullptr;
 
         //@todo move to meshManager
-        std::shared_ptr<Mesh> m_HUD = nullptr;
+        std::vector<std::shared_ptr<Mesh>> m_HUD = {};
         std::vector<VkImageView>m_DepthImageViews = {};
         std::vector<VkImage>m_DepthImages = {};
         glm::mat4 m_Perspective;

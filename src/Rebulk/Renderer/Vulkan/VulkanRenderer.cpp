@@ -1268,7 +1268,7 @@ namespace Rbk {
 
     void VulkanRenderer::BeginRendering(const VkCommandBuffer& commandBuffer, const VkImageView& colorImageView, const VkImageView& depthImageView)
     {
-        VkClearColorValue colorClear = { 0.f, 255.f, 255.f, 0.90f };
+        VkClearColorValue colorClear = { 21.f / 255.f, 10.f / 255.f, 26.f / 255.f, 1.f };
         VkClearDepthStencilValue depthStencil = { 1.f, 0 };
 
         VkRenderingAttachmentInfo colorAttachment{ VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO  };
