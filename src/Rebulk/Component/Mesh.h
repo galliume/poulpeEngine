@@ -1,5 +1,6 @@
 #pragma once
 
+#include <functional>
 #include <volk.h>
 #include "Texture.h"
 #include "Vertex.h"
@@ -32,11 +33,6 @@ namespace Rbk
         glm::vec3 lightPos;
     };
 
-    struct cPC
-    {
-        uint32_t textureID;
-    };
-
     class Mesh : public Entity
     {
     public:
@@ -60,6 +56,7 @@ namespace Rbk
         inline const std::vector<VkDescriptorSet> GetDescriptorSets() const { return m_DescriptorSets; };
 
         void AddUbos(const std::vector<UniformBufferObject>& ubos);
+        std::function<void(VkCommandBuffer commandBuffer, VkPipelineLayout pipelineLayout)> ApplyPushConstants = nullptr;
 
     //@todo make it private
     public:

@@ -9,3 +9,6 @@ glslc.exe assets/shaders/2d.frag -o assets/shaders/spv/2d_frag.spv
 
 glslc.exe assets/shaders/ambient_shader.vert -o assets/shaders/spv/ambient_shader_vert.spv
 glslc.exe assets/shaders/ambient_shader.frag -o assets/shaders/spv/ambient_shader_frag.spv
+
+glslc.exe assets/shaders/grid.vert -o assets/shaders/spv/grid_vert.spv
+glslc.exe assets/shaders/grid.frag -o assets/shaders/spv/grid_frag.spv

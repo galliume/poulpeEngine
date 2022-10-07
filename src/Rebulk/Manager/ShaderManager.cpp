@@ -13,6 +13,7 @@ namespace Rbk
     {
         std::future shaderFuture = std::async(std::launch::async, [this]() {
             AddShader("main", "assets/shaders/spv/vert.spv", "assets/shaders/spv/frag.spv");
+            AddShader("grid", "assets/shaders/spv/grid_vert.spv", "assets/shaders/spv/grid_frag.spv");
             AddShader("skybox", "assets/shaders/spv/skybox_vert.spv", "assets/shaders/spv/skybox_frag.spv");
             AddShader("2d", "assets/shaders/spv/2d_vert.spv", "assets/shaders/spv/2d_frag.spv");
             AddShader("ambient_light", "assets/shaders/spv/ambient_shader_vert.spv", "assets/shaders/spv/ambient_shader_frag.spv");

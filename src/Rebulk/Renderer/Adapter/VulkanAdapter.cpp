@@ -7,7 +7,8 @@
 #include "Rebulk/Component/Mesh.h"
 #include "Rebulk/Core/VisitorStrategy/VulkanInitEntity.h"
 #include "Rebulk/Core/VisitorStrategy/VulkanSkybox.h"
-#include "Rebulk/Core/VisitorStrategy/VulkanHUD.h"
+#include "Rebulk/Core/VisitorStrategy/VulkanCrosshair.h"
+#include "Rebulk/Core/VisitorStrategy/VulkanGrid.h"
 #include "Rebulk/Component/Entity.h"
 
 namespace Rbk
@@ -164,9 +165,16 @@ namespace Rbk
 
         VkDescriptorPool HUDDescriptorPool = m_Renderer->CreateDescriptorPool(poolSizes, 1000);
         m_DescriptorPools.emplace_back(HUDDescriptorPool);
-        std::shared_ptr<VulkanHUD> HUDVulkanisator = std::make_shared<VulkanHUD>(shared_from_this(), HUDDescriptorPool);
-        m_HUD = std::make_shared<Mesh2D>();
-        m_HUD->Accept(HUDVulkanisator);
+        
+        std::shared_ptr<VulkanCrosshair> crosshairVulkanisator = std::make_shared<VulkanCrosshair>(shared_from_this(), HUDDescriptorPool);
+        auto crossHair = std::make_shared<Mesh2D>();
+        crossHair->Accept(crosshairVulkanisator);
+        m_HUD.emplace_back(crossHair);
+        
+        std::shared_ptr<VulkanGrid> gridVulkanisator = std::make_shared<VulkanGrid>(shared_from_this(), HUDDescriptorPool);
+        auto grid = std::make_shared<Mesh2D>();
+        grid->Accept(gridVulkanisator);
+        m_HUD.emplace_back(grid);
     }
 
     void VulkanAdapter::SetPerspective()
@@ -295,18 +303,21 @@ namespace Rbk
         m_Renderer->Draw(m_CommandBuffers[m_ImageIndex], m_EntityManager->GetSkyboxMesh().get(), skyboxData[0], m_ImageIndex, false);
 
         //HUD !
-        std::vector<Rbk::Data> hud = *m_HUD->GetData();
-            
-        cPC cConst;
-        cConst.textureID = VulkanAdapter::s_Crosshair;
+        for (std::shared_ptr<Mesh> hudPart : m_HUD) {
 
-        for (uint32_t i = 0; i < m_HUD->m_UniformBuffers.size(); i++) {
-            hud[0].m_Ubos[i].view = lookAt;
-            m_Renderer->UpdateUniformBuffer(m_HUD->m_UniformBuffers[i], { hud[0].m_Ubos[i] }, 1);
+            std::vector<Rbk::Data> hud = *hudPart->GetData();
+
+            for (uint32_t i = 0; i < hudPart->m_UniformBuffers.size(); i++) {
+                hud[0].m_Ubos[i].view = lookAt;
+                m_Renderer->UpdateUniformBuffer(hudPart->m_UniformBuffers[i], { hud[0].m_Ubos[i] }, 1);
+            }
+            m_Renderer->BindPipeline(m_CommandBuffers[m_ImageIndex], hudPart->m_GraphicsPipeline);
+            
+            if (hudPart->HasPushConstants())
+                hudPart->ApplyPushConstants(m_CommandBuffers[m_ImageIndex], hudPart->m_PipelineLayout);
+
+            m_Renderer->Draw(m_CommandBuffers[m_ImageIndex], hudPart.get(), hud[0], m_ImageIndex);
         }
-        m_Renderer->BindPipeline(m_CommandBuffers[m_ImageIndex], m_HUD->m_GraphicsPipeline);
-        vkCmdPushConstants(m_CommandBuffers[m_ImageIndex], m_HUD->m_PipelineLayout, VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(cPC), &cConst);
-        m_Renderer->Draw(m_CommandBuffers[m_ImageIndex], m_HUD.get(), hud[0], m_ImageIndex);
 
         //end rendering !
         m_Renderer->EndRendering(m_CommandBuffers[m_ImageIndex]);
@@ -377,21 +388,22 @@ namespace Rbk
         m_Renderer->DestroyPipeline(skyboxMesh->m_GraphicsPipeline);
         vkDestroyPipelineLayout(m_Renderer->GetDevice(), skyboxMesh->m_PipelineLayout, nullptr);
 
-        for (auto buffer : m_HUD->m_UniformBuffers) {
-            m_Renderer->DestroyBuffer(buffer.first);
-            m_Renderer->DestroyDeviceMemory(buffer.second);
+        for (auto hudPart : m_HUD) {
+            for (auto buffer : hudPart->m_UniformBuffers) {
+                m_Renderer->DestroyBuffer(buffer.first);
+                m_Renderer->DestroyDeviceMemory(buffer.second);
+            }
+
+            for (Data data : *hudPart->GetData()) {
+                m_Renderer->DestroyBuffer(data.m_VertexBuffer.first);
+                m_Renderer->DestroyDeviceMemory(data.m_VertexBuffer.second);
+
+                m_Renderer->DestroyBuffer(data.m_IndicesBuffer.first);
+                m_Renderer->DestroyDeviceMemory(data.m_IndicesBuffer.second);
+            }
+            m_Renderer->DestroyPipeline(hudPart->m_GraphicsPipeline);
+            vkDestroyPipelineLayout(m_Renderer->GetDevice(), hudPart->m_PipelineLayout, nullptr);
         }
-
-        for (Data data : *m_HUD->GetData()) {
-            m_Renderer->DestroyBuffer(data.m_VertexBuffer.first);
-            m_Renderer->DestroyDeviceMemory(data.m_VertexBuffer.second);
-
-            m_Renderer->DestroyBuffer(data.m_IndicesBuffer.first);
-            m_Renderer->DestroyDeviceMemory(data.m_IndicesBuffer.second);
-        }
-        m_Renderer->DestroyPipeline(m_HUD->m_GraphicsPipeline);
-        vkDestroyPipelineLayout(m_Renderer->GetDevice(), m_HUD->m_PipelineLayout, nullptr);
-
 
         std::vector<std::shared_ptr<Entity>> entities = *m_EntityManager->GetEntities();
 

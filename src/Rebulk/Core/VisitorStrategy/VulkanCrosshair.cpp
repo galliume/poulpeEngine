@@ -1,11 +1,9 @@
 #include "rebulkpch.h"
-#include "VulkanHUD.h"
+#include "VulkanCrosshair.h"
 
 namespace Rbk
 {
-    struct cPC;
-
-    VulkanHUD::VulkanHUD(
+     VulkanCrosshair::VulkanCrosshair(
         std::shared_ptr<VulkanAdapter> adapter,
         VkDescriptorPool descriptorPool) :
         m_Adapter(adapter),
@@ -14,7 +12,7 @@ namespace Rbk
 
     }
 
-    void VulkanHUD::Visit(std::shared_ptr<Entity> entity)
+    void VulkanCrosshair::Visit(std::shared_ptr<Entity> entity)
     {
         std::shared_ptr<Mesh> mesh = std::dynamic_pointer_cast<Mesh>(entity);
 
@@ -96,16 +94,25 @@ namespace Rbk
             mesh->m_DescriptorSets.emplace_back(cdescriptorSet);
         }
 
-        std::vector<VkPushConstantRange> cpushConstants = {};
-        VkPushConstantRange cPushconstant;
-        cPushconstant.offset = 0;
-        cPushconstant.size = sizeof(cPC);
-        cPushconstant.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+        VulkanCrosshair::pc pc;
+        pc.textureID = VulkanAdapter::s_Crosshair;
 
-        cpushConstants.emplace_back(cPushconstant);
+        mesh->ApplyPushConstants = [&pc](VkCommandBuffer commandBuffer, VkPipelineLayout pipelineLayout) {
+            pc.textureID = VulkanAdapter::s_Crosshair;
+            vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(pc), &pc);
+        };
+        mesh->SetHasPushConstants();
+
+        std::vector<VkPushConstantRange> vkPcs = {};
+        VkPushConstantRange vkPc;
+        vkPc.offset = 0;
+        vkPc.size = sizeof(pc);
+        vkPc.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+        vkPcs.emplace_back(vkPc);
+
         std::vector<VkDescriptorSetLayout>dSetLayout = { cdesriptorSetLayout };
 
-        mesh->m_PipelineLayout = m_Adapter->Rdr()->CreatePipelineLayout(mesh->m_DescriptorSets, dSetLayout, cpushConstants);
+        mesh->m_PipelineLayout = m_Adapter->Rdr()->CreatePipelineLayout(mesh->m_DescriptorSets, dSetLayout, vkPcs);
 
         std::vector<VkPipelineShaderStageCreateInfo>cshadersStageInfos;
 
