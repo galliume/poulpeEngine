@@ -14,8 +14,10 @@ namespace Rbk
         
         inline const std::string& GetName() const { return m_Name; }
         void SetName(const std::string& name) { m_Name = name; }
-
+        bool HasPushConstants() { return m_HasPushContants; };
+        void SetHasPushConstants(bool has = true) { m_HasPushContants = has; };
     private:
         std::string m_Name;
+        bool m_HasPushContants = false;
     };
 }

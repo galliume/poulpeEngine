@@ -10,3 +10,6 @@
 
 ./scripts/glslc ./assets/shaders/ambient_shader.vert -o assets/shaders/spv/ambient_shader_vert.spv
 ./scripts/glslc ./assets/shaders/ambient_shader.frag -o assets/shaders/spv/ambient_shader_frag.spv
+
+./scripts/glslc ./assets/shaders/grid.vert -o assets/shaders/spv/grid_vert.spv
+./scripts/glslc ./assets/shaders/grid.frag -o assets/shaders/spv/grid_frag.spv
