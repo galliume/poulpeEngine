@@ -9,7 +9,7 @@ namespace Rbk
 {
     class VulkanCrosshair : public IVisitor
     {
-    struct pc 
+    struct pc
     {
         uint32_t textureID;
     };

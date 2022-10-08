@@ -9,6 +9,11 @@ namespace Rbk
 {
     class VulkanGrid : public IVisitor
     {
+    struct pc
+    {
+        float nearpoint;
+        float farpoint;
+    };
     public:
         VulkanGrid(std::shared_ptr<VulkanAdapter> adapter, VkDescriptorPool descriptorPool);
         void Visit(std::shared_ptr<Entity> entity) override;
