@@ -20,11 +20,11 @@ namespace Rbk
 
         if (!mesh) return;
 
-        const std::vector<Vertex2D> vertices = {
-            {{-0.025f, -0.025f}, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
-            {{0.025f, -0.025f}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f}},
-            {{0.025f, 0.025f}, {0.0f, 0.0f, 1.0f}, {0.0f, 1.0f}},
-            {{-0.025f, 0.025f}, {1.0f, 1.0f, 1.0f}, {1.0f, 1.0f}}
+        const std::vector<Vertex> vertices = {
+            {{-1.f, -1.f, 0.0f}, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
+            {{1.f, -1.f, 0.0f}, {0.0f, 1.0f, 0.0f}, {1.0f, 0.0f}},
+            {{1.0f, 1.f, 0.0f}, {0.0f, 0.0f, 1.0f}, {0.0f, 1.0f}},
+            {{-1.f, 1.f, 0.0f}, {1.0f, 1.0f, 1.0f}, {1.0f, 1.0f}}
         };
         const std::vector<uint32_t> indices = {
             0, 1, 2, 2, 3, 0
@@ -35,13 +35,14 @@ namespace Rbk
 
         auto commandPool = m_Adapter->Rdr()->CreateCommandPool();
 
-        Data crossHairData;
-        crossHairData.m_Texture = "grid";
-        crossHairData.m_TextureIndex = 0;
-        crossHairData.m_VertexBuffer = m_Adapter->Rdr()->CreateVertex2DBuffer(commandPool, vertices);
-        crossHairData.m_IndicesBuffer = m_Adapter->Rdr()->CreateIndexBuffer(commandPool, indices);
-        crossHairData.m_Ubos.emplace_back(ubo);
-        crossHairData.m_Indices = indices;
+        Data gridData;
+        gridData.m_Texture = "grid";
+        gridData.m_TextureIndex = 0;
+        gridData.m_VertexBuffer = m_Adapter->Rdr()->CreateVertexBuffer(commandPool, vertices);
+        gridData.m_IndicesBuffer = m_Adapter->Rdr()->CreateIndexBuffer(commandPool, indices);
+        gridData.m_Ubos.emplace_back(ubo);
+        gridData.m_Indices = indices;
+        gridData.m_Vertices = vertices;
 
         vkDestroyCommandPool(m_Adapter->Rdr()->GetDevice(), commandPool, nullptr);
 
@@ -89,9 +90,27 @@ namespace Rbk
             mesh->m_DescriptorSets.emplace_back(cdescriptorSet);
         }
 
+        VulkanGrid::pc pc;
+        pc.nearpoint = 0.1f;//@todo parameterize it
+        pc.farpoint = 100.f;
+
+        mesh->ApplyPushConstants = [&pc](VkCommandBuffer commandBuffer, VkPipelineLayout pipelineLayout) {
+            pc.nearpoint = 0.1f;//@todo parameterize it
+            pc.farpoint = 100.f;
+            vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(pc), &pc);
+        };
+        mesh->SetHasPushConstants();
+
+        std::vector<VkPushConstantRange> vkPcs = {};
+        VkPushConstantRange vkPc;
+        vkPc.offset = 0;
+        vkPc.size = sizeof(pc);
+        vkPc.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+        vkPcs.emplace_back(vkPc);
+
         std::vector<VkDescriptorSetLayout>dSetLayout = { cdesriptorSetLayout };
 
-        mesh->m_PipelineLayout = m_Adapter->Rdr()->CreatePipelineLayout(mesh->m_DescriptorSets, dSetLayout, {});
+        mesh->m_PipelineLayout = m_Adapter->Rdr()->CreatePipelineLayout(mesh->m_DescriptorSets, dSetLayout, vkPcs);
 
         std::vector<VkPipelineShaderStageCreateInfo>cshadersStageInfos;
 
@@ -109,27 +128,27 @@ namespace Rbk
         cfragShaderStageInfo.pName = "main";
         cshadersStageInfos.emplace_back(cfragShaderStageInfo);
 
-        VkVertexInputBindingDescription bDesc = Vertex2D::GetBindingDescription();
-        auto gridDesc = Vertex2D::GetAttributeDescriptions();
+        VkVertexInputBindingDescription bDesc = Vertex::GetBindingDescription();
+        auto gridDesc = Vertex::GetAttributeDescriptions();
 
-        VkPipelineVertexInputStateCreateInfo vertexInputInfo2D{};
-        vertexInputInfo2D.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-        vertexInputInfo2D.vertexBindingDescriptionCount = 1;
-        vertexInputInfo2D.vertexAttributeDescriptionCount = static_cast<uint32_t>(Vertex2D::GetAttributeDescriptions().size());
-        vertexInputInfo2D.pVertexBindingDescriptions = &bDesc;
-        vertexInputInfo2D.pVertexAttributeDescriptions = gridDesc.data();
+        VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
+        vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
+        vertexInputInfo.vertexBindingDescriptionCount = 1;
+        vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(Vertex::GetAttributeDescriptions().size());
+        vertexInputInfo.pVertexBindingDescriptions = &bDesc;
+        vertexInputInfo.pVertexAttributeDescriptions = gridDesc.data();
 
         mesh->m_GraphicsPipeline = m_Adapter->Rdr()->CreateGraphicsPipeline(
             m_Adapter->RdrPass(),
             mesh->m_PipelineLayout,
             mesh->GetShaderName(),
             cshadersStageInfos,
-            vertexInputInfo2D,
-            VK_CULL_MODE_BACK_BIT,
+            vertexInputInfo,
+            VK_CULL_MODE_NONE,
             true, true, true, true,
             VulkanAdapter::s_PolygoneMode
         );
 
-        mesh->GetData()->emplace_back(crossHairData);
+        mesh->GetData()->emplace_back(gridData);
     }
 }
