@@ -131,40 +131,63 @@ namespace Rbk
 
     void VulkanLayer::DisplayOptions()
     {
-        Rbk::Im::Text("Polygon mode");
+        ImGui::SetNextItemOpen(m_DebugOpen);
+        if (m_DebugOpen = ImGui::CollapsingHeader("Debug"))
+        {
+            Rbk::Im::Text("Polygon mode"); 
+            ImGui::SameLine();
 
-        if (ImGui::RadioButton("Fill", &Rbk::VulkanAdapter::s_PolygoneMode, VK_POLYGON_MODE_FILL)) {
-            m_Adapter->Refresh();
-        }; 
-        ImGui::SameLine();
-        if (ImGui::RadioButton("Line", &Rbk::VulkanAdapter::s_PolygoneMode, VK_POLYGON_MODE_LINE)) {
-            m_Adapter->Refresh();
-        }; 
-        ImGui::SameLine();
-        if (ImGui::RadioButton("Point", &Rbk::VulkanAdapter::s_PolygoneMode, VK_POLYGON_MODE_POINT)) {
-            m_Adapter->Refresh();
+            if (ImGui::RadioButton("Fill", &Rbk::VulkanAdapter::s_PolygoneMode, VK_POLYGON_MODE_FILL)) {
+                m_Adapter->Refresh();
+            };
+            ImGui::SameLine();
+            if (ImGui::RadioButton("Line", &Rbk::VulkanAdapter::s_PolygoneMode, VK_POLYGON_MODE_LINE)) {
+                m_Adapter->Refresh();
+            };
+            ImGui::SameLine();
+            if (ImGui::RadioButton("Point", &Rbk::VulkanAdapter::s_PolygoneMode, VK_POLYGON_MODE_POINT)) {
+                m_Adapter->Refresh();
+            }
+
+            if (ImGui::Checkbox("Display grid", &m_ShowGrid)) {
+                m_Adapter->ShowGrid(m_ShowGrid);
+            }
+
+            Rbk::Im::Text("FPS limit");
+            ImGui::SameLine();
+            ImGui::RadioButton("60 fps", &Rbk::Application::s_UnlockedFPS, 0); ImGui::SameLine();
+            ImGui::RadioButton("120 fps", &Rbk::Application::s_UnlockedFPS, 1); ImGui::SameLine();
+            ImGui::RadioButton("unlocked", &Rbk::Application::s_UnlockedFPS, 2);
         }
-        ImGui::Separator();
 
-        Rbk::Im::Text("Light");
-        ImGui::SliderFloat("Ambiant light", &Rbk::VulkanAdapter::s_AmbiantLight, 0.0f, 1.0f, "%.3f");
-        ImGui::Separator();
-        Rbk::Im::Text("Fog");
-        ImGui::SliderFloat("Fog density", &Rbk::VulkanAdapter::s_FogDensity, 0.0f, 1.0f, "%.3f");
-        ImGui::ColorEdit3("Fog color", Rbk::VulkanAdapter::s_FogColor);
-        ImGui::Separator();
-        Rbk::Im::Text("Others");
-        ImGui::RadioButton("60 fps", &Rbk::Application::s_UnlockedFPS, 0); ImGui::SameLine();
-        ImGui::RadioButton("120 fps", &Rbk::Application::s_UnlockedFPS, 1); ImGui::SameLine();
-        ImGui::RadioButton("unlocked", &Rbk::Application::s_UnlockedFPS, 2);
+        ImGui::SetNextItemOpen(m_LightOpen);
+        if (m_LightOpen = ImGui::CollapsingHeader("Light"))
+        {
+            ImGui::SliderFloat("Ambiant light", &Rbk::VulkanAdapter::s_AmbiantLight, 0.0f, 1.0f, "%.3f");
+        }
 
-        ImGui::RadioButton("Crosshair 1", &Rbk::VulkanAdapter::s_Crosshair, 0); ImGui::SameLine();
-        ImGui::RadioButton("Crosshair 2", &Rbk::VulkanAdapter::s_Crosshair, 1);
+        ImGui::SetNextItemOpen(m_FogOpen);
+        if (m_FogOpen = ImGui::CollapsingHeader("Fog"))
+        {
+            ImGui::SliderFloat("Fog density", &Rbk::VulkanAdapter::s_FogDensity, 0.0f, 1.0f, "%.3f");
+            ImGui::ColorEdit3("Fog color", Rbk::VulkanAdapter::s_FogColor);
+        }
 
-        ImGui::Separator();
-        ImGui::Checkbox("Show ImGui demo", &m_ShowDemo);
-        
-        m_Adapter->SetWireFrameMode(m_WireframeModeOn);
+        ImGui::SetNextItemOpen(m_HUDOpen);
+        if (m_HUDOpen = ImGui::CollapsingHeader("HUD"))
+        {
+            Rbk::Im::Text("Crosshair style");
+            ImGui::SameLine();
+            ImGui::RadioButton("Style 1", &Rbk::VulkanAdapter::s_Crosshair, 0); ImGui::SameLine();
+            ImGui::RadioButton("Style 2", &Rbk::VulkanAdapter::s_Crosshair, 1);
+        }
+
+        ImGui::SetNextItemOpen(m_OtherOpen);
+        if (m_OtherOpen = ImGui::CollapsingHeader("Other"))
+        {
+            ImGui::Checkbox("Show ImGui demo", &m_ShowDemo);
+        }
+
         m_Window->SetVSync(m_VSync);
 
         if (m_ShowDemo) {

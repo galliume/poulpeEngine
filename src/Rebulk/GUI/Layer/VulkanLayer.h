@@ -23,10 +23,17 @@ namespace Rbk
         void AddEntityManager(std::shared_ptr<EntityManager> entityManager) { m_EntityManager = entityManager; };
         void AddShaderManager(std::shared_ptr<ShaderManager> shaderManager) { m_ShaderManager = shaderManager; };
 
+        bool m_DebugOpen = true;
+        bool m_ShowGrid = true;
+        bool m_LightOpen = true;
+        bool m_FogOpen = true;
+        bool m_HUDOpen = true;
+        bool m_OtherOpen = true;
+
     private:
-        bool m_WireframeModeOn = false;
         bool m_VSync = false;
         bool m_ShowDemo = false;
+
         std::shared_ptr<VulkanAdapter> m_Adapter;
         std::shared_ptr<Window> m_Window;
         std::shared_ptr<TextureManager> m_TextureManager;
