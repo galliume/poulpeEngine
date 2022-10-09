@@ -49,3 +49,11 @@ GPUCache/
 VTune Profiler Results/
 debug.log
 *.bin
+
+ReBulkan.cflags
+ReBulkan.config
+ReBulkan.creator
+ReBulkan.creator.user
+ReBulkan.cxxflags
+ReBulkan.files
+ReBulkan.includes
