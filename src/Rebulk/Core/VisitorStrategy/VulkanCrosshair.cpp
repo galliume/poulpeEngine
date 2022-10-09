@@ -49,8 +49,8 @@ namespace Rbk
         std::pair<VkBuffer, VkDeviceMemory> crossHairuniformBuffer = m_Adapter->Rdr()->CreateUniformBuffers(1);
         mesh->m_UniformBuffers.emplace_back(crossHairuniformBuffer);
 
-        Texture ctex = m_Adapter->GetTextureManager()->GetTextures()["crosshair"];
-        Texture ctex2 = m_Adapter->GetTextureManager()->GetTextures()["crosshair2"];
+        Texture ctex = m_Adapter->GetTextureManager()->GetTextures()["crosshair_1"];
+        Texture ctex2 = m_Adapter->GetTextureManager()->GetTextures()["crosshair_2"];
 
         std::vector<VkDescriptorImageInfo>cimageInfos;
         VkDescriptorImageInfo cimageInfo{};
