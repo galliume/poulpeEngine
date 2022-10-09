@@ -49,6 +49,10 @@ namespace Rbk
             ImGui::Begin("Textures");
                 DisplayTextures();
             ImGui::End();
+
+            ImGui::Begin("Sound");
+                DisplaySounds();
+            ImGui::End();
         ImGui::End();
 
         if (!open) {
@@ -192,6 +196,25 @@ namespace Rbk
 
         if (m_ShowDemo) {
             ImGui::ShowDemoWindow();
+        }
+    }
+
+    void VulkanLayer::DisplaySounds()
+    {
+        ImGui::SetNextItemOpen(m_AmbientOpen);
+        if (m_DebugOpen = ImGui::CollapsingHeader("Ambient"))
+        {
+            Rbk::Im::Text("Ambient sound %s", m_AudioManager->GetAmbientSound()[0].c_str());
+
+            if (ImGui::Button("Play"))
+            {
+                m_AudioManager->StartAmbient();
+            }
+            ImGui::SameLine();
+            if (ImGui::Button("Stop"))
+            {
+                m_AudioManager->StopAmbient();
+            }
         }
     }
 
