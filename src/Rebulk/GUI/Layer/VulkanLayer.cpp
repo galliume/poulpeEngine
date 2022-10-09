@@ -202,10 +202,9 @@ namespace Rbk
     void VulkanLayer::DisplaySounds()
     {
         ImGui::SetNextItemOpen(m_AmbientOpen);
-        if (m_DebugOpen = ImGui::CollapsingHeader("Ambient"))
-        {
-            Rbk::Im::Text("Ambient sound %s", m_AudioManager->GetAmbientSound()[0].c_str());
 
+        if (m_AmbientOpen = ImGui::CollapsingHeader("Ambient"))
+        {
             if (ImGui::Button("Play"))
             {
                 m_AudioManager->StartAmbient();
@@ -214,6 +213,31 @@ namespace Rbk
             if (ImGui::Button("Stop"))
             {
                 m_AudioManager->StopAmbient();
+            }
+            ImGui::SameLine();
+            if (ImGui::Checkbox("Loop", &m_Looping)) {
+                m_AudioManager->ToggleLooping();
+            }
+
+            ImGui::SameLine();
+
+            Rbk::Im::Text("%s %s", m_AudioManager->GetState().c_str(), m_AudioManager->GetCurrentAmbientSound().c_str());
+
+            ImGui::PushItemWidth(-1);
+            if (ImGui::BeginListBox("##empty"))
+            {
+                for (int n = 0; n < m_AudioManager->GetAmbientSound().size(); n++)
+                {
+                    const bool is_selected = (m_AudioManager->GetAmbientSoundIndex() == n);
+                    if (ImGui::Selectable(m_AudioManager->GetAmbientSound()[n].c_str(), is_selected)) {
+                        m_AudioManager->StopAmbient();
+                        m_AudioManager->StartAmbient(n);
+                    }
+
+                    if (is_selected)
+                        ImGui::SetItemDefaultFocus();
+                }
+                ImGui::EndListBox();
             }
         }
     }

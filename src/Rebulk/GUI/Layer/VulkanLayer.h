@@ -32,6 +32,7 @@ namespace Rbk
         bool m_HUDOpen = true;
         bool m_OtherOpen = true;
         bool m_AmbientOpen = true;
+        bool m_Looping = true;
 
     private:
         bool m_VSync = false;
