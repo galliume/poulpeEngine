@@ -16,8 +16,12 @@ namespace Rbk
         void SetName(const std::string& name) { m_Name = name; }
         bool HasPushConstants() { return m_HasPushContants; };
         void SetHasPushConstants(bool has = true) { m_HasPushContants = has; };
+        void SetVisible(bool visible) { m_IsVisible = visible; };
+        bool IsVisible() { return m_IsVisible; };
+
     private:
         std::string m_Name;
         bool m_HasPushContants = false;
+        bool m_IsVisible = true;
     };
 }

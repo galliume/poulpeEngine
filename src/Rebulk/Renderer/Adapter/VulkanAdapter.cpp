@@ -156,26 +156,29 @@ namespace Rbk
             entity->Accept(vulkanisator);
         }
 
-        VkDescriptorPool skyDescriptorPool = m_Renderer->CreateDescriptorPool(poolSizes, 1000);
-        m_DescriptorPools.emplace_back(skyDescriptorPool);
-        std::shared_ptr<VulkanSkybox> skyboxVulkanisator = std::make_shared<VulkanSkybox>(shared_from_this(), skyDescriptorPool);
-        std::shared_ptr<Mesh> skyboxMesh = std::make_shared<Mesh>();
-        skyboxMesh->Accept(skyboxVulkanisator);
-        m_EntityManager->SetSkyboxMesh(skyboxMesh);
+        if (!m_IsSkyBoxPrepared) {
+            VkDescriptorPool skyDescriptorPool = m_Renderer->CreateDescriptorPool(poolSizes, 1000);
+            m_DescriptorPools.emplace_back(skyDescriptorPool);
+            std::shared_ptr<VulkanSkybox> skyboxVulkanisator = std::make_shared<VulkanSkybox>(shared_from_this(), skyDescriptorPool);
+            std::shared_ptr<Mesh> skyboxMesh = std::make_shared<Mesh>();
+            skyboxMesh->Accept(skyboxVulkanisator);
+            m_EntityManager->SetSkyboxMesh(skyboxMesh);
+        }
 
-        VkDescriptorPool HUDDescriptorPool = m_Renderer->CreateDescriptorPool(poolSizes, 1000);
-        m_DescriptorPools.emplace_back(HUDDescriptorPool);
-        
-        std::shared_ptr<VulkanGrid> gridVulkanisator = std::make_shared<VulkanGrid>(shared_from_this(), HUDDescriptorPool);
-        auto grid = std::make_shared<Mesh>();
-        grid->Accept(gridVulkanisator);
-        m_HUD.emplace_back(grid);
-        
-        std::shared_ptr<VulkanCrosshair> crosshairVulkanisator = std::make_shared<VulkanCrosshair>(shared_from_this(), HUDDescriptorPool);
-        auto crossHair = std::make_shared<Mesh2D>();
-        crossHair->Accept(crosshairVulkanisator);
-        m_HUD.emplace_back(crossHair);
-        
+        if (!m_IsHUDPrepared) {
+            VkDescriptorPool HUDDescriptorPool = m_Renderer->CreateDescriptorPool(poolSizes, 1000);
+            m_DescriptorPools.emplace_back(HUDDescriptorPool);
+
+            std::shared_ptr<VulkanGrid> gridVulkanisator = std::make_shared<VulkanGrid>(shared_from_this(), HUDDescriptorPool);
+            auto grid = std::make_shared<Mesh>();
+            grid->Accept(gridVulkanisator);
+            m_HUD.emplace_back(grid);
+
+            std::shared_ptr<VulkanCrosshair> crosshairVulkanisator = std::make_shared<VulkanCrosshair>(shared_from_this(), HUDDescriptorPool);
+            auto crossHair = std::make_shared<Mesh2D>();
+            crossHair->Accept(crosshairVulkanisator);
+            m_HUD.emplace_back(crossHair);
+        }
     }
 
     void VulkanAdapter::SetPerspective()
@@ -307,7 +310,7 @@ namespace Rbk
         //HUD!
         for (std::shared_ptr<Mesh> hudPart : m_HUD) {
 
-            if (!hudPart) continue;
+            if (!hudPart || !hudPart->IsVisible()) continue;
 
             for (Data& data : *hudPart->GetData()) {
 
@@ -326,7 +329,7 @@ namespace Rbk
 
                 m_Renderer->BindPipeline(m_CommandBuffers[m_ImageIndex], hudPart->m_GraphicsPipeline);
 
-                if (hudPart->HasPushConstants())
+                if (hudPart->HasPushConstants() && nullptr != hudPart->ApplyPushConstants)
                     hudPart->ApplyPushConstants(m_CommandBuffers[m_ImageIndex], hudPart->m_PipelineLayout);
 
                 m_Renderer->Draw(m_CommandBuffers[m_ImageIndex], hudPart.get(), data, m_ImageIndex);
@@ -584,5 +587,14 @@ namespace Rbk
     void VulkanAdapter::Refresh()
     {
         Prepare();
+    }
+
+    void VulkanAdapter::ShowGrid(bool show)
+    {
+        for (auto hudPart : m_HUD) {
+            if ("grid" == hudPart->GetName()) {
+                hudPart->SetVisible(show);
+            }
+        }
     }
 }
