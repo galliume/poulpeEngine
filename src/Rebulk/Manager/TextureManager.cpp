@@ -15,8 +15,8 @@ namespace Rbk
             AddTexture("campfire_tex", "assets/mesh/campfire/Campfire_MAT_BaseColor_01.jpg");
             AddTexture("tree_tex", "assets/mesh/tree/tree.jpg");
             AddTexture("tree_top_tex", "assets/mesh/tree/tree.png");
-            AddTexture("crosshair", "assets/texture/crosshair/simple_crosshair.png");
-            AddTexture("crosshair2", "assets/texture/crosshair/crosshair2.png");
+            AddTexture("crosshair_1", "assets/texture/crosshair/crosshair_1.png");
+            AddTexture("crosshair_2", "assets/texture/crosshair/crosshair_2.png");
             AddTexture("moon", "assets/mesh/moon/diffuse.jpg");
             AddTexture("trunk_tree_cartoon", "assets/mesh/tree/cartoon/Trunk_4_Cartoon.jpg");
             AddTexture("grass", "assets/mesh/grass/grass.png");

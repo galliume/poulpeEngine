@@ -2,8 +2,8 @@
 #include "TinyObjLoader.h"
 
 #define TINYOBJLOADER_IMPLEMENTATION
-//#define TINYOBJLOADER_USE_MAPBOX_EARCUT
-//#include "mapbox/earcut.hpp"
+#define TINYOBJLOADER_USE_MAPBOX_EARCUT
+#include "mapbox/earcut.hpp"
 #include "tiny_obj_loader.h"
 #include <filesystem>
 
