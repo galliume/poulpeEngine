@@ -38,7 +38,6 @@ namespace Rbk
         virtual void Destroy() override;
 
         void ImmediateSubmit(std::function<void(VkCommandBuffer cmd)>&& function);
-        void SetWireFrameMode(bool wireFrameModeOn) { m_WireFrameModeOn = wireFrameModeOn; };
         void ShouldRecreateSwapChain();
         void RecreateSwapChain();
 
@@ -69,7 +68,8 @@ namespace Rbk
 
         std::shared_ptr<Camera> GetCamera() { return m_Camera; };
         std::vector<glm::vec3> GetLights() { return m_LightsPos; };
-
+        
+        void ShowGrid(bool show);
     private:
         //@todo temp
         void SetPerspective();
@@ -87,13 +87,15 @@ namespace Rbk
         uint32_t m_ImageIndex = 0;
         std::pair<std::vector<VkBuffer>, std::vector<VkDeviceMemory>> m_UniformBuffers = {};
         std::vector<VulkanPipeline>m_Pipelines;
-        bool m_WireFrameModeOn = false;
         std::shared_ptr<Camera> m_Camera = nullptr;
         std::shared_ptr<Window> m_Window = nullptr;
 
         std::shared_ptr<TextureManager> m_TextureManager = nullptr;
         std::shared_ptr<EntityManager> m_EntityManager = nullptr;
         std::shared_ptr<ShaderManager> m_ShaderManager = nullptr;
+
+        bool m_IsHUDPrepared = false;
+        bool m_IsSkyBoxPrepared = false;
 
         //@todo move to meshManager
         std::vector<std::shared_ptr<Mesh>> m_HUD = {};
