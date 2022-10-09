@@ -28,7 +28,7 @@
 #include <glm/gtx/hash.hpp>
 
 #include "stb_image.h"
-
+#include "miniaudio.h"
 #include "spdlog/spdlog.h"
 #include "spdlog/fmt/ostr.h"
 #include "spdlog/sinks/stdout_color_sinks.h"

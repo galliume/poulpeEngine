@@ -40,6 +40,8 @@ namespace Rbk
         );
         m_RenderManager->Init();
         m_RenderManager->AddCamera(m_Camera);
+
+        m_AudioManager = std::make_shared<Rbk::AudioManager>();
     }
 
     void Application::Run()
@@ -49,6 +51,7 @@ namespace Rbk
         m_ShaderManager->Load();
         m_TextureManager->Load();
         m_EntityManager->Load();
+        m_AudioManager->LoadAmbient();
 
         std::shared_ptr<Rbk::VulkanLayer>vulkanLayer = std::make_shared<Rbk::VulkanLayer>();
         m_LayerManager->Add(vulkanLayer.get());
@@ -66,6 +69,7 @@ namespace Rbk
         vulkanLayer->AddTextureManager(m_TextureManager);
         vulkanLayer->AddEntityManager(m_EntityManager);
         vulkanLayer->AddShaderManager(m_ShaderManager);
+        vulkanLayer->AddAudioManager(m_AudioManager);
 
         double endRun = glfwGetTime();
 
