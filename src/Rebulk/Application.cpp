@@ -48,11 +48,6 @@ namespace Rbk
     {
         double startRun = glfwGetTime();
 
-        m_ShaderManager->Load();
-        m_TextureManager->Load();
-        m_EntityManager->Load();
-        m_AudioManager->LoadAmbient();
-
         std::shared_ptr<Rbk::VulkanLayer>vulkanLayer = std::make_shared<Rbk::VulkanLayer>();
         m_LayerManager->Add(vulkanLayer.get());
 
@@ -71,17 +66,28 @@ namespace Rbk
         vulkanLayer->AddShaderManager(m_ShaderManager);
         vulkanLayer->AddAudioManager(m_AudioManager);
 
-        double endRun = glfwGetTime();
+        m_TextureManager->AddTexture("splashscreen", "assets/splashscreen/splash_1.png");
+        m_ShaderManager->AddShader("2d", "assets/shaders/spv/2d_vert.spv", "assets/shaders/spv/2d_frag.spv");
 
-        Rbk::Log::GetLogger()->debug("Loaded scene in {}", endRun - startRun);
+        m_RendererAdapter->PrepareSplashScreen();
+        m_RendererAdapter->Draw();
+
+        m_ShaderManager->Load();
+        m_TextureManager->Load();
+        m_EntityManager->Load();
+        m_AudioManager->LoadAmbient();
 
         m_RendererAdapter->Prepare();
+        vulkanLayer->AddRenderAdapter(m_RendererAdapter);
 
+        double endRun = glfwGetTime();
         double lastTime = endRun;
         double timeStepSum = 0.0;
         uint32_t frameCount = 0;
         double maxFPS = 60.0;
         double maxPeriod = 1.0 / maxFPS;
+        
+        Rbk::Log::GetLogger()->debug("Loaded scene in {}", endRun - startRun);
 
         while (!glfwWindowShouldClose(m_Window->Get())) {
 
@@ -117,7 +123,6 @@ namespace Rbk
                 //@todo move to LayerManager
                 Rbk::Im::NewFrame();
 
-                vulkanLayer->AddRenderAdapter(m_RendererAdapter);
                 vulkanLayer->Render(timeStep, m_RendererAdapter->Rdr()->GetDeviceProperties());
 
                 Rbk::Im::Render();
