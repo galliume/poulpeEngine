@@ -9,6 +9,7 @@
 #include "Rebulk/Core/VisitorStrategy/VulkanSkybox.h"
 #include "Rebulk/Core/VisitorStrategy/VulkanCrosshair.h"
 #include "Rebulk/Core/VisitorStrategy/VulkanGrid.h"
+#include "Rebulk/Core/VisitorStrategy/VulkanSplash.h"
 #include "Rebulk/Component/Entity.h"
 
 namespace Rbk
@@ -125,8 +126,31 @@ namespace Rbk
         }
     }
 
+    void VulkanAdapter::PrepareSplashScreen()
+    {
+        std::vector<VkDescriptorPoolSize> poolSizes{};
+        VkDescriptorPoolSize cp1;
+        cp1.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        cp1.descriptorCount = 1000;
+        VkDescriptorPoolSize cp2;
+        cp2.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        cp2.descriptorCount = 1000;
+        poolSizes.emplace_back(cp1);
+        poolSizes.emplace_back(cp2);
+
+        VkDescriptorPool HUDDescriptorPool = m_Renderer->CreateDescriptorPool(poolSizes, 1000);
+        m_DescriptorPools.emplace_back(HUDDescriptorPool);
+
+        std::shared_ptr<VulkanSplash> splashVulkanisator = std::make_shared<VulkanSplash>(shared_from_this(), HUDDescriptorPool);
+        auto splash = std::make_shared<Mesh2D>();
+        splash->Accept(splashVulkanisator);
+        m_HUD.emplace_back(splash);
+    }
+
     void VulkanAdapter::Prepare()
     {
+        m_DescriptorPools.clear();
+
         std::vector<std::shared_ptr<Entity>>* entities = m_EntityManager->GetEntities();
 
         std::vector<VkDescriptorPoolSize> poolSizes{};
@@ -166,6 +190,8 @@ namespace Rbk
         }
 
         if (!m_IsHUDPrepared) {
+            m_HUD.clear();
+
             VkDescriptorPool HUDDescriptorPool = m_Renderer->CreateDescriptorPool(poolSizes, 1000);
             m_DescriptorPools.emplace_back(HUDDescriptorPool);
 
@@ -290,21 +316,25 @@ namespace Rbk
         }
 
         //skybox !
-        std::vector<Rbk::Data> skyboxData = *m_EntityManager->GetSkyboxMesh()->GetData();
-        
-        if (!skyboxData.empty()) {
-            glm::mat4 skybowView = glm::mat4(glm::mat3(lookAt));
-            for (uint32_t i = 0; i < m_EntityManager->GetSkyboxMesh()->m_UniformBuffers.size(); i++) {
-                skyboxData[0].m_Ubos[i].view = skybowView;
-                m_Renderer->UpdateUniformBuffer(
-                    m_EntityManager->GetSkyboxMesh()->m_UniformBuffers[i],
-                    { skyboxData[0].m_Ubos[i] },
-                    1
-                );
+        std::shared_ptr<Mesh> skyboxMesh = m_EntityManager->GetSkyboxMesh();
+
+        if (skyboxMesh) {
+            std::vector<Rbk::Data> skyboxData = *skyboxMesh->GetData();
+
+            if (!skyboxData.empty()) {
+                glm::mat4 skybowView = glm::mat4(glm::mat3(lookAt));
+                for (uint32_t i = 0; i < m_EntityManager->GetSkyboxMesh()->m_UniformBuffers.size(); i++) {
+                    skyboxData[0].m_Ubos[i].view = skybowView;
+                    m_Renderer->UpdateUniformBuffer(
+                        m_EntityManager->GetSkyboxMesh()->m_UniformBuffers[i],
+                        { skyboxData[0].m_Ubos[i] },
+                        1
+                    );
+                }
+                m_Renderer->BindPipeline(m_CommandBuffers[m_ImageIndex], m_EntityManager->GetSkyboxMesh()->m_GraphicsPipeline);
+                vkCmdPushConstants(m_CommandBuffers[m_ImageIndex], m_EntityManager->GetSkyboxMesh()->m_PipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(constants), &pushConstants);
+                m_Renderer->Draw(m_CommandBuffers[m_ImageIndex], m_EntityManager->GetSkyboxMesh().get(), skyboxData[0], m_ImageIndex, false);
             }
-            m_Renderer->BindPipeline(m_CommandBuffers[m_ImageIndex], m_EntityManager->GetSkyboxMesh()->m_GraphicsPipeline);
-            vkCmdPushConstants(m_CommandBuffers[m_ImageIndex], m_EntityManager->GetSkyboxMesh()->m_PipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(constants), &pushConstants);
-            m_Renderer->Draw(m_CommandBuffers[m_ImageIndex], m_EntityManager->GetSkyboxMesh().get(), skyboxData[0], m_ImageIndex, false);
         }
 
         //HUD!

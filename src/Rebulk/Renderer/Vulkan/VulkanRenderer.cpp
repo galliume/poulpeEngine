@@ -778,7 +778,6 @@ namespace Rbk {
         pipelineInfo.basePipelineIndex = -1;
         pipelineInfo.pDynamicState = &dynamicState;
 
-
         VkFormat format = GetSwapChainImageFormat();
         VkFormat depthFormat = FindDepthFormat();
 
