@@ -33,6 +33,7 @@ namespace Rbk
         virtual void AddEntityManager(std::shared_ptr<EntityManager> entityManager) override;
         virtual void AddShaderManager(std::shared_ptr<ShaderManager> shaderManager) override;
 
+        void PrepareSplashScreen();
         virtual void Prepare() override;
         virtual void Draw() override;
         virtual void Destroy() override;
