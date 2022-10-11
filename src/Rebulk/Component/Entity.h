@@ -18,10 +18,14 @@ namespace Rbk
         void SetHasPushConstants(bool has = true) { m_HasPushContants = has; };
         void SetVisible(bool visible) { m_IsVisible = visible; };
         bool IsVisible() { return m_IsVisible; };
+        uint32_t const GetNextSpriteIndex();
+        void SetSpritesCount(uint32_t count) { m_SpritesCount = count; };
 
     private:
         std::string m_Name;
         bool m_HasPushContants = false;
         bool m_IsVisible = true;
+        uint32_t m_SpritesCount = 0;
+        uint32_t m_SpritesIndex = 0;
     };
 }
