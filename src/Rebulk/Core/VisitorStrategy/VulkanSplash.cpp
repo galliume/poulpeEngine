@@ -44,12 +44,13 @@ namespace Rbk
         vkDestroyCommandPool(m_Adapter->Rdr()->GetDevice(), commandPool, nullptr);
 
         mesh->SetName("splashscreen");
-        mesh->SetShaderName("2d");
+        mesh->SetShaderName("splashscreen");
 
         std::pair<VkBuffer, VkDeviceMemory> uniformBuffer = m_Adapter->Rdr()->CreateUniformBuffers(1);
         mesh->m_UniformBuffers.emplace_back(uniformBuffer);
 
         Texture texture = m_Adapter->GetTextureManager()->GetTextures()["splashscreen"];
+        Texture texture2 = m_Adapter->GetTextureManager()->GetTextures()["splashscreen2"];
 
         std::vector<VkDescriptorImageInfo>imageInfos;
         VkDescriptorImageInfo imageInfo{};
@@ -57,7 +58,15 @@ namespace Rbk
         imageInfo.imageView = texture.GetImageView();
         imageInfo.sampler = texture.GetSampler();
 
+        VkDescriptorImageInfo imageInfo2{};
+        imageInfo2.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        imageInfo2.imageView = texture2.GetImageView();
+        imageInfo2.sampler = texture2.GetSampler();
+
         imageInfos.emplace_back(imageInfo);
+        imageInfos.emplace_back(imageInfo2);
+
+        mesh->SetSpritesCount(imageInfos.size());
 
         VkDescriptorSetLayoutBinding uboLayoutBinding{};
         uboLayoutBinding.binding = 0;
@@ -88,10 +97,10 @@ namespace Rbk
         }
 
         VulkanSplash::pc pc;
-        pc.textureID = VulkanAdapter::s_Crosshair;
+        pc.textureID = 0;
 
-        mesh->ApplyPushConstants = [&pc](VkCommandBuffer commandBuffer, VkPipelineLayout pipelineLayout) {
-            pc.textureID = 0;
+        mesh->ApplyPushConstants = [&pc, mesh](VkCommandBuffer commandBuffer, VkPipelineLayout pipelineLayout) {
+            pc.textureID = mesh->GetNextSpriteIndex();
             vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(pc), &pc);
         };
         mesh->SetHasPushConstants();

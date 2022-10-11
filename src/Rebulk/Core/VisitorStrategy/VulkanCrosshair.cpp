@@ -43,7 +43,7 @@ namespace Rbk
 
         vkDestroyCommandPool(m_Adapter->Rdr()->GetDevice(), commandPool, nullptr);
 
-        mesh->SetName("hud");
+        mesh->SetName("crosshair");
         mesh->SetShaderName("2d");
 
         std::pair<VkBuffer, VkDeviceMemory> crossHairuniformBuffer = m_Adapter->Rdr()->CreateUniformBuffers(1);
@@ -95,10 +95,10 @@ namespace Rbk
         }
 
         VulkanCrosshair::pc pc;
-        pc.textureID = VulkanAdapter::s_Crosshair;
+        pc.textureID = 0;
 
         mesh->ApplyPushConstants = [&pc](VkCommandBuffer commandBuffer, VkPipelineLayout pipelineLayout) {
-            pc.textureID = VulkanAdapter::s_Crosshair;
+            pc.textureID = 0;
             vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(pc), &pc);
         };
         mesh->SetHasPushConstants();

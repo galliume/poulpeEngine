@@ -71,10 +71,13 @@ namespace Rbk
         std::vector<glm::vec3> GetLights() { return m_LightsPos; };
         
         void ShowGrid(bool show);
+        void DrawSplashScreen();
+
     private:
         //@todo temp
         void SetPerspective();
-
+        void BeginRendering();
+        void EndRendering();
     private:
         std::shared_ptr<VulkanRenderer> m_Renderer = nullptr;
         std::shared_ptr<VkRenderPass> m_RenderPass = nullptr;
@@ -99,6 +102,7 @@ namespace Rbk
         bool m_IsSkyBoxPrepared = false;
 
         //@todo move to meshManager
+        std::vector<std::shared_ptr<Mesh>> m_Splash = {};
         std::vector<std::shared_ptr<Mesh>> m_HUD = {};
         std::vector<VkImageView>m_DepthImageViews = {};
         std::vector<VkImage>m_DepthImages = {};

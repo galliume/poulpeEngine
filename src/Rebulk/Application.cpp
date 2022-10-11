@@ -1,10 +1,11 @@
 #include "rebulkpch.h"
 #include "Application.h"
+#include <future>
+#include <thread>
 
 namespace Rbk
 {
     int Application::s_UnlockedFPS = 0;
-
     Application* Application::s_Instance = nullptr;
 
     VImGuiInfo vImGuiInfo;
@@ -67,16 +68,28 @@ namespace Rbk
         vulkanLayer->AddAudioManager(m_AudioManager);
 
         m_TextureManager->AddTexture("splashscreen", "assets/splashscreen/splash_1.png");
-        m_ShaderManager->AddShader("2d", "assets/shaders/spv/2d_vert.spv", "assets/shaders/spv/2d_frag.spv");
+        m_TextureManager->AddTexture("splashscreen2", "assets/splashscreen/splash_2.png");
+        m_ShaderManager->AddShader("splashscreen", "assets/shaders/spv/2d_vert.spv", "assets/shaders/spv/2d_frag.spv");
 
         m_RendererAdapter->PrepareSplashScreen();
-        m_RendererAdapter->Draw();
+
+        std::future loading = std::async(std::launch::async, [this]() {
+            
+            while (!IsLoaded()) {
+                m_RendererAdapter->DrawSplashScreen();
+                std::this_thread::sleep_for(std::chrono::milliseconds(500));
+            }
+            Rbk::Log::GetLogger()->debug("still here");
+        });
 
         m_ShaderManager->Load();
         m_TextureManager->Load();
         m_EntityManager->Load();
         m_AudioManager->LoadAmbient();
 
+        SetIsLoaded();
+        loading.wait();
+        m_RendererAdapter->Rdr()->WaitIdle();
         m_RendererAdapter->Prepare();
         vulkanLayer->AddRenderAdapter(m_RendererAdapter);
 
