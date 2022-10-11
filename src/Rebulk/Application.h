@@ -26,6 +26,9 @@ namespace Rbk
 
         static int s_UnlockedFPS;
 
+        bool IsLoaded() { return m_IsLoaded; };
+        void SetIsLoaded(bool loaded = true) { m_IsLoaded = loaded; };
+
     private:
         static Application* s_Instance;
         std::shared_ptr<Rbk::Window> m_Window;
@@ -39,5 +42,7 @@ namespace Rbk
         std::shared_ptr<Rbk::ShaderManager> m_ShaderManager;
         std::shared_ptr<Rbk::AudioManager> m_AudioManager;
         std::shared_ptr<Rbk::Im> m_VImGui;
+
+        bool m_IsLoaded = false;
     };
 }

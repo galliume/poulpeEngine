@@ -138,13 +138,13 @@ namespace Rbk
         poolSizes.emplace_back(cp1);
         poolSizes.emplace_back(cp2);
 
-        VkDescriptorPool HUDDescriptorPool = m_Renderer->CreateDescriptorPool(poolSizes, 1000);
-        m_DescriptorPools.emplace_back(HUDDescriptorPool);
+        VkDescriptorPool descriptorPool = m_Renderer->CreateDescriptorPool(poolSizes, 1000);
+        m_DescriptorPools.emplace_back(descriptorPool);
 
-        std::shared_ptr<VulkanSplash> splashVulkanisator = std::make_shared<VulkanSplash>(shared_from_this(), HUDDescriptorPool);
+        std::shared_ptr<VulkanSplash> splashVulkanisator = std::make_shared<VulkanSplash>(shared_from_this(), descriptorPool);
         auto splash = std::make_shared<Mesh2D>();
         splash->Accept(splashVulkanisator);
-        m_HUD.emplace_back(splash);
+        m_Splash.emplace_back(splash);
     }
 
     void VulkanAdapter::Prepare()
@@ -190,7 +190,6 @@ namespace Rbk
         }
 
         if (!m_IsHUDPrepared) {
-            m_HUD.clear();
 
             VkDescriptorPool HUDDescriptorPool = m_Renderer->CreateDescriptorPool(poolSizes, 1000);
             m_DescriptorPools.emplace_back(HUDDescriptorPool);
@@ -203,7 +202,7 @@ namespace Rbk
             std::shared_ptr<VulkanCrosshair> crosshairVulkanisator = std::make_shared<VulkanCrosshair>(shared_from_this(), HUDDescriptorPool);
             auto crossHair = std::make_shared<Mesh2D>();
             crossHair->Accept(crosshairVulkanisator);
-            m_HUD.emplace_back(crossHair);
+            //m_HUD.emplace_back(crossHair);
         }
     }
 
@@ -224,54 +223,7 @@ namespace Rbk
 
     void VulkanAdapter::Draw()
     {
-        ShouldRecreateSwapChain();
-
-        m_ImageIndex = m_Renderer->AcquireNextImageKHR(m_SwapChain, m_Semaphores);
-
-        if (m_ImageIndex == VK_ERROR_OUT_OF_DATE_KHR || m_ImageIndex == VK_SUBOPTIMAL_KHR) {
-            RecreateSwapChain();
-        }
-
-        m_Renderer->BeginCommandBuffer(m_CommandBuffers[m_ImageIndex]);
-
-        VkImageMemoryBarrier swapChainImageRenderBeginBarrier = m_Renderer->SetupImageMemoryBarrier(
-            m_SwapChainImages[m_ImageIndex],
-            0,
-            VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
-            VK_IMAGE_LAYOUT_UNDEFINED,
-            VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL
-        );
-
-        m_Renderer->AddPipelineBarriers(
-            m_CommandBuffers[m_ImageIndex],
-            { swapChainImageRenderBeginBarrier },
-            VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-            VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-            VK_DEPENDENCY_BY_REGION_BIT
-        );
-
-        VkImageMemoryBarrier depthImageRenderBeginBarrier = m_Renderer->SetupImageMemoryBarrier(
-            m_DepthImages[m_ImageIndex],
-            0,
-            VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
-            VK_IMAGE_LAYOUT_UNDEFINED,
-            VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
-            1,
-            VK_IMAGE_ASPECT_DEPTH_BIT
-        );
-
-        m_Renderer->AddPipelineBarriers(
-            m_CommandBuffers[m_ImageIndex],
-            { depthImageRenderBeginBarrier },
-            VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-            VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-            VK_DEPENDENCY_BY_REGION_BIT
-        );
-
-        m_Renderer->BeginRendering(m_CommandBuffers[m_ImageIndex], m_SwapChainImageViews[m_ImageIndex], m_DepthImageViews[m_ImageIndex]);
-
-        m_Renderer->SetViewPort(m_CommandBuffers[m_ImageIndex]);
-        m_Renderer->SetScissor(m_CommandBuffers[m_ImageIndex]);
+        BeginRendering();
 
         constants pushConstants;
         pushConstants.cameraPos = m_Camera->GetPos();
@@ -366,48 +318,54 @@ namespace Rbk
             }
         }
 
-        //end rendering !
-        m_Renderer->EndRendering(m_CommandBuffers[m_ImageIndex]);
-        
-       VkImageMemoryBarrier swapChainImageEndRenderBeginBarrier = m_Renderer->SetupImageMemoryBarrier(
-            m_SwapChainImages[m_ImageIndex],
-            VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
-            0,
-            VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
-            VK_IMAGE_LAYOUT_PRESENT_SRC_KHR
-        );
-       m_Renderer->AddPipelineBarriers(
-           m_CommandBuffers[m_ImageIndex],
-           { swapChainImageEndRenderBeginBarrier },
-           VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-           VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
-           0
-       );
+        EndRendering();
+    }
 
-        VkImageMemoryBarrier depthImageEndRenderBeginBarrier = m_Renderer->SetupImageMemoryBarrier(
-            m_DepthImages[m_ImageIndex],
-            VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
-            0,
-            VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL,
-            VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
-            1,
-            VK_IMAGE_ASPECT_DEPTH_BIT
-        );
-        m_Renderer->AddPipelineBarriers(
-            m_CommandBuffers[m_ImageIndex],
-            { depthImageEndRenderBeginBarrier },
-            VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-            VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
-            0
-        );
-        m_Renderer->EndCommandBuffer(m_CommandBuffers[m_ImageIndex]);
+    void VulkanAdapter::DrawSplashScreen()
+    {
+        BeginRendering();
 
-        m_Renderer->QueueSubmit(m_ImageIndex, m_CommandBuffers[m_ImageIndex], m_Semaphores);
-        uint32_t currentFrame = m_Renderer->QueuePresent(m_ImageIndex, m_SwapChain, m_Semaphores);
+        constants pushConstants;
+        pushConstants.cameraPos = m_Camera->GetPos();
+        pushConstants.ambiantLight = Rbk::VulkanAdapter::s_AmbiantLight;
+        pushConstants.fogDensity = Rbk::VulkanAdapter::s_FogDensity;
+        pushConstants.fogColor = glm::vec3({ Rbk::VulkanAdapter::s_FogColor[0], Rbk::VulkanAdapter::s_FogColor[1], Rbk::VulkanAdapter::s_FogColor[2] });
+        pushConstants.lightPos = m_LightsPos.at(0);
 
-        if (currentFrame == VK_ERROR_OUT_OF_DATE_KHR || currentFrame == VK_SUBOPTIMAL_KHR) {
-            RecreateSwapChain();
+        glm::mat4 lookAt = m_Camera->LookAt();
+        glm::mat4 proj = m_Perspective;
+        proj[1][1] *= -1;
+        glm::vec4 cameraPos = m_Camera->GetPos();
+
+        for (std::shared_ptr<Mesh> mesh : m_Splash) {
+
+            if (!mesh || !mesh->IsVisible()) continue;
+
+            for (Data& data : *mesh->GetData()) {
+
+                for (uint32_t i = 0; i < mesh->m_UniformBuffers.size(); i++) {
+                    data.m_Ubos[i].view = lookAt;
+                    data.m_Ubos[i].proj = proj;
+                }
+
+                for (uint32_t i = 0; i < mesh->m_UniformBuffers.size(); i++) {
+                    m_Renderer->UpdateUniformBuffer(
+                        mesh->m_UniformBuffers[i],
+                        data.m_Ubos,
+                        data.m_Ubos.size()
+                    );
+                }
+
+                m_Renderer->BindPipeline(m_CommandBuffers[m_ImageIndex], mesh->m_GraphicsPipeline);
+
+                if (mesh->HasPushConstants() && nullptr != mesh->ApplyPushConstants)
+                    mesh->ApplyPushConstants(m_CommandBuffers[m_ImageIndex], mesh->m_PipelineLayout);
+
+                m_Renderer->Draw(m_CommandBuffers[m_ImageIndex], mesh.get(), data, m_ImageIndex);
+            }
         }
+
+        EndRendering();
     }
 
     void VulkanAdapter::Destroy()
@@ -625,6 +583,103 @@ namespace Rbk
             if ("grid" == hudPart->GetName()) {
                 hudPart->SetVisible(show);
             }
+        }
+    }
+
+    void VulkanAdapter::BeginRendering()
+    {
+        ShouldRecreateSwapChain();
+
+        m_ImageIndex = m_Renderer->AcquireNextImageKHR(m_SwapChain, m_Semaphores);
+
+        if (m_ImageIndex == VK_ERROR_OUT_OF_DATE_KHR || m_ImageIndex == VK_SUBOPTIMAL_KHR) {
+            RecreateSwapChain();
+        }
+
+        m_Renderer->BeginCommandBuffer(m_CommandBuffers[m_ImageIndex]);
+
+        VkImageMemoryBarrier swapChainImageRenderBeginBarrier = m_Renderer->SetupImageMemoryBarrier(
+            m_SwapChainImages[m_ImageIndex],
+            0,
+            VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
+            VK_IMAGE_LAYOUT_UNDEFINED,
+            VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL
+        );
+
+        m_Renderer->AddPipelineBarriers(
+            m_CommandBuffers[m_ImageIndex],
+            { swapChainImageRenderBeginBarrier },
+            VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+            VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+            VK_DEPENDENCY_BY_REGION_BIT
+        );
+
+        VkImageMemoryBarrier depthImageRenderBeginBarrier = m_Renderer->SetupImageMemoryBarrier(
+            m_DepthImages[m_ImageIndex],
+            0,
+            VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
+            VK_IMAGE_LAYOUT_UNDEFINED,
+            VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
+            1,
+            VK_IMAGE_ASPECT_DEPTH_BIT
+        );
+
+        m_Renderer->AddPipelineBarriers(
+            m_CommandBuffers[m_ImageIndex],
+            { depthImageRenderBeginBarrier },
+            VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+            VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+            VK_DEPENDENCY_BY_REGION_BIT
+        );
+
+        m_Renderer->BeginRendering(m_CommandBuffers[m_ImageIndex], m_SwapChainImageViews[m_ImageIndex], m_DepthImageViews[m_ImageIndex]);
+
+        m_Renderer->SetViewPort(m_CommandBuffers[m_ImageIndex]);
+        m_Renderer->SetScissor(m_CommandBuffers[m_ImageIndex]);
+    }
+
+    void VulkanAdapter::EndRendering()
+    {
+        m_Renderer->EndRendering(m_CommandBuffers[m_ImageIndex]);
+
+        VkImageMemoryBarrier swapChainImageEndRenderBeginBarrier = m_Renderer->SetupImageMemoryBarrier(
+            m_SwapChainImages[m_ImageIndex],
+            VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
+            0,
+            VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+            VK_IMAGE_LAYOUT_PRESENT_SRC_KHR
+        );
+        m_Renderer->AddPipelineBarriers(
+            m_CommandBuffers[m_ImageIndex],
+            { swapChainImageEndRenderBeginBarrier },
+            VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+            VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
+            0
+        );
+
+        VkImageMemoryBarrier depthImageEndRenderBeginBarrier = m_Renderer->SetupImageMemoryBarrier(
+            m_DepthImages[m_ImageIndex],
+            VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
+            0,
+            VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL,
+            VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
+            1,
+            VK_IMAGE_ASPECT_DEPTH_BIT
+        );
+        m_Renderer->AddPipelineBarriers(
+            m_CommandBuffers[m_ImageIndex],
+            { depthImageEndRenderBeginBarrier },
+            VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+            VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
+            0
+        );
+        m_Renderer->EndCommandBuffer(m_CommandBuffers[m_ImageIndex]);
+
+        m_Renderer->QueueSubmit(m_ImageIndex, m_CommandBuffers[m_ImageIndex], m_Semaphores);
+        uint32_t currentFrame = m_Renderer->QueuePresent(m_ImageIndex, m_SwapChain, m_Semaphores);
+
+        if (currentFrame == VK_ERROR_OUT_OF_DATE_KHR || currentFrame == VK_SUBOPTIMAL_KHR) {
+            RecreateSwapChain();
         }
     }
 }
