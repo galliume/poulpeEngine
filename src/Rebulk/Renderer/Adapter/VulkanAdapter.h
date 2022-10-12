@@ -32,6 +32,7 @@ namespace Rbk
         virtual void AddTextureManager(std::shared_ptr<TextureManager> textureManager) override;
         virtual void AddEntityManager(std::shared_ptr<EntityManager> entityManager) override;
         virtual void AddShaderManager(std::shared_ptr<ShaderManager> shaderManager) override;
+        virtual void AddSpriteAnimationManager(std::shared_ptr<SpriteAnimationManager> spriteAnimationManager) override;
 
         void PrepareSplashScreen();
         virtual void Prepare() override;
@@ -66,6 +67,7 @@ namespace Rbk
         std::shared_ptr<TextureManager> GetTextureManager() { return m_TextureManager; };
         std::shared_ptr<EntityManager> GetEntityManager() { return m_EntityManager; };
         std::shared_ptr<ShaderManager> GetShaderManager() { return m_ShaderManager; };
+        std::shared_ptr<SpriteAnimationManager> GetSpriteAnimationManager() { return m_SpriteAnimationManager; };
 
         std::shared_ptr<Camera> GetCamera() { return m_Camera; };
         std::vector<glm::vec3> GetLights() { return m_LightsPos; };
@@ -97,6 +99,7 @@ namespace Rbk
         std::shared_ptr<TextureManager> m_TextureManager = nullptr;
         std::shared_ptr<EntityManager> m_EntityManager = nullptr;
         std::shared_ptr<ShaderManager> m_ShaderManager = nullptr;
+        std::shared_ptr<SpriteAnimationManager> m_SpriteAnimationManager = nullptr;
 
         bool m_IsHUDPrepared = false;
         bool m_IsSkyBoxPrepared = false;

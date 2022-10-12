@@ -70,6 +70,11 @@ namespace Rbk
     void VulkanAdapter::AddShaderManager(std::shared_ptr<ShaderManager> shaderManager)
     {
         m_ShaderManager = shaderManager;
+    } 
+    
+    void VulkanAdapter::AddSpriteAnimationManager(std::shared_ptr<SpriteAnimationManager> spriteAnimationManager)
+    {
+        m_SpriteAnimationManager = spriteAnimationManager;
     }
 
     void VulkanAdapter::AddCamera(std::shared_ptr<Camera> camera)
