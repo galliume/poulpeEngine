@@ -3,7 +3,10 @@
 
 namespace Rbk
 {
-    TextureManager::TextureManager(std::shared_ptr<VulkanRenderer> renderer) : m_Renderer(renderer)
+    TextureManager::TextureManager(
+        std::shared_ptr<VulkanRenderer> renderer,
+        nlohmann::json textureConfig)
+        : m_Renderer(renderer), m_TextureConfig(textureConfig)
     {
 
     }
@@ -11,33 +14,16 @@ namespace Rbk
     void TextureManager::Load()
     {
         std::future textureFuture = std::async(std::launch::async, [this]() {
-            AddTexture("minecraft_water", "assets/mesh/minecraft/water.jpg");
-            AddTexture("campfire_tex", "assets/mesh/campfire/Campfire_MAT_BaseColor_01.jpg");
-            AddTexture("tree_tex", "assets/mesh/tree/tree.jpg");
-            AddTexture("tree_top_tex", "assets/mesh/tree/tree.png");
-            AddTexture("crosshair_1", "assets/texture/crosshair/crosshair_1.png");
-            AddTexture("crosshair_2", "assets/texture/crosshair/crosshair_2.png");
-            AddTexture("moon", "assets/mesh/moon/diffuse.jpg");
-            AddTexture("trunk_tree_cartoon", "assets/mesh/tree/cartoon/Trunk_4_Cartoon.jpg");
-            AddTexture("grass", "assets/mesh/grass/grass.png");
-            AddTexture("rooftiles", "assets/mesh/house/textures/rooftiles/T_darkwood_basecolor.png");
-            AddTexture("dark_wood", "assets/mesh/house/textures/wood/T_darkwood_basecolor.png");
-            AddTexture("bright_wood", "assets/mesh/house/textures/wood/T_brightwood_basecolor.png");
-            AddTexture("rocks", "assets/mesh/house/textures/rocks/rock_bc.jpg");
-            AddTexture("dog_base_color", "assets/mesh/doghouse/doghouse0908_PBR_BaseColor.png");
-            AddTexture("dog", "assets/mesh/dog/Texture_albedo.jpg");
-            AddTexture("fence", "assets/mesh/fence/cit_1001_Diffuse.png");
-            AddTexture("minecraft_grass", "assets/mesh/minecraft/Grass_Block_TEX.png");
+            for (auto& texture : m_TextureConfig["textures"].items()) {
+                AddTexture(texture.key(), texture.value());
+            }
         });
 
         std::future skyboxFuture = std::async(std::launch::async, [this]() {
             std::vector<std::string>skyboxImages;
-            skyboxImages.emplace_back("assets/texture/skybox/bluesky/right.jpg");
-            skyboxImages.emplace_back("assets/texture/skybox/bluesky/left.jpg");
-            skyboxImages.emplace_back("assets/texture/skybox/bluesky/top.jpg");
-            skyboxImages.emplace_back("assets/texture/skybox/bluesky/bottom.jpg");
-            skyboxImages.emplace_back("assets/texture/skybox/bluesky/front.jpg");
-            skyboxImages.emplace_back("assets/texture/skybox/bluesky/back.jpg");
+            for (auto& texture : m_TextureConfig["skybox"].items()) {
+                skyboxImages.emplace_back(texture.value());
+            }
             AddSkyBox(skyboxImages);
         });
     }
@@ -100,7 +86,7 @@ namespace Rbk
         }
 
         if (0 != m_Textures.count(name.c_str())) {
-            std::cout << "Texture " << name << " already imported" << std::endl;
+            Rbk::Log::GetLogger()->debug("Texture {} already imported", name);
             return;
         }
 

@@ -29,11 +29,13 @@ namespace Rbk
         m_Camera = std::make_shared<Rbk::Camera>();
         m_Camera->Init();
         
+        m_ConfigManager = std::make_shared<Rbk::ConfigManager>();
         m_InputManager = std::make_shared<Rbk::InputManager>(m_Window, m_Camera);
         m_InputManager->Init();
         m_LayerManager = std::make_shared<Rbk::LayerManager>();
         m_RendererAdapter = std::make_shared<Rbk::VulkanAdapter>(m_Window);
-        m_TextureManager = std::make_shared<Rbk::TextureManager>(m_RendererAdapter->Rdr());
+        m_TextureManager = std::make_shared<Rbk::TextureManager>(
+            m_RendererAdapter->Rdr(), m_ConfigManager->TexturesConfig());
         m_SpriteAnimationManager = std::make_shared<Rbk::SpriteAnimationManager>();
         m_EntityManager = std::make_shared<Rbk::EntityManager>(m_RendererAdapter->Rdr());
         m_ShaderManager = std::make_shared<Rbk::ShaderManager>(m_RendererAdapter->Rdr());
@@ -73,15 +75,14 @@ namespace Rbk
         vulkanLayer->AddShaderManager(m_ShaderManager);
         vulkanLayer->AddAudioManager(m_AudioManager);
 
-        m_SpriteAnimationManager->Add(
-            "splashAnim",
-            { 
-                "assets/splashscreen/splash_1.png",
-                "assets/splashscreen/splash_2.png",
-                "assets/splashscreen/splash_3.png",
-                "assets/splashscreen/splash_4.png"
-            }
-        );
+        nlohmann::json config = m_ConfigManager->TexturesConfig();
+
+        std::vector<std::string> splashSprites{};
+        for (auto& texture : config["splash"].items()) {
+            splashSprites.emplace_back(texture.value());
+        }
+
+        m_SpriteAnimationManager->Add("splashAnim",splashSprites);
         m_ShaderManager->AddShader("splashscreen", "assets/shaders/spv/2d_vert.spv", "assets/shaders/spv/2d_frag.spv");
         m_RendererAdapter->PrepareSplashScreen();
 
