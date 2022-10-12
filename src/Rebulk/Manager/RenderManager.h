@@ -2,6 +2,7 @@
 #include "Rebulk/Renderer/Adapter/IRendererAdapter.h"
 #include "TextureManager.h"
 #include "EntityManager.h"
+#include "SpriteAnimationManager.h"
 #include "Rebulk/Component/Mesh.h"
 #include "Rebulk/Component/Camera.h"
 #include "Rebulk/GUI/Window.h"
@@ -16,7 +17,8 @@ namespace Rbk
             std::shared_ptr<IRendererAdapter> renderer,
             std::shared_ptr<TextureManager> textureManager,
             std::shared_ptr<EntityManager> entityManager,
-            std::shared_ptr<ShaderManager> shaderManager
+            std::shared_ptr<ShaderManager> shaderManager,
+            std::shared_ptr<SpriteAnimationManager> spriteAnimationManager
         );
         ~RenderManager();
 
@@ -35,5 +37,6 @@ namespace Rbk
         std::shared_ptr<TextureManager> m_TextureManager;
         std::shared_ptr<EntityManager> m_EntityManager;
         std::shared_ptr<ShaderManager> m_ShaderManager;
+        std::shared_ptr<SpriteAnimationManager> m_SpriteAnimationManager;
     };
 }

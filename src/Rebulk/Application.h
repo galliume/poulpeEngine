@@ -3,6 +3,7 @@
 #include "Manager/RenderManager.h"
 #include "Manager/InputManager.h"
 #include "Manager/TextureManager.h"
+#include "Manager/SpriteAnimationManager.h"
 #include "Manager/EntityManager.h"
 #include "Manager/AudioManager.h"
 #include "Renderer/Adapter/VulkanAdapter.h"
@@ -38,6 +39,7 @@ namespace Rbk
         std::shared_ptr<Rbk::VulkanAdapter> m_RendererAdapter;
         std::shared_ptr<Rbk::LayerManager> m_LayerManager;
         std::shared_ptr<Rbk::TextureManager> m_TextureManager;
+        std::shared_ptr<Rbk::SpriteAnimationManager> m_SpriteAnimationManager;
         std::shared_ptr<Rbk::EntityManager> m_EntityManager;
         std::shared_ptr<Rbk::ShaderManager> m_ShaderManager;
         std::shared_ptr<Rbk::AudioManager> m_AudioManager;

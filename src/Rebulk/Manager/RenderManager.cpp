@@ -6,17 +6,19 @@ namespace Rbk
     RenderManager* RenderManager::s_Instance = nullptr;
 
     RenderManager::RenderManager(
-        std::shared_ptr<Window> window, 
-        std::shared_ptr<IRendererAdapter> renderer, 
-        std::shared_ptr<TextureManager> textureManager, 
-        std::shared_ptr<EntityManager> entityManager, 
-        std::shared_ptr<ShaderManager> shaderManager
+        std::shared_ptr<Window> window,
+        std::shared_ptr<IRendererAdapter> renderer,
+        std::shared_ptr<TextureManager> textureManager,
+        std::shared_ptr<EntityManager> entityManager,
+        std::shared_ptr<ShaderManager> shaderManager,
+        std::shared_ptr<SpriteAnimationManager> spriteAnimationManager
     ) :
         m_Window(window),
         m_Renderer(renderer),
         m_TextureManager(textureManager),
         m_EntityManager(entityManager),
-        m_ShaderManager(shaderManager)
+        m_ShaderManager(shaderManager),
+        m_SpriteAnimationManager(spriteAnimationManager)
     {
         if (s_Instance == nullptr) {
             s_Instance = this;
@@ -34,6 +36,7 @@ namespace Rbk
         m_Renderer->AddTextureManager(m_TextureManager);
         m_Renderer->AddEntityManager(m_EntityManager);
         m_Renderer->AddShaderManager(m_ShaderManager);
+        m_Renderer->AddSpriteAnimationManager(m_SpriteAnimationManager);
     }
 
     void RenderManager::AddCamera(std::shared_ptr<Camera> camera)
