@@ -1,0 +1,35 @@
+{
+	"splash": [
+		"assets/splashscreen/splash_1.png",
+		"assets/splashscreen/splash_2.png",
+		"assets/splashscreen/splash_3.png",
+		"assets/splashscreen/splash_4.png"
+	],
+	"textures": {
+		"minecraft_water": "assets/mesh/minecraft/water.jpg",
+		"campfire_tex": "assets/mesh/campfire/Campfire_MAT_BaseColor_01.jpg",
+		"tree_tex": "assets/mesh/tree/tree.jpg",
+		"tree_top_tex": "assets/mesh/tree/tree.png",
+		"crosshair_1": "assets/texture/crosshair/crosshair_1.png",
+		"crosshair_2": "assets/texture/crosshair/crosshair_2.png",
+		"moon": "assets/mesh/moon/diffuse.jpg",
+		"trunk_tree_cartoon": "assets/mesh/tree/cartoon/Trunk_4_Cartoon.jpg",
+		"grass": "assets/mesh/grass/grass.png",
+		"rooftiles": "assets/mesh/house/textures/rooftiles/T_darkwood_basecolor.png",
+		"dark_wood": "assets/mesh/house/textures/wood/T_darkwood_basecolor.png",
+		"bright_wood": "assets/mesh/house/textures/wood/T_brightwood_basecolor.png",
+		"rocks": "assets/mesh/house/textures/rocks/rock_bc.jpg",
+		"dog_base_color": "assets/mesh/doghouse/doghouse0908_PBR_BaseColor.png",
+		"dog": "assets/mesh/dog/Texture_albedo.jpg",
+		"fence": "assets/mesh/fence/cit_1001_Diffuse.png",
+		"minecraft_grass": "assets/mesh/minecraft/Grass_Block_TEX.png"
+	},
+	"skybox": [
+		"assets/texture/skybox/bluesky/right.jpg",
+		"assets/texture/skybox/bluesky/left.jpg",
+		"assets/texture/skybox/bluesky/top.jpg",
+		"assets/texture/skybox/bluesky/bottom.jpg",
+		"assets/texture/skybox/bluesky/front.jpg",
+		"assets/texture/skybox/bluesky/back.jpg"
+	]
+}

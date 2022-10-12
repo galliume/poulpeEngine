@@ -20,6 +20,7 @@ IncludeDir["spdlog"] = "vendor/spdlog/include"
 IncludeDir["tiny_obj_loader"] = "vendor/tiny_obj_loader"
 IncludeDir["stb_image"] = "vendor/stb_image"
 IncludeDir["miniaudio"] = "vendor/miniaudio"
+IncludeDir["nlohmann"] = "vendor/nlohmann"
 
 include "vendor/GLFW"
 include "vendor/imgui"
@@ -61,6 +62,7 @@ project "Rebulkan"
         "vendor/tiny_obj_loader/tiny_obj_loader.h",
         "vendor/tiny_obj_loader/mapbox/earcut.hpp",
 		"vendor/miniaudio/miniaudio.cpp",
+		"vendor/nlohmann/json.hpp",
         "shaders/*",
         "mesh/*"
     }

@@ -1,12 +1,15 @@
 #pragma once
 #include "Rebulk/Renderer/Vulkan/VulkanRenderer.h"
+#include "json.hpp"
 
 namespace Rbk
 {
     class TextureManager
     {
     public:
-        explicit TextureManager(std::shared_ptr<VulkanRenderer> renderer);
+        explicit TextureManager(
+            std::shared_ptr<VulkanRenderer> renderer,
+            nlohmann::json textureConfig);
         
         void AddSkyBox(const std::vector<std::string>& skyboxImages);
         void AddTexture(const std::string& name, const std::string& path);
@@ -18,8 +21,9 @@ namespace Rbk
 
     private:
         std::map<std::string, Texture> m_Textures;
-        std::map<std::string, std::string>m_Paths;
+        std::map<std::string, std::string> m_Paths;
         std::shared_ptr<VulkanRenderer> m_Renderer = nullptr;
+        nlohmann::json m_TextureConfig;
 
         Texture m_Skybox;
     };
