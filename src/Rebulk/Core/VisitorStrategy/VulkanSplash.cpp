@@ -49,22 +49,25 @@ namespace Rbk
         std::pair<VkBuffer, VkDeviceMemory> uniformBuffer = m_Adapter->Rdr()->CreateUniformBuffers(1);
         mesh->m_UniformBuffers.emplace_back(uniformBuffer);
 
-        Texture texture = m_Adapter->GetTextureManager()->GetTextures()["splashscreen"];
-        Texture texture2 = m_Adapter->GetTextureManager()->GetTextures()["splashscreen2"];
+        std::vector<VkDescriptorImageInfo> imageInfos{};
+        auto sprites = m_Adapter->GetSpriteAnimationManager()->GetSpritesByName("splashAnim");
+        int index = 0;
 
-        std::vector<VkDescriptorImageInfo>imageInfos;
-        VkDescriptorImageInfo imageInfo{};
-        imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-        imageInfo.imageView = texture.GetImageView();
-        imageInfo.sampler = texture.GetSampler();
+        for (auto sprite : sprites) {
 
-        VkDescriptorImageInfo imageInfo2{};
-        imageInfo2.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-        imageInfo2.imageView = texture2.GetImageView();
-        imageInfo2.sampler = texture2.GetSampler();
+            std::string name = "splashAnim_" + std::to_string(index);
+            m_Adapter->GetTextureManager()->AddTexture(name, sprite);
 
-        imageInfos.emplace_back(imageInfo);
-        imageInfos.emplace_back(imageInfo2);
+            Texture texture = m_Adapter->GetTextureManager()->GetTextures()[name];
+
+            VkDescriptorImageInfo imageInfo{};
+            imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+            imageInfo.imageView = texture.GetImageView();
+            imageInfo.sampler = texture.GetSampler();
+
+            imageInfos.emplace_back(imageInfo);
+            index++;
+        }
 
         mesh->SetSpritesCount(imageInfos.size());
 

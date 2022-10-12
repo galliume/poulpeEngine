@@ -4,6 +4,7 @@
 #include "Rebulk/Manager/TextureManager.h"
 #include "Rebulk/Manager/EntityManager.h"
 #include "Rebulk/Manager/ShaderManager.h"
+#include "Rebulk/Manager/SpriteAnimationManager.h"
 
 namespace Rbk
 {
@@ -14,6 +15,7 @@ namespace Rbk
         virtual void AddTextureManager(std::shared_ptr<TextureManager> textureManager) = 0;
         virtual void AddEntityManager(std::shared_ptr<EntityManager> EntityManager) = 0;
         virtual void AddShaderManager(std::shared_ptr<ShaderManager> shaderManager) = 0;
+        virtual void AddSpriteAnimationManager(std::shared_ptr<SpriteAnimationManager> spriteAnimationManager) = 0;
         virtual void AddCamera(std::shared_ptr<Camera> camera) = 0;
         virtual void Prepare() = 0;
         virtual void Draw() = 0;
