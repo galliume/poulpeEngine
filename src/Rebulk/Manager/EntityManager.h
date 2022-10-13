@@ -13,7 +13,7 @@ namespace Rbk
 
         explicit EntityManager(const std::shared_ptr<VulkanRenderer>& renderer);
         void AddEntity(const std::shared_ptr<Entity>& entity);
-        void Load();
+        std::vector<std::future<void>> Load();
         const std::shared_ptr<Entity> GetEntityByName(const std::string& name) const;
         const uint32_t GetInstancedCount();
 

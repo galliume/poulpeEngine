@@ -249,5 +249,7 @@ namespace Rbk {
         VkFence m_Fence;
 
         VkSampleCountFlagBits m_MsaaSamples = VK_SAMPLE_COUNT_8_BIT;
+
+        std::mutex m_MutexQueueSubmit;
     };
 }

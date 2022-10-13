@@ -593,6 +593,8 @@ namespace Rbk
 
     void VulkanAdapter::BeginRendering()
     {
+        m_MutexRendering.lock();
+
         ShouldRecreateSwapChain();
 
         m_ImageIndex = m_Renderer->AcquireNextImageKHR(m_SwapChain, m_Semaphores);
@@ -686,5 +688,7 @@ namespace Rbk
         if (currentFrame == VK_ERROR_OUT_OF_DATE_KHR || currentFrame == VK_SUBOPTIMAL_KHR) {
             RecreateSwapChain();
         }
+
+        m_MutexRendering.unlock();
     }
 }

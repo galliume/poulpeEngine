@@ -1,4 +1,6 @@
 #pragma once
+#include <future>
+
 #include "Rebulk/Renderer/Vulkan/VulkanRenderer.h"
 
 namespace Rbk
@@ -14,7 +16,7 @@ namespace Rbk
         
 explicit ShaderManager(std::shared_ptr<VulkanRenderer> renderer);
         void AddShader(const std::string& name, const char* vertPath, const char* fragPath);
-        void Load();
+        std::future<void> Load();
 
         inline const std::shared_ptr<VulkanShaders> GetShaders() const { return m_Shaders; };
 
