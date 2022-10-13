@@ -75,34 +75,43 @@ namespace Rbk
         vulkanLayer->AddShaderManager(m_ShaderManager);
         vulkanLayer->AddAudioManager(m_AudioManager);
 
-        nlohmann::json config = m_ConfigManager->TexturesConfig();
+        nlohmann::json textureConfig = m_ConfigManager->TexturesConfig();
+        nlohmann::json soundConfig = m_ConfigManager->SoundConfig();
 
         std::vector<std::string> splashSprites{};
-        for (auto& texture : config["splash"].items()) {
+        for (auto& texture : textureConfig["splash"].items()) {
             splashSprites.emplace_back(texture.value());
         }
 
         m_SpriteAnimationManager->Add("splashAnim",splashSprites);
         m_ShaderManager->AddShader("splashscreen", "assets/shaders/spv/2d_vert.spv", "assets/shaders/spv/2d_frag.spv");
         m_RendererAdapter->PrepareSplashScreen();
+        m_AudioManager->Load(soundConfig);
 
-        std::future loading = std::async(std::launch::async, [this]() {
+        m_AudioManager->StartSplash();
+        std::future<void> loading = std::async(std::launch::async, [this]() {
             
             while (!IsLoaded()) {
                 m_RendererAdapter->DrawSplashScreen();
-                std::this_thread::sleep_for(std::chrono::milliseconds(500));
+                std::this_thread::sleep_for(std::chrono::milliseconds(50));
             }
-            Rbk::Log::GetLogger()->debug("still here");
         });
 
-        m_ShaderManager->Load();
-        m_TextureManager->Load();
-        m_EntityManager->Load();
-        m_AudioManager->LoadAmbient();
+        std::future<void> shaderFuture = m_ShaderManager->Load();
+        std::vector<std::future<void>> textureFutures = m_TextureManager->Load();
+        std::vector<std::future<void>> entityFutures = m_EntityManager->Load();
+
+        for (auto& future : entityFutures) {
+            future.wait();
+        }for (auto& future : textureFutures) {
+            future.wait();
+        }
+        shaderFuture.wait();
 
         SetIsLoaded();
         loading.wait();
-        m_RendererAdapter->Rdr()->WaitIdle();
+        m_AudioManager->StopSplash();
+        m_AudioManager->StartAmbient();
         m_RendererAdapter->Prepare();
         vulkanLayer->AddRenderAdapter(m_RendererAdapter);
 

@@ -7,6 +7,8 @@ namespace Rbk
     AudioManager::AudioManager()
     {
 
+        m_State = State::STOP;
+
         ma_result result;
 
         result = ma_engine_init(NULL, &m_Engine);
@@ -23,12 +25,14 @@ namespace Rbk
         ma_engine_uninit(&m_Engine);
     }
 
-    void AudioManager::LoadAmbient()
+    void AudioManager::Load(nlohmann::json config)
     {
-        m_AmbientSounds.emplace_back("assets/sounds/ambient/wind__artic__cold-6195.mp3");
-        m_AmbientSounds.emplace_back("assets/sounds/ambient/67884__benboncan__lake-waves-2.wav");
-
-        StartAmbient();
+        for (auto& sound : config["splash"].items()) {
+            m_SplashSounds.emplace_back(sound.value());
+        }
+        for (auto& sound : config["ambient"].items()) {
+            m_AmbientSounds.emplace_back(sound.value());
+        }
     }
 
     void AudioManager::StartAmbient(int index)
@@ -38,43 +42,41 @@ namespace Rbk
         }
 
         if (State::PLAY == m_State) {
-            StopAmbient();
+            Stop(m_AmbientSound);
         }
 
-        ma_result result;
+        Start(m_AmbientSounds[index], m_AmbientSound);
 
-        ma_uint32 flags = MA_SOUND_FLAG_ASYNC;
-        result = ma_sound_init_from_file(&m_Engine, m_AmbientSounds[index].c_str(), flags, NULL, NULL, &m_AmbientSound);
-
-        if (m_Looping) {
-            ma_sound_set_looping(&m_AmbientSound, true);
-        }
-
-        if (result != MA_SUCCESS) {
-            Rbk::Log::GetLogger()->warn("Cannot init sound {}", m_AmbientSounds[index].c_str());
-        }
-
-        if (MA_SUCCESS == ma_sound_start(&m_AmbientSound)) {
+        if (State::PLAY == m_State) {
             m_AmbientSoundIndex = index;
-            m_State = State::PLAY;
-        } else {
-            m_State = State::ERR;
         }
     }
 
     void AudioManager::StopAmbient()
     {
-        if (State::PLAY != m_State) {
-            return;
+        Stop(m_AmbientSound);
+    }
+
+    void AudioManager::StartSplash(int index)
+    {
+        if (index > m_SplashSounds.size() - 1 || 0 > index) {
+            return Rbk::Log::GetLogger()->warn("Splash sound index {} does not exists.", index);
         }
 
-        if (MA_SUCCESS == ma_sound_stop(&m_AmbientSound)) {
-            m_State = State::STOP;
-        } else {
-            m_State = State::ERR;
+        if (State::PLAY == m_State) {
+            Stop(m_SplashSound);
         }
 
-        ma_sound_uninit(&m_AmbientSound);
+        Start(m_SplashSounds[index], m_SplashSound);
+
+        if (State::PLAY == m_State) {
+            m_SplashSoundIndex = index;
+        }
+    }
+
+    void AudioManager::StopSplash()
+    {
+        Stop(m_SplashSound);
     }
 
     std::string const AudioManager::GetState()
@@ -95,5 +97,43 @@ namespace Rbk
         } else {
             ma_sound_set_looping(&m_AmbientSound, true);
         }
+    }
+
+    void AudioManager::Start(const std::string& soundPath, ma_sound& sound)
+    {
+        ma_result result;
+
+        ma_uint32 flags = MA_SOUND_FLAG_ASYNC;
+        result = ma_sound_init_from_file(&m_Engine, soundPath.c_str(), flags, NULL, NULL, &sound);
+
+        if (result != MA_SUCCESS) {
+            Rbk::Log::GetLogger()->warn("Cannot init sound {}", soundPath.c_str());
+        }
+
+        if (m_Looping) {
+            ma_sound_set_looping(&sound, true);
+        }
+
+        if (MA_SUCCESS == ma_sound_start(&sound)) {
+            m_State = State::PLAY;
+        } else {
+            m_State = State::ERR;
+        }
+    }
+
+    void AudioManager::Stop(ma_sound sound)
+    {
+        if (State::PLAY != m_State) {
+            return;
+        }
+
+        if (MA_SUCCESS == ma_sound_stop(&sound)) {
+            m_State = State::STOP;
+        }
+        else {
+            m_State = State::ERR;
+        }
+
+        ma_sound_uninit(&sound);
     }
 }

@@ -3,7 +3,17 @@
 		"assets/splashscreen/splash_1.png",
 		"assets/splashscreen/splash_2.png",
 		"assets/splashscreen/splash_3.png",
-		"assets/splashscreen/splash_4.png"
+		"assets/splashscreen/splash_4.png",
+		"assets/splashscreen/splash_5.png",
+		"assets/splashscreen/splash_6.png",
+		"assets/splashscreen/splash_7.png",
+		"assets/splashscreen/splash_8.png",
+		"assets/splashscreen/splash_9.png",
+		"assets/splashscreen/splash_10.png",
+		"assets/splashscreen/splash_11.png",
+		"assets/splashscreen/splash_12.png",
+		"assets/splashscreen/splash_13.png",
+		"assets/splashscreen/splash_14.png"
 	],
 	"textures": {
 		"minecraft_water": "assets/mesh/minecraft/water.jpg",

@@ -9,7 +9,7 @@ namespace Rbk
         m_Shaders = std::make_shared<VulkanShaders>();
     }
 
-    void ShaderManager::Load()
+    std::future<void> ShaderManager::Load()
     {
         std::future shaderFuture = std::async(std::launch::async, [this]() {
             AddShader("main", "assets/shaders/spv/vert.spv", "assets/shaders/spv/frag.spv");
@@ -18,6 +18,8 @@ namespace Rbk
             AddShader("ambient_light", "assets/shaders/spv/ambient_shader_vert.spv", "assets/shaders/spv/ambient_shader_frag.spv");
             AddShader("2d", "assets/shaders/spv/2d_vert.spv", "assets/shaders/spv/2d_frag.spv");
         });
+
+        return std::move(shaderFuture);
     }
 
     void ShaderManager::AddShader(const std::string& name, const char* vertPath, const char* fragPath)

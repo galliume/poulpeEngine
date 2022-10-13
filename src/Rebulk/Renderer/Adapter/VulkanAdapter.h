@@ -115,5 +115,7 @@ namespace Rbk
         std::vector<glm::vec3>m_LightsPos;
         std::vector<VkDescriptorPool>m_DescriptorPools;
         std::vector<VkDescriptorSetLayout>m_DescriptorSetLayouts;
+
+        std::mutex m_MutexRendering;
     };
 }

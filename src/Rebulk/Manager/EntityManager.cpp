@@ -56,8 +56,10 @@ namespace Rbk
         return *it;
     }
 
-    void EntityManager::Load()
+    std::vector<std::future<void>> EntityManager::Load()
     {
+        std::vector<std::future<void>> futures{};
+
         std::future worldFuture = std::async(std::launch::async, [this]() {
 
             std::shared_ptr<Mesh> entity = std::make_shared<Mesh>();
@@ -425,5 +427,11 @@ namespace Rbk
 
             AddEntity(entity16);
         });
+
+        futures.emplace_back(std::move(worldFuture));
+        futures.emplace_back(std::move(worldBisFuture));
+        futures.emplace_back(std::move(worldFutureTer));
+
+        return futures;
     }
 }
