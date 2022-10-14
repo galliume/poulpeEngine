@@ -77,6 +77,7 @@ namespace Rbk
 
         nlohmann::json textureConfig = m_ConfigManager->TexturesConfig();
         nlohmann::json soundConfig = m_ConfigManager->SoundConfig();
+        nlohmann::json levelConfig = m_ConfigManager->EntityConfig("level_1");
 
         std::vector<std::string> splashSprites{};
         for (auto& texture : textureConfig["splash"].items()) {
@@ -99,11 +100,12 @@ namespace Rbk
 
         std::future<void> shaderFuture = m_ShaderManager->Load();
         std::vector<std::future<void>> textureFutures = m_TextureManager->Load();
-        std::vector<std::future<void>> entityFutures = m_EntityManager->Load();
+        std::vector<std::future<void>> entityFutures = m_EntityManager->Load(levelConfig);
 
         for (auto& future : entityFutures) {
             future.wait();
-        }for (auto& future : textureFutures) {
+        }
+        for (auto& future : textureFutures) {
             future.wait();
         }
         shaderFuture.wait();
