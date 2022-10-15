@@ -45,8 +45,7 @@ namespace Rbk
             const std::string& shader,
             const glm::vec3& pos,
             const glm::vec3& scale,
-            glm::vec3 axisRot = glm::vec3(1.0f),
-            float rotAngle = 0.0f,
+            glm::vec3 rotation = glm::vec3(1.0f),
             bool shouldInverseTextureY = true);
 
         std::vector<Data>* GetData() { return &m_Data; };
