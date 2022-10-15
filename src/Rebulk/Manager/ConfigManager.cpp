@@ -8,6 +8,15 @@ namespace Rbk
     ConfigManager::ConfigManager()
     {
         try {
+            std::ifstream f("config/rebulkan.json");
+            m_AppConfig = nlohmann::json::parse(f);
+        }
+        catch (std::exception& e) {
+            Rbk::Log::GetLogger()->critical("Cannot read application config : {}", e.what());
+            m_AppConfig = {};
+        }
+
+        try {
             std::ifstream f("config/textures.json");
             m_TexturesConfig = nlohmann::json::parse(f);
         }
@@ -39,6 +48,11 @@ namespace Rbk
         }
 
         return m_EntityConfig;
+    }
+
+    nlohmann::json ConfigManager::AppConfig()
+    {
+        return m_AppConfig;
     }
 
     nlohmann::json ConfigManager::TexturesConfig()

@@ -13,7 +13,7 @@ namespace Rbk
         
         void AddSkyBox(const std::vector<std::string>& skyboxImages);
         void AddTexture(const std::string& name, const std::string& path);
-        std::vector<std::future<void>> Load();
+        std::vector<std::future<void>> Load(const std::string& skybox);
 
         inline const Texture GetSkyboxTexture() const { return m_Skybox; };
         inline std::map<std::string, Texture> GetTextures() const { return m_Textures; };
