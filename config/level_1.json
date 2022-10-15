@@ -5,7 +5,7 @@
 			"textures": ["dog"],
 			"shader": "main",
 			"positions": [
-				{"x": 0.8, "y": 0.17, "z": -1.2}
+				{"x": 0.8, "y": 0.40, "z": -1.2}
 			],
 			"scales": [
 				{"x": 0.12, "y": 0.12, "z": 0.12}
@@ -36,7 +36,7 @@
 				{"x": 0.0, "y": -90.0, "z": 0.0}
 			],
 			"inverseTextureY": true,
-			"count": 5,
+			"count": 6,
 			"padding": {
 				"x": 0.0,
 				"y": 0.0,
@@ -60,9 +60,9 @@
 			"inverseTextureY": true,
 			"count": 5,
 			"padding": {
-				"x": 0,
+				"x": -0.85,
 				"y": 0,
-				"z": -0.85
+				"z": 0
 			},
 			"form": "line"
 		},
@@ -70,10 +70,10 @@
 			"mesh": "assets/mesh/minecraft/Grass_Block.obj",
 			"textures": ["minecraft_grass"],
 			"shader": "main",
-			"position": [
-				{"x": -0.20, "y": 0.22, "z": 2.30}
+			"positions": [
+				{"x": -0.20, "y": 0.0, "z": -0.20}
 			],
-			"scale": [
+			"scales": [
 				{"x": 0.1, "y": 0.1, "z": 0.1}
 			],
 			"rotations": [
@@ -94,7 +94,7 @@
 			"textures": ["minecraft_grass"],
 			"shader": "main",
 			"positions": [
-				{"x": -0.20, "y": 0.22, "z": 2.30}
+				{"x": -0.20, "y": 0.0, "z": -0.20}
 			],
 			"scales": [
 				{"x": 0.1, "y": 0.1, "z": 0.1}
@@ -117,7 +117,7 @@
 			"textures": ["minecraft_grass"],
 			"shader": "main",
 			"positions": [
-				{"x": -0.20, "y": 0.22, "z": 2.30}
+				{"x": -0.20, "y": 0.0, "z": -0.20}
 			],
 			"scales": [
 				{"x": 0.1, "y": 0.1, "z": 0.1}
@@ -140,7 +140,7 @@
 			"textures": ["minecraft_grass"],
 			"shader": "main",
 			"positions": [
-				{"x": -0.20, "y": 0.22, "z": 2.30}
+				{"x": -0.20, "y": 0.0, "z": -0.20}
 			],
 			"scales": [
 				{"x": 0.1, "y": 0.1, "z": 0.1}
@@ -163,7 +163,7 @@
 			"textures": ["minecraft_grass"],
 			"shader": "main",
 			"positions": [
-				{"x": -0.20, "y": 0.22, "z": 2.30}
+				{"x": -0.20, "y": 0.0, "z": -0.20}
 			],
 			"scales": [
 				{"x": 0.1, "y": 0.1, "z": 0.1}
@@ -186,7 +186,7 @@
 			"textures": ["minecraft_water"],
 			"shader": "main",
 			"positions": [
-				{"x": -0.20, "y": 0.22, "z": 2.30}
+				{"x": -0.20, "y": -0.10, "z": -0.20}
 			],
 			"scales": [
 				{"x": 0.1, "y": 0.1, "z": 0.1}
@@ -209,7 +209,7 @@
 			"textures": ["minecraft_water"],
 			"shader": "main",
 			"positions": [
-				{"x": -0.20, "y": 0.22, "z": 2.30}
+				{"x": -0.20, "y": -0.10, "z": -0.20}
 			],
 			"scales": [
 				{"x": 0.1, "y": 0.1, "z": 0.1}
@@ -232,7 +232,7 @@
 			"textures": ["minecraft_water"],
 			"shader": "main",
 			"positions": [
-				{"x": -0.20, "y": 0.22, "z": 2.30}
+				{"x": -0.20, "y": -0.10, "z": -0.20}
 			],
 			"scales": [
 				{"x": 0.1, "y": 0.1, "z": 0.1}
@@ -255,7 +255,7 @@
 			"textures": ["minecraft_water"],
 			"shader": "main",
 			"positions": [
-				{"x": -0.20, "y": 0.22, "z": 2.30}
+				{"x": -0.20, "y": -0.10, "z": -0.20}
 			],
 			"scales": [
 				{"x": 0.1, "y": 0.1, "z": 0.1}

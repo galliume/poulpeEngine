@@ -11,7 +11,7 @@ namespace Rbk
         const std::string& shader,
         const glm::vec3& pos,
         const glm::vec3& scale,
-        glm::vec3 axisRot,
+        glm::vec3 rotation,
         bool shouldInverseTextureY)
     {
         //@todo move out of Mesh
@@ -42,14 +42,9 @@ namespace Rbk
             ubo.model = glm::translate(ubo.model, pos);
             ubo.model = glm::scale(ubo.model, scale);
 
-            if (0 != axisRot[0])
-                ubo.model = glm::rotate(ubo.model, glm::radians(axisRot[0]), glm::vec3(1.0f, 0.0f, 0.0f));
-
-            if (0 != axisRot[1])
-                ubo.model = glm::rotate(ubo.model, glm::radians(axisRot[1]), glm::vec3(0.0f, 1.0f, 0.0f));
-
-            if (0 != axisRot[2])
-                ubo.model = glm::rotate(ubo.model, glm::radians(axisRot[2]), glm::vec3(0.0f, 0.0f, 1.0f));
+            ubo.model = glm::rotate(ubo.model, glm::radians(rotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
+            ubo.model = glm::rotate(ubo.model, glm::radians(rotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
+            ubo.model = glm::rotate(ubo.model, glm::radians(rotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
 
             ubo.view = glm::translate(view, glm::vec3(0.0f, 0.0f, 0.0f));
             data.m_Ubos.emplace_back(ubo);

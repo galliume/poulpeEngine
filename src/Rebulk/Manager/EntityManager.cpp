@@ -60,111 +60,130 @@ namespace Rbk
     {
         std::vector<std::future<void>> futures;
 
-       /* std::future<void> entitiesFuture = std::async(std::launch::async, [this, &levelConfig]() {*/
-            Rbk::Log::GetLogger()->debug("{} entities", levelConfig["entities"].size());
+        std::future<void> entitiesFuture = std::async(std::launch::async, [this, levelConfig]() {
 
+            Rbk::Log::GetLogger()->debug("{} entities", levelConfig["entities"].size());
             for (auto& entityConf : levelConfig["entities"].items()) {
 
-                if ("deadTree" != entityConf.key()) continue;
+                auto key = entityConf.key();
                 auto data = entityConf.value();
-                std::shared_ptr<Rbk::Mesh> entity = std::make_shared<Rbk::Mesh>();
 
                 Rbk::Log::GetLogger()->debug("entity {}", entityConf.key());
 
                 std::string form = static_cast<std::string>(data["form"]);
 
                 if ("square" == form) {
-
-                    int xMin = static_cast<int>(data["squarePadding"]["x"][0]);
-                    int xMax = static_cast<int>(data["squarePadding"]["x"][1]);
-                    int yMin = static_cast<int>(data["squarePadding"]["y"][0]);
-                    int yMax = static_cast<int>(data["squarePadding"]["y"][1]);
+                    int xMin = static_cast<int>(data["squarePadding"][0]["x"][0]);
+                    int xMax = static_cast<int>(data["squarePadding"][0]["x"][1]);
+                    int yMin = static_cast<int>(data["squarePadding"][0]["y"][0]);
+                    int yMax = static_cast<int>(data["squarePadding"][0]["y"][1]);
 
                     for (int x = xMin; x < xMax; x++) {
                         for (int y = yMin; y < yMax; y++) {
 
+                            std::shared_ptr<Rbk::Mesh> entity = std::make_shared<Rbk::Mesh>();
+
+                            auto positionData = data["positions"].at(0);
+
                             glm::vec3 position = glm::vec3(
-                                static_cast<double>(data["positions"][0]["x"]) * static_cast<float>(x),
-                                static_cast<double>(data["positions"][0]["y"]),
-                                static_cast<double>(data["positions"][0]["z"]) * static_cast<float>(y)
+                                static_cast<float>(positionData["x"]) * static_cast<float>(x),
+                                static_cast<float>(positionData["y"]),
+                                static_cast<float>(positionData["z"]) * static_cast<float>(y)
                             );
 
                             std::vector<std::string> textures{};
                             for (auto& texture : data["textures"])
                                 textures.emplace_back(static_cast<std::string>(texture));
 
+                            auto scaleData = data["scales"].at(0);
+                            auto rotationData = data["rotations"].at(0);
+
+                            glm::vec3 scale = glm::vec3(
+                                static_cast<float>(scaleData["x"]),
+                                static_cast<float>(scaleData["y"]),
+                                static_cast<float>(scaleData["z"])
+                            );
+                            glm::vec3  rotation = glm::vec3(
+                                static_cast<float>(rotationData["x"]),
+                                static_cast<float>(rotationData["y"]),
+                                static_cast<float>(rotationData["z"])
+                            );
+
                             entity->Init(
-                                static_cast<std::string>(entityConf.key()),
+                                static_cast<std::string>(key),
                                 static_cast<std::string>(data["mesh"]),
                                 textures,
                                 static_cast<std::string>(data["shader"]),
                                 position,
-                                glm::vec3(
-                                    static_cast<double>(data["scales"][0]["x"]),
-                                    static_cast<double>(data["scales"][0]["y"]),
-                                    static_cast<double>(data["scales"][0]["z"])
-                                ),
-                                glm::vec3(
-                                    static_cast<double>(data["rotations"][0]["x"]),
-                                    static_cast<double>(data["rotations"][0]["y"]),
-                                    static_cast<double>(data["rotations"][0]["z"])
-                                ),
+                                scale,
+                                rotation,
                                 static_cast<bool>(data["inverseTextureY"])
                             );
                             AddEntity(entity);
                         }
                     }
-                } else {
+                }
+                else {
                     int count = static_cast<int>(data["count"]);
+                    std::string form = static_cast<std::string>(data["form"]);
+
                     for (int i = 0; i < count; i++) {
 
                         glm::vec3 position{};
+                        auto positionData = (1 == data["positions"].size()) ? data["positions"].at(0) : data["positions"].at(i);
 
-                        if ("positioned" == data["form"]) {
+                        if ("positioned" == form) {
                             position = glm::vec3(
-                                static_cast<double>(data["positions"][i]["x"]),
-                                static_cast<double>(data["positions"][i]["y"]),
-                                static_cast<double>(data["positions"][i]["z"])
+                                static_cast<float>(positionData["x"]),
+                                static_cast<float>(positionData["y"]),
+                                static_cast<float>(positionData["z"])
                             );
                         }
-                        else if ("line" == data["form"]) {
+                        else if ("line" == form) {
                             position = glm::vec3(
-                                static_cast<double>(data["positions"][i]["x"]) + static_cast<double>(data["padding"]["x"]),
-                                static_cast<double>(data["positions"][i]["y"]) + static_cast<double>(data["padding"]["y"]),
-                                static_cast<double>(data["positions"][i]["z"]) + static_cast<double>(data["padding"]["y"])
+                                static_cast<float>(positionData["x"]) + static_cast<float>(data["padding"]["x"]) * i,
+                                static_cast<float>(positionData["y"]) + static_cast<float>(data["padding"]["y"]) * i,
+                                static_cast<float>(positionData["z"]) + static_cast<float>(data["padding"]["z"]) * i
                             );
                         }
+
+                        auto scaleData = (1 == data["scales"].size()) ? data["scales"].at(0) : data["scales"].at(i);
+                        auto rotationData = (1 == data["rotations"].size()) ? data["rotations"].at(0) : data["rotations"].at(i);
+
+                        glm::vec3 scale = glm::vec3(
+                            static_cast<float>(scaleData["x"]),
+                            static_cast<float>(scaleData["y"]),
+                            static_cast<float>(scaleData["z"])
+                        );
+                        glm::vec3  rotation = glm::vec3(
+                            static_cast<float>(rotationData["x"]),
+                            static_cast<float>(rotationData["y"]),
+                            static_cast<float>(rotationData["z"])
+                        );
 
                         std::vector<std::string> textures{};
                         for (auto& texture : data["textures"])
                             textures.emplace_back(static_cast<std::string>(texture));
 
+                        std::shared_ptr<Rbk::Mesh> entity = std::make_shared<Rbk::Mesh>();
+
                         entity->Init(
-                            static_cast<std::string>(entityConf.key()),
+                            static_cast<std::string>(key),
                             static_cast<std::string>(data["mesh"]),
                             textures,
                             static_cast<std::string>(data["shader"]),
                             position,
-                            glm::vec3(
-                                static_cast<double>(data["scales"][i]["x"]),
-                                static_cast<double>(data["scales"][i]["y"]),
-                                static_cast<double>(data["scales"][i]["z"])
-                            ),
-                            glm::vec3(
-                                static_cast<double>(data["rotations"][i]["x"]),
-                                static_cast<double>(data["rotations"][i]["y"]),
-                                static_cast<double>(data["rotations"][i]["z"])
-                            ),
+                            scale,
+                            rotation,
                             static_cast<bool>(data["inverseTextureY"])
                         );
                         AddEntity(entity);
                     }
                 }
             }
-        //});
-        //
-        //futures.emplace_back(std::move(entitiesFuture));
+        });
 
+        futures.emplace_back(std::move(entitiesFuture));
         return futures;
     }
 }
