@@ -8,6 +8,7 @@ namespace Rbk
     public:
         ConfigManager();
 
+        nlohmann::json AppConfig();
         nlohmann::json TexturesConfig();
         nlohmann::json SoundConfig();
         nlohmann::json EntityConfig(const std::string& levelName);
@@ -15,6 +16,7 @@ namespace Rbk
         std::vector<std::string> ListSkybox();
 
     private:
+        nlohmann::json m_AppConfig;
         nlohmann::json m_TexturesConfig;
         nlohmann::json m_SoundConfig;
         nlohmann::json m_EntityConfig;

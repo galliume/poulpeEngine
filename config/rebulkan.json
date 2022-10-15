@@ -1,0 +1,16 @@
+{
+	"defaultLevel": "level_1",
+	"defaultSkybox": "bluesky",
+	"splashScreenMusic": true,
+	"input": {
+		"keyboard": {
+			"unlockCamera": "left_ctrl",
+			"forward": "w",
+			"backward": "s",
+			"left": "a",
+			"right": "d",
+			"up": "q",
+			"down": "e"
+		}
+	}
+}
