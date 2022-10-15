@@ -11,6 +11,8 @@ namespace Rbk
         nlohmann::json TexturesConfig();
         nlohmann::json SoundConfig();
         nlohmann::json EntityConfig(const std::string& levelName);
+        std::vector<std::string> ListLevels();
+        std::vector<std::string> ListSkybox();
 
     private:
         nlohmann::json m_TexturesConfig;

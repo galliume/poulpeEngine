@@ -42,6 +42,10 @@ namespace Rbk
                 ImGui::Separator();
             ImGui::End();
 
+            ImGui::Begin("Level");
+            DisplayLevel();
+            ImGui::End();
+
             ImGui::Begin("Options");
                 DisplayOptions();
             ImGui::End();
@@ -239,6 +243,74 @@ namespace Rbk
                 }
                 ImGui::EndListBox();
             }
+        }
+    }
+
+    void VulkanLayer::DisplayLevel()
+    {
+        std::vector<std::string> levels = m_ConfigManager->ListLevels();
+
+        if (ImGui::BeginCombo("Levels", levels.at(m_LevelIndex).c_str())) {
+
+            for (int n = 0; n < levels.size(); n++) {
+
+                const bool isSelected = (m_LevelIndex == n);
+
+                if (ImGui::Selectable(levels.at(n).c_str(), isSelected)) {
+                    m_LevelIndex = n;
+                    nlohmann::json levelConfig = m_ConfigManager->EntityConfig(levels.at(n));
+                    m_Adapter->GetEntityManager()->Clear();
+                    std::vector<std::future<void>> entityFutures = m_Adapter->GetEntityManager()->Load(levelConfig);
+
+                    for (auto& future : entityFutures) {
+                        future.wait();
+                    }
+                    m_Adapter->Refresh();
+                }
+
+                if (isSelected)
+                    ImGui::SetItemDefaultFocus();
+            }
+            ImGui::EndCombo();
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("Refresh level"))
+        {
+            nlohmann::json levelConfig = m_ConfigManager->EntityConfig(levels.at(m_LevelIndex));
+            m_Adapter->GetEntityManager()->Clear();
+            std::vector<std::future<void>> entityFutures = m_Adapter->GetEntityManager()->Load(levelConfig);
+
+            for (auto& future : entityFutures) {
+                future.wait();
+            }
+            m_Adapter->Refresh();
+        }
+
+        std::vector<std::string> skybox = m_ConfigManager->ListSkybox();
+
+        if (ImGui::BeginCombo("Skybox", skybox.at(m_SkyboxIndex).c_str())) {
+
+            for (int n = 0; n < skybox.size(); n++) {
+
+                const bool isSelected = (m_LevelIndex == n);
+
+                if (ImGui::Selectable(skybox.at(n).c_str(), isSelected)) {
+                    m_SkyboxIndex = n;
+                    nlohmann::json skyboxConfig = m_ConfigManager->TexturesConfig()["skybox"];
+
+                    std::vector<std::string>skyboxImages;
+                    for (auto& texture : skyboxConfig[skybox.at(n)].items()) {
+                        skyboxImages.emplace_back(texture.value());
+                    }
+
+                    m_Adapter->GetTextureManager()->AddSkyBox(skyboxImages);
+                    m_Adapter->Refresh();
+                }
+
+                if (isSelected)
+                    ImGui::SetItemDefaultFocus();
+            }
+            ImGui::EndCombo();
         }
     }
 

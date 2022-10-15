@@ -579,6 +579,9 @@ namespace Rbk
 
     void VulkanAdapter::Refresh()
     {
+        m_IsSkyBoxPrepared = false;
+        m_IsHUDPrepared = false;
+        m_HUD.clear();
         Prepare();
     }
 
