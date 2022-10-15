@@ -1,4 +1,6 @@
 #pragma once
+
+#include <json.hpp>
 #include "Rebulk/Renderer/Vulkan/VulkanRenderer.h"
 #include "Rebulk/Core/TinyObjLoader.h"
 #include "Rebulk/Component/Camera.h"
@@ -13,7 +15,7 @@ namespace Rbk
 
         explicit EntityManager(const std::shared_ptr<VulkanRenderer>& renderer);
         void AddEntity(const std::shared_ptr<Entity>& entity);
-        std::vector<std::future<void>> Load();
+        std::vector<std::future<void>> Load(nlohmann::json levelConfig);
         const std::shared_ptr<Entity> GetEntityByName(const std::string& name) const;
         const uint32_t GetInstancedCount();
 
