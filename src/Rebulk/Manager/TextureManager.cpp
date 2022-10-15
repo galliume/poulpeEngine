@@ -17,7 +17,7 @@ namespace Rbk
 
         std::future textureFuture = std::async(std::launch::async, [this]() {
             for (auto& texture : m_TextureConfig["textures"].items()) {
-                AddTexture(texture.key(), texture.value());
+                AddTexture(texture.key(), texture.value(), true);
             }
         });
         std::future skyboxFuture = std::async(std::launch::async, [this, skybox]() {
@@ -79,12 +79,13 @@ namespace Rbk
         m_Skybox.SetWidth(texWidth);
         m_Skybox.SetHeight(texHeight);
         m_Skybox.SetChannels(texChannels);
+        m_Skybox.SetIsPublic(true);
 
         vkFreeCommandBuffers(m_Renderer->GetDevice(), commandPool, 1, &commandBuffer);
         vkDestroyCommandPool(m_Renderer->GetDevice(), commandPool, nullptr);
     }
 
-    void TextureManager::AddTexture(const std::string& name, const std::string& path)
+    void TextureManager::AddTexture(const std::string& name, const std::string& path, bool isPublic)
     {
         if (!std::filesystem::exists(path.c_str())) {
             Rbk::Log::GetLogger()->critical("texture file {} does not exits.", path);
@@ -128,6 +129,7 @@ namespace Rbk
         texture.SetWidth(texWidth);
         texture.SetHeight(texHeight);
         texture.SetChannels(texChannels);
+        texture.SetIsPublic(isPublic);
 
         m_Textures.emplace(name, texture);
         vkFreeCommandBuffers(m_Renderer->GetDevice(), commandPool, 1, &commandBuffer);

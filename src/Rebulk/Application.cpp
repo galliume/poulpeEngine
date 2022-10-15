@@ -68,13 +68,6 @@ namespace Rbk
 
         ImGui_ImplVulkan_DestroyFontUploadObjects();
 
-        vulkanLayer->AddWindow(m_Window);
-        vulkanLayer->AddTextureManager(m_TextureManager);
-        vulkanLayer->AddEntityManager(m_EntityManager);
-        vulkanLayer->AddShaderManager(m_ShaderManager);
-        vulkanLayer->AddAudioManager(m_AudioManager);
-        vulkanLayer->AddConfigManager(m_ConfigManager);
-
         nlohmann::json appConfig = m_ConfigManager->AppConfig();
         std::string defaultLevel = static_cast<std::string>(appConfig["defaultLevel"]);
         std::string defaultSkybox = static_cast<std::string>(appConfig["defaultSkybox"]);
@@ -125,6 +118,13 @@ namespace Rbk
         m_AudioManager->StopSplash();
         m_AudioManager->StartAmbient();
         m_RendererAdapter->Prepare();
+
+        vulkanLayer->AddWindow(m_Window);
+        vulkanLayer->AddTextureManager(m_TextureManager);
+        vulkanLayer->AddEntityManager(m_EntityManager);
+        vulkanLayer->AddShaderManager(m_ShaderManager);
+        vulkanLayer->AddAudioManager(m_AudioManager);
+        vulkanLayer->AddConfigManager(m_ConfigManager);
         vulkanLayer->AddRenderAdapter(m_RendererAdapter);
 
         double endRun = glfwGetTime();

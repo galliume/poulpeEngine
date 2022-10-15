@@ -70,43 +70,37 @@ namespace Rbk
 
     void VulkanLayer::DisplayTextures()
     {
-        //ImGui::TreeNode("Grid");
-        //int x = 0;
-        //
-        //ImGui::BeginTable("table1", 4);
-        //const auto entities = m_Adapter->GetEntityManager()->GetEntities();
+        int x = 0;
+        
+        ImGui::BeginTable("table1", 6);
+    
+        for (const auto& texture : m_Textures) {
 
-        //for (const auto entity : *entities) {
+            if (0 == x) {
+                ImGui::TableNextRow();
+            }
 
-        //    std::shared_ptr<Mesh> mesh = std::dynamic_pointer_cast<Mesh>(entity);
-        //    if (!mesh) return;
+            ImGui::TableSetColumnIndex(x);
 
-        //    if (0 == x) {
-        //        ImGui::TableNextRow();
-        //    }
+            float my_tex_w = 150;
+            float my_tex_h = 150;
+            ImVec2 uv_min = ImVec2(0.0f, 0.0f);                 // Top-left
+            ImVec2 uv_max = ImVec2(1.0f, 1.0f);                 // Lower-right
+            ImVec4 tint_col = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);   // No tint
+            ImVec4 border_col = ImVec4(1.0f, 1.0f, 1.0f, 0.5f); // 50% opaque white
 
-        //    ImGui::TableSetColumnIndex(x);
+            ImGui::Image(texture.second, ImVec2(my_tex_w, my_tex_h), uv_min, uv_max, tint_col, border_col);
 
-        //    float my_tex_w = 25;
-        //    float my_tex_h = 25;
-        //    ImVec2 uv_min = ImVec2(0.0f, 0.0f);                 // Top-left
-        //    ImVec2 uv_max = ImVec2(1.0f, 1.0f);                 // Lower-right
-        //    ImVec4 tint_col = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);   // No tint
-        //    ImVec4 border_col = ImVec4(1.0f, 1.0f, 1.0f, 0.5f); // 50% opaque white
-        //    for (const auto desc : mesh->GetDescriptorSets()) 
-        //        ImGui::Image(desc, ImVec2(my_tex_w, my_tex_h), uv_min, uv_max, tint_col, border_col);
+            Rbk::Im::Text("\t%s", texture.first.c_str());
 
-        //    Rbk::Im::Text("\t%s", mesh->m_Name.c_str());
-        //    //Rbk::Im::Text("\t%s", path.c_str());
+            if (5 > x) {
+                x++;
+            } else {
+                x = 0;
+            }
+        }
 
-        //    if (3 > x) {
-        //        x++;
-        //    } else {
-        //        x = 0;
-        //    }
-        //}
-
-        //ImGui::EndTable();
+        ImGui::EndTable();
     }
 
     void VulkanLayer::DisplayFpsCounter(double timeStep)
@@ -317,5 +311,22 @@ namespace Rbk
     void VulkanLayer::AddRenderAdapter(std::shared_ptr<VulkanAdapter> renderAdapter)
     {
         m_Adapter = renderAdapter;
+    }
+
+    void VulkanLayer::AddTextureManager(std::shared_ptr<TextureManager> textureManager)
+    {
+        m_TextureManager = textureManager; 
+
+        const auto& textures = m_TextureManager->GetTextures();
+
+        for (const auto& texture : textures) {
+            
+            if (!texture.second.IsPublic()) continue;
+
+            VkDescriptorSet imgDset = ImGui_ImplVulkan_AddTexture(texture.second.GetSampler(), texture.second.GetImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+
+            m_Textures[texture.second.GetName()] = imgDset;
+        }
+
     }
 }

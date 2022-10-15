@@ -12,7 +12,7 @@ namespace Rbk
             nlohmann::json textureConfig);
         
         void AddSkyBox(const std::vector<std::string>& skyboxImages);
-        void AddTexture(const std::string& name, const std::string& path);
+        void AddTexture(const std::string& name, const std::string& path, bool isPublic = false);
         std::vector<std::future<void>> Load(const std::string& skybox);
 
         inline const Texture GetSkyboxTexture() const { return m_Skybox; };
