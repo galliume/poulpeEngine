@@ -21,7 +21,7 @@ namespace Rbk
         void DisplayLevel();
         void AddRenderAdapter(std::shared_ptr<VulkanAdapter> renderAdapter);
         void AddWindow(std::shared_ptr<Window> window) { m_Window = window; };
-        void AddTextureManager(std::shared_ptr<TextureManager> textureManager) { m_TextureManager = textureManager; };
+        void AddTextureManager(std::shared_ptr<TextureManager> textureManager);
         void AddEntityManager(std::shared_ptr<EntityManager> entityManager) { m_EntityManager = entityManager; };
         void AddShaderManager(std::shared_ptr<ShaderManager> shaderManager) { m_ShaderManager = shaderManager; };
         void AddAudioManager(std::shared_ptr<AudioManager> audioManager) { m_AudioManager = audioManager; };
@@ -49,5 +49,7 @@ namespace Rbk
         std::shared_ptr<ShaderManager> m_ShaderManager;
         std::shared_ptr<AudioManager> m_AudioManager;
         std::shared_ptr<ConfigManager> m_ConfigManager;
+
+        std::map<std::string, VkDescriptorSet> m_Textures;
     };
 }

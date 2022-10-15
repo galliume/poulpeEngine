@@ -15,7 +15,8 @@ namespace Rbk
         inline const uint32_t GetWidth() const { return m_Width; }
         inline const uint32_t GetHeight() const { return m_Height; }
         inline const uint32_t GetChannels() const { return m_Channels; }
-        
+        inline bool IsPublic() const { return m_IsPublic; }
+
         void SetName(const std::string& name) { m_Name = name; }
         void SetImage(const VkImage& image) { m_Image = image; }
         void SetImageMemory(const VkDeviceMemory& deviceMemory) { m_ImageMemory = deviceMemory; }
@@ -25,6 +26,7 @@ namespace Rbk
         void SetWidth(const uint32_t width) { m_Width = width; }
         void SetHeight(const uint32_t height) { m_Height = height; }
         void SetChannels(const uint32_t channels) { m_Channels = channels; }
+        void SetIsPublic(bool isPublic) { m_IsPublic = isPublic; };
 
     private:
         std::string m_Name;
@@ -36,5 +38,6 @@ namespace Rbk
         uint32_t m_Width;
         uint32_t m_Height;
         uint32_t m_Channels;
+        bool m_IsPublic;
     };
 }
