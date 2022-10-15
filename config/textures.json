@@ -34,12 +34,22 @@
 		"fence": "assets/mesh/fence/cit_1001_Diffuse.png",
 		"minecraft_grass": "assets/mesh/minecraft/Grass_Block_TEX.png"
 	},
-	"skybox": [
-		"assets/texture/skybox/bluesky/right.jpg",
-		"assets/texture/skybox/bluesky/left.jpg",
-		"assets/texture/skybox/bluesky/top.jpg",
-		"assets/texture/skybox/bluesky/bottom.jpg",
-		"assets/texture/skybox/bluesky/front.jpg",
-		"assets/texture/skybox/bluesky/back.jpg"
-	]
+	"skybox": {
+		"bluesky": [
+			"assets/texture/skybox/bluesky/right.jpg",
+			"assets/texture/skybox/bluesky/left.jpg",
+			"assets/texture/skybox/bluesky/top.jpg",
+			"assets/texture/skybox/bluesky/bottom.jpg",
+			"assets/texture/skybox/bluesky/front.jpg",
+			"assets/texture/skybox/bluesky/back.jpg"
+		],
+		"debug": [
+			"assets/texture/skybox/debug/right.jpg",
+			"assets/texture/skybox/debug/left.jpg",
+			"assets/texture/skybox/debug/top.jpg",
+			"assets/texture/skybox/debug/bottom.jpg",
+			"assets/texture/skybox/debug/front.jpg",
+			"assets/texture/skybox/debug/back.jpg"
+		]
+	}
 }

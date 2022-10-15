@@ -74,6 +74,7 @@ namespace Rbk
         vulkanLayer->AddEntityManager(m_EntityManager);
         vulkanLayer->AddShaderManager(m_ShaderManager);
         vulkanLayer->AddAudioManager(m_AudioManager);
+        vulkanLayer->AddConfigManager(m_ConfigManager);
 
         nlohmann::json textureConfig = m_ConfigManager->TexturesConfig();
         nlohmann::json soundConfig = m_ConfigManager->SoundConfig();

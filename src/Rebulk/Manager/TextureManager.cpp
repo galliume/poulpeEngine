@@ -22,7 +22,7 @@ namespace Rbk
         });
         std::future skyboxFuture = std::async(std::launch::async, [this]() {
             std::vector<std::string>skyboxImages;
-            for (auto& texture : m_TextureConfig["skybox"].items()) {
+            for (auto& texture : m_TextureConfig["skybox"]["bluesky"].items()) {
                 skyboxImages.emplace_back(texture.value());
             }
             AddSkyBox(skyboxImages);
