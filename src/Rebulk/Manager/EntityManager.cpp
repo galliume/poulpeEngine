@@ -186,4 +186,10 @@ namespace Rbk
         futures.emplace_back(std::move(entitiesFuture));
         return futures;
     }
+
+    void EntityManager::Clear()
+    {
+        m_Entities.clear();
+        m_LoadedEntities.clear();
+    }
 }

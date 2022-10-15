@@ -16,7 +16,6 @@
 #include <optional>
 #include <set>
 #include <string>
-#include <string.h>
 #include <unordered_map>
 
 #define GLM_FORCE_RADIANS
