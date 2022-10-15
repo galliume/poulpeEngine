@@ -31,7 +31,6 @@ namespace Rbk
         
         m_ConfigManager = std::make_shared<Rbk::ConfigManager>();
         m_InputManager = std::make_shared<Rbk::InputManager>(m_Window, m_Camera);
-        m_InputManager->Init();
         m_LayerManager = std::make_shared<Rbk::LayerManager>();
         m_RendererAdapter = std::make_shared<Rbk::VulkanAdapter>(m_Window);
         m_TextureManager = std::make_shared<Rbk::TextureManager>(
@@ -76,9 +75,17 @@ namespace Rbk
         vulkanLayer->AddAudioManager(m_AudioManager);
         vulkanLayer->AddConfigManager(m_ConfigManager);
 
+        nlohmann::json appConfig = m_ConfigManager->AppConfig();
+        std::string defaultLevel = static_cast<std::string>(appConfig["defaultLevel"]);
+        std::string defaultSkybox = static_cast<std::string>(appConfig["defaultSkybox"]);
+        bool splashScreenMusic = static_cast<bool>(appConfig["splashScreenMusic"]);
+        nlohmann::json inputConfig = appConfig["input"];
+
         nlohmann::json textureConfig = m_ConfigManager->TexturesConfig();
         nlohmann::json soundConfig = m_ConfigManager->SoundConfig();
-        nlohmann::json levelConfig = m_ConfigManager->EntityConfig("level_1");
+        nlohmann::json levelConfig = m_ConfigManager->EntityConfig(defaultLevel);
+
+        m_InputManager->Init(inputConfig);
 
         std::vector<std::string> splashSprites{};
         for (auto& texture : textureConfig["splash"].items()) {
@@ -90,7 +97,9 @@ namespace Rbk
         m_RendererAdapter->PrepareSplashScreen();
         m_AudioManager->Load(soundConfig);
 
-        m_AudioManager->StartSplash();
+        if (splashScreenMusic)
+            m_AudioManager->StartSplash();
+
         std::future<void> loading = std::async(std::launch::async, [this]() {
             
             while (!IsLoaded()) {
@@ -100,7 +109,7 @@ namespace Rbk
         });
 
         std::future<void> shaderFuture = m_ShaderManager->Load();
-        std::vector<std::future<void>> textureFutures = m_TextureManager->Load();
+        std::vector<std::future<void>> textureFutures = m_TextureManager->Load(defaultSkybox);
         std::vector<std::future<void>> entityFutures = m_EntityManager->Load(levelConfig);
 
         for (auto& future : entityFutures) {

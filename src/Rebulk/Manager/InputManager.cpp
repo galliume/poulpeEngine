@@ -15,8 +15,10 @@ namespace Rbk
         InputManager::m_FirtMouseMove = true;
     }
     
-    void InputManager::Init()
+    void InputManager::Init(nlohmann::json inputConfig)
     {
+        m_InputConfig = inputConfig;
+
         glfwSetWindowUserPointer(m_Window->Get(), this);
 
         glfwSetKeyCallback(m_Window->Get(), [](GLFWwindow* window, int key, int scancode, int action, int mods) {
@@ -59,9 +61,6 @@ namespace Rbk
                 }
             case GLFW_REPEAT:
             {
-                if (glfwGetKey(m_Window->Get(), GLFW_KEY_C)) {
-                    m_Camera->Recenter();
-                }
                 if (glfwGetKey(m_Window->Get(), GLFW_KEY_W) ) {
                     m_Camera->Forward();
                 }

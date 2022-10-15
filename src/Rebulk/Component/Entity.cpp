@@ -29,7 +29,7 @@ namespace Rbk
             m_SpritesIndex = 1;
         }
 
-        Rbk::Log::GetLogger()->debug("next sprites index {} of {} sprites", nextIndex, m_SpritesCount);
+        //Rbk::Log::GetLogger()->debug("next sprites index {} of {} sprites", nextIndex, m_SpritesCount);
 
         return nextIndex;
     }
