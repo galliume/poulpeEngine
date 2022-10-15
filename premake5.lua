@@ -89,7 +89,9 @@ project "Rebulkan"
         buildmessage 'Copying assets'
         postbuildcommands 
         {
-            '{COPY} "./assets" "%{cfg.targetdir}/assets"'
+			'{COPY} "./assets" "%{cfg.targetdir}/imgui.ini"',
+            '{COPY} "./assets" "%{cfg.targetdir}/assets"',
+			'{COPY} "./config" "%{cfg.targetdir}/config"'
         }
 
         buildoptions {
@@ -127,7 +129,9 @@ project "Rebulkan"
         buildmessage 'Copying assets'
         postbuildcommands 
         {
-            '{COPY} "./assets" "%{cfg.targetdir}/assets"'
+			'{COPY} "./assets" "%{cfg.targetdir}/imgui.ini"',
+            '{COPY} "./assets" "%{cfg.targetdir}/assets"',
+			'{COPY} "./assets" "%{cfg.targetdir}/config"'
         }
 
     filter "configurations:Debug"

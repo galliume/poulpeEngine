@@ -7,11 +7,9 @@
 
 [In video](https://www.youtube.com/watch?v=C7p9z6LhAig&list=PL4-Os8BWDCPmZt5HvJrSo6QDHkD9J4fJF)
 
-![actual_state](screenshots/state.jpg?raw=true "actual status")
-![actual_state2](screenshots/state_2.jpg?raw=true "actual status bis")
-![actual_state3](screenshots/fog_2.gif?raw=true "actual status ter")
-![actual_state4](screenshots/grid.jpg?raw=true "actual status quater")
-![actual_state5](screenshots/gui.jpg?raw=true "actual status quinquies")
+![actual_state1](screenshots/fog_2.gif?raw=true "actual status")
+![actual_state2](screenshots/grid.jpg?raw=true "actual status")
+![actual_state3](screenshots/textures_list.jpg?raw=true "actual status")
 
 
 ### To execute 

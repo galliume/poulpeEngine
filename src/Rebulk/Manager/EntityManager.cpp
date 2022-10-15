@@ -62,13 +62,10 @@ namespace Rbk
 
         std::future<void> entitiesFuture = std::async(std::launch::async, [this, levelConfig]() {
 
-            Rbk::Log::GetLogger()->debug("{} entities", levelConfig["entities"].size());
             for (auto& entityConf : levelConfig["entities"].items()) {
 
                 auto key = entityConf.key();
                 auto data = entityConf.value();
-
-                Rbk::Log::GetLogger()->debug("entity {}", entityConf.key());
 
                 std::string form = static_cast<std::string>(data["form"]);
 
