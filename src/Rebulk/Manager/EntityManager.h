@@ -15,6 +15,7 @@ namespace Rbk
 
         explicit EntityManager(const std::shared_ptr<VulkanRenderer>& renderer);
         void AddEntity(const std::shared_ptr<Entity>& entity);
+        void AddBBox(const std::shared_ptr<Entity>& bbox);
         std::vector<std::future<void>> Load(nlohmann::json levelConfig);
         const std::shared_ptr<Entity> GetEntityByName(const std::string& name) const;
         const uint32_t GetInstancedCount();
@@ -23,13 +24,16 @@ namespace Rbk
         inline const uint32_t GetTotalEntities() const { return m_Entities.size(); };
         inline std::shared_ptr<Mesh> GetSkyboxMesh() { return m_SkyboxMesh; };
         inline std::vector<std::shared_ptr<Entity>>* GetEntities() { return &m_Entities; };
+        inline std::vector<std::shared_ptr<Entity>>* GetBBox() { return &m_BoundingBox; };
         inline void SetSkyboxMesh(std::shared_ptr<Mesh> skyboxMesh) { m_SkyboxMesh = skyboxMesh; };
 
         void Clear();
 
     private:
         std::vector<std::shared_ptr<Entity>> m_Entities;
+        std::vector<std::shared_ptr<Entity>> m_BoundingBox;
         std::map<std::string, std::array<uint32_t, 2>> m_LoadedEntities;
+        std::map<std::string, std::array<uint32_t, 2>> m_LoadedBbox;
         std::shared_ptr<Mesh> m_SkyboxMesh = nullptr;
         std::shared_ptr<VulkanRenderer> m_Renderer = nullptr;
     };

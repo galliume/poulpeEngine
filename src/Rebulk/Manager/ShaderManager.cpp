@@ -9,20 +9,22 @@ namespace Rbk
         m_Shaders = std::make_shared<VulkanShaders>();
     }
 
-    std::future<void> ShaderManager::Load()
+    std::future<void> ShaderManager::Load(nlohmann::json config)
     {
-        std::future shaderFuture = std::async(std::launch::async, [this]() {
-            AddShader("main", "assets/shaders/spv/vert.spv", "assets/shaders/spv/frag.spv");
-            AddShader("grid", "assets/shaders/spv/grid_vert.spv", "assets/shaders/spv/grid_frag.spv");
-            AddShader("skybox", "assets/shaders/spv/skybox_vert.spv", "assets/shaders/spv/skybox_frag.spv");
-            AddShader("ambient_light", "assets/shaders/spv/ambient_shader_vert.spv", "assets/shaders/spv/ambient_shader_frag.spv");
-            AddShader("2d", "assets/shaders/spv/2d_vert.spv", "assets/shaders/spv/2d_frag.spv");
+        std::future shaderFuture = std::async(std::launch::async, [this, config]() {
+            for (auto& shader : config["shader"].items()) {
+
+                auto key = static_cast<std::string>(shader.key());
+                auto data = shader.value();
+
+                AddShader(key, data["vert"], data["frag"]);
+            }
         });
 
         return std::move(shaderFuture);
     }
 
-    void ShaderManager::AddShader(const std::string& name, const char* vertPath, const char* fragPath)
+    void ShaderManager::AddShader(const std::string& name, const std::string& vertPath, const std::string& fragPath)
     {
 
         if (!std::filesystem::exists(vertPath)) {

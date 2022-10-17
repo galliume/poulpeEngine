@@ -50,6 +50,10 @@ namespace Rbk
                 DisplayOptions();
             ImGui::End();
 
+            //ImGui::Begin("Mesh");
+            //    DisplayMesh();
+            //ImGui::End();
+
             ImGui::Begin("Textures");
                 DisplayTextures();
             ImGui::End();
@@ -96,6 +100,42 @@ namespace Rbk
             if (5 > x) {
                 x++;
             } else {
+                x = 0;
+            }
+        }
+
+        ImGui::EndTable();
+    }
+
+    void VulkanLayer::DisplayMesh()
+    {
+        int x = 0;
+
+        ImGui::BeginTable("table2", 6);
+
+        for (const auto& entity : m_Entities) {
+
+            if (0 == x) {
+                ImGui::TableNextRow();
+            }
+
+            ImGui::TableSetColumnIndex(x);
+
+            float my_tex_w = 150;
+            float my_tex_h = 150;
+            ImVec2 uv_min = ImVec2(0.0f, 0.0f);                 // Top-left
+            ImVec2 uv_max = ImVec2(1.0f, 1.0f);                 // Lower-right
+            ImVec4 tint_col = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);   // No tint
+            ImVec4 border_col = ImVec4(1.0f, 1.0f, 1.0f, 0.5f); // 50% opaque white
+
+            ImGui::Image(entity.second, ImVec2(my_tex_w, my_tex_h), uv_min, uv_max, tint_col, border_col);
+
+            Rbk::Im::Text("\t%s", entity.first.c_str());
+
+            if (5 > x) {
+                x++;
+            }
+            else {
                 x = 0;
             }
         }
@@ -327,6 +367,18 @@ namespace Rbk
 
             m_Textures[texture.second.GetName()] = imgDset;
         }
+    }
 
+    void VulkanLayer::AddEntityManager(std::shared_ptr<EntityManager> entityManager)
+    {
+        m_EntityManager = entityManager;
+
+        //const auto& entities = *m_EntityManager->GetEntities();
+
+        //for (const auto& entity : entities) {
+
+        //    std::shared_ptr<Mesh> mesh = std::dynamic_pointer_cast<Mesh>(entity);
+        //    m_Entities[mesh->GetName()] = mesh->GetDescriptorSets()[0];
+        //}
     }
 }

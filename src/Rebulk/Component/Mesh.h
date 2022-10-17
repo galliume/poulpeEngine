@@ -31,6 +31,7 @@ namespace Rbk
         float fogDensity;
         glm::vec3 fogColor;
         glm::vec3 lightPos;
+        glm::vec3 rayPick;
     };
 
     class Mesh : public Entity

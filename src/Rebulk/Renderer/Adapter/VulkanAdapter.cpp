@@ -19,7 +19,7 @@ namespace Rbk
     float VulkanAdapter::s_FogColor[3] = { 25 / 255.0f, 25 / 255.0f, 25 / 255.0f };
     int VulkanAdapter::s_Crosshair = 0;
     int VulkanAdapter::s_PolygoneMode = VK_POLYGON_MODE_FILL;
-
+    
     VulkanAdapter::VulkanAdapter(std::shared_ptr<Window> window) :
         m_Renderer(std::make_shared<VulkanRenderer>(window)),
         m_Window(window)
@@ -33,6 +33,7 @@ namespace Rbk
 
     void VulkanAdapter::Init()
     {
+        m_RayPick = glm::vec3(0.0f);
         m_LightsPos.emplace_back(glm::vec3(0.5f, 4.5f, -3.00f));
         SetPerspective();
         m_RenderPass = m_Renderer->CreateRenderPass(m_Renderer->GetMsaaSamples());
@@ -207,7 +208,7 @@ namespace Rbk
             std::shared_ptr<VulkanCrosshair> crosshairVulkanisator = std::make_shared<VulkanCrosshair>(shared_from_this(), HUDDescriptorPool);
             auto crossHair = std::make_shared<Mesh2D>();
             crossHair->Accept(crosshairVulkanisator);
-            //m_HUD.emplace_back(crossHair);
+            m_HUD.emplace_back(crossHair);
         }
     }
 
@@ -236,6 +237,7 @@ namespace Rbk
         pushConstants.fogDensity = Rbk::VulkanAdapter::s_FogDensity;
         pushConstants.fogColor = glm::vec3({ Rbk::VulkanAdapter::s_FogColor[0], Rbk::VulkanAdapter::s_FogColor[1], Rbk::VulkanAdapter::s_FogColor[2] });
         pushConstants.lightPos = m_LightsPos.at(0);
+        pushConstants.rayPick = m_RayPick;
 
         glm::mat4 lookAt = m_Camera->LookAt();
         glm::mat4 proj = m_Perspective;
@@ -264,10 +266,45 @@ namespace Rbk
                     );
                 }
 
-                pushConstants.textureID = data.m_TextureIndex;
+                if (m_HasClicked && mesh->IsHit(m_RayPick)) {
+                    Rbk::Log::GetLogger()->warn("HIT ! {}", mesh->GetName());
+                    m_HasClicked = false;
+                }
 
+                pushConstants.textureID = data.m_TextureIndex;
                 m_Renderer->BindPipeline(m_CommandBuffers[m_ImageIndex], mesh->m_GraphicsPipeline);
                 vkCmdPushConstants(m_CommandBuffers[m_ImageIndex], mesh->m_PipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(constants), &pushConstants);
+                m_Renderer->Draw(m_CommandBuffers[m_ImageIndex], mesh.get(), data, m_ImageIndex);
+            }
+        }
+
+        //bbox !
+        auto bboxs = *m_EntityManager->GetBBox();
+
+        for (std::shared_ptr<Entity> bbox : bboxs) {
+            std::shared_ptr<Mesh> mesh = std::dynamic_pointer_cast<Mesh>(bbox);
+
+            if (!mesh) continue;
+            for (Data& data : *mesh->GetData()) {
+
+                for (uint32_t i = 0; i < data.m_Ubos.size(); i++) {
+                    data.m_Ubos[i].view = lookAt;
+                    data.m_Ubos[i].proj = proj;
+                }
+                for (uint32_t i = 0; i < mesh->m_UniformBuffers.size(); i++) {
+                    m_Renderer->UpdateUniformBuffer(
+                        mesh->m_UniformBuffers[i],
+                        data.m_Ubos,
+                        data.m_Ubos.size()
+                    );
+                }
+
+                if (m_HasClicked && mesh->IsHit(m_RayPick)) {
+                    Rbk::Log::GetLogger()->warn("HIT ! {}", mesh->GetName());
+                    m_HasClicked = false;
+                }
+
+                m_Renderer->BindPipeline(m_CommandBuffers[m_ImageIndex], mesh->m_GraphicsPipeline);
                 m_Renderer->Draw(m_CommandBuffers[m_ImageIndex], mesh.get(), data, m_ImageIndex);
             }
         }
@@ -581,7 +618,7 @@ namespace Rbk
     {
         m_IsSkyBoxPrepared = false;
         m_IsHUDPrepared = false;
-        m_HUD.clear();
+        
         Prepare();
     }
 
@@ -693,5 +730,19 @@ namespace Rbk
         }
 
         m_MutexRendering.unlock();
+    }
+
+    void VulkanAdapter::SetRayPick(float x, float y, float z, int width, int height)
+    {
+        glm::vec3 rayNds = glm::vec3(x, y, z);
+        glm::vec4 rayClip = glm::vec4(rayNds.x, rayNds.y, -1.0, 1.0);
+        glm::vec4 rayEye = glm::inverse(GetPerspective()) * rayClip;
+        rayEye = glm::vec4(rayEye.x, rayEye.y, -1.0, 0.0);
+
+        glm::vec4 tmp = (glm::inverse(GetCamera()->GetView()) * rayEye);
+        glm::vec3 rayWor = glm::vec3(tmp.x, tmp.y, tmp.z);
+        m_RayPick = glm::normalize(rayWor);
+
+        m_HasClicked = true;
     }
 }

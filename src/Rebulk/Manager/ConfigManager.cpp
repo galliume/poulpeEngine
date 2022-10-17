@@ -33,6 +33,15 @@ namespace Rbk
             Rbk::Log::GetLogger()->critical("Cannot read sounds config : {}", e.what());
             m_SoundConfig = {};
         }
+
+        try {
+            std::ifstream f("config/shader.json");
+            m_ShaderConfig = nlohmann::json::parse(f);
+        }
+        catch (std::exception& e) {
+            Rbk::Log::GetLogger()->critical("Cannot read shader config : {}", e.what());
+            m_SoundConfig = {};
+        }
     }
 
     nlohmann::json ConfigManager::EntityConfig(const std::string& levelName)
@@ -63,6 +72,11 @@ namespace Rbk
     nlohmann::json ConfigManager::SoundConfig()
     {
         return m_SoundConfig;
+    }
+
+    nlohmann::json ConfigManager::ShaderConfig()
+    {
+        return m_ShaderConfig;
     }
 
     std::vector<std::string> ConfigManager::ListLevels()

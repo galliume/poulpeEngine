@@ -53,6 +53,8 @@ namespace Rbk
         inline glm::mat4 GetPerspective() { return m_Perspective; };
         void Refresh();
 
+        void SetRayPick(float x, float y, float z, int width, int height);
+
         //@todo add GuiManager
         VkRenderPass CreateImGuiRenderPass();
         VImGuiInfo GetVImGuiInfo();
@@ -117,5 +119,7 @@ namespace Rbk
         std::vector<VkDescriptorSetLayout>m_DescriptorSetLayouts;
 
         std::mutex m_MutexRendering;
+        glm::vec3 m_RayPick;
+        bool m_HasClicked = false;
     };
 }

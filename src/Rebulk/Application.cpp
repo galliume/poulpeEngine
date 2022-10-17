@@ -30,7 +30,6 @@ namespace Rbk
         m_Camera->Init();
         
         m_ConfigManager = std::make_shared<Rbk::ConfigManager>();
-        m_InputManager = std::make_shared<Rbk::InputManager>(m_Window, m_Camera);
         m_LayerManager = std::make_shared<Rbk::LayerManager>();
         m_RendererAdapter = std::make_shared<Rbk::VulkanAdapter>(m_Window);
         m_TextureManager = std::make_shared<Rbk::TextureManager>(
@@ -46,6 +45,7 @@ namespace Rbk
             m_ShaderManager,
             m_SpriteAnimationManager
         );
+        m_InputManager = std::make_shared<Rbk::InputManager>(m_Window, m_Camera, m_RendererAdapter);
         m_RenderManager->Init();
         m_RenderManager->AddCamera(m_Camera);
 
@@ -72,9 +72,11 @@ namespace Rbk
         std::string defaultLevel = static_cast<std::string>(appConfig["defaultLevel"]);
         std::string defaultSkybox = static_cast<std::string>(appConfig["defaultSkybox"]);
         bool splashScreenMusic = static_cast<bool>(appConfig["splashScreenMusic"]);
+        bool ambientScreenMusic = static_cast<bool>(appConfig["ambientMusic"]);
         nlohmann::json inputConfig = appConfig["input"];
 
         nlohmann::json textureConfig = m_ConfigManager->TexturesConfig();
+        nlohmann::json shaderConfig = m_ConfigManager->ShaderConfig();
         nlohmann::json soundConfig = m_ConfigManager->SoundConfig();
         nlohmann::json levelConfig = m_ConfigManager->EntityConfig(defaultLevel);
 
@@ -101,7 +103,7 @@ namespace Rbk
             }
         });
 
-        std::future<void> shaderFuture = m_ShaderManager->Load();
+        std::future<void> shaderFuture = m_ShaderManager->Load(shaderConfig);
         std::vector<std::future<void>> textureFutures = m_TextureManager->Load(defaultSkybox);
         std::vector<std::future<void>> entityFutures = m_EntityManager->Load(levelConfig);
 
@@ -116,16 +118,19 @@ namespace Rbk
         SetIsLoaded();
         loading.wait();
         m_AudioManager->StopSplash();
-        m_AudioManager->StartAmbient();
+        
+        if (ambientScreenMusic)
+            m_AudioManager->StartAmbient();
+
         m_RendererAdapter->Prepare();
 
         vulkanLayer->AddWindow(m_Window);
-        vulkanLayer->AddTextureManager(m_TextureManager);
-        vulkanLayer->AddEntityManager(m_EntityManager);
-        vulkanLayer->AddShaderManager(m_ShaderManager);
-        vulkanLayer->AddAudioManager(m_AudioManager);
         vulkanLayer->AddConfigManager(m_ConfigManager);
         vulkanLayer->AddRenderAdapter(m_RendererAdapter);
+        vulkanLayer->AddAudioManager(m_AudioManager);
+        vulkanLayer->AddShaderManager(m_ShaderManager);
+        vulkanLayer->AddTextureManager(m_TextureManager);
+        vulkanLayer->AddEntityManager(m_EntityManager);
 
         double endRun = glfwGetTime();
         double lastTime = endRun;

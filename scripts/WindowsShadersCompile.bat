@@ -12,3 +12,8 @@ glslc.exe assets/shaders/ambient_shader.frag -o assets/shaders/spv/ambient_shade
 
 glslc.exe assets/shaders/grid.vert -o assets/shaders/spv/grid_vert.spv
 glslc.exe assets/shaders/grid.frag -o assets/shaders/spv/grid_frag.spv
+
+glslc.exe assets/shaders/bbox.vert -o assets/shaders/spv/bbox_vert.spv
+glslc.exe assets/shaders/bbox.frag -o assets/shaders/spv/bbox_frag.spv
+
+pause

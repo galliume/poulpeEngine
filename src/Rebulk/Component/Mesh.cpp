@@ -25,6 +25,7 @@ namespace Rbk
 
         SetName(name);
         m_ShaderName = shader;
+        std::vector<BBox> bboxs;
 
         for (size_t i = 0; i < listData.size(); i++) {
 
@@ -46,11 +47,47 @@ namespace Rbk
             ubo.model = glm::rotate(ubo.model, glm::radians(rotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
             ubo.model = glm::rotate(ubo.model, glm::radians(rotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
 
-            ubo.view = glm::translate(view, glm::vec3(0.0f, 0.0f, 0.0f));
+            ubo.view = glm::mat4(1.0f);
             data.m_Ubos.emplace_back(ubo);
 
             m_Data.emplace_back(data);
+
+            float xMax = listData[i].vertices.at(0).pos.x;
+            float yMax = listData[i].vertices.at(0).pos.y;
+            float zMax = listData[i].vertices.at(0).pos.z;
+
+            float xMin = xMax;
+            float yMin = xMin;
+            float zMin = xMin;
+
+            for (int j = 0; j < listData[i].vertices.size(); j++) {
+
+                glm::vec3 vertex = glm::vec4(listData[i].vertices.at(j).pos, 1.0f);
+
+                float x = vertex.x;
+                float y = vertex.y;
+                float z = vertex.z;
+
+                if (x > xMax) xMax = x;
+                if (x < xMin) xMin = x;
+                if (y < yMin) yMin = y;
+                if (y > yMax) yMax = y;
+                if (z > zMax) zMax = z;
+                if (z < zMin) zMin = z;
+            }
+
+            glm::vec3 center = glm::vec3((xMin + xMax) / 2, (yMin + yMax) / 2, (zMin + zMax) / 2);
+            glm::vec3 size = glm::vec3(xMax - xMin, yMax - yMin, zMax - zMin);
+
+            BBox box;
+            box.center = center;
+            box.size = size;
+            box.scale = scale;
+            box.rotation = rotation;
+            bboxs.emplace_back(box);
+
         }
+        SetBBox(bboxs);
     }
 
     void Mesh::AddUbos(const std::vector<UniformBufferObject>& ubos)

@@ -46,6 +46,30 @@ namespace Rbk
         }
     }
 
+    void EntityManager::EntityManager::AddBBox(const std::shared_ptr<Entity>& bbox)
+    {
+        if (0 != m_BoundingBox.size()) {
+            std::shared_ptr<Mesh> mesh = std::dynamic_pointer_cast<Mesh>(bbox);
+
+            if (mesh) {
+                std::vector<Data> listData = *mesh->GetData();
+                std::shared_ptr<Mesh> existingEntity = std::dynamic_pointer_cast<Mesh>(m_BoundingBox[m_LoadedBbox[mesh->GetName().c_str()][1]]);
+
+                for (auto data : listData) {
+                    existingEntity->AddUbos(data.m_Ubos);
+                }
+
+                m_LoadedBbox[mesh->GetName()][0] += 1;
+            }
+        }
+        else {
+            uint32_t index = m_BoundingBox.size();
+
+            m_LoadedBbox.insert({ bbox->GetName(), { 1, index } });
+            m_BoundingBox.emplace_back(bbox);
+        }
+    }
+
     const std::shared_ptr<Entity> EntityManager::GetEntityByName(const std::string& name) const
     {
         auto it = std::find_if(

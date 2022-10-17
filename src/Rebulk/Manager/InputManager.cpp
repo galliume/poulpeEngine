@@ -6,7 +6,9 @@ namespace Rbk
     bool InputManager::m_CanMoveCamera = false;
     bool InputManager::m_FirtMouseMove = true;
 
-    InputManager::InputManager(std::shared_ptr<Window> window, std::shared_ptr<Camera> camera) : m_Window(window), m_Camera(camera)
+    InputManager::InputManager(
+        std::shared_ptr<Window> window, std::shared_ptr<Camera> camera, std::shared_ptr<Rbk::VulkanAdapter> adapter) 
+        : m_Window(window), m_Camera(camera), m_Adapter(adapter)
     {
         int width, height;
         glfwGetWindowSize(m_Window->Get(), &width, &height);
@@ -90,10 +92,10 @@ namespace Rbk
 
     void InputManager::Mouse(double x, double y)
     {
-        if (!InputManager::m_CanMoveCamera) return;
-
         float xPos = static_cast<float>(x);
         float yPos = static_cast<float>(y);
+
+        if (!InputManager::m_CanMoveCamera) return;
 
         if (InputManager::m_FirtMouseMove) {
             m_LastX = xPos;
@@ -115,6 +117,18 @@ namespace Rbk
 
     void InputManager::MouseButton(int button, int action, int mods)
     {
+        if (GLFW_MOUSE_BUTTON_LEFT == button) {
+            int width, height;
+            glfwGetWindowSize(m_Window->Get(), &width, &height);
 
+            double xpos, ypos;
+            glfwGetCursorPos(m_Window->Get(), &xpos, &ypos);
+
+            float x = (2.0f * xpos) / width - 1.0f;
+            float y = 1.0f - (2.0f * ypos) / height;
+            float z = 1.0f;
+
+            m_Adapter->SetRayPick(x, y, z, width, height);
+        }
     }
 }
