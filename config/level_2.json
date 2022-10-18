@@ -1,14 +1,14 @@
 {
-	"entities": {		
+	"entities": {
 		"doggo" : {
 			"mesh": "assets/mesh/dog/dog.obj",
 			"textures": ["dog"],
 			"shader": "main",
 			"positions": [
-				{"x": 0.0, "y": 0.0, "z": 0.0}
+				{"x": 0.8, "y": 0.40, "z": -1.2}
 			],
 			"scales": [
-				{"x": 1, "y": 1, "z": 1}
+				{"x": 0.12, "y": 0.12, "z": 0.12}
 			],
 			"rotations": [
 				{"x": 0.0, "y": 0.0, "z": 0.0}
@@ -21,6 +21,28 @@
 				"z": 0.0
 			},	
 			"form": "positioned"			
+		},		
+		"dog_house" : {
+			"mesh": "assets/mesh/doghouse/doghouse0908.obj",
+			"textures": ["dog_base_color"],
+			"shader": "main",
+			"positions": [
+				{"x": 0.7, "y": 0.20, "z": -2.00}
+			],
+			"scales": [
+				{"x": 0.3, "y": 0.3, "z": 0.3}
+			],
+			"rotations": [
+				{"x": 0.0, "y": -30.0, "z": 0.0}
+			],
+			"inverseTextureY": true,
+			"count": 1,
+			"padding": {
+				"x": 0.0,
+				"y": 0.0,
+				"z": 0.0
+			},
+			"form": "positioned"
 		}
 	}
 }

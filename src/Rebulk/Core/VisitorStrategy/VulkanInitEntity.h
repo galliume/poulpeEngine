@@ -24,7 +24,7 @@ namespace Rbk
         void Visit(std::shared_ptr<Entity> entity) override;
 
     private:
-        void CreateBBoxEntity(Rbk::Entity::BBox box);
+        void CreateBBoxEntity(std::shared_ptr<Mesh>& mesh);
 
     private:
         std::shared_ptr<VulkanAdapter> m_Adapter;

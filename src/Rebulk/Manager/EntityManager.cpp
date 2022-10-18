@@ -48,7 +48,9 @@ namespace Rbk
 
     void EntityManager::EntityManager::AddBBox(const std::shared_ptr<Entity>& bbox)
     {
-        if (0 != m_BoundingBox.size()) {
+        uint64_t count = m_LoadedBbox.count(bbox->GetName().c_str());
+
+        if (0 != count) {
             std::shared_ptr<Mesh> mesh = std::dynamic_pointer_cast<Mesh>(bbox);
 
             if (mesh) {

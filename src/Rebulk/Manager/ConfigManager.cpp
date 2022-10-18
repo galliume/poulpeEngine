@@ -40,7 +40,7 @@ namespace Rbk
         }
         catch (std::exception& e) {
             Rbk::Log::GetLogger()->critical("Cannot read shader config : {}", e.what());
-            m_SoundConfig = {};
+            m_ShaderConfig = {};
         }
     }
 

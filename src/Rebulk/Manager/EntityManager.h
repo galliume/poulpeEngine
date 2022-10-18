@@ -21,6 +21,7 @@ namespace Rbk
         const uint32_t GetInstancedCount();
 
         inline const std::map<std::string, std::array<uint32_t, 2>> GetLoadedEntities() const { return m_LoadedEntities; };
+        inline const std::map<std::string, std::array<uint32_t, 2>> GetLoadedBBox() const { return m_LoadedBbox; };
         inline const uint32_t GetTotalEntities() const { return m_Entities.size(); };
         inline std::shared_ptr<Mesh> GetSkyboxMesh() { return m_SkyboxMesh; };
         inline std::vector<std::shared_ptr<Entity>>* GetEntities() { return &m_Entities; };

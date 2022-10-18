@@ -25,7 +25,7 @@ namespace Rbk
 
         SetName(name);
         m_ShaderName = shader;
-        std::vector<BBox> bboxs;
+        std::vector<Rbk::Mesh::BBox> bboxs;
 
         for (size_t i = 0; i < listData.size(); i++) {
 
@@ -35,8 +35,6 @@ namespace Rbk
             data.m_Texture = textureNames[listData[i].materialId];
             data.m_Vertices = listData[i].vertices;
             data.m_Indices = listData[i].indices;
-
-            glm::mat4 view = glm::mat4(1.0f);
 
             UniformBufferObject ubo;
             ubo.model = glm::mat4(1.0f);
@@ -52,17 +50,17 @@ namespace Rbk
 
             m_Data.emplace_back(data);
 
-            float xMax = listData[i].vertices.at(0).pos.x;
-            float yMax = listData[i].vertices.at(0).pos.y;
-            float zMax = listData[i].vertices.at(0).pos.z;
+            float xMax = data.m_Vertices.at(0).pos.x;
+            float yMax = data.m_Vertices.at(0).pos.y;
+            float zMax = data.m_Vertices.at(0).pos.z;
 
             float xMin = xMax;
-            float yMin = xMin;
-            float zMin = xMin;
+            float yMin = yMax;
+            float zMin = zMax;
 
-            for (int j = 0; j < listData[i].vertices.size(); j++) {
+            for (int j = 0; j < data.m_Vertices.size(); j++) {
 
-                glm::vec3 vertex = glm::vec4(listData[i].vertices.at(j).pos, 1.0f);
+                glm::vec3 vertex = glm::vec4(data.m_Vertices.at(j).pos, 1.0f);
 
                 float x = vertex.x;
                 float y = vertex.y;
@@ -77,16 +75,16 @@ namespace Rbk
             }
 
             glm::vec3 center = glm::vec3((xMin + xMax) / 2, (yMin + yMax) / 2, (zMin + zMax) / 2);
-            glm::vec3 size = glm::vec3(xMax - xMin, yMax - yMin, zMax - zMin);
+            glm::vec3 size = glm::vec3((xMax - xMin) / 2, (yMax - yMin) / 2, (zMax - zMin) / 2);
 
-            BBox box;
+            Rbk::Mesh::BBox box;
+            box.position = data.m_Ubos.at(0).model;
             box.center = center;
             box.size = size;
-            box.scale = scale;
-            box.rotation = rotation;
-            bboxs.emplace_back(box);
 
+            bboxs.emplace_back(box);
         }
+
         SetBBox(bboxs);
     }
 
