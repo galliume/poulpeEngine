@@ -55,7 +55,8 @@ namespace Rbk
 
             if (mesh) {
                 std::vector<Data> listData = *mesh->GetData();
-                std::shared_ptr<Mesh> existingEntity = std::dynamic_pointer_cast<Mesh>(m_BoundingBox[m_LoadedBbox[mesh->GetName().c_str()][1]]);
+                int index = m_LoadedBbox[mesh->GetName().c_str()][1];
+                std::shared_ptr<Mesh> existingEntity = std::dynamic_pointer_cast<Mesh>(m_BoundingBox[index]);
 
                 for (auto data : listData) {
                     existingEntity->AddUbos(data.m_Ubos);

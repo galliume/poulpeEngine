@@ -617,7 +617,6 @@ namespace Rbk
     void VulkanAdapter::Refresh()
     {
         m_IsHUDPrepared = false;
-        m_EntityManager->GetBBox()->clear();
         m_HUD = {};
 
         Prepare();

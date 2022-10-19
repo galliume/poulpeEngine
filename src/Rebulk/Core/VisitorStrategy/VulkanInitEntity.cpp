@@ -133,15 +133,17 @@ namespace Rbk
             VulkanAdapter::s_PolygoneMode
         );
         
-            CreateBBoxEntity(mesh);
- 
+        CreateBBoxEntity(mesh);
     }
 
     void VulkanInitEntity::CreateBBoxEntity(std::shared_ptr<Mesh>& mesh)
     {
-        std::shared_ptr<Mesh> bbox = std::make_shared<Mesh>();
 
-        for (auto box : mesh->GetBBox()) {
+        for (int i = 0; i < mesh->GetData()->size(); i++) {
+
+            std::shared_ptr<Mesh> bbox = std::make_shared<Mesh>();
+
+            auto box = mesh->GetBBox().at(i);
 
             UniformBufferObject ubo;
             glm::mat4 transform = glm::translate(glm::mat4(1), box.center) * glm::scale(glm::mat4(1), box.size);
@@ -181,105 +183,100 @@ namespace Rbk
             data.m_Vertices = vertices;
             data.m_Ubos.emplace_back(ubo);
 
-            bbox->SetName("bbox_" + mesh->GetName());
+            bbox->SetName("bbox_" + mesh->GetData()->at(i).m_Name);
             bbox->SetShaderName("bbox");
             bbox->GetData()->emplace_back(data);
 
-            uint64_t count = m_Adapter->GetEntityManager()->GetLoadedBBox().count(bbox->GetName().c_str());
+            uint32_t totalInstances = static_cast<uint32_t>(bbox->GetData()->size());
+            uint32_t maxUniformBufferRange = m_Adapter->Rdr()->GetDeviceProperties().limits.maxUniformBufferRange;
+            uint32_t uniformBufferChunkSize = maxUniformBufferRange / sizeof(UniformBufferObject);
+            uint32_t uniformBuffersCount = static_cast<uint32_t>(std::ceil(static_cast<float>(totalInstances) / static_cast<float>(uniformBufferChunkSize)));
+            //mesh->m_CameraPos = m_Camera->GetPos();
 
-            if (0 == count) {
-
-                uint32_t totalInstances = static_cast<uint32_t>(bbox->GetData()->size());
-                uint32_t maxUniformBufferRange = m_Adapter->Rdr()->GetDeviceProperties().limits.maxUniformBufferRange;
-                uint32_t uniformBufferChunkSize = maxUniformBufferRange / sizeof(UniformBufferObject);
-                uint32_t uniformBuffersCount = static_cast<uint32_t>(std::ceil(static_cast<float>(totalInstances) / static_cast<float>(uniformBufferChunkSize)));
-                //mesh->m_CameraPos = m_Camera->GetPos();
-
-                for (uint32_t i = 0; i < uniformBuffersCount; i++) {
-                    std::pair<VkBuffer, VkDeviceMemory> uniformBuffer = m_Adapter->Rdr()->CreateUniformBuffers(uniformBufferChunkSize);
-                    bbox->m_UniformBuffers.emplace_back(uniformBuffer);
-                }
-
-                Texture tex = m_Adapter->GetTextureManager()->GetTextures()["minecraft_grass"];
-
-                std::vector<VkDescriptorImageInfo>imageInfos{};
-                VkDescriptorImageInfo imageInfo{};
-                imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-                imageInfo.imageView = tex.GetImageView();
-                imageInfo.sampler = tex.GetSampler();
-
-                imageInfos.emplace_back(imageInfo);
-
-                vkDestroyCommandPool(m_Adapter->Rdr()->GetDevice(), commandPool, nullptr);
-
-                VkDescriptorSetLayoutBinding uboLayoutBinding{};
-                uboLayoutBinding.binding = 0;
-                uboLayoutBinding.descriptorCount = 1;
-                uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-                uboLayoutBinding.pImmutableSamplers = nullptr;
-                uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-
-                VkDescriptorSetLayoutBinding samplerLayoutBinding{};
-                samplerLayoutBinding.binding = 1;
-                samplerLayoutBinding.descriptorCount = imageInfos.size();
-                samplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-                samplerLayoutBinding.pImmutableSamplers = nullptr;
-                samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-
-                std::vector<VkDescriptorSetLayoutBinding> bindings = { uboLayoutBinding, samplerLayoutBinding };
-
-                VkDescriptorSetLayout desriptorSetLayout = m_Adapter->Rdr()->CreateDescriptorSetLayout(
-                    bindings, VK_DESCRIPTOR_SET_LAYOUT_CREATE_UPDATE_AFTER_BIND_POOL_BIT
-                );
-
-                m_Adapter->GetDescriptorSetLayouts()->emplace_back(desriptorSetLayout);
-
-                for (uint32_t i = 0; i < m_Adapter->GetSwapChainImages()->size(); i++) {
-                    VkDescriptorSet descriptorSet = m_Adapter->Rdr()->CreateDescriptorSets(m_DescriptorPool, { desriptorSetLayout }, 1);
-                    m_Adapter->Rdr()->UpdateDescriptorSets(bbox->m_UniformBuffers, descriptorSet, imageInfos);
-                    bbox->m_DescriptorSets.emplace_back(descriptorSet);
-                }
-                std::vector<VkDescriptorSetLayout>dSetLayout = { desriptorSetLayout };
-
-                bbox->m_PipelineLayout = m_Adapter->Rdr()->CreatePipelineLayout(bbox->m_DescriptorSets, dSetLayout, {});
-
-                std::vector<VkPipelineShaderStageCreateInfo> shadersStageInfos;
-
-                VkPipelineShaderStageCreateInfo vertShaderStageInfo{};
-                vertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-                vertShaderStageInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
-                vertShaderStageInfo.module = m_Adapter->GetShaderManager()->GetShaders()->shaders["bbox"][0];
-                vertShaderStageInfo.pName = "main";
-                shadersStageInfos.emplace_back(vertShaderStageInfo);
-
-                VkPipelineShaderStageCreateInfo fragShaderStageInfo{};
-                fragShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-                fragShaderStageInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
-                fragShaderStageInfo.module = m_Adapter->GetShaderManager()->GetShaders()->shaders["bbox"][1];
-                fragShaderStageInfo.pName = "main";
-                shadersStageInfos.emplace_back(fragShaderStageInfo);
-
-                VkVertexInputBindingDescription bDesc = Vertex::GetBindingDescription();
-                auto desc = Vertex::GetAttributeDescriptions();
-
-                VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
-                vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-                vertexInputInfo.vertexBindingDescriptionCount = 1;
-                vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(Vertex::GetAttributeDescriptions().size());
-                vertexInputInfo.pVertexBindingDescriptions = &bDesc;
-                vertexInputInfo.pVertexAttributeDescriptions = desc.data();
-
-                bbox->m_GraphicsPipeline = m_Adapter->Rdr()->CreateGraphicsPipeline(
-                    m_Adapter->RdrPass(),
-                    bbox->m_PipelineLayout,
-                    bbox->GetShaderName(),
-                    shadersStageInfos,
-                    vertexInputInfo,
-                    VK_CULL_MODE_BACK_BIT,
-                    true, true, true, true,
-                    VK_POLYGON_MODE_LINE
-                );
+            for (uint32_t i = 0; i < uniformBuffersCount; i++) {
+                std::pair<VkBuffer, VkDeviceMemory> uniformBuffer = m_Adapter->Rdr()->CreateUniformBuffers(uniformBufferChunkSize);
+                bbox->m_UniformBuffers.emplace_back(uniformBuffer);
             }
+
+            Texture tex = m_Adapter->GetTextureManager()->GetTextures()["minecraft_grass"];
+
+            std::vector<VkDescriptorImageInfo>imageInfos{};
+            VkDescriptorImageInfo imageInfo{};
+            imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+            imageInfo.imageView = tex.GetImageView();
+            imageInfo.sampler = tex.GetSampler();
+
+            imageInfos.emplace_back(imageInfo);
+
+            vkDestroyCommandPool(m_Adapter->Rdr()->GetDevice(), commandPool, nullptr);
+
+            VkDescriptorSetLayoutBinding uboLayoutBinding{};
+            uboLayoutBinding.binding = 0;
+            uboLayoutBinding.descriptorCount = 1;
+            uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+            uboLayoutBinding.pImmutableSamplers = nullptr;
+            uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+
+            VkDescriptorSetLayoutBinding samplerLayoutBinding{};
+            samplerLayoutBinding.binding = 1;
+            samplerLayoutBinding.descriptorCount = imageInfos.size();
+            samplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+            samplerLayoutBinding.pImmutableSamplers = nullptr;
+            samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+            std::vector<VkDescriptorSetLayoutBinding> bindings = { uboLayoutBinding, samplerLayoutBinding };
+
+            VkDescriptorSetLayout desriptorSetLayout = m_Adapter->Rdr()->CreateDescriptorSetLayout(
+                bindings, VK_DESCRIPTOR_SET_LAYOUT_CREATE_UPDATE_AFTER_BIND_POOL_BIT
+            );
+
+            m_Adapter->GetDescriptorSetLayouts()->emplace_back(desriptorSetLayout);
+
+            for (uint32_t i = 0; i < m_Adapter->GetSwapChainImages()->size(); i++) {
+                VkDescriptorSet descriptorSet = m_Adapter->Rdr()->CreateDescriptorSets(m_DescriptorPool, { desriptorSetLayout }, 1);
+                m_Adapter->Rdr()->UpdateDescriptorSets(bbox->m_UniformBuffers, descriptorSet, imageInfos);
+                bbox->m_DescriptorSets.emplace_back(descriptorSet);
+            }
+            std::vector<VkDescriptorSetLayout>dSetLayout = { desriptorSetLayout };
+
+            bbox->m_PipelineLayout = m_Adapter->Rdr()->CreatePipelineLayout(bbox->m_DescriptorSets, dSetLayout, {});
+
+            std::vector<VkPipelineShaderStageCreateInfo> shadersStageInfos;
+
+            VkPipelineShaderStageCreateInfo vertShaderStageInfo{};
+            vertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+            vertShaderStageInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
+            vertShaderStageInfo.module = m_Adapter->GetShaderManager()->GetShaders()->shaders["bbox"][0];
+            vertShaderStageInfo.pName = "main";
+            shadersStageInfos.emplace_back(vertShaderStageInfo);
+
+            VkPipelineShaderStageCreateInfo fragShaderStageInfo{};
+            fragShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+            fragShaderStageInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
+            fragShaderStageInfo.module = m_Adapter->GetShaderManager()->GetShaders()->shaders["bbox"][1];
+            fragShaderStageInfo.pName = "main";
+            shadersStageInfos.emplace_back(fragShaderStageInfo);
+
+            VkVertexInputBindingDescription bDesc = Vertex::GetBindingDescription();
+            auto desc = Vertex::GetAttributeDescriptions();
+
+            VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
+            vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
+            vertexInputInfo.vertexBindingDescriptionCount = 1;
+            vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(Vertex::GetAttributeDescriptions().size());
+            vertexInputInfo.pVertexBindingDescriptions = &bDesc;
+            vertexInputInfo.pVertexAttributeDescriptions = desc.data();
+
+            bbox->m_GraphicsPipeline = m_Adapter->Rdr()->CreateGraphicsPipeline(
+                m_Adapter->RdrPass(),
+                bbox->m_PipelineLayout,
+                bbox->GetShaderName(),
+                shadersStageInfos,
+                vertexInputInfo,
+                VK_CULL_MODE_BACK_BIT,
+                true, true, true, true,
+                VK_POLYGON_MODE_LINE
+            );
 
             m_Adapter->GetEntityManager()->AddBBox(bbox);
         }
