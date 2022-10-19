@@ -4,7 +4,7 @@
 
 namespace Rbk
 {
-    ShaderManager::ShaderManager(std::shared_ptr<VulkanRenderer> renderer) : m_Renderer(renderer)
+    ShaderManager::ShaderManager()
     {
         m_Shaders = std::make_shared<VulkanShaders>();
     }
@@ -40,8 +40,8 @@ namespace Rbk
         auto vertShaderCode = Rbk::Tools::ReadFile(vertPath);
         auto fragShaderCode = Rbk::Tools::ReadFile(fragPath);
     
-        VkShaderModule vertexShaderModule = m_Renderer.get()->CreateShaderModule(vertShaderCode);
-        VkShaderModule fragShaderModule = m_Renderer.get()->CreateShaderModule(fragShaderCode);
+        VkShaderModule vertexShaderModule = m_Renderer->Rdr()->CreateShaderModule(vertShaderCode);
+        VkShaderModule fragShaderModule = m_Renderer->Rdr()->CreateShaderModule(fragShaderCode);
 
         std::array<VkShaderModule, 2> module = { vertexShaderModule, fragShaderModule };
 

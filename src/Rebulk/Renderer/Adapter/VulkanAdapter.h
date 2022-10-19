@@ -11,14 +11,6 @@
 
 namespace Rbk
 {
-    struct VImGuiInfo
-    {
-        ImGui_ImplVulkan_InitInfo info = {};
-        VkCommandBuffer cmdBuffer = nullptr;
-        VkPipeline pipeline = nullptr;
-        VkRenderPass rdrPass = nullptr;
-    };
-
     class VulkanAdapter : public IRendererAdapter, public std::enable_shared_from_this<VulkanAdapter>
     {
 
@@ -29,36 +21,38 @@ namespace Rbk
 
         virtual void Init() override;
         virtual void AddCamera(std::shared_ptr<Camera> camera) override;
-        virtual void AddTextureManager(std::shared_ptr<TextureManager> textureManager) override;
-        virtual void AddEntityManager(std::shared_ptr<EntityManager> entityManager) override;
-        virtual void AddShaderManager(std::shared_ptr<ShaderManager> shaderManager) override;
-        virtual void AddSpriteAnimationManager(std::shared_ptr<SpriteAnimationManager> spriteAnimationManager) override;
-
-        void PrepareSplashScreen();
+        virtual void AddTextureManager(std::shared_ptr<ITextureManager> textureManager) override;
+        virtual void AddEntityManager(std::shared_ptr<IEntityManager> entityManager) override;
+        virtual void AddShaderManager(std::shared_ptr<IShaderManager> shaderManager) override;
+        virtual void AddSpriteAnimationManager(std::shared_ptr<ISpriteAnimationManager> spriteAnimationManager) override;
+        void PrepareSplashScreen() override;
         virtual void Prepare() override;
         virtual void Draw() override;
         virtual void Destroy() override;
+        void DrawSplashScreen() override;
+        void WaitIdle() override;
+        virtual std::shared_ptr<VulkanRenderer> Rdr() override { return m_Renderer; } ;
+        virtual ImGuiInfo GetImGuiInfo() override;
+        virtual void ImmediateSubmit(std::function<void(VkCommandBuffer cmd)>&& function) override;
+        virtual void Refresh() override;
+        virtual void ShowGrid(bool show) override;
 
-        void ImmediateSubmit(std::function<void(VkCommandBuffer cmd)>&& function);
         void ShouldRecreateSwapChain();
         void RecreateSwapChain();
 
         inline uint32_t GetSwapImageIndex() { return m_ImageIndex; };
-        inline std::shared_ptr<VulkanRenderer> Rdr() { return m_Renderer; };
         inline std::shared_ptr<VkRenderPass> RdrPass() { return m_RenderPass; };
         void SetDeltatime(float deltaTime) override;
 
         inline std::vector<VkDescriptorSetLayout>* GetDescriptorSetLayouts() { return &m_DescriptorSetLayouts; };
         inline std::vector<VkImage>* GetSwapChainImages() { return &m_SwapChainImages; };
         inline glm::mat4 GetPerspective() { return m_Perspective; };
-        void Refresh();
 
         void SetRayPick(float x, float y, float z, int width, int height);
 
         //@todo add GuiManager
         VkRenderPass CreateImGuiRenderPass();
-        VImGuiInfo GetVImGuiInfo();
-
+        
         //IMGUI config
         static float s_AmbiantLight;
         static float s_FogDensity;
@@ -66,22 +60,20 @@ namespace Rbk
         static int s_Crosshair;
         static int s_PolygoneMode;
 
-        std::shared_ptr<TextureManager> GetTextureManager() { return m_TextureManager; };
-        std::shared_ptr<EntityManager> GetEntityManager() { return m_EntityManager; };
-        std::shared_ptr<ShaderManager> GetShaderManager() { return m_ShaderManager; };
-        std::shared_ptr<SpriteAnimationManager> GetSpriteAnimationManager() { return m_SpriteAnimationManager; };
+        std::shared_ptr<ITextureManager> GetTextureManager() { return m_TextureManager; };
+        std::shared_ptr<IEntityManager> GetEntityManager() { return m_EntityManager; };
+        std::shared_ptr<IShaderManager> GetShaderManager() { return m_ShaderManager; };
+        std::shared_ptr<ISpriteAnimationManager> GetSpriteAnimationManager() { return m_SpriteAnimationManager; };
 
         std::shared_ptr<Camera> GetCamera() { return m_Camera; };
         std::vector<glm::vec3> GetLights() { return m_LightsPos; };
-        
-        void ShowGrid(bool show);
-        void DrawSplashScreen();
 
     private:
         //@todo temp
         void SetPerspective();
         void BeginRendering();
         void EndRendering();
+
     private:
         std::shared_ptr<VulkanRenderer> m_Renderer = nullptr;
         std::shared_ptr<VkRenderPass> m_RenderPass = nullptr;
@@ -98,10 +90,10 @@ namespace Rbk
         std::shared_ptr<Camera> m_Camera = nullptr;
         std::shared_ptr<Window> m_Window = nullptr;
 
-        std::shared_ptr<TextureManager> m_TextureManager = nullptr;
-        std::shared_ptr<EntityManager> m_EntityManager = nullptr;
-        std::shared_ptr<ShaderManager> m_ShaderManager = nullptr;
-        std::shared_ptr<SpriteAnimationManager> m_SpriteAnimationManager = nullptr;
+        std::shared_ptr<ITextureManager> m_TextureManager = nullptr;
+        std::shared_ptr<IEntityManager> m_EntityManager = nullptr;
+        std::shared_ptr<IShaderManager> m_ShaderManager = nullptr;
+        std::shared_ptr<ISpriteAnimationManager> m_SpriteAnimationManager = nullptr;
 
         bool m_IsHUDPrepared = false;
         bool m_IsSkyBoxPrepared = false;

@@ -6,9 +6,7 @@ namespace Rbk
     bool InputManager::m_CanMoveCamera = false;
     bool InputManager::m_FirtMouseMove = true;
 
-    InputManager::InputManager(
-        std::shared_ptr<Window> window, std::shared_ptr<Camera> camera, std::shared_ptr<Rbk::VulkanAdapter> adapter) 
-        : m_Window(window), m_Camera(camera), m_Adapter(adapter)
+    InputManager::InputManager(std::shared_ptr<Window> window) : m_Window(window)
     {
         int width, height;
         glfwGetWindowSize(m_Window->Get(), &width, &height);

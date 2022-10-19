@@ -63,17 +63,22 @@ namespace Rbk
         m_Semaphores = m_Renderer->CreateSyncObjects(m_SwapChainImages);
     }
 
-    void VulkanAdapter::AddTextureManager(std::shared_ptr<TextureManager> textureManager)
+    void VulkanAdapter::WaitIdle()
+    {
+        m_Renderer->WaitIdle();
+    }
+
+    void VulkanAdapter::AddTextureManager(std::shared_ptr<ITextureManager> textureManager)
     {
         m_TextureManager = textureManager;
     }
 
-    void VulkanAdapter::AddShaderManager(std::shared_ptr<ShaderManager> shaderManager)
+    void VulkanAdapter::AddShaderManager(std::shared_ptr<IShaderManager> shaderManager)
     {
         m_ShaderManager = shaderManager;
     } 
     
-    void VulkanAdapter::AddSpriteAnimationManager(std::shared_ptr<SpriteAnimationManager> spriteAnimationManager)
+    void VulkanAdapter::AddSpriteAnimationManager(std::shared_ptr<ISpriteAnimationManager> spriteAnimationManager)
     {
         m_SpriteAnimationManager = spriteAnimationManager;
     }
@@ -83,7 +88,7 @@ namespace Rbk
         m_Camera = camera;
     }
 
-    void VulkanAdapter::AddEntityManager(std::shared_ptr<EntityManager> entityManager)
+    void VulkanAdapter::AddEntityManager(std::shared_ptr<IEntityManager> entityManager)
     {
         m_EntityManager = entityManager;
     }
@@ -476,6 +481,30 @@ namespace Rbk
 
         }
 
+        std::vector<std::shared_ptr<Entity>> bboxs = *m_EntityManager->GetBBox();
+
+        for (std::shared_ptr<Entity> entity : bboxs) {
+
+            std::shared_ptr<Mesh> mesh = std::dynamic_pointer_cast<Mesh>(entity);
+
+            for (auto buffer : mesh->m_UniformBuffers) {
+                m_Renderer->DestroyBuffer(buffer.first);
+                m_Renderer->DestroyDeviceMemory(buffer.second);
+            }
+
+            for (Data data : *mesh->GetData()) {
+
+                m_Renderer->DestroyBuffer(data.m_VertexBuffer.first);
+                m_Renderer->DestroyDeviceMemory(data.m_VertexBuffer.second);
+
+                m_Renderer->DestroyBuffer(data.m_IndicesBuffer.first);
+                m_Renderer->DestroyDeviceMemory(data.m_IndicesBuffer.second);
+            }
+            m_Renderer->DestroyPipeline(mesh->m_GraphicsPipeline);
+            vkDestroyPipelineLayout(m_Renderer->GetDevice(), mesh->m_PipelineLayout, nullptr);
+
+        }
+
         for (auto item : m_TextureManager->GetTextures()) {
             vkDestroySampler(m_Renderer->GetDevice(), item.second.GetSampler(), nullptr);
 
@@ -572,7 +601,7 @@ namespace Rbk
         return renderPass;
     }
 
-    VImGuiInfo VulkanAdapter::GetVImGuiInfo()
+    ImGuiInfo VulkanAdapter::GetImGuiInfo()
     {
         std::vector<VkDescriptorPoolSize> poolSizes{};
         VkDescriptorPoolSize cp1;
@@ -605,19 +634,20 @@ namespace Rbk
             Rbk::Log::GetLogger()->warn("ImGui error {}", err);
         };
 
-        VImGuiInfo vImGuiInfo;
-        vImGuiInfo.info = info;
-        vImGuiInfo.rdrPass = CreateImGuiRenderPass();
-        vImGuiInfo.cmdBuffer = m_Renderer->AllocateCommandBuffers(m_CommandPool)[0];
-        //vImGuiInfo.pipeline = m_Pipelines[0].graphicsPipeline;
+        ImGuiInfo imGuiInfo;
+        imGuiInfo.info = info;
+        imGuiInfo.rdrPass = CreateImGuiRenderPass();
+        imGuiInfo.cmdBuffer = m_Renderer->AllocateCommandBuffers(m_CommandPool)[0];
+        //imGuiInfo.pipeline = m_Pipelines[0].graphicsPipeline;
 
-        return vImGuiInfo;
+        return imGuiInfo;
     }
 
     void VulkanAdapter::Refresh()
     {
         m_IsHUDPrepared = false;
         m_HUD = {};
+        m_EntityManager->Clear();
 
         Prepare();
     }

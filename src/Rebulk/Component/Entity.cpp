@@ -18,7 +18,7 @@ namespace Rbk
 
     }
 
-    uint32_t const Entity::GetNextSpriteIndex()
+    uint32_t Entity::GetNextSpriteIndex()
     {
         uint32_t nextIndex = 0;
 

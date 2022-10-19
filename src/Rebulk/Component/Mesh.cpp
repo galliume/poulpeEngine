@@ -25,7 +25,7 @@ namespace Rbk
 
         SetName(name);
         m_ShaderName = shader;
-        std::vector<Rbk::Mesh::BBox> bboxs;
+        std::vector<Rbk::Mesh::BBox> bboxs{};
 
         for (size_t i = 0; i < listData.size(); i++) {
 

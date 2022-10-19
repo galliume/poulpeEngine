@@ -38,7 +38,7 @@ namespace Rbk
     {
     public:
         Mesh();
-        ~Mesh();
+        ~Mesh() = default;
 
         void Init(const std::string& name,
             const std::string& path,
@@ -49,11 +49,11 @@ namespace Rbk
             glm::vec3 rotation = glm::vec3(1.0f),
             bool shouldInverseTextureY = true);
 
-        std::vector<Data>* GetData() { return &m_Data; };
+        std::vector<Data>* GetData() { return &m_Data; }
         
-        inline const std::string GetShaderName() const { return m_ShaderName; };
-        inline void SetShaderName(std::string_view name) { m_ShaderName = name; };
-        inline const std::vector<VkDescriptorSet> GetDescriptorSets() const { return m_DescriptorSets; };
+        inline const std::string GetShaderName() const { return m_ShaderName; }
+        inline void SetShaderName(std::string_view name) { m_ShaderName = name; }
+        inline const std::vector<VkDescriptorSet> GetDescriptorSets() const { return m_DescriptorSets; }
 
         void AddUbos(const std::vector<UniformBufferObject>& ubos);
         std::function<void(VkCommandBuffer commandBuffer, VkPipelineLayout pipelineLayout)> ApplyPushConstants = nullptr;

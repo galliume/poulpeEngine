@@ -3,7 +3,7 @@
 
 namespace Rbk
 {
-    EntityManager::EntityManager(const std::shared_ptr<VulkanRenderer>& renderer) : m_Renderer(renderer)
+    EntityManager::EntityManager()
     {
 
     }
@@ -34,6 +34,7 @@ namespace Rbk
 
                 for (auto data : listData) {
                     existingEntity->AddUbos(data.m_Ubos);
+                    existingEntity->AddBBox(mesh->GetBBox().at(0));
                 }
 
                 m_LoadedEntities[mesh->GetName()][0] += 1;
@@ -215,5 +216,12 @@ namespace Rbk
     {
         m_Entities.clear();
         m_LoadedEntities.clear();
+        m_BoundingBox.clear();
+        m_LoadedBbox.clear();
+    }
+
+    void EntityManager::SetShowBBox(bool show)
+    {
+        m_ShowBBox = show;
     }
 }

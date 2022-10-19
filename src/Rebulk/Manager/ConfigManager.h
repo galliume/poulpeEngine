@@ -1,20 +1,20 @@
 #pragma once
-#include "json.hpp"
+#include "IConfigManager.h"
 
 namespace Rbk
 {
-    class ConfigManager
+    class ConfigManager : IConfigManager
     {
     public:
         ConfigManager();
 
-        nlohmann::json AppConfig();
-        nlohmann::json TexturesConfig();
-        nlohmann::json SoundConfig();
-        nlohmann::json ShaderConfig();
-        nlohmann::json EntityConfig(const std::string& levelName);
-        std::vector<std::string> ListLevels();
-        std::vector<std::string> ListSkybox();
+        virtual nlohmann::json AppConfig() override;
+        virtual nlohmann::json TexturesConfig() override;
+        virtual nlohmann::json SoundConfig() override;
+        virtual nlohmann::json ShaderConfig() override;
+        virtual nlohmann::json EntityConfig(const std::string& levelName) override;
+        virtual std::vector<std::string> ListLevels() override;
+        virtual std::vector<std::string> ListSkybox() override;
 
     private:
         nlohmann::json m_AppConfig;

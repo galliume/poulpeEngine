@@ -7,6 +7,7 @@
 #include "Manager/EntityManager.h"
 #include "Manager/AudioManager.h"
 #include "Manager/ConfigManager.h"
+#include "Manager/ShaderManager.h"
 #include "Renderer/Adapter/VulkanAdapter.h"
 
 #include "GUI/LayerManager.h"
@@ -28,25 +29,10 @@ namespace Rbk
 
         static int s_UnlockedFPS;
 
-        bool IsLoaded() { return m_IsLoaded; };
-        void SetIsLoaded(bool loaded = true) { m_IsLoaded = loaded; };
-
     private:
         static Application* s_Instance;
         std::shared_ptr<Rbk::Window> m_Window;
         std::shared_ptr<Rbk::RenderManager> m_RenderManager;
-        std::shared_ptr<Rbk::Camera> m_Camera;
-        std::shared_ptr<Rbk::InputManager> m_InputManager;
-        std::shared_ptr<Rbk::VulkanAdapter> m_RendererAdapter;
-        std::shared_ptr<Rbk::LayerManager> m_LayerManager;
-        std::shared_ptr<Rbk::TextureManager> m_TextureManager;
-        std::shared_ptr<Rbk::SpriteAnimationManager> m_SpriteAnimationManager;
-        std::shared_ptr<Rbk::EntityManager> m_EntityManager;
-        std::shared_ptr<Rbk::ShaderManager> m_ShaderManager;
-        std::shared_ptr<Rbk::AudioManager> m_AudioManager;
-        std::shared_ptr<Rbk::ConfigManager> m_ConfigManager;
         std::shared_ptr<Rbk::Im> m_VImGui;
-
-        bool m_IsLoaded = false;
     };
 }

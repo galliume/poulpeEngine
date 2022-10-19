@@ -1,11 +1,10 @@
 #pragma once
-#include "Rebulk/Component/Camera.h"
-#include "Rebulk/GUI/Window.h"
-#include <json.hpp>
+#include "IAudioManager.h"
+#include <miniaudio.h>
 
 namespace Rbk
 {
-    class AudioManager
+    class AudioManager : IAudioManager
     {
         enum class State {
             STOP,
@@ -15,18 +14,18 @@ namespace Rbk
 
     public:
         AudioManager();
-        ~AudioManager();
-        void Load(nlohmann::json config);
+        ~AudioManager() = default;
 
-        void StartSplash(int index = 0);
-        void StopSplash();
-        void StartAmbient(int index = 0);
-        void StopAmbient();
-        std::vector<std::string> const GetAmbientSound() { return m_AmbientSounds; };
-        std::string const GetState();
-        int const GetAmbientSoundIndex() { return m_AmbientSoundIndex; };
-        std::string const GetCurrentAmbientSound() { return m_AmbientSounds[m_AmbientSoundIndex]; };
-        void ToggleLooping();
+        virtual void Load(nlohmann::json config) override;
+        virtual void StartSplash(int index = 0) override;
+        virtual void StopSplash() override;
+        virtual void StartAmbient(int index = 0) override;
+        virtual void StopAmbient() override;
+        virtual std::vector<std::string> const GetAmbientSound() override { return m_AmbientSounds; }
+        virtual std::string const GetState() override;
+        virtual int GetAmbientSoundIndex() override { return m_AmbientSoundIndex; }
+        virtual std::string GetCurrentAmbientSound() override { return m_AmbientSounds[m_AmbientSoundIndex]; }
+        virtual void ToggleLooping() override;
 
     private:
         void Start(const std::string& soundPath, ma_sound& sound);

@@ -1,26 +1,27 @@
 {
 	"entities": {
-		"deadTree" : {
-			"mesh": "assets/mesh/tree/dead_tree.obj",
-			"textures": ["trunk_tree_cartoon"],
+		"groundCube" : {
+			"mesh": "assets/mesh/minecraft/Grass_Block.obj",
+			"textures": ["minecraft_grass"],
 			"shader": "main",
 			"positions": [
-				{"x": -1.0, "y": 0.19, "z": -1.4}
+				{"x": -0.20, "y": 0.0, "z": -0.20}
 			],
 			"scales": [
-				{"x": 0.01, "y": 0.01, "z": 0.01}
+				{"x": 0.1, "y": 0.1, "z": 0.1}
 			],
 			"rotations": [
 				{"x": 0.0, "y": 0.0, "z": 0.0}
 			],
 			"inverseTextureY": true,
-			"count": 1,
+			"count": 280,
 			"padding": {
-				"x": 0.0,
-				"y": 0.0,
-				"z": 0.0
+				"x": 1,
+				"y": 1,
+				"z": 0
 			},
-			"form": "positioned"
+			"form": "square",
+			"squarePadding": [{"x" : [-7, 7], "y": [-5, 15]}]
 		}
 	}
 }

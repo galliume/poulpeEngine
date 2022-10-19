@@ -1,14 +1,15 @@
 #pragma once
-#include "Rebulk/Renderer/Vulkan/VulkanRenderer.h"
+#include "ISpriteAnimationManager.h"
 
 namespace Rbk
 {
-    class SpriteAnimationManager
+    class SpriteAnimationManager : ISpriteAnimationManager
     {
     public:
         explicit SpriteAnimationManager();
-        void Add(const std::string& name, std::vector<std::string> sprites);
-        std::vector<std::string> GetSpritesByName(const std::string& name);
+
+        virtual void Add(const std::string& name, std::vector<std::string> sprites) override;
+        virtual std::vector<std::string> GetSpritesByName(const std::string& name) override;
 
     private:
         std::map<std::string, std::vector<std::string>> m_SpriteAnimations;

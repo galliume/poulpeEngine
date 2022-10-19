@@ -1,20 +1,20 @@
 #pragma once
-#include <json.hpp>
-
-#include "Rebulk/Component/Camera.h"
-#include "Rebulk/GUI/Window.h"
-#include "Rebulk/Renderer/Adapter/VulkanAdapter.h"
+#include "IInputManager.h"
 
 namespace Rbk
 {
-    class InputManager
+    class InputManager : IInputManager
     {
     public:
-        explicit InputManager(std::shared_ptr<Window> window, std::shared_ptr<Camera> camera, std::shared_ptr<Rbk::VulkanAdapter> adapter);
-        void Init(nlohmann::json inputConfig);
+        explicit InputManager(std::shared_ptr<Window> window);
+        virtual void Init(nlohmann::json inputConfig) override;
+
         void Key(int key, int scancode, int action, int mods);
         void Mouse(double xPos, double yPo);
         void MouseButton(int button, int action, int mods);
+
+        void SetCamera(std::shared_ptr<Camera> camera) { m_Camera = camera; };
+        void AddAdapter(std::shared_ptr<Rbk::VulkanAdapter> adapter) { m_Adapter = adapter; };
 
         static bool m_CanMoveCamera;
         static bool m_FirtMouseMove;
