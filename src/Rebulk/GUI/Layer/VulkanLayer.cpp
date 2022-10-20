@@ -180,24 +180,25 @@ namespace Rbk
             ImGui::SameLine();
 
             if (ImGui::RadioButton("Fill", &Rbk::VulkanAdapter::s_PolygoneMode, VK_POLYGON_MODE_FILL)) {
-                m_RenderManager->Refresh();
+                Refresh();
             };
             ImGui::SameLine();
             if (ImGui::RadioButton("Line", &Rbk::VulkanAdapter::s_PolygoneMode, VK_POLYGON_MODE_LINE)) {
-                m_RenderManager->Refresh();
+                Refresh();
             };
             ImGui::SameLine();
             if (ImGui::RadioButton("Point", &Rbk::VulkanAdapter::s_PolygoneMode, VK_POLYGON_MODE_POINT)) {
-                m_RenderManager->Refresh();
+                Refresh();
             }
 
             if (ImGui::Checkbox("Display grid", &m_ShowGrid)) {
                 m_RenderManager->GetRendererAdapter()->ShowGrid(m_ShowGrid);
+                Refresh();
             }
 
             if (ImGui::Checkbox("Display bbox", &m_ShowBBox)) {
                 m_RenderManager->GetEntityManager()->SetShowBBox(m_ShowBBox);
-                //m_RenderManager->Refresh();
+                Refresh();
             }
 
             Rbk::Im::Text("FPS limit");
@@ -300,14 +301,7 @@ namespace Rbk
 
                 if (ImGui::Selectable(levels.at(n).c_str(), isSelected)) {
                     m_LevelIndex = n;
-                    nlohmann::json levelConfig = m_RenderManager->GetConfigManager()->EntityConfig(levels.at(n));
-                    m_RenderManager->GetEntityManager()->Clear();
-                    std::vector<std::future<void>> entityFutures = m_RenderManager->GetEntityManager()->Load(levelConfig);
-
-                    for (auto& future : entityFutures) {
-                        future.wait();
-                    }
-                    m_RenderManager->Refresh();
+                    Refresh();
                 }
 
                 if (isSelected)
@@ -318,14 +312,7 @@ namespace Rbk
         ImGui::SameLine();
         if (ImGui::Button("Refresh level"))
         {
-            nlohmann::json levelConfig = m_RenderManager->GetConfigManager()->EntityConfig(levels.at(m_LevelIndex));
-            m_RenderManager->GetEntityManager()->Clear();
-            std::vector<std::future<void>> entityFutures = m_RenderManager->GetEntityManager()->Load(levelConfig);
-
-            for (auto& future : entityFutures) {
-                future.wait();
-            }
-            m_RenderManager->Refresh();
+            Refresh();
         }
 
         std::vector<std::string> skybox = m_RenderManager->GetConfigManager()->ListSkybox();
@@ -338,15 +325,7 @@ namespace Rbk
 
                 if (ImGui::Selectable(skybox.at(n).c_str(), isSelected)) {
                     m_SkyboxIndex = n;
-                    nlohmann::json skyboxConfig = m_RenderManager->GetConfigManager()->TexturesConfig()["skybox"];
-
-                    std::vector<std::string>skyboxImages;
-                    for (auto& texture : skyboxConfig[skybox.at(n)].items()) {
-                        skyboxImages.emplace_back(texture.value());
-                    }
-
-                    m_RenderManager->GetTextureManager()->AddSkyBox(skyboxImages);
-                    m_RenderManager->Refresh();
+                    Refresh();
                 }
 
                 if (isSelected)
@@ -383,5 +362,20 @@ namespace Rbk
 
             m_Textures[texture.second.GetName()] = imgDset;
         }
+    }
+
+    void VulkanLayer::Refresh()
+    {
+        nlohmann::json levelConfig = m_RenderManager->GetConfigManager()->EntityConfig(
+            m_RenderManager->GetConfigManager()->ListLevels().at(m_LevelIndex)
+        );
+        m_RenderManager->GetEntityManager()->Clear();
+        std::vector<std::future<void>> entityFutures = m_RenderManager->GetEntityManager()->Load(levelConfig);
+
+        for (auto& future : entityFutures) {
+            future.wait();
+        }
+
+        m_RenderManager->Refresh();
     }
 }

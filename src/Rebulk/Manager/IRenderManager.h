@@ -7,6 +7,7 @@
 #include "EntityManager.h"
 #include "SpriteAnimationManager.h"
 #include "ShaderManager.h"
+#include "DestroyManager.h"
 #include "Rebulk/Component/Mesh.h"
 #include "Rebulk/Component/Camera.h"
 #include "Rebulk/GUI/Window.h"
@@ -35,6 +36,9 @@ namespace Rbk
         virtual std::shared_ptr<Rbk::ShaderManager> GetShaderManager() = 0;
         virtual std::shared_ptr<Rbk::AudioManager> GetAudioManager() = 0;
         virtual std::shared_ptr<Rbk::ConfigManager> GetConfigManager() = 0;
+        virtual std::shared_ptr<Rbk::DestroyManager> GetDestroyManager() = 0;
+        virtual void CleanUp() = 0;
+
         virtual void Refresh() = 0;
     };
 }

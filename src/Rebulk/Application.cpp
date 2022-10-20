@@ -31,9 +31,15 @@ namespace Rbk
         auto entity = std::make_shared<Rbk::EntityManager>();
         auto shader = std::make_shared<Rbk::ShaderManager>();
         auto sprite = std::make_shared<Rbk::SpriteAnimationManager>();
+        auto destroyer = std::make_shared<Rbk::DestroyManager>();
         auto camera = std::make_shared<Rbk::Camera>();
 
-        m_RenderManager = std::make_shared<Rbk::RenderManager>(m_Window, adapter, config, input, audio, texture, entity, shader, sprite, camera);
+        m_RenderManager = std::make_shared<Rbk::RenderManager>(
+            m_Window, adapter, config,
+            input, audio, texture,
+            entity, shader, sprite,
+            destroyer, camera
+        );
         m_RenderManager->Init();
     }
 
@@ -115,7 +121,7 @@ namespace Rbk
         m_RenderManager->GetRendererAdapter()->Rdr()->WaitIdle();
         Rbk::Im::Destroy();
 
-        m_RenderManager->GetRendererAdapter()->Destroy();
+        m_RenderManager->CleanUp();
 
         glfwDestroyWindow(m_Window.get()->Get());
         glfwTerminate();

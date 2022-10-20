@@ -8,6 +8,7 @@
 #include "Manager/AudioManager.h"
 #include "Manager/ConfigManager.h"
 #include "Manager/ShaderManager.h"
+#include "Manager/DestroyManager.h"
 #include "Renderer/Adapter/VulkanAdapter.h"
 
 #include "GUI/LayerManager.h"
