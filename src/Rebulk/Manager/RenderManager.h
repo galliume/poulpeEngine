@@ -16,6 +16,7 @@ namespace Rbk
             std::shared_ptr<EntityManager> entityManager,
             std::shared_ptr<ShaderManager> shaderManager,
             std::shared_ptr<SpriteAnimationManager> spriteAnimationManager,
+            std::shared_ptr<Rbk::DestroyManager> destroyManager,
             std::shared_ptr<Rbk::Camera> camera
         );
         ~RenderManager();
@@ -37,6 +38,8 @@ namespace Rbk
         virtual std::shared_ptr<Rbk::ShaderManager> GetShaderManager() override { return m_ShaderManager; }
         virtual std::shared_ptr<Rbk::AudioManager> GetAudioManager() override { return m_AudioManager; }
         virtual std::shared_ptr<Rbk::ConfigManager> GetConfigManager() override { return m_ConfigManager; }
+        virtual std::shared_ptr<Rbk::DestroyManager> GetDestroyManager() override { return m_DestroyManager; }
+        virtual void RenderManager::CleanUp() override;
 
     private:
         void PrepareSplashScreen();
@@ -54,6 +57,7 @@ namespace Rbk
         std::shared_ptr<Rbk::ShaderManager> m_ShaderManager;
         std::shared_ptr<Rbk::AudioManager> m_AudioManager;
         std::shared_ptr<Rbk::ConfigManager> m_ConfigManager;
+        std::shared_ptr<Rbk::DestroyManager> m_DestroyManager;
 
         bool m_IsLoaded = false;
 

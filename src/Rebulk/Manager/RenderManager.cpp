@@ -19,6 +19,7 @@ namespace Rbk
         std::shared_ptr<EntityManager> entityManager,
         std::shared_ptr<ShaderManager> shaderManager,
         std::shared_ptr<SpriteAnimationManager> spriteAnimationManager,
+        std::shared_ptr<Rbk::DestroyManager> destroyManager,
         std::shared_ptr<Rbk::Camera> camera
     ) :
         m_Window(window),
@@ -30,13 +31,28 @@ namespace Rbk
         m_EntityManager(entityManager),
         m_ShaderManager(shaderManager),
         m_SpriteAnimationManager(spriteAnimationManager),
+        m_DestroyManager(destroyManager),
         m_Camera(camera)
     {
     }
 
     RenderManager::~RenderManager()
     {
-        std::cout << "RenderManager deleted" << std::endl;
+
+    }
+
+    void RenderManager::CleanUp()
+    {
+        m_Renderer->Destroy();
+        
+        m_DestroyManager->CleanEntities(*m_EntityManager->GetEntities());
+        m_DestroyManager->CleanEntities(*m_EntityManager->GetBBox());
+        m_DestroyManager->CleanEntities(m_EntityManager->GetHUD());
+        m_DestroyManager->CleanShaders(m_ShaderManager->GetShaders()->shaders);
+        m_DestroyManager->CleanTextures(m_TextureManager->GetTextures());
+        m_DestroyManager->CleanTexture(m_TextureManager->GetSkyboxTexture());
+                
+        m_Renderer->Rdr()->Destroy();
     }
 
     void RenderManager::Init()
@@ -45,6 +61,7 @@ namespace Rbk
         m_Camera->Init();
         m_Renderer->Init();
         m_Renderer->AddCamera(m_Camera);
+        m_DestroyManager->SetRenderer(m_Renderer->Rdr());
         m_TextureManager->AddConfig(m_ConfigManager->TexturesConfig());
         
         nlohmann::json appConfig = m_ConfigManager->AppConfig();
@@ -250,7 +267,8 @@ namespace Rbk
         crossHair->Accept(crosshairVulkanisator);
         hud.emplace_back(crossHair);
 
-        m_Renderer->AddHUD(hud);
+        m_EntityManager->AddHUD(hud);
+        m_Renderer->AddHUD(m_EntityManager->GetHUD());
     }
 
 }

@@ -135,12 +135,6 @@ namespace Rbk
 
     TextureManager::~TextureManager()
     {
-        for (auto item : GetTextures()) {
-            vkDestroySampler(m_Renderer->Rdr()->GetDevice(), item.second.GetSampler(), nullptr);
 
-            vkDestroyImage(m_Renderer->Rdr()->GetDevice(), item.second.GetImage(), nullptr);
-            m_Renderer->Rdr()->DestroyDeviceMemory(item.second.GetImageMemory());
-            vkDestroyImageView(m_Renderer->Rdr()->GetDevice(), item.second.GetImageView(), nullptr);
-        }
     }
 }
