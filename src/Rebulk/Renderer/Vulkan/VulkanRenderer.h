@@ -1,10 +1,6 @@
 #pragma once
 
-#include "Rebulk/Component/Mesh.h"
 #include "Rebulk/Renderer/IRenderer.h"
-#include "Rebulk/GUI/Window.h"
-
-#include <GLFW/glfw3.h>
 
 namespace Rbk {
 

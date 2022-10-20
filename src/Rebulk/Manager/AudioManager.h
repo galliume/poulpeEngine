@@ -14,7 +14,7 @@ namespace Rbk
 
     public:
         AudioManager();
-        ~AudioManager() = default;
+        ~AudioManager();
 
         virtual void Load(nlohmann::json config) override;
         virtual void StartSplash(int index = 0) override;

@@ -2,6 +2,8 @@
 #include "json.hpp"
 #include "Rebulk/Renderer/Adapter/IRendererAdapter.h"
 
+#include "Rebulk/Component/Texture.h"
+
 namespace Rbk
 {
     class ITextureManager
@@ -10,7 +12,7 @@ namespace Rbk
         ITextureManager() = default;
         ~ITextureManager() = default;
 
-        virtual inline std::map<std::string, Texture> GetTextures() const = 0;
+        virtual inline std::map<std::string, Texture> GetTextures() = 0;
         virtual void AddConfig(nlohmann::json config) = 0;
         virtual void AddRenderer(std::shared_ptr<IRendererAdapter> renderer) = 0;
         virtual std::vector<std::future<void>> Load(const std::string& skybox) = 0;

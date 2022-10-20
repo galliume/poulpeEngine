@@ -14,7 +14,7 @@ namespace Rbk
         void MouseButton(int button, int action, int mods);
 
         void SetCamera(std::shared_ptr<Camera> camera) { m_Camera = camera; };
-        void AddAdapter(std::shared_ptr<Rbk::VulkanAdapter> adapter) { m_Adapter = adapter; };
+        void AddRenderer(std::shared_ptr<Rbk::VulkanAdapter> adapter) { m_Adapter = adapter; };
 
         static bool m_CanMoveCamera;
         static bool m_FirtMouseMove;

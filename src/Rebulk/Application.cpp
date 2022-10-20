@@ -23,26 +23,23 @@ namespace Rbk
         int width, height;
         glfwGetWindowSize(m_Window->Get(), &width, &height);
 
-        m_RenderManager = std::make_shared<Rbk::RenderManager>(
-            m_Window,
-            std::make_shared<Rbk::VulkanAdapter>(m_Window),
-            std::make_shared<Rbk::ConfigManager>(),
-            std::make_shared<Rbk::InputManager>(m_Window),
-            std::make_shared<Rbk::AudioManager>(),
-            std::make_shared<Rbk::TextureManager>(),
-            std::make_shared<Rbk::EntityManager>(),
-            std::make_shared<Rbk::ShaderManager>(),
-            std::make_shared<Rbk::SpriteAnimationManager>(),
-            std::make_shared<Rbk::LayerManager>(),
-            std::make_shared<Rbk::Camera>()
-        );
+        auto adapter = std::make_shared<Rbk::VulkanAdapter>(m_Window);
+        auto config = std::make_shared<Rbk::ConfigManager>();
+        auto input = std::make_shared<Rbk::InputManager>(m_Window);
+        auto audio = std::make_shared<Rbk::AudioManager>();
+        auto texture = std::make_shared<Rbk::TextureManager>();
+        auto entity = std::make_shared<Rbk::EntityManager>();
+        auto shader = std::make_shared<Rbk::ShaderManager>();
+        auto sprite = std::make_shared<Rbk::SpriteAnimationManager>();
+        auto camera = std::make_shared<Rbk::Camera>();
 
+        m_RenderManager = std::make_shared<Rbk::RenderManager>(m_Window, adapter, config, input, audio, texture, entity, shader, sprite, camera);
+        auto a = m_RenderManager->GetAudioManager();
         m_RenderManager->Init();
     }
 
     void Application::Run()
     {
-
         double startRun = glfwGetTime();
         double endRun = glfwGetTime();
         double lastTime = endRun;
@@ -61,6 +58,11 @@ namespace Rbk
         });
 
         ImGui_ImplVulkan_DestroyFontUploadObjects();
+
+        //todo move to layer manager and update application main loop accordingly
+        auto vulkanLayer = std::make_shared<Rbk::VulkanLayer>();
+        vulkanLayer->AddRenderManager(m_RenderManager);
+        //m_LayerManager->Add(vulkanLayer.get());
 
         while (!glfwWindowShouldClose(m_Window->Get())) {
 
@@ -92,11 +94,10 @@ namespace Rbk
                 m_RenderManager->SetDeltatime(timeStep);
                 m_RenderManager->Draw();
 
-
                 //@todo move to LayerManager
                 Rbk::Im::NewFrame();
 
-                m_RenderManager->GetVulkanLayer()->Render(
+                vulkanLayer->Render(
                     timeStep, 
                     m_RenderManager->GetRendererAdapter()->Rdr()->GetDeviceProperties()
                 );
@@ -115,7 +116,7 @@ namespace Rbk
         m_RenderManager->GetRendererAdapter()->Rdr()->WaitIdle();
         Rbk::Im::Destroy();
 
-        m_RenderManager->Adp()->Destroy();
+        m_RenderManager->GetRendererAdapter()->Destroy();
 
         glfwDestroyWindow(m_Window.get()->Get());
         glfwTerminate();

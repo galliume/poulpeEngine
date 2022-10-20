@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Manager/RenderManager.h"
+#include "Manager/IRenderManager.h"
 #include "Manager/InputManager.h"
 #include "Manager/TextureManager.h"
 #include "Manager/SpriteAnimationManager.h"

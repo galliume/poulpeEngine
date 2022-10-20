@@ -1,13 +1,20 @@
 #include "rebulkpch.h"
 #include "VulkanCrosshair.h"
+#include "Rebulk/Renderer/Adapter/VulkanAdapter.h"
 
 namespace Rbk
 {
      VulkanCrosshair::VulkanCrosshair(
-        std::shared_ptr<VulkanAdapter> adapter,
-        VkDescriptorPool descriptorPool) :
-        m_Adapter(adapter),
-        m_DescriptorPool(descriptorPool)
+         std::shared_ptr<VulkanAdapter> adapter,
+         std::shared_ptr<EntityManager> entityManager,
+         std::shared_ptr<ShaderManager> shaderManager,
+         std::shared_ptr<TextureManager> textureManager,
+         VkDescriptorPool descriptorPool) :
+         m_Adapter(adapter),
+         m_EntityManager(entityManager),
+         m_ShaderManager(shaderManager),
+         m_TextureManager(textureManager),
+         m_DescriptorPool(descriptorPool)
     {
 
     }
@@ -49,8 +56,8 @@ namespace Rbk
         std::pair<VkBuffer, VkDeviceMemory> crossHairuniformBuffer = m_Adapter->Rdr()->CreateUniformBuffers(1);
         mesh->m_UniformBuffers.emplace_back(crossHairuniformBuffer);
 
-        Texture ctex = m_Adapter->GetTextureManager()->GetTextures()["crosshair_1"];
-        Texture ctex2 = m_Adapter->GetTextureManager()->GetTextures()["crosshair_2"];
+        Texture ctex = m_TextureManager->GetTextures()["crosshair_1"];
+        Texture ctex2 = m_TextureManager->GetTextures()["crosshair_2"];
 
         std::vector<VkDescriptorImageInfo>cimageInfos;
         VkDescriptorImageInfo cimageInfo{};
@@ -119,14 +126,14 @@ namespace Rbk
         VkPipelineShaderStageCreateInfo cvertShaderStageInfo{};
         cvertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
         cvertShaderStageInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
-        cvertShaderStageInfo.module = m_Adapter->GetShaderManager()->GetShaders()->shaders[mesh->GetShaderName()][0];
+        cvertShaderStageInfo.module = m_ShaderManager->GetShaders()->shaders[mesh->GetShaderName()][0];
         cvertShaderStageInfo.pName = "main";
         cshadersStageInfos.emplace_back(cvertShaderStageInfo);
 
         VkPipelineShaderStageCreateInfo cfragShaderStageInfo{};
         cfragShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
         cfragShaderStageInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
-        cfragShaderStageInfo.module = m_Adapter->GetShaderManager()->GetShaders()->shaders[mesh->GetShaderName()][1];
+        cfragShaderStageInfo.module = m_ShaderManager->GetShaders()->shaders[mesh->GetShaderName()][1];
         cfragShaderStageInfo.pName = "main";
         cshadersStageInfos.emplace_back(cfragShaderStageInfo);
 

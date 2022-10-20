@@ -1,7 +1,6 @@
 #pragma once
 #include <json.hpp>
 
-#include "Rebulk/Component/Camera.h"
 #include "Rebulk/GUI/Window.h"
 #include "Rebulk/Renderer/Adapter/VulkanAdapter.h"
 

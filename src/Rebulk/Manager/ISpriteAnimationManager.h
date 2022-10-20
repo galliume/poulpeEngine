@@ -1,5 +1,4 @@
 #pragma once
-#include "Rebulk/Renderer/Vulkan/VulkanRenderer.h"
 
 namespace Rbk
 {

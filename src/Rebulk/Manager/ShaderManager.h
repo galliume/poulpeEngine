@@ -1,5 +1,6 @@
 #pragma once
 #include "IShaderManager.h"
+#include "Rebulk/Renderer/Adapter/IRendererAdapter.h"
 
 namespace Rbk
 {
@@ -7,6 +8,7 @@ namespace Rbk
     {
     public:
         explicit ShaderManager();
+        ~ShaderManager();
 
         virtual void AddShader(const std::string& name, const std::string& vertPath, const std::string& fragPath) override;
         virtual std::future<void> Load(nlohmann::json config) override;

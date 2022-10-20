@@ -1,6 +1,6 @@
 #include "rebulkpch.h"
 #include "VulkanLayer.h"
-#include <inttypes.h>
+#include "Rebulk/Application.h"
 
 namespace Rbk
 {
@@ -180,15 +180,15 @@ namespace Rbk
             ImGui::SameLine();
 
             if (ImGui::RadioButton("Fill", &Rbk::VulkanAdapter::s_PolygoneMode, VK_POLYGON_MODE_FILL)) {
-                m_RenderManager->GetRendererAdapter()->Refresh();
+                m_RenderManager->Refresh();
             };
             ImGui::SameLine();
             if (ImGui::RadioButton("Line", &Rbk::VulkanAdapter::s_PolygoneMode, VK_POLYGON_MODE_LINE)) {
-                m_RenderManager->GetRendererAdapter()->Refresh();
+                m_RenderManager->Refresh();
             };
             ImGui::SameLine();
             if (ImGui::RadioButton("Point", &Rbk::VulkanAdapter::s_PolygoneMode, VK_POLYGON_MODE_POINT)) {
-                m_RenderManager->GetRendererAdapter()->Refresh();
+                m_RenderManager->Refresh();
             }
 
             if (ImGui::Checkbox("Display grid", &m_ShowGrid)) {
@@ -197,7 +197,7 @@ namespace Rbk
 
             if (ImGui::Checkbox("Display bbox", &m_ShowBBox)) {
                 m_RenderManager->GetEntityManager()->SetShowBBox(m_ShowBBox);
-                m_RenderManager->GetRendererAdapter()->Refresh();
+                m_RenderManager->Refresh();
             }
 
             Rbk::Im::Text("FPS limit");
@@ -307,7 +307,7 @@ namespace Rbk
                     for (auto& future : entityFutures) {
                         future.wait();
                     }
-                    m_RenderManager->GetRendererAdapter()->Refresh();
+                    m_RenderManager->Refresh();
                 }
 
                 if (isSelected)
@@ -325,7 +325,7 @@ namespace Rbk
             for (auto& future : entityFutures) {
                 future.wait();
             }
-            m_RenderManager->GetRendererAdapter()->Refresh();
+            m_RenderManager->Refresh();
         }
 
         std::vector<std::string> skybox = m_RenderManager->GetConfigManager()->ListSkybox();
@@ -346,7 +346,7 @@ namespace Rbk
                     }
 
                     m_RenderManager->GetTextureManager()->AddSkyBox(skyboxImages);
-                    m_RenderManager->GetRendererAdapter()->Refresh();
+                    m_RenderManager->Refresh();
                 }
 
                 if (isSelected)

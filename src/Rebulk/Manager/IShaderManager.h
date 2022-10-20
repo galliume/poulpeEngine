@@ -2,7 +2,6 @@
 #include <volk.h>
 #include <future>
 #include <json.hpp>
-#include "Rebulk/Renderer/Adapter/IRendererAdapter.h"
 
 namespace Rbk
 {

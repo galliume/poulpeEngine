@@ -1,7 +1,7 @@
 #include "rebulkpch.h"
-#include <limits>
 
 #include "VulkanInitEntity.h"
+#include "Rebulk/Renderer/Adapter/VulkanAdapter.h"
 
 namespace Rbk
 {
@@ -9,8 +9,14 @@ namespace Rbk
 
     VulkanInitEntity::VulkanInitEntity(
         std::shared_ptr<VulkanAdapter> adapter,
+        std::shared_ptr<EntityManager> entityManager,
+        std::shared_ptr<ShaderManager> shaderManager,
+        std::shared_ptr<TextureManager> textureManager,
         VkDescriptorPool descriptorPool) :
         m_Adapter(adapter),
+        m_EntityManager(entityManager),
+        m_ShaderManager(shaderManager),
+        m_TextureManager(textureManager),
         m_DescriptorPool(descriptorPool)
     {
 
@@ -44,7 +50,7 @@ namespace Rbk
             data.m_IndicesBuffer = m_Adapter->Rdr()->CreateIndexBuffer(commandPool, data.m_Indices);
             data.m_TextureIndex = index;
 
-            Texture tex = m_Adapter->GetTextureManager()->GetTextures()[data.m_Texture];
+            Texture tex = m_TextureManager->GetTextures()[data.m_Texture];
 
             VkDescriptorImageInfo imageInfo{};
             imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
@@ -103,14 +109,14 @@ namespace Rbk
         VkPipelineShaderStageCreateInfo vertShaderStageInfo{};
         vertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
         vertShaderStageInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
-        vertShaderStageInfo.module = m_Adapter->GetShaderManager()->GetShaders()->shaders[mesh->GetShaderName()][0];
+        vertShaderStageInfo.module = m_ShaderManager->GetShaders()->shaders[mesh->GetShaderName()][0];
         vertShaderStageInfo.pName = "main";
         shadersStageInfos.emplace_back(vertShaderStageInfo);
 
         VkPipelineShaderStageCreateInfo fragShaderStageInfo{};
         fragShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
         fragShaderStageInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
-        fragShaderStageInfo.module = m_Adapter->GetShaderManager()->GetShaders()->shaders[mesh->GetShaderName()][1];
+        fragShaderStageInfo.module = m_ShaderManager->GetShaders()->shaders[mesh->GetShaderName()][1];
         fragShaderStageInfo.pName = "main";
         shadersStageInfos.emplace_back(fragShaderStageInfo);
 
@@ -133,7 +139,7 @@ namespace Rbk
             VulkanAdapter::s_PolygoneMode
         );
         
-        if (m_Adapter->GetEntityManager()->ShowBBox()) {
+        if (m_EntityManager->ShowBBox()) {
             CreateBBoxEntity(mesh);
         }
     }
@@ -189,7 +195,7 @@ namespace Rbk
                 bbox->SetShaderName("bbox");
                 bbox->GetData()->emplace_back(data);
 
-                uint64_t count = m_Adapter->GetEntityManager()->GetLoadedBBox().count(bbox->GetName().c_str());
+                uint64_t count = m_EntityManager->GetLoadedBBox().count(bbox->GetName().c_str());
 
                 if (0 == count) {
 
@@ -204,7 +210,7 @@ namespace Rbk
                         bbox->m_UniformBuffers.emplace_back(uniformBuffer);
                     }
 
-                    Texture tex = m_Adapter->GetTextureManager()->GetTextures()["minecraft_grass"];
+                    Texture tex = m_TextureManager->GetTextures()["minecraft_grass"];
 
                     std::vector<VkDescriptorImageInfo>imageInfos{};
                     VkDescriptorImageInfo imageInfo{};
@@ -252,14 +258,14 @@ namespace Rbk
                     VkPipelineShaderStageCreateInfo vertShaderStageInfo{};
                     vertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
                     vertShaderStageInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
-                    vertShaderStageInfo.module = m_Adapter->GetShaderManager()->GetShaders()->shaders["bbox"][0];
+                    vertShaderStageInfo.module = m_ShaderManager->GetShaders()->shaders["bbox"][0];
                     vertShaderStageInfo.pName = "main";
                     shadersStageInfos.emplace_back(vertShaderStageInfo);
 
                     VkPipelineShaderStageCreateInfo fragShaderStageInfo{};
                     fragShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
                     fragShaderStageInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
-                    fragShaderStageInfo.module = m_Adapter->GetShaderManager()->GetShaders()->shaders["bbox"][1];
+                    fragShaderStageInfo.module = m_ShaderManager->GetShaders()->shaders["bbox"][1];
                     fragShaderStageInfo.pName = "main";
                     shadersStageInfos.emplace_back(fragShaderStageInfo);
 
@@ -285,7 +291,7 @@ namespace Rbk
                     );
                 }
 
-                m_Adapter->GetEntityManager()->AddBBox(bbox);
+                m_EntityManager->AddBBox(bbox);
             }
         }
     }

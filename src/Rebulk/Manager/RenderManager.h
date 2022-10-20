@@ -3,62 +3,61 @@
 
 namespace Rbk
 {
-    class RenderManager : IRenderManager, public std::enable_shared_from_this<RenderManager>
+    class RenderManager : IRenderManager
     {
     public:
-        explicit RenderManager(
+        RenderManager(
             std::shared_ptr<Window> window,
-            std::shared_ptr<IRendererAdapter> renderer,
-            std::shared_ptr<IConfigManager> configManager,
-            std::shared_ptr<IInputManager> inputManager,
-            std::shared_ptr<IAudioManager> audioManager,
-            std::shared_ptr<ITextureManager> textureManager,
-            std::shared_ptr<IEntityManager> entityManager,
-            std::shared_ptr<IShaderManager> shaderManager,
-            std::shared_ptr<ISpriteAnimationManager> spriteAnimationManager,
-            std::shared_ptr<Rbk::ILayerManager> layerManager,
-            std::shared_ptr<Rbk::Camera>
+            std::shared_ptr<VulkanAdapter> renderer,
+            std::shared_ptr<ConfigManager> configManager,
+            std::shared_ptr<InputManager> inputManager,
+            std::shared_ptr<AudioManager> audioManager,
+            std::shared_ptr<TextureManager> textureManager,
+            std::shared_ptr<EntityManager> entityManager,
+            std::shared_ptr<ShaderManager> shaderManager,
+            std::shared_ptr<SpriteAnimationManager> spriteAnimationManager,
+            std::shared_ptr<Rbk::Camera> camera
         );
         ~RenderManager();
 
         virtual void Init() override;
         virtual void Draw() override;
         virtual void SetDeltatime(float deltaTime) override;
-        virtual inline std::shared_ptr<IRendererAdapter> Adp()  override { return m_Renderer; };
-        virtual bool IsLoaded()  override { return m_IsLoaded; };
-        virtual void SetIsLoaded(bool loaded = true) override { m_IsLoaded = loaded; };
+        virtual bool IsLoaded()  override { return m_IsLoaded; }
+        virtual void SetIsLoaded(bool loaded = true) override { m_IsLoaded = loaded; }
+        virtual void Refresh() override;
 
-        virtual std::shared_ptr<Window> GetWindow() override { return  m_Window; };
-        virtual std::shared_ptr<Rbk::Camera> GetCamera() override { return m_Camera; };
-        virtual std::shared_ptr<Rbk::IInputManager> GetInputManager() override { m_InputManager; };
-        virtual std::shared_ptr<Rbk::IRendererAdapter> GetRendererAdapter() override { m_RendererAdapter; };
-        virtual std::shared_ptr<Rbk::ILayerManager> GetLayerManager() override { m_LayerManager; };
-        virtual std::shared_ptr<Rbk::ITextureManager> GetTextureManager() override { m_TextureManager; };
-        virtual std::shared_ptr<Rbk::ISpriteAnimationManager> GetSpriteAnimationManager() override { m_SpriteAnimationManager; };
-        virtual std::shared_ptr<Rbk::IEntityManager> GetEntityManager() override { m_EntityManager; };
-        virtual std::shared_ptr<Rbk::IShaderManager> GetShaderManager() override { m_ShaderManager; };
-        virtual std::shared_ptr<Rbk::IAudioManager> GetAudioManager() override { m_AudioManager; }
-        virtual std::shared_ptr<Rbk::IConfigManager> GetConfigManager() override { m_ConfigManager; };
-        virtual std::shared_ptr<Rbk::ILayer> GetVulkanLayer() override { m_VulkanLayer; };
-
-        inline static RenderManager& Get() { return *s_Instance; };
+        virtual std::shared_ptr<Window> GetWindow() override { return  m_Window; }
+        virtual std::shared_ptr<Rbk::Camera> GetCamera() override { return m_Camera; }
+        virtual std::shared_ptr<Rbk::InputManager> GetInputManager() override { return m_InputManager; }
+        virtual std::shared_ptr<Rbk::VulkanAdapter> GetRendererAdapter() override { return m_Renderer; }
+        virtual std::shared_ptr<Rbk::TextureManager> GetTextureManager() override { return m_TextureManager; }
+        virtual std::shared_ptr<Rbk::SpriteAnimationManager> GetSpriteAnimationManager() override { return m_SpriteAnimationManager; }
+        virtual std::shared_ptr<Rbk::EntityManager> GetEntityManager() override { return m_EntityManager; }
+        virtual std::shared_ptr<Rbk::ShaderManager> GetShaderManager() override { return m_ShaderManager; }
+        virtual std::shared_ptr<Rbk::AudioManager> GetAudioManager() override { return m_AudioManager; }
+        virtual std::shared_ptr<Rbk::ConfigManager> GetConfigManager() override { return m_ConfigManager; }
 
     private:
-        static RenderManager* s_Instance;
-        std::shared_ptr<IRendererAdapter> m_Renderer = nullptr;
+        void PrepareSplashScreen();
+        void Prepare();
+        void LoadData();
+
+    private:
         std::shared_ptr<Window> m_Window;
+        std::shared_ptr<VulkanAdapter> m_Renderer;
         std::shared_ptr<Rbk::Camera> m_Camera;
-        std::shared_ptr<Rbk::IInputManager> m_InputManager;
-        std::shared_ptr<Rbk::IRendererAdapter> m_RendererAdapter;
-        std::shared_ptr<Rbk::ILayerManager> m_LayerManager;
-        std::shared_ptr<Rbk::ITextureManager> m_TextureManager;
-        std::shared_ptr<Rbk::ISpriteAnimationManager> m_SpriteAnimationManager;
-        std::shared_ptr<Rbk::IEntityManager> m_EntityManager;
-        std::shared_ptr<Rbk::IShaderManager> m_ShaderManager;
-        std::shared_ptr<Rbk::IAudioManager> m_AudioManager;
-        std::shared_ptr<Rbk::IConfigManager> m_ConfigManager;
-        std::shared_ptr<Rbk::ILayer> m_VulkanLayer;
+        std::shared_ptr<Rbk::InputManager> m_InputManager;
+        std::shared_ptr<Rbk::TextureManager> m_TextureManager;
+        std::shared_ptr<Rbk::SpriteAnimationManager> m_SpriteAnimationManager;
+        std::shared_ptr<Rbk::EntityManager> m_EntityManager;
+        std::shared_ptr<Rbk::ShaderManager> m_ShaderManager;
+        std::shared_ptr<Rbk::AudioManager> m_AudioManager;
+        std::shared_ptr<Rbk::ConfigManager> m_ConfigManager;
 
         bool m_IsLoaded = false;
+
+        //@todo should not be impl
+        std::vector<VkDescriptorPool> m_DescriptorPools;
     };
 }

@@ -1,14 +1,12 @@
 #pragma once
 
-#include <memory>
-#include <map>
-#include <any>
-#include <string>
+#include <volk.h>
+
+#include "Rebulk/Renderer/Adapter/IRendererAdapter.h"
+#include "Rebulk/Component/Mesh.h"
 
 namespace Rbk
 {
-    class Entity;
-
     class IVisitor
     {
     public:

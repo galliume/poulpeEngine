@@ -1,23 +1,27 @@
 #include "rebulkpch.h"
 #include "RenderManager.h"
 
-namespace Rbk
-{
-    RenderManager* RenderManager::s_Instance = nullptr;
+#include "Rebulk/Core/VisitorStrategy/VulkanInitEntity.h"
+#include "Rebulk/Core/VisitorStrategy/VulkanSkybox.h"
+#include "Rebulk/Core/VisitorStrategy/VulkanCrosshair.h"
+#include "Rebulk/Core/VisitorStrategy/VulkanGrid.h"
+#include "Rebulk/Core/VisitorStrategy/VulkanSplash.h"
 
+namespace Rbk
+{    
     RenderManager::RenderManager(
         std::shared_ptr<Window> window,
-        std::shared_ptr<IRendererAdapter> renderer,
-        std::shared_ptr<IConfigManager> configManager,
-        std::shared_ptr<IInputManager> inputManager,
-        std::shared_ptr<IAudioManager> audioManager,
-        std::shared_ptr<ITextureManager> textureManager,
-        std::shared_ptr<IEntityManager> entityManager,
-        std::shared_ptr<IShaderManager> shaderManager,
-        std::shared_ptr<ISpriteAnimationManager> spriteAnimationManager,
-        std::shared_ptr<Rbk::ILayerManager> layerManager,
+        std::shared_ptr<VulkanAdapter> renderer,
+        std::shared_ptr<ConfigManager> configManager,
+        std::shared_ptr<InputManager> inputManager,
+        std::shared_ptr<AudioManager> audioManager,
+        std::shared_ptr<TextureManager> textureManager,
+        std::shared_ptr<EntityManager> entityManager,
+        std::shared_ptr<ShaderManager> shaderManager,
+        std::shared_ptr<SpriteAnimationManager> spriteAnimationManager,
         std::shared_ptr<Rbk::Camera> camera
-    ) : m_Window(window),
+    ) :
+        m_Window(window),
         m_Renderer(renderer),
         m_ConfigManager(configManager),
         m_InputManager(inputManager),
@@ -26,12 +30,8 @@ namespace Rbk
         m_EntityManager(entityManager),
         m_ShaderManager(shaderManager),
         m_SpriteAnimationManager(spriteAnimationManager),
-        m_LayerManager(layerManager),
         m_Camera(camera)
     {
-        if (s_Instance == nullptr) {
-            s_Instance = this;
-        }
     }
 
     RenderManager::~RenderManager()
@@ -41,37 +41,33 @@ namespace Rbk
 
     void RenderManager::Init()
     {
-        m_Camera->Init();
-
         m_Renderer->WaitIdle();
+        m_Camera->Init();
         m_Renderer->Init();
         m_Renderer->AddCamera(m_Camera);
-
         m_TextureManager->AddConfig(m_ConfigManager->TexturesConfig());
         
-        //@todo, those managers should not have the usage of the renderer...
-        m_TextureManager->AddRenderer(m_Renderer);
-        m_EntityManager->AddRenderer(m_Renderer);
-        //end @todo
-
-        m_Renderer->AddTextureManager(m_TextureManager);
-        m_Renderer->AddEntityManager(m_EntityManager);
-        m_Renderer->AddShaderManager(m_ShaderManager);
-        m_Renderer->AddSpriteAnimationManager(m_SpriteAnimationManager);
-
         nlohmann::json appConfig = m_ConfigManager->AppConfig();
         std::string defaultLevel = static_cast<std::string>(appConfig["defaultLevel"]);
         std::string defaultSkybox = static_cast<std::string>(appConfig["defaultSkybox"]);
         bool splashScreenMusic = static_cast<bool>(appConfig["splashScreenMusic"]);
         bool ambientScreenMusic = static_cast<bool>(appConfig["ambientMusic"]);
         nlohmann::json inputConfig = appConfig["input"];
-
         nlohmann::json textureConfig = m_ConfigManager->TexturesConfig();
         nlohmann::json shaderConfig = m_ConfigManager->ShaderConfig();
         nlohmann::json soundConfig = m_ConfigManager->SoundConfig();
         nlohmann::json levelConfig = m_ConfigManager->EntityConfig(defaultLevel);
 
+        //@todo, those managers should not have the usage of the renderer...
+        m_TextureManager->AddRenderer(m_Renderer);
+        m_EntityManager->AddRenderer(m_Renderer);
+        m_ShaderManager->AddRenderer(m_Renderer);
+        m_InputManager->AddRenderer(m_Renderer);
+        m_InputManager->SetCamera(m_Camera);
+        //end @todo
+
         m_InputManager->Init(inputConfig);
+        m_AudioManager->Load(soundConfig);
 
         std::vector<std::string> splashSprites{};
         for (auto& texture : textureConfig["splash"].items()) {
@@ -80,8 +76,8 @@ namespace Rbk
 
         m_SpriteAnimationManager->Add("splashAnim", splashSprites);
         m_ShaderManager->AddShader("splashscreen", "assets/shaders/spv/2d_vert.spv", "assets/shaders/spv/2d_frag.spv");
-        m_Renderer->PrepareSplashScreen();
-        m_AudioManager->Load(soundConfig);
+
+        PrepareSplashScreen();
 
         if (splashScreenMusic)
             m_AudioManager->StartSplash();
@@ -92,7 +88,26 @@ namespace Rbk
                 m_Renderer->DrawSplashScreen();
                 std::this_thread::sleep_for(std::chrono::milliseconds(50));
             }
-            });
+        });
+
+        LoadData();
+        loading.wait();
+
+        m_AudioManager->StopSplash();
+
+        if (ambientScreenMusic)
+            m_AudioManager->StartAmbient();
+
+        Prepare();
+    }
+
+    void RenderManager::LoadData()
+    {
+        nlohmann::json appConfig = m_ConfigManager->AppConfig();
+        std::string defaultLevel = static_cast<std::string>(appConfig["defaultLevel"]);
+        std::string defaultSkybox = static_cast<std::string>(appConfig["defaultSkybox"]);
+        nlohmann::json shaderConfig = m_ConfigManager->ShaderConfig();
+        nlohmann::json levelConfig = m_ConfigManager->EntityConfig(defaultLevel);
 
         std::future<void> shaderFuture = m_ShaderManager->Load(shaderConfig);
         std::vector<std::future<void>> textureFutures = m_TextureManager->Load(defaultSkybox);
@@ -107,18 +122,8 @@ namespace Rbk
         shaderFuture.wait();
 
         SetIsLoaded();
-        loading.wait();
-        m_AudioManager->StopSplash();
-
-        if (ambientScreenMusic)
-            m_AudioManager->StartAmbient();
-
-        m_Renderer->Prepare();
-
-        //todo move to layer manager and update application main loop accordingly
-        m_VulkanLayer = std::make_shared<Rbk::ILayer>();
-        m_VulkanLayer->AddRenderManager(shared_from_this());
-        //m_LayerManager->Add(vulkanLayer.get());
+        m_Renderer->AddEntities(m_EntityManager->GetEntities());
+        m_Renderer->AddBbox(m_EntityManager->GetBBox());
     }
 
     void RenderManager::Draw()
@@ -130,4 +135,122 @@ namespace Rbk
     {
         m_Renderer->SetDeltatime(deltaTime);
     }
+
+    void RenderManager::Refresh()
+    {
+        Prepare();
+    }
+
+    void RenderManager::PrepareSplashScreen()
+    {
+        std::vector<VkDescriptorPoolSize> poolSizes{};
+        VkDescriptorPoolSize cp1;
+        cp1.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        cp1.descriptorCount = 1000;
+        VkDescriptorPoolSize cp2;
+        cp2.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        cp2.descriptorCount = 1000;
+        poolSizes.emplace_back(cp1);
+        poolSizes.emplace_back(cp2);
+
+        VkDescriptorPool descriptorPool = m_Renderer->Rdr()->CreateDescriptorPool(poolSizes, 1000);
+        m_DescriptorPools.emplace_back(descriptorPool);
+
+        std::shared_ptr<VulkanSplash> splashVulkanisator = std::make_shared<VulkanSplash>(
+            m_Renderer,
+            m_EntityManager,
+            m_ShaderManager,
+            m_TextureManager,
+            m_SpriteAnimationManager,
+            descriptorPool
+        );
+        auto splash = std::make_shared<Mesh2D>();
+        splash->Accept(splashVulkanisator);
+
+        std::vector<std::shared_ptr<Mesh>> splashs{ splash };
+
+        m_Renderer->AddSplash(splashs);
+    }
+
+    void RenderManager::Prepare()
+    {
+        m_DescriptorPools.clear();
+
+        std::vector<VkDescriptorPoolSize> poolSizes{};
+        VkDescriptorPoolSize cp1;
+        cp1.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        cp1.descriptorCount = 1000;
+        VkDescriptorPoolSize cp2;
+        cp2.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        cp2.descriptorCount = 1000;
+        poolSizes.emplace_back(cp1);
+        poolSizes.emplace_back(cp2);
+
+        VkDescriptorPool descriptorPool = m_Renderer->Rdr()->CreateDescriptorPool(poolSizes, 1000);
+        m_DescriptorPools.emplace_back(descriptorPool);
+
+        std::vector<VkPushConstantRange> pushConstants = {};
+        VkPushConstantRange vkPushconstants;
+        vkPushconstants.offset = 0;
+        vkPushconstants.size = sizeof(constants);
+        vkPushconstants.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+        pushConstants.emplace_back(vkPushconstants);
+
+        std::shared_ptr<VulkanInitEntity> vulkanisator = std::make_shared<VulkanInitEntity>(
+            m_Renderer,
+            m_EntityManager,
+            m_ShaderManager,
+            m_TextureManager,
+            descriptorPool
+        );
+
+        for (std::shared_ptr<Entity>& entity : *m_EntityManager->GetEntities()) {
+            entity->Accept(vulkanisator);
+        }
+
+        VkDescriptorPool skyDescriptorPool = m_Renderer->Rdr()->CreateDescriptorPool(poolSizes, 1000);
+        m_DescriptorPools.emplace_back(skyDescriptorPool);
+        std::shared_ptr<VulkanSkybox> skyboxVulkanisator = std::make_shared<VulkanSkybox>(
+            m_Renderer,
+            m_EntityManager,
+            m_ShaderManager,
+            m_TextureManager,
+            skyDescriptorPool
+        );
+
+        auto skyboxMesh = std::make_shared<Mesh>();
+        skyboxMesh->Accept(skyboxVulkanisator);
+        m_Renderer->AddSkybox(skyboxMesh);
+
+        std::vector<std::shared_ptr<Mesh>> hud{};
+
+        VkDescriptorPool HUDDescriptorPool = m_Renderer->Rdr()->CreateDescriptorPool(poolSizes, 1000);
+        m_DescriptorPools.emplace_back(HUDDescriptorPool);
+
+        std::shared_ptr<VulkanGrid> gridVulkanisator = std::make_shared<VulkanGrid>(
+            m_Renderer,
+            m_EntityManager,
+            m_ShaderManager,
+            m_TextureManager,
+            HUDDescriptorPool
+        );
+
+        auto grid = std::make_shared<Mesh>();
+        grid->Accept(gridVulkanisator);
+        hud.emplace_back(grid);
+
+        std::shared_ptr<VulkanCrosshair> crosshairVulkanisator = std::make_shared<VulkanCrosshair>(
+            m_Renderer,
+            m_EntityManager,
+            m_ShaderManager,
+            m_TextureManager,
+            HUDDescriptorPool
+        );
+        auto crossHair = std::make_shared<Mesh2D>();
+        crossHair->Accept(crosshairVulkanisator);
+        hud.emplace_back(crossHair);
+
+        m_Renderer->AddHUD(hud);
+    }
+
 }

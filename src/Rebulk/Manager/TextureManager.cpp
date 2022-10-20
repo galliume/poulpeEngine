@@ -132,4 +132,15 @@ namespace Rbk
         vkFreeCommandBuffers(m_Renderer->Rdr()->GetDevice(), commandPool, 1, &commandBuffer);
         vkDestroyCommandPool(m_Renderer->Rdr()->GetDevice(), commandPool, nullptr);
     }
+
+    TextureManager::~TextureManager()
+    {
+        for (auto item : GetTextures()) {
+            vkDestroySampler(m_Renderer->Rdr()->GetDevice(), item.second.GetSampler(), nullptr);
+
+            vkDestroyImage(m_Renderer->Rdr()->GetDevice(), item.second.GetImage(), nullptr);
+            m_Renderer->Rdr()->DestroyDeviceMemory(item.second.GetImageMemory());
+            vkDestroyImageView(m_Renderer->Rdr()->GetDevice(), item.second.GetImageView(), nullptr);
+        }
+    }
 }

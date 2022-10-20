@@ -1,5 +1,8 @@
 #pragma once
 #include "ILayer.h"
+#include <volk.h>
+#include "Rebulk/GUI/ImGui/Im.h"
+#include "Rebulk/Manager/RenderManager.h"
 
 namespace Rbk
 {
@@ -7,7 +10,8 @@ namespace Rbk
     {
     public:
         virtual void Init() override;
-        void Render(double timeStep, VkPhysicalDeviceProperties devicesProps) override;
+        virtual void Render(double timeStep, VkPhysicalDeviceProperties devicesProps) override;
+        virtual void AddRenderManager(std::shared_ptr<RenderManager> renderManager) override { m_RenderManager = renderManager; }
 
         void Destroy();
         void DisplayFpsCounter(double timeStep);
@@ -17,7 +21,6 @@ namespace Rbk
         void DisplaySounds();
         void DisplayLevel();
         void DisplayMesh();
-        void AddRenderManager(std::shared_ptr<IRenderManager> renderManager) { m_RenderManager = renderManager; };
         void LoadTextures();
 
         bool m_DebugOpen = true;
@@ -36,7 +39,7 @@ namespace Rbk
         int m_LevelIndex = 0;
         int m_SkyboxIndex = 0;
 
-        std::shared_ptr<IRenderManager> m_RenderManager;
+        std::shared_ptr<RenderManager> m_RenderManager;
         std::map<std::string, VkDescriptorSet> m_Textures;
         std::map<std::string, VkDescriptorSet> m_Entities;
     };

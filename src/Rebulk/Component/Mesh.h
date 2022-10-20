@@ -8,21 +8,10 @@
 #include "Rebulk/Component/Entity.h"
 #include "Rebulk/Core/TinyObjLoader.h"
 #include "Rebulk/Core/Buffer.h"
+#include "Rebulk/Core/MeshData.h"
 
 namespace Rbk
 {
-    struct Data
-    {
-        std::string m_Name;
-        std::string m_Texture;
-        std::vector<Vertex> m_Vertices;
-        std::vector<uint32_t> m_Indices;
-        std::vector<UniformBufferObject> m_Ubos;
-        std::pair<VkBuffer, VkDeviceMemory> m_VertexBuffer = { nullptr, nullptr };
-        std::pair<VkBuffer, VkDeviceMemory> m_IndicesBuffer = { nullptr, nullptr };
-        uint32_t m_TextureIndex = 0;
-    };
-
     struct constants 
     {
         uint32_t textureID;

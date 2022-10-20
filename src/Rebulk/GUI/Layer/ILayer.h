@@ -1,17 +1,17 @@
 #pragma once
-#include "Rebulk/Manager/IRenderManager.h"
-#include "Rebulk/GUI/ImGui/Im.h"
-#include "ILayer.h"
-#include "Rebulk/GUI/Window.h"
-#include "Rebulk/Application.h"
+#include <volk.h>
+#include "Rebulk/Manager/RenderManager.h"
 
 namespace Rbk 
 {
     class ILayer
     {
     public:
+        ILayer() = default;
+        ~ILayer() = default;
+
         virtual void Init() = 0;
-        virtual void AddRenderManager(std::shared_ptr<IRenderManager> renderManager) = 0;
+        virtual void AddRenderManager(std::shared_ptr<RenderManager> renderManager) = 0;
 
         //@todo temp, should create a struct not specific to vulkan
         virtual void Render(double timeStep, VkPhysicalDeviceProperties devicesProps) = 0;

@@ -7,8 +7,8 @@ namespace Rbk
     {
     public:
         void Init();
-        inline GLFWwindow* Get() { return m_Window; };
-        inline void SetVSync(bool active) { m_ActiveVSync = active; };
+        inline GLFWwindow* Get() { return m_Window; }
+        inline void SetVSync(bool active) { m_ActiveVSync = active; }
         static bool m_FramebufferResized;
         bool IsMinimized();
         void Wait();

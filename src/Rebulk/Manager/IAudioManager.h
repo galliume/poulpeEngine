@@ -1,6 +1,4 @@
 #pragma once
-#include "Rebulk/Component/Camera.h"
-#include "Rebulk/GUI/Window.h"
 #include <json.hpp>
 
 namespace Rbk

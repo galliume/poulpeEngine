@@ -3,14 +3,8 @@
 #include <memory>
 #include <volk.h>
 #include "VulkanAdapter.h"
+#include "Rebulk/Renderer/Vulkan/VulkanRenderer.h"
 #include "Rebulk/GUI/Window.h"
-#include "Rebulk/Component/Mesh.h"
-#include "Rebulk/Core/VisitorStrategy/VulkanInitEntity.h"
-#include "Rebulk/Core/VisitorStrategy/VulkanSkybox.h"
-#include "Rebulk/Core/VisitorStrategy/VulkanCrosshair.h"
-#include "Rebulk/Core/VisitorStrategy/VulkanGrid.h"
-#include "Rebulk/Core/VisitorStrategy/VulkanSplash.h"
-#include "Rebulk/Component/Entity.h"
 
 namespace Rbk
 {
@@ -21,9 +15,9 @@ namespace Rbk
     int VulkanAdapter::s_PolygoneMode = VK_POLYGON_MODE_FILL;
     
     VulkanAdapter::VulkanAdapter(std::shared_ptr<Window> window) :
-        m_Renderer(std::make_shared<VulkanRenderer>(window)),
         m_Window(window)
     {
+        m_Renderer = std::make_shared<VulkanRenderer>(window);
     }
 
     VulkanAdapter::~VulkanAdapter()
@@ -39,7 +33,6 @@ namespace Rbk
         m_RenderPass = m_Renderer->CreateRenderPass(m_Renderer->GetMsaaSamples());
         m_SwapChain = m_Renderer->CreateSwapChain(m_SwapChainImages);
         m_CommandPool = m_Renderer->CreateCommandPool();
-        VulkanShaders m_Shaders;
 
         //init swap chain, depth image views, primary command buffers and semaphores
         m_SwapChainImageViews.resize(m_SwapChainImages.size());
@@ -66,31 +59,6 @@ namespace Rbk
     void VulkanAdapter::WaitIdle()
     {
         m_Renderer->WaitIdle();
-    }
-
-    void VulkanAdapter::AddTextureManager(std::shared_ptr<ITextureManager> textureManager)
-    {
-        m_TextureManager = textureManager;
-    }
-
-    void VulkanAdapter::AddShaderManager(std::shared_ptr<IShaderManager> shaderManager)
-    {
-        m_ShaderManager = shaderManager;
-    } 
-    
-    void VulkanAdapter::AddSpriteAnimationManager(std::shared_ptr<ISpriteAnimationManager> spriteAnimationManager)
-    {
-        m_SpriteAnimationManager = spriteAnimationManager;
-    }
-
-    void VulkanAdapter::AddCamera(std::shared_ptr<Camera> camera)
-    {
-        m_Camera = camera;
-    }
-
-    void VulkanAdapter::AddEntityManager(std::shared_ptr<IEntityManager> entityManager)
-    {
-        m_EntityManager = entityManager;
     }
 
     void VulkanAdapter::RecreateSwapChain()
@@ -137,86 +105,6 @@ namespace Rbk
         }
     }
 
-    void VulkanAdapter::PrepareSplashScreen()
-    {
-        std::vector<VkDescriptorPoolSize> poolSizes{};
-        VkDescriptorPoolSize cp1;
-        cp1.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        cp1.descriptorCount = 1000;
-        VkDescriptorPoolSize cp2;
-        cp2.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        cp2.descriptorCount = 1000;
-        poolSizes.emplace_back(cp1);
-        poolSizes.emplace_back(cp2);
-
-        VkDescriptorPool descriptorPool = m_Renderer->CreateDescriptorPool(poolSizes, 1000);
-        m_DescriptorPools.emplace_back(descriptorPool);
-
-        std::shared_ptr<VulkanSplash> splashVulkanisator = std::make_shared<VulkanSplash>(shared_from_this(), descriptorPool);
-        auto splash = std::make_shared<Mesh2D>();
-        splash->Accept(splashVulkanisator);
-        m_Splash.emplace_back(splash);
-    }
-
-    void VulkanAdapter::Prepare()
-    {
-        m_DescriptorPools.clear();
-
-        std::vector<std::shared_ptr<Entity>>* entities = m_EntityManager->GetEntities();
-
-        std::vector<VkDescriptorPoolSize> poolSizes{};
-        VkDescriptorPoolSize cp1;
-        cp1.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        cp1.descriptorCount = 1000;
-        VkDescriptorPoolSize cp2;
-        cp2.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        cp2.descriptorCount = 1000;
-        poolSizes.emplace_back(cp1);
-        poolSizes.emplace_back(cp2);
-
-        VkDescriptorPool descriptorPool = m_Renderer->CreateDescriptorPool(poolSizes, 1000);
-        m_DescriptorPools.emplace_back(descriptorPool);
-
-        std::vector<VkPushConstantRange> pushConstants = {};
-        VkPushConstantRange vkPushconstants;
-        vkPushconstants.offset = 0;
-        vkPushconstants.size = sizeof(constants);
-        vkPushconstants.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-        pushConstants.emplace_back(vkPushconstants);
-
-        VkVertexInputBindingDescription bDesc = Vertex::GetBindingDescription();
-
-        std::shared_ptr<VulkanInitEntity> vulkanisator = std::make_shared<VulkanInitEntity>(shared_from_this(), descriptorPool);
-        for (std::shared_ptr<Entity>& entity : *entities) {
-            entity->Accept(vulkanisator);
-        }
-
-        if (!m_IsSkyBoxPrepared) {
-            VkDescriptorPool skyDescriptorPool = m_Renderer->CreateDescriptorPool(poolSizes, 1000);
-            m_DescriptorPools.emplace_back(skyDescriptorPool);
-            std::shared_ptr<VulkanSkybox> skyboxVulkanisator = std::make_shared<VulkanSkybox>(shared_from_this(), skyDescriptorPool);
-            std::shared_ptr<Mesh> skyboxMesh = std::make_shared<Mesh>();
-            skyboxMesh->Accept(skyboxVulkanisator);
-            m_EntityManager->SetSkyboxMesh(skyboxMesh);
-        }
-
-        if (!m_IsHUDPrepared) {
-
-            VkDescriptorPool HUDDescriptorPool = m_Renderer->CreateDescriptorPool(poolSizes, 1000);
-            m_DescriptorPools.emplace_back(HUDDescriptorPool);
-
-            std::shared_ptr<VulkanGrid> gridVulkanisator = std::make_shared<VulkanGrid>(shared_from_this(), HUDDescriptorPool);
-            auto grid = std::make_shared<Mesh>();
-            grid->Accept(gridVulkanisator);
-            m_HUD.emplace_back(grid);
-
-            std::shared_ptr<VulkanCrosshair> crosshairVulkanisator = std::make_shared<VulkanCrosshair>(shared_from_this(), HUDDescriptorPool);
-            auto crossHair = std::make_shared<Mesh2D>();
-            crossHair->Accept(crosshairVulkanisator);
-            m_HUD.emplace_back(crossHair);
-        }
-    }
-
     void VulkanAdapter::SetPerspective()
     {        
         m_Perspective = glm::perspective(
@@ -250,9 +138,7 @@ namespace Rbk
         glm::vec4 cameraPos = m_Camera->GetPos();
 
         //entities !
-        std::vector<std::shared_ptr<Entity>> entities = *m_EntityManager->GetEntities();
-
-        for (std::shared_ptr<Entity> entity : entities) {
+        for (std::shared_ptr<Entity> entity : *m_Entities) {
             std::shared_ptr<Mesh> mesh = std::dynamic_pointer_cast<Mesh>(entity);
 
             if (!mesh) continue;
@@ -284,9 +170,7 @@ namespace Rbk
         }
 
         //bbox !
-        auto bboxs = *m_EntityManager->GetBBox();
-
-        for (std::shared_ptr<Entity> bbox : bboxs) {
+        for (std::shared_ptr<Entity> bbox : *m_BoundingBox) {
             std::shared_ptr<Mesh> mesh = std::dynamic_pointer_cast<Mesh>(bbox);
 
             if (!mesh) continue;
@@ -315,24 +199,22 @@ namespace Rbk
         }
 
         //skybox !
-        std::shared_ptr<Mesh> skyboxMesh = m_EntityManager->GetSkyboxMesh();
-
-        if (skyboxMesh) {
-            std::vector<Rbk::Data> skyboxData = *skyboxMesh->GetData();
+        if (m_SkyboxMesh) {
+            std::vector<Rbk::Data> skyboxData = *m_SkyboxMesh->GetData();
 
             if (!skyboxData.empty()) {
                 glm::mat4 skybowView = glm::mat4(glm::mat3(lookAt));
-                for (uint32_t i = 0; i < m_EntityManager->GetSkyboxMesh()->m_UniformBuffers.size(); i++) {
+                for (uint32_t i = 0; i < m_SkyboxMesh->m_UniformBuffers.size(); i++) {
                     skyboxData[0].m_Ubos[i].view = skybowView;
                     m_Renderer->UpdateUniformBuffer(
-                        m_EntityManager->GetSkyboxMesh()->m_UniformBuffers[i],
+                        m_SkyboxMesh->m_UniformBuffers[i],
                         { skyboxData[0].m_Ubos[i] },
                         1
                     );
                 }
-                m_Renderer->BindPipeline(m_CommandBuffers[m_ImageIndex], m_EntityManager->GetSkyboxMesh()->m_GraphicsPipeline);
-                vkCmdPushConstants(m_CommandBuffers[m_ImageIndex], m_EntityManager->GetSkyboxMesh()->m_PipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(constants), &pushConstants);
-                m_Renderer->Draw(m_CommandBuffers[m_ImageIndex], m_EntityManager->GetSkyboxMesh().get(), skyboxData[0], m_ImageIndex, false);
+                m_Renderer->BindPipeline(m_CommandBuffers[m_ImageIndex], m_SkyboxMesh->m_GraphicsPipeline);
+                vkCmdPushConstants(m_CommandBuffers[m_ImageIndex], m_SkyboxMesh->m_PipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(constants), &pushConstants);
+                m_Renderer->Draw(m_CommandBuffers[m_ImageIndex], m_SkyboxMesh.get(), skyboxData[0], m_ImageIndex, false);
             }
         }
 
@@ -423,22 +305,20 @@ namespace Rbk
         m_Renderer->DestroySwapchain(m_Renderer->GetDevice(), m_SwapChain, {}, m_SwapChainImageViews);
         m_Renderer->DestroySemaphores(m_Semaphores);
     
-        std::shared_ptr<Mesh> skyboxMesh = m_EntityManager->GetSkyboxMesh();
-
-        for (auto buffer : skyboxMesh->m_UniformBuffers) {
+        for (auto buffer : m_SkyboxMesh->m_UniformBuffers) {
             m_Renderer->DestroyBuffer(buffer.first);
             m_Renderer->DestroyDeviceMemory(buffer.second);
         }
         
-        for (Data data : *skyboxMesh->GetData()) {
+        for (Data data : *m_SkyboxMesh->GetData()) {
             m_Renderer->DestroyBuffer(data.m_VertexBuffer.first);
             m_Renderer->DestroyDeviceMemory(data.m_VertexBuffer.second);
 
             m_Renderer->DestroyBuffer(data.m_IndicesBuffer.first);
             m_Renderer->DestroyDeviceMemory(data.m_IndicesBuffer.second);
         }
-        m_Renderer->DestroyPipeline(skyboxMesh->m_GraphicsPipeline);
-        vkDestroyPipelineLayout(m_Renderer->GetDevice(), skyboxMesh->m_PipelineLayout, nullptr);
+        m_Renderer->DestroyPipeline(m_SkyboxMesh->m_GraphicsPipeline);
+        vkDestroyPipelineLayout(m_Renderer->GetDevice(), m_SkyboxMesh->m_PipelineLayout, nullptr);
 
         for (auto hudPart : m_HUD) {
             for (auto buffer : hudPart->m_UniformBuffers) {
@@ -457,9 +337,7 @@ namespace Rbk
             vkDestroyPipelineLayout(m_Renderer->GetDevice(), hudPart->m_PipelineLayout, nullptr);
         }
 
-        std::vector<std::shared_ptr<Entity>> entities = *m_EntityManager->GetEntities();
-
-        for (std::shared_ptr<Entity> entity : entities) {
+        for (std::shared_ptr<Entity> entity : *m_Entities) {
 
             std::shared_ptr<Mesh> mesh = std::dynamic_pointer_cast<Mesh>(entity);
 
@@ -481,9 +359,7 @@ namespace Rbk
 
         }
 
-        std::vector<std::shared_ptr<Entity>> bboxs = *m_EntityManager->GetBBox();
-
-        for (std::shared_ptr<Entity> entity : bboxs) {
+        for (std::shared_ptr<Entity> entity : *m_BoundingBox) {
 
             std::shared_ptr<Mesh> mesh = std::dynamic_pointer_cast<Mesh>(entity);
 
@@ -503,14 +379,6 @@ namespace Rbk
             m_Renderer->DestroyPipeline(mesh->m_GraphicsPipeline);
             vkDestroyPipelineLayout(m_Renderer->GetDevice(), mesh->m_PipelineLayout, nullptr);
 
-        }
-
-        for (auto item : m_TextureManager->GetTextures()) {
-            vkDestroySampler(m_Renderer->GetDevice(), item.second.GetSampler(), nullptr);
-
-            vkDestroyImage(m_Renderer->GetDevice(), item.second.GetImage(), nullptr);
-            m_Renderer->DestroyDeviceMemory(item.second.GetImageMemory());
-            vkDestroyImageView(m_Renderer->GetDevice(), item.second.GetImageView(), nullptr);
         }
 
         for (auto item: m_DepthImages) {
@@ -519,11 +387,6 @@ namespace Rbk
 
         for (auto item : m_DepthImageViews) {
             vkDestroyImageView(m_Renderer->GetDevice(), item, nullptr);
-        }
-
-        for (auto shader : m_ShaderManager->GetShaders()->shaders) {
-            vkDestroyShaderModule(m_Renderer->GetDevice(), shader.second[0], nullptr);
-            vkDestroyShaderModule(m_Renderer->GetDevice(), shader.second[1], nullptr);
         }
 
         for (auto& buffer : m_UniformBuffers.first) {
@@ -641,15 +504,6 @@ namespace Rbk
         //imGuiInfo.pipeline = m_Pipelines[0].graphicsPipeline;
 
         return imGuiInfo;
-    }
-
-    void VulkanAdapter::Refresh()
-    {
-        m_IsHUDPrepared = false;
-        m_HUD = {};
-        m_EntityManager->Clear();
-
-        Prepare();
     }
 
     void VulkanAdapter::ShowGrid(bool show)

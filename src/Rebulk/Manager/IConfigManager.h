@@ -1,5 +1,5 @@
 #pragma once
-#include "json.hpp"
+#include <json.hpp>
 
 namespace Rbk
 {

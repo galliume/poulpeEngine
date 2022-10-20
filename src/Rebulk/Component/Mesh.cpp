@@ -94,6 +94,4 @@ namespace Rbk
             data.m_Ubos.insert(data.m_Ubos.end(), ubos.begin(), ubos.end());
         }
     }
-
-    Mesh::~Mesh() { }
 }

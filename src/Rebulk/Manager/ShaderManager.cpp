@@ -47,4 +47,12 @@ namespace Rbk
 
         m_Shaders->shaders[name] = module;
     }
+
+    ShaderManager::~ShaderManager()
+    {
+        for (auto shader : GetShaders()->shaders) {
+            vkDestroyShaderModule(m_Renderer->Rdr()->GetDevice(), shader.second[0], nullptr);
+            vkDestroyShaderModule(m_Renderer->Rdr()->GetDevice(), shader.second[1], nullptr);
+        }
+    }
 }

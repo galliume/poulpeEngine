@@ -1,9 +1,9 @@
 #pragma once
 
-#include "Rebulk/Core/IVisitor.h"
-
 namespace Rbk
 {
+    class IVisitor;
+
     class Entity : public std::enable_shared_from_this<Entity>
     {
     public:
