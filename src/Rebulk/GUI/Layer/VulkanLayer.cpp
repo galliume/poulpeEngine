@@ -6,7 +6,7 @@ namespace Rbk
 {
     void VulkanLayer::Init()
     {
-
+      
     }
 
     void VulkanLayer::Render(double timeStep, VkPhysicalDeviceProperties devicesProps)
@@ -362,6 +362,21 @@ namespace Rbk
 
         for (const auto& texture : textures) {
             
+            if (!texture.second.IsPublic()) continue;
+
+            VkDescriptorSet imgDset = ImGui_ImplVulkan_AddTexture(texture.second.GetSampler(), texture.second.GetImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+
+            m_Textures[texture.second.GetName()] = imgDset;
+        }
+    }
+
+    void VulkanLayer::AddRenderManager(std::shared_ptr<RenderManager> renderManager)
+    { 
+        m_RenderManager = renderManager; 
+        const auto& textures = m_RenderManager->GetTextureManager()->GetTextures();
+
+        for (const auto& texture : textures) {
+
             if (!texture.second.IsPublic()) continue;
 
             VkDescriptorSet imgDset = ImGui_ImplVulkan_AddTexture(texture.second.GetSampler(), texture.second.GetImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);

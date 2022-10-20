@@ -34,7 +34,6 @@ namespace Rbk
         auto camera = std::make_shared<Rbk::Camera>();
 
         m_RenderManager = std::make_shared<Rbk::RenderManager>(m_Window, adapter, config, input, audio, texture, entity, shader, sprite, camera);
-        auto a = m_RenderManager->GetAudioManager();
         m_RenderManager->Init();
     }
 
