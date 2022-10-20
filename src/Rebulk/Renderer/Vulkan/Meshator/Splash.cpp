@@ -1,10 +1,10 @@
 #include "rebulkpch.h"
-#include "VulkanSplash.h"
+#include "Splash.h"
 #include "Rebulk/Renderer/Adapter/VulkanAdapter.h"
 
 namespace Rbk
 {
-     VulkanSplash::VulkanSplash(
+    Splash::Splash(
          std::shared_ptr<VulkanAdapter> adapter,
          std::shared_ptr<EntityManager> entityManager,
          std::shared_ptr<ShaderManager> shaderManager,
@@ -21,7 +21,7 @@ namespace Rbk
 
     }
 
-    void VulkanSplash::Visit(std::shared_ptr<Entity> entity)
+    void Splash::Visit(std::shared_ptr<Entity> entity)
     {
         std::shared_ptr<Mesh> mesh = std::dynamic_pointer_cast<Mesh>(entity);
 
@@ -108,7 +108,7 @@ namespace Rbk
             mesh->m_DescriptorSets.emplace_back(descriptorSet);
         }
 
-        VulkanSplash::pc pc;
+        Splash::pc pc;
         pc.textureID = 0;
 
         mesh->ApplyPushConstants = [&pc, mesh](VkCommandBuffer commandBuffer, VkPipelineLayout pipelineLayout) {

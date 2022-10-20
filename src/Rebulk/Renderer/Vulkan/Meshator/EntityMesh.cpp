@@ -1,13 +1,13 @@
 #include "rebulkpch.h"
 
-#include "VulkanInitEntity.h"
+#include "EntityMesh.h"
 #include "Rebulk/Renderer/Adapter/VulkanAdapter.h"
 
 namespace Rbk
 {
     struct constants;
 
-    VulkanInitEntity::VulkanInitEntity(
+    EntityMesh::EntityMesh(
         std::shared_ptr<VulkanAdapter> adapter,
         std::shared_ptr<EntityManager> entityManager,
         std::shared_ptr<ShaderManager> shaderManager,
@@ -22,7 +22,7 @@ namespace Rbk
 
     }
 
-    void VulkanInitEntity::Visit(std::shared_ptr<Entity> entity)
+    void EntityMesh::Visit(std::shared_ptr<Entity> entity)
     {
         std::shared_ptr<Mesh> mesh = std::dynamic_pointer_cast<Mesh>(entity);
         if (!mesh) return;
@@ -144,7 +144,7 @@ namespace Rbk
         }
     }
 
-    void VulkanInitEntity::CreateBBoxEntity(std::shared_ptr<Mesh>& mesh)
+    void EntityMesh::CreateBBoxEntity(std::shared_ptr<Mesh>& mesh)
     {
         for (int i = 0; i < mesh->GetData()->size(); i++) {
 
