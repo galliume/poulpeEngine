@@ -15,6 +15,8 @@ namespace Rbk
 
     void Application::Init()
     {
+        m_StartRun = glfwGetTime();
+
         Rbk::Log::Init();
 
         m_Window = std::make_shared<Window>();
@@ -45,16 +47,13 @@ namespace Rbk
 
     void Application::Run()
     {
-        double startRun = glfwGetTime();
         double endRun = glfwGetTime();
         double lastTime = endRun;
         double timeStepSum = 0.0;
         uint32_t frameCount = 0;
         double maxFPS = 60.0;
         double maxPeriod = 1.0 / maxFPS;
-        
-        Rbk::Log::GetLogger()->debug("Loaded scene in {}", endRun - startRun);
-
+  
         ImGuiInfo imguiInfo = m_RenderManager->GetRendererAdapter()->GetImGuiInfo();
         Rbk::Im::Init(m_Window->Get(), imguiInfo.info, imguiInfo.rdrPass);
 
@@ -68,6 +67,8 @@ namespace Rbk
         auto vulkanLayer = std::make_shared<Rbk::VulkanLayer>();
         vulkanLayer->AddRenderManager(m_RenderManager);
         //m_LayerManager->Add(vulkanLayer.get());
+
+        Rbk::Log::GetLogger()->debug("Loaded scene in {}", endRun - m_StartRun);
 
         while (!glfwWindowShouldClose(m_Window->Get())) {
 
