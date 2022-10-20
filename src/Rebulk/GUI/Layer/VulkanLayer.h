@@ -34,6 +34,9 @@ namespace Rbk
         bool m_Looping = true;
 
     private:
+        void Refresh();
+
+    private:
         bool m_VSync = false;
         bool m_ShowDemo = false;
         int m_LevelIndex = 0;

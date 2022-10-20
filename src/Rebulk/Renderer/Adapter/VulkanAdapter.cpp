@@ -22,7 +22,7 @@ namespace Rbk
 
     VulkanAdapter::~VulkanAdapter()
     {
-        std::cout << "VulkanAdapter deleted." << std::endl;
+
     }
 
     void VulkanAdapter::Init()
@@ -299,88 +299,9 @@ namespace Rbk
 
     void VulkanAdapter::Destroy()
     {
-        m_Renderer->WaitIdle();
-
-        //@todo refactor all the destroy system...
         m_Renderer->DestroySwapchain(m_Renderer->GetDevice(), m_SwapChain, {}, m_SwapChainImageViews);
         m_Renderer->DestroySemaphores(m_Semaphores);
     
-        for (auto buffer : m_SkyboxMesh->m_UniformBuffers) {
-            m_Renderer->DestroyBuffer(buffer.first);
-            m_Renderer->DestroyDeviceMemory(buffer.second);
-        }
-        
-        for (Data data : *m_SkyboxMesh->GetData()) {
-            m_Renderer->DestroyBuffer(data.m_VertexBuffer.first);
-            m_Renderer->DestroyDeviceMemory(data.m_VertexBuffer.second);
-
-            m_Renderer->DestroyBuffer(data.m_IndicesBuffer.first);
-            m_Renderer->DestroyDeviceMemory(data.m_IndicesBuffer.second);
-        }
-        m_Renderer->DestroyPipeline(m_SkyboxMesh->m_GraphicsPipeline);
-        vkDestroyPipelineLayout(m_Renderer->GetDevice(), m_SkyboxMesh->m_PipelineLayout, nullptr);
-
-        for (auto hudPart : m_HUD) {
-            for (auto buffer : hudPart->m_UniformBuffers) {
-                m_Renderer->DestroyBuffer(buffer.first);
-                m_Renderer->DestroyDeviceMemory(buffer.second);
-            }
-
-            for (Data data : *hudPart->GetData()) {
-                m_Renderer->DestroyBuffer(data.m_VertexBuffer.first);
-                m_Renderer->DestroyDeviceMemory(data.m_VertexBuffer.second);
-
-                m_Renderer->DestroyBuffer(data.m_IndicesBuffer.first);
-                m_Renderer->DestroyDeviceMemory(data.m_IndicesBuffer.second);
-            }
-            m_Renderer->DestroyPipeline(hudPart->m_GraphicsPipeline);
-            vkDestroyPipelineLayout(m_Renderer->GetDevice(), hudPart->m_PipelineLayout, nullptr);
-        }
-
-        for (std::shared_ptr<Entity> entity : *m_Entities) {
-
-            std::shared_ptr<Mesh> mesh = std::dynamic_pointer_cast<Mesh>(entity);
-
-            for (auto buffer : mesh->m_UniformBuffers) {
-                m_Renderer->DestroyBuffer(buffer.first);
-                m_Renderer->DestroyDeviceMemory(buffer.second);
-            }
-
-            for (Data data : *mesh->GetData()) {
-
-                m_Renderer->DestroyBuffer(data.m_VertexBuffer.first);
-                m_Renderer->DestroyDeviceMemory(data.m_VertexBuffer.second);
-
-                m_Renderer->DestroyBuffer(data.m_IndicesBuffer.first);
-                m_Renderer->DestroyDeviceMemory(data.m_IndicesBuffer.second);
-            }
-            m_Renderer->DestroyPipeline(mesh->m_GraphicsPipeline);
-            vkDestroyPipelineLayout(m_Renderer->GetDevice(), mesh->m_PipelineLayout, nullptr);
-
-        }
-
-        for (std::shared_ptr<Entity> entity : *m_BoundingBox) {
-
-            std::shared_ptr<Mesh> mesh = std::dynamic_pointer_cast<Mesh>(entity);
-
-            for (auto buffer : mesh->m_UniformBuffers) {
-                m_Renderer->DestroyBuffer(buffer.first);
-                m_Renderer->DestroyDeviceMemory(buffer.second);
-            }
-
-            for (Data data : *mesh->GetData()) {
-
-                m_Renderer->DestroyBuffer(data.m_VertexBuffer.first);
-                m_Renderer->DestroyDeviceMemory(data.m_VertexBuffer.second);
-
-                m_Renderer->DestroyBuffer(data.m_IndicesBuffer.first);
-                m_Renderer->DestroyDeviceMemory(data.m_IndicesBuffer.second);
-            }
-            m_Renderer->DestroyPipeline(mesh->m_GraphicsPipeline);
-            vkDestroyPipelineLayout(m_Renderer->GetDevice(), mesh->m_PipelineLayout, nullptr);
-
-        }
-
         for (auto item: m_DepthImages) {
             vkDestroyImage(m_Renderer->GetDevice(), item, nullptr);
         }
@@ -406,7 +327,6 @@ namespace Rbk
         }
 
         m_Renderer->DestroyRenderPass(m_RenderPass, m_CommandPool, m_CommandBuffers);
-        m_Renderer->Destroy();
     }
 
     void VulkanAdapter::ImmediateSubmit(std::function<void(VkCommandBuffer cmd)>&& function)
