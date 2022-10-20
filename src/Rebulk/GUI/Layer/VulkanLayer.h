@@ -1,9 +1,8 @@
 #pragma once
-#include "Rebulk/GUI/ImGui/Im.h"
 #include "ILayer.h"
-#include "Rebulk/Renderer/Adapter/VulkanAdapter.h"
-#include "Rebulk/GUI/Window.h"
-#include "Rebulk/Application.h"
+#include <volk.h>
+#include "Rebulk/GUI/ImGui/Im.h"
+#include "Rebulk/Manager/RenderManager.h"
 
 namespace Rbk
 {
@@ -11,24 +10,22 @@ namespace Rbk
     {
     public:
         virtual void Init() override;
+        virtual void Render(double timeStep, VkPhysicalDeviceProperties devicesProps) override;
+        virtual void AddRenderManager(std::shared_ptr<RenderManager> renderManager) override { m_RenderManager = renderManager; }
+
         void Destroy();
         void DisplayFpsCounter(double timeStep);
         void DisplayAPI(VkPhysicalDeviceProperties devicesProps);
-        void Render(double timeStep, VkPhysicalDeviceProperties devicesProps);
         void DisplayOptions();
         void DisplayTextures();
         void DisplaySounds();
         void DisplayLevel();
-        void AddRenderAdapter(std::shared_ptr<VulkanAdapter> renderAdapter);
-        void AddWindow(std::shared_ptr<Window> window) { m_Window = window; };
-        void AddTextureManager(std::shared_ptr<TextureManager> textureManager);
-        void AddEntityManager(std::shared_ptr<EntityManager> entityManager) { m_EntityManager = entityManager; };
-        void AddShaderManager(std::shared_ptr<ShaderManager> shaderManager) { m_ShaderManager = shaderManager; };
-        void AddAudioManager(std::shared_ptr<AudioManager> audioManager) { m_AudioManager = audioManager; };
-        void AddConfigManager(std::shared_ptr<ConfigManager> configManager) { m_ConfigManager = configManager; };
+        void DisplayMesh();
+        void LoadTextures();
 
         bool m_DebugOpen = true;
         bool m_ShowGrid = true;
+        bool m_ShowBBox = false;
         bool m_LightOpen = true;
         bool m_FogOpen = true;
         bool m_HUDOpen = true;
@@ -42,14 +39,8 @@ namespace Rbk
         int m_LevelIndex = 0;
         int m_SkyboxIndex = 0;
 
-        std::shared_ptr<VulkanAdapter> m_Adapter;
-        std::shared_ptr<Window> m_Window;
-        std::shared_ptr<TextureManager> m_TextureManager;
-        std::shared_ptr<EntityManager> m_EntityManager;
-        std::shared_ptr<ShaderManager> m_ShaderManager;
-        std::shared_ptr<AudioManager> m_AudioManager;
-        std::shared_ptr<ConfigManager> m_ConfigManager;
-
+        std::shared_ptr<RenderManager> m_RenderManager;
         std::map<std::string, VkDescriptorSet> m_Textures;
+        std::map<std::string, VkDescriptorSet> m_Entities;
     };
 }

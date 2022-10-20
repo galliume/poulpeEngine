@@ -1,27 +1,23 @@
 #pragma once
-#include <future>
-
-#include "Rebulk/Renderer/Vulkan/VulkanRenderer.h"
+#include "IShaderManager.h"
+#include "Rebulk/Renderer/Adapter/IRendererAdapter.h"
 
 namespace Rbk
 {
-    struct VulkanShaders
-    {
-        std::map<std::string, std::array<VkShaderModule, 2>> shaders;
-    };
-
-    class ShaderManager
+    class ShaderManager : IShaderManager
     {
     public:
-        
-explicit ShaderManager(std::shared_ptr<VulkanRenderer> renderer);
-        void AddShader(const std::string& name, const char* vertPath, const char* fragPath);
-        std::future<void> Load();
+        explicit ShaderManager();
+        ~ShaderManager();
 
-        inline const std::shared_ptr<VulkanShaders> GetShaders() const { return m_Shaders; };
+        virtual void AddShader(const std::string& name, const std::string& vertPath, const std::string& fragPath) override;
+        virtual std::future<void> Load(nlohmann::json config) override;
+        virtual inline const std::shared_ptr<VulkanShaders> GetShaders() const override { return m_Shaders; };
+
+        void AddRenderer(std::shared_ptr<IRendererAdapter> renderer) { m_Renderer = renderer; };
 
     private:
         std::shared_ptr<VulkanShaders> m_Shaders = nullptr;
-        std::shared_ptr<VulkanRenderer> m_Renderer = nullptr;
+        std::shared_ptr<IRendererAdapter> m_Renderer = nullptr;
     };
 }

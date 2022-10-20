@@ -1,13 +1,20 @@
 #include "rebulkpch.h"
 #include "VulkanCrosshair.h"
+#include "Rebulk/Renderer/Adapter/VulkanAdapter.h"
 
 namespace Rbk
 {
      VulkanCrosshair::VulkanCrosshair(
-        std::shared_ptr<VulkanAdapter> adapter,
-        VkDescriptorPool descriptorPool) :
-        m_Adapter(adapter),
-        m_DescriptorPool(descriptorPool)
+         std::shared_ptr<VulkanAdapter> adapter,
+         std::shared_ptr<EntityManager> entityManager,
+         std::shared_ptr<ShaderManager> shaderManager,
+         std::shared_ptr<TextureManager> textureManager,
+         VkDescriptorPool descriptorPool) :
+         m_Adapter(adapter),
+         m_EntityManager(entityManager),
+         m_ShaderManager(shaderManager),
+         m_TextureManager(textureManager),
+         m_DescriptorPool(descriptorPool)
     {
 
     }
@@ -18,11 +25,11 @@ namespace Rbk
 
         if (!mesh) return;
 
-        const std::vector<Vertex2D> vertices = {
-            {{-0.025f, -0.025f}, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
-            {{0.025f, -0.025f}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f}},
-            {{0.025f, 0.025f}, {0.0f, 0.0f, 1.0f}, {0.0f, 1.0f}},
-            {{-0.025f, 0.025f}, {1.0f, 1.0f, 1.0f}, {1.0f, 1.0f}}
+        const std::vector<Vertex> vertices = {
+            {{-0.025f, -0.025f, 0.0f}, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
+            {{0.025f, -0.025f, 0.0f}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f}},
+            {{0.025f, 0.025f, 0.0f}, {0.0f, 0.0f, 1.0f}, {0.0f, 1.0f}},
+            {{-0.025f, 0.025f, 0.0f}, {1.0f, 1.0f, 1.0f}, {1.0f, 1.0f}}
         };
         const std::vector<uint32_t> indices = {
             0, 1, 2, 2, 3, 0
@@ -36,7 +43,7 @@ namespace Rbk
         Data crossHairData;
         crossHairData.m_Texture = "crosshair";
         crossHairData.m_TextureIndex = 0;
-        crossHairData.m_VertexBuffer = m_Adapter->Rdr()->CreateVertex2DBuffer(commandPool, vertices);
+        crossHairData.m_VertexBuffer = m_Adapter->Rdr()->CreateVertexBuffer(commandPool, vertices);
         crossHairData.m_IndicesBuffer = m_Adapter->Rdr()->CreateIndexBuffer(commandPool, indices);
         crossHairData.m_Ubos.emplace_back(ubo);
         crossHairData.m_Indices = indices;
@@ -49,8 +56,8 @@ namespace Rbk
         std::pair<VkBuffer, VkDeviceMemory> crossHairuniformBuffer = m_Adapter->Rdr()->CreateUniformBuffers(1);
         mesh->m_UniformBuffers.emplace_back(crossHairuniformBuffer);
 
-        Texture ctex = m_Adapter->GetTextureManager()->GetTextures()["crosshair_1"];
-        Texture ctex2 = m_Adapter->GetTextureManager()->GetTextures()["crosshair_2"];
+        Texture ctex = m_TextureManager->GetTextures()["crosshair_1"];
+        Texture ctex2 = m_TextureManager->GetTextures()["crosshair_2"];
 
         std::vector<VkDescriptorImageInfo>cimageInfos;
         VkDescriptorImageInfo cimageInfo{};
@@ -98,7 +105,7 @@ namespace Rbk
         pc.textureID = 0;
 
         mesh->ApplyPushConstants = [&pc](VkCommandBuffer commandBuffer, VkPipelineLayout pipelineLayout) {
-            pc.textureID = 0;
+            pc.textureID = VulkanAdapter::s_Crosshair;
             vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(pc), &pc);
         };
         mesh->SetHasPushConstants();
@@ -119,33 +126,33 @@ namespace Rbk
         VkPipelineShaderStageCreateInfo cvertShaderStageInfo{};
         cvertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
         cvertShaderStageInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
-        cvertShaderStageInfo.module = m_Adapter->GetShaderManager()->GetShaders()->shaders[mesh->GetShaderName()][0];
+        cvertShaderStageInfo.module = m_ShaderManager->GetShaders()->shaders[mesh->GetShaderName()][0];
         cvertShaderStageInfo.pName = "main";
         cshadersStageInfos.emplace_back(cvertShaderStageInfo);
 
         VkPipelineShaderStageCreateInfo cfragShaderStageInfo{};
         cfragShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
         cfragShaderStageInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
-        cfragShaderStageInfo.module = m_Adapter->GetShaderManager()->GetShaders()->shaders[mesh->GetShaderName()][1];
+        cfragShaderStageInfo.module = m_ShaderManager->GetShaders()->shaders[mesh->GetShaderName()][1];
         cfragShaderStageInfo.pName = "main";
         cshadersStageInfos.emplace_back(cfragShaderStageInfo);
 
-        VkVertexInputBindingDescription bDesc2D = Vertex::GetBindingDescription();
-        auto crossDesc = Vertex2D::GetAttributeDescriptions();
+        VkVertexInputBindingDescription bDesc = Vertex::GetBindingDescription();
+        auto crossDesc = Vertex::GetAttributeDescriptions();
 
-        VkPipelineVertexInputStateCreateInfo vertexInputInfo2D{};
-        vertexInputInfo2D.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-        vertexInputInfo2D.vertexBindingDescriptionCount = 1;
-        vertexInputInfo2D.vertexAttributeDescriptionCount = static_cast<uint32_t>(Vertex2D::GetAttributeDescriptions().size());
-        vertexInputInfo2D.pVertexBindingDescriptions = &bDesc2D;
-        vertexInputInfo2D.pVertexAttributeDescriptions = crossDesc.data();
+        VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
+        vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
+        vertexInputInfo.vertexBindingDescriptionCount = 1;
+        vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(Vertex::GetAttributeDescriptions().size());
+        vertexInputInfo.pVertexBindingDescriptions = &bDesc;
+        vertexInputInfo.pVertexAttributeDescriptions = crossDesc.data();
 
         mesh->m_GraphicsPipeline = m_Adapter->Rdr()->CreateGraphicsPipeline(
             m_Adapter->RdrPass(),
             mesh->m_PipelineLayout,
             mesh->GetShaderName(),
             cshadersStageInfos,
-            vertexInputInfo2D,
+            vertexInputInfo,
             VK_CULL_MODE_FRONT_BIT,
             true, true, true, true,
             VulkanAdapter::s_PolygoneMode

@@ -34,3 +34,4 @@
 #include "spdlog/details/log_msg.h"
 
 #include "Rebulk/Core/Log.h"
+#include "imgui.h"

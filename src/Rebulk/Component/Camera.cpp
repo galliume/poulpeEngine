@@ -142,7 +142,7 @@ namespace Rbk
             m_Pitch = -89.0f;
         }
 
-        glm::vec3 direction;
+        glm::vec3 direction{};
         direction.x = cos(glm::radians(m_Yaw)) * cos(glm::radians(m_Pitch));
         direction.y = sin(glm::radians(m_Pitch));
         direction.z = sin(glm::radians(m_Yaw)) * cos(glm::radians(m_Pitch));
