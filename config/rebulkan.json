@@ -1,7 +1,8 @@
 {
-	"defaultLevel": "level_1",
+	"defaultLevel": "level_2",
 	"defaultSkybox": "bluesky",
 	"splashScreenMusic": true,
+	"ambientMusic": false,
 	"input": {
 		"keyboard": {
 			"unlockCamera": "left_ctrl",

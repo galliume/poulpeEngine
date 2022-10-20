@@ -12,6 +12,6 @@ namespace Rbk
         inline std::vector<ILayer*> List() { return m_Layers; };
 
     private:
-        std::vector<ILayer*>m_Layers;
+        std::vector<ILayer*> m_Layers;
     };
 }

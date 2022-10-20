@@ -6,15 +6,15 @@ namespace Rbk
     class Texture
     {
     public:
-        inline const std::string GetName() const { return m_Name; }
-        inline const VkImage GetImage() const { return m_Image; }
-        inline const VkDeviceMemory GetImageMemory() const { return m_ImageMemory; }
-        inline const VkImageView GetImageView() const { return m_ImageView; }
-        inline const VkSampler GetSampler() const { return m_Sampler; }
-        inline const uint32_t GetMipLevels() const { return m_MipLevels; }
-        inline const uint32_t GetWidth() const { return m_Width; }
-        inline const uint32_t GetHeight() const { return m_Height; }
-        inline const uint32_t GetChannels() const { return m_Channels; }
+        inline std::string GetName() const { return m_Name; }
+        inline VkImage GetImage() const { return m_Image; }
+        inline VkDeviceMemory GetImageMemory() const { return m_ImageMemory; }
+        inline VkImageView GetImageView() const { return m_ImageView; }
+        inline VkSampler GetSampler() const { return m_Sampler; }
+        inline uint32_t GetMipLevels() const { return m_MipLevels; }
+        inline uint32_t GetWidth() const { return m_Width; }
+        inline uint32_t GetHeight() const { return m_Height; }
+        inline uint32_t GetChannels() const { return m_Channels; }
         inline bool IsPublic() const { return m_IsPublic; }
 
         void SetName(const std::string& name) { m_Name = name; }
@@ -26,7 +26,7 @@ namespace Rbk
         void SetWidth(const uint32_t width) { m_Width = width; }
         void SetHeight(const uint32_t height) { m_Height = height; }
         void SetChannels(const uint32_t channels) { m_Channels = channels; }
-        void SetIsPublic(bool isPublic) { m_IsPublic = isPublic; };
+        void SetIsPublic(bool isPublic) { m_IsPublic = isPublic; }
 
     private:
         std::string m_Name;

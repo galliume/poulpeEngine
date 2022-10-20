@@ -3,7 +3,7 @@
 
 namespace Rbk
 {
-    EntityManager::EntityManager(const std::shared_ptr<VulkanRenderer>& renderer) : m_Renderer(renderer)
+    EntityManager::EntityManager()
     {
 
     }
@@ -34,6 +34,7 @@ namespace Rbk
 
                 for (auto data : listData) {
                     existingEntity->AddUbos(data.m_Ubos);
+                    existingEntity->AddBBox(mesh->GetBBox().at(0));
                 }
 
                 m_LoadedEntities[mesh->GetName()][0] += 1;
@@ -43,6 +44,33 @@ namespace Rbk
 
             m_LoadedEntities.insert({ entity->GetName(), { 1, index }});
             m_Entities.emplace_back(entity);
+        }
+    }
+
+    void EntityManager::EntityManager::AddBBox(const std::shared_ptr<Entity>& bbox)
+    {
+        uint64_t count = m_LoadedBbox.count(bbox->GetName().c_str());
+
+        if (0 != count) {
+            std::shared_ptr<Mesh> mesh = std::dynamic_pointer_cast<Mesh>(bbox);
+
+            if (mesh) {
+                std::vector<Data> listData = *mesh->GetData();
+                int index = m_LoadedBbox[mesh->GetName().c_str()][1];
+                std::shared_ptr<Mesh> existingEntity = std::dynamic_pointer_cast<Mesh>(m_BoundingBox[index]);
+
+                for (auto data : listData) {
+                    existingEntity->AddUbos(data.m_Ubos);
+                }
+
+                m_LoadedBbox[mesh->GetName()][0] += 1;
+            }
+        }
+        else {
+            uint32_t index = m_BoundingBox.size();
+
+            m_LoadedBbox.insert({ bbox->GetName(), { 1, index } });
+            m_BoundingBox.emplace_back(bbox);
         }
     }
 
@@ -188,5 +216,12 @@ namespace Rbk
     {
         m_Entities.clear();
         m_LoadedEntities.clear();
+        m_BoundingBox.clear();
+        m_LoadedBbox.clear();
+    }
+
+    void EntityManager::SetShowBBox(bool show)
+    {
+        m_ShowBBox = show;
     }
 }

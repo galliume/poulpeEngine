@@ -429,7 +429,7 @@
 			"rotations": [
 				{"x": 0.0, "y": -30.0, "z": 0.0}
 			],
-			"inverseTextureY": false,
+			"inverseTextureY": true,
 			"count": 1,
 			"padding": {
 				"x": 0.0,
