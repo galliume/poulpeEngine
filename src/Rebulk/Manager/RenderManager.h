@@ -43,7 +43,9 @@ namespace Rbk
 
     private:
         void PrepareSplashScreen();
-        void Prepare();
+        void PrepareEntity();
+        void PrepareHUD();
+        void PrepareSkybox();
         void LoadData();
 
     private:
