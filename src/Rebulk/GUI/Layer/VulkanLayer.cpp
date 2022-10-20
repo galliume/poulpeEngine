@@ -197,7 +197,7 @@ namespace Rbk
 
             if (ImGui::Checkbox("Display bbox", &m_ShowBBox)) {
                 m_RenderManager->GetEntityManager()->SetShowBBox(m_ShowBBox);
-                m_RenderManager->Refresh();
+                //m_RenderManager->Refresh();
             }
 
             Rbk::Im::Text("FPS limit");
