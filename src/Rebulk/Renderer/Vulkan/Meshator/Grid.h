@@ -1,27 +1,24 @@
 #pragma once
 
+#include <volk.h>
 #include "Rebulk/Core/IVisitor.h"
+#include "Rebulk/Renderer/Adapter/VulkanAdapter.h"
+#include "Rebulk/Component/Mesh.h"
 #include "Rebulk/Manager/EntityManager.h"
 #include "Rebulk/Manager/ShaderManager.h"
 #include "Rebulk/Manager/TextureManager.h"
-#include "Rebulk/Renderer/Adapter/VulkanAdapter.h"
 
 namespace Rbk
 {
-    class VulkanInitEntity : public IVisitor
+    class Grid : public IVisitor
     {
-        struct pc
-        {
-            uint32_t textureID;
-            glm::vec3 cameraPos;
-            float ambiantLight;
-            float fogDensity;
-            glm::vec3 fogColor;
-            glm::vec3 lightPos;
-        };
-
+    struct pc
+    {
+        float nearpoint;
+        float farpoint;
+    };
     public:
-        VulkanInitEntity(
+        Grid(
             std::shared_ptr<VulkanAdapter> adapter,
             std::shared_ptr<EntityManager> entityManager,
             std::shared_ptr<ShaderManager> shaderManager,
@@ -31,13 +28,11 @@ namespace Rbk
         void Visit(std::shared_ptr<Entity> entity) override;
 
     private:
-        void CreateBBoxEntity(std::shared_ptr<Mesh>& mesh);
-
-    private:
         std::shared_ptr<VulkanAdapter> m_Adapter;
         std::shared_ptr<EntityManager> m_EntityManager;
         std::shared_ptr<ShaderManager> m_ShaderManager;
         std::shared_ptr<TextureManager> m_TextureManager;
         VkDescriptorPool m_DescriptorPool;
+
     };
 }

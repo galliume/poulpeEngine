@@ -1,10 +1,10 @@
 #include "rebulkpch.h"
-#include "VulkanCrosshair.h"
+#include "Crosshair.h"
 #include "Rebulk/Renderer/Adapter/VulkanAdapter.h"
 
 namespace Rbk
 {
-     VulkanCrosshair::VulkanCrosshair(
+    Crosshair::Crosshair(
          std::shared_ptr<VulkanAdapter> adapter,
          std::shared_ptr<EntityManager> entityManager,
          std::shared_ptr<ShaderManager> shaderManager,
@@ -19,7 +19,7 @@ namespace Rbk
 
     }
 
-    void VulkanCrosshair::Visit(std::shared_ptr<Entity> entity)
+    void Crosshair::Visit(std::shared_ptr<Entity> entity)
     {
         std::shared_ptr<Mesh> mesh = std::dynamic_pointer_cast<Mesh>(entity);
 
@@ -101,7 +101,7 @@ namespace Rbk
             mesh->m_DescriptorSets.emplace_back(cdescriptorSet);
         }
 
-        VulkanCrosshair::pc pc;
+        Crosshair::pc pc;
         pc.textureID = 0;
 
         mesh->ApplyPushConstants = [&pc](VkCommandBuffer commandBuffer, VkPipelineLayout pipelineLayout) {

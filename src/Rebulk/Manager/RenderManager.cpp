@@ -1,11 +1,11 @@
 #include "rebulkpch.h"
 #include "RenderManager.h"
 
-#include "Rebulk/Renderer/Vulkan/Meshator/VulkanInitEntity.h"
-#include "Rebulk/Renderer/Vulkan/Meshator/VulkanSkybox.h"
-#include "Rebulk/Renderer/Vulkan/Meshator/VulkanCrosshair.h"
-#include "Rebulk/Renderer/Vulkan/Meshator/VulkanGrid.h"
-#include "Rebulk/Renderer/Vulkan/Meshator/VulkanSplash.h"
+#include "Rebulk/Renderer/Vulkan/Meshator/EntityMesh.h"
+#include "Rebulk/Renderer/Vulkan/Meshator/Skybox.h"
+#include "Rebulk/Renderer/Vulkan/Meshator/Crosshair.h"
+#include "Rebulk/Renderer/Vulkan/Meshator/Grid.h"
+#include "Rebulk/Renderer/Vulkan/Meshator/Splash.h"
 
 namespace Rbk
 {    
@@ -156,7 +156,7 @@ namespace Rbk
         VkDescriptorPool descriptorPool = m_Renderer->Rdr()->CreateDescriptorPool(poolSizes, 1000);
         m_DescriptorPools.emplace_back(descriptorPool);
 
-        std::shared_ptr<VulkanSplash> splashVulkanisator = std::make_shared<VulkanSplash>(
+        std::shared_ptr<Splash> splashVulkanisator = std::make_shared<Splash>(
             m_Renderer,
             m_EntityManager,
             m_ShaderManager,
@@ -196,7 +196,7 @@ namespace Rbk
         vkPushconstants.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
         pushConstants.emplace_back(vkPushconstants);
 
-        std::shared_ptr<VulkanInitEntity> vulkanisator = std::make_shared<VulkanInitEntity>(
+        std::shared_ptr<EntityMesh> vulkanisator = std::make_shared<EntityMesh>(
             m_Renderer,
             m_EntityManager,
             m_ShaderManager,
@@ -210,7 +210,7 @@ namespace Rbk
 
         VkDescriptorPool skyDescriptorPool = m_Renderer->Rdr()->CreateDescriptorPool(poolSizes, 1000);
         m_DescriptorPools.emplace_back(skyDescriptorPool);
-        std::shared_ptr<VulkanSkybox> skyboxVulkanisator = std::make_shared<VulkanSkybox>(
+        std::shared_ptr<Skybox> skyboxVulkanisator = std::make_shared<Skybox>(
             m_Renderer,
             m_EntityManager,
             m_ShaderManager,
@@ -227,7 +227,7 @@ namespace Rbk
         VkDescriptorPool HUDDescriptorPool = m_Renderer->Rdr()->CreateDescriptorPool(poolSizes, 1000);
         m_DescriptorPools.emplace_back(HUDDescriptorPool);
 
-        std::shared_ptr<VulkanGrid> gridVulkanisator = std::make_shared<VulkanGrid>(
+        std::shared_ptr<Grid> gridVulkanisator = std::make_shared<Grid>(
             m_Renderer,
             m_EntityManager,
             m_ShaderManager,
@@ -239,7 +239,7 @@ namespace Rbk
         grid->Accept(gridVulkanisator);
         hud.emplace_back(grid);
 
-        std::shared_ptr<VulkanCrosshair> crosshairVulkanisator = std::make_shared<VulkanCrosshair>(
+        std::shared_ptr<Crosshair> crosshairVulkanisator = std::make_shared<Crosshair>(
             m_Renderer,
             m_EntityManager,
             m_ShaderManager,

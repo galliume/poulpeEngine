@@ -8,10 +8,15 @@
 
 namespace Rbk
 {
-    class VulkanSkybox : public IVisitor
+    class Crosshair : public IVisitor
     {
+    struct pc
+    {
+        uint32_t textureID;
+    };
+
     public:
-        VulkanSkybox(
+        Crosshair(
             std::shared_ptr<VulkanAdapter> adapter,
             std::shared_ptr<EntityManager> entityManager,
             std::shared_ptr<ShaderManager> shaderManager,

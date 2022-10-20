@@ -1,12 +1,12 @@
 #include "rebulkpch.h"
-#include "VulkanSkybox.h"
+#include "Skybox.h"
 #include "Rebulk/Renderer/Adapter/VulkanAdapter.h"
 
 namespace Rbk
 {
     struct constants;
 
-    VulkanSkybox::VulkanSkybox(
+    Skybox::Skybox(
         std::shared_ptr<VulkanAdapter> adapter,
         std::shared_ptr<EntityManager> entityManager,
         std::shared_ptr<ShaderManager> shaderManager,
@@ -21,7 +21,7 @@ namespace Rbk
 
     }
 
-    void VulkanSkybox::Visit(std::shared_ptr<Entity> entity)
+    void Skybox::Visit(std::shared_ptr<Entity> entity)
     {
         std::shared_ptr<Mesh> mesh = std::dynamic_pointer_cast<Mesh>(entity);
 
