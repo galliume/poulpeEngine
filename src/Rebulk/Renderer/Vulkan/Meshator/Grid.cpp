@@ -1,12 +1,12 @@
 #include "rebulkpch.h"
-#include "VulkanGrid.h"
+#include "Grid.h"
 #include "Rebulk/Renderer/Adapter/VulkanAdapter.h"
 
 namespace Rbk
 {
     struct cPC;
 
-    VulkanGrid::VulkanGrid(
+    Grid::Grid(
         std::shared_ptr<VulkanAdapter> adapter,
         std::shared_ptr<EntityManager> entityManager,
         std::shared_ptr<ShaderManager> shaderManager,
@@ -21,7 +21,7 @@ namespace Rbk
 
     }
 
-    void VulkanGrid::Visit(std::shared_ptr<Entity> entity)
+    void Grid::Visit(std::shared_ptr<Entity> entity)
     {
         std::shared_ptr<Mesh> mesh = std::dynamic_pointer_cast<Mesh>(entity);
 
@@ -97,7 +97,7 @@ namespace Rbk
             mesh->m_DescriptorSets.emplace_back(cdescriptorSet);
         }
 
-        VulkanGrid::pc pc;
+        Grid::pc pc;
         pc.nearpoint = 0.1f;//@todo parameterize it
         pc.farpoint = 100.f;
 
