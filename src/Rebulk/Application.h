@@ -35,5 +35,6 @@ namespace Rbk
         std::shared_ptr<Rbk::Window> m_Window;
         std::shared_ptr<Rbk::RenderManager> m_RenderManager;
         std::shared_ptr<Rbk::Im> m_VImGui;
+        double m_StartRun = 0;
     };
 }

@@ -115,7 +115,9 @@ namespace Rbk
         if (ambientScreenMusic)
             m_AudioManager->StartAmbient();
 
-        Prepare();
+        PrepareEntity();
+        PrepareSkybox();
+        PrepareHUD();
     }
 
     void RenderManager::LoadData()
@@ -155,7 +157,7 @@ namespace Rbk
 
     void RenderManager::Refresh()
     {
-        Prepare();
+        PrepareEntity();
     }
 
     void RenderManager::PrepareSplashScreen()
@@ -189,7 +191,7 @@ namespace Rbk
         m_Renderer->AddSplash(splashs);
     }
 
-    void RenderManager::Prepare()
+    void RenderManager::PrepareEntity()
     {
         m_DescriptorPools.clear();
 
@@ -224,20 +226,19 @@ namespace Rbk
         for (std::shared_ptr<Entity>& entity : *m_EntityManager->GetEntities()) {
             entity->Accept(vulkanisator);
         }
+    }
 
-        VkDescriptorPool skyDescriptorPool = m_Renderer->Rdr()->CreateDescriptorPool(poolSizes, 1000);
-        m_DescriptorPools.emplace_back(skyDescriptorPool);
-        std::shared_ptr<Skybox> skyboxVulkanisator = std::make_shared<Skybox>(
-            m_Renderer,
-            m_EntityManager,
-            m_ShaderManager,
-            m_TextureManager,
-            skyDescriptorPool
-        );
-
-        auto skyboxMesh = std::make_shared<Mesh>();
-        skyboxMesh->Accept(skyboxVulkanisator);
-        m_Renderer->AddSkybox(skyboxMesh);
+    void RenderManager::PrepareHUD()
+    {
+        std::vector<VkDescriptorPoolSize> poolSizes{};
+        VkDescriptorPoolSize cp1;
+        cp1.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        cp1.descriptorCount = 1000;
+        VkDescriptorPoolSize cp2;
+        cp2.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        cp2.descriptorCount = 1000;
+        poolSizes.emplace_back(cp1);
+        poolSizes.emplace_back(cp2);
 
         std::vector<std::shared_ptr<Mesh>> hud{};
 
@@ -250,7 +251,7 @@ namespace Rbk
             m_ShaderManager,
             m_TextureManager,
             HUDDescriptorPool
-        );
+            );
 
         auto grid = std::make_shared<Mesh>();
         grid->Accept(gridVulkanisator);
@@ -262,7 +263,7 @@ namespace Rbk
             m_ShaderManager,
             m_TextureManager,
             HUDDescriptorPool
-        );
+            );
         auto crossHair = std::make_shared<Mesh2D>();
         crossHair->Accept(crosshairVulkanisator);
         hud.emplace_back(crossHair);
@@ -271,4 +272,30 @@ namespace Rbk
         m_Renderer->AddHUD(m_EntityManager->GetHUD());
     }
 
+    void RenderManager::PrepareSkybox()
+    {
+        std::vector<VkDescriptorPoolSize> poolSizes{};
+        VkDescriptorPoolSize cp1;
+        cp1.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        cp1.descriptorCount = 1000;
+        VkDescriptorPoolSize cp2;
+        cp2.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        cp2.descriptorCount = 1000;
+        poolSizes.emplace_back(cp1);
+        poolSizes.emplace_back(cp2);
+
+        VkDescriptorPool skyDescriptorPool = m_Renderer->Rdr()->CreateDescriptorPool(poolSizes, 1000);
+        m_DescriptorPools.emplace_back(skyDescriptorPool);
+        std::shared_ptr<Skybox> skyboxVulkanisator = std::make_shared<Skybox>(
+            m_Renderer,
+            m_EntityManager,
+            m_ShaderManager,
+            m_TextureManager,
+            skyDescriptorPool
+            );
+
+        auto skyboxMesh = std::make_shared<Mesh>();
+        skyboxMesh->Accept(skyboxVulkanisator);
+        m_Renderer->AddSkybox(skyboxMesh);
+    }
 }

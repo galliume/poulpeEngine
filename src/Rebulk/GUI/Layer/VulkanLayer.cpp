@@ -193,7 +193,6 @@ namespace Rbk
 
             if (ImGui::Checkbox("Display grid", &m_ShowGrid)) {
                 m_RenderManager->GetRendererAdapter()->ShowGrid(m_ShowGrid);
-                Refresh();
             }
 
             if (ImGui::Checkbox("Display bbox", &m_ShowBBox)) {
