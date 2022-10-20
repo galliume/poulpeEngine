@@ -11,7 +11,7 @@ namespace Rbk
     public:
         virtual void Init() override;
         virtual void Render(double timeStep, VkPhysicalDeviceProperties devicesProps) override;
-        virtual void AddRenderManager(std::shared_ptr<RenderManager> renderManager) override { m_RenderManager = renderManager; }
+        virtual void AddRenderManager(std::shared_ptr<RenderManager> renderManager) override;
 
         void Destroy();
         void DisplayFpsCounter(double timeStep);
