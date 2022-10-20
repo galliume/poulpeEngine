@@ -1,5 +1,6 @@
 #include "rebulkpch.h"
 #include "VulkanSkybox.h"
+#include "Rebulk/Renderer/Adapter/VulkanAdapter.h"
 
 namespace Rbk
 {
@@ -7,8 +8,14 @@ namespace Rbk
 
     VulkanSkybox::VulkanSkybox(
         std::shared_ptr<VulkanAdapter> adapter,
+        std::shared_ptr<EntityManager> entityManager,
+        std::shared_ptr<ShaderManager> shaderManager,
+        std::shared_ptr<TextureManager> textureManager,
         VkDescriptorPool descriptorPool) :
         m_Adapter(adapter),
+        m_EntityManager(entityManager),
+        m_ShaderManager(shaderManager),
+        m_TextureManager(textureManager),
         m_DescriptorPool(descriptorPool)
     {
 
@@ -84,7 +91,7 @@ namespace Rbk
         std::pair<VkBuffer, VkDeviceMemory> uniformBuffer = m_Adapter->Rdr()->CreateUniformBuffers(1);
         mesh->m_UniformBuffers.emplace_back(uniformBuffer);
 
-        Texture tex = m_Adapter->GetTextureManager()->GetSkyboxTexture();
+        Texture tex = m_TextureManager->GetSkyboxTexture();
 
         VkDescriptorSetLayoutBinding uboLayoutBinding{};
         uboLayoutBinding.binding = 0;
@@ -136,14 +143,14 @@ namespace Rbk
         VkPipelineShaderStageCreateInfo vertShaderStageInfo{};
         vertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
         vertShaderStageInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
-        vertShaderStageInfo.module = m_Adapter->GetShaderManager()->GetShaders()->shaders[shaderName][0];
+        vertShaderStageInfo.module = m_ShaderManager->GetShaders()->shaders[shaderName][0];
         vertShaderStageInfo.pName = "main";
         shadersStageInfos.emplace_back(vertShaderStageInfo);
 
         VkPipelineShaderStageCreateInfo fragShaderStageInfo{};
         fragShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
         fragShaderStageInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
-        fragShaderStageInfo.module = m_Adapter->GetShaderManager()->GetShaders()->shaders[shaderName][1];
+        fragShaderStageInfo.module = m_ShaderManager->GetShaders()->shaders[shaderName][1];
         fragShaderStageInfo.pName = "main";
         shadersStageInfos.emplace_back(fragShaderStageInfo);
 

@@ -1,13 +1,22 @@
 #include "rebulkpch.h"
 #include "VulkanSplash.h"
+#include "Rebulk/Renderer/Adapter/VulkanAdapter.h"
 
 namespace Rbk
 {
      VulkanSplash::VulkanSplash(
-        std::shared_ptr<VulkanAdapter> adapter,
-        VkDescriptorPool descriptorPool) :
-        m_Adapter(adapter),
-        m_DescriptorPool(descriptorPool)
+         std::shared_ptr<VulkanAdapter> adapter,
+         std::shared_ptr<EntityManager> entityManager,
+         std::shared_ptr<ShaderManager> shaderManager,
+         std::shared_ptr<TextureManager> textureManager,
+         std::shared_ptr<SpriteAnimationManager> spriteAnimationManager,
+         VkDescriptorPool descriptorPool) :
+         m_Adapter(adapter),
+         m_EntityManager(entityManager),
+         m_ShaderManager(shaderManager),
+         m_TextureManager(textureManager),
+         m_SpriteAnimationManager(spriteAnimationManager),
+         m_DescriptorPool(descriptorPool)
     {
 
     }
@@ -50,15 +59,15 @@ namespace Rbk
         mesh->m_UniformBuffers.emplace_back(uniformBuffer);
 
         std::vector<VkDescriptorImageInfo> imageInfos{};
-        auto sprites = m_Adapter->GetSpriteAnimationManager()->GetSpritesByName("splashAnim");
+        auto sprites = m_SpriteAnimationManager->GetSpritesByName("splashAnim");
         int index = 0;
 
         for (auto sprite : sprites) {
 
             std::string name = "splashAnim_" + std::to_string(index);
-            m_Adapter->GetTextureManager()->AddTexture(name, sprite);
+            m_TextureManager->AddTexture(name, sprite);
 
-            Texture texture = m_Adapter->GetTextureManager()->GetTextures()[name];
+            Texture texture = m_TextureManager->GetTextures()[name];
 
             VkDescriptorImageInfo imageInfo{};
             imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
@@ -124,14 +133,14 @@ namespace Rbk
         VkPipelineShaderStageCreateInfo vertShaderStageInfo{};
         vertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
         vertShaderStageInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
-        vertShaderStageInfo.module = m_Adapter->GetShaderManager()->GetShaders()->shaders[mesh->GetShaderName()][0];
+        vertShaderStageInfo.module = m_ShaderManager->GetShaders()->shaders[mesh->GetShaderName()][0];
         vertShaderStageInfo.pName = "main";
         shadersStageInfos.emplace_back(vertShaderStageInfo);
 
         VkPipelineShaderStageCreateInfo fragShaderStageInfo{};
         fragShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
         fragShaderStageInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
-        fragShaderStageInfo.module = m_Adapter->GetShaderManager()->GetShaders()->shaders[mesh->GetShaderName()][1];
+        fragShaderStageInfo.module = m_ShaderManager->GetShaders()->shaders[mesh->GetShaderName()][1];
         fragShaderStageInfo.pName = "main";
         shadersStageInfos.emplace_back(fragShaderStageInfo);
 

@@ -1,5 +1,5 @@
 {
-	"entities": {		
+	"entities": {
 		"groundCube" : {
 			"mesh": "assets/mesh/minecraft/Grass_Block.obj",
 			"textures": ["minecraft_grass"],
@@ -14,36 +14,14 @@
 				{"x": 0.0, "y": 0.0, "z": 0.0}
 			],
 			"inverseTextureY": true,
-			"count": 340,
+			"count": 280,
 			"padding": {
 				"x": 1,
 				"y": 1,
 				"z": 0
 			},
 			"form": "square",
-			"squarePadding": [{"x" : [-5, 5], "y": [-5, 5]}]
-		},
-		"doggo" : {
-			"mesh": "assets/mesh/dog/dog.obj",
-			"textures": ["dog"],
-			"shader": "main",
-			"positions": [
-				{"x": 0.5, "y": 0.40, "z": 0.5}
-			],
-			"scales": [
-				{"x": 0.12, "y": 0.12, "z": 0.12}
-			],
-			"rotations": [
-				{"x": 0.0, "y": 0.0, "z": 0.0}
-			],
-			"inverseTextureY": true,
-			"count": 1,
-			"padding": {
-				"x": 0.0,
-				"y": 0.0,
-				"z": 0.0
-			},	
-			"form": "positioned"			
+			"squarePadding": [{"x" : [-1, 1], "y": [-1, 1]}]
 		}
 	}
 }

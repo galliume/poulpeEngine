@@ -1,62 +1,45 @@
 #pragma once
 #include "IRendererAdapter.h"
-#include "Rebulk/Renderer/Vulkan/VulkanRenderer.h"
-#include "Rebulk/Component/Mesh.h"
-#include "Rebulk/Component/Mesh2D.h"
-#include "Rebulk/GUI/Window.h"
-
-#include "imgui.h"
-#include "backends/imgui_impl_glfw.h"
-#include "backends/imgui_impl_vulkan.h"
 
 namespace Rbk
 {
-    struct VImGuiInfo
-    {
-        ImGui_ImplVulkan_InitInfo info = {};
-        VkCommandBuffer cmdBuffer = nullptr;
-        VkPipeline pipeline = nullptr;
-        VkRenderPass rdrPass = nullptr;
-    };
-
-    class VulkanAdapter : public IRendererAdapter, public std::enable_shared_from_this<VulkanAdapter>
+    class VulkanAdapter : public IRendererAdapter
     {
 
     public:
 
         explicit VulkanAdapter(std::shared_ptr<Window> window);
-        virtual ~VulkanAdapter();
+        ~VulkanAdapter();
 
         virtual void Init() override;
-        virtual void AddCamera(std::shared_ptr<Camera> camera) override;
-        virtual void AddTextureManager(std::shared_ptr<TextureManager> textureManager) override;
-        virtual void AddEntityManager(std::shared_ptr<EntityManager> entityManager) override;
-        virtual void AddShaderManager(std::shared_ptr<ShaderManager> shaderManager) override;
-        virtual void AddSpriteAnimationManager(std::shared_ptr<SpriteAnimationManager> spriteAnimationManager) override;
-
-        void PrepareSplashScreen();
-        virtual void Prepare() override;
+        virtual void AddCamera(std::shared_ptr<Camera> camera) override { m_Camera = camera; }
         virtual void Draw() override;
         virtual void Destroy() override;
+        virtual void DrawSplashScreen() override;
+        virtual void WaitIdle() override;
+        virtual std::shared_ptr<VulkanRenderer> Rdr() override { return m_Renderer; }
+        virtual ImGuiInfo GetImGuiInfo() override;
+        virtual void ImmediateSubmit(std::function<void(VkCommandBuffer cmd)>&& function) override;
+        virtual void ShowGrid(bool show) override;
+        virtual void AddEntities(std::vector<std::shared_ptr<Entity>>* entities) override { m_Entities = entities; }
+        virtual void AddBbox(std::vector<std::shared_ptr<Entity>>* bbox) override { m_BoundingBox = bbox; }
+        virtual void AddSkybox(std::shared_ptr<Mesh> skyboxMesh) override { m_SkyboxMesh = skyboxMesh; }
+        virtual void AddHUD(std::vector<std::shared_ptr<Mesh>> hud) override { m_HUD = hud; }
+        virtual void AddSplash(std::vector<std::shared_ptr<Mesh>> splash) override { m_Splash = splash; }
+        virtual inline std::vector<VkDescriptorSetLayout>* GetDescriptorSetLayouts() override { return &m_DescriptorSetLayouts; }
+        virtual inline std::vector<VkImage>* GetSwapChainImages() override { return &m_SwapChainImages; }
+        virtual inline std::shared_ptr<VkRenderPass> RdrPass() override { return m_RenderPass; }
+        virtual inline glm::mat4 GetPerspective() override { return m_Perspective; }
+        virtual void SetDeltatime(float deltaTime) override;
 
-        void ImmediateSubmit(std::function<void(VkCommandBuffer cmd)>&& function);
         void ShouldRecreateSwapChain();
         void RecreateSwapChain();
-
-        inline uint32_t GetSwapImageIndex() { return m_ImageIndex; };
-        inline std::shared_ptr<VulkanRenderer> Rdr() { return m_Renderer; };
-        inline std::shared_ptr<VkRenderPass> RdrPass() { return m_RenderPass; };
-        void SetDeltatime(float deltaTime) override;
-
-        inline std::vector<VkDescriptorSetLayout>* GetDescriptorSetLayouts() { return &m_DescriptorSetLayouts; };
-        inline std::vector<VkImage>* GetSwapChainImages() { return &m_SwapChainImages; };
-        inline glm::mat4 GetPerspective() { return m_Perspective; };
-        void Refresh();
+        inline uint32_t GetSwapImageIndex() { return m_ImageIndex; }
+        void SetRayPick(float x, float y, float z, int width, int height);
 
         //@todo add GuiManager
         VkRenderPass CreateImGuiRenderPass();
-        VImGuiInfo GetVImGuiInfo();
-
+        
         //IMGUI config
         static float s_AmbiantLight;
         static float s_FogDensity;
@@ -64,22 +47,15 @@ namespace Rbk
         static int s_Crosshair;
         static int s_PolygoneMode;
 
-        std::shared_ptr<TextureManager> GetTextureManager() { return m_TextureManager; };
-        std::shared_ptr<EntityManager> GetEntityManager() { return m_EntityManager; };
-        std::shared_ptr<ShaderManager> GetShaderManager() { return m_ShaderManager; };
-        std::shared_ptr<SpriteAnimationManager> GetSpriteAnimationManager() { return m_SpriteAnimationManager; };
-
-        std::shared_ptr<Camera> GetCamera() { return m_Camera; };
-        std::vector<glm::vec3> GetLights() { return m_LightsPos; };
-        
-        void ShowGrid(bool show);
-        void DrawSplashScreen();
+        std::shared_ptr<Camera> GetCamera() { return m_Camera; }
+        std::vector<glm::vec3> GetLights() { return m_LightsPos; }
 
     private:
         //@todo temp
         void SetPerspective();
         void BeginRendering();
         void EndRendering();
+
     private:
         std::shared_ptr<VulkanRenderer> m_Renderer = nullptr;
         std::shared_ptr<VkRenderPass> m_RenderPass = nullptr;
@@ -96,14 +72,6 @@ namespace Rbk
         std::shared_ptr<Camera> m_Camera = nullptr;
         std::shared_ptr<Window> m_Window = nullptr;
 
-        std::shared_ptr<TextureManager> m_TextureManager = nullptr;
-        std::shared_ptr<EntityManager> m_EntityManager = nullptr;
-        std::shared_ptr<ShaderManager> m_ShaderManager = nullptr;
-        std::shared_ptr<SpriteAnimationManager> m_SpriteAnimationManager = nullptr;
-
-        bool m_IsHUDPrepared = false;
-        bool m_IsSkyBoxPrepared = false;
-
         //@todo move to meshManager
         std::vector<std::shared_ptr<Mesh>> m_Splash = {};
         std::vector<std::shared_ptr<Mesh>> m_HUD = {};
@@ -117,5 +85,11 @@ namespace Rbk
         std::vector<VkDescriptorSetLayout>m_DescriptorSetLayouts;
 
         std::mutex m_MutexRendering;
+        glm::vec3 m_RayPick;
+        bool m_HasClicked = false;
+
+        std::vector<std::shared_ptr<Entity>>* m_Entities = nullptr;
+        std::shared_ptr<Mesh> m_SkyboxMesh = nullptr;
+        std::vector<std::shared_ptr<Entity>>* m_BoundingBox;
     };
 }

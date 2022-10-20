@@ -1,36 +1,42 @@
 #pragma once
 
-#include <json.hpp>
-#include "Rebulk/Renderer/Vulkan/VulkanRenderer.h"
-#include "Rebulk/Core/TinyObjLoader.h"
-#include "Rebulk/Component/Camera.h"
-#include "Rebulk/Component/Mesh.h"
-#include "Rebulk/Component/Entity.h"
+#include "IEntityManager.h"
 
 namespace Rbk
 {
-    class EntityManager
+    class EntityManager : IEntityManager
     {
     public:
 
-        explicit EntityManager(const std::shared_ptr<VulkanRenderer>& renderer);
+        explicit EntityManager();
+
+        virtual void AddRenderer(std::shared_ptr<IRendererAdapter> renderer) override { m_Renderer = renderer; }
+        virtual std::vector<std::future<void>> Load(nlohmann::json levelConfig) override;
+        virtual inline std::vector<std::shared_ptr<Entity>>* GetEntities() override { return &m_Entities; }
+        virtual inline void SetSkyboxMesh(std::shared_ptr<Mesh> skyboxMesh) override { m_SkyboxMesh = skyboxMesh; }
+        virtual inline std::vector<std::shared_ptr<Entity>>* GetBBox() override  { return &m_BoundingBox; }
+        virtual inline std::shared_ptr<Mesh> GetSkyboxMesh() override { return m_SkyboxMesh; }
+        virtual void Clear() override;
+        virtual bool ShowBBox() const override { return m_ShowBBox; }
+        virtual inline std::map<std::string, std::array<uint32_t, 2>> GetLoadedBBox() override { return m_LoadedBbox; }
+        virtual const uint32_t GetInstancedCount() override;
+        virtual void SetShowBBox(bool show) override;
+        virtual void AddBBox(const std::shared_ptr<Entity>& bbox) override;
+        virtual inline std::map<std::string, std::array<uint32_t, 2>> GetLoadedEntities() override { return m_LoadedEntities; }
+
         void AddEntity(const std::shared_ptr<Entity>& entity);
-        std::vector<std::future<void>> Load(nlohmann::json levelConfig);
         const std::shared_ptr<Entity> GetEntityByName(const std::string& name) const;
-        const uint32_t GetInstancedCount();
 
-        inline const std::map<std::string, std::array<uint32_t, 2>> GetLoadedEntities() const { return m_LoadedEntities; };
-        inline const uint32_t GetTotalEntities() const { return m_Entities.size(); };
-        inline std::shared_ptr<Mesh> GetSkyboxMesh() { return m_SkyboxMesh; };
-        inline std::vector<std::shared_ptr<Entity>>* GetEntities() { return &m_Entities; };
-        inline void SetSkyboxMesh(std::shared_ptr<Mesh> skyboxMesh) { m_SkyboxMesh = skyboxMesh; };
+        inline const uint32_t GetTotalEntities() const { return m_Entities.size(); }
 
-        void Clear();
 
     private:
         std::vector<std::shared_ptr<Entity>> m_Entities;
+        std::vector<std::shared_ptr<Entity>> m_BoundingBox;
         std::map<std::string, std::array<uint32_t, 2>> m_LoadedEntities;
+        std::map<std::string, std::array<uint32_t, 2>> m_LoadedBbox;
         std::shared_ptr<Mesh> m_SkyboxMesh = nullptr;
-        std::shared_ptr<VulkanRenderer> m_Renderer = nullptr;
+        std::shared_ptr<IRendererAdapter> m_Renderer = nullptr;
+        bool m_ShowBBox = false;
     };
 }

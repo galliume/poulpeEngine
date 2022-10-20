@@ -35,11 +35,13 @@ layout(push_constant) uniform constants
     float fogDensity;
     vec3 fogColor;
     vec4 lightPos;
+	
 } PC;
 
 void main() {
     
     gl_Position = ubos[gl_InstanceIndex].proj * ubos[gl_InstanceIndex].view * ubos[gl_InstanceIndex].model * vec4(pos, 1.0);
+
     fragTexCoord = texCoord;
     fragNormal =  mat3(transpose(inverse(ubos[gl_InstanceIndex].model))) * normal;
     fragModelPos = vec3(ubos[gl_InstanceIndex].model * vec4(pos, 1.0));
