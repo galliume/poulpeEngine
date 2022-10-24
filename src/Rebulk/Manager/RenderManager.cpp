@@ -44,14 +44,14 @@ namespace Rbk
     void RenderManager::CleanUp()
     {
         m_Renderer->Destroy();
-        
+
         m_DestroyManager->CleanEntities(*m_EntityManager->GetEntities());
         m_DestroyManager->CleanEntities(*m_EntityManager->GetBBox());
         m_DestroyManager->CleanEntities(m_EntityManager->GetHUD());
         m_DestroyManager->CleanShaders(m_ShaderManager->GetShaders()->shaders);
         m_DestroyManager->CleanTextures(m_TextureManager->GetTextures());
         m_DestroyManager->CleanTexture(m_TextureManager->GetSkyboxTexture());
-                
+
         m_Renderer->Rdr()->Destroy();
     }
 

@@ -4,6 +4,7 @@
 	"splashScreenMusic": true,
 	"ambientMusic": false,
 	"input": {
+		"current" : "keyboard",
 		"keyboard": {
 			"unlockCamera": "left_ctrl",
 			"forward": "w",
