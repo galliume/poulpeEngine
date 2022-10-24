@@ -19,6 +19,35 @@ namespace Rbk
     {
         m_InputConfig = inputConfig;
 
+        //@todo should not be here and take keyboard type (qwerty, azerty, etc).
+        m_KeyboardKeys.insert({ "left_ctrl", GLFW_KEY_LEFT_CONTROL });
+        m_KeyboardKeys.insert({ "a", GLFW_KEY_A });
+        m_KeyboardKeys.insert({ "b", GLFW_KEY_B });
+        m_KeyboardKeys.insert({ "c", GLFW_KEY_C });
+        m_KeyboardKeys.insert({ "d", GLFW_KEY_D });
+        m_KeyboardKeys.insert({ "e", GLFW_KEY_E });
+        m_KeyboardKeys.insert({ "f", GLFW_KEY_F });
+        m_KeyboardKeys.insert({ "g", GLFW_KEY_G });
+        m_KeyboardKeys.insert({ "g", GLFW_KEY_H });
+        m_KeyboardKeys.insert({ "i", GLFW_KEY_I });
+        m_KeyboardKeys.insert({ "j", GLFW_KEY_J });
+        m_KeyboardKeys.insert({ "k", GLFW_KEY_K });
+        m_KeyboardKeys.insert({ "l", GLFW_KEY_L });
+        m_KeyboardKeys.insert({ "m", GLFW_KEY_M });
+        m_KeyboardKeys.insert({ "n", GLFW_KEY_N });
+        m_KeyboardKeys.insert({ "o", GLFW_KEY_O });
+        m_KeyboardKeys.insert({ "p", GLFW_KEY_P });
+        m_KeyboardKeys.insert({ "q", GLFW_KEY_Q });
+        m_KeyboardKeys.insert({ "r", GLFW_KEY_R });
+        m_KeyboardKeys.insert({ "s", GLFW_KEY_S });
+        m_KeyboardKeys.insert({ "t", GLFW_KEY_T });
+        m_KeyboardKeys.insert({ "u", GLFW_KEY_U });
+        m_KeyboardKeys.insert({ "v", GLFW_KEY_V });
+        m_KeyboardKeys.insert({ "w", GLFW_KEY_W });
+        m_KeyboardKeys.insert({ "x", GLFW_KEY_X });
+        m_KeyboardKeys.insert({ "y", GLFW_KEY_Y });
+        m_KeyboardKeys.insert({ "z", GLFW_KEY_Z });
+
         glfwSetWindowUserPointer(m_Window->Get(), this);
 
         glfwSetKeyCallback(m_Window->Get(), [](GLFWwindow* window, int key, int scancode, int action, int mods) {
@@ -47,10 +76,12 @@ namespace Rbk
         //    m_Camera->GetPos().z
         //);
 
+        auto config = m_InputConfig[m_InputConfig["current"]];
+
         switch (action)
         {
             case GLFW_PRESS:
-                if (glfwGetKey(m_Window->Get(), GLFW_KEY_LEFT_CONTROL)) {
+                if (glfwGetKey(m_Window->Get(), m_KeyboardKeys[config["unlockCamera"]])) {
 
                     if (!InputManager::m_CanMoveCamera) {
                         glfwSetInputMode(m_Window->Get(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
@@ -61,22 +92,22 @@ namespace Rbk
                 }
             case GLFW_REPEAT:
             {
-                if (glfwGetKey(m_Window->Get(), GLFW_KEY_W) ) {
+                if (glfwGetKey(m_Window->Get(), m_KeyboardKeys[config["forward"]]) ) {
                     m_Camera->Forward();
                 }
-                if (glfwGetKey(m_Window->Get(), GLFW_KEY_S)) {
+                if (glfwGetKey(m_Window->Get(), m_KeyboardKeys[config["backward"]])) {
                     m_Camera->Backward();
                 }
-                if (glfwGetKey(m_Window->Get(), GLFW_KEY_A)) {
+                if (glfwGetKey(m_Window->Get(), m_KeyboardKeys[config["left"]])) {
                     m_Camera->Left();
                 }
-                if (glfwGetKey(m_Window->Get(), GLFW_KEY_D)) {
+                if (glfwGetKey(m_Window->Get(), m_KeyboardKeys[config["right"]])) {
                     m_Camera->Right();
                 }
-                if (glfwGetKey(m_Window->Get(), GLFW_KEY_Q)) {
+                if (glfwGetKey(m_Window->Get(), m_KeyboardKeys[config["up"]])) {
                     m_Camera->Up();
                 }
-                if (glfwGetKey(m_Window->Get(), GLFW_KEY_E)) {
+                if (glfwGetKey(m_Window->Get(), m_KeyboardKeys[config["down"]])) {
                     m_Camera->Down();
                 }
                 break;
