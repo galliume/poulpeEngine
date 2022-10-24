@@ -22,8 +22,7 @@ namespace Rbk
     void Crosshair::Visit(std::shared_ptr<Entity> entity)
     {
         std::shared_ptr<Mesh> mesh = std::dynamic_pointer_cast<Mesh>(entity);
-
-        if (!mesh) return;
+        if (!mesh && !mesh->IsDirty()) return;
 
         const std::vector<Vertex> vertices = {
             {{-0.025f, -0.025f, 0.0f}, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},

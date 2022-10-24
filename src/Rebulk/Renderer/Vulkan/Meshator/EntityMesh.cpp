@@ -24,8 +24,9 @@ namespace Rbk
 
     void EntityMesh::Visit(std::shared_ptr<Entity> entity)
     {
+
         std::shared_ptr<Mesh> mesh = std::dynamic_pointer_cast<Mesh>(entity);
-        if (!mesh) return;
+        if (!mesh && !mesh->IsDirty()) return;
 
         uint32_t totalInstances = static_cast<uint32_t>(mesh->GetData()->size());
         uint32_t maxUniformBufferRange = m_Adapter->Rdr()->GetDeviceProperties().limits.maxUniformBufferRange;
