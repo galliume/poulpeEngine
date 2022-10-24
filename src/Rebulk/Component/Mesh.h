@@ -46,6 +46,9 @@ namespace Rbk
 
         void AddUbos(const std::vector<UniformBufferObject>& ubos);
         std::function<void(VkCommandBuffer commandBuffer, VkPipelineLayout pipelineLayout)> ApplyPushConstants = nullptr;
+        
+        bool IsDirty() { return m_IsDirty; }
+        void SetIsDirty(bool dirty = true) { m_IsDirty = dirty; }
 
     //@todo make it private
     public:
@@ -58,5 +61,6 @@ namespace Rbk
     private:
         std::vector<Data> m_Data = {};
         std::string m_ShaderName;
+        bool m_IsDirty = true;
     };
 }

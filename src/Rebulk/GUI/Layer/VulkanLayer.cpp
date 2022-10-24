@@ -150,7 +150,7 @@ namespace Rbk
     }
 
     void VulkanLayer::DisplayAPI(VkPhysicalDeviceProperties devicesProps)
-    {                    
+    {
         Rbk::Im::Text("API Version : %s", m_RenderManager->GetRendererAdapter()->Rdr()->GetAPIVersion().c_str());
         //Rbk::Im::Text("Drivers version : %d", devicesProps.driverVersion);
         Rbk::Im::Text("Vendor id : %s", m_RenderManager->GetRendererAdapter()->Rdr()->GetVendor(devicesProps.vendorID).c_str());
@@ -291,16 +291,20 @@ namespace Rbk
     void VulkanLayer::DisplayLevel()
     {
         std::vector<std::string> levels = m_RenderManager->GetConfigManager()->ListLevels();
+        auto appConfig = m_RenderManager->GetConfigManager()->AppConfig();
+        auto defaultLevel = static_cast<std::string>(appConfig["defaultLevel"]);
 
         if (ImGui::BeginCombo("Levels", levels.at(m_LevelIndex).c_str())) {
 
             for (int n = 0; n < levels.size(); n++) {
 
-                const bool isSelected = (m_LevelIndex == n);
+                const bool isSelected = (levels.at(n).c_str() == defaultLevel || m_LevelIndex == n);
 
                 if (ImGui::Selectable(levels.at(n).c_str(), isSelected)) {
                     m_LevelIndex = n;
-                    Refresh();
+                    std::async(std::launch::async, [=]() {
+                        Refresh();
+                    });
                 }
 
                 if (isSelected)
@@ -324,7 +328,8 @@ namespace Rbk
 
                 if (ImGui::Selectable(skybox.at(n).c_str(), isSelected)) {
                     m_SkyboxIndex = n;
-                    Refresh();
+                    m_RenderManager->GetTextureManager()->LoadSkybox(skybox.at(n));
+                    m_RenderManager->GetEntityManager()->GetSkybox()->SetIsDirty(true);
                 }
 
                 if (isSelected)

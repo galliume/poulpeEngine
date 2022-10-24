@@ -13,7 +13,8 @@ namespace Rbk
         virtual void AddConfig(nlohmann::json config) override { m_TextureConfig = config; }
         virtual inline std::map<std::string, Texture> GetTextures() override { return m_Textures; }
         virtual void AddRenderer(std::shared_ptr<IRendererAdapter> renderer) override { m_Renderer = renderer; }
-        virtual std::vector<std::future<void>> Load(const std::string& skybox) override;
+        virtual std::future<void> Load() override;
+        virtual std::future<void> LoadSkybox(const std::string& skybox) override;
         virtual inline const Texture GetSkyboxTexture() const override { return m_Skybox; }
         virtual void AddSkyBox(const std::vector<std::string>& skyboxImages) override;
         virtual void AddTexture(const std::string& name, const std::string& path, bool isPublic = false) override;

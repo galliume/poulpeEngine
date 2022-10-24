@@ -65,15 +65,7 @@ namespace Rbk
         m_TextureManager->AddConfig(m_ConfigManager->TexturesConfig());
         
         nlohmann::json appConfig = m_ConfigManager->AppConfig();
-        std::string defaultLevel = static_cast<std::string>(appConfig["defaultLevel"]);
-        std::string defaultSkybox = static_cast<std::string>(appConfig["defaultSkybox"]);
-        bool splashScreenMusic = static_cast<bool>(appConfig["splashScreenMusic"]);
-        bool ambientScreenMusic = static_cast<bool>(appConfig["ambientMusic"]);
-        nlohmann::json inputConfig = appConfig["input"];
         nlohmann::json textureConfig = m_ConfigManager->TexturesConfig();
-        nlohmann::json shaderConfig = m_ConfigManager->ShaderConfig();
-        nlohmann::json soundConfig = m_ConfigManager->SoundConfig();
-        nlohmann::json levelConfig = m_ConfigManager->EntityConfig(defaultLevel);
 
         //@todo, those managers should not have the usage of the renderer...
         m_TextureManager->AddRenderer(m_Renderer);
@@ -83,8 +75,8 @@ namespace Rbk
         m_InputManager->SetCamera(m_Camera);
         //end @todo
 
-        m_InputManager->Init(inputConfig);
-        m_AudioManager->Load(soundConfig);
+        m_InputManager->Init(appConfig["input"]);
+        m_AudioManager->Load(m_ConfigManager->SoundConfig());
 
         std::vector<std::string> splashSprites{};
         for (auto& texture : textureConfig["splash"].items()) {
@@ -96,7 +88,7 @@ namespace Rbk
 
         PrepareSplashScreen();
 
-        if (splashScreenMusic)
+        if (static_cast<bool>(appConfig["splashScreenMusic"]))
             m_AudioManager->StartSplash();
 
         std::future<void> loading = std::async(std::launch::async, [this]() {
@@ -112,7 +104,7 @@ namespace Rbk
 
         m_AudioManager->StopSplash();
 
-        if (ambientScreenMusic)
+        if (static_cast<bool>(appConfig["ambientMusic"]))
             m_AudioManager->StartAmbient();
 
         PrepareEntity();
@@ -123,21 +115,20 @@ namespace Rbk
     void RenderManager::LoadData()
     {
         nlohmann::json appConfig = m_ConfigManager->AppConfig();
-        std::string defaultLevel = static_cast<std::string>(appConfig["defaultLevel"]);
-        std::string defaultSkybox = static_cast<std::string>(appConfig["defaultSkybox"]);
-        nlohmann::json shaderConfig = m_ConfigManager->ShaderConfig();
-        nlohmann::json levelConfig = m_ConfigManager->EntityConfig(defaultLevel);
 
-        std::future<void> shaderFuture = m_ShaderManager->Load(shaderConfig);
-        std::vector<std::future<void>> textureFutures = m_TextureManager->Load(defaultSkybox);
-        std::vector<std::future<void>> entityFutures = m_EntityManager->Load(levelConfig);
+        std::future<void> shaderFuture = m_ShaderManager->Load(m_ConfigManager->ShaderConfig());
+        std::future<void> textureFuture = m_TextureManager->Load();
+        std::future<void> skyboxFuture = m_TextureManager->LoadSkybox(static_cast<std::string>(appConfig["defaultSkybox"]));
+        std::vector<std::future<void>> entityFutures = m_EntityManager->Load(
+            m_ConfigManager->EntityConfig(static_cast<std::string>(appConfig["defaultLevel"]))
+        );
 
         for (auto& future : entityFutures) {
             future.wait();
         }
-        for (auto& future : textureFutures) {
-            future.wait();
-        }
+        textureFuture.wait();
+        skyboxFuture.wait();
+
         shaderFuture.wait();
 
         SetIsLoaded();
@@ -147,6 +138,11 @@ namespace Rbk
 
     void RenderManager::Draw()
     {
+        if (m_EntityManager->GetSkybox()->IsDirty()) {
+            std::async(std::launch::async, [=]() {
+                PrepareSkybox();
+            });
+        }
         m_Renderer->Draw();
     }
 
@@ -292,10 +288,11 @@ namespace Rbk
             m_ShaderManager,
             m_TextureManager,
             skyDescriptorPool
-            );
+        );
 
         auto skyboxMesh = std::make_shared<Mesh>();
         skyboxMesh->Accept(skyboxVulkanisator);
+        m_EntityManager->SetSkybox(skyboxMesh);
         m_Renderer->AddSkybox(skyboxMesh);
     }
 }
