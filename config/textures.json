@@ -32,7 +32,8 @@
 		"dog_base_color": "assets/mesh/doghouse/doghouse0908_PBR_BaseColor.png",
 		"dog": "assets/mesh/dog/Texture_albedo.jpg",
 		"fence": "assets/mesh/fence/cit_1001_Diffuse.png",
-		"minecraft_grass": "assets/mesh/minecraft/Grass_Block_TEX.png"
+		"minecraft_grass": "assets/mesh/minecraft/Grass_Block_TEX.png",
+		"block_base": "assets/texture/block_base.png"
 	},
 	"skybox": {
 		"bluesky": [
