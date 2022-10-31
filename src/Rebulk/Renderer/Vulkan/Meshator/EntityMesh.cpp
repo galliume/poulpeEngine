@@ -33,8 +33,8 @@ namespace Rbk
         VkDeviceSize maxMemoryHeap = m_Adapter->Rdr()->GetMaxMemoryHeap();
         uint32_t uniformBufferChunkSize = maxMemoryHeap / sizeof(UniformBufferObject);
         uint32_t uniformBuffersCount = static_cast<uint32_t>(std::ceil(static_cast<float>(totalInstances) / static_cast<float>(uniformBufferChunkSize)));
-        //mesh->m_CameraPos = m_Camera->GetPos();
 
+        //@todo fix memory management...
          for (uint32_t i = 0; i < uniformBuffersCount; i++) {
             std::pair<VkBuffer, VkDeviceMemory> uniformBuffer = m_Adapter->Rdr()->CreateUniformBuffers(totalInstances);
             mesh->m_UniformBuffers.emplace_back(uniformBuffer);

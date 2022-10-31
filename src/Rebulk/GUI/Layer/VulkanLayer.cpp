@@ -200,11 +200,11 @@ namespace Rbk
                 Refresh();
             }
 
-            Rbk::Im::Text("FPS limit");
-            ImGui::SameLine();
-            ImGui::RadioButton("60 fps", &Rbk::Application::s_UnlockedFPS, 0); ImGui::SameLine();
-            ImGui::RadioButton("120 fps", &Rbk::Application::s_UnlockedFPS, 1); ImGui::SameLine();
-            ImGui::RadioButton("unlocked", &Rbk::Application::s_UnlockedFPS, 2);
+            Rbk::Im::Text("FPS limit"); ImGui::SameLine();
+            ImGui::RadioButton("30 fps", &Rbk::Application::s_UnlockedFPS, 0); ImGui::SameLine();
+            ImGui::RadioButton("60 fps", &Rbk::Application::s_UnlockedFPS, 1); ImGui::SameLine();
+            ImGui::RadioButton("120 fps", &Rbk::Application::s_UnlockedFPS, 2); ImGui::SameLine();
+            ImGui::RadioButton("unlocked", &Rbk::Application::s_UnlockedFPS, 3);
         }
 
         ImGui::SetNextItemOpen(m_LightOpen);

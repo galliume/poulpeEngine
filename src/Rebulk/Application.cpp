@@ -73,9 +73,12 @@ namespace Rbk
         while (!glfwWindowShouldClose(m_Window->Get())) {
 
             if (Application::s_UnlockedFPS == 0) {
-                maxFPS = 60.0;
+                maxFPS = 30.0;
                 maxPeriod = 1.0 / maxFPS;
             } else if (Application::s_UnlockedFPS == 1) {
+                maxFPS = 60.0;
+                maxPeriod = 1.0 / maxFPS;
+            } else if (Application::s_UnlockedFPS == 2) {
                 maxFPS = 120.0;
                 maxPeriod = 1.0 / maxFPS;
             }
@@ -83,7 +86,7 @@ namespace Rbk
             double currentTime = glfwGetTime();
             double timeStep = currentTime - lastTime;
 
-            if (timeStep >= maxPeriod || Application::s_UnlockedFPS == 2) {
+            if (timeStep >= maxPeriod || Application::s_UnlockedFPS == 3) {
                 
                 timeStepSum += timeStep;
                 frameCount++;
