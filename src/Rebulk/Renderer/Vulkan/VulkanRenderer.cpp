@@ -792,12 +792,8 @@ namespace Rbk {
 
         //@todo move to a FileManager
         //@todo option to enable / disable pipeline cache
-        std::string cacheFileName = std::format(
-            "cache/pipeline_cache_data_{}_{}_{}.bin",
-            GetDeviceProperties().vendorID,
-            GetDeviceProperties().deviceID,
-            name
-        );
+        std::string cacheFileName = "cache/pipeline_cache_data_" + std::to_string(GetDeviceProperties().vendorID) + "_" + std::to_string(GetDeviceProperties().deviceID) + "_" + name.data();
+
         bool badCache = false;
         size_t cacheFileSize = 0;
         void* cacheFileData = nullptr;
@@ -1467,6 +1463,9 @@ namespace Rbk {
         allocInfo.allocationSize = memRequirements.size;
         allocInfo.memoryTypeIndex = FindMemoryType(memRequirements.memoryTypeBits, properties);
 
+        Rbk::Log::GetLogger()->warn("Try to allocate buffer size {} on memoryheap {}", size, m_MaxMemoryHeap);
+
+
         if (vkAllocateMemory(m_Device, &allocInfo, nullptr, &bufferMemory) != VK_SUCCESS) {
             throw std::runtime_error("failed to allocate buffer memory!");
         }
@@ -1645,6 +1644,7 @@ namespace Rbk {
 
         for (uint32_t i = 0; i < memProperties.memoryTypeCount; i++) {
             if ((typeFilter & (1 << i)) && (memProperties.memoryTypes[i].propertyFlags & properties) == properties) {
+                m_MaxMemoryHeap = memProperties.memoryHeaps[memProperties.memoryTypes[i].heapIndex].size;
                 return i;
             }
         }
@@ -1680,6 +1680,8 @@ namespace Rbk {
         allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
         allocInfo.allocationSize = memRequirements.size;
         allocInfo.memoryTypeIndex = FindMemoryType(memRequirements.memoryTypeBits, properties);
+
+        Rbk::Log::GetLogger()->warn("Try to allocate image size {} on memoryheap {}", memRequirements.size, m_MaxMemoryHeap);
 
         if (vkAllocateMemory(m_Device, &allocInfo, nullptr, &imageMemory) != VK_SUCCESS) {
             throw std::runtime_error("failed to allocate image memory!");
@@ -1717,6 +1719,8 @@ namespace Rbk {
         allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
         allocInfo.allocationSize = memRequirements.size;
         allocInfo.memoryTypeIndex = FindMemoryType(memRequirements.memoryTypeBits, properties);
+
+        Rbk::Log::GetLogger()->warn("Try to allocate skybox image size {} on memoryheap {}", memRequirements.size, m_MaxMemoryHeap);
 
         if (vkAllocateMemory(m_Device, &allocInfo, nullptr, &imageMemory) != VK_SUCCESS) {
             throw std::runtime_error("failed to allocate image memory!");

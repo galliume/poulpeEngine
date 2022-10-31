@@ -49,10 +49,13 @@ VTune Profiler Results/
 debug.log
 *.bin
 
-ReBulkan.cflags
-ReBulkan.config
-ReBulkan.creator
-ReBulkan.creator.user
-ReBulkan.cxxflags
-ReBulkan.files
-ReBulkan.includes
+Rebulkan.cflags
+Rebulkan.config
+Rebulkan.creator
+Rebulkan.creator.user
+Rebulkan.cxxflags
+Rebulkan.files
+Rebulkan.includes
+.qtc_clangd/
+Rebulkan.creator.user
+

@@ -91,6 +91,7 @@ namespace Rbk {
         VkFormat FindSupportedFormat(const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features);
         VkFormat FindDepthFormat();
         bool HasStencilComponent(VkFormat format);
+        VkDeviceSize GetMaxMemoryHeap() { return m_MaxMemoryHeap; }
 
         /**
         * Vulkan drawing functions, in main loop
@@ -206,16 +207,10 @@ namespace Rbk {
             VK_EXT_DEPTH_CLIP_ENABLE_EXTENSION_NAME,
             VK_KHR_PUSH_DESCRIPTOR_EXTENSION_NAME,
             VK_KHR_MAINTENANCE_3_EXTENSION_NAME,
-            VK_EXT_DESCRIPTOR_INDEXING_EXTENSION_NAME,
             VK_KHR_SWAPCHAIN_EXTENSION_NAME,
             VK_KHR_MAINTENANCE_4_EXTENSION_NAME,
             VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME,
-            VK_KHR_CREATE_RENDERPASS_2_EXTENSION_NAME,
-            VK_KHR_DEPTH_STENCIL_RESOLVE_EXTENSION_NAME,
-            VK_EXT_PIPELINE_CREATION_CACHE_CONTROL_EXTENSION_NAME,
-            VK_KHR_MULTIVIEW_EXTENSION_NAME,
-            VK_KHR_MAINTENANCE_2_EXTENSION_NAME,
-            VK_NV_FRAMEBUFFER_MIXED_SAMPLES_EXTENSION_NAME
+            VK_EXT_PIPELINE_CREATION_CACHE_CONTROL_EXTENSION_NAME
         };
 
         bool m_InstanceCreated = false;
@@ -247,5 +242,6 @@ namespace Rbk {
         VkSampleCountFlagBits m_MsaaSamples = VK_SAMPLE_COUNT_8_BIT;
 
         std::mutex m_MutexQueueSubmit;
+        VkDeviceSize m_MaxMemoryHeap;
     };
 }

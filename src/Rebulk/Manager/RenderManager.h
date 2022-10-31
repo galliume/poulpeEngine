@@ -39,7 +39,7 @@ namespace Rbk
         virtual std::shared_ptr<Rbk::AudioManager> GetAudioManager() override { return m_AudioManager; }
         virtual std::shared_ptr<Rbk::ConfigManager> GetConfigManager() override { return m_ConfigManager; }
         virtual std::shared_ptr<Rbk::DestroyManager> GetDestroyManager() override { return m_DestroyManager; }
-        virtual void RenderManager::CleanUp() override;
+        virtual void CleanUp() override;
 
     private:
         void PrepareSplashScreen();
