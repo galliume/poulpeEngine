@@ -20,7 +20,7 @@ Compile shaders :
 
   Windows : .\scripts\WindowsShadersCompile.bat
 
-  Linux   : ./scripts/LinuxShadersCompile.sh (broken)
+  Linux   : ./scripts/LinuxShadersCompile.sh
 
 Then compile the project with CLang
 
