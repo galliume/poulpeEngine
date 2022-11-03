@@ -14,11 +14,13 @@
 
 ### To execute 
 
-First compile shaders
+Install the latest Vulkan SDK https://vulkan.lunarg.com/ and be sure to have the env variable VULKAN_SDK properly set to your Vulkan SDK installation folder.
 
-Windows : .\scripts\WindowsShadersCompile.bat
+Compile shaders :
 
-Linux   : ./scripts/LinuxShadersCompile.sh (broken)
+  Windows : .\scripts\WindowsShadersCompile.bat
+
+  Linux   : ./scripts/LinuxShadersCompile.sh (broken)
 
 Then compile the project with CLang
 
