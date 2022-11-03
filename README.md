@@ -20,7 +20,7 @@ Windows : .\scripts\WindowsShadersCompile.bat
 
 Linux   : ./scripts/LinuxShadersCompile.sh (broken)
 
-Then compile the project
+Then compile the project with CLang
 
 Windows : WindowsGenerateProject.bat generate a visual studio code 2022 sln. 
 Load in VS Studio and hit F5... (you can change the .bat file and use an older version of visual studio)
