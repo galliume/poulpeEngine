@@ -68,10 +68,9 @@ namespace Rbk {
         VkCommandPool CreateCommandPool();
         std::vector<VkCommandBuffer> AllocateCommandBuffers(VkCommandPool commandPool, uint32_t size = 1, bool isSecondary = false);
         VkBuffer CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage);
-        void CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory);
-        std::pair<VkBuffer, VkDeviceMemory> CreateVertexBuffer(VkCommandPool commandPool, std::vector<Rbk::Vertex> vertices);
-        std::pair<VkBuffer, VkDeviceMemory> CreateVertex2DBuffer(const VkCommandPool& commandPool, const std::vector<Rbk::Vertex2D>& vertices);
-        std::pair<VkBuffer, VkDeviceMemory> CreateIndexBuffer(const VkCommandPool& commandPool, const std::vector<uint32_t>& indices);
+        Buffer CreateVertexBuffer(VkCommandPool commandPool, std::vector<Rbk::Vertex> vertices);
+        Buffer CreateVertex2DBuffer(const VkCommandPool& commandPool, const std::vector<Rbk::Vertex2D>& vertices);
+        Buffer CreateIndexBuffer(const VkCommandPool& commandPool, const std::vector<uint32_t>& indices);
         std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>> CreateSyncObjects(std::vector<VkImage> swapChainImages);
         VkImageMemoryBarrier SetupImageMemoryBarrier(VkImage image, VkAccessFlags srcAccessMask, VkAccessFlags dstAccessMask, VkImageLayout oldLayout, VkImageLayout newLayout, uint32_t mipLevels = VK_REMAINING_MIP_LEVELS, VkImageAspectFlags aspectMask = VK_IMAGE_ASPECT_COLOR_BIT);
         void CopyBuffer(VkCommandPool commandPool, VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
@@ -219,8 +218,11 @@ namespace Rbk {
     
         VkInstance m_Instance = VK_NULL_HANDLE;
         VkPhysicalDevice m_PhysicalDevice = VK_NULL_HANDLE;
-        VkPhysicalDeviceProperties m_DeviceProps = {};
-        VkPhysicalDeviceFeatures m_DeviceFeatures = {};
+        VkPhysicalDeviceProperties m_DeviceProps;
+        VkPhysicalDeviceFeatures m_DeviceFeatures;
+        VkPhysicalDeviceProperties2 m_DeviceProperties2;
+        VkPhysicalDeviceMaintenance3Properties m_DeviceMaintenance3Properties;
+
         VkDevice m_Device = VK_NULL_HANDLE;
         VkQueue m_GraphicsQueue = VK_NULL_HANDLE;
         VkQueue m_PresentQueue = VK_NULL_HANDLE;

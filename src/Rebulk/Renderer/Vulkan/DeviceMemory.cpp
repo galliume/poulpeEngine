@@ -4,8 +4,8 @@
 
 namespace Rbk
 {
-    DeviceMemory::DeviceMemory(VkDevice device, uint32_t memoryType, VkBufferUsageFlags usage)
-        : m_Device(device), m_MemoryType(memoryType), m_Usage(usage)
+    DeviceMemory::DeviceMemory(VkDevice device, uint32_t memoryType, VkBufferUsageFlags usage, VkDeviceSize maxMemoryAllocationSize)
+        : m_Device(device), m_MemoryType(memoryType), m_Usage(usage), m_MaxMemoryAllocationSize(maxMemoryAllocationSize/10)
     {
         if (nullptr == m_Memory) {
             m_Memory = std::make_shared<VkDeviceMemory>();
@@ -19,6 +19,7 @@ namespace Rbk
             m_Memory = std::make_shared<VkDeviceMemory>();
             m_Offset = 0;
             m_IsFull = false;
+            m_IsAllocated = false;
             AllocateToMemory();
         }
 
@@ -30,10 +31,13 @@ namespace Rbk
         if (!m_IsAllocated) {
             VkMemoryAllocateInfo allocInfo{};
             allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-            allocInfo.allocationSize = m_MaxMemorySize;
+            allocInfo.allocationSize = m_MaxMemoryAllocationSize;
             allocInfo.memoryTypeIndex = m_MemoryType;
 
-            if (vkAllocateMemory(m_Device, &allocInfo, nullptr, m_Memory.get()) != VK_SUCCESS) {
+            VkResult result = vkAllocateMemory(m_Device, &allocInfo, nullptr, m_Memory.get());
+
+            if (VK_SUCCESS != result) {
+                Rbk::Log::GetLogger()->warn("error while allocating memory {}", result);
                 throw std::runtime_error("failed to allocate buffer memory!");
             }
 
@@ -48,7 +52,17 @@ namespace Rbk
         vkBindBufferMemory(m_Device, buffer, *m_Memory, m_Offset);
         m_Offset += size;
 
-        if (m_Offset >= m_MaxMemorySize) {
+        if (m_Offset >= m_MaxMemoryAllocationSize) {
+            m_IsFull = true;
+        }
+    }
+
+    void DeviceMemory::BindImageToMemory(VkImage image, VkDeviceSize size)
+    {
+        vkBindImageMemory(m_Device, image, *m_Memory, m_Offset);
+        m_Offset += size;
+
+        if (m_Offset >= m_MaxMemoryAllocationSize) {
             m_IsFull = true;
         }
     }

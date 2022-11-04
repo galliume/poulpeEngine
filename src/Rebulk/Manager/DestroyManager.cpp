@@ -37,11 +37,11 @@ namespace Rbk
         }
 
         for (Data data : *entity->GetData()) {
-            m_Renderer->DestroyBuffer(data.m_VertexBuffer.first);
-            m_Renderer->DestroyDeviceMemory(data.m_VertexBuffer.second);
+            m_Renderer->DestroyBuffer(data.m_VertexBuffer.buffer);
+            //m_Renderer->DestroyDeviceMemory(data.m_VertexBuffer.second);
 
-            m_Renderer->DestroyBuffer(data.m_IndicesBuffer.first);
-            m_Renderer->DestroyDeviceMemory(data.m_IndicesBuffer.second);
+            m_Renderer->DestroyBuffer(data.m_IndicesBuffer.buffer);
+            //m_Renderer->DestroyDeviceMemory(data.m_IndicesBuffer.second);
         }
         m_Renderer->DestroyPipeline(entity->m_GraphicsPipeline);
         vkDestroyPipelineLayout(m_Renderer->GetDevice(), entity->m_PipelineLayout, nullptr);

@@ -5,6 +5,11 @@ namespace Rbk
 {
     class Vertex;
     struct UniformBufferObject;
+    struct Buffer {
+        VkBuffer buffer;
+        std::shared_ptr<VkDeviceMemory> memory;
+        uint32_t offset;
+    };
 
     struct Data
     {
@@ -13,8 +18,8 @@ namespace Rbk
         std::vector<Vertex> m_Vertices;
         std::vector<uint32_t> m_Indices;
         std::vector<UniformBufferObject> m_Ubos;
-        std::pair<VkBuffer, VkDeviceMemory> m_VertexBuffer = { nullptr, nullptr };
-        std::pair<VkBuffer, VkDeviceMemory> m_IndicesBuffer = { nullptr, nullptr };
+        Buffer m_VertexBuffer = { nullptr, nullptr, 0 };
+        Buffer m_IndicesBuffer = { nullptr, nullptr, 0 };
         uint32_t m_TextureIndex = 0;
     };
 }
