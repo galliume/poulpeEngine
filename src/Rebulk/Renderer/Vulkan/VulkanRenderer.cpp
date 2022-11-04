@@ -84,6 +84,8 @@ namespace Rbk {
         CreateLogicalDevice();
         InitDetails();
         CreateFence();
+
+        m_DeviceMemoryPool = std::make_shared<DeviceMemoryPool>();
     }
 
     std::string VulkanRenderer::GetAPIVersion()
@@ -1443,6 +1445,22 @@ namespace Rbk {
         vkCmdPipelineBarrier(commandBuffer, srcStageMask, dstStageMask, dependencyFlags, 0, 0, 0, 0, static_cast<uint32_t>(renderBarriers.size()), renderBarriers.data());
     }
 
+    VkBuffer VulkanRenderer::CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage)
+    {
+        VkBuffer buffer;
+        VkBufferCreateInfo bufferInfo{};
+        bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+        bufferInfo.size = size;
+        bufferInfo.usage = usage;
+        bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+
+        if (vkCreateBuffer(m_Device, &bufferInfo, nullptr, &buffer) != VK_SUCCESS) {
+            throw std::runtime_error("failed to create buffer!");
+        }
+
+        return buffer;
+    }
+
     void VulkanRenderer::CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory)
     {
         VkBufferCreateInfo bufferInfo{};
@@ -1725,14 +1743,23 @@ namespace Rbk {
     void VulkanRenderer::CreateTextureImage(VkCommandBuffer commandBuffer, stbi_uc* pixels, uint32_t texWidth, uint32_t texHeight, uint32_t mipLevels, VkImage& textureImage, VkDeviceMemory& textureImageMemory, VkFormat format)
     {
         VkDeviceSize imageSize = texWidth * texHeight * 4;
-        VkBuffer stagingBuffer;
-        VkDeviceMemory stagingBufferMemory;
-        CreateBuffer(imageSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
+        VkBuffer buffer = CreateBuffer(imageSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT);
+
+        VkMemoryRequirements memRequirements;
+        vkGetBufferMemoryRequirements(m_Device, buffer, &memRequirements);
+        auto memoryType = FindMemoryType(memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+
+        auto deviceMemory = m_DeviceMemoryPool->Get(m_Device, imageSize, memoryType, VK_BUFFER_USAGE_TRANSFER_SRC_BIT);
+
+        auto offset = deviceMemory->GetOffset();
+        deviceMemory->BindBufferToMemory(buffer, imageSize);
+
+        //CreateBuffer(imageSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
 
         void* data;
-        vkMapMemory(m_Device, stagingBufferMemory, 0, imageSize, 0, &data);
+        vkMapMemory(m_Device, *deviceMemory->GetMemory(), offset, imageSize, 0, &data);
         memcpy(data, pixels, static_cast<size_t>(imageSize));
-        vkUnmapMemory(m_Device, stagingBufferMemory);
+        vkUnmapMemory(m_Device, *deviceMemory->GetMemory());
 
         stbi_image_free(pixels);
 
@@ -1744,7 +1771,7 @@ namespace Rbk {
 
         AddPipelineBarriers(commandBuffer, { renderBarrier }, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_DEPENDENCY_BY_REGION_BIT);
 
-        CopyBufferToImage(commandBuffer, stagingBuffer, textureImage, static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight));
+        CopyBufferToImage(commandBuffer, buffer, textureImage, static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight));
 
         GenerateMipmaps(commandBuffer, format, textureImage, texWidth, texHeight, mipLevels);
 
@@ -1752,26 +1779,33 @@ namespace Rbk {
 
         QueueSubmit(commandBuffer);
 
-        vkDestroyBuffer(m_Device, stagingBuffer, nullptr);
-        vkFreeMemory(m_Device, stagingBufferMemory, nullptr);
+        vkDestroyBuffer(m_Device, buffer, nullptr);
+        //vkFreeMemory(m_Device, *deviceMemory->GetMemory(), nullptr);
     }
 
     void VulkanRenderer::CreateSkyboxTextureImage(VkCommandBuffer commandBuffer, std::vector<stbi_uc*>skyboxPixels, uint32_t texWidth, uint32_t texHeight, uint32_t mipLevels, VkImage& textureImage, VkDeviceMemory& textureImageMemory, VkFormat format)
     {
         VkDeviceSize imageSize = texWidth * texHeight * 4 * 6;
-        VkBuffer stagingBuffer;
-        VkDeviceMemory stagingBufferMemory;
-        CreateBuffer(imageSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
+        VkBuffer buffer = CreateBuffer(imageSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT);
+
+        VkMemoryRequirements memRequirements;
+        vkGetBufferMemoryRequirements(m_Device, buffer, &memRequirements);
+        auto memoryType = FindMemoryType(memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+
+        auto deviceMemory = m_DeviceMemoryPool->Get(m_Device, imageSize, memoryType, VK_BUFFER_USAGE_TRANSFER_SRC_BIT);
+
+        auto offset = deviceMemory->GetOffset();
+        deviceMemory->BindBufferToMemory(buffer, imageSize);
 
         stbi_uc* data;
         VkDeviceSize layerSize = imageSize / 6;
-        vkMapMemory(m_Device, stagingBufferMemory, 0, imageSize, 0, (void**) &data);
+        vkMapMemory(m_Device, *deviceMemory->GetMemory(), offset, imageSize, 0, (void**)&data);
 
         for (uint32_t i = 0; i < skyboxPixels.size(); i++) {
             memcpy(data + layerSize * i, skyboxPixels[i], layerSize);
         }
 
-        vkUnmapMemory(m_Device, stagingBufferMemory);
+        vkUnmapMemory(m_Device, *deviceMemory->GetMemory());
 
         CreateSkyboxImage(texWidth, texHeight, mipLevels, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, textureImage, textureImageMemory);
 
@@ -1785,20 +1819,19 @@ namespace Rbk {
 
         AddPipelineBarriers(commandBuffer, { renderBarrier }, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_DEPENDENCY_BY_REGION_BIT);
 
-        CopyBufferToImageSkybox(commandBuffer, stagingBuffer, textureImage, static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight), skyboxPixels, mipLevels, layerSize);
+        CopyBufferToImageSkybox(commandBuffer, buffer, textureImage, static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight), skyboxPixels, mipLevels, layerSize);
 
         GenerateMipmaps(commandBuffer, format, textureImage, texWidth, texHeight, mipLevels, 6);
 
         EndCommandBuffer(commandBuffer);
 
         QueueSubmit(commandBuffer);
-        
+
         for (uint32_t i = 0; i < skyboxPixels.size(); i++) {
             stbi_image_free(skyboxPixels[i]);
         }
 
-        vkDestroyBuffer(m_Device, stagingBuffer, nullptr);
-        vkFreeMemory(m_Device, stagingBufferMemory, nullptr);
+        vkDestroyBuffer(m_Device, buffer, nullptr);
     }
 
     void VulkanRenderer::GenerateMipmaps(VkCommandBuffer commandBuffer, VkFormat imageFormat, VkImage image, uint32_t texWidth, uint32_t texHeight, uint32_t mipLevels, uint32_t layerCount) {

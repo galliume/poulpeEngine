@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Rebulk/Renderer/IRenderer.h"
+#include "Rebulk/Renderer/Vulkan/DeviceMemoryPool.h"
 
 namespace Rbk {
 
@@ -66,6 +67,7 @@ namespace Rbk {
         std::vector<VkFramebuffer> CreateFramebuffers(std::shared_ptr<VkRenderPass> renderPass, std::vector<VkImageView> swapChainImageViews, std::vector<VkImageView> depthImageView, std::vector<VkImageView> colorImageView);
         VkCommandPool CreateCommandPool();
         std::vector<VkCommandBuffer> AllocateCommandBuffers(VkCommandPool commandPool, uint32_t size = 1, bool isSecondary = false);
+        VkBuffer CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage);
         void CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory);
         std::pair<VkBuffer, VkDeviceMemory> CreateVertexBuffer(VkCommandPool commandPool, std::vector<Rbk::Vertex> vertices);
         std::pair<VkBuffer, VkDeviceMemory> CreateVertex2DBuffer(const VkCommandPool& commandPool, const std::vector<Rbk::Vertex2D>& vertices);
@@ -159,6 +161,7 @@ namespace Rbk {
         const SwapChainSupportDetails QuerySwapChainSupport(VkPhysicalDevice device) const;
         uint32_t GetImageCount() const;
         std::string GetAPIVersion();
+        std::shared_ptr<DeviceMemoryPool> GetDeviceMemoryPool() { return m_DeviceMemoryPool; }
 
         static const std::string GetVendor(int vendorID)
         {
@@ -241,5 +244,6 @@ namespace Rbk {
 
         std::mutex m_MutexQueueSubmit;
         VkDeviceSize m_MaxMemoryHeap;
+        std::shared_ptr<DeviceMemoryPool> m_DeviceMemoryPool = nullptr;
     };
 }
