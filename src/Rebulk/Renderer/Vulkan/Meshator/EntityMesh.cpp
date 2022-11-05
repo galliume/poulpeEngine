@@ -96,10 +96,9 @@ namespace Rbk
 
         m_Adapter->GetDescriptorSetLayouts()->emplace_back(desriptorSetLayout);
 
-        for (uint32_t i = 0; i < m_Adapter->GetSwapChainImages()->size(); i++) {
+        for (auto ubo : mesh->m_UniformBuffers) {
             VkDescriptorSet meshDescriptorSets = m_Adapter->Rdr()->CreateDescriptorSets(m_DescriptorPool, { desriptorSetLayout }, 1);
-            m_Adapter->Rdr()->UpdateDescriptorSets(mesh->m_UniformBuffers, meshDescriptorSets, imageInfos);
-
+            m_Adapter->Rdr()->UpdateDescriptorSets({ ubo }, meshDescriptorSets, imageInfos);
             mesh->m_DescriptorSets.emplace_back(meshDescriptorSets);
         }
 

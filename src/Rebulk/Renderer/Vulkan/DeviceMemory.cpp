@@ -71,4 +71,12 @@ namespace Rbk
             m_IsFull = true;
         }
     }
+
+    bool DeviceMemory::HasEnoughSpaceLeft(VkDeviceSize size)
+    { 
+        bool hasEnoughSpaceLeft = m_MaxSize > m_Offset + size;
+        if (!hasEnoughSpaceLeft) m_IsFull = true;
+
+        return hasEnoughSpaceLeft;
+    }
 }

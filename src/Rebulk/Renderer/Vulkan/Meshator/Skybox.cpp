@@ -117,11 +117,9 @@ namespace Rbk
         skyDescriptorImageInfo.imageView = tex.GetImageView();
         skyDescriptorImageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
-        for (uint32_t i = 0; i < m_Adapter->GetSwapChainImages()->size(); i++) {
-            VkDescriptorSet skyDescriptorSet = m_Adapter->Rdr()->CreateDescriptorSets(m_DescriptorPool, { skyDesriptorSetLayout }, 1);
-            m_Adapter->Rdr()->UpdateDescriptorSets(mesh->m_UniformBuffers, skyDescriptorSet, { skyDescriptorImageInfo });
-            mesh->m_DescriptorSets.emplace_back(skyDescriptorSet);
-        }
+        VkDescriptorSet skyDescriptorSet = m_Adapter->Rdr()->CreateDescriptorSets(m_DescriptorPool, { skyDesriptorSetLayout }, 1);
+        m_Adapter->Rdr()->UpdateDescriptorSets(mesh->m_UniformBuffers, skyDescriptorSet, { skyDescriptorImageInfo });
+        mesh->m_DescriptorSets.emplace_back(skyDescriptorSet);
 
         std::vector<VkPushConstantRange> pushConstants = {};
         VkPushConstantRange vkPushconstants;

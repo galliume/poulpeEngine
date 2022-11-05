@@ -1424,7 +1424,7 @@ namespace Rbk {
         vkResetCommandPool(m_Device, commandPool, 0);
     }
 
-    void VulkanRenderer::Draw(VkCommandBuffer commandBuffer, Mesh* mesh, Data data, uint32_t uboCount, uint32_t frameIndex, bool drawIndexed)
+    void VulkanRenderer::Draw(VkCommandBuffer commandBuffer, VkDescriptorSet descriptorSet, Mesh* mesh, Data data, uint32_t uboCount, uint32_t frameIndex, bool drawIndexed)
     {
         VkBuffer vertexBuffers[] = { data.m_VertexBuffer.buffer };
         VkDeviceSize offsets[] = { 0 };
@@ -1437,7 +1437,7 @@ namespace Rbk {
             mesh->m_PipelineLayout,
             0,
             1,
-            &mesh->m_DescriptorSets[frameIndex],
+            &descriptorSet,
             0,
             nullptr
         );

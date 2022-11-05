@@ -101,11 +101,9 @@ namespace Rbk
 
         m_Adapter->GetDescriptorSetLayouts()->emplace_back(desriptorSetLayout);
 
-        for (uint32_t i = 0; i < m_Adapter->GetSwapChainImages()->size(); i++) {
-            VkDescriptorSet descriptorSet = m_Adapter->Rdr()->CreateDescriptorSets(m_DescriptorPool, { desriptorSetLayout }, 1);
-            m_Adapter->Rdr()->UpdateDescriptorSets(mesh->m_UniformBuffers, descriptorSet, imageInfos);
-            mesh->m_DescriptorSets.emplace_back(descriptorSet);
-        }
+        VkDescriptorSet descriptorSet = m_Adapter->Rdr()->CreateDescriptorSets(m_DescriptorPool, { desriptorSetLayout }, 1);
+        m_Adapter->Rdr()->UpdateDescriptorSets(mesh->m_UniformBuffers, descriptorSet, imageInfos);
+        mesh->m_DescriptorSets.emplace_back(descriptorSet);
 
         Splash::pc pc;
         pc.textureID = 0;

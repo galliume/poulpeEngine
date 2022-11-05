@@ -18,7 +18,7 @@ namespace Rbk
         bool IsFull() { return m_IsFull; }
         uint32_t GetOffset() { return m_Offset; }
         std::shared_ptr<VkDeviceMemory> GetMemory();
-        bool HasEnoughSpaceLeft(VkDeviceSize size) { return (m_MaxSize > m_Offset + size); }
+        bool HasEnoughSpaceLeft(VkDeviceSize size);
 
     private:
         void AllocateToMemory();

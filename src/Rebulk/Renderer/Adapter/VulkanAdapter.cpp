@@ -142,22 +142,26 @@ namespace Rbk
             std::shared_ptr<Mesh> mesh = std::dynamic_pointer_cast<Mesh>(entity);
 
             if (!mesh) continue;
+
             m_Renderer->BindPipeline(m_CommandBuffers[m_ImageIndex], mesh->m_GraphicsPipeline);
 
-            for (Data& data : *mesh->GetData()) {
+            if (mesh->IsDirty()) {
 
-                for (uint32_t i = 0; i < data.m_Ubos.size(); i++) {
-                    data.m_Ubos[i].view = lookAt;
-                    //mesh->cameraPos = cameraPos * mesh->ubos[i].view * mesh->ubos[i].model * mesh->ubos[i].proj;
-                    data.m_Ubos[i].proj = proj;
-                }
-                
                 auto min = 0;
                 auto max = 0;
 
+                for (Data& data : *mesh->GetData()) {
+
+                    for (uint32_t i = 0; i < data.m_Ubos.size(); i++) {
+                        data.m_Ubos[i].view = lookAt;
+                        //mesh->cameraPos = cameraPos * mesh->ubos[i].view * mesh->ubos[i].model * mesh->ubos[i].proj;
+                        data.m_Ubos[i].proj = proj;
+                    }
+                }
+
                 for (uint32_t i = 0; i < mesh->m_UniformBuffers.size(); i++) {
-                    max = data.m_UbosOffset.at(i);
-                    auto ubos = std::vector<UniformBufferObject>(data.m_Ubos.begin() + min, data.m_Ubos.begin() + max);
+                    max = mesh->GetData()->at(0).m_UbosOffset.at(i);
+                    auto ubos = std::vector<UniformBufferObject>(mesh->GetData()->at(0).m_Ubos.begin() + min, mesh->GetData()->at(0).m_Ubos.begin() + max);
 
                     m_Renderer->UpdateUniformBuffer(
                         mesh->m_UniformBuffers[i],
@@ -165,16 +169,22 @@ namespace Rbk
                         ubos.size()
                     );
 
-                    min = max + 1;
+                    min = max;
+                }
 
-                    if (m_HasClicked && mesh->IsHit(m_RayPick)) {
-                        Rbk::Log::GetLogger()->warn("HIT ! {}", mesh->GetName());
-                        m_HasClicked = false;
-                    }
+                //mesh->SetIsDirty(false);
+            }
 
+            if (m_HasClicked && mesh->IsHit(m_RayPick)) {
+                Rbk::Log::GetLogger()->warn("HIT ! {}", mesh->GetName());
+                m_HasClicked = false;
+            }
+
+            for (Data& data : *mesh->GetData()) {
+                for (uint32_t i = 0; i < mesh->m_UniformBuffers.size(); i++) {
                     pushConstants.textureID = data.m_TextureIndex;
                     vkCmdPushConstants(m_CommandBuffers[m_ImageIndex], mesh->m_PipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(constants), &pushConstants);
-                    m_Renderer->Draw(m_CommandBuffers[m_ImageIndex], mesh.get(), data, ubos.size(), m_ImageIndex);
+                    m_Renderer->Draw(m_CommandBuffers[m_ImageIndex], mesh->GetDescriptorSets().at(i), mesh.get(), data, mesh->m_UniformBuffers.at(i).size, m_ImageIndex);
                 }
             }
         }
@@ -198,14 +208,14 @@ namespace Rbk
                         data.m_Ubos,
                         data.m_Ubos.size()
                     );
-                }
 
-                if (m_HasClicked && mesh->IsHit(m_RayPick)) {
-                    Rbk::Log::GetLogger()->warn("HIT ! {}", mesh->GetName());
-                    m_HasClicked = false;
-                }
+                    if (m_HasClicked && mesh->IsHit(m_RayPick)) {
+                        Rbk::Log::GetLogger()->warn("HIT ! {}", mesh->GetName());
+                        m_HasClicked = false;
+                    }
 
-                m_Renderer->Draw(m_CommandBuffers[m_ImageIndex], mesh.get(), data, data.m_Ubos.size(), m_ImageIndex);
+                    m_Renderer->Draw(m_CommandBuffers[m_ImageIndex], mesh->GetDescriptorSets().at(i), mesh.get(), data, data.m_Ubos.size(), m_ImageIndex);
+                }
             }
         }
 
@@ -215,6 +225,8 @@ namespace Rbk
 
             if (!skyboxData.empty()) {
                 glm::mat4 skybowView = glm::mat4(glm::mat3(lookAt));
+                m_Renderer->BindPipeline(m_CommandBuffers[m_ImageIndex], m_SkyboxMesh->m_GraphicsPipeline);
+
                 for (uint32_t i = 0; i < m_SkyboxMesh->m_UniformBuffers.size(); i++) {
                     skyboxData[0].m_Ubos[i].view = skybowView;
                     m_Renderer->UpdateUniformBuffer(
@@ -222,10 +234,9 @@ namespace Rbk
                         { skyboxData[0].m_Ubos[i] },
                         1
                     );
+                    vkCmdPushConstants(m_CommandBuffers[m_ImageIndex], m_SkyboxMesh->m_PipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(constants), &pushConstants);
+                    m_Renderer->Draw(m_CommandBuffers[m_ImageIndex], m_SkyboxMesh->GetDescriptorSets().at(i), m_SkyboxMesh.get(), skyboxData[0], skyboxData[0].m_Ubos.size(), m_ImageIndex, false);
                 }
-                m_Renderer->BindPipeline(m_CommandBuffers[m_ImageIndex], m_SkyboxMesh->m_GraphicsPipeline);
-                vkCmdPushConstants(m_CommandBuffers[m_ImageIndex], m_SkyboxMesh->m_PipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(constants), &pushConstants);
-                m_Renderer->Draw(m_CommandBuffers[m_ImageIndex], m_SkyboxMesh.get(), skyboxData[0], skyboxData[0].m_Ubos.size(), m_ImageIndex, false);
             }
         }
 
@@ -251,9 +262,9 @@ namespace Rbk
                         data.m_Ubos,
                         data.m_Ubos.size()
                     );
-                }
+                    m_Renderer->Draw(m_CommandBuffers[m_ImageIndex], hudPart->GetDescriptorSets().at(i), hudPart.get(), data, data.m_Ubos.size(), m_ImageIndex);
 
-                m_Renderer->Draw(m_CommandBuffers[m_ImageIndex], hudPart.get(), data, data.m_Ubos.size(), m_ImageIndex);
+                }
             }
         }
 
@@ -294,13 +305,12 @@ namespace Rbk
                         data.m_Ubos,
                         data.m_Ubos.size()
                     );
+
+                    if (mesh->HasPushConstants() && nullptr != mesh->ApplyPushConstants)
+                        mesh->ApplyPushConstants(m_CommandBuffers[m_ImageIndex], mesh->m_PipelineLayout);
+
+                    m_Renderer->Draw(m_CommandBuffers[m_ImageIndex], mesh->GetDescriptorSets().at(i), mesh.get(), data, data.m_Ubos.size(), m_ImageIndex);
                 }
-
-
-                if (mesh->HasPushConstants() && nullptr != mesh->ApplyPushConstants)
-                    mesh->ApplyPushConstants(m_CommandBuffers[m_ImageIndex], mesh->m_PipelineLayout);
-
-                m_Renderer->Draw(m_CommandBuffers[m_ImageIndex], mesh.get(), data, data.m_Ubos.size(), m_ImageIndex);
             }
         }
 

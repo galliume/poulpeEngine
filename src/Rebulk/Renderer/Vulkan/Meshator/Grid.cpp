@@ -90,11 +90,9 @@ namespace Rbk
 
         m_Adapter->GetDescriptorSetLayouts()->emplace_back(cdesriptorSetLayout);
 
-        for (uint32_t i = 0; i < m_Adapter->GetSwapChainImages()->size(); i++) {
-            VkDescriptorSet cdescriptorSet = m_Adapter->Rdr()->CreateDescriptorSets(m_DescriptorPool, { cdesriptorSetLayout }, 1);
-            m_Adapter->Rdr()->UpdateDescriptorSets(mesh->m_UniformBuffers, cdescriptorSet, cimageInfos);
-            mesh->m_DescriptorSets.emplace_back(cdescriptorSet);
-        }
+        VkDescriptorSet cdescriptorSet = m_Adapter->Rdr()->CreateDescriptorSets(m_DescriptorPool, { cdesriptorSetLayout }, 1);
+        m_Adapter->Rdr()->UpdateDescriptorSets(mesh->m_UniformBuffers, cdescriptorSet, cimageInfos);
+        mesh->m_DescriptorSets.emplace_back(cdescriptorSet);
 
         Grid::pc pc;
         pc.nearpoint = 0.1f;//@todo parameterize it
