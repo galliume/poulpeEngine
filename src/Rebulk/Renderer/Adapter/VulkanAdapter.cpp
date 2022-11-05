@@ -223,6 +223,9 @@ namespace Rbk
 
             if (!hudPart || !hudPart->IsVisible()) continue;
 
+            if (hudPart->HasPushConstants() && nullptr != hudPart->ApplyPushConstants)
+                hudPart->ApplyPushConstants(m_CommandBuffers[m_ImageIndex], hudPart->m_PipelineLayout);
+
             for (Data& data : *hudPart->GetData()) {
 
                 for (uint32_t i = 0; i < hudPart->m_UniformBuffers.size(); i++) {
@@ -239,10 +242,6 @@ namespace Rbk
                 }
 
                 m_Renderer->BindPipeline(m_CommandBuffers[m_ImageIndex], hudPart->m_GraphicsPipeline);
-
-                if (hudPart->HasPushConstants() && nullptr != hudPart->ApplyPushConstants)
-                    hudPart->ApplyPushConstants(m_CommandBuffers[m_ImageIndex], hudPart->m_PipelineLayout);
-
                 m_Renderer->Draw(m_CommandBuffers[m_ImageIndex], hudPart.get(), data, m_ImageIndex);
             }
         }

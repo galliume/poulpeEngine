@@ -47,7 +47,7 @@ namespace Rbk {
         VkDescriptorSetLayout CreateDescriptorSetLayout(const std::vector<VkDescriptorSetLayoutBinding>& pBindings, const VkDescriptorSetLayoutCreateFlagBits& flags);
         VkDescriptorSet CreateDescriptorSets(const VkDescriptorPool& descriptorPool, const std::vector<VkDescriptorSetLayout>& descriptorSetLayouts, uint32_t count = 100);
         
-        void UpdateDescriptorSets(const std::vector<std::pair<VkBuffer, VkDeviceMemory>>& uniformBuffers, const VkDescriptorSet& descriptorSet, const std::vector<VkDescriptorImageInfo>& imageInfo);
+        void UpdateDescriptorSets(const std::vector<Buffer>& uniformBuffers, const VkDescriptorSet& descriptorSet, const std::vector<VkDescriptorImageInfo>& imageInfo);
         
         VkPipelineLayout CreatePipelineLayout(const std::vector<VkDescriptorSet>& descriptorSets, const std::vector<VkDescriptorSetLayout>& descriptorSetLayouts, const std::vector<VkPushConstantRange>& pushConstants);
         VkPipeline CreateGraphicsPipeline(
@@ -68,6 +68,7 @@ namespace Rbk {
         VkCommandPool CreateCommandPool();
         std::vector<VkCommandBuffer> AllocateCommandBuffers(VkCommandPool commandPool, uint32_t size = 1, bool isSecondary = false);
         VkBuffer CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage);
+        void CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory);
         Buffer CreateVertexBuffer(VkCommandPool commandPool, std::vector<Rbk::Vertex> vertices);
         Buffer CreateVertex2DBuffer(const VkCommandPool& commandPool, const std::vector<Rbk::Vertex2D>& vertices);
         Buffer CreateIndexBuffer(const VkCommandPool& commandPool, const std::vector<uint32_t>& indices);
@@ -75,9 +76,9 @@ namespace Rbk {
         VkImageMemoryBarrier SetupImageMemoryBarrier(VkImage image, VkAccessFlags srcAccessMask, VkAccessFlags dstAccessMask, VkImageLayout oldLayout, VkImageLayout newLayout, uint32_t mipLevels = VK_REMAINING_MIP_LEVELS, VkImageAspectFlags aspectMask = VK_IMAGE_ASPECT_COLOR_BIT);
         void CopyBuffer(VkCommandPool commandPool, VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
         bool SouldResizeSwapChain(VkSwapchainKHR swapChain);
-        std::pair<VkBuffer, VkDeviceMemory> CreateUniformBuffers(uint32_t uniformBuffersCount);
-        std::pair<VkBuffer, VkDeviceMemory> CreateCubeUniformBuffers(uint32_t uniformBuffersCount);
-        void UpdateUniformBuffer(std::pair<VkBuffer, VkDeviceMemory>uniformBuffer, std::vector<UniformBufferObject> uniformBufferObjects, uint32_t uniformBuffersCount);
+        Buffer CreateUniformBuffers(uint32_t uniformBuffersCount);
+        Buffer CreateCubeUniformBuffers(uint32_t uniformBuffersCount);
+        void UpdateUniformBuffer(Buffer buffer, std::vector<UniformBufferObject> uniformBufferObjects, uint32_t uniformBuffersCount);
         void CreateImage(uint32_t width, uint32_t height, uint32_t mipLevels, VkSampleCountFlagBits numSamples, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image, VkDeviceMemory& imageMemory);
         void CreateSkyboxImage(uint32_t width, uint32_t height, uint32_t mipLevels, VkSampleCountFlagBits numSamples, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image, VkDeviceMemory& imageMemory);
         VkImageView CreateImageView(VkImage image, VkFormat format, uint32_t mipLevels, VkImageAspectFlags aspectFlags = VK_IMAGE_ASPECT_COLOR_BIT);

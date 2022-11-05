@@ -32,8 +32,8 @@ namespace Rbk
     void DestroyManager::CleanEntity(std::shared_ptr<Mesh> entity)
     {
         for (auto buffer : entity->m_UniformBuffers) {
-            m_Renderer->DestroyBuffer(buffer.first);
-            m_Renderer->DestroyDeviceMemory(buffer.second);
+            m_Renderer->DestroyBuffer(buffer.buffer);
+            m_Renderer->DestroyDeviceMemory(*buffer.memory);
         }
 
         for (Data data : *entity->GetData()) {

@@ -52,7 +52,7 @@ namespace Rbk
         mesh->SetName("crosshair");
         mesh->SetShaderName("2d");
 
-        std::pair<VkBuffer, VkDeviceMemory> crossHairuniformBuffer = m_Adapter->Rdr()->CreateUniformBuffers(1);
+        Buffer crossHairuniformBuffer = m_Adapter->Rdr()->CreateUniformBuffers(1);
         mesh->m_UniformBuffers.emplace_back(crossHairuniformBuffer);
 
         Texture ctex = m_TextureManager->GetTextures()["crosshair_1"];

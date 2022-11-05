@@ -55,7 +55,7 @@ namespace Rbk
         mesh->SetName("grid");
         mesh->SetShaderName("grid");
 
-        std::pair<VkBuffer, VkDeviceMemory> gridUniformBuffer = m_Adapter->Rdr()->CreateUniformBuffers(1);
+        Buffer gridUniformBuffer = m_Adapter->Rdr()->CreateUniformBuffers(1);
         mesh->m_UniformBuffers.emplace_back(gridUniformBuffer);
 
         Texture ctex = m_TextureManager->GetTextures()["minecraft_grass"];

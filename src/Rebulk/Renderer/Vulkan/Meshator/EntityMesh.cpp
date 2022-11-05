@@ -36,7 +36,7 @@ namespace Rbk
 
         //@todo fix memory management...
          for (uint32_t i = 0; i < uniformBuffersCount; i++) {
-            std::pair<VkBuffer, VkDeviceMemory> uniformBuffer = m_Adapter->Rdr()->CreateUniformBuffers(totalInstances);
+            Buffer uniformBuffer = m_Adapter->Rdr()->CreateUniformBuffers(totalInstances);
             mesh->m_UniformBuffers.emplace_back(uniformBuffer);
         }
 
@@ -208,7 +208,7 @@ namespace Rbk
                     //mesh->m_CameraPos = m_Camera->GetPos();
 
                     for (uint32_t i = 0; i < uniformBuffersCount; i++) {
-                        std::pair<VkBuffer, VkDeviceMemory> uniformBuffer = m_Adapter->Rdr()->CreateUniformBuffers(uniformBufferChunkSize);
+                        Buffer uniformBuffer = m_Adapter->Rdr()->CreateUniformBuffers(uniformBufferChunkSize);
                         bbox->m_UniformBuffers.emplace_back(uniformBuffer);
                     }
 

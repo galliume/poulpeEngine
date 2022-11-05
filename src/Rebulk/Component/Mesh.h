@@ -52,7 +52,7 @@ namespace Rbk
 
     //@todo make it private
     public:
-        std::vector<std::pair<VkBuffer, VkDeviceMemory>> m_UniformBuffers;
+        std::vector<Buffer> m_UniformBuffers;
         glm::vec4 m_CameraPos;
         std::vector<VkDescriptorSet> m_DescriptorSets;
         VkPipelineLayout m_PipelineLayout;

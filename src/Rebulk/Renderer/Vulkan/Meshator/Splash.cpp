@@ -54,7 +54,7 @@ namespace Rbk
         mesh->SetName("splashscreen");
         mesh->SetShaderName("splashscreen");
 
-        std::pair<VkBuffer, VkDeviceMemory> uniformBuffer = m_Adapter->Rdr()->CreateUniformBuffers(1);
+        Buffer uniformBuffer = m_Adapter->Rdr()->CreateUniformBuffers(1);
         mesh->m_UniformBuffers.emplace_back(uniformBuffer);
 
         std::vector<VkDescriptorImageInfo> imageInfos{};

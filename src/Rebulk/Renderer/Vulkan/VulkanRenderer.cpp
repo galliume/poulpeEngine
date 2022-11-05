@@ -1215,16 +1215,16 @@ namespace Rbk {
         return descriptorSet;
     }
 
-    void VulkanRenderer::UpdateDescriptorSets(const std::vector<std::pair<VkBuffer, VkDeviceMemory>>& uniformBuffers, const VkDescriptorSet& descriptorSet, const std::vector<VkDescriptorImageInfo>& imageInfo)
+    void VulkanRenderer::UpdateDescriptorSets(const std::vector<Buffer>& uniformBuffers, const VkDescriptorSet& descriptorSet, const std::vector<VkDescriptorImageInfo>& imageInfo)
     {
         std::array<VkWriteDescriptorSet, 2> descriptorWrites{};
         std::vector<VkDescriptorBufferInfo> bufferInfos;
 
         std::for_each(std::begin(uniformBuffers), std::end(uniformBuffers),
-            [&bufferInfos](const std::pair<VkBuffer, VkDeviceMemory>& uniformBuffer)
+            [&bufferInfos](const Buffer& uniformBuffer)
             {
                 VkDescriptorBufferInfo bufferInfo{};
-                bufferInfo.buffer = uniformBuffer.first;
+                bufferInfo.buffer = uniformBuffer.buffer;
                 bufferInfo.offset = 0;
                 bufferInfo.range = VK_WHOLE_SIZE;
                 bufferInfos.emplace_back(bufferInfo);
@@ -1471,28 +1471,66 @@ namespace Rbk {
         return buffer;
     }
 
-    Buffer VulkanRenderer::CreateIndexBuffer(const VkCommandPool& commandPool, const std::vector<uint32_t>& indices)
+    void VulkanRenderer::CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory)
     {
-        VkDeviceSize bufferSize = sizeof(indices[0]) * indices.size() + 100;
-        VkBuffer buffer = CreateBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT);
+        VkBufferCreateInfo bufferInfo{};
+        bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+        bufferInfo.size = size;
+        bufferInfo.usage = usage;
+        bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+
+        if (vkCreateBuffer(m_Device, &bufferInfo, nullptr, &buffer) != VK_SUCCESS) {
+            throw std::runtime_error("failed to create buffer!");
+        }
+
         VkMemoryRequirements memRequirements;
         vkGetBufferMemoryRequirements(m_Device, buffer, &memRequirements);
 
-        auto memoryType = FindMemoryType(memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+        VkMemoryAllocateInfo allocInfo{};
+        allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+        allocInfo.allocationSize = memRequirements.size;
+        allocInfo.memoryTypeIndex = FindMemoryType(memRequirements.memoryTypeBits, properties);
+
+        if (vkAllocateMemory(m_Device, &allocInfo, nullptr, &bufferMemory) != VK_SUCCESS) {
+            throw std::runtime_error("failed to allocate buffer memory!");
+        }
+
+        vkBindBufferMemory(m_Device, buffer, bufferMemory, 0);
+    }
+
+    Buffer VulkanRenderer::CreateIndexBuffer(const VkCommandPool& commandPool, const std::vector<uint32_t>& indices)
+    {
+        VkDeviceSize bufferSize = sizeof(indices[0]) * indices.size();
+
+        VkBuffer stagingBuffer;
+        VkDeviceMemory stagingBufferMemory;
+        CreateBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
+      
+        void* data;
+        vkMapMemory(m_Device, stagingBufferMemory, 0, bufferSize, 0, &data);
+        memcpy(data, indices.data(), static_cast<size_t>(bufferSize));
+        vkUnmapMemory(m_Device, stagingBufferMemory);
+
+        VkBuffer buffer = CreateBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT);
+        VkMemoryRequirements memRequirements;
+        vkGetBufferMemoryRequirements(m_Device, buffer, &memRequirements);
         uint32_t size = ((memRequirements.size / memRequirements.alignment) + 1) * memRequirements.alignment;
-        auto deviceMemory = m_DeviceMemoryPool->Get(m_Device, size, memoryType, VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT);
+
+        auto memoryType = FindMemoryType(memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+        auto deviceMemory = m_DeviceMemoryPool->Get(m_Device, size, memoryType, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT);
         auto offset = deviceMemory->GetOffset();
         deviceMemory->BindBufferToMemory(buffer, size);
 
-        void* data;
-        vkMapMemory(m_Device, *deviceMemory->GetMemory(), offset, size, 0, &data);
-        memcpy(data, indices.data(), static_cast<size_t>(size));
-        vkUnmapMemory(m_Device, *deviceMemory->GetMemory());
+        CopyBuffer(commandPool, stagingBuffer, buffer, bufferSize);
 
         Buffer meshBuffer;
         meshBuffer.buffer = std::move(buffer);
         meshBuffer.memory = deviceMemory->GetMemory();
         meshBuffer.offset = offset;
+        meshBuffer.size = size;
+
+        vkDestroyBuffer(m_Device, stagingBuffer, nullptr);
+        vkFreeMemory(m_Device, stagingBufferMemory, nullptr);
 
         return meshBuffer;
     }
@@ -1500,59 +1538,86 @@ namespace Rbk {
     Buffer VulkanRenderer::CreateVertexBuffer(VkCommandPool commandPool, std::vector<Rbk::Vertex> vertices)
     {
         VkDeviceSize bufferSize = sizeof(Vertex) * vertices.size();
-        VkBuffer buffer = CreateBuffer(bufferSize, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT);
+        VkBuffer stagingBuffer;
+        VkDeviceMemory stagingBufferMemory;
+
+        CreateBuffer(
+            bufferSize, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+            stagingBuffer, stagingBufferMemory
+        );
+
+        void* data;
+        vkMapMemory(m_Device, stagingBufferMemory, 0, bufferSize, 0, &data);
+        memcpy(data, vertices.data(), static_cast<size_t>(bufferSize));
+        vkUnmapMemory(m_Device, stagingBufferMemory);
+
+        VkBuffer buffer = CreateBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT);
         VkMemoryRequirements memRequirements;
         vkGetBufferMemoryRequirements(m_Device, buffer, &memRequirements);
 
-        auto memoryType = FindMemoryType(memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+        auto memoryType = FindMemoryType(memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
         uint32_t size = ((memRequirements.size / memRequirements.alignment) + 1) * memRequirements.alignment;
-        auto deviceMemory = m_DeviceMemoryPool->Get(m_Device, size, memoryType, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT);
+        auto deviceMemory = m_DeviceMemoryPool->Get(m_Device, size, memoryType, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT);
         auto offset = deviceMemory->GetOffset();
         deviceMemory->BindBufferToMemory(buffer, size);
-
-        void* data;
-        vkMapMemory(m_Device, *deviceMemory->GetMemory(), offset, size, 0, &data);
-        memcpy(data, vertices.data(), static_cast<size_t>(size));
-        vkUnmapMemory(m_Device, *deviceMemory->GetMemory());
+        
+        CopyBuffer(commandPool, stagingBuffer, buffer, bufferSize);
 
         Buffer meshBuffer;
         meshBuffer.buffer = std::move(buffer);
         meshBuffer.memory = deviceMemory->GetMemory();
         meshBuffer.offset = offset;
+        meshBuffer.size = size;
+        
+        vkDestroyBuffer(m_Device, stagingBuffer, nullptr);
+        vkFreeMemory(m_Device, stagingBufferMemory, nullptr);
 
         return meshBuffer;
     }
 
     Buffer VulkanRenderer::CreateVertex2DBuffer(const VkCommandPool& commandPool, const std::vector<Rbk::Vertex2D>& vertices)
     {
+        std::pair<VkBuffer, VkDeviceMemory> vertexBuffer{};
         VkDeviceSize bufferSize = sizeof(Vertex2D) * vertices.size();
-        VkBuffer buffer = CreateBuffer(bufferSize, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT);
+        VkBuffer stagingBuffer;
+        VkDeviceMemory stagingBufferMemory;
+
+        CreateBuffer(
+            bufferSize, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+            stagingBuffer, stagingBufferMemory
+        );
+
+        void* data;
+        vkMapMemory(m_Device, stagingBufferMemory, 0, bufferSize, 0, &data);
+        memcpy(data, vertices.data(), static_cast<size_t>(bufferSize));
+        vkUnmapMemory(m_Device, stagingBufferMemory);
+
+        VkBuffer buffer = CreateBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT);
         VkMemoryRequirements memRequirements;
         vkGetBufferMemoryRequirements(m_Device, buffer, &memRequirements);
 
-        auto memoryType = FindMemoryType(memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+        auto memoryType = FindMemoryType(memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
         uint32_t size = ((memRequirements.size / memRequirements.alignment) + 1) * memRequirements.alignment;
-        auto deviceMemory = m_DeviceMemoryPool->Get(m_Device, size, memoryType, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT);
+        auto deviceMemory = m_DeviceMemoryPool->Get(m_Device, size, memoryType, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT);
         auto offset = deviceMemory->GetOffset();
         deviceMemory->BindBufferToMemory(buffer, size);
-
-        void* data;
-        vkMapMemory(m_Device, *deviceMemory->GetMemory(), offset, size, 0, &data);
-        memcpy(data, vertices.data(), static_cast<size_t>(size));
-        vkUnmapMemory(m_Device, *deviceMemory->GetMemory());
+        
+        CopyBuffer(commandPool, stagingBuffer, buffer, bufferSize);
 
         Buffer meshBuffer;
         meshBuffer.buffer = std::move(buffer);
         meshBuffer.memory = deviceMemory->GetMemory();
         meshBuffer.offset = offset;
+        meshBuffer.size = size;
+
+        vkDestroyBuffer(m_Device, stagingBuffer, nullptr);
+        vkFreeMemory(m_Device, stagingBufferMemory, nullptr);
 
         return meshBuffer;
     }
 
-    std::pair<VkBuffer, VkDeviceMemory> VulkanRenderer::CreateUniformBuffers(uint32_t uniformBuffersCount)
+    Buffer VulkanRenderer::CreateUniformBuffers(uint32_t uniformBuffersCount)
     {
-        std::pair<VkBuffer, VkDeviceMemory> uniformBuffers{};
-
         VkDeviceSize bufferSize = sizeof(UniformBufferObject) * (uniformBuffersCount + 1);
         VkBuffer buffer = CreateBuffer(bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT);
         VkMemoryRequirements memRequirements;
@@ -1563,16 +1628,18 @@ namespace Rbk {
         auto deviceMemory = m_DeviceMemoryPool->Get(m_Device, size, memoryType, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT);
         auto offset = deviceMemory->GetOffset();
         deviceMemory->BindBufferToMemory(buffer, size);
-        uniformBuffers.first = std::move(buffer);
-        uniformBuffers.second = *deviceMemory->GetMemory();
 
-        return uniformBuffers;
+        Buffer uniformBuffer;
+        uniformBuffer.buffer = std::move(buffer);
+        uniformBuffer.memory = deviceMemory->GetMemory();
+        uniformBuffer.offset = offset;
+        uniformBuffer.size = size;
+
+        return uniformBuffer;
     }
 
-    std::pair<VkBuffer, VkDeviceMemory> VulkanRenderer::CreateCubeUniformBuffers(uint32_t uniformBuffersCount)
+    Buffer VulkanRenderer::CreateCubeUniformBuffers(uint32_t uniformBuffersCount)
     {
-        std::pair<VkBuffer, VkDeviceMemory> uniformBuffers{};
-
         VkDeviceSize bufferSize = sizeof(CubeUniformBufferObject) * uniformBuffersCount;
         VkBuffer buffer = CreateBuffer(bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT);
         VkMemoryRequirements memRequirements;
@@ -1583,18 +1650,22 @@ namespace Rbk {
         auto deviceMemory = m_DeviceMemoryPool->Get(m_Device, size, memoryType, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT);
         auto offset = deviceMemory->GetOffset();
         deviceMemory->BindBufferToMemory(buffer, size);
-        uniformBuffers.first = std::move(buffer);
-        uniformBuffers.second = *deviceMemory->GetMemory();
 
-        return uniformBuffers;
+        Buffer uniformBuffer;
+        uniformBuffer.buffer = std::move(buffer);
+        uniformBuffer.memory = deviceMemory->GetMemory();
+        uniformBuffer.offset = offset;
+        uniformBuffer.size = size;
+
+        return uniformBuffer;
     }
 
-    void VulkanRenderer::UpdateUniformBuffer(std::pair<VkBuffer, VkDeviceMemory>uniformBuffer, std::vector<UniformBufferObject> uniformBufferObjects, uint32_t uniformBuffersCount)
+    void VulkanRenderer::UpdateUniformBuffer(Buffer buffer, std::vector<UniformBufferObject> uniformBufferObjects, uint32_t uniformBuffersCount)
     {
         void* data;
-        vkMapMemory(m_Device, uniformBuffer.second, 0, sizeof(UniformBufferObject) * uniformBuffersCount, 0, &data);
-        memcpy(data, uniformBufferObjects.data(), sizeof(UniformBufferObject) * uniformBuffersCount);
-        vkUnmapMemory(m_Device, uniformBuffer.second);
+        vkMapMemory(m_Device, *buffer.memory, buffer.offset, buffer.size, 0, &data);
+        memcpy(data, uniformBufferObjects.data(), buffer.size);
+        vkUnmapMemory(m_Device, *buffer.memory);
     }
 
     void VulkanRenderer::CopyBuffer(VkCommandPool commandPool, VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size)
