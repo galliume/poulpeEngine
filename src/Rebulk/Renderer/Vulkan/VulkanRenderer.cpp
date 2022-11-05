@@ -1740,7 +1740,7 @@ namespace Rbk {
         throw std::runtime_error("failed to find suitable memory type!");
     }
 
-    void VulkanRenderer::CreateImage(uint32_t width, uint32_t height, uint32_t mipLevels, VkSampleCountFlagBits numSamples, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image, VkDeviceMemory& imageMemory)
+    void VulkanRenderer::CreateImage(uint32_t width, uint32_t height, uint32_t mipLevels, VkSampleCountFlagBits numSamples, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image)
     {
         VkImageCreateInfo imageInfo{};
         imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
@@ -1769,7 +1769,7 @@ namespace Rbk {
         deviceMemory->BindImageToMemory(image, size);
     }
 
-    void VulkanRenderer::CreateSkyboxImage(uint32_t width, uint32_t height, uint32_t mipLevels, VkSampleCountFlagBits numSamples, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image, VkDeviceMemory& imageMemory)
+    void VulkanRenderer::CreateSkyboxImage(uint32_t width, uint32_t height, uint32_t mipLevels, VkSampleCountFlagBits numSamples, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image)
     {
         VkImageCreateInfo imageInfo{};
         imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
@@ -1799,7 +1799,7 @@ namespace Rbk {
         deviceMemory->BindImageToMemory(image, size);
     }
 
-    void VulkanRenderer::CreateTextureImage(VkCommandBuffer commandBuffer, stbi_uc* pixels, uint32_t texWidth, uint32_t texHeight, uint32_t mipLevels, VkImage& textureImage, VkDeviceMemory& textureImageMemory, VkFormat format)
+    void VulkanRenderer::CreateTextureImage(VkCommandBuffer commandBuffer, stbi_uc* pixels, uint32_t texWidth, uint32_t texHeight, uint32_t mipLevels, VkImage& textureImage, VkFormat format)
     {
         VkDeviceSize imageSize = texWidth * texHeight * 4;
         VkBuffer buffer = CreateBuffer(imageSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT);
@@ -1818,7 +1818,7 @@ namespace Rbk {
         vkUnmapMemory(m_Device, *deviceMemory->GetMemory());
 
         stbi_image_free(pixels);
-        CreateImage(texWidth, texHeight, mipLevels, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, textureImage, textureImageMemory);
+        CreateImage(texWidth, texHeight, mipLevels, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, textureImage);
 
         VkImageMemoryBarrier renderBarrier = SetupImageMemoryBarrier(
             textureImage, 0, VK_ACCESS_TRANSFER_WRITE_BIT, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL
@@ -1831,7 +1831,7 @@ namespace Rbk {
         QueueSubmit(commandBuffer);
     }
 
-    void VulkanRenderer::CreateSkyboxTextureImage(VkCommandBuffer commandBuffer, std::vector<stbi_uc*>skyboxPixels, uint32_t texWidth, uint32_t texHeight, uint32_t mipLevels, VkImage& textureImage, VkDeviceMemory& textureImageMemory, VkFormat format)
+    void VulkanRenderer::CreateSkyboxTextureImage(VkCommandBuffer commandBuffer, std::vector<stbi_uc*>skyboxPixels, uint32_t texWidth, uint32_t texHeight, uint32_t mipLevels, VkImage& textureImage, VkFormat format)
     {
         VkDeviceSize imageSize = texWidth * texHeight * 4 * 6;
         VkBuffer buffer = CreateBuffer(imageSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT);
@@ -1853,7 +1853,7 @@ namespace Rbk {
         }
 
         vkUnmapMemory(m_Device, *deviceMemory->GetMemory());
-        CreateSkyboxImage(texWidth, texHeight, mipLevels, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, textureImage, textureImageMemory);
+        CreateSkyboxImage(texWidth, texHeight, mipLevels, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, textureImage);
         VkImageMemoryBarrier renderBarrier = SetupImageMemoryBarrier(
             textureImage, 0, VK_ACCESS_TRANSFER_WRITE_BIT, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL
         );
@@ -2015,7 +2015,7 @@ namespace Rbk {
         VkImageView depthImageView;
         VkFormat depthFormat = FindDepthFormat();
 
-        CreateImage(m_SwapChainExtent.width, m_SwapChainExtent.height, 1, VK_SAMPLE_COUNT_1_BIT, depthFormat, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, depthImage, depthImageMemory);
+        CreateImage(m_SwapChainExtent.width, m_SwapChainExtent.height, 1, VK_SAMPLE_COUNT_1_BIT, depthFormat, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, depthImage);
         depthImageView = CreateImageView(depthImage, depthFormat, 1);
 
         VkImageAspectFlags aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
@@ -2172,11 +2172,6 @@ namespace Rbk {
             vkDestroyFence(m_Device, m_InFlightFences[i], nullptr);
             vkDestroyFence(m_Device, m_ImagesInFlight[i], nullptr);
         }
-    }
-
-    void VulkanRenderer::DestroyDeviceMemory(VkDeviceMemory deviceMemory)
-    {
-        vkFreeMemory(m_Device, deviceMemory, nullptr);
     }
 
     void VulkanRenderer::DestroyBuffer(VkBuffer buffer)

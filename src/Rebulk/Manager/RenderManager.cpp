@@ -51,7 +51,7 @@ namespace Rbk
         m_DestroyManager->CleanShaders(m_ShaderManager->GetShaders()->shaders);
         m_DestroyManager->CleanTextures(m_TextureManager->GetTextures());
         m_DestroyManager->CleanTexture(m_TextureManager->GetSkyboxTexture());
-
+        m_DestroyManager->CleanDeviceMemory();
         m_Renderer->Rdr()->Destroy();
     }
 
@@ -62,6 +62,7 @@ namespace Rbk
         m_Renderer->Init();
         m_Renderer->AddCamera(m_Camera);
         m_DestroyManager->SetRenderer(m_Renderer->Rdr());
+        m_DestroyManager->AddMemoryPool(m_Renderer->Rdr()->GetDeviceMemoryPool());
         m_TextureManager->AddConfig(m_ConfigManager->TexturesConfig());
         
         nlohmann::json appConfig = m_ConfigManager->AppConfig();

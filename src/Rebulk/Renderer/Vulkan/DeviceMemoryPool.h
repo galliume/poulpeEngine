@@ -8,6 +8,7 @@ namespace Rbk
     public:
         DeviceMemoryPool(VkDeviceSize maxMemoryAllocationCount, VkDeviceSize maxMemoryAllocationSize);
         std::shared_ptr<DeviceMemory> Get(VkDevice device, VkDeviceSize size, uint32_t memoryType, VkBufferUsageFlags usage);
+        std::map<uint32_t, std::map<VkBufferUsageFlags, std::vector<std::shared_ptr<DeviceMemory>>>> GetPool() { return m_Pool; }
 
     private:
         std::map<uint32_t, std::map<VkBufferUsageFlags, std::vector<std::shared_ptr<DeviceMemory>>>> m_Pool;
