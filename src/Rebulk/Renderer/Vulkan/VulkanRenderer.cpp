@@ -1424,7 +1424,7 @@ namespace Rbk {
         vkResetCommandPool(m_Device, commandPool, 0);
     }
 
-    void VulkanRenderer::Draw(VkCommandBuffer commandBuffer, Mesh* mesh, Data data, uint32_t frameIndex, bool drawIndexed)
+    void VulkanRenderer::Draw(VkCommandBuffer commandBuffer, Mesh* mesh, Data data, uint32_t uboCount, uint32_t frameIndex, bool drawIndexed)
     {
         VkBuffer vertexBuffers[] = { data.m_VertexBuffer.buffer };
         VkDeviceSize offsets[] = { 0 };
@@ -1444,7 +1444,7 @@ namespace Rbk {
 
         if (drawIndexed) {
             vkCmdBindIndexBuffer(commandBuffer, data.m_IndicesBuffer.buffer, 0, VK_INDEX_TYPE_UINT32);
-            vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(data.m_Indices.size()), static_cast<uint32_t>(data.m_Ubos.size()), 0, 0, 0);
+            vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(data.m_Indices.size()), uboCount, 0, 0, 0);
         } else {
             vkCmdDraw(commandBuffer, static_cast<uint32_t>(data.m_Vertices.size()), 1, 0, 0);
         }
@@ -1618,7 +1618,7 @@ namespace Rbk {
 
     Buffer VulkanRenderer::CreateUniformBuffers(uint32_t uniformBuffersCount)
     {
-        VkDeviceSize bufferSize = sizeof(UniformBufferObject) * (uniformBuffersCount + 1);
+        VkDeviceSize bufferSize = sizeof(UniformBufferObject) * uniformBuffersCount;
         VkBuffer buffer = CreateBuffer(bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT);
         VkMemoryRequirements memRequirements;
         vkGetBufferMemoryRequirements(m_Device, buffer, &memRequirements);

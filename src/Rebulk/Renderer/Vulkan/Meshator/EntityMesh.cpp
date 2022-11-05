@@ -28,16 +28,25 @@ namespace Rbk
         std::shared_ptr<Mesh> mesh = std::dynamic_pointer_cast<Mesh>(entity);
         if (!mesh && !mesh->IsDirty()) return;
 
-        uint32_t totalInstances = static_cast<uint32_t>(mesh->GetData()->size());
+        uint32_t totalInstances = static_cast<uint32_t>(mesh->GetData()->at(0).m_Ubos.size());
         uint32_t maxUniformBufferRange = m_Adapter->Rdr()->GetDeviceProperties().limits.maxUniformBufferRange;
-        VkDeviceSize maxMemoryHeap = m_Adapter->Rdr()->GetMaxMemoryHeap();
-        uint32_t uniformBufferChunkSize = maxMemoryHeap / sizeof(UniformBufferObject);
+        uint32_t uniformBufferChunkSize = maxUniformBufferRange / sizeof(UniformBufferObject);
         uint32_t uniformBuffersCount = static_cast<uint32_t>(std::ceil(static_cast<float>(totalInstances) / static_cast<float>(uniformBufferChunkSize)));
 
         //@todo fix memory management...
+        uint32_t uboOffset = (totalInstances > uniformBufferChunkSize) ? uniformBufferChunkSize : totalInstances;
+        uint32_t uboRemaining = (totalInstances - uboOffset > 0) ? totalInstances - uboOffset : 0;
+        uint32_t nbUbo = uboOffset;
+
          for (uint32_t i = 0; i < uniformBuffersCount; i++) {
-            Buffer uniformBuffer = m_Adapter->Rdr()->CreateUniformBuffers(totalInstances);
+
+            mesh->GetData()->at(0).m_UbosOffset.emplace_back(uboOffset);
+            Buffer uniformBuffer = m_Adapter->Rdr()->CreateUniformBuffers(nbUbo);
             mesh->m_UniformBuffers.emplace_back(uniformBuffer);
+
+            uboOffset = (uboRemaining > uniformBufferChunkSize) ? uboOffset + uniformBufferChunkSize : uboOffset + uboRemaining;
+            nbUbo = (uboRemaining > uniformBufferChunkSize) ? uniformBufferChunkSize : uboRemaining;
+            uboRemaining = (totalInstances - uboOffset > 0) ? totalInstances - uboOffset : 0;
         }
 
         std::vector<VkDescriptorImageInfo> imageInfos;

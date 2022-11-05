@@ -20,6 +20,7 @@ namespace Rbk
         std::vector<Vertex> m_Vertices;
         std::vector<uint32_t> m_Indices;
         std::vector<UniformBufferObject> m_Ubos;
+        std::vector<uint32_t> m_UbosOffset;
         Buffer m_VertexBuffer = { nullptr, nullptr, 0, 0 };
         Buffer m_IndicesBuffer = { nullptr, nullptr, 0, 0 };
         uint32_t m_TextureIndex = 0;
