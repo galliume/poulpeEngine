@@ -3,16 +3,25 @@
 
 namespace Rbk
 {
-    DeviceMemoryPool::DeviceMemoryPool(VkDeviceSize maxMemoryAllocationCount, VkDeviceSize maxMemoryAllocationSize)
-        : m_MaxMemoryAllocationCount(maxMemoryAllocationCount), m_MaxMemoryAllocationSize(maxMemoryAllocationSize)
+    DeviceMemoryPool::DeviceMemoryPool(VkPhysicalDeviceProperties2 deviceProperties, VkPhysicalDeviceMaintenance3Properties maintenceProperties)
+        : m_DeviceProperties(deviceProperties), m_MaintenceProperties(maintenceProperties)
     {
 
     }
     std::shared_ptr<DeviceMemory> DeviceMemoryPool::Get(VkDevice device, VkDeviceSize size, uint32_t memoryType, VkBufferUsageFlags usage)
     {
-        if (m_MemoryAllocationCount > m_MaxMemoryAllocationCount) {
-            throw std::runtime_error("Max allocation");
+        if (m_MemoryAllocationCount > m_DeviceProperties.properties.limits.maxMemoryAllocationCount) {
+            throw std::runtime_error("Max number of active allocation reached");
         }
+
+        VkDeviceSize maxSize;
+
+        if (VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT == usage) {
+            maxSize = m_DeviceProperties.properties.limits.maxUniformBufferRange;
+        } else {
+            maxSize = m_MaintenceProperties.maxMemoryAllocationSize / 20;
+        }
+     
         auto poolType = m_Pool.find(memoryType);
 
         if (m_Pool.end() != poolType) {
@@ -26,14 +35,27 @@ namespace Rbk
                 }
             }
 
-            auto dm = std::make_shared<DeviceMemory>(device, memoryType, usage, m_MaxMemoryAllocationSize);
+            if (m_MemoryAllocationSize + maxSize > m_MaintenceProperties.maxMemoryAllocationSize) {
+                throw std::runtime_error("Max size of memory allocation reached");
+            }
+
+            auto dm = std::make_shared<DeviceMemory>(device, memoryType, usage, maxSize);
             m_Pool[memoryType][usage].emplace_back(dm);
             m_MemoryAllocationCount += 1;
+            m_MemoryAllocationSize += maxSize;
+            Rbk::Log::GetLogger()->debug("memory allocation count {}, size {}", m_MemoryAllocationCount, m_MemoryAllocationSize);
             return dm;
         } else {
-            auto dm = std::make_shared<DeviceMemory>(device, memoryType, usage, m_MaxMemoryAllocationSize);
+
+            if (m_MemoryAllocationSize + maxSize > m_MaintenceProperties.maxMemoryAllocationSize) {
+                throw std::runtime_error("Max size of memory allocation reached");
+            }
+
+            auto dm = std::make_shared<DeviceMemory>(device, memoryType, usage, maxSize);
             m_Pool[memoryType][usage].emplace_back(dm);
             m_MemoryAllocationCount += 1;
+            m_MemoryAllocationSize += maxSize;
+            Rbk::Log::GetLogger()->debug("memory allocation count {}, size {}", m_MemoryAllocationCount, m_MemoryAllocationSize);
             return dm;
         }
     }

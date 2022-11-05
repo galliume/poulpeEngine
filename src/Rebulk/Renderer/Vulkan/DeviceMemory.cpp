@@ -4,11 +4,16 @@
 
 namespace Rbk
 {
-    DeviceMemory::DeviceMemory(VkDevice device, uint32_t memoryType, VkBufferUsageFlags usage, VkDeviceSize maxMemoryAllocationSize)
-        : m_Device(device), m_MemoryType(memoryType), m_Usage(usage), m_MaxMemoryAllocationSize(maxMemoryAllocationSize/10)
+    DeviceMemory::DeviceMemory(
+        VkDevice device,
+        uint32_t memoryType,
+        VkBufferUsageFlags usage,
+        VkDeviceSize maxSize
+    ) : m_Device(device), m_MemoryType(memoryType), m_Usage(usage)
     {
         if (nullptr == m_Memory) {
             m_Memory = std::make_shared<VkDeviceMemory>();
+            m_MaxSize = maxSize;
             AllocateToMemory();
         }
     }
@@ -31,7 +36,7 @@ namespace Rbk
         if (!m_IsAllocated) {
             VkMemoryAllocateInfo allocInfo{};
             allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-            allocInfo.allocationSize = m_MaxMemoryAllocationSize;
+            allocInfo.allocationSize = m_MaxSize;
             allocInfo.memoryTypeIndex = m_MemoryType;
 
             VkResult result = vkAllocateMemory(m_Device, &allocInfo, nullptr, m_Memory.get());
@@ -52,7 +57,7 @@ namespace Rbk
         vkBindBufferMemory(m_Device, buffer, *m_Memory, m_Offset);
         m_Offset += size;
 
-        if (m_Offset >= m_MaxMemoryAllocationSize) {
+        if (m_Offset >= m_MaxSize) {
             m_IsFull = true;
         }
     }
@@ -62,7 +67,7 @@ namespace Rbk
         vkBindImageMemory(m_Device, image, *m_Memory, m_Offset);
         m_Offset += size;
 
-        if (m_Offset >= m_MaxMemoryAllocationSize) {
+        if (m_Offset >= m_MaxSize) {
             m_IsFull = true;
         }
     }

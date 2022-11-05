@@ -86,8 +86,8 @@ namespace Rbk {
         CreateFence();
 
         m_DeviceMemoryPool = std::make_shared<DeviceMemoryPool>(
-            m_DeviceProps.limits.maxMemoryAllocationCount,
-            m_DeviceMaintenance3Properties.maxMemoryAllocationSize
+            m_DeviceProperties2,
+            m_DeviceMaintenance3Properties
         );
     }
 
