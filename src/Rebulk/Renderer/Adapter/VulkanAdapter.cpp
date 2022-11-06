@@ -169,20 +169,24 @@ namespace Rbk
 
                 m_Renderer->BindPipeline(m_CommandBuffersEntities[m_ImageIndex], mesh->m_GraphicsPipeline);
 
-                if (mesh->IsDirty()) {
+                //if (m_HasClicked && mesh->IsHit(m_RayPick)) {
+                //    Rbk::Log::GetLogger()->warn("HIT ! {}", mesh->GetName());
+                //    m_HasClicked = false;
+                //}
 
+                uint32_t count = 0;
+                std::vector<Data> chunk{};
+
+                for (Data& data : *mesh->GetData()) {
+                    for (uint32_t i = 0; i < data.m_Ubos.size(); i++) {
+                        data.m_Ubos[i].view = lookAt;
+                        //mesh->cameraPos = cameraPos * mesh->ubos[i].view * mesh->ubos[i].model * mesh->ubos[i].proj;
+                        data.m_Ubos[i].proj = proj;
+                    }
                     auto min = 0;
                     auto max = 0;
 
-                    for (Data& data : *mesh->GetData()) {
-
-                        for (uint32_t i = 0; i < data.m_Ubos.size(); i++) {
-                            data.m_Ubos[i].view = lookAt;
-                            //mesh->cameraPos = cameraPos * mesh->ubos[i].view * mesh->ubos[i].model * mesh->ubos[i].proj;
-                            data.m_Ubos[i].proj = proj;
-                        }
-                    }
-
+                    int index = m_ImageIndex;
                     for (uint32_t i = 0; i < mesh->m_UniformBuffers.size(); i++) {
                         max = mesh->GetData()->at(0).m_UbosOffset.at(i);
                         auto ubos = std::vector<UniformBufferObject>(mesh->GetData()->at(0).m_Ubos.begin() + min, mesh->GetData()->at(0).m_Ubos.begin() + max);
@@ -194,22 +198,11 @@ namespace Rbk
                         );
 
                         min = max;
-                    }
 
-                    //mesh->SetIsDirty(false);
-                }
-
-                //if (m_HasClicked && mesh->IsHit(m_RayPick)) {
-                //    Rbk::Log::GetLogger()->warn("HIT ! {}", mesh->GetName());
-                //    m_HasClicked = false;
-                //}
-
-                for (Data& data : *mesh->GetData()) {
-                    int index = m_ImageIndex;
-                    for (uint32_t i = 0; i < mesh->m_UniformBuffers.size(); i++) {
                         index += i * 3;
                         pushConstants.textureID = data.m_TextureIndex;
                         vkCmdPushConstants(m_CommandBuffersEntities[m_ImageIndex], mesh->m_PipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(constants), &pushConstants);
+                    
                         m_Renderer->Draw(m_CommandBuffersEntities[m_ImageIndex], mesh->GetDescriptorSets().at(index), mesh.get(), data, mesh->m_UniformBuffers.at(i).size, m_ImageIndex);
                         index = m_ImageIndex;
                     }
@@ -231,33 +224,27 @@ namespace Rbk
                     if (!mesh) continue;
                     m_Renderer->BindPipeline(m_CommandBuffersBbox[m_ImageIndex], mesh->m_GraphicsPipeline);
 
-                    auto min = 0;
-                    auto max = 0;
-
                     for (Data& data : *mesh->GetData()) {
-
                         for (uint32_t i = 0; i < data.m_Ubos.size(); i++) {
                             data.m_Ubos[i].view = lookAt;
                             data.m_Ubos[i].proj = proj;
                         }
-                    }
+                        auto min = 0;
+                        auto max = 0;
 
-                    for (uint32_t i = 0; i < mesh->m_UniformBuffers.size(); i++) {
-                        max = mesh->GetData()->at(0).m_UbosOffset.at(i);
-                        auto ubos = std::vector<UniformBufferObject>(mesh->GetData()->at(0).m_Ubos.begin() + min, mesh->GetData()->at(0).m_Ubos.begin() + max);
-
-                        m_Renderer->UpdateUniformBuffer(
-                            mesh->m_UniformBuffers[i],
-                            ubos,
-                            ubos.size()
-                        );
-
-                        min = max;
-                    }
-
-                    for (Data& data : *mesh->GetData()) {
                         int index = m_ImageIndex;
                         for (uint32_t i = 0; i < mesh->m_UniformBuffers.size(); i++) {
+                            max = mesh->GetData()->at(0).m_UbosOffset.at(i);
+                            auto ubos = std::vector<UniformBufferObject>(mesh->GetData()->at(0).m_Ubos.begin() + min, mesh->GetData()->at(0).m_Ubos.begin() + max);
+
+                            m_Renderer->UpdateUniformBuffer(
+                                mesh->m_UniformBuffers[i],
+                                ubos,
+                                ubos.size()
+                            );
+
+                            min = max;
+
                             index += i * 3;
                             m_Renderer->Draw(m_CommandBuffersBbox[m_ImageIndex], mesh->GetDescriptorSets().at(index), mesh.get(), data, mesh->m_UniformBuffers.at(i).size, m_ImageIndex);
                             index = m_ImageIndex;
@@ -332,6 +319,7 @@ namespace Rbk
             EndRendering(m_CommandBuffersHud[m_ImageIndex]);
         };
 
+        //@todo thread pool
         std::thread workerE(entities);
         std::thread workerS(skybox);
         std::thread workerH(hud);
@@ -341,9 +329,9 @@ namespace Rbk
         workerH.join();
 
         std::vector<VkCommandBuffer> cmdSubmit{
-            m_CommandBuffersEntities[m_ImageIndex],
             m_CommandBuffersSkybox[m_ImageIndex],
-            m_CommandBuffersHud[m_ImageIndex]
+            m_CommandBuffersHud[m_ImageIndex],
+            m_CommandBuffersEntities[m_ImageIndex]
         };
 
         if (0 < m_BoundingBox->size()) {

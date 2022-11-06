@@ -4,7 +4,7 @@
 
 namespace Rbk
 {
-    std::atomic<int> Application::s_UnlockedFPS{ 0 };
+    std::atomic<int> Application::s_UnlockedFPS{ 3 };
     Application* Application::s_Instance = nullptr;
 
     Application::Application()
@@ -90,13 +90,13 @@ namespace Rbk
 
         while (!glfwWindowShouldClose(m_Window->Get())) {
 
-            if (Application::s_UnlockedFPS == 0) {
+            if (Application::s_UnlockedFPS.load() == 0) {
                 maxFPS = 30.0;
                 maxPeriod = std::chrono::duration<double>(1.0 / maxFPS);
-            } else if (Application::s_UnlockedFPS == 1) {
+            } else if (Application::s_UnlockedFPS.load() == 1) {
                 maxFPS = 60.0;
                 maxPeriod = std::chrono::duration<double>(1.0 / maxFPS);
-            } else if (Application::s_UnlockedFPS == 2) {
+            } else if (Application::s_UnlockedFPS.load() == 2) {
                 maxFPS = 120.0;
                 maxPeriod = std::chrono::duration<double>(1.0 / maxFPS);
             }
@@ -104,7 +104,7 @@ namespace Rbk
             auto currentTime = std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::system_clock::now());
             timeStep = currentTime - lastTime;
 
-            if (timeStep >= maxPeriod || Application::s_UnlockedFPS == 3) {
+            if (timeStep >= maxPeriod || Application::s_UnlockedFPS.load() == 3) {
                 
                 timeStepSum += timeStep;
                 frameCount++;
@@ -121,13 +121,11 @@ namespace Rbk
                 m_RenderManager->SetDeltatime(timeStep.count());
 
                 //imgui();
-              
-                std::thread([this, &lockDraw] {
-                    {
-                        std::lock_guard<std::mutex> guard(lockDraw);
-                        m_RenderManager->Draw();
-                    }
-                }).join();
+
+                {
+                    std::lock_guard<std::mutex> guard(lockDraw);
+                    m_RenderManager->Draw();
+                }
 
                 lastTime = currentTime;
             }

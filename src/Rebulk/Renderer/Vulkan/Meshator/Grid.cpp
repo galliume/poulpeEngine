@@ -96,11 +96,11 @@ namespace Rbk
 
         Grid::pc pc;
         pc.nearpoint = 0.1f;//@todo parameterize it
-        pc.farpoint = 100.f;
+        pc.farpoint = 50.f;
 
         mesh->ApplyPushConstants = [&pc](VkCommandBuffer commandBuffer, VkPipelineLayout pipelineLayout) {
             pc.nearpoint = 0.1f;//@todo parameterize it
-            pc.farpoint = 100.f;
+            pc.farpoint = 50.f;
             vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(pc), &pc);
         };
         mesh->SetHasPushConstants();

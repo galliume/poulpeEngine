@@ -116,7 +116,7 @@ namespace Rbk
         if (static_cast<bool>(appConfig["splashScreenMusic"]))
             m_AudioManager->StartSplash();
 
-        std::future<void> loading = std::async(std::launch::async, [this]() {
+        std::thread loading([this]() {
             while (!IsLoaded()) {
                     m_Renderer->DrawSplashScreen();
                     std::this_thread::sleep_for(std::chrono::milliseconds(50));
@@ -125,7 +125,7 @@ namespace Rbk
 
         LoadData(m_CurrentLevel);
 
-        loading.wait();
+        loading.join();
 
         m_AudioManager->StopSplash();
 
