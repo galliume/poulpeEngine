@@ -145,8 +145,7 @@ namespace Rbk
 
     void VulkanLayer::DisplayFpsCounter(double timeStep)
     {
-        Rbk::Im::Text("FPS : %.2f", 1 / timeStep);
-        Rbk::Im::Text("Frametime : %.2f ms", timeStep * 1000);	
+        Rbk::Im::Text("Frametime : %.2f ms", timeStep);
     }
 
     void VulkanLayer::DisplayAPI(VkPhysicalDeviceProperties devicesProps)

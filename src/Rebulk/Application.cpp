@@ -1,5 +1,6 @@
 #include "rebulkpch.h"
 #include "Application.h"
+#include <thread>
 
 namespace Rbk
 {
@@ -15,7 +16,7 @@ namespace Rbk
 
     void Application::Init()
     {
-        m_StartRun = glfwGetTime();
+        m_StartRun = std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::system_clock::now());
 
         Rbk::Log::Init();
 
@@ -47,70 +48,85 @@ namespace Rbk
 
     void Application::Run()
     {
-        double endRun = glfwGetTime();
-        double lastTime = endRun;
-        double timeStepSum = 0.0;
+        auto endRun = std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::system_clock::now());
+        auto lastTime = endRun;
+        auto timeStepSum = std::chrono::duration<double>(0.0);
         uint32_t frameCount = 0;
         double maxFPS = 60.0;
-        double maxPeriod = 1.0 / maxFPS;
+        auto maxPeriod = std::chrono::duration<double>(1.0 / maxFPS);
   
         InitImGui();
         bool imGuiInit = true;
+        std::chrono::milliseconds timeStep{0};
 
-        Rbk::Log::GetLogger()->debug("Loaded scene in {}", endRun - m_StartRun);
+        Rbk::Log::GetLogger()->debug("Loaded scene in {}", (endRun - m_StartRun).count());//@todo readable in seconds...
+
+        std::mutex lockDraw;
+
+        auto imgui =
+            [=, &timeStep, &lockDraw]() {
+            glfwPollEvents();
+
+            //@todo move to LayerManager
+            Rbk::Im::NewFrame();
+
+            m_VulkanLayer->Render(
+                timeStep.count(),
+                m_RenderManager->GetRendererAdapter()->Rdr()->GetDeviceProperties()
+            );
+            
+            Rbk::Im::Render();
+
+            m_RenderManager->GetRendererAdapter()->Rdr()->BeginCommandBuffer(Rbk::Im::GetImGuiInfo().cmdBuffer);
+            {
+                std::lock_guard<std::mutex> guard(lockDraw);
+                ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), Rbk::Im::GetImGuiInfo().cmdBuffer);
+            }
+            m_RenderManager->GetRendererAdapter()->Rdr()->EndCommandBuffer(Rbk::Im::GetImGuiInfo().cmdBuffer);
+
+            if (m_VulkanLayer->NeedRefresh()) {
+                m_VulkanLayer->AddRenderManager(m_RenderManager);
+            }
+        };
 
         while (!glfwWindowShouldClose(m_Window->Get())) {
 
             if (Application::s_UnlockedFPS == 0) {
                 maxFPS = 30.0;
-                maxPeriod = 1.0 / maxFPS;
+                maxPeriod = std::chrono::duration<double>(1.0 / maxFPS);
             } else if (Application::s_UnlockedFPS == 1) {
                 maxFPS = 60.0;
-                maxPeriod = 1.0 / maxFPS;
+                maxPeriod = std::chrono::duration<double>(1.0 / maxFPS);
             } else if (Application::s_UnlockedFPS == 2) {
                 maxFPS = 120.0;
-                maxPeriod = 1.0 / maxFPS;
+                maxPeriod = std::chrono::duration<double>(1.0 / maxFPS);
             }
 
-            double currentTime = glfwGetTime();
-            double timeStep = currentTime - lastTime;
+            auto currentTime = std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::system_clock::now());
+            timeStep = currentTime - lastTime;
 
             if (timeStep >= maxPeriod || Application::s_UnlockedFPS == 3) {
                 
                 timeStepSum += timeStep;
                 frameCount++;
 
-                if (1.0 <= timeStepSum) {
+                if (1.0 <= timeStepSum.count()) {
                     Rbk::Log::GetLogger()->debug("{} fps/sec", frameCount);
-                    timeStepSum = 0.0;
+                    timeStepSum = std::chrono::duration<double>(0.0);
                     frameCount = 0;
                 }
 
-                m_RenderManager->GetCamera()->UpdateSpeed(timeStep);
+                m_RenderManager->GetCamera()->UpdateSpeed(timeStep.count());
 
                 glfwPollEvents();
+                m_RenderManager->SetDeltatime(timeStep.count());
 
-                //@todo move to LayerManager
-                Rbk::Im::NewFrame();
-
-                m_VulkanLayer->Render(
-                    timeStep, 
-                    m_RenderManager->GetRendererAdapter()->Rdr()->GetDeviceProperties()
-                );
-
-                Rbk::Im::Render();
-
-                m_RenderManager->GetRendererAdapter()->Rdr()->BeginCommandBuffer(Rbk::Im::GetImGuiInfo().cmdBuffer);
-                ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), Rbk::Im::GetImGuiInfo().cmdBuffer);
-                m_RenderManager->GetRendererAdapter()->Rdr()->EndCommandBuffer(Rbk::Im::GetImGuiInfo().cmdBuffer);
-                //end @todo
-
-                m_RenderManager->SetDeltatime(timeStep);
-                m_RenderManager->Draw();
-
-                if (m_VulkanLayer->NeedRefresh()) {
-                    m_VulkanLayer->AddRenderManager(m_RenderManager);
+                {
+                    std::lock_guard<std::mutex> guard(lockDraw);
+                    m_RenderManager->Draw();
                 }
+
+                imgui();
 
                 lastTime = currentTime;
             }

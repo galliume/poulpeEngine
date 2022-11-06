@@ -246,6 +246,9 @@ namespace Rbk {
         VkSampleCountFlagBits m_MsaaSamples = VK_SAMPLE_COUNT_8_BIT;
 
         std::mutex m_MutexQueueSubmit;
+        std::mutex m_MutexDraw;
+        std::mutex m_MutexCmdBuffer;
+        std::mutex m_MutexCpyBuffer;
         VkDeviceSize m_MaxMemoryHeap;
         std::shared_ptr<DeviceMemoryPool> m_DeviceMemoryPool = nullptr;
     };

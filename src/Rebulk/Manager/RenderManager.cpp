@@ -123,9 +123,7 @@ namespace Rbk
                 }
         });
 
-        std::async(std::launch::async, [this]() {
-            LoadData(m_CurrentLevel);
-        });
+        LoadData(m_CurrentLevel);
 
         loading.wait();
 
@@ -134,15 +132,9 @@ namespace Rbk
         if (static_cast<bool>(appConfig["ambientMusic"]))
             m_AudioManager->StartAmbient();
 
-        std::async(std::launch::async, [this]() {
-            PrepareEntity();
-        });
-        std::async(std::launch::async, [this]() {
-            PrepareSkybox();
-        });
-        std::async(std::launch::async, [this]() {
-            PrepareHUD();
-        });
+        PrepareEntity();
+        PrepareSkybox();
+        PrepareHUD();
     }
 
     void RenderManager::LoadData(const std::string& level)
@@ -181,6 +173,7 @@ namespace Rbk
                 PrepareSkybox();
             });
         }
+        
         m_Renderer->Draw();
     }
 

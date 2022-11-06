@@ -85,7 +85,6 @@ namespace Rbk
         std::vector<VkDescriptorPool>m_DescriptorPools;
         std::vector<VkDescriptorSetLayout>m_DescriptorSetLayouts;
 
-        std::mutex m_MutexRendering;
         glm::vec3 m_RayPick;
         bool m_HasClicked = false;
 

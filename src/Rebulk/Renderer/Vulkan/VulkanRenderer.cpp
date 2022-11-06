@@ -1319,22 +1319,20 @@ namespace Rbk {
 
     void VulkanRenderer::QueueSubmit(VkCommandBuffer commandBuffer)
     {
-        m_MutexQueueSubmit.lock();
 
         VkSubmitInfo submitInfo{};
         submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
         submitInfo.commandBufferCount = 1;
         submitInfo.pCommandBuffers = &commandBuffer;
 
+        std::lock_guard<std::mutex> guard(m_MutexQueueSubmit);
         vkQueueSubmit(m_GraphicsQueue, 1, &submitInfo, VK_NULL_HANDLE);
         vkQueueWaitIdle(m_GraphicsQueue);
-
-        m_MutexQueueSubmit.unlock();
     }
 
     void VulkanRenderer::QueueSubmit(uint32_t imageIndex, VkCommandBuffer commandBuffer, std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>>& semaphores)
     {
-        m_MutexQueueSubmit.lock();
+        std::lock_guard<std::mutex> guard(m_MutexQueueSubmit);
 
         std::vector<VkSemaphore>& imageAvailableSemaphores = semaphores.first;
         std::vector<VkSemaphore>& renderFinishedSemaphores = semaphores.second;
@@ -1365,8 +1363,6 @@ namespace Rbk {
         vkResetFences(m_Device, 1, &m_InFlightFences[m_CurrentFrame]);
 
         VkResult result = vkQueueSubmit(m_GraphicsQueue, 1, &submitInfo, m_InFlightFences[m_CurrentFrame]);
-
-        m_MutexQueueSubmit.unlock();
 
         if (result != VK_SUCCESS) {
             throw std::runtime_error("failed to submit draw command buffer!");
@@ -1430,6 +1426,7 @@ namespace Rbk {
 
     void VulkanRenderer::Draw(VkCommandBuffer commandBuffer, VkDescriptorSet descriptorSet, Mesh* mesh, Data data, uint32_t uboCount, uint32_t frameIndex, bool drawIndexed)
     {
+        std::lock_guard<std::mutex> guard(m_MutexDraw);
         VkBuffer vertexBuffers[] = { data.m_VertexBuffer.buffer };
         VkDeviceSize offsets[] = { 0 };
 
@@ -1674,8 +1671,6 @@ namespace Rbk {
 
     void VulkanRenderer::CopyBuffer(VkCommandPool commandPool, VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size)
     {
-        m_MutexQueueSubmit.lock();
-
         VkCommandBufferAllocateInfo allocInfo{};
         allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
         allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
@@ -1695,6 +1690,9 @@ namespace Rbk {
         copyRegion.srcOffset = 0; // Optional
         copyRegion.dstOffset = 0; // Optional
         copyRegion.size = size;
+
+        std::lock_guard<std::mutex> guard(m_MutexQueueSubmit);
+
         vkCmdCopyBuffer(commandBuffer, srcBuffer, dstBuffer, 1, &copyRegion);
         vkEndCommandBuffer(commandBuffer);
 
@@ -1706,8 +1704,6 @@ namespace Rbk {
         vkQueueSubmit(m_GraphicsQueue, 1, &submitInfo, VK_NULL_HANDLE);
         vkQueueWaitIdle(m_GraphicsQueue);
         vkFreeCommandBuffers(m_Device, commandPool, 1, &commandBuffer);
-
-        m_MutexQueueSubmit.unlock();
     }
 
     VkImageMemoryBarrier VulkanRenderer::SetupImageMemoryBarrier(VkImage image, VkAccessFlags srcAccessMask, VkAccessFlags dstAccessMask, VkImageLayout oldLayout, VkImageLayout newLayout, uint32_t mipLevels, VkImageAspectFlags aspectMask)
