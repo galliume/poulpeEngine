@@ -39,8 +39,6 @@ namespace Rbk
             m_Renderer->DestroyBuffer(data.m_VertexBuffer.buffer);
             m_Renderer->DestroyBuffer(data.m_IndicesBuffer.buffer);
         }
-        m_Renderer->DestroyPipeline(entity->m_GraphicsPipeline);
-        vkDestroyPipelineLayout(m_Renderer->GetDevice(), entity->m_PipelineLayout, nullptr);
     }
 
     void DestroyManager::CleanShaders(std::map<std::string, std::array<VkShaderModule, 2>> shaders)

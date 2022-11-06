@@ -29,7 +29,7 @@ namespace Rbk
             if (poolType->second.end() != poolUsage) {
                 for (int i = 0; i < poolUsage->second.size(); ++i) {
                     auto dm = poolUsage->second.at(i);
-                    Rbk::Log::GetLogger()->debug("size {} type {} usage {} full {} space left {}", size, memoryType, usage, dm->IsFull(), dm->HasEnoughSpaceLeft(size));
+                    //Rbk::Log::GetLogger()->debug("size {} type {} usage {} full {} space left {}", size, memoryType, usage, dm->IsFull(), dm->HasEnoughSpaceLeft(size));
                     if (!dm->IsFull() && dm->HasEnoughSpaceLeft(size)) {
                         return dm;
                     }
@@ -44,7 +44,7 @@ namespace Rbk
             m_Pool[memoryType][usage].emplace_back(dm);
             m_MemoryAllocationCount += 1;
             m_MemoryAllocationSize += maxSize;
-            Rbk::Log::GetLogger()->debug("memory allocation count {}, size {} type {} usage {} ", m_MemoryAllocationCount, m_MemoryAllocationSize, memoryType, usage);
+            //Rbk::Log::GetLogger()->debug("memory allocation count {}, size {} type {} usage {} ", m_MemoryAllocationCount, m_MemoryAllocationSize, memoryType, usage);
             return dm;
         } else {
 
@@ -56,7 +56,7 @@ namespace Rbk
             m_Pool[memoryType][usage].emplace_back(dm);
             m_MemoryAllocationCount += 1;
             m_MemoryAllocationSize += maxSize;
-            Rbk::Log::GetLogger()->debug("memory allocation count {}, size {} type {} usage {} ", m_MemoryAllocationCount, m_MemoryAllocationSize, memoryType, usage);
+            //Rbk::Log::GetLogger()->debug("memory allocation count {}, size {} type {} usage {} ", m_MemoryAllocationCount, m_MemoryAllocationSize, memoryType, usage);
             return dm;
         }
     }

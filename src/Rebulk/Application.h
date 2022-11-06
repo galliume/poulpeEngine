@@ -31,10 +31,15 @@ namespace Rbk
         static int s_UnlockedFPS;
 
     private:
+        void InitImGui();
+
+    private:
         static Application* s_Instance;
         std::shared_ptr<Rbk::Window> m_Window;
         std::shared_ptr<Rbk::RenderManager> m_RenderManager;
         std::shared_ptr<Rbk::Im> m_VImGui;
+        std::shared_ptr<Rbk::VulkanLayer> m_VulkanLayer;
+
         double m_StartRun = 0;
     };
 }

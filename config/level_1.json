@@ -225,53 +225,7 @@
 				"z": 0
 			},
 			"form": "square",
-			"squarePadding": [{"x" : [7, 22], "y": [-5, 15]}]
-		},
-		"waterCube3" : {
-			"mesh": "assets/mesh/minecraft/Grass_Block.obj",
-			"textures": ["minecraft_water"],
-			"shader": "main",
-			"positions": [
-				{"x": -0.20, "y": -0.10, "z": -0.20}
-			],
-			"scales": [
-				{"x": 0.1, "y": 0.1, "z": 0.1}
-			],
-			"rotations": [
-				{"x": 0.0, "y": 0.0, "z": 0.0}
-			],
-			"inverseTextureY": true,
-			"count": 140,
-			"padding": {
-				"x": 1,
-				"y": 1,
-				"z": 0
-			},
-			"form": "square",
-			"squarePadding": [{"x" : [-22, 22], "y": [15, 22]}]
-		},
-		"waterCube4" : {
-			"mesh": "assets/mesh/minecraft/Grass_Block.obj",
-			"textures": ["minecraft_water"],
-			"shader": "main",
-			"positions": [
-				{"x": -0.20, "y": -0.10, "z": -0.20}
-			],
-			"scales": [
-				{"x": 0.1, "y": 0.1, "z": 0.1}
-			],
-			"rotations": [
-				{"x": 0.0, "y": 0.0, "z": 0.0}
-			],
-			"inverseTextureY": true,
-			"count": 140,
-			"padding": {
-				"x": 1,
-				"y": 1,
-				"z": 0
-			},
-			"form": "square",
-			"squarePadding": [{"x" : [-22, 22], "y": [22, 29]}]
+			"squarePadding": [{"x" : [-22, 22], "y": [15, 40]}]
 		},
 		"campfire" : {
 			"mesh": "assets/mesh/campfire/Campfire.obj",

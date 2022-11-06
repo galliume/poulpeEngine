@@ -94,6 +94,7 @@ namespace Rbk {
         VkFormat FindDepthFormat();
         bool HasStencilComponent(VkFormat format);
         VkDeviceSize GetMaxMemoryHeap() { return m_MaxMemoryHeap; }
+        void InitMemoryPool();
 
         /**
         * Vulkan drawing functions, in main loop

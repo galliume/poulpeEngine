@@ -302,9 +302,7 @@ namespace Rbk
 
                 if (ImGui::Selectable(levels.at(n).c_str(), isSelected)) {
                     m_LevelIndex = n;
-                    std::async(std::launch::async, [=]() {
-                        Refresh();
-                    });
+                    Refresh();
                 }
 
                 if (isSelected)
@@ -315,7 +313,7 @@ namespace Rbk
         ImGui::SameLine();
         if (ImGui::Button("Refresh level"))
         {
-            Refresh();
+           Refresh();
         }
 
         std::vector<std::string> skybox = m_RenderManager->GetConfigManager()->ListSkybox();
@@ -366,20 +364,13 @@ namespace Rbk
 
             m_Textures[texture.second.GetName()] = imgDset;
         }
+
+        m_Refresh = false;
     }
 
     void VulkanLayer::Refresh()
     {
-        nlohmann::json levelConfig = m_RenderManager->GetConfigManager()->EntityConfig(
-            m_RenderManager->GetConfigManager()->ListLevels().at(m_LevelIndex)
-        );
-        m_RenderManager->GetEntityManager()->Clear();
-        std::vector<std::future<void>> entityFutures = m_RenderManager->GetEntityManager()->Load(levelConfig);
-
-        for (auto& future : entityFutures) {
-            future.wait();
-        }
-
-        m_RenderManager->Refresh();
+        m_RenderManager->Refresh(m_LevelIndex);
+        m_Refresh = true;
     }
 }

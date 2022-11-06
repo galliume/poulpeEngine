@@ -48,6 +48,11 @@ namespace Rbk
         m_Shaders->shaders[name] = module;
     }
 
+    void ShaderManager::Clear()
+    {
+        m_Shaders->shaders.clear();
+    }
+
     ShaderManager::~ShaderManager()
     {
 

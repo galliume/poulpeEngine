@@ -175,16 +175,18 @@ namespace Rbk
                 //mesh->SetIsDirty(false);
             }
 
-            if (m_HasClicked && mesh->IsHit(m_RayPick)) {
-                Rbk::Log::GetLogger()->warn("HIT ! {}", mesh->GetName());
-                m_HasClicked = false;
-            }
+            //if (m_HasClicked && mesh->IsHit(m_RayPick)) {
+            //    Rbk::Log::GetLogger()->warn("HIT ! {}", mesh->GetName());
+            //    m_HasClicked = false;
+            //}
 
             for (Data& data : *mesh->GetData()) {
+                int index = m_ImageIndex;
                 for (uint32_t i = 0; i < mesh->m_UniformBuffers.size(); i++) {
+                    index += i * 3;
                     pushConstants.textureID = data.m_TextureIndex;
                     vkCmdPushConstants(m_CommandBuffers[m_ImageIndex], mesh->m_PipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(constants), &pushConstants);
-                    m_Renderer->Draw(m_CommandBuffers[m_ImageIndex], mesh->GetDescriptorSets().at(i), mesh.get(), data, mesh->m_UniformBuffers.at(i).size, m_ImageIndex);
+                    m_Renderer->Draw(m_CommandBuffers[m_ImageIndex], mesh->GetDescriptorSets().at(index), mesh.get(), data, mesh->m_UniformBuffers.at(i).size, m_ImageIndex);
                 }
             }
         }
@@ -196,25 +198,40 @@ namespace Rbk
             if (!mesh) continue;
             m_Renderer->BindPipeline(m_CommandBuffers[m_ImageIndex], mesh->m_GraphicsPipeline);
 
+            auto min = 0;
+            auto max = 0;
+
             for (Data& data : *mesh->GetData()) {
 
                 for (uint32_t i = 0; i < data.m_Ubos.size(); i++) {
                     data.m_Ubos[i].view = lookAt;
                     data.m_Ubos[i].proj = proj;
                 }
+            }
+
+            for (uint32_t i = 0; i < mesh->m_UniformBuffers.size(); i++) {
+                max = mesh->GetData()->at(0).m_UbosOffset.at(i);
+                auto ubos = std::vector<UniformBufferObject>(mesh->GetData()->at(0).m_Ubos.begin() + min, mesh->GetData()->at(0).m_Ubos.begin() + max);
+
+                m_Renderer->UpdateUniformBuffer(
+                    mesh->m_UniformBuffers[i],
+                    ubos,
+                    ubos.size()
+                );
+
+                min = max;
+            }
+
+            if (m_HasClicked && mesh->IsHit(m_RayPick)) {
+                Rbk::Log::GetLogger()->warn("HIT ! {}", mesh->GetName());
+                m_HasClicked = false;
+            }
+
+            for (Data& data : *mesh->GetData()) {
+                int index = m_ImageIndex;
                 for (uint32_t i = 0; i < mesh->m_UniformBuffers.size(); i++) {
-                    m_Renderer->UpdateUniformBuffer(
-                        mesh->m_UniformBuffers[i],
-                        data.m_Ubos,
-                        data.m_Ubos.size()
-                    );
-
-                    if (m_HasClicked && mesh->IsHit(m_RayPick)) {
-                        Rbk::Log::GetLogger()->warn("HIT ! {}", mesh->GetName());
-                        m_HasClicked = false;
-                    }
-
-                    m_Renderer->Draw(m_CommandBuffers[m_ImageIndex], mesh->GetDescriptorSets().at(i), mesh.get(), data, data.m_Ubos.size(), m_ImageIndex);
+                    index += i * 3;
+                    m_Renderer->Draw(m_CommandBuffers[m_ImageIndex], mesh->GetDescriptorSets().at(index), mesh.get(), data, mesh->m_UniformBuffers.at(i).size, m_ImageIndex);
                 }
             }
         }
@@ -564,5 +581,14 @@ namespace Rbk
         m_RayPick = glm::normalize(rayWor);
 
         m_HasClicked = true;
+    }
+
+    void VulkanAdapter::Clear()
+    {
+        m_Entities->clear();
+        m_BoundingBox->clear();
+        m_SkyboxMesh = nullptr;
+        m_HUD.clear();
+        m_Splash.clear();
     }
 }

@@ -130,6 +130,11 @@ namespace Rbk
         vkDestroyCommandPool(m_Renderer->Rdr()->GetDevice(), commandPool, nullptr);
     }
 
+    void TextureManager::Clear()
+    {
+        m_Textures.clear();
+    }
+
     TextureManager::~TextureManager()
     {
 

@@ -99,7 +99,9 @@ namespace Rbk
         for (auto ubo : mesh->m_UniformBuffers) {
             VkDescriptorSet meshDescriptorSets = m_Adapter->Rdr()->CreateDescriptorSets(m_DescriptorPool, { desriptorSetLayout }, 1);
             m_Adapter->Rdr()->UpdateDescriptorSets({ ubo }, meshDescriptorSets, imageInfos);
-            mesh->m_DescriptorSets.emplace_back(meshDescriptorSets);
+            for (uint32_t i = 0; i < m_Adapter->GetSwapChainImages()->size(); i++) {
+                mesh->m_DescriptorSets.emplace_back(meshDescriptorSets);
+            }
         }
 
         std::vector<VkPushConstantRange> pushConstants = {};
@@ -209,15 +211,25 @@ namespace Rbk
 
                 if (0 == count) {
 
-                    uint32_t totalInstances = static_cast<uint32_t>(bbox->GetData()->size());
+                    uint32_t totalInstances = static_cast<uint32_t>(mesh->GetData()->at(0).m_Ubos.size());
                     uint32_t maxUniformBufferRange = m_Adapter->Rdr()->GetDeviceProperties().limits.maxUniformBufferRange;
                     uint32_t uniformBufferChunkSize = maxUniformBufferRange / sizeof(UniformBufferObject);
                     uint32_t uniformBuffersCount = static_cast<uint32_t>(std::ceil(static_cast<float>(totalInstances) / static_cast<float>(uniformBufferChunkSize)));
-                    //mesh->m_CameraPos = m_Camera->GetPos();
+
+                    //@todo fix memory management...
+                    uint32_t uboOffset = (totalInstances > uniformBufferChunkSize) ? uniformBufferChunkSize : totalInstances;
+                    uint32_t uboRemaining = (totalInstances - uboOffset > 0) ? totalInstances - uboOffset : 0;
+                    uint32_t nbUbo = uboOffset;
 
                     for (uint32_t i = 0; i < uniformBuffersCount; i++) {
-                        Buffer uniformBuffer = m_Adapter->Rdr()->CreateUniformBuffers(uniformBufferChunkSize);
+
+                        bbox->GetData()->at(0).m_UbosOffset.emplace_back(uboOffset);
+                        Buffer uniformBuffer = m_Adapter->Rdr()->CreateUniformBuffers(nbUbo);
                         bbox->m_UniformBuffers.emplace_back(uniformBuffer);
+
+                        uboOffset = (uboRemaining > uniformBufferChunkSize) ? uboOffset + uniformBufferChunkSize : uboOffset + uboRemaining;
+                        nbUbo = (uboRemaining > uniformBufferChunkSize) ? uniformBufferChunkSize : uboRemaining;
+                        uboRemaining = (totalInstances - uboOffset > 0) ? totalInstances - uboOffset : 0;
                     }
 
                     Texture tex = m_TextureManager->GetTextures()["minecraft_grass"];
@@ -254,11 +266,14 @@ namespace Rbk
 
                     m_Adapter->GetDescriptorSetLayouts()->emplace_back(desriptorSetLayout);
 
-                    for (uint32_t i = 0; i < m_Adapter->GetSwapChainImages()->size(); i++) {
-                        VkDescriptorSet descriptorSet = m_Adapter->Rdr()->CreateDescriptorSets(m_DescriptorPool, { desriptorSetLayout }, 1);
-                        m_Adapter->Rdr()->UpdateDescriptorSets(bbox->m_UniformBuffers, descriptorSet, imageInfos);
-                        bbox->m_DescriptorSets.emplace_back(descriptorSet);
+                    for (auto ubo : bbox->m_UniformBuffers) {
+                        VkDescriptorSet meshDescriptorSets = m_Adapter->Rdr()->CreateDescriptorSets(m_DescriptorPool, { desriptorSetLayout }, 1);
+                        m_Adapter->Rdr()->UpdateDescriptorSets({ ubo }, meshDescriptorSets, imageInfos);
+                        for (uint32_t i = 0; i < m_Adapter->GetSwapChainImages()->size(); i++) {
+                            bbox->m_DescriptorSets.emplace_back(meshDescriptorSets);
+                        }
                     }
+
                     std::vector<VkDescriptorSetLayout>dSetLayout = { desriptorSetLayout };
 
                     bbox->m_PipelineLayout = m_Adapter->Rdr()->CreatePipelineLayout(bbox->m_DescriptorSets, dSetLayout, {});

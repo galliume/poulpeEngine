@@ -31,6 +31,7 @@ namespace Rbk
         virtual inline std::shared_ptr<VkRenderPass> RdrPass() override { return m_RenderPass; }
         virtual inline glm::mat4 GetPerspective() override { return m_Perspective; }
         virtual void SetDeltatime(float deltaTime) override;
+        void Clear();
 
         void ShouldRecreateSwapChain();
         void RecreateSwapChain();

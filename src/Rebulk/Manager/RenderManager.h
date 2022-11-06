@@ -26,7 +26,7 @@ namespace Rbk
         virtual void SetDeltatime(float deltaTime) override;
         virtual bool IsLoaded()  override { return m_IsLoaded; }
         virtual void SetIsLoaded(bool loaded = true) override { m_IsLoaded = loaded; }
-        virtual void Refresh() override;
+        virtual void Refresh(uint32_t levelIndex) override;
 
         virtual std::shared_ptr<Window> GetWindow() override { return  m_Window; }
         virtual std::shared_ptr<Rbk::Camera> GetCamera() override { return m_Camera; }
@@ -46,7 +46,7 @@ namespace Rbk
         void PrepareEntity();
         void PrepareHUD();
         void PrepareSkybox();
-        void LoadData();
+        void LoadData(const std::string& level);
 
     private:
         std::shared_ptr<Window> m_Window;
@@ -62,6 +62,8 @@ namespace Rbk
         std::shared_ptr<Rbk::DestroyManager> m_DestroyManager;
 
         bool m_IsLoaded = false;
+        bool m_Refresh = false;
+        std::string m_CurrentLevel;
 
         //@todo should not be impl
         std::vector<VkDescriptorPool> m_DescriptorPools;

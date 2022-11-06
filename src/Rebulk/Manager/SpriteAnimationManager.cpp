@@ -24,4 +24,9 @@ namespace Rbk
             return {};
         }
     }
+
+    void SpriteAnimationManager::Clear()
+    {
+        m_SpriteAnimations.clear();
+    }
 }

@@ -34,6 +34,25 @@ namespace Rbk
         m_DestroyManager(destroyManager),
         m_Camera(camera)
     {
+        m_Camera->Init();
+        m_Renderer->Init();
+        m_Renderer->AddCamera(m_Camera);
+        m_DestroyManager->SetRenderer(m_Renderer->Rdr());
+        m_DestroyManager->AddMemoryPool(m_Renderer->Rdr()->GetDeviceMemoryPool());
+        m_TextureManager->AddConfig(m_ConfigManager->TexturesConfig());
+
+        nlohmann::json appConfig = m_ConfigManager->AppConfig();
+        m_CurrentLevel = static_cast<std::string>(appConfig["defaultLevel"]);
+
+        m_InputManager->Init(appConfig["input"]);
+
+        //@todo, those managers should not have the usage of the renderer...
+        m_TextureManager->AddRenderer(m_Renderer);
+        m_EntityManager->AddRenderer(m_Renderer);
+        m_ShaderManager->AddRenderer(m_Renderer);
+        m_InputManager->AddRenderer(m_Renderer);
+        m_InputManager->SetCamera(m_Camera);
+        //end @todo
     }
 
     RenderManager::~RenderManager()
@@ -43,8 +62,6 @@ namespace Rbk
 
     void RenderManager::CleanUp()
     {
-        m_Renderer->Destroy();
-
         m_DestroyManager->CleanEntities(*m_EntityManager->GetEntities());
         m_DestroyManager->CleanEntities(*m_EntityManager->GetBBox());
         m_DestroyManager->CleanEntities(m_EntityManager->GetHUD());
@@ -52,31 +69,38 @@ namespace Rbk
         m_DestroyManager->CleanTextures(m_TextureManager->GetTextures());
         m_DestroyManager->CleanTexture(m_TextureManager->GetSkyboxTexture());
         m_DestroyManager->CleanDeviceMemory();
+        m_AudioManager->Clear();
+        m_SpriteAnimationManager->Clear();
+        m_ShaderManager->Clear();
+        m_Renderer->Clear();
+        m_Renderer->Destroy();
         m_Renderer->Rdr()->Destroy();
     }
 
     void RenderManager::Init()
     {
-        m_Renderer->WaitIdle();
-        m_Camera->Init();
-        m_Renderer->Init();
-        m_Renderer->AddCamera(m_Camera);
-        m_DestroyManager->SetRenderer(m_Renderer->Rdr());
-        m_DestroyManager->AddMemoryPool(m_Renderer->Rdr()->GetDeviceMemoryPool());
-        m_TextureManager->AddConfig(m_ConfigManager->TexturesConfig());
-        
+        if (m_Refresh) {
+            m_Renderer->Rdr()->WaitIdle();
+            m_DestroyManager->CleanEntities(*m_EntityManager->GetEntities());
+            m_DestroyManager->CleanEntities(*m_EntityManager->GetBBox());
+            m_DestroyManager->CleanEntities(m_EntityManager->GetHUD());
+            m_DestroyManager->CleanShaders(m_ShaderManager->GetShaders()->shaders);
+            m_DestroyManager->CleanTextures(m_TextureManager->GetTextures());
+            m_DestroyManager->CleanTexture(m_TextureManager->GetSkyboxTexture());
+            m_DestroyManager->CleanDeviceMemory();
+            m_Renderer->Rdr()->InitMemoryPool();
+            m_TextureManager->Clear();
+            m_EntityManager->Clear();
+            m_AudioManager->Clear();
+            m_SpriteAnimationManager->Clear();
+            m_ShaderManager->Clear();
+            m_Renderer->Clear();
+            m_Renderer->RecreateSwapChain();
+        }
+       
         nlohmann::json appConfig = m_ConfigManager->AppConfig();
         nlohmann::json textureConfig = m_ConfigManager->TexturesConfig();
 
-        //@todo, those managers should not have the usage of the renderer...
-        m_TextureManager->AddRenderer(m_Renderer);
-        m_EntityManager->AddRenderer(m_Renderer);
-        m_ShaderManager->AddRenderer(m_Renderer);
-        m_InputManager->AddRenderer(m_Renderer);
-        m_InputManager->SetCamera(m_Camera);
-        //end @todo
-
-        m_InputManager->Init(appConfig["input"]);
         m_AudioManager->Load(m_ConfigManager->SoundConfig());
 
         std::vector<std::string> splashSprites{};
@@ -93,14 +117,16 @@ namespace Rbk
             m_AudioManager->StartSplash();
 
         std::future<void> loading = std::async(std::launch::async, [this]() {
-
             while (!IsLoaded()) {
-                m_Renderer->DrawSplashScreen();
-                std::this_thread::sleep_for(std::chrono::milliseconds(50));
-            }
+                    m_Renderer->DrawSplashScreen();
+                    std::this_thread::sleep_for(std::chrono::milliseconds(50));
+                }
         });
 
-        LoadData();
+        std::async(std::launch::async, [this]() {
+            LoadData(m_CurrentLevel);
+        });
+
         loading.wait();
 
         m_AudioManager->StopSplash();
@@ -108,12 +134,18 @@ namespace Rbk
         if (static_cast<bool>(appConfig["ambientMusic"]))
             m_AudioManager->StartAmbient();
 
-        PrepareEntity();
-        PrepareSkybox();
-        PrepareHUD();
+        std::async(std::launch::async, [this]() {
+            PrepareEntity();
+        });
+        std::async(std::launch::async, [this]() {
+            PrepareSkybox();
+        });
+        std::async(std::launch::async, [this]() {
+            PrepareHUD();
+        });
     }
 
-    void RenderManager::LoadData()
+    void RenderManager::LoadData(const std::string& level)
     {
         nlohmann::json appConfig = m_ConfigManager->AppConfig();
 
@@ -121,7 +153,7 @@ namespace Rbk
         std::future<void> textureFuture = m_TextureManager->Load();
         std::future<void> skyboxFuture = m_TextureManager->LoadSkybox(static_cast<std::string>(appConfig["defaultSkybox"]));
         std::vector<std::future<void>> entityFutures = m_EntityManager->Load(
-            m_ConfigManager->EntityConfig(static_cast<std::string>(appConfig["defaultLevel"]))
+            m_ConfigManager->EntityConfig(level)
         );
 
         for (auto& future : entityFutures) {
@@ -139,6 +171,11 @@ namespace Rbk
 
     void RenderManager::Draw()
     {
+        if (m_Refresh) {
+            Init();
+            m_Refresh = false;
+        }
+
         if (m_EntityManager->GetSkybox()->IsDirty()) {
             std::async(std::launch::async, [=]() {
                 PrepareSkybox();
@@ -152,9 +189,11 @@ namespace Rbk
         m_Renderer->SetDeltatime(deltaTime);
     }
 
-    void RenderManager::Refresh()
+    void RenderManager::Refresh(uint32_t levelIndex)
     {
-        PrepareEntity();
+        m_CurrentLevel = m_ConfigManager->ListLevels().at(levelIndex);
+        m_IsLoaded = false;
+        m_Refresh = true;
     }
 
     void RenderManager::PrepareSplashScreen()

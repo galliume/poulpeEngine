@@ -84,7 +84,11 @@ namespace Rbk {
         CreateLogicalDevice();
         InitDetails();
         CreateFence();
+        InitMemoryPool();
+    }
 
+    void VulkanRenderer::InitMemoryPool()
+    {
         m_DeviceMemoryPool = std::make_shared<DeviceMemoryPool>(
             m_DeviceProperties2,
             m_DeviceMaintenance3Properties
@@ -1444,9 +1448,9 @@ namespace Rbk {
 
         if (drawIndexed) {
             vkCmdBindIndexBuffer(commandBuffer, data.m_IndicesBuffer.buffer, 0, VK_INDEX_TYPE_UINT32);
-            vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(data.m_Indices.size()), uboCount, 0, 0, 0);
+            vkCmdDrawIndexed(commandBuffer, data.m_Indices.size(), uboCount, 0, 0, 0);
         } else {
-            vkCmdDraw(commandBuffer, static_cast<uint32_t>(data.m_Vertices.size()), 1, 0, 0);
+            vkCmdDraw(commandBuffer, data.m_Vertices.size(), 1, 0, 0);
         }
     }
 

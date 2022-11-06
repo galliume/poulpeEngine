@@ -54,19 +54,8 @@ namespace Rbk
         double maxFPS = 60.0;
         double maxPeriod = 1.0 / maxFPS;
   
-        ImGuiInfo imguiInfo = m_RenderManager->GetRendererAdapter()->GetImGuiInfo();
-        Rbk::Im::Init(m_Window->Get(), imguiInfo.info, imguiInfo.rdrPass);
-
-        m_RenderManager->GetRendererAdapter()->ImmediateSubmit([&](VkCommandBuffer cmd) {
-            ImGui_ImplVulkan_CreateFontsTexture(cmd);
-        });
-
-        ImGui_ImplVulkan_DestroyFontUploadObjects();
-
-        //todo move to layer manager and update application main loop accordingly
-        auto vulkanLayer = std::make_shared<Rbk::VulkanLayer>();
-        vulkanLayer->AddRenderManager(m_RenderManager);
-        //m_LayerManager->Add(vulkanLayer.get());
+        InitImGui();
+        bool imGuiInit = true;
 
         Rbk::Log::GetLogger()->debug("Loaded scene in {}", endRun - m_StartRun);
 
@@ -100,23 +89,28 @@ namespace Rbk
                 m_RenderManager->GetCamera()->UpdateSpeed(timeStep);
 
                 glfwPollEvents();
-                m_RenderManager->SetDeltatime(timeStep);
-                m_RenderManager->Draw();
 
                 //@todo move to LayerManager
                 Rbk::Im::NewFrame();
 
-                vulkanLayer->Render(
+                m_VulkanLayer->Render(
                     timeStep, 
                     m_RenderManager->GetRendererAdapter()->Rdr()->GetDeviceProperties()
                 );
 
                 Rbk::Im::Render();
 
-                m_RenderManager->GetRendererAdapter()->Rdr()->BeginCommandBuffer(imguiInfo.cmdBuffer);
-                ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), imguiInfo.cmdBuffer);
-                m_RenderManager->GetRendererAdapter()->Rdr()->EndCommandBuffer(imguiInfo.cmdBuffer);
+                m_RenderManager->GetRendererAdapter()->Rdr()->BeginCommandBuffer(Rbk::Im::GetImGuiInfo().cmdBuffer);
+                ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), Rbk::Im::GetImGuiInfo().cmdBuffer);
+                m_RenderManager->GetRendererAdapter()->Rdr()->EndCommandBuffer(Rbk::Im::GetImGuiInfo().cmdBuffer);
                 //end @todo
+
+                m_RenderManager->SetDeltatime(timeStep);
+                m_RenderManager->Draw();
+
+                if (m_VulkanLayer->NeedRefresh()) {
+                    m_VulkanLayer->AddRenderManager(m_RenderManager);
+                }
 
                 lastTime = currentTime;
             }
@@ -129,5 +123,22 @@ namespace Rbk
 
         glfwDestroyWindow(m_Window.get()->Get());
         glfwTerminate();
+    }
+
+    void Application::InitImGui()
+    {
+        ImGuiInfo imguiInfo = m_RenderManager->GetRendererAdapter()->GetImGuiInfo();
+        Rbk::Im::Init(m_Window->Get(), imguiInfo);
+
+        m_RenderManager->GetRendererAdapter()->ImmediateSubmit([&](VkCommandBuffer cmd) {
+            ImGui_ImplVulkan_CreateFontsTexture(cmd);
+            });
+
+        ImGui_ImplVulkan_DestroyFontUploadObjects();
+
+        //todo move to layer manager and update application main loop accordingly
+        m_VulkanLayer = std::make_shared<Rbk::VulkanLayer>();
+        m_VulkanLayer->AddRenderManager(m_RenderManager);
+        //m_LayerManager->Add(vulkanLayer.get());
     }
 }
