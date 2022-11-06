@@ -44,7 +44,7 @@ namespace Rbk
         int m_SkyboxIndex = 0;
         bool m_Refresh = false;
 
-        std::shared_ptr<RenderManager> m_RenderManager;
+        std::atomic<std::shared_ptr<RenderManager>> m_RenderManager;
         std::map<std::string, VkDescriptorSet> m_Textures;
         std::map<std::string, VkDescriptorSet> m_Entities;
     };

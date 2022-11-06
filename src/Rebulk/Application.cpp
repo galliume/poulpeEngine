@@ -4,7 +4,7 @@
 
 namespace Rbk
 {
-    int Application::s_UnlockedFPS = 0;
+    std::atomic<int> Application::s_UnlockedFPS{ 0 };
     Application* Application::s_Instance = nullptr;
 
     Application::Application()
@@ -55,14 +55,13 @@ namespace Rbk
         double maxFPS = 60.0;
         auto maxPeriod = std::chrono::duration<double>(1.0 / maxFPS);
   
-        InitImGui();
-        bool imGuiInit = true;
         std::chrono::milliseconds timeStep{0};
 
         Rbk::Log::GetLogger()->debug("Loaded scene in {}", (endRun - m_StartRun).count());//@todo readable in seconds...
 
         std::mutex lockDraw;
 
+        InitImGui();
         auto imgui =
             [=, &timeStep, &lockDraw]() {
             glfwPollEvents();
@@ -121,12 +120,14 @@ namespace Rbk
                 glfwPollEvents();
                 m_RenderManager->SetDeltatime(timeStep.count());
 
-                {
-                    std::lock_guard<std::mutex> guard(lockDraw);
-                    m_RenderManager->Draw();
-                }
-
-                imgui();
+                //imgui();
+              
+                std::thread([this, &lockDraw] {
+                    {
+                        std::lock_guard<std::mutex> guard(lockDraw);
+                        m_RenderManager->Draw();
+                    }
+                }).join();
 
                 lastTime = currentTime;
             }

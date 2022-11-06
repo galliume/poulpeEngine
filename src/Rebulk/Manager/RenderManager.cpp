@@ -140,21 +140,36 @@ namespace Rbk
     void RenderManager::LoadData(const std::string& level)
     {
         nlohmann::json appConfig = m_ConfigManager->AppConfig();
+        std::vector<std::thread> threads;
 
-        std::future<void> shaderFuture = m_ShaderManager->Load(m_ConfigManager->ShaderConfig());
-        std::future<void> textureFuture = m_TextureManager->Load();
-        std::future<void> skyboxFuture = m_TextureManager->LoadSkybox(static_cast<std::string>(appConfig["defaultSkybox"]));
-        std::vector<std::future<void>> entityFutures = m_EntityManager->Load(
-            m_ConfigManager->EntityConfig(level)
-        );
+        threads.emplace_back(std::thread([=]() {
+            std::vector<std::future<void>> entityFutures = m_EntityManager->Load(
+                m_ConfigManager->EntityConfig(level)
+            );
 
-        for (auto& future : entityFutures) {
-            future.wait();
+            for (auto& future : entityFutures) {
+                future.wait();
+            }
+        }));
+
+        threads.emplace_back(std::thread([=]() {
+            std::future<void> textureFuture = m_TextureManager->Load();
+            textureFuture.wait();
+        }));
+
+        threads.emplace_back(std::thread ([=, &appConfig]() {
+            std::future<void> skyboxFuture = m_TextureManager->LoadSkybox(static_cast<std::string>(appConfig["defaultSkybox"]));
+            skyboxFuture.wait();
+        }));
+
+        threads.emplace_back(std::thread([=]() {
+            std::future<void> shaderFuture = m_ShaderManager->Load(m_ConfigManager->ShaderConfig());
+            shaderFuture.wait();
+        }));
+
+        for (auto& t : threads) {
+            t.join();
         }
-        textureFuture.wait();
-        skyboxFuture.wait();
-
-        shaderFuture.wait();
 
         SetIsLoaded();
         m_Renderer->AddEntities(m_EntityManager->GetEntities());

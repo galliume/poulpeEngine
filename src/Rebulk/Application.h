@@ -28,7 +28,7 @@ namespace Rbk
         void Init();
         void Run();
 
-        static int s_UnlockedFPS;
+        static  std::atomic<int> s_UnlockedFPS;
 
     private:
         void InitImGui();
