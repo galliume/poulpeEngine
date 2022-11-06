@@ -156,15 +156,9 @@ namespace Rbk
         glm::mat4 proj = m_Perspective;
         proj[1][1] *= -1;
         glm::vec4 cameraPos = m_Camera->GetPos();
-        std::condition_variable cv;
-        std::atomic<bool>entityDone{ false };
-        std::atomic<bool>bboxDone{ false };
-        std::atomic<bool>skyboxDone{ false };
-        std::atomic<bool>hudDone{ false };
-        std::mutex mutex;
 
         //entities !
-        auto entities = [=, &pushConstants, &entityDone]() {
+        auto entities = [=, &pushConstants]() {
 
             BeginRendering(m_CommandBuffersEntities[m_ImageIndex]);
 
@@ -223,12 +217,10 @@ namespace Rbk
             }
 
             EndRendering(m_CommandBuffersEntities[m_ImageIndex]);
-
-            entityDone.store(true);
         };
 
         //bbox !
-        auto bbox = [=, &pushConstants, &bboxDone]() {
+        auto bbox = [=, &pushConstants]() {
 
             if (0 < m_BoundingBox->size()) {
                 BeginRendering(m_CommandBuffersBbox[m_ImageIndex]);
@@ -278,7 +270,7 @@ namespace Rbk
         };
 
         //skybox !
-        auto skybox = [=, &pushConstants, &skyboxDone]() {
+        auto skybox = [=, &pushConstants]() {
             if (m_SkyboxMesh) {
 
                 BeginRendering(m_CommandBuffersSkybox[m_ImageIndex]);
@@ -302,16 +294,11 @@ namespace Rbk
                 }
 
                 EndRendering(m_CommandBuffersSkybox[m_ImageIndex]);
-                skyboxDone.store(true);
-
-            }
-            else {
-                skyboxDone.store(true);
             }
         };
 
         //HUD!
-        auto hud = [=, &pushConstants, &hudDone]() {
+        auto hud = [=, &pushConstants]() {
 
             BeginRendering(m_CommandBuffersHud[m_ImageIndex]);
 
@@ -343,27 +330,28 @@ namespace Rbk
             }
 
             EndRendering(m_CommandBuffersHud[m_ImageIndex]);
-            hudDone.store(true);
         };
 
         std::thread workerE(entities);
-        //std::thread workerB(bbox);
-        //std::thread workerS(skybox);
-        //std::thread workerH(hud);
+        std::thread workerS(skybox);
+        std::thread workerH(hud);
 
         workerE.join();
-        //workerB.join();
-        //workerS.join();
-        //workerH.join();
+        workerS.join();
+        workerH.join();
 
         std::vector<VkCommandBuffer> cmdSubmit{
-            m_CommandBuffersEntities[m_ImageIndex]
+            m_CommandBuffersEntities[m_ImageIndex],
+            m_CommandBuffersSkybox[m_ImageIndex],
+            m_CommandBuffersHud[m_ImageIndex]
         };
 
         if (0 < m_BoundingBox->size()) {
+            std::thread workerB(bbox);
             cmdSubmit.emplace_back(m_CommandBuffersBbox[m_ImageIndex]);
+            workerB.join();
         }
-
+        
         Submit(cmdSubmit);
     }
 

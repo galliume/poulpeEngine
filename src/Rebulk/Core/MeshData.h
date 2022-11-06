@@ -1,5 +1,6 @@
 #pragma once
 #include <volk.h>
+#include "Rebulk/Renderer/Vulkan/DeviceMemory.h"
 
 namespace Rbk
 {
@@ -8,7 +9,7 @@ namespace Rbk
 
     struct Buffer {
         VkBuffer buffer;
-        std::shared_ptr<VkDeviceMemory> memory;
+        std::shared_ptr<DeviceMemory> memory;
         uint32_t offset;
         uint32_t size;
     };

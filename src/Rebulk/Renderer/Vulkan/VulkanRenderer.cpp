@@ -1346,6 +1346,8 @@ namespace Rbk {
 
             m_ImagesInFlight[imageIndex] = m_ImagesInFlight[m_CurrentFrame];
 
+            std::vector<VkSubmitInfo> submits{};
+
             VkSubmitInfo submitInfo{};
             submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 
@@ -1363,9 +1365,11 @@ namespace Rbk {
             submitInfo.signalSemaphoreCount = 1;
             submitInfo.pSignalSemaphores = signalSemaphores;
 
+            submits.emplace_back(submitInfo);
+
             vkResetFences(m_Device, 1, &m_InFlightFences[m_CurrentFrame]);
 
-            VkResult result = vkQueueSubmit(m_GraphicsQueue, 1, &submitInfo, m_InFlightFences[m_CurrentFrame]);
+            VkResult result = vkQueueSubmit(m_GraphicsQueue, submits.size(), submits.data(), m_InFlightFences[m_CurrentFrame]);
 
             if (result != VK_SUCCESS) {
                 throw std::runtime_error("failed to submit draw command buffer!");
@@ -1538,7 +1542,7 @@ namespace Rbk {
 
         Buffer meshBuffer;
         meshBuffer.buffer = std::move(buffer);
-        meshBuffer.memory = deviceMemory->GetMemory();
+        meshBuffer.memory = deviceMemory;
         meshBuffer.offset = offset;
         meshBuffer.size = size;
 
@@ -1578,7 +1582,7 @@ namespace Rbk {
 
         Buffer meshBuffer;
         meshBuffer.buffer = std::move(buffer);
-        meshBuffer.memory = deviceMemory->GetMemory();
+        meshBuffer.memory = deviceMemory;
         meshBuffer.offset = offset;
         meshBuffer.size = size;
         
@@ -1619,7 +1623,7 @@ namespace Rbk {
 
         Buffer meshBuffer;
         meshBuffer.buffer = std::move(buffer);
-        meshBuffer.memory = deviceMemory->GetMemory();
+        meshBuffer.memory = deviceMemory;
         meshBuffer.offset = offset;
         meshBuffer.size = size;
 
@@ -1644,7 +1648,7 @@ namespace Rbk {
 
         Buffer uniformBuffer;
         uniformBuffer.buffer = std::move(buffer);
-        uniformBuffer.memory = deviceMemory->GetMemory();
+        uniformBuffer.memory = deviceMemory;
         uniformBuffer.offset = offset;
         uniformBuffer.size = size;
 
@@ -1666,7 +1670,7 @@ namespace Rbk {
 
         Buffer uniformBuffer;
         uniformBuffer.buffer = std::move(buffer);
-        uniformBuffer.memory = deviceMemory->GetMemory();
+        uniformBuffer.memory = deviceMemory;
         uniformBuffer.offset = offset;
         uniformBuffer.size = size;
 
@@ -1675,10 +1679,17 @@ namespace Rbk {
 
     void VulkanRenderer::UpdateUniformBuffer(Buffer buffer, std::vector<UniformBufferObject> uniformBufferObjects, uint32_t uniformBuffersCount)
     {
-        void* data;
-        vkMapMemory(m_Device, *buffer.memory, buffer.offset, buffer.size, 0, &data);
-        memcpy(data, uniformBufferObjects.data(), buffer.size);
-        vkUnmapMemory(m_Device, *buffer.memory);
+        {
+            buffer.memory->Lock();
+
+            auto memory = buffer.memory->GetMemory();
+            void* data;
+            vkMapMemory(m_Device, *memory, buffer.offset, buffer.size, 0, &data);
+            memcpy(data, uniformBufferObjects.data(), buffer.size);
+            vkUnmapMemory(m_Device, *memory);
+
+            buffer.memory->UnLock();
+        }
     }
 
     void VulkanRenderer::CopyBuffer(VkCommandPool commandPool, VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size)
