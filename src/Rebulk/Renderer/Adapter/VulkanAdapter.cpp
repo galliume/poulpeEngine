@@ -187,6 +187,7 @@ namespace Rbk
                     pushConstants.textureID = data.m_TextureIndex;
                     vkCmdPushConstants(m_CommandBuffers[m_ImageIndex], mesh->m_PipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(constants), &pushConstants);
                     m_Renderer->Draw(m_CommandBuffers[m_ImageIndex], mesh->GetDescriptorSets().at(index), mesh.get(), data, mesh->m_UniformBuffers.at(i).size, m_ImageIndex);
+                    index = m_ImageIndex;
                 }
             }
         }
@@ -232,6 +233,7 @@ namespace Rbk
                 for (uint32_t i = 0; i < mesh->m_UniformBuffers.size(); i++) {
                     index += i * 3;
                     m_Renderer->Draw(m_CommandBuffers[m_ImageIndex], mesh->GetDescriptorSets().at(index), mesh.get(), data, mesh->m_UniformBuffers.at(i).size, m_ImageIndex);
+                    index = m_ImageIndex;
                 }
             }
         }
