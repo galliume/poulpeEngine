@@ -69,6 +69,28 @@ namespace Rbk
 
             imageInfos.emplace_back(imageInfo);
             index++;
+
+            for (uint32_t i = 0; i < data.m_Ubos.size(); i++) {
+                data.m_Ubos[i].view = m_Adapter->GetCamera()->LookAt();
+                //mesh->cameraPos = cameraPos * mesh->ubos[i].view * mesh->ubos[i].model * mesh->ubos[i].proj;
+                data.m_Ubos[i].proj = m_Adapter->GetPerspective();
+            }
+        }
+
+        auto min = 0;
+        auto max = 0;
+
+        for (uint32_t i = 0; i < mesh->m_UniformBuffers.size(); i++) {
+            max = mesh->GetData()->at(0).m_UbosOffset.at(i);
+            auto ubos = std::vector<UniformBufferObject>(mesh->GetData()->at(0).m_Ubos.begin() + min, mesh->GetData()->at(0).m_Ubos.begin() + max);
+
+            m_Adapter->Rdr()->UpdateUniformBuffer(
+                mesh->m_UniformBuffers[i],
+                ubos,
+                ubos.size()
+            );
+
+            min = max;
         }
 
         vkDestroyCommandPool(m_Adapter->Rdr()->GetDevice(), commandPool, nullptr);

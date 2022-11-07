@@ -158,62 +158,47 @@ namespace Rbk
         glm::vec4 cameraPos = m_Camera->GetPos();
 
         //entities !
-        auto entities = [=, &pushConstants]() {
+        std::atomic<uint32_t> drawCall{0};
 
-            BeginRendering(m_CommandBuffersEntities[m_ImageIndex]);
+        auto entities = [=, &pushConstants, &drawCall]() {
 
-            for (std::shared_ptr<Entity> entity : *m_Entities) {
-                std::shared_ptr<Mesh> mesh = std::dynamic_pointer_cast<Mesh>(entity);
+            if (0 < m_Entities->size()) {
+                BeginRendering(m_CommandBuffersEntities[m_ImageIndex]);
+                for (std::shared_ptr<Entity> entity : *m_Entities) {
+                    std::shared_ptr<Mesh> mesh = std::dynamic_pointer_cast<Mesh>(entity);
 
-                if (!mesh) continue;
+                    if (!mesh) continue;
 
-                m_Renderer->BindPipeline(m_CommandBuffersEntities[m_ImageIndex], mesh->m_GraphicsPipeline);
+                    m_Renderer->BindPipeline(m_CommandBuffersEntities[m_ImageIndex], mesh->m_GraphicsPipeline);
 
-                //if (m_HasClicked && mesh->IsHit(m_RayPick)) {
-                //    Rbk::Log::GetLogger()->warn("HIT ! {}", mesh->GetName());
-                //    m_HasClicked = false;
-                //}
+                    //if (m_HasClicked && mesh->IsHit(m_RayPick)) {
+                    //    Rbk::Log::GetLogger()->warn("HIT ! {}", mesh->GetName());
+                    //    m_HasClicked = false;
+                    //}
 
-                uint32_t count = 0;
-                std::vector<Data> chunk{};
+                    uint32_t count = 0;
+                    std::vector<Data> chunk{};
 
-                for (Data& data : *mesh->GetData()) {
-                    for (uint32_t i = 0; i < data.m_Ubos.size(); i++) {
-                        data.m_Ubos[i].view = lookAt;
-                        //mesh->cameraPos = cameraPos * mesh->ubos[i].view * mesh->ubos[i].model * mesh->ubos[i].proj;
-                        data.m_Ubos[i].proj = proj;
-                    }
-                    auto min = 0;
-                    auto max = 0;
+                    for (Data& data : *mesh->GetData()) {
+                        int index = m_ImageIndex;
+                        for (uint32_t i = 0; i < mesh->m_UniformBuffers.size(); i++) {
 
-                    int index = m_ImageIndex;
-                    for (uint32_t i = 0; i < mesh->m_UniformBuffers.size(); i++) {
-                        max = mesh->GetData()->at(0).m_UbosOffset.at(i);
-                        auto ubos = std::vector<UniformBufferObject>(mesh->GetData()->at(0).m_Ubos.begin() + min, mesh->GetData()->at(0).m_Ubos.begin() + max);
-
-                        m_Renderer->UpdateUniformBuffer(
-                            mesh->m_UniformBuffers[i],
-                            ubos,
-                            ubos.size()
-                        );
-
-                        min = max;
-
-                        index += i * 3;
-                        pushConstants.textureID = data.m_TextureIndex;
-                        vkCmdPushConstants(m_CommandBuffersEntities[m_ImageIndex], mesh->m_PipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(constants), &pushConstants);
-                    
-                        m_Renderer->Draw(m_CommandBuffersEntities[m_ImageIndex], mesh->GetDescriptorSets().at(index), mesh.get(), data, mesh->m_UniformBuffers.at(i).size, m_ImageIndex);
-                        index = m_ImageIndex;
+                            index += i * 3;
+                            pushConstants.textureID = data.m_TextureIndex;
+                            vkCmdPushConstants(m_CommandBuffersEntities[m_ImageIndex], mesh->m_PipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(constants), &pushConstants);
+                            drawCall++;
+                            m_Renderer->Draw(m_CommandBuffersEntities[m_ImageIndex], mesh->GetDescriptorSets().at(index), mesh.get(), data, mesh->m_UniformBuffers.at(i).size, m_ImageIndex);
+                            index = m_ImageIndex;
+                        }
                     }
                 }
-            }
 
-            EndRendering(m_CommandBuffersEntities[m_ImageIndex]);
+                EndRendering(m_CommandBuffersEntities[m_ImageIndex]);
+            }
         };
 
         //bbox !
-        auto bbox = [=, &pushConstants]() {
+        auto bbox = [=, &pushConstants, &drawCall]() {
 
             if (0 < m_BoundingBox->size()) {
                 BeginRendering(m_CommandBuffersBbox[m_ImageIndex]);
@@ -247,6 +232,7 @@ namespace Rbk
 
                             index += i * 3;
                             m_Renderer->Draw(m_CommandBuffersBbox[m_ImageIndex], mesh->GetDescriptorSets().at(index), mesh.get(), data, mesh->m_UniformBuffers.at(i).size, m_ImageIndex);
+                            drawCall++;
                             index = m_ImageIndex;
                         }
                     }
@@ -257,7 +243,7 @@ namespace Rbk
         };
 
         //skybox !
-        auto skybox = [=, &pushConstants]() {
+        auto skybox = [=, &pushConstants, &drawCall]() {
             if (m_SkyboxMesh) {
 
                 BeginRendering(m_CommandBuffersSkybox[m_ImageIndex]);
@@ -277,6 +263,7 @@ namespace Rbk
                         );
                         vkCmdPushConstants(m_CommandBuffersSkybox[m_ImageIndex], m_SkyboxMesh->m_PipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(constants), &pushConstants);
                         m_Renderer->Draw(m_CommandBuffersSkybox[m_ImageIndex], m_SkyboxMesh->GetDescriptorSets().at(i), m_SkyboxMesh.get(), skyboxData[0], skyboxData[0].m_Ubos.size(), m_ImageIndex, false);
+                        drawCall++;
                     }
                 }
 
@@ -285,7 +272,7 @@ namespace Rbk
         };
 
         //HUD!
-        auto hud = [=, &pushConstants]() {
+        auto hud = [=, &pushConstants, &drawCall]() {
 
             BeginRendering(m_CommandBuffersHud[m_ImageIndex]);
 
@@ -311,7 +298,7 @@ namespace Rbk
                             data.m_Ubos.size()
                         );
                         m_Renderer->Draw(m_CommandBuffersHud[m_ImageIndex], hudPart->GetDescriptorSets().at(i), hudPart.get(), data, data.m_Ubos.size(), m_ImageIndex);
-
+                        drawCall++;
                     }
                 }
             }
@@ -320,17 +307,17 @@ namespace Rbk
         };
 
         //@todo thread pool
-        std::thread workerE(entities);
-        std::thread workerS(skybox);
-        std::thread workerH(hud);
+        entities();
+        //std::thread workerS(skybox);
+        //std::thread workerH(hud);
 
-        workerE.join();
-        workerS.join();
-        workerH.join();
+        //workerE.join();
+        //workerS.join();
+        //workerH.join();
 
         std::vector<VkCommandBuffer> cmdSubmit{
-            m_CommandBuffersSkybox[m_ImageIndex],
-            m_CommandBuffersHud[m_ImageIndex],
+            //m_CommandBuffersSkybox[m_ImageIndex],
+            //m_CommandBuffersHud[m_ImageIndex],
             m_CommandBuffersEntities[m_ImageIndex]
         };
 
@@ -341,6 +328,7 @@ namespace Rbk
         }
         
         Submit(cmdSubmit);
+        //Rbk::Log::GetLogger()->critical("Draw Call {}", drawCall);
     }
 
     void VulkanAdapter::DrawSplashScreen()

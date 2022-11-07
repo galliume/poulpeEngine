@@ -328,6 +328,7 @@ namespace Rbk
         poolSizes.emplace_back(cp1);
         poolSizes.emplace_back(cp2);
 
+
         VkDescriptorPool skyDescriptorPool = m_Renderer->Rdr()->CreateDescriptorPool(poolSizes, 10);
         m_DescriptorPools.emplace_back(skyDescriptorPool);
         std::shared_ptr<Skybox> skyboxVulkanisator = std::make_shared<Skybox>(
