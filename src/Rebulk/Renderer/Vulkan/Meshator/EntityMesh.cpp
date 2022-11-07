@@ -52,7 +52,6 @@ namespace Rbk
         std::vector<VkDescriptorImageInfo> imageInfos;
 
         uint32_t index = 0;
-        //a cmd pool per entity ?
         auto commandPool = m_Adapter->Rdr()->CreateCommandPool();
 
         for (Data& data : *mesh->GetData()) {

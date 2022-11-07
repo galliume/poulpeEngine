@@ -406,6 +406,11 @@ namespace Rbk {
         vkFeatures13.pipelineCreationCacheControl = VK_TRUE;
         vkFeatures13.pNext = &descriptorIndexing;
 
+        VkPhysicalDeviceShaderDrawParametersFeatures shader_draw_parameters_features = {};
+        shader_draw_parameters_features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_DRAW_PARAMETERS_FEATURES;
+        shader_draw_parameters_features.pNext = &vkFeatures13;
+        shader_draw_parameters_features.shaderDrawParameters = VK_TRUE;
+
         VkDeviceCreateInfo createInfo{};
         createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
         createInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfos.size());
@@ -413,7 +418,7 @@ namespace Rbk {
         createInfo.pEnabledFeatures = &deviceFeatures;
         createInfo.enabledExtensionCount = static_cast<uint32_t>(m_DeviceExtensions.size());
         createInfo.ppEnabledExtensionNames = m_DeviceExtensions.data();
-        createInfo.pNext = &vkFeatures13;
+        createInfo.pNext = &shader_draw_parameters_features;
 
         if (vkCreateDevice(m_PhysicalDevice, &createInfo, nullptr, &m_Device) != VK_SUCCESS) {
             Rbk::Log::GetLogger()->critical("failed to create logical device!");
@@ -1219,7 +1224,7 @@ namespace Rbk {
         return descriptorSet;
     }
 
-    void VulkanRenderer::UpdateDescriptorSets(const std::vector<Buffer>& uniformBuffers, const VkDescriptorSet& descriptorSet, const std::vector<VkDescriptorImageInfo>& imageInfo)
+    void VulkanRenderer::UpdateDescriptorSets(const std::vector<Buffer>& uniformBuffers, const VkDescriptorSet& descriptorSet, const std::vector<VkDescriptorImageInfo>& imageInfo, VkDescriptorType type)
     {
         std::array<VkWriteDescriptorSet, 2> descriptorWrites{};
         std::vector<VkDescriptorBufferInfo> bufferInfos;
@@ -1238,7 +1243,7 @@ namespace Rbk {
         descriptorWrites[0].dstSet = descriptorSet;
         descriptorWrites[0].dstBinding = 0;
         descriptorWrites[0].dstArrayElement = 0;
-        descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        descriptorWrites[0].descriptorType = type;
         descriptorWrites[0].descriptorCount = 1;
         descriptorWrites[0].pBufferInfo = bufferInfos.data();
 
@@ -1436,7 +1441,7 @@ namespace Rbk {
         vkResetCommandPool(m_Device, commandPool, 0);
     }
 
-    void VulkanRenderer::Draw(VkCommandBuffer commandBuffer, VkDescriptorSet descriptorSet, Mesh* mesh, Data data, uint32_t uboCount, uint32_t frameIndex, bool drawIndexed)
+    void VulkanRenderer::Draw(VkCommandBuffer commandBuffer, VkDescriptorSet descriptorSet, Mesh* mesh, Data data, uint32_t uboCount, uint32_t frameIndex, bool drawIndexed, uint32_t index)
     {
         {
             std::lock_guard<std::mutex> guard(m_MutexDraw);
@@ -1462,7 +1467,7 @@ namespace Rbk {
                 vkCmdDrawIndexed(commandBuffer, data.m_Indices.size(), uboCount, 0, 0, 0);
             }
             else {
-                vkCmdDraw(commandBuffer, data.m_Vertices.size(), 1, 0, 0);
+                vkCmdDraw(commandBuffer, data.m_Vertices.size(), 1, 0, index);
             }
         }
     }
@@ -1655,16 +1660,38 @@ namespace Rbk {
         return uniformBuffer;
     }
 
+    Buffer VulkanRenderer::CreateStorageBuffers(uint32_t uniformBuffersCount)
+    {
+        VkDeviceSize bufferSize = sizeof(UniformBufferObject) * uniformBuffersCount;
+        VkBuffer buffer = CreateBuffer(bufferSize, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT);
+        VkMemoryRequirements memRequirements;
+        vkGetBufferMemoryRequirements(m_Device, buffer, &memRequirements);
+
+        auto memoryType = FindMemoryType(memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+        uint32_t size = ((memRequirements.size / memRequirements.alignment) + 1) * memRequirements.alignment;
+        auto deviceMemory = m_DeviceMemoryPool->Get(m_Device, size, memoryType, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT);
+        auto offset = deviceMemory->GetOffset();
+        deviceMemory->BindBufferToMemory(buffer, size);
+
+        Buffer uniformBuffer;
+        uniformBuffer.buffer = std::move(buffer);
+        uniformBuffer.memory = deviceMemory;
+        uniformBuffer.offset = offset;
+        uniformBuffer.size = size;
+
+        return uniformBuffer;
+    }
+
     Buffer VulkanRenderer::CreateCubeUniformBuffers(uint32_t uniformBuffersCount)
     {
         VkDeviceSize bufferSize = sizeof(CubeUniformBufferObject) * uniformBuffersCount;
-        VkBuffer buffer = CreateBuffer(bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT);
+        VkBuffer buffer = CreateBuffer(bufferSize, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
         VkMemoryRequirements memRequirements;
         vkGetBufferMemoryRequirements(m_Device, buffer, &memRequirements);
 
         uint32_t size = ((memRequirements.size / memRequirements.alignment) + 1) * memRequirements.alignment;
         auto memoryType = FindMemoryType(memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-        auto deviceMemory = m_DeviceMemoryPool->Get(m_Device, size, memoryType, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT);
+        auto deviceMemory = m_DeviceMemoryPool->Get(m_Device, size, memoryType, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
         auto offset = deviceMemory->GetOffset();
         deviceMemory->BindBufferToMemory(buffer, size);
 
@@ -1686,6 +1713,21 @@ namespace Rbk {
             void* data;
             vkMapMemory(m_Device, *memory, buffer.offset, buffer.size, 0, &data);
             memcpy(data, uniformBufferObjects.data(), buffer.size);
+            vkUnmapMemory(m_Device, *memory);
+
+            buffer.memory->UnLock();
+        }
+    }
+
+    void VulkanRenderer::UpdateStorageBuffer(Buffer buffer, std::vector<UniformBufferObject> bufferObjects)
+    {
+        {
+            buffer.memory->Lock();
+
+            auto memory = buffer.memory->GetMemory();
+            void* data;
+            vkMapMemory(m_Device, *memory, buffer.offset, buffer.size, 0, &data);
+            memcpy(data, bufferObjects.data(), buffer.size);
             vkUnmapMemory(m_Device, *memory);
 
             buffer.memory->UnLock();

@@ -47,7 +47,7 @@ namespace Rbk {
         VkDescriptorSetLayout CreateDescriptorSetLayout(const std::vector<VkDescriptorSetLayoutBinding>& pBindings, const VkDescriptorSetLayoutCreateFlagBits& flags);
         VkDescriptorSet CreateDescriptorSets(const VkDescriptorPool& descriptorPool, const std::vector<VkDescriptorSetLayout>& descriptorSetLayouts, uint32_t count = 100);
         
-        void UpdateDescriptorSets(const std::vector<Buffer>& uniformBuffers, const VkDescriptorSet& descriptorSet, const std::vector<VkDescriptorImageInfo>& imageInfo);
+        void UpdateDescriptorSets(const std::vector<Buffer>& uniformBuffers, const VkDescriptorSet& descriptorSet, const std::vector<VkDescriptorImageInfo>& imageInfo, VkDescriptorType type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
         
         VkPipelineLayout CreatePipelineLayout(const std::vector<VkDescriptorSet>& descriptorSets, const std::vector<VkDescriptorSetLayout>& descriptorSetLayouts, const std::vector<VkPushConstantRange>& pushConstants);
         VkPipeline CreateGraphicsPipeline(
@@ -95,6 +95,8 @@ namespace Rbk {
         bool HasStencilComponent(VkFormat format);
         VkDeviceSize GetMaxMemoryHeap() { return m_MaxMemoryHeap; }
         void InitMemoryPool();
+        Buffer CreateStorageBuffers(uint32_t uniformBuffersCount);
+        void UpdateStorageBuffer(Buffer buffer, std::vector<UniformBufferObject> bufferObjects);
 
         /**
         * Vulkan drawing functions, in main loop
@@ -111,7 +113,7 @@ namespace Rbk {
         void SetViewPort(VkCommandBuffer commandBuffer);
         void SetScissor(VkCommandBuffer commandBuffer);
         void BindPipeline(const VkCommandBuffer& commandBuffer, const VkPipeline& pipeline);
-        void Draw(VkCommandBuffer commandBuffer, VkDescriptorSet descriptorSet, Mesh* mesh, Data data, uint32_t uboCount, uint32_t frameIndex, bool drawIndexed = true);
+        void Draw(VkCommandBuffer commandBuffer, VkDescriptorSet descriptorSet, Mesh* mesh, Data data, uint32_t uboCount, uint32_t frameIndex, bool drawIndexed = true, uint32_t index = 0);
         uint32_t AcquireNextImageKHR(VkSwapchainKHR swapChain, std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>>& semaphores);
         void QueueSubmit(VkCommandBuffer commandBuffer);
         void QueueSubmit(uint32_t imageIndex, std::vector<VkCommandBuffer> commandBuffers, std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>>& semaphores);

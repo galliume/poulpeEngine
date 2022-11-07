@@ -132,6 +132,7 @@ namespace Rbk
             0.1f,
             100.f
         );
+        m_Perspective[1][1] *= -1;
     }
 
     void VulkanAdapter::SetDeltatime(float deltaTime)
@@ -154,7 +155,6 @@ namespace Rbk
 
         glm::mat4 lookAt = m_Camera->LookAt();
         glm::mat4 proj = m_Perspective;
-        proj[1][1] *= -1;
         glm::vec4 cameraPos = m_Camera->GetPos();
 
         //entities !
@@ -487,14 +487,14 @@ namespace Rbk
         std::vector<VkDescriptorPoolSize> poolSizes{};
         VkDescriptorPoolSize cp1;
         cp1.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        cp1.descriptorCount = 1000;
+        cp1.descriptorCount = 100;
         VkDescriptorPoolSize cp2;
         cp2.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        cp2.descriptorCount = 1000;
+        cp2.descriptorCount = 100;
         poolSizes.emplace_back(cp1);
         poolSizes.emplace_back(cp2);
 
-        VkDescriptorPool imguiPool = m_Renderer->CreateDescriptorPool(poolSizes, 1000);
+        VkDescriptorPool imguiPool = m_Renderer->CreateDescriptorPool(poolSizes, 100);
 
         ImGui_ImplVulkan_InitInfo info = {};
 

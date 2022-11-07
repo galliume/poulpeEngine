@@ -242,14 +242,14 @@ namespace Rbk
         std::vector<VkDescriptorPoolSize> poolSizes{};
         VkDescriptorPoolSize cp1;
         cp1.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        cp1.descriptorCount = 1000;
+        cp1.descriptorCount = 100;
         VkDescriptorPoolSize cp2;
         cp2.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        cp2.descriptorCount = 1000;
+        cp2.descriptorCount = 100;
         poolSizes.emplace_back(cp1);
         poolSizes.emplace_back(cp2);
 
-        VkDescriptorPool descriptorPool = m_Renderer->Rdr()->CreateDescriptorPool(poolSizes, 1000);
+        VkDescriptorPool descriptorPool = m_Renderer->Rdr()->CreateDescriptorPool(poolSizes, 100);
         m_DescriptorPools.emplace_back(descriptorPool);
 
         std::vector<VkPushConstantRange> pushConstants = {};
@@ -277,16 +277,16 @@ namespace Rbk
         std::vector<VkDescriptorPoolSize> poolSizes{};
         VkDescriptorPoolSize cp1;
         cp1.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        cp1.descriptorCount = 1000;
+        cp1.descriptorCount = 10;
         VkDescriptorPoolSize cp2;
         cp2.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        cp2.descriptorCount = 1000;
+        cp2.descriptorCount = 10;
         poolSizes.emplace_back(cp1);
         poolSizes.emplace_back(cp2);
 
         std::vector<std::shared_ptr<Mesh>> hud{};
 
-        VkDescriptorPool HUDDescriptorPool = m_Renderer->Rdr()->CreateDescriptorPool(poolSizes, 1000);
+        VkDescriptorPool HUDDescriptorPool = m_Renderer->Rdr()->CreateDescriptorPool(poolSizes, 10);
         m_DescriptorPools.emplace_back(HUDDescriptorPool);
 
         std::shared_ptr<Grid> gridVulkanisator = std::make_shared<Grid>(
@@ -321,14 +321,14 @@ namespace Rbk
         std::vector<VkDescriptorPoolSize> poolSizes{};
         VkDescriptorPoolSize cp1;
         cp1.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        cp1.descriptorCount = 1000;
+        cp1.descriptorCount = 10;
         VkDescriptorPoolSize cp2;
         cp2.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        cp2.descriptorCount = 1000;
+        cp2.descriptorCount = 10;
         poolSizes.emplace_back(cp1);
         poolSizes.emplace_back(cp2);
 
-        VkDescriptorPool skyDescriptorPool = m_Renderer->Rdr()->CreateDescriptorPool(poolSizes, 1000);
+        VkDescriptorPool skyDescriptorPool = m_Renderer->Rdr()->CreateDescriptorPool(poolSizes, 10);
         m_DescriptorPools.emplace_back(skyDescriptorPool);
         std::shared_ptr<Skybox> skyboxVulkanisator = std::make_shared<Skybox>(
             m_Renderer,

@@ -74,7 +74,6 @@ namespace Rbk
         ubo.model = glm::mat4(0.0f);
         ubo.view = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
         ubo.proj = m_Adapter->GetPerspective();
-        ubo.proj[1][1] *= -1;
 
         auto commandPool = m_Adapter->Rdr()->CreateCommandPool();
 
