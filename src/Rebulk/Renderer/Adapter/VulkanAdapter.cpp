@@ -224,7 +224,7 @@ namespace Rbk
                     for (uint32_t i = 0; i < m_SkyboxMesh->m_UniformBuffers.size(); i++) {
 
                         if (m_SkyboxMesh->HasPushConstants() && nullptr != m_SkyboxMesh->ApplyPushConstants)
-                            m_SkyboxMesh->ApplyPushConstants(m_CommandBuffersHud[m_ImageIndex], m_SkyboxMesh->m_PipelineLayout, shared_from_this(), skyboxData[0]);
+                            m_SkyboxMesh->ApplyPushConstants(m_CommandBuffersSkybox[m_ImageIndex], m_SkyboxMesh->m_PipelineLayout, shared_from_this(), skyboxData[0]);
 
                         m_Renderer->Draw(m_CommandBuffersSkybox[m_ImageIndex], m_SkyboxMesh->GetDescriptorSets().at(i), m_SkyboxMesh.get(), skyboxData[0], skyboxData[0].m_Ubos.size(), m_ImageIndex, false);
                         drawCall++;
@@ -261,7 +261,7 @@ namespace Rbk
 
         //@todo thread pool
         entities();
-        //std::thread workerS(skybox);
+        //skybox();
         //std::thread workerH(hud);
 //        skybox();
       //  hud();

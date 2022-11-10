@@ -18,7 +18,6 @@ namespace Rbk
         glm::vec4 cameraPos;
         glm::vec4 fogColor;
         glm::vec4 lightPos;
-        glm::vec4 rayPick;
         glm::mat4 view;
     };
 

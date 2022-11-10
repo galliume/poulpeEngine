@@ -48,5 +48,5 @@ void main() {
     fragFogDensity = PC.data.z;
     fragFogColor = PC.fogColor.xyz;
     fragLightPos = PC.lightPos.xyz;
-    fragTextureID = 0;
+    fragTextureID = int(PC.data.x);
 }
