@@ -14,13 +14,11 @@ namespace Rbk
 {
     struct constants 
     {
-        uint32_t textureID;
-        glm::vec3 cameraPos;
-        float ambiantLight;
-        float fogDensity;
-        glm::vec3 fogColor;
-        glm::vec3 lightPos;
-        glm::vec3 rayPick;
+        glm::vec4 data;
+        glm::vec4 cameraPos;
+        glm::vec4 fogColor;
+        glm::vec4 lightPos;
+        glm::vec4 rayPick;
         glm::mat4 view;
     };
 
@@ -48,7 +46,7 @@ namespace Rbk
         inline const std::vector<VkDescriptorSet> GetDescriptorSets() const { return m_DescriptorSets; }
 
         void AddUbos(const std::vector<UniformBufferObject>& ubos);
-        std::function<void(VkCommandBuffer commandBuffer, VkPipelineLayout pipelineLayout, std::shared_ptr<VulkanAdapter>, Data& data)> ApplyPushConstants = nullptr;
+        std::function<void(VkCommandBuffer& commandBuffer, VkPipelineLayout& pipelineLayout, std::shared_ptr<VulkanAdapter>, Data& data)> ApplyPushConstants = nullptr;
         
         bool IsDirty() { return m_IsDirty; }
         void SetIsDirty(bool dirty = true) { m_IsDirty = dirty; }

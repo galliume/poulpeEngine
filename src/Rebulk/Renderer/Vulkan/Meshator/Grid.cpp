@@ -95,20 +95,20 @@ namespace Rbk
         mesh->m_DescriptorSets.emplace_back(cdescriptorSet);
 
         Grid::pc pc;
-        pc.nearpoint = 0.1f;//@todo parameterize it
-        pc.farpoint = 50.f;
+        pc.point = glm::vec4(0.1f, 50.f, 0.f, 0.f);
+        pc.view = m_Adapter->GetCamera()->LookAt();
 
-        mesh->ApplyPushConstants = [&pc](VkCommandBuffer commandBuffer, VkPipelineLayout pipelineLayout, std::shared_ptr<VulkanAdapter> adapter, Data& data) {
-            pc.nearpoint = 0.1f;//@todo parameterize it
-            pc.farpoint = 50.f;
-            vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(pc), &pc);
+        mesh->ApplyPushConstants = [&pc](VkCommandBuffer& commandBuffer, VkPipelineLayout& pipelineLayout, std::shared_ptr<VulkanAdapter> adapter, Data& data) {
+            pc.point = glm::vec4(0.1f, 50.f, 0.f, 0.f);
+            pc.view = adapter->GetCamera()->LookAt();
+            vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(Grid::pc), &pc);
         };
         mesh->SetHasPushConstants();
 
         std::vector<VkPushConstantRange> vkPcs = {};
         VkPushConstantRange vkPc;
         vkPc.offset = 0;
-        vkPc.size = sizeof(pc);
+        vkPc.size = sizeof(Grid::pc);
         vkPc.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
         vkPcs.emplace_back(vkPc);
 

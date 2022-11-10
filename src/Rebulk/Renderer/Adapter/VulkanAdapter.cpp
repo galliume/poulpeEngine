@@ -264,13 +264,12 @@ namespace Rbk
         //std::thread workerS(skybox);
         //std::thread workerH(hud);
 //        skybox();
-        //hud();
+      //  hud();
         //workerE.join();
         //workerS.join();
         //workerH.join();
 
         std::vector<VkCommandBuffer> cmdSubmit{
-          //  m_CommandBuffersHud[m_ImageIndex],
             m_CommandBuffersEntities[m_ImageIndex]
         };
 

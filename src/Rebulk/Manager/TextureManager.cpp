@@ -43,7 +43,7 @@ namespace Rbk
                 return;
             }
 
-            stbi_uc* pixels = stbi_load(path.c_str(), &texWidth, &texHeight, &texChannels, STBI_rgb);
+            stbi_uc* pixels = stbi_load(path.c_str(), &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
 
             if (!pixels) {
                 Rbk::Log::GetLogger()->warn("failed to load skybox texture image %s", path);

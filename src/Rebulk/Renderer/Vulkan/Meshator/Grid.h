@@ -14,8 +14,8 @@ namespace Rbk
     {
     struct pc
     {
-        float nearpoint;
-        float farpoint;
+        glm::vec4 point;
+        glm::mat4 view;
     };
     public:
         Grid(

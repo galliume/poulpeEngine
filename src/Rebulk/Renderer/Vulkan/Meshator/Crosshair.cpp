@@ -101,16 +101,16 @@ namespace Rbk
         Crosshair::pc pc;
         pc.textureID = 0;
 
-        mesh->ApplyPushConstants = [&pc](VkCommandBuffer commandBuffer, VkPipelineLayout pipelineLayout, std::shared_ptr<VulkanAdapter> adapter, Data& data) {
+        mesh->ApplyPushConstants = [&pc](VkCommandBuffer& commandBuffer, VkPipelineLayout& pipelineLayout, std::shared_ptr<VulkanAdapter> adapter, Data& data) {
             pc.textureID = VulkanAdapter::s_Crosshair;
-            vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(pc), &pc);
+            vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(Crosshair::pc), &pc);
         };
         mesh->SetHasPushConstants();
 
         std::vector<VkPushConstantRange> vkPcs = {};
         VkPushConstantRange vkPc;
         vkPc.offset = 0;
-        vkPc.size = sizeof(pc);
+        vkPc.size = sizeof(Crosshair::pc);
         vkPc.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
         vkPcs.emplace_back(vkPc);
 

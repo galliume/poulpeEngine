@@ -108,9 +108,9 @@ namespace Rbk
         Splash::pc pc;
         pc.textureID = 0;
 
-        mesh->ApplyPushConstants = [&pc, mesh](VkCommandBuffer commandBuffer, VkPipelineLayout pipelineLayout, std::shared_ptr<VulkanAdapter> adapter, Data& data) {
+        mesh->ApplyPushConstants = [&pc, mesh](VkCommandBuffer& commandBuffer, VkPipelineLayout& pipelineLayout, std::shared_ptr<VulkanAdapter> adapter, Data& data) {
             pc.textureID = mesh->GetNextSpriteIndex();
-            vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(pc), &pc);
+            vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(Splash::pc), &pc);
         };
         mesh->SetHasPushConstants();
 
