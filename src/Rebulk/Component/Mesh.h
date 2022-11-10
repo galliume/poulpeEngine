@@ -21,7 +21,10 @@ namespace Rbk
         glm::vec3 fogColor;
         glm::vec3 lightPos;
         glm::vec3 rayPick;
+        glm::mat4 view;
     };
+
+    class VulkanAdapter;
 
     class Mesh : public Entity
     {
@@ -45,7 +48,7 @@ namespace Rbk
         inline const std::vector<VkDescriptorSet> GetDescriptorSets() const { return m_DescriptorSets; }
 
         void AddUbos(const std::vector<UniformBufferObject>& ubos);
-        std::function<void(VkCommandBuffer commandBuffer, VkPipelineLayout pipelineLayout)> ApplyPushConstants = nullptr;
+        std::function<void(VkCommandBuffer commandBuffer, VkPipelineLayout pipelineLayout, std::shared_ptr<VulkanAdapter>, Data& data)> ApplyPushConstants = nullptr;
         
         bool IsDirty() { return m_IsDirty; }
         void SetIsDirty(bool dirty = true) { m_IsDirty = dirty; }

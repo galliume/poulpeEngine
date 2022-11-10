@@ -43,7 +43,7 @@ namespace Rbk
                 return;
             }
 
-            stbi_uc* pixels = stbi_load(path.c_str(), &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
+            stbi_uc* pixels = stbi_load(path.c_str(), &texWidth, &texHeight, &texChannels, STBI_rgb);
 
             if (!pixels) {
                 Rbk::Log::GetLogger()->warn("failed to load skybox texture image %s", path);
@@ -54,7 +54,7 @@ namespace Rbk
         }
 
         VkImage skyboxImage;
-        uint32_t mipLevels = static_cast<uint32_t>(std::floor(std::log2(std::max(texWidth, texHeight)))) + 1;
+        uint32_t mipLevels = 1;
         VkCommandPool commandPool = m_Renderer->Rdr()->CreateCommandPool();
 
         texWidth = static_cast<uint32_t>(texWidth);
@@ -105,6 +105,7 @@ namespace Rbk
 
         VkImage textureImage;
         uint32_t mipLevels = static_cast<uint32_t>(std::floor(std::log2(std::max(texWidth, texHeight)))) + 1;
+        if (mipLevels > 5) mipLevels = 5;
         VkCommandPool commandPool = m_Renderer->Rdr()->CreateCommandPool();
         VkCommandBuffer commandBuffer = m_Renderer->Rdr()->AllocateCommandBuffers(commandPool)[0];
 

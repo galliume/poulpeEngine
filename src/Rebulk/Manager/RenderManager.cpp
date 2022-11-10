@@ -140,36 +140,23 @@ namespace Rbk
     void RenderManager::LoadData(const std::string& level)
     {
         nlohmann::json appConfig = m_ConfigManager->AppConfig();
-        std::vector<std::thread> threads;
 
-        threads.emplace_back(std::thread([=]() {
-            std::vector<std::future<void>> entityFutures = m_EntityManager->Load(
-                m_ConfigManager->EntityConfig(level)
-            );
+        std::vector<std::future<void>> entityFutures = m_EntityManager->Load(
+            m_ConfigManager->EntityConfig(level)
+        );
 
-            for (auto& future : entityFutures) {
-                future.wait();
-            }
-        }));
-
-        threads.emplace_back(std::thread([=]() {
-            std::future<void> textureFuture = m_TextureManager->Load();
-            textureFuture.wait();
-        }));
-
-        threads.emplace_back(std::thread ([=, &appConfig]() {
-            std::future<void> skyboxFuture = m_TextureManager->LoadSkybox(static_cast<std::string>(appConfig["defaultSkybox"]));
-            skyboxFuture.wait();
-        }));
-
-        threads.emplace_back(std::thread([=]() {
-            std::future<void> shaderFuture = m_ShaderManager->Load(m_ConfigManager->ShaderConfig());
-            shaderFuture.wait();
-        }));
-
-        for (auto& t : threads) {
-            t.join();
+        for (auto& future : entityFutures) {
+            future.wait();
         }
+
+        std::future<void> textureFuture = m_TextureManager->Load();
+        textureFuture.wait();
+
+        std::future<void> skyboxFuture = m_TextureManager->LoadSkybox(static_cast<std::string>(appConfig["defaultSkybox"]));
+        skyboxFuture.wait();
+
+        std::future<void> shaderFuture = m_ShaderManager->Load(m_ConfigManager->ShaderConfig());
+        shaderFuture.wait();
 
         SetIsLoaded();
         m_Renderer->AddEntities(m_EntityManager->GetEntities());
@@ -251,13 +238,6 @@ namespace Rbk
 
         VkDescriptorPool descriptorPool = m_Renderer->Rdr()->CreateDescriptorPool(poolSizes, 100);
         m_DescriptorPools.emplace_back(descriptorPool);
-
-        std::vector<VkPushConstantRange> pushConstants = {};
-        VkPushConstantRange vkPushconstants;
-        vkPushconstants.offset = 0;
-        vkPushconstants.size = sizeof(constants);
-        vkPushconstants.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-        pushConstants.emplace_back(vkPushconstants);
 
         std::shared_ptr<EntityMesh> vulkanisator = std::make_shared<EntityMesh>(
             m_Renderer,

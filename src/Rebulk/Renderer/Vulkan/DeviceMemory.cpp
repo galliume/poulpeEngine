@@ -52,7 +52,7 @@ namespace Rbk
         }
     }
 
-    void DeviceMemory::BindBufferToMemory(VkBuffer buffer, VkDeviceSize size)
+    void DeviceMemory::BindBufferToMemory(VkBuffer& buffer, VkDeviceSize size)
     {
         vkBindBufferMemory(m_Device, buffer, *m_Memory, m_Offset);
         m_Offset += size;
@@ -62,7 +62,7 @@ namespace Rbk
         }
     }
 
-    void DeviceMemory::BindImageToMemory(VkImage image, VkDeviceSize size)
+    void DeviceMemory::BindImageToMemory(VkImage& image, VkDeviceSize size)
     {
         vkBindImageMemory(m_Device, image, *m_Memory, m_Offset);
         m_Offset += size;

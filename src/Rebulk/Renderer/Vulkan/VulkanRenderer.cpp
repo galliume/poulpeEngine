@@ -1704,7 +1704,7 @@ namespace Rbk {
         return uniformBuffer;
     }
 
-    void VulkanRenderer::UpdateUniformBuffer(Buffer buffer, std::vector<UniformBufferObject> uniformBufferObjects, uint32_t uniformBuffersCount)
+    void VulkanRenderer::UpdateUniformBuffer(Buffer& buffer, std::vector<UniformBufferObject> uniformBufferObjects, uint32_t uniformBuffersCount)
     {
         {
             buffer.memory->Lock();
@@ -1824,7 +1824,10 @@ namespace Rbk {
         imageInfo.samples = numSamples;
         imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-        if (vkCreateImage(m_Device, &imageInfo, nullptr, &image) != VK_SUCCESS) {
+        VkResult result;
+        result = vkCreateImage(m_Device, &imageInfo, nullptr, &image);
+
+        if (result != VK_SUCCESS) {
             throw std::runtime_error("failed to create image!");
         }
 
@@ -1844,7 +1847,7 @@ namespace Rbk {
         imageInfo.extent.width = width;
         imageInfo.extent.height = height;
         imageInfo.extent.depth = 1;
-        imageInfo.mipLevels = mipLevels;
+        imageInfo.mipLevels = 1;
         imageInfo.arrayLayers = 6;
         imageInfo.format = format;
         imageInfo.tiling = tiling;
@@ -1866,7 +1869,7 @@ namespace Rbk {
         deviceMemory->BindImageToMemory(image, size);
     }
 
-    void VulkanRenderer::CreateTextureImage(VkCommandBuffer commandBuffer, stbi_uc* pixels, uint32_t texWidth, uint32_t texHeight, uint32_t mipLevels, VkImage& textureImage, VkFormat format)
+    void VulkanRenderer::CreateTextureImage(VkCommandBuffer& commandBuffer, stbi_uc* pixels, uint32_t texWidth, uint32_t texHeight, uint32_t mipLevels, VkImage& textureImage, VkFormat format)
     {
         VkDeviceSize imageSize = texWidth * texHeight * 4;
         VkBuffer buffer = CreateBuffer(imageSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT);
@@ -1892,13 +1895,13 @@ namespace Rbk {
         );
 
         AddPipelineBarriers(commandBuffer, { renderBarrier }, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_DEPENDENCY_BY_REGION_BIT);
-        CopyBufferToImage(commandBuffer, buffer, textureImage, static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight));
+        CopyBufferToImage(commandBuffer, buffer, textureImage, static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight), mipLevels, offset);
         GenerateMipmaps(commandBuffer, format, textureImage, texWidth, texHeight, mipLevels);
         EndCommandBuffer(commandBuffer);
         QueueSubmit(commandBuffer);
     }
 
-    void VulkanRenderer::CreateSkyboxTextureImage(VkCommandBuffer commandBuffer, std::vector<stbi_uc*>skyboxPixels, uint32_t texWidth, uint32_t texHeight, uint32_t mipLevels, VkImage& textureImage, VkFormat format)
+    void VulkanRenderer::CreateSkyboxTextureImage(VkCommandBuffer& commandBuffer, std::vector<stbi_uc*>& skyboxPixels, uint32_t texWidth, uint32_t texHeight, uint32_t mipLevels, VkImage& textureImage, VkFormat format)
     {
         VkDeviceSize imageSize = texWidth * texHeight * 4 * 6;
         VkBuffer buffer = CreateBuffer(imageSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT);
@@ -1912,7 +1915,7 @@ namespace Rbk {
         deviceMemory->BindBufferToMemory(buffer, size);
 
         stbi_uc* data;
-        VkDeviceSize layerSize = size / 6;
+        VkDeviceSize layerSize = imageSize / 6;
         vkMapMemory(m_Device, *deviceMemory->GetMemory(), offset, size, 0, (void**)&data);
 
         for (uint32_t i = 0; i < skyboxPixels.size(); i++) {
@@ -1930,7 +1933,7 @@ namespace Rbk {
         renderBarrier.subresourceRange.levelCount = mipLevels;
 
         AddPipelineBarriers(commandBuffer, { renderBarrier }, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_DEPENDENCY_BY_REGION_BIT);
-        CopyBufferToImageSkybox(commandBuffer, buffer, textureImage, static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight), skyboxPixels, mipLevels, layerSize);
+        CopyBufferToImageSkybox(commandBuffer, buffer, textureImage, texWidth, texHeight, skyboxPixels, mipLevels, imageSize/6, offset);
         GenerateMipmaps(commandBuffer, format, textureImage, texWidth, texHeight, mipLevels, 6);
         EndCommandBuffer(commandBuffer);
         QueueSubmit(commandBuffer);
@@ -2032,7 +2035,7 @@ namespace Rbk {
         );
     }
 
-    void VulkanRenderer::CopyBufferToImage(VkCommandBuffer commandBuffer, VkBuffer buffer, VkImage image, uint32_t width, uint32_t height)
+    void VulkanRenderer::CopyBufferToImage(VkCommandBuffer& commandBuffer, VkBuffer& buffer, VkImage& image, uint32_t width, uint32_t height, uint32_t mipLevels, uint32_t bufferOffset)
     {
         VkBufferImageCopy region{};
         region.bufferOffset = 0;
@@ -2050,7 +2053,7 @@ namespace Rbk {
         vkCmdCopyBufferToImage(commandBuffer, buffer, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
     }
 
-    void VulkanRenderer::CopyBufferToImageSkybox(VkCommandBuffer commandBuffer, VkBuffer buffer, VkImage image, uint32_t width, uint32_t height, std::vector<stbi_uc*>skyboxPixels, uint32_t mipLevels, uint64_t offset)
+    void VulkanRenderer::CopyBufferToImageSkybox(VkCommandBuffer& commandBuffer, VkBuffer& buffer, VkImage& image, uint32_t width, uint32_t height, std::vector<stbi_uc*>skyboxPixels, uint32_t mipLevels, uint32_t layerSize, uint32_t bufferOffset)
     {
         std::vector<VkBufferImageCopy> bufferCopyRegions;
 
@@ -2059,7 +2062,7 @@ namespace Rbk {
             for (uint32_t mipLevel = 0; mipLevel < mipLevels; mipLevel++) {
 
                 VkBufferImageCopy region{};
-                region.bufferOffset = offset * i;
+                region.bufferOffset = layerSize * i;
                 region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
                 region.imageSubresource.mipLevel = mipLevel;
                 region.imageSubresource.baseArrayLayer = i;

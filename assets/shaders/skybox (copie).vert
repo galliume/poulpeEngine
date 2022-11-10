@@ -25,18 +25,17 @@ layout(push_constant) uniform constants
     float fogDensity;
     vec3 fogColor;
     vec4 lightPos;
-    mat4 view;
 } PC;
 
 void main() 
 {
     fragTexCoord = pos.xyz;
     //gl_Position = vec4(pos.xyz, 1.0);
-    vec4 p = ubo.proj * PC.view * vec4(pos, 1.0);
+    vec4 p = ubo.proj * ubo.view * vec4(pos, 1.0);
     gl_Position = p.xyww;
     fragAmbiantLight = PC.ambiantLight;
     fragFogDensity = PC.fogDensity;
     fragModelPos = gl_Position;
-    fragCameraPos = ubo.proj * PC.view * ubo.model * PC.cameraPos;
+    fragCameraPos = ubo.proj * ubo.view * ubo.model * PC.cameraPos;
     fragFogColor = PC.fogColor;
 }

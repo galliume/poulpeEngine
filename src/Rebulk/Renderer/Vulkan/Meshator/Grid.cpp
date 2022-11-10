@@ -98,7 +98,7 @@ namespace Rbk
         pc.nearpoint = 0.1f;//@todo parameterize it
         pc.farpoint = 50.f;
 
-        mesh->ApplyPushConstants = [&pc](VkCommandBuffer commandBuffer, VkPipelineLayout pipelineLayout) {
+        mesh->ApplyPushConstants = [&pc](VkCommandBuffer commandBuffer, VkPipelineLayout pipelineLayout, std::shared_ptr<VulkanAdapter> adapter, Data& data) {
             pc.nearpoint = 0.1f;//@todo parameterize it
             pc.farpoint = 50.f;
             vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(pc), &pc);
@@ -152,6 +152,18 @@ namespace Rbk
             true, true, true, true,
             VulkanAdapter::s_PolygoneMode
         );
+
+
+        for (uint32_t i = 0; i < mesh->m_UniformBuffers.size(); i++) {
+            gridData.m_Ubos[i].view = m_Adapter->GetCamera()->LookAt();
+            gridData.m_Ubos[i].proj = m_Adapter->GetPerspective();
+
+            m_Adapter->Rdr()->UpdateUniformBuffer(
+                mesh->m_UniformBuffers[i],
+                gridData.m_Ubos,
+                gridData.m_Ubos.size()
+            );
+        }
 
         mesh->GetData()->emplace_back(gridData);
     }

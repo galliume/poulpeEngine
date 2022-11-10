@@ -5,7 +5,7 @@
 			"textures": ["minecraft_grass"],
 			"shader": "main",
 			"positions": [
-				{"x": -0.20, "y": -0.2, "z": -0.20}
+				{"x": -0.20, "y": 1.0, "z": -0.20}
 			],
 			"scales": [
 				{"x": 0.1, "y": 0.1, "z": 0.1}
@@ -21,7 +21,7 @@
 				"z": 0
 			},
 			"form": "square",
-			"squarePadding": [{"x" : [-50, 50], "y": [-50, 50]}]
+			"squarePadding": [{"x" : [-2, 2], "y": [-2, 2]}]
 		}
 	}
 }

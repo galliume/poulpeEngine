@@ -5,7 +5,7 @@ namespace Rbk
 {
     void Camera::Init()
     {
-        m_Pos = glm::vec3(0.0f, 2.0f, 3.0f);
+        m_Pos = glm::vec3(0.0f, 0.5f, 1.5f);
         m_Target = glm::vec3(0.0f, 0.0f, 0.0f);
         m_Direction = glm::normalize(m_Pos - m_Target);
         m_Up = glm::vec3(0.0f, 10.0f, 0.0f);
@@ -15,9 +15,9 @@ namespace Rbk
         m_CameraFront = glm::vec3(0.0f, 0.0f, -10.0f);
 
         m_View = glm::lookAt(
-            glm::vec3(0.0f, 0.0f, 3.0f),
-            glm::vec3(0.0f, 0.0f, 0.0f),
-            glm::vec3(0.0f, 1.0f, 0.0f)
+            glm::vec3(1.0f, 0.0f, 0.0f),
+            glm::vec3(0.0f, 1.0f, 0.0f),
+            glm::vec3(0.0f, 0.0f, 1.0f)
         );
     }
 

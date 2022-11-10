@@ -72,7 +72,6 @@ namespace Rbk
 
             for (uint32_t i = 0; i < data.m_Ubos.size(); i++) {
                 data.m_Ubos[i].view = m_Adapter->GetCamera()->LookAt();
-                //mesh->cameraPos = cameraPos * mesh->ubos[i].view * mesh->ubos[i].model * mesh->ubos[i].proj;
                 data.m_Ubos[i].proj = m_Adapter->GetPerspective();
             }
         }
@@ -82,7 +81,7 @@ namespace Rbk
 
         for (uint32_t i = 0; i < mesh->m_UniformBuffers.size(); i++) {
             max = mesh->GetData()->at(0).m_UbosOffset.at(i);
-            auto ubos = std::vector<UniformBufferObject>(mesh->GetData()->at(0).m_Ubos.begin() + min, mesh->GetData()->at(0).m_Ubos.begin() + max);
+            const auto ubos = std::vector<UniformBufferObject>(mesh->GetData()->at(0).m_Ubos.begin() + min, mesh->GetData()->at(0).m_Ubos.begin() + max);
 
             m_Adapter->Rdr()->UpdateUniformBuffer(
                 mesh->m_UniformBuffers[i],
@@ -125,16 +124,38 @@ namespace Rbk
             }
         }
 
-        std::vector<VkPushConstantRange> pushConstants = {};
-        VkPushConstantRange vkPushconstants;
-        vkPushconstants.offset = 0;
-        vkPushconstants.size = sizeof(constants);
-        vkPushconstants.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+        constants pushConstants;
+        pushConstants.textureID = 0;
+        pushConstants.cameraPos = m_Adapter->GetCamera()->GetPos();
+        pushConstants.ambiantLight = Rbk::VulkanAdapter::s_AmbiantLight;
+        pushConstants.fogDensity = Rbk::VulkanAdapter::s_FogDensity;
+        pushConstants.fogColor = glm::vec3({ Rbk::VulkanAdapter::s_FogColor[0].load(), Rbk::VulkanAdapter::s_FogColor[1].load(), Rbk::VulkanAdapter::s_FogColor[2].load() });
+        pushConstants.lightPos = m_Adapter->GetLights().at(0);
+        pushConstants.view = m_Adapter->GetCamera()->LookAt();
 
-        pushConstants.emplace_back(vkPushconstants);
+        mesh->ApplyPushConstants = [=, &mesh](VkCommandBuffer commandBuffer, VkPipelineLayout pipelineLayout, std::shared_ptr<VulkanAdapter> adapter, const Data& data) {
+            constants pushConstants;
+            pushConstants.textureID = data.m_TextureIndex;
+            pushConstants.cameraPos = adapter->GetCamera()->GetPos();
+            pushConstants.ambiantLight = Rbk::VulkanAdapter::s_AmbiantLight;
+            pushConstants.fogDensity = Rbk::VulkanAdapter::s_FogDensity;
+            pushConstants.fogColor = glm::vec3({ Rbk::VulkanAdapter::s_FogColor[0].load(), Rbk::VulkanAdapter::s_FogColor[1].load(), Rbk::VulkanAdapter::s_FogColor[2].load() });
+            pushConstants.lightPos = adapter->GetLights().at(0);
+            pushConstants.view = adapter->GetCamera()->LookAt();
+            vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(pushConstants), &pushConstants);
+        };
+
+        mesh->SetHasPushConstants();
+
         std::vector<VkDescriptorSetLayout>dSetLayout = { desriptorSetLayout };
 
-        mesh->m_PipelineLayout = m_Adapter->Rdr()->CreatePipelineLayout(mesh->m_DescriptorSets, dSetLayout, pushConstants);
+        std::vector<VkPushConstantRange> vkPcs = {};
+        VkPushConstantRange vkPc;
+        vkPc.offset = 0;
+        vkPc.size = sizeof(pushConstants);
+        vkPc.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+        vkPcs.emplace_back(vkPc);
+        mesh->m_PipelineLayout = m_Adapter->Rdr()->CreatePipelineLayout(mesh->m_DescriptorSets, dSetLayout, vkPcs);
 
         VkVertexInputBindingDescription bDesc = Vertex::GetBindingDescription();
         std::vector<VkPipelineShaderStageCreateInfo>shadersStageInfos;
@@ -171,7 +192,7 @@ namespace Rbk
             true, true, true, true,
             VulkanAdapter::s_PolygoneMode
         );
-        
+
         if (m_EntityManager->ShowBBox()) {
             CreateBBoxEntity(mesh);
         }
@@ -223,6 +244,11 @@ namespace Rbk
                 data.m_Indices = indices;
                 data.m_Vertices = vertices;
                 data.m_Ubos.emplace_back(ubo);
+
+                for (uint32_t i = 0; i < data.m_Ubos.size(); i++) {
+                    data.m_Ubos[i].view = m_Adapter->GetCamera()->LookAt();
+                    data.m_Ubos[i].proj = m_Adapter->GetPerspective();
+                }
 
                 bbox->SetName("bbox_" + mesh->GetData()->at(i).m_Name);
                 bbox->SetShaderName("bbox");
@@ -335,6 +361,22 @@ namespace Rbk
                         true, true, true, true,
                         VK_POLYGON_MODE_LINE
                     );
+                }
+
+                auto min = 0;
+                auto max = 0;
+
+                for (uint32_t i = 0; i < mesh->m_UniformBuffers.size(); i++) {
+                    max = mesh->GetData()->at(0).m_UbosOffset.at(i);
+                    const auto ubos = std::vector<UniformBufferObject>(mesh->GetData()->at(0).m_Ubos.begin() + min, mesh->GetData()->at(0).m_Ubos.begin() + max);
+
+                    m_Adapter->Rdr()->UpdateUniformBuffer(
+                        mesh->m_UniformBuffers[i],
+                        ubos,
+                        ubos.size()
+                    );
+
+                    min = max;
                 }
 
                 m_EntityManager->AddBBox(bbox);

@@ -108,7 +108,7 @@ namespace Rbk
         Splash::pc pc;
         pc.textureID = 0;
 
-        mesh->ApplyPushConstants = [&pc, mesh](VkCommandBuffer commandBuffer, VkPipelineLayout pipelineLayout) {
+        mesh->ApplyPushConstants = [&pc, mesh](VkCommandBuffer commandBuffer, VkPipelineLayout pipelineLayout, std::shared_ptr<VulkanAdapter> adapter, Data& data) {
             pc.textureID = mesh->GetNextSpriteIndex();
             vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(pc), &pc);
         };
@@ -161,6 +161,22 @@ namespace Rbk
             true, true, true, true,
             VulkanAdapter::s_PolygoneMode
         );
+
+        for (Data& data : *mesh->GetData()) {
+
+            for (uint32_t i = 0; i < mesh->m_UniformBuffers.size(); i++) {
+                data.m_Ubos[i].view = m_Adapter->GetCamera()->LookAt();
+                data.m_Ubos[i].proj = m_Adapter->GetPerspective();
+            }
+
+            for (uint32_t i = 0; i < mesh->m_UniformBuffers.size(); i++) {
+                m_Adapter->Rdr()->UpdateUniformBuffer(
+                    mesh->m_UniformBuffers[i],
+                    data.m_Ubos,
+                    data.m_Ubos.size()
+                );
+            }
+        }
 
         mesh->GetData()->emplace_back(data);
     }

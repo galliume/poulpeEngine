@@ -13,8 +13,8 @@ namespace Rbk
             VkDeviceSize maxSize
         );
 
-        void BindBufferToMemory(VkBuffer buffer, VkDeviceSize size);
-        void BindImageToMemory(VkImage image, VkDeviceSize size);
+        void BindBufferToMemory(VkBuffer& buffer, VkDeviceSize size);
+        void BindImageToMemory(VkImage& image, VkDeviceSize size);
         bool IsFull() { return m_IsFull; }
         uint32_t GetOffset() { return m_Offset; }
         std::shared_ptr<VkDeviceMemory> GetMemory();

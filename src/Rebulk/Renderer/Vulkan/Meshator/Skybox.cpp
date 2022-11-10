@@ -120,17 +120,29 @@ namespace Rbk
         m_Adapter->Rdr()->UpdateDescriptorSets(mesh->m_UniformBuffers, skyDescriptorSet, { skyDescriptorImageInfo });
         mesh->m_DescriptorSets.emplace_back(skyDescriptorSet);
 
-        std::vector<VkPushConstantRange> pushConstants = {};
-        VkPushConstantRange vkPushconstants;
-        vkPushconstants.offset = 0;
-        vkPushconstants.size = sizeof(constants);
-        vkPushconstants.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+        mesh->ApplyPushConstants = [=, &mesh](VkCommandBuffer commandBuffer, VkPipelineLayout pipelineLayout, std::shared_ptr<VulkanAdapter> adapter, const Data& data) {
+            constants pushConstants;
+            pushConstants.textureID = data.m_TextureIndex;
+            pushConstants.cameraPos = adapter->GetCamera()->GetPos();
+            pushConstants.ambiantLight = Rbk::VulkanAdapter::s_AmbiantLight;
+            pushConstants.fogDensity = Rbk::VulkanAdapter::s_FogDensity;
+            pushConstants.fogColor = glm::vec3({ Rbk::VulkanAdapter::s_FogColor[0].load(), Rbk::VulkanAdapter::s_FogColor[1].load(), Rbk::VulkanAdapter::s_FogColor[2].load() });
+            pushConstants.lightPos = adapter->GetLights().at(0);
+            pushConstants.view = adapter->GetCamera()->LookAt();
+            vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(pushConstants), &pushConstants);
+        };
 
-        pushConstants.emplace_back(vkPushconstants);
+        mesh->SetHasPushConstants();
+
         std::vector<VkDescriptorSetLayout>dSetLayout = { skyDesriptorSetLayout };
 
-        mesh->m_PipelineLayout = m_Adapter->Rdr()->CreatePipelineLayout(mesh->m_DescriptorSets, dSetLayout, pushConstants);
-
+        std::vector<VkPushConstantRange> vkPcs = {};
+        VkPushConstantRange vkPc;
+        vkPc.offset = 0;
+        vkPc.size = sizeof(constants);
+        vkPc.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+        vkPcs.emplace_back(vkPc);
+        mesh->m_PipelineLayout = m_Adapter->Rdr()->CreatePipelineLayout(mesh->m_DescriptorSets, dSetLayout, vkPcs);
         std::string shaderName = "skybox";
 
         VkVertexInputBindingDescription bDesc = Vertex::GetBindingDescription();
@@ -168,6 +180,17 @@ namespace Rbk
             true, true, true, true,
             VulkanAdapter::s_PolygoneMode
         );
+
+        glm::mat4 skybowView = m_Adapter->GetCamera()->LookAt();
+
+        for (uint32_t i = 0; i < mesh->m_UniformBuffers.size(); i++) {
+            data.m_Ubos[i].view = skybowView;
+            m_Adapter->Rdr()->UpdateUniformBuffer(
+                mesh->m_UniformBuffers[i],
+                data.m_Ubos,
+                1
+            );
+        }
 
         mesh->GetData()->emplace_back(data);
         mesh->SetIsDirty(false);

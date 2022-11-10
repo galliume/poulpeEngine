@@ -35,7 +35,7 @@ layout(push_constant) uniform constants
     float fogDensity;
     vec3 fogColor;
     vec4 lightPos;
-	
+    mat4 view;	
 } PC;
 
 void main() {

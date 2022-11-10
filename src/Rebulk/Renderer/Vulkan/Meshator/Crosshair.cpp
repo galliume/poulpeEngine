@@ -101,7 +101,7 @@ namespace Rbk
         Crosshair::pc pc;
         pc.textureID = 0;
 
-        mesh->ApplyPushConstants = [&pc](VkCommandBuffer commandBuffer, VkPipelineLayout pipelineLayout) {
+        mesh->ApplyPushConstants = [&pc](VkCommandBuffer commandBuffer, VkPipelineLayout pipelineLayout, std::shared_ptr<VulkanAdapter> adapter, Data& data) {
             pc.textureID = VulkanAdapter::s_Crosshair;
             vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(pc), &pc);
         };
@@ -154,6 +154,17 @@ namespace Rbk
             true, true, true, true,
             VulkanAdapter::s_PolygoneMode
         );
+
+        for (uint32_t i = 0; i < mesh->m_UniformBuffers.size(); i++) {
+            crossHairData.m_Ubos[i].view = m_Adapter->GetCamera()->LookAt();
+            crossHairData.m_Ubos[i].proj = m_Adapter->GetPerspective();
+
+            m_Adapter->Rdr()->UpdateUniformBuffer(
+                mesh->m_UniformBuffers[i],
+                crossHairData.m_Ubos,
+                crossHairData.m_Ubos.size()
+            );
+        }
 
         mesh->GetData()->emplace_back(crossHairData);
     }

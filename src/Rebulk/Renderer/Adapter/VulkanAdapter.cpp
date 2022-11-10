@@ -145,22 +145,10 @@ namespace Rbk
         ShouldRecreateSwapChain();
         m_ImageIndex = m_Renderer->AcquireNextImageKHR(m_SwapChain, m_Semaphores);
 
-        constants pushConstants;
-        pushConstants.cameraPos = m_Camera->GetPos();
-        pushConstants.ambiantLight = Rbk::VulkanAdapter::s_AmbiantLight;
-        pushConstants.fogDensity = Rbk::VulkanAdapter::s_FogDensity;
-        pushConstants.fogColor = glm::vec3({ Rbk::VulkanAdapter::s_FogColor[0].load(), Rbk::VulkanAdapter::s_FogColor[1].load(), Rbk::VulkanAdapter::s_FogColor[2].load() });
-        pushConstants.lightPos = m_LightsPos.at(0);
-        pushConstants.rayPick = m_RayPick;
-
-        glm::mat4 lookAt = m_Camera->LookAt();
-        glm::mat4 proj = m_Perspective;
-        glm::vec4 cameraPos = m_Camera->GetPos();
-
         //entities !
         std::atomic<uint32_t> drawCall{0};
 
-        auto entities = [=, &pushConstants, &drawCall]() {
+        auto entities = [=, &drawCall]() {
 
             if (0 < m_Entities->size()) {
                 BeginRendering(m_CommandBuffersEntities[m_ImageIndex]);
@@ -176,18 +164,17 @@ namespace Rbk
                     //    m_HasClicked = false;
                     //}
 
-                    uint32_t count = 0;
-                    std::vector<Data> chunk{};
-
                     for (Data& data : *mesh->GetData()) {
+
                         int index = m_ImageIndex;
                         for (uint32_t i = 0; i < mesh->m_UniformBuffers.size(); i++) {
-
                             index += i * 3;
-                            pushConstants.textureID = data.m_TextureIndex;
-                            vkCmdPushConstants(m_CommandBuffersEntities[m_ImageIndex], mesh->m_PipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(constants), &pushConstants);
-                            drawCall++;
+
+                            if (mesh->HasPushConstants() && nullptr != mesh->ApplyPushConstants)
+                                mesh->ApplyPushConstants(m_CommandBuffersEntities[m_ImageIndex], mesh->m_PipelineLayout, shared_from_this(), data);
+
                             m_Renderer->Draw(m_CommandBuffersEntities[m_ImageIndex], mesh->GetDescriptorSets().at(index), mesh.get(), data, mesh->m_UniformBuffers.at(i).size, m_ImageIndex);
+                            drawCall++;
                             index = m_ImageIndex;
                         }
                     }
@@ -198,7 +185,7 @@ namespace Rbk
         };
 
         //bbox !
-        auto bbox = [=, &pushConstants, &drawCall]() {
+        auto bbox = [=, &drawCall]() {
 
             if (0 < m_BoundingBox->size()) {
                 BeginRendering(m_CommandBuffersBbox[m_ImageIndex]);
@@ -210,27 +197,8 @@ namespace Rbk
                     m_Renderer->BindPipeline(m_CommandBuffersBbox[m_ImageIndex], mesh->m_GraphicsPipeline);
 
                     for (Data& data : *mesh->GetData()) {
-                        for (uint32_t i = 0; i < data.m_Ubos.size(); i++) {
-                            data.m_Ubos[i].view = lookAt;
-                            data.m_Ubos[i].proj = proj;
-                        }
-                        auto min = 0;
-                        auto max = 0;
-
                         int index = m_ImageIndex;
                         for (uint32_t i = 0; i < mesh->m_UniformBuffers.size(); i++) {
-                            max = mesh->GetData()->at(0).m_UbosOffset.at(i);
-                            auto ubos = std::vector<UniformBufferObject>(mesh->GetData()->at(0).m_Ubos.begin() + min, mesh->GetData()->at(0).m_Ubos.begin() + max);
-
-                            m_Renderer->UpdateUniformBuffer(
-                                mesh->m_UniformBuffers[i],
-                                ubos,
-                                ubos.size()
-                            );
-
-                            min = max;
-
-                            index += i * 3;
                             m_Renderer->Draw(m_CommandBuffersBbox[m_ImageIndex], mesh->GetDescriptorSets().at(index), mesh.get(), data, mesh->m_UniformBuffers.at(i).size, m_ImageIndex);
                             drawCall++;
                             index = m_ImageIndex;
@@ -243,7 +211,7 @@ namespace Rbk
         };
 
         //skybox !
-        auto skybox = [=, &pushConstants, &drawCall]() {
+        auto skybox = [=, &drawCall]() {
             if (m_SkyboxMesh) {
 
                 BeginRendering(m_CommandBuffersSkybox[m_ImageIndex]);
@@ -251,17 +219,13 @@ namespace Rbk
                 std::vector<Rbk::Data> skyboxData = *m_SkyboxMesh->GetData();
 
                 if (!skyboxData.empty()) {
-                    glm::mat4 skybowView = glm::mat4(glm::mat3(lookAt));
                     m_Renderer->BindPipeline(m_CommandBuffersSkybox[m_ImageIndex], m_SkyboxMesh->m_GraphicsPipeline);
 
                     for (uint32_t i = 0; i < m_SkyboxMesh->m_UniformBuffers.size(); i++) {
-                        skyboxData[0].m_Ubos[i].view = skybowView;
-                        m_Renderer->UpdateUniformBuffer(
-                            m_SkyboxMesh->m_UniformBuffers[i],
-                            { skyboxData[0].m_Ubos[i] },
-                            1
-                        );
-                        vkCmdPushConstants(m_CommandBuffersSkybox[m_ImageIndex], m_SkyboxMesh->m_PipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(constants), &pushConstants);
+
+                        if (m_SkyboxMesh->HasPushConstants() && nullptr != m_SkyboxMesh->ApplyPushConstants)
+                            m_SkyboxMesh->ApplyPushConstants(m_CommandBuffersHud[m_ImageIndex], m_SkyboxMesh->m_PipelineLayout, shared_from_this(), skyboxData[0]);
+
                         m_Renderer->Draw(m_CommandBuffersSkybox[m_ImageIndex], m_SkyboxMesh->GetDescriptorSets().at(i), m_SkyboxMesh.get(), skyboxData[0], skyboxData[0].m_Ubos.size(), m_ImageIndex, false);
                         drawCall++;
                     }
@@ -272,7 +236,7 @@ namespace Rbk
         };
 
         //HUD!
-        auto hud = [=, &pushConstants, &drawCall]() {
+        auto hud = [=, &drawCall]() {
 
             BeginRendering(m_CommandBuffersHud[m_ImageIndex]);
 
@@ -281,22 +245,11 @@ namespace Rbk
                 if (!hudPart || !hudPart->IsVisible()) continue;
                 m_Renderer->BindPipeline(m_CommandBuffersHud[m_ImageIndex], hudPart->m_GraphicsPipeline);
 
-                if (hudPart->HasPushConstants() && nullptr != hudPart->ApplyPushConstants)
-                    hudPart->ApplyPushConstants(m_CommandBuffersHud[m_ImageIndex], hudPart->m_PipelineLayout);
-
                 for (Data& data : *hudPart->GetData()) {
+                    if (hudPart->HasPushConstants() && nullptr != hudPart->ApplyPushConstants)
+                        hudPart->ApplyPushConstants(m_CommandBuffersHud[m_ImageIndex], hudPart->m_PipelineLayout, shared_from_this(), data);
 
                     for (uint32_t i = 0; i < hudPart->m_UniformBuffers.size(); i++) {
-                        data.m_Ubos[i].view = lookAt;
-                        data.m_Ubos[i].proj = proj;
-                    }
-
-                    for (uint32_t i = 0; i < hudPart->m_UniformBuffers.size(); i++) {
-                        m_Renderer->UpdateUniformBuffer(
-                            hudPart->m_UniformBuffers[i],
-                            data.m_Ubos,
-                            data.m_Ubos.size()
-                        );
                         m_Renderer->Draw(m_CommandBuffersHud[m_ImageIndex], hudPart->GetDescriptorSets().at(i), hudPart.get(), data, data.m_Ubos.size(), m_ImageIndex);
                         drawCall++;
                     }
@@ -310,14 +263,14 @@ namespace Rbk
         entities();
         //std::thread workerS(skybox);
         //std::thread workerH(hud);
-
+//        skybox();
+        //hud();
         //workerE.join();
         //workerS.join();
         //workerH.join();
 
         std::vector<VkCommandBuffer> cmdSubmit{
-            //m_CommandBuffersSkybox[m_ImageIndex],
-            //m_CommandBuffersHud[m_ImageIndex],
+          //  m_CommandBuffersHud[m_ImageIndex],
             m_CommandBuffersEntities[m_ImageIndex]
         };
 
@@ -338,39 +291,16 @@ namespace Rbk
 
         BeginRendering(m_CommandBuffersSplash[m_ImageIndex]);
 
-        constants pushConstants;
-        pushConstants.cameraPos = m_Camera->GetPos();
-        pushConstants.ambiantLight = Rbk::VulkanAdapter::s_AmbiantLight;
-        pushConstants.fogDensity = Rbk::VulkanAdapter::s_FogDensity;
-        pushConstants.fogColor = glm::vec3({ Rbk::VulkanAdapter::s_FogColor[0].load(), Rbk::VulkanAdapter::s_FogColor[1].load(), Rbk::VulkanAdapter::s_FogColor[2].load() });
-        pushConstants.lightPos = m_LightsPos.at(0);
-
-        glm::mat4 lookAt = m_Camera->LookAt();
-        glm::mat4 proj = m_Perspective;
-        proj[1][1] *= -1;
-        glm::vec4 cameraPos = m_Camera->GetPos();
-
         for (std::shared_ptr<Mesh> mesh : m_Splash) {
 
             if (!mesh || !mesh->IsVisible()) continue;
             m_Renderer->BindPipeline(m_CommandBuffersSplash[m_ImageIndex], mesh->m_GraphicsPipeline);
 
             for (Data& data : *mesh->GetData()) {
-
                 for (uint32_t i = 0; i < mesh->m_UniformBuffers.size(); i++) {
-                    data.m_Ubos[i].view = lookAt;
-                    data.m_Ubos[i].proj = proj;
-                }
-
-                for (uint32_t i = 0; i < mesh->m_UniformBuffers.size(); i++) {
-                    m_Renderer->UpdateUniformBuffer(
-                        mesh->m_UniformBuffers[i],
-                        data.m_Ubos,
-                        data.m_Ubos.size()
-                    );
 
                     if (mesh->HasPushConstants() && nullptr != mesh->ApplyPushConstants)
-                        mesh->ApplyPushConstants(m_CommandBuffersSplash[m_ImageIndex], mesh->m_PipelineLayout);
+                        mesh->ApplyPushConstants(m_CommandBuffersSplash[m_ImageIndex], mesh->m_PipelineLayout, shared_from_this(), data);
 
                     m_Renderer->Draw(m_CommandBuffersSplash[m_ImageIndex], mesh->GetDescriptorSets().at(i), mesh.get(), data, data.m_Ubos.size(), m_ImageIndex);
                 }
