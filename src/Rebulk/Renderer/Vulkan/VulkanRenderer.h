@@ -108,7 +108,7 @@ namespace Rbk {
         void EndCommandBuffer(VkCommandBuffer commandBuffer);
         void BeginRenderPass(std::shared_ptr<VkRenderPass> renderPass, VkCommandBuffer commandBuffer, VkFramebuffer swapChainFramebuffer);
         void EndRenderPass(VkCommandBuffer commandBuffer);
-        void BeginRendering(const VkCommandBuffer& commandBuffer, const VkImageView& colorImageView, const VkImageView& depthImageView);
+        void BeginRendering(const VkCommandBuffer& commandBuffer, const VkImageView& colorImageView, const VkImageView& depthImageView, const VkAttachmentLoadOp loadOp, const VkAttachmentStoreOp storeOp);
         void EndRendering(VkCommandBuffer commandBuffer);
         void SetViewPort(VkCommandBuffer commandBuffer);
         void SetScissor(VkCommandBuffer commandBuffer);

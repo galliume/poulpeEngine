@@ -132,7 +132,7 @@ namespace Rbk
             pushConstants.cameraPos = adapter->GetCamera()->GetPos();
             pushConstants.fogColor = glm::vec4({ Rbk::VulkanAdapter::s_FogColor[0].load(), Rbk::VulkanAdapter::s_FogColor[1].load(), Rbk::VulkanAdapter::s_FogColor[2].load(), 0.f });
             pushConstants.lightPos = glm::vec4(adapter->GetLights().at(0), 0.f);
-            pushConstants.view = adapter->GetCamera()->LookAt();
+            pushConstants.view = glm::mat4(glm::mat3(adapter->GetCamera()->LookAt()));
             vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(constants), &pushConstants);
         };
 

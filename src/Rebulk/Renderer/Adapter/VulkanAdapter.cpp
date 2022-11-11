@@ -8,8 +8,8 @@
 
 namespace Rbk
 {
-    std::atomic<float> VulkanAdapter::s_AmbiantLight{ 0.1f };
-    std::atomic<float> VulkanAdapter::s_FogDensity{ {0.0f} };
+    std::atomic<float> VulkanAdapter::s_AmbiantLight{ 0.5f };
+    std::atomic<float> VulkanAdapter::s_FogDensity{ 0.0f };
     std::atomic<float> VulkanAdapter::s_FogColor[3]{ 25 / 255.0f, 25 / 255.0f, 25 / 255.0f };
     std::atomic<int> VulkanAdapter::s_Crosshair{ 0 };
     std::atomic<int> VulkanAdapter::s_PolygoneMode{ VK_POLYGON_MODE_FILL };
@@ -37,7 +37,7 @@ namespace Rbk
         m_SwapChainImageViews.resize(m_SwapChainImages.size());
         m_DepthImages.resize(m_SwapChainImages.size());
         m_DepthImageViews.resize(m_SwapChainImages.size());
-        
+
         m_CommandPoolSplash = m_Renderer->CreateCommandPool();
         m_CommandBuffersSplash = m_Renderer->AllocateCommandBuffers(m_CommandPoolSplash, static_cast<uint32_t>(m_SwapChainImageViews.size()));
         m_CommandPoolEntities = m_Renderer->CreateCommandPool();
@@ -214,7 +214,7 @@ namespace Rbk
         auto skybox = [=, &drawCall]() {
             if (m_SkyboxMesh) {
 
-                BeginRendering(m_CommandBuffersSkybox[m_ImageIndex]);
+                BeginRendering(m_CommandBuffersSkybox[m_ImageIndex], VK_ATTACHMENT_LOAD_OP_CLEAR, VK_ATTACHMENT_STORE_OP_STORE);
 
                 std::vector<Rbk::Data> skyboxData = *m_SkyboxMesh->GetData();
 
@@ -260,17 +260,18 @@ namespace Rbk
         };
 
         //@todo thread pool
-        entities();
-        //skybox();
-        //std::thread workerH(hud);
-//        skybox();
-      //  hud();
-        //workerE.join();
-        //workerS.join();
-        //workerH.join();
+        std::thread workerE(entities);
+        std::thread workerS(skybox);
+        std::thread workerH(hud);
+
+        workerE.join();
+        workerS.join();
+        workerH.join();
 
         std::vector<VkCommandBuffer> cmdSubmit{
-            m_CommandBuffersEntities[m_ImageIndex]
+            m_CommandBuffersSkybox[m_ImageIndex],
+            m_CommandBuffersEntities[m_ImageIndex],
+            m_CommandBuffersHud[m_ImageIndex]
         };
 
         if (0 < m_BoundingBox->size()) {
@@ -288,7 +289,7 @@ namespace Rbk
         ShouldRecreateSwapChain();
         m_ImageIndex = m_Renderer->AcquireNextImageKHR(m_SwapChain, m_Semaphores);
 
-        BeginRendering(m_CommandBuffersSplash[m_ImageIndex]);
+        BeginRendering(m_CommandBuffersSplash[m_ImageIndex], VK_ATTACHMENT_LOAD_OP_CLEAR, VK_ATTACHMENT_STORE_OP_NONE_KHR);
 
         for (std::shared_ptr<Mesh> mesh : m_Splash) {
 
@@ -452,7 +453,7 @@ namespace Rbk
         }
     }
 
-    void VulkanAdapter::BeginRendering(VkCommandBuffer commandBuffer)
+    void VulkanAdapter::BeginRendering(VkCommandBuffer commandBuffer, const VkAttachmentLoadOp loadOp, const VkAttachmentStoreOp storeOp)
     {
         if (m_ImageIndex == VK_ERROR_OUT_OF_DATE_KHR || m_ImageIndex == VK_SUBOPTIMAL_KHR) {
             RecreateSwapChain();
@@ -494,7 +495,7 @@ namespace Rbk
             VK_DEPENDENCY_BY_REGION_BIT
         );
 
-        m_Renderer->BeginRendering(commandBuffer, m_SwapChainImageViews[m_ImageIndex], m_DepthImageViews[m_ImageIndex]);
+        m_Renderer->BeginRendering(commandBuffer, m_SwapChainImageViews[m_ImageIndex], m_DepthImageViews[m_ImageIndex], loadOp, storeOp);
 
         m_Renderer->SetViewPort(commandBuffer);
         m_Renderer->SetScissor(commandBuffer);

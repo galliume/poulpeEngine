@@ -966,8 +966,8 @@ namespace Rbk {
         colorAttachment.samples = msaaSamples;
         colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
         colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-        colorAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-        colorAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        colorAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+        colorAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_STORE;
         colorAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
         colorAttachment.finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
@@ -978,10 +978,10 @@ namespace Rbk {
         VkAttachmentDescription colorAttachmentResolve{};
         colorAttachmentResolve.format = surfaceFormat.format;
         colorAttachmentResolve.samples = VK_SAMPLE_COUNT_1_BIT;
-        colorAttachmentResolve.loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+        colorAttachmentResolve.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
         colorAttachmentResolve.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-        colorAttachmentResolve.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-        colorAttachmentResolve.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        colorAttachmentResolve.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+        colorAttachmentResolve.stencilStoreOp = VK_ATTACHMENT_STORE_OP_STORE;
         colorAttachmentResolve.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
         colorAttachmentResolve.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
 
@@ -1000,9 +1000,9 @@ namespace Rbk {
         depthAttachment.format = FindDepthFormat();
         depthAttachment.samples = msaaSamples;
         depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-        depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-        depthAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-        depthAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+        depthAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+        depthAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_STORE;
         depthAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
         depthAttachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
@@ -1282,23 +1282,23 @@ namespace Rbk {
         vkCmdEndRenderPass(commandBuffer);
     }
 
-    void VulkanRenderer::BeginRendering(const VkCommandBuffer& commandBuffer, const VkImageView& colorImageView, const VkImageView& depthImageView)
+    void VulkanRenderer::BeginRendering(const VkCommandBuffer& commandBuffer, const VkImageView& colorImageView, const VkImageView& depthImageView, const VkAttachmentLoadOp loadOp, const VkAttachmentStoreOp storeOp)
     {
-        VkClearColorValue colorClear = { 21.f / 255.f, 10.f / 255.f, 26.f / 255.f, 1.f };
+        VkClearColorValue colorClear = { 154.f / 255.f, 205.f / 255.f, 50.f / 255.f, 1.f };
         VkClearDepthStencilValue depthStencil = { 1.f, 0 };
 
         VkRenderingAttachmentInfo colorAttachment{ VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO  };
         colorAttachment.imageView = colorImageView;
         colorAttachment.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-        colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-        colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+        colorAttachment.loadOp = loadOp;
+        colorAttachment.storeOp = storeOp;
         colorAttachment.clearValue.color = colorClear;
         
         VkRenderingAttachmentInfo depthAttachment{ VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO };
         depthAttachment.imageView = depthImageView;
         depthAttachment.imageLayout = VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL;
-        depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-        depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+        depthAttachment.loadOp = loadOp;
+        depthAttachment.storeOp = storeOp;
         depthAttachment.clearValue.depthStencil = depthStencil;
 
         VkRenderingInfo renderingInfo{ VK_STRUCTURE_TYPE_RENDERING_INFO };
