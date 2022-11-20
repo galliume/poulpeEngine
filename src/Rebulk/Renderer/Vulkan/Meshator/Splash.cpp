@@ -37,7 +37,7 @@ namespace Rbk
         };
 
         UniformBufferObject ubo;
-        ubo.view = glm::mat4(0.0f);
+        //ubo.view = glm::mat4(0.0f);
 
         auto commandPool = m_Adapter->Rdr()->CreateCommandPool();
 
@@ -54,7 +54,7 @@ namespace Rbk
         mesh->SetName("splashscreen");
         mesh->SetShaderName("splashscreen");
 
-        std::pair<VkBuffer, VkDeviceMemory> uniformBuffer = m_Adapter->Rdr()->CreateUniformBuffers(1);
+        Buffer uniformBuffer = m_Adapter->Rdr()->CreateUniformBuffers(1);
         mesh->m_UniformBuffers.emplace_back(uniformBuffer);
 
         std::vector<VkDescriptorImageInfo> imageInfos{};
@@ -101,18 +101,16 @@ namespace Rbk
 
         m_Adapter->GetDescriptorSetLayouts()->emplace_back(desriptorSetLayout);
 
-        for (uint32_t i = 0; i < m_Adapter->GetSwapChainImages()->size(); i++) {
-            VkDescriptorSet descriptorSet = m_Adapter->Rdr()->CreateDescriptorSets(m_DescriptorPool, { desriptorSetLayout }, 1);
-            m_Adapter->Rdr()->UpdateDescriptorSets(mesh->m_UniformBuffers, descriptorSet, imageInfos);
-            mesh->m_DescriptorSets.emplace_back(descriptorSet);
-        }
+        VkDescriptorSet descriptorSet = m_Adapter->Rdr()->CreateDescriptorSets(m_DescriptorPool, { desriptorSetLayout }, 1);
+        m_Adapter->Rdr()->UpdateDescriptorSets(mesh->m_UniformBuffers, descriptorSet, imageInfos);
+        mesh->m_DescriptorSets.emplace_back(descriptorSet);
 
         Splash::pc pc;
         pc.textureID = 0;
 
-        mesh->ApplyPushConstants = [&pc, mesh](VkCommandBuffer commandBuffer, VkPipelineLayout pipelineLayout) {
+        mesh->ApplyPushConstants = [&pc, mesh](VkCommandBuffer& commandBuffer, VkPipelineLayout& pipelineLayout, std::shared_ptr<VulkanAdapter> adapter, Data& data) {
             pc.textureID = mesh->GetNextSpriteIndex();
-            vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(pc), &pc);
+            vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(Splash::pc), &pc);
         };
         mesh->SetHasPushConstants();
 
@@ -163,6 +161,22 @@ namespace Rbk
             true, true, true, true,
             VulkanAdapter::s_PolygoneMode
         );
+
+        for (Data& data : *mesh->GetData()) {
+
+            for (uint32_t i = 0; i < mesh->m_UniformBuffers.size(); i++) {
+                //data.m_Ubos[i].view = m_Adapter->GetCamera()->LookAt();
+                data.m_Ubos[i].proj = m_Adapter->GetPerspective();
+            }
+
+            for (uint32_t i = 0; i < mesh->m_UniformBuffers.size(); i++) {
+                m_Adapter->Rdr()->UpdateUniformBuffer(
+                    mesh->m_UniformBuffers[i],
+                    data.m_Ubos,
+                    data.m_Ubos.size()
+                );
+            }
+        }
 
         mesh->GetData()->emplace_back(data);
     }

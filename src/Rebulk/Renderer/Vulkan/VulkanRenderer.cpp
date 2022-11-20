@@ -84,6 +84,15 @@ namespace Rbk {
         CreateLogicalDevice();
         InitDetails();
         CreateFence();
+        InitMemoryPool();
+    }
+
+    void VulkanRenderer::InitMemoryPool()
+    {
+        m_DeviceMemoryPool = std::make_shared<DeviceMemoryPool>(
+            m_DeviceProperties2,
+            m_DeviceMaintenance3Properties
+        );
     }
 
     std::string VulkanRenderer::GetAPIVersion()
@@ -219,8 +228,8 @@ namespace Rbk {
         
         if (m_EnableValidationLayers) {
             extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
-            extensions.push_back(VK_EXT_DEBUG_REPORT_EXTENSION_NAME);
-            extensions.push_back(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME);
+            //extensions.push_back(VK_EXT_DEBUG_REPORT_EXTENSION_NAME); deprecated
+            //extensions.push_back(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME); deprecated
         }
 
         //for_each(extensions.begin(), extensions.end(), [](std::string text) {
@@ -265,12 +274,19 @@ namespace Rbk {
 
                 VkPhysicalDeviceProperties deviceProperties;
                 VkPhysicalDeviceFeatures deviceFeatures;
+                VkPhysicalDeviceMaintenance3Properties deviceMaintenance3Properties{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MAINTENANCE_3_PROPERTIES };
+                VkPhysicalDeviceProperties2 deviceProperties2{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2 };
+                deviceProperties2.pNext = &deviceMaintenance3Properties;
 
                 vkGetPhysicalDeviceProperties(device, &deviceProperties);
                 vkGetPhysicalDeviceFeatures(device, &deviceFeatures);
+                vkGetPhysicalDeviceProperties2(device, &deviceProperties2);
 
                 m_DeviceProps = deviceProperties;
                 m_DeviceFeatures = deviceFeatures;
+                m_DeviceProperties2 = deviceProperties2;
+                m_DeviceMaintenance3Properties = deviceMaintenance3Properties;
+
                 m_MsaaSamples = GetMaxUsableSampleCount();
 
                 break;
@@ -390,6 +406,11 @@ namespace Rbk {
         vkFeatures13.pipelineCreationCacheControl = VK_TRUE;
         vkFeatures13.pNext = &descriptorIndexing;
 
+        VkPhysicalDeviceShaderDrawParametersFeatures shader_draw_parameters_features = {};
+        shader_draw_parameters_features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_DRAW_PARAMETERS_FEATURES;
+        shader_draw_parameters_features.pNext = &vkFeatures13;
+        shader_draw_parameters_features.shaderDrawParameters = VK_TRUE;
+
         VkDeviceCreateInfo createInfo{};
         createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
         createInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfos.size());
@@ -397,7 +418,7 @@ namespace Rbk {
         createInfo.pEnabledFeatures = &deviceFeatures;
         createInfo.enabledExtensionCount = static_cast<uint32_t>(m_DeviceExtensions.size());
         createInfo.ppEnabledExtensionNames = m_DeviceExtensions.data();
-        createInfo.pNext = &vkFeatures13;
+        createInfo.pNext = &shader_draw_parameters_features;
 
         if (vkCreateDevice(m_PhysicalDevice, &createInfo, nullptr, &m_Device) != VK_SUCCESS) {
             Rbk::Log::GetLogger()->critical("failed to create logical device!");
@@ -792,12 +813,8 @@ namespace Rbk {
 
         //@todo move to a FileManager
         //@todo option to enable / disable pipeline cache
-        std::string cacheFileName = std::format(
-            "cache/pipeline_cache_data_{}_{}_{}.bin",
-            GetDeviceProperties().vendorID,
-            GetDeviceProperties().deviceID,
-            name
-        );
+        std::string cacheFileName = "cache/pipeline_cache_data_" + std::to_string(GetDeviceProperties().vendorID) + "_" + std::to_string(GetDeviceProperties().deviceID) + "_" + name.data();
+
         bool badCache = false;
         size_t cacheFileSize = 0;
         void* cacheFileData = nullptr;
@@ -949,8 +966,8 @@ namespace Rbk {
         colorAttachment.samples = msaaSamples;
         colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
         colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-        colorAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-        colorAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        colorAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+        colorAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_STORE;
         colorAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
         colorAttachment.finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
@@ -961,10 +978,10 @@ namespace Rbk {
         VkAttachmentDescription colorAttachmentResolve{};
         colorAttachmentResolve.format = surfaceFormat.format;
         colorAttachmentResolve.samples = VK_SAMPLE_COUNT_1_BIT;
-        colorAttachmentResolve.loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+        colorAttachmentResolve.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
         colorAttachmentResolve.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-        colorAttachmentResolve.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-        colorAttachmentResolve.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        colorAttachmentResolve.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+        colorAttachmentResolve.stencilStoreOp = VK_ATTACHMENT_STORE_OP_STORE;
         colorAttachmentResolve.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
         colorAttachmentResolve.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
 
@@ -983,9 +1000,9 @@ namespace Rbk {
         depthAttachment.format = FindDepthFormat();
         depthAttachment.samples = msaaSamples;
         depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-        depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-        depthAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-        depthAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+        depthAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+        depthAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_STORE;
         depthAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
         depthAttachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
@@ -1207,16 +1224,16 @@ namespace Rbk {
         return descriptorSet;
     }
 
-    void VulkanRenderer::UpdateDescriptorSets(const std::vector<std::pair<VkBuffer, VkDeviceMemory>>& uniformBuffers, const VkDescriptorSet& descriptorSet, const std::vector<VkDescriptorImageInfo>& imageInfo)
+    void VulkanRenderer::UpdateDescriptorSets(const std::vector<Buffer>& uniformBuffers, const VkDescriptorSet& descriptorSet, const std::vector<VkDescriptorImageInfo>& imageInfo, VkDescriptorType type)
     {
         std::array<VkWriteDescriptorSet, 2> descriptorWrites{};
         std::vector<VkDescriptorBufferInfo> bufferInfos;
 
         std::for_each(std::begin(uniformBuffers), std::end(uniformBuffers),
-            [&bufferInfos](const std::pair<VkBuffer, VkDeviceMemory>& uniformBuffer)
+            [&bufferInfos](const Buffer& uniformBuffer)
             {
                 VkDescriptorBufferInfo bufferInfo{};
-                bufferInfo.buffer = uniformBuffer.first;
+                bufferInfo.buffer = uniformBuffer.buffer;
                 bufferInfo.offset = 0;
                 bufferInfo.range = VK_WHOLE_SIZE;
                 bufferInfos.emplace_back(bufferInfo);
@@ -1226,7 +1243,7 @@ namespace Rbk {
         descriptorWrites[0].dstSet = descriptorSet;
         descriptorWrites[0].dstBinding = 0;
         descriptorWrites[0].dstArrayElement = 0;
-        descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        descriptorWrites[0].descriptorType = type;
         descriptorWrites[0].descriptorCount = 1;
         descriptorWrites[0].pBufferInfo = bufferInfos.data();
 
@@ -1265,23 +1282,23 @@ namespace Rbk {
         vkCmdEndRenderPass(commandBuffer);
     }
 
-    void VulkanRenderer::BeginRendering(const VkCommandBuffer& commandBuffer, const VkImageView& colorImageView, const VkImageView& depthImageView)
+    void VulkanRenderer::BeginRendering(const VkCommandBuffer& commandBuffer, const VkImageView& colorImageView, const VkImageView& depthImageView, const VkAttachmentLoadOp loadOp, const VkAttachmentStoreOp storeOp)
     {
-        VkClearColorValue colorClear = { 21.f / 255.f, 10.f / 255.f, 26.f / 255.f, 1.f };
+        VkClearColorValue colorClear = { 154.f / 255.f, 205.f / 255.f, 50.f / 255.f, 1.f };
         VkClearDepthStencilValue depthStencil = { 1.f, 0 };
 
         VkRenderingAttachmentInfo colorAttachment{ VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO  };
         colorAttachment.imageView = colorImageView;
         colorAttachment.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-        colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-        colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+        colorAttachment.loadOp = loadOp;
+        colorAttachment.storeOp = storeOp;
         colorAttachment.clearValue.color = colorClear;
         
         VkRenderingAttachmentInfo depthAttachment{ VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO };
         depthAttachment.imageView = depthImageView;
         depthAttachment.imageLayout = VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL;
-        depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-        depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+        depthAttachment.loadOp = loadOp;
+        depthAttachment.storeOp = storeOp;
         depthAttachment.clearValue.depthStencil = depthStencil;
 
         VkRenderingInfo renderingInfo{ VK_STRUCTURE_TYPE_RENDERING_INFO };
@@ -1307,57 +1324,61 @@ namespace Rbk {
 
     void VulkanRenderer::QueueSubmit(VkCommandBuffer commandBuffer)
     {
-        m_MutexQueueSubmit.lock();
 
         VkSubmitInfo submitInfo{};
         submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
         submitInfo.commandBufferCount = 1;
         submitInfo.pCommandBuffers = &commandBuffer;
 
-        vkQueueSubmit(m_GraphicsQueue, 1, &submitInfo, VK_NULL_HANDLE);
-        vkQueueWaitIdle(m_GraphicsQueue);
-
-        m_MutexQueueSubmit.unlock();
+        {
+            //std::lock_guard<std::mutex> guard(m_MutexQueueSubmit);
+            vkQueueSubmit(m_GraphicsQueue, 1, &submitInfo, VK_NULL_HANDLE);
+            vkQueueWaitIdle(m_GraphicsQueue);
+        }
     }
 
-    void VulkanRenderer::QueueSubmit(uint32_t imageIndex, VkCommandBuffer commandBuffer, std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>>& semaphores)
+    void VulkanRenderer::QueueSubmit(uint32_t imageIndex, std::vector<VkCommandBuffer> commandBuffers, std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>>& semaphores)
     {
-        m_MutexQueueSubmit.lock();
+        {
+            //std::lock_guard<std::mutex> guard(m_MutexQueueSubmit);
 
-        std::vector<VkSemaphore>& imageAvailableSemaphores = semaphores.first;
-        std::vector<VkSemaphore>& renderFinishedSemaphores = semaphores.second;
+            std::vector<VkSemaphore>& imageAvailableSemaphores = semaphores.first;
+            std::vector<VkSemaphore>& renderFinishedSemaphores = semaphores.second;
 
-        if (m_ImagesInFlight[imageIndex] != VK_NULL_HANDLE) {
-            vkWaitForFences(m_Device, 1, &m_ImagesInFlight[imageIndex], VK_TRUE, UINT64_MAX);
-        }
+            if (m_ImagesInFlight[imageIndex] != VK_NULL_HANDLE) {
+                vkWaitForFences(m_Device, 1, &m_ImagesInFlight[imageIndex], VK_TRUE, UINT64_MAX);
+            }
 
-        m_ImagesInFlight[imageIndex] = m_ImagesInFlight[m_CurrentFrame];
+            m_ImagesInFlight[imageIndex] = m_ImagesInFlight[m_CurrentFrame];
 
-        VkSubmitInfo submitInfo{};
-        submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+            std::vector<VkSubmitInfo> submits{};
 
-        VkSemaphore waitSemaphores[] = { imageAvailableSemaphores[m_CurrentFrame] };
+            VkSubmitInfo submitInfo{};
+            submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 
-        VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
-        submitInfo.waitSemaphoreCount = 1;
-        submitInfo.pWaitSemaphores = waitSemaphores;
-        submitInfo.pWaitDstStageMask = waitStages;
-        submitInfo.commandBufferCount = 1;
-        submitInfo.pCommandBuffers = &commandBuffer;
+            VkSemaphore waitSemaphores[] = { imageAvailableSemaphores[m_CurrentFrame] };
 
-        VkSemaphore signalSemaphores[] = { renderFinishedSemaphores[m_CurrentFrame] };
+            VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
+            submitInfo.waitSemaphoreCount = 1;
+            submitInfo.pWaitSemaphores = waitSemaphores;
+            submitInfo.pWaitDstStageMask = waitStages;
+            submitInfo.commandBufferCount = commandBuffers.size();
+            submitInfo.pCommandBuffers = commandBuffers.data();
 
-        submitInfo.signalSemaphoreCount = 1;
-        submitInfo.pSignalSemaphores = signalSemaphores;
+            VkSemaphore signalSemaphores[] = { renderFinishedSemaphores[m_CurrentFrame] };
 
-        vkResetFences(m_Device, 1, &m_InFlightFences[m_CurrentFrame]);
+            submitInfo.signalSemaphoreCount = 1;
+            submitInfo.pSignalSemaphores = signalSemaphores;
 
-        VkResult result = vkQueueSubmit(m_GraphicsQueue, 1, &submitInfo, m_InFlightFences[m_CurrentFrame]);
+            submits.emplace_back(submitInfo);
 
-        m_MutexQueueSubmit.unlock();
+            vkResetFences(m_Device, 1, &m_InFlightFences[m_CurrentFrame]);
 
-        if (result != VK_SUCCESS) {
-            throw std::runtime_error("failed to submit draw command buffer!");
+            VkResult result = vkQueueSubmit(m_GraphicsQueue, submits.size(), submits.data(), m_InFlightFences[m_CurrentFrame]);
+
+            if (result != VK_SUCCESS) {
+                throw std::runtime_error("failed to submit draw command buffer!");
+            }
         }
     }
 
@@ -1397,18 +1418,22 @@ namespace Rbk {
 
     uint32_t VulkanRenderer::AcquireNextImageKHR(VkSwapchainKHR swapChain, std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>>& semaphores)
     {
-        std::vector<VkSemaphore>& imageAvailableSemaphores = semaphores.first;
+        {
+            //std::lock_guard<std::mutex> guard(m_MutexAcquireNextImage);
+            
+            std::vector<VkSemaphore>& imageAvailableSemaphores = semaphores.first;
 
-        vkWaitForFences(m_Device, 1, &m_InFlightFences[m_CurrentFrame], VK_TRUE, UINT64_MAX);
+            vkWaitForFences(m_Device, 1, &m_InFlightFences[m_CurrentFrame], VK_TRUE, UINT64_MAX);
 
-        uint32_t imageIndex = 0;
-        VkResult result = vkAcquireNextImageKHR(m_Device, swapChain, UINT64_MAX, imageAvailableSemaphores[m_CurrentFrame], VK_NULL_HANDLE, &imageIndex);
+            uint32_t imageIndex = 0;
+            VkResult result = vkAcquireNextImageKHR(m_Device, swapChain, UINT64_MAX, imageAvailableSemaphores[m_CurrentFrame], VK_NULL_HANDLE, &imageIndex);
 
-        if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
-            throw std::runtime_error("failed to acquire swap chain image!");
+            if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
+                throw std::runtime_error("failed to acquire swap chain image!");
+            }
+
+            return imageIndex;
         }
-
-        return imageIndex;
     }
 
     void VulkanRenderer::ResetCommandPool(VkCommandPool commandPool)
@@ -1416,35 +1441,56 @@ namespace Rbk {
         vkResetCommandPool(m_Device, commandPool, 0);
     }
 
-    void VulkanRenderer::Draw(VkCommandBuffer commandBuffer, Mesh* mesh, Data data, uint32_t frameIndex, bool drawIndexed)
+    void VulkanRenderer::Draw(VkCommandBuffer commandBuffer, VkDescriptorSet descriptorSet, Mesh* mesh, Data data, uint32_t uboCount, uint32_t frameIndex, bool drawIndexed, uint32_t index)
     {
-        VkBuffer vertexBuffers[] = { data.m_VertexBuffer.first };
-        VkDeviceSize offsets[] = { 0 };
+        {
+            //std::lock_guard<std::mutex> guard(m_MutexDraw);
 
-        vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
+            VkBuffer vertexBuffers[] = { data.m_VertexBuffer.buffer };
+            VkDeviceSize offsets[] = { 0 };
 
-        vkCmdBindDescriptorSets(
-            commandBuffer,
-            VK_PIPELINE_BIND_POINT_GRAPHICS,
-            mesh->m_PipelineLayout,
-            0,
-            1,
-            &mesh->m_DescriptorSets[frameIndex],
-            0,
-            nullptr
-        );
+            vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
 
-        if (drawIndexed) {
-            vkCmdBindIndexBuffer(commandBuffer, data.m_IndicesBuffer.first, 0, VK_INDEX_TYPE_UINT32);
-            vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(data.m_Indices.size()), static_cast<uint32_t>(data.m_Ubos.size()), 0, 0, 0);
-        } else {
-            vkCmdDraw(commandBuffer, static_cast<uint32_t>(data.m_Vertices.size()), 1, 0, 0);
+            vkCmdBindDescriptorSets(
+                commandBuffer,
+                VK_PIPELINE_BIND_POINT_GRAPHICS,
+                mesh->m_PipelineLayout,
+                0,
+                1,
+                &descriptorSet,
+                0,
+                nullptr
+            );
+
+            if (drawIndexed) {
+                vkCmdBindIndexBuffer(commandBuffer, data.m_IndicesBuffer.buffer, 0, VK_INDEX_TYPE_UINT32);
+                vkCmdDrawIndexed(commandBuffer, data.m_Indices.size(), uboCount, 0, 0, 0);
+            }
+            else {
+                vkCmdDraw(commandBuffer, data.m_Vertices.size(), 1, 0, index);
+            }
         }
     }
 
     void VulkanRenderer::AddPipelineBarriers(VkCommandBuffer commandBuffer, std::vector<VkImageMemoryBarrier> renderBarriers, VkPipelineStageFlags srcStageMask, VkPipelineStageFlags dstStageMask, VkDependencyFlags dependencyFlags)
     {
         vkCmdPipelineBarrier(commandBuffer, srcStageMask, dstStageMask, dependencyFlags, 0, 0, 0, 0, static_cast<uint32_t>(renderBarriers.size()), renderBarriers.data());
+    }
+
+    VkBuffer VulkanRenderer::CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage)
+    {
+        VkBuffer buffer;
+        VkBufferCreateInfo bufferInfo{};
+        bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+        bufferInfo.size = size;
+        bufferInfo.usage = usage;
+        bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+
+        if (vkCreateBuffer(m_Device, &bufferInfo, nullptr, &buffer) != VK_SUCCESS) {
+            throw std::runtime_error("failed to create buffer!");
+        }
+
+        return buffer;
     }
 
     void VulkanRenderer::CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory)
@@ -1474,34 +1520,45 @@ namespace Rbk {
         vkBindBufferMemory(m_Device, buffer, bufferMemory, 0);
     }
 
-    std::pair<VkBuffer, VkDeviceMemory> VulkanRenderer::CreateIndexBuffer(const VkCommandPool& commandPool, const std::vector<uint32_t>& indices)
+    Buffer VulkanRenderer::CreateIndexBuffer(const VkCommandPool& commandPool, const std::vector<uint32_t>& indices)
     {
-        std::pair<VkBuffer, VkDeviceMemory> indexBuffer{};
-
         VkDeviceSize bufferSize = sizeof(indices[0]) * indices.size();
 
         VkBuffer stagingBuffer;
         VkDeviceMemory stagingBufferMemory;
         CreateBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
-
+      
         void* data;
         vkMapMemory(m_Device, stagingBufferMemory, 0, bufferSize, 0, &data);
         memcpy(data, indices.data(), static_cast<size_t>(bufferSize));
         vkUnmapMemory(m_Device, stagingBufferMemory);
 
-        CreateBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, indexBuffer.first, indexBuffer.second);
+        VkBuffer buffer = CreateBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT);
+        VkMemoryRequirements memRequirements;
+        vkGetBufferMemoryRequirements(m_Device, buffer, &memRequirements);
+        uint32_t size = ((memRequirements.size / memRequirements.alignment) + 1) * memRequirements.alignment;
 
-        CopyBuffer(commandPool, stagingBuffer, indexBuffer.first, bufferSize);
+        auto memoryType = FindMemoryType(memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+        auto deviceMemory = m_DeviceMemoryPool->Get(m_Device, size, memoryType, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT);
+        auto offset = deviceMemory->GetOffset();
+        deviceMemory->BindBufferToMemory(buffer, size);
+
+        CopyBuffer(commandPool, stagingBuffer, buffer, bufferSize);
+
+        Buffer meshBuffer;
+        meshBuffer.buffer = std::move(buffer);
+        meshBuffer.memory = deviceMemory;
+        meshBuffer.offset = offset;
+        meshBuffer.size = size;
 
         vkDestroyBuffer(m_Device, stagingBuffer, nullptr);
         vkFreeMemory(m_Device, stagingBufferMemory, nullptr);
 
-        return indexBuffer;
+        return meshBuffer;
     }
 
-    std::pair<VkBuffer, VkDeviceMemory> VulkanRenderer::CreateVertexBuffer(VkCommandPool commandPool, std::vector<Rbk::Vertex> vertices)
+    Buffer VulkanRenderer::CreateVertexBuffer(VkCommandPool commandPool, std::vector<Rbk::Vertex> vertices)
     {
-        std::pair<VkBuffer, VkDeviceMemory> vertexBuffer{};
         VkDeviceSize bufferSize = sizeof(Vertex) * vertices.size();
         VkBuffer stagingBuffer;
         VkDeviceMemory stagingBufferMemory;
@@ -1516,17 +1573,31 @@ namespace Rbk {
         memcpy(data, vertices.data(), static_cast<size_t>(bufferSize));
         vkUnmapMemory(m_Device, stagingBufferMemory);
 
-        CreateBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, vertexBuffer.first, vertexBuffer.second);
+        VkBuffer buffer = CreateBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT);
+        VkMemoryRequirements memRequirements;
+        vkGetBufferMemoryRequirements(m_Device, buffer, &memRequirements);
 
-        CopyBuffer(commandPool, stagingBuffer, vertexBuffer.first, bufferSize);
+        auto memoryType = FindMemoryType(memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+        uint32_t size = ((memRequirements.size / memRequirements.alignment) + 1) * memRequirements.alignment;
+        auto deviceMemory = m_DeviceMemoryPool->Get(m_Device, size, memoryType, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT);
+        auto offset = deviceMemory->GetOffset();
+        deviceMemory->BindBufferToMemory(buffer, size);
+        
+        CopyBuffer(commandPool, stagingBuffer, buffer, bufferSize);
 
+        Buffer meshBuffer;
+        meshBuffer.buffer = std::move(buffer);
+        meshBuffer.memory = deviceMemory;
+        meshBuffer.offset = offset;
+        meshBuffer.size = size;
+        
         vkDestroyBuffer(m_Device, stagingBuffer, nullptr);
         vkFreeMemory(m_Device, stagingBufferMemory, nullptr);
 
-        return vertexBuffer;
+        return meshBuffer;
     }
 
-    std::pair<VkBuffer, VkDeviceMemory> VulkanRenderer::CreateVertex2DBuffer(const VkCommandPool& commandPool, const std::vector<Rbk::Vertex2D>& vertices)
+    Buffer VulkanRenderer::CreateVertex2DBuffer(const VkCommandPool& commandPool, const std::vector<Rbk::Vertex2D>& vertices)
     {
         std::pair<VkBuffer, VkDeviceMemory> vertexBuffer{};
         VkDeviceSize bufferSize = sizeof(Vertex2D) * vertices.size();
@@ -1543,48 +1614,128 @@ namespace Rbk {
         memcpy(data, vertices.data(), static_cast<size_t>(bufferSize));
         vkUnmapMemory(m_Device, stagingBufferMemory);
 
-        CreateBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, vertexBuffer.first, vertexBuffer.second);
+        VkBuffer buffer = CreateBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT);
+        VkMemoryRequirements memRequirements;
+        vkGetBufferMemoryRequirements(m_Device, buffer, &memRequirements);
 
-        CopyBuffer(commandPool, stagingBuffer, vertexBuffer.first, bufferSize);
+        auto memoryType = FindMemoryType(memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+        uint32_t size = ((memRequirements.size / memRequirements.alignment) + 1) * memRequirements.alignment;
+        auto deviceMemory = m_DeviceMemoryPool->Get(m_Device, size, memoryType, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT);
+        auto offset = deviceMemory->GetOffset();
+        deviceMemory->BindBufferToMemory(buffer, size);
+        
+        CopyBuffer(commandPool, stagingBuffer, buffer, bufferSize);
+
+        Buffer meshBuffer;
+        meshBuffer.buffer = std::move(buffer);
+        meshBuffer.memory = deviceMemory;
+        meshBuffer.offset = offset;
+        meshBuffer.size = size;
 
         vkDestroyBuffer(m_Device, stagingBuffer, nullptr);
         vkFreeMemory(m_Device, stagingBufferMemory, nullptr);
 
-        return vertexBuffer;
+        return meshBuffer;
     }
 
-    std::pair<VkBuffer, VkDeviceMemory> VulkanRenderer::CreateUniformBuffers(uint32_t uniformBuffersCount)
+    Buffer VulkanRenderer::CreateUniformBuffers(uint32_t uniformBuffersCount)
     {
-        std::pair<VkBuffer, VkDeviceMemory> uniformBuffers{};
-
         VkDeviceSize bufferSize = sizeof(UniformBufferObject) * uniformBuffersCount;
-        CreateBuffer(bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, uniformBuffers.first, uniformBuffers.second);
+        VkBuffer buffer = CreateBuffer(bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT);
+        VkMemoryRequirements memRequirements;
+        vkGetBufferMemoryRequirements(m_Device, buffer, &memRequirements);
 
-        return uniformBuffers;
+        auto memoryType = FindMemoryType(memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+        uint32_t size = ((memRequirements.size / memRequirements.alignment) + 1) * memRequirements.alignment;
+        auto deviceMemory = m_DeviceMemoryPool->Get(m_Device, size, memoryType, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT);
+        auto offset = deviceMemory->GetOffset();
+        deviceMemory->BindBufferToMemory(buffer, size);
+
+        Buffer uniformBuffer;
+        uniformBuffer.buffer = std::move(buffer);
+        uniformBuffer.memory = deviceMemory;
+        uniformBuffer.offset = offset;
+        uniformBuffer.size = size;
+
+        return uniformBuffer;
     }
 
-    std::pair<VkBuffer, VkDeviceMemory> VulkanRenderer::CreateCubeUniformBuffers(uint32_t uniformBuffersCount)
+    Buffer VulkanRenderer::CreateStorageBuffers(uint32_t uniformBuffersCount)
     {
-        std::pair<VkBuffer, VkDeviceMemory> uniformBuffers{};
+        VkDeviceSize bufferSize = sizeof(UniformBufferObject) * uniformBuffersCount;
+        VkBuffer buffer = CreateBuffer(bufferSize, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT);
+        VkMemoryRequirements memRequirements;
+        vkGetBufferMemoryRequirements(m_Device, buffer, &memRequirements);
 
+        auto memoryType = FindMemoryType(memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+        uint32_t size = ((memRequirements.size / memRequirements.alignment) + 1) * memRequirements.alignment;
+        auto deviceMemory = m_DeviceMemoryPool->Get(m_Device, size, memoryType, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT);
+        auto offset = deviceMemory->GetOffset();
+        deviceMemory->BindBufferToMemory(buffer, size);
+
+        Buffer uniformBuffer;
+        uniformBuffer.buffer = std::move(buffer);
+        uniformBuffer.memory = deviceMemory;
+        uniformBuffer.offset = offset;
+        uniformBuffer.size = size;
+
+        return uniformBuffer;
+    }
+
+    Buffer VulkanRenderer::CreateCubeUniformBuffers(uint32_t uniformBuffersCount)
+    {
         VkDeviceSize bufferSize = sizeof(CubeUniformBufferObject) * uniformBuffersCount;
-        CreateBuffer(bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, uniformBuffers.first, uniformBuffers.second);
+        VkBuffer buffer = CreateBuffer(bufferSize, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
+        VkMemoryRequirements memRequirements;
+        vkGetBufferMemoryRequirements(m_Device, buffer, &memRequirements);
 
-        return uniformBuffers;
+        uint32_t size = ((memRequirements.size / memRequirements.alignment) + 1) * memRequirements.alignment;
+        auto memoryType = FindMemoryType(memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+        auto deviceMemory = m_DeviceMemoryPool->Get(m_Device, size, memoryType, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
+        auto offset = deviceMemory->GetOffset();
+        deviceMemory->BindBufferToMemory(buffer, size);
+
+        Buffer uniformBuffer;
+        uniformBuffer.buffer = std::move(buffer);
+        uniformBuffer.memory = deviceMemory;
+        uniformBuffer.offset = offset;
+        uniformBuffer.size = size;
+
+        return uniformBuffer;
     }
 
-    void VulkanRenderer::UpdateUniformBuffer(std::pair<VkBuffer, VkDeviceMemory>uniformBuffer, std::vector<UniformBufferObject> uniformBufferObjects, uint32_t uniformBuffersCount)
+    void VulkanRenderer::UpdateUniformBuffer(Buffer& buffer, std::vector<UniformBufferObject> uniformBufferObjects, uint32_t uniformBuffersCount)
     {
-        void* data;
-        vkMapMemory(m_Device, uniformBuffer.second, 0, sizeof(UniformBufferObject) * uniformBuffersCount, 0, &data);
-        memcpy(data, uniformBufferObjects.data(), sizeof(UniformBufferObject) * uniformBuffersCount);
-        vkUnmapMemory(m_Device, uniformBuffer.second);
+        {
+            buffer.memory->Lock();
+
+            auto memory = buffer.memory->GetMemory();
+            void* data;
+            vkMapMemory(m_Device, *memory, buffer.offset, buffer.size, 0, &data);
+            memcpy(data, uniformBufferObjects.data(), buffer.size);
+            vkUnmapMemory(m_Device, *memory);
+
+            buffer.memory->UnLock();
+        }
+    }
+
+    void VulkanRenderer::UpdateStorageBuffer(Buffer buffer, std::vector<UniformBufferObject> bufferObjects)
+    {
+        {
+            buffer.memory->Lock();
+
+            auto memory = buffer.memory->GetMemory();
+            void* data;
+            vkMapMemory(m_Device, *memory, buffer.offset, buffer.size, 0, &data);
+            memcpy(data, bufferObjects.data(), buffer.size);
+            vkUnmapMemory(m_Device, *memory);
+
+            buffer.memory->UnLock();
+        }
     }
 
     void VulkanRenderer::CopyBuffer(VkCommandPool commandPool, VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size)
     {
-        m_MutexQueueSubmit.lock();
-
         VkCommandBufferAllocateInfo allocInfo{};
         allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
         allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
@@ -1604,19 +1755,22 @@ namespace Rbk {
         copyRegion.srcOffset = 0; // Optional
         copyRegion.dstOffset = 0; // Optional
         copyRegion.size = size;
-        vkCmdCopyBuffer(commandBuffer, srcBuffer, dstBuffer, 1, &copyRegion);
-        vkEndCommandBuffer(commandBuffer);
 
-        VkSubmitInfo submitInfo{};
-        submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-        submitInfo.commandBufferCount = 1;
-        submitInfo.pCommandBuffers = &commandBuffer;
+        {
+            //std::lock_guard<std::mutex> guard(m_MutexQueueSubmit);
 
-        vkQueueSubmit(m_GraphicsQueue, 1, &submitInfo, VK_NULL_HANDLE);
-        vkQueueWaitIdle(m_GraphicsQueue);
-        vkFreeCommandBuffers(m_Device, commandPool, 1, &commandBuffer);
+            vkCmdCopyBuffer(commandBuffer, srcBuffer, dstBuffer, 1, &copyRegion);
+            vkEndCommandBuffer(commandBuffer);
 
-        m_MutexQueueSubmit.unlock();
+            VkSubmitInfo submitInfo{};
+            submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+            submitInfo.commandBufferCount = 1;
+            submitInfo.pCommandBuffers = &commandBuffer;
+
+            vkQueueSubmit(m_GraphicsQueue, 1, &submitInfo, VK_NULL_HANDLE);
+            vkQueueWaitIdle(m_GraphicsQueue);
+            vkFreeCommandBuffers(m_Device, commandPool, 1, &commandBuffer);
+        }
     }
 
     VkImageMemoryBarrier VulkanRenderer::SetupImageMemoryBarrier(VkImage image, VkAccessFlags srcAccessMask, VkAccessFlags dstAccessMask, VkImageLayout oldLayout, VkImageLayout newLayout, uint32_t mipLevels, VkImageAspectFlags aspectMask)
@@ -1645,6 +1799,7 @@ namespace Rbk {
 
         for (uint32_t i = 0; i < memProperties.memoryTypeCount; i++) {
             if ((typeFilter & (1 << i)) && (memProperties.memoryTypes[i].propertyFlags & properties) == properties) {
+                m_MaxMemoryHeap = memProperties.memoryHeaps[memProperties.memoryTypes[i].heapIndex].size;
                 return i;
             }
         }
@@ -1652,7 +1807,7 @@ namespace Rbk {
         throw std::runtime_error("failed to find suitable memory type!");
     }
 
-    void VulkanRenderer::CreateImage(uint32_t width, uint32_t height, uint32_t mipLevels, VkSampleCountFlagBits numSamples, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image, VkDeviceMemory& imageMemory)
+    void VulkanRenderer::CreateImage(uint32_t width, uint32_t height, uint32_t mipLevels, VkSampleCountFlagBits numSamples, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image)
     {
         VkImageCreateInfo imageInfo{};
         imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
@@ -1669,26 +1824,22 @@ namespace Rbk {
         imageInfo.samples = numSamples;
         imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-        if (vkCreateImage(m_Device, &imageInfo, nullptr, &image) != VK_SUCCESS) {
+        VkResult result;
+        result = vkCreateImage(m_Device, &imageInfo, nullptr, &image);
+
+        if (result != VK_SUCCESS) {
             throw std::runtime_error("failed to create image!");
         }
 
         VkMemoryRequirements memRequirements;
         vkGetImageMemoryRequirements(m_Device, image, &memRequirements);
-
-        VkMemoryAllocateInfo allocInfo{};
-        allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-        allocInfo.allocationSize = memRequirements.size;
-        allocInfo.memoryTypeIndex = FindMemoryType(memRequirements.memoryTypeBits, properties);
-
-        if (vkAllocateMemory(m_Device, &allocInfo, nullptr, &imageMemory) != VK_SUCCESS) {
-            throw std::runtime_error("failed to allocate image memory!");
-        }
-
-        vkBindImageMemory(m_Device, image, imageMemory, 0);
+        auto memoryType = FindMemoryType(memRequirements.memoryTypeBits, properties);
+        uint32_t size = ((memRequirements.size / memRequirements.alignment) + 1) * memRequirements.alignment;
+        auto deviceMemory = m_DeviceMemoryPool->Get(m_Device, size, memoryType, VK_BUFFER_USAGE_TRANSFER_SRC_BIT);
+        deviceMemory->BindImageToMemory(image, size);
     }
 
-    void VulkanRenderer::CreateSkyboxImage(uint32_t width, uint32_t height, uint32_t mipLevels, VkSampleCountFlagBits numSamples, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image, VkDeviceMemory& imageMemory)
+    void VulkanRenderer::CreateSkyboxImage(uint32_t width, uint32_t height, uint32_t mipLevels, VkSampleCountFlagBits numSamples, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image)
     {
         VkImageCreateInfo imageInfo{};
         imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
@@ -1696,7 +1847,7 @@ namespace Rbk {
         imageInfo.extent.width = width;
         imageInfo.extent.height = height;
         imageInfo.extent.depth = 1;
-        imageInfo.mipLevels = mipLevels;
+        imageInfo.mipLevels = 1;
         imageInfo.arrayLayers = 6;
         imageInfo.format = format;
         imageInfo.tiling = tiling;
@@ -1712,72 +1863,67 @@ namespace Rbk {
 
         VkMemoryRequirements memRequirements;
         vkGetImageMemoryRequirements(m_Device, image, &memRequirements);
-
-        VkMemoryAllocateInfo allocInfo{};
-        allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-        allocInfo.allocationSize = memRequirements.size;
-        allocInfo.memoryTypeIndex = FindMemoryType(memRequirements.memoryTypeBits, properties);
-
-        if (vkAllocateMemory(m_Device, &allocInfo, nullptr, &imageMemory) != VK_SUCCESS) {
-            throw std::runtime_error("failed to allocate image memory!");
-        }
-
-        vkBindImageMemory(m_Device, image, imageMemory, 0);
+        auto memoryType = FindMemoryType(memRequirements.memoryTypeBits, properties);
+        uint32_t size = ((memRequirements.size / memRequirements.alignment) + 1) * memRequirements.alignment;
+        auto deviceMemory = m_DeviceMemoryPool->Get(m_Device, size, memoryType, VK_BUFFER_USAGE_TRANSFER_SRC_BIT);
+        deviceMemory->BindImageToMemory(image, size);
     }
 
-    void VulkanRenderer::CreateTextureImage(VkCommandBuffer commandBuffer, stbi_uc* pixels, uint32_t texWidth, uint32_t texHeight, uint32_t mipLevels, VkImage& textureImage, VkDeviceMemory& textureImageMemory, VkFormat format)
+    void VulkanRenderer::CreateTextureImage(VkCommandBuffer& commandBuffer, stbi_uc* pixels, uint32_t texWidth, uint32_t texHeight, uint32_t mipLevels, VkImage& textureImage, VkFormat format)
     {
         VkDeviceSize imageSize = texWidth * texHeight * 4;
-        VkBuffer stagingBuffer;
-        VkDeviceMemory stagingBufferMemory;
-        CreateBuffer(imageSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
+        VkBuffer buffer = CreateBuffer(imageSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT);
+        VkMemoryRequirements memRequirements;
+        vkGetBufferMemoryRequirements(m_Device, buffer, &memRequirements);
+
+        auto memoryType = FindMemoryType(memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+        uint32_t size = ((memRequirements.size / memRequirements.alignment) + 1) * memRequirements.alignment;
+        auto deviceMemory = m_DeviceMemoryPool->Get(m_Device, size, memoryType, VK_BUFFER_USAGE_TRANSFER_SRC_BIT);
+        auto offset = deviceMemory->GetOffset();
+        deviceMemory->BindBufferToMemory(buffer, size);
 
         void* data;
-        vkMapMemory(m_Device, stagingBufferMemory, 0, imageSize, 0, &data);
-        memcpy(data, pixels, static_cast<size_t>(imageSize));
-        vkUnmapMemory(m_Device, stagingBufferMemory);
+        vkMapMemory(m_Device, *deviceMemory->GetMemory(), offset, size, 0, &data);
+        memcpy(data, pixels, static_cast<size_t>(size));
+        vkUnmapMemory(m_Device, *deviceMemory->GetMemory());
 
         stbi_image_free(pixels);
-
-        CreateImage(texWidth, texHeight, mipLevels, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, textureImage, textureImageMemory);
+        CreateImage(texWidth, texHeight, mipLevels, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, textureImage);
 
         VkImageMemoryBarrier renderBarrier = SetupImageMemoryBarrier(
             textureImage, 0, VK_ACCESS_TRANSFER_WRITE_BIT, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL
         );
 
         AddPipelineBarriers(commandBuffer, { renderBarrier }, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_DEPENDENCY_BY_REGION_BIT);
-
-        CopyBufferToImage(commandBuffer, stagingBuffer, textureImage, static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight));
-
+        CopyBufferToImage(commandBuffer, buffer, textureImage, static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight), mipLevels, offset);
         GenerateMipmaps(commandBuffer, format, textureImage, texWidth, texHeight, mipLevels);
-
         EndCommandBuffer(commandBuffer);
-
         QueueSubmit(commandBuffer);
-
-        vkDestroyBuffer(m_Device, stagingBuffer, nullptr);
-        vkFreeMemory(m_Device, stagingBufferMemory, nullptr);
     }
 
-    void VulkanRenderer::CreateSkyboxTextureImage(VkCommandBuffer commandBuffer, std::vector<stbi_uc*>skyboxPixels, uint32_t texWidth, uint32_t texHeight, uint32_t mipLevels, VkImage& textureImage, VkDeviceMemory& textureImageMemory, VkFormat format)
+    void VulkanRenderer::CreateSkyboxTextureImage(VkCommandBuffer& commandBuffer, std::vector<stbi_uc*>& skyboxPixels, uint32_t texWidth, uint32_t texHeight, uint32_t mipLevels, VkImage& textureImage, VkFormat format)
     {
         VkDeviceSize imageSize = texWidth * texHeight * 4 * 6;
-        VkBuffer stagingBuffer;
-        VkDeviceMemory stagingBufferMemory;
-        CreateBuffer(imageSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
+        VkBuffer buffer = CreateBuffer(imageSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT);
+        VkMemoryRequirements memRequirements;
+        vkGetBufferMemoryRequirements(m_Device, buffer, &memRequirements);
+
+        auto memoryType = FindMemoryType(memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+        uint32_t size = ((memRequirements.size / memRequirements.alignment) + 1) * memRequirements.alignment;
+        auto deviceMemory = m_DeviceMemoryPool->Get(m_Device, size, memoryType, VK_BUFFER_USAGE_TRANSFER_SRC_BIT);
+        auto offset = deviceMemory->GetOffset();
+        deviceMemory->BindBufferToMemory(buffer, size);
 
         stbi_uc* data;
         VkDeviceSize layerSize = imageSize / 6;
-        vkMapMemory(m_Device, stagingBufferMemory, 0, imageSize, 0, (void**) &data);
+        vkMapMemory(m_Device, *deviceMemory->GetMemory(), offset, size, 0, (void**)&data);
 
         for (uint32_t i = 0; i < skyboxPixels.size(); i++) {
             memcpy(data + layerSize * i, skyboxPixels[i], layerSize);
         }
 
-        vkUnmapMemory(m_Device, stagingBufferMemory);
-
-        CreateSkyboxImage(texWidth, texHeight, mipLevels, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, textureImage, textureImageMemory);
-
+        vkUnmapMemory(m_Device, *deviceMemory->GetMemory());
+        CreateSkyboxImage(texWidth, texHeight, mipLevels, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, textureImage);
         VkImageMemoryBarrier renderBarrier = SetupImageMemoryBarrier(
             textureImage, 0, VK_ACCESS_TRANSFER_WRITE_BIT, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL
         );
@@ -1787,21 +1933,14 @@ namespace Rbk {
         renderBarrier.subresourceRange.levelCount = mipLevels;
 
         AddPipelineBarriers(commandBuffer, { renderBarrier }, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_DEPENDENCY_BY_REGION_BIT);
-
-        CopyBufferToImageSkybox(commandBuffer, stagingBuffer, textureImage, static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight), skyboxPixels, mipLevels, layerSize);
-
+        CopyBufferToImageSkybox(commandBuffer, buffer, textureImage, texWidth, texHeight, skyboxPixels, mipLevels, imageSize/6, offset);
         GenerateMipmaps(commandBuffer, format, textureImage, texWidth, texHeight, mipLevels, 6);
-
         EndCommandBuffer(commandBuffer);
-
         QueueSubmit(commandBuffer);
-        
+
         for (uint32_t i = 0; i < skyboxPixels.size(); i++) {
             stbi_image_free(skyboxPixels[i]);
         }
-
-        vkDestroyBuffer(m_Device, stagingBuffer, nullptr);
-        vkFreeMemory(m_Device, stagingBufferMemory, nullptr);
     }
 
     void VulkanRenderer::GenerateMipmaps(VkCommandBuffer commandBuffer, VkFormat imageFormat, VkImage image, uint32_t texWidth, uint32_t texHeight, uint32_t mipLevels, uint32_t layerCount) {
@@ -1896,7 +2035,7 @@ namespace Rbk {
         );
     }
 
-    void VulkanRenderer::CopyBufferToImage(VkCommandBuffer commandBuffer, VkBuffer buffer, VkImage image, uint32_t width, uint32_t height)
+    void VulkanRenderer::CopyBufferToImage(VkCommandBuffer& commandBuffer, VkBuffer& buffer, VkImage& image, uint32_t width, uint32_t height, uint32_t mipLevels, uint32_t bufferOffset)
     {
         VkBufferImageCopy region{};
         region.bufferOffset = 0;
@@ -1914,7 +2053,7 @@ namespace Rbk {
         vkCmdCopyBufferToImage(commandBuffer, buffer, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
     }
 
-    void VulkanRenderer::CopyBufferToImageSkybox(VkCommandBuffer commandBuffer, VkBuffer buffer, VkImage image, uint32_t width, uint32_t height, std::vector<stbi_uc*>skyboxPixels, uint32_t mipLevels, uint64_t offset)
+    void VulkanRenderer::CopyBufferToImageSkybox(VkCommandBuffer& commandBuffer, VkBuffer& buffer, VkImage& image, uint32_t width, uint32_t height, std::vector<stbi_uc*>skyboxPixels, uint32_t mipLevels, uint32_t layerSize, uint32_t bufferOffset)
     {
         std::vector<VkBufferImageCopy> bufferCopyRegions;
 
@@ -1923,7 +2062,7 @@ namespace Rbk {
             for (uint32_t mipLevel = 0; mipLevel < mipLevels; mipLevel++) {
 
                 VkBufferImageCopy region{};
-                region.bufferOffset = offset * i;
+                region.bufferOffset = layerSize * i;
                 region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
                 region.imageSubresource.mipLevel = mipLevel;
                 region.imageSubresource.baseArrayLayer = i;
@@ -1946,7 +2085,7 @@ namespace Rbk {
         VkImageView depthImageView;
         VkFormat depthFormat = FindDepthFormat();
 
-        CreateImage(m_SwapChainExtent.width, m_SwapChainExtent.height, 1, VK_SAMPLE_COUNT_1_BIT, depthFormat, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, depthImage, depthImageMemory);
+        CreateImage(m_SwapChainExtent.width, m_SwapChainExtent.height, 1, VK_SAMPLE_COUNT_1_BIT, depthFormat, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, depthImage);
         depthImageView = CreateImageView(depthImage, depthFormat, 1);
 
         VkImageAspectFlags aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
@@ -2103,11 +2242,6 @@ namespace Rbk {
             vkDestroyFence(m_Device, m_InFlightFences[i], nullptr);
             vkDestroyFence(m_Device, m_ImagesInFlight[i], nullptr);
         }
-    }
-
-    void VulkanRenderer::DestroyDeviceMemory(VkDeviceMemory deviceMemory)
-    {
-        vkFreeMemory(m_Device, deviceMemory, nullptr);
     }
 
     void VulkanRenderer::DestroyBuffer(VkBuffer buffer)

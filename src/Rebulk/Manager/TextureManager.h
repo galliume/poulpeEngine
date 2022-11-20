@@ -19,6 +19,7 @@ namespace Rbk
         virtual void AddSkyBox(const std::vector<std::string>& skyboxImages) override;
         virtual void AddTexture(const std::string& name, const std::string& path, bool isPublic = false) override;
         virtual inline std::map<std::string, std::string> GetPaths() const override { return m_Paths; }
+        void Clear();
 
     private:
         std::map<std::string, Texture> m_Textures;

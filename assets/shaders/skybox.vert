@@ -4,7 +4,6 @@
 
 layout(set = 0, binding = 0) uniform UniformBufferObject {
     mat4 model;
-    mat4 view;
     mat4 proj;
 } ubo;
 
@@ -19,23 +18,22 @@ layout(location = 5) out vec3 fragFogColor;
 
 layout(push_constant) uniform constants
 {
-    int textureID;
+    vec4 data;
     vec4 cameraPos;
-    float ambiantLight;
-    float fogDensity;
-    vec3 fogColor;
+    vec4 fogColor;
     vec4 lightPos;
+    mat4 view;	
 } PC;
 
 void main() 
 {
     fragTexCoord = pos.xyz;
     //gl_Position = vec4(pos.xyz, 1.0);
-    vec4 p = ubo.proj * ubo.view * vec4(pos, 1.0);
+    vec4 p = ubo.proj * PC.view * vec4(pos, 1.0);
     gl_Position = p.xyww;
-    fragAmbiantLight = PC.ambiantLight;
-    fragFogDensity = PC.fogDensity;
+    fragAmbiantLight = PC.data.y;
+    fragFogDensity = PC.data.z;
     fragModelPos = gl_Position;
-    fragCameraPos = ubo.proj * ubo.view * ubo.model * PC.cameraPos;
-    fragFogColor = PC.fogColor;
+    fragCameraPos = ubo.proj * PC.view * ubo.model * PC.cameraPos;
+    fragFogColor = PC.fogColor.xyz;
 }

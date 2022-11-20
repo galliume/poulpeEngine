@@ -22,6 +22,7 @@ namespace Rbk
         void DisplayLevel();
         void DisplayMesh();
         void LoadTextures();
+        bool NeedRefresh() { return m_Refresh; }
 
         bool m_DebugOpen = true;
         bool m_ShowGrid = true;
@@ -41,8 +42,9 @@ namespace Rbk
         bool m_ShowDemo = false;
         int m_LevelIndex = 0;
         int m_SkyboxIndex = 0;
+        bool m_Refresh = false;
 
-        std::shared_ptr<RenderManager> m_RenderManager;
+        std::atomic<std::shared_ptr<RenderManager>> m_RenderManager;
         std::map<std::string, VkDescriptorSet> m_Textures;
         std::map<std::string, VkDescriptorSet> m_Entities;
     };

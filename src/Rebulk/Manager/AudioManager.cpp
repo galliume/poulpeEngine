@@ -21,6 +21,7 @@ namespace Rbk
     AudioManager::~AudioManager()
     {
         StopAmbient();
+        StopSplash();
         ma_engine_stop(&m_Engine);
         ma_engine_uninit(&m_Engine);
     }
@@ -135,5 +136,16 @@ namespace Rbk
         }
 
         ma_sound_uninit(&sound);
+    }
+
+    void AudioManager::Clear()
+    {
+        if (State::PLAY == m_State) {
+            StopAmbient();
+            ma_engine_stop(&m_Engine);
+            ma_engine_uninit(&m_Engine);
+        }
+        m_AmbientSounds.clear();
+        m_SplashSounds.clear();
     }
 }

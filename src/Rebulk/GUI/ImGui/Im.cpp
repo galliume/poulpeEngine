@@ -4,8 +4,12 @@
 
 namespace Rbk {
 
-    void Im::Init(GLFWwindow* window, ImGui_ImplVulkan_InitInfo initInfo, VkRenderPass renderPass)
+    ImGuiInfo Im::s_ImGuiInfo{};
+
+    void Im::Init(GLFWwindow* window, ImGuiInfo initInfo)
     {
+        s_ImGuiInfo = initInfo;
+
         IMGUI_CHECKVERSION();
         ImGui::CreateContext();
         ImGuiIO& io = ImGui::GetIO(); (void)io;
@@ -36,7 +40,7 @@ namespace Rbk {
 
        // ImGui::SetNextWindowPos(ImVec2(650, 20), ImGuiCond_FirstUseEver);
         ImGui_ImplGlfw_InitForVulkan(window, true);
-        ImGui_ImplVulkan_Init(&initInfo, renderPass);
+        ImGui_ImplVulkan_Init(&s_ImGuiInfo.info, s_ImGuiInfo.rdrPass);
     }
 
     void Im::NewFrame()
