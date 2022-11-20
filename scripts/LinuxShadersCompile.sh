@@ -14,5 +14,5 @@
 ./scripts/glslc ./assets/shaders/grid.vert -o assets/shaders/spv/grid_vert.spv
 ./scripts/glslc ./assets/shaders/grid.frag -o assets/shaders/spv/grid_frag.spv
 
-./scripts/glslc .assets/shaders/bbox.vert -o assets/shaders/spv/bbox_vert.spv
-./scripts/glslc .assets/shaders/bbox.frag -o assets/shaders/spv/bbox_frag.spv
+./scripts/glslc ./assets/shaders/bbox.vert -o assets/shaders/spv/bbox_vert.spv
+./scripts/glslc ./assets/shaders/bbox.frag -o assets/shaders/spv/bbox_frag.spv

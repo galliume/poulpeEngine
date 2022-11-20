@@ -8,11 +8,11 @@
 
 namespace Rbk
 {
-    float VulkanAdapter::s_AmbiantLight = 0.1f;
-    float VulkanAdapter::s_FogDensity = 0.0f;
-    float VulkanAdapter::s_FogColor[3] = { 25 / 255.0f, 25 / 255.0f, 25 / 255.0f };
-    int VulkanAdapter::s_Crosshair = 0;
-    int VulkanAdapter::s_PolygoneMode = VK_POLYGON_MODE_FILL;
+    std::atomic<float> VulkanAdapter::s_AmbiantLight{ 0.5f };
+    std::atomic<float> VulkanAdapter::s_FogDensity{ 0.0f };
+    std::atomic<float> VulkanAdapter::s_FogColor[3]{ 25 / 255.0f, 25 / 255.0f, 25 / 255.0f };
+    std::atomic<int> VulkanAdapter::s_Crosshair{ 0 };
+    std::atomic<int> VulkanAdapter::s_PolygoneMode{ VK_POLYGON_MODE_FILL };
     
     VulkanAdapter::VulkanAdapter(std::shared_ptr<Window> window) :
         m_Window(window)
@@ -32,13 +32,22 @@ namespace Rbk
         SetPerspective();
         m_RenderPass = m_Renderer->CreateRenderPass(m_Renderer->GetMsaaSamples());
         m_SwapChain = m_Renderer->CreateSwapChain(m_SwapChainImages);
-        m_CommandPool = m_Renderer->CreateCommandPool();
 
         //init swap chain, depth image views, primary command buffers and semaphores
         m_SwapChainImageViews.resize(m_SwapChainImages.size());
         m_DepthImages.resize(m_SwapChainImages.size());
         m_DepthImageViews.resize(m_SwapChainImages.size());
-        m_CommandBuffers = m_Renderer->AllocateCommandBuffers(m_CommandPool, static_cast<uint32_t>(m_SwapChainImageViews.size()));
+
+        m_CommandPoolSplash = m_Renderer->CreateCommandPool();
+        m_CommandBuffersSplash = m_Renderer->AllocateCommandBuffers(m_CommandPoolSplash, static_cast<uint32_t>(m_SwapChainImageViews.size()));
+        m_CommandPoolEntities = m_Renderer->CreateCommandPool();
+        m_CommandBuffersEntities = m_Renderer->AllocateCommandBuffers(m_CommandPoolEntities, static_cast<uint32_t>(m_SwapChainImageViews.size()));
+        m_CommandPoolBbox = m_Renderer->CreateCommandPool();
+        m_CommandBuffersBbox = m_Renderer->AllocateCommandBuffers(m_CommandPoolBbox, static_cast<uint32_t>(m_SwapChainImageViews.size()));
+        m_CommandPoolSkybox = m_Renderer->CreateCommandPool();
+        m_CommandBuffersSkybox = m_Renderer->AllocateCommandBuffers(m_CommandPoolSkybox, static_cast<uint32_t>(m_SwapChainImageViews.size()));
+        m_CommandPoolHud = m_Renderer->CreateCommandPool();
+        m_CommandBuffersHud = m_Renderer->AllocateCommandBuffers(m_CommandPoolHud, static_cast<uint32_t>(m_SwapChainImageViews.size()));
 
         VkDeviceMemory depthImageMemory;
 
@@ -46,7 +55,7 @@ namespace Rbk
             m_SwapChainImageViews[i] = m_Renderer->CreateImageView(m_SwapChainImages[i], m_Renderer->GetSwapChainImageFormat(), VK_IMAGE_ASPECT_COLOR_BIT);
 
             VkImage depthImage;
-            m_Renderer->CreateImage(m_Renderer->GetSwapChainExtent().width, m_Renderer->GetSwapChainExtent().height, 1, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_D32_SFLOAT, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, depthImage, depthImageMemory);
+            m_Renderer->CreateImage(m_Renderer->GetSwapChainExtent().width, m_Renderer->GetSwapChainExtent().height, 1, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_D32_SFLOAT, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, depthImage);
             VkImageView depthImageView = m_Renderer->CreateImageView(depthImage, VK_FORMAT_D32_SFLOAT, 1, VK_IMAGE_ASPECT_DEPTH_BIT);
 
             m_DepthImages[i] = depthImage;
@@ -80,7 +89,7 @@ namespace Rbk
 
             VkImage depthImage;
             VkDeviceMemory depthImageMemory;
-            m_Renderer->CreateImage(m_Renderer->GetSwapChainExtent().width, m_Renderer->GetSwapChainExtent().height, 1, VK_SAMPLE_COUNT_1_BIT, m_Renderer->FindDepthFormat(), VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, depthImage, depthImageMemory);
+            m_Renderer->CreateImage(m_Renderer->GetSwapChainExtent().width, m_Renderer->GetSwapChainExtent().height, 1, VK_SAMPLE_COUNT_1_BIT, m_Renderer->FindDepthFormat(), VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, depthImage);
             VkImageView depthImageView = m_Renderer->CreateImageView(depthImage, m_Renderer->FindDepthFormat(), 1, VK_IMAGE_ASPECT_DEPTH_BIT);
 
             m_DepthImages[i] = depthImage;
@@ -88,7 +97,17 @@ namespace Rbk
         }
 
         m_Semaphores = m_Renderer->CreateSyncObjects(m_SwapChainImages);
-        m_CommandBuffers = m_Renderer->AllocateCommandBuffers(m_CommandPool, static_cast<uint32_t>(m_SwapChainImageViews.size()));
+
+        m_CommandPoolSplash = m_Renderer->CreateCommandPool();
+        m_CommandBuffersSplash = m_Renderer->AllocateCommandBuffers(m_CommandPoolSplash, static_cast<uint32_t>(m_SwapChainImageViews.size()));
+        m_CommandPoolEntities = m_Renderer->CreateCommandPool();
+        m_CommandBuffersEntities = m_Renderer->AllocateCommandBuffers(m_CommandPoolEntities, static_cast<uint32_t>(m_SwapChainImageViews.size()));
+        m_CommandPoolBbox = m_Renderer->CreateCommandPool();
+        m_CommandBuffersBbox = m_Renderer->AllocateCommandBuffers(m_CommandPoolBbox, static_cast<uint32_t>(m_SwapChainImageViews.size()));
+        m_CommandPoolSkybox = m_Renderer->CreateCommandPool();
+        m_CommandBuffersSkybox = m_Renderer->AllocateCommandBuffers(m_CommandPoolSkybox, static_cast<uint32_t>(m_SwapChainImageViews.size()));
+        m_CommandPoolHud = m_Renderer->CreateCommandPool();
+        m_CommandBuffersHud = m_Renderer->AllocateCommandBuffers(m_CommandPoolHud, static_cast<uint32_t>(m_SwapChainImageViews.size()));
     }
 
     void VulkanAdapter::ShouldRecreateSwapChain()
@@ -113,6 +132,7 @@ namespace Rbk
             0.1f,
             100.f
         );
+        m_Perspective[1][1] *= -1;
     }
 
     void VulkanAdapter::SetDeltatime(float deltaTime)
@@ -122,179 +142,177 @@ namespace Rbk
 
     void VulkanAdapter::Draw()
     {
-        BeginRendering();
-
-        constants pushConstants;
-        pushConstants.cameraPos = m_Camera->GetPos();
-        pushConstants.ambiantLight = Rbk::VulkanAdapter::s_AmbiantLight;
-        pushConstants.fogDensity = Rbk::VulkanAdapter::s_FogDensity;
-        pushConstants.fogColor = glm::vec3({ Rbk::VulkanAdapter::s_FogColor[0], Rbk::VulkanAdapter::s_FogColor[1], Rbk::VulkanAdapter::s_FogColor[2] });
-        pushConstants.lightPos = m_LightsPos.at(0);
-        pushConstants.rayPick = m_RayPick;
-
-        glm::mat4 lookAt = m_Camera->LookAt();
-        glm::mat4 proj = m_Perspective;
-        proj[1][1] *= -1;
-        glm::vec4 cameraPos = m_Camera->GetPos();
+        ShouldRecreateSwapChain();
+        m_ImageIndex = m_Renderer->AcquireNextImageKHR(m_SwapChain, m_Semaphores);
 
         //entities !
-        for (std::shared_ptr<Entity> entity : *m_Entities) {
-            std::shared_ptr<Mesh> mesh = std::dynamic_pointer_cast<Mesh>(entity);
+        std::atomic<uint32_t> drawCall{0};
 
-            if (!mesh) continue;
-            for (Data& data : *mesh->GetData()) {
+        auto entities = [=, &drawCall]() {
 
-                for (uint32_t i = 0; i < data.m_Ubos.size(); i++) {
-                    data.m_Ubos[i].view = lookAt;
-                    //mesh->cameraPos = cameraPos * mesh->ubos[i].view * mesh->ubos[i].model * mesh->ubos[i].proj;
-                    data.m_Ubos[i].proj = proj;
+            if (0 < m_Entities->size()) {
+                BeginRendering(m_CommandBuffersEntities[m_ImageIndex], VK_ATTACHMENT_LOAD_OP_CLEAR);
+                for (std::shared_ptr<Entity> entity : *m_Entities) {
+                    std::shared_ptr<Mesh> mesh = std::dynamic_pointer_cast<Mesh>(entity);
+
+                    if (!mesh) continue;
+
+                    m_Renderer->BindPipeline(m_CommandBuffersEntities[m_ImageIndex], mesh->m_GraphicsPipeline);
+
+                    //if (m_HasClicked && mesh->IsHit(m_RayPick)) {
+                    //    Rbk::Log::GetLogger()->warn("HIT ! {}", mesh->GetName());
+                    //    m_HasClicked = false;
+                    //}
+
+                    for (Data& data : *mesh->GetData()) {
+
+                        int index = m_ImageIndex;
+                        for (uint32_t i = 0; i < mesh->m_UniformBuffers.size(); i++) {
+                            index += i * 3;
+
+                            if (mesh->HasPushConstants() && nullptr != mesh->ApplyPushConstants)
+                                mesh->ApplyPushConstants(m_CommandBuffersEntities[m_ImageIndex], mesh->m_PipelineLayout, shared_from_this(), data);
+
+                            m_Renderer->Draw(m_CommandBuffersEntities[m_ImageIndex], mesh->GetDescriptorSets().at(index), mesh.get(), data, mesh->m_UniformBuffers.at(i).size, m_ImageIndex);
+                            drawCall++;
+                            index = m_ImageIndex;
+                        }
+                    }
                 }
-                for (uint32_t i = 0; i < mesh->m_UniformBuffers.size(); i++) {
-                    m_Renderer->UpdateUniformBuffer(
-                        mesh->m_UniformBuffers[i],
-                        data.m_Ubos,
-                        data.m_Ubos.size()
-                    );
-                }
 
-                if (m_HasClicked && mesh->IsHit(m_RayPick)) {
-                    Rbk::Log::GetLogger()->warn("HIT ! {}", mesh->GetName());
-                    m_HasClicked = false;
-                }
-
-                pushConstants.textureID = data.m_TextureIndex;
-                m_Renderer->BindPipeline(m_CommandBuffers[m_ImageIndex], mesh->m_GraphicsPipeline);
-                vkCmdPushConstants(m_CommandBuffers[m_ImageIndex], mesh->m_PipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(constants), &pushConstants);
-                m_Renderer->Draw(m_CommandBuffers[m_ImageIndex], mesh.get(), data, m_ImageIndex);
+                EndRendering(m_CommandBuffersEntities[m_ImageIndex]);
             }
-        }
+        };
 
         //bbox !
-        for (std::shared_ptr<Entity> bbox : *m_BoundingBox) {
-            std::shared_ptr<Mesh> mesh = std::dynamic_pointer_cast<Mesh>(bbox);
+        auto bbox = [=, &drawCall]() {
 
-            if (!mesh) continue;
-            for (Data& data : *mesh->GetData()) {
+            if (0 < m_BoundingBox->size()) {
+                BeginRendering(m_CommandBuffersBbox[m_ImageIndex]);
 
-                for (uint32_t i = 0; i < data.m_Ubos.size(); i++) {
-                    data.m_Ubos[i].view = lookAt;
-                    data.m_Ubos[i].proj = proj;
-                }
-                for (uint32_t i = 0; i < mesh->m_UniformBuffers.size(); i++) {
-                    m_Renderer->UpdateUniformBuffer(
-                        mesh->m_UniformBuffers[i],
-                        data.m_Ubos,
-                        data.m_Ubos.size()
-                    );
-                }
+                for (std::shared_ptr<Entity> bbox : *m_BoundingBox) {
+                    std::shared_ptr<Mesh> mesh = std::dynamic_pointer_cast<Mesh>(bbox);
 
-                if (m_HasClicked && mesh->IsHit(m_RayPick)) {
-                    Rbk::Log::GetLogger()->warn("HIT ! {}", mesh->GetName());
-                    m_HasClicked = false;
+                    if (!mesh) continue;
+                    m_Renderer->BindPipeline(m_CommandBuffersBbox[m_ImageIndex], mesh->m_GraphicsPipeline);
+
+                    for (Data& data : *mesh->GetData()) {
+                        int index = m_ImageIndex;
+                        for (uint32_t i = 0; i < mesh->m_UniformBuffers.size(); i++) {
+                            m_Renderer->Draw(m_CommandBuffersBbox[m_ImageIndex], mesh->GetDescriptorSets().at(index), mesh.get(), data, mesh->m_UniformBuffers.at(i).size, m_ImageIndex);
+                            drawCall++;
+                            index = m_ImageIndex;
+                        }
+                    }
                 }
 
-                m_Renderer->BindPipeline(m_CommandBuffers[m_ImageIndex], mesh->m_GraphicsPipeline);
-                m_Renderer->Draw(m_CommandBuffers[m_ImageIndex], mesh.get(), data, m_ImageIndex);
+                EndRendering(m_CommandBuffersBbox[m_ImageIndex]);
             }
-        }
+        };
 
         //skybox !
-        if (m_SkyboxMesh) {
-            std::vector<Rbk::Data> skyboxData = *m_SkyboxMesh->GetData();
+        auto skybox = [=, &drawCall]() {
+            if (m_SkyboxMesh) {
 
-            if (!skyboxData.empty()) {
-                glm::mat4 skybowView = glm::mat4(glm::mat3(lookAt));
-                for (uint32_t i = 0; i < m_SkyboxMesh->m_UniformBuffers.size(); i++) {
-                    skyboxData[0].m_Ubos[i].view = skybowView;
-                    m_Renderer->UpdateUniformBuffer(
-                        m_SkyboxMesh->m_UniformBuffers[i],
-                        { skyboxData[0].m_Ubos[i] },
-                        1
-                    );
+                BeginRendering(m_CommandBuffersSkybox[m_ImageIndex], VK_ATTACHMENT_LOAD_OP_CLEAR, VK_ATTACHMENT_STORE_OP_STORE);
+
+                std::vector<Rbk::Data> skyboxData = *m_SkyboxMesh->GetData();
+
+                if (!skyboxData.empty()) {
+                    m_Renderer->BindPipeline(m_CommandBuffersSkybox[m_ImageIndex], m_SkyboxMesh->m_GraphicsPipeline);
+
+                    for (uint32_t i = 0; i < m_SkyboxMesh->m_UniformBuffers.size(); i++) {
+
+                        if (m_SkyboxMesh->HasPushConstants() && nullptr != m_SkyboxMesh->ApplyPushConstants)
+                            m_SkyboxMesh->ApplyPushConstants(m_CommandBuffersSkybox[m_ImageIndex], m_SkyboxMesh->m_PipelineLayout, shared_from_this(), skyboxData[0]);
+
+                        m_Renderer->Draw(m_CommandBuffersSkybox[m_ImageIndex], m_SkyboxMesh->GetDescriptorSets().at(i), m_SkyboxMesh.get(), skyboxData[0], skyboxData[0].m_Ubos.size(), m_ImageIndex, false);
+                        drawCall++;
+                    }
                 }
-                m_Renderer->BindPipeline(m_CommandBuffers[m_ImageIndex], m_SkyboxMesh->m_GraphicsPipeline);
-                vkCmdPushConstants(m_CommandBuffers[m_ImageIndex], m_SkyboxMesh->m_PipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(constants), &pushConstants);
-                m_Renderer->Draw(m_CommandBuffers[m_ImageIndex], m_SkyboxMesh.get(), skyboxData[0], m_ImageIndex, false);
+
+                EndRendering(m_CommandBuffersSkybox[m_ImageIndex]);
             }
-        }
+        };
 
         //HUD!
-        for (std::shared_ptr<Mesh> hudPart : m_HUD) {
+        auto hud = [=, &drawCall]() {
 
-            if (!hudPart || !hudPart->IsVisible()) continue;
+            BeginRendering(m_CommandBuffersHud[m_ImageIndex]);
 
-            for (Data& data : *hudPart->GetData()) {
+            for (std::shared_ptr<Mesh> hudPart : m_HUD) {
 
-                for (uint32_t i = 0; i < hudPart->m_UniformBuffers.size(); i++) {
-                    data.m_Ubos[i].view = lookAt;
-                    data.m_Ubos[i].proj = proj;
+                if (!hudPart || !hudPart->IsVisible()) continue;
+                m_Renderer->BindPipeline(m_CommandBuffersHud[m_ImageIndex], hudPart->m_GraphicsPipeline);
+
+                for (Data& data : *hudPart->GetData()) {
+                    if (hudPart->HasPushConstants() && nullptr != hudPart->ApplyPushConstants)
+                        hudPart->ApplyPushConstants(m_CommandBuffersHud[m_ImageIndex], hudPart->m_PipelineLayout, shared_from_this(), data);
+
+                    for (uint32_t i = 0; i < hudPart->m_UniformBuffers.size(); i++) {
+                        m_Renderer->Draw(m_CommandBuffersHud[m_ImageIndex], hudPart->GetDescriptorSets().at(i), hudPart.get(), data, data.m_Ubos.size(), m_ImageIndex);
+                        drawCall++;
+                    }
                 }
-
-                for (uint32_t i = 0; i < hudPart->m_UniformBuffers.size(); i++) {
-                    m_Renderer->UpdateUniformBuffer(
-                        hudPart->m_UniformBuffers[i],
-                        data.m_Ubos,
-                        data.m_Ubos.size()
-                    );
-                }
-
-                m_Renderer->BindPipeline(m_CommandBuffers[m_ImageIndex], hudPart->m_GraphicsPipeline);
-
-                if (hudPart->HasPushConstants() && nullptr != hudPart->ApplyPushConstants)
-                    hudPart->ApplyPushConstants(m_CommandBuffers[m_ImageIndex], hudPart->m_PipelineLayout);
-
-                m_Renderer->Draw(m_CommandBuffers[m_ImageIndex], hudPart.get(), data, m_ImageIndex);
             }
-        }
 
-        EndRendering();
+            EndRendering(m_CommandBuffersHud[m_ImageIndex]);
+        };
+
+        //@todo thread pool
+        //std::thread workerE(entities);
+        //std::thread workerS(skybox);
+        //std::thread workerH(hud);
+
+        //workerE.join();
+        //workerS.join();
+        //workerH.join();
+
+        entities();
+        //skybox();
+        //hud();
+
+        std::vector<VkCommandBuffer> cmdSubmit{
+          
+            m_CommandBuffersEntities[m_ImageIndex]
+            
+        };
+
+        if (0 < m_BoundingBox->size()) {
+            std::thread workerB(bbox);
+            cmdSubmit.emplace_back(m_CommandBuffersBbox[m_ImageIndex]);
+            workerB.join();
+        }
+        
+        Submit(cmdSubmit);
+        //Rbk::Log::GetLogger()->critical("Draw Call {}", drawCall);
     }
 
     void VulkanAdapter::DrawSplashScreen()
     {
-        BeginRendering();
+        ShouldRecreateSwapChain();
+        m_ImageIndex = m_Renderer->AcquireNextImageKHR(m_SwapChain, m_Semaphores);
 
-        constants pushConstants;
-        pushConstants.cameraPos = m_Camera->GetPos();
-        pushConstants.ambiantLight = Rbk::VulkanAdapter::s_AmbiantLight;
-        pushConstants.fogDensity = Rbk::VulkanAdapter::s_FogDensity;
-        pushConstants.fogColor = glm::vec3({ Rbk::VulkanAdapter::s_FogColor[0], Rbk::VulkanAdapter::s_FogColor[1], Rbk::VulkanAdapter::s_FogColor[2] });
-        pushConstants.lightPos = m_LightsPos.at(0);
-
-        glm::mat4 lookAt = m_Camera->LookAt();
-        glm::mat4 proj = m_Perspective;
-        proj[1][1] *= -1;
-        glm::vec4 cameraPos = m_Camera->GetPos();
+        BeginRendering(m_CommandBuffersSplash[m_ImageIndex], VK_ATTACHMENT_LOAD_OP_CLEAR, VK_ATTACHMENT_STORE_OP_NONE_KHR);
 
         for (std::shared_ptr<Mesh> mesh : m_Splash) {
 
             if (!mesh || !mesh->IsVisible()) continue;
+            m_Renderer->BindPipeline(m_CommandBuffersSplash[m_ImageIndex], mesh->m_GraphicsPipeline);
 
             for (Data& data : *mesh->GetData()) {
-
                 for (uint32_t i = 0; i < mesh->m_UniformBuffers.size(); i++) {
-                    data.m_Ubos[i].view = lookAt;
-                    data.m_Ubos[i].proj = proj;
+
+                    if (mesh->HasPushConstants() && nullptr != mesh->ApplyPushConstants)
+                        mesh->ApplyPushConstants(m_CommandBuffersSplash[m_ImageIndex], mesh->m_PipelineLayout, shared_from_this(), data);
+
+                    m_Renderer->Draw(m_CommandBuffersSplash[m_ImageIndex], mesh->GetDescriptorSets().at(i), mesh.get(), data, data.m_Ubos.size(), m_ImageIndex);
                 }
-
-                for (uint32_t i = 0; i < mesh->m_UniformBuffers.size(); i++) {
-                    m_Renderer->UpdateUniformBuffer(
-                        mesh->m_UniformBuffers[i],
-                        data.m_Ubos,
-                        data.m_Ubos.size()
-                    );
-                }
-
-                m_Renderer->BindPipeline(m_CommandBuffers[m_ImageIndex], mesh->m_GraphicsPipeline);
-
-                if (mesh->HasPushConstants() && nullptr != mesh->ApplyPushConstants)
-                    mesh->ApplyPushConstants(m_CommandBuffers[m_ImageIndex], mesh->m_PipelineLayout);
-
-                m_Renderer->Draw(m_CommandBuffers[m_ImageIndex], mesh.get(), data, m_ImageIndex);
             }
         }
 
-        EndRendering();
+        EndRendering(m_CommandBuffersSplash[m_ImageIndex]);
+        Submit({ m_CommandBuffersSplash[m_ImageIndex] });
     }
 
     void VulkanAdapter::Destroy()
@@ -314,10 +332,6 @@ namespace Rbk
             m_Renderer->DestroyBuffer(buffer);
         }
 
-        for (auto& deviceMemory : m_UniformBuffers.second) {
-            m_Renderer->DestroyDeviceMemory(deviceMemory);
-        }
-
         for (VkDescriptorSetLayout descriptorSetLayout : m_DescriptorSetLayouts) {
             vkDestroyDescriptorSetLayout(m_Renderer->GetDevice(), descriptorSetLayout, nullptr);
         }
@@ -326,17 +340,23 @@ namespace Rbk
             vkDestroyDescriptorPool(m_Renderer->GetDevice(), descriptorPool, nullptr);
         }
 
-        m_Renderer->DestroyRenderPass(m_RenderPass, m_CommandPool, m_CommandBuffers);
+        m_Renderer->DestroyRenderPass(m_RenderPass, m_CommandPoolSplash, m_CommandBuffersSplash);
+        m_Renderer->DestroyRenderPass(m_RenderPass, m_CommandPoolEntities, m_CommandBuffersEntities);
+        m_Renderer->DestroyRenderPass(m_RenderPass, m_CommandPoolBbox, m_CommandBuffersBbox);
+        m_Renderer->DestroyRenderPass(m_RenderPass, m_CommandPoolSkybox, m_CommandBuffersSkybox);
+        m_Renderer->DestroyRenderPass(m_RenderPass, m_CommandPoolHud, m_CommandBuffersHud);
     }
 
     void VulkanAdapter::ImmediateSubmit(std::function<void(VkCommandBuffer cmd)>&& function)
     {
-        VkCommandBuffer cmd = m_Renderer->AllocateCommandBuffers(m_CommandPool)[0];
+        auto commandPool = m_Renderer->CreateCommandPool();
+        VkCommandBuffer cmd = m_Renderer->AllocateCommandBuffers(commandPool)[0];
         m_Renderer->BeginCommandBuffer(cmd, VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
         function(cmd);
         m_Renderer->EndCommandBuffer(cmd);
         m_Renderer->QueueSubmit(cmd);
         m_Renderer->WaitForFence();
+        vkDestroyCommandPool(m_Renderer->GetDevice(), commandPool, nullptr);
     }
 
     VkRenderPass VulkanAdapter::CreateImGuiRenderPass()
@@ -346,8 +366,8 @@ namespace Rbk
         VkAttachmentDescription attachment = {};
         attachment.format = VK_FORMAT_B8G8R8A8_UNORM;
         attachment.samples = VK_SAMPLE_COUNT_1_BIT;
-        attachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-        attachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+        attachment.loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+        attachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
         attachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
         attachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
         attachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
@@ -389,14 +409,14 @@ namespace Rbk
         std::vector<VkDescriptorPoolSize> poolSizes{};
         VkDescriptorPoolSize cp1;
         cp1.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        cp1.descriptorCount = 1000;
+        cp1.descriptorCount = 100;
         VkDescriptorPoolSize cp2;
         cp2.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        cp2.descriptorCount = 1000;
+        cp2.descriptorCount = 100;
         poolSizes.emplace_back(cp1);
         poolSizes.emplace_back(cp2);
 
-        VkDescriptorPool imguiPool = m_Renderer->CreateDescriptorPool(poolSizes, 1000);
+        VkDescriptorPool imguiPool = m_Renderer->CreateDescriptorPool(poolSizes, 100);
 
         ImGui_ImplVulkan_InitInfo info = {};
 
@@ -417,10 +437,12 @@ namespace Rbk
             Rbk::Log::GetLogger()->warn("ImGui error {}", err);
         };
 
+        auto commandPool = m_Renderer->CreateCommandPool();
+
         ImGuiInfo imGuiInfo;
         imGuiInfo.info = info;
         imGuiInfo.rdrPass = CreateImGuiRenderPass();
-        imGuiInfo.cmdBuffer = m_Renderer->AllocateCommandBuffers(m_CommandPool)[0];
+        imGuiInfo.cmdBuffer = m_Renderer->AllocateCommandBuffers(commandPool)[0];
         //imGuiInfo.pipeline = m_Pipelines[0].graphicsPipeline;
 
         return imGuiInfo;
@@ -435,19 +457,13 @@ namespace Rbk
         }
     }
 
-    void VulkanAdapter::BeginRendering()
+    void VulkanAdapter::BeginRendering(VkCommandBuffer commandBuffer, const VkAttachmentLoadOp loadOp, const VkAttachmentStoreOp storeOp)
     {
-        m_MutexRendering.lock();
-
-        ShouldRecreateSwapChain();
-
-        m_ImageIndex = m_Renderer->AcquireNextImageKHR(m_SwapChain, m_Semaphores);
-
         if (m_ImageIndex == VK_ERROR_OUT_OF_DATE_KHR || m_ImageIndex == VK_SUBOPTIMAL_KHR) {
             RecreateSwapChain();
         }
 
-        m_Renderer->BeginCommandBuffer(m_CommandBuffers[m_ImageIndex]);
+        m_Renderer->BeginCommandBuffer(commandBuffer);
 
         VkImageMemoryBarrier swapChainImageRenderBeginBarrier = m_Renderer->SetupImageMemoryBarrier(
             m_SwapChainImages[m_ImageIndex],
@@ -458,7 +474,7 @@ namespace Rbk
         );
 
         m_Renderer->AddPipelineBarriers(
-            m_CommandBuffers[m_ImageIndex],
+            commandBuffer,
             { swapChainImageRenderBeginBarrier },
             VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
             VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
@@ -476,22 +492,22 @@ namespace Rbk
         );
 
         m_Renderer->AddPipelineBarriers(
-            m_CommandBuffers[m_ImageIndex],
+            commandBuffer,
             { depthImageRenderBeginBarrier },
             VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
             VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
             VK_DEPENDENCY_BY_REGION_BIT
         );
 
-        m_Renderer->BeginRendering(m_CommandBuffers[m_ImageIndex], m_SwapChainImageViews[m_ImageIndex], m_DepthImageViews[m_ImageIndex]);
+        m_Renderer->BeginRendering(commandBuffer, m_SwapChainImageViews[m_ImageIndex], m_DepthImageViews[m_ImageIndex], loadOp, storeOp);
 
-        m_Renderer->SetViewPort(m_CommandBuffers[m_ImageIndex]);
-        m_Renderer->SetScissor(m_CommandBuffers[m_ImageIndex]);
+        m_Renderer->SetViewPort(commandBuffer);
+        m_Renderer->SetScissor(commandBuffer);
     }
 
-    void VulkanAdapter::EndRendering()
+    void VulkanAdapter::EndRendering(VkCommandBuffer commandBuffer)
     {
-        m_Renderer->EndRendering(m_CommandBuffers[m_ImageIndex]);
+        m_Renderer->EndRendering(commandBuffer);
 
         VkImageMemoryBarrier swapChainImageEndRenderBeginBarrier = m_Renderer->SetupImageMemoryBarrier(
             m_SwapChainImages[m_ImageIndex],
@@ -501,7 +517,7 @@ namespace Rbk
             VK_IMAGE_LAYOUT_PRESENT_SRC_KHR
         );
         m_Renderer->AddPipelineBarriers(
-            m_CommandBuffers[m_ImageIndex],
+            commandBuffer,
             { swapChainImageEndRenderBeginBarrier },
             VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
             VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
@@ -518,22 +534,24 @@ namespace Rbk
             VK_IMAGE_ASPECT_DEPTH_BIT
         );
         m_Renderer->AddPipelineBarriers(
-            m_CommandBuffers[m_ImageIndex],
+            commandBuffer,
             { depthImageEndRenderBeginBarrier },
             VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
             VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
             0
         );
-        m_Renderer->EndCommandBuffer(m_CommandBuffers[m_ImageIndex]);
 
-        m_Renderer->QueueSubmit(m_ImageIndex, m_CommandBuffers[m_ImageIndex], m_Semaphores);
+        m_Renderer->EndCommandBuffer(commandBuffer);
+    }
+
+    void VulkanAdapter::Submit(std::vector<VkCommandBuffer> commandBuffers)
+    {
+        m_Renderer->QueueSubmit(m_ImageIndex, commandBuffers, m_Semaphores);
         uint32_t currentFrame = m_Renderer->QueuePresent(m_ImageIndex, m_SwapChain, m_Semaphores);
 
         if (currentFrame == VK_ERROR_OUT_OF_DATE_KHR || currentFrame == VK_SUBOPTIMAL_KHR) {
             RecreateSwapChain();
         }
-
-        m_MutexRendering.unlock();
     }
 
     void VulkanAdapter::SetRayPick(float x, float y, float z, int width, int height)
@@ -548,5 +566,14 @@ namespace Rbk
         m_RayPick = glm::normalize(rayWor);
 
         m_HasClicked = true;
+    }
+
+    void VulkanAdapter::Clear()
+    {
+        m_Entities->clear();
+        m_BoundingBox->clear();
+        m_SkyboxMesh = nullptr;
+        m_HUD.clear();
+        m_Splash.clear();
     }
 }

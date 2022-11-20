@@ -32,19 +32,13 @@ namespace Rbk
     void DestroyManager::CleanEntity(std::shared_ptr<Mesh> entity)
     {
         for (auto buffer : entity->m_UniformBuffers) {
-            m_Renderer->DestroyBuffer(buffer.first);
-            m_Renderer->DestroyDeviceMemory(buffer.second);
+            m_Renderer->DestroyBuffer(buffer.buffer);
         }
 
         for (Data data : *entity->GetData()) {
-            m_Renderer->DestroyBuffer(data.m_VertexBuffer.first);
-            m_Renderer->DestroyDeviceMemory(data.m_VertexBuffer.second);
-
-            m_Renderer->DestroyBuffer(data.m_IndicesBuffer.first);
-            m_Renderer->DestroyDeviceMemory(data.m_IndicesBuffer.second);
+            m_Renderer->DestroyBuffer(data.m_VertexBuffer.buffer);
+            m_Renderer->DestroyBuffer(data.m_IndicesBuffer.buffer);
         }
-        m_Renderer->DestroyPipeline(entity->m_GraphicsPipeline);
-        vkDestroyPipelineLayout(m_Renderer->GetDevice(), entity->m_PipelineLayout, nullptr);
     }
 
     void DestroyManager::CleanShaders(std::map<std::string, std::array<VkShaderModule, 2>> shaders)
@@ -66,7 +60,17 @@ namespace Rbk
     {
         vkDestroySampler(m_Renderer->GetDevice(), textures.GetSampler(), nullptr);
         vkDestroyImage(m_Renderer->GetDevice(), textures.GetImage(), nullptr);
-        m_Renderer->DestroyDeviceMemory(textures.GetImageMemory());
         vkDestroyImageView(m_Renderer->GetDevice(), textures.GetImageView(), nullptr);
+    }
+
+    void DestroyManager::CleanDeviceMemory()
+    {
+        for (auto poolType : m_DeviceMemoryPool->GetPool()) {
+            for (auto poolUsage : poolType.second) {
+                for (auto deviceMemory : poolUsage.second) {
+                    vkFreeMemory(m_Renderer->GetDevice(), *deviceMemory->GetMemory(), nullptr);
+                }
+            }
+        }
     }
 }

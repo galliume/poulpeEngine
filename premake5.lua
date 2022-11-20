@@ -61,8 +61,8 @@ project "Rebulkan"
         "vendor/stb_image/stb_image.cpp",
         "vendor/tiny_obj_loader/tiny_obj_loader.h",
         "vendor/tiny_obj_loader/mapbox/earcut.hpp",
-		"vendor/miniaudio/miniaudio.cpp",
-		"vendor/nlohmann/json.hpp",
+        "vendor/miniaudio/miniaudio.cpp",
+        "vendor/nlohmann/json.hpp",
         "shaders/*",
         "mesh/*"
     }
@@ -89,9 +89,9 @@ project "Rebulkan"
         buildmessage 'Copying assets'
         postbuildcommands 
         {
-			'{COPY} "./assets" "%{cfg.targetdir}/imgui.ini"',
+            '{COPY} "./imgui.ini" "%{cfg.targetdir}/imgui.ini"',
             '{COPY} "./assets" "%{cfg.targetdir}/assets"',
-			'{COPY} "./config" "%{cfg.targetdir}/config"'
+            '{COPY} "./config" "%{cfg.targetdir}/config"'
         }
 
         buildoptions {
@@ -110,7 +110,7 @@ project "Rebulkan"
             "-Wno-c++98-compat-pedantic"
         }
 		
-		defines { "_NO_DEBUG_HEAP=1" }
+    defines { "_NO_DEBUG_HEAP=1" }
 
     filter { "system:windows", "configurations:Debug" }
         buildoptions { "/MDd" }
@@ -124,14 +124,14 @@ project "Rebulkan"
         links { "GLFW", "ImGui", "X11", "dl", "pthread" }
  
         buildmessage 'Compiling shaders'
-        prebuildcommands { "./scripts/LinuxShadersCompile.bat" }
+        prebuildcommands { "./scripts/LinuxShadersCompile.sh" }
 
         buildmessage 'Copying assets'
         postbuildcommands 
         {
-			'{COPY} "./assets" "%{cfg.targetdir}/imgui.ini"',
+            '{COPY} "./imgui.ini" "%{cfg.targetdir}/imgui.ini"',
             '{COPY} "./assets" "%{cfg.targetdir}/assets"',
-			'{COPY} "./assets" "%{cfg.targetdir}/config"'
+            '{COPY} "./config" "%{cfg.targetdir}/config"'
         }
 
     filter "configurations:Debug"

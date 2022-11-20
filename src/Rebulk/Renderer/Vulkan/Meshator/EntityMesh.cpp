@@ -28,21 +28,30 @@ namespace Rbk
         std::shared_ptr<Mesh> mesh = std::dynamic_pointer_cast<Mesh>(entity);
         if (!mesh && !mesh->IsDirty()) return;
 
-        uint32_t totalInstances = static_cast<uint32_t>(mesh->GetData()->size());
+        uint32_t totalInstances = static_cast<uint32_t>(mesh->GetData()->at(0).m_Ubos.size());
         uint32_t maxUniformBufferRange = m_Adapter->Rdr()->GetDeviceProperties().limits.maxUniformBufferRange;
         uint32_t uniformBufferChunkSize = maxUniformBufferRange / sizeof(UniformBufferObject);
         uint32_t uniformBuffersCount = static_cast<uint32_t>(std::ceil(static_cast<float>(totalInstances) / static_cast<float>(uniformBufferChunkSize)));
-        //mesh->m_CameraPos = m_Camera->GetPos();
+
+        //@todo fix memory management...
+        uint32_t uboOffset = (totalInstances > uniformBufferChunkSize) ? uniformBufferChunkSize : totalInstances;
+        uint32_t uboRemaining = (totalInstances - uboOffset > 0) ? totalInstances - uboOffset : 0;
+        uint32_t nbUbo = uboOffset;
 
          for (uint32_t i = 0; i < uniformBuffersCount; i++) {
-            std::pair<VkBuffer, VkDeviceMemory> uniformBuffer = m_Adapter->Rdr()->CreateUniformBuffers(uniformBufferChunkSize);
+
+            mesh->GetData()->at(0).m_UbosOffset.emplace_back(uboOffset);
+            Buffer uniformBuffer = m_Adapter->Rdr()->CreateUniformBuffers(nbUbo);
             mesh->m_UniformBuffers.emplace_back(uniformBuffer);
+
+            uboOffset = (uboRemaining > uniformBufferChunkSize) ? uboOffset + uniformBufferChunkSize : uboOffset + uboRemaining;
+            nbUbo = (uboRemaining > uniformBufferChunkSize) ? uniformBufferChunkSize : uboRemaining;
+            uboRemaining = (totalInstances - uboOffset > 0) ? totalInstances - uboOffset : 0;
         }
 
         std::vector<VkDescriptorImageInfo> imageInfos;
 
         uint32_t index = 0;
-        //a cmd pool per entity ?
         auto commandPool = m_Adapter->Rdr()->CreateCommandPool();
 
         for (Data& data : *mesh->GetData()) {
@@ -60,6 +69,27 @@ namespace Rbk
 
             imageInfos.emplace_back(imageInfo);
             index++;
+
+            for (uint32_t i = 0; i < data.m_Ubos.size(); i++) {
+                //data.m_Ubos[i].view = m_Adapter->GetCamera()->LookAt();
+                data.m_Ubos[i].proj = m_Adapter->GetPerspective();
+            }
+        }
+
+        auto min = 0;
+        auto max = 0;
+
+        for (uint32_t i = 0; i < mesh->m_UniformBuffers.size(); i++) {
+            max = mesh->GetData()->at(0).m_UbosOffset.at(i);
+            auto ubos = std::vector<UniformBufferObject>(mesh->GetData()->at(0).m_Ubos.begin() + min, mesh->GetData()->at(0).m_Ubos.begin() + max);
+
+            m_Adapter->Rdr()->UpdateUniformBuffer(
+                mesh->m_UniformBuffers[i],
+                ubos,
+                ubos.size()
+            );
+
+            min = max;
         }
 
         vkDestroyCommandPool(m_Adapter->Rdr()->GetDevice(), commandPool, nullptr);
@@ -86,23 +116,41 @@ namespace Rbk
 
         m_Adapter->GetDescriptorSetLayouts()->emplace_back(desriptorSetLayout);
 
-        for (uint32_t i = 0; i < m_Adapter->GetSwapChainImages()->size(); i++) {
+        for (auto ubo : mesh->m_UniformBuffers) {
             VkDescriptorSet meshDescriptorSets = m_Adapter->Rdr()->CreateDescriptorSets(m_DescriptorPool, { desriptorSetLayout }, 1);
-            m_Adapter->Rdr()->UpdateDescriptorSets(mesh->m_UniformBuffers, meshDescriptorSets, imageInfos);
-
-            mesh->m_DescriptorSets.emplace_back(meshDescriptorSets);
+            m_Adapter->Rdr()->UpdateDescriptorSets({ ubo }, meshDescriptorSets, imageInfos);
+            for (uint32_t i = 0; i < m_Adapter->GetSwapChainImages()->size(); i++) {
+                mesh->m_DescriptorSets.emplace_back(meshDescriptorSets);
+            }
         }
 
-        std::vector<VkPushConstantRange> pushConstants = {};
-        VkPushConstantRange vkPushconstants;
-        vkPushconstants.offset = 0;
-        vkPushconstants.size = sizeof(constants);
-        vkPushconstants.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+        constants pushConstants;
+        pushConstants.data = glm::vec4(0.f, Rbk::VulkanAdapter::s_AmbiantLight.load(), Rbk::VulkanAdapter::s_FogDensity.load(), 0.f);
+        pushConstants.cameraPos = m_Adapter->GetCamera()->GetPos();
+        pushConstants.fogColor = glm::vec4({ Rbk::VulkanAdapter::s_FogColor[0].load(), Rbk::VulkanAdapter::s_FogColor[1].load(), Rbk::VulkanAdapter::s_FogColor[2].load(), 0.f });
+        pushConstants.lightPos = glm::vec4(m_Adapter->GetLights().at(0), 0.f);
+        pushConstants.view = m_Adapter->GetCamera()->LookAt();
 
-        pushConstants.emplace_back(vkPushconstants);
+        mesh->ApplyPushConstants = [=, &pushConstants, &mesh](VkCommandBuffer& commandBuffer, VkPipelineLayout& pipelineLayout, std::shared_ptr<VulkanAdapter> adapter, const Data& data) {
+            pushConstants.data = glm::vec4(static_cast<float>(data.m_TextureIndex), Rbk::VulkanAdapter::s_AmbiantLight.load(), Rbk::VulkanAdapter::s_FogDensity.load(), 0.f);
+            pushConstants.cameraPos = adapter->GetCamera()->GetPos();
+            pushConstants.fogColor = glm::vec4({ Rbk::VulkanAdapter::s_FogColor[0].load(), Rbk::VulkanAdapter::s_FogColor[1].load(), Rbk::VulkanAdapter::s_FogColor[2].load(), 0.f });
+            pushConstants.lightPos = glm::vec4(adapter->GetLights().at(0), 0.f);
+            pushConstants.view = adapter->GetCamera()->LookAt();
+            vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(constants), &pushConstants);
+        };
+
+        mesh->SetHasPushConstants();
+
         std::vector<VkDescriptorSetLayout>dSetLayout = { desriptorSetLayout };
 
-        mesh->m_PipelineLayout = m_Adapter->Rdr()->CreatePipelineLayout(mesh->m_DescriptorSets, dSetLayout, pushConstants);
+        std::vector<VkPushConstantRange> vkPcs = {};
+        VkPushConstantRange vkPc;
+        vkPc.offset = 0;
+        vkPc.size = sizeof(constants);
+        vkPc.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+        vkPcs.emplace_back(vkPc);
+        mesh->m_PipelineLayout = m_Adapter->Rdr()->CreatePipelineLayout(mesh->m_DescriptorSets, dSetLayout, vkPcs);
 
         VkVertexInputBindingDescription bDesc = Vertex::GetBindingDescription();
         std::vector<VkPipelineShaderStageCreateInfo>shadersStageInfos;
@@ -139,7 +187,7 @@ namespace Rbk
             true, true, true, true,
             VulkanAdapter::s_PolygoneMode
         );
-        
+
         if (m_EntityManager->ShowBBox()) {
             CreateBBoxEntity(mesh);
         }
@@ -158,7 +206,7 @@ namespace Rbk
                 glm::mat4 transform = glm::translate(glm::mat4(1), box.center) * glm::scale(glm::mat4(1), box.size);
                 ubo.model = box.position * transform;
 
-                ubo.view = glm::mat4(1.0f);
+                //ubo.view = glm::mat4(1.0f);
 
                 auto commandPool = m_Adapter->Rdr()->CreateCommandPool();
 
@@ -192,6 +240,11 @@ namespace Rbk
                 data.m_Vertices = vertices;
                 data.m_Ubos.emplace_back(ubo);
 
+                for (uint32_t i = 0; i < data.m_Ubos.size(); i++) {
+                    //data.m_Ubos[i].view = m_Adapter->GetCamera()->LookAt();
+                    data.m_Ubos[i].proj = m_Adapter->GetPerspective();
+                }
+
                 bbox->SetName("bbox_" + mesh->GetData()->at(i).m_Name);
                 bbox->SetShaderName("bbox");
                 bbox->GetData()->emplace_back(data);
@@ -200,15 +253,25 @@ namespace Rbk
 
                 if (0 == count) {
 
-                    uint32_t totalInstances = static_cast<uint32_t>(bbox->GetData()->size());
+                    uint32_t totalInstances = static_cast<uint32_t>(mesh->GetData()->at(0).m_Ubos.size());
                     uint32_t maxUniformBufferRange = m_Adapter->Rdr()->GetDeviceProperties().limits.maxUniformBufferRange;
                     uint32_t uniformBufferChunkSize = maxUniformBufferRange / sizeof(UniformBufferObject);
                     uint32_t uniformBuffersCount = static_cast<uint32_t>(std::ceil(static_cast<float>(totalInstances) / static_cast<float>(uniformBufferChunkSize)));
-                    //mesh->m_CameraPos = m_Camera->GetPos();
+
+                    //@todo fix memory management...
+                    uint32_t uboOffset = (totalInstances > uniformBufferChunkSize) ? uniformBufferChunkSize : totalInstances;
+                    uint32_t uboRemaining = (totalInstances - uboOffset > 0) ? totalInstances - uboOffset : 0;
+                    uint32_t nbUbo = uboOffset;
 
                     for (uint32_t i = 0; i < uniformBuffersCount; i++) {
-                        std::pair<VkBuffer, VkDeviceMemory> uniformBuffer = m_Adapter->Rdr()->CreateUniformBuffers(uniformBufferChunkSize);
+
+                        bbox->GetData()->at(0).m_UbosOffset.emplace_back(uboOffset);
+                        Buffer uniformBuffer = m_Adapter->Rdr()->CreateUniformBuffers(nbUbo);
                         bbox->m_UniformBuffers.emplace_back(uniformBuffer);
+
+                        uboOffset = (uboRemaining > uniformBufferChunkSize) ? uboOffset + uniformBufferChunkSize : uboOffset + uboRemaining;
+                        nbUbo = (uboRemaining > uniformBufferChunkSize) ? uniformBufferChunkSize : uboRemaining;
+                        uboRemaining = (totalInstances - uboOffset > 0) ? totalInstances - uboOffset : 0;
                     }
 
                     Texture tex = m_TextureManager->GetTextures()["minecraft_grass"];
@@ -245,11 +308,14 @@ namespace Rbk
 
                     m_Adapter->GetDescriptorSetLayouts()->emplace_back(desriptorSetLayout);
 
-                    for (uint32_t i = 0; i < m_Adapter->GetSwapChainImages()->size(); i++) {
-                        VkDescriptorSet descriptorSet = m_Adapter->Rdr()->CreateDescriptorSets(m_DescriptorPool, { desriptorSetLayout }, 1);
-                        m_Adapter->Rdr()->UpdateDescriptorSets(bbox->m_UniformBuffers, descriptorSet, imageInfos);
-                        bbox->m_DescriptorSets.emplace_back(descriptorSet);
+                    for (auto ubo : bbox->m_UniformBuffers) {
+                        VkDescriptorSet meshDescriptorSets = m_Adapter->Rdr()->CreateDescriptorSets(m_DescriptorPool, { desriptorSetLayout }, 1);
+                        m_Adapter->Rdr()->UpdateDescriptorSets({ ubo }, meshDescriptorSets, imageInfos);
+                        for (uint32_t i = 0; i < m_Adapter->GetSwapChainImages()->size(); i++) {
+                            bbox->m_DescriptorSets.emplace_back(meshDescriptorSets);
+                        }
                     }
+
                     std::vector<VkDescriptorSetLayout>dSetLayout = { desriptorSetLayout };
 
                     bbox->m_PipelineLayout = m_Adapter->Rdr()->CreatePipelineLayout(bbox->m_DescriptorSets, dSetLayout, {});
@@ -290,6 +356,22 @@ namespace Rbk
                         true, true, true, true,
                         VK_POLYGON_MODE_LINE
                     );
+                }
+
+                auto min = 0;
+                auto max = 0;
+
+                for (uint32_t i = 0; i < mesh->m_UniformBuffers.size(); i++) {
+                    max = mesh->GetData()->at(0).m_UbosOffset.at(i);
+                    const auto ubos = std::vector<UniformBufferObject>(mesh->GetData()->at(0).m_Ubos.begin() + min, mesh->GetData()->at(0).m_Ubos.begin() + max);
+
+                    m_Adapter->Rdr()->UpdateUniformBuffer(
+                        mesh->m_UniformBuffers[i],
+                        ubos,
+                        ubos.size()
+                    );
+
+                    min = max;
                 }
 
                 m_EntityManager->AddBBox(bbox);

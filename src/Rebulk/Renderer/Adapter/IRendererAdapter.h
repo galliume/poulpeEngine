@@ -3,17 +3,10 @@
 #include "Rebulk/Renderer/Vulkan/VulkanRenderer.h"
 #include "Rebulk/Component/Camera.h"
 #include "backends/imgui_impl_vulkan.h"
+#include "Rebulk/GUI/ImGui/Im.h"
 
 namespace Rbk
 {
-    struct ImGuiInfo
-    {
-        ImGui_ImplVulkan_InitInfo info = {};
-        VkCommandBuffer cmdBuffer = nullptr;
-        VkPipeline pipeline = nullptr;
-        VkRenderPass rdrPass = nullptr;
-    };
-
     class IRendererAdapter
     {
     public:

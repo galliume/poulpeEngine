@@ -37,7 +37,7 @@ namespace Rbk
         };
 
         UniformBufferObject ubo;
-        ubo.view = glm::mat4(0.0f);
+        //ubo.view = glm::mat4(0.0f);
 
         auto commandPool = m_Adapter->Rdr()->CreateCommandPool();
 
@@ -55,7 +55,7 @@ namespace Rbk
         mesh->SetName("grid");
         mesh->SetShaderName("grid");
 
-        std::pair<VkBuffer, VkDeviceMemory> gridUniformBuffer = m_Adapter->Rdr()->CreateUniformBuffers(1);
+        Buffer gridUniformBuffer = m_Adapter->Rdr()->CreateUniformBuffers(1);
         mesh->m_UniformBuffers.emplace_back(gridUniformBuffer);
 
         Texture ctex = m_TextureManager->GetTextures()["minecraft_grass"];
@@ -90,27 +90,25 @@ namespace Rbk
 
         m_Adapter->GetDescriptorSetLayouts()->emplace_back(cdesriptorSetLayout);
 
-        for (uint32_t i = 0; i < m_Adapter->GetSwapChainImages()->size(); i++) {
-            VkDescriptorSet cdescriptorSet = m_Adapter->Rdr()->CreateDescriptorSets(m_DescriptorPool, { cdesriptorSetLayout }, 1);
-            m_Adapter->Rdr()->UpdateDescriptorSets(mesh->m_UniformBuffers, cdescriptorSet, cimageInfos);
-            mesh->m_DescriptorSets.emplace_back(cdescriptorSet);
-        }
+        VkDescriptorSet cdescriptorSet = m_Adapter->Rdr()->CreateDescriptorSets(m_DescriptorPool, { cdesriptorSetLayout }, 1);
+        m_Adapter->Rdr()->UpdateDescriptorSets(mesh->m_UniformBuffers, cdescriptorSet, cimageInfos);
+        mesh->m_DescriptorSets.emplace_back(cdescriptorSet);
 
         Grid::pc pc;
-        pc.nearpoint = 0.1f;//@todo parameterize it
-        pc.farpoint = 100.f;
+        pc.point = glm::vec4(0.1f, 50.f, 0.f, 0.f);
+        pc.view = m_Adapter->GetCamera()->LookAt();
 
-        mesh->ApplyPushConstants = [&pc](VkCommandBuffer commandBuffer, VkPipelineLayout pipelineLayout) {
-            pc.nearpoint = 0.1f;//@todo parameterize it
-            pc.farpoint = 100.f;
-            vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(pc), &pc);
+        mesh->ApplyPushConstants = [&pc](VkCommandBuffer& commandBuffer, VkPipelineLayout& pipelineLayout, std::shared_ptr<VulkanAdapter> adapter, Data& data) {
+            pc.point = glm::vec4(0.1f, 50.f, 0.f, 0.f);
+            pc.view = adapter->GetCamera()->LookAt();
+            vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(Grid::pc), &pc);
         };
         mesh->SetHasPushConstants();
 
         std::vector<VkPushConstantRange> vkPcs = {};
         VkPushConstantRange vkPc;
         vkPc.offset = 0;
-        vkPc.size = sizeof(pc);
+        vkPc.size = sizeof(Grid::pc);
         vkPc.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
         vkPcs.emplace_back(vkPc);
 
@@ -154,6 +152,18 @@ namespace Rbk
             true, true, true, true,
             VulkanAdapter::s_PolygoneMode
         );
+
+
+        for (uint32_t i = 0; i < mesh->m_UniformBuffers.size(); i++) {
+            //gridData.m_Ubos[i].view = m_Adapter->GetCamera()->LookAt();
+            gridData.m_Ubos[i].proj = m_Adapter->GetPerspective();
+
+            m_Adapter->Rdr()->UpdateUniformBuffer(
+                mesh->m_UniformBuffers[i],
+                gridData.m_Ubos,
+                gridData.m_Ubos.size()
+            );
+        }
 
         mesh->GetData()->emplace_back(gridData);
     }

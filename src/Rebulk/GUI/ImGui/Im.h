@@ -6,10 +6,18 @@
 
 namespace Rbk
 {
+    struct ImGuiInfo
+    {
+        ImGui_ImplVulkan_InitInfo info = {};
+        VkCommandBuffer cmdBuffer = nullptr;
+        VkPipeline pipeline = nullptr;
+        VkRenderPass rdrPass = nullptr;
+    };
+
     class Im
     {
     public:
-        static void Init(GLFWwindow* window, ImGui_ImplVulkan_InitInfo initInfo, VkRenderPass renderPass);
+        static void Init(GLFWwindow* window, ImGuiInfo initInfo);
         static void NewFrame();
         static void Begin(std::string name, bool* p_open = NULL, ImGuiWindowFlags flags = 0);
         static void CreateFontsTexture(VkCommandBuffer commandBuffer);
@@ -22,5 +30,7 @@ namespace Rbk
         static void BeginChild(std::string str_id, const ImVec2& size_arg, bool border, ImGuiWindowFlags extra_flags);
         static void Render();
         static void Destroy();
+        static ImGuiInfo GetImGuiInfo() { return s_ImGuiInfo; }
+        static ImGuiInfo s_ImGuiInfo;
     };
 }

@@ -3,7 +3,6 @@
 		"main": {"vert": "assets/shaders/spv/vert.spv", "frag": "assets/shaders/spv/frag.spv"},
 		"grid": {"vert": "assets/shaders/spv/grid_vert.spv", "frag": "assets/shaders/spv/grid_frag.spv"},
 		"skybox": {"vert": "assets/shaders/spv/skybox_vert.spv", "frag": "assets/shaders/spv/skybox_frag.spv"},
-		"ambient_light": {"vert": "assets/shaders/spv/ambient_shader_vert.spv", "frag": "assets/shaders/spv/ambient_shader_frag.spv"},
 		"2d": {"vert": "assets/shaders/spv/2d_vert.spv", "frag": "assets/shaders/spv/2d_frag.spv"},
 		"bbox": {"vert": "assets/shaders/spv/bbox_vert.spv", "frag": "assets/shaders/spv/bbox_frag.spv"}
 	}
