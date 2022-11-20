@@ -5,7 +5,6 @@
 struct UBO 
 {
     mat4 model;
-    mat4 view;
     mat4 proj;
 };
 
@@ -20,8 +19,17 @@ layout(location = 2) in vec2 texCoord;
 layout(location = 0) out vec3 fragColor;
 layout(location = 1) out vec2 fragTexCoord;
 
+layout(push_constant) uniform constants
+{
+    vec4 data;
+    vec4 cameraPos;
+    vec4 fogColor;
+    vec4 lightPos;
+    mat4 view;	
+} PC;
+
 void main() {
-    gl_Position = ubos[gl_InstanceIndex].proj * ubos[gl_InstanceIndex].view * ubos[gl_InstanceIndex].model * vec4(pos, 1);
+    gl_Position = ubos[gl_InstanceIndex].proj * PC.view * ubos[gl_InstanceIndex].model * vec4(pos, 1);
 	fragColor = normal;
     fragTexCoord = texCoord;
 }

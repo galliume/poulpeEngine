@@ -35,7 +35,7 @@ namespace Rbk
         };
 
         UniformBufferObject ubo;
-        ubo.view = glm::mat4(0.0f);
+        //ubo.view = glm::mat4(0.0f);
 
         auto commandPool = m_Adapter->Rdr()->CreateCommandPool();
 
@@ -52,7 +52,7 @@ namespace Rbk
         mesh->SetName("crosshair");
         mesh->SetShaderName("2d");
 
-        std::pair<VkBuffer, VkDeviceMemory> crossHairuniformBuffer = m_Adapter->Rdr()->CreateUniformBuffers(1);
+        Buffer crossHairuniformBuffer = m_Adapter->Rdr()->CreateUniformBuffers(1);
         mesh->m_UniformBuffers.emplace_back(crossHairuniformBuffer);
 
         Texture ctex = m_TextureManager->GetTextures()["crosshair_1"];
@@ -94,25 +94,23 @@ namespace Rbk
 
         m_Adapter->GetDescriptorSetLayouts()->emplace_back(cdesriptorSetLayout);
 
-        for (uint32_t i = 0; i < m_Adapter->GetSwapChainImages()->size(); i++) {
-            VkDescriptorSet cdescriptorSet = m_Adapter->Rdr()->CreateDescriptorSets(m_DescriptorPool, { cdesriptorSetLayout }, 1);
-            m_Adapter->Rdr()->UpdateDescriptorSets(mesh->m_UniformBuffers, cdescriptorSet, cimageInfos);
-            mesh->m_DescriptorSets.emplace_back(cdescriptorSet);
-        }
+        VkDescriptorSet cdescriptorSet = m_Adapter->Rdr()->CreateDescriptorSets(m_DescriptorPool, { cdesriptorSetLayout }, 1);
+        m_Adapter->Rdr()->UpdateDescriptorSets(mesh->m_UniformBuffers, cdescriptorSet, cimageInfos);
+        mesh->m_DescriptorSets.emplace_back(cdescriptorSet);
 
         Crosshair::pc pc;
         pc.textureID = 0;
 
-        mesh->ApplyPushConstants = [&pc](VkCommandBuffer commandBuffer, VkPipelineLayout pipelineLayout) {
+        mesh->ApplyPushConstants = [&pc](VkCommandBuffer& commandBuffer, VkPipelineLayout& pipelineLayout, std::shared_ptr<VulkanAdapter> adapter, Data& data) {
             pc.textureID = VulkanAdapter::s_Crosshair;
-            vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(pc), &pc);
+            vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(Crosshair::pc), &pc);
         };
         mesh->SetHasPushConstants();
 
         std::vector<VkPushConstantRange> vkPcs = {};
         VkPushConstantRange vkPc;
         vkPc.offset = 0;
-        vkPc.size = sizeof(pc);
+        vkPc.size = sizeof(Crosshair::pc);
         vkPc.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
         vkPcs.emplace_back(vkPc);
 
@@ -156,6 +154,17 @@ namespace Rbk
             true, true, true, true,
             VulkanAdapter::s_PolygoneMode
         );
+
+        for (uint32_t i = 0; i < mesh->m_UniformBuffers.size(); i++) {
+            //crossHairData.m_Ubos[i].view = m_Adapter->GetCamera()->LookAt();
+            crossHairData.m_Ubos[i].proj = m_Adapter->GetPerspective();
+
+            m_Adapter->Rdr()->UpdateUniformBuffer(
+                mesh->m_UniformBuffers[i],
+                crossHairData.m_Ubos,
+                crossHairData.m_Ubos.size()
+            );
+        }
 
         mesh->GetData()->emplace_back(crossHairData);
     }

@@ -3,7 +3,7 @@
 
 namespace Rbk
 {
-    class VulkanAdapter : public IRendererAdapter
+    class VulkanAdapter : public IRendererAdapter, public std::enable_shared_from_this<VulkanAdapter>
     {
 
     public:
@@ -31,6 +31,7 @@ namespace Rbk
         virtual inline std::shared_ptr<VkRenderPass> RdrPass() override { return m_RenderPass; }
         virtual inline glm::mat4 GetPerspective() override { return m_Perspective; }
         virtual void SetDeltatime(float deltaTime) override;
+        void Clear();
 
         void ShouldRecreateSwapChain();
         void RecreateSwapChain();
@@ -41,11 +42,11 @@ namespace Rbk
         VkRenderPass CreateImGuiRenderPass();
         
         //IMGUI config
-        static float s_AmbiantLight;
-        static float s_FogDensity;
-        static float s_FogColor[3];
-        static int s_Crosshair;
-        static int s_PolygoneMode;
+        static std::atomic<float> s_AmbiantLight;
+        static std::atomic<float> s_FogDensity;
+        static std::atomic<float> s_FogColor[3];
+        static std::atomic<int> s_Crosshair;
+        static std::atomic<int> s_PolygoneMode;
 
         std::shared_ptr<Camera> GetCamera() { return m_Camera; }
         std::vector<glm::vec3> GetLights() { return m_LightsPos; }
@@ -53,8 +54,9 @@ namespace Rbk
     private:
         //@todo temp
         void SetPerspective();
-        void BeginRendering();
-        void EndRendering();
+        void BeginRendering(VkCommandBuffer commandBuffer, const VkAttachmentLoadOp loadOp = VK_ATTACHMENT_LOAD_OP_LOAD, const VkAttachmentStoreOp storeOp = VK_ATTACHMENT_STORE_OP_STORE);
+        void EndRendering(VkCommandBuffer commandBuffer);
+        void Submit(std::vector<VkCommandBuffer> commandBuffers);
 
     private:
         std::shared_ptr<VulkanRenderer> m_Renderer = nullptr;
@@ -63,9 +65,24 @@ namespace Rbk
         std::vector<VkImage> m_SwapChainImages = {};
         std::vector<VkFramebuffer> m_SwapChainFramebuffers = {};
         std::vector<VkImageView> m_SwapChainImageViews = {};
+
         std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>> m_Semaphores = {};
-        VkCommandPool m_CommandPool = nullptr;
-        std::vector<VkCommandBuffer> m_CommandBuffers = {};
+
+        VkCommandPool m_CommandPoolSplash = nullptr;
+        std::vector<VkCommandBuffer> m_CommandBuffersSplash = {};
+
+        VkCommandPool m_CommandPoolEntities = nullptr;
+        std::vector<VkCommandBuffer> m_CommandBuffersEntities = {};
+
+        VkCommandPool m_CommandPoolBbox = nullptr;
+        std::vector<VkCommandBuffer> m_CommandBuffersBbox = {};
+
+        VkCommandPool m_CommandPoolSkybox = nullptr;
+        std::vector<VkCommandBuffer> m_CommandBuffersSkybox = {};
+
+        VkCommandPool m_CommandPoolHud = nullptr;
+        std::vector<VkCommandBuffer> m_CommandBuffersHud = {};
+
         uint32_t m_ImageIndex = 0;
         std::pair<std::vector<VkBuffer>, std::vector<VkDeviceMemory>> m_UniformBuffers = {};
         std::vector<VulkanPipeline>m_Pipelines;
@@ -84,7 +101,6 @@ namespace Rbk
         std::vector<VkDescriptorPool>m_DescriptorPools;
         std::vector<VkDescriptorSetLayout>m_DescriptorSetLayouts;
 
-        std::mutex m_MutexRendering;
         glm::vec3 m_RayPick;
         bool m_HasClicked = false;
 

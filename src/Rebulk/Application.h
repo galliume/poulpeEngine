@@ -28,13 +28,18 @@ namespace Rbk
         void Init();
         void Run();
 
-        static int s_UnlockedFPS;
+        static  std::atomic<int> s_UnlockedFPS;
+
+    private:
+        void InitImGui();
 
     private:
         static Application* s_Instance;
         std::shared_ptr<Rbk::Window> m_Window;
         std::shared_ptr<Rbk::RenderManager> m_RenderManager;
         std::shared_ptr<Rbk::Im> m_VImGui;
-        double m_StartRun = 0;
+        std::shared_ptr<Rbk::VulkanLayer> m_VulkanLayer;
+
+        std::chrono::time_point<std::chrono::system_clock> m_StartRun;
     };
 }

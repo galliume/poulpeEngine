@@ -5,7 +5,6 @@
 struct UBO 
 {
     mat4 model;
-    mat4 view;
     mat4 proj;
 };
 
@@ -29,26 +28,24 @@ layout(location = 8) out int fragTextureID;
 
 layout(push_constant) uniform constants
 {
-    int textureID;
+    vec4 data;
     vec4 cameraPos;
-    float ambiantLight;
-    float fogDensity;
-    vec3 fogColor;
+    vec4 fogColor;
     vec4 lightPos;
-	
+    mat4 view;	
 } PC;
 
 void main() {
     
-    gl_Position = ubos[gl_InstanceIndex].proj * ubos[gl_InstanceIndex].view * ubos[gl_InstanceIndex].model * vec4(pos, 1.0);
+    gl_Position = ubos[gl_InstanceIndex].proj * PC.view * ubos[gl_InstanceIndex].model * vec4(pos, 1.0);
 
     fragTexCoord = texCoord;
     fragNormal =  mat3(transpose(inverse(ubos[gl_InstanceIndex].model))) * normal;
     fragModelPos = vec3(ubos[gl_InstanceIndex].model * vec4(pos, 1.0));
     fragCameraPos = PC.cameraPos.xyz;
-    fragAmbiantLight = PC.ambiantLight;
-    fragFogDensity = PC.fogDensity;
-    fragFogColor = PC.fogColor;
+    fragAmbiantLight = PC.data.y;
+    fragFogDensity = PC.data.z;
+    fragFogColor = PC.fogColor.xyz;
     fragLightPos = PC.lightPos.xyz;
-    fragTextureID = PC.textureID;
+    fragTextureID = int(PC.data.x);
 }

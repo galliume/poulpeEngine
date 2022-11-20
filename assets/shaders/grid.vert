@@ -5,7 +5,6 @@
 struct UBO 
 {
     mat4 model;
-    mat4 view;
     mat4 proj;
 };
 
@@ -15,8 +14,8 @@ layout(set = 0, binding = 0) uniform UniformBufferObject {
 
 layout(push_constant) uniform constants
 {
-    float nearpoint;
-	float farpoint;
+    vec4 point;
+    mat4 view;
 }PC;
 
 layout(location = 0) in vec3 pos;
@@ -35,11 +34,11 @@ layout(location = 12) out float far;
 
 void main() {
 	vec3 point = pos.xyz;
-	nearPoint = unproject(point.x, point.y, 0.0, ubos[gl_InstanceIndex].view, ubos[gl_InstanceIndex].proj).xyz;
-    farPoint = unproject(point.x, point.y, 1.0, ubos[gl_InstanceIndex].view, ubos[gl_InstanceIndex].proj).xyz;
-	matView = ubos[gl_InstanceIndex].view;	
+	nearPoint = unproject(point.x, point.y, 0.0, PC.view, ubos[gl_InstanceIndex].proj).xyz;
+    	farPoint = unproject(point.x, point.y, 1.0, PC.view, ubos[gl_InstanceIndex].proj).xyz;
+	matView = PC.view;	
 	matProj = ubos[gl_InstanceIndex].proj;
-	near = PC.nearpoint;
-	far = PC.farpoint;
+	near = PC.point.x;
+	far = PC.point.y;
     gl_Position = vec4(point, 1.0);
 }

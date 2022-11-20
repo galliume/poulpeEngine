@@ -45,7 +45,7 @@ namespace Rbk
             ubo.model = glm::rotate(ubo.model, glm::radians(rotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
             ubo.model = glm::rotate(ubo.model, glm::radians(rotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
 
-            ubo.view = glm::mat4(1.0f);
+            //ubo.view = glm::mat4(1.0f);
             data.m_Ubos.emplace_back(ubo);
 
             m_Data.emplace_back(data);

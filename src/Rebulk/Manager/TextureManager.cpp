@@ -54,8 +54,7 @@ namespace Rbk
         }
 
         VkImage skyboxImage;
-        VkDeviceMemory textureImageMemory;
-        uint32_t mipLevels = static_cast<uint32_t>(std::floor(std::log2(std::max(texWidth, texHeight)))) + 1;
+        uint32_t mipLevels = 1;
         VkCommandPool commandPool = m_Renderer->Rdr()->CreateCommandPool();
 
         texWidth = static_cast<uint32_t>(texWidth);
@@ -64,13 +63,12 @@ namespace Rbk
 
         VkCommandBuffer commandBuffer = m_Renderer->Rdr()->AllocateCommandBuffers(commandPool)[0];
         m_Renderer->Rdr()->BeginCommandBuffer(commandBuffer);
-        m_Renderer->Rdr()->CreateSkyboxTextureImage(commandBuffer, skyboxPixels, texWidth, texHeight, mipLevels, skyboxImage, textureImageMemory, VK_FORMAT_R8G8B8A8_SRGB);
+        m_Renderer->Rdr()->CreateSkyboxTextureImage(commandBuffer, skyboxPixels, texWidth, texHeight, mipLevels, skyboxImage, VK_FORMAT_R8G8B8A8_SRGB);
 
         VkImageView textureImageView = m_Renderer->Rdr()->CreateSkyboxImageView(skyboxImage, VK_FORMAT_R8G8B8A8_SRGB, mipLevels);
         VkSampler textureSampler = m_Renderer->Rdr()->CreateSkyboxTextureSampler(mipLevels);
 
         m_Skybox.SetImage(skyboxImage);
-        m_Skybox.SetImageMemory(textureImageMemory);
         m_Skybox.SetImageView(textureImageView);
         m_Skybox.SetSampler(textureSampler);
         m_Skybox.SetMipLevels(mipLevels);
@@ -106,13 +104,13 @@ namespace Rbk
         }
 
         VkImage textureImage;
-        VkDeviceMemory textureImageMemory;
         uint32_t mipLevels = static_cast<uint32_t>(std::floor(std::log2(std::max(texWidth, texHeight)))) + 1;
+        if (mipLevels > 5) mipLevels = 5;
         VkCommandPool commandPool = m_Renderer->Rdr()->CreateCommandPool();
         VkCommandBuffer commandBuffer = m_Renderer->Rdr()->AllocateCommandBuffers(commandPool)[0];
 
         m_Renderer->Rdr()->BeginCommandBuffer(commandBuffer);
-        m_Renderer->Rdr()->CreateTextureImage(commandBuffer, pixels, texWidth, texHeight, mipLevels, textureImage, textureImageMemory, VK_FORMAT_R8G8B8A8_SRGB);
+        m_Renderer->Rdr()->CreateTextureImage(commandBuffer, pixels, texWidth, texHeight, mipLevels, textureImage, VK_FORMAT_R8G8B8A8_SRGB);
 
         VkImageView textureImageView = m_Renderer->Rdr()->CreateImageView(textureImage, VK_FORMAT_R8G8B8A8_SRGB, mipLevels);
         VkSampler textureSampler = m_Renderer->Rdr()->CreateTextureSampler(mipLevels);
@@ -120,7 +118,6 @@ namespace Rbk
         Rbk::Texture texture;
         texture.SetName(name);
         texture.SetImage(textureImage);
-        texture.SetImageMemory(textureImageMemory);
         texture.SetImageView(textureImageView);
         texture.SetSampler(textureSampler);
         texture.SetMipLevels(mipLevels);
@@ -132,6 +129,11 @@ namespace Rbk
         m_Textures.emplace(name, texture);
         vkFreeCommandBuffers(m_Renderer->Rdr()->GetDevice(), commandPool, 1, &commandBuffer);
         vkDestroyCommandPool(m_Renderer->Rdr()->GetDevice(), commandPool, nullptr);
+    }
+
+    void TextureManager::Clear()
+    {
+        m_Textures.clear();
     }
 
     TextureManager::~TextureManager()

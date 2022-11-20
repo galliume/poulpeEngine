@@ -5,7 +5,7 @@
 			"textures": ["minecraft_grass"],
 			"shader": "main",
 			"positions": [
-				{"x": -0.20, "y": -0.2, "z": -0.20}
+				{"x": -0.20, "y": 1.0, "z": -0.20}
 			],
 			"scales": [
 				{"x": 0.1, "y": 0.1, "z": 0.1}
@@ -21,29 +21,7 @@
 				"z": 0
 			},
 			"form": "square",
-			"squarePadding": [{"x" : [-7, 7], "y": [-7, 7]}]
-		},
-		"deadTree" : {
-			"mesh": "assets/mesh/tree/dead_tree.obj",
-			"textures": ["trunk_tree_cartoon"],
-			"shader": "main",
-			"positions": [
-				{"x": 0.0, "y": 0.0, "z": 0.0}
-			],
-			"scales": [
-				{"x": 0.01, "y": 0.01, "z": 0.01}
-			],
-			"rotations": [
-				{"x": 0.0, "y": 0.0, "z": 0.0}
-			],
-			"inverseTextureY": true,
-			"count": 2,
-			"padding": {
-				"x": 0.0,
-				"y": 0.0,
-				"z": 0.0
-			},
-			"form": "positioned"
+			"squarePadding": [{"x" : [-50, 50], "y": [-50, 50]}]
 		}
 	}
 }

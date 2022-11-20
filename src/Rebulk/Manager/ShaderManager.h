@@ -15,6 +15,7 @@ namespace Rbk
         virtual inline const std::shared_ptr<VulkanShaders> GetShaders() const override { return m_Shaders; };
 
         void AddRenderer(std::shared_ptr<IRendererAdapter> renderer) { m_Renderer = renderer; };
+        void Clear();
 
     private:
         std::shared_ptr<VulkanShaders> m_Shaders = nullptr;
