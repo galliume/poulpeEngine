@@ -72,7 +72,7 @@ namespace Rbk
 
         UniformBufferObject ubo;
         ubo.model = glm::mat4(0.0f);
-        ubo.view = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
+        //ubo.view = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
         ubo.proj = m_Adapter->GetPerspective();
 
         auto commandPool = m_Adapter->Rdr()->CreateCommandPool();
@@ -188,7 +188,7 @@ namespace Rbk
         glm::mat4 skybowView = m_Adapter->GetCamera()->LookAt();
 
         for (uint32_t i = 0; i < mesh->m_UniformBuffers.size(); i++) {
-            data.m_Ubos[i].view = skybowView;
+            //data.m_Ubos[i].view = skybowView;
             m_Adapter->Rdr()->UpdateUniformBuffer(
                 mesh->m_UniformBuffers[i],
                 data.m_Ubos,

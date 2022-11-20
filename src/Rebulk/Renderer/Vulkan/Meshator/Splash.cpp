@@ -37,7 +37,7 @@ namespace Rbk
         };
 
         UniformBufferObject ubo;
-        ubo.view = glm::mat4(0.0f);
+        //ubo.view = glm::mat4(0.0f);
 
         auto commandPool = m_Adapter->Rdr()->CreateCommandPool();
 
@@ -165,7 +165,7 @@ namespace Rbk
         for (Data& data : *mesh->GetData()) {
 
             for (uint32_t i = 0; i < mesh->m_UniformBuffers.size(); i++) {
-                data.m_Ubos[i].view = m_Adapter->GetCamera()->LookAt();
+                //data.m_Ubos[i].view = m_Adapter->GetCamera()->LookAt();
                 data.m_Ubos[i].proj = m_Adapter->GetPerspective();
             }
 

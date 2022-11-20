@@ -1331,7 +1331,7 @@ namespace Rbk {
         submitInfo.pCommandBuffers = &commandBuffer;
 
         {
-            std::lock_guard<std::mutex> guard(m_MutexQueueSubmit);
+            //std::lock_guard<std::mutex> guard(m_MutexQueueSubmit);
             vkQueueSubmit(m_GraphicsQueue, 1, &submitInfo, VK_NULL_HANDLE);
             vkQueueWaitIdle(m_GraphicsQueue);
         }
@@ -1340,7 +1340,7 @@ namespace Rbk {
     void VulkanRenderer::QueueSubmit(uint32_t imageIndex, std::vector<VkCommandBuffer> commandBuffers, std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>>& semaphores)
     {
         {
-            std::lock_guard<std::mutex> guard(m_MutexQueueSubmit);
+            //std::lock_guard<std::mutex> guard(m_MutexQueueSubmit);
 
             std::vector<VkSemaphore>& imageAvailableSemaphores = semaphores.first;
             std::vector<VkSemaphore>& renderFinishedSemaphores = semaphores.second;
@@ -1419,7 +1419,7 @@ namespace Rbk {
     uint32_t VulkanRenderer::AcquireNextImageKHR(VkSwapchainKHR swapChain, std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>>& semaphores)
     {
         {
-            std::lock_guard<std::mutex> guard(m_MutexAcquireNextImage);
+            //std::lock_guard<std::mutex> guard(m_MutexAcquireNextImage);
             
             std::vector<VkSemaphore>& imageAvailableSemaphores = semaphores.first;
 
@@ -1444,7 +1444,7 @@ namespace Rbk {
     void VulkanRenderer::Draw(VkCommandBuffer commandBuffer, VkDescriptorSet descriptorSet, Mesh* mesh, Data data, uint32_t uboCount, uint32_t frameIndex, bool drawIndexed, uint32_t index)
     {
         {
-            std::lock_guard<std::mutex> guard(m_MutexDraw);
+            //std::lock_guard<std::mutex> guard(m_MutexDraw);
 
             VkBuffer vertexBuffers[] = { data.m_VertexBuffer.buffer };
             VkDeviceSize offsets[] = { 0 };
@@ -1757,7 +1757,7 @@ namespace Rbk {
         copyRegion.size = size;
 
         {
-            std::lock_guard<std::mutex> guard(m_MutexQueueSubmit);
+            //std::lock_guard<std::mutex> guard(m_MutexQueueSubmit);
 
             vkCmdCopyBuffer(commandBuffer, srcBuffer, dstBuffer, 1, &copyRegion);
             vkEndCommandBuffer(commandBuffer);

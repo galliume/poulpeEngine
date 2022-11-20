@@ -71,7 +71,7 @@ namespace Rbk
             index++;
 
             for (uint32_t i = 0; i < data.m_Ubos.size(); i++) {
-                data.m_Ubos[i].view = m_Adapter->GetCamera()->LookAt();
+                //data.m_Ubos[i].view = m_Adapter->GetCamera()->LookAt();
                 data.m_Ubos[i].proj = m_Adapter->GetPerspective();
             }
         }
@@ -206,7 +206,7 @@ namespace Rbk
                 glm::mat4 transform = glm::translate(glm::mat4(1), box.center) * glm::scale(glm::mat4(1), box.size);
                 ubo.model = box.position * transform;
 
-                ubo.view = glm::mat4(1.0f);
+                //ubo.view = glm::mat4(1.0f);
 
                 auto commandPool = m_Adapter->Rdr()->CreateCommandPool();
 
@@ -241,7 +241,7 @@ namespace Rbk
                 data.m_Ubos.emplace_back(ubo);
 
                 for (uint32_t i = 0; i < data.m_Ubos.size(); i++) {
-                    data.m_Ubos[i].view = m_Adapter->GetCamera()->LookAt();
+                    //data.m_Ubos[i].view = m_Adapter->GetCamera()->LookAt();
                     data.m_Ubos[i].proj = m_Adapter->GetPerspective();
                 }
 

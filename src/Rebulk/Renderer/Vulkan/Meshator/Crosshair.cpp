@@ -35,7 +35,7 @@ namespace Rbk
         };
 
         UniformBufferObject ubo;
-        ubo.view = glm::mat4(0.0f);
+        //ubo.view = glm::mat4(0.0f);
 
         auto commandPool = m_Adapter->Rdr()->CreateCommandPool();
 
@@ -156,7 +156,7 @@ namespace Rbk
         );
 
         for (uint32_t i = 0; i < mesh->m_UniformBuffers.size(); i++) {
-            crossHairData.m_Ubos[i].view = m_Adapter->GetCamera()->LookAt();
+            //crossHairData.m_Ubos[i].view = m_Adapter->GetCamera()->LookAt();
             crossHairData.m_Ubos[i].proj = m_Adapter->GetPerspective();
 
             m_Adapter->Rdr()->UpdateUniformBuffer(

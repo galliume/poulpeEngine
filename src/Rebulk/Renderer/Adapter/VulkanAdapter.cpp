@@ -151,7 +151,7 @@ namespace Rbk
         auto entities = [=, &drawCall]() {
 
             if (0 < m_Entities->size()) {
-                BeginRendering(m_CommandBuffersEntities[m_ImageIndex]);
+                BeginRendering(m_CommandBuffersEntities[m_ImageIndex], VK_ATTACHMENT_LOAD_OP_CLEAR);
                 for (std::shared_ptr<Entity> entity : *m_Entities) {
                     std::shared_ptr<Mesh> mesh = std::dynamic_pointer_cast<Mesh>(entity);
 
@@ -260,18 +260,22 @@ namespace Rbk
         };
 
         //@todo thread pool
-        std::thread workerE(entities);
-        std::thread workerS(skybox);
-        std::thread workerH(hud);
+        //std::thread workerE(entities);
+        //std::thread workerS(skybox);
+        //std::thread workerH(hud);
 
-        workerE.join();
-        workerS.join();
-        workerH.join();
+        //workerE.join();
+        //workerS.join();
+        //workerH.join();
+
+        entities();
+        //skybox();
+        //hud();
 
         std::vector<VkCommandBuffer> cmdSubmit{
-            m_CommandBuffersSkybox[m_ImageIndex],
-            m_CommandBuffersEntities[m_ImageIndex],
-            m_CommandBuffersHud[m_ImageIndex]
+          
+            m_CommandBuffersEntities[m_ImageIndex]
+            
         };
 
         if (0 < m_BoundingBox->size()) {

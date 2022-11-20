@@ -5,7 +5,6 @@
 struct UBO 
 {
     mat4 model;
-    mat4 view;
     mat4 proj;
 };
 
@@ -23,28 +22,27 @@ layout(location = 2) out vec4 fragCameraPos;
 layout(location = 3) out vec4 fragModelPos;
 layout(location = 4) out float fragAmbiantLight;
 layout(location = 5) out float fragFogDensity;
-layout(location = 6) out vec3 fragFogColor;
+layout(location = 6) out vec4 fragFogColor;
 layout(location = 7) out vec4 fragLightPos;
 
 layout(push_constant) uniform constants
 {
-    int textureID;
+    vec4 data;
     vec4 cameraPos;
-    float ambiantLight;
-    float fogDensity;
-    vec3 fogColor;
+    vec4 fogColor;
     vec4 lightPos;
-} PushConstants;
+    mat4 view;	
+} PC;
 
 void main() {
     
-    gl_Position = ubos[gl_InstanceIndex].proj * ubos[gl_InstanceIndex].view * ubos[gl_InstanceIndex].model * vec4(pos, 1.0);
+    gl_Position = ubos[gl_InstanceIndex].proj * PC.view * ubos[gl_InstanceIndex].model * vec4(pos, 1.0);
     fragTexCoord = texCoord;
     fragNormal =  mat3(transpose(inverse(ubos[gl_InstanceIndex].model))) * normal;
     fragModelPos = gl_Position;
-    fragCameraPos = ubos[gl_InstanceIndex].proj * ubos[gl_InstanceIndex].view * ubos[gl_InstanceIndex].model * PushConstants.cameraPos;
-    fragAmbiantLight = PushConstants.ambiantLight;
-    fragFogDensity = PushConstants.fogDensity;
-    fragFogColor = PushConstants.fogColor;
-    fragLightPos = PushConstants.lightPos;
+    fragCameraPos = ubos[gl_InstanceIndex].proj * PC.view * ubos[gl_InstanceIndex].model * PC.cameraPos;
+    fragAmbiantLight = PC.data.y;
+    fragFogDensity = PC.data.z;
+    fragFogColor = PC.fogColor;
+    fragLightPos = PC.lightPos;
 }
