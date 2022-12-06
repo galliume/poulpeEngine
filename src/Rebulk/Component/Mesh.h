@@ -42,7 +42,7 @@ namespace Rbk
         
         inline const std::string GetShaderName() const { return m_ShaderName; }
         inline void SetShaderName(std::string_view name) { m_ShaderName = name; }
-        inline const std::vector<VkDescriptorSet> GetDescriptorSets() const { return m_DescriptorSets; }
+        inline std::vector<VkDescriptorSet> GetDescriptorSets() { return m_DescriptorSets; }
 
         void AddUbos(const std::vector<UniformBufferObject>& ubos);
         std::function<void(VkCommandBuffer& commandBuffer, VkPipelineLayout& pipelineLayout, std::shared_ptr<VulkanAdapter>, Data& data)> ApplyPushConstants = nullptr;

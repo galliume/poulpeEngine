@@ -150,12 +150,11 @@ namespace Rbk
         }
 
         std::future<void> textureFuture = m_TextureManager->Load();
-        textureFuture.wait();
-
         std::future<void> skyboxFuture = m_TextureManager->LoadSkybox(static_cast<std::string>(appConfig["defaultSkybox"]));
-        skyboxFuture.wait();
-
         std::future<void> shaderFuture = m_ShaderManager->Load(m_ConfigManager->ShaderConfig());
+
+        textureFuture.wait();
+        skyboxFuture.wait();
         shaderFuture.wait();
 
         SetIsLoaded();

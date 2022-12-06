@@ -1,6 +1,7 @@
 #include "rebulkpch.h"
 #include <future>
 #include <memory>
+#include <cfenv>
 #include <volk.h>
 #include "VulkanAdapter.h"
 #include "Rebulk/Renderer/Vulkan/VulkanRenderer.h"
@@ -140,22 +141,27 @@ namespace Rbk
         m_Deltatime = deltaTime;
     }
 
-    void VulkanAdapter::Draw()
+    std::future<void> VulkanAdapter::DrawEntities(std::vector<std::shared_ptr<Entity>>& entities)
     {
-        ShouldRecreateSwapChain();
-        m_ImageIndex = m_Renderer->AcquireNextImageKHR(m_SwapChain, m_Semaphores);
+        std::future<void>future = std::async(std::launch::async, [=, &entities]() {
 
-        //entities !
-        std::atomic<uint32_t> drawCall{0};
+            VkDebugUtilsLabelEXT label;
+            label.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_LABEL_EXT;
+            label.pLabelName = "entities_drawing";
+            label.pNext = VK_NULL_HANDLE;
+            label.color[0] = 1.0f;
+            label.color[1] = 0.3f;
+            label.color[2] = 0.2f;
+            label.color[3] = 0.1f;
 
-        auto entities = [=, &drawCall]() {
+            vkCmdBeginDebugUtilsLabelEXT(m_CommandBuffersEntities[m_ImageIndex], &label);
 
-            if (0 < m_Entities->size()) {
-                BeginRendering(m_CommandBuffersEntities[m_ImageIndex], VK_ATTACHMENT_LOAD_OP_CLEAR);
-                for (std::shared_ptr<Entity> entity : *m_Entities) {
+            if (0 < entities.size()) {
+                BeginRendering(m_CommandBuffersEntities[m_ImageIndex]);
+                for (std::shared_ptr<Entity> entity : entities) {
                     std::shared_ptr<Mesh> mesh = std::dynamic_pointer_cast<Mesh>(entity);
 
-                    if (!mesh) continue;
+                    if (!mesh) return;
 
                     m_Renderer->BindPipeline(m_CommandBuffersEntities[m_ImageIndex], mesh->m_GraphicsPipeline);
 
@@ -174,44 +180,22 @@ namespace Rbk
                                 mesh->ApplyPushConstants(m_CommandBuffersEntities[m_ImageIndex], mesh->m_PipelineLayout, shared_from_this(), data);
 
                             m_Renderer->Draw(m_CommandBuffersEntities[m_ImageIndex], mesh->GetDescriptorSets().at(index), mesh.get(), data, mesh->m_UniformBuffers.at(i).size, m_ImageIndex);
-                            drawCall++;
                             index = m_ImageIndex;
                         }
                     }
                 }
 
                 EndRendering(m_CommandBuffersEntities[m_ImageIndex]);
+                vkCmdEndDebugUtilsLabelEXT(m_CommandBuffersEntities[m_ImageIndex]);
             }
-        };
+        });
 
-        //bbox !
-        auto bbox = [=, &drawCall]() {
+        return future;
+    }
 
-            if (0 < m_BoundingBox->size()) {
-                BeginRendering(m_CommandBuffersBbox[m_ImageIndex]);
-
-                for (std::shared_ptr<Entity> bbox : *m_BoundingBox) {
-                    std::shared_ptr<Mesh> mesh = std::dynamic_pointer_cast<Mesh>(bbox);
-
-                    if (!mesh) continue;
-                    m_Renderer->BindPipeline(m_CommandBuffersBbox[m_ImageIndex], mesh->m_GraphicsPipeline);
-
-                    for (Data& data : *mesh->GetData()) {
-                        int index = m_ImageIndex;
-                        for (uint32_t i = 0; i < mesh->m_UniformBuffers.size(); i++) {
-                            m_Renderer->Draw(m_CommandBuffersBbox[m_ImageIndex], mesh->GetDescriptorSets().at(index), mesh.get(), data, mesh->m_UniformBuffers.at(i).size, m_ImageIndex);
-                            drawCall++;
-                            index = m_ImageIndex;
-                        }
-                    }
-                }
-
-                EndRendering(m_CommandBuffersBbox[m_ImageIndex]);
-            }
-        };
-
-        //skybox !
-        auto skybox = [=, &drawCall]() {
+    std::future<void> VulkanAdapter::DrawSkybox()
+    {
+        std::future<void>future = std::async(std::launch::async, [=]() {
             if (m_SkyboxMesh) {
 
                 BeginRendering(m_CommandBuffersSkybox[m_ImageIndex], VK_ATTACHMENT_LOAD_OP_CLEAR, VK_ATTACHMENT_STORE_OP_STORE);
@@ -227,16 +211,19 @@ namespace Rbk
                             m_SkyboxMesh->ApplyPushConstants(m_CommandBuffersSkybox[m_ImageIndex], m_SkyboxMesh->m_PipelineLayout, shared_from_this(), skyboxData[0]);
 
                         m_Renderer->Draw(m_CommandBuffersSkybox[m_ImageIndex], m_SkyboxMesh->GetDescriptorSets().at(i), m_SkyboxMesh.get(), skyboxData[0], skyboxData[0].m_Ubos.size(), m_ImageIndex, false);
-                        drawCall++;
                     }
                 }
 
                 EndRendering(m_CommandBuffersSkybox[m_ImageIndex]);
             }
-        };
+        });
 
-        //HUD!
-        auto hud = [=, &drawCall]() {
+        return future;
+    }
+
+    std::future<void> VulkanAdapter::DrawHUD()
+    {
+        std::future<void>future = std::async(std::launch::async, [=]() {
 
             BeginRendering(m_CommandBuffersHud[m_ImageIndex]);
 
@@ -251,38 +238,69 @@ namespace Rbk
 
                     for (uint32_t i = 0; i < hudPart->m_UniformBuffers.size(); i++) {
                         m_Renderer->Draw(m_CommandBuffersHud[m_ImageIndex], hudPart->GetDescriptorSets().at(i), hudPart.get(), data, data.m_Ubos.size(), m_ImageIndex);
-                        drawCall++;
                     }
                 }
             }
 
             EndRendering(m_CommandBuffersHud[m_ImageIndex]);
-        };
+        });
 
-        //@todo thread pool
-        //std::thread workerE(entities);
-        //std::thread workerS(skybox);
-        //std::thread workerH(hud);
+        return future;
+    }
 
-        //workerE.join();
-        //workerS.join();
-        //workerH.join();
+    std::future<void> VulkanAdapter::DrawBbox()
+    {
+        std::future<void>future = std::async(std::launch::async, [=]() {
 
-        entities();
-        //skybox();
-        //hud();
+            if (0 < m_BoundingBox->size()) {
+                BeginRendering(m_CommandBuffersBbox[m_ImageIndex]);
+
+                for (std::shared_ptr<Entity> bbox : *m_BoundingBox) {
+                    std::shared_ptr<Mesh> mesh = std::dynamic_pointer_cast<Mesh>(bbox);
+
+                    if (!mesh) continue;
+                    m_Renderer->BindPipeline(m_CommandBuffersBbox[m_ImageIndex], mesh->m_GraphicsPipeline);
+
+                    for (Data& data : *mesh->GetData()) {
+                        int index = m_ImageIndex;
+                        for (uint32_t i = 0; i < mesh->m_UniformBuffers.size(); i++) {
+                            m_Renderer->Draw(m_CommandBuffersBbox[m_ImageIndex], mesh->GetDescriptorSets().at(index), mesh.get(), data, mesh->m_UniformBuffers.at(i).size, m_ImageIndex);
+                            index = m_ImageIndex;
+                        }
+                    }
+                }
+
+                EndRendering(m_CommandBuffersBbox[m_ImageIndex]);
+            }
+        });
+
+        return future;
+    }
+
+    void VulkanAdapter::Draw()
+    {
+        ShouldRecreateSwapChain();
+        m_ImageIndex = m_Renderer->AcquireNextImageKHR(m_SwapChain, m_Semaphores);
+    
+        std::future<void>futureEntities = DrawEntities(m_Entities.at(0));
+        std::future<void>futureSkybox = DrawSkybox();
+        std::future<void>hudSkybox = DrawHUD();
+
+        futureSkybox.wait();
+        hudSkybox.wait();
+        futureEntities.wait();
 
         std::vector<VkCommandBuffer> cmdSubmit{
-          
-            m_CommandBuffersEntities[m_ImageIndex]
-            
+            m_CommandBuffersSkybox[m_ImageIndex],
+            m_CommandBuffersEntities[m_ImageIndex],
+            m_CommandBuffersHud[m_ImageIndex]
         };
 
-        if (0 < m_BoundingBox->size()) {
+       /* if (0 < m_BoundingBox->size()) {
             std::thread workerB(bbox);
             cmdSubmit.emplace_back(m_CommandBuffersBbox[m_ImageIndex]);
             workerB.join();
-        }
+        }*/
         
         Submit(cmdSubmit);
         //Rbk::Log::GetLogger()->critical("Draw Call {}", drawCall);
@@ -570,10 +588,33 @@ namespace Rbk
 
     void VulkanAdapter::Clear()
     {
-        m_Entities->clear();
+        for (auto& entities : m_Entities) {
+            entities.clear();
+        }
+        m_Entities.clear();
         m_BoundingBox->clear();
         m_SkyboxMesh = nullptr;
         m_HUD.clear();
         m_Splash.clear();
+    }
+
+    void VulkanAdapter::AddEntities(std::vector<std::shared_ptr<Entity>>* entities)
+    {
+        const int max = 50;//@todo vulkan race conditions to fix first
+        std::fesetround(FE_UPWARD);
+        const int size = std::nearbyint(entities->size() / 50.f);
+        m_Entities.resize(size);
+        int count = 0;
+        int index = 0;
+
+        for (auto& entity : *entities) {
+            m_Entities[index].emplace_back(entity);
+            count += 1;
+
+            if (count == max) {
+                index += 1;
+                count = 0;
+            }
+        }
     }
 }
