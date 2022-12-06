@@ -21,7 +21,7 @@
 				"z": 0
 			},
 			"form": "square",
-			"squarePadding": [{"x" : [-50, 50], "y": [-50, 50]}]
+			"squarePadding": [{"x" : [-1, 1], "y": [-1, 1]}]
 		}
 	}
 }

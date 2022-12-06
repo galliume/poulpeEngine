@@ -4,7 +4,7 @@
 
 namespace Rbk
 {
-    std::atomic<int> Application::s_UnlockedFPS{ 3 };
+    std::atomic<int> Application::s_UnlockedFPS{ 1 };
     Application* Application::s_Instance = nullptr;
 
     Application::Application()
@@ -120,7 +120,7 @@ namespace Rbk
                 glfwPollEvents();
                 m_RenderManager->SetDeltatime(timeStep.count());
 
-                //imgui();
+                imgui();
 
                 {
                     std::lock_guard<std::mutex> guard(lockDraw);
