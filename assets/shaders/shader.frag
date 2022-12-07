@@ -4,14 +4,7 @@
 
 layout(location = 0) out vec4 outputColor;
 layout(location = 0) in vec2 fragTexCoord;
-layout(location = 1) in vec3 fragNormal;
-layout(location = 2) in vec3 cameraPos;
-layout(location = 3) in vec3 fragModelPos;
-layout(location = 4) in float fragAmbiantLight; 
-layout(location = 5) in float fragFogDensity; 
-layout(location = 6) in vec3 fragFogColor;
-layout(location = 7) in vec3 fragLightPos;
-layout(location = 8) flat in int fragTextureID;
+layout(location = 1) flat in int fragTextureID;
 
 layout(binding = 1) uniform sampler2D texSampler[];
 

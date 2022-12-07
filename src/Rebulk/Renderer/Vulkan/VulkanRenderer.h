@@ -74,7 +74,7 @@ namespace Rbk {
         Buffer CreateIndexBuffer(const VkCommandPool& commandPool, const std::vector<uint32_t>& indices);
         std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>> CreateSyncObjects(std::vector<VkImage> swapChainImages);
         VkImageMemoryBarrier SetupImageMemoryBarrier(VkImage image, VkAccessFlags srcAccessMask, VkAccessFlags dstAccessMask, VkImageLayout oldLayout, VkImageLayout newLayout, uint32_t mipLevels = VK_REMAINING_MIP_LEVELS, VkImageAspectFlags aspectMask = VK_IMAGE_ASPECT_COLOR_BIT);
-        void CopyBuffer(VkCommandPool commandPool, VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
+        void CopyBuffer(VkCommandPool commandPool, VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size, int queueIndex = 0);
         bool SouldResizeSwapChain(VkSwapchainKHR swapChain);
         Buffer CreateUniformBuffers(uint32_t uniformBuffersCount);
         Buffer CreateCubeUniformBuffers(uint32_t uniformBuffersCount);
@@ -115,12 +115,13 @@ namespace Rbk {
         void BindPipeline(const VkCommandBuffer& commandBuffer, const VkPipeline& pipeline);
         void Draw(VkCommandBuffer commandBuffer, VkDescriptorSet descriptorSet, Mesh* mesh, Data data, uint32_t uboCount, uint32_t frameIndex, bool drawIndexed = true, uint32_t index = 0);
         uint32_t AcquireNextImageKHR(VkSwapchainKHR swapChain, std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>>& semaphores);
-        void QueueSubmit(VkCommandBuffer commandBuffer);
-        void QueueSubmit(uint32_t imageIndex, std::vector<VkCommandBuffer> commandBuffers, std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>>& semaphores);
-        uint32_t QueuePresent(uint32_t imageIndex, VkSwapchainKHR swapChain, std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>>& semaphores);
+        void QueueSubmit(VkCommandBuffer commandBuffer, int queueIndex = 0);
+        void QueueSubmit(uint32_t imageIndex, std::vector<VkCommandBuffer> commandBuffers, std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>>& semaphores, int queueIndex = 0);
+        void QueuePresent(uint32_t imageIndex, VkSwapchainKHR swapChain, std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>>& semaphores, int queueIndex = 0);
         void AddPipelineBarriers(VkCommandBuffer commandBuffer, std::vector<VkImageMemoryBarrier> renderBarriers, VkPipelineStageFlags srcStageMask, VkPipelineStageFlags dstStageMask, VkDependencyFlags dependencyFlags);
         void WaitIdle();
         void GenerateMipmaps(VkCommandBuffer commandBuffer, VkFormat imageFormat, VkImage image, uint32_t texWidth, uint32_t texHeight, uint32_t mipLevels, uint32_t layerCount = 1);
+        uint32_t GetNextFrameIndex();
 
         /**
         * Vulkan clean and destroy
@@ -146,7 +147,7 @@ namespace Rbk {
         inline VkInstance GetInstance() const { return m_Instance; };
         inline VkPhysicalDevice GetPhysicalDevice() const { return m_PhysicalDevice; }
         inline VkDevice GetDevice() const { return m_Device; }
-        inline VkQueue GetGraphicsQueue() const { return m_GraphicsQueue; }
+        inline std::vector<VkQueue> GetGraphicsQueues() const { return m_GraphicsQueues; }
         inline VkPhysicalDeviceProperties GetDeviceProperties() const { return m_DeviceProps; }
         inline VkPhysicalDeviceFeatures GetDeviceFeatures() const { return m_DeviceFeatures; }
         inline bool IsFramebufferResized() { return m_FramebufferResized; }
@@ -164,6 +165,8 @@ namespace Rbk {
         uint32_t GetImageCount() const;
         std::string GetAPIVersion();
         std::shared_ptr<DeviceMemoryPool> GetDeviceMemoryPool() { return m_DeviceMemoryPool; }
+        void StartMarker(VkCommandBuffer buffer, const std::string& name, float r, float g, float b, float a = 1.0);
+        void EndMarker(VkCommandBuffer buffer);
 
         static const std::string GetVendor(int vendorID)
         {
@@ -227,8 +230,8 @@ namespace Rbk {
         VkPhysicalDeviceMaintenance3Properties m_DeviceMaintenance3Properties;
 
         VkDevice m_Device = VK_NULL_HANDLE;
-        VkQueue m_GraphicsQueue = VK_NULL_HANDLE;
-        VkQueue m_PresentQueue = VK_NULL_HANDLE;
+        std::vector<VkQueue> m_GraphicsQueues;
+        std::vector<VkQueue> m_PresentQueues;
         VkSurfaceKHR m_Surface = VK_NULL_HANDLE;
         VkFormat m_SwapChainImageFormat;
         VkExtent2D m_SwapChainExtent;

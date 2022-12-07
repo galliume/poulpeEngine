@@ -145,19 +145,10 @@ namespace Rbk
     {
         std::future<void>future = std::async(std::launch::async, [=, &entities]() {
 
-            VkDebugUtilsLabelEXT label;
-            label.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_LABEL_EXT;
-            label.pLabelName = "entities_drawing";
-            label.pNext = VK_NULL_HANDLE;
-            label.color[0] = 1.0f;
-            label.color[1] = 0.3f;
-            label.color[2] = 0.2f;
-            label.color[3] = 0.1f;
-
-            vkCmdBeginDebugUtilsLabelEXT(m_CommandBuffersEntities[m_ImageIndex], &label);
-
             if (0 < entities.size()) {
                 BeginRendering(m_CommandBuffersEntities[m_ImageIndex]);
+                m_Renderer->StartMarker(m_CommandBuffersEntities[m_ImageIndex], "entities_drawing", 0.3, 0.2, 0.1);
+                
                 for (std::shared_ptr<Entity> entity : entities) {
                     std::shared_ptr<Mesh> mesh = std::dynamic_pointer_cast<Mesh>(entity);
 
@@ -185,8 +176,8 @@ namespace Rbk
                     }
                 }
 
+                m_Renderer->EndMarker(m_CommandBuffersEntities[m_ImageIndex]);
                 EndRendering(m_CommandBuffersEntities[m_ImageIndex]);
-                vkCmdEndDebugUtilsLabelEXT(m_CommandBuffersEntities[m_ImageIndex]);
             }
         });
 
@@ -199,6 +190,7 @@ namespace Rbk
             if (m_SkyboxMesh) {
 
                 BeginRendering(m_CommandBuffersSkybox[m_ImageIndex], VK_ATTACHMENT_LOAD_OP_CLEAR, VK_ATTACHMENT_STORE_OP_STORE);
+                m_Renderer->StartMarker(m_CommandBuffersSkybox[m_ImageIndex], "skybox_drawing", 0.3, 0.2, 0.1);
 
                 std::vector<Rbk::Data> skyboxData = *m_SkyboxMesh->GetData();
 
@@ -214,6 +206,7 @@ namespace Rbk
                     }
                 }
 
+                m_Renderer->EndMarker(m_CommandBuffersSkybox[m_ImageIndex]);
                 EndRendering(m_CommandBuffersSkybox[m_ImageIndex]);
             }
         });
@@ -226,6 +219,7 @@ namespace Rbk
         std::future<void>future = std::async(std::launch::async, [=]() {
 
             BeginRendering(m_CommandBuffersHud[m_ImageIndex]);
+            m_Renderer->StartMarker(m_CommandBuffersHud[m_ImageIndex], "hud_drawing", 0.3, 0.2, 0.1);
 
             for (std::shared_ptr<Mesh> hudPart : m_HUD) {
 
@@ -242,6 +236,7 @@ namespace Rbk
                 }
             }
 
+            m_Renderer->EndMarker(m_CommandBuffersHud[m_ImageIndex]);
             EndRendering(m_CommandBuffersHud[m_ImageIndex]);
         });
 
@@ -279,30 +274,31 @@ namespace Rbk
 
     void VulkanAdapter::Draw()
     {
-        ShouldRecreateSwapChain();
-        m_ImageIndex = m_Renderer->AcquireNextImageKHR(m_SwapChain, m_Semaphores);
-    
-        std::future<void>futureEntities = DrawEntities(m_Entities.at(0));
-        std::future<void>futureSkybox = DrawSkybox();
-        std::future<void>hudSkybox = DrawHUD();
-
-        futureSkybox.wait();
-        hudSkybox.wait();
-        futureEntities.wait();
-
-        std::vector<VkCommandBuffer> cmdSubmit{
-            m_CommandBuffersSkybox[m_ImageIndex],
-            m_CommandBuffersEntities[m_ImageIndex],
-            m_CommandBuffersHud[m_ImageIndex]
-        };
-
+        DrawEntities(m_Entities.at(0)).get();
+        DrawSkybox().get();
+        DrawHUD().get();
+       
        /* if (0 < m_BoundingBox->size()) {
             std::thread workerB(bbox);
             cmdSubmit.emplace_back(m_CommandBuffersBbox[m_ImageIndex]);
             workerB.join();
         }*/
+
+        m_CmdToSubmit.emplace_back(m_CommandBuffersSkybox[m_ImageIndex]);
+        m_CmdToSubmit.emplace_back(m_CommandBuffersEntities[m_ImageIndex]);
+        m_CmdToSubmit.emplace_back(m_CommandBuffersHud[m_ImageIndex]);
+
+        ShouldRecreateSwapChain();
+        m_ImageIndex = m_Renderer->AcquireNextImageKHR(m_SwapChain, m_Semaphores);
+        Submit(m_CmdToSubmit);
+        //Submit({ m_CommandBuffersEntities[m_ImageIndex] }, 1);
+        m_CmdToSubmit.clear();
         
-        Submit(cmdSubmit);
+        //@todo wtf ?
+        uint32_t currentFrame = m_Renderer->GetNextFrameIndex();
+        if (currentFrame == VK_ERROR_OUT_OF_DATE_KHR || currentFrame == VK_SUBOPTIMAL_KHR) {
+            RecreateSwapChain();
+        }
         //Rbk::Log::GetLogger()->critical("Draw Call {}", drawCall);
     }
 
@@ -330,7 +326,13 @@ namespace Rbk
         }
 
         EndRendering(m_CommandBuffersSplash[m_ImageIndex]);
-        Submit({ m_CommandBuffersSplash[m_ImageIndex] });
+        Submit({ m_CommandBuffersSplash[m_ImageIndex] }, 1);
+
+        //@todo wtf ?
+        uint32_t currentFrame = m_Renderer->GetNextFrameIndex();
+        if (currentFrame == VK_ERROR_OUT_OF_DATE_KHR || currentFrame == VK_SUBOPTIMAL_KHR) {
+            RecreateSwapChain();
+        }
     }
 
     void VulkanAdapter::Destroy()
@@ -442,7 +444,7 @@ namespace Rbk
         info.PhysicalDevice = m_Renderer->GetPhysicalDevice();
         info.Device = m_Renderer->GetDevice();
         info.QueueFamily = m_Renderer->GetQueueFamily();
-        info.Queue = m_Renderer->GetGraphicsQueue();
+        info.Queue = m_Renderer->GetGraphicsQueues()[2];
         info.PipelineCache = nullptr;//to implement VkPipelineCache
         info.DescriptorPool = imguiPool;
         info.Subpass = 0;
@@ -562,14 +564,10 @@ namespace Rbk
         m_Renderer->EndCommandBuffer(commandBuffer);
     }
 
-    void VulkanAdapter::Submit(std::vector<VkCommandBuffer> commandBuffers)
+    void VulkanAdapter::Submit(std::vector<VkCommandBuffer> commandBuffers, int queueIndex)
     {
-        m_Renderer->QueueSubmit(m_ImageIndex, commandBuffers, m_Semaphores);
-        uint32_t currentFrame = m_Renderer->QueuePresent(m_ImageIndex, m_SwapChain, m_Semaphores);
-
-        if (currentFrame == VK_ERROR_OUT_OF_DATE_KHR || currentFrame == VK_SUBOPTIMAL_KHR) {
-            RecreateSwapChain();
-        }
+        m_Renderer->QueueSubmit(m_ImageIndex, commandBuffers, m_Semaphores, queueIndex);
+        m_Renderer->QueuePresent(m_ImageIndex, m_SwapChain, m_Semaphores, queueIndex);
     }
 
     void VulkanAdapter::SetRayPick(float x, float y, float z, int width, int height)
