@@ -70,7 +70,7 @@ namespace Rbk
         std::vector<VkFramebuffer> m_SwapChainFramebuffers = {};
         std::vector<VkImageView> m_SwapChainImageViews = {};
 
-        std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>> m_Semaphores = {};
+        std::vector<std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>>> m_Semaphores = {};
 
         VkCommandPool m_CommandPoolSplash = nullptr;
         std::vector<VkCommandBuffer> m_CommandBuffersSplash = {};

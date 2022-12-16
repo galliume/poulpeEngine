@@ -63,7 +63,9 @@ namespace Rbk
             m_DepthImageViews[i] = depthImageView;
         }
 
-        m_Semaphores = m_Renderer->CreateSyncObjects(m_SwapChainImages);
+        for (int i = 0; i < 3; i++) {
+            m_Semaphores.emplace_back(m_Renderer->CreateSyncObjects(m_SwapChainImages));
+        }
     }
 
     void VulkanAdapter::WaitIdle()
@@ -78,7 +80,9 @@ namespace Rbk
         VkSwapchainKHR old = m_SwapChain;
         m_SwapChain = m_Renderer->CreateSwapChain(m_SwapChainImages, old);
         m_Renderer->DestroySwapchain(m_Renderer->GetDevice(), old, {}, m_SwapChainImageViews);
-        m_Renderer->DestroySemaphores(m_Semaphores);
+        for (auto sema : m_Semaphores) {
+            m_Renderer->DestroySemaphores(sema);
+        }
         m_Renderer->ResetCurrentFrameIndex();
         m_SwapChainImageViews.resize(m_SwapChainImages.size());
         m_DepthImages.resize(m_SwapChainImages.size());
@@ -97,8 +101,9 @@ namespace Rbk
             m_DepthImageViews[i] = depthImageView;
         }
 
-        m_Semaphores = m_Renderer->CreateSyncObjects(m_SwapChainImages);
-
+        for (int i = 0; i < 3; i++) {
+            m_Semaphores.emplace_back(m_Renderer->CreateSyncObjects(m_SwapChainImages));
+        }
         m_CommandPoolSplash = m_Renderer->CreateCommandPool();
         m_CommandBuffersSplash = m_Renderer->AllocateCommandBuffers(m_CommandPoolSplash, static_cast<uint32_t>(m_SwapChainImageViews.size()));
         m_CommandPoolEntities = m_Renderer->CreateCommandPool();
@@ -288,11 +293,14 @@ namespace Rbk
         m_CmdToSubmit.emplace_back(m_CommandBuffersEntities[m_ImageIndex]);
         m_CmdToSubmit.emplace_back(m_CommandBuffersHud[m_ImageIndex]);
 
-        ShouldRecreateSwapChain();
-        m_ImageIndex = m_Renderer->AcquireNextImageKHR(m_SwapChain, m_Semaphores);
         Submit(m_CmdToSubmit);
-        //Submit({ m_CommandBuffersEntities[m_ImageIndex] }, 1);
         m_CmdToSubmit.clear();
+
+        //std::future<void>f1 = std::async(std::launch::async, [=]() {
+        //    Submit({ m_CommandBuffersEntities[m_ImageIndex] }, 0);
+        //});
+        
+        m_ImageIndex = m_Renderer->AcquireNextImageKHR(m_SwapChain, m_Semaphores.at(0));
         
         //@todo wtf ?
         uint32_t currentFrame = m_Renderer->GetNextFrameIndex();
@@ -305,7 +313,7 @@ namespace Rbk
     void VulkanAdapter::DrawSplashScreen()
     {
         ShouldRecreateSwapChain();
-        m_ImageIndex = m_Renderer->AcquireNextImageKHR(m_SwapChain, m_Semaphores);
+        m_ImageIndex = m_Renderer->AcquireNextImageKHR(m_SwapChain, m_Semaphores.at(1));
 
         BeginRendering(m_CommandBuffersSplash[m_ImageIndex], VK_ATTACHMENT_LOAD_OP_CLEAR, VK_ATTACHMENT_STORE_OP_NONE_KHR);
 
@@ -326,7 +334,7 @@ namespace Rbk
         }
 
         EndRendering(m_CommandBuffersSplash[m_ImageIndex]);
-        Submit({ m_CommandBuffersSplash[m_ImageIndex] }, 1);
+        Submit({ m_CommandBuffersSplash[m_ImageIndex] }, 0);
 
         //@todo wtf ?
         uint32_t currentFrame = m_Renderer->GetNextFrameIndex();
@@ -338,7 +346,10 @@ namespace Rbk
     void VulkanAdapter::Destroy()
     {
         m_Renderer->DestroySwapchain(m_Renderer->GetDevice(), m_SwapChain, {}, m_SwapChainImageViews);
-        m_Renderer->DestroySemaphores(m_Semaphores);
+
+        for (auto sema : m_Semaphores) {
+            m_Renderer->DestroySemaphores(sema);
+        }
     
         for (auto item: m_DepthImages) {
             vkDestroyImage(m_Renderer->GetDevice(), item, nullptr);
@@ -566,8 +577,8 @@ namespace Rbk
 
     void VulkanAdapter::Submit(std::vector<VkCommandBuffer> commandBuffers, int queueIndex)
     {
-        m_Renderer->QueueSubmit(m_ImageIndex, commandBuffers, m_Semaphores, queueIndex);
-        m_Renderer->QueuePresent(m_ImageIndex, m_SwapChain, m_Semaphores, queueIndex);
+        m_Renderer->QueueSubmit(m_ImageIndex, commandBuffers, m_Semaphores.at(queueIndex), queueIndex);
+        m_Renderer->QueuePresent(m_ImageIndex, m_SwapChain, m_Semaphores.at(queueIndex), queueIndex);
     }
 
     void VulkanAdapter::SetRayPick(float x, float y, float z, int width, int height)
