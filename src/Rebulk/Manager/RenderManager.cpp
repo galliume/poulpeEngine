@@ -125,6 +125,7 @@ namespace Rbk
 
         LoadData(m_CurrentLevel);
         loading.join();
+        m_Renderer->FlushSplashScreen();
 
         m_AudioManager->StopSplash();
 
@@ -168,11 +169,11 @@ namespace Rbk
             m_Refresh = false;
         }
 
-        if (m_EntityManager->GetSkybox()->IsDirty()) {
-            std::async(std::launch::async, [=]() {
-                PrepareSkybox();
-            });
-        }
+        //if (m_EntityManager->GetSkybox()->IsDirty()) {
+        //    std::async(std::launch::async, [=]() {
+        //        PrepareSkybox();
+        //    });
+        //}
         
         m_Renderer->Draw();
     }

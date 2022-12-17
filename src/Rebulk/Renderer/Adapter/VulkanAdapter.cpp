@@ -101,9 +101,13 @@ namespace Rbk
             m_DepthImageViews[i] = depthImageView;
         }
 
+
+        m_Semaphores.clear();
+
         for (int i = 0; i < m_Renderer->GetQueueCount(); i++) {
             m_Semaphores.emplace_back(m_Renderer->CreateSyncObjects(m_SwapChainImages));
         }
+
         m_CommandPoolSplash = m_Renderer->CreateCommandPool();
         m_CommandBuffersSplash = m_Renderer->AllocateCommandBuffers(m_CommandPoolSplash, static_cast<uint32_t>(m_SwapChainImageViews.size()));
         m_CommandPoolEntities = m_Renderer->CreateCommandPool();
@@ -279,10 +283,17 @@ namespace Rbk
 
     void VulkanAdapter::Draw()
     {
-        DrawSkybox().wait();
-        DrawHUD().wait();
-        DrawEntities(m_Entities.at(0)).wait();
-       
+        //ShouldRecreateSwapChain();
+        m_ImageIndex = m_Renderer->AcquireNextImageKHR(m_SwapChain, m_Semaphores.at(0));
+
+        std::future<void>futureEntities = DrawEntities(m_Entities.at(0));
+        std::future<void>futureSkybox = DrawSkybox();
+        std::future<void>hudSkybox = DrawHUD();
+
+        futureSkybox.wait();
+        hudSkybox.wait();
+        futureEntities.wait();
+
        /* if (0 < m_BoundingBox->size()) {
             std::thread workerB(bbox);
             cmdSubmit.emplace_back(m_CommandBuffersBbox[m_ImageIndex]);
@@ -290,18 +301,18 @@ namespace Rbk
         }*/
 
         m_CmdToSubmit.emplace_back(m_CommandBuffersSkybox[m_ImageIndex]);
-        //m_CmdToSubmit.emplace_back(m_CommandBuffersEntities[m_ImageIndex]);
+        m_CmdToSubmit.emplace_back(m_CommandBuffersEntities[m_ImageIndex]);
         m_CmdToSubmit.emplace_back(m_CommandBuffersHud[m_ImageIndex]);
-
+        
         Submit(m_CmdToSubmit);
-
-        m_ImageIndex = m_Renderer->AcquireNextImageKHR(m_SwapChain, m_Semaphores.at(0));
         
         //@todo wtf ?
         uint32_t currentFrame = m_Renderer->GetNextFrameIndex();
         if (currentFrame == VK_ERROR_OUT_OF_DATE_KHR || currentFrame == VK_SUBOPTIMAL_KHR) {
             RecreateSwapChain();
         }
+
+        m_CmdToSubmit.clear();
         //Rbk::Log::GetLogger()->critical("Draw Call {}", drawCall);
     }
 
@@ -336,6 +347,13 @@ namespace Rbk
         if (currentFrame == VK_ERROR_OUT_OF_DATE_KHR || currentFrame == VK_SUBOPTIMAL_KHR) {
             RecreateSwapChain();
         }
+    }
+
+    void VulkanAdapter::FlushSplashScreen()
+    {
+        DrawSplashScreen();
+        vkFreeCommandBuffers(m_Renderer->GetDevice(), m_CommandPoolSplash, m_CommandBuffersSplash.size(), m_CommandBuffersSplash.data());
+        RecreateSwapChain();
     }
 
     void VulkanAdapter::Destroy()

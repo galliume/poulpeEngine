@@ -41,6 +41,7 @@ namespace Rbk
         void RecreateSwapChain();
         inline uint32_t GetSwapImageIndex() { return m_ImageIndex; }
         void SetRayPick(float x, float y, float z, int width, int height);
+        void FlushSplashScreen();
 
         //@todo add GuiManager
         VkRenderPass CreateImGuiRenderPass();

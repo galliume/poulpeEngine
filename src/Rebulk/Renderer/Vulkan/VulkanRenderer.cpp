@@ -899,7 +899,7 @@ namespace Rbk {
             Rbk::Log::GetLogger()->critical("failed to get graphics pipeline cache size!");
         }
 
-        result = vkCreateGraphicsPipelines(m_Device, nullptr, 1, &pipelineInfo, nullptr, &graphicsPipeline);
+        result = vkCreateGraphicsPipelines(m_Device, pipelineCache, 1, &pipelineInfo, nullptr, &graphicsPipeline);
 
         if (result != VK_SUCCESS) {
             Rbk::Log::GetLogger()->critical("failed to create graphics pipeline cache!");
@@ -1334,13 +1334,11 @@ namespace Rbk {
 
         {
             std::lock_guard<std::mutex> guard(m_MutexQueueSubmit);
-            VkFence fence;
-            vkCreateFence(m_Device, &fenceInfo, nullptr, &fence);
 
             //Rbk::Log::GetLogger()->warn("queue index submit to: {}", queueIndex);
-            vkQueueSubmit(m_GraphicsQueues[queueIndex], 1, &submitInfo, fence);
-            vkWaitForFences(m_Device, 1, &fence, VK_TRUE, UINT32_MAX);
-            //vkQueueWaitIdle(m_GraphicsQueues[queueIndex]);
+            vkQueueSubmit(m_GraphicsQueues[queueIndex], 1, &submitInfo, nullptr);
+            vkQueueWaitIdle(m_GraphicsQueues[queueIndex]);
+            vkResetCommandBuffer(commandBuffer, VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
         }
     }
 
@@ -1381,10 +1379,17 @@ namespace Rbk {
         {
             std::lock_guard<std::mutex> guard(m_MutexQueueSubmit);
             VkResult result = vkQueueSubmit(m_GraphicsQueues[queueIndex], submits.size(), submits.data(), m_InFlightFences[m_CurrentFrame]);
+
             //Rbk::Log::GetLogger()->warn("queue index submit to: {}", queueIndex);
             if (result != VK_SUCCESS) {
                 throw std::runtime_error("failed to submit draw command buffer!");
             }
+            vkQueueWaitIdle(m_GraphicsQueues[queueIndex]);
+
+            //for (auto& cmd : commandBuffers) {
+            //    vkResetCommandBuffer(cmd, VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
+            //}
+
         }
     }
 
@@ -1779,12 +1784,8 @@ namespace Rbk {
         {
             std::lock_guard<std::mutex> guard(m_MutexQueueSubmit);
 
-            VkFence fence;
-            vkCreateFence(m_Device, &fenceInfo, nullptr, &fence);
-
-            vkQueueSubmit(m_GraphicsQueues[queueIndex], 1, &submitInfo, fence);
-            //vkQueueWaitIdle(m_GraphicsQueues[queueIndex]);
-            vkWaitForFences(m_Device, 1, &fence, VK_TRUE, UINT32_MAX);
+            vkQueueSubmit(m_GraphicsQueues[queueIndex], 1, &submitInfo, nullptr);
+            vkQueueWaitIdle(m_GraphicsQueues[queueIndex]);
             vkFreeCommandBuffers(m_Device, commandPool, 1, &commandBuffer);
         }
     }
