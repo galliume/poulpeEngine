@@ -63,7 +63,7 @@ namespace Rbk
             m_DepthImageViews[i] = depthImageView;
         }
 
-        for (int i = 0; i < 3; i++) {
+        for (int i = 0; i < m_Renderer->GetQueueCount(); i++) {
             m_Semaphores.emplace_back(m_Renderer->CreateSyncObjects(m_SwapChainImages));
         }
     }
@@ -101,7 +101,7 @@ namespace Rbk
             m_DepthImageViews[i] = depthImageView;
         }
 
-        for (int i = 0; i < 3; i++) {
+        for (int i = 0; i < m_Renderer->GetQueueCount(); i++) {
             m_Semaphores.emplace_back(m_Renderer->CreateSyncObjects(m_SwapChainImages));
         }
         m_CommandPoolSplash = m_Renderer->CreateCommandPool();
@@ -279,9 +279,9 @@ namespace Rbk
 
     void VulkanAdapter::Draw()
     {
-        DrawEntities(m_Entities.at(0)).get();
-        DrawSkybox().get();
-        DrawHUD().get();
+        DrawSkybox().wait();
+        DrawHUD().wait();
+        DrawEntities(m_Entities.at(0)).wait();
        
        /* if (0 < m_BoundingBox->size()) {
             std::thread workerB(bbox);
@@ -290,16 +290,11 @@ namespace Rbk
         }*/
 
         m_CmdToSubmit.emplace_back(m_CommandBuffersSkybox[m_ImageIndex]);
-        m_CmdToSubmit.emplace_back(m_CommandBuffersEntities[m_ImageIndex]);
+        //m_CmdToSubmit.emplace_back(m_CommandBuffersEntities[m_ImageIndex]);
         m_CmdToSubmit.emplace_back(m_CommandBuffersHud[m_ImageIndex]);
 
         Submit(m_CmdToSubmit);
-        m_CmdToSubmit.clear();
 
-        //std::future<void>f1 = std::async(std::launch::async, [=]() {
-        //    Submit({ m_CommandBuffersEntities[m_ImageIndex] }, 0);
-        //});
-        
         m_ImageIndex = m_Renderer->AcquireNextImageKHR(m_SwapChain, m_Semaphores.at(0));
         
         //@todo wtf ?
@@ -313,7 +308,7 @@ namespace Rbk
     void VulkanAdapter::DrawSplashScreen()
     {
         ShouldRecreateSwapChain();
-        m_ImageIndex = m_Renderer->AcquireNextImageKHR(m_SwapChain, m_Semaphores.at(1));
+        m_ImageIndex = m_Renderer->AcquireNextImageKHR(m_SwapChain, m_Semaphores.at(0));
 
         BeginRendering(m_CommandBuffersSplash[m_ImageIndex], VK_ATTACHMENT_LOAD_OP_CLEAR, VK_ATTACHMENT_STORE_OP_NONE_KHR);
 
@@ -334,7 +329,7 @@ namespace Rbk
         }
 
         EndRendering(m_CommandBuffersSplash[m_ImageIndex]);
-        Submit({ m_CommandBuffersSplash[m_ImageIndex] }, 0);
+        Submit({ m_CommandBuffersSplash[m_ImageIndex] });
 
         //@todo wtf ?
         uint32_t currentFrame = m_Renderer->GetNextFrameIndex();
@@ -455,12 +450,12 @@ namespace Rbk
         info.PhysicalDevice = m_Renderer->GetPhysicalDevice();
         info.Device = m_Renderer->GetDevice();
         info.QueueFamily = m_Renderer->GetQueueFamily();
-        info.Queue = m_Renderer->GetGraphicsQueues()[2];
+        info.Queue = m_Renderer->GetGraphicsQueues()[0];
         info.PipelineCache = nullptr;//to implement VkPipelineCache
         info.DescriptorPool = imguiPool;
         info.Subpass = 0;
-        info.MinImageCount = 3;
-        info.ImageCount = 3;
+        info.MinImageCount = 2;
+        info.ImageCount = 2;
         info.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
         info.Allocator = nullptr;
         info.CheckVkResultFn = [](VkResult err) {

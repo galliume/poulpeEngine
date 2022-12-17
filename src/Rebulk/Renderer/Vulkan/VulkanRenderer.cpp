@@ -369,16 +369,15 @@ namespace Rbk {
         std::set<uint32_t> uniqueQueueFamilies = { indices.graphicsFamily.value(), indices.presentFamily.value() };
 
         float queuePriority = 1.0f;
-        const int queueCount = 3;
-        m_GraphicsQueues.resize(queueCount);
-        m_PresentQueues.resize(queueCount);
+        m_GraphicsQueues.resize(m_queueCount);
+        m_PresentQueues.resize(m_queueCount);
 
         for (uint32_t queueFamily : uniqueQueueFamilies) {
 
             VkDeviceQueueCreateInfo queueCreateInfo{};
             queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
             queueCreateInfo.queueFamilyIndex = queueFamily;
-            queueCreateInfo.queueCount = queueCount;
+            queueCreateInfo.queueCount = m_queueCount;
             queueCreateInfo.pQueuePriorities = &queuePriority;
             queueCreateInfos.push_back(queueCreateInfo);
         }
@@ -422,7 +421,7 @@ namespace Rbk {
             return;
         }
 
-        for (int i = 0; i < queueCount; i++) {
+        for (int i = 0; i < m_queueCount; i++) {
             m_GraphicsQueues[i] = VK_NULL_HANDLE;
             m_PresentQueues[i] = VK_NULL_HANDLE;
             vkGetDeviceQueue(m_Device, indices.graphicsFamily.value(), 0, &m_GraphicsQueues[i]);
@@ -900,7 +899,7 @@ namespace Rbk {
             Rbk::Log::GetLogger()->critical("failed to get graphics pipeline cache size!");
         }
 
-        result = vkCreateGraphicsPipelines(m_Device, pipelineCache, 1, &pipelineInfo, nullptr, &graphicsPipeline);
+        result = vkCreateGraphicsPipelines(m_Device, nullptr, 1, &pipelineInfo, nullptr, &graphicsPipeline);
 
         if (result != VK_SUCCESS) {
             Rbk::Log::GetLogger()->critical("failed to create graphics pipeline cache!");
@@ -1101,8 +1100,7 @@ namespace Rbk {
         VkCommandBufferAllocateInfo allocInfo{};
         allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
         allocInfo.commandPool = commandPool;
-        //allocInfo.level = (!isSecondary) ? VK_COMMAND_BUFFER_LEVEL_PRIMARY : VK_COMMAND_BUFFER_LEVEL_SECONDARY;
-
+        allocInfo.level = (!isSecondary) ? VK_COMMAND_BUFFER_LEVEL_PRIMARY : VK_COMMAND_BUFFER_LEVEL_SECONDARY;
         allocInfo.commandBufferCount = static_cast<uint32_t>(commandBuffers.size());
 
         VkResult result = vkAllocateCommandBuffers(m_Device, &allocInfo, commandBuffers.data());
@@ -1116,7 +1114,7 @@ namespace Rbk {
 
     void VulkanRenderer::BeginCommandBuffer(VkCommandBuffer commandBuffer, VkCommandBufferUsageFlagBits flags, VkCommandBufferInheritanceInfo inheritanceInfo)
     {
-        //vkResetCommandBuffer(commandBuffer, VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
+        vkResetCommandBuffer(commandBuffer, VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
 
         VkCommandBufferBeginInfo beginInfo{};
         beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -1331,12 +1329,19 @@ namespace Rbk {
         submitInfo.commandBufferCount = 1;
         submitInfo.pCommandBuffers = &commandBuffer;
 
+        VkFenceCreateInfo fenceInfo{};
+        fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+
         {
             std::lock_guard<std::mutex> guard(m_MutexQueueSubmit);
-            Rbk::Log::GetLogger()->warn("queue index submit to: {}", queueIndex);
-            vkQueueSubmit(m_GraphicsQueues[queueIndex], 1, &submitInfo, VK_NULL_HANDLE);
+            VkFence fence;
+            vkCreateFence(m_Device, &fenceInfo, nullptr, &fence);
+
+            //Rbk::Log::GetLogger()->warn("queue index submit to: {}", queueIndex);
+            vkQueueSubmit(m_GraphicsQueues[queueIndex], 1, &submitInfo, fence);
+            vkWaitForFences(m_Device, 1, &fence, VK_TRUE, UINT32_MAX);
+            //vkQueueWaitIdle(m_GraphicsQueues[queueIndex]);
         }
-        vkQueueWaitIdle(m_GraphicsQueues[queueIndex]);
     }
 
     void VulkanRenderer::QueueSubmit(uint32_t imageIndex, std::vector<VkCommandBuffer> commandBuffers, std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>>& semaphores, int queueIndex)
@@ -1371,11 +1376,12 @@ namespace Rbk {
 
         submits.emplace_back(submitInfo);
 
+        vkResetFences(m_Device, 1, &m_InFlightFences[m_CurrentFrame]);
+
         {
             std::lock_guard<std::mutex> guard(m_MutexQueueSubmit);
-            vkResetFences(m_Device, 1, &m_InFlightFences[m_CurrentFrame]);
             VkResult result = vkQueueSubmit(m_GraphicsQueues[queueIndex], submits.size(), submits.data(), m_InFlightFences[m_CurrentFrame]);
-            Rbk::Log::GetLogger()->warn("queue index submit to: {}", queueIndex);
+            //Rbk::Log::GetLogger()->warn("queue index submit to: {}", queueIndex);
             if (result != VK_SUCCESS) {
                 throw std::runtime_error("failed to submit draw command buffer!");
             }
@@ -1767,12 +1773,20 @@ namespace Rbk {
         submitInfo.commandBufferCount = 1;
         submitInfo.pCommandBuffers = &commandBuffer;
 
+        VkFenceCreateInfo fenceInfo{};
+        fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+        
         {
             std::lock_guard<std::mutex> guard(m_MutexQueueSubmit);
-            vkQueueSubmit(m_GraphicsQueues[queueIndex], 1, &submitInfo, VK_NULL_HANDLE);
-        }
-            vkQueueWaitIdle(m_GraphicsQueues[queueIndex]);
+
+            VkFence fence;
+            vkCreateFence(m_Device, &fenceInfo, nullptr, &fence);
+
+            vkQueueSubmit(m_GraphicsQueues[queueIndex], 1, &submitInfo, fence);
+            //vkQueueWaitIdle(m_GraphicsQueues[queueIndex]);
+            vkWaitForFences(m_Device, 1, &fence, VK_TRUE, UINT32_MAX);
             vkFreeCommandBuffers(m_Device, commandPool, 1, &commandBuffer);
+        }
     }
 
     VkImageMemoryBarrier VulkanRenderer::SetupImageMemoryBarrier(VkImage image, VkAccessFlags srcAccessMask, VkAccessFlags dstAccessMask, VkImageLayout oldLayout, VkImageLayout newLayout, uint32_t mipLevels, VkImageAspectFlags aspectMask)
@@ -1912,7 +1926,7 @@ namespace Rbk {
 
         auto memoryType = FindMemoryType(memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
         uint32_t size = ((memRequirements.size / memRequirements.alignment) + 1) * memRequirements.alignment;
-        auto deviceMemory = m_DeviceMemoryPool->Get(m_Device, size, memoryType, VK_BUFFER_USAGE_TRANSFER_SRC_BIT);
+        auto deviceMemory = m_DeviceMemoryPool->Get(m_Device, size, memoryType, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, true);
         auto offset = deviceMemory->GetOffset();
         deviceMemory->BindBufferToMemory(buffer, size);
 

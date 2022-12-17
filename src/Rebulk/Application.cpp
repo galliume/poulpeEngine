@@ -61,32 +61,32 @@ namespace Rbk
 
         std::mutex lockDraw;
 
-        //InitImGui();
-        //auto imgui =
-        //    [=, &timeStep, &lockDraw]() {
-        //    glfwPollEvents();
+        InitImGui();
+        auto imgui =
+            [=, &timeStep, &lockDraw]() {
+            glfwPollEvents();
 
-        //    //@todo move to LayerManager
-        //    Rbk::Im::NewFrame();
+            //@todo move to LayerManager
+            Rbk::Im::NewFrame();
 
-        //    m_VulkanLayer->Render(
-        //        timeStep.count(),
-        //        m_RenderManager->GetRendererAdapter()->Rdr()->GetDeviceProperties()
-        //    );
-        //    
-        //    Rbk::Im::Render();
+            m_VulkanLayer->Render(
+                timeStep.count(),
+                m_RenderManager->GetRendererAdapter()->Rdr()->GetDeviceProperties()
+            );
+            
+            Rbk::Im::Render();
 
-        //    m_RenderManager->GetRendererAdapter()->Rdr()->BeginCommandBuffer(Rbk::Im::GetImGuiInfo().cmdBuffer);
-        //    {
-        //        std::lock_guard<std::mutex> guard(lockDraw);
-        //        ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), Rbk::Im::GetImGuiInfo().cmdBuffer);
-        //    }
-        //    m_RenderManager->GetRendererAdapter()->Rdr()->EndCommandBuffer(Rbk::Im::GetImGuiInfo().cmdBuffer);
+            m_RenderManager->GetRendererAdapter()->Rdr()->BeginCommandBuffer(Rbk::Im::GetImGuiInfo().cmdBuffer);
+            {
+                std::lock_guard<std::mutex> guard(lockDraw);
+                ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), Rbk::Im::GetImGuiInfo().cmdBuffer);
+            }
+            m_RenderManager->GetRendererAdapter()->Rdr()->EndCommandBuffer(Rbk::Im::GetImGuiInfo().cmdBuffer);
 
-        //    if (m_VulkanLayer->NeedRefresh()) {
-        //        m_VulkanLayer->AddRenderManager(m_RenderManager);
-        //    }
-        //};
+            if (m_VulkanLayer->NeedRefresh()) {
+                m_VulkanLayer->AddRenderManager(m_RenderManager);
+            }
+        };
 
         while (!glfwWindowShouldClose(m_Window->Get())) {
 
@@ -113,7 +113,7 @@ namespace Rbk
                 frameCount++;
 
                 if (1.0 <= timeStepSum.count()) {
-                    //Rbk::Log::GetLogger()->debug("{} fps", frameCount);
+                    Rbk::Log::GetLogger()->debug("{} fps", frameCount);
                     timeStepSum = std::chrono::duration<double>(0.0);
                     frameCount = 0;
                 }
@@ -122,7 +122,7 @@ namespace Rbk
 
                 glfwPollEvents();
                 m_RenderManager->SetDeltatime(timeStep.count());
-                //imgui();
+                imgui();
                 m_RenderManager->Draw();
                 
                 lastTime = currentTime;
@@ -130,7 +130,7 @@ namespace Rbk
         }
 
         m_RenderManager->GetRendererAdapter()->Rdr()->WaitIdle();
-        //Rbk::Im::Destroy();
+        Rbk::Im::Destroy();
 
         m_RenderManager->CleanUp();
 

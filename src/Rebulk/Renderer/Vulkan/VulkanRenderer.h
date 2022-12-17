@@ -167,6 +167,7 @@ namespace Rbk {
         std::shared_ptr<DeviceMemoryPool> GetDeviceMemoryPool() { return m_DeviceMemoryPool; }
         void StartMarker(VkCommandBuffer buffer, const std::string& name, float r, float g, float b, float a = 1.0);
         void EndMarker(VkCommandBuffer buffer);
+        uint32_t GetQueueCount() { return m_queueCount; }
 
         static const std::string GetVendor(int vendorID)
         {
@@ -207,6 +208,7 @@ namespace Rbk {
         int32_t m_CurrentFrame = 0;
         uint32_t m_ExtensionCount;
         std::string m_apiVersion;
+        const uint32_t m_queueCount = 1;
 
         std::shared_ptr<Window> m_Window = VK_NULL_HANDLE;
 
