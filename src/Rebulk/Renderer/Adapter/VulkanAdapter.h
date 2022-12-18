@@ -41,6 +41,7 @@ namespace Rbk
         void RecreateSwapChain();
         inline uint32_t GetSwapImageIndex() { return m_ImageIndex; }
         void SetRayPick(float x, float y, float z, int width, int height);
+        void FlushSplashScreen();
 
         //@todo add GuiManager
         VkRenderPass CreateImGuiRenderPass();
@@ -60,7 +61,7 @@ namespace Rbk
         void SetPerspective();
         void BeginRendering(VkCommandBuffer commandBuffer, const VkAttachmentLoadOp loadOp = VK_ATTACHMENT_LOAD_OP_LOAD, const VkAttachmentStoreOp storeOp = VK_ATTACHMENT_STORE_OP_STORE);
         void EndRendering(VkCommandBuffer commandBuffer);
-        void Submit(std::vector<VkCommandBuffer> commandBuffers);
+        void Submit(std::vector<VkCommandBuffer> commandBuffers, int queueIndex = 0);
 
     private:
         std::shared_ptr<VulkanRenderer> m_Renderer = nullptr;
@@ -70,7 +71,7 @@ namespace Rbk
         std::vector<VkFramebuffer> m_SwapChainFramebuffers = {};
         std::vector<VkImageView> m_SwapChainImageViews = {};
 
-        std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>> m_Semaphores = {};
+        std::vector<std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>>> m_Semaphores = {};
 
         VkCommandPool m_CommandPoolSplash = nullptr;
         std::vector<VkCommandBuffer> m_CommandBuffersSplash = {};
@@ -111,5 +112,6 @@ namespace Rbk
         std::vector<std::vector<std::shared_ptr<Entity>>> m_Entities;
         std::shared_ptr<Mesh> m_SkyboxMesh = nullptr;
         std::vector<std::shared_ptr<Entity>>* m_BoundingBox;
+        std::vector<VkCommandBuffer> m_CmdToSubmit;
     };
 }

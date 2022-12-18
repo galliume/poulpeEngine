@@ -71,16 +71,19 @@ project "Rebulkan"
     {
         "src",
         IncludeDir,
-        os.getenv("VULKAN_SDK").."/Include"
+        os.getenv("VULKAN_SDK").."/Include",
+		os.getenv("NVTOOLSEXT_PATH").."/include"
     }
 
     filter "system:windows"
 
         systemversion "latest"
 
+		libdirs  { os.getenv("NVTOOLSEXT_PATH").."/lib/x64" }
+		
         links
         {
-            "GLFW", "ImGui"
+            "GLFW", "ImGui", "nvToolsExt64_1"
         }
         
         buildmessage 'Compiling shaders'
@@ -91,7 +94,8 @@ project "Rebulkan"
         {
             '{COPY} "./imgui.ini" "%{cfg.targetdir}/imgui.ini"',
             '{COPY} "./assets" "%{cfg.targetdir}/assets"',
-            '{COPY} "./config" "%{cfg.targetdir}/config"'
+            '{COPY} "./config" "%{cfg.targetdir}/config"',
+			'{COPY} "C:/Program Files/NVIDIA Corporation/NvToolsExt/bin/x64/nvToolsExt64_1.dll" "%{cfg.targetdir}/"'
         }
 
         buildoptions {
@@ -114,8 +118,8 @@ project "Rebulkan"
 
     filter { "system:windows", "configurations:Debug" }
         buildoptions { "/MDd" }
-
-    filter { "system:windows", "configurations:Release" }
+    
+	filter { "system:windows", "configurations:Release" }
         buildoptions { "/MD" }
    
     filter "system:linux"

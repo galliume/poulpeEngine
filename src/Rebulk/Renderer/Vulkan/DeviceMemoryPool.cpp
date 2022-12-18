@@ -8,7 +8,7 @@ namespace Rbk
     {
 
     }
-    std::shared_ptr<DeviceMemory> DeviceMemoryPool::Get(VkDevice& device, VkDeviceSize size, uint32_t memoryType, VkBufferUsageFlags usage)
+    std::shared_ptr<DeviceMemory> DeviceMemoryPool::Get(VkDevice& device, VkDeviceSize size, uint32_t memoryType, VkBufferUsageFlags usage, bool forceNew)
     {
         if (m_MemoryAllocationCount > m_DeviceProperties.properties.limits.maxMemoryAllocationCount) {
             throw std::runtime_error("Max number of active allocation reached");
@@ -20,7 +20,7 @@ namespace Rbk
 
         auto poolType = m_Pool.find(memoryType);
 
-        if (m_Pool.end() != poolType) {
+        if (m_Pool.end() != poolType && !forceNew) {
             auto poolUsage = poolType->second.find(usage);
             if (poolType->second.end() != poolUsage) {
                 for (int i = 0; i < poolUsage->second.size(); ++i) {
