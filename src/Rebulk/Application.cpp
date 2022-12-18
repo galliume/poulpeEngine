@@ -1,10 +1,10 @@
 #include "rebulkpch.h"
 #include "Application.h"
-#include <thread>
+#include <nvToolsExt.h>
 
 namespace Rbk
 {
-    std::atomic<int> Application::s_UnlockedFPS{ 1 };
+    std::atomic<int> Application::s_UnlockedFPS{ 3 };
     Application* Application::s_Instance = nullptr;
 
     Application::Application()
@@ -90,6 +90,9 @@ namespace Rbk
 
         while (!glfwWindowShouldClose(m_Window->Get())) {
 
+            nvtxRangePush(L"Yatangaki");
+            nvtxMark((L"Subido la marea ! AHIIII"));
+
             if (Application::s_UnlockedFPS.load() == 0) {
                 maxFPS = 30.0;
                 maxPeriod = std::chrono::duration<double>(1.0 / maxFPS);
@@ -119,14 +122,9 @@ namespace Rbk
 
                 glfwPollEvents();
                 m_RenderManager->SetDeltatime(timeStep.count());
-
                 imgui();
-
-                {
-                    std::lock_guard<std::mutex> guard(lockDraw);
-                    m_RenderManager->Draw();
-                }
-
+                m_RenderManager->Draw();
+                
                 lastTime = currentTime;
             }
         }
@@ -138,6 +136,8 @@ namespace Rbk
 
         glfwDestroyWindow(m_Window.get()->Get());
         glfwTerminate();
+
+        nvtxRangePop();
     }
 
     void Application::InitImGui()

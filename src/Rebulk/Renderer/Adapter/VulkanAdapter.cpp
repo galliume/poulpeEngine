@@ -63,7 +63,9 @@ namespace Rbk
             m_DepthImageViews[i] = depthImageView;
         }
 
-        m_Semaphores = m_Renderer->CreateSyncObjects(m_SwapChainImages);
+        for (int i = 0; i < m_Renderer->GetQueueCount(); i++) {
+            m_Semaphores.emplace_back(m_Renderer->CreateSyncObjects(m_SwapChainImages));
+        }
     }
 
     void VulkanAdapter::WaitIdle()
@@ -78,7 +80,9 @@ namespace Rbk
         VkSwapchainKHR old = m_SwapChain;
         m_SwapChain = m_Renderer->CreateSwapChain(m_SwapChainImages, old);
         m_Renderer->DestroySwapchain(m_Renderer->GetDevice(), old, {}, m_SwapChainImageViews);
-        m_Renderer->DestroySemaphores(m_Semaphores);
+        for (auto sema : m_Semaphores) {
+            m_Renderer->DestroySemaphores(sema);
+        }
         m_Renderer->ResetCurrentFrameIndex();
         m_SwapChainImageViews.resize(m_SwapChainImages.size());
         m_DepthImages.resize(m_SwapChainImages.size());
@@ -97,7 +101,12 @@ namespace Rbk
             m_DepthImageViews[i] = depthImageView;
         }
 
-        m_Semaphores = m_Renderer->CreateSyncObjects(m_SwapChainImages);
+
+        m_Semaphores.clear();
+
+        for (int i = 0; i < m_Renderer->GetQueueCount(); i++) {
+            m_Semaphores.emplace_back(m_Renderer->CreateSyncObjects(m_SwapChainImages));
+        }
 
         m_CommandPoolSplash = m_Renderer->CreateCommandPool();
         m_CommandBuffersSplash = m_Renderer->AllocateCommandBuffers(m_CommandPoolSplash, static_cast<uint32_t>(m_SwapChainImageViews.size()));
@@ -145,19 +154,10 @@ namespace Rbk
     {
         std::future<void>future = std::async(std::launch::async, [=, &entities]() {
 
-            VkDebugUtilsLabelEXT label;
-            label.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_LABEL_EXT;
-            label.pLabelName = "entities_drawing";
-            label.pNext = VK_NULL_HANDLE;
-            label.color[0] = 1.0f;
-            label.color[1] = 0.3f;
-            label.color[2] = 0.2f;
-            label.color[3] = 0.1f;
-
-            vkCmdBeginDebugUtilsLabelEXT(m_CommandBuffersEntities[m_ImageIndex], &label);
-
             if (0 < entities.size()) {
                 BeginRendering(m_CommandBuffersEntities[m_ImageIndex]);
+                m_Renderer->StartMarker(m_CommandBuffersEntities[m_ImageIndex], "entities_drawing", 0.3, 0.2, 0.1);
+                
                 for (std::shared_ptr<Entity> entity : entities) {
                     std::shared_ptr<Mesh> mesh = std::dynamic_pointer_cast<Mesh>(entity);
 
@@ -185,8 +185,8 @@ namespace Rbk
                     }
                 }
 
+                m_Renderer->EndMarker(m_CommandBuffersEntities[m_ImageIndex]);
                 EndRendering(m_CommandBuffersEntities[m_ImageIndex]);
-                vkCmdEndDebugUtilsLabelEXT(m_CommandBuffersEntities[m_ImageIndex]);
             }
         });
 
@@ -199,6 +199,7 @@ namespace Rbk
             if (m_SkyboxMesh) {
 
                 BeginRendering(m_CommandBuffersSkybox[m_ImageIndex], VK_ATTACHMENT_LOAD_OP_CLEAR, VK_ATTACHMENT_STORE_OP_STORE);
+                m_Renderer->StartMarker(m_CommandBuffersSkybox[m_ImageIndex], "skybox_drawing", 0.3, 0.2, 0.1);
 
                 std::vector<Rbk::Data> skyboxData = *m_SkyboxMesh->GetData();
 
@@ -214,6 +215,7 @@ namespace Rbk
                     }
                 }
 
+                m_Renderer->EndMarker(m_CommandBuffersSkybox[m_ImageIndex]);
                 EndRendering(m_CommandBuffersSkybox[m_ImageIndex]);
             }
         });
@@ -226,6 +228,7 @@ namespace Rbk
         std::future<void>future = std::async(std::launch::async, [=]() {
 
             BeginRendering(m_CommandBuffersHud[m_ImageIndex]);
+            m_Renderer->StartMarker(m_CommandBuffersHud[m_ImageIndex], "hud_drawing", 0.3, 0.2, 0.1);
 
             for (std::shared_ptr<Mesh> hudPart : m_HUD) {
 
@@ -242,6 +245,7 @@ namespace Rbk
                 }
             }
 
+            m_Renderer->EndMarker(m_CommandBuffersHud[m_ImageIndex]);
             EndRendering(m_CommandBuffersHud[m_ImageIndex]);
         });
 
@@ -279,9 +283,9 @@ namespace Rbk
 
     void VulkanAdapter::Draw()
     {
-        ShouldRecreateSwapChain();
-        m_ImageIndex = m_Renderer->AcquireNextImageKHR(m_SwapChain, m_Semaphores);
-    
+        //ShouldRecreateSwapChain();
+        m_ImageIndex = m_Renderer->AcquireNextImageKHR(m_SwapChain, m_Semaphores.at(0));
+
         std::future<void>futureEntities = DrawEntities(m_Entities.at(0));
         std::future<void>futureSkybox = DrawSkybox();
         std::future<void>hudSkybox = DrawHUD();
@@ -290,26 +294,32 @@ namespace Rbk
         hudSkybox.wait();
         futureEntities.wait();
 
-        std::vector<VkCommandBuffer> cmdSubmit{
-            m_CommandBuffersSkybox[m_ImageIndex],
-            m_CommandBuffersEntities[m_ImageIndex],
-            m_CommandBuffersHud[m_ImageIndex]
-        };
-
        /* if (0 < m_BoundingBox->size()) {
             std::thread workerB(bbox);
             cmdSubmit.emplace_back(m_CommandBuffersBbox[m_ImageIndex]);
             workerB.join();
         }*/
+
+        m_CmdToSubmit.emplace_back(m_CommandBuffersSkybox[m_ImageIndex]);
+        m_CmdToSubmit.emplace_back(m_CommandBuffersEntities[m_ImageIndex]);
+        m_CmdToSubmit.emplace_back(m_CommandBuffersHud[m_ImageIndex]);
         
-        Submit(cmdSubmit);
+        Submit(m_CmdToSubmit);
+        
+        //@todo wtf ?
+        uint32_t currentFrame = m_Renderer->GetNextFrameIndex();
+        if (currentFrame == VK_ERROR_OUT_OF_DATE_KHR || currentFrame == VK_SUBOPTIMAL_KHR) {
+            RecreateSwapChain();
+        }
+
+        m_CmdToSubmit.clear();
         //Rbk::Log::GetLogger()->critical("Draw Call {}", drawCall);
     }
 
     void VulkanAdapter::DrawSplashScreen()
     {
         ShouldRecreateSwapChain();
-        m_ImageIndex = m_Renderer->AcquireNextImageKHR(m_SwapChain, m_Semaphores);
+        m_ImageIndex = m_Renderer->AcquireNextImageKHR(m_SwapChain, m_Semaphores.at(0));
 
         BeginRendering(m_CommandBuffersSplash[m_ImageIndex], VK_ATTACHMENT_LOAD_OP_CLEAR, VK_ATTACHMENT_STORE_OP_NONE_KHR);
 
@@ -331,12 +341,28 @@ namespace Rbk
 
         EndRendering(m_CommandBuffersSplash[m_ImageIndex]);
         Submit({ m_CommandBuffersSplash[m_ImageIndex] });
+
+        //@todo wtf ?
+        uint32_t currentFrame = m_Renderer->GetNextFrameIndex();
+        if (currentFrame == VK_ERROR_OUT_OF_DATE_KHR || currentFrame == VK_SUBOPTIMAL_KHR) {
+            RecreateSwapChain();
+        }
+    }
+
+    void VulkanAdapter::FlushSplashScreen()
+    {
+        DrawSplashScreen();
+        vkFreeCommandBuffers(m_Renderer->GetDevice(), m_CommandPoolSplash, m_CommandBuffersSplash.size(), m_CommandBuffersSplash.data());
+        RecreateSwapChain();
     }
 
     void VulkanAdapter::Destroy()
     {
         m_Renderer->DestroySwapchain(m_Renderer->GetDevice(), m_SwapChain, {}, m_SwapChainImageViews);
-        m_Renderer->DestroySemaphores(m_Semaphores);
+
+        for (auto sema : m_Semaphores) {
+            m_Renderer->DestroySemaphores(sema);
+        }
     
         for (auto item: m_DepthImages) {
             vkDestroyImage(m_Renderer->GetDevice(), item, nullptr);
@@ -442,12 +468,12 @@ namespace Rbk
         info.PhysicalDevice = m_Renderer->GetPhysicalDevice();
         info.Device = m_Renderer->GetDevice();
         info.QueueFamily = m_Renderer->GetQueueFamily();
-        info.Queue = m_Renderer->GetGraphicsQueue();
+        info.Queue = m_Renderer->GetGraphicsQueues()[0];
         info.PipelineCache = nullptr;//to implement VkPipelineCache
         info.DescriptorPool = imguiPool;
         info.Subpass = 0;
-        info.MinImageCount = 3;
-        info.ImageCount = 3;
+        info.MinImageCount = 2;
+        info.ImageCount = 2;
         info.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
         info.Allocator = nullptr;
         info.CheckVkResultFn = [](VkResult err) {
@@ -562,14 +588,10 @@ namespace Rbk
         m_Renderer->EndCommandBuffer(commandBuffer);
     }
 
-    void VulkanAdapter::Submit(std::vector<VkCommandBuffer> commandBuffers)
+    void VulkanAdapter::Submit(std::vector<VkCommandBuffer> commandBuffers, int queueIndex)
     {
-        m_Renderer->QueueSubmit(m_ImageIndex, commandBuffers, m_Semaphores);
-        uint32_t currentFrame = m_Renderer->QueuePresent(m_ImageIndex, m_SwapChain, m_Semaphores);
-
-        if (currentFrame == VK_ERROR_OUT_OF_DATE_KHR || currentFrame == VK_SUBOPTIMAL_KHR) {
-            RecreateSwapChain();
-        }
+        m_Renderer->QueueSubmit(m_ImageIndex, commandBuffers, m_Semaphores.at(queueIndex), queueIndex);
+        m_Renderer->QueuePresent(m_ImageIndex, m_SwapChain, m_Semaphores.at(queueIndex), queueIndex);
     }
 
     void VulkanAdapter::SetRayPick(float x, float y, float z, int width, int height)

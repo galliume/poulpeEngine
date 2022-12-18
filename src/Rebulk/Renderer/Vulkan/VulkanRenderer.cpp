@@ -369,22 +369,18 @@ namespace Rbk {
         std::set<uint32_t> uniqueQueueFamilies = { indices.graphicsFamily.value(), indices.presentFamily.value() };
 
         float queuePriority = 1.0f;
+        m_GraphicsQueues.resize(m_queueCount);
+        m_PresentQueues.resize(m_queueCount);
 
         for (uint32_t queueFamily : uniqueQueueFamilies) {
 
             VkDeviceQueueCreateInfo queueCreateInfo{};
             queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
             queueCreateInfo.queueFamilyIndex = queueFamily;
-            queueCreateInfo.queueCount = 1;
+            queueCreateInfo.queueCount = m_queueCount;
             queueCreateInfo.pQueuePriorities = &queuePriority;
             queueCreateInfos.push_back(queueCreateInfo);
         }
-
-        VkDeviceQueueCreateInfo queueCreateInfo{};
-        queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-        queueCreateInfo.queueFamilyIndex = indices.graphicsFamily.value();
-        queueCreateInfo.queueCount = 1;
-        queueCreateInfo.pQueuePriorities = &queuePriority;
 
         VkPhysicalDeviceFeatures deviceFeatures{};
         deviceFeatures.fillModeNonSolid =  VK_TRUE;
@@ -425,8 +421,12 @@ namespace Rbk {
             return;
         }
 
-        vkGetDeviceQueue(m_Device, indices.graphicsFamily.value(), 0, &m_GraphicsQueue);
-        vkGetDeviceQueue(m_Device, indices.presentFamily.value(), 0, &m_PresentQueue);
+        for (int i = 0; i < m_queueCount; i++) {
+            m_GraphicsQueues[i] = VK_NULL_HANDLE;
+            m_PresentQueues[i] = VK_NULL_HANDLE;
+            vkGetDeviceQueue(m_Device, indices.graphicsFamily.value(), 0, &m_GraphicsQueues[i]);
+            vkGetDeviceQueue(m_Device, indices.presentFamily.value(), 0, &m_PresentQueues[i]);
+        }
 
         volkLoadDevice(m_Device);
     }
@@ -1100,8 +1100,7 @@ namespace Rbk {
         VkCommandBufferAllocateInfo allocInfo{};
         allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
         allocInfo.commandPool = commandPool;
-        //allocInfo.level = (!isSecondary) ? VK_COMMAND_BUFFER_LEVEL_PRIMARY : VK_COMMAND_BUFFER_LEVEL_SECONDARY;
-
+        allocInfo.level = (!isSecondary) ? VK_COMMAND_BUFFER_LEVEL_PRIMARY : VK_COMMAND_BUFFER_LEVEL_SECONDARY;
         allocInfo.commandBufferCount = static_cast<uint32_t>(commandBuffers.size());
 
         VkResult result = vkAllocateCommandBuffers(m_Device, &allocInfo, commandBuffers.data());
@@ -1322,7 +1321,7 @@ namespace Rbk {
         vkEndCommandBuffer(commandBuffer);
     }
 
-    void VulkanRenderer::QueueSubmit(VkCommandBuffer commandBuffer)
+    void VulkanRenderer::QueueSubmit(VkCommandBuffer commandBuffer, int queueIndex)
     {
 
         VkSubmitInfo submitInfo{};
@@ -1330,59 +1329,71 @@ namespace Rbk {
         submitInfo.commandBufferCount = 1;
         submitInfo.pCommandBuffers = &commandBuffer;
 
+        VkFenceCreateInfo fenceInfo{};
+        fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+
         {
-            //std::lock_guard<std::mutex> guard(m_MutexQueueSubmit);
-            vkQueueSubmit(m_GraphicsQueue, 1, &submitInfo, VK_NULL_HANDLE);
-            vkQueueWaitIdle(m_GraphicsQueue);
+            std::lock_guard<std::mutex> guard(m_MutexQueueSubmit);
+
+            //Rbk::Log::GetLogger()->warn("queue index submit to: {}", queueIndex);
+            vkQueueSubmit(m_GraphicsQueues[queueIndex], 1, &submitInfo, nullptr);
+            vkQueueWaitIdle(m_GraphicsQueues[queueIndex]);
+            vkResetCommandBuffer(commandBuffer, VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
         }
     }
 
-    void VulkanRenderer::QueueSubmit(uint32_t imageIndex, std::vector<VkCommandBuffer> commandBuffers, std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>>& semaphores)
+    void VulkanRenderer::QueueSubmit(uint32_t imageIndex, std::vector<VkCommandBuffer> commandBuffers, std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>>& semaphores, int queueIndex)
     {
+        std::vector<VkSemaphore>& imageAvailableSemaphores = semaphores.first;
+        std::vector<VkSemaphore>& renderFinishedSemaphores = semaphores.second;
+
+        if (m_ImagesInFlight[imageIndex] != VK_NULL_HANDLE) {
+            vkWaitForFences(m_Device, 1, &m_ImagesInFlight[imageIndex], VK_TRUE, UINT32_MAX);
+        }
+
+        m_ImagesInFlight[imageIndex] = m_ImagesInFlight[m_CurrentFrame];
+
+        std::vector<VkSubmitInfo> submits{};
+
+        VkSubmitInfo submitInfo{};
+        submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+
+        VkSemaphore waitSemaphores[] = { imageAvailableSemaphores[m_CurrentFrame] };
+
+        VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
+        submitInfo.waitSemaphoreCount = 1;
+        submitInfo.pWaitSemaphores = waitSemaphores;
+        submitInfo.pWaitDstStageMask = waitStages;
+        submitInfo.commandBufferCount = commandBuffers.size();
+        submitInfo.pCommandBuffers = commandBuffers.data();
+
+        VkSemaphore signalSemaphores[] = { renderFinishedSemaphores[m_CurrentFrame] };
+
+        submitInfo.signalSemaphoreCount = 1;
+        submitInfo.pSignalSemaphores = signalSemaphores;
+
+        submits.emplace_back(submitInfo);
+
+        vkResetFences(m_Device, 1, &m_InFlightFences[m_CurrentFrame]);
+
         {
-            //std::lock_guard<std::mutex> guard(m_MutexQueueSubmit);
+            std::lock_guard<std::mutex> guard(m_MutexQueueSubmit);
+            VkResult result = vkQueueSubmit(m_GraphicsQueues[queueIndex], submits.size(), submits.data(), m_InFlightFences[m_CurrentFrame]);
 
-            std::vector<VkSemaphore>& imageAvailableSemaphores = semaphores.first;
-            std::vector<VkSemaphore>& renderFinishedSemaphores = semaphores.second;
-
-            if (m_ImagesInFlight[imageIndex] != VK_NULL_HANDLE) {
-                vkWaitForFences(m_Device, 1, &m_ImagesInFlight[imageIndex], VK_TRUE, UINT64_MAX);
-            }
-
-            m_ImagesInFlight[imageIndex] = m_ImagesInFlight[m_CurrentFrame];
-
-            std::vector<VkSubmitInfo> submits{};
-
-            VkSubmitInfo submitInfo{};
-            submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-
-            VkSemaphore waitSemaphores[] = { imageAvailableSemaphores[m_CurrentFrame] };
-
-            VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
-            submitInfo.waitSemaphoreCount = 1;
-            submitInfo.pWaitSemaphores = waitSemaphores;
-            submitInfo.pWaitDstStageMask = waitStages;
-            submitInfo.commandBufferCount = commandBuffers.size();
-            submitInfo.pCommandBuffers = commandBuffers.data();
-
-            VkSemaphore signalSemaphores[] = { renderFinishedSemaphores[m_CurrentFrame] };
-
-            submitInfo.signalSemaphoreCount = 1;
-            submitInfo.pSignalSemaphores = signalSemaphores;
-
-            submits.emplace_back(submitInfo);
-
-            vkResetFences(m_Device, 1, &m_InFlightFences[m_CurrentFrame]);
-
-            VkResult result = vkQueueSubmit(m_GraphicsQueue, submits.size(), submits.data(), m_InFlightFences[m_CurrentFrame]);
-
+            //Rbk::Log::GetLogger()->warn("queue index submit to: {}", queueIndex);
             if (result != VK_SUCCESS) {
                 throw std::runtime_error("failed to submit draw command buffer!");
             }
+            vkQueueWaitIdle(m_GraphicsQueues[queueIndex]);
+
+            //for (auto& cmd : commandBuffers) {
+            //    vkResetCommandBuffer(cmd, VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
+            //}
+
         }
     }
 
-    uint32_t VulkanRenderer::QueuePresent(uint32_t imageIndex, VkSwapchainKHR swapChain, std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>>& semaphores)
+    void VulkanRenderer::QueuePresent(uint32_t imageIndex, VkSwapchainKHR swapChain, std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>>& semaphores, int queueIndex)
     {
         std::vector<VkSemaphore>& renderFinishedSemaphores = semaphores.second;
 
@@ -1400,12 +1411,15 @@ namespace Rbk {
         presentInfo.pImageIndices = &imageIndex;
         presentInfo.pResults = nullptr;
 
-        VkResult result = vkQueuePresentKHR(m_PresentQueue, &presentInfo);
+        VkResult result = vkQueuePresentKHR(m_PresentQueues[queueIndex], &presentInfo);
 
         if (result != VK_SUCCESS) {
             throw std::runtime_error("failed to present swap chain image!");
         }
+    }
 
+    uint32_t VulkanRenderer::GetNextFrameIndex()
+    {
         m_CurrentFrame = (m_CurrentFrame + 1) % static_cast<uint32_t>(m_MAX_FRAMES_IN_FLIGHT);
 
         return m_CurrentFrame;
@@ -1423,10 +1437,10 @@ namespace Rbk {
             
             std::vector<VkSemaphore>& imageAvailableSemaphores = semaphores.first;
 
-            vkWaitForFences(m_Device, 1, &m_InFlightFences[m_CurrentFrame], VK_TRUE, UINT64_MAX);
+            vkWaitForFences(m_Device, 1, &m_InFlightFences[m_CurrentFrame], VK_TRUE, UINT32_MAX);
 
             uint32_t imageIndex = 0;
-            VkResult result = vkAcquireNextImageKHR(m_Device, swapChain, UINT64_MAX, imageAvailableSemaphores[m_CurrentFrame], VK_NULL_HANDLE, &imageIndex);
+            VkResult result = vkAcquireNextImageKHR(m_Device, swapChain, UINT32_MAX, imageAvailableSemaphores[m_CurrentFrame], VK_NULL_HANDLE, &imageIndex);
 
             if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
                 throw std::runtime_error("failed to acquire swap chain image!");
@@ -1734,7 +1748,7 @@ namespace Rbk {
         }
     }
 
-    void VulkanRenderer::CopyBuffer(VkCommandPool commandPool, VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size)
+    void VulkanRenderer::CopyBuffer(VkCommandPool commandPool, VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size, int queueIndex)
     {
         VkCommandBufferAllocateInfo allocInfo{};
         allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
@@ -1756,19 +1770,22 @@ namespace Rbk {
         copyRegion.dstOffset = 0; // Optional
         copyRegion.size = size;
 
+        vkCmdCopyBuffer(commandBuffer, srcBuffer, dstBuffer, 1, &copyRegion);
+        vkEndCommandBuffer(commandBuffer);
+
+        VkSubmitInfo submitInfo{};
+        submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+        submitInfo.commandBufferCount = 1;
+        submitInfo.pCommandBuffers = &commandBuffer;
+
+        VkFenceCreateInfo fenceInfo{};
+        fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+        
         {
-            //std::lock_guard<std::mutex> guard(m_MutexQueueSubmit);
+            std::lock_guard<std::mutex> guard(m_MutexQueueSubmit);
 
-            vkCmdCopyBuffer(commandBuffer, srcBuffer, dstBuffer, 1, &copyRegion);
-            vkEndCommandBuffer(commandBuffer);
-
-            VkSubmitInfo submitInfo{};
-            submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-            submitInfo.commandBufferCount = 1;
-            submitInfo.pCommandBuffers = &commandBuffer;
-
-            vkQueueSubmit(m_GraphicsQueue, 1, &submitInfo, VK_NULL_HANDLE);
-            vkQueueWaitIdle(m_GraphicsQueue);
+            vkQueueSubmit(m_GraphicsQueues[queueIndex], 1, &submitInfo, nullptr);
+            vkQueueWaitIdle(m_GraphicsQueues[queueIndex]);
             vkFreeCommandBuffers(m_Device, commandPool, 1, &commandBuffer);
         }
     }
@@ -1910,7 +1927,7 @@ namespace Rbk {
 
         auto memoryType = FindMemoryType(memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
         uint32_t size = ((memRequirements.size / memRequirements.alignment) + 1) * memRequirements.alignment;
-        auto deviceMemory = m_DeviceMemoryPool->Get(m_Device, size, memoryType, VK_BUFFER_USAGE_TRANSFER_SRC_BIT);
+        auto deviceMemory = m_DeviceMemoryPool->Get(m_Device, size, memoryType, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, true);
         auto offset = deviceMemory->GetOffset();
         deviceMemory->BindBufferToMemory(buffer, size);
 
@@ -2218,7 +2235,7 @@ namespace Rbk {
 
     void VulkanRenderer::WaitForFence()
     {
-        vkWaitForFences(m_Device, 1, &m_Fence, true, 9999999999);
+        vkWaitForFences(m_Device, 1, &m_Fence, VK_TRUE, UINT32_MAX);
         vkResetFences(m_Device, 1, &m_Fence);
     }
 
@@ -2285,5 +2302,28 @@ namespace Rbk {
     VulkanRenderer::~VulkanRenderer()
     {
         std::cout << "VulkanRenderer deleted." << std::endl;
+    }
+
+    void VulkanRenderer::StartMarker(VkCommandBuffer buffer, const std::string& name, float r, float g, float b, float a)
+    {
+#ifdef RBK_DEBUG
+        VkDebugUtilsLabelEXT label;
+        label.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_LABEL_EXT;
+        label.pLabelName = name.c_str();
+        label.pNext = VK_NULL_HANDLE;
+        label.color[0] = a;
+        label.color[1] = r;
+        label.color[2] = g;
+        label.color[3] = b;
+
+        vkCmdBeginDebugUtilsLabelEXT(buffer, &label);
+#endif
+    }
+
+    void VulkanRenderer::EndMarker(VkCommandBuffer buffer)
+    {
+#ifdef RBK_DEBUG
+        vkCmdEndDebugUtilsLabelEXT(buffer);
+#endif
     }
 }
