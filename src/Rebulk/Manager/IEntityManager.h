@@ -16,7 +16,7 @@ namespace Rbk
         ~IEntityManager() = default;
 
         virtual void AddRenderer(std::shared_ptr<IRendererAdapter> renderer) = 0;
-        virtual std::vector<std::future<void>> Load(nlohmann::json levelConfig) = 0;
+        virtual std::vector<std::function<void()>> Load(nlohmann::json levelConfig) = 0;
         virtual inline std::vector<std::shared_ptr<Entity>>* GetEntities() = 0;
         virtual inline void SetSkybox(std::shared_ptr<Mesh> skybox) = 0;
         virtual inline std::vector<std::shared_ptr<Entity>>* GetBBox() = 0;

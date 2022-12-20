@@ -83,6 +83,7 @@ namespace Rbk
         for (auto sema : m_Semaphores) {
             m_Renderer->DestroySemaphores(sema);
         }
+        m_Renderer->DestroyFences();
         m_Renderer->ResetCurrentFrameIndex();
         m_SwapChainImageViews.resize(m_SwapChainImages.size());
         m_DepthImages.resize(m_SwapChainImages.size());
@@ -286,13 +287,9 @@ namespace Rbk
         //ShouldRecreateSwapChain();
         m_ImageIndex = m_Renderer->AcquireNextImageKHR(m_SwapChain, m_Semaphores.at(0));
 
-        std::future<void>futureEntities = DrawEntities(m_Entities.at(0));
-        std::future<void>futureSkybox = DrawSkybox();
-        std::future<void>hudSkybox = DrawHUD();
-
-        futureSkybox.wait();
-        hudSkybox.wait();
-        futureEntities.wait();
+        DrawEntities(m_Entities.at(0)).wait();
+        DrawSkybox().wait();
+        DrawHUD().wait();
 
        /* if (0 < m_BoundingBox->size()) {
             std::thread workerB(bbox);
@@ -363,7 +360,9 @@ namespace Rbk
         for (auto sema : m_Semaphores) {
             m_Renderer->DestroySemaphores(sema);
         }
-    
+
+        m_Renderer->DestroyFences();
+
         for (auto item: m_DepthImages) {
             vkDestroyImage(m_Renderer->GetDevice(), item, nullptr);
         }
@@ -391,7 +390,7 @@ namespace Rbk
         m_Renderer->DestroyRenderPass(m_RenderPass, m_CommandPoolHud, m_CommandBuffersHud);
     }
 
-    void VulkanAdapter::ImmediateSubmit(std::function<void(VkCommandBuffer cmd)>&& function)
+    void VulkanAdapter::ImmediateSubmit(std::function<void(VkCommandBuffer cmd)>&& function, int queueIndex)
     {
         auto commandPool = m_Renderer->CreateCommandPool();
         VkCommandBuffer cmd = m_Renderer->AllocateCommandBuffers(commandPool)[0];

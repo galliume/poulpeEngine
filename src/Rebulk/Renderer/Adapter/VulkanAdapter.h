@@ -19,7 +19,7 @@ namespace Rbk
         virtual void WaitIdle() override;
         virtual std::shared_ptr<VulkanRenderer> Rdr() override { return m_Renderer; }
         virtual ImGuiInfo GetImGuiInfo() override;
-        virtual void ImmediateSubmit(std::function<void(VkCommandBuffer cmd)>&& function) override;
+        virtual void ImmediateSubmit(std::function<void(VkCommandBuffer cmd)>&& function, int queueIndex = 0) override;
         virtual void ShowGrid(bool show) override;
         virtual void AddEntities(std::vector<std::shared_ptr<Entity>>* entities) override;
         virtual void AddBbox(std::vector<std::shared_ptr<Entity>>* bbox) override { m_BoundingBox = bbox; }

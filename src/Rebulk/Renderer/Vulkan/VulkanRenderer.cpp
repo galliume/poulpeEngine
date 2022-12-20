@@ -2254,9 +2254,18 @@ namespace Rbk {
     void VulkanRenderer::DestroySemaphores(std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>> semaphores)
     {
         for (int i = 0; i < m_MAX_FRAMES_IN_FLIGHT; i++) {
-            vkDestroySemaphore(m_Device, semaphores.first[i], nullptr);
-            vkDestroySemaphore(m_Device, semaphores.second[i], nullptr);
+            
+            if (nullptr != semaphores.first[i]) vkDestroySemaphore(m_Device, semaphores.first[i], nullptr);
+            if (nullptr != semaphores.second[i]) vkDestroySemaphore(m_Device, semaphores.second[i], nullptr);
+        }
+    }
+
+    void VulkanRenderer::DestroyFences()
+    {
+        for (int i = 0; i < m_InFlightFences.size(); ++i) {
             vkDestroyFence(m_Device, m_InFlightFences[i], nullptr);
+        }
+        for (int i = 0; i < m_ImagesInFlight.size(); ++i) {
             vkDestroyFence(m_Device, m_ImagesInFlight[i], nullptr);
         }
     }

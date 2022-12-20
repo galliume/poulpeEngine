@@ -1,6 +1,5 @@
 #include "rebulkpch.h"
 #include "Application.h"
-#include <nvToolsExt.h>
 
 namespace Rbk
 {
@@ -62,7 +61,7 @@ namespace Rbk
         std::mutex lockDraw;
 
         InitImGui();
-        auto imgui =
+        std::function<void()> imGui =
             [=, &timeStep, &lockDraw]() {
             glfwPollEvents();
 
@@ -90,10 +89,7 @@ namespace Rbk
 
         while (!glfwWindowShouldClose(m_Window->Get())) {
 
-            nvtxRangePush(L"Yatangaki");
-            nvtxMark((L"Subido la marea ! AHIIII"));
-
-            if (Application::s_UnlockedFPS.load() == 0) {
+         if (Application::s_UnlockedFPS.load() == 0) {
                 maxFPS = 30.0;
                 maxPeriod = std::chrono::duration<double>(1.0 / maxFPS);
             } else if (Application::s_UnlockedFPS.load() == 1) {
@@ -122,9 +118,10 @@ namespace Rbk
 
                 glfwPollEvents();
                 m_RenderManager->SetDeltatime(timeStep.count());
-                imgui();
+                //m_RenderManager->StartInThread(imGui);
+                imGui();
                 m_RenderManager->Draw();
-                
+
                 lastTime = currentTime;
             }
         }
@@ -136,8 +133,6 @@ namespace Rbk
 
         glfwDestroyWindow(m_Window.get()->Get());
         glfwTerminate();
-
-        nvtxRangePop();
     }
 
     void Application::InitImGui()

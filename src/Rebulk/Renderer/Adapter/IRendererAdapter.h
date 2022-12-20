@@ -30,7 +30,7 @@ namespace Rbk
         virtual inline glm::mat4 GetPerspective() = 0;
 
         //@todo should return an interface not direct impl
-        virtual void ImmediateSubmit(std::function<void(VkCommandBuffer cmd)>&& function) = 0;
+        virtual void ImmediateSubmit(std::function<void(VkCommandBuffer cmd)>&& function, int queueIndex = 0) = 0;
         virtual std::shared_ptr<VulkanRenderer> Rdr() = 0;
         //end @todo
     };
