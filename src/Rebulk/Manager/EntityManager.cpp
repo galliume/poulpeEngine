@@ -29,11 +29,11 @@ namespace Rbk
             std::shared_ptr<Mesh> mesh = std::dynamic_pointer_cast<Mesh>(entity);
             
             if (mesh) {
-                std::vector<Data> listData = *mesh->GetData();
+                Data* data = mesh->GetData();
                 std::shared_ptr<Mesh> existingEntity = std::dynamic_pointer_cast<Mesh>(m_Entities[m_LoadedEntities[mesh->GetName().c_str()][1]]);
+                existingEntity->AddUbos(data->m_Ubos);
 
-                for (auto data : listData) {
-                    existingEntity->AddUbos(data.m_Ubos);
+                if (mesh->GetBBox().size()) {
                     existingEntity->AddBBox(mesh->GetBBox().at(0));
                 }
 
@@ -55,13 +55,10 @@ namespace Rbk
             std::shared_ptr<Mesh> mesh = std::dynamic_pointer_cast<Mesh>(bbox);
 
             if (mesh) {
-                std::vector<Data> listData = *mesh->GetData();
+                Data data = *mesh->GetData();
                 int index = m_LoadedBbox[mesh->GetName().c_str()][1];
                 std::shared_ptr<Mesh> existingEntity = std::dynamic_pointer_cast<Mesh>(m_BoundingBox[index]);
-
-                for (auto data : listData) {
-                    existingEntity->AddUbos(data.m_Ubos);
-                }
+                existingEntity->AddUbos(data.m_Ubos);
 
                 m_LoadedBbox[mesh->GetName()][0] += 1;
             }
@@ -136,7 +133,7 @@ namespace Rbk
                                 static_cast<float>(rotationData["z"])
                             );
 
-                            entity->Init(
+                            auto entities = entity->Init(
                                 static_cast<std::string>(key),
                                 static_cast<std::string>(data["mesh"]),
                                 textures,
@@ -146,7 +143,8 @@ namespace Rbk
                                 rotation,
                                 static_cast<bool>(data["inverseTextureY"])
                             );
-                            AddEntity(entity);
+
+                            for (auto& e: entities) AddEntity(e);
                         }
                     }
                 }
@@ -194,7 +192,7 @@ namespace Rbk
 
                         std::shared_ptr<Rbk::Mesh> entity = std::make_shared<Rbk::Mesh>();
 
-                        entity->Init(
+                        auto entities = entity->Init(
                             static_cast<std::string>(key),
                             static_cast<std::string>(data["mesh"]),
                             textures,
@@ -204,7 +202,8 @@ namespace Rbk
                             rotation,
                             static_cast<bool>(data["inverseTextureY"])
                         );
-                        AddEntity(entity);
+                        
+                        for (auto& e : entities) AddEntity(e);
                     }
                 }
             }

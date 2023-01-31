@@ -35,10 +35,8 @@ namespace Rbk
             m_Renderer->DestroyBuffer(buffer.buffer);
         }
 
-        for (Data data : *entity->GetData()) {
-            m_Renderer->DestroyBuffer(data.m_VertexBuffer.buffer);
-            m_Renderer->DestroyBuffer(data.m_IndicesBuffer.buffer);
-        }
+        m_Renderer->DestroyBuffer(entity->GetData()->m_VertexBuffer.buffer);
+        m_Renderer->DestroyBuffer(entity->GetData()->m_IndicesBuffer.buffer);
     }
 
     void DestroyManager::CleanShaders(std::map<std::string, std::array<VkShaderModule, 2>> shaders)

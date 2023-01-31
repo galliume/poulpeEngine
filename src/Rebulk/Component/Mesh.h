@@ -29,7 +29,7 @@ namespace Rbk
         Mesh();
         ~Mesh() = default;
 
-        void Init(const std::string& name,
+        std::vector<std::shared_ptr<Mesh>> Init(const std::string& name,
             const std::string& path,
             const std::vector<std::string>& textureNames,
             const std::string& shader,
@@ -38,7 +38,8 @@ namespace Rbk
             glm::vec3 rotation = glm::vec3(1.0f),
             bool shouldInverseTextureY = true);
 
-        std::vector<Data>* GetData() { return &m_Data; }
+        Data* GetData() { return &m_Data; }
+        void SetData(Data& data) { m_Data = data; }
         
         inline const std::string GetShaderName() const { return m_ShaderName; }
         inline void SetShaderName(std::string_view name) { m_ShaderName = name; }
@@ -59,7 +60,7 @@ namespace Rbk
         VkPipeline m_GraphicsPipeline;
     
     private:
-        std::vector<Data> m_Data = {};
+        Data m_Data;
         std::string m_ShaderName;
         bool m_IsDirty = true;
     };

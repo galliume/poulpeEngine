@@ -156,7 +156,8 @@ namespace Rbk
          if (0 < entities.size()) {
             BeginRendering(m_CommandBuffersEntities[m_ImageIndex]);
             m_Renderer->StartMarker(m_CommandBuffersEntities[m_ImageIndex], "entities_drawing", 0.3, 0.2, 0.1);
-                
+            
+
             for (std::shared_ptr<Entity> entity : entities) {
                 std::shared_ptr<Mesh> mesh = std::dynamic_pointer_cast<Mesh>(entity);
 
@@ -164,23 +165,20 @@ namespace Rbk
 
                 m_Renderer->BindPipeline(m_CommandBuffersEntities[m_ImageIndex], mesh->m_GraphicsPipeline);
 
+
                 //if (m_HasClicked && mesh->IsHit(m_RayPick)) {
                 //    Rbk::Log::GetLogger()->warn("HIT ! {}", mesh->GetName());
                 //    m_HasClicked = false;
                 //}
+                int index = m_ImageIndex;
+                for (uint32_t i = 0; i < mesh->m_UniformBuffers.size(); i++) {
+                    index += i * 3;
 
-                for (Data& data : *mesh->GetData()) {
+                    if (mesh->HasPushConstants() && nullptr != mesh->ApplyPushConstants)
+                        mesh->ApplyPushConstants(m_CommandBuffersEntities[m_ImageIndex], mesh->m_PipelineLayout, shared_from_this(), *mesh->GetData());
 
-                    int index = m_ImageIndex;
-                    for (uint32_t i = 0; i < mesh->m_UniformBuffers.size(); i++) {
-                        index += i * 3;
-
-                        if (mesh->HasPushConstants() && nullptr != mesh->ApplyPushConstants)
-                            mesh->ApplyPushConstants(m_CommandBuffersEntities[m_ImageIndex], mesh->m_PipelineLayout, shared_from_this(), data);
-
-                        m_Renderer->Draw(m_CommandBuffersEntities[m_ImageIndex], mesh->GetDescriptorSets().at(index), mesh.get(), data, mesh->m_UniformBuffers.at(i).size, m_ImageIndex);
-                        index = m_ImageIndex;
-                    }
+                    m_Renderer->Draw(m_CommandBuffersEntities[m_ImageIndex], mesh->GetDescriptorSets().at(index), mesh.get(), *mesh->GetData(), mesh->GetData()->m_Ubos.size(), m_ImageIndex);
+                    index = m_ImageIndex;
                 }
             }
 
@@ -196,18 +194,16 @@ namespace Rbk
             BeginRendering(m_CommandBuffersSkybox[m_ImageIndex], VK_ATTACHMENT_LOAD_OP_CLEAR, VK_ATTACHMENT_STORE_OP_STORE);
             m_Renderer->StartMarker(m_CommandBuffersSkybox[m_ImageIndex], "skybox_drawing", 0.3, 0.2, 0.1);
 
-            std::vector<Rbk::Data> skyboxData = *m_SkyboxMesh->GetData();
+            Rbk::Data skyboxData = *m_SkyboxMesh->GetData();
 
-            if (!skyboxData.empty()) {
-                m_Renderer->BindPipeline(m_CommandBuffersSkybox[m_ImageIndex], m_SkyboxMesh->m_GraphicsPipeline);
+            m_Renderer->BindPipeline(m_CommandBuffersSkybox[m_ImageIndex], m_SkyboxMesh->m_GraphicsPipeline);
 
-                for (uint32_t i = 0; i < m_SkyboxMesh->m_UniformBuffers.size(); i++) {
+            for (uint32_t i = 0; i < m_SkyboxMesh->m_UniformBuffers.size(); i++) {
 
-                    if (m_SkyboxMesh->HasPushConstants() && nullptr != m_SkyboxMesh->ApplyPushConstants)
-                        m_SkyboxMesh->ApplyPushConstants(m_CommandBuffersSkybox[m_ImageIndex], m_SkyboxMesh->m_PipelineLayout, shared_from_this(), skyboxData[0]);
+                if (m_SkyboxMesh->HasPushConstants() && nullptr != m_SkyboxMesh->ApplyPushConstants)
+                    m_SkyboxMesh->ApplyPushConstants(m_CommandBuffersSkybox[m_ImageIndex], m_SkyboxMesh->m_PipelineLayout, shared_from_this(), skyboxData);
 
-                    m_Renderer->Draw(m_CommandBuffersSkybox[m_ImageIndex], m_SkyboxMesh->GetDescriptorSets().at(i), m_SkyboxMesh.get(), skyboxData[0], skyboxData[0].m_Ubos.size(), m_ImageIndex, false);
-                }
+                m_Renderer->Draw(m_CommandBuffersSkybox[m_ImageIndex], m_SkyboxMesh->GetDescriptorSets().at(i), m_SkyboxMesh.get(), skyboxData, skyboxData.m_Ubos.size(), m_ImageIndex, false);
             }
 
             m_Renderer->EndMarker(m_CommandBuffersSkybox[m_ImageIndex]);
@@ -225,13 +221,11 @@ namespace Rbk
             if (!hudPart || !hudPart->IsVisible()) continue;
             m_Renderer->BindPipeline(m_CommandBuffersHud[m_ImageIndex], hudPart->m_GraphicsPipeline);
 
-            for (Data& data : *hudPart->GetData()) {
-                if (hudPart->HasPushConstants() && nullptr != hudPart->ApplyPushConstants)
-                    hudPart->ApplyPushConstants(m_CommandBuffersHud[m_ImageIndex], hudPart->m_PipelineLayout, shared_from_this(), data);
+            if (hudPart->HasPushConstants() && nullptr != hudPart->ApplyPushConstants)
+                hudPart->ApplyPushConstants(m_CommandBuffersHud[m_ImageIndex], hudPart->m_PipelineLayout, shared_from_this(), *hudPart->GetData());
 
-                for (uint32_t i = 0; i < hudPart->m_UniformBuffers.size(); i++) {
-                    m_Renderer->Draw(m_CommandBuffersHud[m_ImageIndex], hudPart->GetDescriptorSets().at(i), hudPart.get(), data, data.m_Ubos.size(), m_ImageIndex);
-                }
+            for (uint32_t i = 0; i < hudPart->m_UniformBuffers.size(); i++) {
+                m_Renderer->Draw(m_CommandBuffersHud[m_ImageIndex], hudPart->GetDescriptorSets().at(i), hudPart.get(), *hudPart->GetData(), hudPart->GetData()->m_Ubos.size(), m_ImageIndex);
             }
         }
 
@@ -249,13 +243,10 @@ namespace Rbk
 
                 if (!mesh) continue;
                 m_Renderer->BindPipeline(m_CommandBuffersBbox[m_ImageIndex], mesh->m_GraphicsPipeline);
-
-                for (Data& data : *mesh->GetData()) {
-                    int index = m_ImageIndex;
-                    for (uint32_t i = 0; i < mesh->m_UniformBuffers.size(); i++) {
-                        m_Renderer->Draw(m_CommandBuffersBbox[m_ImageIndex], mesh->GetDescriptorSets().at(index), mesh.get(), data, mesh->m_UniformBuffers.at(i).size, m_ImageIndex);
-                        index = m_ImageIndex;
-                    }
+                int index = m_ImageIndex;
+                for (uint32_t i = 0; i < mesh->m_UniformBuffers.size(); i++) {
+                    m_Renderer->Draw(m_CommandBuffersBbox[m_ImageIndex], mesh->GetDescriptorSets().at(index), mesh.get(), *mesh->GetData(), mesh->m_UniformBuffers.at(i).size, m_ImageIndex);
+                    index = m_ImageIndex;
                 }
             }
 
@@ -265,15 +256,15 @@ namespace Rbk
 
     void VulkanAdapter::Draw()
     {
-        //ShouldRecreateSwapChain();
+        ShouldRecreateSwapChain();
         m_ImageIndex = m_Renderer->AcquireNextImageKHR(m_SwapChain, m_Semaphores.at(0));
 
         std::vector<std::future<void>> drawing{};
         for (auto& entities: m_Entities) 
             drawing.emplace_back(std::async(std::launch::async, [this, &entities] { DrawEntities(entities); }));
         
-        drawing.emplace_back(std::async(std::launch::async, [this] { DrawSkybox(); }));
-        drawing.emplace_back(std::async(std::launch::async, [this] { DrawHUD(); }));
+        /*drawing.emplace_back(std::async(std::launch::async, [this] { DrawSkybox(); }));
+        drawing.emplace_back(std::async(std::launch::async, [this] { DrawHUD(); }));*/
 
         for (auto& d : drawing) {
             d.wait();
@@ -285,9 +276,9 @@ namespace Rbk
             workerB.join();
         }*/
 
-        m_CmdToSubmit.emplace_back(m_CommandBuffersSkybox[m_ImageIndex]);
+        //m_CmdToSubmit.emplace_back(m_CommandBuffersSkybox[m_ImageIndex]);
         m_CmdToSubmit.emplace_back(m_CommandBuffersEntities[m_ImageIndex]);
-        m_CmdToSubmit.emplace_back(m_CommandBuffersHud[m_ImageIndex]);
+        //m_CmdToSubmit.emplace_back(m_CommandBuffersHud[m_ImageIndex]);
         
         if (!m_CmdToSubmit.empty()) {
             Submit(m_CmdToSubmit);
@@ -315,14 +306,12 @@ namespace Rbk
             if (!mesh || !mesh->IsVisible()) continue;
             m_Renderer->BindPipeline(m_CommandBuffersSplash[m_ImageIndex], mesh->m_GraphicsPipeline);
 
-            for (Data& data : *mesh->GetData()) {
-                for (uint32_t i = 0; i < mesh->m_UniformBuffers.size(); i++) {
+            for (uint32_t i = 0; i < mesh->m_UniformBuffers.size(); i++) {
 
-                    if (mesh->HasPushConstants() && nullptr != mesh->ApplyPushConstants)
-                        mesh->ApplyPushConstants(m_CommandBuffersSplash[m_ImageIndex], mesh->m_PipelineLayout, shared_from_this(), data);
+                if (mesh->HasPushConstants() && nullptr != mesh->ApplyPushConstants)
+                    mesh->ApplyPushConstants(m_CommandBuffersSplash[m_ImageIndex], mesh->m_PipelineLayout, shared_from_this(), *mesh->GetData());
 
-                    m_Renderer->Draw(m_CommandBuffersSplash[m_ImageIndex], mesh->GetDescriptorSets().at(i), mesh.get(), data, data.m_Ubos.size(), m_ImageIndex);
-                }
+                m_Renderer->Draw(m_CommandBuffersSplash[m_ImageIndex], mesh->GetDescriptorSets().at(i), mesh.get(), *mesh->GetData(), mesh->GetData()->m_Ubos.size(), m_ImageIndex);
             }
         }
 
@@ -611,7 +600,7 @@ namespace Rbk
 
     void VulkanAdapter::AddEntities(std::vector<std::shared_ptr<Entity>>* entities)
     {
-        const int max = 50;//@todo vulkan race conditions to fix first
+        const int max = 100;//@todo vulkan race conditions to fix first
         std::fesetround(FE_UPWARD);
         const int size = std::nearbyint(entities->size() / 50.f);
         m_Entities.resize(size);

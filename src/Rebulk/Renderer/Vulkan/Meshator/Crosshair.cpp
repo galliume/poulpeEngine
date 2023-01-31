@@ -166,6 +166,6 @@ namespace Rbk
             );
         }
 
-        mesh->GetData()->emplace_back(crossHairData);
+        mesh->SetData(crossHairData);
     }
 }
