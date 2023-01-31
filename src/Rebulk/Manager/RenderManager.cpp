@@ -34,8 +34,6 @@ namespace Rbk
         m_DestroyManager(destroyManager),
         m_Camera(camera)
     {
-        m_ThreadPool = std::make_unique<ThreadPool>();
-
         m_Camera->Init();
         m_Renderer->Init();
         m_Renderer->AddCamera(m_Camera);
@@ -81,6 +79,8 @@ namespace Rbk
 
     void RenderManager::Init()
     {
+        m_ThreadPool = std::make_unique<ThreadPool>();
+
         if (m_Refresh) {
             m_Renderer->Rdr()->WaitIdle();
             m_DestroyManager->CleanEntities(*m_EntityManager->GetEntities());

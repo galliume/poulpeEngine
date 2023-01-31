@@ -257,6 +257,7 @@ namespace Rbk {
         std::mutex m_MutexDraw;
         std::mutex m_MutexCmdBuffer;
         std::mutex m_MutexAcquireNextImage;
+        std::mutex m_MutexGraphicsPipeline;
 
         VkDeviceSize m_MaxMemoryHeap;
         std::shared_ptr<DeviceMemoryPool> m_DeviceMemoryPool = nullptr;

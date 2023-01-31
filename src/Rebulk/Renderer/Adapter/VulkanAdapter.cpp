@@ -151,135 +151,116 @@ namespace Rbk
         m_Deltatime = deltaTime;
     }
 
-    std::future<void> VulkanAdapter::DrawEntities(std::vector<std::shared_ptr<Entity>>& entities)
+     void VulkanAdapter::DrawEntities(std::vector<std::shared_ptr<Entity>>& entities)
     {
-        std::future<void>future = std::async(std::launch::async, [=, &entities]() {
-
-            if (0 < entities.size()) {
-                BeginRendering(m_CommandBuffersEntities[m_ImageIndex]);
-                m_Renderer->StartMarker(m_CommandBuffersEntities[m_ImageIndex], "entities_drawing", 0.3, 0.2, 0.1);
+         if (0 < entities.size()) {
+            BeginRendering(m_CommandBuffersEntities[m_ImageIndex]);
+            m_Renderer->StartMarker(m_CommandBuffersEntities[m_ImageIndex], "entities_drawing", 0.3, 0.2, 0.1);
                 
-                for (std::shared_ptr<Entity> entity : entities) {
-                    std::shared_ptr<Mesh> mesh = std::dynamic_pointer_cast<Mesh>(entity);
+            for (std::shared_ptr<Entity> entity : entities) {
+                std::shared_ptr<Mesh> mesh = std::dynamic_pointer_cast<Mesh>(entity);
 
-                    if (!mesh) return;
+                if (!mesh) return;
 
-                    m_Renderer->BindPipeline(m_CommandBuffersEntities[m_ImageIndex], mesh->m_GraphicsPipeline);
+                m_Renderer->BindPipeline(m_CommandBuffersEntities[m_ImageIndex], mesh->m_GraphicsPipeline);
 
-                    //if (m_HasClicked && mesh->IsHit(m_RayPick)) {
-                    //    Rbk::Log::GetLogger()->warn("HIT ! {}", mesh->GetName());
-                    //    m_HasClicked = false;
-                    //}
+                //if (m_HasClicked && mesh->IsHit(m_RayPick)) {
+                //    Rbk::Log::GetLogger()->warn("HIT ! {}", mesh->GetName());
+                //    m_HasClicked = false;
+                //}
 
-                    for (Data& data : *mesh->GetData()) {
+                for (Data& data : *mesh->GetData()) {
 
-                        int index = m_ImageIndex;
-                        for (uint32_t i = 0; i < mesh->m_UniformBuffers.size(); i++) {
-                            index += i * 3;
+                    int index = m_ImageIndex;
+                    for (uint32_t i = 0; i < mesh->m_UniformBuffers.size(); i++) {
+                        index += i * 3;
 
-                            if (mesh->HasPushConstants() && nullptr != mesh->ApplyPushConstants)
-                                mesh->ApplyPushConstants(m_CommandBuffersEntities[m_ImageIndex], mesh->m_PipelineLayout, shared_from_this(), data);
+                        if (mesh->HasPushConstants() && nullptr != mesh->ApplyPushConstants)
+                            mesh->ApplyPushConstants(m_CommandBuffersEntities[m_ImageIndex], mesh->m_PipelineLayout, shared_from_this(), data);
 
-                            m_Renderer->Draw(m_CommandBuffersEntities[m_ImageIndex], mesh->GetDescriptorSets().at(index), mesh.get(), data, mesh->m_UniformBuffers.at(i).size, m_ImageIndex);
-                            index = m_ImageIndex;
-                        }
+                        m_Renderer->Draw(m_CommandBuffersEntities[m_ImageIndex], mesh->GetDescriptorSets().at(index), mesh.get(), data, mesh->m_UniformBuffers.at(i).size, m_ImageIndex);
+                        index = m_ImageIndex;
                     }
                 }
-
-                m_Renderer->EndMarker(m_CommandBuffersEntities[m_ImageIndex]);
-                EndRendering(m_CommandBuffersEntities[m_ImageIndex]);
             }
-        });
 
-        return future;
+            m_Renderer->EndMarker(m_CommandBuffersEntities[m_ImageIndex]);
+            EndRendering(m_CommandBuffersEntities[m_ImageIndex]);
+        }
     }
 
-    std::future<void> VulkanAdapter::DrawSkybox()
+    void VulkanAdapter::DrawSkybox()
     {
-        std::future<void>future = std::async(std::launch::async, [=]() {
-            if (m_SkyboxMesh) {
+        if (m_SkyboxMesh) {
 
-                BeginRendering(m_CommandBuffersSkybox[m_ImageIndex], VK_ATTACHMENT_LOAD_OP_CLEAR, VK_ATTACHMENT_STORE_OP_STORE);
-                m_Renderer->StartMarker(m_CommandBuffersSkybox[m_ImageIndex], "skybox_drawing", 0.3, 0.2, 0.1);
+            BeginRendering(m_CommandBuffersSkybox[m_ImageIndex], VK_ATTACHMENT_LOAD_OP_CLEAR, VK_ATTACHMENT_STORE_OP_STORE);
+            m_Renderer->StartMarker(m_CommandBuffersSkybox[m_ImageIndex], "skybox_drawing", 0.3, 0.2, 0.1);
 
-                std::vector<Rbk::Data> skyboxData = *m_SkyboxMesh->GetData();
+            std::vector<Rbk::Data> skyboxData = *m_SkyboxMesh->GetData();
 
-                if (!skyboxData.empty()) {
-                    m_Renderer->BindPipeline(m_CommandBuffersSkybox[m_ImageIndex], m_SkyboxMesh->m_GraphicsPipeline);
+            if (!skyboxData.empty()) {
+                m_Renderer->BindPipeline(m_CommandBuffersSkybox[m_ImageIndex], m_SkyboxMesh->m_GraphicsPipeline);
 
-                    for (uint32_t i = 0; i < m_SkyboxMesh->m_UniformBuffers.size(); i++) {
+                for (uint32_t i = 0; i < m_SkyboxMesh->m_UniformBuffers.size(); i++) {
 
-                        if (m_SkyboxMesh->HasPushConstants() && nullptr != m_SkyboxMesh->ApplyPushConstants)
-                            m_SkyboxMesh->ApplyPushConstants(m_CommandBuffersSkybox[m_ImageIndex], m_SkyboxMesh->m_PipelineLayout, shared_from_this(), skyboxData[0]);
+                    if (m_SkyboxMesh->HasPushConstants() && nullptr != m_SkyboxMesh->ApplyPushConstants)
+                        m_SkyboxMesh->ApplyPushConstants(m_CommandBuffersSkybox[m_ImageIndex], m_SkyboxMesh->m_PipelineLayout, shared_from_this(), skyboxData[0]);
 
-                        m_Renderer->Draw(m_CommandBuffersSkybox[m_ImageIndex], m_SkyboxMesh->GetDescriptorSets().at(i), m_SkyboxMesh.get(), skyboxData[0], skyboxData[0].m_Ubos.size(), m_ImageIndex, false);
-                    }
+                    m_Renderer->Draw(m_CommandBuffersSkybox[m_ImageIndex], m_SkyboxMesh->GetDescriptorSets().at(i), m_SkyboxMesh.get(), skyboxData[0], skyboxData[0].m_Ubos.size(), m_ImageIndex, false);
                 }
-
-                m_Renderer->EndMarker(m_CommandBuffersSkybox[m_ImageIndex]);
-                EndRendering(m_CommandBuffersSkybox[m_ImageIndex]);
             }
-        });
 
-        return future;
+            m_Renderer->EndMarker(m_CommandBuffersSkybox[m_ImageIndex]);
+            EndRendering(m_CommandBuffersSkybox[m_ImageIndex]);
+        }
     }
 
-    std::future<void> VulkanAdapter::DrawHUD()
+    void VulkanAdapter::DrawHUD()
     {
-        std::future<void>future = std::async(std::launch::async, [=]() {
+        BeginRendering(m_CommandBuffersHud[m_ImageIndex]);
+        m_Renderer->StartMarker(m_CommandBuffersHud[m_ImageIndex], "hud_drawing", 0.3, 0.2, 0.1);
 
-            BeginRendering(m_CommandBuffersHud[m_ImageIndex]);
-            m_Renderer->StartMarker(m_CommandBuffersHud[m_ImageIndex], "hud_drawing", 0.3, 0.2, 0.1);
+        for (std::shared_ptr<Mesh> hudPart : m_HUD) {
 
-            for (std::shared_ptr<Mesh> hudPart : m_HUD) {
+            if (!hudPart || !hudPart->IsVisible()) continue;
+            m_Renderer->BindPipeline(m_CommandBuffersHud[m_ImageIndex], hudPart->m_GraphicsPipeline);
 
-                if (!hudPart || !hudPart->IsVisible()) continue;
-                m_Renderer->BindPipeline(m_CommandBuffersHud[m_ImageIndex], hudPart->m_GraphicsPipeline);
+            for (Data& data : *hudPart->GetData()) {
+                if (hudPart->HasPushConstants() && nullptr != hudPart->ApplyPushConstants)
+                    hudPart->ApplyPushConstants(m_CommandBuffersHud[m_ImageIndex], hudPart->m_PipelineLayout, shared_from_this(), data);
 
-                for (Data& data : *hudPart->GetData()) {
-                    if (hudPart->HasPushConstants() && nullptr != hudPart->ApplyPushConstants)
-                        hudPart->ApplyPushConstants(m_CommandBuffersHud[m_ImageIndex], hudPart->m_PipelineLayout, shared_from_this(), data);
-
-                    for (uint32_t i = 0; i < hudPart->m_UniformBuffers.size(); i++) {
-                        m_Renderer->Draw(m_CommandBuffersHud[m_ImageIndex], hudPart->GetDescriptorSets().at(i), hudPart.get(), data, data.m_Ubos.size(), m_ImageIndex);
-                    }
+                for (uint32_t i = 0; i < hudPart->m_UniformBuffers.size(); i++) {
+                    m_Renderer->Draw(m_CommandBuffersHud[m_ImageIndex], hudPart->GetDescriptorSets().at(i), hudPart.get(), data, data.m_Ubos.size(), m_ImageIndex);
                 }
             }
+        }
 
-            m_Renderer->EndMarker(m_CommandBuffersHud[m_ImageIndex]);
-            EndRendering(m_CommandBuffersHud[m_ImageIndex]);
-        });
-
-        return future;
+        m_Renderer->EndMarker(m_CommandBuffersHud[m_ImageIndex]);
+        EndRendering(m_CommandBuffersHud[m_ImageIndex]);
     }
 
-    std::future<void> VulkanAdapter::DrawBbox()
+    void VulkanAdapter::DrawBbox()
     {
-        std::future<void>future = std::async(std::launch::async, [=]() {
+        if (0 < m_BoundingBox->size()) {
+            BeginRendering(m_CommandBuffersBbox[m_ImageIndex]);
 
-            if (0 < m_BoundingBox->size()) {
-                BeginRendering(m_CommandBuffersBbox[m_ImageIndex]);
+            for (std::shared_ptr<Entity> bbox : *m_BoundingBox) {
+                std::shared_ptr<Mesh> mesh = std::dynamic_pointer_cast<Mesh>(bbox);
 
-                for (std::shared_ptr<Entity> bbox : *m_BoundingBox) {
-                    std::shared_ptr<Mesh> mesh = std::dynamic_pointer_cast<Mesh>(bbox);
+                if (!mesh) continue;
+                m_Renderer->BindPipeline(m_CommandBuffersBbox[m_ImageIndex], mesh->m_GraphicsPipeline);
 
-                    if (!mesh) continue;
-                    m_Renderer->BindPipeline(m_CommandBuffersBbox[m_ImageIndex], mesh->m_GraphicsPipeline);
-
-                    for (Data& data : *mesh->GetData()) {
-                        int index = m_ImageIndex;
-                        for (uint32_t i = 0; i < mesh->m_UniformBuffers.size(); i++) {
-                            m_Renderer->Draw(m_CommandBuffersBbox[m_ImageIndex], mesh->GetDescriptorSets().at(index), mesh.get(), data, mesh->m_UniformBuffers.at(i).size, m_ImageIndex);
-                            index = m_ImageIndex;
-                        }
+                for (Data& data : *mesh->GetData()) {
+                    int index = m_ImageIndex;
+                    for (uint32_t i = 0; i < mesh->m_UniformBuffers.size(); i++) {
+                        m_Renderer->Draw(m_CommandBuffersBbox[m_ImageIndex], mesh->GetDescriptorSets().at(index), mesh.get(), data, mesh->m_UniformBuffers.at(i).size, m_ImageIndex);
+                        index = m_ImageIndex;
                     }
                 }
-
-                EndRendering(m_CommandBuffersBbox[m_ImageIndex]);
             }
-        });
 
-        return future;
+            EndRendering(m_CommandBuffersBbox[m_ImageIndex]);
+        }
     }
 
     void VulkanAdapter::Draw()
@@ -287,9 +268,16 @@ namespace Rbk
         //ShouldRecreateSwapChain();
         m_ImageIndex = m_Renderer->AcquireNextImageKHR(m_SwapChain, m_Semaphores.at(0));
 
-        DrawEntities(m_Entities.at(0)).wait();
-        DrawSkybox().wait();
-        DrawHUD().wait();
+        std::vector<std::future<void>> drawing{};
+        for (auto& entities: m_Entities) 
+            drawing.emplace_back(std::async(std::launch::async, [this, &entities] { DrawEntities(entities); }));
+        
+        drawing.emplace_back(std::async(std::launch::async, [this] { DrawSkybox(); }));
+        drawing.emplace_back(std::async(std::launch::async, [this] { DrawHUD(); }));
+
+        for (auto& d : drawing) {
+            d.wait();
+        }
 
        /* if (0 < m_BoundingBox->size()) {
             std::thread workerB(bbox);
@@ -301,15 +289,17 @@ namespace Rbk
         m_CmdToSubmit.emplace_back(m_CommandBuffersEntities[m_ImageIndex]);
         m_CmdToSubmit.emplace_back(m_CommandBuffersHud[m_ImageIndex]);
         
-        Submit(m_CmdToSubmit);
-        
-        //@todo wtf ?
-        uint32_t currentFrame = m_Renderer->GetNextFrameIndex();
-        if (currentFrame == VK_ERROR_OUT_OF_DATE_KHR || currentFrame == VK_SUBOPTIMAL_KHR) {
-            RecreateSwapChain();
-        }
+        if (!m_CmdToSubmit.empty()) {
+            Submit(m_CmdToSubmit);
 
-        m_CmdToSubmit.clear();
+            //@todo wtf ?
+            uint32_t currentFrame = m_Renderer->GetNextFrameIndex();
+            if (currentFrame == VK_ERROR_OUT_OF_DATE_KHR || currentFrame == VK_SUBOPTIMAL_KHR) {
+                RecreateSwapChain();
+            }
+
+            m_CmdToSubmit.clear();
+        }
         //Rbk::Log::GetLogger()->critical("Draw Call {}", drawCall);
     }
 

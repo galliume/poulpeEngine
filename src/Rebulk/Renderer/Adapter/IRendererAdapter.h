@@ -4,6 +4,7 @@
 #include "Rebulk/Component/Camera.h"
 #include "backends/imgui_impl_vulkan.h"
 #include "Rebulk/GUI/ImGui/Im.h"
+#include "Rebulk/Core/ThreadPool.h"
 
 namespace Rbk
 {
