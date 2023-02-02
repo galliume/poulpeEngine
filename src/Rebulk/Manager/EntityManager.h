@@ -11,7 +11,7 @@ namespace Rbk
         explicit EntityManager();
 
         virtual void AddRenderer(std::shared_ptr<IRendererAdapter> renderer) override { m_Renderer = renderer; }
-        virtual std::vector<std::future<void>> Load(nlohmann::json levelConfig) override;
+        virtual std::vector<std::function<void()>> Load(nlohmann::json levelConfig) override;
         virtual inline std::vector<std::shared_ptr<Entity>>* GetEntities() override { return &m_Entities; }
         virtual inline void SetSkybox(std::shared_ptr<Mesh> skybox) override { m_Skybox = skybox; }
         virtual inline std::vector<std::shared_ptr<Entity>>* GetBBox() override  { return &m_BoundingBox; }
@@ -40,5 +40,6 @@ namespace Rbk
         std::vector<std::shared_ptr<Mesh>> m_HUD = {};
         std::shared_ptr<IRendererAdapter> m_Renderer = nullptr;
         bool m_ShowBBox = false;
+        nlohmann::json m_LevelConfig;
     };
 }

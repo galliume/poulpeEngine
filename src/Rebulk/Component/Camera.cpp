@@ -90,31 +90,31 @@ namespace Rbk
 
     void Camera::Forward()
     {
-        m_Pos += m_Speed * m_CameraFront;
+        m_Pos += m_Speed * m_DeltaTime * m_CameraFront;
     }
 
     void Camera::Backward()
     {
-        m_Pos -= m_Speed * m_CameraFront;
+        m_Pos -= m_Speed * m_DeltaTime * m_CameraFront;
     }
     void Camera::Up()
     {
-        m_Pos -= m_CameraUp * m_Speed;
+        m_Pos -= m_CameraUp * m_Speed * m_DeltaTime;
     }
 
     void Camera::Down()
     {
-        m_Pos += m_CameraUp * m_Speed;
+        m_Pos += m_CameraUp * m_Speed * m_DeltaTime;
     }
 
     void Camera::Left()
     {
-        m_Pos -= glm::normalize(glm::cross(m_CameraFront, m_CameraUp)) * m_Speed;
+        m_Pos -= glm::normalize(glm::cross(m_CameraFront, m_CameraUp)) * m_Speed * m_DeltaTime;
     }
 
     void Camera::Right()
     {
-        m_Pos += glm::normalize(glm::cross(m_CameraFront, m_CameraUp)) * m_Speed;
+        m_Pos += glm::normalize(glm::cross(m_CameraFront, m_CameraUp)) * m_Speed * m_DeltaTime;
     }
 
     glm::mat4 Camera::LookAt()
@@ -123,9 +123,9 @@ namespace Rbk
         return m_View;
     }
 
-    void Camera::UpdateSpeed(float timeStep)
+    void Camera::UpdateDeltaTime(float timeStep)
     {
-        m_Speed = timeStep / 100;
+        m_DeltaTime = timeStep;
     }
 
     void Camera::UpdateYP(float xoffset, float yoffset)

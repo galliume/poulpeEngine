@@ -165,6 +165,6 @@ namespace Rbk
             );
         }
 
-        mesh->GetData()->emplace_back(gridData);
+        mesh->SetData(gridData);
     }
 }
