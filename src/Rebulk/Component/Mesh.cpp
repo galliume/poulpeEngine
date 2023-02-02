@@ -5,7 +5,7 @@ namespace Rbk
 {
     Mesh::Mesh() : Entity() { }
 
-    void Mesh::Init(const std::string& name,
+    std::vector<std::shared_ptr<Mesh>> Mesh::Init(const std::string& name,
         const std::string& path,
         const std::vector<std::string>& textureNames,
         const std::string& shader,
@@ -23,15 +23,18 @@ namespace Rbk
         std::vector<TinyObjData> listData = Rbk::TinyObjLoader::LoadData(path, shouldInverseTextureY);
         //end todo
 
-        SetName(name);
-        m_ShaderName = shader;
-        std::vector<Rbk::Mesh::BBox> bboxs{};
+        std::vector<std::shared_ptr<Mesh>> meshes;
 
         for (size_t i = 0; i < listData.size(); i++) {
 
             Data data;
+            auto mesh = std::make_shared<Mesh>();
+            mesh->SetName(name + '_' + std::to_string(i));
+            mesh->SetShaderName(shader);
 
-            data.m_Name = name + '_' + textureNames[listData[i].materialId] + '_' + std::to_string(i);
+            std::vector<Rbk::Mesh::BBox> bboxs{};
+
+            data.m_Name = name + '_' + textureNames[listData[i].materialId];
             data.m_Texture = textureNames[listData[i].materialId];
             data.m_Vertices = listData[i].vertices;
             data.m_Indices = listData[i].indices;
@@ -48,7 +51,7 @@ namespace Rbk
             //ubo.view = glm::mat4(1.0f);
             data.m_Ubos.emplace_back(ubo);
 
-            m_Data.emplace_back(data);
+            mesh->SetData(data);
 
             float xMax = data.m_Vertices.at(0).pos.x;
             float yMax = data.m_Vertices.at(0).pos.y;
@@ -82,16 +85,15 @@ namespace Rbk
             box.center = center;
             box.size = size;
 
-            bboxs.emplace_back(box);
+            mesh->AddBBox(box);
+            meshes.emplace_back(mesh);
         }
 
-        SetBBox(bboxs);
+        return meshes;
     }
 
     void Mesh::AddUbos(const std::vector<UniformBufferObject>& ubos)
     {
-        for (auto& data : m_Data) {
-            data.m_Ubos.insert(data.m_Ubos.end(), ubos.begin(), ubos.end());
-        }
+        m_Data.m_Ubos.insert(m_Data.m_Ubos.end(), ubos.begin(), ubos.end());
     }
 }

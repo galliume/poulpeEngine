@@ -21,7 +21,7 @@ namespace Rbk
         void Left();
         void Right();
         glm::mat4 LookAt();
-        void UpdateSpeed(float timeStep);
+        void UpdateDeltaTime(float timeStep);
         void UpdateYP(float xoffset, float yoffset);
         void Recenter();
         glm::mat4 FrustumProj(float fovy, float s, float n, float f);
@@ -38,6 +38,7 @@ namespace Rbk
         glm::vec3 m_CameraFront;
         float m_Yaw = -90.0f;
         float m_Pitch;
-        float m_Speed;
+        float m_Speed = 0.1f;
+        float m_DeltaTime = 1.f;
     };
 }

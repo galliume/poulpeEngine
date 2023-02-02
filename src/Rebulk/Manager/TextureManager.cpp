@@ -8,26 +8,29 @@ namespace Rbk
 
     }
 
-    std::future<void> TextureManager::Load()
+    std::function<void()> TextureManager::Load()
     {
-        std::future textureFuture = std::async(std::launch::async, [this]() {
+        std::function<void()> textureFuture = [=]() {
             for (auto& texture : m_TextureConfig["textures"].items()) {
                 AddTexture(texture.key(), texture.value(), true);
             }
-        });
+            m_TexturesLoadingDone = true;
+        };
 
         return textureFuture;
     }
 
-    std::future<void> TextureManager::LoadSkybox(const std::string& skybox) 
+    std::function<void()> TextureManager::LoadSkybox(const std::string& skybox)
     {
-        std::future skyboxFuture = std::async(std::launch::async, [this, skybox]() {
+        m_SkyboxName = skybox;
+        std::function<void()> skyboxFuture = [=]() {
             std::vector<std::string>skyboxImages;
-            for (auto& texture : m_TextureConfig["skybox"][skybox].items()) {
+            for (auto& texture : m_TextureConfig["skybox"][m_SkyboxName].items()) {
                 skyboxImages.emplace_back(texture.value());
             }
             AddSkyBox(skyboxImages);
-        });
+            m_SkyboxLoadingDone = true;
+        };
 
         return skyboxFuture;
     }

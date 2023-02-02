@@ -19,7 +19,7 @@ namespace Rbk
         virtual void WaitIdle() override;
         virtual std::shared_ptr<VulkanRenderer> Rdr() override { return m_Renderer; }
         virtual ImGuiInfo GetImGuiInfo() override;
-        virtual void ImmediateSubmit(std::function<void(VkCommandBuffer cmd)>&& function) override;
+        virtual void ImmediateSubmit(std::function<void(VkCommandBuffer cmd)>&& function, int queueIndex = 0) override;
         virtual void ShowGrid(bool show) override;
         virtual void AddEntities(std::vector<std::shared_ptr<Entity>>* entities) override;
         virtual void AddBbox(std::vector<std::shared_ptr<Entity>>* bbox) override { m_BoundingBox = bbox; }
@@ -32,10 +32,10 @@ namespace Rbk
         virtual inline glm::mat4 GetPerspective() override { return m_Perspective; }
         virtual void SetDeltatime(float deltaTime) override;
         void Clear();
-        std::future<void> DrawEntities(std::vector<std::shared_ptr<Entity>>& entities);
-        std::future<void> DrawSkybox();
-        std::future<void> DrawHUD();
-        std::future<void> DrawBbox();
+        void DrawEntities(std::vector<std::shared_ptr<Entity>>& entities);
+        void DrawSkybox();
+        void DrawHUD();
+        void DrawBbox();
 
         void ShouldRecreateSwapChain();
         void RecreateSwapChain();
@@ -112,6 +112,6 @@ namespace Rbk
         std::vector<std::vector<std::shared_ptr<Entity>>> m_Entities;
         std::shared_ptr<Mesh> m_SkyboxMesh = nullptr;
         std::vector<std::shared_ptr<Entity>>* m_BoundingBox;
-        std::vector<VkCommandBuffer> m_CmdToSubmit;
+        std::vector<VkCommandBuffer> m_CmdToSubmit;;
     };
 }

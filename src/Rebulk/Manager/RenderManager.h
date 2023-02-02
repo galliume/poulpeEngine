@@ -1,5 +1,6 @@
 #pragma once
 #include "IRenderManager.h"
+#include "Rebulk/Core/ThreadPool.h"
 
 namespace Rbk
 {
@@ -41,6 +42,8 @@ namespace Rbk
         virtual std::shared_ptr<Rbk::DestroyManager> GetDestroyManager() override { return m_DestroyManager; }
         virtual void CleanUp() override;
 
+        void StartInThread(std::function<void()> func);
+
     private:
         void PrepareSplashScreen();
         void PrepareEntity();
@@ -64,6 +67,8 @@ namespace Rbk
         bool m_IsLoaded = false;
         bool m_Refresh = false;
         std::string m_CurrentLevel;
+
+        std::unique_ptr<ThreadPool> m_ThreadPool;
 
         //@todo should not be impl
         std::vector<VkDescriptorPool> m_DescriptorPools;

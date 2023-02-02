@@ -9,19 +9,23 @@ namespace Rbk
         m_Shaders = std::make_shared<VulkanShaders>();
     }
 
-    std::future<void> ShaderManager::Load(nlohmann::json config)
+    std::function<void()> ShaderManager::Load(nlohmann::json config)
     {
-        std::future shaderFuture = std::async(std::launch::async, [this, config]() {
-            for (auto& shader : config["shader"].items()) {
+        m_Config = config;
+
+        std::function shaderFuture = [=]() {
+            for (auto& shader : m_Config["shader"].items()) {
 
                 auto key = static_cast<std::string>(shader.key());
                 auto data = shader.value();
 
                 AddShader(key, data["vert"], data["frag"]);
             }
-        });
 
-        return std::move(shaderFuture);
+            m_LoadingDone = true;
+        };
+
+        return shaderFuture;
     }
 
     void ShaderManager::AddShader(const std::string& name, const std::string& vertPath, const std::string& fragPath)

@@ -196,7 +196,7 @@ namespace Rbk
             );
         }
 
-        mesh->GetData()->emplace_back(data);
+        mesh->SetData(data);
         mesh->SetIsDirty(false);
     }
 }

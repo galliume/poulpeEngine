@@ -28,7 +28,6 @@ namespace Rbk
         uint32_t GetNextSpriteIndex();
         void SetSpritesCount(uint32_t count) { m_SpritesCount = count; }
         bool IsHit(glm::vec3 point);
-        void SetBBox(std::vector<BBox> bbox) { m_BoundingBox = bbox; }
         void AddBBox(BBox bbox) { m_BoundingBox.emplace_back(bbox); }
         std::vector<BBox> GetBBox() { return m_BoundingBox; }
 
