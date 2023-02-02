@@ -1337,15 +1337,23 @@ namespace Rbk {
 
         VkFenceCreateInfo fenceInfo{};
         fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+        fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+        fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
+
+        VkFence fence;
+
+        vkCreateFence(m_Device, &fenceInfo, nullptr, &fence);
+        vkResetFences(m_Device, 1, &fence);
 
         {
             std::lock_guard<std::mutex> guard(m_MutexQueueSubmit);
 
-            //Rbk::Log::GetLogger()->warn("queue index submit to: {}", queueIndex);
-            vkQueueSubmit(m_GraphicsQueues[queueIndex], 1, &submitInfo, nullptr);
-            vkQueueWaitIdle(m_GraphicsQueues[queueIndex]);
+            vkQueueSubmit(m_GraphicsQueues[queueIndex], 1, &submitInfo, fence);
+            vkWaitForFences(m_Device, 1, &fence, VK_TRUE, UINT32_MAX);
             vkResetCommandBuffer(commandBuffer, VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
         }
+
+        vkDestroyFence(m_Device, fence, nullptr);
     }
 
     void VulkanRenderer::QueueSubmit(uint32_t imageIndex, std::vector<VkCommandBuffer> commandBuffers, std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>>& semaphores, int queueIndex)
@@ -1379,23 +1387,19 @@ namespace Rbk {
         submitInfo.pSignalSemaphores = signalSemaphores;
 
         submits.emplace_back(submitInfo);
-
+        
         vkResetFences(m_Device, 1, &m_InFlightFences[m_CurrentFrame]);
 
         {
             std::lock_guard<std::mutex> guard(m_MutexQueueSubmit);
             VkResult result = vkQueueSubmit(m_GraphicsQueues[queueIndex], submits.size(), submits.data(), m_InFlightFences[m_CurrentFrame]);
 
-            //Rbk::Log::GetLogger()->warn("queue index submit to: {}", queueIndex);
             if (result != VK_SUCCESS) {
                 throw std::runtime_error("failed to submit draw command buffer!");
             }
-            vkQueueWaitIdle(m_GraphicsQueues[queueIndex]);
-
             //for (auto& cmd : commandBuffers) {
             //    vkResetCommandBuffer(cmd, VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
             //}
-
         }
     }
 
@@ -1786,14 +1790,23 @@ namespace Rbk {
 
         VkFenceCreateInfo fenceInfo{};
         fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
-        
+        fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+        fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
+
+        VkFence fence;
+
+        vkCreateFence(m_Device, &fenceInfo, nullptr, &fence);
+        vkResetFences(m_Device, 1, &fence);
+
         {
             std::lock_guard<std::mutex> guard(m_MutexQueueSubmit);
 
-            vkQueueSubmit(m_GraphicsQueues[queueIndex], 1, &submitInfo, nullptr);
-            vkQueueWaitIdle(m_GraphicsQueues[queueIndex]);
+            vkQueueSubmit(m_GraphicsQueues[queueIndex], 1, &submitInfo, fence);
+            vkWaitForFences(m_Device, 1, &fence, VK_TRUE, UINT32_MAX);
             vkFreeCommandBuffers(m_Device, commandPool, 1, &commandBuffer);
         }
+
+        vkDestroyFence(m_Device, fence, nullptr);
     }
 
     VkImageMemoryBarrier VulkanRenderer::SetupImageMemoryBarrier(VkImage image, VkAccessFlags srcAccessMask, VkAccessFlags dstAccessMask, VkImageLayout oldLayout, VkImageLayout newLayout, uint32_t mipLevels, VkImageAspectFlags aspectMask)

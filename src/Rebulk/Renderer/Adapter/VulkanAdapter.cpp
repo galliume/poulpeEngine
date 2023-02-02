@@ -75,7 +75,6 @@ namespace Rbk
 
     void VulkanAdapter::RecreateSwapChain()
     {
-        m_Renderer->WaitIdle();
         m_Renderer->InitDetails();
         VkSwapchainKHR old = m_SwapChain;
         m_SwapChain = m_Renderer->CreateSwapChain(m_SwapChainImages, old);
@@ -259,16 +258,19 @@ namespace Rbk
         ShouldRecreateSwapChain();
         m_ImageIndex = m_Renderer->AcquireNextImageKHR(m_SwapChain, m_Semaphores.at(0));
 
+        auto drawSkybox = std::async(std::launch::async, [this] { DrawSkybox(); });
+        drawSkybox.wait();
+
         std::vector<std::future<void>> drawing{};
         for (auto& entities: m_Entities) 
             drawing.emplace_back(std::async(std::launch::async, [this, &entities] { DrawEntities(entities); }));
-        
-        /*drawing.emplace_back(std::async(std::launch::async, [this] { DrawSkybox(); }));
-        drawing.emplace_back(std::async(std::launch::async, [this] { DrawHUD(); }));*/
 
         for (auto& d : drawing) {
             d.wait();
         }
+
+        auto drawHUD = std::async(std::launch::async, [this] { DrawHUD(); });
+        drawHUD.wait();
 
        /* if (0 < m_BoundingBox->size()) {
             std::thread workerB(bbox);
@@ -276,21 +278,19 @@ namespace Rbk
             workerB.join();
         }*/
 
-        //m_CmdToSubmit.emplace_back(m_CommandBuffersSkybox[m_ImageIndex]);
+        m_CmdToSubmit.emplace_back(m_CommandBuffersSkybox[m_ImageIndex]);
         m_CmdToSubmit.emplace_back(m_CommandBuffersEntities[m_ImageIndex]);
-        //m_CmdToSubmit.emplace_back(m_CommandBuffersHud[m_ImageIndex]);
+        m_CmdToSubmit.emplace_back(m_CommandBuffersHud[m_ImageIndex]);
         
-        if (!m_CmdToSubmit.empty()) {
-            Submit(m_CmdToSubmit);
+        Submit(m_CmdToSubmit);
 
-            //@todo wtf ?
-            uint32_t currentFrame = m_Renderer->GetNextFrameIndex();
-            if (currentFrame == VK_ERROR_OUT_OF_DATE_KHR || currentFrame == VK_SUBOPTIMAL_KHR) {
-                RecreateSwapChain();
-            }
-
-            m_CmdToSubmit.clear();
+        //@todo wtf ?
+        uint32_t currentFrame = m_Renderer->GetNextFrameIndex();
+        if (currentFrame == VK_ERROR_OUT_OF_DATE_KHR || currentFrame == VK_SUBOPTIMAL_KHR) {
+            RecreateSwapChain();
         }
+
+        m_CmdToSubmit.clear();
         //Rbk::Log::GetLogger()->critical("Draw Call {}", drawCall);
     }
 
@@ -377,7 +377,6 @@ namespace Rbk
         function(cmd);
         m_Renderer->EndCommandBuffer(cmd);
         m_Renderer->QueueSubmit(cmd);
-        m_Renderer->WaitForFence();
         vkDestroyCommandPool(m_Renderer->GetDevice(), commandPool, nullptr);
     }
 

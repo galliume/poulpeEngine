@@ -82,7 +82,6 @@ namespace Rbk
         m_ThreadPool = std::make_unique<ThreadPool>();
 
         if (m_Refresh) {
-            m_Renderer->Rdr()->WaitIdle();
             m_DestroyManager->CleanEntities(*m_EntityManager->GetEntities());
             m_DestroyManager->CleanEntities(*m_EntityManager->GetBBox());
             m_DestroyManager->CleanEntities(m_EntityManager->GetHUD());

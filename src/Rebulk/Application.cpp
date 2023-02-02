@@ -119,7 +119,7 @@ namespace Rbk
                 glfwPollEvents();
                 m_RenderManager->SetDeltatime(timeStep.count());
                 //m_RenderManager->StartInThread(imGui);
-                imGui();
+                //imGui();
                 m_RenderManager->Draw();
 
                 lastTime = currentTime;
