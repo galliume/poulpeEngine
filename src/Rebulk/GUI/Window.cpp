@@ -7,10 +7,8 @@ namespace Rbk
 
     void Window::Init()
     {
-        const uint32_t WIDTH = 2560;
-        const uint32_t HEIGHT = 1440;
-
-        const char* glsl_version = "#version 150";
+        const uint32_t WIDTH = 800;
+        const uint32_t HEIGHT = 600;
 
         glfwInit();
         glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);

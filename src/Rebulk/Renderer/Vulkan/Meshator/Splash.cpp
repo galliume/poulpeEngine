@@ -162,22 +162,19 @@ namespace Rbk
             VulkanAdapter::s_PolygoneMode
         );
 
-        for (Data& data : *mesh->GetData()) {
-
-            for (uint32_t i = 0; i < mesh->m_UniformBuffers.size(); i++) {
-                //data.m_Ubos[i].view = m_Adapter->GetCamera()->LookAt();
-                data.m_Ubos[i].proj = m_Adapter->GetPerspective();
-            }
-
-            for (uint32_t i = 0; i < mesh->m_UniformBuffers.size(); i++) {
-                m_Adapter->Rdr()->UpdateUniformBuffer(
-                    mesh->m_UniformBuffers[i],
-                    data.m_Ubos,
-                    data.m_Ubos.size()
-                );
-            }
+        for (uint32_t i = 0; i < mesh->m_UniformBuffers.size(); i++) {
+            //data.m_Ubos[i].view = m_Adapter->GetCamera()->LookAt();
+            data.m_Ubos[i].proj = m_Adapter->GetPerspective();
         }
 
-        mesh->GetData()->emplace_back(data);
+        for (uint32_t i = 0; i < mesh->m_UniformBuffers.size(); i++) {
+            m_Adapter->Rdr()->UpdateUniformBuffer(
+                mesh->m_UniformBuffers[i],
+                data.m_Ubos,
+                data.m_Ubos.size()
+            );
+        }
+        
+        mesh->SetData(data);
     }
 }

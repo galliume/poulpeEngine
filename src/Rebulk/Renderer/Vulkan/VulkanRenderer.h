@@ -130,6 +130,7 @@ namespace Rbk {
         void DestroyPipelineData(VkPipelineLayout pipelineLayout, VkDescriptorPool descriptorPool, VkDescriptorSetLayout descriptorSetLayout);
         void DestroySwapchain(VkDevice device, VkSwapchainKHR swapChain, std::vector<VkFramebuffer> swapChainFramebuffers, std::vector<VkImageView> swapChainImageViews);
         void DestroySemaphores(std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>> semaphores);
+        void DestroyFences();
         void DestroyBuffer(VkBuffer buffer);
         void DestroyRenderPass(std::shared_ptr<VkRenderPass> renderPass, VkCommandPool commandPool, std::vector<VkCommandBuffer> commandBuffers);
         void Destroy();
@@ -208,7 +209,7 @@ namespace Rbk {
         int32_t m_CurrentFrame = 0;
         uint32_t m_ExtensionCount;
         std::string m_apiVersion;
-        const uint32_t m_queueCount = 1;
+        const uint32_t m_queueCount = 2;
 
         std::shared_ptr<Window> m_Window = VK_NULL_HANDLE;
 
@@ -256,6 +257,8 @@ namespace Rbk {
         std::mutex m_MutexDraw;
         std::mutex m_MutexCmdBuffer;
         std::mutex m_MutexAcquireNextImage;
+        std::mutex m_MutexGraphicsPipeline;
+
         VkDeviceSize m_MaxMemoryHeap;
         std::shared_ptr<DeviceMemoryPool> m_DeviceMemoryPool = nullptr;
     };

@@ -79,8 +79,9 @@ namespace Rbk
 
     void RenderManager::Init()
     {
+        m_ThreadPool = std::make_unique<ThreadPool>();
+
         if (m_Refresh) {
-            m_Renderer->Rdr()->WaitIdle();
             m_DestroyManager->CleanEntities(*m_EntityManager->GetEntities());
             m_DestroyManager->CleanEntities(*m_EntityManager->GetBBox());
             m_DestroyManager->CleanEntities(m_EntityManager->GetHUD());
@@ -141,21 +142,28 @@ namespace Rbk
     {
         nlohmann::json appConfig = m_ConfigManager->AppConfig();
 
-        std::vector<std::future<void>> entityFutures = m_EntityManager->Load(
+        std::vector<std::function<void()>> entityFutures = m_EntityManager->Load(
             m_ConfigManager->EntityConfig(level)
         );
 
         for (auto& future : entityFutures) {
-            future.wait();
+            StartInThread(future);
         }
 
-        std::future<void> textureFuture = m_TextureManager->Load();
-        std::future<void> skyboxFuture = m_TextureManager->LoadSkybox(static_cast<std::string>(appConfig["defaultSkybox"]));
-        std::future<void> shaderFuture = m_ShaderManager->Load(m_ConfigManager->ShaderConfig());
+        std::function<void()> textureFuture = m_TextureManager->Load();
+        std::function<void()> skyboxFuture = m_TextureManager->LoadSkybox(static_cast<std::string>(appConfig["defaultSkybox"]));
+        std::function<void()> shaderFuture = m_ShaderManager->Load(m_ConfigManager->ShaderConfig());
 
-        textureFuture.wait();
-        skyboxFuture.wait();
-        shaderFuture.wait();
+        StartInThread(textureFuture);
+        StartInThread(skyboxFuture);
+        StartInThread(shaderFuture);
+        while (!m_TextureManager->IsTexturesLoadingDone()) {}
+        while (!m_TextureManager->IsSkyboxLoadingDone()) {}
+        while (!m_ShaderManager->IsLoadingDone()) {}
+
+        /*while (!m_TextureManager->IsSkyboxLoadingDone() && !m_TextureManager->IsTexturesLoadingDone() && !m_ShaderManager->IsLoadingDone()) {
+            Rbk::Log::GetLogger()->debug("Loading {} {} {}", m_TextureManager->IsSkyboxLoadingDone(), m_TextureManager->IsTexturesLoadingDone(), m_ShaderManager->IsLoadingDone());
+        };*/
 
         SetIsLoaded();
         m_Renderer->AddEntities(m_EntityManager->GetEntities());
@@ -322,5 +330,10 @@ namespace Rbk
         skyboxMesh->Accept(skyboxVulkanisator);
         m_EntityManager->SetSkybox(skyboxMesh);
         m_Renderer->AddSkybox(skyboxMesh);
+    }
+
+    void RenderManager::StartInThread(std::function<void()> func)
+    {
+        m_ThreadPool->Submit(func);
     }
 }
