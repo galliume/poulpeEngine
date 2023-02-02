@@ -114,7 +114,7 @@ namespace Rbk
                     frameCount = 0;
                 }
 
-                m_RenderManager->GetCamera()->UpdateSpeed(timeStep.count());
+                m_RenderManager->GetCamera()->UpdateDeltaTime(timeStep.count());
 
                 glfwPollEvents();
                 m_RenderManager->SetDeltatime(timeStep.count());

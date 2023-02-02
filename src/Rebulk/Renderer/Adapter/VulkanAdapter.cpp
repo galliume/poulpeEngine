@@ -257,20 +257,18 @@ namespace Rbk
     {
         ShouldRecreateSwapChain();
         m_ImageIndex = m_Renderer->AcquireNextImageKHR(m_SwapChain, m_Semaphores.at(0));
-
-        auto drawSkybox = std::async(std::launch::async, [this] { DrawSkybox(); });
-        drawSkybox.wait();
-
         std::vector<std::future<void>> drawing{};
+
+        drawing.emplace_back(std::async(std::launch::async, [this] { DrawSkybox(); }));
+
         for (auto& entities: m_Entities) 
             drawing.emplace_back(std::async(std::launch::async, [this, &entities] { DrawEntities(entities); }));
+
+        drawing.emplace_back(std::async(std::launch::async, [this] { DrawHUD(); }));
 
         for (auto& d : drawing) {
             d.wait();
         }
-
-        auto drawHUD = std::async(std::launch::async, [this] { DrawHUD(); });
-        drawHUD.wait();
 
        /* if (0 < m_BoundingBox->size()) {
             std::thread workerB(bbox);
