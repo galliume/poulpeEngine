@@ -1393,13 +1393,14 @@ namespace Rbk {
         {
             std::lock_guard<std::mutex> guard(m_MutexQueueSubmit);
             VkResult result = vkQueueSubmit(m_GraphicsQueues[queueIndex], submits.size(), submits.data(), m_InFlightFences[m_CurrentFrame]);
+            vkWaitForFences(m_Device, 1, &m_InFlightFences[m_CurrentFrame], VK_TRUE, UINT32_MAX);
 
             if (result != VK_SUCCESS) {
                 throw std::runtime_error("failed to submit draw command buffer!");
             }
-            //for (auto& cmd : commandBuffers) {
-            //    vkResetCommandBuffer(cmd, VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
-            //}
+            for (auto& cmd : commandBuffers) {
+                vkResetCommandBuffer(cmd, VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
+            }
         }
     }
 
@@ -1489,8 +1490,7 @@ namespace Rbk {
             if (drawIndexed) {
                 vkCmdBindIndexBuffer(commandBuffer, data.m_IndicesBuffer.buffer, 0, VK_INDEX_TYPE_UINT32);
                 vkCmdDrawIndexed(commandBuffer, data.m_Indices.size(), uboCount, 0, 0, 0);
-            }
-            else {
+            } else {
                 vkCmdDraw(commandBuffer, data.m_Vertices.size(), 1, 0, index);
             }
         }

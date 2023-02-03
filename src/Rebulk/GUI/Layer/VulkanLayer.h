@@ -12,7 +12,7 @@ namespace Rbk
         virtual void Init() override;
         virtual void Render(double timeStep, VkPhysicalDeviceProperties devicesProps) override;
         virtual void AddRenderManager(std::shared_ptr<RenderManager> renderManager) override;
-
+        void SetNeedRefresh(bool needRefresh) { m_Refresh = needRefresh; };
         void Destroy();
         void DisplayFpsCounter(double timeStep);
         void DisplayAPI(VkPhysicalDeviceProperties devicesProps);

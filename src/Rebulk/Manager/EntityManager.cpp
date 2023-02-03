@@ -87,6 +87,9 @@ namespace Rbk
 
         m_LevelConfig = levelConfig;
 
+        m_LoadingQueues.push(m_QueueIndex);
+        m_QueueIndex += 1;
+
         std::function<void()> entitiesFuture = [=]() {
 
             for (auto& entityConf : m_LevelConfig["entities"].items()) {
@@ -147,8 +150,7 @@ namespace Rbk
                             for (auto& e: entities) AddEntity(e);
                         }
                     }
-                }
-                else {
+                } else {
                     int count = static_cast<int>(data["count"]);
                     std::string form = static_cast<std::string>(data["form"]);
 
@@ -207,6 +209,9 @@ namespace Rbk
                     }
                 }
             }
+
+            m_LoadingQueues.pop();
+            m_QueueIndex -= 1;
         };
 
         futures.emplace_back(std::move(entitiesFuture));

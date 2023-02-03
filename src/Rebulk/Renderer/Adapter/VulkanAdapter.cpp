@@ -326,8 +326,6 @@ namespace Rbk
     void VulkanAdapter::FlushSplashScreen()
     {
         DrawSplashScreen();
-        vkFreeCommandBuffers(m_Renderer->GetDevice(), m_CommandPoolSplash, m_CommandBuffersSplash.size(), m_CommandBuffersSplash.data());
-        RecreateSwapChain();
     }
 
     void VulkanAdapter::Destroy()

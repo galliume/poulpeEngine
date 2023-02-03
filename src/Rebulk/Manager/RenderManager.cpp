@@ -34,6 +34,8 @@ namespace Rbk
         m_DestroyManager(destroyManager),
         m_Camera(camera)
     {
+        m_ThreadPool = std::make_unique<ThreadPool>();
+
         m_Camera->Init();
         m_Renderer->Init();
         m_Renderer->AddCamera(m_Camera);
@@ -57,7 +59,10 @@ namespace Rbk
 
     RenderManager::~RenderManager()
     {
-
+        CleanUp();
+        m_Renderer->Clear();
+        m_Renderer->Destroy();
+        m_Renderer->Rdr()->Destroy();
     }
 
     void RenderManager::CleanUp()
@@ -68,35 +73,23 @@ namespace Rbk
         m_DestroyManager->CleanShaders(m_ShaderManager->GetShaders()->shaders);
         m_DestroyManager->CleanTextures(m_TextureManager->GetTextures());
         m_DestroyManager->CleanTexture(m_TextureManager->GetSkyboxTexture());
-        m_DestroyManager->CleanDeviceMemory();
         m_AudioManager->Clear();
         m_SpriteAnimationManager->Clear();
+        m_TextureManager->Clear();
+        m_EntityManager->Clear();
         m_ShaderManager->Clear();
         m_Renderer->Clear();
-        m_Renderer->Destroy();
-        m_Renderer->Rdr()->Destroy();
+        m_DestroyManager->CleanDeviceMemory();
+        m_Renderer->Rdr()->InitMemoryPool();
     }
 
     void RenderManager::Init()
     {
-        m_ThreadPool = std::make_unique<ThreadPool>();
-
         if (m_Refresh) {
-            m_DestroyManager->CleanEntities(*m_EntityManager->GetEntities());
-            m_DestroyManager->CleanEntities(*m_EntityManager->GetBBox());
-            m_DestroyManager->CleanEntities(m_EntityManager->GetHUD());
-            m_DestroyManager->CleanShaders(m_ShaderManager->GetShaders()->shaders);
-            m_DestroyManager->CleanTextures(m_TextureManager->GetTextures());
-            m_DestroyManager->CleanTexture(m_TextureManager->GetSkyboxTexture());
-            m_DestroyManager->CleanDeviceMemory();
-            m_Renderer->Rdr()->InitMemoryPool();
-            m_TextureManager->Clear();
-            m_EntityManager->Clear();
-            m_AudioManager->Clear();
-            m_SpriteAnimationManager->Clear();
-            m_ShaderManager->Clear();
-            m_Renderer->Clear();
+            m_Renderer->WaitIdle();
+            CleanUp();
             m_Renderer->RecreateSwapChain();
+            SetIsLoaded(false);
         }
        
         nlohmann::json appConfig = m_ConfigManager->AppConfig();
@@ -157,9 +150,12 @@ namespace Rbk
         StartInThread(textureFuture);
         StartInThread(skyboxFuture);
         StartInThread(shaderFuture);
+        
+        //@todo clean this...
         while (!m_TextureManager->IsTexturesLoadingDone()) {}
         while (!m_TextureManager->IsSkyboxLoadingDone()) {}
         while (!m_ShaderManager->IsLoadingDone()) {}
+        while (!m_EntityManager->IsLoadingQueuesEmpty()) {}
 
         /*while (!m_TextureManager->IsSkyboxLoadingDone() && !m_TextureManager->IsTexturesLoadingDone() && !m_ShaderManager->IsLoadingDone()) {
             Rbk::Log::GetLogger()->debug("Loading {} {} {}", m_TextureManager->IsSkyboxLoadingDone(), m_TextureManager->IsTexturesLoadingDone(), m_ShaderManager->IsLoadingDone());
@@ -172,18 +168,17 @@ namespace Rbk
 
     void RenderManager::Draw()
     {
-        if (m_Refresh) {
-            Init();
-            m_Refresh = false;
-        }
-
         //if (m_EntityManager->GetSkybox()->IsDirty()) {
         //    std::async(std::launch::async, [=]() {
         //        PrepareSkybox();
         //    });
-        //}
-        
+        //}        
         m_Renderer->Draw();
+
+        if (m_Refresh) {
+            Init();
+            m_Refresh = false;
+        }
     }
 
     void RenderManager::SetDeltatime(float deltaTime)
