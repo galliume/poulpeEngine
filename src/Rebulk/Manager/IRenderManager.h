@@ -23,7 +23,6 @@ namespace Rbk
 
         virtual void Init() = 0;
         virtual void Draw() = 0;
-        virtual void SetDeltatime(float deltaTime) = 0;
         virtual bool IsLoaded() = 0;
         virtual void SetIsLoaded(bool loaded = true) = 0;
         virtual std::shared_ptr<Window> GetWindow() = 0;
