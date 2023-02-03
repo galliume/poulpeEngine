@@ -1361,10 +1361,6 @@ namespace Rbk {
         std::vector<VkSemaphore>& imageAvailableSemaphores = semaphores.first;
         std::vector<VkSemaphore>& renderFinishedSemaphores = semaphores.second;
 
-        if (m_ImagesInFlight[imageIndex] != VK_NULL_HANDLE) {
-            vkWaitForFences(m_Device, 1, &m_ImagesInFlight[imageIndex], VK_TRUE, UINT32_MAX);
-        }
-
         m_ImagesInFlight[imageIndex] = m_ImagesInFlight[m_CurrentFrame];
 
         std::vector<VkSubmitInfo> submits{};
@@ -1444,11 +1440,7 @@ namespace Rbk {
     uint32_t VulkanRenderer::AcquireNextImageKHR(VkSwapchainKHR swapChain, std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>>& semaphores)
     {
         {
-            //std::lock_guard<std::mutex> guard(m_MutexAcquireNextImage);
-            
             std::vector<VkSemaphore>& imageAvailableSemaphores = semaphores.first;
-
-            vkWaitForFences(m_Device, 1, &m_InFlightFences[m_CurrentFrame], VK_TRUE, UINT32_MAX);
 
             uint32_t imageIndex = 0;
             VkResult result = vkAcquireNextImageKHR(m_Device, swapChain, UINT32_MAX, imageAvailableSemaphores[m_CurrentFrame], VK_NULL_HANDLE, &imageIndex);

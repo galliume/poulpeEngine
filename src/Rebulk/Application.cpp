@@ -116,10 +116,9 @@ namespace Rbk
                 }
 
                 m_RenderManager->GetCamera()->UpdateDeltaTime(timeStep.count());
-                m_RenderManager->SetDeltatime(timeStep.count());
 
                 glfwPollEvents();
-                imGui();
+                //imGui();
                 m_RenderManager->Draw();
 
                 lastTime = currentTime;
