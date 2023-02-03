@@ -181,11 +181,6 @@ namespace Rbk
         }
     }
 
-    void RenderManager::SetDeltatime(float deltaTime)
-    {
-        m_Renderer->SetDeltatime(deltaTime);
-    }
-
     void RenderManager::Refresh(uint32_t levelIndex)
     {
         m_CurrentLevel = m_ConfigManager->ListLevels().at(levelIndex);

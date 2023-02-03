@@ -24,7 +24,6 @@ namespace Rbk
 
         virtual void Init() override;
         virtual void Draw() override;
-        virtual void SetDeltatime(float deltaTime) override;
         virtual bool IsLoaded()  override { return m_IsLoaded; }
         virtual void SetIsLoaded(bool loaded = true) override { m_IsLoaded = loaded; }
         virtual void Refresh(uint32_t levelIndex) override;
