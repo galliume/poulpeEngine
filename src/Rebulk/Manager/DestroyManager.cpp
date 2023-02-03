@@ -66,9 +66,12 @@ namespace Rbk
         for (auto poolType : m_DeviceMemoryPool->GetPool()) {
             for (auto poolUsage : poolType.second) {
                 for (auto deviceMemory : poolUsage.second) {
-                    vkFreeMemory(m_Renderer->GetDevice(), *deviceMemory->GetMemory(), nullptr);
+                    if (nullptr != *deviceMemory->GetMemory())
+                        vkFreeMemory(m_Renderer->GetDevice(), *deviceMemory->GetMemory(), nullptr);
                 }
             }
         }
+
+        m_DeviceMemoryPool->Clear();
     }
 }

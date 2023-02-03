@@ -137,6 +137,8 @@ namespace Rbk
     void TextureManager::Clear()
     {
         m_Textures.clear();
+        m_TexturesLoadingDone = false;
+        m_SkyboxLoadingDone = false;
     }
 
     TextureManager::~TextureManager()

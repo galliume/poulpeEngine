@@ -30,6 +30,7 @@ namespace Rbk
         const std::shared_ptr<Entity> GetEntityByName(const std::string& name) const;
 
         inline const uint32_t GetTotalEntities() const { return m_Entities.size(); }
+        bool IsLoadingQueuesEmpty() { return m_LoadingQueues.empty(); };
 
     private:
         std::vector<std::shared_ptr<Entity>> m_Entities;
@@ -41,5 +42,7 @@ namespace Rbk
         std::shared_ptr<IRendererAdapter> m_Renderer = nullptr;
         bool m_ShowBBox = false;
         nlohmann::json m_LevelConfig;
+        std::queue<int> m_LoadingQueues;
+        int m_QueueIndex = 0;
     };
 }

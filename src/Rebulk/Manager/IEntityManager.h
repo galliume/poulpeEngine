@@ -1,6 +1,7 @@
 #pragma once
 
 #include <json.hpp>
+#include <queue>
 #include "Rebulk/Renderer/Adapter/IRendererAdapter.h"
 #include "Rebulk/Core/TinyObjLoader.h"
 #include "Rebulk/Component/Camera.h"
