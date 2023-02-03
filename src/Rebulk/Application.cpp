@@ -63,7 +63,11 @@ namespace Rbk
         InitImGui();
         std::function<void()> imGui =
             [=, &timeStep, &lockDraw]() {
-            glfwPollEvents();
+            //glfwPollEvents();
+            if (m_VulkanLayer->NeedRefresh()) {
+                m_VulkanLayer->AddRenderManager(m_RenderManager);
+                m_VulkanLayer->SetNeedRefresh(false);
+            }
 
             //@todo move to LayerManager
             Rbk::Im::NewFrame();
@@ -82,9 +86,6 @@ namespace Rbk
             }
             m_RenderManager->GetRendererAdapter()->Rdr()->EndCommandBuffer(Rbk::Im::GetImGuiInfo().cmdBuffer);
 
-            if (m_VulkanLayer->NeedRefresh()) {
-                m_VulkanLayer->AddRenderManager(m_RenderManager);
-            }
         };
 
         while (!glfwWindowShouldClose(m_Window->Get())) {
@@ -115,11 +116,10 @@ namespace Rbk
                 }
 
                 m_RenderManager->GetCamera()->UpdateDeltaTime(timeStep.count());
+                m_RenderManager->SetDeltatime(timeStep.count());
 
                 glfwPollEvents();
-                m_RenderManager->SetDeltatime(timeStep.count());
-                //m_RenderManager->StartInThread(imGui);
-                //imGui();
+                imGui();
                 m_RenderManager->Draw();
 
                 lastTime = currentTime;
