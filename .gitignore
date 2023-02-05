@@ -59,3 +59,5 @@ Rebulkan.includes
 .qtc_clangd/
 Rebulkan.creator.user
 cache/
+.clang-tidy
+Directory.build.props

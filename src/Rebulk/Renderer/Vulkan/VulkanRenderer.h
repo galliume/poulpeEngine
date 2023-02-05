@@ -119,7 +119,6 @@ namespace Rbk {
         void QueueSubmit(uint32_t imageIndex, std::vector<VkCommandBuffer> commandBuffers, std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>>& semaphores, int queueIndex = 0);
         void QueuePresent(uint32_t imageIndex, VkSwapchainKHR swapChain, std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>>& semaphores, int queueIndex = 0);
         void AddPipelineBarriers(VkCommandBuffer commandBuffer, std::vector<VkImageMemoryBarrier> renderBarriers, VkPipelineStageFlags srcStageMask, VkPipelineStageFlags dstStageMask, VkDependencyFlags dependencyFlags);
-        void WaitIdle();
         void GenerateMipmaps(VkCommandBuffer commandBuffer, VkFormat imageFormat, VkImage image, uint32_t texWidth, uint32_t texHeight, uint32_t mipLevels, uint32_t layerCount = 1);
         uint32_t GetNextFrameIndex();
 
@@ -159,8 +158,7 @@ namespace Rbk {
         inline VkFormat GetSwapChainImageFormat() const { return m_SwapChainImageFormat; }
         inline VkSampleCountFlagBits GetMsaaSamples() const { return m_MsaaSamples; }
         void InitDetails();
-        void CreateFence();
-        void WaitForFence();
+
         VkSampleCountFlagBits GetMaxUsableSampleCount();
         const SwapChainSupportDetails QuerySwapChainSupport(VkPhysicalDevice device) const;
         uint32_t GetImageCount() const;

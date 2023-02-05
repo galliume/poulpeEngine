@@ -86,7 +86,6 @@ namespace Rbk
     void RenderManager::Init()
     {
         if (m_Refresh) {
-            m_Renderer->WaitIdle();
             CleanUp();
             m_Renderer->RecreateSwapChain();
             SetIsLoaded(false);
@@ -162,6 +161,7 @@ namespace Rbk
         };*/
 
         SetIsLoaded();
+
         m_Renderer->AddEntities(m_EntityManager->GetEntities());
         m_Renderer->AddBbox(m_EntityManager->GetBBox());
     }

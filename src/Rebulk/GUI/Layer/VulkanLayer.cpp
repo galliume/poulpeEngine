@@ -336,11 +336,6 @@ namespace Rbk
             }
             ImGui::EndCombo();
         }
-        ImGui::SameLine();
-        if (ImGui::Button("Refresh level"))
-        {
-           Refresh();
-        }
 
         std::vector<std::string> skybox = m_RenderManager.load()->GetConfigManager()->ListSkybox();
 
@@ -348,12 +343,13 @@ namespace Rbk
 
             for (int n = 0; n < skybox.size(); n++) {
 
-                const bool isSelected = (m_LevelIndex == n);
+                const bool isSelected = (m_SkyboxIndex == n);
 
                 if (ImGui::Selectable(skybox.at(n).c_str(), isSelected)) {
                     m_SkyboxIndex = n;
                     m_RenderManager.load()->GetTextureManager()->LoadSkybox(skybox.at(n));
                     m_RenderManager.load()->GetEntityManager()->GetSkybox()->SetIsDirty(true);
+                    Refresh();
                 }
 
                 if (isSelected)

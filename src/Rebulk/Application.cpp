@@ -118,14 +118,13 @@ namespace Rbk
                 m_RenderManager->GetCamera()->UpdateDeltaTime(timeStep.count());
 
                 glfwPollEvents();
-                //imGui();
+                imGui();
                 m_RenderManager->Draw();
 
                 lastTime = currentTime;
             }
         }
 
-        m_RenderManager->GetRendererAdapter()->Rdr()->WaitIdle();
         Rbk::Im::Destroy();
 
         m_RenderManager->CleanUp();

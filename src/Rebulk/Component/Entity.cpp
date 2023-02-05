@@ -14,11 +14,6 @@ namespace Rbk
         visitor->Visit(shared_from_this());
     }
 
-    Entity::~Entity()
-    {
-
-    }
-
     uint32_t Entity::GetNextSpriteIndex()
     {
         uint32_t nextIndex = 0;
