@@ -128,6 +128,8 @@ namespace Rbk
         pushConstants.fogColor = glm::vec4({ Rbk::VulkanAdapter::s_FogColor[0].load(), Rbk::VulkanAdapter::s_FogColor[1].load(), Rbk::VulkanAdapter::s_FogColor[2].load(), 0.f });
         pushConstants.lightPos = glm::vec4(m_Adapter->GetLights().at(0), 0.f);
         pushConstants.view = m_Adapter->GetCamera()->LookAt();
+        pushConstants.ambiantLight = Rbk::VulkanAdapter::s_AmbiantLight.load();
+        pushConstants.fogDensity = Rbk::VulkanAdapter::s_FogDensity.load();
 
         mesh->ApplyPushConstants = [=, &pushConstants, &mesh](VkCommandBuffer& commandBuffer, VkPipelineLayout& pipelineLayout, std::shared_ptr<VulkanAdapter> adapter, const Data& data) {
             pushConstants.data = glm::vec4(static_cast<float>(data.m_TextureIndex), Rbk::VulkanAdapter::s_AmbiantLight.load(), Rbk::VulkanAdapter::s_FogDensity.load(), 0.f);
@@ -135,6 +137,8 @@ namespace Rbk
             pushConstants.fogColor = glm::vec4({ Rbk::VulkanAdapter::s_FogColor[0].load(), Rbk::VulkanAdapter::s_FogColor[1].load(), Rbk::VulkanAdapter::s_FogColor[2].load(), 0.f });
             pushConstants.lightPos = glm::vec4(adapter->GetLights().at(0), 0.f);
             pushConstants.view = adapter->GetCamera()->LookAt();
+            pushConstants.ambiantLight = Rbk::VulkanAdapter::s_AmbiantLight.load();
+            pushConstants.fogDensity = Rbk::VulkanAdapter::s_FogDensity.load();
             vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(constants), &pushConstants);
         };
 

@@ -22,5 +22,7 @@ namespace Rbk
         nlohmann::json m_ShaderConfig;
         nlohmann::json m_SoundConfig;
         nlohmann::json m_EntityConfig;
+
+        std::mutex m_MutexRead;
     };
 }

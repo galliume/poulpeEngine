@@ -17,7 +17,6 @@ namespace Rbk
         virtual void Destroy() = 0;
         virtual void SetDeltatime(float deltaTime) = 0;
         virtual void DrawSplashScreen() = 0;
-        virtual void WaitIdle() = 0;
         virtual ImGuiInfo GetImGuiInfo() = 0;
         virtual void ShowGrid(bool show) = 0;
         virtual void AddEntities(std::vector<std::shared_ptr<Entity>>* entities) = 0;

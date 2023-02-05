@@ -9,6 +9,7 @@
 
 namespace Rbk
 {
+    //@todo should not be globally accessible
     std::atomic<float> VulkanAdapter::s_AmbiantLight{ 0.5f };
     std::atomic<float> VulkanAdapter::s_FogDensity{ 0.0f };
     std::atomic<float> VulkanAdapter::s_FogColor[3]{ 25 / 255.0f, 25 / 255.0f, 25 / 255.0f };
@@ -19,11 +20,6 @@ namespace Rbk
         m_Window(window)
     {
         m_Renderer = std::make_shared<VulkanRenderer>(window);
-    }
-
-    VulkanAdapter::~VulkanAdapter()
-    {
-
     }
 
     void VulkanAdapter::Init()
@@ -50,8 +46,6 @@ namespace Rbk
         m_CommandPoolHud = m_Renderer->CreateCommandPool();
         m_CommandBuffersHud = m_Renderer->AllocateCommandBuffers(m_CommandPoolHud, static_cast<uint32_t>(m_SwapChainImageViews.size()));
 
-        VkDeviceMemory depthImageMemory;
-
         for (uint32_t i = 0; i < m_SwapChainImages.size(); i++) {
             m_SwapChainImageViews[i] = m_Renderer->CreateImageView(m_SwapChainImages[i], m_Renderer->GetSwapChainImageFormat(), VK_IMAGE_ASPECT_COLOR_BIT);
 
@@ -66,11 +60,6 @@ namespace Rbk
         for (int i = 0; i < m_Renderer->GetQueueCount(); i++) {
             m_Semaphores.emplace_back(m_Renderer->CreateSyncObjects(m_SwapChainImages));
         }
-    }
-
-    void VulkanAdapter::WaitIdle()
-    {
-        m_Renderer->WaitIdle();
     }
 
     void VulkanAdapter::RecreateSwapChain()
@@ -93,7 +82,6 @@ namespace Rbk
             m_SwapChainImageViews[i] = m_Renderer->CreateImageView(m_SwapChainImages[i], m_Renderer->GetSwapChainImageFormat(), VK_IMAGE_ASPECT_COLOR_BIT);
 
             VkImage depthImage;
-            VkDeviceMemory depthImageMemory;
             m_Renderer->CreateImage(m_Renderer->GetSwapChainExtent().width, m_Renderer->GetSwapChainExtent().height, 1, VK_SAMPLE_COUNT_1_BIT, m_Renderer->FindDepthFormat(), VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, depthImage);
             VkImageView depthImageView = m_Renderer->CreateImageView(depthImage, m_Renderer->FindDepthFormat(), 1, VK_IMAGE_ASPECT_DEPTH_BIT);
 
@@ -476,10 +464,6 @@ namespace Rbk
 
     void VulkanAdapter::BeginRendering(VkCommandBuffer commandBuffer, const VkAttachmentLoadOp loadOp, const VkAttachmentStoreOp storeOp)
     {
-        if (m_ImageIndex == VK_ERROR_OUT_OF_DATE_KHR || m_ImageIndex == VK_SUBOPTIMAL_KHR) {
-            RecreateSwapChain();
-        }
-
         m_Renderer->BeginCommandBuffer(commandBuffer);
 
         VkImageMemoryBarrier swapChainImageRenderBeginBarrier = m_Renderer->SetupImageMemoryBarrier(
