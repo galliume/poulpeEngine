@@ -19,6 +19,8 @@ namespace Rbk
         glm::vec4 fogColor;
         glm::vec4 lightPos;
         glm::mat4 view;
+        float ambiantLight;
+        float fogDensity;
     };
 
     class VulkanAdapter;

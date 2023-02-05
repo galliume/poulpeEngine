@@ -9,14 +9,13 @@ namespace Rbk
     public:
 
         explicit VulkanAdapter(std::shared_ptr<Window> window);
-        ~VulkanAdapter();
+        ~VulkanAdapter() = default;
 
         virtual void Init() override;
         virtual void AddCamera(std::shared_ptr<Camera> camera) override { m_Camera = camera; }
         virtual void Draw() override;
         virtual void Destroy() override;
         virtual void DrawSplashScreen() override;
-        virtual void WaitIdle() override;
         virtual std::shared_ptr<VulkanRenderer> Rdr() override { return m_Renderer; }
         virtual ImGuiInfo GetImGuiInfo() override;
         virtual void ImmediateSubmit(std::function<void(VkCommandBuffer cmd)>&& function, int queueIndex = 0) override;

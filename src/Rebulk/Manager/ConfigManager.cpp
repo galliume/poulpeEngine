@@ -47,9 +47,12 @@ namespace Rbk
     nlohmann::json ConfigManager::EntityConfig(const std::string& levelName)
     {
         try {
-            std::string level = "config/" + levelName + ".json";
-            std::ifstream f(level);
-            m_EntityConfig = nlohmann::json::parse(f);
+            {
+                std::lock_guard guard(m_MutexRead);
+                std::string level = "config/" + levelName + ".json";
+                std::ifstream f(level);
+                m_EntityConfig = nlohmann::json::parse(f);
+            }
         }
         catch (std::exception& e) {
             Rbk::Log::GetLogger()->critical("Cannot read level {} config : {}", levelName, e.what());

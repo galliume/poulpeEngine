@@ -83,7 +83,6 @@ namespace Rbk {
         PickPhysicalDevice();
         CreateLogicalDevice();
         InitDetails();
-        CreateFence();
         InitMemoryPool();
     }
 
@@ -1432,11 +1431,6 @@ namespace Rbk {
         return m_CurrentFrame;
     }
 
-    void VulkanRenderer::WaitIdle()
-    {
-        vkDeviceWaitIdle(m_Device);
-    }
-
     uint32_t VulkanRenderer::AcquireNextImageKHR(VkSwapchainKHR swapChain, std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>>& semaphores)
     {
         {
@@ -2232,22 +2226,6 @@ namespace Rbk {
         if (counts & VK_SAMPLE_COUNT_2_BIT) { return VK_SAMPLE_COUNT_2_BIT; }
 
         return VK_SAMPLE_COUNT_1_BIT;
-    }
-
-    void VulkanRenderer::CreateFence()
-    {
-        VkFenceCreateInfo fenceInfo{};
-        fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
-        fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
-        fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
-
-        vkCreateFence(m_Device, &fenceInfo, nullptr, &m_Fence);
-    }
-
-    void VulkanRenderer::WaitForFence()
-    {
-        vkWaitForFences(m_Device, 1, &m_Fence, VK_TRUE, UINT32_MAX);
-        vkResetFences(m_Device, 1, &m_Fence);
     }
 
     void VulkanRenderer::DestroyPipeline(VkPipeline pipeline)
