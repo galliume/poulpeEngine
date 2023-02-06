@@ -5,6 +5,10 @@ namespace Rbk
 {
     Mesh::Mesh() : Entity() { }
 
+    Mesh::~Mesh()
+    {
+    }
+
     std::vector<std::shared_ptr<Mesh>> Mesh::Init(const std::string& name,
         const std::string& path,
         const std::vector<std::string>& textureNames,
@@ -80,11 +84,7 @@ namespace Rbk
             glm::vec3 center = glm::vec3((xMin + xMax) / 2, (yMin + yMax) / 2, (zMin + zMax) / 2);
             glm::vec3 size = glm::vec3((xMax - xMin) / 2, (yMax - yMin) / 2, (zMax - zMin) / 2);
 
-            Rbk::Mesh::BBox box;
-            box.position = data.m_Ubos.at(0).model;
-            box.center = center;
-            box.size = size;
-
+            std::shared_ptr<Rbk::Mesh::BBox> box = std::make_shared<Rbk::Mesh::BBox>(data.m_Ubos.at(0).model, center, size);
             mesh->AddBBox(box);
             meshes.emplace_back(mesh);
         }
