@@ -39,5 +39,6 @@ namespace Rbk
         std::shared_ptr<ShaderManager> m_ShaderManager;
         std::shared_ptr<TextureManager> m_TextureManager;
         VkDescriptorPool m_DescriptorPool;
+        std::mutex m_Lock;
     };
 }

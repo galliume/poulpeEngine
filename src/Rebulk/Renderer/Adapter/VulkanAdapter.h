@@ -21,7 +21,6 @@ namespace Rbk
         virtual void ImmediateSubmit(std::function<void(VkCommandBuffer cmd)>&& function, int queueIndex = 0) override;
         virtual void ShowGrid(bool show) override;
         virtual void AddEntities(std::vector<std::shared_ptr<Entity>>* entities) override;
-        virtual void AddBbox(std::vector<std::shared_ptr<Entity>>* bbox) override { m_BoundingBox = bbox; }
         virtual void AddSkybox(std::shared_ptr<Mesh> skyboxMesh) override { m_SkyboxMesh = skyboxMesh; }
         virtual void AddHUD(std::vector<std::shared_ptr<Mesh>> hud) override { m_HUD = hud; }
         virtual void AddSplash(std::vector<std::shared_ptr<Mesh>> splash) override { m_Splash = splash; }
@@ -34,7 +33,7 @@ namespace Rbk
         void DrawEntities(std::vector<std::shared_ptr<Entity>>& entities);
         void DrawSkybox();
         void DrawHUD();
-        void DrawBbox();
+        void DrawBbox(std::shared_ptr<Mesh>& mesh);
 
         void ShouldRecreateSwapChain();
         void RecreateSwapChain();
