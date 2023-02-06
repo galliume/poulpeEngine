@@ -68,7 +68,6 @@ namespace Rbk
     void RenderManager::CleanUp()
     {
         m_DestroyManager->CleanEntities(*m_EntityManager->GetEntities());
-        m_DestroyManager->CleanEntities(*m_EntityManager->GetBBox());
         m_DestroyManager->CleanEntities(m_EntityManager->GetHUD());
         m_DestroyManager->CleanShaders(m_ShaderManager->GetShaders()->shaders);
         m_DestroyManager->CleanTextures(m_TextureManager->GetTextures());
@@ -163,7 +162,6 @@ namespace Rbk
         SetIsLoaded();
 
         m_Renderer->AddEntities(m_EntityManager->GetEntities());
-        m_Renderer->AddBbox(m_EntityManager->GetBBox());
     }
 
     void RenderManager::Draw()

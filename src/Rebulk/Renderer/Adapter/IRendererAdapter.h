@@ -20,7 +20,6 @@ namespace Rbk
         virtual ImGuiInfo GetImGuiInfo() = 0;
         virtual void ShowGrid(bool show) = 0;
         virtual void AddEntities(std::vector<std::shared_ptr<Entity>>* entities) = 0;
-        virtual void AddBbox(std::vector<std::shared_ptr<Entity>>* bbox) = 0;
         virtual void AddSkybox(std::shared_ptr<Mesh> skyboxMesh) = 0;
         virtual void AddHUD(std::vector<std::shared_ptr<Mesh>> hud) = 0;
         virtual void AddSplash(std::vector<std::shared_ptr<Mesh>> splash) = 0;
