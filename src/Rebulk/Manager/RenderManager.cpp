@@ -179,6 +179,12 @@ namespace Rbk
             Init();
             m_Refresh = false;
         }
+
+        if (m_EntityManager->GetSkybox()->IsDirty())
+        {
+            PrepareSkybox();
+            m_EntityManager->GetSkybox()->SetIsDirty(false);
+        }
     }
 
     void RenderManager::Refresh(uint32_t levelIndex)
