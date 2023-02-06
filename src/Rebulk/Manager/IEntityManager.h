@@ -20,14 +20,11 @@ namespace Rbk
         virtual std::vector<std::function<void()>> Load(nlohmann::json levelConfig) = 0;
         virtual inline std::vector<std::shared_ptr<Entity>>* GetEntities() = 0;
         virtual inline void SetSkybox(std::shared_ptr<Mesh> skybox) = 0;
-        virtual inline std::vector<std::shared_ptr<Entity>>* GetBBox() = 0;
         virtual inline std::shared_ptr<Mesh> GetSkybox() = 0;
         virtual void Clear() = 0;
         virtual bool ShowBBox() = 0;
-        virtual inline std::map<std::string, std::array<uint32_t, 2>> GetLoadedBBox() = 0;
         virtual const uint32_t GetInstancedCount() = 0;
         virtual void SetShowBBox(bool show) = 0;
-        virtual void AddBBox(const std::shared_ptr<Entity>& bbox) = 0;
         virtual std::map<std::string, std::array<uint32_t, 2>> GetLoadedEntities() = 0;
         virtual void AddHUD(std::vector<std::shared_ptr<Mesh>> hud) = 0;
         virtual std::vector<std::shared_ptr<Mesh>> GetHUD() = 0;
