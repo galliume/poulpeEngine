@@ -347,9 +347,8 @@ namespace Rbk
 
                 if (ImGui::Selectable(skybox.at(n).c_str(), isSelected)) {
                     m_SkyboxIndex = n;
-                    m_RenderManager.load()->GetTextureManager()->LoadSkybox(skybox.at(n));
+                    m_RenderManager.load()->GetTextureManager()->LoadSkybox(skybox.at(n))();
                     m_RenderManager.load()->GetEntityManager()->GetSkybox()->SetIsDirty(true);
-                    Refresh();
                 }
 
                 if (isSelected)
