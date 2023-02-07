@@ -33,6 +33,11 @@ namespace Rbk
                 std::shared_ptr<Mesh> existingEntity = std::dynamic_pointer_cast<Mesh>(m_Entities[m_LoadedEntities[mesh->GetName().c_str()][1]]);
                 existingEntity->AddUbos(data->m_Ubos);
 
+                UniformBufferObject ubo;
+                glm::mat4 transform = glm::translate(glm::mat4(1), mesh->GetBBox()->center) * glm::scale(glm::mat4(1), mesh->GetBBox()->size);
+                ubo.model = mesh->GetBBox()->position * transform;
+                existingEntity->GetBBox()->mesh->AddUbos({ ubo });
+
                 m_LoadedEntities[mesh->GetName()][0] += 1;
             }
         } else {
