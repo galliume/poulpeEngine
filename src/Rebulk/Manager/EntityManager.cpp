@@ -86,8 +86,10 @@ namespace Rbk
                         for (int y = yMin; y < yMax; y++) {
 
                             std::shared_ptr<Rbk::Mesh> entity = std::make_shared<Rbk::Mesh>();
-
+                            bool hasBbox = static_cast<bool>(data["hasBbox"]);
                             auto positionData = data["positions"].at(0);
+
+                            entity->SetHasBbox(hasBbox);
 
                             glm::vec3 position = glm::vec3(
                                 static_cast<float>(positionData["x"]) * static_cast<float>(x),
@@ -170,6 +172,8 @@ namespace Rbk
                             textures.emplace_back(static_cast<std::string>(texture));
 
                         std::shared_ptr<Rbk::Mesh> entity = std::make_shared<Rbk::Mesh>();
+                        bool hasBbox = static_cast<bool>(data["hasBbox"]);
+                        entity->SetHasBbox(hasBbox);
 
                         auto entities = entity->Init(
                             static_cast<std::string>(key),
@@ -182,7 +186,9 @@ namespace Rbk
                             static_cast<bool>(data["inverseTextureY"])
                         );
                         
-                        for (auto& e : entities) AddEntity(e);
+                        for (auto& e : entities) {
+                            AddEntity(e);
+                        }
                     }
                 }
             }
