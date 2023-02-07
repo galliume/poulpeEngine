@@ -33,13 +33,15 @@ namespace Rbk
         void DrawEntities(std::vector<std::shared_ptr<Entity>>& entities);
         void DrawSkybox();
         void DrawHUD();
-        void DrawBbox(std::shared_ptr<Mesh>& mesh);
+        void DrawBbox(std::vector<std::shared_ptr<Entity>>& entities);
 
         void ShouldRecreateSwapChain();
         void RecreateSwapChain();
         inline uint32_t GetSwapImageIndex() { return m_ImageIndex; }
         void SetRayPick(float x, float y, float z, int width, int height);
         void FlushSplashScreen();
+        void SetDrawBbox(bool draw) { m_DrawBbox = draw; };
+        bool GetDrawBbox() { return m_DrawBbox; };
 
         //@todo add GuiManager
         VkRenderPass CreateImGuiRenderPass();
@@ -110,6 +112,8 @@ namespace Rbk
         std::vector<std::vector<std::shared_ptr<Entity>>> m_Entities;
         std::shared_ptr<Mesh> m_SkyboxMesh = nullptr;
         std::vector<std::shared_ptr<Entity>>* m_BoundingBox;
-        std::vector<VkCommandBuffer> m_CmdToSubmit;;
+        std::vector<VkCommandBuffer> m_CmdToSubmit;
+
+        bool m_DrawBbox = false;
     };
 }

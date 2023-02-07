@@ -155,10 +155,6 @@ namespace Rbk
         while (!m_ShaderManager->IsLoadingDone()) {}
         while (!m_EntityManager->IsLoadingQueuesEmpty()) {}
 
-        /*while (!m_TextureManager->IsSkyboxLoadingDone() && !m_TextureManager->IsTexturesLoadingDone() && !m_ShaderManager->IsLoadingDone()) {
-            Rbk::Log::GetLogger()->debug("Loading {} {} {}", m_TextureManager->IsSkyboxLoadingDone(), m_TextureManager->IsTexturesLoadingDone(), m_ShaderManager->IsLoadingDone());
-        };*/
-
         SetIsLoaded();
 
         m_Renderer->AddEntities(m_EntityManager->GetEntities());
@@ -166,11 +162,6 @@ namespace Rbk
 
     void RenderManager::Draw()
     {
-        //if (m_EntityManager->GetSkybox()->IsDirty()) {
-        //    std::async(std::launch::async, [=]() {
-        //        PrepareSkybox();
-        //    });
-        //}        
         m_Renderer->Draw();
 
         if (m_Refresh) {
@@ -185,11 +176,12 @@ namespace Rbk
         }
     }
 
-    void RenderManager::Refresh(uint32_t levelIndex)
+    void RenderManager::Refresh(uint32_t levelIndex, bool showBbox)
     {
         m_CurrentLevel = m_ConfigManager->ListLevels().at(levelIndex);
         m_IsLoaded = false;
         m_Refresh = true;
+        m_Renderer->SetDrawBbox(showBbox);
     }
 
     void RenderManager::PrepareSplashScreen()

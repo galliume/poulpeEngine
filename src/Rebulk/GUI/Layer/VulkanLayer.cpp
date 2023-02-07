@@ -199,7 +199,6 @@ namespace Rbk
             }
 
             if (ImGui::Checkbox("Display bbox", &m_ShowBBox)) {
-                m_RenderManager.load()->GetEntityManager()->SetShowBBox(m_ShowBBox);
                 Refresh();
             }
 
@@ -317,14 +316,23 @@ namespace Rbk
     void VulkanLayer::DisplayLevel()
     {
         std::vector<std::string> levels = m_RenderManager.load()->GetConfigManager()->ListLevels();
-        auto appConfig = m_RenderManager.load()->GetConfigManager()->AppConfig();
-        auto defaultLevel = static_cast<std::string>(appConfig["defaultLevel"]);
 
-        if (ImGui::BeginCombo("Levels", levels.at(m_LevelIndex).c_str())) {
+        if (!m_LevelIndex.has_value()) {
+            auto appConfig = m_RenderManager.load()->GetConfigManager()->AppConfig();
+            auto defaultLevel = static_cast<std::string>(appConfig["defaultLevel"]);
+            for (int i = 0; i < levels.size(); ++i) {
+                if (levels.at(i).c_str() == defaultLevel) {
+                    m_LevelIndex = i;
+                    break;
+                }
+            }
+        }
+
+        if (ImGui::BeginCombo("Levels", levels.at(m_LevelIndex.value()).c_str())) {
 
             for (int n = 0; n < levels.size(); n++) {
 
-                const bool isSelected = (levels.at(n).c_str() == defaultLevel || m_LevelIndex == n);
+                const bool isSelected = m_LevelIndex == n;
 
                 if (ImGui::Selectable(levels.at(n).c_str(), isSelected)) {
                     m_LevelIndex = n;
@@ -344,7 +352,7 @@ namespace Rbk
             for (int n = 0; n < skybox.size(); n++) {
 
                 const bool isSelected = (m_SkyboxIndex == n);
-
+                
                 if (ImGui::Selectable(skybox.at(n).c_str(), isSelected)) {
                     m_SkyboxIndex = n;
                     m_RenderManager.load()->GetTextureManager()->LoadSkybox(skybox.at(n))();
@@ -391,7 +399,7 @@ namespace Rbk
 
     void VulkanLayer::Refresh()
     {
-        m_RenderManager.load()->Refresh(m_LevelIndex);
+        m_RenderManager.load()->Refresh(m_LevelIndex.value(), m_ShowBBox);
         m_Refresh = true;
     }
 }
