@@ -29,7 +29,7 @@ namespace Rbk
     {
     public:
         Mesh();
-        ~Mesh();
+        ~Mesh() = default;
 
         std::vector<std::shared_ptr<Mesh>> Init(const std::string& name,
             const std::string& path,

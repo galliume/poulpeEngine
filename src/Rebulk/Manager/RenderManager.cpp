@@ -165,8 +165,10 @@ namespace Rbk
         m_Renderer->Draw();
 
         if (m_Refresh) {
+            m_Renderer->SetDrawBbox(m_ShowBbox);
             Init();
             m_Refresh = false;
+            m_ShowBbox = false;
         }
 
         if (m_EntityManager->GetSkybox()->IsDirty())
@@ -181,7 +183,7 @@ namespace Rbk
         m_CurrentLevel = m_ConfigManager->ListLevels().at(levelIndex);
         m_IsLoaded = false;
         m_Refresh = true;
-        m_Renderer->SetDrawBbox(showBbox);
+        m_ShowBbox = true;
     }
 
     void RenderManager::PrepareSplashScreen()
