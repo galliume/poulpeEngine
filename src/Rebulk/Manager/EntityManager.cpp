@@ -5,7 +5,7 @@ namespace Rbk
 {
     EntityManager::EntityManager() 
     {
-        m_ShowBBox = true;
+
     }
 
     const uint32_t EntityManager::GetInstancedCount()
@@ -194,10 +194,5 @@ namespace Rbk
     {
         m_Entities.clear();
         m_LoadedEntities.clear();
-    }
-
-    void EntityManager::SetShowBBox(bool show)
-    {
-        m_ShowBBox = show;
     }
 }

@@ -167,8 +167,6 @@ namespace Rbk
                     m_Renderer->Draw(m_CommandBuffersEntities[m_ImageIndex], mesh->GetDescriptorSets().at(index), mesh.get(), *mesh->GetData(), mesh->GetData()->m_Ubos.size(), m_ImageIndex);
                     index = m_ImageIndex;
                 }
-
-                DrawBbox(mesh);
             }
 
             m_Renderer->EndMarker(m_CommandBuffersEntities[m_ImageIndex]);
@@ -222,33 +220,42 @@ namespace Rbk
         EndRendering(m_CommandBuffersHud[m_ImageIndex]);
     }
 
-    void VulkanAdapter::DrawBbox(std::shared_ptr<Mesh>& mesh)
+    void VulkanAdapter::DrawBbox(std::vector<std::shared_ptr<Entity>>& entities)
     {
-        std::shared_ptr<Mesh> bbox = std::dynamic_pointer_cast<Mesh>(mesh->GetBBox()->mesh);
+        if (entities.size() > 0)
+        {
+            BeginRendering(m_CommandBuffersBbox[m_ImageIndex]);
+            m_Renderer->StartMarker(m_CommandBuffersBbox[m_ImageIndex], "bbox_drawing", 0.3, 0.2, 0.1);
+            
+            for (std::shared_ptr<Entity> entity : entities) {
+                std::shared_ptr<Mesh> mesh = std::dynamic_pointer_cast<Mesh>(entity);
 
-        if (!bbox) return;
-        
-        BeginRendering(m_CommandBuffersBbox[m_ImageIndex]);
-        m_Renderer->StartMarker(m_CommandBuffersBbox[m_ImageIndex], "bbox_drawing", 0.3, 0.2, 0.1);
-        m_Renderer->BindPipeline(m_CommandBuffersBbox[m_ImageIndex], bbox->m_GraphicsPipeline);
+                if (!mesh && !mesh->HasBbox()) continue;
+                auto&& bbox = std::dynamic_pointer_cast<Mesh>(mesh->GetBBox()->mesh);
 
-        //if (m_HasClicked && mesh->IsHit(m_RayPick)) {
-        //    Rbk::Log::GetLogger()->warn("HIT ! {}", mesh->GetName());
-        //    m_HasClicked = false;
-        //}
-        int index = m_ImageIndex;
-        for (uint32_t i = 0; i < bbox->m_UniformBuffers.size(); i++) {
-            index += i * 3;
+                if (!bbox) continue;
 
-            if (bbox->HasPushConstants() && nullptr != bbox->ApplyPushConstants)
-                bbox->ApplyPushConstants(m_CommandBuffersBbox[m_ImageIndex], bbox->m_PipelineLayout, shared_from_this(), *bbox->GetData());
+                m_Renderer->BindPipeline(m_CommandBuffersBbox[m_ImageIndex], bbox->m_GraphicsPipeline);
 
-            m_Renderer->Draw(m_CommandBuffersBbox[m_ImageIndex], bbox->GetDescriptorSets().at(index), bbox.get(), *bbox->GetData(), mesh->GetData()->m_Ubos.size(), m_ImageIndex);
-            index = m_ImageIndex;
+                //if (m_HasClicked && mesh->IsHit(m_RayPick)) {
+                //    Rbk::Log::GetLogger()->warn("HIT ! {}", mesh->GetName());
+                //    m_HasClicked = false;
+                //}
+                int index = m_ImageIndex;
+                for (uint32_t i = 0; i < bbox->m_UniformBuffers.size(); i++) {
+                    index += i * 3;
+
+                    if (bbox->HasPushConstants() && nullptr != bbox->ApplyPushConstants)
+                        bbox->ApplyPushConstants(m_CommandBuffersBbox[m_ImageIndex], bbox->m_PipelineLayout, shared_from_this(), *bbox->GetData());
+
+                    m_Renderer->Draw(m_CommandBuffersBbox[m_ImageIndex], bbox->GetDescriptorSets().at(index), bbox.get(), *bbox->GetData(), mesh->GetData()->m_Ubos.size(), m_ImageIndex);
+                    index = m_ImageIndex;
+                }
+            }
+
+            m_Renderer->EndMarker(m_CommandBuffersBbox[m_ImageIndex]);
+            EndRendering(m_CommandBuffersBbox[m_ImageIndex]);
         }
-
-        m_Renderer->EndMarker(m_CommandBuffersBbox[m_ImageIndex]);
-        EndRendering(m_CommandBuffersBbox[m_ImageIndex]);
     }
 
     void VulkanAdapter::Draw()
@@ -261,6 +268,10 @@ namespace Rbk
 
         for (auto& entities : m_Entities) {
             drawing.emplace_back(std::async(std::launch::async, [this, &entities] { DrawEntities(entities); }));
+            
+            //@todo strip for release?
+            if (GetDrawBbox())
+                drawing.emplace_back(std::async(std::launch::async, [this, &entities] { DrawBbox(entities); }));
         }
 
         drawing.emplace_back(std::async(std::launch::async, [this] { DrawHUD(); }));
@@ -270,7 +281,10 @@ namespace Rbk
         }
 
         m_CmdToSubmit.emplace_back(m_CommandBuffersSkybox[m_ImageIndex]);
-        m_CmdToSubmit.emplace_back(m_CommandBuffersBbox[m_ImageIndex]);
+
+        if (GetDrawBbox())
+            m_CmdToSubmit.emplace_back(m_CommandBuffersBbox[m_ImageIndex]);
+
         m_CmdToSubmit.emplace_back(m_CommandBuffersEntities[m_ImageIndex]);
         m_CmdToSubmit.emplace_back(m_CommandBuffersHud[m_ImageIndex]);
         
@@ -577,7 +591,6 @@ namespace Rbk
             entities.clear();
         }
         m_Entities.clear();
-        m_BoundingBox->clear();
         m_SkyboxMesh = nullptr;
         m_HUD.clear();
         m_Splash.clear();

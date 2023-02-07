@@ -1,4 +1,5 @@
 #pragma once
+#include <optional>
 #include "ILayer.h"
 #include <volk.h>
 #include "Rebulk/GUI/ImGui/Im.h"
@@ -40,7 +41,7 @@ namespace Rbk
     private:
         bool m_VSync = false;
         bool m_ShowDemo = false;
-        int m_LevelIndex = 0;
+        std::optional<int> m_LevelIndex;
         int m_SkyboxIndex = 0;
         bool m_Refresh = false;
 
