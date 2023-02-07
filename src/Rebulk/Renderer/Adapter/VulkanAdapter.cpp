@@ -230,7 +230,7 @@ namespace Rbk
             for (std::shared_ptr<Entity> entity : entities) {
                 std::shared_ptr<Mesh> mesh = std::dynamic_pointer_cast<Mesh>(entity);
 
-                if (!mesh && !mesh->HasBbox()) continue;
+                if (!mesh || !mesh->HasBbox()) continue;
                 auto&& bbox = std::dynamic_pointer_cast<Mesh>(mesh->GetBBox()->mesh);
 
                 if (!bbox) continue;

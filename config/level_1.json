@@ -20,7 +20,8 @@
 				"y": 0.0,
 				"z": 0.0
 			},	
-			"form": "positioned"			
+			"form": "positioned",
+			"hasBbox": true
 		},
 		"fence" : {
 			"mesh": "assets/mesh/fence/fence.obj",
@@ -42,7 +43,8 @@
 				"y": 0.0,
 				"z": 0.85
 			},
-			"form": "line"
+			"form": "line",
+			"hasBbox": true
 		},
 		"fence2" : {
 			"mesh": "assets/mesh/fence/fence.obj",
@@ -64,7 +66,8 @@
 				"y": 0,
 				"z": 0
 			},
-			"form": "line"
+			"form": "line",
+			"hasBbox": true
 		},
 		"groundCube" : {
 			"mesh": "assets/mesh/minecraft/Grass_Block.obj",
@@ -87,7 +90,8 @@
 				"z": 0
 			},
 			"form": "square",
-			"squarePadding": [{"x" : [-7, 7], "y": [-5, 15]}]
+			"squarePadding": [{"x" : [-7, 7], "y": [-5, 15]}],
+			"hasBbox": true
 		},
 		"groundCube2" : {
 			"mesh": "assets/mesh/minecraft/Grass_Block.obj",
@@ -110,7 +114,8 @@
 				"z": 0
 			},
 			"form": "square",
-			"squarePadding": [{"x" : [-7, 7], "y": [-15, -5]}]
+			"squarePadding": [{"x" : [-7, 7], "y": [-15, -5]}],
+			"hasBbox": true
 		},
 		"groundCube3" : {
 			"mesh": "assets/mesh/minecraft/Grass_Block.obj",
@@ -133,7 +138,8 @@
 				"z": 0
 			},
 			"form": "square",
-			"squarePadding": [{"x" : [-22, -7], "y": [-5, 15]}]
+			"squarePadding": [{"x" : [-22, -7], "y": [-5, 15]}],
+			"hasBbox": true
 		},
 		"groundCube4" : {
 			"mesh": "assets/mesh/minecraft/Grass_Block.obj",
@@ -156,7 +162,8 @@
 				"z": 0
 			},
 			"form": "square",
-			"squarePadding": [{"x" : [-22, -7], "y": [-15, -5]}]
+			"squarePadding": [{"x" : [-22, -7], "y": [-15, -5]}],
+			"hasBbox": true
 		},
 		"groundCube5" : {
 			"mesh": "assets/mesh/minecraft/Grass_Block.obj",
@@ -179,7 +186,8 @@
 				"z": 0
 			},
 			"form": "square",
-			"squarePadding": [{"x" : [7, 30], "y": [-15, -5]}]
+			"squarePadding": [{"x" : [7, 30], "y": [-15, -5]}],
+			"hasBbox": true
 		},
 		"waterCube" : {
 			"mesh": "assets/mesh/minecraft/Grass_Block.obj",
@@ -202,7 +210,8 @@
 				"z": 0
 			},
 			"form": "square",
-			"squarePadding": [{"x" : [7, 30], "y": [-5, 15]}]
+			"squarePadding": [{"x" : [7, 30], "y": [-5, 15]}],
+			"hasBbox": false
 		},
 		"waterCube2" : {
 			"mesh": "assets/mesh/minecraft/Grass_Block.obj",
@@ -225,7 +234,8 @@
 				"z": 0
 			},
 			"form": "square",
-			"squarePadding": [{"x" : [-30, 30], "y": [15, 29]}]
+			"squarePadding": [{"x" : [-30, 30], "y": [15, 29]}],
+			"hasBbox": false
 		},
 		"waterCube3" : {
 			"mesh": "assets/mesh/minecraft/Grass_Block.obj",
@@ -248,7 +258,8 @@
 				"z": 0
 			},
 			"form": "square",
-			"squarePadding": [{"x" : [-30, -22], "y": [-15, 15]}]
+			"squarePadding": [{"x" : [-30, -22], "y": [-15, 15]}],
+			"hasBbox": false
 		},
 		"campfire" : {
 			"mesh": "assets/mesh/campfire/Campfire.obj",
@@ -270,7 +281,8 @@
 				"y": 0.0,
 				"z": 0.0
 			},			
-			"form": "positioned"
+			"form": "positioned",
+			"hasBbox": true
 		},
 		"deadTree" : {
 			"mesh": "assets/mesh/tree/dead_tree.obj",
@@ -304,7 +316,8 @@
 				"y": 0.0,
 				"z": 0.0
 			},
-			"form": "positioned"
+			"form": "positioned",
+			"hasBbox": true
 		},
 		"tree" : {
 			"mesh": "assets/mesh/tree/tree.obj",
@@ -350,7 +363,8 @@
 				"y": 0.0,
 				"z": 0.0
 			},
-			"form": "positioned"
+			"form": "positioned",
+			"hasBbox": true
 		},
 		"moon" : {
 			"mesh": "assets/mesh/moon/moon.obj",
@@ -372,7 +386,8 @@
 				"y": 0.0,
 				"z": 0.0
 			},
-			"form": "positioned"
+			"form": "positioned",
+			"hasBbox": false
 		},
 		"house" : {
 			"mesh": "assets/mesh/house/midpoly_town_house_01.obj",
@@ -394,7 +409,8 @@
 				"y": 0.0,
 				"z": 0.0
 			},
-			"form": "positioned"
+			"form": "positioned",
+			"hasBbox": true
 		},
 		"dog_house" : {
 			"mesh": "assets/mesh/doghouse/doghouse0908.obj",
@@ -416,7 +432,8 @@
 				"y": 0.0,
 				"z": 0.0
 			},
-			"form": "positioned"
+			"form": "positioned",
+			"hasBbox": true
 		}
 	}
 }

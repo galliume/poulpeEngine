@@ -67,6 +67,6 @@ namespace Rbk
         Data m_Data;
         std::string m_ShaderName;
         bool m_IsDirty = true;
-        bool m_HasBbox = false;
+        bool m_HasBbox = true;
     };
 }
