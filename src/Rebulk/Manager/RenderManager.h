@@ -66,6 +66,7 @@ namespace Rbk
 
         bool m_IsLoaded = false;
         bool m_Refresh = false;
+        bool m_ShowBbox = false;
         std::string m_CurrentLevel;
 
         std::unique_ptr<ThreadPool> m_ThreadPool;

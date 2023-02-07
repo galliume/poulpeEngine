@@ -198,7 +198,6 @@ namespace Rbk
 
     void EntityMesh::CreateBBoxEntity(std::shared_ptr<Mesh>& mesh)
     {
-        mesh->GetBBox()->mesh = std::make_shared<Mesh>();
         Rbk::Entity::BBox* box = mesh->GetBBox().get();
 
         UniformBufferObject ubo;
@@ -236,6 +235,9 @@ namespace Rbk
         data.m_Indices = indices;
         data.m_Vertices = vertices;
         data.m_Ubos.emplace_back(ubo);
+
+        if (box->mesh->GetData()->m_Ubos.size() > 0)
+            data.m_Ubos.insert(data.m_Ubos.end(), box->mesh->GetData()->m_Ubos.begin(), box->mesh->GetData()->m_Ubos.end());
 
         for (uint32_t i = 0; i < data.m_Ubos.size(); i++) {
             data.m_Ubos[i].proj = m_Adapter->GetPerspective();
