@@ -190,7 +190,7 @@ namespace Rbk
             VulkanAdapter::s_PolygoneMode
         );
 
-        if (m_Adapter->GetDrawBbox()) {
+        if (m_Adapter->GetDrawBbox() && mesh->HasBbox()) {
             CreateBBoxEntity(mesh);
             mesh->SetHasBbox(true);
         }
