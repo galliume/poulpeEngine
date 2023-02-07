@@ -26,7 +26,7 @@ namespace Rbk
         virtual void Draw() override;
         virtual bool IsLoaded()  override { return m_IsLoaded; }
         virtual void SetIsLoaded(bool loaded = true) override { m_IsLoaded = loaded; }
-        virtual void Refresh(uint32_t levelIndex) override;
+        virtual void Refresh(uint32_t levelIndex, bool showBbox = false) override;
 
         virtual std::shared_ptr<Window> GetWindow() override { return  m_Window; }
         virtual std::shared_ptr<Rbk::Camera> GetCamera() override { return m_Camera; }
@@ -42,6 +42,7 @@ namespace Rbk
         virtual void CleanUp() override;
 
         void StartInThread(std::function<void()> func);
+        void SetDrawBbox(bool draw) { m_Renderer->SetDrawBbox(draw); };
 
     private:
         void PrepareSplashScreen();

@@ -52,6 +52,8 @@ namespace Rbk
         
         bool IsDirty() { return m_IsDirty; }
         void SetIsDirty(bool dirty = true) { m_IsDirty = dirty; }
+        void SetHasBbox(bool hasBbox = false) { m_HasBbox = hasBbox; }
+        bool HasBbox() { return m_HasBbox; }
 
     //@todo make it private
     public:
@@ -65,5 +67,6 @@ namespace Rbk
         Data m_Data;
         std::string m_ShaderName;
         bool m_IsDirty = true;
+        bool m_HasBbox = false;
     };
 }
