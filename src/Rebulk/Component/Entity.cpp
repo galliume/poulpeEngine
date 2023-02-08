@@ -6,7 +6,7 @@ namespace Rbk
 {
     void Entity::Draw()
     {
-        Rbk::Log::GetLogger()->debug("Draw nothing");
+
     }
 
     void Entity::Accept(std::shared_ptr<IVisitor> visitor)
@@ -25,14 +25,12 @@ namespace Rbk
             m_SpritesIndex = 1;
         }
 
-        //Rbk::Log::GetLogger()->debug("next sprites index {} of {} sprites", nextIndex, m_SpritesCount);
-
         return nextIndex;
     }
 
     bool Entity::IsHit(glm::vec3 point)
     {
-        //Rbk::Log::GetLogger()->warn(
+        //RBK_DEBUG(
         //    "BBOX maxX:{} minX{} maxY:{} minY{} maxZ:{} minZ{}",
         //    m_BoundingBox.maxX,
         //    m_BoundingBox.minX,
@@ -42,7 +40,7 @@ namespace Rbk
         //    m_BoundingBox.minZ
         //);
 
-        //Rbk::Log::GetLogger()->warn(
+        //RBK_DEBUG(
         //    "point x:{} y{} z:{}", point.x, point.y, point.z);
 
     /*    return (

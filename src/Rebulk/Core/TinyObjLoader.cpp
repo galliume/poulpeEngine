@@ -21,13 +21,13 @@ namespace Rbk
 
         if (!reader.ParseFromFile(path, reader_config)) {
             if (!reader.Error().empty()) {
-                std::cerr << "TinyObjReader: " << reader.Error();
+                RBK_ERROR("TinyObjReader: {}", reader.Error());
             }
             exit(1);
         }
 
         if (!reader.Warning().empty()) {
-            std::cout << "TinyObjReader: " << reader.Warning();
+            RBK_WARN("TinyObjReader: {}", reader.Warning());
         }
 
         auto& attrib = reader.GetAttrib();

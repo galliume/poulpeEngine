@@ -16,7 +16,7 @@ namespace Rbk
     {
         //@todo move out of Mesh
         if (!std::filesystem::exists(path)) {
-            Rbk::Log::GetLogger()->critical("mesh file {} does not exits.", path);
+            RBK_FATAL("mesh file {} does not exits.", path);
             throw std::runtime_error("error loading a mesh file.");
         }
 
