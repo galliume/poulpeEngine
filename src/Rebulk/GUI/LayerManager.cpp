@@ -5,7 +5,6 @@ namespace Rbk
 {
     LayerManager::~LayerManager()
     {
-        std::cout << "LayerManager deleted" << std::endl;
     }
 
     void LayerManager::Add(ILayer* layer)

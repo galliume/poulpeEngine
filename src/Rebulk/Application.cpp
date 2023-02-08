@@ -56,7 +56,7 @@ namespace Rbk
   
         std::chrono::milliseconds timeStep{0};
 
-        Rbk::Log::GetLogger()->debug("Loaded scene in {}", (endRun - m_StartRun).count());//@todo readable in seconds...
+        RBK_DEBUG("Loaded scene in {}", (endRun - m_StartRun).count());//@todo readable in seconds...
 
         std::mutex lockDraw;
 
@@ -110,7 +110,7 @@ namespace Rbk
                 frameCount++;
 
                 if (1.0 <= timeStepSum.count()) {
-                    Rbk::Log::GetLogger()->debug("{} fps", frameCount);
+                    RBK_DEBUG("{} fps", frameCount);
                     timeStepSum = std::chrono::duration<double>(0.0);
                     frameCount = 0;
                 }

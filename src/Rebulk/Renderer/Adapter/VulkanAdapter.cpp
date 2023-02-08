@@ -154,7 +154,7 @@ namespace Rbk
 
 
                 //if (m_HasClicked && mesh->IsHit(m_RayPick)) {
-                //    Rbk::Log::GetLogger()->warn("HIT ! {}", mesh->GetName());
+                //    RBK_DEBUG("HIT ! {}", mesh->GetName());
                 //    m_HasClicked = false;
                 //}
                 int index = m_ImageIndex;
@@ -238,7 +238,7 @@ namespace Rbk
                 m_Renderer->BindPipeline(m_CommandBuffersBbox[m_ImageIndex], bbox->m_GraphicsPipeline);
 
                 //if (m_HasClicked && mesh->IsHit(m_RayPick)) {
-                //    Rbk::Log::GetLogger()->warn("HIT ! {}", mesh->GetName());
+                //    RBK_DEBUG("HIT ! {}", mesh->GetName());
                 //    m_HasClicked = false;
                 //}
                 int index = m_ImageIndex;
@@ -297,7 +297,7 @@ namespace Rbk
         }
 
         m_CmdToSubmit.clear();
-        //Rbk::Log::GetLogger()->critical("Draw Call {}", drawCall);
+        //RBK_DEBUG("Draw Call {}", drawCall);
     }
 
     void VulkanAdapter::DrawSplashScreen()
@@ -423,7 +423,7 @@ namespace Rbk
         VkResult result = vkCreateRenderPass(m_Renderer->GetDevice(), &info, nullptr, &renderPass);
 
         if (result != VK_SUCCESS) {
-            Rbk::Log::GetLogger()->critical("failed to create imgui render pass : {}", result);
+            RBK_FATAL("failed to create imgui render pass : {}", result);
         }
 
         return renderPass;
@@ -459,7 +459,7 @@ namespace Rbk
         info.Allocator = nullptr;
         info.CheckVkResultFn = [](VkResult err) {
             if (0 == err) return;
-            Rbk::Log::GetLogger()->warn("ImGui error {}", err);
+            RBK_FATAL("ImGui error {}", err);
         };
 
         auto commandPool = m_Renderer->CreateCommandPool();
