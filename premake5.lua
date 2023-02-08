@@ -35,7 +35,7 @@ project "Rebulkan"
     targetdir  ("bin/" .. outputdir  .. "/%{prj.name}")
     objdir  ("bin-int/" .. outputdir  .. "/%{prj.name}")
 
-    pchheader "rebulkpch.h"
+    pchheader "rebulkpch.hpp"
     pchsource "src/rebulkpch.cpp"
 
     flags
@@ -52,9 +52,9 @@ project "Rebulkan"
 
     files 
     {
-        "src/**.h",
+        "src/**.hpp",
         "src/**.cpp",
-        "vendor/stb_image/**.h",
+        "vendor/stb_image/**.hpp",
         "vendor/stb_image/**.cpp",
         "vendor/GLM/glm/**.hpp",
         "vendor/GLM/glm/**.inl",

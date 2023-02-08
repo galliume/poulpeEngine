@@ -1,6 +1,6 @@
-#include "rebulkpch.h"
-#include "Crosshair.h"
-#include "Rebulk/Renderer/Adapter/VulkanAdapter.h"
+#include "rebulkpch.hpp"
+#include "Crosshair.hpp"
+#include "Rebulk/Renderer/Adapter/VulkanAdapter.hpp"
 
 namespace Rbk
 {

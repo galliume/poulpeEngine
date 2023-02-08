@@ -1,5 +1,5 @@
-#include "rebulkpch.h"
-#include "Camera.h"
+#include "rebulkpch.hpp"
+#include "Camera.hpp"
 
 namespace Rbk
 {

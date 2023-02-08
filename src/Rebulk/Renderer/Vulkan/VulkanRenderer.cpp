@@ -1,5 +1,5 @@
-#include "rebulkpch.h"
-#include "VulkanRenderer.h"
+#include "rebulkpch.hpp"
+#include "VulkanRenderer.hpp"
 
 #define VOLK_IMPLEMENTATION
 #include <volk.h>

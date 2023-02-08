@@ -1,5 +1,5 @@
-#include "rebulkpch.h"
-#include "TextureManager.h"
+#include "rebulkpch.hpp"
+#include "TextureManager.hpp"
 
 namespace Rbk
 {

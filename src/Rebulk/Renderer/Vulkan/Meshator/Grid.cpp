@@ -1,6 +1,6 @@
-#include "rebulkpch.h"
-#include "Grid.h"
-#include "Rebulk/Renderer/Adapter/VulkanAdapter.h"
+#include "rebulkpch.hpp"
+#include "Grid.hpp"
+#include "Rebulk/Renderer/Adapter/VulkanAdapter.hpp"
 
 namespace Rbk
 {

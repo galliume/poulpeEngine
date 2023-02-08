@@ -1,5 +1,5 @@
-#include "rebulkpch.h"
-#include "EntityManager.h"
+#include "rebulkpch.hpp"
+#include "EntityManager.hpp"
 
 namespace Rbk
 {
