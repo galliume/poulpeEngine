@@ -20,7 +20,7 @@ namespace Rbk
         if (sprites != m_SpriteAnimations.end()) {
             return sprites->second;
         } else {
-            Rbk::Log::GetLogger()->warn("Sprites {} not found", name);
+            RBK_WARN("Sprites {} not found", name);
             return {};
         }
     }

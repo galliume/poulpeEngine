@@ -14,7 +14,7 @@ namespace Rbk
         result = ma_engine_init(NULL, &m_Engine);
 
         if (result != MA_SUCCESS) {
-            Rbk::Log::GetLogger()->warn("Cannot init mini audio {}", result);
+            RBK_WARN("Cannot init mini audio {}", result);
         }
     }
 
@@ -39,7 +39,8 @@ namespace Rbk
     void AudioManager::StartAmbient(int index)
     {
         if (index > m_AmbientSounds.size() - 1 || 0 > index) {
-            return Rbk::Log::GetLogger()->warn("Ambient sound index {} does not exists.", index);
+            RBK_WARN("Ambient sound index {} does not exists.", index);
+            return;
         }
 
         if (State::PLAY == m_State) {
@@ -61,7 +62,8 @@ namespace Rbk
     void AudioManager::StartSplash(int index)
     {
         if (index > m_SplashSounds.size() - 1 || 0 > index) {
-            return Rbk::Log::GetLogger()->warn("Splash sound index {} does not exists.", index);
+            RBK_WARN("Splash sound index {} does not exists.", index);
+            return;
         }
 
         if (State::PLAY == m_State) {
@@ -108,7 +110,9 @@ namespace Rbk
         result = ma_sound_init_from_file(&m_Engine, soundPath.c_str(), flags, NULL, NULL, &sound);
 
         if (result != MA_SUCCESS) {
-            Rbk::Log::GetLogger()->warn("Cannot init sound {}", soundPath.c_str());
+            RBK_WARN("Cannot init sound {}", soundPath.c_str());
+            m_State = State::ERR;
+            return;
         }
 
         if (m_Looping) {

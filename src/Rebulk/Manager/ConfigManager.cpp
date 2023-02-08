@@ -12,7 +12,7 @@ namespace Rbk
             m_AppConfig = nlohmann::json::parse(f);
         }
         catch (std::exception& e) {
-            Rbk::Log::GetLogger()->critical("Cannot read application config : {}", e.what());
+            RBK_FATAL("Cannot read application config : {}", e.what());
             m_AppConfig = {};
         }
 
@@ -21,7 +21,7 @@ namespace Rbk
             m_TexturesConfig = nlohmann::json::parse(f);
         }
         catch (std::exception& e) {
-            Rbk::Log::GetLogger()->critical("Cannot read texture config : {}", e.what());
+            RBK_FATAL("Cannot read texture config : {}", e.what());
             m_TexturesConfig = {};
         }
 
@@ -30,7 +30,7 @@ namespace Rbk
             m_SoundConfig = nlohmann::json::parse(f);
         }
         catch (std::exception& e) {
-            Rbk::Log::GetLogger()->critical("Cannot read sounds config : {}", e.what());
+            RBK_FATAL("Cannot read sounds config : {}", e.what());
             m_SoundConfig = {};
         }
 
@@ -39,7 +39,7 @@ namespace Rbk
             m_ShaderConfig = nlohmann::json::parse(f);
         }
         catch (std::exception& e) {
-            Rbk::Log::GetLogger()->critical("Cannot read shader config : {}", e.what());
+            RBK_FATAL("Cannot read shader config : {}", e.what());
             m_ShaderConfig = {};
         }
     }
@@ -55,7 +55,7 @@ namespace Rbk
             }
         }
         catch (std::exception& e) {
-            Rbk::Log::GetLogger()->critical("Cannot read level {} config : {}", levelName, e.what());
+            RBK_FATAL("Cannot read level {} config : {}", levelName, e.what());
             m_EntityConfig = {};
         }
 

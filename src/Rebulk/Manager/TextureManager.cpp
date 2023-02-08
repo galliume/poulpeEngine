@@ -44,14 +44,14 @@ namespace Rbk
 
         for (std::string path : skyboxImages) {
             if (!std::filesystem::exists(path)) {
-                Rbk::Log::GetLogger()->critical("texture file {} does not exits.", path);
+                RBK_FATAL("texture file {} does not exits.", path);
                 return;
             }
 
             stbi_uc* pixels = stbi_load(path.c_str(), &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
 
             if (!pixels) {
-                Rbk::Log::GetLogger()->warn("failed to load skybox texture image %s", path);
+                RBK_FATAL("failed to load skybox texture image %s", path);
                 return;
             }
 
@@ -89,12 +89,12 @@ namespace Rbk
     void TextureManager::AddTexture(const std::string& name, const std::string& path, bool isPublic)
     {
         if (!std::filesystem::exists(path.c_str())) {
-            Rbk::Log::GetLogger()->critical("texture file {} does not exits.", path);
+            RBK_FATAL("texture file {} does not exits.", path);
             return;
         }
 
         if (0 != m_Textures.count(name.c_str())) {
-            Rbk::Log::GetLogger()->debug("Texture {} already imported", name);
+            RBK_TRACE("Texture {} already imported", name);
             return;
         }
 
@@ -104,7 +104,7 @@ namespace Rbk
         stbi_uc* pixels = stbi_load(path.c_str(), &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
 
         if (!pixels) {
-            Rbk::Log::GetLogger()->warn("failed to load texture image %s", name);
+            RBK_FATAL("failed to load texture image %s", name);
             return;
         }
 
