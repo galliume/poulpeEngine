@@ -1,7 +1,7 @@
-#include "rebulkpch.h"
+#include "rebulkpch.hpp"
 
-#include "EntityMesh.h"
-#include "Rebulk/Renderer/Adapter/VulkanAdapter.h"
+#include "EntityMesh.hpp"
+#include "Rebulk/Renderer/Adapter/VulkanAdapter.hpp"
 
 namespace Rbk
 {

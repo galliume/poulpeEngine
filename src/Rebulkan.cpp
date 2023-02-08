@@ -1,5 +1,5 @@
-#include "rebulkpch.h"
-#include "Rebulk/Application.h"
+#include "rebulkpch.hpp"
+#include "Rebulk/Application.hpp"
 
 int main(int argc, char** argv)
 {

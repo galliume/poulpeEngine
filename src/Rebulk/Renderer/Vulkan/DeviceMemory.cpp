@@ -1,5 +1,5 @@
-#include "rebulkpch.h"
-#include "DeviceMemory.h"
+#include "rebulkpch.hpp"
+#include "DeviceMemory.hpp"
 #include <volk.h>
 
 namespace Rbk

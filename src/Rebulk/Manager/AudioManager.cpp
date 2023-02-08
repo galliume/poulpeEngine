@@ -1,5 +1,5 @@
-#include "rebulkpch.h"
-#include "AudioManager.h"
+#include "rebulkpch.hpp"
+#include "AudioManager.hpp"
 #include <miniaudio.h>
 
 namespace Rbk

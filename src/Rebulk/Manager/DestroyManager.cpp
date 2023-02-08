@@ -1,6 +1,6 @@
-#include "rebulkpch.h"
+#include "rebulkpch.hpp"
 
-#include "DestroyManager.h"
+#include "DestroyManager.hpp"
 
 namespace Rbk
 {

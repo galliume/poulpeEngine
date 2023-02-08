@@ -1,6 +1,6 @@
-#include "rebulkpch.h"
-#include "Entity.h"
-#include "Rebulk/Core/IVisitor.h"
+#include "rebulkpch.hpp"
+#include "Entity.hpp"
+#include "Rebulk/Core/IVisitor.hpp"
 
 namespace Rbk
 {
