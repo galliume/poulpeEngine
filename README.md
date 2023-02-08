@@ -3,7 +3,7 @@
 
 ### This project is a never ending educationnal exercice about game engine and vulkan.
 
-[State of the project](https://github.com/galliume/rebulkan/projects/1)
+[State of the project](https://github.com/users/galliume/projects/4/views/1)
 
 [In video](https://www.youtube.com/watch?v=C7p9z6LhAig&list=PL4-Os8BWDCPmZt5HvJrSo6QDHkD9J4fJF)
 
