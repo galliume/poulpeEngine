@@ -1,5 +1,5 @@
-#include "rebulkpch.h"
-#include "SpriteAnimationManager.h"
+#include "rebulkpch.hpp"
+#include "SpriteAnimationManager.hpp"
 
 namespace Rbk
 {

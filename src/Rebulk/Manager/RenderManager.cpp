@@ -1,11 +1,11 @@
-#include "rebulkpch.h"
-#include "RenderManager.h"
+#include "rebulkpch.hpp"
+#include "RenderManager.hpp"
 
-#include "Rebulk/Renderer/Vulkan/Meshator/EntityMesh.h"
-#include "Rebulk/Renderer/Vulkan/Meshator/Skybox.h"
-#include "Rebulk/Renderer/Vulkan/Meshator/Crosshair.h"
-#include "Rebulk/Renderer/Vulkan/Meshator/Grid.h"
-#include "Rebulk/Renderer/Vulkan/Meshator/Splash.h"
+#include "Rebulk/Renderer/Vulkan/Meshator/EntityMesh.hpp"
+#include "Rebulk/Renderer/Vulkan/Meshator/Skybox.hpp"
+#include "Rebulk/Renderer/Vulkan/Meshator/Crosshair.hpp"
+#include "Rebulk/Renderer/Vulkan/Meshator/Grid.hpp"
+#include "Rebulk/Renderer/Vulkan/Meshator/Splash.hpp"
 
 namespace Rbk
 {    

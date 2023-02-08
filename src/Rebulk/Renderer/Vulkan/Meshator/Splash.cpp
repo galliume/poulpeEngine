@@ -1,6 +1,6 @@
-#include "rebulkpch.h"
-#include "Splash.h"
-#include "Rebulk/Renderer/Adapter/VulkanAdapter.h"
+#include "rebulkpch.hpp"
+#include "Splash.hpp"
+#include "Rebulk/Renderer/Adapter/VulkanAdapter.hpp"
 
 namespace Rbk
 {

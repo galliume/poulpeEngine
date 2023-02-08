@@ -1,6 +1,6 @@
-#include "rebulkpch.h"
-#include "Skybox.h"
-#include "Rebulk/Renderer/Adapter/VulkanAdapter.h"
+#include "rebulkpch.hpp"
+#include "Skybox.hpp"
+#include "Rebulk/Renderer/Adapter/VulkanAdapter.hpp"
 
 namespace Rbk
 {
