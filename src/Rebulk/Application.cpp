@@ -1,5 +1,5 @@
-#include "rebulkpch.h"
-#include "Application.h"
+#include "rebulkpch.hpp"
+#include "Application.hpp"
 
 namespace Rbk
 {

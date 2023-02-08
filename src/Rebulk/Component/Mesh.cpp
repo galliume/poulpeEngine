@@ -1,5 +1,5 @@
-#include "rebulkpch.h"
-#include "Mesh.h"
+#include "rebulkpch.hpp"
+#include "Mesh.hpp"
 
 namespace Rbk
 {

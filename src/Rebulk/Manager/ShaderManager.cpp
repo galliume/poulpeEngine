@@ -1,6 +1,6 @@
-#include "rebulkpch.h"
-#include "ShaderManager.h"
-#include "Rebulk/Core/Tools.h"
+#include "rebulkpch.hpp"
+#include "ShaderManager.hpp"
+#include "Rebulk/Core/Tools.hpp"
 
 namespace Rbk
 {

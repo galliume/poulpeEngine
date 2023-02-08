@@ -1,5 +1,5 @@
-#include "rebulkpch.h"
-#include "ConfigManager.h"
+#include "rebulkpch.hpp"
+#include "ConfigManager.hpp"
 #include <filesystem>
 
 namespace Rbk

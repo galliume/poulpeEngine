@@ -1,5 +1,5 @@
-#include "rebulkpch.h"
-#include "TinyObjLoader.h"
+#include "rebulkpch.hpp"
+#include "TinyObjLoader.hpp"
 
 #define TINYOBJLOADER_IMPLEMENTATION
 #define TINYOBJLOADER_USE_MAPBOX_EARCUT

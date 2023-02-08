@@ -1,11 +1,11 @@
-#include "rebulkpch.h"
+#include "rebulkpch.hpp"
 #include <future>
 #include <memory>
 #include <cfenv>
 #include <volk.h>
-#include "VulkanAdapter.h"
-#include "Rebulk/Renderer/Vulkan/VulkanRenderer.h"
-#include "Rebulk/GUI/Window.h"
+#include "VulkanAdapter.hpp"
+#include "Rebulk/Renderer/Vulkan/VulkanRenderer.hpp"
+#include "Rebulk/GUI/Window.hpp"
 
 namespace Rbk
 {
