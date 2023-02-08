@@ -42,17 +42,17 @@ namespace Rbk {
         {
         case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT:
         {
-            Rbk::Log::GetLogger()->critical("{} : {}", messageType, pCallbackData->pMessage);
+            RBK_FATAL("{} : {}", messageType, pCallbackData->pMessage);
             break;
         }
         case VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT:
         {
-            Rbk::Log::GetLogger()->warn("{} : {}", messageType, pCallbackData->pMessage);
+            RBK_WARN("{} : {}", messageType, pCallbackData->pMessage);
             break;
         }
         default:
         {
-            //Rbk::Log::GetLogger()->trace("{} : {}", messageType, pCallbackData->pMessage);
+            RBK_TRACE("{} : {}", messageType, pCallbackData->pMessage);
         }
         }
 
@@ -119,7 +119,7 @@ namespace Rbk {
         std::string message;
 
         if (!IsValidationLayersEnabled() && !CheckValidationLayerSupport()) {
-            Rbk::Log::GetLogger()->warn("Validations layers not available !");
+            RBK_WARN("Validations layers not available !");
         }
 
         VkApplicationInfo appInfo{};
@@ -149,9 +149,9 @@ namespace Rbk {
             createInfo.enabledLayerCount = static_cast<uint32_t>(m_ValidationLayers.size());
             createInfo.ppEnabledLayerNames = m_ValidationLayers.data();
             createInfo.pNext = (VkDebugUtilsMessengerCreateInfoEXT*)&debugCreateInfo;
-            Rbk::Log::GetLogger()->trace("Validations enabled");
+            RBK_TRACE("Validations enabled");
         } else {
-            Rbk::Log::GetLogger()->trace("Validations disabled");
+            RBK_TRACE("Validations disabled");
             createInfo.enabledLayerCount = 0;
         }
 
@@ -160,7 +160,7 @@ namespace Rbk {
         result = vkCreateInstance(&createInfo, nullptr, &m_Instance);
 
         if (VK_SUCCESS != result) {
-            Rbk::Log::GetLogger()->critical("Can't create VK instance : {}", result);
+            RBK_FATAL("Can't create VK instance : {}", result);
             throw std::runtime_error("Can't create VK instance.");
         }
 
@@ -231,10 +231,6 @@ namespace Rbk {
             //extensions.push_back(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME); deprecated
         }
 
-        //for_each(extensions.begin(), extensions.end(), [](std::string text) {
-        //    Rbk::Log::GetLogger()->trace("required extension needed : {}", text);
-        //});
-
         m_RequiredExtensions = extensions;
     }
 
@@ -250,7 +246,7 @@ namespace Rbk {
         createInfo.pUserData = nullptr;
 
         if (CreateDebugUtilsMessengerEXT(m_Instance, &createInfo, nullptr, &m_DebugMessengerCallback) != VK_SUCCESS) {
-            Rbk::Log::GetLogger()->warn("Can't create debug messenger.");
+            RBK_ERROR("Can't create debug messenger.");
         }
     }
 
@@ -260,7 +256,7 @@ namespace Rbk {
         vkEnumeratePhysicalDevices(m_Instance, &deviceCount, nullptr);
 
         if (deviceCount == 0) {
-            Rbk::Log::GetLogger()->critical("failed to find GPUs with Vulkan support!");
+            RBK_FATAL("failed to find GPUs with Vulkan support!");
             exit(-1);
         }
 
@@ -293,7 +289,7 @@ namespace Rbk {
         }
 
         if (m_PhysicalDevice == VK_NULL_HANDLE) {
-            Rbk::Log::GetLogger()->critical("failed to find a suitable GPU");
+            RBK_FATAL("failed to find a suitable GPU");
             exit(-1);
         }
     }
@@ -416,7 +412,7 @@ namespace Rbk {
         createInfo.pNext = &shader_draw_parameters_features;
 
         if (vkCreateDevice(m_PhysicalDevice, &createInfo, nullptr, &m_Device) != VK_SUCCESS) {
-            Rbk::Log::GetLogger()->critical("failed to create logical device!");
+            RBK_FATAL("failed to create logical device!");
             return;
         }
 
@@ -435,7 +431,7 @@ namespace Rbk {
         VkResult result = glfwCreateWindowSurface(m_Instance, m_Window->Get(), nullptr, &m_Surface);
 
         if (result != VK_SUCCESS) {
-            Rbk::Log::GetLogger()->critical("failed to create window surface!");
+            RBK_FATAL("failed to create window surface!");
             throw std::runtime_error("failed to create window surface!");
         }
     }
@@ -557,7 +553,7 @@ namespace Rbk {
         result = vkCreateSwapchainKHR(m_Device, &createInfo, nullptr, &swapChain);
 
         if (result != VK_SUCCESS) {
-            Rbk::Log::GetLogger()->critical("Swap chain failed " + std::to_string(result));
+            RBK_FATAL("Swap chain failed " + std::to_string(result));
         }
 
         vkGetSwapchainImagesKHR(m_Device, swapChain, &imageCount, nullptr);
@@ -606,7 +602,7 @@ namespace Rbk {
         result = vkCreateImageView(m_Device, &createInfo, nullptr, &swapChainImageView);
 
         if (result != VK_SUCCESS) {
-            Rbk::Log::GetLogger()->critical("failed to create image views!");
+            RBK_ERROR("failed to create image views!");
         }
 
         return swapChainImageView;
@@ -634,7 +630,7 @@ namespace Rbk {
         result = vkCreateImageView(m_Device, &createInfo, nullptr, &swapChainImageView);
 
         if (result != VK_SUCCESS) {
-            Rbk::Log::GetLogger()->critical("failed to create image views!");
+            RBK_ERROR("failed to create image views!");
         }
 
         return swapChainImageView;
@@ -676,7 +672,7 @@ namespace Rbk {
         VkResult result = vkCreatePipelineLayout(m_Device, &pipelineLayoutInfo, nullptr, &graphicsPipelineLayout);
 
         if (result != VK_SUCCESS) {
-            Rbk::Log::GetLogger()->critical("failed to create pipeline layout!");
+            RBK_ERROR("failed to create pipeline layout!");
         }
 
         return graphicsPipelineLayout;
@@ -830,7 +826,7 @@ namespace Rbk {
                 fStream.close();
             }
             else {
-                Rbk::Log::GetLogger()->debug("Pipeline cache miss!");
+                RBK_TRACE("Pipeline cache miss!");
                 badCache = true;
             }
 
@@ -839,10 +835,10 @@ namespace Rbk {
                 cacheFileData = pReadFile.data();
 
                 if (cacheFileData == nullptr) {
-                    Rbk::Log::GetLogger()->critical("Cannot allocate memory to pipeline cache");
+                    RBK_WARN("Cannot allocate memory to pipeline cache");
                 }
 
-                Rbk::Log::GetLogger()->debug("Pipeline cache HIT from {}", cacheFileName);
+                RBK_TRACE("Pipeline cache HIT from {}", cacheFileName);
             }
 
             if (cacheFileData != nullptr) {
@@ -860,33 +856,33 @@ namespace Rbk {
 
                 if (headerLength <= 0) {
                     badCache = true;
-                    Rbk::Log::GetLogger()->critical("Bad header length in {} - {}", cacheFileName, headerLength);
+                    RBK_ERROR("Bad header length in {} - {}", cacheFileName, headerLength);
                 }
                 if (cacheHeaderVersion != VK_PIPELINE_CACHE_HEADER_VERSION_ONE) {
                     badCache = true;
-                    Rbk::Log::GetLogger()->critical("Unsupported cache header version in {} got {}", cacheFileName, cacheHeaderVersion);
+                    RBK_ERROR("Unsupported cache header version in {} got {}", cacheFileName, cacheHeaderVersion);
                 }
                 if (vendorID != GetDeviceProperties().vendorID) {
                     badCache = true;
-                    Rbk::Log::GetLogger()->critical("Vendor ID mismatch in {} got {} expect {}", cacheFileName, vendorID, GetDeviceProperties().vendorID);
+                    RBK_ERROR("Vendor ID mismatch in {} got {} expect {}", cacheFileName, vendorID, GetDeviceProperties().vendorID);
                 }
                 if (deviceID != GetDeviceProperties().deviceID) {
                     badCache = true;
-                    Rbk::Log::GetLogger()->critical("Device ID mismatch in {} got {} expect {}", cacheFileName, deviceID, GetDeviceProperties().deviceID);
+                    RBK_ERROR("Device ID mismatch in {} got {} expect {}", cacheFileName, deviceID, GetDeviceProperties().deviceID);
                 }
                 if (memcmp(pipelineCacheUUID, GetDeviceProperties().pipelineCacheUUID, sizeof(pipelineCacheUUID)) != 0) {
                     badCache = true;
-                    Rbk::Log::GetLogger()->critical("UUID mismatch in {} got {} expect {}", cacheFileName, pipelineCacheUUID, GetDeviceProperties().pipelineCacheUUID);
+                    RBK_ERROR("UUID mismatch in {} got {} expect {}", cacheFileName, pipelineCacheUUID, GetDeviceProperties().pipelineCacheUUID);
                 }
                 if (badCache) {
                     free(cacheFileData);
                     cacheFileSize = 0;
                     cacheFileData = nullptr;
 
-                    Rbk::Log::GetLogger()->debug("Deleting cache entry {} to repopulate.", cacheFileName);
+                    RBK_TRACE("Deleting cache entry {} to repopulate.", cacheFileName);
 
                     if (remove(cacheFileName.c_str()) != 0) {
-                        Rbk::Log::GetLogger()->critical("Reading error");
+                        RBK_ERROR("Reading error");
                     }
                 }
             }
@@ -899,13 +895,13 @@ namespace Rbk {
             VkResult result = vkCreatePipelineCache(m_Device, &pCreateInfo, nullptr, &pipelineCache);
 
             if (result != VK_SUCCESS) {
-                Rbk::Log::GetLogger()->critical("failed to get graphics pipeline cache size!");
+                RBK_ERROR("failed to get graphics pipeline cache size!");
             }
 
             result = vkCreateGraphicsPipelines(m_Device, pipelineCache, 1, &pipelineInfo, nullptr, &graphicsPipeline);
 
             if (result != VK_SUCCESS) {
-                Rbk::Log::GetLogger()->critical("failed to create graphics pipeline cache!");
+                RBK_ERROR("failed to create graphics pipeline cache!");
             }
 
             if (result == VK_SUCCESS && badCache) {
@@ -916,13 +912,13 @@ namespace Rbk {
                 result = vkGetPipelineCacheData(m_Device, pipelineCache, &pDataSize, nullptr);
 
                 if (result != VK_SUCCESS) {
-                    Rbk::Log::GetLogger()->critical("failed to get graphics pipeline cache size!");
+                    RBK_ERROR("failed to get graphics pipeline cache size!");
                 }
 
                 data = (char*)malloc(sizeof(char) * pDataSize);
 
                 if (!data) {
-                    Rbk::Log::GetLogger()->critical("failed to resize cache buffer!");
+                    RBK_ERROR("failed to resize cache buffer!");
                 }
                 else {
                     result = vkGetPipelineCacheData(m_Device, pipelineCache, &pDataSize, data);
@@ -932,7 +928,7 @@ namespace Rbk {
                         std::ofstream ostrm(cacheFileName, std::ios::binary);
                         ostrm.write(static_cast<const char*>(data), pDataSize);
                         ostrm.close();
-                        Rbk::Log::GetLogger()->debug("cacheData written to {}", cacheFileName);
+                        RBK_TRACE("cacheData written to {}", cacheFileName);
                     }
                 }
             }
@@ -953,7 +949,7 @@ namespace Rbk {
         result = vkCreateShaderModule(m_Device, &createInfo, nullptr, &shaderModule);
 
         if (result != VK_SUCCESS) {
-            Rbk::Log::GetLogger()->critical("failed to create shader module!");
+            RBK_ERROR("failed to create shader module!");
         }
 
         return shaderModule;
@@ -1036,7 +1032,7 @@ namespace Rbk {
         VkResult result = vkCreateRenderPass(m_Device, &renderPassInfo, nullptr, renderPass.get());
 
         if (result != VK_SUCCESS) {
-            Rbk::Log::GetLogger()->critical("failed to create render pass!");
+            RBK_FATAL("failed to create render pass!");
         }
 
         return renderPass;
@@ -1068,7 +1064,7 @@ namespace Rbk {
             VkResult result = vkCreateFramebuffer(m_Device, &framebufferInfo, nullptr, &swapChainFramebuffers[i]);
 
             if (result != VK_SUCCESS) {
-                Rbk::Log::GetLogger()->critical("failed to create framebuffer!");
+                RBK_ERROR("failed to create framebuffer!");
             }            
         }
 
@@ -1090,7 +1086,7 @@ namespace Rbk {
         VkResult result = vkCreateCommandPool(m_Device, &poolInfo, nullptr, &commandPool);
 
         if (result != VK_SUCCESS) {
-            Rbk::Log::GetLogger()->critical("failed to create command pool!");
+            RBK_ERROR("failed to create command pool!");
         }
 
         return commandPool;
@@ -1111,7 +1107,7 @@ namespace Rbk {
         VkResult result = vkAllocateCommandBuffers(m_Device, &allocInfo, commandBuffers.data());
 
         if (result != VK_SUCCESS) {
-            Rbk::Log::GetLogger()->critical("failed to allocate command buffers!");
+            RBK_ERROR("failed to allocate command buffers!");
         }
 
         return commandBuffers;
@@ -1180,7 +1176,7 @@ namespace Rbk {
             if (vkCreateSemaphore(m_Device, &semaphoreInfo, nullptr, &imageAvailableSemaphores[static_cast<size_t>(i)]) != VK_SUCCESS ||
                 vkCreateSemaphore(m_Device, &semaphoreInfo, nullptr, &renderFinishedSemaphores[static_cast<size_t>(i)]) != VK_SUCCESS ||
                 vkCreateFence(m_Device, &fenceInfo, nullptr, &m_InFlightFences[static_cast<size_t>(i)]) != VK_SUCCESS) {
-                Rbk::Log::GetLogger()->critical("failed to create semaphores!");
+                RBK_ERROR("failed to create semaphores!");
             }
         }
 
@@ -2283,7 +2279,7 @@ namespace Rbk {
         vkDestroySurfaceKHR(m_Instance, m_Surface, nullptr);
         vkDestroyInstance(m_Instance, nullptr);
 
-        Rbk::Log::GetLogger()->trace("VK instance destroyed and cleaned");
+        RBK_TRACE("VK instance destroyed and cleaned");
     }
 
     void VulkanRenderer::DestroySwapchain(VkDevice device, VkSwapchainKHR swapChain, std::vector<VkFramebuffer> swapChainFramebuffers, std::vector<VkImageView> swapChainImageViews)
@@ -2299,7 +2295,7 @@ namespace Rbk {
 
     VulkanRenderer::~VulkanRenderer()
     {
-        std::cout << "VulkanRenderer deleted." << std::endl;
+        RBK_TRACE("VulkanRenderer deleted.");
     }
 
     void VulkanRenderer::StartMarker(VkCommandBuffer buffer, const std::string& name, float r, float g, float b, float a)

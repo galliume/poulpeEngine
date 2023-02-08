@@ -130,8 +130,6 @@ namespace Rbk
 
     void Camera::UpdateYP(float xoffset, float yoffset)
     {
-        //Rbk::Log::GetLogger()->debug("Mouse xoffset {} yoffset {}", xoffset, yoffset);
-
         m_Yaw += xoffset;
         m_Pitch += yoffset;
 

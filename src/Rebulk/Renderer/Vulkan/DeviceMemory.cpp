@@ -42,13 +42,13 @@ namespace Rbk
             VkResult result = vkAllocateMemory(m_Device, &allocInfo, nullptr, m_Memory.get());
 
             if (VK_SUCCESS != result) {
-                Rbk::Log::GetLogger()->warn("error while allocating memory {}", result);
+                RBK_FATAL("error while allocating memory {}", result);
                 throw std::runtime_error("failed to allocate buffer memory!");
             }
 
             m_IsAllocated = true;
         } else {
-            Rbk::Log::GetLogger()->warn("trying to re allocate memory already allocated.");
+            RBK_WARN("trying to re allocate memory already allocated.");
         }
     }
 

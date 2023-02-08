@@ -32,12 +32,12 @@ namespace Rbk
     {
 
         if (!std::filesystem::exists(vertPath)) {
-            Rbk::Log::GetLogger()->critical("vertex shader file {} does not exits.", vertPath);
+            RBK_FATAL("vertex shader file {} does not exits.", vertPath);
             return;
         }
 
         if (!std::filesystem::exists(fragPath)) {
-            Rbk::Log::GetLogger()->critical("fragment shader file {} does not exits.", fragPath);
+            RBK_FATAL("fragment shader file {} does not exits.", fragPath);
             return;
         }
 
