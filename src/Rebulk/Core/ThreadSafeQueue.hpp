@@ -8,6 +8,7 @@ namespace Rbk
     {
     public:
         ThreadSafeQueue() {};
+        ~ThreadSafeQueue() = default;
 
         void Push(T newValue)
         {

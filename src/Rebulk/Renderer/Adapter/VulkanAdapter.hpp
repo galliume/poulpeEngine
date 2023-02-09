@@ -59,9 +59,9 @@ namespace Rbk
     private:
         //@todo temp
         void SetPerspective();
-        void BeginRendering(VkCommandBuffer commandBuffer, const VkAttachmentLoadOp loadOp = VK_ATTACHMENT_LOAD_OP_LOAD, const VkAttachmentStoreOp storeOp = VK_ATTACHMENT_STORE_OP_STORE);
-        void EndRendering(VkCommandBuffer commandBuffer);
-        void Submit(std::vector<VkCommandBuffer> commandBuffers, int queueIndex = 0);
+        void BeginRendering(const VkCommandBuffer& commandBuffer, const VkAttachmentLoadOp loadOp = VK_ATTACHMENT_LOAD_OP_LOAD, const VkAttachmentStoreOp storeOp = VK_ATTACHMENT_STORE_OP_STORE);
+        void EndRendering(const VkCommandBuffer& commandBuffer);
+        void Submit(const std::vector<VkCommandBuffer>& commandBuffers, int queueIndex = 0);
 
     private:
         std::shared_ptr<VulkanRenderer> m_Renderer = nullptr;
@@ -71,6 +71,7 @@ namespace Rbk
         std::vector<VkFramebuffer> m_SwapChainFramebuffers = {};
         std::vector<VkImageView> m_SwapChainImageViews = {};
 
+        //@todo wtf
         std::vector<std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>>> m_Semaphores = {};
 
         VkCommandPool m_CommandPoolSplash = nullptr;
@@ -115,5 +116,6 @@ namespace Rbk
         std::vector<VkCommandBuffer> m_CmdToSubmit;
 
         bool m_DrawBbox = false;
+        std::vector<std::future<void>> m_CmdLists{};
     };
 }

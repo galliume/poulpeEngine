@@ -102,22 +102,22 @@ namespace Rbk {
         * Vulkan drawing functions, in main loop
         **/
         void ResetCommandPool(VkCommandPool commandPool);
-        void BeginCommandBuffer(VkCommandBuffer commandBuffer,
+        void BeginCommandBuffer(const VkCommandBuffer& commandBuffer,
             VkCommandBufferUsageFlagBits flags = VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT,
             VkCommandBufferInheritanceInfo inheritanceInfo = {});
-        void EndCommandBuffer(VkCommandBuffer commandBuffer);
+        void EndCommandBuffer(const VkCommandBuffer& commandBuffer);
         void BeginRenderPass(std::shared_ptr<VkRenderPass> renderPass, VkCommandBuffer commandBuffer, VkFramebuffer swapChainFramebuffer);
-        void EndRenderPass(VkCommandBuffer commandBuffer);
+        void EndRenderPass(const VkCommandBuffer& commandBuffer);
         void BeginRendering(const VkCommandBuffer& commandBuffer, const VkImageView& colorImageView, const VkImageView& depthImageView, const VkAttachmentLoadOp loadOp, const VkAttachmentStoreOp storeOp);
-        void EndRendering(VkCommandBuffer commandBuffer);
-        void SetViewPort(VkCommandBuffer commandBuffer);
-        void SetScissor(VkCommandBuffer commandBuffer);
+        void EndRendering(const VkCommandBuffer& commandBuffer);
+        void SetViewPort(const VkCommandBuffer& commandBuffer);
+        void SetScissor(const VkCommandBuffer& commandBuffer);
         void BindPipeline(const VkCommandBuffer& commandBuffer, const VkPipeline& pipeline);
-        void Draw(VkCommandBuffer commandBuffer, VkDescriptorSet descriptorSet, Mesh* mesh, Data data, uint32_t uboCount, uint32_t frameIndex, bool drawIndexed = true, uint32_t index = 0);
+        void Draw(const VkCommandBuffer& commandBuffer, VkDescriptorSet descriptorSet, Mesh* mesh, const Data& data, uint32_t uboCount, uint32_t frameIndex, bool drawIndexed = true, uint32_t index = 0);
         uint32_t AcquireNextImageKHR(VkSwapchainKHR swapChain, std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>>& semaphores);
-        void QueueSubmit(VkCommandBuffer commandBuffer, int queueIndex = 0);
-        void QueueSubmit(uint32_t imageIndex, std::vector<VkCommandBuffer> commandBuffers, std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>>& semaphores, int queueIndex = 0);
-        void QueuePresent(uint32_t imageIndex, VkSwapchainKHR swapChain, std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>>& semaphores, int queueIndex = 0);
+        void QueueSubmit(const VkCommandBuffer& commandBuffer, int queueIndex = 0);
+        VkResult QueueSubmit(uint32_t imageIndex, const std::vector<VkCommandBuffer>& commandBuffers, std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>>& semaphores, int queueIndex = 0);
+        VkResult QueuePresent(uint32_t imageIndex, VkSwapchainKHR swapChain, std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>>& semaphores, int queueIndex = 0);
         void AddPipelineBarriers(VkCommandBuffer commandBuffer, std::vector<VkImageMemoryBarrier> renderBarriers, VkPipelineStageFlags srcStageMask, VkPipelineStageFlags dstStageMask, VkDependencyFlags dependencyFlags);
         void GenerateMipmaps(VkCommandBuffer commandBuffer, VkFormat imageFormat, VkImage image, uint32_t texWidth, uint32_t texHeight, uint32_t mipLevels, uint32_t layerCount = 1);
         uint32_t GetNextFrameIndex();

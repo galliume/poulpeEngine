@@ -148,7 +148,7 @@ namespace Rbk
             for (std::shared_ptr<Entity> entity : entities) {
                 std::shared_ptr<Mesh> mesh = std::dynamic_pointer_cast<Mesh>(entity);
 
-                if (!mesh) return;
+                if (!mesh) continue;
 
                 m_Renderer->BindPipeline(m_CommandBuffersEntities[m_ImageIndex], mesh->m_GraphicsPipeline);
 
@@ -171,6 +171,8 @@ namespace Rbk
 
             m_Renderer->EndMarker(m_CommandBuffersEntities[m_ImageIndex]);
             EndRendering(m_CommandBuffersEntities[m_ImageIndex]);
+
+            m_CmdToSubmit.emplace_back(m_CommandBuffersEntities[m_ImageIndex]);
         }
     }
 
@@ -195,6 +197,8 @@ namespace Rbk
 
             m_Renderer->EndMarker(m_CommandBuffersSkybox[m_ImageIndex]);
             EndRendering(m_CommandBuffersSkybox[m_ImageIndex]);
+
+            m_CmdToSubmit.emplace_back(m_CommandBuffersSkybox[m_ImageIndex]);
         }
     }
 
@@ -218,6 +222,8 @@ namespace Rbk
 
         m_Renderer->EndMarker(m_CommandBuffersHud[m_ImageIndex]);
         EndRendering(m_CommandBuffersHud[m_ImageIndex]);
+
+        m_CmdToSubmit.emplace_back(m_CommandBuffersHud[m_ImageIndex]);
     }
 
     void VulkanAdapter::DrawBbox(std::vector<std::shared_ptr<Entity>>& entities)
@@ -255,6 +261,7 @@ namespace Rbk
 
             m_Renderer->EndMarker(m_CommandBuffersBbox[m_ImageIndex]);
             EndRendering(m_CommandBuffersBbox[m_ImageIndex]);
+            m_CmdToSubmit.emplace_back(m_CommandBuffersBbox[m_ImageIndex]);
         }
     }
 
@@ -262,42 +269,37 @@ namespace Rbk
     {
         ShouldRecreateSwapChain();
         m_ImageIndex = m_Renderer->AcquireNextImageKHR(m_SwapChain, m_Semaphores.at(0));
-        std::vector<std::future<void>> drawing{};
 
-        drawing.emplace_back(std::async(std::launch::async, [this] { DrawSkybox(); }));
+        //@todo glitch if not finished first... why?
+        
+        Rbk::Locator::getThreadPool()->Submit([this] {
+            DrawSkybox();
+        });
 
         for (auto& entities : m_Entities) {
-            drawing.emplace_back(std::async(std::launch::async, [this, &entities] { DrawEntities(entities); }));
+            Rbk::Locator::getThreadPool()->Submit([this, &entities] { 
+                DrawEntities(entities);
+            });
             
             //@todo strip for release?
-            if (GetDrawBbox())
-                drawing.emplace_back(std::async(std::launch::async, [this, &entities] { DrawBbox(entities); }));
+            if (GetDrawBbox()) {
+                Rbk::Locator::getThreadPool()->Submit([this, &entities] { 
+                    DrawBbox(entities);
+                });
+            }
         }
 
-        drawing.emplace_back(std::async(std::launch::async, [this] { DrawHUD(); }));
+        Rbk::Locator::getThreadPool()->Submit([this] {
+            DrawHUD();
+        });
 
-        for (auto& d : drawing) {
-            d.wait();
-        }
-
-        m_CmdToSubmit.emplace_back(m_CommandBuffersSkybox[m_ImageIndex]);
-
-        if (GetDrawBbox())
-            m_CmdToSubmit.emplace_back(m_CommandBuffersBbox[m_ImageIndex]);
-
-        m_CmdToSubmit.emplace_back(m_CommandBuffersEntities[m_ImageIndex]);
-        m_CmdToSubmit.emplace_back(m_CommandBuffersHud[m_ImageIndex]);
-        
         Submit(m_CmdToSubmit);
 
         //@todo wtf ?
         uint32_t currentFrame = m_Renderer->GetNextFrameIndex();
         if (currentFrame == VK_ERROR_OUT_OF_DATE_KHR || currentFrame == VK_SUBOPTIMAL_KHR) {
-            RecreateSwapChain();
+            //RecreateSwapChain();
         }
-
-        m_CmdToSubmit.clear();
-        //RBK_DEBUG("Draw Call {}", drawCall);
     }
 
     void VulkanAdapter::DrawSplashScreen()
@@ -482,7 +484,7 @@ namespace Rbk
         }
     }
 
-    void VulkanAdapter::BeginRendering(VkCommandBuffer commandBuffer, const VkAttachmentLoadOp loadOp, const VkAttachmentStoreOp storeOp)
+    void VulkanAdapter::BeginRendering(const VkCommandBuffer& commandBuffer, const VkAttachmentLoadOp loadOp, const VkAttachmentStoreOp storeOp)
     {
         m_Renderer->BeginCommandBuffer(commandBuffer);
 
@@ -526,7 +528,7 @@ namespace Rbk
         m_Renderer->SetScissor(commandBuffer);
     }
 
-    void VulkanAdapter::EndRendering(VkCommandBuffer commandBuffer)
+    void VulkanAdapter::EndRendering(const VkCommandBuffer& commandBuffer)
     {
         m_Renderer->EndRendering(commandBuffer);
 
@@ -565,10 +567,22 @@ namespace Rbk
         m_Renderer->EndCommandBuffer(commandBuffer);
     }
 
-    void VulkanAdapter::Submit(std::vector<VkCommandBuffer> commandBuffers, int queueIndex)
+    void VulkanAdapter::Submit(const std::vector<VkCommandBuffer>& commandBuffers, int queueIndex)
     {
-        m_Renderer->QueueSubmit(m_ImageIndex, commandBuffers, m_Semaphores.at(queueIndex), queueIndex);
-        m_Renderer->QueuePresent(m_ImageIndex, m_SwapChain, m_Semaphores.at(queueIndex), queueIndex);
+        VkResult submitResult = m_Renderer->QueueSubmit(m_ImageIndex, commandBuffers, m_Semaphores.at(queueIndex), queueIndex);
+
+        if (submitResult != VK_SUCCESS) {
+            RBK_WARN("Error on queue submit: {}", submitResult);
+            RecreateSwapChain();
+            return;
+        }
+
+        VkResult presentResult = m_Renderer->QueuePresent(m_ImageIndex, m_SwapChain, m_Semaphores.at(queueIndex), queueIndex);
+
+        if (presentResult != VK_SUCCESS) {
+            RBK_WARN("Error on queue present: {}", presentResult);
+            RecreateSwapChain();
+        }
     }
 
     void VulkanAdapter::SetRayPick(float x, float y, float z, int width, int height)

@@ -45,8 +45,6 @@ project "Rebulkan"
 
     defines
     {
-        "_CRT_SECURE_NO_WARNINGS",
-		"_CRT_APP",
         "IMGUI_IMPL_VULKAN_NO_PROTOTYPES"
     }
 
@@ -144,4 +142,4 @@ project "Rebulkan"
     filter "configurations:Release"
         runtime "Release"
         symbols "Off"
-        optimize "On"
+        optimize "Full"
