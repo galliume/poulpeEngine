@@ -60,6 +60,7 @@ namespace Rbk
 
         std::mutex lockDraw;
 
+        #ifdef RBK_DEBUG
         InitImGui();
         std::function<void()> imGui =
             [=, &timeStep, &lockDraw]() {
@@ -87,6 +88,7 @@ namespace Rbk
             m_RenderManager->GetRendererAdapter()->Rdr()->EndCommandBuffer(Rbk::Im::GetImGuiInfo().cmdBuffer);
 
         };
+        #endif
 
         while (!glfwWindowShouldClose(m_Window->Get())) {
 
@@ -118,14 +120,20 @@ namespace Rbk
                 m_RenderManager->GetCamera()->UpdateDeltaTime(timeStep.count());
 
                 glfwPollEvents();
-                imGui();
+                
+                #ifdef RBK_DEBUG
+                    imGui();
+                #endif
+
                 m_RenderManager->Draw();
 
                 lastTime = currentTime;
             }
         }
 
-        Rbk::Im::Destroy();
+        #ifdef RBK_DEBUG
+            Rbk::Im::Destroy();
+        #endif
 
         m_RenderManager->CleanUp();
 
