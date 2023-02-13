@@ -140,6 +140,8 @@ namespace Rbk
 
      void VulkanAdapter::DrawEntities(std::vector<std::shared_ptr<Entity>>& entities)
     {
+         RBK_DEBUG("Start DrawEntities thread id {}", std::this_thread::get_id());
+
          if (0 < entities.size()) {
             BeginRendering(m_CommandBuffersEntities[m_ImageIndex]);
             m_Renderer->StartMarker(m_CommandBuffersEntities[m_ImageIndex], "entities_drawing", 0.3, 0.2, 0.1);
@@ -173,11 +175,17 @@ namespace Rbk
             EndRendering(m_CommandBuffersEntities[m_ImageIndex]);
 
             m_CmdToSubmit.emplace_back(m_CommandBuffersEntities[m_ImageIndex]);
+            m_EntitiesSignal.store(true);
+            m_CVEntities.notify_one();
         }
+
+        RBK_DEBUG("End DrawEntities thread id {}", std::this_thread::get_id());
     }
 
     void VulkanAdapter::DrawSkybox()
     {
+        RBK_DEBUG("Start DrawSkybox thread id {}", std::this_thread::get_id());
+
         if (m_SkyboxMesh) {
 
             BeginRendering(m_CommandBuffersSkybox[m_ImageIndex], VK_ATTACHMENT_LOAD_OP_CLEAR, VK_ATTACHMENT_STORE_OP_STORE);
@@ -199,11 +207,17 @@ namespace Rbk
             EndRendering(m_CommandBuffersSkybox[m_ImageIndex]);
 
             m_CmdToSubmit.emplace_back(m_CommandBuffersSkybox[m_ImageIndex]);
+            m_SkyboxSignal.store(true);
+            m_CVSkybox.notify_one();
         }
+
+        RBK_DEBUG("End DrawSkybox thread id {}", std::this_thread::get_id());
     }
 
     void VulkanAdapter::DrawHUD()
     {
+        RBK_DEBUG("Start DrawHUD thread id {}", std::this_thread::get_id());
+
         BeginRendering(m_CommandBuffersHud[m_ImageIndex]);
         m_Renderer->StartMarker(m_CommandBuffersHud[m_ImageIndex], "hud_drawing", 0.3, 0.2, 0.1);
 
@@ -224,10 +238,15 @@ namespace Rbk
         EndRendering(m_CommandBuffersHud[m_ImageIndex]);
 
         m_CmdToSubmit.emplace_back(m_CommandBuffersHud[m_ImageIndex]);
+        m_HUDSignal.store(true);
+        m_CVHUD.notify_one();
+        RBK_DEBUG("End DrawHUD thread id {}", std::this_thread::get_id());
     }
 
     void VulkanAdapter::DrawBbox(std::vector<std::shared_ptr<Entity>>& entities)
     {
+        RBK_DEBUG("Start DrawBbox thread id {}", std::this_thread::get_id());
+
         if (entities.size() > 0)
         {
             BeginRendering(m_CommandBuffersBbox[m_ImageIndex]);
@@ -262,43 +281,68 @@ namespace Rbk
             m_Renderer->EndMarker(m_CommandBuffersBbox[m_ImageIndex]);
             EndRendering(m_CommandBuffersBbox[m_ImageIndex]);
             m_CmdToSubmit.emplace_back(m_CommandBuffersBbox[m_ImageIndex]);
+            m_BBoxSignal.store(true);
+            m_CVBBox.notify_one();
         }
+
+        RBK_DEBUG("End DrawBbox thread id {}", std::this_thread::get_id());
     }
 
     void VulkanAdapter::Draw()
     {
         ShouldRecreateSwapChain();
         m_ImageIndex = m_Renderer->AcquireNextImageKHR(m_SwapChain, m_Semaphores.at(0));
-
-        //@todo glitch if not finished first... why?
-        
+      
         Rbk::Locator::getThreadPool()->Submit([this] {
             DrawSkybox();
         });
 
-        for (auto& entities : m_Entities) {
-            Rbk::Locator::getThreadPool()->Submit([this, &entities] { 
-                DrawEntities(entities);
-            });
-            
-            //@todo strip for release?
-            if (GetDrawBbox()) {
-                Rbk::Locator::getThreadPool()->Submit([this, &entities] { 
-                    DrawBbox(entities);
-                });
-            }
-        }
+        //for (auto& entities : m_Entities) {
+        //    Rbk::Locator::getThreadPool()->Submit([this, &entities] { 
+        //        DrawEntities(entities);
+        //    });
+        //    
+        //    //@todo strip for release?
+        //    if (GetDrawBbox()) {
+        //        Rbk::Locator::getThreadPool()->Submit([this, &entities] { 
+        //            DrawBbox(entities);
+        //        });
+        //    }
+        //}
 
         Rbk::Locator::getThreadPool()->Submit([this] {
             DrawHUD();
         });
 
+        {
+            std::unique_lock<std::mutex> lock(m_MutexSubmit);
+            m_CVSkybox.wait(lock, [this]() { std::cout << "waiting for sky" << std::endl; return m_SkyboxSignal.load(); });
+        }
+        //{
+        //    std::unique_lock<std::mutex> lock(m_MutexSubmit);
+        //    m_CVEntities.wait(lock, [this]() {  std::cout << "waiting for ent" << std::endl;return m_EntitiesSignal.load(); });
+        //}
+        {
+            std::unique_lock<std::mutex> lock(m_MutexSubmit);
+            m_CVHUD.wait(lock, [this]() {  std::cout << "waiting for hud" << std::endl;return m_HUDSignal.load(); });
+        }
+
+        //if (GetDrawBbox()) {
+        //    {
+        //        std::unique_lock<std::mutex> lock(m_MutexSubmit);
+        //        m_CVBBox.wait(lock, [this]() {  std::cout << "waiting for bb" << std::endl;return m_BBoxSignal.load(); });
+        //    }
+        //}
         Submit(m_CmdToSubmit);
+        Present();
+
+        m_SkyboxSignal.store(false);
+        m_HUDSignal.store(false);
 
         //@todo wtf ?
         uint32_t currentFrame = m_Renderer->GetNextFrameIndex();
         if (currentFrame == VK_ERROR_OUT_OF_DATE_KHR || currentFrame == VK_SUBOPTIMAL_KHR) {
-            //RecreateSwapChain();
+            RecreateSwapChain();
         }
     }
 
@@ -325,6 +369,7 @@ namespace Rbk
 
         EndRendering(m_CommandBuffersSplash[m_ImageIndex]);
         Submit({ m_CommandBuffersSplash[m_ImageIndex] });
+        Present();
 
         //@todo wtf ?
         uint32_t currentFrame = m_Renderer->GetNextFrameIndex();
@@ -576,13 +621,17 @@ namespace Rbk
             RecreateSwapChain();
             return;
         }
+    }
 
+    void VulkanAdapter::Present(int queueIndex)
+    {
         VkResult presentResult = m_Renderer->QueuePresent(m_ImageIndex, m_SwapChain, m_Semaphores.at(queueIndex), queueIndex);
 
         if (presentResult != VK_SUCCESS) {
             RBK_WARN("Error on queue present: {}", presentResult);
             RecreateSwapChain();
         }
+        m_CmdToSubmit.clear();
     }
 
     void VulkanAdapter::SetRayPick(float x, float y, float z, int width, int height)

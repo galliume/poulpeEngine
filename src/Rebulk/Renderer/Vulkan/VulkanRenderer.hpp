@@ -103,7 +103,7 @@ namespace Rbk {
         **/
         void ResetCommandPool(VkCommandPool commandPool);
         void BeginCommandBuffer(const VkCommandBuffer& commandBuffer,
-            VkCommandBufferUsageFlagBits flags = VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT,
+            VkCommandBufferUsageFlagBits flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT,
             VkCommandBufferInheritanceInfo inheritanceInfo = {});
         void EndCommandBuffer(const VkCommandBuffer& commandBuffer);
         void BeginRenderPass(std::shared_ptr<VkRenderPass> renderPass, VkCommandBuffer commandBuffer, VkFramebuffer swapChainFramebuffer);

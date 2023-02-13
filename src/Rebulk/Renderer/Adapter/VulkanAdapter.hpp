@@ -37,7 +37,6 @@ namespace Rbk
 
         void ShouldRecreateSwapChain();
         void RecreateSwapChain();
-        inline uint32_t GetSwapImageIndex() { return m_ImageIndex; }
         void SetRayPick(float x, float y, float z, int width, int height);
         void FlushSplashScreen();
         void SetDrawBbox(bool draw) { m_DrawBbox = draw; };
@@ -62,6 +61,7 @@ namespace Rbk
         void BeginRendering(const VkCommandBuffer& commandBuffer, const VkAttachmentLoadOp loadOp = VK_ATTACHMENT_LOAD_OP_LOAD, const VkAttachmentStoreOp storeOp = VK_ATTACHMENT_STORE_OP_STORE);
         void EndRendering(const VkCommandBuffer& commandBuffer);
         void Submit(const std::vector<VkCommandBuffer>& commandBuffers, int queueIndex = 0);
+        void Present(int queueIndex = 0);
 
     private:
         std::shared_ptr<VulkanRenderer> m_Renderer = nullptr;
@@ -117,5 +117,18 @@ namespace Rbk
 
         bool m_DrawBbox = false;
         std::vector<std::future<void>> m_CmdLists{};
+        std::vector<std::future<void>> m_BufferedCmdLists{};
+        uint32_t m_BufferedIndex = 0;
+
+        //thread signaling
+        std::mutex m_MutexSubmit;
+        std::condition_variable m_CVSkybox;
+        std::condition_variable m_CVEntities;
+        std::condition_variable m_CVHUD;
+        std::condition_variable m_CVBBox;
+        std::atomic<bool> m_SkyboxSignal { false };
+        std::atomic<bool> m_EntitiesSignal { false };
+        std::atomic<bool> m_HUDSignal { false };
+        std::atomic<bool> m_BBoxSignal { false };
     };
 }
