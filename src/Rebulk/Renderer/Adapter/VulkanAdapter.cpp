@@ -61,7 +61,7 @@ namespace Rbk
             m_Semaphores.emplace_back(m_Renderer->CreateSyncObjects(m_SwapChainImages));
         }
 
-        m_CmdToSubmit.resize(1);
+        m_CmdToSubmit.resize(3);
     }
 
     void VulkanAdapter::RecreateSwapChain()
@@ -142,8 +142,6 @@ namespace Rbk
 
      void VulkanAdapter::DrawEntities(std::vector<std::shared_ptr<Entity>>& entities)
     {
-         RBK_DEBUG("Start DrawEntities thread id {}", std::this_thread::get_id());
-
          if (0 < entities.size()) {
             BeginRendering(m_CommandBuffersEntities[m_ImageIndex]);
             m_Renderer->StartMarker(m_CommandBuffersEntities[m_ImageIndex], "entities_drawing", 0.3, 0.2, 0.1);
@@ -184,14 +182,10 @@ namespace Rbk
             m_EntitiesSignal.store(true);
             m_CVEntities.notify_one();
         }
-
-        RBK_DEBUG("End DrawEntities thread id {}", std::this_thread::get_id());
     }
 
     void VulkanAdapter::DrawSkybox()
     {
-        RBK_DEBUG("Start DrawSkybox thread id {}", std::this_thread::get_id());
-
         if (m_SkyboxMesh) {
 
             BeginRendering(m_CommandBuffersSkybox[m_ImageIndex], VK_ATTACHMENT_LOAD_OP_CLEAR, VK_ATTACHMENT_STORE_OP_STORE);
@@ -217,17 +211,14 @@ namespace Rbk
                 m_CmdToSubmit[0] = m_CommandBuffersSkybox[m_ImageIndex];
             }
 
-            m_SkyboxSignal.store(true);
-            m_CVSkybox.notify_one();
         }
 
-        RBK_DEBUG("End DrawSkybox thread id {}", std::this_thread::get_id());
+        m_SkyboxSignal.store(true);
+        m_CVSkybox.notify_one();
     }
 
     void VulkanAdapter::DrawHUD()
     {
-        RBK_DEBUG("Start DrawHUD thread id {}", std::this_thread::get_id());
-
         BeginRendering(m_CommandBuffersHud[m_ImageIndex]);
         m_Renderer->StartMarker(m_CommandBuffersHud[m_ImageIndex], "hud_drawing", 0.3, 0.2, 0.1);
 
@@ -254,13 +245,10 @@ namespace Rbk
 
         m_HUDSignal.store(true);
         m_CVHUD.notify_one();
-        RBK_DEBUG("End DrawHUD thread id {}", std::this_thread::get_id());
     }
 
     void VulkanAdapter::DrawBbox(std::vector<std::shared_ptr<Entity>>& entities)
     {
-        RBK_DEBUG("Start DrawBbox thread id {}", std::this_thread::get_id());
-
         if (entities.size() > 0)
         {
             BeginRendering(m_CommandBuffersBbox[m_ImageIndex]);
@@ -311,7 +299,7 @@ namespace Rbk
 
         for (auto& entities : m_Entities) {
 
-//            Rbk::Locator::getThreadPool()->Submit([this, &entities]() { DrawEntities(entities); });
+            Rbk::Locator::getThreadPool()->Submit([this, &entities]() { DrawEntities(entities); });
 
             //@todo strip for release?
             if (GetDrawBbox()) {
@@ -321,20 +309,24 @@ namespace Rbk
             }
         }
 
-//        Rbk::Locator::getThreadPool()->Submit([this]() { DrawHUD(); });
+        Rbk::Locator::getThreadPool()->Submit([this]() { DrawHUD(); });
+        std::chrono::milliseconds waitFor(50);
 
         {
             std::unique_lock<std::mutex> lock(m_MutexSubmit);
-            m_CVSkybox.wait(lock, [this]() { std::cout << "waiting for sky:" << (m_SkyboxSignal.load() ? "ok":"ko")  << std::endl; return m_SkyboxSignal.load(); });
+            auto now = std::chrono::system_clock::now();
+            m_CVSkybox.wait_until(lock, now + waitFor, [this]() { return m_SkyboxSignal.load(); });
         }
-//        {
-//            std::unique_lock<std::mutex> lock(m_MutexSubmit);
-//            m_CVEntities.wait(lock, [this]() {  std::cout << "waiting for ent" << (m_EntitiesSignal.load() ? "ok":"ko") << std::endl; return m_EntitiesSignal.load(); });
-//        }
-//        {
-//            std::unique_lock<std::mutex> lock(m_MutexSubmit);
-//            m_CVHUD.wait(lock, [this]() {  std::cout << "waiting for hud:" << (m_HUDSignal.load() ? "ok":"ko") << std::endl;return m_HUDSignal.load(); });
-//        }
+        {
+            std::unique_lock<std::mutex> lock(m_MutexSubmit);
+            auto now = std::chrono::system_clock::now();
+            m_CVEntities.wait_until(lock, now + waitFor, [this]() { return m_EntitiesSignal.load(); });
+        }
+        {
+            std::unique_lock<std::mutex> lock(m_MutexSubmit);
+            auto now = std::chrono::system_clock::now();
+            m_CVHUD.wait_until(lock, now + waitFor, [this]() { return m_HUDSignal.load(); });
+        }
 
         //if (GetDrawBbox()) {
         //    {
@@ -342,22 +334,20 @@ namespace Rbk
         //        m_CVBBox.wait(lock, [this]() {  std::cout << "waiting for bb" << std::endl;return m_BBoxSignal.load(); });
         //    }
         //}
-        {
-            std::lock_guard<std::mutex> lock(m_MutexSubmit);
+ 
+        m_SkyboxSignal.store(false);
+        m_EntitiesSignal.store(false);
+        m_HUDSignal.store(false);
 
-            m_SkyboxSignal.store(false);
-            m_EntitiesSignal.store(false);
-            m_HUDSignal.store(false);
+        Submit(m_CmdToSubmit);
+        Present();
+        m_CmdToSubmit.clear();
+        m_CmdToSubmit.resize(3);
 
-            Submit(m_CmdToSubmit);
-            Present();
-            m_CmdToSubmit.clear();
-
-            //@todo wtf ?
-            uint32_t currentFrame = m_Renderer->GetNextFrameIndex();
-            if (currentFrame == VK_ERROR_OUT_OF_DATE_KHR || currentFrame == VK_SUBOPTIMAL_KHR) {
-                RecreateSwapChain();
-            }
+        //@todo wtf ?
+        uint32_t currentFrame = m_Renderer->GetNextFrameIndex();
+        if (currentFrame == VK_ERROR_OUT_OF_DATE_KHR || currentFrame == VK_SUBOPTIMAL_KHR) {
+            RecreateSwapChain();
         }
     }
 

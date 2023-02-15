@@ -1394,7 +1394,6 @@ namespace Rbk {
 //                vkResetCommandBuffer(cmd, VK_COMMAND_BUFFER_RESET);
 //            }
         }
-        vkQueueWaitIdle(m_GraphicsQueues[queueIndex]);
 
         return result;
     }

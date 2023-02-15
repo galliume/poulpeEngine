@@ -1,6 +1,6 @@
 {
 	"defaultLevel": "level_2",
-	"defaultSkybox": "bluesky",
+	"defaultSkybox": "debug",
 	"splashScreenMusic": false,
 	"ambientMusic": false,
 	"input": {
