@@ -1113,7 +1113,7 @@ namespace Rbk {
         return commandBuffers;
     }
 
-    void VulkanRenderer::BeginCommandBuffer(const VkCommandBuffer& commandBuffer, VkCommandBufferUsageFlagBits flags, VkCommandBufferInheritanceInfo inheritanceInfo)
+    void VulkanRenderer::BeginCommandBuffer(VkCommandBuffer commandBuffer, VkCommandBufferUsageFlagBits flags, VkCommandBufferInheritanceInfo inheritanceInfo)
     {
         vkResetCommandBuffer(commandBuffer, VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
 
@@ -1127,7 +1127,7 @@ namespace Rbk {
         }
     }
 
-    void VulkanRenderer::SetViewPort(const VkCommandBuffer& commandBuffer)
+    void VulkanRenderer::SetViewPort(VkCommandBuffer commandBuffer)
     {
         VkViewport viewport;
         viewport.x = 0;
@@ -1140,14 +1140,14 @@ namespace Rbk {
         vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
     }
 
-    void VulkanRenderer::SetScissor(const VkCommandBuffer& commandBuffer)
+    void VulkanRenderer::SetScissor(VkCommandBuffer commandBuffer)
     {
         VkRect2D scissor = { { 0, 0 }, { static_cast<uint32_t>(m_SwapChainExtent.width), static_cast<uint32_t>(m_SwapChainExtent.height) } };
 
         vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
     }
 
-    void VulkanRenderer::BindPipeline(const VkCommandBuffer& commandBuffer, const VkPipeline& pipeline)
+    void VulkanRenderer::BindPipeline(VkCommandBuffer commandBuffer, VkPipeline pipeline)
     {
         vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
     }
@@ -1277,12 +1277,12 @@ namespace Rbk {
         vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS);
     }
 
-    void VulkanRenderer::EndRenderPass(const VkCommandBuffer& commandBuffer)
+    void VulkanRenderer::EndRenderPass(VkCommandBuffer commandBuffer)
     {
         vkCmdEndRenderPass(commandBuffer);
     }
 
-    void VulkanRenderer::BeginRendering(const VkCommandBuffer& commandBuffer, const VkImageView& colorImageView, const VkImageView& depthImageView, const VkAttachmentLoadOp loadOp, const VkAttachmentStoreOp storeOp)
+    void VulkanRenderer::BeginRendering(VkCommandBuffer commandBuffer, const VkImageView& colorImageView, const VkImageView& depthImageView, const VkAttachmentLoadOp loadOp, const VkAttachmentStoreOp storeOp)
     {
         VkClearColorValue colorClear = { 154.f / 255.f, 205.f / 255.f, 50.f / 255.f, 1.f };
         VkClearDepthStencilValue depthStencil = { 1.f, 0 };
@@ -1312,17 +1312,17 @@ namespace Rbk {
         vkCmdBeginRenderingKHR(commandBuffer, &renderingInfo);
     }
 
-    void VulkanRenderer::EndRendering(const VkCommandBuffer& commandBuffer)
+    void VulkanRenderer::EndRendering(VkCommandBuffer commandBuffer)
     {
         vkCmdEndRenderingKHR(commandBuffer);
     }
 
-    void VulkanRenderer::EndCommandBuffer(const VkCommandBuffer& commandBuffer)
+    void VulkanRenderer::EndCommandBuffer(VkCommandBuffer commandBuffer)
     {
         vkEndCommandBuffer(commandBuffer);
     }
 
-    void VulkanRenderer::QueueSubmit(const VkCommandBuffer& commandBuffer, int queueIndex)
+    VkResult VulkanRenderer::QueueSubmit(VkCommandBuffer commandBuffer, int queueIndex)
     {
 
         VkSubmitInfo submitInfo{};
@@ -1339,19 +1339,22 @@ namespace Rbk {
 
         vkCreateFence(m_Device, &fenceInfo, nullptr, &fence);
         vkResetFences(m_Device, 1, &fence);
+        VkResult result = VK_SUCCESS;
 
         {
             std::lock_guard<std::mutex> guard(m_MutexQueueSubmit);
 
-            vkQueueSubmit(m_GraphicsQueues[queueIndex], 1, &submitInfo, fence);
+            result = vkQueueSubmit(m_GraphicsQueues[queueIndex], 1, &submitInfo, fence);
             vkWaitForFences(m_Device, 1, &fence, VK_TRUE, UINT32_MAX);
             vkResetCommandBuffer(commandBuffer, VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
         }
 
         vkDestroyFence(m_Device, fence, nullptr);
+
+        return result;
     }
 
-    VkResult VulkanRenderer::QueueSubmit(uint32_t imageIndex, const std::vector<VkCommandBuffer>& commandBuffers, std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>>& semaphores, int queueIndex)
+    VkResult VulkanRenderer::QueueSubmit(uint32_t imageIndex, std::vector<VkCommandBuffer> commandBuffers, std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>> semaphores, int queueIndex)
     {
         std::vector<VkSemaphore>& imageAvailableSemaphores = semaphores.first;
         std::vector<VkSemaphore>& renderFinishedSemaphores = semaphores.second;
@@ -1446,7 +1449,7 @@ namespace Rbk {
         vkResetCommandPool(m_Device, commandPool, 0);
     }
 
-    void VulkanRenderer::Draw(const VkCommandBuffer& commandBuffer, VkDescriptorSet descriptorSet, Mesh* mesh, const Data& data, uint32_t uboCount, uint32_t frameIndex, bool drawIndexed, uint32_t index)
+    void VulkanRenderer::Draw(VkCommandBuffer commandBuffer, VkDescriptorSet descriptorSet, Mesh* mesh, Data data, uint32_t uboCount, uint32_t frameIndex, bool drawIndexed, uint32_t index)
     {
         {
             //std::lock_guard<std::mutex> guard(m_MutexDraw);

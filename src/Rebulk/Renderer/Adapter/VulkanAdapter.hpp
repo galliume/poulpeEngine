@@ -58,9 +58,9 @@ namespace Rbk
     private:
         //@todo temp
         void SetPerspective();
-        void BeginRendering(const VkCommandBuffer& commandBuffer, const VkAttachmentLoadOp loadOp = VK_ATTACHMENT_LOAD_OP_LOAD, const VkAttachmentStoreOp storeOp = VK_ATTACHMENT_STORE_OP_STORE);
-        void EndRendering(const VkCommandBuffer& commandBuffer);
-        void Submit(const std::vector<VkCommandBuffer>& commandBuffers, int queueIndex = 0);
+        void BeginRendering(VkCommandBuffer commandBuffer, const VkAttachmentLoadOp loadOp = VK_ATTACHMENT_LOAD_OP_LOAD, const VkAttachmentStoreOp storeOp = VK_ATTACHMENT_STORE_OP_STORE);
+        void EndRendering(VkCommandBuffer commandBuffer);
+        void Submit(std::vector<VkCommandBuffer> commandBuffers, int queueIndex = 0);
         void Present(int queueIndex = 0);
 
     private:
@@ -122,6 +122,7 @@ namespace Rbk
 
         //thread signaling
         std::mutex m_MutexSubmit;
+        std::mutex m_MutexCmdSubmit;
         std::condition_variable m_CVSkybox;
         std::condition_variable m_CVEntities;
         std::condition_variable m_CVHUD;

@@ -1,15 +1,3 @@
-src
-src/Rebulk
-src/Rebulk/Component
-src/Rebulk/Core
-src/Rebulk/GUI
-src/Rebulk/GUI/ImGui
-src/Rebulk/GUI/Layer
-src/Rebulk/Manager
-src/Rebulk/Renderer
-src/Rebulk/Renderer/Adapter
-src/Rebulk/Renderer/Vulkan
-src/Rebulk/Renderer/Vulkan/Meshator
 vendor/assimp/include/assimp
 vendor/assimp/include/assimp/Compiler
 vendor/assimp/include/assimp/port/AndroidJNI
