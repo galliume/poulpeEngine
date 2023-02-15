@@ -58,7 +58,7 @@ namespace Rbk
     private:
         //@todo temp
         void SetPerspective();
-        void BeginRendering(VkCommandBuffer commandBuffer, const VkAttachmentLoadOp loadOp = VK_ATTACHMENT_LOAD_OP_LOAD, const VkAttachmentStoreOp storeOp = VK_ATTACHMENT_STORE_OP_STORE);
+        void BeginRendering(VkCommandBuffer commandBuffer, VkAttachmentLoadOp loadOp = VK_ATTACHMENT_LOAD_OP_LOAD, VkAttachmentStoreOp storeOp = VK_ATTACHMENT_STORE_OP_STORE);
         void EndRendering(VkCommandBuffer commandBuffer);
         void Submit(std::vector<VkCommandBuffer> commandBuffers, int queueIndex = 0);
         void Present(int queueIndex = 0);

@@ -61,7 +61,7 @@ namespace Rbk
             m_Semaphores.emplace_back(m_Renderer->CreateSyncObjects(m_SwapChainImages));
         }
 
-        m_CmdToSubmit.resize(3);
+        m_CmdToSubmit.resize(1);
     }
 
     void VulkanAdapter::RecreateSwapChain()
@@ -307,10 +307,11 @@ namespace Rbk
         ShouldRecreateSwapChain();
         m_ImageIndex = m_Renderer->AcquireNextImageKHR(m_SwapChain, m_Semaphores.at(0));
 
-            DrawSkybox();
+        Rbk::Locator::getThreadPool()->Submit([this]() { DrawSkybox(); });
 
         for (auto& entities : m_Entities) {
-                DrawEntities(entities);
+
+//            Rbk::Locator::getThreadPool()->Submit([this, &entities]() { DrawEntities(entities); });
 
             //@todo strip for release?
             if (GetDrawBbox()) {
@@ -319,20 +320,21 @@ namespace Rbk
 //                });
             }
         }
-            DrawHUD();
+
+//        Rbk::Locator::getThreadPool()->Submit([this]() { DrawHUD(); });
 
         {
             std::unique_lock<std::mutex> lock(m_MutexSubmit);
             m_CVSkybox.wait(lock, [this]() { std::cout << "waiting for sky:" << (m_SkyboxSignal.load() ? "ok":"ko")  << std::endl; return m_SkyboxSignal.load(); });
         }
-        {
-            std::unique_lock<std::mutex> lock(m_MutexSubmit);
-            m_CVEntities.wait(lock, [this]() {  std::cout << "waiting for ent" << (m_EntitiesSignal.load() ? "ok":"ko") << std::endl; return m_EntitiesSignal.load(); });
-        }
-        {
-            std::unique_lock<std::mutex> lock(m_MutexSubmit);
-            m_CVHUD.wait(lock, [this]() {  std::cout << "waiting for hud:" << (m_HUDSignal.load() ? "ok":"ko") << std::endl;return m_HUDSignal.load(); });
-        }
+//        {
+//            std::unique_lock<std::mutex> lock(m_MutexSubmit);
+//            m_CVEntities.wait(lock, [this]() {  std::cout << "waiting for ent" << (m_EntitiesSignal.load() ? "ok":"ko") << std::endl; return m_EntitiesSignal.load(); });
+//        }
+//        {
+//            std::unique_lock<std::mutex> lock(m_MutexSubmit);
+//            m_CVHUD.wait(lock, [this]() {  std::cout << "waiting for hud:" << (m_HUDSignal.load() ? "ok":"ko") << std::endl;return m_HUDSignal.load(); });
+//        }
 
         //if (GetDrawBbox()) {
         //    {
@@ -542,7 +544,7 @@ namespace Rbk
         }
     }
 
-    void VulkanAdapter::BeginRendering(VkCommandBuffer commandBuffer, const VkAttachmentLoadOp loadOp, const VkAttachmentStoreOp storeOp)
+    void VulkanAdapter::BeginRendering(VkCommandBuffer commandBuffer, VkAttachmentLoadOp loadOp, VkAttachmentStoreOp storeOp)
     {
         m_Renderer->BeginCommandBuffer(commandBuffer);
 

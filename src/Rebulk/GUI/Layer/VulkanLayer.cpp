@@ -164,7 +164,7 @@ namespace Rbk
         Rbk::Im::Text("Shader count %d", m_RenderManager.load()->GetShaderManager()->GetShaders()->shaders.size());
         ImGui::Separator();
         Rbk::Im::Text("Texture count %d", m_RenderManager.load()->GetTextureManager()->GetTextures().size());
-        Rbk::Im::Text("Loaded textures :");
+        Rbk::Im::Text("%s", "Loaded textures :");
         for (auto tex : m_RenderManager.load()->GetTextureManager()->GetTextures()) {
             Rbk::Im::Text("\t%s", tex.first.c_str());
         }
