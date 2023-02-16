@@ -19,6 +19,8 @@ namespace Rbk
 
         Rbk::Log::Init();
 
+        Rbk::Locator::setThreadPool(std::make_unique<ThreadPool>());
+
         m_Window = std::make_shared<Window>();
         m_Window->Init();
 
@@ -72,7 +74,6 @@ namespace Rbk
 
             //@todo move to LayerManager
             Rbk::Im::NewFrame();
-
             m_VulkanLayer->Render(
                 timeStep.count(),
                 m_RenderManager->GetRendererAdapter()->Rdr()->GetDeviceProperties()
@@ -81,10 +82,7 @@ namespace Rbk
             Rbk::Im::Render();
 
             m_RenderManager->GetRendererAdapter()->Rdr()->BeginCommandBuffer(Rbk::Im::GetImGuiInfo().cmdBuffer);
-            {
-                std::lock_guard<std::mutex> guard(lockDraw);
-                ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), Rbk::Im::GetImGuiInfo().cmdBuffer);
-            }
+            ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), Rbk::Im::GetImGuiInfo().cmdBuffer);
             m_RenderManager->GetRendererAdapter()->Rdr()->EndCommandBuffer(Rbk::Im::GetImGuiInfo().cmdBuffer);
 
         };

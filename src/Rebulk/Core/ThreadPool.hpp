@@ -14,7 +14,6 @@ namespace Rbk
         ThreadPool() : m_Done(false), m_Joiner(m_Threads)
         {
             unsigned const threadCount = std::thread::hardware_concurrency();
-            RBK_DEBUG("Starting {} threads", threadCount);
 
             try {
                 for (unsigned i = 0; i < threadCount; ++i) {
@@ -23,7 +22,6 @@ namespace Rbk
             }
             catch (...) {
                 m_Done = true;
-                RBK_FATAL("ThreadPool error");
 
                 throw;
             }

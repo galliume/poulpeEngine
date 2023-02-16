@@ -157,14 +157,14 @@ namespace Rbk
         ImGui::Separator();
         Rbk::Im::Text("Current frame %d", m_RenderManager.load()->GetRendererAdapter()->Rdr()->GetCurrentFrame());
         ImGui::Separator();
-        Rbk::Im::Text("Meshes stats");
+        Rbk::Im::Text("%", "Meshes stats");
         Rbk::Im::Text("Total mesh loaded %d", m_RenderManager.load()->GetEntityManager()->GetEntities()->size());
         Rbk::Im::Text("Total mesh instanced %d", m_RenderManager.load()->GetEntityManager()->GetInstancedCount());
         ImGui::Separator();
         Rbk::Im::Text("Shader count %d", m_RenderManager.load()->GetShaderManager()->GetShaders()->shaders.size());
         ImGui::Separator();
         Rbk::Im::Text("Texture count %d", m_RenderManager.load()->GetTextureManager()->GetTextures().size());
-        Rbk::Im::Text("Loaded textures :");
+        Rbk::Im::Text("%s", "Loaded textures :");
         for (auto tex : m_RenderManager.load()->GetTextureManager()->GetTextures()) {
             Rbk::Im::Text("\t%s", tex.first.c_str());
         }
@@ -173,7 +173,7 @@ namespace Rbk
     void VulkanLayer::DisplayOptions()
     {
         ImGui::SetNextItemOpen(m_DebugOpen);
-        if (m_DebugOpen = ImGui::CollapsingHeader("Debug"))
+        if ((m_DebugOpen = ImGui::CollapsingHeader("Debug")))
         {
             Rbk::Im::Text("Polygon mode"); 
             ImGui::SameLine();
@@ -214,7 +214,7 @@ namespace Rbk
         }
 
         ImGui::SetNextItemOpen(m_LightOpen);
-        if (m_LightOpen = ImGui::CollapsingHeader("Light"))
+        if ((m_LightOpen = ImGui::CollapsingHeader("Light")))
         {
             auto ambiant = Rbk::VulkanAdapter::s_AmbiantLight.load();
             ImGui::SliderFloat("Ambiant light", &ambiant, 0.0f, 1.0f, "%.3f");
@@ -224,7 +224,7 @@ namespace Rbk
         }
 
         ImGui::SetNextItemOpen(m_FogOpen);
-        if (m_FogOpen = ImGui::CollapsingHeader("Fog"))
+        if ((m_FogOpen = ImGui::CollapsingHeader("Fog")))
         {
             auto fogD = Rbk::VulkanAdapter::s_FogDensity.load();
             ImGui::SliderFloat("Fog density", &fogD, 0.0f, 1.0f, "%.3f");
@@ -240,7 +240,7 @@ namespace Rbk
         }
 
         ImGui::SetNextItemOpen(m_HUDOpen);
-        if (m_HUDOpen = ImGui::CollapsingHeader("HUD"))
+        if ((m_HUDOpen = ImGui::CollapsingHeader("HUD")))
         {
             Rbk::Im::Text("Crosshair style");
             ImGui::SameLine();
@@ -255,7 +255,7 @@ namespace Rbk
         }
 
         ImGui::SetNextItemOpen(m_OtherOpen);
-        if (m_OtherOpen = ImGui::CollapsingHeader("Other"))
+        if ((m_OtherOpen = ImGui::CollapsingHeader("Other")))
         {
             ImGui::Checkbox("Show ImGui demo", &m_ShowDemo);
         }
@@ -271,7 +271,7 @@ namespace Rbk
     {
         ImGui::SetNextItemOpen(m_AmbientOpen);
 
-        if (m_AmbientOpen = ImGui::CollapsingHeader("Ambient"))
+        if ((m_AmbientOpen = ImGui::CollapsingHeader("Ambient")))
         {
             if (ImGui::Button("Play"))
             {

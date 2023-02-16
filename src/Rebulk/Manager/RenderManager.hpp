@@ -69,8 +69,6 @@ namespace Rbk
         bool m_ShowBbox = false;
         std::string m_CurrentLevel;
 
-        std::unique_ptr<ThreadPool> m_ThreadPool;
-
         //@todo should not be impl
         std::vector<VkDescriptorPool> m_DescriptorPools;
     };
