@@ -60,8 +60,6 @@ namespace Rbk
         for (int i = 0; i < m_Renderer->GetQueueCount(); i++) {
             m_Semaphores.emplace_back(m_Renderer->CreateSyncObjects(m_SwapChainImages));
         }
-
-        m_CmdToSubmit.resize(3);
     }
 
     void VulkanAdapter::RecreateSwapChain()
@@ -282,16 +280,24 @@ namespace Rbk
 
             m_Renderer->EndMarker(m_CommandBuffersBbox[m_ImageIndex]);
             EndRendering(m_CommandBuffersBbox[m_ImageIndex]);
-            m_CmdToSubmit.emplace_back(m_CommandBuffersBbox[m_ImageIndex]);
-            //m_BBoxSignal.store(true);
+
+            {
+                std::lock_guard<std::mutex> guard(m_MutexCmdSubmit);
+                m_CmdToSubmit[3] = m_CommandBuffersBbox[m_ImageIndex];
+            }
+
+            m_BBoxSignal.store(true);
             m_CVBBox.notify_one();
         }
-
-        RBK_DEBUG("End DrawBbox thread id {}", std::this_thread::get_id());
     }
 
     void VulkanAdapter::Draw()
     {
+        m_CmdToSubmit.clear();
+
+        if (GetDrawBbox()) m_CmdToSubmit.resize(4);
+        else m_CmdToSubmit.resize(3);
+
         ShouldRecreateSwapChain();
         m_ImageIndex = m_Renderer->AcquireNextImageKHR(m_SwapChain, m_Semaphores.at(0));
 
@@ -303,9 +309,9 @@ namespace Rbk
 
             //@todo strip for release?
             if (GetDrawBbox()) {
-//                Rbk::Locator::getThreadPool()->Submit([this, &entities] {
-//                    DrawBbox(entities);
-//                });
+                Rbk::Locator::getThreadPool()->Submit([this, &entities] {
+                    DrawBbox(entities);
+                });
             }
         }
 
@@ -320,29 +326,30 @@ namespace Rbk
         {
             std::unique_lock<std::mutex> lock(m_MutexSubmit);
             auto now = std::chrono::system_clock::now();
-            m_CVEntities.wait_until(lock, now + waitFor, [this]() { return m_EntitiesSignal.load(); });
+            m_CVHUD.wait_until(lock, now + waitFor, [this]() { return m_HUDSignal.load(); });
         }
+        
+        //slower operations
         {
             std::unique_lock<std::mutex> lock(m_MutexSubmit);
             auto now = std::chrono::system_clock::now();
-            m_CVHUD.wait_until(lock, now + waitFor, [this]() { return m_HUDSignal.load(); });
+            m_CVEntities.wait_until(lock, now + waitFor, [this]() { return m_EntitiesSignal.load(); });
         }
-
-        //if (GetDrawBbox()) {
-        //    {
-        //        std::unique_lock<std::mutex> lock(m_MutexSubmit);
-        //        m_CVBBox.wait(lock, [this]() {  std::cout << "waiting for bb" << std::endl;return m_BBoxSignal.load(); });
-        //    }
-        //}
+        if (GetDrawBbox()) {
+            {
+                std::unique_lock<std::mutex> lock(m_MutexSubmit);
+                auto now = std::chrono::system_clock::now();
+                m_CVBBox.wait_until(lock, now + waitFor, [this]() { return m_BBoxSignal.load(); });
+            }
+        }
  
         m_SkyboxSignal.store(false);
         m_EntitiesSignal.store(false);
         m_HUDSignal.store(false);
+        m_BBoxSignal.store(false);
 
         Submit(m_CmdToSubmit);
         Present();
-        m_CmdToSubmit.clear();
-        m_CmdToSubmit.resize(3);
 
         //@todo wtf ?
         uint32_t currentFrame = m_Renderer->GetNextFrameIndex();

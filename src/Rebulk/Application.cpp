@@ -120,7 +120,7 @@ namespace Rbk
                 glfwPollEvents();
                 
                 #ifdef RBK_DEBUG
-                    //imGui();
+                    imGui();
                 #endif
 
                 m_RenderManager->Draw();
