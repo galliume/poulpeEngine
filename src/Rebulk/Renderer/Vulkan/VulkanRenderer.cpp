@@ -1147,7 +1147,7 @@ namespace Rbk {
         vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
     }
 
-    void VulkanRenderer::BindPipeline(const VkCommandBuffer& commandBuffer, const VkPipeline& pipeline)
+    void VulkanRenderer::BindPipeline(VkCommandBuffer commandBuffer, VkPipeline pipeline)
     {
         vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
     }
@@ -1282,7 +1282,7 @@ namespace Rbk {
         vkCmdEndRenderPass(commandBuffer);
     }
 
-    void VulkanRenderer::BeginRendering(const VkCommandBuffer& commandBuffer, const VkImageView& colorImageView, const VkImageView& depthImageView, const VkAttachmentLoadOp loadOp, const VkAttachmentStoreOp storeOp)
+    void VulkanRenderer::BeginRendering(VkCommandBuffer commandBuffer, const VkImageView& colorImageView, const VkImageView& depthImageView, const VkAttachmentLoadOp loadOp, const VkAttachmentStoreOp storeOp)
     {
         VkClearColorValue colorClear = { 154.f / 255.f, 205.f / 255.f, 50.f / 255.f, 1.f };
         VkClearDepthStencilValue depthStencil = { 1.f, 0 };
@@ -1322,7 +1322,7 @@ namespace Rbk {
         vkEndCommandBuffer(commandBuffer);
     }
 
-    void VulkanRenderer::QueueSubmit(VkCommandBuffer commandBuffer, int queueIndex)
+    VkResult VulkanRenderer::QueueSubmit(VkCommandBuffer commandBuffer, int queueIndex)
     {
 
         VkSubmitInfo submitInfo{};
@@ -1339,19 +1339,22 @@ namespace Rbk {
 
         vkCreateFence(m_Device, &fenceInfo, nullptr, &fence);
         vkResetFences(m_Device, 1, &fence);
+        VkResult result = VK_SUCCESS;
 
         {
             std::lock_guard<std::mutex> guard(m_MutexQueueSubmit);
 
-            vkQueueSubmit(m_GraphicsQueues[queueIndex], 1, &submitInfo, fence);
+            result = vkQueueSubmit(m_GraphicsQueues[queueIndex], 1, &submitInfo, fence);
             vkWaitForFences(m_Device, 1, &fence, VK_TRUE, UINT32_MAX);
             vkResetCommandBuffer(commandBuffer, VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
         }
 
         vkDestroyFence(m_Device, fence, nullptr);
+
+        return result;
     }
 
-    void VulkanRenderer::QueueSubmit(uint32_t imageIndex, std::vector<VkCommandBuffer> commandBuffers, std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>>& semaphores, int queueIndex)
+    VkResult VulkanRenderer::QueueSubmit(uint32_t imageIndex, std::vector<VkCommandBuffer> commandBuffers, std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>> semaphores, int queueIndex)
     {
         std::vector<VkSemaphore>& imageAvailableSemaphores = semaphores.first;
         std::vector<VkSemaphore>& renderFinishedSemaphores = semaphores.second;
@@ -1380,22 +1383,22 @@ namespace Rbk {
         submits.emplace_back(submitInfo);
         
         vkResetFences(m_Device, 1, &m_InFlightFences[m_CurrentFrame]);
+        VkResult result = VK_SUCCESS;
 
         {
             std::lock_guard<std::mutex> guard(m_MutexQueueSubmit);
-            VkResult result = vkQueueSubmit(m_GraphicsQueues[queueIndex], submits.size(), submits.data(), m_InFlightFences[m_CurrentFrame]);
+            result = vkQueueSubmit(m_GraphicsQueues[queueIndex], submits.size(), submits.data(), m_InFlightFences[m_CurrentFrame]);
             vkWaitForFences(m_Device, 1, &m_InFlightFences[m_CurrentFrame], VK_TRUE, UINT32_MAX);
 
-            if (result != VK_SUCCESS) {
-                throw std::runtime_error("failed to submit draw command buffer!");
-            }
-            for (auto& cmd : commandBuffers) {
-                vkResetCommandBuffer(cmd, VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
-            }
+//            for (auto& cmd : commandBuffers) {
+//                vkResetCommandBuffer(cmd, VK_COMMAND_BUFFER_RESET);
+//            }
         }
+
+        return result;
     }
 
-    void VulkanRenderer::QueuePresent(uint32_t imageIndex, VkSwapchainKHR swapChain, std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>>& semaphores, int queueIndex)
+    VkResult VulkanRenderer::QueuePresent(uint32_t imageIndex, VkSwapchainKHR swapChain, std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>>& semaphores, int queueIndex)
     {
         std::vector<VkSemaphore>& renderFinishedSemaphores = semaphores.second;
 
@@ -1415,9 +1418,7 @@ namespace Rbk {
 
         VkResult result = vkQueuePresentKHR(m_PresentQueues[queueIndex], &presentInfo);
 
-        if (result != VK_SUCCESS) {
-            throw std::runtime_error("failed to present swap chain image!");
-        }
+        return result;
     }
 
     uint32_t VulkanRenderer::GetNextFrameIndex()
@@ -1436,7 +1437,7 @@ namespace Rbk {
             VkResult result = vkAcquireNextImageKHR(m_Device, swapChain, UINT32_MAX, imageAvailableSemaphores[m_CurrentFrame], VK_NULL_HANDLE, &imageIndex);
 
             if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
-                throw std::runtime_error("failed to acquire swap chain image!");
+                RBK_ERROR("failed to acquire swap chain image!");
             }
 
             return imageIndex;

@@ -34,4 +34,5 @@
 #include "spdlog/details/log_msg.h"
 
 #include "Rebulk/Core/Log.hpp"
+#include "Rebulk/Core/Locator.hpp"
 #include "imgui.h"
