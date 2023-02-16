@@ -34,8 +34,6 @@ namespace Rbk
         m_DestroyManager(destroyManager),
         m_Camera(camera)
     {
-        m_ThreadPool = std::make_unique<ThreadPool>();
-
         m_Camera->Init();
         m_Renderer->Init();
         m_Renderer->AddCamera(m_Camera);
@@ -171,11 +169,11 @@ namespace Rbk
             m_ShowBbox = false;
         }
 
-        if (m_EntityManager->GetSkybox()->IsDirty())
-        {
-            PrepareSkybox();
-            m_EntityManager->GetSkybox()->SetIsDirty(false);
-        }
+        //if (m_EntityManager->GetSkybox()->IsDirty())
+        //{
+        //    PrepareSkybox();
+        //    m_EntityManager->GetSkybox()->SetIsDirty(false);
+        //}
     }
 
     void RenderManager::Refresh(uint32_t levelIndex, bool showBbox)
@@ -322,6 +320,6 @@ namespace Rbk
 
     void RenderManager::StartInThread(std::function<void()> func)
     {
-        m_ThreadPool->Submit(func);
+        Rbk::Locator::getThreadPool()->Submit(func);
     }
 }

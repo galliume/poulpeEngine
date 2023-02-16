@@ -4,7 +4,7 @@
 
 namespace Rbk {
 
-    ImGuiInfo Im::s_ImGuiInfo{};
+    ImGuiInfo Im::s_ImGuiInfo;
 
     void Im::Init(GLFWwindow* window, ImGuiInfo initInfo)
     {
