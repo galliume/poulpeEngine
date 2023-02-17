@@ -1,5 +1,4 @@
 #include "AudioManager.hpp"
-#include <miniaudio.h>
 
 namespace Rbk
 {
