@@ -1,5 +1,4 @@
 #pragma once
-#include <volk.h>
 #include "Rebulk/Core/Buffer.hpp"
 #include "Rebulk/Core/MeshData.hpp"
 #include "Rebulk/Component/Entity.hpp"
