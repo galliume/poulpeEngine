@@ -1,6 +1,6 @@
 #pragma once
 
-#include <json.hpp>
+#include <nlohmann/json.hpp>
 #include <queue>
 #include "Rebulk/Renderer/Adapter/IRendererAdapter.hpp"
 #include "Rebulk/Core/TinyObjLoader.hpp"

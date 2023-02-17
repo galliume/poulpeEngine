@@ -1,4 +1,3 @@
-#include "rebulkpch.hpp"
 #include "Application.hpp"
 
 namespace Rbk

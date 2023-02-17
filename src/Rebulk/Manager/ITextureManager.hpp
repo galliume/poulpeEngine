@@ -1,5 +1,5 @@
 #pragma once
-#include "json.hpp"
+#include <nlohmann/json.hpp>
 #include "Rebulk/Renderer/Adapter/IRendererAdapter.hpp"
 
 #include "Rebulk/Component/Texture.hpp"
