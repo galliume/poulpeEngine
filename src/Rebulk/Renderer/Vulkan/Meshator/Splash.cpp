@@ -1,4 +1,3 @@
-#include "rebulkpch.hpp"
 #include "Splash.hpp"
 #include "Rebulk/Renderer/Adapter/VulkanAdapter.hpp"
 

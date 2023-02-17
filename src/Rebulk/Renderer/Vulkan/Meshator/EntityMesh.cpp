@@ -1,5 +1,3 @@
-#include "rebulkpch.hpp"
-
 #include "EntityMesh.hpp"
 #include "Rebulk/Renderer/Adapter/VulkanAdapter.hpp"
 

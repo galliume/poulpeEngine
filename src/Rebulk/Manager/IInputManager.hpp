@@ -1,8 +1,8 @@
 #pragma once
-#include <json.hpp>
+#include <nlohmann/json.hpp>
 
-#include "Rebulk/GUI/Window.hpp"
 #include "Rebulk/Renderer/Adapter/VulkanAdapter.hpp"
+#include "Rebulk/GUI/Window.hpp"
 
 namespace Rbk
 {

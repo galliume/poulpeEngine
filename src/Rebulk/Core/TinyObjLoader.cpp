@@ -1,4 +1,3 @@
-#include "rebulkpch.hpp"
 #include "TinyObjLoader.hpp"
 
 #define TINYOBJLOADER_IMPLEMENTATION
