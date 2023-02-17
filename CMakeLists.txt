@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.26)
+cmake_minimum_required(VERSION 3.25.2)
 
 project(Rebulkan
   VERSION 0.0.1
@@ -14,6 +14,10 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED            ON)
 set(gcc_like_cxx "$<COMPILE_LANG_AND_ID:CXX,ARMClang,AppleClang,Clang,GNU,LCC>")
 set(msvc_cxx "$<COMPILE_LANG_AND_ID:CXX,MSVC>")
+set(GIT_SUBMODULE ON)
+set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules ${CMAKE_MODULE_PATH})
+
+include(gitSubModule)
 
 target_compile_options(rebulkan_compiler_flags INTERFACE
   "$<${gcc_like_cxx}:$<BUILD_INTERFACE:-Wall;-Wextra;-Wshadow;-Wformat=2;-Wunused>>"
@@ -27,6 +31,7 @@ add_executable(Rebulkan src/Rebulkan.cpp)
 include_directories(vendor/glfw vendor/spdlog vendor/glm vendor/stb_image vendor/miniaudio vendor/nlohmann vendor/tiny_obj_loader vendor/volk vendor/imgui)
 
 add_subdirectory(src)
+
 add_subdirectory(vendor/glfw)
 add_subdirectory(vendor/spdlog)
 add_subdirectory(vendor/glm)
@@ -49,6 +54,4 @@ target_include_directories(Rebulkan PUBLIC
                            "${PROJECT_BINARY_DIR}"
                            )
 						   
-#set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules ${CMAKE_MODULE_PATH})
-
 
