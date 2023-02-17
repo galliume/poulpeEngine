@@ -1,4 +1,3 @@
-#include "rebulkpch.hpp"
 #include "Im.hpp"
 #include <volk.h>
 
@@ -17,17 +16,18 @@ namespace Rbk {
         io.Fonts->AddFontFromFileTTF("./assets/fonts/montserrat/Montserrat-Regular.ttf", 20.0f);
 
         io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
-        io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
-        io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
+        //io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+        //io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
 
-        io.ConfigDockingWithShift = false;
-        io.ConfigViewportsNoAutoMerge = true;
+        //io.ConfigDockingWithShift = false;
+        //io.ConfigViewportsNoAutoMerge = true;
         io.BackendFlags |= ImGuiBackendFlags_HasMouseCursors;
 
         ImGui::StyleColorsDark();
 
         ImGuiStyle& style = ImGui::GetStyle();
-        if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
+        //if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
+        if (io.ConfigFlags) {
             style.WindowRounding = 0.0f;
             style.Colors[ImGuiCol_WindowBg].w = 1.0f;
         }
@@ -91,11 +91,11 @@ namespace Rbk {
 
         ImGuiIO& io = ImGui::GetIO();
 
-        if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
-        {
-            ImGui::UpdatePlatformWindows();
-            ImGui::RenderPlatformWindowsDefault();
-        }
+        //if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+        //{
+        //    ImGui::UpdatePlatformWindows();
+        //    ImGui::RenderPlatformWindowsDefault();
+        //}
     }
 
     void Im::Destroy()

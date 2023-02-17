@@ -1,7 +1,6 @@
 #pragma once
 
 #include <volk.h>
-
 #include "Rebulk/Renderer/Adapter/IRendererAdapter.hpp"
 #include "Rebulk/Component/Mesh.hpp"
 

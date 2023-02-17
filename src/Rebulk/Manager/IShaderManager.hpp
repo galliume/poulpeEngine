@@ -1,7 +1,7 @@
 #pragma once
 #include <volk.h>
 #include <future>
-#include <json.hpp>
+#include <nlohmann/json.hpp>
 
 namespace Rbk
 {
