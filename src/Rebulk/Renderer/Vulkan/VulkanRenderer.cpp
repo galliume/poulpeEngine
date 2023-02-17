@@ -1,6 +1,5 @@
 #include "VulkanRenderer.hpp"
 
-#define VOLK_IMPLEMENTATION
 #include <volk.h>
 
 namespace Rbk {
