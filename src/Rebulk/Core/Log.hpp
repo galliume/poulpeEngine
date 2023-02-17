@@ -25,6 +25,6 @@ namespace Rbk
     #define RBK_ERROR(...)
     #define RBK_WARN(...)
     #define RBK_INFO(...)
-    #define RBK_DEBUG(...) ::Rbk::Log::GetLogger()->debug(__VA_ARGS__)
+    #define RBK_DEBUG(...)
     #define RBK_TRACE(...)
 #endif

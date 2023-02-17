@@ -1,5 +1,3 @@
-#include "rebulkpch.hpp"
-
 #include "DestroyManager.hpp"
 
 namespace Rbk
