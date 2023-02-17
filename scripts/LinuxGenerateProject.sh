@@ -15,7 +15,7 @@ CMAKE_CXX_COMPILER=${1:-"clang++"}
 CMAKE_C_COMPILER=${2:-"clang"}
 CMAKE_BUILD_TYPE=Debug 
 REFRESH_BUILD_DIR=${3:-false}
-MAKE_J=4
+MAKE_J=8
 
  [ -d "./${CMAKE_BUILD_DIR}" ] && 
     echo "Directory ${CMAKE_BUILD_DIR} exists."

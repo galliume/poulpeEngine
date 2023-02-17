@@ -31,7 +31,9 @@ target_compile_options(rebulkan_compiler_flags INTERFACE
 
 configure_file(RebulkanConfig.h.in RebulkanConfig.h)
 
-add_definitions(-DVK_NO_PROTOTYPES -DVOLK_STATIC_DEFINES -DIMGUI_IMPL_VULKAN_NO_PROTOTYPES)
+add_definitions(-DVK_NO_PROTOTYPES 
+                -DVOLK_STATIC_DEFINES 
+                -DIMGUI_IMPL_VULKAN_NO_PROTOTYPES)
 
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES src/Rebulkan.cpp)
 
