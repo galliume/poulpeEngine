@@ -28,6 +28,7 @@
 
 #include "stb_image.h"
 #include "miniaudio.h"
+
 #include "spdlog/spdlog.h"
 #include "spdlog/fmt/ostr.h"
 #include "spdlog/sinks/stdout_color_sinks.h"
@@ -35,9 +36,3 @@
 
 #include "Rebulk/Core/Log.hpp"
 #include "Rebulk/Core/Locator.hpp"
-
-// Order matters here in order to avoid redefinitions
-#include <backends/imgui_impl_vulkan.cpp>
-#include <backends/imgui_impl_glfw.cpp>
-#include "imgui.h"
-

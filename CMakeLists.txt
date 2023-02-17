@@ -36,7 +36,6 @@ add_definitions(-DVK_NO_PROTOTYPES -DVOLK_STATIC_DEFINES -DIMGUI_IMPL_VULKAN_NO_
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES src/Rebulkan.cpp)
 
 include_directories(${PROJECT_SOURCE_DIR}/src
-                    ${PROJECT_SOURCE_DIR}/vendor/build
                     ${PROJECT_SOURCE_DIR}/vendor/glfw/include
                     ${PROJECT_SOURCE_DIR}/vendor/spdlog/include 
                     ${PROJECT_SOURCE_DIR}/vendor/glm 
@@ -46,7 +45,14 @@ include_directories(${PROJECT_SOURCE_DIR}/src
                     ${PROJECT_SOURCE_DIR}/vendor/tiny_obj_loader
                     ${PROJECT_SOURCE_DIR}/vendor/imgui)
 
-add_executable(Rebulkan src/Rebulkan.cpp)
+if (DEFINED ENV{VULKAN_SDK}) 
+  string(CONCAT VULKAN_PATH $ENV{VULKAN_SDK} "/Include")
+  include_directories(${VULKAN_PATH})
+else()
+  message(FATAL_ERROR "The env var VULKAN_SDK not found.")
+endif()
+
+add_executable(Rebulkan src/Rebulkan.cpp include/build.cpp)
 
 add_subdirectory(${PROJECT_SOURCE_DIR}/src/Rebulk)
 add_subdirectory(${PROJECT_SOURCE_DIR}/src/Rebulk/Component)
@@ -65,20 +71,31 @@ add_subdirectory(${PROJECT_SOURCE_DIR}/vendor/spdlog)
 add_subdirectory(${PROJECT_SOURCE_DIR}/vendor/glm)
 add_subdirectory(${PROJECT_SOURCE_DIR}/vendor/volk)
 
-if (DEFINED ENV{VULKAN_SDK}) 
-    string(CONCAT VULKAN_PATH $ENV{VULKAN_SDK} "/Include")
-    include_directories(${VULKAN_PATH})
-else()
-    message(FATAL_ERROR "The env var VULKAN_SDK not found.")
-endif()
-    
+add_library(ImGui ${PROJECT_SOURCE_DIR}/vendor/imgui/imconfig.h
+                  ${PROJECT_SOURCE_DIR}/vendor/imgui/imgui.h
+                  ${PROJECT_SOURCE_DIR}/vendor/imgui/imgui.cpp
+                  ${PROJECT_SOURCE_DIR}/vendor/imgui/imgui_draw.cpp
+                  ${PROJECT_SOURCE_DIR}/vendor/imgui/imgui_internal.h
+                  ${PROJECT_SOURCE_DIR}/vendor/imgui/imgui_tables.cpp
+                  ${PROJECT_SOURCE_DIR}/vendor/imgui/imgui_widgets.cpp
+                  ${PROJECT_SOURCE_DIR}/vendor/imgui/imstb_rectpack.h
+                  ${PROJECT_SOURCE_DIR}/vendor/imgui/imstb_textedit.h
+                  ${PROJECT_SOURCE_DIR}/vendor/imgui/imstb_truetype.h
+                  ${PROJECT_SOURCE_DIR}/vendor/imgui/imgui_demo.cpp)
+   
 list(APPEND EXTRA_LIBS glfw)
 list(APPEND EXTRA_LIBS spdlog)
 list(APPEND EXTRA_LIBS glm::glm)
 list(APPEND EXTRA_LIBS volk)
+list(APPEND EXTRA_LIBS ImGui)
 
-target_precompile_headers(Rebulkan PUBLIC src/rebulkpch.hpp)
+target_precompile_headers(Rebulkan PUBLIC include/rebulkpch.hpp)
 
 target_link_libraries(Rebulkan PRIVATE ${EXTRA_LIBS} rebulkan_compiler_flags)
 
-target_include_directories(Rebulkan PUBLIC "${PROJECT_BINARY_DIR}")
+target_include_directories(Rebulkan PUBLIC "${PROJECT_BINARY_DIR}"
+                          "${PROJECT_SOURCE_DIR}/vendor/glfw"
+                          "${PROJECT_SOURCE_DIR}/vendor/spdog"
+                          "${PROJECT_SOURCE_DIR}/vendor/glm"
+                          "${PROJECT_SOURCE_DIR}/vendor/volk"
+                          "${PROJECT_SOURCE_DIR}/vendor/imgui")

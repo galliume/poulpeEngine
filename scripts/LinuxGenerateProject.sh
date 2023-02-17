@@ -48,6 +48,6 @@ git checkout docking
 cd "../../build"
 
 echo "Starting building"
-cmake --build . -j${MAKE_J} --config Debug
+cmake --build . -j${MAKE_J}
 
 echo "build done"
