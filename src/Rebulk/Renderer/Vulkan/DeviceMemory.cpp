@@ -1,5 +1,4 @@
 #include "DeviceMemory.hpp"
-#include <volk.h>
 
 namespace Rbk
 {

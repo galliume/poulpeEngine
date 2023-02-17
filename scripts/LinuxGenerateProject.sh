@@ -13,6 +13,7 @@
 CMAKE_BUILD_DIR="build"
 CMAKE_CXX_COMPILER=${1:-"clang++"}
 CMAKE_C_COMPILER=${2:-"clang"}
+CMAKE_BUILD_TYPE=Debug 
 REFRESH_BUILD_DIR=${3:-false}
 MAKE_J=4
 
@@ -30,17 +31,23 @@ MAKE_J=4
 echo "Moving to ${CMAKE_BUILD_DIR}"
 cd "./${CMAKE_BUILD_DIR}"
 
-echo "Starting cmake with options : "
+echo "Starting configuration with options : "
 echo "Build dir: ${CMAKE_BUILD_DIR}"
 echo "Building from: ../${CMAKE_BUILD_DIR}"
 echo "CMAKE_CXX_COMPILER: ${CMAKE_CXX_COMPILER}"
 echo "CMAKE_C_COMPILER : ${CMAKE_C_COMPILER}"
 
-cmake "-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON" "-DCMAKE_RULE_MESSAGES:BOOL=OFF" "-DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}" "-DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}" ..
+cmake "-DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}" "-DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}" "-DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}" ..
 
-echo "cmake done"
-echo "Starting make"
+echo "configuration done"
 
-make "-j${MAKE_J}" "--no-print-directory"
+echo "Switching to ImGui docking branch"
+cd "../vendor/imgui"
+git checkout docking
 
-echo "make done"
+cd "../../build"
+
+echo "Starting building"
+cmake --build . -j${MAKE_J} --config Debug
+
+echo "build done"
