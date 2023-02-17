@@ -8,7 +8,7 @@ project(Rebulkan
 )
 
 add_library(rebulkan_compiler_flags INTERFACE)
-
+ 
 target_compile_features(rebulkan_compiler_flags INTERFACE cxx_std_20)
 
 set(CMAKE_CXX_STANDARD 20)
@@ -31,11 +31,12 @@ target_compile_options(rebulkan_compiler_flags INTERFACE
 
 configure_file(RebulkanConfig.h.in RebulkanConfig.h)
 
-add_definitions(-DIMGUI_IMPL_VULKAN_NO_PROTOTYPES)
+add_definitions(-DVK_NO_PROTOTYPES -DVOLK_STATIC_DEFINES -DIMGUI_IMPL_VULKAN_NO_PROTOTYPES)
 
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES src/Rebulkan.cpp)
 
 include_directories(${PROJECT_SOURCE_DIR}/src
+                    ${PROJECT_SOURCE_DIR}/vendor/build
                     ${PROJECT_SOURCE_DIR}/vendor/glfw/include
                     ${PROJECT_SOURCE_DIR}/vendor/spdlog/include 
                     ${PROJECT_SOURCE_DIR}/vendor/glm 
@@ -46,6 +47,18 @@ include_directories(${PROJECT_SOURCE_DIR}/src
                     ${PROJECT_SOURCE_DIR}/vendor/imgui)
 
 add_executable(Rebulkan src/Rebulkan.cpp)
+
+add_subdirectory(${PROJECT_SOURCE_DIR}/src/Rebulk)
+add_subdirectory(${PROJECT_SOURCE_DIR}/src/Rebulk/Component)
+add_subdirectory(${PROJECT_SOURCE_DIR}/src/Rebulk/Core)
+add_subdirectory(${PROJECT_SOURCE_DIR}/src/Rebulk/GUI)
+add_subdirectory(${PROJECT_SOURCE_DIR}/src/Rebulk/GUI/ImGui)
+add_subdirectory(${PROJECT_SOURCE_DIR}/src/Rebulk/GUI/Layer)
+add_subdirectory(${PROJECT_SOURCE_DIR}/src/Rebulk/Manager)
+add_subdirectory(${PROJECT_SOURCE_DIR}/src/Rebulk/Renderer)
+add_subdirectory(${PROJECT_SOURCE_DIR}/src/Rebulk/Renderer/Adapter)
+add_subdirectory(${PROJECT_SOURCE_DIR}/src/Rebulk/Renderer/Vulkan)
+add_subdirectory(${PROJECT_SOURCE_DIR}/src/Rebulk/Renderer/Vulkan/Meshator)
 
 add_subdirectory(${PROJECT_SOURCE_DIR}/vendor/glfw)
 add_subdirectory(${PROJECT_SOURCE_DIR}/vendor/spdlog)
@@ -59,13 +72,13 @@ else()
     message(FATAL_ERROR "The env var VULKAN_SDK not found.")
 endif()
     
-list(APPEND EXTRA_LIBS volk_headers)
 list(APPEND EXTRA_LIBS glfw)
 list(APPEND EXTRA_LIBS spdlog)
 list(APPEND EXTRA_LIBS glm::glm)
+list(APPEND EXTRA_LIBS volk)
 
 target_precompile_headers(Rebulkan PUBLIC src/rebulkpch.hpp)
 
-target_link_libraries(Rebulkan PUBLIC ${EXTRA_LIBS} rebulkan_compiler_flags)
+target_link_libraries(Rebulkan PRIVATE ${EXTRA_LIBS} rebulkan_compiler_flags)
 
 target_include_directories(Rebulkan PUBLIC "${PROJECT_BINARY_DIR}")

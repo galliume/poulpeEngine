@@ -1,7 +1,6 @@
 #pragma once
 
 #include <functional>
-#include <volk.h>
 #include "Texture.hpp"
 #include "Vertex.hpp"
 #include "Vertex2D.hpp"

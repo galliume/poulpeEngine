@@ -7,6 +7,4 @@ set(SRC_LIST ${CMAKE_CURRENT_SOURCE_DIR}/DeviceMemory.cpp
 
 target_sources(Rebulkan PRIVATE ${SRC_LIST})
 
-add_subdirectory(Meshator)
-
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${SRC_LIST})

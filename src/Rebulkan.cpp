@@ -8,7 +8,9 @@ int main(int argc, char** argv)
               << Rebulkan_VERSION_MINOR << std::endl;
     }
 
-   std::unique_ptr<Rbk::Application>app = std::make_unique<Rbk::Application>();
-  
+    std::unique_ptr<Rbk::Application>app = std::make_unique<Rbk::Application>();
+    app->Init();
+    app->Run();
+
     return 0;
 }
