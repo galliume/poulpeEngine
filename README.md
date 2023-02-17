@@ -22,19 +22,17 @@ Compile shaders :
 
   Linux   : ./scripts/LinuxShadersCompile.sh
 
-Then compile the project with CLang
+Then compile the project :
 
-Windows : WindowsGenerateProject.bat generate a visual studio code 2022 sln. 
-Load in VS Studio and hit F5... (you can change the .bat file and use an older version of visual studio)
+  Windows : WindowsGenerateProject.bat generate a visual studio code 2022 sln. 
+  Load in VS Studio and hit F5... (you can change the .bat file and use an older version of visual studio)
 
-Linux   : LinuxGenerateProject.sh generate a make file. Then "make" it
-```
-clear && make clean && make && ./bin/your_archi/Rebulkan/Rebulkan
-```
+  Linux   : LinuxGenerateProject.sh to build with cmake and clang
+  ```
+  clear && ./scripts/LinuxGenerateProject.sh && ./build/Rebulkan
+  ```
 
 [help to configure the project](https://github.com/galliume/rebulkan/wiki/Env-config)
-
-Thanks to [premake](https://premake.github.io/)
 
 ### Keyboard shortcuts (azerty)
 
