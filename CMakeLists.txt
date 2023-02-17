@@ -28,10 +28,9 @@ configure_file(RebulkanConfig.h.in RebulkanConfig.h)
 
 add_executable(Rebulkan src/Rebulkan.cpp)
 
-include_directories(vendor/glfw vendor/spdlog vendor/glm vendor/stb_image vendor/miniaudio vendor/nlohmann vendor/tiny_obj_loader vendor/volk vendor/imgui)
+include_directories(vendor/glfw vendor/spdlog vendor/glm vendor/stb vendor/miniaudio vendor/nlohmann vendor/tiny_obj_loader vendor/volk vendor/imgui)
 
 add_subdirectory(src)
-
 add_subdirectory(vendor/glfw)
 add_subdirectory(vendor/spdlog)
 add_subdirectory(vendor/glm)
