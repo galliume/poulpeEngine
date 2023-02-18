@@ -16,21 +16,21 @@
 
 Install the latest Vulkan SDK https://vulkan.lunarg.com/ and be sure to have the env variable VULKAN_SDK properly set to your Vulkan SDK installation folder.
 
-Compile shaders :
+Compile shaders (windows or linux) : 
+```
+./bin/rbkShadersCompilation.sh
+```	
 
-  Windows : .\scripts\WindowsShadersCompile.bat
+Generate the project and run with CMake :
 
-  Linux   : ./scripts/LinuxShadersCompile.sh
-
-Then compile the project :
-
-  Windows : WindowsGenerateProject.bat generate a visual studio code 2022 sln. 
-  Load in VS Studio and hit F5... (you can change the .bat file and use an older version of visual studio)
-
-  Linux   : LinuxGenerateProject.sh to build with cmake and clang
   ```
-  clear && ./scripts/LinuxGenerateProject.sh && ./build/Rebulkan
+  clear && ./bin/rbkBuild.sh && ./build/Rebulkan
   ```
+
+You can also generate and build yourself using CMake and the IDE you want.
+
+By default the project is compiled with clang+ (see in ./bin/rbkBuild.sh)
+
 
 [help to configure the project](https://github.com/galliume/rebulkan/wiki/Env-config)
 
