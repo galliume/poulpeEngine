@@ -23,14 +23,33 @@ Compile shaders (windows or linux) :
 
 Generate the project and run with CMake :
 
-  ```
-  clear && ./bin/rbkBuild.sh && ./build/Rebulkan
-  ```
+```
+clear && ./bin/rbkBuild.sh && ./build/Debug/Rebulkan
+```
 
 You can also generate and build yourself using CMake and the IDE you want.
 
 By default the project is compiled with clang+ (see in ./bin/rbkBuild.sh)
 
+rbkBuild.sh can take those options (here are the default values)
+
+> -a: CMAKE_BUILD_DIR="build"
+>
+> -b: CMAKE_CXX_COMPILER="clang++"
+>
+> -c: CMAKE_C_COMPILER="clang"
+>
+> -d: CMAKE_BUILD_TYPE="Debug"
+>
+> -e: REFRESH_BUILD_DIR=false
+>
+> -f: CMAKE_J=8
+
+For exemple, if you want to build a Release in a folder named foo and force a clean refresh of the folder:
+
+```
+./bin/rbkBuild.sh -afoo -dRelease -etrue
+```
 
 [help to configure the project](https://github.com/galliume/rebulkan/wiki/Env-config)
 
