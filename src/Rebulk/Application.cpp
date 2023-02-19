@@ -61,7 +61,7 @@ namespace Rbk
 
         std::mutex lockDraw;
 
-        #ifdef RBK_DEBUG
+        #ifdef RBK_DEBUG_BUILD
         InitImGui();
         std::function<void()> imGui =
             [=, &timeStep, &lockDraw]() {
@@ -110,6 +110,7 @@ namespace Rbk
 
                 if (1.0 <= timeStepSum.count()) {
                     RBK_DEBUG("{} fps", frameCount);
+                    std::cout << "fps " << frameCount << std::endl;
                     timeStepSum = std::chrono::duration<double>(0.0);
                     frameCount = 0;
                 }
@@ -118,7 +119,7 @@ namespace Rbk
 
                 glfwPollEvents();
                 
-                #ifdef RBK_DEBUG
+                #ifdef RBK_DEBUG_BUILD
                     imGui();
                 #endif
 
@@ -128,7 +129,7 @@ namespace Rbk
             }
         }
 
-        #ifdef RBK_DEBUG
+        #ifdef RBK_DEBUG_BUILD
             Rbk::Im::Destroy();
         #endif
 
@@ -140,18 +141,20 @@ namespace Rbk
 
     void Application::InitImGui()
     {
-        ImGuiInfo imguiInfo = m_RenderManager->GetRendererAdapter()->GetImGuiInfo();
-        Rbk::Im::Init(m_Window->Get(), imguiInfo);
+        #ifdef RBK_DEBUG_BUILD
+            ImGuiInfo imguiInfo = m_RenderManager->GetRendererAdapter()->GetImGuiInfo();
+            Rbk::Im::Init(m_Window->Get(), imguiInfo);
 
-        m_RenderManager->GetRendererAdapter()->ImmediateSubmit([&](VkCommandBuffer cmd) {
-            ImGui_ImplVulkan_CreateFontsTexture(cmd);
-            });
+            m_RenderManager->GetRendererAdapter()->ImmediateSubmit([&](VkCommandBuffer cmd) {
+                ImGui_ImplVulkan_CreateFontsTexture(cmd);
+                });
 
-        ImGui_ImplVulkan_DestroyFontUploadObjects();
+            ImGui_ImplVulkan_DestroyFontUploadObjects();
 
-        //todo move to layer manager and update application main loop accordingly
-        m_VulkanLayer = std::make_shared<Rbk::VulkanLayer>();
-        m_VulkanLayer->AddRenderManager(m_RenderManager);
-        //m_LayerManager->Add(vulkanLayer.get());
+            //todo move to layer manager and update application main loop accordingly
+            m_VulkanLayer = std::make_shared<Rbk::VulkanLayer>();
+            m_VulkanLayer->AddRenderManager(m_RenderManager);
+            //m_LayerManager->Add(vulkanLayer.get());
+        #endif
     }
 }

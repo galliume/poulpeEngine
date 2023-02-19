@@ -59,7 +59,7 @@ namespace Rbk {
 
     VulkanRenderer::VulkanRenderer(std::shared_ptr<Window> window) : m_Window(window)
     {
-#ifdef RBK_DEBUG
+#ifdef RBK_DEBUG_BUILD
         m_EnableValidationLayers = true;
 #else
         m_EnableValidationLayers = false;
@@ -2299,7 +2299,7 @@ namespace Rbk {
 
     void VulkanRenderer::StartMarker(VkCommandBuffer buffer, const std::string& name, float r, float g, float b, float a)
     {
-#ifdef RBK_DEBUG
+#ifdef RBK_DEBUG_BUILD
         VkDebugUtilsLabelEXT label;
         label.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_LABEL_EXT;
         label.pLabelName = name.c_str();
@@ -2315,7 +2315,7 @@ namespace Rbk {
 
     void VulkanRenderer::EndMarker(VkCommandBuffer buffer)
     {
-#ifdef RBK_DEBUG
+#ifdef RBK_DEBUG_BUILD
         vkCmdEndDebugUtilsLabelEXT(buffer);
 #endif
     }
