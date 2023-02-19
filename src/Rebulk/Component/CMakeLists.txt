@@ -13,5 +13,3 @@ set(SRC_LIST ${CMAKE_CURRENT_SOURCE_DIR}/Camera.cpp
              ${CMAKE_CURRENT_SOURCE_DIR}/Vertex2D.hpp)
 
 target_sources(Rebulkan PRIVATE ${SRC_LIST})
-
-source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${SRC_LIST})

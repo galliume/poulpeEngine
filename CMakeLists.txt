@@ -17,6 +17,7 @@ set(gcc_like_cxx "$<COMPILE_LANG_AND_ID:CXX,ARMClang,AppleClang,Clang,GNU,LCC>")
 set(msvc_cxx "$<COMPILE_LANG_AND_ID:CXX,MSVC>")
 set(GIT_SUBMODULE ON)
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules ${CMAKE_MODULE_PATH})
+set(VS_STARTUP_PROJECT Rebulkan)
 
 message("Generated with config types: ${CMAKE_CONFIGURATION_TYPES}")
 message("CMAKE_CXX_STANDARD: ${CMAKE_CXX_STANDARD}")
@@ -39,8 +40,6 @@ configure_file(RebulkanConfig.h.in RebulkanConfig.h)
 add_definitions(-DVK_NO_PROTOTYPES 
                 -DVOLK_STATIC_DEFINES 
                 -DIMGUI_IMPL_VULKAN_NO_PROTOTYPES)
-
-source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES src/Rebulkan.cpp)
 
 include_directories(${PROJECT_SOURCE_DIR}/src
                     ${PROJECT_SOURCE_DIR}/vendor/glfw/include
@@ -106,3 +105,12 @@ target_include_directories(Rebulkan PUBLIC "${PROJECT_BINARY_DIR}"
                           "${PROJECT_SOURCE_DIR}/vendor/glm"
                           "${PROJECT_SOURCE_DIR}/vendor/volk"
                           "${PROJECT_SOURCE_DIR}/vendor/imgui")
+					
+#Filters for visual studio structure					
+file(GLOB_RECURSE _source_list *.cpp* *.h* *.hpp*)
+foreach(_source IN ITEMS ${_source_list})
+    get_filename_component(_source_path "${_source}" PATH)
+    string(REPLACE "${CMAKE_SOURCE_DIR}" "" _group_path "${_source_path}")
+    string(REPLACE "/" "\\" _group_path "${_group_path}")
+    source_group("${_group_path}" FILES "${_source}")
+endforeach()						  

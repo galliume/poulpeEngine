@@ -2,11 +2,11 @@ if(ENABLE_CLANG_TIDY)
     find_program(CLANG_TIDY_COMMAND NAMES clang-tidy)
 
     if(NOT CLANG_TIDY_COMMAND)
-        message(WARNING "🔴 CMake_RUN_CLANG_TIDY is ON but clang-tidy is not found!")
+        message(WARNING "CMake_RUN_CLANG_TIDY is ON but clang-tidy is not found!")
         set(CMAKE_CXX_CLANG_TIDY "" CACHE STRING "" FORCE)
     else()
     
-        message(STATUS "🟢 CMake_RUN_CLANG_TIDY is ON")
+        message(STATUS "CMake_RUN_CLANG_TIDY is ON")
         set(CLANGTIDY_EXTRA_ARGS
             "-extra-arg=-Wno-unknown-warning-option"
         )
