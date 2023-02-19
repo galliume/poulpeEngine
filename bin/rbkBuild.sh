@@ -10,6 +10,9 @@
 ### - launch tests ?                     ###
 ############################################
 
+ROOT_DIR="$(dirname "$0")"
+. "${ROOT_DIR}/utils.sh"
+
 #Default Configuration
 CMAKE_BUILD_DIR="build"
 CMAKE_CXX_COMPILER="clang++"
@@ -17,8 +20,9 @@ CMAKE_C_COMPILER="clang"
 CMAKE_BUILD_TYPE="Debug"
 REFRESH_BUILD_DIR=false
 CMAKE_J=8
+BUILD_IT=false
 
-while getopts ":a:b:c:d:e:f" opt; do
+while getopts ":a:b:c:d:e:f:g:h" opt; do
   case $opt in
     a) CMAKE_BUILD_DIR="$OPTARG"
     ;;
@@ -31,6 +35,10 @@ while getopts ":a:b:c:d:e:f" opt; do
 	e) REFRESH_BUILD_DIR="$OPTARG"
 	;;
 	f) CMAKE_J="$OPTARG"
+	;;
+	g) BUILD_IT="$OPTARG"
+	;;
+	h) showHelp
 	;;
     \?) echo "Invalid option -$OPTARG" >&2
     exit 1
@@ -75,16 +83,18 @@ echo "CMAKE_J : ${CMAKE_J}"
 
 cmake -DCMAKE_CONFIGURATION_TYPES="Debug;Release;RelWithDebInfo" -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER} -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER} ../..
 
-echo "configuration done"
+echo "Configuration done"
 
 #Just to be sure to be on the docking branch
 echo "Switching to ImGui docking branch"
 cd "../../vendor/imgui"
 git checkout docking
 
-cd "../../${CMAKE_BUILD_DIR}/${CMAKE_BUILD_TYPE}"
+if [ $BUILD_IT = true ]; then
+	cd "../../${CMAKE_BUILD_DIR}/${CMAKE_BUILD_TYPE}"
 
-echo "Starting building"
-cmake --build . -j${CMAKE_J}
+	echo "Starting building"
+	cmake --build . -j${CMAKE_J}
 
-echo "build done"
+	echo "build done"
+fi
