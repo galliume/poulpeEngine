@@ -36,9 +36,11 @@ Usage: ./bin/rbkBuild.sh [-abcdefgh]
 
 -e: Clean build dir [default to REFRESH_BUILD_DIR=false]
 
--f: paralls job number [default to CMAKE_J=8]
+-f: parallels job number [default to CMAKE_J=8]
 
 -g: Compile now with cmake --build [default to BUILD_IT=false]
+
+-i: CMake toolset (-T) [default to ClangCL]
 
 -h Display help	
 
