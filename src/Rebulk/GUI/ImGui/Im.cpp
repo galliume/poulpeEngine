@@ -1,4 +1,8 @@
 #include "Im.hpp"
+
+#include <backends/imgui_impl_vulkan.cpp>
+#include <backends/imgui_impl_glfw.cpp>
+
 #include <volk.h>
 
 namespace Rbk {

@@ -4,17 +4,17 @@ detectOs() {
 	case "$(uname -sr)" in
 
 	   Linux*Microsoft*)
-		 echo 'OS detected : WSL'  # Windows Subsystem for Linux
+		 #echo 'OS detected : WSL'  # Windows Subsystem for Linux
 		 return 1
 		 ;;
 
 	   Linux*)
-		 echo 'OS detected : Linux'
+		 #echo 'OS detected : Linux'
 		 return 2
 		 ;;
 
 	   CYGWIN*|MINGW*|MINGW32*|MSYS*)
-		 echo 'OS detected : MS Windows'
+		 #echo 'OS detected : MS Windows'
 		 return 3
 		 ;;
 
@@ -36,13 +36,17 @@ Usage: ./bin/rbkBuild.sh [-abcdefgh]
 
 -e: Clean build dir [default to REFRESH_BUILD_DIR=false]
 
--f: parallels job number [default to CMAKE_J=8]
+-f: Number of parallels jobs [default to CMAKE_J=8]
 
--g: Compile now with cmake --build [default to BUILD_IT=false]
-
--i: CMake toolset (-T) [default to ClangCL]
+-g: CMake toolset (-T) [default to ClangCL]
 
 -h Display help	
+
+-i: Build
+
+-j: Run Rebulkan
+
+-k: Build and Run
 
 EOF
 	
