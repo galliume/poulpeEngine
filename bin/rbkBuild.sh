@@ -21,8 +21,9 @@ CMAKE_BUILD_TYPE="Debug"
 REFRESH_BUILD_DIR=false
 CMAKE_J=8
 BUILD_IT=false
+CMAKE_TOOLSET="ClangCL"
 
-while getopts ":a:b:c:d:e:f:g:h" opt; do
+while getopts ":a:b:c:d:e:f:g:hi:" opt; do
   case $opt in
     a) CMAKE_BUILD_DIR="$OPTARG"
     ;;
@@ -39,6 +40,8 @@ while getopts ":a:b:c:d:e:f:g:h" opt; do
 	g) BUILD_IT="$OPTARG"
 	;;
 	h) showHelp
+	;;
+	i) CMAKE_TOOLSET="$OPTARG"
 	;;
     \?) echo "Invalid option -$OPTARG" >&2
     exit 1
@@ -81,7 +84,7 @@ echo "CMAKE_C_COMPILER : ${CMAKE_C_COMPILER}"
 echo "CMAKE_BUILD_TYPE : ${CMAKE_BUILD_TYPE}"
 echo "CMAKE_J : ${CMAKE_J}"
 
-cmake -DCMAKE_CONFIGURATION_TYPES="Debug;Release;RelWithDebInfo" -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER} -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER} ../..
+cmake -T ${CMAKE_TOOLSET} -DCMAKE_CONFIGURATION_TYPES="Debug;Release;RelWithDebInfo" -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER} -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER} ../..
 
 echo "Configuration done"
 
@@ -96,5 +99,6 @@ if [ $BUILD_IT = true ]; then
 	echo "Starting building"
 	cmake --build . -j${CMAKE_J}
 
-	echo "build done"
+	RESULT=$?
+	echo "Build done with code: ${RESULT}"
 fi

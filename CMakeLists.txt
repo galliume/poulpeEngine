@@ -17,7 +17,8 @@ set(gcc_like_cxx "$<COMPILE_LANG_AND_ID:CXX,ARMClang,AppleClang,Clang,GNU,LCC>")
 set(msvc_cxx "$<COMPILE_LANG_AND_ID:CXX,MSVC>")
 set(GIT_SUBMODULE ON)
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules ${CMAKE_MODULE_PATH})
-set(VS_STARTUP_PROJECT Rebulkan)
+set(CMAKE_NO_SYSTEM_FROM_IMPORTED ON)
+set_property(DIRECTORY ${PROJECT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT Rebulkan)
 
 message("Generated with config types: ${CMAKE_CONFIGURATION_TYPES}")
 message("CMAKE_CXX_STANDARD: ${CMAKE_CXX_STANDARD}")
@@ -41,6 +42,14 @@ add_definitions(-DVK_NO_PROTOTYPES
                 -DVOLK_STATIC_DEFINES 
                 -DIMGUI_IMPL_VULKAN_NO_PROTOTYPES)
 
+if (DEFINED ENV{VULKAN_SDK}) 
+  cmake_path(SET VULKAN_PATH "$ENV{VULKAN_SDK}/Include")
+  message("Found Vulkan include dir: ${VULKAN_PATH}")  
+  find_package(Vulkan REQUIRED)
+else()
+  message(FATAL_ERROR "The env var VULKAN_SDK not found.")
+endif()
+
 include_directories(${PROJECT_SOURCE_DIR}/src
                     ${PROJECT_SOURCE_DIR}/vendor/glfw/include
                     ${PROJECT_SOURCE_DIR}/vendor/spdlog/include 
@@ -50,13 +59,6 @@ include_directories(${PROJECT_SOURCE_DIR}/src
                     ${PROJECT_SOURCE_DIR}/vendor/nlohmann/include 
                     ${PROJECT_SOURCE_DIR}/vendor/tiny_obj_loader
                     ${PROJECT_SOURCE_DIR}/vendor/imgui)
-
-if (DEFINED ENV{VULKAN_SDK}) 
-  string(CONCAT VULKAN_PATH $ENV{VULKAN_SDK} "/Include")
-  include_directories(${VULKAN_PATH})
-else()
-  message(FATAL_ERROR "The env var VULKAN_SDK not found.")
-endif()
 
 add_executable(Rebulkan src/Rebulkan.cpp include/build.cpp)
 
@@ -94,6 +96,7 @@ list(APPEND EXTRA_LIBS spdlog)
 list(APPEND EXTRA_LIBS glm::glm)
 list(APPEND EXTRA_LIBS volk)
 list(APPEND EXTRA_LIBS ImGui)
+list(APPEND EXTRA_LIBS Vulkan::Vulkan)
 
 target_precompile_headers(Rebulkan PUBLIC include/rebulkpch.hpp)
 
@@ -101,7 +104,7 @@ target_link_libraries(Rebulkan PRIVATE ${EXTRA_LIBS} rebulkan_compiler_flags)
 
 target_include_directories(Rebulkan PUBLIC "${PROJECT_BINARY_DIR}"
                           "${PROJECT_SOURCE_DIR}/vendor/glfw"
-                          "${PROJECT_SOURCE_DIR}/vendor/spdog"
+                          "${PROJECT_SOURCE_DIR}/vendor/spdlog"
                           "${PROJECT_SOURCE_DIR}/vendor/glm"
                           "${PROJECT_SOURCE_DIR}/vendor/volk"
                           "${PROJECT_SOURCE_DIR}/vendor/imgui")
@@ -114,3 +117,18 @@ foreach(_source IN ITEMS ${_source_list})
     string(REPLACE "/" "\\" _group_path "${_group_path}")
     source_group("${_group_path}" FILES "${_source}")
 endforeach()						  
+
+set_property(TARGET Rebulkan PROPERTY VS_DEBUGGER_WORKING_DIRECTORY $<TARGET_FILE_DIR:Rebulkan>)
+
+add_custom_command(TARGET Rebulkan 
+				   PRE_BUILD COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/config/ $<TARGET_FILE_DIR:Rebulkan>/config)
+				   
+add_custom_command(TARGET Rebulkan 
+				   PRE_BUILD COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/assets/ $<TARGET_FILE_DIR:Rebulkan>/assets)				   
+
+add_custom_command(TARGET Rebulkan
+				   PRE_BUILD COMMAND ${CMAKE_COMMAND} -E make_directory $<TARGET_FILE_DIR:Rebulkan>/cache)
+				   
+add_custom_command(TARGET Rebulkan 
+				   PRE_BUILD COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/imgui.ini $<TARGET_FILE_DIR:Rebulkan>/imgui.ini)
+				
