@@ -24,7 +24,7 @@ Compile shaders (windows or linux) :
 Generate the project and run with CMake :
 
 ```
-clear && ./bin/rbkBuild.sh && ./build/Debug/Rebulkan
+clear && ./bin/rbkBuild.sh && ./build/Debug/Debug/Rebulkan
 ```
 
 You can also generate and build yourself using CMake and the IDE you want.
@@ -43,11 +43,17 @@ rbkBuild.sh can take those options (here are the default values)
 >
 >-e: Clean build dir [default to REFRESH_BUILD_DIR=false]
 >
->-f: paralls job number [default to CMAKE_J=8]
+>-f: Number of parallels jobs [default to CMAKE_J=8]
 >
->-g: Compile now with cmake --build [default to BUILD_IT=false]
+>-g: CMake toolset (-T) [default to ClangCL]
 >
 >-h Display help	
+>
+>-i: Build
+>
+>-j: Run Rebulkan
+>
+>-k: Build and Run
 
 For exemple, if you want to build a Release in a folder named foo and force a clean refresh of the folder:
 

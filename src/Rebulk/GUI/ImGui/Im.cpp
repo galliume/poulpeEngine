@@ -1,4 +1,8 @@
 #include "Im.hpp"
+
+#include <backends/imgui_impl_vulkan.cpp>
+#include <backends/imgui_impl_glfw.cpp>
+
 #include <volk.h>
 
 namespace Rbk {
@@ -48,7 +52,7 @@ namespace Rbk {
         ImGui_ImplVulkan_NewFrame();
         ImGui::NewFrame();
     }
-    
+
     void Im::CreateFontsTexture(VkCommandBuffer commandBuffer)
     {
         ImGui_ImplVulkan_CreateFontsTexture(commandBuffer);
@@ -90,11 +94,11 @@ namespace Rbk {
 
         ImGuiIO& io = ImGui::GetIO();
 
-        //if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
-        //{
-        //    ImGui::UpdatePlatformWindows();
-        //    ImGui::RenderPlatformWindowsDefault();
-        //}
+        if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+        {
+            ImGui::UpdatePlatformWindows();
+            ImGui::RenderPlatformWindowsDefault();
+        }
     }
 
     void Im::Destroy()
