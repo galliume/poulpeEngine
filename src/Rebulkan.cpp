@@ -1,6 +1,12 @@
 #include "RebulkanConfig.h"
 #include "Rebulk/Application.hpp"
 
+#define MINIAUDIO_IMPLEMENTATION
+#include "miniaudio.h"
+
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
+
 int main(int argc, char** argv)
 {
     if (argc < 2) {

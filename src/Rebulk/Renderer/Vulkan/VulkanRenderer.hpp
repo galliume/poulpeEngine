@@ -2,6 +2,7 @@
 
 #include "Rebulk/Renderer/IRenderer.hpp"
 #include "Rebulk/Renderer/Vulkan/DeviceMemoryPool.hpp"
+#include <stb_image.h>
 
 namespace Rbk {
 
