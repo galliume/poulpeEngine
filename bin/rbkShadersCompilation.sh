@@ -9,6 +9,10 @@ GLSLC_BIN="glslc"
 detectOs
 OS=$?
 
+if [ ! -d "./assets/shaders/spv" ]; then
+	mkdir "./assets/shaders/spv"
+fi
+
 if ! [[ "$OS" == 2 ]]; then
 GLSLC_BIN="glslc.exe"
 fi
