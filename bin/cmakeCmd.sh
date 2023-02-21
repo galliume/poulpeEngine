@@ -86,7 +86,7 @@ build() {
 		
 		cd "../"
 		
-		return 0
+		return RESULT
 	else
 		echo "Build dir [${CMAKE_BUILD_DIR}] does not exists"
 		return -1
