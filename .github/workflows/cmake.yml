@@ -15,6 +15,15 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+    
+    - uses: actions/checkout@master
+      with:
+        name: KhronosGroup/Vulkan-Headers
+        cache: true
+        
+    - name: Set VULKAN_SDK
+      run: export VULKAN_SDK=./KhronosGroup/Vulkan-Headers/include
+      
     - uses: actions/checkout@v3
 
     - name: chmod x rbkBuild 
