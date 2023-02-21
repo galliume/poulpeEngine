@@ -50,16 +50,14 @@ add_definitions(-DVK_NO_PROTOTYPES
                 -DVOLK_STATIC_DEFINES 
                 -DIMGUI_IMPL_VULKAN_NO_PROTOTYPES)
 
-set(LOAD_VULKAN_LIB true)
-
 if (DEFINED ENV{VULKAN_SDK}) 
   cmake_path(SET VULKAN_PATH "$ENV{VULKAN_SDK}/Include")
-  message("-- Found Vulkan include dir: ${VULKAN_PATH}")  
+  message(STATUS "Found Vulkan include dir: ${VULKAN_PATH}")  
   find_package(Vulkan REQUIRED)
 elseif (DEFINED ENV{VULKAN_SDK_ACTIONS})
   cmake_path(SET VULKAN_PATH "$ENV{VULKAN_SDK_ACTIONS}")
-  message("-- Found Vulkan via GitHub Actions include dir: ${VULKAN_PATH}")  
-  set(LOAD_VULKAN_LIB false)
+  message(STATUS "Found Vulkan via GitHub Actions include dir: ${VULKAN_PATH}")  
+  find_package(Vulkan REQUIRED)
 else()
   message(FATAL_ERROR "The env var VULKAN_SDK nor VULKAN_SDK_ACTIONS not found.")
 endif()
@@ -116,10 +114,7 @@ list(APPEND EXTRA_LIBS glfw)
 list(APPEND EXTRA_LIBS glm::glm)
 list(APPEND EXTRA_LIBS volk)
 list(APPEND EXTRA_LIBS ImGui)
-
-if (LOAD_VULKAN_LIB)
-	list(APPEND EXTRA_LIBS Vulkan::Vulkan)
-endif()
+list(APPEND EXTRA_LIBS Vulkan::Vulkan)
 
 target_precompile_headers(Rebulkan PUBLIC include/rebulkpch.hpp)
 
