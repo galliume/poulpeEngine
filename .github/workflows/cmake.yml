@@ -17,6 +17,9 @@ jobs:
     steps:
     - uses: actions/checkout@v3
 
+    - name: chmod x rbkBuild 
+      run:  chmod +x ./bin/rbkBuild.sh
+      
     - name: Configure CMake
       run: ./bin/rbkBuild.sh
 
