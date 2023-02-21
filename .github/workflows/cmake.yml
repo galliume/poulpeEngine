@@ -4,7 +4,8 @@ on:
   push:
     branches: [ "tooling" ]
   pull_request:
-    branches: [ "tooling" ]
+    branches: [ "tooling" ]    
+  workflow_dispatch:
 
 env:
   BUILD_TYPE: Release
