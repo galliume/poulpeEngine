@@ -850,7 +850,7 @@ namespace Rbk {
                 memcpy(&cacheHeaderVersion, static_cast<uint8_t*>(cacheFileData) + 4, 4);
                 memcpy(&vendorID, static_cast<uint8_t*>(cacheFileData) + 8, 4);
                 memcpy(&deviceID, static_cast<uint8_t*>(cacheFileData) + 12, 4);
-                memcpy(pipelineCacheUUID, static_cast<uint8_t*>(cacheFileData) + 16, VK_UUID_SIZE);
+                memcpy(&pipelineCacheUUID, static_cast<uint8_t*>(cacheFileData) + 16, VK_UUID_SIZE);
 
                 if (headerLength <= 0) {
                     badCache = true;
@@ -860,20 +860,18 @@ namespace Rbk {
                     badCache = true;
                     RBK_ERROR("Unsupported cache header version in {} got {}", cacheFileName, cacheHeaderVersion);
                 }
-                if (vendorID != GetDeviceProperties().vendorID) {
+                if (vendorID != *m_DeviceProps.pipelineCacheUUID) {
                     badCache = true;
-                    RBK_ERROR("Vendor ID mismatch in {} got {} expect {}", cacheFileName, vendorID, GetDeviceProperties().vendorID);
+                    RBK_ERROR("Vendor ID mismatch in {} got {} expect {}", cacheFileName, vendorID, *m_DeviceProps.pipelineCacheUUID);
                 }
-                if (deviceID != GetDeviceProperties().deviceID) {
+                if (deviceID != m_DeviceProps.deviceID) {
                     badCache = true;
-                    RBK_ERROR("Device ID mismatch in {} got {} expect {}", cacheFileName, deviceID, GetDeviceProperties().deviceID);
+                    RBK_ERROR("Device ID mismatch in {} got {} expect {}", cacheFileName, deviceID, *m_DeviceProps.pipelineCacheUUID);
                 }
-                
-                auto pcUUID = GetDeviceProperties().pipelineCacheUUID;
+                if (memcmp(pipelineCacheUUID,  m_DeviceProps.pipelineCacheUUID, sizeof(pipelineCacheUUID)) != 0) {
+                    RBK_ERROR("UUID mismatch in {} got {} expect {}", cacheFileName, *pipelineCacheUUID, *m_DeviceProps.pipelineCacheUUID);
+                }
 
-                if (memcmp(pipelineCacheUUID, pcUUID, sizeof(pipelineCacheUUID)) != 0) {
-                    RBK_ERROR("UUID mismatch in {}", cacheFileName);
-                }
                 if (badCache) {
                     free(cacheFileData);
                     cacheFileSize = 0;
