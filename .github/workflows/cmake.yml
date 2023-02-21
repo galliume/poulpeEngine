@@ -9,7 +9,7 @@ on:
 
 env:
   BUILD_TYPE: Release
-  VULKAN_SDK_ACTIONS: ./Vulkan-Headers/include
+  VULKAN_SDK_ACTIONS: external/Vulkan-Headers/include
   
 jobs:
   build:
@@ -21,10 +21,12 @@ jobs:
       with:
         name: KhronosGroup/Vulkan-Headers
         repository: KhronosGroup/Vulkan-Headers
-        path: ./
+        path: external
         cache: true
         
     - uses: actions/checkout@v3
+      with:
+        path: main
 
     - name: Install dependancies
       run: sudo apt-get install xorg-dev libglu1-mesa-dev
