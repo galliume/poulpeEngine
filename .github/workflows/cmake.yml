@@ -32,11 +32,11 @@ jobs:
       run: sudo apt-get install xorg-dev libglu1-mesa-dev
       
     - name: chmod x rbkBuild 
-      run:  chmod +x ./bin/rbkBuild.sh
+      run:  chmod +x ./main/bin/rbkBuild.sh
       
     - name: Configure CMake
-      run: ./bin/rbkBuild.sh -lfalse
+      run: ./main/bin/rbkBuild.sh -lfalse
 
     - name: Build
-      run: ./bin/rbkBuild.sh -i 
+      run: ./main/bin/rbkBuild.sh -i 
 
