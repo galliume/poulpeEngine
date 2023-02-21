@@ -45,7 +45,7 @@ rbkBuild.sh can take those options (here are the default values)
 >
 >-f: Number of parallels jobs [default to CMAKE_J=8]
 >
->-g: CMake toolset (-T) [default to ClangCL]
+>-g: CMake toolset (-T) [default to CMAKE_TOOLSET="ClangCL"]
 >
 >-h Display help	
 >
@@ -54,6 +54,8 @@ rbkBuild.sh can take those options (here are the default values)
 >-j: Run Rebulkan
 >
 >-k: Build and Run
+>
+>-l: Use Ninja [default to USE_NINJA=true]
 
 For exemple, if you want to build a Release in a folder named foo and force a clean refresh of the folder:
 

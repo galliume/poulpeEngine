@@ -1,5 +1,11 @@
 cmake_minimum_required(VERSION 3.25.2)
 
+find_program(CCACHE_PROGRAM ccache)
+if(CCACHE_PROGRAM)
+	message(STATUS "Found ccache: ${CCACHE_PROGRAM}")
+    set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE "${CCACHE_PROGRAM}")
+endif()
+
 project(Rebulkan
   VERSION 0.1.1
   DESCRIPTION "Game Engine with a vulkan renderer"
@@ -25,17 +31,11 @@ set_property(DIRECTORY ${PROJECT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT Rebulka
 set(DEBUG_OPTIONS "-g")
 set(RELEASE_OPTIONS "-03")
 
-find_program(CCACHE_PROGRAM ccache)
-if(CCACHE_PROGRAM)
-	message(STATUS "Found ccache")
-    set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE "${CCACHE_PROGRAM}")
-endif()
-
-message("-- Generated with config types: ${CMAKE_CONFIGURATION_TYPES}")
-message("-- \tCMAKE_CXX_STANDARD: ${CMAKE_CXX_STANDARD}")
-message("-- \tCMAKE_CXX_STANDARD_REQUIRED: ${CMAKE_CXX_STANDARD_REQUIRED}")
-message("-- \tDEBUG_OPTIONS: ${DEBUG_OPTIONS}")
-message("-- \tRELEASE_OPTIONS: ${RELEASE_OPTIONS}")
+message(STATUS "Generated with config types: ${CMAKE_CONFIGURATION_TYPES}")
+message(STATUS "CMAKE_CXX_STANDARD: ${CMAKE_CXX_STANDARD}")
+message(STATUS "tCMAKE_CXX_STANDARD_REQUIRED: ${CMAKE_CXX_STANDARD_REQUIRED}")
+message(STATUS "DEBUG_OPTIONS: ${DEBUG_OPTIONS}")
+message(STATUS "RELEASE_OPTIONS: ${RELEASE_OPTIONS}")
 
 #set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /MD")
 #set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /MDd")
