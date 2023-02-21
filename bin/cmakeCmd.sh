@@ -103,10 +103,25 @@ run() {
 	if ! [[ "$OS" == 2 ]]; then
 		RBK_BIN="Rebulkan.exe"
 	fi
-
-	sleep 2 #why some segmentation fault ? too slow to finalise building ?
 	
-	"./${CMAKE_BUILD_DIR}/${CMAKE_BUILD_TYPE}/${RBK_BIN}"
+	RBK_PATH="./${CMAKE_BUILD_DIR}/${CMAKE_BUILD_TYPE}/${RBK_BIN}"
+	
+	if [ -f $RBK_PATH ] ; then
+		RBK_PATH
+		RESULT=$?
+		exit $((RESULT+0))		
+	else
+		RBK_PATH="./${CMAKE_BUILD_DIR}/${RBK_BIN}"
+	fi
+	
+	if [ -f $RBK_PATH ] ; then
+		RBK_PATH
+		RESULT=$?
+		exit $((RESULT+0))
+	else
+		echo "Can't find Rebulkan binary"
+		exit -1
+	fi
 	
 	exit 0
 }

@@ -31,6 +31,8 @@ set_property(DIRECTORY ${PROJECT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT Rebulka
 set(DEBUG_OPTIONS "-g")
 set(RELEASE_OPTIONS "-03")
 
+set(VOLK_PULL_IN_VULKAN false)
+
 message(STATUS "Generated with config types: ${CMAKE_CONFIGURATION_TYPES}")
 message(STATUS "CMAKE_CXX_STANDARD: ${CMAKE_CXX_STANDARD}")
 message(STATUS "CMAKE_CXX_STANDARD_REQUIRED: ${CMAKE_CXX_STANDARD_REQUIRED}")
@@ -54,11 +56,11 @@ set(LOAD_VULKAN_LIB true)
 
 if (DEFINED ENV{VULKAN_SDK}) 
   cmake_path(SET VULKAN_PATH "$ENV{VULKAN_SDK}/Include")
-  message("-- Found Vulkan include dir: ${VULKAN_PATH}")  
+  message(STATUS "Found Vulkan include dir: ${VULKAN_PATH}")  
   find_package(Vulkan REQUIRED)
 elseif (DEFINED ENV{VULKAN_SDK_ACTIONS})
   cmake_path(SET VULKAN_PATH "$ENV{VULKAN_SDK_ACTIONS}")
-  message("-- Found Vulkan via GitHub Actions include dir: ${VULKAN_PATH}")  
+  message(STATUS "Found Vulkan via GitHub Actions include dir: ${VULKAN_PATH}")  
   set(LOAD_VULKAN_LIB false)
 else()
   message(FATAL_ERROR "The env var VULKAN_SDK nor VULKAN_SDK_ACTIONS not found.")
@@ -72,7 +74,8 @@ include_directories(${PROJECT_SOURCE_DIR}/src
                     ${PROJECT_SOURCE_DIR}/vendor/miniaudio 
                     ${PROJECT_SOURCE_DIR}/vendor/nlohmann/include 
                     ${PROJECT_SOURCE_DIR}/vendor/tiny_obj_loader
-                    ${PROJECT_SOURCE_DIR}/vendor/imgui)
+                    ${PROJECT_SOURCE_DIR}/vendor/imgui
+					${VULKAN_PATH})
 
 add_executable(Rebulkan src/Rebulkan.cpp)
 
@@ -117,9 +120,6 @@ list(APPEND EXTRA_LIBS glm::glm)
 list(APPEND EXTRA_LIBS volk)
 list(APPEND EXTRA_LIBS ImGui)
 
-if (LOAD_VULKAN_LIB)
-	list(APPEND EXTRA_LIBS Vulkan::Vulkan)
-endif()
 
 target_precompile_headers(Rebulkan PUBLIC include/rebulkpch.hpp)
 

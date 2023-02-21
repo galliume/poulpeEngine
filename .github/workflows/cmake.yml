@@ -2,14 +2,13 @@ name: CMake
 
 on:
   push:
-    branches: [ "tooling" ]
+    branches: [ "main" ]
   pull_request:
-    branches: [ "tooling" ]    
+    branches: [ "main" ]    
   workflow_dispatch:
 
 env:
   BUILD_TYPE: Release
-  VULKAN_SDK_ACTIONS: external/Vulkan-Headers/include
   
 jobs:
   build:
@@ -30,11 +29,14 @@ jobs:
 
     - name: Install dependancies
       run: sudo apt-get install xorg-dev libglu1-mesa-dev
-      
+
+    - name: Set env variable VULKAN_SDK_ACTIONS
+      run: |
+        echo "VULKAN_SDK_ACTIONS=${{ github.workspace }}/external/include" >> $GITHUB_ENV
+    
     - name: Configure CMake
       run: |
         cd main
         chmod +x ./bin/rbkBuild.sh
         ./bin/rbkBuild.sh -lfalse
         ./bin/rbkBuild.sh -i 
-
