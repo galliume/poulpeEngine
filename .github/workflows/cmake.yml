@@ -9,7 +9,7 @@ on:
 
 env:
   BUILD_TYPE: Release
-  VULKAN_SDK_ACTIONS: ./KhronosGroup/Vulkan-Headers/include
+  VULKAN_SDK_ACTIONS: ./Vulkan-Headers/include
   
 jobs:
   build:
