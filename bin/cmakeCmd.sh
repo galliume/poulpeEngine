@@ -63,14 +63,16 @@ configure() {
 	
 	cmake ${NINJA} ${CONFIG_TYPE} ${BUILD_TYPE} ${CXX_COMPILER} ${C_COMPILER} ${TOOLSET} ..
 
-	echo "Configuration done"
+	RESULT=$?
+	
+	echo "Configuration done with code: ${RESULT}"
 
 	#Just to be sure to be on the docking branch
 	echo "Switching to ImGui docking branch"
 	cd "../vendor/imgui"
 	git checkout docking
 	
-	return 0
+	exit $((RESULT+0))
 }
 
 build() {
@@ -86,10 +88,10 @@ build() {
 		
 		cd "../"
 		
-		return RESULT
+		exit $((RESULT+0))
 	else
 		echo "Build dir [${CMAKE_BUILD_DIR}] does not exists"
-		return -1
+		exit -1
 	fi
 }
 
@@ -106,5 +108,5 @@ run() {
 	
 	"./${CMAKE_BUILD_DIR}/${CMAKE_BUILD_TYPE}/${RBK_BIN}"
 	
-	return 0
+	exit 0
 }
