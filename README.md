@@ -1,6 +1,11 @@
 # Rebulkan
 ## Game Engine with a vulkan renderer
 
+| **CI Service** | Build Status |
+|:---------------|-------------:|
+| GitHub Actions | [![CMake](https://github.com/galliume/rebulkan/actions/workflows/cmake.yml/badge.svg?branch=main)](https://github.com/galliume/rebulkan/actions/workflows/cmake.yml)
+
+
 ### This project is a never ending educationnal exercice about game engine and vulkan.
 
 [State of the project](https://github.com/users/galliume/projects/4/views/1)
