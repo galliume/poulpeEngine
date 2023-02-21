@@ -77,7 +77,6 @@ include_directories(${PROJECT_SOURCE_DIR}/src
 
 add_executable(Rebulkan src/Rebulkan.cpp)
 
-
 target_compile_options(Rebulkan INTERFACE
   "$<${gcc_like_cxx}:$<BUILD_INTERFACE:-Wall;-Wextra;-Wshadow;-Wformat=2;-Wunused>>"
   "$<${msvc_cxx}:$<BUILD_INTERFACE:-W3>>"
