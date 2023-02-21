@@ -31,12 +31,15 @@ jobs:
     - name: Install dependancies
       run: sudo apt-get install xorg-dev libglu1-mesa-dev
       
+    - name: move to main
+      run: cd ./main
+      
     - name: chmod x rbkBuild 
-      run:  chmod +x ./main/bin/rbkBuild.sh
+      run:  chmod +x ./bin/rbkBuild.sh
       
     - name: Configure CMake
-      run: ./main/bin/rbkBuild.sh -lfalse
+      run: ./bin/rbkBuild.sh -lfalse
 
     - name: Build
-      run: ./main/bin/rbkBuild.sh -i 
+      run: ./bin/rbkBuild.sh -i 
 
