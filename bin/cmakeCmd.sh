@@ -25,16 +25,7 @@ configure() {
 	echo "Moving to ${CMAKE_BUILD_DIR}"
 	cd "./${CMAKE_BUILD_DIR}"
 
-	echo "Starting configuration with options: "
-	echo "Build dir: ${CMAKE_BUILD_DIR}/${CMAKE_BUILD_TYPE}"
-	echo "Building from: ../${CMAKE_BUILD_DIR}"
-	echo "CMAKE_CXX_COMPILER: ${CMAKE_CXX_COMPILER}"
-	echo "CMAKE_C_COMPILER: ${CMAKE_C_COMPILER}"
-	echo "CMAKE_BUILD_TYPE: ${CMAKE_BUILD_TYPE}"
-	echo "CMAKE_J: ${CMAKE_J}"
-	echo "USE_NINJA: ${USE_NINJA}" 
-	echo "OS: $OS"
-	
+
 	NINJA=""
 	CONFIG_TYPE="-DCMAKE_CONFIGURATION_TYPES=Debug;Release;RelWithDebInfo"
 	BUILD_TYPE="-DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}"
@@ -42,21 +33,27 @@ configure() {
 	C_COMPILER="-DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}"
 	TOOLSET="-DCMAKE_GENERATOR_TOOLSET=${CMAKE_TOOLSET}"
 	
-	if [[ "$OS" == 2 ]]; then
-		TOOLSET=""
-	fi
-	
 	if [ $USE_NINJA = true ]; then
-		NINJA="-GNinja"
+		NINJA="-G Ninja"
 		
 		if ! [[ "$OS" == 2 ]]; then
-			NINJA=""
+			TOOLSET=""
 			echo "Ninja config not ready for Visual Studio, Linux only, yet."
 			#TOOLSET="-DCMAKE_GENERATOR_TOOLSET=v142"
 			#cmd "C:\Program Files (x86)\Microsoft Visual Studio\2019\Professional\VC\Auxiliary\Build\vcvarsall.bat" x64
 			#"C:\Program Files\Git\bin\sh.exe" --login -i
 		fi
 	fi	
+
+	echo "Starting configuration with options: "
+	echo "Build dir: ${CMAKE_BUILD_DIR}/${CMAKE_BUILD_TYPE}"
+	echo "Building from: ../${CMAKE_BUILD_DIR}"
+	echo "${CXX_COMPILER}"
+	echo "${C_COMPILER}"
+	echo "${BUILD_TYPE}"
+	echo "CMAKE_J: ${CMAKE_J}"
+	echo "USE_NINJA: ${USE_NINJA} ${NINJA}" 
+	echo "OS: $OS"
 	
 	cmake ${NINJA} ${CONFIG_TYPE} ${BUILD_TYPE} ${CXX_COMPILER} ${C_COMPILER} ${TOOLSET} ..
 
