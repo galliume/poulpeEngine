@@ -33,11 +33,16 @@ configure() {
 	C_COMPILER="-DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}"
 	TOOLSET="-DCMAKE_GENERATOR_TOOLSET=${CMAKE_TOOLSET}"
 	
+	if [[ "$OS" == 2 ]]; then
+		TOOLSET=""
+	fi
+		
 	if [ $USE_NINJA = true ]; then
 		NINJA="-G Ninja"
+		TOOLSET=""		
 		
 		if ! [[ "$OS" == 2 ]]; then
-			TOOLSET=""
+			
 			echo "Ninja config not ready for Visual Studio, Linux only, yet."
 			#TOOLSET="-DCMAKE_GENERATOR_TOOLSET=v142"
 			#cmd "C:\Program Files (x86)\Microsoft Visual Studio\2019\Professional\VC\Auxiliary\Build\vcvarsall.bat" x64
@@ -53,6 +58,7 @@ configure() {
 	echo "${BUILD_TYPE}"
 	echo "CMAKE_J: ${CMAKE_J}"
 	echo "USE_NINJA: ${USE_NINJA} ${NINJA}" 
+	echo "TOOLSET: ${TOOLSET}"
 	echo "OS: $OS"
 	
 	cmake ${NINJA} ${CONFIG_TYPE} ${BUILD_TYPE} ${CXX_COMPILER} ${C_COMPILER} ${TOOLSET} ..
