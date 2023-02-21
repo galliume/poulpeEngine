@@ -9,7 +9,8 @@ on:
 
 env:
   BUILD_TYPE: Release
-
+  VULKAN_SDK: ./KhronosGroup/Vulkan-Headers/include
+  
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -23,9 +24,6 @@ jobs:
         path: ./
         cache: true
         
-    - name: Set VULKAN_SDK
-      run: export VULKAN_SDK=./KhronosGroup/Vulkan-Headers/include
-      
     - uses: actions/checkout@v3
 
     - name: chmod x rbkBuild 
