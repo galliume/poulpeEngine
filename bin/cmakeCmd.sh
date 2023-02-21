@@ -19,6 +19,9 @@ configure() {
 		echo "Directory ${CMAKE_BUILD_DIR} freshly recreated."
 	fi
 
+	detectOs
+	OS=$?
+	
 	echo "Moving to ${CMAKE_BUILD_DIR}"
 	cd "./${CMAKE_BUILD_DIR}"
 
@@ -30,6 +33,7 @@ configure() {
 	echo "CMAKE_BUILD_TYPE: ${CMAKE_BUILD_TYPE}"
 	echo "CMAKE_J: ${CMAKE_J}"
 	echo "USE_NINJA: ${USE_NINJA}" 
+	echo "OS: $OS"
 	
 	NINJA=""
 	CONFIG_TYPE="-DCMAKE_CONFIGURATION_TYPES=Debug;Release;RelWithDebInfo"
@@ -37,6 +41,10 @@ configure() {
 	CXX_COMPILER="-DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}"
 	C_COMPILER="-DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}"
 	TOOLSET="-DCMAKE_GENERATOR_TOOLSET=${CMAKE_TOOLSET}"
+	
+	if [[ "$OS" == 2 ]]; then
+		TOOLSET=""
+	fi
 	
 	if [ $USE_NINJA = true ]; then
 		NINJA="-GNinja"
