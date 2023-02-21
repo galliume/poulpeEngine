@@ -110,7 +110,7 @@ namespace Rbk
 
                 if (1.0 <= timeStepSum.count()) {
                     RBK_DEBUG("{} fps", frameCount);
-                    std::cout << "fps " << frameCount << std::endl;
+                    std::cout << "fpssss " << frameCount << std::endl;
                     timeStepSum = std::chrono::duration<double>(0.0);
                     frameCount = 0;
                 }
