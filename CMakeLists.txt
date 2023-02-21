@@ -52,8 +52,6 @@ add_definitions(-DVK_NO_PROTOTYPES
                 -DVOLK_STATIC_DEFINES 
                 -DIMGUI_IMPL_VULKAN_NO_PROTOTYPES)
 
-set(LOAD_VULKAN_LIB true)
-
 if (DEFINED ENV{VULKAN_SDK}) 
   cmake_path(SET VULKAN_PATH "$ENV{VULKAN_SDK}/Include")
   message(STATUS "Found Vulkan include dir: ${VULKAN_PATH}")  
@@ -119,7 +117,6 @@ list(APPEND EXTRA_LIBS glfw)
 list(APPEND EXTRA_LIBS glm::glm)
 list(APPEND EXTRA_LIBS volk)
 list(APPEND EXTRA_LIBS ImGui)
-
 
 target_precompile_headers(Rebulkan PUBLIC include/rebulkpch.hpp)
 
