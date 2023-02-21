@@ -1,0 +1,24 @@
+name: CMake
+
+on:
+  push:
+    branches: [ "tooling" ]
+  pull_request:
+    branches: [ "tooling" ]
+
+env:
+  BUILD_TYPE: Release
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Configure CMake
+      run: ./bin/rbkBuild.sh
+
+    - name: Build
+      run: ./bin/rbkBuild.sh -i
+
