@@ -32,7 +32,7 @@ jobs:
       run: sudo apt-get install xorg-dev libglu1-mesa-dev
       
     - name: move to main
-      run: cd ./main
+      run: cd ./main/rebulkan
       
     - name: chmod x rbkBuild 
       run:  chmod +x ./bin/rbkBuild.sh
