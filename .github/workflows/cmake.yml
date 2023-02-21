@@ -33,7 +33,7 @@ jobs:
       run:  chmod +x ./bin/rbkBuild.sh
       
     - name: Configure CMake
-      run: ./bin/rbkBuild.sh -lfalse
+      run: ./bin/rbkBuild.sh
 
     - name: Build
       run: ./bin/rbkBuild.sh -i 
