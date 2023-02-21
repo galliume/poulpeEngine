@@ -28,21 +28,12 @@ jobs:
 
     - name: Install dependancies
       run: sudo apt-get install xorg-dev libglu1-mesa-dev libvulkan1 mesa-vulkan-drivers
-      
-    - name: chmod x rbkBuild 
-      run:  chmod +x ./bin/rbkBuild.sh
-      
-    - name: Configure CMake
-      run: ./bin/rbkBuild.sh -lfalse
-
-    - name: Build
-      run: ./bin/rbkBuild.sh -i 
 
     - name: Set env variable VULKAN_SDK_ACTIONS
       run: |
         echo "VULKAN_SDK_ACTIONS=${{ github.workspace }}/external/include" >> $GITHUB_ENV
     
-    - name: Configure CMake
+    - name: Configure && Build
       run: |
         cd main
         chmod +x ./bin/rbkBuild.sh
