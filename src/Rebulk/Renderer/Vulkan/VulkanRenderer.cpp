@@ -868,9 +868,11 @@ namespace Rbk {
                     badCache = true;
                     RBK_ERROR("Device ID mismatch in {} got {} expect {}", cacheFileName, deviceID, GetDeviceProperties().deviceID);
                 }
-                if (memcmp(pipelineCacheUUID, GetDeviceProperties().pipelineCacheUUID, sizeof(pipelineCacheUUID)) != 0) {
-                    badCache = true;
-                    RBK_ERROR("UUID mismatch in {} got {} expect {}", cacheFileName, pipelineCacheUUID, GetDeviceProperties().pipelineCacheUUID);
+                
+                auto pcUUID = GetDeviceProperties().pipelineCacheUUID;
+
+                if (memcmp(pipelineCacheUUID, pcUUID, sizeof(pipelineCacheUUID)) != 0) {
+                    RBK_ERROR("UUID mismatch in {}", cacheFileName);
                 }
                 if (badCache) {
                     free(cacheFileData);
