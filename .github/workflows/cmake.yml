@@ -16,9 +16,11 @@ jobs:
 
     steps:
     
-    - uses: actions/checkout@master
+    - uses: actions/checkout@v3
       with:
         name: KhronosGroup/Vulkan-Headers
+        repository: KhronosGroup/Vulkan-Headers
+        path: ./
         cache: true
         
     - name: Set VULKAN_SDK
