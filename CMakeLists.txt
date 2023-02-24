@@ -70,16 +70,16 @@ else()
   message(FATAL_ERROR "The env var VULKAN_SDK nor VULKAN_SDK_ACTIONS not found.")
 endif()
 
-include_directories(${PROJECT_SOURCE_DIR}/src)
-include_directories(${PROJECT_SOURCE_DIR}/vendor/glfw/include)
-include_directories(${PROJECT_SOURCE_DIR}/vendor/spdlog/include )
-include_directories(${PROJECT_SOURCE_DIR}/vendor/glm)
-include_directories(${PROJECT_SOURCE_DIR}/vendor/stb) 
-include_directories(${PROJECT_SOURCE_DIR}/vendor/miniaudio)
-include_directories(${PROJECT_SOURCE_DIR}/vendor/nlohmann/include)
-include_directories(${PROJECT_SOURCE_DIR}/vendor/tiny_obj_loader)
-include_directories(${PROJECT_SOURCE_DIR}/vendor/imgui)
-include_directories(${VULKAN_PATH})
+include_directories(${PROJECT_SOURCE_DIR}/src
+                    ${PROJECT_SOURCE_DIR}/vendor/glfw/include
+                    ${PROJECT_SOURCE_DIR}/vendor/spdlog/include 
+                    ${PROJECT_SOURCE_DIR}/vendor/glm 
+                    ${PROJECT_SOURCE_DIR}/vendor/stb 
+                    ${PROJECT_SOURCE_DIR}/vendor/miniaudio 
+                    ${PROJECT_SOURCE_DIR}/vendor/nlohmann/include 
+                    ${PROJECT_SOURCE_DIR}/vendor/tiny_obj_loader
+                    ${PROJECT_SOURCE_DIR}/vendor/imgui
+					          ${VULKAN_PATH})
 
 add_executable(Rebulkan src/Rebulkan.cpp)
 

@@ -95,7 +95,7 @@ namespace Rbk
 
                 // per-face material
                 data.materialId = (-1 != shapes[s].mesh.material_ids[f]) ? shapes[s].mesh.material_ids[f] : 0;
-                shapes[s].mesh.material_ids[f];
+                data.facesMaterialId.emplace_back(shapes[s].mesh.material_ids[f]);
             }
             dataList.emplace_back(data);
         }

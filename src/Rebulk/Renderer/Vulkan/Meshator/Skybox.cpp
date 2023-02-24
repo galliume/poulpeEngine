@@ -184,10 +184,7 @@ namespace Rbk
             VulkanAdapter::s_PolygoneMode
         );
 
-        glm::mat4 skybowView = m_Adapter->GetCamera()->LookAt();
-
         for (uint32_t i = 0; i < mesh->m_UniformBuffers.size(); i++) {
-            //data.m_Ubos[i].view = skybowView;
             m_Adapter->Rdr()->UpdateUniformBuffer(
                 mesh->m_UniformBuffers[i],
                 data.m_Ubos,

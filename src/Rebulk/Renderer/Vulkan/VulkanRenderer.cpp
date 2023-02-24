@@ -96,7 +96,7 @@ namespace Rbk {
     {
         if (m_apiVersion.empty()) {
             uint32_t instanceVersion = VK_API_VERSION_1_3;
-            auto FN_vkEnumerateInstanceVersion = PFN_vkEnumerateInstanceVersion(vkGetInstanceProcAddr(nullptr, "vkEnumerateInstanceVersion"));
+            PFN_vkEnumerateInstanceVersion(vkGetInstanceProcAddr(nullptr, "vkEnumerateInstanceVersion"));
 
             if (vkEnumerateInstanceVersion) {
                 vkEnumerateInstanceVersion(&instanceVersion);
@@ -738,13 +738,13 @@ namespace Rbk {
 
         VkPipelineDepthStencilStateCreateInfo depthStencil{};
         depthStencil.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
-        depthStencil.depthTestEnable = (depthTestEnable) ? VK_TRUE : VK_FALSE;
-        depthStencil.depthWriteEnable = (depthWriteEnable) ? VK_TRUE : VK_FALSE;
+        depthStencil.depthTestEnable = (depthTestEnable == true) ? VK_TRUE : VK_FALSE;
+        depthStencil.depthWriteEnable = (depthWriteEnable == true) ? VK_TRUE : VK_FALSE;
         depthStencil.depthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL;
         depthStencil.depthBoundsTestEnable = VK_FALSE;
         depthStencil.minDepthBounds = 0.0f;
         depthStencil.maxDepthBounds = 1.0f;
-        depthStencil.stencilTestEnable = (stencilTestEnable) ? VK_TRUE : VK_FALSE;
+        depthStencil.stencilTestEnable = (stencilTestEnable == true) ? VK_TRUE : VK_FALSE;
         depthStencil.front = {};
         depthStencil.back = {};
 
@@ -883,6 +883,8 @@ namespace Rbk {
                         RBK_ERROR("Reading error");
                     }
                 }
+
+                delete cacheFileData;
             }
 
             VkPipelineCache pipelineCache;
