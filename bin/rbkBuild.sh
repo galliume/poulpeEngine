@@ -17,8 +17,9 @@ REFRESH_BUILD_DIR=false
 CMAKE_J=8
 CMAKE_TOOLSET="ClangCL"
 USE_NINJA=true
+USE_CCACHE=true
 
-while getopts ":a:b:c:d:e:f:g:hijkl:" opt; do
+while getopts ":a:b:c:d:e:f:g:hijkl:m:" opt; do
   case $opt in
     a) CMAKE_BUILD_DIR="$OPTARG"
     ;;
@@ -43,6 +44,8 @@ while getopts ":a:b:c:d:e:f:g:hijkl:" opt; do
 	k) build; run; exit 0
 	;;
 	l) USE_NINJA="$OPTARG"
+	;;
+	m) USE_CCACHE="$OPTARG"
 	;;
     \?) echo "Invalid option -$OPTARG" >&2
     exit 1

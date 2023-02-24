@@ -38,6 +38,7 @@ Usage: ./bin/rbkBuild.sh [-abcdefgh]
 -j: Run Rebulkan
 -k: Build and Run
 -l: Use Ninja
+-m: Use ccache [default to USE_CCACHE=true]
 
 EOF
 	

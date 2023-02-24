@@ -56,10 +56,7 @@ namespace Rbk
 
     RenderManager::~RenderManager()
     {
-        CleanUp();
-        m_Renderer->Clear();
-        m_Renderer->Destroy();
-        m_Renderer->Rdr()->Destroy();
+        
     }
 
     void RenderManager::CleanUp()

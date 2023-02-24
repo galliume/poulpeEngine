@@ -8,6 +8,7 @@ namespace Rbk
         std::vector<Vertex> vertices;
         std::vector<uint32_t> indices;
         uint32_t materialId = 0;
+        std::vector<uint32_t> facesMaterialId;
     };
 
     class TinyObjLoader
