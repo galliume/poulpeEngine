@@ -1,5 +1,4 @@
 #pragma once
-#include <volk.h>
 #include "Rebulk/Renderer/Vulkan/DeviceMemory.hpp"
 
 namespace Rbk

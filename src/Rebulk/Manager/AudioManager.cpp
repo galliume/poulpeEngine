@@ -18,8 +18,6 @@ namespace Rbk
 
     AudioManager::~AudioManager()
     {
-        StopAmbient();
-        StopSplash();
         ma_engine_stop(&m_Engine);
         ma_engine_uninit(&m_Engine);
     }
@@ -89,6 +87,9 @@ namespace Rbk
         } else if (State::ERR == m_State) {
             return "an error occured";
         }
+
+        RBK_WARN("AudioManager in an unknown states.");
+        return "AudioManager unknown state";
     }
 
     void AudioManager::ToggleLooping()
