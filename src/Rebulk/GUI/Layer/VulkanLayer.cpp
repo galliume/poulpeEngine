@@ -174,7 +174,7 @@ namespace Rbk
         ImGui::SetNextItemOpen(m_DebugOpen);
         if ((m_DebugOpen = ImGui::CollapsingHeader("Debug")))
         {
-            Rbk::Im::Text("Polygon mode"); 
+            Rbk::Im::Text("%s", "Polygon mode"); 
             ImGui::SameLine();
 
             auto pm = Rbk::VulkanAdapter::s_PolygoneMode.load();

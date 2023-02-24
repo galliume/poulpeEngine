@@ -1,10 +1,16 @@
 cmake_minimum_required(VERSION 3.25.2)
 
-find_program(CCACHE_PROGRAM ccache)
-if(CCACHE_PROGRAM)
-	message(STATUS "Found ccache: ${CCACHE_PROGRAM}")
-    set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE "${CCACHE_PROGRAM}")
+if (USE_CCACHE)
+  find_program(CCACHE_PROGRAM ccache)
+  if(CCACHE_PROGRAM)
+    message(STATUS "Found ccache: ${CCACHE_PROGRAM}")
+	set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE "${CCACHE_PROGRAM}")
+  endif()
+else()
+  message(WARNING "ccache deactivated")
 endif()
+
+set(CMAKE_CXX_CLANG_TIDY clang-tidy)
 
 project(Rebulkan
   VERSION 0.1.1
@@ -73,7 +79,7 @@ include_directories(${PROJECT_SOURCE_DIR}/src
                     ${PROJECT_SOURCE_DIR}/vendor/nlohmann/include 
                     ${PROJECT_SOURCE_DIR}/vendor/tiny_obj_loader
                     ${PROJECT_SOURCE_DIR}/vendor/imgui
-					${VULKAN_PATH})
+					          ${VULKAN_PATH})
 
 add_executable(Rebulkan src/Rebulkan.cpp)
 
@@ -121,19 +127,21 @@ target_precompile_headers(Rebulkan PUBLIC include/rebulkpch.hpp)
 
 target_link_libraries(Rebulkan PRIVATE ${EXTRA_LIBS} rebulkan_compiler_flags)
 
-target_include_directories(Rebulkan PUBLIC "${PROJECT_BINARY_DIR}"
+target_include_directories(Rebulkan PUBLIC "${PROJECT_BINARY_DIR}")
+target_include_directories(Rebulkan PRIVATE
                           "${PROJECT_SOURCE_DIR}/vendor/glfw"
                           "${PROJECT_SOURCE_DIR}/vendor/glm"
                           "${PROJECT_SOURCE_DIR}/vendor/volk"
                           "${PROJECT_SOURCE_DIR}/vendor/imgui")
 					
 #Filters for visual studio structure					
-file(GLOB_RECURSE _source_list *.cpp* *.h* *.hpp*)
+file(GLOB_RECURSE _source_list "${PROJECT_SOURCE_DIR}/src/**/*.cpp" "${PROJECT_SOURCE_DIR}/src/**/*.hpp")
 foreach(_source IN ITEMS ${_source_list})
     get_filename_component(_source_path "${_source}" PATH)
     string(REPLACE "${CMAKE_SOURCE_DIR}" "" _group_path "${_source_path}")
     string(REPLACE "/" "\\" _group_path "${_group_path}")
     source_group("${_group_path}" FILES "${_source}")
+	list(APPEND TIDY_SRC "${_source}")
 endforeach()						  
 
 set_property(TARGET Rebulkan PROPERTY VS_DEBUGGER_WORKING_DIRECTORY $<TARGET_FILE_DIR:Rebulkan>)
@@ -151,3 +159,5 @@ add_custom_command(TARGET Rebulkan
 				   
 add_custom_command(TARGET Rebulkan 
 				   PRE_BUILD COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/imgui.ini $<TARGET_FILE_DIR:Rebulkan>/imgui.ini)
+				   
+find_program(CLANG_TIDY_EXE NAMES "clang-tidy")
