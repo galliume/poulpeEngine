@@ -152,10 +152,11 @@ namespace Rbk
                 m_Renderer->BindPipeline(m_CommandBuffersEntities[m_ImageIndex], mesh->m_GraphicsPipeline);
 
 
-                //if (m_HasClicked && mesh->IsHit(m_RayPick)) {
+                // if (m_HasClicked && mesh->IsHit(m_RayPick)) {
                 //    RBK_DEBUG("HIT ! {}", mesh->GetName());
-                //    m_HasClicked = false;
-                //}
+                // }
+                //m_HasClicked = false;
+
                 int index = m_ImageIndex;
                 for (uint32_t i = 0; i < mesh->m_UniformBuffers.size(); i++) {
                     index += i * 3;
@@ -261,10 +262,11 @@ namespace Rbk
 
                 m_Renderer->BindPipeline(m_CommandBuffersBbox[m_ImageIndex], bbox->m_GraphicsPipeline);
 
-                //if (m_HasClicked && mesh->IsHit(m_RayPick)) {
-                //    RBK_DEBUG("HIT ! {}", mesh->GetName());
-                //    m_HasClicked = false;
-                //}
+                if (m_HasClicked && mesh->IsHit(m_RayPick)) {
+                   RBK_DEBUG("HIT ! {}", mesh->GetName());
+                }
+                m_HasClicked = false;
+                
                 int index = m_ImageIndex;
                 for (uint32_t i = 0; i < bbox->m_UniformBuffers.size(); i++) {
                     index += i * 3;
@@ -315,7 +317,7 @@ namespace Rbk
         }
 
         Rbk::Locator::getThreadPool()->Submit([this]() { DrawHUD(); });
-        std::chrono::milliseconds waitFor(50);
+        std::chrono::milliseconds waitFor(75);
 
         {
             std::unique_lock<std::mutex> lock(m_MutexSubmit);
@@ -338,7 +340,8 @@ namespace Rbk
             {
                 std::unique_lock<std::mutex> lock(m_MutexSubmit);
                 auto now = std::chrono::system_clock::now();
-                m_CVBBox.wait_until(lock, now + waitFor, [this]() { return m_BBoxSignal.load(); });
+                std::chrono::milliseconds plus(200);
+                m_CVBBox.wait_until(lock, now + plus, [this]() { return m_BBoxSignal.load(); });
             }
         }
  

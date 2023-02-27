@@ -29,18 +29,18 @@ namespace Rbk
 
     bool Entity::IsHit(glm::vec3 point)
     {
-        //RBK_DEBUG(
-        //    "BBOX maxX:{} minX{} maxY:{} minY{} maxZ:{} minZ{}",
-        //    m_BoundingBox.maxX,
-        //    m_BoundingBox.minX,
-        //    m_BoundingBox.maxY,
-        //    m_BoundingBox.minY,
-        //    m_BoundingBox.maxZ,
-        //    m_BoundingBox.minZ
-        //);
+        RBK_DEBUG(
+           "BBOX maxX:{} minX{} maxY:{} minY{} maxZ:{} minZ{}",
+           GetBBox()->maxX,
+           GetBBox()->minX,
+           GetBBox()->maxY,
+           GetBBox()->minY,
+           GetBBox()->maxZ,
+           GetBBox()->minZ
+        );
 
-        //RBK_DEBUG(
-        //    "point x:{} y{} z:{}", point.x, point.y, point.z);
+        RBK_DEBUG(
+           "point x:{} y{} z:{}", point.x, point.y, point.z);
 
     /*    return (
             point.x >= m_BoundingBox.minX &&
