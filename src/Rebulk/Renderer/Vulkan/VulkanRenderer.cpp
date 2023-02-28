@@ -883,8 +883,6 @@ namespace Rbk {
                         RBK_ERROR("Reading error");
                     }
                 }
-
-                delete cacheFileData;
             }
 
             VkPipelineCache pipelineCache;

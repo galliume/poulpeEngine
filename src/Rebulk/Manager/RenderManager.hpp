@@ -41,7 +41,6 @@ namespace Rbk
         virtual std::shared_ptr<Rbk::DestroyManager> GetDestroyManager() override { return m_DestroyManager; }
         virtual void CleanUp() override;
 
-        void StartInThread(std::function<void()> func);
         void SetDrawBbox(bool draw) { m_Renderer->SetDrawBbox(draw); };
 
     private:

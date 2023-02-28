@@ -126,22 +126,23 @@ namespace Rbk
     void RenderManager::LoadData(const std::string& level)
     {
         nlohmann::json appConfig = m_ConfigManager->AppConfig();
+        std::string_view threadQueueName{ "loading" };
 
         std::vector<std::function<void()>> entityFutures = m_EntityManager->Load(
             m_ConfigManager->EntityConfig(level)
         );
 
         for (auto& future : entityFutures) {
-            StartInThread(future);
+            Rbk::Locator::getThreadPool()->Submit(threadQueueName, future);
         }
 
         std::function<void()> textureFuture = m_TextureManager->Load();
         std::function<void()> skyboxFuture = m_TextureManager->LoadSkybox(static_cast<std::string>(appConfig["defaultSkybox"]));
         std::function<void()> shaderFuture = m_ShaderManager->Load(m_ConfigManager->ShaderConfig());
 
-        StartInThread(textureFuture);
-        StartInThread(skyboxFuture);
-        StartInThread(shaderFuture);
+        Rbk::Locator::getThreadPool()->Submit(threadQueueName, textureFuture);
+        Rbk::Locator::getThreadPool()->Submit(threadQueueName, skyboxFuture);
+        Rbk::Locator::getThreadPool()->Submit(threadQueueName, shaderFuture);
         
         //@todo clean this...
         while (!m_TextureManager->IsTexturesLoadingDone()) {}
@@ -312,10 +313,5 @@ namespace Rbk
         skyboxMesh->Accept(skyboxVulkanisator);
         m_EntityManager->SetSkybox(skyboxMesh);
         m_Renderer->AddSkybox(skyboxMesh);
-    }
-
-    void RenderManager::StartInThread(std::function<void()> func)
-    {
-        Rbk::Locator::getThreadPool()->Submit(func);
     }
 }

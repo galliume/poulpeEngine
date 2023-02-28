@@ -28,9 +28,13 @@ namespace Rbk
         }
 
         template<typename FunctionType>
-        void Submit(FunctionType f)
+        void Submit(std::string_view queueName, FunctionType f)
         {
-            m_WorkQueue.Push(std::function<void()>(f));
+            if (m_WorkQueue.contains(queueName)) {
+                m_WorkQueue.at(queueName).Push(std::function<void()>(f));
+            } else{
+                m_WorkQueue[queueName];
+            }
         }
 
         ~ThreadPool()
@@ -43,18 +47,25 @@ namespace Rbk
         {
             while (!m_Done) {
                 std::function<void()> task;
+                //@todo add priority order
+                for (auto& [queueName, queueThread]: m_WorkQueue) {
+                    if (queueThread.TryPop(task)) {
+                        RBK_DEBUG("TryPop from {}", queueName.data());
 
-                if (m_WorkQueue.TryPop(task)) {
-                    task();
-                } else {
-                    std::this_thread::yield();
+                        if (m_WorkQueue.at(queueName.data()).Empty()) {
+                            RBK_DEBUG("queueThread {} is empty", queueName.data());
+                        }
+                        task();
+                    } else {
+                        std::this_thread::yield();
+                    }
                 }
             }
         }
 
     private:
         std::atomic_bool m_Done;
-        ThreadSafeQueue<std::function<void()>> m_WorkQueue;
+        std::unordered_map<std::string_view, ThreadSafeQueue<std::function<void()>>> m_WorkQueue;
         std::vector<std::thread> m_Threads;
         JoinThreads m_Joiner;
     };
