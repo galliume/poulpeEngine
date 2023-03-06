@@ -186,7 +186,7 @@ namespace Rbk
         m_CurrentLevel = m_ConfigManager->ListLevels().at(levelIndex);
         m_IsLoaded = false;
         m_Refresh = true;
-        m_ShowBbox = true;
+        m_ShowBbox = showBbox;
     }
 
     void RenderManager::PrepareSplashScreen()
