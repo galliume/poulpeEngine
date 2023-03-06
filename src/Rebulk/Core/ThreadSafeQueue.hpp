@@ -21,7 +21,7 @@ namespace Rbk
         void WaitAndPop(T& value)
         {
             std::unique_lock<std::mutex> lock(m_Mutex);
-            m_DataCond.wait(lock, [this] { return !m_DataQueue.empty(); });
+            m_DataCond.wait(lock, [=, this] { return !m_DataQueue.empty(); });
 
             value = std::move(*m_DataQueue.front());
             m_DataQueue.pop();
@@ -30,7 +30,7 @@ namespace Rbk
         std::shared_ptr<T> WaitAndPop()
         {
             std::unique_lock<std::mutex> lock(m_Mutex);
-            m_DataCond.wait(lock, [this] { return !m_DataQueue.empty(); });
+            m_DataCond.wait(lock, [=, this] { return !m_DataQueue.empty(); });
 
             std::shared_ptr<T> res = m_DataQueue.front();
             m_DataQueue.pop();

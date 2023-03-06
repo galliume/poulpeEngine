@@ -102,7 +102,7 @@ namespace Rbk
         if (static_cast<bool>(appConfig["splashScreenMusic"]))
             m_AudioManager->StartSplash();
 
-        std::thread loading([this]() {
+        std::thread loading([=, this]() {
             while (!IsLoaded()) {
                 m_Renderer->DrawSplashScreen();
                 std::this_thread::sleep_for(std::chrono::milliseconds(50));
@@ -127,28 +127,36 @@ namespace Rbk
     {
         nlohmann::json appConfig = m_ConfigManager->AppConfig();
         std::string_view threadQueueName{ "loading" };
+        std::condition_variable cv;
 
-        std::vector<std::function<void()>> entityFutures = m_EntityManager->Load(
-            m_ConfigManager->EntityConfig(level)
-        );
+        std::function<void()> entityFutures = m_EntityManager->Load(m_ConfigManager->EntityConfig(level), cv);
+        std::function<void()> textureFuture = m_TextureManager->Load(cv);
+        std::function<void()> skyboxFuture = m_TextureManager->LoadSkybox(static_cast<std::string>(appConfig["defaultSkybox"]), cv);
+        std::function<void()> shaderFuture = m_ShaderManager->Load(m_ConfigManager->ShaderConfig(), cv);
 
-        for (auto& future : entityFutures) {
-            Rbk::Locator::getThreadPool()->Submit(threadQueueName, future);
-        }
-
-        std::function<void()> textureFuture = m_TextureManager->Load();
-        std::function<void()> skyboxFuture = m_TextureManager->LoadSkybox(static_cast<std::string>(appConfig["defaultSkybox"]));
-        std::function<void()> shaderFuture = m_ShaderManager->Load(m_ConfigManager->ShaderConfig());
-
+        Rbk::Locator::getThreadPool()->Submit(threadQueueName, entityFutures);
         Rbk::Locator::getThreadPool()->Submit(threadQueueName, textureFuture);
         Rbk::Locator::getThreadPool()->Submit(threadQueueName, skyboxFuture);
         Rbk::Locator::getThreadPool()->Submit(threadQueueName, shaderFuture);
+
+        std::mutex loading;
         
-        //@todo clean this...
-        while (!m_TextureManager->IsTexturesLoadingDone()) {}
-        while (!m_TextureManager->IsSkyboxLoadingDone()) {}
-        while (!m_ShaderManager->IsLoadingDone()) {}
-        while (!m_EntityManager->IsLoadingQueuesEmpty()) {}
+        {
+            std::unique_lock<std::mutex> lock(loading);
+            cv.wait(lock, [=, this]() { return m_TextureManager->IsTexturesLoadingDone(); });
+        }
+        {
+            std::unique_lock<std::mutex> lock(loading);
+            cv.wait(lock, [=, this]() { return m_TextureManager->IsSkyboxLoadingDone(); });
+        }
+        {
+            std::unique_lock<std::mutex> lock(loading);
+            cv.wait(lock, [=, this]() { return m_ShaderManager->IsLoadingDone(); });
+        }
+        {
+            std::unique_lock<std::mutex> lock(loading);
+            cv.wait(lock, [=, this]() { return m_EntityManager->IsLoadingDone(); });
+        }
 
         SetIsLoaded();
 

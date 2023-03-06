@@ -11,7 +11,7 @@ namespace Rbk
         explicit EntityManager();
 
         virtual void AddRenderer(std::shared_ptr<IRendererAdapter> renderer) override { m_Renderer = renderer; }
-        virtual std::vector<std::function<void()>> Load(nlohmann::json levelConfig) override;
+        std::function<void()> Load(nlohmann::json levelConfig, std::condition_variable& cv) override;
         virtual inline std::vector<std::shared_ptr<Entity>>* GetEntities() override { return &m_Entities; }
         virtual inline void SetSkybox(std::shared_ptr<Mesh> skybox) override { m_Skybox = skybox; }
         virtual inline std::shared_ptr<Mesh> GetSkybox() override { return m_Skybox; }
@@ -25,7 +25,7 @@ namespace Rbk
         const std::shared_ptr<Entity> GetEntityByName(const std::string& name) const;
 
         inline const uint32_t GetTotalEntities() const { return m_Entities.size(); }
-        bool IsLoadingQueuesEmpty() { return m_LoadingQueues.empty(); };
+        inline bool IsLoadingDone() { return m_LoadingDone.load(); }
 
     private:
         std::vector<std::shared_ptr<Entity>> m_Entities;
@@ -34,7 +34,6 @@ namespace Rbk
         std::vector<std::shared_ptr<Mesh>> m_HUD = {};
         std::shared_ptr<IRendererAdapter> m_Renderer = nullptr;
         nlohmann::json m_LevelConfig;
-        std::queue<int> m_LoadingQueues;
-        int m_QueueIndex = 0;
+        std::atomic_bool m_LoadingDone{ false };
     };
 }

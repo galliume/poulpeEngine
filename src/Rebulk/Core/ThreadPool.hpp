@@ -34,6 +34,7 @@ namespace Rbk
                 m_WorkQueue.at(queueName).Push(std::function<void()>(f));
             } else{
                 m_WorkQueue[queueName];
+                m_WorkQueue.at(queueName).Push(std::function<void()>(f));
             }
         }
 
@@ -50,11 +51,6 @@ namespace Rbk
                 //@todo add priority order
                 for (auto& [queueName, queueThread]: m_WorkQueue) {
                     if (queueThread.TryPop(task)) {
-                        RBK_DEBUG("TryPop from {}", queueName.data());
-
-                        if (m_WorkQueue.at(queueName.data()).Empty()) {
-                            RBK_DEBUG("queueThread {} is empty", queueName.data());
-                        }
                         task();
                     } else {
                         std::this_thread::yield();

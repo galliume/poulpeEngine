@@ -176,6 +176,9 @@ namespace Rbk
                 std::lock_guard<std::mutex> guard(m_MutexCmdSubmit);
                 m_CmdToSubmit[1] = m_CommandBuffersEntities[m_ImageIndex];
             }
+
+            m_EntitiesSignal.store(true);
+            m_CVEntities.notify_one();
         }
     }
 
@@ -206,6 +209,8 @@ namespace Rbk
                 m_CmdToSubmit[0] = m_CommandBuffersSkybox[m_ImageIndex];
             }
 
+            m_SkyboxSignal.store(true);
+            m_CVSkybox.notify_one();
         }
     }
 
@@ -234,6 +239,9 @@ namespace Rbk
             std::lock_guard<std::mutex> guard(m_MutexCmdSubmit);
             m_CmdToSubmit[2] = m_CommandBuffersHud[m_ImageIndex];
         }
+
+        m_HUDSignal.store(true);
+        m_CVHUD.notify_one();
     }
 
     void VulkanAdapter::DrawBbox(std::vector<std::shared_ptr<Entity>>& entities)
@@ -277,6 +285,9 @@ namespace Rbk
                 std::lock_guard<std::mutex> guard(m_MutexCmdSubmit);
                 m_CmdToSubmit[3] = m_CommandBuffersBbox[m_ImageIndex];
             }
+
+            m_BBoxSignal.store(true);
+            m_CVBBox.notify_one();
         }
     }
 
@@ -293,21 +304,51 @@ namespace Rbk
 
         for (auto& entities : m_Entities) {
 
-            Rbk::Locator::getThreadPool()->Submit(threadQueueName, [this, &entities]() { DrawEntities(entities); });
+            Rbk::Locator::getThreadPool()->Submit(threadQueueName, [=, this, &entities]() { DrawEntities(entities); });
 
             //@todo strip for release?
             if (GetDrawBbox()) {
-                Rbk::Locator::getThreadPool()->Submit(threadQueueName, [this, &entities] {
+                Rbk::Locator::getThreadPool()->Submit(threadQueueName, [=, this, &entities] {
                     DrawBbox(entities);
                 });
             }
         }
 
-        Rbk::Locator::getThreadPool()->Submit(threadQueueName, [this]() { DrawSkybox(); });
-        Rbk::Locator::getThreadPool()->Submit(threadQueueName, [this]() { DrawHUD(); });
-        
+        Rbk::Locator::getThreadPool()->Submit(threadQueueName, [=, this]() { DrawSkybox(); });
+        Rbk::Locator::getThreadPool()->Submit(threadQueueName, [=, this]() { DrawHUD(); });
+
+        std::chrono::milliseconds waitFor(50);
+
+        {
+            std::unique_lock<std::mutex> lock(m_MutexSubmit);
+            auto now = std::chrono::system_clock::now();
+            m_CVSkybox.wait_until(lock, now + waitFor, [=, this]() { return m_SkyboxSignal.load(); });
+        }
+        {
+            std::unique_lock<std::mutex> lock(m_MutexSubmit);
+            auto now = std::chrono::system_clock::now();
+            m_CVHUD.wait_until(lock, now + waitFor, [=, this]() { return m_HUDSignal.load(); });
+        }
+        {
+            std::unique_lock<std::mutex> lock(m_MutexSubmit);
+            auto now = std::chrono::system_clock::now();
+            m_CVEntities.wait_until(lock, now + waitFor, [=, this]() { return m_EntitiesSignal.load(); });
+        }
+        if (GetDrawBbox()) {
+            {
+                std::unique_lock<std::mutex> lock(m_MutexSubmit);
+                auto now = std::chrono::system_clock::now();
+                m_CVBBox.wait_until(lock, now + waitFor, [=, this]() { return m_BBoxSignal.load(); });
+            }
+        }
+
         Submit(m_CmdToSubmit);
         Present();
+
+        m_SkyboxSignal.store(false);
+        m_EntitiesSignal.store(false);
+        m_HUDSignal.store(false);
+        m_BBoxSignal.store(false);
 
         //@todo wtf ?
         uint32_t currentFrame = m_Renderer->GetNextFrameIndex();
