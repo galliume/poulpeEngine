@@ -261,10 +261,10 @@ namespace Rbk
 
                 m_Renderer->BindPipeline(m_CommandBuffersBbox[m_ImageIndex], bbox->m_GraphicsPipeline);
 
-                //if (m_HasClicked && mesh->IsHit(m_RayPick)) {
-                //   RBK_DEBUG("HIT ! {}", mesh->GetName());
-                //}
-                //m_HasClicked = false;
+                if (m_HasClicked && mesh->IsHit(m_RayPick)) {
+                   RBK_DEBUG("HIT ! {}", mesh->GetName());
+                }
+                m_HasClicked = false;
                 
                 int index = m_ImageIndex;
                 for (uint32_t i = 0; i < bbox->m_UniformBuffers.size(); i++) {
