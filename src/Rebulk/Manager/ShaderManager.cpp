@@ -8,11 +8,11 @@ namespace Rbk
         m_Shaders = std::make_shared<VulkanShaders>();
     }
 
-    std::function<void()> ShaderManager::Load(nlohmann::json config)
+    std::function<void()> ShaderManager::Load(nlohmann::json config, std::condition_variable& cv)
     {
         m_Config = config;
 
-        std::function shaderFuture = [=]() {
+        std::function shaderFuture = [=, this, &cv]() {
             for (auto& shader : m_Config["shader"].items()) {
 
                 auto key = static_cast<std::string>(shader.key());
@@ -22,6 +22,7 @@ namespace Rbk
             }
 
             m_LoadingDone = true;
+            cv.notify_one();
         };
 
         return shaderFuture;

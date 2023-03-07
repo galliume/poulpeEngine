@@ -169,6 +169,8 @@ namespace Rbk {
         void EndMarker(VkCommandBuffer buffer);
         uint32_t GetQueueCount() { return m_queueCount; }
 
+        void WaitIdle();
+
         static const std::string GetVendor(int vendorID)
         {
             std::map<int, std::string> vendors;

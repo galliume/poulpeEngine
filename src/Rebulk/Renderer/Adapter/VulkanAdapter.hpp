@@ -30,10 +30,10 @@ namespace Rbk
         virtual inline glm::mat4 GetPerspective() override { return m_Perspective; }
         virtual void SetDeltatime(float deltaTime) override;
         void Clear();
-        void DrawEntities(std::vector<std::shared_ptr<Entity>>& entities);
+        void DrawEntities();
         void DrawSkybox();
         void DrawHUD();
-        void DrawBbox(std::vector<std::shared_ptr<Entity>>& entities);
+        void DrawBbox();
 
         void ShouldRecreateSwapChain();
         void RecreateSwapChain();
@@ -110,7 +110,7 @@ namespace Rbk
         glm::vec3 m_RayPick;
         bool m_HasClicked = false;
 
-        std::vector<std::vector<std::shared_ptr<Entity>>> m_Entities;
+        std::vector<std::shared_ptr<Entity>>* m_Entities;
         std::shared_ptr<Mesh> m_SkyboxMesh = nullptr;
         std::vector<std::shared_ptr<Entity>>* m_BoundingBox;
         std::vector<VkCommandBuffer> m_CmdToSubmit;

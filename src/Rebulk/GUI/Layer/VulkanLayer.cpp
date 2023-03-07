@@ -354,8 +354,8 @@ namespace Rbk
                 
                 if (ImGui::Selectable(skybox.at(n).c_str(), isSelected)) {
                     m_SkyboxIndex = n;
-                    m_RenderManager.load()->GetTextureManager()->LoadSkybox(skybox.at(n))();
-                    m_RenderManager.load()->GetEntityManager()->GetSkybox()->SetIsDirty(true);
+                    m_Skybox = skybox.at(m_SkyboxIndex).c_str();
+                    Refresh();
                 }
 
                 if (isSelected)
@@ -363,6 +363,8 @@ namespace Rbk
             }
             ImGui::EndCombo();
         }
+
+        if (ImGui::SmallButton("Reload")) Refresh();
     }
 
     void VulkanLayer::LoadTextures()
@@ -398,7 +400,7 @@ namespace Rbk
 
     void VulkanLayer::Refresh()
     {
-        m_RenderManager.load()->Refresh(m_LevelIndex.value(), m_ShowBBox);
+        m_RenderManager.load()->Refresh(m_LevelIndex.value(), m_ShowBBox, m_Skybox);
         m_Refresh = true;
     }
 }

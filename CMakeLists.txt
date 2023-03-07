@@ -54,9 +54,11 @@ include(gitSubModule)
 
 configure_file(RebulkanConfig.h.in RebulkanConfig.h)
 
-add_definitions(-DVK_NO_PROTOTYPES 
-                -DVOLK_STATIC_DEFINES 
-                -DIMGUI_IMPL_VULKAN_NO_PROTOTYPES)
+add_definitions(-DVK_NO_PROTOTYPES
+                -DVOLK_STATIC_DEFINES
+                -DIMGUI_IMPL_VULKAN_NO_PROTOTYPES
+                -D_CRT_SECURE_NO_WARNINGS
+                -D_CRT_APP)
 
 if (DEFINED ENV{VULKAN_SDK}) 
   cmake_path(SET VULKAN_PATH "$ENV{VULKAN_SDK}/Include")

@@ -38,6 +38,6 @@ namespace Rbk
         virtual std::shared_ptr<Rbk::DestroyManager> GetDestroyManager() = 0;
         virtual void CleanUp() = 0;
 
-        virtual void Refresh(uint32_t levelIndex, bool showBbox = false) = 0;
+        virtual void Refresh(uint32_t levelIndex, bool showBbox = false, std::string_view skybox = "debug") = 0;
     };
 }
