@@ -38,7 +38,7 @@ namespace Rbk
         glm::vec3 m_CameraFront;
         float m_Yaw = -90.0f;
         float m_Pitch;
-        float m_Speed = 0.1f;
+        float m_Speed = 0.01f;
         float m_DeltaTime = 1.f;
     };
 }

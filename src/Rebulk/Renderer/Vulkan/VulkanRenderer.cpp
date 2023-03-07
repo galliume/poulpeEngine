@@ -82,6 +82,16 @@ namespace Rbk {
         CreateLogicalDevice();
         InitDetails();
         InitMemoryPool();
+
+        VkFenceCreateInfo fenceInfo{};
+        fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+        fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+        fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
+        VkFence fence;
+
+        vkCreateFence(m_Device, &fenceInfo, nullptr, &m_FenceAcquireImage);
+        vkCreateFence(m_Device, &fenceInfo, nullptr, &m_FenceSubmit);
+        vkCreateFence(m_Device, &fenceInfo, nullptr, &m_FenceBuffer);
     }
 
     void VulkanRenderer::InitMemoryPool()
@@ -1328,26 +1338,16 @@ namespace Rbk {
         submitInfo.commandBufferCount = 1;
         submitInfo.pCommandBuffers = &commandBuffer;
 
-        VkFenceCreateInfo fenceInfo{};
-        fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
-        fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
-        fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
-
-        VkFence fence;
-
-        vkCreateFence(m_Device, &fenceInfo, nullptr, &fence);
-        vkResetFences(m_Device, 1, &fence);
+        vkResetFences(m_Device, 1, &m_FenceSubmit);
         VkResult result = VK_SUCCESS;
 
         {
             std::lock_guard<std::mutex> guard(m_MutexQueueSubmit);
 
-            result = vkQueueSubmit(m_GraphicsQueues[queueIndex], 1, &submitInfo, fence);
-            vkWaitForFences(m_Device, 1, &fence, VK_TRUE, UINT32_MAX);
+            result = vkQueueSubmit(m_GraphicsQueues[queueIndex], 1, &submitInfo, m_FenceSubmit);
+            vkWaitForFences(m_Device, 1, &m_FenceSubmit, VK_TRUE, UINT32_MAX);
             vkResetCommandBuffer(commandBuffer, VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
         }
-
-        vkDestroyFence(m_Device, fence, nullptr);
 
         return result;
     }
@@ -1388,9 +1388,9 @@ namespace Rbk {
             result = vkQueueSubmit(m_GraphicsQueues[queueIndex], submits.size(), submits.data(), m_InFlightFences[m_CurrentFrame]);
             vkWaitForFences(m_Device, 1, &m_InFlightFences[m_CurrentFrame], VK_TRUE, UINT32_MAX);
 
-//            for (auto& cmd : commandBuffers) {
-//                vkResetCommandBuffer(cmd, VK_COMMAND_BUFFER_RESET);
-//            }
+            //for (auto& cmd : commandBuffers) {
+            //    vkResetCommandBuffer(cmd, VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
+            //}
         }
 
         return result;
@@ -1430,9 +1430,12 @@ namespace Rbk {
     {
         {
             std::vector<VkSemaphore>& imageAvailableSemaphores = semaphores.first;
+            
+            vkResetFences(m_Device, 1, &m_FenceAcquireImage);
 
             uint32_t imageIndex = 0;
-            VkResult result = vkAcquireNextImageKHR(m_Device, swapChain, UINT32_MAX, imageAvailableSemaphores[m_CurrentFrame], VK_NULL_HANDLE, &imageIndex);
+            VkResult result = vkAcquireNextImageKHR(m_Device, swapChain, UINT32_MAX, imageAvailableSemaphores[m_CurrentFrame], m_FenceAcquireImage, &imageIndex);
+            vkWaitForFences(m_Device, 1, &m_FenceAcquireImage, VK_TRUE, UINT32_MAX);
 
             if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
                 RBK_ERROR("failed to acquire swap chain image!");
@@ -1769,25 +1772,15 @@ namespace Rbk {
         submitInfo.commandBufferCount = 1;
         submitInfo.pCommandBuffers = &commandBuffer;
 
-        VkFenceCreateInfo fenceInfo{};
-        fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
-        fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
-        fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
-
-        VkFence fence;
-
-        vkCreateFence(m_Device, &fenceInfo, nullptr, &fence);
-        vkResetFences(m_Device, 1, &fence);
+        vkResetFences(m_Device, 1, &m_FenceBuffer);
 
         {
             std::lock_guard<std::mutex> guard(m_MutexQueueSubmit);
 
-            vkQueueSubmit(m_GraphicsQueues[queueIndex], 1, &submitInfo, fence);
-            vkWaitForFences(m_Device, 1, &fence, VK_TRUE, UINT32_MAX);
+            vkQueueSubmit(m_GraphicsQueues[queueIndex], 1, &submitInfo, m_FenceBuffer);
+            vkWaitForFences(m_Device, 1, &m_FenceBuffer, VK_TRUE, UINT32_MAX);
             vkFreeCommandBuffers(m_Device, commandPool, 1, &commandBuffer);
         }
-
-        vkDestroyFence(m_Device, fence, nullptr);
     }
 
     VkImageMemoryBarrier VulkanRenderer::SetupImageMemoryBarrier(VkImage image, VkAccessFlags srcAccessMask, VkAccessFlags dstAccessMask, VkImageLayout oldLayout, VkImageLayout newLayout, uint32_t mipLevels, VkImageAspectFlags aspectMask)
