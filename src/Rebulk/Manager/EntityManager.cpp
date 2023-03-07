@@ -57,16 +57,12 @@ namespace Rbk
         return *it;
     }
 
-    std::vector<std::function<void()>> EntityManager::Load(nlohmann::json levelConfig)
+    std::function<void()> EntityManager::Load(nlohmann::json levelConfig, std::condition_variable& cv)
     {
-        std::vector<std::function<void()>> futures;
 
         m_LevelConfig = levelConfig;
 
-        m_LoadingQueues.push(m_QueueIndex);
-        m_QueueIndex += 1;
-
-        std::function<void()> entitiesFuture = [=]() {
+        std::function<void()> entitiesFuture = [=, this, &cv]() {
 
             for (auto& entityConf : m_LevelConfig["entities"].items()) {
 
@@ -196,12 +192,11 @@ namespace Rbk
                 }
             }
 
-            m_LoadingQueues.pop();
-            m_QueueIndex -= 1;
+            m_LoadingDone.store(true);
+            cv.notify_one();
         };
 
-        futures.emplace_back(std::move(entitiesFuture));
-        return futures;
+        return entitiesFuture;
     }
 
     void EntityManager::Clear()

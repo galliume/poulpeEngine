@@ -84,7 +84,12 @@ namespace Rbk
             box->center = center;
             box->size = size;
             box->mesh = std::make_shared<Mesh>();
-            
+            box->maxX = xMax;
+            box->minX = xMin;
+            box->maxY = yMax;
+            box->minY = yMin;
+            box->maxZ = zMax;
+            box->minZ = zMin;
             mesh->AddBBox(box);
             meshes.emplace_back(mesh);
         }

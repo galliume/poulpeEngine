@@ -1,0 +1,61 @@
+{
+    "tasks": [
+        {
+            "label": "RbkBuild",
+            "detail": "rbk build cmd",
+            "command": "${workspaceFolder}\\bin\\rbkBuild.sh",
+            "type": "shell",
+            "group": {
+                "kind": "build",
+                "isDefault": false
+            },
+            "problemMatcher": [],
+            "args": [
+                "-e", "true"
+            ],
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared"
+            }
+        },
+        {
+            "label": "RbkCompile",
+            "detail": "rbk compile cmd",
+            "command": "${workspaceFolder}\\bin\\rbkBuild.sh",
+            "type": "shell",
+            "group": {
+                "kind": "build",
+                "isDefault": false
+            },
+            "problemMatcher": [],
+            "args": [
+                "-i"
+            ],
+            "presentation": {
+                "echo": true,
+                "clear": false,
+                "reveal": "always",
+                "panel": "shared"
+            }
+        },
+        {
+            "label": "RbkLaunch",
+            "detail": "rbk launch cmd",
+            "command": "${workspaceFolder}\\bin\\rbkBuild.sh",
+            "type": "shell",
+            "group": {
+                "kind": "build",
+                "isDefault": false
+            },
+            "problemMatcher": [],
+            "args": [
+                "-j"
+            ],
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared"
+            }
+        }
+    ],
+    "version": "2.0.0"
+}

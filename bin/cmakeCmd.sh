@@ -108,18 +108,25 @@ run() {
 		RBK_BIN="Rebulkan.exe"
 	fi
 	
-	RBK_PATH="./${CMAKE_BUILD_DIR}/${CMAKE_BUILD_TYPE}/${RBK_BIN}"
+	RBK_PATH="./${CMAKE_BUILD_DIR}/${CMAKE_BUILD_TYPE}"
 	
-	if [ -f $RBK_PATH ] ; then
-		RBK_PATH
+	if [ -d $RBK_PATH ] ; then
+
+		cd ${RBK_PATH}
+		rm "./cache/*"
+		"./${RBK_BIN}"
 		RESULT=$?
 		exit $((RESULT+0))		
 	else
-		RBK_PATH="./${CMAKE_BUILD_DIR}/${RBK_BIN}"
+		RBK_PATH="./${CMAKE_BUILD_DIR}"
 	fi
-	
-	if [ -f $RBK_PATH ] ; then
-		RBK_PATH
+
+	echo $RBK_PATH
+	if [ -d $RBK_PATH ] ; then
+		cd ${RBK_PATH}
+		rm "./cache/*"
+		pwd
+		"./${RBK_BIN}"
 		RESULT=$?
 		exit $((RESULT+0))
 	else

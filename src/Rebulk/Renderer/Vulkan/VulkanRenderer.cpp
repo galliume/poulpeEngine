@@ -809,7 +809,7 @@ namespace Rbk {
 
             //@todo move to a FileManager
             //@todo option to enable / disable pipeline cache
-            std::string cacheFileName = "cache/pipeline_cache_data_" + std::to_string(GetDeviceProperties().vendorID) + "_" + std::to_string(GetDeviceProperties().deviceID) + "_" + name.data();
+            std::string cacheFileName = "cache/pipeline_cache_data_" + std::to_string(m_DeviceProps.vendorID) + "_" + std::to_string(m_DeviceProps.deviceID) + "_" + name.data();
 
             bool badCache = false;
             size_t cacheFileSize = 0;
@@ -860,13 +860,13 @@ namespace Rbk {
                     badCache = true;
                     RBK_ERROR("Unsupported cache header version in {} got {}", cacheFileName, cacheHeaderVersion);
                 }
-                if (vendorID != *m_DeviceProps.pipelineCacheUUID) {
+                if (vendorID != static_cast<uint32_t>(m_DeviceProps.vendorID)) {
                     badCache = true;
-                    RBK_ERROR("Vendor ID mismatch in {} got {} expect {}", cacheFileName, vendorID, *m_DeviceProps.pipelineCacheUUID);
+                    RBK_ERROR("Vendor ID mismatch in {} got {} expect {}", cacheFileName, vendorID, m_DeviceProps.vendorID);
                 }
-                if (deviceID != m_DeviceProps.deviceID) {
+                if (deviceID != static_cast<uint32_t>(m_DeviceProps.deviceID)) {
                     badCache = true;
-                    RBK_ERROR("Device ID mismatch in {} got {} expect {}", cacheFileName, deviceID, *m_DeviceProps.pipelineCacheUUID);
+                    RBK_ERROR("Device ID mismatch in {} got {} expect {}", cacheFileName, deviceID, m_DeviceProps.deviceID);
                 }
                 if (memcmp(pipelineCacheUUID,  m_DeviceProps.pipelineCacheUUID, sizeof(pipelineCacheUUID)) != 0) {
                     RBK_ERROR("UUID mismatch in {} got {} expect {}", cacheFileName, *pipelineCacheUUID, *m_DeviceProps.pipelineCacheUUID);
@@ -883,8 +883,6 @@ namespace Rbk {
                         RBK_ERROR("Reading error");
                     }
                 }
-
-                delete cacheFileData;
             }
 
             VkPipelineCache pipelineCache;
@@ -2320,5 +2318,10 @@ namespace Rbk {
 #ifdef RBK_DEBUG_BUILD
         vkCmdEndDebugUtilsLabelEXT(buffer);
 #endif
+    }
+
+    void VulkanRenderer::WaitIdle()
+    {
+        vkDeviceWaitIdle(m_Device);
     }
 }
