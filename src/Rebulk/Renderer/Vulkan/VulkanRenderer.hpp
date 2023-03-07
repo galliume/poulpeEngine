@@ -210,7 +210,7 @@ namespace Rbk {
         int32_t m_CurrentFrame = 0;
         uint32_t m_ExtensionCount;
         std::string m_apiVersion;
-        const uint32_t m_queueCount = 2;
+        const uint32_t m_queueCount = 1;
 
         std::shared_ptr<Window> m_Window = VK_NULL_HANDLE;
 
@@ -262,5 +262,9 @@ namespace Rbk {
 
         VkDeviceSize m_MaxMemoryHeap;
         std::shared_ptr<DeviceMemoryPool> m_DeviceMemoryPool = nullptr;
+
+        VkFence m_FenceAcquireImage;
+        VkFence m_FenceSubmit;
+        VkFence m_FenceBuffer;
     };
 }

@@ -60,6 +60,12 @@ namespace Rbk
         RBK_DEBUG("Loaded scene in {}", (endRun - m_StartRun).count());//@todo readable in seconds...
 
         std::mutex lockDraw;
+        std::mutex mutex;
+
+        std::condition_variable cvImgui;
+        std::condition_variable cvMainRender;
+        std::atomic_bool imguiDone{ false };
+        std::atomic_bool mainRenderDone{ false };
 
         #ifdef RBK_DEBUG_BUILD
         InitImGui();
@@ -120,9 +126,30 @@ namespace Rbk
                 
                 #ifdef RBK_DEBUG_BUILD
                     imGui();
+                    //Rbk::Locator::getThreadPool()->Submit("render", [=, this, &imguiDone, &cvImgui]() {
+                    //    imGui();
+                    //    imguiDone.store(true);
+                    //    cvImgui.notify_one();
+                    //});
                 #endif
 
-                m_RenderManager->Draw();
+                Rbk::Locator::getThreadPool()->Submit("render", [=, this, &mainRenderDone, &cvMainRender]() { 
+                    m_RenderManager->Draw();
+                    mainRenderDone.store(true);
+                    cvMainRender.notify_one();
+                });
+                
+                //{
+                //    std::unique_lock<std::mutex> lock(mutex);
+                //    cvImgui.wait(lock, [=, this, &imguiDone]() { return imguiDone.load(); });
+                //}
+                {
+                    std::unique_lock<std::mutex> lock(mutex);
+                    cvMainRender.wait(lock, [=, this, &mainRenderDone]() { return mainRenderDone.load(); });
+                }
+
+                imguiDone.store(false);
+                mainRenderDone.store(false);
 
                 lastTime = currentTime;
             }
