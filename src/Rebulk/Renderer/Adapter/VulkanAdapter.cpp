@@ -300,9 +300,11 @@ namespace Rbk
         else m_CmdToSubmit.resize(3);
 
         m_ImageIndex = m_Renderer->AcquireNextImageKHR(m_SwapChain, m_Semaphores.at(0));
-
+        
         std::string_view threadQueueName{ "render" };
 
+        Rbk::Locator::getThreadPool()->Submit(threadQueueName, [=, this]() { DrawSkybox(); });
+        Rbk::Locator::getThreadPool()->Submit(threadQueueName, [=, this]() { DrawHUD(); });
         Rbk::Locator::getThreadPool()->Submit(threadQueueName, [=, this]() { DrawEntities(); });
 
         //@todo strip for release?
@@ -312,9 +314,7 @@ namespace Rbk
             });
         }
 
-        Rbk::Locator::getThreadPool()->Submit(threadQueueName, [=, this]() { DrawSkybox(); });
-        Rbk::Locator::getThreadPool()->Submit(threadQueueName, [=, this]() { DrawHUD(); });
-        std::chrono::milliseconds waitFor(50);
+        std::chrono::milliseconds waitFor(75);
 
         {
             std::unique_lock<std::mutex> lock(m_MutexSubmit);
