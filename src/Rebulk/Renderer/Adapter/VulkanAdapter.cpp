@@ -261,10 +261,10 @@ namespace Rbk
 
                 m_Renderer->BindPipeline(m_CommandBuffersBbox[m_ImageIndex], bbox->m_GraphicsPipeline);
 
-                if (m_HasClicked && mesh->IsHit(m_RayPick)) {
-                   RBK_DEBUG("HIT ! {}", mesh->GetName());
-                }
-                m_HasClicked = false;
+                //if (m_HasClicked && mesh->IsHit(m_RayPick)) {
+                //   RBK_DEBUG("HIT ! {}", mesh->GetName());
+                //}
+                //m_HasClicked = false;
                 
                 int index = m_ImageIndex;
                 for (uint32_t i = 0; i < bbox->m_UniformBuffers.size(); i++) {
@@ -314,27 +314,28 @@ namespace Rbk
 
         Rbk::Locator::getThreadPool()->Submit(threadQueueName, [=, this]() { DrawSkybox(); });
         Rbk::Locator::getThreadPool()->Submit(threadQueueName, [=, this]() { DrawHUD(); });
+        std::chrono::milliseconds waitFor(50);
 
         {
             std::unique_lock<std::mutex> lock(m_MutexSubmit);
             auto now = std::chrono::system_clock::now();
-            m_CVSkybox.wait(lock, [=, this]() { return m_SkyboxSignal.load(); });
+            m_CVSkybox.wait_until(lock, now + waitFor, [=, this]() { return m_SkyboxSignal.load(); });
         }
         {
             std::unique_lock<std::mutex> lock(m_MutexSubmit);
             auto now = std::chrono::system_clock::now();
-            m_CVHUD.wait(lock, [=, this]() { return m_HUDSignal.load(); });
+            m_CVHUD.wait_until(lock, now + waitFor, [=, this]() { return m_HUDSignal.load(); });
         }
         {
             std::unique_lock<std::mutex> lock(m_MutexSubmit);
             auto now = std::chrono::system_clock::now();
-            m_CVEntities.wait(lock, [=, this]() { return m_EntitiesSignal.load(); });
+            m_CVEntities.wait_until(lock, now + waitFor, [=, this]() { return m_EntitiesSignal.load(); });
         }
         if (GetDrawBbox()) {
             {
                 std::unique_lock<std::mutex> lock(m_MutexSubmit);
                 auto now = std::chrono::system_clock::now();
-                m_CVBBox.wait(lock, [=, this]() { return m_BBoxSignal.load(); });
+                m_CVBBox.wait_until(lock, now + waitFor, [=, this]() { return m_BBoxSignal.load(); });
             }
         }
 

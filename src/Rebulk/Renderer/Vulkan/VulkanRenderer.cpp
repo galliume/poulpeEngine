@@ -2319,4 +2319,9 @@ namespace Rbk {
         vkCmdEndDebugUtilsLabelEXT(buffer);
 #endif
     }
+
+    void VulkanRenderer::WaitIdle()
+    {
+        vkDeviceWaitIdle(m_Device);
+    }
 }

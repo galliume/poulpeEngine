@@ -33,6 +33,7 @@ namespace Rbk
         bool m_OtherOpen = true;
         bool m_AmbientOpen = true;
         bool m_Looping = true;
+        std::string_view m_Skybox{ "debug" };
 
     private:
         void Refresh();

@@ -22,7 +22,7 @@
 			},
 			"form": "square",
 			"squarePadding": [{"x" : [-10, 10], "y": [-10, 10]}],
-			"hasBbox": false
+			"hasBbox": true
 		}
 	}
 }

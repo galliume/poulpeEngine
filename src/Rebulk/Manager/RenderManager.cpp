@@ -79,6 +79,7 @@ namespace Rbk
     void RenderManager::Init()
     {
         if (m_Refresh) {
+            m_Renderer->Rdr()->WaitIdle();
             CleanUp();
             m_Renderer->RecreateSwapChain();
             SetIsLoaded(false);
@@ -131,7 +132,9 @@ namespace Rbk
 
         std::function<void()> entityFutures = m_EntityManager->Load(m_ConfigManager->EntityConfig(level), cv);
         std::function<void()> textureFuture = m_TextureManager->Load(cv);
-        std::function<void()> skyboxFuture = m_TextureManager->LoadSkybox(static_cast<std::string>(appConfig["defaultSkybox"]), cv);
+
+        std::string sb = (m_CurrentSkybox.empty()) ? static_cast<std::string>(appConfig["defaultSkybox"]) : m_CurrentSkybox;
+        std::function<void()> skyboxFuture = m_TextureManager->LoadSkybox(sb, cv);
         std::function<void()> shaderFuture = m_ShaderManager->Load(m_ConfigManager->ShaderConfig(), cv);
 
         Rbk::Locator::getThreadPool()->Submit(threadQueueName, entityFutures);
@@ -181,9 +184,10 @@ namespace Rbk
         //}
     }
 
-    void RenderManager::Refresh(uint32_t levelIndex, bool showBbox)
+    void RenderManager::Refresh(uint32_t levelIndex, bool showBbox, std::string_view skybox)
     {
         m_CurrentLevel = m_ConfigManager->ListLevels().at(levelIndex);
+        m_CurrentSkybox = skybox;
         m_IsLoaded = false;
         m_Refresh = true;
         m_ShowBbox = showBbox;
