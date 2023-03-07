@@ -14,6 +14,12 @@ namespace Rbk
             glm::vec3 center;
             glm::vec3 size;
             std::shared_ptr<Mesh> mesh;
+            float maxX;
+            float minX;
+            float maxY;
+            float minY;
+            float maxZ;
+            float minZ;
         };
 
     public:

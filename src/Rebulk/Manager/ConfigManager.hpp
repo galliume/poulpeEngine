@@ -17,11 +17,11 @@ namespace Rbk
         virtual std::vector<std::string> ListSkybox() override;
 
     private:
-        nlohmann::json m_AppConfig;
-        nlohmann::json m_TexturesConfig;
-        nlohmann::json m_ShaderConfig;
-        nlohmann::json m_SoundConfig;
-        nlohmann::json m_EntityConfig;
+        nlohmann::json m_AppConfig{};
+        nlohmann::json m_TexturesConfig{};
+        nlohmann::json m_ShaderConfig{};
+        nlohmann::json m_SoundConfig{};
+        nlohmann::json m_EntityConfig{};
 
         std::mutex m_MutexRead;
     };

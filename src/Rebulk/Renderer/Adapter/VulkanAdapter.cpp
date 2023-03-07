@@ -137,14 +137,14 @@ namespace Rbk
         m_Deltatime = deltaTime;
     }
 
-     void VulkanAdapter::DrawEntities(std::vector<std::shared_ptr<Entity>>& entities)
+     void VulkanAdapter::DrawEntities()
     {
-         if (0 < entities.size()) {
+         if (0 < m_Entities->size()) {
             BeginRendering(m_CommandBuffersEntities[m_ImageIndex]);
             m_Renderer->StartMarker(m_CommandBuffersEntities[m_ImageIndex], "entities_drawing", 0.3, 0.2, 0.1);
             
 
-            for (std::shared_ptr<Entity> entity : entities) {
+            for (std::shared_ptr<Entity> entity : *m_Entities) {
                 std::shared_ptr<Mesh> mesh = std::dynamic_pointer_cast<Mesh>(entity);
 
                 if (!mesh) continue;
@@ -152,10 +152,11 @@ namespace Rbk
                 m_Renderer->BindPipeline(m_CommandBuffersEntities[m_ImageIndex], mesh->m_GraphicsPipeline);
 
 
-                //if (m_HasClicked && mesh->IsHit(m_RayPick)) {
+                // if (m_HasClicked && mesh->IsHit(m_RayPick)) {
                 //    RBK_DEBUG("HIT ! {}", mesh->GetName());
-                //    m_HasClicked = false;
-                //}
+                // }
+                //m_HasClicked = false;
+
                 int index = m_ImageIndex;
                 for (uint32_t i = 0; i < mesh->m_UniformBuffers.size(); i++) {
                     index += i * 3;
@@ -208,10 +209,9 @@ namespace Rbk
                 m_CmdToSubmit[0] = m_CommandBuffersSkybox[m_ImageIndex];
             }
 
+            m_SkyboxSignal.store(true);
+            m_CVSkybox.notify_one();
         }
-
-        m_SkyboxSignal.store(true);
-        m_CVSkybox.notify_one();
     }
 
     void VulkanAdapter::DrawHUD()
@@ -244,14 +244,14 @@ namespace Rbk
         m_CVHUD.notify_one();
     }
 
-    void VulkanAdapter::DrawBbox(std::vector<std::shared_ptr<Entity>>& entities)
+    void VulkanAdapter::DrawBbox()
     {
-        if (entities.size() > 0)
+        if (m_Entities->size() > 0)
         {
             BeginRendering(m_CommandBuffersBbox[m_ImageIndex]);
             m_Renderer->StartMarker(m_CommandBuffersBbox[m_ImageIndex], "bbox_drawing", 0.3, 0.2, 0.1);
             
-            for (std::shared_ptr<Entity> entity : entities) {
+            for (std::shared_ptr<Entity> entity : *m_Entities) {
                 std::shared_ptr<Mesh> mesh = std::dynamic_pointer_cast<Mesh>(entity);
 
                 if (!mesh || !mesh->HasBbox()) continue;
@@ -261,10 +261,11 @@ namespace Rbk
 
                 m_Renderer->BindPipeline(m_CommandBuffersBbox[m_ImageIndex], bbox->m_GraphicsPipeline);
 
-                //if (m_HasClicked && mesh->IsHit(m_RayPick)) {
-                //    RBK_DEBUG("HIT ! {}", mesh->GetName());
-                //    m_HasClicked = false;
-                //}
+                if (m_HasClicked && mesh->IsHit(m_RayPick)) {
+                   RBK_DEBUG("HIT ! {}", mesh->GetName());
+                }
+                m_HasClicked = false;
+                
                 int index = m_ImageIndex;
                 for (uint32_t i = 0; i < bbox->m_UniformBuffers.size(); i++) {
                     index += i * 3;
@@ -292,63 +293,59 @@ namespace Rbk
 
     void VulkanAdapter::Draw()
     {
-        m_CmdToSubmit.clear();
+        ShouldRecreateSwapChain();
 
+        m_CmdToSubmit.clear();
         if (GetDrawBbox()) m_CmdToSubmit.resize(4);
         else m_CmdToSubmit.resize(3);
 
-        ShouldRecreateSwapChain();
         m_ImageIndex = m_Renderer->AcquireNextImageKHR(m_SwapChain, m_Semaphores.at(0));
 
-        Rbk::Locator::getThreadPool()->Submit([this]() { DrawSkybox(); });
+        std::string_view threadQueueName{ "render" };
 
-        for (auto& entities : m_Entities) {
+        Rbk::Locator::getThreadPool()->Submit(threadQueueName, [=, this]() { DrawEntities(); });
 
-            Rbk::Locator::getThreadPool()->Submit([this, &entities]() { DrawEntities(entities); });
-
-            //@todo strip for release?
-            if (GetDrawBbox()) {
-                Rbk::Locator::getThreadPool()->Submit([this, &entities] {
-                    DrawBbox(entities);
-                });
-            }
+        //@todo strip for release?
+        if (GetDrawBbox()) {
+            Rbk::Locator::getThreadPool()->Submit(threadQueueName, [=, this] {
+                DrawBbox();
+            });
         }
 
-        Rbk::Locator::getThreadPool()->Submit([this]() { DrawHUD(); });
+        Rbk::Locator::getThreadPool()->Submit(threadQueueName, [=, this]() { DrawSkybox(); });
+        Rbk::Locator::getThreadPool()->Submit(threadQueueName, [=, this]() { DrawHUD(); });
         std::chrono::milliseconds waitFor(50);
 
         {
             std::unique_lock<std::mutex> lock(m_MutexSubmit);
             auto now = std::chrono::system_clock::now();
-            m_CVSkybox.wait_until(lock, now + waitFor, [this]() { return m_SkyboxSignal.load(); });
+            m_CVSkybox.wait_until(lock, now + waitFor, [=, this]() { return m_SkyboxSignal.load(); });
         }
         {
             std::unique_lock<std::mutex> lock(m_MutexSubmit);
             auto now = std::chrono::system_clock::now();
-            m_CVHUD.wait_until(lock, now + waitFor, [this]() { return m_HUDSignal.load(); });
+            m_CVHUD.wait_until(lock, now + waitFor, [=, this]() { return m_HUDSignal.load(); });
         }
-        
-        //slower operations
         {
             std::unique_lock<std::mutex> lock(m_MutexSubmit);
             auto now = std::chrono::system_clock::now();
-            m_CVEntities.wait_until(lock, now + waitFor, [this]() { return m_EntitiesSignal.load(); });
+            m_CVEntities.wait_until(lock, now + waitFor, [=, this]() { return m_EntitiesSignal.load(); });
         }
         if (GetDrawBbox()) {
             {
                 std::unique_lock<std::mutex> lock(m_MutexSubmit);
                 auto now = std::chrono::system_clock::now();
-                m_CVBBox.wait_until(lock, now + waitFor, [this]() { return m_BBoxSignal.load(); });
+                m_CVBBox.wait_until(lock, now + waitFor, [=, this]() { return m_BBoxSignal.load(); });
             }
         }
- 
+
+        Submit(m_CmdToSubmit);
+        Present();
+
         m_SkyboxSignal.store(false);
         m_EntitiesSignal.store(false);
         m_HUDSignal.store(false);
         m_BBoxSignal.store(false);
-
-        Submit(m_CmdToSubmit);
-        Present();
 
         //@todo wtf ?
         uint32_t currentFrame = m_Renderer->GetNextFrameIndex();
@@ -660,10 +657,7 @@ namespace Rbk
 
     void VulkanAdapter::Clear()
     {
-        for (auto& entities : m_Entities) {
-            entities.clear();
-        }
-        m_Entities.clear();
+        m_Entities->clear();
         m_SkyboxMesh = nullptr;
         m_HUD.clear();
         m_Splash.clear();
@@ -671,21 +665,6 @@ namespace Rbk
 
     void VulkanAdapter::AddEntities(std::vector<std::shared_ptr<Entity>>* entities)
     {
-        const int max = 100;//@todo vulkan race conditions to fix first
-        std::fesetround(FE_UPWARD);
-        const int size = std::nearbyint(entities->size() / 50.f);
-        m_Entities.resize(size);
-        int count = 0;
-        int index = 0;
-
-        for (auto& entity : *entities) {
-            m_Entities[index].emplace_back(entity);
-            count += 1;
-
-            if (count == max) {
-                index += 1;
-                count = 0;
-            }
-        }
+        m_Entities = entities;
     }
 }
