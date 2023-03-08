@@ -130,7 +130,8 @@ namespace Rbk
         std::string_view threadQueueName{ "loading" };
         std::condition_variable cv;
 
-        std::function<void()> entityFutures = m_EntityManager->Load(m_ConfigManager->EntityConfig(level), cv);
+        auto levelData = m_ConfigManager->EntityConfig(level);
+        std::function<void()> entityFutures = m_EntityManager->Load(levelData, cv);
         std::function<void()> textureFuture = m_TextureManager->Load(cv);
 
         std::string sb = (m_CurrentSkybox.empty()) ? static_cast<std::string>(appConfig["defaultSkybox"]) : m_CurrentSkybox;
@@ -143,7 +144,7 @@ namespace Rbk
         Rbk::Locator::getThreadPool()->Submit(threadQueueName, shaderFuture);
 
         std::mutex loading;
-        
+
         {
             std::unique_lock<std::mutex> lock(loading);
             cv.wait(lock, [=, this]() { return m_TextureManager->IsTexturesLoadingDone(); });
@@ -169,6 +170,11 @@ namespace Rbk
     void RenderManager::Draw()
     {
         m_Renderer->Draw();
+    }
+
+    void RenderManager::RenderScene()
+    {
+        m_Renderer->RenderScene();
 
         if (m_Refresh) {
             m_Renderer->SetDrawBbox(m_ShowBbox);

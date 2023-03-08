@@ -29,11 +29,14 @@ namespace Rbk
         virtual inline std::shared_ptr<VkRenderPass> RdrPass() override { return m_RenderPass; }
         virtual inline glm::mat4 GetPerspective() override { return m_Perspective; }
         virtual void SetDeltatime(float deltaTime) override;
+        virtual void RenderScene() override;
         void Clear();
         void DrawEntities();
         void DrawSkybox();
         void DrawHUD();
         void DrawBbox();
+        //void RenderForImGui(VkCommandBuffer cmdBuffer, VkFramebuffer swapChainFramebuffer);
+        void AddCmdToSubmit(VkCommandBuffer cmd);
 
         void ShouldRecreateSwapChain();
         void RecreateSwapChain();
@@ -41,6 +44,9 @@ namespace Rbk
         void FlushSplashScreen();
         void SetDrawBbox(bool draw) { m_DrawBbox = draw; };
         bool GetDrawBbox() { return m_DrawBbox; };
+
+        std::vector<VkImageView>* GetSwapChainImageViews() { return &m_SwapChainImageViews; }
+        uint32_t GetCurrentFrameIndex() const { return m_ImageIndex; };
 
         //@todo add GuiManager
         VkRenderPass CreateImGuiRenderPass();

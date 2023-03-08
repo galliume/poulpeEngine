@@ -9,9 +9,9 @@ namespace Rbk
     class VulkanLayer : public ILayer
     {
     public:
-        virtual void Init() override;
-        virtual void Render(double timeStep, VkPhysicalDeviceProperties devicesProps) override;
-        virtual void AddRenderManager(std::shared_ptr<RenderManager> renderManager) override;
+        virtual void Init(Window* window) override;
+        virtual void Render(double timeStep) override;
+        virtual void AddRenderManager(RenderManager* renderManager) override;
         void SetNeedRefresh(bool needRefresh) { m_Refresh = needRefresh; };
         void Destroy();
         void DisplayFpsCounter(double timeStep);
@@ -23,6 +23,7 @@ namespace Rbk
         void DisplayMesh();
         void LoadTextures();
         bool NeedRefresh() { return m_Refresh; }
+        void Draw();
 
         bool m_DebugOpen = true;
         bool m_ShowGrid = true;
@@ -45,8 +46,9 @@ namespace Rbk
         int m_SkyboxIndex = 0;
         bool m_Refresh = false;
 
-        std::atomic<std::shared_ptr<RenderManager>> m_RenderManager;
+        RenderManager* m_RenderManager;
         std::map<std::string, VkDescriptorSet> m_Textures;
+        std::vector<VkDescriptorSet> m_Scenes;
         std::map<std::string, VkDescriptorSet> m_Entities;
     };
 }
