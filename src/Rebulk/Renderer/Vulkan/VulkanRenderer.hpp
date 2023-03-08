@@ -210,7 +210,7 @@ namespace Rbk {
         int32_t m_CurrentFrame = 0;
         uint32_t m_ExtensionCount;
         std::string m_apiVersion;
-        const uint32_t m_queueCount = 1;
+        const uint32_t m_queueCount = 2;
 
         std::shared_ptr<Window> m_Window = VK_NULL_HANDLE;
 

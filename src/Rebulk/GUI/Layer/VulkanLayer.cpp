@@ -3,17 +3,39 @@
 
 namespace Rbk
 {
-    void VulkanLayer::Init()
+    void VulkanLayer::Init(Window* window)
     {
-      
+        ImGuiInfo imguiInfo = m_RenderManager->GetRendererAdapter()->GetImGuiInfo();
+        Rbk::Im::Init(window->Get(), imguiInfo);
+
+        m_RenderManager->GetRendererAdapter()->ImmediateSubmit([&](VkCommandBuffer cmd) {
+            ImGui_ImplVulkan_CreateFontsTexture(cmd);
+        });
+
+        ImGui_ImplVulkan_DestroyFontUploadObjects();
     }
 
-    void VulkanLayer::Render(double timeStep, VkPhysicalDeviceProperties devicesProps)
+    void VulkanLayer::Draw()
     {
+        //ImGui_ImplVulkan_RenderDrawData
+        //ImDrawData* cmds = ImGui::GetDrawData();
+        //m_RenderManager->GetRendererAdapter()->AddCmdToSubmit();
+        m_RenderManager->GetRendererAdapter()->Rdr()->BeginCommandBuffer(Rbk::Im::GetImGuiInfo().cmdBuffer);
+        ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), Rbk::Im::GetImGuiInfo().cmdBuffer);
+        m_RenderManager->GetRendererAdapter()->Rdr()->EndCommandBuffer(Rbk::Im::GetImGuiInfo().cmdBuffer);
+    }
+
+    void VulkanLayer::Render(double timeStep)
+    {
+        VkPhysicalDeviceProperties devicesProps = m_RenderManager->GetRendererAdapter()->Rdr()->GetDeviceProperties();
+        Rbk::Im::NewFrame();
+        
         ImGuiWindowFlags flags = 0;
         flags |= ImGuiWindowFlags_MenuBar;
 
         bool open = true;
+
+        if (m_Textures.empty() || m_Refresh) LoadTextures();
 
         ImGui::Begin("Rebulkan Engine", &open, flags);
 
@@ -26,7 +48,7 @@ namespace Rbk
                 {
                     if (ImGui::MenuItem("Quit", "Alt+F4")) 
                     {
-                        m_RenderManager.load()->GetWindow()->Quit();
+                        m_RenderManager->GetWindow()->Quit();
                     }
                     ImGui::Separator();
                     ImGui::EndMenu();
@@ -63,8 +85,10 @@ namespace Rbk
         ImGui::End();
 
         if (!open) {
-            m_RenderManager.load()->GetWindow()->Quit();
+            m_RenderManager->GetWindow()->Quit();
         }
+
+        Rbk::Im::Render();
     }
     void VulkanLayer::Destroy()
     {
@@ -104,6 +128,17 @@ namespace Rbk
         }
 
         ImGui::EndTable();
+        
+        //if (!m_Scenes.empty()) {
+        //    float my_tex_w = 150;
+        //    float my_tex_h = 150;
+        //    ImVec2 uv_min = ImVec2(0.0f, 0.0f);                 // Top-left
+        //    ImVec2 uv_max = ImVec2(1.0f, 1.0f);                 // Lower-right
+        //    ImVec4 tint_col = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);   // No tint
+        //    ImVec4 border_col = ImVec4(1.0f, 1.0f, 1.0f, 0.5f); // 50% opaque white
+
+        //    ImGui::Image(m_Scenes.at(m_RenderManager->GetRendererAdapter()->GetCurrentFrameIndex()), ImVec2(my_tex_w, my_tex_h), uv_min, uv_max, tint_col, border_col);
+        //}
     }
 
     void VulkanLayer::DisplayMesh()
@@ -149,22 +184,22 @@ namespace Rbk
 
     void VulkanLayer::DisplayAPI(VkPhysicalDeviceProperties devicesProps)
     {
-        Rbk::Im::Text("API Version : %s", m_RenderManager.load()->GetRendererAdapter()->Rdr()->GetAPIVersion().c_str());
+        Rbk::Im::Text("API Version : %s", m_RenderManager->GetRendererAdapter()->Rdr()->GetAPIVersion().c_str());
         //Rbk::Im::Text("Drivers version : %d", devicesProps.driverVersion);
-        Rbk::Im::Text("Vendor id : %s", m_RenderManager.load()->GetRendererAdapter()->Rdr()->GetVendor(devicesProps.vendorID).c_str());
+        Rbk::Im::Text("Vendor id : %s", m_RenderManager->GetRendererAdapter()->Rdr()->GetVendor(devicesProps.vendorID).c_str());
         Rbk::Im::Text("GPU : %s", devicesProps.deviceName);
         ImGui::Separator();
-        Rbk::Im::Text("Current frame %d", m_RenderManager.load()->GetRendererAdapter()->Rdr()->GetCurrentFrame());
+        Rbk::Im::Text("Current frame %d", m_RenderManager->GetRendererAdapter()->Rdr()->GetCurrentFrame());
         ImGui::Separator();
         Rbk::Im::Text("%", "Meshes stats");
-        Rbk::Im::Text("Total mesh loaded %d", m_RenderManager.load()->GetEntityManager()->GetEntities()->size());
-        Rbk::Im::Text("Total mesh instanced %d", m_RenderManager.load()->GetEntityManager()->GetInstancedCount());
+        Rbk::Im::Text("Total mesh loaded %d", m_RenderManager->GetEntityManager()->GetEntities()->size());
+        Rbk::Im::Text("Total mesh instanced %d", m_RenderManager->GetEntityManager()->GetInstancedCount());
         ImGui::Separator();
-        Rbk::Im::Text("Shader count %d", m_RenderManager.load()->GetShaderManager()->GetShaders()->shaders.size());
+        Rbk::Im::Text("Shader count %d", m_RenderManager->GetShaderManager()->GetShaders()->shaders.size());
         ImGui::Separator();
-        Rbk::Im::Text("Texture count %d", m_RenderManager.load()->GetTextureManager()->GetTextures().size());
+        Rbk::Im::Text("Texture count %d", m_RenderManager->GetTextureManager()->GetTextures().size());
         Rbk::Im::Text("%s", "Loaded textures :");
-        for (auto tex : m_RenderManager.load()->GetTextureManager()->GetTextures()) {
+        for (auto tex : m_RenderManager->GetTextureManager()->GetTextures()) {
             Rbk::Im::Text("\t%s", tex.first.c_str());
         }
     }
@@ -194,7 +229,7 @@ namespace Rbk
             }
 
             if (ImGui::Checkbox("Display grid", &m_ShowGrid)) {
-                m_RenderManager.load()->GetRendererAdapter()->ShowGrid(m_ShowGrid);
+                m_RenderManager->GetRendererAdapter()->ShowGrid(m_ShowGrid);
             }
 
             if (ImGui::Checkbox("Display bbox", &m_ShowBBox)) {
@@ -259,7 +294,7 @@ namespace Rbk
             ImGui::Checkbox("Show ImGui demo", &m_ShowDemo);
         }
 
-        m_RenderManager.load()->GetWindow()->SetVSync(m_VSync);
+        m_RenderManager->GetWindow()->SetVSync(m_VSync);
 
         if (m_ShowDemo) {
             ImGui::ShowDemoWindow();
@@ -274,34 +309,34 @@ namespace Rbk
         {
             if (ImGui::Button("Play"))
             {
-                m_RenderManager.load()->GetAudioManager()->StartAmbient();
+                m_RenderManager->GetAudioManager()->StartAmbient();
             }
             ImGui::SameLine();
             if (ImGui::Button("Stop"))
             {
-                m_RenderManager.load()->GetAudioManager()->StopAmbient();
+                m_RenderManager->GetAudioManager()->StopAmbient();
             }
             ImGui::SameLine();
             if (ImGui::Checkbox("Loop", &m_Looping)) {
-                m_RenderManager.load()->GetAudioManager()->ToggleLooping();
+                m_RenderManager->GetAudioManager()->ToggleLooping();
             }
 
             ImGui::SameLine();
 
             Rbk::Im::Text("%s %s", 
-                m_RenderManager.load()->GetAudioManager()->GetState().c_str(),
-                m_RenderManager.load()->GetAudioManager()->GetCurrentAmbientSound().c_str()
+                m_RenderManager->GetAudioManager()->GetState().c_str(),
+                m_RenderManager->GetAudioManager()->GetCurrentAmbientSound().c_str()
             );
 
             ImGui::PushItemWidth(-1);
             if (ImGui::BeginListBox("##empty"))
             {
-                for (int n = 0; n < m_RenderManager.load()->GetAudioManager()->GetAmbientSound().size(); n++)
+                for (int n = 0; n < m_RenderManager->GetAudioManager()->GetAmbientSound().size(); n++)
                 {
-                    const bool is_selected = (m_RenderManager.load()->GetAudioManager()->GetAmbientSoundIndex() == n);
-                    if (ImGui::Selectable(m_RenderManager.load()->GetAudioManager()->GetAmbientSound()[n].c_str(), is_selected)) {
-                        m_RenderManager.load()->GetAudioManager()->StopAmbient();
-                        m_RenderManager.load()->GetAudioManager()->StartAmbient(n);
+                    const bool is_selected = (m_RenderManager->GetAudioManager()->GetAmbientSoundIndex() == n);
+                    if (ImGui::Selectable(m_RenderManager->GetAudioManager()->GetAmbientSound()[n].c_str(), is_selected)) {
+                        m_RenderManager->GetAudioManager()->StopAmbient();
+                        m_RenderManager->GetAudioManager()->StartAmbient(n);
                     }
 
                     if (is_selected)
@@ -314,10 +349,10 @@ namespace Rbk
 
     void VulkanLayer::DisplayLevel()
     {
-        std::vector<std::string> levels = m_RenderManager.load()->GetConfigManager()->ListLevels();
+        std::vector<std::string> levels = m_RenderManager->GetConfigManager()->ListLevels();
 
         if (!m_LevelIndex.has_value()) {
-            auto appConfig = m_RenderManager.load()->GetConfigManager()->AppConfig();
+            auto appConfig = m_RenderManager->GetConfigManager()->AppConfig();
             auto defaultLevel = static_cast<std::string>(appConfig["defaultLevel"]);
             for (int i = 0; i < levels.size(); ++i) {
                 if (levels.at(i).c_str() == defaultLevel) {
@@ -344,7 +379,7 @@ namespace Rbk
             ImGui::EndCombo();
         }
 
-        std::vector<std::string> skybox = m_RenderManager.load()->GetConfigManager()->ListSkybox();
+        std::vector<std::string> skybox = m_RenderManager->GetConfigManager()->ListSkybox();
 
         if (ImGui::BeginCombo("Skybox", skybox.at(m_SkyboxIndex).c_str())) {
 
@@ -369,7 +404,8 @@ namespace Rbk
 
     void VulkanLayer::LoadTextures()
     {
-        const auto& textures = m_RenderManager.load()->GetTextureManager()->GetTextures();
+        const auto& textures = m_RenderManager->GetTextureManager()->GetTextures();
+        const auto& imageViews = m_RenderManager->GetRendererAdapter()->GetSwapChainImageViews();
 
         for (const auto& texture : textures) {
             
@@ -379,28 +415,22 @@ namespace Rbk
 
             m_Textures[texture.second.GetName()] = imgDset;
         }
+
+        //for (const auto& imageView : *imageViews) {
+        //    VkSampler textureSampler = m_RenderManager->GetRendererAdapter()->Rdr()->CreateTextureSampler(1);
+        //    VkDescriptorSet imgDset = ImGui_ImplVulkan_AddTexture(textureSampler, imageView, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+        //    m_Scenes.emplace_back(imgDset);
+        //}
     }
 
-    void VulkanLayer::AddRenderManager(std::shared_ptr<RenderManager> renderManager)
+    void VulkanLayer::AddRenderManager(RenderManager* renderManager)
     { 
         m_RenderManager = renderManager;
-        const auto& textures = m_RenderManager.load()->GetTextureManager()->GetTextures();
-
-        for (const auto& texture : textures) {
-
-            if (!texture.second.IsPublic()) continue;
-
-            VkDescriptorSet imgDset = ImGui_ImplVulkan_AddTexture(texture.second.GetSampler(), texture.second.GetImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-
-            m_Textures[texture.second.GetName()] = imgDset;
-        }
-
-        m_Refresh = false;
     }
 
     void VulkanLayer::Refresh()
     {
-        m_RenderManager.load()->Refresh(m_LevelIndex.value(), m_ShowBBox, m_Skybox);
+        m_RenderManager->Refresh(m_LevelIndex.value(), m_ShowBBox, m_Skybox);
         m_Refresh = true;
     }
 }

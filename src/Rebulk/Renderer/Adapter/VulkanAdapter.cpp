@@ -291,7 +291,7 @@ namespace Rbk
         }
     }
 
-    void VulkanAdapter::Draw()
+    void VulkanAdapter::RenderScene()
     {
         ShouldRecreateSwapChain();
 
@@ -300,7 +300,7 @@ namespace Rbk
         else m_CmdToSubmit.resize(3);
 
         m_ImageIndex = m_Renderer->AcquireNextImageKHR(m_SwapChain, m_Semaphores.at(0));
-        
+
         std::string_view threadQueueName{ "render" };
 
         Rbk::Locator::getThreadPool()->Submit(threadQueueName, [=, this]() { DrawSkybox(); });
@@ -338,7 +338,15 @@ namespace Rbk
                 m_CVBBox.wait_until(lock, now + waitFor, [=, this]() { return m_BBoxSignal.load(); });
             }
         }
+    }
 
+    void VulkanAdapter::AddCmdToSubmit(VkCommandBuffer cmd)
+    {
+        m_CmdToSubmit.emplace_back(cmd);
+    }
+
+    void VulkanAdapter::Draw()
+    {
         Submit(m_CmdToSubmit);
         Present();
 
@@ -504,7 +512,7 @@ namespace Rbk
         info.PhysicalDevice = m_Renderer->GetPhysicalDevice();
         info.Device = m_Renderer->GetDevice();
         info.QueueFamily = m_Renderer->GetQueueFamily();
-        info.Queue = m_Renderer->GetGraphicsQueues()[0];
+        info.Queue = m_Renderer->GetGraphicsQueues()[1];
         info.PipelineCache = nullptr;//to implement VkPipelineCache
         info.DescriptorPool = imguiPool;
         info.Subpass = 0;
@@ -667,4 +675,46 @@ namespace Rbk
     {
         m_Entities = entities;
     }
+
+    //void VulkanAdapter::RenderForImGui(VkCommandBuffer cmdBuffer, VkFramebuffer swapChainFramebuffer)
+    //{
+    //    auto renderPass = m_Renderer->CreateRenderPass(VK_SAMPLE_COUNT_1_BIT);
+
+    //    VkRenderPassBeginInfo renderPassInfo{};
+    //    renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+    //    renderPassInfo.renderPass = *renderPass.get();
+    //    renderPassInfo.framebuffer = swapChainFramebuffer;
+    //    renderPassInfo.renderArea.offset = { 0, 0 };
+    //    renderPassInfo.renderArea.extent = m_Renderer->GetSwapChainExtent();
+
+    //    std::array<VkClearValue, 2> clearValues{};
+    //    clearValues[0].color = { {0.f, 1.f, 0.f, 1.0f} };
+    //    clearValues[1].depthStencil = { 1.0f, 0 };
+
+    //    renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
+    //    renderPassInfo.pClearValues = clearValues.data();
+
+    //    vkCmdBeginRenderPass(cmdBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS);
+
+    //    VkViewport viewport{};
+    //    viewport.x = 0.0f;
+    //    viewport.y = 0.0f;
+    //    viewport.width = static_cast<float>(m_Renderer->GetSwapChainExtent().width);
+    //    viewport.height = static_cast<float>(m_Renderer->GetSwapChainExtent().height);
+    //    viewport.minDepth = 0.0f;
+    //    viewport.maxDepth = 1.0f;
+
+    //    VkRect2D scissor{};
+    //    scissor.offset = { 0, 0 };
+    //    scissor.extent = m_Renderer->GetSwapChainExtent();
+
+    //    vkCmdSetViewport(cmdBuffer, 0, 1, &viewport);
+    //    vkCmdSetScissor(cmdBuffer, 0, 1, &scissor);
+
+    //    vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayouts.textured, 0, 1, &descriptorSets.mirror, 0, nullptr);
+    //    vkCmdBindPipeline(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelines.mirror);
+    //    m_Renderer->Draw(cmdBuffer, mesh->GetDescriptorSets().at(index), mesh.get(), *mesh->GetData(), mesh->GetData()->m_Ubos.size(), m_ImageIndex);
+   
+    //    vkCmdEndRenderPass(cmdBuffer);
+    //}
 }

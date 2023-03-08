@@ -23,6 +23,7 @@ namespace Rbk
         ~RenderManager();
 
         virtual void Init() override;
+        virtual void RenderScene() override;
         virtual void Draw() override;
         virtual bool IsLoaded()  override { return m_IsLoaded; }
         virtual void SetIsLoaded(bool loaded = true) override { m_IsLoaded = loaded; }

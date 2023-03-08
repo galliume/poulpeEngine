@@ -8,7 +8,7 @@ namespace Rbk
     public:
         ~LayerManager();
         void Add(ILayer* layer);
-        void InitLayers();
+        void InitLayers(Window* window);
         inline std::vector<ILayer*> List() { return m_Layers; };
 
     private:
