@@ -44,6 +44,11 @@ namespace Rbk
             destroyer, camera
         );
         m_RenderManager->Init();
+
+        //todo move to layer manager and update application main loop accordingly
+        m_VulkanLayer = std::make_shared<Rbk::VulkanLayer>();
+        m_VulkanLayer->AddRenderManager(m_RenderManager.get());
+        //m_LayerManager->Add(vulkanLayer.get());
     }
 
     void Application::Run()
@@ -59,38 +64,12 @@ namespace Rbk
 
         RBK_DEBUG("Loaded scene in {}", (endRun - m_StartRun).count());//@todo readable in seconds...
 
-        std::mutex lockDraw;
         std::mutex mutex;
-
-        std::condition_variable cvImgui;
-        std::condition_variable cvMainRender;
-        std::atomic_bool imguiDone{ false };
-        std::atomic_bool mainRenderDone{ false };
+        std::condition_variable renderSceneCV;
+        std::atomic_bool renderSceneDone { false };
 
         #ifdef RBK_DEBUG_BUILD
-        InitImGui();
-        std::function<void()> imGui =
-            [=, &timeStep, &lockDraw]() {
-            //glfwPollEvents();
-            if (m_VulkanLayer->NeedRefresh()) {
-                m_VulkanLayer->AddRenderManager(m_RenderManager);
-                m_VulkanLayer->SetNeedRefresh(false);
-            }
-
-            //@todo move to LayerManager
-            Rbk::Im::NewFrame();
-            m_VulkanLayer->Render(
-                timeStep.count(),
-                m_RenderManager->GetRendererAdapter()->Rdr()->GetDeviceProperties()
-            );
-            
-            Rbk::Im::Render();
-
-            m_RenderManager->GetRendererAdapter()->Rdr()->BeginCommandBuffer(Rbk::Im::GetImGuiInfo().cmdBuffer);
-            ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), Rbk::Im::GetImGuiInfo().cmdBuffer);
-            m_RenderManager->GetRendererAdapter()->Rdr()->EndCommandBuffer(Rbk::Im::GetImGuiInfo().cmdBuffer);
-
-        };
+            m_VulkanLayer->Init(m_Window.get());
         #endif
 
         while (!glfwWindowShouldClose(m_Window->Get())) {
@@ -119,38 +98,36 @@ namespace Rbk
                     timeStepSum = std::chrono::duration<double>(0.0);
                     frameCount = 0;
                 }
-
                 m_RenderManager->GetCamera()->UpdateDeltaTime(timeStep.count());
 
                 glfwPollEvents();
                 
-                #ifdef RBK_DEBUG_BUILD
-                    imGui();
-                    //Rbk::Locator::getThreadPool()->Submit("render", [=, this, &imguiDone, &cvImgui]() {
-                    //    imGui();
-                    //    imguiDone.store(true);
-                    //    cvImgui.notify_one();
-                    //});
-                #endif
-
-                Rbk::Locator::getThreadPool()->Submit("render", [=, this, &mainRenderDone, &cvMainRender]() { 
-                    m_RenderManager->Draw();
-                    mainRenderDone.store(true);
-                    cvMainRender.notify_one();
+                Rbk::Locator::getThreadPool()->Submit("render", [=, this, &renderSceneDone, &renderSceneCV]() {
+                    m_RenderManager->RenderScene();
+                    renderSceneDone.store(true);
+                    renderSceneCV.notify_one();
                 });
-                
-                //{
-                //    std::unique_lock<std::mutex> lock(mutex);
-                //    cvImgui.wait(lock, [=, this, &imguiDone]() { return imguiDone.load(); });
-                //}
+
                 {
                     std::unique_lock<std::mutex> lock(mutex);
-                    cvMainRender.wait(lock, [=, this, &mainRenderDone]() { return mainRenderDone.load(); });
+                    renderSceneCV.wait(lock, [&renderSceneDone]() { return renderSceneDone.load(); });
                 }
 
-                imguiDone.store(false);
-                mainRenderDone.store(false);
+                #ifdef RBK_DEBUG_BUILD
+                    if (m_VulkanLayer->NeedRefresh()) {
+                        m_VulkanLayer->AddRenderManager(m_RenderManager.get());
+                    }
+                    m_VulkanLayer->Render(timeStep.count());
+                #endif
 
+                #ifdef RBK_DEBUG_BUILD
+                    m_VulkanLayer->Draw();
+                    m_VulkanLayer->SetNeedRefresh(false);
+                #endif
+
+                m_RenderManager->Draw();
+
+                renderSceneDone.store(false);
                 lastTime = currentTime;
             }
         }
@@ -163,24 +140,5 @@ namespace Rbk
 
         glfwDestroyWindow(m_Window.get()->Get());
         glfwTerminate();
-    }
-
-    void Application::InitImGui()
-    {
-        #ifdef RBK_DEBUG_BUILD
-            ImGuiInfo imguiInfo = m_RenderManager->GetRendererAdapter()->GetImGuiInfo();
-            Rbk::Im::Init(m_Window->Get(), imguiInfo);
-
-            m_RenderManager->GetRendererAdapter()->ImmediateSubmit([&](VkCommandBuffer cmd) {
-                ImGui_ImplVulkan_CreateFontsTexture(cmd);
-                });
-
-            ImGui_ImplVulkan_DestroyFontUploadObjects();
-
-            //todo move to layer manager and update application main loop accordingly
-            m_VulkanLayer = std::make_shared<Rbk::VulkanLayer>();
-            m_VulkanLayer->AddRenderManager(m_RenderManager);
-            //m_LayerManager->Add(vulkanLayer.get());
-        #endif
     }
 }

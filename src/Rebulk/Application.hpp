@@ -31,9 +31,6 @@ namespace Rbk
         static  std::atomic<int> s_UnlockedFPS;
 
     private:
-        void InitImGui();
-
-    private:
         static Application* s_Instance;
         std::shared_ptr<Rbk::Window> m_Window;
         std::shared_ptr<Rbk::RenderManager> m_RenderManager;

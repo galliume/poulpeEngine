@@ -59,7 +59,7 @@ namespace Rbk
         }
         catch (std::exception& e) {
             RBK_FATAL("Cannot read level {} config : {}", levelName, e.what());
-            m_EntityConfig = {};
+            throw std::runtime_error("Can't read level configuration file");
         }
 
         return m_EntityConfig;
