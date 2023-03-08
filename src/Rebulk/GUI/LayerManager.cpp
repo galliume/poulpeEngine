@@ -11,11 +11,11 @@ namespace Rbk
         m_Layers.emplace_back(layer);
     }
 
-    void LayerManager::InitLayers()
+    void LayerManager::InitLayers(Window* window)
     {
         for (auto layer : m_Layers)
         {
-            layer->Init();
+            layer->Init(window);
         }
     }
 }

@@ -22,6 +22,7 @@ namespace Rbk
         ~IRenderManager() = default;
 
         virtual void Init() = 0;
+        virtual void RenderScene() = 0;
         virtual void Draw() = 0;
         virtual bool IsLoaded() = 0;
         virtual void SetIsLoaded(bool loaded = true) = 0;
