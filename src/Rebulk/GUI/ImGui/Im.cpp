@@ -21,8 +21,8 @@ namespace Rbk {
         io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
         io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
         io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
-        io.LogFilename = "./imguiLog.txt";
-        io.IniFilename = "./imgui.ini";
+        //io.LogFilename = "imguiLog.txt";
+        //io.IniFilename = "imgui.ini";
 
         io.ConfigDockingWithShift = false;
         io.ConfigViewportsNoAutoMerge = true;

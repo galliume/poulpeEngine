@@ -72,7 +72,7 @@ namespace Rbk
 
         while (!glfwWindowShouldClose(m_Window->Get())) {
 
-         if (Application::s_UnlockedFPS.load() == 0) {
+            if (Application::s_UnlockedFPS.load() == 0) {
                 maxFPS = 30.0;
                 maxPeriod = std::chrono::duration<double>(1.0 / maxFPS);
             } else if (Application::s_UnlockedFPS.load() == 1) {
@@ -99,17 +99,13 @@ namespace Rbk
                 m_RenderManager->GetCamera()->UpdateDeltaTime(timeStep.count());
 
                 glfwPollEvents();
-                
+                m_RenderManager->GetRendererAdapter()->ShouldRecreateSwapChain();
+
                 Rbk::Locator::getThreadPool()->Submit("render", [=, this, &renderSceneDone, &renderSceneCV]() {
                     m_RenderManager->RenderScene();
                     renderSceneDone.store(true);
                     renderSceneCV.notify_one();
                 });
-
-                {
-                    std::unique_lock<std::mutex> lock(mutex);
-                    renderSceneCV.wait(lock, [&renderSceneDone]() { return renderSceneDone.load(); });
-                }
 
                 #ifdef RBK_DEBUG_BUILD
                     if (m_VulkanLayer->NeedRefresh()) {
@@ -117,6 +113,11 @@ namespace Rbk
                     }
                     m_VulkanLayer->Render(timeStep.count());
                 #endif
+
+                {
+                    std::unique_lock<std::mutex> lock(mutex);
+                    renderSceneCV.wait(lock, [&renderSceneDone]() { return renderSceneDone.load(); });
+                }
 
                 #ifdef RBK_DEBUG_BUILD
                     m_VulkanLayer->Draw();
