@@ -47,8 +47,8 @@ namespace Rbk
         bool m_Refresh = false;
 
         RenderManager* m_RenderManager;
-        std::map<std::string, VkDescriptorSet> m_Textures;
+        std::unordered_map<std::string, VkDescriptorSet> m_Textures;
         std::vector<VkDescriptorSet> m_Scenes;
-        std::map<std::string, VkDescriptorSet> m_Entities;
+        std::unordered_map<std::string, VkDescriptorSet> m_Entities;
     };
 }

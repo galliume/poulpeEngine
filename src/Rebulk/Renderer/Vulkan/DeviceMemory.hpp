@@ -29,7 +29,6 @@ namespace Rbk
         bool m_IsAllocated = false;
 
         std::shared_ptr<VkDeviceMemory> m_Memory = nullptr;
-        VkBuffer m_Buffer;
 
         VkDevice m_Device;
         uint32_t m_MemoryType;

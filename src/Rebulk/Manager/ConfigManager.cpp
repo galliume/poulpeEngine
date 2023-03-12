@@ -6,61 +6,37 @@ namespace Rbk
 
     ConfigManager::ConfigManager()
     {
-        try {
-            std::filesystem::path path{ "config/rebulkan.json" };
-            std::ifstream f(std::filesystem::absolute(path), std::ios::binary);
-            if (f.is_open()) m_AppConfig = nlohmann::json::parse(f);
-        }
-        catch (std::exception& e) {
-            RBK_FATAL("Cannot read application config : {}", e.what());
-            throw std::runtime_error("Can't read application configuration file");
-        }
+        std::filesystem::path path{};
+        std::ifstream f;
 
-        try {
-            std::filesystem::path path{ "config/textures.json" };
-            std::ifstream f(std::filesystem::absolute(path), std::ios::binary);
-            if (f.is_open()) m_TexturesConfig = nlohmann::json::parse(f);
-        }
-        catch (std::exception& e) {
-            RBK_FATAL("Cannot read texture config : {}", e.what());
-            throw std::runtime_error("Can't read textures configuration file");
-        }
+        path = "config/rebulkan.json";
+        f.open(std::filesystem::absolute(path));
+        if (f.is_open()) m_AppConfig = nlohmann::json::parse(f);
+        f.close();
 
-        try {
-            std::filesystem::path path{ "config/sounds.json" };
-            std::ifstream f(std::filesystem::absolute(path), std::ios::binary);
-            if (f.is_open()) m_SoundConfig = nlohmann::json::parse(f);
-        }
-        catch (std::exception& e) {
-            RBK_FATAL("Cannot read sounds config : {}", e.what());
-            throw std::runtime_error("Can't read sounds configuration file");
-        }
+        path = "config/textures.json";
+        f.open(std::filesystem::absolute(path));
+        if (f.is_open()) m_TexturesConfig = nlohmann::json::parse(f);
+        f.close();
+  
+        path = "config/sounds.json";
+        f.open(std::filesystem::absolute(path));
+        if (f.is_open()) m_SoundConfig = nlohmann::json::parse(f);
+        f.close();
 
-        try {
-            std::filesystem::path path{ "config/shader.json" };
-            std::ifstream f(std::filesystem::absolute(path), std::ios::binary);
-            if (f.is_open()) m_ShaderConfig = nlohmann::json::parse(f);
-        }
-        catch (std::exception& e) {
-            RBK_FATAL("Cannot read shader config : {}", e.what());
-            throw std::runtime_error("Can't read shaders configuration file");
-        }
+        path = "config/shader.json";
+        f.open(std::filesystem::absolute(path));
+        if (f.is_open()) m_ShaderConfig = nlohmann::json::parse(f);
+        f.close();
     }
 
     nlohmann::json ConfigManager::EntityConfig(const std::string& levelName)
     {
-        try {
-            {
-                std::lock_guard guard(m_MutexRead);
-                std::filesystem::path level{ "config/" + levelName + ".json" };
-                std::ifstream f(std::filesystem::absolute(level), std::ios::binary);
-                if (f.is_open()) m_EntityConfig = nlohmann::json::parse(f);
-            }
-        }
-        catch (std::exception& e) {
-            RBK_FATAL("Cannot read level {} config : {}", levelName, e.what());
-            throw std::runtime_error("Can't read level configuration file");
-        }
+        std::filesystem::path level{ "config/" + levelName + ".json" };
+        std::ifstream f;
+        f.open(std::filesystem::absolute(level), std::ios_base::in);
+        if (f.is_open()) m_EntityConfig = nlohmann::json::parse(f);
+        f.close();
 
         return m_EntityConfig;
     }

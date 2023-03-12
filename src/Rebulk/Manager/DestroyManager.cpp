@@ -37,7 +37,7 @@ namespace Rbk
         m_Renderer->DestroyBuffer(entity->GetData()->m_IndicesBuffer.buffer);
     }
 
-    void DestroyManager::CleanShaders(std::map<std::string, std::array<VkShaderModule, 2>> shaders)
+    void DestroyManager::CleanShaders(std::unordered_map<std::string, std::array<VkShaderModule, 2>> shaders)
     {
         for (auto shader : shaders) {
             vkDestroyShaderModule(m_Renderer->GetDevice(), shader.second[0], nullptr);
@@ -45,7 +45,7 @@ namespace Rbk
         }
     }
 
-    void DestroyManager::CleanTextures(std::map<std::string, Texture> textures)
+    void DestroyManager::CleanTextures(std::unordered_map<std::string, Texture> textures)
     {
         for (auto texture : textures) {
             CleanTexture(texture.second);

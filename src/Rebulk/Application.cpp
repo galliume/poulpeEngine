@@ -2,7 +2,7 @@
 
 namespace Rbk
 {
-    std::atomic<int> Application::s_UnlockedFPS{ 3 };
+    std::atomic<int> Application::s_UnlockedFPS{ 0 };
     Application* Application::s_Instance = nullptr;
 
     Application::Application()
@@ -46,9 +46,11 @@ namespace Rbk
         m_RenderManager->Init();
 
         //todo move to layer manager and update application main loop accordingly
-        m_VulkanLayer = std::make_shared<Rbk::VulkanLayer>();
-        m_VulkanLayer->AddRenderManager(m_RenderManager.get());
-        //m_LayerManager->Add(vulkanLayer.get());
+        #ifdef RBK_DEBUG_BUILD
+            m_VulkanLayer = std::make_shared<Rbk::VulkanLayer>();
+            m_VulkanLayer->AddRenderManager(m_RenderManager.get());
+            m_VulkanLayer->Init(m_Window.get());
+        #endif
     }
 
     void Application::Run()
@@ -67,10 +69,6 @@ namespace Rbk
         std::mutex mutex;
         std::condition_variable renderSceneCV;
         std::atomic_bool renderSceneDone { false };
-
-        #ifdef RBK_DEBUG_BUILD
-            m_VulkanLayer->Init(m_Window.get());
-        #endif
 
         while (!glfwWindowShouldClose(m_Window->Get())) {
 
