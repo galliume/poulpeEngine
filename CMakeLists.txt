@@ -27,17 +27,16 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED            ON)
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules ${CMAKE_MODULE_PATH})
 set(CMAKE_NO_SYSTEM_FROM_IMPORTED ON)
-
 set(gcc_like_cxx "$<COMPILE_LANG_AND_ID:CXX,ARMClang,AppleClang,Clang,GNU,LCC>")
+set(gcc_like_c "$<COMPILE_LANG_AND_ID:C,ARMClang,AppleClang,Clang,GNU,LCC>")
 set(msvc_cxx "$<COMPILE_LANG_AND_ID:CXX,MSVC>")
+set(msvc_c "$<COMPILE_LANG_AND_ID:C,MSVC>")
 set(GIT_SUBMODULE ON)
-
-set_property(DIRECTORY ${PROJECT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT Rebulkan)
-
 set(DEBUG_OPTIONS "-g")
 set(RELEASE_OPTIONS "-03")
-
 set(VOLK_PULL_IN_VULKAN false)
+#weird bug with vulkan loader ?
+set(CMAKE_MSVC_RUNTIME_LIBRARY "")
 
 message(STATUS "Generated with config types: ${CMAKE_CONFIGURATION_TYPES}")
 message(STATUS "CMAKE_CXX_STANDARD: ${CMAKE_CXX_STANDARD}")
@@ -57,8 +56,7 @@ configure_file(RebulkanConfig.h.in RebulkanConfig.h)
 add_definitions(-DVK_NO_PROTOTYPES
                 -DVOLK_STATIC_DEFINES
                 -DIMGUI_IMPL_VULKAN_NO_PROTOTYPES
-                -D_CRT_SECURE_NO_WARNINGS
-                -D_CRT_APP)
+                -D_CRT_SECURE_NO_WARNINGS)
 
 if (DEFINED ENV{VULKAN_SDK}) 
   cmake_path(SET VULKAN_PATH "$ENV{VULKAN_SDK}/Include")
@@ -81,7 +79,7 @@ include_directories(${PROJECT_SOURCE_DIR}/src
                     ${PROJECT_SOURCE_DIR}/vendor/nlohmann/include 
                     ${PROJECT_SOURCE_DIR}/vendor/tiny_obj_loader
                     ${PROJECT_SOURCE_DIR}/vendor/imgui
-					          ${VULKAN_PATH})
+				    ${VULKAN_PATH})
 
 add_executable(Rebulkan src/Rebulkan.cpp)
 
@@ -147,6 +145,8 @@ foreach(_source IN ITEMS ${_source_list})
 endforeach()						  
 
 set_property(TARGET Rebulkan PROPERTY VS_DEBUGGER_WORKING_DIRECTORY $<TARGET_FILE_DIR:Rebulkan>)
+set_property(DIRECTORY ${PROJECT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT Rebulkan)
+set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreadedDebugDLL$<$<CONFIG:Debug>:Debug>")
 
 target_compile_definitions(Rebulkan PUBLIC "$<$<CONFIG:DEBUG>:RBK_DEBUG_BUILD>")
 
@@ -163,3 +163,6 @@ add_custom_command(TARGET Rebulkan
 				   PRE_BUILD COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/imgui.ini $<TARGET_FILE_DIR:Rebulkan>/imgui.ini)
 				   
 find_program(CLANG_TIDY_EXE NAMES "clang-tidy")
+
+#target_compile_options(Rebulkan PRIVATE -fsanitize=address)
+#target_link_options(Rebulkan PRIVATE -fsanitize=address)

@@ -430,7 +430,11 @@ namespace Rbk
 
     void VulkanLayer::Refresh()
     {
-        m_RenderManager->Refresh(m_LevelIndex.value(), m_ShowBBox, m_Skybox);
+        //std::future<int> refresh = std::async(
+        //    std::launch::async, [=, this](){ 
+        //});
+
+                m_RenderManager->Refresh(m_LevelIndex.value(), m_ShowBBox, m_Skybox);
         m_Refresh = true;
     }
 }

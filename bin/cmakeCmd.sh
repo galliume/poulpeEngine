@@ -71,11 +71,6 @@ configure() {
 	
 	echo "Configuration done with code: ${RESULT}"
 
-	#Just to be sure to be on the docking branch
-	echo "Switching to ImGui docking branch"
-	cd "../vendor/imgui"
-	git checkout docking
-	
 	exit $((RESULT+0))
 }
 
