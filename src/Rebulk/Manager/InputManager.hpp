@@ -27,6 +27,6 @@ namespace Rbk
         float m_LastY;
 
         nlohmann::json m_InputConfig;
-        std::map<std::string, int> m_KeyboardKeys{};
+        std::unordered_map<std::string, int> m_KeyboardKeys{};
     };
 }

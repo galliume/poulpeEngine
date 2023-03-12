@@ -23,7 +23,7 @@ namespace Rbk
         virtual inline std::shared_ptr<Mesh> GetSkybox() = 0;
         virtual void Clear() = 0;
         virtual const uint32_t GetInstancedCount() = 0;
-        virtual std::map<std::string, std::array<uint32_t, 2>> GetLoadedEntities() = 0;
+        virtual std::unordered_map<std::string, std::array<uint32_t, 2>> GetLoadedEntities() = 0;
         virtual void AddHUD(std::vector<std::shared_ptr<Mesh>> hud) = 0;
         virtual std::vector<std::shared_ptr<Mesh>> GetHUD() = 0;
     };

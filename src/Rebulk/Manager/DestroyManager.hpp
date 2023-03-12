@@ -16,8 +16,8 @@ namespace Rbk
         void CleanEntities(std::vector<std::shared_ptr<Entity>> entities);
         void CleanEntities(std::vector<std::shared_ptr<Mesh>> entities);
         void CleanEntity(std::shared_ptr<Mesh> entity);
-        void CleanShaders(std::map<std::string, std::array<VkShaderModule, 2>> shaders);
-        void CleanTextures(std::map<std::string, Texture> textures);
+        void CleanShaders(std::unordered_map<std::string, std::array<VkShaderModule, 2>> shaders);
+        void CleanTextures(std::unordered_map<std::string, Texture> textures);
         void CleanTexture(Texture textures);
         void CleanDeviceMemory();
 

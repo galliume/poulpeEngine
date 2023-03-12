@@ -2,11 +2,6 @@
 
 namespace Rbk
 {
-    TextureManager::TextureManager()
-    {
-
-    }
-
     std::function<void()> TextureManager::Load(std::condition_variable& cv)
     {
         std::function<void()> textureFuture = [=, this, &cv]() {
@@ -60,7 +55,7 @@ namespace Rbk
             skyboxPixels.emplace_back(pixels);
         }
 
-        VkImage skyboxImage;
+        VkImage skyboxImage = nullptr;
         uint32_t mipLevels = 1;
         VkCommandPool commandPool = m_Renderer->Rdr()->CreateCommandPool();
 
@@ -102,7 +97,7 @@ namespace Rbk
 
         m_Paths.insert({ name, path });
 
-        int texWidth, texHeight, texChannels;
+        int texWidth = 0, texHeight = 0, texChannels = 0;
         stbi_uc* pixels = stbi_load(path.c_str(), &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
 
         if (!pixels) {
@@ -110,9 +105,9 @@ namespace Rbk
             return;
         }
 
-        VkImage textureImage;
+        VkImage textureImage = nullptr;
         uint32_t mipLevels = static_cast<uint32_t>(std::floor(std::log2(std::max(texWidth, texHeight)))) + 1;
-        if (mipLevels > 5) mipLevels = 5;
+        if (mipLevels > MAX_MIPLEVELS) mipLevels = MAX_MIPLEVELS;
         VkCommandPool commandPool = m_Renderer->Rdr()->CreateCommandPool();
         VkCommandBuffer commandBuffer = m_Renderer->Rdr()->AllocateCommandBuffers(commandPool)[0];
 
@@ -143,10 +138,5 @@ namespace Rbk
         m_Textures.clear();
         m_TexturesLoadingDone = false;
         m_SkyboxLoadingDone = false;
-    }
-
-    TextureManager::~TextureManager()
-    {
-
     }
 }

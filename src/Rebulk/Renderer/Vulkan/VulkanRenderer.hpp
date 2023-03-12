@@ -173,7 +173,7 @@ namespace Rbk {
 
         static const std::string GetVendor(int vendorID)
         {
-            std::map<int, std::string> vendors;
+            std::unordered_map<int, std::string> vendors;
             vendors[0x1002] = "AMD";
             vendors[0x1010] = "ImgTec";
             vendors[0x10DE] = "NVIDIA";
