@@ -13,6 +13,6 @@ namespace Rbk
         void Clear();
 
     private:
-        std::map<std::string, std::vector<std::string>> m_SpriteAnimations;
+        std::unordered_map<std::string, std::vector<std::string>> m_SpriteAnimations;
     };
 }
