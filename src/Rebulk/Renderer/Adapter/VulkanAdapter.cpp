@@ -293,8 +293,6 @@ namespace Rbk
 
     void VulkanAdapter::RenderScene()
     {
-        ShouldRecreateSwapChain();
-
         m_CmdToSubmit.clear();
         if (GetDrawBbox()) m_CmdToSubmit.resize(4);
         else m_CmdToSubmit.resize(3);
@@ -512,7 +510,7 @@ namespace Rbk
         info.PhysicalDevice = m_Renderer->GetPhysicalDevice();
         info.Device = m_Renderer->GetDevice();
         info.QueueFamily = m_Renderer->GetQueueFamily();
-        info.Queue = m_Renderer->GetGraphicsQueues()[1];
+        info.Queue = m_Renderer->GetGraphicsQueues()[0];
         info.PipelineCache = nullptr;//to implement VkPipelineCache
         info.DescriptorPool = imguiPool;
         info.Subpass = 0;
