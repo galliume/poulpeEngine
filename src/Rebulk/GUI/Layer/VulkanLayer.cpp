@@ -23,13 +23,14 @@ namespace Rbk
         m_RenderManager->GetRendererAdapter()->Rdr()->BeginCommandBuffer(Rbk::Im::GetImGuiInfo().cmdBuffer);
         ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), Rbk::Im::GetImGuiInfo().cmdBuffer);
         m_RenderManager->GetRendererAdapter()->Rdr()->EndCommandBuffer(Rbk::Im::GetImGuiInfo().cmdBuffer);
+        m_RenderManager->GetRendererAdapter()->Rdr()->QueueSubmit(Rbk::Im::GetImGuiInfo().cmdBuffer);
     }
 
     void VulkanLayer::Render(double timeStep)
     {
         VkPhysicalDeviceProperties devicesProps = m_RenderManager->GetRendererAdapter()->Rdr()->GetDeviceProperties();
         Rbk::Im::NewFrame();
-        
+
         ImGuiWindowFlags flags = 0;
         flags |= ImGuiWindowFlags_MenuBar;
 
@@ -56,32 +57,32 @@ namespace Rbk
             }
             ImGui::EndMenuBar();
 
-            ImGui::Begin("Performances stats");
-                DisplayFpsCounter(timeStep);
-                ImGui::Separator();
-                DisplayAPI(devicesProps);
-                ImGui::Separator();
-            ImGui::End();
-
-            ImGui::Begin("Level");
-            DisplayLevel();
-            ImGui::End();
-
-            ImGui::Begin("Options");
-                DisplayOptions();
-            ImGui::End();
-
-            //ImGui::Begin("Mesh");
-            //    DisplayMesh();
+            //ImGui::Begin("Performances stats");
+            //    DisplayFpsCounter(timeStep);
+            //    ImGui::Separator();
+            //    DisplayAPI(devicesProps);
+            //    ImGui::Separator();
             //ImGui::End();
 
-            ImGui::Begin("Textures");
-                DisplayTextures();
-            ImGui::End();
+            //ImGui::Begin("Level");
+            //DisplayLevel();
+            //ImGui::End();
 
-            ImGui::Begin("Sound");
-                DisplaySounds();
-            ImGui::End();
+            //ImGui::Begin("Options");
+            //    DisplayOptions();
+            //ImGui::End();
+
+            ////ImGui::Begin("Mesh");
+            ////    DisplayMesh();
+            ////ImGui::End();
+
+            //ImGui::Begin("Textures");
+            //    DisplayTextures();
+            //ImGui::End();
+
+            //ImGui::Begin("Sound");
+            //    DisplaySounds();
+            //ImGui::End();
         ImGui::End();
 
         if (!open) {
@@ -90,6 +91,7 @@ namespace Rbk
 
         Rbk::Im::Render();
     }
+
     void VulkanLayer::Destroy()
     {
         Rbk::Im::Destroy();
