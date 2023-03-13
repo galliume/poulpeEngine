@@ -129,13 +129,9 @@ namespace Rbk
         //thread signaling
         std::mutex m_MutexSubmit;
         std::mutex m_MutexCmdSubmit;
-        std::condition_variable m_CVSkybox;
-        std::condition_variable m_CVEntities;
-        std::condition_variable m_CVHUD;
-        std::condition_variable m_CVBBox;
-        std::atomic<bool> m_SkyboxSignal { false };
-        std::atomic<bool> m_EntitiesSignal { false };
-        std::atomic<bool> m_HUDSignal { false };
-        std::atomic<bool> m_BBoxSignal { false };
+        std::mutex m_MutexCmdSubmitEntities;
+        std::mutex m_MutexCmdSubmitSkbybox;
+        std::mutex m_MutexCmdSubmitHUD;
+        std::mutex m_MutexCmdSubmitBBox;
     };
 }
