@@ -41,6 +41,10 @@ namespace Rbk
         m_TextureManager->AddConfig(m_ConfigManager->TexturesConfig());
 
         nlohmann::json appConfig = m_ConfigManager->AppConfig();
+        if (appConfig["defaultLevel"].empty()) {
+            RBK_WARN("defaultLevel conf not set.");
+        }
+        
         m_CurrentLevel = static_cast<std::string>(appConfig["defaultLevel"]);
 
         m_InputManager->Init(appConfig["input"]);
