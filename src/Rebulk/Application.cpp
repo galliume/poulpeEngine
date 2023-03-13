@@ -99,30 +99,22 @@ namespace Rbk
                 m_RenderManager->GetCamera()->UpdateDeltaTime(timeStep.count());
 
                 glfwPollEvents();
+                
                 m_RenderManager->GetRendererAdapter()->ShouldRecreateSwapChain();
-
-                Rbk::Locator::getThreadPool()->Submit("render", [=, this, &renderSceneDone, &renderSceneCV]() {
-                    m_RenderManager->RenderScene();
-                    renderSceneDone.store(true);
-                    renderSceneCV.notify_one();
-                });
-
-                #ifdef RBK_DEBUG_BUILD
+                m_RenderManager->RenderScene();
+ 
+                /*#ifdef RBK_DEBUG_BUILD
                     if (m_VulkanLayer->NeedRefresh()) {
                         m_VulkanLayer->AddRenderManager(m_RenderManager.get());
                     }
                     m_VulkanLayer->Render(timeStep.count());
-                #endif
+                #endif*/
 
-                {
-                    std::unique_lock<std::mutex> lock(mutex);
-                    renderSceneCV.wait(lock, [&renderSceneDone]() { return renderSceneDone.load(); });
-                }
 
-                #ifdef RBK_DEBUG_BUILD
-                    m_VulkanLayer->Draw();
-                    m_VulkanLayer->SetNeedRefresh(false);
-                #endif
+                //#ifdef RBK_DEBUG_BUILD
+                //    m_VulkanLayer->Draw();
+                //    m_VulkanLayer->SetNeedRefresh(false);
+                //#endif
 
                 m_RenderManager->Draw();
 
