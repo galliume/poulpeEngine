@@ -41,15 +41,15 @@ configure() {
 		
 	if [ $USE_NINJA = true ]; then
 		NINJA="-G Ninja"
-		TOOLSET=""		
+		TOOLSET=""
 		
-		if ! [[ "$OS" == 2 ]]; then
+		# if ! [[ "$OS" == 2 ]]; then
 			
-			echo "Ninja config not ready for Visual Studio, Linux only, yet."
-			#TOOLSET="-DCMAKE_GENERATOR_TOOLSET=v142"
-			#cmd "C:\Program Files (x86)\Microsoft Visual Studio\2019\Professional\VC\Auxiliary\Build\vcvarsall.bat" x64
-			#"C:\Program Files\Git\bin\sh.exe" --login -i
-		fi
+		# 	echo "Ninja config not ready for Visual Studio, Linux only, yet."
+		# 	#TOOLSET="-DCMAKE_GENERATOR_TOOLSET=v142"
+		# 	#cmd "C:\Program Files (x86)\Microsoft Visual Studio\2019\Professional\VC\Auxiliary\Build\vcvarsall.bat" x64
+		# 	#"C:\Program Files\Git\bin\sh.exe" --login -i
+		# fi
 	fi	
 
 	echo "Starting configuration with options: "
