@@ -13,7 +13,7 @@ namespace Rbk
     
         ThreadPool() : m_Done(false), m_Joiner(m_Threads)
         {
-            unsigned const threadCount = std::thread::hardware_concurrency();
+            unsigned const threadCount = 1;//std::thread::hardware_concurrency();
 
             try {
                 for (unsigned i = 0; i < threadCount; ++i) {

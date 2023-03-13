@@ -4,7 +4,7 @@ if (USE_CCACHE)
   find_program(CCACHE_PROGRAM ccache)
   if(CCACHE_PROGRAM)
     message(STATUS "Found ccache: ${CCACHE_PROGRAM}")
-	set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE "${CCACHE_PROGRAM}")
+    set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE "${CCACHE_PROGRAM}")
   endif()
 else()
   message(WARNING "ccache deactivated")
@@ -79,16 +79,9 @@ include_directories(${PROJECT_SOURCE_DIR}/src
                     ${PROJECT_SOURCE_DIR}/vendor/nlohmann/include 
                     ${PROJECT_SOURCE_DIR}/vendor/tiny_obj_loader
                     ${PROJECT_SOURCE_DIR}/vendor/imgui
-				    ${VULKAN_PATH})
+                    ${VULKAN_PATH})
 
-add_executable(Rebulkan src/Rebulkan.cpp)
-
-target_compile_options(Rebulkan INTERFACE
-  "$<${gcc_like_cxx}:$<BUILD_INTERFACE:-Wall;-Wextra;-Wshadow;-Wformat=2;-Wunused>>"
-  "$<${msvc_cxx}:$<BUILD_INTERFACE:-W3>>"
-)
-target_compile_options(Rebulkan PUBLIC "$<$<CONFIG:DEBUG>:${DEBUG_OPTIONS}>")
-target_compile_options(Rebulkan PUBLIC "$<$<CONFIG:RELEASE>:${RELEASE_OPTIONS}>")
+add_executable(${PROJECT_NAME} src/Rebulkan.cpp)
 
 add_subdirectory(${PROJECT_SOURCE_DIR}/src/Rebulk)
 add_subdirectory(${PROJECT_SOURCE_DIR}/src/Rebulk/Component)
@@ -117,52 +110,47 @@ add_library(ImGui ${PROJECT_SOURCE_DIR}/vendor/imgui/imconfig.h
                   ${PROJECT_SOURCE_DIR}/vendor/imgui/imstb_textedit.h
                   ${PROJECT_SOURCE_DIR}/vendor/imgui/imstb_truetype.h
                   ${PROJECT_SOURCE_DIR}/vendor/imgui/imgui_demo.cpp)
-   
+
 list(APPEND EXTRA_LIBS glfw)
 list(APPEND EXTRA_LIBS glm::glm)
 list(APPEND EXTRA_LIBS volk)
 list(APPEND EXTRA_LIBS ImGui)
 
-target_precompile_headers(Rebulkan PUBLIC include/rebulkpch.hpp)
+target_compile_options(${PROJECT_NAME} INTERFACE
+  "$<${gcc_like_cxx}:$<BUILD_INTERFACE:-Wall;-Wextra;-Wshadow;-Wformat=2;-Wunused>>"
+  "$<${msvc_cxx}:$<BUILD_INTERFACE:-W3>>"
+)
+target_compile_options(${PROJECT_NAME} PRIVATE "$<$<CONFIG:DEBUG>:${DEBUG_OPTIONS}>")
+target_compile_options(${PROJECT_NAME} PRIVATE "$<$<CONFIG:RELEASE>:${RELEASE_OPTIONS}>")
 
-target_link_libraries(Rebulkan PRIVATE ${EXTRA_LIBS} rebulkan_compiler_flags)
+target_precompile_headers(${PROJECT_NAME} PRIVATE include/rebulkpch.hpp)
 
-target_include_directories(Rebulkan PUBLIC "${PROJECT_BINARY_DIR}")
-target_include_directories(Rebulkan PRIVATE
+target_link_libraries(${PROJECT_NAME} PRIVATE ${EXTRA_LIBS} rebulkan_compiler_flags)
+
+target_include_directories(${PROJECT_NAME} PRIVATE "${PROJECT_BINARY_DIR}")
+target_include_directories(${PROJECT_NAME} PRIVATE
                           "${PROJECT_SOURCE_DIR}/vendor/glfw"
                           "${PROJECT_SOURCE_DIR}/vendor/glm"
                           "${PROJECT_SOURCE_DIR}/vendor/volk"
                           "${PROJECT_SOURCE_DIR}/vendor/imgui")
-					
-#Filters for visual studio structure					
+
+#Filters for visual studio structure
 file(GLOB_RECURSE _source_list "${PROJECT_SOURCE_DIR}/src/**/*.cpp" "${PROJECT_SOURCE_DIR}/src/**/*.hpp")
 foreach(_source IN ITEMS ${_source_list})
     get_filename_component(_source_path "${_source}" PATH)
     string(REPLACE "${CMAKE_SOURCE_DIR}" "" _group_path "${_source_path}")
     string(REPLACE "/" "\\" _group_path "${_group_path}")
     source_group("${_group_path}" FILES "${_source}")
-	list(APPEND TIDY_SRC "${_source}")
-endforeach()						  
+  list(APPEND TIDY_SRC "${_source}")
+endforeach()
 
-set_property(TARGET Rebulkan PROPERTY VS_DEBUGGER_WORKING_DIRECTORY $<TARGET_FILE_DIR:Rebulkan>)
-set_property(DIRECTORY ${PROJECT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT Rebulkan)
+set_property(TARGET ${PROJECT_NAME} PROPERTY VS_DEBUGGER_WORKING_DIRECTORY $<TARGET_FILE_DIR:${PROJECT_NAME}>)
+set_property(DIRECTORY ${PROJECT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT ${PROJECT_NAME})
 set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreadedDebugDLL$<$<CONFIG:Debug>:Debug>")
 
-target_compile_definitions(Rebulkan PUBLIC "$<$<CONFIG:DEBUG>:RBK_DEBUG_BUILD>")
+target_compile_definitions(${PROJECT_NAME} PRIVATE "$<$<CONFIG:DEBUG>:RBK_DEBUG_BUILD>")
 
-add_custom_command(TARGET Rebulkan 
-				   PRE_BUILD COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/config/ $<TARGET_FILE_DIR:Rebulkan>/config)
-				   
-add_custom_command(TARGET Rebulkan 
-				   PRE_BUILD COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/assets/ $<TARGET_FILE_DIR:Rebulkan>/assets)				   
+#target_compile_options(${PROJECT_NAME} PRIVATE -fsanitize=address)
+#target_link_options(${PROJECT_NAME} PRIVATE -fsanitize=address)
 
-add_custom_command(TARGET Rebulkan
-				   PRE_BUILD COMMAND ${CMAKE_COMMAND} -E make_directory $<TARGET_FILE_DIR:Rebulkan>/cache)
-				   
-add_custom_command(TARGET Rebulkan 
-				   PRE_BUILD COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/imgui.ini $<TARGET_FILE_DIR:Rebulkan>/imgui.ini)
-				   
 find_program(CLANG_TIDY_EXE NAMES "clang-tidy")
-
-#target_compile_options(Rebulkan PRIVATE -fsanitize=address)
-#target_link_options(Rebulkan PRIVATE -fsanitize=address)
