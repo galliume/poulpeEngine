@@ -144,11 +144,12 @@ foreach(_source IN ITEMS ${_source_list})
   list(APPEND TIDY_SRC "${_source}")
 endforeach()
 
-set_property(TARGET ${PROJECT_NAME} PROPERTY VS_DEBUGGER_WORKING_DIRECTORY $<TARGET_FILE_DIR:${PROJECT_NAME}>)
-set_property(DIRECTORY ${PROJECT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT ${PROJECT_NAME})
+target_compile_definitions(${PROJECT_NAME} PRIVATE "$<$<CONFIG:DEBUG>:RBK_DEBUG_BUILD>")
+
 set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreadedDebugDLL$<$<CONFIG:Debug>:Debug>")
 
-target_compile_definitions(${PROJECT_NAME} PRIVATE "$<$<CONFIG:DEBUG>:RBK_DEBUG_BUILD>")
+set_property(TARGET ${PROJECT_NAME} PROPERTY VS_DEBUGGER_WORKING_DIRECTORY ${PROJECT_SOURCE_DIR})
+set_property(DIRECTORY ${PROJECT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT ${PROJECT_NAME})
 
 #target_compile_options(${PROJECT_NAME} PRIVATE -fsanitize=address)
 #target_link_options(${PROJECT_NAME} PRIVATE -fsanitize=address)
