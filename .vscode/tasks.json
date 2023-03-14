@@ -3,7 +3,7 @@
         {
             "label": "RbkBuild",
             "detail": "rbk build cmd",
-            "command": "${workspaceFolder}\\bin\\rbkBuild.sh",
+            "command": "${workspaceFolder}/bin/rbkBuild.sh",
             "type": "shell",
             "group": {
                 "kind": "build",
@@ -21,7 +21,7 @@
         {
             "label": "RbkCompile",
             "detail": "rbk compile cmd",
-            "command": "${workspaceFolder}\\bin\\rbkBuild.sh",
+            "command": "${workspaceFolder}/bin/rbkBuild.sh",
             "type": "shell",
             "group": {
                 "kind": "build",
@@ -41,7 +41,7 @@
         {
             "label": "RbkLaunch",
             "detail": "rbk launch cmd",
-            "command": "${workspaceFolder}\\bin\\rbkBuild.sh",
+            "command": "${workspaceFolder}/bin/rbkBuild.sh",
             "type": "shell",
             "group": {
                 "kind": "build",
@@ -54,7 +54,8 @@
             "presentation": {
                 "reveal": "always",
                 "panel": "shared"
-            }
+            },
+            "dependsOn": ["RbkCompile"]
         }
     ],
     "version": "2.0.0"

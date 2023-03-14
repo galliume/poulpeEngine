@@ -30,7 +30,6 @@ namespace Rbk
     {
         VkPhysicalDeviceProperties devicesProps = m_RenderManager->GetRendererAdapter()->Rdr()->GetDeviceProperties();
         Rbk::Im::NewFrame();
-
         ImGuiWindowFlags flags = 0;
         flags |= ImGuiWindowFlags_MenuBar;
 
@@ -40,7 +39,7 @@ namespace Rbk
 
         ImGui::Begin("Rebulkan Engine", &open, flags);
 
-            ImGuiID dockspace_id = ImGui::GetID("Dockspace");
+            ImGuiID dockspace_id = ImGui::GetID("RebulkanDockspace");
             ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f));
 
             if (ImGui::BeginMenuBar())
