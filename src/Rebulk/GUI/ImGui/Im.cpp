@@ -25,7 +25,7 @@ namespace Rbk {
         //io.IniFilename = "imgui.ini";
 
         io.ConfigDockingWithShift = false;
-        io.ConfigViewportsNoAutoMerge = true;
+        io.ConfigViewportsNoAutoMerge = false;
         io.BackendFlags |= ImGuiBackendFlags_HasMouseCursors;
 
         ImGui::StyleColorsDark();

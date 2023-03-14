@@ -59,6 +59,8 @@ namespace Rbk
         for (int i = 0; i < m_Renderer->GetQueueCount(); i++) {
             m_Semaphores.emplace_back(m_Renderer->CreateSyncObjects(m_SwapChainImages));
         }
+
+        m_CmdToSubmit.resize(4);
     }
 
     void VulkanAdapter::RecreateSwapChain()
@@ -297,7 +299,7 @@ namespace Rbk
 
     void VulkanAdapter::RenderScene()
     {
-         m_ImageIndex = m_Renderer->AcquireNextImageKHR(m_SwapChain, m_Semaphores.at(0));
+        m_ImageIndex = m_Renderer->AcquireNextImageKHR(m_SwapChain, m_Semaphores.at(0));
 
         std::string_view threadQueueName{ "render" };
 
@@ -320,18 +322,22 @@ namespace Rbk
 
     void VulkanAdapter::Draw()
     {
+        if (m_CmdToSubmit.size() == 0) return;
+
         {
             std::lock_guard<std::mutex> guard(m_MutexCmdSubmit);
-            std::remove_if(m_CmdToSubmit.begin(), m_CmdToSubmit.end(), [](const auto& item) {
-                return nullptr == item;
-            });
+            std::vector<VkCommandBuffer> cmds{};
+            for (int i = 0; i < m_CmdToSubmit.size(); ++i) {
+                if (nullptr != m_CmdToSubmit[i]) {
+                    cmds.resize(i);
+                    cmds[i] = std::move(m_CmdToSubmit[i]);
+                }
+            }
 
-            Submit(m_CmdToSubmit);
+            Submit(cmds);
             Present();
 
             m_CmdToSubmit.clear();
-            if (GetDrawBbox()) m_CmdToSubmit.resize(4);
-            else m_CmdToSubmit.resize(3);
         }
 
         //@todo wtf ?
@@ -376,6 +382,7 @@ namespace Rbk
     void VulkanAdapter::FlushSplashScreen()
     {
         DrawSplashScreen();
+        m_Renderer->WaitIdle();
     }
 
     void VulkanAdapter::Destroy()

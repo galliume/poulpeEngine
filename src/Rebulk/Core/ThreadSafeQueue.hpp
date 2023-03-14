@@ -39,9 +39,8 @@ namespace Rbk
 
                 std::shared_ptr<T> res = m_DataQueue.front();
                 m_DataQueue.pop();
+                return res;
             }
-
-            return res;
         }
 
         bool TryPop(T& value)
@@ -65,9 +64,8 @@ namespace Rbk
 
                 std::shared_ptr<T> res = m_DataQueue.front();
                 m_DataQueue.pop();
+                return res;
             }
-
-            return res;
         }
 
         bool Empty()
