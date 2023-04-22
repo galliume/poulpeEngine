@@ -2,7 +2,7 @@
 
 namespace Rbk
 {
-    std::atomic<int> Application::s_UnlockedFPS{ 0 };
+    std::atomic<int> Application::s_UnlockedFPS{ 2 };
     Application* Application::s_Instance = nullptr;
 
     Application::Application()
@@ -68,7 +68,6 @@ namespace Rbk
 
         std::mutex mutex;
         std::condition_variable renderSceneCV;
-        std::atomic_bool renderSceneDone { false };
 
         while (!glfwWindowShouldClose(m_Window->Get())) {
 
@@ -91,7 +90,7 @@ namespace Rbk
                 timeStepSum += timeStep;
                 frameCount++;
 
-                if (1.0 <= timeStepSum.count()) {
+                if (1.0 < timeStepSum.count()) {
                     RBK_DEBUG("{} fps", frameCount);
                     timeStepSum = std::chrono::duration<double>(0.0);
                     frameCount = 0;
@@ -101,24 +100,19 @@ namespace Rbk
                 glfwPollEvents();
                 
                 m_RenderManager->GetRendererAdapter()->ShouldRecreateSwapChain();
-                m_RenderManager->RenderScene();
  
-                /*#ifdef RBK_DEBUG_BUILD
+                #ifdef RBK_DEBUG_BUILD
                     if (m_VulkanLayer->NeedRefresh()) {
                         m_VulkanLayer->AddRenderManager(m_RenderManager.get());
                     }
                     m_VulkanLayer->Render(timeStep.count());
-                #endif*/
+                    m_VulkanLayer->Draw();
+                    m_VulkanLayer->SetNeedRefresh(false);
+                #endif
 
-
-                //#ifdef RBK_DEBUG_BUILD
-                //    m_VulkanLayer->Draw();
-                //    m_VulkanLayer->SetNeedRefresh(false);
-                //#endif
-
+                m_RenderManager->RenderScene();
                 m_RenderManager->Draw();
 
-                renderSceneDone.store(false);
                 lastTime = currentTime;
             }
         }

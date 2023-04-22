@@ -1,4 +1,5 @@
 {
+    "version": "2.0.0",
     "tasks": [
         {
             "label": "RbkBuild",
@@ -21,14 +22,22 @@
         {
             "label": "RbkCompile",
             "detail": "rbk compile cmd",
-            "command": "${workspaceFolder}/bin/rbkBuild.sh",
             "type": "shell",
             "group": {
                 "kind": "build",
                 "isDefault": false
             },
+            "options": {
+                "cwd": "${workspaceFolder}\\build"
+            },
             "problemMatcher": [],
+            "command": "cmd.exe",
             "args": [
+                "/d",
+                "/c",
+                "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Professional\\VC\\Auxiliary\\Build\\vcvarsall.bat",
+                "'&'",
+                "${workspaceFolder}/bin/rbkBuild.sh",
                 "-i"
             ],
             "presentation": {
@@ -57,6 +66,5 @@
             },
             "dependsOn": ["RbkCompile"]
         }
-    ],
-    "version": "2.0.0"
+    ]
 }

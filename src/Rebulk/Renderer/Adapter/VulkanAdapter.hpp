@@ -127,11 +127,14 @@ namespace Rbk
         uint32_t m_BufferedIndex = 0;
 
         //thread signaling
+        std::mutex m_MutexRenderScene;
         std::mutex m_MutexSubmit;
         std::mutex m_MutexCmdSubmit;
         std::mutex m_MutexCmdSubmitEntities;
         std::mutex m_MutexCmdSubmitSkbybox;
         std::mutex m_MutexCmdSubmitHUD;
         std::mutex m_MutexCmdSubmitBBox;
+        std::condition_variable m_RenderCond;
+        unsigned int m_renderStatus = 1;
     };
 }
