@@ -61,6 +61,8 @@ namespace Rbk
         }
 
         m_CmdToSubmit.resize(4);
+
+        m_ImageIndex = m_Renderer->AcquireNextImageKHR(m_SwapChain, m_Semaphores.at(0));
     }
 
     void VulkanAdapter::RecreateSwapChain()
@@ -180,6 +182,11 @@ namespace Rbk
                 {
                     std::lock_guard<std::mutex> guard(m_MutexCmdSubmit);
                     m_CmdToSubmit[1] = m_CommandBuffersEntities[m_ImageIndex];
+                    m_renderStatus = m_renderStatus << 1;
+
+                    if ((GetDrawBbox() && m_renderStatus == 16) || (!GetDrawBbox() && m_renderStatus == 8)) {
+                        m_RenderCond.notify_one();
+                    }
                 }
             }
         }
@@ -190,31 +197,36 @@ namespace Rbk
          {
             std::unique_lock<std::mutex> lock(m_MutexCmdSubmitSkbybox);
 
-             if (m_SkyboxMesh) {
+            if (m_SkyboxMesh) {
 
-                 BeginRendering(m_CommandBuffersSkybox[m_ImageIndex], VK_ATTACHMENT_LOAD_OP_CLEAR, VK_ATTACHMENT_STORE_OP_STORE);
-                 m_Renderer->StartMarker(m_CommandBuffersSkybox[m_ImageIndex], "skybox_drawing", 0.3, 0.2, 0.1);
+                BeginRendering(m_CommandBuffersSkybox[m_ImageIndex], VK_ATTACHMENT_LOAD_OP_CLEAR, VK_ATTACHMENT_STORE_OP_STORE);
+                m_Renderer->StartMarker(m_CommandBuffersSkybox[m_ImageIndex], "skybox_drawing", 0.3, 0.2, 0.1);
 
-                 Rbk::Data skyboxData = *m_SkyboxMesh->GetData();
+                Rbk::Data skyboxData = *m_SkyboxMesh->GetData();
 
-                 m_Renderer->BindPipeline(m_CommandBuffersSkybox[m_ImageIndex], m_SkyboxMesh->m_GraphicsPipeline);
+                m_Renderer->BindPipeline(m_CommandBuffersSkybox[m_ImageIndex], m_SkyboxMesh->m_GraphicsPipeline);
 
-                 for (uint32_t i = 0; i < m_SkyboxMesh->m_UniformBuffers.size(); i++) {
+                for (uint32_t i = 0; i < m_SkyboxMesh->m_UniformBuffers.size(); i++) {
 
-                     if (m_SkyboxMesh->HasPushConstants() && nullptr != m_SkyboxMesh->ApplyPushConstants)
-                         m_SkyboxMesh->ApplyPushConstants(m_CommandBuffersSkybox[m_ImageIndex], m_SkyboxMesh->m_PipelineLayout, shared_from_this(), skyboxData);
+                    if (m_SkyboxMesh->HasPushConstants() && nullptr != m_SkyboxMesh->ApplyPushConstants)
+                        m_SkyboxMesh->ApplyPushConstants(m_CommandBuffersSkybox[m_ImageIndex], m_SkyboxMesh->m_PipelineLayout, shared_from_this(), skyboxData);
 
-                     m_Renderer->Draw(m_CommandBuffersSkybox[m_ImageIndex], m_SkyboxMesh->GetDescriptorSets().at(i), m_SkyboxMesh.get(), skyboxData, skyboxData.m_Ubos.size(), m_ImageIndex, false);
-                 }
+                    m_Renderer->Draw(m_CommandBuffersSkybox[m_ImageIndex], m_SkyboxMesh->GetDescriptorSets().at(i), m_SkyboxMesh.get(), skyboxData, skyboxData.m_Ubos.size(), m_ImageIndex, false);
+                }
 
-                 m_Renderer->EndMarker(m_CommandBuffersSkybox[m_ImageIndex]);
-                 EndRendering(m_CommandBuffersSkybox[m_ImageIndex]);
+                m_Renderer->EndMarker(m_CommandBuffersSkybox[m_ImageIndex]);
+                EndRendering(m_CommandBuffersSkybox[m_ImageIndex]);
 
-                 {
-                     std::lock_guard<std::mutex> guard(m_MutexCmdSubmit);
-                     m_CmdToSubmit[0] = m_CommandBuffersSkybox[m_ImageIndex];
-                 }
-             }
+                {
+                    std::lock_guard<std::mutex> guard(m_MutexCmdSubmit);
+                    m_CmdToSubmit[0] = m_CommandBuffersSkybox[m_ImageIndex];
+                    m_renderStatus = m_renderStatus << 1;
+
+                    if ((GetDrawBbox() && m_renderStatus == 16) || (!GetDrawBbox() && m_renderStatus == 8)) {
+                        m_RenderCond.notify_one();
+                    }
+                }
+            }
         }
     }
 
@@ -245,6 +257,11 @@ namespace Rbk
             {
                 std::lock_guard<std::mutex> guard(m_MutexCmdSubmit);
                 m_CmdToSubmit[2] = m_CommandBuffersHud[m_ImageIndex];
+                m_renderStatus = m_renderStatus << 1;
+
+                if ((GetDrawBbox() && m_renderStatus == 16) || (!GetDrawBbox() && m_renderStatus == 8)) {
+                    m_RenderCond.notify_one();
+                }
             }
         }
     }
@@ -292,6 +309,11 @@ namespace Rbk
                 {
                     std::lock_guard<std::mutex> guard(m_MutexCmdSubmit);
                     m_CmdToSubmit[3] = m_CommandBuffersBbox[m_ImageIndex];
+
+                    m_renderStatus = m_renderStatus << 1;
+                    if ((GetDrawBbox() && m_renderStatus == 16) || (!GetDrawBbox() && m_renderStatus == 8)) {
+                        m_RenderCond.notify_one();
+                    }
                 }
             }
         }
@@ -299,19 +321,22 @@ namespace Rbk
 
     void VulkanAdapter::RenderScene()
     {
-        m_ImageIndex = m_Renderer->AcquireNextImageKHR(m_SwapChain, m_Semaphores.at(0));
+        {
+            std::unique_lock<std::mutex> render(m_MutexRenderScene);
+            m_renderStatus = 1;
 
-        std::string_view threadQueueName{ "render" };
+            std::string_view threadQueueName{ "render" };
 
-        Rbk::Locator::getThreadPool()->Submit(threadQueueName, [=, this]() { DrawSkybox(); });
-        Rbk::Locator::getThreadPool()->Submit(threadQueueName, [=, this]() { DrawHUD(); });
-        Rbk::Locator::getThreadPool()->Submit(threadQueueName, [=, this]() { DrawEntities(); });
+            Rbk::Locator::getThreadPool()->Submit(threadQueueName, [=, this]() { DrawSkybox(); });
+            Rbk::Locator::getThreadPool()->Submit(threadQueueName, [=, this]() { DrawHUD(); });
+            Rbk::Locator::getThreadPool()->Submit(threadQueueName, [=, this]() { DrawEntities(); });
 
-        //@todo strip for release?
-        if (GetDrawBbox()) {
-            Rbk::Locator::getThreadPool()->Submit(threadQueueName, [=, this] {
-                DrawBbox();
-            });
+            //@todo strip for release?
+            if (GetDrawBbox()) {
+                Rbk::Locator::getThreadPool()->Submit(threadQueueName, [=, this] {
+                    DrawBbox();
+                });
+            }
         }
     }
 
@@ -322,35 +347,44 @@ namespace Rbk
 
     void VulkanAdapter::Draw()
     {
+
         if (m_CmdToSubmit.size() == 0) return;
 
         {
-            std::lock_guard<std::mutex> guard(m_MutexCmdSubmit);
-            std::vector<VkCommandBuffer> cmds{};
-            for (int i = 0; i < m_CmdToSubmit.size(); ++i) {
-                if (nullptr != m_CmdToSubmit[i]) {
-                    cmds.resize(i);
-                    cmds[i] = std::move(m_CmdToSubmit[i]);
+            std::unique_lock<std::mutex> render(m_MutexRenderScene);
+
+            m_RenderCond.wait(render, [=, this] {
+                return  (GetDrawBbox()) ? m_renderStatus == 16 : m_renderStatus == 8;
+            });
+            {
+                std::unique_lock<std::mutex> render(m_MutexCmdSubmit);
+                std::vector<VkCommandBuffer> cmds{};
+                std::copy_if(
+                    m_CmdToSubmit.begin(), m_CmdToSubmit.end(),
+                    std::back_inserter(cmds),
+                    [](VkCommandBuffer vkBuffer) {
+                        return vkBuffer != VK_NULL_HANDLE;
+                    }
+                );
+
+                Submit(cmds);
+                Present();
+                m_CmdToSubmit.clear();
+
+                //@todo wtf ?
+                uint32_t currentFrame = m_Renderer->GetNextFrameIndex();
+                if (currentFrame == VK_ERROR_OUT_OF_DATE_KHR || currentFrame == VK_SUBOPTIMAL_KHR) {
+                    RecreateSwapChain();
                 }
             }
 
-            Submit(cmds);
-            Present();
-
-            m_CmdToSubmit.clear();
-        }
-
-        //@todo wtf ?
-        uint32_t currentFrame = m_Renderer->GetNextFrameIndex();
-        if (currentFrame == VK_ERROR_OUT_OF_DATE_KHR || currentFrame == VK_SUBOPTIMAL_KHR) {
-            RecreateSwapChain();
+            m_ImageIndex = m_Renderer->AcquireNextImageKHR(m_SwapChain, m_Semaphores.at(0));
         }
     }
 
     void VulkanAdapter::DrawSplashScreen()
     {
         ShouldRecreateSwapChain();
-        m_ImageIndex = m_Renderer->AcquireNextImageKHR(m_SwapChain, m_Semaphores.at(0));
 
         BeginRendering(m_CommandBuffersSplash[m_ImageIndex], VK_ATTACHMENT_LOAD_OP_CLEAR, VK_ATTACHMENT_STORE_OP_NONE_KHR);
 
@@ -377,12 +411,14 @@ namespace Rbk
         if (currentFrame == VK_ERROR_OUT_OF_DATE_KHR || currentFrame == VK_SUBOPTIMAL_KHR) {
             RecreateSwapChain();
         }
+        m_ImageIndex = m_Renderer->AcquireNextImageKHR(m_SwapChain, m_Semaphores.at(0));
     }
 
     void VulkanAdapter::FlushSplashScreen()
     {
         DrawSplashScreen();
         m_Renderer->WaitIdle();
+        RBK_DEBUG("Flush splashcreen");
     }
 
     void VulkanAdapter::Destroy()

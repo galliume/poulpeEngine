@@ -38,6 +38,11 @@ namespace Rbk
             }
         }
 
+        bool IsPoolEmpty(std::string_view poolName)
+        {
+            return (m_WorkQueue.contains(poolName)) ? m_WorkQueue[poolName].Empty() : true;
+        }
+
         ~ThreadPool()
         {
             m_Done = true;
