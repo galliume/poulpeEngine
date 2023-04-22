@@ -56,32 +56,32 @@ namespace Rbk
             }
             ImGui::EndMenuBar();
 
-            //ImGui::Begin("Performances stats");
-            //    DisplayFpsCounter(timeStep);
-            //    ImGui::Separator();
-            //    DisplayAPI(devicesProps);
-            //    ImGui::Separator();
+            ImGui::Begin("Performances stats");
+                DisplayFpsCounter(timeStep);
+                ImGui::Separator();
+                DisplayAPI(devicesProps);
+                ImGui::Separator();
+            ImGui::End();
+
+            ImGui::Begin("Level");
+            DisplayLevel();
+            ImGui::End();
+
+            ImGui::Begin("Options");
+                DisplayOptions();
+            ImGui::End();
+
+            //ImGui::Begin("Mesh");
+            //    DisplayMesh();
             //ImGui::End();
 
-            //ImGui::Begin("Level");
-            //DisplayLevel();
-            //ImGui::End();
+            ImGui::Begin("Textures");
+                DisplayTextures();
+            ImGui::End();
 
-            //ImGui::Begin("Options");
-            //    DisplayOptions();
-            //ImGui::End();
-
-            ////ImGui::Begin("Mesh");
-            ////    DisplayMesh();
-            ////ImGui::End();
-
-            //ImGui::Begin("Textures");
-            //    DisplayTextures();
-            //ImGui::End();
-
-            //ImGui::Begin("Sound");
-            //    DisplaySounds();
-            //ImGui::End();
+            ImGui::Begin("Sound");
+                DisplaySounds();
+            ImGui::End();
         ImGui::End();
 
         if (!open) {
