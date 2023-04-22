@@ -16,7 +16,7 @@ project(Rebulkan
   VERSION 0.1.1
   DESCRIPTION "Game Engine with a vulkan renderer"
   HOMEPAGE_URL "https://github.com/galliume/rebulkan"
-  LANGUAGES CXX
+  LANGUAGES C CXX
 )
 
 add_library(rebulkan_compiler_flags INTERFACE)
