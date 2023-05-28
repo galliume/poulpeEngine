@@ -51,6 +51,7 @@ message(STATUS "RELEASE_OPTIONS: ${RELEASE_OPTIONS}")
 configure_file(RebulkanConfig.h.in RebulkanConfig.h)
 
 include(gitSubModule)
+include(CTest)
 
 configure_file(RebulkanConfig.h.in RebulkanConfig.h)
 
@@ -81,9 +82,10 @@ include_directories(${PROJECT_SOURCE_DIR}/src
                     ${PROJECT_SOURCE_DIR}/vendor/nlohmann/include 
                     ${PROJECT_SOURCE_DIR}/vendor/tiny_obj_loader
                     ${PROJECT_SOURCE_DIR}/vendor/imgui
-					          ${VULKAN_PATH})
+                    ${VULKAN_PATH})
 
 add_executable(Rebulkan src/Rebulkan.cpp)
+set_property(GLOBAL PROPERTY CTEST_TARGETS_ADDED 1) 
 
 target_compile_options(Rebulkan INTERFACE
   "$<${gcc_like_cxx}:$<BUILD_INTERFACE:-Wall;-Wextra;-Wshadow;-Wformat=2;-Wunused>>"
@@ -104,9 +106,11 @@ add_subdirectory(${PROJECT_SOURCE_DIR}/src/Rebulk/Renderer/Adapter)
 add_subdirectory(${PROJECT_SOURCE_DIR}/src/Rebulk/Renderer/Vulkan)
 add_subdirectory(${PROJECT_SOURCE_DIR}/src/Rebulk/Renderer/Vulkan/Meshator)
 
-add_subdirectory(${PROJECT_SOURCE_DIR}/vendor/glfw)
 add_subdirectory(${PROJECT_SOURCE_DIR}/vendor/glm)
 add_subdirectory(${PROJECT_SOURCE_DIR}/vendor/volk)
+
+add_subdirectory(${PROJECT_SOURCE_DIR}/vendor/gtest)
+add_subdirectory(${PROJECT_SOURCE_DIR}/tests)
 
 add_library(ImGui ${PROJECT_SOURCE_DIR}/vendor/imgui/imconfig.h
                   ${PROJECT_SOURCE_DIR}/vendor/imgui/imgui.h
@@ -135,8 +139,8 @@ target_include_directories(Rebulkan PRIVATE
                           "${PROJECT_SOURCE_DIR}/vendor/glm"
                           "${PROJECT_SOURCE_DIR}/vendor/volk"
                           "${PROJECT_SOURCE_DIR}/vendor/imgui")
-					
-#Filters for visual studio structure					
+
+#Filters for visual studio structure
 file(GLOB_RECURSE _source_list "${PROJECT_SOURCE_DIR}/src/**/*.cpp" "${PROJECT_SOURCE_DIR}/src/**/*.hpp")
 foreach(_source IN ITEMS ${_source_list})
     get_filename_component(_source_path "${_source}" PATH)
@@ -144,22 +148,22 @@ foreach(_source IN ITEMS ${_source_list})
     string(REPLACE "/" "\\" _group_path "${_group_path}")
     source_group("${_group_path}" FILES "${_source}")
 	list(APPEND TIDY_SRC "${_source}")
-endforeach()						  
+endforeach()
 
 set_property(TARGET Rebulkan PROPERTY VS_DEBUGGER_WORKING_DIRECTORY $<TARGET_FILE_DIR:Rebulkan>)
 
 target_compile_definitions(Rebulkan PUBLIC "$<$<CONFIG:DEBUG>:RBK_DEBUG_BUILD>")
 
 add_custom_command(TARGET Rebulkan 
-				   PRE_BUILD COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/config/ $<TARGET_FILE_DIR:Rebulkan>/config)
-				   
+    PRE_BUILD COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/config/ $<TARGET_FILE_DIR:Rebulkan>/config)
+
 add_custom_command(TARGET Rebulkan 
-				   PRE_BUILD COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/assets/ $<TARGET_FILE_DIR:Rebulkan>/assets)				   
+    PRE_BUILD COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/assets/ $<TARGET_FILE_DIR:Rebulkan>/assets)
 
 add_custom_command(TARGET Rebulkan
-				   PRE_BUILD COMMAND ${CMAKE_COMMAND} -E make_directory $<TARGET_FILE_DIR:Rebulkan>/cache)
-				   
+    PRE_BUILD COMMAND ${CMAKE_COMMAND} -E make_directory $<TARGET_FILE_DIR:Rebulkan>/cache)
+
 add_custom_command(TARGET Rebulkan 
-				   PRE_BUILD COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/imgui.ini $<TARGET_FILE_DIR:Rebulkan>/imgui.ini)
-				   
+    PRE_BUILD COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/imgui.ini $<TARGET_FILE_DIR:Rebulkan>/imgui.ini)
+
 find_program(CLANG_TIDY_EXE NAMES "clang-tidy")
