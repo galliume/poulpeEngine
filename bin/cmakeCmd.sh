@@ -1,29 +1,31 @@
 #!/usr/bin/env bash
 
 configure() {
-	if [ -d "./${CMAKE_BUILD_DIR}" ]; then
-		echo "Directory ${CMAKE_BUILD_DIR} exists."
+	BUILD_DIR=${CMAKE_BUILD_DIR}/${CMAKE_BUILD_TYPE}
+
+	if [ -d "./${BUILD_DIR}" ]; then
+		echo "Directory ${BUILD_DIR} exists."
 
 		if [ $REFRESH_BUILD_DIR = true ]; then
-			rm "./${CMAKE_BUILD_DIR}" -rf
-			echo "Directory ${CMAKE_BUILD_DIR} deleted."
-			mkdir "./${CMAKE_BUILD_DIR}"
-			echo "Directory ${CMAKE_BUILD_DIR} freshly recreated."
+			rm "./${BUILD_DIR}" -rf
+			echo "Directory ${BUILD_DIR} deleted."
+			mkdir "./${BUILD_DIR}"
+			echo "Directory ${BUILD_DIR} freshly recreated."
 		fi
 	else
-		if [ ! -d "./${CMAKE_BUILD_DIR}" ]; then
-			mkdir "./${CMAKE_BUILD_DIR}"
+		if [ ! -d "./${BUILD_DIR}" ]; then
+			mkdir "./${BUILD_DIR}"
 		fi
 		
-		mkdir "./${CMAKE_BUILD_DIR}"
-		echo "Directory ${CMAKE_BUILD_DIR} freshly recreated."
+		mkdir "./${BUILD_DIR}"
+		echo "Directory ${BUILD_DIR} freshly recreated."
 	fi
 
 	detectOs
 	OS=$?
 	
-	echo "Moving to ${CMAKE_BUILD_DIR}"
-	cd "./${CMAKE_BUILD_DIR}"
+	echo "Moving to ${BUILD_DIR}"
+	cd "./${BUILD_DIR}"
 
 
 	NINJA=""
@@ -54,7 +56,7 @@ configure() {
 
 	echo "Starting configuration with options: "
 	echo "Build dir: ${CMAKE_BUILD_DIR}/${CMAKE_BUILD_TYPE}"
-	echo "Building from: ../${CMAKE_BUILD_DIR}"
+	echo "Building from: ../../${CMAKE_BUILD_DIR}"
 	echo "${CXX_COMPILER}"
 	echo "${C_COMPILER}"
 	echo "${BUILD_TYPE}"
@@ -65,7 +67,7 @@ configure() {
 	echo "${USE_CCACHE}"
 	echo "${EXPORT_COMPILE_CMD}"
 
-	cmake ${NINJA} ${CONFIG_TYPE} ${BUILD_TYPE} ${CXX_COMPILER} ${C_COMPILER} ${TOOLSET} ${USE_CCACHE} ${EXPORT_COMPILE_CMD} ..
+	cmake ${NINJA} ${CONFIG_TYPE} ${BUILD_TYPE} ${CXX_COMPILER} ${C_COMPILER} ${TOOLSET} ${USE_CCACHE} ${EXPORT_COMPILE_CMD} ../..
 
 	RESULT=$?
 	
@@ -73,18 +75,18 @@ configure() {
 
 	#Just to be sure to be on the docking branch
 	echo "Switching to ImGui docking branch"
-	cd "../vendor/imgui"
+	cd "../../vendor/imgui"
 	git checkout docking
 	
 	exit $((RESULT+0))
 }
 
 build() {
-	if [ -d "./${CMAKE_BUILD_DIR}" ]; then
+	if [ -d "./${CMAKE_BUILD_DIR}/${CMAKE_BUILD_TYPE}" ]; then
 		
-		cd "${CMAKE_BUILD_DIR}"
+		cd "${CMAKE_BUILD_DIR}/${CMAKE_BUILD_TYPE}"
 
-		echo "Starting building"
+		echo "Starting building into: ${CMAKE_BUILD_DIR}/${CMAKE_BUILD_TYPE}"
 		cmake --build . -j${CMAKE_J}
 
 		RESULT=$?
@@ -94,7 +96,7 @@ build() {
 		
 		exit $((RESULT+0))
 	else
-		echo "Build dir [${CMAKE_BUILD_DIR}] does not exists"
+		echo "Build dir [${CMAKE_BUILD_DIR}/${CMAKE_BUILD_TYPE}] does not exists"
 		exit -1
 	fi
 }
@@ -135,4 +137,9 @@ run() {
 	fi
 	
 	exit 0
+}
+
+runCTest() {
+	cd "build/Debug"
+	ctest
 }
