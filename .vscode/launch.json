@@ -3,12 +3,10 @@
     "configurations": [
         {
             "name": "RBKDebug",
-            "type": "cppvsdbg",
+            "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}\\build\\Rebulkan.exe",
-            "symbolSearchPath": "${workspaceFolder}\\build\\Rebulkan.pdb",
-            "cwd": "${workspaceFolder}\\build\\",
-            "console": "externalTerminal",
+            "program": "${workspaceFolder}\\build\\Rebulkan",
+            "cwd": "${workspaceFolder}\\",
             "logging": {
               "moduleLoad": false,
               "trace": true

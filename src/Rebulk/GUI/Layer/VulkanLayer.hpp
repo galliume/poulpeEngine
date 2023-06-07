@@ -9,7 +9,7 @@ namespace Rbk
     class VulkanLayer : public ILayer
     {
     public:
-        virtual void Init(Window* window) override;
+        virtual void Init(Window* window, std::shared_ptr<CommandQueue> cmdQueue) override;
         virtual void Render(double timeStep) override;
         virtual void AddRenderManager(RenderManager* renderManager) override;
         void SetNeedRefresh(bool needRefresh) { m_Refresh = needRefresh; };
@@ -24,6 +24,7 @@ namespace Rbk
         void LoadTextures();
         bool NeedRefresh() { return m_Refresh; }
         void Draw();
+        std::shared_ptr<ImGuiInfo> GetImGuiInfo() { return m_ImGuiInfo; };
 
         bool m_DebugOpen = true;
         bool m_ShowGrid = true;
@@ -48,7 +49,9 @@ namespace Rbk
 
         RenderManager* m_RenderManager;
         std::unordered_map<std::string, VkDescriptorSet> m_Textures;
-        std::vector<VkDescriptorSet> m_Scenes;
+        std::vector<VkDescriptorSet> m_m_CmdQueueScenes;
         std::unordered_map<std::string, VkDescriptorSet> m_Entities;
+        std::shared_ptr<CommandQueue> m_CmdQueue;
+        std::shared_ptr<ImGuiInfo> m_ImGuiInfo;
     };
 }
