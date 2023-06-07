@@ -48,8 +48,6 @@ message(STATUS "RELEASE_OPTIONS: ${RELEASE_OPTIONS}")
 #set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /MD")
 #set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /MDd")
 
-configure_file(RebulkanConfig.h.in RebulkanConfig.h)
-
 include(gitSubModule)
 include(CTest)
 
@@ -106,10 +104,9 @@ add_subdirectory(${PROJECT_SOURCE_DIR}/src/Rebulk/Renderer/Adapter)
 add_subdirectory(${PROJECT_SOURCE_DIR}/src/Rebulk/Renderer/Vulkan)
 add_subdirectory(${PROJECT_SOURCE_DIR}/src/Rebulk/Renderer/Vulkan/Meshator)
 
+add_subdirectory(${PROJECT_SOURCE_DIR}/vendor/glfw)
 add_subdirectory(${PROJECT_SOURCE_DIR}/vendor/glm)
 add_subdirectory(${PROJECT_SOURCE_DIR}/vendor/volk)
-
-add_subdirectory(${PROJECT_SOURCE_DIR}/vendor/gtest)
 add_subdirectory(${PROJECT_SOURCE_DIR}/tests)
 
 add_library(ImGui ${PROJECT_SOURCE_DIR}/vendor/imgui/imconfig.h
