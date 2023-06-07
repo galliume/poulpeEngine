@@ -26,6 +26,8 @@ namespace Rbk
         int width, height;
         glfwGetWindowSize(m_Window->Get(), &width, &height);
 
+        auto cmdQueue = std::make_shared<Rbk::CommandQueue>();
+
         auto adapter = std::make_shared<Rbk::VulkanAdapter>(m_Window);
         auto config = std::make_shared<Rbk::ConfigManager>();
         auto input = std::make_shared<Rbk::InputManager>(m_Window);
@@ -49,7 +51,7 @@ namespace Rbk
         #ifdef RBK_DEBUG_BUILD
             m_VulkanLayer = std::make_shared<Rbk::VulkanLayer>();
             m_VulkanLayer->AddRenderManager(m_RenderManager.get());
-            m_VulkanLayer->Init(m_Window.get());
+            m_VulkanLayer->Init(m_Window.get(), cmdQueue);
         #endif
     }
 
@@ -100,17 +102,18 @@ namespace Rbk
                 glfwPollEvents();
                 
                 m_RenderManager->GetRendererAdapter()->ShouldRecreateSwapChain();
+                m_RenderManager->RenderScene();
  
                 #ifdef RBK_DEBUG_BUILD
                     if (m_VulkanLayer->NeedRefresh()) {
                         m_VulkanLayer->AddRenderManager(m_RenderManager.get());
                     }
                     m_VulkanLayer->Render(timeStep.count());
-                    m_VulkanLayer->Draw();
                     m_VulkanLayer->SetNeedRefresh(false);
+                    //m_VulkanLayer->Draw();
+                    m_RenderManager->GetRendererAdapter()->AddCmdToSubmit(m_VulkanLayer->GetImGuiInfo()->cmdBuffer);
                 #endif
 
-                m_RenderManager->RenderScene();
                 m_RenderManager->Draw();
 
                 lastTime = currentTime;

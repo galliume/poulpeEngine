@@ -37,6 +37,8 @@ set(RELEASE_OPTIONS "-03")
 set(VOLK_PULL_IN_VULKAN false)
 #weird bug with vulkan loader ?
 set(CMAKE_MSVC_RUNTIME_LIBRARY "")
+set(GLFW_BUILD_WAYLAND ON)
+set(GLFW_BUILD_X11 OFF)
 
 message(STATUS "Generated with config types: ${CMAKE_CONFIGURATION_TYPES}")
 message(STATUS "CMAKE_CXX_STANDARD: ${CMAKE_CXX_STANDARD}")

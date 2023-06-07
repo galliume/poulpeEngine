@@ -15,7 +15,7 @@ namespace Rbk
     {
         for (auto layer : m_Layers)
         {
-            layer->Init(window);
+            //layer->Init(window);
         }
     }
 }

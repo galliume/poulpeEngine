@@ -342,7 +342,7 @@ namespace Rbk
 
     void VulkanAdapter::AddCmdToSubmit(VkCommandBuffer cmd)
     {
-        m_CmdToSubmit.emplace_back(cmd);
+        m_moreCmdToSubmit.emplace_back(cmd);
     }
 
     void VulkanAdapter::Draw()
@@ -367,10 +367,15 @@ namespace Rbk
                     }
                 );
 
+                if (m_moreCmdToSubmit.size() > 0) {
+                   std::copy(m_moreCmdToSubmit.begin(), m_moreCmdToSubmit.end(), std::back_inserter(cmds)); 
+                }
+
                 Submit(cmds);
                 Present();
                 m_CmdToSubmit.clear();
-
+                m_moreCmdToSubmit.clear();
+                
                 //@todo wtf ?
                 uint32_t currentFrame = m_Renderer->GetNextFrameIndex();
                 if (currentFrame == VK_ERROR_OUT_OF_DATE_KHR || currentFrame == VK_SUBOPTIMAL_KHR) {
