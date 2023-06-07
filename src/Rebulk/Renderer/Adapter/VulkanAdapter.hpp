@@ -120,6 +120,7 @@ namespace Rbk
         std::shared_ptr<Mesh> m_SkyboxMesh = nullptr;
         std::vector<std::shared_ptr<Entity>>* m_BoundingBox;
         std::vector<VkCommandBuffer> m_CmdToSubmit;
+        std::vector<VkCommandBuffer> m_moreCmdToSubmit;
 
         bool m_DrawBbox = false;
         std::vector<std::future<void>> m_CmdLists{};

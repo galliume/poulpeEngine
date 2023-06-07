@@ -11,7 +11,7 @@
 				{"x": 0.1, "y": 0.1, "z": 0.1}
 			],
 			"rotations": [
-				{"x": 0.2, "y": 0.1, "z": -23.0}
+				{"x": 0.0, "y": 0.0, "z": 0.0}
 			],
 			"inverseTextureY": true,
 			"count": 1,
@@ -21,7 +21,7 @@
 				"z": 0
 			},
 			"form": "square",
-			"squarePadding": [{"x" : [-10, 10], "y": [-10, 10]}],
+			"squarePadding": [{"x" : [-2, 2], "y": [-2, 2]}],
 			"hasBbox": true
 		}
 	}

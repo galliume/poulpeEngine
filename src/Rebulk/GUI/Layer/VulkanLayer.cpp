@@ -3,10 +3,12 @@
 
 namespace Rbk
 {
-    void VulkanLayer::Init(Window* window)
+    void VulkanLayer::Init(Window* window, std::shared_ptr<CommandQueue> cmdQueue)
     {
-        ImGuiInfo imguiInfo = m_RenderManager->GetRendererAdapter()->GetImGuiInfo();
-        Rbk::Im::Init(window->Get(), imguiInfo);
+        m_CmdQueue = cmdQueue;
+        
+        m_ImGuiInfo = std::make_shared<ImGuiInfo>(m_RenderManager->GetRendererAdapter()->GetImGuiInfo());
+        Rbk::Im::Init(window->Get(), *m_ImGuiInfo);
 
         m_RenderManager->GetRendererAdapter()->ImmediateSubmit([&](VkCommandBuffer cmd) {
             ImGui_ImplVulkan_CreateFontsTexture(cmd);
@@ -89,6 +91,10 @@ namespace Rbk
         }
 
         Rbk::Im::Render();
+
+        m_RenderManager->GetRendererAdapter()->Rdr()->BeginCommandBuffer(Rbk::Im::GetImGuiInfo().cmdBuffer);
+        ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), Rbk::Im::GetImGuiInfo().cmdBuffer);
+        m_RenderManager->GetRendererAdapter()->Rdr()->EndCommandBuffer(Rbk::Im::GetImGuiInfo().cmdBuffer);
     }
 
     void VulkanLayer::Destroy()
