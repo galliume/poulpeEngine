@@ -11,6 +11,10 @@ set(SRC_LIST ${CMAKE_CURRENT_SOURCE_DIR}/Buffer.hpp
              ${CMAKE_CURRENT_SOURCE_DIR}/TinyObjLoader.cpp
              ${CMAKE_CURRENT_SOURCE_DIR}/TinyObjLoader.hpp
              ${CMAKE_CURRENT_SOURCE_DIR}/Tools.cpp
-             ${CMAKE_CURRENT_SOURCE_DIR}/Tools.hpp)
+             ${CMAKE_CURRENT_SOURCE_DIR}/Tools.hpp
+             ${CMAKE_CURRENT_SOURCE_DIR}/Command.cpp
+             ${CMAKE_CURRENT_SOURCE_DIR}/Command.hpp
+             ${CMAKE_CURRENT_SOURCE_DIR}/CommandQueue.cpp
+             ${CMAKE_CURRENT_SOURCE_DIR}/CommandQueue.hpp)
 
 target_sources(Rebulkan PRIVATE ${SRC_LIST})

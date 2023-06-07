@@ -16,6 +16,8 @@
 #include "GUI/ImGui/Im.hpp"
 #include "GUI/Window.hpp"
 
+#include "Core/CommandQueue.hpp"
+
 namespace Rbk 
 {
     class Application
