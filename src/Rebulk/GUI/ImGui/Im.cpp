@@ -7,11 +7,22 @@
 
 namespace Rbk {
 
+    VkAllocationCallbacks* Im::s_Allocator = nullptr;
     ImGuiInfo Im::s_ImGuiInfo;
+
+    static void check_vk_result(VkResult err)
+    {
+    if (err == 0)
+        return;
+    fprintf(stderr, "[vulkan] Error: VkResult = %d\n", err);
+    if (err < 0)
+        abort();
+    }
 
     void Im::Init(GLFWwindow* window, ImGuiInfo initInfo)
     {
-        s_ImGuiInfo = initInfo;
+        s_ImGuiInfo = std::move(initInfo);
+        s_ImGuiInfo.info.Allocator = s_Allocator;
 
         IMGUI_CHECKVERSION();
         ImGui::CreateContext();
@@ -26,7 +37,7 @@ namespace Rbk {
 
         io.ConfigDockingWithShift = false;
         io.ConfigViewportsNoAutoMerge = false;
-        io.BackendFlags |= ImGuiBackendFlags_HasMouseCursors;
+        //io.BackendFlags |= ImGuiBackendFlags_HasMouseCursors;
 
         ImGui::StyleColorsDark();
 
@@ -42,7 +53,6 @@ namespace Rbk {
             }
         );
 
-       // ImGui::SetNextWindowPos(ImVec2(650, 20), ImGuiCond_FirstUseEver);
         ImGui_ImplGlfw_InitForVulkan(window, true);
         ImGui_ImplVulkan_Init(&s_ImGuiInfo.info, s_ImGuiInfo.rdrPass);
     }

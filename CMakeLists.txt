@@ -101,7 +101,7 @@ add_subdirectory(${PROJECT_SOURCE_DIR}/vendor/glfw)
 add_subdirectory(${PROJECT_SOURCE_DIR}/vendor/glm)
 add_subdirectory(${PROJECT_SOURCE_DIR}/vendor/volk)
 
-add_library(ImGui ${PROJECT_SOURCE_DIR}/vendor/imgui/imconfig.h
+add_library(ImGui STATIC ${PROJECT_SOURCE_DIR}/vendor/imgui/imconfig.h
                   ${PROJECT_SOURCE_DIR}/vendor/imgui/imgui.h
                   ${PROJECT_SOURCE_DIR}/vendor/imgui/imgui.cpp
                   ${PROJECT_SOURCE_DIR}/vendor/imgui/imgui_draw.cpp

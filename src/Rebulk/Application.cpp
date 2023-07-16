@@ -2,7 +2,7 @@
 
 namespace Rbk
 {
-    std::atomic<int> Application::s_UnlockedFPS{ 2 };
+    std::atomic<int> Application::s_UnlockedFPS{ 1 };
     Application* Application::s_Instance = nullptr;
 
     Application::Application()
@@ -21,7 +21,7 @@ namespace Rbk
         Rbk::Locator::setThreadPool(std::make_unique<ThreadPool>());
 
         m_Window = std::make_shared<Window>();
-        m_Window->Init();
+        m_Window->Init("Rebulkan Engine");
 
         int width, height;
         glfwGetWindowSize(m_Window->Get(), &width, &height);
@@ -51,7 +51,7 @@ namespace Rbk
         #ifdef RBK_DEBUG_BUILD
             m_VulkanLayer = std::make_shared<Rbk::VulkanLayer>();
             m_VulkanLayer->AddRenderManager(m_RenderManager.get());
-            m_VulkanLayer->Init(m_Window.get(), cmdQueue);
+            m_VulkanLayer->Init(m_Window.get(), cmdQueue, m_RenderManager->GetRendererAdapter()->Rdr()->GetDeviceProperties());
         #endif
     }
 
@@ -71,7 +71,7 @@ namespace Rbk
         std::mutex mutex;
         std::condition_variable renderSceneCV;
 
-        while (!glfwWindowShouldClose(m_Window->Get())) {
+         while (!glfwWindowShouldClose(m_Window->Get())) {
 
             if (Application::s_UnlockedFPS.load() == 0) {
                 maxFPS = 30.0;
@@ -102,19 +102,17 @@ namespace Rbk
                 glfwPollEvents();
                 
                 m_RenderManager->GetRendererAdapter()->ShouldRecreateSwapChain();
-                m_RenderManager->RenderScene();
- 
+                //m_RenderManager->RenderScene();
+                //m_RenderManager->Draw();
+
                 #ifdef RBK_DEBUG_BUILD
                     if (m_VulkanLayer->NeedRefresh()) {
                         m_VulkanLayer->AddRenderManager(m_RenderManager.get());
                     }
                     m_VulkanLayer->Render(timeStep.count());
                     m_VulkanLayer->SetNeedRefresh(false);
-                    //m_VulkanLayer->Draw();
-                    m_RenderManager->GetRendererAdapter()->AddCmdToSubmit(m_VulkanLayer->GetImGuiInfo()->cmdBuffer);
+                    m_VulkanLayer->Draw();
                 #endif
-
-                m_RenderManager->Draw();
 
                 lastTime = currentTime;
             }

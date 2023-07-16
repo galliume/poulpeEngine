@@ -815,7 +815,7 @@ namespace Rbk {
         VkPipeline graphicsPipeline = nullptr;
 
         {
-            std::lock_guard<std::mutex> guard(m_MutexGraphicsPipeline);
+            //std::lock_guard<std::mutex> guard(m_MutexGraphicsPipeline);
 
             //@todo move to a FileManager
             //@todo option to enable / disable pipeline cache
@@ -1046,7 +1046,7 @@ namespace Rbk {
         return renderPass;
     }
 
-    std::vector<VkFramebuffer> VulkanRenderer::CreateFramebuffers(std::shared_ptr<VkRenderPass> renderPass, std::vector<VkImageView> swapChainImageViews, std::vector<VkImageView> depthImageView, std::vector<VkImageView> colorImageView)
+    std::vector<VkFramebuffer> VulkanRenderer::CreateFramebuffers(VkRenderPass renderPass, std::vector<VkImageView> swapChainImageViews, std::vector<VkImageView> depthImageView, std::vector<VkImageView> colorImageView)
     {
         std::vector<VkFramebuffer> swapChainFramebuffers;
 
@@ -1062,7 +1062,7 @@ namespace Rbk {
 
             VkFramebufferCreateInfo framebufferInfo{};
             framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-            framebufferInfo.renderPass = *renderPass.get();
+            framebufferInfo.renderPass = renderPass;
             framebufferInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
             framebufferInfo.pAttachments = attachments.data();
             framebufferInfo.width = m_SwapChainExtent.width;
@@ -1266,12 +1266,12 @@ namespace Rbk {
         vkUpdateDescriptorSets(m_Device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
     }
 
-    void VulkanRenderer::BeginRenderPass(std::shared_ptr<VkRenderPass> renderPass, VkCommandBuffer commandBuffer, VkFramebuffer swapChainFramebuffer)
+    void VulkanRenderer::BeginRenderPass(VkRenderPass renderPass, VkCommandBuffer commandBuffer, VkFramebuffer framebuffer)
     {
         VkRenderPassBeginInfo renderPassInfo{};
         renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-        renderPassInfo.renderPass = *renderPass.get();
-        renderPassInfo.framebuffer = swapChainFramebuffer;
+        renderPassInfo.renderPass = renderPass;
+        renderPassInfo.framebuffer = framebuffer;
         renderPassInfo.renderArea.offset = { 0, 0 };
         renderPassInfo.renderArea.extent = m_SwapChainExtent;
 
@@ -1282,7 +1282,8 @@ namespace Rbk {
         renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
         renderPassInfo.pClearValues = clearValues.data();
 
-        vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS);
+        vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+        //vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS);
     }
 
     void VulkanRenderer::EndRenderPass(VkCommandBuffer commandBuffer)
@@ -1292,7 +1293,7 @@ namespace Rbk {
 
     void VulkanRenderer::BeginRendering(VkCommandBuffer commandBuffer, const VkImageView& colorImageView, const VkImageView& depthImageView, const VkAttachmentLoadOp loadOp, const VkAttachmentStoreOp storeOp)
     {
-        VkClearColorValue colorClear = { 154.f / 255.f, 205.f / 255.f, 50.f / 255.f, 1.f };
+        VkClearColorValue colorClear = { 27.f / 255.f, 37.f / 255.f, 54.f / 255.f, 0.f };
         VkClearDepthStencilValue depthStencil = { 1.f, 0 };
 
         VkRenderingAttachmentInfo colorAttachment{ VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO  };
@@ -1388,15 +1389,15 @@ namespace Rbk {
             result = vkQueueSubmit(m_GraphicsQueues[queueIndex], submits.size(), submits.data(), m_InFlightFences[m_CurrentFrame]);
             vkWaitForFences(m_Device, 1, &m_InFlightFences[m_CurrentFrame], VK_TRUE, UINT32_MAX);
 
-            // for (auto& cmd : commandBuffers) {
-            //     vkResetCommandBuffer(cmd, VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
-            // }
+             for (auto& cmd : commandBuffers) {
+                 vkResetCommandBuffer(cmd, VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
+             }
         }
 
         return result;
     }
 
-    VkResult VulkanRenderer::QueuePresent(uint32_t imageIndex, VkSwapchainKHR swapChain, std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>>& semaphores, int queueIndex)
+    VkResult VulkanRenderer::QueuePresent(uint32_t imageIndex, VkSwapchainKHR swapChain, std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>> semaphores, int queueIndex)
     {
         std::vector<VkSemaphore>& renderFinishedSemaphores = semaphores.second;
 
@@ -1426,7 +1427,7 @@ namespace Rbk {
         return m_CurrentFrame;
     }
 
-    uint32_t VulkanRenderer::AcquireNextImageKHR(VkSwapchainKHR swapChain, std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>>& semaphores)
+    uint32_t VulkanRenderer::AcquireNextImageKHR(VkSwapchainKHR swapChain, std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>> semaphores)
     {
         {
             std::vector<VkSemaphore>& imageAvailableSemaphores = semaphores.first;
