@@ -65,7 +65,7 @@ namespace Rbk {
             int polygoneMode = VK_POLYGON_MODE_FILL
         );
         VkSwapchainKHR CreateSwapChain(std::vector<VkImage>& swapChainImages, const VkSwapchainKHR& oldSwapChain = VK_NULL_HANDLE);
-        std::vector<VkFramebuffer> CreateFramebuffers(std::shared_ptr<VkRenderPass> renderPass, std::vector<VkImageView> swapChainImageViews, std::vector<VkImageView> depthImageView, std::vector<VkImageView> colorImageView);
+        std::vector<VkFramebuffer> CreateFramebuffers(VkRenderPass renderPass, std::vector<VkImageView> swapChainImageViews, std::vector<VkImageView> depthImageView, std::vector<VkImageView> colorImageView);
         VkCommandPool CreateCommandPool();
         std::vector<VkCommandBuffer> AllocateCommandBuffers(VkCommandPool commandPool, uint32_t size = 1, bool isSecondary = false);
         VkBuffer CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage);
@@ -107,7 +107,7 @@ namespace Rbk {
             VkCommandBufferUsageFlagBits flags = VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT,
             VkCommandBufferInheritanceInfo inheritanceInfo = {});
         void EndCommandBuffer(VkCommandBuffer commandBuffer);
-        void BeginRenderPass(std::shared_ptr<VkRenderPass> renderPass, VkCommandBuffer commandBuffer, VkFramebuffer swapChainFramebuffer);
+        void BeginRenderPass(VkRenderPass renderPass, VkCommandBuffer commandBuffer, VkFramebuffer framebuffer);
         void EndRenderPass(VkCommandBuffer commandBuffer);
         void BeginRendering(VkCommandBuffer commandBuffer, const VkImageView& colorImageView, const VkImageView& depthImageView, const VkAttachmentLoadOp loadOp, const VkAttachmentStoreOp storeOp);
         void EndRendering(VkCommandBuffer commandBuffer);
@@ -115,10 +115,10 @@ namespace Rbk {
         void SetScissor(VkCommandBuffer commandBuffer);
         void BindPipeline(VkCommandBuffer commandBuffer, VkPipeline pipeline);
         void Draw(VkCommandBuffer commandBuffer, VkDescriptorSet descriptorSet, Mesh* mesh, Data data, uint32_t uboCount, uint32_t frameIndex, bool drawIndexed = true, uint32_t index = 0);
-        uint32_t AcquireNextImageKHR(VkSwapchainKHR swapChain, std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>>& semaphores);
+        uint32_t AcquireNextImageKHR(VkSwapchainKHR swapChain, std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>> semaphores);
         VkResult QueueSubmit(VkCommandBuffer commandBuffer, int queueIndex = 0);
         VkResult QueueSubmit(uint32_t imageIndex, std::vector<VkCommandBuffer> commandBuffers, std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>> semaphores, int queueIndex = 0);
-        VkResult QueuePresent(uint32_t imageIndex, VkSwapchainKHR swapChain, std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>>& semaphores, int queueIndex = 0);
+        VkResult QueuePresent(uint32_t imageIndex, VkSwapchainKHR swapChain, std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>> semaphores, int queueIndex = 0);
         void AddPipelineBarriers(VkCommandBuffer commandBuffer, std::vector<VkImageMemoryBarrier> renderBarriers, VkPipelineStageFlags srcStageMask, VkPipelineStageFlags dstStageMask, VkDependencyFlags dependencyFlags);
         void GenerateMipmaps(VkCommandBuffer commandBuffer, VkFormat imageFormat, VkImage image, uint32_t texWidth, uint32_t texHeight, uint32_t mipLevels, uint32_t layerCount = 1);
         uint32_t GetNextFrameIndex();
@@ -154,6 +154,7 @@ namespace Rbk {
         inline bool IsFramebufferResized() { return m_FramebufferResized; }
         inline VkExtent2D GetSwapChainExtent() const { return m_SwapChainExtent; }
         inline VkSurfaceKHR GetSurface() const { return m_Surface; }
+        inline VkSurfaceFormatKHR GetSurfaceFormat() const { return m_SurfaceFormat; }
         inline void ResetCurrentFrameIndex() { m_CurrentFrame = 0; }
         inline int32_t GetCurrentFrame() const { return m_CurrentFrame; }
         inline VkFormat GetSwapChainImageFormat() const { return m_SwapChainImageFormat; }
@@ -168,6 +169,7 @@ namespace Rbk {
         void StartMarker(VkCommandBuffer buffer, const std::string& name, float r, float g, float b, float a = 1.0);
         void EndMarker(VkCommandBuffer buffer);
         uint32_t GetQueueCount() { return m_queueCount; }
+        std::vector<VkQueue> GetPresentQueue() { return m_PresentQueues; };
 
         void WaitIdle();
 
@@ -210,7 +212,7 @@ namespace Rbk {
         int32_t m_CurrentFrame = 0;
         uint32_t m_ExtensionCount;
         std::string m_apiVersion;
-        const uint32_t m_queueCount = 1;
+        const uint32_t m_queueCount = 2;
 
         std::shared_ptr<Window> m_Window = VK_NULL_HANDLE;
 

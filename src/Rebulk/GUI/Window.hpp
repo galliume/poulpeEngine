@@ -6,7 +6,7 @@ namespace Rbk
     class Window
     {
     public:
-        void Init();
+        void Init(std::string_view windowTitle);
         inline GLFWwindow* Get() { return m_Window; }
         inline void SetVSync(bool active) { m_ActiveVSync = active; }
         static bool m_FramebufferResized;

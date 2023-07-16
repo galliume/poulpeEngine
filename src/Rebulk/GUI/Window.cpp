@@ -4,10 +4,10 @@ namespace Rbk
 {
     bool Window::m_FramebufferResized = false;
 
-    void Window::Init()
+    void Window::Init(std::string_view windowTitle)
     {
-        const uint32_t WIDTH = 800;
-        const uint32_t HEIGHT = 600;
+        const uint32_t WIDTH = 2560;
+        const uint32_t HEIGHT = 1536;
 
         glfwInit();
         glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
@@ -17,7 +17,7 @@ namespace Rbk
         glfwWindowHint(GLFW_DOUBLEBUFFER, GLFW_TRUE);
         glfwWindowHint(GLFW_CONTEXT_CREATION_API, GLFW_NATIVE_CONTEXT_API);
 
-        m_Window = glfwCreateWindow(WIDTH, HEIGHT, "Rebulkan Engine", nullptr, nullptr);
+        m_Window = glfwCreateWindow(WIDTH, HEIGHT, windowTitle.data(), nullptr, nullptr);
 
         glfwSetWindowSizeLimits(m_Window, 800, 600, 2560, 1440);
         glfwMakeContextCurrent(m_Window);

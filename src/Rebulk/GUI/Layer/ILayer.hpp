@@ -11,7 +11,7 @@ namespace Rbk
         ILayer() = default;
         ~ILayer() = default;
 
-        virtual void Init(Window* window, std::shared_ptr<CommandQueue> cmdQueue) = 0;
+        virtual void Init(Window* window, std::shared_ptr<CommandQueue> cmdQueue, VkPhysicalDeviceProperties deviceProperties) = 0;
         virtual void AddRenderManager(RenderManager* renderManager) = 0;
         virtual void Render(double timeStep) = 0;
     };
