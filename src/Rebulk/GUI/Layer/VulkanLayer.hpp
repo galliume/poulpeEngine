@@ -9,7 +9,7 @@ namespace Rbk
     class VulkanLayer : public ILayer
     {
     public:
-        virtual void Init(Window* window, std::shared_ptr<CommandQueue> cmdQueue) override;
+        virtual void Init(Window* window, std::shared_ptr<CommandQueue> cmdQueue, VkPhysicalDeviceProperties deviceProperties) override;
         virtual void Render(double timeStep) override;
         virtual void AddRenderManager(RenderManager* renderManager) override;
         void SetNeedRefresh(bool needRefresh) { m_Refresh = needRefresh; };
@@ -53,5 +53,10 @@ namespace Rbk
         std::unordered_map<std::string, VkDescriptorSet> m_Entities;
         std::shared_ptr<CommandQueue> m_CmdQueue;
         std::shared_ptr<ImGuiInfo> m_ImGuiInfo;
+        VkPhysicalDeviceProperties m_deviceProperties;
+
+        VkCommandPool m_ImGuiPool;
+        VkFence m_Fence;
+        uint32_t m_ImGuiImageIndex;
     };
 }
