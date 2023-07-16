@@ -21,6 +21,8 @@ namespace Rbk
         bool HasEnoughSpaceLeft(VkDeviceSize size);
         void Lock() { m_MutexMemory.lock(); }
         void UnLock() { m_MutexMemory.unlock(); }
+        void Clear();
+
     private:
         void AllocateToMemory();
 
@@ -38,5 +40,6 @@ namespace Rbk
 
         //@todo check with deviceProps.limits.bufferImageGranularity;
         uint32_t m_Offset = 0;
+        std::vector<VkBuffer> m_Buffer {};
     };
 }

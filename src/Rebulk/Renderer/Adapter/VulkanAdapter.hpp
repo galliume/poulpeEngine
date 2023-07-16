@@ -47,7 +47,8 @@ namespace Rbk
         void ClearSplashScreen();
         void SetDrawBbox(bool draw) { m_DrawBbox = draw; };
         bool GetDrawBbox() { return m_DrawBbox; };
-        void ClearScreen(VkCommandBuffer& cmdBuffer);
+        void ClearRendererScreen();
+        void StopRendering() { m_RenderingStopped = true; };
 
         std::vector<VkImageView>* GetSwapChainImageViews() { return &m_SwapChainImageViews; }
         uint32_t GetCurrentFrameIndex() const { return m_ImageIndex; };
@@ -139,5 +140,7 @@ namespace Rbk
         std::mutex m_MutexCmdSubmitBBox;
         std::condition_variable m_RenderCond;
         unsigned int m_renderStatus = 1;
+
+        bool m_RenderingStopped = false;
     };
 }

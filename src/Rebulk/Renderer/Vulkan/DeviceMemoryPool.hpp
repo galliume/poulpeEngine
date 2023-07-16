@@ -9,7 +9,7 @@ namespace Rbk
         DeviceMemoryPool(VkPhysicalDeviceProperties2 deviceProperties, VkPhysicalDeviceMaintenance3Properties maintenceProperties);
         std::shared_ptr<DeviceMemory> Get(VkDevice& device, VkDeviceSize size, uint32_t memoryType, VkBufferUsageFlags usage, bool forceNew = false);
         std::unordered_map<uint32_t, std::unordered_map<VkBufferUsageFlags, std::vector<std::shared_ptr<DeviceMemory>>>> GetPool() { return m_Pool; }
-        void Clear() { m_Pool.clear(); };
+        void Clear();
 
     private:
         std::unordered_map<uint32_t, std::unordered_map<VkBufferUsageFlags, std::vector<std::shared_ptr<DeviceMemory>>>> m_Pool;

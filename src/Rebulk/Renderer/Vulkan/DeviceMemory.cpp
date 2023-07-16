@@ -58,6 +58,8 @@ namespace Rbk
         if (m_Offset >= m_MaxSize) {
             m_IsFull = true;
         }
+
+        m_Buffer.emplace_back(buffer);
     }
 
     void DeviceMemory::BindImageToMemory(VkImage& image, VkDeviceSize size)
@@ -76,5 +78,16 @@ namespace Rbk
         if (!hasEnoughSpaceLeft) m_IsFull = true;
 
         return hasEnoughSpaceLeft;
+    }
+
+    void DeviceMemory::Clear()
+    {
+        for (auto buffer : m_Buffer) {
+            vkDestroyBuffer(m_Device, buffer, nullptr);
+        }
+
+        vkFreeMemory(m_Device, *m_Memory.get(), nullptr);
+
+        m_Memory.reset();
     }
 }

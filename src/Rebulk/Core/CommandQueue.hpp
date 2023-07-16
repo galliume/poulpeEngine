@@ -14,6 +14,7 @@ namespace Rbk
         ~CommandQueue() = default;
 
         void Add(Command& cmd);
+        void ExecRequest();
 
     private:
         mutable std::mutex m_Mutex;

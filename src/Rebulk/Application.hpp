@@ -38,6 +38,7 @@ namespace Rbk
         std::shared_ptr<Rbk::RenderManager> m_RenderManager;
         std::shared_ptr<Rbk::Im> m_VImGui;
         std::shared_ptr<Rbk::VulkanLayer> m_VulkanLayer;
+        std::shared_ptr<Rbk::CommandQueue> m_CommandQueue;
 
         std::chrono::time_point<std::chrono::system_clock> m_StartRun;
     };
