@@ -2316,6 +2316,7 @@ namespace Rbk {
 
     void VulkanRenderer::WaitIdle()
     {
+        vkQueueWaitIdle(m_PresentQueues[0]);
         vkDeviceWaitIdle(m_Device);
     }
 }

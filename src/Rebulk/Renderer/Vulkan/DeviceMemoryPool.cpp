@@ -56,4 +56,20 @@ namespace Rbk
             return dm;
         }
     }
+
+    void DeviceMemoryPool::Clear()
+    {
+        for (auto& memoryType : m_Pool) {
+            for (auto& usage : memoryType.second) {
+                for (auto& mem : usage.second) {
+                    mem->Clear();
+                }
+            }
+        }
+        
+        m_Pool.clear();
+
+        m_MemoryAllocationCount = 0;
+        m_MemoryAllocationSize = 0;
+    }
 }
