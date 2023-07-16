@@ -6,16 +6,27 @@
 
 namespace Rbk
 {
+    struct DebugInfo
+    {
+        VkPhysicalDeviceProperties deviceProperties{};
+        std::string apiVersion{};
+        std::string vendorID{};
+        uint32_t totalMeshesLoaded = 0;
+        uint32_t totalMeshesInstanced = 0;
+        uint32_t totalShadersLoaded = 0;
+        std::unordered_map<std::string, Texture> textures{};
+    };
+
     class VulkanLayer : public ILayer
     {
     public:
-        virtual void Init(Window* window, std::shared_ptr<CommandQueue> cmdQueue, VkPhysicalDeviceProperties deviceProperties) override;
+        virtual void Init(Window* window, std::shared_ptr<CommandQueue> cmdQueue) override;
         virtual void Render(double timeStep) override;
         virtual void AddRenderManager(RenderManager* renderManager) override;
         void SetNeedRefresh(bool needRefresh) { m_Refresh = needRefresh; };
         void Destroy();
         void DisplayFpsCounter(double timeStep);
-        void DisplayAPI(VkPhysicalDeviceProperties devicesProps);
+        void DisplayAPI();
         void DisplayOptions();
         void DisplayTextures();
         void DisplaySounds();
@@ -37,6 +48,11 @@ namespace Rbk
         bool m_Looping = true;
         std::string_view m_Skybox{ "debug" };
 
+        void LoadDebugInfo();
+        void LoadAmbiantSounds();
+        void LoadLevels();
+        void LoadSkybox();
+
     private:
         void Refresh();
 
@@ -48,15 +64,19 @@ namespace Rbk
         bool m_Refresh = false;
 
         RenderManager* m_RenderManager;
-        std::unordered_map<std::string, VkDescriptorSet> m_Textures;
+        std::unordered_map<std::string, VkDescriptorSet> m_Textures{};
         std::vector<VkDescriptorSet> m_m_CmdQueueScenes;
         std::unordered_map<std::string, VkDescriptorSet> m_Entities;
         std::shared_ptr<CommandQueue> m_CmdQueue;
         std::shared_ptr<ImGuiInfo> m_ImGuiInfo;
-        VkPhysicalDeviceProperties m_deviceProperties;
 
         VkCommandPool m_ImGuiPool;
         VkFence m_Fence;
         uint32_t m_ImGuiImageIndex;
+        DebugInfo m_DebugInfo;
+        std::vector<std::string> m_AmbientSounds {};
+        uint32_t m_SoundIndex = 0;
+        std::vector<std::string> m_Levels {};
+        std::vector<std::string> m_Skyboxs {};
     };
 }

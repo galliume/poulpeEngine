@@ -18,7 +18,8 @@ namespace Rbk
             std::shared_ptr<ShaderManager> shaderManager,
             std::shared_ptr<SpriteAnimationManager> spriteAnimationManager,
             std::shared_ptr<Rbk::DestroyManager> destroyManager,
-            std::shared_ptr<Rbk::Camera> camera
+            std::shared_ptr<Rbk::Camera> camera,
+            std::shared_ptr<Rbk::CommandQueue> cmdQueue
         );
         ~RenderManager();
 
@@ -63,6 +64,7 @@ namespace Rbk
         std::shared_ptr<Rbk::AudioManager> m_AudioManager;
         std::shared_ptr<Rbk::ConfigManager> m_ConfigManager;
         std::shared_ptr<Rbk::DestroyManager> m_DestroyManager;
+        std::shared_ptr<Rbk::CommandQueue> m_CommandQueue;
 
         bool m_IsLoaded = false;
         bool m_Refresh = false;

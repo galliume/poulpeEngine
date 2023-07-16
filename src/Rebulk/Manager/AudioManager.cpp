@@ -5,15 +5,6 @@ namespace Rbk
     AudioManager::AudioManager()
     {
 
-        m_State = State::STOP;
-
-        ma_result result;
-
-        result = ma_engine_init(NULL, &m_Engine);
-
-        if (result != MA_SUCCESS) {
-            RBK_WARN("Cannot init mini audio {}", result);
-        }
     }
 
     AudioManager::~AudioManager()
@@ -29,6 +20,19 @@ namespace Rbk
         }
         for (auto& sound : config["ambient"].items()) {
             m_AmbientSounds.emplace_back(sound.value());
+        }
+    }
+
+    void AudioManager::Init()
+    {
+        m_State = State::STOP;
+
+        ma_result result;
+
+        result = ma_engine_init(NULL, &m_Engine);
+
+        if (result != MA_SUCCESS) {
+            RBK_WARN("Cannot init mini audio {}", result);
         }
     }
 

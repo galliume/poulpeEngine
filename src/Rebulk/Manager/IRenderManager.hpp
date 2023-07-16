@@ -12,6 +12,7 @@
 #include "Rebulk/Component/Camera.hpp"
 #include "Rebulk/GUI/Window.hpp"
 #include "Rebulk/Renderer/Adapter/VulkanAdapter.hpp"
+#include "Rebulk/Core/CommandQueue.hpp"
 
 namespace Rbk
 {

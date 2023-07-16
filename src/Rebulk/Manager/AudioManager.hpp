@@ -26,6 +26,7 @@ namespace Rbk
         virtual std::string GetCurrentAmbientSound() override { return m_AmbientSounds[m_AmbientSoundIndex]; }
         virtual void ToggleLooping() override;
         void Clear();
+        void Init();
 
     private:
         void Start(const std::string& soundPath, ma_sound& sound);

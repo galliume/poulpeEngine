@@ -3,11 +3,9 @@
 
 namespace Rbk
 {
-    void VulkanLayer::Init(Window* window, std::shared_ptr<CommandQueue> cmdQueue, VkPhysicalDeviceProperties deviceProperties)
+    void VulkanLayer::Init(Window* window, std::shared_ptr<CommandQueue> cmdQueue)
     {
         m_CmdQueue = cmdQueue;
-        m_deviceProperties = deviceProperties;
-
         m_ImGuiInfo = std::make_shared<ImGuiInfo>(m_RenderManager->GetRendererAdapter()->GetImGuiInfo());
         Rbk::Im::Init(window->Get(), *m_ImGuiInfo);
 
@@ -27,91 +25,97 @@ namespace Rbk
 
         vkCreateFence(m_RenderManager->GetRendererAdapter()->Rdr()->GetDevice(), &fenceInfo, nullptr, &m_Fence);
         m_ImGuiImageIndex = 0;
+
+        LoadDebugInfo();
+        LoadTextures();
+        LoadAmbiantSounds();
+        LoadLevels();
+        LoadSkybox();
     }
 
-    void VulkanLayer::Draw()
+    void VulkanLayer::LoadDebugInfo()
     {
-        uint32_t frameIndex = m_RenderManager->GetRendererAdapter()->GetCurrentFrameIndex();
+        std::function<void()> request = [=, this]() {
+            m_DebugInfo.deviceProperties = m_RenderManager->GetRendererAdapter()->Rdr()->GetDeviceProperties();
+            m_DebugInfo.apiVersion = m_RenderManager->GetRendererAdapter()->Rdr()->GetAPIVersion();
+            m_DebugInfo.vendorID = m_RenderManager->GetRendererAdapter()->Rdr()->GetVendor(m_DebugInfo.deviceProperties.vendorID);
+            m_DebugInfo.totalMeshesLoaded = m_RenderManager->GetEntityManager()->GetEntities()->size();
+            m_DebugInfo.totalMeshesInstanced = m_RenderManager->GetEntityManager()->GetInstancedCount();
+            m_DebugInfo.totalShadersLoaded = m_RenderManager->GetShaderManager()->GetShaders()->shaders.size();
+            m_DebugInfo.textures = m_RenderManager->GetTextureManager()->GetTextures();
+        };
 
-        m_RenderManager->GetRendererAdapter()->Rdr()->BeginCommandBuffer(Rbk::Im::s_ImGuiInfo.cmdBuffer);
-        m_RenderManager->GetRendererAdapter()->Rdr()->BeginRenderPass(
-            Rbk::Im::s_ImGuiInfo.rdrPass,
-            Rbk::Im::s_ImGuiInfo.cmdBuffer,
-            Rbk::Im::s_ImGuiInfo.frameBuffers[frameIndex]
-        );
-        ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), Rbk::Im::s_ImGuiInfo.cmdBuffer, Rbk::Im::s_ImGuiInfo.pipeline);
-        m_RenderManager->GetRendererAdapter()->Rdr()->EndRenderPass(Rbk::Im::s_ImGuiInfo.cmdBuffer);
-        m_RenderManager->GetRendererAdapter()->Rdr()->EndCommandBuffer(Rbk::Im::s_ImGuiInfo.cmdBuffer);
+        Command cmd{request};
 
-        std::vector<VkSemaphore>& imageAvailableSemaphores =  Rbk::Im::s_ImGuiInfo.semaphores.first;
+        m_CmdQueue->Add(cmd);
+    }
+
+    void VulkanLayer::LoadTextures()
+    {
+        std::function<void()> request = [=, this]() {
             
-        vkResetFences(m_RenderManager->GetRendererAdapter()->Rdr()->GetDevice(), 1, &m_Fence);
+            std::unordered_map<std::string, VkDescriptorSet> tmpTextures{};
 
-        VkResult result = vkAcquireNextImageKHR(
-            m_RenderManager->GetRendererAdapter()->Rdr()->GetDevice(),
-            m_RenderManager->GetRendererAdapter()->GetSwapChain(),
-            UINT32_MAX,
-            imageAvailableSemaphores[frameIndex],
-            m_Fence,
-            &m_ImGuiImageIndex);
+            const auto& textures = m_RenderManager->GetTextureManager()->GetTextures();
+            const auto& imageViews = m_RenderManager->GetRendererAdapter()->GetSwapChainImageViews();
 
-        vkWaitForFences(m_RenderManager->GetRendererAdapter()->Rdr()->GetDevice(), 1, &m_Fence, VK_TRUE, UINT32_MAX);
+            for (const auto& texture : textures) {
+            
+                if (!texture.second.IsPublic()) continue;
 
-        if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
-            RBK_ERROR("failed to acquire swap chain image!");
-        }
+                VkDescriptorSet imgDset = ImGui_ImplVulkan_AddTexture(texture.second.GetSampler(), texture.second.GetImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
-        std::vector<VkSemaphore>& renderFinishedSemaphores = Rbk::Im::s_ImGuiInfo.semaphores.second;
+                tmpTextures[texture.second.GetName()] = imgDset;
+            }
 
-        if (Rbk::Im::s_ImGuiInfo.imagesInFlight[m_ImGuiImageIndex] != VK_NULL_HANDLE) {
-            vkWaitForFences(m_RenderManager->GetRendererAdapter()->Rdr()->GetDevice(), 1, &Rbk::Im::s_ImGuiInfo.imagesInFlight[m_ImGuiImageIndex], VK_TRUE, UINT64_MAX);
-        }
+            std::swap(tmpTextures, m_Textures);
+        };
 
-        Rbk::Im::s_ImGuiInfo.imagesInFlight[m_ImGuiImageIndex] = Rbk::Im::s_ImGuiInfo.imagesInFlight[frameIndex];
+        Command cmd{request};
+        m_CmdQueue->Add(cmd);
 
-        std::vector<VkSubmitInfo> submits{};
+        //for (const auto& imageView : *imageViews) {
+        //    VkSampler textureSampler = m_RenderManager->GetRendererAdapter()->Rdr()->CreateTextureSampler(1);
+        //    VkDescriptorSet imgDset = ImGui_ImplVulkan_AddTexture(textureSampler, imageView, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+        //    m_Scenes.emplace_back(imgDset);
+        //}
+    }
 
-        VkSubmitInfo submitInfo{};
-        submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+    void VulkanLayer::LoadAmbiantSounds()
+    {
+        std::function<void()> requestSounds = [=, this]() {
+            m_AmbientSounds = m_RenderManager->GetAudioManager()->GetAmbientSound();
+        };
 
-        VkSemaphore waitSemaphores[] = { imageAvailableSemaphores[frameIndex] };
+        std::function<void()> requestIndex = [=, this]() {
+            m_SoundIndex = m_RenderManager->GetAudioManager()->GetAmbientSoundIndex();
+        };
 
-        VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
-        submitInfo.waitSemaphoreCount = 1;
-        submitInfo.pWaitSemaphores = waitSemaphores;
-        submitInfo.pWaitDstStageMask = waitStages;
-        submitInfo.commandBufferCount = 1;
-        submitInfo.pCommandBuffers = &Rbk::Im::s_ImGuiInfo.cmdBuffer;
+        Command cmdSounds{requestSounds};
+        Command cmdIndex{requestIndex};
 
-        VkSemaphore signalSemaphores[] = { renderFinishedSemaphores[frameIndex] };
+        m_CmdQueue->Add(cmdSounds);
+        m_CmdQueue->Add(cmdIndex);
+    }
 
-        submitInfo.signalSemaphoreCount = 1;
-        submitInfo.pSignalSemaphores = signalSemaphores;
+    void VulkanLayer::LoadLevels()
+    {
+        std::function<void()> request = [=, this]() {
+            m_Levels = m_RenderManager->GetConfigManager()->ListLevels();
+        };
 
-        submits.emplace_back(submitInfo);
-        
-        vkResetFences(m_RenderManager->GetRendererAdapter()->Rdr()->GetDevice(), 1, &Rbk::Im::s_ImGuiInfo.inFlightFences[frameIndex]);
+        Command cmd{request};
+        m_CmdQueue->Add(cmd);
+    }
 
-        result = vkQueueSubmit(m_RenderManager->GetRendererAdapter()->Rdr()->GetGraphicsQueues()[0], submits.size(), submits.data(), Rbk::Im::s_ImGuiInfo.inFlightFences[frameIndex]);
-        vkWaitForFences(m_RenderManager->GetRendererAdapter()->Rdr()->GetDevice(), 1, &Rbk::Im::s_ImGuiInfo.inFlightFences[frameIndex], VK_TRUE, UINT32_MAX);
+    void VulkanLayer::LoadSkybox()
+    {
+        std::function<void()> request = [=, this]() {
+            m_Skyboxs = m_RenderManager->GetConfigManager()->ListSkybox();
+        };
 
-        vkResetCommandBuffer(Rbk::Im::s_ImGuiInfo.cmdBuffer, VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
-
-        renderFinishedSemaphores = Rbk::Im::s_ImGuiInfo.semaphores.second;
-
-        VkPresentInfoKHR presentInfo{};
-        presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
-
-        presentInfo.waitSemaphoreCount = 1;
-        presentInfo.pWaitSemaphores = signalSemaphores;
-
-        VkSwapchainKHR swapChains[] = { m_RenderManager->GetRendererAdapter()->GetSwapChain() };
-        presentInfo.swapchainCount = 1;
-        presentInfo.pSwapchains = swapChains;
-        presentInfo.pImageIndices = &m_ImGuiImageIndex;
-        presentInfo.pResults = nullptr;
-
-        VkResult err = vkQueuePresentKHR(m_RenderManager->GetRendererAdapter()->Rdr()->GetPresentQueue()[0], &presentInfo);
+        Command cmd{request};
+        m_CmdQueue->Add(cmd);
     }
 
     void VulkanLayer::Render(double timeStep)
@@ -127,12 +131,10 @@ namespace Rbk
 
         bool open = true;
 
-        if (m_Textures.empty() || m_Refresh) LoadTextures();
-
         ImGui::Begin("Rebulkan Engine", &open, flags);
 
             ImGuiID dockspace_id = ImGui::GetID("RebulkanDockspace");
-            ImGui::DockSpace(dockspace_id, ImVec2(500.0f, 500.0f), dockspaceFlags);
+            ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), dockspaceFlags);
 
             if (ImGui::BeginMenuBar())
             {
@@ -151,7 +153,7 @@ namespace Rbk
             ImGui::Begin("Performances stats");
                 DisplayFpsCounter(timeStep);
                 ImGui::Separator();
-                DisplayAPI(m_deviceProperties);
+                DisplayAPI();
                 ImGui::Separator();
             ImGui::End();
 
@@ -275,24 +277,20 @@ namespace Rbk
         Rbk::Im::Text("Frametime : %.2f ms", timeStep);
     }
 
-    void VulkanLayer::DisplayAPI(VkPhysicalDeviceProperties devicesProps)
+    void VulkanLayer::DisplayAPI()
     {
-        Rbk::Im::Text("API Version : %s", m_RenderManager->GetRendererAdapter()->Rdr()->GetAPIVersion().c_str());
-        //Rbk::Im::Text("Drivers version : %d", devicesProps.driverVersion);
-        Rbk::Im::Text("Vendor id : %s", m_RenderManager->GetRendererAdapter()->Rdr()->GetVendor(devicesProps.vendorID).c_str());
-        Rbk::Im::Text("GPU : %s", devicesProps.deviceName);
-        ImGui::Separator();
-        Rbk::Im::Text("Current frame %d", m_RenderManager->GetRendererAdapter()->Rdr()->GetCurrentFrame());
+        Rbk::Im::Text("API Version : %s", m_DebugInfo.apiVersion.c_str());
+        Rbk::Im::Text("Vendor id : %s", m_DebugInfo.vendorID.c_str());
+        Rbk::Im::Text("GPU : %s", m_DebugInfo.deviceProperties.deviceName);
         ImGui::Separator();
         Rbk::Im::Text("%", "Meshes stats");
-        Rbk::Im::Text("Total mesh loaded %d", m_RenderManager->GetEntityManager()->GetEntities()->size());
-        Rbk::Im::Text("Total mesh instanced %d", m_RenderManager->GetEntityManager()->GetInstancedCount());
+        Rbk::Im::Text("Total mesh loaded %d", m_DebugInfo.totalMeshesLoaded);
+        Rbk::Im::Text("Total mesh instanced %d", m_DebugInfo.totalMeshesInstanced);
         ImGui::Separator();
-        Rbk::Im::Text("Shader count %d", m_RenderManager->GetShaderManager()->GetShaders()->shaders.size());
+        Rbk::Im::Text("Shader count %d", m_DebugInfo.totalShadersLoaded);
         ImGui::Separator();
-        Rbk::Im::Text("Texture count %d", m_RenderManager->GetTextureManager()->GetTextures().size());
-        Rbk::Im::Text("%s", "Loaded textures :");
-        for (auto tex : m_RenderManager->GetTextureManager()->GetTextures()) {
+        Rbk::Im::Text("Texture count %d", m_DebugInfo.textures.size());
+        for (auto tex : m_DebugInfo.textures) {
             Rbk::Im::Text("\t%s", tex.first.c_str());
         }
     }
@@ -402,34 +400,59 @@ namespace Rbk
         {
             if (ImGui::Button("Play"))
             {
-                m_RenderManager->GetAudioManager()->StartAmbient();
+                std::function<void()> request = [=, this]() {
+                    m_RenderManager->GetAudioManager()->StartAmbient();
+                };
+
+                Command cmd{request};
+                m_CmdQueue->Add(cmd);
             }
+
             ImGui::SameLine();
+
             if (ImGui::Button("Stop"))
             {
-                m_RenderManager->GetAudioManager()->StopAmbient();
+                std::function<void()> request = [=, this]() {
+                    m_RenderManager->GetAudioManager()->StopAmbient();
+                };
+
+                Command cmd{request};
+                m_CmdQueue->Add(cmd);
             }
+
             ImGui::SameLine();
+
             if (ImGui::Checkbox("Loop", &m_Looping)) {
-                m_RenderManager->GetAudioManager()->ToggleLooping();
+                std::function<void()> request = [=, this]() {
+                    m_RenderManager->GetAudioManager()->ToggleLooping();
+                };
+
+                Command cmd{request};
+                m_CmdQueue->Add(cmd);
             }
 
             ImGui::SameLine();
 
-            Rbk::Im::Text("%s %s", 
-                m_RenderManager->GetAudioManager()->GetState().c_str(),
-                m_RenderManager->GetAudioManager()->GetCurrentAmbientSound().c_str()
-            );
+            std::string state = m_RenderManager->GetAudioManager()->GetState();
+            std::string currentAmbientSound = m_RenderManager->GetAudioManager()->GetCurrentAmbientSound();
+
+            Rbk::Im::Text("%s %s", state.c_str(), currentAmbientSound.c_str());
 
             ImGui::PushItemWidth(-1);
             if (ImGui::BeginListBox("##empty"))
             {
-                for (int n = 0; n < m_RenderManager->GetAudioManager()->GetAmbientSound().size(); n++)
+                for (int n = 0; n < m_AmbientSounds.size(); n++)
                 {
-                    const bool is_selected = (m_RenderManager->GetAudioManager()->GetAmbientSoundIndex() == n);
-                    if (ImGui::Selectable(m_RenderManager->GetAudioManager()->GetAmbientSound()[n].c_str(), is_selected)) {
-                        m_RenderManager->GetAudioManager()->StopAmbient();
-                        m_RenderManager->GetAudioManager()->StartAmbient(n);
+                    const bool is_selected = (m_SoundIndex == n);
+                    if (ImGui::Selectable(m_AmbientSounds[n].c_str(), is_selected)) {
+                        m_SoundIndex = n;
+                        std::function<void()> request = [=, this]() {
+                            m_RenderManager->GetAudioManager()->StopAmbient();
+                            m_RenderManager->GetAudioManager()->StartAmbient(m_SoundIndex);
+                        };
+
+                        Command cmd{request};
+                        m_CmdQueue->Add(cmd);
                     }
 
                     if (is_selected)
@@ -442,26 +465,24 @@ namespace Rbk
 
     void VulkanLayer::DisplayLevel()
     {
-        std::vector<std::string> levels = m_RenderManager->GetConfigManager()->ListLevels();
-
         if (!m_LevelIndex.has_value()) {
             auto appConfig = m_RenderManager->GetConfigManager()->AppConfig();
             auto defaultLevel = static_cast<std::string>(appConfig["defaultLevel"]);
-            for (int i = 0; i < levels.size(); ++i) {
-                if (levels.at(i).c_str() == defaultLevel) {
+            for (int i = 0; i < m_Levels.size(); ++i) {
+                if (m_Levels.at(i).c_str() == defaultLevel) {
                     m_LevelIndex = i;
                     break;
                 }
             }
         }
 
-        if (ImGui::BeginCombo("Levels", levels.at(m_LevelIndex.value()).c_str())) {
+        if (m_Levels.size() > 0 && ImGui::BeginCombo("Levels", m_Levels.at(m_LevelIndex.value()).c_str())) {
 
-            for (int n = 0; n < levels.size(); n++) {
+            for (int n = 0; n < m_Levels.size(); n++) {
 
                 const bool isSelected = m_LevelIndex == n;
 
-                if (ImGui::Selectable(levels.at(n).c_str(), isSelected)) {
+                if (ImGui::Selectable(m_Levels.at(n).c_str(), isSelected)) {
                     m_LevelIndex = n;
                     Refresh();
                 }
@@ -472,17 +493,16 @@ namespace Rbk
             ImGui::EndCombo();
         }
 
-        std::vector<std::string> skybox = m_RenderManager->GetConfigManager()->ListSkybox();
 
-        if (ImGui::BeginCombo("Skybox", skybox.at(m_SkyboxIndex).c_str())) {
+        if (m_Skyboxs.size() > 0 && ImGui::BeginCombo("Skybox", m_Skyboxs.at(m_SkyboxIndex).c_str())) {
 
-            for (int n = 0; n < skybox.size(); n++) {
+            for (int n = 0; n < m_Skyboxs.size(); n++) {
 
                 const bool isSelected = (m_SkyboxIndex == n);
                 
-                if (ImGui::Selectable(skybox.at(n).c_str(), isSelected)) {
+                if (ImGui::Selectable(m_Skyboxs.at(n).c_str(), isSelected)) {
                     m_SkyboxIndex = n;
-                    m_Skybox = skybox.at(m_SkyboxIndex).c_str();
+                    m_Skybox = m_Skyboxs.at(m_SkyboxIndex).c_str();
                     Refresh();
                 }
 
@@ -493,27 +513,6 @@ namespace Rbk
         }
 
         if (ImGui::SmallButton("Reload")) Refresh();
-    }
-
-    void VulkanLayer::LoadTextures()
-    {
-        const auto& textures = m_RenderManager->GetTextureManager()->GetTextures();
-        const auto& imageViews = m_RenderManager->GetRendererAdapter()->GetSwapChainImageViews();
-
-        for (const auto& texture : textures) {
-            
-            if (!texture.second.IsPublic()) continue;
-
-            VkDescriptorSet imgDset = ImGui_ImplVulkan_AddTexture(texture.second.GetSampler(), texture.second.GetImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-
-            m_Textures[texture.second.GetName()] = imgDset;
-        }
-
-        //for (const auto& imageView : *imageViews) {
-        //    VkSampler textureSampler = m_RenderManager->GetRendererAdapter()->Rdr()->CreateTextureSampler(1);
-        //    VkDescriptorSet imgDset = ImGui_ImplVulkan_AddTexture(textureSampler, imageView, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-        //    m_Scenes.emplace_back(imgDset);
-        //}
     }
 
     void VulkanLayer::AddRenderManager(RenderManager* renderManager)

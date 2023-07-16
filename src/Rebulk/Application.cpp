@@ -26,7 +26,7 @@ namespace Rbk
         int width, height;
         glfwGetWindowSize(m_Window->Get(), &width, &height);
 
-        auto cmdQueue = std::make_shared<Rbk::CommandQueue>();
+        m_CommandQueue = std::make_shared<Rbk::CommandQueue>();
 
         auto adapter = std::make_shared<Rbk::VulkanAdapter>(m_Window);
         auto config = std::make_shared<Rbk::ConfigManager>();
@@ -43,7 +43,7 @@ namespace Rbk
             m_Window, adapter, config,
             input, audio, texture,
             entity, shader, sprite,
-            destroyer, camera
+            destroyer, camera, m_CommandQueue
         );
         m_RenderManager->Init();
 
@@ -51,7 +51,7 @@ namespace Rbk
         #ifdef RBK_DEBUG_BUILD
             m_VulkanLayer = std::make_shared<Rbk::VulkanLayer>();
             m_VulkanLayer->AddRenderManager(m_RenderManager.get());
-            m_VulkanLayer->Init(m_Window.get(), cmdQueue, m_RenderManager->GetRendererAdapter()->Rdr()->GetDeviceProperties());
+            m_VulkanLayer->Init(m_Window.get(), m_CommandQueue);
         #endif
     }
 
@@ -102,17 +102,21 @@ namespace Rbk
                 glfwPollEvents();
                 
                 m_RenderManager->GetRendererAdapter()->ShouldRecreateSwapChain();
-                //m_RenderManager->RenderScene();
-                //m_RenderManager->Draw();
 
                 #ifdef RBK_DEBUG_BUILD
                     if (m_VulkanLayer->NeedRefresh()) {
+                        m_VulkanLayer->SetNeedRefresh(false);
+                        m_RenderManager->GetRendererAdapter()->Rdr()->WaitIdle();
+                        m_VulkanLayer->Destroy();
+                        m_VulkanLayer->Init(m_Window.get(), m_CommandQueue);
                         m_VulkanLayer->AddRenderManager(m_RenderManager.get());
                     }
+
                     m_VulkanLayer->Render(timeStep.count());
-                    m_VulkanLayer->SetNeedRefresh(false);
-                    m_VulkanLayer->Draw();
                 #endif
+
+                m_RenderManager->RenderScene();
+                m_RenderManager->Draw();
 
                 lastTime = currentTime;
             }

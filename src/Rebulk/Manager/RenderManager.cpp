@@ -19,7 +19,8 @@ namespace Rbk
         std::shared_ptr<ShaderManager> shaderManager,
         std::shared_ptr<SpriteAnimationManager> spriteAnimationManager,
         std::shared_ptr<Rbk::DestroyManager> destroyManager,
-        std::shared_ptr<Rbk::Camera> camera
+        std::shared_ptr<Rbk::Camera> camera,
+        std::shared_ptr<Rbk::CommandQueue> cmdQueue
     ) :
         m_Window(window),
         m_Renderer(renderer),
@@ -31,7 +32,8 @@ namespace Rbk
         m_ShaderManager(shaderManager),
         m_SpriteAnimationManager(spriteAnimationManager),
         m_DestroyManager(destroyManager),
-        m_Camera(camera)
+        m_Camera(camera),
+        m_CommandQueue(cmdQueue)
     {
         m_Camera->Init();
         m_Renderer->Init();
@@ -83,15 +85,18 @@ namespace Rbk
     void RenderManager::Init()
     {
         if (m_Refresh) {
-            m_Renderer->Rdr()->WaitIdle();
+            m_Renderer->StopRendering();
+            m_Renderer->ClearRendererScreen();
             CleanUp();
             m_Renderer->RecreateSwapChain();
             SetIsLoaded(false);
+            m_Refresh = false;
         }
        
         nlohmann::json appConfig = m_ConfigManager->AppConfig();
         nlohmann::json textureConfig = m_ConfigManager->TexturesConfig();
 
+        m_AudioManager->Init();
         m_AudioManager->Load(m_ConfigManager->SoundConfig());
 
         std::vector<std::string> splashSprites{};
@@ -178,6 +183,8 @@ namespace Rbk
 
     void RenderManager::RenderScene()
     {
+        m_CommandQueue->ExecRequest();
+
         m_Renderer->RenderScene();
 
         if (m_Refresh) {
