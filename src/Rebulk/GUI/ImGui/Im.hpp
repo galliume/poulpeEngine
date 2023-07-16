@@ -9,9 +9,19 @@ namespace Rbk
     struct ImGuiInfo
     {
         ImGui_ImplVulkan_InitInfo info = {};
-        VkCommandBuffer cmdBuffer = nullptr;
-        VkPipeline pipeline = nullptr;
         VkRenderPass rdrPass = nullptr;
+        VkCommandBuffer cmdBuffer = nullptr;
+        int width{ 0 };
+        int height{ 0 };
+        VkSurfaceKHR surface = nullptr;
+        VkSurfaceFormatKHR surfaceFormat;
+        VkPipeline pipeline = nullptr;
+        VkPipelineLayout pipelineLayout = nullptr;
+        VkDescriptorSet fontDescriptorSet = nullptr;
+        std::vector<VkFramebuffer> frameBuffers {};
+        std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>> semaphores {};
+        std::vector<VkFence> inFlightFences{};
+        std::vector<VkFence> imagesInFlight{};
     };
 
     class Im
@@ -32,5 +42,7 @@ namespace Rbk
         static void Destroy();
         static ImGuiInfo GetImGuiInfo() { return s_ImGuiInfo; }
         static ImGuiInfo s_ImGuiInfo;
+        static VkAllocationCallbacks* s_Allocator;
+        static ImGui_ImplVulkanH_Window s_wd;
     };
 }

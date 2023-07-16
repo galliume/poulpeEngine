@@ -116,7 +116,7 @@ namespace Rbk
 
         LoadData(m_CurrentLevel);
         loading.join();
-        m_Renderer->FlushSplashScreen();
+        m_Renderer->ClearSplashScreen();
 
         m_AudioManager->StopSplash();
 

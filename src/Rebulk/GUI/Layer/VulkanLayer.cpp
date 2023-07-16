@@ -3,10 +3,11 @@
 
 namespace Rbk
 {
-    void VulkanLayer::Init(Window* window, std::shared_ptr<CommandQueue> cmdQueue)
+    void VulkanLayer::Init(Window* window, std::shared_ptr<CommandQueue> cmdQueue, VkPhysicalDeviceProperties deviceProperties)
     {
         m_CmdQueue = cmdQueue;
-        
+        m_deviceProperties = deviceProperties;
+
         m_ImGuiInfo = std::make_shared<ImGuiInfo>(m_RenderManager->GetRendererAdapter()->GetImGuiInfo());
         Rbk::Im::Init(window->Get(), *m_ImGuiInfo);
 
@@ -15,25 +16,114 @@ namespace Rbk
         });
 
         ImGui_ImplVulkan_DestroyFontUploadObjects();
+
+        m_ImGuiPool = m_RenderManager->GetRendererAdapter()->Rdr()->CreateCommandPool();
+
+        VkFenceCreateInfo fenceInfo{};
+        fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+        fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+        fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
+        m_Fence;
+
+        vkCreateFence(m_RenderManager->GetRendererAdapter()->Rdr()->GetDevice(), &fenceInfo, nullptr, &m_Fence);
+        m_ImGuiImageIndex = 0;
     }
 
     void VulkanLayer::Draw()
     {
-        //ImGui_ImplVulkan_RenderDrawData
-        //ImDrawData* cmds = ImGui::GetDrawData();
-        //m_RenderManager->GetRendererAdapter()->AddCmdToSubmit();
-        m_RenderManager->GetRendererAdapter()->Rdr()->BeginCommandBuffer(Rbk::Im::GetImGuiInfo().cmdBuffer);
-        ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), Rbk::Im::GetImGuiInfo().cmdBuffer);
-        m_RenderManager->GetRendererAdapter()->Rdr()->EndCommandBuffer(Rbk::Im::GetImGuiInfo().cmdBuffer);
-        m_RenderManager->GetRendererAdapter()->Rdr()->QueueSubmit(Rbk::Im::GetImGuiInfo().cmdBuffer);
+        uint32_t frameIndex = m_RenderManager->GetRendererAdapter()->GetCurrentFrameIndex();
+
+        m_RenderManager->GetRendererAdapter()->Rdr()->BeginCommandBuffer(Rbk::Im::s_ImGuiInfo.cmdBuffer);
+        m_RenderManager->GetRendererAdapter()->Rdr()->BeginRenderPass(
+            Rbk::Im::s_ImGuiInfo.rdrPass,
+            Rbk::Im::s_ImGuiInfo.cmdBuffer,
+            Rbk::Im::s_ImGuiInfo.frameBuffers[frameIndex]
+        );
+        ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), Rbk::Im::s_ImGuiInfo.cmdBuffer, Rbk::Im::s_ImGuiInfo.pipeline);
+        m_RenderManager->GetRendererAdapter()->Rdr()->EndRenderPass(Rbk::Im::s_ImGuiInfo.cmdBuffer);
+        m_RenderManager->GetRendererAdapter()->Rdr()->EndCommandBuffer(Rbk::Im::s_ImGuiInfo.cmdBuffer);
+
+        std::vector<VkSemaphore>& imageAvailableSemaphores =  Rbk::Im::s_ImGuiInfo.semaphores.first;
+            
+        vkResetFences(m_RenderManager->GetRendererAdapter()->Rdr()->GetDevice(), 1, &m_Fence);
+
+        VkResult result = vkAcquireNextImageKHR(
+            m_RenderManager->GetRendererAdapter()->Rdr()->GetDevice(),
+            m_RenderManager->GetRendererAdapter()->GetSwapChain(),
+            UINT32_MAX,
+            imageAvailableSemaphores[frameIndex],
+            m_Fence,
+            &m_ImGuiImageIndex);
+
+        vkWaitForFences(m_RenderManager->GetRendererAdapter()->Rdr()->GetDevice(), 1, &m_Fence, VK_TRUE, UINT32_MAX);
+
+        if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
+            RBK_ERROR("failed to acquire swap chain image!");
+        }
+
+        std::vector<VkSemaphore>& renderFinishedSemaphores = Rbk::Im::s_ImGuiInfo.semaphores.second;
+
+        if (Rbk::Im::s_ImGuiInfo.imagesInFlight[m_ImGuiImageIndex] != VK_NULL_HANDLE) {
+            vkWaitForFences(m_RenderManager->GetRendererAdapter()->Rdr()->GetDevice(), 1, &Rbk::Im::s_ImGuiInfo.imagesInFlight[m_ImGuiImageIndex], VK_TRUE, UINT64_MAX);
+        }
+
+        Rbk::Im::s_ImGuiInfo.imagesInFlight[m_ImGuiImageIndex] = Rbk::Im::s_ImGuiInfo.imagesInFlight[frameIndex];
+
+        std::vector<VkSubmitInfo> submits{};
+
+        VkSubmitInfo submitInfo{};
+        submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+
+        VkSemaphore waitSemaphores[] = { imageAvailableSemaphores[frameIndex] };
+
+        VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
+        submitInfo.waitSemaphoreCount = 1;
+        submitInfo.pWaitSemaphores = waitSemaphores;
+        submitInfo.pWaitDstStageMask = waitStages;
+        submitInfo.commandBufferCount = 1;
+        submitInfo.pCommandBuffers = &Rbk::Im::s_ImGuiInfo.cmdBuffer;
+
+        VkSemaphore signalSemaphores[] = { renderFinishedSemaphores[frameIndex] };
+
+        submitInfo.signalSemaphoreCount = 1;
+        submitInfo.pSignalSemaphores = signalSemaphores;
+
+        submits.emplace_back(submitInfo);
+        
+        vkResetFences(m_RenderManager->GetRendererAdapter()->Rdr()->GetDevice(), 1, &Rbk::Im::s_ImGuiInfo.inFlightFences[frameIndex]);
+
+        result = vkQueueSubmit(m_RenderManager->GetRendererAdapter()->Rdr()->GetGraphicsQueues()[0], submits.size(), submits.data(), Rbk::Im::s_ImGuiInfo.inFlightFences[frameIndex]);
+        vkWaitForFences(m_RenderManager->GetRendererAdapter()->Rdr()->GetDevice(), 1, &Rbk::Im::s_ImGuiInfo.inFlightFences[frameIndex], VK_TRUE, UINT32_MAX);
+
+        vkResetCommandBuffer(Rbk::Im::s_ImGuiInfo.cmdBuffer, VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
+
+        renderFinishedSemaphores = Rbk::Im::s_ImGuiInfo.semaphores.second;
+
+        VkPresentInfoKHR presentInfo{};
+        presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+
+        presentInfo.waitSemaphoreCount = 1;
+        presentInfo.pWaitSemaphores = signalSemaphores;
+
+        VkSwapchainKHR swapChains[] = { m_RenderManager->GetRendererAdapter()->GetSwapChain() };
+        presentInfo.swapchainCount = 1;
+        presentInfo.pSwapchains = swapChains;
+        presentInfo.pImageIndices = &m_ImGuiImageIndex;
+        presentInfo.pResults = nullptr;
+
+        VkResult err = vkQueuePresentKHR(m_RenderManager->GetRendererAdapter()->Rdr()->GetPresentQueue()[0], &presentInfo);
     }
 
     void VulkanLayer::Render(double timeStep)
     {
-        VkPhysicalDeviceProperties devicesProps = m_RenderManager->GetRendererAdapter()->Rdr()->GetDeviceProperties();
         Rbk::Im::NewFrame();
         ImGuiWindowFlags flags = 0;
         flags |= ImGuiWindowFlags_MenuBar;
+
+        ImGuiDockNodeFlags dockspaceFlags = ImGuiDockNodeFlags_None;
+        
+        if (dockspaceFlags & ImGuiDockNodeFlags_PassthruCentralNode)
+            flags |= ImGuiWindowFlags_NoBackground;
 
         bool open = true;
 
@@ -42,7 +132,7 @@ namespace Rbk
         ImGui::Begin("Rebulkan Engine", &open, flags);
 
             ImGuiID dockspace_id = ImGui::GetID("RebulkanDockspace");
-            ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f));
+            ImGui::DockSpace(dockspace_id, ImVec2(500.0f, 500.0f), dockspaceFlags);
 
             if (ImGui::BeginMenuBar())
             {
@@ -61,12 +151,12 @@ namespace Rbk
             ImGui::Begin("Performances stats");
                 DisplayFpsCounter(timeStep);
                 ImGui::Separator();
-                DisplayAPI(devicesProps);
+                DisplayAPI(m_deviceProperties);
                 ImGui::Separator();
             ImGui::End();
 
             ImGui::Begin("Level");
-            DisplayLevel();
+                DisplayLevel();
             ImGui::End();
 
             ImGui::Begin("Options");
@@ -91,10 +181,6 @@ namespace Rbk
         }
 
         Rbk::Im::Render();
-
-        m_RenderManager->GetRendererAdapter()->Rdr()->BeginCommandBuffer(Rbk::Im::GetImGuiInfo().cmdBuffer);
-        ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), Rbk::Im::GetImGuiInfo().cmdBuffer);
-        m_RenderManager->GetRendererAdapter()->Rdr()->EndCommandBuffer(Rbk::Im::GetImGuiInfo().cmdBuffer);
     }
 
     void VulkanLayer::Destroy()
@@ -106,7 +192,7 @@ namespace Rbk
     {
         int x = 0;
         
-        ImGui::BeginTable("table1", 6);
+        if (!ImGui::BeginTable("table1", 6)) return;
     
         for (const auto& texture : m_Textures) {
 
@@ -441,7 +527,7 @@ namespace Rbk
         //    std::launch::async, [=, this](){ 
         //});
 
-                m_RenderManager->Refresh(m_LevelIndex.value(), m_ShowBBox, m_Skybox);
+        m_RenderManager->Refresh(m_LevelIndex.value(), m_ShowBBox, m_Skybox);
         m_Refresh = true;
     }
 }

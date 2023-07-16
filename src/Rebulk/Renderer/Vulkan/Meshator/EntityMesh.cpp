@@ -68,7 +68,6 @@ namespace Rbk
         index++;
 
         for (uint32_t i = 0; i < data->m_Ubos.size(); i++) {
-            //data.m_Ubos[i].view = m_Adapter->GetCamera()->LookAt();
             data->m_Ubos[i].proj = m_Adapter->GetPerspective();
         }
 

@@ -17,7 +17,6 @@ namespace Rbk
         virtual void Destroy() override;
         virtual void DrawSplashScreen() override;
         virtual std::shared_ptr<VulkanRenderer> Rdr() override { return m_Renderer; }
-        virtual ImGuiInfo GetImGuiInfo() override;
         virtual void ImmediateSubmit(std::function<void(VkCommandBuffer cmd)>&& function, int queueIndex = 0) override;
         virtual void ShowGrid(bool show) override;
         virtual void AddEntities(std::vector<std::shared_ptr<Entity>>* entities) override;
@@ -30,6 +29,7 @@ namespace Rbk
         virtual inline glm::mat4 GetPerspective() override { return m_Perspective; }
         virtual void SetDeltatime(float deltaTime) override;
         virtual void RenderScene() override;
+        ImGuiInfo GetImGuiInfo() ;
         void Clear();
         void DrawEntities();
         void DrawSkybox();
@@ -37,19 +37,23 @@ namespace Rbk
         void DrawBbox();
         //void RenderForImGui(VkCommandBuffer cmdBuffer, VkFramebuffer swapChainFramebuffer);
         void AddCmdToSubmit(VkCommandBuffer cmd);
+        void BeginRendering(VkCommandBuffer commandBuffer, VkAttachmentLoadOp loadOp = VK_ATTACHMENT_LOAD_OP_LOAD, VkAttachmentStoreOp storeOp = VK_ATTACHMENT_STORE_OP_STORE);
+        void EndRendering(VkCommandBuffer commandBuffer);
+        VkSwapchainKHR GetSwapChain() { return m_SwapChain; };
 
         void ShouldRecreateSwapChain();
         void RecreateSwapChain();
         void SetRayPick(float x, float y, float z, int width, int height);
-        void FlushSplashScreen();
+        void ClearSplashScreen();
         void SetDrawBbox(bool draw) { m_DrawBbox = draw; };
         bool GetDrawBbox() { return m_DrawBbox; };
+        void ClearScreen(VkCommandBuffer& cmdBuffer);
 
         std::vector<VkImageView>* GetSwapChainImageViews() { return &m_SwapChainImageViews; }
         uint32_t GetCurrentFrameIndex() const { return m_ImageIndex; };
 
         //@todo add GuiManager
-        VkRenderPass CreateImGuiRenderPass();
+        VkRenderPass CreateImGuiRenderPass(VkFormat format);
         
         //IMGUI config
         static std::atomic<float> s_AmbiantLight;
@@ -64,8 +68,6 @@ namespace Rbk
     private:
         //@todo temp
         void SetPerspective();
-        void BeginRendering(VkCommandBuffer commandBuffer, VkAttachmentLoadOp loadOp = VK_ATTACHMENT_LOAD_OP_LOAD, VkAttachmentStoreOp storeOp = VK_ATTACHMENT_STORE_OP_STORE);
-        void EndRendering(VkCommandBuffer commandBuffer);
         void Submit(std::vector<VkCommandBuffer> commandBuffers, int queueIndex = 0);
         void Present(int queueIndex = 0);
 

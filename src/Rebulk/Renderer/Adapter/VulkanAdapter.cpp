@@ -375,7 +375,9 @@ namespace Rbk
                 Present();
                 m_CmdToSubmit.clear();
                 m_moreCmdToSubmit.clear();
-                
+                cmds.clear();
+                m_renderStatus = 1;
+
                 //@todo wtf ?
                 uint32_t currentFrame = m_Renderer->GetNextFrameIndex();
                 if (currentFrame == VK_ERROR_OUT_OF_DATE_KHR || currentFrame == VK_SUBOPTIMAL_KHR) {
@@ -419,11 +421,30 @@ namespace Rbk
         m_ImageIndex = m_Renderer->AcquireNextImageKHR(m_SwapChain, m_Semaphores.at(0));
     }
 
-    void VulkanAdapter::FlushSplashScreen()
+    void VulkanAdapter::ClearSplashScreen()
     {
         DrawSplashScreen();
-        m_Renderer->WaitIdle();
-        RBK_DEBUG("Flush splashcreen");
+        ClearScreen(m_CommandBuffersSplash[m_ImageIndex]);
+    }
+
+    void VulkanAdapter::ClearScreen(VkCommandBuffer& cmdBuffer)
+    {
+        ShouldRecreateSwapChain();
+
+        BeginRendering(cmdBuffer, VK_ATTACHMENT_LOAD_OP_CLEAR, VK_ATTACHMENT_STORE_OP_NONE_KHR);
+
+        //Do nothing !
+
+        EndRendering(cmdBuffer);
+        Submit({ cmdBuffer });
+        Present();
+
+        //@todo wtf ?
+        uint32_t currentFrame = m_Renderer->GetNextFrameIndex();
+        if (currentFrame == VK_ERROR_OUT_OF_DATE_KHR || currentFrame == VK_SUBOPTIMAL_KHR) {
+            RecreateSwapChain();
+        }
+        m_ImageIndex = m_Renderer->AcquireNextImageKHR(m_SwapChain, m_Semaphores.at(0));
     }
 
     void VulkanAdapter::Destroy()
@@ -474,12 +495,12 @@ namespace Rbk
         vkDestroyCommandPool(m_Renderer->GetDevice(), commandPool, nullptr);
     }
 
-    VkRenderPass VulkanAdapter::CreateImGuiRenderPass()
+    VkRenderPass VulkanAdapter::CreateImGuiRenderPass(VkFormat format)
     {
         VkRenderPass renderPass;
 
         VkAttachmentDescription attachment = {};
-        attachment.format = VK_FORMAT_B8G8R8A8_UNORM;
+        attachment.format = format;
         attachment.samples = VK_SAMPLE_COUNT_1_BIT;
         attachment.loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
         attachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
@@ -541,10 +562,10 @@ namespace Rbk
         info.QueueFamily = m_Renderer->GetQueueFamily();
         info.Queue = m_Renderer->GetGraphicsQueues()[0];
         info.PipelineCache = nullptr;//to implement VkPipelineCache
-        info.DescriptorPool = imguiPool;
+        info.DescriptorPool = std::move(imguiPool);
         info.Subpass = 0;
-        info.MinImageCount = 2;
-        info.ImageCount = 2;
+        info.MinImageCount = 3;
+        info.ImageCount = 3;
         info.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
         info.Allocator = nullptr;
         info.CheckVkResultFn = [](VkResult err) {
@@ -554,11 +575,97 @@ namespace Rbk
 
         auto commandPool = m_Renderer->CreateCommandPool();
 
+        VkRenderPass renderPass;
+
+        const SwapChainSupportDetails swapChainDetails = m_Renderer->QuerySwapChainSupport(m_Renderer->GetPhysicalDevice());
+        VkSurfaceFormatKHR imguiFormat{};
+        
+        for (const auto& availableFormat : swapChainDetails.formats) {
+            if (availableFormat.format == VK_FORMAT_B8G8R8A8_UNORM && availableFormat.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR) {
+                imguiFormat = availableFormat;
+                break;
+            }
+        }
+
+        auto rdrPass = CreateImGuiRenderPass(imguiFormat.format);
+
         ImGuiInfo imGuiInfo;
         imGuiInfo.info = info;
-        imGuiInfo.rdrPass = CreateImGuiRenderPass();
+        imGuiInfo.rdrPass = std::move(rdrPass);
         imGuiInfo.cmdBuffer = m_Renderer->AllocateCommandBuffers(commandPool)[0];
         //imGuiInfo.pipeline = m_Pipelines[0].graphicsPipeline;
+        imGuiInfo.width = m_Renderer->GetSwapChainExtent().width;
+        imGuiInfo.height = m_Renderer->GetSwapChainExtent().height;
+
+        std::vector<VkImage> swapChainImages;
+        uint32_t imageCount;
+        
+        vkGetSwapchainImagesKHR(m_Renderer->GetDevice(), m_SwapChain, &imageCount, nullptr);
+        swapChainImages.resize(imageCount);
+        vkGetSwapchainImagesKHR(m_Renderer->GetDevice(), m_SwapChain, &imageCount, swapChainImages.data());
+        
+        VkImage colorImage;
+        m_Renderer->CreateImage(m_Renderer->GetSwapChainExtent().width, m_Renderer->GetSwapChainExtent().height, 1, VK_SAMPLE_COUNT_1_BIT, imguiFormat.format, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, colorImage);
+        VkImageView colorImageView = m_Renderer->CreateImageView(colorImage, imguiFormat.format, VK_IMAGE_ASPECT_COLOR_BIT, 1);
+
+        std::array<VkImageView, 1> attachments = { colorImageView };
+
+        VkFramebufferCreateInfo framebufferInfo{};
+        framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+        framebufferInfo.renderPass = rdrPass;
+        framebufferInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
+        framebufferInfo.pAttachments = attachments.data();
+        framebufferInfo.width = m_Renderer->GetSwapChainExtent().width;
+        framebufferInfo.height = m_Renderer->GetSwapChainExtent().height;
+        framebufferInfo.layers = 1;
+
+        imGuiInfo.frameBuffers.resize(swapChainImages.size());
+        for (int i = 0; i < swapChainImages.size(); ++i)
+        {
+            VkFramebuffer frameBuffer = VK_NULL_HANDLE;
+            VkResult e = vkCreateFramebuffer(m_Renderer->GetDevice(), &framebufferInfo, nullptr, &frameBuffer);
+            imGuiInfo.frameBuffers[i] = std::move(frameBuffer);
+        }
+
+        imGuiInfo.surface = m_Renderer->GetSurface();
+        imGuiInfo.surfaceFormat = imguiFormat;
+
+        std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>> semaphores{};
+
+        std::vector<VkSemaphore> imageAvailableSemaphores{};
+        std::vector<VkSemaphore> renderFinishedSemaphores{};
+
+        uint32_t MAX_FRAMES_IN_FLIGHT = 3;
+        std::vector<VkFence> inFlightFences{};
+        std::vector<VkFence> imagesInFlight{};
+
+        imageAvailableSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
+        renderFinishedSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
+        inFlightFences.resize(MAX_FRAMES_IN_FLIGHT);
+        imagesInFlight.resize(swapChainImages.size(), VK_NULL_HANDLE);
+
+        VkSemaphoreCreateInfo semaphoreInfo{};
+        semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+
+        VkFenceCreateInfo fenceInfo{};
+        fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+        fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+        fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
+
+        for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+            if (vkCreateSemaphore(m_Renderer->GetDevice(), &semaphoreInfo, nullptr, &imageAvailableSemaphores[static_cast<size_t>(i)]) != VK_SUCCESS ||
+                vkCreateSemaphore(m_Renderer->GetDevice(), &semaphoreInfo, nullptr, &renderFinishedSemaphores[static_cast<size_t>(i)]) != VK_SUCCESS ||
+                vkCreateFence(m_Renderer->GetDevice(), &fenceInfo, nullptr, &inFlightFences[static_cast<size_t>(i)]) != VK_SUCCESS) {
+                RBK_ERROR("failed to create semaphores!");
+            }
+        }
+
+        semaphores.first = imageAvailableSemaphores;
+        semaphores.second = renderFinishedSemaphores;
+
+        imGuiInfo.semaphores = std::move(semaphores);
+        imGuiInfo.inFlightFences = std::move(inFlightFences);
+        imGuiInfo.imagesInFlight = std::move(imagesInFlight);
 
         return imGuiInfo;
     }
