@@ -15,4 +15,22 @@ namespace Rbk
             m_CmdQueue.push(cmdToQueue);
         }
     }
+
+    void CommandQueue::ExecRequest()
+    {
+        Rbk::Locator::getThreadPool()->Submit("commandQueue", [=, this]() {
+
+            {
+                std::lock_guard guard(m_Mutex);
+
+                while (!m_CmdQueue.empty())
+                {
+                    std::shared_ptr<Command> cmd = m_CmdQueue.front();
+                    cmd->ExecRequest();
+
+                    m_CmdQueue.pop();
+                }
+            }
+        });
+    }
 }

@@ -1,8 +1,8 @@
 {
-	"defaultLevel": "level_2",
-	"defaultSkybox": "debug",
-	"splashScreenMusic": false,
-	"ambientMusic": false,
+	"defaultLevel": "level_1",
+	"defaultSkybox": "bluesky",
+	"splashScreenMusic": true,
+	"ambientMusic": true,
 	"input": {
 		"current" : "keyboard",
 		"keyboard": {

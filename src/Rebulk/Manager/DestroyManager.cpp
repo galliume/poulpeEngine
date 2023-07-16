@@ -61,15 +61,6 @@ namespace Rbk
 
     void DestroyManager::CleanDeviceMemory()
     {
-        for (auto poolType : m_DeviceMemoryPool->GetPool()) {
-            for (auto poolUsage : poolType.second) {
-                for (auto deviceMemory : poolUsage.second) {
-                    if (nullptr != *deviceMemory->GetMemory())
-                        vkFreeMemory(m_Renderer->GetDevice(), *deviceMemory->GetMemory(), nullptr);
-                }
-            }
-        }
-
         m_DeviceMemoryPool->Clear();
     }
 }

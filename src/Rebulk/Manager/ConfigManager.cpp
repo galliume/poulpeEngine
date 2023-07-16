@@ -35,7 +35,13 @@ namespace Rbk
         std::filesystem::path level{ "config/" + levelName + ".json" };
         std::ifstream f;
         f.open(std::filesystem::absolute(level), std::ios_base::in);
-        if (f.is_open()) m_EntityConfig = nlohmann::json::parse(f);
+        try {
+            if (f.is_open()) m_EntityConfig = nlohmann::json::parse(f);
+        }
+        catch (nlohmann::json::parse_error& ex) {
+            RBK_ERROR("Parse error at byte {}", ex.byte);
+        }
+
         f.close();
 
         return m_EntityConfig;
