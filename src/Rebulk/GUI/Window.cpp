@@ -6,8 +6,8 @@ namespace Rbk
 
     void Window::Init(std::string_view windowTitle)
     {
-        const uint32_t WIDTH = 800;
-        const uint32_t HEIGHT = 600;
+        const uint32_t WIDTH = 2048;
+        const uint32_t HEIGHT = 1080;
 
         glfwInit();
         glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
@@ -19,7 +19,7 @@ namespace Rbk
 
         m_Window = glfwCreateWindow(WIDTH, HEIGHT, windowTitle.data(), nullptr, nullptr);
 
-        glfwSetWindowSizeLimits(m_Window, 800, 600, 2560, 1440);
+        glfwSetWindowSizeLimits(m_Window, 800, 600, 2048, 1080);
         glfwMakeContextCurrent(m_Window);
         glfwSwapInterval(false);
 

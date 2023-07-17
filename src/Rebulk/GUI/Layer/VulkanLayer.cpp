@@ -176,6 +176,21 @@ namespace Rbk
             ImGui::Begin("Sound");
                 DisplaySounds();
             ImGui::End();
+
+            //ImGui::Begin("3D View");
+            //    float my_tex_w = 800;
+            //    float my_tex_h = 600;
+            //    ImVec2 uv_min = ImVec2(0.0f, 0.0f);                 // Top-left
+            //    ImVec2 uv_max = ImVec2(1.0f, 1.0f);                 // Lower-right
+            //    ImVec4 tint_col = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);   // No tint
+            //    ImVec4 border_col = ImVec4(1.0f, 1.0f, 1.0f, 0.5f); // 50% opaque white
+
+            //    m_RenderScene = m_RenderManager->GetRendererAdapter()->GetImguiTexture();
+
+            //    VkDescriptorSet imgDset = ImGui_ImplVulkan_AddTexture(m_RenderScene.first, m_RenderScene.second, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+            //    ImGui::Image(imgDset, ImVec2(my_tex_w, my_tex_h), uv_min, uv_max, tint_col, border_col);
+
+            //ImGui::End();
         ImGui::End();
 
         if (!open) {
