@@ -536,7 +536,7 @@ namespace Rbk {
         createInfo.imageExtent = m_SwapChainExtent;
         createInfo.imageArrayLayers = 1;//1 unless stereoscopic app
         //use of VK_IMAGE_USAGE_TRANSFER_DST_BIT if post process is needed
-        createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
+        createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
         createInfo.preTransform = m_SwapChainSupport.capabilities.currentTransform;
         createInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
         createInfo.presentMode = m_PresentMode;
