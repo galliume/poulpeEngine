@@ -66,7 +66,7 @@ namespace Rbk
 
         RenderManager* m_RenderManager;
         std::unordered_map<std::string, VkDescriptorSet> m_Textures{};
-        std::vector<VkDescriptorSet> m_m_CmdQueueScenes;
+        std::vector<VkDescriptorSet> m_CmdQueueScenes;
         std::unordered_map<std::string, VkDescriptorSet> m_Entities;
         std::shared_ptr<CommandQueue> m_CmdQueue;
         std::shared_ptr<ImGuiInfo> m_ImGuiInfo;
@@ -79,5 +79,6 @@ namespace Rbk
         uint32_t m_SoundIndex{0};
         std::vector<std::string> m_Levels {};
         std::vector<std::string> m_Skyboxs {};
+        std::pair<VkSampler, VkImageView> m_RenderScene;
     };
 }
