@@ -69,7 +69,6 @@ namespace Rbk
         RBK_DEBUG("Loaded scene in {}", (endRun - m_StartRun).count());//@todo readable in seconds...
 
         std::mutex mutex;
-        std::condition_variable renderSceneCV;
 
          while (!glfwWindowShouldClose(m_Window->Get())) {
 
@@ -106,7 +105,7 @@ namespace Rbk
                 #ifdef RBK_DEBUG_BUILD
                     if (m_VulkanLayer->NeedRefresh()) {
                         m_VulkanLayer->SetNeedRefresh(false);
-                        m_RenderManager->GetRendererAdapter()->Rdr()->WaitIdle();
+                        //@todo: tmp, fix imgui update
                         m_VulkanLayer->Destroy();
                         m_VulkanLayer->Init(m_Window.get(), m_CommandQueue);
                         m_VulkanLayer->AddRenderManager(m_RenderManager.get());
