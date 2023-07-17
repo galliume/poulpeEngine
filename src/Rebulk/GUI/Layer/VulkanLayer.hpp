@@ -36,16 +36,17 @@ namespace Rbk
         bool NeedRefresh() { return m_Refresh; }
         void Draw();
         std::shared_ptr<ImGuiInfo> GetImGuiInfo() { return m_ImGuiInfo; };
+        void UpdateData();
 
-        bool m_DebugOpen = true;
-        bool m_ShowGrid = true;
-        bool m_ShowBBox = false;
-        bool m_LightOpen = true;
-        bool m_FogOpen = true;
-        bool m_HUDOpen = true;
-        bool m_OtherOpen = true;
-        bool m_AmbientOpen = true;
-        bool m_Looping = true;
+        bool m_DebugOpen{ true };
+        bool m_ShowGrid{ true };
+        bool m_ShowBBox{ false };
+        bool m_LightOpen{ true };
+        bool m_FogOpen{ true };
+        bool m_HUDOpen{ true };
+        bool m_OtherOpen{ true };
+        bool m_AmbientOpen{ true };
+        bool m_Looping{ true };
         std::string_view m_Skybox{ "debug" };
 
         void LoadDebugInfo();
@@ -57,11 +58,11 @@ namespace Rbk
         void Refresh();
 
     private:
-        bool m_VSync = false;
-        bool m_ShowDemo = false;
-        std::optional<int> m_LevelIndex;
-        int m_SkyboxIndex = 0;
-        bool m_Refresh = false;
+        bool m_VSync{ false };
+        bool m_ShowDemo{ false };
+        std::optional<uint32_t> m_LevelIndex{ 0 };
+        uint32_t m_SkyboxIndex{ 0 };
+        bool m_Refresh{ false };
 
         RenderManager* m_RenderManager;
         std::unordered_map<std::string, VkDescriptorSet> m_Textures{};
@@ -72,10 +73,10 @@ namespace Rbk
 
         VkCommandPool m_ImGuiPool;
         VkFence m_Fence;
-        uint32_t m_ImGuiImageIndex;
+        uint32_t m_ImGuiImageIndex{0};
         DebugInfo m_DebugInfo;
         std::vector<std::string> m_AmbientSounds {};
-        uint32_t m_SoundIndex = 0;
+        uint32_t m_SoundIndex{0};
         std::vector<std::string> m_Levels {};
         std::vector<std::string> m_Skyboxs {};
     };

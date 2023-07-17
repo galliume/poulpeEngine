@@ -516,8 +516,17 @@ namespace Rbk
     }
 
     void VulkanLayer::AddRenderManager(RenderManager* renderManager)
-    { 
+    {
         m_RenderManager = renderManager;
+    }
+
+    void VulkanLayer::UpdateData()
+    {
+        LoadDebugInfo();
+        LoadTextures();
+        LoadAmbiantSounds();
+        LoadLevels();
+        LoadSkybox();
     }
 
     void VulkanLayer::Refresh()
@@ -528,5 +537,13 @@ namespace Rbk
 
         m_RenderManager->Refresh(m_LevelIndex.value(), m_ShowBBox, m_Skybox);
         m_Refresh = true;
+        // 
+        //std::function<void()> request = [=, this]() {
+        //  m_RenderManager->Refresh(m_LevelIndex.value(), m_ShowBBox, m_Skybox);
+        //  m_Refresh = true;
+        //};
+
+        //Command cmd{ request };
+        //m_CmdQueue->Add(cmd);
     }
 }
