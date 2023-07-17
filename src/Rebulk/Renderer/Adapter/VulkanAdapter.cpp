@@ -60,9 +60,6 @@ namespace Rbk
         for (int i = 0; i < m_Renderer->GetQueueCount(); i++) {
             m_Semaphores.emplace_back(m_Renderer->CreateSyncObjects(m_SwapChainImages));
         }
-
-        m_CmdToSubmit.resize(4);
-
         m_ImageIndex = m_Renderer->AcquireNextImageKHR(m_SwapChain, m_Semaphores.at(0));
     }
 
@@ -313,6 +310,7 @@ namespace Rbk
     {
         {
             std::unique_lock<std::mutex> render(m_MutexRenderScene);
+            m_CmdToSubmit.resize(4);
             m_renderStatus = 1;
 
             std::string_view threadQueueName{ "render" };
@@ -337,7 +335,21 @@ namespace Rbk
 
     void VulkanAdapter::Draw()
     {
-        if (m_CmdToSubmit.size() == 0) return;
+        if (m_RenderingStopped) {
+            VkCommandBufferResetFlags flags = VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT;
+
+            vkResetCommandBuffer(m_CommandBuffersEntities[m_ImageIndex], flags);
+            vkResetCommandBuffer(m_CommandBuffersHud[m_ImageIndex], flags);
+            vkResetCommandBuffer(m_CommandBuffersSkybox[m_ImageIndex], flags);
+
+            if (GetDrawBbox()) {
+              vkResetCommandBuffer(m_CommandBuffersBbox[m_ImageIndex], flags);
+            }
+
+            m_RenderingStopped = false;
+
+            return;
+        }
 
         {
             std::unique_lock<std::mutex> render(m_MutexRenderScene);
@@ -360,16 +372,13 @@ namespace Rbk
                    std::copy(m_moreCmdToSubmit.begin(), m_moreCmdToSubmit.end(), std::back_inserter(cmds)); 
                 }
 
-                if (!m_RenderingStopped) {
-                    Submit(cmds);
-                    Present();
-                }
+                Submit(cmds);
+                Present();
+
 
                 m_CmdToSubmit.clear();
                 m_moreCmdToSubmit.clear();
                 cmds.clear();
-                m_renderStatus = 1;
-                m_RenderingStopped = false;
 
                 //@todo wtf ?
                 uint32_t currentFrame = m_Renderer->GetNextFrameIndex();
@@ -439,15 +448,15 @@ namespace Rbk
                 return  (GetDrawBbox()) ? m_renderStatus == 16 : m_renderStatus == 8;
                 });
 
-            BeginRendering(m_CommandBuffersEntities[m_ImageIndex], VK_ATTACHMENT_LOAD_OP_CLEAR, VK_ATTACHMENT_STORE_OP_NONE_KHR);
+            BeginRendering(m_CommandBuffersEntities[m_ImageIndex]);
             //do nothing !
             EndRendering(m_CommandBuffersEntities[m_ImageIndex]);
 
-            BeginRendering(m_CommandBuffersHud[m_ImageIndex], VK_ATTACHMENT_LOAD_OP_CLEAR, VK_ATTACHMENT_STORE_OP_NONE_KHR);
+            BeginRendering(m_CommandBuffersHud[m_ImageIndex]);
             //do nothing !
             EndRendering(m_CommandBuffersHud[m_ImageIndex]);
 
-            BeginRendering(m_CommandBuffersSkybox[m_ImageIndex], VK_ATTACHMENT_LOAD_OP_CLEAR, VK_ATTACHMENT_STORE_OP_NONE_KHR);
+            BeginRendering(m_CommandBuffersSkybox[m_ImageIndex], VK_ATTACHMENT_LOAD_OP_CLEAR, VK_ATTACHMENT_STORE_OP_STORE);
             //do nothing !
             EndRendering(m_CommandBuffersSkybox[m_ImageIndex]);
 
@@ -457,7 +466,7 @@ namespace Rbk
             cmds.emplace_back(m_CommandBuffersHud[m_ImageIndex]);
 
             if (GetDrawBbox()) {
-                BeginRendering(m_CommandBuffersSkybox[m_ImageIndex], VK_ATTACHMENT_LOAD_OP_CLEAR, VK_ATTACHMENT_STORE_OP_NONE_KHR);
+                BeginRendering(m_CommandBuffersSkybox[m_ImageIndex]);
                 //do nothing !
                 EndRendering(m_CommandBuffersBbox[m_ImageIndex]);
                 cmds.emplace_back(m_CommandBuffersBbox[m_ImageIndex]);
@@ -475,8 +484,6 @@ namespace Rbk
             }
 
             m_ImageIndex = m_Renderer->AcquireNextImageKHR(m_SwapChain, m_Semaphores.at(0));
-
-            m_MutexCmdSubmit.unlock();
         }
     }
 
