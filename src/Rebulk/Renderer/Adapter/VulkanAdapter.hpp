@@ -49,6 +49,7 @@ namespace Rbk
         bool GetDrawBbox() { return m_DrawBbox; };
         void ClearRendererScreen();
         void StopRendering() { m_RenderingStopped = true; };
+        std::pair<VkSampler, VkImageView> GetImguiTexture() { return std::make_pair(m_imguiSampler, m_imguiImageView); };
 
         std::vector<VkImageView>* GetSwapChainImageViews() { return &m_SwapChainImageViews; }
         uint32_t GetCurrentFrameIndex() const { return m_ImageIndex; };
@@ -142,5 +143,9 @@ namespace Rbk
         unsigned int m_renderStatus = 1;
 
         bool m_RenderingStopped = false;
+
+        VkImage m_imguiImage;
+        VkSampler m_imguiSampler;
+        VkImageView m_imguiImageView;
     };
 }

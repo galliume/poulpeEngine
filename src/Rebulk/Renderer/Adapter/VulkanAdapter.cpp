@@ -61,6 +61,11 @@ namespace Rbk
             m_Semaphores.emplace_back(m_Renderer->CreateSyncObjects(m_SwapChainImages));
         }
         m_ImageIndex = m_Renderer->AcquireNextImageKHR(m_SwapChain, m_Semaphores.at(0));
+
+        //m_Renderer->CreateImage(m_Renderer->GetSwapChainExtent().width, m_Renderer->GetSwapChainExtent().height, 1, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_B8G8R8A8_UNORM, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, m_imguiImage);
+        //m_imguiImageView = m_Renderer->CreateImageView(m_imguiImage, VK_FORMAT_B8G8R8A8_UNORM, VK_IMAGE_ASPECT_COLOR_BIT, 1);
+        m_imguiSampler = m_Renderer->CreateTextureSampler(1);
+        m_Renderer->CreateImage(m_Renderer->GetSwapChainExtent().width, m_Renderer->GetSwapChainExtent().height, 1, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_D32_SFLOAT, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, m_imguiImage);
     }
 
     void VulkanAdapter::RecreateSwapChain()
@@ -375,7 +380,6 @@ namespace Rbk
                 Submit(cmds);
                 Present();
 
-
                 m_CmdToSubmit.clear();
                 m_moreCmdToSubmit.clear();
                 cmds.clear();
@@ -410,6 +414,10 @@ namespace Rbk
         }
 
         EndRendering(m_CommandBuffersSplash[m_ImageIndex]);
+
+        m_imguiImage = m_SwapChainImages[m_ImageIndex];
+        m_imguiImageView = m_SwapChainImageViews[m_ImageIndex];
+
         Submit({ m_CommandBuffersSplash[m_ImageIndex] });
         Present();
 
