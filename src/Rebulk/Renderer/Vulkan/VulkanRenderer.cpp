@@ -50,7 +50,7 @@ namespace Rbk {
         }
         default:
         {
-            RBK_TRACE("{} : {}", messageType, pCallbackData->pMessage);
+            //RBK_TRACE("{} : {}", messageType, pCallbackData->pMessage);
         }
         }
 
