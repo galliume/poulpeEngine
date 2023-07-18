@@ -1200,7 +1200,7 @@ namespace Rbk {
         return semaphores;
     }
 
-    VkDescriptorPool VulkanRenderer::CreateDescriptorPool(const std::vector<VkDescriptorPoolSize>& poolSizes, uint32_t maxSets)
+    VkDescriptorPool VulkanRenderer::CreateDescriptorPool(const std::vector<VkDescriptorPoolSize>& poolSizes, uint32_t maxSets, VkDescriptorPoolCreateFlags flags)
     {
         VkDescriptorPool descriptorPool;
 
@@ -1209,7 +1209,7 @@ namespace Rbk {
         poolInfo.poolSizeCount = poolSizes.size();
         poolInfo.pPoolSizes = poolSizes.data();
         poolInfo.maxSets = maxSets;
-        poolInfo.flags = VK_DESCRIPTOR_POOL_CREATE_UPDATE_AFTER_BIND_BIT;
+        poolInfo.flags = flags;
 
         if (vkCreateDescriptorPool(m_Device, &poolInfo, nullptr, &descriptorPool) != VK_SUCCESS)
         {

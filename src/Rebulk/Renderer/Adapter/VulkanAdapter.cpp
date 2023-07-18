@@ -50,7 +50,7 @@ namespace Rbk
             m_SwapChainImageViews[i] = m_Renderer->CreateImageView(m_SwapChainImages[i], m_Renderer->GetSwapChainImageFormat(), VK_IMAGE_ASPECT_COLOR_BIT);
 
             VkImage depthImage;
-            m_Renderer->CreateImage(m_Renderer->GetSwapChainExtent().width, m_Renderer->GetSwapChainExtent().height, 1, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_D32_SFLOAT, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, depthImage);
+            m_Renderer->CreateImage(m_Renderer->GetSwapChainExtent().width, m_Renderer->GetSwapChainExtent().height, 1, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_D32_SFLOAT, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, depthImage);
             VkImageView depthImageView = m_Renderer->CreateImageView(depthImage, VK_FORMAT_D32_SFLOAT, 1, VK_IMAGE_ASPECT_DEPTH_BIT);
 
             m_DepthImages[i] = depthImage;
@@ -64,9 +64,15 @@ namespace Rbk
 
         m_imguiSampler = m_Renderer->CreateTextureSampler(1);
         m_Renderer->CreateImage(m_Renderer->GetSwapChainExtent().width, m_Renderer->GetSwapChainExtent().height, 1, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_B8G8R8A8_UNORM, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, m_imguiImage);
+       
+        m_imguiDepthSampler = m_Renderer->CreateTextureSampler(1);
+        m_Renderer->CreateImage(m_Renderer->GetSwapChainExtent().width, m_Renderer->GetSwapChainExtent().height, 1, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_D32_SFLOAT, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, m_imguiDepthImage);
 
         m_CopyCommandPool = m_Renderer->CreateCommandPool();
         m_CopyCmd = m_Renderer->AllocateCommandBuffers(m_CopyCommandPool, 1)[0];
+
+        m_imguiImageView = m_Renderer->CreateImageView(m_imguiImage, VK_FORMAT_B8G8R8A8_UNORM, 1, VK_IMAGE_ASPECT_COLOR_BIT);
+        m_imguiDepthImageView = m_Renderer->CreateImageView(m_imguiDepthImage, VK_FORMAT_D32_SFLOAT, 1, VK_IMAGE_ASPECT_DEPTH_BIT);
     }
 
     void VulkanAdapter::RecreateSwapChain()
@@ -364,8 +370,6 @@ namespace Rbk
                 return  (GetDrawBbox()) ? m_renderStatus == 16 : m_renderStatus == 8;
             });
             {
-                OnFinishRender();
-
                 std::unique_lock<std::mutex> render(m_MutexCmdSubmit);
                 std::vector<VkCommandBuffer> cmds{};
                 std::copy_if(
@@ -418,8 +422,6 @@ namespace Rbk
 
         EndRendering(m_CommandBuffersSplash[m_ImageIndex]);
 
-        OnFinishRender();
-
         Submit({ m_CommandBuffersSplash[m_ImageIndex] });
         Present();
 
@@ -436,8 +438,6 @@ namespace Rbk
         BeginRendering(m_CommandBuffersSplash[m_ImageIndex], VK_ATTACHMENT_LOAD_OP_CLEAR, VK_ATTACHMENT_STORE_OP_NONE_KHR);
         //do nothing !
         EndRendering(m_CommandBuffersSplash[m_ImageIndex]);
-
-        OnFinishRender();
 
         Submit({ m_CommandBuffersSplash[m_ImageIndex] });
         Present();
@@ -472,7 +472,6 @@ namespace Rbk
             //do nothing !
             EndRendering(m_CommandBuffersSkybox[m_ImageIndex]);
 
-            OnFinishRender();
 
             std::vector<VkCommandBuffer> cmds{};
             cmds.emplace_back(m_CommandBuffersSkybox[m_ImageIndex]);
@@ -606,7 +605,7 @@ namespace Rbk
         poolSizes.emplace_back(cp1);
         poolSizes.emplace_back(cp2);
 
-        VkDescriptorPool imguiPool = m_Renderer->CreateDescriptorPool(poolSizes, 100);
+        VkDescriptorPool imguiPool = m_Renderer->CreateDescriptorPool(poolSizes, 10000, VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT);
 
         ImGui_ImplVulkan_InitInfo info = {};
 
@@ -755,6 +754,8 @@ namespace Rbk
             RecreateSwapChain();
             return;
         }
+
+        OnFinishRender();
     }
 
     void VulkanAdapter::Present(int queueIndex)
@@ -796,134 +797,144 @@ namespace Rbk
 
     void VulkanAdapter::OnFinishRender()
     {
-        //VkImageCopy imageCopyRegion{};
-        //imageCopyRegion.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-        //imageCopyRegion.srcSubresource.layerCount = 1;
-        //imageCopyRegion.dstSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-        //imageCopyRegion.dstSubresource.layerCount = 1;
-        //imageCopyRegion.extent.width = m_Renderer->GetSwapChainExtent().width;
-        //imageCopyRegion.extent.height = m_Renderer->GetSwapChainExtent().height;
-        //imageCopyRegion.extent.depth = 1;
+        m_Renderer->BeginCommandBuffer(m_CopyCmd);
 
-        m_imguiImageView = m_Renderer->CreateImageView(m_imguiImage, VK_FORMAT_B8G8R8A8_UNORM, 1, VK_IMAGE_ASPECT_COLOR_BIT);
+        VkImageCopy imageCopyRegion{};
+        imageCopyRegion.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        imageCopyRegion.srcSubresource.layerCount = 1;
+        imageCopyRegion.dstSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        imageCopyRegion.dstSubresource.layerCount = 1;
+        imageCopyRegion.extent.width = m_Renderer->GetSwapChainExtent().width;
+        imageCopyRegion.extent.height = m_Renderer->GetSwapChainExtent().height;
+        imageCopyRegion.extent.depth = 1;
 
-        VkDeviceSize imageSize = m_Renderer->GetSwapChainExtent().width * m_Renderer->GetSwapChainExtent().height * 4;
-        
-        VkMemoryPropertyFlags properties;
-        VkBuffer buffer;
-        VkDeviceMemory bufferMemory;
-        m_Renderer->CreateBuffer(imageSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, buffer, bufferMemory);
-
-        VkImageSubresourceLayers srcImgsubrcLayers;
-        srcImgsubrcLayers.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-        srcImgsubrcLayers.mipLevel = 0;
-        srcImgsubrcLayers.baseArrayLayer = 0;
-        srcImgsubrcLayers.layerCount = 1;
-        
-        VkBufferImageCopy srcImgcopy;
-        srcImgcopy.bufferOffset = 0;
-        srcImgcopy.bufferRowLength = 0;
-        srcImgcopy.bufferImageHeight = 0;
-        srcImgcopy.imageSubresource = srcImgsubrcLayers;
-        srcImgcopy.imageOffset = { 0, 0, 0 };
-        srcImgcopy.imageExtent = {
-          m_Renderer->GetSwapChainExtent().width,
-          m_Renderer->GetSwapChainExtent().height,
-          1
-        };
-
-        m_Renderer->BeginCommandBuffer(m_CopyCmd, VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
-
-        VkPipelineStageFlags sourceStage { VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT };
-        VkPipelineStageFlags destinationStage { VK_PIPELINE_STAGE_TRANSFER_BIT };
-
-        VkImageMemoryBarrier barrier{};
-        barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-        barrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-        barrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-        barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-        barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-        barrier.image = m_imguiImage;
-        barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-        barrier.subresourceRange.baseMipLevel = 0;
-        barrier.subresourceRange.levelCount = 1;
-        barrier.subresourceRange.baseArrayLayer = 0;
-        barrier.subresourceRange.layerCount = 1;
-        barrier.srcAccessMask = 0;
-        barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-
-        vkCmdPipelineBarrier(
-          m_CopyCmd,
-          sourceStage, destinationStage,
-          0,
-          0, nullptr,
-          0, nullptr,
-          1, &barrier
+        VkImageMemoryBarrier copyImageRenderBeginBarrier = m_Renderer->SetupImageMemoryBarrier(
+          m_imguiImage,
+          VK_ACCESS_TRANSFER_WRITE_BIT,
+          VK_ACCESS_MEMORY_READ_BIT,
+          VK_IMAGE_LAYOUT_UNDEFINED,
+          VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL
         );
 
-        VkSubmitInfo submitInfo{};
-        submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-        submitInfo.commandBufferCount = 1;
-        submitInfo.pCommandBuffers = &m_CopyCmd;
-
-        vkCmdCopyImageToBuffer(m_CopyCmd, m_SwapChainImages[m_ImageIndex], VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, buffer, 1, &srcImgcopy);
-        vkCmdCopyBufferToImage(m_CopyCmd, buffer, m_imguiImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &srcImgcopy);
-
-        sourceStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
-        destinationStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
-
-        barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-        barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-        barrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-        barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-        barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-        barrier.image = m_imguiImage;
-        barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-        barrier.subresourceRange.baseMipLevel = 0;
-        barrier.subresourceRange.levelCount = 1;
-        barrier.subresourceRange.baseArrayLayer = 0;
-        barrier.subresourceRange.layerCount = 1;
-        barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-        barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
-
-        vkCmdPipelineBarrier(
+        m_Renderer->AddPipelineBarriers(
           m_CopyCmd,
-          sourceStage, destinationStage,
-          0,
-          0, nullptr,
-          0, nullptr,
-          1, &barrier
+          { copyImageRenderBeginBarrier },
+          VK_PIPELINE_STAGE_TRANSFER_BIT,
+          VK_PIPELINE_STAGE_TRANSFER_BIT,
+          0
         );
 
-        //VkImageMemoryBarrier copyImageRenderEndBarrier = m_Renderer->SetupImageMemoryBarrier(
-        //  m_imguiImage,
+        VkImageMemoryBarrier copyImageSrcBeginBarrier = m_Renderer->SetupImageMemoryBarrier(
+          m_SwapChainImages[m_ImageIndex],
+          VK_ACCESS_MEMORY_READ_BIT,
+          VK_ACCESS_TRANSFER_READ_BIT,
+          VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
+          VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL
+        );
+
+        m_Renderer->AddPipelineBarriers(
+          m_CopyCmd,
+          { copyImageSrcBeginBarrier },
+          VK_PIPELINE_STAGE_TRANSFER_BIT,
+          VK_PIPELINE_STAGE_TRANSFER_BIT,
+          VK_DEPENDENCY_BY_REGION_BIT
+        );
+
+        vkCmdCopyImage(
+          m_CopyCmd,
+          m_SwapChainImages[m_ImageIndex], VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+          m_imguiImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+          1,
+          &imageCopyRegion);
+
+        VkImageMemoryBarrier copyImageRenderEndBarrier = m_Renderer->SetupImageMemoryBarrier(
+          m_imguiImage,
+          VK_ACCESS_TRANSFER_WRITE_BIT,
+          VK_ACCESS_MEMORY_READ_BIT,
+          VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+          VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+        );
+
+        m_Renderer->AddPipelineBarriers(
+          m_CopyCmd,
+          { copyImageRenderEndBarrier },
+          VK_PIPELINE_STAGE_TRANSFER_BIT,
+          VK_PIPELINE_STAGE_TRANSFER_BIT,
+          0
+        );
+
+        VkImageMemoryBarrier srcImageRenderEndBarrier = m_Renderer->SetupImageMemoryBarrier(
+          m_SwapChainImages[m_ImageIndex],
+          VK_ACCESS_TRANSFER_READ_BIT,
+          VK_ACCESS_MEMORY_READ_BIT,
+          VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+          VK_IMAGE_LAYOUT_PRESENT_SRC_KHR
+        );
+
+        m_Renderer->AddPipelineBarriers(
+          m_CopyCmd,
+          { srcImageRenderEndBarrier },
+          VK_PIPELINE_STAGE_TRANSFER_BIT,
+          VK_PIPELINE_STAGE_TRANSFER_BIT,
+          0
+        );
+
+        m_Renderer->EndCommandBuffer(m_CopyCmd);
+        m_Renderer->QueueSubmit(m_CopyCmd);
+
+        //m_Renderer->BeginCommandBuffer(m_CopyCmd);
+
+        //VkDeviceSize imageSize = m_Renderer->GetSwapChainExtent().width * m_Renderer->GetSwapChainExtent().height * 4;
+        //VkMemoryPropertyFlags properties;
+        //VkBuffer buffer;
+        //VkDeviceMemory bufferMemory;
+        //m_Renderer->CreateBuffer(imageSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, buffer, bufferMemory);
+
+        //VkImageSubresourceLayers srcImgsubrcLayers;
+        //srcImgsubrcLayers.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
+        //srcImgsubrcLayers.mipLevel = 0;
+        //srcImgsubrcLayers.baseArrayLayer = 0;
+        //srcImgsubrcLayers.layerCount = 1;
+
+        //VkBufferImageCopy srcImgcopy;
+        //srcImgcopy.bufferOffset = 0;
+        //srcImgcopy.bufferRowLength = 0;
+        //srcImgcopy.bufferImageHeight = 0;
+        //srcImgcopy.imageSubresource = srcImgsubrcLayers;
+        //srcImgcopy.imageOffset = { 0, 0, 0 };
+        //srcImgcopy.imageExtent = {
+        //  m_Renderer->GetSwapChainExtent().width,
+        //  m_Renderer->GetSwapChainExtent().height,
+        //  1
+        //};
+
+        //VkImageCopy depthImageCopyRegion{};
+        //depthImageCopyRegion.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        //depthImageCopyRegion.srcSubresource.layerCount = 1;
+        //depthImageCopyRegion.dstSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        //depthImageCopyRegion.dstSubresource.layerCount = 1;
+        //depthImageCopyRegion.extent.width = m_Renderer->GetSwapChainExtent().width;
+        //depthImageCopyRegion.extent.height = m_Renderer->GetSwapChainExtent().height;
+        //depthImageCopyRegion.extent.depth = 1;
+        //
+        //VkImageMemoryBarrier copyDepthImageRenderBeginBarrier = m_Renderer->SetupImageMemoryBarrier(
+        //  m_imguiDepthImage,
         //  VK_ACCESS_TRANSFER_WRITE_BIT,
         //  VK_ACCESS_MEMORY_READ_BIT,
-        //  VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-        //  VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+        //  VK_IMAGE_LAYOUT_UNDEFINED,
+        //  VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL
         //);
 
         //m_Renderer->AddPipelineBarriers(
         //  m_CopyCmd,
-        //  { copyImageRenderEndBarrier },
+        //  { copyDepthImageRenderBeginBarrier },
         //  VK_PIPELINE_STAGE_TRANSFER_BIT,
         //  VK_PIPELINE_STAGE_TRANSFER_BIT,
         //  0
         //);
 
-        m_Renderer->EndCommandBuffer(m_CopyCmd);
-        m_Renderer->QueueSubmit(m_CopyCmd);
-
-        //m_Renderer->AddPipelineBarriers(
-        //  m_CopyCmd,
-        //  { copyImageRenderBeginBarrier },
-        //  VK_PIPELINE_STAGE_TRANSFER_BIT,
-        //  VK_PIPELINE_STAGE_TRANSFER_BIT,
-        //  VK_DEPENDENCY_BY_REGION_BIT
-        //);
-
-        //VkImageMemoryBarrier copyImageSrcBeginBarrier = m_Renderer->SetupImageMemoryBarrier(
-        //  m_SwapChainImages[m_ImageIndex],
+        //VkImageMemoryBarrier copyDepthImageSrcBeginBarrier = m_Renderer->SetupImageMemoryBarrier(
+        //  m_DepthImages[m_ImageIndex],
         //  VK_ACCESS_MEMORY_READ_BIT,
         //  VK_ACCESS_TRANSFER_READ_BIT,
         //  VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
@@ -932,23 +943,17 @@ namespace Rbk
 
         //m_Renderer->AddPipelineBarriers(
         //  m_CopyCmd,
-        //  { copyImageSrcBeginBarrier },
+        //  { copyDepthImageSrcBeginBarrier },
         //  VK_PIPELINE_STAGE_TRANSFER_BIT,
         //  VK_PIPELINE_STAGE_TRANSFER_BIT,
         //  VK_DEPENDENCY_BY_REGION_BIT
         //);
 
-        ////VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
-        //// Issue the copy command
-        //vkCmdCopyImage(
-        //  m_CopyCmd,
-        //  m_SwapChainImages[m_ImageIndex], VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
-        //  m_imguiImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-        //  1,
-        //  &imageCopyRegion);
+        //vkCmdCopyImageToBuffer(m_CopyCmd, m_DepthImages[m_ImageIndex], VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, buffer, 1, &srcImgcopy);
+        //vkCmdCopyBufferToImage(m_CopyCmd, buffer, m_imguiDepthImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &srcImgcopy);
 
-        //VkImageMemoryBarrier copyImageRenderEndBarrier = m_Renderer->SetupImageMemoryBarrier(
-        //  m_imguiImage,
+        //VkImageMemoryBarrier copyDepthImageRenderEndBarrier = m_Renderer->SetupImageMemoryBarrier(
+        //  m_imguiDepthImage,
         //  VK_ACCESS_TRANSFER_WRITE_BIT,
         //  VK_ACCESS_MEMORY_READ_BIT,
         //  VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
@@ -957,14 +962,14 @@ namespace Rbk
 
         //m_Renderer->AddPipelineBarriers(
         //  m_CopyCmd,
-        //  { copyImageRenderEndBarrier },
+        //  { copyDepthImageRenderEndBarrier },
         //  VK_PIPELINE_STAGE_TRANSFER_BIT,
         //  VK_PIPELINE_STAGE_TRANSFER_BIT,
         //  0
         //);
 
-        //VkImageMemoryBarrier srcImageRenderEndBarrier = m_Renderer->SetupImageMemoryBarrier(
-        //  m_SwapChainImages[m_ImageIndex],
+        //VkImageMemoryBarrier srcDepthImageRenderEndBarrier = m_Renderer->SetupImageMemoryBarrier(
+        //  m_DepthImages[m_ImageIndex],
         //  VK_ACCESS_TRANSFER_READ_BIT,
         //  VK_ACCESS_MEMORY_READ_BIT,
         //  VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
@@ -973,17 +978,18 @@ namespace Rbk
 
         //m_Renderer->AddPipelineBarriers(
         //  m_CopyCmd,
-        //  { srcImageRenderEndBarrier },
+        //  { srcDepthImageRenderEndBarrier },
         //  VK_PIPELINE_STAGE_TRANSFER_BIT,
         //  VK_PIPELINE_STAGE_TRANSFER_BIT,
         //  0
         //);
 
+
         //m_Renderer->EndCommandBuffer(m_CopyCmd);
         //m_Renderer->QueueSubmit(m_CopyCmd);
 
-        vkDestroyBuffer(m_Renderer->GetDevice(), buffer, nullptr);
-        vkFreeMemory(m_Renderer->GetDevice(), bufferMemory, nullptr);
+        //vkDestroyBuffer(m_Renderer->GetDevice(), buffer, nullptr);
+        //vkFreeMemory(m_Renderer->GetDevice(), bufferMemory, nullptr);
 
         Event event{ "OnFinishRender" };
         for (const auto& observer : m_Observers) {

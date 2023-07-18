@@ -44,7 +44,7 @@ namespace Rbk {
         **/
         std::shared_ptr<VkRenderPass> CreateRenderPass(const VkSampleCountFlagBits& msaaSamples);
         VkShaderModule CreateShaderModule(const std::vector<char>& code);
-        VkDescriptorPool CreateDescriptorPool(const std::vector<VkDescriptorPoolSize>& poolSizes, uint32_t maxSets = 100);
+        VkDescriptorPool CreateDescriptorPool(const std::vector<VkDescriptorPoolSize>& poolSizes, uint32_t maxSets = 100, VkDescriptorPoolCreateFlags flags = VK_DESCRIPTOR_POOL_CREATE_UPDATE_AFTER_BIND_BIT);
         VkDescriptorSetLayout CreateDescriptorSetLayout(const std::vector<VkDescriptorSetLayoutBinding>& pBindings, const VkDescriptorSetLayoutCreateFlagBits& flags);
         VkDescriptorSet CreateDescriptorSets(const VkDescriptorPool& descriptorPool, const std::vector<VkDescriptorSetLayout>& descriptorSetLayouts, uint32_t count = 100);
 
