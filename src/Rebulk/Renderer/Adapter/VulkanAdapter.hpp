@@ -1,5 +1,6 @@
 #pragma once
 #include "IRendererAdapter.hpp"
+#include "Rebulk/Core/IObserver.hpp"
 
 namespace Rbk
 {
@@ -57,6 +58,8 @@ namespace Rbk
         //@todo add GuiManager
         VkRenderPass CreateImGuiRenderPass(VkFormat format);
         
+        void AttachObserver(IObserver* observer);
+
         //IMGUI config
         static std::atomic<float> s_AmbiantLight;
         static std::atomic<float> s_FogDensity;
@@ -72,6 +75,7 @@ namespace Rbk
         void SetPerspective();
         void Submit(std::vector<VkCommandBuffer> commandBuffers, int queueIndex = 0);
         void Present(int queueIndex = 0);
+        void OnFinishRender();
 
     private:
         std::shared_ptr<VulkanRenderer> m_Renderer = nullptr;
@@ -147,5 +151,7 @@ namespace Rbk
         VkImage m_imguiImage;
         VkSampler m_imguiSampler;
         VkImageView m_imguiImageView;
+
+        std::vector<IObserver*> m_Observers{};
     };
 }
