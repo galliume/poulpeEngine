@@ -153,5 +153,7 @@ namespace Rbk
         VkImageView m_imguiImageView;
 
         std::vector<IObserver*> m_Observers{};
+        VkCommandBuffer m_CopyCmd;
+        VkCommandPool m_CopyCommandPool;
     };
 }

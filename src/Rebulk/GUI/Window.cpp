@@ -6,8 +6,8 @@ namespace Rbk
 
     void Window::Init(std::string_view windowTitle)
     {
-        const uint32_t WIDTH = 2048;
-        const uint32_t HEIGHT = 1080;
+        const uint32_t WIDTH = 800;
+        const uint32_t HEIGHT = 600;
 
         glfwInit();
         glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
