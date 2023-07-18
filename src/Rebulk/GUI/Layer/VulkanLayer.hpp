@@ -82,6 +82,7 @@ namespace Rbk
         std::vector<std::string> m_Levels {};
         std::vector<std::string> m_Skyboxs {};
         std::pair<VkSampler, VkImageView> m_RenderScene;
+        std::pair<VkSampler, VkImageView> m_DepthImage;
 
         bool m_OnFinishRender{ false };
     };

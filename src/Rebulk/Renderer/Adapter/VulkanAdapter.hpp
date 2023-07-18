@@ -51,6 +51,7 @@ namespace Rbk
         void ClearRendererScreen();
         void StopRendering() { m_RenderingStopped = true; };
         std::pair<VkSampler, VkImageView> GetImguiTexture() { return std::make_pair(m_imguiSampler, m_imguiImageView); };
+        std::pair<VkSampler, VkImageView> GetImguiDepthImage() { return std::make_pair(m_imguiDepthSampler, m_imguiDepthImageView); };
 
         std::vector<VkImageView>* GetSwapChainImageViews() { return &m_SwapChainImageViews; }
         uint32_t GetCurrentFrameIndex() const { return m_ImageIndex; };
@@ -151,6 +152,10 @@ namespace Rbk
         VkImage m_imguiImage;
         VkSampler m_imguiSampler;
         VkImageView m_imguiImageView;
+        
+        VkImage m_imguiDepthImage;
+        VkSampler m_imguiDepthSampler;
+        VkImageView m_imguiDepthImageView;
 
         std::vector<IObserver*> m_Observers{};
         VkCommandBuffer m_CopyCmd;
