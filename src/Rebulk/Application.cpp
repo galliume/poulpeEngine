@@ -99,7 +99,7 @@ namespace Rbk
                 m_RenderManager->GetCamera()->UpdateDeltaTime(timeStep.count());
 
                 glfwPollEvents();
-                
+
                 m_RenderManager->GetRendererAdapter()->ShouldRecreateSwapChain();
 
                 #ifdef RBK_DEBUG_BUILD

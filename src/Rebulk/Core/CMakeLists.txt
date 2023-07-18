@@ -15,6 +15,7 @@ set(SRC_LIST ${CMAKE_CURRENT_SOURCE_DIR}/Buffer.hpp
              ${CMAKE_CURRENT_SOURCE_DIR}/Command.cpp
              ${CMAKE_CURRENT_SOURCE_DIR}/Command.hpp
              ${CMAKE_CURRENT_SOURCE_DIR}/CommandQueue.cpp
-             ${CMAKE_CURRENT_SOURCE_DIR}/CommandQueue.hpp)
+             ${CMAKE_CURRENT_SOURCE_DIR}/CommandQueue.hpp
+			 ${CMAKE_CURRENT_SOURCE_DIR}/IObserver.hpp)
 
 target_sources(Rebulkan PRIVATE ${SRC_LIST})

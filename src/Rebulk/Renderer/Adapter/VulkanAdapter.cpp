@@ -392,6 +392,8 @@ namespace Rbk
             }
 
             m_ImageIndex = m_Renderer->AcquireNextImageKHR(m_SwapChain, m_Semaphores.at(0));
+            
+            OnFinishRender();
         }
     }
 
@@ -427,6 +429,8 @@ namespace Rbk
             RecreateSwapChain();
         }
         m_ImageIndex = m_Renderer->AcquireNextImageKHR(m_SwapChain, m_Semaphores.at(0));
+
+        OnFinishRender();
     }
 
     void VulkanAdapter::ClearSplashScreen()
@@ -786,6 +790,20 @@ namespace Rbk
     void VulkanAdapter::AddEntities(std::vector<std::shared_ptr<Entity>>* entities)
     {
         m_Entities = entities;
+    }
+
+    void VulkanAdapter::OnFinishRender()
+    {
+        Event event{ "OnFinishRender" };
+        for (const auto& observer : m_Observers)
+        {
+            observer->Notify(event);
+        }
+    }
+
+    void VulkanAdapter::AttachObserver(IObserver* observer)
+    {
+        m_Observers.push_back(observer);
     }
 
     //void VulkanAdapter::RenderForImGui(VkCommandBuffer cmdBuffer, VkFramebuffer swapChainFramebuffer)
