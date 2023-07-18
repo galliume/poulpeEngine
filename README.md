@@ -12,9 +12,10 @@
 
 [In video](https://www.youtube.com/watch?v=C7p9z6LhAig&list=PL4-Os8BWDCPmZt5HvJrSo6QDHkD9J4fJF)
 
-![actual_state1](screenshots/fog_2.gif?raw=true "actual status")
-![actual_state2](screenshots/grid.jpg?raw=true "actual status")
-![actual_state3](screenshots/textures_list.jpg?raw=true "actual status")
+![actual_state1](screenshots/viewport.jpg?raw=true "actual status")
+![actual_state2](screenshots/fog_2.gif?raw=true "actual status")
+![actual_state3](screenshots/grid.jpg?raw=true "actual status")
+![actual_state4](screenshots/textures_list.jpg?raw=true "actual status")
 
 
 ### To execute 
