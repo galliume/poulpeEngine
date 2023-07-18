@@ -3,6 +3,7 @@
 #include "ILayer.hpp"
 #include "Rebulk/GUI/ImGui/Im.hpp"
 #include "Rebulk/Manager/RenderManager.hpp"
+#include "Rebulk/Core/IObserver.hpp"
 
 namespace Rbk
 {
@@ -17,7 +18,7 @@ namespace Rbk
         std::unordered_map<std::string, Texture> textures{};
     };
 
-    class VulkanLayer : public ILayer
+    class VulkanLayer : public ILayer, public IObserver, public std::enable_shared_from_this<VulkanLayer>
     {
     public:
         virtual void Init(Window* window, std::shared_ptr<CommandQueue> cmdQueue) override;
@@ -53,6 +54,7 @@ namespace Rbk
         void LoadAmbiantSounds();
         void LoadLevels();
         void LoadSkybox();
+        virtual void Notify(const Event& event) override;
 
     private:
         void Refresh();
@@ -80,5 +82,7 @@ namespace Rbk
         std::vector<std::string> m_Levels {};
         std::vector<std::string> m_Skyboxs {};
         std::pair<VkSampler, VkImageView> m_RenderScene;
+
+        bool m_OnFinishRender{ false };
     };
 }
