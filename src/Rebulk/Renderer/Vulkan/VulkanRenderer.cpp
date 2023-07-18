@@ -527,6 +527,12 @@ namespace Rbk {
 
         uint32_t imageCount = GetImageCount();
 
+        VkImageSubresourceLayers srcImgsubrcLayers;
+        srcImgsubrcLayers.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        srcImgsubrcLayers.mipLevel = 1;
+        srcImgsubrcLayers.baseArrayLayer = 1;
+        srcImgsubrcLayers.layerCount = 1;
+
         VkSwapchainCreateInfoKHR createInfo{};
         createInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
         createInfo.surface = m_Surface;
@@ -536,7 +542,7 @@ namespace Rbk {
         createInfo.imageExtent = m_SwapChainExtent;
         createInfo.imageArrayLayers = 1;//1 unless stereoscopic app
         //use of VK_IMAGE_USAGE_TRANSFER_DST_BIT if post process is needed
-        createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+        createInfo.imageUsage = VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
         createInfo.preTransform = m_SwapChainSupport.capabilities.currentTransform;
         createInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
         createInfo.presentMode = m_PresentMode;
@@ -1798,6 +1804,7 @@ namespace Rbk {
         //those constants don't work on android
         result.subresourceRange.levelCount = mipLevels;
         result.subresourceRange.layerCount = VK_REMAINING_ARRAY_LAYERS;
+
         result.pNext = nullptr;
 
         return result;
