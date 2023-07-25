@@ -60,7 +60,8 @@ namespace Rbk
         for (int i = 0; i < m_Renderer->GetQueueCount(); i++) {
             m_Semaphores.emplace_back(m_Renderer->CreateSyncObjects(m_SwapChainImages));
         }
-        m_ImageIndex = m_Renderer->AcquireNextImageKHR(m_SwapChain, m_Semaphores.at(0));
+
+        AcquireNextImage();
 
         m_imguiSampler = m_Renderer->CreateTextureSampler(1);
         m_Renderer->CreateImage(m_Renderer->GetSwapChainExtent().width, m_Renderer->GetSwapChainExtent().height, 1, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_B8G8R8A8_UNORM, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, m_imguiImage);
@@ -398,7 +399,7 @@ namespace Rbk
                 }
             }
 
-            m_ImageIndex = m_Renderer->AcquireNextImageKHR(m_SwapChain, m_Semaphores.at(0));
+            AcquireNextImage();
         }
     }
 
@@ -430,7 +431,7 @@ namespace Rbk
         if (currentFrame == VK_ERROR_OUT_OF_DATE_KHR || currentFrame == VK_SUBOPTIMAL_KHR) {
             RecreateSwapChain();
         }
-        m_ImageIndex = m_Renderer->AcquireNextImageKHR(m_SwapChain, m_Semaphores.at(0));
+        AcquireNextImage();
     }
 
     void VulkanAdapter::ClearSplashScreen()
@@ -448,7 +449,7 @@ namespace Rbk
             RecreateSwapChain();
         }
 
-        m_ImageIndex = m_Renderer->AcquireNextImageKHR(m_SwapChain, m_Semaphores.at(0));
+        AcquireNextImage();
     }
 
     void VulkanAdapter::ClearRendererScreen()
@@ -496,7 +497,7 @@ namespace Rbk
                 RecreateSwapChain();
             }
 
-            m_ImageIndex = m_Renderer->AcquireNextImageKHR(m_SwapChain, m_Semaphores.at(0));
+            AcquireNextImage();
         }
     }
 
@@ -760,12 +761,35 @@ namespace Rbk
 
     void VulkanAdapter::Present(int queueIndex)
     {
+      //std::vector<VkSemaphore>& renderFinishedSemaphores = m_Semaphores.at(queueIndex).second;
+      //VkSemaphore signalSemaphores[] = { renderFinishedSemaphores[m_ImageIndex] };
+
+  
+      //VkSemaphoreTypeCreateInfo sema;
+      //sema.sType = VK_STRUCTURE_TYPE_SEMAPHORE_TYPE_CREATE_INFO;
+      //sema.semaphoreType = VK_SEMAPHORE_TYPE_BINARY;
+      //sema.pNext = NULL;
+
+      //VkSemaphoreWaitInfo waitInfo;
+      //waitInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_WAIT_INFO;
+      //waitInfo.pNext = NULL;
+      //waitInfo.flags = 0;
+      //waitInfo.semaphoreCount = 1;
+      //waitInfo.pSemaphores = { &m_Semaphores.at(queueIndex).second[m_ImageIndex]};
+
+      //vkWaitSemaphores(m_Renderer->GetDevice(), &waitInfo, UINT64_MAX);
+
         VkResult presentResult = m_Renderer->QueuePresent(m_ImageIndex, m_SwapChain, m_Semaphores.at(queueIndex), queueIndex);
 
         if (presentResult != VK_SUCCESS) {
             RBK_WARN("Error on queue present: {}", presentResult);
             RecreateSwapChain();
         }
+    }
+
+    void VulkanAdapter::AcquireNextImage()
+    {
+      m_ImageIndex = m_Renderer->AcquireNextImageKHR(m_SwapChain, m_Semaphores.at(0));
     }
 
     void VulkanAdapter::SetRayPick(float x, float y, float z, int width, int height)

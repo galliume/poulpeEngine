@@ -77,6 +77,7 @@ namespace Rbk
         void Submit(std::vector<VkCommandBuffer> commandBuffers, int queueIndex = 0);
         void Present(int queueIndex = 0);
         void OnFinishRender();
+        void AcquireNextImage();
 
     private:
         std::shared_ptr<VulkanRenderer> m_Renderer = nullptr;
