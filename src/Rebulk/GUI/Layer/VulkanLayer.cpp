@@ -3,6 +3,8 @@
 
 namespace Rbk
 {
+    bool VulkanLayer::s_RenderViewportHasInput { false };
+
     void VulkanLayer::Init(Window* window, std::shared_ptr<CommandQueue> cmdQueue)
     {
         m_CmdQueue = cmdQueue;
@@ -37,9 +39,15 @@ namespace Rbk
 
     void VulkanLayer::Notify(const Event& event)
     {
-        if ("OnFinishRender" == event.name)
+        if ("OnFinishRender" == event.name && m_OnFinishRender == false)
         {
             m_OnFinishRender = true;
+            m_RenderScene = m_RenderManager->GetRendererAdapter()->GetImguiTexture();
+            m_ImgDesc = ImGui_ImplVulkan_AddTexture(m_RenderScene.first, m_RenderScene.second, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+
+            //m_DepthImage = m_RenderManager->GetRendererAdapter()->GetImguiDepthImage();
+            //VkDescriptorSet depthImgDset = ImGui_ImplVulkan_AddTexture(m_DepthImage.first, m_DepthImage.second, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+            //ImGui::Image(depthImgDset, ImVec2(my_tex_w, my_tex_h), uv_min, uv_max, tint_col, border_col);
         }
     }
 
@@ -194,21 +202,26 @@ namespace Rbk
                 ImVec2 uv_max = ImVec2(1.0f, 1.0f);                 // Lower-right
                 ImVec4 tint_col = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);   // No tint
                 ImVec4 border_col = ImVec4(1.0f, 1.0f, 1.0f, 0.5f); // 50% opaque white
+                ImVec2 surface = ImVec2(my_tex_w, my_tex_h);
 
-                if (m_OnFinishRender) {
-                    m_RenderScene = m_RenderManager->GetRendererAdapter()->GetImguiTexture();
-                    VkDescriptorSet imgDset = ImGui_ImplVulkan_AddTexture(m_RenderScene.first, m_RenderScene.second, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-                    ImGui::Image(imgDset, ImVec2(my_tex_w, my_tex_h), uv_min, uv_max, tint_col, border_col);
+                ImGui::Image(m_ImgDesc, surface, uv_min, uv_max, tint_col, border_col);
 
-                    ImGui::SameLine();
-
-                    //m_DepthImage = m_RenderManager->GetRendererAdapter()->GetImguiDepthImage();
-                    //VkDescriptorSet depthImgDset = ImGui_ImplVulkan_AddTexture(m_DepthImage.first, m_DepthImage.second, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-                    //ImGui::Image(depthImgDset, ImVec2(my_tex_w, my_tex_h), uv_min, uv_max, tint_col, border_col);
-                    
-                    m_OnFinishRender = false;
+                if (ImGui::InvisibleButton("##RenderViewportHasInput", surface)) {
+                    s_RenderViewportHasInput = true;
+                    RBK_WARN("CLICKED!");
                 }
+                ImGui::SetItemAllowOverlap();
 
+                ImGuiIO& io = ImGui::GetIO();
+
+                if (ImGui::IsKeyDown(ImGui::GetKeyIndex(ImGuiKey_Escape))) {
+                    s_RenderViewportHasInput = false; 
+                    io.ConfigFlags &= ~ImGuiConfigFlags_NoMouse;
+                }
+                if (s_RenderViewportHasInput) {
+                    io.ConfigFlags |= ImGuiConfigFlags_NoMouse;
+                    ImGui::SetMouseCursor(ImGuiMouseCursor_None);
+                }
             ImGui::End();
 
         ImGui::End();
@@ -580,5 +593,10 @@ namespace Rbk
 
         //Command cmd{ request };
         //m_CmdQueue->Add(cmd);
+    }
+
+    void VulkanLayer::OnKeyPressed()
+    {
+        
     }
 }

@@ -14,14 +14,19 @@ namespace Rbk
         glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
         glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
         glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-        glfwWindowHint(GLFW_DOUBLEBUFFER, GLFW_TRUE);
         glfwWindowHint(GLFW_CONTEXT_CREATION_API, GLFW_NATIVE_CONTEXT_API);
+        //glfwWindowHint(GLFW_DECORATED, GLFW_FALSE);
 
         m_Window = glfwCreateWindow(WIDTH, HEIGHT, windowTitle.data(), nullptr, nullptr);
 
         glfwSetWindowSizeLimits(m_Window, 800, 600, 2048, 1080);
         glfwMakeContextCurrent(m_Window);
         glfwSwapInterval(false);
+        
+        int maxWidth  = GetSystemMetrics(SM_CXSCREEN);
+        int maxHeight = GetSystemMetrics(SM_CYSCREEN);
+        //glfwSetWindowMonitor(m_Window, NULL, (maxWidth/2)-(WIDTH/2), (maxHeight/2) - (HEIGHT/2), WIDTH, HEIGHT, GLFW_DONT_CARE);
+
 
         glfwSetWindowUserPointer(m_Window, this);
 
@@ -49,5 +54,10 @@ namespace Rbk
     void Window::Quit()
     {
         glfwSetWindowShouldClose(m_Window, true);
+    }
+
+    void Window::Hide()
+    {
+        glfwWindowHint(GLFW_VISIBLE, GLFW_TRUE);
     }
 }

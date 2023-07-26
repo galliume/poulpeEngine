@@ -13,6 +13,7 @@ namespace Rbk
         bool IsMinimized();
         void Wait();
         void Quit();
+        void Hide();
 
     private:
         GLFWwindow* m_Window;
