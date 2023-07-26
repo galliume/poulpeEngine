@@ -1,9 +1,11 @@
+#include "RebulkanConfig.h"
 #include "VulkanLayer.hpp"
 #include "Rebulk/Application.hpp"
 
 namespace Rbk
 {
     bool VulkanLayer::s_RenderViewportHasInput { false };
+    bool VulkanLayer::s_OpenAbout { false };
 
     void VulkanLayer::Init(Window* window, std::shared_ptr<CommandQueue> cmdQueue)
     {
@@ -147,7 +149,7 @@ namespace Rbk
         if (dockspaceFlags & ImGuiDockNodeFlags_PassthruCentralNode)
             flags |= ImGuiWindowFlags_NoBackground;
 
-        bool open = true;
+        bool open{ true };
 
         ImGui::Begin("Rebulkan Engine", &open, flags);
 
@@ -162,7 +164,17 @@ namespace Rbk
                     {
                         m_RenderManager->GetWindow()->Quit();
                     }
-                    ImGui::Separator();
+                    //ImGui::Separator();
+                    ImGui::EndMenu();
+                }
+                if (ImGui::BeginMenu("Help"))
+                {
+                    if (ImGui::MenuItem("About")) 
+                    {
+                        s_OpenAbout = true;
+                    }
+
+                    //ImGui::Separator();
                     ImGui::EndMenu();
                 }
             }
@@ -224,6 +236,54 @@ namespace Rbk
                 }
             ImGui::End();
 
+            if (s_OpenAbout) {
+                ImGui::OpenPopup("About");
+
+                ImVec2 center = ImGui::GetMainViewport()->GetCenter();
+                ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+
+                if (ImGui::BeginPopupModal("About", NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
+                    ImGui::Text("%s %d.%d", "Rebulkan version", Rebulkan_VERSION_MAJOR, Rebulkan_VERSION_MINOR);
+                    ImGui::Separator();
+                    ImGui::Text("%s", "Build with C++ & Vulkan");
+                    ImGui::Separator();
+                    ImGui::Text("%s", "Third Parties:");
+                    ImGui::NewLine();
+                    ImGui::NewLine();
+                    std::array<std::string, 9> thirdParties{
+                        "GLFW", "GLM", "ImGui", "MiniAudio", "Nlohmann json", "SpdLog", "STB", "Tiny Obj Loader", "Volk"};
+
+                    std::array<std::string, 9> thirdPartiesURL{
+                        "https://www.glfw.org/",
+                        "https://github.com/g-truc/glm",
+                        "https://github.com/ocornut/imgui",
+                        "https://miniaud.io/",
+                        "https://github.com/nlohmann/json",
+                        "https://github.com/gabime/spdlog",
+                        "https://github.com/nothings/stb",
+                        "https://github.com/tinyobjloader/tinyobjloader",
+                        "https://github.com/zeux/volk"};
+
+                     if (ImGui::BeginTable("thirdParties", 2)) {
+                        for (int row = 0; row < 9; row++) {
+                            ImGui::TableNextRow();
+                            ImGui::TableNextColumn();
+                            ImGui::Text("%s", thirdParties.at(row).c_str());
+                            ImGui::Separator();
+                            ImGui::TableNextColumn();
+                            ImGui::Text("%s", thirdPartiesURL.at(row).c_str());
+                            ImGui::Separator();
+                        }
+                        ImGui::EndTable();
+                    }
+
+                    if (ImGui::Button("Close")) {
+                        ImGui::CloseCurrentPopup();
+                        s_OpenAbout = false;
+                    }
+                    ImGui::EndPopup();
+                }
+            }
         ImGui::End();
 
         if (!open) {
