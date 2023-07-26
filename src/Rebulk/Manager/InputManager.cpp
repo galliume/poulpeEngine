@@ -73,7 +73,7 @@ namespace Rbk
         {
             case GLFW_PRESS:
                 if (glfwGetKey(m_Window->Get(), m_KeyboardKeys[config["unlockCamera"]])) {
-
+                    RBK_DEBUG("ctrl clicked!");
                     if (!InputManager::m_CanMoveCamera) {
                         glfwSetInputMode(m_Window->Get(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
                     } else {
@@ -112,6 +112,7 @@ namespace Rbk
 
     void InputManager::Mouse(double x, double y)
     {
+        RBK_DEBUG("clicked !");
         float xPos = static_cast<float>(x);
         float yPos = static_cast<float>(y);
 
