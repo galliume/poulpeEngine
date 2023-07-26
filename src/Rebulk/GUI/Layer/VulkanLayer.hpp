@@ -38,6 +38,7 @@ namespace Rbk
         void Draw();
         std::shared_ptr<ImGuiInfo> GetImGuiInfo() { return m_ImGuiInfo; };
         void UpdateData();
+        void AttachObserver(IObserver* observer);
 
         bool m_DebugOpen{ true };
         bool m_ShowGrid{ true };
@@ -55,6 +56,7 @@ namespace Rbk
         void LoadLevels();
         void LoadSkybox();
         virtual void Notify(const Event& event) override;
+        void OnKeyPressed();
 
     private:
         void Refresh();
@@ -83,7 +85,11 @@ namespace Rbk
         std::vector<std::string> m_Skyboxs {};
         std::pair<VkSampler, VkImageView> m_RenderScene;
         std::pair<VkSampler, VkImageView> m_DepthImage;
+        VkDescriptorSet m_ImgDesc;
 
         bool m_OnFinishRender{ false };
+        static bool s_RenderViewportHasInput;
+
+        std::vector<IObserver> m_Observers{};
     };
 }
