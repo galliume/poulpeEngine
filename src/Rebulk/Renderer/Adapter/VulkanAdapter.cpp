@@ -549,120 +549,6 @@ namespace Rbk
         vkDestroyCommandPool(m_Renderer->GetDevice(), commandPool, nullptr);
     }
 
-    VkRenderPass VulkanAdapter::CreateImGuiRenderPass(VkFormat format)
-    {
-        VkRenderPass renderPass;
-
-        VkAttachmentDescription attachment = {};
-        attachment.format = format;
-        attachment.samples = VK_SAMPLE_COUNT_1_BIT;
-        attachment.loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-        attachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-        attachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-        attachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-        attachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-        attachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
-        VkAttachmentReference color_attachment = {};
-        color_attachment.attachment = 0;
-        color_attachment.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-        VkSubpassDescription subpass = {};
-        subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
-        subpass.colorAttachmentCount = 1;
-        subpass.pColorAttachments = &color_attachment;
-        VkSubpassDependency dependency = {};
-        dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
-        dependency.dstSubpass = 0;
-        dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-        dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-        dependency.srcAccessMask = 0;
-        dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-        VkRenderPassCreateInfo info = {};
-        info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-        info.attachmentCount = 1;
-        info.pAttachments = &attachment;
-        info.subpassCount = 1;
-        info.pSubpasses = &subpass;
-        info.dependencyCount = 1;
-        info.pDependencies = &dependency;
-
-        VkResult result = vkCreateRenderPass(m_Renderer->GetDevice(), &info, nullptr, &renderPass);
-
-        if (result != VK_SUCCESS) {
-            RBK_FATAL("failed to create imgui render pass : {}", result);
-        }
-
-        return renderPass;
-    }
-
-    ImGuiInfo VulkanAdapter::GetImGuiInfo()
-    {
-        std::vector<VkDescriptorPoolSize> poolSizes{};
-        VkDescriptorPoolSize cp1;
-        cp1.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        cp1.descriptorCount = 1000;
-        VkDescriptorPoolSize cp2;
-        cp2.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        cp2.descriptorCount = 1000;
-        poolSizes.emplace_back(cp1);
-        poolSizes.emplace_back(cp2);
-
-        VkDescriptorPool imguiPool = m_Renderer->CreateDescriptorPool(poolSizes, 10000, VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT);
-
-        ImGui_ImplVulkan_InitInfo info = {};
-
-        info.Instance = m_Renderer->GetInstance();
-        info.PhysicalDevice = m_Renderer->GetPhysicalDevice();
-        info.Device = m_Renderer->GetDevice();
-        info.QueueFamily = m_Renderer->GetQueueFamily();
-        info.Queue = m_Renderer->GetGraphicsQueues()[0];
-        info.PipelineCache = nullptr;//to implement VkPipelineCache
-        info.DescriptorPool = std::move(imguiPool);
-        info.Subpass = 0;
-        info.MinImageCount = 3;
-        info.ImageCount = 3;
-        info.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
-        info.Allocator = nullptr;
-        info.CheckVkResultFn = [](VkResult err) {
-            if (0 == err) return;
-            RBK_FATAL("ImGui error {}", err);
-        };
-
-        auto commandPool = m_Renderer->CreateCommandPool();
-
-        VkRenderPass renderPass;
-
-        const SwapChainSupportDetails swapChainDetails = m_Renderer->QuerySwapChainSupport(m_Renderer->GetPhysicalDevice());
-        VkSurfaceFormatKHR imguiFormat{};
-        
-        for (const auto& availableFormat : swapChainDetails.formats) {
-            if (availableFormat.format == VK_FORMAT_B8G8R8A8_UNORM && availableFormat.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR) {
-                imguiFormat = availableFormat;
-                break;
-            }
-        }
-
-        auto rdrPass = CreateImGuiRenderPass(imguiFormat.format);
-
-        ImGuiInfo imGuiInfo;
-        imGuiInfo.info = info;
-        imGuiInfo.rdrPass = std::move(rdrPass);
-        imGuiInfo.cmdBuffer = m_Renderer->AllocateCommandBuffers(commandPool)[0];
-        //imGuiInfo.pipeline = m_Pipelines[0].graphicsPipeline;
-        imGuiInfo.width = m_Renderer->GetSwapChainExtent().width;
-        imGuiInfo.height = m_Renderer->GetSwapChainExtent().height;
-
-        return imGuiInfo;
-    }
-
-    void VulkanAdapter::ShowGrid(bool show)
-    {
-        for (auto hudPart : m_HUD) {
-            if ("grid" == hudPart->GetName()) {
-                hudPart->SetVisible(show);
-            }
-        }
-    }
-
     void VulkanAdapter::BeginRendering(VkCommandBuffer commandBuffer, VkAttachmentLoadOp loadOp, VkAttachmentStoreOp storeOp)
     {
         m_Renderer->BeginCommandBuffer(commandBuffer, VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT);
@@ -748,6 +634,8 @@ namespace Rbk
 
     void VulkanAdapter::Submit(std::vector<VkCommandBuffer> commandBuffers, int queueIndex)
     {
+        OnFinishRender();
+
         VkResult submitResult = m_Renderer->QueueSubmit(m_ImageIndex, commandBuffers, m_Semaphores.at(queueIndex), queueIndex);
 
         if (submitResult != VK_SUCCESS) {
@@ -755,8 +643,6 @@ namespace Rbk
             RecreateSwapChain();
             return;
         }
-
-        OnFinishRender();
     }
 
     void VulkanAdapter::Present(int queueIndex)
@@ -1026,6 +912,119 @@ namespace Rbk
         m_Observers.push_back(observer);
     }
 
+    VkRenderPass VulkanAdapter::CreateImGuiRenderPass(VkFormat format)
+    {
+        VkRenderPass renderPass;
+
+        VkAttachmentDescription attachment = {};
+        attachment.format = format;
+        attachment.samples = VK_SAMPLE_COUNT_1_BIT;
+        attachment.loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+        attachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        attachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+        attachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        attachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        attachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+        VkAttachmentReference color_attachment = {};
+        color_attachment.attachment = 0;
+        color_attachment.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+        VkSubpassDescription subpass = {};
+        subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+        subpass.colorAttachmentCount = 1;
+        subpass.pColorAttachments = &color_attachment;
+        VkSubpassDependency dependency = {};
+        dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
+        dependency.dstSubpass = 0;
+        dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        dependency.srcAccessMask = 0;
+        dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+        VkRenderPassCreateInfo info = {};
+        info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+        info.attachmentCount = 1;
+        info.pAttachments = &attachment;
+        info.subpassCount = 1;
+        info.pSubpasses = &subpass;
+        info.dependencyCount = 1;
+        info.pDependencies = &dependency;
+
+        VkResult result = vkCreateRenderPass(m_Renderer->GetDevice(), &info, nullptr, &renderPass);
+
+        if (result != VK_SUCCESS) {
+            RBK_FATAL("failed to create imgui render pass : {}", result);
+        }
+
+        return renderPass;
+    }
+
+    ImGuiInfo VulkanAdapter::GetImGuiInfo()
+    {
+        std::vector<VkDescriptorPoolSize> poolSizes{};
+        VkDescriptorPoolSize cp1;
+        cp1.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        cp1.descriptorCount = 1000;
+        VkDescriptorPoolSize cp2;
+        cp2.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        cp2.descriptorCount = 1000;
+        poolSizes.emplace_back(cp1);
+        poolSizes.emplace_back(cp2);
+
+        VkDescriptorPool imguiPool = m_Renderer->CreateDescriptorPool(poolSizes, 1000, VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT);
+
+        ImGui_ImplVulkan_InitInfo info = {};
+
+        info.Instance = m_Renderer->GetInstance();
+        info.PhysicalDevice = m_Renderer->GetPhysicalDevice();
+        info.Device = m_Renderer->GetDevice();
+        info.QueueFamily = m_Renderer->GetQueueFamily();
+        info.Queue = m_Renderer->GetGraphicsQueues()[0];
+        info.PipelineCache = nullptr;//to implement VkPipelineCache
+        info.DescriptorPool = std::move(imguiPool);
+        info.Subpass = 0;
+        info.MinImageCount = 3;
+        info.ImageCount = 3;
+        info.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
+        info.Allocator = nullptr;
+        info.CheckVkResultFn = [](VkResult err) {
+            if (0 == err) return;
+            RBK_FATAL("ImGui error {}", err);
+        };
+
+        auto commandPool = m_Renderer->CreateCommandPool();
+
+        VkRenderPass renderPass;
+
+        const SwapChainSupportDetails swapChainDetails = m_Renderer->QuerySwapChainSupport(m_Renderer->GetPhysicalDevice());
+        VkSurfaceFormatKHR imguiFormat{};
+        
+        for (const auto& availableFormat : swapChainDetails.formats) {
+            if (availableFormat.format == VK_FORMAT_B8G8R8A8_UNORM && availableFormat.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR) {
+                imguiFormat = availableFormat;
+                break;
+            }
+        }
+
+        auto rdrPass = CreateImGuiRenderPass(imguiFormat.format);
+
+        ImGuiInfo imGuiInfo;
+        imGuiInfo.info = info;
+        imGuiInfo.rdrPass = std::move(rdrPass);
+        imGuiInfo.cmdBuffer = m_Renderer->AllocateCommandBuffers(commandPool)[0];
+        //imGuiInfo.pipeline = m_Pipelines[0].graphicsPipeline;
+        imGuiInfo.width = m_Renderer->GetSwapChainExtent().width;
+        imGuiInfo.height = m_Renderer->GetSwapChainExtent().height;
+
+        return imGuiInfo;
+    }
+
+    void VulkanAdapter::ShowGrid(bool show)
+    {
+        for (auto hudPart : m_HUD) {
+            if ("grid" == hudPart->GetName()) {
+                hudPart->SetVisible(show);
+            }
+        }
+    }
     //void VulkanAdapter::RenderForImGui(VkCommandBuffer cmdBuffer, VkFramebuffer swapChainFramebuffer)
     //{
     //    auto renderPass = m_Renderer->CreateRenderPass(VK_SAMPLE_COUNT_1_BIT);
