@@ -68,6 +68,7 @@ namespace Rbk {
         const ImVec4 goldenBrown = ImVec4(153/255.f, 106/255.f, 48/255.f, 1.f);
         const ImVec4 darkPink = ImVec4(186/255.f, 157/255.f, 111/255.f, 1.f);
         const ImVec4 lightPink = ImVec4(224/255.f, 211/255.f, 182/255.f, 1.f);
+        const ImVec4 transparentLightPink = ImVec4(224/255.f, 211/255.f, 182/255.f, 0.2f);
 
         const ImVec4 text = white;
         const ImVec4 textDisabled = lightOrange;
@@ -107,7 +108,7 @@ namespace Rbk {
         const ImVec4 plotHistogram = lightPink;
         const ImVec4 plotHistogramHovered = darkPink;
         const ImVec4 plotHistogramActive = lightPink;
-        const ImVec4 modalWindowDimBg = lightGreen;
+        const ImVec4 modalWindowDimBg = transparentLightPink;
         const ImVec4 tab = lightPink;
         const ImVec4 tabHovered = lightPink;
         const ImVec4 tabActive = darkPink;
