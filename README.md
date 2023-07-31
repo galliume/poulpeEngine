@@ -1,9 +1,9 @@
-# Rebulkan
+# Poulpe Engine
 ## Game Engine with a vulkan renderer
 
 | **CI Service** | Build Status |
 |:---------------|-------------:|
-| GitHub Actions | [![CMake](https://github.com/galliume/rebulkan/actions/workflows/cmake.yml/badge.svg?branch=main)](https://github.com/galliume/rebulkan/actions/workflows/cmake.yml)
+| GitHub Actions | [![CMake](https://github.com/galliume/poulpeEngine/actions/workflows/cmake.yml/badge.svg?branch=main)](https://github.com/galliume/poulpeEngine/actions/workflows/cmake.yml)
 
 
 ### This project is a never ending educationnal exercice about game engine and vulkan.
@@ -12,8 +12,8 @@
 
 [In video](https://www.youtube.com/watch?v=C7p9z6LhAig&list=PL4-Os8BWDCPmZt5HvJrSo6QDHkD9J4fJF)
 
-![actual_state1](screenshots/viewport.jpg?raw=true "Rebulkan Engine GUI")
-![actual_state2](screenshots/fog_2.gif?raw=true "Rebulkan 3D rendering")
+![actual_state1](screenshots/viewport.jpg?raw=true "Poulpe Engine GUI")
+![actual_state2](screenshots/fog_2.gif?raw=true "Poulpe 3D rendering")
 
 
 ### To execute 
@@ -22,20 +22,20 @@ Install the latest Vulkan SDK https://vulkan.lunarg.com/ and be sure to have the
 
 Compile shaders (windows or linux) : 
 ```
-./bin/rbkShadersCompilation.sh
+./bin/plpShadersCompilation.sh
 ```	
 
 Generate the project and run with CMake :
 
 ```
-clear && ./bin/rbkBuild.sh && ./build/Debug/Debug/Rebulkan
+clear && ./bin/plpBuild.sh && ./build/Debug/Debug/poulpeEngine
 ```
 
 You can also generate and build yourself using CMake and the IDE you want.
 
-By default the project is compiled with clang+ (see in ./bin/rbkBuild.sh)
+By default the project is compiled with clang+ (see in ./bin/plpBuild.sh)
 
-rbkBuild.sh can take those options (here are the default values)
+plpBuild.sh can take those options (here are the default values)
 
 >-a: Build directory [default to CMAKE_BUILD_DIR="build"]
 >
@@ -55,7 +55,7 @@ rbkBuild.sh can take those options (here are the default values)
 >
 >-i: Build
 >
->-j: Run Rebulkan
+>-j: Run PoulpeEngine
 >
 >-k: Build and Run
 >
@@ -64,10 +64,10 @@ rbkBuild.sh can take those options (here are the default values)
 For exemple, if you want to build a Release in a folder named foo and force a clean refresh of the folder:
 
 ```
-./bin/rbkBuild.sh -afoo -dRelease -etrue
+./bin/plpBuild.sh -afoo -dRelease -etrue
 ```
 
-[help to configure the project](https://github.com/galliume/rebulkan/wiki/Env-config)
+[help to configure the project](https://github.com/galliume/poulpeEngine/wiki/Env-config)
 
 ### Keyboard shortcuts (azerty)
 
