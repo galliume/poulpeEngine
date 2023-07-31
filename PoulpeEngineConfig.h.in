@@ -1,0 +1,2 @@
+#define PoulpeEngine_VERSION_MAJOR @PoulpeEngine_VERSION_MAJOR@
+#define PoulpeEngine_VERSION_MINOR @PoulpeEngine_VERSION_MINOR@

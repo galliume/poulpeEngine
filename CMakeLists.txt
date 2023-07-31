@@ -12,16 +12,16 @@ endif()
 
 set(CMAKE_CXX_CLANG_TIDY clang-tidy)
 
-project(Rebulkan
+project(PoulpeEngine
   VERSION 0.1.1
   DESCRIPTION "Game Engine with a vulkan renderer"
-  HOMEPAGE_URL "https://github.com/galliume/rebulkan"
+  HOMEPAGE_URL "https://github.com/galliume/poulpeEngine"
   LANGUAGES C CXX
 )
 
-add_library(rebulkan_compiler_flags INTERFACE)
+add_library(poulpe INTERFACE)
  
-target_compile_features(rebulkan_compiler_flags INTERFACE cxx_std_20)
+target_compile_features(poulpe INTERFACE cxx_std_20)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED            ON)
@@ -52,11 +52,9 @@ message(STATUS "RELEASE_OPTIONS: ${RELEASE_OPTIONS}")
 #set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /MD")
 #set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /MDd")
 
-configure_file(RebulkanConfig.h.in RebulkanConfig.h)
-
 include(gitSubModule)
 
-configure_file(RebulkanConfig.h.in RebulkanConfig.h)
+configure_file(PoulpeEngineConfig.h.in PoulpeEngineConfig.h)
 
 add_definitions(-DVK_NO_PROTOTYPES
                 -DVOLK_STATIC_DEFINES
@@ -86,19 +84,19 @@ include_directories(${PROJECT_SOURCE_DIR}/src
                     ${PROJECT_SOURCE_DIR}/vendor/imgui
                     ${VULKAN_PATH})
 
-add_executable(${PROJECT_NAME} src/Rebulkan.cpp)
+add_executable(${PROJECT_NAME} src/Poulpe.cpp)
 
-add_subdirectory(${PROJECT_SOURCE_DIR}/src/Rebulk)
-add_subdirectory(${PROJECT_SOURCE_DIR}/src/Rebulk/Component)
-add_subdirectory(${PROJECT_SOURCE_DIR}/src/Rebulk/Core)
-add_subdirectory(${PROJECT_SOURCE_DIR}/src/Rebulk/GUI)
-add_subdirectory(${PROJECT_SOURCE_DIR}/src/Rebulk/GUI/ImGui)
-add_subdirectory(${PROJECT_SOURCE_DIR}/src/Rebulk/GUI/Layer)
-add_subdirectory(${PROJECT_SOURCE_DIR}/src/Rebulk/Manager)
-add_subdirectory(${PROJECT_SOURCE_DIR}/src/Rebulk/Renderer)
-add_subdirectory(${PROJECT_SOURCE_DIR}/src/Rebulk/Renderer/Adapter)
-add_subdirectory(${PROJECT_SOURCE_DIR}/src/Rebulk/Renderer/Vulkan)
-add_subdirectory(${PROJECT_SOURCE_DIR}/src/Rebulk/Renderer/Vulkan/Meshator)
+add_subdirectory(${PROJECT_SOURCE_DIR}/src/Poulpe)
+add_subdirectory(${PROJECT_SOURCE_DIR}/src/Poulpe/Component)
+add_subdirectory(${PROJECT_SOURCE_DIR}/src/Poulpe/Core)
+add_subdirectory(${PROJECT_SOURCE_DIR}/src/Poulpe/GUI)
+add_subdirectory(${PROJECT_SOURCE_DIR}/src/Poulpe/GUI/ImGui)
+add_subdirectory(${PROJECT_SOURCE_DIR}/src/Poulpe/GUI/Layer)
+add_subdirectory(${PROJECT_SOURCE_DIR}/src/Poulpe/Manager)
+add_subdirectory(${PROJECT_SOURCE_DIR}/src/Poulpe/Renderer)
+add_subdirectory(${PROJECT_SOURCE_DIR}/src/Poulpe/Renderer/Adapter)
+add_subdirectory(${PROJECT_SOURCE_DIR}/src/Poulpe/Renderer/Vulkan)
+add_subdirectory(${PROJECT_SOURCE_DIR}/src/Poulpe/Renderer/Vulkan/Meshator)
 
 add_subdirectory(${PROJECT_SOURCE_DIR}/vendor/glfw)
 add_subdirectory(${PROJECT_SOURCE_DIR}/vendor/glm)
@@ -128,9 +126,9 @@ target_compile_options(${PROJECT_NAME} INTERFACE
 target_compile_options(${PROJECT_NAME} PRIVATE "$<$<CONFIG:DEBUG>:${DEBUG_OPTIONS}>")
 target_compile_options(${PROJECT_NAME} PRIVATE "$<$<CONFIG:RELEASE>:${RELEASE_OPTIONS}>")
 
-target_precompile_headers(${PROJECT_NAME} PRIVATE include/rebulkpch.hpp)
+target_precompile_headers(${PROJECT_NAME} PRIVATE include/Poulpepch.hpp)
 
-target_link_libraries(${PROJECT_NAME} PRIVATE ${EXTRA_LIBS} rebulkan_compiler_flags)
+target_link_libraries(${PROJECT_NAME} PRIVATE ${EXTRA_LIBS} poulpe)
 
 target_include_directories(${PROJECT_NAME} PRIVATE "${PROJECT_BINARY_DIR}")
 target_include_directories(${PROJECT_NAME} PRIVATE
@@ -149,7 +147,7 @@ foreach(_source IN ITEMS ${_source_list})
   list(APPEND TIDY_SRC "${_source}")
 endforeach()
 
-target_compile_definitions(${PROJECT_NAME} PRIVATE "$<$<CONFIG:DEBUG>:RBK_DEBUG_BUILD>")
+target_compile_definitions(${PROJECT_NAME} PRIVATE "$<$<CONFIG:DEBUG>:PLP_DEBUG_BUILD>")
 
 set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreadedDebugDLL$<$<CONFIG:Debug>:Debug>")
 
