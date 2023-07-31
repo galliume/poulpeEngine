@@ -48,15 +48,15 @@ VTune Profiler Results/
 debug.log
 *.bin
 
-Rebulkan.cflags
-Rebulkan.config
-Rebulkan.creator
-Rebulkan.creator.user
-Rebulkan.cxxflags
-Rebulkan.files
-Rebulkan.includes
+PoulpeEngine.cflags
+PoulpeEngine.config
+PoulpeEngine.creator
+PoulpeEngine.creator.user
+PoulpeEngine.cxxflags
+PoulpeEngine.files
+PoulpeEngine.includes
 .qtc_clangd/
-Rebulkan.creator.user
+PoulpeEngine.creator.user
 cache/
 .clang-tidy
 Directory.build.props

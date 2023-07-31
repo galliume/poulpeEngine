@@ -24,7 +24,7 @@ detectOs() {
 showHelp() {
 cat << EOF  
 
-Usage: ./bin/rbkBuild.sh [-abcdefgh]
+Usage: ./bin/plpBuild.sh [-abcdefgh]
 
 -a: Build directory [default to CMAKE_BUILD_DIR="build"]
 -b: CXX compiler [default to CMAKE_CXX_COMPILER="clang++"]
@@ -35,7 +35,7 @@ Usage: ./bin/rbkBuild.sh [-abcdefgh]
 -g: CMake toolset (-T) [default to ClangCL]
 -h: Help	
 -i: Build
--j: Run Rebulkan
+-j: Run PoulpeEngine
 -k: Build and Run
 -l: Use Ninja
 -m: Use ccache [default to USE_CCACHE=true]
