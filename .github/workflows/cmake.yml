@@ -36,6 +36,6 @@ jobs:
     - name: Configure && Build
       run: |
         cd main
-        chmod +x ./bin/rbkBuild.sh
-        ./bin/rbkBuild.sh -lfalse
-        ./bin/rbkBuild.sh -i 
+        chmod +x ./bin/plpBuild.sh
+        ./bin/plpBuild.sh -lfalse
+        ./bin/plpBuild.sh -i 

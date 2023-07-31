@@ -97,35 +97,35 @@ build() {
 run() {
 	detectOs
 	OS=$?
-	RBK_BIN="Rebulkan"
+	PLP_BIN="PoulpeEngine"
 	
 	if ! [[ "$OS" == 2 ]]; then
-		RBK_BIN="Rebulkan.exe"
+		PLP_BIN="PoulpeEngine.exe"
 	fi
 	
-	RBK_PATH="./${CMAKE_BUILD_DIR}/${CMAKE_BUILD_TYPE}"
+	PLP_PATH="./${CMAKE_BUILD_DIR}/${CMAKE_BUILD_TYPE}"
 	
-	if [ -d $RBK_PATH ] ; then
+	if [ -d $PLP_PATH ] ; then
 
-		cd ${RBK_PATH}
+		cd ${PLP_PATH}
 		rm "./cache/*"
-		"./${RBK_BIN}"
+		"./${PLP_BIN}"
 		RESULT=$?
 		exit $((RESULT+0))		
 	else
-		RBK_PATH="./${CMAKE_BUILD_DIR}"
+		PLP_PATH="./${CMAKE_BUILD_DIR}"
 	fi
 
-	echo $RBK_PATH
-	if [ -d $RBK_PATH ] ; then
-		cd ${RBK_PATH}
+	echo $PLP_PATH
+	if [ -d $PLP_PATH ] ; then
+		cd ${PLP_PATH}
 		rm "./cache/*"
 		pwd
-		"./${RBK_BIN}"
+		"./${PLP_BIN}"
 		RESULT=$?
 		exit $((RESULT+0))
 	else
-		echo "Can't find Rebulkan binary"
+		echo "Can't find PoulpeEngine binary"
 		exit -1
 	fi
 	
