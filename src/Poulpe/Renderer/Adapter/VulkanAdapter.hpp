@@ -50,8 +50,8 @@ namespace Poulpe
         bool GetDrawBbox() { return m_DrawBbox; };
         void ClearRendererScreen();
         void StopRendering() { m_RenderingStopped = true; };
-        std::pair<VkSampler, VkImageView> GetImguiTexture() { return std::make_pair(m_imguiSampler, m_imguiImageView); };
-        std::pair<VkSampler, VkImageView> GetImguiDepthImage() { return std::make_pair(m_imguiDepthSampler, m_imguiDepthImageView); };
+        std::pair<VkSampler, VkImageView> GetImguiTexture() { return std::make_pair(m_SwapChainSamplers[m_ImageIndex], m_SwapChainImageViews[m_ImageIndex]); };
+        std::pair<VkSampler, VkImageView> GetImguiDepthImage() { return std::make_pair(m_SwapChainDepthSamplers[m_ImageIndex], m_DepthImageViews[m_ImageIndex]); };
 
         std::vector<VkImageView>* GetSwapChainImageViews() { return &m_SwapChainImageViews; }
         uint32_t GetCurrentFrameIndex() const { return m_ImageIndex; };
@@ -150,13 +150,8 @@ namespace Poulpe
 
         bool m_RenderingStopped = false;
 
-        VkImage m_imguiImage;
-        VkSampler m_imguiSampler;
-        VkImageView m_imguiImageView;
-        
-        VkImage m_imguiDepthImage;
-        VkSampler m_imguiDepthSampler;
-        VkImageView m_imguiDepthImageView;
+        std::vector<VkSampler> m_SwapChainSamplers{};
+        std::vector<VkSampler> m_SwapChainDepthSamplers{};
 
         std::vector<IObserver*> m_Observers{};
         VkCommandBuffer m_CopyCmd;

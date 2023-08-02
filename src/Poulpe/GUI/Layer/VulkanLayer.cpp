@@ -141,17 +141,21 @@ namespace Poulpe
     void VulkanLayer::Render(double timeStep)
     {
         Poulpe::Im::NewFrame();
+
+        ImGuiDockNodeFlags dockspaceFlags = ImGuiDockNodeFlags_PassthruCentralNode;
+
         ImGuiWindowFlags flags = 0;
         flags |= ImGuiWindowFlags_MenuBar;
-
-        ImGuiDockNodeFlags dockspaceFlags = ImGuiDockNodeFlags_None;
-        
-        if (dockspaceFlags & ImGuiDockNodeFlags_PassthruCentralNode)
-            flags |= ImGuiWindowFlags_NoBackground;
+        flags |= ImGuiWindowFlags_NoBackground;
 
         bool open{ true };
+        
+        ImGui::Begin("maindockspace");
+        ImGui::DockSpaceOverViewport(ImGui::GetMainViewport(), dockspaceFlags);
+        ImGui::End();
 
         ImGui::Begin("PoulpeEngine", &open, flags);
+    
 
             ImGuiID dockspace_id = ImGui::GetID("PoulpeEngineDockspace");
             ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), dockspaceFlags);
