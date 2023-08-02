@@ -25,7 +25,7 @@ namespace Poulpe
         
         int maxWidth  = GetSystemMetrics(SM_CXSCREEN);
         int maxHeight = GetSystemMetrics(SM_CYSCREEN);
-        //glfwSetWindowMonitor(m_Window, NULL, (maxWidth/2)-(WIDTH/2), (maxHeight/2) - (HEIGHT/2), WIDTH, HEIGHT, GLFW_DONT_CARE);
+        glfwSetWindowMonitor(m_Window, NULL, (maxWidth/2)-(WIDTH/2), (maxHeight/2) - (HEIGHT/2), WIDTH, HEIGHT, GLFW_DONT_CARE);
 
 
         glfwSetWindowUserPointer(m_Window, this);

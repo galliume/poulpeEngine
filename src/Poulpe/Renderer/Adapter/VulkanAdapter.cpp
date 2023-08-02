@@ -28,8 +28,25 @@ namespace Poulpe
         m_LightsPos.emplace_back(glm::vec3(0.5f, 4.5f, -3.00f));
         SetPerspective();
         m_RenderPass = m_Renderer->CreateRenderPass(m_Renderer->GetMsaaSamples());
+        
+#ifndef  PLP_DEBUG_BUILD
         m_SwapChain = m_Renderer->CreateSwapChain(m_SwapChainImages);
+#else
+        m_SwapChainImages.resize(3);
+        m_SwapChainSamplers.resize(3);
+        m_SwapChainDepthSamplers.resize(3);
 
+        for (int i = 0; i < m_SwapChainImages.size(); ++i) {
+          VkImage image;
+          VkImage depthImage;
+
+          m_Renderer->CreateImage(m_Renderer->GetSwapChainExtent().width, m_Renderer->GetSwapChainExtent().height, 1, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_B8G8R8A8_UNORM, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, image);
+          m_SwapChainImages[i] = image;
+
+          m_SwapChainSamplers[i] = m_Renderer->CreateTextureSampler(1);
+          m_SwapChainDepthSamplers[i] = m_Renderer->CreateTextureSampler(1);;
+        }
+#endif
         //init swap chain, depth image views, primary command buffers and semaphores
         m_SwapChainImageViews.resize(m_SwapChainImages.size());
         m_DepthImages.resize(m_SwapChainImages.size());
@@ -50,7 +67,7 @@ namespace Poulpe
             m_SwapChainImageViews[i] = m_Renderer->CreateImageView(m_SwapChainImages[i], m_Renderer->GetSwapChainImageFormat(), VK_IMAGE_ASPECT_COLOR_BIT);
 
             VkImage depthImage;
-            m_Renderer->CreateImage(m_Renderer->GetSwapChainExtent().width, m_Renderer->GetSwapChainExtent().height, 1, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_D32_SFLOAT, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, depthImage);
+            m_Renderer->CreateImage(m_Renderer->GetSwapChainExtent().width, m_Renderer->GetSwapChainExtent().height, 1, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_D32_SFLOAT, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, depthImage);
             VkImageView depthImageView = m_Renderer->CreateImageView(depthImage, VK_FORMAT_D32_SFLOAT, 1, VK_IMAGE_ASPECT_DEPTH_BIT);
 
             m_DepthImages[i] = depthImage;
@@ -62,18 +79,6 @@ namespace Poulpe
         }
 
         AcquireNextImage();
-
-        m_imguiSampler = m_Renderer->CreateTextureSampler(1);
-        m_Renderer->CreateImage(m_Renderer->GetSwapChainExtent().width, m_Renderer->GetSwapChainExtent().height, 1, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_B8G8R8A8_UNORM, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, m_imguiImage);
-       
-        m_imguiDepthSampler = m_Renderer->CreateTextureSampler(1);
-        m_Renderer->CreateImage(m_Renderer->GetSwapChainExtent().width, m_Renderer->GetSwapChainExtent().height, 1, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_D32_SFLOAT, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, m_imguiDepthImage);
-
-        m_CopyCommandPool = m_Renderer->CreateCommandPool();
-        m_CopyCmd = m_Renderer->AllocateCommandBuffers(m_CopyCommandPool, 1)[0];
-
-        m_imguiImageView = m_Renderer->CreateImageView(m_imguiImage, VK_FORMAT_B8G8R8A8_UNORM, 1, VK_IMAGE_ASPECT_COLOR_BIT);
-        m_imguiDepthImageView = m_Renderer->CreateImageView(m_imguiDepthImage, VK_FORMAT_D32_SFLOAT, 1, VK_IMAGE_ASPECT_DEPTH_BIT);
     }
 
     void VulkanAdapter::RecreateSwapChain()
@@ -597,12 +602,18 @@ namespace Poulpe
     {
         m_Renderer->EndRendering(commandBuffer);
 
+#ifndef PLP_DEBUG_BUILD
+        auto newLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+#else
+        auto newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+#endif
+
         VkImageMemoryBarrier swapChainImageEndRenderBeginBarrier = m_Renderer->SetupImageMemoryBarrier(
             m_SwapChainImages[m_ImageIndex],
             VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
             0,
             VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
-            VK_IMAGE_LAYOUT_PRESENT_SRC_KHR
+            newLayout
         );
         m_Renderer->AddPipelineBarriers(
             commandBuffer,
@@ -617,7 +628,7 @@ namespace Poulpe
             VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
             0,
             VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL,
-            VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
+            newLayout,
             1,
             VK_IMAGE_ASPECT_DEPTH_BIT
         );
@@ -634,9 +645,10 @@ namespace Poulpe
 
     void VulkanAdapter::Submit(std::vector<VkCommandBuffer> commandBuffers, int queueIndex)
     {
-        OnFinishRender();
 
         VkResult submitResult = m_Renderer->QueueSubmit(m_ImageIndex, commandBuffers, m_Semaphores.at(queueIndex), queueIndex);
+
+        OnFinishRender();
 
         if (submitResult != VK_SUCCESS) {
             PLP_WARN("Error on queue submit: {}", submitResult);
@@ -647,23 +659,24 @@ namespace Poulpe
 
     void VulkanAdapter::Present(int queueIndex)
     {
-      //std::vector<VkSemaphore>& renderFinishedSemaphores = m_Semaphores.at(queueIndex).second;
-      //VkSemaphore signalSemaphores[] = { renderFinishedSemaphores[m_ImageIndex] };
+#ifndef PLP_DEBUG_BUILD
+        std::vector<VkSemaphore>& renderFinishedSemaphores = m_Semaphores.at(queueIndex).second;
+        VkSemaphore signalSemaphores[] = { renderFinishedSemaphores[m_ImageIndex] };
 
   
-      //VkSemaphoreTypeCreateInfo sema;
-      //sema.sType = VK_STRUCTURE_TYPE_SEMAPHORE_TYPE_CREATE_INFO;
-      //sema.semaphoreType = VK_SEMAPHORE_TYPE_BINARY;
-      //sema.pNext = NULL;
+        VkSemaphoreTypeCreateInfo sema;
+        sema.sType = VK_STRUCTURE_TYPE_SEMAPHORE_TYPE_CREATE_INFO;
+        sema.semaphoreType = VK_SEMAPHORE_TYPE_BINARY;
+        sema.pNext = NULL;
 
-      //VkSemaphoreWaitInfo waitInfo;
-      //waitInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_WAIT_INFO;
-      //waitInfo.pNext = NULL;
-      //waitInfo.flags = 0;
-      //waitInfo.semaphoreCount = 1;
-      //waitInfo.pSemaphores = { &m_Semaphores.at(queueIndex).second[m_ImageIndex]};
+        VkSemaphoreWaitInfo waitInfo;
+        waitInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_WAIT_INFO;
+        waitInfo.pNext = NULL;
+        waitInfo.flags = 0;
+        waitInfo.semaphoreCount = 1;
+        waitInfo.pSemaphores = { &m_Semaphores.at(queueIndex).second[m_ImageIndex]};
 
-      //vkWaitSemaphores(m_Renderer->GetDevice(), &waitInfo, UINT64_MAX);
+        vkWaitSemaphores(m_Renderer->GetDevice(), &waitInfo, UINT64_MAX);
 
         VkResult presentResult = m_Renderer->QueuePresent(m_ImageIndex, m_SwapChain, m_Semaphores.at(queueIndex), queueIndex);
 
@@ -671,11 +684,16 @@ namespace Poulpe
             PLP_WARN("Error on queue present: {}", presentResult);
             RecreateSwapChain();
         }
+#endif
     }
 
     void VulkanAdapter::AcquireNextImage()
     {
+#ifndef PLP_DEBUG_BUILD
       m_ImageIndex = m_Renderer->AcquireNextImageKHR(m_SwapChain, m_Semaphores.at(0));
+#else
+      m_ImageIndex = m_Renderer->GetNextFrameIndex();
+#endif
     }
 
     void VulkanAdapter::SetRayPick(float x, float y, float z, int width, int height)
@@ -707,7 +725,8 @@ namespace Poulpe
 
     void VulkanAdapter::OnFinishRender()
     {
-        m_Renderer->BeginCommandBuffer(m_CopyCmd);
+        //m_imguiImage = m_SwapChainImages[m_ImageIndex];
+        /*m_Renderer->BeginCommandBuffer(m_CopyCmd);
 
         VkImageCopy imageCopyRegion{};
         imageCopyRegion.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
@@ -790,7 +809,7 @@ namespace Poulpe
         );
 
         m_Renderer->EndCommandBuffer(m_CopyCmd);
-        m_Renderer->QueueSubmit(m_CopyCmd);
+        m_Renderer->QueueSubmit(m_CopyCmd);*/
 
         //m_Renderer->BeginCommandBuffer(m_CopyCmd);
 
@@ -1025,45 +1044,4 @@ namespace Poulpe
             }
         }
     }
-    //void VulkanAdapter::RenderForImGui(VkCommandBuffer cmdBuffer, VkFramebuffer swapChainFramebuffer)
-    //{
-    //    auto renderPass = m_Renderer->CreateRenderPass(VK_SAMPLE_COUNT_1_BIT);
-
-    //    VkRenderPassBeginInfo renderPassInfo{};
-    //    renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-    //    renderPassInfo.renderPass = *renderPass.get();
-    //    renderPassInfo.framebuffer = swapChainFramebuffer;
-    //    renderPassInfo.renderArea.offset = { 0, 0 };
-    //    renderPassInfo.renderArea.extent = m_Renderer->GetSwapChainExtent();
-
-    //    std::array<VkClearValue, 2> clearValues{};
-    //    clearValues[0].color = { {0.f, 1.f, 0.f, 1.0f} };
-    //    clearValues[1].depthStencil = { 1.0f, 0 };
-
-    //    renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
-    //    renderPassInfo.pClearValues = clearValues.data();
-
-    //    vkCmdBeginRenderPass(cmdBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS);
-
-    //    VkViewport viewport{};
-    //    viewport.x = 0.0f;
-    //    viewport.y = 0.0f;
-    //    viewport.width = static_cast<float>(m_Renderer->GetSwapChainExtent().width);
-    //    viewport.height = static_cast<float>(m_Renderer->GetSwapChainExtent().height);
-    //    viewport.minDepth = 0.0f;
-    //    viewport.maxDepth = 1.0f;
-
-    //    VkRect2D scissor{};
-    //    scissor.offset = { 0, 0 };
-    //    scissor.extent = m_Renderer->GetSwapChainExtent();
-
-    //    vkCmdSetViewport(cmdBuffer, 0, 1, &viewport);
-    //    vkCmdSetScissor(cmdBuffer, 0, 1, &scissor);
-
-    //    vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayouts.textured, 0, 1, &descriptorSets.mirror, 0, nullptr);
-    //    vkCmdBindPipeline(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelines.mirror);
-    //    m_Renderer->Draw(cmdBuffer, mesh->GetDescriptorSets().at(index), mesh.get(), *mesh->GetData(), mesh->GetData()->m_Ubos.size(), m_ImageIndex);
-   
-    //    vkCmdEndRenderPass(cmdBuffer);
-    //}
 }
