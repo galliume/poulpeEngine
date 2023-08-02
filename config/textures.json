@@ -16,6 +16,7 @@
 		"assets/splashscreen/splash_14.png"
 	],
 	"textures": {
+		"mpoulpe": "assets/mpoulpe.png",
 		"minecraft_water": "assets/mesh/minecraft/water.jpg",
 		"campfire_tex": "assets/mesh/campfire/Campfire_MAT_BaseColor_01.jpg",
 		"tree_tex": "assets/mesh/tree/tree.jpg",
