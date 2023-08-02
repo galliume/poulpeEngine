@@ -1,41 +1,43 @@
 #include "ConfigManager.hpp"
 #include <filesystem>
 
+namespace fs = std::filesystem;
+
 namespace Poulpe
 {
 
     ConfigManager::ConfigManager()
     {
-        std::filesystem::path path{};
+        fs::path path{};
         std::ifstream f;
 
         path = "config/poulpeEngine.json";
-        f.open(std::filesystem::absolute(path));
+        f.open(fs::absolute(path));
         if (f.is_open()) m_AppConfig = nlohmann::json::parse(f);
         f.close();
 
         path = "config/textures.json";
-        f.open(std::filesystem::absolute(path));
+        f.open(fs::absolute(path));
         if (f.is_open()) m_TexturesConfig = nlohmann::json::parse(f);
         f.close();
   
         path = "config/sounds.json";
-        f.open(std::filesystem::absolute(path));
+        f.open(fs::absolute(path));
         if (f.is_open()) m_SoundConfig = nlohmann::json::parse(f);
         f.close();
 
         path = "config/shader.json";
-        f.open(std::filesystem::absolute(path));
+        f.open(fs::absolute(path));
         if (f.is_open()) m_ShaderConfig = nlohmann::json::parse(f);
         f.close();
     }
 
     nlohmann::json ConfigManager::EntityConfig(const std::string& levelName)
     {
-        std::filesystem::path level{ "config/" + levelName + ".json" };
+        fs::path level{ "config/" + levelName + ".json" };
         std::ifstream f;
-        f.open(std::filesystem::absolute(level), std::ios_base::in);
         try {
+            f.open(fs::absolute(level), std::ios_base::in);
             if (f.is_open()) m_EntityConfig = nlohmann::json::parse(f);
         }
         catch (nlohmann::json::parse_error& ex) {
@@ -72,7 +74,7 @@ namespace Poulpe
         std::vector<std::string> levels;
 
         std::string path = "config/";
-        auto entries = std::filesystem::directory_iterator(path);
+        auto entries = fs::directory_iterator(path);
 
         for (auto& entry : entries) {
             if (std::string::npos != entry.path().filename().string().find("level_")) {
@@ -88,7 +90,7 @@ namespace Poulpe
         std::vector<std::string> skybox;
 
         std::string path = "assets/texture/skybox/";
-        auto entries = std::filesystem::directory_iterator(path);
+        auto entries = fs::directory_iterator(path);
 
         for (auto& entry : entries) {
             skybox.emplace_back(entry.path().stem().string());

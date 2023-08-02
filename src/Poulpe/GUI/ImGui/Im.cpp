@@ -14,7 +14,7 @@ namespace Poulpe {
     {
     if (err == 0)
         return;
-    fprintf(stderr, "[vulkan] Error: VkResult = %d\n", err);
+        fprintf(stderr, "[vulkan] Error: VkResult = %d\n", err);
     if (err < 0)
         abort();
     }
@@ -40,6 +40,11 @@ namespace Poulpe {
         //io.BackendFlags |= ImGuiBackendFlags_HasMouseCursors;
 
         ImGui::StyleColorsDark();
+
+        const ImGuiViewport* viewport = ImGui::GetMainViewport();
+        ImGui::SetNextWindowPos(viewport->WorkPos);
+        ImGui::SetNextWindowSize(viewport->WorkSize);
+        ImGui::SetNextWindowViewport(viewport->ID);
 
         ImGuiStyle& style = ImGui::GetStyle();
         if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
