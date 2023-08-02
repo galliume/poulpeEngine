@@ -140,25 +140,20 @@ namespace Poulpe
 
     void VulkanLayer::Render(double timeStep)
     {
+        ImGuiIO& io = ImGui::GetIO();
+        
         Poulpe::Im::NewFrame();
-
-        ImGuiDockNodeFlags dockspaceFlags = ImGuiDockNodeFlags_PassthruCentralNode;
 
         ImGuiWindowFlags flags = 0;
         flags |= ImGuiWindowFlags_MenuBar;
         flags |= ImGuiWindowFlags_NoBackground;
 
         bool open{ true };
-        
-        ImGui::Begin("maindockspace");
-        ImGui::DockSpaceOverViewport(ImGui::GetMainViewport(), dockspaceFlags);
-        ImGui::End();
 
         ImGui::Begin("PoulpeEngine", &open, flags);
-    
 
-            ImGuiID dockspace_id = ImGui::GetID("PoulpeEngineDockspace");
-            ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), dockspaceFlags);
+            ImGuiID poulpeEngineDockspaceid = ImGui::GetID("PoulpeEngineDockspace");
+            ImGui::DockSpace(poulpeEngineDockspaceid, ImVec2(0.0f, 0.0f));
 
             if (ImGui::BeginMenuBar())
             {
@@ -228,8 +223,6 @@ namespace Poulpe
                 }
                 ImGui::SetItemAllowOverlap();
 
-                ImGuiIO& io = ImGui::GetIO();
-
                 if (ImGui::IsKeyDown(ImGui::GetKeyIndex(ImGuiKey_Escape))) {
                     s_RenderViewportHasInput = false; 
                     io.ConfigFlags &= ~ImGuiConfigFlags_NoMouse;
@@ -245,8 +238,21 @@ namespace Poulpe
 
                 ImVec2 center = ImGui::GetMainViewport()->GetCenter();
                 ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+                ImGui::SetNextWindowSize(ImVec2(800.f, 600.f));
 
                 if (ImGui::BeginPopupModal("About", NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
+
+                    float my_tex_w = 150;
+                    float my_tex_h = 150;
+                    ImVec2 uv_min = ImVec2(0.0f, 0.0f);                 // Top-left
+                    ImVec2 uv_max = ImVec2(1.0f, 1.0f);                 // Lower-right
+                    ImVec4 tint_col = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);   // No tint
+                    ImVec4 border_col = ImVec4(1.0f, 1.0f, 1.0f, 0.5f); // 50% opaque white
+                    ImVec2 pos = ImVec2((ImGui::GetContentRegionAvail().x - 150.f) * 0.5f, (ImGui::GetContentRegionAvail().y - 150.f) * .05f);
+
+                    ImGui::SetCursorPos(pos);
+                    ImGui::Image(m_Textures["mpoulpe"], ImVec2(my_tex_w, my_tex_h), uv_min, uv_max, tint_col, border_col);
+
                     ImGui::Text("%s %d.%d", "PoulpeEngine version", PoulpeEngine_VERSION_MAJOR, PoulpeEngine_VERSION_MINOR);
                     ImGui::Separator();
                     ImGui::Text("%s", "Build with C++ & Vulkan");
