@@ -471,7 +471,7 @@ namespace Poulpe {
     VkSurfaceFormatKHR VulkanRenderer::ChooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats)
     {
         for (const auto& availableFormat : availableFormats) {
-            if (availableFormat.format == VK_FORMAT_B8G8R8A8_SRGB && availableFormat.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR) {
+            if (availableFormat.format == VK_FORMAT_B8G8R8A8_UNORM && availableFormat.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR) {
                 return availableFormat;
             }
         }
@@ -1374,16 +1374,16 @@ namespace Poulpe {
         VkSemaphore waitSemaphores[] = { imageAvailableSemaphores[m_CurrentFrame] };
 
         VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
-        submitInfo.waitSemaphoreCount = 1;
-        submitInfo.pWaitSemaphores = waitSemaphores;
+        submitInfo.waitSemaphoreCount = 0;
+        submitInfo.pWaitSemaphores = VK_NULL_HANDLE;// waitSemaphores;
         submitInfo.pWaitDstStageMask = waitStages;
         submitInfo.commandBufferCount = commandBuffers.size();
         submitInfo.pCommandBuffers = commandBuffers.data();
 
         VkSemaphore signalSemaphores[] = { renderFinishedSemaphores[m_CurrentFrame] };
 
-        submitInfo.signalSemaphoreCount = 1;
-        submitInfo.pSignalSemaphores = signalSemaphores;
+        submitInfo.signalSemaphoreCount = 0;
+        //submitInfo.pSignalSemaphores = signalSemaphores;
 
         submits.emplace_back(submitInfo);
         
