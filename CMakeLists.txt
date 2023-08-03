@@ -37,8 +37,10 @@ set(RELEASE_OPTIONS "-03")
 set(VOLK_PULL_IN_VULKAN false)
 #weird bug with vulkan loader ?
 set(CMAKE_MSVC_RUNTIME_LIBRARY "")
-set(GLFW_BUILD_WAYLAND ON)
-set(GLFW_BUILD_X11 OFF)
+
+#need to find how to have wayland on github actions...
+set(GLFW_BUILD_WAYLAND OFF)
+set(GLFW_BUILD_X11 ON)
 set(GLFW_BUILD_DOCS OFF)
 set(GLFW_BUILD_TESTS OFF)
 set(GLFW_BUILD_EXAMPLES OFF)
