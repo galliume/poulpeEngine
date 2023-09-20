@@ -37,7 +37,6 @@ set(RELEASE_OPTIONS "-03")
 set(VOLK_PULL_IN_VULKAN false)
 #weird bug with vulkan loader ?
 set(CMAKE_MSVC_RUNTIME_LIBRARY "")
-
 #need to find how to have wayland on github actions...
 set(GLFW_BUILD_WAYLAND OFF)
 set(GLFW_BUILD_X11 ON)
@@ -122,7 +121,7 @@ list(APPEND EXTRA_LIBS volk)
 list(APPEND EXTRA_LIBS ImGui)
 
 target_compile_options(${PROJECT_NAME} INTERFACE
-  "$<${gcc_like_cxx}:$<BUILD_INTERFACE:-Wall;-Wextra;-Wshadow;-Wformat=2;-Wunused>>"
+  "$<${gcc_like_cxx}:$<BUILD_INTERFACE:-Wall;-Wextra;-Wshadow;-Wformat=2;-Wunused;-Wconversion>>"
   "$<${msvc_cxx}:$<BUILD_INTERFACE:-W3>>"
 )
 target_compile_options(${PROJECT_NAME} PRIVATE "$<$<CONFIG:DEBUG>:${DEBUG_OPTIONS}>")
