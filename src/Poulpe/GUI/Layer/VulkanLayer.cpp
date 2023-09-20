@@ -261,7 +261,7 @@ namespace Poulpe
                     ImGui::NewLine();
                     ImGui::NewLine();
                     std::array<std::string, 9> thirdParties{
-                        "GLFW", "GLM", "ImGui", "MiniAudio", "Nlohmann json", "SpdLog", "STB", "Tiny Obj Loader", "Volk"};
+                        "GLFW", "GLM", "Dear ImGui", "MiniAudio", "Nlohmann json", "SpdLog", "STB", "Tiny Obj Loader", "Volk"};
 
                     std::array<std::string, 9> thirdPartiesURL{
                         "https://www.glfw.org/",
