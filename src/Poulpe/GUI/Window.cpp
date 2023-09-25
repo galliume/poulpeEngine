@@ -1,4 +1,5 @@
 #include "Poulpe/GUI/Window.hpp"
+
 #include "stb_image.h"
 
 namespace Poulpe

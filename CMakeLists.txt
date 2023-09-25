@@ -113,6 +113,11 @@ add_library(ImGui STATIC ${PROJECT_SOURCE_DIR}/vendor/imgui/imconfig.h
                   ${PROJECT_SOURCE_DIR}/vendor/imgui/imstb_rectpack.h
                   ${PROJECT_SOURCE_DIR}/vendor/imgui/imstb_textedit.h
                   ${PROJECT_SOURCE_DIR}/vendor/imgui/imstb_truetype.h
+				  ${PROJECT_SOURCE_DIR}/vendor/imgui/imstb_truetype.h
+				  ${PROJECT_SOURCE_DIR}/vendor/imgui/backends/imgui_impl_glfw.h
+				  ${PROJECT_SOURCE_DIR}/vendor/imgui/backends/imgui_impl_glfw.cpp
+				  ${PROJECT_SOURCE_DIR}/vendor/imgui/backends/imgui_impl_vulkan.h
+				  ${PROJECT_SOURCE_DIR}/vendor/imgui/backends/imgui_impl_vulkan.cpp
                   ${PROJECT_SOURCE_DIR}/vendor/imgui/imgui_demo.cpp)
 
 list(APPEND EXTRA_LIBS glfw)

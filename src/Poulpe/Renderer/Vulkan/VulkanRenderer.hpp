@@ -2,6 +2,7 @@
 
 #include "Poulpe/Renderer/IRenderer.hpp"
 #include "Poulpe/Renderer/Vulkan/DeviceMemoryPool.hpp"
+
 #include <stb_image.h>
 
 namespace Poulpe {
