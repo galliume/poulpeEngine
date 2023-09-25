@@ -1,9 +1,12 @@
 #pragma once
-#include <optional>
+
 #include "ILayer.hpp"
+
+#include "Poulpe/Core/IObserver.hpp"
 #include "Poulpe/GUI/ImGui/Im.hpp"
 #include "Poulpe/Manager/RenderManager.hpp"
-#include "Poulpe/Core/IObserver.hpp"
+
+#include <optional>
 
 namespace Poulpe
 {

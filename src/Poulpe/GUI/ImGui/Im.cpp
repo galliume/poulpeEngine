@@ -1,8 +1,5 @@
 #include "Im.hpp"
 
-#include <backends/imgui_impl_vulkan.cpp>
-#include <backends/imgui_impl_glfw.cpp>
-
 #include <volk.h>
 
 namespace Poulpe {
@@ -176,6 +173,7 @@ namespace Poulpe {
         );
 
         ImGui_ImplGlfw_InitForVulkan(window, true);
+        ImGui_ImplGlfw_SetCallbacksChainForAllWindows(true);
         ImGui_ImplVulkan_Init(&s_ImGuiInfo.info, s_ImGuiInfo.rdrPass);
     }
 

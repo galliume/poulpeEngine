@@ -1,11 +1,13 @@
+#include "VulkanAdapter.hpp"
+
+#include "Poulpe/GUI/Window.hpp"
+#include "Poulpe/Renderer/Vulkan/VulkanRenderer.hpp"
+
+#include <cfenv>
+#include <exception>
 #include <future>
 #include <memory>
-#include <cfenv>
 #include <volk.h>
-#include "VulkanAdapter.hpp"
-#include "Poulpe/Renderer/Vulkan/VulkanRenderer.hpp"
-#include "Poulpe/GUI/Window.hpp"
-#include <exception>
 
 namespace Poulpe
 {

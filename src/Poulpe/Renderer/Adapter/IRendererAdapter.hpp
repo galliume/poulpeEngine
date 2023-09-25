@@ -1,10 +1,7 @@
 #pragma once
 
-#include "Poulpe/Renderer/Vulkan/VulkanRenderer.hpp"
 #include "Poulpe/Component/Camera.hpp"
-#include "backends/imgui_impl_vulkan.h"
-#include "Poulpe/GUI/ImGui/Im.hpp"
-#include "Poulpe/Core/ThreadPool.hpp"
+#include "Poulpe/Renderer/Vulkan/VulkanRenderer.hpp"
 
 namespace Poulpe
 {

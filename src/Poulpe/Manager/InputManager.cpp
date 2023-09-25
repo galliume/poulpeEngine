@@ -50,17 +50,17 @@ namespace Poulpe
         glfwSetWindowUserPointer(m_Window->Get(), this);
 
         glfwSetKeyCallback(m_Window->Get(), [](GLFWwindow* window, int key, int scancode, int action, int mods) {
-            InputManager* inputManager = static_cast<InputManager*>(glfwGetWindowUserPointer(window));
+            InputManager* inputManager = Poulpe::Locator::getInputManager();
             inputManager->Key(key, scancode, action, mods);
         });
 
         glfwSetCursorPosCallback(m_Window->Get(), [](GLFWwindow* window, double xPos, double yPos) {
-            InputManager* inputManager = static_cast<InputManager*>(glfwGetWindowUserPointer(window));
+            InputManager* inputManager = Poulpe::Locator::getInputManager();
             inputManager->Mouse(xPos, yPos);
         });
 
         glfwSetMouseButtonCallback(m_Window->Get(), [](GLFWwindow* window, int button, int action, int mods) {
-            InputManager* inputManager = static_cast<InputManager*>(glfwGetWindowUserPointer(window));
+            InputManager* inputManager = Poulpe::Locator::getInputManager();
             inputManager->MouseButton(button, action, mods);
         });
     }
@@ -73,7 +73,6 @@ namespace Poulpe
         {
             case GLFW_PRESS:
                 if (glfwGetKey(m_Window->Get(), m_KeyboardKeys[config["unlockCamera"]])) {
-                    PLP_DEBUG("ctrl clicked!");
                     if (!InputManager::m_CanMoveCamera) {
                         glfwSetInputMode(m_Window->Get(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
                     } else {
@@ -112,7 +111,6 @@ namespace Poulpe
 
     void InputManager::Mouse(double x, double y)
     {
-        PLP_DEBUG("clicked !");
         float xPos = static_cast<float>(x);
         float yPos = static_cast<float>(y);
 
@@ -149,7 +147,7 @@ namespace Poulpe
             float y = 1.0f - (2.0f * ypos) / height;
             float z = 1.0f;
 
-            m_Adapter->SetRayPick(x, y, z, width, height);
+            //m_Adapter->SetRayPick(x, y, z, width, height);
         }
     }
 }

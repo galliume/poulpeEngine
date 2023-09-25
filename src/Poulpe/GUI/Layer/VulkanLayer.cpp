@@ -1,5 +1,6 @@
-#include "PoulpeEngineConfig.h"
 #include "VulkanLayer.hpp"
+
+#include "PoulpeEngineConfig.h"
 #include "Poulpe/Application.hpp"
 
 namespace Poulpe
@@ -216,21 +217,6 @@ namespace Poulpe
                 ImVec2 surface = ImVec2(my_tex_w, my_tex_h);
 
                 ImGui::Image(m_ImgDesc, surface, uv_min, uv_max, tint_col, border_col);
-
-                if (ImGui::InvisibleButton("##RenderViewportHasInput", surface)) {
-                    s_RenderViewportHasInput = true;
-                    PLP_WARN("CLICKED!");
-                }
-                ImGui::SetItemAllowOverlap();
-
-                if (ImGui::IsKeyDown(ImGui::GetKeyIndex(ImGuiKey_Escape))) {
-                    s_RenderViewportHasInput = false; 
-                    io.ConfigFlags &= ~ImGuiConfigFlags_NoMouse;
-                }
-                if (s_RenderViewportHasInput) {
-                    io.ConfigFlags |= ImGuiConfigFlags_NoMouse;
-                    ImGui::SetMouseCursor(ImGuiMouseCursor_None);
-                }
             ImGui::End();
 
             if (s_OpenAbout) {

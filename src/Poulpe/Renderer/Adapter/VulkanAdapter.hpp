@@ -1,6 +1,9 @@
 #pragma once
+
 #include "IRendererAdapter.hpp"
+
 #include "Poulpe/Core/IObserver.hpp"
+#include "Poulpe/GUI/ImGui/Im.hpp"
 
 namespace Poulpe
 {

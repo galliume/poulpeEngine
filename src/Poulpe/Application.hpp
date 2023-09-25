@@ -1,24 +1,25 @@
 #pragma once
 
-#include "Manager/IRenderManager.hpp"
-#include "Manager/InputManager.hpp"
-#include "Manager/TextureManager.hpp"
-#include "Manager/SpriteAnimationManager.hpp"
-#include "Manager/EntityManager.hpp"
-#include "Manager/AudioManager.hpp"
-#include "Manager/ConfigManager.hpp"
-#include "Manager/ShaderManager.hpp"
-#include "Manager/DestroyManager.hpp"
-#include "Renderer/Adapter/VulkanAdapter.hpp"
-
-#include "GUI/LayerManager.hpp"
-#include "GUI/Layer/VulkanLayer.hpp"
-#include "GUI/ImGui/Im.hpp"
-#include "GUI/Window.hpp"
-
 #include "Core/CommandQueue.hpp"
 
-namespace Poulpe 
+#include "GUI/ImGui/Im.hpp"
+#include "GUI/LayerManager.hpp"
+#include "GUI/Layer/VulkanLayer.hpp"
+#include "GUI/Window.hpp"
+
+#include "Manager/AudioManager.hpp"
+#include "Manager/ConfigManager.hpp"
+#include "Manager/DestroyManager.hpp"
+#include "Manager/EntityManager.hpp"
+#include "Manager/InputManager.hpp"
+#include "Manager/IRenderManager.hpp"
+#include "Manager/ShaderManager.hpp"
+#include "Manager/SpriteAnimationManager.hpp"
+#include "Manager/TextureManager.hpp"
+
+#include "Renderer/Adapter/VulkanAdapter.hpp"
+
+namespace Poulpe
 {
     class Application
     {
