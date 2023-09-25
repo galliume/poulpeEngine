@@ -30,7 +30,10 @@ namespace Poulpe
 
         auto adapter = std::make_shared<Poulpe::VulkanAdapter>(m_Window);
         auto config = std::make_shared<Poulpe::ConfigManager>();
+        
         auto input = std::make_shared<Poulpe::InputManager>(m_Window);
+        Poulpe::Locator::setInputManager(input);
+
         auto audio = std::make_shared<Poulpe::AudioManager>();
         auto texture = std::make_shared<Poulpe::TextureManager>();
         auto entity = std::make_shared<Poulpe::EntityManager>();

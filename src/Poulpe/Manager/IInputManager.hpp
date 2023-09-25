@@ -1,8 +1,6 @@
 #pragma once
-#include <nlohmann/json.hpp>
 
-#include "Poulpe/Renderer/Adapter/VulkanAdapter.hpp"
-#include "Poulpe/GUI/Window.hpp"
+#include <nlohmann/json.hpp>
 
 namespace Poulpe
 {
