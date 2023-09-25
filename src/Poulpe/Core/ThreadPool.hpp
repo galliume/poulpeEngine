@@ -1,9 +1,9 @@
 #pragma once
 
-#include <functional>
-
-#include "ThreadSafeQueue.hpp"
 #include "JoinThreads.hpp"
+#include "ThreadSafeQueue.hpp"
+
+#include <functional>
 
 namespace Poulpe
 {

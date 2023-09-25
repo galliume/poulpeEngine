@@ -1,8 +1,14 @@
 #pragma once
+
 #include "IInputManager.hpp"
+
+#include "Poulpe/Component/Camera.hpp"
+#include "Poulpe/GUI/Window.hpp"
 
 namespace Poulpe
 {
+    class VulkanAdapter; //@todo replace with interface
+
     class InputManager : IInputManager
     {
     public:
