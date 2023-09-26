@@ -6,7 +6,7 @@
 	"input": {
 		"current" : "keyboard",
 		"keyboard": {
-			"unlockCamera": "left_ctrl",
+			"unlockCamera": "c",
 			"forward": "w",
 			"backward": "s",
 			"left": "a",
