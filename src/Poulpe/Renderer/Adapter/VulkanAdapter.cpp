@@ -336,8 +336,8 @@ namespace Poulpe
             std::string_view threadQueueName{ "render" };
 
             Poulpe::Locator::getThreadPool()->Submit(threadQueueName, [=, this]() { DrawSkybox(); });
-            Poulpe::Locator::getThreadPool()->Submit(threadQueueName, [=, this]() { DrawHUD(); });
             Poulpe::Locator::getThreadPool()->Submit(threadQueueName, [=, this]() { DrawEntities(); });
+            Poulpe::Locator::getThreadPool()->Submit(threadQueueName, [=, this]() { DrawHUD(); });
 
             //@todo strip for release?
             if (GetDrawBbox()) {
@@ -389,7 +389,7 @@ namespace Poulpe
                 );
 
                 if (m_moreCmdToSubmit.size() > 0) {
-                   std::copy(m_moreCmdToSubmit.begin(), m_moreCmdToSubmit.end(), std::back_inserter(cmds)); 
+                   std::copy(m_moreCmdToSubmit.begin(), m_moreCmdToSubmit.end(), std::back_inserter(cmds));
                 }
 
                 Submit(cmds);
@@ -727,201 +727,6 @@ namespace Poulpe
 
     void VulkanAdapter::OnFinishRender()
     {
-        //m_imguiImage = m_SwapChainImages[m_ImageIndex];
-        /*m_Renderer->BeginCommandBuffer(m_CopyCmd);
-
-        VkImageCopy imageCopyRegion{};
-        imageCopyRegion.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-        imageCopyRegion.srcSubresource.layerCount = 1;
-        imageCopyRegion.dstSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-        imageCopyRegion.dstSubresource.layerCount = 1;
-        imageCopyRegion.extent.width = m_Renderer->GetSwapChainExtent().width;
-        imageCopyRegion.extent.height = m_Renderer->GetSwapChainExtent().height;
-        imageCopyRegion.extent.depth = 1;
-
-        VkImageMemoryBarrier copyImageRenderBeginBarrier = m_Renderer->SetupImageMemoryBarrier(
-          m_imguiImage,
-          VK_ACCESS_TRANSFER_WRITE_BIT,
-          VK_ACCESS_MEMORY_READ_BIT,
-          VK_IMAGE_LAYOUT_UNDEFINED,
-          VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL
-        );
-
-        m_Renderer->AddPipelineBarriers(
-          m_CopyCmd,
-          { copyImageRenderBeginBarrier },
-          VK_PIPELINE_STAGE_TRANSFER_BIT,
-          VK_PIPELINE_STAGE_TRANSFER_BIT,
-          0
-        );
-
-        VkImageMemoryBarrier copyImageSrcBeginBarrier = m_Renderer->SetupImageMemoryBarrier(
-          m_SwapChainImages[m_ImageIndex],
-          VK_ACCESS_MEMORY_READ_BIT,
-          VK_ACCESS_TRANSFER_READ_BIT,
-          VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
-          VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL
-        );
-
-        m_Renderer->AddPipelineBarriers(
-          m_CopyCmd,
-          { copyImageSrcBeginBarrier },
-          VK_PIPELINE_STAGE_TRANSFER_BIT,
-          VK_PIPELINE_STAGE_TRANSFER_BIT,
-          VK_DEPENDENCY_BY_REGION_BIT
-        );
-
-        vkCmdCopyImage(
-          m_CopyCmd,
-          m_SwapChainImages[m_ImageIndex], VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
-          m_imguiImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-          1,
-          &imageCopyRegion);
-
-        VkImageMemoryBarrier copyImageRenderEndBarrier = m_Renderer->SetupImageMemoryBarrier(
-          m_imguiImage,
-          VK_ACCESS_TRANSFER_WRITE_BIT,
-          VK_ACCESS_MEMORY_READ_BIT,
-          VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-          VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
-        );
-
-        m_Renderer->AddPipelineBarriers(
-          m_CopyCmd,
-          { copyImageRenderEndBarrier },
-          VK_PIPELINE_STAGE_TRANSFER_BIT,
-          VK_PIPELINE_STAGE_TRANSFER_BIT,
-          0
-        );
-
-        VkImageMemoryBarrier srcImageRenderEndBarrier = m_Renderer->SetupImageMemoryBarrier(
-          m_SwapChainImages[m_ImageIndex],
-          VK_ACCESS_TRANSFER_READ_BIT,
-          VK_ACCESS_MEMORY_READ_BIT,
-          VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
-          VK_IMAGE_LAYOUT_PRESENT_SRC_KHR
-        );
-
-        m_Renderer->AddPipelineBarriers(
-          m_CopyCmd,
-          { srcImageRenderEndBarrier },
-          VK_PIPELINE_STAGE_TRANSFER_BIT,
-          VK_PIPELINE_STAGE_TRANSFER_BIT,
-          0
-        );
-
-        m_Renderer->EndCommandBuffer(m_CopyCmd);
-        m_Renderer->QueueSubmit(m_CopyCmd);*/
-
-        //m_Renderer->BeginCommandBuffer(m_CopyCmd);
-
-        //VkDeviceSize imageSize = m_Renderer->GetSwapChainExtent().width * m_Renderer->GetSwapChainExtent().height * 4;
-        //VkMemoryPropertyFlags properties;
-        //VkBuffer buffer;
-        //VkDeviceMemory bufferMemory;
-        //m_Renderer->CreateBuffer(imageSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, buffer, bufferMemory);
-
-        //VkImageSubresourceLayers srcImgsubrcLayers;
-        //srcImgsubrcLayers.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
-        //srcImgsubrcLayers.mipLevel = 0;
-        //srcImgsubrcLayers.baseArrayLayer = 0;
-        //srcImgsubrcLayers.layerCount = 1;
-
-        //VkBufferImageCopy srcImgcopy;
-        //srcImgcopy.bufferOffset = 0;
-        //srcImgcopy.bufferRowLength = 0;
-        //srcImgcopy.bufferImageHeight = 0;
-        //srcImgcopy.imageSubresource = srcImgsubrcLayers;
-        //srcImgcopy.imageOffset = { 0, 0, 0 };
-        //srcImgcopy.imageExtent = {
-        //  m_Renderer->GetSwapChainExtent().width,
-        //  m_Renderer->GetSwapChainExtent().height,
-        //  1
-        //};
-
-        //VkImageCopy depthImageCopyRegion{};
-        //depthImageCopyRegion.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-        //depthImageCopyRegion.srcSubresource.layerCount = 1;
-        //depthImageCopyRegion.dstSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-        //depthImageCopyRegion.dstSubresource.layerCount = 1;
-        //depthImageCopyRegion.extent.width = m_Renderer->GetSwapChainExtent().width;
-        //depthImageCopyRegion.extent.height = m_Renderer->GetSwapChainExtent().height;
-        //depthImageCopyRegion.extent.depth = 1;
-        //
-        //VkImageMemoryBarrier copyDepthImageRenderBeginBarrier = m_Renderer->SetupImageMemoryBarrier(
-        //  m_imguiDepthImage,
-        //  VK_ACCESS_TRANSFER_WRITE_BIT,
-        //  VK_ACCESS_MEMORY_READ_BIT,
-        //  VK_IMAGE_LAYOUT_UNDEFINED,
-        //  VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL
-        //);
-
-        //m_Renderer->AddPipelineBarriers(
-        //  m_CopyCmd,
-        //  { copyDepthImageRenderBeginBarrier },
-        //  VK_PIPELINE_STAGE_TRANSFER_BIT,
-        //  VK_PIPELINE_STAGE_TRANSFER_BIT,
-        //  0
-        //);
-
-        //VkImageMemoryBarrier copyDepthImageSrcBeginBarrier = m_Renderer->SetupImageMemoryBarrier(
-        //  m_DepthImages[m_ImageIndex],
-        //  VK_ACCESS_MEMORY_READ_BIT,
-        //  VK_ACCESS_TRANSFER_READ_BIT,
-        //  VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
-        //  VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL
-        //);
-
-        //m_Renderer->AddPipelineBarriers(
-        //  m_CopyCmd,
-        //  { copyDepthImageSrcBeginBarrier },
-        //  VK_PIPELINE_STAGE_TRANSFER_BIT,
-        //  VK_PIPELINE_STAGE_TRANSFER_BIT,
-        //  VK_DEPENDENCY_BY_REGION_BIT
-        //);
-
-        //vkCmdCopyImageToBuffer(m_CopyCmd, m_DepthImages[m_ImageIndex], VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, buffer, 1, &srcImgcopy);
-        //vkCmdCopyBufferToImage(m_CopyCmd, buffer, m_imguiDepthImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &srcImgcopy);
-
-        //VkImageMemoryBarrier copyDepthImageRenderEndBarrier = m_Renderer->SetupImageMemoryBarrier(
-        //  m_imguiDepthImage,
-        //  VK_ACCESS_TRANSFER_WRITE_BIT,
-        //  VK_ACCESS_MEMORY_READ_BIT,
-        //  VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-        //  VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
-        //);
-
-        //m_Renderer->AddPipelineBarriers(
-        //  m_CopyCmd,
-        //  { copyDepthImageRenderEndBarrier },
-        //  VK_PIPELINE_STAGE_TRANSFER_BIT,
-        //  VK_PIPELINE_STAGE_TRANSFER_BIT,
-        //  0
-        //);
-
-        //VkImageMemoryBarrier srcDepthImageRenderEndBarrier = m_Renderer->SetupImageMemoryBarrier(
-        //  m_DepthImages[m_ImageIndex],
-        //  VK_ACCESS_TRANSFER_READ_BIT,
-        //  VK_ACCESS_MEMORY_READ_BIT,
-        //  VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
-        //  VK_IMAGE_LAYOUT_PRESENT_SRC_KHR
-        //);
-
-        //m_Renderer->AddPipelineBarriers(
-        //  m_CopyCmd,
-        //  { srcDepthImageRenderEndBarrier },
-        //  VK_PIPELINE_STAGE_TRANSFER_BIT,
-        //  VK_PIPELINE_STAGE_TRANSFER_BIT,
-        //  0
-        //);
-
-
-        //m_Renderer->EndCommandBuffer(m_CopyCmd);
-        //m_Renderer->QueueSubmit(m_CopyCmd);
-
-        //vkDestroyBuffer(m_Renderer->GetDevice(), buffer, nullptr);
-        //vkFreeMemory(m_Renderer->GetDevice(), bufferMemory, nullptr);
-
         Event event{ "OnFinishRender" };
         for (const auto& observer : m_Observers) {
             observer->Notify(event);
