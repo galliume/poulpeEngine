@@ -207,7 +207,11 @@ namespace Poulpe
                 DisplaySounds();
             ImGui::End();
 
-            ImGui::Begin("3D View");
+            ImGuiWindowFlags windowFlags;
+            //windowFlags |= ImGuiWindowFlags_NoBackground;
+            bool view3DOpen = true;
+
+            ImGui::Begin("3D View", &view3DOpen, windowFlags);
                 float my_tex_w = m_RenderManager->GetRendererAdapter()->Rdr()->GetSwapChainExtent().width;
                 float my_tex_h = m_RenderManager->GetRendererAdapter()->Rdr()->GetSwapChainExtent().height;
                 ImVec2 uv_min = ImVec2(0.0f, 0.0f);                 // Top-left
