@@ -35,7 +35,7 @@ layout(location = 12) out float far;
 void main() {
 	vec3 point = pos.xyz;
 	nearPoint = unproject(point.x, point.y, 0.0, PC.view, ubos[gl_InstanceIndex].proj).xyz;
-    	farPoint = unproject(point.x, point.y, 1.0, PC.view, ubos[gl_InstanceIndex].proj).xyz;
+	farPoint = unproject(point.x, point.y, 1.0, PC.view, ubos[gl_InstanceIndex].proj).xyz;
 	matView = PC.view;	
 	matProj = ubos[gl_InstanceIndex].proj;
 	near = PC.point.x;
