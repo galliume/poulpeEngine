@@ -771,7 +771,7 @@ namespace Poulpe {
         colorBlendAttachment.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
         colorBlendAttachment.colorBlendOp = VK_BLEND_OP_ADD;
         colorBlendAttachment.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
-        colorBlendAttachment.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
+        colorBlendAttachment.dstAlphaBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
         colorBlendAttachment.alphaBlendOp = VK_BLEND_OP_ADD;
 
         VkPipelineColorBlendStateCreateInfo colorBlending{};
@@ -1282,7 +1282,7 @@ namespace Poulpe {
         renderPassInfo.renderArea.extent = m_SwapChainExtent;
 
         std::array<VkClearValue, 2> clearValues{};
-        clearValues[0].color = { {0.f, 1.f, 0.f, 1.0f} };
+        clearValues[0].color = { {0.f, 1.f, 0.f, 0.0f} };
         clearValues[1].depthStencil = { 1.0f, 0 };
 
         renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
@@ -1299,10 +1299,10 @@ namespace Poulpe {
 
     void VulkanRenderer::BeginRendering(VkCommandBuffer commandBuffer, const VkImageView& colorImageView, const VkImageView& depthImageView, const VkAttachmentLoadOp loadOp, const VkAttachmentStoreOp storeOp)
     {
-        VkClearColorValue colorClear = { 27.f / 255.f, 37.f / 255.f, 54.f / 255.f, 0.f };
+        VkClearColorValue colorClear = { 27.f / 255.f, 37.f / 255.f, 54.f / 255.f, 0.0f };
         VkClearDepthStencilValue depthStencil = { 1.f, 0 };
 
-        VkRenderingAttachmentInfo colorAttachment{ VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO  };
+        VkRenderingAttachmentInfo colorAttachment{ VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO };
         colorAttachment.imageView = colorImageView;
         colorAttachment.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
         colorAttachment.loadOp = loadOp;

@@ -294,7 +294,7 @@ namespace Poulpe
             m_ShaderManager,
             m_TextureManager,
             HUDDescriptorPool
-            );
+        );
 
         auto grid = std::make_shared<Mesh>();
         grid->Accept(gridVulkanisator);
@@ -306,7 +306,7 @@ namespace Poulpe
             m_ShaderManager,
             m_TextureManager,
             HUDDescriptorPool
-            );
+        );
         auto crossHair = std::make_shared<Mesh2D>();
         crossHair->Accept(crosshairVulkanisator);
         hud.emplace_back(crossHair);

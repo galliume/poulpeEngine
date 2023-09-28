@@ -29,6 +29,7 @@ namespace Poulpe {
         //io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
         io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
         io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
+        
         //io.LogFilename = "imguiLog.txt";
         //io.IniFilename = "imgui.ini";
 
@@ -36,7 +37,7 @@ namespace Poulpe {
         io.ConfigViewportsNoAutoMerge = false;
         //io.BackendFlags |= ImGuiBackendFlags_HasMouseCursors;
 
-        ImGui::StyleColorsDark();
+        //ImGui::StyleColorsDark();
 
         const ImGuiViewport* viewport = ImGui::GetMainViewport();
         ImGui::SetNextWindowPos(viewport->WorkPos);
@@ -52,6 +53,7 @@ namespace Poulpe {
         style.WindowRounding = 1.f;
         style.WindowBorderSize = 1.0f;
         style.FrameRounding = 0.f;
+        style.FrameBorderSize = 1.f;
         style.ScrollbarRounding = 0;
 
         const ImVec4 white = ImVec4(1.f, 1.f, 1.f, 1.f);
