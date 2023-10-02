@@ -60,6 +60,7 @@ namespace Poulpe
         void LoadSkybox();
         virtual void Notify(const Event& event) override;
         void OnKeyPressed();
+        void UpdateRenderMode(VkPolygonMode mode);
 
     private:
         void Refresh();
