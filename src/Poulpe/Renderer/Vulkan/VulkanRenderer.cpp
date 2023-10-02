@@ -2257,6 +2257,8 @@ namespace Poulpe {
 
     void VulkanRenderer::DestroyBuffer(VkBuffer buffer)
     {
+        if (VK_NULL_HANDLE == buffer) return;
+
         vkDestroyBuffer(m_Device, buffer, nullptr);
     }
 

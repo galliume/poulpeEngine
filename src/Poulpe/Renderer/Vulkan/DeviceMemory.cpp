@@ -83,7 +83,10 @@ namespace Poulpe
     void DeviceMemory::Clear()
     {
         for (auto buffer : m_Buffer) {
-            vkDestroyBuffer(m_Device, buffer, nullptr);
+            if (VK_NULL_HANDLE != buffer)
+            {
+                vkDestroyBuffer(m_Device, buffer, nullptr);
+            }
         }
 
         vkFreeMemory(m_Device, *m_Memory.get(), nullptr);

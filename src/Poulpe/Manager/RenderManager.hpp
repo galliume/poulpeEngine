@@ -46,6 +46,7 @@ namespace Poulpe
         virtual void CleanUp() override;
 
         void SetDrawBbox(bool draw) { m_Renderer->SetDrawBbox(draw); };
+        void ForceRefresh() { m_Refresh = true; };
 
     private:
         void PrepareSplashScreen();
