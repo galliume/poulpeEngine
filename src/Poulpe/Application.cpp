@@ -104,6 +104,7 @@ namespace Poulpe
                 glfwPollEvents();
 
                 m_RenderManager->GetRendererAdapter()->ShouldRecreateSwapChain();
+                m_RenderManager->RenderScene();
 
                 #ifdef PLP_DEBUG_BUILD
                     if (m_VulkanLayer->NeedRefresh()) {
@@ -117,7 +118,6 @@ namespace Poulpe
                     m_VulkanLayer->Render(timeStep.count());
                 #endif
 
-                m_RenderManager->RenderScene();
                 m_RenderManager->Draw();
 
                 lastTime = currentTime;

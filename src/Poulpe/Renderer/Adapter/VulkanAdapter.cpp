@@ -87,29 +87,48 @@ namespace Poulpe
     {
         m_Renderer->InitDetails();
         VkSwapchainKHR old = m_SwapChain;
-        m_SwapChain = m_Renderer->CreateSwapChain(m_SwapChainImages, old);
+
         m_Renderer->DestroySwapchain(m_Renderer->GetDevice(), old, {}, m_SwapChainImageViews);
+
         for (auto sema : m_Semaphores) {
             m_Renderer->DestroySemaphores(sema);
         }
         m_Renderer->DestroyFences();
         m_Renderer->ResetCurrentFrameIndex();
+
+#ifndef  PLP_DEBUG_BUILD
+        m_SwapChain = m_Renderer->CreateSwapChain(m_SwapChainImages, old);
+#else
+        m_SwapChainImages.resize(3);
+        m_SwapChainSamplers.resize(3);
+        m_SwapChainDepthSamplers.resize(3);
+
+        for (int i = 0; i < m_SwapChainImages.size(); ++i) {
+          VkImage image;
+          VkImage depthImage;
+
+          m_Renderer->CreateImage(m_Renderer->GetSwapChainExtent().width, m_Renderer->GetSwapChainExtent().height, 1, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_B8G8R8A8_UNORM, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, image);
+          m_SwapChainImages[i] = image;
+
+          m_SwapChainSamplers[i] = m_Renderer->CreateTextureSampler(1);
+          m_SwapChainDepthSamplers[i] = m_Renderer->CreateTextureSampler(1);;
+        }
+#endif
+
         m_SwapChainImageViews.resize(m_SwapChainImages.size());
         m_DepthImages.resize(m_SwapChainImages.size());
         m_DepthImageViews.resize(m_SwapChainImages.size());
 
         for (uint32_t i = 0; i < m_SwapChainImages.size(); i++) {
-
             m_SwapChainImageViews[i] = m_Renderer->CreateImageView(m_SwapChainImages[i], m_Renderer->GetSwapChainImageFormat(), VK_IMAGE_ASPECT_COLOR_BIT);
 
             VkImage depthImage;
-            m_Renderer->CreateImage(m_Renderer->GetSwapChainExtent().width, m_Renderer->GetSwapChainExtent().height, 1, VK_SAMPLE_COUNT_1_BIT, m_Renderer->FindDepthFormat(), VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, depthImage);
-            VkImageView depthImageView = m_Renderer->CreateImageView(depthImage, m_Renderer->FindDepthFormat(), 1, VK_IMAGE_ASPECT_DEPTH_BIT);
+            m_Renderer->CreateImage(m_Renderer->GetSwapChainExtent().width, m_Renderer->GetSwapChainExtent().height, 1, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_D32_SFLOAT, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, depthImage);
+            VkImageView depthImageView = m_Renderer->CreateImageView(depthImage, VK_FORMAT_D32_SFLOAT, 1, VK_IMAGE_ASPECT_DEPTH_BIT);
 
             m_DepthImages[i] = depthImage;
             m_DepthImageViews[i] = depthImageView;
         }
-
 
         m_Semaphores.clear();
 
@@ -127,6 +146,8 @@ namespace Poulpe
         m_CommandBuffersSkybox = m_Renderer->AllocateCommandBuffers(m_CommandPoolSkybox, static_cast<uint32_t>(m_SwapChainImageViews.size()));
         m_CommandPoolHud = m_Renderer->CreateCommandPool();
         m_CommandBuffersHud = m_Renderer->AllocateCommandBuffers(m_CommandPoolHud, static_cast<uint32_t>(m_SwapChainImageViews.size()));
+
+        AcquireNextImage();
     }
 
     void VulkanAdapter::ShouldRecreateSwapChain()
@@ -356,17 +377,17 @@ namespace Poulpe
     void VulkanAdapter::Draw()
     {
         if (m_RenderingStopped) {
-            VkCommandBufferResetFlags flags = VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT;
+            {
+                std::unique_lock<std::mutex> render(m_MutexRenderScene);
 
-            vkResetCommandBuffer(m_CommandBuffersEntities[m_ImageIndex], flags);
-            vkResetCommandBuffer(m_CommandBuffersHud[m_ImageIndex], flags);
-            vkResetCommandBuffer(m_CommandBuffersSkybox[m_ImageIndex], flags);
-
-            if (GetDrawBbox()) {
-              vkResetCommandBuffer(m_CommandBuffersBbox[m_ImageIndex], flags);
+                m_RenderCond.wait(render, [=, this] {
+                    return  (GetDrawBbox()) ? m_renderStatus == 16 : m_renderStatus == 8;
+                });
+                {
+                    OnFinishRender();
+                    m_RenderingStopped = false;
+                }
             }
-
-            m_RenderingStopped = false;
 
             return;
         }
@@ -466,7 +487,11 @@ namespace Poulpe
 
             m_RenderCond.wait(render, [=, this] {
                 return  (GetDrawBbox()) ? m_renderStatus == 16 : m_renderStatus == 8;
-                });
+            });
+
+            vkResetCommandBuffer(m_CommandBuffersEntities[m_ImageIndex], 0);
+            vkResetCommandBuffer(m_CommandBuffersHud[m_ImageIndex], 0);
+            vkResetCommandBuffer(m_CommandBuffersSkybox[m_ImageIndex], 0);
 
             BeginRendering(m_CommandBuffersEntities[m_ImageIndex]);
             //do nothing !
@@ -480,20 +505,19 @@ namespace Poulpe
             //do nothing !
             EndRendering(m_CommandBuffersSkybox[m_ImageIndex]);
 
-
             std::vector<VkCommandBuffer> cmds{};
             cmds.emplace_back(m_CommandBuffersSkybox[m_ImageIndex]);
             cmds.emplace_back(m_CommandBuffersEntities[m_ImageIndex]);
             cmds.emplace_back(m_CommandBuffersHud[m_ImageIndex]);
 
             if (GetDrawBbox()) {
-                BeginRendering(m_CommandBuffersSkybox[m_ImageIndex]);
+                vkResetCommandBuffer(m_CommandBuffersBbox[m_ImageIndex], 0);
+
+                BeginRendering(m_CommandBuffersBbox[m_ImageIndex]);
                 //do nothing !
                 EndRendering(m_CommandBuffersBbox[m_ImageIndex]);
                 cmds.emplace_back(m_CommandBuffersBbox[m_ImageIndex]);
             }
-
-            m_renderStatus = 1;
 
             Submit(cmds);
             Present();
