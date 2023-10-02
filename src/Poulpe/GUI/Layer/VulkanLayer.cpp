@@ -139,6 +139,18 @@ namespace Poulpe
         m_CmdQueue->Add(cmd);
     }
 
+    void VulkanLayer::UpdateRenderMode(VkPolygonMode mode)
+    {
+        std::function<void()> request = [=, this]() {
+            Poulpe::VulkanAdapter::s_PolygoneMode.store(mode);
+            m_RenderManager->ForceRefresh();
+            m_Refresh = true;
+        };
+
+        Command cmd{request};
+        m_CmdQueue->Add(cmd);
+    }
+
     void VulkanLayer::Render(double timeStep)
     {
         ImGuiIO& io = ImGui::GetIO();
@@ -207,11 +219,7 @@ namespace Poulpe
                 DisplaySounds();
             ImGui::End();
 
-            ImGuiWindowFlags windowFlags;
-            //windowFlags |= ImGuiWindowFlags_NoBackground;
-            bool view3DOpen = true;
-
-            ImGui::Begin("3D View", &view3DOpen, windowFlags);
+            ImGui::Begin("3D View");
                 float my_tex_w = m_RenderManager->GetRendererAdapter()->Rdr()->GetSwapChainExtent().width;
                 float my_tex_h = m_RenderManager->GetRendererAdapter()->Rdr()->GetSwapChainExtent().height;
                 ImVec2 uv_min = ImVec2(0.0f, 0.0f);                 // Top-left
@@ -413,18 +421,18 @@ namespace Poulpe
 
             auto pm = Poulpe::VulkanAdapter::s_PolygoneMode.load();
             if (ImGui::RadioButton("Fill", &pm, VK_POLYGON_MODE_FILL)) {
-                Poulpe::VulkanAdapter::s_PolygoneMode.store(VK_POLYGON_MODE_FILL);
-                Refresh();
+                UpdateRenderMode(VK_POLYGON_MODE_FILL);
             };
             ImGui::SameLine();
             if (ImGui::RadioButton("Line", &pm, VK_POLYGON_MODE_LINE)) {
                 Poulpe::VulkanAdapter::s_PolygoneMode.store(VK_POLYGON_MODE_LINE);
-                Refresh();
+                UpdateRenderMode(VK_POLYGON_MODE_LINE);
             };
+
             ImGui::SameLine();
             if (ImGui::RadioButton("Point", &pm, VK_POLYGON_MODE_POINT)) {
                 Poulpe::VulkanAdapter::s_PolygoneMode.store(VK_POLYGON_MODE_POINT);
-                Refresh();
+                UpdateRenderMode(VK_POLYGON_MODE_POINT);
             }
 
             if (ImGui::Checkbox("Display grid", &m_ShowGrid)) {

@@ -62,7 +62,7 @@ namespace Poulpe
 
     RenderManager::~RenderManager()
     {
-        
+
     }
 
     void RenderManager::CleanUp()
@@ -87,6 +87,7 @@ namespace Poulpe
         if (m_Refresh) {
             m_Renderer->StopRendering();
             m_Renderer->ClearRendererScreen();
+            m_Renderer->Rdr()->WaitIdle();
             CleanUp();
             m_Renderer->RecreateSwapChain();
             SetIsLoaded(false);
