@@ -27,7 +27,6 @@ namespace Poulpe
         virtual void Init(Window* window, std::shared_ptr<CommandQueue> cmdQueue) override;
         virtual void Render(double timeStep) override;
         virtual void AddRenderManager(RenderManager* renderManager) override;
-        void SetNeedRefresh(bool needRefresh) { m_Refresh = needRefresh; };
         void Destroy();
         void DisplayFpsCounter(double timeStep);
         void DisplayAPI();
@@ -37,7 +36,6 @@ namespace Poulpe
         void DisplayLevel();
         void DisplayMesh();
         void LoadTextures();
-        bool NeedRefresh() { return m_Refresh; }
         void Draw();
         std::shared_ptr<ImGuiInfo> GetImGuiInfo() { return m_ImGuiInfo; };
         void UpdateData();
@@ -63,14 +61,10 @@ namespace Poulpe
         void UpdateRenderMode(VkPolygonMode mode);
 
     private:
-        void Refresh();
-
-    private:
         bool m_VSync{ false };
         bool m_ShowDemo{ false };
         std::optional<uint32_t> m_LevelIndex{ 0 };
         uint32_t m_SkyboxIndex{ 0 };
-        bool m_Refresh{ false };
 
         RenderManager* m_RenderManager;
         std::unordered_map<std::string, VkDescriptorSet> m_Textures{};
