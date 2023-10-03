@@ -104,20 +104,12 @@ namespace Poulpe
                 glfwPollEvents();
 
                 m_RenderManager->GetRendererAdapter()->ShouldRecreateSwapChain();
-                m_RenderManager->RenderScene();
 
                 #ifdef PLP_DEBUG_BUILD
-                    if (m_VulkanLayer->NeedRefresh()) {
-                        m_VulkanLayer->SetNeedRefresh(false);
-                        //@todo: tmp, fix imgui update
-                        m_VulkanLayer->Destroy();
-                        m_VulkanLayer->Init(m_Window.get(), m_CommandQueue);
-                        m_VulkanLayer->AddRenderManager(m_RenderManager.get());
-                    }
-
                     m_VulkanLayer->Render(timeStep.count());
                 #endif
 
+                m_RenderManager->RenderScene();
                 m_RenderManager->Draw();
 
                 lastTime = currentTime;

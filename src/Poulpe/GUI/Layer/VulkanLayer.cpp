@@ -42,9 +42,8 @@ namespace Poulpe
 
     void VulkanLayer::Notify(const Event& event)
     {
-        if ("OnFinishRender" == event.name && m_OnFinishRender == false)
+        if ("OnFinishRender" == event.name)
         {
-            m_OnFinishRender = true;
             m_RenderScene = m_RenderManager->GetRendererAdapter()->GetImguiTexture();
             m_ImgDesc = ImGui_ImplVulkan_AddTexture(m_RenderScene.first, m_RenderScene.second, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
@@ -144,7 +143,6 @@ namespace Poulpe
         std::function<void()> request = [=, this]() {
             Poulpe::VulkanAdapter::s_PolygoneMode.store(mode);
             m_RenderManager->ForceRefresh();
-            m_Refresh = true;
         };
 
         Command cmd{request};
@@ -440,7 +438,7 @@ namespace Poulpe
             }
 
             if (ImGui::Checkbox("Display bbox", &m_ShowBBox)) {
-                Refresh();
+                //m_RenderManager->SetDrawBbox(m_ShowBBox);
             }
 
             Poulpe::Im::Text("FPS limit"); ImGui::SameLine();
@@ -600,7 +598,6 @@ namespace Poulpe
 
                 if (ImGui::Selectable(m_Levels.at(n).c_str(), isSelected)) {
                     m_LevelIndex = n;
-                    Refresh();
                 }
 
                 if (isSelected)
@@ -619,7 +616,6 @@ namespace Poulpe
                 if (ImGui::Selectable(m_Skyboxs.at(n).c_str(), isSelected)) {
                     m_SkyboxIndex = n;
                     m_Skybox = m_Skyboxs.at(m_SkyboxIndex).c_str();
-                    Refresh();
                 }
 
                 if (isSelected)
@@ -627,8 +623,6 @@ namespace Poulpe
             }
             ImGui::EndCombo();
         }
-
-        if (ImGui::SmallButton("Reload")) Refresh();
     }
 
     void VulkanLayer::AddRenderManager(RenderManager* renderManager)
@@ -643,24 +637,6 @@ namespace Poulpe
         LoadAmbiantSounds();
         LoadLevels();
         LoadSkybox();
-    }
-
-    void VulkanLayer::Refresh()
-    {
-        //std::future<int> refresh = std::async(
-        //    std::launch::async, [=, this](){ 
-        //});
-
-        m_RenderManager->Refresh(m_LevelIndex.value(), m_ShowBBox, m_Skybox);
-        m_Refresh = true;
-        // 
-        //std::function<void()> request = [=, this]() {
-        //  m_RenderManager->Refresh(m_LevelIndex.value(), m_ShowBBox, m_Skybox);
-        //  m_Refresh = true;
-        //};
-
-        //Command cmd{ request };
-        //m_CmdQueue->Add(cmd);
     }
 
     void VulkanLayer::OnKeyPressed()
