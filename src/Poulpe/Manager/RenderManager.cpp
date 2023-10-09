@@ -1,10 +1,6 @@
 #include "RenderManager.hpp"
 
-#include "Poulpe/Renderer/Vulkan/Meshator/Crosshair.hpp"
-#include "Poulpe/Renderer/Vulkan/Meshator/EntityMesh.hpp"
-#include "Poulpe/Renderer/Vulkan/Meshator/Grid.hpp"
-#include "Poulpe/Renderer/Vulkan/Meshator/Skybox.hpp"
-#include "Poulpe/Renderer/Vulkan/Meshator/Splash.hpp"
+#include "Poulpe/Renderer/Vulkan/EntityFactory.hpp"
 
 namespace Poulpe
 {    
@@ -259,7 +255,7 @@ namespace Poulpe
         VkDescriptorPool descriptorPool = m_Renderer->Rdr()->CreateDescriptorPool(poolSizes, 1000);
         m_DescriptorPools.emplace_back(descriptorPool);
 
-        std::shared_ptr<EntityMesh> vulkanisator = std::make_shared<EntityMesh>(
+        std::shared_ptr<Basic> vulkanisator = std::make_shared<Basic>(
             m_Renderer,
             m_EntityManager,
             m_ShaderManager,
@@ -286,30 +282,21 @@ namespace Poulpe
 
         std::vector<std::shared_ptr<Mesh>> hud{};
 
-        VkDescriptorPool HUDDescriptorPool = m_Renderer->Rdr()->CreateDescriptorPool(poolSizes, 10);
-        m_DescriptorPools.emplace_back(HUDDescriptorPool);
+        VkDescriptorPool descriptorPool = m_Renderer->Rdr()->CreateDescriptorPool(poolSizes, 10);
+        m_DescriptorPools.emplace_back(descriptorPool);
 
-        std::shared_ptr<Grid> gridVulkanisator = std::make_shared<Grid>(
-            m_Renderer,
-            m_EntityManager,
-            m_ShaderManager,
-            m_TextureManager,
-            HUDDescriptorPool
-        );
+        auto entityG = std::make_shared<Grid>(EntityFactory::create<Grid>(
+            m_Renderer, m_EntityManager, m_ShaderManager, m_TextureManager, descriptorPool));
 
         auto grid = std::make_shared<Mesh>();
-        grid->Accept(gridVulkanisator);
+        grid->Accept(entityG);
         hud.emplace_back(grid);
 
-        std::shared_ptr<Crosshair> crosshairVulkanisator = std::make_shared<Crosshair>(
-            m_Renderer,
-            m_EntityManager,
-            m_ShaderManager,
-            m_TextureManager,
-            HUDDescriptorPool
-        );
+        auto entityC = std::make_shared<Crosshair>(EntityFactory::create<Crosshair>(
+            m_Renderer, m_EntityManager, m_ShaderManager, m_TextureManager, descriptorPool));
+
         auto crossHair = std::make_shared<Mesh2D>();
-        crossHair->Accept(crosshairVulkanisator);
+        crossHair->Accept(entityC);
         hud.emplace_back(crossHair);
 
         m_EntityManager->AddHUD(hud);
@@ -331,16 +318,12 @@ namespace Poulpe
 
         VkDescriptorPool skyDescriptorPool = m_Renderer->Rdr()->CreateDescriptorPool(poolSizes, 10);
         m_DescriptorPools.emplace_back(skyDescriptorPool);
-        std::shared_ptr<Skybox> skyboxVulkanisator = std::make_shared<Skybox>(
-            m_Renderer,
-            m_EntityManager,
-            m_ShaderManager,
-            m_TextureManager,
-            skyDescriptorPool
-        );
+
+        auto entity = std::make_shared<Skybox>(EntityFactory::create<Skybox>(
+            m_Renderer, m_EntityManager, m_ShaderManager, m_TextureManager, skyDescriptorPool));
 
         auto skyboxMesh = std::make_shared<Mesh>();
-        skyboxMesh->Accept(skyboxVulkanisator);
+        skyboxMesh->Accept(entity);
         m_EntityManager->SetSkybox(skyboxMesh);
         m_Renderer->AddSkybox(skyboxMesh);
     }
