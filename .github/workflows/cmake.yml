@@ -27,7 +27,7 @@ jobs:
         path: main
 
     - name: Install dependancies
-      run: sudo apt-get install xorg-dev libglu1-mesa-dev libvulkan1 mesa-vulkan-drivers
+      run: sudo apt-get update && sudo apt-get install xorg-dev libglu1-mesa-dev libvulkan1 mesa-vulkan-drivers
 
     - name: Set env variable VULKAN_SDK_ACTIONS
       run: |
