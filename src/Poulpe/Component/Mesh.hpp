@@ -49,8 +49,8 @@ namespace Poulpe
         void AddUbos(const std::vector<UniformBufferObject>& ubos);
         std::function<void(VkCommandBuffer& commandBuffer, VkPipelineLayout& pipelineLayout, std::shared_ptr<VulkanAdapter>, Data& data)> ApplyPushConstants = nullptr;
         
-        bool IsDirty() { return m_IsDirty; }
-        void SetIsDirty(bool dirty = true) { m_IsDirty = dirty; }
+        bool IsDirty() { return m_IsDirty.load(); }
+        void SetIsDirty(bool dirty = true) { m_IsDirty.store(dirty); }
         void SetHasBbox(bool hasBbox = false) { m_HasBbox = hasBbox; }
         bool HasBbox() { return m_HasBbox; }
 
@@ -61,11 +61,13 @@ namespace Poulpe
         std::vector<VkDescriptorSet> m_DescriptorSets;
         VkPipelineLayout m_PipelineLayout;
         VkPipeline m_GraphicsPipeline;
-    
+        VkDescriptorSetLayout m_DescriptorSetLayout;
+        VkDescriptorPool m_DescriptorPool;
+
     private:
         Data m_Data;
         std::string m_ShaderName;
-        bool m_IsDirty = true;
+        std::atomic<bool> m_IsDirty{ true };
         bool m_HasBbox = true;
     };
 }

@@ -88,96 +88,33 @@ namespace Poulpe
         Buffer uniformBuffer = m_Adapter->Rdr()->CreateUniformBuffers(1);
         mesh->m_UniformBuffers.emplace_back(uniformBuffer);
 
-        Texture tex = m_TextureManager->GetSkyboxTexture();
+        SetPushConstants(mesh);
 
-        VkDescriptorSetLayoutBinding uboLayoutBinding{};
-        uboLayoutBinding.binding = 0;
-        uboLayoutBinding.descriptorCount = 1;
-        uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        uboLayoutBinding.pImmutableSamplers = nullptr;
-        uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+        VkDescriptorSetLayout descriptorSetLayout = CreateDescriptorSetLayout(mesh);
+        VkDescriptorSet desriptorSet = CreateDescriptorSet(mesh, descriptorSetLayout);
+        VkPipelineLayout pipelineLayout = CreatePipelineLayout(mesh, descriptorSetLayout);
 
-        VkDescriptorSetLayoutBinding skySamplerLayoutBinding{};
-        skySamplerLayoutBinding.binding = 1;
-        skySamplerLayoutBinding.descriptorCount = 1;
-        skySamplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        skySamplerLayoutBinding.pImmutableSamplers = nullptr;
-        skySamplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+        mesh->m_DescriptorSetLayout = descriptorSetLayout;
+        mesh->m_DescriptorSets.emplace_back(desriptorSet);
+        mesh->m_PipelineLayout = pipelineLayout;
 
-        std::vector<VkDescriptorSetLayoutBinding> skyBindings = { uboLayoutBinding, skySamplerLayoutBinding };
+        auto shaders = GetShaders();
 
-        VkDescriptorSetLayout skyDesriptorSetLayout = m_Adapter->Rdr()->CreateDescriptorSetLayout(
-            skyBindings, VK_DESCRIPTOR_SET_LAYOUT_CREATE_UPDATE_AFTER_BIND_POOL_BIT
-        );
+        auto bDesc = Vertex::GetBindingDescription();
+        auto desc = Vertex::GetAttributeDescriptions();
 
-        VkDescriptorImageInfo skyDescriptorImageInfo{};
-        skyDescriptorImageInfo.sampler = tex.GetSampler();
-        skyDescriptorImageInfo.imageView = tex.GetImageView();
-        skyDescriptorImageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-
-        VkDescriptorSet skyDescriptorSet = m_Adapter->Rdr()->CreateDescriptorSets(m_DescriptorPool, { skyDesriptorSetLayout }, 1);
-        m_Adapter->Rdr()->UpdateDescriptorSets(mesh->m_UniformBuffers, skyDescriptorSet, { skyDescriptorImageInfo });
-        mesh->m_DescriptorSets.emplace_back(skyDescriptorSet);
-
-        constants pushConstants;
-        pushConstants.data = glm::vec4(0.f, Poulpe::VulkanAdapter::s_AmbiantLight.load(), Poulpe::VulkanAdapter::s_FogDensity.load(), 0.f);
-        pushConstants.cameraPos = m_Adapter->GetCamera()->GetPos();
-        pushConstants.fogColor = glm::vec4({ Poulpe::VulkanAdapter::s_FogColor[0].load(), Poulpe::VulkanAdapter::s_FogColor[1].load(), Poulpe::VulkanAdapter::s_FogColor[2].load(), 0.f });
-        pushConstants.lightPos = glm::vec4(m_Adapter->GetLights().at(0), 0.f);
-        pushConstants.view = m_Adapter->GetCamera()->LookAt();
-
-        mesh->ApplyPushConstants = [=, &pushConstants, &mesh](VkCommandBuffer& commandBuffer, VkPipelineLayout& pipelineLayout, std::shared_ptr<VulkanAdapter> adapter, const Data& data) {
-            pushConstants.data = glm::vec4(0.f, Poulpe::VulkanAdapter::s_AmbiantLight.load(), Poulpe::VulkanAdapter::s_FogDensity.load(), 0.f);
-            pushConstants.cameraPos = adapter->GetCamera()->GetPos();
-            pushConstants.fogColor = glm::vec4({ Poulpe::VulkanAdapter::s_FogColor[0].load(), Poulpe::VulkanAdapter::s_FogColor[1].load(), Poulpe::VulkanAdapter::s_FogColor[2].load(), 0.f });
-            pushConstants.lightPos = glm::vec4(adapter->GetLights().at(0), 0.f);
-            pushConstants.view = glm::mat4(glm::mat3(adapter->GetCamera()->LookAt()));
-            vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(constants), &pushConstants);
-        };
-
-        mesh->SetHasPushConstants();
-
-        std::vector<VkDescriptorSetLayout>dSetLayout = { skyDesriptorSetLayout };
-
-        std::vector<VkPushConstantRange> vkPcs = {};
-        VkPushConstantRange vkPc;
-        vkPc.offset = 0;
-        vkPc.size = sizeof(constants);
-        vkPc.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-        vkPcs.emplace_back(vkPc);
-        mesh->m_PipelineLayout = m_Adapter->Rdr()->CreatePipelineLayout(mesh->m_DescriptorSets, dSetLayout, vkPcs);
-        std::string shaderName = "skybox";
-
-        VkVertexInputBindingDescription bDesc = Vertex::GetBindingDescription();
-        std::vector<VkPipelineShaderStageCreateInfo>shadersStageInfos;
-
-        VkPipelineShaderStageCreateInfo vertShaderStageInfo{};
-        vertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-        vertShaderStageInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
-        vertShaderStageInfo.module = m_ShaderManager->GetShaders()->shaders[shaderName][0];
-        vertShaderStageInfo.pName = "main";
-        shadersStageInfos.emplace_back(vertShaderStageInfo);
-
-        VkPipelineShaderStageCreateInfo fragShaderStageInfo{};
-        fragShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-        fragShaderStageInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
-        fragShaderStageInfo.module = m_ShaderManager->GetShaders()->shaders[shaderName][1];
-        fragShaderStageInfo.pName = "main";
-        shadersStageInfos.emplace_back(fragShaderStageInfo);
-
-        auto skyDesc = Vertex::GetAttributeDescriptions();
         VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
         vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
         vertexInputInfo.vertexBindingDescriptionCount = 1;
         vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(Vertex::GetAttributeDescriptions().size());
         vertexInputInfo.pVertexBindingDescriptions = &bDesc;
-        vertexInputInfo.pVertexAttributeDescriptions = skyDesc.data();
+        vertexInputInfo.pVertexAttributeDescriptions = desc.data();
 
         mesh->m_GraphicsPipeline = m_Adapter->Rdr()->CreateGraphicsPipeline(
             m_Adapter->RdrPass(),
             mesh->m_PipelineLayout,
             mesh->GetShaderName(),
-            shadersStageInfos,
+            shaders,
             vertexInputInfo,
             VK_CULL_MODE_NONE,
             true, true, true, true,
@@ -194,5 +131,110 @@ namespace Poulpe
 
         mesh->SetData(data);
         mesh->SetIsDirty(false);
+    }
+
+    VkDescriptorSetLayout Skybox::CreateDescriptorSetLayout(std::shared_ptr<Mesh> mesh)
+    {
+        VkDescriptorSetLayoutBinding uboLayoutBinding{};
+        uboLayoutBinding.binding = 0;
+        uboLayoutBinding.descriptorCount = 1;
+        uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        uboLayoutBinding.pImmutableSamplers = nullptr;
+        uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+
+        VkDescriptorSetLayoutBinding skySamplerLayoutBinding{};
+        skySamplerLayoutBinding.binding = 1;
+        skySamplerLayoutBinding.descriptorCount = 1;
+        skySamplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        skySamplerLayoutBinding.pImmutableSamplers = nullptr;
+        skySamplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+        std::vector<VkDescriptorSetLayoutBinding> skyBindings = { uboLayoutBinding, skySamplerLayoutBinding };
+
+        VkDescriptorSetLayout desriptorSetLayout = m_Adapter->Rdr()->CreateDescriptorSetLayout(
+            skyBindings, VK_DESCRIPTOR_SET_LAYOUT_CREATE_UPDATE_AFTER_BIND_POOL_BIT
+        );
+
+        return desriptorSetLayout;
+    }
+    
+    VkDescriptorSet Skybox::CreateDescriptorSet(std::shared_ptr<Mesh> mesh, VkDescriptorSetLayout descriptorSetLayout)
+    {
+        if (!mesh->m_DescriptorSets.empty()) {
+            vkFreeDescriptorSets(m_Adapter->Rdr()->GetDevice(), mesh->m_DescriptorPool, mesh->m_DescriptorSets.size(), mesh->m_DescriptorSets.data());
+            mesh->m_DescriptorSets.clear();
+        }
+
+        Texture tex = m_TextureManager->GetSkyboxTexture();
+
+        VkDescriptorImageInfo descriptorImageInfo{};
+        descriptorImageInfo.sampler = tex.GetSampler();
+        descriptorImageInfo.imageView = tex.GetImageView();
+        descriptorImageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+
+        VkDescriptorSet descriptorSet = m_Adapter->Rdr()->CreateDescriptorSets(mesh->m_DescriptorPool, { descriptorSetLayout }, 1);
+        m_Adapter->Rdr()->UpdateDescriptorSets(mesh->m_UniformBuffers, descriptorSet, { descriptorImageInfo });
+
+        return descriptorSet;
+    }
+
+    VkPipelineLayout Skybox::CreatePipelineLayout(std::shared_ptr<Mesh> mesh, VkDescriptorSetLayout descriptorSetLayout)
+    {
+        std::vector<VkDescriptorSetLayout> dSetLayout = { descriptorSetLayout };
+
+        std::vector<VkPushConstantRange> vkPcs = {};
+        VkPushConstantRange vkPc;
+        vkPc.offset = 0;
+        vkPc.size = sizeof(constants);
+        vkPc.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+        vkPcs.emplace_back(vkPc);
+
+        VkPipelineLayout pipelineLayout = m_Adapter->Rdr()->CreatePipelineLayout(mesh->m_DescriptorSets, dSetLayout, vkPcs);
+
+        return pipelineLayout;
+    }
+
+    std::vector<VkPipelineShaderStageCreateInfo> Skybox::GetShaders()
+    {
+        std::string shaderName = "skybox";
+
+        std::vector<VkPipelineShaderStageCreateInfo> shadersStageInfos{};
+
+        VkPipelineShaderStageCreateInfo vertShaderStageInfo{};
+        vertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+        vertShaderStageInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
+        vertShaderStageInfo.module = m_ShaderManager->GetShaders()->shaders[shaderName][0];
+        vertShaderStageInfo.pName = "main";
+        shadersStageInfos.emplace_back(vertShaderStageInfo);
+
+        VkPipelineShaderStageCreateInfo fragShaderStageInfo{};
+        fragShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+        fragShaderStageInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
+        fragShaderStageInfo.module = m_ShaderManager->GetShaders()->shaders[shaderName][1];
+        fragShaderStageInfo.pName = "main";
+        shadersStageInfos.emplace_back(fragShaderStageInfo);
+
+        return shadersStageInfos;
+    }
+
+    void Skybox::SetPushConstants(std::shared_ptr<Mesh> mesh)
+    {
+        constants pushConstants{};
+        pushConstants.data = glm::vec4(0.f, Poulpe::VulkanAdapter::s_AmbiantLight.load(), Poulpe::VulkanAdapter::s_FogDensity.load(), 0.f);
+        pushConstants.cameraPos = m_Adapter->GetCamera()->GetPos();
+        pushConstants.fogColor = glm::vec4({ Poulpe::VulkanAdapter::s_FogColor[0].load(), Poulpe::VulkanAdapter::s_FogColor[1].load(), Poulpe::VulkanAdapter::s_FogColor[2].load(), 0.f });
+        pushConstants.lightPos = glm::vec4(m_Adapter->GetLights().at(0), 0.f);
+        pushConstants.view = m_Adapter->GetCamera()->LookAt();
+
+        mesh->ApplyPushConstants = [=, &pushConstants, &mesh](VkCommandBuffer& commandBuffer, VkPipelineLayout& pipelineLayout, std::shared_ptr<VulkanAdapter> adapter, const Data& data) {
+            pushConstants.data = glm::vec4(0.f, Poulpe::VulkanAdapter::s_AmbiantLight.load(), Poulpe::VulkanAdapter::s_FogDensity.load(), 0.f);
+            pushConstants.cameraPos = adapter->GetCamera()->GetPos();
+            pushConstants.fogColor = glm::vec4({ Poulpe::VulkanAdapter::s_FogColor[0].load(), Poulpe::VulkanAdapter::s_FogColor[1].load(), Poulpe::VulkanAdapter::s_FogColor[2].load(), 0.f });
+            pushConstants.lightPos = glm::vec4(adapter->GetLights().at(0), 0.f);
+            pushConstants.view = glm::mat4(glm::mat3(adapter->GetCamera()->LookAt()));
+            vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(constants), &pushConstants);
+        };
+
+        mesh->SetHasPushConstants();
     }
 }

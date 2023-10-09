@@ -26,7 +26,7 @@ namespace Poulpe
         virtual void Draw();
         virtual void Accept(std::shared_ptr<IVisitor> visitor);
         virtual ~Entity() = default;
-        
+
         [[nodiscard]] inline const std::string &GetName() const {
             return m_Name;
         }
