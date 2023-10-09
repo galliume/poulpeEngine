@@ -696,7 +696,7 @@ namespace Poulpe {
         std::shared_ptr<VkRenderPass> renderPass,
         VkPipelineLayout pipelineLayout,
         std::string_view name,
-        std::vector<VkPipelineShaderStageCreateInfo>shadersCreateInfos,
+        std::vector<VkPipelineShaderStageCreateInfo> shadersCreateInfos,
         VkPipelineVertexInputStateCreateInfo vertexInputInfo,
         VkCullModeFlagBits cullMode,
         bool dynamicRendering,
