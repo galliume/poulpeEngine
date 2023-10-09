@@ -30,10 +30,12 @@ namespace Poulpe
         //stbi_image_free(images[0].pixels);
 
         glfwSetWindowSizeLimits(m_Window, 800, 600, 2048, 1080);
-        
-        int maxWidth  = GetSystemMetrics(SM_CXSCREEN);
-        int maxHeight = GetSystemMetrics(SM_CYSCREEN);
-        
+          
+        const GLFWvidmode * mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
+
+        const int maxWidth = mode->width;
+        const int maxHeight = mode->height; 
+
         glfwSetWindowMonitor(m_Window, NULL, (maxWidth/2)-(WIDTH/2), (maxHeight/2) - (HEIGHT/2), WIDTH, HEIGHT, GLFW_DONT_CARE);
         glfwSetWindowUserPointer(m_Window, this);
 
