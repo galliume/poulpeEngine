@@ -37,9 +37,11 @@ namespace Poulpe
         void DisplayMesh();
         void LoadTextures();
         void Draw();
-        std::shared_ptr<ImGuiInfo> GetImGuiInfo() { return m_ImGuiInfo; };
         void UpdateData();
+        void UpdateSkybox();
         void AttachObserver(IObserver* observer);
+
+        std::shared_ptr<ImGuiInfo> GetImGuiInfo() { return m_ImGuiInfo; };
 
         bool m_DebugOpen{ true };
         bool m_ShowGrid{ true };
@@ -50,7 +52,6 @@ namespace Poulpe
         bool m_OtherOpen{ true };
         bool m_AmbientOpen{ true };
         bool m_Looping{ true };
-        std::string_view m_Skybox{ "debug" };
 
         void LoadDebugInfo();
         void LoadAmbiantSounds();

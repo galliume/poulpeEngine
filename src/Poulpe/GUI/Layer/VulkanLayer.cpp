@@ -2,6 +2,7 @@
 
 #include "PoulpeEngineConfig.h"
 #include "Poulpe/Application.hpp"
+#include "Poulpe/Renderer/Vulkan/EntityFactory.hpp"
 
 namespace Poulpe
 {
@@ -125,6 +126,34 @@ namespace Poulpe
     {
         std::function<void()> request = [=, this]() {
             m_Levels = m_RenderManager->GetConfigManager()->ListLevels();
+        };
+
+        Command cmd{request};
+        m_CmdQueue->Add(cmd);
+    }
+
+    void VulkanLayer::UpdateSkybox()
+    {
+        std::function<void()> request = [=, this]() {
+            {
+                std::condition_variable cv;
+                auto loading = m_RenderManager->GetTextureManager()->LoadSkybox(m_Skyboxs.at(m_SkyboxIndex), cv);
+                loading();
+
+                auto skybox = m_RenderManager->GetEntityManager()->GetSkybox();
+                skybox->SetIsDirty();
+                auto entity = std::make_unique<Skybox>(EntityFactory::create<Skybox>(
+                    m_RenderManager->GetRendererAdapter(),
+                    m_RenderManager->GetEntityManager(),
+                    m_RenderManager->GetShaderManager(),
+                    m_RenderManager->GetTextureManager(),
+                    skybox->m_DescriptorPool));
+
+                auto desriptorSet = entity->CreateDescriptorSet(skybox, skybox->m_DescriptorSetLayout);
+                skybox->m_DescriptorSets.emplace_back(desriptorSet);
+
+                cv.notify_one(); //useful?
+            }
         };
 
         Command cmd{request};
@@ -620,7 +649,7 @@ namespace Poulpe
                 
                 if (ImGui::Selectable(m_Skyboxs.at(n).c_str(), isSelected)) {
                     m_SkyboxIndex = n;
-                    m_Skybox = m_Skyboxs.at(m_SkyboxIndex).c_str();
+                    UpdateSkybox();
                 }
 
                 if (isSelected)

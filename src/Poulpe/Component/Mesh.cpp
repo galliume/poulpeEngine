@@ -1,5 +1,7 @@
 #include "Mesh.hpp"
 
+#include <stdexcept>
+
 namespace Poulpe
 {
     Mesh::Mesh() : Entity() { }
