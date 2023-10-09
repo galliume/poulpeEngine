@@ -16,7 +16,7 @@ namespace Poulpe
         return textureFuture;
     }
 
-    std::function<void()> TextureManager::LoadSkybox(const std::string& skybox, std::condition_variable& cv)
+    std::function<void()> TextureManager::LoadSkybox(std::string_view skybox, std::condition_variable& cv)
     {
         m_SkyboxName = skybox;
         std::function<void()> skyboxFuture = [=, this, &cv]() {

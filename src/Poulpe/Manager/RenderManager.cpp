@@ -136,11 +136,11 @@ namespace Poulpe
         std::string_view threadQueueName{ "loading" };
         std::condition_variable cv;
 
-        auto levelData = m_ConfigManager->EntityConfig(level);
+        const auto levelData = m_ConfigManager->EntityConfig(level);
         std::function<void()> entityFutures = m_EntityManager->Load(levelData, cv);
         std::function<void()> textureFuture = m_TextureManager->Load(cv);
 
-        std::string sb = (m_CurrentSkybox.empty()) ? static_cast<std::string>(appConfig["defaultSkybox"]) : m_CurrentSkybox;
+        const std::string sb = (m_CurrentSkybox.empty()) ? static_cast<std::string>(appConfig["defaultSkybox"]) : m_CurrentSkybox;
         std::function<void()> skyboxFuture = m_TextureManager->LoadSkybox(sb, cv);
         std::function<void()> shaderFuture = m_ShaderManager->Load(m_ConfigManager->ShaderConfig(), cv);
 
@@ -190,12 +190,6 @@ namespace Poulpe
             m_Refresh = false;
             m_ShowBbox = false;
         }
-
-        //if (m_EntityManager->GetSkybox()->IsDirty())
-        //{
-        //    PrepareSkybox();
-        //    m_EntityManager->GetSkybox()->SetIsDirty(false);
-        //}
     }
 
     void RenderManager::Refresh(uint32_t levelIndex, bool showBbox, std::string_view skybox)
@@ -315,14 +309,15 @@ namespace Poulpe
         poolSizes.emplace_back(cp1);
         poolSizes.emplace_back(cp2);
 
-
-        VkDescriptorPool skyDescriptorPool = m_Renderer->Rdr()->CreateDescriptorPool(poolSizes, 10);
-        m_DescriptorPools.emplace_back(skyDescriptorPool);
+        VkDescriptorPool descriptorPool = m_Renderer->Rdr()->CreateDescriptorPool(poolSizes, 10, VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT);
+        m_DescriptorPools.emplace_back(descriptorPool);
 
         auto entity = std::make_shared<Skybox>(EntityFactory::create<Skybox>(
-            m_Renderer, m_EntityManager, m_ShaderManager, m_TextureManager, skyDescriptorPool));
+            m_Renderer, m_EntityManager, m_ShaderManager, m_TextureManager, descriptorPool));
 
         auto skyboxMesh = std::make_shared<Mesh>();
+        skyboxMesh->m_DescriptorPool = descriptorPool;
+
         skyboxMesh->Accept(entity);
         m_EntityManager->SetSkybox(skyboxMesh);
         m_Renderer->AddSkybox(skyboxMesh);
