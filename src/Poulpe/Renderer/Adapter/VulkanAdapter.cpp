@@ -813,14 +813,14 @@ namespace Poulpe
         std::vector<VkDescriptorPoolSize> poolSizes{};
         VkDescriptorPoolSize cp1;
         cp1.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        cp1.descriptorCount = 3000;
+        cp1.descriptorCount = 1000;
         VkDescriptorPoolSize cp2;
         cp2.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        cp2.descriptorCount = 3000;
+        cp2.descriptorCount = 1000;
         poolSizes.emplace_back(cp1);
         poolSizes.emplace_back(cp2);
 
-        VkDescriptorPool imguiPool = m_Renderer->CreateDescriptorPool(poolSizes, 3000, VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT);
+        VkDescriptorPool imguiPool = m_Renderer->CreateDescriptorPool(poolSizes, 1000, VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT);
 
         ImGui_ImplVulkan_InitInfo info = {};
 

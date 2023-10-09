@@ -1,11 +1,11 @@
-#include "EntityMesh.hpp"
+#include "Basic.hpp"
 #include "Poulpe/Renderer/Adapter/VulkanAdapter.hpp"
 
 namespace Poulpe
 {
     struct constants;
 
-    EntityMesh::EntityMesh(
+    Basic::Basic(
         std::shared_ptr<VulkanAdapter> adapter,
         std::shared_ptr<EntityManager> entityManager,
         std::shared_ptr<ShaderManager> shaderManager,
@@ -20,7 +20,7 @@ namespace Poulpe
 
     }
 
-    void EntityMesh::Visit(std::shared_ptr<Entity> entity)
+    void Basic::Visit(std::shared_ptr<Entity> entity)
     {
 
         std::shared_ptr<Mesh> mesh = std::dynamic_pointer_cast<Mesh>(entity);
@@ -193,7 +193,7 @@ namespace Poulpe
         }
     }
 
-    void EntityMesh::CreateBBoxEntity(std::shared_ptr<Mesh>& mesh)
+    void Basic::CreateBBoxEntity(std::shared_ptr<Mesh>& mesh)
     {
         Poulpe::Entity::BBox* box = mesh->GetBBox().get();
 

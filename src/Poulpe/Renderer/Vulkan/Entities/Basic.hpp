@@ -8,7 +8,7 @@
 
 namespace Poulpe
 {
-    class EntityMesh : public IVisitor
+    class Basic : public IVisitor
     {
         struct pc
         {
@@ -21,7 +21,7 @@ namespace Poulpe
         };
 
     public:
-        EntityMesh(
+        Basic(
             std::shared_ptr<VulkanAdapter> adapter,
             std::shared_ptr<EntityManager> entityManager,
             std::shared_ptr<ShaderManager> shaderManager,

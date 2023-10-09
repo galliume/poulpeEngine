@@ -44,8 +44,11 @@ namespace Poulpe
     {
         if ("OnFinishRender" == event.name)
         {
-            m_RenderScene = m_RenderManager->GetRendererAdapter()->GetImguiTexture();
-            m_ImgDesc = ImGui_ImplVulkan_AddTexture(m_RenderScene.first, m_RenderScene.second, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+            if (!m_ImgDescDone) {
+                m_RenderScene = m_RenderManager->GetRendererAdapter()->GetImguiTexture();
+                m_ImgDesc = ImGui_ImplVulkan_AddTexture(m_RenderScene.first, m_RenderScene.second, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+                m_ImgDescDone = true;
+            }
 
             //m_DepthImage = m_RenderManager->GetRendererAdapter()->GetImguiDepthImage();
             //VkDescriptorSet depthImgDset = ImGui_ImplVulkan_AddTexture(m_DepthImage.first, m_DepthImage.second, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
@@ -142,6 +145,8 @@ namespace Poulpe
     {
         std::function<void()> request = [=, this]() {
             Poulpe::VulkanAdapter::s_PolygoneMode.store(mode);
+            vkResetDescriptorPool(m_RenderManager->GetRendererAdapter()->Rdr()->GetDevice(), m_ImGuiInfo->info.DescriptorPool, 0);
+            m_ImgDescDone = false;
             m_RenderManager->ForceRefresh();
         };
 
