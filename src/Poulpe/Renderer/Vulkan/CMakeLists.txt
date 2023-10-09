@@ -3,7 +3,8 @@ set(SRC_LIST ${CMAKE_CURRENT_SOURCE_DIR}/DeviceMemory.cpp
 	     ${CMAKE_CURRENT_SOURCE_DIR}/DeviceMemoryPool.cpp 
 	     ${CMAKE_CURRENT_SOURCE_DIR}/DeviceMemoryPool.hpp
 	     ${CMAKE_CURRENT_SOURCE_DIR}/VulkanRenderer.cpp 
-	     ${CMAKE_CURRENT_SOURCE_DIR}/VulkanRenderer.hpp)
+	     ${CMAKE_CURRENT_SOURCE_DIR}/VulkanRenderer.hpp
+	     ${CMAKE_CURRENT_SOURCE_DIR}/EntityFactory.hpp)
 
 target_sources(PoulpeEngine PRIVATE ${SRC_LIST})
 

@@ -1,4 +1,5 @@
 #include "EntityManager.hpp"
+#include "Poulpe/Renderer/Vulkan/EntityFactory.hpp"
 
 namespace Poulpe
 {

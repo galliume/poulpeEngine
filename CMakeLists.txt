@@ -97,7 +97,7 @@ add_subdirectory(${PROJECT_SOURCE_DIR}/src/Poulpe/Manager)
 add_subdirectory(${PROJECT_SOURCE_DIR}/src/Poulpe/Renderer)
 add_subdirectory(${PROJECT_SOURCE_DIR}/src/Poulpe/Renderer/Adapter)
 add_subdirectory(${PROJECT_SOURCE_DIR}/src/Poulpe/Renderer/Vulkan)
-add_subdirectory(${PROJECT_SOURCE_DIR}/src/Poulpe/Renderer/Vulkan/Meshator)
+add_subdirectory(${PROJECT_SOURCE_DIR}/src/Poulpe/Renderer/Vulkan/Entities)
 
 add_subdirectory(${PROJECT_SOURCE_DIR}/vendor/glfw)
 add_subdirectory(${PROJECT_SOURCE_DIR}/vendor/glm)
