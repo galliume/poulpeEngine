@@ -16,7 +16,7 @@ CMAKE_BUILD_TYPE="Debug"
 REFRESH_BUILD_DIR=true
 CMAKE_J=8
 CMAKE_TOOLSET="ClangCL"
-USE_NINJA=true
+USE_NINJA=false
 USE_CCACHE=true
 
 while getopts ":a:b:c:d:e:f:g:hijkl:m:" opt; do
