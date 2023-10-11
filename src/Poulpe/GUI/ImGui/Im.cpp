@@ -25,13 +25,13 @@ namespace Poulpe {
         ImGui::CreateContext();
         ImGuiIO& io = ImGui::GetIO(); (void)io;
 
-        io.Fonts->AddFontFromFileTTF(std::filesystem::absolute("./assets/fonts/montserrat/Montserrat-Regular.ttf").string().c_str(), 20.0f);
+        io.Fonts->AddFontFromFileTTF("./assets/fonts/montserrat/Montserrat-Regular.ttf", 20.0f);
         //io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
         io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
         io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
         
         //io.LogFilename = "imguiLog.txt";
-        //io.IniFilename = "imgui.ini";
+        io.IniFilename = "./config/imgui.ini";
 
         io.ConfigDockingWithShift = false;
         io.ConfigViewportsNoAutoMerge = false;
