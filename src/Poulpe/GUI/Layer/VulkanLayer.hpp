@@ -38,7 +38,6 @@ namespace Poulpe
         void LoadTextures();
         void Draw();
         void UpdateData();
-        void UpdateSkybox();
         void AttachObserver(IObserver* observer);
 
         std::shared_ptr<ImGuiInfo> GetImGuiInfo() { return m_ImGuiInfo; };
@@ -53,13 +52,19 @@ namespace Poulpe
         bool m_AmbientOpen{ true };
         bool m_Looping{ true };
 
+        virtual void Notify(const Event& event) override;
+
         void LoadDebugInfo();
         void LoadAmbiantSounds();
         void LoadLevels();
         void LoadSkybox();
-        virtual void Notify(const Event& event) override;
         void OnKeyPressed();
         void UpdateRenderMode(VkPolygonMode mode);
+        void UpdateSkybox();
+        void UpdateLevel();
+
+    private:
+      VkDescriptorSet GetImgDesc();
 
     private:
         bool m_VSync{ false };
