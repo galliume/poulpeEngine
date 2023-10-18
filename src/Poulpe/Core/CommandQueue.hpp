@@ -14,10 +14,12 @@ namespace Poulpe
         ~CommandQueue() = default;
 
         void Add(Command& cmd);
-        void ExecRequest();
+        void ExecPreRequest();
+        void ExecPostRequest();
 
     private:
         mutable std::mutex m_Mutex;
-        std::queue<std::shared_ptr<Command>> m_CmdQueue;
+        std::queue<std::shared_ptr<Command>> m_PreCmdQueue;
+        std::queue<std::shared_ptr<Command>> m_PostCmdQueue;
     };
 }

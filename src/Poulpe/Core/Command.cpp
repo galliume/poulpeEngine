@@ -2,8 +2,8 @@
 
 namespace Poulpe
 {
-    Command::Command(std::function<void()> request)
-        : m_Request(request)
+    Command::Command(std::function<void()> request, WhenToExecute w)
+        : m_Request(request), m_When(w)
     {
     }
 
