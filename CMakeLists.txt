@@ -194,3 +194,4 @@ add_custom_command(
 set_target_properties(ImGui PROPERTIES
     ARCHIVE_OUTPUT_DIRECTORY "$<TARGET_FILE_DIR:${PROJECT_NAME}>/lib"
 )		
+

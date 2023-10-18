@@ -41,13 +41,20 @@ namespace Poulpe
         m_RenderManager->GetRendererAdapter()->AttachObserver(this);
     }
 
+    VkDescriptorSet VulkanLayer::GetImgDesc()
+    {
+      m_RenderScene = m_RenderManager->GetRendererAdapter()->GetImguiTexture();
+      VkDescriptorSet imgDesc = ImGui_ImplVulkan_AddTexture(m_RenderScene.first, m_RenderScene.second, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+
+      return imgDesc;
+    }
+
     void VulkanLayer::Notify(const Event& event)
     {
         if ("OnFinishRender" == event.name)
         {
             if (!m_ImgDescDone) {
-                m_RenderScene = m_RenderManager->GetRendererAdapter()->GetImguiTexture();
-                m_ImgDesc = ImGui_ImplVulkan_AddTexture(m_RenderScene.first, m_RenderScene.second, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+                m_ImgDesc = std::move(GetImgDesc());
                 m_ImgDescDone = true;
             }
 
@@ -160,6 +167,19 @@ namespace Poulpe
         m_CmdQueue->Add(cmd);
     }
 
+    void VulkanLayer::UpdateLevel()
+    {
+      std::function<void()> request = [=, this]() {
+        {
+          m_RenderManager->Refresh(m_LevelIndex.value(), m_ShowBBox, m_Skyboxs.at(m_SkyboxIndex));
+        }
+      };
+
+      Command cmd{ request, WhenToExecute::POST_RENDERING };
+      m_CmdQueue->Add(cmd);
+      m_ImgDescDone = false;
+    }
+
     void VulkanLayer::LoadSkybox()
     {
         std::function<void()> request = [=, this]() {
@@ -260,7 +280,7 @@ namespace Poulpe
                 ImVec4 border_col = ImVec4(1.0f, 1.0f, 1.0f, 0.5f); // 50% opaque white
                 ImVec2 surface = ImVec2(my_tex_w, my_tex_h);
 
-                ImGui::Image(m_ImgDesc, surface, uv_min, uv_max, tint_col, border_col);
+                if (m_ImgDescDone) ImGui::Image(m_ImgDesc, surface, uv_min, uv_max, tint_col, border_col);
             ImGui::End();
 
             if (s_OpenAbout) {
@@ -632,6 +652,7 @@ namespace Poulpe
 
                 if (ImGui::Selectable(m_Levels.at(n).c_str(), isSelected)) {
                     m_LevelIndex = n;
+                    UpdateLevel();
                 }
 
                 if (isSelected)

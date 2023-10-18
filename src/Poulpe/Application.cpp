@@ -108,9 +108,11 @@ namespace Poulpe
                 #ifdef PLP_DEBUG_BUILD
                     m_VulkanLayer->Render(timeStep.count());
                 #endif
-
+            
+                m_CommandQueue->ExecPreRequest();
                 m_RenderManager->RenderScene();
                 m_RenderManager->Draw();
+                m_CommandQueue->ExecPostRequest();
 
                 lastTime = currentTime;
             }
