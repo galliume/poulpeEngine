@@ -74,8 +74,8 @@ namespace Poulpe
         m_EntityManager->Clear();
         m_ShaderManager->Clear();
         m_Renderer->Clear();
-        m_DestroyManager->CleanDeviceMemory();
-        m_Renderer->Rdr()->InitMemoryPool();
+        //m_DestroyManager->CleanDeviceMemory();
+        //m_Renderer->Rdr()->InitMemoryPool();
     }
 
     void RenderManager::Init()
@@ -180,8 +180,6 @@ namespace Poulpe
 
     void RenderManager::RenderScene()
     {
-        m_CommandQueue->ExecRequest();
-
         m_Renderer->RenderScene();
 
         if (m_Refresh) {

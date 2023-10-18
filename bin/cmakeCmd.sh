@@ -65,7 +65,7 @@ configure() {
 	echo "${USE_CCACHE}"
 	echo "${EXPORT_COMPILE_CMD}"
 
-	cmake ${NINJA} ${CONFIG_TYPE} ${BUILD_TYPE} ${CXX_COMPILER} ${C_COMPILER} ${TOOLSET} ${USE_CCACHE} ${EXPORT_COMPILE_CMD} ..
+	X:\\cmake\\3.26.3\\win64\\bin\\cmake.exe ${NINJA} ${CONFIG_TYPE} ${BUILD_TYPE} ${CXX_COMPILER} ${C_COMPILER} ${TOOLSET} ${USE_CCACHE} ${EXPORT_COMPILE_CMD} ..
 
 	RESULT=$?
 	
