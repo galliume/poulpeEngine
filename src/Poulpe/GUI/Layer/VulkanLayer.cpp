@@ -4,6 +4,9 @@
 #include "Poulpe/Application.hpp"
 #include "Poulpe/Renderer/Vulkan/EntityFactory.hpp"
 
+#include <chrono>
+#include <thread>
+
 namespace Poulpe
 {
     bool VulkanLayer::s_RenderViewportHasInput { false };
@@ -171,13 +174,25 @@ namespace Poulpe
     {
       std::function<void()> request = [=, this]() {
         {
+          const auto start = std::chrono::high_resolution_clock::now();
+
           m_RenderManager->Refresh(m_LevelIndex.value(), m_ShowBBox, m_Skyboxs.at(m_SkyboxIndex));
+
+          while (!m_RenderManager->IsLoaded()) {
+            //just loading.
+          };
+
+          const auto end = std::chrono::high_resolution_clock::now();
+          const std::chrono::duration<double, std::milli> elapsed = end - start;
+
+          PLP_DEBUG("Loaded {} in {}", m_Levels.at(m_LevelIndex.value()), elapsed);
+
+          m_ImgDescDone = false;
         }
       };
 
       Command cmd{ request, WhenToExecute::POST_RENDERING };
       m_CmdQueue->Add(cmd);
-      m_ImgDescDone = false;
     }
 
     void VulkanLayer::LoadSkybox()
