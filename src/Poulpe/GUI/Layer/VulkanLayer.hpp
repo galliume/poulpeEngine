@@ -38,6 +38,9 @@ namespace Poulpe
         void LoadTextures();
         void Draw();
         void UpdateData();
+        void UpdateSkybox();
+        void UpdateLevel();
+
         void AttachObserver(IObserver* observer);
 
         std::shared_ptr<ImGuiInfo> GetImGuiInfo() { return m_ImGuiInfo; };

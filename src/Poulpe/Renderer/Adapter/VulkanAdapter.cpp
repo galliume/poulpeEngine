@@ -31,9 +31,9 @@ namespace Poulpe
         SetPerspective();
         m_RenderPass = m_Renderer->CreateRenderPass(m_Renderer->GetMsaaSamples());
         
-#ifndef  PLP_DEBUG_BUILD
-        m_SwapChain = m_Renderer->CreateSwapChain(m_SwapChainImages);
-#else
+//#ifndef  PLP_DEBUG_BUILD
+//        m_SwapChain = m_Renderer->CreateSwapChain(m_SwapChainImages);
+//#else
         m_SwapChainImages.resize(3);
         m_SwapChainSamplers.resize(3);
         m_SwapChainDepthSamplers.resize(3);
@@ -48,7 +48,7 @@ namespace Poulpe
           m_SwapChainSamplers[i] = m_Renderer->CreateTextureSampler(1);
           m_SwapChainDepthSamplers[i] = m_Renderer->CreateTextureSampler(1);;
         }
-#endif
+//#endif
         //init swap chain, depth image views, primary command buffers and semaphores
         m_SwapChainImageViews.resize(m_SwapChainImages.size());
         m_DepthImages.resize(m_SwapChainImages.size());
@@ -96,9 +96,9 @@ namespace Poulpe
         m_Renderer->DestroyFences();
         m_Renderer->ResetCurrentFrameIndex();
 
-#ifndef  PLP_DEBUG_BUILD
-        m_SwapChain = m_Renderer->CreateSwapChain(m_SwapChainImages, old);
-#else
+//#ifndef  PLP_DEBUG_BUILD
+//        m_SwapChain = m_Renderer->CreateSwapChain(m_SwapChainImages, old);
+//#else
         m_SwapChainImages.resize(3);
         m_SwapChainSamplers.resize(3);
         m_SwapChainDepthSamplers.resize(3);
@@ -113,7 +113,7 @@ namespace Poulpe
           m_SwapChainSamplers[i] = m_Renderer->CreateTextureSampler(1);
           m_SwapChainDepthSamplers[i] = m_Renderer->CreateTextureSampler(1);;
         }
-#endif
+//#endif
 
         m_SwapChainImageViews.resize(m_SwapChainImages.size());
         m_DepthImages.resize(m_SwapChainImages.size());
@@ -629,11 +629,11 @@ namespace Poulpe
     {
         m_Renderer->EndRendering(commandBuffer);
 
-#ifndef PLP_DEBUG_BUILD
-        auto newLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
-#else
+//#ifndef PLP_DEBUG_BUILD
+//        auto newLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+//#else
         auto newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-#endif
+//#endif
 
         VkImageMemoryBarrier swapChainImageEndRenderBeginBarrier = m_Renderer->SetupImageMemoryBarrier(
             m_SwapChainImages[m_ImageIndex],
@@ -686,41 +686,41 @@ namespace Poulpe
 
     void VulkanAdapter::Present(int queueIndex)
     {
-#ifndef PLP_DEBUG_BUILD
-        std::vector<VkSemaphore>& renderFinishedSemaphores = m_Semaphores.at(queueIndex).second;
-        VkSemaphore signalSemaphores[] = { renderFinishedSemaphores[m_ImageIndex] };
-
-  
-        VkSemaphoreTypeCreateInfo sema;
-        sema.sType = VK_STRUCTURE_TYPE_SEMAPHORE_TYPE_CREATE_INFO;
-        sema.semaphoreType = VK_SEMAPHORE_TYPE_BINARY;
-        sema.pNext = NULL;
-
-        VkSemaphoreWaitInfo waitInfo;
-        waitInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_WAIT_INFO;
-        waitInfo.pNext = NULL;
-        waitInfo.flags = 0;
-        waitInfo.semaphoreCount = 1;
-        waitInfo.pSemaphores = { &m_Semaphores.at(queueIndex).second[m_ImageIndex]};
-
-        vkWaitSemaphores(m_Renderer->GetDevice(), &waitInfo, UINT64_MAX);
-
-        VkResult presentResult = m_Renderer->QueuePresent(m_ImageIndex, m_SwapChain, m_Semaphores.at(queueIndex), queueIndex);
-
-        if (presentResult != VK_SUCCESS) {
-            PLP_WARN("Error on queue present: {}", presentResult);
-            RecreateSwapChain();
-        }
-#endif
+//#ifndef PLP_DEBUG_BUILD
+//        std::vector<VkSemaphore>& renderFinishedSemaphores = m_Semaphores.at(queueIndex).second;
+//        VkSemaphore signalSemaphores[] = { renderFinishedSemaphores[m_ImageIndex] };
+//
+//  
+//        VkSemaphoreTypeCreateInfo sema;
+//        sema.sType = VK_STRUCTURE_TYPE_SEMAPHORE_TYPE_CREATE_INFO;
+//        sema.semaphoreType = VK_SEMAPHORE_TYPE_BINARY;
+//        sema.pNext = NULL;
+//
+//        VkSemaphoreWaitInfo waitInfo;
+//        waitInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_WAIT_INFO;
+//        waitInfo.pNext = NULL;
+//        waitInfo.flags = 0;
+//        waitInfo.semaphoreCount = 1;
+//        waitInfo.pSemaphores = { &m_Semaphores.at(queueIndex).second[m_ImageIndex]};
+//
+//        vkWaitSemaphores(m_Renderer->GetDevice(), &waitInfo, UINT64_MAX);
+//
+//        VkResult presentResult = m_Renderer->QueuePresent(m_ImageIndex, m_SwapChain, m_Semaphores.at(queueIndex), queueIndex);
+//
+//        if (presentResult != VK_SUCCESS) {
+//            PLP_WARN("Error on queue present: {}", presentResult);
+//            RecreateSwapChain();
+//        }
+//#endif
     }
 
     void VulkanAdapter::AcquireNextImage()
     {
-#ifndef PLP_DEBUG_BUILD
-      m_ImageIndex = m_Renderer->AcquireNextImageKHR(m_SwapChain, m_Semaphores.at(0));
-#else
+//#ifndef PLP_DEBUG_BUILD
+//      m_ImageIndex = m_Renderer->AcquireNextImageKHR(m_SwapChain, m_Semaphores.at(0));
+//#else
       m_ImageIndex = m_Renderer->GetNextFrameIndex();
-#endif
+//#endif
     }
 
     void VulkanAdapter::SetRayPick(float x, float y, float z, int width, int height)
@@ -828,7 +828,7 @@ namespace Poulpe
         info.PhysicalDevice = m_Renderer->GetPhysicalDevice();
         info.Device = m_Renderer->GetDevice();
         info.QueueFamily = m_Renderer->GetQueueFamily();
-        info.Queue = m_Renderer->GetGraphicsQueues()[0];
+        info.Queue = m_Renderer->GetGraphicsQueues()[1];
         info.PipelineCache = nullptr;//to implement VkPipelineCache
         info.DescriptorPool = std::move(imguiPool);
         info.Subpass = 0;
