@@ -81,9 +81,9 @@ namespace Poulpe
     void RenderManager::Init()
     {
         if (m_Refresh) {
+            m_Renderer->Rdr()->WaitIdle();
             m_Renderer->StopRendering();
             m_Renderer->ClearRendererScreen();
-            m_Renderer->Rdr()->WaitIdle();
             CleanUp();
             m_Renderer->RecreateSwapChain();
             SetIsLoaded(false);

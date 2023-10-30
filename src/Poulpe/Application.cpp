@@ -51,11 +51,11 @@ namespace Poulpe
         m_RenderManager->Init();
 
         //todo move to layer manager and update application main loop accordingly
-        #ifdef PLP_DEBUG_BUILD
+        //#ifdef PLP_DEBUG_BUILD
             m_VulkanLayer = std::make_shared<Poulpe::VulkanLayer>();
             m_VulkanLayer->AddRenderManager(m_RenderManager.get());
             m_VulkanLayer->Init(m_Window.get(), m_CommandQueue);
-        #endif
+        //#endif
     }
 
     void Application::Run()
@@ -69,7 +69,7 @@ namespace Poulpe
   
         std::chrono::milliseconds timeStep{0};
 
-        PLP_DEBUG("Loaded scene in {}", (endRun - m_StartRun).count());//@todo readable in seconds...
+        PLP_WARN("Loaded scene in {}", (endRun - m_StartRun).count());//@todo readable in seconds...
 
         std::mutex mutex;
 
@@ -95,7 +95,7 @@ namespace Poulpe
                 frameCount++;
 
                 if (1.0 < timeStepSum.count()) {
-                    PLP_DEBUG("{} fps", frameCount);
+                    PLP_WARN("{} fps", frameCount);
                     timeStepSum = std::chrono::duration<double>(0.0);
                     frameCount = 0;
                 }
@@ -104,13 +104,8 @@ namespace Poulpe
                 glfwPollEvents();
 
                 m_RenderManager->GetRendererAdapter()->ShouldRecreateSwapChain();
-
                 m_CommandQueue->ExecPreRequest();
-
-                #ifdef PLP_DEBUG_BUILD
-                    m_VulkanLayer->Render(timeStep.count());
-                #endif
-            
+                m_VulkanLayer->Render(timeStep.count());
                 m_RenderManager->RenderScene();
                 m_RenderManager->Draw();
                 m_CommandQueue->ExecPostRequest();
@@ -119,10 +114,7 @@ namespace Poulpe
             }
         }
 
-        #ifdef PLP_DEBUG_BUILD
-            Poulpe::Im::Destroy();
-        #endif
-
+        Poulpe::Im::Destroy();
         m_RenderManager->CleanUp();
 
         glfwDestroyWindow(m_Window.get()->Get());
