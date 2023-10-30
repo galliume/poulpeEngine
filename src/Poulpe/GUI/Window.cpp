@@ -18,9 +18,9 @@ namespace Poulpe
         glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
         //glfwWindowHint(GLFW_CONTEXT_CREATION_API, GLFW_NATIVE_CONTEXT_API);
         //glfwWindowHint(GLFW_DECORATED, GLFW_FALSE);
-#ifdef PLP_DEBUG_BUILD
+//#ifdef PLP_DEBUG_BUILD
         glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
-#endif
+//#endif
 
         m_Window = glfwCreateWindow(WIDTH, HEIGHT, windowTitle.data(), nullptr, nullptr);
 
