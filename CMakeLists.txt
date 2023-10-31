@@ -137,7 +137,7 @@ target_precompile_headers(${PROJECT_NAME} PRIVATE include/Poulpepch.hpp)
 target_link_libraries(${PROJECT_NAME} PRIVATE ${EXTRA_LIBS} poulpe)
 
 target_include_directories(${PROJECT_NAME} PRIVATE "${PROJECT_BINARY_DIR}")
-target_include_directories(${PROJECT_NAME} PRIVATE
+target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE
                           "${PROJECT_SOURCE_DIR}/vendor/glfw"
                           "${PROJECT_SOURCE_DIR}/vendor/glm"
                           "${PROJECT_SOURCE_DIR}/vendor/volk"
