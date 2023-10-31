@@ -29,9 +29,9 @@ namespace Poulpe
             VkDescriptorPool descriptorPool
         );
         void Visit(std::shared_ptr<Entity> entity) override;
-        VkDescriptorSetLayout CreateDescriptorSetLayout(std::shared_ptr<Mesh> mesh);
+        VkDescriptorSetLayout CreateDescriptorSetLayout();
         std::vector<VkDescriptorSet> CreateDescriptorSet(std::shared_ptr<Mesh> mesh, VkDescriptorSetLayout descriptorSetLayout);
-        VkPipelineLayout CreatePipelineLayout(std::shared_ptr<Mesh> mesh, VkDescriptorSetLayout descriptorSetLayout);
+        VkPipelineLayout CreatePipelineLayout(VkDescriptorSetLayout descriptorSetLayout);
         std::vector<VkPipelineShaderStageCreateInfo> GetShaders(std::string const & shaderName);
         VkPipelineVertexInputStateCreateInfo GetVertexBindingDesc(
           VkVertexInputBindingDescription bDesc, std::array<VkVertexInputAttributeDescription, 3> attDesc);

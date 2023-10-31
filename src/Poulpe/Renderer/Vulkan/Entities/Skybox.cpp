@@ -9,13 +9,11 @@ namespace Poulpe
         std::shared_ptr<VulkanAdapter> adapter,
         std::shared_ptr<EntityManager> entityManager,
         std::shared_ptr<ShaderManager> shaderManager,
-        std::shared_ptr<TextureManager> textureManager,
-        VkDescriptorPool descriptorPool) :
+        std::shared_ptr<TextureManager> textureManager) :
         m_Adapter(adapter),
         m_EntityManager(entityManager),
         m_ShaderManager(shaderManager),
-        m_TextureManager(textureManager),
-        m_DescriptorPool(descriptorPool)
+        m_TextureManager(textureManager)
     {
 
     }
@@ -90,9 +88,9 @@ namespace Poulpe
 
         SetPushConstants(mesh);
 
-        VkDescriptorSetLayout descriptorSetLayout = CreateDescriptorSetLayout(mesh);
+        VkDescriptorSetLayout descriptorSetLayout = CreateDescriptorSetLayout();
         VkDescriptorSet desriptorSet = CreateDescriptorSet(mesh, descriptorSetLayout);
-        VkPipelineLayout pipelineLayout = CreatePipelineLayout(mesh, descriptorSetLayout);
+        VkPipelineLayout pipelineLayout = CreatePipelineLayout(descriptorSetLayout);
 
         mesh->m_DescriptorSetLayout = descriptorSetLayout;
         mesh->m_DescriptorSets.emplace_back(desriptorSet);
@@ -118,8 +116,7 @@ namespace Poulpe
         for (uint32_t i = 0; i < mesh->m_UniformBuffers.size(); i++) {
             m_Adapter->Rdr()->UpdateUniformBuffer(
                 mesh->m_UniformBuffers[i],
-                data.m_Ubos,
-                1
+                data.m_Ubos
             );
         }
 
@@ -127,7 +124,7 @@ namespace Poulpe
         mesh->SetIsDirty(false);
     }
 
-    VkDescriptorSetLayout Skybox::CreateDescriptorSetLayout(std::shared_ptr<Mesh> mesh)
+    VkDescriptorSetLayout Skybox::CreateDescriptorSetLayout()
     {
         VkDescriptorSetLayoutBinding uboLayoutBinding{};
         uboLayoutBinding.binding = 0;
@@ -145,9 +142,7 @@ namespace Poulpe
 
         std::vector<VkDescriptorSetLayoutBinding> skyBindings = { uboLayoutBinding, skySamplerLayoutBinding };
 
-        VkDescriptorSetLayout desriptorSetLayout = m_Adapter->Rdr()->CreateDescriptorSetLayout(
-            skyBindings, VK_DESCRIPTOR_SET_LAYOUT_CREATE_UPDATE_AFTER_BIND_POOL_BIT
-        );
+        VkDescriptorSetLayout desriptorSetLayout = m_Adapter->Rdr()->CreateDescriptorSetLayout(skyBindings);
 
         return desriptorSetLayout;
     }
@@ -172,7 +167,7 @@ namespace Poulpe
         return descriptorSet;
     }
 
-    VkPipelineLayout Skybox::CreatePipelineLayout(std::shared_ptr<Mesh> mesh, VkDescriptorSetLayout descriptorSetLayout)
+    VkPipelineLayout Skybox::CreatePipelineLayout(VkDescriptorSetLayout descriptorSetLayout)
     {
         std::vector<VkDescriptorSetLayout> dSetLayout = { descriptorSetLayout };
 
@@ -183,7 +178,7 @@ namespace Poulpe
         vkPc.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
         vkPcs.emplace_back(vkPc);
 
-        VkPipelineLayout pipelineLayout = m_Adapter->Rdr()->CreatePipelineLayout(mesh->m_DescriptorSets, dSetLayout, vkPcs);
+        VkPipelineLayout pipelineLayout = m_Adapter->Rdr()->CreatePipelineLayout(dSetLayout, vkPcs);
 
         return pipelineLayout;
     }
@@ -220,7 +215,7 @@ namespace Poulpe
         pushConstants.lightPos = glm::vec4(m_Adapter->GetLights().at(0), 0.f);
         pushConstants.view = m_Adapter->GetCamera()->LookAt();
 
-        mesh->ApplyPushConstants = [=, &pushConstants, &mesh](VkCommandBuffer& commandBuffer, VkPipelineLayout& pipelineLayout, std::shared_ptr<VulkanAdapter> adapter, const Data& data) {
+        mesh->ApplyPushConstants = [=, &pushConstants](VkCommandBuffer& commandBuffer, VkPipelineLayout& pipelineLayout, std::shared_ptr<VulkanAdapter> adapter,  [[maybe_unused]] const Data& data) {
             pushConstants.data = glm::vec4(0.f, Poulpe::VulkanAdapter::s_AmbiantLight.load(), Poulpe::VulkanAdapter::s_FogDensity.load(), 0.f);
             pushConstants.cameraPos = adapter->GetCamera()->GetPos();
             pushConstants.fogColor = glm::vec4({ Poulpe::VulkanAdapter::s_FogColor[0].load(), Poulpe::VulkanAdapter::s_FogColor[1].load(), Poulpe::VulkanAdapter::s_FogColor[2].load(), 0.f });

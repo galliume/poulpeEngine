@@ -5,6 +5,8 @@
 #include "Poulpe/Core/IObserver.hpp"
 #include "Poulpe/GUI/ImGui/Im.hpp"
 
+#include <future>
+
 namespace Poulpe
 {
     class VulkanAdapter : public IRendererAdapter, public std::enable_shared_from_this<VulkanAdapter>
@@ -13,7 +15,7 @@ namespace Poulpe
     public:
 
         explicit VulkanAdapter(std::shared_ptr<Window> window);
-        ~VulkanAdapter() = default;
+        virtual ~VulkanAdapter();
 
         virtual void Init() override;
         virtual void AddCamera(std::shared_ptr<Camera> camera) override { m_Camera = camera; }
@@ -120,7 +122,7 @@ namespace Poulpe
         std::vector<VkImageView>m_DepthImageViews = {};
         std::vector<VkImage>m_DepthImages = {};
         glm::mat4 m_Perspective;
-        glm::mat4 m_lastLookAt;
+        //glm::mat4 m_lastLookAt;
         float m_Deltatime = 0.0f;
         std::vector<glm::vec3>m_LightsPos;
         std::vector<VkDescriptorPool>m_DescriptorPools;
@@ -131,14 +133,14 @@ namespace Poulpe
 
         std::vector<std::shared_ptr<Entity>>* m_Entities;
         std::shared_ptr<Mesh> m_SkyboxMesh = nullptr;
-        std::vector<std::shared_ptr<Entity>>* m_BoundingBox;
+        //std::vector<std::shared_ptr<Entity>>* m_BoundingBox;
         std::vector<VkCommandBuffer> m_CmdToSubmit;
         std::vector<VkCommandBuffer> m_moreCmdToSubmit;
 
         bool m_DrawBbox = false;
         std::vector<std::future<void>> m_CmdLists{};
         std::vector<std::future<void>> m_BufferedCmdLists{};
-        uint32_t m_BufferedIndex = 0;
+        //uint32_t m_BufferedIndex = 0;
 
         //thread signaling
         std::mutex m_MutexRenderScene;
@@ -157,7 +159,7 @@ namespace Poulpe
         std::vector<VkSampler> m_SwapChainDepthSamplers{};
 
         std::vector<IObserver*> m_Observers{};
-        VkCommandBuffer m_CopyCmd;
-        VkCommandPool m_CopyCommandPool;
+        //VkCommandBuffer m_CopyCmd;
+        //VkCommandPool m_CopyCommandPool;
     };
 }

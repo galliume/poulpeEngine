@@ -1,6 +1,8 @@
 #include "PoulpeEngineConfig.h"
 #include "Poulpe/Application.hpp"
 
+#include <iostream>
+
 #define MINIAUDIO_IMPLEMENTATION
 #include "miniaudio.h"
 

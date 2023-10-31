@@ -1,8 +1,8 @@
 #include "TinyObjLoader.hpp"
 
 #define TINYOBJLOADER_IMPLEMENTATION
-#define TINYOBJLOADER_USE_MAPBOX_EARCUT
-#include "mapbox/earcut.hpp"
+//#define TINYOBJLOADER_USE_MAPBOX_EARCUT
+//#include "mapbox/earcut.hpp"
 #include "tiny_obj_loader.h"
 #include <filesystem>
 
@@ -31,12 +31,12 @@ namespace Poulpe
 
         auto& attrib = reader.GetAttrib();
         auto& shapes = reader.GetShapes();
-        auto& materials = reader.GetMaterials();
+        //auto& materials = reader.GetMaterials();
 
         std::unordered_map<Poulpe::Vertex, uint32_t> uniqueVertices{};
         uniqueVertices.clear();
 
-        glm::vec3 pos = glm::vec3(0.0f);
+        //glm::vec3 pos = glm::vec3(0.0f);
 
         for (uint32_t s = 0; s < shapes.size(); s++) {
 

@@ -24,6 +24,9 @@ namespace Poulpe
     class VulkanLayer : public ILayer, public IObserver, public std::enable_shared_from_this<VulkanLayer>
     {
     public:
+
+        virtual ~VulkanLayer() = default;
+
         virtual void Init(Window* window, std::shared_ptr<CommandQueue> cmdQueue) override;
         virtual void Render(double timeStep) override;
         virtual void AddRenderManager(RenderManager* renderManager) override;
@@ -63,11 +66,9 @@ namespace Poulpe
         void LoadSkybox();
         void OnKeyPressed();
         void UpdateRenderMode(VkPolygonMode mode);
-        void UpdateSkybox();
-        void UpdateLevel();
 
     private:
-      VkDescriptorSet GetImgDesc();
+      [[nodiscard]] VkDescriptorSet GetImgDesc();
 
     private:
         bool m_VSync{ false };

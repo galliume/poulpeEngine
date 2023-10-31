@@ -1,5 +1,7 @@
 #include "TextureManager.hpp"
 
+#include <filesystem>
+
 namespace Poulpe
 {
     std::function<void()> TextureManager::Load(std::condition_variable& cv)
@@ -107,7 +109,8 @@ namespace Poulpe
 
         VkImage textureImage = nullptr;
         uint32_t mipLevels = static_cast<uint32_t>(std::floor(std::log2(std::max(texWidth, texHeight)))) + 1;
-        if (mipLevels > MAX_MIPLEVELS) mipLevels = MAX_MIPLEVELS;
+        if (std::cmp_greater(mipLevels, MAX_MIPLEVELS)) mipLevels = MAX_MIPLEVELS;
+
         VkCommandPool commandPool = m_Renderer->Rdr()->CreateCommandPool();
         VkCommandBuffer commandBuffer = m_Renderer->Rdr()->AllocateCommandBuffers(commandPool)[0];
 

@@ -57,9 +57,9 @@ namespace Poulpe
           mesh->GetData()->m_Ubos[i].proj = m_Adapter->GetPerspective();
         }
 
-        VkDescriptorSetLayout descriptorSetLayout = CreateDescriptorSetLayout(mesh);
+        VkDescriptorSetLayout descriptorSetLayout = CreateDescriptorSetLayout();
         std::vector<VkDescriptorSet> desriptorSets = CreateDescriptorSet(mesh, descriptorSetLayout);
-        VkPipelineLayout pipelineLayout = CreatePipelineLayout(mesh, descriptorSetLayout);
+        VkPipelineLayout pipelineLayout = CreatePipelineLayout(descriptorSetLayout);
 
         m_Adapter->GetDescriptorSetLayouts()->emplace_back(descriptorSetLayout);
 
@@ -76,8 +76,7 @@ namespace Poulpe
 
           m_Adapter->Rdr()->UpdateUniformBuffer(
             mesh->m_UniformBuffers[i],
-            ubos,
-            ubos.size()
+            ubos
           );
 
           min = max;
@@ -162,9 +161,9 @@ namespace Poulpe
         box->mesh->SetShaderName("bbox");
         box->mesh->SetData(data);
 
-        VkDescriptorSetLayout descriptorSetLayout = CreateDescriptorSetLayout(box->mesh);
+        VkDescriptorSetLayout descriptorSetLayout = CreateDescriptorSetLayout();
         std::vector<VkDescriptorSet> desriptorSets = CreateDescriptorSet(box->mesh, descriptorSetLayout);
-        VkPipelineLayout pipelineLayout = CreatePipelineLayout(mesh, descriptorSetLayout);
+        VkPipelineLayout pipelineLayout = CreatePipelineLayout(descriptorSetLayout);
 
         box->mesh->m_DescriptorSetLayout = descriptorSetLayout;
         box->mesh->m_DescriptorSets = desriptorSets;
@@ -191,13 +190,12 @@ namespace Poulpe
         for (uint32_t i = 0; i < box->mesh->m_UniformBuffers.size(); i++) {
             m_Adapter->Rdr()->UpdateUniformBuffer(
                 box->mesh->m_UniformBuffers[i],
-                box->mesh->GetData()->m_Ubos,
-                box->mesh->GetData()->m_Ubos.size()
+                box->mesh->GetData()->m_Ubos
             );
         }
     }
 
-    VkDescriptorSetLayout Basic::CreateDescriptorSetLayout(std::shared_ptr<Mesh> mesh)
+    VkDescriptorSetLayout Basic::CreateDescriptorSetLayout()
     {
       VkDescriptorSetLayoutBinding uboLayoutBinding{};
       uboLayoutBinding.binding = 0;
@@ -215,9 +213,7 @@ namespace Poulpe
 
       std::vector<VkDescriptorSetLayoutBinding> bindings = { uboLayoutBinding, samplerLayoutBinding };
 
-      VkDescriptorSetLayout desriptorSetLayout = m_Adapter->Rdr()->CreateDescriptorSetLayout(
-        bindings, VK_DESCRIPTOR_SET_LAYOUT_CREATE_UPDATE_AFTER_BIND_POOL_BIT
-      );
+      VkDescriptorSetLayout desriptorSetLayout = m_Adapter->Rdr()->CreateDescriptorSetLayout(bindings);
 
       return desriptorSetLayout;
     }
@@ -253,7 +249,7 @@ namespace Poulpe
       return descSets;
     }
 
-    VkPipelineLayout Basic::CreatePipelineLayout(std::shared_ptr<Mesh> mesh, VkDescriptorSetLayout descriptorSetLayout)
+    VkPipelineLayout Basic::CreatePipelineLayout(VkDescriptorSetLayout descriptorSetLayout)
     {
       std::vector<VkDescriptorSetLayout> dSetLayout = { descriptorSetLayout };
 
@@ -263,7 +259,7 @@ namespace Poulpe
       vkPc.size = sizeof(constants);
       vkPc.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
       vkPcs.emplace_back(vkPc);
-      VkPipelineLayout pipelineLayout = m_Adapter->Rdr()->CreatePipelineLayout(mesh->m_DescriptorSets, dSetLayout, vkPcs);
+      VkPipelineLayout pipelineLayout = m_Adapter->Rdr()->CreatePipelineLayout(dSetLayout, vkPcs);
 
       return pipelineLayout;
     }
@@ -300,7 +296,7 @@ namespace Poulpe
       pushConstants.ambiantLight = Poulpe::VulkanAdapter::s_AmbiantLight.load();
       pushConstants.fogDensity = Poulpe::VulkanAdapter::s_FogDensity.load();
 
-      mesh->ApplyPushConstants = [=, &pushConstants, &mesh](VkCommandBuffer& commandBuffer, VkPipelineLayout& pipelineLayout, std::shared_ptr<VulkanAdapter> adapter, const Data& data) {
+      mesh->ApplyPushConstants = [=, &pushConstants](VkCommandBuffer& commandBuffer, VkPipelineLayout& pipelineLayout, std::shared_ptr<VulkanAdapter> adapter, const Data& data) {
         pushConstants.data = glm::vec4(static_cast<float>(data.m_TextureIndex), Poulpe::VulkanAdapter::s_AmbiantLight.load(), Poulpe::VulkanAdapter::s_FogDensity.load(), 0.f);
         pushConstants.cameraPos = adapter->GetCamera()->GetPos();
         pushConstants.fogColor = glm::vec4({ Poulpe::VulkanAdapter::s_FogColor[0].load(), Poulpe::VulkanAdapter::s_FogColor[1].load(), Poulpe::VulkanAdapter::s_FogColor[2].load(), 0.f });

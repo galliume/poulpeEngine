@@ -9,7 +9,7 @@ namespace Poulpe
     {
     public:
         TextureManager() = default;
-        ~TextureManager() = default;
+        virtual ~TextureManager() = default;
 
         void AddConfig(nlohmann::json config) override { m_TextureConfig = config; }
         inline std::unordered_map<std::string, Texture> GetTextures() override { return m_Textures; }

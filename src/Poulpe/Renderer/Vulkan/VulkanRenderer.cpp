@@ -1,5 +1,8 @@
 #include "VulkanRenderer.hpp"
 
+#include <iostream>
+#include <filesystem>
+#include <set>
 #include <volk.h>
 
 namespace Poulpe {
@@ -10,9 +13,7 @@ namespace Poulpe {
 
         if (func != nullptr) {
             return func(instance, pCreateInfo, pAllocator, pCallback);
-        }
-        else {
-
+        } else {
             std::cerr << "Debug utils extension not present";
 
             return VK_ERROR_EXTENSION_NOT_PRESENT;
@@ -31,7 +32,7 @@ namespace Poulpe {
         VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
         VkDebugUtilsMessageTypeFlagsEXT messageType,
         const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
-        void* pUserData)
+         [[maybe_unused]] void* pUserData)
     {
 
         spdlog::set_pattern("%^[%T] %n: %v%$");
@@ -87,7 +88,7 @@ namespace Poulpe {
         fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
         fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
         fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
-        VkFence fence;
+        //VkFence fence;
 
         vkCreateFence(m_Device, &fenceInfo, nullptr, &m_FenceAcquireImage);
         vkCreateFence(m_Device, &fenceInfo, nullptr, &m_FenceSubmit);
@@ -106,7 +107,10 @@ namespace Poulpe {
     {
         if (m_apiVersion.empty()) {
             uint32_t instanceVersion = VK_API_VERSION_1_3;
-            PFN_vkEnumerateInstanceVersion(vkGetInstanceProcAddr(nullptr, "vkEnumerateInstanceVersion"));
+
+            //@todo fix unused ?
+            auto tmp = PFN_vkEnumerateInstanceVersion(vkGetInstanceProcAddr(nullptr, "vkEnumerateInstanceVersion"));
+            (void)tmp;
 
             if (vkEnumerateInstanceVersion) {
                 vkEnumerateInstanceVersion(&instanceVersion);
@@ -277,8 +281,11 @@ namespace Poulpe {
 
                 VkPhysicalDeviceProperties deviceProperties;
                 VkPhysicalDeviceFeatures deviceFeatures;
-                VkPhysicalDeviceMaintenance3Properties deviceMaintenance3Properties{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MAINTENANCE_3_PROPERTIES };
-                VkPhysicalDeviceProperties2 deviceProperties2{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2 };
+                VkPhysicalDeviceMaintenance3Properties deviceMaintenance3Properties{};
+                deviceMaintenance3Properties.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MAINTENANCE_3_PROPERTIES;
+            
+                VkPhysicalDeviceProperties2 deviceProperties2{};
+                deviceProperties2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2;
                 deviceProperties2.pNext = &deviceMaintenance3Properties;
 
                 vkGetPhysicalDeviceProperties(device, &deviceProperties);
@@ -399,7 +406,8 @@ namespace Poulpe {
         descriptorIndexing.descriptorBindingVariableDescriptorCount = VK_TRUE;
         descriptorIndexing.descriptorBindingPartiallyBound = VK_TRUE;
 
-        VkPhysicalDeviceVulkan13Features vkFeatures13 = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES };
+        VkPhysicalDeviceVulkan13Features vkFeatures13 = {};
+        vkFeatures13.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES;
         vkFeatures13.dynamicRendering = VK_TRUE;
         vkFeatures13.synchronization2 = VK_TRUE;
         vkFeatures13.pipelineCreationCacheControl = VK_TRUE;
@@ -424,7 +432,7 @@ namespace Poulpe {
             return;
         }
 
-        for (int i = 0; i < m_queueCount; i++) {
+        for (uint32_t i = 0; i < m_queueCount; i++) {
             m_GraphicsQueues[i] = VK_NULL_HANDLE;
             m_PresentQueues[i] = VK_NULL_HANDLE;
             vkGetDeviceQueue(m_Device, indices.graphicsFamily.value(), 0, &m_GraphicsQueues[i]);
@@ -577,7 +585,7 @@ namespace Poulpe {
         return swapChain;
     }
 
-    bool VulkanRenderer::SouldResizeSwapChain(VkSwapchainKHR swapChain)
+    bool VulkanRenderer::SouldResizeSwapChain()
     {
         VkExtent2D currentExtent = GetSwapChainExtent();
 
@@ -650,7 +658,7 @@ namespace Poulpe {
         return swapChainImageView;
     }
 
-    VkDescriptorSetLayout VulkanRenderer::CreateDescriptorSetLayout(const std::vector<VkDescriptorSetLayoutBinding>& pBindings, const VkDescriptorSetLayoutCreateFlagBits& flags)
+    VkDescriptorSetLayout VulkanRenderer::CreateDescriptorSetLayout(const std::vector<VkDescriptorSetLayoutBinding>& pBindings)
     {
         VkDescriptorSetLayout descriptorSetLayout;
 
@@ -668,7 +676,7 @@ namespace Poulpe {
         return descriptorSetLayout;
     }
 
-    VkPipelineLayout VulkanRenderer::CreatePipelineLayout(const std::vector<VkDescriptorSet>& descriptorSets, const std::vector<VkDescriptorSetLayout>& descriptorSetLayouts, const std::vector<VkPushConstantRange>& pushConstants)
+    VkPipelineLayout VulkanRenderer::CreatePipelineLayout(const std::vector<VkDescriptorSetLayout>& descriptorSetLayouts, const std::vector<VkPushConstantRange>& pushConstants)
     {
         VkPipelineLayout graphicsPipelineLayout = VK_NULL_HANDLE;
 
@@ -811,7 +819,8 @@ namespace Poulpe {
         VkFormat format = GetSwapChainImageFormat();
         VkFormat depthFormat = FindDepthFormat();
 
-        VkPipelineRenderingCreateInfoKHR renderingCreateInfo = { VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO_KHR };
+        VkPipelineRenderingCreateInfoKHR renderingCreateInfo = { };
+        renderingCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO_KHR;
         renderingCreateInfo.colorAttachmentCount = 1;
         renderingCreateInfo.pColorAttachmentFormats = &format;
         renderingCreateInfo.depthAttachmentFormat = depthFormat; //(VK_FORMAT_D32_SFLOAT) 
@@ -902,7 +911,8 @@ namespace Poulpe {
             }
 
             VkPipelineCache pipelineCache;
-            VkPipelineCacheCreateInfo pCreateInfo = { VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO };
+            VkPipelineCacheCreateInfo pCreateInfo = { };
+            pCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO;
             pCreateInfo.initialDataSize = cacheFileSize;
             pCreateInfo.pInitialData = &cacheFileData;
 
@@ -1299,24 +1309,36 @@ namespace Poulpe {
 
     void VulkanRenderer::BeginRendering(VkCommandBuffer commandBuffer, const VkImageView& colorImageView, const VkImageView& depthImageView, const VkAttachmentLoadOp loadOp, const VkAttachmentStoreOp storeOp)
     {
-        VkClearColorValue colorClear = { 27.f / 255.f, 37.f / 255.f, 54.f / 255.f, 0.0f };
+        const auto r = 27.f / 255.f;
+        const auto g = 37.f / 255.f;
+        const auto b = 54.f / 255.f;
+
+        VkClearColorValue colorClear = {};
+        colorClear.float32[0] = r;
+        colorClear.float32[1] = g;
+        colorClear.float32[2] = b;
+        colorClear.float32[3] = 0;
+
         VkClearDepthStencilValue depthStencil = { 1.f, 0 };
 
-        VkRenderingAttachmentInfo colorAttachment{ VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO };
+        VkRenderingAttachmentInfo colorAttachment{ };
+        colorAttachment.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
         colorAttachment.imageView = colorImageView;
         colorAttachment.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
         colorAttachment.loadOp = loadOp;
         colorAttachment.storeOp = storeOp;
         colorAttachment.clearValue.color = colorClear;
         
-        VkRenderingAttachmentInfo depthAttachment{ VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO };
+        VkRenderingAttachmentInfo depthAttachment{ };
+        depthAttachment.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
         depthAttachment.imageView = depthImageView;
         depthAttachment.imageLayout = VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL;
         depthAttachment.loadOp = loadOp;
         depthAttachment.storeOp = storeOp;
         depthAttachment.clearValue.depthStencil = depthStencil;
 
-        VkRenderingInfo renderingInfo{ VK_STRUCTURE_TYPE_RENDERING_INFO };
+        VkRenderingInfo renderingInfo{ };
+        renderingInfo.sType = VK_STRUCTURE_TYPE_RENDERING_INFO;
         renderingInfo.renderArea.extent = m_SwapChainExtent;
         renderingInfo.layerCount = 1;
         renderingInfo.colorAttachmentCount = 1;
@@ -1359,10 +1381,10 @@ namespace Poulpe {
         return result;
     }
 
-    VkResult VulkanRenderer::QueueSubmit(uint32_t imageIndex, std::vector<VkCommandBuffer> commandBuffers, std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>> semaphores, int queueIndex)
+    VkResult VulkanRenderer::QueueSubmit(uint32_t imageIndex, std::vector<VkCommandBuffer> commandBuffers, int queueIndex)
     {
-        std::vector<VkSemaphore>& imageAvailableSemaphores = semaphores.first;
-        std::vector<VkSemaphore>& renderFinishedSemaphores = semaphores.second;
+        /*std::vector<VkSemaphore>& imageAvailableSemaphores = semaphores.first;
+        std::vector<VkSemaphore>& renderFinishedSemaphores = semaphores.second;*/
 
         m_ImagesInFlight[imageIndex] = m_ImagesInFlight[m_CurrentFrame];
 
@@ -1371,7 +1393,7 @@ namespace Poulpe {
         VkSubmitInfo submitInfo{};
         submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 
-        VkSemaphore waitSemaphores[] = { imageAvailableSemaphores[m_CurrentFrame] };
+        //VkSemaphore waitSemaphores[] = { imageAvailableSemaphores[m_CurrentFrame] };
 
         VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
         submitInfo.waitSemaphoreCount = 0;
@@ -1380,7 +1402,7 @@ namespace Poulpe {
         submitInfo.commandBufferCount = commandBuffers.size();
         submitInfo.pCommandBuffers = commandBuffers.data();
 
-        VkSemaphore signalSemaphores[] = { renderFinishedSemaphores[m_CurrentFrame] };
+        //VkSemaphore signalSemaphores[] = { renderFinishedSemaphores[m_CurrentFrame] };
 
         submitInfo.signalSemaphoreCount = 0;
         //submitInfo.pSignalSemaphores = signalSemaphores;
@@ -1457,7 +1479,7 @@ namespace Poulpe {
         vkResetCommandPool(m_Device, commandPool, 0);
     }
 
-    void VulkanRenderer::Draw(VkCommandBuffer commandBuffer, VkDescriptorSet descriptorSet, Mesh* mesh, Data data, uint32_t uboCount, uint32_t frameIndex, bool drawIndexed, uint32_t index)
+    void VulkanRenderer::Draw(VkCommandBuffer commandBuffer, VkDescriptorSet descriptorSet, Mesh* mesh, Data data, uint32_t uboCount, bool drawIndexed, uint32_t index)
     {
         {
             //std::lock_guard<std::mutex> guard(m_MutexDraw);
@@ -1614,10 +1636,10 @@ namespace Poulpe {
 
     Buffer VulkanRenderer::CreateVertex2DBuffer(const VkCommandPool& commandPool, const std::vector<Poulpe::Vertex2D>& vertices)
     {
-        std::pair<VkBuffer, VkDeviceMemory> vertexBuffer{};
+        //std::pair<VkBuffer, VkDeviceMemory> vertexBuffer{};
         VkDeviceSize bufferSize = sizeof(Vertex2D) * vertices.size();
-        VkBuffer stagingBuffer;
-        VkDeviceMemory stagingBufferMemory;
+        VkBuffer stagingBuffer{};
+        VkDeviceMemory stagingBufferMemory{};
 
         CreateBuffer(
             bufferSize, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
@@ -1719,7 +1741,7 @@ namespace Poulpe {
         return uniformBuffer;
     }
 
-    void VulkanRenderer::UpdateUniformBuffer(Buffer& buffer, std::vector<UniformBufferObject> uniformBufferObjects, uint32_t uniformBuffersCount)
+    void VulkanRenderer::UpdateUniformBuffer(Buffer& buffer, std::vector<UniformBufferObject> uniformBufferObjects)
     {
         {
             buffer.memory->Lock();
@@ -1792,7 +1814,8 @@ namespace Poulpe {
 
     VkImageMemoryBarrier VulkanRenderer::SetupImageMemoryBarrier(VkImage image, VkAccessFlags srcAccessMask, VkAccessFlags dstAccessMask, VkImageLayout oldLayout, VkImageLayout newLayout, uint32_t mipLevels, VkImageAspectFlags aspectMask)
     {
-        VkImageMemoryBarrier result = { VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER };
+        VkImageMemoryBarrier result = { };
+        result.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
         result.srcAccessMask = srcAccessMask;
         result.dstAccessMask = dstAccessMask;
         result.oldLayout = oldLayout;
@@ -1857,7 +1880,7 @@ namespace Poulpe {
         deviceMemory->BindImageToMemory(image, size);
     }
 
-    void VulkanRenderer::CreateSkyboxImage(uint32_t width, uint32_t height, uint32_t mipLevels, VkSampleCountFlagBits numSamples, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image)
+    void VulkanRenderer::CreateSkyboxImage(uint32_t width, uint32_t height, VkSampleCountFlagBits numSamples, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image)
     {
         VkImageCreateInfo imageInfo{};
         imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
@@ -1913,7 +1936,7 @@ namespace Poulpe {
         );
 
         AddPipelineBarriers(commandBuffer, { renderBarrier }, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_DEPENDENCY_BY_REGION_BIT);
-        CopyBufferToImage(commandBuffer, buffer, textureImage, static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight), mipLevels, offset);
+        CopyBufferToImage(commandBuffer, buffer, textureImage, static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight), mipLevels);
         GenerateMipmaps(commandBuffer, format, textureImage, texWidth, texHeight, mipLevels);
         EndCommandBuffer(commandBuffer);
         QueueSubmit(commandBuffer);
@@ -1941,7 +1964,7 @@ namespace Poulpe {
         }
 
         vkUnmapMemory(m_Device, *deviceMemory->GetMemory());
-        CreateSkyboxImage(texWidth, texHeight, mipLevels, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, textureImage);
+        CreateSkyboxImage(texWidth, texHeight, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, textureImage);
         VkImageMemoryBarrier renderBarrier = SetupImageMemoryBarrier(
             textureImage, 0, VK_ACCESS_TRANSFER_WRITE_BIT, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL
         );
@@ -1951,7 +1974,7 @@ namespace Poulpe {
         renderBarrier.subresourceRange.levelCount = mipLevels;
 
         AddPipelineBarriers(commandBuffer, { renderBarrier }, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_DEPENDENCY_BY_REGION_BIT);
-        CopyBufferToImageSkybox(commandBuffer, buffer, textureImage, texWidth, texHeight, skyboxPixels, mipLevels, imageSize/6, offset);
+        CopyBufferToImageSkybox(commandBuffer, buffer, textureImage, texWidth, texHeight, skyboxPixels, mipLevels, imageSize/6);
         GenerateMipmaps(commandBuffer, format, textureImage, texWidth, texHeight, mipLevels, 6);
         EndCommandBuffer(commandBuffer);
         QueueSubmit(commandBuffer);
@@ -2053,7 +2076,7 @@ namespace Poulpe {
         );
     }
 
-    void VulkanRenderer::CopyBufferToImage(VkCommandBuffer& commandBuffer, VkBuffer& buffer, VkImage& image, uint32_t width, uint32_t height, uint32_t mipLevels, uint32_t bufferOffset)
+    void VulkanRenderer::CopyBufferToImage(VkCommandBuffer& commandBuffer, VkBuffer& buffer, VkImage& image, uint32_t width, uint32_t height, [[maybe_unused]] uint32_t mipLevels)
     {
         VkBufferImageCopy region{};
         region.bufferOffset = 0;
@@ -2071,7 +2094,7 @@ namespace Poulpe {
         vkCmdCopyBufferToImage(commandBuffer, buffer, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
     }
 
-    void VulkanRenderer::CopyBufferToImageSkybox(VkCommandBuffer& commandBuffer, VkBuffer& buffer, VkImage& image, uint32_t width, uint32_t height, std::vector<stbi_uc*>skyboxPixels, uint32_t mipLevels, uint32_t layerSize, uint32_t bufferOffset)
+    void VulkanRenderer::CopyBufferToImageSkybox(VkCommandBuffer& commandBuffer, VkBuffer& buffer, VkImage& image, uint32_t width, uint32_t height, std::vector<stbi_uc*>skyboxPixels, uint32_t mipLevels, uint32_t layerSize)
     {
         std::vector<VkBufferImageCopy> bufferCopyRegions;
 
@@ -2098,9 +2121,9 @@ namespace Poulpe {
 
     VkImageView VulkanRenderer::CreateDepthResources(VkCommandBuffer commandBuffer)
     {
-        VkImage depthImage;
-        VkDeviceMemory depthImageMemory;
-        VkImageView depthImageView;
+        VkImage depthImage{};
+        //VkDeviceMemory depthImageMemory;
+        VkImageView depthImageView{};
         VkFormat depthFormat = FindDepthFormat();
 
         CreateImage(m_SwapChainExtent.width, m_SwapChainExtent.height, 1, VK_SAMPLE_COUNT_1_BIT, depthFormat, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, depthImage);
@@ -2247,10 +2270,10 @@ namespace Poulpe {
 
     void VulkanRenderer::DestroyFences()
     {
-        for (int i = 0; i < m_InFlightFences.size(); ++i) {
+        for (size_t i = 0; i < m_InFlightFences.size(); ++i) {
             vkDestroyFence(m_Device, m_InFlightFences[i], nullptr);
         }
-        for (int i = 0; i < m_ImagesInFlight.size(); ++i) {
+        for (size_t i = 0; i < m_ImagesInFlight.size(); ++i) {
             vkDestroyFence(m_Device, m_ImagesInFlight[i], nullptr);
         }
     }
