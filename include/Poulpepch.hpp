@@ -1,23 +1,5 @@
 #define NOMINMAX
 
-#include <algorithm>
-#include <array>
-#include <chrono>
-#include <cstddef>
-#include <cstdint> 
-#include <filesystem>
-#include <fstream>
-#include <future>
-#include <iostream>
-#include <list>
-#include <map>
-#include <mutex>
-#include <numeric>
-#include <optional>
-#include <set>
-#include <string>
-#include <unordered_map>
-
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEFAULT_ALIGNED_GENTYPES
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
@@ -33,3 +15,5 @@
 
 #include "Poulpe/Core/Log.hpp"
 #include "Poulpe/Core/Locator.hpp"
+
+#include <imgui.h>

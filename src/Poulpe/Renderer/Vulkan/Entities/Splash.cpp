@@ -94,9 +94,7 @@ namespace Poulpe
 
         std::vector<VkDescriptorSetLayoutBinding> bindings = { uboLayoutBinding, samplerLayoutBinding };
 
-        VkDescriptorSetLayout desriptorSetLayout = m_Adapter->Rdr()->CreateDescriptorSetLayout(
-            bindings, VK_DESCRIPTOR_SET_LAYOUT_CREATE_UPDATE_AFTER_BIND_POOL_BIT
-        );
+        VkDescriptorSetLayout desriptorSetLayout = m_Adapter->Rdr()->CreateDescriptorSetLayout(bindings);
 
         m_Adapter->GetDescriptorSetLayouts()->emplace_back(desriptorSetLayout);
 
@@ -107,7 +105,7 @@ namespace Poulpe
         Splash::pc pc;
         pc.textureID = 0;
 
-        mesh->ApplyPushConstants = [&pc, mesh](VkCommandBuffer& commandBuffer, VkPipelineLayout& pipelineLayout, std::shared_ptr<VulkanAdapter> adapter, Data& data) {
+        mesh->ApplyPushConstants = [&pc, mesh](VkCommandBuffer& commandBuffer, VkPipelineLayout& pipelineLayout, [[maybe_unused]] std::shared_ptr<VulkanAdapter> adapter, [[maybe_unused]] Data& data) {
             pc.textureID = mesh->GetNextSpriteIndex();
             vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(Splash::pc), &pc);
         };
@@ -122,7 +120,7 @@ namespace Poulpe
 
         std::vector<VkDescriptorSetLayout>dSetLayout = { desriptorSetLayout };
 
-        mesh->m_PipelineLayout = m_Adapter->Rdr()->CreatePipelineLayout(mesh->m_DescriptorSets, dSetLayout, vkPcs);
+        mesh->m_PipelineLayout = m_Adapter->Rdr()->CreatePipelineLayout(dSetLayout, vkPcs);
 
         std::vector<VkPipelineShaderStageCreateInfo>shadersStageInfos;
 
@@ -169,8 +167,7 @@ namespace Poulpe
         for (uint32_t i = 0; i < mesh->m_UniformBuffers.size(); i++) {
             m_Adapter->Rdr()->UpdateUniformBuffer(
                 mesh->m_UniformBuffers[i],
-                data.m_Ubos,
-                data.m_Ubos.size()
+                data.m_Ubos
             );
         }
         

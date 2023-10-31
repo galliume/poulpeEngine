@@ -30,7 +30,6 @@ namespace Poulpe
         fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
         fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
         fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
-        m_Fence;
 
         vkCreateFence(m_RenderManager->GetRendererAdapter()->Rdr()->GetDevice(), &fenceInfo, nullptr, &m_Fence);
         m_ImGuiImageIndex = 0;
@@ -60,10 +59,6 @@ namespace Poulpe
                 m_ImgDesc = std::move(GetImgDesc());
                 m_ImgDescDone = true;
             }
-
-            //m_DepthImage = m_RenderManager->GetRendererAdapter()->GetImguiDepthImage();
-            //VkDescriptorSet depthImgDset = ImGui_ImplVulkan_AddTexture(m_DepthImage.first, m_DepthImage.second, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-            //ImGui::Image(depthImgDset, ImVec2(my_tex_w, my_tex_h), uv_min, uv_max, tint_col, border_col);
         }
     }
 
@@ -91,7 +86,7 @@ namespace Poulpe
             std::unordered_map<std::string, VkDescriptorSet> tmpTextures{};
 
             const auto& textures = m_RenderManager->GetTextureManager()->GetTextures();
-            const auto& imageViews = m_RenderManager->GetRendererAdapter()->GetSwapChainImageViews();
+            //const auto& imageViews = m_RenderManager->GetRendererAdapter()->GetSwapChainImageViews();
 
             for (const auto& texture : textures) {
             
@@ -156,8 +151,7 @@ namespace Poulpe
                     m_RenderManager->GetRendererAdapter(),
                     m_RenderManager->GetEntityManager(),
                     m_RenderManager->GetShaderManager(),
-                    m_RenderManager->GetTextureManager(),
-                    skybox->m_DescriptorPool));
+                    m_RenderManager->GetTextureManager()));
 
                 auto desriptorSet = entity->CreateDescriptorSet(skybox, skybox->m_DescriptorSetLayout);
                 skybox->m_DescriptorSets.emplace_back(desriptorSet);
@@ -220,7 +214,7 @@ namespace Poulpe
 
     void VulkanLayer::Render(double timeStep)
     {
-        ImGuiIO& io = ImGui::GetIO();
+        //ImGuiIO& io = ImGui::GetIO();
         
         Poulpe::Im::NewFrame();
 
@@ -396,7 +390,7 @@ namespace Poulpe
 
             ImGui::Image(texture.second, ImVec2(my_tex_w, my_tex_h), uv_min, uv_max, tint_col, border_col);
 
-            Poulpe::Im::Text("\t%s", texture.first.c_str());
+            ImGui::Text("\t%s", texture.first.c_str());
 
             if (5 > x) {
                 x++;
@@ -442,7 +436,7 @@ namespace Poulpe
 
             ImGui::Image(entity.second, ImVec2(my_tex_w, my_tex_h), uv_min, uv_max, tint_col, border_col);
 
-            Poulpe::Im::Text("\t%s", entity.first.c_str());
+            ImGui::Text("\t%s", entity.first.c_str());
 
             if (5 > x) {
                 x++;
@@ -457,24 +451,24 @@ namespace Poulpe
 
     void VulkanLayer::DisplayFpsCounter(double timeStep)
     {
-        Poulpe::Im::Text("Frametime : %.2f ms", timeStep);
+        ImGui::Text("Frametime : %.2f ms", timeStep);
     }
 
     void VulkanLayer::DisplayAPI()
     {
-        Poulpe::Im::Text("API Version : %s", m_DebugInfo.apiVersion.c_str());
-        Poulpe::Im::Text("Vendor id : %s", m_DebugInfo.vendorID.c_str());
-        Poulpe::Im::Text("GPU : %s", m_DebugInfo.deviceProperties.deviceName);
+        ImGui::Text("API Version : %s", m_DebugInfo.apiVersion.c_str());
+        ImGui::Text("Vendor id : %s", m_DebugInfo.vendorID.c_str());
+        ImGui::Text("GPU : %s", m_DebugInfo.deviceProperties.deviceName);
         ImGui::Separator();
-        Poulpe::Im::Text("%", "Meshes stats");
-        Poulpe::Im::Text("Total mesh loaded %d", m_DebugInfo.totalMeshesLoaded);
-        Poulpe::Im::Text("Total mesh instanced %d", m_DebugInfo.totalMeshesInstanced);
+        ImGui::Text("%s", "Meshes stats");
+        ImGui::Text("Total mesh loaded %d", m_DebugInfo.totalMeshesLoaded);
+        ImGui::Text("Total mesh instanced %d", m_DebugInfo.totalMeshesInstanced);
         ImGui::Separator();
-        Poulpe::Im::Text("Shader count %d", m_DebugInfo.totalShadersLoaded);
+        ImGui::Text("Shader count %d", m_DebugInfo.totalShadersLoaded);
         ImGui::Separator();
-        Poulpe::Im::Text("Texture count %d", m_DebugInfo.textures.size());
+        ImGui::Text("Texture count %llu", m_DebugInfo.textures.size());
         for (auto tex : m_DebugInfo.textures) {
-            Poulpe::Im::Text("\t%s", tex.first.c_str());
+            ImGui::Text("\t%s", tex.first.c_str());
         }
     }
 
@@ -483,7 +477,7 @@ namespace Poulpe
         ImGui::SetNextItemOpen(m_DebugOpen);
         if ((m_DebugOpen = ImGui::CollapsingHeader("Debug")))
         {
-            Poulpe::Im::Text("%s", "Polygon mode"); 
+            ImGui::Text("%s", "Polygon mode"); 
             ImGui::SameLine();
 
             auto pm = Poulpe::VulkanAdapter::s_PolygoneMode.load();
@@ -510,7 +504,7 @@ namespace Poulpe
                 //m_RenderManager->SetDrawBbox(m_ShowBBox);
             }
 
-            Poulpe::Im::Text("FPS limit"); ImGui::SameLine();
+            ImGui::Text("FPS limit"); ImGui::SameLine();
             auto fps = Poulpe::Application::s_UnlockedFPS.load();
             ImGui::RadioButton("30 fps", &fps, 0); ImGui::SameLine();
             ImGui::RadioButton("60 fps", &fps, 1); ImGui::SameLine();
@@ -550,7 +544,7 @@ namespace Poulpe
         ImGui::SetNextItemOpen(m_HUDOpen);
         if ((m_HUDOpen = ImGui::CollapsingHeader("HUD")))
         {
-            Poulpe::Im::Text("Crosshair style");
+            ImGui::Text("Crosshair style");
             ImGui::SameLine();
             auto crossH = Poulpe::VulkanAdapter::s_Crosshair.load();
 
@@ -619,14 +613,14 @@ namespace Poulpe
             std::string state = m_RenderManager->GetAudioManager()->GetState();
             std::string currentAmbientSound = m_RenderManager->GetAudioManager()->GetCurrentAmbientSound();
 
-            Poulpe::Im::Text("%s %s", state.c_str(), currentAmbientSound.c_str());
+            ImGui::Text("%s %s", state.c_str(), currentAmbientSound.c_str());
 
             ImGui::PushItemWidth(-1);
             if (ImGui::BeginListBox("##empty"))
             {
-                for (int n = 0; n < m_AmbientSounds.size(); n++)
+                for (size_t n = 0; n < m_AmbientSounds.size(); ++n)
                 {
-                    const bool is_selected = (m_SoundIndex == n);
+                    const bool is_selected = std::cmp_equal(m_SoundIndex, n);
                     if (ImGui::Selectable(m_AmbientSounds[n].c_str(), is_selected)) {
                         m_SoundIndex = n;
                         std::function<void()> request = [=, this]() {
@@ -651,7 +645,7 @@ namespace Poulpe
         if (!m_LevelIndex.has_value()) {
             auto appConfig = m_RenderManager->GetConfigManager()->AppConfig();
             auto defaultLevel = static_cast<std::string>(appConfig["defaultLevel"]);
-            for (int i = 0; i < m_Levels.size(); ++i) {
+            for (size_t i = 0; i < m_Levels.size(); ++i) {
                 if (m_Levels.at(i).c_str() == defaultLevel) {
                     m_LevelIndex = i;
                     break;
@@ -661,7 +655,7 @@ namespace Poulpe
 
         if (m_Levels.size() > 0 && ImGui::BeginCombo("Levels", m_Levels.at(m_LevelIndex.value()).c_str())) {
 
-            for (int n = 0; n < m_Levels.size(); n++) {
+            for (size_t n = 0; n < m_Levels.size(); n++) {
 
                 const bool isSelected = m_LevelIndex == n;
 
@@ -679,9 +673,9 @@ namespace Poulpe
 
         if (m_Skyboxs.size() > 0 && ImGui::BeginCombo("Skybox", m_Skyboxs.at(m_SkyboxIndex).c_str())) {
 
-            for (int n = 0; n < m_Skyboxs.size(); n++) {
+            for (size_t n = 0; n < m_Skyboxs.size(); n++) {
 
-                const bool isSelected = (m_SkyboxIndex == n);
+                const bool isSelected = std::cmp_equal(m_SkyboxIndex, n);
                 
                 if (ImGui::Selectable(m_Skyboxs.at(n).c_str(), isSelected)) {
                     m_SkyboxIndex = n;

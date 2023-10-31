@@ -7,6 +7,7 @@ namespace Poulpe
     {
     public:
         explicit SpriteAnimationManager();
+        virtual ~SpriteAnimationManager() = default;
 
         virtual void Add(const std::string& name, std::vector<std::string> sprites) override;
         virtual std::vector<std::string> GetSpritesByName(const std::string& name) override;

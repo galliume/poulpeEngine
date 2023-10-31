@@ -7,6 +7,7 @@ namespace Poulpe
     {
     public:
         ConfigManager();
+        virtual ~ConfigManager() = default;
 
         virtual nlohmann::json AppConfig() override;
         virtual nlohmann::json TexturesConfig() override;

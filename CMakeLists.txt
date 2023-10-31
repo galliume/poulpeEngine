@@ -32,8 +32,8 @@ set(gcc_like_c "$<COMPILE_LANG_AND_ID:C,ARMClang,AppleClang,Clang,GNU,LCC>")
 set(msvc_cxx "$<COMPILE_LANG_AND_ID:CXX,MSVC>")
 set(msvc_c "$<COMPILE_LANG_AND_ID:C,MSVC>")
 set(GIT_SUBMODULE ON)
-set(DEBUG_OPTIONS "-g")
-set(RELEASE_OPTIONS "-03")
+set(GLFW_LIBRARY_TYPE STATIC)
+
 set(VOLK_PULL_IN_VULKAN false)
 #weird bug with vulkan loader ?
 set(CMAKE_MSVC_RUNTIME_LIBRARY "")
@@ -76,16 +76,16 @@ endif()
 
 include_directories(${PROJECT_SOURCE_DIR}/src
                     ${PROJECT_SOURCE_DIR}/vendor/glfw/include
-                    ${PROJECT_SOURCE_DIR}/vendor/spdlog/include 
-                    ${PROJECT_SOURCE_DIR}/vendor/glm 
-                    ${PROJECT_SOURCE_DIR}/vendor/stb 
-                    ${PROJECT_SOURCE_DIR}/vendor/miniaudio 
-                    ${PROJECT_SOURCE_DIR}/vendor/nlohmann/include 
-                    ${PROJECT_SOURCE_DIR}/vendor/tiny_obj_loader
+                    ${PROJECT_SOURCE_DIR}/vendor/spdlog/include
+                    ${PROJECT_SOURCE_DIR}/vendor/glm
+                    ${PROJECT_SOURCE_DIR}/vendor/stb
+                    ${PROJECT_SOURCE_DIR}/vendor/nlohmann/include
                     ${PROJECT_SOURCE_DIR}/vendor/imgui
                     ${VULKAN_PATH})
 
 add_executable(${PROJECT_NAME} src/Poulpe.cpp)
+
+target_precompile_headers(${PROJECT_NAME} PRIVATE include/Poulpepch.hpp)
 
 add_subdirectory(${PROJECT_SOURCE_DIR}/src/Poulpe)
 add_subdirectory(${PROJECT_SOURCE_DIR}/src/Poulpe/Component)
@@ -103,7 +103,7 @@ add_subdirectory(${PROJECT_SOURCE_DIR}/vendor/glfw)
 add_subdirectory(${PROJECT_SOURCE_DIR}/vendor/glm)
 add_subdirectory(${PROJECT_SOURCE_DIR}/vendor/volk)
 
-add_library(ImGui STATIC ${PROJECT_SOURCE_DIR}/vendor/imgui/imconfig.h
+add_library(dearimgui STATIC ${PROJECT_SOURCE_DIR}/vendor/imgui/imconfig.h
                   ${PROJECT_SOURCE_DIR}/vendor/imgui/imgui.h
                   ${PROJECT_SOURCE_DIR}/vendor/imgui/imgui.cpp
                   ${PROJECT_SOURCE_DIR}/vendor/imgui/imgui_draw.cpp
@@ -120,28 +120,68 @@ add_library(ImGui STATIC ${PROJECT_SOURCE_DIR}/vendor/imgui/imconfig.h
 				  ${PROJECT_SOURCE_DIR}/vendor/imgui/backends/imgui_impl_vulkan.cpp
                   ${PROJECT_SOURCE_DIR}/vendor/imgui/imgui_demo.cpp)
 
+add_library(miniaudio STATIC 
+	${PROJECT_SOURCE_DIR}/vendor/miniaudio/extras/miniaudio_split/miniaudio.h
+	${PROJECT_SOURCE_DIR}/vendor/miniaudio/extras/miniaudio_split/miniaudio.c)
+
+add_library(tiny_obj_loader STATIC 
+	${PROJECT_SOURCE_DIR}/vendor/tiny_obj_loader/tiny_obj_loader.h
+	${PROJECT_SOURCE_DIR}/vendor/tiny_obj_loader/tiny_obj_loader.cc)
+
 list(APPEND EXTRA_LIBS glfw)
 list(APPEND EXTRA_LIBS glm::glm)
 list(APPEND EXTRA_LIBS volk)
-list(APPEND EXTRA_LIBS ImGui)
-
-target_compile_options(${PROJECT_NAME} INTERFACE
-  "$<${gcc_like_cxx}:$<BUILD_INTERFACE:-Wall;-Wextra;-Wshadow;-Wformat=2;-Wunused;-Wconversion>>"
-  "$<${msvc_cxx}:$<BUILD_INTERFACE:-W3>>"
-)
-target_compile_options(${PROJECT_NAME} PRIVATE "$<$<CONFIG:DEBUG>:${DEBUG_OPTIONS}>")
-target_compile_options(${PROJECT_NAME} PRIVATE "$<$<CONFIG:RELEASE>:${RELEASE_OPTIONS}>")
-
-target_precompile_headers(${PROJECT_NAME} PRIVATE include/Poulpepch.hpp)
+list(APPEND EXTRA_LIBS dearimgui)
+list(APPEND EXTRA_LIBS miniaudio)
+list(APPEND EXTRA_LIBS tiny_obj_loader)
 
 target_link_libraries(${PROJECT_NAME} PRIVATE ${EXTRA_LIBS} poulpe)
 
 target_include_directories(${PROJECT_NAME} PRIVATE "${PROJECT_BINARY_DIR}")
-target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE
+
+target_include_directories(${PROJECT_NAME} PRIVATE
                           "${PROJECT_SOURCE_DIR}/vendor/glfw"
                           "${PROJECT_SOURCE_DIR}/vendor/glm"
                           "${PROJECT_SOURCE_DIR}/vendor/volk"
-                          "${PROJECT_SOURCE_DIR}/vendor/imgui")
+                          "${PROJECT_SOURCE_DIR}/vendor/imgui"
+						  "${PROJECT_SOURCE_DIR}/vendor/miniaudio/extras/miniaudio_split"
+						  "${PROJECT_SOURCE_DIR}/vendor/tiny_obj_loader")
+
+target_include_directories(${PROJECT_NAME} SYSTEM INTERFACE
+                          "${PROJECT_SOURCE_DIR}/vendor/glfw"
+                          "${PROJECT_SOURCE_DIR}/vendor/glm"
+                          "${PROJECT_SOURCE_DIR}/vendor/volk"
+                          "${PROJECT_SOURCE_DIR}/vendor/imgui"
+						  "${PROJECT_SOURCE_DIR}/vendor/miniaudio/extras/miniaudio_split"
+						  "${PROJECT_SOURCE_DIR}/vendor/tiny_obj_loader")
+
+target_compile_definitions(${PROJECT_NAME} PRIVATE "$<$<CONFIG:DEBUG>:PLP_DEBUG_BUILD>")
+
+if(MSVC)
+	set(DEBUG_OPTIONS "/WX;/W4")
+	set(RELEASE_OPTIONS "-O2")
+else()
+	set(DEBUG_OPTIONS "-Wextra -Wshadow -Wformat=2 -Wunused -Wconversion -Werror")
+	set(RELEASE_OPTIONS "-O2")
+endif()
+
+target_compile_options(${PROJECT_NAME} PRIVATE "$<$<CONFIG:DEBUG>:${DEBUG_OPTIONS}>")
+target_compile_options(${PROJECT_NAME} PRIVATE "$<$<CONFIG:RELEASE>:${RELEASE_OPTIONS}>")
+
+target_compile_options(dearimgui PRIVATE
+  $<$<CXX_COMPILER_ID:MSVC>:/W0 /O2>
+  $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-w -O2>
+)
+
+target_compile_options(miniaudio PRIVATE
+  $<$<CXX_COMPILER_ID:MSVC>:/W0 /O2>
+  $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-w -O2>
+)
+
+target_compile_options(tiny_obj_loader PRIVATE
+  $<$<CXX_COMPILER_ID:MSVC>:/W0 /O2>
+  $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-w -O2>
+)
 
 #Filters for visual studio structure
 file(GLOB_RECURSE _source_list "${PROJECT_SOURCE_DIR}/src/**/*.cpp" "${PROJECT_SOURCE_DIR}/src/**/*.hpp")
@@ -152,8 +192,6 @@ foreach(_source IN ITEMS ${_source_list})
     source_group("${_group_path}" FILES "${_source}")
   list(APPEND TIDY_SRC "${_source}")
 endforeach()
-
-target_compile_definitions(${PROJECT_NAME} PRIVATE "$<$<CONFIG:DEBUG>:PLP_DEBUG_BUILD>")
 
 set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreadedDebugDLL$<$<CONFIG:Debug>:Debug>")
 
@@ -191,7 +229,18 @@ add_custom_command(
 				$<TARGET_FILE_DIR:${PROJECT_NAME}>/lib
 		COMMENT "Creating lib dir")
 
-set_target_properties(ImGui PROPERTIES
+set_target_properties(dearimgui PROPERTIES
+    ARCHIVE_OUTPUT_DIRECTORY "$<TARGET_FILE_DIR:${PROJECT_NAME}>/lib"
+)
+set_target_properties(miniaudio PROPERTIES
     ARCHIVE_OUTPUT_DIRECTORY "$<TARGET_FILE_DIR:${PROJECT_NAME}>/lib"
 )		
-
+set_target_properties(glfw PROPERTIES
+    ARCHIVE_OUTPUT_DIRECTORY "$<TARGET_FILE_DIR:${PROJECT_NAME}>/lib"
+)
+set_target_properties(volk PROPERTIES
+    ARCHIVE_OUTPUT_DIRECTORY "$<TARGET_FILE_DIR:${PROJECT_NAME}>/lib"
+)
+set_target_properties(tiny_obj_loader PROPERTIES
+    ARCHIVE_OUTPUT_DIRECTORY "$<TARGET_FILE_DIR:${PROJECT_NAME}>/lib"
+)

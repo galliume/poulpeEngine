@@ -7,14 +7,20 @@ namespace Poulpe {
     VkAllocationCallbacks* Im::s_Allocator = nullptr;
     ImGuiInfo Im::s_ImGuiInfo;
 
-    static void check_vk_result(VkResult err)
-    {
-    if (err == 0)
-        return;
-        fprintf(stderr, "[vulkan] Error: VkResult = %d\n", err);
-    if (err < 0)
-        abort();
-    }
+    //@todo check why unused ?
+    //static void check_vk_result(VkResult err)
+    //{
+    //    if (err == 0)
+    //    {
+    //        return;
+    //    }
+
+    //    fprintf(stderr, "[vulkan] Error: VkResult = %d\n", err);
+    //    if (err < 0)
+    //    {
+    //        abort();
+    //    }
+    //}
 
     void Im::Init(GLFWwindow* window, ImGuiInfo initInfo)
     {
@@ -57,16 +63,16 @@ namespace Poulpe {
         style.ScrollbarRounding = 0;
 
         const ImVec4 white = ImVec4(1.f, 1.f, 1.f, 1.f);
-        const ImVec4 black = ImVec4(0.f, 0.f, 0.f, 1.f);
+        //const ImVec4 black = ImVec4(0.f, 0.f, 0.f, 1.f);
         const ImVec4 transparent = ImVec4(0.f, 0.f, 0.f, 0.f);
-        const ImVec4 darkGreen = ImVec4(76/255.f, 76/255.f, 26/255.f, 1.f);
-        const ImVec4 lightGreen = ImVec4(131/255.f, 211/255.f, 80/255.f, 1.f);
-        const ImVec4 darkOrange = ImVec4(250/255.f, 176/255.f, 54/255.f, 1.f);
+        //const ImVec4 darkGreen = ImVec4(76/255.f, 76/255.f, 26/255.f, 1.f);
+        //const ImVec4 lightGreen = ImVec4(131/255.f, 211/255.f, 80/255.f, 1.f);
+        //const ImVec4 darkOrange = ImVec4(250/255.f, 176/255.f, 54/255.f, 1.f);
         const ImVec4 lightOrange = ImVec4(253/255.f, 212/255.f, 138/255.f, 1.f);
         const ImVec4 darkGray = ImVec4(28/255.f, 28/255.f, 28/255.f, 1.f);
         const ImVec4 midDarkGray = ImVec4(52/255.f, 51/255.f, 51/255.f, 1.f);
-        const ImVec4 darkPurple = ImVec4(126/255.f, 92/255.f, 120/255.f, 1.f);
-        const ImVec4 lightPurple = ImVec4(163/255.f, 139/255.f, 160/255.f, 1.f);
+        //const ImVec4 darkPurple = ImVec4(126/255.f, 92/255.f, 120/255.f, 1.f);
+        //const ImVec4 lightPurple = ImVec4(163/255.f, 139/255.f, 160/255.f, 1.f);
         const ImVec4 darkBrown = ImVec4(41/255.f, 23/255.f, 15/255.f, 1.f);
         const ImVec4 midDarkBrown = ImVec4(79/255.f, 52/255.f, 30/255.f, 1.f);
         const ImVec4 goldenBrown = ImVec4(153/255.f, 106/255.f, 48/255.f, 1.f);

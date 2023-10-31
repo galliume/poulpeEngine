@@ -17,20 +17,21 @@ namespace Poulpe
         std::shared_ptr<Poulpe::DestroyManager> destroyManager,
         std::shared_ptr<Poulpe::Camera> camera,
         std::shared_ptr<Poulpe::CommandQueue> cmdQueue
-    ) :
-        m_Window(window),
-        m_Renderer(renderer),
-        m_ConfigManager(configManager),
-        m_InputManager(inputManager),
-        m_AudioManager(audioManager),
-        m_TextureManager(textureManager),
-        m_EntityManager(entityManager),
-        m_ShaderManager(shaderManager),
-        m_SpriteAnimationManager(spriteAnimationManager),
-        m_DestroyManager(destroyManager),
-        m_Camera(camera),
-        m_CommandQueue(cmdQueue)
+    )
     {
+        m_Window = window;
+        m_Renderer = renderer;
+        m_ConfigManager = configManager;
+        m_InputManager = inputManager;
+        m_AudioManager = audioManager;
+        m_TextureManager = textureManager;
+        m_EntityManager = entityManager;
+        m_ShaderManager = shaderManager;
+        m_SpriteAnimationManager = spriteAnimationManager;
+        m_DestroyManager = destroyManager;
+        m_Camera = camera;
+        m_CommandQueue = cmdQueue;
+
         m_Camera->Init();
         m_Renderer->Init();
         m_Renderer->AddCamera(m_Camera);
@@ -54,11 +55,6 @@ namespace Poulpe
         m_InputManager->AddRenderer(m_Renderer);
         m_InputManager->SetCamera(m_Camera);
         //end @todo
-    }
-
-    RenderManager::~RenderManager()
-    {
-
     }
 
     void RenderManager::CleanUp()
@@ -311,7 +307,7 @@ namespace Poulpe
         m_DescriptorPools.emplace_back(descriptorPool);
 
         auto entity = std::make_shared<Skybox>(EntityFactory::create<Skybox>(
-            m_Renderer, m_EntityManager, m_ShaderManager, m_TextureManager, descriptorPool));
+            m_Renderer, m_EntityManager, m_ShaderManager, m_TextureManager));
 
         auto skyboxMesh = std::make_shared<Mesh>();
         skyboxMesh->m_DescriptorPool = descriptorPool;

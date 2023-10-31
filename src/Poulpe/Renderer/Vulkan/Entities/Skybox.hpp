@@ -15,13 +15,12 @@ namespace Poulpe
             std::shared_ptr<VulkanAdapter> adapter,
             std::shared_ptr<EntityManager> entityManager,
             std::shared_ptr<ShaderManager> shaderManager,
-            std::shared_ptr<TextureManager> textureManager,
-            VkDescriptorPool descriptorPool
+            std::shared_ptr<TextureManager> textureManager
         );
         void Visit(std::shared_ptr<Entity> entity) override;
-        VkDescriptorSetLayout CreateDescriptorSetLayout(std::shared_ptr<Mesh> mesh);
+        VkDescriptorSetLayout CreateDescriptorSetLayout();
         VkDescriptorSet CreateDescriptorSet(std::shared_ptr<Mesh> mesh, VkDescriptorSetLayout descriptorSetLayout);
-        VkPipelineLayout CreatePipelineLayout(std::shared_ptr<Mesh> mesh, VkDescriptorSetLayout descriptorSetLayout);
+        VkPipelineLayout CreatePipelineLayout(VkDescriptorSetLayout descriptorSetLayout);
         std::vector<VkPipelineShaderStageCreateInfo> GetShaders();
         VkPipelineVertexInputStateCreateInfo GetVertexBindingDesc(
           VkVertexInputBindingDescription bDesc, std::array<VkVertexInputAttributeDescription, 3> attDesc);
@@ -32,6 +31,6 @@ namespace Poulpe
         std::shared_ptr<EntityManager> m_EntityManager;
         std::shared_ptr<ShaderManager> m_ShaderManager;
         std::shared_ptr<TextureManager> m_TextureManager;
-        VkDescriptorPool m_DescriptorPool;
+        //VkDescriptorPool m_DescriptorPool;
     };
 }
