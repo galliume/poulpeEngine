@@ -23,7 +23,8 @@ namespace Poulpe
         VkDescriptorSet CreateDescriptorSet(std::shared_ptr<Mesh> mesh, VkDescriptorSetLayout descriptorSetLayout);
         VkPipelineLayout CreatePipelineLayout(std::shared_ptr<Mesh> mesh, VkDescriptorSetLayout descriptorSetLayout);
         std::vector<VkPipelineShaderStageCreateInfo> GetShaders();
-        VkPipelineVertexInputStateCreateInfo GetVertexBindingDesc();
+        VkPipelineVertexInputStateCreateInfo GetVertexBindingDesc(
+          VkVertexInputBindingDescription bDesc, std::array<VkVertexInputAttributeDescription, 3> attDesc);
         void SetPushConstants(std::shared_ptr<Mesh> mesh);
 
     private:

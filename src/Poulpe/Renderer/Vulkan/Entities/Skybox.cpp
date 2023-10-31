@@ -101,14 +101,8 @@ namespace Poulpe
         auto shaders = GetShaders();
 
         auto bDesc = Vertex::GetBindingDescription();
-        auto desc = Vertex::GetAttributeDescriptions();
-
-        VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
-        vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-        vertexInputInfo.vertexBindingDescriptionCount = 1;
-        vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(Vertex::GetAttributeDescriptions().size());
-        vertexInputInfo.pVertexBindingDescriptions = &bDesc;
-        vertexInputInfo.pVertexAttributeDescriptions = desc.data();
+        auto attDesc = Vertex::GetAttributeDescriptions();
+        auto  vertexInputInfo = GetVertexBindingDesc(bDesc, attDesc);
 
         mesh->m_GraphicsPipeline = m_Adapter->Rdr()->CreateGraphicsPipeline(
             m_Adapter->RdrPass(),
@@ -236,5 +230,18 @@ namespace Poulpe
         };
 
         mesh->SetHasPushConstants();
+    }
+
+    VkPipelineVertexInputStateCreateInfo Skybox::GetVertexBindingDesc(VkVertexInputBindingDescription bDesc, 
+      std::array<VkVertexInputAttributeDescription, 3> attDesc)
+    {
+      VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
+      vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
+      vertexInputInfo.vertexBindingDescriptionCount = 1;
+      vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(Vertex::GetAttributeDescriptions().size());
+      vertexInputInfo.pVertexBindingDescriptions = &bDesc;
+      vertexInputInfo.pVertexAttributeDescriptions = attDesc.data();
+
+      return vertexInputInfo;
     }
 }
