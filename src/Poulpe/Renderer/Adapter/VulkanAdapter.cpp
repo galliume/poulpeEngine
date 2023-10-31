@@ -24,6 +24,11 @@ namespace Poulpe
         m_Renderer = std::make_shared<VulkanRenderer>(window);
     }
 
+    VulkanAdapter::~VulkanAdapter()
+    {
+
+    }
+
     void VulkanAdapter::Init()
     {
         m_RayPick = glm::vec3(0.0f);
@@ -38,9 +43,9 @@ namespace Poulpe
         m_SwapChainSamplers.resize(3);
         m_SwapChainDepthSamplers.resize(3);
 
-        for (int i = 0; i < m_SwapChainImages.size(); ++i) {
+        for (size_t i = 0; i < m_SwapChainImages.size(); ++i) {
           VkImage image;
-          VkImage depthImage;
+          //VkImage depthImage;
 
           m_Renderer->CreateImage(m_Renderer->GetSwapChainExtent().width, m_Renderer->GetSwapChainExtent().height, 1, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_B8G8R8A8_UNORM, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, image);
           m_SwapChainImages[i] = image;
@@ -76,7 +81,7 @@ namespace Poulpe
             m_DepthImageViews[i] = depthImageView;
         }
 
-        for (int i = 0; i < m_Renderer->GetQueueCount(); i++) {
+        for (size_t i = 0; i < m_Renderer->GetQueueCount(); i++) {
             m_Semaphores.emplace_back(m_Renderer->CreateSyncObjects(m_SwapChainImages));
         }
 
@@ -103,9 +108,9 @@ namespace Poulpe
         m_SwapChainSamplers.resize(3);
         m_SwapChainDepthSamplers.resize(3);
 
-        for (int i = 0; i < m_SwapChainImages.size(); ++i) {
+        for (size_t i = 0; i < m_SwapChainImages.size(); ++i) {
           VkImage image;
-          VkImage depthImage;
+          //VkImage depthImage;
 
           m_Renderer->CreateImage(m_Renderer->GetSwapChainExtent().width, m_Renderer->GetSwapChainExtent().height, 1, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_B8G8R8A8_UNORM, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, image);
           m_SwapChainImages[i] = image;
@@ -132,7 +137,7 @@ namespace Poulpe
 
         m_Semaphores.clear();
 
-        for (int i = 0; i < m_Renderer->GetQueueCount(); i++) {
+        for (size_t i = 0; i < m_Renderer->GetQueueCount(); i++) {
             m_Semaphores.emplace_back(m_Renderer->CreateSyncObjects(m_SwapChainImages));
         }
 
@@ -208,7 +213,7 @@ namespace Poulpe
                         mesh->ApplyPushConstants(m_CommandBuffersEntities[m_ImageIndex], mesh->m_PipelineLayout, shared_from_this(), *mesh->GetData());
 
                     try {
-                        m_Renderer->Draw(m_CommandBuffersEntities[m_ImageIndex], mesh->GetDescriptorSets().at(index), mesh.get(), *mesh->GetData(), mesh->GetData()->m_Ubos.size(), m_ImageIndex);
+                        m_Renderer->Draw(m_CommandBuffersEntities[m_ImageIndex], mesh->GetDescriptorSets().at(index), mesh.get(), *mesh->GetData(), mesh->GetData()->m_Ubos.size());
                     }
                     catch (std::exception& e) {
                         PLP_DEBUG("Draw error: {}", e.what());
@@ -248,7 +253,7 @@ namespace Poulpe
                 if (m_SkyboxMesh->HasPushConstants() && nullptr != m_SkyboxMesh->ApplyPushConstants)
                     m_SkyboxMesh->ApplyPushConstants(m_CommandBuffersSkybox[m_ImageIndex], m_SkyboxMesh->m_PipelineLayout, shared_from_this(), skyboxData);
 
-                m_Renderer->Draw(m_CommandBuffersSkybox[m_ImageIndex], m_SkyboxMesh->GetDescriptorSets().at(i), m_SkyboxMesh.get(), skyboxData, skyboxData.m_Ubos.size(), m_ImageIndex, false);
+                m_Renderer->Draw(m_CommandBuffersSkybox[m_ImageIndex], m_SkyboxMesh->GetDescriptorSets().at(i), m_SkyboxMesh.get(), skyboxData, skyboxData.m_Ubos.size(), false);
             }
 
             m_Renderer->EndMarker(m_CommandBuffersSkybox[m_ImageIndex]);
@@ -280,7 +285,7 @@ namespace Poulpe
                 hudPart->ApplyPushConstants(m_CommandBuffersHud[m_ImageIndex], hudPart->m_PipelineLayout, shared_from_this(), *hudPart->GetData());
 
             for (uint32_t i = 0; i < hudPart->m_UniformBuffers.size(); i++) {
-                m_Renderer->Draw(m_CommandBuffersHud[m_ImageIndex], hudPart->GetDescriptorSets().at(i), hudPart.get(), *hudPart->GetData(), hudPart->GetData()->m_Ubos.size(), m_ImageIndex);
+                m_Renderer->Draw(m_CommandBuffersHud[m_ImageIndex], hudPart->GetDescriptorSets().at(i), hudPart.get(), *hudPart->GetData(), hudPart->GetData()->m_Ubos.size());
             }
         }
 
@@ -327,7 +332,7 @@ namespace Poulpe
                     if (bbox->HasPushConstants() && nullptr != bbox->ApplyPushConstants)
                         bbox->ApplyPushConstants(m_CommandBuffersBbox[m_ImageIndex], bbox->m_PipelineLayout, shared_from_this(), *bbox->GetData());
 
-                    m_Renderer->Draw(m_CommandBuffersBbox[m_ImageIndex], bbox->GetDescriptorSets().at(index), bbox.get(), *bbox->GetData(), mesh->GetData()->m_Ubos.size(), m_ImageIndex);
+                    m_Renderer->Draw(m_CommandBuffersBbox[m_ImageIndex], bbox->GetDescriptorSets().at(index), bbox.get(), *bbox->GetData(), mesh->GetData()->m_Ubos.size());
                     index = m_ImageIndex;
                 }
             }
@@ -421,10 +426,10 @@ namespace Poulpe
                 cmds.clear();
 
                 //@todo wtf ?
-                uint32_t currentFrame = m_Renderer->GetNextFrameIndex();
-                if (currentFrame == VK_ERROR_OUT_OF_DATE_KHR || currentFrame == VK_SUBOPTIMAL_KHR) {
+                /*uint32_t currentFrame = m_Renderer->GetNextFrameIndex();
+                if (std::cmp_equal(currentFrame, VK_ERROR_OUT_OF_DATE_KHR) || std::cmp_equal(currentFrame, VK_SUBOPTIMAL_KHR)) {
                     RecreateSwapChain();
-                }
+                }*/
             }
 
             AcquireNextImage();
@@ -455,10 +460,10 @@ namespace Poulpe
         Present();
 
         //@todo wtf ?
-        uint32_t currentFrame = m_Renderer->GetNextFrameIndex();
-        if (currentFrame == VK_ERROR_OUT_OF_DATE_KHR || currentFrame == VK_SUBOPTIMAL_KHR) {
+        //uint32_t currentFrame = m_Renderer->GetNextFrameIndex();
+        /*if (std::cmp_equal(currentFrame, VK_ERROR_OUT_OF_DATE_KHR) || std::cmp_equal(currentFrame, VK_SUBOPTIMAL_KHR)) {
             RecreateSwapChain();
-        }
+        }*/
         AcquireNextImage();
     }
 
@@ -472,10 +477,10 @@ namespace Poulpe
         Present();
 
         //@todo wtf ?
-        uint32_t currentFrame = m_Renderer->GetNextFrameIndex();
-        if (currentFrame == VK_ERROR_OUT_OF_DATE_KHR || currentFrame == VK_SUBOPTIMAL_KHR) {
-            RecreateSwapChain();
-        }
+        //uint32_t currentFrame = m_Renderer->GetNextFrameIndex();
+        //if (std::cmp_equal(currentFrame, VK_ERROR_OUT_OF_DATE_KHR) || std::cmp_equal(currentFrame, VK_SUBOPTIMAL_KHR)) {
+        //    RecreateSwapChain();
+        //}
 
         AcquireNextImage();
     }
@@ -523,10 +528,10 @@ namespace Poulpe
             Present();
 
             //@todo wtf ?
-            uint32_t currentFrame = m_Renderer->GetNextFrameIndex();
-            if (currentFrame == VK_ERROR_OUT_OF_DATE_KHR || currentFrame == VK_SUBOPTIMAL_KHR) {
-                RecreateSwapChain();
-            }
+            //uint32_t currentFrame = m_Renderer->GetNextFrameIndex();
+            //if (std::cmp_equal(currentFrame, VK_ERROR_OUT_OF_DATE_KHR) || std::cmp_equal(currentFrame, VK_SUBOPTIMAL_KHR)) {
+            //    RecreateSwapChain();
+            //}
 
             AcquireNextImage();
             OnFinishRender();
@@ -570,7 +575,7 @@ namespace Poulpe
         m_Renderer->DestroyRenderPass(m_RenderPass, m_CommandPoolHud, m_CommandBuffersHud);
     }
 
-    void VulkanAdapter::ImmediateSubmit(std::function<void(VkCommandBuffer cmd)>&& function, int queueIndex)
+    void VulkanAdapter::ImmediateSubmit(std::function<void(VkCommandBuffer cmd)>&& function, [[maybe_unused]] int queueIndex)
     {
         auto commandPool = m_Renderer->CreateCommandPool();
         VkCommandBuffer cmd = m_Renderer->AllocateCommandBuffers(commandPool)[0];
@@ -673,7 +678,7 @@ namespace Poulpe
     void VulkanAdapter::Submit(std::vector<VkCommandBuffer> commandBuffers, int queueIndex)
     {
 
-        VkResult submitResult = m_Renderer->QueueSubmit(m_ImageIndex, commandBuffers, m_Semaphores.at(queueIndex), queueIndex);
+        VkResult submitResult = m_Renderer->QueueSubmit(m_ImageIndex, commandBuffers, queueIndex);
 
         OnFinishRender();
 
@@ -684,7 +689,7 @@ namespace Poulpe
         }
     }
 
-    void VulkanAdapter::Present(int queueIndex)
+    void VulkanAdapter::Present([[maybe_unused]] int queueIndex)
     {
 //#ifndef PLP_DEBUG_BUILD
 //        std::vector<VkSemaphore>& renderFinishedSemaphores = m_Semaphores.at(queueIndex).second;
@@ -723,7 +728,7 @@ namespace Poulpe
 //#endif
     }
 
-    void VulkanAdapter::SetRayPick(float x, float y, float z, int width, int height)
+    void VulkanAdapter::SetRayPick(float x, float y, float z, [[maybe_unused]] int width, [[maybe_unused]] int height)
     {
         glm::vec3 rayNds = glm::vec3(x, y, z);
         glm::vec4 rayClip = glm::vec4(rayNds.x, rayNds.y, -1.0, 1.0);

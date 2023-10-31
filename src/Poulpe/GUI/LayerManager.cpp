@@ -11,11 +11,11 @@ namespace Poulpe
         m_Layers.emplace_back(layer);
     }
 
-    void LayerManager::InitLayers(Window* window)
+    void LayerManager::InitLayers([[maybe_unused]] Window* window)
     {
-        for (auto layer : m_Layers)
+        /*for (auto layer : m_Layers)
         {
-            //layer->Init(window);
-        }
+            layer->Init(window);
+        }*/
     }
 }

@@ -38,7 +38,7 @@ namespace Poulpe
 
     void AudioManager::StartAmbient(int index)
     {
-        if (index > m_AmbientSounds.size() - 1 || 0 > index) {
+        if (std::cmp_equal(index, m_AmbientSounds.size() - 1) || 0 > index) {
             PLP_WARN("Ambient sound index {} does not exists.", index);
             return;
         }
@@ -61,7 +61,7 @@ namespace Poulpe
 
     void AudioManager::StartSplash(int index)
     {
-        if (index > m_SplashSounds.size() - 1 || 0 > index) {
+        if (std::cmp_greater(index, m_SplashSounds.size() - 1) || 0 > index) {
             PLP_WARN("Splash sound index {} does not exists.", index);
             return;
         }

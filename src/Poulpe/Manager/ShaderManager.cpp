@@ -57,9 +57,4 @@ namespace Poulpe
         m_Shaders->shaders.clear();
         m_LoadingDone = false;
     }
-
-    ShaderManager::~ShaderManager()
-    {
-
-    }
 }

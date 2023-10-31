@@ -83,9 +83,7 @@ namespace Poulpe
 
         std::vector<VkDescriptorSetLayoutBinding> cbindings = { cuboLayoutBinding, csamplerLayoutBinding };
 
-        VkDescriptorSetLayout cdesriptorSetLayout = m_Adapter->Rdr()->CreateDescriptorSetLayout(
-            cbindings, VK_DESCRIPTOR_SET_LAYOUT_CREATE_UPDATE_AFTER_BIND_POOL_BIT
-        );
+        VkDescriptorSetLayout cdesriptorSetLayout = m_Adapter->Rdr()->CreateDescriptorSetLayout(cbindings);
 
         m_Adapter->GetDescriptorSetLayouts()->emplace_back(cdesriptorSetLayout);
 
@@ -97,7 +95,7 @@ namespace Poulpe
         pc.point = glm::vec4(0.1f, 50.f, 0.f, 0.f);
         pc.view = m_Adapter->GetCamera()->LookAt();
 
-        mesh->ApplyPushConstants = [&pc](VkCommandBuffer& commandBuffer, VkPipelineLayout& pipelineLayout, std::shared_ptr<VulkanAdapter> adapter, Data& data) {
+        mesh->ApplyPushConstants = [&pc](VkCommandBuffer& commandBuffer, VkPipelineLayout& pipelineLayout, std::shared_ptr<VulkanAdapter> adapter, [[maybe_unused]] Data& data) {
             pc.point = glm::vec4(0.1f, 50.f, 0.f, 0.f);
             pc.view = adapter->GetCamera()->LookAt();
             vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(Grid::pc), &pc);
@@ -113,7 +111,7 @@ namespace Poulpe
 
         std::vector<VkDescriptorSetLayout>dSetLayout = { cdesriptorSetLayout };
 
-        mesh->m_PipelineLayout = m_Adapter->Rdr()->CreatePipelineLayout(mesh->m_DescriptorSets, dSetLayout, vkPcs);
+        mesh->m_PipelineLayout = m_Adapter->Rdr()->CreatePipelineLayout(dSetLayout, vkPcs);
 
         std::vector<VkPipelineShaderStageCreateInfo>cshadersStageInfos;
 
@@ -159,8 +157,7 @@ namespace Poulpe
 
             m_Adapter->Rdr()->UpdateUniformBuffer(
                 mesh->m_UniformBuffers[i],
-                gridData.m_Ubos,
-                gridData.m_Ubos.size()
+                gridData.m_Ubos
             );
         }
 

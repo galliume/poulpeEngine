@@ -22,7 +22,7 @@ namespace Poulpe
         if (m_Pool.end() != poolType && !forceNew) {
             auto poolUsage = poolType->second.find(usage);
             if (poolType->second.end() != poolUsage) {
-                for (int i = 0; i < poolUsage->second.size(); ++i) {
+                for (size_t i = 0; i < poolUsage->second.size(); ++i) {
                     auto dm = poolUsage->second.at(i);
                     if (!dm->IsFull() && dm->HasEnoughSpaceLeft(size)) {
                         //PLP_DEBUG("memory allocation recycle: size {} type {} usage {} full {} space left {}", size, memoryType, usage, dm->IsFull(), dm->HasEnoughSpaceLeft(size));

@@ -62,7 +62,7 @@ namespace Poulpe
             float yMin = yMax;
             float zMin = zMax;
 
-            for (int j = 0; j < data.m_Vertices.size(); j++) {
+            for (size_t j = 0; j < data.m_Vertices.size(); j++) {
 
                 glm::vec3 vertex = glm::vec4(data.m_Vertices.at(j).pos, 1.0f);
 
