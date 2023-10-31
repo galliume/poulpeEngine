@@ -13,7 +13,7 @@ namespace Poulpe
 
     public:
         AudioManager();
-        ~AudioManager();
+        virtual ~AudioManager();
 
         virtual void Load(nlohmann::json config) override;
         virtual void StartSplash(int index = 0) override;

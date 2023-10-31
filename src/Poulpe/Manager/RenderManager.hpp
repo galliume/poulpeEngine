@@ -23,7 +23,7 @@ namespace Poulpe
             std::shared_ptr<Poulpe::Camera> camera,
             std::shared_ptr<Poulpe::CommandQueue> cmdQueue
         );
-        ~RenderManager();
+        virtual ~RenderManager() = default;
 
         virtual void Init() override;
         virtual void RenderScene() override;

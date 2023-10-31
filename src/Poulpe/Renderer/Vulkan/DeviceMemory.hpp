@@ -34,7 +34,7 @@ namespace Poulpe
 
         VkDevice m_Device;
         uint32_t m_MemoryType;
-        VkBufferUsageFlags m_Usage;
+        //VkBufferUsageFlags m_Usage;
         VkDeviceSize m_MaxSize = 429287014;
         std::mutex m_MutexMemory;
 

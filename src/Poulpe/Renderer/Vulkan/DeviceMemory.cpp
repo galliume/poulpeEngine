@@ -5,9 +5,10 @@ namespace Poulpe
     DeviceMemory::DeviceMemory(
         VkDevice device,
         uint32_t memoryType,
-        VkBufferUsageFlags usage,
+        [[maybe_unused]] VkBufferUsageFlags usage,
         VkDeviceSize maxSize
-    ) : m_Device(device), m_MemoryType(memoryType), m_Usage(usage)
+    ) : m_Device(device), m_MemoryType(memoryType)
+        //, m_Usage(usage)
     {
         if (nullptr == m_Memory) {
             m_Memory = std::make_shared<VkDeviceMemory>();

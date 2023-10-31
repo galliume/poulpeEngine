@@ -32,8 +32,6 @@ namespace Poulpe
         static void NewFrame();
         static void Begin(std::string name, bool* p_open = NULL, ImGuiWindowFlags flags = 0);
         static void CreateFontsTexture(VkCommandBuffer commandBuffer);
-        template <typename T, typename... Types>
-        void static Text(T arg, Types... args) { ImGui::Text(arg, args...); };
         void static EndChild();
         static void End();
         static void EndFrame();

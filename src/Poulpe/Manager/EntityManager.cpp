@@ -3,12 +3,13 @@
 
 namespace Poulpe
 {
-    EntityManager::EntityManager() 
+    EntityManager::EntityManager()
     {
 
     }
 
-    const uint32_t EntityManager::GetInstancedCount()
+
+    uint32_t EntityManager::GetInstancedCount()
     {
         uint32_t total = 0;
 

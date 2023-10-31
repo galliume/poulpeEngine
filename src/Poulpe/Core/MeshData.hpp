@@ -3,7 +3,7 @@
 
 namespace Poulpe
 {
-    class Vertex;
+    struct Vertex;
     struct UniformBufferObject;
 
     struct Buffer {
