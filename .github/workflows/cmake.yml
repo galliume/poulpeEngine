@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
 
 env:
-  BUILD_TYPE: Release
+  CMAKE_BUILD_TYPE: Release
   
 jobs:
   build:
@@ -27,15 +27,14 @@ jobs:
         path: main
 
     - name: Install dependancies
-      run: sudo apt-get update && sudo apt-get install xorg-dev libglu1-mesa-dev libvulkan1 mesa-vulkan-drivers
+      run: sudo apt-get update && sudo apt-get install xorg-dev libglu1-mesa-dev libvulkan1 mesa-vulkan-drivers ninja-build
 
     - name: Set env variable VULKAN_SDK_ACTIONS
-      run: |
-        echo "VULKAN_SDK_ACTIONS=${{ github.workspace }}/external/include" >> $GITHUB_ENV
+      run: echo "VULKAN_SDK_ACTIONS=${{ github.workspace }}/external/include" >> $GITHUB_ENV
     
     - name: Configure && Build
       run: |
         cd main
         chmod +x ./bin/plpBuild.sh
-        ./bin/plpBuild.sh -lfalse
+        ./bin/plpBuild.sh -l true
         ./bin/plpBuild.sh -i 
