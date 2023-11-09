@@ -58,7 +58,7 @@ namespace Poulpe
         bool m_AmbientOpen{ true };
         bool m_Looping{ true };
 
-        virtual void notify(const Event& event) override;
+        virtual void notify(Event const & event) override;
 
         void loadDebugInfo();
         void loadAmbiantSounds();

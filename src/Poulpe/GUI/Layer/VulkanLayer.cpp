@@ -51,7 +51,7 @@ namespace Poulpe
       return imgDesc;
     }
 
-    void VulkanLayer::notify(const Event& event)
+    void VulkanLayer::notify(Event const & event)
     {
         if ("OnFinishRender" == event.name)
         {
@@ -85,10 +85,10 @@ namespace Poulpe
             
             std::unordered_map<std::string, VkDescriptorSet> tmpTextures{};
 
-            const auto& textures = m_RenderManager->getTextureManager()->getTextures();
+            auto const & textures = m_RenderManager->getTextureManager()->getTextures();
             //const auto& imageViews = m_RenderManager->GetRendererAdapter()->GetSwapChainImageViews();
 
-            for (const auto& texture : textures) {
+            for (auto const & texture : textures) {
             
                 if (!texture.second.isPublic()) continue;
 
@@ -153,8 +153,7 @@ namespace Poulpe
                     m_RenderManager->getShaderManager(),
                     m_RenderManager->getTextureManager()));
 
-                auto desriptorSet = entity->createDescriptorSet(skybox, skybox->m_DescriptorSetLayout);
-                skybox->m_DescriptorSets.emplace_back(desriptorSet);
+                skybox->m_DescriptorSets = entity->createDescriptorSet(skybox);
 
                 cv.notify_one(); //useful?
             }
@@ -168,7 +167,7 @@ namespace Poulpe
     {
       std::function<void()> request = [=, this]() {
         {
-          const auto start = std::chrono::high_resolution_clock::now();
+          auto const start = std::chrono::high_resolution_clock::now();
 
           m_RenderManager->refresh(m_LevelIndex.value(), m_ShowBBox, m_Skyboxs.at(m_SkyboxIndex));
 
@@ -176,8 +175,8 @@ namespace Poulpe
             //just loading.
           };
 
-          const auto end = std::chrono::high_resolution_clock::now();
-          const std::chrono::duration<double, std::milli> elapsed = end - start;
+          auto const end = std::chrono::high_resolution_clock::now();
+          std::chrono::duration<double, std::milli> const elapsed = end - start;
 
           PLP_DEBUG("Loaded {} in {}", m_Levels.at(m_LevelIndex.value()), elapsed);
 
@@ -373,7 +372,7 @@ namespace Poulpe
         
         if (!ImGui::BeginTable("table1", 6)) return;
     
-        for (const auto& texture : m_Textures) {
+        for (auto const & texture : m_Textures) {
 
             if (0 == x) {
                 ImGui::TableNextRow();
@@ -419,7 +418,7 @@ namespace Poulpe
 
         ImGui::BeginTable("table2", 6);
 
-        for (const auto& entity : m_Entities) {
+        for (auto const & entity : m_Entities) {
 
             if (0 == x) {
                 ImGui::TableNextRow();
@@ -620,7 +619,7 @@ namespace Poulpe
             {
                 for (size_t n = 0; n < m_AmbientSounds.size(); ++n)
                 {
-                    const bool is_selected = std::cmp_equal(m_SoundIndex, n);
+                    bool const is_selected = std::cmp_equal(m_SoundIndex, n);
                     if (ImGui::Selectable(m_AmbientSounds[n].c_str(), is_selected)) {
                         m_SoundIndex = n;
                         std::function<void()> request = [=, this]() {
@@ -657,7 +656,7 @@ namespace Poulpe
 
             for (size_t n = 0; n < m_Levels.size(); n++) {
 
-                const bool isSelected = m_LevelIndex == n;
+                bool const isSelected = m_LevelIndex == n;
 
                 if (ImGui::Selectable(m_Levels.at(n).c_str(), isSelected)) {
                     m_LevelIndex = n;
@@ -675,7 +674,7 @@ namespace Poulpe
 
             for (size_t n = 0; n < m_Skyboxs.size(); n++) {
 
-                const bool isSelected = std::cmp_equal(m_SkyboxIndex, n);
+                bool const isSelected = std::cmp_equal(m_SkyboxIndex, n);
                 
                 if (ImGui::Selectable(m_Skyboxs.at(n).c_str(), isSelected)) {
                     m_SkyboxIndex = n;

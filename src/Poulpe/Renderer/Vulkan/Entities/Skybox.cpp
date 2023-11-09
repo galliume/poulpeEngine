@@ -23,7 +23,7 @@ namespace Poulpe
         std::shared_ptr<Mesh> mesh = std::dynamic_pointer_cast<Mesh>(entity);
         if (!mesh && !mesh->isDirty()) return;
 
-        const std::vector<Vertex> skyVertices = {
+        std::vector<Vertex> const skyVertices = {
             {{-1.0f,  1.0f, -1.0f }, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
             {{-1.0f, -1.0f, -1.0f }, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
             {{ 1.0f, -1.0f, -1.0f }, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
@@ -88,15 +88,11 @@ namespace Poulpe
 
         setPushConstants(mesh);
 
-        VkDescriptorSetLayout descriptorSetLayout = createDescriptorSetLayout();
-        VkDescriptorSet desriptorSet = createDescriptorSet(mesh, descriptorSetLayout);
-        VkPipelineLayout pipelineLayout = createPipelineLayout(descriptorSetLayout);
+        mesh->m_DescriptorSetLayout = createDescriptorSetLayout();
+        mesh->m_PipelineLayout = createPipelineLayout(mesh->m_DescriptorSetLayout);
+        mesh->m_DescriptorSets = createDescriptorSet(mesh);
 
-        mesh->m_DescriptorSetLayout = descriptorSetLayout;
-        mesh->m_DescriptorSets.emplace_back(desriptorSet);
-        mesh->m_PipelineLayout = pipelineLayout;
-
-        auto shaders = getShaders();
+        auto shaders = getShaders("skybox");
 
         auto bDesc = Vertex::GetBindingDescription();
         auto attDesc = Vertex::GetAttributeDescriptions();
@@ -147,7 +143,7 @@ namespace Poulpe
         return desriptorSetLayout;
     }
     
-    VkDescriptorSet Skybox::createDescriptorSet(std::shared_ptr<Mesh> mesh, VkDescriptorSetLayout descriptorSetLayout)
+    std::vector<VkDescriptorSet> Skybox::createDescriptorSet(std::shared_ptr<Mesh> mesh)
     {
         if (!mesh->m_DescriptorSets.empty()) {
             vkFreeDescriptorSets(m_Adapter->rdr()->getDevice(), mesh->m_DescriptorPool, mesh->m_DescriptorSets.size(), mesh->m_DescriptorSets.data());
@@ -161,10 +157,10 @@ namespace Poulpe
         descriptorImageInfo.imageView = tex.getImageView();
         descriptorImageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
-        VkDescriptorSet descriptorSet = m_Adapter->rdr()->createDescriptorSets(mesh->m_DescriptorPool, { descriptorSetLayout }, 1);
+        VkDescriptorSet descriptorSet = m_Adapter->rdr()->createDescriptorSets(mesh->m_DescriptorPool, { mesh->m_DescriptorSetLayout }, 1);
         m_Adapter->rdr()->pdateDescriptorSets(mesh->m_UniformBuffers, descriptorSet, { descriptorImageInfo });
 
-        return descriptorSet;
+        return { descriptorSet };
     }
 
     VkPipelineLayout Skybox::createPipelineLayout(VkDescriptorSetLayout descriptorSetLayout)
@@ -183,23 +179,21 @@ namespace Poulpe
         return pipelineLayout;
     }
 
-    std::vector<VkPipelineShaderStageCreateInfo> Skybox::getShaders()
+    std::vector<VkPipelineShaderStageCreateInfo> Skybox::getShaders(std::string const & name)
     {
-        std::string shaderName = "skybox";
-
         std::vector<VkPipelineShaderStageCreateInfo> shadersStageInfos{};
 
         VkPipelineShaderStageCreateInfo vertShaderStageInfo{};
         vertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
         vertShaderStageInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
-        vertShaderStageInfo.module = m_ShaderManager->getShaders()->shaders[shaderName][0];
+        vertShaderStageInfo.module = m_ShaderManager->getShaders()->shaders[name][0];
         vertShaderStageInfo.pName = "main";
         shadersStageInfos.emplace_back(vertShaderStageInfo);
 
         VkPipelineShaderStageCreateInfo fragShaderStageInfo{};
         fragShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
         fragShaderStageInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
-        fragShaderStageInfo.module = m_ShaderManager->getShaders()->shaders[shaderName][1];
+        fragShaderStageInfo.module = m_ShaderManager->getShaders()->shaders[name][1];
         fragShaderStageInfo.pName = "main";
         shadersStageInfos.emplace_back(fragShaderStageInfo);
 

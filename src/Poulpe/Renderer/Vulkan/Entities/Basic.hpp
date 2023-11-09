@@ -1,14 +1,10 @@
 #pragma once
 
-#include "Poulpe/Core/IVisitor.hpp"
-#include "Poulpe/Manager/EntityManager.hpp"
-#include "Poulpe/Manager/ShaderManager.hpp"
-#include "Poulpe/Manager/TextureManager.hpp"
-#include "Poulpe/Renderer/Adapter/VulkanAdapter.hpp"
+#include "IEntity.hpp"
 
 namespace Poulpe
 {
-    class Basic : public IVisitor
+    class Basic : public IEntity, public IVisitor
     {
         struct pc
         {
@@ -29,16 +25,16 @@ namespace Poulpe
             VkDescriptorPool descriptorPool
         );
         void visit(std::shared_ptr<Entity> entity) override;
-        VkDescriptorSetLayout createDescriptorSetLayout();
-        std::vector<VkDescriptorSet> createDescriptorSet(std::shared_ptr<Mesh> mesh, VkDescriptorSetLayout descriptorSetLayout);
-        VkPipelineLayout createPipelineLayout(VkDescriptorSetLayout descriptorSetLayout);
-        std::vector<VkPipelineShaderStageCreateInfo> getShaders(std::string const & shaderName);
+        VkDescriptorSetLayout createDescriptorSetLayout() override;
+        std::vector<VkDescriptorSet> createDescriptorSet(std::shared_ptr<Mesh> mesh) override;
+        VkPipelineLayout createPipelineLayout(VkDescriptorSetLayout descriptorSetLayout) override;
+        std::vector<VkPipelineShaderStageCreateInfo> getShaders(std::string const & name) override;
         VkPipelineVertexInputStateCreateInfo getVertexBindingDesc(
-          VkVertexInputBindingDescription bDesc, std::array<VkVertexInputAttributeDescription, 3> attDesc);
-        void setPushConstants(std::shared_ptr<Mesh> mesh);
+          VkVertexInputBindingDescription bDesc, std::array<VkVertexInputAttributeDescription, 3> attDesc) override;
+        void setPushConstants(std::shared_ptr<Mesh> mesh) override;
 
     private:
-        void createBBoxEntity(std::shared_ptr<Mesh>& mesh);
+        void createBBoxEntity(std::shared_ptr<Mesh> & mesh);
 
     private:
         std::shared_ptr<VulkanAdapter> m_Adapter;
