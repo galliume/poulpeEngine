@@ -48,104 +48,29 @@ namespace Poulpe
 
         vkDestroyCommandPool(m_Adapter->rdr()->getDevice(), commandPool, nullptr);
 
+        Buffer crossHairuniformBuffer = m_Adapter->rdr()->createUniformBuffers(1);
+
         mesh->setName("crosshair");
         mesh->setShaderName("2d");
-
-        Buffer crossHairuniformBuffer = m_Adapter->rdr()->createUniformBuffers(1);
         mesh->m_UniformBuffers.emplace_back(crossHairuniformBuffer);
+        mesh->m_DescriptorSetLayout = createDescriptorSetLayout();
+        mesh->m_DescriptorSets = createDescriptorSet(mesh);
+        mesh->m_PipelineLayout = createPipelineLayout(mesh->m_DescriptorSetLayout);
 
-        Texture ctex = m_TextureManager->getTextures()["crosshair_1"];
-        Texture ctex2 = m_TextureManager->getTextures()["crosshair_2"];
+        setPushConstants(mesh);
 
-        std::vector<VkDescriptorImageInfo>cimageInfos;
-        VkDescriptorImageInfo cimageInfo{};
-        cimageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-        cimageInfo.imageView = ctex.getImageView();
-        cimageInfo.sampler = ctex.getSampler();
+        m_Adapter->getDescriptorSetLayouts()->emplace_back(mesh->m_DescriptorSetLayout);
 
-        VkDescriptorImageInfo cimageInfo2{};
-        cimageInfo2.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-        cimageInfo2.imageView = ctex2.getImageView();
-        cimageInfo2.sampler = ctex2.getSampler();
-
-        cimageInfos.emplace_back(cimageInfo);
-        cimageInfos.emplace_back(cimageInfo2);
-
-        VkDescriptorSetLayoutBinding cuboLayoutBinding{};
-        cuboLayoutBinding.binding = 0;
-        cuboLayoutBinding.descriptorCount = 1;
-        cuboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        cuboLayoutBinding.pImmutableSamplers = nullptr;
-        cuboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-
-        VkDescriptorSetLayoutBinding csamplerLayoutBinding{};
-        csamplerLayoutBinding.binding = 1;
-        csamplerLayoutBinding.descriptorCount = cimageInfos.size();
-        csamplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        csamplerLayoutBinding.pImmutableSamplers = nullptr;
-        csamplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-
-        std::vector<VkDescriptorSetLayoutBinding> cbindings = { cuboLayoutBinding, csamplerLayoutBinding };
-
-        VkDescriptorSetLayout cdesriptorSetLayout = m_Adapter->rdr()->createDescriptorSetLayout(cbindings);
-
-        m_Adapter->getDescriptorSetLayouts()->emplace_back(cdesriptorSetLayout);
-
-        VkDescriptorSet cdescriptorSet = m_Adapter->rdr()->createDescriptorSets(m_DescriptorPool, { cdesriptorSetLayout }, 1);
-        m_Adapter->rdr()->pdateDescriptorSets(mesh->m_UniformBuffers, cdescriptorSet, cimageInfos);
-        mesh->m_DescriptorSets.emplace_back(cdescriptorSet);
-
-        Crosshair::pc pc;
-        pc.textureID = 0;
-
-        mesh->applyPushConstants = [&pc](VkCommandBuffer& commandBuffer, VkPipelineLayout& pipelineLayout,  [[maybe_unused]] std::shared_ptr<VulkanAdapter> adapter,  [[maybe_unused]] Data& data) {
-            pc.textureID = VulkanAdapter::s_Crosshair;
-            vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(Crosshair::pc), &pc);
-        };
-        mesh->setHasPushConstants();
-
-        std::vector<VkPushConstantRange> vkPcs = {};
-        VkPushConstantRange vkPc;
-        vkPc.offset = 0;
-        vkPc.size = sizeof(Crosshair::pc);
-        vkPc.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-        vkPcs.emplace_back(vkPc);
-
-        std::vector<VkDescriptorSetLayout>dSetLayout = { cdesriptorSetLayout };
-
-        mesh->m_PipelineLayout = m_Adapter->rdr()->createPipelineLayout(dSetLayout, vkPcs);
-
-        std::vector<VkPipelineShaderStageCreateInfo>cshadersStageInfos;
-
-        VkPipelineShaderStageCreateInfo cvertShaderStageInfo{};
-        cvertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-        cvertShaderStageInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
-        cvertShaderStageInfo.module = m_ShaderManager->getShaders()->shaders[mesh->getShaderName()][0];
-        cvertShaderStageInfo.pName = "main";
-        cshadersStageInfos.emplace_back(cvertShaderStageInfo);
-
-        VkPipelineShaderStageCreateInfo cfragShaderStageInfo{};
-        cfragShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-        cfragShaderStageInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
-        cfragShaderStageInfo.module = m_ShaderManager->getShaders()->shaders[mesh->getShaderName()][1];
-        cfragShaderStageInfo.pName = "main";
-        cshadersStageInfos.emplace_back(cfragShaderStageInfo);
-
-        VkVertexInputBindingDescription bDesc = Vertex::GetBindingDescription();
-        auto crossDesc = Vertex::GetAttributeDescriptions();
-
-        VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
-        vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-        vertexInputInfo.vertexBindingDescriptionCount = 1;
-        vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(Vertex::GetAttributeDescriptions().size());
-        vertexInputInfo.pVertexBindingDescriptions = &bDesc;
-        vertexInputInfo.pVertexAttributeDescriptions = crossDesc.data();
+        auto shaders = getShaders(mesh->getShaderName());
+        auto bDesc = Vertex::GetBindingDescription();
+        auto attrDesc = Vertex::GetAttributeDescriptions();
+        auto vertexInputInfo = getVertexBindingDesc(bDesc, attrDesc);
 
         mesh->m_GraphicsPipeline = m_Adapter->rdr()->createGraphicsPipeline(
             m_Adapter->rdrPass(),
             mesh->m_PipelineLayout,
             mesh->getShaderName(),
-            cshadersStageInfos,
+            shaders,
             vertexInputInfo,
             VK_CULL_MODE_FRONT_BIT,
             true, true, true, true,
@@ -163,5 +88,114 @@ namespace Poulpe
         }
 
         mesh->setData(crossHairData);
+    }
+    VkDescriptorSetLayout Crosshair::createDescriptorSetLayout()
+    {
+         VkDescriptorSetLayoutBinding uboLayoutBinding{};
+        uboLayoutBinding.binding = 0;
+        uboLayoutBinding.descriptorCount = 1;
+        uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        uboLayoutBinding.pImmutableSamplers = nullptr;
+        uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+
+        VkDescriptorSetLayoutBinding samplerLayoutBinding{};
+        samplerLayoutBinding.binding = 1;
+        samplerLayoutBinding.descriptorCount = 2;
+        samplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        samplerLayoutBinding.pImmutableSamplers = nullptr;
+        samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+        std::vector<VkDescriptorSetLayoutBinding> bindings = { uboLayoutBinding, samplerLayoutBinding };
+
+         VkDescriptorSetLayout desriptorSetLayout = m_Adapter->rdr()->createDescriptorSetLayout(bindings);
+
+         return desriptorSetLayout;
+    }
+
+    std::vector<VkDescriptorSet> Crosshair::createDescriptorSet(std::shared_ptr<Mesh> mesh)
+    {
+        Texture tex = m_TextureManager->getTextures()["crosshair_1"];
+        Texture tex2 = m_TextureManager->getTextures()["crosshair_2"];
+
+        std::vector<VkDescriptorImageInfo> imageInfos;
+        VkDescriptorImageInfo imageInfo{};
+        imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        imageInfo.imageView = tex.getImageView();
+        imageInfo.sampler = tex.getSampler();
+
+        VkDescriptorImageInfo imageInfo2{};
+        imageInfo2.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        imageInfo2.imageView = tex2.getImageView();
+        imageInfo2.sampler = tex2.getSampler();
+
+        imageInfos.emplace_back(imageInfo);
+        imageInfos.emplace_back(imageInfo2);
+
+        VkDescriptorSet descriptorSet = m_Adapter->rdr()->createDescriptorSets(m_DescriptorPool, { mesh->m_DescriptorSetLayout }, 1);
+        m_Adapter->rdr()->pdateDescriptorSets(mesh->m_UniformBuffers, descriptorSet, imageInfos);
+
+        return { descriptorSet };
+    }
+
+    VkPipelineLayout Crosshair::createPipelineLayout(VkDescriptorSetLayout descriptorSetLayout)
+    {
+        std::vector<VkDescriptorSetLayout>dSetLayout = { descriptorSetLayout };
+
+        std::vector<VkPushConstantRange> vkPcs = {};
+        VkPushConstantRange vkPc;
+        vkPc.offset = 0;
+        vkPc.size = sizeof(Crosshair::pc);
+        vkPc.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+        vkPcs.emplace_back(vkPc);
+
+
+        VkPipelineLayout pipelineLayout = m_Adapter->rdr()->createPipelineLayout(dSetLayout, vkPcs);
+
+        return pipelineLayout;
+    }
+
+    std::vector<VkPipelineShaderStageCreateInfo> Crosshair::getShaders(std::string const & name)
+    {
+        std::vector<VkPipelineShaderStageCreateInfo> shadersStageInfos;
+
+        VkPipelineShaderStageCreateInfo vertShaderStageInfo{};
+        vertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+        vertShaderStageInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
+        vertShaderStageInfo.module = m_ShaderManager->getShaders()->shaders[name][0];
+        vertShaderStageInfo.pName = "main";
+        shadersStageInfos.emplace_back(vertShaderStageInfo);
+
+        VkPipelineShaderStageCreateInfo fragShaderStageInfo{};
+        fragShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+        fragShaderStageInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
+        fragShaderStageInfo.module = m_ShaderManager->getShaders()->shaders[name][1];
+        fragShaderStageInfo.pName = "main";
+        shadersStageInfos.emplace_back(fragShaderStageInfo);
+
+        return shadersStageInfos;
+    }
+
+    VkPipelineVertexInputStateCreateInfo Crosshair::getVertexBindingDesc(VkVertexInputBindingDescription bDesc, std::array<VkVertexInputAttributeDescription, 3> attDesc)
+    {
+        VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
+        vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
+        vertexInputInfo.vertexBindingDescriptionCount = 1;
+        vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(Vertex::GetAttributeDescriptions().size());
+        vertexInputInfo.pVertexBindingDescriptions = &bDesc;
+        vertexInputInfo.pVertexAttributeDescriptions = attDesc.data();
+
+        return vertexInputInfo;
+    }
+
+    void Crosshair::setPushConstants(std::shared_ptr<Mesh> mesh)
+    {
+        Crosshair::pc pc;
+        pc.textureID = 0;
+
+        mesh->applyPushConstants = [&pc](VkCommandBuffer& commandBuffer, VkPipelineLayout& pipelineLayout,  [[maybe_unused]] std::shared_ptr<VulkanAdapter> adapter,  [[maybe_unused]] Data& data) {
+            pc.textureID = VulkanAdapter::s_Crosshair;
+            vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(Crosshair::pc), &pc);
+        };
+        mesh->setHasPushConstants();
     }
 }
