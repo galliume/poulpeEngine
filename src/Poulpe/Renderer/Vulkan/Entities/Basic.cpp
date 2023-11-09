@@ -57,15 +57,11 @@ namespace Poulpe
           mesh->getData()->m_Ubos[i].proj = m_Adapter->getPerspective();
         }
 
-        VkDescriptorSetLayout descriptorSetLayout = createDescriptorSetLayout();
-        std::vector<VkDescriptorSet> desriptorSets = createDescriptorSet(mesh, descriptorSetLayout);
-        VkPipelineLayout pipelineLayout = createPipelineLayout(descriptorSetLayout);
+        mesh->m_DescriptorSetLayout = createDescriptorSetLayout();
+        mesh->m_DescriptorSets = createDescriptorSet(mesh);
+        mesh->m_PipelineLayout = createPipelineLayout(mesh->m_DescriptorSetLayout);
 
-        m_Adapter->getDescriptorSetLayouts()->emplace_back(descriptorSetLayout);
-
-        mesh->m_DescriptorSetLayout = descriptorSetLayout;
-        mesh->m_DescriptorSets = desriptorSets;
-        mesh->m_PipelineLayout = pipelineLayout;
+        m_Adapter->getDescriptorSetLayouts()->emplace_back(mesh->m_DescriptorSetLayout);
 
         int min{ 0 };
         int max{ 0 };
@@ -82,11 +78,9 @@ namespace Poulpe
           min = max;
         }
 
-
         setPushConstants(mesh);
 
         auto shaders = getShaders(mesh->getShaderName());
-
         auto bDesc = Vertex::GetBindingDescription();
         auto attDesc = Vertex::GetAttributeDescriptions();
         auto vertexInputInfo = getVertexBindingDesc(bDesc, attDesc);
@@ -95,7 +89,7 @@ namespace Poulpe
             m_Adapter->rdrPass(),
             mesh->m_PipelineLayout,
             mesh->getShaderName(),
-          shaders,
+            shaders,
             vertexInputInfo,
             VK_CULL_MODE_BACK_BIT,
             true, true, true, true,
@@ -160,14 +154,9 @@ namespace Poulpe
         box->mesh->setName("bbox_" + mesh->getData()->m_Name);
         box->mesh->setShaderName("bbox");
         box->mesh->setData(data);
-
-        VkDescriptorSetLayout descriptorSetLayout = createDescriptorSetLayout();
-        std::vector<VkDescriptorSet> desriptorSets = createDescriptorSet(box->mesh, descriptorSetLayout);
-        VkPipelineLayout pipelineLayout = createPipelineLayout(descriptorSetLayout);
-
-        box->mesh->m_DescriptorSetLayout = descriptorSetLayout;
-        box->mesh->m_DescriptorSets = desriptorSets;
-        box->mesh->m_PipelineLayout = pipelineLayout;
+        box->mesh->m_DescriptorSetLayout = createDescriptorSetLayout();
+        box->mesh->m_DescriptorSets = createDescriptorSet(box->mesh);
+        box->mesh->m_PipelineLayout = createPipelineLayout(box->mesh->m_DescriptorSetLayout);
 
         setPushConstants(box->mesh);
 
@@ -218,7 +207,7 @@ namespace Poulpe
       return desriptorSetLayout;
     }
 
-    std::vector<VkDescriptorSet> Basic::createDescriptorSet(std::shared_ptr<Mesh> mesh, VkDescriptorSetLayout descriptorSetLayout)
+    std::vector<VkDescriptorSet> Basic::createDescriptorSet(std::shared_ptr<Mesh> mesh)
     {
       if (!mesh->m_DescriptorSets.empty()) {
         vkFreeDescriptorSets(m_Adapter->rdr()->getDevice(), mesh->m_DescriptorPool, mesh->m_DescriptorSets.size(), mesh->m_DescriptorSets.data());
@@ -239,7 +228,7 @@ namespace Poulpe
       std::vector<VkDescriptorSet> descSets{};
 
       for (auto ubo : mesh->m_UniformBuffers) {
-        VkDescriptorSet descSet = m_Adapter->rdr()->createDescriptorSets(m_DescriptorPool, { descriptorSetLayout }, 1);
+        VkDescriptorSet descSet = m_Adapter->rdr()->createDescriptorSets(m_DescriptorPool, { mesh->m_DescriptorSetLayout }, 1);
         m_Adapter->rdr()->pdateDescriptorSets({ ubo }, descSet, imageInfos);
         for (uint32_t i = 0; i < m_Adapter->getSwapChainImages()->size(); i++) {
           descSets.emplace_back(descSet);
