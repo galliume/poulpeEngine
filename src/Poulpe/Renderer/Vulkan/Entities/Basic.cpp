@@ -20,13 +20,13 @@ namespace Poulpe
 
     }
 
-    void Basic::Visit(std::shared_ptr<Entity> entity)
+    void Basic::visit(std::shared_ptr<Entity> entity)
     {
         std::shared_ptr<Mesh> mesh = std::dynamic_pointer_cast<Mesh>(entity);
-        if (!mesh && !mesh->IsDirty()) return;
+        if (!mesh && !mesh->isDirty()) return;
 
-        uint32_t totalInstances = static_cast<uint32_t>(mesh->GetData()->m_Ubos.size());
-        uint32_t maxUniformBufferRange = m_Adapter->Rdr()->GetDeviceProperties().limits.maxUniformBufferRange;
+        uint32_t totalInstances = static_cast<uint32_t>(mesh->getData()->m_Ubos.size());
+        uint32_t maxUniformBufferRange = m_Adapter->rdr()->getDeviceProperties().limits.maxUniformBufferRange;
         uint32_t uniformBufferChunkSize = maxUniformBufferRange / sizeof(UniformBufferObject);
         uint32_t uniformBuffersCount = static_cast<uint32_t>(std::ceil(static_cast<float>(totalInstances) / static_cast<float>(uniformBufferChunkSize)));
 
@@ -37,8 +37,8 @@ namespace Poulpe
 
         for (size_t i = 0; i < uniformBuffersCount; ++i) {
 
-          mesh->GetData()->m_UbosOffset.emplace_back(uboOffset);
-          Buffer uniformBuffer = m_Adapter->Rdr()->CreateUniformBuffers(nbUbo);
+          mesh->getData()->m_UbosOffset.emplace_back(uboOffset);
+          Buffer uniformBuffer = m_Adapter->rdr()->createUniformBuffers(nbUbo);
           mesh->m_UniformBuffers.emplace_back(uniformBuffer);
 
           uboOffset = (uboRemaining > uniformBufferChunkSize) ? uboOffset + uniformBufferChunkSize : uboOffset + uboRemaining;
@@ -46,22 +46,22 @@ namespace Poulpe
           uboRemaining = (totalInstances - uboOffset > 0) ? totalInstances - uboOffset : 0;
         }
 
-        auto commandPool = m_Adapter->Rdr()->CreateCommandPool();
-        auto data = mesh->GetData();
+        auto commandPool = m_Adapter->rdr()->createCommandPool();
+        auto data = mesh->getData();
 
-        data->m_VertexBuffer = m_Adapter->Rdr()->CreateVertexBuffer(commandPool, data->m_Vertices);
-        data->m_IndicesBuffer = m_Adapter->Rdr()->CreateIndexBuffer(commandPool, data->m_Indices);
+        data->m_VertexBuffer = m_Adapter->rdr()->createVertexBuffer(commandPool, data->m_Vertices);
+        data->m_IndicesBuffer = m_Adapter->rdr()->createIndexBuffer(commandPool, data->m_Indices);
         data->m_TextureIndex = 0;
 
-        for (size_t i = 0; i < mesh->GetData()->m_Ubos.size(); ++i) {
-          mesh->GetData()->m_Ubos[i].proj = m_Adapter->GetPerspective();
+        for (size_t i = 0; i < mesh->getData()->m_Ubos.size(); ++i) {
+          mesh->getData()->m_Ubos[i].proj = m_Adapter->getPerspective();
         }
 
-        VkDescriptorSetLayout descriptorSetLayout = CreateDescriptorSetLayout();
-        std::vector<VkDescriptorSet> desriptorSets = CreateDescriptorSet(mesh, descriptorSetLayout);
-        VkPipelineLayout pipelineLayout = CreatePipelineLayout(descriptorSetLayout);
+        VkDescriptorSetLayout descriptorSetLayout = createDescriptorSetLayout();
+        std::vector<VkDescriptorSet> desriptorSets = createDescriptorSet(mesh, descriptorSetLayout);
+        VkPipelineLayout pipelineLayout = createPipelineLayout(descriptorSetLayout);
 
-        m_Adapter->GetDescriptorSetLayouts()->emplace_back(descriptorSetLayout);
+        m_Adapter->getDescriptorSetLayouts()->emplace_back(descriptorSetLayout);
 
         mesh->m_DescriptorSetLayout = descriptorSetLayout;
         mesh->m_DescriptorSets = desriptorSets;
@@ -71,10 +71,10 @@ namespace Poulpe
         int max{ 0 };
 
         for (size_t i = 0; i < mesh->m_UniformBuffers.size(); ++i) {
-          max = mesh->GetData()->m_UbosOffset.at(i);
-          auto ubos = std::vector<UniformBufferObject>(mesh->GetData()->m_Ubos.begin() + min, mesh->GetData()->m_Ubos.begin() + max);
+          max = mesh->getData()->m_UbosOffset.at(i);
+          auto ubos = std::vector<UniformBufferObject>(mesh->getData()->m_Ubos.begin() + min, mesh->getData()->m_Ubos.begin() + max);
 
-          m_Adapter->Rdr()->UpdateUniformBuffer(
+          m_Adapter->rdr()->updateUniformBuffer(
             mesh->m_UniformBuffers[i],
             ubos
           );
@@ -83,18 +83,18 @@ namespace Poulpe
         }
 
 
-        SetPushConstants(mesh);
+        setPushConstants(mesh);
 
-        auto shaders = GetShaders(mesh->GetShaderName());
+        auto shaders = getShaders(mesh->getShaderName());
 
         auto bDesc = Vertex::GetBindingDescription();
         auto attDesc = Vertex::GetAttributeDescriptions();
-        auto vertexInputInfo = GetVertexBindingDesc(bDesc, attDesc);
+        auto vertexInputInfo = getVertexBindingDesc(bDesc, attDesc);
 
-        mesh->m_GraphicsPipeline = m_Adapter->Rdr()->CreateGraphicsPipeline(
-            m_Adapter->RdrPass(),
+        mesh->m_GraphicsPipeline = m_Adapter->rdr()->createGraphicsPipeline(
+            m_Adapter->rdrPass(),
             mesh->m_PipelineLayout,
-            mesh->GetShaderName(),
+            mesh->getShaderName(),
           shaders,
             vertexInputInfo,
             VK_CULL_MODE_BACK_BIT,
@@ -102,23 +102,23 @@ namespace Poulpe
             VulkanAdapter::s_PolygoneMode
         );
 
-        if (m_Adapter->GetDrawBbox() && mesh->HasBbox()) {
-            CreateBBoxEntity(mesh);
-            mesh->SetHasBbox(true);
+        if (m_Adapter->getDrawBbox() && mesh->hasBbox()) {
+            createBBoxEntity(mesh);
+            mesh->setHasBbox(true);
         }
 
-        vkDestroyCommandPool(m_Adapter->Rdr()->GetDevice(), commandPool, nullptr);
+        vkDestroyCommandPool(m_Adapter->rdr()->getDevice(), commandPool, nullptr);
     }
 
-    void Basic::CreateBBoxEntity(std::shared_ptr<Mesh>& mesh)
+    void Basic::createBBoxEntity(std::shared_ptr<Mesh>& mesh)
     {
-        Poulpe::Entity::BBox* box = mesh->GetBBox().get();
+        Poulpe::Entity::BBox* box = mesh->getBBox().get();
 
         UniformBufferObject ubo;
         glm::mat4 transform = glm::translate(glm::mat4(1), box->center) * glm::scale(glm::mat4(1), box->size);
         ubo.model = box->position * transform;
 
-        auto commandPool = m_Adapter->Rdr()->CreateCommandPool();
+        auto commandPool = m_Adapter->rdr()->createCommandPool();
 
         const std::vector<Vertex> vertices = {
             {{-1.0f, -1.0f, 1.0f}, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
@@ -144,42 +144,42 @@ namespace Poulpe
         Data data;
         data.m_Texture = "minecraft_grass";
         data.m_TextureIndex = 0;
-        data.m_VertexBuffer = m_Adapter->Rdr()->CreateVertexBuffer(commandPool, vertices);
-        data.m_IndicesBuffer = m_Adapter->Rdr()->CreateIndexBuffer(commandPool, indices);
+        data.m_VertexBuffer = m_Adapter->rdr()->createVertexBuffer(commandPool, vertices);
+        data.m_IndicesBuffer = m_Adapter->rdr()->createIndexBuffer(commandPool, indices);
         data.m_Indices = indices;
         data.m_Vertices = vertices;
         data.m_Ubos.emplace_back(ubo);
 
-        if (box->mesh->GetData()->m_Ubos.size() > 0)
-            data.m_Ubos.insert(data.m_Ubos.end(), box->mesh->GetData()->m_Ubos.begin(), box->mesh->GetData()->m_Ubos.end());
+        if (box->mesh->getData()->m_Ubos.size() > 0)
+            data.m_Ubos.insert(data.m_Ubos.end(), box->mesh->getData()->m_Ubos.begin(), box->mesh->getData()->m_Ubos.end());
 
         for (uint32_t i = 0; i < data.m_Ubos.size(); i++) {
-            data.m_Ubos[i].proj = m_Adapter->GetPerspective();
+            data.m_Ubos[i].proj = m_Adapter->getPerspective();
         }
 
-        box->mesh->SetName("bbox_" + mesh->GetData()->m_Name);
-        box->mesh->SetShaderName("bbox");
-        box->mesh->SetData(data);
+        box->mesh->setName("bbox_" + mesh->getData()->m_Name);
+        box->mesh->setShaderName("bbox");
+        box->mesh->setData(data);
 
-        VkDescriptorSetLayout descriptorSetLayout = CreateDescriptorSetLayout();
-        std::vector<VkDescriptorSet> desriptorSets = CreateDescriptorSet(box->mesh, descriptorSetLayout);
-        VkPipelineLayout pipelineLayout = CreatePipelineLayout(descriptorSetLayout);
+        VkDescriptorSetLayout descriptorSetLayout = createDescriptorSetLayout();
+        std::vector<VkDescriptorSet> desriptorSets = createDescriptorSet(box->mesh, descriptorSetLayout);
+        VkPipelineLayout pipelineLayout = createPipelineLayout(descriptorSetLayout);
 
         box->mesh->m_DescriptorSetLayout = descriptorSetLayout;
         box->mesh->m_DescriptorSets = desriptorSets;
         box->mesh->m_PipelineLayout = pipelineLayout;
 
-        SetPushConstants(box->mesh);
+        setPushConstants(box->mesh);
 
-        auto shaders = Basic::GetShaders("bbox");
+        auto shaders = Basic::getShaders("bbox");
         auto bDesc = Vertex::GetBindingDescription();
         auto attDesc = Vertex::GetAttributeDescriptions();
-        auto vertexInputInfo = GetVertexBindingDesc(bDesc, attDesc);
+        auto vertexInputInfo = getVertexBindingDesc(bDesc, attDesc);
 
-        box->mesh->m_GraphicsPipeline = m_Adapter->Rdr()->CreateGraphicsPipeline(
-            m_Adapter->RdrPass(),
+        box->mesh->m_GraphicsPipeline = m_Adapter->rdr()->createGraphicsPipeline(
+            m_Adapter->rdrPass(),
             box->mesh->m_PipelineLayout,
-            box->mesh->GetShaderName(),
+            box->mesh->getShaderName(),
             shaders,
             vertexInputInfo,
             VK_CULL_MODE_BACK_BIT,
@@ -188,14 +188,14 @@ namespace Poulpe
         );
 
         for (uint32_t i = 0; i < box->mesh->m_UniformBuffers.size(); i++) {
-            m_Adapter->Rdr()->UpdateUniformBuffer(
+            m_Adapter->rdr()->updateUniformBuffer(
                 box->mesh->m_UniformBuffers[i],
-                box->mesh->GetData()->m_Ubos
+                box->mesh->getData()->m_Ubos
             );
         }
     }
 
-    VkDescriptorSetLayout Basic::CreateDescriptorSetLayout()
+    VkDescriptorSetLayout Basic::createDescriptorSetLayout()
     {
       VkDescriptorSetLayoutBinding uboLayoutBinding{};
       uboLayoutBinding.binding = 0;
@@ -213,35 +213,35 @@ namespace Poulpe
 
       std::vector<VkDescriptorSetLayoutBinding> bindings = { uboLayoutBinding, samplerLayoutBinding };
 
-      VkDescriptorSetLayout desriptorSetLayout = m_Adapter->Rdr()->CreateDescriptorSetLayout(bindings);
+      VkDescriptorSetLayout desriptorSetLayout = m_Adapter->rdr()->createDescriptorSetLayout(bindings);
 
       return desriptorSetLayout;
     }
 
-    std::vector<VkDescriptorSet> Basic::CreateDescriptorSet(std::shared_ptr<Mesh> mesh, VkDescriptorSetLayout descriptorSetLayout)
+    std::vector<VkDescriptorSet> Basic::createDescriptorSet(std::shared_ptr<Mesh> mesh, VkDescriptorSetLayout descriptorSetLayout)
     {
       if (!mesh->m_DescriptorSets.empty()) {
-        vkFreeDescriptorSets(m_Adapter->Rdr()->GetDevice(), mesh->m_DescriptorPool, mesh->m_DescriptorSets.size(), mesh->m_DescriptorSets.data());
+        vkFreeDescriptorSets(m_Adapter->rdr()->getDevice(), mesh->m_DescriptorPool, mesh->m_DescriptorSets.size(), mesh->m_DescriptorSets.data());
         mesh->m_DescriptorSets.clear();
       }
 
       std::vector<VkDescriptorImageInfo> imageInfos;
 
-      Texture tex = m_TextureManager->GetTextures()[mesh->GetData()->m_Texture];
+      Texture tex = m_TextureManager->getTextures()[mesh->getData()->m_Texture];
 
       VkDescriptorImageInfo imageInfo{};
       imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-      imageInfo.imageView = tex.GetImageView();
-      imageInfo.sampler = tex.GetSampler();
+      imageInfo.imageView = tex.getImageView();
+      imageInfo.sampler = tex.getSampler();
 
       imageInfos.emplace_back(imageInfo);
 
       std::vector<VkDescriptorSet> descSets{};
 
       for (auto ubo : mesh->m_UniformBuffers) {
-        VkDescriptorSet descSet = m_Adapter->Rdr()->CreateDescriptorSets(m_DescriptorPool, { descriptorSetLayout }, 1);
-        m_Adapter->Rdr()->UpdateDescriptorSets({ ubo }, descSet, imageInfos);
-        for (uint32_t i = 0; i < m_Adapter->GetSwapChainImages()->size(); i++) {
+        VkDescriptorSet descSet = m_Adapter->rdr()->createDescriptorSets(m_DescriptorPool, { descriptorSetLayout }, 1);
+        m_Adapter->rdr()->pdateDescriptorSets({ ubo }, descSet, imageInfos);
+        for (uint32_t i = 0; i < m_Adapter->getSwapChainImages()->size(); i++) {
           descSets.emplace_back(descSet);
         }
       }
@@ -249,7 +249,7 @@ namespace Poulpe
       return descSets;
     }
 
-    VkPipelineLayout Basic::CreatePipelineLayout(VkDescriptorSetLayout descriptorSetLayout)
+    VkPipelineLayout Basic::createPipelineLayout(VkDescriptorSetLayout descriptorSetLayout)
     {
       std::vector<VkDescriptorSetLayout> dSetLayout = { descriptorSetLayout };
 
@@ -259,58 +259,58 @@ namespace Poulpe
       vkPc.size = sizeof(constants);
       vkPc.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
       vkPcs.emplace_back(vkPc);
-      VkPipelineLayout pipelineLayout = m_Adapter->Rdr()->CreatePipelineLayout(dSetLayout, vkPcs);
+      VkPipelineLayout pipelineLayout = m_Adapter->rdr()->createPipelineLayout(dSetLayout, vkPcs);
 
       return pipelineLayout;
     }
 
-    std::vector<VkPipelineShaderStageCreateInfo> Basic::GetShaders(std::string const & shaderName)
+    std::vector<VkPipelineShaderStageCreateInfo> Basic::getShaders(std::string const & shaderName)
     {
       std::vector<VkPipelineShaderStageCreateInfo> shadersStageInfos;
 
       VkPipelineShaderStageCreateInfo vertShaderStageInfo{};
       vertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
       vertShaderStageInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
-      vertShaderStageInfo.module = m_ShaderManager->GetShaders()->shaders[shaderName][0];
+      vertShaderStageInfo.module = m_ShaderManager->getShaders()->shaders[shaderName][0];
       vertShaderStageInfo.pName = "main";
       shadersStageInfos.emplace_back(vertShaderStageInfo);
 
       VkPipelineShaderStageCreateInfo fragShaderStageInfo{};
       fragShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
       fragShaderStageInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
-      fragShaderStageInfo.module = m_ShaderManager->GetShaders()->shaders[shaderName][1];
+      fragShaderStageInfo.module = m_ShaderManager->getShaders()->shaders[shaderName][1];
       fragShaderStageInfo.pName = "main";
       shadersStageInfos.emplace_back(fragShaderStageInfo);
 
       return shadersStageInfos;
     }
 
-    void Basic::SetPushConstants(std::shared_ptr<Mesh> mesh)
+    void Basic::setPushConstants(std::shared_ptr<Mesh> mesh)
     {
       constants pushConstants;
       pushConstants.data = glm::vec4(0.f, Poulpe::VulkanAdapter::s_AmbiantLight.load(), Poulpe::VulkanAdapter::s_FogDensity.load(), 0.f);
-      pushConstants.cameraPos = m_Adapter->GetCamera()->GetPos();
+      pushConstants.cameraPos = m_Adapter->getCamera()->getPos();
       pushConstants.fogColor = glm::vec4({ Poulpe::VulkanAdapter::s_FogColor[0].load(), Poulpe::VulkanAdapter::s_FogColor[1].load(), Poulpe::VulkanAdapter::s_FogColor[2].load(), 0.f });
-      pushConstants.lightPos = glm::vec4(m_Adapter->GetLights().at(0), 0.f);
-      pushConstants.view = m_Adapter->GetCamera()->LookAt();
+      pushConstants.lightPos = glm::vec4(m_Adapter->getLights().at(0), 0.f);
+      pushConstants.view = m_Adapter->getCamera()->lookAt();
       pushConstants.ambiantLight = Poulpe::VulkanAdapter::s_AmbiantLight.load();
       pushConstants.fogDensity = Poulpe::VulkanAdapter::s_FogDensity.load();
 
-      mesh->ApplyPushConstants = [=, &pushConstants](VkCommandBuffer& commandBuffer, VkPipelineLayout& pipelineLayout, std::shared_ptr<VulkanAdapter> adapter, const Data& data) {
+      mesh->applyPushConstants = [=, &pushConstants](VkCommandBuffer& commandBuffer, VkPipelineLayout& pipelineLayout, std::shared_ptr<VulkanAdapter> adapter, const Data& data) {
         pushConstants.data = glm::vec4(static_cast<float>(data.m_TextureIndex), Poulpe::VulkanAdapter::s_AmbiantLight.load(), Poulpe::VulkanAdapter::s_FogDensity.load(), 0.f);
-        pushConstants.cameraPos = adapter->GetCamera()->GetPos();
+        pushConstants.cameraPos = adapter->getCamera()->getPos();
         pushConstants.fogColor = glm::vec4({ Poulpe::VulkanAdapter::s_FogColor[0].load(), Poulpe::VulkanAdapter::s_FogColor[1].load(), Poulpe::VulkanAdapter::s_FogColor[2].load(), 0.f });
-        pushConstants.lightPos = glm::vec4(adapter->GetLights().at(0), 0.f);
-        pushConstants.view = adapter->GetCamera()->LookAt();
+        pushConstants.lightPos = glm::vec4(adapter->getLights().at(0), 0.f);
+        pushConstants.view = adapter->getCamera()->lookAt();
         pushConstants.ambiantLight = Poulpe::VulkanAdapter::s_AmbiantLight.load();
         pushConstants.fogDensity = Poulpe::VulkanAdapter::s_FogDensity.load();
         vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(constants), &pushConstants);
       };
 
-      mesh->SetHasPushConstants();
+      mesh->setHasPushConstants();
     }
 
-    VkPipelineVertexInputStateCreateInfo Basic::GetVertexBindingDesc(VkVertexInputBindingDescription bDesc,
+    VkPipelineVertexInputStateCreateInfo Basic::getVertexBindingDesc(VkVertexInputBindingDescription bDesc,
       std::array<VkVertexInputAttributeDescription, 3> attDesc)
     {
       VkPipelineVertexInputStateCreateInfo vertexInputInfo{};

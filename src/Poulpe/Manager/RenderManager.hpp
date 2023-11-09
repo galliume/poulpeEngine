@@ -25,35 +25,35 @@ namespace Poulpe
         );
         virtual ~RenderManager() = default;
 
-        virtual void Init() override;
-        virtual void RenderScene() override;
-        virtual void Draw() override;
-        virtual bool IsLoaded()  override { return m_IsLoaded; }
-        virtual void SetIsLoaded(bool loaded = true) override { m_IsLoaded = loaded; }
-        virtual void Refresh(uint32_t levelIndex, bool showBbox = false, std::string_view skybox = "debug") override;
+        virtual void init() override;
+        virtual void renderScene() override;
+        virtual void draw() override;
+        virtual bool isLoaded()  override { return m_IsLoaded; }
+        virtual void setIsLoaded(bool loaded = true) override { m_IsLoaded = loaded; }
+        virtual void refresh(uint32_t levelIndex, bool showBbox = false, std::string_view skybox = "debug") override;
 
-        virtual std::shared_ptr<Window> GetWindow() override { return  m_Window; }
-        virtual std::shared_ptr<Poulpe::Camera> GetCamera() override { return m_Camera; }
-        virtual std::shared_ptr<Poulpe::InputManager> GetInputManager() override { return m_InputManager; }
-        virtual std::shared_ptr<Poulpe::VulkanAdapter> GetRendererAdapter() override { return m_Renderer; }
-        virtual std::shared_ptr<Poulpe::TextureManager> GetTextureManager() override { return m_TextureManager; }
-        virtual std::shared_ptr<Poulpe::SpriteAnimationManager> GetSpriteAnimationManager() override { return m_SpriteAnimationManager; }
-        virtual std::shared_ptr<Poulpe::EntityManager> GetEntityManager() override { return m_EntityManager; }
-        virtual std::shared_ptr<Poulpe::ShaderManager> GetShaderManager() override { return m_ShaderManager; }
-        virtual std::shared_ptr<Poulpe::AudioManager> GetAudioManager() override { return m_AudioManager; }
-        virtual std::shared_ptr<Poulpe::ConfigManager> GetConfigManager() override { return m_ConfigManager; }
-        virtual std::shared_ptr<Poulpe::DestroyManager> GetDestroyManager() override { return m_DestroyManager; }
-        virtual void CleanUp() override;
+        virtual std::shared_ptr<Window> getWindow() override { return  m_Window; }
+        virtual std::shared_ptr<Poulpe::Camera> getCamera() override { return m_Camera; }
+        virtual std::shared_ptr<Poulpe::InputManager> getInputManager() override { return m_InputManager; }
+        virtual std::shared_ptr<Poulpe::VulkanAdapter> getRendererAdapter() override { return m_Renderer; }
+        virtual std::shared_ptr<Poulpe::TextureManager> getTextureManager() override { return m_TextureManager; }
+        virtual std::shared_ptr<Poulpe::SpriteAnimationManager> getSpriteAnimationManager() override { return m_SpriteAnimationManager; }
+        virtual std::shared_ptr<Poulpe::EntityManager> getEntityManager() override { return m_EntityManager; }
+        virtual std::shared_ptr<Poulpe::ShaderManager> getShaderManager() override { return m_ShaderManager; }
+        virtual std::shared_ptr<Poulpe::AudioManager> getAudioManager() override { return m_AudioManager; }
+        virtual std::shared_ptr<Poulpe::ConfigManager> getConfigManager() override { return m_ConfigManager; }
+        virtual std::shared_ptr<Poulpe::DestroyManager> getDestroyManager() override { return m_DestroyManager; }
+        virtual void cleanUp() override;
 
-        void SetDrawBbox(bool draw) { m_Renderer->SetDrawBbox(draw); };
-        void ForceRefresh() { m_Refresh = true; };
+        void setDrawBbox(bool draw) { m_Renderer->setDrawBbox(draw); };
+        void forceRefresh() { m_Refresh = true; };
 
     private:
-        void PrepareSplashScreen();
-        void PrepareEntity();
-        void PrepareHUD();
-        void PrepareSkybox();
-        void LoadData(const std::string& level);
+        void prepareSplashScreen();
+        void prepareEntity();
+        void prepareHUD();
+        void prepareSkybox();
+        void loadData(const std::string& level);
 
     private:
         std::shared_ptr<Window> m_Window;

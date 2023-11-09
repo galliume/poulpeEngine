@@ -17,8 +17,8 @@ int main(int argc, char** argv)
     }
 
     std::unique_ptr<Poulpe::Application>app = std::make_unique<Poulpe::Application>();
-    app->Init();
-    app->Run();
+    app->init();
+    app->run();
 
     return 0;
 }

@@ -7,9 +7,9 @@ namespace Poulpe
     {
     public:
         ~LayerManager();
-        void Add(ILayer* layer);
-        void InitLayers(Window* window);
-        inline std::vector<ILayer*> List() { return m_Layers; };
+        void add(ILayer* layer);
+        void initLayers(Window* window);
+        inline std::vector<ILayer*> list() { return m_Layers; };
 
     private:
         std::vector<ILayer*> m_Layers;

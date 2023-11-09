@@ -13,24 +13,24 @@ namespace Poulpe
         if (nullptr == m_Memory) {
             m_Memory = std::make_shared<VkDeviceMemory>();
             m_MaxSize = maxSize;
-            AllocateToMemory();
+            allocateToMemory();
         }
     }
 
-    std::shared_ptr<VkDeviceMemory> DeviceMemory::GetMemory()
+    std::shared_ptr<VkDeviceMemory> DeviceMemory::getMemory()
     {
         if (nullptr == m_Memory) {
             m_Memory = std::make_shared<VkDeviceMemory>();
             m_Offset = 0;
             m_IsFull = false;
             m_IsAllocated = false;
-            AllocateToMemory();
+            allocateToMemory();
         }
 
         return m_Memory;
     }
 
-    void DeviceMemory::AllocateToMemory()
+    void DeviceMemory::allocateToMemory()
     {
         if (!m_IsAllocated) {
             VkMemoryAllocateInfo allocInfo{};
@@ -51,7 +51,7 @@ namespace Poulpe
         }
     }
 
-    void DeviceMemory::BindBufferToMemory(VkBuffer& buffer, VkDeviceSize size)
+    void DeviceMemory::bindBufferToMemory(VkBuffer& buffer, VkDeviceSize size)
     {
         vkBindBufferMemory(m_Device, buffer, *m_Memory, m_Offset);
         m_Offset += size;
@@ -63,7 +63,7 @@ namespace Poulpe
         m_Buffer.emplace_back(buffer);
     }
 
-    void DeviceMemory::BindImageToMemory(VkImage& image, VkDeviceSize size)
+    void DeviceMemory::bindImageToMemory(VkImage& image, VkDeviceSize size)
     {
         vkBindImageMemory(m_Device, image, *m_Memory, m_Offset);
         m_Offset += size;
@@ -73,7 +73,7 @@ namespace Poulpe
         }
     }
 
-    bool DeviceMemory::HasEnoughSpaceLeft(VkDeviceSize size)
+    bool DeviceMemory::hasEnoughSpaceLeft(VkDeviceSize size)
     { 
         bool hasEnoughSpaceLeft = m_MaxSize > m_Offset + size;
         if (!hasEnoughSpaceLeft) m_IsFull = true;
@@ -81,7 +81,7 @@ namespace Poulpe
         return hasEnoughSpaceLeft;
     }
 
-    void DeviceMemory::Clear()
+    void DeviceMemory::clear()
     {
         for (auto buffer : m_Buffer) {
             if (VK_NULL_HANDLE != buffer)

@@ -7,7 +7,7 @@ namespace Poulpe
     {
     }
 
-    Response Command::ExecRequest()
+    Response Command::execRequest()
     {
         Response response;
         

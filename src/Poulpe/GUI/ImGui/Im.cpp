@@ -22,7 +22,7 @@ namespace Poulpe {
     //    }
     //}
 
-    void Im::Init(GLFWwindow* window, ImGuiInfo initInfo)
+    void Im::init(GLFWwindow* window, ImGuiInfo initInfo)
     {
         s_ImGuiInfo = std::move(initInfo);
         s_ImGuiInfo.info.Allocator = s_Allocator;
@@ -185,49 +185,49 @@ namespace Poulpe {
         ImGui_ImplVulkan_Init(&s_ImGuiInfo.info, s_ImGuiInfo.rdrPass);
     }
 
-    void Im::NewFrame()
+    void Im::newFrame()
     {
         ImGui_ImplGlfw_NewFrame();
         ImGui_ImplVulkan_NewFrame();
         ImGui::NewFrame();
     }
 
-    void Im::CreateFontsTexture(VkCommandBuffer commandBuffer)
+    void Im::createFontsTexture(VkCommandBuffer commandBuffer)
     {
         ImGui_ImplVulkan_CreateFontsTexture(commandBuffer);
     }
 
-    void Im::Begin(std::string name, bool* p_open, ImGuiWindowFlags flags)
+    void Im::begin(std::string name, bool* p_open, ImGuiWindowFlags flags)
     {
         ImGui::Begin(name.c_str(), p_open, flags);
     }
     
-    void Im::End()
+    void Im::end()
     {
         ImGui::End();
     }
 
-    void Im::EndFrame()
+    void Im::endFrame()
     {
         ImGui::EndFrame();
     }
 
-    void Im::EndChild()
+    void Im::endChild()
     {
         ImGui::EndChild();
     }
 
-    void Im::Separator()
+    void Im::separator()
     {
         ImGui::Separator();
     }
 
-    void Im::BeginChild(std::string str_id, const ImVec2& size_arg, bool border, ImGuiWindowFlags extra_flags)
+    void Im::beginChild(std::string str_id, const ImVec2& size_arg, bool border, ImGuiWindowFlags extra_flags)
     {
         ImGui::BeginChild(str_id.c_str(), size_arg, border, extra_flags);
     }
 
-    void Im::Render()
+    void Im::render()
     {
         ImGui::Render();
 
@@ -240,7 +240,7 @@ namespace Poulpe {
         }
     }
 
-    void Im::Destroy()
+    void Im::destroy()
     {
         ImGui_ImplVulkan_DestroyFontUploadObjects();
         ImGui_ImplVulkan_Shutdown();

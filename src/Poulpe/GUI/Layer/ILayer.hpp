@@ -11,8 +11,8 @@ namespace Poulpe
         ILayer() = default;
         ~ILayer() = default;
 
-        virtual void Init(Window* window, std::shared_ptr<CommandQueue> cmdQueue) = 0;
-        virtual void AddRenderManager(RenderManager* renderManager) = 0;
-        virtual void Render(double timeStep) = 0;
+        virtual void init(Window* window, std::shared_ptr<CommandQueue> cmdQueue) = 0;
+        virtual void addRenderManager(RenderManager* renderManager) = 0;
+        virtual void render(double timeStep) = 0;
     };
 }

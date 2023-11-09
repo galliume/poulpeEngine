@@ -8,7 +8,7 @@ namespace Poulpe
         m_Shaders = std::make_shared<VulkanShaders>();
     }
 
-    std::function<void()> ShaderManager::Load(nlohmann::json config, std::condition_variable& cv)
+    std::function<void()> ShaderManager::load(nlohmann::json config, std::condition_variable& cv)
     {
         m_Config = config;
 
@@ -18,7 +18,7 @@ namespace Poulpe
                 auto key = static_cast<std::string>(shader.key());
                 auto data = shader.value();
 
-                AddShader(key, data["vert"], data["frag"]);
+                addShader(key, data["vert"], data["frag"]);
             }
 
             m_LoadingDone = true;
@@ -28,7 +28,7 @@ namespace Poulpe
         return shaderFuture;
     }
 
-    void ShaderManager::AddShader(const std::string& name, const std::string& vertPath, const std::string& fragPath)
+    void ShaderManager::addShader(const std::string& name, const std::string& vertPath, const std::string& fragPath)
     {
 
         if (!std::filesystem::exists(vertPath)) {
@@ -41,18 +41,18 @@ namespace Poulpe
             return;
         }
 
-        auto vertShaderCode = Poulpe::Tools::ReadFile(vertPath);
-        auto fragShaderCode = Poulpe::Tools::ReadFile(fragPath);
+        auto vertShaderCode = Poulpe::Tools::readFile(vertPath);
+        auto fragShaderCode = Poulpe::Tools::readFile(fragPath);
     
-        VkShaderModule vertexShaderModule = m_Renderer->Rdr()->CreateShaderModule(vertShaderCode);
-        VkShaderModule fragShaderModule = m_Renderer->Rdr()->CreateShaderModule(fragShaderCode);
+        VkShaderModule vertexShaderModule = m_Renderer->rdr()->createShaderModule(vertShaderCode);
+        VkShaderModule fragShaderModule = m_Renderer->rdr()->createShaderModule(fragShaderCode);
 
         std::array<VkShaderModule, 2> module = { vertexShaderModule, fragShaderModule };
 
         m_Shaders->shaders[name] = module;
     }
 
-    void ShaderManager::Clear()
+    void ShaderManager::clear()
     {
         m_Shaders->shaders.clear();
         m_LoadingDone = false;

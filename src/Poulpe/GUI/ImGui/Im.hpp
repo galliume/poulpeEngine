@@ -28,18 +28,18 @@ namespace Poulpe
     class Im
     {
     public:
-        static void Init(GLFWwindow* window, ImGuiInfo initInfo);
-        static void NewFrame();
-        static void Begin(std::string name, bool* p_open = NULL, ImGuiWindowFlags flags = 0);
-        static void CreateFontsTexture(VkCommandBuffer commandBuffer);
-        void static EndChild();
-        static void End();
-        static void EndFrame();
-        static void Separator();
-        static void BeginChild(std::string str_id, const ImVec2& size_arg, bool border, ImGuiWindowFlags extra_flags);
-        static void Render();
-        static void Destroy();
-        static ImGuiInfo GetImGuiInfo() { return s_ImGuiInfo; }
+        static void init(GLFWwindow* window, ImGuiInfo initInfo);
+        static void newFrame();
+        static void begin(std::string name, bool* p_open = NULL, ImGuiWindowFlags flags = 0);
+        static void createFontsTexture(VkCommandBuffer commandBuffer);
+        void static endChild();
+        static void end();
+        static void endFrame();
+        static void separator();
+        static void beginChild(std::string str_id, const ImVec2& size_arg, bool border, ImGuiWindowFlags extra_flags);
+        static void render();
+        static void destroy();
+        static ImGuiInfo getImGuiInfo() { return s_ImGuiInfo; }
         static ImGuiInfo s_ImGuiInfo;
         static VkAllocationCallbacks* s_Allocator;
         static ImGui_ImplVulkanH_Window s_wd;

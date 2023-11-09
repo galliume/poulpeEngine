@@ -7,7 +7,7 @@ namespace Poulpe
     {
 
     }
-    std::shared_ptr<DeviceMemory> DeviceMemoryPool::Get(VkDevice& device, VkDeviceSize size, uint32_t memoryType, VkBufferUsageFlags usage, bool forceNew)
+    std::shared_ptr<DeviceMemory> DeviceMemoryPool::get(VkDevice& device, VkDeviceSize size, uint32_t memoryType, VkBufferUsageFlags usage, bool forceNew)
     {
         if (m_MemoryAllocationCount > m_DeviceProperties.properties.limits.maxMemoryAllocationCount) {
             throw std::runtime_error("Max number of active allocation reached");
@@ -24,7 +24,7 @@ namespace Poulpe
             if (poolType->second.end() != poolUsage) {
                 for (size_t i = 0; i < poolUsage->second.size(); ++i) {
                     auto dm = poolUsage->second.at(i);
-                    if (!dm->IsFull() && dm->HasEnoughSpaceLeft(size)) {
+                    if (!dm->isFull() && dm->hasEnoughSpaceLeft(size)) {
                         //PLP_DEBUG("memory allocation recycle: size {} type {} usage {} full {} space left {}", size, memoryType, usage, dm->IsFull(), dm->HasEnoughSpaceLeft(size));
                         return dm;
                     }
@@ -57,12 +57,12 @@ namespace Poulpe
         }
     }
 
-    void DeviceMemoryPool::Clear()
+    void DeviceMemoryPool::clear()
     {
         for (auto& memoryType : m_Pool) {
             for (auto& usage : memoryType.second) {
                 for (auto& mem : usage.second) {
-                    mem->Clear();
+                    mem->clear();
                 }
             }
         }

@@ -7,12 +7,12 @@ namespace Poulpe
 
     }
 
-    void SpriteAnimationManager::Add(const std::string& name, std::vector<std::string> sprites)
+    void SpriteAnimationManager::add(const std::string& name, std::vector<std::string> sprites)
     {
         m_SpriteAnimations[name] = sprites;
     }
 
-    std::vector<std::string> SpriteAnimationManager::GetSpritesByName(const std::string& name)
+    std::vector<std::string> SpriteAnimationManager::getSpritesByName(const std::string& name)
     {
         auto sprites = m_SpriteAnimations.find(name);
 
@@ -24,7 +24,7 @@ namespace Poulpe
         }
     }
 
-    void SpriteAnimationManager::Clear()
+    void SpriteAnimationManager::clear()
     {
         m_SpriteAnimations.clear();
     }

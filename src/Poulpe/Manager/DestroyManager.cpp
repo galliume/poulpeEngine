@@ -7,60 +7,60 @@ namespace Poulpe
 
     }
 
-    void DestroyManager::SetRenderer(std::shared_ptr<VulkanRenderer> renderer)
+    void DestroyManager::setRenderer(std::shared_ptr<VulkanRenderer> renderer)
     {
         m_Renderer = renderer;
     }
 
-    void DestroyManager::CleanEntities(std::vector<std::shared_ptr<Entity>> entities)
+    void DestroyManager::cleanEntities(std::vector<std::shared_ptr<Entity>> entities)
     {
         for (std::shared_ptr<Entity> entity : entities) {
             std::shared_ptr<Mesh> mesh = std::dynamic_pointer_cast<Mesh>(entity);
-            CleanEntity(mesh);
+            cleanEntity(mesh);
         }
     }
 
-    void DestroyManager::CleanEntities(std::vector<std::shared_ptr<Mesh>> entities)
+    void DestroyManager::cleanEntities(std::vector<std::shared_ptr<Mesh>> entities)
     {
         for (std::shared_ptr<Mesh> mesh : entities) {
-            CleanEntity(mesh);
+            cleanEntity(mesh);
         }
     }
 
-    void DestroyManager::CleanEntity(std::shared_ptr<Mesh> entity)
+    void DestroyManager::cleanEntity(std::shared_ptr<Mesh> entity)
     {
         for (auto buffer : entity->m_UniformBuffers) {
-            m_Renderer->DestroyBuffer(buffer.buffer);
+            m_Renderer->destroyBuffer(buffer.buffer);
         }
 
-        m_Renderer->DestroyBuffer(entity->GetData()->m_VertexBuffer.buffer);
-        m_Renderer->DestroyBuffer(entity->GetData()->m_IndicesBuffer.buffer);
+        m_Renderer->destroyBuffer(entity->getData()->m_VertexBuffer.buffer);
+        m_Renderer->destroyBuffer(entity->getData()->m_IndicesBuffer.buffer);
     }
 
-    void DestroyManager::CleanShaders(std::unordered_map<std::string, std::array<VkShaderModule, 2>> shaders)
+    void DestroyManager::cleanShaders(std::unordered_map<std::string, std::array<VkShaderModule, 2>> shaders)
     {
         for (auto shader : shaders) {
-            vkDestroyShaderModule(m_Renderer->GetDevice(), shader.second[0], nullptr);
-            vkDestroyShaderModule(m_Renderer->GetDevice(), shader.second[1], nullptr);
+            vkDestroyShaderModule(m_Renderer->getDevice(), shader.second[0], nullptr);
+            vkDestroyShaderModule(m_Renderer->getDevice(), shader.second[1], nullptr);
         }
     }
 
-    void DestroyManager::CleanTextures(std::unordered_map<std::string, Texture> textures)
+    void DestroyManager::cleanTextures(std::unordered_map<std::string, Texture> textures)
     {
         for (auto texture : textures) {
-            CleanTexture(texture.second);
+            cleanTexture(texture.second);
         }
     }
 
-    void  DestroyManager::CleanTexture(Texture textures)
+    void  DestroyManager::cleanTexture(Texture textures)
     {
-        vkDestroySampler(m_Renderer->GetDevice(), textures.GetSampler(), nullptr);
-        vkDestroyImage(m_Renderer->GetDevice(), textures.GetImage(), nullptr);
-        vkDestroyImageView(m_Renderer->GetDevice(), textures.GetImageView(), nullptr);
+        vkDestroySampler(m_Renderer->getDevice(), textures.getSampler(), nullptr);
+        vkDestroyImage(m_Renderer->getDevice(), textures.getImage(), nullptr);
+        vkDestroyImageView(m_Renderer->getDevice(), textures.getImageView(), nullptr);
     }
 
-    void DestroyManager::CleanDeviceMemory()
+    void DestroyManager::cleanDeviceMemory()
     {
-        m_DeviceMemoryPool->Clear();
+        m_DeviceMemoryPool->clear();
     }
 }

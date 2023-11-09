@@ -13,18 +13,18 @@ namespace Poulpe
             VkDeviceSize maxSize
         );
 
-        void BindBufferToMemory(VkBuffer& buffer, VkDeviceSize size);
-        void BindImageToMemory(VkImage& image, VkDeviceSize size);
-        bool IsFull() { return m_IsFull; }
-        uint32_t GetOffset() { return m_Offset; }
-        std::shared_ptr<VkDeviceMemory> GetMemory();
-        bool HasEnoughSpaceLeft(VkDeviceSize size);
-        void Lock() { m_MutexMemory.lock(); }
-        void UnLock() { m_MutexMemory.unlock(); }
-        void Clear();
+        void bindBufferToMemory(VkBuffer& buffer, VkDeviceSize size);
+        void bindImageToMemory(VkImage& image, VkDeviceSize size);
+        bool isFull() { return m_IsFull; }
+        uint32_t getOffset() { return m_Offset; }
+        std::shared_ptr<VkDeviceMemory> getMemory();
+        bool hasEnoughSpaceLeft(VkDeviceSize size);
+        void lock() { m_MutexMemory.lock(); }
+        void unLock() { m_MutexMemory.unlock(); }
+        void clear();
 
     private:
-        void AllocateToMemory();
+        void allocateToMemory();
 
     private:
         bool m_IsFull = false;

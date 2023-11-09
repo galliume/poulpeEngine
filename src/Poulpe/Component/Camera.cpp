@@ -2,7 +2,7 @@
 
 namespace Poulpe
 {
-    void Camera::Init()
+    void Camera::init()
     {
         m_Pos = glm::vec3(0.0f, 0.5f, 1.5f);
         m_Target = glm::vec3(0.0f, 0.0f, 0.0f);
@@ -26,7 +26,7 @@ namespace Poulpe
         n : near distance
         f : far distance
     **/
-    glm::mat4 Camera::FrustumProj(float fovy, float s, float n, float f)
+    glm::mat4 Camera::frustumProj(float fovy, float s, float n, float f)
     {
         //infine reverse frustum projection
         /*float g = 1.0f / tan(fovy * 0.5f);
@@ -87,47 +87,47 @@ namespace Poulpe
         return frustumProj;
     }
 
-    void Camera::Forward()
+    void Camera::forward()
     {
         m_Pos += m_Speed * m_DeltaTime * m_CameraFront;
     }
 
-    void Camera::Backward()
+    void Camera::backward()
     {
         m_Pos -= m_Speed * m_DeltaTime * m_CameraFront;
     }
-    void Camera::Up()
+    void Camera::up()
     {
         m_Pos -= m_CameraUp * m_Speed * m_DeltaTime;
     }
 
-    void Camera::Down()
+    void Camera::down()
     {
         m_Pos += m_CameraUp * m_Speed * m_DeltaTime;
     }
 
-    void Camera::Left()
+    void Camera::left()
     {
         m_Pos -= glm::normalize(glm::cross(m_CameraFront, m_CameraUp)) * m_Speed * m_DeltaTime;
     }
 
-    void Camera::Right()
+    void Camera::right()
     {
         m_Pos += glm::normalize(glm::cross(m_CameraFront, m_CameraUp)) * m_Speed * m_DeltaTime;
     }
 
-    glm::mat4 Camera::LookAt()
+    glm::mat4 Camera::lookAt()
     {
         m_View = glm::lookAt(m_Pos, m_Pos + m_CameraFront, m_CameraUp);
         return m_View;
     }
 
-    void Camera::UpdateDeltaTime(float timeStep)
+    void Camera::updateDeltaTime(float timeStep)
     {
         m_DeltaTime = timeStep;
     }
 
-    void Camera::UpdateYP(float xoffset, float yoffset)
+    void Camera::updateYP(float xoffset, float yoffset)
     {
         m_Yaw += xoffset;
         m_Pitch += yoffset;
@@ -146,7 +146,7 @@ namespace Poulpe
         m_CameraFront = glm::normalize(direction);
     }
 
-    void Camera::Recenter()
+    void Camera::recenter()
     {
         m_CameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
     }
