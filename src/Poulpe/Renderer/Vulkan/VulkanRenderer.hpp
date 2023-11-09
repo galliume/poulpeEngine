@@ -43,16 +43,16 @@ namespace Poulpe {
         /**
         * Vulkan init functions, before main loop.
         **/
-        std::shared_ptr<VkRenderPass> CreateRenderPass(const VkSampleCountFlagBits& msaaSamples);
-        VkShaderModule CreateShaderModule(const std::vector<char>& code);
-        VkDescriptorPool CreateDescriptorPool(const std::vector<VkDescriptorPoolSize>& poolSizes, uint32_t maxSets = 100, VkDescriptorPoolCreateFlags flags = VK_DESCRIPTOR_POOL_CREATE_UPDATE_AFTER_BIND_BIT);
-        VkDescriptorSetLayout CreateDescriptorSetLayout(const std::vector<VkDescriptorSetLayoutBinding>& pBindings);
-        VkDescriptorSet CreateDescriptorSets(const VkDescriptorPool& descriptorPool, const std::vector<VkDescriptorSetLayout>& descriptorSetLayouts, uint32_t count = 100);
+        std::shared_ptr<VkRenderPass> createRenderPass(const VkSampleCountFlagBits& msaaSamples);
+        VkShaderModule createShaderModule(const std::vector<char>& code);
+        VkDescriptorPool createDescriptorPool(const std::vector<VkDescriptorPoolSize>& poolSizes, uint32_t maxSets = 100, VkDescriptorPoolCreateFlags flags = VK_DESCRIPTOR_POOL_CREATE_UPDATE_AFTER_BIND_BIT);
+        VkDescriptorSetLayout createDescriptorSetLayout(const std::vector<VkDescriptorSetLayoutBinding>& pBindings);
+        VkDescriptorSet createDescriptorSets(const VkDescriptorPool& descriptorPool, const std::vector<VkDescriptorSetLayout>& descriptorSetLayouts, uint32_t count = 100);
 
-        void UpdateDescriptorSets(const std::vector<Buffer>& uniformBuffers, const VkDescriptorSet& descriptorSet, const std::vector<VkDescriptorImageInfo>& imageInfo, VkDescriptorType type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
+        void pdateDescriptorSets(const std::vector<Buffer>& uniformBuffers, const VkDescriptorSet& descriptorSet, const std::vector<VkDescriptorImageInfo>& imageInfo, VkDescriptorType type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
 
-        VkPipelineLayout CreatePipelineLayout(const std::vector<VkDescriptorSetLayout>& descriptorSetLayouts, const std::vector<VkPushConstantRange>& pushConstants);
-        VkPipeline CreateGraphicsPipeline(
+        VkPipelineLayout createPipelineLayout(const std::vector<VkDescriptorSetLayout>& descriptorSetLayouts, const std::vector<VkPushConstantRange>& pushConstants);
+        VkPipeline createGraphicsPipeline(
             std::shared_ptr<VkRenderPass> renderPass,
             VkPipelineLayout pipelineLayout,
             std::string_view name,
@@ -65,116 +65,116 @@ namespace Poulpe {
             bool stencilTestEnable = true,
             int polygoneMode = VK_POLYGON_MODE_FILL
         );
-        VkSwapchainKHR CreateSwapChain(std::vector<VkImage>& swapChainImages, const VkSwapchainKHR& oldSwapChain = VK_NULL_HANDLE);
-        std::vector<VkFramebuffer> CreateFramebuffers(VkRenderPass renderPass, std::vector<VkImageView> swapChainImageViews, std::vector<VkImageView> depthImageView, std::vector<VkImageView> colorImageView);
-        VkCommandPool CreateCommandPool();
-        std::vector<VkCommandBuffer> AllocateCommandBuffers(VkCommandPool commandPool, uint32_t size = 1, bool isSecondary = false);
-        VkBuffer CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage);
-        void CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory);
-        Buffer CreateVertexBuffer(VkCommandPool commandPool, std::vector<Poulpe::Vertex> vertices);
-        Buffer CreateVertex2DBuffer(const VkCommandPool& commandPool, const std::vector<Poulpe::Vertex2D>& vertices);
-        Buffer CreateIndexBuffer(const VkCommandPool& commandPool, const std::vector<uint32_t>& indices);
-        std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>> CreateSyncObjects(std::vector<VkImage> swapChainImages);
-        VkImageMemoryBarrier SetupImageMemoryBarrier(VkImage image, VkAccessFlags srcAccessMask, VkAccessFlags dstAccessMask, VkImageLayout oldLayout, VkImageLayout newLayout, uint32_t mipLevels = VK_REMAINING_MIP_LEVELS, VkImageAspectFlags aspectMask = VK_IMAGE_ASPECT_COLOR_BIT);
-        void CopyBuffer(VkCommandPool commandPool, VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size, int queueIndex = 0);
-        bool SouldResizeSwapChain();
-        Buffer CreateUniformBuffers(uint32_t uniformBuffersCount);
-        Buffer CreateCubeUniformBuffers(uint32_t uniformBuffersCount);
-        void UpdateUniformBuffer(Buffer& buffer, std::vector<UniformBufferObject> uniformBufferObjects);
-        void CreateImage(uint32_t width, uint32_t height, uint32_t mipLevels, VkSampleCountFlagBits numSamples, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image);
-        void CreateSkyboxImage(uint32_t width, uint32_t height, VkSampleCountFlagBits numSamples, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image);
-        VkImageView CreateImageView(VkImage image, VkFormat format, uint32_t mipLevels, VkImageAspectFlags aspectFlags = VK_IMAGE_ASPECT_COLOR_BIT);
-        VkImageView CreateSkyboxImageView(VkImage image, VkFormat format, uint32_t mipLevels, VkImageAspectFlags aspectFlags = VK_IMAGE_ASPECT_COLOR_BIT);
-        void CreateTextureImage(VkCommandBuffer& commandBuffer, stbi_uc* pixels, uint32_t texWidth, uint32_t texHeight, uint32_t mipLevels, VkImage& textureImage, VkFormat format);
-        void CreateSkyboxTextureImage(VkCommandBuffer& commandBuffer, std::vector<stbi_uc*>& skyboxPixels, uint32_t texWidth, uint32_t texHeight, uint32_t mipLevels, VkImage& textureImage, VkFormat format);
-        void CopyBufferToImage(VkCommandBuffer& commandBuffer, VkBuffer& buffer, VkImage& image, uint32_t width, uint32_t height, uint32_t mipLevels = 0);
-        void CopyBufferToImageSkybox(VkCommandBuffer& commandBuffer, VkBuffer& buffer, VkImage& image, uint32_t width, uint32_t height, std::vector<stbi_uc*>skyboxPixels, uint32_t mipLevels, uint32_t layerSize);
-        VkSampler CreateTextureSampler(uint32_t mipLevels);
-        VkSampler CreateSkyboxTextureSampler(uint32_t mipLevels);
-        VkImageView CreateDepthResources(VkCommandBuffer commandBuffer);
-        VkFormat FindSupportedFormat(const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features);
-        VkFormat FindDepthFormat();
-        bool HasStencilComponent(VkFormat format);
-        VkDeviceSize GetMaxMemoryHeap() { return m_MaxMemoryHeap; }
-        void InitMemoryPool();
-        Buffer CreateStorageBuffers(uint32_t uniformBuffersCount);
-        void UpdateStorageBuffer(Buffer buffer, std::vector<UniformBufferObject> bufferObjects);
+        VkSwapchainKHR createSwapChain(std::vector<VkImage>& swapChainImages, const VkSwapchainKHR& oldSwapChain = VK_NULL_HANDLE);
+        std::vector<VkFramebuffer> createFramebuffers(VkRenderPass renderPass, std::vector<VkImageView> swapChainImageViews, std::vector<VkImageView> depthImageView, std::vector<VkImageView> colorImageView);
+        VkCommandPool createCommandPool();
+        std::vector<VkCommandBuffer> allocateCommandBuffers(VkCommandPool commandPool, uint32_t size = 1, bool isSecondary = false);
+        VkBuffer createBuffer(VkDeviceSize size, VkBufferUsageFlags usage);
+        void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory);
+        Buffer createVertexBuffer(VkCommandPool commandPool, std::vector<Poulpe::Vertex> vertices);
+        Buffer createVertex2DBuffer(const VkCommandPool& commandPool, const std::vector<Poulpe::Vertex2D>& vertices);
+        Buffer createIndexBuffer(const VkCommandPool& commandPool, const std::vector<uint32_t>& indices);
+        std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>> createSyncObjects(std::vector<VkImage> swapChainImages);
+        VkImageMemoryBarrier setupImageMemoryBarrier(VkImage image, VkAccessFlags srcAccessMask, VkAccessFlags dstAccessMask, VkImageLayout oldLayout, VkImageLayout newLayout, uint32_t mipLevels = VK_REMAINING_MIP_LEVELS, VkImageAspectFlags aspectMask = VK_IMAGE_ASPECT_COLOR_BIT);
+        void copyBuffer(VkCommandPool commandPool, VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size, int queueIndex = 0);
+        bool souldResizeSwapChain();
+        Buffer createUniformBuffers(uint32_t uniformBuffersCount);
+        Buffer createCubeUniformBuffers(uint32_t uniformBuffersCount);
+        void updateUniformBuffer(Buffer& buffer, std::vector<UniformBufferObject> uniformBufferObjects);
+        void createImage(uint32_t width, uint32_t height, uint32_t mipLevels, VkSampleCountFlagBits numSamples, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image);
+        void createSkyboxImage(uint32_t width, uint32_t height, VkSampleCountFlagBits numSamples, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image);
+        VkImageView createImageView(VkImage image, VkFormat format, uint32_t mipLevels, VkImageAspectFlags aspectFlags = VK_IMAGE_ASPECT_COLOR_BIT);
+        VkImageView createSkyboxImageView(VkImage image, VkFormat format, uint32_t mipLevels, VkImageAspectFlags aspectFlags = VK_IMAGE_ASPECT_COLOR_BIT);
+        void createTextureImage(VkCommandBuffer& commandBuffer, stbi_uc* pixels, uint32_t texWidth, uint32_t texHeight, uint32_t mipLevels, VkImage& textureImage, VkFormat format);
+        void createSkyboxTextureImage(VkCommandBuffer& commandBuffer, std::vector<stbi_uc*>& skyboxPixels, uint32_t texWidth, uint32_t texHeight, uint32_t mipLevels, VkImage& textureImage, VkFormat format);
+        void copyBufferToImage(VkCommandBuffer& commandBuffer, VkBuffer& buffer, VkImage& image, uint32_t width, uint32_t height, uint32_t mipLevels = 0);
+        void copyBufferToImageSkybox(VkCommandBuffer& commandBuffer, VkBuffer& buffer, VkImage& image, uint32_t width, uint32_t height, std::vector<stbi_uc*>skyboxPixels, uint32_t mipLevels, uint32_t layerSize);
+        VkSampler createTextureSampler(uint32_t mipLevels);
+        VkSampler createSkyboxTextureSampler(uint32_t mipLevels);
+        VkImageView createDepthResources(VkCommandBuffer commandBuffer);
+        VkFormat findSupportedFormat(const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features);
+        VkFormat findDepthFormat();
+        bool hasStencilComponent(VkFormat format);
+        VkDeviceSize getMaxMemoryHeap() { return m_MaxMemoryHeap; }
+        void initMemoryPool();
+        Buffer createStorageBuffers(uint32_t uniformBuffersCount);
+        void updateStorageBuffer(Buffer buffer, std::vector<UniformBufferObject> bufferObjects);
 
         /**
         * Vulkan drawing functions, in main loop
         **/
-        void ResetCommandPool(VkCommandPool commandPool);
-        void BeginCommandBuffer(VkCommandBuffer commandBuffer,
+        void resetCommandPool(VkCommandPool commandPool);
+        void beginCommandBuffer(VkCommandBuffer commandBuffer,
             VkCommandBufferUsageFlagBits flags = VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT,
             VkCommandBufferInheritanceInfo inheritanceInfo = {});
-        void EndCommandBuffer(VkCommandBuffer commandBuffer);
-        void BeginRenderPass(VkRenderPass renderPass, VkCommandBuffer commandBuffer, VkFramebuffer framebuffer);
-        void EndRenderPass(VkCommandBuffer commandBuffer);
-        void BeginRendering(VkCommandBuffer commandBuffer, const VkImageView& colorImageView, const VkImageView& depthImageView, const VkAttachmentLoadOp loadOp, const VkAttachmentStoreOp storeOp);
-        void EndRendering(VkCommandBuffer commandBuffer);
-        void SetViewPort(VkCommandBuffer commandBuffer);
-        void SetScissor(VkCommandBuffer commandBuffer);
-        void BindPipeline(VkCommandBuffer commandBuffer, VkPipeline pipeline);
-        void Draw(VkCommandBuffer commandBuffer, VkDescriptorSet descriptorSet, Mesh* mesh, Data data, uint32_t uboCount, bool drawIndexed = true, uint32_t index = 0);
-        uint32_t AcquireNextImageKHR(VkSwapchainKHR swapChain, std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>> semaphores);
-        VkResult QueueSubmit(VkCommandBuffer commandBuffer, int queueIndex = 0);
-        VkResult QueueSubmit(uint32_t imageIndex, std::vector<VkCommandBuffer> commandBuffers, int queueIndex = 0);
-        VkResult QueuePresent(uint32_t imageIndex, VkSwapchainKHR swapChain, std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>> semaphores, int queueIndex = 0);
-        void AddPipelineBarriers(VkCommandBuffer commandBuffer, std::vector<VkImageMemoryBarrier> renderBarriers, VkPipelineStageFlags srcStageMask, VkPipelineStageFlags dstStageMask, VkDependencyFlags dependencyFlags);
-        void GenerateMipmaps(VkCommandBuffer commandBuffer, VkFormat imageFormat, VkImage image, uint32_t texWidth, uint32_t texHeight, uint32_t mipLevels, uint32_t layerCount = 1);
-        uint32_t GetNextFrameIndex();
+        void endCommandBuffer(VkCommandBuffer commandBuffer);
+        void beginRenderPass(VkRenderPass renderPass, VkCommandBuffer commandBuffer, VkFramebuffer framebuffer);
+        void endRenderPass(VkCommandBuffer commandBuffer);
+        void beginRendering(VkCommandBuffer commandBuffer, const VkImageView& colorImageView, const VkImageView& depthImageView, const VkAttachmentLoadOp loadOp, const VkAttachmentStoreOp storeOp);
+        void endRendering(VkCommandBuffer commandBuffer);
+        void setViewPort(VkCommandBuffer commandBuffer);
+        void setScissor(VkCommandBuffer commandBuffer);
+        void bindPipeline(VkCommandBuffer commandBuffer, VkPipeline pipeline);
+        void draw(VkCommandBuffer commandBuffer, VkDescriptorSet descriptorSet, Mesh* mesh, Data data, uint32_t uboCount, bool drawIndexed = true, uint32_t index = 0);
+        uint32_t acquireNextImageKHR(VkSwapchainKHR swapChain, std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>> semaphores);
+        VkResult queueSubmit(VkCommandBuffer commandBuffer, int queueIndex = 0);
+        VkResult queueSubmit(uint32_t imageIndex, std::vector<VkCommandBuffer> commandBuffers, int queueIndex = 0);
+        VkResult queuePresent(uint32_t imageIndex, VkSwapchainKHR swapChain, std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>> semaphores, int queueIndex = 0);
+        void addPipelineBarriers(VkCommandBuffer commandBuffer, std::vector<VkImageMemoryBarrier> renderBarriers, VkPipelineStageFlags srcStageMask, VkPipelineStageFlags dstStageMask, VkDependencyFlags dependencyFlags);
+        void generateMipmaps(VkCommandBuffer commandBuffer, VkFormat imageFormat, VkImage image, uint32_t texWidth, uint32_t texHeight, uint32_t mipLevels, uint32_t layerCount = 1);
+        uint32_t getNextFrameIndex();
 
         /**
         * Vulkan clean and destroy
         **/
-        void DestroyPipeline(VkPipeline pipeline);
-        void DestroyPipelineData(VkPipelineLayout pipelineLayout, VkDescriptorPool descriptorPool, VkDescriptorSetLayout descriptorSetLayout);
-        void DestroySwapchain(VkDevice device, VkSwapchainKHR swapChain, std::vector<VkFramebuffer> swapChainFramebuffers, std::vector<VkImageView> swapChainImageViews);
-        void DestroySemaphores(std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>> semaphores);
-        void DestroyFences();
-        void DestroyBuffer(VkBuffer buffer);
-        void DestroyRenderPass(std::shared_ptr<VkRenderPass> renderPass, VkCommandPool commandPool, std::vector<VkCommandBuffer> commandBuffers);
-        void Destroy();
+        void destroyPipeline(VkPipeline pipeline);
+        void destroyPipelineData(VkPipelineLayout pipelineLayout, VkDescriptorPool descriptorPool, VkDescriptorSetLayout descriptorSetLayout);
+        void destroySwapchain(VkDevice device, VkSwapchainKHR swapChain, std::vector<VkFramebuffer> swapChainFramebuffers, std::vector<VkImageView> swapChainImageViews);
+        void destroySemaphores(std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>> semaphores);
+        void destroyFences();
+        void destroyBuffer(VkBuffer buffer);
+        void destroyRenderPass(std::shared_ptr<VkRenderPass> renderPass, VkCommandPool commandPool, std::vector<VkCommandBuffer> commandBuffers);
+        void destroy();
 
         /*
         * Helper functions.
         */
-        inline const std::vector<const char*> GetValidationLayers() const { return m_ValidationLayers; }
-        inline const std::vector<VkExtensionProperties> GetExtensions() const { return m_Extensions; }
-        inline const std::vector<VkLayerProperties> GetLayersAvailable() const { return m_LayersAvailable; }
-        inline bool IsInstanceCreated() const { return m_InstanceCreated; }
-        inline bool IsValidationLayersEnabled() const { return m_EnableValidationLayers; }
-        inline uint32_t GetExtensionCount() const { return m_ExtensionCount; }
-        inline uint32_t GetQueueFamily() const { return m_QueueFamilyIndices.graphicsFamily.value(); }
-        inline VkInstance GetInstance() const { return m_Instance; };
-        inline VkPhysicalDevice GetPhysicalDevice() const { return m_PhysicalDevice; }
-        inline VkDevice GetDevice() const { return m_Device; }
-        inline std::vector<VkQueue> GetGraphicsQueues() const { return m_GraphicsQueues; }
-        inline VkPhysicalDeviceProperties GetDeviceProperties() const { return m_DeviceProps; }
-        inline VkPhysicalDeviceFeatures GetDeviceFeatures() const { return m_DeviceFeatures; }
-        inline bool IsFramebufferResized() { return m_FramebufferResized; }
-        inline VkExtent2D GetSwapChainExtent() const { return m_SwapChainExtent; }
-        inline VkSurfaceKHR GetSurface() const { return m_Surface; }
-        inline VkSurfaceFormatKHR GetSurfaceFormat() const { return m_SurfaceFormat; }
-        inline void ResetCurrentFrameIndex() { m_CurrentFrame = 0; }
-        inline int32_t GetCurrentFrame() const { return m_CurrentFrame; }
-        inline VkFormat GetSwapChainImageFormat() const { return m_SwapChainImageFormat; }
-        inline VkSampleCountFlagBits GetMsaaSamples() const { return m_MsaaSamples; }
-        void InitDetails();
+        inline const std::vector<const char*> getValidationLayers() const { return m_ValidationLayers; }
+        inline const std::vector<VkExtensionProperties> getExtensions() const { return m_Extensions; }
+        inline const std::vector<VkLayerProperties> getLayersAvailable() const { return m_LayersAvailable; }
+        inline bool isInstanceCreated() const { return m_InstanceCreated; }
+        inline bool isValidationLayersEnabled() const { return m_EnableValidationLayers; }
+        inline uint32_t getExtensionCount() const { return m_ExtensionCount; }
+        inline uint32_t getQueueFamily() const { return m_QueueFamilyIndices.graphicsFamily.value(); }
+        inline VkInstance getInstance() const { return m_Instance; };
+        inline VkPhysicalDevice getPhysicalDevice() const { return m_PhysicalDevice; }
+        inline VkDevice getDevice() const { return m_Device; }
+        inline std::vector<VkQueue> getGraphicsQueues() const { return m_GraphicsQueues; }
+        inline VkPhysicalDeviceProperties getDeviceProperties() const { return m_DeviceProps; }
+        inline VkPhysicalDeviceFeatures getDeviceFeatures() const { return m_DeviceFeatures; }
+        inline bool isFramebufferResized() { return m_FramebufferResized; }
+        inline VkExtent2D getSwapChainExtent() const { return m_SwapChainExtent; }
+        inline VkSurfaceKHR getSurface() const { return m_Surface; }
+        inline VkSurfaceFormatKHR getSurfaceFormat() const { return m_SurfaceFormat; }
+        inline void resetCurrentFrameIndex() { m_CurrentFrame = 0; }
+        inline int32_t getCurrentFrame() const { return m_CurrentFrame; }
+        inline VkFormat getSwapChainImageFormat() const { return m_SwapChainImageFormat; }
+        inline VkSampleCountFlagBits getMsaaSamples() const { return m_MsaaSamples; }
+        void initDetails();
 
-        VkSampleCountFlagBits GetMaxUsableSampleCount();
-        const SwapChainSupportDetails QuerySwapChainSupport(VkPhysicalDevice device) const;
-        uint32_t GetImageCount() const;
-        std::string GetAPIVersion();
-        std::shared_ptr<DeviceMemoryPool> GetDeviceMemoryPool() { return m_DeviceMemoryPool; }
-        void StartMarker(VkCommandBuffer buffer, const std::string& name, float r, float g, float b, float a = 1.0);
-        void EndMarker(VkCommandBuffer buffer);
-        uint32_t GetQueueCount() { return m_queueCount; }
-        std::vector<VkQueue> GetPresentQueue() { return m_PresentQueues; };
+        VkSampleCountFlagBits getMaxUsableSampleCount();
+        const SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice device) const;
+        uint32_t getImageCount() const;
+        std::string getAPIVersion();
+        std::shared_ptr<DeviceMemoryPool> getDeviceMemoryPool() { return m_DeviceMemoryPool; }
+        void startMarker(VkCommandBuffer buffer, const std::string& name, float r, float g, float b, float a = 1.0);
+        void endMarker(VkCommandBuffer buffer);
+        uint32_t getQueueCount() { return m_queueCount; }
+        std::vector<VkQueue> getPresentQueue() { return m_PresentQueues; };
 
-        void WaitIdle();
+        void waitIdle();
 
-        static const std::string GetVendor(int vendorID)
+        static const std::string getVendor(int vendorID)
         {
             std::unordered_map<int, std::string> vendors;
             vendors[0x1002] = "AMD";
@@ -191,22 +191,22 @@ namespace Poulpe {
         bool m_FramebufferResized = false;
 
     private:
-        bool IsDeviceSuitable(VkPhysicalDevice device);
-        bool CheckDeviceExtensionSupport(VkPhysicalDevice device);
-        bool CheckValidationLayerSupport();
-        void CreateInstance();
-        void EnumerateExtensions();
-        void LoadRequiredExtensions();
-        void SetupDebugMessenger();
-        void CreateLogicalDevice();
-        void PickPhysicalDevice();
-        void CreateSurface();
+        bool isDeviceSuitable(VkPhysicalDevice device);
+        bool checkDeviceExtensionSupport(VkPhysicalDevice device);
+        bool checkValidationLayerSupport();
+        void createInstance();
+        void enumerateExtensions();
+        void loadRequiredExtensions();
+        void setupDebugMessenger();
+        void createLogicalDevice();
+        void pickPhysicalDevice();
+        void createSurface();
 
-        QueueFamilyIndices FindQueueFamilies(VkPhysicalDevice device);
-        VkSurfaceFormatKHR ChooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats);
-        VkPresentModeKHR ChooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes);
-        uint32_t FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
-        VkExtent2D ChooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities);
+        QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device);
+        VkSurfaceFormatKHR chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats);
+        VkPresentModeKHR chooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes);
+        uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
+        VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities);
 
     private:
         const int m_MAX_FRAMES_IN_FLIGHT = 2;

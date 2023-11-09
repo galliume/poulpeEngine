@@ -14,6 +14,6 @@ namespace Poulpe
     class TinyObjLoader
     {
     public:
-        static std::vector<TinyObjData> LoadData(std::string path, bool shouldInverseTextureY);
+        static std::vector<TinyObjData> loadData(std::string path, bool shouldInverseTextureY);
     };
 }

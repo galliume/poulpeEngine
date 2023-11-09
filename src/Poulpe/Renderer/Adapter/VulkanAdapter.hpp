@@ -17,54 +17,54 @@ namespace Poulpe
         explicit VulkanAdapter(std::shared_ptr<Window> window);
         virtual ~VulkanAdapter();
 
-        virtual void Init() override;
-        virtual void AddCamera(std::shared_ptr<Camera> camera) override { m_Camera = camera; }
-        virtual void Draw() override;
-        virtual void Destroy() override;
-        virtual void DrawSplashScreen() override;
-        virtual std::shared_ptr<VulkanRenderer> Rdr() override { return m_Renderer; }
-        virtual void ImmediateSubmit(std::function<void(VkCommandBuffer cmd)>&& function, int queueIndex = 0) override;
-        virtual void ShowGrid(bool show) override;
-        virtual void AddEntities(std::vector<std::shared_ptr<Entity>>* entities) override;
-        virtual void AddSkybox(std::shared_ptr<Mesh> skyboxMesh) override { m_SkyboxMesh = skyboxMesh; }
-        virtual void AddHUD(std::vector<std::shared_ptr<Mesh>> hud) override { m_HUD = hud; }
-        virtual void AddSplash(std::vector<std::shared_ptr<Mesh>> splash) override { m_Splash = splash; }
-        virtual inline std::vector<VkDescriptorSetLayout>* GetDescriptorSetLayouts() override { return &m_DescriptorSetLayouts; }
-        virtual inline std::vector<VkImage>* GetSwapChainImages() override { return &m_SwapChainImages; }
-        virtual inline std::shared_ptr<VkRenderPass> RdrPass() override { return m_RenderPass; }
-        virtual inline glm::mat4 GetPerspective() override { return m_Perspective; }
-        virtual void SetDeltatime(float deltaTime) override;
-        virtual void RenderScene() override;
-        ImGuiInfo GetImGuiInfo() ;
-        void Clear();
-        void DrawEntities();
-        void DrawSkybox();
-        void DrawHUD();
-        void DrawBbox();
+        virtual void init() override;
+        virtual void addCamera(std::shared_ptr<Camera> camera) override { m_Camera = camera; }
+        virtual void draw() override;
+        virtual void destroy() override;
+        virtual void drawSplashScreen() override;
+        virtual std::shared_ptr<VulkanRenderer> rdr() override { return m_Renderer; }
+        virtual void immediateSubmit(std::function<void(VkCommandBuffer cmd)>&& function, int queueIndex = 0) override;
+        virtual void showGrid(bool show) override;
+        virtual void addEntities(std::vector<std::shared_ptr<Entity>>* entities) override;
+        virtual void addSkybox(std::shared_ptr<Mesh> skyboxMesh) override { m_SkyboxMesh = skyboxMesh; }
+        virtual void addHUD(std::vector<std::shared_ptr<Mesh>> hud) override { m_HUD = hud; }
+        virtual void addSplash(std::vector<std::shared_ptr<Mesh>> splash) override { m_Splash = splash; }
+        virtual inline std::vector<VkDescriptorSetLayout>* getDescriptorSetLayouts() override { return &m_DescriptorSetLayouts; }
+        virtual inline std::vector<VkImage>* getSwapChainImages() override { return &m_SwapChainImages; }
+        virtual inline std::shared_ptr<VkRenderPass> rdrPass() override { return m_RenderPass; }
+        virtual inline glm::mat4 getPerspective() override { return m_Perspective; }
+        virtual void setDeltatime(float deltaTime) override;
+        virtual void renderScene() override;
+        ImGuiInfo getImGuiInfo() ;
+        void clear();
+        void drawEntities();
+        void drawSkybox();
+        void drawHUD();
+        void drawBbox();
         //void RenderForImGui(VkCommandBuffer cmdBuffer, VkFramebuffer swapChainFramebuffer);
-        void AddCmdToSubmit(VkCommandBuffer cmd);
-        void BeginRendering(VkCommandBuffer commandBuffer, VkAttachmentLoadOp loadOp = VK_ATTACHMENT_LOAD_OP_LOAD, VkAttachmentStoreOp storeOp = VK_ATTACHMENT_STORE_OP_STORE);
-        void EndRendering(VkCommandBuffer commandBuffer);
-        VkSwapchainKHR GetSwapChain() { return m_SwapChain; };
+        void addCmdToSubmit(VkCommandBuffer cmd);
+        void beginRendering(VkCommandBuffer commandBuffer, VkAttachmentLoadOp loadOp = VK_ATTACHMENT_LOAD_OP_LOAD, VkAttachmentStoreOp storeOp = VK_ATTACHMENT_STORE_OP_STORE);
+        void endRendering(VkCommandBuffer commandBuffer);
+        VkSwapchainKHR getSwapChain() { return m_SwapChain; };
 
-        void ShouldRecreateSwapChain();
-        void RecreateSwapChain();
-        void SetRayPick(float x, float y, float z, int width, int height);
-        void ClearSplashScreen();
-        void SetDrawBbox(bool draw) { m_DrawBbox = draw; };
-        bool GetDrawBbox() { return m_DrawBbox; };
-        void ClearRendererScreen();
-        void StopRendering() { m_RenderingStopped = true; };
-        std::pair<VkSampler, VkImageView> GetImguiTexture() { return std::make_pair(m_SwapChainSamplers[m_ImageIndex], m_SwapChainImageViews[m_ImageIndex]); };
-        std::pair<VkSampler, VkImageView> GetImguiDepthImage() { return std::make_pair(m_SwapChainDepthSamplers[m_ImageIndex], m_DepthImageViews[m_ImageIndex]); };
+        void shouldRecreateSwapChain();
+        void recreateSwapChain();
+        void setRayPick(float x, float y, float z, int width, int height);
+        void clearSplashScreen();
+        void setDrawBbox(bool draw) { m_DrawBbox = draw; };
+        bool getDrawBbox() { return m_DrawBbox; };
+        void clearRendererScreen();
+        void stopRendering() { m_RenderingStopped = true; };
+        std::pair<VkSampler, VkImageView> getImguiTexture() { return std::make_pair(m_SwapChainSamplers[m_ImageIndex], m_SwapChainImageViews[m_ImageIndex]); };
+        std::pair<VkSampler, VkImageView> getImguiDepthImage() { return std::make_pair(m_SwapChainDepthSamplers[m_ImageIndex], m_DepthImageViews[m_ImageIndex]); };
 
-        std::vector<VkImageView>* GetSwapChainImageViews() { return &m_SwapChainImageViews; }
-        uint32_t GetCurrentFrameIndex() const { return m_ImageIndex; };
+        std::vector<VkImageView>* getSwapChainImageViews() { return &m_SwapChainImageViews; }
+        uint32_t getCurrentFrameIndex() const { return m_ImageIndex; };
 
         //@todo add GuiManager
-        VkRenderPass CreateImGuiRenderPass(VkFormat format);
+        VkRenderPass createImGuiRenderPass(VkFormat format);
         
-        void AttachObserver(IObserver* observer);
+        void attachObserver(IObserver* observer);
 
         //IMGUI config
         static std::atomic<float> s_AmbiantLight;
@@ -73,16 +73,16 @@ namespace Poulpe
         static std::atomic<int> s_Crosshair;
         static std::atomic<int> s_PolygoneMode;
 
-        std::shared_ptr<Camera> GetCamera() { return m_Camera; }
-        std::vector<glm::vec3> GetLights() { return m_LightsPos; }
+        std::shared_ptr<Camera> getCamera() { return m_Camera; }
+        std::vector<glm::vec3> getLights() { return m_LightsPos; }
 
     private:
         //@todo temp
-        void SetPerspective();
-        void Submit(std::vector<VkCommandBuffer> commandBuffers, int queueIndex = 0);
-        void Present(int queueIndex = 0);
-        void OnFinishRender();
-        void AcquireNextImage();
+        void setPerspective();
+        void submit(std::vector<VkCommandBuffer> commandBuffers, int queueIndex = 0);
+        void present(int queueIndex = 0);
+        void onFinishRender();
+        void acquireNextImage();
 
     private:
         std::shared_ptr<VulkanRenderer> m_Renderer = nullptr;

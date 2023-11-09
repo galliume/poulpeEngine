@@ -12,20 +12,20 @@ namespace Poulpe
     class Camera
     {
     public:
-        void Init();
-        inline glm::mat4 GetView() { return m_View; }
-        void Forward();
-        void Backward();
-        void Up();
-        void Down();
-        void Left();
-        void Right();
-        glm::mat4 LookAt();
-        void UpdateDeltaTime(float timeStep);
-        void UpdateYP(float xoffset, float yoffset);
-        void Recenter();
-        glm::mat4 FrustumProj(float fovy, float s, float n, float f);
-        glm::vec4 GetPos() { return glm::vec4(m_Pos, 1.0f); }
+        void init();
+        inline glm::mat4 getView() { return m_View; }
+        void forward();
+        void backward();
+        void up();
+        void down();
+        void left();
+        void right();
+        glm::mat4 lookAt();
+        void updateDeltaTime(float timeStep);
+        void updateYP(float xoffset, float yoffset);
+        void recenter();
+        glm::mat4 frustumProj(float fovy, float s, float n, float f);
+        glm::vec4 getPos() { return glm::vec4(m_Pos, 1.0f); }
 
     private:
         glm::vec3 m_Pos;

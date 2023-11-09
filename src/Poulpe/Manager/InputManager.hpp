@@ -13,14 +13,14 @@ namespace Poulpe
     {
     public:
         explicit InputManager(std::shared_ptr<Window> window);
-        virtual void Init(nlohmann::json inputConfig) override;
+        virtual void init(nlohmann::json inputConfig) override;
 
-        void Key(int key, int scancode, int action, int mods);
-        void Mouse(double xPos, double yPo);
-        void MouseButton(int button, int action, int mods);
+        void key(int key, int scancode, int action, int mods);
+        void mouse(double xPos, double yPo);
+        void mouseButton(int button, int action, int mods);
 
-        void SetCamera(std::shared_ptr<Camera> camera) { m_Camera = camera; };
-        void AddRenderer(std::shared_ptr<Poulpe::VulkanAdapter> adapter) { m_Adapter = adapter; };
+        void setCamera(std::shared_ptr<Camera> camera) { m_Camera = camera; };
+        void addRenderer(std::shared_ptr<Poulpe::VulkanAdapter> adapter) { m_Adapter = adapter; };
 
         static bool m_CanMoveCamera;
         static bool m_FirtMouseMove;

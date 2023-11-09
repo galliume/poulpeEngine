@@ -8,13 +8,13 @@ namespace Poulpe
     InputManager::InputManager(std::shared_ptr<Window> window) : m_Window(window)
     {
         int width, height;
-        glfwGetWindowSize(m_Window->Get(), &width, &height);
+        glfwGetWindowSize(m_Window->get(), &width, &height);
         m_LastX = 800;
         m_LastY = 600;
         InputManager::m_FirtMouseMove = true;
     }
     
-    void InputManager::Init(nlohmann::json inputConfig)
+    void InputManager::init(nlohmann::json inputConfig)
     {
         m_InputConfig = inputConfig;
 
@@ -49,25 +49,25 @@ namespace Poulpe
             { "z", GLFW_KEY_Z }
         };
 
-        glfwSetWindowUserPointer(m_Window->Get(), this);
+        glfwSetWindowUserPointer(m_Window->get(), this);
 
-        glfwSetKeyCallback(m_Window->Get(), []([[maybe_unused]] GLFWwindow* window, int key, int scancode, int action, int mods) {
+        glfwSetKeyCallback(m_Window->get(), []([[maybe_unused]] GLFWwindow* window, int key, int scancode, int action, int mods) {
             InputManager* inputManager = Poulpe::Locator::getInputManager();
-            inputManager->Key(key, scancode, action, mods);
+            inputManager->key(key, scancode, action, mods);
         });
 
-        glfwSetCursorPosCallback(m_Window->Get(), []([[maybe_unused]] GLFWwindow* window, double xPos, double yPos) {
+        glfwSetCursorPosCallback(m_Window->get(), []([[maybe_unused]] GLFWwindow* window, double xPos, double yPos) {
             InputManager* inputManager = Poulpe::Locator::getInputManager();
-            inputManager->Mouse(xPos, yPos);
+            inputManager->mouse(xPos, yPos);
         });
 
-        glfwSetMouseButtonCallback(m_Window->Get(), []([[maybe_unused]] GLFWwindow* window, int button, int action, int mods) {
+        glfwSetMouseButtonCallback(m_Window->get(), []([[maybe_unused]] GLFWwindow* window, int button, int action, int mods) {
             InputManager* inputManager = Poulpe::Locator::getInputManager();
-            inputManager->MouseButton(button, action, mods);
+            inputManager->mouseButton(button, action, mods);
         });
     }
 
-    void InputManager::Key(int key, [[maybe_unused]] int scancode, int action, [[maybe_unused]] int mods)
+    void InputManager::key(int key, [[maybe_unused]] int scancode, int action, [[maybe_unused]] int mods)
     {
         const auto config = m_InputConfig[m_InputConfig["current"]];
 
@@ -78,23 +78,23 @@ namespace Poulpe
             {
                 if (key == m_KeyboardKeys[config["unlockCamera"]]) {
                     if (!InputManager::m_CanMoveCamera) {
-                        glfwSetInputMode(m_Window->Get(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+                        glfwSetInputMode(m_Window->get(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
                     } else {
-                        glfwSetInputMode(m_Window->Get(), GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+                        glfwSetInputMode(m_Window->get(), GLFW_CURSOR, GLFW_CURSOR_NORMAL);
                     }
                     InputManager::m_CanMoveCamera = !InputManager::m_CanMoveCamera;
                 } else if (key == m_KeyboardKeys[config["forward"]]) {
-                    m_Camera->Forward();
+                    m_Camera->forward();
                 } else if (key == m_KeyboardKeys[config["backward"]]) {
-                    m_Camera->Backward();
+                    m_Camera->backward();
                 } else if (key == m_KeyboardKeys[config["left"]]) {
-                    m_Camera->Left();
+                    m_Camera->left();
                 } else if (key == m_KeyboardKeys[config["right"]]) {
-                    m_Camera->Right();
+                    m_Camera->right();
                 } else if (key == m_KeyboardKeys[config["up"]]) {
-                    m_Camera->Up();
+                    m_Camera->up();
                 } else if (key == m_KeyboardKeys[config["down"]]) {
-                    m_Camera->Down();
+                    m_Camera->down();
                 }
                 break;
             }
@@ -105,7 +105,7 @@ namespace Poulpe
         }
     }
 
-    void InputManager::Mouse(double x, double y)
+    void InputManager::mouse(double x, double y)
     {
         float xPos = static_cast<float>(x);
         float yPos = static_cast<float>(y);
@@ -127,17 +127,17 @@ namespace Poulpe
         xoffset *= sensitivity;
         yoffset *= sensitivity;
     
-        m_Camera->UpdateYP(xoffset, yoffset);
+        m_Camera->updateYP(xoffset, yoffset);
     }
 
-    void InputManager::MouseButton(int button, [[maybe_unused]] int action, [[maybe_unused]] int mods)
+    void InputManager::mouseButton(int button, [[maybe_unused]] int action, [[maybe_unused]] int mods)
     {
         if (GLFW_MOUSE_BUTTON_LEFT == button) {
             int width, height;
-            glfwGetWindowSize(m_Window->Get(), &width, &height);
+            glfwGetWindowSize(m_Window->get(), &width, &height);
 
             double xpos, ypos;
-            glfwGetCursorPos(m_Window->Get(), &xpos, &ypos);
+            glfwGetCursorPos(m_Window->get(), &xpos, &ypos);
 
             //float x = (2.0f * xpos) / width - 1.0f;
             //float y = 1.0f - (2.0f * ypos) / height;

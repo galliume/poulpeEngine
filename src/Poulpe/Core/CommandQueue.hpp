@@ -13,9 +13,9 @@ namespace Poulpe
         CommandQueue();
         ~CommandQueue() = default;
 
-        void Add(Command& cmd);
-        void ExecPreRequest();
-        void ExecPostRequest();
+        void add(Command& cmd);
+        void execPreRequest();
+        void execPostRequest();
 
     private:
         mutable std::mutex m_Mutex;

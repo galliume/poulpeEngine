@@ -203,12 +203,12 @@ set_property(DIRECTORY ${PROJECT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT ${PROJE
 
 find_program(CLANG_TIDY_EXE NAMES "clang-tidy")
 
-add_custom_command(
-        TARGET ${PROJECT_NAME} PRE_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_directory
-                ${CMAKE_CURRENT_SOURCE_DIR}/assets
-                $<TARGET_FILE_DIR:${PROJECT_NAME}>/assets
-		COMMENT "Copying assets")
+# add_custom_command(
+        # TARGET ${PROJECT_NAME} PRE_BUILD
+        # COMMAND ${CMAKE_COMMAND} -E copy_directory
+                # ${CMAKE_CURRENT_SOURCE_DIR}/assets
+                # $<TARGET_FILE_DIR:${PROJECT_NAME}>/assets
+		# COMMENT "Copying assets")
 
 add_custom_command(
         TARGET ${PROJECT_NAME} PRE_BUILD

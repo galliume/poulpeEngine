@@ -6,7 +6,7 @@ namespace Poulpe
 {
     Mesh::Mesh() : Entity() { }
 
-    std::vector<std::shared_ptr<Mesh>> Mesh::Init(const std::string& name,
+    std::vector<std::shared_ptr<Mesh>> Mesh::init(const std::string& name,
         const std::string& path,
         const std::vector<std::string>& textureNames,
         const std::string& shader,
@@ -21,7 +21,7 @@ namespace Poulpe
             throw std::runtime_error("error loading a mesh file.");
         }
 
-        std::vector<TinyObjData> listData = Poulpe::TinyObjLoader::LoadData(path, shouldInverseTextureY);
+        std::vector<TinyObjData> listData = Poulpe::TinyObjLoader::loadData(path, shouldInverseTextureY);
         //end todo
 
         std::vector<std::shared_ptr<Mesh>> meshes;
@@ -30,8 +30,8 @@ namespace Poulpe
 
             Data data;
             auto mesh = std::make_shared<Mesh>();
-            mesh->SetName(name + '_' + std::to_string(i));
-            mesh->SetShaderName(shader);
+            mesh->setName(name + '_' + std::to_string(i));
+            mesh->setShaderName(shader);
 
             std::vector<Poulpe::Mesh::BBox> bboxs{};
 
@@ -52,7 +52,7 @@ namespace Poulpe
             //ubo.view = glm::mat4(1.0f);
             data.m_Ubos.emplace_back(ubo);
 
-            mesh->SetData(data);
+            mesh->setData(data);
 
             float xMax = data.m_Vertices.at(0).pos.x;
             float yMax = data.m_Vertices.at(0).pos.y;
@@ -92,14 +92,14 @@ namespace Poulpe
             box->minY = yMin;
             box->maxZ = zMax;
             box->minZ = zMin;
-            mesh->AddBBox(box);
+            mesh->addBBox(box);
             meshes.emplace_back(mesh);
         }
 
         return meshes;
     }
 
-    void Mesh::AddUbos(const std::vector<UniformBufferObject>& ubos)
+    void Mesh::addUbos(const std::vector<UniformBufferObject>& ubos)
     {
         m_Data.m_Ubos.insert(m_Data.m_Ubos.end(), ubos.begin(), ubos.end());
     }

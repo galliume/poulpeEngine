@@ -20,10 +20,10 @@ namespace Poulpe
 
     }
 
-    void Grid::Visit(std::shared_ptr<Entity> entity)
+    void Grid::visit(std::shared_ptr<Entity> entity)
     {
         std::shared_ptr<Mesh> mesh = std::dynamic_pointer_cast<Mesh>(entity);
-        if (!mesh && !mesh->IsDirty()) return;
+        if (!mesh && !mesh->isDirty()) return;
 
         const std::vector<Vertex> vertices = {
             {{-1.f, -1.f, 0.0f}, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
@@ -38,32 +38,32 @@ namespace Poulpe
         UniformBufferObject ubo;
         //ubo.view = glm::mat4(0.0f);
 
-        auto commandPool = m_Adapter->Rdr()->CreateCommandPool();
+        auto commandPool = m_Adapter->rdr()->createCommandPool();
 
         Data gridData;
         gridData.m_Texture = "grid";
         gridData.m_TextureIndex = 0;
-        gridData.m_VertexBuffer = m_Adapter->Rdr()->CreateVertexBuffer(commandPool, vertices);
-        gridData.m_IndicesBuffer = m_Adapter->Rdr()->CreateIndexBuffer(commandPool, indices);
+        gridData.m_VertexBuffer = m_Adapter->rdr()->createVertexBuffer(commandPool, vertices);
+        gridData.m_IndicesBuffer = m_Adapter->rdr()->createIndexBuffer(commandPool, indices);
         gridData.m_Ubos.emplace_back(ubo);
         gridData.m_Indices = indices;
         gridData.m_Vertices = vertices;
 
-        vkDestroyCommandPool(m_Adapter->Rdr()->GetDevice(), commandPool, nullptr);
+        vkDestroyCommandPool(m_Adapter->rdr()->getDevice(), commandPool, nullptr);
 
-        mesh->SetName("grid");
-        mesh->SetShaderName("grid");
+        mesh->setName("grid");
+        mesh->setShaderName("grid");
 
-        Buffer gridUniformBuffer = m_Adapter->Rdr()->CreateUniformBuffers(1);
+        Buffer gridUniformBuffer = m_Adapter->rdr()->createUniformBuffers(1);
         mesh->m_UniformBuffers.emplace_back(gridUniformBuffer);
 
-        Texture ctex = m_TextureManager->GetTextures()["minecraft_grass"];
+        Texture ctex = m_TextureManager->getTextures()["minecraft_grass"];
 
         std::vector<VkDescriptorImageInfo>cimageInfos{};
         VkDescriptorImageInfo cimageInfo{};
         cimageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-        cimageInfo.imageView = ctex.GetImageView();
-        cimageInfo.sampler = ctex.GetSampler();
+        cimageInfo.imageView = ctex.getImageView();
+        cimageInfo.sampler = ctex.getSampler();
 
         cimageInfos.emplace_back(cimageInfo);
 
@@ -83,24 +83,24 @@ namespace Poulpe
 
         std::vector<VkDescriptorSetLayoutBinding> cbindings = { cuboLayoutBinding, csamplerLayoutBinding };
 
-        VkDescriptorSetLayout cdesriptorSetLayout = m_Adapter->Rdr()->CreateDescriptorSetLayout(cbindings);
+        VkDescriptorSetLayout cdesriptorSetLayout = m_Adapter->rdr()->createDescriptorSetLayout(cbindings);
 
-        m_Adapter->GetDescriptorSetLayouts()->emplace_back(cdesriptorSetLayout);
+        m_Adapter->getDescriptorSetLayouts()->emplace_back(cdesriptorSetLayout);
 
-        VkDescriptorSet cdescriptorSet = m_Adapter->Rdr()->CreateDescriptorSets(m_DescriptorPool, { cdesriptorSetLayout }, 1);
-        m_Adapter->Rdr()->UpdateDescriptorSets(mesh->m_UniformBuffers, cdescriptorSet, cimageInfos);
+        VkDescriptorSet cdescriptorSet = m_Adapter->rdr()->createDescriptorSets(m_DescriptorPool, { cdesriptorSetLayout }, 1);
+        m_Adapter->rdr()->pdateDescriptorSets(mesh->m_UniformBuffers, cdescriptorSet, cimageInfos);
         mesh->m_DescriptorSets.emplace_back(cdescriptorSet);
 
         Grid::pc pc;
         pc.point = glm::vec4(0.1f, 50.f, 0.f, 0.f);
-        pc.view = m_Adapter->GetCamera()->LookAt();
+        pc.view = m_Adapter->getCamera()->lookAt();
 
-        mesh->ApplyPushConstants = [&pc](VkCommandBuffer& commandBuffer, VkPipelineLayout& pipelineLayout, std::shared_ptr<VulkanAdapter> adapter, [[maybe_unused]] Data& data) {
+        mesh->applyPushConstants = [&pc](VkCommandBuffer& commandBuffer, VkPipelineLayout& pipelineLayout, std::shared_ptr<VulkanAdapter> adapter, [[maybe_unused]] Data& data) {
             pc.point = glm::vec4(0.1f, 50.f, 0.f, 0.f);
-            pc.view = adapter->GetCamera()->LookAt();
+            pc.view = adapter->getCamera()->lookAt();
             vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(Grid::pc), &pc);
         };
-        mesh->SetHasPushConstants();
+        mesh->setHasPushConstants();
 
         std::vector<VkPushConstantRange> vkPcs = {};
         VkPushConstantRange vkPc;
@@ -111,21 +111,21 @@ namespace Poulpe
 
         std::vector<VkDescriptorSetLayout>dSetLayout = { cdesriptorSetLayout };
 
-        mesh->m_PipelineLayout = m_Adapter->Rdr()->CreatePipelineLayout(dSetLayout, vkPcs);
+        mesh->m_PipelineLayout = m_Adapter->rdr()->createPipelineLayout(dSetLayout, vkPcs);
 
         std::vector<VkPipelineShaderStageCreateInfo>cshadersStageInfos;
 
         VkPipelineShaderStageCreateInfo cvertShaderStageInfo{};
         cvertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
         cvertShaderStageInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
-        cvertShaderStageInfo.module = m_ShaderManager->GetShaders()->shaders[mesh->GetShaderName()][0];
+        cvertShaderStageInfo.module = m_ShaderManager->getShaders()->shaders[mesh->getShaderName()][0];
         cvertShaderStageInfo.pName = "main";
         cshadersStageInfos.emplace_back(cvertShaderStageInfo);
 
         VkPipelineShaderStageCreateInfo cfragShaderStageInfo{};
         cfragShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
         cfragShaderStageInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
-        cfragShaderStageInfo.module = m_ShaderManager->GetShaders()->shaders[mesh->GetShaderName()][1];
+        cfragShaderStageInfo.module = m_ShaderManager->getShaders()->shaders[mesh->getShaderName()][1];
         cfragShaderStageInfo.pName = "main";
         cshadersStageInfos.emplace_back(cfragShaderStageInfo);
 
@@ -139,10 +139,10 @@ namespace Poulpe
         vertexInputInfo.pVertexBindingDescriptions = &bDesc;
         vertexInputInfo.pVertexAttributeDescriptions = gridDesc.data();
 
-        mesh->m_GraphicsPipeline = m_Adapter->Rdr()->CreateGraphicsPipeline(
-            m_Adapter->RdrPass(),
+        mesh->m_GraphicsPipeline = m_Adapter->rdr()->createGraphicsPipeline(
+            m_Adapter->rdrPass(),
             mesh->m_PipelineLayout,
-            mesh->GetShaderName(),
+            mesh->getShaderName(),
             cshadersStageInfos,
             vertexInputInfo,
             VK_CULL_MODE_NONE,
@@ -153,14 +153,14 @@ namespace Poulpe
 
         for (uint32_t i = 0; i < mesh->m_UniformBuffers.size(); i++) {
             //gridData.m_Ubos[i].view = m_Adapter->GetCamera()->LookAt();
-            gridData.m_Ubos[i].proj = m_Adapter->GetPerspective();
+            gridData.m_Ubos[i].proj = m_Adapter->getPerspective();
 
-            m_Adapter->Rdr()->UpdateUniformBuffer(
+            m_Adapter->rdr()->updateUniformBuffer(
                 mesh->m_UniformBuffers[i],
                 gridData.m_Ubos
             );
         }
 
-        mesh->SetData(gridData);
+        mesh->setData(gridData);
     }
 }

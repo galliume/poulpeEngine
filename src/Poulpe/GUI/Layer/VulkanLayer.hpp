@@ -27,26 +27,26 @@ namespace Poulpe
 
         virtual ~VulkanLayer() = default;
 
-        virtual void Init(Window* window, std::shared_ptr<CommandQueue> cmdQueue) override;
-        virtual void Render(double timeStep) override;
-        virtual void AddRenderManager(RenderManager* renderManager) override;
-        void Destroy();
-        void DisplayFpsCounter(double timeStep);
-        void DisplayAPI();
-        void DisplayOptions();
-        void DisplayTextures();
-        void DisplaySounds();
-        void DisplayLevel();
-        void DisplayMesh();
-        void LoadTextures();
-        void Draw();
-        void UpdateData();
-        void UpdateSkybox();
-        void UpdateLevel();
+        virtual void init(Window* window, std::shared_ptr<CommandQueue> cmdQueue) override;
+        virtual void render(double timeStep) override;
+        virtual void addRenderManager(RenderManager* renderManager) override;
+        void destroy();
+        void displayFpsCounter(double timeStep);
+        void displayAPI();
+        void displayOptions();
+        void displayTextures();
+        void displaySounds();
+        void displayLevel();
+        void displayMesh();
+        void loadTextures();
+        void draw();
+        void updateData();
+        void updateSkybox();
+        void updateLevel();
 
-        void AttachObserver(IObserver* observer);
+        void attachObserver(IObserver* observer);
 
-        std::shared_ptr<ImGuiInfo> GetImGuiInfo() { return m_ImGuiInfo; };
+        std::shared_ptr<ImGuiInfo> getImGuiInfo() { return m_ImGuiInfo; };
 
         bool m_DebugOpen{ true };
         bool m_ShowGrid{ true };
@@ -58,17 +58,17 @@ namespace Poulpe
         bool m_AmbientOpen{ true };
         bool m_Looping{ true };
 
-        virtual void Notify(const Event& event) override;
+        virtual void notify(const Event& event) override;
 
-        void LoadDebugInfo();
-        void LoadAmbiantSounds();
-        void LoadLevels();
-        void LoadSkybox();
-        void OnKeyPressed();
-        void UpdateRenderMode(VkPolygonMode mode);
+        void loadDebugInfo();
+        void loadAmbiantSounds();
+        void loadLevels();
+        void loadSkybox();
+        void onKeyPressed();
+        void updateRenderMode(VkPolygonMode mode);
 
     private:
-      [[nodiscard]] VkDescriptorSet GetImgDesc();
+      [[nodiscard]] VkDescriptorSet getImgDesc();
 
     private:
         bool m_VSync{ false };

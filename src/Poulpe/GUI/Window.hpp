@@ -8,14 +8,15 @@ namespace Poulpe
     class Window
     {
     public:
-        void Init(std::string_view windowTitle);
-        inline GLFWwindow* Get() { return m_Window; }
-        inline void SetVSync(bool active) { m_ActiveVSync = active; }
+        void init(std::string_view windowTitle);
+        inline GLFWwindow* get() { return m_Window; }
+        inline void setVSync(bool active) { m_ActiveVSync = active; }
+        bool isMinimized();
+        void wait();
+        void quit();
+        void hide();
+
         static bool m_FramebufferResized;
-        bool IsMinimized();
-        void Wait();
-        void Quit();
-        void Hide();
 
     private:
         GLFWwindow* m_Window;
