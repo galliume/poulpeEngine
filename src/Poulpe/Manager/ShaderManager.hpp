@@ -10,13 +10,13 @@ namespace Poulpe
         explicit ShaderManager();
         virtual ~ShaderManager() = default;
 
-        virtual void AddShader(const std::string& name, const std::string& vertPath, const std::string& fragPath) override;
-        virtual std::function<void()> Load(nlohmann::json config, std::condition_variable& cv) override;
-        virtual inline const std::shared_ptr<VulkanShaders> GetShaders() const override { return m_Shaders; };
+        virtual void addShader(const std::string& name, const std::string& vertPath, const std::string& fragPath) override;
+        virtual std::function<void()> load(nlohmann::json config, std::condition_variable& cv) override;
+        virtual inline const std::shared_ptr<VulkanShaders> getShaders() const override { return m_Shaders; };
 
-        void AddRenderer(std::shared_ptr<IRendererAdapter> renderer) { m_Renderer = renderer; };
-        void Clear();
-        bool IsLoadingDone() { return m_LoadingDone.load(); }
+        void addRenderer(std::shared_ptr<IRendererAdapter> renderer) { m_Renderer = renderer; };
+        void clear();
+        bool isLoadingDone() { return m_LoadingDone.load(); }
 
     private:
         std::shared_ptr<VulkanShaders> m_Shaders = nullptr;

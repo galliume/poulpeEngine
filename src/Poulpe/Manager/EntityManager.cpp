@@ -9,7 +9,7 @@ namespace Poulpe
     }
 
 
-    uint32_t EntityManager::GetInstancedCount()
+    uint32_t EntityManager::getInstancedCount()
     {
         uint32_t total = 0;
 
@@ -22,44 +22,44 @@ namespace Poulpe
         return total;
     }
 
-    void EntityManager::AddEntity(const std::shared_ptr<Entity>& entity)
+    void EntityManager::addEntity(const std::shared_ptr<Entity>& entity)
     {
-        uint64_t count = m_LoadedEntities.count(entity->GetName().c_str());
+        uint64_t count = m_LoadedEntities.count(entity->getName().c_str());
 
         if (0 != count) {
             std::shared_ptr<Mesh> mesh = std::dynamic_pointer_cast<Mesh>(entity);
             
             if (mesh) {
-                Data* data = mesh->GetData();
-                std::shared_ptr<Mesh> existingEntity = std::dynamic_pointer_cast<Mesh>(m_Entities[m_LoadedEntities[mesh->GetName().c_str()][1]]);
-                existingEntity->AddUbos(data->m_Ubos);
+                Data* data = mesh->getData();
+                std::shared_ptr<Mesh> existingEntity = std::dynamic_pointer_cast<Mesh>(m_Entities[m_LoadedEntities[mesh->getName().c_str()][1]]);
+                existingEntity->addUbos(data->m_Ubos);
 
                 UniformBufferObject ubo;
-                glm::mat4 transform = glm::translate(glm::mat4(1), mesh->GetBBox()->center) * glm::scale(glm::mat4(1), mesh->GetBBox()->size);
-                ubo.model = mesh->GetBBox()->position * transform;
-                existingEntity->GetBBox()->mesh->AddUbos({ ubo });
+                glm::mat4 transform = glm::translate(glm::mat4(1), mesh->getBBox()->center) * glm::scale(glm::mat4(1), mesh->getBBox()->size);
+                ubo.model = mesh->getBBox()->position * transform;
+                existingEntity->getBBox()->mesh->addUbos({ ubo });
 
-                m_LoadedEntities[mesh->GetName()][0] += 1;
+                m_LoadedEntities[mesh->getName()][0] += 1;
             }
         } else {
             uint32_t index = m_Entities.size();
 
-            m_LoadedEntities.insert({ entity->GetName(), { 1, index }});
+            m_LoadedEntities.insert({ entity->getName(), { 1, index }});
             m_Entities.emplace_back(entity);
         }
     }
 
-    const std::shared_ptr<Entity> EntityManager::GetEntityByName(const std::string& name) const
+    const std::shared_ptr<Entity> EntityManager::getEntityByName(const std::string& name) const
     {
         auto it = std::find_if(
             m_Entities.cbegin(),
             m_Entities.cend(),
-            [name](const std::shared_ptr<Entity>& entity) -> bool { return entity->GetName() == name; });
+            [name](const std::shared_ptr<Entity>& entity) -> bool { return entity->getName() == name; });
 
         return *it;
     }
 
-    std::function<void()> EntityManager::Load(nlohmann::json levelConfig, std::condition_variable& cv)
+    std::function<void()> EntityManager::load(nlohmann::json levelConfig, std::condition_variable& cv)
     {
 
         m_LevelConfig = levelConfig;
@@ -110,9 +110,9 @@ namespace Poulpe
                             );
 
                             bool hasBbox = static_cast<bool>(data["hasBbox"]);
-                            entity->SetHasBbox(hasBbox);
+                            entity->setHasBbox(hasBbox);
 
-                            auto entities = entity->Init(
+                            auto entities = entity->init(
                                 static_cast<std::string>(key),
                                 static_cast<std::string>(data["mesh"]),
                                 textures,
@@ -124,8 +124,8 @@ namespace Poulpe
                             );
 
                             for (auto& e : entities) {
-                                e->SetHasBbox(hasBbox);
-                                AddEntity(e);
+                                e->setHasBbox(hasBbox);
+                                addEntity(e);
                             }
                         }
                     }
@@ -173,9 +173,9 @@ namespace Poulpe
 
                         std::shared_ptr<Poulpe::Mesh> entity = std::make_shared<Poulpe::Mesh>();
                         bool hasBbox = static_cast<bool>(data["hasBbox"]);
-                        entity->SetHasBbox(hasBbox);
+                        entity->setHasBbox(hasBbox);
 
-                        auto entities = entity->Init(
+                        auto entities = entity->init(
                             static_cast<std::string>(key),
                             static_cast<std::string>(data["mesh"]),
                             textures,
@@ -187,8 +187,8 @@ namespace Poulpe
                         );
                         
                         for (auto& e : entities) {
-                            e->SetHasBbox(hasBbox);
-                            AddEntity(e);
+                            e->setHasBbox(hasBbox);
+                            addEntity(e);
                         }
                     }
                 }
@@ -201,7 +201,7 @@ namespace Poulpe
         return entitiesFuture;
     }
 
-    void EntityManager::Clear()
+    void EntityManager::clear()
     {
         m_Entities.clear();
         m_LoadedEntities.clear();

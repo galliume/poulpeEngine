@@ -9,13 +9,13 @@ namespace Poulpe
         ConfigManager();
         virtual ~ConfigManager() = default;
 
-        virtual nlohmann::json AppConfig() override;
-        virtual nlohmann::json TexturesConfig() override;
-        virtual nlohmann::json SoundConfig() override;
-        virtual nlohmann::json ShaderConfig() override;
-        virtual nlohmann::json EntityConfig(const std::string& levelName) override;
-        virtual std::vector<std::string> ListLevels() override;
-        virtual std::vector<std::string> ListSkybox() override;
+        virtual nlohmann::json appConfig() override;
+        virtual nlohmann::json texturesConfig() override;
+        virtual nlohmann::json soundConfig() override;
+        virtual nlohmann::json shaderConfig() override;
+        virtual nlohmann::json entityConfig(const std::string& levelName) override;
+        virtual std::vector<std::string> listLevels() override;
+        virtual std::vector<std::string> listSkybox() override;
 
     private:
         nlohmann::json m_AppConfig{};

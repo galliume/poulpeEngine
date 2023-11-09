@@ -17,14 +17,14 @@ namespace Poulpe
             std::shared_ptr<ShaderManager> shaderManager,
             std::shared_ptr<TextureManager> textureManager
         );
-        void Visit(std::shared_ptr<Entity> entity) override;
-        VkDescriptorSetLayout CreateDescriptorSetLayout();
-        VkDescriptorSet CreateDescriptorSet(std::shared_ptr<Mesh> mesh, VkDescriptorSetLayout descriptorSetLayout);
-        VkPipelineLayout CreatePipelineLayout(VkDescriptorSetLayout descriptorSetLayout);
-        std::vector<VkPipelineShaderStageCreateInfo> GetShaders();
-        VkPipelineVertexInputStateCreateInfo GetVertexBindingDesc(
+        void visit(std::shared_ptr<Entity> entity) override;
+        VkDescriptorSetLayout createDescriptorSetLayout();
+        VkDescriptorSet createDescriptorSet(std::shared_ptr<Mesh> mesh, VkDescriptorSetLayout descriptorSetLayout);
+        VkPipelineLayout createPipelineLayout(VkDescriptorSetLayout descriptorSetLayout);
+        std::vector<VkPipelineShaderStageCreateInfo> getShaders();
+        VkPipelineVertexInputStateCreateInfo getVertexBindingDesc(
           VkVertexInputBindingDescription bDesc, std::array<VkVertexInputAttributeDescription, 3> attDesc);
-        void SetPushConstants(std::shared_ptr<Mesh> mesh);
+        void setPushConstants(std::shared_ptr<Mesh> mesh);
 
     private:
         std::shared_ptr<VulkanAdapter> m_Adapter;

@@ -18,10 +18,10 @@ namespace Poulpe
 
     }
 
-    void Crosshair::Visit(std::shared_ptr<Entity> entity)
+    void Crosshair::visit(std::shared_ptr<Entity> entity)
     {
         std::shared_ptr<Mesh> mesh = std::dynamic_pointer_cast<Mesh>(entity);
-        if (!mesh && !mesh->IsDirty()) return;
+        if (!mesh && !mesh->isDirty()) return;
 
         const std::vector<Vertex> vertices = {
             {{-0.025f, -0.025f, 0.0f}, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
@@ -36,37 +36,37 @@ namespace Poulpe
         UniformBufferObject ubo;
         //ubo.view = glm::mat4(0.0f);
 
-        auto commandPool = m_Adapter->Rdr()->CreateCommandPool();
+        auto commandPool = m_Adapter->rdr()->createCommandPool();
 
         Data crossHairData;
         crossHairData.m_Texture = "crosshair";
         crossHairData.m_TextureIndex = 0;
-        crossHairData.m_VertexBuffer = m_Adapter->Rdr()->CreateVertexBuffer(commandPool, vertices);
-        crossHairData.m_IndicesBuffer = m_Adapter->Rdr()->CreateIndexBuffer(commandPool, indices);
+        crossHairData.m_VertexBuffer = m_Adapter->rdr()->createVertexBuffer(commandPool, vertices);
+        crossHairData.m_IndicesBuffer = m_Adapter->rdr()->createIndexBuffer(commandPool, indices);
         crossHairData.m_Ubos.emplace_back(ubo);
         crossHairData.m_Indices = indices;
 
-        vkDestroyCommandPool(m_Adapter->Rdr()->GetDevice(), commandPool, nullptr);
+        vkDestroyCommandPool(m_Adapter->rdr()->getDevice(), commandPool, nullptr);
 
-        mesh->SetName("crosshair");
-        mesh->SetShaderName("2d");
+        mesh->setName("crosshair");
+        mesh->setShaderName("2d");
 
-        Buffer crossHairuniformBuffer = m_Adapter->Rdr()->CreateUniformBuffers(1);
+        Buffer crossHairuniformBuffer = m_Adapter->rdr()->createUniformBuffers(1);
         mesh->m_UniformBuffers.emplace_back(crossHairuniformBuffer);
 
-        Texture ctex = m_TextureManager->GetTextures()["crosshair_1"];
-        Texture ctex2 = m_TextureManager->GetTextures()["crosshair_2"];
+        Texture ctex = m_TextureManager->getTextures()["crosshair_1"];
+        Texture ctex2 = m_TextureManager->getTextures()["crosshair_2"];
 
         std::vector<VkDescriptorImageInfo>cimageInfos;
         VkDescriptorImageInfo cimageInfo{};
         cimageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-        cimageInfo.imageView = ctex.GetImageView();
-        cimageInfo.sampler = ctex.GetSampler();
+        cimageInfo.imageView = ctex.getImageView();
+        cimageInfo.sampler = ctex.getSampler();
 
         VkDescriptorImageInfo cimageInfo2{};
         cimageInfo2.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-        cimageInfo2.imageView = ctex2.GetImageView();
-        cimageInfo2.sampler = ctex2.GetSampler();
+        cimageInfo2.imageView = ctex2.getImageView();
+        cimageInfo2.sampler = ctex2.getSampler();
 
         cimageInfos.emplace_back(cimageInfo);
         cimageInfos.emplace_back(cimageInfo2);
@@ -87,22 +87,22 @@ namespace Poulpe
 
         std::vector<VkDescriptorSetLayoutBinding> cbindings = { cuboLayoutBinding, csamplerLayoutBinding };
 
-        VkDescriptorSetLayout cdesriptorSetLayout = m_Adapter->Rdr()->CreateDescriptorSetLayout(cbindings);
+        VkDescriptorSetLayout cdesriptorSetLayout = m_Adapter->rdr()->createDescriptorSetLayout(cbindings);
 
-        m_Adapter->GetDescriptorSetLayouts()->emplace_back(cdesriptorSetLayout);
+        m_Adapter->getDescriptorSetLayouts()->emplace_back(cdesriptorSetLayout);
 
-        VkDescriptorSet cdescriptorSet = m_Adapter->Rdr()->CreateDescriptorSets(m_DescriptorPool, { cdesriptorSetLayout }, 1);
-        m_Adapter->Rdr()->UpdateDescriptorSets(mesh->m_UniformBuffers, cdescriptorSet, cimageInfos);
+        VkDescriptorSet cdescriptorSet = m_Adapter->rdr()->createDescriptorSets(m_DescriptorPool, { cdesriptorSetLayout }, 1);
+        m_Adapter->rdr()->pdateDescriptorSets(mesh->m_UniformBuffers, cdescriptorSet, cimageInfos);
         mesh->m_DescriptorSets.emplace_back(cdescriptorSet);
 
         Crosshair::pc pc;
         pc.textureID = 0;
 
-        mesh->ApplyPushConstants = [&pc](VkCommandBuffer& commandBuffer, VkPipelineLayout& pipelineLayout,  [[maybe_unused]] std::shared_ptr<VulkanAdapter> adapter,  [[maybe_unused]] Data& data) {
+        mesh->applyPushConstants = [&pc](VkCommandBuffer& commandBuffer, VkPipelineLayout& pipelineLayout,  [[maybe_unused]] std::shared_ptr<VulkanAdapter> adapter,  [[maybe_unused]] Data& data) {
             pc.textureID = VulkanAdapter::s_Crosshair;
             vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(Crosshair::pc), &pc);
         };
-        mesh->SetHasPushConstants();
+        mesh->setHasPushConstants();
 
         std::vector<VkPushConstantRange> vkPcs = {};
         VkPushConstantRange vkPc;
@@ -113,21 +113,21 @@ namespace Poulpe
 
         std::vector<VkDescriptorSetLayout>dSetLayout = { cdesriptorSetLayout };
 
-        mesh->m_PipelineLayout = m_Adapter->Rdr()->CreatePipelineLayout(dSetLayout, vkPcs);
+        mesh->m_PipelineLayout = m_Adapter->rdr()->createPipelineLayout(dSetLayout, vkPcs);
 
         std::vector<VkPipelineShaderStageCreateInfo>cshadersStageInfos;
 
         VkPipelineShaderStageCreateInfo cvertShaderStageInfo{};
         cvertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
         cvertShaderStageInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
-        cvertShaderStageInfo.module = m_ShaderManager->GetShaders()->shaders[mesh->GetShaderName()][0];
+        cvertShaderStageInfo.module = m_ShaderManager->getShaders()->shaders[mesh->getShaderName()][0];
         cvertShaderStageInfo.pName = "main";
         cshadersStageInfos.emplace_back(cvertShaderStageInfo);
 
         VkPipelineShaderStageCreateInfo cfragShaderStageInfo{};
         cfragShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
         cfragShaderStageInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
-        cfragShaderStageInfo.module = m_ShaderManager->GetShaders()->shaders[mesh->GetShaderName()][1];
+        cfragShaderStageInfo.module = m_ShaderManager->getShaders()->shaders[mesh->getShaderName()][1];
         cfragShaderStageInfo.pName = "main";
         cshadersStageInfos.emplace_back(cfragShaderStageInfo);
 
@@ -141,10 +141,10 @@ namespace Poulpe
         vertexInputInfo.pVertexBindingDescriptions = &bDesc;
         vertexInputInfo.pVertexAttributeDescriptions = crossDesc.data();
 
-        mesh->m_GraphicsPipeline = m_Adapter->Rdr()->CreateGraphicsPipeline(
-            m_Adapter->RdrPass(),
+        mesh->m_GraphicsPipeline = m_Adapter->rdr()->createGraphicsPipeline(
+            m_Adapter->rdrPass(),
             mesh->m_PipelineLayout,
-            mesh->GetShaderName(),
+            mesh->getShaderName(),
             cshadersStageInfos,
             vertexInputInfo,
             VK_CULL_MODE_FRONT_BIT,
@@ -154,14 +154,14 @@ namespace Poulpe
 
         for (uint32_t i = 0; i < mesh->m_UniformBuffers.size(); i++) {
             //crossHairData.m_Ubos[i].view = m_Adapter->GetCamera()->LookAt();
-            crossHairData.m_Ubos[i].proj = m_Adapter->GetPerspective();
+            crossHairData.m_Ubos[i].proj = m_Adapter->getPerspective();
 
-            m_Adapter->Rdr()->UpdateUniformBuffer(
+            m_Adapter->rdr()->updateUniformBuffer(
                 mesh->m_UniformBuffers[i],
                 crossHairData.m_Ubos
             );
         }
 
-        mesh->SetData(crossHairData);
+        mesh->setData(crossHairData);
     }
 }

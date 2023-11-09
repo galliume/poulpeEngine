@@ -11,7 +11,7 @@ namespace Poulpe
         alignas(16) glm::vec3 normal;
         alignas(8) glm::vec2 texCoord;
 
-        static VkVertexInputBindingDescription GetBindingDescription() {
+        static VkVertexInputBindingDescription getBindingDescription() {
 
             VkVertexInputBindingDescription bindingDescription{};
             bindingDescription.binding = 0;
@@ -21,7 +21,7 @@ namespace Poulpe
             return bindingDescription;
         }
 
-        static std::array<VkVertexInputAttributeDescription, 3> GetAttributeDescriptions() {
+        static std::array<VkVertexInputAttributeDescription, 3> getAttributeDescriptions() {
 
             std::array<VkVertexInputAttributeDescription, 3> attributeDescriptions{};
             attributeDescriptions[0].binding = 0;

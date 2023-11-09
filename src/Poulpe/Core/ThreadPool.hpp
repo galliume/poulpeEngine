@@ -28,19 +28,19 @@ namespace Poulpe
         }
 
         template<typename FunctionType>
-        void Submit(std::string_view queueName, FunctionType f)
+        void submit(std::string_view queueName, FunctionType f)
         {
             if (m_WorkQueue.contains(queueName)) {
-                m_WorkQueue.at(queueName).Push(std::function<void()>(f));
+                m_WorkQueue.at(queueName).push(std::function<void()>(f));
             } else{
                 m_WorkQueue[queueName];
-                m_WorkQueue.at(queueName).Push(std::function<void()>(f));
+                m_WorkQueue.at(queueName).push(std::function<void()>(f));
             }
         }
 
-        bool IsPoolEmpty(std::string_view poolName)
+        bool isPoolEmpty(std::string_view poolName)
         {
-            return (m_WorkQueue.contains(poolName)) ? m_WorkQueue[poolName].Empty() : true;
+            return (m_WorkQueue.contains(poolName)) ? m_WorkQueue[poolName].empty() : true;
         }
 
         ~ThreadPool()
@@ -55,7 +55,7 @@ namespace Poulpe
                 std::function<void()> task;
                 //@todo add priority order
                 for (auto& [queueName, queueThread]: m_WorkQueue) {
-                    if (queueThread.TryPop(task)) {
+                    if (queueThread.tryPop(task)) {
                         task();
                     } else {
                         std::this_thread::yield();
@@ -68,6 +68,6 @@ namespace Poulpe
         std::atomic_bool m_Done;
         std::unordered_map<std::string_view, ThreadSafeQueue<std::function<void()>>> m_WorkQueue;
         std::vector<std::thread> m_Threads;
-        JoinThreads m_Joiner;
+        joinThreads m_Joiner;
     };
 }

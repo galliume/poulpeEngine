@@ -8,7 +8,7 @@ namespace Poulpe
     class IVisitor
     {
     public:
-        virtual void Visit(std::shared_ptr<Entity> entity) = 0;
+        virtual void visit(std::shared_ptr<Entity> entity) = 0;
         virtual ~IVisitor() = 0;
     };
 }

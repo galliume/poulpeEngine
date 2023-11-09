@@ -12,19 +12,19 @@ namespace Poulpe
         }
     }
 
-    void Application::Init()
+    void Application::init()
     {
         m_StartRun = std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::system_clock::now());
 
-        Poulpe::Log::Init();
+        Poulpe::Log::init();
 
         Poulpe::Locator::setThreadPool(std::make_unique<ThreadPool>());
 
         m_Window = std::make_shared<Window>();
-        m_Window->Init("PoulpeEngine");
+        m_Window->init("PoulpeEngine");
 
         int width, height;
-        glfwGetWindowSize(m_Window->Get(), &width, &height);
+        glfwGetWindowSize(m_Window->get(), &width, &height);
 
         m_CommandQueue = std::make_shared<Poulpe::CommandQueue>();
 
@@ -48,17 +48,17 @@ namespace Poulpe
             entity, shader, sprite,
             destroyer, camera, m_CommandQueue
         );
-        m_RenderManager->Init();
+        m_RenderManager->init();
 
         //todo move to layer manager and update application main loop accordingly
         //#ifdef PLP_DEBUG_BUILD
             m_VulkanLayer = std::make_shared<Poulpe::VulkanLayer>();
-            m_VulkanLayer->AddRenderManager(m_RenderManager.get());
-            m_VulkanLayer->Init(m_Window.get(), m_CommandQueue);
+            m_VulkanLayer->addRenderManager(m_RenderManager.get());
+            m_VulkanLayer->init(m_Window.get(), m_CommandQueue);
         //#endif
     }
 
-    void Application::Run()
+    void Application::run()
     {
         auto endRun = std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::system_clock::now());
         auto lastTime = endRun;
@@ -73,7 +73,7 @@ namespace Poulpe
 
         std::mutex mutex;
 
-         while (!glfwWindowShouldClose(m_Window->Get())) {
+         while (!glfwWindowShouldClose(m_Window->get())) {
 
             if (Application::s_UnlockedFPS.load() == 0) {
                 maxFPS = 30.0;
@@ -99,25 +99,25 @@ namespace Poulpe
                     timeStepSum = std::chrono::duration<double>(0.0);
                     frameCount = 0;
                 }
-                m_RenderManager->GetCamera()->UpdateDeltaTime(timeStep.count());
+                m_RenderManager->getCamera()->updateDeltaTime(timeStep.count());
 
                 glfwPollEvents();
 
-                m_RenderManager->GetRendererAdapter()->ShouldRecreateSwapChain();
-                m_CommandQueue->ExecPreRequest();
-                m_VulkanLayer->Render(timeStep.count());
-                m_RenderManager->RenderScene();
-                m_RenderManager->Draw();
-                m_CommandQueue->ExecPostRequest();
+                m_RenderManager->getRendererAdapter()->shouldRecreateSwapChain();
+                m_CommandQueue->execPreRequest();
+                m_VulkanLayer->render(timeStep.count());
+                m_RenderManager->renderScene();
+                m_RenderManager->draw();
+                m_CommandQueue->execPostRequest();
 
                 lastTime = currentTime;
             }
         }
 
-        Poulpe::Im::Destroy();
-        m_RenderManager->CleanUp();
+        Poulpe::Im::destroy();
+        m_RenderManager->cleanUp();
 
-        glfwDestroyWindow(m_Window.get()->Get());
+        glfwDestroyWindow(m_Window.get()->get());
         glfwTerminate();
     }
 }

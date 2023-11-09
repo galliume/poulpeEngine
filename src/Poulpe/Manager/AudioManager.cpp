@@ -13,7 +13,7 @@ namespace Poulpe
         ma_engine_uninit(&m_Engine);
     }
 
-    void AudioManager::Load(nlohmann::json config)
+    void AudioManager::load(nlohmann::json config)
     {
         for (auto& sound : config["splash"].items()) {
             m_SplashSounds.emplace_back(sound.value());
@@ -23,7 +23,7 @@ namespace Poulpe
         }
     }
 
-    void AudioManager::Init()
+    void AudioManager::init()
     {
         m_State = State::STOP;
 
@@ -36,7 +36,7 @@ namespace Poulpe
         }
     }
 
-    void AudioManager::StartAmbient(int index)
+    void AudioManager::startAmbient(int index)
     {
         if (std::cmp_equal(index, m_AmbientSounds.size() - 1) || 0 > index) {
             PLP_WARN("Ambient sound index {} does not exists.", index);
@@ -44,22 +44,22 @@ namespace Poulpe
         }
 
         if (State::PLAY == m_State) {
-            Stop(m_AmbientSound);
+            stop(m_AmbientSound);
         }
 
-        Start(m_AmbientSounds[index], m_AmbientSound);
+        start(m_AmbientSounds[index], m_AmbientSound);
 
         if (State::PLAY == m_State) {
             m_AmbientSoundIndex = index;
         }
     }
 
-    void AudioManager::StopAmbient()
+    void AudioManager::stopAmbient()
     {
-        Stop(m_AmbientSound);
+        stop(m_AmbientSound);
     }
 
-    void AudioManager::StartSplash(int index)
+    void AudioManager::startSplash(int index)
     {
         if (std::cmp_greater(index, m_SplashSounds.size() - 1) || 0 > index) {
             PLP_WARN("Splash sound index {} does not exists.", index);
@@ -67,22 +67,22 @@ namespace Poulpe
         }
 
         if (State::PLAY == m_State) {
-            Stop(m_SplashSound);
+            stop(m_SplashSound);
         }
 
-        Start(m_SplashSounds[index], m_SplashSound);
+        start(m_SplashSounds[index], m_SplashSound);
 
         if (State::PLAY == m_State) {
             m_SplashSoundIndex = index;
         }
     }
 
-    void AudioManager::StopSplash()
+    void AudioManager::stopSplash()
     {
-        Stop(m_SplashSound);
+        stop(m_SplashSound);
     }
 
-    std::string const AudioManager::GetState()
+    std::string const AudioManager::getState()
     {
         if (State::PLAY == m_State) {
             return "playing";
@@ -96,7 +96,7 @@ namespace Poulpe
         return "AudioManager unknown state";
     }
 
-    void AudioManager::ToggleLooping()
+    void AudioManager::toggleLooping()
     {
         if (ma_sound_is_looping(&m_AmbientSound)) {
             ma_sound_set_looping(&m_AmbientSound, false);
@@ -105,7 +105,7 @@ namespace Poulpe
         }
     }
 
-    void AudioManager::Start(const std::string& soundPath, ma_sound& sound)
+    void AudioManager::start(const std::string& soundPath, ma_sound& sound)
     {
         ma_result result;
 
@@ -129,7 +129,7 @@ namespace Poulpe
         }
     }
 
-    void AudioManager::Stop(ma_sound sound)
+    void AudioManager::stop(ma_sound sound)
     {
         if (State::PLAY != m_State) {
             return;
@@ -145,10 +145,10 @@ namespace Poulpe
         ma_sound_uninit(&sound);
     }
 
-    void AudioManager::Clear()
+    void AudioManager::clear()
     {
         if (State::PLAY == m_State) {
-            StopAmbient();
+            stopAmbient();
             ma_engine_stop(&m_Engine);
             ma_engine_uninit(&m_Engine);
         }

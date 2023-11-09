@@ -8,7 +8,7 @@
 
 namespace Poulpe
 {
-    std::vector<TinyObjData> TinyObjLoader::LoadData(std::string path, bool shouldInverseTextureY)
+    std::vector<TinyObjData> TinyObjLoader::loadData(std::string path, bool shouldInverseTextureY)
     {
         std::vector<TinyObjData> dataList = {};
 

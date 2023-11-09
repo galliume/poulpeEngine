@@ -6,12 +6,12 @@ namespace Poulpe
     {
     }
 
-    void LayerManager::Add(ILayer* layer)
+    void LayerManager::add(ILayer* layer)
     {
         m_Layers.emplace_back(layer);
     }
 
-    void LayerManager::InitLayers([[maybe_unused]] Window* window)
+    void LayerManager::initLayers([[maybe_unused]] Window* window)
     {
         /*for (auto layer : m_Layers)
         {

@@ -11,18 +11,18 @@ namespace Poulpe
         TextureManager() = default;
         virtual ~TextureManager() = default;
 
-        void AddConfig(nlohmann::json config) override { m_TextureConfig = config; }
-        inline std::unordered_map<std::string, Texture> GetTextures() override { return m_Textures; }
-        void AddRenderer(std::shared_ptr<IRendererAdapter> renderer) override { m_Renderer = renderer; }
-        std::function<void()> Load(std::condition_variable& cv) override;
-        std::function<void()> LoadSkybox(std::string_view skybox, std::condition_variable& cv) override;
-        inline const Texture GetSkyboxTexture() const override { return m_Skybox; }
-        void AddSkyBox(const std::vector<std::string>& skyboxImages) override;
-        void AddTexture(const std::string& name, const std::string& path, bool isPublic = false) override;
-        inline std::unordered_map<std::string, std::string> GetPaths() const override { return m_Paths; }
-        void Clear();
-        bool IsTexturesLoadingDone() { return m_TexturesLoadingDone.load(); }
-        bool IsSkyboxLoadingDone() { return m_SkyboxLoadingDone.load(); }
+        void addConfig(nlohmann::json config) override { m_TextureConfig = config; }
+        inline std::unordered_map<std::string, Texture> getTextures() override { return m_Textures; }
+        void addRenderer(std::shared_ptr<IRendererAdapter> renderer) override { m_Renderer = renderer; }
+        std::function<void()> load(std::condition_variable& cv) override;
+        std::function<void()> loadSkybox(std::string_view skybox, std::condition_variable& cv) override;
+        inline const Texture getSkyboxTexture() const override { return m_Skybox; }
+        void addSkyBox(const std::vector<std::string>& skyboxImages) override;
+        void addTexture(const std::string& name, const std::string& path, bool isPublic = false) override;
+        inline std::unordered_map<std::string, std::string> getPaths() const override { return m_Paths; }
+        void clear();
+        bool isTexturesLoadingDone() { return m_TexturesLoadingDone.load(); }
+        bool isSkyboxLoadingDone() { return m_SkyboxLoadingDone.load(); }
 
     private:
         std::unordered_map<std::string, Texture> m_Textures;

@@ -10,7 +10,7 @@ namespace Poulpe
         ThreadSafeQueue() {};
         ~ThreadSafeQueue() = default;
 
-        void Push(T newValue)
+        void push(T newValue)
         {
             {
                 std::lock_guard<std::mutex> lock(m_Mutex);
@@ -20,7 +20,7 @@ namespace Poulpe
             }
         }
 
-        void WaitAndPop(T& value)
+        void waitAndPop(T& value)
         {
             {
                 std::unique_lock<std::mutex> lock(m_Mutex);
@@ -31,7 +31,7 @@ namespace Poulpe
             }
         }
 
-        std::shared_ptr<T> WaitAndPop()
+        std::shared_ptr<T> waitAndPop()
         {
             {
                 std::unique_lock<std::mutex> lock(m_Mutex);
@@ -43,7 +43,7 @@ namespace Poulpe
             }
         }
 
-        bool TryPop(T& value)
+        bool tryPop(T& value)
         {
             {
                 std::lock_guard<std::mutex> lock(m_Mutex);
@@ -56,7 +56,7 @@ namespace Poulpe
             return true;
         }
 
-        std::shared_ptr<T> TryPop()
+        std::shared_ptr<T> tryPop()
         {
             {
                 std::lock_guard<std::mutex> lock(m_Mutex);
@@ -68,7 +68,7 @@ namespace Poulpe
             }
         }
 
-        bool Empty()
+        bool empty()
         {
             bool isEmpty{ false };
 

@@ -27,9 +27,9 @@ namespace Poulpe
     public:
         Application();
 
-        inline static Application* Get() { return s_Instance; };
-        void Init();
-        void Run();
+        inline static Application* get() { return s_Instance; };
+        void init();
+        void run();
 
         static  std::atomic<int> s_UnlockedFPS;
 
