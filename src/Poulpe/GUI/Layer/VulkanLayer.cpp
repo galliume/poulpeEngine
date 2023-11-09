@@ -12,96 +12,96 @@ namespace Poulpe
     bool VulkanLayer::s_RenderViewportHasInput { false };
     bool VulkanLayer::s_OpenAbout { false };
 
-    void VulkanLayer::Init(Window* window, std::shared_ptr<CommandQueue> cmdQueue)
+    void VulkanLayer::init(Window* window, std::shared_ptr<CommandQueue> cmdQueue)
     {
         m_CmdQueue = cmdQueue;
-        m_ImGuiInfo = std::make_shared<ImGuiInfo>(m_RenderManager->GetRendererAdapter()->GetImGuiInfo());
-        Poulpe::Im::Init(window->Get(), *m_ImGuiInfo);
+        m_ImGuiInfo = std::make_shared<ImGuiInfo>(m_RenderManager->getRendererAdapter()->getImGuiInfo());
+        Poulpe::Im::init(window->get(), *m_ImGuiInfo);
 
-        m_RenderManager->GetRendererAdapter()->ImmediateSubmit([&](VkCommandBuffer cmd) {
+        m_RenderManager->getRendererAdapter()->immediateSubmit([&](VkCommandBuffer cmd) {
             ImGui_ImplVulkan_CreateFontsTexture(cmd);
         });
 
         ImGui_ImplVulkan_DestroyFontUploadObjects();
 
-        m_ImGuiPool = m_RenderManager->GetRendererAdapter()->Rdr()->CreateCommandPool();
+        m_ImGuiPool = m_RenderManager->getRendererAdapter()->rdr()->createCommandPool();
 
         VkFenceCreateInfo fenceInfo{};
         fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
         fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
         fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
 
-        vkCreateFence(m_RenderManager->GetRendererAdapter()->Rdr()->GetDevice(), &fenceInfo, nullptr, &m_Fence);
+        vkCreateFence(m_RenderManager->getRendererAdapter()->rdr()->getDevice(), &fenceInfo, nullptr, &m_Fence);
         m_ImGuiImageIndex = 0;
 
-        LoadDebugInfo();
-        LoadTextures();
-        LoadAmbiantSounds();
-        LoadLevels();
-        LoadSkybox();
+        loadDebugInfo();
+        loadTextures();
+        loadAmbiantSounds();
+        loadLevels();
+        loadSkybox();
 
-        m_RenderManager->GetRendererAdapter()->AttachObserver(this);
+        m_RenderManager->getRendererAdapter()->attachObserver(this);
     }
 
-    VkDescriptorSet VulkanLayer::GetImgDesc()
+    VkDescriptorSet VulkanLayer::getImgDesc()
     {
-      m_RenderScene = m_RenderManager->GetRendererAdapter()->GetImguiTexture();
+      m_RenderScene = m_RenderManager->getRendererAdapter()->getImguiTexture();
       VkDescriptorSet imgDesc = ImGui_ImplVulkan_AddTexture(m_RenderScene.first, m_RenderScene.second, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
       return imgDesc;
     }
 
-    void VulkanLayer::Notify(const Event& event)
+    void VulkanLayer::notify(const Event& event)
     {
         if ("OnFinishRender" == event.name)
         {
             if (!m_ImgDescDone) {
-                m_ImgDesc = std::move(GetImgDesc());
+                m_ImgDesc = std::move(getImgDesc());
                 m_ImgDescDone = true;
             }
         }
     }
 
-    void VulkanLayer::LoadDebugInfo()
+    void VulkanLayer::loadDebugInfo()
     {
         std::function<void()> request = [=, this]() {
-            m_DebugInfo.deviceProperties = m_RenderManager->GetRendererAdapter()->Rdr()->GetDeviceProperties();
-            m_DebugInfo.apiVersion = m_RenderManager->GetRendererAdapter()->Rdr()->GetAPIVersion();
-            m_DebugInfo.vendorID = m_RenderManager->GetRendererAdapter()->Rdr()->GetVendor(m_DebugInfo.deviceProperties.vendorID);
-            m_DebugInfo.totalMeshesLoaded = m_RenderManager->GetEntityManager()->GetEntities()->size();
-            m_DebugInfo.totalMeshesInstanced = m_RenderManager->GetEntityManager()->GetInstancedCount();
-            m_DebugInfo.totalShadersLoaded = m_RenderManager->GetShaderManager()->GetShaders()->shaders.size();
-            m_DebugInfo.textures = m_RenderManager->GetTextureManager()->GetTextures();
+            m_DebugInfo.deviceProperties = m_RenderManager->getRendererAdapter()->rdr()->getDeviceProperties();
+            m_DebugInfo.apiVersion = m_RenderManager->getRendererAdapter()->rdr()->getAPIVersion();
+            m_DebugInfo.vendorID = m_RenderManager->getRendererAdapter()->rdr()->getVendor(m_DebugInfo.deviceProperties.vendorID);
+            m_DebugInfo.totalMeshesLoaded = m_RenderManager->getEntityManager()->getEntities()->size();
+            m_DebugInfo.totalMeshesInstanced = m_RenderManager->getEntityManager()->getInstancedCount();
+            m_DebugInfo.totalShadersLoaded = m_RenderManager->getShaderManager()->getShaders()->shaders.size();
+            m_DebugInfo.textures = m_RenderManager->getTextureManager()->getTextures();
         };
 
         Command cmd{request};
 
-        m_CmdQueue->Add(cmd);
+        m_CmdQueue->add(cmd);
     }
 
-    void VulkanLayer::LoadTextures()
+    void VulkanLayer::loadTextures()
     {
         std::function<void()> request = [=, this]() {
             
             std::unordered_map<std::string, VkDescriptorSet> tmpTextures{};
 
-            const auto& textures = m_RenderManager->GetTextureManager()->GetTextures();
+            const auto& textures = m_RenderManager->getTextureManager()->getTextures();
             //const auto& imageViews = m_RenderManager->GetRendererAdapter()->GetSwapChainImageViews();
 
             for (const auto& texture : textures) {
             
-                if (!texture.second.IsPublic()) continue;
+                if (!texture.second.isPublic()) continue;
 
-                VkDescriptorSet imgDset = ImGui_ImplVulkan_AddTexture(texture.second.GetSampler(), texture.second.GetImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+                VkDescriptorSet imgDset = ImGui_ImplVulkan_AddTexture(texture.second.getSampler(), texture.second.getImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
-                tmpTextures[texture.second.GetName()] = imgDset;
+                tmpTextures[texture.second.getName()] = imgDset;
             }
 
             std::swap(tmpTextures, m_Textures);
         };
 
         Command cmd{request};
-        m_CmdQueue->Add(cmd);
+        m_CmdQueue->add(cmd);
 
         //for (const auto& imageView : *imageViews) {
         //    VkSampler textureSampler = m_RenderManager->GetRendererAdapter()->Rdr()->CreateTextureSampler(1);
@@ -110,50 +110,50 @@ namespace Poulpe
         //}
     }
 
-    void VulkanLayer::LoadAmbiantSounds()
+    void VulkanLayer::loadAmbiantSounds()
     {
         std::function<void()> requestSounds = [=, this]() {
-            m_AmbientSounds = m_RenderManager->GetAudioManager()->GetAmbientSound();
+            m_AmbientSounds = m_RenderManager->getAudioManager()->getAmbientSound();
         };
 
         std::function<void()> requestIndex = [=, this]() {
-            m_SoundIndex = m_RenderManager->GetAudioManager()->GetAmbientSoundIndex();
+            m_SoundIndex = m_RenderManager->getAudioManager()->getAmbientSoundIndex();
         };
 
         Command cmdSounds{requestSounds};
         Command cmdIndex{requestIndex};
 
-        m_CmdQueue->Add(cmdSounds);
-        m_CmdQueue->Add(cmdIndex);
+        m_CmdQueue->add(cmdSounds);
+        m_CmdQueue->add(cmdIndex);
     }
 
-    void VulkanLayer::LoadLevels()
+    void VulkanLayer::loadLevels()
     {
         std::function<void()> request = [=, this]() {
-            m_Levels = m_RenderManager->GetConfigManager()->ListLevels();
+            m_Levels = m_RenderManager->getConfigManager()->listLevels();
         };
 
         Command cmd{request};
-        m_CmdQueue->Add(cmd);
+        m_CmdQueue->add(cmd);
     }
 
-    void VulkanLayer::UpdateSkybox()
+    void VulkanLayer::updateSkybox()
     {
         std::function<void()> request = [=, this]() {
             {
                 std::condition_variable cv;
-                auto loading = m_RenderManager->GetTextureManager()->LoadSkybox(m_Skyboxs.at(m_SkyboxIndex), cv);
+                auto loading = m_RenderManager->getTextureManager()->loadSkybox(m_Skyboxs.at(m_SkyboxIndex), cv);
                 loading();
 
-                auto skybox = m_RenderManager->GetEntityManager()->GetSkybox();
-                skybox->SetIsDirty();
+                auto skybox = m_RenderManager->getEntityManager()->getSkybox();
+                skybox->setIsDirty();
                 auto entity = std::make_unique<Skybox>(EntityFactory::create<Skybox>(
-                    m_RenderManager->GetRendererAdapter(),
-                    m_RenderManager->GetEntityManager(),
-                    m_RenderManager->GetShaderManager(),
-                    m_RenderManager->GetTextureManager()));
+                    m_RenderManager->getRendererAdapter(),
+                    m_RenderManager->getEntityManager(),
+                    m_RenderManager->getShaderManager(),
+                    m_RenderManager->getTextureManager()));
 
-                auto desriptorSet = entity->CreateDescriptorSet(skybox, skybox->m_DescriptorSetLayout);
+                auto desriptorSet = entity->createDescriptorSet(skybox, skybox->m_DescriptorSetLayout);
                 skybox->m_DescriptorSets.emplace_back(desriptorSet);
 
                 cv.notify_one(); //useful?
@@ -161,18 +161,18 @@ namespace Poulpe
         };
 
         Command cmd{request};
-        m_CmdQueue->Add(cmd);
+        m_CmdQueue->add(cmd);
     }
 
-    void VulkanLayer::UpdateLevel()
+    void VulkanLayer::updateLevel()
     {
       std::function<void()> request = [=, this]() {
         {
           const auto start = std::chrono::high_resolution_clock::now();
 
-          m_RenderManager->Refresh(m_LevelIndex.value(), m_ShowBBox, m_Skyboxs.at(m_SkyboxIndex));
+          m_RenderManager->refresh(m_LevelIndex.value(), m_ShowBBox, m_Skyboxs.at(m_SkyboxIndex));
 
-          while (!m_RenderManager->IsLoaded()) {
+          while (!m_RenderManager->isLoaded()) {
             //just loading.
           };
 
@@ -186,37 +186,37 @@ namespace Poulpe
       };
 
       Command cmd{ request, WhenToExecute::POST_RENDERING };
-      m_CmdQueue->Add(cmd);
+      m_CmdQueue->add(cmd);
     }
 
-    void VulkanLayer::LoadSkybox()
+    void VulkanLayer::loadSkybox()
     {
         std::function<void()> request = [=, this]() {
-            m_Skyboxs = m_RenderManager->GetConfigManager()->ListSkybox();
+            m_Skyboxs = m_RenderManager->getConfigManager()->listSkybox();
         };
 
         Command cmd{request};
-        m_CmdQueue->Add(cmd);
+        m_CmdQueue->add(cmd);
     }
 
-    void VulkanLayer::UpdateRenderMode(VkPolygonMode mode)
+    void VulkanLayer::updateRenderMode(VkPolygonMode mode)
     {
         std::function<void()> request = [=, this]() {
             Poulpe::VulkanAdapter::s_PolygoneMode.store(mode);
-            vkResetDescriptorPool(m_RenderManager->GetRendererAdapter()->Rdr()->GetDevice(), m_ImGuiInfo->info.DescriptorPool, 0);
+            vkResetDescriptorPool(m_RenderManager->getRendererAdapter()->rdr()->getDevice(), m_ImGuiInfo->info.DescriptorPool, 0);
             m_ImgDescDone = false;
-            m_RenderManager->ForceRefresh();
+            m_RenderManager->forceRefresh();
         };
 
         Command cmd{request};
-        m_CmdQueue->Add(cmd);
+        m_CmdQueue->add(cmd);
     }
 
-    void VulkanLayer::Render(double timeStep)
+    void VulkanLayer::render(double timeStep)
     {
         //ImGuiIO& io = ImGui::GetIO();
         
-        Poulpe::Im::NewFrame();
+        Poulpe::Im::newFrame();
 
         ImGuiWindowFlags flags = 0;
         flags |= ImGuiWindowFlags_MenuBar;
@@ -235,7 +235,7 @@ namespace Poulpe
                 {
                     if (ImGui::MenuItem("Quit", "Alt+F4")) 
                     {
-                        m_RenderManager->GetWindow()->Quit();
+                        m_RenderManager->getWindow()->quit();
                     }
                     //ImGui::Separator();
                     ImGui::EndMenu();
@@ -254,18 +254,18 @@ namespace Poulpe
             ImGui::EndMenuBar();
 
             ImGui::Begin("Performances stats");
-                DisplayFpsCounter(timeStep);
+                displayFpsCounter(timeStep);
                 ImGui::Separator();
-                DisplayAPI();
+                displayAPI();
                 ImGui::Separator();
             ImGui::End();
 
             ImGui::Begin("Level");
-                DisplayLevel();
+                displayLevel();
             ImGui::End();
 
             ImGui::Begin("Options");
-                DisplayOptions();
+                displayOptions();
             ImGui::End();
 
             //ImGui::Begin("Mesh");
@@ -273,16 +273,16 @@ namespace Poulpe
             //ImGui::End();
 
             ImGui::Begin("Textures");
-                DisplayTextures();
+                displayTextures();
             ImGui::End();
 
             ImGui::Begin("Sound");
-                DisplaySounds();
+                displaySounds();
             ImGui::End();
 
             ImGui::Begin("3D View");
-                float my_tex_w = m_RenderManager->GetRendererAdapter()->Rdr()->GetSwapChainExtent().width;
-                float my_tex_h = m_RenderManager->GetRendererAdapter()->Rdr()->GetSwapChainExtent().height;
+                float my_tex_w = m_RenderManager->getRendererAdapter()->rdr()->getSwapChainExtent().width;
+                float my_tex_h = m_RenderManager->getRendererAdapter()->rdr()->getSwapChainExtent().height;
                 ImVec2 uv_min = ImVec2(0.0f, 0.0f);                 // Top-left
                 ImVec2 uv_max = ImVec2(1.0f, 1.0f);                 // Lower-right
                 ImVec4 tint_col = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);   // No tint
@@ -356,18 +356,18 @@ namespace Poulpe
         ImGui::End();
 
         if (!open) {
-            m_RenderManager->GetWindow()->Quit();
+            m_RenderManager->getWindow()->quit();
         }
 
-        Poulpe::Im::Render();
+        Poulpe::Im::render();
     }
 
-    void VulkanLayer::Destroy()
+    void VulkanLayer::destroy()
     {
-        Poulpe::Im::Destroy();
+        Poulpe::Im::destroy();
     }
 
-    void VulkanLayer::DisplayTextures()
+    void VulkanLayer::displayTextures()
     {
         int x = 0;
         
@@ -413,7 +413,7 @@ namespace Poulpe
         //}
     }
 
-    void VulkanLayer::DisplayMesh()
+    void VulkanLayer::displayMesh()
     {
         int x = 0;
 
@@ -449,12 +449,12 @@ namespace Poulpe
         ImGui::EndTable();
     }
 
-    void VulkanLayer::DisplayFpsCounter(double timeStep)
+    void VulkanLayer::displayFpsCounter(double timeStep)
     {
         ImGui::Text("Frametime : %.2f ms", timeStep);
     }
 
-    void VulkanLayer::DisplayAPI()
+    void VulkanLayer::displayAPI()
     {
         ImGui::Text("API Version : %s", m_DebugInfo.apiVersion.c_str());
         ImGui::Text("Vendor id : %s", m_DebugInfo.vendorID.c_str());
@@ -472,7 +472,7 @@ namespace Poulpe
         }
     }
 
-    void VulkanLayer::DisplayOptions()
+    void VulkanLayer::displayOptions()
     {
         ImGui::SetNextItemOpen(m_DebugOpen);
         if ((m_DebugOpen = ImGui::CollapsingHeader("Debug")))
@@ -482,22 +482,22 @@ namespace Poulpe
 
             auto pm = Poulpe::VulkanAdapter::s_PolygoneMode.load();
             if (ImGui::RadioButton("Fill", &pm, VK_POLYGON_MODE_FILL)) {
-                UpdateRenderMode(VK_POLYGON_MODE_FILL);
+                updateRenderMode(VK_POLYGON_MODE_FILL);
             };
             ImGui::SameLine();
             if (ImGui::RadioButton("Line", &pm, VK_POLYGON_MODE_LINE)) {
                 Poulpe::VulkanAdapter::s_PolygoneMode.store(VK_POLYGON_MODE_LINE);
-                UpdateRenderMode(VK_POLYGON_MODE_LINE);
+                updateRenderMode(VK_POLYGON_MODE_LINE);
             };
 
             ImGui::SameLine();
             if (ImGui::RadioButton("Point", &pm, VK_POLYGON_MODE_POINT)) {
                 Poulpe::VulkanAdapter::s_PolygoneMode.store(VK_POLYGON_MODE_POINT);
-                UpdateRenderMode(VK_POLYGON_MODE_POINT);
+                updateRenderMode(VK_POLYGON_MODE_POINT);
             }
 
             if (ImGui::Checkbox("Display grid", &m_ShowGrid)) {
-                m_RenderManager->GetRendererAdapter()->ShowGrid(m_ShowGrid);
+                m_RenderManager->getRendererAdapter()->showGrid(m_ShowGrid);
             }
 
             if (ImGui::Checkbox("Display bbox", &m_ShowBBox)) {
@@ -562,14 +562,14 @@ namespace Poulpe
             ImGui::Checkbox("Show ImGui demo", &m_ShowDemo);
         }
 
-        m_RenderManager->GetWindow()->SetVSync(m_VSync);
+        m_RenderManager->getWindow()->setVSync(m_VSync);
 
         if (m_ShowDemo) {
             ImGui::ShowDemoWindow();
         }
     }
 
-    void VulkanLayer::DisplaySounds()
+    void VulkanLayer::displaySounds()
     {
         ImGui::SetNextItemOpen(m_AmbientOpen);
 
@@ -578,11 +578,11 @@ namespace Poulpe
             if (ImGui::Button("Play"))
             {
                 std::function<void()> request = [=, this]() {
-                    m_RenderManager->GetAudioManager()->StartAmbient();
+                    m_RenderManager->getAudioManager()->startAmbient();
                 };
 
                 Command cmd{request};
-                m_CmdQueue->Add(cmd);
+                m_CmdQueue->add(cmd);
             }
 
             ImGui::SameLine();
@@ -590,28 +590,28 @@ namespace Poulpe
             if (ImGui::Button("Stop"))
             {
                 std::function<void()> request = [=, this]() {
-                    m_RenderManager->GetAudioManager()->StopAmbient();
+                    m_RenderManager->getAudioManager()->stopAmbient();
                 };
 
                 Command cmd{request};
-                m_CmdQueue->Add(cmd);
+                m_CmdQueue->add(cmd);
             }
 
             ImGui::SameLine();
 
             if (ImGui::Checkbox("Loop", &m_Looping)) {
                 std::function<void()> request = [=, this]() {
-                    m_RenderManager->GetAudioManager()->ToggleLooping();
+                    m_RenderManager->getAudioManager()->toggleLooping();
                 };
 
                 Command cmd{request};
-                m_CmdQueue->Add(cmd);
+                m_CmdQueue->add(cmd);
             }
 
             ImGui::SameLine();
 
-            std::string state = m_RenderManager->GetAudioManager()->GetState();
-            std::string currentAmbientSound = m_RenderManager->GetAudioManager()->GetCurrentAmbientSound();
+            std::string state = m_RenderManager->getAudioManager()->getState();
+            std::string currentAmbientSound = m_RenderManager->getAudioManager()->getCurrentAmbientSound();
 
             ImGui::Text("%s %s", state.c_str(), currentAmbientSound.c_str());
 
@@ -624,12 +624,12 @@ namespace Poulpe
                     if (ImGui::Selectable(m_AmbientSounds[n].c_str(), is_selected)) {
                         m_SoundIndex = n;
                         std::function<void()> request = [=, this]() {
-                            m_RenderManager->GetAudioManager()->StopAmbient();
-                            m_RenderManager->GetAudioManager()->StartAmbient(m_SoundIndex);
+                            m_RenderManager->getAudioManager()->stopAmbient();
+                            m_RenderManager->getAudioManager()->startAmbient(m_SoundIndex);
                         };
 
                         Command cmd{request};
-                        m_CmdQueue->Add(cmd);
+                        m_CmdQueue->add(cmd);
                     }
 
                     if (is_selected)
@@ -640,10 +640,10 @@ namespace Poulpe
         }
     }
 
-    void VulkanLayer::DisplayLevel()
+    void VulkanLayer::displayLevel()
     {
         if (!m_LevelIndex.has_value()) {
-            auto appConfig = m_RenderManager->GetConfigManager()->AppConfig();
+            auto appConfig = m_RenderManager->getConfigManager()->appConfig();
             auto defaultLevel = static_cast<std::string>(appConfig["defaultLevel"]);
             for (size_t i = 0; i < m_Levels.size(); ++i) {
                 if (m_Levels.at(i).c_str() == defaultLevel) {
@@ -661,7 +661,7 @@ namespace Poulpe
 
                 if (ImGui::Selectable(m_Levels.at(n).c_str(), isSelected)) {
                     m_LevelIndex = n;
-                    UpdateLevel();
+                    updateLevel();
                 }
 
                 if (isSelected)
@@ -679,7 +679,7 @@ namespace Poulpe
                 
                 if (ImGui::Selectable(m_Skyboxs.at(n).c_str(), isSelected)) {
                     m_SkyboxIndex = n;
-                    UpdateSkybox();
+                    updateSkybox();
                 }
 
                 if (isSelected)
@@ -689,21 +689,21 @@ namespace Poulpe
         }
     }
 
-    void VulkanLayer::AddRenderManager(RenderManager* renderManager)
+    void VulkanLayer::addRenderManager(RenderManager* renderManager)
     {
         m_RenderManager = renderManager;
     }
 
-    void VulkanLayer::UpdateData()
+    void VulkanLayer::updateData()
     {
-        LoadDebugInfo();
-        LoadTextures();
-        LoadAmbiantSounds();
-        LoadLevels();
-        LoadSkybox();
+        loadDebugInfo();
+        loadTextures();
+        loadAmbiantSounds();
+        loadLevels();
+        loadSkybox();
     }
 
-    void VulkanLayer::OnKeyPressed()
+    void VulkanLayer::onKeyPressed()
     {
         
     }

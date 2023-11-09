@@ -23,23 +23,21 @@ namespace Poulpe
         };
 
     public:
-        virtual void Draw();
-        virtual void Accept(std::shared_ptr<IVisitor> visitor);
+        virtual void draw();
+        virtual void accept(std::shared_ptr<IVisitor> visitor);
         virtual ~Entity() = default;
 
-        [[nodiscard]] inline const std::string &GetName() const {
-            return m_Name;
-        }
-        void SetName(const std::string& name) { m_Name = name; }
-        bool HasPushConstants() { return m_HasPushContants; }
-        void SetHasPushConstants(bool has = true) { m_HasPushContants = has; }
-        void SetVisible(bool visible) { m_IsVisible = visible; }
-        bool IsVisible() { return m_IsVisible; }
-        uint32_t GetNextSpriteIndex();
-        void SetSpritesCount(uint32_t count) { m_SpritesCount = count; }
-        bool IsHit(glm::vec3 point);
-        void AddBBox(std::shared_ptr<BBox> bbox) { m_BoundingBox = bbox; }
-        std::shared_ptr<BBox> GetBBox() { return m_BoundingBox; }
+        [[nodiscard]] inline const std::string getName() const { return m_Name; }
+        void setName(const std::string& name) { m_Name = name; }
+        bool hasPushConstants() { return m_HasPushContants; }
+        void setHasPushConstants(bool has = true) { m_HasPushContants = has; }
+        void setVisible(bool visible) { m_IsVisible = visible; }
+        bool isVisible() { return m_IsVisible; }
+        uint32_t getNextSpriteIndex();
+        void setSpritesCount(uint32_t count) { m_SpritesCount = count; }
+        bool isHit(glm::vec3 point);
+        void addBBox(std::shared_ptr<BBox> bbox) { m_BoundingBox = bbox; }
+        std::shared_ptr<BBox> getBBox() { return m_BoundingBox; }
 
     private:
         std::string m_Name;

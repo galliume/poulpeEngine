@@ -11,15 +11,15 @@ namespace Poulpe
         IAudioManager() = default;
         ~IAudioManager() = default;
 
-        virtual void Load(nlohmann::json config) = 0;
-        virtual void StartSplash(int index = 0) = 0;
-        virtual void StopSplash() = 0;
-        virtual void StartAmbient(int index = 0) = 0;
-        virtual void StopAmbient() = 0;
-        virtual std::vector<std::string> const GetAmbientSound() = 0;
-        virtual std::string const GetState() = 0;
-        virtual int GetAmbientSoundIndex() = 0;
-        virtual std::string GetCurrentAmbientSound() = 0;
-        virtual void ToggleLooping() = 0;
+        virtual void load(nlohmann::json config) = 0;
+        virtual void startSplash(int index = 0) = 0;
+        virtual void stopSplash() = 0;
+        virtual void startAmbient(int index = 0) = 0;
+        virtual void stopAmbient() = 0;
+        virtual std::vector<std::string> const getAmbientSound() = 0;
+        virtual std::string const getState() = 0;
+        virtual int getAmbientSoundIndex() = 0;
+        virtual std::string getCurrentAmbientSound() = 0;
+        virtual void toggleLooping() = 0;
     };
 }

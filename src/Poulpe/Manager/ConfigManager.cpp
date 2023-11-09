@@ -32,7 +32,7 @@ namespace Poulpe
         f.close();
     }
 
-    nlohmann::json ConfigManager::EntityConfig(const std::string& levelName)
+    nlohmann::json ConfigManager::entityConfig(const std::string& levelName)
     {
         fs::path level{ "config/" + levelName + ".json" };
         std::ifstream f;
@@ -49,27 +49,27 @@ namespace Poulpe
         return m_EntityConfig;
     }
 
-    nlohmann::json ConfigManager::AppConfig()
+    nlohmann::json ConfigManager::appConfig()
     {
         return m_AppConfig;
     }
 
-    nlohmann::json ConfigManager::TexturesConfig()
+    nlohmann::json ConfigManager::texturesConfig()
     {
         return m_TexturesConfig;
     }
 
-    nlohmann::json ConfigManager::SoundConfig()
+    nlohmann::json ConfigManager::soundConfig()
     {
         return m_SoundConfig;
     }
 
-    nlohmann::json ConfigManager::ShaderConfig()
+    nlohmann::json ConfigManager::shaderConfig()
     {
         return m_ShaderConfig;
     }
 
-    std::vector<std::string> ConfigManager::ListLevels()
+    std::vector<std::string> ConfigManager::listLevels()
     {
         std::vector<std::string> levels;
 
@@ -85,7 +85,7 @@ namespace Poulpe
         return levels;
     }
 
-    std::vector<std::string> ConfigManager::ListSkybox()
+    std::vector<std::string> ConfigManager::listSkybox()
     {
         std::vector<std::string> skybox;
 

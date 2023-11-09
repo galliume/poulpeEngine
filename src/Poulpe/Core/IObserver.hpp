@@ -10,6 +10,6 @@ namespace Poulpe
     class IObserver
     {
     public:
-        virtual void Notify(const Event& onEvent) = 0;
+        virtual void notify(const Event& onEvent) = 0;
     };
 }

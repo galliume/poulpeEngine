@@ -4,7 +4,7 @@ namespace Poulpe {
 
     std::shared_ptr<spdlog::logger> Log::s_Logger;
 
-    void Log::Init()
+    void Log::init()
     {
         spdlog::set_pattern("%^[%T] %n: %v%$");
 

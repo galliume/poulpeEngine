@@ -32,170 +32,170 @@ namespace Poulpe
         m_Camera = camera;
         m_CommandQueue = cmdQueue;
 
-        m_Camera->Init();
-        m_Renderer->Init();
-        m_Renderer->AddCamera(m_Camera);
-        m_DestroyManager->SetRenderer(m_Renderer->Rdr());
-        m_DestroyManager->AddMemoryPool(m_Renderer->Rdr()->GetDeviceMemoryPool());
-        m_TextureManager->AddConfig(m_ConfigManager->TexturesConfig());
+        m_Camera->init();
+        m_Renderer->init();
+        m_Renderer->addCamera(m_Camera);
+        m_DestroyManager->setRenderer(m_Renderer->rdr());
+        m_DestroyManager->addMemoryPool(m_Renderer->rdr()->getDeviceMemoryPool());
+        m_TextureManager->addConfig(m_ConfigManager->texturesConfig());
 
-        nlohmann::json appConfig = m_ConfigManager->AppConfig();
+        nlohmann::json appConfig = m_ConfigManager->appConfig();
         if (appConfig["defaultLevel"].empty()) {
             PLP_WARN("defaultLevel conf not set.");
         }
         
         m_CurrentLevel = static_cast<std::string>(appConfig["defaultLevel"]);
 
-        m_InputManager->Init(appConfig["input"]);
+        m_InputManager->init(appConfig["input"]);
 
         //@todo, those managers should not have the usage of the renderer...
-        m_TextureManager->AddRenderer(m_Renderer);
-        m_EntityManager->AddRenderer(m_Renderer);
-        m_ShaderManager->AddRenderer(m_Renderer);
-        m_InputManager->AddRenderer(m_Renderer);
-        m_InputManager->SetCamera(m_Camera);
+        m_TextureManager->addRenderer(m_Renderer);
+        m_EntityManager->addRenderer(m_Renderer);
+        m_ShaderManager->addRenderer(m_Renderer);
+        m_InputManager->addRenderer(m_Renderer);
+        m_InputManager->setCamera(m_Camera);
         //end @todo
     }
 
-    void RenderManager::CleanUp()
+    void RenderManager::cleanUp()
     {
-        m_DestroyManager->CleanEntities(*m_EntityManager->GetEntities());
-        m_DestroyManager->CleanEntities(m_EntityManager->GetHUD());
-        m_DestroyManager->CleanShaders(m_ShaderManager->GetShaders()->shaders);
-        m_DestroyManager->CleanTextures(m_TextureManager->GetTextures());
-        m_DestroyManager->CleanTexture(m_TextureManager->GetSkyboxTexture());
-        m_AudioManager->Clear();
-        m_SpriteAnimationManager->Clear();
-        m_TextureManager->Clear();
-        m_EntityManager->Clear();
-        m_ShaderManager->Clear();
-        m_Renderer->Clear();
+        m_DestroyManager->cleanEntities(*m_EntityManager->getEntities());
+        m_DestroyManager->cleanEntities(m_EntityManager->getHUD());
+        m_DestroyManager->cleanShaders(m_ShaderManager->getShaders()->shaders);
+        m_DestroyManager->cleanTextures(m_TextureManager->getTextures());
+        m_DestroyManager->cleanTexture(m_TextureManager->getSkyboxTexture());
+        m_AudioManager->clear();
+        m_SpriteAnimationManager->clear();
+        m_TextureManager->clear();
+        m_EntityManager->clear();
+        m_ShaderManager->clear();
+        m_Renderer->clear();
         //m_DestroyManager->CleanDeviceMemory();
         //m_Renderer->Rdr()->InitMemoryPool();
     }
 
-    void RenderManager::Init()
+    void RenderManager::init()
     {
         if (m_Refresh) {
-            m_Renderer->Rdr()->WaitIdle();
-            m_Renderer->StopRendering();
-            m_Renderer->ClearRendererScreen();
-            CleanUp();
-            m_Renderer->RecreateSwapChain();
-            SetIsLoaded(false);
+            m_Renderer->rdr()->waitIdle();
+            m_Renderer->stopRendering();
+            m_Renderer->clearRendererScreen();
+            cleanUp();
+            m_Renderer->recreateSwapChain();
+            setIsLoaded(false);
             m_Refresh = false;
         }
        
-        nlohmann::json appConfig = m_ConfigManager->AppConfig();
-        nlohmann::json textureConfig = m_ConfigManager->TexturesConfig();
+        nlohmann::json appConfig = m_ConfigManager->appConfig();
+        nlohmann::json textureConfig = m_ConfigManager->texturesConfig();
 
-        m_AudioManager->Init();
-        m_AudioManager->Load(m_ConfigManager->SoundConfig());
+        m_AudioManager->init();
+        m_AudioManager->load(m_ConfigManager->soundConfig());
 
         std::vector<std::string> splashSprites{};
         for (auto& texture : textureConfig["splash"].items()) {
             splashSprites.emplace_back(texture.value());
         }
 
-        m_SpriteAnimationManager->Add("splashAnim", splashSprites);
-        m_ShaderManager->AddShader("splashscreen", "assets/shaders/spv/2d_vert.spv", "assets/shaders/spv/2d_frag.spv");
+        m_SpriteAnimationManager->add("splashAnim", splashSprites);
+        m_ShaderManager->addShader("splashscreen", "assets/shaders/spv/2d_vert.spv", "assets/shaders/spv/2d_frag.spv");
 
-        PrepareSplashScreen();
+        prepareSplashScreen();
 
         if (static_cast<bool>(appConfig["splashScreenMusic"]))
-            m_AudioManager->StartSplash();
+            m_AudioManager->startSplash();
 
         std::thread loading([=, this]() {
-            while (!IsLoaded()) {
-                m_Renderer->DrawSplashScreen();
+            while (!isLoaded()) {
+                m_Renderer->drawSplashScreen();
                 std::this_thread::sleep_for(std::chrono::milliseconds(33));
             }
         });
 
-        LoadData(m_CurrentLevel);
+        loadData(m_CurrentLevel);
         loading.join();
-        m_Renderer->ClearSplashScreen();
+        m_Renderer->clearSplashScreen();
 
-        m_AudioManager->StopSplash();
+        m_AudioManager->stopSplash();
 
         if (static_cast<bool>(appConfig["ambientMusic"]))
-            m_AudioManager->StartAmbient();
+            m_AudioManager->startAmbient();
 
-        PrepareEntity();
-        PrepareSkybox();
-        PrepareHUD();
+        prepareEntity();
+        prepareSkybox();
+        prepareHUD();
     }
 
-    void RenderManager::LoadData(const std::string& level)
+    void RenderManager::loadData(const std::string& level)
     {
-        nlohmann::json appConfig = m_ConfigManager->AppConfig();
+        nlohmann::json appConfig = m_ConfigManager->appConfig();
         std::string_view threadQueueName{ "loading" };
         std::condition_variable cv;
 
-        const auto levelData = m_ConfigManager->EntityConfig(level);
-        std::function<void()> entityFutures = m_EntityManager->Load(levelData, cv);
-        std::function<void()> textureFuture = m_TextureManager->Load(cv);
+        const auto levelData = m_ConfigManager->entityConfig(level);
+        std::function<void()> entityFutures = m_EntityManager->load(levelData, cv);
+        std::function<void()> textureFuture = m_TextureManager->load(cv);
 
         const std::string sb = (m_CurrentSkybox.empty()) ? static_cast<std::string>(appConfig["defaultSkybox"]) : m_CurrentSkybox;
-        std::function<void()> skyboxFuture = m_TextureManager->LoadSkybox(sb, cv);
-        std::function<void()> shaderFuture = m_ShaderManager->Load(m_ConfigManager->ShaderConfig(), cv);
+        std::function<void()> skyboxFuture = m_TextureManager->loadSkybox(sb, cv);
+        std::function<void()> shaderFuture = m_ShaderManager->load(m_ConfigManager->shaderConfig(), cv);
 
-        Poulpe::Locator::getThreadPool()->Submit(threadQueueName, entityFutures);
-        Poulpe::Locator::getThreadPool()->Submit(threadQueueName, textureFuture);
-        Poulpe::Locator::getThreadPool()->Submit(threadQueueName, skyboxFuture);
-        Poulpe::Locator::getThreadPool()->Submit(threadQueueName, shaderFuture);
+        Poulpe::Locator::getThreadPool()->submit(threadQueueName, entityFutures);
+        Poulpe::Locator::getThreadPool()->submit(threadQueueName, textureFuture);
+        Poulpe::Locator::getThreadPool()->submit(threadQueueName, skyboxFuture);
+        Poulpe::Locator::getThreadPool()->submit(threadQueueName, shaderFuture);
 
         std::mutex loading;
 
         {
             std::unique_lock<std::mutex> lock(loading);
-            cv.wait(lock, [=, this]() { return m_TextureManager->IsTexturesLoadingDone(); });
+            cv.wait(lock, [=, this]() { return m_TextureManager->isTexturesLoadingDone(); });
         }
         {
             std::unique_lock<std::mutex> lock(loading);
-            cv.wait(lock, [=, this]() { return m_TextureManager->IsSkyboxLoadingDone(); });
+            cv.wait(lock, [=, this]() { return m_TextureManager->isSkyboxLoadingDone(); });
         }
         {
             std::unique_lock<std::mutex> lock(loading);
-            cv.wait(lock, [=, this]() { return m_ShaderManager->IsLoadingDone(); });
+            cv.wait(lock, [=, this]() { return m_ShaderManager->isLoadingDone(); });
         }
         {
             std::unique_lock<std::mutex> lock(loading);
             cv.wait(lock, [=, this]() { return m_EntityManager->IsLoadingDone(); });
         }
 
-        SetIsLoaded();
+        setIsLoaded();
 
-        m_Renderer->AddEntities(m_EntityManager->GetEntities());
+        m_Renderer->addEntities(m_EntityManager->getEntities());
     }
 
-    void RenderManager::Draw()
+    void RenderManager::draw()
     {
-        m_Renderer->Draw();
+        m_Renderer->draw();
     }
 
-    void RenderManager::RenderScene()
+    void RenderManager::renderScene()
     {
-        m_Renderer->RenderScene();
+        m_Renderer->renderScene();
 
         if (m_Refresh) {
-            m_Renderer->SetDrawBbox(m_ShowBbox);
-            Init();
+            m_Renderer->setDrawBbox(m_ShowBbox);
+            init();
             m_Refresh = false;
             m_ShowBbox = false;
         }
     }
 
-    void RenderManager::Refresh(uint32_t levelIndex, bool showBbox, std::string_view skybox)
+    void RenderManager::refresh(uint32_t levelIndex, bool showBbox, std::string_view skybox)
     {
-        m_CurrentLevel = m_ConfigManager->ListLevels().at(levelIndex);
+        m_CurrentLevel = m_ConfigManager->listLevels().at(levelIndex);
         m_CurrentSkybox = skybox;
         m_IsLoaded = false;
         m_Refresh = true;
         m_ShowBbox = showBbox;
     }
 
-    void RenderManager::PrepareSplashScreen()
+    void RenderManager::prepareSplashScreen()
     {
         std::vector<VkDescriptorPoolSize> poolSizes{};
         VkDescriptorPoolSize cp1;
@@ -207,7 +207,7 @@ namespace Poulpe
         poolSizes.emplace_back(cp1);
         poolSizes.emplace_back(cp2);
 
-        VkDescriptorPool descriptorPool = m_Renderer->Rdr()->CreateDescriptorPool(poolSizes, 1000);
+        VkDescriptorPool descriptorPool = m_Renderer->rdr()->createDescriptorPool(poolSizes, 1000);
         m_DescriptorPools.emplace_back(descriptorPool);
 
         std::shared_ptr<Splash> splashVulkanisator = std::make_shared<Splash>(
@@ -219,14 +219,14 @@ namespace Poulpe
             descriptorPool
         );
         auto splash = std::make_shared<Mesh2D>();
-        splash->Accept(splashVulkanisator);
+        splash->accept(splashVulkanisator);
 
         std::vector<std::shared_ptr<Mesh>> splashs{ splash };
 
-        m_Renderer->AddSplash(splashs);
+        m_Renderer->addSplash(splashs);
     }
 
-    void RenderManager::PrepareEntity()
+    void RenderManager::prepareEntity()
     {
         m_DescriptorPools.clear();
 
@@ -240,7 +240,7 @@ namespace Poulpe
         poolSizes.emplace_back(cp1);
         poolSizes.emplace_back(cp2);
 
-        VkDescriptorPool descriptorPool = m_Renderer->Rdr()->CreateDescriptorPool(poolSizes, 1000);
+        VkDescriptorPool descriptorPool = m_Renderer->rdr()->createDescriptorPool(poolSizes, 1000);
         m_DescriptorPools.emplace_back(descriptorPool);
 
         std::shared_ptr<Basic> vulkanisator = std::make_shared<Basic>(
@@ -251,12 +251,12 @@ namespace Poulpe
             descriptorPool
         );
 
-        for (std::shared_ptr<Entity>& entity : *m_EntityManager->GetEntities()) {
-            entity->Accept(vulkanisator);
+        for (std::shared_ptr<Entity>& entity : *m_EntityManager->getEntities()) {
+            entity->accept(vulkanisator);
         }
     }
 
-    void RenderManager::PrepareHUD()
+    void RenderManager::prepareHUD()
     {
         std::vector<VkDescriptorPoolSize> poolSizes{};
         VkDescriptorPoolSize cp1;
@@ -270,28 +270,28 @@ namespace Poulpe
 
         std::vector<std::shared_ptr<Mesh>> hud{};
 
-        VkDescriptorPool descriptorPool = m_Renderer->Rdr()->CreateDescriptorPool(poolSizes, 10);
+        VkDescriptorPool descriptorPool = m_Renderer->rdr()->createDescriptorPool(poolSizes, 10);
         m_DescriptorPools.emplace_back(descriptorPool);
 
         auto entityG = std::make_shared<Grid>(EntityFactory::create<Grid>(
             m_Renderer, m_EntityManager, m_ShaderManager, m_TextureManager, descriptorPool));
 
         auto grid = std::make_shared<Mesh>();
-        grid->Accept(entityG);
+        grid->accept(entityG);
         hud.emplace_back(grid);
 
         auto entityC = std::make_shared<Crosshair>(EntityFactory::create<Crosshair>(
             m_Renderer, m_EntityManager, m_ShaderManager, m_TextureManager, descriptorPool));
 
         auto crossHair = std::make_shared<Mesh2D>();
-        crossHair->Accept(entityC);
+        crossHair->accept(entityC);
         hud.emplace_back(crossHair);
 
-        m_EntityManager->AddHUD(hud);
-        m_Renderer->AddHUD(m_EntityManager->GetHUD());
+        m_EntityManager->addHUD(hud);
+        m_Renderer->addHUD(m_EntityManager->getHUD());
     }
 
-    void RenderManager::PrepareSkybox()
+    void RenderManager::prepareSkybox()
     {
         std::vector<VkDescriptorPoolSize> poolSizes{};
         VkDescriptorPoolSize cp1;
@@ -303,7 +303,7 @@ namespace Poulpe
         poolSizes.emplace_back(cp1);
         poolSizes.emplace_back(cp2);
 
-        VkDescriptorPool descriptorPool = m_Renderer->Rdr()->CreateDescriptorPool(poolSizes, 10, VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT);
+        VkDescriptorPool descriptorPool = m_Renderer->rdr()->createDescriptorPool(poolSizes, 10, VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT);
         m_DescriptorPools.emplace_back(descriptorPool);
 
         auto entity = std::make_shared<Skybox>(EntityFactory::create<Skybox>(
@@ -312,8 +312,8 @@ namespace Poulpe
         auto skyboxMesh = std::make_shared<Mesh>();
         skyboxMesh->m_DescriptorPool = descriptorPool;
 
-        skyboxMesh->Accept(entity);
-        m_EntityManager->SetSkybox(skyboxMesh);
-        m_Renderer->AddSkybox(skyboxMesh);
+        skyboxMesh->accept(entity);
+        m_EntityManager->setSkybox(skyboxMesh);
+        m_Renderer->addSkybox(skyboxMesh);
     }
 }

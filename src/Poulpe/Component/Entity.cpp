@@ -3,17 +3,17 @@
 
 namespace Poulpe
 {
-    void Entity::Draw()
+    void Entity::draw()
     {
 
     }
 
-    void Entity::Accept(std::shared_ptr<IVisitor> visitor)
+    void Entity::accept(std::shared_ptr<IVisitor> visitor)
     {
-        visitor->Visit(shared_from_this());
+        visitor->visit(shared_from_this());
     }
 
-    uint32_t Entity::GetNextSpriteIndex()
+    uint32_t Entity::getNextSpriteIndex()
     {
         uint32_t nextIndex = 0;
 
@@ -27,7 +27,7 @@ namespace Poulpe
         return nextIndex;
     }
 
-    bool Entity::IsHit(glm::vec3 point)
+    bool Entity::isHit(glm::vec3 point)
     {
         //PLP_DEBUG(
         //   "BBOX maxX:{} minX{} maxY:{} minY:{} maxZ:{} minZ{}",

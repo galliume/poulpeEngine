@@ -28,17 +28,17 @@ namespace Poulpe
             std::shared_ptr<TextureManager> textureManager,
             VkDescriptorPool descriptorPool
         );
-        void Visit(std::shared_ptr<Entity> entity) override;
-        VkDescriptorSetLayout CreateDescriptorSetLayout();
-        std::vector<VkDescriptorSet> CreateDescriptorSet(std::shared_ptr<Mesh> mesh, VkDescriptorSetLayout descriptorSetLayout);
-        VkPipelineLayout CreatePipelineLayout(VkDescriptorSetLayout descriptorSetLayout);
-        std::vector<VkPipelineShaderStageCreateInfo> GetShaders(std::string const & shaderName);
-        VkPipelineVertexInputStateCreateInfo GetVertexBindingDesc(
+        void visit(std::shared_ptr<Entity> entity) override;
+        VkDescriptorSetLayout createDescriptorSetLayout();
+        std::vector<VkDescriptorSet> createDescriptorSet(std::shared_ptr<Mesh> mesh, VkDescriptorSetLayout descriptorSetLayout);
+        VkPipelineLayout createPipelineLayout(VkDescriptorSetLayout descriptorSetLayout);
+        std::vector<VkPipelineShaderStageCreateInfo> getShaders(std::string const & shaderName);
+        VkPipelineVertexInputStateCreateInfo getVertexBindingDesc(
           VkVertexInputBindingDescription bDesc, std::array<VkVertexInputAttributeDescription, 3> attDesc);
-        void SetPushConstants(std::shared_ptr<Mesh> mesh);
+        void setPushConstants(std::shared_ptr<Mesh> mesh);
 
     private:
-        void CreateBBoxEntity(std::shared_ptr<Mesh>& mesh);
+        void createBBoxEntity(std::shared_ptr<Mesh>& mesh);
 
     private:
         std::shared_ptr<VulkanAdapter> m_Adapter;

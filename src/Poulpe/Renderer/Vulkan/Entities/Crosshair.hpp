@@ -23,7 +23,7 @@ namespace Poulpe
             std::shared_ptr<TextureManager> textureManager,
             VkDescriptorPool descriptorPool
         );
-        void Visit(std::shared_ptr<Entity> entity) override;
+        void visit(std::shared_ptr<Entity> entity) override;
 
     private:
         std::shared_ptr<VulkanAdapter> m_Adapter;
