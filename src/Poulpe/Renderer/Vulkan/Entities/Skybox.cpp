@@ -80,7 +80,7 @@ namespace Poulpe
         vkDestroyCommandPool(m_Adapter->rdr()->getDevice(), commandPool, nullptr);
 
         Buffer uniformBuffer = m_Adapter->rdr()->createUniformBuffers(1);
-        mesh->getUniformBuffers().emplace_back(uniformBuffer);
+        mesh->getUniformBuffers()->emplace_back(uniformBuffer);
 
         setPushConstants(mesh);
 
@@ -98,11 +98,8 @@ namespace Poulpe
             mesh->getShaderName(), shaders, vertexInputInfo, VK_CULL_MODE_NONE, true, true, true, true,
             VulkanAdapter::s_PolygoneMode));
 
-        for (uint32_t i = 0; i < mesh->getUniformBuffers().size(); i++) {
-            m_Adapter->rdr()->updateUniformBuffer(
-                mesh->getUniformBuffers()[i],
-                data.m_Ubos
-            );
+        for (uint32_t i = 0; i < mesh->getUniformBuffers()->size(); i++) {
+            m_Adapter->rdr()->updateUniformBuffer(mesh->getUniformBuffers()->at(i), & data.m_Ubos);
         }
 
         mesh->setData(data);
@@ -148,8 +145,13 @@ namespace Poulpe
         descriptorImageInfo.imageView = tex.getImageView();
         descriptorImageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
-        VkDescriptorSet descriptorSet = m_Adapter->rdr()->createDescriptorSets(mesh->getDescriptorPool(), {mesh->getDescriptorSetLayout()}, 1);
-        m_Adapter->rdr()->pdateDescriptorSets(mesh->getUniformBuffers(), descriptorSet, {descriptorImageInfo});
+        VkDescriptorSet descriptorSet = m_Adapter->rdr()->createDescriptorSets(mesh->getDescriptorPool(),
+            {mesh->getDescriptorSetLayout()}, 1);
+
+        std::vector<VkDescriptorImageInfo> descriptorImageInfos{};
+        descriptorImageInfos.emplace_back(descriptorImageInfo);
+
+        m_Adapter->rdr()->updateDescriptorSets(*mesh->getUniformBuffers(), descriptorSet, descriptorImageInfos);
 
         return { descriptorSet };
     }

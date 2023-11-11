@@ -56,8 +56,11 @@ namespace Poulpe {
         VkDescriptorSet createDescriptorSets(VkDescriptorPool const & descriptorPool,
             std::vector<VkDescriptorSetLayout> const  & descriptorSetLayouts, uint32_t count = 100);
 
-        void pdateDescriptorSets(std::vector<Buffer> const & uniformBuffers, VkDescriptorSet const & descriptorSet,
-            std::vector<VkDescriptorImageInfo> const & imageInfo, VkDescriptorType type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
+        void updateDescriptorSets(std::vector<Buffer> & uniformBuffers, VkDescriptorSet & descriptorSet,
+            std::vector<VkDescriptorImageInfo> & imageInfo, VkDescriptorType type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
+
+        void updateDescriptorSet(Buffer & uniformBuffer, VkDescriptorSet & descriptorSet,
+            std::vector<VkDescriptorImageInfo> & imageInfo, VkDescriptorType type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
 
         VkPipelineLayout createPipelineLayout(std::vector<VkDescriptorSetLayout> const & descriptorSetLayouts,
             std::vector<VkPushConstantRange> const & pushConstants);
@@ -103,7 +106,7 @@ namespace Poulpe {
 
         Buffer createCubeUniformBuffers(uint32_t uniformBuffersCount);
 
-        void updateUniformBuffer(Buffer & buffer, std::vector<UniformBufferObject> uniformBufferObjects);
+        void updateUniformBuffer(Buffer & buffer, std::vector<UniformBufferObject>* uniformBufferObjects);
 
         void createImage(uint32_t width, uint32_t height, uint32_t mipLevels, VkSampleCountFlagBits numSamples,VkFormat format,
             VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage & image);

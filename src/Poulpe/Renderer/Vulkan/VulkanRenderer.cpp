@@ -1237,22 +1237,52 @@ namespace Poulpe {
         return descriptorSet;
     }
 
-    void VulkanRenderer::updateDescriptorSets(std::vector<Buffer> const & uniformBuffers,
-        VkDescriptorSet const & descriptorSet, std::vector<VkDescriptorImageInfo> const & imageInfo,
-        VkDescriptorType type)
+    void VulkanRenderer::updateDescriptorSets(std::vector<Buffer> & uniformBuffers, VkDescriptorSet & descriptorSet,
+        std::vector<VkDescriptorImageInfo> & imageInfo, VkDescriptorType type)
     {
         std::array<VkWriteDescriptorSet, 2> descriptorWrites{};
         std::vector<VkDescriptorBufferInfo> bufferInfos;
 
         std::for_each(std::begin(uniformBuffers), std::end(uniformBuffers),
-            [& bufferInfos](const Buffer& uniformBuffer)
-            {
-                VkDescriptorBufferInfo bufferInfo{};
-                bufferInfo.buffer = uniformBuffer.buffer;
-                bufferInfo.offset = 0;
-                bufferInfo.range = VK_WHOLE_SIZE;
-                bufferInfos.emplace_back(bufferInfo);
-            });
+        [& bufferInfos](const Buffer& uniformBuffer)
+        {
+            VkDescriptorBufferInfo bufferInfo{};
+            bufferInfo.buffer = uniformBuffer.buffer;
+            bufferInfo.offset = 0;
+            bufferInfo.range = VK_WHOLE_SIZE;
+            bufferInfos.emplace_back(bufferInfo);
+        });
+
+        descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        descriptorWrites[0].dstSet = descriptorSet;
+        descriptorWrites[0].dstBinding = 0;
+        descriptorWrites[0].dstArrayElement = 0;
+        descriptorWrites[0].descriptorType = type;
+        descriptorWrites[0].descriptorCount = 1;
+        descriptorWrites[0].pBufferInfo = bufferInfos.data();
+
+        descriptorWrites[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        descriptorWrites[1].dstSet = descriptorSet;
+        descriptorWrites[1].dstBinding = 1;
+        descriptorWrites[1].dstArrayElement = 0;
+        descriptorWrites[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        descriptorWrites[1].descriptorCount = imageInfo.size();
+        descriptorWrites[1].pImageInfo = imageInfo.data();
+
+        vkUpdateDescriptorSets(m_Device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
+    }
+
+    void VulkanRenderer::updateDescriptorSet(Buffer & uniformBuffer, VkDescriptorSet & descriptorSet,
+        std::vector<VkDescriptorImageInfo> & imageInfo, VkDescriptorType type)
+    {
+        std::array<VkWriteDescriptorSet, 2> descriptorWrites{};
+        std::vector<VkDescriptorBufferInfo> bufferInfos;
+
+        VkDescriptorBufferInfo bufferInfo{};
+        bufferInfo.buffer = uniformBuffer.buffer;
+        bufferInfo.offset = 0;
+        bufferInfo.range = VK_WHOLE_SIZE;
+        bufferInfos.emplace_back(bufferInfo);
 
         descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
         descriptorWrites[0].dstSet = descriptorSet;
@@ -1730,7 +1760,7 @@ namespace Poulpe {
         return uniformBuffer;
     }
 
-    void VulkanRenderer::updateUniformBuffer(Buffer & buffer, std::vector<UniformBufferObject> uniformBufferObjects)
+    void VulkanRenderer::updateUniformBuffer(Buffer & buffer, std::vector<UniformBufferObject>* uniformBufferObjects)
     {
         {
             buffer.memory->lock();
@@ -1738,7 +1768,7 @@ namespace Poulpe {
             auto memory = buffer.memory->getMemory();
             void* data;
             vkMapMemory(m_Device, *memory, buffer.offset, buffer.size, 0, &data);
-            memcpy(data, uniformBufferObjects.data(), buffer.size);
+            memcpy(data, uniformBufferObjects->data(), buffer.size);
             vkUnmapMemory(m_Device, *memory);
 
             buffer.memory->unLock();
