@@ -3,7 +3,10 @@
 #include "IRendererAdapter.hpp"
 
 #include "Poulpe/Core/IObserver.hpp"
+
 #include "Poulpe/GUI/ImGui/Im.hpp"
+
+#include "Poulpe/Manager/EntityManager.hpp"
 
 #include <future>
 
@@ -14,20 +17,20 @@ namespace Poulpe
 
     public:
 
-        explicit VulkanAdapter(Window* window);
+        explicit VulkanAdapter(Window* window, EntityManager* entityManager);
         virtual ~VulkanAdapter();
 
         void init() override;
-        void addCamera(std::shared_ptr<Camera> camera) override { m_Camera = camera; }
+        void addCamera(Camera* camera) override { m_Camera = camera; }
         void draw() override;
         void destroy() override;
         void drawSplashScreen() override;
-        std::shared_ptr<VulkanRenderer> rdr() override { return m_Renderer; }
+        VulkanRenderer* rdr() override { return m_Renderer.get(); }
         void immediateSubmit(std::function<void(VkCommandBuffer cmd)>&& function, int queueIndex = 0) override;
         void showGrid(bool show) override;
-        inline std::vector<VkDescriptorSetLayout>* getDescriptorSetLayouts() override { return &m_DescriptorSetLayouts; }
-        inline std::vector<VkImage>* getSwapChainImages() override { return &m_SwapChainImages; }
-        inline std::shared_ptr<VkRenderPass> rdrPass() override { return m_RenderPass; }
+        inline std::vector<VkDescriptorSetLayout>* getDescriptorSetLayouts() override { return & m_DescriptorSetLayouts; }
+        inline std::vector<VkImage>* getSwapChainImages() override { return & m_SwapChainImages; }
+        inline VkRenderPass* rdrPass() override { return m_RenderPass.get(); }
         inline glm::mat4 getPerspective() override { return m_Perspective; }
         void setDeltatime(float deltaTime) override;
         void renderScene() override;
@@ -39,7 +42,10 @@ namespace Poulpe
         void drawBbox();
         //void RenderForImGui(VkCommandBuffer cmdBuffer, VkFramebuffer swapChainFramebuffer);
         void addCmdToSubmit(VkCommandBuffer cmd);
-        void beginRendering(VkCommandBuffer commandBuffer, VkAttachmentLoadOp loadOp = VK_ATTACHMENT_LOAD_OP_LOAD, VkAttachmentStoreOp storeOp = VK_ATTACHMENT_STORE_OP_STORE);
+
+        void beginRendering(VkCommandBuffer commandBuffer, VkAttachmentLoadOp loadOp = VK_ATTACHMENT_LOAD_OP_LOAD,
+            VkAttachmentStoreOp storeOp = VK_ATTACHMENT_STORE_OP_STORE);
+
         void endRendering(VkCommandBuffer commandBuffer);
         VkSwapchainKHR getSwapChain() { return m_SwapChain; };
 
@@ -51,8 +57,14 @@ namespace Poulpe
         bool getDrawBbox() { return m_DrawBbox; };
         void clearRendererScreen();
         void stopRendering() { m_RenderingStopped = true; };
-        std::pair<VkSampler, VkImageView> getImguiTexture() { return std::make_pair(m_SwapChainSamplers[m_ImageIndex], m_SwapChainImageViews[m_ImageIndex]); };
-        std::pair<VkSampler, VkImageView> getImguiDepthImage() { return std::make_pair(m_SwapChainDepthSamplers[m_ImageIndex], m_DepthImageViews[m_ImageIndex]); };
+        
+        std::pair<VkSampler, VkImageView> getImguiTexture() { 
+            return std::make_pair(m_SwapChainSamplers[m_ImageIndex], m_SwapChainImageViews[m_ImageIndex]);
+        };
+
+        std::pair<VkSampler, VkImageView> getImguiDepthImage() { 
+            return std::make_pair(m_SwapChainDepthSamplers[m_ImageIndex], m_DepthImageViews[m_ImageIndex]); 
+        };
 
         std::vector<VkImageView>* getSwapChainImageViews() { return &m_SwapChainImageViews; }
         uint32_t getCurrentFrameIndex() const { return m_ImageIndex; };
@@ -69,7 +81,7 @@ namespace Poulpe
         static std::atomic<int> s_Crosshair;
         static std::atomic<int> s_PolygoneMode;
 
-        std::shared_ptr<Camera> getCamera() { return m_Camera; }
+        Camera* getCamera() { return m_Camera; }
         std::vector<glm::vec3> getLights() { return m_LightsPos; }
 
     private:
@@ -109,8 +121,10 @@ namespace Poulpe
         uint32_t m_ImageIndex = 0;
         std::pair<std::vector<VkBuffer>, std::vector<VkDeviceMemory>> m_UniformBuffers = {};
         std::vector<VulkanPipeline>m_Pipelines;
-        std::shared_ptr<Camera> m_Camera = nullptr;
-        std::shared_ptr<Window> m_Window = nullptr;
+        
+        Camera* m_Camera = nullptr;
+        Window* m_Window = nullptr;
+        EntityManager* m_EntityManager = nullptr;
 
         //@todo move to meshManager
         std::vector<VkImageView>m_DepthImageViews = {};

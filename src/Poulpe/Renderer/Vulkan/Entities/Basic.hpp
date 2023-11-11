@@ -6,19 +6,18 @@ namespace Poulpe
 {
     class Basic : public IEntity, public IVisitor
     {
-        struct pc
-        {
-            uint32_t textureID;
-            glm::vec3 cameraPos;
-            float ambiantLight;
-            float fogDensity;
-            glm::vec3 fogColor;
-            glm::vec3 lightPos;
-        };
+    struct pc
+    {
+        uint32_t textureID;
+        glm::vec3 cameraPos;
+        float ambiantLight;
+        float fogDensity;
+        glm::vec3 fogColor;
+        glm::vec3 lightPos;
+    };
 
     public:
-        Basic(VulkanAdapter* adapter, EntityManager* entityManager,
-              ShaderManager* shaderManager, TextureManager* textureManager,
+        Basic(VulkanAdapter* adapter,  ShaderManager* shaderManager, TextureManager* textureManager,
               VkDescriptorPool descriptorPool);
 
         void visit(Entity* entity) override;
@@ -37,11 +36,8 @@ namespace Poulpe
 
     private:
         VulkanAdapter* m_Adapter;
-        EntityManager* m_EntityManager;
         ShaderManager* m_ShaderManager;
         TextureManager* m_TextureManager;
         VkDescriptorPool m_DescriptorPool;
-
-        std::mutex m_Lock;
     };
 }

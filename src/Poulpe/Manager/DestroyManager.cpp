@@ -7,29 +7,29 @@ namespace Poulpe
 
     }
 
-    void DestroyManager::setRenderer(std::shared_ptr<VulkanRenderer> renderer)
+    void DestroyManager::setRenderer(VulkanRenderer* renderer)
     {
         m_Renderer = renderer;
     }
 
-    void DestroyManager::cleanEntities(std::vector<std::shared_ptr<Entity>> entities)
+    void DestroyManager::cleanEntities(std::vector<Entity*> entities)
     {
-        for (std::shared_ptr<Entity> entity : entities) {
-            std::shared_ptr<Mesh> mesh = std::dynamic_pointer_cast<Mesh>(entity);
+        for (auto entity : entities) {
+            Mesh* mesh = dynamic_cast<Mesh*>(entity);
             cleanEntity(mesh);
         }
     }
 
-    void DestroyManager::cleanEntities(std::vector<std::shared_ptr<Mesh>> entities)
+    void DestroyManager::cleanEntities(std::vector<Mesh*> entities)
     {
-        for (std::shared_ptr<Mesh> mesh : entities) {
+        for (auto mesh : entities) {
             cleanEntity(mesh);
         }
     }
 
-    void DestroyManager::cleanEntity(std::shared_ptr<Mesh> entity)
+    void DestroyManager::cleanEntity(Mesh* entity)
     {
-        for (auto buffer : entity->m_UniformBuffers) {
+        for (auto buffer : entity->getUniformBuffers()) {
             m_Renderer->destroyBuffer(buffer.buffer);
         }
 

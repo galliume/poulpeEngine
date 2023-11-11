@@ -3,11 +3,9 @@
 
 namespace Poulpe
 {
-    Splash::Splash(VulkanAdapter* adapter, EntityManager* entityManager,
-         ShaderManager* shaderManager, TextureManager* textureManager,
+    Splash::Splash(VulkanAdapter* adapter, ShaderManager* shaderManager, TextureManager* textureManager,
          SpriteAnimationManager* spriteAnimationManager, VkDescriptorPool descriptorPool) :
          m_Adapter(adapter),
-         m_EntityManager(entityManager),
          m_ShaderManager(shaderManager),
          m_TextureManager(textureManager),
          m_SpriteAnimationManager(spriteAnimationManager),
@@ -51,7 +49,7 @@ namespace Poulpe
         mesh->setShaderName("splashscreen");
 
         Buffer uniformBuffer = m_Adapter->rdr()->createUniformBuffers(1);
-        mesh->m_UniformBuffers.emplace_back(uniformBuffer);
+        mesh->getUniformBuffers().emplace_back(uniformBuffer);
 
         std::vector<VkDescriptorImageInfo> imageInfos{};
         auto sprites = m_SpriteAnimationManager->getSpritesByName("splashAnim");
@@ -96,13 +94,14 @@ namespace Poulpe
         m_Adapter->getDescriptorSetLayouts()->emplace_back(desriptorSetLayout);
 
         VkDescriptorSet descriptorSet = m_Adapter->rdr()->createDescriptorSets(m_DescriptorPool, { desriptorSetLayout }, 1);
-        m_Adapter->rdr()->pdateDescriptorSets(mesh->m_UniformBuffers, descriptorSet, imageInfos);
-        mesh->m_DescriptorSets.emplace_back(descriptorSet);
+        m_Adapter->rdr()->pdateDescriptorSets(mesh->getUniformBuffers(), descriptorSet, imageInfos);
+        mesh->getDescriptorSets().emplace_back(descriptorSet);
 
         Splash::pc pc;
         pc.textureID = 0;
 
-        mesh->applyPushConstants = [&pc, mesh](VkCommandBuffer& commandBuffer, VkPipelineLayout& pipelineLayout, [[maybe_unused]] std::shared_ptr<VulkanAdapter> adapter, [[maybe_unused]] Data& data) {
+        mesh->applyPushConstants = [&pc, mesh](VkCommandBuffer & commandBuffer, VkPipelineLayout pipelineLayout, 
+            [[maybe_unused]] VulkanAdapter* adapter, [[maybe_unused]] Data * data) {
             pc.textureID = mesh->getNextSpriteIndex();
             vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(Splash::pc), &pc);
         };
@@ -117,7 +116,7 @@ namespace Poulpe
 
         std::vector<VkDescriptorSetLayout>dSetLayout = { desriptorSetLayout };
 
-        mesh->m_PipelineLayout = m_Adapter->rdr()->createPipelineLayout(dSetLayout, vkPcs);
+        mesh->setPipelineLayout(m_Adapter->rdr()->createPipelineLayout(dSetLayout, vkPcs));
 
         std::vector<VkPipelineShaderStageCreateInfo>shadersStageInfos;
 
@@ -145,25 +144,18 @@ namespace Poulpe
         vertexInputInfo2D.pVertexBindingDescriptions = &bDesc2D;
         vertexInputInfo2D.pVertexAttributeDescriptions = desc.data();
 
-        mesh->m_GraphicsPipeline = m_Adapter->rdr()->createGraphicsPipeline(
-            m_Adapter->rdrPass(),
-            mesh->m_PipelineLayout,
-            mesh->getShaderName(),
-            shadersStageInfos,
-            vertexInputInfo2D,
-            VK_CULL_MODE_NONE,
-            true, true, true, true,
-            VulkanAdapter::s_PolygoneMode
-        );
+        mesh->setGraphicsPipeline(m_Adapter->rdr()->createGraphicsPipeline(m_Adapter->rdrPass(), mesh->getPipelineLayout(),
+            mesh->getShaderName(), shadersStageInfos, vertexInputInfo2D, VK_CULL_MODE_NONE, true, true, true, true,
+            VulkanAdapter::s_PolygoneMode));
 
-        for (uint32_t i = 0; i < mesh->m_UniformBuffers.size(); i++) {
+        for (uint32_t i = 0; i < mesh->getUniformBuffers().size(); i++) {
             //data.m_Ubos[i].view = m_Adapter->GetCamera()->LookAt();
             data.m_Ubos[i].proj = m_Adapter->getPerspective();
         }
 
-        for (uint32_t i = 0; i < mesh->m_UniformBuffers.size(); i++) {
+        for (uint32_t i = 0; i < mesh->getUniformBuffers().size(); i++) {
             m_Adapter->rdr()->updateUniformBuffer(
-                mesh->m_UniformBuffers[i],
+                mesh->getUniformBuffers()[i],
                 data.m_Ubos
             );
         }

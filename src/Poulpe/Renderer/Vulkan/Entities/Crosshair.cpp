@@ -4,11 +4,9 @@
 
 namespace Poulpe
 {
-    Crosshair::Crosshair(VulkanAdapter* adapter, EntityManager* entityManager,
-         ShaderManager* shaderManager, TextureManager* textureManager,
+    Crosshair::Crosshair(VulkanAdapter* adapter, ShaderManager* shaderManager, TextureManager* textureManager,
          VkDescriptorPool descriptorPool) :
          m_Adapter(adapter),
-         m_EntityManager(entityManager),
          m_ShaderManager(shaderManager),
          m_TextureManager(textureManager),
          m_DescriptorPool(descriptorPool)
@@ -51,39 +49,29 @@ namespace Poulpe
 
         mesh->setName("crosshair");
         mesh->setShaderName("2d");
-        mesh->m_UniformBuffers.emplace_back(crossHairuniformBuffer);
-        mesh->m_DescriptorSetLayout = createDescriptorSetLayout();
-        mesh->m_DescriptorSets = createDescriptorSet(mesh);
-        mesh->m_PipelineLayout = createPipelineLayout(mesh->m_DescriptorSetLayout);
+        mesh->getUniformBuffers().emplace_back(crossHairuniformBuffer);
+        mesh->setDescriptorSetLayout(createDescriptorSetLayout());
+        mesh->setDescriptorSets(createDescriptorSet(mesh));
+        mesh->setPipelineLayout(createPipelineLayout(mesh->getDescriptorSetLayout()));
 
         setPushConstants(mesh);
 
-        m_Adapter->getDescriptorSetLayouts()->emplace_back(mesh->m_DescriptorSetLayout);
+        m_Adapter->getDescriptorSetLayouts()->emplace_back(mesh->getDescriptorSetLayout());
 
         auto shaders = getShaders(mesh->getShaderName());
         auto bDesc = Vertex::GetBindingDescription();
         auto attrDesc = Vertex::GetAttributeDescriptions();
         auto vertexInputInfo = getVertexBindingDesc(bDesc, attrDesc);
 
-        mesh->m_GraphicsPipeline = m_Adapter->rdr()->createGraphicsPipeline(
-            m_Adapter->rdrPass(),
-            mesh->m_PipelineLayout,
-            mesh->getShaderName(),
-            shaders,
-            vertexInputInfo,
-            VK_CULL_MODE_FRONT_BIT,
-            true, true, true, true,
-            VulkanAdapter::s_PolygoneMode
-        );
+        mesh->setGraphicsPipeline(m_Adapter->rdr()->createGraphicsPipeline(m_Adapter->rdrPass(), mesh->getPipelineLayout(),
+            mesh->getShaderName(), shaders, vertexInputInfo, VK_CULL_MODE_FRONT_BIT, true, true, true, true,
+            VulkanAdapter::s_PolygoneMode));
 
-        for (uint32_t i = 0; i < mesh->m_UniformBuffers.size(); i++) {
+        for (uint32_t i = 0; i < mesh->getUniformBuffers().size(); i++) {
             //crossHairData.m_Ubos[i].view = m_Adapter->GetCamera()->LookAt();
             crossHairData.m_Ubos[i].proj = m_Adapter->getPerspective();
 
-            m_Adapter->rdr()->updateUniformBuffer(
-                mesh->m_UniformBuffers[i],
-                crossHairData.m_Ubos
-            );
+            m_Adapter->rdr()->updateUniformBuffer(mesh->getUniformBuffers()[i], crossHairData.m_Ubos);
         }
 
         mesh->setData(crossHairData);
@@ -130,8 +118,8 @@ namespace Poulpe
         imageInfos.emplace_back(imageInfo);
         imageInfos.emplace_back(imageInfo2);
 
-        VkDescriptorSet descriptorSet = m_Adapter->rdr()->createDescriptorSets(m_DescriptorPool, { mesh->m_DescriptorSetLayout }, 1);
-        m_Adapter->rdr()->pdateDescriptorSets(mesh->m_UniformBuffers, descriptorSet, imageInfos);
+        VkDescriptorSet descriptorSet = m_Adapter->rdr()->createDescriptorSets(m_DescriptorPool, { mesh->getDescriptorSetLayout() }, 1);
+        m_Adapter->rdr()->pdateDescriptorSets(mesh->getUniformBuffers(), descriptorSet, imageInfos);
 
         return { descriptorSet };
     }
@@ -188,10 +176,11 @@ namespace Poulpe
 
     void Crosshair::setPushConstants(Mesh* mesh)
     {
-        Crosshair::pc pc;
+        Crosshair::pc pc{};
         pc.textureID = 0;
 
-        mesh->applyPushConstants = [&pc](VkCommandBuffer& commandBuffer, VkPipelineLayout& pipelineLayout,  [[maybe_unused]] std::shared_ptr<VulkanAdapter> adapter,  [[maybe_unused]] Data& data) {
+        mesh->applyPushConstants = [& pc](VkCommandBuffer & commandBuffer, VkPipelineLayout pipelineLayout,
+            [[maybe_unused]] VulkanAdapter* adapter, [[maybe_unused]] Data* data) {
             pc.textureID = VulkanAdapter::s_Crosshair;
             vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(Crosshair::pc), &pc);
         };

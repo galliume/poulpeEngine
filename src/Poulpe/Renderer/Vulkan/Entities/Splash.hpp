@@ -19,15 +19,13 @@ namespace Poulpe
     };
 
     public:
-        Splash(VulkanAdapter* adapter, EntityManager* entityManager,
-            ShaderManager* shaderManager, TextureManager* textureManager,
+        Splash(VulkanAdapter* adapter, ShaderManager* shaderManager, TextureManager* textureManager,
             SpriteAnimationManager* spriteAnimationManager, VkDescriptorPool descriptorPool);
 
         void visit(Entity* entity) override;
 
     private:
         VulkanAdapter* m_Adapter;
-        EntityManager* m_EntityManager;
         ShaderManager* m_ShaderManager;
         TextureManager* m_TextureManager;
         SpriteAnimationManager* m_SpriteAnimationManager;
