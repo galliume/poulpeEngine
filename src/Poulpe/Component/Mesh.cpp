@@ -48,8 +48,6 @@ namespace Poulpe
             //ubo.view = glm::mat4(1.0f);
             data.m_Ubos.emplace_back(ubo);
 
-            mesh->setData(data);
-
             float xMax = data.m_Vertices.at(0).pos.x;
             float yMax = data.m_Vertices.at(0).pos.y;
             float zMax = data.m_Vertices.at(0).pos.z;
@@ -88,7 +86,10 @@ namespace Poulpe
             box->minY = yMin;
             box->maxZ = zMax;
             box->minZ = zMin;
+
+            mesh->setData(data);
             mesh->addBBox(box);
+
             meshes.emplace_back(std::move(mesh.get()));
         }
 

@@ -51,7 +51,7 @@ namespace Poulpe
         mesh->setShaderName("grid");
 
         Buffer gridUniformBuffer = m_Adapter->rdr()->createUniformBuffers(1);
-        mesh->getUniformBuffers().emplace_back(gridUniformBuffer);
+        mesh->getUniformBuffers()->emplace_back(gridUniformBuffer);
 
         Texture ctex = m_TextureManager->getTextures()["minecraft_grass"];
 
@@ -84,7 +84,7 @@ namespace Poulpe
         m_Adapter->getDescriptorSetLayouts()->emplace_back(cdesriptorSetLayout);
 
         VkDescriptorSet cdescriptorSet = m_Adapter->rdr()->createDescriptorSets(m_DescriptorPool, { cdesriptorSetLayout }, 1);
-        m_Adapter->rdr()->pdateDescriptorSets(mesh->getUniformBuffers(), cdescriptorSet, cimageInfos);
+        m_Adapter->rdr()->updateDescriptorSets(*mesh->getUniformBuffers(), cdescriptorSet, cimageInfos);
         mesh->getDescriptorSets().emplace_back(cdescriptorSet);
 
         Grid::pc pc;
@@ -141,11 +141,11 @@ namespace Poulpe
             VulkanAdapter::s_PolygoneMode));
 
 
-        for (uint32_t i = 0; i < mesh->getUniformBuffers().size(); i++) {
+        for (uint32_t i = 0; i < mesh->getUniformBuffers()->size(); i++) {
             //gridData.m_Ubos[i].view = m_Adapter->GetCamera()->LookAt();
             gridData.m_Ubos[i].proj = m_Adapter->getPerspective();
 
-            m_Adapter->rdr()->updateUniformBuffer(mesh->getUniformBuffers()[i], gridData.m_Ubos);
+            m_Adapter->rdr()->updateUniformBuffer(mesh->getUniformBuffers()->at(i), & gridData.m_Ubos);
         }
         mesh->setData(gridData);
     }

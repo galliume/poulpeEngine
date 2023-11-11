@@ -241,7 +241,7 @@ namespace Poulpe
                 //m_HasClicked = false;
 
                 int index = m_ImageIndex;
-                for (uint32_t i = 0; i < mesh->getUniformBuffers().size(); i++) {
+                for (uint32_t i = 0; i < mesh->getUniformBuffers()->size(); i++) {
                     index += i * 3;
 
                     if (mesh->hasPushConstants() && nullptr != mesh->applyPushConstants)
@@ -284,7 +284,7 @@ namespace Poulpe
 
             m_Renderer->bindPipeline(m_CommandBuffersSkybox[m_ImageIndex], skybox->getGraphicsPipeline());
 
-            for (uint32_t i = 0; i < skybox->getUniformBuffers().size(); i++) {
+            for (uint32_t i = 0; i < skybox->getUniformBuffers()->size(); i++) {
 
                 if (skybox->hasPushConstants() && nullptr != skybox->applyPushConstants)
                     skybox->applyPushConstants(m_CommandBuffersSkybox[m_ImageIndex], skybox->getPipelineLayout(), this,
@@ -324,7 +324,7 @@ namespace Poulpe
                     hudPart->getData());
             }
 
-            for (uint32_t i = 0; i < hudPart->getUniformBuffers().size(); i++) {
+            for (uint32_t i = 0; i < hudPart->getUniformBuffers()->size(); i++) {
                 m_Renderer->draw(m_CommandBuffersHud[m_ImageIndex], hudPart->getDescriptorSets().at(i), hudPart,
                     hudPart->getData(), hudPart->getData()->m_Ubos.size());
             }
@@ -369,7 +369,7 @@ namespace Poulpe
                 m_HasClicked = false;
 
                 int index = m_ImageIndex;
-                for (uint32_t i = 0; i < bbox->getUniformBuffers().size(); i++) {
+                for (uint32_t i = 0; i < bbox->getUniformBuffers()->size(); i++) {
                     index += i * 3;
 
                     if (bbox->hasPushConstants() && nullptr != bbox->applyPushConstants)
