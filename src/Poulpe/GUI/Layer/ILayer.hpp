@@ -1,8 +1,10 @@
 #pragma once
-#include <volk.h>
+
 #include "Poulpe/Manager/RenderManager.hpp"
 
-namespace Poulpe 
+#include <volk.h>
+
+namespace Poulpe
 {
     class ILayer
     {

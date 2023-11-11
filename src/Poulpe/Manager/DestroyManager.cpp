@@ -29,7 +29,7 @@ namespace Poulpe
 
     void DestroyManager::cleanEntity(Mesh* entity)
     {
-        for (auto buffer : entity->getUniformBuffers()) {
+        for (auto buffer : *entity->getUniformBuffers()) {
             m_Renderer->destroyBuffer(buffer.buffer);
         }
 

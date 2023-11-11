@@ -35,7 +35,7 @@ namespace Poulpe
 
           mesh->getData()->m_UbosOffset.emplace_back(uboOffset);
           Buffer uniformBuffer = m_Adapter->rdr()->createUniformBuffers(nbUbo);
-          mesh->getUniformBuffers().emplace_back(uniformBuffer);
+          mesh->getUniformBuffers()->emplace_back(uniformBuffer);
 
           uboOffset = (uboRemaining > uniformBufferChunkSize) ? uboOffset + uniformBufferChunkSize : uboOffset + uboRemaining;
           nbUbo = (uboRemaining > uniformBufferChunkSize) ? uniformBufferChunkSize : uboRemaining;
@@ -62,11 +62,11 @@ namespace Poulpe
         int min{ 0 };
         int max{ 0 };
 
-        for (size_t i = 0; i < mesh->getUniformBuffers().size(); ++i) {
+        for (size_t i = 0; i < mesh->getUniformBuffers()->size(); ++i) {
           max = mesh->getData()->m_UbosOffset.at(i);
           auto ubos = std::vector<UniformBufferObject>(mesh->getData()->m_Ubos.begin() + min, mesh->getData()->m_Ubos.begin() + max);
 
-          m_Adapter->rdr()->updateUniformBuffer(mesh->getUniformBuffers()[i], ubos);
+          m_Adapter->rdr()->updateUniformBuffer(mesh->getUniformBuffers()->at(i), &ubos);
 
           min = max;
         }
@@ -155,10 +155,10 @@ namespace Poulpe
             box->mesh->getPipelineLayout(), box->mesh->getShaderName(), shaders, vertexInputInfo,
             VK_CULL_MODE_BACK_BIT, true, true, true, true, VK_POLYGON_MODE_LINE));
 
-        for (uint32_t i = 0; i < box->mesh->getUniformBuffers().size(); i++) {
+        for (uint32_t i = 0; i < box->mesh->getUniformBuffers()->size(); i++) {
             m_Adapter->rdr()->updateUniformBuffer(
-                box->mesh->getUniformBuffers()[i],
-                box->mesh->getData()->m_Ubos
+                box->mesh->getUniformBuffers()->at(i),
+                & box->mesh->getData()->m_Ubos
             );
         }
     }
@@ -208,9 +208,11 @@ namespace Poulpe
 
       std::vector<VkDescriptorSet> descSets{};
 
-      for (auto ubo : mesh->getUniformBuffers()) {
+      for (size_t i = 0; i < mesh->getUniformBuffers()->size(); ++i) {
         VkDescriptorSet descSet = m_Adapter->rdr()->createDescriptorSets(m_DescriptorPool, { mesh->getDescriptorSetLayout()}, 1);
-        m_Adapter->rdr()->pdateDescriptorSets({ ubo }, descSet, imageInfos);
+        
+        m_Adapter->rdr()->updateDescriptorSet(mesh->getUniformBuffers()->at(i), descSet, imageInfos);
+
         for (uint32_t i = 0; i < m_Adapter->getSwapChainImages()->size(); i++) {
           descSets.emplace_back(descSet);
         }

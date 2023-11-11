@@ -49,7 +49,7 @@ namespace Poulpe
         mesh->setShaderName("splashscreen");
 
         Buffer uniformBuffer = m_Adapter->rdr()->createUniformBuffers(1);
-        mesh->getUniformBuffers().emplace_back(uniformBuffer);
+        mesh->getUniformBuffers()->emplace_back(uniformBuffer);
 
         std::vector<VkDescriptorImageInfo> imageInfos{};
         auto sprites = m_SpriteAnimationManager->getSpritesByName("splashAnim");
@@ -94,7 +94,7 @@ namespace Poulpe
         m_Adapter->getDescriptorSetLayouts()->emplace_back(desriptorSetLayout);
 
         VkDescriptorSet descriptorSet = m_Adapter->rdr()->createDescriptorSets(m_DescriptorPool, { desriptorSetLayout }, 1);
-        m_Adapter->rdr()->pdateDescriptorSets(mesh->getUniformBuffers(), descriptorSet, imageInfos);
+        m_Adapter->rdr()->updateDescriptorSets(*mesh->getUniformBuffers(), descriptorSet, imageInfos);
         mesh->getDescriptorSets().emplace_back(descriptorSet);
 
         Splash::pc pc;
@@ -148,16 +148,13 @@ namespace Poulpe
             mesh->getShaderName(), shadersStageInfos, vertexInputInfo2D, VK_CULL_MODE_NONE, true, true, true, true,
             VulkanAdapter::s_PolygoneMode));
 
-        for (uint32_t i = 0; i < mesh->getUniformBuffers().size(); i++) {
+        for (uint32_t i = 0; i < mesh->getUniformBuffers()->size(); i++) {
             //data.m_Ubos[i].view = m_Adapter->GetCamera()->LookAt();
             data.m_Ubos[i].proj = m_Adapter->getPerspective();
         }
 
-        for (uint32_t i = 0; i < mesh->getUniformBuffers().size(); i++) {
-            m_Adapter->rdr()->updateUniformBuffer(
-                mesh->getUniformBuffers()[i],
-                data.m_Ubos
-            );
+        for (uint32_t i = 0; i < mesh->getUniformBuffers()->size(); i++) {
+            m_Adapter->rdr()->updateUniformBuffer(mesh->getUniformBuffers()->at(i), & data.m_Ubos);
         }
         
         mesh->setData(data);
