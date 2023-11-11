@@ -6,13 +6,9 @@ namespace Poulpe
 {
     Mesh::Mesh() : Entity() { }
 
-    std::vector<std::shared_ptr<Mesh>> Mesh::init(const std::string& name,
-        const std::string& path,
-        const std::vector<std::string>& textureNames,
-        const std::string& shader,
-        const glm::vec3& pos,
-        const glm::vec3& scale,
-        glm::vec3 rotation,
+    std::vector<Mesh*> Mesh::init(std::string const  & name, std::string const & path,
+        std::vector<std::string> const & textureNames, std::string const & shader,
+        glm::vec3 const & pos, glm::vec3 const & scale, glm::vec3 rotation,
         bool shouldInverseTextureY)
     {
         //@todo move out of Mesh
@@ -24,12 +20,12 @@ namespace Poulpe
         std::vector<TinyObjData> listData = Poulpe::TinyObjLoader::loadData(path, shouldInverseTextureY);
         //end todo
 
-        std::vector<std::shared_ptr<Mesh>> meshes;
+        std::vector<Mesh*> meshes;
 
         for (size_t i = 0; i < listData.size(); i++) {
 
             Data data;
-            auto mesh = std::make_shared<Mesh>();
+            auto mesh = std::make_unique<Mesh>();
             mesh->setName(name + '_' + std::to_string(i));
             mesh->setShaderName(shader);
 
@@ -85,7 +81,7 @@ namespace Poulpe
             box->position = data.m_Ubos.at(0).model;
             box->center = center;
             box->size = size;
-            box->mesh = std::make_shared<Mesh>();
+            box->mesh = std::make_unique<Mesh>();
             box->maxX = xMax;
             box->minX = xMin;
             box->maxY = yMax;
@@ -93,7 +89,7 @@ namespace Poulpe
             box->maxZ = zMax;
             box->minZ = zMin;
             mesh->addBBox(box);
-            meshes.emplace_back(mesh);
+            meshes.emplace_back(std::move(mesh.get()));
         }
 
         return meshes;

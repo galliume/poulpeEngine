@@ -35,11 +35,10 @@ namespace Poulpe
 
     private:
         static Application* s_Instance;
+
         std::shared_ptr<Poulpe::Window> m_Window;
         std::shared_ptr<Poulpe::RenderManager> m_RenderManager;
-        std::shared_ptr<Poulpe::Im> m_VImGui;
         std::shared_ptr<Poulpe::VulkanLayer> m_VulkanLayer;
-        std::shared_ptr<Poulpe::CommandQueue> m_CommandQueue;
 
         std::chrono::time_point<std::chrono::system_clock> m_StartRun;
     };

@@ -1,13 +1,11 @@
 #include "Crosshair.hpp"
+
 #include "Poulpe/Renderer/Adapter/VulkanAdapter.hpp"
 
 namespace Poulpe
 {
-    Crosshair::Crosshair(
-         std::shared_ptr<VulkanAdapter> adapter,
-         std::shared_ptr<EntityManager> entityManager,
-         std::shared_ptr<ShaderManager> shaderManager,
-         std::shared_ptr<TextureManager> textureManager,
+    Crosshair::Crosshair(VulkanAdapter* adapter, EntityManager* entityManager,
+         ShaderManager* shaderManager, TextureManager* textureManager,
          VkDescriptorPool descriptorPool) :
          m_Adapter(adapter),
          m_EntityManager(entityManager),
@@ -18,9 +16,10 @@ namespace Poulpe
 
     }
 
-    void Crosshair::visit(std::shared_ptr<Entity> entity)
+    void Crosshair::visit(Entity* entity)
     {
-        std::shared_ptr<Mesh> mesh = std::dynamic_pointer_cast<Mesh>(entity);
+        Mesh* mesh = dynamic_cast<Mesh*>(entity);
+
         if (!mesh && !mesh->isDirty()) return;
 
         const std::vector<Vertex> vertices = {
@@ -112,7 +111,7 @@ namespace Poulpe
          return desriptorSetLayout;
     }
 
-    std::vector<VkDescriptorSet> Crosshair::createDescriptorSet(std::shared_ptr<Mesh> mesh)
+    std::vector<VkDescriptorSet> Crosshair::createDescriptorSet(Mesh* mesh)
     {
         Texture tex = m_TextureManager->getTextures()["crosshair_1"];
         Texture tex2 = m_TextureManager->getTextures()["crosshair_2"];
@@ -187,7 +186,7 @@ namespace Poulpe
         return vertexInputInfo;
     }
 
-    void Crosshair::setPushConstants(std::shared_ptr<Mesh> mesh)
+    void Crosshair::setPushConstants(Mesh* mesh)
     {
         Crosshair::pc pc;
         pc.textureID = 0;

@@ -1,12 +1,16 @@
 #pragma once
 
-#include <volk.h>
-#include "Poulpe/Core/IVisitor.hpp"
-#include "Poulpe/Renderer/Adapter/VulkanAdapter.hpp"
 #include "Poulpe/Component/Mesh.hpp"
+
+#include "Poulpe/Core/IVisitor.hpp"
+
 #include "Poulpe/Manager/EntityManager.hpp"
 #include "Poulpe/Manager/ShaderManager.hpp"
 #include "Poulpe/Manager/TextureManager.hpp"
+
+#include "Poulpe/Renderer/Adapter/VulkanAdapter.hpp"
+
+#include <volk.h>
 
 namespace Poulpe
 {
@@ -18,20 +22,17 @@ namespace Poulpe
         glm::mat4 view;
     };
     public:
-        Grid(
-            std::shared_ptr<VulkanAdapter> adapter,
-            std::shared_ptr<EntityManager> entityManager,
-            std::shared_ptr<ShaderManager> shaderManager,
-            std::shared_ptr<TextureManager> textureManager,
-            VkDescriptorPool descriptorPool
-        );
-        void visit(std::shared_ptr<Entity> entity) override;
+        Grid(VulkanAdapter* adapter, EntityManager* entityManager,
+            ShaderManager* shaderManager, TextureManager* textureManager,
+            VkDescriptorPool descriptorPool);
+
+        void visit(Entity* entity) override;
 
     private:
-        std::shared_ptr<VulkanAdapter> m_Adapter;
-        std::shared_ptr<EntityManager> m_EntityManager;
-        std::shared_ptr<ShaderManager> m_ShaderManager;
-        std::shared_ptr<TextureManager> m_TextureManager;
+        VulkanAdapter* m_Adapter;
+        EntityManager* m_EntityManager;
+        ShaderManager* m_ShaderManager;
+        TextureManager* m_TextureManager;
         VkDescriptorPool m_DescriptorPool;
 
     };

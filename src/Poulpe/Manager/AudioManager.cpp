@@ -98,7 +98,7 @@ namespace Poulpe
     void AudioManager::start(std::string const & soundPath, ma_sound & sound)
     {
         ma_result result{ MA_ERROR };
-        ma_uint32 flags = MA_SOUND_FLAG_ASYNC;
+        ma_uint32 flags{ MA_SOUND_FLAG_ASYNC };
 
         result = ma_sound_init_from_file(& m_Engine, soundPath.c_str(), flags, nullptr, nullptr, & sound);
 
@@ -123,8 +123,7 @@ namespace Poulpe
 
         if (MA_SUCCESS == ma_sound_stop(&sound)) {
             m_State = State::STOP;
-        }
-        else {
+        } else {
             m_State = State::ERR;
         }
 
