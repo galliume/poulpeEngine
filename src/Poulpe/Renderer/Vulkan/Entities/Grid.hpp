@@ -22,15 +22,13 @@ namespace Poulpe
         glm::mat4 view;
     };
     public:
-        Grid(VulkanAdapter* adapter, EntityManager* entityManager,
-            ShaderManager* shaderManager, TextureManager* textureManager,
+        Grid(VulkanAdapter* adapter, ShaderManager* shaderManager, TextureManager* textureManager,
             VkDescriptorPool descriptorPool);
 
         void visit(Entity* entity) override;
 
     private:
         VulkanAdapter* m_Adapter;
-        EntityManager* m_EntityManager;
         ShaderManager* m_ShaderManager;
         TextureManager* m_TextureManager;
         VkDescriptorPool m_DescriptorPool;

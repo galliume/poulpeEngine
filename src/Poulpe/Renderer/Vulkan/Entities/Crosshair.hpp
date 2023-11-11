@@ -12,8 +12,7 @@ namespace Poulpe
     };
 
     public:
-        Crosshair(VulkanAdapter* adapter, EntityManager* entityManager,
-                 ShaderManager* shaderManager, TextureManager* textureManager,
+        Crosshair(VulkanAdapter* adapter, ShaderManager* shaderManager, TextureManager* textureManager,
                  VkDescriptorPool descriptorPool);
 
         void visit(Entity* entity) override;
@@ -29,7 +28,6 @@ namespace Poulpe
 
     private:
         VulkanAdapter* m_Adapter;
-        EntityManager* m_EntityManager;
         ShaderManager* m_ShaderManager;
         TextureManager* m_TextureManager;
         VkDescriptorPool m_DescriptorPool;

@@ -12,23 +12,23 @@ namespace Poulpe
     class InputManager : IInputManager
     {
     public:
-        explicit InputManager(std::shared_ptr<Window> window);
+        explicit InputManager(Window* window);
         virtual void init(nlohmann::json inputConfig) override;
 
         void key(int key, int scancode, int action, int mods);
         void mouse(double xPos, double yPo);
         void mouseButton(int button, int action, int mods);
 
-        void setCamera(std::shared_ptr<Camera> camera) { m_Camera = camera; };
-        void addRenderer(std::shared_ptr<Poulpe::VulkanAdapter> adapter) { m_Adapter = adapter; };
+        void setCamera(Camera* camera) { m_Camera = camera; };
+        void addRenderer(Poulpe::VulkanAdapter* adapter) { m_Adapter = adapter; };
 
         static bool m_CanMoveCamera;
         static bool m_FirtMouseMove;
 
     private:
-        std::shared_ptr<Window> m_Window;
-        std::shared_ptr<Camera> m_Camera;
-        std::shared_ptr<VulkanAdapter> m_Adapter;
+        Window* m_Window;
+        Camera* m_Camera;
+        VulkanAdapter* m_Adapter;
         float m_LastX;
         float m_LastY;
 

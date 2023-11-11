@@ -7,8 +7,7 @@ namespace Poulpe
     class Skybox : public IEntity, public IVisitor
     {
     public:
-        Skybox(VulkanAdapter* adapter, EntityManager* entityManager,
-           ShaderManager* shaderManager, TextureManager* textureManager);
+        Skybox(VulkanAdapter* adapter, ShaderManager* shaderManager, TextureManager* textureManager);
 
         void visit(Entity* entity) override;
         VkDescriptorSetLayout createDescriptorSetLayout() override;
@@ -21,7 +20,6 @@ namespace Poulpe
 
     private:
         VulkanAdapter* m_Adapter;
-        EntityManager* m_EntityManager;
         ShaderManager* m_ShaderManager;
         TextureManager* m_TextureManager;
         //VkDescriptorPool m_DescriptorPool;

@@ -5,11 +5,9 @@ namespace Poulpe
 {
     struct cPC;
 
-    Grid::Grid(VulkanAdapter* adapter, EntityManager* entityManager,
-        ShaderManager* shaderManager, TextureManager* textureManager,
+    Grid::Grid(VulkanAdapter* adapter, ShaderManager* shaderManager, TextureManager* textureManager,
         VkDescriptorPool descriptorPool) :
         m_Adapter(adapter),
-        m_EntityManager(entityManager),
         m_ShaderManager(shaderManager),
         m_TextureManager(textureManager),
         m_DescriptorPool(descriptorPool)
@@ -23,13 +21,13 @@ namespace Poulpe
 
         if (!mesh && !mesh->isDirty()) return;
 
-        const std::vector<Vertex> vertices = {
+        std::vector<Vertex> const vertices = {
             {{-1.f, -1.f, 0.0f}, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
             {{1.f, -1.f, 0.0f}, {0.0f, 1.0f, 0.0f}, {1.0f, 0.0f}},
             {{1.0f, 1.f, 0.0f}, {0.0f, 0.0f, 1.0f}, {0.0f, 1.0f}},
             {{-1.f, 1.f, 0.0f}, {1.0f, 1.0f, 1.0f}, {1.0f, 1.0f}}
         };
-        const std::vector<uint32_t> indices = {
+        std::vector<uint32_t> const indices = {
             0, 1, 2, 2, 3, 0
         };
 
@@ -53,7 +51,7 @@ namespace Poulpe
         mesh->setShaderName("grid");
 
         Buffer gridUniformBuffer = m_Adapter->rdr()->createUniformBuffers(1);
-        mesh->m_UniformBuffers.emplace_back(gridUniformBuffer);
+        mesh->getUniformBuffers().emplace_back(gridUniformBuffer);
 
         Texture ctex = m_TextureManager->getTextures()["minecraft_grass"];
 
@@ -86,14 +84,15 @@ namespace Poulpe
         m_Adapter->getDescriptorSetLayouts()->emplace_back(cdesriptorSetLayout);
 
         VkDescriptorSet cdescriptorSet = m_Adapter->rdr()->createDescriptorSets(m_DescriptorPool, { cdesriptorSetLayout }, 1);
-        m_Adapter->rdr()->pdateDescriptorSets(mesh->m_UniformBuffers, cdescriptorSet, cimageInfos);
-        mesh->m_DescriptorSets.emplace_back(cdescriptorSet);
+        m_Adapter->rdr()->pdateDescriptorSets(mesh->getUniformBuffers(), cdescriptorSet, cimageInfos);
+        mesh->getDescriptorSets().emplace_back(cdescriptorSet);
 
         Grid::pc pc;
         pc.point = glm::vec4(0.1f, 50.f, 0.f, 0.f);
         pc.view = m_Adapter->getCamera()->lookAt();
 
-        mesh->applyPushConstants = [&pc](VkCommandBuffer& commandBuffer, VkPipelineLayout& pipelineLayout, std::shared_ptr<VulkanAdapter> adapter, [[maybe_unused]] Data& data) {
+        mesh->applyPushConstants = [&pc](VkCommandBuffer & commandBuffer, VkPipelineLayout pipelineLayout,
+            VulkanAdapter* adapter, [[maybe_unused]] Data * data) {
             pc.point = glm::vec4(0.1f, 50.f, 0.f, 0.f);
             pc.view = adapter->getCamera()->lookAt();
             vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(Grid::pc), &pc);
@@ -109,7 +108,7 @@ namespace Poulpe
 
         std::vector<VkDescriptorSetLayout>dSetLayout = { cdesriptorSetLayout };
 
-        mesh->m_PipelineLayout = m_Adapter->rdr()->createPipelineLayout(dSetLayout, vkPcs);
+        mesh->setPipelineLayout(m_Adapter->rdr()->createPipelineLayout(dSetLayout, vkPcs));
 
         std::vector<VkPipelineShaderStageCreateInfo>cshadersStageInfos;
 
@@ -137,28 +136,17 @@ namespace Poulpe
         vertexInputInfo.pVertexBindingDescriptions = &bDesc;
         vertexInputInfo.pVertexAttributeDescriptions = gridDesc.data();
 
-        mesh->m_GraphicsPipeline = m_Adapter->rdr()->createGraphicsPipeline(
-            m_Adapter->rdrPass(),
-            mesh->m_PipelineLayout,
-            mesh->getShaderName(),
-            cshadersStageInfos,
-            vertexInputInfo,
-            VK_CULL_MODE_NONE,
-            true, true, true, true,
-            VulkanAdapter::s_PolygoneMode
-        );
+        mesh->setGraphicsPipeline(m_Adapter->rdr()->createGraphicsPipeline(m_Adapter->rdrPass(), mesh->getPipelineLayout(),
+            mesh->getShaderName(), cshadersStageInfos, vertexInputInfo, VK_CULL_MODE_NONE, true, true, true, true,
+            VulkanAdapter::s_PolygoneMode));
 
 
-        for (uint32_t i = 0; i < mesh->m_UniformBuffers.size(); i++) {
+        for (uint32_t i = 0; i < mesh->getUniformBuffers().size(); i++) {
             //gridData.m_Ubos[i].view = m_Adapter->GetCamera()->LookAt();
             gridData.m_Ubos[i].proj = m_Adapter->getPerspective();
 
-            m_Adapter->rdr()->updateUniformBuffer(
-                mesh->m_UniformBuffers[i],
-                gridData.m_Ubos
-            );
+            m_Adapter->rdr()->updateUniformBuffer(mesh->getUniformBuffers()[i], gridData.m_Ubos);
         }
-
         mesh->setData(gridData);
     }
 }
