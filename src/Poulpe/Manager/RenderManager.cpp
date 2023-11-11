@@ -4,33 +4,18 @@
 
 namespace Poulpe
 {    
-    RenderManager::RenderManager(
-        std::shared_ptr<Window> window,
-        std::shared_ptr<VulkanAdapter> renderer,
-        std::shared_ptr<ConfigManager> configManager,
-        std::shared_ptr<InputManager> inputManager,
-        std::shared_ptr<AudioManager> audioManager,
-        std::shared_ptr<TextureManager> textureManager,
-        std::shared_ptr<EntityManager> entityManager,
-        std::shared_ptr<ShaderManager> shaderManager,
-        std::shared_ptr<SpriteAnimationManager> spriteAnimationManager,
-        std::shared_ptr<Poulpe::DestroyManager> destroyManager,
-        std::shared_ptr<Poulpe::Camera> camera,
-        std::shared_ptr<Poulpe::CommandQueue> cmdQueue
-    )
+    RenderManager::RenderManager(Window* window)
+        : m_Window(window)
     {
-        m_Window = window;
-        m_Renderer = renderer;
-        m_ConfigManager = configManager;
-        m_InputManager = inputManager;
-        m_AudioManager = audioManager;
-        m_TextureManager = textureManager;
-        m_EntityManager = entityManager;
-        m_ShaderManager = shaderManager;
-        m_SpriteAnimationManager = spriteAnimationManager;
-        m_DestroyManager = destroyManager;
-        m_Camera = camera;
-        m_CommandQueue = cmdQueue;
+        m_Renderer = std::make_shared<Poulpe::VulkanAdapter>(m_Window);
+        m_ConfigManager = std::make_shared<Poulpe::ConfigManager>();
+        m_AudioManager = std::make_shared<Poulpe::AudioManager>();
+        m_TextureManager = std::make_shared<Poulpe::TextureManager>();
+        m_EntityManager = std::make_shared<Poulpe::EntityManager>();
+        m_ShaderManager = std::make_shared<Poulpe::ShaderManager>();
+        m_SpriteAnimationManager = std::make_shared<Poulpe::SpriteAnimationManager>();
+        m_DestroyManager = std::make_shared<Poulpe::DestroyManager>();
+        m_Camera = std::make_shared<Poulpe::Camera>();
 
         m_Camera->init();
         m_Renderer->init();
@@ -268,27 +253,26 @@ namespace Poulpe
         poolSizes.emplace_back(cp1);
         poolSizes.emplace_back(cp2);
 
-        std::vector<std::shared_ptr<Mesh>> hud{};
+        std::vector<std::unique_ptr<Mesh>> hud{};
 
         VkDescriptorPool descriptorPool = m_Renderer->rdr()->createDescriptorPool(poolSizes, 10);
         m_DescriptorPools.emplace_back(descriptorPool);
 
-        auto entityG = std::make_shared<Grid>(EntityFactory::create<Grid>(
-            m_Renderer, m_EntityManager, m_ShaderManager, m_TextureManager, descriptorPool));
+        auto entityG = EntityFactory::create<Grid>(
+            m_Renderer, m_EntityManager, m_ShaderManager, m_TextureManager, descriptorPool);
 
-        auto grid = std::make_shared<Mesh>();
+        auto grid = new Mesh();
         grid->accept(entityG);
-        hud.emplace_back(grid);
+        hud.emplace_back(std::move(grid));
 
         auto entityC = std::make_shared<Crosshair>(EntityFactory::create<Crosshair>(
             m_Renderer, m_EntityManager, m_ShaderManager, m_TextureManager, descriptorPool));
 
-        auto crossHair = std::make_shared<Mesh2D>();
+        auto crossHair = new Mesh2D();
         crossHair->accept(entityC);
         hud.emplace_back(crossHair);
 
         m_EntityManager->addHUD(hud);
-        m_Renderer->addHUD(m_EntityManager->getHUD());
     }
 
     void RenderManager::prepareSkybox()

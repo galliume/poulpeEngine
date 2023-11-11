@@ -3,13 +3,9 @@
 
 namespace Poulpe
 {
-    Splash::Splash(
-         std::shared_ptr<VulkanAdapter> adapter,
-         std::shared_ptr<EntityManager> entityManager,
-         std::shared_ptr<ShaderManager> shaderManager,
-         std::shared_ptr<TextureManager> textureManager,
-         std::shared_ptr<SpriteAnimationManager> spriteAnimationManager,
-         VkDescriptorPool descriptorPool) :
+    Splash::Splash(VulkanAdapter* adapter, EntityManager* entityManager,
+         ShaderManager* shaderManager, TextureManager* textureManager,
+         SpriteAnimationManager* spriteAnimationManager, VkDescriptorPool descriptorPool) :
          m_Adapter(adapter),
          m_EntityManager(entityManager),
          m_ShaderManager(shaderManager),
@@ -20,9 +16,10 @@ namespace Poulpe
 
     }
 
-    void Splash::visit(std::shared_ptr<Entity> entity)
+    void Splash::visit(Entity* entity)
     {
-        std::shared_ptr<Mesh> mesh = std::dynamic_pointer_cast<Mesh>(entity);
+        Mesh* mesh = dynamic_cast<Mesh*>(entity);
+
         if (!mesh && !mesh->isDirty()) return;
 
         const std::vector<Vertex2D> vertices = {

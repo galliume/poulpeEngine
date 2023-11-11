@@ -5,13 +5,10 @@ namespace Poulpe
 {
     struct constants;
 
-    Basic::Basic(
-        std::shared_ptr<VulkanAdapter> adapter,
-        std::shared_ptr<EntityManager> entityManager,
-        std::shared_ptr<ShaderManager> shaderManager,
-        std::shared_ptr<TextureManager> textureManager,
-        VkDescriptorPool descriptorPool) :
-        m_Adapter(adapter),
+    Basic::Basic(VulkanAdapter* adapter, EntityManager* entityManager,
+        ShaderManager* shaderManager, TextureManager* textureManager,
+        VkDescriptorPool descriptorPool)
+        : m_Adapter(adapter),
         m_EntityManager(entityManager),
         m_ShaderManager(shaderManager),
         m_TextureManager(textureManager),
@@ -20,9 +17,10 @@ namespace Poulpe
 
     }
 
-    void Basic::visit(std::shared_ptr<Entity> entity)
+    void Basic::visit(Entity* entity)
     {
-        std::shared_ptr<Mesh> mesh = std::dynamic_pointer_cast<Mesh>(entity);
+        Mesh* mesh = dynamic_cast<Mesh*>(entity);
+
         if (!mesh && !mesh->isDirty()) return;
 
         uint32_t totalInstances = static_cast<uint32_t>(mesh->getData()->m_Ubos.size());
@@ -104,7 +102,7 @@ namespace Poulpe
         vkDestroyCommandPool(m_Adapter->rdr()->getDevice(), commandPool, nullptr);
     }
 
-    void Basic::createBBoxEntity(std::shared_ptr<Mesh>& mesh)
+    void Basic::createBBoxEntity(Mesh* mesh)
     {
         Poulpe::Entity::BBox* box = mesh->getBBox().get();
 
@@ -207,7 +205,7 @@ namespace Poulpe
       return desriptorSetLayout;
     }
 
-    std::vector<VkDescriptorSet> Basic::createDescriptorSet(std::shared_ptr<Mesh> mesh)
+    std::vector<VkDescriptorSet> Basic::createDescriptorSet(Mesh* mesh)
     {
       if (!mesh->m_DescriptorSets.empty()) {
         vkFreeDescriptorSets(m_Adapter->rdr()->getDevice(), mesh->m_DescriptorPool, mesh->m_DescriptorSets.size(), mesh->m_DescriptorSets.data());
@@ -274,7 +272,7 @@ namespace Poulpe
       return shadersStageInfos;
     }
 
-    void Basic::setPushConstants(std::shared_ptr<Mesh> mesh)
+    void Basic::setPushConstants(Mesh* mesh)
     {
       constants pushConstants;
       pushConstants.data = glm::vec4(0.f, Poulpe::VulkanAdapter::s_AmbiantLight.load(), Poulpe::VulkanAdapter::s_FogDensity.load(), 0.f);

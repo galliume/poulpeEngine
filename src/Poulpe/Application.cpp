@@ -3,7 +3,7 @@
 namespace Poulpe
 {
     std::atomic<int> Application::s_UnlockedFPS{ 1 };
-    Application* Application::s_Instance = nullptr;
+    Application* Application::s_Instance{ nullptr };
 
     Application::Application()
     {
@@ -14,47 +14,32 @@ namespace Poulpe
 
     void Application::init()
     {
-        m_StartRun = std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::system_clock::now());
-
         Poulpe::Log::init();
-
-        Poulpe::Locator::setThreadPool(std::make_unique<ThreadPool>());
+        m_StartRun = std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::system_clock::now());
 
         m_Window = std::make_shared<Window>();
         m_Window->init("PoulpeEngine");
 
-        int width, height;
-        glfwGetWindowSize(m_Window->get(), &width, &height);
+        int width{ 0 };
+        int height{ 0 };
 
-        m_CommandQueue = std::make_shared<Poulpe::CommandQueue>();
+        glfwGetWindowSize(m_Window->get(), & width, & height);
 
-        auto adapter = std::make_shared<Poulpe::VulkanAdapter>(m_Window);
-        auto config = std::make_shared<Poulpe::ConfigManager>();
-        
         auto input = std::make_shared<Poulpe::InputManager>(m_Window);
+        auto cmdQueue = std::make_shared<Poulpe::CommandQueue>();
+
+        Poulpe::Locator::setThreadPool(std::make_unique<ThreadPool>());
         Poulpe::Locator::setInputManager(input);
+        Poulpe::Locator::setCommandQueue(cmdQueue);
 
-        auto audio = std::make_shared<Poulpe::AudioManager>();
-        auto texture = std::make_shared<Poulpe::TextureManager>();
-        auto entity = std::make_shared<Poulpe::EntityManager>();
-        auto shader = std::make_shared<Poulpe::ShaderManager>();
-        auto sprite = std::make_shared<Poulpe::SpriteAnimationManager>();
-        auto destroyer = std::make_shared<Poulpe::DestroyManager>();
-        auto camera = std::make_shared<Poulpe::Camera>();
-
-        m_RenderManager = std::make_shared<Poulpe::RenderManager>(
-            m_Window, adapter, config,
-            input, audio, texture,
-            entity, shader, sprite,
-            destroyer, camera, m_CommandQueue
-        );
+        m_RenderManager = std::make_shared<Poulpe::RenderManager>(m_Window.get());
         m_RenderManager->init();
 
         //todo move to layer manager and update application main loop accordingly
         //#ifdef PLP_DEBUG_BUILD
             m_VulkanLayer = std::make_shared<Poulpe::VulkanLayer>();
             m_VulkanLayer->addRenderManager(m_RenderManager.get());
-            m_VulkanLayer->init(m_Window.get(), m_CommandQueue);
+            m_VulkanLayer->init(m_Window.get());
         //#endif
     }
 
@@ -104,11 +89,11 @@ namespace Poulpe
                 glfwPollEvents();
 
                 m_RenderManager->getRendererAdapter()->shouldRecreateSwapChain();
-                m_CommandQueue->execPreRequest();
+                Poulpe::Locator::getCommandQueue()->execPreRequest();
                 m_VulkanLayer->render(timeStep.count());
                 m_RenderManager->renderScene();
                 m_RenderManager->draw();
-                m_CommandQueue->execPostRequest();
+                Poulpe::Locator::getCommandQueue()->execPostRequest();
 
                 lastTime = currentTime;
             }

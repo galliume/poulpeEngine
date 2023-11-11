@@ -14,27 +14,23 @@ namespace Poulpe
 
     public:
 
-        explicit VulkanAdapter(std::shared_ptr<Window> window);
+        explicit VulkanAdapter(Window* window);
         virtual ~VulkanAdapter();
 
-        virtual void init() override;
-        virtual void addCamera(std::shared_ptr<Camera> camera) override { m_Camera = camera; }
-        virtual void draw() override;
-        virtual void destroy() override;
-        virtual void drawSplashScreen() override;
-        virtual std::shared_ptr<VulkanRenderer> rdr() override { return m_Renderer; }
-        virtual void immediateSubmit(std::function<void(VkCommandBuffer cmd)>&& function, int queueIndex = 0) override;
-        virtual void showGrid(bool show) override;
-        virtual void addEntities(std::vector<std::shared_ptr<Entity>>* entities) override;
-        virtual void addSkybox(std::shared_ptr<Mesh> skyboxMesh) override { m_SkyboxMesh = skyboxMesh; }
-        virtual void addHUD(std::vector<std::shared_ptr<Mesh>> hud) override { m_HUD = hud; }
-        virtual void addSplash(std::vector<std::shared_ptr<Mesh>> splash) override { m_Splash = splash; }
-        virtual inline std::vector<VkDescriptorSetLayout>* getDescriptorSetLayouts() override { return &m_DescriptorSetLayouts; }
-        virtual inline std::vector<VkImage>* getSwapChainImages() override { return &m_SwapChainImages; }
-        virtual inline std::shared_ptr<VkRenderPass> rdrPass() override { return m_RenderPass; }
-        virtual inline glm::mat4 getPerspective() override { return m_Perspective; }
-        virtual void setDeltatime(float deltaTime) override;
-        virtual void renderScene() override;
+        void init() override;
+        void addCamera(std::shared_ptr<Camera> camera) override { m_Camera = camera; }
+        void draw() override;
+        void destroy() override;
+        void drawSplashScreen() override;
+        std::shared_ptr<VulkanRenderer> rdr() override { return m_Renderer; }
+        void immediateSubmit(std::function<void(VkCommandBuffer cmd)>&& function, int queueIndex = 0) override;
+        void showGrid(bool show) override;
+        inline std::vector<VkDescriptorSetLayout>* getDescriptorSetLayouts() override { return &m_DescriptorSetLayouts; }
+        inline std::vector<VkImage>* getSwapChainImages() override { return &m_SwapChainImages; }
+        inline std::shared_ptr<VkRenderPass> rdrPass() override { return m_RenderPass; }
+        inline glm::mat4 getPerspective() override { return m_Perspective; }
+        void setDeltatime(float deltaTime) override;
+        void renderScene() override;
         ImGuiInfo getImGuiInfo() ;
         void clear();
         void drawEntities();
@@ -117,8 +113,6 @@ namespace Poulpe
         std::shared_ptr<Window> m_Window = nullptr;
 
         //@todo move to meshManager
-        std::vector<std::shared_ptr<Mesh>> m_Splash = {};
-        std::vector<std::shared_ptr<Mesh>> m_HUD = {};
         std::vector<VkImageView>m_DepthImageViews = {};
         std::vector<VkImage>m_DepthImages = {};
         glm::mat4 m_Perspective;
@@ -131,8 +125,6 @@ namespace Poulpe
         glm::vec3 m_RayPick;
         bool m_HasClicked = false;
 
-        std::vector<std::shared_ptr<Entity>>* m_Entities;
-        std::shared_ptr<Mesh> m_SkyboxMesh = nullptr;
         //std::vector<std::shared_ptr<Entity>>* m_BoundingBox;
         std::vector<VkCommandBuffer> m_CmdToSubmit;
         std::vector<VkCommandBuffer> m_moreCmdToSubmit;
