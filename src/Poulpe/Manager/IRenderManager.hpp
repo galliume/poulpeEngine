@@ -1,17 +1,18 @@
 #pragma once
 
-#include "ConfigManager.hpp"
-#include "InputManager.hpp"
 #include "AudioManager.hpp"
-#include "TextureManager.hpp"
-#include "EntityManager.hpp"
-#include "SpriteAnimationManager.hpp"
-#include "ShaderManager.hpp"
+#include "ConfigManager.hpp"
 #include "DestroyManager.hpp"
+#include "EntityManager.hpp"
+#include "ShaderManager.hpp"
+#include "SpriteAnimationManager.hpp"
+#include "TextureManager.hpp"
 
-#include "Poulpe/Component/Mesh.hpp"
 #include "Poulpe/Component/Camera.hpp"
+#include "Poulpe/Component/Mesh.hpp"
+
 #include "Poulpe/GUI/Window.hpp"
+
 #include "Poulpe/Renderer/Adapter/VulkanAdapter.hpp"
 
 namespace Poulpe
@@ -30,7 +31,6 @@ namespace Poulpe
         
         virtual Window* getWindow() = 0;
         virtual Camera* getCamera() = 0;
-        virtual InputManager* getInputManager() = 0;
         virtual VulkanAdapter* getRendererAdapter() = 0;
         virtual TextureManager* getTextureManager() = 0;
         virtual SpriteAnimationManager* getSpriteAnimationManager() = 0;

@@ -22,7 +22,6 @@ namespace Poulpe
         Window* getWindow() override { return m_Window; }
 
         Camera* getCamera() override { return m_Camera.get(); }
-        InputManager* getInputManager() override { return m_InputManager.get(); }
         VulkanAdapter* getRendererAdapter() override { return m_Renderer.get(); }
         TextureManager* getTextureManager() override { return m_TextureManager.get(); }
         SpriteAnimationManager* getSpriteAnimationManager() override { return m_SpriteAnimationManager.get(); }
@@ -53,7 +52,6 @@ namespace Poulpe
 
         std::shared_ptr<VulkanAdapter> m_Renderer;
         std::shared_ptr<Poulpe::Camera> m_Camera;
-        std::shared_ptr<Poulpe::InputManager> m_InputManager;
         std::shared_ptr<Poulpe::TextureManager> m_TextureManager;
         std::shared_ptr<Poulpe::SpriteAnimationManager> m_SpriteAnimationManager;
         std::shared_ptr<Poulpe::EntityManager> m_EntityManager;

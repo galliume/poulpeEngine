@@ -5,7 +5,7 @@ namespace Poulpe
     bool InputManager::m_CanMoveCamera = false;
     bool InputManager::m_FirtMouseMove = true;
 
-    InputManager::InputManager(std::shared_ptr<Window> window) : m_Window(window)
+    InputManager::InputManager(Window* window) : m_Window(window)
     {
         int width, height;
         glfwGetWindowSize(m_Window->get(), &width, &height);
