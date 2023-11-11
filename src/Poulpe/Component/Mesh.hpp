@@ -30,16 +30,12 @@ namespace Poulpe
         Mesh();
         ~Mesh() = default;
 
-        std::vector<std::shared_ptr<Mesh>> init(const std::string& name,
-            const std::string& path,
-            const std::vector<std::string>& textureNames,
-            const std::string& shader,
-            const glm::vec3& pos,
-            const glm::vec3& scale,
-            glm::vec3 rotation = glm::vec3(1.0f),
-            bool shouldInverseTextureY = true);
+        std::vector<Mesh*> init(std::string const & name, std::string const & path,
+            std::vector<std::string> const & textureNames, std::string const & shader,
+            glm::vec3 const & pos, glm::vec3 const & scale, glm::vec3 rotation,
+            bool shouldInverseTextureY);
 
-        Data* getData() { return &m_Data; }
+        Data* getData() { return & m_Data; }
         void setData(Data& data) { m_Data = data; }
         
         inline const std::string getShaderName() const { return m_ShaderName; }

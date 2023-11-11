@@ -8,13 +8,13 @@ namespace Poulpe
 
     }
 
-
     uint32_t EntityManager::getInstancedCount()
     {
+        //@wtf
         uint32_t total = 0;
 
-        for (std::shared_ptr<Entity> entity : m_Entities) {
-            std::shared_ptr<Mesh> mesh = std::dynamic_pointer_cast<Mesh>(entity);
+        for (Entity* entity : m_Entities) {
+            Mesh* mesh = dynamic_cast<Mesh*>(entity);
 
             if (mesh) total += 1;
         }
@@ -22,19 +22,19 @@ namespace Poulpe
         return total;
     }
 
-    void EntityManager::addEntity(const std::shared_ptr<Entity>& entity)
+    void EntityManager::addEntity(Entity* entity)
     {
         uint64_t count = m_LoadedEntities.count(entity->getName().c_str());
 
         if (0 != count) {
-            std::shared_ptr<Mesh> mesh = std::dynamic_pointer_cast<Mesh>(entity);
+            Mesh* mesh = dynamic_cast<Mesh*>(entity);
             
             if (mesh) {
                 Data* data = mesh->getData();
-                std::shared_ptr<Mesh> existingEntity = std::dynamic_pointer_cast<Mesh>(m_Entities[m_LoadedEntities[mesh->getName().c_str()][1]]);
+                Mesh* existingEntity = dynamic_cast<Mesh*>(m_Entities[m_LoadedEntities[mesh->getName().c_str()][1]]);
                 existingEntity->addUbos(data->m_Ubos);
 
-                UniformBufferObject ubo;
+                UniformBufferObject ubo{};
                 glm::mat4 transform = glm::translate(glm::mat4(1), mesh->getBBox()->center) * glm::scale(glm::mat4(1), mesh->getBBox()->size);
                 ubo.model = mesh->getBBox()->position * transform;
                 existingEntity->getBBox()->mesh->addUbos({ ubo });
@@ -49,22 +49,20 @@ namespace Poulpe
         }
     }
 
-    const std::shared_ptr<Entity> EntityManager::getEntityByName(const std::string& name) const
+    Entity* EntityManager::getEntityByName(std::string const & name)
     {
-        auto it = std::find_if(
-            m_Entities.cbegin(),
-            m_Entities.cend(),
-            [name](const std::shared_ptr<Entity>& entity) -> bool { return entity->getName() == name; });
+        auto it = std::find_if(m_Entities.cbegin(), m_Entities.cend(),
+            [name](Entity* entity) -> bool { return entity->getName() == name; });
 
         return *it;
     }
 
-    std::function<void()> EntityManager::load(nlohmann::json levelConfig, std::condition_variable& cv)
+    std::function<void()> EntityManager::load(nlohmann::json levelConfig, std::condition_variable & cv)
     {
 
         m_LevelConfig = levelConfig;
 
-        std::function<void()> entitiesFuture = [=, this, &cv]() {
+        std::function<void()> entitiesFuture = [this, &cv]() {
 
             for (auto& entityConf : m_LevelConfig["entities"].items()) {
 
@@ -82,7 +80,7 @@ namespace Poulpe
                     for (int x = xMin; x < xMax; x++) {
                         for (int y = yMin; y < yMax; y++) {
 
-                            std::shared_ptr<Poulpe::Mesh> entity = std::make_shared<Poulpe::Mesh>();
+                            Poulpe::Mesh* entity = new Poulpe::Mesh();
                             auto positionData = data["positions"].at(0);
 
                             glm::vec3 position = glm::vec3(
