@@ -1,4 +1,5 @@
 #pragma once
+
 #include "IAudioManager.hpp"
 
 namespace Poulpe
@@ -12,24 +13,24 @@ namespace Poulpe
         };
 
     public:
-        AudioManager();
+        AudioManager() = default;
         virtual ~AudioManager();
 
-        virtual void load(nlohmann::json config) override;
-        virtual void startSplash(int index = 0) override;
-        virtual void stopSplash() override;
-        virtual void startAmbient(int index = 0) override;
-        virtual void stopAmbient() override;
-        virtual std::vector<std::string> const getAmbientSound() override { return m_AmbientSounds; }
-        virtual std::string const getState() override;
-        virtual int getAmbientSoundIndex() override { return m_AmbientSoundIndex; }
-        virtual std::string getCurrentAmbientSound() override { return m_AmbientSounds[m_AmbientSoundIndex]; }
-        virtual void toggleLooping() override;
+        void load(nlohmann::json config) override;
+        void startSplash(unsigned int const index = 0) override;
+        void stopSplash() override;
+        void startAmbient(unsigned int const index = 0) override;
+        void stopAmbient() override;
+        std::vector<std::string> const getAmbientSound() override { return m_AmbientSounds; }
+        std::string const getState() override;
+        unsigned int getAmbientSoundIndex() override { return m_AmbientSoundIndex; }
+        std::string getCurrentAmbientSound() override { return m_AmbientSounds[m_AmbientSoundIndex]; }
+        void toggleLooping() override;
         void clear();
         void init();
 
     private:
-        void start(const std::string& soundPath, ma_sound& sound);
+        void start(std::string const & soundPath, ma_sound & sound);
         void stop(ma_sound sound);
 
     private:
@@ -37,8 +38,8 @@ namespace Poulpe
         ma_sound m_AmbientSound;
         ma_sound m_SplashSound;
         State m_State;
-        int m_AmbientSoundIndex = 0;
-        int m_SplashSoundIndex = 0;
+        unsigned int m_AmbientSoundIndex{ 0 };
+        unsigned int m_SplashSoundIndex{ 0 };
         bool m_Looping = true;
         std::vector<std::string> m_AmbientSounds {};
         std::vector<std::string> m_SplashSounds {};
