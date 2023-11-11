@@ -1,4 +1,5 @@
 #include "Entity.hpp"
+
 #include "Poulpe/Core/IVisitor.hpp"
 
 namespace Poulpe
@@ -8,9 +9,9 @@ namespace Poulpe
 
     }
 
-    void Entity::accept(std::shared_ptr<IVisitor> visitor)
+    void Entity::accept(IVisitor* visitor)
     {
-        visitor->visit(shared_from_this());
+        visitor->visit(this);
     }
 
     uint32_t Entity::getNextSpriteIndex()

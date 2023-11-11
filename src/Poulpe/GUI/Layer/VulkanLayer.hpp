@@ -27,9 +27,9 @@ namespace Poulpe
 
         virtual ~VulkanLayer() = default;
 
-        virtual void init(Window* window, std::shared_ptr<CommandQueue> cmdQueue) override;
-        virtual void render(double timeStep) override;
-        virtual void addRenderManager(RenderManager* renderManager) override;
+        void init(Window* window) override;
+        void render(double timeStep) override;
+        void addRenderManager(RenderManager* renderManager) override;
         void destroy();
         void displayFpsCounter(double timeStep);
         void displayAPI();
@@ -64,7 +64,6 @@ namespace Poulpe
         void loadAmbiantSounds();
         void loadLevels();
         void loadSkybox();
-        void onKeyPressed();
         void updateRenderMode(VkPolygonMode mode);
 
     private:
@@ -80,7 +79,6 @@ namespace Poulpe
         std::unordered_map<std::string, VkDescriptorSet> m_Textures{};
         std::vector<VkDescriptorSet> m_CmdQueueScenes;
         std::unordered_map<std::string, VkDescriptorSet> m_Entities;
-        std::shared_ptr<CommandQueue> m_CmdQueue;
         std::shared_ptr<ImGuiInfo> m_ImGuiInfo;
 
         VkCommandPool m_ImGuiPool;

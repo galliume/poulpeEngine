@@ -1,6 +1,7 @@
 #include "VulkanLayer.hpp"
 
 #include "PoulpeEngineConfig.h"
+
 #include "Poulpe/Application.hpp"
 #include "Poulpe/Renderer/Vulkan/EntityFactory.hpp"
 
@@ -9,12 +10,11 @@
 
 namespace Poulpe
 {
-    bool VulkanLayer::s_RenderViewportHasInput { false };
-    bool VulkanLayer::s_OpenAbout { false };
+    bool VulkanLayer::s_RenderViewportHasInput{ false };
+    bool VulkanLayer::s_OpenAbout{ false };
 
-    void VulkanLayer::init(Window* window, std::shared_ptr<CommandQueue> cmdQueue)
+    void VulkanLayer::init(Window* window)
     {
-        m_CmdQueue = cmdQueue;
         m_ImGuiInfo = std::make_shared<ImGuiInfo>(m_RenderManager->getRendererAdapter()->getImGuiInfo());
         Poulpe::Im::init(window->get(), *m_ImGuiInfo);
 
@@ -31,7 +31,7 @@ namespace Poulpe
         fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
         fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
 
-        vkCreateFence(m_RenderManager->getRendererAdapter()->rdr()->getDevice(), &fenceInfo, nullptr, &m_Fence);
+        vkCreateFence(m_RenderManager->getRendererAdapter()->rdr()->getDevice(), & fenceInfo, nullptr, & m_Fence);
         m_ImGuiImageIndex = 0;
 
         loadDebugInfo();
@@ -64,7 +64,7 @@ namespace Poulpe
 
     void VulkanLayer::loadDebugInfo()
     {
-        std::function<void()> request = [=, this]() {
+        std::function<void()> request = [this]() {
             m_DebugInfo.deviceProperties = m_RenderManager->getRendererAdapter()->rdr()->getDeviceProperties();
             m_DebugInfo.apiVersion = m_RenderManager->getRendererAdapter()->rdr()->getAPIVersion();
             m_DebugInfo.vendorID = m_RenderManager->getRendererAdapter()->rdr()->getVendor(m_DebugInfo.deviceProperties.vendorID);
@@ -75,33 +75,27 @@ namespace Poulpe
         };
 
         Command cmd{request};
-
-        m_CmdQueue->add(cmd);
+        Poulpe::Locator::getCommandQueue()->add(cmd);
     }
 
     void VulkanLayer::loadTextures()
     {
-        std::function<void()> request = [=, this]() {
+        std::function<void()> request = [this]() {
             
             std::unordered_map<std::string, VkDescriptorSet> tmpTextures{};
-
             auto const & textures = m_RenderManager->getTextureManager()->getTextures();
-            //const auto& imageViews = m_RenderManager->GetRendererAdapter()->GetSwapChainImageViews();
 
             for (auto const & texture : textures) {
-            
                 if (!texture.second.isPublic()) continue;
 
                 VkDescriptorSet imgDset = ImGui_ImplVulkan_AddTexture(texture.second.getSampler(), texture.second.getImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-
                 tmpTextures[texture.second.getName()] = imgDset;
             }
-
             std::swap(tmpTextures, m_Textures);
         };
 
         Command cmd{request};
-        m_CmdQueue->add(cmd);
+        Poulpe::Locator::getCommandQueue()->add(cmd);
 
         //for (const auto& imageView : *imageViews) {
         //    VkSampler textureSampler = m_RenderManager->GetRendererAdapter()->Rdr()->CreateTextureSampler(1);
@@ -112,60 +106,61 @@ namespace Poulpe
 
     void VulkanLayer::loadAmbiantSounds()
     {
-        std::function<void()> requestSounds = [=, this]() {
+        std::function<void()> requestSounds = [this]() {
             m_AmbientSounds = m_RenderManager->getAudioManager()->getAmbientSound();
         };
-
-        std::function<void()> requestIndex = [=, this]() {
+        std::function<void()> requestIndex = [this]() {
             m_SoundIndex = m_RenderManager->getAudioManager()->getAmbientSoundIndex();
         };
 
         Command cmdSounds{requestSounds};
         Command cmdIndex{requestIndex};
 
-        m_CmdQueue->add(cmdSounds);
-        m_CmdQueue->add(cmdIndex);
+        Poulpe::Locator::getCommandQueue()->add(cmdSounds);
+        Poulpe::Locator::getCommandQueue()->add(cmdIndex);
     }
 
     void VulkanLayer::loadLevels()
     {
-        std::function<void()> request = [=, this]() {
+        std::function<void()> request = [this]() {
             m_Levels = m_RenderManager->getConfigManager()->listLevels();
         };
 
         Command cmd{request};
-        m_CmdQueue->add(cmd);
+        Poulpe::Locator::getCommandQueue()->add(cmd);
     }
 
     void VulkanLayer::updateSkybox()
     {
-        std::function<void()> request = [=, this]() {
+        std::function<void()> request = [this]() {
             {
                 std::condition_variable cv;
                 auto loading = m_RenderManager->getTextureManager()->loadSkybox(m_Skyboxs.at(m_SkyboxIndex), cv);
+
                 loading();
 
                 auto skybox = m_RenderManager->getEntityManager()->getSkybox();
                 skybox->setIsDirty();
+
                 auto entity = std::make_unique<Skybox>(EntityFactory::create<Skybox>(
                     m_RenderManager->getRendererAdapter(),
                     m_RenderManager->getEntityManager(),
                     m_RenderManager->getShaderManager(),
                     m_RenderManager->getTextureManager()));
 
-                skybox->m_DescriptorSets = entity->createDescriptorSet(skybox);
+                skybox->m_DescriptorSets = entity->createDescriptorSet(skybox.get());
 
                 cv.notify_one(); //useful?
             }
         };
 
         Command cmd{request};
-        m_CmdQueue->add(cmd);
+        Poulpe::Locator::getCommandQueue()->add(cmd);
     }
 
     void VulkanLayer::updateLevel()
     {
-      std::function<void()> request = [=, this]() {
+      std::function<void()> request = [this]() {
         {
           auto const start = std::chrono::high_resolution_clock::now();
 
@@ -184,23 +179,23 @@ namespace Poulpe
         }
       };
 
-      Command cmd{ request, WhenToExecute::POST_RENDERING };
-      m_CmdQueue->add(cmd);
+      Command cmd{request, WhenToExecute::POST_RENDERING};
+      Poulpe::Locator::getCommandQueue()->add(cmd);
     }
 
     void VulkanLayer::loadSkybox()
     {
-        std::function<void()> request = [=, this]() {
+        std::function<void()> request = [this]() {
             m_Skyboxs = m_RenderManager->getConfigManager()->listSkybox();
         };
 
         Command cmd{request};
-        m_CmdQueue->add(cmd);
+        Poulpe::Locator::getCommandQueue()->add(cmd);
     }
 
     void VulkanLayer::updateRenderMode(VkPolygonMode mode)
     {
-        std::function<void()> request = [=, this]() {
+        std::function<void()> request = [this, & mode]() {
             Poulpe::VulkanAdapter::s_PolygoneMode.store(mode);
             vkResetDescriptorPool(m_RenderManager->getRendererAdapter()->rdr()->getDevice(), m_ImGuiInfo->info.DescriptorPool, 0);
             m_ImgDescDone = false;
@@ -208,22 +203,20 @@ namespace Poulpe
         };
 
         Command cmd{request};
-        m_CmdQueue->add(cmd);
+        Poulpe::Locator::getCommandQueue()->add(cmd);
     }
 
     void VulkanLayer::render(double timeStep)
     {
-        //ImGuiIO& io = ImGui::GetIO();
-        
         Poulpe::Im::newFrame();
 
         ImGuiWindowFlags flags = 0;
         flags |= ImGuiWindowFlags_MenuBar;
         flags |= ImGuiWindowFlags_NoBackground;
 
-        bool open{ true };
+        bool open{true};
 
-        ImGui::Begin("PoulpeEngine", &open, flags);
+        ImGui::Begin("PoulpeEngine", & open, flags);
 
             ImGuiID poulpeEngineDockspaceid = ImGui::GetID("PoulpeEngineDockspace");
             ImGui::DockSpace(poulpeEngineDockspaceid, ImVec2(0.0f, 0.0f));
@@ -236,7 +229,6 @@ namespace Poulpe
                     {
                         m_RenderManager->getWindow()->quit();
                     }
-                    //ImGui::Separator();
                     ImGui::EndMenu();
                 }
                 if (ImGui::BeginMenu("Help"))
@@ -245,8 +237,6 @@ namespace Poulpe
                     {
                         s_OpenAbout = true;
                     }
-
-                    //ImGui::Separator();
                     ImGui::EndMenu();
                 }
             }
@@ -280,8 +270,9 @@ namespace Poulpe
             ImGui::End();
 
             ImGui::Begin("3D View");
-                float my_tex_w = m_RenderManager->getRendererAdapter()->rdr()->getSwapChainExtent().width;
-                float my_tex_h = m_RenderManager->getRendererAdapter()->rdr()->getSwapChainExtent().height;
+                auto my_tex_w = static_cast<float>(m_RenderManager->getAppWidth());
+                auto my_tex_h = static_cast<float>(m_RenderManager->getAppHeight());
+
                 ImVec2 uv_min = ImVec2(0.0f, 0.0f);                 // Top-left
                 ImVec2 uv_max = ImVec2(1.0f, 1.0f);                 // Lower-right
                 ImVec4 tint_col = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);   // No tint
@@ -298,10 +289,11 @@ namespace Poulpe
                 ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
                 ImGui::SetNextWindowSize(ImVec2(800.f, 600.f));
 
-                if (ImGui::BeginPopupModal("About", NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
+                if (ImGui::BeginPopupModal("About", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
 
                     float my_tex_w = 150;
                     float my_tex_h = 150;
+
                     ImVec2 uv_min = ImVec2(0.0f, 0.0f);                 // Top-left
                     ImVec2 uv_max = ImVec2(1.0f, 1.0f);                 // Lower-right
                     ImVec4 tint_col = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);   // No tint
@@ -377,11 +369,11 @@ namespace Poulpe
             if (0 == x) {
                 ImGui::TableNextRow();
             }
-
             ImGui::TableSetColumnIndex(x);
 
             float my_tex_w = 150;
             float my_tex_h = 150;
+
             ImVec2 uv_min = ImVec2(0.0f, 0.0f);                 // Top-left
             ImVec2 uv_max = ImVec2(1.0f, 1.0f);                 // Lower-right
             ImVec4 tint_col = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);   // No tint
@@ -428,6 +420,7 @@ namespace Poulpe
 
             float my_tex_w = 150;
             float my_tex_h = 150;
+
             ImVec2 uv_min = ImVec2(0.0f, 0.0f);                 // Top-left
             ImVec2 uv_max = ImVec2(1.0f, 1.0f);                 // Lower-right
             ImVec4 tint_col = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);   // No tint
@@ -439,8 +432,7 @@ namespace Poulpe
 
             if (5 > x) {
                 x++;
-            }
-            else {
+            } else {
                 x = 0;
             }
         }
@@ -576,35 +568,35 @@ namespace Poulpe
         {
             if (ImGui::Button("Play"))
             {
-                std::function<void()> request = [=, this]() {
+                std::function<void()> request = [this]() {
                     m_RenderManager->getAudioManager()->startAmbient();
                 };
 
                 Command cmd{request};
-                m_CmdQueue->add(cmd);
+                Poulpe::Locator::getCommandQueue()->add(cmd);
             }
 
             ImGui::SameLine();
 
             if (ImGui::Button("Stop"))
             {
-                std::function<void()> request = [=, this]() {
+                std::function<void()> request = [this]() {
                     m_RenderManager->getAudioManager()->stopAmbient();
                 };
 
                 Command cmd{request};
-                m_CmdQueue->add(cmd);
+                Poulpe::Locator::getCommandQueue()->add(cmd);
             }
 
             ImGui::SameLine();
 
             if (ImGui::Checkbox("Loop", &m_Looping)) {
-                std::function<void()> request = [=, this]() {
+                std::function<void()> request = [this]() {
                     m_RenderManager->getAudioManager()->toggleLooping();
                 };
 
                 Command cmd{request};
-                m_CmdQueue->add(cmd);
+                Poulpe::Locator::getCommandQueue()->add(cmd);
             }
 
             ImGui::SameLine();
@@ -622,13 +614,13 @@ namespace Poulpe
                     bool const is_selected = std::cmp_equal(m_SoundIndex, n);
                     if (ImGui::Selectable(m_AmbientSounds[n].c_str(), is_selected)) {
                         m_SoundIndex = n;
-                        std::function<void()> request = [=, this]() {
+                        std::function<void()> request = [this]() {
                             m_RenderManager->getAudioManager()->stopAmbient();
                             m_RenderManager->getAudioManager()->startAmbient(m_SoundIndex);
                         };
 
                         Command cmd{request};
-                        m_CmdQueue->add(cmd);
+                        Poulpe::Locator::getCommandQueue()->add(cmd);
                     }
 
                     if (is_selected)
@@ -700,10 +692,5 @@ namespace Poulpe
         loadAmbiantSounds();
         loadLevels();
         loadSkybox();
-    }
-
-    void VulkanLayer::onKeyPressed()
-    {
-        
     }
 }
