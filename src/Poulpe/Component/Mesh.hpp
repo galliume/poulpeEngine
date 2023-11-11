@@ -40,12 +40,12 @@ namespace Poulpe
             bool shouldInverseTextureY);
 
         Data* getData() { return & m_Data; }
-        void setData(Data& data) { m_Data = data; }
+        void setData(Data data) { m_Data = std::move(data); }
         
         inline std::vector<VkDescriptorSet> getDescriptorSets() { return m_DescriptorSets; }
         inline VkPipeline getGraphicsPipeline() { return m_GraphicsPipeline; }
         inline VkPipelineLayout getPipelineLayout() { return m_PipelineLayout; }
-        inline std::vector<Buffer> getUniformBuffers() { return m_UniformBuffers; }
+        inline std::vector<Buffer>* getUniformBuffers() { return & m_UniformBuffers; }
         inline glm::vec4 getCameraPos() { return m_CameraPos; }
         inline VkDescriptorPool getDescriptorPool() { return m_DescriptorPool; }
         inline VkDescriptorSetLayout getDescriptorSetLayout() { return m_DescriptorSetLayout; }

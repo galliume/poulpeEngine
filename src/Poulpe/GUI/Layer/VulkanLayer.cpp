@@ -3,6 +3,7 @@
 #include "PoulpeEngineConfig.h"
 
 #include "Poulpe/Application.hpp"
+
 #include "Poulpe/Renderer/Vulkan/EntityFactory.hpp"
 
 #include <chrono>

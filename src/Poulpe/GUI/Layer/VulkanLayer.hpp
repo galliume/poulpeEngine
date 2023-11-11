@@ -3,7 +3,9 @@
 #include "ILayer.hpp"
 
 #include "Poulpe/Core/IObserver.hpp"
+
 #include "Poulpe/GUI/ImGui/Im.hpp"
+
 #include "Poulpe/Manager/RenderManager.hpp"
 
 #include <optional>

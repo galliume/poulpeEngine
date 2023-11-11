@@ -30,7 +30,7 @@ namespace Poulpe
             0, 1, 2, 2, 3, 0
         };
 
-        UniformBufferObject ubo;
+        UniformBufferObject ubo{};
         //ubo.view = glm::mat4(0.0f);
 
         auto commandPool = m_Adapter->rdr()->createCommandPool();
@@ -49,7 +49,7 @@ namespace Poulpe
 
         mesh->setName("crosshair");
         mesh->setShaderName("2d");
-        mesh->getUniformBuffers().emplace_back(crossHairuniformBuffer);
+        mesh->getUniformBuffers()->emplace_back(crossHairuniformBuffer);
         mesh->setDescriptorSetLayout(createDescriptorSetLayout());
         mesh->setDescriptorSets(createDescriptorSet(mesh));
         mesh->setPipelineLayout(createPipelineLayout(mesh->getDescriptorSetLayout()));
@@ -67,11 +67,11 @@ namespace Poulpe
             mesh->getShaderName(), shaders, vertexInputInfo, VK_CULL_MODE_FRONT_BIT, true, true, true, true,
             VulkanAdapter::s_PolygoneMode));
 
-        for (uint32_t i = 0; i < mesh->getUniformBuffers().size(); i++) {
+        for (uint32_t i = 0; i < mesh->getUniformBuffers()->size(); i++) {
             //crossHairData.m_Ubos[i].view = m_Adapter->GetCamera()->LookAt();
             crossHairData.m_Ubos[i].proj = m_Adapter->getPerspective();
 
-            m_Adapter->rdr()->updateUniformBuffer(mesh->getUniformBuffers()[i], crossHairData.m_Ubos);
+            m_Adapter->rdr()->updateUniformBuffer(mesh->getUniformBuffers()->at(i), & crossHairData.m_Ubos);
         }
 
         mesh->setData(crossHairData);
@@ -119,7 +119,7 @@ namespace Poulpe
         imageInfos.emplace_back(imageInfo2);
 
         VkDescriptorSet descriptorSet = m_Adapter->rdr()->createDescriptorSets(m_DescriptorPool, { mesh->getDescriptorSetLayout() }, 1);
-        m_Adapter->rdr()->pdateDescriptorSets(mesh->getUniformBuffers(), descriptorSet, imageInfos);
+        m_Adapter->rdr()->updateDescriptorSets(*mesh->getUniformBuffers(), descriptorSet, imageInfos);
 
         return { descriptorSet };
     }
