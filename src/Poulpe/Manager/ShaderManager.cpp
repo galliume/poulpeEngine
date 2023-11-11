@@ -12,7 +12,7 @@ namespace Poulpe
     {
         m_Config = config;
 
-        std::function shaderFuture = [=, this, &cv]() {
+        std::function shaderFuture = [this, &cv]() {
             for (auto& shader : m_Config["shader"].items()) {
 
                 auto key = static_cast<std::string>(shader.key());
@@ -28,7 +28,7 @@ namespace Poulpe
         return shaderFuture;
     }
 
-    void ShaderManager::addShader(const std::string& name, const std::string& vertPath, const std::string& fragPath)
+    void ShaderManager::addShader(std::string const & name, std::string const & vertPath, std::string const & fragPath)
     {
 
         if (!std::filesystem::exists(vertPath)) {

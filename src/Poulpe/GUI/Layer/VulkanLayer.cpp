@@ -68,7 +68,7 @@ namespace Poulpe
             m_DebugInfo.deviceProperties = m_RenderManager->getRendererAdapter()->rdr()->getDeviceProperties();
             m_DebugInfo.apiVersion = m_RenderManager->getRendererAdapter()->rdr()->getAPIVersion();
             m_DebugInfo.vendorID = m_RenderManager->getRendererAdapter()->rdr()->getVendor(m_DebugInfo.deviceProperties.vendorID);
-            m_DebugInfo.totalMeshesLoaded = m_RenderManager->getEntityManager()->getEntities()->size();
+            m_DebugInfo.totalMeshesLoaded = m_RenderManager->getEntityManager()->getEntities().size();
             m_DebugInfo.totalMeshesInstanced = m_RenderManager->getEntityManager()->getInstancedCount();
             m_DebugInfo.totalShadersLoaded = m_RenderManager->getShaderManager()->getShaders()->shaders.size();
             m_DebugInfo.textures = m_RenderManager->getTextureManager()->getTextures();
@@ -142,13 +142,10 @@ namespace Poulpe
                 auto skybox = m_RenderManager->getEntityManager()->getSkybox();
                 skybox->setIsDirty();
 
-                auto entity = std::make_unique<Skybox>(EntityFactory::create<Skybox>(
-                    m_RenderManager->getRendererAdapter(),
-                    m_RenderManager->getEntityManager(),
-                    m_RenderManager->getShaderManager(),
-                    m_RenderManager->getTextureManager()));
+                auto entity = std::make_unique<Skybox>(EntityFactory::create<Skybox>(m_RenderManager->getRendererAdapter(),
+                    m_RenderManager->getShaderManager(), m_RenderManager->getTextureManager()));
 
-                skybox->m_DescriptorSets = entity->createDescriptorSet(skybox.get());
+                skybox->setDescriptorSets(entity->createDescriptorSet(skybox));
 
                 cv.notify_one(); //useful?
             }

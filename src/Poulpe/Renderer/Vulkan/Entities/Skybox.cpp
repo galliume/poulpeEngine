@@ -5,10 +5,8 @@ namespace Poulpe
 {
     struct constants;
 
-    Skybox::Skybox(VulkanAdapter* adapter, EntityManager* entityManager,
-        ShaderManager* shaderManager, TextureManager* textureManager) :
+    Skybox::Skybox(VulkanAdapter* adapter, ShaderManager* shaderManager, TextureManager* textureManager) :
         m_Adapter(adapter),
-        m_EntityManager(entityManager),
         m_ShaderManager(shaderManager),
         m_TextureManager(textureManager)
     {
@@ -82,13 +80,13 @@ namespace Poulpe
         vkDestroyCommandPool(m_Adapter->rdr()->getDevice(), commandPool, nullptr);
 
         Buffer uniformBuffer = m_Adapter->rdr()->createUniformBuffers(1);
-        mesh->m_UniformBuffers.emplace_back(uniformBuffer);
+        mesh->getUniformBuffers().emplace_back(uniformBuffer);
 
         setPushConstants(mesh);
 
-        mesh->m_DescriptorSetLayout = createDescriptorSetLayout();
-        mesh->m_PipelineLayout = createPipelineLayout(mesh->m_DescriptorSetLayout);
-        mesh->m_DescriptorSets = createDescriptorSet(mesh);
+        mesh->setDescriptorSetLayout(createDescriptorSetLayout());
+        mesh->setPipelineLayout(createPipelineLayout(mesh->getDescriptorSetLayout()));
+        mesh->setDescriptorSets(createDescriptorSet(mesh));
 
         auto shaders = getShaders("skybox");
 
@@ -96,20 +94,13 @@ namespace Poulpe
         auto attDesc = Vertex::GetAttributeDescriptions();
         auto  vertexInputInfo = getVertexBindingDesc(bDesc, attDesc);
 
-        mesh->m_GraphicsPipeline = m_Adapter->rdr()->createGraphicsPipeline(
-            m_Adapter->rdrPass(),
-            mesh->m_PipelineLayout,
-            mesh->getShaderName(),
-            shaders,
-            vertexInputInfo,
-            VK_CULL_MODE_NONE,
-            true, true, true, true,
-            VulkanAdapter::s_PolygoneMode
-        );
+        mesh->setGraphicsPipeline(m_Adapter->rdr()->createGraphicsPipeline(m_Adapter->rdrPass(), mesh->getPipelineLayout(),
+            mesh->getShaderName(), shaders, vertexInputInfo, VK_CULL_MODE_NONE, true, true, true, true,
+            VulkanAdapter::s_PolygoneMode));
 
-        for (uint32_t i = 0; i < mesh->m_UniformBuffers.size(); i++) {
+        for (uint32_t i = 0; i < mesh->getUniformBuffers().size(); i++) {
             m_Adapter->rdr()->updateUniformBuffer(
-                mesh->m_UniformBuffers[i],
+                mesh->getUniformBuffers()[i],
                 data.m_Ubos
             );
         }
@@ -143,9 +134,11 @@ namespace Poulpe
     
     std::vector<VkDescriptorSet> Skybox::createDescriptorSet(Mesh* mesh)
     {
-        if (!mesh->m_DescriptorSets.empty()) {
-            vkFreeDescriptorSets(m_Adapter->rdr()->getDevice(), mesh->m_DescriptorPool, mesh->m_DescriptorSets.size(), mesh->m_DescriptorSets.data());
-            mesh->m_DescriptorSets.clear();
+        if (!mesh->getDescriptorSets().empty()) {
+            vkFreeDescriptorSets(m_Adapter->rdr()->getDevice(), mesh->getDescriptorPool(),
+                mesh->getDescriptorSets().size(), mesh->getDescriptorSets().data());
+
+            mesh->getDescriptorSets().clear();
         }
 
         Texture tex = m_TextureManager->getSkyboxTexture();
@@ -155,8 +148,8 @@ namespace Poulpe
         descriptorImageInfo.imageView = tex.getImageView();
         descriptorImageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
-        VkDescriptorSet descriptorSet = m_Adapter->rdr()->createDescriptorSets(mesh->m_DescriptorPool, { mesh->m_DescriptorSetLayout }, 1);
-        m_Adapter->rdr()->pdateDescriptorSets(mesh->m_UniformBuffers, descriptorSet, { descriptorImageInfo });
+        VkDescriptorSet descriptorSet = m_Adapter->rdr()->createDescriptorSets(mesh->getDescriptorPool(), {mesh->getDescriptorSetLayout()}, 1);
+        m_Adapter->rdr()->pdateDescriptorSets(mesh->getUniformBuffers(), descriptorSet, {descriptorImageInfo});
 
         return { descriptorSet };
     }
@@ -201,19 +194,32 @@ namespace Poulpe
     void Skybox::setPushConstants(Mesh* mesh)
     {
         constants pushConstants{};
-        pushConstants.data = glm::vec4(0.f, Poulpe::VulkanAdapter::s_AmbiantLight.load(), Poulpe::VulkanAdapter::s_FogDensity.load(), 0.f);
+        pushConstants.data = glm::vec4(0.f, Poulpe::VulkanAdapter::s_AmbiantLight.load(),
+            Poulpe::VulkanAdapter::s_FogDensity.load(), 0.f);
+
         pushConstants.cameraPos = m_Adapter->getCamera()->getPos();
-        pushConstants.fogColor = glm::vec4({ Poulpe::VulkanAdapter::s_FogColor[0].load(), Poulpe::VulkanAdapter::s_FogColor[1].load(), Poulpe::VulkanAdapter::s_FogColor[2].load(), 0.f });
+
+        pushConstants.fogColor = glm::vec4({ Poulpe::VulkanAdapter::s_FogColor[0].load(), Poulpe::VulkanAdapter::s_FogColor[1].load(),
+            Poulpe::VulkanAdapter::s_FogColor[2].load(), 0.f });
+
         pushConstants.lightPos = glm::vec4(m_Adapter->getLights().at(0), 0.f);
         pushConstants.view = m_Adapter->getCamera()->lookAt();
 
-        mesh->applyPushConstants = [=, &pushConstants](VkCommandBuffer& commandBuffer, VkPipelineLayout& pipelineLayout, std::shared_ptr<VulkanAdapter> adapter,  [[maybe_unused]] const Data& data) {
-            pushConstants.data = glm::vec4(0.f, Poulpe::VulkanAdapter::s_AmbiantLight.load(), Poulpe::VulkanAdapter::s_FogDensity.load(), 0.f);
+        mesh->applyPushConstants = [=, &pushConstants](VkCommandBuffer & commandBuffer, VkPipelineLayout pipelineLayout,
+            VulkanAdapter* adapter,  [[maybe_unused]] Data * data) {
+
+            pushConstants.data = glm::vec4(0.f, Poulpe::VulkanAdapter::s_AmbiantLight.load(),
+                Poulpe::VulkanAdapter::s_FogDensity.load(), 0.f);
+
             pushConstants.cameraPos = adapter->getCamera()->getPos();
-            pushConstants.fogColor = glm::vec4({ Poulpe::VulkanAdapter::s_FogColor[0].load(), Poulpe::VulkanAdapter::s_FogColor[1].load(), Poulpe::VulkanAdapter::s_FogColor[2].load(), 0.f });
+            pushConstants.fogColor = glm::vec4({ Poulpe::VulkanAdapter::s_FogColor[0].load(),
+                Poulpe::VulkanAdapter::s_FogColor[1].load(), Poulpe::VulkanAdapter::s_FogColor[2].load(), 0.f });
+
             pushConstants.lightPos = glm::vec4(adapter->getLights().at(0), 0.f);
             pushConstants.view = glm::mat4(glm::mat3(adapter->getCamera()->lookAt()));
-            vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(constants), &pushConstants);
+
+            vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(constants),
+                & pushConstants);
         };
 
         mesh->setHasPushConstants();
@@ -226,7 +232,7 @@ namespace Poulpe
       vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
       vertexInputInfo.vertexBindingDescriptionCount = 1;
       vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(Vertex::GetAttributeDescriptions().size());
-      vertexInputInfo.pVertexBindingDescriptions = &bDesc;
+      vertexInputInfo.pVertexBindingDescriptions = & bDesc;
       vertexInputInfo.pVertexAttributeDescriptions = attDesc.data();
 
       return vertexInputInfo;

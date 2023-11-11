@@ -1,17 +1,21 @@
 #pragma once
 
-#include <functional>
-#include "Texture.hpp"
-#include "Vertex.hpp"
-#include "Vertex2D.hpp"
 #include "Poulpe/Component/Entity.hpp"
-#include "Poulpe/Core/TinyObjLoader.hpp"
+
 #include "Poulpe/Core/Buffer.hpp"
 #include "Poulpe/Core/MeshData.hpp"
+#include "Poulpe/Core/TinyObjLoader.hpp"
+
+#include "Texture.hpp"
+
+#include "Vertex.hpp"
+#include "Vertex2D.hpp"
+
+#include <functional>
 
 namespace Poulpe
 {
-    struct constants 
+    struct constants
     {
         glm::vec4 data;
         glm::vec4 cameraPos;
@@ -38,20 +42,32 @@ namespace Poulpe
         Data* getData() { return & m_Data; }
         void setData(Data& data) { m_Data = data; }
         
+        inline std::vector<VkDescriptorSet> getDescriptorSets() { return m_DescriptorSets; }
+        inline VkPipeline getGraphicsPipeline() { return m_GraphicsPipeline; }
+        inline VkPipelineLayout getPipelineLayout() { return m_PipelineLayout; }
+        inline std::vector<Buffer> getUniformBuffers() { return m_UniformBuffers; }
+        inline glm::vec4 getCameraPos() { return m_CameraPos; }
+        inline VkDescriptorPool getDescriptorPool() { return m_DescriptorPool; }
+        inline VkDescriptorSetLayout getDescriptorSetLayout() { return m_DescriptorSetLayout; }
+
         inline const std::string getShaderName() const { return m_ShaderName; }
         inline void setShaderName(std::string_view name) { m_ShaderName = name; }
-        inline std::vector<VkDescriptorSet> getDescriptorSets() { return m_DescriptorSets; }
+        void setDescriptorSets(std::vector<VkDescriptorSet> descSets) { m_DescriptorSets = descSets; }
+        void setDescriptorPool(VkDescriptorPool descPool) { m_DescriptorPool = descPool; }
+        void setPipelineLayout(VkPipelineLayout pipelineLayout) { m_PipelineLayout = pipelineLayout; }
+        void setDescriptorSetLayout(VkDescriptorSetLayout descLayout) { m_DescriptorSetLayout = descLayout; }
+        void setGraphicsPipeline(VkPipeline pipeline) { m_GraphicsPipeline = pipeline; }
 
         void addUbos(const std::vector<UniformBufferObject>& ubos);
-        std::function<void(VkCommandBuffer& commandBuffer, VkPipelineLayout& pipelineLayout, std::shared_ptr<VulkanAdapter>, Data& data)> applyPushConstants = nullptr;
+        std::function<void(VkCommandBuffer & commandBuffer, VkPipelineLayout pipelineLayout,
+            VulkanAdapter* vulkanAdapter, Data * data)> applyPushConstants = nullptr;
         
         bool isDirty() { return m_IsDirty.load(); }
         void setIsDirty(bool dirty = true) { m_IsDirty.store(dirty); }
         void setHasBbox(bool hasBbox = false) { m_HasBbox = hasBbox; }
         bool hasBbox() { return m_HasBbox; }
 
-    //@todo make it private
-    public:
+    private:
         std::vector<Buffer> m_UniformBuffers;
         glm::vec4 m_CameraPos;
         std::vector<VkDescriptorSet> m_DescriptorSets;
@@ -60,7 +76,6 @@ namespace Poulpe
         VkDescriptorSetLayout m_DescriptorSetLayout;
         VkDescriptorPool m_DescriptorPool;
 
-    private:
         Data m_Data;
         std::string m_ShaderName;
         std::atomic<bool> m_IsDirty{ true };
