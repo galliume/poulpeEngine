@@ -1,13 +1,15 @@
 #pragma once
 
-#include "Poulpe/Component/Mesh.hpp"
-
 namespace Poulpe
 {
+    class Entity;
+
     class IVisitor
     {
     public:
-        virtual void visit(Entity* entity) = 0;
+        IVisitor() = default;
         virtual ~IVisitor() = 0;
+
+        virtual void visit(Entity* entity) = 0;
     };
 }

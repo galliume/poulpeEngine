@@ -21,7 +21,7 @@ namespace Poulpe
 
         virtual void addRenderer(IRendererAdapter* renderer) = 0;
         virtual std::function<void()> load(nlohmann::json levelConfig, std::condition_variable& cv) = 0;
-        virtual inline std::vector<Entity*> getEntities() = 0;
+        virtual inline std::vector<std::shared_ptr<Entity>>* getEntities() = 0;
         virtual inline void setSkybox(Mesh* skybox) = 0;
         virtual inline Mesh* getSkybox() = 0;
         virtual void clear() = 0;

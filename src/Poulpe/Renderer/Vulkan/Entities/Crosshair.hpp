@@ -16,6 +16,7 @@ namespace Poulpe
                  VkDescriptorPool descriptorPool);
 
         void visit(Entity* entity) override;
+
         VkDescriptorSetLayout createDescriptorSetLayout() override;
         std::vector<VkDescriptorSet> createDescriptorSet(Mesh* mesh) override;
         VkPipelineLayout createPipelineLayout(VkDescriptorSetLayout descriptorSetLayout) override;
