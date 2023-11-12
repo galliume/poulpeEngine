@@ -121,7 +121,7 @@ namespace Poulpe
                                 static_cast<bool>(data["inverseTextureY"])
                             );
 
-                            for (auto& e : entities) {
+                            for (auto & e : entities) {
                                 e->setHasBbox(hasBbox);
                                 addEntity(e);
                             }
@@ -169,7 +169,7 @@ namespace Poulpe
                         for (auto& texture : data["textures"])
                             textures.emplace_back(static_cast<std::string>(texture));
 
-                        std::shared_ptr<Poulpe::Mesh> entity = std::make_shared<Poulpe::Mesh>();
+                        Poulpe::Mesh* entity = new Poulpe::Mesh();
                         bool hasBbox = static_cast<bool>(data["hasBbox"]);
                         entity->setHasBbox(hasBbox);
 
