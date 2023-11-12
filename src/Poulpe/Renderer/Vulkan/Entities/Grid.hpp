@@ -1,20 +1,10 @@
 #pragma once
 
-#include "Poulpe/Component/Mesh.hpp"
-
-#include "Poulpe/Core/IVisitor.hpp"
-
-#include "Poulpe/Manager/EntityManager.hpp"
-#include "Poulpe/Manager/ShaderManager.hpp"
-#include "Poulpe/Manager/TextureManager.hpp"
-
-#include "Poulpe/Renderer/Adapter/VulkanAdapter.hpp"
-
-#include <volk.h>
+#include "IEntity.hpp"
 
 namespace Poulpe
 {
-    class Grid : public IVisitor
+    class Grid : public IEntity, public IVisitor
     {
     struct pc
     {
@@ -26,6 +16,15 @@ namespace Poulpe
             VkDescriptorPool descriptorPool);
 
         void visit(Entity* entity) override;
+        VkDescriptorSetLayout createDescriptorSetLayout() override;
+        std::vector<VkDescriptorSet> createDescriptorSet(Mesh* mesh) override;
+        VkPipelineLayout createPipelineLayout(VkDescriptorSetLayout descriptorSetLayout) override;
+        std::vector<VkPipelineShaderStageCreateInfo> getShaders(std::string const & name) override;
+
+        VkPipelineVertexInputStateCreateInfo getVertexBindingDesc(
+          VkVertexInputBindingDescription bDesc, std::array<VkVertexInputAttributeDescription, 3> attDesc) override;
+
+        void setPushConstants(Mesh* mesh) override;
 
     private:
         VulkanAdapter* m_Adapter;
