@@ -31,10 +31,9 @@ namespace Poulpe
             0, 1, 2, 2, 3, 0
         };
 
-        UniformBufferObject ubo;
-        //ubo.view = glm::mat4(0.0f);
-
         auto commandPool = m_Adapter->rdr()->createCommandPool();
+
+        UniformBufferObject ubo{};
 
         Data gridData;
         gridData.m_Texture = "grid";
@@ -49,19 +48,67 @@ namespace Poulpe
 
         mesh->setName("grid");
         mesh->setShaderName("grid");
+        mesh->getUniformBuffers()->emplace_back(m_Adapter->rdr()->createUniformBuffers(1));
+        mesh->setDescriptorSetLayout(createDescriptorSetLayout());
+        mesh->setDescriptorSets(createDescriptorSet(mesh));
+        mesh->setPipelineLayout(createPipelineLayout(mesh->getDescriptorSetLayout()));
 
-        Buffer gridUniformBuffer = m_Adapter->rdr()->createUniformBuffers(1);
-        mesh->getUniformBuffers()->emplace_back(gridUniformBuffer);
+        setPushConstants(mesh);
 
+        m_Adapter->getDescriptorSetLayouts()->emplace_back(mesh->getDescriptorSetLayout());
+
+        auto shaders = getShaders(mesh->getShaderName());
+        auto bDesc = Vertex::GetBindingDescription();
+        auto attrDesc = Vertex::GetAttributeDescriptions();
+        auto vertexInputInfo = getVertexBindingDesc(bDesc, attrDesc);
+
+        mesh->setGraphicsPipeline(m_Adapter->rdr()->createGraphicsPipeline(m_Adapter->rdrPass(), mesh->getPipelineLayout(),
+            mesh->getShaderName(), shaders, vertexInputInfo, VK_CULL_MODE_NONE, true, true, true, true,
+            VulkanAdapter::s_PolygoneMode));
+
+        for (uint32_t i = 0; i < mesh->getUniformBuffers()->size(); i++) {
+            //gridData.m_Ubos[i].view = m_Adapter->GetCamera()->LookAt();
+            gridData.m_Ubos[i].proj = m_Adapter->getPerspective();
+
+            m_Adapter->rdr()->updateUniformBuffer(mesh->getUniformBuffers()->at(i), & gridData.m_Ubos);
+        }
+        mesh->setData(gridData);
+    }
+
+    VkDescriptorSetLayout Grid::createDescriptorSetLayout()
+    {
+        VkDescriptorSetLayoutBinding uboLayoutBinding{};
+        uboLayoutBinding.binding = 0;
+        uboLayoutBinding.descriptorCount = 1;
+        uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        uboLayoutBinding.pImmutableSamplers = nullptr;
+        uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+
+        VkDescriptorSetLayoutBinding samplerLayoutBinding{};
+        samplerLayoutBinding.binding = 1;
+        samplerLayoutBinding.descriptorCount = 2;
+        samplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        samplerLayoutBinding.pImmutableSamplers = nullptr;
+        samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+        std::vector<VkDescriptorSetLayoutBinding> bindings = { uboLayoutBinding, samplerLayoutBinding };
+
+         VkDescriptorSetLayout desriptorSetLayout = m_Adapter->rdr()->createDescriptorSetLayout(bindings);
+
+         return desriptorSetLayout;
+    }
+
+    std::vector<VkDescriptorSet> Grid::createDescriptorSet(Mesh* mesh)
+    {
         Texture ctex = m_TextureManager->getTextures()["minecraft_grass"];
 
-        std::vector<VkDescriptorImageInfo>cimageInfos{};
+        std::vector<VkDescriptorImageInfo> imageInfos{};
         VkDescriptorImageInfo cimageInfo{};
         cimageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
         cimageInfo.imageView = ctex.getImageView();
         cimageInfo.sampler = ctex.getSampler();
 
-        cimageInfos.emplace_back(cimageInfo);
+        imageInfos.emplace_back(cimageInfo);
 
         VkDescriptorSetLayoutBinding cuboLayoutBinding{};
         cuboLayoutBinding.binding = 0;
@@ -72,32 +119,22 @@ namespace Poulpe
 
         VkDescriptorSetLayoutBinding csamplerLayoutBinding{};
         csamplerLayoutBinding.binding = 1;
-        csamplerLayoutBinding.descriptorCount = cimageInfos.size();
+        csamplerLayoutBinding.descriptorCount = imageInfos.size();
         csamplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
         csamplerLayoutBinding.pImmutableSamplers = nullptr;
         csamplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 
         std::vector<VkDescriptorSetLayoutBinding> cbindings = { cuboLayoutBinding, csamplerLayoutBinding };
 
-        VkDescriptorSetLayout cdesriptorSetLayout = m_Adapter->rdr()->createDescriptorSetLayout(cbindings);
+        VkDescriptorSet descSet = m_Adapter->rdr()->createDescriptorSets(m_DescriptorPool, { mesh->getDescriptorSetLayout() }, 1);
+        m_Adapter->rdr()->updateDescriptorSets(*mesh->getUniformBuffers(), descSet, imageInfos);
 
-        m_Adapter->getDescriptorSetLayouts()->emplace_back(cdesriptorSetLayout);
+        return { descSet };
+    }
 
-        VkDescriptorSet cdescriptorSet = m_Adapter->rdr()->createDescriptorSets(m_DescriptorPool, { cdesriptorSetLayout }, 1);
-        m_Adapter->rdr()->updateDescriptorSets(*mesh->getUniformBuffers(), cdescriptorSet, cimageInfos);
-        mesh->getDescriptorSets().emplace_back(cdescriptorSet);
-
-        Grid::pc pc;
-        pc.point = glm::vec4(0.1f, 50.f, 0.f, 0.f);
-        pc.view = m_Adapter->getCamera()->lookAt();
-
-        mesh->applyPushConstants = [&pc](VkCommandBuffer & commandBuffer, VkPipelineLayout pipelineLayout,
-            VulkanAdapter* adapter, [[maybe_unused]] Data * data) {
-            pc.point = glm::vec4(0.1f, 50.f, 0.f, 0.f);
-            pc.view = adapter->getCamera()->lookAt();
-            vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(Grid::pc), &pc);
-        };
-        mesh->setHasPushConstants();
+    VkPipelineLayout Grid::createPipelineLayout(VkDescriptorSetLayout descriptorSetLayout)
+    {
+        std::vector<VkDescriptorSetLayout> dSetLayout = { descriptorSetLayout };
 
         std::vector<VkPushConstantRange> vkPcs = {};
         VkPushConstantRange vkPc;
@@ -106,47 +143,57 @@ namespace Poulpe
         vkPc.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
         vkPcs.emplace_back(vkPc);
 
-        std::vector<VkDescriptorSetLayout>dSetLayout = { cdesriptorSetLayout };
+         VkPipelineLayout pipelineLayout = m_Adapter->rdr()->createPipelineLayout(dSetLayout, vkPcs);
 
-        mesh->setPipelineLayout(m_Adapter->rdr()->createPipelineLayout(dSetLayout, vkPcs));
+        return pipelineLayout;
+    }
 
-        std::vector<VkPipelineShaderStageCreateInfo>cshadersStageInfos;
+    std::vector<VkPipelineShaderStageCreateInfo> Grid::getShaders(std::string const & name)
+    {
+        std::vector<VkPipelineShaderStageCreateInfo> shadersStageInfos;
 
-        VkPipelineShaderStageCreateInfo cvertShaderStageInfo{};
-        cvertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-        cvertShaderStageInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
-        cvertShaderStageInfo.module = m_ShaderManager->getShaders()->shaders[mesh->getShaderName()][0];
-        cvertShaderStageInfo.pName = "main";
-        cshadersStageInfos.emplace_back(cvertShaderStageInfo);
+        VkPipelineShaderStageCreateInfo vertShaderStageInfo{};
+        vertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+        vertShaderStageInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
+        vertShaderStageInfo.module = m_ShaderManager->getShaders()->shaders[name][0];
+        vertShaderStageInfo.pName = "main";
+        shadersStageInfos.emplace_back(vertShaderStageInfo);
 
-        VkPipelineShaderStageCreateInfo cfragShaderStageInfo{};
-        cfragShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-        cfragShaderStageInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
-        cfragShaderStageInfo.module = m_ShaderManager->getShaders()->shaders[mesh->getShaderName()][1];
-        cfragShaderStageInfo.pName = "main";
-        cshadersStageInfos.emplace_back(cfragShaderStageInfo);
+        VkPipelineShaderStageCreateInfo fragShaderStageInfo{};
+        fragShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+        fragShaderStageInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
+        fragShaderStageInfo.module = m_ShaderManager->getShaders()->shaders[name][1];
+        fragShaderStageInfo.pName = "main";
+        shadersStageInfos.emplace_back(fragShaderStageInfo);
 
-        VkVertexInputBindingDescription bDesc = Vertex::GetBindingDescription();
-        auto gridDesc = Vertex::GetAttributeDescriptions();
+        return shadersStageInfos;
+    }
 
+    VkPipelineVertexInputStateCreateInfo Grid::getVertexBindingDesc(VkVertexInputBindingDescription bDesc,
+        std::array<VkVertexInputAttributeDescription, 3> attDesc)
+    {
         VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
         vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
         vertexInputInfo.vertexBindingDescriptionCount = 1;
         vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(Vertex::GetAttributeDescriptions().size());
-        vertexInputInfo.pVertexBindingDescriptions = &bDesc;
-        vertexInputInfo.pVertexAttributeDescriptions = gridDesc.data();
+        vertexInputInfo.pVertexBindingDescriptions = & bDesc;
+        vertexInputInfo.pVertexAttributeDescriptions = attDesc.data();
 
-        mesh->setGraphicsPipeline(m_Adapter->rdr()->createGraphicsPipeline(m_Adapter->rdrPass(), mesh->getPipelineLayout(),
-            mesh->getShaderName(), cshadersStageInfos, vertexInputInfo, VK_CULL_MODE_NONE, true, true, true, true,
-            VulkanAdapter::s_PolygoneMode));
+        return vertexInputInfo;
+    }
 
+    void Grid::setPushConstants(Mesh* mesh)
+    {
+        Grid::pc pc;
+        pc.point = glm::vec4(0.1f, 50.f, 0.f, 0.f);
+        pc.view = m_Adapter->getCamera()->lookAt();
 
-        for (uint32_t i = 0; i < mesh->getUniformBuffers()->size(); i++) {
-            //gridData.m_Ubos[i].view = m_Adapter->GetCamera()->LookAt();
-            gridData.m_Ubos[i].proj = m_Adapter->getPerspective();
-
-            m_Adapter->rdr()->updateUniformBuffer(mesh->getUniformBuffers()->at(i), & gridData.m_Ubos);
-        }
-        mesh->setData(gridData);
+        mesh->applyPushConstants = [&pc](VkCommandBuffer & commandBuffer, VkPipelineLayout pipelineLayout,
+            VulkanAdapter* adapter, [[maybe_unused]] Data * data) {
+            pc.point = glm::vec4(0.1f, 50.f, 0.f, 0.f);
+            pc.view = adapter->getCamera()->lookAt();
+            vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(Grid::pc), & pc);
+        };
+        mesh->setHasPushConstants();
     }
 }

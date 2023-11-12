@@ -30,26 +30,23 @@ namespace Poulpe
             0, 1, 2, 2, 3, 0
         };
 
-        UniformBufferObject ubo{};
-        //ubo.view = glm::mat4(0.0f);
-
         auto commandPool = m_Adapter->rdr()->createCommandPool();
 
-        Data crossHairData;
-        crossHairData.m_Texture = "crosshair";
-        crossHairData.m_TextureIndex = 0;
-        crossHairData.m_VertexBuffer = m_Adapter->rdr()->createVertexBuffer(commandPool, vertices);
-        crossHairData.m_IndicesBuffer = m_Adapter->rdr()->createIndexBuffer(commandPool, indices);
-        crossHairData.m_Ubos.emplace_back(ubo);
-        crossHairData.m_Indices = indices;
+        UniformBufferObject ubo{};
+
+        Data data;
+        data.m_Texture = "crosshair";
+        data.m_TextureIndex = 0;
+        data.m_VertexBuffer = m_Adapter->rdr()->createVertexBuffer(commandPool, vertices);
+        data.m_IndicesBuffer = m_Adapter->rdr()->createIndexBuffer(commandPool, indices);
+        data.m_Ubos.emplace_back(ubo);
+        data.m_Indices = indices;
 
         vkDestroyCommandPool(m_Adapter->rdr()->getDevice(), commandPool, nullptr);
 
-        Buffer crossHairuniformBuffer = m_Adapter->rdr()->createUniformBuffers(1);
-
         mesh->setName("crosshair");
         mesh->setShaderName("2d");
-        mesh->getUniformBuffers()->emplace_back(crossHairuniformBuffer);
+        mesh->getUniformBuffers()->emplace_back(m_Adapter->rdr()->createUniformBuffers(1));
         mesh->setDescriptorSetLayout(createDescriptorSetLayout());
         mesh->setDescriptorSets(createDescriptorSet(mesh));
         mesh->setPipelineLayout(createPipelineLayout(mesh->getDescriptorSetLayout()));
@@ -68,14 +65,15 @@ namespace Poulpe
             VulkanAdapter::s_PolygoneMode));
 
         for (uint32_t i = 0; i < mesh->getUniformBuffers()->size(); i++) {
-            //crossHairData.m_Ubos[i].view = m_Adapter->GetCamera()->LookAt();
-            crossHairData.m_Ubos[i].proj = m_Adapter->getPerspective();
+            //data.m_Ubos[i].view = m_Adapter->GetCamera()->LookAt();
+            data.m_Ubos[i].proj = m_Adapter->getPerspective();
 
-            m_Adapter->rdr()->updateUniformBuffer(mesh->getUniformBuffers()->at(i), & crossHairData.m_Ubos);
+            m_Adapter->rdr()->updateUniformBuffer(mesh->getUniformBuffers()->at(i), & data.m_Ubos);
         }
 
-        mesh->setData(crossHairData);
+        mesh->setData(data);
     }
+
     VkDescriptorSetLayout Crosshair::createDescriptorSetLayout()
     {
          VkDescriptorSetLayoutBinding uboLayoutBinding{};

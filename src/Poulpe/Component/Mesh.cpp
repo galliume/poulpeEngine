@@ -24,19 +24,19 @@ namespace Poulpe
 
         for (size_t i = 0; i < listData.size(); i++) {
 
-            Data data;
-            auto mesh = std::make_unique<Mesh>();
+            Mesh* mesh = new Mesh();
             mesh->setName(name + '_' + std::to_string(i));
             mesh->setShaderName(shader);
 
             std::vector<Poulpe::Mesh::BBox> bboxs{};
 
+            Data data{};
             data.m_Name = name + '_' + textureNames[listData[i].materialId];
             data.m_Texture = textureNames[listData[i].materialId];
             data.m_Vertices = listData[i].vertices;
             data.m_Indices = listData[i].indices;
 
-            UniformBufferObject ubo;
+            UniformBufferObject ubo{};
             ubo.model = glm::mat4(1.0f);
             ubo.model = glm::translate(ubo.model, pos);
             ubo.model = glm::scale(ubo.model, scale);
@@ -90,7 +90,7 @@ namespace Poulpe
             mesh->setData(data);
             mesh->addBBox(box);
 
-            meshes.emplace_back(std::move(mesh.get()));
+            meshes.emplace_back(std::move(mesh));
         }
 
         return meshes;
