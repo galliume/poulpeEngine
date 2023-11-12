@@ -44,8 +44,11 @@ namespace Poulpe
 
     void RenderManager::cleanUp()
     {
-        m_DestroyManager->cleanEntities(m_EntityManager->getEntities());
-        m_DestroyManager->cleanEntities(m_EntityManager->getHUD());
+        m_DestroyManager->cleanEntities(*m_EntityManager->getEntities());
+
+        std::vector<Mesh*> hud = m_EntityManager->getHUD();
+        m_DestroyManager->cleanEntities(hud);
+
         m_DestroyManager->cleanShaders(m_ShaderManager->getShaders()->shaders);
         m_DestroyManager->cleanTextures(m_TextureManager->getTextures());
         m_DestroyManager->cleanTexture(m_TextureManager->getSkyboxTexture());
@@ -225,7 +228,7 @@ namespace Poulpe
         Basic basic = EntityFactory::create<Basic>(
             m_Renderer.get(), m_ShaderManager.get(), m_TextureManager.get(), descriptorPool);
 
-        for (auto entity : m_EntityManager->getEntities()) {
+        for (auto entity : *m_EntityManager->getEntities()) {
             entity->accept(& basic);
         }
     }

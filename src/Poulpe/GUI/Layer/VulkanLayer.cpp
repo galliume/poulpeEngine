@@ -69,7 +69,7 @@ namespace Poulpe
             m_DebugInfo.deviceProperties = m_RenderManager->getRendererAdapter()->rdr()->getDeviceProperties();
             m_DebugInfo.apiVersion = m_RenderManager->getRendererAdapter()->rdr()->getAPIVersion();
             m_DebugInfo.vendorID = m_RenderManager->getRendererAdapter()->rdr()->getVendor(m_DebugInfo.deviceProperties.vendorID);
-            m_DebugInfo.totalMeshesLoaded = m_RenderManager->getEntityManager()->getEntities().size();
+            m_DebugInfo.totalMeshesLoaded = m_RenderManager->getEntityManager()->getEntities()->size();
             m_DebugInfo.totalMeshesInstanced = m_RenderManager->getEntityManager()->getInstancedCount();
             m_DebugInfo.totalShadersLoaded = m_RenderManager->getShaderManager()->getShaders()->shaders.size();
             m_DebugInfo.textures = m_RenderManager->getTextureManager()->getTextures();

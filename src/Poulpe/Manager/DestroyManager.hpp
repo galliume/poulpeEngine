@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Poulpe/Component/Mesh.hpp"
+
 #include "Poulpe/Renderer/Vulkan/VulkanRenderer.hpp"
 
 namespace Poulpe
@@ -8,14 +9,21 @@ namespace Poulpe
     class DestroyManager
     {
     public:
-        DestroyManager();
+        DestroyManager() = default;
 
         //@todo should not be specific impl
         void setRenderer(VulkanRenderer* renderer);
         void addMemoryPool(DeviceMemoryPool* deviceMemoryPool) { m_DeviceMemoryPool = deviceMemoryPool; }
-        void cleanEntities(std::vector<Entity*> entities);
-        void cleanEntities(std::vector<Mesh*> entities);
-        void cleanEntity(Mesh* entity);
+
+        template<std::derived_from<Entity> T>
+        void cleanEntities(std::vector<std::shared_ptr<T>> const & entities);
+
+        template<std::derived_from<Entity> T>
+        void cleanEntities(std::vector<T*> const & entities);
+
+        template<std::derived_from<Entity> T>
+        void cleanEntity(T* entity);
+
         void cleanShaders(std::unordered_map<std::string, std::array<VkShaderModule, 2>> shaders);
         void cleanTextures(std::unordered_map<std::string, Texture> textures);
         void cleanTexture(Texture textures);

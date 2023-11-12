@@ -5,5 +5,5 @@ namespace Poulpe
     IVisitor::~IVisitor()
     {
 
-    };
+    }
 }

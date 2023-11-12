@@ -10,16 +10,7 @@ namespace Poulpe
 
     uint32_t EntityManager::getInstancedCount()
     {
-        //@wtf
-        uint32_t total = 0;
-
-        for (Entity* entity : m_Entities) {
-            Mesh* mesh = dynamic_cast<Mesh*>(entity);
-
-            if (mesh) total += 1;
-        }
-
-        return total;
+        return m_Entities.size();
     }
 
     void EntityManager::addEntity(Entity* entity)
@@ -30,12 +21,16 @@ namespace Poulpe
             Mesh* mesh = dynamic_cast<Mesh*>(entity);
             
             if (mesh) {
-                Data* data = mesh->getData();
-                Mesh* existingEntity = dynamic_cast<Mesh*>(m_Entities[m_LoadedEntities[mesh->getName().c_str()][1]]);
+                Entity::Data* data = mesh->getData();
+                std::shared_ptr<Mesh> existingEntity = std::dynamic_pointer_cast<Mesh>(
+                    m_Entities[m_LoadedEntities[mesh->getName().c_str()][1]]);
+
                 existingEntity->addUbos(data->m_Ubos);
 
                 UniformBufferObject ubo{};
-                glm::mat4 transform = glm::translate(glm::mat4(1), mesh->getBBox()->center) * glm::scale(glm::mat4(1), mesh->getBBox()->size);
+                glm::mat4 transform = glm::translate(glm::mat4(1), mesh->getBBox()->center) * glm::scale(glm::mat4(1),
+                    mesh->getBBox()->size);
+
                 ubo.model = mesh->getBBox()->position * transform;
                 existingEntity->getBBox()->mesh->addUbos({ ubo });
 
@@ -52,9 +47,9 @@ namespace Poulpe
     Entity* EntityManager::getEntityByName(std::string const & name)
     {
         auto it = std::find_if(m_Entities.cbegin(), m_Entities.cend(),
-            [name](Entity* entity) -> bool { return entity->getName() == name; });
+            [name](auto & entity) -> bool { return entity->getName() == name; });
 
-        return *it;
+        return it->get();
     }
 
     std::function<void()> EntityManager::load(nlohmann::json levelConfig, std::condition_variable & cv)

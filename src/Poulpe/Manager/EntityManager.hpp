@@ -16,7 +16,7 @@ namespace Poulpe
         void addHUD(std::vector<Mesh*> hud) override { m_HUD = std::move(hud); }
         void clear() override;
 
-        inline std::vector<Entity*> getEntities() override { return m_Entities; }
+        inline std::vector<std::shared_ptr<Entity>>* getEntities() override { return & m_Entities; }
         inline Mesh* getSkybox() override { return m_Skybox.get(); }
         inline uint32_t getTotalEntities() const { return m_Entities.size(); }
         inline std::unordered_map<std::string, std::array<uint32_t, 2>> getLoadedEntities() override { return m_LoadedEntities; }
@@ -30,7 +30,7 @@ namespace Poulpe
 
 
     private:
-        std::vector<Entity*> m_Entities;
+        std::vector<std::shared_ptr<Entity>> m_Entities;
         std::unordered_map<std::string, std::array<uint32_t, 2>> m_LoadedEntities;
         std::unique_ptr<Mesh> m_Skybox = nullptr;
         std::vector<Mesh*> m_HUD = {};
