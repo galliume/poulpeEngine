@@ -13,6 +13,8 @@ namespace Poulpe
 
     }
 
+    Skybox::~Skybox() {}
+
     void Skybox::visit(Entity* entity)
     {
         Mesh* mesh = dynamic_cast<Mesh*>(entity);
@@ -70,7 +72,7 @@ namespace Poulpe
 
         auto commandPool = m_Adapter->rdr()->createCommandPool();
 
-        Data data;
+        Entity::Data data;
         data.m_Texture = "skybox";
         data.m_Vertices = skyVertices;
         data.m_VertexBuffer = m_Adapter->rdr()->createVertexBuffer(commandPool, skyVertices);
@@ -79,7 +81,7 @@ namespace Poulpe
 
         vkDestroyCommandPool(m_Adapter->rdr()->getDevice(), commandPool, nullptr);
 
-        Buffer uniformBuffer = m_Adapter->rdr()->createUniformBuffers(1);
+        Entity::Buffer uniformBuffer = m_Adapter->rdr()->createUniformBuffers(1);
         mesh->getUniformBuffers()->emplace_back(uniformBuffer);
 
         setPushConstants(mesh);
@@ -208,7 +210,7 @@ namespace Poulpe
         pushConstants.view = m_Adapter->getCamera()->lookAt();
 
         mesh->applyPushConstants = [=, &pushConstants](VkCommandBuffer & commandBuffer, VkPipelineLayout pipelineLayout,
-            VulkanAdapter* adapter,  [[maybe_unused]] Data * data) {
+            VulkanAdapter* adapter,  [[maybe_unused]] Entity::Data * data) {
 
             pushConstants.data = glm::vec4(0.f, Poulpe::VulkanAdapter::s_AmbiantLight.load(),
                 Poulpe::VulkanAdapter::s_FogDensity.load(), 0.f);

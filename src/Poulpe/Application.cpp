@@ -25,11 +25,11 @@ namespace Poulpe
 
         glfwGetWindowSize(m_Window->get(), & width, & height);
 
-        auto input = std::make_shared<Poulpe::InputManager>(m_Window.get());
+        auto inputManager = std::make_shared<Poulpe::InputManager>(m_Window.get());
         auto cmdQueue = std::make_shared<Poulpe::CommandQueue>();
 
         Poulpe::Locator::setThreadPool(std::make_unique<ThreadPool>());
-        Poulpe::Locator::setInputManager(input);
+        Poulpe::Locator::setInputManager(inputManager);
         Poulpe::Locator::setCommandQueue(cmdQueue);
 
         m_RenderManager = std::make_shared<Poulpe::RenderManager>(m_Window.get());

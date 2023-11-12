@@ -2,32 +2,29 @@
 
 namespace Poulpe
 {
-    DestroyManager::DestroyManager()
-    {
-
-    }
-
     void DestroyManager::setRenderer(VulkanRenderer* renderer)
     {
         m_Renderer = renderer;
     }
 
-    void DestroyManager::cleanEntities(std::vector<Entity*> entities)
+    template<std::derived_from<Entity> T>
+    void DestroyManager::cleanEntities(std::vector<std::shared_ptr<T>> const & entities)
     {
         for (auto entity : entities) {
-            Mesh* mesh = dynamic_cast<Mesh*>(entity);
-            cleanEntity(mesh);
+            cleanEntity(entity.get());
         }
     }
 
-    void DestroyManager::cleanEntities(std::vector<Mesh*> entities)
+    template<std::derived_from<Entity> T>
+    void DestroyManager::cleanEntities(std::vector<T*> const & entities)
     {
-        for (auto mesh : entities) {
-            cleanEntity(mesh);
+        for (auto entity : entities) {
+            cleanEntity(entity);
         }
     }
 
-    void DestroyManager::cleanEntity(Mesh* entity)
+    template<std::derived_from<Entity> T>
+    void DestroyManager::cleanEntity(T* entity)
     {
         for (auto buffer : *entity->getUniformBuffers()) {
             m_Renderer->destroyBuffer(buffer.buffer);
@@ -63,4 +60,10 @@ namespace Poulpe
     {
         m_DeviceMemoryPool->clear();
     }
+
+    template void DestroyManager::cleanEntities<Entity>(std::vector<std::shared_ptr<Entity>> const & entities);
+    template void DestroyManager::cleanEntities<Mesh>(std::vector<std::shared_ptr<Mesh>> const & entities);
+
+    template void DestroyManager::cleanEntities<Entity>(std::vector<Entity*> const & entities);
+    template void DestroyManager::cleanEntities<Mesh>(std::vector<Mesh*> const & entities);
 }

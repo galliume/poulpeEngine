@@ -8,8 +8,10 @@ namespace Poulpe
     {
     public:
         Skybox(VulkanAdapter* adapter, ShaderManager* shaderManager, TextureManager* textureManager);
+        virtual ~Skybox();
 
         void visit(Entity* entity) override;
+
         VkDescriptorSetLayout createDescriptorSetLayout() override;
         std::vector<VkDescriptorSet> createDescriptorSet(Mesh* mesh) override;
         VkPipelineLayout createPipelineLayout(VkDescriptorSetLayout descriptorSetLayout) override;

@@ -1,5 +1,6 @@
 #include "Mesh.hpp"
 
+#include <filesystem>
 #include <stdexcept>
 
 namespace Poulpe

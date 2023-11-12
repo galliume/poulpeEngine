@@ -1,10 +1,13 @@
 #include "Entity.hpp"
 
-#include "Poulpe/Core/IVisitor.hpp"
-
 namespace Poulpe
 {
     void Entity::draw()
+    {
+
+    }
+
+    Entity::~Entity()
     {
 
     }
