@@ -4,11 +4,12 @@
 //#define TINYOBJLOADER_USE_MAPBOX_EARCUT
 //#include "mapbox/earcut.hpp"
 #include "tiny_obj_loader.h"
+
 #include <filesystem>
 
 namespace Poulpe
 {
-    std::vector<TinyObjData> TinyObjLoader::loadData(std::string path, bool shouldInverseTextureY)
+    std::vector<TinyObjData> TinyObjLoader::loadData(std::string const & path, bool shouldInverseTextureY)
     {
         std::vector<TinyObjData> dataList = {};
 

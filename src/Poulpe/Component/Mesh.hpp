@@ -1,15 +1,6 @@
 #pragma once
 
-#include "Poulpe/Component/Entity.hpp"
-
-#include "Poulpe/Core/Buffer.hpp"
-#include "Poulpe/Core/MeshData.hpp"
-#include "Poulpe/Core/TinyObjLoader.hpp"
-
-#include "Texture.hpp"
-
-#include "Vertex.hpp"
-#include "Vertex2D.hpp"
+#include "Entity.hpp"
 
 #include <functional>
 
@@ -26,10 +17,25 @@ namespace Poulpe
         float fogDensity;
     };
 
-    class VulkanAdapter;
+    class VulkanAdapter;//@todo should not be here
 
     class Mesh : public Entity
     {
+    public:
+        struct BBox
+        {
+            glm::mat4 position;
+            glm::vec3 center;
+            glm::vec3 size;
+            std::unique_ptr<Mesh> mesh;
+            float maxX;
+            float minX;
+            float maxY;
+            float minY;
+            float maxZ;
+            float minZ;
+        };
+
     public:
         Mesh();
         ~Mesh() = default;
@@ -38,14 +44,10 @@ namespace Poulpe
             std::vector<std::string> const & textureNames, std::string const & shader,
             glm::vec3 const & pos, glm::vec3 const & scale, glm::vec3 rotation,
             bool shouldInverseTextureY);
-
-        Data* getData() { return & m_Data; }
-        void setData(Data data) { m_Data = std::move(data); }
         
         inline std::vector<VkDescriptorSet> getDescriptorSets() { return m_DescriptorSets; }
         inline VkPipeline getGraphicsPipeline() { return m_GraphicsPipeline; }
         inline VkPipelineLayout getPipelineLayout() { return m_PipelineLayout; }
-        inline std::vector<Buffer>* getUniformBuffers() { return & m_UniformBuffers; }
         inline glm::vec4 getCameraPos() { return m_CameraPos; }
         inline VkDescriptorPool getDescriptorPool() { return m_DescriptorPool; }
         inline VkDescriptorSetLayout getDescriptorSetLayout() { return m_DescriptorSetLayout; }
@@ -66,17 +68,19 @@ namespace Poulpe
         void setIsDirty(bool dirty = true) { m_IsDirty.store(dirty); }
         void setHasBbox(bool hasBbox = false) { m_HasBbox = hasBbox; }
         bool hasBbox() { return m_HasBbox; }
+        
+        void addBBox(std::shared_ptr<BBox> bbox) { m_BoundingBox = std::move(bbox); }
+        std::shared_ptr<BBox> getBBox() { return m_BoundingBox; }
 
     private:
-        std::vector<Buffer> m_UniformBuffers;
         glm::vec4 m_CameraPos;
         std::vector<VkDescriptorSet> m_DescriptorSets;
         VkPipelineLayout m_PipelineLayout;
         VkPipeline m_GraphicsPipeline;
         VkDescriptorSetLayout m_DescriptorSetLayout;
         VkDescriptorPool m_DescriptorPool;
+        std::shared_ptr<BBox> m_BoundingBox;
 
-        Data m_Data;
         std::string m_ShaderName;
         std::atomic<bool> m_IsDirty{ true };
         bool m_HasBbox = true;

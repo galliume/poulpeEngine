@@ -19,6 +19,7 @@ namespace Poulpe
 
     private:
         mutable std::mutex m_Mutex;
+
         std::queue<std::shared_ptr<Command>> m_PreCmdQueue;
         std::queue<std::shared_ptr<Command>> m_PostCmdQueue;
     };

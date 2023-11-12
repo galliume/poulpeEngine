@@ -35,7 +35,7 @@ namespace Poulpe
 
         UniformBufferObject ubo{};
 
-        Data gridData;
+        Entity::Data gridData;
         gridData.m_Texture = "grid";
         gridData.m_TextureIndex = 0;
         gridData.m_VertexBuffer = m_Adapter->rdr()->createVertexBuffer(commandPool, vertices);
@@ -189,7 +189,7 @@ namespace Poulpe
         pc.view = m_Adapter->getCamera()->lookAt();
 
         mesh->applyPushConstants = [&pc](VkCommandBuffer & commandBuffer, VkPipelineLayout pipelineLayout,
-            VulkanAdapter* adapter, [[maybe_unused]] Data * data) {
+            VulkanAdapter* adapter, [[maybe_unused]] Entity::Data * data) {
             pc.point = glm::vec4(0.1f, 50.f, 0.f, 0.f);
             pc.view = adapter->getCamera()->lookAt();
             vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(Grid::pc), & pc);

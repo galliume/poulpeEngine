@@ -34,7 +34,7 @@ namespace Poulpe
 
         UniformBufferObject ubo{};
 
-        Data data;
+        Entity::Data data;
         data.m_Texture = "crosshair";
         data.m_TextureIndex = 0;
         data.m_VertexBuffer = m_Adapter->rdr()->createVertexBuffer(commandPool, vertices);
@@ -166,7 +166,7 @@ namespace Poulpe
         vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
         vertexInputInfo.vertexBindingDescriptionCount = 1;
         vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(Vertex::GetAttributeDescriptions().size());
-        vertexInputInfo.pVertexBindingDescriptions = &bDesc;
+        vertexInputInfo.pVertexBindingDescriptions = & bDesc;
         vertexInputInfo.pVertexAttributeDescriptions = attDesc.data();
 
         return vertexInputInfo;
@@ -178,9 +178,9 @@ namespace Poulpe
         pc.textureID = 0;
 
         mesh->applyPushConstants = [& pc](VkCommandBuffer & commandBuffer, VkPipelineLayout pipelineLayout,
-            [[maybe_unused]] VulkanAdapter* adapter, [[maybe_unused]] Data* data) {
+            [[maybe_unused]] VulkanAdapter* adapter, [[maybe_unused]] Entity::Data* data) {
             pc.textureID = VulkanAdapter::s_Crosshair;
-            vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(Crosshair::pc), &pc);
+            vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(Crosshair::pc), & pc);
         };
         mesh->setHasPushConstants();
     }
