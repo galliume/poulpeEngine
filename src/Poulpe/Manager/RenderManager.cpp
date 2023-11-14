@@ -5,17 +5,17 @@
 namespace Poulpe
 {    
     RenderManager::RenderManager(Window* window)
-        : m_Window(window)
     {
-        m_EntityManager = std::make_shared<Poulpe::EntityManager>();
-        m_Renderer = std::make_shared<Poulpe::VulkanAdapter>(m_Window, m_EntityManager.get());
-        m_ConfigManager = std::make_shared<Poulpe::ConfigManager>();
-        m_AudioManager = std::make_shared<Poulpe::AudioManager>();
-        m_TextureManager = std::make_shared<Poulpe::TextureManager>();
-        m_ShaderManager = std::make_shared<Poulpe::ShaderManager>();
-        m_SpriteAnimationManager = std::make_shared<Poulpe::SpriteAnimationManager>();
-        m_DestroyManager = std::make_shared<Poulpe::DestroyManager>();
-        m_Camera = std::make_shared<Poulpe::Camera>();
+        m_Window = std::unique_ptr< Window>(window);
+        m_EntityManager = std::make_unique<Poulpe::EntityManager>();
+        m_Renderer = std::make_unique<Poulpe::VulkanAdapter>(m_Window.get(), m_EntityManager.get());
+        m_ConfigManager = std::make_unique<Poulpe::ConfigManager>();
+        m_AudioManager = std::make_unique<Poulpe::AudioManager>();
+        m_TextureManager = std::make_unique<Poulpe::TextureManager>();
+        m_ShaderManager = std::make_unique<Poulpe::ShaderManager>();
+        m_SpriteAnimationManager = std::make_unique<Poulpe::SpriteAnimationManager>();
+        m_DestroyManager = std::make_unique<Poulpe::DestroyManager>();
+        m_Camera = std::make_unique<Poulpe::Camera>();
 
         m_Camera->init();
         m_Renderer->init();

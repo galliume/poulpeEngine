@@ -69,8 +69,8 @@ namespace Poulpe
         void setHasBbox(bool hasBbox = false) { m_HasBbox = hasBbox; }
         bool hasBbox() { return m_HasBbox; }
         
-        void addBBox(std::shared_ptr<BBox> bbox) { m_BoundingBox = std::move(bbox); }
-        std::shared_ptr<BBox> getBBox() { return m_BoundingBox; }
+        void addBBox(BBox* bbox) { m_BoundingBox = std::unique_ptr<BBox>(bbox); }
+        BBox* getBBox() { return m_BoundingBox.get(); }
 
     private:
         glm::vec4 m_CameraPos;
@@ -79,7 +79,7 @@ namespace Poulpe
         VkPipeline m_GraphicsPipeline;
         VkDescriptorSetLayout m_DescriptorSetLayout;
         VkDescriptorPool m_DescriptorPool;
-        std::shared_ptr<BBox> m_BoundingBox;
+        std::unique_ptr<BBox> m_BoundingBox;
 
         std::string m_ShaderName;
         std::atomic<bool> m_IsDirty{ true };
