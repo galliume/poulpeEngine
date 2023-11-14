@@ -18,6 +18,6 @@ namespace Poulpe
 
         virtual void addShader(const std::string& name, const std::string& vertPath, const std::string& fragPath) = 0;
         virtual std::function<void()> load(nlohmann::json config, std::condition_variable& cv) = 0;
-        virtual inline const std::shared_ptr<VulkanShaders> getShaders() const = 0;
+        virtual inline VulkanShaders* getShaders() const = 0;
     };
 }
