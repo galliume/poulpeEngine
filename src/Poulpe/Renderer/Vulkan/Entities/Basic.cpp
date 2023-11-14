@@ -92,7 +92,7 @@ namespace Poulpe
 
     void Basic::createBBoxEntity(Mesh* mesh)
     {
-        Mesh::BBox* box = mesh->getBBox().get();
+        Mesh::BBox* box = mesh->getBBox();
 
         UniformBufferObject ubo{};
         glm::mat4 transform = glm::translate(glm::mat4(1), box->center) * glm::scale(glm::mat4(1), box->size);

@@ -19,7 +19,7 @@ namespace Poulpe
         void setIsLoaded(bool loaded = true) override { m_IsLoaded = loaded; }
         void refresh(uint32_t levelIndex, bool showBbox = false, std::string_view skybox = "debug") override;
 
-        Window* getWindow() override { return m_Window; }
+        Window* getWindow() override { return m_Window.get(); }
 
         Camera* getCamera() override { return m_Camera.get(); }
         VulkanAdapter* getRendererAdapter() override { return m_Renderer.get(); }
@@ -48,17 +48,16 @@ namespace Poulpe
         void loadData(std::string const & level);
 
     private:
-        Window* m_Window;
-
-        std::shared_ptr<VulkanAdapter> m_Renderer;
-        std::shared_ptr<Poulpe::Camera> m_Camera;
-        std::shared_ptr<Poulpe::TextureManager> m_TextureManager;
-        std::shared_ptr<Poulpe::SpriteAnimationManager> m_SpriteAnimationManager;
-        std::shared_ptr<Poulpe::EntityManager> m_EntityManager;
-        std::shared_ptr<Poulpe::ShaderManager> m_ShaderManager;
-        std::shared_ptr<Poulpe::AudioManager> m_AudioManager;
-        std::shared_ptr<Poulpe::ConfigManager> m_ConfigManager;
-        std::shared_ptr<Poulpe::DestroyManager> m_DestroyManager;
+        std::unique_ptr<Window> m_Window;
+        std::unique_ptr<VulkanAdapter> m_Renderer;
+        std::unique_ptr<Poulpe::Camera> m_Camera;
+        std::unique_ptr<Poulpe::TextureManager> m_TextureManager;
+        std::unique_ptr<Poulpe::SpriteAnimationManager> m_SpriteAnimationManager;
+        std::unique_ptr<Poulpe::EntityManager> m_EntityManager;
+        std::unique_ptr<Poulpe::ShaderManager> m_ShaderManager;
+        std::unique_ptr<Poulpe::AudioManager> m_AudioManager;
+        std::unique_ptr<Poulpe::ConfigManager> m_ConfigManager;
+        std::unique_ptr<Poulpe::DestroyManager> m_DestroyManager;
 
         bool m_IsLoaded{ false };
         bool m_Refresh{ false };
