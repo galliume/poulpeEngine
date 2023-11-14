@@ -8,15 +8,15 @@ namespace Poulpe
     }
 
     template<std::derived_from<Entity> T>
-    void DestroyManager::cleanEntities(std::vector<std::shared_ptr<T>> const & entities)
+    void DestroyManager::cleanEntities(std::vector<std::unique_ptr<T>> & entities)
     {
-        for (auto entity : entities) {
+        for (auto & entity : entities) {
             cleanEntity(entity.get());
         }
     }
 
     template<std::derived_from<Entity> T>
-    void DestroyManager::cleanEntities(std::vector<T*> const & entities)
+    void DestroyManager::cleanEntities(std::vector<T*> & entities)
     {
         for (auto entity : entities) {
             cleanEntity(entity);
@@ -61,9 +61,9 @@ namespace Poulpe
         m_DeviceMemoryPool->clear();
     }
 
-    template void DestroyManager::cleanEntities<Entity>(std::vector<std::shared_ptr<Entity>> const & entities);
-    template void DestroyManager::cleanEntities<Mesh>(std::vector<std::shared_ptr<Mesh>> const & entities);
+    template void DestroyManager::cleanEntities<Entity>(std::vector<std::unique_ptr<Entity>> & entities);
+    template void DestroyManager::cleanEntities<Mesh>(std::vector<std::unique_ptr<Mesh>> & entities);
 
-    template void DestroyManager::cleanEntities<Entity>(std::vector<Entity*> const & entities);
-    template void DestroyManager::cleanEntities<Mesh>(std::vector<Mesh*> const & entities);
+    template void DestroyManager::cleanEntities<Entity>(std::vector<Entity*> & entities);
+    template void DestroyManager::cleanEntities<Mesh>(std::vector<Mesh*> & entities);
 }
