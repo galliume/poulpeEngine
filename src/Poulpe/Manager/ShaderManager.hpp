@@ -12,14 +12,14 @@ namespace Poulpe
 
         void addShader(std::string const & name, std::string const & vertPath, std::string const & fragPath) override;
         std::function<void()> load(nlohmann::json config, std::condition_variable& cv) override;
-        inline const std::shared_ptr<VulkanShaders> getShaders() const override { return m_Shaders; };
+        inline VulkanShaders* getShaders() const override { return m_Shaders.get(); };
 
         void addRenderer(IRendererAdapter* renderer) { m_Renderer = renderer; };
         void clear();
         bool isLoadingDone() { return m_LoadingDone.load(); }
 
     private:
-        std::shared_ptr<VulkanShaders> m_Shaders = nullptr;
+        std::unique_ptr<VulkanShaders> m_Shaders = nullptr;
         IRendererAdapter* m_Renderer = nullptr;
         nlohmann::json m_Config;
         std::atomic_bool m_LoadingDone = false;

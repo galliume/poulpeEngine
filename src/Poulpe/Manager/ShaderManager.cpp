@@ -1,19 +1,20 @@
 #include "ShaderManager.hpp"
+
 #include "Poulpe/Core/Tools.hpp"
 
 namespace Poulpe
 {
     ShaderManager::ShaderManager()
     {
-        m_Shaders = std::make_shared<VulkanShaders>();
+        m_Shaders = std::make_unique<VulkanShaders>();
     }
 
-    std::function<void()> ShaderManager::load(nlohmann::json config, std::condition_variable& cv)
+    std::function<void()> ShaderManager::load(nlohmann::json config, std::condition_variable & cv)
     {
         m_Config = config;
 
-        std::function shaderFuture = [this, &cv]() {
-            for (auto& shader : m_Config["shader"].items()) {
+        std::function shaderFuture = [this, & cv]() {
+            for (auto & shader : m_Config["shader"].items()) {
 
                 auto key = static_cast<std::string>(shader.key());
                 auto data = shader.value();
