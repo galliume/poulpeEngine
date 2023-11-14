@@ -191,13 +191,16 @@ namespace Poulpe
         Poulpe::Locator::getCommandQueue()->add(cmd);
     }
 
-    void VulkanLayer::updateRenderMode(VkPolygonMode mode)
+    void VulkanLayer::updateRenderMode()
     {
-        std::function<void()> request = [this, & mode]() {
-            Poulpe::VulkanAdapter::s_PolygoneMode.store(mode);
-            vkResetDescriptorPool(m_RenderManager->getRendererAdapter()->rdr()->getDevice(), m_ImGuiInfo->info.DescriptorPool, 0);
+        std::function<void()> request = [this]() {
+            m_RenderManager->refresh(m_LevelIndex.value(), m_ShowBBox, m_Skyboxs.at(m_SkyboxIndex));
+
+            while (!m_RenderManager->isLoaded()) {
+                //just loading.
+            };
+
             m_ImgDescDone = false;
-            m_RenderManager->forceRefresh();
         };
 
         Command cmd{request};
@@ -466,23 +469,34 @@ namespace Poulpe
         ImGui::SetNextItemOpen(m_DebugOpen);
         if ((m_DebugOpen = ImGui::CollapsingHeader("Debug")))
         {
-            ImGui::Text("%s", "Polygon mode"); 
+            std::unordered_map<unsigned int, std::string> resolutions { 
+                {0, "800x600"}, {1, "1200x720"}, {2, "1920x1080"}, {3, "2560x1440"} };
+
+            if (ImGui::BeginCombo("Resolutions:", resolutions.at(0).c_str())) {
+                for (auto reso : resolutions) {
+                    ImGui::Selectable(reso.second.c_str(), false);
+                }
+                ImGui::SetItemDefaultFocus();
+                ImGui::EndCombo();
+            }
+
+            ImGui::Text("%s", "Polygon mode");
             ImGui::SameLine();
 
             auto pm = Poulpe::VulkanAdapter::s_PolygoneMode.load();
             if (ImGui::RadioButton("Fill", &pm, VK_POLYGON_MODE_FILL)) {
-                updateRenderMode(VK_POLYGON_MODE_FILL);
+                updateRenderMode();
             };
             ImGui::SameLine();
             if (ImGui::RadioButton("Line", &pm, VK_POLYGON_MODE_LINE)) {
                 Poulpe::VulkanAdapter::s_PolygoneMode.store(VK_POLYGON_MODE_LINE);
-                updateRenderMode(VK_POLYGON_MODE_LINE);
+                updateRenderMode();
             };
 
             ImGui::SameLine();
             if (ImGui::RadioButton("Point", &pm, VK_POLYGON_MODE_POINT)) {
                 Poulpe::VulkanAdapter::s_PolygoneMode.store(VK_POLYGON_MODE_POINT);
-                updateRenderMode(VK_POLYGON_MODE_POINT);
+                updateRenderMode();
             }
 
             if (ImGui::Checkbox("Display grid", &m_ShowGrid)) {
@@ -495,10 +509,10 @@ namespace Poulpe
 
             ImGui::Text("FPS limit"); ImGui::SameLine();
             auto fps = Poulpe::Application::s_UnlockedFPS.load();
-            ImGui::RadioButton("30 fps", &fps, 0); ImGui::SameLine();
-            ImGui::RadioButton("60 fps", &fps, 1); ImGui::SameLine();
-            ImGui::RadioButton("120 fps", &fps, 2); ImGui::SameLine();
-            ImGui::RadioButton("unlocked", &fps, 3);
+            ImGui::RadioButton("30 fps", & fps, 0); ImGui::SameLine();
+            ImGui::RadioButton("60 fps", & fps, 1); ImGui::SameLine();
+            ImGui::RadioButton("120 fps", & fps, 2); ImGui::SameLine();
+            ImGui::RadioButton("unlocked", & fps, 3);
             if (fps != Poulpe::Application::s_UnlockedFPS.load()) {
                 Poulpe::Application::s_UnlockedFPS.store(fps);
             }
@@ -518,13 +532,13 @@ namespace Poulpe
         if ((m_FogOpen = ImGui::CollapsingHeader("Fog")))
         {
             auto fogD = Poulpe::VulkanAdapter::s_FogDensity.load();
-            ImGui::SliderFloat("Fog density", &fogD, 0.0f, 1.0f, "%.3f");
+            ImGui::SliderFloat("Fog density", & fogD, 0.0f, 1.0f, "%.3f");
             if (fogD != Poulpe::VulkanAdapter::s_FogDensity) {
                 Poulpe::VulkanAdapter::s_FogDensity.store(fogD);
             }
 
             auto fogC = Poulpe::VulkanAdapter::s_FogColor->load();
-            ImGui::ColorEdit3("Fog color", &fogC);
+            ImGui::ColorEdit3("Fog color", & fogC);
             if (fogC != Poulpe::VulkanAdapter::s_FogColor->load()) {
                 Poulpe::VulkanAdapter::s_FogColor->store(fogC);
             }
@@ -537,8 +551,8 @@ namespace Poulpe
             ImGui::SameLine();
             auto crossH = Poulpe::VulkanAdapter::s_Crosshair.load();
 
-            ImGui::RadioButton("Style 1", &crossH, 0); ImGui::SameLine();
-            ImGui::RadioButton("Style 2", &crossH, 1);
+            ImGui::RadioButton("Style 1", & crossH, 0); ImGui::SameLine();
+            ImGui::RadioButton("Style 2", & crossH, 1);
 
             if (crossH != Poulpe::VulkanAdapter::s_Crosshair.load()) {
                 Poulpe::VulkanAdapter::s_Crosshair.store(crossH);
