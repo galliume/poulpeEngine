@@ -18,12 +18,12 @@ namespace Poulpe
         uint64_t count = m_LoadedEntities.count(entity->getName().c_str());
 
         if (0 != count) {
-            Mesh* mesh = dynamic_cast<Mesh*>(entity);
+            auto mesh = dynamic_cast<Mesh*>(entity);
             
             if (mesh) {
                 Entity::Data* data = mesh->getData();
-                std::shared_ptr<Mesh> existingEntity = std::dynamic_pointer_cast<Mesh>(
-                    m_Entities[m_LoadedEntities[mesh->getName().c_str()][1]]);
+                auto existingEntity = dynamic_cast<Mesh*>(
+                  m_Entities[m_LoadedEntities[mesh->getName().c_str()][1]].get());
 
                 existingEntity->addUbos(data->m_Ubos);
 

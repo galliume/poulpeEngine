@@ -16,10 +16,10 @@ namespace Poulpe
         void addMemoryPool(DeviceMemoryPool* deviceMemoryPool) { m_DeviceMemoryPool = deviceMemoryPool; }
 
         template<std::derived_from<Entity> T>
-        void cleanEntities(std::vector<std::shared_ptr<T>> const & entities);
+        void cleanEntities(std::vector<std::unique_ptr<T>> & entities);
 
         template<std::derived_from<Entity> T>
-        void cleanEntities(std::vector<T*> const & entities);
+        void cleanEntities(std::vector<T*> & entities);
 
         template<std::derived_from<Entity> T>
         void cleanEntity(T* entity);

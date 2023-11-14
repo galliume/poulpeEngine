@@ -228,7 +228,7 @@ namespace Poulpe
         Basic basic = EntityFactory::create<Basic>(
             m_Renderer.get(), m_ShaderManager.get(), m_TextureManager.get(), descriptorPool);
 
-        for (auto entity : *m_EntityManager->getEntities()) {
+        for (auto & entity : *m_EntityManager->getEntities()) {
             entity->accept(& basic);
         }
     }
