@@ -44,7 +44,7 @@ namespace Poulpe {
         /**
         * Vulkan init functions, before main loop.
         **/
-        std::shared_ptr<VkRenderPass> createRenderPass(VkSampleCountFlagBits const & msaaSamples);
+        VkRenderPass* createRenderPass(VkSampleCountFlagBits const & msaaSamples);
 
         VkShaderModule createShaderModule(std::vector<char> const & code);
 
@@ -216,7 +216,7 @@ namespace Poulpe {
 
         void destroyBuffer(VkBuffer buffer);
 
-        void destroyRenderPass(std::shared_ptr<VkRenderPass> renderPass, VkCommandPool commandPool,
+        void destroyRenderPass(VkRenderPass* renderPass, VkCommandPool commandPool,
             std::vector<VkCommandBuffer> commandBuffers);
 
         void destroy();
@@ -276,7 +276,7 @@ namespace Poulpe {
 
         std::string getAPIVersion();
 
-        std::shared_ptr<DeviceMemoryPool> getDeviceMemoryPool() { return m_DeviceMemoryPool; }
+       DeviceMemoryPool* getDeviceMemoryPool() { return m_DeviceMemoryPool.get(); }
 
         void startMarker(VkCommandBuffer buffer, std::string const & name, float r, float g, float b, float a = 1.0);
 
@@ -378,7 +378,7 @@ namespace Poulpe {
         std::mutex m_MutexGraphicsPipeline;
 
         VkDeviceSize m_MaxMemoryHeap;
-        std::shared_ptr<DeviceMemoryPool> m_DeviceMemoryPool = nullptr;
+        std::unique_ptr<DeviceMemoryPool> m_DeviceMemoryPool = nullptr;
 
         VkFence m_FenceAcquireImage;
         VkFence m_FenceSubmit;

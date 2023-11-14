@@ -98,7 +98,7 @@ namespace Poulpe {
 
     void VulkanRenderer::initMemoryPool()
     {
-        m_DeviceMemoryPool = std::make_shared<DeviceMemoryPool>(m_DeviceProperties2, m_DeviceMaintenance3Properties);
+        m_DeviceMemoryPool = std::make_unique<DeviceMemoryPool>(m_DeviceProperties2, m_DeviceMaintenance3Properties);
     }
 
     std::string VulkanRenderer::getAPIVersion()
@@ -961,12 +961,12 @@ namespace Poulpe {
         return shaderModule;
     }
 
-    std::shared_ptr<VkRenderPass> VulkanRenderer::createRenderPass(VkSampleCountFlagBits const & msaaSamples)
+    VkRenderPass* VulkanRenderer::createRenderPass(VkSampleCountFlagBits const & msaaSamples)
     {
         SwapChainSupportDetails swapChainSupport = querySwapChainSupport(m_PhysicalDevice);
         VkSurfaceFormatKHR surfaceFormat = chooseSwapSurfaceFormat(swapChainSupport.formats);
 
-        std::shared_ptr<VkRenderPass> renderPass = std::make_shared<VkRenderPass>();
+        VkRenderPass* renderPass = new VkRenderPass();
 
         VkAttachmentDescription colorAttachment{};
         colorAttachment.format = surfaceFormat.format;
@@ -1037,7 +1037,7 @@ namespace Poulpe {
         renderPassInfo.dependencyCount = 1;
         renderPassInfo.pDependencies = & dependency;
 
-        VkResult result = vkCreateRenderPass(m_Device, & renderPassInfo, nullptr, renderPass.get());
+        VkResult result = vkCreateRenderPass(m_Device, & renderPassInfo, nullptr, renderPass);
 
         if (result != VK_SUCCESS) {
             PLP_FATAL("failed to create render pass!");
@@ -2306,11 +2306,11 @@ namespace Poulpe {
         vkDestroyBuffer(m_Device, buffer, nullptr);
     }
 
-    void VulkanRenderer::destroyRenderPass(std::shared_ptr<VkRenderPass> renderPass, VkCommandPool commandPool,
+    void VulkanRenderer::destroyRenderPass(VkRenderPass* renderPass, VkCommandPool commandPool,
         std::vector<VkCommandBuffer> commandBuffers)
     {
         vkFreeCommandBuffers(m_Device, commandPool, static_cast<uint32_t>(commandBuffers.size()), commandBuffers.data());
-        vkDestroyRenderPass(m_Device, *renderPass.get(), nullptr);
+        vkDestroyRenderPass(m_Device, *renderPass, nullptr);
         vkDestroyCommandPool(m_Device, commandPool, nullptr);
     }
 
