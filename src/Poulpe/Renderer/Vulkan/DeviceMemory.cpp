@@ -11,23 +11,23 @@ namespace Poulpe
         //, m_Usage(usage)
     {
         if (nullptr == m_Memory) {
-            m_Memory = std::make_shared<VkDeviceMemory>();
+            m_Memory = std::make_unique<VkDeviceMemory>();
             m_MaxSize = maxSize;
             allocateToMemory();
         }
     }
 
-    std::shared_ptr<VkDeviceMemory> DeviceMemory::getMemory()
+    VkDeviceMemory* DeviceMemory::getMemory()
     {
         if (nullptr == m_Memory) {
-            m_Memory = std::make_shared<VkDeviceMemory>();
+            m_Memory = std::make_unique<VkDeviceMemory>();
             m_Offset = 0;
             m_IsFull = false;
             m_IsAllocated = false;
             allocateToMemory();
         }
 
-        return m_Memory;
+        return m_Memory.get();
     }
 
     void DeviceMemory::allocateToMemory()
