@@ -17,7 +17,7 @@ namespace Poulpe
         Poulpe::Log::init();
         m_StartRun = std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::system_clock::now());
 
-        m_Window = std::make_shared<Window>();
+        m_Window = std::make_unique<Window>();
         m_Window->init("PoulpeEngine");
 
         int width{ 0 };
@@ -25,19 +25,20 @@ namespace Poulpe
 
         glfwGetWindowSize(m_Window->get(), & width, & height);
 
-        auto inputManager = std::make_shared<Poulpe::InputManager>(m_Window.get());
-        auto cmdQueue = std::make_shared<Poulpe::CommandQueue>();
+        auto* inputManager = new Poulpe::InputManager(m_Window.get());
+        auto* cmdQueue = new Poulpe::CommandQueue();
+        auto* threadPool = new Poulpe::ThreadPool();
 
-        Poulpe::Locator::setThreadPool(std::make_unique<ThreadPool>());
+        Poulpe::Locator::setThreadPool(threadPool);
         Poulpe::Locator::setInputManager(inputManager);
         Poulpe::Locator::setCommandQueue(cmdQueue);
 
-        m_RenderManager = std::make_shared<Poulpe::RenderManager>(m_Window.get());
+        m_RenderManager = std::make_unique<Poulpe::RenderManager>(m_Window.get());
         m_RenderManager->init();
 
         //todo move to layer manager and update application main loop accordingly
         //#ifdef PLP_DEBUG_BUILD
-            m_VulkanLayer = std::make_shared<Poulpe::VulkanLayer>();
+            m_VulkanLayer = std::make_unique<Poulpe::VulkanLayer>();
             m_VulkanLayer->addRenderManager(m_RenderManager.get());
             m_VulkanLayer->init(m_Window.get());
         //#endif
