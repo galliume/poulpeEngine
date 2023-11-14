@@ -76,7 +76,7 @@ namespace Poulpe
             glm::vec3 center = glm::vec3((xMin + xMax) / 2, (yMin + yMax) / 2, (zMin + zMax) / 2);
             glm::vec3 size = glm::vec3((xMax - xMin) / 2, (yMax - yMin) / 2, (zMax - zMin) / 2);
 
-            std::shared_ptr<Poulpe::Mesh::BBox> box = std::make_shared<Poulpe::Mesh::BBox>();
+            Poulpe::Mesh::BBox* box = new Poulpe::Mesh::BBox();
             box->position = data.m_Ubos.at(0).model;
             box->center = center;
             box->size = size;
