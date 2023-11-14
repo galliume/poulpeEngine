@@ -21,7 +21,7 @@ namespace Poulpe
     VulkanAdapter::VulkanAdapter(Window* window, EntityManager* entityManager)
         : m_Window(window), m_EntityManager(entityManager)
     {
-        m_Renderer = std::make_shared<VulkanRenderer>(window);
+        m_Renderer = std::make_unique<VulkanRenderer>(window);
     }
 
     VulkanAdapter::~VulkanAdapter()
@@ -34,7 +34,7 @@ namespace Poulpe
         m_RayPick = glm::vec3(0.0f);
         m_LightsPos.emplace_back(glm::vec3(0.5f, 4.5f, -3.00f));
         setPerspective();
-        m_RenderPass = m_Renderer->createRenderPass(m_Renderer->getMsaaSamples());
+        m_RenderPass = std::unique_ptr<VkRenderPass>(m_Renderer->createRenderPass(m_Renderer->getMsaaSamples()));
         
 //#ifndef  PLP_DEBUG_BUILD
 //        m_SwapChain = m_Renderer->CreateSwapChain(m_SwapChainImages);
@@ -605,11 +605,11 @@ namespace Poulpe
         for (VkDescriptorPool descriptorPool : m_DescriptorPools) {
             vkDestroyDescriptorPool(m_Renderer->getDevice(), descriptorPool, nullptr);
         }
-        m_Renderer->destroyRenderPass(m_RenderPass, m_CommandPoolSplash, m_CommandBuffersSplash);
-        m_Renderer->destroyRenderPass(m_RenderPass, m_CommandPoolEntities, m_CommandBuffersEntities);
-        m_Renderer->destroyRenderPass(m_RenderPass, m_CommandPoolBbox, m_CommandBuffersBbox);
-        m_Renderer->destroyRenderPass(m_RenderPass, m_CommandPoolSkybox, m_CommandBuffersSkybox);
-        m_Renderer->destroyRenderPass(m_RenderPass, m_CommandPoolHud, m_CommandBuffersHud);
+        m_Renderer->destroyRenderPass(m_RenderPass.get(), m_CommandPoolSplash, m_CommandBuffersSplash);
+        m_Renderer->destroyRenderPass(m_RenderPass.get(), m_CommandPoolEntities, m_CommandBuffersEntities);
+        m_Renderer->destroyRenderPass(m_RenderPass.get(), m_CommandPoolBbox, m_CommandBuffersBbox);
+        m_Renderer->destroyRenderPass(m_RenderPass.get(), m_CommandPoolSkybox, m_CommandBuffersSkybox);
+        m_Renderer->destroyRenderPass(m_RenderPass.get(), m_CommandPoolHud, m_CommandBuffersHud);
     }
 
     void VulkanAdapter::immediateSubmit(std::function<void(VkCommandBuffer cmd)> && function,

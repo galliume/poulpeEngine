@@ -21,7 +21,7 @@ namespace Poulpe
         m_Renderer->init();
         m_Renderer->addCamera(m_Camera.get());
         m_DestroyManager->setRenderer(m_Renderer->rdr());
-        m_DestroyManager->addMemoryPool(m_Renderer->rdr()->getDeviceMemoryPool().get());
+        m_DestroyManager->addMemoryPool(m_Renderer->rdr()->getDeviceMemoryPool());
         m_TextureManager->addConfig(m_ConfigManager->texturesConfig());
 
         nlohmann::json appConfig = m_ConfigManager->appConfig();
