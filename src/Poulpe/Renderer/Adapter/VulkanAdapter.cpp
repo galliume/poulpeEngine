@@ -227,8 +227,8 @@ namespace Poulpe
             m_Renderer->startMarker(m_CommandBuffersEntities[m_ImageIndex], "entities_drawing", 0.3, 0.2, 0.1);
 
 
-            for (auto entity : *m_EntityManager->getEntities()) {
-                std::shared_ptr<Mesh> mesh = std::dynamic_pointer_cast<Mesh>(entity);
+            for (auto & entity : *m_EntityManager->getEntities()) {
+                Mesh* mesh = dynamic_cast<Mesh*>(entity.get());
 
                 if (!mesh) continue;
 
@@ -250,7 +250,7 @@ namespace Poulpe
 
                     try {
                         m_Renderer->draw(m_CommandBuffersEntities[m_ImageIndex], mesh->getDescriptorSets().at(index),
-                            mesh.get(), mesh->getData(), mesh->getData()->m_Ubos.size());
+                            mesh, mesh->getData(), mesh->getData()->m_Ubos.size());
                     }
                     catch (std::exception & e) {
                         PLP_DEBUG("Draw error: {}", e.what());
@@ -346,15 +346,15 @@ namespace Poulpe
 
     void VulkanAdapter::drawBbox()
     {
-        auto entities = *m_EntityManager->getEntities();
+        auto & entities = *m_EntityManager->getEntities();
 
         if (entities.size() > 0)
         {
             beginRendering(m_CommandBuffersBbox[m_ImageIndex]);
             m_Renderer->startMarker(m_CommandBuffersBbox[m_ImageIndex], "bbox_drawing", 0.3, 0.2, 0.1);
 
-            for (auto entity : entities) {
-                std::shared_ptr<Mesh> mesh = std::dynamic_pointer_cast<Mesh>(entity);
+            for (auto & entity : entities) {
+                Mesh* mesh = dynamic_cast<Mesh*>(entity.get());
 
                 if (!mesh || !mesh->hasBbox()) continue;
                 auto && bbox = mesh->getBBox()->mesh;
