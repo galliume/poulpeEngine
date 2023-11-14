@@ -48,7 +48,7 @@ namespace Poulpe
 
         void attachObserver(IObserver* observer);
 
-        std::shared_ptr<ImGuiInfo> getImGuiInfo() { return m_ImGuiInfo; };
+        ImGuiInfo* getImGuiInfo() { return m_ImGuiInfo.get(); };
 
         bool m_DebugOpen{ true };
         bool m_ShowGrid{ true };
@@ -81,7 +81,7 @@ namespace Poulpe
         std::unordered_map<std::string, VkDescriptorSet> m_Textures{};
         std::vector<VkDescriptorSet> m_CmdQueueScenes;
         std::unordered_map<std::string, VkDescriptorSet> m_Entities;
-        std::shared_ptr<ImGuiInfo> m_ImGuiInfo;
+        std::unique_ptr<ImGuiInfo> m_ImGuiInfo;
 
         VkCommandPool m_ImGuiPool;
         VkFence m_Fence;

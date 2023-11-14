@@ -16,7 +16,7 @@ namespace Poulpe
 
     void VulkanLayer::init(Window* window)
     {
-        m_ImGuiInfo = std::make_shared<ImGuiInfo>(m_RenderManager->getRendererAdapter()->getImGuiInfo());
+        m_ImGuiInfo = std::make_unique<ImGuiInfo>(m_RenderManager->getRendererAdapter()->getImGuiInfo());
         Poulpe::Im::init(window->get(), *m_ImGuiInfo);
 
         m_RenderManager->getRendererAdapter()->immediateSubmit([&](VkCommandBuffer cmd) {
