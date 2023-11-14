@@ -93,8 +93,8 @@ namespace Poulpe
         void acquireNextImage();
 
     private:
-        std::shared_ptr<VulkanRenderer> m_Renderer = nullptr;
-        std::shared_ptr<VkRenderPass> m_RenderPass = nullptr;
+        std::unique_ptr<VulkanRenderer> m_Renderer = nullptr;
+        std::unique_ptr<VkRenderPass> m_RenderPass = nullptr;
         VkSwapchainKHR m_SwapChain = nullptr;
         std::vector<VkImage> m_SwapChainImages = {};
         std::vector<VkFramebuffer> m_SwapChainFramebuffers = {};
