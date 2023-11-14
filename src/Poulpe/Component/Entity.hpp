@@ -22,7 +22,7 @@ namespace Poulpe
 
         struct Buffer {
             VkBuffer buffer;
-            std::shared_ptr<DeviceMemory> memory;
+            DeviceMemory* memory;
             uint32_t offset;
             uint32_t size;
         };

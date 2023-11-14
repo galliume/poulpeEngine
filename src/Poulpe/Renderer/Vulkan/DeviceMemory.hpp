@@ -17,7 +17,7 @@ namespace Poulpe
         void bindImageToMemory(VkImage& image, VkDeviceSize size);
         bool isFull() { return m_IsFull; }
         uint32_t getOffset() { return m_Offset; }
-        std::shared_ptr<VkDeviceMemory> getMemory();
+        VkDeviceMemory* getMemory();
         bool hasEnoughSpaceLeft(VkDeviceSize size);
         void lock() { m_MutexMemory.lock(); }
         void unLock() { m_MutexMemory.unlock(); }
@@ -30,7 +30,7 @@ namespace Poulpe
         bool m_IsFull = false;
         bool m_IsAllocated = false;
 
-        std::shared_ptr<VkDeviceMemory> m_Memory = nullptr;
+        std::unique_ptr<VkDeviceMemory> m_Memory = nullptr;
 
         VkDevice m_Device;
         uint32_t m_MemoryType;

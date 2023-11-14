@@ -2,12 +2,14 @@
 
 namespace Poulpe
 {
-    DeviceMemoryPool::DeviceMemoryPool(VkPhysicalDeviceProperties2 deviceProperties, VkPhysicalDeviceMaintenance3Properties maintenceProperties)
+    DeviceMemoryPool::DeviceMemoryPool(VkPhysicalDeviceProperties2 deviceProperties,
+      VkPhysicalDeviceMaintenance3Properties maintenceProperties)
         : m_DeviceProperties(deviceProperties), m_MaintenceProperties(maintenceProperties)
     {
 
     }
-    std::shared_ptr<DeviceMemory> DeviceMemoryPool::get(VkDevice& device, VkDeviceSize size, uint32_t memoryType, VkBufferUsageFlags usage, bool forceNew)
+    DeviceMemory* DeviceMemoryPool::get(VkDevice & device, VkDeviceSize size, uint32_t memoryType,
+      VkBufferUsageFlags usage, bool forceNew)
     {
         if (m_MemoryAllocationCount > m_DeviceProperties.properties.limits.maxMemoryAllocationCount) {
             throw std::runtime_error("Max number of active allocation reached");
@@ -23,10 +25,10 @@ namespace Poulpe
             auto poolUsage = poolType->second.find(usage);
             if (poolType->second.end() != poolUsage) {
                 for (size_t i = 0; i < poolUsage->second.size(); ++i) {
-                    auto dm = poolUsage->second.at(i);
+                    auto & dm = poolUsage->second.at(i);
                     if (!dm->isFull() && dm->hasEnoughSpaceLeft(size)) {
                         //PLP_DEBUG("memory allocation recycle: size {} type {} usage {} full {} space left {}", size, memoryType, usage, dm->IsFull(), dm->HasEnoughSpaceLeft(size));
-                        return dm;
+                        return dm.get();
                     }
                 }
             }
@@ -35,12 +37,11 @@ namespace Poulpe
                 throw std::runtime_error("Max size of memory allocation reached");
             }
 
-            auto dm = std::make_shared<DeviceMemory>(device, memoryType, usage, maxSize);
-            m_Pool[memoryType][usage].emplace_back(dm);
+            m_Pool[memoryType][usage].emplace_back(std::make_unique<DeviceMemory>(device, memoryType, usage, maxSize));
             m_MemoryAllocationCount += 1;
             m_MemoryAllocationSize += maxSize;
             //PLP_DEBUG("memory allocation creation: count {}, size {} type {} usage {} ", m_MemoryAllocationCount, m_MemoryAllocationSize, memoryType, usage);
-            return dm;
+            return m_Pool[memoryType][usage].back().get();
         } else {
 
             if (m_MemoryAllocationSize + maxSize > m_MaintenceProperties.maxMemoryAllocationSize) {
@@ -48,12 +49,11 @@ namespace Poulpe
                 PLP_ERROR("Max size of memory allocation reached");
             }
 
-            auto dm = std::make_shared<DeviceMemory>(device, memoryType, usage, maxSize);
-            m_Pool[memoryType][usage].emplace_back(dm);
+            m_Pool[memoryType][usage].emplace_back(std::make_unique<DeviceMemory>(device, memoryType, usage, maxSize));
             m_MemoryAllocationCount += 1;
             m_MemoryAllocationSize += maxSize;
             //PLP_DEBUG("memory allocation creation: count {}, size {} type {} usage {} ", m_MemoryAllocationCount, m_MemoryAllocationSize, memoryType, usage);
-            return dm;
+            return m_Pool[memoryType][usage].back().get();
         }
     }
 

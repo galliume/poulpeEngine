@@ -1582,7 +1582,7 @@ namespace Poulpe {
 
         VkBuffer buffer = createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT);
         VkMemoryRequirements memRequirements;
-        vkGetBufferMemoryRequirements(m_Device, buffer, &memRequirements);
+        vkGetBufferMemoryRequirements(m_Device, buffer, & memRequirements);
         uint32_t size = ((memRequirements.size / memRequirements.alignment) + 1) * memRequirements.alignment;
 
         auto memoryType = findMemoryType(memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
