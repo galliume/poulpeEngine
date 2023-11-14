@@ -66,7 +66,7 @@ namespace Poulpe
         void loadAmbiantSounds();
         void loadLevels();
         void loadSkybox();
-        void updateRenderMode(VkPolygonMode mode);
+        void updateRenderMode();
 
     private:
       [[nodiscard]] VkDescriptorSet getImgDesc();
