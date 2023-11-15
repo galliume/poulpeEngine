@@ -153,6 +153,8 @@ namespace Poulpe {
 
         void updateStorageBuffer(Entity::Buffer buffer, std::vector<UniformBufferObject> bufferObjects);
 
+        void setResolution(unsigned int width, unsigned int height);
+
         /**
         * Vulkan drawing functions, in main loop
         **/
@@ -329,10 +331,10 @@ namespace Poulpe {
         std::string m_apiVersion;
         const uint32_t m_queueCount{ 2 };
 
-        Window* m_Window = nullptr;
+        Window* m_Window{ nullptr };
 
-        const std::vector<const char*> m_ValidationLayers = { "VK_LAYER_KHRONOS_validation" };
-        const std::vector<const char*> m_DeviceExtensions = {
+        const std::vector<const char*> m_ValidationLayers{ "VK_LAYER_KHRONOS_validation" };
+        const std::vector<const char*> m_DeviceExtensions{
             VK_KHR_PUSH_DESCRIPTOR_EXTENSION_NAME,
             VK_KHR_MAINTENANCE_4_EXTENSION_NAME,
             VK_KHR_SWAPCHAIN_EXTENSION_NAME,
@@ -350,38 +352,41 @@ namespace Poulpe {
         VkPhysicalDeviceProperties2 m_DeviceProperties2;
         VkPhysicalDeviceMaintenance3Properties m_DeviceMaintenance3Properties;
 
-        VkDevice m_Device = VK_NULL_HANDLE;
-        std::vector<VkQueue> m_GraphicsQueues;
-        std::vector<VkQueue> m_PresentQueues;
-        VkSurfaceKHR m_Surface = VK_NULL_HANDLE;
-        VkFormat m_SwapChainImageFormat;
-        VkExtent2D m_SwapChainExtent;
-        VkDebugUtilsMessengerEXT m_DebugMessengerCallback = VK_NULL_HANDLE;
-        QueueFamilyIndices m_QueueFamilyIndices = {};
-        VkSurfaceFormatKHR m_SurfaceFormat;
-        VkPresentModeKHR m_PresentMode;
-        SwapChainSupportDetails m_SwapChainSupport;
+        VkDevice m_Device{ VK_NULL_HANDLE };
+        std::vector<VkQueue> m_GraphicsQueues{};
+        std::vector<VkQueue> m_PresentQueues{};
+        VkSurfaceKHR m_Surface{ VK_NULL_HANDLE };
+        VkFormat m_SwapChainImageFormat{};
+        VkExtent2D m_SwapChainExtent{};
+        VkDebugUtilsMessengerEXT m_DebugMessengerCallback{ VK_NULL_HANDLE };
+        QueueFamilyIndices m_QueueFamilyIndices{};
+        VkSurfaceFormatKHR m_SurfaceFormat{};
+        VkPresentModeKHR m_PresentMode{};
+        SwapChainSupportDetails m_SwapChainSupport{};
 
-        std::vector<VkLayerProperties> m_LayersAvailable = {};
-        std::vector<VkExtensionProperties> m_Extensions = {};
-        std::vector<const char*> m_RequiredExtensions = {};
-        std::vector<VkFence> m_InFlightFences = {};
-        std::vector<VkFence> m_ImagesInFlight = {};
-        VkFence m_Fence;
+        std::vector<VkLayerProperties> m_LayersAvailable{};
+        std::vector<VkExtensionProperties> m_Extensions{};
+        std::vector<const char*> m_RequiredExtensions{};
+        std::vector<VkFence> m_InFlightFences{};
+        std::vector<VkFence> m_ImagesInFlight{};
+        VkFence m_Fence{};
 
-        VkSampleCountFlagBits m_MsaaSamples = VK_SAMPLE_COUNT_8_BIT;
+        VkSampleCountFlagBits m_MsaaSamples{ VK_SAMPLE_COUNT_8_BIT };
 
-        std::mutex m_MutexQueueSubmit;
-        std::mutex m_MutexDraw;
-        std::mutex m_MutexCmdBuffer;
-        std::mutex m_MutexAcquireNextImage;
-        std::mutex m_MutexGraphicsPipeline;
+        std::mutex m_MutexQueueSubmit{};
+        std::mutex m_MutexDraw{};
+        std::mutex m_MutexCmdBuffer{};
+        std::mutex m_MutexAcquireNextImage{};
+        std::mutex m_MutexGraphicsPipeline{};
 
-        VkDeviceSize m_MaxMemoryHeap;
-        std::unique_ptr<DeviceMemoryPool> m_DeviceMemoryPool = nullptr;
+        VkDeviceSize m_MaxMemoryHeap{};
+        std::unique_ptr<DeviceMemoryPool> m_DeviceMemoryPool{ nullptr };
 
-        VkFence m_FenceAcquireImage;
-        VkFence m_FenceSubmit;
-        VkFence m_FenceBuffer;
+        VkFence m_FenceAcquireImage{};
+        VkFence m_FenceSubmit{};
+        VkFence m_FenceBuffer{};
+
+        unsigned int m_Width{ 800 };
+        unsigned int m_Height{ 600 };
     };
 }
