@@ -207,6 +207,46 @@ namespace Poulpe
         Poulpe::Locator::getCommandQueue()->add(cmd);
     }
 
+    void VulkanLayer::updateResolution()
+    {
+        std::function<void()> request = [this]() {
+
+            unsigned int width{ 800 };
+            unsigned int height{ 600 };
+
+            //@todo list and save in config file
+            //@todo detect which are possible
+            switch (m_Resolution) {
+                case 1:
+                    width = 1200;
+                    height = 720;
+                break;
+                case 2:
+                    width = 1900;
+                    height = 1080;
+                break;
+                case 3:
+                    width = 2560;
+                    height = 1440;
+                break;
+                default:
+                    PLP_WARN("unknown resolution selected");
+            }
+            m_RenderManager->getRendererAdapter()->rdr()->setResolution(width, height);
+
+            m_RenderManager->refresh(m_LevelIndex.value(), m_ShowBBox, m_Skyboxs.at(m_SkyboxIndex));
+
+            while (!m_RenderManager->isLoaded()) {
+                //just loading.
+            };
+
+            m_ImgDescDone = false;
+        };
+
+        Command cmd{request};
+        Poulpe::Locator::getCommandQueue()->add(cmd);
+    }
+
     void VulkanLayer::render(double timeStep)
     {
         Poulpe::Im::newFrame();
@@ -271,14 +311,14 @@ namespace Poulpe
             ImGui::End();
 
             ImGui::Begin("3D View");
-                auto my_tex_w = static_cast<float>(m_RenderManager->getAppWidth());
-                auto my_tex_h = static_cast<float>(m_RenderManager->getAppHeight());
+                auto textureWidth = static_cast<float>(m_RenderManager->getAppWidth());
+                auto textureHeight = static_cast<float>(m_RenderManager->getAppHeight());
 
                 ImVec2 uv_min = ImVec2(0.0f, 0.0f);                 // Top-left
                 ImVec2 uv_max = ImVec2(1.0f, 1.0f);                 // Lower-right
                 ImVec4 tint_col = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);   // No tint
                 ImVec4 border_col = ImVec4(1.0f, 1.0f, 1.0f, 0.5f); // 50% opaque white
-                ImVec2 surface = ImVec2(my_tex_w, my_tex_h);
+                ImVec2 surface = ImVec2(textureWidth, textureHeight);
 
                 if (m_ImgDescDone) ImGui::Image(m_ImgDesc, surface, uv_min, uv_max, tint_col, border_col);
             ImGui::End();
@@ -472,11 +512,16 @@ namespace Poulpe
             std::unordered_map<unsigned int, std::string> resolutions { 
                 {0, "800x600"}, {1, "1200x720"}, {2, "1920x1080"}, {3, "2560x1440"} };
 
-            if (ImGui::BeginCombo("Resolutions:", resolutions.at(0).c_str())) {
+            if (ImGui::BeginCombo("Resolutions", resolutions.at(m_Resolution).c_str())) {
                 for (auto reso : resolutions) {
-                    ImGui::Selectable(reso.second.c_str(), false);
+                    const bool isSelected = m_Resolution == reso.first;
+                    
+                    if (ImGui::Selectable(reso.second.c_str(), isSelected)) {
+                        m_Resolution = reso.first;
+                        ImGui::SetItemDefaultFocus();
+                        updateResolution();
+                    }
                 }
-                ImGui::SetItemDefaultFocus();
                 ImGui::EndCombo();
             }
 
@@ -484,26 +529,26 @@ namespace Poulpe
             ImGui::SameLine();
 
             auto pm = Poulpe::VulkanAdapter::s_PolygoneMode.load();
-            if (ImGui::RadioButton("Fill", &pm, VK_POLYGON_MODE_FILL)) {
+            if (ImGui::RadioButton("Fill", & pm, VK_POLYGON_MODE_FILL)) {
                 updateRenderMode();
             };
             ImGui::SameLine();
-            if (ImGui::RadioButton("Line", &pm, VK_POLYGON_MODE_LINE)) {
+            if (ImGui::RadioButton("Line", & pm, VK_POLYGON_MODE_LINE)) {
                 Poulpe::VulkanAdapter::s_PolygoneMode.store(VK_POLYGON_MODE_LINE);
                 updateRenderMode();
             };
 
             ImGui::SameLine();
-            if (ImGui::RadioButton("Point", &pm, VK_POLYGON_MODE_POINT)) {
+            if (ImGui::RadioButton("Point", & pm, VK_POLYGON_MODE_POINT)) {
                 Poulpe::VulkanAdapter::s_PolygoneMode.store(VK_POLYGON_MODE_POINT);
                 updateRenderMode();
             }
 
-            if (ImGui::Checkbox("Display grid", &m_ShowGrid)) {
+            if (ImGui::Checkbox("Display grid", & m_ShowGrid)) {
                 m_RenderManager->getRendererAdapter()->showGrid(m_ShowGrid);
             }
 
-            if (ImGui::Checkbox("Display bbox", &m_ShowBBox)) {
+            if (ImGui::Checkbox("Display bbox", & m_ShowBBox)) {
                 //m_RenderManager->SetDrawBbox(m_ShowBBox);
             }
 
@@ -522,7 +567,7 @@ namespace Poulpe
         if ((m_LightOpen = ImGui::CollapsingHeader("Light")))
         {
             auto ambiant = Poulpe::VulkanAdapter::s_AmbiantLight.load();
-            ImGui::SliderFloat("Ambiant light", &ambiant, 0.0f, 1.0f, "%.3f");
+            ImGui::SliderFloat("Ambiant light", & ambiant, 0.0f, 1.0f, "%.3f");
             if (ambiant != Poulpe::VulkanAdapter::s_AmbiantLight.load()) {
                 Poulpe::VulkanAdapter::s_AmbiantLight.store(ambiant);
             }
@@ -562,7 +607,7 @@ namespace Poulpe
         ImGui::SetNextItemOpen(m_OtherOpen);
         if ((m_OtherOpen = ImGui::CollapsingHeader("Other")))
         {
-            ImGui::Checkbox("Show ImGui demo", &m_ShowDemo);
+            ImGui::Checkbox("Show ImGui demo", & m_ShowDemo);
         }
 
         m_RenderManager->getWindow()->setVSync(m_VSync);
@@ -602,7 +647,7 @@ namespace Poulpe
 
             ImGui::SameLine();
 
-            if (ImGui::Checkbox("Loop", &m_Looping)) {
+            if (ImGui::Checkbox("Loop", & m_Looping)) {
                 std::function<void()> request = [this]() {
                     m_RenderManager->getAudioManager()->toggleLooping();
                 };

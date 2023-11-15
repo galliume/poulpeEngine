@@ -23,7 +23,7 @@ namespace Poulpe {
     static void DestroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT debugMessenger,
         VkAllocationCallbacks const * pAllocator)
     {
-        auto func = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, 
+        auto func = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance,
             "vkDestroyDebugUtilsMessengerEXT");
         if (func != nullptr) {
             func(instance, debugMessenger, pAllocator);
@@ -91,9 +91,9 @@ namespace Poulpe {
         fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
         //VkFence fence;
 
-        vkCreateFence(m_Device, &fenceInfo, nullptr, &m_FenceAcquireImage);
-        vkCreateFence(m_Device, &fenceInfo, nullptr, &m_FenceSubmit);
-        vkCreateFence(m_Device, &fenceInfo, nullptr, &m_FenceBuffer);
+        vkCreateFence(m_Device, & fenceInfo, nullptr, & m_FenceAcquireImage);
+        vkCreateFence(m_Device, & fenceInfo, nullptr, & m_FenceSubmit);
+        vkCreateFence(m_Device, & fenceInfo, nullptr, & m_FenceBuffer);
     }
 
     void VulkanRenderer::initMemoryPool()
@@ -185,9 +185,8 @@ namespace Poulpe {
         m_SwapChainSupport = querySwapChainSupport(m_PhysicalDevice);
         m_SurfaceFormat = chooseSwapSurfaceFormat(m_SwapChainSupport.formats);
         m_PresentMode = chooseSwapPresentMode(m_SwapChainSupport.presentModes);
-        VkExtent2D extent = chooseSwapExtent(m_SwapChainSupport.capabilities);
+        m_SwapChainExtent = chooseSwapExtent(m_SwapChainSupport.capabilities);
         m_SwapChainImageFormat = m_SurfaceFormat.format;
-        m_SwapChainExtent = extent;
     }
 
     void VulkanRenderer::enumerateExtensions()
@@ -486,23 +485,18 @@ namespace Poulpe {
         return VK_PRESENT_MODE_FIFO_KHR;
     }
 
-    VkExtent2D VulkanRenderer::chooseSwapExtent(VkSurfaceCapabilitiesKHR const & capabilities)
+    VkExtent2D VulkanRenderer::chooseSwapExtent([[maybe_unused]] VkSurfaceCapabilitiesKHR const & capabilities)
     {
-        if (capabilities.currentExtent.width != UINT32_MAX) {
-            return capabilities.currentExtent;
-        }
+        //if (capabilities.currentExtent.width != UINT32_MAX) {
+        //    return capabilities.currentExtent;
+        //}
 
-        int width{ 0 };
-        int height{ 0 };
+        VkExtent2D actualExtent = {m_Width, m_Height};
 
-        glfwGetFramebufferSize(m_Window->get(), & width, & height);
-
-        VkExtent2D actualExtent = {static_cast<uint32_t>(width), static_cast<uint32_t>(height)};
-
-        actualExtent.width = std::clamp(actualExtent.width, capabilities.minImageExtent.width,
-            capabilities.maxImageExtent.width);
-        actualExtent.height = std::clamp(actualExtent.height, capabilities.minImageExtent.height,
-            capabilities.maxImageExtent.height);
+        //actualExtent.width = std::clamp(actualExtent.width, capabilities.minImageExtent.width,
+        //    capabilities.maxImageExtent.width);
+        //actualExtent.height = std::clamp(actualExtent.height, capabilities.minImageExtent.height,
+        //    capabilities.maxImageExtent.height);
 
         return actualExtent;
     }
@@ -2373,5 +2367,11 @@ namespace Poulpe {
     {
         vkQueueWaitIdle(m_PresentQueues[0]);
         vkDeviceWaitIdle(m_Device);
+    }
+
+    void VulkanRenderer::setResolution(unsigned int width, unsigned int height)
+    {
+        m_Width = width;
+        m_Height = height;
     }
 }
