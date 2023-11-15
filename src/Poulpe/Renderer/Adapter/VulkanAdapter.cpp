@@ -24,11 +24,6 @@ namespace Poulpe
         m_Renderer = std::make_unique<VulkanRenderer>(window);
     }
 
-    VulkanAdapter::~VulkanAdapter()
-    {
-
-    }
-
     void VulkanAdapter::init()
     {
         m_RayPick = glm::vec3(0.0f);
