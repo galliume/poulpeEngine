@@ -386,7 +386,8 @@ namespace Poulpe {
         VkFence m_FenceSubmit{};
         VkFence m_FenceBuffer{};
 
-        unsigned int m_Width{ 800 };
-        unsigned int m_Height{ 600 };
+        //@todo move to config file
+        unsigned int m_Width{ 2560 };
+        unsigned int m_Height{ 1440 };
     };
 }
