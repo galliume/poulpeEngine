@@ -86,11 +86,13 @@ namespace Poulpe
             std::unordered_map<std::string, VkDescriptorSet> tmpTextures{};
             auto const & textures = m_RenderManager->getTextureManager()->getTextures();
 
-            for (auto const & texture : textures) {
-                if (!texture.second.isPublic()) continue;
+            for (auto const & [name, texture] : textures) {
+                if (!texture.isPublic()) continue;
 
-                VkDescriptorSet imgDset = ImGui_ImplVulkan_AddTexture(texture.second.getSampler(), texture.second.getImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-                tmpTextures[texture.second.getName()] = imgDset;
+                VkDescriptorSet imgDset = ImGui_ImplVulkan_AddTexture(texture.getSampler(), texture.getImageView(),
+                    VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+
+                tmpTextures[texture.getName()] = imgDset;
             }
             std::swap(tmpTextures, m_Textures);
         };
@@ -149,6 +151,8 @@ namespace Poulpe
                 skybox->setDescriptorSets(entity->createDescriptorSet(skybox));
 
                 cv.notify_one(); //useful?
+
+                entity.release();
             }
         };
 
@@ -513,17 +517,34 @@ namespace Poulpe
                 {0, "800x600"}, {1, "1200x720"}, {2, "1920x1080"}, {3, "2560x1440"} };
 
             if (ImGui::BeginCombo("Resolutions", resolutions.at(m_Resolution).c_str())) {
-                for (auto reso : resolutions) {
-                    const bool isSelected = m_Resolution == reso.first;
+                for (auto const & [index, reso] : resolutions) {
+                    const bool isSelected = m_Resolution == index;
                     
-                    if (ImGui::Selectable(reso.second.c_str(), isSelected)) {
-                        m_Resolution = reso.first;
+                    if (ImGui::Selectable(reso.c_str(), isSelected)) {
+                        m_Resolution = index;
                         ImGui::SetItemDefaultFocus();
                         updateResolution();
                     }
                 }
                 ImGui::EndCombo();
             }
+            
+            //@todo finish ratio
+            //std::unordered_map<unsigned int, std::string> ratios { {0, "16:9"}, {1, "4:3"} };
+
+            //if (ImGui::BeginCombo("Ratio", ratios.at(m_Ratio).c_str())) {
+            //    for (auto const & [index, ratio] : ratios) {
+            //        const bool isSelected = m_Ratio == index;
+            //        
+            //        if (ImGui::Selectable(ratio.c_str(), isSelected)) {
+            //            m_Ratio = index;
+            //            ImGui::SetItemDefaultFocus();
+            //            updateResolution();
+            //        }
+            //    }
+            //    ImGui::EndCombo();
+            //}
+
 
             ImGui::Text("%s", "Polygon mode");
             ImGui::SameLine();

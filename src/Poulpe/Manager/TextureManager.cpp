@@ -4,9 +4,9 @@
 
 namespace Poulpe
 {
-    std::function<void()> TextureManager::load(std::condition_variable& cv)
+    std::function<void()> TextureManager::load(std::condition_variable & cv)
     {
-        std::function<void()> textureFuture = [=, this, &cv]() {
+        std::function<void()> textureFuture = [this, & cv]() {
             for (auto& texture : m_TextureConfig["textures"].items()) {
                 addTexture(texture.key(), texture.value(), true);
             }
@@ -18,10 +18,10 @@ namespace Poulpe
         return textureFuture;
     }
 
-    std::function<void()> TextureManager::loadSkybox(std::string_view skybox, std::condition_variable& cv)
+    std::function<void()> TextureManager::loadSkybox(std::string_view skybox, std::condition_variable & cv)
     {
         m_SkyboxName = skybox;
-        std::function<void()> skyboxFuture = [=, this, &cv]() {
+        std::function<void()> skyboxFuture = [this, & cv]() {
             std::vector<std::string>skyboxImages;
             for (auto& texture : m_TextureConfig["skybox"][m_SkyboxName].items()) {
                 skyboxImages.emplace_back(texture.value());
@@ -34,7 +34,7 @@ namespace Poulpe
         return skyboxFuture;
     }
 
-    void TextureManager::addSkyBox(const std::vector<std::string>& skyboxImages)
+    void TextureManager::addSkyBox(std::vector<std::string> const & skyboxImages)
     {
         m_Skybox = {};
 
@@ -47,7 +47,7 @@ namespace Poulpe
                 return;
             }
 
-            stbi_uc* pixels = stbi_load(path.c_str(), &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
+            stbi_uc* pixels = stbi_load(path.c_str(), & texWidth, & texHeight, & texChannels, STBI_rgb_alpha);
 
             if (!pixels) {
                 PLP_FATAL("failed to load skybox texture image %s", path);
@@ -81,11 +81,11 @@ namespace Poulpe
         m_Skybox.setChannels(texChannels);
         m_Skybox.setIsPublic(true);
 
-        vkFreeCommandBuffers(m_Renderer->rdr()->getDevice(), commandPool, 1, &commandBuffer);
+        vkFreeCommandBuffers(m_Renderer->rdr()->getDevice(), commandPool, 1, & commandBuffer);
         vkDestroyCommandPool(m_Renderer->rdr()->getDevice(), commandPool, nullptr);
     }
 
-    void TextureManager::addTexture(const std::string& name, const std::string& path, bool isPublic)
+    void TextureManager::addTexture(std::string const & name, std::string const & path, bool isPublic)
     {
         if (!std::filesystem::exists(path.c_str())) {
             PLP_FATAL("texture file {} does not exits.", path);
@@ -100,7 +100,7 @@ namespace Poulpe
         m_Paths.insert({ name, path });
 
         int texWidth = 0, texHeight = 0, texChannels = 0;
-        stbi_uc* pixels = stbi_load(path.c_str(), &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
+        stbi_uc* pixels = stbi_load(path.c_str(), & texWidth, & texHeight, & texChannels, STBI_rgb_alpha);
 
         if (!pixels) {
             PLP_FATAL("failed to load texture image %s", name);

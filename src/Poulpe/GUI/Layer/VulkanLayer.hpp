@@ -102,6 +102,7 @@ namespace Poulpe
         std::vector<IObserver> m_Observers{};
         static bool s_OpenAbout;
         bool m_ImgDescDone = false;
-        unsigned int m_Resolution{ 0 };
+        unsigned int m_Resolution{ 3 };
+        unsigned int m_Ratio{ 0 };
     };
 }
