@@ -1761,7 +1761,7 @@ namespace Poulpe {
 
             auto memory = buffer.memory->getMemory();
             void* data;
-            vkMapMemory(m_Device, *memory, buffer.offset, buffer.size, 0, &data);
+            vkMapMemory(m_Device, *memory, buffer.offset, buffer.size, 0, & data);
             memcpy(data, uniformBufferObjects->data(), buffer.size);
             vkUnmapMemory(m_Device, *memory);
 
