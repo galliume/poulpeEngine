@@ -14,6 +14,7 @@ namespace Poulpe {
         static InputManager* getInputManager() { return m_InputManager.get(); }
         static CommandQueue* getCommandQueue() { return m_CommandQueue.get(); }
 
+        //@todo inject with Interface not direct Impl
         static void setThreadPool(ThreadPool* threadPool) {
           m_ThreadPool = std::unique_ptr<ThreadPool>(threadPool); }
 

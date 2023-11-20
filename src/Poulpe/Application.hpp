@@ -26,7 +26,6 @@ namespace Poulpe
     private:
         static Application* s_Instance;
 
-        std::unique_ptr<Poulpe::Window> m_Window;
         std::unique_ptr<Poulpe::RenderManager> m_RenderManager;
         std::unique_ptr<Poulpe::VulkanLayer> m_VulkanLayer;
 
