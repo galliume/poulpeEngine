@@ -17,15 +17,15 @@ namespace Poulpe
         Poulpe::Log::init();
         m_StartRun = std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::system_clock::now());
 
-        m_Window = std::make_unique<Window>();
-        m_Window->init("PoulpeEngine");
+        auto* window = new Window();
+        window->init("PoulpeEngine");
 
         int width{ 0 };
         int height{ 0 };
 
-        glfwGetWindowSize(m_Window->get(), & width, & height);
+        glfwGetWindowSize(window->get(), & width, & height);
 
-        auto* inputManager = new Poulpe::InputManager(m_Window.get());
+        auto* inputManager = new Poulpe::InputManager(window);
         auto* cmdQueue = new Poulpe::CommandQueue();
         auto* threadPool = new Poulpe::ThreadPool();
 
@@ -33,14 +33,14 @@ namespace Poulpe
         Poulpe::Locator::setInputManager(inputManager);
         Poulpe::Locator::setCommandQueue(cmdQueue);
 
-        m_RenderManager = std::make_unique<Poulpe::RenderManager>(m_Window.get());
+        m_RenderManager = std::make_unique<Poulpe::RenderManager>(window);
         m_RenderManager->init();
 
         //todo move to layer manager and update application main loop accordingly
         //#ifdef PLP_DEBUG_BUILD
             m_VulkanLayer = std::make_unique<Poulpe::VulkanLayer>();
             m_VulkanLayer->addRenderManager(m_RenderManager.get());
-            m_VulkanLayer->init(m_Window.get());
+            m_VulkanLayer->init(window);
         //#endif
     }
 
@@ -59,7 +59,7 @@ namespace Poulpe
 
         std::mutex mutex;
 
-         while (!glfwWindowShouldClose(m_Window->get())) {
+         while (!glfwWindowShouldClose(m_RenderManager->getWindow()->get())) {
 
             if (Application::s_UnlockedFPS.load() == 0) {
                 maxFPS = 30.0;
@@ -103,7 +103,7 @@ namespace Poulpe
         Poulpe::Im::destroy();
         m_RenderManager->cleanUp();
 
-        glfwDestroyWindow(m_Window.get()->get());
+        glfwDestroyWindow(m_RenderManager->getWindow()->get());
         glfwTerminate();
     }
 }
