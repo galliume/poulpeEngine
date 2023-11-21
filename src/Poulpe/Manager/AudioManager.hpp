@@ -1,5 +1,8 @@
 #pragma once
 
+#define MA_NO_THREADING
+#define MA_NO_DEVICE_IO
+
 #include "IAudioManager.hpp"
 
 namespace Poulpe

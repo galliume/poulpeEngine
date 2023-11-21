@@ -570,7 +570,8 @@ namespace Poulpe
             }
 
             if (ImGui::Checkbox("Display bbox", & m_ShowBBox)) {
-                //m_RenderManager->SetDrawBbox(m_ShowBBox);
+                //m_RenderManager->setDrawBbox(m_ShowBBox);
+                updateLevel();
             }
 
             ImGui::Text("FPS limit"); ImGui::SameLine();

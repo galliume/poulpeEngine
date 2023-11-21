@@ -22,24 +22,24 @@ namespace Poulpe
         glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
 //#endif
 
-        m_Window = glfwCreateWindow(WIDTH, HEIGHT, windowTitle.data(), nullptr, nullptr);
+        m_Window = UniqueGLFWWindowPtr(glfwCreateWindow(WIDTH, HEIGHT, windowTitle.data(), nullptr, nullptr));
 
         //GLFWimage images[1]; 
         //images[0].pixels = stbi_load("./assets/mpoulpe.png", &images[0].width, &images[0].height, 0, 4);
         //glfwSetWindowIcon(m_Window, 1, images); 
         //stbi_image_free(images[0].pixels);
 
-        glfwSetWindowSizeLimits(m_Window, 800, 600, 2048, 1080);
+        glfwSetWindowSizeLimits(m_Window.get(), 800, 600, 2048, 1080);
           
         const GLFWvidmode * mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
 
         const int maxWidth = mode->width;
         const int maxHeight = mode->height; 
 
-        glfwSetWindowMonitor(m_Window, NULL, (maxWidth/2)-(WIDTH/2), (maxHeight/2) - (HEIGHT/2), WIDTH, HEIGHT, GLFW_DONT_CARE);
-        glfwSetWindowUserPointer(m_Window, this);
+        glfwSetWindowMonitor(m_Window.get(), NULL, (maxWidth/2)-(WIDTH/2), (maxHeight/2) - (HEIGHT/2), WIDTH, HEIGHT, GLFW_DONT_CARE);
+        glfwSetWindowUserPointer(m_Window.get(), this);
 
-        glfwSetFramebufferSizeCallback(m_Window, []([[maybe_unused]] GLFWwindow* glfwWindow, [[maybe_unused]] int width, [[maybe_unused]] int height) {
+        glfwSetFramebufferSizeCallback(m_Window.get(), []([[maybe_unused]] GLFWwindow* glfwWindow, [[maybe_unused]] int width, [[maybe_unused]] int height) {
             Poulpe::Window::m_FramebufferResized = true;
         });
 
@@ -50,7 +50,7 @@ namespace Poulpe
     bool Window::isMinimized()
     {
         int width = 0, height = 0;
-        glfwGetFramebufferSize(m_Window, &width, &height);
+        glfwGetFramebufferSize(m_Window.get(), &width, &height);
 
         return (width == 0 || height == 0);
     }
@@ -62,7 +62,7 @@ namespace Poulpe
 
     void Window::quit()
     {
-        glfwSetWindowShouldClose(m_Window, true);
+        glfwSetWindowShouldClose(m_Window.get(), true);
     }
 
     void Window::hide()

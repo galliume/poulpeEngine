@@ -1,5 +1,7 @@
 #include "Application.hpp"
 
+#include "PoulpeEngineConfig.h"
+
 namespace Poulpe
 {
     std::atomic<int> Application::s_UnlockedFPS{ 1 };
@@ -15,10 +17,14 @@ namespace Poulpe
     void Application::init()
     {
         Poulpe::Log::init();
-        m_StartRun = std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::system_clock::now());
+        m_StartRun = std::chrono::time_point_cast<std::chrono::milliseconds>(
+          std::chrono::system_clock::now());
 
         auto* window = new Window();
-        window->init("PoulpeEngine");
+        window->init("PoulpeEngine "
+          + std::to_string(PoulpeEngine_VERSION_MAJOR)
+          + "." 
+          + std::to_string(PoulpeEngine_VERSION_MINOR));
 
         int width{ 0 };
         int height{ 0 };
@@ -46,7 +52,8 @@ namespace Poulpe
 
     void Application::run()
     {
-        auto endRun = std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::system_clock::now());
+        auto endRun = std::chrono::time_point_cast<std::chrono::milliseconds>(
+          std::chrono::system_clock::now());
         auto lastTime = endRun;
         auto timeStepSum = std::chrono::duration<double>(0.0);
         uint32_t frameCount = 0;
@@ -55,7 +62,8 @@ namespace Poulpe
   
         std::chrono::milliseconds timeStep{0};
 
-        PLP_WARN("Loaded scene in {}", (endRun - m_StartRun).count());//@todo readable in seconds...
+        //@todo readable in seconds...
+        PLP_WARN("Loaded scene in {}", (endRun - m_StartRun).count());
 
         std::mutex mutex;
 
@@ -72,7 +80,9 @@ namespace Poulpe
                 maxPeriod = std::chrono::duration<double>(1.0 / maxFPS);
             }
 
-            auto currentTime = std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::system_clock::now());
+            auto currentTime = std::chrono::time_point_cast<std::chrono::milliseconds>(
+              std::chrono::system_clock::now());
+
             timeStep = currentTime - lastTime;
 
             if (timeStep >= maxPeriod || Application::s_UnlockedFPS.load() == 3) {
@@ -90,12 +100,11 @@ namespace Poulpe
                 glfwPollEvents();
 
                 m_RenderManager->getRendererAdapter()->shouldRecreateSwapChain();
-                Poulpe::Locator::getCommandQueue()->execPreRequest();
+                
                 m_VulkanLayer->render(timeStep.count());
-                m_RenderManager->renderScene();
-                m_RenderManager->draw();
-                Poulpe::Locator::getCommandQueue()->execPostRequest();
 
+                m_RenderManager->renderScene();
+                
                 lastTime = currentTime;
             }
         }

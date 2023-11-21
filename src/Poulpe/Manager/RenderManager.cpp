@@ -164,14 +164,24 @@ namespace Poulpe
 
     void RenderManager::renderScene()
     {
-        m_Renderer->renderScene();
+      auto render = [&]() {
+          Poulpe::Locator::getCommandQueue()->execPostRequest();
+          
+          m_Renderer->renderScene();
 
-        if (m_Refresh) {
+          draw();
+
+          if (m_Refresh) {
             m_Renderer->setDrawBbox(m_ShowBbox);
             init();
             m_Refresh = false;
             m_ShowBbox = false;
-        }
+          }
+
+          Poulpe::Locator::getCommandQueue()->execPreRequest();
+        };
+
+        Poulpe::Locator::getThreadPool()->submit("render", render);
     }
 
     void RenderManager::refresh(uint32_t levelIndex, bool showBbox, std::string_view skybox)
