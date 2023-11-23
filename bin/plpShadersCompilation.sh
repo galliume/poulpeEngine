@@ -43,4 +43,4 @@ ${GLSLC_BIN} ./assets/shaders/bbox.vert -o assets/shaders/spv/bbox_vert.spv
 ${GLSLC_BIN} ./assets/shaders/bbox.frag -o assets/shaders/spv/bbox_frag.spv
 echo "Shader [shaders] compiled"
 
-echo "All shaders compiled"
+echo "All shaders have been compiled."
