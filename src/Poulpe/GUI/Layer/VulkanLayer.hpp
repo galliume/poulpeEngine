@@ -45,6 +45,7 @@ namespace Poulpe
         void updateData();
         void updateSkybox();
         void updateLevel();
+        void displayGraph();
 
         void attachObserver(IObserver* observer);
 
