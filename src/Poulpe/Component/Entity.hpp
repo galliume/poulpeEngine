@@ -17,7 +17,7 @@ namespace Poulpe
     {
 
     public:
-        Entity() = default;
+        Entity();
         virtual ~Entity() = 0;
 
         struct Buffer {
@@ -41,21 +41,23 @@ namespace Poulpe
 
         void draw();
         void accept(IVisitor* visitor);
-
+        
+        uint32_t getNextSpriteIndex();
+        Data* getData() { return & m_Data; }
         [[nodiscard]] inline const std::string getName() const { return m_Name; }
+        inline std::vector<Buffer>* getUniformBuffers() { return & m_UniformBuffers; }
+        std::string const GetID() const { return m_ID; }
+
         void setName(std::string const & name) { m_Name = name; }
-        bool hasPushConstants() { return m_HasPushContants; }
         void setHasPushConstants(bool has = true) { m_HasPushContants = has; }
         void setVisible(bool visible) { m_IsVisible = visible; }
-        bool isVisible() { return m_IsVisible; }
-        uint32_t getNextSpriteIndex();
         void setSpritesCount(uint32_t count) { m_SpritesCount = count; }
-        bool isHit(glm::vec3 point);
-
-        Data* getData() { return & m_Data; }
         void setData(Data data) { m_Data = std::move(data); }
 
-        inline std::vector<Buffer>* getUniformBuffers() { return & m_UniformBuffers; }
+        bool hasPushConstants() { return m_HasPushContants; }
+        
+        bool isVisible() { return m_IsVisible; }
+        bool isHit(glm::vec3 point);
 
         virtual bool isDirty() = 0;
 
@@ -63,6 +65,8 @@ namespace Poulpe
         Data m_Data;
 
     private:
+        std::string m_ID;
+
         std::string m_Name;
         bool m_HasPushContants = false;
         bool m_IsVisible = true;

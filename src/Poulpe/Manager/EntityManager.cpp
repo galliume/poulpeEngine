@@ -5,7 +5,11 @@ namespace Poulpe
 {
     EntityManager::EntityManager()
     {
+        m_World = std::make_unique<WorldEntity>();
+        m_World->setName("_PlpWoldComponent");
+        m_World->setVisible(false);
 
+        m_WorldNode = std::make_unique<EntityNode>(m_World.get());
     }
 
     uint32_t EntityManager::getInstancedCount()
@@ -37,6 +41,8 @@ namespace Poulpe
                 m_LoadedEntities[mesh->getName()][0] += 1;
             }
         } else {
+            m_WorldNode->addChild(entity);
+
             uint32_t index = m_Entities.size();
 
             m_LoadedEntities.insert({ entity->getName(), { 1, index }});

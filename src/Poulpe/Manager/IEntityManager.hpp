@@ -2,7 +2,9 @@
 
 #include "Poulpe/Component/Camera.hpp"
 #include "Poulpe/Component/Entity.hpp"
+#include "Poulpe/Component/EntityNode.hpp"
 #include "Poulpe/Component/Mesh.hpp"
+#include "Poulpe/Component/WorldEntity.hpp"
 
 #include "Poulpe/Core/TinyObjLoader.hpp"
 

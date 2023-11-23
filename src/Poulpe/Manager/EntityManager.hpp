@@ -28,6 +28,7 @@ namespace Poulpe
         std::vector<Mesh*> getHUD() override { return m_HUD; }
         std::function<void()> load(nlohmann::json levelConfig, std::condition_variable & cv) override;
 
+        EntityNode const * getWorldNode() const { return m_WorldNode.get(); }
 
     private:
         std::vector<std::unique_ptr<Entity>> m_Entities;
@@ -37,5 +38,8 @@ namespace Poulpe
         IRendererAdapter* m_Renderer = nullptr;
         nlohmann::json m_LevelConfig;
         std::atomic_bool m_LoadingDone{ false };
+
+        std::unique_ptr<WorldEntity> m_World;
+        std::unique_ptr<EntityNode> m_WorldNode;
     };
 }

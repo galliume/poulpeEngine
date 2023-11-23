@@ -64,7 +64,7 @@ namespace Poulpe
         std::function<void(VkCommandBuffer & commandBuffer, VkPipelineLayout pipelineLayout,
             VulkanAdapter* vulkanAdapter, Data * data)> applyPushConstants = nullptr;
         
-        bool isDirty() { return m_IsDirty.load(); }
+        bool isDirty() override { return m_IsDirty.load(); }
         void setIsDirty(bool dirty = true) { m_IsDirty.store(dirty); }
         void setHasBbox(bool hasBbox = false) { m_HasBbox = hasBbox; }
         bool hasBbox() { return m_HasBbox; }
