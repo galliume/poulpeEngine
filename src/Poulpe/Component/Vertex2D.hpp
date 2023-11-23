@@ -1,7 +1,8 @@
 #pragma once
-#include <volk.h>
+
 #include <array>
 #include <glm/glm.hpp>
+#include <volk.h>
 
 namespace Poulpe
 {

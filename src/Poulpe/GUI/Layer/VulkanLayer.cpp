@@ -294,6 +294,10 @@ namespace Poulpe
                 ImGui::Separator();
             ImGui::End();
 
+            ImGui::Begin("Node graph");
+                displayGraph();
+            ImGui::End();
+
             ImGui::Begin("Level");
                 displayLevel();
             ImGui::End();
@@ -503,9 +507,9 @@ namespace Poulpe
         ImGui::Text("Shader count %d", m_DebugInfo.totalShadersLoaded);
         ImGui::Separator();
         ImGui::Text("Texture count %llu", m_DebugInfo.textures.size());
-        for (auto tex : m_DebugInfo.textures) {
-            ImGui::Text("\t%s", tex.first.c_str());
-        }
+        //for (auto tex : m_DebugInfo.textures) {
+        //    ImGui::Text("\t%s", tex.first.c_str());
+        //}
     }
 
     void VulkanLayer::displayOptions()
@@ -770,5 +774,16 @@ namespace Poulpe
         loadAmbiantSounds();
         loadLevels();
         loadSkybox();
+    }
+
+    void VulkanLayer::displayGraph()
+    {
+        auto world = m_RenderManager->getEntityManager()->getWorldNode();
+
+        ImGui::Text("%s: %s ", world->getEntity()->GetID().c_str(), world->getEntity()->getName().c_str());
+
+        for (EntityNode node : world->getChildren()) {
+            ImGui::Text("\t%s: %s ", node.getEntity()->GetID().c_str(), node.getEntity()->getName().c_str());
+        }
     }
 }
