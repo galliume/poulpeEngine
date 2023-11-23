@@ -9,8 +9,8 @@ layout(location = 2) in vec4 cameraPos;
 layout(location = 3) in vec4 fragModelPos;
 layout(location = 4) in float fragAmbiantLight; 
 layout(location = 5) in float fragFogDensity; 
-layout(location = 6) in vec3 fragFogColor;
-layout(location = 7) in vec3 fragLightPos;
+layout(location = 6) in vec4 fragFogColor;
+layout(location = 7) in vec4 fragLightPos;
 
 layout(binding = 1) uniform sampler2D texSampler[];
 
@@ -35,7 +35,7 @@ void main() {
 
     vec3 ambient = fragAmbiantLight * lightColor;
     vec3 norm = normalize(fragNormal);
-    vec3 lightDir = normalize(fragLightPos - fragModelPos.xyz);
+    vec3 lightDir = normalize(fragLightPos.xyz - fragModelPos.xyz);
     
     float diff = max(dot(norm, lightDir), 0.0);
     vec3 diffuse = diff * lightColor;
@@ -46,7 +46,7 @@ void main() {
         float d = distance(cameraPos, fragModelPos);
         float alpha = getFogFactor(d);
 
-        outputColor = mix(outputColor, vec4(fragFogColor, 1.0), alpha * fragFogDensity);
+        outputColor = mix(outputColor, fragFogColor, alpha * fragFogDensity);
     }
 
     //outputColor = vec4(fragColor, 1.0);
