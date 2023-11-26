@@ -21,7 +21,6 @@ namespace Poulpe
         Mesh* getMesh() { return m_Mesh.get(); }
         [[nodiscard]] inline const std::string getName() const { return m_Name; }
 
-        void setMesh(Mesh* mesh) { m_Mesh = std::unique_ptr<Mesh>(mesh); }
         void setName(std::string const & name) { m_Name = name; }
         void setVisible(bool visible) { m_IsVisible = visible; }
 
@@ -29,6 +28,8 @@ namespace Poulpe
         bool isHit(glm::vec3 point);
         bool isVisible() { return m_IsVisible; }
 
+        //@todo move to a componentManager
+        void setMesh(Mesh* mesh) { m_Mesh = std::unique_ptr<Mesh>(mesh); }
     private:
         IDType m_ID;
         std::string m_Name;

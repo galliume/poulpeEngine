@@ -4,14 +4,22 @@
 
 namespace Poulpe
 {
-    Crosshair::Crosshair(VulkanAdapter* adapter, ShaderManager* shaderManager, TextureManager* textureManager,
-         VkDescriptorPool descriptorPool) :
+    Crosshair::Crosshair(VulkanAdapter* adapter, ShaderManager* shaderManager, TextureManager* textureManager) :
          m_Adapter(adapter),
          m_ShaderManager(shaderManager),
-         m_TextureManager(textureManager),
-         m_DescriptorPool(descriptorPool)
+         m_TextureManager(textureManager)
     {
+        std::vector<VkDescriptorPoolSize> poolSizes{};
+        VkDescriptorPoolSize cp1;
+        cp1.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        cp1.descriptorCount = 1000;
+        VkDescriptorPoolSize cp2;
+        cp2.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        cp2.descriptorCount = 1000;
+        poolSizes.emplace_back(cp1);
+        poolSizes.emplace_back(cp2);
 
+        m_DescriptorPool = adapter->rdr()->createDescriptorPool(poolSizes, 10);
     }
 
     void Crosshair::visit(Mesh* mesh)
