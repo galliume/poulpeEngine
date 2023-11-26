@@ -1,10 +1,10 @@
 #pragma once
 
-#include "IEntity.hpp"
+#include "IMesh.hpp"
 
 namespace Poulpe
 {
-    class Basic : public IEntity, public IVisitor
+    class Basic : public IMesh, public IVisitor
     {
     struct pc
     {
@@ -20,7 +20,7 @@ namespace Poulpe
         Basic(VulkanAdapter* adapter,  ShaderManager* shaderManager, TextureManager* textureManager,
               VkDescriptorPool descriptorPool);
 
-        void visit(Entity* entity) override;
+        void visit(Mesh* mesh) override;
 
         VkDescriptorSetLayout createDescriptorSetLayout() override;
         std::vector<VkDescriptorSet> createDescriptorSet(Mesh* mesh) override;

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "AudioManager.hpp"
+#include "ComponentManager.hpp"
 #include "ConfigManager.hpp"
 #include "DestroyManager.hpp"
 #include "EntityManager.hpp"
@@ -39,6 +40,7 @@ namespace Poulpe
         virtual AudioManager* getAudioManager() = 0;
         virtual ConfigManager* getConfigManager() = 0;
         virtual DestroyManager* getDestroyManager() = 0;
+        virtual ComponentManager* getComponentManager() = 0;
 
         virtual void cleanUp() = 0;
         virtual void refresh(uint32_t levelIndex, bool showBbox = false, std::string_view skybox = "debug") = 0;

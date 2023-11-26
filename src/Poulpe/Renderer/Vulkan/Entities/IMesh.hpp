@@ -10,7 +10,7 @@
 
 namespace Poulpe
 {
-    class IEntity
+    class IMesh
     {
     public:
         virtual VkDescriptorSetLayout createDescriptorSetLayout() = 0;

@@ -1,7 +1,5 @@
 #pragma once
 
-#include "Poulpe/Core/IVisitor.h"
-
 namespace Poulpe
 {
     class Object

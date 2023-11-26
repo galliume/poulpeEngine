@@ -98,6 +98,7 @@ add_subdirectory(${PROJECT_SOURCE_DIR}/src/Poulpe/Renderer)
 add_subdirectory(${PROJECT_SOURCE_DIR}/src/Poulpe/Renderer/Adapter)
 add_subdirectory(${PROJECT_SOURCE_DIR}/src/Poulpe/Renderer/Vulkan)
 add_subdirectory(${PROJECT_SOURCE_DIR}/src/Poulpe/Renderer/Vulkan/Entities)
+add_subdirectory(${PROJECT_SOURCE_DIR}/src/Poulpe/Utils)
 
 add_subdirectory(${PROJECT_SOURCE_DIR}/vendor/glfw)
 add_subdirectory(${PROJECT_SOURCE_DIR}/vendor/glm)
@@ -113,20 +114,20 @@ add_library(dearimgui STATIC ${PROJECT_SOURCE_DIR}/vendor/imgui/imconfig.h
                   ${PROJECT_SOURCE_DIR}/vendor/imgui/imstb_rectpack.h
                   ${PROJECT_SOURCE_DIR}/vendor/imgui/imstb_textedit.h
                   ${PROJECT_SOURCE_DIR}/vendor/imgui/imstb_truetype.h
-				  ${PROJECT_SOURCE_DIR}/vendor/imgui/imstb_truetype.h
-				  ${PROJECT_SOURCE_DIR}/vendor/imgui/backends/imgui_impl_glfw.h
-				  ${PROJECT_SOURCE_DIR}/vendor/imgui/backends/imgui_impl_glfw.cpp
-				  ${PROJECT_SOURCE_DIR}/vendor/imgui/backends/imgui_impl_vulkan.h
-				  ${PROJECT_SOURCE_DIR}/vendor/imgui/backends/imgui_impl_vulkan.cpp
+                  ${PROJECT_SOURCE_DIR}/vendor/imgui/imstb_truetype.h
+                  ${PROJECT_SOURCE_DIR}/vendor/imgui/backends/imgui_impl_glfw.h
+                  ${PROJECT_SOURCE_DIR}/vendor/imgui/backends/imgui_impl_glfw.cpp
+                  ${PROJECT_SOURCE_DIR}/vendor/imgui/backends/imgui_impl_vulkan.h
+                  ${PROJECT_SOURCE_DIR}/vendor/imgui/backends/imgui_impl_vulkan.cpp
                   ${PROJECT_SOURCE_DIR}/vendor/imgui/imgui_demo.cpp)
 
 add_library(miniaudio STATIC 
-	${PROJECT_SOURCE_DIR}/vendor/miniaudio/extras/miniaudio_split/miniaudio.h
-	${PROJECT_SOURCE_DIR}/vendor/miniaudio/extras/miniaudio_split/miniaudio.c)
+    ${PROJECT_SOURCE_DIR}/vendor/miniaudio/extras/miniaudio_split/miniaudio.h
+    ${PROJECT_SOURCE_DIR}/vendor/miniaudio/extras/miniaudio_split/miniaudio.c)
 
 add_library(tiny_obj_loader STATIC 
-	${PROJECT_SOURCE_DIR}/vendor/tiny_obj_loader/tiny_obj_loader.h
-	${PROJECT_SOURCE_DIR}/vendor/tiny_obj_loader/tiny_obj_loader.cc)
+    ${PROJECT_SOURCE_DIR}/vendor/tiny_obj_loader/tiny_obj_loader.h
+    ${PROJECT_SOURCE_DIR}/vendor/tiny_obj_loader/tiny_obj_loader.cc)
 
 list(APPEND EXTRA_LIBS glfw)
 list(APPEND EXTRA_LIBS glm::glm)

@@ -56,10 +56,10 @@ namespace Poulpe {
         VkDescriptorSet createDescriptorSets(VkDescriptorPool const & descriptorPool,
             std::vector<VkDescriptorSetLayout> const  & descriptorSetLayouts, uint32_t count = 100);
 
-        void updateDescriptorSets(std::vector<Entity::Buffer> & uniformBuffers, VkDescriptorSet & descriptorSet,
+        void updateDescriptorSets(std::vector<Mesh::Buffer> & uniformBuffers, VkDescriptorSet & descriptorSet,
             std::vector<VkDescriptorImageInfo> & imageInfo, VkDescriptorType type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
 
-        void updateDescriptorSet(Entity::Buffer & uniformBuffer, VkDescriptorSet & descriptorSet,
+        void updateDescriptorSet(Mesh::Buffer & uniformBuffer, VkDescriptorSet & descriptorSet,
             std::vector<VkDescriptorImageInfo> & imageInfo, VkDescriptorType type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
 
         VkPipelineLayout createPipelineLayout(std::vector<VkDescriptorSetLayout> const & descriptorSetLayouts,
@@ -86,11 +86,11 @@ namespace Poulpe {
         void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties,
             VkBuffer & buffer, VkDeviceMemory & bufferMemory);
 
-        Entity::Buffer createVertexBuffer(VkCommandPool commandPool, std::vector<Poulpe::Vertex> vertices);
+        Mesh::Buffer createVertexBuffer(VkCommandPool commandPool, std::vector<Poulpe::Vertex> vertices);
 
-        Entity::Buffer createVertex2DBuffer(VkCommandPool const & commandPool, std::vector<Poulpe::Vertex2D> const & vertices);
+        Mesh::Buffer createVertex2DBuffer(VkCommandPool const & commandPool, std::vector<Poulpe::Vertex2D> const & vertices);
 
-        Entity::Buffer createIndexBuffer(VkCommandPool const & commandPool, std::vector<uint32_t> const & indices);
+        Mesh::Buffer createIndexBuffer(VkCommandPool const & commandPool, std::vector<uint32_t> const & indices);
 
         std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>> createSyncObjects(std::vector<VkImage> swapChainImages);
         
@@ -102,11 +102,11 @@ namespace Poulpe {
 
         bool souldResizeSwapChain();
 
-        Entity::Buffer createUniformBuffers(uint32_t uniformBuffersCount);
+        Mesh::Buffer createUniformBuffers(uint32_t uniformBuffersCount);
 
-        Entity::Buffer createCubeUniformBuffers(uint32_t uniformBuffersCount);
+        Mesh::Buffer createCubeUniformBuffers(uint32_t uniformBuffersCount);
 
-        void updateUniformBuffer(Entity::Buffer & buffer, std::vector<UniformBufferObject>* uniformBufferObjects);
+        void updateUniformBuffer(Mesh::Buffer & buffer, std::vector<UniformBufferObject>* uniformBufferObjects);
 
         void createImage(uint32_t width, uint32_t height, uint32_t mipLevels, VkSampleCountFlagBits numSamples,VkFormat format,
             VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage & image);
@@ -149,9 +149,9 @@ namespace Poulpe {
 
         void initMemoryPool();
 
-        Entity::Buffer createStorageBuffers(uint32_t uniformBuffersCount);
+        Mesh::Buffer createStorageBuffers(uint32_t uniformBuffersCount);
 
-        void updateStorageBuffer(Entity::Buffer buffer, std::vector<UniformBufferObject> bufferObjects);
+        void updateStorageBuffer(Mesh::Buffer buffer, std::vector<UniformBufferObject> bufferObjects);
 
         void setResolution(unsigned int width, unsigned int height);
 
@@ -180,7 +180,7 @@ namespace Poulpe {
 
         void bindPipeline(VkCommandBuffer commandBuffer, VkPipeline pipeline);
 
-        void draw(VkCommandBuffer commandBuffer, VkDescriptorSet descriptorSet, Mesh* mesh, Entity::Data * data,
+        void draw(VkCommandBuffer commandBuffer, VkDescriptorSet descriptorSet, Mesh* mesh, Mesh::Data * data,
             uint32_t uboCount, bool drawIndexed = true, uint32_t index = 0);
 
         uint32_t acquireNextImageKHR(VkSwapchainKHR swapChain, std::pair<std::vector<VkSemaphore>,
