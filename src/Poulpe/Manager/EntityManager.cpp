@@ -20,40 +20,43 @@ namespace Poulpe
         return m_Entities.size();
     }
 
-    void EntityManager::addEntity(Mesh* mesh)
+    void EntityManager::addEntity(std::vector<Mesh*> meshes)
     {
-        auto entity = std::make_unique<Entity>();
-        //@todo change for archetype id ?
-        entity->setName(mesh->getName());
-        entity->setMesh(mesh);
+        for (auto& mesh : meshes) {
+            uint64_t count = m_LoadedEntities.count(mesh->getName().c_str());
 
-        uint64_t count = m_LoadedEntities.count(entity->getName().c_str());
+            if (0 != count) {
+                Mesh::Data* data = mesh->getData();
 
-        if (0 != count) {
-            Mesh::Data* data = entity->getMesh()->getData();
+                auto existingEntity = m_Entities[m_LoadedEntities[mesh->getName().c_str()][1]].get();
 
-            auto existingEntity = m_Entities[m_LoadedEntities[entity->getName().c_str()][1]].get();
+                existingEntity->getMesh()->addUbos(data->m_Ubos);
 
-            existingEntity->getMesh()->addUbos(data->m_Ubos);
+                UniformBufferObject ubo{};
 
-            UniformBufferObject ubo{};
+                glm::mat4 transform = glm::translate(
+                    glm::mat4(1),
+                    mesh->getBBox()->center) * glm::scale(glm::mat4(1),
+                        mesh->getBBox()->size);
 
-            glm::mat4 transform = glm::translate(
-                glm::mat4(1), 
-                entity->getMesh()->getBBox()->center) * glm::scale(glm::mat4(1),
-                entity->getMesh()->getBBox()->size);
+                ubo.model = mesh->getBBox()->position * transform;
+                existingEntity->getMesh()->getBBox()->mesh->addUbos({ ubo });
 
-            ubo.model = entity->getMesh()->getBBox()->position * transform;
-            existingEntity->getMesh()->getBBox()->mesh->addUbos({ ubo });
+                m_LoadedEntities[mesh->getName()][0] += 1;
+            }
+            else {
+                auto entity = std::make_unique<Entity>();
+                //@todo change for archetype id ?
+                entity->setName(mesh->getName());
+                entity->setMesh(mesh);
 
-            m_LoadedEntities[entity->getName()][0] += 1;
-        } else {
-            m_WorldNode->addChild(entity.get());
+                m_WorldNode->addChild(entity.get());
 
-            uint32_t index = m_Entities.size();
+                uint32_t index = m_Entities.size();
 
-            m_LoadedEntities.insert({ entity->getName(), { 1, index }});
-            m_Entities.emplace_back(std::move(entity));
+                m_LoadedEntities.insert({ entity->getName(), { 1, index } });
+                m_Entities.emplace_back(std::move(entity));
+            }
         }
     }
 
@@ -129,8 +132,8 @@ namespace Poulpe
 
                             for (auto & part : parts) {
                                 part->setHasBbox(hasBbox);
-                                addEntity(std::move(part));
                             }
+                            addEntity(std::move(parts));
                         }
                     }
                 } else {
@@ -191,8 +194,8 @@ namespace Poulpe
 
                         for (auto & part : parts) {
                             part->setHasBbox(hasBbox);
-                            addEntity(std::move(part));
                         }
+                        addEntity(std::move(parts));
                     }
                 }
             }
@@ -215,14 +218,13 @@ namespace Poulpe
         glm::vec3 const & pos, glm::vec3 const & scale, glm::vec3 rotation,
         bool shouldInverseTextureY)
     {
-        //@todo move out of Mesh
         if (!std::filesystem::exists(path)) {
             PLP_FATAL("mesh file {} does not exits.", path);
             throw std::runtime_error("error loading a mesh file.");
         }
 
-        std::vector<TinyObjData> listData = Poulpe::TinyObjLoader::loadData(path, shouldInverseTextureY);
-        //end todo
+        //@todo not reload an already loaded obj
+        std::vector<TinyObjData> listData = TinyObjLoader::loadData(path, shouldInverseTextureY);
 
         std::vector<Mesh*> meshes;
 
@@ -232,7 +234,7 @@ namespace Poulpe
             mesh->setName(name + '_' + std::to_string(i));
             mesh->setShaderName(shader);
 
-            std::vector<Poulpe::Mesh::BBox> bboxs{};
+            std::vector<Mesh::BBox> bboxs{};
 
             Mesh::Data data{};
             data.m_Name = name + '_' + textureNames[listData[i].materialId];

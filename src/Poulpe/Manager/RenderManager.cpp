@@ -165,6 +165,17 @@ namespace Poulpe
 
     void RenderManager::renderScene()
     {
+        for (auto& entity : *m_EntityManager->getHUD()) {
+            if (entity->getMesh()->isDirty()) {
+                auto comp = m_ComponentManager->GetComponent<Grid>(entity->getID());
+                entity->accept(comp);
+                //for (const std::type_info* typeID : m_ComponentManager->getEntityComponents(entity->getID())) {
+                //    auto comp = m_ComponentManager->GetComponent<typeID>(entity->getID());
+                //    entity->accept(comp);
+                //}
+            }
+        }
+
         m_Renderer->renderScene();
 
         if (m_Refresh) {
@@ -236,39 +247,23 @@ namespace Poulpe
 
     void RenderManager::prepareHUD()
     {
-        std::vector<VkDescriptorPoolSize> poolSizes{};
-        VkDescriptorPoolSize cp1;
-        cp1.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        cp1.descriptorCount = 10;
-        VkDescriptorPoolSize cp2;
-        cp2.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        cp2.descriptorCount = 10;
-        poolSizes.emplace_back(cp1);
-        poolSizes.emplace_back(cp2);
-
-        VkDescriptorPool descriptorPool = m_Renderer->rdr()->createDescriptorPool(poolSizes, 10);
-        m_DescriptorPools.emplace_back(descriptorPool);
-
-        Grid entityG = EntityFactory::create<Grid>(m_Renderer.get(), m_ShaderManager.get(), m_TextureManager.get(),
-            descriptorPool);
-
-        Entity* grid = new Entity();
         Mesh* gridMesh = new Mesh();
-        grid->setMesh(gridMesh);
+        auto* gridEntity = new Entity();
+        gridEntity->setMesh(gridMesh);
 
-        grid->accept(& entityG);
+        m_EntityManager->addHUD(gridEntity);
 
-        Crosshair entityC = EntityFactory::create<Crosshair>(m_Renderer.get(), m_ShaderManager.get(),
-            m_TextureManager.get(), descriptorPool);
+        m_ComponentManager->addComponent<Grid>(gridEntity->getID(), m_Renderer.get(), m_ShaderManager.get(),
+            m_TextureManager.get());
 
-        Mesh2D* meshCH = new Mesh2D();
-        auto crossHair = new Entity();
-        crossHair->setMesh(meshCH);
+        //Mesh* chMesh = new Mesh();
+        //auto* chEntity = new Entity();
+        //chEntity->setMesh(chMesh);
 
-        crossHair->accept(& entityC);
+        //m_EntityManager->addHUD(chEntity);
 
-        m_EntityManager->addHUD(grid);
-        m_EntityManager->addHUD(crossHair);
+        //m_ComponentManager->addComponent<Crosshair>(gridEntity->getID(), m_Renderer.get(), m_ShaderManager.get(),
+        //    m_TextureManager.get());
     }
 
     void RenderManager::prepareSkybox()
