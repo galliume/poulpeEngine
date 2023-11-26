@@ -2,9 +2,11 @@
 
 #include "IMesh.hpp"
 
+#include "Poulpe/Component/Component.hpp"
+
 namespace Poulpe
 {
-    class Grid : public IMesh, public IVisitor
+    class Grid : public Component, public IMesh, public IVisitor
     {
     struct pc
     {
@@ -12,8 +14,7 @@ namespace Poulpe
         glm::mat4 view;
     };
     public:
-        Grid(VulkanAdapter* adapter, ShaderManager* shaderManager, TextureManager* textureManager,
-            VkDescriptorPool descriptorPool);
+        Grid(VulkanAdapter* adapter, ShaderManager* shaderManager, TextureManager* textureManager);
 
         void visit(Mesh* meshy) override;
 

@@ -11,7 +11,7 @@ namespace Poulpe
         explicit EntityManager();
         virtual ~EntityManager() = default;
 
-        void addEntity(Mesh* mesh);
+        void addEntity(std::vector<Mesh*> meshes);
 
         std::vector<Mesh*> initMeshes(std::string const & name, std::string const & path,
             std::vector<std::string> const & textureNames, std::string const & shader,
