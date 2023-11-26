@@ -16,6 +16,7 @@ namespace Poulpe
         m_SpriteAnimationManager = std::make_unique<Poulpe::SpriteAnimationManager>();
         m_DestroyManager = std::make_unique<Poulpe::DestroyManager>();
         m_Camera = std::make_unique<Poulpe::Camera>();
+        m_ComponentManager = std::make_unique<Poulpe::ComponentManager>();
 
         m_Camera->init();
         m_Renderer->init();
@@ -46,8 +47,8 @@ namespace Poulpe
     {
         m_DestroyManager->cleanEntities(*m_EntityManager->getEntities());
 
-        std::vector<Mesh*> hud = m_EntityManager->getHUD();
-        m_DestroyManager->cleanEntities(hud);
+        auto hud = m_EntityManager->getHUD();
+        m_DestroyManager->cleanEntities(*hud);
 
         m_DestroyManager->cleanShaders(m_ShaderManager->getShaders()->shaders);
         m_DestroyManager->cleanTextures(m_TextureManager->getTextures());
@@ -88,20 +89,20 @@ namespace Poulpe
         m_SpriteAnimationManager->add("splashAnim", splashSprites);
         m_ShaderManager->addShader("splashscreen", "assets/shaders/spv/2d_vert.spv", "assets/shaders/spv/2d_frag.spv");
 
-        prepareSplashScreen();
+        //prepareSplashScreen();
 
         if (static_cast<bool>(appConfig["splashScreenMusic"]))
             m_AudioManager->startSplash();
 
-        std::thread loading([this]() {
-            while (!isLoaded()) {
-                m_Renderer->drawSplashScreen();
-                std::this_thread::sleep_for(std::chrono::milliseconds(33));
-            }
-        });
+        //std::thread loading([this]() {
+        //    while (!isLoaded()) {
+        //        m_Renderer->drawSplashScreen();
+        //        std::this_thread::sleep_for(std::chrono::milliseconds(33));
+        //    }
+        //});
 
         loadData(m_CurrentLevel);
-        loading.join();
+        //loading.join();
         m_Renderer->clearSplashScreen();
 
         m_AudioManager->stopSplash();
@@ -185,26 +186,26 @@ namespace Poulpe
 
     void RenderManager::prepareSplashScreen()
     {
-        std::vector<VkDescriptorPoolSize> poolSizes{};
-        VkDescriptorPoolSize cp1;
-        cp1.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        cp1.descriptorCount = 1000;
-        VkDescriptorPoolSize cp2;
-        cp2.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        cp2.descriptorCount = 1000;
-        poolSizes.emplace_back(cp1);
-        poolSizes.emplace_back(cp2);
+        //std::vector<VkDescriptorPoolSize> poolSizes{};
+        //VkDescriptorPoolSize cp1;
+        //cp1.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        //cp1.descriptorCount = 1000;
+        //VkDescriptorPoolSize cp2;
+        //cp2.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        //cp2.descriptorCount = 1000;
+        //poolSizes.emplace_back(cp1);
+        //poolSizes.emplace_back(cp2);
 
-        VkDescriptorPool descriptorPool = m_Renderer->rdr()->createDescriptorPool(poolSizes, 1000);
-        m_DescriptorPools.emplace_back(descriptorPool);
+        //VkDescriptorPool descriptorPool = m_Renderer->rdr()->createDescriptorPool(poolSizes, 1000);
+        //m_DescriptorPools.emplace_back(descriptorPool);
 
-        Splash splashEntity = EntityFactory::create<Splash>(m_Renderer.get(),  m_ShaderManager.get(),
-            m_TextureManager.get(), m_SpriteAnimationManager.get(), descriptorPool);
+        //Splash splashEntity = EntityFactory::create<Splash>(m_Renderer.get(),  m_ShaderManager.get(),
+        //    m_TextureManager.get(), m_SpriteAnimationManager.get(), descriptorPool);
 
-        Mesh2D* splash = new Mesh2D();
-        splash->accept(& splashEntity);
+        //Mesh2D* splash = new Mesh2D();
+        //splash->accept(& splashEntity);
 
-        std::vector<Mesh*> splashs{ splash };
+        //std::vector<Mesh*> splashs{ splash };
         //@todo add to EntityManager...
     }
 
@@ -245,28 +246,29 @@ namespace Poulpe
         poolSizes.emplace_back(cp1);
         poolSizes.emplace_back(cp2);
 
-        std::vector<Mesh*> hud{};
-
         VkDescriptorPool descriptorPool = m_Renderer->rdr()->createDescriptorPool(poolSizes, 10);
         m_DescriptorPools.emplace_back(descriptorPool);
 
         Grid entityG = EntityFactory::create<Grid>(m_Renderer.get(), m_ShaderManager.get(), m_TextureManager.get(),
             descriptorPool);
 
-        Mesh* grid = new Mesh();
-        grid->accept(& entityG);
+        Entity* grid = new Entity();
+        Mesh* gridMesh = new Mesh();
+        grid->setMesh(gridMesh);
 
-        hud.emplace_back(std::move(grid));
+        grid->accept(& entityG);
 
         Crosshair entityC = EntityFactory::create<Crosshair>(m_Renderer.get(), m_ShaderManager.get(),
             m_TextureManager.get(), descriptorPool);
 
-        Mesh2D* crossHair = new Mesh2D();
+        Mesh2D* meshCH = new Mesh2D();
+        auto crossHair = new Entity();
+        crossHair->setMesh(meshCH);
+
         crossHair->accept(& entityC);
 
-        hud.emplace_back(std::move(crossHair));
-
-        m_EntityManager->addHUD(hud);
+        m_EntityManager->addHUD(grid);
+        m_EntityManager->addHUD(crossHair);
     }
 
     void RenderManager::prepareSkybox()
@@ -289,9 +291,12 @@ namespace Poulpe
         Skybox entity = EntityFactory::create<Skybox>(m_Renderer.get(), m_ShaderManager.get(), m_TextureManager.get());
 
         Mesh* skyboxMesh = new Mesh();
+        auto skybox = new Entity();
+        skybox->setMesh(skyboxMesh);
         skyboxMesh->setDescriptorPool(descriptorPool);
 
-        skyboxMesh->accept(& entity);
-        m_EntityManager->setSkybox(skyboxMesh);
+        skybox->accept(& entity);
+        m_EntityManager->setSkybox(skybox);
+
     }
 }

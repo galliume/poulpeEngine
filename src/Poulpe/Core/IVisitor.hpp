@@ -2,7 +2,7 @@
 
 namespace Poulpe
 {
-    class Entity;
+    class Mesh;
 
     class IVisitor
     {
@@ -10,6 +10,6 @@ namespace Poulpe
         IVisitor() = default;
         virtual ~IVisitor() = 0;
 
-        virtual void visit(Entity* entity) = 0;
+        virtual void visit(Mesh* mesh) = 0;
     };
 }

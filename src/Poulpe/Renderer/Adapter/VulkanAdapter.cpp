@@ -223,7 +223,7 @@ namespace Poulpe
 
 
             for (auto & entity : *m_EntityManager->getEntities()) {
-                Mesh* mesh = dynamic_cast<Mesh*>(entity.get());
+                Mesh* mesh = entity->getMesh();
 
                 if (!mesh) continue;
 
@@ -275,17 +275,17 @@ namespace Poulpe
             beginRendering(m_CommandBuffersSkybox[m_ImageIndex], VK_ATTACHMENT_LOAD_OP_CLEAR, VK_ATTACHMENT_STORE_OP_STORE);
             m_Renderer->startMarker(m_CommandBuffersSkybox[m_ImageIndex], "skybox_drawing", 0.3, 0.2, 0.1);
 
-            Entity::Data* skyboxData = skybox->getData();
+            Mesh::Data* skyboxData = skybox->getMesh()->getData();
 
-            m_Renderer->bindPipeline(m_CommandBuffersSkybox[m_ImageIndex], skybox->getGraphicsPipeline());
+            m_Renderer->bindPipeline(m_CommandBuffersSkybox[m_ImageIndex], skybox->getMesh()->getGraphicsPipeline());
 
-            for (uint32_t i = 0; i < skybox->getUniformBuffers()->size(); i++) {
+            for (uint32_t i = 0; i < skybox->getMesh()->getUniformBuffers()->size(); i++) {
 
-                if (skybox->hasPushConstants() && nullptr != skybox->applyPushConstants)
-                    skybox->applyPushConstants(m_CommandBuffersSkybox[m_ImageIndex], skybox->getPipelineLayout(), this,
+                if (skybox->getMesh()->hasPushConstants() && nullptr != skybox->getMesh()->applyPushConstants)
+                    skybox->getMesh()->applyPushConstants(m_CommandBuffersSkybox[m_ImageIndex], skybox->getMesh()->getPipelineLayout(), this,
                         skyboxData);
 
-                m_Renderer->draw(m_CommandBuffersSkybox[m_ImageIndex], skybox->getDescriptorSets().at(i), skybox,
+                m_Renderer->draw(m_CommandBuffersSkybox[m_ImageIndex], skybox->getMesh()->getDescriptorSets().at(i), skybox->getMesh(),
                     skyboxData, skyboxData->m_Ubos.size(), false);
             }
 
@@ -309,9 +309,11 @@ namespace Poulpe
         beginRendering(m_CommandBuffersHud[m_ImageIndex]);
         m_Renderer->startMarker(m_CommandBuffersHud[m_ImageIndex], "hud_drawing", 0.3, 0.2, 0.1);
 
-        for (Mesh* hudPart : m_EntityManager->getHUD()) {
+        for (auto const & entity : * m_EntityManager->getHUD()) {
 
-            if (!hudPart || !hudPart->isVisible()) continue;
+            auto* hudPart = entity->getMesh();
+
+            if (!hudPart || !entity->isVisible()) continue;
             m_Renderer->bindPipeline(m_CommandBuffersHud[m_ImageIndex], hudPart->getGraphicsPipeline());
 
             if (hudPart->hasPushConstants() && nullptr != hudPart->applyPushConstants) {
@@ -349,7 +351,7 @@ namespace Poulpe
             m_Renderer->startMarker(m_CommandBuffersBbox[m_ImageIndex], "bbox_drawing", 0.3, 0.2, 0.1);
 
             for (auto & entity : entities) {
-                Mesh* mesh = dynamic_cast<Mesh*>(entity.get());
+                Mesh* mesh = entity->getMesh();
 
                 if (!mesh || !mesh->hasBbox()) continue;
                 auto && bbox = mesh->getBBox()->mesh;
@@ -358,7 +360,7 @@ namespace Poulpe
 
                 m_Renderer->bindPipeline(m_CommandBuffersBbox[m_ImageIndex], bbox->getGraphicsPipeline());
 
-                if (m_HasClicked && mesh->isHit(m_RayPick)) {
+                if (m_HasClicked && entity->isHit(m_RayPick)) {
                     PLP_DEBUG("HIT ! {}", mesh->getName());
                 }
                 m_HasClicked = false;
@@ -864,7 +866,7 @@ namespace Poulpe
 
     void VulkanAdapter::showGrid(bool show)
     {
-        for (auto hudPart : m_EntityManager->getHUD()) {
+        for (auto & hudPart : *m_EntityManager->getHUD()) {
             if ("grid" == hudPart->getName()) {
                 hudPart->setVisible(show);
             }
