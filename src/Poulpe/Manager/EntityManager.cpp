@@ -1,12 +1,15 @@
 #include "EntityManager.hpp"
+
 #include "Poulpe/Renderer/Vulkan/EntityFactory.hpp"
+
+#include <filesystem>
 
 namespace Poulpe
 {
     EntityManager::EntityManager()
     {
-        m_World = std::make_unique<WorldEntity>();
-        m_World->setName("_PlpWoldComponent");
+        m_World = std::make_unique<Entity>();
+        m_World->setName("_PLPWorld");
         m_World->setVisible(false);
 
         m_WorldNode = std::make_unique<EntityNode>(m_World.get());
@@ -17,36 +20,40 @@ namespace Poulpe
         return m_Entities.size();
     }
 
-    void EntityManager::addEntity(Entity* entity)
+    void EntityManager::addEntity(Mesh* mesh)
     {
+        auto entity = std::make_unique<Entity>();
+        //@todo change for archetype id ?
+        entity->setName(mesh->getName());
+        entity->setMesh(mesh);
+
         uint64_t count = m_LoadedEntities.count(entity->getName().c_str());
 
         if (0 != count) {
-            auto mesh = dynamic_cast<Mesh*>(entity);
-            
-            if (mesh) {
-                Entity::Data* data = mesh->getData();
-                auto existingEntity = dynamic_cast<Mesh*>(
-                  m_Entities[m_LoadedEntities[mesh->getName().c_str()][1]].get());
+            Mesh::Data* data = entity->getMesh()->getData();
 
-                existingEntity->addUbos(data->m_Ubos);
+            auto existingEntity = m_Entities[m_LoadedEntities[entity->getName().c_str()][1]].get();
 
-                UniformBufferObject ubo{};
-                glm::mat4 transform = glm::translate(glm::mat4(1), mesh->getBBox()->center) * glm::scale(glm::mat4(1),
-                    mesh->getBBox()->size);
+            existingEntity->getMesh()->addUbos(data->m_Ubos);
 
-                ubo.model = mesh->getBBox()->position * transform;
-                existingEntity->getBBox()->mesh->addUbos({ ubo });
+            UniformBufferObject ubo{};
 
-                m_LoadedEntities[mesh->getName()][0] += 1;
-            }
+            glm::mat4 transform = glm::translate(
+                glm::mat4(1), 
+                entity->getMesh()->getBBox()->center) * glm::scale(glm::mat4(1),
+                entity->getMesh()->getBBox()->size);
+
+            ubo.model = entity->getMesh()->getBBox()->position * transform;
+            existingEntity->getMesh()->getBBox()->mesh->addUbos({ ubo });
+
+            m_LoadedEntities[entity->getName()][0] += 1;
         } else {
-            m_WorldNode->addChild(entity);
+            m_WorldNode->addChild(entity.get());
 
             uint32_t index = m_Entities.size();
 
             m_LoadedEntities.insert({ entity->getName(), { 1, index }});
-            m_Entities.emplace_back(entity);
+            m_Entities.emplace_back(std::move(entity));
         }
     }
 
@@ -63,7 +70,7 @@ namespace Poulpe
 
         m_LevelConfig = levelConfig;
 
-        std::function<void()> entitiesFuture = [this, &cv]() {
+        std::function<void()> entitiesFuture = [this, & cv]() {
 
             for (auto& entityConf : m_LevelConfig["entities"].items()) {
 
@@ -81,7 +88,6 @@ namespace Poulpe
                     for (int x = xMin; x < xMax; x++) {
                         for (int y = yMin; y < yMax; y++) {
 
-                            Poulpe::Mesh* entity = new Poulpe::Mesh();
                             auto positionData = data["positions"].at(0);
 
                             glm::vec3 position = glm::vec3(
@@ -109,9 +115,8 @@ namespace Poulpe
                             );
 
                             bool hasBbox = static_cast<bool>(data["hasBbox"]);
-                            entity->setHasBbox(hasBbox);
 
-                            auto entities = entity->init(
+                            auto parts = initMeshes(
                                 static_cast<std::string>(key),
                                 static_cast<std::string>(data["mesh"]),
                                 textures,
@@ -122,9 +127,9 @@ namespace Poulpe
                                 static_cast<bool>(data["inverseTextureY"])
                             );
 
-                            for (auto & e : entities) {
-                                e->setHasBbox(hasBbox);
-                                addEntity(e);
+                            for (auto & part : parts) {
+                                part->setHasBbox(hasBbox);
+                                addEntity(std::move(part));
                             }
                         }
                     }
@@ -170,11 +175,10 @@ namespace Poulpe
                         for (auto& texture : data["textures"])
                             textures.emplace_back(static_cast<std::string>(texture));
 
-                        Poulpe::Mesh* entity = new Poulpe::Mesh();
                         bool hasBbox = static_cast<bool>(data["hasBbox"]);
-                        entity->setHasBbox(hasBbox);
-
-                        auto entities = entity->init(
+                        
+                        //@todo move init to a factory ?
+                        auto parts = initMeshes(
                             static_cast<std::string>(key),
                             static_cast<std::string>(data["mesh"]),
                             textures,
@@ -184,10 +188,10 @@ namespace Poulpe
                             rotation,
                             static_cast<bool>(data["inverseTextureY"])
                         );
-                        
-                        for (auto& e : entities) {
-                            e->setHasBbox(hasBbox);
-                            addEntity(e);
+
+                        for (auto & part : parts) {
+                            part->setHasBbox(hasBbox);
+                            addEntity(std::move(part));
                         }
                     }
                 }
@@ -204,5 +208,95 @@ namespace Poulpe
     {
         m_Entities.clear();
         m_LoadedEntities.clear();
+    }
+
+    std::vector<Mesh*> EntityManager::initMeshes(std::string const  & name, std::string const & path,
+        std::vector<std::string> const & textureNames, std::string const & shader,
+        glm::vec3 const & pos, glm::vec3 const & scale, glm::vec3 rotation,
+        bool shouldInverseTextureY)
+    {
+        //@todo move out of Mesh
+        if (!std::filesystem::exists(path)) {
+            PLP_FATAL("mesh file {} does not exits.", path);
+            throw std::runtime_error("error loading a mesh file.");
+        }
+
+        std::vector<TinyObjData> listData = Poulpe::TinyObjLoader::loadData(path, shouldInverseTextureY);
+        //end todo
+
+        std::vector<Mesh*> meshes;
+
+        for (size_t i = 0; i < listData.size(); i++) {
+
+            Mesh* mesh = new Mesh();
+            mesh->setName(name + '_' + std::to_string(i));
+            mesh->setShaderName(shader);
+
+            std::vector<Poulpe::Mesh::BBox> bboxs{};
+
+            Mesh::Data data{};
+            data.m_Name = name + '_' + textureNames[listData[i].materialId];
+            data.m_Texture = textureNames[listData[i].materialId];
+            data.m_Vertices = listData[i].vertices;
+            data.m_Indices = listData[i].indices;
+
+            UniformBufferObject ubo{};
+            ubo.model = glm::mat4(1.0f);
+            ubo.model = glm::translate(ubo.model, pos);
+            ubo.model = glm::scale(ubo.model, scale);
+
+            ubo.model = glm::rotate(ubo.model, glm::radians(rotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
+            ubo.model = glm::rotate(ubo.model, glm::radians(rotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
+            ubo.model = glm::rotate(ubo.model, glm::radians(rotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
+
+            //ubo.view = glm::mat4(1.0f);
+            data.m_Ubos.emplace_back(ubo);
+
+            float xMax = data.m_Vertices.at(0).pos.x;
+            float yMax = data.m_Vertices.at(0).pos.y;
+            float zMax = data.m_Vertices.at(0).pos.z;
+
+            float xMin = xMax;
+            float yMin = yMax;
+            float zMin = zMax;
+
+            for (size_t j = 0; j < data.m_Vertices.size(); j++) {
+
+                glm::vec3 vertex = glm::vec4(data.m_Vertices.at(j).pos, 1.0f);
+
+                float x = vertex.x;
+                float y = vertex.y;
+                float z = vertex.z;
+
+                if (x > xMax) xMax = x;
+                if (x < xMin) xMin = x;
+                if (y < yMin) yMin = y;
+                if (y > yMax) yMax = y;
+                if (z > zMax) zMax = z;
+                if (z < zMin) zMin = z;
+            }
+
+            glm::vec3 center = glm::vec3((xMin + xMax) / 2, (yMin + yMax) / 2, (zMin + zMax) / 2);
+            glm::vec3 size = glm::vec3((xMax - xMin) / 2, (yMax - yMin) / 2, (zMax - zMin) / 2);
+
+            Mesh::BBox* box = new Mesh::BBox();
+            box->position = data.m_Ubos.at(0).model;
+            box->center = center;
+            box->size = size;
+            box->mesh = std::make_unique<Mesh>();
+            box->maxX = xMax;
+            box->minX = xMin;
+            box->maxY = yMax;
+            box->minY = yMin;
+            box->maxZ = zMax;
+            box->minZ = zMin;
+
+            mesh->setData(data);
+            mesh->addBBox(box);
+
+            meshes.emplace_back(std::move(mesh));
+        }
+
+        return meshes;
     }
 }

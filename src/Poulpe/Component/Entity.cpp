@@ -7,45 +7,12 @@ namespace Poulpe
 {
     Entity::Entity()
     {
-        auto millis = std::chrono::duration_cast<std::chrono::milliseconds>(
-            std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::system_clock::now()).time_since_epoch()
-        ).count();
-
-        std::random_device rd;
-        std::mt19937_64 gen(rd());
-        std::uniform_int_distribution<uint64_t> dis(0, std::numeric_limits<uint64_t>::max());
-        uint64_t random_number = dis(gen);
-    
-        m_ID = std::to_string(millis) + std::to_string(random_number);
-    }
-
-    void Entity::draw()
-    {
-
-    }
-
-    Entity::~Entity()
-    {
-
+        m_ID = GUIDGenerator::getGUID();
     }
 
     void Entity::accept(IVisitor* visitor)
     {
-        visitor->visit(this);
-    }
-
-    uint32_t Entity::getNextSpriteIndex()
-    {
-        uint32_t nextIndex = 0;
-
-        if (m_SpritesIndex > 0 && m_SpritesIndex < m_SpritesCount) {
-            nextIndex = m_SpritesIndex;
-            m_SpritesIndex += 1;
-        } else if (m_SpritesIndex == m_SpritesCount  || 0 == m_SpritesIndex) {
-            m_SpritesIndex = 1;
-        }
-
-        return nextIndex;
+        visitor->visit(getMesh());
     }
 
     bool Entity::isHit(glm::vec3 point)

@@ -15,10 +15,8 @@ namespace Poulpe
 
     }
 
-    void Basic::visit(Entity* entity)
+    void Basic::visit(Mesh* mesh)
     {
-        Mesh* mesh = dynamic_cast<Mesh*>(entity);
-
         if (!mesh && !mesh->isDirty()) return;
 
         uint32_t totalInstances = static_cast<uint32_t>(mesh->getData()->m_Ubos.size());
@@ -34,7 +32,7 @@ namespace Poulpe
         for (size_t i = 0; i < uniformBuffersCount; ++i) {
 
           mesh->getData()->m_UbosOffset.emplace_back(uboOffset);
-          Entity::Buffer uniformBuffer = m_Adapter->rdr()->createUniformBuffers(nbUbo);
+          Mesh::Buffer uniformBuffer = m_Adapter->rdr()->createUniformBuffers(nbUbo);
           mesh->getUniformBuffers()->emplace_back(uniformBuffer);
 
           uboOffset = (uboRemaining > uniformBufferChunkSize) ? uboOffset + uniformBufferChunkSize : uboOffset + uboRemaining;
@@ -121,7 +119,7 @@ namespace Poulpe
             3, 2, 6, 6, 7, 3 // top
         };
 
-        Entity::Data data;
+        Mesh::Data data;
         data.m_Texture = "minecraft_grass";
         data.m_TextureIndex = 0;
         data.m_VertexBuffer = m_Adapter->rdr()->createVertexBuffer(commandPool, vertices);
@@ -275,7 +273,7 @@ namespace Poulpe
         pushConstants.fogDensity = Poulpe::VulkanAdapter::s_FogDensity.load();
 
         mesh->applyPushConstants = [=, & pushConstants](VkCommandBuffer & commandBuffer, VkPipelineLayout pipelineLayout,
-            VulkanAdapter* adapter, Entity::Data * data) {
+            VulkanAdapter* adapter, Mesh::Data * data) {
 
         pushConstants.data = glm::vec4(static_cast<float>(data->m_TextureIndex), Poulpe::VulkanAdapter::s_AmbiantLight.load(),
             Poulpe::VulkanAdapter::s_FogDensity.load(), 0.f);

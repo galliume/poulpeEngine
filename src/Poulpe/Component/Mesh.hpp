@@ -1,11 +1,19 @@
 #pragma once
 
-#include "Entity.hpp"
+#include "Texture.hpp"
+#include "Vertex.hpp"
+#include "Vertex2D.hpp"
+
+#include "Poulpe/Core/Buffer.hpp"
+
+#include "Poulpe/Renderer/Vulkan/DeviceMemory.hpp"
 
 #include <functional>
 
 namespace Poulpe
 {
+    class VulkanAdapter;//@todo should not be here
+
     struct constants
     {
         glm::vec4 data;
@@ -17,11 +25,28 @@ namespace Poulpe
         float fogDensity;
     };
 
-    class VulkanAdapter;//@todo should not be here
-
-    class Mesh : public Entity
+    class Mesh
     {
     public:
+         struct Buffer {
+            VkBuffer buffer;
+            DeviceMemory* memory;
+            uint32_t offset;
+            uint32_t size;
+        };
+
+        struct Data {
+            std::string m_Name;
+            std::string m_Texture;
+            std::vector<Vertex> m_Vertices;
+            std::vector<uint32_t> m_Indices;
+            std::vector<UniformBufferObject> m_Ubos;
+            std::vector<uint32_t> m_UbosOffset;
+            Buffer m_VertexBuffer = { nullptr, nullptr, 0, 0 };
+            Buffer m_IndicesBuffer = { nullptr, nullptr, 0, 0 };
+            uint32_t m_TextureIndex = 0;
+        };
+
         struct BBox
         {
             glm::mat4 position;
@@ -37,18 +62,12 @@ namespace Poulpe
         };
 
     public:
-        Mesh();
+        Mesh() = default;
         ~Mesh() = default;
 
-        std::vector<Mesh*> init(std::string const & name, std::string const & path,
-            std::vector<std::string> const & textureNames, std::string const & shader,
-            glm::vec3 const & pos, glm::vec3 const & scale, glm::vec3 rotation,
-            bool shouldInverseTextureY);
-        
         inline std::vector<VkDescriptorSet> getDescriptorSets() { return m_DescriptorSets; }
         inline VkPipeline getGraphicsPipeline() { return m_GraphicsPipeline; }
         inline VkPipelineLayout getPipelineLayout() { return m_PipelineLayout; }
-        inline glm::vec4 getCameraPos() { return m_CameraPos; }
         inline VkDescriptorPool getDescriptorPool() { return m_DescriptorPool; }
         inline VkDescriptorSetLayout getDescriptorSetLayout() { return m_DescriptorSetLayout; }
 
@@ -62,9 +81,9 @@ namespace Poulpe
 
         void addUbos(const std::vector<UniformBufferObject>& ubos);
         std::function<void(VkCommandBuffer & commandBuffer, VkPipelineLayout pipelineLayout,
-            VulkanAdapter* vulkanAdapter, Data * data)> applyPushConstants = nullptr;
+            VulkanAdapter* vulkanAdapter, Mesh::Data * data)> applyPushConstants = nullptr;
         
-        bool isDirty() override { return m_IsDirty.load(); }
+        bool isDirty() { return m_IsDirty.load(); }
         void setIsDirty(bool dirty = true) { m_IsDirty.store(dirty); }
         void setHasBbox(bool hasBbox = false) { m_HasBbox = hasBbox; }
         bool hasBbox() { return m_HasBbox; }
@@ -72,8 +91,23 @@ namespace Poulpe
         void addBBox(BBox* bbox) { m_BoundingBox = std::unique_ptr<BBox>(bbox); }
         BBox* getBBox() { return m_BoundingBox.get(); }
 
+        void setHasPushConstants(bool has = true) { m_HasPushContants = has; }
+        bool hasPushConstants() { return m_HasPushContants; }
+
+        inline std::vector<Mesh::Buffer>* getUniformBuffers() { return & m_UniformBuffers; }
+
+        inline glm::vec4 getCameraPos() { return m_CameraPos; }
+
+        void setName(std::string const & name) { m_Name = name; }
+        std::string getName() { return m_Name; }
+
+        void setSpritesCount(uint32_t count) { m_SpritesCount = count; }
+        uint32_t getNextSpriteIndex();
+
+        Data* getData() { return & m_Data; }
+        void setData(Data data) { m_Data = std::move(data); }
+
     private:
-        glm::vec4 m_CameraPos;
         std::vector<VkDescriptorSet> m_DescriptorSets;
         VkPipelineLayout m_PipelineLayout;
         VkPipeline m_GraphicsPipeline;
@@ -84,5 +118,15 @@ namespace Poulpe
         std::string m_ShaderName;
         std::atomic<bool> m_IsDirty{ true };
         bool m_HasBbox = true;
+
+        bool m_HasPushContants = false;
+        std::vector<Mesh::Buffer> m_UniformBuffers;
+        glm::vec4 m_CameraPos;
+        std::string m_Name;
+
+        uint32_t m_SpritesCount = 0;
+        uint32_t m_SpritesIndex = 0;
+        
+        Data m_Data;
     };
 }

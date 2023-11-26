@@ -143,12 +143,12 @@ namespace Poulpe
                 loading();
 
                 auto skybox = m_RenderManager->getEntityManager()->getSkybox();
-                skybox->setIsDirty();
+                skybox->getMesh()->setIsDirty();
 
                 auto entity = std::make_unique<Skybox>(EntityFactory::create<Skybox>(m_RenderManager->getRendererAdapter(),
                     m_RenderManager->getShaderManager(), m_RenderManager->getTextureManager()));
 
-                skybox->setDescriptorSets(entity->createDescriptorSet(skybox));
+                skybox->getMesh()->setDescriptorSets(entity->createDescriptorSet(skybox->getMesh()));
 
                 cv.notify_one(); //useful?
 
@@ -780,10 +780,10 @@ namespace Poulpe
     {
         auto world = m_RenderManager->getEntityManager()->getWorldNode();
 
-        ImGui::Text("%s: %s ", world->getEntity()->GetID().c_str(), world->getEntity()->getName().c_str());
+        ImGui::Text("%llu: %s ", world->getEntity()->getID(), world->getEntity()->getName().c_str());
 
         for (EntityNode node : world->getChildren()) {
-            ImGui::Text("\t%s: %s ", node.getEntity()->GetID().c_str(), node.getEntity()->getName().c_str());
+            ImGui::Text("\t%llu: %s ", node.getEntity()->getID(), node.getEntity()->getName().c_str());
         }
     }
 }

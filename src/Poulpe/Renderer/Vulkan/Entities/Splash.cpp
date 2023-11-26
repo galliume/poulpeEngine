@@ -1,4 +1,5 @@
 #include "Splash.hpp"
+
 #include "Poulpe/Renderer/Adapter/VulkanAdapter.hpp"
 
 namespace Poulpe
@@ -14,10 +15,8 @@ namespace Poulpe
 
     }
 
-    void Splash::visit(Entity* entity)
+    void Splash::visit(Mesh* mesh)
     {
-        Mesh* mesh = dynamic_cast<Mesh*>(entity);
-
         if (!mesh && !mesh->isDirty()) return;
 
         const std::vector<Vertex2D> vertices = {
@@ -35,7 +34,7 @@ namespace Poulpe
 
         auto commandPool = m_Adapter->rdr()->createCommandPool();
 
-        Entity::Data data;
+        Mesh::Data data;
         data.m_Texture = "splashscreen";
         data.m_TextureIndex = 0;
         data.m_VertexBuffer = m_Adapter->rdr()->createVertex2DBuffer(commandPool, vertices);
@@ -48,7 +47,7 @@ namespace Poulpe
         mesh->setName("splashscreen");
         mesh->setShaderName("splashscreen");
 
-        Entity::Buffer uniformBuffer = m_Adapter->rdr()->createUniformBuffers(1);
+        Mesh::Buffer uniformBuffer = m_Adapter->rdr()->createUniformBuffers(1);
         mesh->getUniformBuffers()->emplace_back(uniformBuffer);
 
         std::vector<VkDescriptorImageInfo> imageInfos{};
@@ -101,7 +100,7 @@ namespace Poulpe
         pc.textureID = 0;
 
         mesh->applyPushConstants = [&pc, mesh](VkCommandBuffer & commandBuffer, VkPipelineLayout pipelineLayout, 
-            [[maybe_unused]] VulkanAdapter* adapter, [[maybe_unused]] Entity::Data * data) {
+            [[maybe_unused]] VulkanAdapter* adapter, [[maybe_unused]] Mesh::Data * data) {
             pc.textureID = mesh->getNextSpriteIndex();
             vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(Splash::pc), &pc);
         };

@@ -22,7 +22,7 @@ namespace Poulpe
         Splash(VulkanAdapter* adapter, ShaderManager* shaderManager, TextureManager* textureManager,
             SpriteAnimationManager* spriteAnimationManager, VkDescriptorPool descriptorPool);
 
-        void visit(Entity* entity);
+        void visit(Mesh* mesh);
 
     private:
         VulkanAdapter* m_Adapter;
