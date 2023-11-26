@@ -229,7 +229,6 @@ namespace Poulpe
 
                 m_Renderer->bindPipeline(m_CommandBuffersEntities[m_ImageIndex], mesh->getGraphicsPipeline());
 
-
                 // if (m_HasClicked && mesh->IsHit(m_RayPick)) {
                 //    PLP_DEBUG("HIT ! {}", mesh->GetName());
                 // }
@@ -424,21 +423,21 @@ namespace Poulpe
 
     void VulkanAdapter::draw()
     {
-        if (m_RenderingStopped) {
-            {
-                std::unique_lock<std::mutex> render(m_MutexRenderScene);
+        //if (m_RenderingStopped) {
+        //    {
+        //        std::unique_lock<std::mutex> render(m_MutexRenderScene);
 
-                m_RenderCond.wait(render, [this] {
-                    return  (getDrawBbox()) ? m_renderStatus == 16 : m_renderStatus == 8;
-                });
-                {
-                    onFinishRender();
-                    m_RenderingStopped = false;
-                }
-            }
+        //        m_RenderCond.wait(render, [this] {
+        //            return  (getDrawBbox()) ? m_renderStatus == 16 : m_renderStatus == 8;
+        //        });
+        //        {
+        //            onFinishRender();
+        //            m_RenderingStopped = false;
+        //        }
+        //    }
 
-            return;
-        }
+        //    return;
+        //}
 
         {
             std::unique_lock<std::mutex> render(m_MutexRenderScene);

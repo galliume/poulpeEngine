@@ -1,18 +1,27 @@
 #include "Grid.hpp"
+
 #include "Poulpe/Renderer/Adapter/VulkanAdapter.hpp"
 
 namespace Poulpe
 {
     struct cPC;
 
-    Grid::Grid(VulkanAdapter* adapter, ShaderManager* shaderManager, TextureManager* textureManager,
-        VkDescriptorPool descriptorPool) :
+    Grid::Grid(VulkanAdapter* adapter, ShaderManager* shaderManager, TextureManager* textureManager) :
         m_Adapter(adapter),
         m_ShaderManager(shaderManager),
-        m_TextureManager(textureManager),
-        m_DescriptorPool(descriptorPool)
+        m_TextureManager(textureManager)
     {
+        std::vector<VkDescriptorPoolSize> poolSizes{};
+        VkDescriptorPoolSize cp1;
+        cp1.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        cp1.descriptorCount = 10;
+        VkDescriptorPoolSize cp2;
+        cp2.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        cp2.descriptorCount = 10;
+        poolSizes.emplace_back(cp1);
+        poolSizes.emplace_back(cp2);
 
+        m_DescriptorPool = adapter->rdr()->createDescriptorPool(poolSizes, 10);
     }
 
     void Grid::visit(Mesh* mesh)
@@ -71,6 +80,7 @@ namespace Poulpe
             m_Adapter->rdr()->updateUniformBuffer(mesh->getUniformBuffers()->at(i), & gridData.m_Ubos);
         }
         mesh->setData(gridData);
+        mesh->setIsDirty(false);
     }
 
     VkDescriptorSetLayout Grid::createDescriptorSetLayout()

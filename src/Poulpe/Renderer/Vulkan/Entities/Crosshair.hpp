@@ -2,9 +2,11 @@
 
 #include "IMesh.hpp"
 
+#include "Poulpe/Component/Component.hpp"
+
 namespace Poulpe
 {
-    class Crosshair : public IMesh, public IVisitor
+    class Crosshair : public Component, public IMesh, public IVisitor
     {
     struct pc
     {
@@ -12,8 +14,7 @@ namespace Poulpe
     };
 
     public:
-        Crosshair(VulkanAdapter* adapter, ShaderManager* shaderManager, TextureManager* textureManager,
-                 VkDescriptorPool descriptorPool);
+        Crosshair(VulkanAdapter* adapter, ShaderManager* shaderManager, TextureManager* textureManager);
 
         void visit(Mesh* mesh) override;
 
