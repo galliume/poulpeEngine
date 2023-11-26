@@ -23,6 +23,10 @@ set(SRC_LIST ${CMAKE_CURRENT_SOURCE_DIR}/AudioManager.cpp
              ${CMAKE_CURRENT_SOURCE_DIR}/SpriteAnimationManager.cpp
              ${CMAKE_CURRENT_SOURCE_DIR}/SpriteAnimationManager.hpp
              ${CMAKE_CURRENT_SOURCE_DIR}/TextureManager.cpp
-             ${CMAKE_CURRENT_SOURCE_DIR}/TextureManager.hpp)
+             ${CMAKE_CURRENT_SOURCE_DIR}/TextureManager.hpp
+		     ${CMAKE_CURRENT_SOURCE_DIR}/ComponentManager.cpp
+             ${CMAKE_CURRENT_SOURCE_DIR}/ComponentManager.hpp
+			 ${CMAKE_CURRENT_SOURCE_DIR}/SystemManager.cpp
+             ${CMAKE_CURRENT_SOURCE_DIR}/SystemManager.hpp)
 
 target_sources(PoulpeEngine PRIVATE ${SRC_LIST})

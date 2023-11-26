@@ -1,16 +1,16 @@
 #pragma once
 
-#include "IEntity.hpp"
+#include "IMesh.hpp"
 
 namespace Poulpe
 {
-    class Skybox : public IEntity, public IVisitor
+    class Skybox : public IMesh, public IVisitor
     {
     public:
         Skybox(VulkanAdapter* adapter, ShaderManager* shaderManager, TextureManager* textureManager);
         virtual ~Skybox();
 
-        void visit(Entity* entity) override;
+        void visit(Mesh* mesh) override;
 
         VkDescriptorSetLayout createDescriptorSetLayout() override;
         std::vector<VkDescriptorSet> createDescriptorSet(Mesh* mesh) override;

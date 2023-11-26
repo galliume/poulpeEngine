@@ -8,7 +8,7 @@ set(SRC_LIST ${CMAKE_CURRENT_SOURCE_DIR}/Crosshair.cpp
              ${CMAKE_CURRENT_SOURCE_DIR}/Skybox.hpp
              ${CMAKE_CURRENT_SOURCE_DIR}/Splash.cpp
              ${CMAKE_CURRENT_SOURCE_DIR}/Splash.hpp
-			 ${CMAKE_CURRENT_SOURCE_DIR}/IEntity.hpp)
+			 ${CMAKE_CURRENT_SOURCE_DIR}/IMesh.hpp)
 
 target_sources(PoulpeEngine PRIVATE ${SRC_LIST})
 

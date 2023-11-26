@@ -1,10 +1,10 @@
 #pragma once
 
-#include "IEntity.hpp"
+#include "IMesh.hpp"
 
 namespace Poulpe
 {
-    class Grid : public IEntity, public IVisitor
+    class Grid : public IMesh, public IVisitor
     {
     struct pc
     {
@@ -15,7 +15,7 @@ namespace Poulpe
         Grid(VulkanAdapter* adapter, ShaderManager* shaderManager, TextureManager* textureManager,
             VkDescriptorPool descriptorPool);
 
-        void visit(Entity* entity) override;
+        void visit(Mesh* meshy) override;
 
         VkDescriptorSetLayout createDescriptorSetLayout() override;
         std::vector<VkDescriptorSet> createDescriptorSet(Mesh* mesh) override;

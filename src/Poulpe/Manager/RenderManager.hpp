@@ -30,6 +30,7 @@ namespace Poulpe
         AudioManager* getAudioManager() override { return m_AudioManager.get(); }
         ConfigManager* getConfigManager() override { return m_ConfigManager.get(); }
         DestroyManager* getDestroyManager() override { return m_DestroyManager.get(); }
+        ComponentManager* getComponentManager() override { return m_ComponentManager.get(); }
 
 
         void cleanUp() override;
@@ -41,23 +42,25 @@ namespace Poulpe
         void setDrawBbox(bool draw) { m_Renderer->setDrawBbox(draw); };
 
     private:
-        void prepareSplashScreen();
+        void loadData(std::string const & level);
         void prepareEntity();
         void prepareHUD();
         void prepareSkybox();
-        void loadData(std::string const & level);
+        void prepareSplashScreen();
 
     private:
-        std::unique_ptr<Window> m_Window;
-        std::unique_ptr<VulkanAdapter> m_Renderer;
         std::unique_ptr<Poulpe::Camera> m_Camera;
-        std::unique_ptr<Poulpe::TextureManager> m_TextureManager;
-        std::unique_ptr<Poulpe::SpriteAnimationManager> m_SpriteAnimationManager;
-        std::unique_ptr<Poulpe::EntityManager> m_EntityManager;
-        std::unique_ptr<Poulpe::ShaderManager> m_ShaderManager;
+        std::unique_ptr<VulkanAdapter> m_Renderer;
+        std::unique_ptr<Window> m_Window;
+
         std::unique_ptr<Poulpe::AudioManager> m_AudioManager;
+        std::unique_ptr<Poulpe::ComponentManager> m_ComponentManager;
         std::unique_ptr<Poulpe::ConfigManager> m_ConfigManager;
         std::unique_ptr<Poulpe::DestroyManager> m_DestroyManager;
+        std::unique_ptr<Poulpe::EntityManager> m_EntityManager;
+        std::unique_ptr<Poulpe::ShaderManager> m_ShaderManager;
+        std::unique_ptr<Poulpe::SpriteAnimationManager> m_SpriteAnimationManager;
+        std::unique_ptr<Poulpe::TextureManager> m_TextureManager;
 
         bool m_IsLoaded{ false };
         bool m_Refresh{ false };
