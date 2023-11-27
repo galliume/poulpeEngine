@@ -15,7 +15,7 @@ namespace Poulpe
 
     }
 
-    void Splash::visit(Mesh* mesh)
+    void Splash::visit([[maybe_unused]] float const deltaTime, Mesh* mesh)
     {
         if (!mesh && !mesh->isDirty()) return;
 

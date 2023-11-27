@@ -13,12 +13,12 @@ namespace Poulpe
         ComponentManager() = default;
         ~ComponentManager() = default;
 
-        template <typename T, typename IDType, typename... TArgs>
-        T& addComponent(IDType entityID, TArgs&&... args)
+        template <typename T, typename IDType, typename Component, typename... TArgs>
+        T& addComponent(IDType entityID, Component* componentImpl, TArgs&&... args)
         {
             T* newComponent(new T(std::forward<TArgs>(args)...));
+            newComponent->init(componentImpl);
             newComponent->setOwner(entityID);
-            //newComponent->Initialize();
 
             m_ComponentTypeMap[&typeid(*newComponent)].emplace_back(newComponent);
             m_ComponentsEntityMap[entityID].emplace_back(&typeid(*newComponent));

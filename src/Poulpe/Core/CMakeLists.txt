@@ -1,5 +1,4 @@
 set(SRC_LIST ${CMAKE_CURRENT_SOURCE_DIR}/Buffer.hpp
-             ${CMAKE_CURRENT_SOURCE_DIR}/IVisitor.cpp
              ${CMAKE_CURRENT_SOURCE_DIR}/IVisitor.hpp
              ${CMAKE_CURRENT_SOURCE_DIR}/JoinThreads.hpp
              ${CMAKE_CURRENT_SOURCE_DIR}/Locator.hpp

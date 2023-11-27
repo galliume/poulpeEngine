@@ -2,9 +2,11 @@
 
 #include "IMesh.hpp"
 
+#include "Poulpe/Core/IVisitor.hpp"
+
 namespace Poulpe
 {
-    class Basic : public IMesh, public IVisitor
+    class Basic : public IVisitor, public IMesh
     {
     struct pc
     {
@@ -20,7 +22,7 @@ namespace Poulpe
         Basic(VulkanAdapter* adapter,  ShaderManager* shaderManager, TextureManager* textureManager,
               VkDescriptorPool descriptorPool);
 
-        void visit(Mesh* mesh) override;
+        void visit(float const deltaTime, Mesh* mesh) override;
 
         VkDescriptorSetLayout createDescriptorSetLayout() override;
         std::vector<VkDescriptorSet> createDescriptorSet(Mesh* mesh) override;

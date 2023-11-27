@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Poulpe/Core/IVisitor.hpp"
+
 #include "Poulpe/Utils/IDHelper.hpp"
 
 namespace Poulpe
@@ -9,20 +11,31 @@ namespace Poulpe
     class Component
     {
     public:
-        Component() {
-            m_ID = GUIDGenerator::getGUID();
+        Component() { m_ID = GUIDGenerator::getGUID(); }
+        ~Component() { delete m_Pimpl; }
+
+        template<std::derived_from<IVisitor> T>
+        void init(T* componentImpl) {
+            //m_Pimpl = std::unique_ptr<T>(componentImpl);
+            m_Pimpl = std::move(componentImpl);
         }
-        virtual ~Component() {}
-        //virtual void Initialize() {}
-        //virtual void Update([[maybe_unused]] float deltaTime) {}
-        //virtual void Render() {}
+
+        template<typename... TArgs>
+        void visit(float deltaTime, TArgs&&... args)
+        {
+            m_Pimpl->visit(deltaTime, std::forward<TArgs>(args)...);
+        }
 
         void setOwner(IDType owner) { m_Owner = owner; }
-        IDType getOwner() { return m_Owner; }
+
         IDType getID() { return m_ID; }
+        IDType getOwner() { return m_Owner; }
 
     private:
-        IDType m_Owner;
         IDType m_ID;
+        IDType m_Owner;
+
+        //@todo make unique_ptr ?
+        IVisitor* m_Pimpl;
     };
 }
