@@ -13,9 +13,7 @@ namespace Poulpe
 
     }
 
-    Skybox::~Skybox() {}
-
-    void Skybox::visit(Mesh* mesh)
+    void Skybox::visit([[maybe_unused]] float const deltaTime, Mesh* mesh)
     {
         if (!mesh && !mesh->isDirty()) return;
 

@@ -7,9 +7,7 @@ namespace Poulpe
     class IVisitor
     {
     public:
-        IVisitor() = default;
-        virtual ~IVisitor() = 0;
-
-        virtual void visit(Mesh* mesh) = 0;
+        virtual ~IVisitor() = default;
+        virtual void visit(float const deltaTime, Mesh* mesh) = 0;
     };
 }
