@@ -1,6 +1,12 @@
 #include "RenderManager.hpp"
 
+#include "Poulpe/Component/RenderComponent.hpp"
+
+//@todo should not be pointing to Vulkan impl
 #include "Poulpe/Renderer/Vulkan/EntityFactory.hpp"
+//#include "Poulpe/Renderer/Vulkan/Entities/Basic.hpp"
+//#include "Poulpe/Renderer/Vulkan/Entities/Grid.hpp"
+//#include "Poulpe/Renderer/Vulkan/Entities/Skybox.hpp"
 
 namespace Poulpe
 {    
@@ -167,8 +173,8 @@ namespace Poulpe
     {
         for (auto& entity : *m_EntityManager->getHUD()) {
             if (entity->getMesh()->isDirty()) {
-                auto comp = m_ComponentManager->GetComponent<Grid>(entity->getID());
-                entity->accept(comp);
+                auto comp = m_ComponentManager->GetComponent<RenderComponent>(entity->getID());
+                entity->accept(0, comp);
                 //for (const std::type_info* typeID : m_ComponentManager->getEntityComponents(entity->getID())) {
                 //    auto comp = m_ComponentManager->GetComponent<typeID>(entity->getID());
                 //    entity->accept(comp);
@@ -241,7 +247,7 @@ namespace Poulpe
             m_Renderer.get(), m_ShaderManager.get(), m_TextureManager.get(), descriptorPool);
 
         for (auto & entity : *m_EntityManager->getEntities()) {
-            entity->accept(& basic);
+            entity->accept(0, & basic);
         }
     }
 
@@ -249,12 +255,13 @@ namespace Poulpe
     {
         Mesh* gridMesh = new Mesh();
         auto* gridEntity = new Entity();
+        Grid* rendererImpl = new Grid(m_Renderer.get(), m_ShaderManager.get(), m_TextureManager.get());
+
         gridEntity->setMesh(gridMesh);
 
         m_EntityManager->addHUD(gridEntity);
 
-        m_ComponentManager->addComponent<Grid>(gridEntity->getID(), m_Renderer.get(), m_ShaderManager.get(),
-            m_TextureManager.get());
+        m_ComponentManager->addComponent<RenderComponent>(gridEntity->getID(), rendererImpl);
 
         //Mesh* chMesh = new Mesh();
         //auto* chEntity = new Entity();
@@ -290,7 +297,7 @@ namespace Poulpe
         skybox->setMesh(skyboxMesh);
         skyboxMesh->setDescriptorPool(descriptorPool);
 
-        skybox->accept(& entity);
+        skybox->accept(0, & entity);
         m_EntityManager->setSkybox(skybox);
 
     }

@@ -15,7 +15,7 @@ namespace Poulpe
 
     }
 
-    void Basic::visit(Mesh* mesh)
+    void Basic::visit([[maybe_unused]] float const deltaTime, Mesh* mesh)
     {
         if (!mesh && !mesh->isDirty()) return;
 

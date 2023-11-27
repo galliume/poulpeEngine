@@ -2,15 +2,17 @@
 
 #include "IMesh.hpp"
 
+#include "Poulpe/Core/IVisitor.hpp"
+
 namespace Poulpe
 {
-    class Skybox : public IMesh, public IVisitor
+    class Skybox : public IVisitor, public IMesh
     {
     public:
         Skybox(VulkanAdapter* adapter, ShaderManager* shaderManager, TextureManager* textureManager);
-        virtual ~Skybox();
+        ~Skybox() = default;
 
-        void visit(Mesh* mesh) override;
+        void visit(float const deltaTime, Mesh* mesh) override;
 
         VkDescriptorSetLayout createDescriptorSetLayout() override;
         std::vector<VkDescriptorSet> createDescriptorSet(Mesh* mesh) override;
@@ -24,6 +26,5 @@ namespace Poulpe
         VulkanAdapter* m_Adapter;
         ShaderManager* m_ShaderManager;
         TextureManager* m_TextureManager;
-        //VkDescriptorPool m_DescriptorPool;
     };
 }

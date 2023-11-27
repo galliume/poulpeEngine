@@ -22,7 +22,7 @@ namespace Poulpe
         m_DescriptorPool = adapter->rdr()->createDescriptorPool(poolSizes, 10);
     }
 
-    void Crosshair::visit(Mesh* mesh)
+    void Crosshair::visit([[maybe_unused]] float const deltaTime, Mesh* mesh)
     {
         if (!mesh && !mesh->isDirty()) return;
 
