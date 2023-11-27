@@ -15,7 +15,7 @@ namespace Poulpe
         Entity();
         ~Entity() = default;
 
-        void accept(IVisitor* visitor);
+        void accept(float const deltaTime, IVisitor* visitor);
         
         IDType getID() const { return m_ID; }
         Mesh* getMesh() { return m_Mesh.get(); }

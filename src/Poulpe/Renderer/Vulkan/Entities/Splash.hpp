@@ -1,13 +1,10 @@
 #pragma once
 
+#include "IMesh.hpp"
+
 #include "Poulpe/Core/IVisitor.hpp"
 
-#include "Poulpe/Manager/EntityManager.hpp"
-#include "Poulpe/Manager/ShaderManager.hpp"
 #include "Poulpe/Manager/SpriteAnimationManager.hpp"
-#include "Poulpe/Manager/TextureManager.hpp"
-
-#include "Poulpe/Renderer/Adapter/VulkanAdapter.hpp"
 
 namespace Poulpe
 {
@@ -22,7 +19,7 @@ namespace Poulpe
         Splash(VulkanAdapter* adapter, ShaderManager* shaderManager, TextureManager* textureManager,
             SpriteAnimationManager* spriteAnimationManager, VkDescriptorPool descriptorPool);
 
-        void visit(Mesh* mesh);
+        void visit(float const deltaTime, Mesh* mesh) override;
 
     private:
         VulkanAdapter* m_Adapter;

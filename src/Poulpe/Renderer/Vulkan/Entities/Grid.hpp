@@ -2,11 +2,11 @@
 
 #include "IMesh.hpp"
 
-#include "Poulpe/Component/Component.hpp"
+#include "Poulpe/Core/IVisitor.hpp"
 
 namespace Poulpe
 {
-    class Grid : public Component, public IMesh, public IVisitor
+    class Grid : public IVisitor, public IMesh
     {
     struct pc
     {
@@ -15,8 +15,9 @@ namespace Poulpe
     };
     public:
         Grid(VulkanAdapter* adapter, ShaderManager* shaderManager, TextureManager* textureManager);
+        ~Grid() = default;
 
-        void visit(Mesh* meshy) override;
+        void visit(float const deltaTime, Mesh* mesh) override;
 
         VkDescriptorSetLayout createDescriptorSetLayout() override;
         std::vector<VkDescriptorSet> createDescriptorSet(Mesh* mesh) override;
