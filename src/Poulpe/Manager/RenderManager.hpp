@@ -43,6 +43,8 @@ namespace Poulpe
 
     private:
         void loadData(std::string const & level);
+
+        //@todo move to EntityManager
         void prepareEntity();
         void prepareHUD();
         void prepareSkybox();

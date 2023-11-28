@@ -26,5 +26,6 @@ namespace Poulpe
         VulkanAdapter* m_Adapter;
         ShaderManager* m_ShaderManager;
         TextureManager* m_TextureManager;
+        VkDescriptorPool m_DescriptorPool;
     };
 }

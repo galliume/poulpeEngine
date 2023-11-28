@@ -19,8 +19,7 @@ namespace Poulpe
     };
 
     public:
-        Basic(VulkanAdapter* adapter,  ShaderManager* shaderManager, TextureManager* textureManager,
-              VkDescriptorPool descriptorPool);
+        Basic(VulkanAdapter* adapter,  ShaderManager* shaderManager, TextureManager* textureManager);
 
         void visit(float const deltaTime, Mesh* mesh) override;
 
