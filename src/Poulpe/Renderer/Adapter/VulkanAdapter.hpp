@@ -6,6 +6,7 @@
 
 #include "Poulpe/GUI/ImGui/Im.hpp"
 
+#include "Poulpe/Manager/ComponentManager.hpp"
 #include "Poulpe/Manager/EntityManager.hpp"
 
 #include <future>
@@ -17,14 +18,13 @@ namespace Poulpe
 
     public:
 
-        explicit VulkanAdapter(Window* window, EntityManager* entityManager);
+        explicit VulkanAdapter(Window* window, EntityManager* entityManager, ComponentManager* componentManager);
         virtual ~VulkanAdapter() = default;
 
         void init() override;
         void addCamera(Camera* camera) override { m_Camera = camera; }
         void draw() override;
         void destroy() override;
-        void drawSplashScreen() override;
         VulkanRenderer* rdr() override { return m_Renderer.get(); }
         void immediateSubmit(std::function<void(VkCommandBuffer cmd)> && function, int queueIndex = 0) override;
         void showGrid(bool show) override;
@@ -52,7 +52,6 @@ namespace Poulpe
         void shouldRecreateSwapChain();
         void recreateSwapChain();
         void setRayPick(float x, float y, float z, int width, int height);
-        void clearSplashScreen();
         void setDrawBbox(bool draw) { m_DrawBbox = draw; };
         bool getDrawBbox() { return m_DrawBbox; };
         void clearRendererScreen();
@@ -103,9 +102,6 @@ namespace Poulpe
         //@todo wtf
         std::vector<std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>>> m_Semaphores{};
 
-        VkCommandPool m_CommandPoolSplash{ nullptr };
-        std::vector<VkCommandBuffer> m_CommandBuffersSplash{};
-
         VkCommandPool m_CommandPoolEntities{ nullptr };
         std::vector<VkCommandBuffer> m_CommandBuffersEntities{};
 
@@ -125,6 +121,7 @@ namespace Poulpe
         Camera* m_Camera{ nullptr };
         Window* m_Window{ nullptr };
         EntityManager* m_EntityManager{ nullptr };
+        [[maybe_unused]] ComponentManager* m_ComponentManager{ nullptr };
 
         //@todo move to meshManager
         std::vector<VkImageView>m_DepthImageViews{};

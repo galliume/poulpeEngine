@@ -17,8 +17,6 @@ namespace Poulpe
         virtual ~AudioManager();
 
         void load(nlohmann::json config) override;
-        void startSplash(unsigned int const index = 0) override;
-        void stopSplash() override;
         void startAmbient(unsigned int const index = 0) override;
         void stopAmbient() override;
         std::vector<std::string> const getAmbientSound() override { return m_AmbientSounds; }
@@ -36,12 +34,9 @@ namespace Poulpe
     private:
         ma_engine m_Engine;
         ma_sound m_AmbientSound;
-        ma_sound m_SplashSound;
         State m_State;
         unsigned int m_AmbientSoundIndex{ 0 };
-        unsigned int m_SplashSoundIndex{ 0 };
         bool m_Looping = true;
         std::vector<std::string> m_AmbientSounds {};
-        std::vector<std::string> m_SplashSounds {};
     };
 }

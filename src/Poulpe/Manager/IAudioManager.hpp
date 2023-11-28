@@ -13,8 +13,6 @@ namespace Poulpe
         ~IAudioManager() = default;
 
         virtual void load(nlohmann::json config) = 0;
-        virtual void startSplash(unsigned int const index = 0) = 0;
-        virtual void stopSplash() = 0;
         virtual void startAmbient(unsigned int const index = 0) = 0;
         virtual void stopAmbient() = 0;
         virtual std::vector<std::string> const getAmbientSound() = 0;

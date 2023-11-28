@@ -78,6 +78,7 @@ namespace Poulpe
         }
 
         mesh->setData(data);
+        mesh->setIsDirty(false);
     }
 
     VkDescriptorSetLayout Crosshair::createDescriptorSetLayout()
