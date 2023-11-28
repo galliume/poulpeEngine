@@ -148,6 +148,16 @@ namespace Poulpe
         m_Renderer->draw();
     }
 
+    template <typename T>
+    T lerp(T const& startValue, T const& endValue, float const& t) {
+      return ((1.0f - t) * startValue) + (t * endValue);
+    }
+
+    glm::vec3 startScale = glm::vec3(0.001, 0.001, 0.001);
+    glm::vec3 endScale = glm::vec3(0.12, 0.12, 0.12);
+    float animationDuration = 3;
+    bool reverse = false;
+
     void RenderManager::renderScene()
     {
         for (auto& entity : *m_EntityManager->getEntities()) {
@@ -158,10 +168,25 @@ namespace Poulpe
               //mesh->getData()->m_CurrentPos.x -= 0.0001;
               //mesh->getData()->m_CurrentPos.y -= 0.0001;
               //mesh->getData()->m_CurrentPos.z -= 0.0001;
+              if (!reverse) {
+                animationDuration -= 0.001;
+              } else {
+                animationDuration += 0.001;
+              }
 
+              if (0 > animationDuration) {
+                animationDuration = 0;
+                reverse = true;
+              } else if (3 < animationDuration) {
+                animationDuration = 3;
+                reverse = false;
+              }
+
+              auto scale = lerp(startScale, endScale, animationDuration);
+              
               ubo.model = glm::mat4(1.0f);
               ubo.model = glm::translate(ubo.model, mesh->getData()->m_OriginPos);
-              ubo.model = glm::scale(ubo.model, mesh->getData()->m_OriginScale);
+              ubo.model = glm::scale(ubo.model, scale);
 
               auto& rotation = mesh->getData()->m_CurrentRotation;
               rotation.x += 0.1;
