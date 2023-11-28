@@ -13,7 +13,7 @@ namespace Poulpe
         virtual ~RenderManager() = default;
 
         void init() override;
-        void renderScene() override;
+        void renderScene(float const deltaTime) override;
         void draw() override;
         bool isLoaded()  override { return m_IsLoaded; }
         void setIsLoaded(bool loaded = true) override { m_IsLoaded = loaded; }

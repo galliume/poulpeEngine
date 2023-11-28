@@ -46,11 +46,6 @@ namespace Poulpe
             //}
         }
 
-        template <typename T>
-        bool HasComponent() const {
-            return componentTypeMap.count(&typeid(T));
-        }
-
         std::vector<const std::type_info*> getEntityComponents(IDType entityID) { return m_ComponentsEntityMap[entityID]; }
 
     private:
