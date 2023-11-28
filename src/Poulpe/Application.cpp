@@ -2,7 +2,7 @@
 
 namespace Poulpe
 {
-    std::atomic<int> Application::s_UnlockedFPS{ 1 };
+    std::atomic<int> Application::s_MaxFPS{ 60 };
     Application* Application::s_Instance{ nullptr };
 
     Application::Application()
@@ -47,57 +47,36 @@ namespace Poulpe
     void Application::run()
     {
         auto endRun = std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::system_clock::now());
-        auto lastTime = endRun;
-        auto timeStepSum = std::chrono::duration<double>(0.0);
-        uint32_t frameCount = 0;
-        double maxFPS = 60.0;
-        auto maxPeriod = std::chrono::duration<double>(1.0 / maxFPS);
-  
-        std::chrono::milliseconds timeStep{0};
-
+        
         PLP_WARN("Loaded scene in {}", (endRun - m_StartRun).count());//@todo readable in seconds...
 
         std::mutex mutex;
 
-         while (!glfwWindowShouldClose(m_RenderManager->getWindow()->get())) {
+        auto lastTime = std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::system_clock::now());
 
-            if (Application::s_UnlockedFPS.load() == 0) {
-                maxFPS = 30.0;
-                maxPeriod = std::chrono::duration<double>(1.0 / maxFPS);
-            } else if (Application::s_UnlockedFPS.load() == 1) {
-                maxFPS = 60.0;
-                maxPeriod = std::chrono::duration<double>(1.0 / maxFPS);
-            } else if (Application::s_UnlockedFPS.load() == 2) {
-                maxFPS = 120.0;
-                maxPeriod = std::chrono::duration<double>(1.0 / maxFPS);
-            }
+        while (!glfwWindowShouldClose(m_RenderManager->getWindow()->get())) {
 
+            auto frameTarget = (1.0f / (s_MaxFPS.load() / 1000.0f)) / 1000.0f;
             auto currentTime = std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::system_clock::now());
-            timeStep = currentTime - lastTime;
+            auto deltaTime = static_cast<float>(currentTime.time_since_epoch().count() - lastTime.time_since_epoch().count())
+                / 1000.0f;
 
-            if (timeStep >= maxPeriod || Application::s_UnlockedFPS.load() == 3) {
-                
-                timeStepSum += timeStep;
-                frameCount++;
+            if (deltaTime < frameTarget && s_MaxFPS.load() != 0) continue;
 
-                if (1.0 < timeStepSum.count()) {
-                    PLP_WARN("{} fps", frameCount);
-                    timeStepSum = std::chrono::duration<double>(0.0);
-                    frameCount = 0;
-                }
-                m_RenderManager->getCamera()->updateDeltaTime(timeStep.count());
+            PLP_WARN("{} ms", deltaTime);
+            
+            m_RenderManager->getCamera()->updateDeltaTime(deltaTime);
 
-                glfwPollEvents();
+            glfwPollEvents();
 
-                m_RenderManager->getRendererAdapter()->shouldRecreateSwapChain();
-                Poulpe::Locator::getCommandQueue()->execPreRequest();
-                m_VulkanLayer->render(timeStep.count());
-                m_RenderManager->renderScene();
-                m_RenderManager->draw();
-                Poulpe::Locator::getCommandQueue()->execPostRequest();
+            m_RenderManager->getRendererAdapter()->shouldRecreateSwapChain();
+            Poulpe::Locator::getCommandQueue()->execPreRequest();
+            m_VulkanLayer->render(deltaTime);
+            m_RenderManager->renderScene(deltaTime);
+            m_RenderManager->draw();
+            Poulpe::Locator::getCommandQueue()->execPostRequest();
 
-                lastTime = currentTime;
-            }
+            lastTime = currentTime;
         }
 
         Poulpe::Im::destroy();

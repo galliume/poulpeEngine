@@ -14,6 +14,6 @@ namespace Poulpe
 
         virtual void init(Window* window) = 0;
         virtual void addRenderManager(RenderManager* renderManager) = 0;
-        virtual void render(double timeStep) = 0;
+        virtual void render(float timeStep) = 0;
     };
 }

@@ -25,7 +25,7 @@ namespace Poulpe
         ~IRenderManager() = default;
 
         virtual void init() = 0;
-        virtual void renderScene() = 0;
+        virtual void renderScene(float const deltaTime) = 0;
         virtual void draw() = 0;
         virtual bool isLoaded() = 0;
         virtual void setIsLoaded(bool loaded = true) = 0;

@@ -14,7 +14,7 @@
 
 ![actual_state1](screenshots/viewport.jpg?raw=true "Poulpe Engine GUI")
 ![actual_state2](screenshots/fog_2.gif?raw=true "Poulpe 3D rendering")
-
+![actual_state3](screenshots/anim.gif?raw=true "Poulpe 3D anim")
 
 ### To execute 
 
