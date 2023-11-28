@@ -256,6 +256,7 @@ namespace Poulpe
             data.m_OriginPos = pos;
             data.m_CurrentPos = pos;
             data.m_OriginScale = scale;
+            data.m_CurrentScale = scale;
             data.m_OriginRotation = rotation;
             data.m_CurrentRotation = rotation;
 

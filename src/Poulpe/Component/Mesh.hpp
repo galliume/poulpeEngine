@@ -50,6 +50,7 @@ namespace Poulpe
             glm::vec3 m_OriginRotation;
             glm::vec3 m_CurrentPos;
             glm::vec3 m_CurrentRotation;
+            glm::vec3 m_CurrentScale;
         };
 
         struct BBox
