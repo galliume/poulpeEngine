@@ -1,6 +1,7 @@
 #include "RenderManager.hpp"
 
 #include "Poulpe/Component/RenderComponent.hpp"
+#include "Poulpe/Component/AnimationComponent.hpp"
 
 //@todo should not be pointing to Vulkan impl
 #include "Poulpe/Renderer/Vulkan/EntityFactory.hpp"
@@ -153,52 +154,13 @@ namespace Poulpe
       return ((1.0f - t) * startValue) + (t * endValue);
     }
 
-    glm::vec3 startScale = glm::vec3(0.001, 0.001, 0.001);
-    glm::vec3 endScale = glm::vec3(0.12, 0.12, 0.12);
-    float animationDuration = 3;
-    bool reverse = false;
-
-    void RenderManager::renderScene()
+    void RenderManager::renderScene(float const deltaTime)
     {
         for (auto& entity : *m_EntityManager->getEntities()) {
             auto* mesh = entity->getMesh();
-            for (auto& ubo : mesh->getData()->m_Ubos) {
-              if (!mesh->hasAnimation()) continue;
-              
-              //mesh->getData()->m_CurrentPos.x -= 0.0001;
-              //mesh->getData()->m_CurrentPos.y -= 0.0001;
-              //mesh->getData()->m_CurrentPos.z -= 0.0001;
-              if (!reverse) {
-                animationDuration -= 0.001;
-              } else {
-                animationDuration += 0.001;
-              }
-
-              if (0 > animationDuration) {
-                animationDuration = 0;
-                reverse = true;
-              } else if (3 < animationDuration) {
-                animationDuration = 3;
-                reverse = false;
-              }
-
-              auto scale = lerp(startScale, endScale, animationDuration);
-              
-              ubo.model = glm::mat4(1.0f);
-              ubo.model = glm::translate(ubo.model, mesh->getData()->m_OriginPos);
-              ubo.model = glm::scale(ubo.model, scale);
-
-              auto& rotation = mesh->getData()->m_CurrentRotation;
-              rotation.x += 0.1;
-              rotation.y += 0.1;
-              rotation.z += 0.1;
-
-              ubo.model = glm::rotate(ubo.model, glm::radians(rotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
-              ubo.model = glm::rotate(ubo.model, glm::radians(rotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
-              ubo.model = glm::rotate(ubo.model, glm::radians(rotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
-
-              m_Renderer->rdr()->updateUniformBuffer(mesh->getUniformBuffers()->at(0), &mesh->getData()->m_Ubos);
-            }
+            if (!mesh->hasAnimation()) continue;
+            auto compo = m_ComponentManager->GetComponent<AnimationComponent>(entity->getID());
+            if (compo) compo->visit(deltaTime, mesh);
         }
 
         m_Renderer->renderScene();
@@ -227,10 +189,74 @@ namespace Poulpe
         m_ComponentManager->addComponent<RenderComponent>(entity->getID(), basicRdrImpl);
       }
 
+      //@todo temp until lua scripting
+      class AnimImpl : public IVisitor
+      {
+      public:
+          AnimImpl(VulkanAdapter* adapter)
+          {
+              m_Adapter = adapter;
+          }
+
+          void visit(float const deltaTime, Mesh* mesh) override
+          {
+              for (auto& ubo : mesh->getData()->m_Ubos) {
+
+                  //mesh->getData()->m_CurrentPos.x -= 0.0001;
+                  //mesh->getData()->m_CurrentPos.y -= 0.0001;
+                  //mesh->getData()->m_CurrentPos.z -= 0.0001;
+                  //if (!reverse) {
+                  //    animationDuration -= 1.f;
+                  //}
+                  //else {
+                  //    animationDuration += 1.f;
+                  //}
+
+                  //if (0 > animationDuration) {
+                  //    animationDuration = 0.f;
+                  //    reverse = true;
+                  //}
+                  //else if (3 < animationDuration) {
+                  //    animationDuration = 3.f;
+                  //    reverse = false;
+                  //}
+
+                  //auto scale = lerp(startScale, endScale, elapsedTime / animationDuration);
+
+                  //elapsedTime += deltaTime;
+
+                  //ubo.model = glm::mat4(1.0f);
+                  //ubo.model = glm::translate(ubo.model, mesh->getData()->m_OriginPos);
+                  //ubo.model = glm::scale(ubo.model, mesh->getData()->m_OriginScale);
+
+                  auto angle = deltaTime * (std::rand() % 100);
+
+                  ubo.model = glm::rotate(ubo.model, glm::radians(angle), mesh->getData()->m_OriginPos);
+
+                  m_Adapter->rdr()->updateUniformBuffer(mesh->getUniformBuffers()->at(0), &mesh->getData()->m_Ubos);
+              }
+
+          }
+
+          VulkanAdapter* m_Adapter;
+          float animationDuration = 3.f;
+          float elapsedTime = 0.f;
+          bool reverse = false;
+          glm::vec3 startScale = glm::vec3(0.001, 0.001, 0.001);
+          glm::vec3 endScale = glm::vec3(0.12, 0.12, 0.12);
+      };
+
+      auto* animImpl = new AnimImpl(m_Renderer.get());
+
       for (auto& entity : *m_EntityManager->getEntities()) {
         if (entity->getMesh()->isDirty()) {
           auto comp = m_ComponentManager->GetComponent<RenderComponent>(entity->getID());
           entity->accept(0, comp);
+        }
+
+        //@todo temp until lua scripting
+        if (entity->getMesh()->hasAnimation()) {
+            m_ComponentManager->addComponent<AnimationComponent>(entity->getID(), animImpl);
         }
       }
     }

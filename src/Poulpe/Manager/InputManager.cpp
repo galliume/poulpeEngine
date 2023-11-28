@@ -123,7 +123,7 @@ namespace Poulpe
         m_LastX = xPos;
         m_LastY = yPos;
     
-        const float sensitivity = 0.25f;
+        const float sensitivity = 0.5f;
         xoffset *= sensitivity;
         yoffset *= sensitivity;
     

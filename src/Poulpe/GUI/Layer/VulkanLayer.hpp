@@ -30,10 +30,10 @@ namespace Poulpe
         virtual ~VulkanLayer() = default;
 
         void init(Window* window) override;
-        void render(double timeStep) override;
+        void render(float timeStep) override;
         void addRenderManager(RenderManager* renderManager) override;
         void destroy();
-        void displayFpsCounter(double timeStep);
+        void displayFpsCounter(float timeStep);
         void displayAPI();
         void displayOptions();
         void displayTextures();
@@ -103,7 +103,7 @@ namespace Poulpe
         std::vector<IObserver> m_Observers{};
         static bool s_OpenAbout;
         bool m_ImgDescDone = false;
-        unsigned int m_Resolution{ 0 };
+        unsigned int m_Resolution{ 3 };
         unsigned int m_Ratio{ 0 };
     };
 }

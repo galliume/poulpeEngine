@@ -251,7 +251,7 @@ namespace Poulpe
         Poulpe::Locator::getCommandQueue()->add(cmd);
     }
 
-    void VulkanLayer::render(double timeStep)
+    void VulkanLayer::render(float timeStep)
     {
         Poulpe::Im::newFrame();
 
@@ -489,9 +489,9 @@ namespace Poulpe
         ImGui::EndTable();
     }
 
-    void VulkanLayer::displayFpsCounter(double timeStep)
+    void VulkanLayer::displayFpsCounter(float timeStep)
     {
-        ImGui::Text("Frametime : %.2f ms", timeStep);
+        ImGui::Text("Frametime : %.10f ms", timeStep);
     }
 
     void VulkanLayer::displayAPI()
@@ -578,13 +578,13 @@ namespace Poulpe
             }
 
             ImGui::Text("FPS limit"); ImGui::SameLine();
-            auto fps = Poulpe::Application::s_UnlockedFPS.load();
-            ImGui::RadioButton("30 fps", & fps, 0); ImGui::SameLine();
-            ImGui::RadioButton("60 fps", & fps, 1); ImGui::SameLine();
-            ImGui::RadioButton("120 fps", & fps, 2); ImGui::SameLine();
-            ImGui::RadioButton("unlocked", & fps, 3);
-            if (fps != Poulpe::Application::s_UnlockedFPS.load()) {
-                Poulpe::Application::s_UnlockedFPS.store(fps);
+            auto fps = Poulpe::Application::s_MaxFPS.load();
+            ImGui::RadioButton("30 fps", & fps, 30); ImGui::SameLine();
+            ImGui::RadioButton("60 fps", & fps, 60); ImGui::SameLine();
+            ImGui::RadioButton("120 fps", & fps, 120); ImGui::SameLine();
+            ImGui::RadioButton("unlocked", & fps, 0);
+            if (fps != Poulpe::Application::s_MaxFPS.load()) {
+                Poulpe::Application::s_MaxFPS.store(fps);
             }
         }
 

@@ -7,7 +7,7 @@ namespace Poulpe
     class RenderComponent : public Component, public IVisitor
     {
     public:
-        RenderComponent();
+        RenderComponent() : Component() {};
 
         //@todo mmh ? CRTP ?
         void visit(float const deltaTime, Mesh* mesh) override {
