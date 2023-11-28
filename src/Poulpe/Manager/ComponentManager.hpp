@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Poulpe/Component/Component.hpp"
+#include "Poulpe/Component/RenderComponent.hpp"
 
 #include <cstdint>
 
