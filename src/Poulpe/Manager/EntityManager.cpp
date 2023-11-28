@@ -118,6 +118,7 @@ namespace Poulpe
                             );
 
                             bool hasBbox = static_cast<bool>(data["hasBbox"]);
+                            bool hasAnimation = static_cast<bool>(data["hasAnimation"]);
 
                             auto parts = initMeshes(
                                 static_cast<std::string>(key),
@@ -132,6 +133,7 @@ namespace Poulpe
 
                             for (auto & part : parts) {
                                 part->setHasBbox(hasBbox);
+                                part->setHasAnimation(hasAnimation);
                             }
                             addEntity(std::move(parts));
                         }
@@ -179,7 +181,8 @@ namespace Poulpe
                             textures.emplace_back(static_cast<std::string>(texture));
 
                         bool hasBbox = static_cast<bool>(data["hasBbox"]);
-                        
+                        bool hasAnimation = static_cast<bool>(data["hasAnimation"]);
+
                         //@todo move init to a factory ?
                         auto parts = initMeshes(
                             static_cast<std::string>(key),
@@ -194,6 +197,7 @@ namespace Poulpe
 
                         for (auto & part : parts) {
                             part->setHasBbox(hasBbox);
+                            part->setHasAnimation(hasAnimation);
                         }
                         addEntity(std::move(parts));
                     }
@@ -218,15 +222,23 @@ namespace Poulpe
         glm::vec3 const & pos, glm::vec3 const & scale, glm::vec3 rotation,
         bool shouldInverseTextureY)
     {
+        std::vector<Mesh*> meshes{};
+
         if (!std::filesystem::exists(path)) {
             PLP_FATAL("mesh file {} does not exits.", path);
             throw std::runtime_error("error loading a mesh file.");
         }
 
+        if (m_ObjLoaded.contains(path)) {
+          PLP_TRACE("contain {}", path);
+            return meshes;
+        }
+
+        //m_ObjLoaded.insert(path);
+
         //@todo not reload an already loaded obj
         std::vector<TinyObjData> listData = TinyObjLoader::loadData(path, shouldInverseTextureY);
 
-        std::vector<Mesh*> meshes;
 
         for (size_t i = 0; i < listData.size(); i++) {
 
@@ -241,6 +253,11 @@ namespace Poulpe
             data.m_Texture = textureNames[listData[i].materialId];
             data.m_Vertices = listData[i].vertices;
             data.m_Indices = listData[i].indices;
+            data.m_OriginPos = pos;
+            data.m_CurrentPos = pos;
+            data.m_OriginScale = scale;
+            data.m_OriginRotation = rotation;
+            data.m_CurrentRotation = rotation;
 
             UniformBufferObject ubo{};
             ubo.model = glm::mat4(1.0f);

@@ -10,7 +10,17 @@ namespace Poulpe
         m_ShaderManager(shaderManager),
         m_TextureManager(textureManager)
     {
+      std::vector<VkDescriptorPoolSize> poolSizes{};
+      VkDescriptorPoolSize cp1;
+      cp1.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+      cp1.descriptorCount = 10;
+      VkDescriptorPoolSize cp2;
+      cp2.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+      cp2.descriptorCount = 10;
+      poolSizes.emplace_back(cp1);
+      poolSizes.emplace_back(cp2);
 
+      m_DescriptorPool = m_Adapter->rdr()->createDescriptorPool(poolSizes, 10, VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT);
     }
 
     void Skybox::visit([[maybe_unused]] float const deltaTime, Mesh* mesh)
@@ -82,6 +92,7 @@ namespace Poulpe
 
         setPushConstants(mesh);
 
+        mesh->setDescriptorPool(m_DescriptorPool);
         mesh->setDescriptorSetLayout(createDescriptorSetLayout());
         mesh->setPipelineLayout(createPipelineLayout(mesh->getDescriptorSetLayout()));
         mesh->setDescriptorSets(createDescriptorSet(mesh));

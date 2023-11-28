@@ -5,14 +5,22 @@ namespace Poulpe
 {
     struct constants;
 
-    Basic::Basic(VulkanAdapter* adapter, ShaderManager* shaderManager, TextureManager* textureManager,
-        VkDescriptorPool descriptorPool)
+    Basic::Basic(VulkanAdapter* adapter, ShaderManager* shaderManager, TextureManager* textureManager)
         : m_Adapter(adapter),
         m_ShaderManager(shaderManager),
-        m_TextureManager(textureManager),
-        m_DescriptorPool(descriptorPool)
+        m_TextureManager(textureManager)
     {
+      std::vector<VkDescriptorPoolSize> poolSizes{};
+      VkDescriptorPoolSize cp1;
+      cp1.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+      cp1.descriptorCount = 1000;
+      VkDescriptorPoolSize cp2;
+      cp2.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+      cp2.descriptorCount = 1000;
+      poolSizes.emplace_back(cp1);
+      poolSizes.emplace_back(cp2);
 
+      m_DescriptorPool = m_Adapter->rdr()->createDescriptorPool(poolSizes, 1000);
     }
 
     void Basic::visit([[maybe_unused]] float const deltaTime, Mesh* mesh)
@@ -86,6 +94,8 @@ namespace Poulpe
         }
 
         vkDestroyCommandPool(m_Adapter->rdr()->getDevice(), commandPool, nullptr);
+
+        mesh->setIsDirty(false);
     }
 
     void Basic::createBBoxEntity(Mesh* mesh)

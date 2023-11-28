@@ -45,6 +45,11 @@ namespace Poulpe
             Buffer m_VertexBuffer = { nullptr, nullptr, 0, 0 };
             Buffer m_IndicesBuffer = { nullptr, nullptr, 0, 0 };
             uint32_t m_TextureIndex = 0;
+            glm::vec3 m_OriginPos;
+            glm::vec3 m_OriginScale;
+            glm::vec3 m_OriginRotation;
+            glm::vec3 m_CurrentPos;
+            glm::vec3 m_CurrentRotation;
         };
 
         struct BBox
@@ -86,7 +91,9 @@ namespace Poulpe
         bool isDirty() { return m_IsDirty.load(); }
         void setIsDirty(bool dirty = true) { m_IsDirty.store(dirty); }
         void setHasBbox(bool hasBbox = false) { m_HasBbox = hasBbox; }
+        void setHasAnimation(bool hasAnimation = false) { m_HasAnimation = hasAnimation; }
         bool hasBbox() { return m_HasBbox; }
+        bool hasAnimation() { return m_HasAnimation; }
         
         void addBBox(BBox* bbox) { m_BoundingBox = std::unique_ptr<BBox>(bbox); }
         BBox* getBBox() { return m_BoundingBox.get(); }
@@ -117,7 +124,8 @@ namespace Poulpe
 
         std::string m_ShaderName;
         std::atomic<bool> m_IsDirty{ true };
-        bool m_HasBbox = true;
+        bool m_HasBbox = false;
+        bool m_HasAnimation = false;
 
         bool m_HasPushContants = false;
         std::vector<Mesh::Buffer> m_UniformBuffers;

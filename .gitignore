@@ -61,3 +61,4 @@ cache/
 .clang-tidy
 Directory.build.props
 build
+CMakeFiles

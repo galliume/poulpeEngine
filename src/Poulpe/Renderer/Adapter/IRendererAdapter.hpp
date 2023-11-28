@@ -14,7 +14,6 @@ namespace Poulpe
         virtual void draw() = 0;
         virtual void destroy() = 0;
         virtual void setDeltatime(float deltaTime) = 0;
-        virtual void drawSplashScreen() = 0;
         virtual void showGrid(bool show) = 0;
         virtual inline std::vector<VkDescriptorSetLayout>* getDescriptorSetLayouts() = 0;
         virtual inline std::vector<VkImage>* getSwapChainImages() = 0;

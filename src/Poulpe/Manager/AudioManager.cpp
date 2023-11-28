@@ -10,9 +10,6 @@ namespace Poulpe
 
     void AudioManager::load(nlohmann::json config)
     {
-        for (auto const & sound : config["splash"].items()) {
-            m_SplashSounds.emplace_back(sound.value());
-        }
         for (auto const & sound : config["ambient"].items()) {
             m_AmbientSounds.emplace_back(sound.value());
         }
@@ -50,28 +47,6 @@ namespace Poulpe
     void AudioManager::stopAmbient()
     {
         stop(m_AmbientSound);
-    }
-
-    void AudioManager::startSplash(unsigned int const index)
-    {
-        try {
-            if (State::PLAY == m_State) {
-                stop(m_SplashSound);
-            }
-
-            start(m_SplashSounds.at(index), m_SplashSound);
-
-            if (State::PLAY == m_State) {
-                m_SplashSoundIndex = index;
-            }
-        } catch (std::out_of_range const & exc) {
-            PLP_ERROR("Splash sound index {} does not exists.", index);
-        }
-    }
-
-    void AudioManager::stopSplash()
-    {
-        stop(m_SplashSound);
     }
 
     std::string const AudioManager::getState()
@@ -139,6 +114,5 @@ namespace Poulpe
         }
 
         m_AmbientSounds.clear();
-        m_SplashSounds.clear();
     }
 }

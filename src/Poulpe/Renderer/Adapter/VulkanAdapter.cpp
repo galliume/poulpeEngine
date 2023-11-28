@@ -18,8 +18,8 @@ namespace Poulpe
     std::atomic<int> VulkanAdapter::s_Crosshair{ 0 };
     std::atomic<int> VulkanAdapter::s_PolygoneMode{ VK_POLYGON_MODE_FILL };
     
-    VulkanAdapter::VulkanAdapter(Window* window, EntityManager* entityManager)
-        : m_Window(window), m_EntityManager(entityManager)
+    VulkanAdapter::VulkanAdapter(Window* window, EntityManager* entityManager, ComponentManager* componentManager)
+        : m_Window(window), m_EntityManager(entityManager), m_ComponentManager(componentManager)
     {
         m_Renderer = std::make_unique<VulkanRenderer>(window);
     }
@@ -57,10 +57,6 @@ namespace Poulpe
         m_SwapChainImageViews.resize(m_SwapChainImages.size());
         m_DepthImages.resize(m_SwapChainImages.size());
         m_DepthImageViews.resize(m_SwapChainImages.size());
-
-        m_CommandPoolSplash = m_Renderer->createCommandPool();
-        m_CommandBuffersSplash = m_Renderer->allocateCommandBuffers(m_CommandPoolSplash,
-            static_cast<uint32_t>(m_SwapChainImageViews.size()));
 
         m_CommandPoolEntities = m_Renderer->createCommandPool();
 
@@ -165,10 +161,6 @@ namespace Poulpe
         for (size_t i = 0; i < m_Renderer->getQueueCount(); i++) {
             m_Semaphores.emplace_back(m_Renderer->createSyncObjects(m_SwapChainImages));
         }
-
-        m_CommandPoolSplash = m_Renderer->createCommandPool();
-        m_CommandBuffersSplash = m_Renderer->allocateCommandBuffers(m_CommandPoolSplash,
-            static_cast<uint32_t>(m_SwapChainImageViews.size()));
 
         m_CommandPoolEntities = m_Renderer->createCommandPool();
         m_CommandBuffersEntities = m_Renderer->allocateCommandBuffers(m_CommandPoolEntities,
@@ -398,6 +390,7 @@ namespace Poulpe
     {
         {
             std::unique_lock<std::mutex> render(m_MutexRenderScene);
+
             m_CmdToSubmit.resize(4);
             m_renderStatus = 1;
 
@@ -473,55 +466,6 @@ namespace Poulpe
             }
             acquireNextImage();
         }
-    }
-
-    void VulkanAdapter::drawSplashScreen()
-    {
-        //beginRendering(m_CommandBuffersSplash[m_ImageIndex], VK_ATTACHMENT_LOAD_OP_CLEAR, VK_ATTACHMENT_STORE_OP_NONE_KHR);
-
-        //for (std::shared_ptr<Mesh> mesh : m_Splash) {
-
-        //    if (!mesh || !mesh->isVisible()) continue;
-        //    m_Renderer->bindPipeline(m_CommandBuffersSplash[m_ImageIndex], mesh->m_GraphicsPipeline);
-
-        //    for (uint32_t i = 0; i < mesh->m_UniformBuffers.size(); i++) {
-
-        //        if (mesh->hasPushConstants() && nullptr != mesh->applyPushConstants)
-        //            mesh->applyPushConstants(m_CommandBuffersSplash[m_ImageIndex], mesh->m_PipelineLayout, shared_from_this(), *mesh->getData());
-
-        //        m_Renderer->draw(m_CommandBuffersSplash[m_ImageIndex], mesh->getDescriptorSets().at(i), mesh.get(), *mesh->getData(), mesh->getData()->m_Ubos.size(), m_ImageIndex);
-        //    }
-        //}
-
-        //endRendering(m_CommandBuffersSplash[m_ImageIndex]);
-
-        //submit({ m_CommandBuffersSplash[m_ImageIndex] });
-        //present();
-
-        ////@todo wtf ?
-        ////uint32_t currentFrame = m_Renderer->GetNextFrameIndex();
-        ///*if (std::cmp_equal(currentFrame, VK_ERROR_OUT_OF_DATE_KHR) || std::cmp_equal(currentFrame, VK_SUBOPTIMAL_KHR)) {
-        //    RecreateSwapChain();
-        //}*/
-        //acquireNextImage();
-    }
-
-    void VulkanAdapter::clearSplashScreen()
-    {
-        //beginRendering(m_CommandBuffersSplash[m_ImageIndex], VK_ATTACHMENT_LOAD_OP_CLEAR, VK_ATTACHMENT_STORE_OP_NONE_KHR);
-        ////do nothing !
-        //endRendering(m_CommandBuffersSplash[m_ImageIndex]);
-
-        //submit({ m_CommandBuffersSplash[m_ImageIndex] });
-        //present();
-
-        ////@todo wtf ?
-        ////uint32_t currentFrame = m_Renderer->GetNextFrameIndex();
-        ////if (std::cmp_equal(currentFrame, VK_ERROR_OUT_OF_DATE_KHR) || std::cmp_equal(currentFrame, VK_SUBOPTIMAL_KHR)) {
-        ////    RecreateSwapChain();
-        ////}
-
-        //acquireNextImage();
     }
 
     void VulkanAdapter::clearRendererScreen()
@@ -601,7 +545,6 @@ namespace Poulpe
         for (VkDescriptorPool descriptorPool : m_DescriptorPools) {
             vkDestroyDescriptorPool(m_Renderer->getDevice(), descriptorPool, nullptr);
         }
-        m_Renderer->destroyRenderPass(m_RenderPass.get(), m_CommandPoolSplash, m_CommandBuffersSplash);
         m_Renderer->destroyRenderPass(m_RenderPass.get(), m_CommandPoolEntities, m_CommandBuffersEntities);
         m_Renderer->destroyRenderPass(m_RenderPass.get(), m_CommandPoolBbox, m_CommandBuffersBbox);
         m_Renderer->destroyRenderPass(m_RenderPass.get(), m_CommandPoolSkybox, m_CommandBuffersSkybox);

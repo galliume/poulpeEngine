@@ -2,6 +2,8 @@
 
 #include "IEntityManager.hpp"
 
+#include <set>
+
 namespace Poulpe
 {
     class EntityManager : IEntityManager
@@ -47,5 +49,7 @@ namespace Poulpe
 
         std::unique_ptr<Entity> m_World;
         std::unique_ptr<EntityNode> m_WorldNode;
+
+        std::set<std::string> m_ObjLoaded{};
     };
 }
