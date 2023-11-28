@@ -21,7 +21,7 @@ namespace Poulpe
         void init();
         void run();
 
-        static std::atomic<int> s_UnlockedFPS;
+        static std::atomic<int> s_MaxFPS;
 
     private:
         static Application* s_Instance;
