@@ -37,6 +37,7 @@ namespace Poulpe
         std::function<void()> load(nlohmann::json levelConfig, std::condition_variable & cv) override;
 
         EntityNode const * getWorldNode() const { return m_WorldNode.get(); }
+        void initWorldGraph();
 
     private:
         std::vector<std::unique_ptr<Entity>> m_Entities;
