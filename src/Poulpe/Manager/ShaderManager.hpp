@@ -11,7 +11,7 @@ namespace Poulpe
         virtual ~ShaderManager() = default;
 
         void addShader(std::string const & name, std::string const & vertPath, std::string const & fragPath) override;
-        std::function<void()> load(nlohmann::json config, std::condition_variable& cv) override;
+        std::function<void()> load(nlohmann::json config) override;
         inline VulkanShaders* getShaders() const override { return m_Shaders.get(); };
 
         void addRenderer(IRendererAdapter* renderer) { m_Renderer = renderer; };

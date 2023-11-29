@@ -14,8 +14,8 @@ namespace Poulpe
         void addConfig(nlohmann::json config) override { m_TextureConfig = config; }
         inline std::unordered_map<std::string, Texture> getTextures() override { return m_Textures; }
         void addRenderer(IRendererAdapter* renderer) override { m_Renderer = renderer; }
-        std::function<void()> load(std::condition_variable& cv) override;
-        std::function<void()> loadSkybox(std::string_view skybox, std::condition_variable& cv) override;
+        std::function<void()> load() override;
+        std::function<void()> loadSkybox(std::string_view skybox) override;
         inline const Texture getSkyboxTexture() const override { return m_Skybox; }
         void addSkyBox(std::vector<std::string> const & skyboxImages) override;
         void addTexture(std::string const & name, std::string const & path, bool isPublic = false) override;

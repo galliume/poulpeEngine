@@ -9,11 +9,11 @@ namespace Poulpe
         m_Shaders = std::make_unique<VulkanShaders>();
     }
 
-    std::function<void()> ShaderManager::load(nlohmann::json config, std::condition_variable & cv)
+    std::function<void()> ShaderManager::load(nlohmann::json config)
     {
         m_Config = config;
 
-        std::function shaderFuture = [this, & cv]() {
+        std::function shaderFuture = [this]() {
             for (auto & shader : m_Config["shader"].items()) {
 
                 auto key = static_cast<std::string>(shader.key());
@@ -23,7 +23,6 @@ namespace Poulpe
             }
 
             m_LoadingDone = true;
-            cv.notify_one();
         };
 
         return shaderFuture;
