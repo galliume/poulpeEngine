@@ -1,0 +1,83 @@
+{
+	"entities": {
+		"sponza" : {
+			"mesh": "assets/mesh/sponza/sponza.obj",
+			"textures": [
+				"textures_background",
+				"textures_background_bump",
+				"textures_chain_texture",
+				"textures_chain_texture_bump",
+				"textures_chain_texture_mask",
+				"textures_floor_gloss",
+				"textures_lion",
+				"textures_lion_bump",
+				"textures_lion2_bump",
+				"textures_spnza_bricks_a_bump",
+				"textures_spnza_bricks_a_diff",
+				"textures_spnza_bricks_a_spec",
+				"textures_sponza_arch_bump",
+				"textures_sponza_arch_diff",
+				"textures_sponza_arch_spec",
+				"textures_sponza_ceiling_a_diff",
+				"textures_sponza_ceiling_a_spec",
+				"textures_sponza_column_a_bump",
+				"textures_sponza_column_a_diff",
+				"textures_sponza_column_a_spec",
+				"textures_sponza_column_b_bump",
+				"textures_sponza_column_b_diff",
+				"textures_sponza_column_b_spec",
+				"textures_sponza_column_c_bump",
+				"textures_sponza_column_c_diff",
+				"textures_sponza_column_c_spec",
+				"textures_sponza_curtain_blue_diff",
+				"textures_sponza_curtain_diff",
+				"textures_sponza_curtain_green_diff",
+				"textures_sponza_details_diff",
+				"textures_sponza_details_spec",
+				"textures_sponza_fabric_blue_diff",
+				"textures_sponza_fabric_diff",
+				"textures_sponza_fabric_green_diff",
+				"textures_sponza_fabric_purple",
+				"textures_sponza_fabric_spec",
+				"textures_sponza_flagpole_diff",
+				"textures_sponza_flagpole_spec",
+				"textures_sponza_floor_a_diff",
+				"textures_sponza_floor_a_spec",
+				"textures_sponza_roof_diff",
+				"textures_sponza_thorn_bump",
+				"textures_sponza_thorn_diff",
+				"textures_sponza_thorn_mask",
+				"textures_sponza_thorn_spec",
+				"textures_vase_bump",
+				"textures_vase_dif",
+				"textures_vase_hanging",
+				"textures_vase_plant",
+				"textures_vase_plant_mask",
+				"textures_vase_plant_spec",
+				"textures_vase_round",
+				"textures_vase_round_bump",
+				"textures_vase_round_spec"
+			],           
+			"shader": "main",
+			"positions": [
+				{"x": -0.20, "y": 0.1, "z": -0.20}
+			],
+			"scales": [
+				{"x": 0.001, "y": 0.001, "z": 0.001}
+			],
+			"rotations": [
+				{"x": 0.0, "y": 0.0, "z": 0.0}
+			],
+			"inverseTextureY": true,
+			"count": 1,
+			"padding": {
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"form": "positioned",
+			"hasBbox": false,
+			"hasAnimation": false
+		}	
+	}
+}
