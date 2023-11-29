@@ -13,7 +13,7 @@ namespace Poulpe
         virtual nlohmann::json appConfig() = 0;
         virtual nlohmann::json soundConfig() = 0;
         virtual nlohmann::json shaderConfig() = 0;
-        virtual nlohmann::json entityConfig(const std::string& levelName) = 0;
+        virtual nlohmann::json loadLevelData(std::string const & levelName) = 0;
         virtual std::vector<std::string> listLevels() = 0;
         virtual std::vector<std::string> listSkybox() = 0;
     };

@@ -2,7 +2,12 @@
 	"entities": {		
 		"doggo" : {
 			"mesh": "assets/mesh/dog/dog.obj",
-			"textures": ["dog"],
+			"textures": {
+				"Default": "assets/mesh/dog/Texture_albedo.jpg",
+				"Roughess": "assets/mesh/dog/Roughess.jpg",
+				"Texture_ao": "assets/mesh/dog/Texture_ao.jpg",
+				"Texture_normal": "assets/mesh/dog/Texture_normal.jpg"
+			},
 			"shader": "main",
 			"positions": [
 				{"x": 0.8, "y": 0.40, "z": -1.2}
@@ -26,7 +31,14 @@
 		},
 		"fence" : {
 			"mesh": "assets/mesh/fence/fence.obj",
-			"textures": ["fence"],
+			"textures": {
+				"cit_1001_Diffuse": "assets/mesh/fence/cit_1001_Diffuse.png",
+				"cit_1001_Glossiness": "assets/mesh/fence/cit_1001_Glossiness.png",
+				"cit_1001_Height": "assets/mesh/fence/cit_1001_Height.png",
+				"cit_1001_ior": "assets/mesh/fence/cit_1001_ior.png",
+				"cit_1001_Normal": "assets/mesh/fence/cit_1001_Normal.png",
+				"cit_1001_Reflection": "assets/mesh/fence/cit_1001_Reflection.png"
+			},
 			"shader": "main",
 			"positions": [
 				{"x": 4.0, "y": 0.22, "z": -2.4}
@@ -50,7 +62,14 @@
 		},
 		"fence2" : {
 			"mesh": "assets/mesh/fence/fence.obj",
-			"textures": ["fence"],
+			"textures": {
+				"cit_1001_Diffuse": "assets/mesh/fence/cit_1001_Diffuse.png",
+				"cit_1001_Glossiness": "assets/mesh/fence/cit_1001_Glossiness.png",
+				"cit_1001_Height": "assets/mesh/fence/cit_1001_Height.png",
+				"cit_1001_ior": "assets/mesh/fence/cit_1001_ior.png",
+				"cit_1001_Normal": "assets/mesh/fence/cit_1001_Normal.png",
+				"cit_1001_Reflection": "assets/mesh/fence/cit_1001_Reflection.png"
+			},
 			"shader": "main",
 			"positions": [
 				{"x": 3.55, "y": 0.22, "z": 2.30}
@@ -74,7 +93,9 @@
 		},
 		"groundCube" : {
 			"mesh": "assets/mesh/minecraft/Grass_Block.obj",
-			"textures": ["minecraft_grass"],
+			"textures": {
+				"Grass_Block_TEX": "assets/mesh/minecraft/Grass_Block_TEX.png"
+			},
 			"shader": "main",
 			"positions": [
 				{"x": -0.20, "y": 0.0, "z": -0.20}
@@ -99,7 +120,9 @@
 		},
 		"groundCube2" : {
 			"mesh": "assets/mesh/minecraft/Grass_Block.obj",
-			"textures": ["minecraft_grass"],
+			"textures": {
+				"Grass_Block_TEX": "assets/mesh/minecraft/Grass_Block_TEX.png"
+			},
 			"shader": "main",
 			"positions": [
 				{"x": -0.20, "y": 0.0, "z": -0.20}
@@ -124,7 +147,9 @@
 		},
 		"groundCube3" : {
 			"mesh": "assets/mesh/minecraft/Grass_Block.obj",
-			"textures": ["minecraft_grass"],
+			"textures": {
+				"Grass_Block_TEX": "assets/mesh/minecraft/Grass_Block_TEX.png"
+			},
 			"shader": "main",
 			"positions": [
 				{"x": -0.20, "y": 0.0, "z": -0.20}
@@ -149,7 +174,9 @@
 		},
 		"groundCube4" : {
 			"mesh": "assets/mesh/minecraft/Grass_Block.obj",
-			"textures": ["minecraft_grass"],
+			"textures": {
+				"Grass_Block_TEX": "assets/mesh/minecraft/Grass_Block_TEX.png"
+			},
 			"shader": "main",
 			"positions": [
 				{"x": -0.20, "y": 0.0, "z": -0.20}
@@ -174,7 +201,9 @@
 		},
 		"groundCube5" : {
 			"mesh": "assets/mesh/minecraft/Grass_Block.obj",
-			"textures": ["minecraft_grass"],
+			"textures": {
+				"Grass_Block_TEX": "assets/mesh/minecraft/Grass_Block_TEX.png"
+			},
 			"shader": "main",
 			"positions": [
 				{"x": -0.20, "y": 0.0, "z": -0.20}
@@ -199,7 +228,9 @@
 		},
 		"waterCube" : {
 			"mesh": "assets/mesh/minecraft/Grass_Block.obj",
-			"textures": ["minecraft_water"],
+			"textures": {
+				"minecraft_water": "assets/mesh/minecraft/water.jpg"
+			},
 			"shader": "main",
 			"positions": [
 				{"x": -0.20, "y": -0.10, "z": -0.20}
@@ -224,7 +255,9 @@
 		},
 		"waterCube2" : {
 			"mesh": "assets/mesh/minecraft/Grass_Block.obj",
-			"textures": ["minecraft_water"],
+			"textures": {
+				"minecraft_water": "assets/mesh/minecraft/water.jpg"
+			},
 			"shader": "main",
 			"positions": [
 				{"x": -0.20, "y": -0.10, "z": -0.20}
@@ -249,7 +282,9 @@
 		},
 		"waterCube3" : {
 			"mesh": "assets/mesh/minecraft/Grass_Block.obj",
-			"textures": ["minecraft_water"],
+			"textures": {
+				"minecraft_water": "assets/mesh/minecraft/water.jpg"
+			},
 			"shader": "main",
 			"positions": [
 				{"x": -0.20, "y": -0.10, "z": -0.20}
@@ -274,7 +309,9 @@
 		},
 		"campfire" : {
 			"mesh": "assets/mesh/campfire/Campfire.obj",
-			"textures": ["campfire_tex"],
+			"textures": {
+				"Campfire_MAT_BaseColor_01": "assets/mesh/campfire/Campfire_MAT_BaseColor_01.jpg"
+			},
 			"shader": "main",
 			"positions": [
 				{"x": 0.8, "y": 0.2, "z": -0.4}
@@ -298,7 +335,9 @@
 		},
 		"deadTree" : {
 			"mesh": "assets/mesh/tree/dead_tree.obj",
-			"textures": ["trunk_tree_cartoon"],
+			"textures": {
+				"Trunk_4_Cartoon": "assets/mesh/tree/cartoon/Trunk_4_Cartoon.jpg"
+			},
 			"shader": "main",
 			"positions": [
 				{"x": -1.0, "y": 0.19, "z": -1.4},
@@ -334,7 +373,10 @@
 		},
 		"tree" : {
 			"mesh": "assets/mesh/tree/tree.obj",
-			"textures": ["tree_top_tex", "trunk_tree_cartoon"],
+			"textures": {
+				"tree": "assets/mesh/tree/tree.png",
+				"tree_1": "assets/mesh/tree/cartoon/Trunk_4_Cartoon.jpg"
+			},
 			"shader": "main",
 			"positions": [
 				{"x": 3.0, "y": 0.18, "z": -0.6},
@@ -382,7 +424,9 @@
 		},
 		"moon" : {
 			"mesh": "assets/mesh/moon/moon.obj",
-			"textures": ["moon"],
+			"textures": {
+				"diffuse": "assets/mesh/moon/diffuse.jpg"
+			},
 			"shader": "ambient_light",
 			"positions": [
 				{"x": 0.5, "y": 4.5, "z": -3.00}
@@ -406,7 +450,12 @@
 		},
 		"house" : {
 			"mesh": "assets/mesh/house/midpoly_town_house_01.obj",
-			"textures": ["dark_wood", "rocks", "rooftiles", "bright_wood"],
+			"textures": {				
+				"rooftiles.002": "assets/mesh/house/textures/rooftiles/T_darkwood_basecolor.png",
+				"darkwood.002": "assets/mesh/house/textures/wood/T_darkwood_basecolor.png",
+				"rocks.002": "assets/mesh/house/textures/rocks/rock_bc.jpg",							
+				"wood.002": "assets/mesh/house/textures/wood/T_brightwood_basecolor.png"
+			},
 			"shader": "main",
 			"positions": [
 				{"x": -0.5, "y": 0.19, "z": -0.20}
@@ -430,7 +479,14 @@
 		},
 		"dog_house" : {
 			"mesh": "assets/mesh/doghouse/doghouse0908.obj",
-			"textures": ["dog_base_color"],
+			"textures": {
+				"PBR": "assets/mesh/doghouse/doghouse0908_PBR_BaseColor.png",
+				"doghouse0908_PBR_AO": "assets/mesh/doghouse/doghouse0908_PBR_AO.png",
+				"doghouse0908_PBR_Height": "assets/mesh/doghouse/doghouse0908_PBR_Height.png",
+				"doghouse0908_PBR_Metallic": "assets/mesh/doghouse/doghouse0908_PBR_Metallic.png",
+				"doghouse0908_PBR_Normal": "assets/mesh/doghouse/doghouse0908_PBR_Normal.png",
+				"doghouse0908_PBR_Roughness": "assets/mesh/doghouse/doghouse0908_PBR_Roughness.png"
+			},
 			"shader": "main",
 			"positions": [
 				{"x": 0.7, "y": 0.20, "z": -2.00}
