@@ -33,7 +33,6 @@ namespace Poulpe
         m_Renderer->addCamera(m_Camera.get());
         m_DestroyManager->setRenderer(m_Renderer->rdr());
         m_DestroyManager->addMemoryPool(m_Renderer->rdr()->getDeviceMemoryPool());
-        m_TextureManager->addConfig(m_ConfigManager->texturesConfig());
 
         nlohmann::json appConfig = m_ConfigManager->appConfig();
         if (appConfig["defaultLevel"].empty()) {
@@ -71,13 +70,14 @@ namespace Poulpe
         m_Renderer->clear();
         //m_DestroyManager->CleanDeviceMemory();
         //m_Renderer->Rdr()->InitMemoryPool();
+        m_ComponentManager->clear();
     }
 
     void RenderManager::init()
     {
         if (m_Refresh) {
-            m_Renderer->rdr()->waitIdle();
             m_Renderer->stopRendering();
+            m_Renderer->rdr()->waitIdle();
             cleanUp();
             m_Renderer->recreateSwapChain();
             setIsLoaded(false);
@@ -105,43 +105,38 @@ namespace Poulpe
     {
         nlohmann::json appConfig = m_ConfigManager->appConfig();
         std::string_view threadQueueName{ "loading" };
-        std::condition_variable cv;
 
-        auto const levelData = m_ConfigManager->entityConfig(level);
-        std::function<void()> entityFutures = m_EntityManager->load(levelData, cv);
-        std::function<void()> textureFuture = m_TextureManager->load(cv);
+        auto const levelData = m_ConfigManager->loadLevelData(level);
+        m_TextureManager->addConfig(m_ConfigManager->texturesConfig());
+
+        std::function<void()> entityFutures = m_EntityManager->load(levelData);
+        std::function<void()> textureFuture = m_TextureManager->load();
 
         std::string const  sb = (m_CurrentSkybox.empty()) ? static_cast<std::string>(appConfig["defaultSkybox"])
             : m_CurrentSkybox;
 
-        std::function<void()> skyboxFuture = m_TextureManager->loadSkybox(sb, cv);
-        std::function<void()> shaderFuture = m_ShaderManager->load(m_ConfigManager->shaderConfig(), cv);
+        std::function<void()> skyboxFuture = m_TextureManager->loadSkybox(sb);
+        std::function<void()> shaderFuture = m_ShaderManager->load(m_ConfigManager->shaderConfig());
 
         Poulpe::Locator::getThreadPool()->submit(threadQueueName, entityFutures);
         Poulpe::Locator::getThreadPool()->submit(threadQueueName, textureFuture);
         Poulpe::Locator::getThreadPool()->submit(threadQueueName, skyboxFuture);
         Poulpe::Locator::getThreadPool()->submit(threadQueueName, shaderFuture);
 
-        std::mutex loading;
-
-        {
-            std::unique_lock<std::mutex> lock(loading);
-            cv.wait(lock, [this]() { return m_TextureManager->isTexturesLoadingDone(); });
+        while (!m_TextureManager->isTexturesLoadingDone()) {
+            //PLP_WARN("loading {}", m_TextureManager->isTexturesLoadingDone());
         }
-        {
-            std::unique_lock<std::mutex> lock(loading);
-            cv.wait(lock, [this]() { return m_TextureManager->isSkyboxLoadingDone(); });
+        while (!m_TextureManager->isSkyboxLoadingDone()) {
+            //PLP_WARN("loading {}", m_TextureManager->isSkyboxLoadingDone());
         }
-        {
-            std::unique_lock<std::mutex> lock(loading);
-            cv.wait(lock, [this]() { return m_ShaderManager->isLoadingDone(); });
+        while (!m_ShaderManager->isLoadingDone()) {
+            //PLP_WARN("loading {}", m_ShaderManager->isLoadingDone());
         }
-        {
-            std::unique_lock<std::mutex> lock(loading);
-            cv.wait(lock, [this]() { return m_EntityManager->IsLoadingDone(); });
+        while (!m_EntityManager->IsLoadingDone()) {
+            //PLP_WARN("loading {}", m_EntityManager->IsLoadingDone());
         }
-
         setIsLoaded();
+        TinyObjLoader::m_TinyObjMaterials.clear();
     }
 
     void RenderManager::draw()

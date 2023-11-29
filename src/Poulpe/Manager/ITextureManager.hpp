@@ -15,8 +15,8 @@ namespace Poulpe
         virtual inline std::unordered_map<std::string, Texture> getTextures() = 0;
         virtual void addConfig(nlohmann::json config) = 0;
         virtual void addRenderer(IRendererAdapter* renderer) = 0;
-        virtual std::function<void()> load(std::condition_variable& cv) = 0;
-        virtual std::function<void()> loadSkybox(std::string_view, std::condition_variable& cv) = 0;
+        virtual std::function<void()> load() = 0;
+        virtual std::function<void()> loadSkybox(std::string_view) = 0;
         virtual inline const Texture getSkyboxTexture() const = 0;
         virtual void addSkyBox(std::vector<std::string> const & skyboxImages) = 0;
         virtual void addTexture(std::string const & name, std::string const & path, bool isPublic = false) = 0;

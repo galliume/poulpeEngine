@@ -73,12 +73,11 @@ namespace Poulpe
         return it->get();
     }
 
-    std::function<void()> EntityManager::load(nlohmann::json levelConfig, std::condition_variable & cv)
+    std::function<void()> EntityManager::load(nlohmann::json levelConfig)
     {
-
         m_LevelConfig = levelConfig;
 
-        std::function<void()> entitiesFuture = [this, & cv]() {
+        std::function<void()> entitiesFuture = [this]() {
 
             for (auto& entityConf : m_LevelConfig["entities"].items()) {
 
@@ -105,8 +104,8 @@ namespace Poulpe
                             );
 
                             std::vector<std::string> textures{};
-                            for (auto& texture : data["textures"])
-                                textures.emplace_back(static_cast<std::string>(texture));
+                            for (auto& [key, path]: data["textures"].items())
+                                textures.emplace_back(static_cast<std::string>(key));
 
                             auto scaleData = data["scales"].at(0);
                             auto rotationData = data["rotations"].at(0);
@@ -182,8 +181,8 @@ namespace Poulpe
                         );
 
                         std::vector<std::string> textures{};
-                        for (auto& texture : data["textures"])
-                            textures.emplace_back(static_cast<std::string>(texture));
+                        for (auto& [key, path]: data["textures"].items())
+                            textures.emplace_back(static_cast<std::string>(key));
 
                         bool hasBbox = static_cast<bool>(data["hasBbox"]);
                         bool hasAnimation = static_cast<bool>(data["hasAnimation"]);
@@ -210,7 +209,6 @@ namespace Poulpe
             }
 
             m_LoadingDone.store(true);
-            cv.notify_one();
         };
 
         return entitiesFuture;

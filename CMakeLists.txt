@@ -10,7 +10,6 @@ else()
   message(WARNING "ccache deactivated")
 endif()
 
-
 project(PoulpeEngine
   VERSION 0.1.1
   DESCRIPTION "Game Engine with a vulkan renderer"
@@ -19,7 +18,7 @@ project(PoulpeEngine
 )
 
 add_library(poulpe INTERFACE)
- 
+
 target_compile_features(poulpe INTERFACE cxx_std_20)
 
 set(CMAKE_CXX_STANDARD 20)
@@ -145,16 +144,16 @@ target_include_directories(${PROJECT_NAME} PRIVATE
                           "${PROJECT_SOURCE_DIR}/vendor/glm"
                           "${PROJECT_SOURCE_DIR}/vendor/volk"
                           "${PROJECT_SOURCE_DIR}/vendor/imgui"
-              "${PROJECT_SOURCE_DIR}/vendor/miniaudio/extras/miniaudio_split"
-              "${PROJECT_SOURCE_DIR}/vendor/tiny_obj_loader")
+                          "${PROJECT_SOURCE_DIR}/vendor/miniaudio/extras/miniaudio_split"
+                          "${PROJECT_SOURCE_DIR}/vendor/tiny_obj_loader")
 
 target_include_directories(${PROJECT_NAME} SYSTEM INTERFACE
                           "${PROJECT_SOURCE_DIR}/vendor/glfw"
                           "${PROJECT_SOURCE_DIR}/vendor/glm"
                           "${PROJECT_SOURCE_DIR}/vendor/volk"
                           "${PROJECT_SOURCE_DIR}/vendor/imgui"
-              "${PROJECT_SOURCE_DIR}/vendor/miniaudio/extras/miniaudio_split"
-              "${PROJECT_SOURCE_DIR}/vendor/tiny_obj_loader")
+                          "${PROJECT_SOURCE_DIR}/vendor/miniaudio/extras/miniaudio_split"
+                          "${PROJECT_SOURCE_DIR}/vendor/tiny_obj_loader")
 
 target_compile_definitions(${PROJECT_NAME} PRIVATE "$<$<CONFIG:DEBUG>:PLP_DEBUG_BUILD>")
 
@@ -204,12 +203,12 @@ set_property(DIRECTORY ${PROJECT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT ${PROJE
 
 find_program(CLANG_TIDY_EXE NAMES "clang-tidy")
 
- add_custom_command(
-         TARGET ${PROJECT_NAME} PRE_BUILD
-         COMMAND ${CMAKE_COMMAND} -E copy_directory
-                 ${CMAKE_CURRENT_SOURCE_DIR}/assets
-                 $<TARGET_FILE_DIR:${PROJECT_NAME}>/assets
-     COMMENT "Copying assets")
+ #add_custom_command(
+ #        TARGET ${PROJECT_NAME} PRE_BUILD
+ #        COMMAND ${CMAKE_COMMAND} -E copy_directory
+ #                ${CMAKE_CURRENT_SOURCE_DIR}/assets
+ #                $<TARGET_FILE_DIR:${PROJECT_NAME}>/assets
+ #    COMMENT "Copying assets")
 
 add_custom_command(
         TARGET ${PROJECT_NAME} PRE_BUILD
@@ -217,31 +216,31 @@ add_custom_command(
                 ${CMAKE_CURRENT_SOURCE_DIR}/config
                 $<TARGET_FILE_DIR:${PROJECT_NAME}>/config
     COMMENT "Copying config")
-        
+
 add_custom_command(
         TARGET ${PROJECT_NAME} PRE_BUILD
         COMMAND ${CMAKE_COMMAND} -E make_directory 
         $<TARGET_FILE_DIR:${PROJECT_NAME}>/cache
     COMMENT "Creating cache dir")
-    
+
 add_custom_command(
         TARGET ${PROJECT_NAME} PRE_BUILD
         COMMAND ${CMAKE_COMMAND} -E make_directory 
         $<TARGET_FILE_DIR:${PROJECT_NAME}>/lib
     COMMENT "Creating lib dir")
 
-add_custom_target(graphviz ALL
-    COMMAND ${CMAKE_COMMAND} "--graphviz=graph/plp.dot" ..
-    COMMAND dot -Tsvg graph/plp.dot -o graph/plp.svg
-    WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
-)
+#add_custom_target(graphviz ALL
+#    COMMAND ${CMAKE_COMMAND} "--graphviz=graph/plp.dot" ..
+#    COMMAND dot -Tsvg graph/plp.dot -o graph/plp.svg
+#    WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
+#)
 
 set_target_properties(dearimgui PROPERTIES
     ARCHIVE_OUTPUT_DIRECTORY "$<TARGET_FILE_DIR:${PROJECT_NAME}>/lib"
 )
 set_target_properties(miniaudio PROPERTIES
     ARCHIVE_OUTPUT_DIRECTORY "$<TARGET_FILE_DIR:${PROJECT_NAME}>/lib"
-)		
+)
 set_target_properties(glfw PROPERTIES
     ARCHIVE_OUTPUT_DIRECTORY "$<TARGET_FILE_DIR:${PROJECT_NAME}>/lib"
 )

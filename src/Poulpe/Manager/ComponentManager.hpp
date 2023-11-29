@@ -47,6 +47,7 @@ namespace Poulpe
         }
 
         std::vector<const std::type_info*> getEntityComponents(IDType entityID) { return m_ComponentsEntityMap[entityID]; }
+        void clear();
 
     private:
         std::unordered_map<const std::type_info*, std::vector<Component*>> m_ComponentTypeMap;
