@@ -130,7 +130,7 @@ namespace Poulpe
         };
 
         Mesh::Data data;
-        data.m_Texture = "minecraft_grass";
+        data.m_Texture = "mpoulpe";
         data.m_TextureIndex = 0;
         data.m_VertexBuffer = m_Adapter->rdr()->createVertexBuffer(commandPool, vertices);
         data.m_IndicesBuffer = m_Adapter->rdr()->createIndexBuffer(commandPool, indices);

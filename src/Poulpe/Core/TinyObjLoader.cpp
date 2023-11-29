@@ -9,6 +9,8 @@
 
 namespace Poulpe
 {
+    std::vector<Poulpe::material_t> TinyObjLoader::m_TinyObjMaterials{};
+
     std::vector<TinyObjData> TinyObjLoader::loadData(std::string const & path, bool shouldInverseTextureY)
     {
         std::vector<TinyObjData> dataList = {};
@@ -32,7 +34,38 @@ namespace Poulpe
 
         auto& attrib = reader.GetAttrib();
         auto& shapes = reader.GetShapes();
-        //auto& materials = reader.GetMaterials();
+        auto& materials = reader.GetMaterials();
+
+
+        for (auto & material : materials) {
+          
+          Poulpe::material_t mat{};
+          mat.name = material.name;
+          mat.ambient = { material.ambient[0], material.ambient[1], material.ambient[2] };
+          mat.diffuse = { material.diffuse[0], material.diffuse[1], material.diffuse[2] };
+          mat.specular = { material.specular[0], material.specular[1], material.specular[2] };
+          mat.transmittance = { material.transmittance[0], material.transmittance[1], material.transmittance[2] };
+          mat.emission = { material.emission[0], material.emission[1], material.emission[2] };
+          mat.shininess = material.shininess;
+          mat.ior = material.ior;
+          mat.dissolve = material.dissolve;
+          mat.ambientTexname = material.ambient_texname;
+
+          std::string n;
+          if (material.diffuse_texname.size() > 0) {
+            n = material.diffuse_texname;
+            n.resize(n.size() - 4); //remove extension
+
+            std::replace(n.begin(), n.end(), '\\', '_');
+          }
+
+          mat.diffuseTexname = n;
+          mat.specularTexname = material.specular_texname;
+          mat.specularHighlightTexname = material.specular_highlight_texname;
+          mat.bumpTexname = material.bump_texname;
+
+          m_TinyObjMaterials.emplace_back(mat);
+        }
 
         std::unordered_map<Poulpe::Vertex, uint32_t> uniqueVertices{};
         uniqueVertices.clear();
