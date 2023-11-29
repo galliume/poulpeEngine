@@ -2,7 +2,9 @@
 	"entities": {
 		"groundCube" : {
 			"mesh": "assets/mesh/minecraft/Grass_Block.obj",
-			"textures": ["Grass_Block_TEX"],
+			"textures": {
+				"Grass_Block_TEX": "assets/mesh/minecraft/Grass_Block_TEX.png"
+			},
 			"shader": "main",
 			"positions": [
 				{"x": -0.20, "y": 0.1, "z": -0.20}

@@ -34,7 +34,7 @@ namespace Poulpe
         uint32_t getInstancedCount() override;
         Entity* getEntityByName(std::string const & name);
         std::vector<std::unique_ptr<Entity>>* getHUD() override { return & m_HUD; }
-        std::function<void()> load(nlohmann::json levelConfig, std::condition_variable & cv) override;
+        std::function<void()> load(nlohmann::json levelConfig) override;
 
         EntityNode const * getWorldNode() const { return m_WorldNode.get(); }
         void initWorldGraph();

@@ -204,8 +204,13 @@ namespace Poulpe
       }
 
       std::vector<VkDescriptorImageInfo> imageInfos;
+      Texture tex;
 
-      Texture tex = m_TextureManager->getTextures()[mesh->getData()->m_Texture];
+      if (m_TextureManager->getTextures().contains(mesh->getData()->m_Texture)) {
+        tex = m_TextureManager->getTextures()[mesh->getData()->m_Texture];
+      } else {
+        tex = m_TextureManager->getTextures()["mpoulpe"];
+      }
 
       VkDescriptorImageInfo imageInfo{};
       imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;

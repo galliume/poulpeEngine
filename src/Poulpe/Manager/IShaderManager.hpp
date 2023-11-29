@@ -16,8 +16,8 @@ namespace Poulpe
         IShaderManager() = default;
         ~IShaderManager() = default;
 
-        virtual void addShader(const std::string& name, const std::string& vertPath, const std::string& fragPath) = 0;
-        virtual std::function<void()> load(nlohmann::json config, std::condition_variable& cv) = 0;
+        virtual void addShader(std::string const & name, std::string const & vertPath, std::string const & fragPath) = 0;
+        virtual std::function<void()> load(nlohmann::json config) = 0;
         virtual inline VulkanShaders* getShaders() const = 0;
     };
 }

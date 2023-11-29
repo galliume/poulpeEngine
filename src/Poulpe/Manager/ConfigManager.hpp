@@ -13,7 +13,7 @@ namespace Poulpe
         virtual nlohmann::json texturesConfig() override;
         virtual nlohmann::json soundConfig() override;
         virtual nlohmann::json shaderConfig() override;
-        virtual nlohmann::json entityConfig(const std::string& levelName) override;
+        virtual nlohmann::json loadLevelData(std::string const & levelName) override;
         virtual std::vector<std::string> listLevels() override;
         virtual std::vector<std::string> listSkybox() override;
 

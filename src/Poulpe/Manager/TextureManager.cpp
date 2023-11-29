@@ -4,31 +4,33 @@
 
 namespace Poulpe
 {
-    std::function<void()> TextureManager::load(std::condition_variable & cv)
+    std::function<void()> TextureManager::load()
     {
-        std::function<void()> textureFuture = [this, & cv]() {
-            for (auto& texture : m_TextureConfig["textures"].items()) {
-                addTexture(texture.key(), texture.value(), true);
+        std::function<void()> textureFuture = [this]() {
+            std::filesystem::path p = std::filesystem::current_path();
+            
+            for (auto& [key, path] : m_TextureConfig["textures"].items()) {
+                //@todo wtf, relatives path worked before...
+                auto absolutePath = p.string() + "\\" + static_cast<std::string>(path);
+                addTexture(key, absolutePath, true);
             }
 
             m_TexturesLoadingDone.store(true);
-            cv.notify_one();
         };
 
         return textureFuture;
     }
 
-    std::function<void()> TextureManager::loadSkybox(std::string_view skybox, std::condition_variable & cv)
+    std::function<void()> TextureManager::loadSkybox(std::string_view skybox)
     {
         m_SkyboxName = skybox;
-        std::function<void()> skyboxFuture = [this, & cv]() {
+        std::function<void()> skyboxFuture = [this]() {
             std::vector<std::string>skyboxImages;
             for (auto& texture : m_TextureConfig["skybox"][m_SkyboxName].items()) {
                 skyboxImages.emplace_back(texture.value());
             }
             addSkyBox(skyboxImages);
             m_SkyboxLoadingDone.store(true);
-            cv.notify_one();
         };
 
         return skyboxFuture;
@@ -89,7 +91,7 @@ namespace Poulpe
     {
         if (!std::filesystem::exists(path.c_str())) {
             PLP_FATAL("texture file {} does not exits.", path);
-            return;
+            //return;
         }
 
         if (0 != m_Textures.count(name.c_str())) {
@@ -141,5 +143,6 @@ namespace Poulpe
         m_Textures.clear();
         m_TexturesLoadingDone = false;
         m_SkyboxLoadingDone = false;
+        m_TextureConfig.clear();
     }
 }

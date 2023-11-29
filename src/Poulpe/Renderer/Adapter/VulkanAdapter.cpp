@@ -235,6 +235,7 @@ namespace Poulpe
                             this, mesh->getData());
 
                     try {
+                        if (m_RenderingStopped) return;
                         m_Renderer->draw(m_CommandBuffersEntities[m_ImageIndex], mesh->getDescriptorSets().at(index),
                             mesh, mesh->getData(), mesh->getData()->m_Ubos.size());
                     }
@@ -276,6 +277,7 @@ namespace Poulpe
                     skybox->getMesh()->applyPushConstants(m_CommandBuffersSkybox[m_ImageIndex], skybox->getMesh()->getPipelineLayout(), this,
                         skyboxData);
 
+                if (m_RenderingStopped) return;
                 m_Renderer->draw(m_CommandBuffersSkybox[m_ImageIndex], skybox->getMesh()->getDescriptorSets().at(i), skybox->getMesh(),
                     skyboxData, skyboxData->m_Ubos.size(), false);
             }
@@ -313,6 +315,7 @@ namespace Poulpe
             }
 
             for (uint32_t i = 0; i < hudPart->getUniformBuffers()->size(); i++) {
+                if (m_RenderingStopped) return;
                 m_Renderer->draw(m_CommandBuffersHud[m_ImageIndex], hudPart->getDescriptorSets().at(i), hudPart,
                     hudPart->getData(), hudPart->getData()->m_Ubos.size());
             }
@@ -363,6 +366,8 @@ namespace Poulpe
                     if (bbox->hasPushConstants() && nullptr != bbox->applyPushConstants)
                         bbox->applyPushConstants(m_CommandBuffersBbox[m_ImageIndex], bbox->getPipelineLayout(), this,
                             bbox->getData());
+
+                    if (m_RenderingStopped) return;
 
                     m_Renderer->draw(m_CommandBuffersBbox[m_ImageIndex], bbox->getDescriptorSets().at(index), bbox.get(),
                         bbox->getData(), mesh->getData()->m_Ubos.size());
@@ -418,8 +423,6 @@ namespace Poulpe
     {
         if (m_RenderingStopped) {
             {
-              std::unique_lock<std::mutex> render(m_MutexRenderScene);
-
               m_CmdToSubmit.clear();
               m_RenderingStopped = false;
 

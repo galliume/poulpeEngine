@@ -20,7 +20,7 @@ namespace Poulpe
         ~IEntityManager() = default;
 
         virtual void addRenderer(IRendererAdapter* renderer) = 0;
-        virtual std::function<void()> load(nlohmann::json levelConfig, std::condition_variable& cv) = 0;
+        virtual std::function<void()> load(nlohmann::json levelConfig) = 0;
         virtual inline std::vector<std::unique_ptr<Entity>>* getEntities() = 0;
         virtual inline void setSkybox(Entity* skybox) = 0;
         virtual inline Entity* getSkybox() = 0;
