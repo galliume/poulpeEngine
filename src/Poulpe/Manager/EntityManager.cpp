@@ -8,11 +8,16 @@ namespace Poulpe
 {
     EntityManager::EntityManager()
     {
-        m_World = std::make_unique<Entity>();
-        m_World->setName("_PLPWorld");
-        m_World->setVisible(false);
+        initWorldGraph();
+    }
 
-        m_WorldNode = std::make_unique<EntityNode>(m_World.get());
+    void EntityManager::initWorldGraph()
+    {
+      m_World = std::make_unique<Entity>();
+      m_World->setName("_PLPWorld");
+      m_World->setVisible(false);
+
+      m_WorldNode = std::make_unique<EntityNode>(m_World.get());
     }
 
     uint32_t EntityManager::getInstancedCount()
@@ -214,7 +219,10 @@ namespace Poulpe
     void EntityManager::clear()
     {
         m_Entities.clear();
+        m_HUD.clear();
         m_LoadedEntities.clear();
+        m_WorldNode->clear();
+        m_World.release();
     }
 
     std::vector<Mesh*> EntityManager::initMeshes(std::string const  & name, std::string const & path,
@@ -229,11 +237,8 @@ namespace Poulpe
             throw std::runtime_error("error loading a mesh file.");
         }
 
-        if (m_ObjLoaded.contains(path)) {
-          PLP_TRACE("contain {}", path);
-            return meshes;
-        }
-
+        //if (m_ObjLoaded.contains(path)) return meshes;
+       
         //m_ObjLoaded.insert(path);
 
         //@todo not reload an already loaded obj

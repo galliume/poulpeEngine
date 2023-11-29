@@ -25,5 +25,7 @@ namespace Poulpe
         nlohmann::json m_EntityConfig{};
 
         std::mutex m_MutexRead;
+
+        std::string const m_LevelPath{ "config/levels/" };
     };
 }

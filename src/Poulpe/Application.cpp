@@ -63,7 +63,7 @@ namespace Poulpe
 
             if (deltaTime < frameTarget && s_MaxFPS.load() != 0) continue;
 
-            PLP_WARN("{} ms", deltaTime);
+            //PLP_WARN("{} ms", deltaTime);
             
             m_RenderManager->getCamera()->updateDeltaTime(deltaTime);
 

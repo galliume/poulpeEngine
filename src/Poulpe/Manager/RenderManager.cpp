@@ -78,11 +78,11 @@ namespace Poulpe
         if (m_Refresh) {
             m_Renderer->rdr()->waitIdle();
             m_Renderer->stopRendering();
-            m_Renderer->clearRendererScreen();
             cleanUp();
             m_Renderer->recreateSwapChain();
             setIsLoaded(false);
             m_Refresh = false;
+            m_EntityManager->initWorldGraph();
         }
        
         nlohmann::json appConfig = m_ConfigManager->appConfig();
