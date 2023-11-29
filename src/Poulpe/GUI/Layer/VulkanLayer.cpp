@@ -592,7 +592,7 @@ namespace Poulpe
         if ((m_LightOpen = ImGui::CollapsingHeader("Light")))
         {
             auto ambiant = Poulpe::VulkanAdapter::s_AmbiantLight.load();
-            ImGui::SliderFloat("Ambiant light", & ambiant, 0.0f, 1.0f, "%.3f");
+            ImGui::SliderFloat("Ambiant light", & ambiant, 0.0f, 10.0f, "%.5f");
             if (ambiant != Poulpe::VulkanAdapter::s_AmbiantLight.load()) {
                 Poulpe::VulkanAdapter::s_AmbiantLight.store(ambiant);
             }
@@ -602,7 +602,7 @@ namespace Poulpe
         if ((m_FogOpen = ImGui::CollapsingHeader("Fog")))
         {
             auto fogD = Poulpe::VulkanAdapter::s_FogDensity.load();
-            ImGui::SliderFloat("Fog density", & fogD, 0.0f, 1.0f, "%.3f");
+            ImGui::SliderFloat("Fog density", & fogD, 0.0f, 1.0f, "%.5f");
             if (fogD != Poulpe::VulkanAdapter::s_FogDensity) {
                 Poulpe::VulkanAdapter::s_FogDensity.store(fogD);
             }
