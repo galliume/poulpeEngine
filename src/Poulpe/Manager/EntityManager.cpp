@@ -253,9 +253,13 @@ namespace Poulpe
 
             std::vector<Mesh::BBox> bboxs{};
 
+            auto nameTexture = (TinyObjLoader::m_TinyObjMaterials.empty() || TinyObjLoader::m_TinyObjMaterials.at(listData[i].materialId).diffuseTexname.empty())
+              ? textureNames[listData[i].materialId]
+              : TinyObjLoader::m_TinyObjMaterials.at(listData[i].materialId).diffuseTexname;
+
             Mesh::Data data{};
-            data.m_Name = name + '_' + textureNames[listData[i].materialId];
-            data.m_Texture = textureNames[listData[i].materialId];
+            data.m_Name = name + '_' + nameTexture;
+            data.m_Texture = nameTexture;
             data.m_Vertices = listData[i].vertices;
             data.m_Indices = listData[i].indices;
             data.m_OriginPos = pos;
