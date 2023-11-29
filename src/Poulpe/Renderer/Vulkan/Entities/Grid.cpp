@@ -108,7 +108,7 @@ namespace Poulpe
 
     std::vector<VkDescriptorSet> Grid::createDescriptorSet(Mesh* mesh)
     {
-        Texture ctex = m_TextureManager->getTextures()["minecraft_grass"];
+        Texture ctex = m_TextureManager->getTextures()["mpoulpe"];
 
         std::vector<VkDescriptorImageInfo> imageInfos{};
         VkDescriptorImageInfo cimageInfo{};

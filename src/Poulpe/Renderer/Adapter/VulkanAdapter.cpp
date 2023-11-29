@@ -12,7 +12,7 @@
 namespace Poulpe
 {
     //@todo should not be globally accessible
-    std::atomic<float> VulkanAdapter::s_AmbiantLight{ 3.5f };
+    std::atomic<float> VulkanAdapter::s_AmbiantLight{ 1.0f };
     std::atomic<float> VulkanAdapter::s_FogDensity{ 0.0f };
     std::atomic<float> VulkanAdapter::s_FogColor[3]{ 25 / 255.0f, 25 / 255.0f, 25 / 255.0f };
     std::atomic<int> VulkanAdapter::s_Crosshair{ 0 };
