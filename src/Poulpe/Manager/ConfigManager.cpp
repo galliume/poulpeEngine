@@ -26,7 +26,7 @@ namespace Poulpe
         if (f.is_open()) m_SoundConfig = nlohmann::json::parse(f);
         f.close();
 
-        path = "config/shader.json";
+        path = "config/shaders.json";
         f.open(fs::absolute(path));
         if (f.is_open()) m_ShaderConfig = nlohmann::json::parse(f);
         f.close();
@@ -34,7 +34,7 @@ namespace Poulpe
 
     nlohmann::json ConfigManager::entityConfig(const std::string& levelName)
     {
-        fs::path level{ "config/" + levelName + ".json" };
+        fs::path level{ m_LevelPath + levelName + ".json" };
         std::ifstream f;
         try {
             f.open(fs::absolute(level), std::ios_base::in);
@@ -73,13 +73,10 @@ namespace Poulpe
     {
         std::vector<std::string> levels;
 
-        std::string path = "config/";
-        auto entries = fs::directory_iterator(path);
+        auto entries = fs::directory_iterator(m_LevelPath);
 
         for (auto& entry : entries) {
-            if (std::string::npos != entry.path().filename().string().find("level_")) {
-                levels.emplace_back(entry.path().stem().string());
-            }
+            levels.emplace_back(entry.path().stem().string());
         }
 
         return levels;

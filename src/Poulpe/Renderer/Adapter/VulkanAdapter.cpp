@@ -416,21 +416,17 @@ namespace Poulpe
 
     void VulkanAdapter::draw()
     {
-        //if (m_RenderingStopped) {
-        //    {
-        //        std::unique_lock<std::mutex> render(m_MutexRenderScene);
+        if (m_RenderingStopped) {
+            {
+              std::unique_lock<std::mutex> render(m_MutexRenderScene);
 
-        //        m_RenderCond.wait(render, [this] {
-        //            return  (getDrawBbox()) ? m_renderStatus == 16 : m_renderStatus == 8;
-        //        });
-        //        {
-        //            onFinishRender();
-        //            m_RenderingStopped = false;
-        //        }
-        //    }
+              m_CmdToSubmit.clear();
+              m_RenderingStopped = false;
 
-        //    return;
-        //}
+              clearRendererScreen();
+            }
+            return;
+        }
 
         {
             std::unique_lock<std::mutex> render(m_MutexRenderScene);
@@ -471,12 +467,6 @@ namespace Poulpe
     void VulkanAdapter::clearRendererScreen()
     {
         {
-            std::unique_lock<std::mutex> render(m_MutexRenderScene);
-
-            m_RenderCond.wait(render, [this] {
-                return  (getDrawBbox()) ? m_renderStatus == 16 : m_renderStatus == 8;
-            });
-
             vkResetCommandBuffer(m_CommandBuffersEntities[m_ImageIndex], 0);
             vkResetCommandBuffer(m_CommandBuffersHud[m_ImageIndex], 0);
             vkResetCommandBuffer(m_CommandBuffersSkybox[m_ImageIndex], 0);
@@ -518,6 +508,7 @@ namespace Poulpe
 
             acquireNextImage();
             onFinishRender();
+            m_renderStatus = 1;
         }
     }
 

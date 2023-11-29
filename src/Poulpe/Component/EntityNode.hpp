@@ -26,6 +26,7 @@ namespace Poulpe {
         }
 
         bool hasChildren() { return !m_Children.empty(); }
+        void clear() { m_Children.clear(); }
 
     private:
         Entity* m_Entity;
