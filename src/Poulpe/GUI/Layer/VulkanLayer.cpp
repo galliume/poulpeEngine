@@ -294,7 +294,7 @@ namespace Poulpe
                 ImGui::Separator();
             ImGui::End();
 
-            ImGui::Begin("Node graph");
+            ImGui::Begin("Scene graph");
                 displayGraph();
             ImGui::End();
 
