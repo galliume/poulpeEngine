@@ -96,11 +96,9 @@ namespace Poulpe
         m_Adapter->rdr()->updateDescriptorSets(*mesh->getUniformBuffers(), descriptorSet, imageInfos);
         mesh->getDescriptorSets().emplace_back(descriptorSet);
 
-        Splash::pc pc;
-        pc.textureID = 0;
-
-        mesh->applyPushConstants = [&pc, mesh](VkCommandBuffer & commandBuffer, VkPipelineLayout pipelineLayout, 
-            [[maybe_unused]] VulkanAdapter* adapter, [[maybe_unused]] Mesh::Data * data) {
+        mesh->applyPushConstants = [=](VkCommandBuffer & commandBuffer, VkPipelineLayout pipelineLayout, 
+            [[maybe_unused]] VulkanAdapter* adapter, [[maybe_unused]] Mesh* mesh) {
+            Splash::pc pc;
             pc.textureID = mesh->getNextSpriteIndex();
             vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(Splash::pc), &pc);
         };
@@ -149,7 +147,7 @@ namespace Poulpe
 
         for (uint32_t i = 0; i < mesh->getUniformBuffers()->size(); i++) {
             //data.m_Ubos[i].view = m_Adapter->GetCamera()->LookAt();
-            data.m_Ubos[i].proj = m_Adapter->getPerspective();
+            data.m_Ubos[i].projection = m_Adapter->getPerspective();
         }
 
         for (uint32_t i = 0; i < mesh->getUniformBuffers()->size(); i++) {

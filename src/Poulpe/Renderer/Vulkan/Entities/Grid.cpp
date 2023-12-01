@@ -75,7 +75,7 @@ namespace Poulpe
 
         for (uint32_t i = 0; i < mesh->getUniformBuffers()->size(); i++) {
             //gridData.m_Ubos[i].view = m_Adapter->GetCamera()->LookAt();
-            gridData.m_Ubos[i].proj = m_Adapter->getPerspective();
+            gridData.m_Ubos[i].projection = m_Adapter->getPerspective();
 
             m_Adapter->rdr()->updateUniformBuffer(mesh->getUniformBuffers()->at(i), & gridData.m_Ubos);
         }
@@ -192,14 +192,13 @@ namespace Poulpe
 
     void Grid::setPushConstants(Mesh* mesh)
     {
-        Grid::pc pc;
-        pc.point = glm::vec4(0.1f, 50.f, 0.f, 0.f);
-        pc.view = m_Adapter->getCamera()->lookAt();
-
-        mesh->applyPushConstants = [&pc](VkCommandBuffer & commandBuffer, VkPipelineLayout pipelineLayout,
-            VulkanAdapter* adapter, [[maybe_unused]] Mesh::Data * data) {
+        mesh->applyPushConstants = [](VkCommandBuffer & commandBuffer, VkPipelineLayout pipelineLayout,
+            VulkanAdapter* adapter, [[maybe_unused]] Mesh* mesh) {
+            
+            Grid::pc pc;
             pc.point = glm::vec4(0.1f, 50.f, 0.f, 0.f);
             pc.view = adapter->getCamera()->lookAt();
+
             vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(Grid::pc), & pc);
         };
         mesh->setHasPushConstants();

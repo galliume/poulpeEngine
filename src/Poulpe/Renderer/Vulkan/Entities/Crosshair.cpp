@@ -71,8 +71,7 @@ namespace Poulpe
             VulkanAdapter::s_PolygoneMode));
 
         for (uint32_t i = 0; i < mesh->getUniformBuffers()->size(); i++) {
-            //data.m_Ubos[i].view = m_Adapter->GetCamera()->LookAt();
-            data.m_Ubos[i].proj = m_Adapter->getPerspective();
+            data.m_Ubos[i].projection = m_Adapter->getPerspective();
 
             m_Adapter->rdr()->updateUniformBuffer(mesh->getUniformBuffers()->at(i), & data.m_Ubos);
         }
@@ -181,12 +180,12 @@ namespace Poulpe
 
     void Crosshair::setPushConstants(Mesh* mesh)
     {
-        Crosshair::pc pc{};
-        pc.textureID = 0;
+        mesh->applyPushConstants = [](VkCommandBuffer & commandBuffer, VkPipelineLayout pipelineLayout,
+            [[maybe_unused]] VulkanAdapter* adapter, [[maybe_unused]] Mesh* mesh) {
 
-        mesh->applyPushConstants = [& pc](VkCommandBuffer & commandBuffer, VkPipelineLayout pipelineLayout,
-            [[maybe_unused]] VulkanAdapter* adapter, [[maybe_unused]] Mesh::Data* data) {
+            Crosshair::pc pc{};
             pc.textureID = VulkanAdapter::s_Crosshair;
+
             vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(Crosshair::pc), & pc);
         };
         mesh->setHasPushConstants();

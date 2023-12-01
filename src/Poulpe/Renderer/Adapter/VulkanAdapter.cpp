@@ -27,7 +27,7 @@ namespace Poulpe
     void VulkanAdapter::init()
     {
         m_RayPick = glm::vec3(0.0f);
-        m_LightsPos.emplace_back(glm::vec3(0.5f, 4.5f, -3.00f));
+        m_LightsPos.emplace_back(glm::vec3(0.5f, 0.5f, 0.5f));
         setPerspective();
         m_RenderPass = std::unique_ptr<VkRenderPass>(m_Renderer->createRenderPass(m_Renderer->getMsaaSamples()));
         
@@ -196,7 +196,7 @@ namespace Poulpe
 
     void VulkanAdapter::setPerspective()
     {        
-        m_Perspective = glm::perspective(glm::radians(60.0f),
+        m_Perspective = glm::perspective(glm::radians(45.0f),
             static_cast<float>(m_Renderer->getSwapChainExtent().width) / static_cast<float>(m_Renderer->getSwapChainExtent().height),
             0.1f, 100.f);
         m_Perspective[1][1] *= -1;
@@ -232,7 +232,7 @@ namespace Poulpe
 
                     if (mesh->hasPushConstants() && nullptr != mesh->applyPushConstants)
                         mesh->applyPushConstants(m_CommandBuffersEntities[m_ImageIndex], mesh->getPipelineLayout(),
-                            this, mesh->getData());
+                            this, mesh);
 
                     try {
                         if (m_RenderingStopped) return;
@@ -275,7 +275,7 @@ namespace Poulpe
 
                 if (skybox->getMesh()->hasPushConstants() && nullptr != skybox->getMesh()->applyPushConstants)
                     skybox->getMesh()->applyPushConstants(m_CommandBuffersSkybox[m_ImageIndex], skybox->getMesh()->getPipelineLayout(), this,
-                        skyboxData);
+                        skybox->getMesh());
 
                 if (m_RenderingStopped) return;
                 m_Renderer->draw(m_CommandBuffersSkybox[m_ImageIndex], skybox->getMesh()->getDescriptorSets().at(i), skybox->getMesh(),
@@ -311,7 +311,7 @@ namespace Poulpe
 
             if (hudPart->hasPushConstants() && nullptr != hudPart->applyPushConstants) {
                 hudPart->applyPushConstants(m_CommandBuffersHud[m_ImageIndex], hudPart->getPipelineLayout(), this,
-                    hudPart->getData());
+                    hudPart);
             }
 
             for (uint32_t i = 0; i < hudPart->getUniformBuffers()->size(); i++) {
@@ -365,7 +365,7 @@ namespace Poulpe
 
                     if (bbox->hasPushConstants() && nullptr != bbox->applyPushConstants)
                         bbox->applyPushConstants(m_CommandBuffersBbox[m_ImageIndex], bbox->getPipelineLayout(), this,
-                            bbox->getData());
+                            bbox.get());
 
                     if (m_RenderingStopped) return;
 

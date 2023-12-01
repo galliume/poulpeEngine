@@ -4,20 +4,15 @@ namespace Poulpe
 {
     void Camera::init()
     {
-        m_Pos = glm::vec3(0.0f, 0.5f, 1.5f);
+        m_Pos = glm::vec3(0.5f, 0.5f, -3.0f);
         m_Target = glm::vec3(0.0f, 0.0f, 0.0f);
         m_Direction = glm::normalize(m_Pos - m_Target);
-        m_Up = glm::vec3(0.0f, 10.0f, 0.0f);
+        m_Up = glm::vec3(0.0f, 1.0f, 0.0f);
         m_CameraRight = glm::normalize(glm::cross(m_Up, m_Direction));
-        //m_CameraUp = glm::cross(m_Direction, m_CameraRight);
         m_CameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
-        m_CameraFront = glm::vec3(0.0f, 0.0f, -10.0f);
+        m_CameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
 
-        m_View = glm::lookAt(
-            glm::vec3(1.0f, 0.0f, 0.0f),
-            glm::vec3(0.0f, 1.0f, 0.0f),
-            glm::vec3(0.0f, 0.0f, 1.0f)
-        );
+        m_View = glm::lookAt(m_Pos, m_Pos + m_CameraFront, m_CameraUp);
     }
 
     /**
@@ -89,31 +84,31 @@ namespace Poulpe
 
     void Camera::forward()
     {
-        m_Pos += m_Speed * m_DeltaTime * m_CameraFront;
+        m_Pos +=  m_CameraFront * (m_Speed * m_DeltaTime);
     }
 
     void Camera::backward()
     {
-        m_Pos -= m_Speed * m_DeltaTime * m_CameraFront;
+        m_Pos -= m_CameraFront * (m_Speed * m_DeltaTime);
     }
     void Camera::up()
     {
-        m_Pos -= m_CameraUp * m_Speed * m_DeltaTime;
+        m_Pos -= m_CameraUp * (m_Speed * m_DeltaTime);
     }
 
     void Camera::down()
     {
-        m_Pos += m_CameraUp * m_Speed * m_DeltaTime;
+        m_Pos += m_CameraUp * (m_Speed * m_DeltaTime);
     }
 
     void Camera::left()
     {
-        m_Pos -= glm::normalize(glm::cross(m_CameraFront, m_CameraUp)) * m_Speed * m_DeltaTime;
+        m_Pos -= glm::normalize(glm::cross(m_CameraFront, m_CameraUp)) * (m_Speed * m_DeltaTime);
     }
 
     void Camera::right()
     {
-        m_Pos += glm::normalize(glm::cross(m_CameraFront, m_CameraUp)) * m_Speed * m_DeltaTime;
+        m_Pos += glm::normalize(glm::cross(m_CameraFront, m_CameraUp)) * (m_Speed * m_DeltaTime);
     }
 
     glm::mat4 Camera::lookAt()

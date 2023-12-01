@@ -1,55 +1,55 @@
 #version 450
-#extension GL_ARB_separate_shader_objects : enable
 #extension GL_EXT_nonuniform_qualifier : enable
 
 #define MAX_UBOS 1000
 
-struct UBO 
+struct UBO
 {
     mat4 model;
-    mat4 proj;
+    mat4 projection;
 };
 
 layout(set = 0, binding = 0) uniform UniformBufferObject {
    UBO ubos[MAX_UBOS];
 };
 
-layout(location = 0) in vec3 pos;
-layout(location = 1) in vec3 normal;
-layout(location = 2) in vec2 texCoord;
-
-layout(location = 0) out vec2 fragTexCoord;
-layout(location = 1) out int fragTextureID;
-layout(location = 2) out vec3 fragCameraPos;
-layout(location = 3) out vec3 fragModelPos;
-layout(location = 4) out float fragAmbiantLight;
-layout(location = 5) out float fragFogDensity;
-layout(location = 6) out vec3 fragFogColor;
-layout(location = 7) out vec3 fragLightPos;
-layout(location = 8) out vec3 fragNormal;
-
 layout(push_constant) uniform constants
 {
-    vec4 data;
-    vec4 cameraPos;
-    vec3 fogColor;
-    vec4 lightPos;
+    int textureID;
     mat4 view;
-	float ambiantLight;
-	float fogDensity;
-} PC;
+    vec4 viewPos;
+    vec3 ambient;
+    vec3 diffuse;
+    vec3 specular;
+    float shininess;
+} pc;
 
-void main() {
-    
-    gl_Position = ubos[gl_InstanceIndex].proj * PC.view * ubos[gl_InstanceIndex].model * vec4(pos, 1.0);
+layout (location = 0) in vec3 pos;
+layout (location = 1) in vec3 normal;
+layout(location = 2) in vec2 texCoord;
 
-    fragTexCoord = texCoord;
-    fragTextureID = int(PC.data.x);
-	fragAmbiantLight = PC.ambiantLight;
-    fragFogDensity = PC.fogDensity;
-    fragFogColor = PC.fogColor;
-    fragLightPos = PC.lightPos.xyz;
-	fragModelPos = vec3(ubos[gl_InstanceIndex].model * vec4(pos, 1.0));
-    fragCameraPos = PC.cameraPos.xyz;
-	fragNormal =  mat3(transpose(inverse(ubos[gl_InstanceIndex].model))) * normal;
-}
+layout(location = 0) out vec3 fNormal;
+layout(location = 1) out vec3 fPos;
+layout(location = 2) out vec2 fTexCoord;
+layout(location = 3) flat out int fTextureID;
+layout(location = 4) out vec4 fViewPos;
+layout(location = 5) out vec3 fAmbient;
+layout(location = 6) out vec3 fDiffuse;
+layout(location = 7) out vec3 fSpecular;
+layout(location = 8) out float fShininess;
+
+void main()
+{
+    gl_Position = ubos[gl_InstanceIndex].projection * pc.view * ubos[gl_InstanceIndex].model * vec4(pos, 1.0);
+
+    fNormal = normal;
+    //fNormal = mat3(transpose(inverse(ubos[gl_InstanceIndex].model))) * normal;
+    fPos = vec3(ubos[gl_InstanceIndex].model * vec4(pos, 1.0));
+    fTexCoord = texCoord;
+    fTextureID = pc.textureID;
+    fViewPos = pc.viewPos;
+    fAmbient = pc.ambient;
+    fDiffuse = pc.diffuse;
+    fSpecular = pc.specular;
+    fShininess = pc.shininess;
+} 
