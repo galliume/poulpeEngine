@@ -59,6 +59,7 @@ namespace Poulpe
 
     void DeviceMemoryPool::clear()
     {
+        PLP_WARN("MEMORY POOL CLEANING");
         for (auto& memoryType : m_Pool) {
             for (auto& usage : memoryType.second) {
                 for (auto& mem : usage.second) {

@@ -74,7 +74,7 @@ namespace Poulpe
         UniformBufferObject ubo;
         ubo.model = glm::mat4(0.0f);
         //ubo.view = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
-        ubo.proj = m_Adapter->getPerspective();
+        ubo.projection = m_Adapter->getPerspective();
 
         auto commandPool = m_Adapter->rdr()->createCommandPool();
 
@@ -204,30 +204,14 @@ namespace Poulpe
 
     void Skybox::setPushConstants(Mesh* mesh)
     {
-        constants pushConstants{};
-        pushConstants.data = glm::vec4(0.f, Poulpe::VulkanAdapter::s_AmbiantLight.load(),
-            Poulpe::VulkanAdapter::s_FogDensity.load(), 0.f);
 
-        pushConstants.cameraPos = m_Adapter->getCamera()->getPos();
+        mesh->applyPushConstants = [](VkCommandBuffer & commandBuffer, VkPipelineLayout pipelineLayout,
+            VulkanAdapter* adapter, Mesh* mesh) {
 
-        pushConstants.fogColor = glm::vec4({ Poulpe::VulkanAdapter::s_FogColor[0].load(), Poulpe::VulkanAdapter::s_FogColor[1].load(),
-            Poulpe::VulkanAdapter::s_FogColor[2].load(), 0.f });
-
-        pushConstants.lightPos = glm::vec4(m_Adapter->getLights().at(0), 0.f);
-        pushConstants.view = m_Adapter->getCamera()->lookAt();
-
-        mesh->applyPushConstants = [=, &pushConstants](VkCommandBuffer & commandBuffer, VkPipelineLayout pipelineLayout,
-            VulkanAdapter* adapter,  [[maybe_unused]] Mesh::Data * data) {
-
-            pushConstants.data = glm::vec4(0.f, Poulpe::VulkanAdapter::s_AmbiantLight.load(),
-                Poulpe::VulkanAdapter::s_FogDensity.load(), 0.f);
-
-            pushConstants.cameraPos = adapter->getCamera()->getPos();
-            pushConstants.fogColor = glm::vec4({ Poulpe::VulkanAdapter::s_FogColor[0].load(),
-                Poulpe::VulkanAdapter::s_FogColor[1].load(), Poulpe::VulkanAdapter::s_FogColor[2].load(), 0.f });
-
-            pushConstants.lightPos = glm::vec4(adapter->getLights().at(0), 0.f);
+            constants pushConstants{};
+            pushConstants.textureID = mesh->getData()->m_TextureIndex;
             pushConstants.view = glm::mat4(glm::mat3(adapter->getCamera()->lookAt()));
+            pushConstants.viewPos = adapter->getCamera()->getPos();
 
             vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(constants),
                 & pushConstants);

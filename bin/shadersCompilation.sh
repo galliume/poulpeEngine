@@ -31,16 +31,8 @@ ${GLSLC_BIN} ./assets/shaders/2d.vert -o assets/shaders/spv/2d_vert.spv
 ${GLSLC_BIN} ./assets/shaders/2d.frag -o assets/shaders/spv/2d_frag.spv
 echo "Shader [2d] compiled"
 
-${GLSLC_BIN} ./assets/shaders/ambient_shader.vert -o assets/shaders/spv/ambient_shader_vert.spv
-${GLSLC_BIN} ./assets/shaders/ambient_shader.frag -o assets/shaders/spv/ambient_shader_frag.spv
-echo "Shader [ambient_shader] compiled"
-
 ${GLSLC_BIN} ./assets/shaders/grid.vert -o assets/shaders/spv/grid_vert.spv
 ${GLSLC_BIN} ./assets/shaders/grid.frag -o assets/shaders/spv/grid_frag.spv
 echo "Shader [grid] compiled"
-
-${GLSLC_BIN} ./assets/shaders/bbox.vert -o assets/shaders/spv/bbox_vert.spv
-${GLSLC_BIN} ./assets/shaders/bbox.frag -o assets/shaders/spv/bbox_frag.spv
-echo "Shader [shaders] compiled"
 
 echo "All shaders have been compiled."

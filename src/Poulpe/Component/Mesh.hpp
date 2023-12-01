@@ -14,15 +14,33 @@ namespace Poulpe
 {
     class VulkanAdapter;//@todo should not be here
 
+    struct material_t {
+      std::string name;
+
+      glm::vec3 ambient;
+      glm::vec3 diffuse;
+      glm::vec3 specular;
+      glm::vec3 transmittance;
+      glm::vec3 emission;
+      float shininess;
+      float ior;       // index of refraction
+      float dissolve;  // 1 == opaque; 0 == fully transparent
+      std::string ambientTexname;             // map_Ka
+      std::string diffuseTexname;             // map_Kd
+      std::string specularTexname;            // map_Ks
+      std::string specularHighlightTexname;  // map_Ns
+      std::string bumpTexname;                // map_bump, map_Bump, bump
+    };
+
     struct constants
     {
-        glm::vec4 data;
-        glm::vec4 cameraPos;
-        glm::vec4 fogColor;
-        glm::vec4 lightPos;
+        int textureID;
         glm::mat4 view;
-        float ambiantLight;
-        float fogDensity;
+        glm::vec4 viewPos;
+        glm::vec3 ambient;
+        glm::vec3 diffuse;
+        glm::vec3 specular;
+        float shininess;
     };
 
     class Mesh
@@ -87,7 +105,7 @@ namespace Poulpe
 
         void addUbos(const std::vector<UniformBufferObject>& ubos);
         std::function<void(VkCommandBuffer & commandBuffer, VkPipelineLayout pipelineLayout,
-            VulkanAdapter* vulkanAdapter, Mesh::Data * data)> applyPushConstants = nullptr;
+            VulkanAdapter* vulkanAdapter, Mesh* mesh)> applyPushConstants = nullptr;
         
         bool isDirty() { return m_IsDirty.load(); }
         void setIsDirty(bool dirty = true) { m_IsDirty.store(dirty); }
@@ -115,6 +133,9 @@ namespace Poulpe
         Data* getData() { return & m_Data; }
         void setData(Data data) { m_Data = std::move(data); }
 
+        void setMaterial(material_t material) { m_Material = material; }
+        material_t getMaterial() { return m_Material; }
+
     private:
         std::vector<VkDescriptorSet> m_DescriptorSets;
         VkPipelineLayout m_PipelineLayout;
@@ -137,5 +158,7 @@ namespace Poulpe
         uint32_t m_SpritesIndex = 0;
         
         Data m_Data;
+
+        material_t m_Material;
     };
 }

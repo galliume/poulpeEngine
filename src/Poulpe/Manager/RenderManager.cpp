@@ -75,6 +75,9 @@ namespace Poulpe
 
     void RenderManager::init()
     {
+        //@todo clean all thoses
+        TinyObjLoader::m_TinyObjMaterials.clear();
+
         if (m_Refresh) {
             m_Renderer->stopRendering();
             m_Renderer->rdr()->waitIdle();
@@ -136,7 +139,6 @@ namespace Poulpe
             //PLP_WARN("loading {}", m_EntityManager->IsLoadingDone());
         }
         setIsLoaded();
-        TinyObjLoader::m_TinyObjMaterials.clear();
     }
 
     void RenderManager::draw()
