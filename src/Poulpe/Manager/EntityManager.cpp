@@ -250,10 +250,18 @@ namespace Poulpe
             mesh->setShaderName(shader);
 
             std::vector<Mesh::BBox> bboxs{};
+            
+            auto nameTexture = textureNames[listData[i].materialId];
 
-            auto nameTexture = (TinyObjLoader::m_TinyObjMaterials.empty() || TinyObjLoader::m_TinyObjMaterials.at(listData[i].materialId).diffuseTexname.empty())
-              ? textureNames[listData[i].materialId]
-              : TinyObjLoader::m_TinyObjMaterials.at(listData[i].materialId).diffuseTexname;
+            if (!TinyObjLoader::m_TinyObjMaterials.empty()) {
+                
+                mesh->setMaterial(TinyObjLoader::m_TinyObjMaterials.at(listData[i].materialId));
+            
+                //@todo temp
+                if (!TinyObjLoader::m_TinyObjMaterials.at(listData[i].materialId).diffuseTexname.empty()) {
+                    nameTexture = TinyObjLoader::m_TinyObjMaterials.at(listData[i].materialId).diffuseTexname;
+                }
+            }
 
             Mesh::Data data{};
             data.m_Name = name + '_' + nameTexture;

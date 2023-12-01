@@ -1,63 +1,39 @@
 #version 450
-#extension GL_ARB_separate_shader_objects : enable
 #extension GL_EXT_nonuniform_qualifier : enable
+#extension GL_ARB_separate_shader_objects : enable
 
-layout(location = 0) out vec4 outputColor;
+layout(location = 0) out vec4 fColor;
 
-layout(location = 0) in vec2 fragTexCoord;
-layout(location = 1) flat in int fragTextureID;
-layout(location = 2) in vec3 cameraPos;
-layout(location = 3) in vec3 fragModelPos;
-layout(location = 4) in float fragAmbiantLight; 
-layout(location = 5) in float fragFogDensity; 
-layout(location = 6) in vec3 fragFogColor;
-layout(location = 7) in vec3 fragLightPos;
-layout(location = 8) in vec3 fragNormal;
+layout(location = 0) in vec3 fNormal;
+layout(location = 1) in vec3 fPos;
+layout(location = 2) in vec2 fTexCoord;
+layout(location = 3) flat in int fTextureID;
+layout(location = 4) in vec4 fViewPos;
+layout(location = 5) in vec3 fAmbient;
+layout(location = 6) in vec3 fDiffuse;
+layout(location = 7) in vec3 fSpecular;
+layout(location = 8) in float fShininess;
 
 layout(binding = 1) uniform sampler2D texSampler[];
 
-//todo move to push constants
-vec3 lightColor = vec3(1.0f);
-const float fogDistanceMax = 1.0;
-const float fogDistanceMin = 0.5;
-
-float getFogFactor(float d)
+void main()
 {
-    //todo move to push constants
-    const float FogMax = 1.5;
-    const float FogMin = 0.5;
+    vec3 lightPos = vec3(0.5f, 4.5f, -3.0f);
+    vec3 lightColor = vec3(1.0f, 1.0f, 1.0f);
 
-    if (d>=FogMax) return 1;
-    if (d<=FogMin) return 0;
-
-    return 1 - (FogMax - d) / (FogMax - FogMin);
-}
-
-void main() {
-
-    float specularStrength = 0.5;  
-    vec3 viewDir = normalize(cameraPos - fragModelPos);
-    vec3 lightDir = normalize(fragLightPos - fragModelPos);
-    vec3 norm = normalize(fragNormal);
-    vec3 reflectDir = reflect(-lightDir, norm);
-    float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32);
-    vec3 specular = specularStrength * spec * lightColor;
+    vec3 norm = normalize(fNormal);
+    vec3 lightDir = normalize(lightPos - fPos);
 
     float diff = max(dot(norm, lightDir), 0.0);
-    vec3 ambient = fragAmbiantLight * lightColor;
-    vec3 diffuse = diff * lightColor * 0.05;
+    vec3 diffuse = (diff * fDiffuse) * lightColor;
 
-    outputColor = texture(texSampler[fragTextureID], fragTexCoord);
-    outputColor = vec4((ambient + diffuse), 1.0) * outputColor;
-    
-    if (0 < fragFogDensity) {
-        float d = distance(cameraPos, fragModelPos);
-        float alpha = getFogFactor(d);
+    vec3 ambient = fAmbient * lightColor;
 
-        outputColor = mix(outputColor, vec4(fragFogColor, 1.0), alpha * fragFogDensity);
-    }
+    vec3 viewDir = normalize(fViewPos.xyz - fPos);
+    vec3 reflectDir = reflect(-lightDir, norm);
 
-	//outputColor = texture(texSampler[fragTextureID], fragTexCoord);
-    
-    //outputColor = vec4(fragColor, 1.0);
-}
+    float spec = pow(max(dot(viewDir, reflectDir), 0.0), fShininess);
+    vec3 specular = (fSpecular * spec) * lightColor;
+
+    fColor = vec4((ambient + diffuse + specular), 1.0) * texture(texSampler[fTextureID], fTexCoord);
+}  

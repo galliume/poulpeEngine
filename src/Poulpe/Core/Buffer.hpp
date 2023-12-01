@@ -2,10 +2,10 @@
 
 namespace Poulpe
 {
-    struct UniformBufferObject 
+    struct UniformBufferObject
     {
         alignas(16) glm::mat4 model;
-        alignas(16) glm::mat4 proj;
+        alignas(16) glm::mat4 projection;
     };
 
     struct CubeUniformBufferObject : UniformBufferObject
