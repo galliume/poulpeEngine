@@ -56,7 +56,7 @@ namespace Poulpe
         data->m_TextureIndex = 0;
 
         for (size_t i = 0; i < mesh->getData()->m_Ubos.size(); ++i) {
-          mesh->getData()->m_Ubos[i].proj = m_Adapter->getPerspective();
+          mesh->getData()->m_Ubos[i].projection = m_Adapter->getPerspective();
         }
 
         mesh->setDescriptorSetLayout(createDescriptorSetLayout());
@@ -142,7 +142,7 @@ namespace Poulpe
             data.m_Ubos.insert(data.m_Ubos.end(), box->mesh->getData()->m_Ubos.begin(), box->mesh->getData()->m_Ubos.end());
 
         for (uint32_t i = 0; i < data.m_Ubos.size(); i++) {
-            data.m_Ubos[i].proj = m_Adapter->getPerspective();
+            data.m_Ubos[i].projection = m_Adapter->getPerspective();
         }
 
         box->mesh->setName("bbox_" + mesh->getData()->m_Name);
@@ -272,36 +272,21 @@ namespace Poulpe
 
     void Basic::setPushConstants(Mesh* mesh)
     {
-        constants pushConstants{};
+        mesh->applyPushConstants = [](VkCommandBuffer & commandBuffer, VkPipelineLayout pipelineLayout,
+            VulkanAdapter* adapter, Mesh* mesh) {
 
-        pushConstants.data = glm::vec4(0.f, Poulpe::VulkanAdapter::s_AmbiantLight.load(),
-            Poulpe::VulkanAdapter::s_FogDensity.load(), 0.f);
+            constants pushConstants {};
+            pushConstants.textureID = mesh->getData()->m_TextureIndex;
+            pushConstants.view = adapter->getCamera()->lookAt();
+            pushConstants.viewPos = adapter->getCamera()->getPos();
 
-        pushConstants.cameraPos = m_Adapter->getCamera()->getPos();
+            pushConstants.ambient = mesh->getMaterial().ambient;
+            pushConstants.diffuse = mesh->getMaterial().diffuse;
+            pushConstants.specular = mesh->getMaterial().specular;
+            pushConstants.shininess = mesh->getMaterial().shininess;
 
-        pushConstants.fogColor = glm::vec4({ Poulpe::VulkanAdapter::s_FogColor[0].load(), Poulpe::VulkanAdapter::s_FogColor[1].load(),
-            Poulpe::VulkanAdapter::s_FogColor[2].load(), 0.f });
-
-        pushConstants.lightPos = glm::vec4(m_Adapter->getLights().at(0), 0.f);
-        pushConstants.view = m_Adapter->getCamera()->lookAt();
-        pushConstants.ambiantLight = Poulpe::VulkanAdapter::s_AmbiantLight.load();
-        pushConstants.fogDensity = Poulpe::VulkanAdapter::s_FogDensity.load();
-
-        mesh->applyPushConstants = [=, & pushConstants](VkCommandBuffer & commandBuffer, VkPipelineLayout pipelineLayout,
-            VulkanAdapter* adapter, Mesh::Data * data) {
-
-        pushConstants.data = glm::vec4(static_cast<float>(data->m_TextureIndex), Poulpe::VulkanAdapter::s_AmbiantLight.load(),
-            Poulpe::VulkanAdapter::s_FogDensity.load(), 0.f);
-
-        pushConstants.cameraPos = adapter->getCamera()->getPos();
-        pushConstants.fogColor = glm::vec4({ Poulpe::VulkanAdapter::s_FogColor[0].load(), Poulpe::VulkanAdapter::s_FogColor[1].load(),
-            Poulpe::VulkanAdapter::s_FogColor[2].load(), 0.f });
-
-        pushConstants.lightPos = glm::vec4(adapter->getLights().at(0), 0.f);
-        pushConstants.view = adapter->getCamera()->lookAt();
-        pushConstants.ambiantLight = Poulpe::VulkanAdapter::s_AmbiantLight.load();
-        pushConstants.fogDensity = Poulpe::VulkanAdapter::s_FogDensity.load();
-        vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(constants), & pushConstants);
+            vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(constants),
+                & pushConstants);
         };
 
         mesh->setHasPushConstants();
