@@ -36,7 +36,6 @@ namespace Poulpe
         auto& shapes = reader.GetShapes();
         auto& materials = reader.GetMaterials();
 
-
         for (auto & material : materials) {
           
           Poulpe::material_t mat{};

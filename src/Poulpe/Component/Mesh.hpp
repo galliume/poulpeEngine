@@ -38,8 +38,13 @@ namespace Poulpe
         glm::mat4 view;
         glm::vec4 viewPos;
         glm::vec3 ambient;
+        glm::vec3 ambientLight;
+        glm::vec3 ambientlightPos;
+        glm::vec3 ambientlightColor;
         glm::vec3 diffuse;
+        glm::vec3 diffuseLight;
         glm::vec3 specular;
+        glm::vec3 specularLight;
         float shininess;
     };
 

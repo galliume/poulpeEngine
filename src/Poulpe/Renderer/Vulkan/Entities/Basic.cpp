@@ -275,16 +275,25 @@ namespace Poulpe
         mesh->applyPushConstants = [](VkCommandBuffer & commandBuffer, VkPipelineLayout pipelineLayout,
             VulkanAdapter* adapter, Mesh* mesh) {
 
-            constants pushConstants {};
+            constants pushConstants{};
             pushConstants.textureID = mesh->getData()->m_TextureIndex;
             pushConstants.view = adapter->getCamera()->lookAt();
             pushConstants.viewPos = adapter->getCamera()->getPos();
-
             pushConstants.ambient = mesh->getMaterial().ambient;
-            pushConstants.diffuse = mesh->getMaterial().diffuse;
-            pushConstants.specular = mesh->getMaterial().specular;
-            pushConstants.shininess = mesh->getMaterial().shininess;
+            pushConstants.ambientLight = glm::vec3(0.3);
 
+            pushConstants.ambientlightPos = glm::vec3(std::sin(glfwGetTime() * 2.0f),
+                std::sin(glfwGetTime() * 1.4f),
+                std::sin(glfwGetTime() * 0.5f));
+            
+            pushConstants.ambientlightColor = glm::vec3(1.0f);
+
+            pushConstants.diffuse = mesh->getMaterial().diffuse;
+            pushConstants.diffuseLight = glm::vec3(0.5);
+            pushConstants.specular = mesh->getMaterial().specular;
+            pushConstants.specularLight = glm::vec3(1.0);
+            pushConstants.shininess = mesh->getMaterial().shininess;
+            
             vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(constants),
                 & pushConstants);
         };

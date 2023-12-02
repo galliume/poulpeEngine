@@ -78,6 +78,32 @@
 			"form": "positioned",
 			"hasBbox": false,
 			"hasAnimation": false
-		}	
+		},
+		"moon" : {
+			"mesh": "assets/mesh/moon/moon.obj",
+			"textures": {
+				"diffuse": "assets/mesh/moon/diffuse.png"
+			},
+			"shader": "ambient_light",
+			"positions": [
+				{"x": 0.5, "y": 4.5, "z": -3.00}
+			],
+			"scales": [
+				{"x": 0.2, "y": 0.2, "z": 0.2}
+			],
+			"rotations": [
+				{"x": 0.0, "y": 0.0, "z": 0.0}
+			],
+			"inverseTextureY": false,
+			"count": 1,
+			"padding": {
+				"x": 0.0,
+				"y": 0.0,
+				"z": 0.0
+			},
+			"form": "positioned",
+			"hasBbox": false,
+			"hasAnimation": true
+		}
 	}
 }

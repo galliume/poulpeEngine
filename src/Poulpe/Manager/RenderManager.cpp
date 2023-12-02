@@ -226,7 +226,7 @@ namespace Poulpe
                   //ubo.model = glm::translate(ubo.model, mesh->getData()->m_OriginPos);
                   //ubo.model = glm::scale(ubo.model, mesh->getData()->m_OriginScale);
 
-                  auto angle = deltaTime * (std::rand() % 100);
+                  auto angle = deltaTime * (std::rand() % 20);
 
                   ubo.model = glm::rotate(ubo.model, glm::radians(angle), mesh->getData()->m_OriginPos);
 

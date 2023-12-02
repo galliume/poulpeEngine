@@ -204,6 +204,8 @@ namespace Poulpe
                             part->setHasAnimation(hasAnimation);
                         }
                         addEntity(std::move(parts));
+
+                        TinyObjLoader::m_TinyObjMaterials.clear();
                     }
                 }
             }
