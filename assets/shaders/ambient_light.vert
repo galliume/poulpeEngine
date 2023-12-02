@@ -19,13 +19,8 @@ layout(push_constant) uniform constants
     mat4 view;
     vec4 viewPos;
     vec3 ambient;
-    vec3 ambientLight;
-    vec3 ambientLightPos;
-    vec3 ambientLightColor;
     vec3 diffuse;
-    vec3 diffuseLight;
     vec3 specular;
-    vec3 specularLight;
     float shininess;
 } pc;
 
@@ -39,32 +34,22 @@ layout(location = 2) out vec2 fTexCoord;
 layout(location = 3) flat out int fTextureID;
 layout(location = 4) out vec4 fViewPos;
 layout(location = 5) out vec3 fAmbient;
-layout(location = 6) out vec3 fAmbientLight;
-layout(location = 7) out vec3 fAmbientLighPos;
-layout(location = 8) out vec3 fAmbientLightColor;
-layout(location = 9) out vec3 fDiffuse;
-layout(location = 10) out vec3 fDiffuseLight;
-layout(location = 11) out vec3 fSpecular;
-layout(location = 12) out vec3 fSpecularLight;
-layout(location = 13) out float fShininess;
+layout(location = 6) out vec3 fDiffuse;
+layout(location = 7) out vec3 fSpecular;
+layout(location = 8) out float fShininess;
 
 void main()
 {
     gl_Position = ubos[gl_InstanceIndex].projection * pc.view * ubos[gl_InstanceIndex].model * vec4(pos, 1.0);
 
-    //fNormal = normal;
-    fNormal = mat3(transpose(inverse(ubos[gl_InstanceIndex].model))) * normal;
+    fNormal = normal;
+    //fNormal = mat3(transpose(inverse(ubos[gl_InstanceIndex].model))) * normal;
     fPos = vec3(ubos[gl_InstanceIndex].model * vec4(pos, 1.0));
     fTexCoord = texCoord;
     fTextureID = pc.textureID;
     fViewPos = pc.viewPos;
     fAmbient = pc.ambient;
-    fAmbientLight = pc.ambientLight;
-    fAmbientLightColor = pc.ambientLightColor;
-    fAmbientLight = pc.ambientLight;
     fDiffuse = pc.diffuse;
-    fDiffuseLight = pc.diffuseLight;
     fSpecular = pc.specular;
-    fSpecularLight = pc.specularLight;
     fShininess = pc.shininess;
 } 

@@ -229,6 +229,10 @@ add_custom_command(
         $<TARGET_FILE_DIR:${PROJECT_NAME}>/lib
     COMMENT "Creating lib dir")
 
+add_custom_target(
+        CompilShaders ${CMAKE_CURRENT_SOURCE_DIR}/bin/shadersCompilation.sh
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+
 #add_custom_target(graphviz ALL
 #    COMMAND ${CMAKE_COMMAND} "--graphviz=graph/plp.dot" ..
 #    COMMAND dot -Tsvg graph/plp.dot -o graph/plp.svg
