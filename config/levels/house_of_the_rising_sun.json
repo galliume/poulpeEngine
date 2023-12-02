@@ -425,7 +425,7 @@
 		"moon" : {
 			"mesh": "assets/mesh/moon/moon.obj",
 			"textures": {
-				"diffuse": "assets/mesh/moon/diffuse.jpg"
+				"diffuse": "assets/mesh/moon/diffuse.png"
 			},
 			"shader": "ambient_light",
 			"positions": [

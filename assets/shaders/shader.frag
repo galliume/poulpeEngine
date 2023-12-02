@@ -10,30 +10,48 @@ layout(location = 2) in vec2 fTexCoord;
 layout(location = 3) flat in int fTextureID;
 layout(location = 4) in vec4 fViewPos;
 layout(location = 5) in vec3 fAmbient;
-layout(location = 6) in vec3 fDiffuse;
-layout(location = 7) in vec3 fSpecular;
-layout(location = 8) in float fShininess;
+layout(location = 6) in vec3 fAmbientLight;
+layout(location = 7) in vec3 fAmbientLighPos;
+layout(location = 8) in vec3 fAmbientLightColor;
+layout(location = 9) in vec3 fDiffuse;
+layout(location = 10) in vec3 fDiffuseLight;
+layout(location = 11) in vec3 fSpecular;
+layout(location = 12) in vec3 fSpecularLight;
+layout(location = 13) in float fShininess;
 
 layout(binding = 1) uniform sampler2D texSampler[];
 
 void main()
 {
-    vec3 lightPos = vec3(0.5f, 4.5f, -3.0f);
-    vec3 lightColor = vec3(1.0f, 1.0f, 1.0f);
-
     vec3 norm = normalize(fNormal);
-    vec3 lightDir = normalize(lightPos - fPos);
+    vec3 lightDir = fAmbientLighPos - fPos;
+    float distance = length(lightDir);
+    lightDir = normalize(lightDir);
+    distance = distance * distance;
 
-    float diff = max(dot(norm, lightDir), 0.0);
-    vec3 diffuse = (diff * fDiffuse) * lightColor;
+    float diff = clamp(dot(norm, lightDir), 0.0, 1.0);
+    vec3 diffuse = fAmbientLightColor * (diff * fDiffuse * fDiffuseLight);
 
-    vec3 ambient = fAmbient * lightColor;
+    vec3 ambient = fAmbientLightColor * fAmbient * fAmbientLight;
 
-    vec3 viewDir = normalize(fViewPos.xyz - fPos);
-    vec3 reflectDir = reflect(-lightDir, norm);
+    vec3 viewDir = normalize(fViewPos.xyz - fPos.xyz);
+    //vec3 reflectDir = reflect(-lightDir, norm);
+    vec3 h = normalize(-lightDir + viewDir);
 
-    float spec = pow(max(dot(viewDir, reflectDir), 0.0), fShininess);
-    vec3 specular = (fSpecular * spec) * lightColor;
+    float specFactor = clamp(dot(norm, h), 0.0, 1.0);
+    vec3 specular = vec3(0.0);
 
-    fColor = vec4((ambient + diffuse + specular), 1.0) * texture(texSampler[fTextureID], fTexCoord);
+    if (specFactor > 0.0) {
+        float spec = pow(specFactor, fShininess) * float(dot(norm, -lightDir) > 0.0);
+        vec3 specular = fAmbientLightColor * (fSpecular * spec * fSpecularLight) / distance;
+    }
+
+    vec3 debugDiffuse = vec3(1.0, 0.0, 0.0); // Debugging color for diffuse
+    vec3 debugAmbient = vec3(0.0, 1.0, 0.0); // Debugging color for ambient
+    vec3 debugSpecular = vec3(0.0, 0.0, 1.0); // Debugging color for specular
+
+    vec3 texture = texture(texSampler[fTextureID], fTexCoord).xyz;
+    vec3 phong = (ambient + diffuse) * texture + specular;
+
+    fColor = vec4(phong, 1.0f);
 }  

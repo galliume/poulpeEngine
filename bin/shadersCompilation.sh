@@ -35,4 +35,8 @@ ${GLSLC_BIN} ./assets/shaders/grid.vert -o assets/shaders/spv/grid_vert.spv
 ${GLSLC_BIN} ./assets/shaders/grid.frag -o assets/shaders/spv/grid_frag.spv
 echo "Shader [grid] compiled"
 
+${GLSLC_BIN} ./assets/shaders/ambient_light.vert -o assets/shaders/spv/ambient_light_vert.spv
+${GLSLC_BIN} ./assets/shaders/ambient_light.frag -o assets/shaders/spv/ambient_light_frag.spv
+echo "Shader [ambient_light] compiled"
+
 echo "All shaders have been compiled."

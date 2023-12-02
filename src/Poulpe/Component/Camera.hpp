@@ -26,6 +26,7 @@ namespace Poulpe
         void recenter();
         glm::mat4 frustumProj(float fovy, float s, float n, float f);
         glm::vec4 getPos() { return glm::vec4(m_Pos, 1.0f); }
+        glm::vec3 getDirection() { return m_Direction; }
 
     private:
         glm::vec3 m_Pos;
