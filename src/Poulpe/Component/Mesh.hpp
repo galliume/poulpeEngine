@@ -39,13 +39,12 @@ namespace Poulpe
         glm::vec4 viewPos;
         glm::vec3 ambient;
         glm::vec3 ambientLight;
-        glm::vec3 ambientlightPos;
-        glm::vec3 ambientlightColor;
-        glm::vec3 diffuse;
+        glm::vec3 lightDir;
         glm::vec3 diffuseLight;
         glm::vec3 specular;
         glm::vec3 specularLight;
         float shininess;
+        glm::vec3 mapsUsed{ 0, 0, 0 };
     };
 
     class Mesh
@@ -61,6 +60,7 @@ namespace Poulpe
         struct Data {
             std::string m_Name;
             std::string m_Texture;
+            std::string m_TextureSpecularMap;
             std::vector<Vertex> m_Vertices;
             std::vector<uint32_t> m_Indices;
             std::vector<UniformBufferObject> m_Ubos;
@@ -74,6 +74,8 @@ namespace Poulpe
             glm::vec3 m_CurrentPos;
             glm::vec3 m_CurrentRotation;
             glm::vec3 m_CurrentScale;
+            //x = specularMap, y = bumMap
+            glm::vec3 mapsUsed{ 0, 0, 0 };
         };
 
         struct BBox
@@ -95,7 +97,8 @@ namespace Poulpe
         ~Mesh() = default;
 
         inline std::vector<VkDescriptorSet> getDescriptorSets() { return m_DescriptorSets; }
-        inline VkPipeline getGraphicsPipeline() { return m_GraphicsPipeline; }
+        inline VkPipeline getGraphicsPipeline(unsigned int index = 0) { return m_GraphicsPipeline.at(index); }
+        inline size_t getGraphicsPipelineSize() { return m_GraphicsPipeline.size(); }
         inline VkPipelineLayout getPipelineLayout() { return m_PipelineLayout; }
         inline VkDescriptorPool getDescriptorPool() { return m_DescriptorPool; }
         inline VkDescriptorSetLayout getDescriptorSetLayout() { return m_DescriptorSetLayout; }
@@ -106,7 +109,7 @@ namespace Poulpe
         void setDescriptorPool(VkDescriptorPool descPool) { m_DescriptorPool = descPool; }
         void setPipelineLayout(VkPipelineLayout pipelineLayout) { m_PipelineLayout = pipelineLayout; }
         void setDescriptorSetLayout(VkDescriptorSetLayout descLayout) { m_DescriptorSetLayout = descLayout; }
-        void setGraphicsPipeline(VkPipeline pipeline) { m_GraphicsPipeline = pipeline; }
+        void setGraphicsPipeline(VkPipeline pipeline) { m_GraphicsPipeline.emplace_back(pipeline); }
 
         void addUbos(const std::vector<UniformBufferObject>& ubos);
         std::function<void(VkCommandBuffer & commandBuffer, VkPipelineLayout pipelineLayout,
@@ -144,7 +147,7 @@ namespace Poulpe
     private:
         std::vector<VkDescriptorSet> m_DescriptorSets;
         VkPipelineLayout m_PipelineLayout;
-        VkPipeline m_GraphicsPipeline;
+        std::vector<VkPipeline> m_GraphicsPipeline;
         VkDescriptorSetLayout m_DescriptorSetLayout;
         VkDescriptorPool m_DescriptorPool;
         std::unique_ptr<BBox> m_BoundingBox;
