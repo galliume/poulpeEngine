@@ -48,18 +48,19 @@ namespace Poulpe
           mat.shininess = material.shininess;
           mat.ior = material.ior;
           mat.dissolve = material.dissolve;
-          mat.ambientTexname = material.ambient_texname;
 
-          std::string n;
-          if (material.diffuse_texname.size() > 0) {
-            n = material.diffuse_texname;
-            n.resize(n.size() - 4); //remove extension
+          auto cleanName = [](std::string const & name) -> std::string {
+              std::string cleaned{ name };
+              if (name.size() > 0) {
+                  cleaned.resize(cleaned.size() - 4); //remove extension
+                  std::replace(cleaned.begin(), cleaned.end(), '\\', '_');
+              }
+              return cleaned;
+          };
 
-            std::replace(n.begin(), n.end(), '\\', '_');
-          }
-
-          mat.diffuseTexname = n;
-          mat.specularTexname = material.specular_texname;
+          mat.ambientTexname = cleanName(material.ambient_texname);
+          mat.diffuseTexname = cleanName(material.diffuse_texname);
+          mat.specularTexname = cleanName(material.specular_texname);
           mat.specularHighlightTexname = material.specular_highlight_texname;
           mat.bumpTexname = material.bump_texname;
 

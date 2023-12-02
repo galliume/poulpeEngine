@@ -254,6 +254,7 @@ namespace Poulpe
             std::vector<Mesh::BBox> bboxs{};
             
             auto nameTexture = textureNames[listData[i].materialId];
+            std::string nameTextureSpecularMap;
 
             if (!TinyObjLoader::m_TinyObjMaterials.empty()) {
                 
@@ -263,11 +264,15 @@ namespace Poulpe
                 if (!TinyObjLoader::m_TinyObjMaterials.at(listData[i].materialId).diffuseTexname.empty()) {
                     nameTexture = TinyObjLoader::m_TinyObjMaterials.at(listData[i].materialId).diffuseTexname;
                 }
+                if (!TinyObjLoader::m_TinyObjMaterials.at(listData[i].materialId).diffuseTexname.empty()) {
+                    nameTextureSpecularMap = TinyObjLoader::m_TinyObjMaterials.at(listData[i].materialId).specularTexname;
+                }
             }
 
             Mesh::Data data{};
             data.m_Name = name + '_' + nameTexture;
             data.m_Texture = nameTexture;
+            data.m_TextureSpecularMap = nameTextureSpecularMap;
             data.m_Vertices = listData[i].vertices;
             data.m_Indices = listData[i].indices;
             data.m_OriginPos = pos;
