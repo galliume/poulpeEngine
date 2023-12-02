@@ -182,7 +182,7 @@ namespace Poulpe
 
       VkDescriptorSetLayoutBinding samplerLayoutBinding{};
       samplerLayoutBinding.binding = 1;
-      samplerLayoutBinding.descriptorCount = 1;
+      samplerLayoutBinding.descriptorCount = 2;
       samplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
       samplerLayoutBinding.pImmutableSamplers = nullptr;
       samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
@@ -204,6 +204,8 @@ namespace Poulpe
       }
 
       std::vector<VkDescriptorImageInfo> imageInfos;
+      std::vector<VkDescriptorImageInfo> imageInfoSpec;
+
       Texture tex;
 
       if (m_TextureManager->getTextures().contains(mesh->getData()->m_Texture)) {
@@ -213,17 +215,35 @@ namespace Poulpe
       }
 
       VkDescriptorImageInfo imageInfo{};
+
       imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
       imageInfo.imageView = tex.getImageView();
       imageInfo.sampler = tex.getSampler();
 
       imageInfos.emplace_back(imageInfo);
 
+      std::string specMapName = "mpoulpe";
+      mesh->getData()->mapsUsed.x = 0;
+
+      if (!mesh->getData()->m_TextureSpecularMap.empty() 
+          && m_TextureManager->getTextures().contains(mesh->getData()->m_TextureSpecularMap)) {
+          specMapName = mesh->getData()->m_TextureSpecularMap;
+          mesh->getData()->mapsUsed.x = 1;
+      }
+      Texture texSpecularMap = m_TextureManager->getTextures()[specMapName];
+
+      VkDescriptorImageInfo imageInfoSpecularMap{};
+      imageInfoSpecularMap.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+      imageInfoSpecularMap.imageView = texSpecularMap.getImageView();
+      imageInfoSpecularMap.sampler = texSpecularMap.getSampler();
+
+      imageInfos.emplace_back(imageInfoSpecularMap);
+ 
       std::vector<VkDescriptorSet> descSets{};
 
       for (size_t i = 0; i < mesh->getUniformBuffers()->size(); ++i) {
         VkDescriptorSet descSet = m_Adapter->rdr()->createDescriptorSets(m_DescriptorPool, { mesh->getDescriptorSetLayout()}, 1);
-        
+
         m_Adapter->rdr()->updateDescriptorSet(mesh->getUniformBuffers()->at(i), descSet, imageInfos);
 
         for (uint32_t i = 0; i < m_Adapter->getSwapChainImages()->size(); i++) {
@@ -277,23 +297,24 @@ namespace Poulpe
 
             constants pushConstants{};
             pushConstants.textureID = mesh->getData()->m_TextureIndex;
+            
             pushConstants.view = adapter->getCamera()->lookAt();
             pushConstants.viewPos = adapter->getCamera()->getPos();
-            pushConstants.ambient = mesh->getMaterial().ambient;
-            pushConstants.ambientLight = glm::vec3(0.3);
-
-            pushConstants.ambientlightPos = glm::vec3(std::sin(glfwGetTime() * 2.0f),
-                std::sin(glfwGetTime() * 1.4f),
-                std::sin(glfwGetTime() * 0.5f));
             
-            pushConstants.ambientlightColor = glm::vec3(1.0f);
+            pushConstants.lightDir = glm::vec3(-0.1, -2.5, -0.2);
 
-            pushConstants.diffuse = mesh->getMaterial().diffuse;
-            pushConstants.diffuseLight = glm::vec3(0.5);
+            pushConstants.ambient = mesh->getMaterial().ambient;
+            pushConstants.ambientLight = glm::vec3(0.5);
+
+            pushConstants.diffuseLight = glm::vec3(1.0);
+
             pushConstants.specular = mesh->getMaterial().specular;
             pushConstants.specularLight = glm::vec3(1.0);
+
             pushConstants.shininess = mesh->getMaterial().shininess;
             
+            pushConstants.mapsUsed = mesh->getData()->mapsUsed;
+
             vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(constants),
                 & pushConstants);
         };

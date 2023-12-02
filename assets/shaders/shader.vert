@@ -7,6 +7,9 @@ struct UBO
 {
     mat4 model;
     mat4 projection;
+    float constant;
+    float linear;
+    float quadratic;
 };
 
 layout(set = 0, binding = 0) uniform UniformBufferObject {
@@ -20,13 +23,12 @@ layout(push_constant) uniform constants
     vec4 viewPos;
     vec3 ambient;
     vec3 ambientLight;
-    vec3 ambientLightPos;
-    vec3 ambientLightColor;
-    vec3 diffuse;
+    vec3 lightDir;
     vec3 diffuseLight;
     vec3 specular;
     vec3 specularLight;
     float shininess;
+    vec3 mapsUsed;
 } pc;
 
 layout (location = 0) in vec3 pos;
@@ -40,13 +42,15 @@ layout(location = 3) flat out int fTextureID;
 layout(location = 4) out vec4 fViewPos;
 layout(location = 5) out vec3 fAmbient;
 layout(location = 6) out vec3 fAmbientLight;
-layout(location = 7) out vec3 fAmbientLighPos;
-layout(location = 8) out vec3 fAmbientLightColor;
-layout(location = 9) out vec3 fDiffuse;
-layout(location = 10) out vec3 fDiffuseLight;
-layout(location = 11) out vec3 fSpecular;
-layout(location = 12) out vec3 fSpecularLight;
-layout(location = 13) out float fShininess;
+layout(location = 7) out vec3 fLightDir;
+layout(location = 8) out vec3 fDiffuseLight;
+layout(location = 9) out vec3 fSpecular;
+layout(location = 10) out vec3 fSpecularLight;
+layout(location = 11) out float fShininess;
+layout(location = 12) out vec3 fMapsUsed;
+layout(location = 13) out float fConstant;
+layout(location = 14) out float fLinear;
+layout(location = 15) out float fQuadratic;
 
 void main()
 {
@@ -60,11 +64,14 @@ void main()
     fViewPos = pc.viewPos;
     fAmbient = pc.ambient;
     fAmbientLight = pc.ambientLight;
-    fAmbientLightColor = pc.ambientLightColor;
+    fLightDir = pc.lightDir;
     fAmbientLight = pc.ambientLight;
-    fDiffuse = pc.diffuse;
     fDiffuseLight = pc.diffuseLight;
     fSpecular = pc.specular;
     fSpecularLight = pc.specularLight;
     fShininess = pc.shininess;
+    fMapsUsed = pc.mapsUsed;
+    fConstant = ubos[gl_InstanceIndex].constant;
+    fLinear = ubos[gl_InstanceIndex].linear;
+    fQuadratic = ubos[gl_InstanceIndex].quadratic;
 } 

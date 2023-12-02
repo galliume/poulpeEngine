@@ -70,6 +70,12 @@ namespace Poulpe {
             VkCullModeFlagBits cullMode = VK_CULL_MODE_BACK_BIT, bool dynamicRendering = true, bool depthTestEnable = true,
             bool depthWriteEnable = true, bool stencilTestEnable = true, int polygoneMode = VK_POLYGON_MODE_FILL);
 
+        VkPipeline createGraphicsPipelineOutline(VkRenderPass* renderPass, VkPipelineLayout pipelineLayout, std::string_view name,
+            std::vector<VkPipelineShaderStageCreateInfo>shadersCreateInfos, VkPipelineVertexInputStateCreateInfo vertexInputInfo,
+            VkCullModeFlagBits cullMode = VK_CULL_MODE_BACK_BIT, bool dynamicRendering = true, bool depthTestEnable = true,
+            bool depthWriteEnable = true, bool stencilTestEnable = true, int polygoneMode = VK_POLYGON_MODE_FILL);
+
+
         VkSwapchainKHR createSwapChain(std::vector<VkImage> & swapChainImages,
             VkSwapchainKHR const & oldSwapChain = VK_NULL_HANDLE);
 
