@@ -19,6 +19,8 @@ layout(set = 0, binding = 0) uniform UniformBufferObject {
 layout(push_constant) uniform constants
 {
     int textureID;
+    int mapsUsed;
+    float shininess;
     mat4 view;
     vec4 viewPos;
     vec3 ambient;
@@ -27,13 +29,12 @@ layout(push_constant) uniform constants
     vec3 diffuseLight;
     vec3 specular;
     vec3 specularLight;
-    float shininess;
-    vec3 mapsUsed;
 } pc;
 
 layout (location = 0) in vec3 pos;
 layout (location = 1) in vec3 normal;
 layout(location = 2) in vec2 texCoord;
+layout(location = 3) in vec4 tangent;
 
 layout(location = 0) out vec3 fNormal;
 layout(location = 1) out vec3 fPos;
@@ -47,17 +48,23 @@ layout(location = 8) out vec3 fDiffuseLight;
 layout(location = 9) out vec3 fSpecular;
 layout(location = 10) out vec3 fSpecularLight;
 layout(location = 11) out float fShininess;
-layout(location = 12) out vec3 fMapsUsed;
+layout(location = 12) out int fMapsUsed;
 layout(location = 13) out float fConstant;
 layout(location = 14) out float fLinear;
 layout(location = 15) out float fQuadratic;
+
+layout(location = 16) out VS_OUT {
+//    vec3 fPos;
+//    vec2 fTexCoord;
+    mat3 TBN;
+} vs_out;
 
 void main()
 {
     gl_Position = ubos[gl_InstanceIndex].projection * pc.view * ubos[gl_InstanceIndex].model * vec4(pos, 1.0);
 
-    //fNormal = normal;
-    fNormal = mat3(transpose(inverse(ubos[gl_InstanceIndex].model))) * normal;
+    fNormal = normal;
+    //fNormal = mat3(transpose(inverse(ubos[gl_InstanceIndex].model))) * normal;
     fPos = vec3(ubos[gl_InstanceIndex].model * vec4(pos, 1.0));
     fTexCoord = texCoord;
     fTextureID = pc.textureID;
@@ -74,4 +81,10 @@ void main()
     fConstant = ubos[gl_InstanceIndex].constant;
     fLinear = ubos[gl_InstanceIndex].linear;
     fQuadratic = ubos[gl_InstanceIndex].quadratic;
+
+    vec3 t = normalize(vec3(ubos[gl_InstanceIndex].model * vec4(tangent.xyz, 0.0)));
+    vec3 n = normalize(vec3(ubos[gl_InstanceIndex].model * vec4(normal, 0.0)));
+    vec3 b = normalize(vec3(ubos[gl_InstanceIndex].model * vec4(cross(n, t), 0.0)));
+    mat3 TBN = transpose(mat3(t, b, n));
+    vs_out.TBN = TBN;
 } 

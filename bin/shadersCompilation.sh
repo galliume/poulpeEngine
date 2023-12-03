@@ -39,4 +39,8 @@ ${GLSLC_BIN} ./assets/shaders/ambient_light.vert -o assets/shaders/spv/ambient_l
 ${GLSLC_BIN} ./assets/shaders/ambient_light.frag -o assets/shaders/spv/ambient_light_frag.spv
 echo "Shader [ambient_light] compiled"
 
+${GLSLC_BIN} ./assets/shaders/tangent.vert -o assets/shaders/spv/tangent_vert.spv
+${GLSLC_BIN} ./assets/shaders/tangent.frag -o assets/shaders/spv/tangent_frag.spv
+echo "Shader [tangent] compiled"
+
 echo "All shaders have been compiled."
