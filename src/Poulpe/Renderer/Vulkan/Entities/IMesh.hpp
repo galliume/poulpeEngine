@@ -20,7 +20,7 @@ namespace Poulpe
         virtual VkPipelineLayout createPipelineLayout(VkDescriptorSetLayout descriptorSetLayout) = 0;
         virtual std::vector<VkPipelineShaderStageCreateInfo> getShaders(std::string const & name) = 0;
         virtual VkPipelineVertexInputStateCreateInfo getVertexBindingDesc(
-            VkVertexInputBindingDescription bDesc, std::array<VkVertexInputAttributeDescription, 3> attDesc) = 0;
+            VkVertexInputBindingDescription bDesc, std::array<VkVertexInputAttributeDescription, 4> attDesc) = 0;
         virtual void setPushConstants(Mesh* mesh) = 0;
     };
 }
