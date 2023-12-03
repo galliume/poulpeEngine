@@ -19,7 +19,7 @@ namespace Poulpe
         VkPipelineLayout createPipelineLayout(VkDescriptorSetLayout descriptorSetLayout) override;
         std::vector<VkPipelineShaderStageCreateInfo> getShaders(std::string const & name) override;
         VkPipelineVertexInputStateCreateInfo getVertexBindingDesc(
-          VkVertexInputBindingDescription bDesc, std::array<VkVertexInputAttributeDescription, 3> attDesc) override;
+          VkVertexInputBindingDescription bDesc, std::array<VkVertexInputAttributeDescription, 4> attDesc) override;
         void setPushConstants(Mesh* mesh) override;
 
     private:

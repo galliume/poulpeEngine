@@ -27,10 +27,10 @@ namespace Poulpe
         if (!mesh && !mesh->isDirty()) return;
 
         const std::vector<Vertex> vertices = {
-            {{-0.025f, -0.025f, 0.0f}, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
-            {{0.025f, -0.025f, 0.0f}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f}},
-            {{0.025f, 0.025f, 0.0f}, {0.0f, 0.0f, 1.0f}, {0.0f, 1.0f}},
-            {{-0.025f, 0.025f, 0.0f}, {1.0f, 1.0f, 1.0f}, {1.0f, 1.0f}}
+            {{-0.025f, -0.025f, 0.0f}, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}},
+            {{0.025f, -0.025f, 0.0f}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}},
+            {{0.025f, 0.025f, 0.0f}, {0.0f, 0.0f, 1.0f}, {0.0f, 1.0f}, {0.0f, 0.0f, 0.0f, 0.0f}},
+            {{-0.025f, 0.025f, 0.0f}, {1.0f, 1.0f, 1.0f}, {1.0f, 1.0f}, {0.0f, 0.0f, 0.0f, 0.0f}}
         };
         const std::vector<uint32_t> indices = {
             0, 1, 2, 2, 3, 0
@@ -166,7 +166,8 @@ namespace Poulpe
         return shadersStageInfos;
     }
 
-    VkPipelineVertexInputStateCreateInfo Crosshair::getVertexBindingDesc(VkVertexInputBindingDescription bDesc, std::array<VkVertexInputAttributeDescription, 3> attDesc)
+    VkPipelineVertexInputStateCreateInfo Crosshair::getVertexBindingDesc(VkVertexInputBindingDescription bDesc,
+        std::array<VkVertexInputAttributeDescription, 4> attDesc)
     {
         VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
         vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;

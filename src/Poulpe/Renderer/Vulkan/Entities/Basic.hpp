@@ -19,7 +19,7 @@ namespace Poulpe
     };
 
     public:
-        Basic(VulkanAdapter* adapter,  ShaderManager* shaderManager, TextureManager* textureManager);
+        Basic(VulkanAdapter* adapter, ShaderManager* shaderManager, TextureManager* textureManager);
 
         void visit(float const deltaTime, Mesh* mesh) override;
 
@@ -29,7 +29,7 @@ namespace Poulpe
         std::vector<VkPipelineShaderStageCreateInfo> getShaders(std::string const & name) override;
 
         VkPipelineVertexInputStateCreateInfo getVertexBindingDesc(
-          VkVertexInputBindingDescription bDesc, std::array<VkVertexInputAttributeDescription, 3> attDesc) override;
+          VkVertexInputBindingDescription bDesc, std::array<VkVertexInputAttributeDescription, 4> attDesc) override;
 
         void setPushConstants(Mesh* mesh) override;
 
