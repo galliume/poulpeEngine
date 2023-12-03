@@ -109,15 +109,15 @@ namespace Poulpe
         auto commandPool = m_Adapter->rdr()->createCommandPool();
 
         const std::vector<Vertex> vertices = {
-            {{-1.0f, -1.0f, 1.0f}, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
-            {{1.0f, -1.0f, 1.0f}, {0.0f, 1.0f, 0.0f}, {1.0f, 0.0f}},
-            {{1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 1.0f}, {0.0f, 1.0f}},
-            {{-1.0f, 1.0f, 1.0f}, {1.0f, 1.0f, 1.0f}, {1.0f, 1.0f}},
+            {{-1.0f, -1.0f, 1.0f}, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}},
+            {{1.0f, -1.0f, 1.0f}, {0.0f, 1.0f, 0.0f}, {1.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}},
+            {{1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 1.0f}, {0.0f, 1.0f}, {0.0f, 0.0f, 0.0f, 0.0f}},
+            {{-1.0f, 1.0f, 1.0f}, {1.0f, 1.0f, 1.0f}, {1.0f, 1.0f}, {0.0f, 0.0f, 0.0f, 0.0f}},
 
-            {{-1.0f, -1.0f, -1.0f}, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
-            {{1.0f, -1.0f, -1.0f}, {0.0f, 1.0f, 0.0f}, {1.0f, 0.0f}},
-            {{1.0f, 1.0f, -1.0f}, {0.0f, 0.0f, 1.0f}, {0.0f, 1.0f}},
-            {{-1.0f, 1.0f, -1.0f}, {1.0f, 1.0f, 1.0f}, {1.0f, 1.0f}}
+            {{-1.0f, -1.0f, -1.0f}, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}},
+            {{1.0f, -1.0f, -1.0f}, {0.0f, 1.0f, 0.0f}, {1.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}},
+            {{1.0f, 1.0f, -1.0f}, {0.0f, 0.0f, 1.0f}, {0.0f, 1.0f}, {0.0f, 0.0f, 0.0f, 0.0f}},
+            {{-1.0f, 1.0f, -1.0f}, {1.0f, 1.0f, 1.0f}, {1.0f, 1.0f}, {0.0f, 0.0f, 0.0f, 0.0f}}
         };
 
         const std::vector<uint32_t> indices = {
@@ -182,7 +182,7 @@ namespace Poulpe
 
       VkDescriptorSetLayoutBinding samplerLayoutBinding{};
       samplerLayoutBinding.binding = 1;
-      samplerLayoutBinding.descriptorCount = 2;
+      samplerLayoutBinding.descriptorCount = 3;
       samplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
       samplerLayoutBinding.pImmutableSamplers = nullptr;
       samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
@@ -222,22 +222,37 @@ namespace Poulpe
 
       imageInfos.emplace_back(imageInfo);
 
-      std::string specMapName = "mpoulpe";
-      mesh->getData()->mapsUsed.x = 0;
+      std::string specMapName = "textures_lion_bump";
+      std::string bumMapName = "mpoulpe";
 
       if (!mesh->getData()->m_TextureSpecularMap.empty() 
           && m_TextureManager->getTextures().contains(mesh->getData()->m_TextureSpecularMap)) {
           specMapName = mesh->getData()->m_TextureSpecularMap;
-          mesh->getData()->mapsUsed.x = 1;
+          mesh->getData()->mapsUsed += 1;
+
       }
       Texture texSpecularMap = m_TextureManager->getTextures()[specMapName];
+
+      if (!mesh->getData()->m_TextureBumMap.empty() 
+          && m_TextureManager->getTextures().contains(mesh->getData()->m_TextureBumMap)) {
+          bumMapName = mesh->getData()->m_TextureBumMap;
+        mesh->getData()->mapsUsed += 1;
+      }
+
+      Texture texBumpMap = m_TextureManager->getTextures()[bumMapName];
 
       VkDescriptorImageInfo imageInfoSpecularMap{};
       imageInfoSpecularMap.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
       imageInfoSpecularMap.imageView = texSpecularMap.getImageView();
       imageInfoSpecularMap.sampler = texSpecularMap.getSampler();
 
+      VkDescriptorImageInfo imageInfoBumpMap{};
+      imageInfoBumpMap.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+      imageInfoBumpMap.imageView = texBumpMap.getImageView();
+      imageInfoBumpMap.sampler = texBumpMap.getSampler();
+
       imageInfos.emplace_back(imageInfoSpecularMap);
+      imageInfos.emplace_back(imageInfoBumpMap);
  
       std::vector<VkDescriptorSet> descSets{};
 
@@ -298,21 +313,22 @@ namespace Poulpe
             constants pushConstants{};
             pushConstants.textureID = mesh->getData()->m_TextureIndex;
             
+            
             pushConstants.view = adapter->getCamera()->lookAt();
             pushConstants.viewPos = adapter->getCamera()->getPos();
             
-            pushConstants.lightDir = glm::vec3(-0.1, -2.5, -0.2);
+            pushConstants.lightDir = glm::vec3(0.5, 2.5, -0.2);
 
             pushConstants.ambient = mesh->getMaterial().ambient;
-            pushConstants.ambientLight = glm::vec3(0.5);
+            pushConstants.ambientLight = glm::vec3(0.2);
 
-            pushConstants.diffuseLight = glm::vec3(1.0);
+            pushConstants.diffuseLight = glm::vec3(0.5);
 
             pushConstants.specular = mesh->getMaterial().specular;
             pushConstants.specularLight = glm::vec3(1.0);
 
             pushConstants.shininess = mesh->getMaterial().shininess;
-            
+
             pushConstants.mapsUsed = mesh->getData()->mapsUsed;
 
             vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(constants),
@@ -323,7 +339,7 @@ namespace Poulpe
     }
 
     VkPipelineVertexInputStateCreateInfo Basic::getVertexBindingDesc(VkVertexInputBindingDescription bDesc,
-      std::array<VkVertexInputAttributeDescription, 3> attDesc)
+      std::array<VkVertexInputAttributeDescription, 4> attDesc)
     {
       VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
       vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;

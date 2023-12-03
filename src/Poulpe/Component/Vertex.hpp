@@ -10,6 +10,7 @@ namespace Poulpe
         alignas(16) glm::vec3 pos;
         alignas(16) glm::vec3 normal;
         alignas(8) glm::vec2 texCoord;
+        alignas(16) glm::vec4 tangent;
 
         static VkVertexInputBindingDescription GetBindingDescription() {
 
@@ -21,9 +22,9 @@ namespace Poulpe
             return bindingDescription;
         }
 
-        static std::array<VkVertexInputAttributeDescription, 3> GetAttributeDescriptions() {
+        static std::array<VkVertexInputAttributeDescription, 4> GetAttributeDescriptions() {
 
-            std::array<VkVertexInputAttributeDescription, 3> attributeDescriptions{};
+            std::array<VkVertexInputAttributeDescription, 4> attributeDescriptions{};
             attributeDescriptions[0].binding = 0;
             attributeDescriptions[0].location = 0;
             attributeDescriptions[0].format = VK_FORMAT_R32G32B32_SFLOAT;
@@ -39,12 +40,18 @@ namespace Poulpe
             attributeDescriptions[2].format = VK_FORMAT_R32G32_SFLOAT;
             attributeDescriptions[2].offset = offsetof(Vertex, texCoord);
 
+            attributeDescriptions[3].binding = 0;
+            attributeDescriptions[3].location = 3;
+            attributeDescriptions[3].format = VK_FORMAT_R32G32B32_SFLOAT;
+            attributeDescriptions[3].offset = offsetof(Vertex, tangent);
+
             return attributeDescriptions;
         }
 
         bool operator==(const Vertex& other) const
         {
-            return pos == other.pos && normal == other.normal && texCoord == other.texCoord;
+            return pos == other.pos && normal == other.normal 
+                && texCoord == other.texCoord && other.tangent == tangent;
         }
     };
 }
@@ -52,9 +59,10 @@ namespace Poulpe
 namespace std {
     template<> struct hash<Poulpe::Vertex> {
         size_t operator()(Poulpe::Vertex const& vertex) const {
-            return ((hash<glm::vec3>()(vertex.pos) ^
+            return ((((hash<glm::vec3>()(vertex.pos) ^
                 (hash<glm::vec3>()(vertex.normal) << 1)) >> 1) ^
-                (hash<glm::vec2>()(vertex.texCoord) << 1);
+                (hash<glm::vec2>()(vertex.texCoord) << 1)) >> 1) ^
+                (hash<glm::vec3>()(vertex.tangent) << 1);
         }
     };
 }

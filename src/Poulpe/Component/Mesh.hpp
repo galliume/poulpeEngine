@@ -35,6 +35,8 @@ namespace Poulpe
     struct constants
     {
         int textureID;
+        int mapsUsed = 0;
+        float shininess;
         glm::mat4 view;
         glm::vec4 viewPos;
         glm::vec3 ambient;
@@ -43,8 +45,6 @@ namespace Poulpe
         glm::vec3 diffuseLight;
         glm::vec3 specular;
         glm::vec3 specularLight;
-        float shininess;
-        glm::vec3 mapsUsed{ 0, 0, 0 };
     };
 
     class Mesh
@@ -61,6 +61,7 @@ namespace Poulpe
             std::string m_Name;
             std::string m_Texture;
             std::string m_TextureSpecularMap;
+            std::string m_TextureBumMap;
             std::vector<Vertex> m_Vertices;
             std::vector<uint32_t> m_Indices;
             std::vector<UniformBufferObject> m_Ubos;
@@ -75,7 +76,8 @@ namespace Poulpe
             glm::vec3 m_CurrentRotation;
             glm::vec3 m_CurrentScale;
             //x = specularMap, y = bumMap
-            glm::vec3 mapsUsed{ 0, 0, 0 };
+            int mapsUsed = 0;
+            glm::vec3 tangeant;
         };
 
         struct BBox
@@ -143,6 +145,8 @@ namespace Poulpe
 
         void setMaterial(material_t material) { m_Material = material; }
         material_t getMaterial() { return m_Material; }
+        bool isIndexed() { return m_IsIndexed; }
+        void setIsIndexed(bool indexed) { m_IsIndexed = indexed; }
 
     private:
         std::vector<VkDescriptorSet> m_DescriptorSets;
@@ -168,5 +172,6 @@ namespace Poulpe
         Data m_Data;
 
         material_t m_Material;
+        bool m_IsIndexed{ true };
     };
 }

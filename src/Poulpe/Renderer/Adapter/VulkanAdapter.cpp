@@ -237,7 +237,7 @@ namespace Poulpe
                     try {
                         if (m_RenderingStopped) return;
                         m_Renderer->draw(m_CommandBuffersEntities[m_ImageIndex], mesh->getDescriptorSets().at(index),
-                            mesh, mesh->getData(), mesh->getData()->m_Ubos.size());
+                            mesh, mesh->getData(), mesh->getData()->m_Ubos.size(), mesh->isIndexed());
                     }
                     catch (std::exception & e) {
                         PLP_DEBUG("Draw error: {}", e.what());

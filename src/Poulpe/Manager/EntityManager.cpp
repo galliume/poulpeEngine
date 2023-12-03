@@ -45,7 +45,7 @@ namespace Poulpe
                         mesh->getBBox()->size);
 
                 ubo.model = mesh->getBBox()->position * transform;
-                existingEntity->getMesh()->getBBox()->mesh->addUbos({ ubo });
+                //existingEntity->getMesh()->getBBox()->mesh->addUbos({ ubo });
 
                 m_LoadedEntities[mesh->getName()][0] += 1;
             }
@@ -60,6 +60,49 @@ namespace Poulpe
                 uint32_t index = m_Entities.size();
 
                 m_LoadedEntities.insert({ entity->getName(), { 1, index } });
+
+                //auto tangentEntity = std::make_unique<Entity>();
+
+                //Mesh* tangentMesh = new Mesh();
+                //tangentMesh->setName(mesh->getName() + "_tangent");
+                //tangentMesh->setShaderName("tangent");
+
+                //auto tangent = mesh->getData()->m_Vertices.at(0).tangent;
+
+                //const std::vector<Vertex> vertices = {
+                //    {{-0.025f, -0.025f, 0.0f}, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}, { tangent.x, tangent.y, tangent.z, tangent.w }},
+                //    {{0.025f, -0.025f, 0.0f}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f}, { tangent.x, tangent.y, tangent.z, tangent.w }},
+                //    {{0.025f, 0.025f, 0.0f}, {0.0f, 0.0f, 1.0f}, {0.0f, 1.0f}, { tangent.x, tangent.y, tangent.z, tangent.w }},
+                //    {{-0.025f, 0.025f, 0.0f}, {1.0f, 1.0f, 1.0f}, {1.0f, 1.0f}, { tangent.x, tangent.y, tangent.z, tangent.w }}
+                //};
+
+                //const std::vector<uint32_t> indices = {
+                //    0, 1, 2, 2, 3, 0
+                //};
+
+                //Mesh::Data data{};
+                //data.m_Name = mesh->getName() + "_tangent";
+                //data.m_Texture = "mpoulpe";
+                //data.m_Indices = indices;
+                //data.m_Vertices = vertices;
+
+                //UniformBufferObject ubo{};
+                //ubo.model = glm::mat4(1.0f);
+                //ubo.model = glm::translate(ubo.model, glm::vec3(
+                //    entity->getMesh()->getData()->m_OriginPos.x,
+                //    entity->getMesh()->getData()->m_OriginPos.y,
+                //    entity->getMesh()->getData()->m_OriginPos.z
+                //));
+                //ubo.model = glm::scale(ubo.model, glm::vec3(1.0));
+
+                ////ubo.view = glm::mat4(1.0f);
+                //data.m_Ubos.emplace_back(ubo);
+                //tangentMesh->setData(data);
+                ////tangentMesh->setIsIndexed(false);
+
+                //tangentEntity->setMesh(tangentMesh);
+
+                //m_Entities.emplace_back(std::move(tangentEntity));
                 m_Entities.emplace_back(std::move(entity));
             }
         }
@@ -255,17 +298,25 @@ namespace Poulpe
             
             auto nameTexture = textureNames[listData[i].materialId];
             std::string nameTextureSpecularMap;
+            std::string bumpTexname;
 
             if (!TinyObjLoader::m_TinyObjMaterials.empty()) {
                 
                 mesh->setMaterial(TinyObjLoader::m_TinyObjMaterials.at(listData[i].materialId));
             
                 //@todo temp
-                if (!TinyObjLoader::m_TinyObjMaterials.at(listData[i].materialId).diffuseTexname.empty()) {
+                if (!TinyObjLoader::m_TinyObjMaterials.at(listData[i].materialId).ambientTexname.empty()) {
+                    nameTexture = TinyObjLoader::m_TinyObjMaterials.at(listData[i].materialId).ambientTexname;
+                } else if (!TinyObjLoader::m_TinyObjMaterials.at(listData[i].materialId).diffuseTexname.empty()) {
                     nameTexture = TinyObjLoader::m_TinyObjMaterials.at(listData[i].materialId).diffuseTexname;
                 }
-                if (!TinyObjLoader::m_TinyObjMaterials.at(listData[i].materialId).diffuseTexname.empty()) {
+
+                if (!TinyObjLoader::m_TinyObjMaterials.at(listData[i].materialId).specularTexname.empty()) {
                     nameTextureSpecularMap = TinyObjLoader::m_TinyObjMaterials.at(listData[i].materialId).specularTexname;
+                }
+
+                if (!TinyObjLoader::m_TinyObjMaterials.at(listData[i].materialId).bumpTexname.empty()) {
+                    bumpTexname = TinyObjLoader::m_TinyObjMaterials.at(listData[i].materialId).bumpTexname;
                 }
             }
 
@@ -273,6 +324,7 @@ namespace Poulpe
             data.m_Name = name + '_' + nameTexture;
             data.m_Texture = nameTexture;
             data.m_TextureSpecularMap = nameTextureSpecularMap;
+            data.m_TextureBumMap = bumpTexname;
             data.m_Vertices = listData[i].vertices;
             data.m_Indices = listData[i].indices;
             data.m_OriginPos = pos;
