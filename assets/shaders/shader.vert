@@ -36,26 +36,22 @@ layout (location = 1) in vec3 normal;
 layout(location = 2) in vec2 texCoord;
 layout(location = 3) in vec4 tangent;
 
-layout(location = 0) out vec3 fNormal;
-layout(location = 1) out vec3 fPos;
-layout(location = 2) out vec2 fTexCoord;
-layout(location = 3) flat out int fTextureID;
-layout(location = 4) out vec4 fViewPos;
-layout(location = 5) out vec3 fAmbient;
-layout(location = 6) out vec3 fAmbientLight;
-layout(location = 7) out vec3 fLightDir;
-layout(location = 8) out vec3 fDiffuseLight;
-layout(location = 9) out vec3 fSpecular;
-layout(location = 10) out vec3 fSpecularLight;
-layout(location = 11) out float fShininess;
-layout(location = 12) out int fMapsUsed;
-layout(location = 13) out float fConstant;
-layout(location = 14) out float fLinear;
-layout(location = 15) out float fQuadratic;
-
-layout(location = 16) out VS_OUT {
-//    vec3 fPos;
-//    vec2 fTexCoord;
+layout(location = 0) out VS_OUT {
+    vec3 fNormal;
+    vec3 fPos;
+    vec2 fTexCoord;
+    flat int fTextureID;
+    vec4 fViewPos;
+    vec3 fAmbient;
+    vec3 fAmbientLight;
+    vec3 fLightDir;
+    vec3 fDiffuseLight;
+    vec3 fSpecular;
+    vec3 fSpecularLight;
+    float fShininess;
+    float fConstant;
+    float fLinear;
+    float fQuadratic;
     mat3 TBN;
 } vs_out;
 
@@ -63,24 +59,24 @@ void main()
 {
     gl_Position = ubos[gl_InstanceIndex].projection * pc.view * ubos[gl_InstanceIndex].model * vec4(pos, 1.0);
 
-    fNormal = normal;
+    vs_out.fNormal = normal;
     //fNormal = mat3(transpose(inverse(ubos[gl_InstanceIndex].model))) * normal;
-    fPos = vec3(ubos[gl_InstanceIndex].model * vec4(pos, 1.0));
-    fTexCoord = texCoord;
-    fTextureID = pc.textureID;
-    fViewPos = pc.viewPos;
-    fAmbient = pc.ambient;
-    fAmbientLight = pc.ambientLight;
-    fLightDir = pc.lightDir;
-    fAmbientLight = pc.ambientLight;
-    fDiffuseLight = pc.diffuseLight;
-    fSpecular = pc.specular;
-    fSpecularLight = pc.specularLight;
-    fShininess = pc.shininess;
-    fMapsUsed = pc.mapsUsed;
-    fConstant = ubos[gl_InstanceIndex].constant;
-    fLinear = ubos[gl_InstanceIndex].linear;
-    fQuadratic = ubos[gl_InstanceIndex].quadratic;
+    vs_out.fPos = vec3(ubos[gl_InstanceIndex].model * vec4(pos, 1.0));
+    vs_out.fTexCoord = texCoord;
+    vs_out.fTextureID = pc.textureID;
+    vs_out.fViewPos = pc.viewPos;
+    vs_out.fAmbient = pc.ambient;
+    vs_out.fAmbientLight = pc.ambientLight;
+    vs_out.fLightDir = pc.lightDir;
+    vs_out.fAmbientLight = pc.ambientLight;
+    vs_out.fDiffuseLight = pc.diffuseLight;
+    vs_out.fSpecular = pc.specular;
+    vs_out.fSpecularLight = pc.specularLight;
+    vs_out.fShininess = pc.shininess;
+    //vs_out.fMapsUsed = pc.mapsUsed;
+    vs_out.fConstant = ubos[gl_InstanceIndex].constant;
+    vs_out.fLinear = ubos[gl_InstanceIndex].linear;
+    vs_out.fQuadratic = ubos[gl_InstanceIndex].quadratic;
 
     vec3 t = normalize(vec3(ubos[gl_InstanceIndex].model * vec4(tangent.xyz, 0.0)));
     vec3 n = normalize(vec3(ubos[gl_InstanceIndex].model * vec4(normal, 0.0)));
