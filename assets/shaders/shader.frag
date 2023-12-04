@@ -4,26 +4,22 @@
 
 layout(location = 0) out vec4 fColor;
 
-layout(location = 0) in vec3 fNormal;
-layout(location = 1) in vec3 fPos;
-layout(location = 2) in vec2 fTexCoord;
-layout(location = 3) flat in int fTextureID;
-layout(location = 4) in vec4 fViewPos;
-layout(location = 5) in vec3 fAmbient;
-layout(location = 6) in vec3 fAmbientLight;
-layout(location = 7) in vec3 fLightDir;
-layout(location = 8) in vec3 fDiffuseLight;
-layout(location = 9) in vec3 fSpecular;
-layout(location = 10) in vec3 fSpecularLight;
-layout(location = 11) in float fShininess;
-layout(location = 12) flat in int fMapsUsed;
-layout(location = 13) in float fConstant;
-layout(location = 14) in float fLinear;
-layout(location = 15) in float fQuadratic;
-
-layout(location = 16) in VS_OUT {
-//    vec3 FragPos;
-//    vec2 TexCoords;
+layout(location = 0) in VS_OUT {
+    vec3 fNormal;
+    vec3 fPos;
+    vec2 fTexCoord;
+    flat int fTextureID;
+    vec4 fViewPos;
+    vec3 fAmbient;
+    vec3 fAmbientLight;
+    vec3 fLightDir;
+    vec3 fDiffuseLight;
+    vec3 fSpecular;
+    vec3 fSpecularLight;
+    float fShininess;
+    float fConstant;
+    float fLinear;
+    float fQuadratic;
     mat3 TBN;
 } fs_in;
 
@@ -47,42 +43,35 @@ void main()
 //    if (texture(texSampler[0], fTexCoord).a < 0.5) {
 //        discard;
 //    }
-    vec3 normal = fNormal;
+    vec3 normal = fs_in.fNormal;
     vec3 norm = normalize(normal);
 
-    if (fMapsUsed >= 2) {
-        normal = texture(texSampler[2], fTexCoord).rgb;
-        normal = normalize(normal * 2.0 - 1.0);
-        norm = normal;
-    }
+    normal = texture(texSampler[2], fs_in.fTexCoord).rgb;
+    normal = normalize(normal * 2.0 - 1.0);
+    norm = normal;
 
-    vec3 lightDir = normalize(-fLightDir);
-    float distance = length(lightDir - fPos);
-    float attenuation = 1.0 / (fConstant + fLinear * distance + fQuadratic * (distance * distance));
+    vec3 lightDir = normalize(fs_in.fLightDir - fs_in.fPos);
+    float distance = length(lightDir - fs_in.fPos);
+    float attenuation = 1.0 / (fs_in.fConstant + fs_in.fLinear * distance + fs_in.fQuadratic * (distance * distance));
+    
+    vec3 ambient = fs_in.fAmbientLight * fs_in.fAmbient;
 
     float diff = max(dot(norm, lightDir), 0.0);
-    vec3 diffuse = diff * fDiffuseLight * texture(texSampler[0], fTexCoord).xyz;
-    diffuse *= attenuation;
+    vec3 diffuse = fs_in.fAmbient * (diff * fs_in.fDiffuseLight * texture(texSampler[0], fs_in.fTexCoord).xyz);
 
-    vec3 ambient = fAmbientLight * texture(texSampler[0], fTexCoord).xyz;
-    ambient *= attenuation;
-
-    vec3 viewDir = normalize(fViewPos.xyz - fPos.xyz);
-    //vec3 reflectDir = reflect(-fLightDir, norm);
-    vec3 h = normalize(-fLightDir + viewDir);
-
-    float specFactor = max(dot(norm, h), 0.0);
-    vec3 specular = vec3(0.0);
+    vec3 viewDir = normalize(fs_in.fViewPos.xyz - fs_in.fPos.xyz);
+    vec3 reflectDir = reflect(-lightDir, norm);
+    vec3 h = normalize(-lightDir + viewDir);
     
-    if (fMapsUsed >= 1) {
-        float spec = pow(specFactor, fShininess);
-        specular = (spec * fSpecularLight * texture(texSampler[1], fTexCoord).xyz) / distance;
-    }
+    float spec = pow(clamp(dot(norm, h), 0.0, 1.0), fs_in.fShininess) * float(dot(norm, lightDir) > 0.0);
+    vec3 specular = fs_in.fAmbient * ((spec * fs_in.fSpecularLight * texture(texSampler[1], fs_in.fTexCoord).xyz) / distance);
 
+    ambient *= attenuation;
+    diffuse *= attenuation;
     specular *= attenuation;
 
-    vec3 texture = texture(texSampler[0], fTexCoord).xyz;
-    vec3 phong = (ambient + diffuse + specular) * texture;
+    vec3 texture = texture(texSampler[0], fs_in.fTexCoord).xyz;
+    vec3 phong = (ambient + diffuse) * texture;
 
     fColor = vec4(phong, 1.0f);
 //    float depth = LinearizeDepth(gl_FragCoord.z) / far;
