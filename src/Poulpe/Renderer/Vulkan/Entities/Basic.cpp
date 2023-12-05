@@ -228,7 +228,7 @@ namespace Poulpe
       if (!mesh->getData()->m_TextureSpecularMap.empty() 
           && m_TextureManager->getTextures().contains(mesh->getData()->m_TextureSpecularMap)) {
           specMapName = mesh->getData()->m_TextureSpecularMap;
-          mesh->getData()->mapsUsed += 1;
+          mesh->getData()->mapsUsed.y = 1.0f;
 
       }
       Texture texSpecularMap = m_TextureManager->getTextures()[specMapName];
@@ -236,7 +236,7 @@ namespace Poulpe
       if (!mesh->getData()->m_TextureBumMap.empty() 
           && m_TextureManager->getTextures().contains(mesh->getData()->m_TextureBumMap)) {
           bumMapName = mesh->getData()->m_TextureBumMap;
-        mesh->getData()->mapsUsed += 1;
+        mesh->getData()->mapsUsed.x = 1.0f;
       }
 
       Texture texBumpMap = m_TextureManager->getTextures()[bumMapName];
@@ -320,9 +320,10 @@ namespace Poulpe
             pushConstants.lightDir = glm::vec3(0.5, 2.5, -0.2);
 
             pushConstants.ambient = mesh->getMaterial().ambient;
-            pushConstants.ambientLight = glm::vec3(0.2);
+            pushConstants.ambientLight = glm::vec3(1.0);
+            pushConstants.ambientLightColor = glm::vec3(1.0f);
 
-            pushConstants.diffuseLight = glm::vec3(0.5);
+            pushConstants.diffuseLight = glm::vec3(0.8);
 
             pushConstants.specular = mesh->getMaterial().specular;
             pushConstants.specularLight = glm::vec3(1.0);
