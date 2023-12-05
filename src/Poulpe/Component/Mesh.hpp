@@ -35,12 +35,13 @@ namespace Poulpe
     struct constants
     {
         int textureID;
-        int mapsUsed = 0;
         float shininess;
         glm::mat4 view;
         glm::vec4 viewPos;
+        glm::vec3 mapsUsed = glm::vec3(0.0f);
         glm::vec3 ambient;
         glm::vec3 ambientLight;
+        glm::vec3 ambientLightColor;
         glm::vec3 lightDir;
         glm::vec3 diffuseLight;
         glm::vec3 specular;
@@ -76,7 +77,7 @@ namespace Poulpe
             glm::vec3 m_CurrentRotation;
             glm::vec3 m_CurrentScale;
             //x = specularMap, y = bumMap
-            int mapsUsed = 0;
+            glm::vec3 mapsUsed = glm::vec3(0.0f);
             glm::vec3 tangeant;
         };
 

@@ -19,12 +19,13 @@ layout(set = 0, binding = 0) uniform UniformBufferObject {
 layout(push_constant) uniform constants
 {
     int textureID;
-    int mapsUsed;
     float shininess;
     mat4 view;
     vec4 viewPos;
+    vec3 mapsUsed;
     vec3 ambient;
     vec3 ambientLight;
+    vec3 ambientLightColor;
     vec3 lightDir;
     vec3 diffuseLight;
     vec3 specular;
@@ -37,21 +38,23 @@ layout(location = 2) in vec2 texCoord;
 layout(location = 3) in vec4 tangent;
 
 layout(location = 0) out VS_OUT {
-    vec3 fNormal;
-    vec3 fPos;
-    vec2 fTexCoord;
     flat int fTextureID;
-    vec4 fViewPos;
-    vec3 fAmbient;
-    vec3 fAmbientLight;
-    vec3 fLightDir;
-    vec3 fDiffuseLight;
-    vec3 fSpecular;
-    vec3 fSpecularLight;
     float fShininess;
     float fConstant;
     float fLinear;
     float fQuadratic;
+    vec2 fTexCoord;
+    vec3 fNormal;
+    vec3 fPos;
+    vec3 fMapsUsed;
+    vec3 fAmbient;
+    vec3 fAmbientLight;
+    vec3 fAmbientLightColor;
+    vec3 fLightDir;
+    vec3 fDiffuseLight;
+    vec3 fSpecular;
+    vec3 fSpecularLight;
+    vec4 fViewPos;
     mat3 TBN;
 } vs_out;
 
@@ -64,16 +67,17 @@ void main()
     vs_out.fPos = vec3(ubos[gl_InstanceIndex].model * vec4(pos, 1.0));
     vs_out.fTexCoord = texCoord;
     vs_out.fTextureID = pc.textureID;
+    vs_out.fMapsUsed = pc.mapsUsed;
     vs_out.fViewPos = pc.viewPos;
     vs_out.fAmbient = pc.ambient;
     vs_out.fAmbientLight = pc.ambientLight;
+    vs_out.fAmbientLightColor = pc.ambientLightColor;
     vs_out.fLightDir = pc.lightDir;
     vs_out.fAmbientLight = pc.ambientLight;
     vs_out.fDiffuseLight = pc.diffuseLight;
     vs_out.fSpecular = pc.specular;
     vs_out.fSpecularLight = pc.specularLight;
     vs_out.fShininess = pc.shininess;
-    //vs_out.fMapsUsed = pc.mapsUsed;
     vs_out.fConstant = ubos[gl_InstanceIndex].constant;
     vs_out.fLinear = ubos[gl_InstanceIndex].linear;
     vs_out.fQuadratic = ubos[gl_InstanceIndex].quadratic;
