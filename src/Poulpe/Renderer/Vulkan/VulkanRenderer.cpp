@@ -829,9 +829,8 @@ namespace Poulpe {
                 pReadFile.resize(cacheFileSize);
                 fStream.read(pReadFile.data(), cacheFileSize);
                 fStream.close();
-            }
-            else {
-                PLP_TRACE("Pipeline cache miss!");
+            } else {
+                //PLP_TRACE("Pipeline cache miss!");
                 badCache = true;
             }
 
@@ -842,8 +841,7 @@ namespace Poulpe {
                 if (cacheFileData == nullptr) {
                     PLP_WARN("Cannot allocate memory to pipeline cache");
                 }
-
-                PLP_TRACE("Pipeline cache HIT from {}", cacheFileName);
+                //PLP_TRACE("Pipeline cache HIT from {}", cacheFileName);
             }
 
             if (cacheFileData != nullptr) {
@@ -1301,25 +1299,28 @@ namespace Poulpe {
         vkUpdateDescriptorSets(m_Device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
     }
 
-    void VulkanRenderer::updateStorageDescriptorSet(Mesh::Buffer & uniformBuffer, VkDescriptorSet & descriptorSet,
+    void VulkanRenderer::updateStorageDescriptorSets(std::vector<Mesh::Buffer> & uniformBuffers, VkDescriptorSet & descriptorSet,
         VkDescriptorType type)
     {
         std::array<VkWriteDescriptorSet, 1> descriptorWrites{};
         std::vector<VkDescriptorBufferInfo> bufferInfos;
 
-        VkDescriptorBufferInfo bufferInfo{};
-        bufferInfo.buffer = uniformBuffer.buffer;
-        bufferInfo.offset = 0;
-        bufferInfo.range = VK_WHOLE_SIZE;
-
-        bufferInfos.emplace_back(bufferInfo);
+        std::for_each(std::begin(uniformBuffers), std::end(uniformBuffers),
+        [& bufferInfos](const Mesh::Buffer & uniformBuffer)
+        {
+            VkDescriptorBufferInfo bufferInfo{};
+            bufferInfo.buffer = uniformBuffer.buffer;
+            bufferInfo.offset = 0;
+            bufferInfo.range = VK_WHOLE_SIZE;
+            bufferInfos.emplace_back(bufferInfo);
+        });
 
         descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
         descriptorWrites[0].dstSet = descriptorSet;
         descriptorWrites[0].dstBinding = 2;
         descriptorWrites[0].dstArrayElement = 0;
         descriptorWrites[0].descriptorType = type;
-        descriptorWrites[0].descriptorCount = 1;
+        descriptorWrites[0].descriptorCount = bufferInfos.size();
         descriptorWrites[0].pBufferInfo = bufferInfos.data();
 
         vkUpdateDescriptorSets(m_Device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
@@ -1528,7 +1529,6 @@ namespace Poulpe {
         VkDeviceSize offsets[] = { 0 };
 
         vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
-
         vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, mesh->getPipelineLayout(),
             0, 1, & descriptorSet, 0, nullptr);
 

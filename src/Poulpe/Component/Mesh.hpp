@@ -31,17 +31,18 @@ namespace Poulpe
       std::string specularHighlightTexname;  // map_Ns
       std::string bumpTexname;                // map_bump, map_Bump, bump
       std::string normalMapTexname;
+      int illum;
     };
 
     struct constants
     {
         int textureID;
+        int ambientLight;
         float shininess;
         glm::mat4 view;
         glm::vec4 viewPos;
         glm::vec3 mapsUsed = glm::vec3(0.0f);
         glm::vec3 ambient;
-        glm::vec3 ambientLight;
         glm::vec3 ambientLightColor;
         glm::vec3 lightDir;
         glm::vec3 diffuseLight;
@@ -154,6 +155,9 @@ namespace Poulpe
         void addStorageBuffer(Buffer buffer) { m_StorageBuffers.emplace_back(buffer); }
         std::vector<Buffer>* getStorageBuffers() { return & m_StorageBuffers; }
 
+        void setHasBufferStorage(bool has = true) { m_HasStorageBuffer = has; }
+        bool hasBufferStorage() { return m_HasStorageBuffer; }
+
     private:
         std::vector<VkDescriptorSet> m_DescriptorSets;
         VkPipelineLayout m_PipelineLayout;
@@ -180,5 +184,6 @@ namespace Poulpe
 
         material_t m_Material;
         bool m_IsIndexed{ true };
+        bool m_HasStorageBuffer{ false };
     };
 }
