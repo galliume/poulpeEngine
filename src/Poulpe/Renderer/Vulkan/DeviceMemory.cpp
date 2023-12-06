@@ -6,8 +6,9 @@ namespace Poulpe
         VkDevice device,
         uint32_t memoryType,
         [[maybe_unused]] VkBufferUsageFlags usage,
-        VkDeviceSize maxSize
-    ) : m_Device(device), m_MemoryType(memoryType)
+        VkDeviceSize maxSize,
+        unsigned int index
+    ) : m_Device(device), m_MemoryType(memoryType), m_Index(index)
         //, m_Usage(usage)
     {
         if (nullptr == m_Memory) {
@@ -53,7 +54,12 @@ namespace Poulpe
 
     void DeviceMemory::bindBufferToMemory(VkBuffer& buffer, VkDeviceSize size)
     {
-        vkBindBufferMemory(m_Device, buffer, *m_Memory, m_Offset);
+        VkResult result = vkBindBufferMemory(m_Device, buffer, *m_Memory, m_Offset);
+
+        if (VK_SUCCESS != result) {
+            PLP_ERROR("BindBuffer memory failed in bindBufferToMemory");
+        }
+
         m_Offset += size;
 
         if (m_Offset >= m_MaxSize) {
@@ -91,6 +97,10 @@ namespace Poulpe
         }
 
         vkFreeMemory(m_Device, *m_Memory.get(), nullptr);
+
+        m_MaxSize = 0;
+        m_Offset = 0;
+        m_IsFull = false;
 
         m_Memory.reset();
     }
