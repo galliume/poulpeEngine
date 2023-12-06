@@ -6,16 +6,17 @@ layout(location = 0) out vec4 fColor;
 
 layout(location = 0) in VS_OUT {
     flat int fTextureID;
+    flat int fAmbientLight;
     float fShininess;
     float fConstant;
     float fLinear;
     float fQuadratic;
     vec2 fTexCoord;
+    vec2 fTexSize;
     vec3 fNormal;
     vec3 fPos;
     vec3 fMapsUsed;
     vec3 fAmbient;
-    vec3 fAmbientLight;
     vec3 fAmbientLightColor;
     vec3 fLightDir;
     vec3 fDiffuseLight;
@@ -33,7 +34,7 @@ layout(binding = 1) uniform sampler2D texSampler[3];
 
 layout(binding = 2) readonly buffer ObjectBuffer{
     NormalMap normalMap[];
-} normalMapBuffer;
+} objectData;
 
 float near = 0.1;
 float far  = 100.0;
@@ -53,13 +54,18 @@ void main()
     if (texture(texSampler[0], fs_in.fTexCoord).a < 0.5) {
         discard;
     }
-    vec3 normal = fs_in.fNormal;
-    vec3 norm = normalize(normal);
+
+    vec3 normal = normalize(fs_in.fNormal);
 
     if (fs_in.fMapsUsed.x > 0.0) {
-      normal = texture(texSampler[2], fs_in.fTexCoord).rgb;
+      int texWidth = int(fs_in.fTexSize.x);
+      int texHeight = int(fs_in.fTexSize.y);
+
+      int xIndex = int(fs_in.fTexCoord.x * texWidth);
+      int yIndex = int(fs_in.fTexCoord.y * texHeight);
+
+      normal = objectData.normalMap[yIndex * texWidth + xIndex].normal;
       normal = normalize(normal * 2.0 - 1.0);
-      norm = normal;
     }
 
     vec3 lightDir = normalize(fs_in.fLightDir - fs_in.fPos);
@@ -68,19 +74,18 @@ void main()
     
     vec3 ambient = fs_in.fAmbientLight * fs_in.fAmbient * fs_in.fAmbientLightColor;
 
-    float diff = max(dot(norm, lightDir), 0.0);
+    float diff = max(dot(normal, lightDir), 0.0);
     vec3 diffuse = fs_in.fAmbientLightColor * diff * fs_in.fDiffuseLight * texture(texSampler[0], fs_in.fTexCoord).xyz;
 
     vec3 viewDir = normalize(fs_in.fViewPos.xyz - fs_in.fPos.xyz);
-    vec3 reflectDir = reflect(-lightDir, norm);
-    vec3 h = normalize(-lightDir + viewDir);
+    vec3 h = normalize(lightDir + viewDir);
     vec3 specular = vec3(0.0);
 
     if (fs_in.fMapsUsed.y > 0.0) {
-      float spec = pow(clamp(dot(norm, h), 0.0, 1.0), fs_in.fShininess) * float(dot(norm, lightDir) > 0.0);
+      float spec = pow(clamp(dot(normal, h), 0.0, 1.0), fs_in.fShininess) * float(dot(normal, lightDir) > 0.0);
       specular = fs_in.fAmbientLightColor * (spec * fs_in.fSpecularLight * texture(texSampler[1], fs_in.fTexCoord).xyz) / distance;
     } else {
-      float spec = pow(clamp(dot(norm, h), 0.0, 1.0), fs_in.fShininess) * float(dot(norm, h) > 0.0) * float(dot(norm, lightDir) > 0.0);
+      float spec = pow(clamp(dot(normal, h), 0.0, 1.0), fs_in.fShininess) * float(dot(normal, h) > 0.0) * float(dot(normal, lightDir) > 0.0);
       specular = fs_in.fAmbientLightColor * (fs_in.fSpecular * spec * fs_in.fSpecularLight) / distance;
     }
 
