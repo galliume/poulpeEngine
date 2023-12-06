@@ -106,14 +106,14 @@ namespace Poulpe
         vkDestroyCommandPool(m_Adapter->rdr()->getDevice(), commandPool, nullptr);
 
         //loading normal map
-        //if (!mesh->getData()->m_TextureBumpMap.empty()) {
-        //    auto const & map = m_TextureManager->addNormalMapTexture(mesh->getData()->m_TextureBumpMap);
-        //    
-        //    if (map.size() > 0) {
-        //      size_t size = sizeof(std::array<float, 3>) * map.size();
-        //      mesh->addStorageBuffer(m_Adapter->rdr()->createStorageBuffers(size));
-        //    }
-        //}
+        if (!mesh->getData()->m_TextureBumpMap.empty()) {
+            auto const & map = m_TextureManager->addNormalMapTexture(mesh->getData()->m_TextureBumpMap);
+            
+            if (map.size() > 0) {
+              size_t size = sizeof(std::array<float, 3>) * map.size();
+              mesh->addStorageBuffer(m_Adapter->rdr()->createStorageBuffers(size));
+            }
+        }
 
         mesh->setIsDirty(false);
     }
