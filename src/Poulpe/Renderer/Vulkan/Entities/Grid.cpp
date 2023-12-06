@@ -56,7 +56,7 @@ namespace Poulpe
         mesh->setName("grid");
         mesh->setShaderName("grid");
         mesh->getUniformBuffers()->emplace_back(m_Adapter->rdr()->createUniformBuffers(1));
-        mesh->setDescriptorSetLayout(createDescriptorSetLayout());
+        mesh->setDescriptorSetLayout(createDescriptorSetLayout(mesh));
         mesh->setDescriptorSets(createDescriptorSet(mesh));
         mesh->setPipelineLayout(createPipelineLayout(mesh->getDescriptorSetLayout()));
 
@@ -83,7 +83,7 @@ namespace Poulpe
         mesh->setIsDirty(false);
     }
 
-    VkDescriptorSetLayout Grid::createDescriptorSetLayout()
+    VkDescriptorSetLayout Grid::createDescriptorSetLayout([[maybe_unused]] Mesh* mesh)
     {
         VkDescriptorSetLayoutBinding uboLayoutBinding{};
         uboLayoutBinding.binding = 0;

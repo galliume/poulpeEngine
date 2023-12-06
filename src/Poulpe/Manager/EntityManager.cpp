@@ -346,6 +346,8 @@ namespace Poulpe
             ubo.model = glm::rotate(ubo.model, glm::radians(rotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
             ubo.model = glm::rotate(ubo.model, glm::radians(rotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
 
+            ubo.texSize = glm::vec2(0.0);
+
             //ubo.view = glm::mat4(1.0f);
             data.m_Ubos.emplace_back(ubo);
 

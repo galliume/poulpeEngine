@@ -12,10 +12,12 @@ namespace Poulpe
         std::vector<VkDescriptorPoolSize> poolSizes{};
         VkDescriptorPoolSize cp1;
         cp1.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        cp1.descriptorCount = 1000;
+        cp1.descriptorCount = 10;
+        
         VkDescriptorPoolSize cp2;
         cp2.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        cp2.descriptorCount = 1000;
+        cp2.descriptorCount = 10;
+
         poolSizes.emplace_back(cp1);
         poolSizes.emplace_back(cp2);
 
@@ -53,7 +55,7 @@ namespace Poulpe
         mesh->setName("crosshair");
         mesh->setShaderName("2d");
         mesh->getUniformBuffers()->emplace_back(m_Adapter->rdr()->createUniformBuffers(1));
-        mesh->setDescriptorSetLayout(createDescriptorSetLayout());
+        mesh->setDescriptorSetLayout(createDescriptorSetLayout(mesh));
         mesh->setDescriptorSets(createDescriptorSet(mesh));
         mesh->setPipelineLayout(createPipelineLayout(mesh->getDescriptorSetLayout()));
 
@@ -80,7 +82,7 @@ namespace Poulpe
         mesh->setIsDirty(false);
     }
 
-    VkDescriptorSetLayout Crosshair::createDescriptorSetLayout()
+    VkDescriptorSetLayout Crosshair::createDescriptorSetLayout([[maybe_unused]] Mesh* mesh)
     {
          VkDescriptorSetLayoutBinding uboLayoutBinding{};
         uboLayoutBinding.binding = 0;
@@ -138,7 +140,6 @@ namespace Poulpe
         vkPc.size = sizeof(Crosshair::pc);
         vkPc.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
         vkPcs.emplace_back(vkPc);
-
 
         VkPipelineLayout pipelineLayout = m_Adapter->rdr()->createPipelineLayout(dSetLayout, vkPcs);
 
