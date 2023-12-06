@@ -93,7 +93,7 @@ namespace Poulpe
         setPushConstants(mesh);
 
         mesh->setDescriptorPool(m_DescriptorPool);
-        mesh->setDescriptorSetLayout(createDescriptorSetLayout());
+        mesh->setDescriptorSetLayout(createDescriptorSetLayout(mesh));
         mesh->setPipelineLayout(createPipelineLayout(mesh->getDescriptorSetLayout()));
         mesh->setDescriptorSets(createDescriptorSet(mesh));
 
@@ -115,7 +115,7 @@ namespace Poulpe
         mesh->setIsDirty(false);
     }
 
-    VkDescriptorSetLayout Skybox::createDescriptorSetLayout()
+    VkDescriptorSetLayout Skybox::createDescriptorSetLayout([[maybe_unused]] Mesh* mesh)
     {
         VkDescriptorSetLayoutBinding uboLayoutBinding{};
         uboLayoutBinding.binding = 0;

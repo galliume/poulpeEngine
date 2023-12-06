@@ -10,6 +10,7 @@ struct UBO
     float constant;
     float linear;
     float quadratic;
+    vec2 texSize;
 };
 
 layout(set = 0, binding = 0) uniform UniformBufferObject {
@@ -19,12 +20,12 @@ layout(set = 0, binding = 0) uniform UniformBufferObject {
 layout(push_constant) uniform constants
 {
     int textureID;
+    int ambientLight;
     float shininess;
     mat4 view;
     vec4 viewPos;
     vec3 mapsUsed;
     vec3 ambient;
-    vec3 ambientLight;
     vec3 ambientLightColor;
     vec3 lightDir;
     vec3 diffuseLight;
@@ -39,16 +40,17 @@ layout(location = 3) in vec4 tangent;
 
 layout(location = 0) out VS_OUT {
     flat int fTextureID;
+    flat int fAmbientLight;
     float fShininess;
     float fConstant;
     float fLinear;
     float fQuadratic;
     vec2 fTexCoord;
+    vec2 fTexSize;
     vec3 fNormal;
     vec3 fPos;
     vec3 fMapsUsed;
     vec3 fAmbient;
-    vec3 fAmbientLight;
     vec3 fAmbientLightColor;
     vec3 fLightDir;
     vec3 fDiffuseLight;
@@ -61,6 +63,13 @@ layout(location = 0) out VS_OUT {
 void main()
 {
     gl_Position = ubos[gl_InstanceIndex].projection * pc.view * ubos[gl_InstanceIndex].model * vec4(pos, 1.0);
+
+    
+    vec3 t = normalize(vec3(ubos[gl_InstanceIndex].model * vec4(tangent.xyz, 0.0)));
+    vec3 n = normalize(vec3(ubos[gl_InstanceIndex].model * vec4(normal, 0.0)));
+    vec3 b = normalize(vec3(ubos[gl_InstanceIndex].model * vec4(cross(n, t) * tangent.w, 0.0)));
+    mat3 TBN = transpose(mat3(t, b, n));
+    vs_out.TBN = TBN;
 
     vs_out.fNormal = normal;
     //fNormal = mat3(transpose(inverse(ubos[gl_InstanceIndex].model))) * normal;
@@ -81,10 +90,5 @@ void main()
     vs_out.fConstant = ubos[gl_InstanceIndex].constant;
     vs_out.fLinear = ubos[gl_InstanceIndex].linear;
     vs_out.fQuadratic = ubos[gl_InstanceIndex].quadratic;
-
-    vec3 t = normalize(vec3(ubos[gl_InstanceIndex].model * vec4(tangent.xyz, 0.0)));
-    vec3 n = normalize(vec3(ubos[gl_InstanceIndex].model * vec4(normal, 0.0)));
-    vec3 b = normalize(vec3(ubos[gl_InstanceIndex].model * vec4(cross(n, t), 0.0)));
-    mat3 TBN = transpose(mat3(t, b, n));
-    vs_out.TBN = TBN;
+    vs_out.fTexSize = ubos[gl_InstanceIndex].texSize;
 } 
