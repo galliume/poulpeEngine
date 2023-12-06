@@ -299,6 +299,7 @@ namespace Poulpe
             auto nameTexture = textureNames[listData[i].materialId];
             std::string nameTextureSpecularMap;
             std::string bumpTexname;
+            std::string normalMapTexname;
 
             if (!TinyObjLoader::m_TinyObjMaterials.empty()) {
                 
@@ -317,6 +318,7 @@ namespace Poulpe
 
                 if (!TinyObjLoader::m_TinyObjMaterials.at(listData[i].materialId).bumpTexname.empty()) {
                     bumpTexname = TinyObjLoader::m_TinyObjMaterials.at(listData[i].materialId).bumpTexname;
+                    normalMapTexname = TinyObjLoader::m_TinyObjMaterials.at(listData[i].materialId).normalMapTexname;
                 }
             }
 
@@ -324,7 +326,8 @@ namespace Poulpe
             data.m_Name = name + '_' + nameTexture;
             data.m_Texture = nameTexture;
             data.m_TextureSpecularMap = nameTextureSpecularMap;
-            data.m_TextureBumMap = bumpTexname;
+            data.m_TextureBumpMap = bumpTexname;
+            data.m_TextureNormalMap = normalMapTexname;
             data.m_Vertices = listData[i].vertices;
             data.m_Indices = listData[i].indices;
             data.m_OriginPos = pos;
