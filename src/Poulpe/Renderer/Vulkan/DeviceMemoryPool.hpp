@@ -32,7 +32,7 @@ namespace Poulpe
         VkDeviceSize m_MemoryAllocationCount = 0;
         std::vector<VkDeviceSize> m_MemoryAllocationSize{0};
         unsigned int m_DeviceMemoryCount{ 0 };
-        unsigned int const m_MaxUBOS{ 1000 };
-        unsigned int const m_MaxStorage{ 100 };
+        unsigned int const m_MaxUniform{ 100 };
+        unsigned int const m_MaxStorage{ 10 };
     };
 }

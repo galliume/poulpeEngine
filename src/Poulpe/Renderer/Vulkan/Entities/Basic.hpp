@@ -23,7 +23,7 @@ namespace Poulpe
 
         void visit(float const deltaTime, Mesh* mesh) override;
 
-        VkDescriptorSetLayout createDescriptorSetLayout() override;
+        VkDescriptorSetLayout createDescriptorSetLayout(Mesh* mesh) override;
         std::vector<VkDescriptorSet> createDescriptorSet(Mesh* mesh) override;
         VkPipelineLayout createPipelineLayout(VkDescriptorSetLayout descriptorSetLayout) override;
         std::vector<VkPipelineShaderStageCreateInfo> getShaders(std::string const & name) override;

@@ -9,6 +9,7 @@ namespace Poulpe
         alignas(4) float constant{ 1.0 };
         alignas(4) float linear{ 0.09 };
         alignas(4) float quadratic{ 0.032 };
+        alignas(8) glm::vec2 texSize;
     };
 
     struct CubeUniformBufferObject : UniformBufferObject
