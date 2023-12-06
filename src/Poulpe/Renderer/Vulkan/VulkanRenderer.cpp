@@ -98,7 +98,11 @@ namespace Poulpe {
 
     void VulkanRenderer::initMemoryPool()
     {
-        m_DeviceMemoryPool = std::make_unique<DeviceMemoryPool>(m_DeviceProperties2, m_DeviceMaintenance3Properties);
+        VkPhysicalDeviceMemoryProperties memProperties;
+        vkGetPhysicalDeviceMemoryProperties(m_PhysicalDevice, & memProperties);
+
+        m_DeviceMemoryPool = std::make_unique<DeviceMemoryPool>(
+          m_DeviceProperties2, m_DeviceMaintenance3Properties, memProperties);
     }
 
     std::string VulkanRenderer::getAPIVersion()
@@ -1581,7 +1585,11 @@ namespace Poulpe {
         if (vkAllocateMemory(m_Device, &allocInfo, nullptr, & bufferMemory) != VK_SUCCESS) {
             throw std::runtime_error("failed to allocate buffer memory!");
         }
-        vkBindBufferMemory(m_Device, buffer, bufferMemory, 0);
+        VkResult result = vkBindBufferMemory(m_Device, buffer, bufferMemory, 0);
+
+        if (result != VK_SUCCESS) {
+            PLP_ERROR("Memory binding failed in createBuffer");
+        }
     }
 
     Mesh::Buffer VulkanRenderer::createIndexBuffer(VkCommandPool const & commandPool, std::vector<uint32_t> const & indices)
@@ -1602,7 +1610,8 @@ namespace Poulpe {
         VkMemoryRequirements memRequirements;
         vkGetBufferMemoryRequirements(m_Device, buffer, & memRequirements);
         uint32_t size = ((memRequirements.size / memRequirements.alignment) + 1) * memRequirements.alignment;
-
+        if (size <= memRequirements.size) size = memRequirements.size + memRequirements.alignment;
+        
         auto memoryType = findMemoryType(memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
         auto deviceMemory = m_DeviceMemoryPool->get(m_Device, size, memoryType, VK_BUFFER_USAGE_TRANSFER_DST_BIT 
             | VK_BUFFER_USAGE_INDEX_BUFFER_BIT);
@@ -1644,6 +1653,8 @@ namespace Poulpe {
 
         auto memoryType = findMemoryType(memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
         uint32_t size = ((memRequirements.size / memRequirements.alignment) + 1) * memRequirements.alignment;
+        if (size <= memRequirements.size) size = memRequirements.size + memRequirements.alignment;
+
         auto deviceMemory = m_DeviceMemoryPool->get(m_Device, size, memoryType, VK_BUFFER_USAGE_TRANSFER_DST_BIT 
             | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT);
 
@@ -1686,6 +1697,8 @@ namespace Poulpe {
 
         auto memoryType = findMemoryType(memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
         uint32_t size = ((memRequirements.size / memRequirements.alignment) + 1) * memRequirements.alignment;
+        if (size <= memRequirements.size) size = memRequirements.size + memRequirements.alignment;
+
         auto deviceMemory = m_DeviceMemoryPool->get(m_Device, size, memoryType, VK_BUFFER_USAGE_TRANSFER_DST_BIT
             | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT);
 
@@ -1717,6 +1730,8 @@ namespace Poulpe {
             | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 
         uint32_t size = ((memRequirements.size / memRequirements.alignment) + 1) * memRequirements.alignment;
+        if (size <= memRequirements.size) size = memRequirements.size + memRequirements.alignment;
+
         auto deviceMemory = m_DeviceMemoryPool->get(m_Device, size, memoryType, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT);
         auto offset = deviceMemory->getOffset();
         deviceMemory->bindBufferToMemory(buffer, size);
@@ -1741,7 +1756,12 @@ namespace Poulpe {
             | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT | VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 
         uint32_t size = ((memRequirements.size / memRequirements.alignment) + 1) * memRequirements.alignment;
-        auto deviceMemory = m_DeviceMemoryPool->get(m_Device, size, memoryType, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+        if (size <= memRequirements.size) size = memRequirements.size + memRequirements.alignment;
+
+        auto deviceMemory = m_DeviceMemoryPool->get(
+          m_Device, size, memoryType, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+          DeviceMemoryPool::DeviceBufferType::STORAGE);
+
         auto offset = deviceMemory->getOffset();
         deviceMemory->bindBufferToMemory(buffer, size);
 
@@ -1762,6 +1782,8 @@ namespace Poulpe {
         vkGetBufferMemoryRequirements(m_Device, buffer, &memRequirements);
 
         uint32_t size = ((memRequirements.size / memRequirements.alignment) + 1) * memRequirements.alignment;
+        if (size <= memRequirements.size) size = memRequirements.size + memRequirements.alignment;
+
         auto memoryType = findMemoryType(memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT
             | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 
@@ -1914,7 +1936,10 @@ namespace Poulpe {
         vkGetImageMemoryRequirements(m_Device, image, & memRequirements);
         auto memoryType = findMemoryType(memRequirements.memoryTypeBits, properties);
         uint32_t size = ((memRequirements.size / memRequirements.alignment) + 1) * memRequirements.alignment;
-        auto deviceMemory = m_DeviceMemoryPool->get(m_Device, size, memoryType, VK_BUFFER_USAGE_TRANSFER_SRC_BIT);
+        if (size <= memRequirements.size) size = memRequirements.size + memRequirements.alignment;
+
+        auto deviceMemory = m_DeviceMemoryPool->get(m_Device, size, memoryType, 
+          VK_BUFFER_USAGE_TRANSFER_SRC_BIT, DeviceMemoryPool::DeviceBufferType::STAGING);
         deviceMemory->bindImageToMemory(image, size);
     }
 
@@ -1944,7 +1969,10 @@ namespace Poulpe {
         vkGetImageMemoryRequirements(m_Device, image, & memRequirements);
         auto memoryType = findMemoryType(memRequirements.memoryTypeBits, properties);
         uint32_t size = ((memRequirements.size / memRequirements.alignment) + 1) * memRequirements.alignment;
-        auto deviceMemory = m_DeviceMemoryPool->get(m_Device, size, memoryType, VK_BUFFER_USAGE_TRANSFER_SRC_BIT);
+        if (size <= memRequirements.size) size = memRequirements.size + memRequirements.alignment;
+
+        auto deviceMemory = m_DeviceMemoryPool->get(m_Device, size, memoryType, 
+          VK_BUFFER_USAGE_TRANSFER_SRC_BIT, DeviceMemoryPool::DeviceBufferType::STAGING);
         deviceMemory->bindImageToMemory(image, size);
     }
 
@@ -1960,7 +1988,11 @@ namespace Poulpe {
             | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 
         uint32_t size = ((memRequirements.size / memRequirements.alignment) + 1) * memRequirements.alignment;
-        auto deviceMemory = m_DeviceMemoryPool->get(m_Device, size, memoryType, VK_BUFFER_USAGE_TRANSFER_SRC_BIT);
+        if (size <= memRequirements.size) size = memRequirements.size + memRequirements.alignment;
+
+        auto deviceMemory = m_DeviceMemoryPool->get(m_Device, size, memoryType, 
+          VK_BUFFER_USAGE_TRANSFER_SRC_BIT, DeviceMemoryPool::DeviceBufferType::STAGING);
+
         auto offset = deviceMemory->getOffset();
         deviceMemory->bindBufferToMemory(buffer, size);
 
@@ -1987,6 +2019,7 @@ namespace Poulpe {
         generateMipmaps(commandBuffer, format, textureImage, texWidth, texHeight, mipLevels);
         endCommandBuffer(commandBuffer);
         queueSubmit(commandBuffer);
+        //m_DeviceMemoryPool->clear(deviceMemory);
     }
 
     void VulkanRenderer::createSkyboxTextureImage(VkCommandBuffer & commandBuffer, std::vector<stbi_uc*> & skyboxPixels,
@@ -2001,7 +2034,11 @@ namespace Poulpe {
             | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 
         uint32_t size = ((memRequirements.size / memRequirements.alignment) + 1) * memRequirements.alignment;
-        auto deviceMemory = m_DeviceMemoryPool->get(m_Device, size, memoryType, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, true);
+        if (size <= memRequirements.size) size = memRequirements.size + memRequirements.alignment;
+        
+        auto deviceMemory = m_DeviceMemoryPool->get(m_Device, size, memoryType, 
+          VK_BUFFER_USAGE_TRANSFER_SRC_BIT, DeviceMemoryPool::DeviceBufferType::STAGING,  true);
+
         auto offset = deviceMemory->getOffset();
         deviceMemory->bindBufferToMemory(buffer, size);
 
@@ -2038,6 +2075,7 @@ namespace Poulpe {
         for (uint32_t i = 0; i < skyboxPixels.size(); i++) {
             stbi_image_free(skyboxPixels[i]);
         }
+        //m_DeviceMemoryPool->clear(deviceMemory);
     }
 
     void VulkanRenderer::generateMipmaps(VkCommandBuffer commandBuffer, VkFormat imageFormat, VkImage image, uint32_t texWidth,
