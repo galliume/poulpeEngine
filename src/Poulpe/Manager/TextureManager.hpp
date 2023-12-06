@@ -19,6 +19,7 @@ namespace Poulpe
         inline const Texture getSkyboxTexture() const override { return m_Skybox; }
         void addSkyBox(std::vector<std::string> const & skyboxImages) override;
         void addTexture(std::string const & name, std::string const & path, bool isPublic = false) override;
+        std::vector<std::array<float, 3>> addNormalMapTexture(std::string const& name) override;
         inline std::unordered_map<std::string, std::string> getPaths() const override { return m_Paths; }
         void clear();
         bool isTexturesLoadingDone() { return m_TexturesLoadingDone.load(); }

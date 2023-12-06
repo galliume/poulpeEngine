@@ -25,7 +25,15 @@ layout(location = 0) in VS_OUT {
     mat3 TBN;
 } fs_in;
 
+struct NormalMap {
+    vec3 normal;
+};
+
 layout(binding = 1) uniform sampler2D texSampler[3];
+
+layout(binding = 2) readonly buffer ObjectBuffer{
+    NormalMap normalMap[];
+} normalMapBuffer;
 
 float near = 0.1;
 float far  = 100.0;
@@ -42,9 +50,9 @@ void main()
     vec3 debugAmbient = vec3(0.0, 1.0, 0.0); // Debugging color for ambient
     vec3 debugSpecular = vec3(0.0, 0.0, 1.0); // Debugging color for specular
 
-//    if (texture(texSampler[0], fTexCoord).a < 0.5) {
-//        discard;
-//    }
+    if (texture(texSampler[0], fs_in.fTexCoord).a < 0.5) {
+        discard;
+    }
     vec3 normal = fs_in.fNormal;
     vec3 norm = normalize(normal);
 

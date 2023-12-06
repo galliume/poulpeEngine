@@ -1297,6 +1297,30 @@ namespace Poulpe {
         vkUpdateDescriptorSets(m_Device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
     }
 
+    void VulkanRenderer::updateStorageDescriptorSet(Mesh::Buffer & uniformBuffer, VkDescriptorSet & descriptorSet,
+        VkDescriptorType type)
+    {
+        std::array<VkWriteDescriptorSet, 1> descriptorWrites{};
+        std::vector<VkDescriptorBufferInfo> bufferInfos;
+
+        VkDescriptorBufferInfo bufferInfo{};
+        bufferInfo.buffer = uniformBuffer.buffer;
+        bufferInfo.offset = 0;
+        bufferInfo.range = VK_WHOLE_SIZE;
+
+        bufferInfos.emplace_back(bufferInfo);
+
+        descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        descriptorWrites[0].dstSet = descriptorSet;
+        descriptorWrites[0].dstBinding = 2;
+        descriptorWrites[0].dstArrayElement = 0;
+        descriptorWrites[0].descriptorType = type;
+        descriptorWrites[0].descriptorCount = 1;
+        descriptorWrites[0].pBufferInfo = bufferInfos.data();
+
+        vkUpdateDescriptorSets(m_Device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
+    }
+
     void VulkanRenderer::beginRenderPass(VkRenderPass renderPass, VkCommandBuffer commandBuffer, VkFramebuffer framebuffer)
     {
         VkRenderPassBeginInfo renderPassInfo{};
@@ -1706,18 +1730,18 @@ namespace Poulpe {
         return uniformBuffer;
     }
 
-    Mesh::Buffer VulkanRenderer::createStorageBuffers(uint32_t uniformBuffersCount)
+    Mesh::Buffer VulkanRenderer::createStorageBuffers(size_t storageSize)
     {
-        VkDeviceSize bufferSize = sizeof(UniformBufferObject) * uniformBuffersCount;
+        VkDeviceSize bufferSize = storageSize;
         VkBuffer buffer = createBuffer(bufferSize, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT);
         VkMemoryRequirements memRequirements;
         vkGetBufferMemoryRequirements(m_Device, buffer, & memRequirements);
 
         auto memoryType = findMemoryType(memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT
-            | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+            | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT | VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 
         uint32_t size = ((memRequirements.size / memRequirements.alignment) + 1) * memRequirements.alignment;
-        auto deviceMemory = m_DeviceMemoryPool->get(m_Device, size, memoryType, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT);
+        auto deviceMemory = m_DeviceMemoryPool->get(m_Device, size, memoryType, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
         auto offset = deviceMemory->getOffset();
         deviceMemory->bindBufferToMemory(buffer, size);
 

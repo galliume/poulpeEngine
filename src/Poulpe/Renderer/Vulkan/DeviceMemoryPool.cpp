@@ -4,7 +4,7 @@ namespace Poulpe
 {
     DeviceMemoryPool::DeviceMemoryPool(VkPhysicalDeviceProperties2 deviceProperties,
       VkPhysicalDeviceMaintenance3Properties maintenceProperties)
-        : m_DeviceProperties(deviceProperties), m_MaintenceProperties(maintenceProperties)
+        : m_DeviceProperties(deviceProperties), m_MaintenanceProperties(maintenceProperties)
     {
 
     }
@@ -17,7 +17,7 @@ namespace Poulpe
 
         VkDeviceSize maxSize;
 
-        maxSize = m_MaintenceProperties.maxMemoryAllocationSize / 20.f;
+        maxSize = m_MaintenanceProperties.maxMemoryAllocationSize / 6.f;
 
         auto poolType = m_Pool.find(memoryType);
 
@@ -33,7 +33,7 @@ namespace Poulpe
                 }
             }
 
-            if (m_MemoryAllocationSize + maxSize > m_MaintenceProperties.maxMemoryAllocationSize) {
+            if (m_MemoryAllocationSize + maxSize > m_MaintenanceProperties.maxMemoryAllocationSize) {
                 throw std::runtime_error("Max size of memory allocation reached");
             }
 
@@ -44,7 +44,7 @@ namespace Poulpe
             return m_Pool[memoryType][usage].back().get();
         } else {
 
-            if (m_MemoryAllocationSize + maxSize > m_MaintenceProperties.maxMemoryAllocationSize) {
+            if (m_MemoryAllocationSize + maxSize > m_MaintenanceProperties.maxMemoryAllocationSize) {
                 //throw std::runtime_error("Max size of memory allocation reached");
                 PLP_ERROR("Max size of memory allocation reached");
             }
