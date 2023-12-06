@@ -132,10 +132,65 @@ namespace Poulpe
         texture.setHeight(texHeight);
         texture.setChannels(texChannels);
         texture.setIsPublic(isPublic);
+        texture.setPath(path);
 
         m_Textures.emplace(name, texture);
         vkFreeCommandBuffers(m_Renderer->rdr()->getDevice(), commandPool, 1, &commandBuffer);
         vkDestroyCommandPool(m_Renderer->rdr()->getDevice(), commandPool, nullptr);
+    }
+
+    std::vector<std::array<float, 3>> TextureManager::addNormalMapTexture(std::string const & name)
+    {
+        if (!m_Textures.contains(name)) {
+            PLP_TRACE("Texture {} does not exists, can't create normal map", name);
+            return {};
+        }
+
+        Texture& originalTexture = m_Textures[name];
+        auto const path = originalTexture.getPath();
+
+        if (!originalTexture.getNormalMap().empty()) {
+            return originalTexture.getNormalMap();
+        }
+
+        int texWidth = 0, texHeight = 0, texChannels = 0;
+        stbi_uc* pixels = stbi_load(path.c_str(), & texWidth, & texHeight, & texChannels, STBI_rgb_alpha);
+
+        if (!pixels) {
+            PLP_FATAL("failed to load texture image %s", name);
+            return {};
+        }
+
+        std::vector<std::array<float, 3>> normalMapTexture;
+
+        for (int y = 0; y < texHeight; ++y) {
+
+            int ym1 = (y - 1) & (texHeight - 1);
+            int yp1 = (y + 1) & (texHeight - 1);
+
+            unsigned char* centerRow = pixels + y * texWidth;
+            unsigned char* upperRow = pixels + ym1 * texWidth;
+            unsigned char* lowerRow = pixels + yp1 * texWidth;
+
+            for (int x = 0; x < texWidth; ++x) {
+                int xm1 = (x - 1) & (texWidth - 1);
+                int xp1 = (x + 1) & (texWidth - 1);
+
+                float dx = (centerRow[xp1] - centerRow[xm1]) * 0.5f;
+                float dy = (lowerRow[x] - upperRow[x]) * 0.5f;
+
+                float nz = 1.0f / std::sqrt(dx * dx + dy * dy + 1.0f);
+                float nx = std::fmin(std::fmax(-dx * nz, -1.0f), 1.0f);
+                float ny = std::fmin(std::fmax(-dy * nz, -1.0f), 1.0f);
+
+                std::array<float, 3>d{nx, ny, nz};
+                normalMapTexture.emplace_back(d);
+            }
+        }
+
+        originalTexture.setNormalMap(std::move(normalMapTexture));
+
+        return originalTexture.getNormalMap();
     }
 
     void TextureManager::clear()

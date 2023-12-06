@@ -62,6 +62,9 @@ namespace Poulpe {
         void updateDescriptorSet(Mesh::Buffer & uniformBuffer, VkDescriptorSet & descriptorSet,
             std::vector<VkDescriptorImageInfo> & imageInfo, VkDescriptorType type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
 
+        void updateStorageDescriptorSet(Mesh::Buffer & uniformBuffer, VkDescriptorSet & descriptorSet, 
+            VkDescriptorType type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER);
+
         VkPipelineLayout createPipelineLayout(std::vector<VkDescriptorSetLayout> const & descriptorSetLayouts,
             std::vector<VkPushConstantRange> const & pushConstants);
 
@@ -155,7 +158,7 @@ namespace Poulpe {
 
         void initMemoryPool();
 
-        Mesh::Buffer createStorageBuffers(uint32_t uniformBuffersCount);
+        Mesh::Buffer createStorageBuffers(size_t storageBuffer);
 
         void updateStorageBuffer(Mesh::Buffer buffer, std::vector<UniformBufferObject> bufferObjects);
 
@@ -393,7 +396,7 @@ namespace Poulpe {
         VkFence m_FenceBuffer{};
 
         //@todo move to config file
-        unsigned int m_Width{ 1200 };
-        unsigned int m_Height{ 720 };
+        unsigned int m_Width{ 2560 };
+        unsigned int m_Height{ 1440 };
     };
 }
