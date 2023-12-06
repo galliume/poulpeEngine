@@ -26,7 +26,7 @@ namespace Poulpe
 
        switch (bufferType) {
            case DeviceBufferType::STORAGE:
-             bufferSize = m_MaintenanceProperties.maxMemoryAllocationSize;
+             bufferSize = m_DeviceProperties.properties.limits.maxStorageBufferRange * m_MaxStorage;
              bufferTypeDebug = "STORAGE";
            break;
            case DeviceBufferType::UNIFORM:
@@ -77,7 +77,7 @@ namespace Poulpe
         m_MemoryAllocationCount += 1;
         m_MemoryAllocationSize.at(memoryType) += bufferSize;
         PLP_DEBUG("DM CREATION: id {}, type {}, id {}, size {} type {} usage {} ",
-          m_DeviceMemoryCount, bufferTypeDebug, m_MemoryAllocationCount, bufferSize, memoryType, usage);
+        m_DeviceMemoryCount, bufferTypeDebug, m_MemoryAllocationCount, bufferSize, memoryType, usage);
         m_DeviceMemoryCount += 1;
         return m_Pool[memoryType][usage].back().get();
       }
