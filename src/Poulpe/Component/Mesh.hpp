@@ -30,6 +30,7 @@ namespace Poulpe
       std::string specularTexname;            // map_Ks
       std::string specularHighlightTexname;  // map_Ns
       std::string bumpTexname;                // map_bump, map_Bump, bump
+      std::string normalMapTexname;
     };
 
     struct constants
@@ -62,7 +63,8 @@ namespace Poulpe
             std::string m_Name;
             std::string m_Texture;
             std::string m_TextureSpecularMap;
-            std::string m_TextureBumMap;
+            std::string m_TextureBumpMap;
+            std::string m_TextureNormalMap;
             std::vector<Vertex> m_Vertices;
             std::vector<uint32_t> m_Indices;
             std::vector<UniformBufferObject> m_Ubos;
@@ -149,6 +151,9 @@ namespace Poulpe
         bool isIndexed() { return m_IsIndexed; }
         void setIsIndexed(bool indexed) { m_IsIndexed = indexed; }
 
+        void addStorageBuffer(Buffer buffer) { m_StorageBuffers.emplace_back(buffer); }
+        std::vector<Buffer>* getStorageBuffers() { return & m_StorageBuffers; }
+
     private:
         std::vector<VkDescriptorSet> m_DescriptorSets;
         VkPipelineLayout m_PipelineLayout;
@@ -164,6 +169,7 @@ namespace Poulpe
 
         bool m_HasPushContants = false;
         std::vector<Mesh::Buffer> m_UniformBuffers;
+        std::vector<Mesh::Buffer> m_StorageBuffers;
         glm::vec4 m_CameraPos;
         std::string m_Name;
 

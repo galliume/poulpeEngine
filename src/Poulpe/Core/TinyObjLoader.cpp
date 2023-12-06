@@ -63,7 +63,7 @@ namespace Poulpe
           mat.specularTexname = cleanName(material.specular_texname);
           mat.specularHighlightTexname = cleanName(material.specular_highlight_texname);
           mat.bumpTexname = cleanName(material.bump_texname);
-
+          mat.normalMapTexname = "_plp_normal_map" + mat.bumpTexname;
           m_TinyObjMaterials.emplace_back(mat);
         }
 
