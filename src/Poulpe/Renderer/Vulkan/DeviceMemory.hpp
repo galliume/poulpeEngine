@@ -10,7 +10,8 @@ namespace Poulpe
             VkDevice device,
             uint32_t memoryType,
             VkBufferUsageFlags usage,
-            VkDeviceSize maxSize
+            VkDeviceSize maxSize,
+            unsigned int index
         );
 
         void bindBufferToMemory(VkBuffer& buffer, VkDeviceSize size);
@@ -22,6 +23,10 @@ namespace Poulpe
         void lock() { m_MutexMemory.lock(); }
         void unLock() { m_MutexMemory.unlock(); }
         void clear();
+        VkDeviceSize getSize() { return m_MaxSize; }
+        uint32_t getType() { return m_MemoryType; }
+        unsigned int getID() { return m_Index; }
+        unsigned int getSpaceLeft() { return m_MaxSize - m_Offset; }
 
     private:
         void allocateToMemory();
@@ -35,11 +40,12 @@ namespace Poulpe
         VkDevice m_Device;
         uint32_t m_MemoryType;
         //VkBufferUsageFlags m_Usage;
-        VkDeviceSize m_MaxSize = 429287014;
+        VkDeviceSize m_MaxSize;
         std::mutex m_MutexMemory;
 
         //@todo check with deviceProps.limits.bufferImageGranularity;
         uint32_t m_Offset = 0;
         std::vector<VkBuffer> m_Buffer {};
+        unsigned int m_Index{0};
     };
 }

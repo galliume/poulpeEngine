@@ -84,6 +84,12 @@ void main()
       specular = fs_in.fAmbientLightColor * (fs_in.fSpecular * spec * fs_in.fSpecularLight) / distance;
     }
 
+    float gamma = 2.2;
+
+   //diffuse = pow(diffuse, vec3(gamma));
+   //ambient = pow(ambient, vec3(gamma));
+   //specular = pow(specular, vec3(gamma));
+
     ambient *= attenuation;
     diffuse *= attenuation;
     specular *= attenuation;
