@@ -13,12 +13,22 @@ namespace Poulpe
       std::vector<VkDescriptorPoolSize> poolSizes{};
       VkDescriptorPoolSize cp1;
       cp1.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-      cp1.descriptorCount = 1000;
+      cp1.descriptorCount = 10;
+
       VkDescriptorPoolSize cp2;
       cp2.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-      cp2.descriptorCount = 1000;
+      cp2.descriptorCount = 10;
       poolSizes.emplace_back(cp1);
       poolSizes.emplace_back(cp2);
+
+      VkDescriptorPoolSize cp3;
+      cp3.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+      cp3.descriptorCount = 10;
+
+      poolSizes.emplace_back(cp1);
+      poolSizes.emplace_back(cp2);
+      poolSizes.emplace_back(cp3);
+
 
       m_DescriptorPool = m_Adapter->rdr()->createDescriptorPool(poolSizes, 1000);
     }
@@ -94,6 +104,13 @@ namespace Poulpe
         }
 
         vkDestroyCommandPool(m_Adapter->rdr()->getDevice(), commandPool, nullptr);
+
+        //loading normal map
+        if (!mesh->getData()->m_TextureBumpMap.empty()) {
+            auto const & map = m_TextureManager->addNormalMapTexture(mesh->getData()->m_TextureBumpMap);
+            size_t size = sizeof(std::array<float, 3>) * map.size();
+            mesh->addStorageBuffer(m_Adapter->rdr()->createStorageBuffers(size));
+        }
 
         mesh->setIsDirty(false);
     }
@@ -187,7 +204,15 @@ namespace Poulpe
       samplerLayoutBinding.pImmutableSamplers = nullptr;
       samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 
-      std::vector<VkDescriptorSetLayoutBinding> bindings = { uboLayoutBinding, samplerLayoutBinding };
+      VkDescriptorSetLayoutBinding normalMap{};
+      normalMap.binding = 2;
+      normalMap.descriptorCount = 1;
+      normalMap.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+      normalMap.pImmutableSamplers = nullptr;
+      normalMap.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+      std::vector<VkDescriptorSetLayoutBinding> bindings = { 
+          uboLayoutBinding, samplerLayoutBinding, normalMap };
 
       VkDescriptorSetLayout desriptorSetLayout = m_Adapter->rdr()->createDescriptorSetLayout(bindings);
 
@@ -222,7 +247,7 @@ namespace Poulpe
 
       imageInfos.emplace_back(imageInfo);
 
-      std::string specMapName = "textures_lion_bump";
+      std::string specMapName = "mpoulpe";
       std::string bumMapName = "mpoulpe";
 
       if (!mesh->getData()->m_TextureSpecularMap.empty() 
@@ -233,9 +258,9 @@ namespace Poulpe
       }
       Texture texSpecularMap = m_TextureManager->getTextures()[specMapName];
 
-      if (!mesh->getData()->m_TextureBumMap.empty() 
-          && m_TextureManager->getTextures().contains(mesh->getData()->m_TextureBumMap)) {
-          bumMapName = mesh->getData()->m_TextureBumMap;
+      if (!mesh->getData()->m_TextureBumpMap.empty() 
+          && m_TextureManager->getTextures().contains(mesh->getData()->m_TextureBumpMap)) {
+          bumMapName = mesh->getData()->m_TextureBumpMap;
         mesh->getData()->mapsUsed.x = 1.0f;
       }
 
@@ -264,6 +289,16 @@ namespace Poulpe
         for (uint32_t i = 0; i < m_Adapter->getSwapChainImages()->size(); i++) {
           descSets.emplace_back(descSet);
         }
+      }
+
+      for (size_t i = 0; i < mesh->getStorageBuffers()->size(); ++i) {
+          VkDescriptorSet descSet = m_Adapter->rdr()->createDescriptorSets(m_DescriptorPool, { mesh->getDescriptorSetLayout() }, 1);
+
+          m_Adapter->rdr()->updateStorageDescriptorSet(mesh->getStorageBuffers()->at(i), descSet);
+
+          for (uint32_t i = 0; i < m_Adapter->getSwapChainImages()->size(); i++) {
+              descSets.emplace_back(descSet);
+          }
       }
 
       return descSets;

@@ -20,7 +20,7 @@ namespace Poulpe
     private:
         std::unordered_map<uint32_t, std::unordered_map<VkBufferUsageFlags, std::vector<std::unique_ptr<DeviceMemory>>>> m_Pool;
         VkPhysicalDeviceProperties2 m_DeviceProperties;
-        VkPhysicalDeviceMaintenance3Properties m_MaintenceProperties;
+        VkPhysicalDeviceMaintenance3Properties m_MaintenanceProperties;
         VkDeviceSize m_MemoryAllocationCount = 0;
         VkDeviceSize m_MemoryAllocationSize = 0;
     };
