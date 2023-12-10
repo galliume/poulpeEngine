@@ -4,7 +4,7 @@ namespace Poulpe
 {
     void Camera::init()
     {
-        m_Pos = glm::vec3(0.0f, 0.5f, 1.0f);
+        m_Pos = glm::vec3(1.0f, 0.2f, 0.0f);
         m_Target = glm::vec3(0.0f, 0.0f, 0.0f);
         m_Direction = glm::normalize(m_Pos - m_Target);
         m_Up = glm::vec3(0.0f, 1.0f, 0.0f);

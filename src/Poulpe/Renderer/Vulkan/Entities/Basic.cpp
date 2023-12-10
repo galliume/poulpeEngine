@@ -59,6 +59,8 @@ namespace Poulpe
           }
         }
 
+        ObjectBuffer objectBuffer{};
+
         Material material{};
         material.ambient = mesh->getMaterial().ambient;
         material.diffuse = mesh->getMaterial().diffuse;
@@ -68,8 +70,13 @@ namespace Poulpe
         material.shiIorDiss = glm::vec3(mesh->getMaterial().shininess,
             mesh->getMaterial().ior, mesh->getMaterial().illum);
 
-        ObjectBuffer objectBuffer{};
+        objectBuffer.pointLights[0] = m_LightManager->getPointLights().at(0);
+        objectBuffer.pointLights[1] = m_LightManager->getPointLights().at(1);
+
+        objectBuffer.spotLight = m_LightManager->getSpotLights().at(0);
+
         objectBuffer.ambientLight = m_LightManager->getAmbientLight();
+
         objectBuffer.material = material;
 
         auto size = sizeof(objectBuffer);

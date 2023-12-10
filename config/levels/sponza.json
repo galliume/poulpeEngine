@@ -78,7 +78,7 @@
 			"form": "positioned",
 			"hasBbox": false,
 			"hasAnimation": false,
-			"isLightCaster": false
+			"isPointLight": false
 		},
 		"moon" : {
 			"mesh": "assets/mesh/moon/moon.obj",
@@ -87,7 +87,7 @@
 			},
 			"shader": "main_basic",
 			"positions": [
-				{"x": 0.5, "y": 4.5, "z": -3.00}
+				{"x": -1.5, "y": 2.0, "z": 0.00}
 			],
 			"scales": [
 				{"x": 0.2, "y": 0.2, "z": 0.2}
@@ -105,7 +105,7 @@
 			"form": "positioned",
 			"hasBbox": false,
 			"hasAnimation": false,
-			"isLightCaster": true
+			"isPointLight": true
 		}
 	}
 }
