@@ -19,7 +19,10 @@ namespace Poulpe
     };
 
     public:
-        Basic(VulkanAdapter* adapter, ShaderManager* shaderManager, TextureManager* textureManager);
+        Basic(VulkanAdapter* adapter,
+            ShaderManager* shaderManager,
+            TextureManager* textureManager,
+            LightManager* lightManager);
 
         void visit(float const deltaTime, Mesh* mesh) override;
 
@@ -40,6 +43,7 @@ namespace Poulpe
         VulkanAdapter* m_Adapter;
         ShaderManager* m_ShaderManager;
         TextureManager* m_TextureManager;
+        LightManager* m_LightManager;
         VkDescriptorPool m_DescriptorPool;
     };
 }
