@@ -16,7 +16,6 @@ namespace Poulpe
 
     struct material_t {
       std::string name;
-
       glm::vec3 ambient;
       glm::vec3 diffuse;
       glm::vec3 specular;
@@ -25,29 +24,20 @@ namespace Poulpe
       float shininess;
       float ior;       // index of refraction
       float dissolve;  // 1 == opaque; 0 == fully transparent
+      int illum;
       std::string ambientTexname;             // map_Ka
       std::string diffuseTexname;             // map_Kd
       std::string specularTexname;            // map_Ks
       std::string specularHighlightTexname;  // map_Ns
       std::string bumpTexname;                // map_bump, map_Bump, bump
-      std::string normalMapTexname;
-      int illum;
     };
 
     struct constants
     {
         int textureID;
-        int ambientLight;
-        float shininess;
         glm::mat4 view;
         glm::vec4 viewPos;
         glm::vec3 mapsUsed = glm::vec3(0.0f);
-        glm::vec3 ambient;
-        glm::vec3 ambientLightColor;
-        glm::vec3 lightDir;
-        glm::vec3 diffuseLight;
-        glm::vec3 specular;
-        glm::vec3 specularLight;
     };
 
     class Mesh
@@ -58,6 +48,32 @@ namespace Poulpe
             DeviceMemory* memory;
             uint32_t offset;
             uint32_t size;
+        };
+
+        struct DirLight
+        {
+            alignas(16) glm::vec3 color;
+            alignas(16) glm::vec3 direction;
+            alignas(16) glm::vec3 ambient;
+            alignas(16) glm::vec3 diffuse;
+            alignas(16) glm::vec3 specular;
+        };
+
+        struct Material
+        {
+            alignas(16) glm::vec3 ambient;
+            alignas(16) glm::vec3 diffuse;
+            alignas(16) glm::vec3 specular;
+            alignas(16) glm::vec3 transmittance;
+            alignas(16) glm::vec3 emission;
+            //shininess, ior, diss
+            alignas(16) glm::vec3 shiIorDiss;
+        };
+
+        struct ObjectBuffer
+        {
+            DirLight dirLight;
+            Material material;
         };
 
         struct Data {

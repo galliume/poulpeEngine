@@ -58,7 +58,7 @@
 				"textures_vase_round_bump": "assets/mesh/sponza/textures/vase_round_bump.png",
 				"textures_vase_round_spec": "assets/mesh/sponza/textures/vase_round_spec.png"
 			},           
-			"shader": "main",
+			"shader": "main_basic",
 			"positions": [
 				{"x": -0.20, "y": 0.1, "z": -0.20}
 			],
