@@ -26,7 +26,7 @@ namespace Poulpe
 
        switch (bufferType) {
            case DeviceBufferType::STORAGE:
-             bufferSize = m_DeviceProperties.properties.limits.maxStorageBufferRange * m_MaxStorage;
+             bufferSize = maxBufferSize / m_MaxStorage;
              bufferTypeDebug = "STORAGE";
            break;
            case DeviceBufferType::UNIFORM:
@@ -34,7 +34,7 @@ namespace Poulpe
              bufferTypeDebug = "UNIFORM";
            break;
            case DeviceBufferType::STAGING:
-             bufferSize = m_MaintenanceProperties.maxMemoryAllocationSize;
+             bufferSize = m_MaintenanceProperties.maxMemoryAllocationSize / m_MaxStaging;
              bufferTypeDebug = "STAGING";
            break;
            default:
@@ -49,9 +49,12 @@ namespace Poulpe
           for (size_t i = 0; i < poolUsage->second.size(); ++i) {
             auto& dm = poolUsage->second.at(i);
             if (!dm->isFull() && dm->hasEnoughSpaceLeft(size)) {
-              /*PLP_DEBUG("DM REUSE: id {}, type {}, size {} type {} usage {} full {} space left {}",
-                dm.get()->getID(), bufferTypeDebug, size, memoryType, usage, dm->isFull(), dm->getSpaceLeft());*/
+              //PLP_DEBUG("DM REUSE OK: id {}, {}, type {} usage {} size {}/{}",
+              //  dm.get()->getID(), bufferTypeDebug, memoryType, usage, size, dm->getSpaceLeft());
               return dm.get();
+            } else {
+              /*PLP_DEBUG("DM REUSE KO: id {}, {}, type {} usage {} size {}/{}",
+                dm.get()->getID(), bufferTypeDebug, memoryType, usage, size, dm->getSpaceLeft());*/
             }
           }
         }
@@ -63,9 +66,9 @@ namespace Poulpe
         m_Pool[memoryType][usage].emplace_back(std::make_unique<DeviceMemory>(device, memoryType, usage, bufferSize, m_DeviceMemoryCount));
         m_MemoryAllocationCount += 1;
         m_MemoryAllocationSize.at(memoryType) += bufferSize;
-        /*PLP_DEBUG("DM CREATION: id {}, type {}, id {}, size {} type {} usage {} ",
-          m_DeviceMemoryCount, bufferTypeDebug, m_MemoryAllocationCount, bufferSize, memoryType, usage);*/
+        /*PLP_DEBUG("DM CREATION: id {}, {}, type {} usage {} size {}", m_DeviceMemoryCount, bufferTypeDebug, memoryType, usage, bufferSize);*/
         m_DeviceMemoryCount += 1;
+        m_MemorySizeAllocated += size;
         return m_Pool[memoryType][usage].back().get();
       } else {
 
@@ -76,9 +79,9 @@ namespace Poulpe
         m_Pool[memoryType][usage].emplace_back(std::make_unique<DeviceMemory>(device, memoryType, usage, bufferSize, m_DeviceMemoryCount));
         m_MemoryAllocationCount += 1;
         m_MemoryAllocationSize.at(memoryType) += bufferSize;
-        /*PLP_DEBUG("DM CREATION: id {}, type {}, id {}, size {} type {} usage {} ",
-        m_DeviceMemoryCount, bufferTypeDebug, m_MemoryAllocationCount, bufferSize, memoryType, usage);*/
+        /*PLP_DEBUG("DM CREATION: id {}, {}, type {} usage {} size {}", m_DeviceMemoryCount, bufferTypeDebug, memoryType, usage, bufferSize);*/
         m_DeviceMemoryCount += 1;
+        m_MemorySizeAllocated += size;
         return m_Pool[memoryType][usage].back().get();
       }
     }

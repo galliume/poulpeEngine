@@ -54,13 +54,29 @@ namespace Poulpe
           }
         }
 
-        //loading normal map
-        size_t size = sizeof(std::array<float, 3>);// why storage has to have a value?
-        if (!mesh->getData()->m_TextureBumpMap.empty()) {
-            auto const& map = m_TextureManager->addNormalMapTexture(mesh->getData()->m_TextureBumpMap);
-            size = sizeof(std::array<float, 3>) * map.size();
-        }
+        Mesh::DirLight dirLight{};
+        dirLight.color = glm::vec3(1.0);
+        dirLight.direction = glm::vec3(0.0, 4.0, 0.0);
+        dirLight.ambient = glm::vec3(0.4);
+        dirLight.diffuse = glm::vec3(0.7);
+        dirLight.specular = glm::vec3(1.0f);
+
+        Mesh::Material material{};
+        material.ambient = mesh->getMaterial().ambient;
+        material.diffuse = mesh->getMaterial().diffuse;
+        material.specular = mesh->getMaterial().specular;
+        material.transmittance = mesh->getMaterial().transmittance;
+        material.emission = mesh->getMaterial().emission;
+        material.shiIorDiss = glm::vec3(mesh->getMaterial().shininess,
+            mesh->getMaterial().ior, mesh->getMaterial().illum);
+
+        Mesh::ObjectBuffer objectBuffer{};
+        objectBuffer.dirLight = dirLight;
+        objectBuffer.material = material;
+
+        auto size = sizeof(objectBuffer);
         mesh->addStorageBuffer(m_Adapter->rdr()->createStorageBuffers(size));
+        m_Adapter->rdr()->updateStorageBuffer(mesh->getStorageBuffers()->at(0), objectBuffer);
         mesh->setHasBufferStorage();
 
         std::vector<VkDescriptorPoolSize> poolSizes{};
@@ -261,7 +277,7 @@ namespace Poulpe
       imageInfos.emplace_back(imageInfo);
 
       std::string specMapName = "mpoulpe";
-      std::string bumMapName = "mpoulpe";
+      std::string bumpMapName = "mpoulpe";
 
       if (!mesh->getData()->m_TextureSpecularMap.empty() 
           && m_TextureManager->getTextures().contains(mesh->getData()->m_TextureSpecularMap)) {
@@ -273,12 +289,12 @@ namespace Poulpe
 
       if (!mesh->getData()->m_TextureBumpMap.empty() 
           && m_TextureManager->getTextures().contains(mesh->getData()->m_TextureBumpMap)) {
-          bumMapName = mesh->getData()->m_TextureBumpMap;
+          bumpMapName = mesh->getData()->m_TextureBumpMap;
           mesh->getData()->mapsUsed.x = 1.0f;
       }
 
-      Texture texBumpMap = m_TextureManager->getTextures()[bumMapName];
-
+      Texture texBumpMap = m_TextureManager->getTextures()[bumpMapName];
+      
       VkDescriptorImageInfo imageInfoSpecularMap{};
       imageInfoSpecularMap.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
       imageInfoSpecularMap.imageView = texSpecularMap.getImageView();
@@ -297,8 +313,10 @@ namespace Poulpe
       for (size_t i = 0; i < mesh->getUniformBuffers()->size(); ++i) {
         VkDescriptorSet descSet = m_Adapter->rdr()->createDescriptorSets(m_DescriptorPool, { mesh->getDescriptorSetLayout()}, 1);
 
-        m_Adapter->rdr()->updateDescriptorSet(mesh->getUniformBuffers()->at(i), descSet, imageInfos);
-        m_Adapter->rdr()->updateStorageDescriptorSets(*mesh->getStorageBuffers(), descSet);
+        m_Adapter->rdr()->updateDescriptorSet(
+            mesh->getUniformBuffers()->at(i),
+            mesh->getStorageBuffers()->at(0),
+            descSet, imageInfos);
 
         for (uint32_t i = 0; i < m_Adapter->getSwapChainImages()->size(); i++) {
           descSets.emplace_back(descSet);
@@ -351,24 +369,8 @@ namespace Poulpe
 
             constants pushConstants{};
             pushConstants.textureID = mesh->getData()->m_TextureIndex;
-            
-            
             pushConstants.view = adapter->getCamera()->lookAt();
             pushConstants.viewPos = adapter->getCamera()->getPos();
-
-            pushConstants.lightDir = glm::vec3(0.5, 2.5, -0.2);
-
-            pushConstants.ambient = mesh->getMaterial().ambient;
-            pushConstants.ambientLight = 1.0;
-            pushConstants.ambientLightColor = glm::vec3(1.0f);
-
-            pushConstants.diffuseLight = glm::vec3(0.8);
-
-            pushConstants.specular = mesh->getMaterial().specular;
-            pushConstants.specularLight = glm::vec3(1.0);
-
-            pushConstants.shininess = mesh->getMaterial().shininess;
-
             pushConstants.mapsUsed = mesh->getData()->mapsUsed;
 
             vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(constants),

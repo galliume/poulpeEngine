@@ -62,6 +62,9 @@ namespace Poulpe {
         void updateDescriptorSet(Mesh::Buffer & uniformBuffer, VkDescriptorSet & descriptorSet,
             std::vector<VkDescriptorImageInfo> & imageInfo, VkDescriptorType type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
 
+        void updateDescriptorSet(Mesh::Buffer & uniformBuffer, Mesh::Buffer & storageBuffer, VkDescriptorSet & descriptorSet,
+            std::vector<VkDescriptorImageInfo> & imageInfo);
+
         void updateStorageDescriptorSets(std::vector<Mesh::Buffer> & uniformBuffers, VkDescriptorSet & descriptorSet, 
             VkDescriptorType type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER);
 
@@ -160,7 +163,7 @@ namespace Poulpe {
 
         Mesh::Buffer createStorageBuffers(size_t storageBuffer);
 
-        void updateStorageBuffer(Mesh::Buffer buffer, std::vector<UniformBufferObject> bufferObjects);
+        void updateStorageBuffer(Mesh::Buffer & buffer, Mesh::ObjectBuffer objectBuffer);
 
         void setResolution(unsigned int width, unsigned int height);
 
