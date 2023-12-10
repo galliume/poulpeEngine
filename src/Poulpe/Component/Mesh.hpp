@@ -148,8 +148,8 @@ namespace Poulpe
         void setHasBufferStorage(bool has = true) { m_HasStorageBuffer = has; }
         bool hasBufferStorage() { return m_HasStorageBuffer; }
 
-        void setIsLightCaster(bool is = true) { m_IsLightCaster = is; }
-        bool isLightCaster() { return m_IsLightCaster; }
+        void setIsPointLight(bool is = true) { m_IsPointLight = is; }
+        bool isPointLight() { return m_IsPointLight; }
 
     private:
         std::vector<VkDescriptorSet> m_DescriptorSets;
@@ -178,6 +178,6 @@ namespace Poulpe
         material_t m_Material;
         bool m_IsIndexed{ true };
         bool m_HasStorageBuffer{ false };
-        bool m_IsLightCaster{ false };
+        bool m_IsPointLight{ false };
     };
 }

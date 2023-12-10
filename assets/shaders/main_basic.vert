@@ -7,10 +7,6 @@ struct UBO
 {
     mat4 model;
     mat4 projection;
-    float constant;
-    float linear;
-    float quadratic;
-    vec2 texSize;
 };
 
 layout(set = 0, binding = 0) uniform UniformBufferObject {
@@ -32,11 +28,7 @@ layout(location = 3) in vec4 tangent;
 
 layout(location = 0) out VS_OUT {
     flat int fTextureID;
-    float fConstant;
-    float fLinear;
-    float fQuadratic;
     vec2 fTexCoord;
-    vec2 fTexSize;
     vec3 fNormal;
     vec3 fPos;
     vec3 fMapsUsed;
@@ -62,8 +54,4 @@ void main()
     vs_out.fTextureID = pc.textureID;
     vs_out.fMapsUsed = pc.mapsUsed;
     vs_out.fViewPos = pc.viewPos;
-    vs_out.fConstant = ubos[gl_InstanceIndex].constant;
-    vs_out.fLinear = ubos[gl_InstanceIndex].linear;
-    vs_out.fQuadratic = ubos[gl_InstanceIndex].quadratic;
-    vs_out.fTexSize = ubos[gl_InstanceIndex].texSize;
 } 
