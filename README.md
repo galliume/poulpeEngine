@@ -81,6 +81,8 @@ Just download, unzip and copy paste in assets/mesh.
 
 All levels are described in config/levels, for those meshes they should be fine as it is.
 
+Models downloaded from Morgan McGuire's [Computer Graphics Archive](https://casual-effects.com/data)
+
 [help to configure the project](https://github.com/galliume/poulpeEngine/wiki/Env-config)
 
 ### Keyboard shortcuts (azerty)

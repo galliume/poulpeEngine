@@ -21,9 +21,13 @@ namespace Poulpe
     {
         alignas(16) glm::vec3 color;
         alignas(16) glm::vec3 direction;
-        alignas(16) glm::vec3 ambient;
-        alignas(16) glm::vec3 diffuse;
-        alignas(16) glm::vec3 specular;
+        alignas(16) glm::vec3 position;
+        //ambiance diffuse specular
+        alignas(16) glm::vec3 ads;
+        //constant, linear, quadratiq
+        alignas(16) glm::vec3 clq;
+        //cutOff, outerCutoff Blank
+        alignas(16) glm::vec3 coB{ 1.0, 0.0, 0.0 };
     };
 
     struct Material
@@ -40,6 +44,8 @@ namespace Poulpe
     struct ObjectBuffer
     {
         Light ambientLight;
+        std::array<Light, 2> pointLights;
+        Light spotLight;
         Material material;
     };
 }

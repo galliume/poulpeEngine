@@ -346,7 +346,8 @@
 			},
 			"form": "positioned",
 			"hasBbox": false,
-			"hasAnimation": false
+			"hasAnimation": false,
+			"isPointLight": false
 		}	
 	}
 }
