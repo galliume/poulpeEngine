@@ -18,7 +18,7 @@ layout(location = 0) in VS_OUT {
     mat3 TBN;
 } fs_in;
 
-struct DirLight {
+struct Light {
     vec3 color;
     vec3 direction;
     vec3 ambient;
@@ -40,7 +40,7 @@ struct Material
 layout(binding = 1) uniform sampler2D texSampler[3];
 
 layout(binding = 2) buffer ObjectBuffer {
-    DirLight dirLight;
+    Light ambientLight;
     Material material;
 };
 
@@ -74,14 +74,14 @@ void main()
       normal = vec3(normalize(nm));
     }
 
-    vec3 lightDir = normalize(dirLight.direction - fs_in.fPos);
+    vec3 lightDir = normalize(ambientLight.direction - fs_in.fPos);
     float distance = length(lightDir - fs_in.fPos);
     float attenuation = 1.0 / (fs_in.fConstant + fs_in.fLinear * distance + fs_in.fQuadratic * (distance * distance));
     
-    vec3 ambient = dirLight.ambient * material.ambient * dirLight.color;
+    vec3 ambient = ambientLight.ambient * material.ambient * ambientLight.color;
 
     float diff = max(dot(normal, lightDir), 0.0);
-    vec3 diffuse = material.diffuse * dirLight.color * diff * dirLight.diffuse * texture(texSampler[0], fs_in.fTexCoord).xyz;
+    vec3 diffuse = material.diffuse * ambientLight.color * diff * ambientLight.diffuse * texture(texSampler[0], fs_in.fTexCoord).xyz;
 
     vec3 viewDir = normalize(fs_in.fViewPos.xyz - fs_in.fPos.xyz);
     vec3 h = normalize(lightDir + viewDir);
@@ -89,10 +89,10 @@ void main()
 
     if (fs_in.fMapsUsed.y > 0.0) {
       float spec = pow(clamp(dot(normal, h), 0.0, 1.0), material.shiIorDiss.x) * float(dot(normal, lightDir) > 0.0);
-      specular = dirLight.color * (spec * material.specular * texture(texSampler[1], fs_in.fTexCoord).xyz) / distance;
+      specular = ambientLight.color * (spec * material.specular * texture(texSampler[1], fs_in.fTexCoord).xyz) / distance;
     } else {
       float spec = pow(clamp(dot(normal, h), 0.0, 1.0), material.shiIorDiss.x) * float(dot(normal, h) > 0.0) * float(dot(normal, lightDir) > 0.0);
-      specular = dirLight.color * (dirLight.specular * spec * material.specular) / distance;
+      specular = ambientLight.color * (ambientLight.specular * spec * material.specular) / distance;
     }
 
     float gamma = 2.2;

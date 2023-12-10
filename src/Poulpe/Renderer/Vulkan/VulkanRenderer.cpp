@@ -1866,7 +1866,7 @@ namespace Poulpe {
         }
     }
 
-    void VulkanRenderer::updateStorageBuffer(Mesh::Buffer & buffer, Mesh::ObjectBuffer objectBuffer)
+    void VulkanRenderer::updateStorageBuffer(Mesh::Buffer & buffer, ObjectBuffer objectBuffer)
     {
         {
             buffer.memory->lock();

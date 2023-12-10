@@ -50,32 +50,6 @@ namespace Poulpe
             uint32_t size;
         };
 
-        struct DirLight
-        {
-            alignas(16) glm::vec3 color;
-            alignas(16) glm::vec3 direction;
-            alignas(16) glm::vec3 ambient;
-            alignas(16) glm::vec3 diffuse;
-            alignas(16) glm::vec3 specular;
-        };
-
-        struct Material
-        {
-            alignas(16) glm::vec3 ambient;
-            alignas(16) glm::vec3 diffuse;
-            alignas(16) glm::vec3 specular;
-            alignas(16) glm::vec3 transmittance;
-            alignas(16) glm::vec3 emission;
-            //shininess, ior, diss
-            alignas(16) glm::vec3 shiIorDiss;
-        };
-
-        struct ObjectBuffer
-        {
-            DirLight dirLight;
-            Material material;
-        };
-
         struct Data {
             std::string m_Name;
             std::string m_Texture;
@@ -174,6 +148,9 @@ namespace Poulpe
         void setHasBufferStorage(bool has = true) { m_HasStorageBuffer = has; }
         bool hasBufferStorage() { return m_HasStorageBuffer; }
 
+        void setIsLightCaster(bool is = true) { m_IsLightCaster = is; }
+        bool isLightCaster() { return m_IsLightCaster; }
+
     private:
         std::vector<VkDescriptorSet> m_DescriptorSets;
         VkPipelineLayout m_PipelineLayout;
@@ -201,5 +178,6 @@ namespace Poulpe
         material_t m_Material;
         bool m_IsIndexed{ true };
         bool m_HasStorageBuffer{ false };
+        bool m_IsLightCaster{ false };
     };
 }
