@@ -3,6 +3,7 @@
 
 namespace Poulpe
 {
+    //@todo manage memory fragmentation
     class DeviceMemoryPool
     {
     public:
@@ -29,10 +30,12 @@ namespace Poulpe
         VkPhysicalDeviceProperties2 m_DeviceProperties;
         [[maybe_unused]] VkPhysicalDeviceMaintenance3Properties m_MaintenanceProperties;
         VkPhysicalDeviceMemoryProperties m_MemProperties;
-        VkDeviceSize m_MemoryAllocationCount = 0;
+        VkDeviceSize m_MemoryAllocationCount{ 0 };
+        VkDeviceSize m_MemorySizeAllocated{ 0 };
         std::vector<VkDeviceSize> m_MemoryAllocationSize{0};
         unsigned int m_DeviceMemoryCount{ 0 };
-        unsigned int const m_MaxUniform{ 100 };
-        unsigned int const m_MaxStorage{ 10 };
+        unsigned int const m_MaxUniform{ 1000 };
+        unsigned int const m_MaxStorage{ 2 };
+        unsigned int const m_MaxStaging{ 5 };
     };
 }

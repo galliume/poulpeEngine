@@ -81,7 +81,7 @@ namespace Poulpe
 
     bool DeviceMemory::hasEnoughSpaceLeft(VkDeviceSize size)
     { 
-        bool hasEnoughSpaceLeft = m_MaxSize > m_Offset + size;
+        bool hasEnoughSpaceLeft = m_MaxSize - m_Offset >= size;
         if (!hasEnoughSpaceLeft) m_IsFull = true;
 
         return hasEnoughSpaceLeft;

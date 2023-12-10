@@ -19,9 +19,13 @@ fi
 
 echo "Compiling shaders"
 
-${GLSLC_BIN} ./assets/shaders/shader.vert -o ./assets/shaders/spv/vert.spv
-${GLSLC_BIN} ./assets/shaders/shader.frag -o ./assets/shaders/spv/frag.spv
-echo "Shader [shader] compiled"
+${GLSLC_BIN} ./assets/shaders/main_basic.vert -o ./assets/shaders/spv/main_basic_vert.spv
+${GLSLC_BIN} ./assets/shaders/main_basic.frag -o ./assets/shaders/spv/main_basic_frag.spv
+echo "Shader [main_basic] compiled"
+
+${GLSLC_BIN} ./assets/shaders/main_basic_no_texture.vert -o ./assets/shaders/spv/main_basic_no_texture_vert.spv
+${GLSLC_BIN} ./assets/shaders/main_basic_no_texture.frag -o ./assets/shaders/spv/main_basic_no_texture_frag.spv
+echo "Shader [main_basic_no_texture] compiled"
 
 ${GLSLC_BIN} ./assets/shaders/skybox.vert -o ./assets/shaders/spv/skybox_vert.spv
 ${GLSLC_BIN} ./assets/shaders/skybox.frag -o ./assets/shaders/spv/skybox_frag.spv

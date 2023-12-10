@@ -1268,8 +1268,11 @@ namespace Poulpe {
         vkUpdateDescriptorSets(m_Device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
     }
 
-    void VulkanRenderer::updateDescriptorSet(Mesh::Buffer & uniformBuffer, VkDescriptorSet & descriptorSet,
-        std::vector<VkDescriptorImageInfo> & imageInfo, VkDescriptorType type)
+    void VulkanRenderer::updateDescriptorSet(
+        Mesh::Buffer & uniformBuffer,
+        VkDescriptorSet & descriptorSet,
+        std::vector<VkDescriptorImageInfo> & imageInfo,
+        VkDescriptorType type)
     {
         std::array<VkWriteDescriptorSet, 2> descriptorWrites{};
         std::vector<VkDescriptorBufferInfo> bufferInfos;
@@ -1295,6 +1298,55 @@ namespace Poulpe {
         descriptorWrites[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
         descriptorWrites[1].descriptorCount = imageInfo.size();
         descriptorWrites[1].pImageInfo = imageInfo.data();
+
+        vkUpdateDescriptorSets(m_Device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
+    }
+
+    void VulkanRenderer::updateDescriptorSet(
+        Mesh::Buffer & uniformBuffer,
+        Mesh::Buffer & storageBuffer,
+        VkDescriptorSet & descriptorSet,
+        std::vector<VkDescriptorImageInfo> & imageInfo)
+    {
+        std::array<VkWriteDescriptorSet, 3> descriptorWrites{};
+        std::vector<VkDescriptorBufferInfo> bufferInfos;
+        std::vector<VkDescriptorBufferInfo> storageBufferInfos;
+
+        VkDescriptorBufferInfo bufferInfo{};
+        bufferInfo.buffer = uniformBuffer.buffer;
+        bufferInfo.offset = 0;
+        bufferInfo.range = VK_WHOLE_SIZE;
+        bufferInfos.emplace_back(bufferInfo);
+
+        VkDescriptorBufferInfo storageBufferInfo{};
+        storageBufferInfo.buffer = storageBuffer.buffer;
+        storageBufferInfo.offset = 0;
+        storageBufferInfo.range = VK_WHOLE_SIZE;
+        storageBufferInfos.emplace_back(storageBufferInfo);
+
+        descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        descriptorWrites[0].dstSet = descriptorSet;
+        descriptorWrites[0].dstBinding = 0;
+        descriptorWrites[0].dstArrayElement = 0;
+        descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        descriptorWrites[0].descriptorCount = 1;
+        descriptorWrites[0].pBufferInfo = bufferInfos.data();
+
+        descriptorWrites[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        descriptorWrites[1].dstSet = descriptorSet;
+        descriptorWrites[1].dstBinding = 1;
+        descriptorWrites[1].dstArrayElement = 0;
+        descriptorWrites[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        descriptorWrites[1].descriptorCount = imageInfo.size();
+        descriptorWrites[1].pImageInfo = imageInfo.data();
+
+        descriptorWrites[2].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        descriptorWrites[2].dstSet = descriptorSet;
+        descriptorWrites[2].dstBinding = 2;
+        descriptorWrites[2].dstArrayElement = 0;
+        descriptorWrites[2].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+        descriptorWrites[2].descriptorCount = storageBufferInfos.size();
+        descriptorWrites[2].pBufferInfo = storageBufferInfos.data();
 
         vkUpdateDescriptorSets(m_Device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
     }
@@ -1411,10 +1463,10 @@ namespace Poulpe {
         submitInfo.commandBufferCount = 1;
         submitInfo.pCommandBuffers = &commandBuffer;
 
-        vkResetFences(m_Device, 1, &m_FenceSubmit);
         VkResult result = VK_SUCCESS;
         {
             std::lock_guard<std::mutex> guard(m_MutexQueueSubmit);
+            vkResetFences(m_Device, 1, &m_FenceSubmit);
 
             result = vkQueueSubmit(m_GraphicsQueues[queueIndex], 1, &submitInfo, m_FenceSubmit);
             vkWaitForFences(m_Device, 1, & m_FenceSubmit, VK_TRUE, UINT32_MAX);
@@ -1451,10 +1503,10 @@ namespace Poulpe {
 
         submits.emplace_back(submitInfo);
         
-        vkResetFences(m_Device, 1, & m_InFlightFences[m_CurrentFrame]);
         VkResult result = VK_SUCCESS;
         {
             std::lock_guard<std::mutex> guard(m_MutexQueueSubmit);
+            vkResetFences(m_Device, 1, & m_InFlightFences[m_CurrentFrame]);
             result = vkQueueSubmit(m_GraphicsQueues[queueIndex], submits.size(), submits.data(),
                 m_InFlightFences[m_CurrentFrame]);
             vkWaitForFences(m_Device, 1, & m_InFlightFences[m_CurrentFrame], VK_TRUE, UINT32_MAX);
@@ -1752,7 +1804,7 @@ namespace Poulpe {
         VkMemoryRequirements memRequirements;
         vkGetBufferMemoryRequirements(m_Device, buffer, & memRequirements);
 
-        auto memoryType = findMemoryType(memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+        auto memoryType = findMemoryType(memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT | VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
 
         uint32_t size = ((memRequirements.size / memRequirements.alignment) + 1) * memRequirements.alignment;
         if (size <= memRequirements.size) size = memRequirements.size + memRequirements.alignment;
@@ -1814,7 +1866,7 @@ namespace Poulpe {
         }
     }
 
-    void VulkanRenderer::updateStorageBuffer(Mesh::Buffer buffer, std::vector<UniformBufferObject> bufferObjects)
+    void VulkanRenderer::updateStorageBuffer(Mesh::Buffer & buffer, Mesh::ObjectBuffer objectBuffer)
     {
         {
             buffer.memory->lock();
@@ -1822,7 +1874,7 @@ namespace Poulpe {
             auto memory = buffer.memory->getMemory();
             void* data;
             vkMapMemory(m_Device, *memory, buffer.offset, buffer.size, 0, &data);
-            memcpy(data, bufferObjects.data(), buffer.size);
+            memcpy(data, & objectBuffer, buffer.size);
             vkUnmapMemory(m_Device, *memory);
 
             buffer.memory->unLock();
@@ -1860,9 +1912,9 @@ namespace Poulpe {
         submitInfo.commandBufferCount = 1;
         submitInfo.pCommandBuffers = & commandBuffer;
 
-        vkResetFences(m_Device, 1, & m_FenceBuffer);
         {
             std::lock_guard<std::mutex> guard(m_MutexQueueSubmit);
+            vkResetFences(m_Device, 1, & m_FenceBuffer);
 
             vkQueueSubmit(m_GraphicsQueues[queueIndex], 1, & submitInfo, m_FenceBuffer);
             vkWaitForFences(m_Device, 1, & m_FenceBuffer, VK_TRUE, UINT32_MAX);
