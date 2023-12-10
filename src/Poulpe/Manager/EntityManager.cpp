@@ -296,10 +296,12 @@ namespace Poulpe
 
             std::vector<Mesh::BBox> bboxs{};
             
-            auto nameTexture = textureNames[listData[i].materialId];
+            auto nameTexture = (!textureNames.empty())
+                ? textureNames.at(listData[i].materialId)
+                : "mpoulpe";
+
             std::string nameTextureSpecularMap;
             std::string bumpTexname;
-            std::string normalMapTexname;
 
             if (!TinyObjLoader::m_TinyObjMaterials.empty()) {
                 
@@ -318,7 +320,6 @@ namespace Poulpe
 
                 if (!TinyObjLoader::m_TinyObjMaterials.at(listData[i].materialId).bumpTexname.empty()) {
                     bumpTexname = TinyObjLoader::m_TinyObjMaterials.at(listData[i].materialId).bumpTexname;
-                    normalMapTexname = TinyObjLoader::m_TinyObjMaterials.at(listData[i].materialId).normalMapTexname;
                 }
             }
 
@@ -327,7 +328,6 @@ namespace Poulpe
             data.m_Texture = nameTexture;
             data.m_TextureSpecularMap = nameTextureSpecularMap;
             data.m_TextureBumpMap = bumpTexname;
-            data.m_TextureNormalMap = normalMapTexname;
             data.m_Vertices = listData[i].vertices;
             data.m_Indices = listData[i].indices;
             data.m_OriginPos = pos;

@@ -63,14 +63,19 @@ namespace Poulpe
           mat.specularTexname = cleanName(material.specular_texname);
           mat.specularHighlightTexname = cleanName(material.specular_highlight_texname);
           mat.bumpTexname = cleanName(material.bump_texname);
-          mat.normalMapTexname = "_plp_normal_map" + mat.bumpTexname;
           mat.illum = material.illum;
 
           m_TinyObjMaterials.emplace_back(mat);
         }
 
         std::unordered_map<Poulpe::Vertex, uint32_t> uniqueVertices{};
-        uniqueVertices.clear();
+        
+        //@todo refacto...
+        std::unordered_map<uint32_t, std::array<unsigned int, 3>> triangles;
+        std::unordered_map<uint32_t, Poulpe::Vertex*> listVertex;
+        std::unordered_map<uint32_t, Poulpe::Vertex*> iToVertex;
+
+        uint32_t i = 0, k = 0;
 
         //glm::vec3 pos = glm::vec3(0.0f);
         for (uint32_t s = 0; s < shapes.size(); s++) {
@@ -103,7 +108,7 @@ namespace Poulpe
 
                         vertex.normal = { nx, ny, nz };
                     } else {
-                        vertex.normal = { 0, 0, 0 };
+                        vertex.normal = { 1, 1, 1 };
                     }
 
                     // Check if `texcoord_index` is zero or positive. negative = no texcoord data
@@ -126,8 +131,20 @@ namespace Poulpe
                     if (uniqueVertices.count(vertex) == 0) {
                         uniqueVertices[vertex] = static_cast<uint32_t>(data.vertices.size());
                         data.vertices.push_back(vertex);
-                    }
 
+                        triangles[i][0] = 3 * size_t(idx.vertex_index) + 0;
+                        triangles[i][1] = 3 * size_t(idx.vertex_index) + 1;
+                        triangles[i][2] = 3 * size_t(idx.vertex_index) + 2;
+                    
+                        listVertex[3 * size_t(idx.vertex_index) + 0] = &vertex;
+                        listVertex[3 * size_t(idx.vertex_index) + 1] = &vertex;
+                        listVertex[3 * size_t(idx.vertex_index) + 2] = &vertex;
+
+                        iToVertex[i] = &vertex;
+
+                        i += 1;
+                    }
+                    k += 1;
                     data.indices.push_back(uniqueVertices[vertex]);
                 }
 
@@ -143,24 +160,28 @@ namespace Poulpe
             std::vector<glm::vec3> bitangents{};
             auto def = glm::vec3(0.0f);
 
-            for (size_t i = 0; i < data.indices.size(); ++i) {
+            for (size_t i = 0; i < k*2; ++i) {
                 tangents.emplace_back(def);
                 bitangents.emplace_back(def);
             }
 
-            for (size_t i = 0; i < data.indices.size(); i += 3)
+            for (size_t i = 0; i < triangles.size(); ++i)
             {
-                uint32_t i0 = data.indices[i + 0];
-                uint32_t i1 = data.indices[i + 1];
-                uint32_t i2 = data.indices[i + 2];
+                uint32_t i0 = triangles[i][0];
+                uint32_t i1 = triangles[i][1];
+                uint32_t i2 = triangles[i][2];
  
-                glm::vec3 & p0 = data.vertices[i0].pos;
-                glm::vec3 & p1 = data.vertices[i1].pos;
-                glm::vec3 & p2 = data.vertices[i2].pos;
+                auto& vertex01 = listVertex[i0];
+                auto& vertex02 = listVertex[i1];
+                auto& vertex03 = listVertex[i2];
+
+                glm::vec3 & p0 = vertex01->pos;
+                glm::vec3 & p1 = vertex02->pos;
+                glm::vec3 & p2 = vertex03->pos;
  
-                glm::vec2 & w0 = data.vertices[i0].texCoord;
-                glm::vec2 & w1 = data.vertices[i1].texCoord;
-                glm::vec2 & w2 = data.vertices[i2].texCoord;
+                glm::vec2 & w0 = vertex01->texCoord;
+                glm::vec2 & w1 = vertex02->texCoord;
+                glm::vec2 & w2 = vertex03->texCoord;
 
                 glm::vec3 e1 = p1 - p0;
                 glm::vec3 e2 = p2 - p0;
@@ -183,16 +204,18 @@ namespace Poulpe
                 bitangents[i2] += b;
             }
 
-            for (size_t i = 0; i < data.vertices.size(); ++i) {
+            for (size_t i = 0; i < triangles.size(); ++i) {
+                auto& vertex = iToVertex[i];
+
                 auto t = tangents[i];
                 auto b = bitangents[i];
-                auto n = data.vertices.at(i).normal;
+                auto n = vertex->normal;
 
                 auto a =  glm::normalize((t - n * (glm::dot(t, n) / glm::dot(n, n))));
                 auto w = (glm::dot(glm::cross(t, b), n) > 0.0f) ? 1.0f : -1.0f;
 
                 //data.vertices.at(i).texCoord.y *= w;
-                data.vertices.at(i).tangent = glm::vec4{a.x, a.y, a.z, w};
+                vertex->tangent = glm::vec4{a.x, a.y, a.z, w};
             }
 
             dataList.emplace_back(data);

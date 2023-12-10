@@ -1,13 +1,17 @@
 {
 	"entities": {
-		"groundCube" : {
-			"mesh": "assets/mesh/minecraft/Grass_Block.obj",
+		"backpack" : {
+			"mesh": "assets/mesh/backpack/backpack.obj",
 			"textures": {
-				"Grass_Block_TEX": "assets/mesh/minecraft/Grass_Block_TEX.png"
+				"ao": "assets/mesh/backpack/ao.jpg",
+				"diffuse": "assets/mesh/backpack/diffuse.jpg",
+				"normal": "assets/mesh/backpack/normal.png",
+				"roughness": "assets/mesh/backpack/roughness.jpg",
+				"specular": "assets/mesh/backpack/specular.jpg"
 			},
-			"shader": "main",
+			"shader": "main_basic",
 			"positions": [
-				{"x": -0.20, "y": 0.1, "z": -0.20}
+				{"x": 0.0, "y": 0.5, "z": 0.00}
 			],
 			"scales": [
 				{"x": 0.1, "y": 0.1, "z": 0.1}
@@ -15,17 +19,16 @@
 			"rotations": [
 				{"x": 0.0, "y": 0.0, "z": 0.0}
 			],
-			"inverseTextureY": true,
+			"inverseTextureY": false,
 			"count": 1,
 			"padding": {
-				"x": 1,
-				"y": 1,
+				"x": 0,
+				"y": 0,
 				"z": 0
 			},
-			"form": "square",
-			"squarePadding": [{"x" : [0, 1], "y": [0, 1]}],
+			"form": "positioned",
 			"hasBbox": false,
-			"hasAnimation": false
+			"hasAnimation": true
 		}	
 	}
 }
