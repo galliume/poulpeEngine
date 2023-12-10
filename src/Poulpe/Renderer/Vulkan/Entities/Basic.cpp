@@ -1,14 +1,19 @@
 #include "Basic.hpp"
+
 #include "Poulpe/Renderer/Adapter/VulkanAdapter.hpp"
 
 namespace Poulpe
 {
     struct constants;
 
-    Basic::Basic(VulkanAdapter* adapter, ShaderManager* shaderManager, TextureManager* textureManager)
+    Basic::Basic(VulkanAdapter* adapter,
+        ShaderManager* shaderManager,
+        TextureManager* textureManager,
+        LightManager* lightManager)
         : m_Adapter(adapter),
         m_ShaderManager(shaderManager),
-        m_TextureManager(textureManager)
+        m_TextureManager(textureManager),
+        m_LightManager(lightManager)
     {
 
     }
@@ -54,14 +59,7 @@ namespace Poulpe
           }
         }
 
-        Mesh::DirLight dirLight{};
-        dirLight.color = glm::vec3(1.0);
-        dirLight.direction = glm::vec3(0.0, 4.0, 0.0);
-        dirLight.ambient = glm::vec3(0.4);
-        dirLight.diffuse = glm::vec3(0.7);
-        dirLight.specular = glm::vec3(1.0f);
-
-        Mesh::Material material{};
+        Material material{};
         material.ambient = mesh->getMaterial().ambient;
         material.diffuse = mesh->getMaterial().diffuse;
         material.specular = mesh->getMaterial().specular;
@@ -70,8 +68,8 @@ namespace Poulpe
         material.shiIorDiss = glm::vec3(mesh->getMaterial().shininess,
             mesh->getMaterial().ior, mesh->getMaterial().illum);
 
-        Mesh::ObjectBuffer objectBuffer{};
-        objectBuffer.dirLight = dirLight;
+        ObjectBuffer objectBuffer{};
+        objectBuffer.ambientLight = m_LightManager->getAmbientLight();
         objectBuffer.material = material;
 
         auto size = sizeof(objectBuffer);

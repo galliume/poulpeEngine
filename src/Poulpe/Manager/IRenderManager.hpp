@@ -8,6 +8,7 @@
 #include "ShaderManager.hpp"
 #include "SpriteAnimationManager.hpp"
 #include "TextureManager.hpp"
+#include "LightManager.hpp"
 
 #include "Poulpe/Component/Camera.hpp"
 #include "Poulpe/Component/Mesh.hpp"
@@ -41,6 +42,7 @@ namespace Poulpe
         virtual ConfigManager* getConfigManager() = 0;
         virtual DestroyManager* getDestroyManager() = 0;
         virtual ComponentManager* getComponentManager() = 0;
+        virtual LightManager* getLightManager() = 0;
 
         virtual void cleanUp() = 0;
         virtual void refresh(uint32_t levelIndex, bool showBbox = false, std::string_view skybox = "debug") = 0;

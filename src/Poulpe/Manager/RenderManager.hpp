@@ -31,6 +31,7 @@ namespace Poulpe
         ConfigManager* getConfigManager() override { return m_ConfigManager.get(); }
         DestroyManager* getDestroyManager() override { return m_DestroyManager.get(); }
         ComponentManager* getComponentManager() override { return m_ComponentManager.get(); }
+        LightManager* getLightManager() override { return m_LightManager.get(); }
 
 
         void cleanUp() override;
@@ -63,6 +64,7 @@ namespace Poulpe
         std::unique_ptr<Poulpe::ShaderManager> m_ShaderManager;
         std::unique_ptr<Poulpe::SpriteAnimationManager> m_SpriteAnimationManager;
         std::unique_ptr<Poulpe::TextureManager> m_TextureManager;
+        std::unique_ptr<Poulpe::LightManager> m_LightManager;
 
         bool m_IsLoaded{ false };
         bool m_Refresh{ false };

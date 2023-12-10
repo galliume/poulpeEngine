@@ -166,6 +166,7 @@ namespace Poulpe
 
                             bool hasBbox = static_cast<bool>(data["hasBbox"]);
                             bool hasAnimation = static_cast<bool>(data["hasAnimation"]);
+                            bool isLightCaster = static_cast<bool>(data["isLightCaster"]);
 
                             auto parts = initMeshes(
                                 static_cast<std::string>(key),
@@ -181,6 +182,7 @@ namespace Poulpe
                             for (auto & part : parts) {
                                 part->setHasBbox(hasBbox);
                                 part->setHasAnimation(hasAnimation);
+                                part->setIsLightCaster(isLightCaster);
                             }
                             addEntity(std::move(parts));
                         }
@@ -229,6 +231,7 @@ namespace Poulpe
 
                         bool hasBbox = static_cast<bool>(data["hasBbox"]);
                         bool hasAnimation = static_cast<bool>(data["hasAnimation"]);
+                        bool isLightCaster = static_cast<bool>(data["isLightCaster"]);
 
                         //@todo move init to a factory ?
                         auto parts = initMeshes(
@@ -245,6 +248,7 @@ namespace Poulpe
                         for (auto & part : parts) {
                             part->setHasBbox(hasBbox);
                             part->setHasAnimation(hasAnimation);
+                            part->setIsLightCaster(isLightCaster);
                         }
                         addEntity(std::move(parts));
 

@@ -2,7 +2,10 @@
 
 #include "Poulpe/Core/IVisitor.hpp"
 
+#include "Poulpe/Core/Buffer.hpp"
+
 #include "Poulpe/Manager/EntityManager.hpp"
+#include "Poulpe/Manager/LightManager.hpp"
 #include "Poulpe/Manager/ShaderManager.hpp"
 #include "Poulpe/Manager/TextureManager.hpp"
 
@@ -13,6 +16,7 @@ namespace Poulpe
     class IMesh
     {
     public:
+
         virtual ~IMesh() = default;
 
         virtual VkDescriptorSetLayout createDescriptorSetLayout(Mesh* mesh) = 0;
