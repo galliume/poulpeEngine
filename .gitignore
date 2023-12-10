@@ -63,3 +63,4 @@ Directory.build.props
 build
 CMakeFiles
 rdrDoc
+assets/mesh
