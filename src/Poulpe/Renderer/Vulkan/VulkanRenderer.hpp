@@ -1,6 +1,9 @@
 #pragma once
 
+#include "Poulpe/Core/Buffer.hpp"
+
 #include "Poulpe/Renderer/IRenderer.hpp"
+
 #include "Poulpe/Renderer/Vulkan/DeviceMemoryPool.hpp"
 
 #include <stb_image.h>
@@ -163,7 +166,7 @@ namespace Poulpe {
 
         Mesh::Buffer createStorageBuffers(size_t storageBuffer);
 
-        void updateStorageBuffer(Mesh::Buffer & buffer, Mesh::ObjectBuffer objectBuffer);
+        void updateStorageBuffer(Mesh::Buffer & buffer, ObjectBuffer objectBuffer);
 
         void setResolution(unsigned int width, unsigned int height);
 

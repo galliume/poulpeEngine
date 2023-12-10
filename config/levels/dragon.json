@@ -23,7 +23,8 @@
 			},
 			"form": "positioned",
 			"hasBbox": false,
-			"hasAnimation": false
+			"hasAnimation": false,
+			"isLightCaster": false			
 		}	
 	}
 }

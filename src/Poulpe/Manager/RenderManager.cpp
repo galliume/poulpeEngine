@@ -3,11 +3,8 @@
 #include "Poulpe/Component/RenderComponent.hpp"
 #include "Poulpe/Component/AnimationComponent.hpp"
 
-//@todo should not be pointing to Vulkan impl
+
 #include "Poulpe/Renderer/Vulkan/EntityFactory.hpp"
-//#include "Poulpe/Renderer/Vulkan/Entities/Basic.hpp"
-//#include "Poulpe/Renderer/Vulkan/Entities/Grid.hpp"
-//#include "Poulpe/Renderer/Vulkan/Entities/Skybox.hpp"
 
 namespace Poulpe
 {    
@@ -16,6 +13,7 @@ namespace Poulpe
         m_Window = std::unique_ptr< Window>(window);
         m_EntityManager = std::make_unique<Poulpe::EntityManager>();
         m_ComponentManager = std::make_unique<Poulpe::ComponentManager>();
+        m_LightManager = std::make_unique<Poulpe::LightManager>();
         
         m_Renderer = std::make_unique<Poulpe::VulkanAdapter>(m_Window.get(), m_EntityManager.get(), 
           m_ComponentManager.get());
@@ -181,7 +179,11 @@ namespace Poulpe
 
     void RenderManager::prepareEntity()
     {
-      auto* basicRdrImpl = new Basic(m_Renderer.get(), m_ShaderManager.get(), m_TextureManager.get());
+      auto* basicRdrImpl = new Basic(m_Renderer.get(),
+          m_ShaderManager.get(),
+          m_TextureManager.get(),
+          m_LightManager.get());
+
       for (auto& entity : *m_EntityManager->getEntities()) {
         m_ComponentManager->addComponent<RenderComponent>(entity->getID(), basicRdrImpl);
       }
