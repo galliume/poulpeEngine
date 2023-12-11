@@ -209,7 +209,7 @@ namespace Poulpe
             VulkanAdapter* adapter, Mesh* mesh) {
 
             constants pushConstants{};
-            pushConstants.textureID = mesh->getData()->m_TextureIndex;
+            pushConstants.textureIDBB = glm::vec3(mesh->getData()->m_TextureIndex, 0.0f, 0.0f);
             pushConstants.view = glm::mat4(glm::mat3(adapter->getCamera()->lookAt()));
             pushConstants.viewPos = adapter->getCamera()->getPos();
 

@@ -270,6 +270,7 @@ namespace Poulpe
       if (m_TextureManager->getTextures().contains(mesh->getData()->m_Texture)) {
         tex = m_TextureManager->getTextures()[mesh->getData()->m_Texture];
       } else {
+        //@todo rename to debug texture ?
         tex = m_TextureManager->getTextures()["mpoulpe"];
       }
 
@@ -281,8 +282,10 @@ namespace Poulpe
 
       imageInfos.emplace_back(imageInfo);
 
-      std::string specMapName = "mpoulpe";
+      //@todo rename to debug texture ?
+      std::string specMapName = "textures_lion";
       std::string bumpMapName = "mpoulpe";
+      mesh->getData()->mapsUsed = glm::vec3(0.0f);
 
       if (!mesh->getData()->m_TextureSpecularMap.empty() 
           && m_TextureManager->getTextures().contains(mesh->getData()->m_TextureSpecularMap)) {
@@ -373,7 +376,7 @@ namespace Poulpe
             VulkanAdapter* adapter, Mesh* mesh) {
 
             constants pushConstants{};
-            pushConstants.textureID = mesh->getData()->m_TextureIndex;
+            pushConstants.textureIDBB = glm::vec3(mesh->getData()->m_TextureIndex, 0.0, 0.0);
             pushConstants.view = adapter->getCamera()->lookAt();
             pushConstants.viewPos = adapter->getCamera()->getPos();
             pushConstants.mapsUsed = mesh->getData()->mapsUsed;
