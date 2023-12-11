@@ -18,7 +18,7 @@ namespace Poulpe
         light.clq = glm::vec3(1.0f, 0.25f, 0.44f);
 
         Light light2;
-        light2.color = glm::vec3(0.92f, 0.53f, 0.2f);
+        light2.color = glm::vec3(0.89f, 0.35f, 0.13f);
         light2.position = glm::vec3(1.0f, 0.2f, 0.0f);
         light2.ads = glm::vec3(0.7f, 0.9f, 1.0f);
         light2.clq = glm::vec3(1.0f, 0.7f, 1.8f);
