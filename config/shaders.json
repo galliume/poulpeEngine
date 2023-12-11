@@ -1,12 +1,40 @@
  {
   "shader": {
-    "main_basic": {"vert": "assets/shaders/spv/main_basic_vert.spv", "frag": "assets/shaders/spv/main_basic_frag.spv"},
-	"main_basic_no_texture": {"vert": "assets/shaders/spv/main_basic_no_texture_vert.spv", "frag": "assets/shaders/spv/main_basic_no_texture_frag.spv"},
-    "grid": {"vert": "assets/shaders/spv/grid_vert.spv", "frag": "assets/shaders/spv/grid_frag.spv"},
-    "skybox": {"vert": "assets/shaders/spv/skybox_vert.spv", "frag": "assets/shaders/spv/skybox_frag.spv"},
-    "2d": {"vert": "assets/shaders/spv/2d_vert.spv", "frag": "assets/shaders/spv/2d_frag.spv"},
-    "bbox": {"vert": "assets/shaders/spv/bbox_vert.spv", "frag": "assets/shaders/spv/bbox_frag.spv"},
-    "ambient_light": {"vert": "assets/shaders/spv/ambient_light_vert.spv", "frag": "assets/shaders/spv/ambient_light_frag.spv"},
-    "tangent": { "vert": "assets/shaders/spv/tangent_vert.spv", "frag": "assets/shaders/spv/tangent_frag.spv"}
+    "main_basic": {
+      "vert": "assets/shaders/spv/main_basic_vert.spv",
+      "frag": "assets/shaders/spv/main_basic_frag.spv"
+    },
+    "main_basic_no_texture": {
+      "vert": "assets/shaders/spv/main_basic_no_texture_vert.spv",
+      "frag": "assets/shaders/spv/main_basic_no_texture_frag.spv"
+    },
+    "grid": {
+      "vert": "assets/shaders/spv/grid_vert.spv",
+      "frag": "assets/shaders/spv/grid_frag.spv"
+    },
+    "skybox": {
+      "vert": "assets/shaders/spv/skybox_vert.spv",
+      "frag": "assets/shaders/spv/skybox_frag.spv"
+    },
+    "2d": {
+      "vert": "assets/shaders/spv/2d_vert.spv",
+      "frag": "assets/shaders/spv/2d_frag.spv"
+    },
+    "bbox": {
+      "vert": "assets/shaders/spv/bbox_vert.spv",
+      "frag": "assets/shaders/spv/bbox_frag.spv"
+    },
+    "ambient_light": {
+      "vert": "assets/shaders/spv/ambient_light_vert.spv",
+      "frag": "assets/shaders/spv/ambient_light_frag.spv"
+    },
+    "tangent": {
+      "vert": "assets/shaders/spv/tangent_vert.spv",
+      "frag": "assets/shaders/spv/tangent_frag.spv"
+    },
+    "depth": {
+      "vert": "assets/shaders/spv/depth_vert.spv",
+      "frag": "assets/shaders/spv/depth_frag.spv"
+    }
   }
  }

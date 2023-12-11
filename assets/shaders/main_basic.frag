@@ -47,15 +47,6 @@ layout(binding = 2) buffer ObjectBuffer {
     Material material;
 };
 
-float near = 0.1;
-float far  = 100.0;
-  
-float LinearizeDepth(float depth)
-{
-    float z = depth * 2.0 - 1.0;
-    return (2.0 * near * far) / (far + near - z * (far - near));
-}
-
 vec3 CalcDirLight(Light dirLight, vec3 normal, vec3 viewDir);
 vec3 CalcPointLight(Light pointLight, vec3 normal, vec3 fragPos, vec3 viewDir);
 vec3 CalcSpotLight(Light pointLight, vec3 normal, vec3 fragPos, vec3 viewDir);

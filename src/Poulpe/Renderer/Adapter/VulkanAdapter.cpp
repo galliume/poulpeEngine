@@ -31,6 +31,8 @@ namespace Poulpe
         setPerspective();
         m_RenderPass = std::unique_ptr<VkRenderPass>(m_Renderer->createRenderPass(m_Renderer->getMsaaSamples()));
         
+        prepareShadowMap();
+
 //#ifndef  PLP_DEBUG_BUILD
 //        m_SwapChain = m_Renderer->CreateSwapChain(m_SwapChainImages);
 //#else
@@ -40,7 +42,6 @@ namespace Poulpe
 
         for (size_t i = 0; i < m_SwapChainImages.size(); ++i) {
           VkImage image;
-          //VkImage depthImage;
 
           m_Renderer->createImage(m_Renderer->getSwapChainExtent().width, m_Renderer->getSwapChainExtent().height, 1,
               VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_B8G8R8A8_UNORM, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_SRC_BIT 
@@ -48,9 +49,7 @@ namespace Poulpe
               VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, image);
 
           m_SwapChainImages[i] = image;
-
           m_SwapChainSamplers[i] = m_Renderer->createTextureSampler(1);
-          m_SwapChainDepthSamplers[i] = m_Renderer->createTextureSampler(1);;
         }
 //#endif
         //init swap chain, depth image views, primary command buffers and semaphores
@@ -90,6 +89,7 @@ namespace Poulpe
 
             m_DepthImages[i] = depthImage;
             m_DepthImageViews[i] = depthImageView;
+            m_SwapChainDepthSamplers[i] = m_Renderer->createTextureSampler(1);
         }
 
         for (size_t i = 0; i < m_Renderer->getQueueCount(); i++) {
@@ -129,9 +129,7 @@ namespace Poulpe
               VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, image);
 
           m_SwapChainImages[i] = image;
-
           m_SwapChainSamplers[i] = m_Renderer->createTextureSampler(1);
-          m_SwapChainDepthSamplers[i] = m_Renderer->createTextureSampler(1);;
         }
 //#endif
 
@@ -154,6 +152,7 @@ namespace Poulpe
 
             m_DepthImages[i] = depthImage;
             m_DepthImageViews[i] = depthImageView;
+            m_SwapChainDepthSamplers[i] = m_Renderer->createTextureSampler(1);;
         }
 
         m_Semaphores.clear();
@@ -207,9 +206,77 @@ namespace Poulpe
         m_Deltatime = deltaTime;
     }
 
+    void VulkanAdapter::prepareShadowMap()
+    {
+        VkAttachmentDescription attachmentDescription{};
+        attachmentDescription.format = VK_FORMAT_D24_UNORM_S8_UINT;
+        attachmentDescription.samples = VK_SAMPLE_COUNT_1_BIT;
+        attachmentDescription.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+        attachmentDescription.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+        attachmentDescription.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+        attachmentDescription.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        attachmentDescription.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        attachmentDescription.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
+
+        VkAttachmentReference depthReference = {};
+        depthReference.attachment = 0;
+        depthReference.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+
+        VkSubpassDescription subpass = {};
+        subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+        subpass.colorAttachmentCount = 0;
+        subpass.pDepthStencilAttachment = & depthReference;
+
+        std::array<VkSubpassDependency, 2> dependencies;
+
+        dependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL;
+        dependencies[0].dstSubpass = 0;
+        dependencies[0].srcStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+        dependencies[0].dstStageMask = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+        dependencies[0].srcAccessMask = VK_ACCESS_SHADER_READ_BIT;
+        dependencies[0].dstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+        dependencies[0].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
+
+        dependencies[1].srcSubpass = 0;
+        dependencies[1].dstSubpass = VK_SUBPASS_EXTERNAL;
+        dependencies[1].srcStageMask = VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
+        dependencies[1].dstStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+        dependencies[1].srcAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+        dependencies[1].dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+        dependencies[1].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
+
+        VkRenderPassCreateInfo renderPassInfo{};
+        renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+        renderPassInfo.attachmentCount = 1;
+        renderPassInfo.pAttachments = & attachmentDescription;
+        renderPassInfo.subpassCount = 1;
+        renderPassInfo.pSubpasses = & subpass;
+        renderPassInfo.dependencyCount = static_cast<uint32_t>(dependencies.size());
+        renderPassInfo.pDependencies = dependencies.data();
+
+        VkResult result = vkCreateRenderPass(m_Renderer->getDevice(),
+            & renderPassInfo, nullptr, & m_DepthMapRenderPass);
+
+        if (result != VK_SUCCESS) {
+            throw std::runtime_error("can't create rdr pass for shadow map");
+        }
+
+        m_Renderer->createDepthMapImage(m_DepthMapImage);
+        m_DepthMapView = m_Renderer->createDepthMapImageView(m_DepthMapImage);
+        m_DepthMapSampler = m_Renderer->createDepthMapSampler();
+        m_Renderer->createDepthMapFrameBuffer(m_DepthMapRenderPass, m_DepthMapView, m_DepthMapFrameBuffer);
+    }
+
     void VulkanAdapter::drawEntities()
     {
         if (0 < m_EntityManager->getEntities()->size()) {
+
+            //beginRendering(m_CommandBuffersEntities[m_ImageIndex]);
+            //m_Renderer->startMarker(m_CommandBuffersEntities[m_ImageIndex], "entities_shadow_map", 0.1, 0.2, 0.3);
+
+            //m_Renderer->endMarker(m_CommandBuffersEntities[m_ImageIndex]);
+            //endRendering(m_CommandBuffersEntities[m_ImageIndex]);
+
             beginRendering(m_CommandBuffersEntities[m_ImageIndex]);
             m_Renderer->startMarker(m_CommandBuffersEntities[m_ImageIndex], "entities_drawing", 0.3, 0.2, 0.1);
 

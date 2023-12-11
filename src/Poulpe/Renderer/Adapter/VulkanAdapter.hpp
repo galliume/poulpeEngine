@@ -90,6 +90,7 @@ namespace Poulpe
         void present(int queueIndex = 0);
         void onFinishRender();
         void acquireNextImage();
+        void prepareShadowMap();
 
     private:
         std::unique_ptr<VulkanRenderer> m_Renderer{ nullptr };
@@ -164,5 +165,13 @@ namespace Poulpe
         std::vector<IObserver*> m_Observers{};
         //VkCommandBuffer m_CopyCmd;
         //VkCommandPool m_CopyCommandPool;
+
+        [[maybe_unused]] VkFramebuffer m_DepthMapFrameBuffer;
+        [[maybe_unused]] VkImage m_DepthMapImage;
+        [[maybe_unused]] VkDeviceMemory m_DepthMapDeviceMemory;
+        [[maybe_unused]] VkImageView m_DepthMapView;
+        [[maybe_unused]] VkRenderPass m_DepthMapRenderPass;
+        [[maybe_unused]] VkSampler m_DepthMapSampler;
+        [[maybe_unused]] VkDescriptorImageInfo m_DepthMapDescriptor;
     };
 }

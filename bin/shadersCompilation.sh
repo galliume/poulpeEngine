@@ -47,4 +47,9 @@ ${GLSLC_BIN} ./assets/shaders/tangent.vert -o assets/shaders/spv/tangent_vert.sp
 ${GLSLC_BIN} ./assets/shaders/tangent.frag -o assets/shaders/spv/tangent_frag.spv
 echo "Shader [tangent] compiled"
 
+${GLSLC_BIN} ./assets/shaders/depth.vert -o assets/shaders/spv/depth_vert.spv
+${GLSLC_BIN} ./assets/shaders/depth.frag -o assets/shaders/spv/depth_frag.spv
+
+echo "Shader [depth] compiled"
+
 echo "All shaders have been compiled."
