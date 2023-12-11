@@ -34,10 +34,11 @@ namespace Poulpe
 
     struct constants
     {
-        int textureID;
-        glm::mat4 view;
-        glm::vec4 viewPos;
-        glm::vec3 mapsUsed = glm::vec3(0.0f);
+      //textureID blank blank
+        alignas(16) glm::vec3 textureIDBB;
+        alignas(16) glm::mat4 view;
+        alignas(16) glm::vec4 viewPos;
+        alignas(16) glm::vec3 mapsUsed = glm::vec3(0.0f);
     };
 
     class Mesh
