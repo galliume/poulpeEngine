@@ -305,6 +305,11 @@ namespace Poulpe {
 
         void waitIdle();
 
+        void createDepthMapImage(VkImage & image);
+        VkImageView createDepthMapImageView(VkImage image);
+        VkSampler createDepthMapSampler();
+        void createDepthMapFrameBuffer(VkRenderPass & renderPass, VkImageView & imageView, VkFramebuffer & frameBuffer);
+
         static const std::string getVendor(int vendorID)
         {
             std::unordered_map<int, std::string> vendors;
