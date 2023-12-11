@@ -22,7 +22,7 @@ struct Light {
     vec3 ads;
     //constant, linear, quadratiq
     vec3 clq;
-    //cutOff, outerCuoffBlank
+    //cutOff, outerCutoff, Blank
     vec3 coB;
 };
 
@@ -66,9 +66,9 @@ void main()
     vec3 debugAmbient = vec3(0.0, 1.0, 0.0); // Debugging color for ambient
     vec3 debugSpecular = vec3(0.0, 0.0, 1.0); // Debugging color for specular
 
-//    if (texture(texSampler[0], fs_in.fTexCoord).a < 0.5) {
-//        discard;
-//    }
+    if (texture(texSampler[0], fs_in.fTexCoord).a < 0.5) {
+        discard;
+    }
 
     vec3 normal = normalize(fs_in.fNormal);
 
@@ -79,15 +79,15 @@ void main()
     }
 
     vec3 viewDir = normalize(fs_in.fViewPos.xyz - fs_in.fPos.xyz);
-    vec3 lights = CalcDirLight(ambientLight, normal, viewDir);
+    vec3 color = CalcDirLight(ambientLight, normal, viewDir);
     
     for(int i = 0; i < NR_POINT_LIGHTS; i++) {
-        lights += CalcPointLight(pointLights[i], normal, fs_in.fPos.xyz, viewDir);
+        color += CalcPointLight(pointLights[i], normal, fs_in.fPos.xyz, viewDir);
     }
 
-    lights += CalcSpotLight(spotLight, normal, fs_in.fPos.xyz, viewDir);
+    color += CalcSpotLight(spotLight, normal, fs_in.fPos.xyz, viewDir);
 
-    fColor = vec4(lights, 1.0);
+    fColor = vec4(color, 1.0);
 }
 
 vec3 CalcDirLight(Light dirLight, vec3 normal, vec3 viewDir)
@@ -147,7 +147,7 @@ vec3 CalcSpotLight(Light spotlight, vec3 normal, vec3 fragPos, vec3 viewDir)
     vec3 ambient = spotlight.color * (material.ambient * spotlight.ads.x * texture(texSampler[0], fs_in.fTexCoord).xyz);
 
     float theta = dot(lightDir, normalize(-spotlight.direction));
-    float epsilon   = spotlight.coB.z - spotlight.coB.y;
+    float epsilon   = spotlight.coB.x - spotlight.coB.y;
     float intensity = clamp((theta - spotlight.coB.y) / epsilon, 0.0, 1.0);
 
     float distance = length(spotlight.position - fs_in.fPos);
