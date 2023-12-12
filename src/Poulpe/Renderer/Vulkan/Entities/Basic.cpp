@@ -128,7 +128,7 @@ namespace Poulpe
 
         setPushConstants(mesh);
 
-        auto shaders = getShaders(mesh->getShaderName());
+        auto shaders = getShaders("depth");
         auto bDesc = Vertex::GetBindingDescription();
         auto attDesc = Vertex::GetAttributeDescriptions();
         auto vertexInputInfo = getVertexBindingDesc(bDesc, attDesc);
