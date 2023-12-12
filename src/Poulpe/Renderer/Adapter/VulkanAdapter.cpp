@@ -18,8 +18,15 @@ namespace Poulpe
     std::atomic<int> VulkanAdapter::s_Crosshair{ 0 };
     std::atomic<int> VulkanAdapter::s_PolygoneMode{ VK_POLYGON_MODE_FILL };
     
-    VulkanAdapter::VulkanAdapter(Window* window, EntityManager* entityManager, ComponentManager* componentManager)
-        : m_Window(window), m_EntityManager(entityManager), m_ComponentManager(componentManager)
+    VulkanAdapter::VulkanAdapter(
+      Window* window,
+      EntityManager* entityManager,
+      ComponentManager* componentManager,
+      LightManager* lightManager)
+        : m_Window(window), 
+          m_EntityManager(entityManager),
+          m_ComponentManager(componentManager),
+          m_LightManager(lightManager)
     {
         m_Renderer = std::make_unique<VulkanRenderer>(window);
     }
@@ -27,7 +34,6 @@ namespace Poulpe
     void VulkanAdapter::init()
     {
         m_RayPick = glm::vec3(0.0f);
-        m_LightsPos.emplace_back(glm::vec3(0.5f, 0.5f, 0.5f));
         setPerspective();
         m_RenderPass = std::unique_ptr<VkRenderPass>(m_Renderer->createRenderPass(m_Renderer->getMsaaSamples()));
         
@@ -267,54 +273,159 @@ namespace Poulpe
         m_Renderer->createDepthMapFrameBuffer(m_DepthMapRenderPass, m_DepthMapView, m_DepthMapFrameBuffer);
     }
 
+    void VulkanAdapter::drawShadowMap()
+    {
+      m_Renderer->beginCommandBuffer(m_CommandBuffersEntities[m_ImageIndex], VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT);
+      m_Renderer->startMarker(m_CommandBuffersEntities[m_ImageIndex], "shadow_map", 0.1, 0.2, 0.3);
+
+      VkImageMemoryBarrier swapChainImageRenderBeginBarrier = m_Renderer->setupImageMemoryBarrier(
+        m_SwapChainImages[m_ImageIndex], 0, VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT, VK_IMAGE_LAYOUT_UNDEFINED,
+        VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+
+      m_Renderer->addPipelineBarriers(m_CommandBuffersEntities[m_ImageIndex], { swapChainImageRenderBeginBarrier },
+        VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+        VK_DEPENDENCY_BY_REGION_BIT);
+
+      VkImageMemoryBarrier depthImageRenderBeginBarrier = m_Renderer->setupImageMemoryBarrier(
+        m_DepthImages[m_ImageIndex], 0, VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT, VK_IMAGE_LAYOUT_UNDEFINED,
+        VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, 1, VK_IMAGE_ASPECT_DEPTH_BIT);
+
+      m_Renderer->addPipelineBarriers(m_CommandBuffersEntities[m_ImageIndex], { depthImageRenderBeginBarrier },
+        VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+        VK_DEPENDENCY_BY_REGION_BIT);
+
+      VkAttachmentLoadOp loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
+      VkAttachmentStoreOp storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+
+      m_Renderer->beginRendering(m_CommandBuffersEntities[m_ImageIndex], m_SwapChainImageViews[m_ImageIndex], m_DepthImageViews[m_ImageIndex], loadOp, storeOp);
+
+      m_Renderer->setViewPort(m_CommandBuffersEntities[m_ImageIndex]);
+      m_Renderer->setScissor(m_CommandBuffersEntities[m_ImageIndex]);
+
+      for (auto& entity : *m_EntityManager->getEntities()) {
+        Mesh* mesh = entity->getMesh();
+
+        if (!mesh) continue;
+
+        m_Renderer->bindPipeline(m_CommandBuffersEntities[m_ImageIndex], mesh->getGraphicsPipeline());
+
+        // if (m_HasClicked && mesh->IsHit(m_RayPick)) {
+        //    PLP_DEBUG("HIT ! {}", mesh->GetName());
+        // }
+        //m_HasClicked = false;
+        float near_plane = 1.0f, far_plane = 7.5f;
+        glm::mat4 lightProjection = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, near_plane, far_plane);
+        glm::mat4 lightView = glm::lookAt(m_LightManager->getAmbientLight().position,
+          glm::vec3(0.0f, 0.0f, 0.0f),
+          glm::vec3(0.0f, 1.0f, 0.0f));
+        glm::mat4 lightSpaceMatrix = lightProjection * lightView;
+
+        for (size_t i = 0; i < mesh->getData()->m_Ubos.size(); ++i) {
+          mesh->getData()->m_Ubos[i].projection = lightSpaceMatrix;
+          //mesh->getData()->m_Ubos[i].projection = lightProjection;
+        }
+
+        int min{ 0 };
+        int max{ 0 };
+
+        for (size_t i = 0; i < mesh->getUniformBuffers()->size(); ++i) {
+          max = mesh->getData()->m_UbosOffset.at(i);
+          auto ubos = std::vector<UniformBufferObject>(mesh->getData()->m_Ubos.begin() + min, mesh->getData()->m_Ubos.begin() + max);
+          rdr()->updateUniformBuffer(mesh->getUniformBuffers()->at(i), &ubos);
+
+          min = max;
+        }
+
+        int index = m_ImageIndex;
+        for (uint32_t i = 0; i < mesh->getUniformBuffers()->size(); i++) {
+          index += i * 3;
+
+          if (mesh->hasPushConstants() && nullptr != mesh->applyPushConstants) {
+            constants pushConstants{};
+            pushConstants.textureIDBB = glm::vec3(mesh->getData()->m_TextureIndex, 0.0, 0.0);
+            pushConstants.view = lightView ;
+            pushConstants.viewPos = glm::vec4(m_LightManager->getAmbientLight().position, 1.0f);
+            pushConstants.mapsUsed = mesh->getData()->mapsUsed;
+
+            vkCmdPushConstants(m_CommandBuffersEntities[m_ImageIndex], mesh->getPipelineLayout(), VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(constants), & pushConstants);
+          }
+          try {
+            if (m_RenderingStopped) return;
+            m_Renderer->draw(m_CommandBuffersEntities[m_ImageIndex], mesh->getDescriptorSets().at(index),
+              mesh, mesh->getData(), mesh->getData()->m_Ubos.size(), mesh->isIndexed());
+          }
+          catch (std::exception& e) {
+            PLP_DEBUG("Draw error: {}", e.what());
+          }
+          index = m_ImageIndex;
+        }
+      }
+
+      m_Renderer->endMarker(m_CommandBuffersEntities[m_ImageIndex]);
+      m_Renderer->endRendering(m_CommandBuffersEntities[m_ImageIndex]);
+
+        auto newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+
+        VkImageMemoryBarrier swapChainImageEndRenderBeginBarrier = m_Renderer->setupImageMemoryBarrier(
+          m_SwapChainImages[m_ImageIndex], VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT, 0,
+          VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, newLayout);
+
+        m_Renderer->addPipelineBarriers(m_CommandBuffersEntities[m_ImageIndex], { swapChainImageEndRenderBeginBarrier },
+          VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, 0);
+
+        VkImageMemoryBarrier depthImageEndRenderBeginBarrier = m_Renderer->setupImageMemoryBarrier(
+          m_DepthImages[m_ImageIndex], VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT, 0,
+          VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL, newLayout, 1, VK_IMAGE_ASPECT_DEPTH_BIT);
+
+        m_Renderer->addPipelineBarriers(m_CommandBuffersEntities[m_ImageIndex], { depthImageEndRenderBeginBarrier },
+          VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, 0);
+
+        m_Renderer->endCommandBuffer(m_CommandBuffersEntities[m_ImageIndex]);
+    }
+
     void VulkanAdapter::drawEntities()
     {
         if (0 < m_EntityManager->getEntities()->size()) {
 
+          drawShadowMap();
+
             //beginRendering(m_CommandBuffersEntities[m_ImageIndex]);
-            //m_Renderer->startMarker(m_CommandBuffersEntities[m_ImageIndex], "entities_shadow_map", 0.1, 0.2, 0.3);
+            //m_Renderer->startMarker(m_CommandBuffersEntities[m_ImageIndex], "entities_drawing", 0.3, 0.2, 0.1);
+
+            //for (auto & entity : *m_EntityManager->getEntities()) {
+            //    Mesh* mesh = entity->getMesh();
+
+            //    if (!mesh) continue;
+
+            //    m_Renderer->bindPipeline(m_CommandBuffersEntities[m_ImageIndex], mesh->getGraphicsPipeline());
+
+            //    // if (m_HasClicked && mesh->IsHit(m_RayPick)) {
+            //    //    PLP_DEBUG("HIT ! {}", mesh->GetName());
+            //    // }
+            //    //m_HasClicked = false;
+
+            //    int index = m_ImageIndex;
+            //    for (uint32_t i = 0; i < mesh->getUniformBuffers()->size(); i++) {
+            //        index += i * 3;
+
+            //        if (mesh->hasPushConstants() && nullptr != mesh->applyPushConstants)
+            //            mesh->applyPushConstants(m_CommandBuffersEntities[m_ImageIndex], mesh->getPipelineLayout(),
+            //                this, mesh);
+
+            //        try {
+            //            if (m_RenderingStopped) return;
+            //            m_Renderer->draw(m_CommandBuffersEntities[m_ImageIndex], mesh->getDescriptorSets().at(index),
+            //                mesh, mesh->getData(), mesh->getData()->m_Ubos.size(), mesh->isIndexed());
+            //        }
+            //        catch (std::exception & e) {
+            //            PLP_DEBUG("Draw error: {}", e.what());
+            //        }
+            //        index = m_ImageIndex;
+            //    }
+            //}
 
             //m_Renderer->endMarker(m_CommandBuffersEntities[m_ImageIndex]);
             //endRendering(m_CommandBuffersEntities[m_ImageIndex]);
-
-            beginRendering(m_CommandBuffersEntities[m_ImageIndex]);
-            m_Renderer->startMarker(m_CommandBuffersEntities[m_ImageIndex], "entities_drawing", 0.3, 0.2, 0.1);
-
-
-            for (auto & entity : *m_EntityManager->getEntities()) {
-                Mesh* mesh = entity->getMesh();
-
-                if (!mesh) continue;
-
-                m_Renderer->bindPipeline(m_CommandBuffersEntities[m_ImageIndex], mesh->getGraphicsPipeline());
-
-                // if (m_HasClicked && mesh->IsHit(m_RayPick)) {
-                //    PLP_DEBUG("HIT ! {}", mesh->GetName());
-                // }
-                //m_HasClicked = false;
-
-                int index = m_ImageIndex;
-                for (uint32_t i = 0; i < mesh->getUniformBuffers()->size(); i++) {
-                    index += i * 3;
-
-                    if (mesh->hasPushConstants() && nullptr != mesh->applyPushConstants)
-                        mesh->applyPushConstants(m_CommandBuffersEntities[m_ImageIndex], mesh->getPipelineLayout(),
-                            this, mesh);
-
-                    try {
-                        if (m_RenderingStopped) return;
-                        m_Renderer->draw(m_CommandBuffersEntities[m_ImageIndex], mesh->getDescriptorSets().at(index),
-                            mesh, mesh->getData(), mesh->getData()->m_Ubos.size(), mesh->isIndexed());
-                    }
-                    catch (std::exception & e) {
-                        PLP_DEBUG("Draw error: {}", e.what());
-                    }
-                    index = m_ImageIndex;
-                }
-            }
-
-            m_Renderer->endMarker(m_CommandBuffersEntities[m_ImageIndex]);
-            endRendering(m_CommandBuffersEntities[m_ImageIndex]);
             {
                 std::lock_guard<std::mutex> guard(m_MutexCmdSubmit);
                 m_CmdToSubmit[1] = m_CommandBuffersEntities[m_ImageIndex];

@@ -51,6 +51,14 @@ vec3 CalcDirLight(Light dirLight, vec3 normal, vec3 viewDir);
 vec3 CalcPointLight(Light pointLight, vec3 normal, vec3 fragPos, vec3 viewDir);
 vec3 CalcSpotLight(Light pointLight, vec3 normal, vec3 fragPos, vec3 viewDir);
 
+float near = 0.1;
+float far  = 100.0;
+  
+float LinearizeDepth(float depth)
+{
+    return (2.0 * near * far) / (far + near - depth * (far - near));
+}
+
 void main()
 {
     vec3 debugDiffuse = vec3(1.0, 0.0, 0.0); // Debugging color for diffuse
@@ -77,8 +85,10 @@ void main()
     }
 
     color += CalcSpotLight(spotLight, normal, fs_in.fPos.xyz, viewDir);
-
+	
     fColor = vec4(color, 1.0);
+    //float depth = LinearizeDepth(gl_FragCoord.z) / far;
+    //fColor = vec4(vec3(depth), 1.0);
 }
 
 vec3 CalcDirLight(Light dirLight, vec3 normal, vec3 viewDir)

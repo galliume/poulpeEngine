@@ -39,7 +39,7 @@ layout(location = 0) out VS_OUT {
 
 void main()
 {
-    gl_Position = ubos[gl_InstanceIndex].projection * pc.view * ubos[gl_InstanceIndex].model * vec4(pos, 1.0);
+    gl_Position = ubos[gl_InstanceIndex].projection * ubos[gl_InstanceIndex].model * vec4(pos, 1.0);
 
     
     vec3 t = normalize(vec3(ubos[gl_InstanceIndex].model * vec4(tangent.xyz, 0.0)));
