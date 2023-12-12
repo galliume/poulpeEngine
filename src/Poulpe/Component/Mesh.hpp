@@ -93,21 +93,9 @@ namespace Poulpe
         Mesh() = default;
         ~Mesh() = default;
 
-        inline std::vector<VkDescriptorSet> getDescriptorSets() { return m_DescriptorSets; }
-        inline VkPipeline getGraphicsPipeline(unsigned int index = 0) { return m_GraphicsPipeline.at(index); }
-        inline size_t getGraphicsPipelineSize() { return m_GraphicsPipeline.size(); }
-        inline VkPipelineLayout getPipelineLayout() { return m_PipelineLayout; }
-        inline VkDescriptorPool getDescriptorPool() { return m_DescriptorPool; }
-        inline VkDescriptorSetLayout getDescriptorSetLayout() { return m_DescriptorSetLayout; }
-
         inline const std::string getShaderName() const { return m_ShaderName; }
         inline void setShaderName(std::string_view name) { m_ShaderName = name; }
-        void setDescriptorSets(std::vector<VkDescriptorSet> descSets) { m_DescriptorSets = descSets; }
-        void setDescriptorPool(VkDescriptorPool descPool) { m_DescriptorPool = descPool; }
-        void setPipelineLayout(VkPipelineLayout pipelineLayout) { m_PipelineLayout = pipelineLayout; }
-        void setDescriptorSetLayout(VkDescriptorSetLayout descLayout) { m_DescriptorSetLayout = descLayout; }
-        void setGraphicsPipeline(VkPipeline pipeline) { m_GraphicsPipeline.emplace_back(pipeline); }
-
+        
         void addUbos(const std::vector<UniformBufferObject>& ubos);
         std::function<void(VkCommandBuffer & commandBuffer, VkPipelineLayout pipelineLayout,
             VulkanAdapter* vulkanAdapter, Mesh* mesh)> applyPushConstants = nullptr;
@@ -153,11 +141,6 @@ namespace Poulpe
         bool isPointLight() { return m_IsPointLight; }
 
     private:
-        std::vector<VkDescriptorSet> m_DescriptorSets;
-        VkPipelineLayout m_PipelineLayout;
-        std::vector<VkPipeline> m_GraphicsPipeline;
-        VkDescriptorSetLayout m_DescriptorSetLayout;
-        VkDescriptorPool m_DescriptorPool;
         std::unique_ptr<BBox> m_BoundingBox;
 
         std::string m_ShaderName;

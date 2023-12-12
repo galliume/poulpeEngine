@@ -14,16 +14,17 @@ namespace Poulpe
         m_EntityManager = std::make_unique<Poulpe::EntityManager>();
         m_ComponentManager = std::make_unique<Poulpe::ComponentManager>();
         m_LightManager = std::make_unique<Poulpe::LightManager>();
+        m_TextureManager = std::make_unique<Poulpe::TextureManager>();
         
         m_Renderer = std::make_unique<Poulpe::VulkanAdapter>(
           m_Window.get(),
           m_EntityManager.get(),
           m_ComponentManager.get(),
-          m_LightManager.get());
+          m_LightManager.get(),
+          m_TextureManager.get());
 
         m_ConfigManager = std::make_unique<Poulpe::ConfigManager>();
         m_AudioManager = std::make_unique<Poulpe::AudioManager>();
-        m_TextureManager = std::make_unique<Poulpe::TextureManager>();
         m_ShaderManager = std::make_unique<Poulpe::ShaderManager>();
         m_SpriteAnimationManager = std::make_unique<Poulpe::SpriteAnimationManager>();
         m_DestroyManager = std::make_unique<Poulpe::DestroyManager>();
@@ -183,7 +184,6 @@ namespace Poulpe
     void RenderManager::prepareEntity()
     {
       auto* basicRdrImpl = new Basic(m_Renderer.get(),
-          m_ShaderManager.get(),
           m_TextureManager.get(),
           m_LightManager.get());
 
@@ -267,7 +267,7 @@ namespace Poulpe
     {
         auto* gridMesh = new Mesh();
         auto* gridEntity = new Entity();
-        auto* gridRdrImpl = new Grid(m_Renderer.get(), m_ShaderManager.get(), m_TextureManager.get());
+        auto* gridRdrImpl = new Grid(m_Renderer.get());
 
         gridEntity->setMesh(gridMesh);
         m_EntityManager->addHUD(gridEntity);
@@ -275,7 +275,7 @@ namespace Poulpe
 
         auto* chMesh = new Mesh();
         auto* chEntity = new Entity();
-        auto* chRdrImpl = new Crosshair(m_Renderer.get(), m_ShaderManager.get(), m_TextureManager.get());
+        auto* chRdrImpl = new Crosshair(m_Renderer.get());
 
         chEntity->setMesh(chMesh);
         m_EntityManager->addHUD(chEntity);
@@ -293,7 +293,7 @@ namespace Poulpe
     {
         auto* skyboxMesh = new Mesh();
         auto* skyboxEntity = new Entity();
-        auto* skyRdrImpl = new Skybox(m_Renderer.get(), m_ShaderManager.get(), m_TextureManager.get());
+        auto* skyRdrImpl = new Skybox(m_Renderer.get());
 
         skyboxEntity->setMesh(skyboxMesh);
         m_EntityManager->setSkybox(skyboxEntity);

@@ -18,16 +18,10 @@ layout(set = 0, binding = 0) uniform UniformBufferObject {
 
 layout(push_constant) uniform constants
 {
-    int textureID;
+    //texture ID blank blank
+    vec3 textureIDBB;
     mat4 view;
     vec4 viewPos;
-    vec3 ambient;
-    vec3 ambientLight;
-    vec3 lightDir;
-    vec3 diffuseLight;
-    vec3 specular;
-    vec3 specularLight;
-    float shininess;
     vec3 mapsUsed;
 } pc;
 
