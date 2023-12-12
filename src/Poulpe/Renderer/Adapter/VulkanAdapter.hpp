@@ -9,6 +9,7 @@
 #include "Poulpe/Manager/ComponentManager.hpp"
 #include "Poulpe/Manager/EntityManager.hpp"
 #include "Poulpe/Manager/LightManager.hpp"
+#include "Poulpe/Manager/TextureManager.hpp"
 
 #include <future>
 
@@ -23,7 +24,8 @@ namespace Poulpe
           Window* window,
           EntityManager* entityManager, 
           ComponentManager* componentManager,
-          LightManager* lightManager
+          LightManager* lightManager,
+          TextureManager* textureManager
         );
 
         virtual ~VulkanAdapter() = default;
@@ -90,6 +92,9 @@ namespace Poulpe
         Camera* getCamera() { return m_Camera; }
 
         void drawShadowMap();
+        void addPipeline(std::string const & shaderName, VulkanPipeline pipeline) override;
+        VulkanPipeline* getPipeline(std::string const& shaderName) { return & m_Pipelines[shaderName]; };
+        void updateDescriptorSets(Mesh* mesh, std::vector<VkDescriptorImageInfo> imageInfos);
 
     private:
         //@todo temp
@@ -125,13 +130,13 @@ namespace Poulpe
 
         uint32_t m_ImageIndex{ 0 };
         std::pair<std::vector<VkBuffer>, std::vector<VkDeviceMemory>> m_UniformBuffers{};
-        std::vector<VulkanPipeline>m_Pipelines;
         
         Camera* m_Camera{ nullptr };
         Window* m_Window{ nullptr };
         EntityManager* m_EntityManager{ nullptr };
         [[maybe_unused]] ComponentManager* m_ComponentManager{ nullptr };
         [[maybe_unused]] LightManager* m_LightManager{ nullptr };
+        [[maybe_unused]] TextureManager* m_TextureManager{ nullptr };
 
         //@todo move to meshManager
         std::vector<VkImageView>m_DepthImageViews{};
@@ -182,5 +187,7 @@ namespace Poulpe
         [[maybe_unused]] VkRenderPass m_DepthMapRenderPass;
         [[maybe_unused]] VkSampler m_DepthMapSampler;
         [[maybe_unused]] VkDescriptorImageInfo m_DepthMapDescriptor;
+
+        std::unordered_map<std::string, VulkanPipeline> m_Pipelines;
     };
 }

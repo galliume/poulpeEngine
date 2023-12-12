@@ -23,6 +23,7 @@ namespace Poulpe
         //@todo should return an interface not direct impl
         virtual void immediateSubmit(std::function<void(VkCommandBuffer cmd)>&& function, int queueIndex = 0) = 0;
         virtual VulkanRenderer* rdr() = 0;
+        virtual void addPipeline(std::string const& shaderName, VulkanPipeline pipeline) = 0;
         //end @todo
     };
 }

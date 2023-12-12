@@ -1575,13 +1575,13 @@ namespace Poulpe {
     }
 
     void VulkanRenderer::draw(VkCommandBuffer commandBuffer, VkDescriptorSet descriptorSet,
-        Mesh* mesh, Mesh::Data * data, uint32_t uboCount, bool drawIndexed, uint32_t index)
+        VkPipelineLayout pipelineLayout, Mesh::Data * data, uint32_t uboCount, bool drawIndexed, uint32_t index)
     {
         VkBuffer vertexBuffers[] = { data->m_VertexBuffer.buffer };
         VkDeviceSize offsets[] = { 0 };
 
         vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
-        vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, mesh->getPipelineLayout(),
+        vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout,
             0, 1, & descriptorSet, 0, nullptr);
 
         if (drawIndexed) {

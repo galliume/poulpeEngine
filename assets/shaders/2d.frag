@@ -11,11 +11,16 @@ layout(binding = 1) uniform sampler2D texSampler[];
 
 layout(push_constant) uniform constants
 {
-    int textureID;
-}PC;
+    //texture ID blank blank
+    vec3 textureIDBB;
+    mat4 view;
+    vec4 viewPos;
+    vec3 mapsUsed;
+} pc;
 
 void main() {
-    outColor = texture(texSampler[PC.textureID], fragTexCoord);
+	int id = int(pc.textureIDBB.x);
+    outColor = texture(texSampler[id], fragTexCoord);
     //outColor = vec4(fragColor, 1.0);
     //outColor = vec4(1.0, 0.0, 0.0, 1.0);
 }
