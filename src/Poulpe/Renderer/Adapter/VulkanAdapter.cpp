@@ -22,11 +22,13 @@ namespace Poulpe
       Window* window,
       EntityManager* entityManager,
       ComponentManager* componentManager,
-      LightManager* lightManager)
+      LightManager* lightManager,
+      TextureManager* textureManager)
         : m_Window(window), 
           m_EntityManager(entityManager),
           m_ComponentManager(componentManager),
-          m_LightManager(lightManager)
+          m_LightManager(lightManager),
+          m_TextureManager(textureManager)
     {
         m_Renderer = std::make_unique<VulkanRenderer>(window);
     }
@@ -307,7 +309,9 @@ namespace Poulpe
 
         if (!mesh) continue;
 
-        m_Renderer->bindPipeline(m_CommandBuffersEntities[m_ImageIndex], mesh->getGraphicsPipeline());
+        auto pipeline = getPipeline(mesh->getShaderName());
+
+        m_Renderer->bindPipeline(m_CommandBuffersEntities[m_ImageIndex], pipeline->pipeline);
 
         // if (m_HasClicked && mesh->IsHit(m_RayPick)) {
         //    PLP_DEBUG("HIT ! {}", mesh->GetName());
@@ -336,28 +340,22 @@ namespace Poulpe
           min = max;
         }
 
-        int index = m_ImageIndex;
-        for (uint32_t i = 0; i < mesh->getUniformBuffers()->size(); i++) {
-          index += i * 3;
+        if (mesh->hasPushConstants() && nullptr != mesh->applyPushConstants) {
+        constants pushConstants{};
+        pushConstants.textureIDBB = glm::vec3(mesh->getData()->m_TextureIndex, 0.0, 0.0);
+        pushConstants.view = lightView ;
+        pushConstants.viewPos = glm::vec4(m_LightManager->getAmbientLight().position, 1.0f);
+        pushConstants.mapsUsed = mesh->getData()->mapsUsed;
 
-          if (mesh->hasPushConstants() && nullptr != mesh->applyPushConstants) {
-            constants pushConstants{};
-            pushConstants.textureIDBB = glm::vec3(mesh->getData()->m_TextureIndex, 0.0, 0.0);
-            pushConstants.view = lightView ;
-            pushConstants.viewPos = glm::vec4(m_LightManager->getAmbientLight().position, 1.0f);
-            pushConstants.mapsUsed = mesh->getData()->mapsUsed;
-
-            vkCmdPushConstants(m_CommandBuffersEntities[m_ImageIndex], mesh->getPipelineLayout(), VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(constants), & pushConstants);
-          }
-          try {
-            if (m_RenderingStopped) return;
-            m_Renderer->draw(m_CommandBuffersEntities[m_ImageIndex], mesh->getDescriptorSets().at(index),
-              mesh, mesh->getData(), mesh->getData()->m_Ubos.size(), mesh->isIndexed());
-          }
-          catch (std::exception& e) {
-            PLP_DEBUG("Draw error: {}", e.what());
-          }
-          index = m_ImageIndex;
+        vkCmdPushConstants(m_CommandBuffersEntities[m_ImageIndex], pipeline->pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(constants), & pushConstants);
+        }
+        try {
+        if (m_RenderingStopped) return;
+            m_Renderer->draw(m_CommandBuffersEntities[m_ImageIndex], pipeline->descSets.at(m_ImageIndex),
+            pipeline->pipelineLayout, mesh->getData(), mesh->getData()->m_Ubos.size(), mesh->isIndexed());
+        }
+        catch (std::exception& e) {
+        PLP_DEBUG("Draw error: {}", e.what());
         }
       }
 
@@ -387,45 +385,95 @@ namespace Poulpe
     {
         if (0 < m_EntityManager->getEntities()->size()) {
 
-          drawShadowMap();
+          //drawShadowMap();
 
-            //beginRendering(m_CommandBuffersEntities[m_ImageIndex]);
-            //m_Renderer->startMarker(m_CommandBuffersEntities[m_ImageIndex], "entities_drawing", 0.3, 0.2, 0.1);
+            beginRendering(m_CommandBuffersEntities[m_ImageIndex]);
+            m_Renderer->startMarker(m_CommandBuffersEntities[m_ImageIndex], "entities_drawing", 0.3, 0.2, 0.1);
 
-            //for (auto & entity : *m_EntityManager->getEntities()) {
-            //    Mesh* mesh = entity->getMesh();
+            for (auto & entity : *m_EntityManager->getEntities()) {
+                Mesh* mesh = entity->getMesh();
 
-            //    if (!mesh) continue;
+                if (!mesh) continue;
 
-            //    m_Renderer->bindPipeline(m_CommandBuffersEntities[m_ImageIndex], mesh->getGraphicsPipeline());
+                auto pipeline = getPipeline(mesh->getShaderName());
+                
+                std::vector<VkDescriptorImageInfo> imageInfos;
 
-            //    // if (m_HasClicked && mesh->IsHit(m_RayPick)) {
-            //    //    PLP_DEBUG("HIT ! {}", mesh->GetName());
-            //    // }
-            //    //m_HasClicked = false;
+                Texture tex;
 
-            //    int index = m_ImageIndex;
-            //    for (uint32_t i = 0; i < mesh->getUniformBuffers()->size(); i++) {
-            //        index += i * 3;
+                if (m_TextureManager->getTextures().contains(mesh->getData()->m_Texture)) {
+                    tex = m_TextureManager->getTextures()[mesh->getData()->m_Texture];
+                } else {
+                    //@todo rename to debug texture ?
+                    tex = m_TextureManager->getTextures()["mpoulpe"];
+                }
 
-            //        if (mesh->hasPushConstants() && nullptr != mesh->applyPushConstants)
-            //            mesh->applyPushConstants(m_CommandBuffersEntities[m_ImageIndex], mesh->getPipelineLayout(),
-            //                this, mesh);
+                VkDescriptorImageInfo imageInfo{};
 
-            //        try {
-            //            if (m_RenderingStopped) return;
-            //            m_Renderer->draw(m_CommandBuffersEntities[m_ImageIndex], mesh->getDescriptorSets().at(index),
-            //                mesh, mesh->getData(), mesh->getData()->m_Ubos.size(), mesh->isIndexed());
-            //        }
-            //        catch (std::exception & e) {
-            //            PLP_DEBUG("Draw error: {}", e.what());
-            //        }
-            //        index = m_ImageIndex;
-            //    }
-            //}
+                imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+                imageInfo.imageView = tex.getImageView();
+                imageInfo.sampler = tex.getSampler();
 
-            //m_Renderer->endMarker(m_CommandBuffersEntities[m_ImageIndex]);
-            //endRendering(m_CommandBuffersEntities[m_ImageIndex]);
+                imageInfos.emplace_back(imageInfo);
+
+                //@todo rename to debug texture ?
+                std::string specMapName = "textures_lion";
+                std::string bumpMapName = "mpoulpe";
+                mesh->getData()->mapsUsed = glm::vec3(0.0f);
+
+                if (!mesh->getData()->m_TextureSpecularMap.empty() 
+                    && m_TextureManager->getTextures().contains(mesh->getData()->m_TextureSpecularMap)) {
+                    specMapName = mesh->getData()->m_TextureSpecularMap;
+                    mesh->getData()->mapsUsed.y = 1.0f;
+
+                }
+                Texture texSpecularMap = m_TextureManager->getTextures()[specMapName];
+
+                if (!mesh->getData()->m_TextureBumpMap.empty() 
+                    && m_TextureManager->getTextures().contains(mesh->getData()->m_TextureBumpMap)) {
+                    bumpMapName = mesh->getData()->m_TextureBumpMap;
+                    mesh->getData()->mapsUsed.x = 1.0f;
+                }
+
+                Texture texBumpMap = m_TextureManager->getTextures()[bumpMapName];
+      
+                VkDescriptorImageInfo imageInfoSpecularMap{};
+                imageInfoSpecularMap.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+                imageInfoSpecularMap.imageView = texSpecularMap.getImageView();
+                imageInfoSpecularMap.sampler = texSpecularMap.getSampler();
+
+                VkDescriptorImageInfo imageInfoBumpMap{};
+                imageInfoBumpMap.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+                imageInfoBumpMap.imageView = texBumpMap.getImageView();
+                imageInfoBumpMap.sampler = texBumpMap.getSampler();
+
+                imageInfos.emplace_back(imageInfoSpecularMap);
+                imageInfos.emplace_back(imageInfoBumpMap);
+
+                m_Renderer->bindPipeline(m_CommandBuffersEntities[m_ImageIndex], pipeline->pipeline);
+                updateDescriptorSets(mesh, imageInfos);
+
+                // if (m_HasClicked && mesh->IsHit(m_RayPick)) {
+                //    PLP_DEBUG("HIT ! {}", mesh->GetName());
+                // }
+                //m_HasClicked = false;
+
+                if (mesh->hasPushConstants() && nullptr != mesh->applyPushConstants)
+                    mesh->applyPushConstants(m_CommandBuffersEntities[m_ImageIndex], pipeline->pipelineLayout,
+                        this, mesh);
+
+                try {
+                    if (m_RenderingStopped) return;
+                    m_Renderer->draw(m_CommandBuffersEntities[m_ImageIndex], pipeline->descSets.at(m_ImageIndex),
+                        pipeline->pipelineLayout, mesh->getData(), mesh->getData()->m_Ubos.size(), mesh->isIndexed());
+                }
+                catch (std::exception & e) {
+                    PLP_DEBUG("Draw error: {}", e.what());
+                }
+            }
+
+            m_Renderer->endMarker(m_CommandBuffersEntities[m_ImageIndex]);
+            endRendering(m_CommandBuffersEntities[m_ImageIndex]);
             {
                 std::lock_guard<std::mutex> guard(m_MutexCmdSubmit);
                 m_CmdToSubmit[1] = m_CommandBuffersEntities[m_ImageIndex];
@@ -442,26 +490,42 @@ namespace Poulpe
      {
         if (auto skybox = m_EntityManager->getSkybox()) {
 
-            beginRendering(m_CommandBuffersSkybox[m_ImageIndex], VK_ATTACHMENT_LOAD_OP_CLEAR, VK_ATTACHMENT_STORE_OP_STORE);
+            /*beginRendering(m_CommandBuffersSkybox[m_ImageIndex], VK_ATTACHMENT_LOAD_OP_CLEAR, VK_ATTACHMENT_STORE_OP_STORE);
             m_Renderer->startMarker(m_CommandBuffersSkybox[m_ImageIndex], "skybox_drawing", 0.3, 0.2, 0.1);
 
             Mesh::Data* skyboxData = skybox->getMesh()->getData();
+            auto pipeline = getPipeline(skybox->getMesh()->getShaderName());
 
-            m_Renderer->bindPipeline(m_CommandBuffersSkybox[m_ImageIndex], skybox->getMesh()->getGraphicsPipeline());
+            std::vector<VkDescriptorImageInfo> imageInfos;
 
-            for (uint32_t i = 0; i < skybox->getMesh()->getUniformBuffers()->size(); i++) {
+            Texture tex = m_TextureManager->getSkyboxTexture();
 
-                if (skybox->getMesh()->hasPushConstants() && nullptr != skybox->getMesh()->applyPushConstants)
-                    skybox->getMesh()->applyPushConstants(m_CommandBuffersSkybox[m_ImageIndex], skybox->getMesh()->getPipelineLayout(), this,
-                        skybox->getMesh());
+            VkDescriptorImageInfo descriptorImageInfo{};
+            descriptorImageInfo.sampler = tex.getSampler();
+            descriptorImageInfo.imageView = tex.getImageView();
+            descriptorImageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
-                if (m_RenderingStopped) return;
-                m_Renderer->draw(m_CommandBuffersSkybox[m_ImageIndex], skybox->getMesh()->getDescriptorSets().at(i), skybox->getMesh(),
-                    skyboxData, skyboxData->m_Ubos.size(), false);
-            }
+            VkDescriptorImageInfo descriptorImageInfo2{};
+            descriptorImageInfo.sampler = tex.getSampler();
+            descriptorImageInfo.imageView = tex.getImageView();
+            descriptorImageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+
+            imageInfos.emplace_back(descriptorImageInfo);
+            imageInfos.emplace_back(descriptorImageInfo2);
+
+            updateDescriptorSets(skybox->getMesh(), imageInfos);
+            m_Renderer->bindPipeline(m_CommandBuffersSkybox[m_ImageIndex], pipeline->pipeline);
+
+            if (skybox->getMesh()->hasPushConstants() && nullptr != skybox->getMesh()->applyPushConstants)
+                skybox->getMesh()->applyPushConstants(m_CommandBuffersSkybox[m_ImageIndex], pipeline->pipelineLayout, this,
+                    skybox->getMesh());
+
+            if (m_RenderingStopped) return;
+            m_Renderer->draw(m_CommandBuffersSkybox[m_ImageIndex], pipeline->descSets.at(m_ImageIndex), pipeline->pipelineLayout,
+                skyboxData, skyboxData->m_Ubos.size(), false);
 
             m_Renderer->endMarker(m_CommandBuffersSkybox[m_ImageIndex]);
-            endRendering(m_CommandBuffersSkybox[m_ImageIndex]);
+            endRendering(m_CommandBuffersSkybox[m_ImageIndex]);*/
 
             {
                 std::lock_guard<std::mutex> guard(m_MutexCmdSubmit);
@@ -477,30 +541,69 @@ namespace Poulpe
 
     void VulkanAdapter::drawHUD()
     {
-        beginRendering(m_CommandBuffersHud[m_ImageIndex]);
+        /*beginRendering(m_CommandBuffersHud[m_ImageIndex]);
         m_Renderer->startMarker(m_CommandBuffersHud[m_ImageIndex], "hud_drawing", 0.3, 0.2, 0.1);
 
         for (auto const & entity : * m_EntityManager->getHUD()) {
 
-            auto* hudPart = entity->getMesh();
+           auto* hudPart = entity->getMesh();
 
             if (!hudPart || !entity->isVisible()) continue;
-            m_Renderer->bindPipeline(m_CommandBuffersHud[m_ImageIndex], hudPart->getGraphicsPipeline());
+            
+            auto pipeline = getPipeline(hudPart->getShaderName());
+
+            std::vector<VkDescriptorImageInfo> imageInfos;
+
+            if (hudPart->getName() == "grid") {
+
+                Texture tex = m_TextureManager->getTextures()["crosshair_1"];
+                Texture tex2 = m_TextureManager->getTextures()["crosshair_2"];
+
+                VkDescriptorImageInfo imageInfo{};
+                imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+                imageInfo.imageView = tex.getImageView();
+                imageInfo.sampler = tex.getSampler();
+
+                VkDescriptorImageInfo imageInfo2{};
+                imageInfo2.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+                imageInfo2.imageView = tex2.getImageView();
+                imageInfo2.sampler = tex2.getSampler();
+
+                imageInfos.emplace_back(imageInfo);
+                imageInfos.emplace_back(imageInfo2);
+            } else {
+                Texture tex = m_TextureManager->getTextures()["mpoulpe"];
+                Texture tex2 = m_TextureManager->getTextures()["crosshair_2"];
+
+                VkDescriptorImageInfo imageInfo{};
+                imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+                imageInfo.imageView = tex.getImageView();
+                imageInfo.sampler = tex.getSampler();
+
+                VkDescriptorImageInfo imageInfo2{};
+                imageInfo2.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+                imageInfo2.imageView = tex2.getImageView();
+                imageInfo2.sampler = tex2.getSampler();
+
+                imageInfos.emplace_back(imageInfo);
+                imageInfos.emplace_back(imageInfo2);
+            }
+
+            updateDescriptorSets(hudPart, imageInfos);
+            m_Renderer->bindPipeline(m_CommandBuffersHud[m_ImageIndex], pipeline->pipeline);
 
             if (hudPart->hasPushConstants() && nullptr != hudPart->applyPushConstants) {
-                hudPart->applyPushConstants(m_CommandBuffersHud[m_ImageIndex], hudPart->getPipelineLayout(), this,
+                hudPart->applyPushConstants(m_CommandBuffersHud[m_ImageIndex], pipeline->pipelineLayout, this,
                     hudPart);
             }
 
-            for (uint32_t i = 0; i < hudPart->getUniformBuffers()->size(); i++) {
-                if (m_RenderingStopped) return;
-                m_Renderer->draw(m_CommandBuffersHud[m_ImageIndex], hudPart->getDescriptorSets().at(i), hudPart,
-                    hudPart->getData(), hudPart->getData()->m_Ubos.size());
-            }
+            if (m_RenderingStopped) return;
+            m_Renderer->draw(m_CommandBuffersHud[m_ImageIndex], pipeline->descSets.at(m_ImageIndex), pipeline->pipelineLayout,
+                hudPart->getData(), hudPart->getData()->m_Ubos.size());
         }
 
         m_Renderer->endMarker(m_CommandBuffersHud[m_ImageIndex]);
-        endRendering(m_CommandBuffersHud[m_ImageIndex]);
+        endRendering(m_CommandBuffersHud[m_ImageIndex]);*/
 
         {
             std::lock_guard<std::mutex> guard(m_MutexCmdSubmit);
@@ -515,7 +618,7 @@ namespace Poulpe
 
     void VulkanAdapter::drawBbox()
     {
-        auto & entities = *m_EntityManager->getEntities();
+ /*       auto & entities = *m_EntityManager->getEntities();
 
         if (entities.size() > 0)
         {
@@ -566,7 +669,7 @@ namespace Poulpe
                     m_RenderCond.notify_one();
                 }
             }
-        }
+        }*/
     }
 
     void VulkanAdapter::renderScene()
@@ -983,6 +1086,56 @@ namespace Poulpe
         for (auto & hudPart : *m_EntityManager->getHUD()) {
             if ("grid" == hudPart->getName()) {
                 hudPart->setVisible(show);
+            }
+        }
+    }
+
+    void VulkanAdapter::addPipeline(std::string const & shaderName, VulkanPipeline pipeline)
+    {
+        m_Pipelines[shaderName] = std::move(pipeline);
+    }
+
+    void VulkanAdapter::updateDescriptorSets(Mesh* mesh, std::vector<VkDescriptorImageInfo> imageInfos)
+    {
+        auto pipeline = getPipeline(mesh->getShaderName());
+
+        if (!mesh->hasBufferStorage()) {
+            ObjectBuffer objectBuffer{};
+
+            Material material{};
+            material.ambient = mesh->getMaterial().ambient;
+            material.diffuse = mesh->getMaterial().diffuse;
+            material.specular = mesh->getMaterial().specular;
+            material.transmittance = mesh->getMaterial().transmittance;
+            material.emission = mesh->getMaterial().emission;
+            material.shiIorDiss = glm::vec3(mesh->getMaterial().shininess,
+                mesh->getMaterial().ior, mesh->getMaterial().illum);
+
+            objectBuffer.pointLights[0] = m_LightManager->getPointLights().at(0);
+            objectBuffer.pointLights[1] = m_LightManager->getPointLights().at(1);
+
+            objectBuffer.spotLight = m_LightManager->getSpotLights().at(0);
+
+            objectBuffer.ambientLight = m_LightManager->getAmbientLight();
+
+            objectBuffer.material = material;
+
+            auto size = sizeof(objectBuffer);
+            mesh->addStorageBuffer(rdr()->createStorageBuffers(size));
+            rdr()->updateStorageBuffer(mesh->getStorageBuffers()->at(0), objectBuffer);
+            mesh->setHasBufferStorage();
+        }
+
+        for (size_t i = 0; i < mesh->getUniformBuffers()->size(); ++i) {
+            if (!mesh->getStorageBuffers()->empty()) {
+                rdr()->updateDescriptorSet(
+                    mesh->getUniformBuffers()->at(i),
+                    mesh->getStorageBuffers()->at(0),
+                    pipeline->descSets.at(m_ImageIndex), imageInfos);
+            } else {
+                rdr()->updateDescriptorSet(
+                    mesh->getUniformBuffers()->at(i),
+                    pipeline->descSets.at(m_ImageIndex), imageInfos);
             }
         }
     }

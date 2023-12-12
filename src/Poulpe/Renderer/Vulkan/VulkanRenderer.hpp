@@ -16,11 +16,11 @@ namespace Poulpe {
     struct VulkanPipeline
     {
         VkPipelineLayout pipelineLayout;
-        VkDescriptorPool descriptorPool;
-        std::vector<VkDescriptorSet> descriptorSets;
-        std::vector<VkDescriptorSetLayout> descriptorSetLayouts;
+        VkDescriptorPool descPool;
+        std::vector<VkDescriptorSet> descSets;
+        VkDescriptorSetLayout descSetLayout;
         VkPipelineCache pipelineCache;
-        std::vector<VkPipeline> graphicsPipeline;
+        VkPipeline pipeline;
     };
 
     struct QueueFamilyIndices {
@@ -195,7 +195,7 @@ namespace Poulpe {
 
         void bindPipeline(VkCommandBuffer commandBuffer, VkPipeline pipeline);
 
-        void draw(VkCommandBuffer commandBuffer, VkDescriptorSet descriptorSet, Mesh* mesh, Mesh::Data * data,
+        void draw(VkCommandBuffer commandBuffer, VkDescriptorSet descriptorSet, VkPipelineLayout pipelineLayout, Mesh::Data * data,
             uint32_t uboCount, bool drawIndexed = true, uint32_t index = 0);
 
         uint32_t acquireNextImageKHR(VkSwapchainKHR swapChain, std::pair<std::vector<VkSemaphore>,
@@ -407,8 +407,8 @@ namespace Poulpe {
         VkFence m_FenceBuffer{};
 
         //@todo move to config file
-        unsigned int m_Width{ 1200 };
-        unsigned int m_Height{ 720 };
+        unsigned int m_Width{ 2560 };
+        unsigned int m_Height{ 1440 };
 
         VkMemoryRequirements m_MemRequirements;
     };

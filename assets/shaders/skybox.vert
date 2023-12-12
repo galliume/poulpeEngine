@@ -17,9 +17,11 @@ layout(location = 2) out vec4 fModelPos;
 
 layout(push_constant) uniform constants
 {
-    int textureID;
+    //texture ID blank blank
+    vec3 textureIDBB;
     mat4 view;
-	vec4 viewPos;
+    vec4 viewPos;
+    vec3 mapsUsed;
 } pc;
 
 void main() 

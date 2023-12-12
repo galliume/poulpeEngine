@@ -14,9 +14,13 @@ layout(set = 0, binding = 0) uniform UniformBufferObject {
 
 layout(push_constant) uniform constants
 {
-    vec4 point;
+    //texture ID blank blank
+    vec3 textureIDBB;
     mat4 view;
-}PC;
+    vec4 viewPos;
+    vec3 mapsUsed;
+} pc;
+
 
 layout(location = 0) in vec3 pos;
 
@@ -34,11 +38,11 @@ layout(location = 12) out float far;
 
 void main() {
 	vec3 point = pos.xyz;
-	nearPoint = unproject(point.x, point.y, 0.0, PC.view, ubos[gl_InstanceIndex].proj).xyz;
-	farPoint = unproject(point.x, point.y, 1.0, PC.view, ubos[gl_InstanceIndex].proj).xyz;
-	matView = PC.view;	
+	nearPoint = unproject(point.x, point.y, 0.0, pc.view, ubos[gl_InstanceIndex].proj).xyz;
+	farPoint = unproject(point.x, point.y, 1.0, pc.view, ubos[gl_InstanceIndex].proj).xyz;
+	matView = pc.view;	
 	matProj = ubos[gl_InstanceIndex].proj;
-	near = PC.point.x;
-	far = PC.point.y;
+	near = pc.viewPos.x;
+	far = pc.viewPos.y;
     gl_Position = vec4(point, 1.0);
 }

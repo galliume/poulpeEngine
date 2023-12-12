@@ -48,10 +48,136 @@ namespace Poulpe
         VkShaderModule fragShaderModule = m_Renderer->rdr()->createShaderModule(fragShaderCode);
 
         std::array<VkShaderModule, 2> module = { vertexShaderModule, fragShaderModule };
-
+        
         m_Shaders->shaders[name] = module;
+
+        createGraphicPipeline(name);
     }
 
+    void ShaderManager::createGraphicPipeline(std::string const & shaderName)
+    {
+        std::vector<VkDescriptorPoolSize> poolSizes{};
+        VkDescriptorPoolSize cp1;
+        cp1.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        cp1.descriptorCount = 10;
+
+        VkDescriptorPoolSize cp2;
+        cp2.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        cp2.descriptorCount = 10;
+        poolSizes.emplace_back(cp1);
+        poolSizes.emplace_back(cp2);
+
+        poolSizes.emplace_back(cp1);
+        poolSizes.emplace_back(cp2);
+
+        VkDescriptorPoolSize cp3;
+        cp3.type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+        cp3.descriptorCount = 10;
+
+        auto descriptorPool = m_Renderer->rdr()->createDescriptorPool(poolSizes, 1000);
+        auto descSetLayout = createDescriptorSetLayout();
+
+        std::vector<VkDescriptorSet> descSets{};
+        for (size_t i = 0; i < m_Renderer->getSwapChainImages()->size(); ++i) {
+            auto descSet = m_Renderer->rdr()->createDescriptorSets(descriptorPool, { descSetLayout }, 1);
+            descSets.emplace_back(descSet);
+        }
+
+        std::vector<VkDescriptorSetLayout> dSetLayout = { descSetLayout };
+
+        std::vector<VkPushConstantRange> vkPcs = {};
+        VkPushConstantRange vkPc;
+        vkPc.offset = 0;
+        vkPc.size = sizeof(constants);
+        vkPc.stageFlags = VK_SHADER_STAGE_ALL;
+        vkPcs.emplace_back(vkPc);
+        VkPipelineLayout pipelineLayout = m_Renderer->rdr()->createPipelineLayout(dSetLayout, vkPcs);
+
+        auto shaders = getShadersInfo(shaderName);
+        auto bDesc = Vertex::GetBindingDescription();
+        auto attDesc = Vertex::GetAttributeDescriptions();
+        auto vertexInputInfo = getVertexBindingDesc(bDesc, attDesc);
+
+        auto graphicPipeline = m_Renderer->rdr()->createGraphicsPipeline(m_Renderer->rdrPass(), pipelineLayout,
+            shaderName, shaders, vertexInputInfo, VK_CULL_MODE_BACK_BIT, true, true, true, true, VK_POLYGON_MODE_FILL);
+
+        VulkanPipeline pipeline{};
+        pipeline.pipeline = graphicPipeline;
+        pipeline.pipelineLayout = pipelineLayout;
+        pipeline.descPool = descriptorPool;
+        pipeline.descSetLayout = descSetLayout;
+        pipeline.descSets = descSets;
+
+        m_Renderer->addPipeline(shaderName, pipeline);
+    }
+
+    VkDescriptorSetLayout ShaderManager::createDescriptorSetLayout()
+    {
+        VkDescriptorSetLayoutBinding uboLayoutBinding{};
+        uboLayoutBinding.binding = 0;
+        uboLayoutBinding.descriptorCount = 1;
+        uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        uboLayoutBinding.pImmutableSamplers = nullptr;
+        uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+
+        VkDescriptorSetLayoutBinding samplerLayoutBinding{};
+        samplerLayoutBinding.binding = 1;
+        samplerLayoutBinding.descriptorCount = 3;
+        samplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        samplerLayoutBinding.pImmutableSamplers = nullptr;
+        samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+        std::vector<VkDescriptorSetLayoutBinding> bindings = {
+            uboLayoutBinding, samplerLayoutBinding };
+
+        VkDescriptorSetLayoutBinding storageLayoutBinding{};
+        storageLayoutBinding.binding = 2;
+        storageLayoutBinding.descriptorCount = 1;
+        storageLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+        storageLayoutBinding.pImmutableSamplers = nullptr;
+        storageLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+        bindings.emplace_back(storageLayoutBinding);
+
+      VkDescriptorSetLayout desriptorSetLayout = m_Renderer->rdr()->createDescriptorSetLayout(bindings);
+
+      return desriptorSetLayout;
+    }
+
+    std::vector<VkPipelineShaderStageCreateInfo> ShaderManager::getShadersInfo(std::string const & shaderName)
+    {
+      std::vector<VkPipelineShaderStageCreateInfo> shadersStageInfos;
+
+      VkPipelineShaderStageCreateInfo vertShaderStageInfo{};
+      vertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+      vertShaderStageInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
+      vertShaderStageInfo.module = m_Shaders->shaders[shaderName][0];
+      vertShaderStageInfo.pName = "main";
+      shadersStageInfos.emplace_back(vertShaderStageInfo);
+
+      VkPipelineShaderStageCreateInfo fragShaderStageInfo{};
+      fragShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+      fragShaderStageInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
+      fragShaderStageInfo.module = m_Shaders->shaders[shaderName][1];
+      fragShaderStageInfo.pName = "main";
+      shadersStageInfos.emplace_back(fragShaderStageInfo);
+
+      return shadersStageInfos;
+    }
+
+    VkPipelineVertexInputStateCreateInfo ShaderManager::getVertexBindingDesc(VkVertexInputBindingDescription bDesc,
+      std::array<VkVertexInputAttributeDescription, 4> attDesc)
+    {
+      VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
+      vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
+      vertexInputInfo.vertexBindingDescriptionCount = 1;
+      vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(Vertex::GetAttributeDescriptions().size());
+      vertexInputInfo.pVertexBindingDescriptions = & bDesc;
+      vertexInputInfo.pVertexAttributeDescriptions = attDesc.data();
+
+      return vertexInputInfo;
+
+    }
     void ShaderManager::clear()
     {
         m_Shaders->shaders.clear();

@@ -145,10 +145,8 @@ namespace Poulpe
                 auto skybox = m_RenderManager->getEntityManager()->getSkybox();
                 skybox->getMesh()->setIsDirty();
 
-                auto entity = std::make_unique<Skybox>(EntityFactory::create<Skybox>(m_RenderManager->getRendererAdapter(),
-                    m_RenderManager->getShaderManager(), m_RenderManager->getTextureManager()));
+                auto entity = std::make_unique<Skybox>(EntityFactory::create<Skybox>(m_RenderManager->getRendererAdapter()));
 
-                skybox->getMesh()->setDescriptorSets(entity->createDescriptorSet(skybox->getMesh()));
                 entity.release();
             }
         };

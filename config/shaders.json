@@ -20,10 +20,6 @@
       "vert": "assets/shaders/spv/2d_vert.spv",
       "frag": "assets/shaders/spv/2d_frag.spv"
     },
-    "ambient_light": {
-      "vert": "assets/shaders/spv/ambient_light_vert.spv",
-      "frag": "assets/shaders/spv/ambient_light_frag.spv"
-    },
     "tangent": {
       "vert": "assets/shaders/spv/tangent_vert.spv",
       "frag": "assets/shaders/spv/tangent_frag.spv"
