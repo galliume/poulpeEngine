@@ -15,8 +15,11 @@ namespace Poulpe
         m_ComponentManager = std::make_unique<Poulpe::ComponentManager>();
         m_LightManager = std::make_unique<Poulpe::LightManager>();
         
-        m_Renderer = std::make_unique<Poulpe::VulkanAdapter>(m_Window.get(), m_EntityManager.get(), 
-          m_ComponentManager.get());
+        m_Renderer = std::make_unique<Poulpe::VulkanAdapter>(
+          m_Window.get(),
+          m_EntityManager.get(),
+          m_ComponentManager.get(),
+          m_LightManager.get());
 
         m_ConfigManager = std::make_unique<Poulpe::ConfigManager>();
         m_AudioManager = std::make_unique<Poulpe::AudioManager>();

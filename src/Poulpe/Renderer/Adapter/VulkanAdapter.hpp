@@ -8,6 +8,7 @@
 
 #include "Poulpe/Manager/ComponentManager.hpp"
 #include "Poulpe/Manager/EntityManager.hpp"
+#include "Poulpe/Manager/LightManager.hpp"
 
 #include <future>
 
@@ -18,7 +19,13 @@ namespace Poulpe
 
     public:
 
-        explicit VulkanAdapter(Window* window, EntityManager* entityManager, ComponentManager* componentManager);
+        explicit VulkanAdapter(
+          Window* window,
+          EntityManager* entityManager, 
+          ComponentManager* componentManager,
+          LightManager* lightManager
+        );
+
         virtual ~VulkanAdapter() = default;
 
         void init() override;
@@ -81,7 +88,8 @@ namespace Poulpe
         static std::atomic<int> s_PolygoneMode;
 
         Camera* getCamera() { return m_Camera; }
-        std::vector<glm::vec3> getLights() { return m_LightsPos; }
+
+        void drawShadowMap();
 
     private:
         //@todo temp
@@ -123,6 +131,7 @@ namespace Poulpe
         Window* m_Window{ nullptr };
         EntityManager* m_EntityManager{ nullptr };
         [[maybe_unused]] ComponentManager* m_ComponentManager{ nullptr };
+        [[maybe_unused]] LightManager* m_LightManager{ nullptr };
 
         //@todo move to meshManager
         std::vector<VkImageView>m_DepthImageViews{};

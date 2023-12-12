@@ -20,10 +20,6 @@
       "vert": "assets/shaders/spv/2d_vert.spv",
       "frag": "assets/shaders/spv/2d_frag.spv"
     },
-    "bbox": {
-      "vert": "assets/shaders/spv/bbox_vert.spv",
-      "frag": "assets/shaders/spv/bbox_frag.spv"
-    },
     "ambient_light": {
       "vert": "assets/shaders/spv/ambient_light_vert.spv",
       "frag": "assets/shaders/spv/ambient_light_frag.spv"
