@@ -8,30 +8,13 @@ namespace Poulpe
 {
     class Crosshair : public IVisitor, public IMesh
     {
-    struct pc
-    {
-        uint32_t textureID;
-    };
-
     public:
-        Crosshair(VulkanAdapter* adapter, ShaderManager* shaderManager, TextureManager* textureManager);
+        Crosshair(VulkanAdapter* adapter);
 
         void visit(float const deltaTime, Mesh* mesh) override;
-
-        VkDescriptorSetLayout createDescriptorSetLayout(Mesh* mesh) override;
-        std::vector<VkDescriptorSet> createDescriptorSet(Mesh* mesh) override;
-        VkPipelineLayout createPipelineLayout(VkDescriptorSetLayout descriptorSetLayout) override;
-        std::vector<VkPipelineShaderStageCreateInfo> getShaders(std::string const & name) override;
-
-        VkPipelineVertexInputStateCreateInfo getVertexBindingDesc(
-          VkVertexInputBindingDescription bDesc, std::array<VkVertexInputAttributeDescription, 4> attDesc) override;
-        
         void setPushConstants(Mesh* mesh) override;
 
     private:
         VulkanAdapter* m_Adapter;
-        ShaderManager* m_ShaderManager;
-        TextureManager* m_TextureManager;
-        VkDescriptorPool m_DescriptorPool;
     };
 }

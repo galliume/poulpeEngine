@@ -4,7 +4,6 @@
 #include "Poulpe/Renderer/Vulkan/Entities/Basic.hpp"
 #include "Poulpe/Renderer/Vulkan/Entities/Grid.hpp"
 #include "Poulpe/Renderer/Vulkan/Entities/Skybox.hpp"
-#include "Poulpe/Renderer/Vulkan/Entities/Splash.hpp"
 
 namespace Poulpe
 {
