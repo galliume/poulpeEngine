@@ -5,8 +5,9 @@ namespace Poulpe
 {
     struct constants;
 
-    Skybox::Skybox(VulkanAdapter* adapter) :
-        m_Adapter(adapter)
+    Skybox::Skybox(VulkanAdapter* adapter, TextureManager* textureManager)
+      : m_Adapter(adapter),
+      m_TextureManager(textureManager)
     {
      
     }
@@ -73,7 +74,6 @@ namespace Poulpe
         data.m_Ubos.emplace_back(ubo);
         data.m_TextureIndex = 0;
 
-
         vkDestroyCommandPool(m_Adapter->rdr()->getDevice(), commandPool, nullptr);
 
         Mesh::Buffer uniformBuffer = m_Adapter->rdr()->createUniformBuffers(1);
@@ -88,6 +88,7 @@ namespace Poulpe
             m_Adapter->rdr()->updateUniformBuffer(mesh->getUniformBuffers()->at(i), & data.m_Ubos);
         }
 
+        createDescriptorSet(mesh);
         mesh->setData(data);
         mesh->setIsDirty(false);
     }
@@ -107,5 +108,26 @@ namespace Poulpe
         };
 
         mesh->setHasPushConstants();
+    }
+
+    void Skybox::createDescriptorSet(Mesh* mesh)
+    {
+      Texture tex = m_TextureManager->getSkyboxTexture();
+
+      std::vector<VkDescriptorImageInfo> imageInfos{};
+
+      VkDescriptorImageInfo imageInfo{};
+      imageInfo.sampler = tex.getSampler();
+      imageInfo.imageView = tex.getImageView();
+      imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+
+      imageInfos.emplace_back(imageInfo);
+
+      auto pipeline = m_Adapter->getPipeline(mesh->getShaderName());
+      VkDescriptorSet descSet = m_Adapter->rdr()->createDescriptorSets(pipeline->descPool, { pipeline->descSetLayout }, 1);
+
+      m_Adapter->rdr()->updateDescriptorSets(*mesh->getUniformBuffers(), descSet, imageInfos);
+
+      mesh->setDescSet(descSet);
     }
 }

@@ -22,13 +22,11 @@ namespace Poulpe
       Window* window,
       EntityManager* entityManager,
       ComponentManager* componentManager,
-      LightManager* lightManager,
-      TextureManager* textureManager)
+      LightManager* lightManager)
         : m_Window(window), 
           m_EntityManager(entityManager),
           m_ComponentManager(componentManager),
-          m_LightManager(lightManager),
-          m_TextureManager(textureManager)
+          m_LightManager(lightManager)
     {
         m_Renderer = std::make_unique<VulkanRenderer>(window);
     }
@@ -351,7 +349,7 @@ namespace Poulpe
         }
         try {
         if (m_RenderingStopped) return;
-            m_Renderer->draw(m_CommandBuffersEntities[m_ImageIndex], pipeline->descSets.at(m_ImageIndex),
+            m_Renderer->draw(m_CommandBuffersEntities[m_ImageIndex], *mesh->getDescSet(),
             pipeline->pipelineLayout, mesh->getData(), mesh->getData()->m_Ubos.size(), mesh->isIndexed());
         }
         catch (std::exception& e) {
@@ -396,67 +394,13 @@ namespace Poulpe
                 if (!mesh) continue;
 
                 auto pipeline = getPipeline(mesh->getShaderName());
-                
-                std::vector<VkDescriptorImageInfo> imageInfos;
-
-                Texture tex;
-
-                if (m_TextureManager->getTextures().contains(mesh->getData()->m_Texture)) {
-                    tex = m_TextureManager->getTextures()[mesh->getData()->m_Texture];
-                } else {
-                    //@todo rename to debug texture ?
-                    tex = m_TextureManager->getTextures()["mpoulpe"];
-                }
-
-                VkDescriptorImageInfo imageInfo{};
-
-                imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-                imageInfo.imageView = tex.getImageView();
-                imageInfo.sampler = tex.getSampler();
-
-                imageInfos.emplace_back(imageInfo);
-
-                //@todo rename to debug texture ?
-                std::string specMapName = "textures_lion";
-                std::string bumpMapName = "mpoulpe";
-                mesh->getData()->mapsUsed = glm::vec3(0.0f);
-
-                if (!mesh->getData()->m_TextureSpecularMap.empty() 
-                    && m_TextureManager->getTextures().contains(mesh->getData()->m_TextureSpecularMap)) {
-                    specMapName = mesh->getData()->m_TextureSpecularMap;
-                    mesh->getData()->mapsUsed.y = 1.0f;
-
-                }
-                Texture texSpecularMap = m_TextureManager->getTextures()[specMapName];
-
-                if (!mesh->getData()->m_TextureBumpMap.empty() 
-                    && m_TextureManager->getTextures().contains(mesh->getData()->m_TextureBumpMap)) {
-                    bumpMapName = mesh->getData()->m_TextureBumpMap;
-                    mesh->getData()->mapsUsed.x = 1.0f;
-                }
-
-                Texture texBumpMap = m_TextureManager->getTextures()[bumpMapName];
-      
-                VkDescriptorImageInfo imageInfoSpecularMap{};
-                imageInfoSpecularMap.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-                imageInfoSpecularMap.imageView = texSpecularMap.getImageView();
-                imageInfoSpecularMap.sampler = texSpecularMap.getSampler();
-
-                VkDescriptorImageInfo imageInfoBumpMap{};
-                imageInfoBumpMap.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-                imageInfoBumpMap.imageView = texBumpMap.getImageView();
-                imageInfoBumpMap.sampler = texBumpMap.getSampler();
-
-                imageInfos.emplace_back(imageInfoSpecularMap);
-                imageInfos.emplace_back(imageInfoBumpMap);
-
-                m_Renderer->bindPipeline(m_CommandBuffersEntities[m_ImageIndex], pipeline->pipeline);
-                updateDescriptorSets(mesh, imageInfos);
 
                 // if (m_HasClicked && mesh->IsHit(m_RayPick)) {
                 //    PLP_DEBUG("HIT ! {}", mesh->GetName());
                 // }
                 //m_HasClicked = false;
+
+                m_Renderer->bindPipeline(m_CommandBuffersEntities[m_ImageIndex], pipeline->pipeline);
 
                 if (mesh->hasPushConstants() && nullptr != mesh->applyPushConstants)
                     mesh->applyPushConstants(m_CommandBuffersEntities[m_ImageIndex], pipeline->pipelineLayout,
@@ -464,7 +408,7 @@ namespace Poulpe
 
                 try {
                     if (m_RenderingStopped) return;
-                    m_Renderer->draw(m_CommandBuffersEntities[m_ImageIndex], pipeline->descSets.at(m_ImageIndex),
+                    m_Renderer->draw(m_CommandBuffersEntities[m_ImageIndex], *mesh->getDescSet(),
                         pipeline->pipelineLayout, mesh->getData(), mesh->getData()->m_Ubos.size(), mesh->isIndexed());
                 }
                 catch (std::exception & e) {
@@ -490,30 +434,12 @@ namespace Poulpe
      {
         if (auto skybox = m_EntityManager->getSkybox()) {
 
-            /*beginRendering(m_CommandBuffersSkybox[m_ImageIndex], VK_ATTACHMENT_LOAD_OP_CLEAR, VK_ATTACHMENT_STORE_OP_STORE);
+            beginRendering(m_CommandBuffersSkybox[m_ImageIndex], VK_ATTACHMENT_LOAD_OP_CLEAR, VK_ATTACHMENT_STORE_OP_STORE);
             m_Renderer->startMarker(m_CommandBuffersSkybox[m_ImageIndex], "skybox_drawing", 0.3, 0.2, 0.1);
 
             Mesh::Data* skyboxData = skybox->getMesh()->getData();
             auto pipeline = getPipeline(skybox->getMesh()->getShaderName());
 
-            std::vector<VkDescriptorImageInfo> imageInfos;
-
-            Texture tex = m_TextureManager->getSkyboxTexture();
-
-            VkDescriptorImageInfo descriptorImageInfo{};
-            descriptorImageInfo.sampler = tex.getSampler();
-            descriptorImageInfo.imageView = tex.getImageView();
-            descriptorImageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-
-            VkDescriptorImageInfo descriptorImageInfo2{};
-            descriptorImageInfo.sampler = tex.getSampler();
-            descriptorImageInfo.imageView = tex.getImageView();
-            descriptorImageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-
-            imageInfos.emplace_back(descriptorImageInfo);
-            imageInfos.emplace_back(descriptorImageInfo2);
-
-            updateDescriptorSets(skybox->getMesh(), imageInfos);
             m_Renderer->bindPipeline(m_CommandBuffersSkybox[m_ImageIndex], pipeline->pipeline);
 
             if (skybox->getMesh()->hasPushConstants() && nullptr != skybox->getMesh()->applyPushConstants)
@@ -521,11 +447,11 @@ namespace Poulpe
                     skybox->getMesh());
 
             if (m_RenderingStopped) return;
-            m_Renderer->draw(m_CommandBuffersSkybox[m_ImageIndex], pipeline->descSets.at(m_ImageIndex), pipeline->pipelineLayout,
+            m_Renderer->draw(m_CommandBuffersSkybox[m_ImageIndex], *skybox->getMesh()->getDescSet(), pipeline->pipelineLayout,
                 skyboxData, skyboxData->m_Ubos.size(), false);
 
             m_Renderer->endMarker(m_CommandBuffersSkybox[m_ImageIndex]);
-            endRendering(m_CommandBuffersSkybox[m_ImageIndex]);*/
+            endRendering(m_CommandBuffersSkybox[m_ImageIndex]);
 
             {
                 std::lock_guard<std::mutex> guard(m_MutexCmdSubmit);
@@ -541,7 +467,7 @@ namespace Poulpe
 
     void VulkanAdapter::drawHUD()
     {
-        /*beginRendering(m_CommandBuffersHud[m_ImageIndex]);
+        beginRendering(m_CommandBuffersHud[m_ImageIndex]);
         m_Renderer->startMarker(m_CommandBuffersHud[m_ImageIndex], "hud_drawing", 0.3, 0.2, 0.1);
 
         for (auto const & entity : * m_EntityManager->getHUD()) {
@@ -552,44 +478,6 @@ namespace Poulpe
             
             auto pipeline = getPipeline(hudPart->getShaderName());
 
-            std::vector<VkDescriptorImageInfo> imageInfos;
-
-            if (hudPart->getName() == "grid") {
-
-                Texture tex = m_TextureManager->getTextures()["crosshair_1"];
-                Texture tex2 = m_TextureManager->getTextures()["crosshair_2"];
-
-                VkDescriptorImageInfo imageInfo{};
-                imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-                imageInfo.imageView = tex.getImageView();
-                imageInfo.sampler = tex.getSampler();
-
-                VkDescriptorImageInfo imageInfo2{};
-                imageInfo2.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-                imageInfo2.imageView = tex2.getImageView();
-                imageInfo2.sampler = tex2.getSampler();
-
-                imageInfos.emplace_back(imageInfo);
-                imageInfos.emplace_back(imageInfo2);
-            } else {
-                Texture tex = m_TextureManager->getTextures()["mpoulpe"];
-                Texture tex2 = m_TextureManager->getTextures()["crosshair_2"];
-
-                VkDescriptorImageInfo imageInfo{};
-                imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-                imageInfo.imageView = tex.getImageView();
-                imageInfo.sampler = tex.getSampler();
-
-                VkDescriptorImageInfo imageInfo2{};
-                imageInfo2.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-                imageInfo2.imageView = tex2.getImageView();
-                imageInfo2.sampler = tex2.getSampler();
-
-                imageInfos.emplace_back(imageInfo);
-                imageInfos.emplace_back(imageInfo2);
-            }
-
-            updateDescriptorSets(hudPart, imageInfos);
             m_Renderer->bindPipeline(m_CommandBuffersHud[m_ImageIndex], pipeline->pipeline);
 
             if (hudPart->hasPushConstants() && nullptr != hudPart->applyPushConstants) {
@@ -598,12 +486,12 @@ namespace Poulpe
             }
 
             if (m_RenderingStopped) return;
-            m_Renderer->draw(m_CommandBuffersHud[m_ImageIndex], pipeline->descSets.at(m_ImageIndex), pipeline->pipelineLayout,
+            m_Renderer->draw(m_CommandBuffersHud[m_ImageIndex], *hudPart->getDescSet(), pipeline->pipelineLayout,
                 hudPart->getData(), hudPart->getData()->m_Ubos.size());
         }
 
         m_Renderer->endMarker(m_CommandBuffersHud[m_ImageIndex]);
-        endRendering(m_CommandBuffersHud[m_ImageIndex]);*/
+        endRendering(m_CommandBuffersHud[m_ImageIndex]);
 
         {
             std::lock_guard<std::mutex> guard(m_MutexCmdSubmit);
@@ -1093,50 +981,5 @@ namespace Poulpe
     void VulkanAdapter::addPipeline(std::string const & shaderName, VulkanPipeline pipeline)
     {
         m_Pipelines[shaderName] = std::move(pipeline);
-    }
-
-    void VulkanAdapter::updateDescriptorSets(Mesh* mesh, std::vector<VkDescriptorImageInfo> imageInfos)
-    {
-        auto pipeline = getPipeline(mesh->getShaderName());
-
-        if (!mesh->hasBufferStorage()) {
-            ObjectBuffer objectBuffer{};
-
-            Material material{};
-            material.ambient = mesh->getMaterial().ambient;
-            material.diffuse = mesh->getMaterial().diffuse;
-            material.specular = mesh->getMaterial().specular;
-            material.transmittance = mesh->getMaterial().transmittance;
-            material.emission = mesh->getMaterial().emission;
-            material.shiIorDiss = glm::vec3(mesh->getMaterial().shininess,
-                mesh->getMaterial().ior, mesh->getMaterial().illum);
-
-            objectBuffer.pointLights[0] = m_LightManager->getPointLights().at(0);
-            objectBuffer.pointLights[1] = m_LightManager->getPointLights().at(1);
-
-            objectBuffer.spotLight = m_LightManager->getSpotLights().at(0);
-
-            objectBuffer.ambientLight = m_LightManager->getAmbientLight();
-
-            objectBuffer.material = material;
-
-            auto size = sizeof(objectBuffer);
-            mesh->addStorageBuffer(rdr()->createStorageBuffers(size));
-            rdr()->updateStorageBuffer(mesh->getStorageBuffers()->at(0), objectBuffer);
-            mesh->setHasBufferStorage();
-        }
-
-        for (size_t i = 0; i < mesh->getUniformBuffers()->size(); ++i) {
-            if (!mesh->getStorageBuffers()->empty()) {
-                rdr()->updateDescriptorSet(
-                    mesh->getUniformBuffers()->at(i),
-                    mesh->getStorageBuffers()->at(0),
-                    pipeline->descSets.at(m_ImageIndex), imageInfos);
-            } else {
-                rdr()->updateDescriptorSet(
-                    mesh->getUniformBuffers()->at(i),
-                    pipeline->descSets.at(m_ImageIndex), imageInfos);
-            }
-        }
     }
 }

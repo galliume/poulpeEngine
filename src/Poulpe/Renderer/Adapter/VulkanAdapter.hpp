@@ -24,8 +24,7 @@ namespace Poulpe
           Window* window,
           EntityManager* entityManager, 
           ComponentManager* componentManager,
-          LightManager* lightManager,
-          TextureManager* textureManager
+          LightManager* lightManager
         );
 
         virtual ~VulkanAdapter() = default;
@@ -94,7 +93,6 @@ namespace Poulpe
         void drawShadowMap();
         void addPipeline(std::string const & shaderName, VulkanPipeline pipeline) override;
         VulkanPipeline* getPipeline(std::string const& shaderName) { return & m_Pipelines[shaderName]; };
-        void updateDescriptorSets(Mesh* mesh, std::vector<VkDescriptorImageInfo> imageInfos);
 
     private:
         //@todo temp
@@ -136,7 +134,6 @@ namespace Poulpe
         EntityManager* m_EntityManager{ nullptr };
         [[maybe_unused]] ComponentManager* m_ComponentManager{ nullptr };
         [[maybe_unused]] LightManager* m_LightManager{ nullptr };
-        [[maybe_unused]] TextureManager* m_TextureManager{ nullptr };
 
         //@todo move to meshManager
         std::vector<VkImageView>m_DepthImageViews{};
