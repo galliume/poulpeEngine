@@ -6,8 +6,9 @@ namespace Poulpe
 {
     struct cPC;
 
-    Grid::Grid(VulkanAdapter* adapter) :
-        m_Adapter(adapter)
+    Grid::Grid(VulkanAdapter* adapter, TextureManager* textureManager)
+      : m_Adapter(adapter),
+      m_TextureManager(textureManager)
     {
 
     }
@@ -53,6 +54,8 @@ namespace Poulpe
 
             m_Adapter->rdr()->updateUniformBuffer(mesh->getUniformBuffers()->at(i), & gridData.m_Ubos);
         }
+
+        createDescriptorSet(mesh);
         mesh->setData(gridData);
         mesh->setIsDirty(false);
     }
@@ -69,5 +72,26 @@ namespace Poulpe
             vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_ALL, 0, sizeof(constants), & pushConstants);
         };
         mesh->setHasPushConstants();
+    }
+
+    void Grid::createDescriptorSet(Mesh* mesh)
+    {
+      Texture ctex = m_TextureManager->getTextures()["mpoulpe"];
+
+      std::vector<VkDescriptorImageInfo> imageInfos{};
+
+      VkDescriptorImageInfo imageInfo{};
+      imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+      imageInfo.imageView = ctex.getImageView();
+      imageInfo.sampler = ctex.getSampler();
+
+      imageInfos.emplace_back(imageInfo);
+
+      auto pipeline = m_Adapter->getPipeline(mesh->getShaderName());
+      VkDescriptorSet descSet = m_Adapter->rdr()->createDescriptorSets(pipeline->descPool, { pipeline->descSetLayout }, 1);
+
+      m_Adapter->rdr()->updateDescriptorSets(*mesh->getUniformBuffers(), descSet, imageInfos);
+
+      mesh->setDescSet(descSet);
     }
 }

@@ -20,8 +20,7 @@ namespace Poulpe
           m_Window.get(),
           m_EntityManager.get(),
           m_ComponentManager.get(),
-          m_LightManager.get(),
-          m_TextureManager.get());
+          m_LightManager.get());
 
         m_ConfigManager = std::make_unique<Poulpe::ConfigManager>();
         m_AudioManager = std::make_unique<Poulpe::AudioManager>();
@@ -267,7 +266,7 @@ namespace Poulpe
     {
         auto* gridMesh = new Mesh();
         auto* gridEntity = new Entity();
-        auto* gridRdrImpl = new Grid(m_Renderer.get());
+        auto* gridRdrImpl = new Grid(m_Renderer.get(), m_TextureManager.get());
 
         gridEntity->setMesh(gridMesh);
         m_EntityManager->addHUD(gridEntity);
@@ -275,7 +274,7 @@ namespace Poulpe
 
         auto* chMesh = new Mesh();
         auto* chEntity = new Entity();
-        auto* chRdrImpl = new Crosshair(m_Renderer.get());
+        auto* chRdrImpl = new Crosshair(m_Renderer.get(), m_TextureManager.get());
 
         chEntity->setMesh(chMesh);
         m_EntityManager->addHUD(chEntity);
@@ -293,7 +292,7 @@ namespace Poulpe
     {
         auto* skyboxMesh = new Mesh();
         auto* skyboxEntity = new Entity();
-        auto* skyRdrImpl = new Skybox(m_Renderer.get());
+        auto* skyRdrImpl = new Skybox(m_Renderer.get(), m_TextureManager.get());
 
         skyboxEntity->setMesh(skyboxMesh);
         m_EntityManager->setSkybox(skyboxEntity);
