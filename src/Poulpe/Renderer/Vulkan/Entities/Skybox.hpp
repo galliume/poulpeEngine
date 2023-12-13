@@ -9,13 +9,15 @@ namespace Poulpe
     class Skybox : public IVisitor, public IMesh
     {
     public:
-        Skybox(VulkanAdapter* adapter);
+        Skybox(VulkanAdapter* adapter, TextureManager* textureManager);
         ~Skybox() = default;
 
         void visit(float const deltaTime, Mesh* mesh) override;
         void setPushConstants(Mesh* mesh) override;
+        void createDescriptorSet(Mesh* mesh) override;
 
     private:
         VulkanAdapter* m_Adapter;
+        TextureManager* m_TextureManager;
     };
 }
