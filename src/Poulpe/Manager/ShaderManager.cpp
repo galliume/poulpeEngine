@@ -74,13 +74,16 @@ namespace Poulpe
         cp3.type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
         cp3.descriptorCount = 10;
 
-        auto descriptorPool = m_Renderer->rdr()->createDescriptorPool(poolSizes, 1000);
-        auto descSetLayout = createDescriptorSetLayout();
+        VkDescriptorSetLayout descSetLayout;
 
-        std::vector<VkDescriptorSet> descSets{};
-        for (size_t i = 0; i < m_Renderer->getSwapChainImages()->size(); ++i) {
-            auto descSet = m_Renderer->rdr()->createDescriptorSets(descriptorPool, { descSetLayout }, 1);
-            descSets.emplace_back(descSet);
+        auto descriptorPool = m_Renderer->rdr()->createDescriptorPool(poolSizes, 1000);
+
+        if (shaderName == "skybox") {
+          descSetLayout = createDescriptorSetLayoutForSkybox();
+        } else if (shaderName == "grid" || shaderName == "2d") {
+          descSetLayout = createDescriptorSetLayoutForHUD();
+        } else {
+          descSetLayout = createDescriptorSetLayout();
         }
 
         std::vector<VkDescriptorSetLayout> dSetLayout = { descSetLayout };
@@ -106,9 +109,56 @@ namespace Poulpe
         pipeline.pipelineLayout = pipelineLayout;
         pipeline.descPool = descriptorPool;
         pipeline.descSetLayout = descSetLayout;
-        pipeline.descSets = descSets;
 
         m_Renderer->addPipeline(shaderName, pipeline);
+    }
+
+    VkDescriptorSetLayout ShaderManager::createDescriptorSetLayoutForSkybox()
+    {
+      VkDescriptorSetLayoutBinding uboLayoutBinding{};
+      uboLayoutBinding.binding = 0;
+      uboLayoutBinding.descriptorCount = 1;
+      uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+      uboLayoutBinding.pImmutableSamplers = nullptr;
+      uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+
+      VkDescriptorSetLayoutBinding samplerLayoutBinding{};
+      samplerLayoutBinding.binding = 1;
+      samplerLayoutBinding.descriptorCount = 1;
+      samplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+      samplerLayoutBinding.pImmutableSamplers = nullptr;
+      samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+      std::vector<VkDescriptorSetLayoutBinding> bindings = {
+          uboLayoutBinding, samplerLayoutBinding };
+
+      VkDescriptorSetLayout desriptorSetLayout = m_Renderer->rdr()->createDescriptorSetLayout(bindings);
+
+      return desriptorSetLayout;
+    }
+
+    VkDescriptorSetLayout ShaderManager::createDescriptorSetLayoutForHUD()
+    {
+      VkDescriptorSetLayoutBinding uboLayoutBinding{};
+      uboLayoutBinding.binding = 0;
+      uboLayoutBinding.descriptorCount = 1;
+      uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+      uboLayoutBinding.pImmutableSamplers = nullptr;
+      uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+
+      VkDescriptorSetLayoutBinding samplerLayoutBinding{};
+      samplerLayoutBinding.binding = 1;
+      samplerLayoutBinding.descriptorCount = 2;
+      samplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+      samplerLayoutBinding.pImmutableSamplers = nullptr;
+      samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+      std::vector<VkDescriptorSetLayoutBinding> bindings = {
+          uboLayoutBinding, samplerLayoutBinding };
+
+      VkDescriptorSetLayout desriptorSetLayout = m_Renderer->rdr()->createDescriptorSetLayout(bindings);
+
+      return desriptorSetLayout;
     }
 
     VkDescriptorSetLayout ShaderManager::createDescriptorSetLayout()
@@ -127,17 +177,15 @@ namespace Poulpe
         samplerLayoutBinding.pImmutableSamplers = nullptr;
         samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 
-        std::vector<VkDescriptorSetLayoutBinding> bindings = {
-            uboLayoutBinding, samplerLayoutBinding };
-
         VkDescriptorSetLayoutBinding storageLayoutBinding{};
         storageLayoutBinding.binding = 2;
         storageLayoutBinding.descriptorCount = 1;
         storageLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
         storageLayoutBinding.pImmutableSamplers = nullptr;
         storageLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-
-        bindings.emplace_back(storageLayoutBinding);
+        
+        std::vector<VkDescriptorSetLayoutBinding> bindings = {
+            uboLayoutBinding, samplerLayoutBinding, storageLayoutBinding };
 
       VkDescriptorSetLayout desriptorSetLayout = m_Renderer->rdr()->createDescriptorSetLayout(bindings);
 

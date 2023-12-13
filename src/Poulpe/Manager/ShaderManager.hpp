@@ -21,6 +21,9 @@ namespace Poulpe
     private:
         void createGraphicPipeline(std::string const & shaderName);
         VkDescriptorSetLayout createDescriptorSetLayout();
+        VkDescriptorSetLayout createDescriptorSetLayoutForSkybox();
+        VkDescriptorSetLayout createDescriptorSetLayoutForHUD();
+
         std::vector<VkPipelineShaderStageCreateInfo> getShadersInfo(std::string const & shaderName);
         VkPipelineVertexInputStateCreateInfo getVertexBindingDesc(VkVertexInputBindingDescription bDesc,
             std::array<VkVertexInputAttributeDescription, 4> attDesc);

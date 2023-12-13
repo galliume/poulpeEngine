@@ -1,7 +1,6 @@
 {
 	"defaultLevel": "sponza",
 	"defaultSkybox": "bluesky",
-	"splashScreenMusic": false,
 	"ambientMusic": false,
 	"input": {
 		"current" : "keyboard",

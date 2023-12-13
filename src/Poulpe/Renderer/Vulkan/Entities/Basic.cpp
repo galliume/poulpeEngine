@@ -94,8 +94,8 @@ namespace Poulpe
           min = max;
         }
 
+        createDescriptorSet(mesh);
         setPushConstants(mesh);
-
         mesh->setIsDirty(false);
     }
 
@@ -115,5 +115,76 @@ namespace Poulpe
         };
 
         mesh->setHasPushConstants();
+    }
+
+    void Basic::createDescriptorSet(Mesh* mesh)
+    {
+      std::vector<VkDescriptorImageInfo> imageInfos;
+      std::vector<VkDescriptorImageInfo> imageInfoSpec;
+
+      Texture tex;
+
+      if (m_TextureManager->getTextures().contains(mesh->getData()->m_Texture)) {
+        tex = m_TextureManager->getTextures()[mesh->getData()->m_Texture];
+      }
+      else {
+        //@todo rename to debug texture ?
+        tex = m_TextureManager->getTextures()["mpoulpe"];
+      }
+
+      VkDescriptorImageInfo imageInfo{};
+
+      imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+      imageInfo.imageView = tex.getImageView();
+      imageInfo.sampler = tex.getSampler();
+
+      imageInfos.emplace_back(imageInfo);
+
+      //@todo rename to debug texture ?
+      std::string specMapName = "textures_lion";
+      std::string bumpMapName = "mpoulpe";
+      mesh->getData()->mapsUsed = glm::vec3(0.0f);
+
+      if (!mesh->getData()->m_TextureSpecularMap.empty()
+        && m_TextureManager->getTextures().contains(mesh->getData()->m_TextureSpecularMap)) {
+        specMapName = mesh->getData()->m_TextureSpecularMap;
+        mesh->getData()->mapsUsed.y = 1.0f;
+
+      }
+      Texture texSpecularMap = m_TextureManager->getTextures()[specMapName];
+
+      if (!mesh->getData()->m_TextureBumpMap.empty()
+        && m_TextureManager->getTextures().contains(mesh->getData()->m_TextureBumpMap)) {
+        bumpMapName = mesh->getData()->m_TextureBumpMap;
+        mesh->getData()->mapsUsed.x = 1.0f;
+      }
+
+      Texture texBumpMap = m_TextureManager->getTextures()[bumpMapName];
+
+      VkDescriptorImageInfo imageInfoSpecularMap{};
+      imageInfoSpecularMap.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+      imageInfoSpecularMap.imageView = texSpecularMap.getImageView();
+      imageInfoSpecularMap.sampler = texSpecularMap.getSampler();
+
+      VkDescriptorImageInfo imageInfoBumpMap{};
+      imageInfoBumpMap.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+      imageInfoBumpMap.imageView = texBumpMap.getImageView();
+      imageInfoBumpMap.sampler = texBumpMap.getSampler();
+
+      imageInfos.emplace_back(imageInfoSpecularMap);
+      imageInfos.emplace_back(imageInfoBumpMap);
+
+      auto pipeline = m_Adapter->getPipeline(mesh->getShaderName());
+      VkDescriptorSet descSet = m_Adapter->rdr()->createDescriptorSets(pipeline->descPool, { pipeline->descSetLayout }, 1);
+
+      for (size_t i = 0; i < mesh->getUniformBuffers()->size(); ++i) {
+
+        m_Adapter->rdr()->updateDescriptorSets(
+          *mesh->getUniformBuffers(),
+          *mesh->getStorageBuffers(),
+          descSet, imageInfos);
+      }
+
+      mesh->setDescSet(descSet);
     }
 }

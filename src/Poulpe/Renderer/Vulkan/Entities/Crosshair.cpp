@@ -4,8 +4,9 @@
 
 namespace Poulpe
 {
-    Crosshair::Crosshair(VulkanAdapter* adapter) :
-         m_Adapter(adapter)
+    Crosshair::Crosshair(VulkanAdapter* adapter, TextureManager* textureManager) 
+      : m_Adapter(adapter),
+        m_TextureManager(textureManager)
     {
 
     }
@@ -50,6 +51,7 @@ namespace Poulpe
             m_Adapter->rdr()->updateUniformBuffer(mesh->getUniformBuffers()->at(i), & data.m_Ubos);
         }
 
+        createDescriptorSet(mesh);
         mesh->setData(data);
         mesh->setIsDirty(false);
     }
@@ -67,5 +69,33 @@ namespace Poulpe
             vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_ALL, 0, sizeof(constants), & pushConstants);
         };
         mesh->setHasPushConstants();
+    }
+
+    void Crosshair::createDescriptorSet(Mesh* mesh)
+    {
+      Texture tex = m_TextureManager->getTextures()["crosshair_1"];
+      Texture tex2 = m_TextureManager->getTextures()["crosshair_2"];
+
+      std::vector<VkDescriptorImageInfo> imageInfos;
+      VkDescriptorImageInfo imageInfo{};
+      imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+      imageInfo.imageView = tex.getImageView();
+      imageInfo.sampler = tex.getSampler();
+
+      VkDescriptorImageInfo imageInfo2{};
+      imageInfo2.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+      imageInfo2.imageView = tex2.getImageView();
+      imageInfo2.sampler = tex2.getSampler();
+
+      imageInfos.emplace_back(imageInfo);
+      imageInfos.emplace_back(imageInfo2);
+
+      auto pipeline = m_Adapter->getPipeline(mesh->getShaderName());
+
+      VkDescriptorSet descSet = m_Adapter->rdr()->createDescriptorSets(pipeline->descPool, { pipeline->descSetLayout }, 1);
+
+      m_Adapter->rdr()->updateDescriptorSets(*mesh->getUniformBuffers(), descSet, imageInfos);
+
+      mesh->setDescSet(descSet);
     }
 }

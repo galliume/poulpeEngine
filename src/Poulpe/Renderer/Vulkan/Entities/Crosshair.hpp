@@ -9,12 +9,14 @@ namespace Poulpe
     class Crosshair : public IVisitor, public IMesh
     {
     public:
-        Crosshair(VulkanAdapter* adapter);
+        Crosshair(VulkanAdapter* adapter, TextureManager* textureManager);
 
         void visit(float const deltaTime, Mesh* mesh) override;
         void setPushConstants(Mesh* mesh) override;
+        void createDescriptorSet(Mesh* mesh) override;
 
     private:
         VulkanAdapter* m_Adapter;
+        TextureManager* m_TextureManager;
     };
 }
