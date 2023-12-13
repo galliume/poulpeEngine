@@ -24,9 +24,9 @@
       "vert": "assets/shaders/spv/tangent_vert.spv",
       "frag": "assets/shaders/spv/tangent_frag.spv"
     },
-    "depth": {
-      "vert": "assets/shaders/spv/depth_vert.spv",
-      "frag": "assets/shaders/spv/depth_frag.spv"
+    "shadowMap": {
+      "vert": "assets/shaders/spv/shadowMap_vert.spv",
+      "frag": "assets/shaders/spv/shadowMap_frag.spv"
     }
   }
  }
