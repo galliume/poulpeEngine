@@ -691,7 +691,7 @@ namespace Poulpe {
         std::vector<VkPipelineShaderStageCreateInfo> shadersCreateInfos,
         VkPipelineVertexInputStateCreateInfo vertexInputInfo,
         VkCullModeFlagBits cullMode, bool dynamicRendering, bool depthTestEnable, bool depthWriteEnable,
-        bool stencilTestEnable, int polygoneMode
+        bool stencilTestEnable, int polygoneMode, bool hasColorAttachment
     )
     {
         VkPipelineInputAssemblyStateCreateInfo inputAssembly{};
@@ -802,9 +802,9 @@ namespace Poulpe {
 
         VkPipelineRenderingCreateInfoKHR renderingCreateInfo = { };
         renderingCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO_KHR;
-        renderingCreateInfo.colorAttachmentCount = 1;
-        renderingCreateInfo.pColorAttachmentFormats = & format;
-        renderingCreateInfo.depthAttachmentFormat = depthFormat; //(VK_FORMAT_D32_SFLOAT) 
+        renderingCreateInfo.colorAttachmentCount = hasColorAttachment ? 1 : 0;
+        if (hasColorAttachment) renderingCreateInfo.pColorAttachmentFormats = & format;
+        renderingCreateInfo.depthAttachmentFormat = (hasColorAttachment) ? depthFormat : VK_FORMAT_D24_UNORM_S8_UINT; //(VK_FORMAT_D32_SFLOAT) 
 
         pipelineInfo.pNext = & renderingCreateInfo;
 
@@ -1026,7 +1026,7 @@ namespace Poulpe {
 
         VkRenderPassCreateInfo renderPassInfo{};
         renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-        renderPassInfo.attachmentCount = static_cast<uint32_t>(attachments.size());;
+        renderPassInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
         renderPassInfo.pAttachments = attachments.data();
         renderPassInfo.subpassCount = 1;
         renderPassInfo.pSubpasses = & subpass;
@@ -2063,10 +2063,10 @@ namespace Poulpe {
         imageInfo.format = VK_FORMAT_D24_UNORM_S8_UINT;
         imageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
         imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-        imageInfo.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;;
+        imageInfo.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
         imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
         imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-
+        
         VkResult result = vkCreateImage(getDevice(), & imageInfo, nullptr, & image);
 
          if (result != VK_SUCCESS) {
@@ -2094,12 +2094,11 @@ namespace Poulpe {
         createInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
         createInfo.format = VK_FORMAT_D24_UNORM_S8_UINT;
         createInfo.subresourceRange = {};
-        createInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
+        createInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT;
         createInfo.subresourceRange.baseMipLevel = 0;
         createInfo.subresourceRange.levelCount = 1;
         createInfo.subresourceRange.baseArrayLayer = 0;
         createInfo.subresourceRange.layerCount = 1;
-        createInfo.image = image;
 
         VkResult result{ VK_SUCCESS };
 

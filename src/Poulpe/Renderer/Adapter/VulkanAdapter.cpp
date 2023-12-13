@@ -271,6 +271,8 @@ namespace Poulpe
         m_DepthMapView = m_Renderer->createDepthMapImageView(m_DepthMapImage);
         m_DepthMapSampler = m_Renderer->createDepthMapSampler();
         m_Renderer->createDepthMapFrameBuffer(m_DepthMapRenderPass, m_DepthMapView, m_DepthMapFrameBuffer);
+
+        auto m_DepthMapSync = m_Renderer->createSyncObjects({ m_DepthImages });
     }
 
     void VulkanAdapter::drawShadowMap()
@@ -278,26 +280,55 @@ namespace Poulpe
       m_Renderer->beginCommandBuffer(m_CommandBuffersEntities[m_ImageIndex], VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT);
       m_Renderer->startMarker(m_CommandBuffersEntities[m_ImageIndex], "shadow_map", 0.1, 0.2, 0.3);
 
-      VkImageMemoryBarrier swapChainImageRenderBeginBarrier = m_Renderer->setupImageMemoryBarrier(
-        m_SwapChainImages[m_ImageIndex], 0, VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT, VK_IMAGE_LAYOUT_UNDEFINED,
-        VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+      //VkImageMemoryBarrier swapChainImageRenderBeginBarrier = m_Renderer->setupImageMemoryBarrier(
+      //  m_SwapChainImages[m_ImageIndex], 0, VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT, VK_IMAGE_LAYOUT_UNDEFINED,
+      //  VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
 
-      m_Renderer->addPipelineBarriers(m_CommandBuffersEntities[m_ImageIndex], { swapChainImageRenderBeginBarrier },
-        VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-        VK_DEPENDENCY_BY_REGION_BIT);
+      //m_Renderer->addPipelineBarriers(m_CommandBuffersEntities[m_ImageIndex], { swapChainImageRenderBeginBarrier },
+      //  VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+      //  VK_DEPENDENCY_BY_REGION_BIT);
 
       VkImageMemoryBarrier depthImageRenderBeginBarrier = m_Renderer->setupImageMemoryBarrier(
-        m_DepthImages[m_ImageIndex], 0, VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT, VK_IMAGE_LAYOUT_UNDEFINED,
-        VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, 1, VK_IMAGE_ASPECT_DEPTH_BIT);
+        m_DepthMapImage, 0, VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT, VK_IMAGE_LAYOUT_UNDEFINED,
+        VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL, 1, VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT);
 
       m_Renderer->addPipelineBarriers(m_CommandBuffersEntities[m_ImageIndex], { depthImageRenderBeginBarrier },
-        VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+        VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT,
         VK_DEPENDENCY_BY_REGION_BIT);
 
-      VkAttachmentLoadOp loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
+      VkAttachmentLoadOp loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
       VkAttachmentStoreOp storeOp = VK_ATTACHMENT_STORE_OP_STORE;
 
-      m_Renderer->beginRendering(m_CommandBuffersEntities[m_ImageIndex], m_SwapChainImageViews[m_ImageIndex], m_DepthImageViews[m_ImageIndex], loadOp, storeOp);
+      auto const r = 27.f / 255.f;
+      auto const g = 37.f / 255.f;
+      auto const b = 54.f / 255.f;
+
+      VkClearColorValue colorClear = {};
+      colorClear.float32[0] = r;
+      colorClear.float32[1] = g;
+      colorClear.float32[2] = b;
+      colorClear.float32[3] = 0;
+      
+      VkClearDepthStencilValue depthStencil = { 1.f, 0 };
+
+      VkRenderingAttachmentInfo depthAttachment{ };
+      depthAttachment.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
+      depthAttachment.imageView = m_DepthMapView;
+      depthAttachment.imageLayout = VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL;
+      depthAttachment.loadOp = loadOp;
+      depthAttachment.storeOp = storeOp;
+      depthAttachment.clearValue.depthStencil = depthStencil;
+      depthAttachment.clearValue.color = colorClear;
+
+      VkRenderingInfo renderingInfo{ };
+      renderingInfo.sType = VK_STRUCTURE_TYPE_RENDERING_INFO;
+      renderingInfo.renderArea.extent.width = rdr()->getSwapChainExtent().width;
+      renderingInfo.renderArea.extent.height = rdr()->getSwapChainExtent().height;
+      renderingInfo.layerCount = 1;
+      renderingInfo.pDepthAttachment = &depthAttachment;
+      renderingInfo.colorAttachmentCount = 0;
+
+      vkCmdBeginRenderingKHR(m_CommandBuffersEntities[m_ImageIndex], &renderingInfo);
 
       m_Renderer->setViewPort(m_CommandBuffersEntities[m_ImageIndex]);
       m_Renderer->setScissor(m_CommandBuffersEntities[m_ImageIndex]);
@@ -307,7 +338,12 @@ namespace Poulpe
 
         if (!mesh) continue;
 
-        auto pipeline = getPipeline(mesh->getShaderName());
+        auto pipeline = getPipeline("shadowMap");
+
+        /*float depthBiasConstant = 1.25f;
+        float depthBiasSlope = 1.75f;*/
+
+        //vkCmdSetDepthBias(m_CommandBuffersEntities[m_ImageIndex], depthBiasConstant, 0.0f, depthBiasSlope);
 
         m_Renderer->bindPipeline(m_CommandBuffersEntities[m_ImageIndex], pipeline->pipeline);
 
@@ -317,7 +353,7 @@ namespace Poulpe
         //m_HasClicked = false;
         float near_plane = 1.0f, far_plane = 7.5f;
         glm::mat4 lightProjection = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, near_plane, far_plane);
-        glm::mat4 lightView = glm::lookAt(m_LightManager->getAmbientLight().position,
+        glm::mat4 lightView = glm::lookAt(m_LightManager->getAmbientLight().direction,
           glm::vec3(0.0f, 0.0f, 0.0f),
           glm::vec3(0.0f, 1.0f, 0.0f));
         glm::mat4 lightSpaceMatrix = lightProjection * lightView;
@@ -339,14 +375,15 @@ namespace Poulpe
         }
 
         if (mesh->hasPushConstants() && nullptr != mesh->applyPushConstants) {
-        constants pushConstants{};
-        pushConstants.textureIDBB = glm::vec3(mesh->getData()->m_TextureIndex, 0.0, 0.0);
-        pushConstants.view = lightView ;
-        pushConstants.viewPos = glm::vec4(m_LightManager->getAmbientLight().position, 1.0f);
-        pushConstants.mapsUsed = mesh->getData()->mapsUsed;
+            constants pushConstants{};
+            pushConstants.textureIDBB = glm::vec3(mesh->getData()->m_TextureIndex, 0.0, 0.0);
+            pushConstants.view = lightView ;
+            pushConstants.viewPos = glm::vec4(m_LightManager->getAmbientLight().position, 1.0f);
+            pushConstants.mapsUsed = mesh->getData()->mapsUsed;
 
-        vkCmdPushConstants(m_CommandBuffersEntities[m_ImageIndex], pipeline->pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(constants), & pushConstants);
+            vkCmdPushConstants(m_CommandBuffersEntities[m_ImageIndex], pipeline->pipelineLayout, VK_SHADER_STAGE_ALL, 0, sizeof(constants), & pushConstants);
         }
+
         try {
         if (m_RenderingStopped) return;
             m_Renderer->draw(m_CommandBuffersEntities[m_ImageIndex], *mesh->getDescSet(),
@@ -362,19 +399,19 @@ namespace Poulpe
 
         auto newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
-        VkImageMemoryBarrier swapChainImageEndRenderBeginBarrier = m_Renderer->setupImageMemoryBarrier(
-          m_SwapChainImages[m_ImageIndex], VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT, 0,
-          VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, newLayout);
+        //VkImageMemoryBarrier swapChainImageEndRenderBeginBarrier = m_Renderer->setupImageMemoryBarrier(
+        //  m_SwapChainImages[m_ImageIndex], VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT, 0,
+        //  VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, newLayout);
 
-        m_Renderer->addPipelineBarriers(m_CommandBuffersEntities[m_ImageIndex], { swapChainImageEndRenderBeginBarrier },
-          VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, 0);
+        //m_Renderer->addPipelineBarriers(m_CommandBuffersEntities[m_ImageIndex], { swapChainImageEndRenderBeginBarrier },
+        //  VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, 0);
 
         VkImageMemoryBarrier depthImageEndRenderBeginBarrier = m_Renderer->setupImageMemoryBarrier(
-          m_DepthImages[m_ImageIndex], VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT, 0,
-          VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL, newLayout, 1, VK_IMAGE_ASPECT_DEPTH_BIT);
+          m_DepthMapImage, VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT, 0,
+          VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL, newLayout, 1, VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT);
 
         m_Renderer->addPipelineBarriers(m_CommandBuffersEntities[m_ImageIndex], { depthImageEndRenderBeginBarrier },
-          VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, 0);
+          VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, VK_DEPENDENCY_BY_REGION_BIT);
 
         m_Renderer->endCommandBuffer(m_CommandBuffersEntities[m_ImageIndex]);
     }
@@ -383,41 +420,42 @@ namespace Poulpe
     {
         if (0 < m_EntityManager->getEntities()->size()) {
 
-          //drawShadowMap();
+          drawShadowMap();
 
-            beginRendering(m_CommandBuffersEntities[m_ImageIndex]);
-            m_Renderer->startMarker(m_CommandBuffersEntities[m_ImageIndex], "entities_drawing", 0.3, 0.2, 0.1);
+            //beginRendering(m_CommandBuffersEntities[m_ImageIndex]);
+            //m_Renderer->startMarker(m_CommandBuffersEntities[m_ImageIndex], "entities_drawing", 0.3, 0.2, 0.1);
 
-            for (auto & entity : *m_EntityManager->getEntities()) {
-                Mesh* mesh = entity->getMesh();
+            //for (auto & entity : *m_EntityManager->getEntities()) {
+            //    Mesh* mesh = entity->getMesh();
 
-                if (!mesh) continue;
+            //    if (!mesh) continue;
 
-                auto pipeline = getPipeline(mesh->getShaderName());
+            //    auto pipeline = getPipeline(mesh->getShaderName());
 
-                // if (m_HasClicked && mesh->IsHit(m_RayPick)) {
-                //    PLP_DEBUG("HIT ! {}", mesh->GetName());
-                // }
-                //m_HasClicked = false;
+            //    // if (m_HasClicked && mesh->IsHit(m_RayPick)) {
+            //    //    PLP_DEBUG("HIT ! {}", mesh->GetName());
+            //    // }
+            //    //m_HasClicked = false;
 
-                m_Renderer->bindPipeline(m_CommandBuffersEntities[m_ImageIndex], pipeline->pipeline);
+            //    m_Renderer->bindPipeline(m_CommandBuffersEntities[m_ImageIndex], pipeline->pipeline);
 
-                if (mesh->hasPushConstants() && nullptr != mesh->applyPushConstants)
-                    mesh->applyPushConstants(m_CommandBuffersEntities[m_ImageIndex], pipeline->pipelineLayout,
-                        this, mesh);
+            //    if (mesh->hasPushConstants() && nullptr != mesh->applyPushConstants)
+            //        mesh->applyPushConstants(m_CommandBuffersEntities[m_ImageIndex], pipeline->pipelineLayout,
+            //            this, mesh);
 
-                try {
-                    if (m_RenderingStopped) return;
-                    m_Renderer->draw(m_CommandBuffersEntities[m_ImageIndex], *mesh->getDescSet(),
-                        pipeline->pipelineLayout, mesh->getData(), mesh->getData()->m_Ubos.size(), mesh->isIndexed());
-                }
-                catch (std::exception & e) {
-                    PLP_DEBUG("Draw error: {}", e.what());
-                }
-            }
+            //    try {
+            //        if (m_RenderingStopped) return;
+            //        m_Renderer->draw(m_CommandBuffersEntities[m_ImageIndex], *mesh->getDescSet(),
+            //            pipeline->pipelineLayout, mesh->getData(), mesh->getData()->m_Ubos.size(), mesh->isIndexed());
+            //    }
+            //    catch (std::exception & e) {
+            //        PLP_DEBUG("Draw error: {}", e.what());
+            //    }
+            //}
 
-            m_Renderer->endMarker(m_CommandBuffersEntities[m_ImageIndex]);
-            endRendering(m_CommandBuffersEntities[m_ImageIndex]);
+            //m_Renderer->endMarker(m_CommandBuffersEntities[m_ImageIndex]);
+            //endRendering(m_CommandBuffersEntities[m_ImageIndex]);
+
             {
                 std::lock_guard<std::mutex> guard(m_MutexCmdSubmit);
                 m_CmdToSubmit[1] = m_CommandBuffersEntities[m_ImageIndex];
@@ -434,7 +472,7 @@ namespace Poulpe
      {
         if (auto skybox = m_EntityManager->getSkybox()) {
 
-            beginRendering(m_CommandBuffersSkybox[m_ImageIndex], VK_ATTACHMENT_LOAD_OP_CLEAR, VK_ATTACHMENT_STORE_OP_STORE);
+            /*beginRendering(m_CommandBuffersSkybox[m_ImageIndex], VK_ATTACHMENT_LOAD_OP_CLEAR, VK_ATTACHMENT_STORE_OP_STORE);
             m_Renderer->startMarker(m_CommandBuffersSkybox[m_ImageIndex], "skybox_drawing", 0.3, 0.2, 0.1);
 
             Mesh::Data* skyboxData = skybox->getMesh()->getData();
@@ -451,11 +489,11 @@ namespace Poulpe
                 skyboxData, skyboxData->m_Ubos.size(), false);
 
             m_Renderer->endMarker(m_CommandBuffersSkybox[m_ImageIndex]);
-            endRendering(m_CommandBuffersSkybox[m_ImageIndex]);
+            endRendering(m_CommandBuffersSkybox[m_ImageIndex]);*/
 
             {
                 std::lock_guard<std::mutex> guard(m_MutexCmdSubmit);
-                m_CmdToSubmit[0] = m_CommandBuffersSkybox[m_ImageIndex];
+                m_CmdToSubmit[0] = VK_NULL_HANDLE; //m_CommandBuffersSkybox[m_ImageIndex];
                 m_renderStatus = m_renderStatus << 1;
 
                 if ((getDrawBbox() && m_renderStatus == 16) || (!getDrawBbox() && m_renderStatus == 8)) {
@@ -467,7 +505,7 @@ namespace Poulpe
 
     void VulkanAdapter::drawHUD()
     {
-        beginRendering(m_CommandBuffersHud[m_ImageIndex]);
+        /*beginRendering(m_CommandBuffersHud[m_ImageIndex]);
         m_Renderer->startMarker(m_CommandBuffersHud[m_ImageIndex], "hud_drawing", 0.3, 0.2, 0.1);
 
         for (auto const & entity : * m_EntityManager->getHUD()) {
@@ -492,10 +530,10 @@ namespace Poulpe
 
         m_Renderer->endMarker(m_CommandBuffersHud[m_ImageIndex]);
         endRendering(m_CommandBuffersHud[m_ImageIndex]);
-
+        */
         {
             std::lock_guard<std::mutex> guard(m_MutexCmdSubmit);
-            m_CmdToSubmit[2] = m_CommandBuffersHud[m_ImageIndex];
+            m_CmdToSubmit[2] = VK_NULL_HANDLE; // m_CommandBuffersHud[m_ImageIndex];
             m_renderStatus = m_renderStatus << 1;
 
             if ((getDrawBbox() && m_renderStatus == 16) || (!getDrawBbox() && m_renderStatus == 8)) {
