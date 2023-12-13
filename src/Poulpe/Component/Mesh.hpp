@@ -140,6 +140,9 @@ namespace Poulpe
         void setIsPointLight(bool is = true) { m_IsPointLight = is; }
         bool isPointLight() { return m_IsPointLight; }
 
+        void setDescSet(VkDescriptorSet descSet) { m_DescSet = descSet; }
+        VkDescriptorSet* getDescSet() { return & m_DescSet; }
+
     private:
         std::unique_ptr<BBox> m_BoundingBox;
 
@@ -163,5 +166,7 @@ namespace Poulpe
         bool m_IsIndexed{ true };
         bool m_HasStorageBuffer{ false };
         bool m_IsPointLight{ false };
+
+        VkDescriptorSet m_DescSet;
     };
 }

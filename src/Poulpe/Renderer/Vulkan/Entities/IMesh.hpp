@@ -17,5 +17,6 @@ namespace Poulpe
 
         virtual ~IMesh() = default;
         virtual void setPushConstants(Mesh* mesh) = 0;
+        virtual void createDescriptorSet(Mesh* mesh) = 0;
     };
 }

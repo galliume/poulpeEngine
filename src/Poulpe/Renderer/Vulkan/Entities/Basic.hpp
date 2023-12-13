@@ -15,6 +15,7 @@ namespace Poulpe
 
         void visit(float const deltaTime, Mesh* mesh) override;
         void setPushConstants(Mesh* mesh) override;
+        void createDescriptorSet(Mesh* mesh) override;
 
     //private:
     //    void createBBoxEntity(Mesh* mesh);

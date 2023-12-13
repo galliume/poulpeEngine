@@ -654,8 +654,8 @@ namespace Poulpe {
         layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
         layoutInfo.bindingCount = static_cast<uint32_t>(pBindings.size());
         layoutInfo.pBindings = pBindings.data();
-        //layoutInfo.flags = flags;
-
+        layoutInfo.flags = VK_DESCRIPTOR_SET_LAYOUT_CREATE_UPDATE_AFTER_BIND_POOL_BIT;
+        //VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT
         if (vkCreateDescriptorSetLayout(m_Device, & layoutInfo, nullptr, & descriptorSetLayout) != VK_SUCCESS)
         {
             throw std::runtime_error("failed to create descriptor set layout!");
@@ -1218,7 +1218,6 @@ namespace Poulpe {
         std::vector<VkDescriptorSetLayout> const  & descriptorSetLayouts, uint32_t count)
     {
         VkDescriptorSet descriptorSet{};
-
         VkDescriptorSetAllocateInfo allocInfo{};
         allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
         allocInfo.descriptorPool = descriptorPool;
@@ -1349,6 +1348,63 @@ namespace Poulpe {
         descriptorWrites[2].pBufferInfo = storageBufferInfos.data();
 
         vkUpdateDescriptorSets(m_Device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
+    }
+
+    void VulkanRenderer::updateDescriptorSets(
+      std::vector<Mesh::Buffer>& uniformBuffers,
+      std::vector<Mesh::Buffer>& storageBuffers,
+      VkDescriptorSet& descriptorSet,
+      std::vector<VkDescriptorImageInfo>& imageInfo)
+    {
+      std::array<VkWriteDescriptorSet, 3> descriptorWrites{};
+      std::vector<VkDescriptorBufferInfo> bufferInfos;
+      std::vector<VkDescriptorBufferInfo> storageBufferInfos;
+
+      std::for_each(std::begin(uniformBuffers), std::end(uniformBuffers),
+        [&bufferInfos](const Mesh::Buffer& uniformBuffer)
+        {
+          VkDescriptorBufferInfo bufferInfo{};
+          bufferInfo.buffer = uniformBuffer.buffer;
+          bufferInfo.offset = 0;
+          bufferInfo.range = VK_WHOLE_SIZE;
+          bufferInfos.emplace_back(bufferInfo);
+        });
+
+      std::for_each(std::begin(storageBuffers), std::end(storageBuffers),
+        [&storageBufferInfos](const Mesh::Buffer& storageBuffers)
+        {
+          VkDescriptorBufferInfo bufferInfo{};
+          bufferInfo.buffer = storageBuffers.buffer;
+          bufferInfo.offset = 0;
+          bufferInfo.range = VK_WHOLE_SIZE;
+          storageBufferInfos.emplace_back(bufferInfo);
+        });
+
+      descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+      descriptorWrites[0].dstSet = descriptorSet;
+      descriptorWrites[0].dstBinding = 0;
+      descriptorWrites[0].dstArrayElement = 0;
+      descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+      descriptorWrites[0].descriptorCount = 1;
+      descriptorWrites[0].pBufferInfo = bufferInfos.data();
+
+      descriptorWrites[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+      descriptorWrites[1].dstSet = descriptorSet;
+      descriptorWrites[1].dstBinding = 1;
+      descriptorWrites[1].dstArrayElement = 0;
+      descriptorWrites[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+      descriptorWrites[1].descriptorCount = imageInfo.size();
+      descriptorWrites[1].pImageInfo = imageInfo.data();
+
+      descriptorWrites[2].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+      descriptorWrites[2].dstSet = descriptorSet;
+      descriptorWrites[2].dstBinding = 2;
+      descriptorWrites[2].dstArrayElement = 0;
+      descriptorWrites[2].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+      descriptorWrites[2].descriptorCount = storageBufferInfos.size();
+      descriptorWrites[2].pBufferInfo = storageBufferInfos.data();
+
+      vkUpdateDescriptorSets(m_Device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
     }
 
     void VulkanRenderer::updateStorageDescriptorSets(std::vector<Mesh::Buffer> & uniformBuffers, VkDescriptorSet & descriptorSet,
