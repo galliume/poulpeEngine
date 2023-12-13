@@ -100,9 +100,16 @@ namespace Poulpe
         auto bDesc = Vertex::GetBindingDescription();
         auto attDesc = Vertex::GetAttributeDescriptions();
         auto vertexInputInfo = getVertexBindingDesc(bDesc, attDesc);
+        VkPipeline graphicPipeline;
 
-        auto graphicPipeline = m_Renderer->rdr()->createGraphicsPipeline(m_Renderer->rdrPass(), pipelineLayout,
+        if (shaderName == "shadowMap") {
+          graphicPipeline = m_Renderer->rdr()->createGraphicsPipeline(m_Renderer->rdrPass(), pipelineLayout,
+            shaderName, shaders, vertexInputInfo, VK_CULL_MODE_NONE, true, false, false, false, VK_POLYGON_MODE_FILL, false);
+        } else {
+          graphicPipeline = m_Renderer->rdr()->createGraphicsPipeline(m_Renderer->rdrPass(), pipelineLayout,
             shaderName, shaders, vertexInputInfo, VK_CULL_MODE_BACK_BIT, true, true, true, true, VK_POLYGON_MODE_FILL);
+        }
+
 
         VulkanPipeline pipeline{};
         pipeline.pipeline = graphicPipeline;
