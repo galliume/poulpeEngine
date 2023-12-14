@@ -20,7 +20,8 @@ namespace Poulpe
           m_Window.get(),
           m_EntityManager.get(),
           m_ComponentManager.get(),
-          m_LightManager.get());
+          m_LightManager.get(),
+          m_TextureManager.get());
 
         m_ConfigManager = std::make_unique<Poulpe::ConfigManager>();
         m_AudioManager = std::make_unique<Poulpe::AudioManager>();
