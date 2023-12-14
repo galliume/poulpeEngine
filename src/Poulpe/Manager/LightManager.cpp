@@ -6,10 +6,17 @@ namespace Poulpe
     {
         m_AmbientLight.color = glm::vec3(1.0f);
         m_AmbientLight.direction = glm::vec3(-0.1f, -1.0, 0.0);
-        m_AmbientLight.position = glm::vec3(-1.0f, 4.0f, 0.0f);
+        m_AmbientLight.position = glm::vec3(-0.6f, 4.5f, 0.0f);
         //ambient diffuse specular
         m_AmbientLight.ads = glm::vec3(0.5f, 0.7f, 1.0f);
         m_AmbientLight.clq = glm::vec3(0.0f);
+
+        float near_plane = 1.0f, far_plane = 7.5f;
+        glm::mat4 lightProjection = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, near_plane, far_plane);
+        glm::mat4 lightView = glm::lookAt(m_AmbientLight.direction,
+          glm::vec3(0.0f, 0.0f, 0.0f),
+          glm::vec3(0.0f, 1.0f, 0.0f));
+        m_AmbientLight.lightSpaceMatrix = lightProjection * lightView;
 
         Light light;
         light.color = glm::vec3(1.0);

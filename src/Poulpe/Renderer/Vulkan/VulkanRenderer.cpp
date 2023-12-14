@@ -804,7 +804,7 @@ namespace Poulpe {
         renderingCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO_KHR;
         renderingCreateInfo.colorAttachmentCount = hasColorAttachment ? 1 : 0;
         if (hasColorAttachment) renderingCreateInfo.pColorAttachmentFormats = & format;
-        renderingCreateInfo.depthAttachmentFormat = (hasColorAttachment) ? depthFormat : VK_FORMAT_D24_UNORM_S8_UINT; //(VK_FORMAT_D32_SFLOAT) 
+        renderingCreateInfo.depthAttachmentFormat = (hasColorAttachment) ? depthFormat : VK_FORMAT_D32_SFLOAT; //(VK_FORMAT_D32_SFLOAT) 
 
         pipelineInfo.pNext = & renderingCreateInfo;
 
@@ -1444,7 +1444,7 @@ namespace Poulpe {
         renderPassInfo.renderArea.extent = m_SwapChainExtent;
 
         std::array<VkClearValue, 2> clearValues{};
-        clearValues[0].color = { {0.f, 1.f, 0.f, 0.0f} };
+        clearValues[0].color = { {1.0f} };
         clearValues[1].depthStencil = { 1.0f, 0 };
 
         renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
@@ -1462,15 +1462,11 @@ namespace Poulpe {
     void VulkanRenderer::beginRendering(VkCommandBuffer commandBuffer, VkImageView const & colorImageView,
         VkImageView const & depthImageView, VkAttachmentLoadOp const loadOp, VkAttachmentStoreOp const storeOp)
     {
-        auto const r = 27.f / 255.f;
-        auto const g = 37.f / 255.f;
-        auto const b = 54.f / 255.f;
-
         VkClearColorValue colorClear = {};
-        colorClear.float32[0] = r;
-        colorClear.float32[1] = g;
-        colorClear.float32[2] = b;
-        colorClear.float32[3] = 0;
+        colorClear.float32[0] = 1;
+        colorClear.float32[1] = 1;
+        colorClear.float32[2] = 1;
+        colorClear.float32[3] = 1;
 
         VkClearDepthStencilValue depthStencil = { 1.f, 0 };
 
@@ -2060,10 +2056,11 @@ namespace Poulpe {
         imageInfo.extent.depth = 1;
         imageInfo.mipLevels = 1;
         imageInfo.arrayLayers = 1;
-        imageInfo.format = VK_FORMAT_D24_UNORM_S8_UINT;
+        imageInfo.format = VK_FORMAT_D32_SFLOAT;
         imageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
         imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-        imageInfo.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+        imageInfo.usage = VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT 
+            | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
         imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
         imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
         
@@ -2092,9 +2089,9 @@ namespace Poulpe {
         createInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
         createInfo.image = image;
         createInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
-        createInfo.format = VK_FORMAT_D24_UNORM_S8_UINT;
+        createInfo.format = VK_FORMAT_D32_SFLOAT;
         createInfo.subresourceRange = {};
-        createInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT;
+        createInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
         createInfo.subresourceRange.baseMipLevel = 0;
         createInfo.subresourceRange.levelCount = 1;
         createInfo.subresourceRange.baseArrayLayer = 0;

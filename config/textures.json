@@ -2,7 +2,8 @@
 	"textures": {
 		"mpoulpe": "assets/mpoulpe.png",
 		"crosshair_1": "assets/texture/crosshair/crosshair_1.png",
-		"crosshair_2": "assets/texture/crosshair/crosshair_2.png"
+		"crosshair_2": "assets/texture/crosshair/crosshair_2.png",
+		"_plp_empty": "assets/texture/_plp_empty.png"
 	},
 	"skybox": {
 		"bluesky": [

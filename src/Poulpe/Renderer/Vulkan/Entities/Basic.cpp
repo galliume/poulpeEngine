@@ -123,14 +123,7 @@ namespace Poulpe
       std::vector<VkDescriptorImageInfo> imageInfoSpec;
 
       Texture tex;
-
-      if (m_TextureManager->getTextures().contains(mesh->getData()->m_Texture)) {
-        tex = m_TextureManager->getTextures()[mesh->getData()->m_Texture];
-      }
-      else {
-        //@todo rename to debug texture ?
-        tex = m_TextureManager->getTextures()["mpoulpe"];
-      }
+      tex = m_TextureManager->getTextures()[mesh->getData()->m_Texture];
 
       VkDescriptorImageInfo imageInfo{};
 
@@ -140,9 +133,8 @@ namespace Poulpe
 
       imageInfos.emplace_back(imageInfo);
 
-      //@todo rename to debug texture ?
-      std::string specMapName = "textures_lion";
-      std::string bumpMapName = "mpoulpe";
+      std::string specMapName = "_plp_empty";
+      std::string bumpMapName = "_plp_empty";
       mesh->getData()->mapsUsed = glm::vec3(0.0f);
 
       if (!mesh->getData()->m_TextureSpecularMap.empty()
@@ -171,8 +163,15 @@ namespace Poulpe
       imageInfoBumpMap.imageView = texBumpMap.getImageView();
       imageInfoBumpMap.sampler = texBumpMap.getSampler();
 
+      Texture texShadowMap = m_TextureManager->getTextures()["_plp_empty"];
+      VkDescriptorImageInfo shadowMap{};
+      shadowMap.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+      shadowMap.imageView = texShadowMap.getImageView();
+      shadowMap.sampler = texShadowMap.getSampler();
+
       imageInfos.emplace_back(imageInfoSpecularMap);
       imageInfos.emplace_back(imageInfoBumpMap);
+      imageInfos.emplace_back(shadowMap);
 
       auto pipeline = m_Adapter->getPipeline(mesh->getShaderName());
       VkDescriptorSet descSet = m_Adapter->rdr()->createDescriptorSets(pipeline->descPool, { pipeline->descSetLayout }, 1);

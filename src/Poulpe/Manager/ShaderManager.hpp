@@ -23,6 +23,7 @@ namespace Poulpe
         VkDescriptorSetLayout createDescriptorSetLayout();
         VkDescriptorSetLayout createDescriptorSetLayoutForSkybox();
         VkDescriptorSetLayout createDescriptorSetLayoutForHUD();
+        VkDescriptorSetLayout createShadowMapDescriptorSetLayout();
 
         std::vector<VkPipelineShaderStageCreateInfo> getShadersInfo(std::string const & shaderName);
         VkPipelineVertexInputStateCreateInfo getVertexBindingDesc(VkVertexInputBindingDescription bDesc,
