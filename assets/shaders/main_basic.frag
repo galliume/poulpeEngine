@@ -12,6 +12,7 @@ layout(location = 0) in VS_OUT {
     vec3 fMapsUsed;
     vec4 fViewPos;
     mat3 TBN;
+    vec4 fShadowCoord;
 } fs_in;
 
 struct Light {
@@ -24,6 +25,7 @@ struct Light {
     vec3 clq;
     //cutOff, outerCutoff, Blank
     vec3 coB;
+    mat4 lightSpaceMatrix;
 };
 
 struct Material
@@ -37,7 +39,7 @@ struct Material
     vec3 shiIorDiss;
 };
 
-layout(binding = 1) uniform sampler2D texSampler[3];
+layout(binding = 1) uniform sampler2D texSampler[4];
 
 #define NR_POINT_LIGHTS 2
 layout(binding = 2) buffer ObjectBuffer {
@@ -47,9 +49,10 @@ layout(binding = 2) buffer ObjectBuffer {
     Material material;
 };
 
-vec3 CalcDirLight(Light dirLight, vec3 normal, vec3 viewDir);
-vec3 CalcPointLight(Light pointLight, vec3 normal, vec3 fragPos, vec3 viewDir);
-vec3 CalcSpotLight(Light pointLight, vec3 normal, vec3 fragPos, vec3 viewDir);
+vec3 CalcDirLight(Light dirLight, vec3 normal, vec3 viewDir, float shadows);
+vec3 CalcPointLight(Light pointLight, vec3 normal, vec3 fragPos, vec3 viewDir, float shadows);
+vec3 CalcSpotLight(Light pointLight, vec3 normal, vec3 fragPos, vec3 viewDir, float shadows);
+float ShadowCalculation(Light dirLight, vec4 shadowCoord, vec2 off);
 
 float near = 0.1;
 float far  = 100.0;
@@ -65,9 +68,9 @@ void main()
     vec3 debugAmbient = vec3(0.0, 1.0, 0.0); // Debugging color for ambient
     vec3 debugSpecular = vec3(0.0, 0.0, 1.0); // Debugging color for specular
 
-    if (texture(texSampler[0], fs_in.fTexCoord).a < 0.5) {
-        discard;
-    }
+//    if (texture(texSampler[0], fs_in.fTexCoord).a < 0.5) {
+//        discard;
+//    }
 
     vec3 normal = normalize(fs_in.fNormal);
 
@@ -77,21 +80,24 @@ void main()
       normal = vec3(normalize(nm));
     }
 
-    vec3 viewDir = normalize(fs_in.fViewPos.xyz - fs_in.fPos.xyz);
-    vec3 color = CalcDirLight(ambientLight, normal, viewDir);
-    
-    for(int i = 0; i < NR_POINT_LIGHTS; i++) {
-        color += CalcPointLight(pointLights[i], normal, fs_in.fPos.xyz, viewDir);
-    }
+    float shadows = ShadowCalculation(ambientLight, fs_in.fShadowCoord / fs_in.fShadowCoord.w, vec2(0.0));
 
-    color += CalcSpotLight(spotLight, normal, fs_in.fPos.xyz, viewDir);
-	
-    fColor = vec4(color, 1.0);
-    //float depth = LinearizeDepth(gl_FragCoord.z) / far;
-    //fColor = vec4(vec3(depth), 1.0);
+    vec3 viewDir = normalize(fs_in.fViewPos.xyz - fs_in.fPos.xyz);
+    vec3 color = CalcDirLight(ambientLight, normal, viewDir, shadows);
+    //color *= shadows;
+//    for(int i = 0; i < NR_POINT_LIGHTS; i++) {
+//        color += CalcPointLight(pointLights[i], normal, fs_in.fPos.xyz, viewDir, shadows);
+//    }
+
+    //color += CalcSpotLight(spotLight, normal, fs_in.fPos.xyz, viewDir, shadows);
+    //color *= textureProj(ambientLight, fs_in.fShadowCoord / fs_in.fShadowCoord.w, vec2(0.0));
+
+    //fColor = vec4(color, 1.0);
+    float depthValue = texture(texSampler[3], fs_in.fTexCoord).r;
+    fColor = vec4(vec3(depthValue), 1.0);
 }
 
-vec3 CalcDirLight(Light dirLight, vec3 normal, vec3 viewDir)
+vec3 CalcDirLight(Light dirLight, vec3 normal, vec3 viewDir, float shadows)
 {
     vec3 lightDir = normalize(-dirLight.direction);
     vec3 ambient = dirLight.color * (material.ambient * dirLight.ads.x * texture(texSampler[0], fs_in.fTexCoord).xyz);
@@ -113,7 +119,7 @@ vec3 CalcDirLight(Light dirLight, vec3 normal, vec3 viewDir)
     return (ambient + diffuse + specular);
 }
 
-vec3 CalcPointLight(Light pointLight, vec3 normal, vec3 fragPos, vec3 viewDir)
+vec3 CalcPointLight(Light pointLight, vec3 normal, vec3 fragPos, vec3 viewDir, float shadows)
 {
     vec3 lightDir = normalize(pointLight.position - fs_in.fPos);
     vec3 ambient = pointLight.color * (material.ambient * pointLight.ads.x * texture(texSampler[0], fs_in.fTexCoord).xyz);
@@ -142,7 +148,7 @@ vec3 CalcPointLight(Light pointLight, vec3 normal, vec3 fragPos, vec3 viewDir)
     return (ambient + diffuse + specular);
 }
 
-vec3 CalcSpotLight(Light spotlight, vec3 normal, vec3 fragPos, vec3 viewDir)
+vec3 CalcSpotLight(Light spotlight, vec3 normal, vec3 fragPos, vec3 viewDir, float shadows)
 {
     vec3 lightDir = normalize(spotlight.position - fs_in.fPos);
     vec3 ambient = spotlight.color * (material.ambient * spotlight.ads.x * texture(texSampler[0], fs_in.fTexCoord).xyz);
@@ -173,4 +179,22 @@ vec3 CalcSpotLight(Light spotlight, vec3 normal, vec3 fragPos, vec3 viewDir)
     specular *= attenuation * intensity;
 
     return (ambient + diffuse + specular);
+}
+
+float ShadowCalculation(Light aLight, vec4 shadowCoord, vec2 off)
+{
+    float shadow = 1.0;
+    if (shadowCoord.z > -1.0 && shadowCoord.z < 1.0) {
+        float dist = texture(texSampler[3], shadowCoord.st).r;
+        if (shadowCoord.w > 0.0 && dist < shadowCoord.z ) {
+            shadow = 0.1;
+        }
+    }
+//    vec3 projCoords = shadowCoord.xyz / shadowCoord.w;
+//    projCoords = projCoords * 0.5 + 0.5;
+//    float closestDepth = texture(texSampler[3], projCoords.xy).r;
+//    float currentDepth = projCoords.z;
+//    float shadow = currentDepth > closestDepth  ? 1.0 : 0.0;
+
+    return shadow;
 }

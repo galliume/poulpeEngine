@@ -143,6 +143,9 @@ namespace Poulpe
         void setDescSet(VkDescriptorSet descSet) { m_DescSet = descSet; }
         VkDescriptorSet* getDescSet() { return & m_DescSet; }
 
+        bool isDescShadowMapDone() { return m_IsDescShadowMapDone; }
+        void setIsDescShadowMapDone() { m_IsDescShadowMapDone = true; }
+
     private:
         std::unique_ptr<BBox> m_BoundingBox;
 
@@ -168,5 +171,6 @@ namespace Poulpe
         bool m_IsPointLight{ false };
 
         VkDescriptorSet m_DescSet;
+        bool m_IsDescShadowMapDone{ false };
     };
 }

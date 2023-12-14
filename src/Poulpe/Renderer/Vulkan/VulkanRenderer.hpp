@@ -18,8 +18,10 @@ namespace Poulpe {
         VkPipelineLayout pipelineLayout;
         VkDescriptorPool descPool;
         VkDescriptorSetLayout descSetLayout;
+        VkDescriptorSet descSet;
         VkPipelineCache pipelineCache;
         VkPipeline pipeline;
+        std::vector<VkPipelineShaderStageCreateInfo> shaders;
     };
 
     struct QueueFamilyIndices {
@@ -406,10 +408,10 @@ namespace Poulpe {
         VkFence m_FenceBuffer{};
 
         //@todo move to config file
-        //unsigned int m_Width{ 2560 };
-        //unsigned int m_Height{ 1440 };
-        unsigned int m_Width{ 1200 };
-        unsigned int m_Height{ 720 };
+        unsigned int m_Width{ 2560 };
+        unsigned int m_Height{ 1440 };
+        //unsigned int m_Width{ 1200 };
+        //unsigned int m_Height{ 720 };
 
         //VkMemoryRequirements m_MemRequirements;
     };
