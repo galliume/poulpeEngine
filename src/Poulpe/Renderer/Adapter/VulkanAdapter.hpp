@@ -22,9 +22,10 @@ namespace Poulpe
 
         explicit VulkanAdapter(
           Window* window,
-          EntityManager* entityManager, 
+          EntityManager* entityManager,
           ComponentManager* componentManager,
-          LightManager* lightManager
+          LightManager* lightManager,
+          TextureManager* textureManager
         );
 
         virtual ~VulkanAdapter() = default;
@@ -52,7 +53,7 @@ namespace Poulpe
         void addCmdToSubmit(VkCommandBuffer cmd);
 
         void beginRendering(VkCommandBuffer commandBuffer, VkAttachmentLoadOp loadOp = VK_ATTACHMENT_LOAD_OP_LOAD,
-            VkAttachmentStoreOp storeOp = VK_ATTACHMENT_STORE_OP_STORE);
+            VkAttachmentStoreOp storeOp = VK_ATTACHMENT_STORE_OP_STORE, bool continuousCmdBuffer = false);
 
         void endRendering(VkCommandBuffer commandBuffer);
         VkSwapchainKHR getSwapChain() { return m_SwapChain; };
@@ -93,6 +94,9 @@ namespace Poulpe
         void drawShadowMap();
         void addPipeline(std::string const & shaderName, VulkanPipeline pipeline) override;
         VulkanPipeline* getPipeline(std::string const& shaderName) { return & m_Pipelines[shaderName]; };
+        void prepareShadowMap() override;
+        VkImageView* getDepthMapImageView() { return &m_DepthImageViews.at(m_ImageIndex); };
+        VkSampler* getDepthMapSampler() { return &m_SwapChainDepthSamplers.at(m_ImageIndex); };
 
     private:
         //@todo temp
@@ -101,7 +105,6 @@ namespace Poulpe
         void present(int queueIndex = 0);
         void onFinishRender();
         void acquireNextImage();
-        void prepareShadowMap();
 
     private:
         std::unique_ptr<VulkanRenderer> m_Renderer{ nullptr };
@@ -134,6 +137,7 @@ namespace Poulpe
         EntityManager* m_EntityManager{ nullptr };
         [[maybe_unused]] ComponentManager* m_ComponentManager{ nullptr };
         [[maybe_unused]] LightManager* m_LightManager{ nullptr };
+        [[maybe_unused]] TextureManager* m_TextureManager{ nullptr };
 
         //@todo move to meshManager
         std::vector<VkImageView>m_DepthImageViews{};
@@ -178,11 +182,11 @@ namespace Poulpe
         //VkCommandPool m_CopyCommandPool;
 
         [[maybe_unused]] VkFramebuffer m_DepthMapFrameBuffer;
-        [[maybe_unused]] VkImage m_DepthMapImage;
+        [[maybe_unused]] std::vector<VkImage> m_DepthMapImages;
         [[maybe_unused]] VkDeviceMemory m_DepthMapDeviceMemory;
-        [[maybe_unused]] VkImageView m_DepthMapView;
+        [[maybe_unused]] std::vector<VkImageView> m_DepthMapViews;
         [[maybe_unused]] VkRenderPass m_DepthMapRenderPass;
-        [[maybe_unused]] VkSampler m_DepthMapSampler;
+        [[maybe_unused]] std::vector<VkSampler> m_DepthMapSamplers;
         [[maybe_unused]] VkDescriptorImageInfo m_DepthMapDescriptor;
 
         std::unordered_map<std::string, VulkanPipeline> m_Pipelines;

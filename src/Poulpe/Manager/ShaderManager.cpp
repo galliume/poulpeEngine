@@ -63,7 +63,7 @@ namespace Poulpe
 
         VkDescriptorPoolSize cp2;
         cp2.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        cp2.descriptorCount = 10;
+        cp2.descriptorCount = 10000;
         poolSizes.emplace_back(cp1);
         poolSizes.emplace_back(cp2);
 
@@ -76,7 +76,7 @@ namespace Poulpe
 
         VkDescriptorSetLayout descSetLayout;
 
-        auto descriptorPool = m_Renderer->rdr()->createDescriptorPool(poolSizes, 1000);
+        auto descriptorPool = m_Renderer->rdr()->createDescriptorPool(poolSizes, 10000);
 
         if (shaderName == "skybox") {
           descSetLayout = createDescriptorSetLayoutForSkybox();
@@ -100,24 +100,26 @@ namespace Poulpe
         auto bDesc = Vertex::GetBindingDescription();
         auto attDesc = Vertex::GetAttributeDescriptions();
         auto vertexInputInfo = getVertexBindingDesc(bDesc, attDesc);
-        VkPipeline graphicPipeline;
+        VkPipeline graphicPipeline = VK_NULL_HANDLE;
 
-        if (shaderName == "shadowMap") {
-          graphicPipeline = m_Renderer->rdr()->createGraphicsPipeline(m_Renderer->rdrPass(), pipelineLayout,
-            shaderName, shaders, vertexInputInfo, VK_CULL_MODE_NONE, true, false, false, false, VK_POLYGON_MODE_FILL, false);
-        } else {
+        if (shaderName != "shadowMap") {
           graphicPipeline = m_Renderer->rdr()->createGraphicsPipeline(m_Renderer->rdrPass(), pipelineLayout,
             shaderName, shaders, vertexInputInfo, VK_CULL_MODE_BACK_BIT, true, true, true, true, VK_POLYGON_MODE_FILL);
+        } else {
+            graphicPipeline = m_Renderer->rdr()->createGraphicsPipeline(m_Renderer->rdrPass(), pipelineLayout,
+            shaderName, shaders, vertexInputInfo, VK_CULL_MODE_NONE, true, true, true, true, VK_POLYGON_MODE_FILL, false);
         }
-
 
         VulkanPipeline pipeline{};
         pipeline.pipeline = graphicPipeline;
         pipeline.pipelineLayout = pipelineLayout;
         pipeline.descPool = descriptorPool;
         pipeline.descSetLayout = descSetLayout;
+        pipeline.shaders = shaders;
 
         m_Renderer->addPipeline(shaderName, pipeline);
+
+        //if (shaderName == "shadowMap") m_Renderer->prepareShadowMap();
     }
 
     VkDescriptorSetLayout ShaderManager::createDescriptorSetLayoutForSkybox()
@@ -179,7 +181,7 @@ namespace Poulpe
 
         VkDescriptorSetLayoutBinding samplerLayoutBinding{};
         samplerLayoutBinding.binding = 1;
-        samplerLayoutBinding.descriptorCount = 3;
+        samplerLayoutBinding.descriptorCount = 4;
         samplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
         samplerLayoutBinding.pImmutableSamplers = nullptr;
         samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
@@ -189,7 +191,7 @@ namespace Poulpe
         storageLayoutBinding.descriptorCount = 1;
         storageLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
         storageLayoutBinding.pImmutableSamplers = nullptr;
-        storageLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+        storageLayoutBinding.stageFlags = VK_SHADER_STAGE_ALL;
         
         std::vector<VkDescriptorSetLayoutBinding> bindings = {
             uboLayoutBinding, samplerLayoutBinding, storageLayoutBinding };
