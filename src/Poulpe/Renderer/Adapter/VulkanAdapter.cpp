@@ -470,15 +470,8 @@ namespace Poulpe
         //    PLP_DEBUG("HIT ! {}", mesh->GetName());
         // }
         //m_HasClicked = false;
-        float near_plane = 1.0f, far_plane = 7.5f;
-        glm::mat4 lightProjection = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, near_plane, far_plane);
-        glm::mat4 lightView = glm::lookAt(m_LightManager->getAmbientLight().direction,
-          glm::vec3(0.0f, 0.0f, 0.0f),
-          glm::vec3(0.0f, 1.0f, 0.0f));
-        glm::mat4 lightSpaceMatrix = lightProjection * lightView;
-
         for (size_t i = 0; i < mesh->getData()->m_Ubos.size(); ++i) {
-          mesh->getData()->m_Ubos[i].projection = lightSpaceMatrix;
+          mesh->getData()->m_Ubos[i].projection = m_LightManager->getSpotLights().at(0).lightSpaceMatrix;
           //mesh->getData()->m_Ubos[i].projection = lightProjection;
         }
 

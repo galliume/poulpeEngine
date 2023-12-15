@@ -43,6 +43,12 @@ namespace Poulpe
         light3.clq = glm::vec3(1.0f, 0.9f, 0.032f);
         light3.coB = glm::vec3( glm::cos(glm::radians(12.5f)), glm::cos(glm::radians(15.0f)), 0.0f);
 
+        lightProjection = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, near_plane, far_plane);
+        lightView = glm::lookAt(light3.position,
+          glm::vec3(0.0f, 0.0f, 0.0f),
+          glm::vec3(0.0f, 1.0f, 0.0f));
+        light3.lightSpaceMatrix = lightProjection * lightView;
+
         m_SpotLights.emplace_back(light3);
     }
 }
