@@ -280,12 +280,12 @@ namespace Poulpe
 
     void VulkanAdapter::drawShadowMap(
         std::vector<std::unique_ptr<Entity>>* entities, VkCommandBuffer & commandBuffer,
-        VkImage & image, VkImageView & imageView, Light light)
+        VkImage & image, VkImageView & imageView, Light light, std::string const & pipelineName)
     {
-        auto pipeline = getPipeline("shadowMap");
+        auto pipeline = getPipeline(pipelineName);
 
         m_Renderer->beginCommandBuffer(commandBuffer, VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT);
-        m_Renderer->startMarker(commandBuffer, "shadow_map", 0.1, 0.2, 0.3);
+        m_Renderer->startMarker(commandBuffer, "shadow_map_" + pipelineName, 0.1, 0.2, 0.3);
 
         VkImageMemoryBarrier depthImageRenderBeginBarrier = m_Renderer->setupImageMemoryBarrier(
         image, 0, VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT, VK_IMAGE_LAYOUT_UNDEFINED,
@@ -324,16 +324,16 @@ namespace Poulpe
 
         m_Renderer->setViewPort(commandBuffer);
         m_Renderer->setScissor(commandBuffer);
+        
+        float depthBiasConstant = -1.25f;
+        float depthBiasSlope = 5.f;
+
+        vkCmdSetDepthBias(commandBuffer, depthBiasConstant, 0.0f, depthBiasSlope);
 
         for (auto& entity : *entities) {
             Mesh* mesh = entity->getMesh();
 
             if (!mesh) continue;
-
-            float depthBiasConstant = -1.25f;
-            float depthBiasSlope = 1.75f;
-
-            vkCmdSetDepthBias(commandBuffer, depthBiasConstant, 0.0f, depthBiasSlope);
 
             m_Renderer->bindPipeline(commandBuffer, pipeline->pipeline);
                 
@@ -390,7 +390,10 @@ namespace Poulpe
         if (0 < m_EntityManager->getEntities()->size()) {
 
             drawShadowMap(m_EntityManager->getEntities(), m_CommandBuffersEntities[m_ImageIndex],
-                m_DepthMapImages[0], m_DepthMapImageViews[0], m_LightManager->getAmbientLight());
+                m_DepthMapImages[0], m_DepthMapImageViews[0], m_LightManager->getAmbientLight(), "shadowMap");
+
+            /*drawShadowMap(m_EntityManager->getEntities(), m_CommandBuffersEntities[m_ImageIndex],
+                m_DepthMapImages[1], m_DepthMapImageViews[1], m_LightManager->getSpotLights().at(0), "shadowMapSpot");*/
 
             beginRendering(m_CommandBuffersEntities[m_ImageIndex],
             VK_ATTACHMENT_LOAD_OP_LOAD, VK_ATTACHMENT_STORE_OP_STORE, true);
