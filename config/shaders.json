@@ -27,6 +27,10 @@
     "shadowMap": {
       "vert": "assets/shaders/spv/shadowMap_vert.spv",
       "frag": "assets/shaders/spv/shadowMap_frag.spv"
-    }
+    },
+    "quad": {
+      "vert": "assets/shaders/spv/quad_vert.spv",
+      "frag": "assets/shaders/spv/quad_frag.spv"
+    }	
   }
  }
