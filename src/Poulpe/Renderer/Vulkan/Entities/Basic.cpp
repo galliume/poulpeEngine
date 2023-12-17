@@ -110,7 +110,7 @@ namespace Poulpe
             pushConstants.viewPos = adapter->getCamera()->getPos();
             pushConstants.mapsUsed = mesh->getData()->mapsUsed;
 
-            vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_ALL, 0, sizeof(constants),
+            vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(constants),
                 & pushConstants);
         };
 
@@ -163,11 +163,10 @@ namespace Poulpe
       imageInfoBumpMap.imageView = texBumpMap.getImageView();
       imageInfoBumpMap.sampler = texBumpMap.getSampler();
 
-      Texture texShadowMap = m_TextureManager->getTextures()["_plp_empty"];
       VkDescriptorImageInfo shadowMap{};
       shadowMap.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-      shadowMap.imageView = texShadowMap.getImageView();
-      shadowMap.sampler = texShadowMap.getSampler();
+      shadowMap.imageView = *m_Adapter->getDepthMapImageView();
+      shadowMap.sampler = *m_Adapter->getDepthMapSampler();
 
       imageInfos.emplace_back(imageInfoSpecularMap);
       imageInfos.emplace_back(imageInfoBumpMap);

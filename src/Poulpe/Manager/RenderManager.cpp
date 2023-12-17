@@ -265,13 +265,13 @@ namespace Poulpe
 
     void RenderManager::prepareHUD()
     {
-        auto* gridMesh = new Mesh();
-        auto* gridEntity = new Entity();
-        auto* gridRdrImpl = new Grid(m_Renderer.get(), m_TextureManager.get());
+        //auto* gridMesh = new Mesh();
+        //auto* gridEntity = new Entity();
+        //auto* gridRdrImpl = new Grid(m_Renderer.get(), m_TextureManager.get());
 
-        gridEntity->setMesh(gridMesh);
-        m_EntityManager->addHUD(gridEntity);
-        m_ComponentManager->addComponent<RenderComponent>(gridEntity->getID(), gridRdrImpl);
+        //gridEntity->setMesh(gridMesh);
+        //m_EntityManager->addHUD(gridEntity);
+        //m_ComponentManager->addComponent<RenderComponent>(gridEntity->getID(), gridRdrImpl);
 
         auto* chMesh = new Mesh();
         auto* chEntity = new Entity();

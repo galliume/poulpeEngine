@@ -49,6 +49,8 @@ struct Light {
     vec3 clq;
     //cutOff, outerCutoff, Blank
     vec3 coB;
+    mat4 view;
+    mat4 projection;
     mat4 lightSpaceMatrix;
 };
 
@@ -95,5 +97,5 @@ void main()
     vs_out.fTextureID = int(pc.textureIDBB.x);//ID conversion should be ok
     vs_out.fMapsUsed = pc.mapsUsed;
     vs_out.fViewPos = pc.viewPos;
-    vs_out.fShadowCoord = (ambientLight.lightSpaceMatrix * ubos[gl_InstanceIndex].model ) * vec4(pos, 1.0);
+    vs_out.fShadowCoord = (biasMat * ambientLight.lightSpaceMatrix * ubos[gl_InstanceIndex].model) * vec4(pos, 1.0);
 } 

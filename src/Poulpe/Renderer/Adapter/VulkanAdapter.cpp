@@ -406,7 +406,7 @@ namespace Poulpe
       m_Renderer->startMarker(m_CommandBuffersEntities[m_ImageIndex], "shadow_map", 0.1, 0.2, 0.3);
 
       VkImageMemoryBarrier depthImageRenderBeginBarrier = m_Renderer->setupImageMemoryBarrier(
-        m_DepthMapImages[m_ImageIndex], 0, VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT, VK_IMAGE_LAYOUT_UNDEFINED,
+        m_DepthMapImages[0], 0, VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT, VK_IMAGE_LAYOUT_UNDEFINED,
             VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, 1, VK_IMAGE_ASPECT_DEPTH_BIT);
 
       m_Renderer->addPipelineBarriers(m_CommandBuffersEntities[m_ImageIndex], { depthImageRenderBeginBarrier },
@@ -415,10 +415,10 @@ namespace Poulpe
 
 
       VkClearColorValue colorClear = {};
-      colorClear.float32[0] = 1;
-      colorClear.float32[1] = 1;
-      colorClear.float32[2] = 1;
-      colorClear.float32[3] = 1;
+      colorClear.float32[0] = 1.0f;
+      colorClear.float32[1] = 1.0f;
+      colorClear.float32[2] = 1.0f;
+      colorClear.float32[3] = 1.0f;
       
       VkClearDepthStencilValue depthStencil = { 1.f, 0 };
       
@@ -427,7 +427,7 @@ namespace Poulpe
 
       VkRenderingAttachmentInfo depthAttachment{ };
       depthAttachment.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
-      depthAttachment.imageView = m_DepthMapViews[m_ImageIndex];
+      depthAttachment.imageView = m_DepthMapViews[0];
       depthAttachment.imageLayout = VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL;
       depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
       depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
@@ -459,10 +459,10 @@ namespace Poulpe
         if (!mesh) continue;
 
 
-        //float depthBiasConstant = 1.25f;
-        //float depthBiasSlope = 1.75f;
+        float depthBiasConstant = -1.25f;
+        float depthBiasSlope = 1.75f;
 
-        //vkCmdSetDepthBias(m_CommandBuffersEntities[m_ImageIndex], depthBiasConstant, 0.0f, depthBiasSlope);
+        vkCmdSetDepthBias(m_CommandBuffersEntities[m_ImageIndex], depthBiasConstant, 0.0f, depthBiasSlope);
 
         m_Renderer->bindPipeline(m_CommandBuffersEntities[m_ImageIndex], pipeline->pipeline);
 
@@ -471,7 +471,7 @@ namespace Poulpe
         // }
         //m_HasClicked = false;
         for (size_t i = 0; i < mesh->getData()->m_Ubos.size(); ++i) {
-          mesh->getData()->m_Ubos[i].projection = m_LightManager->getSpotLights().at(0).lightSpaceMatrix;
+          mesh->getData()->m_Ubos[i].projection = m_LightManager->getAmbientLight().lightSpaceMatrix;
           //mesh->getData()->m_Ubos[i].projection = lightProjection;
         }
 
@@ -486,8 +486,15 @@ namespace Poulpe
           min = max;
         }
 
-        if (mesh->hasPushConstants() && nullptr != mesh->applyPushConstants)
-            mesh->applyPushConstants(m_CommandBuffersEntities[m_ImageIndex], pipeline->pipelineLayout, this, mesh);
+        constants pushConstants{};
+        pushConstants.textureIDBB = glm::vec3(mesh->getData()->m_TextureIndex, 0.0, 0.0);
+        
+        pushConstants.view = m_LightManager->getAmbientLight().view;
+        pushConstants.viewPos = getCamera()->getPos();
+        pushConstants.mapsUsed = mesh->getData()->mapsUsed;
+
+        vkCmdPushConstants(m_CommandBuffersEntities[m_ImageIndex], pipeline->pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(constants),
+            & pushConstants);
 
         try {
         if (m_RenderingStopped) return;
@@ -507,7 +514,7 @@ namespace Poulpe
         auto newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
         VkImageMemoryBarrier depthImageEndRenderBeginBarrier = m_Renderer->setupImageMemoryBarrier(
-          m_DepthMapImages[m_ImageIndex], VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT, 0,
+          m_DepthMapImages[0], VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT, 0,
             VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL, newLayout, 1, VK_IMAGE_ASPECT_DEPTH_BIT);
 
         m_Renderer->addPipelineBarriers(m_CommandBuffersEntities[m_ImageIndex], { depthImageEndRenderBeginBarrier },
@@ -525,7 +532,7 @@ namespace Poulpe
             beginRendering(m_CommandBuffersEntities[m_ImageIndex],
             VK_ATTACHMENT_LOAD_OP_LOAD, VK_ATTACHMENT_STORE_OP_STORE, true);
 
-            m_Renderer->startMarker(m_CommandBuffersEntities[m_ImageIndex], "entities_drawing", 0.3, 0.2, 0.1);
+            m_Renderer->startMarker(m_CommandBuffersEntities[m_ImageIndex], "entities_drawing", 0.2, 0.2, 0.9);
 
             for (auto & entity : *m_EntityManager->getEntities()) {
                 Mesh* mesh = entity->getMesh();
@@ -533,74 +540,6 @@ namespace Poulpe
                 if (!mesh) continue;
                 auto pipeline = getPipeline(mesh->getShaderName());
 
-                if (!mesh->isDescShadowMapDone()) {
-                    std::vector<VkDescriptorImageInfo> imageInfos;
-                    std::vector<VkDescriptorImageInfo> imageInfoSpec;
-
-                    Texture tex;
-                    tex = m_TextureManager->getTextures()[mesh->getData()->m_Texture];
-
-                    VkDescriptorImageInfo imageInfo{};
-
-                    imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-                    imageInfo.imageView = tex.getImageView();
-                    imageInfo.sampler = tex.getSampler();
-
-                    imageInfos.emplace_back(imageInfo);
-
-                    //@todo rename to debug texture ?
-                    std::string specMapName = "_plp_empty";
-                    std::string bumpMapName = "_plp_empty";
-                    mesh->getData()->mapsUsed = glm::vec3(0.0f);
-
-                    if (!mesh->getData()->m_TextureSpecularMap.empty()
-                        && m_TextureManager->getTextures().contains(mesh->getData()->m_TextureSpecularMap)) {
-                        specMapName = mesh->getData()->m_TextureSpecularMap;
-                        mesh->getData()->mapsUsed.y = 1.0f;
-
-                    }
-                    Texture texSpecularMap = m_TextureManager->getTextures()[specMapName];
-
-                    if (!mesh->getData()->m_TextureBumpMap.empty()
-                        && m_TextureManager->getTextures().contains(mesh->getData()->m_TextureBumpMap)) {
-                        bumpMapName = mesh->getData()->m_TextureBumpMap;
-                        mesh->getData()->mapsUsed.x = 1.0f;
-                    }
-
-                    Texture texBumpMap = m_TextureManager->getTextures()[bumpMapName];
-
-                    VkDescriptorImageInfo imageInfoSpecularMap{};
-                    imageInfoSpecularMap.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-                    imageInfoSpecularMap.imageView = texSpecularMap.getImageView();
-                    imageInfoSpecularMap.sampler = texSpecularMap.getSampler();
-
-                    VkDescriptorImageInfo imageInfoBumpMap{};
-                    imageInfoBumpMap.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-                    imageInfoBumpMap.imageView = texBumpMap.getImageView();
-                    imageInfoBumpMap.sampler = texBumpMap.getSampler();
-
-                    VkDescriptorImageInfo shadowMap{};
-                    shadowMap.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-                    shadowMap.imageView = m_DepthMapViews[m_ImageIndex];
-                    shadowMap.sampler = m_DepthMapSamplers[m_ImageIndex];
-
-                    imageInfos.emplace_back(imageInfoSpecularMap);
-                    imageInfos.emplace_back(imageInfoBumpMap);
-                    imageInfos.emplace_back(shadowMap);
-
-                    VkDescriptorSet descSet = rdr()->createDescriptorSets(pipeline->descPool, { pipeline->descSetLayout }, 1);
-
-                    for (size_t i = 0; i < mesh->getUniformBuffers()->size(); ++i) {
-
-                        rdr()->updateDescriptorSets(
-                            *mesh->getUniformBuffers(),
-                            *mesh->getStorageBuffers(),
-                            descSet, imageInfos);
-                    }
-
-                    mesh->setDescSet(descSet);
-                    mesh->setIsDescShadowMapDone();
-                }
 
                 // if (m_HasClicked && mesh->IsHit(m_RayPick)) {
                 //    PLP_DEBUG("HIT ! {}", mesh->GetName());
@@ -831,7 +770,6 @@ namespace Poulpe
             {
                 std::unique_lock<std::mutex> render(m_MutexCmdSubmit);
                 std::vector<VkCommandBuffer> cmds{};
-
                 std::copy_if(m_CmdToSubmit.begin(), m_CmdToSubmit.end(), std::back_inserter(cmds),
                     [](VkCommandBuffer vkBuffer) { return vkBuffer != VK_NULL_HANDLE; });
 
