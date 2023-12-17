@@ -5,10 +5,10 @@ namespace Poulpe
     LightManager::LightManager()
     {
         m_AmbientLight.color = glm::vec3(1.0f);
-        m_AmbientLight.position = glm::vec3(0.0f, 3.0f, 0.0f);
+        m_AmbientLight.position = glm::vec3(-0.2f, 2.0f, -0.3f);
         m_AmbientLight.direction = glm::vec3(-0.1f, -1.0, 0.0);
         //ambient diffuse specular
-        m_AmbientLight.ads = glm::vec3(0.3f, 0.7f, 1.0f);
+        m_AmbientLight.ads = glm::vec3(0.8f, 0.7f, 1.0f);
         m_AmbientLight.clq = glm::vec3(0.0f);
 
         m_AmbientLight.view = glm::lookAt(
@@ -45,13 +45,16 @@ namespace Poulpe
         light3.direction = glm::vec3(-0.1f, -1.0, 0.0);
         light3.ads = glm::vec3(2.5f, 2.8f, 3.0f);
         light3.clq = glm::vec3(1.0f, 0.9f, 0.032f);
+
         light3.coB = glm::vec3( glm::cos(glm::radians(12.5f)), glm::cos(glm::radians(15.0f)), 0.0f);
 
-        light3.view = glm::lookAt(light3.position, light3.position + light3.direction, glm::vec3( 0.0f, 1.0f,  0.0f));
-        light3.projection = glm::perspective(glm::radians(45.0f), 2560.f / 1440.f, 0.1f, 100.f);
-        //light3.projection[1][1] *= -1;
+        light3.view = glm::lookAt(
+            light3.position,
+            glm::vec3( 0.0f, 0.0f,  0.0f),
+            glm::vec3( 0.0f, 1.0f,  0.0f));
 
-        //light3.lightSpaceMatrix = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, near_plane, far_plane);
+        light3.projection = glm::perspective(glm::radians(45.0f), 2560.f / 1440.f, 1.f, 100.f);
+        light3.projection[1][1] *= -1;
         light3.lightSpaceMatrix = light3.view * light3.projection;
 
         m_SpotLights.emplace_back(light3);
@@ -61,10 +64,9 @@ namespace Poulpe
     {
         m_AmbientLight.position.x += cos(glm::radians(deltaTime * 360.0f));
         m_AmbientLight.direction.x += cos(glm::radians(deltaTime * 360.0f));
-		m_AmbientLight.position.z += sin(glm::radians(deltaTime * 360.0f));
-		m_AmbientLight.direction.z += sin(glm::radians(deltaTime * 360.0f));
+        m_AmbientLight.position.z += sin(glm::radians(deltaTime * 360.0f));
+        m_AmbientLight.direction.z += sin(glm::radians(deltaTime * 360.0f));
 
-        
         m_AmbientLight.view = glm::lookAt(
             m_AmbientLight.position,
             m_AmbientLight.position + m_AmbientLight.direction,

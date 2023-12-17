@@ -11,6 +11,8 @@ namespace Poulpe
         alignas(16) glm::vec3 normal;
         alignas(8) glm::vec2 texCoord;
         alignas(16) glm::vec4 tangent;
+        //faceId texture ID blank blank
+        alignas(16) glm::vec4 fidtidBB;
 
         static VkVertexInputBindingDescription GetBindingDescription() {
 
@@ -22,9 +24,9 @@ namespace Poulpe
             return bindingDescription;
         }
 
-        static std::array<VkVertexInputAttributeDescription, 4> GetAttributeDescriptions() {
+        static std::array<VkVertexInputAttributeDescription, 5> GetAttributeDescriptions() {
 
-            std::array<VkVertexInputAttributeDescription, 4> attributeDescriptions{};
+            std::array<VkVertexInputAttributeDescription, 5> attributeDescriptions{};
             attributeDescriptions[0].binding = 0;
             attributeDescriptions[0].location = 0;
             attributeDescriptions[0].format = VK_FORMAT_R32G32B32_SFLOAT;
@@ -44,6 +46,11 @@ namespace Poulpe
             attributeDescriptions[3].location = 3;
             attributeDescriptions[3].format = VK_FORMAT_R32G32B32_SFLOAT;
             attributeDescriptions[3].offset = offsetof(Vertex, tangent);
+
+            attributeDescriptions[4].binding = 0;
+            attributeDescriptions[4].location = 4;
+            attributeDescriptions[4].format = VK_FORMAT_R32G32B32_SFLOAT;
+            attributeDescriptions[4].offset = offsetof(Vertex, fidtidBB);
 
             return attributeDescriptions;
         }

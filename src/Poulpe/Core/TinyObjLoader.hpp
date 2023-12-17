@@ -11,6 +11,7 @@ namespace Poulpe
         std::vector<uint32_t> indices;
         uint32_t materialId = 0;
         std::vector<uint32_t> facesMaterialId;
+        std::vector<uint32_t> materialsID;
     };
 
     class TinyObjLoader

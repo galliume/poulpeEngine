@@ -102,7 +102,8 @@ namespace Poulpe
         auto vertexInputInfo = getVertexBindingDesc(bDesc, attDesc);
         VkPipeline graphicPipeline = VK_NULL_HANDLE;
 
-        if (shaderName == "shadowMap" || shaderName == "quad") {
+        //@todo clean
+        if (shaderName == "shadowMap" || shaderName == "shadowMapSpot" || shaderName == "quad") {
             graphicPipeline = m_Renderer->rdr()->createGraphicsPipeline(m_Renderer->rdrPass(), pipelineLayout,
             shaderName, shaders, vertexInputInfo, VK_CULL_MODE_NONE, true, true, true, true, VK_POLYGON_MODE_FILL, false, true);
         } else {
@@ -181,7 +182,7 @@ namespace Poulpe
 
         VkDescriptorSetLayoutBinding samplerLayoutBinding{};
         samplerLayoutBinding.binding = 1;
-        samplerLayoutBinding.descriptorCount = 4;
+        samplerLayoutBinding.descriptorCount = 5;
         samplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
         samplerLayoutBinding.pImmutableSamplers = nullptr;
         samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
@@ -223,7 +224,7 @@ namespace Poulpe
     }
 
     VkPipelineVertexInputStateCreateInfo ShaderManager::getVertexBindingDesc(VkVertexInputBindingDescription bDesc,
-      std::array<VkVertexInputAttributeDescription, 4> attDesc)
+      std::array<VkVertexInputAttributeDescription, 5> attDesc)
     {
       VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
       vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
