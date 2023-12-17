@@ -1,5 +1,85 @@
 {
 	"entities": {
+		"sponza" : {
+			"mesh": "assets/mesh/sponza/sponza.obj",
+			"textures": {
+				"textures_background" : "assets/mesh/sponza/textures/background.png",
+				"textures_background_bump": "assets/mesh/sponza/textures/background_bump.png",
+				"textures_chain_texture": "assets/mesh/sponza/textures/chain_texture.png",
+				"textures_chain_texture_bump": "assets/mesh/sponza/textures/chain_texture_bump.png",
+				"textures_chain_texture_mask": "assets/mesh/sponza/textures/chain_texture_mask.png",
+				"textures_floor_gloss": "assets/mesh/sponza/textures/floor_gloss.png",
+				"textures_lion": "assets/mesh/sponza/textures/lion.png",
+				"textures_lion_bump": "assets/mesh/sponza/textures/lion_bump.png",
+				"textures_lion2_bump": "assets/mesh/sponza/textures/lion2_bump.png",
+				"textures_spnza_bricks_a_bump": "assets/mesh/sponza/textures/spnza_bricks_a_bump.png",
+				"textures_spnza_bricks_a_diff": "assets/mesh/sponza/textures/spnza_bricks_a_diff.png",
+				"textures_spnza_bricks_a_spec": "assets/mesh/sponza/textures/spnza_bricks_a_spec.png",
+				"textures_sponza_arch_bump": "assets/mesh/sponza/textures/sponza_arch_bump.png",
+				"textures_sponza_arch_diff": "assets/mesh/sponza/textures/sponza_arch_diff.png",
+				"textures_sponza_arch_spec": "assets/mesh/sponza/textures/sponza_arch_spec.png",
+				"textures_sponza_ceiling_a_diff": "assets/mesh/sponza/textures/sponza_ceiling_a_diff.png",
+				"textures_sponza_ceiling_a_spec": "assets/mesh/sponza/textures/sponza_ceiling_a_spec.png",
+				"textures_sponza_column_a_bump": "assets/mesh/sponza/textures/sponza_column_a_bump.png",
+				"textures_sponza_column_a_diff": "assets/mesh/sponza/textures/sponza_column_a_diff.png",
+				"textures_sponza_column_a_spec": "assets/mesh/sponza/textures/sponza_column_a_spec.png",
+				"textures_sponza_column_b_bump": "assets/mesh/sponza/textures/sponza_column_b_bump.png",
+				"textures_sponza_column_b_diff": "assets/mesh/sponza/textures/sponza_column_b_diff.png",
+				"textures_sponza_column_b_spec": "assets/mesh/sponza/textures/sponza_column_b_spec.png",
+				"textures_sponza_column_c_bump": "assets/mesh/sponza/textures/sponza_column_c_bump.png",
+				"textures_sponza_column_c_diff": "assets/mesh/sponza/textures/sponza_column_c_diff.png",
+				"textures_sponza_column_c_spec": "assets/mesh/sponza/textures/sponza_column_c_spec.png",
+				"textures_sponza_curtain_blue_diff": "assets/mesh/sponza/textures/sponza_curtain_blue_diff.png",
+				"textures_sponza_curtain_diff": "assets/mesh/sponza/textures/sponza_curtain_diff.png",
+				"textures_sponza_curtain_green_diff": "assets/mesh/sponza/textures/sponza_curtain_green_diff.png",
+				"textures_sponza_details_diff": "assets/mesh/sponza/textures/sponza_details_diff.png",
+				"textures_sponza_details_spec": "assets/mesh/sponza/textures/sponza_details_spec.png",
+				"textures_sponza_fabric_blue_diff": "assets/mesh/sponza/textures/sponza_fabric_blue_diff.png",
+				"textures_sponza_fabric_diff": "assets/mesh/sponza/textures/sponza_fabric_diff.png",
+				"textures_sponza_fabric_green_diff": "assets/mesh/sponza/textures/sponza_fabric_green_diff.png",
+				"textures_sponza_fabric_purple": "assets/mesh/sponza/textures/sponza_fabric_purple.png",
+				"textures_sponza_fabric_spec": "assets/mesh/sponza/textures/sponza_fabric_spec.png",
+				"textures_sponza_flagpole_diff": "assets/mesh/sponza/textures/sponza_flagpole_diff.png",
+				"textures_sponza_flagpole_spec": "assets/mesh/sponza/textures/sponza_flagpole_spec.png",
+				"textures_sponza_floor_a_diff": "assets/mesh/sponza/textures/sponza_floor_a_diff.png",
+				"textures_sponza_floor_a_spec": "assets/mesh/sponza/textures/sponza_floor_a_spec.png",
+				"textures_sponza_roof_diff": "assets/mesh/sponza/textures/sponza_roof_diff.png",
+				"textures_sponza_thorn_bump": "assets/mesh/sponza/textures/sponza_thorn_bump.png",
+				"textures_sponza_thorn_diff": "assets/mesh/sponza/textures/sponza_thorn_diff.png",
+				"textures_sponza_thorn_mask": "assets/mesh/sponza/textures/sponza_thorn_mask.png",
+				"textures_sponza_thorn_spec": "assets/mesh/sponza/textures/sponza_thorn_spec.png",
+				"textures_vase_bump": "assets/mesh/sponza/textures/vase_bump.png",
+				"textures_vase_dif": "assets/mesh/sponza/textures/vase_dif.png",
+				"textures_vase_hanging": "assets/mesh/sponza/textures/vase_hanging.png",
+				"textures_vase_plant": "assets/mesh/sponza/textures/vase_plant.png",
+				"textures_vase_plant_mask": "assets/mesh/sponza/textures/vase_plant_mask.png",
+				"textures_vase_plant_spec": "assets/mesh/sponza/textures/vase_plant_spec.png",
+				"textures_vase_round": "assets/mesh/sponza/textures/vase_round.png",
+				"textures_vase_round_bump": "assets/mesh/sponza/textures/vase_round_bump.png",
+				"textures_vase_round_spec": "assets/mesh/sponza/textures/vase_round_spec.png"
+			},           
+			"shader": "main_basic",
+			"positions": [
+				{"x": -0.20, "y": 0.1, "z": -0.20}
+			],
+			"scales": [
+				{"x": 0.001, "y": 0.001, "z": 0.001}
+			],
+			"rotations": [
+				{"x": 0.0, "y": 0.0, "z": 0.0}
+			],
+			"inverseTextureY": true,
+			"count": 1,
+			"padding": {
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"form": "positioned",
+			"hasBbox": false,
+			"hasAnimation": false,
+			"isPointLight": false
+		},
 		"Grass_Block" : {
 			"mesh": "assets/mesh/minecraft/Grass_Block.obj",
 			"textures": {
@@ -7,7 +87,7 @@
 			},
 			"shader": "main_basic",
 			"positions": [
-				{"x": 0.0, "y": 0.2, "z": -0.2}
+				{"x": -2.9, "y": 0.2, "z": -0.2}
 			],
 			"scales": [
 				{"x": 0.05, "y": 0.05, "z": 0.05}
@@ -34,7 +114,7 @@
 			},
 			"shader": "main_basic",
 			"positions": [
-				{"x": 0.0, "y": -0.2, "z": 0.0}
+				{"x": 0.0, "y": -0.25, "z": 0.0}
 			],
 			"scales": [
 				{"x": 1.0, "y": 1.0, "z": 1.0}

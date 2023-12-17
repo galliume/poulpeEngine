@@ -16,6 +16,7 @@ namespace Poulpe
         Light getAmbientLight() { return m_AmbientLight; }
         std::vector<Light> getPointLights() { return m_PointLights; }
         std::vector<Light> getSpotLights() { return m_SpotLights; }
+        void animateAmbientLight(float deltaTime);
 
     private:
         Light m_AmbientLight;
