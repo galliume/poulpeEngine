@@ -95,8 +95,8 @@ namespace Poulpe
         void addPipeline(std::string const & shaderName, VulkanPipeline pipeline) override;
         VulkanPipeline* getPipeline(std::string const& shaderName) { return & m_Pipelines[shaderName]; };
         void prepareShadowMap() override;
-        VkImageView* getDepthMapImageView() { return &m_DepthImageViews.at(m_ImageIndex); };
-        VkSampler* getDepthMapSampler() { return &m_SwapChainDepthSamplers.at(m_ImageIndex); };
+        VkImageView* getDepthMapImageView() { return &m_DepthMapViews.at(0); };
+        VkSampler* getDepthMapSampler() { return &m_DepthMapSamplers.at(0); };
 
     private:
         //@todo temp

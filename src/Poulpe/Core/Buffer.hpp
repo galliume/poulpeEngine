@@ -28,6 +28,8 @@ namespace Poulpe
         alignas(16) glm::vec3 clq;
         //cutOff, outerCutoff Blank
         alignas(16) glm::vec3 coB{ 1.0, 0.0, 0.0 };
+        alignas(16) glm::mat4 view;
+        alignas(16) glm::mat4 projection;
         alignas(16) glm::mat4 lightSpaceMatrix;
     };
 

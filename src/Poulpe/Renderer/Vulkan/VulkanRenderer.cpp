@@ -691,7 +691,7 @@ namespace Poulpe {
         std::vector<VkPipelineShaderStageCreateInfo> shadersCreateInfos,
         VkPipelineVertexInputStateCreateInfo vertexInputInfo,
         VkCullModeFlagBits cullMode, bool dynamicRendering, bool depthTestEnable, bool depthWriteEnable,
-        bool stencilTestEnable, int polygoneMode, bool hasColorAttachment
+        bool stencilTestEnable, int polygoneMode, bool hasColorAttachment, bool dynamicDepthBias
     )
     {
         VkPipelineInputAssemblyStateCreateInfo inputAssembly{};
@@ -726,8 +726,8 @@ namespace Poulpe {
         rasterizer.lineWidth = 1.0f;
         rasterizer.cullMode = cullMode;
         rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
-        rasterizer.depthBiasEnable = VK_FALSE;
-        rasterizer.depthBiasConstantFactor = 0.0f;
+        rasterizer.depthBiasEnable = VK_TRUE;
+        rasterizer.depthBiasConstantFactor = 0.f;
         rasterizer.depthBiasClamp = 0.0f;
         rasterizer.depthBiasSlopeFactor = 0.0f;
 
@@ -773,11 +773,13 @@ namespace Poulpe {
         colorBlending.blendConstants[2] = 1.0f;
         colorBlending.blendConstants[3] = 1.0f;
 
-        VkDynamicState dynamicStates[2] = { VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR };
+        std::vector<VkDynamicState> dynamicStates{ VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR };
+        if (dynamicDepthBias) dynamicStates.emplace_back(VK_DYNAMIC_STATE_DEPTH_BIAS);
+        
         VkPipelineDynamicStateCreateInfo dynamicState{};
         dynamicState.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
-        dynamicState.dynamicStateCount = 2;
-        dynamicState.pDynamicStates = dynamicStates;
+        dynamicState.dynamicStateCount = dynamicStates.size();
+        dynamicState.pDynamicStates = dynamicStates.data();
 
         VkGraphicsPipelineCreateInfo pipelineInfo{};
         pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
@@ -1459,8 +1461,7 @@ namespace Poulpe {
         vkCmdEndRenderPass(commandBuffer);
     }
 
-    void VulkanRenderer::beginRendering(VkCommandBuffer commandBuffer, VkImageView const & colorImageView,
-        VkImageView const & depthImageView, VkAttachmentLoadOp const loadOp, VkAttachmentStoreOp const storeOp)
+    void VulkanRenderer::beginRendering(VkCommandBuffer commandBuffer,VkImageView const & colorImageView, VkImageView const & depthImageView, VkAttachmentLoadOp const loadOp, VkAttachmentStoreOp const storeOp)
     {
         VkClearColorValue colorClear = {};
         colorClear.float32[0] = 1;

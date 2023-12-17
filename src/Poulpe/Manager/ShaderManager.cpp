@@ -92,7 +92,7 @@ namespace Poulpe
         VkPushConstantRange vkPc;
         vkPc.offset = 0;
         vkPc.size = sizeof(constants);
-        vkPc.stageFlags = VK_SHADER_STAGE_ALL;
+        vkPc.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
         vkPcs.emplace_back(vkPc);
         VkPipelineLayout pipelineLayout = m_Renderer->rdr()->createPipelineLayout(dSetLayout, vkPcs);
 
@@ -102,12 +102,12 @@ namespace Poulpe
         auto vertexInputInfo = getVertexBindingDesc(bDesc, attDesc);
         VkPipeline graphicPipeline = VK_NULL_HANDLE;
 
-        if (shaderName != "shadowMap") {
+        if (shaderName == "shadowMap" || shaderName == "quad") {
+            graphicPipeline = m_Renderer->rdr()->createGraphicsPipeline(m_Renderer->rdrPass(), pipelineLayout,
+            shaderName, shaders, vertexInputInfo, VK_CULL_MODE_NONE, true, true, true, true, VK_POLYGON_MODE_FILL, false, true);
+        } else {
           graphicPipeline = m_Renderer->rdr()->createGraphicsPipeline(m_Renderer->rdrPass(), pipelineLayout,
             shaderName, shaders, vertexInputInfo, VK_CULL_MODE_BACK_BIT, true, true, true, true, VK_POLYGON_MODE_FILL);
-        } else {
-            graphicPipeline = m_Renderer->rdr()->createGraphicsPipeline(m_Renderer->rdrPass(), pipelineLayout,
-            shaderName, shaders, vertexInputInfo, VK_CULL_MODE_NONE, true, true, true, true, VK_POLYGON_MODE_FILL, false);
         }
 
         VulkanPipeline pipeline{};
@@ -191,7 +191,7 @@ namespace Poulpe
         storageLayoutBinding.descriptorCount = 1;
         storageLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
         storageLayoutBinding.pImmutableSamplers = nullptr;
-        storageLayoutBinding.stageFlags = VK_SHADER_STAGE_ALL;
+        storageLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
         
         std::vector<VkDescriptorSetLayoutBinding> bindings = {
             uboLayoutBinding, samplerLayoutBinding, storageLayoutBinding };
