@@ -82,16 +82,38 @@ namespace Poulpe
 
             TinyObjData data;
             std::vector<uint32_t> indices;
+            std::vector<uint32_t> materialsID;
 
             // Loop over faces(polygon)
             size_t index_offset = 0;
+            int lastId = -1;
+            std::vector<int> ids{};
+            ids.resize(4);
+            int samplerId = 0;
+            std::unordered_map<int, float> texidsmap;
+
             for (size_t f = 0; f < shapes[s].mesh.num_face_vertices.size(); f++) {
                 size_t fv = size_t(shapes[s].mesh.num_face_vertices[f]);
+
+                int id = (-1 != shapes[s].mesh.material_ids[f]) ? shapes[s].mesh.material_ids[f] : 0;
+
+                if (lastId != id) {
+                    lastId = id;
+                    ids.emplace_back(id);
+                    materialsID.emplace_back(id);
+                    texidsmap[id] = samplerId;
+                    samplerId += 1;
+                }
+
+                //@todo work for only 2 textures
+                float t = (texidsmap[id] == 0) ? 0.0f : 1.0f;
 
                 // Loop over vertices in the face.
                 for (size_t v = 0; v < fv; v++) {
 
                     Poulpe::Vertex vertex{};
+                    vertex.fidtidBB = glm::vec4(static_cast<float>(f), t, 0.0f, 0.0f);
+
                     // access to vertex
                     tinyobj::index_t idx = shapes[s].mesh.indices[index_offset + v];
                     tinyobj::real_t vx = attrib.vertices[3 * size_t(idx.vertex_index) + 0];
@@ -153,6 +175,7 @@ namespace Poulpe
                 // per-face material
                 data.materialId = (-1 != shapes[s].mesh.material_ids[f]) ? shapes[s].mesh.material_ids[f] : 0;
                 data.facesMaterialId.emplace_back(shapes[s].mesh.material_ids[f]);
+                data.materialsID = materialsID;
             }
 
             //tangeant

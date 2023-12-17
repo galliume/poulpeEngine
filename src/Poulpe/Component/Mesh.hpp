@@ -53,7 +53,7 @@ namespace Poulpe
 
         struct Data {
             std::string m_Name;
-            std::string m_Texture;
+            std::vector<std::string> m_Textures;
             std::string m_TextureSpecularMap;
             std::string m_TextureBumpMap;
             std::string m_TextureNormalMap;

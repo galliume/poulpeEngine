@@ -10,7 +10,7 @@ detectOs
 OS=$?
 
 if [ ! -d "./assets/shaders/spv" ]; then
-	mkdir "./assets/shaders/spv"
+    mkdir "./assets/shaders/spv"
 fi
 
 if ! [[ "$OS" == 2 ]]; then
@@ -21,13 +21,13 @@ echo "Compiling shaders"
 
 #@todo read from config/shaders.json
 shaders=("main_basic" "main_basic_no_texture" "skybox"
-		"2d" "grid" "ambient_light" "tangent"
-		"shadowMap" "quad")
+        "2d" "grid" "ambient_light" "tangent"
+        "shadowMap" "shadowMapSpot" "quad")
 
 for shader in ${shaders[@]}; do
-	${GLSLC_BIN} ./assets/shaders/${shader}.vert -o ./assets/shaders/spv/${shader}_vert.spv
-	${GLSLC_BIN} ./assets/shaders/${shader}.frag -o ./assets/shaders/spv/${shader}_frag.spv
-	echo "Shader [${shader}] compiled"
+    ${GLSLC_BIN} ./assets/shaders/${shader}.vert -o ./assets/shaders/spv/${shader}_vert.spv
+    ${GLSLC_BIN} ./assets/shaders/${shader}.frag -o ./assets/shaders/spv/${shader}_frag.spv
+    echo "Shader [${shader}] compiled"
 done
 
 echo "All shaders have been compiled."
