@@ -155,6 +155,9 @@ namespace Poulpe
 
     void RenderManager::renderScene(float const deltaTime)
     {
+        //@todo animate light
+        //m_LightManager->animateAmbientLight(deltaTime);
+
         for (auto& entity : *m_EntityManager->getEntities()) {
             auto* mesh = entity->getMesh();
             if (!mesh->hasAnimation()) continue;

@@ -58,7 +58,6 @@ float ShadowCalculation(vec4 shadowCoord);
 
 float near = 0.1;
 float far  = 100.0;
-float bias = 0.005;
 
 float LinearizeDepth(float depth)
 {
@@ -83,17 +82,16 @@ void main()
       normal = vec3(normalize(nm));
     }
 
-    bias = max(0.05 * (1.0 - dot(normal, ambientLight.direction)), 0.005);
     float shadow = ShadowCalculation(fs_in.fShadowCoord / fs_in.fShadowCoord.w);
 
     vec3 viewDir = normalize(fs_in.fViewPos.xyz - fs_in.fPos.xyz);
     vec3 color = CalcDirLight(ambientLight, normal, viewDir, shadow);
     
-//    for(int i = 0; i < NR_POINT_LIGHTS; i++) {
-//        color += CalcPointLight(pointLights[i], normal, fs_in.fPos.xyz, viewDir);
-//    }
-//
-//    color += CalcSpotLight(spotLight, normal, fs_in.fPos.xyz, viewDir);
+    for(int i = 0; i < NR_POINT_LIGHTS; i++) {
+        color += CalcPointLight(pointLights[i], normal, fs_in.fPos.xyz, viewDir);
+    }
+
+    color += CalcSpotLight(spotLight, normal, fs_in.fPos.xyz, viewDir);
 
     fColor = vec4(color, 1.0);
     //fColor = vec4(fs_in.fShadowCoord.st, 0, 1);
