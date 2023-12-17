@@ -92,13 +92,13 @@ namespace Poulpe
         Camera* getCamera() { return m_Camera; }
 
         void drawShadowMap(std::vector<std::unique_ptr<Entity>>* entities, VkCommandBuffer & commandBuffer,
-        VkImage & image, VkImageView & imageView, Light light);
+        VkImage & image, VkImageView & imageView, Light light, std::string const & pipelineName);
 
         void addPipeline(std::string const & shaderName, VulkanPipeline pipeline) override;
         VulkanPipeline* getPipeline(std::string const& shaderName) { return & m_Pipelines[shaderName]; };
         void prepareShadowMap() override;
-        VkImageView* getDepthMapImageView() { return &m_DepthMapImageViews.at(0); };
-        VkSampler* getDepthMapSampler() { return &m_DepthMapSamplers.at(0); };
+        std::vector<VkImageView>* getDepthMapImageViews() { return & m_DepthMapImageViews; };
+        std::vector<VkSampler>* getDepthMapSamplers() { return & m_DepthMapSamplers; };
 
     private:
         //@todo temp

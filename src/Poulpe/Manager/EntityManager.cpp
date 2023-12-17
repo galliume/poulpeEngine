@@ -300,9 +300,17 @@ namespace Poulpe
 
             std::vector<Mesh::BBox> bboxs{};
             
-            auto nameTexture = (!textureNames.empty())
-                ? textureNames.at(listData[i].materialId)
+            unsigned int const tex1ID = listData[i].materialsID.at(0);
+
+            std::string nameTexture = (!textureNames.empty())
+                ? textureNames.at(tex1ID)
                 : "mpoulpe";
+
+            std::string name2Texture;
+
+            if ("textures_vase_round" == nameTexture) {
+                PLP_DEBUG("yeah");
+            }
 
             std::string nameTextureSpecularMap;
             std::string bumpTexname;
@@ -312,10 +320,22 @@ namespace Poulpe
                 mesh->setMaterial(TinyObjLoader::m_TinyObjMaterials.at(listData[i].materialId));
             
                 //@todo temp
-                if (!TinyObjLoader::m_TinyObjMaterials.at(listData[i].materialId).ambientTexname.empty()) {
-                    nameTexture = TinyObjLoader::m_TinyObjMaterials.at(listData[i].materialId).ambientTexname;
-                } else if (!TinyObjLoader::m_TinyObjMaterials.at(listData[i].materialId).diffuseTexname.empty()) {
-                    nameTexture = TinyObjLoader::m_TinyObjMaterials.at(listData[i].materialId).diffuseTexname;
+                //@todo separate into 2 storage buffer of 3 texSample
+
+                if (!TinyObjLoader::m_TinyObjMaterials.at(tex1ID).ambientTexname.empty()) {
+                    nameTexture = TinyObjLoader::m_TinyObjMaterials.at(tex1ID).ambientTexname;
+                } else if (!TinyObjLoader::m_TinyObjMaterials.at(tex1ID).diffuseTexname.empty()) {
+                    nameTexture = TinyObjLoader::m_TinyObjMaterials.at(tex1ID).diffuseTexname;
+                }
+
+                if (1 < listData[i].materialsID.size()) {
+                    unsigned int const tex2ID = listData[i].materialsID.at(1);
+
+                    if (!TinyObjLoader::m_TinyObjMaterials.at(tex2ID).ambientTexname.empty()) {
+                        name2Texture = TinyObjLoader::m_TinyObjMaterials.at(tex2ID).ambientTexname;
+                    } else if (!TinyObjLoader::m_TinyObjMaterials.at(tex2ID).diffuseTexname.empty()) {
+                        name2Texture = TinyObjLoader::m_TinyObjMaterials.at(tex2ID).diffuseTexname;
+                    }
                 }
 
                 if (!TinyObjLoader::m_TinyObjMaterials.at(listData[i].materialId).specularTexname.empty()) {
@@ -329,7 +349,8 @@ namespace Poulpe
 
             Mesh::Data data{};
             data.m_Name = name + '_' + nameTexture;
-            data.m_Texture = nameTexture;
+            data.m_Textures.emplace_back(nameTexture);
+            data.m_Textures.emplace_back(name2Texture);
             data.m_TextureSpecularMap = nameTextureSpecularMap;
             data.m_TextureBumpMap = bumpTexname;
             data.m_Vertices = listData[i].vertices;

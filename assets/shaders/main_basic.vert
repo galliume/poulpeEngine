@@ -26,6 +26,7 @@ layout(location = 0) in vec3 pos;
 layout(location = 1) in vec3 normal;
 layout(location = 2) in vec2 texCoord;
 layout(location = 3) in vec4 tangent;
+layout(location = 4) in vec4 fidtidBB;
 
 layout(location = 0) out VS_OUT {
     flat int fTextureID;
@@ -35,7 +36,10 @@ layout(location = 0) out VS_OUT {
     vec3 fMapsUsed;
     vec4 fViewPos;
     mat3 TBN;
-    vec4 fShadowCoord;
+    vec4 fShadowCoordAmbient;
+    vec4 fShadowCoordSpot;
+    //faceId texture ID blank blank
+    vec4 ffidtidBB;
 } vs_out;
 
 
@@ -97,5 +101,7 @@ void main()
     vs_out.fTextureID = int(pc.textureIDBB.x);//ID conversion should be ok
     vs_out.fMapsUsed = pc.mapsUsed;
     vs_out.fViewPos = pc.viewPos;
-    vs_out.fShadowCoord = (biasMat * ambientLight.lightSpaceMatrix * ubos[gl_InstanceIndex].model) * vec4(pos, 1.0);
+    vs_out.fShadowCoordAmbient = (biasMat * ambientLight.lightSpaceMatrix * ubos[gl_InstanceIndex].model) * vec4(pos, 1.0);
+    vs_out.fShadowCoordSpot = (biasMat * spotLight.lightSpaceMatrix * ubos[gl_InstanceIndex].model) * vec4(pos, 1.0);
+    vs_out.ffidtidBB = fidtidBB;
 } 
