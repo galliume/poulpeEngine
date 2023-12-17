@@ -56,4 +56,24 @@ namespace Poulpe
 
         m_SpotLights.emplace_back(light3);
     }
+
+    void LightManager::animateAmbientLight(float deltaTime)
+    {
+        m_AmbientLight.position.x += cos(glm::radians(deltaTime * 360.0f));
+        m_AmbientLight.direction.x += cos(glm::radians(deltaTime * 360.0f));
+		m_AmbientLight.position.z += sin(glm::radians(deltaTime * 360.0f));
+		m_AmbientLight.direction.z += sin(glm::radians(deltaTime * 360.0f));
+
+        
+        m_AmbientLight.view = glm::lookAt(
+            m_AmbientLight.position,
+            m_AmbientLight.position + m_AmbientLight.direction,
+            glm::vec3(0.0f, 1.0f,  0.0f));
+
+        float near_plane = 1.f, far_plane = 7.5f;
+        m_AmbientLight.projection = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, near_plane, far_plane);
+        m_AmbientLight.projection[1][1] *= -1;
+
+        m_AmbientLight.lightSpaceMatrix = m_AmbientLight.projection * m_AmbientLight.view;
+    }
 }
