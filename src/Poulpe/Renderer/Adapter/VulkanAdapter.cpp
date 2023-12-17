@@ -268,266 +268,129 @@ namespace Poulpe
             throw std::runtime_error("can't create rdr pass for shadow map");
         }
 
-
         for (size_t i = 0; i < m_SwapChainImages.size(); ++i) {
             VkImage image{};
             m_Renderer->createDepthMapImage(image);
             m_DepthMapImages.emplace_back(image);
-            m_DepthMapViews.emplace_back(m_Renderer->createDepthMapImageView(image));
+            m_DepthMapImageViews.emplace_back(m_Renderer->createDepthMapImageView(image));
             m_DepthMapSamplers.emplace_back(m_Renderer->createDepthMapSampler());
 
         }
-        //m_Renderer->createDepthMapFrameBuffer(m_DepthMapRenderPass, m_DepthMapView, m_DepthMapFrameBuffer);
-
-        //auto m_DepthMapSync = m_Renderer->createSyncObjects({ m_DepthImages });
-
-        /*auto pipeline = getPipeline("shadowMap");
-
-        if (VK_NULL_HANDLE == pipeline->pipeline) {
-            VkPipelineInputAssemblyStateCreateInfo inputAssembly{};
-            inputAssembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
-            inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
-            inputAssembly.primitiveRestartEnable = VK_FALSE;
-
-            VkPipelineRasterizationStateCreateInfo rasterizer{};
-            rasterizer.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
-            rasterizer.depthClampEnable = VK_FALSE;
-            rasterizer.rasterizerDiscardEnable = VK_FALSE;
-            rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
-            rasterizer.lineWidth = 1.0f;
-            rasterizer.cullMode = VK_CULL_MODE_BACK_BIT;
-            rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
-            rasterizer.depthBiasEnable = VK_FALSE;
-            rasterizer.depthBiasConstantFactor = 0.0f;
-            rasterizer.depthBiasClamp = 0.0f;
-            rasterizer.depthBiasSlopeFactor = 0.0f;
-
-            VkPipelineColorBlendAttachmentState colorBlendAttachment{};
-            colorBlendAttachment.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT
-                | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
-            colorBlendAttachment.blendEnable = VK_FALSE;
-            colorBlendAttachment.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
-            colorBlendAttachment.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
-            colorBlendAttachment.colorBlendOp = VK_BLEND_OP_ADD;
-            colorBlendAttachment.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
-            colorBlendAttachment.dstAlphaBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
-            colorBlendAttachment.alphaBlendOp = VK_BLEND_OP_ADD;
-
-            VkPipelineColorBlendStateCreateInfo colorBlending{};
-            colorBlending.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
-            colorBlending.logicOpEnable = VK_FALSE;
-            colorBlending.attachmentCount = 1;
-            colorBlending.pAttachments = & colorBlendAttachment;
-            colorBlending.blendConstants[0] = 1.0f;
-            colorBlending.blendConstants[1] = 1.0f;
-            colorBlending.blendConstants[2] = 1.0f;
-            colorBlending.blendConstants[3] = 1.0f;
-
-            VkPipelineDepthStencilStateCreateInfo depthStencil{};
-            depthStencil.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
-            depthStencil.depthTestEnable = VK_TRUE;
-            depthStencil.depthWriteEnable = VK_TRUE;
-            depthStencil.depthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL;
-            depthStencil.depthBoundsTestEnable = VK_FALSE;
-            depthStencil.minDepthBounds = 0.0f;
-            depthStencil.maxDepthBounds = 1.0f;
-            depthStencil.stencilTestEnable = VK_FALSE;
-            depthStencil.front = {};
-            depthStencil.back = {};
-
-            VkViewport viewport{};
-            viewport.x = 0.0f;
-            viewport.y = 0.0f;
-            viewport.width = static_cast<float>(rdr()->getSwapChainExtent().width);
-            viewport.height = static_cast<float>(rdr()->getSwapChainExtent().height);
-            viewport.minDepth = 0.0f;
-            viewport.maxDepth = 1.0f;
-
-            VkRect2D scissor{};
-            scissor.offset = { 0, 0 };
-            scissor.extent = rdr()->getSwapChainExtent();
-
-            VkPipelineViewportStateCreateInfo viewportState{};
-            viewportState.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
-            viewportState.viewportCount = 1;
-            viewportState.pViewports = & viewport;
-            viewportState.scissorCount = 1;
-            viewportState.pScissors = & scissor;
-
-            std::vector<VkDynamicState> dynamicStates = { VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR };
-            VkPipelineDynamicStateCreateInfo dynamicState{};
-            dynamicState.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
-            dynamicState.dynamicStateCount = 2;
-            dynamicState.pDynamicStates = dynamicStates.data();
-
-            VkPipelineMultisampleStateCreateInfo multisampling{};
-            multisampling.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
-            multisampling.sampleShadingEnable = VK_FALSE;
-            multisampling.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
-            multisampling.minSampleShading = 0.2f;
-            multisampling.pSampleMask = nullptr;
-            multisampling.alphaToCoverageEnable = VK_FALSE;
-            multisampling.alphaToOneEnable = VK_FALSE;
-
-            VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
-            vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-            vertexInputInfo.vertexBindingDescriptionCount = 0;
-            vertexInputInfo.vertexAttributeDescriptionCount = 0;
-
-            VkGraphicsPipelineCreateInfo pipelineInfo{};
-            pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
-            pipelineInfo.layout = pipeline->pipelineLayout;
-            pipelineInfo.renderPass = m_DepthMapRenderPass;
-            pipelineInfo.pInputAssemblyState = &inputAssembly;
-            pipelineInfo.pRasterizationState = &rasterizer;
-            pipelineInfo.pColorBlendState = &colorBlending;
-            pipelineInfo.pMultisampleState = &multisampling;
-            pipelineInfo.pViewportState = &viewportState;
-            pipelineInfo.pDepthStencilState = &depthStencil;
-            pipelineInfo.pDynamicState = &dynamicState;
-            pipelineInfo.stageCount = pipeline->shaders.size();
-            pipelineInfo.pStages = pipeline->shaders.data();
-            pipelineInfo.pVertexInputState = &vertexInputInfo;
-
-            VkResult result = vkCreateGraphicsPipelines(rdr()->getDevice(),
-                nullptr, 1, &pipelineInfo, nullptr, & pipeline->pipeline);
-
-            if (VK_SUCCESS != result) {
-                throw std::runtime_error("Can't create graphic pipelien for shadow map.");
-            }
-        }*/
     }
 
-    void VulkanAdapter::drawShadowMap()
+    void VulkanAdapter::drawShadowMap(
+        std::vector<std::unique_ptr<Entity>>* entities, VkCommandBuffer & commandBuffer,
+        VkImage & image, VkImageView & imageView, Light light)
     {
-      auto pipeline = getPipeline("shadowMap");
+        auto pipeline = getPipeline("shadowMap");
 
-      m_Renderer->beginCommandBuffer(m_CommandBuffersEntities[m_ImageIndex], VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT);
-      m_Renderer->startMarker(m_CommandBuffersEntities[m_ImageIndex], "shadow_map", 0.1, 0.2, 0.3);
+        m_Renderer->beginCommandBuffer(commandBuffer, VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT);
+        m_Renderer->startMarker(commandBuffer, "shadow_map", 0.1, 0.2, 0.3);
 
-      VkImageMemoryBarrier depthImageRenderBeginBarrier = m_Renderer->setupImageMemoryBarrier(
-        m_DepthMapImages[0], 0, VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT, VK_IMAGE_LAYOUT_UNDEFINED,
+        VkImageMemoryBarrier depthImageRenderBeginBarrier = m_Renderer->setupImageMemoryBarrier(
+        image, 0, VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT, VK_IMAGE_LAYOUT_UNDEFINED,
             VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, 1, VK_IMAGE_ASPECT_DEPTH_BIT);
 
-      m_Renderer->addPipelineBarriers(m_CommandBuffersEntities[m_ImageIndex], { depthImageRenderBeginBarrier },
+        m_Renderer->addPipelineBarriers(commandBuffer, { depthImageRenderBeginBarrier },
         VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
             VK_DEPENDENCY_BY_REGION_BIT);
 
-
-      VkClearColorValue colorClear = {};
-      colorClear.float32[0] = 1.0f;
-      colorClear.float32[1] = 1.0f;
-      colorClear.float32[2] = 1.0f;
-      colorClear.float32[3] = 1.0f;
+        VkClearColorValue colorClear = {};
+        colorClear.float32[0] = 1.0f;
+        colorClear.float32[1] = 1.0f;
+        colorClear.float32[2] = 1.0f;
+        colorClear.float32[3] = 1.0f;
       
-      VkClearDepthStencilValue depthStencil = { 1.f, 0 };
+        VkClearDepthStencilValue depthStencil = { 1.f, 0 };
       
-      //VkClearValue clearValues[2];
-      //clearValues[0].depthStencil = { 1.0f, 0 };
+        VkRenderingAttachmentInfo depthAttachment{ };
+        depthAttachment.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
+        depthAttachment.imageView = imageView;
+        depthAttachment.imageLayout = VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL;
+        depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+        depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+        depthAttachment.clearValue.depthStencil = depthStencil;
+        depthAttachment.clearValue.color = colorClear;
 
-      VkRenderingAttachmentInfo depthAttachment{ };
-      depthAttachment.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
-      depthAttachment.imageView = m_DepthMapViews[0];
-      depthAttachment.imageLayout = VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL;
-      depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-      depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-      depthAttachment.clearValue.depthStencil = depthStencil;
-      depthAttachment.clearValue.color = colorClear;
-
-      VkRenderingInfo  renderingInfo{ };
-      renderingInfo.sType = VK_STRUCTURE_TYPE_RENDERING_INFO;
-      renderingInfo.renderArea.extent.width = rdr()->getSwapChainExtent().width;
-      renderingInfo.renderArea.extent.height = rdr()->getSwapChainExtent().height;
-      //renderingInfo.renderPass = m_DepthMapRenderPass;
-      //renderingInfo.framebuffer = m_DepthMapFrameBuffer;
-      //renderingInfo.pClearValues = clearValues;
-      //renderingInfo.clearValueCount = 1;
-
-      renderingInfo.layerCount = 1;
-      renderingInfo.pDepthAttachment = &depthAttachment;
-      renderingInfo.colorAttachmentCount = 0;
+        VkRenderingInfo  renderingInfo{ };
+        renderingInfo.sType = VK_STRUCTURE_TYPE_RENDERING_INFO;
+        renderingInfo.renderArea.extent.width = rdr()->getSwapChainExtent().width;
+        renderingInfo.renderArea.extent.height = rdr()->getSwapChainExtent().height;
+        renderingInfo.layerCount = 1;
+        renderingInfo.pDepthAttachment = & depthAttachment;
+        renderingInfo.colorAttachmentCount = 0;
       
-      vkCmdBeginRenderingKHR(m_CommandBuffersEntities[m_ImageIndex], & renderingInfo);
-     //vkCmdBeginRenderPass(m_CommandBuffersEntities[m_ImageIndex], & renderingInfo, VK_SUBPASS_CONTENTS_INLINE);
+        vkCmdBeginRenderingKHR(commandBuffer, & renderingInfo);
 
-      m_Renderer->setViewPort(m_CommandBuffersEntities[m_ImageIndex]);
-      m_Renderer->setScissor(m_CommandBuffersEntities[m_ImageIndex]);
+        m_Renderer->setViewPort(commandBuffer);
+        m_Renderer->setScissor(commandBuffer);
 
-      for (auto& entity : *m_EntityManager->getEntities()) {
-        Mesh* mesh = entity->getMesh();
+        for (auto& entity : *entities) {
+            Mesh* mesh = entity->getMesh();
 
-        if (!mesh) continue;
+            if (!mesh) continue;
 
+            float depthBiasConstant = -1.25f;
+            float depthBiasSlope = 1.75f;
 
-        float depthBiasConstant = -1.25f;
-        float depthBiasSlope = 1.75f;
+            vkCmdSetDepthBias(commandBuffer, depthBiasConstant, 0.0f, depthBiasSlope);
 
-        vkCmdSetDepthBias(m_CommandBuffersEntities[m_ImageIndex], depthBiasConstant, 0.0f, depthBiasSlope);
+            m_Renderer->bindPipeline(commandBuffer, pipeline->pipeline);
+                
+            for (size_t i = 0; i < mesh->getData()->m_Ubos.size(); ++i) {
+                mesh->getData()->m_Ubos[i].projection = light.lightSpaceMatrix;
+            }
 
-        m_Renderer->bindPipeline(m_CommandBuffersEntities[m_ImageIndex], pipeline->pipeline);
+            int min{ 0 };
+            int max{ 0 };
 
-        // if (m_HasClicked && mesh->IsHit(m_RayPick)) {
-        //    PLP_DEBUG("HIT ! {}", mesh->GetName());
-        // }
-        //m_HasClicked = false;
-        for (size_t i = 0; i < mesh->getData()->m_Ubos.size(); ++i) {
-          mesh->getData()->m_Ubos[i].projection = m_LightManager->getAmbientLight().lightSpaceMatrix;
-          //mesh->getData()->m_Ubos[i].projection = lightProjection;
-        }
+            for (size_t i = 0; i < mesh->getUniformBuffers()->size(); ++i) {
+                max = mesh->getData()->m_UbosOffset.at(i);
+                auto ubos = std::vector<UniformBufferObject>(mesh->getData()->m_Ubos.begin() + min, mesh->getData()->m_Ubos.begin() + max);
+                rdr()->updateUniformBuffer(mesh->getUniformBuffers()->at(i), &ubos);
 
-        int min{ 0 };
-        int max{ 0 };
+                min = max;
+            }
 
-        for (size_t i = 0; i < mesh->getUniformBuffers()->size(); ++i) {
-          max = mesh->getData()->m_UbosOffset.at(i);
-          auto ubos = std::vector<UniformBufferObject>(mesh->getData()->m_Ubos.begin() + min, mesh->getData()->m_Ubos.begin() + max);
-          rdr()->updateUniformBuffer(mesh->getUniformBuffers()->at(i), &ubos);
-
-          min = max;
-        }
-
-        constants pushConstants{};
-        pushConstants.textureIDBB = glm::vec3(mesh->getData()->m_TextureIndex, 0.0, 0.0);
+            constants pushConstants{};
+            pushConstants.textureIDBB = glm::vec3(mesh->getData()->m_TextureIndex, 0.0, 0.0);
         
-        pushConstants.view = m_LightManager->getAmbientLight().view;
-        pushConstants.viewPos = getCamera()->getPos();
-        pushConstants.mapsUsed = mesh->getData()->mapsUsed;
+            pushConstants.view = light.view;
+            pushConstants.viewPos = getCamera()->getPos();
+            pushConstants.mapsUsed = mesh->getData()->mapsUsed;
 
-        vkCmdPushConstants(m_CommandBuffersEntities[m_ImageIndex], pipeline->pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(constants),
-            & pushConstants);
+            vkCmdPushConstants(commandBuffer, pipeline->pipelineLayout, 
+                VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(constants), & pushConstants);
 
-        try {
-        if (m_RenderingStopped) return;
-            m_Renderer->draw(m_CommandBuffersEntities[m_ImageIndex], *mesh->getDescSet(),
-            pipeline->pipelineLayout, mesh->getData(), mesh->getData()->m_Ubos.size(), mesh->isIndexed());
+            try {
+                if (m_RenderingStopped) return;
+                m_Renderer->draw(commandBuffer, *mesh->getDescSet(),
+                pipeline->pipelineLayout, mesh->getData(), mesh->getData()->m_Ubos.size(), mesh->isIndexed());
+            }
+            catch (std::exception& e) {
+                PLP_DEBUG("Draw error: {}", e.what());
+            }
         }
-        catch (std::exception& e) {
-        PLP_DEBUG("Draw error: {}", e.what());
-        }
-      }
 
-      m_Renderer->endMarker(m_CommandBuffersEntities[m_ImageIndex]);
-      m_Renderer->endRendering(m_CommandBuffersEntities[m_ImageIndex]);
-      //vkCmdEndRenderPass(m_CommandBuffersEntities[m_ImageIndex]);
-      //vkEndCommandBuffer(m_CommandBuffersEntities[m_ImageIndex]);
+        m_Renderer->endMarker(commandBuffer);
+        m_Renderer->endRendering(commandBuffer);
 
         auto newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
         VkImageMemoryBarrier depthImageEndRenderBeginBarrier = m_Renderer->setupImageMemoryBarrier(
-          m_DepthMapImages[0], VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT, 0,
+          image, VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT, 0,
             VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL, newLayout, 1, VK_IMAGE_ASPECT_DEPTH_BIT);
 
-        m_Renderer->addPipelineBarriers(m_CommandBuffersEntities[m_ImageIndex], { depthImageEndRenderBeginBarrier },
+        m_Renderer->addPipelineBarriers(commandBuffer, { depthImageEndRenderBeginBarrier },
           VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, 0);
-
-        //m_Renderer->endCommandBuffer(m_CommandBuffersEntities[m_ImageIndex]);
     }
 
     void VulkanAdapter::drawEntities()
     {
         if (0 < m_EntityManager->getEntities()->size()) {
 
-            drawShadowMap();
+            drawShadowMap(m_EntityManager->getEntities(), m_CommandBuffersEntities[m_ImageIndex],
+                m_DepthMapImages[0], m_DepthMapImageViews[0], m_LightManager->getAmbientLight());
 
             beginRendering(m_CommandBuffersEntities[m_ImageIndex],
             VK_ATTACHMENT_LOAD_OP_LOAD, VK_ATTACHMENT_STORE_OP_STORE, true);
