@@ -273,7 +273,7 @@ namespace Poulpe
     }
 
     std::vector<Mesh*> EntityManager::initMeshes(std::string const  & name, std::string const & path,
-        std::vector<std::string> const & textureNames, std::string const & shader,
+        [[maybe_unused]]std::vector<std::string> const & textureNames, std::string const & shader,
         glm::vec3 const & pos, glm::vec3 const & scale, glm::vec3 rotation,
         bool shouldInverseTextureY)
     {
@@ -295,29 +295,24 @@ namespace Poulpe
         for (size_t i = 0; i < listData.size(); i++) {
 
             Mesh* mesh = new Mesh();
-            mesh->setName(name + '_' + std::to_string(i));
+            mesh->setName(listData[i].name);
             mesh->setShaderName(shader);
 
             std::vector<Mesh::BBox> bboxs{};
             
             unsigned int const tex1ID = listData[i].materialsID.at(0);
 
-            std::string nameTexture = (!textureNames.empty())
-                ? textureNames.at(tex1ID)
-                : "mpoulpe";
-
-            std::string name2Texture;
-
-            if ("textures_vase_round" == nameTexture) {
-                PLP_DEBUG("yeah");
-            }
-
+            std::string nameTexture {"_plp_empty"};
+            std::string name2Texture {"_plp_empty"};
+            std::string name3Texture {"_plp_empty"};
             std::string nameTextureSpecularMap;
             std::string bumpTexname;
+            std::string alphaTexname;
 
             if (!TinyObjLoader::m_TinyObjMaterials.empty()) {
                 
-                mesh->setMaterial(TinyObjLoader::m_TinyObjMaterials.at(listData[i].materialId));
+                //@todo material per textures...
+                mesh->setMaterial(TinyObjLoader::m_TinyObjMaterials.at(listData[i].materialsID.at(0)));
             
                 //@todo temp
                 //@todo separate into 2 storage buffer of 3 texSample
@@ -328,6 +323,7 @@ namespace Poulpe
                     nameTexture = TinyObjLoader::m_TinyObjMaterials.at(tex1ID).diffuseTexname;
                 }
 
+                //@todo to refacto & clean
                 if (1 < listData[i].materialsID.size()) {
                     unsigned int const tex2ID = listData[i].materialsID.at(1);
 
@@ -337,6 +333,15 @@ namespace Poulpe
                         name2Texture = TinyObjLoader::m_TinyObjMaterials.at(tex2ID).diffuseTexname;
                     }
                 }
+                if (2 < listData[i].materialsID.size()) {
+                  unsigned int const tex3ID = listData[i].materialsID.at(2);
+
+                  if (!TinyObjLoader::m_TinyObjMaterials.at(tex3ID).ambientTexname.empty()) {
+                    name3Texture = TinyObjLoader::m_TinyObjMaterials.at(tex3ID).ambientTexname;
+                  } else if (!TinyObjLoader::m_TinyObjMaterials.at(tex3ID).diffuseTexname.empty()) {
+                    name3Texture = TinyObjLoader::m_TinyObjMaterials.at(tex3ID).diffuseTexname;
+                  }
+                }
 
                 if (!TinyObjLoader::m_TinyObjMaterials.at(listData[i].materialId).specularTexname.empty()) {
                     nameTextureSpecularMap = TinyObjLoader::m_TinyObjMaterials.at(listData[i].materialId).specularTexname;
@@ -345,14 +350,20 @@ namespace Poulpe
                 if (!TinyObjLoader::m_TinyObjMaterials.at(listData[i].materialId).bumpTexname.empty()) {
                     bumpTexname = TinyObjLoader::m_TinyObjMaterials.at(listData[i].materialId).bumpTexname;
                 }
+
+                if (!TinyObjLoader::m_TinyObjMaterials.at(listData[i].materialId).alphaTexname.empty()) {
+                  alphaTexname = TinyObjLoader::m_TinyObjMaterials.at(listData[i].materialId).alphaTexname;
+                }
             }
 
             Mesh::Data data{};
             data.m_Name = name + '_' + nameTexture;
             data.m_Textures.emplace_back(nameTexture);
             data.m_Textures.emplace_back(name2Texture);
+            data.m_Textures.emplace_back(name3Texture);
             data.m_TextureSpecularMap = nameTextureSpecularMap;
             data.m_TextureBumpMap = bumpTexname;
+            data.m_TextureAlpha = alphaTexname;
             data.m_Vertices = listData[i].vertices;
             data.m_Indices = listData[i].indices;
             data.m_OriginPos = pos;

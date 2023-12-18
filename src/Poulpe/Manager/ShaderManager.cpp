@@ -182,7 +182,7 @@ namespace Poulpe
 
         VkDescriptorSetLayoutBinding samplerLayoutBinding{};
         samplerLayoutBinding.binding = 1;
-        samplerLayoutBinding.descriptorCount = 5;
+        samplerLayoutBinding.descriptorCount = 7;
         samplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
         samplerLayoutBinding.pImmutableSamplers = nullptr;
         samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
@@ -224,7 +224,7 @@ namespace Poulpe
     }
 
     VkPipelineVertexInputStateCreateInfo ShaderManager::getVertexBindingDesc(VkVertexInputBindingDescription bDesc,
-      std::array<VkVertexInputAttributeDescription, 5> attDesc)
+      std::array<VkVertexInputAttributeDescription, 6> attDesc)
     {
       VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
       vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
