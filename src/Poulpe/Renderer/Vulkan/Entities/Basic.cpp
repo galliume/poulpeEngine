@@ -121,15 +121,35 @@ namespace Poulpe
     {
       std::vector<VkDescriptorImageInfo> imageInfos;
       std::vector<VkDescriptorImageInfo> imageInfoSpec;
+      mesh->getData()->mapsUsed = glm::vec4(0.0f);
 
       Texture tex;
       tex = m_TextureManager->getTextures()[mesh->getData()->m_Textures.at(0)];
 
+      if (tex.getName() == "_plp_empty") {
+          mesh->getData()->mapsUsed.w = 1.0f;
+      }
+
       Texture tex2;
       tex2 = m_TextureManager->getTextures()["_plp_empty"];
 
+      Texture tex3;
+      tex3 = m_TextureManager->getTextures()["_plp_empty"];
+
+      Texture alpha;
+      alpha = m_TextureManager->getTextures()["_plp_empty"];
+
       if (!mesh->getData()->m_Textures.at(1).empty()) {
         tex2 = m_TextureManager->getTextures()[mesh->getData()->m_Textures.at(1)];
+      }
+
+      if (!mesh->getData()->m_Textures.at(2).empty()) {
+        tex3 = m_TextureManager->getTextures()[mesh->getData()->m_Textures.at(2)];
+      }
+
+      if (!mesh->getData()->m_TextureAlpha.empty()) {
+        mesh->getData()->mapsUsed.z = 1.0f;
+        alpha = m_TextureManager->getTextures()[mesh->getData()->m_TextureAlpha];
       }
 
       VkDescriptorImageInfo imageInfo{};
@@ -142,19 +162,30 @@ namespace Poulpe
       imageInfo2.imageView = tex2.getImageView();
       imageInfo2.sampler = tex2.getSampler();
 
+      VkDescriptorImageInfo imageInfo3{};
+      imageInfo3.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+      imageInfo3.imageView = tex3.getImageView();
+      imageInfo3.sampler = tex3.getSampler();
+
+      VkDescriptorImageInfo imageInfoAlpha{};
+      imageInfoAlpha.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+      imageInfoAlpha.imageView = alpha.getImageView();
+      imageInfoAlpha.sampler = alpha.getSampler();
+
       imageInfos.emplace_back(imageInfo);
       imageInfos.emplace_back(imageInfo2);
+      imageInfos.emplace_back(imageInfo3);
+      imageInfos.emplace_back(imageInfoAlpha);
 
       std::string specMapName = "_plp_empty";
       std::string bumpMapName = "_plp_empty";
-      mesh->getData()->mapsUsed = glm::vec3(0.0f);
 
       if (!mesh->getData()->m_TextureSpecularMap.empty()
         && m_TextureManager->getTextures().contains(mesh->getData()->m_TextureSpecularMap)) {
         specMapName = mesh->getData()->m_TextureSpecularMap;
         mesh->getData()->mapsUsed.y = 1.0f;
-
       }
+
       Texture texSpecularMap = m_TextureManager->getTextures()[specMapName];
 
       if (!mesh->getData()->m_TextureBumpMap.empty()

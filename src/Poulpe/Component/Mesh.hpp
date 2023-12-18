@@ -30,6 +30,7 @@ namespace Poulpe
       std::string specularTexname;            // map_Ks
       std::string specularHighlightTexname;  // map_Ns
       std::string bumpTexname;                // map_bump, map_Bump, bump
+      std::string alphaTexname; // map_d
     };
 
     struct constants
@@ -38,7 +39,7 @@ namespace Poulpe
         alignas(16) glm::vec3 textureIDBB;
         alignas(16) glm::mat4 view;
         alignas(16) glm::vec4 viewPos;
-        alignas(16) glm::vec3 mapsUsed = glm::vec3(0.0f);
+        alignas(16) glm::vec4 mapsUsed = glm::vec4(0.0f);
     };
 
     class Mesh
@@ -57,6 +58,7 @@ namespace Poulpe
             std::string m_TextureSpecularMap;
             std::string m_TextureBumpMap;
             std::string m_TextureNormalMap;
+            std::string m_TextureAlpha;
             std::vector<Vertex> m_Vertices;
             std::vector<uint32_t> m_Indices;
             std::vector<UniformBufferObject> m_Ubos;
@@ -71,7 +73,7 @@ namespace Poulpe
             glm::vec3 m_CurrentRotation;
             glm::vec3 m_CurrentScale;
             //x = specularMap, y = bumMap
-            glm::vec3 mapsUsed = glm::vec3(0.0f);
+            glm::vec4 mapsUsed = glm::vec4(0.0f);
             glm::vec3 tangeant;
         };
 
