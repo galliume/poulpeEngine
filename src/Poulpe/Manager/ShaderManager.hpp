@@ -27,7 +27,7 @@ namespace Poulpe
 
         std::vector<VkPipelineShaderStageCreateInfo> getShadersInfo(std::string const & shaderName);
         VkPipelineVertexInputStateCreateInfo getVertexBindingDesc(VkVertexInputBindingDescription bDesc,
-            std::array<VkVertexInputAttributeDescription, 5> attDesc);
+            std::array<VkVertexInputAttributeDescription, 6> attDesc);
 
     private:
 

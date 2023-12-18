@@ -20,6 +20,7 @@ namespace Poulpe
 
         std::filesystem::path p = path;
         reader_config.mtl_search_path = p.remove_filename().string();
+        reader_config.vertex_color = true;
 
         if (!reader.ParseFromFile(path, reader_config)) {
             if (!reader.Error().empty()) {
@@ -63,6 +64,7 @@ namespace Poulpe
           mat.specularTexname = cleanName(material.specular_texname);
           mat.specularHighlightTexname = cleanName(material.specular_highlight_texname);
           mat.bumpTexname = cleanName(material.bump_texname);
+          mat.alphaTexname = cleanName(material.alpha_texname);
           mat.illum = material.illum;
 
           m_TinyObjMaterials.emplace_back(mat);
@@ -81,12 +83,12 @@ namespace Poulpe
         for (uint32_t s = 0; s < shapes.size(); s++) {
 
             TinyObjData data;
+            data.name = shapes[s].name + "_" + std::to_string(s);
             std::vector<uint32_t> indices;
             std::vector<uint32_t> materialsID;
 
             // Loop over faces(polygon)
             size_t index_offset = 0;
-            int lastId = -1;
             std::vector<int> ids{};
             ids.resize(4);
             int samplerId = 0;
@@ -97,16 +99,18 @@ namespace Poulpe
 
                 int id = (-1 != shapes[s].mesh.material_ids[f]) ? shapes[s].mesh.material_ids[f] : 0;
 
-                if (lastId != id) {
-                    lastId = id;
+                if (shapes[s].mesh.material_ids[f] == -1) {
+                  PLP_DEBUG("no textures");
+                }
+
+                if (!texidsmap.contains(id)) {
                     ids.emplace_back(id);
                     materialsID.emplace_back(id);
                     texidsmap[id] = samplerId;
                     samplerId += 1;
                 }
-
-                //@todo work for only 2 textures
-                float t = (texidsmap[id] == 0) ? 0.0f : 1.0f;
+                //@todo work for only 10 textures per face, but well...
+                float t =(texidsmap[id] == 0) ? 0.0f : texidsmap[id] / 10.0f;
 
                 // Loop over vertices in the face.
                 for (size_t v = 0; v < fv; v++) {
@@ -130,7 +134,7 @@ namespace Poulpe
 
                         vertex.normal = { nx, ny, nz };
                     } else {
-                        vertex.normal = { 1, 1, 1 };
+                        vertex.normal = { 0, 0, 0 };
                     }
 
                     // Check if `texcoord_index` is zero or positive. negative = no texcoord data
@@ -146,7 +150,8 @@ namespace Poulpe
                      //tinyobj::real_t red   = attrib.colors[3*size_t(idx.vertex_index)+0];
                      //tinyobj::real_t green = attrib.colors[3*size_t(idx.vertex_index)+1];
                      //tinyobj::real_t blue  = attrib.colors[3*size_t(idx.vertex_index)+2];
-                    // vertex.color = { red, green, blue };
+
+                     vertex.color = { 58.0, 54.9, 51.8};
 
                     vertex.tangent = glm::vec4(0.0f);
 
