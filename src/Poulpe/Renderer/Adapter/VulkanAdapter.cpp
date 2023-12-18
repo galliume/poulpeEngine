@@ -494,35 +494,35 @@ namespace Poulpe
 
     void VulkanAdapter::drawHUD()
     {
-        beginRendering(m_CommandBuffersHud[m_ImageIndex]);
-        m_Renderer->startMarker(m_CommandBuffersHud[m_ImageIndex], "hud_drawing", 0.3, 0.2, 0.1);
+        //beginRendering(m_CommandBuffersHud[m_ImageIndex]);
+        //m_Renderer->startMarker(m_CommandBuffersHud[m_ImageIndex], "hud_drawing", 0.3, 0.2, 0.1);
 
-        for (auto const & entity : * m_EntityManager->getHUD()) {
+        //for (auto const & entity : * m_EntityManager->getHUD()) {
 
-           auto* hudPart = entity->getMesh();
+        //   auto* hudPart = entity->getMesh();
 
-            if (!hudPart || !entity->isVisible()) continue;
-            
-            auto pipeline = getPipeline(hudPart->getShaderName());
+        //    if (!hudPart || !entity->isVisible()) continue;
+        //    
+        //    auto pipeline = getPipeline(hudPart->getShaderName());
 
-            m_Renderer->bindPipeline(m_CommandBuffersHud[m_ImageIndex], pipeline->pipeline);
+        //    m_Renderer->bindPipeline(m_CommandBuffersHud[m_ImageIndex], pipeline->pipeline);
 
-            if (hudPart->hasPushConstants() && nullptr != hudPart->applyPushConstants) {
-                hudPart->applyPushConstants(m_CommandBuffersHud[m_ImageIndex], pipeline->pipelineLayout, this,
-                    hudPart);
-            }
+        //    if (hudPart->hasPushConstants() && nullptr != hudPart->applyPushConstants) {
+        //        hudPart->applyPushConstants(m_CommandBuffersHud[m_ImageIndex], pipeline->pipelineLayout, this,
+        //            hudPart);
+        //    }
 
-            if (m_RenderingStopped) return;
-            m_Renderer->draw(m_CommandBuffersHud[m_ImageIndex], *hudPart->getDescSet(), pipeline->pipelineLayout,
-                hudPart->getData(), hudPart->getData()->m_Ubos.size());
-        }
+        //    if (m_RenderingStopped) return;
+        //    m_Renderer->draw(m_CommandBuffersHud[m_ImageIndex], *hudPart->getDescSet(), pipeline->pipelineLayout,
+        //        hudPart->getData(), hudPart->getData()->m_Ubos.size());
+        //}
 
-        m_Renderer->endMarker(m_CommandBuffersHud[m_ImageIndex]);
-        endRendering(m_CommandBuffersHud[m_ImageIndex]);
+        //m_Renderer->endMarker(m_CommandBuffersHud[m_ImageIndex]);
+        //endRendering(m_CommandBuffersHud[m_ImageIndex]);
         
         {
             std::lock_guard<std::mutex> guard(m_MutexCmdSubmit);
-            m_CmdToSubmit[2] = m_CommandBuffersHud[m_ImageIndex];
+            //m_CmdToSubmit[2] = m_CommandBuffersHud[m_ImageIndex];
             m_renderStatus = m_renderStatus << 1;
 
             if ((getDrawBbox() && m_renderStatus == 16) || (!getDrawBbox() && m_renderStatus == 8)) {

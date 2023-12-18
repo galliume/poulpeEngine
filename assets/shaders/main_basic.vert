@@ -1,7 +1,7 @@
 #version 450
 #extension GL_EXT_nonuniform_qualifier : enable
 
-#define MAX_UBOS 1000
+#define MAX_UBOS 10
 
 struct UBO
 {
@@ -19,7 +19,7 @@ layout(push_constant) uniform constants
     vec3 textureIDBB;
     mat4 view;
     vec4 viewPos;
-    vec3 mapsUsed;
+    vec4 mapsUsed;
 } pc;
 
 layout(location = 0) in vec3 pos;
@@ -27,19 +27,21 @@ layout(location = 1) in vec3 normal;
 layout(location = 2) in vec2 texCoord;
 layout(location = 3) in vec4 tangent;
 layout(location = 4) in vec4 fidtidBB;
+layout(location = 5) in vec3 vColor;
 
 layout(location = 0) out VS_OUT {
     flat int fTextureID;
     vec2 fTexCoord;
     vec3 fNormal;
     vec3 fPos;
-    vec3 fMapsUsed;
+    vec4 fMapsUsed;
     vec4 fViewPos;
     mat3 TBN;
     vec4 fShadowCoordAmbient;
     vec4 fShadowCoordSpot;
     //faceId texture ID blank blank
     vec4 ffidtidBB;
+    vec3 fvColor;
 } vs_out;
 
 
@@ -104,4 +106,5 @@ void main()
     vs_out.fShadowCoordAmbient = (biasMat * ambientLight.lightSpaceMatrix * ubos[gl_InstanceIndex].model) * vec4(pos, 1.0);
     vs_out.fShadowCoordSpot = (biasMat * spotLight.lightSpaceMatrix * ubos[gl_InstanceIndex].model) * vec4(pos, 1.0);
     vs_out.ffidtidBB = fidtidBB;
+    vs_out.fvColor = vColor;
 } 
