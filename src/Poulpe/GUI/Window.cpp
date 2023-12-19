@@ -8,18 +8,18 @@ namespace Poulpe
 
     void Window::init(std::string_view windowTitle)
     {
-        const uint32_t WIDTH = 800;
-        const uint32_t HEIGHT = 600;
+        const uint32_t WIDTH = 1240;
+        const uint32_t HEIGHT = 720;
 
         glfwInit();
         glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-        glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
+        glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
         glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
         glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
         //glfwWindowHint(GLFW_CONTEXT_CREATION_API, GLFW_NATIVE_CONTEXT_API);
         //glfwWindowHint(GLFW_DECORATED, GLFW_FALSE);
 //#ifdef PLP_DEBUG_BUILD
-        glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
+        //glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
 //#endif
 
         m_Window = glfwCreateWindow(WIDTH, HEIGHT, windowTitle.data(), nullptr, nullptr);
@@ -29,7 +29,7 @@ namespace Poulpe
         //glfwSetWindowIcon(m_Window, 1, images); 
         //stbi_image_free(images[0].pixels);
 
-        glfwSetWindowSizeLimits(m_Window, 800, 600, 2048, 1080);
+        glfwSetWindowSizeLimits(m_Window, 800, 600, 2560, 1440);
           
         const GLFWvidmode * mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
 

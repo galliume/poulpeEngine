@@ -26,12 +26,12 @@ namespace Poulpe
     template<std::derived_from<Entity> T>
     void DestroyManager::cleanEntity(T* entity)
     {
-        for (auto buffer : *entity->getMesh()->getUniformBuffers()) {
+        /*for (auto buffer : *entity->getMesh()->getUniformBuffers()) {
             m_Renderer->destroyBuffer(buffer.buffer);
         }
 
         m_Renderer->destroyBuffer(entity->getMesh()->getData()->m_VertexBuffer.buffer);
-        m_Renderer->destroyBuffer(entity->getMesh()->getData()->m_IndicesBuffer.buffer);
+        m_Renderer->destroyBuffer(entity->getMesh()->getData()->m_IndicesBuffer.buffer);*/
     }
 
     void DestroyManager::cleanShaders(std::unordered_map<std::string, std::array<VkShaderModule, 2>> shaders)

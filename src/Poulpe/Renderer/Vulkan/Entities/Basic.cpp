@@ -211,10 +211,10 @@ namespace Poulpe
       shadowMapAmbient.imageView = m_Adapter->getDepthMapImageViews()->at(0);
       shadowMapAmbient.sampler = m_Adapter->getDepthMapSamplers()->at(0);
 
-      VkDescriptorImageInfo shadowMapSpot{};
-      shadowMapSpot.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-      shadowMapSpot.imageView = m_Adapter->getDepthMapImageViews()->at(1);
-      shadowMapSpot.sampler = m_Adapter->getDepthMapSamplers()->at(1);
+      //VkDescriptorImageInfo shadowMapSpot{};
+      //shadowMapSpot.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+      //shadowMapSpot.imageView = m_Adapter->getDepthMapImageViews()->at(1);
+      //shadowMapSpot.sampler = m_Adapter->getDepthMapSamplers()->at(1);
 
       imageInfos.emplace_back(imageInfoSpecularMap);
       imageInfos.emplace_back(imageInfoBumpMap);
