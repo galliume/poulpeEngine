@@ -104,11 +104,11 @@ namespace Poulpe
 
         //@todo clean
         if (shaderName == "shadowMap" || shaderName == "shadowMapSpot" || shaderName == "quad") {
-            graphicPipeline = m_Renderer->rdr()->createGraphicsPipeline(m_Renderer->rdrPass(), pipelineLayout,
-            shaderName, shaders, vertexInputInfo, VK_CULL_MODE_NONE, true, true, true, true, VK_POLYGON_MODE_FILL, false, true);
+            graphicPipeline = m_Renderer->rdr()->createGraphicsPipeline( pipelineLayout,
+            shaderName, shaders, vertexInputInfo, VK_CULL_MODE_NONE, true, true, true, VK_POLYGON_MODE_FILL, false, true);
         } else {
-          graphicPipeline = m_Renderer->rdr()->createGraphicsPipeline(m_Renderer->rdrPass(), pipelineLayout,
-            shaderName, shaders, vertexInputInfo, VK_CULL_MODE_BACK_BIT, true, true, true, true, VK_POLYGON_MODE_FILL);
+          graphicPipeline = m_Renderer->rdr()->createGraphicsPipeline(pipelineLayout,
+            shaderName, shaders, vertexInputInfo, VK_CULL_MODE_BACK_BIT, true, true, true, VK_POLYGON_MODE_FILL);
         }
 
         VulkanPipeline pipeline{};

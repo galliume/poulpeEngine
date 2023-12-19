@@ -17,7 +17,6 @@ namespace Poulpe
         virtual void showGrid(bool show) = 0;
         virtual inline std::vector<VkDescriptorSetLayout>* getDescriptorSetLayouts() = 0;
         virtual inline std::vector<VkImage>* getSwapChainImages() = 0;
-        virtual inline VkRenderPass* rdrPass() = 0;
         virtual inline glm::mat4 getPerspective() = 0;
 
         //@todo should return an interface not direct impl

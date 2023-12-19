@@ -37,14 +37,18 @@ namespace Poulpe
     {
         m_RayPick = glm::vec3(0.0f);
         setPerspective();
-        m_RenderPass = std::unique_ptr<VkRenderPass>(m_Renderer->createRenderPass(m_Renderer->getMsaaSamples()));
 
         m_SwapChain = m_Renderer->createSwapChain(m_SwapChainImages);
-        m_SwapChainImages.resize(3);
-        m_SwapChainSamplers.resize(3);
-        m_SwapChainDepthSamplers.resize(3);
+
+        m_SwapChainImageViews.resize(m_SwapChainImages.size());
+        m_SwapChainSamplers.resize(m_SwapChainImages.size());
+        
+        m_SwapChainDepthImages.resize(m_SwapChainImages.size());
+        m_SwapChainDepthImageViews.resize(m_SwapChainImages.size());
+        m_SwapChainDepthSamplers.resize(m_SwapChainImages.size());
 
         for (size_t i = 0; i < m_SwapChainImages.size(); ++i) {
+          
           VkImage image;
 
           m_Renderer->createImage(m_Renderer->getSwapChainExtent().width, m_Renderer->getSwapChainExtent().height, 1,
@@ -52,14 +56,25 @@ namespace Poulpe
               | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
               VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, image);
 
-          m_SwapChainImages[i] = image;
+          //m_SwapChainImages[i] = image;
+          m_SwapChainImageViews[i] = m_Renderer->createImageView(m_SwapChainImages[i],
+            m_Renderer->getSwapChainImageFormat(), VK_IMAGE_ASPECT_COLOR_BIT);
           m_SwapChainSamplers[i] = m_Renderer->createTextureSampler(1);
+
+          VkImage depthImage;
+
+          m_Renderer->createImage(m_Renderer->getSwapChainExtent().width, m_Renderer->getSwapChainExtent().height, 1,
+            VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_D32_SFLOAT, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_SAMPLED_BIT
+            | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
+            VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, depthImage);
+
+          VkImageView depthImageView = m_Renderer->createImageView(depthImage, VK_FORMAT_D32_SFLOAT, 1,
+            VK_IMAGE_ASPECT_DEPTH_BIT);
+
+          m_SwapChainDepthImages[i] = depthImage;
+          m_SwapChainDepthImageViews[i] = depthImageView;
+          m_SwapChainDepthSamplers[i] = m_Renderer->createTextureSampler(1);
         }
-//#endif
-        //init swap chain, depth image views, primary command buffers and semaphores
-        m_SwapChainImageViews.resize(m_SwapChainImages.size());
-        m_DepthImages.resize(m_SwapChainImages.size());
-        m_DepthImageViews.resize(m_SwapChainImages.size());
 
         m_CommandPoolEntities = m_Renderer->createCommandPool();
 
@@ -78,58 +93,35 @@ namespace Poulpe
         m_CommandBuffersHud = m_Renderer->allocateCommandBuffers(m_CommandPoolHud,
             static_cast<uint32_t>(m_SwapChainImageViews.size()));
 
-        for (uint32_t i = 0; i < m_SwapChainImages.size(); i++) {
-            m_SwapChainImageViews[i] = m_Renderer->createImageView(m_SwapChainImages[i],
-                m_Renderer->getSwapChainImageFormat(), VK_IMAGE_ASPECT_COLOR_BIT);
-
-            VkImage depthImage;
-            m_Renderer->createImage(m_Renderer->getSwapChainExtent().width, m_Renderer->getSwapChainExtent().height, 1,
-                VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_D32_SFLOAT, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_SAMPLED_BIT
-                | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
-                VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, depthImage);
-
-            VkImageView depthImageView = m_Renderer->createImageView(depthImage, VK_FORMAT_D32_SFLOAT, 1,
-                VK_IMAGE_ASPECT_DEPTH_BIT);
-
-            m_DepthImages[i] = depthImage;
-            m_DepthImageViews[i] = depthImageView;
-            m_SwapChainDepthSamplers[i] = m_Renderer->createTextureSampler(1);
-        }
-
-        for (size_t i = 0; i < m_Renderer->getQueueCount(); i++) {
-            m_Semaphores.emplace_back(m_Renderer->createSyncObjects(m_SwapChainImages));
-        }
-
         prepareShadowMap();
-        acquireNextImage();
 
-        //refacto cleaning gpu sync
+        VkSemaphoreTypeCreateInfo semaType;
+        semaType.sType = VK_STRUCTURE_TYPE_SEMAPHORE_TYPE_CREATE_INFO;
+        semaType.semaphoreType = VK_SEMAPHORE_TYPE_BINARY;
+        semaType.initialValue = 0;
+        semaType.pNext = NULL;
+
         VkSemaphoreCreateInfo sema{};
         sema.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+        sema.pNext = &semaType;
 
         VkResult result{};
 
-        m_EntitiesSemaRenderFinished.resize(m_SwapChainImages.size());
-        m_SkyboxSemaRenderFinished.resize(m_SwapChainImages.size());
-        m_HUDSemaRenderFinished.resize(m_SwapChainImages.size());
+        m_EntitiesSemaRenderFinished.resize(m_MAX_FRAMES_IN_FLIGHT);
+        m_SkyboxSemaRenderFinished.resize(m_MAX_FRAMES_IN_FLIGHT);
+        m_HUDSemaRenderFinished.resize(m_MAX_FRAMES_IN_FLIGHT);
+        m_ShadowMapSemaRenderFinished.resize(m_MAX_FRAMES_IN_FLIGHT);
 
-        m_ImageAvailable.resize(m_SwapChainImages.size());
-
-   /*    
-        result = vkCreateSemaphore(rdr()->getDevice(), &sema, nullptr, &m_ShadowMapSemaRenderFinished);
-        if (VK_SUCCESS != result) PLP_ERROR("can't create m_ShadowMapSemaRenderFinished semaphore");*/
-
-        //result = vkCreateSemaphore(rdr()->getDevice(), &sema, nullptr, &m_ShadowMapSemaImageAvailable);
-        //if (VK_SUCCESS != result) PLP_ERROR("can't create m_ShadowMapSemaImageAvailable semaphore");
+        m_ImageAvailable.resize(m_MAX_FRAMES_IN_FLIGHT);
 
         VkFenceCreateInfo fenceInfo{};
         fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
         fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
 
-        m_PreviousFrame.resize(m_SwapChainImages.size());
-        m_CurrentFrame.resize(m_SwapChainImages.size());
+        m_InFlightFences.resize(m_MAX_FRAMES_IN_FLIGHT);
+        m_ImagesInFlight.resize(m_MAX_FRAMES_IN_FLIGHT, VK_NULL_HANDLE);
 
-        for (size_t i = 0; i < m_SwapChainImages.size(); ++i) {
+        for (size_t i = 0; i < m_MAX_FRAMES_IN_FLIGHT; ++i) {
 
              result = vkCreateSemaphore(rdr()->getDevice(), &sema, nullptr, &m_EntitiesSemaRenderFinished[i]);
             if (VK_SUCCESS != result) PLP_ERROR("can't create m_EntitiesSemaRenderFinished semaphore");
@@ -140,95 +132,23 @@ namespace Poulpe
             result = vkCreateSemaphore(rdr()->getDevice(), &sema, nullptr, &m_HUDSemaRenderFinished[i]);
             if (VK_SUCCESS != result) PLP_ERROR("can't create m_HUDSemaRenderFinished semaphore");
 
+            result = vkCreateSemaphore(rdr()->getDevice(), &sema, nullptr, &m_ShadowMapSemaRenderFinished[i]);
+            if (VK_SUCCESS != result) PLP_ERROR("can't create m_ShadowMapSemaRenderFinished semaphore");
+
             result = vkCreateSemaphore(rdr()->getDevice(), &sema, nullptr, &m_ImageAvailable[i]);
             if (VK_SUCCESS != result) PLP_ERROR("can't create m_ImageAvailable semaphore");
 
-            result = vkCreateFence(rdr()->getDevice(), &fenceInfo, nullptr, &m_PreviousFrame[i]);
+            result = vkCreateFence(rdr()->getDevice(), &fenceInfo, nullptr, &m_ImagesInFlight[i]);
             if (VK_SUCCESS != result) PLP_ERROR("can't create m_PreviousFrame fence");
 
-            result = vkCreateFence(rdr()->getDevice(), &fenceInfo, nullptr, &m_CurrentFrame[i]);
-            if (VK_SUCCESS != result) PLP_ERROR("can't create m_CurrentFrame fence");
+            result = vkCreateFence(rdr()->getDevice(), &fenceInfo, nullptr, &m_InFlightFences[i]);
+            if (VK_SUCCESS != result) PLP_ERROR("can't create m_InFlightFences fence");
         }
     }
 
     void VulkanAdapter::recreateSwapChain()
     {
-        m_Renderer->initDetails();
-        VkSwapchainKHR old = m_SwapChain;
-
-        m_Renderer->destroySwapchain(m_Renderer->getDevice(), old, {}, m_SwapChainImageViews);
-
-        for (auto sema : m_Semaphores) {
-            m_Renderer->destroySemaphores(sema);
-        }
-        m_Renderer->destroyFences();
-        m_Renderer->resetCurrentFrameIndex();
-
-        m_SwapChain = m_Renderer->createSwapChain(m_SwapChainImages, old);
-
-        m_SwapChainImages.resize(3);
-        m_SwapChainSamplers.resize(3);
-        m_SwapChainDepthSamplers.resize(3);
-
-        for (size_t i = 0; i < m_SwapChainImages.size(); ++i) {
-          VkImage image;
-          //VkImage depthImage;
-
-          m_Renderer->createImage(m_Renderer->getSwapChainExtent().width, m_Renderer->getSwapChainExtent().height, 1,
-              VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_B8G8R8A8_UNORM, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_SRC_BIT
-              | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
-              VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, image);
-
-          m_SwapChainImages[i] = image;
-          m_SwapChainSamplers[i] = m_Renderer->createTextureSampler(1);
-        }
-//#endif
-
-        m_SwapChainImageViews.resize(m_SwapChainImages.size());
-        m_DepthImages.resize(m_SwapChainImages.size());
-        m_DepthImageViews.resize(m_SwapChainImages.size());
-
-        for (uint32_t i = 0; i < m_SwapChainImages.size(); i++) {
-            m_SwapChainImageViews[i] = m_Renderer->createImageView(m_SwapChainImages[i],
-                m_Renderer->getSwapChainImageFormat(), VK_IMAGE_ASPECT_COLOR_BIT);
-
-            VkImage depthImage;
-            m_Renderer->createImage(m_Renderer->getSwapChainExtent().width, m_Renderer->getSwapChainExtent().height, 1,
-                VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_D32_SFLOAT, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_SAMPLED_BIT
-                | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
-                VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, depthImage);
-
-            VkImageView depthImageView = m_Renderer->createImageView(depthImage, VK_FORMAT_D32_SFLOAT, 1,
-                VK_IMAGE_ASPECT_DEPTH_BIT);
-
-            m_DepthImages[i] = depthImage;
-            m_DepthImageViews[i] = depthImageView;
-            m_SwapChainDepthSamplers[i] = m_Renderer->createTextureSampler(1);;
-        }
-
-        m_Semaphores.clear();
-
-        for (size_t i = 0; i < m_Renderer->getQueueCount(); i++) {
-            m_Semaphores.emplace_back(m_Renderer->createSyncObjects(m_SwapChainImages));
-        }
-
-        m_CommandPoolEntities = m_Renderer->createCommandPool();
-        m_CommandBuffersEntities = m_Renderer->allocateCommandBuffers(m_CommandPoolEntities,
-            static_cast<uint32_t>(m_SwapChainImageViews.size()));
-
-        m_CommandPoolBbox = m_Renderer->createCommandPool();
-        m_CommandBuffersBbox = m_Renderer->allocateCommandBuffers(m_CommandPoolBbox,
-            static_cast<uint32_t>(m_SwapChainImageViews.size()));
-
-        m_CommandPoolSkybox = m_Renderer->createCommandPool();
-        m_CommandBuffersSkybox = m_Renderer->allocateCommandBuffers(m_CommandPoolSkybox,
-            static_cast<uint32_t>(m_SwapChainImageViews.size()));
-
-        m_CommandPoolHud = m_Renderer->createCommandPool();
-        m_CommandBuffersHud = m_Renderer->allocateCommandBuffers(m_CommandPoolHud,
-            static_cast<uint32_t>(m_SwapChainImageViews.size()));
-
-        acquireNextImage();
+ 
     }
 
     void VulkanAdapter::shouldRecreateSwapChain()
@@ -323,21 +243,15 @@ namespace Poulpe
     }
 
     void VulkanAdapter::drawShadowMap(
-        std::vector<std::unique_ptr<Entity>>* entities, VkCommandBuffer & commandBuffer,
-        VkImage & image, VkImageView & imageView, Light light, std::string const & pipelineName)
+        std::vector<std::unique_ptr<Entity>>* entities, VkCommandBuffer & commandBuffer, Light light)
     {
-        auto pipeline = getPipeline(pipelineName);
+      std::string const pipelineName{ "shadowMap" };
+      auto pipeline = getPipeline(pipelineName);
 
-        m_Renderer->beginCommandBuffer(commandBuffer, VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT);
         m_Renderer->startMarker(commandBuffer, "shadow_map_" + pipelineName, 0.1, 0.2, 0.3);
 
-        VkImageMemoryBarrier depthImageRenderBeginBarrier = m_Renderer->setupImageMemoryBarrier(
-        image, 0, VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT, VK_IMAGE_LAYOUT_UNDEFINED,
-            VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, 1, VK_IMAGE_ASPECT_DEPTH_BIT);
-
-        m_Renderer->addPipelineBarriers(commandBuffer, { depthImageRenderBeginBarrier },
-        VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-            VK_DEPENDENCY_BY_REGION_BIT);
+        rdr()->transitionImageLayout(commandBuffer, m_DepthMapImages[m_ImageIndex],
+          VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL, VK_IMAGE_ASPECT_DEPTH_BIT);
 
         VkClearColorValue colorClear = {};
         colorClear.float32[0] = 1.0f;
@@ -349,7 +263,7 @@ namespace Poulpe
       
         VkRenderingAttachmentInfo depthAttachment{ };
         depthAttachment.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
-        depthAttachment.imageView = imageView;
+        depthAttachment.imageView = m_DepthMapImageViews[m_ImageIndex];
         depthAttachment.imageLayout = VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL;
         depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
         depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
@@ -419,29 +333,33 @@ namespace Poulpe
         m_Renderer->endMarker(commandBuffer);
         m_Renderer->endRendering(commandBuffer);
 
-        auto newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-
-        VkImageMemoryBarrier depthImageEndRenderBeginBarrier = m_Renderer->setupImageMemoryBarrier(
-          image, VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT, 0,
-            VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL, newLayout, 1, VK_IMAGE_ASPECT_DEPTH_BIT);
-
-        m_Renderer->addPipelineBarriers(commandBuffer, { depthImageEndRenderBeginBarrier },
-          VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, 0);
+        rdr()->transitionImageLayout(commandBuffer, m_DepthMapImages[m_ImageIndex],
+          VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_IMAGE_ASPECT_DEPTH_BIT);
     }
 
     void VulkanAdapter::drawEntities()
     {
         if (0 < m_EntityManager->getEntities()->size()) {
 
+          m_Renderer->beginCommandBuffer(m_CommandBuffersEntities[m_ImageIndex], VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT);
 
-            drawShadowMap(m_EntityManager->getEntities(), m_CommandBuffersEntities[m_ImageIndex],
-                m_DepthMapImages[0], m_DepthMapImageViews[0], m_LightManager->getAmbientLight(), "shadowMap");
+          rdr()->transitionImageLayout(m_CommandBuffersEntities[m_ImageIndex], m_SwapChainImages[m_ImageIndex],
+            VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_ASPECT_COLOR_BIT);
 
-            /*drawShadowMap(m_EntityManager->getEntities(), m_CommandBuffersEntities[m_ImageIndex],
-                m_DepthMapImages[1], m_DepthMapImageViews[1], m_LightManager->getSpotLights().at(0), "shadowMapSpot");*/
+          rdr()->transitionImageLayout(m_CommandBuffersEntities[m_ImageIndex], m_SwapChainDepthImages[m_ImageIndex],
+            VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL, VK_IMAGE_ASPECT_DEPTH_BIT);
 
-            beginRendering(m_CommandBuffersEntities[m_ImageIndex],
-            VK_ATTACHMENT_LOAD_OP_LOAD, VK_ATTACHMENT_STORE_OP_STORE, true);
+          drawShadowMap(m_EntityManager->getEntities(), m_CommandBuffersEntities[m_ImageIndex], m_LightManager->getAmbientLight());
+
+          m_Renderer->beginRendering(
+            m_CommandBuffersEntities[m_ImageIndex],
+            m_SwapChainImageViews[m_ImageIndex],
+            m_SwapChainDepthImageViews[m_ImageIndex],
+            VK_ATTACHMENT_LOAD_OP_LOAD,
+            VK_ATTACHMENT_STORE_OP_STORE);
+
+          m_Renderer->setViewPort(m_CommandBuffersEntities[m_ImageIndex]);
+          m_Renderer->setScissor(m_CommandBuffersEntities[m_ImageIndex]);
 
             m_Renderer->startMarker(m_CommandBuffersEntities[m_ImageIndex], "entities_drawing", 0.2, 0.2, 0.9);
 
@@ -489,8 +407,6 @@ namespace Poulpe
 
             m_Renderer->endMarker(m_CommandBuffersEntities[m_ImageIndex]);
             endRendering(m_CommandBuffersEntities[m_ImageIndex]);
-            m_CmdToSubmit[1] = m_CommandBuffersEntities[m_ImageIndex];
-
         }
     }
 
@@ -516,7 +432,6 @@ namespace Poulpe
 
             m_Renderer->endMarker(m_CommandBuffersSkybox[m_ImageIndex]);
             endRendering(m_CommandBuffersSkybox[m_ImageIndex]);
-            m_CmdToSubmit[0] = m_CommandBuffersSkybox[m_ImageIndex];
         }
     }
 
@@ -547,7 +462,6 @@ namespace Poulpe
 
         m_Renderer->endMarker(m_CommandBuffersHud[m_ImageIndex]);
         endRendering(m_CommandBuffersHud[m_ImageIndex]);
-        m_CmdToSubmit[2] = m_CommandBuffersHud[m_ImageIndex];
     }
 
     void VulkanAdapter::drawBbox()
@@ -592,20 +506,32 @@ namespace Poulpe
             }
 
             m_Renderer->endMarker(m_CommandBuffersBbox[m_ImageIndex]);
-            endRendering(m_CommandBuffersBbox[m_ImageIndex]);
+            endRendering(m_CommandBuffersBbox[m_CurrentFrame]);
         }*/
     }
 
     void VulkanAdapter::renderScene()
     {
-        vkWaitForFences(rdr()->getDevice(), 1, &m_CurrentFrame[m_ImageIndex], VK_TRUE, UINT64_MAX);
+        //uint32_t imageIndex{};
+        vkWaitForFences(rdr()->getDevice(), 1, &m_InFlightFences[m_CurrentFrame], VK_TRUE, UINT64_MAX);
+        VkResult result = vkAcquireNextImageKHR(rdr()->getDevice(), m_SwapChain, UINT64_MAX, m_ImageAvailable[m_CurrentFrame], VK_NULL_HANDLE, &m_ImageIndex);
+        vkResetFences(rdr()->getDevice(), 1, &m_InFlightFences[m_CurrentFrame]);
 
-        m_CmdToSubmit.resize(4);
+        //@todo clean
+        if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR)
+        {
+            PLP_ERROR("Error on vkAcquireNextImageKHR {}", result);
+        }
 
-        //std::string_view threadQueueName{ "render" };
+
         drawSkybox();
-        drawEntities();
         drawHUD();
+        drawEntities();
+        submit();
+        //std::string_view threadQueueName{ "render" };
+        //drawSkybox();
+        /*drawEntities();
+        drawHUD();*/
         //Poulpe::Locator::getThreadPool()->submit(threadQueueName, [this]() { drawSkybox(); });
         //Poulpe::Locator::getThreadPool()->submit(threadQueueName, [this]() { drawEntities(); });
         //Poulpe::Locator::getThreadPool()->submit(threadQueueName, [this]() { drawHUD(); });
@@ -618,41 +544,20 @@ namespace Poulpe
         //}
     }
 
-    void VulkanAdapter::addCmdToSubmit(VkCommandBuffer cmd)
-    {
-        m_moreCmdToSubmit.emplace_back(cmd);
-    }
-
     void VulkanAdapter::draw()
     {
-        if (m_RenderingStopped) {
-            {
-              m_CmdToSubmit.clear();
-              m_RenderingStopped = false;
-
-              clearRendererScreen();
-            }
-            return;
-        }
-        std::vector<VkCommandBuffer> cmds{};
-        std::copy_if(m_CmdToSubmit.begin(), m_CmdToSubmit.end(), std::back_inserter(cmds),
-            [](VkCommandBuffer vkBuffer) { return vkBuffer != VK_NULL_HANDLE; });
-
-        if (m_moreCmdToSubmit.size() > 0) {
-            std::copy(m_moreCmdToSubmit.begin(), m_moreCmdToSubmit.end(), std::back_inserter(cmds));
-        }
+        //if (m_RenderingStopped) {
+        //    {
+        //      m_RenderingStopped = false;
+        //      clearRendererScreen();
+        //    }
+        //    return;
+        //}
+        //std::string_view threadQueueName{ "render" };
 
         //Poulpe::Locator::getThreadPool()->Submit("submit", [=, this]() { Submit({ cmds.at(0), cmds.at(1)}); });
         //Poulpe::Locator::getThreadPool()->Submit("submit", [=, this]() { Submit({ cmds.at(2) }); });
-        submit(cmds);
-
-        present();
-
-        m_CmdToSubmit.clear();
-        m_moreCmdToSubmit.clear();
-        cmds.clear();
-
-        acquireNextImage();
+        //submit();
     }
 
     void VulkanAdapter::clearRendererScreen()
@@ -688,42 +593,31 @@ namespace Poulpe
                 cmds.emplace_back(m_CommandBuffersBbox[m_ImageIndex]);
             }
 
-            submit(cmds);
-            present();
-
-            acquireNextImage();
-            onFinishRender();
+            submit();
         }
     }
 
     void VulkanAdapter::destroy()
     {
-        m_Renderer->destroySwapchain(m_Renderer->getDevice(), m_SwapChain, {}, m_SwapChainImageViews);
+       /* m_Renderer->destroySwapchain(m_Renderer->getDevice(), m_SwapChain, {}, m_SwapChainImageViews);
 
-        for (auto sema : m_Semaphores) {
-            m_Renderer->destroySemaphores(sema);
-        }
         m_Renderer->destroyFences();
 
-        for (auto item: m_DepthImages) {
+        for (auto item: m_SwapChainDepthImages) {
             vkDestroyImage(m_Renderer->getDevice(), item, nullptr);
         }
-        for (auto item : m_DepthImageViews) {
+        for (auto item : m_SwapChainDepthImageViews) {
             vkDestroyImageView(m_Renderer->getDevice(), item, nullptr);
         }
         for (auto& buffer : m_UniformBuffers.first) {
             m_Renderer->destroyBuffer(buffer);
-        }
+        }*/
         for (VkDescriptorSetLayout descriptorSetLayout : m_DescriptorSetLayouts) {
             vkDestroyDescriptorSetLayout(m_Renderer->getDevice(), descriptorSetLayout, nullptr);
         }
         for (VkDescriptorPool descriptorPool : m_DescriptorPools) {
             vkDestroyDescriptorPool(m_Renderer->getDevice(), descriptorPool, nullptr);
         }
-        m_Renderer->destroyRenderPass(m_RenderPass.get(), m_CommandPoolEntities, m_CommandBuffersEntities);
-        m_Renderer->destroyRenderPass(m_RenderPass.get(), m_CommandPoolBbox, m_CommandBuffersBbox);
-        m_Renderer->destroyRenderPass(m_RenderPass.get(), m_CommandPoolSkybox, m_CommandBuffersSkybox);
-        m_Renderer->destroyRenderPass(m_RenderPass.get(), m_CommandPoolHud, m_CommandBuffersHud);
     }
 
     void VulkanAdapter::immediateSubmit(std::function<void(VkCommandBuffer cmd)> && function,
@@ -738,29 +632,24 @@ namespace Poulpe
         vkDestroyCommandPool(m_Renderer->getDevice(), commandPool, nullptr);
     }
 
+    //@todo do to much to refacto
     void VulkanAdapter::beginRendering(VkCommandBuffer commandBuffer, VkAttachmentLoadOp loadOp,
         VkAttachmentStoreOp storeOp, bool continuousCmdBuffer)
     {
         if (!continuousCmdBuffer) m_Renderer->beginCommandBuffer(commandBuffer, VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT);
 
-        VkImageMemoryBarrier swapChainImageRenderBeginBarrier = m_Renderer->setupImageMemoryBarrier(
-            m_SwapChainImages[m_ImageIndex], 0, VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT, VK_IMAGE_LAYOUT_UNDEFINED,
-            VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+        rdr()->transitionImageLayout(commandBuffer, m_SwapChainImages[m_ImageIndex],
+          VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_ASPECT_COLOR_BIT);
 
-        m_Renderer->addPipelineBarriers(commandBuffer, { swapChainImageRenderBeginBarrier },
-            VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-            VK_DEPENDENCY_BY_REGION_BIT);
+        rdr()->transitionImageLayout(commandBuffer, m_SwapChainDepthImages[m_ImageIndex],
+          VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL, VK_IMAGE_ASPECT_DEPTH_BIT);
 
-        VkImageMemoryBarrier depthImageRenderBeginBarrier = m_Renderer->setupImageMemoryBarrier(
-            m_DepthImages[m_ImageIndex], 0, VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT, VK_IMAGE_LAYOUT_UNDEFINED,
-            VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, 1, VK_IMAGE_ASPECT_DEPTH_BIT);
-
-        m_Renderer->addPipelineBarriers(commandBuffer, { depthImageRenderBeginBarrier },
-            VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-            VK_DEPENDENCY_BY_REGION_BIT);
-
-        m_Renderer->beginRendering(commandBuffer, m_SwapChainImageViews[m_ImageIndex], m_DepthImageViews[m_ImageIndex],
-            loadOp, storeOp);
+        m_Renderer->beginRendering(
+          commandBuffer,
+          m_SwapChainImageViews[m_ImageIndex],
+          m_SwapChainDepthImageViews[m_ImageIndex],
+          loadOp,
+          storeOp);
 
         m_Renderer->setViewPort(commandBuffer);
         m_Renderer->setScissor(commandBuffer);
@@ -770,59 +659,31 @@ namespace Poulpe
     {
         m_Renderer->endRendering(commandBuffer);
 
-//#ifndef PLP_DEBUG_BUILD
-//        auto newLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
-//#else
-        auto newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-//#endif
+        rdr()->transitionImageLayout(commandBuffer, m_SwapChainImages[m_ImageIndex],
+          VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR, VK_IMAGE_ASPECT_COLOR_BIT);
 
-        VkImageMemoryBarrier swapChainImageEndRenderBeginBarrier = m_Renderer->setupImageMemoryBarrier(
-            m_SwapChainImages[m_ImageIndex], VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT, 0,
-            VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, newLayout );
-
-        m_Renderer->addPipelineBarriers(commandBuffer, { swapChainImageEndRenderBeginBarrier },
-            VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, 0);
-
-        VkImageMemoryBarrier depthImageEndRenderBeginBarrier = m_Renderer->setupImageMemoryBarrier(
-            m_DepthImages[m_ImageIndex], VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT, 0,
-            VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL, newLayout, 1, VK_IMAGE_ASPECT_DEPTH_BIT);
-
-        m_Renderer->addPipelineBarriers(commandBuffer, { depthImageEndRenderBeginBarrier },
-            VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, 0);
+       rdr()->transitionImageLayout(commandBuffer, m_SwapChainDepthImages[m_ImageIndex],
+          VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR, VK_IMAGE_ASPECT_DEPTH_BIT);
 
         m_Renderer->endCommandBuffer(commandBuffer);
     }
 
-    void VulkanAdapter::submit(std::vector<VkCommandBuffer> commandBuffers, [[maybe_unused]] int queueIndex)
+    void VulkanAdapter::submit()
     {
-        //VkResult submitResult = m_Renderer->queueSubmit(m_ImageIndex, commandBuffers, queueIndex);
-        uint32_t imageIndex = (0 == m_ImageIndex) ? 2 : m_ImageIndex - 1;
-
-
-        //vkAcquireNextImageKHR(rdr()->getDevice(), 
-        //    m_SwapChain, UINT64_MAX, m_ImageAvailable[m_ImageIndex], VK_NULL_HANDLE, & imageIndex);
-
-        //@todo clean
-        //if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || framebufferResized) 
-        //{
-
-        //}
-
-        if (m_CurrentFrame[imageIndex] != VK_NULL_HANDLE) 
-        {
-            vkWaitForFences(rdr()->getDevice(), 1, & m_CurrentFrame[imageIndex], VK_TRUE, UINT64_MAX);
-        }
-
-        m_PreviousFrame[imageIndex] = m_CurrentFrame[m_ImageIndex];
+        std::vector<VkCommandBuffer> cmdBuffers {
+            m_CommandBuffersSkybox[m_ImageIndex],
+            m_CommandBuffersEntities[m_ImageIndex],
+            m_CommandBuffersHud[m_ImageIndex]
+        };
 
         std::vector<VkSemaphore> waitSemaphores{
-             //m_ImageAvailable[m_ImageIndex]
+             m_ImageAvailable[m_ImageIndex]
         };
 
         std::vector<VkSemaphore> signalSemaphores {
-            m_EntitiesSemaRenderFinished[imageIndex],
-            m_SkyboxSemaRenderFinished[imageIndex],
-            m_HUDSemaRenderFinished[imageIndex]
+            m_SkyboxSemaRenderFinished[m_ImageIndex],
+            m_EntitiesSemaRenderFinished[m_ImageIndex],
+            m_HUDSemaRenderFinished[m_ImageIndex]
         };
 
         std::vector<VkPipelineStageFlags> waitStages {
@@ -832,71 +693,45 @@ namespace Poulpe
 
         VkSubmitInfo submitInfo{};
         submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-        submitInfo.waitSemaphoreCount = waitSemaphores.size();
-        submitInfo.pWaitSemaphores = waitSemaphores.data();
-        submitInfo.pWaitDstStageMask = waitStages.data();
-        submitInfo.commandBufferCount = commandBuffers.size();
-        submitInfo.pCommandBuffers = commandBuffers.data();
+        submitInfo.pCommandBuffers = cmdBuffers.data();
+        submitInfo.commandBufferCount = cmdBuffers.size();
+        submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+        submitInfo.pWaitDstStageMask = waitStages.data();;
         submitInfo.signalSemaphoreCount = signalSemaphores.size();
         submitInfo.pSignalSemaphores = signalSemaphores.data();
+        submitInfo.waitSemaphoreCount = waitSemaphores.size();
+        submitInfo.pWaitSemaphores = waitSemaphores.data();
 
         auto queue = rdr()->getGraphicsQueues().at(0);
 
-        vkResetFences(rdr()->getDevice(), 1, &m_PreviousFrame[m_ImageIndex]);
+        vkResetFences(rdr()->getDevice(), 1, &m_InFlightFences[m_ImageIndex]);
 
-        VkResult submitResult = vkQueueSubmit(queue, 1, &submitInfo, m_PreviousFrame[m_ImageIndex]);
+        VkResult submitResult = vkQueueSubmit(queue, 1, & submitInfo, m_InFlightFences[m_ImageIndex]);
 
         if (submitResult != VK_SUCCESS) {
-            PLP_WARN("Error on queue submit: {}", submitResult);
-            recreateSwapChain();
-            return;
+            PLP_ERROR("Error on queue submit: {}", submitResult);
+            throw std::runtime_error("Error on queueSubmit");
         }
 
-        rdr()->waitIdle();
+       std::vector<VkSwapchainKHR> swapChains{ m_SwapChain };
 
-       for (auto & cmd : commandBuffers) {
-            vkResetCommandBuffer(cmd, VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
-        }
-    }
+       VkPresentInfoKHR presentInfo{};
+       presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+       presentInfo.waitSemaphoreCount = signalSemaphores.size();
+       presentInfo.pWaitSemaphores = signalSemaphores.data();
+       presentInfo.swapchainCount = 1;
+       presentInfo.pSwapchains = swapChains.data();
+       presentInfo.pImageIndices = &m_CurrentFrame;
+       presentInfo.pResults = nullptr;
 
-    void VulkanAdapter::present([[maybe_unused]] int queueIndex)
-    {
-          onFinishRender();
-//#ifndef PLP_DEBUG_BUILD
-//        std::vector<VkSemaphore>& renderFinishedSemaphores = m_Semaphores.at(queueIndex).second;
-//        VkSemaphore signalSemaphores[] = { renderFinishedSemaphores[m_ImageIndex] };
-//
-//  
-//        VkSemaphoreTypeCreateInfo sema;
-//        sema.sType = VK_STRUCTURE_TYPE_SEMAPHORE_TYPE_CREATE_INFO;
-//        sema.semaphoreType = VK_SEMAPHORE_TYPE_BINARY;
-//        sema.pNext = NULL;
-//
-//        VkSemaphoreWaitInfo waitInfo;
-//        waitInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_WAIT_INFO;
-//        waitInfo.pNext = NULL;
-//        waitInfo.flags = 0;
-//        waitInfo.semaphoreCount = 1;
-//        waitInfo.pSemaphores = { &m_Semaphores.at(queueIndex).second[m_ImageIndex]};
-//
-//        vkWaitSemaphores(m_Renderer->GetDevice(), &waitInfo, UINT64_MAX);
-//
-//        VkResult presentResult = m_Renderer->QueuePresent(m_ImageIndex, m_SwapChain, m_Semaphores.at(queueIndex), queueIndex);
-//
-//        if (presentResult != VK_SUCCESS) {
-//            PLP_WARN("Error on queue present: {}", presentResult);
-//            RecreateSwapChain();
-//        }
-//#endif
-    }
+      VkResult presentResult = vkQueuePresentKHR(queue, & presentInfo);
 
-    void VulkanAdapter::acquireNextImage()
-    {
-//#ifndef PLP_DEBUG_BUILD
-//      m_ImageIndex = m_Renderer->AcquireNextImageKHR(m_SwapChain, m_Semaphores.at(0));
-//#else
-      m_ImageIndex = m_Renderer->getNextFrameIndex();
-//#endif
+       if (presentResult != VK_SUCCESS) {
+         PLP_ERROR("Error on queue present: {}", presentResult);
+       }
+
+        m_CurrentFrame = (m_CurrentFrame + 1) % static_cast<uint32_t>(m_MAX_FRAMES_IN_FLIGHT);
+        onFinishRender();
     }
 
     void VulkanAdapter::setRayPick(float x, float y, float z, [[maybe_unused]] int width, [[maybe_unused]] int height)

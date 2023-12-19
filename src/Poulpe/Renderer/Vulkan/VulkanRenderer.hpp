@@ -81,9 +81,9 @@ namespace Poulpe {
         VkPipelineLayout createPipelineLayout(std::vector<VkDescriptorSetLayout> const & descriptorSetLayouts,
             std::vector<VkPushConstantRange> const & pushConstants);
 
-        VkPipeline createGraphicsPipeline(VkRenderPass* renderPass, VkPipelineLayout pipelineLayout, std::string_view name,
+        VkPipeline createGraphicsPipeline(VkPipelineLayout pipelineLayout, std::string_view name,
             std::vector<VkPipelineShaderStageCreateInfo>shadersCreateInfos, VkPipelineVertexInputStateCreateInfo vertexInputInfo,
-            VkCullModeFlagBits cullMode = VK_CULL_MODE_BACK_BIT, bool dynamicRendering = true, bool depthTestEnable = true,
+            VkCullModeFlagBits cullMode = VK_CULL_MODE_BACK_BIT, bool depthTestEnable = true,
             bool depthWriteEnable = true, bool stencilTestEnable = true, int polygoneMode = VK_POLYGON_MODE_FILL, bool hasColorAttachment = true, bool dynamicDepthBias = false);
 
         VkSwapchainKHR createSwapChain(std::vector<VkImage> & swapChainImages,
@@ -108,7 +108,7 @@ namespace Poulpe {
 
         Mesh::Buffer createIndexBuffer(VkCommandPool const & commandPool, std::vector<uint32_t> const & indices);
 
-        std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>> createSyncObjects(std::vector<VkImage> swapChainImages);
+        //std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>> createSyncObjects(std::vector<VkImage> swapChainImages);
         
         VkImageMemoryBarrier setupImageMemoryBarrier(VkImage image, VkAccessFlags srcAccessMask, VkAccessFlags dstAccessMask,
             VkImageLayout oldLayout, VkImageLayout newLayout, uint32_t mipLevels = VK_REMAINING_MIP_LEVELS,
@@ -185,8 +185,11 @@ namespace Poulpe {
 
         void endRenderPass(VkCommandBuffer commandBuffer);
 
-        void beginRendering(VkCommandBuffer commandBuffer, VkImageView const & colorImageView,
-            VkImageView const & depthImageView, VkAttachmentLoadOp const loadOp, VkAttachmentStoreOp const storeOp);
+        void beginRendering(VkCommandBuffer commandBuffer,
+            VkImageView & colorImageView,
+            VkImageView & depthImageView,
+            VkAttachmentLoadOp const loadOp,
+            VkAttachmentStoreOp const storeOp);
 
         void endRendering(VkCommandBuffer commandBuffer);
 
@@ -199,15 +202,15 @@ namespace Poulpe {
         void draw(VkCommandBuffer commandBuffer, VkDescriptorSet descriptorSet, VkPipelineLayout pipelineLayout, Mesh::Data * data,
             uint32_t uboCount, bool drawIndexed = true, uint32_t index = 0);
 
-        uint32_t acquireNextImageKHR(VkSwapchainKHR swapChain, std::pair<std::vector<VkSemaphore>,
-            std::vector<VkSemaphore>> semaphores);
+        //uint32_t acquireNextImageKHR(VkSwapchainKHR swapChain, std::pair<std::vector<VkSemaphore>,
+        //    std::vector<VkSemaphore>> semaphores);
 
         VkResult queueSubmit(VkCommandBuffer commandBuffer, int queueIndex = 0);
 
         //VkResult queueSubmit(uint32_t imageIndex, std::vector<VkCommandBuffer> commandBuffers, int queueIndex = 0);
 
-        VkResult queuePresent(uint32_t imageIndex, VkSwapchainKHR swapChain, std::pair<std::vector<VkSemaphore>,
-            std::vector<VkSemaphore>> semaphores, int queueIndex = 0);
+        //VkResult queuePresent(uint32_t imageIndex, VkSwapchainKHR swapChain, std::pair<std::vector<VkSemaphore>,
+        //    std::vector<VkSemaphore>> semaphores, int queueIndex = 0);
 
         void addPipelineBarriers(VkCommandBuffer commandBuffer, std::vector<VkImageMemoryBarrier> renderBarriers,
             VkPipelineStageFlags srcStageMask, VkPipelineStageFlags dstStageMask, VkDependencyFlags dependencyFlags);
@@ -215,27 +218,27 @@ namespace Poulpe {
         void generateMipmaps(VkCommandBuffer commandBuffer, VkFormat imageFormat, VkImage image, uint32_t texWidth,
             uint32_t texHeight, uint32_t mipLevels, uint32_t layerCount = 1);
 
-        uint32_t getNextFrameIndex();
+        //uint32_t getNextFrameIndex();
 
         /**
         * Vulkan clean and destroy
         **/
-        void destroyPipeline(VkPipeline pipeline);
+        //void destroyPipeline(VkPipeline pipeline);
 
-        void destroyPipelineData(VkPipelineLayout pipelineLayout, VkDescriptorPool descriptorPool,
-            VkDescriptorSetLayout descriptorSetLayout);
+        //void destroyPipelineData(VkPipelineLayout pipelineLayout, VkDescriptorPool descriptorPool,
+        //    VkDescriptorSetLayout descriptorSetLayout);
 
-        void destroySwapchain(VkDevice device, VkSwapchainKHR swapChain, std::vector<VkFramebuffer> swapChainFramebuffers,
-            std::vector<VkImageView> swapChainImageViews);
+        //void destroySwapchain(VkDevice device, VkSwapchainKHR swapChain, std::vector<VkFramebuffer> swapChainFramebuffers,
+        //    std::vector<VkImageView> swapChainImageViews);
 
-        void destroySemaphores(std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>> semaphores);
+        //void destroySemaphores(std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>> semaphores);
 
-        void destroyFences();
+        //void destroyFences();
 
-        void destroyBuffer(VkBuffer buffer);
+        //void destroyBuffer(VkBuffer buffer);
 
-        void destroyRenderPass(VkRenderPass* renderPass, VkCommandPool commandPool,
-            std::vector<VkCommandBuffer> commandBuffers);
+        //void destroyRenderPass(VkRenderPass* renderPass, VkCommandPool commandPool,
+        //    std::vector<VkCommandBuffer> commandBuffers);
 
         void destroy();
 
@@ -324,6 +327,13 @@ namespace Poulpe {
             return vendors[vendorID];
         }
 
+        void transitionImageLayout(
+          VkCommandBuffer commandBuffer,
+          VkImage image,
+          VkImageLayout oldLayout,
+          VkImageLayout newLayout,
+          VkImageAspectFlags aspectFlags);
+
     public:
         bool m_FramebufferResized = false;
 
@@ -346,7 +356,6 @@ namespace Poulpe {
         VkExtent2D chooseSwapExtent(VkSurfaceCapabilitiesKHR const & capabilities);
 
     private:
-        const int m_MAX_FRAMES_IN_FLIGHT{ 2 };
         int32_t m_CurrentFrame{ 0 };
         uint32_t m_ExtensionCount;
         std::string m_apiVersion;
@@ -360,9 +369,7 @@ namespace Poulpe {
             VK_KHR_MAINTENANCE_4_EXTENSION_NAME,
             VK_KHR_SWAPCHAIN_EXTENSION_NAME,
             VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME,
-            VK_EXT_PIPELINE_CREATION_CACHE_CONTROL_EXTENSION_NAME,
-            VK_EXT_EXTENDED_DYNAMIC_STATE_3_EXTENSION_NAME,
-            VK_EXT_DEPTH_RANGE_UNRESTRICTED_EXTENSION_NAME
+            VK_EXT_PIPELINE_CREATION_CACHE_CONTROL_EXTENSION_NAME
         };
 
         bool m_InstanceCreated{ false };

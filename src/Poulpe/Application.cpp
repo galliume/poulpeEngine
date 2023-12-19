@@ -2,7 +2,7 @@
 
 namespace Poulpe
 {
-    std::atomic<int> Application::s_MaxFPS{ 60 };
+    std::atomic<int> Application::s_MaxFPS{ 0 };
     Application* Application::s_Instance{ nullptr };
 
     Application::Application()
@@ -38,9 +38,9 @@ namespace Poulpe
 
         //todo move to layer manager and update application main loop accordingly
         //#ifdef PLP_DEBUG_BUILD
-            m_VulkanLayer = std::make_unique<Poulpe::VulkanLayer>();
-            m_VulkanLayer->addRenderManager(m_RenderManager.get());
-            m_VulkanLayer->init(window);
+            //m_VulkanLayer = std::make_unique<Poulpe::VulkanLayer>();
+            //m_VulkanLayer->addRenderManager(m_RenderManager.get());
+            //m_VulkanLayer->init(window);
         //#endif
     }
 
@@ -63,15 +63,15 @@ namespace Poulpe
 
             if (deltaTime < frameTarget && s_MaxFPS.load() != 0) continue;
 
-            //PLP_WARN("{} ms", deltaTime);
-            
+            //PLP_TRACE("{} ms", deltaTime);
+           
             m_RenderManager->getCamera()->updateDeltaTime(deltaTime);
 
             glfwPollEvents();
 
-            m_RenderManager->getRendererAdapter()->shouldRecreateSwapChain();
+            //m_RenderManager->getRendererAdapter()->shouldRecreateSwapChain();
             Poulpe::Locator::getCommandQueue()->execPreRequest();
-            m_VulkanLayer->render(deltaTime);
+            //m_VulkanLayer->render(deltaTime);
             m_RenderManager->renderScene(deltaTime);
             m_RenderManager->draw();
             Poulpe::Locator::getCommandQueue()->execPostRequest();
@@ -79,7 +79,7 @@ namespace Poulpe
             lastTime = currentTime;
         }
 
-        Poulpe::Im::destroy();
+        //Poulpe::Im::destroy();
         m_RenderManager->cleanUp();
 
         glfwDestroyWindow(m_RenderManager->getWindow()->get());
