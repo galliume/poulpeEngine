@@ -412,6 +412,11 @@ namespace Poulpe {
         shader_draw_parameters_features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_DRAW_PARAMETERS_FEATURES;
         shader_draw_parameters_features.pNext = &vkFeatures13;
         shader_draw_parameters_features.shaderDrawParameters = VK_TRUE;
+        
+        VkPhysicalDeviceExtendedDynamicState3FeaturesEXT extDynamicState{};
+        extDynamicState.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_EXTENDED_DYNAMIC_STATE_3_FEATURES_EXT;
+        extDynamicState.pNext = &shader_draw_parameters_features;
+        extDynamicState.extendedDynamicState3DepthClampEnable = VK_TRUE;
 
         VkDeviceCreateInfo createInfo{};
         createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
@@ -420,7 +425,7 @@ namespace Poulpe {
         createInfo.pEnabledFeatures = &deviceFeatures;
         createInfo.enabledExtensionCount = static_cast<uint32_t>(m_DeviceExtensions.size());
         createInfo.ppEnabledExtensionNames = m_DeviceExtensions.data();
-        createInfo.pNext = &shader_draw_parameters_features;
+        createInfo.pNext = &extDynamicState;
 
         if (vkCreateDevice(m_PhysicalDevice, & createInfo, nullptr, &m_Device) != VK_SUCCESS) {
             PLP_FATAL("failed to create logical device!");
@@ -686,6 +691,7 @@ namespace Poulpe {
         return graphicsPipelineLayout;
     }
 
+    //@todo refactor this...
     VkPipeline VulkanRenderer::createGraphicsPipeline(
         VkRenderPass * renderPass, VkPipelineLayout pipelineLayout, std::string_view name,
         std::vector<VkPipelineShaderStageCreateInfo> shadersCreateInfos,
@@ -718,6 +724,11 @@ namespace Poulpe {
         viewportState.scissorCount = 1;
         viewportState.pScissors = & scissor;
 
+        //@todo extension not working ?
+        VkPipelineRasterizationDepthClipStateCreateInfoEXT depthClipState{};
+        depthClipState.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_DEPTH_CLIP_STATE_CREATE_INFO_EXT;
+        depthClipState.depthClipEnable = VK_TRUE;
+
         VkPipelineRasterizationStateCreateInfo rasterizer{};
         rasterizer.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
         rasterizer.depthClampEnable = VK_FALSE;
@@ -730,6 +741,7 @@ namespace Poulpe {
         rasterizer.depthBiasConstantFactor = 0.f;
         rasterizer.depthBiasClamp = 0.0f;
         rasterizer.depthBiasSlopeFactor = 0.0f;
+        //rasterizer.pNext = &depthClipState;
 
         VkPipelineMultisampleStateCreateInfo multisampling{};
         multisampling.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
@@ -773,7 +785,8 @@ namespace Poulpe {
         colorBlending.blendConstants[2] = 1.0f;
         colorBlending.blendConstants[3] = 1.0f;
 
-        std::vector<VkDynamicState> dynamicStates{ VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR };
+        std::vector<VkDynamicState> dynamicStates{
+            VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR};
         if (dynamicDepthBias) dynamicStates.emplace_back(VK_DYNAMIC_STATE_DEPTH_BIAS);
         
         VkPipelineDynamicStateCreateInfo dynamicState{};
@@ -1177,7 +1190,6 @@ namespace Poulpe {
 
         VkFenceCreateInfo fenceInfo{};
         fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
-        fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
         fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
 
         for (int i = 0; i < m_MAX_FRAMES_IN_FLIGHT; i++) {
@@ -1528,48 +1540,47 @@ namespace Poulpe {
         return result;
     }
 
-    VkResult VulkanRenderer::queueSubmit(uint32_t imageIndex, std::vector<VkCommandBuffer> commandBuffers, int queueIndex)
-    {
-        /*std::vector<VkSemaphore>& imageAvailableSemaphores = semaphores.first;
-        std::vector<VkSemaphore>& renderFinishedSemaphores = semaphores.second;*/
+    //VkResult VulkanRenderer::queueSubmit(uint32_t imageIndex, std::vector<VkCommandBuffer> commandBuffers, int queueIndex)
+    //{
+    //    /*std::vector<VkSemaphore>& imageAvailableSemaphores = semaphores.first;
+    //    std::vector<VkSemaphore>& renderFinishedSemaphores = semaphores.second;*/
+    //    //m_ImagesInFlight[imageIndex] = m_ImagesInFlight[m_CurrentFrame];
 
-        m_ImagesInFlight[imageIndex] = m_ImagesInFlight[m_CurrentFrame];
+    //    std::vector<VkSubmitInfo> submits{};
 
-        std::vector<VkSubmitInfo> submits{};
+    //    VkSubmitInfo submitInfo{};
+    //    submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 
-        VkSubmitInfo submitInfo{};
-        submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+    //    //VkSemaphore waitSemaphores[] = { imageAvailableSemaphores[m_CurrentFrame] };
 
-        //VkSemaphore waitSemaphores[] = { imageAvailableSemaphores[m_CurrentFrame] };
+    //    VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
+    //    submitInfo.waitSemaphoreCount = 0;
+    //    submitInfo.pWaitSemaphores = VK_NULL_HANDLE;// waitSemaphores;
+    //    submitInfo.pWaitDstStageMask = waitStages;
+    //    submitInfo.commandBufferCount = commandBuffers.size();
+    //    submitInfo.pCommandBuffers = commandBuffers.data();
 
-        VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
-        submitInfo.waitSemaphoreCount = 0;
-        submitInfo.pWaitSemaphores = VK_NULL_HANDLE;// waitSemaphores;
-        submitInfo.pWaitDstStageMask = waitStages;
-        submitInfo.commandBufferCount = commandBuffers.size();
-        submitInfo.pCommandBuffers = commandBuffers.data();
+    //    //VkSemaphore signalSemaphores[] = { renderFinishedSemaphores[m_CurrentFrame] };
 
-        //VkSemaphore signalSemaphores[] = { renderFinishedSemaphores[m_CurrentFrame] };
+    //    submitInfo.signalSemaphoreCount = 0;
+    //    //submitInfo.pSignalSemaphores = signalSemaphores;
 
-        submitInfo.signalSemaphoreCount = 0;
-        //submitInfo.pSignalSemaphores = signalSemaphores;
+    //    submits.emplace_back(submitInfo);
+    //    
+    //    VkResult result = VK_SUCCESS;
+    //    {
+    //        std::lock_guard<std::mutex> guard(m_MutexQueueSubmit);
+    //        vkResetFences(m_Device, 1, & m_InFlightFences[m_CurrentFrame]);
+    //        result = vkQueueSubmit(m_GraphicsQueues[queueIndex], submits.size(), submits.data(),
+    //            m_InFlightFences[m_CurrentFrame]);
+    //        vkWaitForFences(m_Device, 1, & m_InFlightFences[m_CurrentFrame], VK_TRUE, UINT32_MAX);
 
-        submits.emplace_back(submitInfo);
-        
-        VkResult result = VK_SUCCESS;
-        {
-            std::lock_guard<std::mutex> guard(m_MutexQueueSubmit);
-            vkResetFences(m_Device, 1, & m_InFlightFences[m_CurrentFrame]);
-            result = vkQueueSubmit(m_GraphicsQueues[queueIndex], submits.size(), submits.data(),
-                m_InFlightFences[m_CurrentFrame]);
-            vkWaitForFences(m_Device, 1, & m_InFlightFences[m_CurrentFrame], VK_TRUE, UINT32_MAX);
-
-             for (auto & cmd : commandBuffers) {
-                 vkResetCommandBuffer(cmd, VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
-             }
-        }
-        return result;
-    }
+    //         for (auto & cmd : commandBuffers) {
+    //             vkResetCommandBuffer(cmd, VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
+    //         }
+    //    }
+    //    return result;
+    //}
 
     VkResult VulkanRenderer::queuePresent(uint32_t imageIndex, VkSwapchainKHR swapChain,
         std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>> semaphores, int queueIndex)
@@ -1607,13 +1618,13 @@ namespace Poulpe {
         {
             std::vector<VkSemaphore> & imageAvailableSemaphores = semaphores.first;
             
-            vkResetFences(m_Device, 1, & m_FenceAcquireImage);
+            //vkResetFences(m_Device, 1, & m_FenceAcquireImage);
 
             uint32_t imageIndex = 0;
             VkResult result = vkAcquireNextImageKHR(m_Device, swapChain, UINT32_MAX,
-                imageAvailableSemaphores[m_CurrentFrame], m_FenceAcquireImage, & imageIndex);
+                imageAvailableSemaphores[m_CurrentFrame], nullptr, & imageIndex);
 
-            vkWaitForFences(m_Device, 1, &m_FenceAcquireImage, VK_TRUE, UINT32_MAX);
+            //vkWaitForFences(m_Device, 1, &m_FenceAcquireImage, VK_TRUE, UINT32_MAX);
 
             if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
                 PLP_ERROR("failed to acquire swap chain image!");
