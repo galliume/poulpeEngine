@@ -96,15 +96,6 @@ void main()
       texColor = vec4(fs_in.fvColor, 1.0);
     }
 
-    float alpha = 1.0;
-
-     if (fs_in.fMapsUsed.z > 0.5) {
-        alpha  *=  texture(texSampler[3], fs_in.fTexCoord).a;
-    } 
-    if (alpha < 0.5 || texColor.a < 0.5){
-        discard;
-    }
-
     //float shadow = ShadowCalculation(fs_in.fShadowCoord / fs_in.fShadowCoord.w, vec2(0.0));
     float shadowAmbient = filterPCF(fs_in.fShadowCoordAmbient / fs_in.fShadowCoordAmbient.w);
     //float shadowSpot = filterPCF(fs_in.fShadowCoordAmbient / fs_in.fShadowCoordAmbient.w);
@@ -118,7 +109,15 @@ void main()
 
     color += CalcSpotLight(texColor, spotLight, normal, fs_in.fPos.xyz, viewDir, 1.0);
 
-    fColor = vec4(color, alpha);
+    if (fs_in.fMapsUsed.z > 0.5) {
+        vec4 mask = texture(texSampler[3], fs_in.fTexCoord);
+//        fColor = mix(fColor, mask, mask.a);
+        if (mask.r < 0.7) discard;
+    }
+    if (texColor.a < 0.7) discard;
+
+    fColor = vec4(color, 1.0);
+
     //fColor = vec4(fs_in.fShadowCoord.st, 0, 1);
     //float depthValue = texture(texSampler[4], fs_in.fTexCoord).r;
     //fColor = vec4(vec3(depthValue), 1.0);
