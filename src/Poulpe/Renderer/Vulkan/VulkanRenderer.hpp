@@ -204,7 +204,7 @@ namespace Poulpe {
 
         VkResult queueSubmit(VkCommandBuffer commandBuffer, int queueIndex = 0);
 
-        VkResult queueSubmit(uint32_t imageIndex, std::vector<VkCommandBuffer> commandBuffers, int queueIndex = 0);
+        //VkResult queueSubmit(uint32_t imageIndex, std::vector<VkCommandBuffer> commandBuffers, int queueIndex = 0);
 
         VkResult queuePresent(uint32_t imageIndex, VkSwapchainKHR swapChain, std::pair<std::vector<VkSemaphore>,
             std::vector<VkSemaphore>> semaphores, int queueIndex = 0);
@@ -360,7 +360,9 @@ namespace Poulpe {
             VK_KHR_MAINTENANCE_4_EXTENSION_NAME,
             VK_KHR_SWAPCHAIN_EXTENSION_NAME,
             VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME,
-            VK_EXT_PIPELINE_CREATION_CACHE_CONTROL_EXTENSION_NAME
+            VK_EXT_PIPELINE_CREATION_CACHE_CONTROL_EXTENSION_NAME,
+            VK_EXT_EXTENDED_DYNAMIC_STATE_3_EXTENSION_NAME,
+            VK_EXT_DEPTH_RANGE_UNRESTRICTED_EXTENSION_NAME
         };
 
         bool m_InstanceCreated{ false };
@@ -408,8 +410,8 @@ namespace Poulpe {
         VkFence m_FenceBuffer{};
 
         //@todo move to config file
-        unsigned int m_Width{ 2560 };
-        unsigned int m_Height{ 1440 };
+        unsigned int m_Width{ 800 };
+        unsigned int m_Height{ 600 };
         //unsigned int m_Width{ 1200 };
         //unsigned int m_Height{ 720 };
 
