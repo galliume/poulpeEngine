@@ -147,11 +147,11 @@ namespace Poulpe
                     }
 
                     // Optional: vertex colors
-                     //tinyobj::real_t red   = attrib.colors[3*size_t(idx.vertex_index)+0];
-                     //tinyobj::real_t green = attrib.colors[3*size_t(idx.vertex_index)+1];
-                     //tinyobj::real_t blue  = attrib.colors[3*size_t(idx.vertex_index)+2];
+                     tinyobj::real_t red   = attrib.colors[3*size_t(idx.vertex_index)+0];
+                     tinyobj::real_t green = attrib.colors[3*size_t(idx.vertex_index)+1];
+                     tinyobj::real_t blue  = attrib.colors[3*size_t(idx.vertex_index)+2];
 
-                     vertex.color = { 58.0, 54.9, 51.8};
+                     vertex.color = { red, green, blue };
 
                     vertex.tangent = glm::vec4(0.0f);
 

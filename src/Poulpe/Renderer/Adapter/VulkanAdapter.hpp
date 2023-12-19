@@ -163,17 +163,6 @@ namespace Poulpe
         std::vector<std::future<void>> m_BufferedCmdLists{};
         //uint32_t m_BufferedIndex = 0;
 
-        //thread signaling
-        std::mutex m_MutexRenderScene;
-        std::mutex m_MutexSubmit;
-        std::mutex m_MutexCmdSubmit;
-        std::mutex m_MutexCmdSubmitEntities;
-        std::mutex m_MutexCmdSubmitSkbybox;
-        std::mutex m_MutexCmdSubmitHUD;
-        std::mutex m_MutexCmdSubmitBBox;
-        std::condition_variable m_RenderCond;
-        unsigned int m_renderStatus{ 1 };
-
         bool m_RenderingStopped{ false };
 
         std::vector<VkSampler> m_SwapChainSamplers{};
@@ -192,5 +181,16 @@ namespace Poulpe
         [[maybe_unused]] VkDescriptorImageInfo m_DepthMapDescriptor;
 
         std::unordered_map<std::string, VulkanPipeline> m_Pipelines;
+
+        std::vector<VkSemaphore> m_EntitiesSemaRenderFinished;
+        std::vector<VkSemaphore> m_SkyboxSemaRenderFinished;
+        std::vector<VkSemaphore> m_HUDSemaRenderFinished;
+        std::vector<VkSemaphore> m_ShadowMapSemaRenderFinished;
+
+        std::vector<VkSemaphore> m_ImageAvailable;
+        std::vector<VkSemaphore> m_ShadowMapSemaImageAvailable;
+
+        std::vector<VkFence> m_PreviousFrame{};
+        std::vector<VkFence> m_CurrentFrame{};
     };
 }
