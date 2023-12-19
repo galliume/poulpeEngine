@@ -39,7 +39,6 @@ namespace Poulpe
         void showGrid(bool show) override;
         inline std::vector<VkDescriptorSetLayout>* getDescriptorSetLayouts() override { return & m_DescriptorSetLayouts; }
         inline std::vector<VkImage>* getSwapChainImages() override { return & m_SwapChainImages; }
-        inline VkRenderPass* rdrPass() override { return m_RenderPass.get(); }
         inline glm::mat4 getPerspective() override { return m_Perspective; }
         void setDeltatime(float deltaTime) override;
         void renderScene() override;
@@ -50,7 +49,6 @@ namespace Poulpe
         void drawHUD();
         void drawBbox();
         //void RenderForImGui(VkCommandBuffer cmdBuffer, VkFramebuffer swapChainFramebuffer);
-        void addCmdToSubmit(VkCommandBuffer cmd);
 
         void beginRendering(VkCommandBuffer commandBuffer, VkAttachmentLoadOp loadOp = VK_ATTACHMENT_LOAD_OP_LOAD,
             VkAttachmentStoreOp storeOp = VK_ATTACHMENT_STORE_OP_STORE, bool continuousCmdBuffer = false);
@@ -67,15 +65,15 @@ namespace Poulpe
         void stopRendering() { m_RenderingStopped = true; };
         
         std::pair<VkSampler, VkImageView> getImguiTexture() {
-            return std::make_pair(m_SwapChainSamplers[m_ImageIndex], m_SwapChainImageViews[m_ImageIndex]);
+            return std::make_pair(m_SwapChainSamplers[m_CurrentFrame], m_SwapChainImageViews[m_CurrentFrame]);
         };
 
         std::pair<VkSampler, VkImageView> getImguiDepthImage() {
-            return std::make_pair(m_SwapChainDepthSamplers[m_ImageIndex], m_DepthImageViews[m_ImageIndex]);
+            return std::make_pair(m_SwapChainDepthSamplers[m_CurrentFrame], m_SwapChainDepthImageViews[m_CurrentFrame]);
         };
 
         std::vector<VkImageView>* getSwapChainImageViews() { return &m_SwapChainImageViews; }
-        uint32_t getCurrentFrameIndex() const { return m_ImageIndex; };
+        uint32_t getCurrentFrameIndex() const { return m_CurrentFrame; };
 
         //@todo add GuiManager
         VkRenderPass createImGuiRenderPass(VkFormat format);
@@ -91,8 +89,7 @@ namespace Poulpe
 
         Camera* getCamera() { return m_Camera; }
 
-        void drawShadowMap(std::vector<std::unique_ptr<Entity>>* entities, VkCommandBuffer & commandBuffer,
-        VkImage & image, VkImageView & imageView, Light light, std::string const & pipelineName);
+        void drawShadowMap(std::vector<std::unique_ptr<Entity>>* entities, VkCommandBuffer & commandBuffer, Light light);
 
         void addPipeline(std::string const & shaderName, VulkanPipeline pipeline) override;
         VulkanPipeline* getPipeline(std::string const& shaderName) { return & m_Pipelines[shaderName]; };
@@ -101,23 +98,18 @@ namespace Poulpe
         std::vector<VkSampler>* getDepthMapSamplers() { return & m_DepthMapSamplers; };
 
     private:
+        const size_t m_MAX_FRAMES_IN_FLIGHT{ 2 };
+
         //@todo temp
         void setPerspective();
-        void submit(std::vector<VkCommandBuffer> commandBuffers, int queueIndex = 0);
-        void present(int queueIndex = 0);
+        void submit();
         void onFinishRender();
-        void acquireNextImage();
 
     private:
         std::unique_ptr<VulkanRenderer> m_Renderer{ nullptr };
-        std::unique_ptr<VkRenderPass> m_RenderPass{ nullptr };
         VkSwapchainKHR m_SwapChain{ nullptr };
         std::vector<VkImage> m_SwapChainImages{};
-        std::vector<VkFramebuffer> m_SwapChainFramebuffers{};
         std::vector<VkImageView> m_SwapChainImageViews{};
-
-        //@todo wtf
-        std::vector<std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>>> m_Semaphores{};
 
         VkCommandPool m_CommandPoolEntities{ nullptr };
         std::vector<VkCommandBuffer> m_CommandBuffersEntities{};
@@ -131,7 +123,8 @@ namespace Poulpe
         VkCommandPool m_CommandPoolHud{ nullptr };
         std::vector<VkCommandBuffer> m_CommandBuffersHud{};
 
-        uint32_t m_ImageIndex{ 0 };
+        uint32_t m_CurrentFrame{ 0 };
+        uint32_t m_ImageIndex;
         std::pair<std::vector<VkBuffer>, std::vector<VkDeviceMemory>> m_UniformBuffers{};
         
         Camera* m_Camera{ nullptr };
@@ -142,8 +135,8 @@ namespace Poulpe
         [[maybe_unused]] TextureManager* m_TextureManager{ nullptr };
 
         //@todo move to meshManager
-        std::vector<VkImageView>m_DepthImageViews{};
-        std::vector<VkImage>m_DepthImages{};
+        std::vector<VkImageView>m_SwapChainDepthImageViews{};
+        std::vector<VkImage>m_SwapChainDepthImages{};
         glm::mat4 m_Perspective;
         //glm::mat4 m_lastLookAt;
         float m_Deltatime{ 0.0f };
@@ -153,10 +146,6 @@ namespace Poulpe
 
         glm::vec3 m_RayPick;
         bool m_HasClicked{ false };
-
-        //std::vector<std::shared_ptr<Entity>>* m_BoundingBox;
-        std::vector<VkCommandBuffer> m_CmdToSubmit;
-        std::vector<VkCommandBuffer> m_moreCmdToSubmit;
 
         bool m_DrawBbox{ false };
         std::vector<std::future<void>> m_CmdLists{};
@@ -169,8 +158,6 @@ namespace Poulpe
         std::vector<VkSampler> m_SwapChainDepthSamplers{};
 
         std::vector<IObserver*> m_Observers{};
-        //VkCommandBuffer m_CopyCmd;
-        //VkCommandPool m_CopyCommandPool;
 
         [[maybe_unused]] VkFramebuffer m_DepthMapFrameBuffer;
         [[maybe_unused]] std::vector<VkImage> m_DepthMapImages;
@@ -190,7 +177,7 @@ namespace Poulpe
         std::vector<VkSemaphore> m_ImageAvailable;
         std::vector<VkSemaphore> m_ShadowMapSemaImageAvailable;
 
-        std::vector<VkFence> m_PreviousFrame{};
-        std::vector<VkFence> m_CurrentFrame{};
+        std::vector<VkFence> m_ImagesInFlight{};
+        std::vector<VkFence> m_InFlightFences{};
     };
 }
