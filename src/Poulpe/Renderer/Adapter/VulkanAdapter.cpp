@@ -21,14 +21,10 @@ namespace Poulpe
     VulkanAdapter::VulkanAdapter(
       Window* window,
       EntityManager* entityManager,
-      ComponentManager* componentManager,
-      LightManager* lightManager,
-      TextureManager* textureManager)
+      LightManager* lightManager)
         : m_Window(window),
           m_EntityManager(entityManager),
-          m_ComponentManager(componentManager),
-          m_LightManager(lightManager),
-          m_TextureManager(textureManager)
+          m_LightManager(lightManager)
     {
         m_Renderer = std::make_unique<VulkanRenderer>(window);
     }
@@ -395,12 +391,8 @@ namespace Poulpe
 
             m_Renderer->endMarker(m_CommandBuffersEntities[m_CurrentFrame]);
             endRendering(m_CommandBuffersEntities[m_CurrentFrame]);
-
-            {
-              std::lock_guard<std::mutex> guard(m_MutexQueueSubmit);
-              m_CmdEntitiesStatus[m_CurrentFrame]->done.store(true);
-              m_CmdsToSubmit.emplace_back(m_CmdEntitiesStatus[m_CurrentFrame].get());
-            }
+            m_CmdsToSubmit.emplace_back(m_CmdEntitiesStatus[m_CurrentFrame].get());
+            m_CmdEntitiesStatus[m_CurrentFrame]->done.store(true);
         }
     }
 
@@ -427,11 +419,8 @@ namespace Poulpe
             m_Renderer->endMarker(m_CommandBuffersSkybox[m_CurrentFrame]);
             endRendering(m_CommandBuffersSkybox[m_CurrentFrame]);
 
-            {
-              std::lock_guard<std::mutex> guard(m_MutexQueueSubmit);
-              m_CmdSkyboxStatus[m_CurrentFrame]->done.store(true);
-              m_CmdsToSubmit.emplace_back(m_CmdSkyboxStatus[m_CurrentFrame].get());
-            }
+            m_CmdsToSubmit.emplace_back(m_CmdSkyboxStatus[m_CurrentFrame].get());
+            m_CmdSkyboxStatus[m_CurrentFrame]->done.store(true);
         }
     }
 
@@ -463,11 +452,8 @@ namespace Poulpe
         m_Renderer->endMarker(m_CommandBuffersHUD[m_CurrentFrame]);
         endRendering(m_CommandBuffersHUD[m_CurrentFrame]);
 
-        {
-            std::lock_guard<std::mutex> guard(m_MutexQueueSubmit);
-            m_CmdHUDStatus[m_CurrentFrame]->done.store(true);
-            m_CmdsToSubmit.emplace_back(m_CmdHUDStatus[m_CurrentFrame].get());
-        }
+        m_CmdsToSubmit.emplace_back(m_CmdHUDStatus[m_CurrentFrame].get());
+        m_CmdHUDStatus[m_CurrentFrame]->done.store(true);
     }
 
     void VulkanAdapter::drawBbox()
@@ -529,13 +515,17 @@ namespace Poulpe
         {
             PLP_ERROR("Error on vkAcquireNextImageKHR {}", result);
         }
-
-        vkResetCommandBuffer(m_CommandBuffersEntities[m_CurrentFrame], 0);
-        vkResetCommandBuffer(m_CommandBuffersHUD[m_CurrentFrame], 0);
-        vkResetCommandBuffer(m_CommandBuffersShadowMap[m_CurrentFrame], 0);
-        vkResetCommandBuffer(m_CommandBuffersSkybox[m_CurrentFrame], 0);
+        //vkResetCommandBuffer(m_CommandBuffersEntities[m_CurrentFrame], 0);
+        //vkResetCommandBuffer(m_CommandBuffersHUD[m_CurrentFrame], 0);
+        //vkResetCommandBuffer(m_CommandBuffersShadowMap[m_CurrentFrame], 0);
+        //vkResetCommandBuffer(m_CommandBuffersSkybox[m_CurrentFrame], 0);
 
         //std::string_view threadQueueName{ "render" };
+
+         //PLP_DEBUG("m_Nodraw: {}", m_Nodraw.load());
+         //PLP_DEBUG("m_CmdSkyboxStatus: {}", m_CmdSkyboxStatus[m_CurrentFrame]->done.load());
+         //PLP_DEBUG("m_CmdEntitiesStatus: {}", m_CmdEntitiesStatus[m_CurrentFrame]->done.load());
+         //PLP_DEBUG("m_CmdHUDStatus: {}", m_CmdHUDStatus[m_CurrentFrame]->done.load());
 
           if (!m_CmdSkyboxStatus[m_CurrentFrame]->done.load() || m_Nodraw.load()) {
             m_CmdSkyboxStatus[m_CurrentFrame]->done.store(false);

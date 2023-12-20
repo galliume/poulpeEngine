@@ -4,18 +4,16 @@ namespace Poulpe
 {
     void Camera::init()
     {
-        m_Pos = glm::vec3(-0.2f, 0.2f, -0.3f);
+        m_Pos = glm::vec3(-0.2f, 0.2f, 0.0f);
         m_Target = glm::vec3(0.0f, 0.0f, 0.0f);
         m_Direction = glm::normalize(m_Pos - m_Target);
 
         auto up = glm::vec3(0.0f, 1.0f, 0.0f);
         m_CameraRight = glm::normalize(glm::cross(up, m_Direction));
         m_CameraUp = glm::cross(m_Direction, m_CameraRight);
-        m_CameraFront = glm::vec3(-0.9f, 0.2f, -0.2f);
+        m_CameraFront = glm::vec3(-0.9f, 0.2f, 0.0f);
 
-        m_View = glm::lookAt(glm::vec3(0.0f, 0.0f, 3.0f),
-          glm::vec3(0.0f, 0.0f, 0.0f),
-          glm::vec3(0.0f, 1.0f, 0.0f));
+        m_View = glm::lookAt(m_Pos, m_Pos + m_CameraFront, m_CameraUp);
     }
 
     /**
@@ -87,7 +85,7 @@ namespace Poulpe
 
     void Camera::forward()
     {
-        m_Pos +=  m_CameraFront *(m_Speed * m_DeltaTime);
+        m_Pos +=  m_CameraFront * (m_Speed * m_DeltaTime);
     }
 
     void Camera::backward()

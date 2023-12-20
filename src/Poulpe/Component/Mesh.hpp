@@ -72,7 +72,7 @@ namespace Poulpe
             glm::vec3 m_CurrentPos;
             glm::vec3 m_CurrentRotation;
             glm::vec3 m_CurrentScale;
-            //x = specularMap, y = bumMap
+            //x = specularMap, y = bumpMap
             glm::vec4 mapsUsed = glm::vec4(0.0f);
             glm::vec3 tangeant;
         };
@@ -105,9 +105,7 @@ namespace Poulpe
         bool isDirty() { return m_IsDirty.load(); }
         void setIsDirty(bool dirty = true) { m_IsDirty.store(dirty); }
         void setHasBbox(bool hasBbox = false) { m_HasBbox = hasBbox; }
-        void setHasAnimation(bool hasAnimation = false) { m_HasAnimation = hasAnimation; }
         bool hasBbox() { return m_HasBbox; }
-        bool hasAnimation() { return m_HasAnimation; }
         
         void addBBox(BBox* bbox) { m_BoundingBox = std::unique_ptr<BBox>(bbox); }
         BBox* getBBox() { return m_BoundingBox.get(); }
@@ -121,9 +119,6 @@ namespace Poulpe
 
         void setName(std::string const & name) { m_Name = name; }
         std::string getName() { return m_Name; }
-
-        void setSpritesCount(uint32_t count) { m_SpritesCount = count; }
-        uint32_t getNextSpriteIndex();
 
         Data* getData() { return & m_Data; }
         void setData(Data data) { m_Data = std::move(data); }
@@ -154,16 +149,12 @@ namespace Poulpe
         std::string m_ShaderName;
         std::atomic<bool> m_IsDirty{ true };
         bool m_HasBbox = false;
-        bool m_HasAnimation = false;
 
         bool m_HasPushContants = false;
         std::vector<Mesh::Buffer> m_UniformBuffers;
         std::vector<Mesh::Buffer> m_StorageBuffers;
         glm::vec4 m_CameraPos;
         std::string m_Name;
-
-        uint32_t m_SpritesCount = 0;
-        uint32_t m_SpritesIndex = 0;
         
         Data m_Data;
 
