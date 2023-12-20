@@ -21,10 +21,10 @@ namespace Poulpe
     public:
 
       struct CommandToSubmit {
-        VkCommandBuffer buffer;
+        VkCommandBuffer* buffer;
         VkPipelineStageFlags stageFlags;
-        VkSemaphore semaphore;
-        std::vector<bool>* status;
+        VkSemaphore* semaphore;
+        std::atomic_bool done{false};
       };
 
         explicit VulkanAdapter(
@@ -128,7 +128,7 @@ namespace Poulpe
         std::vector<VkCommandBuffer> m_CommandBuffersSkybox{};
 
         VkCommandPool m_CommandPoolHud{ nullptr };
-        std::vector<VkCommandBuffer> m_CommandBuffersHud{};
+        std::vector<VkCommandBuffer> m_CommandBuffersHUD{};
 
         VkCommandPool m_CommandPoolShadowMap{ nullptr };
         std::vector<VkCommandBuffer> m_CommandBuffersShadowMap{};
@@ -191,11 +191,12 @@ namespace Poulpe
         std::vector<VkFence> m_InFlightFences{};
 
         std::mutex m_MutexQueueSubmit;
-        std::vector<CommandToSubmit> m_CmdsToSubmit{};
+        std::vector<CommandToSubmit*> m_CmdsToSubmit{};
 
-        std::vector<bool> m_CmdSkyboxStatus{};
-        std::vector<bool> m_CmdEntitiesStatus{};
-        std::vector<bool> m_CmdHUDStatus{};
-        std::vector<bool> m_CmdShadowMapStatus{};
+        std::vector<std::unique_ptr<CommandToSubmit>> m_CmdSkyboxStatus{};
+        std::vector< std::unique_ptr<CommandToSubmit>> m_CmdEntitiesStatus{};
+        std::vector< std::unique_ptr<CommandToSubmit>> m_CmdHUDStatus{};
+
+        std::atomic_bool m_Nodraw{ true };
     };
 }
