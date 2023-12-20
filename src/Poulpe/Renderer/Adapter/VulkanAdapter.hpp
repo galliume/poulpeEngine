@@ -30,9 +30,7 @@ namespace Poulpe
         explicit VulkanAdapter(
           Window* window,
           EntityManager* entityManager,
-          ComponentManager* componentManager,
-          LightManager* lightManager,
-          TextureManager* textureManager
+          LightManager* lightManager
         );
 
         virtual ~VulkanAdapter() = default;
@@ -140,9 +138,7 @@ namespace Poulpe
         Camera* m_Camera{ nullptr };
         Window* m_Window{ nullptr };
         EntityManager* m_EntityManager{ nullptr };
-        [[maybe_unused]] ComponentManager* m_ComponentManager{ nullptr };
-        [[maybe_unused]] LightManager* m_LightManager{ nullptr };
-        [[maybe_unused]] TextureManager* m_TextureManager{ nullptr };
+        LightManager* m_LightManager{ nullptr };
 
         //@todo move to meshManager
         std::vector<VkImageView>m_SwapChainDepthImageViews{};
@@ -169,13 +165,9 @@ namespace Poulpe
 
         std::vector<IObserver*> m_Observers{};
 
-        [[maybe_unused]] VkFramebuffer m_DepthMapFrameBuffer;
-        [[maybe_unused]] std::vector<VkImage> m_DepthMapImages;
-        [[maybe_unused]] VkDeviceMemory m_DepthMapDeviceMemory;
-        [[maybe_unused]] std::vector<VkImageView> m_DepthMapImageViews;
-        [[maybe_unused]] VkRenderPass m_DepthMapRenderPass;
-        [[maybe_unused]] std::vector<VkSampler> m_DepthMapSamplers;
-        [[maybe_unused]] VkDescriptorImageInfo m_DepthMapDescriptor;
+        std::vector<VkImage> m_DepthMapImages;
+        std::vector<VkImageView> m_DepthMapImageViews;
+        std::vector<VkSampler> m_DepthMapSamplers;
 
         std::unordered_map<std::string, VulkanPipeline> m_Pipelines;
 
@@ -194,8 +186,8 @@ namespace Poulpe
         std::vector<CommandToSubmit*> m_CmdsToSubmit{};
 
         std::vector<std::unique_ptr<CommandToSubmit>> m_CmdSkyboxStatus{};
-        std::vector< std::unique_ptr<CommandToSubmit>> m_CmdEntitiesStatus{};
-        std::vector< std::unique_ptr<CommandToSubmit>> m_CmdHUDStatus{};
+        std::vector<std::unique_ptr<CommandToSubmit>> m_CmdEntitiesStatus{};
+        std::vector<std::unique_ptr<CommandToSubmit>> m_CmdHUDStatus{};
 
         std::atomic_bool m_Nodraw{ true };
     };

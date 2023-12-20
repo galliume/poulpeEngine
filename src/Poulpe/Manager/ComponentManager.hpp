@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Poulpe/Component/MeshComponent.hpp"
 #include "Poulpe/Component/RenderComponent.hpp"
 
 #include <cstdint>
@@ -27,7 +28,7 @@ namespace Poulpe
         }
 
         template <typename T>
-        T* GetComponent(IDType entityID) {
+        T* getComponent(IDType entityID) {
 
             for (auto component : m_ComponentTypeMap[&typeid(T)]) {
                 if (component->getOwner() == entityID) {
