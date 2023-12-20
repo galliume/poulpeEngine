@@ -9,9 +9,6 @@ namespace Poulpe
     {
         int width, height;
         glfwGetWindowSize(m_Window->get(), &width, &height);
-        m_LastX = 800;
-        m_LastY = 600;
-        InputManager::m_FirtMouseMove = true;
     }
     
     void InputManager::init(nlohmann::json inputConfig)
@@ -58,13 +55,21 @@ namespace Poulpe
 
         glfwSetCursorPosCallback(m_Window->get(), []([[maybe_unused]] GLFWwindow* window, double xPos, double yPos) {
             InputManager* inputManager = Poulpe::Locator::getInputManager();
-            inputManager->mouse(xPos, yPos);
+            inputManager->updateMousePos(xPos, yPos);
         });
 
         glfwSetMouseButtonCallback(m_Window->get(), []([[maybe_unused]] GLFWwindow* window, int button, int action, int mods) {
             InputManager* inputManager = Poulpe::Locator::getInputManager();
             inputManager->mouseButton(button, action, mods);
         });
+    }
+
+    void InputManager::saveLastMousePos(double xPos, double yPos)
+    {
+        m_LastX = xPos;
+        m_LastY = yPos;
+
+        InputManager::m_FirtMouseMove = true;
     }
 
     void InputManager::key(int key, [[maybe_unused]] int scancode, int action, [[maybe_unused]] int mods)
@@ -105,10 +110,10 @@ namespace Poulpe
         }
     }
 
-    void InputManager::mouse(double x, double y)
+    void InputManager::updateMousePos(double x, double y)
     {
-        float xPos = static_cast<float>(x);
-        float yPos = static_cast<float>(y);
+        double xPos = x;
+        double yPos = y;
 
         if (!InputManager::m_CanMoveCamera) return;
 
@@ -120,14 +125,16 @@ namespace Poulpe
 
         float xoffset = xPos - m_LastX;
         float yoffset = m_LastY - yPos;
+
         m_LastX = xPos;
         m_LastY = yPos;
     
         const float sensitivity = 0.5f;
+
         xoffset *= sensitivity;
         yoffset *= sensitivity;
     
-        m_Camera->updateYP(xoffset, yoffset);
+        m_Camera->updatePos(xoffset, yoffset);
     }
 
     void InputManager::mouseButton(int button, [[maybe_unused]] int action, [[maybe_unused]] int mods)

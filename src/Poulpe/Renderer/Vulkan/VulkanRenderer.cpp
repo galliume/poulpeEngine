@@ -1141,7 +1141,7 @@ namespace Poulpe {
 
         VkCommandBufferBeginInfo beginInfo{};
         beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-        beginInfo.flags = flags;
+        beginInfo.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT | flags;
         beginInfo.pInheritanceInfo = (flags == VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT) ? & inheritanceInfo : nullptr;
 
         if (VK_SUCCESS != vkBeginCommandBuffer(commandBuffer, & beginInfo)) {
@@ -1547,113 +1547,23 @@ namespace Poulpe {
         return result;
     }
 
-    //VkResult VulkanRenderer::queueSubmit(uint32_t imageIndex, std::vector<VkCommandBuffer> commandBuffers, int queueIndex)
-    //{
-    //    /*std::vector<VkSemaphore>& imageAvailableSemaphores = semaphores.first;
-    //    std::vector<VkSemaphore>& renderFinishedSemaphores = semaphores.second;*/
-    //    //m_ImagesInFlight[imageIndex] = m_ImagesInFlight[m_CurrentFrame];
-
-    //    std::vector<VkSubmitInfo> submits{};
-
-    //    VkSubmitInfo submitInfo{};
-    //    submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-
-    //    //VkSemaphore waitSemaphores[] = { imageAvailableSemaphores[m_CurrentFrame] };
-
-    //    VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
-    //    submitInfo.waitSemaphoreCount = 0;
-    //    submitInfo.pWaitSemaphores = VK_NULL_HANDLE;// waitSemaphores;
-    //    submitInfo.pWaitDstStageMask = waitStages;
-    //    submitInfo.commandBufferCount = commandBuffers.size();
-    //    submitInfo.pCommandBuffers = commandBuffers.data();
-
-    //    //VkSemaphore signalSemaphores[] = { renderFinishedSemaphores[m_CurrentFrame] };
-
-    //    submitInfo.signalSemaphoreCount = 0;
-    //    //submitInfo.pSignalSemaphores = signalSemaphores;
-
-    //    submits.emplace_back(submitInfo);
-    //    
-    //    VkResult result = VK_SUCCESS;
-    //    {
-    //        std::lock_guard<std::mutex> guard(m_MutexQueueSubmit);
-    //        vkResetFences(m_Device, 1, & m_InFlightFences[m_CurrentFrame]);
-    //        result = vkQueueSubmit(m_GraphicsQueues[queueIndex], submits.size(), submits.data(),
-    //            m_InFlightFences[m_CurrentFrame]);
-    //        vkWaitForFences(m_Device, 1, & m_InFlightFences[m_CurrentFrame], VK_TRUE, UINT32_MAX);
-
-    //         for (auto & cmd : commandBuffers) {
-    //             vkResetCommandBuffer(cmd, VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
-    //         }
-    //    }
-    //    return result;
-    //}
-
-    //VkResult VulkanRenderer::queuePresent(uint32_t imageIndex, VkSwapchainKHR swapChain,
-    //    std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>> semaphores, int queueIndex)
-    //{
-    //    std::vector<VkSemaphore> & renderFinishedSemaphores = semaphores.second;
-
-    //    VkPresentInfoKHR presentInfo{};
-    //    presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
-
-    //    VkSemaphore signalSemaphores[] = { renderFinishedSemaphores[m_CurrentFrame] };
-
-    //    presentInfo.waitSemaphoreCount = 1;
-    //    presentInfo.pWaitSemaphores = signalSemaphores;
-
-    //    VkSwapchainKHR swapChains[] = { swapChain };
-    //    presentInfo.swapchainCount = 1;
-    //    presentInfo.pSwapchains = swapChains;
-    //    presentInfo.pImageIndices = & imageIndex;
-    //    presentInfo.pResults = nullptr;
-
-    //    VkResult result = vkQueuePresentKHR(m_PresentQueues[queueIndex], & presentInfo);
-
-    //    return result;
-    //}
-
-    //uint32_t VulkanRenderer::getNextFrameIndex()
-    //{
-    //    m_CurrentFrame = (m_CurrentFrame + 1) % static_cast<uint32_t>(m_MAX_FRAMES_IN_FLIGHT);
-    //    return m_CurrentFrame;
-    //}
-
-    //uint32_t VulkanRenderer::acquireNextImageKHR(VkSwapchainKHR swapChain,
-    //    std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>> semaphores)
-    //{
-    //    {
-    //        std::vector<VkSemaphore> & imageAvailableSemaphores = semaphores.first;
-    //        
-    //        //vkResetFences(m_Device, 1, & m_FenceAcquireImage);
-
-    //        uint32_t imageIndex = 0;
-    //        VkResult result = vkAcquireNextImageKHR(m_Device, swapChain, UINT32_MAX,
-    //            imageAvailableSemaphores[m_CurrentFrame], nullptr, & imageIndex);
-
-    //        //vkWaitForFences(m_Device, 1, &m_FenceAcquireImage, VK_TRUE, UINT32_MAX);
-
-    //        if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
-    //            PLP_ERROR("failed to acquire swap chain image!");
-    //        }
-    //        return imageIndex;
-    //    }
-    //}
-
     void VulkanRenderer::resetCommandPool(VkCommandPool commandPool)
     {
         vkResetCommandPool(m_Device, commandPool, 0);
     }
 
     void VulkanRenderer::draw(VkCommandBuffer commandBuffer, VkDescriptorSet descriptorSet,
-        VkPipelineLayout pipelineLayout, Mesh::Data * data, uint32_t uboCount, bool drawIndexed, uint32_t index)
+        VulkanPipeline & pipeline, Mesh::Data * data, uint32_t uboCount, bool drawIndexed, uint32_t index)
     {
+        vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline.pipelineLayout,
+            0, 1, & descriptorSet, 0, nullptr);
+
+        vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline.pipeline);
+
         VkBuffer vertexBuffers[] = { data->m_VertexBuffer.buffer };
         VkDeviceSize offsets[] = { 0 };
 
         vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
-        vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout,
-            0, 1, & descriptorSet, 0, nullptr);
 
         if (drawIndexed) {
             vkCmdBindIndexBuffer(commandBuffer, data->m_IndicesBuffer.buffer, 0, VK_INDEX_TYPE_UINT32);
@@ -2722,7 +2632,13 @@ namespace Poulpe {
 
         sourceStage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
         destinationStage = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
-      } else if (oldLayout == VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL && newLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL) {
+      } else if (oldLayout == VK_IMAGE_LAYOUT_UNDEFINED && newLayout == VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL) {
+        barrier.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+        barrier.dstAccessMask = 0;
+
+        sourceStage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        destinationStage = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
+      } else if (oldLayout == VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL && newLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL) {
         barrier.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
         barrier.dstAccessMask = 0;
 
@@ -2741,5 +2657,4 @@ namespace Poulpe {
         1, &barrier
       );
     }
-
 }

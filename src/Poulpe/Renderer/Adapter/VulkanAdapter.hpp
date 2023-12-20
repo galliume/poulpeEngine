@@ -20,6 +20,13 @@ namespace Poulpe
 
     public:
 
+      struct CommandToSubmit {
+        VkCommandBuffer buffer;
+        VkPipelineStageFlags stageFlags;
+        VkSemaphore semaphore;
+        std::vector<bool>* status;
+      };
+
         explicit VulkanAdapter(
           Window* window,
           EntityManager* entityManager,
@@ -89,11 +96,11 @@ namespace Poulpe
 
         Camera* getCamera() { return m_Camera; }
 
-        void drawShadowMap(std::vector<std::unique_ptr<Entity>>* entities, VkCommandBuffer & commandBuffer, Light light);
+        void drawShadowMap(std::vector<std::unique_ptr<Entity>>* entities, Light light);
 
         void addPipeline(std::string const & shaderName, VulkanPipeline pipeline) override;
         VulkanPipeline* getPipeline(std::string const& shaderName) { return & m_Pipelines[shaderName]; };
-        void prepareShadowMap() override;
+
         std::vector<VkImageView>* getDepthMapImageViews() { return & m_DepthMapImageViews; };
         std::vector<VkSampler>* getDepthMapSamplers() { return & m_DepthMapSamplers; };
 
@@ -122,6 +129,9 @@ namespace Poulpe
 
         VkCommandPool m_CommandPoolHud{ nullptr };
         std::vector<VkCommandBuffer> m_CommandBuffersHud{};
+
+        VkCommandPool m_CommandPoolShadowMap{ nullptr };
+        std::vector<VkCommandBuffer> m_CommandBuffersShadowMap{};
 
         uint32_t m_CurrentFrame{ 0 };
         uint32_t m_ImageIndex;
@@ -179,5 +189,13 @@ namespace Poulpe
 
         std::vector<VkFence> m_ImagesInFlight{};
         std::vector<VkFence> m_InFlightFences{};
+
+        std::mutex m_MutexQueueSubmit;
+        std::vector<CommandToSubmit> m_CmdsToSubmit{};
+
+        std::vector<bool> m_CmdSkyboxStatus{};
+        std::vector<bool> m_CmdEntitiesStatus{};
+        std::vector<bool> m_CmdHUDStatus{};
+        std::vector<bool> m_CmdShadowMapStatus{};
     };
 }
