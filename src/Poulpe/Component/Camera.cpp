@@ -7,12 +7,15 @@ namespace Poulpe
         m_Pos = glm::vec3(-0.2f, 0.2f, -0.3f);
         m_Target = glm::vec3(0.0f, 0.0f, 0.0f);
         m_Direction = glm::normalize(m_Pos - m_Target);
-        m_Up = glm::vec3(0.0f, 1.0f, 0.0f);
-        m_CameraRight = glm::normalize(glm::cross(m_Up, m_Direction));
-        m_CameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
+
+        auto up = glm::vec3(0.0f, 1.0f, 0.0f);
+        m_CameraRight = glm::normalize(glm::cross(up, m_Direction));
+        m_CameraUp = glm::cross(m_Direction, m_CameraRight);
         m_CameraFront = glm::vec3(-0.9f, 0.2f, -0.2f);
 
-        m_View = glm::lookAt(m_Pos, m_Pos + m_CameraFront, m_CameraUp);
+        m_View = glm::lookAt(glm::vec3(0.0f, 0.0f, 3.0f),
+          glm::vec3(0.0f, 0.0f, 0.0f),
+          glm::vec3(0.0f, 1.0f, 0.0f));
     }
 
     /**
@@ -84,7 +87,7 @@ namespace Poulpe
 
     void Camera::forward()
     {
-        m_Pos +=  m_CameraFront * (m_Speed * m_DeltaTime);
+        m_Pos +=  m_CameraFront *(m_Speed * m_DeltaTime);
     }
 
     void Camera::backward()
@@ -117,12 +120,12 @@ namespace Poulpe
         return m_View;
     }
 
-    void Camera::updateDeltaTime(float timeStep)
+    void Camera::updateDeltaTime(float deltaTime)
     {
-        m_DeltaTime = timeStep;
+        m_DeltaTime = deltaTime;
     }
 
-    void Camera::updateYP(float xoffset, float yoffset)
+    void Camera::updatePos(double xoffset, double yoffset)
     {
         m_Yaw += xoffset;
         m_Pitch += yoffset;
@@ -139,10 +142,5 @@ namespace Poulpe
         direction.y = sin(glm::radians(m_Pitch));
         direction.z = sin(glm::radians(m_Yaw)) * cos(glm::radians(m_Pitch));
         m_CameraFront = glm::normalize(direction);
-    }
-
-    void Camera::recenter()
-    {
-        m_CameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
     }
 }

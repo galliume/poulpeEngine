@@ -23,7 +23,6 @@ namespace Poulpe
         virtual void immediateSubmit(std::function<void(VkCommandBuffer cmd)>&& function, int queueIndex = 0) = 0;
         virtual VulkanRenderer* rdr() = 0;
         virtual void addPipeline(std::string const& shaderName, VulkanPipeline pipeline) = 0;
-        virtual void prepareShadowMap() = 0;
         //end @todo
     };
 }

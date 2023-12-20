@@ -199,26 +199,16 @@ namespace Poulpe {
 
         void bindPipeline(VkCommandBuffer commandBuffer, VkPipeline pipeline);
 
-        void draw(VkCommandBuffer commandBuffer, VkDescriptorSet descriptorSet, VkPipelineLayout pipelineLayout, Mesh::Data * data,
+        void draw(VkCommandBuffer commandBuffer, VkDescriptorSet descriptorSet, VulkanPipeline& pipeline, Mesh::Data * data,
             uint32_t uboCount, bool drawIndexed = true, uint32_t index = 0);
 
-        //uint32_t acquireNextImageKHR(VkSwapchainKHR swapChain, std::pair<std::vector<VkSemaphore>,
-        //    std::vector<VkSemaphore>> semaphores);
-
         VkResult queueSubmit(VkCommandBuffer commandBuffer, int queueIndex = 0);
-
-        //VkResult queueSubmit(uint32_t imageIndex, std::vector<VkCommandBuffer> commandBuffers, int queueIndex = 0);
-
-        //VkResult queuePresent(uint32_t imageIndex, VkSwapchainKHR swapChain, std::pair<std::vector<VkSemaphore>,
-        //    std::vector<VkSemaphore>> semaphores, int queueIndex = 0);
 
         void addPipelineBarriers(VkCommandBuffer commandBuffer, std::vector<VkImageMemoryBarrier> renderBarriers,
             VkPipelineStageFlags srcStageMask, VkPipelineStageFlags dstStageMask, VkDependencyFlags dependencyFlags);
 
         void generateMipmaps(VkCommandBuffer commandBuffer, VkFormat imageFormat, VkImage image, uint32_t texWidth,
             uint32_t texHeight, uint32_t mipLevels, uint32_t layerCount = 1);
-
-        //uint32_t getNextFrameIndex();
 
         /**
         * Vulkan clean and destroy
