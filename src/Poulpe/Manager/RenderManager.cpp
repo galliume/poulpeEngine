@@ -1,8 +1,8 @@
 #include "RenderManager.hpp"
 
-#include "Poulpe/Component/RenderComponent.hpp"
 #include "Poulpe/Component/AnimationComponent.hpp"
-
+#include "Poulpe/Component/MeshComponent.hpp"
+#include "Poulpe/Component/RenderComponent.hpp"
 
 #include "Poulpe/Renderer/Vulkan/EntityFactory.hpp"
 
@@ -19,9 +19,7 @@ namespace Poulpe
         m_Renderer = std::make_unique<Poulpe::VulkanAdapter>(
           m_Window.get(),
           m_EntityManager.get(),
-          m_ComponentManager.get(),
-          m_LightManager.get(),
-          m_TextureManager.get());
+          m_LightManager.get());
 
         m_ConfigManager = std::make_unique<Poulpe::ConfigManager>();
         m_AudioManager = std::make_unique<Poulpe::AudioManager>();
@@ -137,9 +135,9 @@ namespace Poulpe
         while (!m_ShaderManager->isLoadingDone()) {
             //PLP_WARN("loading {}", m_ShaderManager->isLoadingDone());
         }
-        while (!m_EntityManager->IsLoadingDone()) {
-            //PLP_WARN("loading {}", m_EntityManager->IsLoadingDone());
-        }
+        //while (!m_EntityManager->IsLoadingDone()) {
+        //    //PLP_WARN("loading {}", m_EntityManager->IsLoadingDone());
+        //}
         setIsLoaded();
     }
 
@@ -159,10 +157,13 @@ namespace Poulpe
         //m_LightManager->animateAmbientLight(deltaTime);
 
         for (auto& entity : *m_EntityManager->getEntities()) {
-            auto* mesh = entity->getMesh();
-            if (!mesh->hasAnimation()) continue;
-            auto compo = m_ComponentManager->GetComponent<AnimationComponent>(entity->getID());
-            if (compo) compo->visit(deltaTime, mesh);
+
+            auto meshComponent = m_ComponentManager->getComponent<MeshComponent>(entity->getID());
+            auto animationComponent = m_ComponentManager->getComponent<AnimationComponent>(entity->getID());
+
+            if (animationComponent && meshComponent) {
+                animationComponent->visit(deltaTime, meshComponent->getMesh());
+            }
         }
 
         m_Renderer->renderScene();
@@ -186,14 +187,6 @@ namespace Poulpe
 
     void RenderManager::prepareEntity()
     {
-      auto* basicRdrImpl = new Basic(m_Renderer.get(),
-          m_TextureManager.get(),
-          m_LightManager.get());
-
-      for (auto& entity : *m_EntityManager->getEntities()) {
-        m_ComponentManager->addComponent<RenderComponent>(entity->getID(), basicRdrImpl);
-      }
-
       //@todo temp until lua scripting
       class AnimImpl : public IVisitor
       {
@@ -251,61 +244,62 @@ namespace Poulpe
           glm::vec3 endScale = glm::vec3(0.12, 0.12, 0.12);
       };
 
-      auto* animImpl = new AnimImpl(m_Renderer.get());
-
       for (auto& entity : *m_EntityManager->getEntities()) {
-        if (entity->getMesh()->isDirty()) {
-          auto comp = m_ComponentManager->GetComponent<RenderComponent>(entity->getID());
-          entity->accept(0, comp);
-        }
+          Poulpe::Locator::getThreadPool()->submit("load_entity", [this, &entity]() {
 
-        //@todo temp until lua scripting
-        if (entity->getMesh()->hasAnimation()) {
-            m_ComponentManager->addComponent<AnimationComponent>(entity->getID(), animImpl);
-        }
+          auto* animImpl = new AnimImpl(m_Renderer.get());
+          auto* basicRdrImpl = new Basic(m_Renderer.get(),
+              m_TextureManager.get(),
+              m_LightManager.get());
+
+            m_ComponentManager->addComponent<RenderComponent>(entity->getID(), basicRdrImpl);
+            auto meshComponent = m_ComponentManager->getComponent<MeshComponent>(entity->getID());
+
+            if (meshComponent->getMesh()->isDirty()) {
+                auto renderComponent = m_ComponentManager->getComponent<RenderComponent>(entity->getID());
+                renderComponent->visit(0, meshComponent->getMesh());
+            }
+
+            //@todo temp until lua scripting
+            if (entity->hasAnimation()) {
+                m_ComponentManager->addComponent<AnimationComponent>(entity->getID(), animImpl);
+            }
+        });
       }
     }
 
     void RenderManager::prepareHUD()
     {
-        auto* gridMesh = new Mesh();
         auto* gridEntity = new Entity();
+        auto* gridMesh = new Mesh();
         auto* gridRdrImpl = new Grid(m_Renderer.get(), m_TextureManager.get());
 
-        gridEntity->setMesh(gridMesh);
-        m_EntityManager->addHUD(gridEntity);
-        m_ComponentManager->addComponent<RenderComponent>(gridEntity->getID(), gridRdrImpl);
+        auto renderGridComponent = m_ComponentManager->addComponent<RenderComponent>(gridEntity->getID(), gridRdrImpl);
+        renderGridComponent.visit(0, gridMesh);
+        m_ComponentManager->addComponent<MeshComponent>(gridEntity->getID(), gridMesh);
 
-        auto* chMesh = new Mesh();
         auto* chEntity = new Entity();
+        auto* chMesh = new Mesh();
         auto* chRdrImpl = new Crosshair(m_Renderer.get(), m_TextureManager.get());
 
-        chEntity->setMesh(chMesh);
-        m_EntityManager->addHUD(chEntity);
-        m_ComponentManager->addComponent<RenderComponent>(chEntity->getID(), chRdrImpl);
+        auto renderCrosshairComponent = m_ComponentManager->addComponent<RenderComponent>(chEntity->getID(), chRdrImpl);
+        renderCrosshairComponent.visit(0, chMesh);
+        m_ComponentManager->addComponent<MeshComponent>(chEntity->getID(), chMesh);
 
-        for (auto& entity : *m_EntityManager->getHUD()) {
-          if (entity->getMesh()->isDirty()) {
-            auto comp = m_ComponentManager->GetComponent<RenderComponent>(entity->getID());
-            entity->accept(0, comp);
-          }
-        }
+        m_EntityManager->addHUD(gridEntity);
+        m_EntityManager->addHUD(chEntity);
     }
 
     void RenderManager::prepareSkybox()
     {
-        auto* skyboxMesh = new Mesh();
         auto* skyboxEntity = new Entity();
+        auto* skyboxMesh = new Mesh();
         auto* skyRdrImpl = new Skybox(m_Renderer.get(), m_TextureManager.get());
 
-        skyboxEntity->setMesh(skyboxMesh);
-        m_EntityManager->setSkybox(skyboxEntity);
-        m_ComponentManager->addComponent<RenderComponent>(skyboxEntity->getID(), skyRdrImpl);
+        auto renderComponent = m_ComponentManager->addComponent<RenderComponent>(skyboxEntity->getID(), skyRdrImpl);
+        renderComponent.visit(0, skyboxMesh);
+        m_ComponentManager->addComponent<MeshComponent>(skyboxEntity->getID(), skyboxMesh);
 
-        auto skybox = m_EntityManager->getSkybox();
-        if (skybox && skybox->getMesh()->isDirty()) {
-          auto comp = m_ComponentManager->GetComponent<RenderComponent>(skybox->getID());
-          skybox->accept(0, comp);
-        }
+        m_EntityManager->setSkybox(skyboxEntity);
     }
 }

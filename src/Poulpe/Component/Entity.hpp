@@ -14,11 +14,8 @@ namespace Poulpe
     public:
         Entity();
         ~Entity() = default;
-
-        void accept(float const deltaTime, IVisitor* visitor);
         
         IDType getID() const { return m_ID; }
-        Mesh* getMesh() { return m_Mesh.get(); }
         [[nodiscard]] inline const std::string getName() const { return m_Name; }
 
         void setName(std::string const & name) { m_Name = name; }
@@ -28,15 +25,14 @@ namespace Poulpe
         bool isHit(glm::vec3 point);
         bool isVisible() { return m_IsVisible; }
 
-        //@todo move to a componentManager
-        void setMesh(Mesh* mesh) { m_Mesh = std::unique_ptr<Mesh>(mesh); }
+        bool hasAnimation() { return m_HasAnimation; }
+        void setHasAnimation(bool has = true) { m_HasAnimation = has; }
+
     private:
         IDType m_ID;
         std::string m_Name;
 
-        bool m_IsVisible = true;
-
-        //@todo move to a componentManager
-        std::unique_ptr<Mesh> m_Mesh = nullptr;
+        bool m_IsVisible{ true };
+        bool m_HasAnimation{ true };
     };
 }
