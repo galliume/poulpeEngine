@@ -834,7 +834,7 @@ namespace Poulpe {
             //@todo move to a FileManager
             //@todo option to enable / disable pipeline cache
             std::string cacheFileName = "./cache/pipeline_cache_data_" + std::to_string(m_DeviceProps.vendorID) +
-                "_" + std::to_string(m_DeviceProps.deviceID) + "_" + name.data();
+                "_" + std::to_string(m_DeviceProps.deviceID) + "_" + name.data() + ".bin";
 
             bool badCache = false;
             size_t cacheFileSize = 0;
