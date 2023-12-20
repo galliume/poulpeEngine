@@ -79,7 +79,6 @@ include_directories(${PROJECT_SOURCE_DIR}/src
                     ${PROJECT_SOURCE_DIR}/vendor/glm
                     ${PROJECT_SOURCE_DIR}/vendor/stb
                     ${PROJECT_SOURCE_DIR}/vendor/nlohmann/include
-                    ${PROJECT_SOURCE_DIR}/vendor/imgui
                     ${VULKAN_PATH})
 
 add_executable(${PROJECT_NAME} src/Poulpe.cpp)
@@ -90,8 +89,6 @@ add_subdirectory(${PROJECT_SOURCE_DIR}/src/Poulpe)
 add_subdirectory(${PROJECT_SOURCE_DIR}/src/Poulpe/Component)
 add_subdirectory(${PROJECT_SOURCE_DIR}/src/Poulpe/Core)
 add_subdirectory(${PROJECT_SOURCE_DIR}/src/Poulpe/GUI)
-add_subdirectory(${PROJECT_SOURCE_DIR}/src/Poulpe/GUI/ImGui)
-add_subdirectory(${PROJECT_SOURCE_DIR}/src/Poulpe/GUI/Layer)
 add_subdirectory(${PROJECT_SOURCE_DIR}/src/Poulpe/Manager)
 add_subdirectory(${PROJECT_SOURCE_DIR}/src/Poulpe/Renderer)
 add_subdirectory(${PROJECT_SOURCE_DIR}/src/Poulpe/Renderer/Adapter)
@@ -102,23 +99,6 @@ add_subdirectory(${PROJECT_SOURCE_DIR}/src/Poulpe/Utils)
 add_subdirectory(${PROJECT_SOURCE_DIR}/vendor/glfw)
 add_subdirectory(${PROJECT_SOURCE_DIR}/vendor/glm)
 add_subdirectory(${PROJECT_SOURCE_DIR}/vendor/volk)
-
-add_library(dearimgui STATIC ${PROJECT_SOURCE_DIR}/vendor/imgui/imconfig.h
-                  ${PROJECT_SOURCE_DIR}/vendor/imgui/imgui.h
-                  ${PROJECT_SOURCE_DIR}/vendor/imgui/imgui.cpp
-                  ${PROJECT_SOURCE_DIR}/vendor/imgui/imgui_draw.cpp
-                  ${PROJECT_SOURCE_DIR}/vendor/imgui/imgui_internal.h
-                  ${PROJECT_SOURCE_DIR}/vendor/imgui/imgui_tables.cpp
-                  ${PROJECT_SOURCE_DIR}/vendor/imgui/imgui_widgets.cpp
-                  ${PROJECT_SOURCE_DIR}/vendor/imgui/imstb_rectpack.h
-                  ${PROJECT_SOURCE_DIR}/vendor/imgui/imstb_textedit.h
-                  ${PROJECT_SOURCE_DIR}/vendor/imgui/imstb_truetype.h
-                  ${PROJECT_SOURCE_DIR}/vendor/imgui/imstb_truetype.h
-                  ${PROJECT_SOURCE_DIR}/vendor/imgui/backends/imgui_impl_glfw.h
-                  ${PROJECT_SOURCE_DIR}/vendor/imgui/backends/imgui_impl_glfw.cpp
-                  ${PROJECT_SOURCE_DIR}/vendor/imgui/backends/imgui_impl_vulkan.h
-                  ${PROJECT_SOURCE_DIR}/vendor/imgui/backends/imgui_impl_vulkan.cpp
-                  ${PROJECT_SOURCE_DIR}/vendor/imgui/imgui_demo.cpp)
 
 add_library(miniaudio STATIC 
     ${PROJECT_SOURCE_DIR}/vendor/miniaudio/extras/miniaudio_split/miniaudio.h
@@ -131,7 +111,6 @@ add_library(tiny_obj_loader STATIC
 list(APPEND EXTRA_LIBS glfw)
 list(APPEND EXTRA_LIBS glm::glm)
 list(APPEND EXTRA_LIBS volk)
-list(APPEND EXTRA_LIBS dearimgui)
 list(APPEND EXTRA_LIBS miniaudio)
 list(APPEND EXTRA_LIBS tiny_obj_loader)
 
@@ -143,7 +122,6 @@ target_include_directories(${PROJECT_NAME} PRIVATE
                           "${PROJECT_SOURCE_DIR}/vendor/glfw"
                           "${PROJECT_SOURCE_DIR}/vendor/glm"
                           "${PROJECT_SOURCE_DIR}/vendor/volk"
-                          "${PROJECT_SOURCE_DIR}/vendor/imgui"
                           "${PROJECT_SOURCE_DIR}/vendor/miniaudio/extras/miniaudio_split"
                           "${PROJECT_SOURCE_DIR}/vendor/tiny_obj_loader")
 
@@ -151,7 +129,6 @@ target_include_directories(${PROJECT_NAME} SYSTEM INTERFACE
                           "${PROJECT_SOURCE_DIR}/vendor/glfw"
                           "${PROJECT_SOURCE_DIR}/vendor/glm"
                           "${PROJECT_SOURCE_DIR}/vendor/volk"
-                          "${PROJECT_SOURCE_DIR}/vendor/imgui"
                           "${PROJECT_SOURCE_DIR}/vendor/miniaudio/extras/miniaudio_split"
                           "${PROJECT_SOURCE_DIR}/vendor/tiny_obj_loader")
 
@@ -167,11 +144,6 @@ endif()
 
 target_compile_options(${PROJECT_NAME} PRIVATE "$<$<CONFIG:DEBUG>:${DEBUG_OPTIONS}>")
 target_compile_options(${PROJECT_NAME} PRIVATE "$<$<CONFIG:RELEASE>:${RELEASE_OPTIONS}>")
-
-target_compile_options(dearimgui PRIVATE
-  $<$<CXX_COMPILER_ID:MSVC>:/W0 /O2>
-  $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-w -O2>
-)
 
 target_compile_options(miniaudio PRIVATE
   $<$<CXX_COMPILER_ID:MSVC>:/W0 /O2>
@@ -208,26 +180,26 @@ add_custom_command(
 	COMMAND ${CMAKE_COMMAND} -E copy_directory
 			${CMAKE_CURRENT_SOURCE_DIR}/assets
 			$<TARGET_FILE_DIR:${PROJECT_NAME}>/assets
-	COMMENT "Copying assets")
+	COMMENT "\r\n Copying assets")
 
 add_custom_command(
 	TARGET ${PROJECT_NAME} PRE_BUILD
 	COMMAND ${CMAKE_COMMAND} -E copy_directory
 			${CMAKE_CURRENT_SOURCE_DIR}/config
 			$<TARGET_FILE_DIR:${PROJECT_NAME}>/config
-	COMMENT "Copying config")
+	COMMENT "\r\n Copying config")
 
 add_custom_command(
 	TARGET ${PROJECT_NAME} PRE_BUILD
 	COMMAND ${CMAKE_COMMAND} -E make_directory 
 			$<TARGET_FILE_DIR:${PROJECT_NAME}>/cache
-	COMMENT "Creating cache dir")
+	COMMENT "\r\n Creating cache dir")
 
 add_custom_command(
 	TARGET ${PROJECT_NAME} PRE_BUILD
 	COMMAND ${CMAKE_COMMAND} -E make_directory 
 			$<TARGET_FILE_DIR:${PROJECT_NAME}>/lib
-	COMMENT "Creating lib dir")
+	COMMENT "\r\n Creating lib dir")
 
 add_custom_target(
         CompilShaders ${CMAKE_CURRENT_SOURCE_DIR}/bin/shadersCompilation.sh
@@ -239,9 +211,6 @@ add_custom_target(
 #    WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
 #)
 
-set_target_properties(dearimgui PROPERTIES
-    ARCHIVE_OUTPUT_DIRECTORY "$<TARGET_FILE_DIR:${PROJECT_NAME}>/lib"
-)
 set_target_properties(miniaudio PROPERTIES
     ARCHIVE_OUTPUT_DIRECTORY "$<TARGET_FILE_DIR:${PROJECT_NAME}>/lib"
 )

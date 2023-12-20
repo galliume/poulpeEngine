@@ -16,7 +16,6 @@ namespace Poulpe
 
         template<std::derived_from<IVisitor> T>
         void init(T* componentImpl) {
-            //m_Pimpl = std::unique_ptr<T>(componentImpl);
             m_Pimpl = std::move(componentImpl);
         }
 

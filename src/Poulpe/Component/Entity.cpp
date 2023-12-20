@@ -10,11 +10,6 @@ namespace Poulpe
         m_ID = GUIDGenerator::getGUID();
     }
 
-    void Entity::accept(float const deltaTime, IVisitor* visitor)
-    {
-        visitor->visit(deltaTime, getMesh());
-    }
-
     bool Entity::isHit(glm::vec3 point)
     {
         //PLP_DEBUG(
