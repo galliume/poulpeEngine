@@ -1,7 +1,8 @@
 #pragma once
-#include <volk.h>
+
 #include <future>
 #include <nlohmann/json.hpp>
+#include <volk.h>
 
 namespace Poulpe
 {
@@ -17,7 +18,7 @@ namespace Poulpe
         ~IShaderManager() = default;
 
         virtual void addShader(std::string const & name, std::string const & vertPath, std::string const & fragPath) = 0;
-        virtual std::function<void()> load(nlohmann::json config) = 0;
         virtual inline VulkanShaders* getShaders() const = 0;
+        virtual std::function<void()> load(nlohmann::json config) = 0;
     };
 }

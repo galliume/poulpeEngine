@@ -13,10 +13,10 @@ namespace Poulpe
         LightManager();
         ~LightManager() = default;
 
-        Light getAmbientLight() { return m_AmbientLight; }
-        std::vector<Light> getPointLights() { return m_PointLights; }
-        std::vector<Light> getSpotLights() { return m_SpotLights; }
         void animateAmbientLight(float deltaTime);
+        inline Light getAmbientLight() { return m_AmbientLight; }
+        inline std::vector<Light> getPointLights() { return m_PointLights; }
+        inline std::vector<Light> getSpotLights() { return m_SpotLights; }
 
     private:
         Light m_AmbientLight;
