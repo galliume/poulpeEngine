@@ -6,7 +6,7 @@ namespace Poulpe
 {
     struct constants;
 
-    void Basic::visit([[maybe_unused]] float const deltaTime, Mesh* mesh)
+    void Basic::visit([[maybe_unused]] float const deltaTime, IVisitable* const mesh)
     {
         if (!mesh && !mesh->isDirty()) return;
 
@@ -23,7 +23,7 @@ namespace Poulpe
         for (size_t i = 0; i < uniformBuffersCount; ++i) {
 
           mesh->getData()->m_UbosOffset.emplace_back(uboOffset);
-          Mesh::Buffer uniformBuffer = m_Adapter->rdr()->createUniformBuffers(nbUbo);
+          Buffer uniformBuffer = m_Adapter->rdr()->createUniformBuffers(nbUbo);
           mesh->getUniformBuffers()->emplace_back(uniformBuffer);
 
           uboOffset = (uboRemaining > uniformBufferChunkSize) ? uboOffset + uniformBufferChunkSize : uboOffset + uboRemaining;
@@ -68,7 +68,8 @@ namespace Poulpe
         objectBuffer.material = material;
 
         auto size = sizeof(objectBuffer);
-        mesh->addStorageBuffer(m_Adapter->rdr()->createStorageBuffers(size));
+        auto storageBuffer = m_Adapter->rdr()->createStorageBuffers(size);
+        mesh->addStorageBuffer(storageBuffer);
         m_Adapter->rdr()->updateStorageBuffer(mesh->getStorageBuffers()->at(0), objectBuffer);
         mesh->setHasBufferStorage();
 
@@ -89,10 +90,12 @@ namespace Poulpe
         mesh->setIsDirty(false);
     }
 
-    void Basic::setPushConstants(Mesh* mesh)
+    void Basic::setPushConstants(IVisitable* const mesh)
     {
-        mesh->applyPushConstants = [](VkCommandBuffer & commandBuffer, VkPipelineLayout pipelineLayout,
-            VulkanAdapter* adapter, Mesh* mesh) {
+        mesh->setApplyPushConstants([](
+            VkCommandBuffer & commandBuffer, 
+            VkPipelineLayout pipelineLayout,
+            VulkanAdapter* const adapter, IVisitable* const mesh) {
 
             constants pushConstants{};
             pushConstants.textureIDBB = glm::vec3(mesh->getData()->m_TextureIndex, 0.0, 0.0);
@@ -102,12 +105,12 @@ namespace Poulpe
 
             vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(constants),
                 & pushConstants);
-        };
+        });
 
         mesh->setHasPushConstants();
     }
 
-    void Basic::createDescriptorSet(Mesh* mesh)
+    void Basic::createDescriptorSet(IVisitable* const mesh)
     {
       std::vector<VkDescriptorImageInfo> imageInfos;
       std::vector<VkDescriptorImageInfo> imageInfoSpec;

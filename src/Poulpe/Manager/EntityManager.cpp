@@ -14,14 +14,16 @@ namespace Poulpe
     public:
         AnimImpl() = default;
 
-        void init(VulkanAdapter* adapter, [[maybe_unused]] TextureManager* textureManager, [[maybe_unused]] LightManager* lightManager) override
+        void init(VulkanAdapter* const adapter,
+            [[maybe_unused]] TextureManager* const textureManager,
+            [[maybe_unused]] LightManager* const lightManager) override
         {
             m_Adapter = adapter;
         }
-        void setPushConstants([[maybe_unused]]Mesh* mesh) override {};
-        void createDescriptorSet([[maybe_unused]]Mesh* mesh) override {};
+        void setPushConstants([[maybe_unused]] IVisitable* const mesh) override {};
+        void createDescriptorSet([[maybe_unused]] IVisitable* const) override {};
 
-        void visit(float const deltaTime, Mesh* mesh) override
+        void visit(float const deltaTime, IVisitable* const mesh) override
         {
             for (auto& ubo : mesh->getData()->m_Ubos) {
 
@@ -95,24 +97,25 @@ namespace Poulpe
             uint64_t count = m_LoadedEntities.count(mesh->getName().c_str());
 
             if (0 != count) {
-                Mesh::Data* data = mesh->getData();
+                Data* data = mesh->getData();
 
                 auto existingEntity = m_Entities[m_LoadedEntities[mesh->getName().c_str()][1]].get();
 
                 auto meshComponent = m_ComponentManager->getComponent<MeshComponent>(existingEntity->getID());
-                meshComponent->getMesh()->addUbos(data->m_Ubos);
+                Mesh* exisitingMesh = meshComponent->hasImpl<Mesh>();
+                exisitingMesh->addUbos(data->m_Ubos);
 
-                UniformBufferObject ubo{};
+                //UniformBufferObject ubo{};
 
-                glm::mat4 transform = glm::translate(
-                    glm::mat4(1),
-                    mesh->getBBox()->center) * glm::scale(glm::mat4(1),
-                        mesh->getBBox()->size);
+                //glm::mat4 transform = glm::translate(
+                //    glm::mat4(1),
+                //    mesh->getBBox()->center) * glm::scale(glm::mat4(1),
+                //        mesh->getBBox()->size);
 
-                ubo.model = mesh->getBBox()->position * transform;
+                //ubo.model = mesh->getBBox()->position * transform;
                 //existingEntity->getMesh()->getBBox()->mesh->addUbos({ ubo });
 
-                m_LoadedEntities[mesh->getName()][0] += 1;
+                m_LoadedEntities[exisitingMesh->getName()][0] += 1;
             }
             else {
                 auto entity = std::make_unique<Entity>();
@@ -375,7 +378,7 @@ namespace Poulpe
             mesh->setName(listData[i].name);
             mesh->setShaderName(shader);
 
-            std::vector<Mesh::BBox> bboxs{};
+            //std::vector<Mesh::BBox> bboxs{};
             
             unsigned int const tex1ID = listData[i].materialsID.at(0);
 
@@ -433,7 +436,7 @@ namespace Poulpe
                 }
             }
 
-            Mesh::Data data{};
+            Data data{};
             data.m_Name = name + '_' + nameTexture;
             data.m_Textures.emplace_back(nameTexture);
             data.m_Textures.emplace_back(name2Texture);
@@ -491,7 +494,7 @@ namespace Poulpe
             glm::vec3 center = glm::vec3((xMin + xMax) / 2, (yMin + yMax) / 2, (zMin + zMax) / 2);
             glm::vec3 size = glm::vec3((xMax - xMin) / 2, (yMax - yMin) / 2, (zMax - zMin) / 2);
 
-            Mesh::BBox* box = new Mesh::BBox();
+            /*BBox* box = new BBox();
             box->position = data.m_Ubos.at(0).model;
             box->center = center;
             box->size = size;
@@ -501,10 +504,10 @@ namespace Poulpe
             box->maxY = yMax;
             box->minY = yMin;
             box->maxZ = zMax;
-            box->minZ = zMin;
+            box->minZ = zMin;*/
 
             mesh->setData(data);
-            mesh->addBBox(box);
+            //mesh->addBBox(box);
 
             meshes.emplace_back(std::move(mesh));
         }

@@ -5,7 +5,7 @@ namespace Poulpe
 {
     struct constants;
 
-    void Skybox::visit([[maybe_unused]] float const deltaTime, Mesh* mesh)
+    void Skybox::visit([[maybe_unused]] float const deltaTime, IVisitable* const mesh)
     {
         if (!mesh && !mesh->isDirty()) return;
 
@@ -60,7 +60,7 @@ namespace Poulpe
 
         auto commandPool = m_Adapter->rdr()->createCommandPool();
 
-        Mesh::Data data;
+        Data data;
         data.m_Textures.emplace_back("skybox");
         data.m_Vertices = skyVertices;
         data.m_VertexBuffer = m_Adapter->rdr()->createVertexBuffer(commandPool, skyVertices);
@@ -69,7 +69,7 @@ namespace Poulpe
 
         vkDestroyCommandPool(m_Adapter->rdr()->getDevice(), commandPool, nullptr);
 
-        Mesh::Buffer uniformBuffer = m_Adapter->rdr()->createUniformBuffers(1);
+       Buffer uniformBuffer = m_Adapter->rdr()->createUniformBuffers(1);
         mesh->getUniformBuffers()->emplace_back(uniformBuffer);
 
         mesh->setName("skybox");
@@ -86,10 +86,12 @@ namespace Poulpe
         mesh->setIsDirty(false);
     }
 
-    void Skybox::setPushConstants(Mesh* mesh)
+    void Skybox::setPushConstants(IVisitable* const mesh)
     {
-        mesh->applyPushConstants = [](VkCommandBuffer & commandBuffer, VkPipelineLayout pipelineLayout,
-            VulkanAdapter* adapter, Mesh* mesh) {
+        mesh->setApplyPushConstants([](VkCommandBuffer& commandBuffer,
+            VkPipelineLayout pipelineLayout,
+            VulkanAdapter* const adapter,
+            IVisitable* const mesh) {
 
             constants pushConstants{};
             pushConstants.textureIDBB = glm::vec3(mesh->getData()->m_TextureIndex, 0.0f, 0.0f);
@@ -98,12 +100,12 @@ namespace Poulpe
 
             vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(constants),
                 & pushConstants);
-        };
+        });
 
         mesh->setHasPushConstants();
     }
 
-    void Skybox::createDescriptorSet(Mesh* mesh)
+    void Skybox::createDescriptorSet(IVisitable* const mesh)
     {
       Texture tex = m_TextureManager->getSkyboxTexture();
 

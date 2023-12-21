@@ -1,10 +1,12 @@
 #include "Crosshair.hpp"
 
+#include "Poulpe/Core/PlpTypedef.hpp"
+
 #include "Poulpe/Renderer/Adapter/VulkanAdapter.hpp"
 
 namespace Poulpe
 {
-    void Crosshair::visit([[maybe_unused]] float const deltaTime, Mesh* mesh)
+    void Crosshair::visit([[maybe_unused]] float const deltaTime, IVisitable* const mesh)
     {
         if (!mesh && !mesh->isDirty()) return;
 
@@ -22,7 +24,7 @@ namespace Poulpe
 
         UniformBufferObject ubo{};
 
-        Mesh::Data data;
+        Data data;
         data.m_Textures.emplace_back("crosshair");
         data.m_TextureIndex = 0;
         data.m_VertexBuffer = m_Adapter->rdr()->createVertexBuffer(commandPool, vertices);
@@ -49,22 +51,24 @@ namespace Poulpe
         mesh->setIsDirty(false);
     }
 
-    void Crosshair::setPushConstants(Mesh* mesh)
+    void Crosshair::setPushConstants(IVisitable* const mesh)
     {
-        mesh->applyPushConstants = [](VkCommandBuffer & commandBuffer, VkPipelineLayout pipelineLayout,
-            [[maybe_unused]] VulkanAdapter* adapter, [[maybe_unused]] Mesh* mesh) {
-
+        mesh->setApplyPushConstants([](
+            VkCommandBuffer & commandBuffer, VkPipelineLayout pipelineLayout,
+            [[maybe_unused]] VulkanAdapter* const adapter,
+            [[maybe_unused]] IVisitable* const mesh) {
+  
             float id = static_cast<float>(VulkanAdapter::s_Crosshair);
 
             constants pushConstants{};
             pushConstants.textureIDBB = glm::vec3(id, 0.0f, 0.0f);
 
             vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(constants), & pushConstants);
-        };
+        });
         mesh->setHasPushConstants();
     }
 
-    void Crosshair::createDescriptorSet(Mesh* mesh)
+    void Crosshair::createDescriptorSet(IVisitable* const mesh)
     {
       Texture tex = m_TextureManager->getTextures()["crosshair_1"];
       Texture tex2 = m_TextureManager->getTextures()["crosshair_2"];

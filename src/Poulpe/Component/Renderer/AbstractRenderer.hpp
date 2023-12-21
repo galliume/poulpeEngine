@@ -1,18 +1,20 @@
 #pragma once
 
-#include "IRenderer.hpp"
+#include "IComponentRenderer.hpp"
 
 #include "Poulpe/Core/IVisitor.hpp"
 
 namespace Poulpe
 {
-    class AbstractRenderer : public IVisitor, public IRenderer
+    class AbstractRenderer : public IVisitor, public IComponentRenderer
     {
     public:
-        AbstractRenderer();
-        ~AbstractRenderer();
+        AbstractRenderer() = default;
+        ~AbstractRenderer() = default;
 
-    void init(VulkanAdapter* adapter, TextureManager* textureManager, LightManager* lightManager) override;
+    void init(VulkanAdapter* const adapter,
+        TextureManager* const textureManager,
+        LightManager* const lightManager) override;
 
     protected:
         VulkanAdapter* m_Adapter;

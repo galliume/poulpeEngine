@@ -1249,14 +1249,14 @@ namespace Poulpe {
         return descriptorSet;
     }
 
-    void VulkanRenderer::updateDescriptorSets(std::vector<Mesh::Buffer> & uniformBuffers, VkDescriptorSet & descriptorSet,
+    void VulkanRenderer::updateDescriptorSets(std::vector<Buffer> & uniformBuffers, VkDescriptorSet & descriptorSet,
         std::vector<VkDescriptorImageInfo> & imageInfo, VkDescriptorType type)
     {
         std::array<VkWriteDescriptorSet, 2> descriptorWrites{};
         std::vector<VkDescriptorBufferInfo> bufferInfos;
 
         std::for_each(std::begin(uniformBuffers), std::end(uniformBuffers),
-        [& bufferInfos](const Mesh::Buffer & uniformBuffer)
+        [& bufferInfos](const Buffer & uniformBuffer)
         {
             VkDescriptorBufferInfo bufferInfo{};
             bufferInfo.buffer = uniformBuffer.buffer;
@@ -1285,7 +1285,7 @@ namespace Poulpe {
     }
 
     void VulkanRenderer::updateDescriptorSet(
-        Mesh::Buffer & uniformBuffer,
+        Buffer & uniformBuffer,
         VkDescriptorSet & descriptorSet,
         std::vector<VkDescriptorImageInfo> & imageInfo,
         VkDescriptorType type)
@@ -1319,8 +1319,8 @@ namespace Poulpe {
     }
 
     void VulkanRenderer::updateDescriptorSet(
-        Mesh::Buffer & uniformBuffer,
-        Mesh::Buffer & storageBuffer,
+        Buffer & uniformBuffer,
+        Buffer & storageBuffer,
         VkDescriptorSet & descriptorSet,
         std::vector<VkDescriptorImageInfo> & imageInfo)
     {
@@ -1368,8 +1368,8 @@ namespace Poulpe {
     }
 
     void VulkanRenderer::updateDescriptorSets(
-      std::vector<Mesh::Buffer>& uniformBuffers,
-      std::vector<Mesh::Buffer>& storageBuffers,
+      std::vector<Buffer>& uniformBuffers,
+      std::vector<Buffer>& storageBuffers,
       VkDescriptorSet& descriptorSet,
       std::vector<VkDescriptorImageInfo>& imageInfo)
     {
@@ -1378,7 +1378,7 @@ namespace Poulpe {
       std::vector<VkDescriptorBufferInfo> storageBufferInfos;
 
       std::for_each(std::begin(uniformBuffers), std::end(uniformBuffers),
-        [&bufferInfos](const Mesh::Buffer& uniformBuffer)
+        [&bufferInfos](const Buffer& uniformBuffer)
         {
           VkDescriptorBufferInfo bufferInfo{};
           bufferInfo.buffer = uniformBuffer.buffer;
@@ -1388,7 +1388,7 @@ namespace Poulpe {
         });
 
       std::for_each(std::begin(storageBuffers), std::end(storageBuffers),
-        [&storageBufferInfos](const Mesh::Buffer& storageBuffers)
+        [&storageBufferInfos](const Buffer& storageBuffers)
         {
           VkDescriptorBufferInfo bufferInfo{};
           bufferInfo.buffer = storageBuffers.buffer;
@@ -1424,14 +1424,14 @@ namespace Poulpe {
       vkUpdateDescriptorSets(m_Device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
     }
 
-    void VulkanRenderer::updateStorageDescriptorSets(std::vector<Mesh::Buffer> & uniformBuffers, VkDescriptorSet & descriptorSet,
+    void VulkanRenderer::updateStorageDescriptorSets(std::vector<Buffer> & uniformBuffers, VkDescriptorSet & descriptorSet,
         VkDescriptorType type)
     {
         std::array<VkWriteDescriptorSet, 1> descriptorWrites{};
         std::vector<VkDescriptorBufferInfo> bufferInfos;
 
         std::for_each(std::begin(uniformBuffers), std::end(uniformBuffers),
-        [& bufferInfos](const Mesh::Buffer & uniformBuffer)
+        [& bufferInfos](const Buffer & uniformBuffer)
         {
             VkDescriptorBufferInfo bufferInfo{};
             bufferInfo.buffer = uniformBuffer.buffer;
@@ -1553,7 +1553,7 @@ namespace Poulpe {
     }
 
     void VulkanRenderer::draw(VkCommandBuffer commandBuffer, VkDescriptorSet descriptorSet,
-        VulkanPipeline & pipeline, Mesh::Data * data, uint32_t uboCount, bool drawIndexed, uint32_t index)
+        VulkanPipeline & pipeline, Data * data, uint32_t uboCount, bool drawIndexed, uint32_t index)
     {
         vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline.pipelineLayout,
             0, 1, & descriptorSet, 0, nullptr);
@@ -1625,7 +1625,7 @@ namespace Poulpe {
         }
     }
 
-    Mesh::Buffer VulkanRenderer::createIndexBuffer(VkCommandPool const & commandPool, std::vector<uint32_t> const & indices)
+    Buffer VulkanRenderer::createIndexBuffer(VkCommandPool const & commandPool, std::vector<uint32_t> const & indices)
     {
         VkDeviceSize bufferSize = sizeof(indices[0]) * indices.size();
 
@@ -1654,7 +1654,7 @@ namespace Poulpe {
 
         copyBuffer(commandPool, stagingBuffer, buffer, bufferSize);
 
-        Mesh::Buffer meshBuffer;
+        Buffer meshBuffer;
         meshBuffer.buffer = std::move(buffer);
         meshBuffer.memory = deviceMemory;
         meshBuffer.offset = offset;
@@ -1666,7 +1666,7 @@ namespace Poulpe {
         return meshBuffer;
     }
 
-    Mesh::Buffer VulkanRenderer::createVertexBuffer(VkCommandPool commandPool, std::vector<Poulpe::Vertex> vertices)
+    Buffer VulkanRenderer::createVertexBuffer(VkCommandPool commandPool, std::vector<Poulpe::Vertex> vertices)
     {
         VkDeviceSize bufferSize = sizeof(Vertex) * vertices.size();
         VkBuffer stagingBuffer{};
@@ -1696,7 +1696,7 @@ namespace Poulpe {
         
         copyBuffer(commandPool, stagingBuffer, buffer, bufferSize);
 
-        Mesh::Buffer meshBuffer;
+        Buffer meshBuffer;
         meshBuffer.buffer = std::move(buffer);
         meshBuffer.memory = deviceMemory;
         meshBuffer.offset = offset;
@@ -1708,7 +1708,7 @@ namespace Poulpe {
         return meshBuffer;
     }
 
-    Mesh::Buffer VulkanRenderer::createVertex2DBuffer(VkCommandPool const & commandPool,
+    Buffer VulkanRenderer::createVertex2DBuffer(VkCommandPool const & commandPool,
         std::vector<Poulpe::Vertex2D> const & vertices)
     {
         //std::pair<VkBuffer, VkDeviceMemory> vertexBuffer{};
@@ -1740,7 +1740,7 @@ namespace Poulpe {
         
         copyBuffer(commandPool, stagingBuffer, buffer, bufferSize);
 
-        Mesh::Buffer meshBuffer;
+        Buffer meshBuffer;
         meshBuffer.buffer = std::move(buffer);
         meshBuffer.memory = deviceMemory;
         meshBuffer.offset = offset;
@@ -1752,7 +1752,7 @@ namespace Poulpe {
         return meshBuffer;
     }
 
-    Mesh::Buffer VulkanRenderer::createUniformBuffers(uint32_t uniformBuffersCount)
+    Buffer VulkanRenderer::createUniformBuffers(uint32_t uniformBuffersCount)
     {
         VkDeviceSize bufferSize = sizeof(UniformBufferObject) * uniformBuffersCount;
         VkBuffer buffer = createBuffer(bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT);
@@ -1769,7 +1769,7 @@ namespace Poulpe {
         auto offset = deviceMemory->getOffset();
         deviceMemory->bindBufferToMemory(buffer, size);
 
-        Mesh::Buffer uniformBuffer;
+        Buffer uniformBuffer;
         uniformBuffer.buffer = std::move(buffer);
         uniformBuffer.memory = deviceMemory;
         uniformBuffer.offset = offset;
@@ -1778,7 +1778,7 @@ namespace Poulpe {
         return uniformBuffer;
     }
 
-    Mesh::Buffer VulkanRenderer::createStorageBuffers(size_t storageSize)
+    Buffer VulkanRenderer::createStorageBuffers(size_t storageSize)
     {
         VkDeviceSize bufferSize = storageSize;
         VkBuffer buffer = createBuffer(bufferSize, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT);
@@ -1797,7 +1797,7 @@ namespace Poulpe {
         auto offset = deviceMemory->getOffset();
         deviceMemory->bindBufferToMemory(buffer, size);
 
-        Mesh::Buffer uniformBuffer;
+        Buffer uniformBuffer;
         uniformBuffer.buffer = std::move(buffer);
         uniformBuffer.memory = deviceMemory;
         uniformBuffer.offset = offset;
@@ -1806,7 +1806,7 @@ namespace Poulpe {
         return uniformBuffer;
     }
 
-    Mesh::Buffer VulkanRenderer::createCubeUniformBuffers(uint32_t uniformBuffersCount)
+    Buffer VulkanRenderer::createCubeUniformBuffers(uint32_t uniformBuffersCount)
     {
         VkDeviceSize bufferSize = sizeof(CubeUniformBufferObject) * uniformBuffersCount;
         VkBuffer buffer = createBuffer(bufferSize, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
@@ -1823,7 +1823,7 @@ namespace Poulpe {
         auto offset = deviceMemory->getOffset();
         deviceMemory->bindBufferToMemory(buffer, size);
 
-        Mesh::Buffer uniformBuffer;
+        Buffer uniformBuffer;
         uniformBuffer.buffer = std::move(buffer);
         uniformBuffer.memory = deviceMemory;
         uniformBuffer.offset = offset;
@@ -1832,7 +1832,7 @@ namespace Poulpe {
         return uniformBuffer;
     }
 
-    void VulkanRenderer::updateUniformBuffer(Mesh::Buffer & buffer, std::vector<UniformBufferObject>* uniformBufferObjects)
+    void VulkanRenderer::updateUniformBuffer(Buffer & buffer, std::vector<UniformBufferObject>* uniformBufferObjects)
     {
         {
             buffer.memory->lock();
@@ -1847,7 +1847,7 @@ namespace Poulpe {
         }
     }
 
-    void VulkanRenderer::updateStorageBuffer(Mesh::Buffer & buffer, ObjectBuffer objectBuffer)
+    void VulkanRenderer::updateStorageBuffer(Buffer & buffer, ObjectBuffer objectBuffer)
     {
         {
             buffer.memory->lock();
