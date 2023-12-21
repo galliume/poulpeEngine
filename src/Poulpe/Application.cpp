@@ -35,13 +35,6 @@ namespace Poulpe
 
         m_RenderManager = std::make_unique<Poulpe::RenderManager>(window);
         m_RenderManager->init();
-
-        //todo move to layer manager and update application main loop accordingly
-        //#ifdef PLP_DEBUG_BUILD
-            //m_VulkanLayer = std::make_unique<Poulpe::VulkanLayer>();
-            //m_VulkanLayer->addRenderManager(m_RenderManager.get());
-            //m_VulkanLayer->init(window);
-        //#endif
     }
 
     void Application::run()
@@ -71,7 +64,6 @@ namespace Poulpe
 
             //m_RenderManager->getRendererAdapter()->shouldRecreateSwapChain();
             Poulpe::Locator::getCommandQueue()->execPreRequest();
-            //m_VulkanLayer->render(deltaTime);
             m_RenderManager->renderScene(deltaTime);
             m_RenderManager->draw();
             Poulpe::Locator::getCommandQueue()->execPostRequest();
@@ -79,7 +71,6 @@ namespace Poulpe
             lastTime = currentTime;
         }
 
-        //Poulpe::Im::destroy();
         m_RenderManager->cleanUp();
 
         glfwDestroyWindow(m_RenderManager->getWindow()->get());

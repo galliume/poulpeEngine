@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Poulpe/Component/Entity.hpp"
 #include "Poulpe/Component/Mesh.hpp"
 
 #include "Poulpe/Renderer/Vulkan/VulkanRenderer.hpp"

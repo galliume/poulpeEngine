@@ -32,6 +32,9 @@ namespace Poulpe
             m_Pimpl->visit(deltaTime, std::forward<TArgs>(args)...);
         }
 
+        template<typename T>
+        T* hasImpl() { return dynamic_cast<T*>(m_Pimpl); }
+
         void setOwner(IDType owner) { m_Owner = owner; }
 
         IDType getID() { return m_ID; }

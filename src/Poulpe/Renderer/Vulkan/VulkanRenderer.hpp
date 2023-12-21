@@ -1,9 +1,10 @@
 #pragma once
 
-#include "Poulpe/Core/Buffer.hpp"
+#include "Poulpe/Component/Vertex2D.hpp"
+
+#include "Poulpe/Core/PlpTypedef.hpp"
 
 #include "Poulpe/Renderer/IRenderer.hpp"
-
 #include "Poulpe/Renderer/Vulkan/DeviceMemoryPool.hpp"
 
 #include <stb_image.h>
@@ -12,6 +13,7 @@ namespace Poulpe {
 
     VkResult CreateDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerCreateInfoEXT const * pCreateInfo,
         VkAllocationCallbacks const * pAllocator, VkDebugUtilsMessengerEXT* pCallback);
+
 
     struct VulkanPipeline
     {
@@ -60,22 +62,22 @@ namespace Poulpe {
         VkDescriptorSet createDescriptorSets(VkDescriptorPool const & descriptorPool,
             std::vector<VkDescriptorSetLayout> const  & descriptorSetLayouts, uint32_t count = 100);
 
-        void updateDescriptorSets(std::vector<Mesh::Buffer> & uniformBuffers, VkDescriptorSet & descriptorSet,
+        void updateDescriptorSets(std::vector<Buffer> & uniformBuffers, VkDescriptorSet & descriptorSet,
             std::vector<VkDescriptorImageInfo> & imageInfo, VkDescriptorType type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
 
         void updateDescriptorSets(
-          std::vector<Mesh::Buffer>& uniformBuffers,
-          std::vector<Mesh::Buffer>& storageBuffers,
+          std::vector<Buffer>& uniformBuffers,
+          std::vector<Buffer>& storageBuffers,
           VkDescriptorSet& descriptorSet,
           std::vector<VkDescriptorImageInfo>& imageInfo);
 
-        void updateDescriptorSet(Mesh::Buffer & uniformBuffer, VkDescriptorSet & descriptorSet,
+        void updateDescriptorSet(Buffer & uniformBuffer, VkDescriptorSet & descriptorSet,
             std::vector<VkDescriptorImageInfo> & imageInfo, VkDescriptorType type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
 
-        void updateDescriptorSet(Mesh::Buffer & uniformBuffer, Mesh::Buffer & storageBuffer, VkDescriptorSet & descriptorSet,
+        void updateDescriptorSet(Buffer & uniformBuffer, Buffer & storageBuffer, VkDescriptorSet & descriptorSet,
             std::vector<VkDescriptorImageInfo> & imageInfo);
 
-        void updateStorageDescriptorSets(std::vector<Mesh::Buffer> & uniformBuffers, VkDescriptorSet & descriptorSet, 
+        void updateStorageDescriptorSets(std::vector<Buffer> & uniformBuffers, VkDescriptorSet & descriptorSet, 
             VkDescriptorType type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER);
 
         VkPipelineLayout createPipelineLayout(std::vector<VkDescriptorSetLayout> const & descriptorSetLayouts,
@@ -102,11 +104,11 @@ namespace Poulpe {
         void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties,
             VkBuffer & buffer, VkDeviceMemory & bufferMemory);
 
-        Mesh::Buffer createVertexBuffer(VkCommandPool commandPool, std::vector<Poulpe::Vertex> vertices);
+        Buffer createVertexBuffer(VkCommandPool commandPool, std::vector<Vertex> vertices);
 
-        Mesh::Buffer createVertex2DBuffer(VkCommandPool const & commandPool, std::vector<Poulpe::Vertex2D> const & vertices);
+        Buffer createVertex2DBuffer(VkCommandPool const & commandPool, std::vector<Vertex2D> const & vertices);
 
-        Mesh::Buffer createIndexBuffer(VkCommandPool const & commandPool, std::vector<uint32_t> const & indices);
+        Buffer createIndexBuffer(VkCommandPool const & commandPool, std::vector<uint32_t> const & indices);
 
         //std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>> createSyncObjects(std::vector<VkImage> swapChainImages);
         
@@ -118,11 +120,11 @@ namespace Poulpe {
 
         bool souldResizeSwapChain();
 
-        Mesh::Buffer createUniformBuffers(uint32_t uniformBuffersCount);
+        Buffer createUniformBuffers(uint32_t uniformBuffersCount);
 
-        Mesh::Buffer createCubeUniformBuffers(uint32_t uniformBuffersCount);
+        Buffer createCubeUniformBuffers(uint32_t uniformBuffersCount);
 
-        void updateUniformBuffer(Mesh::Buffer & buffer, std::vector<UniformBufferObject>* uniformBufferObjects);
+        void updateUniformBuffer(Buffer & buffer, std::vector<UniformBufferObject>* uniformBufferObjects);
 
         void createImage(uint32_t width, uint32_t height, uint32_t mipLevels, VkSampleCountFlagBits numSamples,VkFormat format,
             VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage & image);
@@ -165,9 +167,9 @@ namespace Poulpe {
 
         void initMemoryPool();
 
-        Mesh::Buffer createStorageBuffers(size_t storageBuffer);
+        Buffer createStorageBuffers(size_t storageBuffer);
 
-        void updateStorageBuffer(Mesh::Buffer & buffer, ObjectBuffer objectBuffer);
+        void updateStorageBuffer(Buffer & buffer, ObjectBuffer objectBuffer);
 
         void setResolution(unsigned int width, unsigned int height);
 
@@ -199,7 +201,7 @@ namespace Poulpe {
 
         void bindPipeline(VkCommandBuffer commandBuffer, VkPipeline pipeline);
 
-        void draw(VkCommandBuffer commandBuffer, VkDescriptorSet descriptorSet, VulkanPipeline& pipeline, Mesh::Data * data,
+        void draw(VkCommandBuffer commandBuffer, VkDescriptorSet descriptorSet, VulkanPipeline& pipeline, Data * data,
             uint32_t uboCount, bool drawIndexed = true, uint32_t index = 0);
 
         VkResult queueSubmit(VkCommandBuffer commandBuffer, int queueIndex = 0);
