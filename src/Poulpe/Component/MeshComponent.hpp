@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Component.hpp"
+#include "Mesh.hpp"
 
 namespace Poulpe
 {
@@ -10,15 +11,9 @@ namespace Poulpe
         MeshComponent() : Component() {};
 
         //@todo mmh ? CRTP ?
-        void visit(float const deltaTime, Mesh* mesh)
+        void visit(float const deltaTime, IVisitable* visitable)
         {
-            Component::visit(deltaTime, mesh);
+            Component::visit(deltaTime, visitable);
         }
-
-        Mesh* getMesh() { return m_Mesh.get(); }
-        void setMesh(Mesh* mesh) { m_Mesh = std::unique_ptr<Mesh>(mesh); }
-
-    private:
-        std::unique_ptr<Mesh> m_Mesh = nullptr;
     };
 }

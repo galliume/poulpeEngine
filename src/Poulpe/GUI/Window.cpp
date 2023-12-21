@@ -8,8 +8,10 @@ namespace Poulpe
 
     void Window::init(std::string_view windowTitle)
     {
-        const uint32_t WIDTH = 2560;
-        const uint32_t HEIGHT = 1440;
+        /*const uint32_t WIDTH = 2560;
+        const uint32_t HEIGHT = 1440;*/
+        const uint32_t WIDTH = 800;
+        const uint32_t HEIGHT = 600;
 
         glfwInit();
         glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);

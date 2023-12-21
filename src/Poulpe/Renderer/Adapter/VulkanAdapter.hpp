@@ -26,9 +26,10 @@ namespace Poulpe
       };
 
         VulkanAdapter(
-          Window* window,
-          EntityManager* entityManager,
-          LightManager* lightManager
+          Window* const window,
+          EntityManager* const entityManager,
+          ComponentManager* const componentManager,
+          LightManager* const lightManager
         );
         ~VulkanAdapter() = default;
 
@@ -135,6 +136,7 @@ namespace Poulpe
         Camera* m_Camera{ nullptr };
         Window* m_Window{ nullptr };
         EntityManager* m_EntityManager{ nullptr };
+        ComponentManager* m_ComponentManager{ nullptr };
         LightManager* m_LightManager{ nullptr };
 
         //@todo move to meshManager

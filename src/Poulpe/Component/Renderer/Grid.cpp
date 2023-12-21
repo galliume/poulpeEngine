@@ -6,7 +6,7 @@ namespace Poulpe
 {
     struct cPC;
 
-    void Grid::visit([[maybe_unused]] float const deltaTime, Mesh* mesh)
+    void Grid::visit([[maybe_unused]] float const deltaTime, IVisitable* const mesh)
     {
         if (!mesh && !mesh->isDirty()) return;
 
@@ -24,7 +24,7 @@ namespace Poulpe
 
         UniformBufferObject ubo{};
 
-        Mesh::Data gridData;
+        Data gridData;
         gridData.m_Textures.emplace_back("grid");
         gridData.m_TextureIndex = 0;
         gridData.m_VertexBuffer = m_Adapter->rdr()->createVertexBuffer(commandPool, vertices);
@@ -53,21 +53,23 @@ namespace Poulpe
         mesh->setIsDirty(false);
     }
 
-    void Grid::setPushConstants(Mesh* mesh)
+    void Grid::setPushConstants(IVisitable* const mesh)
     {
-        mesh->applyPushConstants = [](VkCommandBuffer & commandBuffer, VkPipelineLayout pipelineLayout,
-            VulkanAdapter* adapter, [[maybe_unused]] Mesh* mesh) {
+        mesh->setApplyPushConstants([](VkCommandBuffer& commandBuffer,
+            VkPipelineLayout pipelineLayout,
+            VulkanAdapter* const adapter,
+            [[maybe_unused]] IVisitable* const mesh) {
             
             constants pushConstants{};
             pushConstants.view = adapter->getCamera()->lookAt();
             pushConstants.viewPos = glm::vec4(0.1f, 50.f, 0.f, 0.f);
 
             vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(constants), & pushConstants);
-        };
+        });
         mesh->setHasPushConstants();
     }
 
-    void Grid::createDescriptorSet(Mesh* mesh)
+    void Grid::createDescriptorSet(IVisitable* const mesh)
     {
       Texture ctex = m_TextureManager->getTextures()["mpoulpe"];
 

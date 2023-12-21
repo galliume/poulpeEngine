@@ -1,6 +1,6 @@
 #pragma once
 
-#include "AbstractEntity.hpp"
+#include "AbstractRenderer.hpp"
 
 namespace Poulpe
 {
@@ -9,8 +9,8 @@ namespace Poulpe
     public:
         Crosshair() = default;
 
-        void visit(float const deltaTime, Mesh* mesh) override;
-        void setPushConstants(Mesh* mesh) override;
-        void createDescriptorSet(Mesh* mesh) override;
+        void visit(float const deltaTime, IVisitable* const mesh) override;
+        void setPushConstants(IVisitable* const mesh) override;
+        void createDescriptorSet(IVisitable* const mesh) override;
     };
 }

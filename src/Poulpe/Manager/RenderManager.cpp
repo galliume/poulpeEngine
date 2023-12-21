@@ -19,6 +19,7 @@ namespace Poulpe
         m_Renderer = std::make_unique<Poulpe::VulkanAdapter>(
           m_Window.get(),
           m_EntityManager.get(),
+          m_ComponentManager.get(),
           m_LightManager.get());
 
         m_ConfigManager = std::make_unique<Poulpe::ConfigManager>();
@@ -99,9 +100,20 @@ namespace Poulpe
         if (static_cast<bool>(appConfig["ambientMusic"]))
             m_AudioManager->startAmbient();
 
-        prepareEntity();
         prepareSkybox();
         prepareHUD();
+
+        for (auto& entity : *m_EntityManager->getEntities()) {
+
+          auto* meshComponent = m_ComponentManager->getComponent<MeshComponent>(entity->getID());
+          Mesh* mesh = meshComponent->hasImpl<Mesh>();
+
+          if (mesh) {
+            auto renderComponent = m_ComponentManager->getComponent<RenderComponent>(entity->getID());
+            renderComponent->initPimpl(m_Renderer.get(), m_TextureManager.get(), m_LightManager.get());
+            renderComponent->visit(0, mesh);
+          }
+        }
     }
 
     void RenderManager::loadData(std::string const & level)
@@ -135,9 +147,9 @@ namespace Poulpe
         while (!m_ShaderManager->isLoadingDone()) {
             //PLP_WARN("loading {}", m_ShaderManager->isLoadingDone());
         }
-        //while (!m_EntityManager->IsLoadingDone()) {
-        //    //PLP_WARN("loading {}", m_EntityManager->IsLoadingDone());
-        //}
+        while (!m_EntityManager->IsLoadingDone()) {
+            //PLP_WARN("loading {}", m_EntityManager->IsLoadingDone());
+        }
         setIsLoaded();
     }
 
@@ -158,11 +170,12 @@ namespace Poulpe
 
         for (auto& entity : *m_EntityManager->getEntities()) {
 
-            auto meshComponent = m_ComponentManager->getComponent<MeshComponent>(entity->getID());
-            auto animationComponent = m_ComponentManager->getComponent<AnimationComponent>(entity->getID());
+            auto* meshComponent = m_ComponentManager->getComponent<MeshComponent>(entity->getID());
+            auto* animationComponent = m_ComponentManager->getComponent<AnimationComponent>(entity->getID());
+            Mesh* mesh = meshComponent->hasImpl<Mesh>();
 
-            if (animationComponent && meshComponent) {
-                animationComponent->visit(deltaTime, meshComponent->getMesh());
+            if (animationComponent && mesh) {
+                animationComponent->visit(deltaTime, mesh);
             }
         }
 
@@ -183,22 +196,6 @@ namespace Poulpe
         m_IsLoaded = false;
         m_Refresh = true;
         m_ShowBbox = showBbox;
-    }
-
-    void RenderManager::prepareEntity()
-    {
-      for (auto& entity : *m_EntityManager->getEntities()) {
-          Poulpe::Locator::getThreadPool()->submit("load_entity", [this, &entity]() {
-
-            auto meshComponent = m_ComponentManager->getComponent<MeshComponent>(entity->getID());
-          
-            if (meshComponent->getMesh()->isDirty()) {
-                auto renderComponent = m_ComponentManager->getComponent<RenderComponent>(entity->getID());
-                renderComponent->initPimpl(m_Renderer.get(), m_TextureManager.get(), m_LightManager.get());
-                renderComponent->visit(0, meshComponent->getMesh());
-            }
-        });
-      }
     }
 
     void RenderManager::prepareHUD()

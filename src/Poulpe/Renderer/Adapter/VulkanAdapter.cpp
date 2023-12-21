@@ -19,11 +19,13 @@ namespace Poulpe
     std::atomic<int> VulkanAdapter::s_PolygoneMode{ VK_POLYGON_MODE_FILL };
     
     VulkanAdapter::VulkanAdapter(
-      Window* window,
-      EntityManager* entityManager,
-      LightManager* lightManager)
+      Window* const window,
+      EntityManager* const entityManager,
+      ComponentManager* const componentManager,
+      LightManager* const lightManager)
         : m_Window(window),
           m_EntityManager(entityManager),
+          m_ComponentManager(componentManager),
           m_LightManager(lightManager)
     {
         m_Renderer = std::make_unique<VulkanRenderer>(window);
@@ -259,7 +261,9 @@ namespace Poulpe
         vkCmdSetDepthBias(m_CommandBuffersEntities[m_CurrentFrame], depthBiasConstant, 0.0f, depthBiasSlope);
 
         for (auto& entity : *entities) {
-            Mesh* mesh = entity->getMesh();
+
+            auto meshComponent = m_ComponentManager->getComponent<MeshComponent>(entity->getID());
+            Mesh* mesh = meshComponent->hasImpl<Mesh>();
 
             if (!mesh) continue;
 
@@ -348,7 +352,8 @@ namespace Poulpe
             m_Renderer->startMarker(m_CommandBuffersEntities[m_CurrentFrame], "entities_drawing", 0.2, 0.2, 0.9);
 
             for (auto & entity : *m_EntityManager->getEntities()) {
-                Mesh* mesh = entity->getMesh();
+                auto meshComponent = m_ComponentManager->getComponent<MeshComponent>(entity->getID());
+                Mesh* mesh = meshComponent->hasImpl<Mesh>();
 
                 if (!mesh) continue;
                 auto pipeline = getPipeline(mesh->getShaderName());
@@ -376,8 +381,9 @@ namespace Poulpe
                   min = max;
 
                 }
-                if (mesh->hasPushConstants() && nullptr != mesh->applyPushConstants)
-                    mesh->applyPushConstants(m_CommandBuffersEntities[m_CurrentFrame], pipeline->pipelineLayout, this, mesh);
+                if (mesh->hasPushConstants()) {
+                  mesh->applyPushConstants(m_CommandBuffersEntities[m_CurrentFrame], pipeline->pipelineLayout, this, mesh);
+                }
 
                 try {
                     if (m_RenderingStopped) return;
@@ -403,17 +409,22 @@ namespace Poulpe
             beginRendering(m_CommandBuffersSkybox[m_CurrentFrame], VK_ATTACHMENT_LOAD_OP_CLEAR, VK_ATTACHMENT_STORE_OP_STORE, false);
             m_Renderer->startMarker(m_CommandBuffersSkybox[m_CurrentFrame], "skybox_drawing", 0.3, 0.2, 0.1);
 
-            Mesh::Data* skyboxData = skybox->getMesh()->getData();
-            auto pipeline = getPipeline(skybox->getMesh()->getShaderName());
+            auto meshComponent = m_ComponentManager->getComponent<MeshComponent>(skybox->getID());
+            Mesh* mesh = meshComponent->hasImpl<Mesh>();
+            
+            if (!mesh) return;
+
+            Data* skyboxData = mesh->getData();
+            auto pipeline = getPipeline(mesh->getShaderName());
 
             m_Renderer->bindPipeline(m_CommandBuffersSkybox[m_CurrentFrame], pipeline->pipeline);
 
-            if (skybox->getMesh()->hasPushConstants() && nullptr != skybox->getMesh()->applyPushConstants)
-                skybox->getMesh()->applyPushConstants(m_CommandBuffersSkybox[m_CurrentFrame], pipeline->pipelineLayout, this,
-                    skybox->getMesh());
+            if (mesh->hasPushConstants()) {
+              mesh->applyPushConstants(m_CommandBuffersSkybox[m_CurrentFrame], pipeline->pipelineLayout, this, mesh);
+            }
 
             if (m_RenderingStopped) return;
-            m_Renderer->draw(m_CommandBuffersSkybox[m_CurrentFrame], *skybox->getMesh()->getDescSet(), *pipeline,
+            m_Renderer->draw(m_CommandBuffersSkybox[m_CurrentFrame], *mesh->getDescSet(), *pipeline,
                 skyboxData, skyboxData->m_Ubos.size(), false);
 
             m_Renderer->endMarker(m_CommandBuffersSkybox[m_CurrentFrame]);
@@ -431,7 +442,8 @@ namespace Poulpe
 
         for (auto const & entity : * m_EntityManager->getHUD()) {
 
-           auto* hudPart = entity->getMesh();
+           auto meshComponent = m_ComponentManager->getComponent<MeshComponent>(entity->getID());
+           Mesh* hudPart = meshComponent->hasImpl<Mesh>();
 
             if (!hudPart || !entity->isVisible()) continue;
             
@@ -439,7 +451,7 @@ namespace Poulpe
 
             m_Renderer->bindPipeline(m_CommandBuffersHUD[m_CurrentFrame], pipeline->pipeline);
 
-            if (hudPart->hasPushConstants() && nullptr != hudPart->applyPushConstants) {
+            if (hudPart->hasPushConstants()) {
                 hudPart->applyPushConstants(m_CommandBuffersHUD[m_CurrentFrame], pipeline->pipelineLayout, this,
                     hudPart);
             }
@@ -824,66 +836,6 @@ namespace Poulpe
             PLP_FATAL("failed to create imgui render pass : {}", result);
         }
         return renderPass;
-    }
-
-    ImGuiInfo VulkanAdapter::getImGuiInfo()
-    {
-        std::vector<VkDescriptorPoolSize> poolSizes{};
-        VkDescriptorPoolSize cp1;
-        cp1.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        cp1.descriptorCount = 1000;
-        VkDescriptorPoolSize cp2;
-        cp2.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        cp2.descriptorCount = 1000;
-        poolSizes.emplace_back(cp1);
-        poolSizes.emplace_back(cp2);
-
-        VkDescriptorPool imguiPool = m_Renderer->createDescriptorPool(poolSizes, 1000,
-            VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT);
-
-        ImGui_ImplVulkan_InitInfo info = {};
-
-        info.Instance = m_Renderer->getInstance();
-        info.PhysicalDevice = m_Renderer->getPhysicalDevice();
-        info.Device = m_Renderer->getDevice();
-        info.QueueFamily = m_Renderer->getQueueFamily();
-        info.Queue = m_Renderer->getGraphicsQueues()[1];
-        info.PipelineCache = nullptr;//to implement VkPipelineCache
-        info.DescriptorPool = std::move(imguiPool);
-        info.Subpass = 0;
-        info.MinImageCount = 3;
-        info.ImageCount = 3;
-        info.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
-        info.Allocator = nullptr;
-        info.CheckVkResultFn = [](VkResult err) {
-            if (0 == err) return;
-            PLP_FATAL("ImGui error {}", err);
-        };
-
-        auto commandPool = m_Renderer->createCommandPool();
-
-        const SwapChainSupportDetails swapChainDetails = m_Renderer->querySwapChainSupport(m_Renderer->getPhysicalDevice());
-        VkSurfaceFormatKHR imguiFormat{};
-        
-        for (const auto& availableFormat : swapChainDetails.formats) {
-            if (availableFormat.format == VK_FORMAT_B8G8R8A8_UNORM
-                && availableFormat.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR) {
-                imguiFormat = availableFormat;
-                break;
-            }
-        }
-
-        auto rdrPass = createImGuiRenderPass(imguiFormat.format);
-
-        ImGuiInfo imGuiInfo;
-        imGuiInfo.info = info;
-        imGuiInfo.rdrPass = std::move(rdrPass);
-        imGuiInfo.cmdBuffer = m_Renderer->allocateCommandBuffers(commandPool)[0];
-        //imGuiInfo.pipeline = m_Pipelines[0].graphicsPipeline;
-        imGuiInfo.width = m_Renderer->getSwapChainExtent().width;
-        imGuiInfo.height = m_Renderer->getSwapChainExtent().height;
-
-        return imGuiInfo;
     }
 
     void VulkanAdapter::showGrid(bool show)

@@ -1,4 +1,4 @@
-#include "AbstractEntity.hpp"
+#include "AbstractRenderer.hpp"
 
 namespace Poulpe
 {

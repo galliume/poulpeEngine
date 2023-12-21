@@ -10,9 +10,9 @@ namespace Poulpe
         RenderComponent() : Component() {};
 
         //@todo mmh ? CRTP ?
-        void visit(float const deltaTime, Mesh* mesh)
+        void visit(float const deltaTime, IVisitable* visitable)
         {
-            Component::visit(deltaTime, mesh);
+            Component::visit(deltaTime, visitable);
         }
     };
 }
