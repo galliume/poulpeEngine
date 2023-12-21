@@ -21,15 +21,15 @@ namespace Poulpe
         IEntityManager() = default;
         ~IEntityManager() = default;
 
-        virtual void addRenderer(IRendererAdapter* renderer) = 0;
-        virtual std::function<void()> load(nlohmann::json levelConfig) = 0;
-        virtual inline std::vector<std::unique_ptr<Entity>>* getEntities() = 0;
-        virtual inline void setSkybox(Entity* skybox) = 0;
-        virtual inline Entity* getSkybox() = 0;
-        virtual void clear() = 0;
-        virtual uint32_t getInstancedCount() = 0;
-        virtual std::unordered_map<std::string, std::array<uint32_t, 2>> getLoadedEntities() = 0;
         virtual void addHUD(Entity* entity) = 0;
+        virtual void addRenderer(IRendererAdapter* renderer) = 0;
+        virtual void clear() = 0;
+        virtual inline std::vector<std::unique_ptr<Entity>>* getEntities() = 0;
         virtual std::vector<std::unique_ptr<Entity>>* getHUD() = 0;
+        virtual inline uint32_t getInstancedCount() const = 0;
+        virtual std::unordered_map<std::string, std::array<uint32_t, 2>> getLoadedEntities() = 0;
+        virtual inline Entity* getSkybox() = 0;
+        virtual std::function<void()> load(nlohmann::json levelConfig) = 0;
+        virtual inline void setSkybox(Entity* skybox) = 0;
     };
 }

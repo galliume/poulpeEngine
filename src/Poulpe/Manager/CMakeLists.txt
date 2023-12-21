@@ -14,14 +14,11 @@ set(SRC_LIST ${CMAKE_CURRENT_SOURCE_DIR}/AudioManager.cpp
              ${CMAKE_CURRENT_SOURCE_DIR}/InputManager.hpp
              ${CMAKE_CURRENT_SOURCE_DIR}/IRenderManager.hpp
              ${CMAKE_CURRENT_SOURCE_DIR}/IShaderManager.hpp
-             ${CMAKE_CURRENT_SOURCE_DIR}/ISpriteAnimationManager.hpp
              ${CMAKE_CURRENT_SOURCE_DIR}/ITextureManager.hpp
              ${CMAKE_CURRENT_SOURCE_DIR}/RenderManager.cpp
              ${CMAKE_CURRENT_SOURCE_DIR}/RenderManager.hpp
              ${CMAKE_CURRENT_SOURCE_DIR}/ShaderManager.cpp
              ${CMAKE_CURRENT_SOURCE_DIR}/ShaderManager.hpp
-             ${CMAKE_CURRENT_SOURCE_DIR}/SpriteAnimationManager.cpp
-             ${CMAKE_CURRENT_SOURCE_DIR}/SpriteAnimationManager.hpp
              ${CMAKE_CURRENT_SOURCE_DIR}/TextureManager.cpp
              ${CMAKE_CURRENT_SOURCE_DIR}/TextureManager.hpp
 		     ${CMAKE_CURRENT_SOURCE_DIR}/ComponentManager.cpp

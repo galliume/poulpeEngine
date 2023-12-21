@@ -77,114 +77,258 @@ namespace Poulpe
         initWorldGraph();
     }
 
-    void EntityManager::initWorldGraph()
+    void EntityManager::clear()
     {
-      m_World = std::make_unique<Entity>();
-      m_World->setName("_PLPWorld");
-      m_World->setVisible(false);
-
-      m_WorldNode = std::make_unique<EntityNode>(m_World.get());
+      m_Entities.clear();
+      m_HUD.clear();
+      m_LoadedEntities.clear();
+      m_WorldNode->clear();
+      m_World.release();
     }
 
-    uint32_t EntityManager::getInstancedCount()
+    std::function<void()> EntityManager::load(nlohmann::json levelConfig)
     {
-        return m_Entities.size();
+      m_LevelConfig = levelConfig;
+
+      std::function<void()> entitiesFuture = [this]() {
+
+        for (auto& entityConf : m_LevelConfig["entities"].items()) {
+
+          auto key = entityConf.key();
+          auto data = entityConf.value();
+
+          std::string form = static_cast<std::string>(data["form"]);
+
+          if ("square" == form) {
+            int xMin = static_cast<int>(data["squarePadding"][0]["x"][0]);
+            int xMax = static_cast<int>(data["squarePadding"][0]["x"][1]);
+            int yMin = static_cast<int>(data["squarePadding"][0]["y"][0]);
+            int yMax = static_cast<int>(data["squarePadding"][0]["y"][1]);
+
+            for (int x = xMin; x < xMax; x++) {
+              for (int y = yMin; y < yMax; y++) {
+
+                auto positionData = data["positions"].at(0);
+
+                glm::vec3 position = glm::vec3(
+                  static_cast<float>(positionData["x"]) * static_cast<float>(x),
+                  static_cast<float>(positionData["y"]),
+                  static_cast<float>(positionData["z"]) * static_cast<float>(y)
+                );
+
+                std::vector<std::string> textures{};
+                for (auto& [key, path] : data["textures"].items())
+                  textures.emplace_back(static_cast<std::string>(key));
+
+                auto scaleData = data["scales"].at(0);
+                auto rotationData = data["rotations"].at(0);
+
+                glm::vec3 scale = glm::vec3(
+                  static_cast<float>(scaleData["x"]),
+                  static_cast<float>(scaleData["y"]),
+                  static_cast<float>(scaleData["z"])
+                );
+                glm::vec3  rotation = glm::vec3(
+                  static_cast<float>(rotationData["x"]),
+                  static_cast<float>(rotationData["y"]),
+                  static_cast<float>(rotationData["z"])
+                );
+
+                bool hasBbox = static_cast<bool>(data["hasBbox"]);
+                bool hasAnimation = static_cast<bool>(data["hasAnimation"]);
+                bool isPointLight = static_cast<bool>(data["isPointLight"]);
+
+                auto parts = initMeshes(
+                  static_cast<std::string>(key),
+                  static_cast<std::string>(data["mesh"]),
+                  textures,
+                  static_cast<std::string>(data["shader"]),
+                  position,
+                  scale,
+                  rotation,
+                  static_cast<bool>(data["inverseTextureY"])
+                );
+
+                //@todo add component type in json config file
+                for (auto& part : parts) {
+                  part->setHasBbox(hasBbox);
+                  part->setHasAnimation(hasAnimation);
+                  part->setIsPointLight(isPointLight);
+                }
+                addEntity(std::move(parts));
+              }
+            }
+          }
+          else {
+            int count = static_cast<int>(data["count"]);
+            std::string form = static_cast<std::string>(data["form"]);
+
+            for (int i = 0; i < count; i++) {
+
+              glm::vec3 position{};
+              auto positionData = (1 == data["positions"].size()) ? data["positions"].at(0) : data["positions"].at(i);
+
+              if ("positioned" == form) {
+                position = glm::vec3(
+                  static_cast<float>(positionData["x"]),
+                  static_cast<float>(positionData["y"]),
+                  static_cast<float>(positionData["z"])
+                );
+              }
+              else if ("line" == form) {
+                position = glm::vec3(
+                  static_cast<float>(positionData["x"]) + static_cast<float>(data["padding"]["x"]) * i,
+                  static_cast<float>(positionData["y"]) + static_cast<float>(data["padding"]["y"]) * i,
+                  static_cast<float>(positionData["z"]) + static_cast<float>(data["padding"]["z"]) * i
+                );
+              }
+
+              auto scaleData = (1 == data["scales"].size()) ? data["scales"].at(0) : data["scales"].at(i);
+              auto rotationData = (1 == data["rotations"].size()) ? data["rotations"].at(0) : data["rotations"].at(i);
+
+              glm::vec3 scale = glm::vec3(
+                static_cast<float>(scaleData["x"]),
+                static_cast<float>(scaleData["y"]),
+                static_cast<float>(scaleData["z"])
+              );
+              glm::vec3  rotation = glm::vec3(
+                static_cast<float>(rotationData["x"]),
+                static_cast<float>(rotationData["y"]),
+                static_cast<float>(rotationData["z"])
+              );
+
+              std::vector<std::string> textures{};
+              for (auto& [key, path] : data["textures"].items())
+                textures.emplace_back(static_cast<std::string>(key));
+
+              bool hasBbox = static_cast<bool>(data["hasBbox"]);
+              bool hasAnimation = static_cast<bool>(data["hasAnimation"]);
+              bool isPointLight = static_cast<bool>(data["isPointLight"]);
+
+              //@todo move init to a factory ?
+              auto parts = initMeshes(
+                static_cast<std::string>(key),
+                static_cast<std::string>(data["mesh"]),
+                textures,
+                static_cast<std::string>(data["shader"]),
+                position,
+                scale,
+                rotation,
+                static_cast<bool>(data["inverseTextureY"])
+              );
+
+              for (auto& part : parts) {
+                part->setHasBbox(hasBbox);
+                part->setHasAnimation(hasAnimation);
+                part->setIsPointLight(isPointLight);
+              }
+              addEntity(std::move(parts));
+
+              TinyObjLoader::m_TinyObjMaterials.clear();
+            }
+          }
+        }
+
+        m_LoadingDone.store(true);
+      };
+
+      return entitiesFuture;
     }
 
     void EntityManager::addEntity(std::vector<Mesh*> meshes)
     {
-        for (auto& mesh : meshes) {
-            uint64_t count = m_LoadedEntities.count(mesh->getName().c_str());
+      for (auto& mesh : meshes) {
+        uint64_t count = m_LoadedEntities.count(mesh->getName().c_str());
 
-            if (0 != count) {
-                Data* data = mesh->getData();
+        if (0 != count) {
+          Data* data = mesh->getData();
 
-                auto existingEntity = m_Entities[m_LoadedEntities[mesh->getName().c_str()][1]].get();
+          auto existingEntity = m_Entities[m_LoadedEntities[mesh->getName().c_str()][1]].get();
 
-                auto meshComponent = m_ComponentManager->getComponent<MeshComponent>(existingEntity->getID());
-                Mesh* exisitingMesh = meshComponent->hasImpl<Mesh>();
-                exisitingMesh->addUbos(data->m_Ubos);
+          auto meshComponent = m_ComponentManager->getComponent<MeshComponent>(existingEntity->getID());
+          Mesh* exisitingMesh = meshComponent->hasImpl<Mesh>();
+          exisitingMesh->addUbos(data->m_Ubos);
 
-                //UniformBufferObject ubo{};
+          //UniformBufferObject ubo{};
 
-                //glm::mat4 transform = glm::translate(
-                //    glm::mat4(1),
-                //    mesh->getBBox()->center) * glm::scale(glm::mat4(1),
-                //        mesh->getBBox()->size);
+          //glm::mat4 transform = glm::translate(
+          //    glm::mat4(1),
+          //    mesh->getBBox()->center) * glm::scale(glm::mat4(1),
+          //        mesh->getBBox()->size);
 
-                //ubo.model = mesh->getBBox()->position * transform;
-                //existingEntity->getMesh()->getBBox()->mesh->addUbos({ ubo });
+          //ubo.model = mesh->getBBox()->position * transform;
+          //existingEntity->getMesh()->getBBox()->mesh->addUbos({ ubo });
 
-                m_LoadedEntities[exisitingMesh->getName()][0] += 1;
-            }
-            else {
-                auto entity = std::make_unique<Entity>();
-
-                //@todo change for archetype id ?
-                entity->setName(mesh->getName());
-
-                if (mesh->hasAnimation()) {
-                    //@todo temp until lua scripting
-                    auto* animImpl = new AnimImpl();
-                    m_ComponentManager->addComponent<AnimationComponent>(entity->getID(), animImpl);
-                }
-
-                m_ComponentManager->addComponent<MeshComponent>(entity->getID(), mesh);
-
-                auto* basicRdrImpl = new Basic();
-                m_ComponentManager->addComponent<RenderComponent>(entity->getID(), basicRdrImpl);
-
-                m_WorldNode->addChild(entity.get());
-
-                uint32_t index = m_Entities.size();
-
-                m_LoadedEntities.insert({ entity->getName(), { 1, index } });
-
-                //auto tangentEntity = std::make_unique<Entity>();
-
-                //Mesh* tangentMesh = new Mesh();
-                //tangentMesh->setName(mesh->getName() + "_tangent");
-                //tangentMesh->setShaderName("tangent");
-
-                //auto tangent = mesh->getData()->m_Vertices.at(0).tangent;
-
-                //const std::vector<Vertex> vertices = {
-                //    {{-0.025f, -0.025f, 0.0f}, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}, { tangent.x, tangent.y, tangent.z, tangent.w }},
-                //    {{0.025f, -0.025f, 0.0f}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f}, { tangent.x, tangent.y, tangent.z, tangent.w }},
-                //    {{0.025f, 0.025f, 0.0f}, {0.0f, 0.0f, 1.0f}, {0.0f, 1.0f}, { tangent.x, tangent.y, tangent.z, tangent.w }},
-                //    {{-0.025f, 0.025f, 0.0f}, {1.0f, 1.0f, 1.0f}, {1.0f, 1.0f}, { tangent.x, tangent.y, tangent.z, tangent.w }}
-                //};
-
-                //const std::vector<uint32_t> indices = {
-                //    0, 1, 2, 2, 3, 0
-                //};
-
-                //Mesh::Data data{};
-                //data.m_Name = mesh->getName() + "_tangent";
-                //data.m_Texture = "mpoulpe";
-                //data.m_Indices = indices;
-                //data.m_Vertices = vertices;
-
-                //UniformBufferObject ubo{};
-                //ubo.model = glm::mat4(1.0f);
-                //ubo.model = glm::translate(ubo.model, glm::vec3(
-                //    entity->getMesh()->getData()->m_OriginPos.x,
-                //    entity->getMesh()->getData()->m_OriginPos.y,
-                //    entity->getMesh()->getData()->m_OriginPos.z
-                //));
-                //ubo.model = glm::scale(ubo.model, glm::vec3(1.0));
-
-                ////ubo.view = glm::mat4(1.0f);
-                //data.m_Ubos.emplace_back(ubo);
-                //tangentMesh->setData(data);
-                ////tangentMesh->setIsIndexed(false);
-
-                //tangentEntity->setMesh(tangentMesh);
-
-                //m_Entities.emplace_back(std::move(tangentEntity));
-                m_Entities.emplace_back(std::move(entity));
-            }
+          m_LoadedEntities[exisitingMesh->getName()][0] += 1;
         }
+        else {
+          auto entity = std::make_unique<Entity>();
+
+          //@todo change for archetype id ?
+          entity->setName(mesh->getName());
+
+          if (mesh->hasAnimation()) {
+            //@todo temp until lua scripting
+            auto* animImpl = new AnimImpl();
+            m_ComponentManager->addComponent<AnimationComponent>(entity->getID(), animImpl);
+          }
+
+          m_ComponentManager->addComponent<MeshComponent>(entity->getID(), mesh);
+
+          auto* basicRdrImpl = new Basic();
+          m_ComponentManager->addComponent<RenderComponent>(entity->getID(), basicRdrImpl);
+
+          m_WorldNode->addChild(entity.get());
+
+          uint32_t index = m_Entities.size();
+
+          m_LoadedEntities.insert({ entity->getName(), { 1, index } });
+
+          //auto tangentEntity = std::make_unique<Entity>();
+
+          //Mesh* tangentMesh = new Mesh();
+          //tangentMesh->setName(mesh->getName() + "_tangent");
+          //tangentMesh->setShaderName("tangent");
+
+          //auto tangent = mesh->getData()->m_Vertices.at(0).tangent;
+
+          //const std::vector<Vertex> vertices = {
+          //    {{-0.025f, -0.025f, 0.0f}, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}, { tangent.x, tangent.y, tangent.z, tangent.w }},
+          //    {{0.025f, -0.025f, 0.0f}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f}, { tangent.x, tangent.y, tangent.z, tangent.w }},
+          //    {{0.025f, 0.025f, 0.0f}, {0.0f, 0.0f, 1.0f}, {0.0f, 1.0f}, { tangent.x, tangent.y, tangent.z, tangent.w }},
+          //    {{-0.025f, 0.025f, 0.0f}, {1.0f, 1.0f, 1.0f}, {1.0f, 1.0f}, { tangent.x, tangent.y, tangent.z, tangent.w }}
+          //};
+
+          //const std::vector<uint32_t> indices = {
+          //    0, 1, 2, 2, 3, 0
+          //};
+
+          //Mesh::Data data{};
+          //data.m_Name = mesh->getName() + "_tangent";
+          //data.m_Texture = "mpoulpe";
+          //data.m_Indices = indices;
+          //data.m_Vertices = vertices;
+
+          //UniformBufferObject ubo{};
+          //ubo.model = glm::mat4(1.0f);
+          //ubo.model = glm::translate(ubo.model, glm::vec3(
+          //    entity->getMesh()->getData()->m_OriginPos.x,
+          //    entity->getMesh()->getData()->m_OriginPos.y,
+          //    entity->getMesh()->getData()->m_OriginPos.z
+          //));
+          //ubo.model = glm::scale(ubo.model, glm::vec3(1.0));
+
+          ////ubo.view = glm::mat4(1.0f);
+          //data.m_Ubos.emplace_back(ubo);
+          //tangentMesh->setData(data);
+          ////tangentMesh->setIsIndexed(false);
+
+          //tangentEntity->setMesh(tangentMesh);
+
+          //m_Entities.emplace_back(std::move(tangentEntity));
+          m_Entities.emplace_back(std::move(entity));
+        }
+      }
     }
 
     Entity* EntityManager::getEntityByName(std::string const & name)
@@ -193,163 +337,6 @@ namespace Poulpe
             [name](auto & entity) -> bool { return entity->getName() == name; });
 
         return it->get();
-    }
-
-    std::function<void()> EntityManager::load(nlohmann::json levelConfig)
-    {
-        m_LevelConfig = levelConfig;
-
-        std::function<void()> entitiesFuture = [this]() {
-
-            for (auto& entityConf : m_LevelConfig["entities"].items()) {
-
-                auto key = entityConf.key();
-                auto data = entityConf.value();
-
-                std::string form = static_cast<std::string>(data["form"]);
-
-                if ("square" == form) {
-                    int xMin = static_cast<int>(data["squarePadding"][0]["x"][0]);
-                    int xMax = static_cast<int>(data["squarePadding"][0]["x"][1]);
-                    int yMin = static_cast<int>(data["squarePadding"][0]["y"][0]);
-                    int yMax = static_cast<int>(data["squarePadding"][0]["y"][1]);
-
-                    for (int x = xMin; x < xMax; x++) {
-                        for (int y = yMin; y < yMax; y++) {
-
-                            auto positionData = data["positions"].at(0);
-
-                            glm::vec3 position = glm::vec3(
-                                static_cast<float>(positionData["x"]) * static_cast<float>(x),
-                                static_cast<float>(positionData["y"]),
-                                static_cast<float>(positionData["z"]) * static_cast<float>(y)
-                            );
-
-                            std::vector<std::string> textures{};
-                            for (auto& [key, path]: data["textures"].items())
-                                textures.emplace_back(static_cast<std::string>(key));
-
-                            auto scaleData = data["scales"].at(0);
-                            auto rotationData = data["rotations"].at(0);
-
-                            glm::vec3 scale = glm::vec3(
-                                static_cast<float>(scaleData["x"]),
-                                static_cast<float>(scaleData["y"]),
-                                static_cast<float>(scaleData["z"])
-                            );
-                            glm::vec3  rotation = glm::vec3(
-                                static_cast<float>(rotationData["x"]),
-                                static_cast<float>(rotationData["y"]),
-                                static_cast<float>(rotationData["z"])
-                            );
-
-                            bool hasBbox = static_cast<bool>(data["hasBbox"]);
-                            bool hasAnimation = static_cast<bool>(data["hasAnimation"]);
-                            bool isPointLight = static_cast<bool>(data["isPointLight"]);
-
-                            auto parts = initMeshes(
-                                static_cast<std::string>(key),
-                                static_cast<std::string>(data["mesh"]),
-                                textures,
-                                static_cast<std::string>(data["shader"]),
-                                position,
-                                scale,
-                                rotation,
-                                static_cast<bool>(data["inverseTextureY"])
-                            );
-
-                            //@todo add component type in json config file
-                            for (auto & part : parts) {
-                                part->setHasBbox(hasBbox);
-                                part->setHasAnimation(hasAnimation);
-                                part->setIsPointLight(isPointLight);
-                            }
-                            addEntity(std::move(parts));
-                        }
-                    }
-                } else {
-                    int count = static_cast<int>(data["count"]);
-                    std::string form = static_cast<std::string>(data["form"]);
-
-                    for (int i = 0; i < count; i++) {
-
-                        glm::vec3 position{};
-                        auto positionData = (1 == data["positions"].size()) ? data["positions"].at(0) : data["positions"].at(i);
-
-                        if ("positioned" == form) {
-                            position = glm::vec3(
-                                static_cast<float>(positionData["x"]),
-                                static_cast<float>(positionData["y"]),
-                                static_cast<float>(positionData["z"])
-                            );
-                        }
-                        else if ("line" == form) {
-                            position = glm::vec3(
-                                static_cast<float>(positionData["x"]) + static_cast<float>(data["padding"]["x"]) * i,
-                                static_cast<float>(positionData["y"]) + static_cast<float>(data["padding"]["y"]) * i,
-                                static_cast<float>(positionData["z"]) + static_cast<float>(data["padding"]["z"]) * i
-                            );
-                        }
-
-                        auto scaleData = (1 == data["scales"].size()) ? data["scales"].at(0) : data["scales"].at(i);
-                        auto rotationData = (1 == data["rotations"].size()) ? data["rotations"].at(0) : data["rotations"].at(i);
-
-                        glm::vec3 scale = glm::vec3(
-                            static_cast<float>(scaleData["x"]),
-                            static_cast<float>(scaleData["y"]),
-                            static_cast<float>(scaleData["z"])
-                        );
-                        glm::vec3  rotation = glm::vec3(
-                            static_cast<float>(rotationData["x"]),
-                            static_cast<float>(rotationData["y"]),
-                            static_cast<float>(rotationData["z"])
-                        );
-
-                        std::vector<std::string> textures{};
-                        for (auto& [key, path]: data["textures"].items())
-                            textures.emplace_back(static_cast<std::string>(key));
-
-                        bool hasBbox = static_cast<bool>(data["hasBbox"]);
-                        bool hasAnimation = static_cast<bool>(data["hasAnimation"]);
-                        bool isPointLight = static_cast<bool>(data["isPointLight"]);
-
-                        //@todo move init to a factory ?
-                        auto parts = initMeshes(
-                            static_cast<std::string>(key),
-                            static_cast<std::string>(data["mesh"]),
-                            textures,
-                            static_cast<std::string>(data["shader"]),
-                            position,
-                            scale,
-                            rotation,
-                            static_cast<bool>(data["inverseTextureY"])
-                        );
-
-                        for (auto & part : parts) {
-                            part->setHasBbox(hasBbox);
-                            part->setHasAnimation(hasAnimation);
-                            part->setIsPointLight(isPointLight);
-                        }
-                        addEntity(std::move(parts));
-
-                        TinyObjLoader::m_TinyObjMaterials.clear();
-                    }
-                }
-            }
-
-            m_LoadingDone.store(true);
-        };
-
-        return entitiesFuture;
-    }
-
-    void EntityManager::clear()
-    {
-        m_Entities.clear();
-        m_HUD.clear();
-        m_LoadedEntities.clear();
-        m_WorldNode->clear();
-        m_World.release();
     }
 
     std::vector<Mesh*> EntityManager::initMeshes(std::string const  & name, std::string const & path,
@@ -513,5 +500,14 @@ namespace Poulpe
         }
 
         return meshes;
+    }
+
+    void EntityManager::initWorldGraph()
+    {
+      m_World = std::make_unique<Entity>();
+      m_World->setName("_PLPWorld");
+      m_World->setVisible(false);
+
+      m_WorldNode = std::make_unique<EntityNode>(m_World.get());
     }
 }
