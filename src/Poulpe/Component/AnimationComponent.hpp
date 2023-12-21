@@ -9,16 +9,15 @@ namespace Poulpe
     public:
         AnimationComponent() : Component() {};
 
-        //@todo mmh ? CRTP ?
-        void visit(float const deltaTime, Mesh* mesh)
-        {
-            Component::visit(deltaTime, mesh);
-        }
-
         template<typename T>
         void init(T* componentImpl)
         {
-            m_Pimpl = std::move(componentImpl);
+          m_Pimpl = std::move(componentImpl);
+        }
+
+        void visit(float const deltaTime, Mesh* mesh)
+        {
+            Component::visit(deltaTime, mesh);
         }
     };
 }

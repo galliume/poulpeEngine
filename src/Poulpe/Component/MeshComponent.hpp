@@ -10,7 +10,6 @@ namespace Poulpe
     public:
         MeshComponent() : Component() {};
 
-        //@todo mmh ? CRTP ?
         void visit(float const deltaTime, IVisitable* visitable)
         {
             Component::visit(deltaTime, visitable);

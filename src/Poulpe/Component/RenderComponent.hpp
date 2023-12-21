@@ -9,7 +9,6 @@ namespace Poulpe
     public:
         RenderComponent() : Component() {};
 
-        //@todo mmh ? CRTP ?
         void visit(float const deltaTime, IVisitable* visitable)
         {
             Component::visit(deltaTime, visitable);

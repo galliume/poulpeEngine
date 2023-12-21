@@ -16,6 +16,36 @@ namespace Poulpe
         m_View = glm::lookAt(m_Pos, m_Pos + m_CameraFront, m_CameraUp);
     }
 
+    void Camera::backward()
+    {
+      m_Pos -= m_CameraFront * (m_Speed * m_DeltaTime);
+    }
+
+    void Camera::down()
+    {
+      m_Pos += m_CameraUp * (m_Speed * m_DeltaTime);
+    }
+
+    void Camera::forward()
+    {
+      m_Pos += m_CameraFront * (m_Speed * m_DeltaTime);
+    }
+
+    void Camera::left()
+    {
+      m_Pos -= glm::normalize(glm::cross(m_CameraFront, m_CameraUp)) * (m_Speed * m_DeltaTime);
+    }
+
+    void Camera::right()
+    {
+      m_Pos += glm::normalize(glm::cross(m_CameraFront, m_CameraUp)) * (m_Speed * m_DeltaTime);
+    }
+
+    void Camera::up()
+    {
+      m_Pos -= m_CameraUp * (m_Speed * m_DeltaTime);
+    }
+
     /**
         fovy : viertical field of view
         s : aspect ratio viewport
@@ -81,35 +111,6 @@ namespace Poulpe
         //frustumProj[3][3] = 1.0f;
 
         return frustumProj;
-    }
-
-    void Camera::forward()
-    {
-        m_Pos +=  m_CameraFront * (m_Speed * m_DeltaTime);
-    }
-
-    void Camera::backward()
-    {
-        m_Pos -= m_CameraFront * (m_Speed * m_DeltaTime);
-    }
-    void Camera::up()
-    {
-        m_Pos -= m_CameraUp * (m_Speed * m_DeltaTime);
-    }
-
-    void Camera::down()
-    {
-        m_Pos += m_CameraUp * (m_Speed * m_DeltaTime);
-    }
-
-    void Camera::left()
-    {
-        m_Pos -= glm::normalize(glm::cross(m_CameraFront, m_CameraUp)) * (m_Speed * m_DeltaTime);
-    }
-
-    void Camera::right()
-    {
-        m_Pos += glm::normalize(glm::cross(m_CameraFront, m_CameraUp)) * (m_Speed * m_DeltaTime);
     }
 
     glm::mat4 Camera::lookAt()
