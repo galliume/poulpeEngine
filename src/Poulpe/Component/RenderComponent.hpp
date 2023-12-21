@@ -4,13 +4,14 @@
 
 namespace Poulpe
 {
-    class RenderComponent : public Component, public IVisitor
+    class RenderComponent : public Component
     {
     public:
         RenderComponent() : Component() {};
 
         //@todo mmh ? CRTP ?
-        void visit(float const deltaTime, Mesh* mesh) override {
+        void visit(float const deltaTime, Mesh* mesh)
+        {
             Component::visit(deltaTime, mesh);
         }
     };

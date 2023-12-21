@@ -10,7 +10,7 @@ namespace Poulpe
     {
     public:
 
-        explicit EntityManager();
+        explicit EntityManager(ComponentManager* componentManager);
         virtual ~EntityManager() = default;
 
         void addEntity(std::vector<Mesh*> meshes);
@@ -52,5 +52,7 @@ namespace Poulpe
         std::unique_ptr<EntityNode> m_WorldNode;
 
         std::set<std::string> m_ObjLoaded{};
+
+        ComponentManager* m_ComponentManager;
     };
 }

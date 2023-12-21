@@ -2,10 +2,9 @@
 
 #include "Core/CommandQueue.hpp"
 
-#include "GUI/ImGui/Im.hpp"
-#include "GUI/LayerManager.hpp"
-#include "GUI/Layer/VulkanLayer.hpp"
 #include "GUI/Window.hpp"
+
+#include "Manager/RenderManager.hpp"
 
 #include "Renderer/Adapter/VulkanAdapter.hpp"
 
@@ -26,8 +25,7 @@ namespace Poulpe
     private:
         static Application* s_Instance;
 
-        std::unique_ptr<Poulpe::RenderManager> m_RenderManager;
-        std::unique_ptr<Poulpe::VulkanLayer> m_VulkanLayer;
+        std::unique_ptr<RenderManager> m_RenderManager;
 
         std::chrono::time_point<std::chrono::system_clock> m_StartRun;
     };
