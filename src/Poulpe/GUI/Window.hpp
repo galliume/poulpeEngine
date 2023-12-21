@@ -9,19 +9,22 @@ namespace Poulpe
     {
     public:
         Window() = default;
+        //m_Window: delete is done in Application.cpp with glfwFunction
 
-        void init(std::string_view windowTitle);
-        inline GLFWwindow* get() { return m_Window; }
+        inline GLFWwindow* get() const { return m_Window; }
+
         inline void setVSync(bool active) { m_ActiveVSync = active; }
-        bool isMinimized();
-        void wait();
-        void quit();
+
         void hide();
+        void init(std::string_view windowTitle);
+        bool isMinimized();
+        void quit();
+        void wait();
 
         static bool m_FramebufferResized;
 
     private:
-        GLFWwindow* m_Window = nullptr;
         bool m_ActiveVSync = true;
+        GLFWwindow* m_Window = nullptr;
     };
 }
