@@ -6,6 +6,12 @@ namespace Poulpe
 {
     class DeviceMemory;
 
+    struct CameraUBO {
+      alignas(16) glm::mat4 view;
+      alignas(16) glm::mat4 proj;
+      alignas(16) glm::mat4 projXview;
+    };
+
     struct UniformBufferObject
     {
         alignas(16) glm::mat4 model;
