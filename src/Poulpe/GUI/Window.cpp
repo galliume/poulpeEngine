@@ -6,6 +6,11 @@ namespace Poulpe
 {
     bool Window::m_FramebufferResized = false;
 
+    void Window::hide()
+    {
+      glfwWindowHint(GLFW_VISIBLE, GLFW_TRUE);
+    }
+
     void Window::init(std::string_view windowTitle)
     {
         /*const uint32_t WIDTH = 2560;
@@ -18,18 +23,8 @@ namespace Poulpe
         glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
         glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
         glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-        //glfwWindowHint(GLFW_CONTEXT_CREATION_API, GLFW_NATIVE_CONTEXT_API);
-        //glfwWindowHint(GLFW_DECORATED, GLFW_FALSE);
-//#ifdef PLP_DEBUG_BUILD
-        //glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
-//#endif
 
         m_Window = glfwCreateWindow(WIDTH, HEIGHT, windowTitle.data(), nullptr, nullptr);
-
-        //GLFWimage images[1]; 
-        //images[0].pixels = stbi_load("./assets/mpoulpe.png", &images[0].width, &images[0].height, 0, 4);
-        //glfwSetWindowIcon(m_Window, 1, images); 
-        //stbi_image_free(images[0].pixels);
 
         glfwSetWindowSizeLimits(m_Window, 800, 600, 2560, 1440);
           
@@ -57,18 +52,13 @@ namespace Poulpe
         return (width == 0 || height == 0);
     }
 
-    void Window::wait()
-    {
-        glfwWaitEvents();
-    }
-
     void Window::quit()
     {
         glfwSetWindowShouldClose(m_Window, true);
     }
 
-    void Window::hide()
+    void Window::wait()
     {
-        glfwWindowHint(GLFW_VISIBLE, GLFW_TRUE);
+        glfwWaitEvents();
     }
 }

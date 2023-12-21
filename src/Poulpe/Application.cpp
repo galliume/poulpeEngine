@@ -29,9 +29,9 @@ namespace Poulpe
         auto* cmdQueue = new Poulpe::CommandQueue();
         auto* threadPool = new Poulpe::ThreadPool();
 
-        Poulpe::Locator::setThreadPool(threadPool);
         Poulpe::Locator::setInputManager(inputManager);
         Poulpe::Locator::setCommandQueue(cmdQueue);
+        Poulpe::Locator::setThreadPool(threadPool);
 
         m_RenderManager = std::make_unique<Poulpe::RenderManager>(window);
         m_RenderManager->init();
@@ -62,7 +62,6 @@ namespace Poulpe
 
             glfwPollEvents();
 
-            //m_RenderManager->getRendererAdapter()->shouldRecreateSwapChain();
             Poulpe::Locator::getCommandQueue()->execPreRequest();
             m_RenderManager->renderScene(deltaTime);
             m_RenderManager->draw();
@@ -72,8 +71,5 @@ namespace Poulpe
         }
 
         m_RenderManager->cleanUp();
-
-        glfwDestroyWindow(m_RenderManager->getWindow()->get());
-        glfwTerminate();
     }
 }
