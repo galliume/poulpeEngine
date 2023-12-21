@@ -1,9 +1,9 @@
 #pragma once
 
-#include "Poulpe/Renderer/Vulkan/Entities/Crosshair.hpp"
-#include "Poulpe/Renderer/Vulkan/Entities/Basic.hpp"
-#include "Poulpe/Renderer/Vulkan/Entities/Grid.hpp"
-#include "Poulpe/Renderer/Vulkan/Entities/Skybox.hpp"
+#include "Poulpe/Component/Renderer/Crosshair.hpp"
+#include "Poulpe/Component/Renderer/Basic.hpp"
+#include "Poulpe/Component/Renderer/Grid.hpp"
+#include "Poulpe/Component/Renderer/Skybox.hpp"
 
 namespace Poulpe
 {

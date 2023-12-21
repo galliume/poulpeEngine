@@ -6,6 +6,8 @@
 
 #include "Poulpe/Core/TinyObjLoader.hpp"
 
+#include "Poulpe/Manager/ComponentManager.hpp"
+
 #include "Poulpe/Renderer/Adapter/IRendererAdapter.hpp"
 
 #include <nlohmann/json.hpp>

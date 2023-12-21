@@ -2,11 +2,75 @@
 
 #include "Poulpe/Renderer/Vulkan/EntityFactory.hpp"
 
+#include "Poulpe/Component/AnimationComponent.hpp"
+#include "Poulpe/Component/MeshComponent.hpp"
+
 #include <filesystem>
 
 namespace Poulpe
 {
-    EntityManager::EntityManager()
+    class AnimImpl : public AbstractRenderer
+    {
+    public:
+        AnimImpl() = default;
+
+        void init(VulkanAdapter* adapter, [[maybe_unused]] TextureManager* textureManager, [[maybe_unused]] LightManager* lightManager) override
+        {
+            m_Adapter = adapter;
+        }
+        void setPushConstants([[maybe_unused]]Mesh* mesh) override {};
+        void createDescriptorSet([[maybe_unused]]Mesh* mesh) override {};
+
+        void visit(float const deltaTime, Mesh* mesh) override
+        {
+            for (auto& ubo : mesh->getData()->m_Ubos) {
+
+                //mesh->getData()->m_CurrentPos.x -= 0.0001;
+                //mesh->getData()->m_CurrentPos.y -= 0.0001;
+                //mesh->getData()->m_CurrentPos.z -= 0.0001;
+                //if (!reverse) {
+                //    animationDuration -= 1.f;
+                //}
+                //else {
+                //    animationDuration += 1.f;
+                //}
+
+                //if (0 > animationDuration) {
+                //    animationDuration = 0.f;
+                //    reverse = true;
+                //}
+                //else if (3 < animationDuration) {
+                //    animationDuration = 3.f;
+                //    reverse = false;
+                //}
+
+                //auto scale = lerp(startScale, endScale, elapsedTime / animationDuration);
+
+                //elapsedTime += deltaTime;
+
+                //ubo.model = glm::mat4(1.0f);
+                //ubo.model = glm::translate(ubo.model, mesh->getData()->m_OriginPos);
+                //ubo.model = glm::scale(ubo.model, mesh->getData()->m_OriginScale);
+
+                auto angle = deltaTime * (std::rand() % 20);
+
+                ubo.model = glm::rotate(ubo.model, glm::radians(angle), mesh->getData()->m_OriginPos);
+
+                m_Adapter->rdr()->updateUniformBuffer(mesh->getUniformBuffers()->at(0), &mesh->getData()->m_Ubos);
+            }
+
+        }
+
+        VulkanAdapter* m_Adapter;
+        float animationDuration = 3.f;
+        float elapsedTime = 0.f;
+        bool reverse = false;
+        glm::vec3 startScale = glm::vec3(0.001, 0.001, 0.001);
+        glm::vec3 endScale = glm::vec3(0.12, 0.12, 0.12);
+    };
+
+    EntityManager::EntityManager(ComponentManager* componentManager)
+        : m_ComponentManager(componentManager)
     {
         initWorldGraph();
     }
@@ -35,7 +99,8 @@ namespace Poulpe
 
                 auto existingEntity = m_Entities[m_LoadedEntities[mesh->getName().c_str()][1]].get();
 
-                existingEntity->getMesh()->addUbos(data->m_Ubos);
+                auto meshComponent = m_ComponentManager->getComponent<MeshComponent>(existingEntity->getID());
+                meshComponent->getMesh()->addUbos(data->m_Ubos);
 
                 UniformBufferObject ubo{};
 
@@ -51,9 +116,20 @@ namespace Poulpe
             }
             else {
                 auto entity = std::make_unique<Entity>();
+
                 //@todo change for archetype id ?
                 entity->setName(mesh->getName());
-                entity->setMesh(mesh);
+
+                if (mesh->hasAnimation()) {
+                    //@todo temp until lua scripting
+                    auto* animImpl = new AnimImpl();
+                    m_ComponentManager->addComponent<AnimationComponent>(entity->getID(), animImpl);
+                }
+
+                m_ComponentManager->addComponent<MeshComponent>(entity->getID(), mesh);
+
+                auto* basicRdrImpl = new Basic();
+                m_ComponentManager->addComponent<RenderComponent>(entity->getID(), basicRdrImpl);
 
                 m_WorldNode->addChild(entity.get());
 
@@ -179,6 +255,7 @@ namespace Poulpe
                                 static_cast<bool>(data["inverseTextureY"])
                             );
 
+                            //@todo add component type in json config file
                             for (auto & part : parts) {
                                 part->setHasBbox(hasBbox);
                                 part->setHasAnimation(hasAnimation);

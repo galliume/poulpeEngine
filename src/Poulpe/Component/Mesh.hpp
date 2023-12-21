@@ -5,6 +5,7 @@
 #include "Vertex2D.hpp"
 
 #include "Poulpe/Core/Buffer.hpp"
+#include "Poulpe/Core/IVisitor.hpp"
 
 #include "Poulpe/Renderer/Vulkan/DeviceMemory.hpp"
 
@@ -13,6 +14,8 @@
 namespace Poulpe
 {
     class VulkanAdapter;//@todo should not be here
+    class TextureManager;
+    class LightManager;
 
     struct material_t {
       std::string name;
@@ -42,7 +45,7 @@ namespace Poulpe
         alignas(16) glm::vec4 mapsUsed = glm::vec4(0.0f);
     };
 
-    class Mesh
+    class Mesh : public IVisitor
     {
     public:
          struct Buffer {
@@ -140,8 +143,11 @@ namespace Poulpe
         void setDescSet(VkDescriptorSet descSet) { m_DescSet = descSet; }
         VkDescriptorSet* getDescSet() { return & m_DescSet; }
 
-        bool isDescShadowMapDone() { return m_IsDescShadowMapDone; }
-        void setIsDescShadowMapDone() { m_IsDescShadowMapDone = true; }
+        bool hasAnimation() { return m_HasAnimation; }
+        void setHasAnimation(bool has = true) { m_HasAnimation = has; }
+
+        void visit(float const deltaTime, Mesh* mesh);
+        void init([[maybe_unused]]VulkanAdapter* adapter, [[maybe_unused]]TextureManager* textureManager, [[maybe_unused]]LightManager* lightManager) {}
 
     private:
         std::unique_ptr<BBox> m_BoundingBox;
@@ -162,8 +168,8 @@ namespace Poulpe
         bool m_IsIndexed{ true };
         bool m_HasStorageBuffer{ false };
         bool m_IsPointLight{ false };
+        bool m_HasAnimation{ true };
 
         VkDescriptorSet m_DescSet;
-        bool m_IsDescShadowMapDone{ false };
     };
 }

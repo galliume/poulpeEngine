@@ -15,8 +15,15 @@ namespace Poulpe
         ~Component() { delete m_Pimpl; }
 
         template<std::derived_from<IVisitor> T>
-        void init(T* componentImpl) {
+        void init(T* componentImpl) 
+        {
             m_Pimpl = std::move(componentImpl);
+        }
+
+        template<typename... TArgs>
+        void initPimpl(TArgs&&... args)
+        {
+            m_Pimpl->init(std::forward<TArgs>(args)...);
         }
 
         template<typename... TArgs>
@@ -30,11 +37,13 @@ namespace Poulpe
         IDType getID() { return m_ID; }
         IDType getOwner() { return m_Owner; }
 
+    protected:
+        IVisitor* m_Pimpl;
+
     private:
         IDType m_ID;
         IDType m_Owner;
 
         //@todo make unique_ptr ?
-        IVisitor* m_Pimpl;
     };
 }
