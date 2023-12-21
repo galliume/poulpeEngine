@@ -16,7 +16,8 @@ namespace Poulpe
     public:
 
         virtual ~IComponentRenderer() = default;
-        virtual void setPushConstants(IVisitable* const mesh) = 0;
+
         virtual void createDescriptorSet(IVisitable* const mesh) = 0;
+        virtual void setPushConstants(IVisitable* const mesh) = 0;
     };
 }
