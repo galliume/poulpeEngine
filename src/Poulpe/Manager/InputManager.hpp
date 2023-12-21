@@ -13,25 +13,26 @@ namespace Poulpe
     {
     public:
         explicit InputManager(Window* window);
+
         virtual void init(nlohmann::json inputConfig) override;
 
+        void inline addRenderer(Poulpe::VulkanAdapter* adapter) { m_Adapter = adapter; };
         void key(int key, int scancode, int action, int mods);
-        void updateMousePos(double xPos, double yPo);
         void mouseButton(int button, int action, int mods);
-
-        void setCamera(Camera* camera) { m_Camera = camera; };
-        void addRenderer(Poulpe::VulkanAdapter* adapter) { m_Adapter = adapter; };
         void saveLastMousePos(double xPos, double yPos);
+        void inline setCamera(Camera* camera) { m_Camera = camera; };
+        void updateMousePos(double xPos, double yPo);
 
         static bool m_CanMoveCamera;
         static bool m_FirtMouseMove;
 
     private:
-        Window* m_Window;
-        Camera* m_Camera;
-        VulkanAdapter* m_Adapter;
         double m_LastX;
         double m_LastY;
+
+        VulkanAdapter* m_Adapter;
+        Camera* m_Camera;
+        Window* m_Window;
 
         nlohmann::json m_InputConfig;
         std::unordered_map<std::string, int> m_KeyboardKeys{};

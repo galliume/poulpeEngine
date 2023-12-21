@@ -8,7 +8,7 @@ namespace Poulpe
     InputManager::InputManager(Window* window) : m_Window(window)
     {
         int width, height;
-        glfwGetWindowSize(m_Window->get(), &width, &height);
+        glfwGetWindowSize(m_Window->get(), & width, & height);
     }
     
     void InputManager::init(nlohmann::json inputConfig)
@@ -64,14 +64,6 @@ namespace Poulpe
         });
     }
 
-    void InputManager::saveLastMousePos(double xPos, double yPos)
-    {
-        m_LastX = xPos;
-        m_LastY = yPos;
-
-        InputManager::m_FirtMouseMove = true;
-    }
-
     void InputManager::key(int key, [[maybe_unused]] int scancode, int action, [[maybe_unused]] int mods)
     {
         const auto config = m_InputConfig[m_InputConfig["current"]];
@@ -110,6 +102,25 @@ namespace Poulpe
         }
     }
 
+    void InputManager::mouseButton(int button, [[maybe_unused]] int action, [[maybe_unused]] int mods)
+    {
+      if (GLFW_MOUSE_BUTTON_LEFT == button) {
+        int width, height;
+        glfwGetWindowSize(m_Window->get(), &width, &height);
+
+        double xpos, ypos;
+        glfwGetCursorPos(m_Window->get(), &xpos, &ypos);
+      }
+    }
+
+    void InputManager::saveLastMousePos(double xPos, double yPos)
+    {
+      m_LastX = xPos;
+      m_LastY = yPos;
+
+      InputManager::m_FirtMouseMove = true;
+    }
+
     void InputManager::updateMousePos(double x, double y)
     {
         double xPos = x;
@@ -135,22 +146,5 @@ namespace Poulpe
         yoffset *= sensitivity;
     
         m_Camera->updatePos(xoffset, yoffset);
-    }
-
-    void InputManager::mouseButton(int button, [[maybe_unused]] int action, [[maybe_unused]] int mods)
-    {
-        if (GLFW_MOUSE_BUTTON_LEFT == button) {
-            int width, height;
-            glfwGetWindowSize(m_Window->get(), &width, &height);
-
-            double xpos, ypos;
-            glfwGetCursorPos(m_Window->get(), &xpos, &ypos);
-
-            //float x = (2.0f * xpos) / width - 1.0f;
-            //float y = 1.0f - (2.0f * ypos) / height;
-            //float z = 1.0f;
-
-            //m_Adapter->SetRayPick(x, y, z, width, height);
-        }
     }
 }

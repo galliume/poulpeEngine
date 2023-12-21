@@ -25,7 +25,6 @@ namespace Poulpe
         m_ConfigManager = std::make_unique<Poulpe::ConfigManager>();
         m_AudioManager = std::make_unique<Poulpe::AudioManager>();
         m_ShaderManager = std::make_unique<Poulpe::ShaderManager>();
-        m_SpriteAnimationManager = std::make_unique<Poulpe::SpriteAnimationManager>();
         m_DestroyManager = std::make_unique<Poulpe::DestroyManager>();
         m_Camera = std::make_unique<Poulpe::Camera>();
 
@@ -64,7 +63,6 @@ namespace Poulpe
         m_DestroyManager->cleanTextures(m_TextureManager->getTextures());
         m_DestroyManager->cleanTexture(m_TextureManager->getSkyboxTexture());
         m_AudioManager->clear();
-        m_SpriteAnimationManager->clear();
         m_TextureManager->clear();
         m_EntityManager->clear();
         m_ShaderManager->clear();
@@ -72,6 +70,11 @@ namespace Poulpe
         //m_DestroyManager->CleanDeviceMemory();
         //m_Renderer->Rdr()->InitMemoryPool();
         m_ComponentManager->clear();
+    }
+
+    void RenderManager::draw()
+    {
+      m_Renderer->draw();
     }
 
     void RenderManager::init()
@@ -116,51 +119,18 @@ namespace Poulpe
         }
     }
 
-    void RenderManager::loadData(std::string const & level)
-    {
-        nlohmann::json appConfig = m_ConfigManager->appConfig();
-        std::string_view threadQueueName{ "loading" };
-
-        auto const levelData = m_ConfigManager->loadLevelData(level);
-        m_TextureManager->addConfig(m_ConfigManager->texturesConfig());
-
-        std::function<void()> entityFutures = m_EntityManager->load(levelData);
-        std::function<void()> textureFuture = m_TextureManager->load();
-
-        std::string const  sb = (m_CurrentSkybox.empty()) ? static_cast<std::string>(appConfig["defaultSkybox"])
-            : m_CurrentSkybox;
-
-        std::function<void()> skyboxFuture = m_TextureManager->loadSkybox(sb);
-        std::function<void()> shaderFuture = m_ShaderManager->load(m_ConfigManager->shaderConfig());
-
-        Poulpe::Locator::getThreadPool()->submit(threadQueueName, entityFutures);
-        Poulpe::Locator::getThreadPool()->submit(threadQueueName, textureFuture);
-        Poulpe::Locator::getThreadPool()->submit(threadQueueName, skyboxFuture);
-        Poulpe::Locator::getThreadPool()->submit(threadQueueName, shaderFuture);
-
-        while (!m_TextureManager->isTexturesLoadingDone()) {
-            //PLP_WARN("loading {}", m_TextureManager->isTexturesLoadingDone());
-        }
-        while (!m_TextureManager->isSkyboxLoadingDone()) {
-            //PLP_WARN("loading {}", m_TextureManager->isSkyboxLoadingDone());
-        }
-        while (!m_ShaderManager->isLoadingDone()) {
-            //PLP_WARN("loading {}", m_ShaderManager->isLoadingDone());
-        }
-        while (!m_EntityManager->IsLoadingDone()) {
-            //PLP_WARN("loading {}", m_EntityManager->IsLoadingDone());
-        }
-        setIsLoaded();
-    }
-
-    void RenderManager::draw()
-    {
-        m_Renderer->draw();
-    }
-
     template <typename T>
     T lerp(T const& startValue, T const& endValue, float const& t) {
       return ((1.0f - t) * startValue) + (t * endValue);
+    }
+
+    void RenderManager::refresh(uint32_t levelIndex, bool showBbox, std::string_view skybox)
+    {
+      m_CurrentLevel = m_ConfigManager->listLevels().at(levelIndex);
+      m_CurrentSkybox = skybox;
+      m_IsLoaded = false;
+      m_Refresh = true;
+      m_ShowBbox = showBbox;
     }
 
     void RenderManager::renderScene(float const deltaTime)
@@ -189,13 +159,41 @@ namespace Poulpe
         }
     }
 
-    void RenderManager::refresh(uint32_t levelIndex, bool showBbox, std::string_view skybox)
+    void RenderManager::loadData(std::string const & level)
     {
-        m_CurrentLevel = m_ConfigManager->listLevels().at(levelIndex);
-        m_CurrentSkybox = skybox;
-        m_IsLoaded = false;
-        m_Refresh = true;
-        m_ShowBbox = showBbox;
+      nlohmann::json appConfig = m_ConfigManager->appConfig();
+      std::string_view threadQueueName{ "loading" };
+
+      auto const levelData = m_ConfigManager->loadLevelData(level);
+      m_TextureManager->addConfig(m_ConfigManager->texturesConfig());
+
+      std::function<void()> entityFutures = m_EntityManager->load(levelData);
+      std::function<void()> textureFuture = m_TextureManager->load();
+
+      std::string const  sb = (m_CurrentSkybox.empty()) ? static_cast<std::string>(appConfig["defaultSkybox"])
+        : m_CurrentSkybox;
+
+      std::function<void()> skyboxFuture = m_TextureManager->loadSkybox(sb);
+      std::function<void()> shaderFuture = m_ShaderManager->load(m_ConfigManager->shaderConfig());
+
+      Poulpe::Locator::getThreadPool()->submit(threadQueueName, entityFutures);
+      Poulpe::Locator::getThreadPool()->submit(threadQueueName, textureFuture);
+      Poulpe::Locator::getThreadPool()->submit(threadQueueName, skyboxFuture);
+      Poulpe::Locator::getThreadPool()->submit(threadQueueName, shaderFuture);
+
+      while (!m_TextureManager->isTexturesLoadingDone()) {
+        //PLP_WARN("loading {}", m_TextureManager->isTexturesLoadingDone());
+      }
+      while (!m_TextureManager->isSkyboxLoadingDone()) {
+        //PLP_WARN("loading {}", m_TextureManager->isSkyboxLoadingDone());
+      }
+      while (!m_ShaderManager->isLoadingDone()) {
+        //PLP_WARN("loading {}", m_ShaderManager->isLoadingDone());
+      }
+      //while (!m_EntityManager->IsLoadingDone()) {
+      //    //PLP_WARN("loading {}", m_EntityManager->IsLoadingDone());
+      //}
+      setIsLoaded();
     }
 
     void RenderManager::prepareHUD()
