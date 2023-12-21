@@ -41,9 +41,7 @@ namespace Poulpe
     {
         auto endRun = std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::system_clock::now());
         
-        PLP_WARN("Loaded scene in {}", (endRun - m_StartRun).count());//@todo readable in seconds...
-
-        std::mutex mutex;
+        PLP_TRACE("Loaded scene in {}", (endRun - m_StartRun).count());//@todo readable in seconds...
 
         auto lastTime = std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::system_clock::now());
 
