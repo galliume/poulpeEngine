@@ -18,22 +18,6 @@ namespace Poulpe
         }
     }
 
-    void CommandQueue::execPreRequest()
-    {
-        Poulpe::Locator::getThreadPool()->submit("preCommandQueue", [this]() {
-            {
-                std::lock_guard guard(m_Mutex);
-
-                while (!m_PreCmdQueue.empty())
-                {
-                    std::shared_ptr<Command> cmd = m_PreCmdQueue.front();
-                    cmd->execRequest();
-                    m_PreCmdQueue.pop();
-                }
-            }
-        });
-    }
-
     void CommandQueue::execPostRequest()
     {
       Poulpe::Locator::getThreadPool()->submit("postCommandQueue", [this]() {
@@ -45,6 +29,22 @@ namespace Poulpe
             std::shared_ptr<Command> cmd = m_PostCmdQueue.front();
             cmd->execRequest();
             m_PostCmdQueue.pop();
+          }
+        }
+        });
+    }
+
+    void CommandQueue::execPreRequest()
+    {
+      Poulpe::Locator::getThreadPool()->submit("preCommandQueue", [this]() {
+        {
+          std::lock_guard guard(m_Mutex);
+
+          while (!m_PreCmdQueue.empty())
+          {
+            std::shared_ptr<Command> cmd = m_PreCmdQueue.front();
+            cmd->execRequest();
+            m_PreCmdQueue.pop();
           }
         }
         });

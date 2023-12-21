@@ -7,6 +7,7 @@ namespace Poulpe
     {
     }
 
+    //@todo WIP
     Response Command::execRequest()
     {
         Response response;

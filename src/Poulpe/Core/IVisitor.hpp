@@ -12,9 +12,10 @@ namespace Poulpe
     {
     public:
         virtual ~IVisitor() {};
-        virtual void visit(float const deltaTime, IVisitable* const visitable) = 0;
+
         virtual void init(VulkanAdapter* const adapter,
           TextureManager* const textureManager,
           LightManager* const lightManager) = 0;
+        virtual void visit(float const deltaTime, IVisitable* const visitable) = 0;
     };
 }

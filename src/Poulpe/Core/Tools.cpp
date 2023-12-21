@@ -2,7 +2,7 @@
 
 namespace Poulpe
 {
-    std::vector<char> Tools::readFile(const std::string& filename)
+    std::vector<char> Tools::readFile(const std::string & filename)
     {
         std::ifstream file(filename, std::ios::ate | std::ios::binary);
 
