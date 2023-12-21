@@ -22,8 +22,7 @@ namespace Poulpe
     class IRenderManager
     {
     public:
-        IRenderManager() = default;
-        ~IRenderManager() = default;
+        virtual ~IRenderManager() = default;
 
         virtual void init() = 0;
         virtual void renderScene(float const deltaTime) = 0;

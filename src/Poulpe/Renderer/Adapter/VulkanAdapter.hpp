@@ -4,8 +4,6 @@
 
 #include "Poulpe/Core/IObserver.hpp"
 
-#include "Poulpe/GUI/ImGui/Im.hpp"
-
 #include "Poulpe/Manager/ComponentManager.hpp"
 #include "Poulpe/Manager/EntityManager.hpp"
 #include "Poulpe/Manager/LightManager.hpp"
@@ -20,20 +18,19 @@ namespace Poulpe
 
     public:
 
-      struct CommandToSubmit {
+      struct DrawCommand {
         VkCommandBuffer* buffer;
         VkPipelineStageFlags stageFlags;
         VkSemaphore* semaphore;
         std::atomic_bool done{false};
       };
 
-        explicit VulkanAdapter(
+        VulkanAdapter(
           Window* window,
           EntityManager* entityManager,
           LightManager* lightManager
         );
-
-        virtual ~VulkanAdapter() = default;
+        ~VulkanAdapter() = default;
 
         void init() override;
         void addCamera(Camera* camera) override { m_Camera = camera; }
@@ -47,7 +44,7 @@ namespace Poulpe
         inline glm::mat4 getPerspective() override { return m_Perspective; }
         void setDeltatime(float deltaTime) override;
         void renderScene() override;
-        ImGuiInfo getImGuiInfo() ;
+
         void clear();
         void drawEntities();
         void drawSkybox();
@@ -183,11 +180,11 @@ namespace Poulpe
         std::vector<VkFence> m_InFlightFences{};
 
         std::mutex m_MutexQueueSubmit;
-        std::vector<CommandToSubmit*> m_CmdsToSubmit{};
+        std::vector<DrawCommand*> m_CmdsToSubmit{};
 
-        std::vector<std::unique_ptr<CommandToSubmit>> m_CmdSkyboxStatus{};
-        std::vector<std::unique_ptr<CommandToSubmit>> m_CmdEntitiesStatus{};
-        std::vector<std::unique_ptr<CommandToSubmit>> m_CmdHUDStatus{};
+        std::vector<std::unique_ptr<DrawCommand>> m_CmdSkyboxStatus{};
+        std::vector<std::unique_ptr<DrawCommand>> m_CmdEntitiesStatus{};
+        std::vector<std::unique_ptr<DrawCommand>> m_CmdHUDStatus{};
 
         std::atomic_bool m_Nodraw{ true };
     };

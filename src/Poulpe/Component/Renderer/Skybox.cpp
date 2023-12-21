@@ -5,13 +5,6 @@ namespace Poulpe
 {
     struct constants;
 
-    Skybox::Skybox(VulkanAdapter* adapter, TextureManager* textureManager)
-      : m_Adapter(adapter),
-      m_TextureManager(textureManager)
-    {
-     
-    }
-
     void Skybox::visit([[maybe_unused]] float const deltaTime, Mesh* mesh)
     {
         if (!mesh && !mesh->isDirty()) return;

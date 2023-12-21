@@ -146,7 +146,7 @@ namespace Poulpe
             result = vkCreateFence(rdr()->getDevice(), &fenceInfo, nullptr, &m_InFlightFences[i]);
             if (VK_SUCCESS != result) PLP_ERROR("can't create m_InFlightFences fence");
 
-            auto cmdSky = std::make_unique<CommandToSubmit>();
+            auto cmdSky = std::make_unique<DrawCommand>();
             cmdSky->buffer = &m_CommandBuffersSkybox[i],
             cmdSky->stageFlags = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
             cmdSky->semaphore = &m_SkyboxSemaRenderFinished[i],
@@ -154,7 +154,7 @@ namespace Poulpe
 
             m_CmdSkyboxStatus[i] = std::move(cmdSky);
 
-            auto cmdHUD = std::make_unique<CommandToSubmit>();
+            auto cmdHUD = std::make_unique<DrawCommand>();
             cmdHUD->buffer = &m_CommandBuffersHUD[i],
             cmdHUD->stageFlags = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
             cmdHUD->semaphore = &m_HUDSemaRenderFinished[i],
@@ -162,7 +162,7 @@ namespace Poulpe
 
             m_CmdHUDStatus[i] = std::move(cmdHUD);
 
-            auto cmdEntities = std::make_unique<CommandToSubmit>();
+            auto cmdEntities = std::make_unique<DrawCommand>();
             cmdEntities->buffer = &m_CommandBuffersEntities[i],
             cmdEntities->stageFlags = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
             cmdEntities->semaphore = &m_EntitiesSemaRenderFinished[i],

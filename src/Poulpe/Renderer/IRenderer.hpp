@@ -13,9 +13,11 @@
 
 namespace Poulpe
 {
-
     class IRenderer
     {
-
+        virtual ~IRenderer() {};
+        virtual void init(VulkanAdapter* adapter, TextureManager* textureManager, LightManager* lightManager) = 0;
+        virtual void setPushConstants(Mesh* mesh) = 0;
+        virtual void createDescriptorSet(Mesh* mesh) = 0;
     };
 }

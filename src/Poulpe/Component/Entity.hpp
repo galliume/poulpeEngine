@@ -25,14 +25,10 @@ namespace Poulpe
         bool isHit(glm::vec3 point);
         bool isVisible() { return m_IsVisible; }
 
-        bool hasAnimation() { return m_HasAnimation; }
-        void setHasAnimation(bool has = true) { m_HasAnimation = has; }
-
     private:
         IDType m_ID;
         std::string m_Name;
 
         bool m_IsVisible{ true };
-        bool m_HasAnimation{ true };
     };
 }

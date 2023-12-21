@@ -6,13 +6,6 @@ namespace Poulpe
 {
     struct cPC;
 
-    Grid::Grid(VulkanAdapter* adapter, TextureManager* textureManager)
-      : m_Adapter(adapter),
-      m_TextureManager(textureManager)
-    {
-
-    }
-
     void Grid::visit([[maybe_unused]] float const deltaTime, Mesh* mesh)
     {
         if (!mesh && !mesh->isDirty()) return;

@@ -10,7 +10,6 @@ namespace Poulpe
     {
     public:
         RenderManager(Window* window);
-        virtual ~RenderManager() = default;
 
         void init() override;
         void renderScene(float const deltaTime) override;
@@ -49,7 +48,6 @@ namespace Poulpe
         void prepareEntity();
         void prepareHUD();
         void prepareSkybox();
-        void prepareSplashScreen();
 
     private:
         std::unique_ptr<Poulpe::Camera> m_Camera;

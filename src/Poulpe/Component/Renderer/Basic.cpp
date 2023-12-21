@@ -6,16 +6,6 @@ namespace Poulpe
 {
     struct constants;
 
-    Basic::Basic(VulkanAdapter* adapter,
-        TextureManager* textureManager,
-        LightManager* lightManager)
-        : m_Adapter(adapter),
-        m_TextureManager(textureManager),
-        m_LightManager(lightManager)
-    {
-
-    }
-
     void Basic::visit([[maybe_unused]] float const deltaTime, Mesh* mesh)
     {
         if (!mesh && !mesh->isDirty()) return;

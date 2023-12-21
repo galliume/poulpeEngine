@@ -8,6 +8,7 @@ namespace Poulpe
     class IRendererAdapter
     {
     public:
+        virtual ~IRendererAdapter() = default;
         virtual void init() = 0;
         virtual void addCamera(Camera* camera) = 0;
         virtual void renderScene() = 0;
