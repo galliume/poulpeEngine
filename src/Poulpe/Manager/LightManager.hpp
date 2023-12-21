@@ -2,7 +2,7 @@
 
 #include "ILightManager.hpp"
 
-#include "Poulpe/Core/Buffer.hpp"
+#include "Poulpe/Core/PlpTypedef.hpp"
 
 namespace Poulpe
 {

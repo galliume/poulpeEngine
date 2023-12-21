@@ -8,7 +8,7 @@ set(SRC_LIST ${CMAKE_CURRENT_SOURCE_DIR}/AbstractRenderer.hpp
              ${CMAKE_CURRENT_SOURCE_DIR}/Grid.hpp
              ${CMAKE_CURRENT_SOURCE_DIR}/Skybox.cpp
              ${CMAKE_CURRENT_SOURCE_DIR}/Skybox.hpp
-			 ${CMAKE_CURRENT_SOURCE_DIR}/IRenderer.hpp)
+			 ${CMAKE_CURRENT_SOURCE_DIR}/IComponentRenderer.hpp)
 
 target_sources(PoulpeEngine PRIVATE ${SRC_LIST})
 

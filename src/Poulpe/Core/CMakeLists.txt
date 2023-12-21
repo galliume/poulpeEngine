@@ -1,4 +1,4 @@
-set(SRC_LIST ${CMAKE_CURRENT_SOURCE_DIR}/Buffer.hpp
+set(SRC_LIST ${CMAKE_CURRENT_SOURCE_DIR}/PlpTypedef.hpp
              ${CMAKE_CURRENT_SOURCE_DIR}/IVisitor.hpp
              ${CMAKE_CURRENT_SOURCE_DIR}/JoinThreads.hpp
              ${CMAKE_CURRENT_SOURCE_DIR}/Locator.hpp
@@ -15,6 +15,7 @@ set(SRC_LIST ${CMAKE_CURRENT_SOURCE_DIR}/Buffer.hpp
              ${CMAKE_CURRENT_SOURCE_DIR}/Command.hpp
              ${CMAKE_CURRENT_SOURCE_DIR}/CommandQueue.cpp
              ${CMAKE_CURRENT_SOURCE_DIR}/CommandQueue.hpp
-			 ${CMAKE_CURRENT_SOURCE_DIR}/IObserver.hpp)
+			 ${CMAKE_CURRENT_SOURCE_DIR}/IObserver.hpp
+			 ${CMAKE_CURRENT_SOURCE_DIR}/IVisitable.hpp)
 
 target_sources(PoulpeEngine PRIVATE ${SRC_LIST})
