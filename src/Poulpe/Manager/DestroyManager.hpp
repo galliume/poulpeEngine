@@ -5,6 +5,9 @@
 
 #include "Poulpe/Renderer/Vulkan/VulkanRenderer.hpp"
 
+/**
+* @TODO refactor all destroy system....
+*/
 namespace Poulpe
 {
     class DestroyManager
