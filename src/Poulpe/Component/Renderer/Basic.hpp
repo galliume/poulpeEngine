@@ -9,8 +9,8 @@ namespace Poulpe
     public:
         Basic() = default;
 
-        void visit(float const deltaTime, IVisitable* const visitable) override;
-        void setPushConstants(IVisitable* const mesh) override;
         void createDescriptorSet(IVisitable* const mesh) override;
+        void setPushConstants(IVisitable* const mesh) override;
+        void visit(float const deltaTime, IVisitable* const visitable) override;
     };
 }
