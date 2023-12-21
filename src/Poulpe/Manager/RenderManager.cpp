@@ -11,8 +11,8 @@ namespace Poulpe
     RenderManager::RenderManager(Window* window)
     {
         m_Window = std::unique_ptr< Window>(window);
-        m_EntityManager = std::make_unique<Poulpe::EntityManager>();
         m_ComponentManager = std::make_unique<Poulpe::ComponentManager>();
+        m_EntityManager = std::make_unique<Poulpe::EntityManager>(m_ComponentManager.get());
         m_LightManager = std::make_unique<Poulpe::LightManager>();
         m_TextureManager = std::make_unique<Poulpe::TextureManager>();
         
@@ -187,82 +187,15 @@ namespace Poulpe
 
     void RenderManager::prepareEntity()
     {
-      //@todo temp until lua scripting
-      class AnimImpl : public IVisitor
-      {
-      public:
-          AnimImpl(VulkanAdapter* adapter)
-          {
-              m_Adapter = adapter;
-          }
-
-          void visit(float const deltaTime, Mesh* mesh) override
-          {
-              for (auto& ubo : mesh->getData()->m_Ubos) {
-
-                  //mesh->getData()->m_CurrentPos.x -= 0.0001;
-                  //mesh->getData()->m_CurrentPos.y -= 0.0001;
-                  //mesh->getData()->m_CurrentPos.z -= 0.0001;
-                  //if (!reverse) {
-                  //    animationDuration -= 1.f;
-                  //}
-                  //else {
-                  //    animationDuration += 1.f;
-                  //}
-
-                  //if (0 > animationDuration) {
-                  //    animationDuration = 0.f;
-                  //    reverse = true;
-                  //}
-                  //else if (3 < animationDuration) {
-                  //    animationDuration = 3.f;
-                  //    reverse = false;
-                  //}
-
-                  //auto scale = lerp(startScale, endScale, elapsedTime / animationDuration);
-
-                  //elapsedTime += deltaTime;
-
-                  //ubo.model = glm::mat4(1.0f);
-                  //ubo.model = glm::translate(ubo.model, mesh->getData()->m_OriginPos);
-                  //ubo.model = glm::scale(ubo.model, mesh->getData()->m_OriginScale);
-
-                  auto angle = deltaTime * (std::rand() % 20);
-
-                  ubo.model = glm::rotate(ubo.model, glm::radians(angle), mesh->getData()->m_OriginPos);
-
-                  m_Adapter->rdr()->updateUniformBuffer(mesh->getUniformBuffers()->at(0), &mesh->getData()->m_Ubos);
-              }
-
-          }
-
-          VulkanAdapter* m_Adapter;
-          float animationDuration = 3.f;
-          float elapsedTime = 0.f;
-          bool reverse = false;
-          glm::vec3 startScale = glm::vec3(0.001, 0.001, 0.001);
-          glm::vec3 endScale = glm::vec3(0.12, 0.12, 0.12);
-      };
-
       for (auto& entity : *m_EntityManager->getEntities()) {
           Poulpe::Locator::getThreadPool()->submit("load_entity", [this, &entity]() {
 
-          auto* animImpl = new AnimImpl(m_Renderer.get());
-          auto* basicRdrImpl = new Basic(m_Renderer.get(),
-              m_TextureManager.get(),
-              m_LightManager.get());
-
-            m_ComponentManager->addComponent<RenderComponent>(entity->getID(), basicRdrImpl);
             auto meshComponent = m_ComponentManager->getComponent<MeshComponent>(entity->getID());
-
+          
             if (meshComponent->getMesh()->isDirty()) {
                 auto renderComponent = m_ComponentManager->getComponent<RenderComponent>(entity->getID());
+                renderComponent->initPimpl(m_Renderer.get(), m_TextureManager.get(), m_LightManager.get());
                 renderComponent->visit(0, meshComponent->getMesh());
-            }
-
-            //@todo temp until lua scripting
-            if (entity->hasAnimation()) {
-                m_ComponentManager->addComponent<AnimationComponent>(entity->getID(), animImpl);
             }
         });
       }
@@ -272,7 +205,8 @@ namespace Poulpe
     {
         auto* gridEntity = new Entity();
         auto* gridMesh = new Mesh();
-        auto* gridRdrImpl = new Grid(m_Renderer.get(), m_TextureManager.get());
+        auto* gridRdrImpl = new Grid();
+        gridRdrImpl->init(m_Renderer.get(), m_TextureManager.get(), nullptr);
 
         auto renderGridComponent = m_ComponentManager->addComponent<RenderComponent>(gridEntity->getID(), gridRdrImpl);
         renderGridComponent.visit(0, gridMesh);
@@ -280,7 +214,8 @@ namespace Poulpe
 
         auto* chEntity = new Entity();
         auto* chMesh = new Mesh();
-        auto* chRdrImpl = new Crosshair(m_Renderer.get(), m_TextureManager.get());
+        auto* chRdrImpl = new Crosshair();
+         chRdrImpl->init(m_Renderer.get(), m_TextureManager.get(), nullptr);
 
         auto renderCrosshairComponent = m_ComponentManager->addComponent<RenderComponent>(chEntity->getID(), chRdrImpl);
         renderCrosshairComponent.visit(0, chMesh);
@@ -294,7 +229,8 @@ namespace Poulpe
     {
         auto* skyboxEntity = new Entity();
         auto* skyboxMesh = new Mesh();
-        auto* skyRdrImpl = new Skybox(m_Renderer.get(), m_TextureManager.get());
+        auto* skyRdrImpl = new Skybox();
+        skyRdrImpl->init(m_Renderer.get(), m_TextureManager.get(), nullptr);
 
         auto renderComponent = m_ComponentManager->addComponent<RenderComponent>(skyboxEntity->getID(), skyRdrImpl);
         renderComponent.visit(0, skyboxMesh);

@@ -4,13 +4,6 @@
 
 namespace Poulpe
 {
-    Crosshair::Crosshair(VulkanAdapter* adapter, TextureManager* textureManager) 
-      : m_Adapter(adapter),
-        m_TextureManager(textureManager)
-    {
-
-    }
-
     void Crosshair::visit([[maybe_unused]] float const deltaTime, Mesh* mesh)
     {
         if (!mesh && !mesh->isDirty()) return;
