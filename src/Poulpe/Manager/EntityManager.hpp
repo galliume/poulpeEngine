@@ -14,15 +14,15 @@ namespace Poulpe
         virtual ~EntityManager() = default;
 
         void addEntity(std::vector<Mesh*> meshes);
+        void addHUD(Entity* entity) override { m_HUD.emplace_back(std::unique_ptr<Entity>(entity)); }
+        void addRenderer(IRendererAdapter* renderer) override { m_Renderer = renderer; }
+        void clear() override;
 
         std::vector<Mesh*> initMeshes(std::string const & name, std::string const & path,
             std::vector<std::string> const & textureNames, std::string const & shader,
             glm::vec3 const & pos, glm::vec3 const & scale, glm::vec3 rotation,
             bool shouldInverseTextureY);
 
-        void addRenderer(IRendererAdapter* renderer) override { m_Renderer = renderer; }
-        void addHUD(Entity* entity) override { m_HUD.emplace_back(std::unique_ptr<Entity>(entity)); }
-        void clear() override;
 
         inline std::vector<std::unique_ptr<Entity>>* getEntities() override { return & m_Entities; }
         inline Entity* getSkybox() override { return m_Skybox.get(); }

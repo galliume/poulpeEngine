@@ -27,6 +27,33 @@ namespace Poulpe
         f.close();
     }
 
+    std::vector<std::string> ConfigManager::listLevels() const
+    {
+      std::vector<std::string> levels;
+
+      auto entries = fs::directory_iterator(m_LevelPath);
+
+      for (auto& entry : entries) {
+        levels.emplace_back(entry.path().stem().string());
+      }
+
+      return levels;
+    }
+
+    std::vector<std::string> ConfigManager::listSkybox() const
+    {
+      std::vector<std::string> skybox;
+
+      std::string path = "assets/texture/skybox/";
+      auto entries = fs::directory_iterator(path);
+
+      for (auto& entry : entries) {
+        skybox.emplace_back(entry.path().stem().string());
+      }
+
+      return skybox;
+    }
+
     nlohmann::json ConfigManager::loadLevelData(std::string const & levelName)
     {
         m_EntityConfig.clear();
@@ -58,52 +85,5 @@ namespace Poulpe
             }
         }
         return m_EntityConfig;
-    }
-
-    nlohmann::json ConfigManager::appConfig()
-    {
-        return m_AppConfig;
-    }
-
-    nlohmann::json ConfigManager::texturesConfig()
-    {
-        return m_TexturesConfig;
-    }
-
-    nlohmann::json ConfigManager::soundConfig()
-    {
-        return m_SoundConfig;
-    }
-
-    nlohmann::json ConfigManager::shaderConfig()
-    {
-        return m_ShaderConfig;
-    }
-
-    std::vector<std::string> ConfigManager::listLevels()
-    {
-        std::vector<std::string> levels;
-
-        auto entries = fs::directory_iterator(m_LevelPath);
-
-        for (auto& entry : entries) {
-            levels.emplace_back(entry.path().stem().string());
-        }
-
-        return levels;
-    }
-
-    std::vector<std::string> ConfigManager::listSkybox()
-    {
-        std::vector<std::string> skybox;
-
-        std::string path = "assets/texture/skybox/";
-        auto entries = fs::directory_iterator(path);
-
-        for (auto& entry : entries) {
-            skybox.emplace_back(entry.path().stem().string());
-        }
-
-        return skybox;
     }
 }
