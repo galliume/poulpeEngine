@@ -13,9 +13,9 @@ namespace Poulpe
     {
     public:
         Command(std::function<void()> request, WhenToExecute w = WhenToExecute::PRE_RENDERING);
+        
         Response execRequest();
-
-        WhenToExecute getWhenToExecute() { return m_When; };
+        WhenToExecute getWhenToExecute() const { return m_When; };
 
     private:
         std::function<void()> m_Request;

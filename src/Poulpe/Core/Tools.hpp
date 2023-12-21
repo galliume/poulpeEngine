@@ -6,6 +6,6 @@ namespace Poulpe
     class Tools
     {
     public:
-        static std::vector<char> readFile(const std::string& filename);
+        static std::vector<char> readFile(const std::string & filename);
     };
 }
