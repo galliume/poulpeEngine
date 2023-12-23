@@ -5,13 +5,13 @@ namespace Poulpe
     DeviceMemory::DeviceMemory(
         VkDevice device,
         uint32_t memoryType,
-        [[maybe_unused]] VkBufferUsageFlags usage,
         VkDeviceSize maxSize,
         unsigned int index
-    ) : m_Device(device), m_MemoryType(memoryType), m_Index(index)
-        //, m_Usage(usage)
+    ) : m_Index(index),
+        m_MemoryType(memoryType),
+        m_Device(device)
     {
-        if (nullptr == m_Memory) {
+        if (!m_Memory) {
             m_Memory = std::make_unique<VkDeviceMemory>();
             m_MaxSize = maxSize;
             allocateToMemory();
@@ -20,7 +20,7 @@ namespace Poulpe
 
     VkDeviceMemory* DeviceMemory::getMemory()
     {
-        if (nullptr == m_Memory) {
+        if (!m_Memory) {
             m_Memory = std::make_unique<VkDeviceMemory>();
             m_Offset = 0;
             m_IsFull = false;

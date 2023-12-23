@@ -11,7 +11,7 @@ namespace Poulpe
         }
 
         std::streamsize fileSize = file.tellg();
-        std::vector<char> buffer(fileSize);
+        std::vector<char> buffer(static_cast<unsigned long>(fileSize));
 
         file.seekg(0);
         file.read(buffer.data(), fileSize);

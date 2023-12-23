@@ -7,7 +7,7 @@
 #include "Poulpe/Manager/EntityManager.hpp"
 #include "Poulpe/Manager/LightManager.hpp"
 
-#include "Poulpe/Renderer/Adapter/VulkanAdapter.hpp"
+#include "Poulpe/Renderer/IRenderer.hpp"
 
 namespace Poulpe
 {

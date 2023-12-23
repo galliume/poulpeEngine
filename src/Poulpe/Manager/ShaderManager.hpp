@@ -2,7 +2,7 @@
 
 #include "IShaderManager.hpp"
 
-#include "Poulpe/Renderer/Adapter/IRendererAdapter.hpp"
+#include "Poulpe/Renderer/IRenderer.hpp"
 
 namespace Poulpe
 {
@@ -12,7 +12,7 @@ namespace Poulpe
         explicit ShaderManager();
         virtual ~ShaderManager() = default;
 
-        inline void addRenderer(IRendererAdapter* renderer) { m_Renderer = renderer; };
+        inline void addRenderer(IRenderer* const renderer) override { m_Renderer = renderer; };
         void addShader(std::string const & name, std::string const & vertPath, std::string const & fragPath) override;
         void clear();
         inline VulkanShaders* getShaders() const override { return m_Shaders.get(); };
@@ -32,7 +32,7 @@ namespace Poulpe
     private:
         nlohmann::json m_Config;
         std::atomic_bool m_LoadingDone{ false };
-        IRendererAdapter* m_Renderer{ nullptr };
+        IRenderer* m_Renderer{ nullptr };
         std::unique_ptr<VulkanShaders> m_Shaders{ nullptr };
     };
 }

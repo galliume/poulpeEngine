@@ -1,5 +1,7 @@
 #include "Application.hpp"
 
+#include "Poulpe/Manager/InputManager.hpp"
+
 namespace Poulpe
 {
     std::atomic<int> Application::s_MaxFPS{ 0 };
@@ -14,7 +16,7 @@ namespace Poulpe
 
     void Application::init()
     {
-        Poulpe::Log::init();
+        Log::init();
         m_StartRun = std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::system_clock::now());
 
         auto* window = new Window();
@@ -25,15 +27,15 @@ namespace Poulpe
 
         glfwGetWindowSize(window->get(), & width, & height);
 
-        auto* inputManager = new Poulpe::InputManager(window);
-        auto* cmdQueue = new Poulpe::CommandQueue();
-        auto* threadPool = new Poulpe::ThreadPool();
+        auto* inputManager = new InputManager(window);
+        auto* cmdQueue = new CommandQueue();
+        auto* threadPool = new ThreadPool();
 
         Poulpe::Locator::setInputManager(inputManager);
         Poulpe::Locator::setCommandQueue(cmdQueue);
         Poulpe::Locator::setThreadPool(threadPool);
 
-        m_RenderManager = std::make_unique<Poulpe::RenderManager>(window);
+        m_RenderManager = std::make_unique<RenderManager>(window);
         m_RenderManager->init();
     }
 
@@ -60,10 +62,10 @@ namespace Poulpe
 
             glfwPollEvents();
 
-            Poulpe::Locator::getCommandQueue()->execPreRequest();
+            Locator::getCommandQueue()->execPreRequest();
             m_RenderManager->renderScene(deltaTime);
             m_RenderManager->draw();
-            Poulpe::Locator::getCommandQueue()->execPostRequest();
+            Locator::getCommandQueue()->execPostRequest();
 
             lastTime = currentTime;
         }

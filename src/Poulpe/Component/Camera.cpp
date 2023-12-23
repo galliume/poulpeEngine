@@ -126,8 +126,8 @@ namespace Poulpe
 
     void Camera::updatePos(double xoffset, double yoffset)
     {
-        m_Yaw += xoffset;
-        m_Pitch += yoffset;
+        m_Yaw += static_cast<float>(xoffset);
+        m_Pitch += static_cast<float>(yoffset);
 
         if (m_Pitch > 89.0f) {
             m_Pitch = 89.0f;
@@ -137,9 +137,9 @@ namespace Poulpe
         }
 
         glm::vec3 direction{};
-        direction.x = cos(glm::radians(m_Yaw)) * cos(glm::radians(m_Pitch));
-        direction.y = sin(glm::radians(m_Pitch));
-        direction.z = sin(glm::radians(m_Yaw)) * cos(glm::radians(m_Pitch));
+        direction.x = static_cast<float>(cos(glm::radians(m_Yaw)) * cos(glm::radians(m_Pitch)));
+        direction.y = static_cast<float>(sin(glm::radians(m_Pitch)));
+        direction.z = static_cast<float>(sin(glm::radians(m_Yaw)) * cos(glm::radians(m_Pitch)));
         m_CameraFront = glm::normalize(direction);
     }
 }

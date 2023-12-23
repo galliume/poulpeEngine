@@ -7,16 +7,16 @@
 #include "Poulpe/Core/IVisitor.hpp"
 #include "Poulpe/Core/PlpTypedef.hpp"
 
+#include "Poulpe/Manager/ILightManager.hpp"
+#include "Poulpe/Manager/ITextureManager.hpp"
+
+#include "Poulpe/Renderer/IGraphicsAPI.hpp"
 #include "Poulpe/Renderer/Vulkan/DeviceMemory.hpp" //@todo should not be here
 
 #include <functional>
 
 namespace Poulpe
 {
-    class VulkanAdapter;//@todo should not be here
-    class TextureManager;
-    class LightManager;
-
     //@todo should not be IVisitor
     class Mesh : public IVisitor, public IVisitable
     {
@@ -33,16 +33,17 @@ namespace Poulpe
 
         void addStorageBuffer(Buffer& buffer) override { m_StorageBuffers.emplace_back(std::move(buffer)); }
         void init(
-            [[maybe_unused]] VulkanAdapter* const adapter,
-            [[maybe_unused]] TextureManager* const textureManager, 
-            [[maybe_unused]] LightManager* const lightManager) override {};
+            [[maybe_unused]] IRenderer* const renderer,
+            [[maybe_unused]] ITextureManager* const textureManager, 
+            [[maybe_unused]] ILightManager* const lightManager) override {};
+        
         bool isDirty() override { return m_IsDirty.load(); }
         void visit(float const deltaTime, IVisitable* const  visitable) override;
 
         virtual void setApplyPushConstants(
           std::function<void(VkCommandBuffer& commandBuffer,
             VkPipelineLayout pipelineLayout,
-            VulkanAdapter* const vulkanAdapter,
+            IRenderer* const renderer,
             IVisitable* const mesh)> fn) override { m_ApplyPushConstants = fn; };
 
         void setData(Data data) override { m_Data = std::move(data); }
@@ -101,7 +102,7 @@ namespace Poulpe
 
         std::function<void(VkCommandBuffer& commandBuffer,
           VkPipelineLayout pipelineLayout,
-          VulkanAdapter* const vulkanAdapter,
+          IRenderer* const renderer,
           IVisitable* const mesh)> m_ApplyPushConstants = nullptr;
     };
 }

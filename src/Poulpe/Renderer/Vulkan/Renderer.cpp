@@ -1,7 +1,10 @@
-#include "VulkanAdapter.hpp"
+#include "Renderer.hpp"
+
+#include "VulkanAPI.hpp"
 
 #include "Poulpe/GUI/Window.hpp"
-#include "Poulpe/Renderer/Vulkan/VulkanRenderer.hpp"
+
+#include "Poulpe/Renderer/Vulkan/VulkanAPI.hpp"
 
 #include <cfenv>
 #include <exception>
@@ -12,31 +15,31 @@
 namespace Poulpe
 {
     //@todo should not be globally accessible
-    std::atomic<float> VulkanAdapter::s_AmbiantLight{ 1.0f };
-    std::atomic<float> VulkanAdapter::s_FogDensity{ 0.0f };
-    std::atomic<float> VulkanAdapter::s_FogColor[3]{ 25 / 255.0f, 25 / 255.0f, 25 / 255.0f };
-    std::atomic<int> VulkanAdapter::s_Crosshair{ 0 };
-    std::atomic<int> VulkanAdapter::s_PolygoneMode{ VK_POLYGON_MODE_FILL };
+    std::atomic<float> Renderer::s_AmbiantLight{ 1.0f };
+    std::atomic<float> Renderer::s_FogDensity{ 0.0f };
+    std::atomic<float> Renderer::s_FogColor[3]{ 25 / 255.0f, 25 / 255.0f, 25 / 255.0f };
+    std::atomic<int> Renderer::s_Crosshair{ 0 };
+    std::atomic<int> Renderer::s_PolygoneMode{ VK_POLYGON_MODE_FILL };
     
-    VulkanAdapter::VulkanAdapter(
+    Renderer::Renderer(
       Window* const window,
-      EntityManager* const entityManager,
+      IEntityManager* const entityManager,
       ComponentManager* const componentManager,
-      LightManager* const lightManager)
+      ILightManager* const lightManager)
         : m_Window(window),
           m_EntityManager(entityManager),
           m_ComponentManager(componentManager),
           m_LightManager(lightManager)
     {
-        m_Renderer = std::make_unique<VulkanRenderer>(window);
+        m_API = std::make_unique<VulkanAPI>(window);
     }
 
-    void VulkanAdapter::init()
+    void Renderer::init()
     {
         m_RayPick = glm::vec3(0.0f);
         setPerspective();
 
-        m_SwapChain = m_Renderer->createSwapChain(m_SwapChainImages);
+        m_SwapChain = m_API->createSwapChain(m_SwapChainImages);
 
         m_SwapChainImageViews.resize(m_SwapChainImages.size());
         m_SwapChainSamplers.resize(m_SwapChainImages.size());
@@ -49,50 +52,50 @@ namespace Poulpe
           
           VkImage image;
 
-          m_Renderer->createImage(m_Renderer->getSwapChainExtent().width, m_Renderer->getSwapChainExtent().height, 1,
+          m_API->createImage(m_API->getSwapChainExtent().width, m_API->getSwapChainExtent().height, 1,
               VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_B8G8R8A8_UNORM, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_SRC_BIT 
               | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
               VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, image);
 
           //m_SwapChainImages[i] = image;
-          m_SwapChainImageViews[i] = m_Renderer->createImageView(m_SwapChainImages[i],
-            m_Renderer->getSwapChainImageFormat(), VK_IMAGE_ASPECT_COLOR_BIT);
-          m_SwapChainSamplers[i] = m_Renderer->createTextureSampler(1);
+          m_SwapChainImageViews[i] = m_API->createImageView(m_SwapChainImages[i],
+            m_API->getSwapChainImageFormat(), VK_IMAGE_ASPECT_COLOR_BIT);
+          m_SwapChainSamplers[i] = m_API->createTextureSampler(1);
 
           VkImage depthImage;
 
-          m_Renderer->createImage(m_Renderer->getSwapChainExtent().width, m_Renderer->getSwapChainExtent().height, 1,
+          m_API->createImage(m_API->getSwapChainExtent().width, m_API->getSwapChainExtent().height, 1,
             VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_D32_SFLOAT, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_SAMPLED_BIT
             | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
             VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, depthImage);
 
-          VkImageView depthImageView = m_Renderer->createImageView(depthImage, VK_FORMAT_D32_SFLOAT, 1,
+          VkImageView depthImageView = m_API->createImageView(depthImage, VK_FORMAT_D32_SFLOAT, 1,
             VK_IMAGE_ASPECT_DEPTH_BIT);
 
           m_SwapChainDepthImages[i] = depthImage;
           m_SwapChainDepthImageViews[i] = depthImageView;
-          m_SwapChainDepthSamplers[i] = m_Renderer->createTextureSampler(1);
+          m_SwapChainDepthSamplers[i] = m_API->createTextureSampler(1);
         }
 
-        m_CommandPoolEntities = m_Renderer->createCommandPool();
+        m_CommandPoolEntities = m_API->createCommandPool();
 
-        m_CommandBuffersEntities = m_Renderer->allocateCommandBuffers(m_CommandPoolEntities,
+        m_CommandBuffersEntities = m_API->allocateCommandBuffers(m_CommandPoolEntities,
             static_cast<uint32_t>(m_SwapChainImageViews.size()));
 
-        m_CommandPoolBbox = m_Renderer->createCommandPool();
-        m_CommandBuffersBbox = m_Renderer->allocateCommandBuffers(m_CommandPoolBbox,
+        m_CommandPoolBbox = m_API->createCommandPool();
+        m_CommandBuffersBbox = m_API->allocateCommandBuffers(m_CommandPoolBbox,
             static_cast<uint32_t>(m_SwapChainImageViews.size()));
 
-        m_CommandPoolSkybox = m_Renderer->createCommandPool();
-        m_CommandBuffersSkybox = m_Renderer->allocateCommandBuffers(m_CommandPoolSkybox,
+        m_CommandPoolSkybox = m_API->createCommandPool();
+        m_CommandBuffersSkybox = m_API->allocateCommandBuffers(m_CommandPoolSkybox,
             static_cast<uint32_t>(m_SwapChainImageViews.size()));
 
-        m_CommandPoolHud = m_Renderer->createCommandPool();
-        m_CommandBuffersHUD = m_Renderer->allocateCommandBuffers(m_CommandPoolHud,
+        m_CommandPoolHud = m_API->createCommandPool();
+        m_CommandBuffersHUD = m_API->allocateCommandBuffers(m_CommandPoolHud,
             static_cast<uint32_t>(m_SwapChainImageViews.size()));
 
-        m_CommandPoolShadowMap = m_Renderer->createCommandPool();
-        m_CommandBuffersShadowMap = m_Renderer->allocateCommandBuffers(m_CommandPoolShadowMap,
+        m_CommandPoolShadowMap = m_API->createCommandPool();
+        m_CommandBuffersShadowMap = m_API->allocateCommandBuffers(m_CommandPoolShadowMap,
           static_cast<uint32_t>(m_SwapChainImageViews.size()));
 
         VkSemaphoreTypeCreateInfo semaType;
@@ -127,25 +130,25 @@ namespace Poulpe
 
         for (size_t i = 0; i < m_MAX_FRAMES_IN_FLIGHT; ++i) {
 
-             result = vkCreateSemaphore(rdr()->getDevice(), &sema, nullptr, &m_EntitiesSemaRenderFinished[i]);
+             result = vkCreateSemaphore(m_API->getDevice(), &sema, nullptr, &m_EntitiesSemaRenderFinished[i]);
             if (VK_SUCCESS != result) PLP_ERROR("can't create m_EntitiesSemaRenderFinished semaphore");
 
-            result = vkCreateSemaphore(rdr()->getDevice(), &sema, nullptr, &m_SkyboxSemaRenderFinished[i]);
+            result = vkCreateSemaphore(m_API->getDevice(), &sema, nullptr, &m_SkyboxSemaRenderFinished[i]);
             if (VK_SUCCESS != result) PLP_ERROR("can't create m_SkyboxSemaRenderFinished semaphore");
 
-            result = vkCreateSemaphore(rdr()->getDevice(), &sema, nullptr, &m_HUDSemaRenderFinished[i]);
+            result = vkCreateSemaphore(m_API->getDevice(), &sema, nullptr, &m_HUDSemaRenderFinished[i]);
             if (VK_SUCCESS != result) PLP_ERROR("can't create m_HUDSemaRenderFinished semaphore");
 
-            result = vkCreateSemaphore(rdr()->getDevice(), &sema, nullptr, &m_ShadowMapSemaRenderFinished[i]);
+            result = vkCreateSemaphore(m_API->getDevice(), &sema, nullptr, &m_ShadowMapSemaRenderFinished[i]);
             if (VK_SUCCESS != result) PLP_ERROR("can't create m_ShadowMapSemaRenderFinished semaphore");
 
-            result = vkCreateSemaphore(rdr()->getDevice(), &sema, nullptr, &m_ImageAvailable[i]);
+            result = vkCreateSemaphore(m_API->getDevice(), &sema, nullptr, &m_ImageAvailable[i]);
             if (VK_SUCCESS != result) PLP_ERROR("can't create m_ImageAvailable semaphore");
 
-            result = vkCreateFence(rdr()->getDevice(), &fenceInfo, nullptr, &m_ImagesInFlight[i]);
+            result = vkCreateFence(m_API->getDevice(), &fenceInfo, nullptr, &m_ImagesInFlight[i]);
             if (VK_SUCCESS != result) PLP_ERROR("can't create m_PreviousFrame fence");
 
-            result = vkCreateFence(rdr()->getDevice(), &fenceInfo, nullptr, &m_InFlightFences[i]);
+            result = vkCreateFence(m_API->getDevice(), &fenceInfo, nullptr, &m_InFlightFences[i]);
             if (VK_SUCCESS != result) PLP_ERROR("can't create m_InFlightFences fence");
 
             auto cmdSky = std::make_unique<DrawCommand>();
@@ -175,53 +178,53 @@ namespace Poulpe
 
         for (size_t i = 0; i < m_MAX_FRAMES_IN_FLIGHT; ++i) {
           VkImage image{};
-          m_Renderer->createDepthMapImage(image);
+          m_API->createDepthMapImage(image);
           m_DepthMapImages.emplace_back(image);
-          m_DepthMapImageViews.emplace_back(m_Renderer->createDepthMapImageView(image));
-          m_DepthMapSamplers.emplace_back(m_Renderer->createDepthMapSampler());
+          m_DepthMapImageViews.emplace_back(m_API->createDepthMapImageView(image));
+          m_DepthMapSamplers.emplace_back(m_API->createDepthMapSampler());
         }
     }
 
-    void VulkanAdapter::recreateSwapChain()
+    void Renderer::recreateSwapChain()
     {
  
     }
 
-    void VulkanAdapter::shouldRecreateSwapChain()
+    void Renderer::shouldRecreateSwapChain()
     {
-        if (Poulpe::Window::m_FramebufferResized == true) {
+        if (Window::m_FramebufferResized == true) {
 
             while (m_Window->isMinimized()) {
                 m_Window->wait();
             }
             recreateSwapChain();
 
-            Poulpe::Window::m_FramebufferResized = false;
+            Window::m_FramebufferResized = false;
         }
     }
 
-    void VulkanAdapter::setPerspective()
+    void Renderer::setPerspective()
     {        
         m_Perspective = glm::perspective(glm::radians(45.0f),
-            static_cast<float>(m_Renderer->getSwapChainExtent().width) / static_cast<float>(m_Renderer->getSwapChainExtent().height),
+            static_cast<float>(m_API->getSwapChainExtent().width) / static_cast<float>(m_API->getSwapChainExtent().height),
             0.1f, 100.f);
         m_Perspective[1][1] *= -1;
     }
 
-    void VulkanAdapter::setDeltatime(float deltaTime)
+    void Renderer::setDeltatime(float deltaTime)
     {
         m_Deltatime = deltaTime;
     }
 
-    void VulkanAdapter::drawShadowMap(std::vector<std::unique_ptr<Entity>>* entities,  Light light)
+    void Renderer::drawShadowMap(std::vector<std::unique_ptr<Entity>>* entities,  Light light)
     {
       std::string const pipelineName{ "shadowMap" };
       auto pipeline = getPipeline(pipelineName);
 
-        //m_Renderer->beginCommandBuffer(m_CommandBuffersShadowMap[m_CurrentFrame]);
-        m_Renderer->startMarker(m_CommandBuffersEntities[m_CurrentFrame], "shadow_map_" + pipelineName, 0.1, 0.2, 0.3);
+        //m_API->beginCommandBuffer(m_CommandBuffersShadowMap[m_CurrentFrame]);
+        m_API->startMarker(m_CommandBuffersEntities[m_CurrentFrame], "shadow_map_" + pipelineName, 0.1, 0.2, 0.3);
 
-        rdr()->transitionImageLayout(m_CommandBuffersEntities[m_CurrentFrame], m_DepthMapImages[m_CurrentFrame],
+        m_API->transitionImageLayout(m_CommandBuffersEntities[m_CurrentFrame], m_DepthMapImages[m_CurrentFrame],
           VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, VK_IMAGE_ASPECT_DEPTH_BIT);
 
         VkClearColorValue colorClear = {};
@@ -243,8 +246,8 @@ namespace Poulpe
 
         VkRenderingInfo  renderingInfo{ };
         renderingInfo.sType = VK_STRUCTURE_TYPE_RENDERING_INFO;
-        renderingInfo.renderArea.extent.width = rdr()->getSwapChainExtent().width;
-        renderingInfo.renderArea.extent.height = rdr()->getSwapChainExtent().height;
+        renderingInfo.renderArea.extent.width = m_API->getSwapChainExtent().width;
+        renderingInfo.renderArea.extent.height = m_API->getSwapChainExtent().height;
         renderingInfo.layerCount = 1;
         renderingInfo.pDepthAttachment = & depthAttachment;
         renderingInfo.colorAttachmentCount = 0;
@@ -252,8 +255,8 @@ namespace Poulpe
 
         vkCmdBeginRenderingKHR(m_CommandBuffersEntities[m_CurrentFrame], & renderingInfo);
 
-        m_Renderer->setViewPort(m_CommandBuffersEntities[m_CurrentFrame]);
-        m_Renderer->setScissor(m_CommandBuffersEntities[m_CurrentFrame]);
+        m_API->setViewPort(m_CommandBuffersEntities[m_CurrentFrame]);
+        m_API->setScissor(m_CommandBuffersEntities[m_CurrentFrame]);
         
         float depthBiasConstant = -1.25f;
         float depthBiasSlope = 5.f;
@@ -267,7 +270,7 @@ namespace Poulpe
 
             if (!mesh) continue;
 
-            m_Renderer->bindPipeline(m_CommandBuffersEntities[m_CurrentFrame], pipeline->pipeline);
+            m_API->bindPipeline(m_CommandBuffersEntities[m_CurrentFrame], pipeline->pipeline);
                 
             for (size_t i = 0; i < mesh->getData()->m_Ubos.size(); ++i) {
                 mesh->getData()->m_Ubos[i].projection = light.lightSpaceMatrix;
@@ -279,7 +282,7 @@ namespace Poulpe
             for (size_t i = 0; i < mesh->getUniformBuffers()->size(); ++i) {
                 max = mesh->getData()->m_UbosOffset.at(i);
                 auto ubos = std::vector<UniformBufferObject>(mesh->getData()->m_Ubos.begin() + min, mesh->getData()->m_Ubos.begin() + max);
-                rdr()->updateUniformBuffer(mesh->getUniformBuffers()->at(i), &ubos);
+                m_API->updateUniformBuffer(mesh->getUniformBuffers()->at(i), &ubos);
 
                 min = max;
             }
@@ -296,7 +299,7 @@ namespace Poulpe
 
             try {
                 if (m_RenderingStopped) return;
-                m_Renderer->draw(m_CommandBuffersEntities[m_CurrentFrame], *mesh->getDescSet(),
+                m_API->draw(m_CommandBuffersEntities[m_CurrentFrame], *mesh->getDescSet(),
                 *pipeline, mesh->getData(), mesh->getData()->m_Ubos.size(), mesh->isIndexed());
             }
             catch (std::exception& e) {
@@ -304,13 +307,13 @@ namespace Poulpe
             }
         }
 
-        m_Renderer->endMarker(m_CommandBuffersEntities[m_CurrentFrame]);
-        m_Renderer->endRendering(m_CommandBuffersEntities[m_CurrentFrame]);
+        m_API->endMarker(m_CommandBuffersEntities[m_CurrentFrame]);
+        m_API->endRendering(m_CommandBuffersEntities[m_CurrentFrame]);
 
-        rdr()->transitionImageLayout(m_CommandBuffersEntities[m_CurrentFrame], m_DepthMapImages[m_CurrentFrame],
+        m_API->transitionImageLayout(m_CommandBuffersEntities[m_CurrentFrame], m_DepthMapImages[m_CurrentFrame],
           VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_IMAGE_ASPECT_DEPTH_BIT);
 
- //       m_Renderer->endCommandBuffer(m_CommandBuffersShadowMap[m_CurrentFrame]);
+ //       m_API->endCommandBuffer(m_CommandBuffersShadowMap[m_CurrentFrame]);
 
         //CommandToSubmit cmd{
         //    m_CommandBuffersShadowMap[m_CurrentFrame],
@@ -325,31 +328,31 @@ namespace Poulpe
         //}
     }
 
-    void VulkanAdapter::drawEntities()
+    void Renderer::drawEntities()
     {
         if (0 < m_EntityManager->getEntities()->size()) {
 
-          m_Renderer->beginCommandBuffer(m_CommandBuffersEntities[m_CurrentFrame], VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT);
+          m_API->beginCommandBuffer(m_CommandBuffersEntities[m_CurrentFrame], VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT);
 
           drawShadowMap(m_EntityManager->getEntities(), m_LightManager->getAmbientLight());
 
-          rdr()->transitionImageLayout(m_CommandBuffersEntities[m_CurrentFrame], m_SwapChainImages[m_CurrentFrame],
+          m_API->transitionImageLayout(m_CommandBuffersEntities[m_CurrentFrame], m_SwapChainImages[m_CurrentFrame],
             VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_ASPECT_COLOR_BIT);
 
-          rdr()->transitionImageLayout(m_CommandBuffersEntities[m_CurrentFrame], m_SwapChainDepthImages[m_CurrentFrame],
+          m_API->transitionImageLayout(m_CommandBuffersEntities[m_CurrentFrame], m_SwapChainDepthImages[m_CurrentFrame],
             VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL, VK_IMAGE_ASPECT_DEPTH_BIT);
 
-          m_Renderer->beginRendering(
+          m_API->beginRendering(
             m_CommandBuffersEntities[m_CurrentFrame],
             m_SwapChainImageViews[m_CurrentFrame],
             m_SwapChainDepthImageViews[m_CurrentFrame],
             VK_ATTACHMENT_LOAD_OP_LOAD,
             VK_ATTACHMENT_STORE_OP_STORE);
 
-          m_Renderer->setViewPort(m_CommandBuffersEntities[m_CurrentFrame]);
-          m_Renderer->setScissor(m_CommandBuffersEntities[m_CurrentFrame]);
+          m_API->setViewPort(m_CommandBuffersEntities[m_CurrentFrame]);
+          m_API->setScissor(m_CommandBuffersEntities[m_CurrentFrame]);
 
-            m_Renderer->startMarker(m_CommandBuffersEntities[m_CurrentFrame], "entities_drawing", 0.2, 0.2, 0.9);
+            m_API->startMarker(m_CommandBuffersEntities[m_CurrentFrame], "entities_drawing", 0.2, 0.2, 0.9);
 
             for (auto & entity : *m_EntityManager->getEntities()) {
                 auto meshComponent = m_ComponentManager->getComponent<MeshComponent>(entity->getID());
@@ -364,7 +367,7 @@ namespace Poulpe
                 // }
                 //m_HasClicked = false;
 
-                m_Renderer->bindPipeline(m_CommandBuffersEntities[m_CurrentFrame], pipeline->pipeline);
+                m_API->bindPipeline(m_CommandBuffersEntities[m_CurrentFrame], pipeline->pipeline);
 
                 for (size_t i = 0; i < mesh->getData()->m_Ubos.size(); ++i) {
                     mesh->getData()->m_Ubos[i].projection = getPerspective();
@@ -376,7 +379,7 @@ namespace Poulpe
                 for (size_t i = 0; i < mesh->getUniformBuffers()->size(); ++i) {
                   max = mesh->getData()->m_UbosOffset.at(i);
                   auto ubos = std::vector<UniformBufferObject>(mesh->getData()->m_Ubos.begin() + min, mesh->getData()->m_Ubos.begin() + max);
-                  rdr()->updateUniformBuffer(mesh->getUniformBuffers()->at(i), &ubos);
+                  m_API->updateUniformBuffer(mesh->getUniformBuffers()->at(i), &ubos);
 
                   min = max;
 
@@ -387,7 +390,7 @@ namespace Poulpe
 
                 try {
                     if (m_RenderingStopped) return;
-                    m_Renderer->draw(m_CommandBuffersEntities[m_CurrentFrame], *mesh->getDescSet(),
+                    m_API->draw(m_CommandBuffersEntities[m_CurrentFrame], *mesh->getDescSet(),
                         *pipeline, mesh->getData(), mesh->getData()->m_Ubos.size(), mesh->isIndexed());
                 }
                 catch (std::exception & e) {
@@ -395,19 +398,19 @@ namespace Poulpe
                 }
             }
 
-            m_Renderer->endMarker(m_CommandBuffersEntities[m_CurrentFrame]);
+            m_API->endMarker(m_CommandBuffersEntities[m_CurrentFrame]);
             endRendering(m_CommandBuffersEntities[m_CurrentFrame]);
             m_CmdsToSubmit.emplace_back(m_CmdEntitiesStatus[m_CurrentFrame].get());
             m_CmdEntitiesStatus[m_CurrentFrame]->done.store(true);
         }
     }
 
-     void VulkanAdapter::drawSkybox()
+     void Renderer::drawSkybox()
      {
         if (auto skybox = m_EntityManager->getSkybox()) {
 
             beginRendering(m_CommandBuffersSkybox[m_CurrentFrame], VK_ATTACHMENT_LOAD_OP_CLEAR, VK_ATTACHMENT_STORE_OP_STORE, false);
-            m_Renderer->startMarker(m_CommandBuffersSkybox[m_CurrentFrame], "skybox_drawing", 0.3, 0.2, 0.1);
+            m_API->startMarker(m_CommandBuffersSkybox[m_CurrentFrame], "skybox_drawing", 0.3, 0.2, 0.1);
 
             auto meshComponent = m_ComponentManager->getComponent<MeshComponent>(skybox->getID());
             Mesh* mesh = meshComponent->hasImpl<Mesh>();
@@ -417,17 +420,17 @@ namespace Poulpe
             Data* skyboxData = mesh->getData();
             auto pipeline = getPipeline(mesh->getShaderName());
 
-            m_Renderer->bindPipeline(m_CommandBuffersSkybox[m_CurrentFrame], pipeline->pipeline);
+            m_API->bindPipeline(m_CommandBuffersSkybox[m_CurrentFrame], pipeline->pipeline);
 
             if (mesh->hasPushConstants()) {
               mesh->applyPushConstants(m_CommandBuffersSkybox[m_CurrentFrame], pipeline->pipelineLayout, this, mesh);
             }
 
             if (m_RenderingStopped) return;
-            m_Renderer->draw(m_CommandBuffersSkybox[m_CurrentFrame], *mesh->getDescSet(), *pipeline,
+            m_API->draw(m_CommandBuffersSkybox[m_CurrentFrame], *mesh->getDescSet(), *pipeline,
                 skyboxData, skyboxData->m_Ubos.size(), false);
 
-            m_Renderer->endMarker(m_CommandBuffersSkybox[m_CurrentFrame]);
+            m_API->endMarker(m_CommandBuffersSkybox[m_CurrentFrame]);
             endRendering(m_CommandBuffersSkybox[m_CurrentFrame]);
 
             m_CmdsToSubmit.emplace_back(m_CmdSkyboxStatus[m_CurrentFrame].get());
@@ -435,10 +438,10 @@ namespace Poulpe
         }
     }
 
-    void VulkanAdapter::drawHUD()
+    void Renderer::drawHUD()
     {
         beginRendering(m_CommandBuffersHUD[m_CurrentFrame]);
-        m_Renderer->startMarker(m_CommandBuffersHUD[m_CurrentFrame], "hud_drawing", 0.3, 0.2, 0.1);
+        m_API->startMarker(m_CommandBuffersHUD[m_CurrentFrame], "hud_drawing", 0.3, 0.2, 0.1);
 
         for (auto const & entity : * m_EntityManager->getHUD()) {
 
@@ -449,7 +452,7 @@ namespace Poulpe
             
             auto pipeline = getPipeline(hudPart->getShaderName());
 
-            m_Renderer->bindPipeline(m_CommandBuffersHUD[m_CurrentFrame], pipeline->pipeline);
+            m_API->bindPipeline(m_CommandBuffersHUD[m_CurrentFrame], pipeline->pipeline);
 
             if (hudPart->hasPushConstants()) {
                 hudPart->applyPushConstants(m_CommandBuffersHUD[m_CurrentFrame], pipeline->pipelineLayout, this,
@@ -457,25 +460,25 @@ namespace Poulpe
             }
 
             if (m_RenderingStopped) return;
-            m_Renderer->draw(m_CommandBuffersHUD[m_CurrentFrame], *hudPart->getDescSet(), *pipeline,
+            m_API->draw(m_CommandBuffersHUD[m_CurrentFrame], *hudPart->getDescSet(), *pipeline,
                 hudPart->getData(), hudPart->getData()->m_Ubos.size());
         }
 
-        m_Renderer->endMarker(m_CommandBuffersHUD[m_CurrentFrame]);
+        m_API->endMarker(m_CommandBuffersHUD[m_CurrentFrame]);
         endRendering(m_CommandBuffersHUD[m_CurrentFrame]);
 
         m_CmdsToSubmit.emplace_back(m_CmdHUDStatus[m_CurrentFrame].get());
         m_CmdHUDStatus[m_CurrentFrame]->done.store(true);
     }
 
-    void VulkanAdapter::drawBbox()
+    void Renderer::drawBbox()
     {
  /*       auto & entities = *m_EntityManager->getEntities();
 
         if (entities.size() > 0)
         {
             beginRendering(m_CommandBuffersBbox[m_CurrentFrame]);
-            m_Renderer->startMarker(m_CommandBuffersBbox[m_CurrentFrame], "bbox_drawing", 0.3, 0.2, 0.1);
+            m_API->startMarker(m_CommandBuffersBbox[m_CurrentFrame], "bbox_drawing", 0.3, 0.2, 0.1);
 
             for (auto & entity : entities) {
                 Mesh* mesh = entity->getMesh();
@@ -485,7 +488,7 @@ namespace Poulpe
 
                 if (!bbox) continue;
 
-                m_Renderer->bindPipeline(m_CommandBuffersBbox[m_CurrentFrame], bbox->getGraphicsPipeline());
+                m_API->bindPipeline(m_CommandBuffersBbox[m_CurrentFrame], bbox->getGraphicsPipeline());
 
                 if (m_HasClicked && entity->isHit(m_RayPick)) {
                     PLP_DEBUG("HIT ! {}", mesh->getName());
@@ -502,25 +505,25 @@ namespace Poulpe
 
                     if (m_RenderingStopped) return;
 
-                    m_Renderer->draw(m_CommandBuffersBbox[m_CurrentFrame], bbox->getDescriptorSets().at(index), bbox.get(),
+                    m_API->draw(m_CommandBuffersBbox[m_CurrentFrame], bbox->getDescriptorSets().at(index), bbox.get(),
                         bbox->getData(), mesh->getData()->m_Ubos.size());
 
                     index = m_CurrentFrame;
                 }
             }
 
-            m_Renderer->endMarker(m_CommandBuffersBbox[m_CurrentFrame]);
+            m_API->endMarker(m_CommandBuffersBbox[m_CurrentFrame]);
             endRendering(m_CommandBuffersBbox[m_CurrentFrame]);
         }*/
     }
 
-    void VulkanAdapter::renderScene()
+    void Renderer::renderScene()
     {
         //uint32_t imageIndex{};
 
-        vkWaitForFences(rdr()->getDevice(), 1, &m_InFlightFences[m_CurrentFrame], VK_TRUE, UINT64_MAX);
-        VkResult result = vkAcquireNextImageKHR(rdr()->getDevice(), m_SwapChain, UINT64_MAX, m_ImageAvailable[m_CurrentFrame], VK_NULL_HANDLE, &m_ImageIndex);
-        vkResetFences(rdr()->getDevice(), 1, &m_InFlightFences[m_CurrentFrame]);
+        vkWaitForFences(m_API->getDevice(), 1, &m_InFlightFences[m_CurrentFrame], VK_TRUE, UINT64_MAX);
+        VkResult result = vkAcquireNextImageKHR(m_API->getDevice(), m_SwapChain, UINT64_MAX, m_ImageAvailable[m_CurrentFrame], VK_NULL_HANDLE, &m_ImageIndex);
+        vkResetFences(m_API->getDevice(), 1, &m_InFlightFences[m_CurrentFrame]);
 
         //@todo clean
         if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR)
@@ -542,29 +545,29 @@ namespace Poulpe
           if (!m_CmdSkyboxStatus[m_CurrentFrame]->done.load() || m_Nodraw.load()) {
             m_CmdSkyboxStatus[m_CurrentFrame]->done.store(false);
             drawSkybox();
-            //Poulpe::Locator::getThreadPool()->submit(threadQueueName, [this]() { drawSkybox(); });
+            //Locator::getThreadPool()->submit(threadQueueName, [this]() { drawSkybox(); });
           }
           if (!m_CmdEntitiesStatus[m_CurrentFrame]->done.load() || m_Nodraw.load()) {
             m_CmdEntitiesStatus[m_CurrentFrame]->done.store(false);
             drawEntities();
-            //Poulpe::Locator::getThreadPool()->submit(threadQueueName, [this]() { drawEntities(); });
+            //Locator::getThreadPool()->submit(threadQueueName, [this]() { drawEntities(); });
           }
           if (!m_CmdHUDStatus[m_CurrentFrame]->done.load() || m_Nodraw.load()) {
             m_CmdHUDStatus[m_CurrentFrame]->done.store(false);
             drawHUD();
-            //Poulpe::Locator::getThreadPool()->submit(threadQueueName, [this]() { drawHUD(); });
+            //Locator::getThreadPool()->submit(threadQueueName, [this]() { drawHUD(); });
           }
 
           submit();
         //@todo strip for release?
         //if (getDrawBbox()) {
-        //    Poulpe::Locator::getThreadPool()->submit(threadQueueName, [this] {
+        //    Locator::getThreadPool()->submit(threadQueueName, [this] {
         //        drawBbox();
         //    });
         //}
     }
 
-    void VulkanAdapter::draw()
+    void Renderer::draw()
     {
         //if (m_RenderingStopped) {
         //    {
@@ -575,12 +578,12 @@ namespace Poulpe
         //}
         //std::string_view threadQueueName{ "render" };
 
-        //Poulpe::Locator::getThreadPool()->Submit("submit", [=, this]() { Submit({ cmds.at(0), cmds.at(1)}); });
-        //Poulpe::Locator::getThreadPool()->Submit("submit", [=, this]() { Submit({ cmds.at(2) }); });
+        //Locator::getThreadPool()->Submit("submit", [=, this]() { Submit({ cmds.at(0), cmds.at(1)}); });
+        //Locator::getThreadPool()->Submit("submit", [=, this]() { Submit({ cmds.at(2) }); });
         //submit();
     }
 
-    void VulkanAdapter::clearRendererScreen()
+    void Renderer::clearRendererScreen()
     {
         {
             vkResetCommandBuffer(m_CommandBuffersEntities[m_CurrentFrame], 0);
@@ -617,78 +620,78 @@ namespace Poulpe
         }
     }
 
-    void VulkanAdapter::destroy()
+    void Renderer::destroy()
     {
-       /* m_Renderer->destroySwapchain(m_Renderer->getDevice(), m_SwapChain, {}, m_SwapChainImageViews);
+       /* m_API->destroySwapchain(m_API->getDevice(), m_SwapChain, {}, m_SwapChainImageViews);
 
-        m_Renderer->destroyFences();
+        m_API->destroyFences();
 
         for (auto item: m_SwapChainDepthImages) {
-            vkDestroyImage(m_Renderer->getDevice(), item, nullptr);
+            vkDestroyImage(m_API->getDevice(), item, nullptr);
         }
         for (auto item : m_SwapChainDepthImageViews) {
-            vkDestroyImageView(m_Renderer->getDevice(), item, nullptr);
+            vkDestroyImageView(m_API->getDevice(), item, nullptr);
         }
         for (auto& buffer : m_UniformBuffers.first) {
-            m_Renderer->destroyBuffer(buffer);
+            m_API->destroyBuffer(buffer);
         }*/
         for (VkDescriptorSetLayout descriptorSetLayout : m_DescriptorSetLayouts) {
-            vkDestroyDescriptorSetLayout(m_Renderer->getDevice(), descriptorSetLayout, nullptr);
+            vkDestroyDescriptorSetLayout(m_API->getDevice(), descriptorSetLayout, nullptr);
         }
         for (VkDescriptorPool descriptorPool : m_DescriptorPools) {
-            vkDestroyDescriptorPool(m_Renderer->getDevice(), descriptorPool, nullptr);
+            vkDestroyDescriptorPool(m_API->getDevice(), descriptorPool, nullptr);
         }
     }
 
-    void VulkanAdapter::immediateSubmit(std::function<void(VkCommandBuffer cmd)> && function,
+    void Renderer::immediateSubmit(std::function<void(VkCommandBuffer cmd)> && function,
         [[maybe_unused]] int queueIndex)
     {
-        auto commandPool = m_Renderer->createCommandPool();
-        VkCommandBuffer cmd = m_Renderer->allocateCommandBuffers(commandPool)[0];
-        m_Renderer->beginCommandBuffer(cmd);
+        auto commandPool = m_API->createCommandPool();
+        VkCommandBuffer cmd = m_API->allocateCommandBuffers(commandPool)[0];
+        m_API->beginCommandBuffer(cmd);
         function(cmd);
-        m_Renderer->endCommandBuffer(cmd);
-        m_Renderer->queueSubmit(cmd);
-        vkDestroyCommandPool(m_Renderer->getDevice(), commandPool, nullptr);
+        m_API->endCommandBuffer(cmd);
+        m_API->queueSubmit(cmd);
+        vkDestroyCommandPool(m_API->getDevice(), commandPool, nullptr);
     }
 
     //@todo do to much to refacto
-    void VulkanAdapter::beginRendering(VkCommandBuffer commandBuffer, VkAttachmentLoadOp loadOp,
+    void Renderer::beginRendering(VkCommandBuffer commandBuffer, VkAttachmentLoadOp loadOp,
         VkAttachmentStoreOp storeOp, bool continuousCmdBuffer)
     {
-        if (!continuousCmdBuffer) m_Renderer->beginCommandBuffer(commandBuffer, VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT);
+        if (!continuousCmdBuffer) m_API->beginCommandBuffer(commandBuffer, VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT);
 
-        rdr()->transitionImageLayout(commandBuffer, m_SwapChainImages[m_CurrentFrame],
+        m_API->transitionImageLayout(commandBuffer, m_SwapChainImages[m_CurrentFrame],
           VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_ASPECT_COLOR_BIT);
 
-        rdr()->transitionImageLayout(commandBuffer, m_SwapChainDepthImages[m_CurrentFrame],
+        m_API->transitionImageLayout(commandBuffer, m_SwapChainDepthImages[m_CurrentFrame],
           VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL, VK_IMAGE_ASPECT_DEPTH_BIT);
 
-        m_Renderer->beginRendering(
+        m_API->beginRendering(
           commandBuffer,
           m_SwapChainImageViews[m_CurrentFrame],
           m_SwapChainDepthImageViews[m_CurrentFrame],
           loadOp,
           storeOp);
 
-        m_Renderer->setViewPort(commandBuffer);
-        m_Renderer->setScissor(commandBuffer);
+        m_API->setViewPort(commandBuffer);
+        m_API->setScissor(commandBuffer);
     }
 
-    void VulkanAdapter::endRendering(VkCommandBuffer commandBuffer)
+    void Renderer::endRendering(VkCommandBuffer commandBuffer)
     {
-        m_Renderer->endRendering(commandBuffer);
+        m_API->endRendering(commandBuffer);
 
-        rdr()->transitionImageLayout(commandBuffer, m_SwapChainImages[m_CurrentFrame],
+        m_API->transitionImageLayout(commandBuffer, m_SwapChainImages[m_CurrentFrame],
           VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR, VK_IMAGE_ASPECT_COLOR_BIT);
 
-       rdr()->transitionImageLayout(commandBuffer, m_SwapChainDepthImages[m_CurrentFrame],
+       m_API->transitionImageLayout(commandBuffer, m_SwapChainDepthImages[m_CurrentFrame],
           VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR, VK_IMAGE_ASPECT_DEPTH_BIT);
 
-        m_Renderer->endCommandBuffer(commandBuffer);
+        m_API->endCommandBuffer(commandBuffer);
     }
 
-    void VulkanAdapter::submit()
+    void Renderer::submit()
     {
         if (m_CmdsToSubmit.empty()) {
           m_Nodraw.store(true);
@@ -724,7 +727,7 @@ namespace Poulpe
         submitInfo.waitSemaphoreCount = waitSemaphores.size();
         submitInfo.pWaitSemaphores = waitSemaphores.data();
 
-        auto queue = rdr()->getGraphicsQueues().at(0);
+        auto queue = m_API->getGraphicsQueues().at(0);
 
         VkResult submitResult = vkQueueSubmit(queue, 1, &submitInfo, m_InFlightFences[m_CurrentFrame]);
 
@@ -751,7 +754,7 @@ namespace Poulpe
         presentInfo.pResults = nullptr;
 
         VkResult presentResult = vkQueuePresentKHR(queue, &presentInfo);
-        vkDeviceWaitIdle(rdr()->getDevice());
+        vkDeviceWaitIdle(m_API->getDevice());
         if (presentResult != VK_SUCCESS) {
           PLP_ERROR("Error on queue present: {}", presentResult);
         }
@@ -762,7 +765,7 @@ namespace Poulpe
       }
     }
 
-    void VulkanAdapter::setRayPick(float x, float y, float z, [[maybe_unused]] int width, [[maybe_unused]] int height)
+    void Renderer::setRayPick(float x, float y, float z, [[maybe_unused]] int width, [[maybe_unused]] int height)
     {
         glm::vec3 rayNds = glm::vec3(x, y, z);
         glm::vec4 rayClip = glm::vec4(rayNds.x, rayNds.y, -1.0, 1.0);
@@ -776,12 +779,12 @@ namespace Poulpe
         m_HasClicked = true;
     }
 
-    void VulkanAdapter::clear()
+    void Renderer::clear()
     {
         m_EntityManager->clear();
     }
 
-    void VulkanAdapter::onFinishRender()
+    void Renderer::onFinishRender()
     {
         Event event{ "OnFinishRender" };
         for (const auto& observer : m_Observers) {
@@ -789,12 +792,12 @@ namespace Poulpe
         }
     }
 
-    void VulkanAdapter::attachObserver(IObserver* observer)
+    void Renderer::attachObserver(IObserver* observer)
     {
         m_Observers.push_back(observer);
     }
 
-    VkRenderPass VulkanAdapter::createImGuiRenderPass(VkFormat format)
+    VkRenderPass Renderer::createImGuiRenderPass(VkFormat format)
     {
         VkRenderPass renderPass{};
 
@@ -830,7 +833,7 @@ namespace Poulpe
         info.dependencyCount = 1;
         info.pDependencies = &dependency;
 
-        VkResult result = vkCreateRenderPass(m_Renderer->getDevice(), & info, nullptr, & renderPass);
+        VkResult result = vkCreateRenderPass(m_API->getDevice(), & info, nullptr, & renderPass);
 
         if (result != VK_SUCCESS) {
             PLP_FATAL("failed to create imgui render pass : {}", result);
@@ -838,7 +841,7 @@ namespace Poulpe
         return renderPass;
     }
 
-    void VulkanAdapter::showGrid(bool show)
+    void Renderer::showGrid(bool show)
     {
         for (auto & hudPart : *m_EntityManager->getHUD()) {
             if ("grid" == hudPart->getName()) {
@@ -847,7 +850,7 @@ namespace Poulpe
         }
     }
 
-    void VulkanAdapter::addPipeline(std::string const & shaderName, VulkanPipeline pipeline)
+    void Renderer::addPipeline(std::string const & shaderName, VulkanPipeline pipeline)
     {
         m_Pipelines[shaderName] = std::move(pipeline);
     }

@@ -1,1 +1,3 @@
-set(SRC_LIST ${CMAKE_CURRENT_SOURCE_DIR}/IRenderer.hpp)
+set(SRC_LIST ${CMAKE_CURRENT_SOURCE_DIR}/IGraphicsAPI.hpp
+             ${CMAKE_CURRENT_SOURCE_DIR}/IRenderer.hpp)
+

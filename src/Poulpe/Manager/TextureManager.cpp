@@ -83,18 +83,18 @@ namespace Poulpe
 
     VkImage skyboxImage = nullptr;
     uint32_t mipLevels = 1;
-    VkCommandPool commandPool = m_Renderer->rdr()->createCommandPool();
+    VkCommandPool commandPool = m_Renderer->createCommandPool();
 
     texWidth = static_cast<uint32_t>(texWidth);
     texHeight = static_cast<uint32_t>(texHeight);
     texChannels = static_cast<uint32_t>(texChannels);
 
-    VkCommandBuffer commandBuffer = m_Renderer->rdr()->allocateCommandBuffers(commandPool)[0];
-    m_Renderer->rdr()->beginCommandBuffer(commandBuffer);
-    m_Renderer->rdr()->createSkyboxTextureImage(commandBuffer, skyboxPixels, texWidth, texHeight, mipLevels, skyboxImage, VK_FORMAT_R8G8B8A8_SRGB);
+    VkCommandBuffer commandBuffer = m_Renderer->allocateCommandBuffers(commandPool)[0];
+    m_Renderer->beginCommandBuffer(commandBuffer);
+    m_Renderer->createSkyboxTextureImage(commandBuffer, skyboxPixels, texWidth, texHeight, mipLevels, skyboxImage, VK_FORMAT_R8G8B8A8_SRGB);
 
-    VkImageView textureImageView = m_Renderer->rdr()->createSkyboxImageView(skyboxImage, VK_FORMAT_R8G8B8A8_SRGB, mipLevels);
-    VkSampler textureSampler = m_Renderer->rdr()->createSkyboxTextureSampler(mipLevels);
+    VkImageView textureImageView = m_Renderer->createSkyboxImageView(skyboxImage, VK_FORMAT_R8G8B8A8_SRGB, mipLevels);
+    VkSampler textureSampler = m_Renderer->createSkyboxTextureSampler(mipLevels);
 
     m_Skybox.setImage(skyboxImage);
     m_Skybox.setImageView(textureImageView);
@@ -105,8 +105,8 @@ namespace Poulpe
     m_Skybox.setChannels(texChannels);
     m_Skybox.setIsPublic(true);
 
-    vkFreeCommandBuffers(m_Renderer->rdr()->getDevice(), commandPool, 1, &commandBuffer);
-    vkDestroyCommandPool(m_Renderer->rdr()->getDevice(), commandPool, nullptr);
+    vkFreeCommandBuffers(m_Renderer->getDevice(), commandPool, 1, &commandBuffer);
+    vkDestroyCommandPool(m_Renderer->getDevice(), commandPool, nullptr);
   }
 
   void TextureManager::addTexture(std::string const& name, std::string const& path, bool isPublic)
@@ -135,16 +135,16 @@ namespace Poulpe
     uint32_t mipLevels = static_cast<uint32_t>(std::floor(std::log2(std::max(texWidth, texHeight)))) + 1;
     if (std::cmp_greater(mipLevels, MAX_MIPLEVELS)) mipLevels = MAX_MIPLEVELS;
 
-    VkCommandPool commandPool = m_Renderer->rdr()->createCommandPool();
-    VkCommandBuffer commandBuffer = m_Renderer->rdr()->allocateCommandBuffers(commandPool)[0];
+    VkCommandPool commandPool = m_Renderer->createCommandPool();
+    VkCommandBuffer commandBuffer = m_Renderer->allocateCommandBuffers(commandPool)[0];
 
-    m_Renderer->rdr()->beginCommandBuffer(commandBuffer);
-    m_Renderer->rdr()->createTextureImage(commandBuffer, pixels, texWidth, texHeight, mipLevels, textureImage, VK_FORMAT_R8G8B8A8_SRGB);
+    m_Renderer->beginCommandBuffer(commandBuffer);
+    m_Renderer->createTextureImage(commandBuffer, pixels, texWidth, texHeight, mipLevels, textureImage, VK_FORMAT_R8G8B8A8_SRGB);
 
-    VkImageView textureImageView = m_Renderer->rdr()->createImageView(textureImage, VK_FORMAT_R8G8B8A8_SRGB, mipLevels);
-    VkSampler textureSampler = m_Renderer->rdr()->createTextureSampler(mipLevels);
+    VkImageView textureImageView = m_Renderer->createImageView(textureImage, VK_FORMAT_R8G8B8A8_SRGB, mipLevels);
+    VkSampler textureSampler = m_Renderer->createTextureSampler(mipLevels);
 
-    Poulpe::Texture texture;
+    Texture texture;
     texture.setName(name);
     texture.setImage(textureImage);
     texture.setImageView(textureImageView);
@@ -157,8 +157,8 @@ namespace Poulpe
     texture.setPath(path);
 
     m_Textures.emplace(name, texture);
-    vkFreeCommandBuffers(m_Renderer->rdr()->getDevice(), commandPool, 1, &commandBuffer);
-    vkDestroyCommandPool(m_Renderer->rdr()->getDevice(), commandPool, nullptr);
+    vkFreeCommandBuffers(m_Renderer->getDevice(), commandPool, 1, &commandBuffer);
+    vkDestroyCommandPool(m_Renderer->getDevice(), commandPool, nullptr);
   }
 
   void TextureManager::clear()

@@ -9,7 +9,7 @@
 
 namespace Poulpe
 {
-    std::vector<Poulpe::material_t> TinyObjLoader::m_TinyObjMaterials{};
+    std::vector<material_t> TinyObjLoader::m_TinyObjMaterials{};
 
     std::vector<TinyObjData> TinyObjLoader::loadData(std::string const & path, [[maybe_unused]] bool shouldInverseTextureY)
     {
@@ -39,7 +39,7 @@ namespace Poulpe
                     
         for (auto & material : materials) {
           
-          Poulpe::material_t mat{};
+          material_t mat{};
           mat.name = material.name;
           mat.ambient = { material.ambient[0], material.ambient[1], material.ambient[2] };
           mat.diffuse = { material.diffuse[0], material.diffuse[1], material.diffuse[2] };
@@ -70,12 +70,12 @@ namespace Poulpe
           m_TinyObjMaterials.emplace_back(mat);
         }
 
-        std::unordered_map<Poulpe::Vertex, uint32_t> uniqueVertices{};
+        std::unordered_map<Vertex, uint32_t> uniqueVertices{};
         
         //@todo refacto...
         std::unordered_map<uint32_t, std::array<unsigned int, 3>> triangles;
-        std::unordered_map<uint32_t, Poulpe::Vertex*> listVertex;
-        std::unordered_map<uint32_t, Poulpe::Vertex*> iToVertex;
+        std::unordered_map<uint32_t, Vertex*> listVertex;
+        std::unordered_map<uint32_t, Vertex*> iToVertex;
 
         //uint32_t i = 0, k = 0;
 
@@ -115,7 +115,7 @@ namespace Poulpe
                 // Loop over vertices in the face.
                 for (size_t v = 0; v < fv; v++) {
 
-                    Poulpe::Vertex vertex{};
+                    Vertex vertex{};
                     vertex.fidtidBB = glm::vec4(static_cast<float>(f), t, 0.0f, 0.0f);
 
                     // access to vertex

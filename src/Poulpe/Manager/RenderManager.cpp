@@ -1,38 +1,48 @@
 #include "RenderManager.hpp"
 
+#include "AudioManager.hpp"
+#include "ComponentManager.hpp"
+#include "ConfigManager.hpp"
+#include "EntityManager.hpp"
+#include "LightManager.hpp"
+#include "ShaderManager.hpp"
+#include "TextureManager.hpp"
+
 #include "Poulpe/Component/AnimationComponent.hpp"
 #include "Poulpe/Component/MeshComponent.hpp"
 #include "Poulpe/Component/RenderComponent.hpp"
 
-#include "Poulpe/Renderer/Vulkan/EntityFactory.hpp"
+#include "Poulpe/Component/Renderer/RendererFactory.hpp"
+
+#include "Poulpe/Renderer/Vulkan/Renderer.hpp"
 
 namespace Poulpe
 {    
-    RenderManager::RenderManager(Window* window)
+    RenderManager::RenderManager(Window* const window)
     {
-        m_Window = std::unique_ptr< Window>(window);
-        m_ComponentManager = std::make_unique<Poulpe::ComponentManager>();
-        m_EntityManager = std::make_unique<Poulpe::EntityManager>(m_ComponentManager.get());
-        m_LightManager = std::make_unique<Poulpe::LightManager>();
-        m_TextureManager = std::make_unique<Poulpe::TextureManager>();
+        m_Window = std::unique_ptr<Window>(window);
+        m_ComponentManager = std::make_unique<ComponentManager>();
+        m_EntityManager = std::make_unique<EntityManager>(m_ComponentManager.get());
+        m_LightManager = std::make_unique<LightManager>();
+        m_TextureManager = std::make_unique<TextureManager>();
         
-        m_Renderer = std::make_unique<Poulpe::VulkanAdapter>(
+        m_Renderer = std::make_unique<Renderer>(
           m_Window.get(),
           m_EntityManager.get(),
           m_ComponentManager.get(),
           m_LightManager.get());
 
-        m_ConfigManager = std::make_unique<Poulpe::ConfigManager>();
-        m_AudioManager = std::make_unique<Poulpe::AudioManager>();
-        m_ShaderManager = std::make_unique<Poulpe::ShaderManager>();
-        m_DestroyManager = std::make_unique<Poulpe::DestroyManager>();
-        m_Camera = std::make_unique<Poulpe::Camera>();
+        m_ConfigManager = std::make_unique<ConfigManager>();
+        m_AudioManager = std::make_unique<AudioManager>();
+        m_ShaderManager = std::make_unique<ShaderManager>();
+        m_DestroyManager = std::make_unique<DestroyManager>();
+        m_Camera = std::make_unique<Camera>();
 
         m_Camera->init();
         m_Renderer->init();
         m_Renderer->addCamera(m_Camera.get());
-        m_DestroyManager->setRenderer(m_Renderer->rdr());
-        m_DestroyManager->addMemoryPool(m_Renderer->rdr()->getDeviceMemoryPool());
+        m_DestroyManager->setRenderer(m_Renderer.get());
+        m_DestroyManager->addMemoryPool(m_Renderer->getDeviceMemoryPool());
 
         nlohmann::json appConfig = m_ConfigManager->appConfig();
         if (appConfig["defaultLevel"].empty()) {
@@ -41,14 +51,14 @@ namespace Poulpe
         
         m_CurrentLevel = static_cast<std::string>(appConfig["defaultLevel"]);
 
-        Poulpe::Locator::getInputManager()->init(appConfig["input"]);
+        Locator::getInputManager()->init(appConfig["input"]);
 
         //@todo, those managers should not have the usage of the renderer...
         m_TextureManager->addRenderer(m_Renderer.get());
         m_EntityManager->addRenderer(m_Renderer.get());
         m_ShaderManager->addRenderer(m_Renderer.get());
-        Poulpe::Locator::getInputManager()->addRenderer(m_Renderer.get());
-        Poulpe::Locator::getInputManager()->setCamera(m_Camera.get());
+        
+        Locator::getInputManager()->setCamera(m_Camera.get());
         //end @todo
     }
 
@@ -68,7 +78,7 @@ namespace Poulpe
         m_ShaderManager->clear();
         m_Renderer->clear();
         //m_DestroyManager->CleanDeviceMemory();
-        //m_Renderer->Rdr()->InitMemoryPool();
+        //m_Renderer->InitMemoryPool();
         m_ComponentManager->clear();
     }
 
@@ -84,7 +94,7 @@ namespace Poulpe
 
         if (m_Refresh) {
             m_Renderer->stopRendering();
-            m_Renderer->rdr()->waitIdle();
+            m_Renderer->waitIdle();
             cleanUp();
             m_Renderer->recreateSwapChain();
             setIsLoaded(false);
@@ -176,10 +186,10 @@ namespace Poulpe
       std::function<void()> skyboxFuture = m_TextureManager->loadSkybox(sb);
       std::function<void()> shaderFuture = m_ShaderManager->load(m_ConfigManager->shaderConfig());
 
-      Poulpe::Locator::getThreadPool()->submit(threadQueueName, entityFutures);
-      Poulpe::Locator::getThreadPool()->submit(threadQueueName, textureFuture);
-      Poulpe::Locator::getThreadPool()->submit(threadQueueName, skyboxFuture);
-      Poulpe::Locator::getThreadPool()->submit(threadQueueName, shaderFuture);
+      Locator::getThreadPool()->submit(threadQueueName, entityFutures);
+      Locator::getThreadPool()->submit(threadQueueName, textureFuture);
+      Locator::getThreadPool()->submit(threadQueueName, skyboxFuture);
+      Locator::getThreadPool()->submit(threadQueueName, shaderFuture);
 
       while (!m_TextureManager->isTexturesLoadingDone()) {
         //PLP_WARN("loading {}", m_TextureManager->isTexturesLoadingDone());
@@ -200,19 +210,19 @@ namespace Poulpe
     {
         auto* gridEntity = new Entity();
         auto* gridMesh = new Mesh();
-        auto* gridRdrImpl = new Grid();
-        gridRdrImpl->init(m_Renderer.get(), m_TextureManager.get(), nullptr);
+        auto gridRdrImpl = RendererFactory::create<Grid>();
+        gridRdrImpl.init(m_Renderer.get(), m_TextureManager.get(), nullptr);
 
-        auto renderGridComponent = m_ComponentManager->addComponent<RenderComponent>(gridEntity->getID(), gridRdrImpl);
+        auto renderGridComponent = m_ComponentManager->addComponent<RenderComponent>(gridEntity->getID(), &gridRdrImpl);
         renderGridComponent.visit(0, gridMesh);
         m_ComponentManager->addComponent<MeshComponent>(gridEntity->getID(), gridMesh);
 
         auto* chEntity = new Entity();
         auto* chMesh = new Mesh();
-        auto* chRdrImpl = new Crosshair();
-         chRdrImpl->init(m_Renderer.get(), m_TextureManager.get(), nullptr);
+        auto chRdrImpl = RendererFactory::create<Crosshair>();
+        chRdrImpl.init(m_Renderer.get(), m_TextureManager.get(), nullptr);
 
-        auto renderCrosshairComponent = m_ComponentManager->addComponent<RenderComponent>(chEntity->getID(), chRdrImpl);
+        auto renderCrosshairComponent = m_ComponentManager->addComponent<RenderComponent>(chEntity->getID(), &chRdrImpl);
         renderCrosshairComponent.visit(0, chMesh);
         m_ComponentManager->addComponent<MeshComponent>(chEntity->getID(), chMesh);
 

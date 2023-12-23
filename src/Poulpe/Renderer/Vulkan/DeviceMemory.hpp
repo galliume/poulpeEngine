@@ -9,43 +9,42 @@ namespace Poulpe
         DeviceMemory(
             VkDevice device,
             uint32_t memoryType,
-            VkBufferUsageFlags usage,
             VkDeviceSize maxSize,
             unsigned int index
         );
 
         void bindBufferToMemory(VkBuffer& buffer, VkDeviceSize size);
         void bindImageToMemory(VkImage& image, VkDeviceSize size);
-        bool isFull() { return m_IsFull; }
-        uint32_t getOffset() { return m_Offset; }
+        void clear();
+        unsigned int getID() const { return m_Index; }
         VkDeviceMemory* getMemory();
+        VkDeviceSize getOffset() const { return m_Offset; }
+        VkDeviceSize getSize() const { return m_MaxSize; }
+        VkDeviceSize getSpaceLeft() const { return m_MaxSize - m_Offset; }
+        VkDeviceSize getType() const { return m_MemoryType; }
         bool hasEnoughSpaceLeft(VkDeviceSize size);
+        bool isFull() const {  return m_IsFull; }
         void lock() { m_MutexMemory.lock(); }
         void unLock() { m_MutexMemory.unlock(); }
-        void clear();
-        VkDeviceSize getSize() { return m_MaxSize; }
-        uint32_t getType() { return m_MemoryType; }
-        unsigned int getID() { return m_Index; }
-        unsigned int getSpaceLeft() { return m_MaxSize - m_Offset; }
 
     private:
         void allocateToMemory();
 
     private:
-        bool m_IsFull = false;
-        bool m_IsAllocated = false;
+        unsigned int m_Index{0};
+        
+        bool m_IsAllocated{false};
+        bool m_IsFull{false};
 
-        std::unique_ptr<VkDeviceMemory> m_Memory = nullptr;
-
-        VkDevice m_Device;
-        uint32_t m_MemoryType;
-        //VkBufferUsageFlags m_Usage;
         VkDeviceSize m_MaxSize;
+        uint32_t m_MemoryType;
+        //@todo check with deviceProps.limits.bufferImageGranularity;
+        VkDeviceSize m_Offset{0};
+ 
+        std::vector<VkBuffer> m_Buffer {};
+        VkDevice m_Device;
+        std::unique_ptr<VkDeviceMemory> m_Memory{nullptr};
         std::mutex m_MutexMemory;
 
-        //@todo check with deviceProps.limits.bufferImageGranularity;
-        uint32_t m_Offset = 0;
-        std::vector<VkBuffer> m_Buffer {};
-        unsigned int m_Index{0};
     };
 }

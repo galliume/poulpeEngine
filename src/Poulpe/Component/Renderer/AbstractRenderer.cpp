@@ -2,9 +2,12 @@
 
 namespace Poulpe
 {
-    void AbstractRenderer::init(VulkanAdapter* adapter, TextureManager* textureManager, LightManager* lightManager)
+    void AbstractRenderer::init(
+        IRenderer* const renderer,
+        ITextureManager* const textureManager,
+        ILightManager* const lightManager)
     {
-        m_Adapter = adapter;
+        m_Renderer = renderer;
         m_TextureManager = textureManager;
         m_LightManager = lightManager;
     }

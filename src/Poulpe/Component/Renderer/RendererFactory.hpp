@@ -1,13 +1,13 @@
 #pragma once
 
-#include "Poulpe/Component/Renderer/Crosshair.hpp"
-#include "Poulpe/Component/Renderer/Basic.hpp"
-#include "Poulpe/Component/Renderer/Grid.hpp"
-#include "Poulpe/Component/Renderer/Skybox.hpp"
+#include "Crosshair.hpp"
+#include "Basic.hpp"
+#include "Grid.hpp"
+#include "Skybox.hpp"
 
 namespace Poulpe
 {
-    class EntityFactory
+    class RendererFactory
     {
     public:
         template <typename T, typename... TArgs>

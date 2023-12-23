@@ -13,10 +13,10 @@ namespace Poulpe
 
     void Window::init(std::string_view windowTitle)
     {
-        /*const uint32_t WIDTH = 2560;
-        const uint32_t HEIGHT = 1440;*/
-        const uint32_t WIDTH = 800;
-        const uint32_t HEIGHT = 600;
+        /*const int WIDTH = 2560;
+        const int HEIGHT = 1440;*/
+        const int WIDTH = 800;
+        const int HEIGHT = 600;
 
         glfwInit();
         glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
@@ -37,7 +37,7 @@ namespace Poulpe
         glfwSetWindowUserPointer(m_Window, this);
 
         glfwSetFramebufferSizeCallback(m_Window, []([[maybe_unused]] GLFWwindow* glfwWindow, [[maybe_unused]] int width, [[maybe_unused]] int height) {
-            Poulpe::Window::m_FramebufferResized = true;
+            Window::m_FramebufferResized = true;
         });
 
         //glfwSetInputMode(m_Window, GLFW_STICKY_MOUSE_BUTTONS, GLFW_TRUE);

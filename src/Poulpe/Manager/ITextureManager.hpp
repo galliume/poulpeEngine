@@ -2,7 +2,7 @@
 
 #include <nlohmann/json.hpp>
 
-#include "Poulpe/Renderer/Adapter/IRendererAdapter.hpp"
+#include "Poulpe/Renderer/IRenderer.hpp"
 
 #include "Poulpe/Component/Texture.hpp"
 
@@ -12,10 +12,10 @@ namespace Poulpe
     {
     public:
         ITextureManager() = default;
-        ~ITextureManager() = default;
+        virtual ~ITextureManager() = default;
 
         virtual void addConfig(nlohmann::json config) = 0;
-        virtual void addRenderer(IRendererAdapter* const renderer) = 0;
+        virtual void addRenderer(IRenderer* const renderer) = 0;
         virtual std::vector<std::array<float, 3>> addNormalMapTexture(std::string const & name) = 0;
         virtual void addSkyBox(std::vector<std::string> const & skyboxImages) = 0;
         virtual void addTexture(std::string const & name, std::string const & path, bool isPublic = false) = 0;

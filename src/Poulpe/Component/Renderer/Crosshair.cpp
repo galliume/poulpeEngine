@@ -2,7 +2,7 @@
 
 #include "Poulpe/Core/PlpTypedef.hpp"
 
-#include "Poulpe/Renderer/Adapter/VulkanAdapter.hpp"
+#include "Poulpe/Renderer/Vulkan/Renderer.hpp"
 
 namespace Poulpe
 {
@@ -25,11 +25,11 @@ namespace Poulpe
       imageInfos.emplace_back(imageInfo);
       imageInfos.emplace_back(imageInfo2);
 
-      auto pipeline = m_Adapter->getPipeline(mesh->getShaderName());
+      auto pipeline = m_Renderer->getPipeline(mesh->getShaderName());
 
-      VkDescriptorSet descSet = m_Adapter->rdr()->createDescriptorSets(pipeline->descPool, { pipeline->descSetLayout }, 1);
+      VkDescriptorSet descSet = m_Renderer->createDescriptorSets(pipeline->descPool, { pipeline->descSetLayout }, 1);
 
-      m_Adapter->rdr()->updateDescriptorSets(*mesh->getUniformBuffers(), descSet, imageInfos);
+      m_Renderer->updateDescriptorSets(*mesh->getUniformBuffers(), descSet, imageInfos);
 
       mesh->setDescSet(descSet);
     }
@@ -38,10 +38,10 @@ namespace Poulpe
     {
         mesh->setApplyPushConstants([](
             VkCommandBuffer & commandBuffer, VkPipelineLayout pipelineLayout,
-            [[maybe_unused]] VulkanAdapter* const adapter,
+            [[maybe_unused]] IRenderer* const renderer,
             [[maybe_unused]] IVisitable* const mesh) {
   
-            float id = static_cast<float>(VulkanAdapter::s_Crosshair);
+            float id = static_cast<float>(Renderer::s_Crosshair);
 
             constants pushConstants{};
             pushConstants.textureIDBB = glm::vec3(id, 0.0f, 0.0f);
@@ -65,30 +65,30 @@ namespace Poulpe
           0, 1, 2, 2, 3, 0
       };
 
-      auto commandPool = m_Adapter->rdr()->createCommandPool();
+      auto commandPool = m_Renderer->createCommandPool();
 
       UniformBufferObject ubo{};
 
       Data data;
       data.m_Textures.emplace_back("crosshair");
       data.m_TextureIndex = 0;
-      data.m_VertexBuffer = m_Adapter->rdr()->createVertexBuffer(commandPool, vertices);
-      data.m_IndicesBuffer = m_Adapter->rdr()->createIndexBuffer(commandPool, indices);
+      data.m_VertexBuffer = m_Renderer->createVertexBuffer(commandPool, vertices);
+      data.m_IndicesBuffer = m_Renderer->createIndexBuffer(commandPool, indices);
       data.m_Ubos.emplace_back(ubo);
       data.m_Indices = indices;
 
-      vkDestroyCommandPool(m_Adapter->rdr()->getDevice(), commandPool, nullptr);
+      vkDestroyCommandPool(m_Renderer->getDevice(), commandPool, nullptr);
 
       mesh->setName("crosshair");
       mesh->setShaderName("2d");
-      mesh->getUniformBuffers()->emplace_back(m_Adapter->rdr()->createUniformBuffers(1));
+      mesh->getUniformBuffers()->emplace_back(m_Renderer->createUniformBuffers(1));
 
       setPushConstants(mesh);
 
       for (uint32_t i = 0; i < mesh->getUniformBuffers()->size(); i++) {
-        data.m_Ubos[i].projection = m_Adapter->getPerspective();
+        data.m_Ubos[i].projection = m_Renderer->getPerspective();
 
-        m_Adapter->rdr()->updateUniformBuffer(mesh->getUniformBuffers()->at(i), &data.m_Ubos);
+        m_Renderer->updateUniformBuffer(mesh->getUniformBuffers()->at(i), &data.m_Ubos);
       }
 
       createDescriptorSet(mesh);

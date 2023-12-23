@@ -20,7 +20,7 @@ namespace Poulpe
 
     void CommandQueue::execPostRequest()
     {
-      Poulpe::Locator::getThreadPool()->submit("postCommandQueue", [this]() {
+      Locator::getThreadPool()->submit("postCommandQueue", [this]() {
         {
           std::lock_guard guard(m_Mutex);
 
@@ -36,7 +36,7 @@ namespace Poulpe
 
     void CommandQueue::execPreRequest()
     {
-      Poulpe::Locator::getThreadPool()->submit("preCommandQueue", [this]() {
+      Locator::getThreadPool()->submit("preCommandQueue", [this]() {
         {
           std::lock_guard guard(m_Mutex);
 

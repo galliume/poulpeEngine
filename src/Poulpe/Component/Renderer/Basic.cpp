@@ -1,7 +1,5 @@
 #include "Basic.hpp"
 
-#include "Poulpe/Renderer/Adapter/VulkanAdapter.hpp"
-
 namespace Poulpe
 {
     struct constants;
@@ -97,25 +95,25 @@ namespace Poulpe
 
       VkDescriptorImageInfo shadowMapAmbient{};
       shadowMapAmbient.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-      shadowMapAmbient.imageView = m_Adapter->getDepthMapImageViews()->at(0);
-      shadowMapAmbient.sampler = m_Adapter->getDepthMapSamplers()->at(0);
+      shadowMapAmbient.imageView = m_Renderer->getDepthMapImageViews()->at(0);
+      shadowMapAmbient.sampler = m_Renderer->getDepthMapSamplers()->at(0);
 
       //VkDescriptorImageInfo shadowMapSpot{};
       //shadowMapSpot.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-      //shadowMapSpot.imageView = m_Adapter->getDepthMapImageViews()->at(1);
-      //shadowMapSpot.sampler = m_Adapter->getDepthMapSamplers()->at(1);
+      //shadowMapSpot.imageView = m_Renderer->getDepthMapImageViews()->at(1);
+      //shadowMapSpot.sampler = m_Renderer->getDepthMapSamplers()->at(1);
 
       imageInfos.emplace_back(imageInfoSpecularMap);
       imageInfos.emplace_back(imageInfoBumpMap);
       imageInfos.emplace_back(shadowMapAmbient);
       //imageInfos.emplace_back(shadowMapSpot);
 
-      auto pipeline = m_Adapter->getPipeline(mesh->getShaderName());
-      VkDescriptorSet descSet = m_Adapter->rdr()->createDescriptorSets(pipeline->descPool, { pipeline->descSetLayout }, 1);
+      auto pipeline = m_Renderer->getPipeline(mesh->getShaderName());
+      VkDescriptorSet descSet = m_Renderer->createDescriptorSets(pipeline->descPool, { pipeline->descSetLayout }, 1);
 
       for (size_t i = 0; i < mesh->getUniformBuffers()->size(); ++i) {
 
-        m_Adapter->rdr()->updateDescriptorSets(
+        m_Renderer->updateDescriptorSets(
           *mesh->getUniformBuffers(),
           *mesh->getStorageBuffers(),
           descSet, imageInfos);
@@ -129,12 +127,12 @@ namespace Poulpe
         mesh->setApplyPushConstants([](
             VkCommandBuffer & commandBuffer, 
             VkPipelineLayout pipelineLayout,
-            VulkanAdapter* const adapter, IVisitable* const mesh) {
+            IRenderer* const renderer, IVisitable* const mesh) {
 
             constants pushConstants{};
             pushConstants.textureIDBB = glm::vec3(mesh->getData()->m_TextureIndex, 0.0, 0.0);
-            pushConstants.view = adapter->getCamera()->lookAt();
-            pushConstants.viewPos = adapter->getCamera()->getPos();
+            pushConstants.view = renderer->getCamera()->lookAt();
+            pushConstants.viewPos = renderer->getCamera()->getPos();
             pushConstants.mapsUsed = mesh->getData()->mapsUsed;
 
             vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(constants),
@@ -149,7 +147,7 @@ namespace Poulpe
       if (!mesh && !mesh->isDirty()) return;
 
       uint32_t totalInstances = static_cast<uint32_t>(mesh->getData()->m_Ubos.size());
-      uint32_t maxUniformBufferRange = m_Adapter->rdr()->getDeviceProperties().limits.maxUniformBufferRange;
+      uint32_t maxUniformBufferRange = m_Renderer->getDeviceProperties().limits.maxUniformBufferRange;
       uint32_t uniformBufferChunkSize = maxUniformBufferRange / sizeof(UniformBufferObject);
       uint32_t uniformBuffersCount = static_cast<uint32_t>(std::ceil(static_cast<float>(totalInstances) / static_cast<float>(uniformBufferChunkSize)));
 
@@ -161,7 +159,7 @@ namespace Poulpe
       for (size_t i = 0; i < uniformBuffersCount; ++i) {
 
         mesh->getData()->m_UbosOffset.emplace_back(uboOffset);
-        Buffer uniformBuffer = m_Adapter->rdr()->createUniformBuffers(nbUbo);
+        Buffer uniformBuffer = m_Renderer->createUniformBuffers(nbUbo);
         mesh->getUniformBuffers()->emplace_back(uniformBuffer);
 
         uboOffset = (uboRemaining > uniformBufferChunkSize) ? uboOffset + uniformBufferChunkSize : uboOffset + uboRemaining;
@@ -169,15 +167,15 @@ namespace Poulpe
         uboRemaining = (totalInstances - uboOffset > 0) ? totalInstances - uboOffset : 0;
       }
 
-      auto commandPool = m_Adapter->rdr()->createCommandPool();
+      auto commandPool = m_Renderer->createCommandPool();
       auto data = mesh->getData();
 
-      data->m_VertexBuffer = m_Adapter->rdr()->createVertexBuffer(commandPool, data->m_Vertices);
-      data->m_IndicesBuffer = m_Adapter->rdr()->createIndexBuffer(commandPool, data->m_Indices);
+      data->m_VertexBuffer = m_Renderer->createVertexBuffer(commandPool, data->m_Vertices);
+      data->m_IndicesBuffer = m_Renderer->createIndexBuffer(commandPool, data->m_Indices);
       data->m_TextureIndex = 0;
 
       for (size_t i = 0; i < mesh->getData()->m_Ubos.size(); ++i) {
-        mesh->getData()->m_Ubos[i].projection = m_Adapter->getPerspective();
+        mesh->getData()->m_Ubos[i].projection = m_Renderer->getPerspective();
 
         if (m_TextureManager->getTextures().contains(mesh->getData()->m_TextureBumpMap)) {
           auto const tex = m_TextureManager->getTextures()[mesh->getData()->m_TextureBumpMap];
@@ -206,19 +204,19 @@ namespace Poulpe
       objectBuffer.material = material;
 
       auto size = sizeof(objectBuffer);
-      auto storageBuffer = m_Adapter->rdr()->createStorageBuffers(size);
+      auto storageBuffer = m_Renderer->createStorageBuffers(size);
       mesh->addStorageBuffer(storageBuffer);
-      m_Adapter->rdr()->updateStorageBuffer(mesh->getStorageBuffers()->at(0), objectBuffer);
+      m_Renderer->updateStorageBuffer(mesh->getStorageBuffers()->at(0), objectBuffer);
       mesh->setHasBufferStorage();
 
-      int min{ 0 };
-      int max{ 0 };
+      unsigned int min{ 0 };
+      unsigned int max{ 0 };
 
       for (size_t i = 0; i < mesh->getUniformBuffers()->size(); ++i) {
         max = mesh->getData()->m_UbosOffset.at(i);
         auto ubos = std::vector<UniformBufferObject>(mesh->getData()->m_Ubos.begin() + min, mesh->getData()->m_Ubos.begin() + max);
 
-        m_Adapter->rdr()->updateUniformBuffer(mesh->getUniformBuffers()->at(i), &ubos);
+        m_Renderer->updateUniformBuffer(mesh->getUniformBuffers()->at(i), &ubos);
 
         min = max;
       }

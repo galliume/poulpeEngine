@@ -22,11 +22,11 @@ namespace Poulpe
         return;
       }
 
-      auto vertShaderCode = Poulpe::Tools::readFile(vertPath);
-      auto fragShaderCode = Poulpe::Tools::readFile(fragPath);
+      auto vertShaderCode = Tools::readFile(vertPath);
+      auto fragShaderCode = Tools::readFile(fragPath);
 
-      VkShaderModule vertexShaderModule = m_Renderer->rdr()->createShaderModule(vertShaderCode);
-      VkShaderModule fragShaderModule = m_Renderer->rdr()->createShaderModule(fragShaderCode);
+      VkShaderModule vertexShaderModule = m_Renderer->createShaderModule(vertShaderCode);
+      VkShaderModule fragShaderModule = m_Renderer->createShaderModule(fragShaderCode);
 
       std::array<VkShaderModule, 2> module = { vertexShaderModule, fragShaderModule };
 
@@ -86,7 +86,7 @@ namespace Poulpe
       std::vector<VkDescriptorSetLayoutBinding> bindings = {
           uboLayoutBinding, samplerLayoutBinding, storageLayoutBinding };
 
-      VkDescriptorSetLayout desriptorSetLayout = m_Renderer->rdr()->createDescriptorSetLayout(bindings);
+      VkDescriptorSetLayout desriptorSetLayout = m_Renderer->createDescriptorSetLayout(bindings);
 
       return desriptorSetLayout;
     }
@@ -110,7 +110,7 @@ namespace Poulpe
       std::vector<VkDescriptorSetLayoutBinding> bindings = {
           uboLayoutBinding, samplerLayoutBinding };
 
-      VkDescriptorSetLayout desriptorSetLayout = m_Renderer->rdr()->createDescriptorSetLayout(bindings);
+      VkDescriptorSetLayout desriptorSetLayout = m_Renderer->createDescriptorSetLayout(bindings);
 
       return desriptorSetLayout;
     }
@@ -134,7 +134,7 @@ namespace Poulpe
       std::vector<VkDescriptorSetLayoutBinding> bindings = {
           uboLayoutBinding, samplerLayoutBinding };
 
-      VkDescriptorSetLayout desriptorSetLayout = m_Renderer->rdr()->createDescriptorSetLayout(bindings);
+      VkDescriptorSetLayout desriptorSetLayout = m_Renderer->createDescriptorSetLayout(bindings);
 
       return desriptorSetLayout;
     }
@@ -161,7 +161,7 @@ namespace Poulpe
 
       VkDescriptorSetLayout descSetLayout;
 
-      auto descriptorPool = m_Renderer->rdr()->createDescriptorPool(poolSizes, 10000);
+      auto descriptorPool = m_Renderer->createDescriptorPool(poolSizes, 10000);
 
       if (shaderName == "skybox") {
         descSetLayout = createDescriptorSetLayoutForSkybox();
@@ -181,7 +181,7 @@ namespace Poulpe
       vkPc.size = sizeof(constants);
       vkPc.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
       vkPcs.emplace_back(vkPc);
-      VkPipelineLayout pipelineLayout = m_Renderer->rdr()->createPipelineLayout(dSetLayout, vkPcs);
+      VkPipelineLayout pipelineLayout = m_Renderer->createPipelineLayout(dSetLayout, vkPcs);
 
       auto shaders = getShadersInfo(shaderName);
       auto bDesc = Vertex::GetBindingDescription();
@@ -191,10 +191,10 @@ namespace Poulpe
 
       //@todo clean
       if (shaderName == "shadowMap" || shaderName == "shadowMapSpot" || shaderName == "quad") {
-        graphicPipeline = m_Renderer->rdr()->createGraphicsPipeline(pipelineLayout,
+        graphicPipeline = m_Renderer->createGraphicsPipeline(pipelineLayout,
           shaderName, shaders, vertexInputInfo, VK_CULL_MODE_NONE, true, true, true, VK_POLYGON_MODE_FILL, false, true);
       } else {
-        graphicPipeline = m_Renderer->rdr()->createGraphicsPipeline(pipelineLayout,
+        graphicPipeline = m_Renderer->createGraphicsPipeline(pipelineLayout,
           shaderName, shaders, vertexInputInfo, VK_CULL_MODE_BACK_BIT, true, true, true, VK_POLYGON_MODE_FILL);
       }
 

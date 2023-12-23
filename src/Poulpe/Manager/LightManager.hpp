@@ -2,24 +2,22 @@
 
 #include "ILightManager.hpp"
 
-#include "Poulpe/Core/PlpTypedef.hpp"
-
 namespace Poulpe
 {
-    class LightManager : ILightManager
+    class LightManager : public ILightManager
     {
     public:
 
         LightManager();
         ~LightManager() = default;
 
-        void animateAmbientLight(float deltaTime);
-        inline Light getAmbientLight() { return m_AmbientLight; }
-        inline std::vector<Light> getPointLights() { return m_PointLights; }
-        inline std::vector<Light> getSpotLights() { return m_SpotLights; }
+        void animateAmbientLight(float deltaTime) override;
+        inline Light getAmbientLight() override { return m_AmbientLight; }
+        inline std::vector<Light> getPointLights() override { return m_PointLights; }
+        inline std::vector<Light> getSpotLights() override { return m_SpotLights; }
 
     private:
-        Light m_AmbientLight;
+        Light m_AmbientLight{};
         std::vector<Light> m_PointLights{};
         std::vector<Light> m_SpotLights{};
     };

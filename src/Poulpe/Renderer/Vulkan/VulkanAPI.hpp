@@ -4,7 +4,7 @@
 
 #include "Poulpe/Core/PlpTypedef.hpp"
 
-#include "Poulpe/Renderer/IRenderer.hpp"
+#include "Poulpe/Renderer/IGraphicsAPI.hpp"
 #include "Poulpe/Renderer/Vulkan/DeviceMemoryPool.hpp"
 
 #include <stb_image.h>
@@ -41,11 +41,11 @@ namespace Poulpe {
         std::vector<VkPresentModeKHR> presentModes;
     };
 
-    class VulkanRenderer : public IRenderer
+    class VulkanAPI : public IGraphicsAPI
     {
     public:
-        VulkanRenderer(Window* window);
-        ~VulkanRenderer();
+        VulkanAPI(Window* window);
+        ~VulkanAPI();
 
         /**
         * Vulkan init functions, before main loop.
@@ -289,7 +289,7 @@ namespace Poulpe {
 
         std::string getAPIVersion();
 
-       DeviceMemoryPool* getDeviceMemoryPool() { return m_DeviceMemoryPool.get(); }
+        DeviceMemoryPool* getDeviceMemoryPool() { return m_DeviceMemoryPool.get(); }
 
         void startMarker(VkCommandBuffer buffer, std::string const & name, float r, float g, float b, float a = 1.0);
 

@@ -1,9 +1,7 @@
 #include "EntityManager.hpp"
 
-#include "Poulpe/Renderer/Vulkan/EntityFactory.hpp"
-
 #include "Poulpe/Component/AnimationComponent.hpp"
-#include "Poulpe/Component/MeshComponent.hpp"
+#include "Poulpe/Component/Renderer/RendererFactory.hpp"
 
 #include <filesystem>
 
@@ -14,11 +12,11 @@ namespace Poulpe
     public:
         AnimImpl() = default;
 
-        void init(VulkanAdapter* const adapter,
-            [[maybe_unused]] TextureManager* const textureManager,
-            [[maybe_unused]] LightManager* const lightManager) override
+        void init(IRenderer* const renderer,
+            [[maybe_unused]] ITextureManager* const textureManager,
+            [[maybe_unused]] ILightManager* const lightManager) override
         {
-            m_Adapter = adapter;
+            m_Renderer = renderer;
         }
         void setPushConstants([[maybe_unused]] IVisitable* const mesh) override {};
         void createDescriptorSet([[maybe_unused]] IVisitable* const) override {};
@@ -58,12 +56,12 @@ namespace Poulpe
 
                 ubo.model = glm::rotate(ubo.model, glm::radians(angle), mesh->getData()->m_OriginPos);
 
-                m_Adapter->rdr()->updateUniformBuffer(mesh->getUniformBuffers()->at(0), &mesh->getData()->m_Ubos);
+                m_Renderer->updateUniformBuffer(mesh->getUniformBuffers()->at(0), &mesh->getData()->m_Ubos);
             }
 
         }
 
-        VulkanAdapter* m_Adapter;
+        IRenderer* m_Renderer;
         float animationDuration = 3.f;
         float elapsedTime = 0.f;
         bool reverse = false;
@@ -117,8 +115,9 @@ namespace Poulpe
                 );
 
                 std::vector<std::string> textures{};
-                for (auto& [key, path] : data["textures"].items())
-                  textures.emplace_back(static_cast<std::string>(key));
+                for (auto& [keyTex, pathTex] : data["textures"].items()) {
+                  textures.emplace_back(static_cast<std::string>(keyTex));
+                }
 
                 auto scaleData = data["scales"].at(0);
                 auto rotationData = data["rotations"].at(0);
@@ -158,10 +157,9 @@ namespace Poulpe
                 addEntity(std::move(parts));
               }
             }
-          }
-          else {
+          } else {
             int count = static_cast<int>(data["count"]);
-            std::string form = static_cast<std::string>(data["form"]);
+            form = static_cast<std::string>(data["form"]);
 
             for (int i = 0; i < count; i++) {
 
@@ -198,8 +196,9 @@ namespace Poulpe
               );
 
               std::vector<std::string> textures{};
-              for (auto& [key, path] : data["textures"].items())
-                textures.emplace_back(static_cast<std::string>(key));
+              for (auto& [keyTex, pathTex] : data["textures"].items()) {
+                textures.emplace_back(static_cast<std::string>(keyTex));
+              }
 
               bool hasBbox = static_cast<bool>(data["hasBbox"]);
               bool hasAnimation = static_cast<bool>(data["hasAnimation"]);
@@ -275,8 +274,8 @@ namespace Poulpe
 
           m_ComponentManager->addComponent<MeshComponent>(entity->getID(), mesh);
 
-          auto* basicRdrImpl = new Basic();
-          m_ComponentManager->addComponent<RenderComponent>(entity->getID(), basicRdrImpl);
+          auto basicRdrImpl = RendererFactory::create<Basic>();
+          m_ComponentManager->addComponent<RenderComponent>(entity->getID(), &basicRdrImpl);
 
           m_WorldNode->addChild(entity.get());
 
