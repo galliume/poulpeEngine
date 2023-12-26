@@ -2,9 +2,9 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "RbkBuild",
-            "detail": "rbk build cmd",
-            "command": "${workspaceFolder}/bin/rbkBuild.sh",
+            "label": "Build",
+            "detail": "build cmd",
+            "command": "${workspaceFolder}/bin/plpBuild.sh",
             "type": "shell",
             "group": {
                 "kind": "build",
@@ -20,8 +20,8 @@
             }
         },
         {
-            "label": "RbkCompile",
-            "detail": "rbk compile cmd",
+            "label": "Compile",
+            "detail": "compile cmd",
             "type": "shell",
             "group": {
                 "kind": "build",

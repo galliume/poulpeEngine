@@ -175,8 +175,7 @@ namespace Poulpe
       std::filesystem::path p = std::filesystem::current_path();
 
       for (auto& [key, path] : m_TextureConfig["textures"].items()) {
-        //@todo wtf, relatives path worked before...
-        auto absolutePath = p.string() + "\\" + static_cast<std::string>(path);
+        auto absolutePath = p.string() + "/" + static_cast<std::string>(path);
         addTexture(key, absolutePath, true);
       }
 

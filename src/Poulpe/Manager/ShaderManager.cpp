@@ -165,11 +165,9 @@ namespace Poulpe
 
       if (shaderName == "skybox") {
         descSetLayout = createDescriptorSetLayoutForSkybox();
-      }
-      else if (shaderName == "grid" || shaderName == "2d") {
+      } else if (shaderName == "grid" || shaderName == "2d") {
         descSetLayout = createDescriptorSetLayoutForHUD();
-      }
-      else {
+      } else {
         descSetLayout = createDescriptorSetLayout();
       }
 
@@ -183,19 +181,44 @@ namespace Poulpe
       vkPcs.emplace_back(vkPc);
       VkPipelineLayout pipelineLayout = m_Renderer->createPipelineLayout(dSetLayout, vkPcs);
 
+      VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
+      VkVertexInputBindingDescription bDesc{};
+      
       auto shaders = getShadersInfo(shaderName);
-      auto bDesc = Vertex::GetBindingDescription();
-      auto attDesc = Vertex::GetAttributeDescriptions();
-      auto vertexInputInfo = getVertexBindingDesc(bDesc, attDesc);
+
+      if (shaderName == "grid" || shaderName == "2d") {
+        bDesc = Vertex2D::getBindingDescription();
+        std::array<VkVertexInputAttributeDescription, 3> attDesc = Vertex2D::getAttributeDescriptions();
+        vertexInputInfo = getVertexBindingDesc2D(bDesc, attDesc);
+      } else {
+        std::array<VkVertexInputAttributeDescription, 6> attDesc = Vertex::getAttributeDescriptions();
+        bDesc = Vertex::getBindingDescription();
+        vertexInputInfo = getVertexBindingDesc(bDesc, attDesc);
+      }
+
+
       VkPipeline graphicPipeline = VK_NULL_HANDLE;
 
       //@todo clean
       if (shaderName == "shadowMap" || shaderName == "shadowMapSpot" || shaderName == "quad") {
-        graphicPipeline = m_Renderer->createGraphicsPipeline(pipelineLayout,
-          shaderName, shaders, vertexInputInfo, VK_CULL_MODE_NONE, true, true, true, VK_POLYGON_MODE_FILL, false, true);
+        graphicPipeline = m_Renderer->createGraphicsPipeline(
+          pipelineLayout,
+          shaderName,
+          shaders,
+          vertexInputInfo,
+          VK_CULL_MODE_NONE,
+          true, true, true,
+          VK_POLYGON_MODE_FILL,
+          false, true);
       } else {
-        graphicPipeline = m_Renderer->createGraphicsPipeline(pipelineLayout,
-          shaderName, shaders, vertexInputInfo, VK_CULL_MODE_BACK_BIT, true, true, true, VK_POLYGON_MODE_FILL);
+        graphicPipeline = m_Renderer->createGraphicsPipeline(
+          pipelineLayout,
+          shaderName,
+          shaders,
+          vertexInputInfo,
+          VK_CULL_MODE_BACK_BIT,
+          true, true, true,
+          VK_POLYGON_MODE_FILL);
       }
 
       VulkanPipeline pipeline{};
@@ -206,8 +229,6 @@ namespace Poulpe
       pipeline.shaders = shaders;
 
       m_Renderer->addPipeline(shaderName, pipeline);
-
-      //if (shaderName == "shadowMap") m_Renderer->prepareShadowMap();
     }
 
     std::vector<VkPipelineShaderStageCreateInfo> ShaderManager::getShadersInfo(std::string const & shaderName)
@@ -231,13 +252,28 @@ namespace Poulpe
       return shadersStageInfos;
     }
 
-    VkPipelineVertexInputStateCreateInfo ShaderManager::getVertexBindingDesc(VkVertexInputBindingDescription bDesc,
+    VkPipelineVertexInputStateCreateInfo ShaderManager::getVertexBindingDesc(
+      VkVertexInputBindingDescription bDesc,
       std::array<VkVertexInputAttributeDescription, 6> attDesc)
     {
       VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
       vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
       vertexInputInfo.vertexBindingDescriptionCount = 1;
-      vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(Vertex::GetAttributeDescriptions().size());
+      vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(Vertex::getAttributeDescriptions().size());
+      vertexInputInfo.pVertexBindingDescriptions = & bDesc;
+      vertexInputInfo.pVertexAttributeDescriptions = attDesc.data();
+
+      return vertexInputInfo;
+    }
+
+    VkPipelineVertexInputStateCreateInfo ShaderManager::getVertexBindingDesc2D(
+      VkVertexInputBindingDescription bDesc,
+      std::array<VkVertexInputAttributeDescription, 3> attDesc)
+    {
+      VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
+      vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
+      vertexInputInfo.vertexBindingDescriptionCount = 1;
+      vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(Vertex2D::getAttributeDescriptions().size());
       vertexInputInfo.pVertexBindingDescriptions = & bDesc;
       vertexInputInfo.pVertexAttributeDescriptions = attDesc.data();
 

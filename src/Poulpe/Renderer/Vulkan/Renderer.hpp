@@ -55,14 +55,25 @@ namespace Poulpe
             return m_API->createDescriptorSetLayout(pBindings);
         }
 
-        VkPipeline createGraphicsPipeline(VkPipelineLayout pipelineLayout, std::string_view name,
-            std::vector<VkPipelineShaderStageCreateInfo>shadersCreateInfos, VkPipelineVertexInputStateCreateInfo vertexInputInfo,
-            VkCullModeFlagBits cullMode = VK_CULL_MODE_BACK_BIT, bool depthTestEnable = true,
-            bool depthWriteEnable = true, bool stencilTestEnable = true, int polygoneMode = VK_POLYGON_MODE_FILL, 
+        VkPipeline createGraphicsPipeline(
+            VkPipelineLayout & pipelineLayout,
+            std::string_view name,
+            std::vector<VkPipelineShaderStageCreateInfo> & shadersCreateInfos,
+            VkPipelineVertexInputStateCreateInfo & vertexInputInfo,
+            VkCullModeFlagBits cullMode = VK_CULL_MODE_BACK_BIT,
+            bool depthTestEnable = true, bool depthWriteEnable = true, bool stencilTestEnable = true,
+            int polygoneMode = VK_POLYGON_MODE_FILL, 
             bool hasColorAttachment = true, bool dynamicDepthBias = false) override {
                 return m_API->createGraphicsPipeline(
-                    pipelineLayout, name, shadersCreateInfos, vertexInputInfo, cullMode, depthTestEnable, depthWriteEnable, stencilTestEnable,
-                    polygoneMode, hasColorAttachment, dynamicDepthBias
+                    pipelineLayout,
+                    name,
+                    shadersCreateInfos,
+                    vertexInputInfo,
+                    cullMode,
+                    depthTestEnable, depthWriteEnable, stencilTestEnable,
+                    polygoneMode,
+                    hasColorAttachment,
+                    dynamicDepthBias
                 );
             }
 

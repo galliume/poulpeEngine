@@ -83,10 +83,17 @@ namespace Poulpe {
         VkPipelineLayout createPipelineLayout(std::vector<VkDescriptorSetLayout> const & descriptorSetLayouts,
             std::vector<VkPushConstantRange> const & pushConstants);
 
-        VkPipeline createGraphicsPipeline(VkPipelineLayout pipelineLayout, std::string_view name,
-            std::vector<VkPipelineShaderStageCreateInfo>shadersCreateInfos, VkPipelineVertexInputStateCreateInfo vertexInputInfo,
-            VkCullModeFlagBits cullMode = VK_CULL_MODE_BACK_BIT, bool depthTestEnable = true,
-            bool depthWriteEnable = true, bool stencilTestEnable = true, int polygoneMode = VK_POLYGON_MODE_FILL, bool hasColorAttachment = true, bool dynamicDepthBias = false);
+        VkPipeline createGraphicsPipeline(VkPipelineLayout & pipelineLayout,
+            std::string_view name,
+            std::vector<VkPipelineShaderStageCreateInfo> & shadersCreateInfos,
+            VkPipelineVertexInputStateCreateInfo & vertexInputInfo,
+            VkCullModeFlagBits cullMode = VK_CULL_MODE_BACK_BIT, 
+            bool depthTestEnable = true,
+            bool depthWriteEnable = true,
+            bool stencilTestEnable = true,
+            int polygoneMode = VK_POLYGON_MODE_FILL,
+            bool hasColorAttachment = true,
+            bool dynamicDepthBias = false);
 
         VkSwapchainKHR createSwapChain(std::vector<VkImage> & swapChainImages,
             VkSwapchainKHR const & oldSwapChain = VK_NULL_HANDLE);
@@ -351,7 +358,7 @@ namespace Poulpe {
         int32_t m_CurrentFrame{ 0 };
         uint32_t m_ExtensionCount;
         std::string m_apiVersion;
-        const uint32_t m_queueCount{ 2 };
+        const uint32_t m_queueCount{ 1 };
 
         Window* m_Window{ nullptr };
 

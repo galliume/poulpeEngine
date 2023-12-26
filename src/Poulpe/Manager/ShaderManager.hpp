@@ -26,8 +26,14 @@ namespace Poulpe
         void createGraphicPipeline(std::string const & shaderName);
 
         std::vector<VkPipelineShaderStageCreateInfo> getShadersInfo(std::string const & shaderName);
-        VkPipelineVertexInputStateCreateInfo getVertexBindingDesc(VkVertexInputBindingDescription bDesc,
+
+        VkPipelineVertexInputStateCreateInfo getVertexBindingDesc(
+            VkVertexInputBindingDescription bDesc,
             std::array<VkVertexInputAttributeDescription, 6> attDesc);
+
+        VkPipelineVertexInputStateCreateInfo getVertexBindingDesc2D(
+            VkVertexInputBindingDescription bDesc,
+            std::array<VkVertexInputAttributeDescription, 3> attDesc);
 
     private:
         nlohmann::json m_Config;

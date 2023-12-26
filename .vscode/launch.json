@@ -2,13 +2,13 @@
     "version": "2.0.0",
     "configurations": [
         {
-            "name": "RBKDebug",
+            "name": "Debug",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}\\build\\Rebulkan",
+            "program": "${workspaceFolder}\\build\\Debug\\PoulpeEngine",
             "cwd": "${workspaceFolder}\\",
             "logging": {
-              "moduleLoad": false,
+              "moduleLoad": true,
               "trace": true
             }
         }

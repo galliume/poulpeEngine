@@ -696,12 +696,18 @@ namespace Poulpe {
     }
 
     //@todo refactor this...
-    VkPipeline VulkanAPI::createGraphicsPipeline(VkPipelineLayout pipelineLayout, std::string_view name,
-        std::vector<VkPipelineShaderStageCreateInfo> shadersCreateInfos,
-        VkPipelineVertexInputStateCreateInfo vertexInputInfo,
-        VkCullModeFlagBits cullMode, bool depthTestEnable, bool depthWriteEnable,
-        bool stencilTestEnable, int polygoneMode, bool hasColorAttachment, bool dynamicDepthBias
-    )
+    VkPipeline VulkanAPI::createGraphicsPipeline(
+        VkPipelineLayout & pipelineLayout,
+        std::string_view name,
+        std::vector<VkPipelineShaderStageCreateInfo> & shadersCreateInfos,
+        VkPipelineVertexInputStateCreateInfo & vertexInputInfo,
+        VkCullModeFlagBits cullMode,
+        bool depthTestEnable,
+        bool depthWriteEnable,
+        bool stencilTestEnable,
+        int polygoneMode,
+        bool hasColorAttachment,
+        bool dynamicDepthBias)
     {
         VkPipelineInputAssemblyStateCreateInfo inputAssembly{};
         inputAssembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
@@ -801,7 +807,7 @@ namespace Poulpe {
         pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
         pipelineInfo.stageCount = static_cast<uint32_t>(shadersCreateInfos.size());
         pipelineInfo.pStages = shadersCreateInfos.data();
-        pipelineInfo.pVertexInputState = &vertexInputInfo;
+        pipelineInfo.pVertexInputState = & vertexInputInfo;
         pipelineInfo.pInputAssemblyState = & inputAssembly;
         pipelineInfo.pViewportState = & viewportState;
         pipelineInfo.pRasterizationState = & rasterizer;
@@ -1968,10 +1974,11 @@ namespace Poulpe {
         vkGetImageMemoryRequirements(m_Device, image, & memRequirements);
         auto memoryType = findMemoryType(memRequirements.memoryTypeBits, properties);
         uint32_t size = ((memRequirements.size / memRequirements.alignment) + 1) * memRequirements.alignment;
-        if (size <= memRequirements.size) size = memRequirements.size + memRequirements.alignment;
+        //if (size <= memRequirements.size) size = memRequirements.size + memRequirements.alignment;
 
         auto deviceMemory = m_DeviceMemoryPool->get(m_Device, size, memoryType, 
           VK_BUFFER_USAGE_TRANSFER_SRC_BIT, DeviceMemoryPool::DeviceBufferType::STAGING);
+
         deviceMemory->bindImageToMemory(image, size);
     }
 
@@ -2003,10 +2010,11 @@ namespace Poulpe {
         vkGetImageMemoryRequirements(m_Device, image, & memRequirements);
         auto memoryType = findMemoryType(memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
         uint32_t size = ((memRequirements.size / memRequirements.alignment) + 1) * memRequirements.alignment;
-        if (size <= memRequirements.size) size = memRequirements.size + memRequirements.alignment;
+        //if (size <= memRequirements.size) size = memRequirements.size + memRequirements.alignment;
 
         auto deviceMemory = m_DeviceMemoryPool->get(m_Device, size, memoryType, 
           VK_BUFFER_USAGE_TRANSFER_SRC_BIT, DeviceMemoryPool::DeviceBufferType::STAGING);
+
         deviceMemory->bindImageToMemory(image, size);
     }
 
@@ -2105,10 +2113,11 @@ namespace Poulpe {
         vkGetImageMemoryRequirements(m_Device, image, & memRequirements);
         auto memoryType = findMemoryType(memRequirements.memoryTypeBits, properties);
         uint32_t size = ((memRequirements.size / memRequirements.alignment) + 1) * memRequirements.alignment;
-        if (size <= memRequirements.size) size = memRequirements.size + memRequirements.alignment;
+        //if (size <= memRequirements.size) size = memRequirements.size + memRequirements.alignment;
 
         auto deviceMemory = m_DeviceMemoryPool->get(m_Device, size, memoryType, 
           VK_BUFFER_USAGE_TRANSFER_SRC_BIT, DeviceMemoryPool::DeviceBufferType::STAGING);
+
         deviceMemory->bindImageToMemory(image, size);
     }
 

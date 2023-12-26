@@ -2,7 +2,8 @@
 
 namespace Poulpe
 {
-    DeviceMemoryPool::DeviceMemoryPool(VkPhysicalDeviceProperties2 deviceProperties,
+    DeviceMemoryPool::DeviceMemoryPool(
+      VkPhysicalDeviceProperties2 deviceProperties,
       VkPhysicalDeviceMaintenance3Properties maintenanceProperties,
       VkPhysicalDeviceMemoryProperties memProperties)
       : m_DeviceProperties(deviceProperties),
@@ -12,8 +13,12 @@ namespace Poulpe
         m_MemoryAllocationSize.resize(m_MemProperties.memoryTypeCount);
     }
 
-    DeviceMemory* DeviceMemoryPool::get(VkDevice& device, VkDeviceSize size,
-      uint32_t memoryType, VkBufferUsageFlags usage, DeviceBufferType bufferType,
+    DeviceMemory* DeviceMemoryPool::get(
+      VkDevice& device,
+      VkDeviceSize size,
+      uint32_t memoryType,
+      VkBufferUsageFlags usage,
+      DeviceBufferType bufferType,
       bool forceNew)
     {
         if (m_MemoryAllocationCount > m_DeviceProperties.properties.limits.maxMemoryAllocationCount) {

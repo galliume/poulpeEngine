@@ -99,10 +99,6 @@ namespace Poulpe
 
                 int id = (-1 != shapes[s].mesh.material_ids[f]) ? shapes[s].mesh.material_ids[f] : 0;
 
-                if (shapes[s].mesh.material_ids[f] == -1) {
-                  PLP_DEBUG("no textures");
-                }
-
                 if (!texidsmap.contains(id)) {
                     ids.emplace_back(id);
                     materialsID.emplace_back(id);
