@@ -56,26 +56,17 @@ namespace Poulpe
         }
 
         VkPipeline createGraphicsPipeline(
-            VkPipelineLayout & pipelineLayout,
+            VkPipelineLayout pipelineLayout,
             std::string_view name,
-            std::vector<VkPipelineShaderStageCreateInfo> & shadersCreateInfos,
+            std::vector<VkPipelineShaderStageCreateInfo> shadersCreateInfos,
             VkPipelineVertexInputStateCreateInfo & vertexInputInfo,
             VkCullModeFlagBits cullMode = VK_CULL_MODE_BACK_BIT,
-            bool depthTestEnable = true, bool depthWriteEnable = true, bool stencilTestEnable = true,
-            int polygoneMode = VK_POLYGON_MODE_FILL, 
-            bool hasColorAttachment = true, bool dynamicDepthBias = false) override {
-                return m_API->createGraphicsPipeline(
-                    pipelineLayout,
-                    name,
-                    shadersCreateInfos,
-                    vertexInputInfo,
-                    cullMode,
-                    depthTestEnable, depthWriteEnable, stencilTestEnable,
-                    polygoneMode,
-                    hasColorAttachment,
-                    dynamicDepthBias
-                );
-            }
+            bool depthTestEnable = true,
+            bool depthWriteEnable = true,
+            bool stencilTestEnable = true,
+            int polygoneMode = VK_POLYGON_MODE_FILL,
+            bool hasColorAttachment = true,
+            bool dynamicDepthBias = false) override;
 
         VkPipelineLayout createPipelineLayout(std::vector<VkDescriptorSetLayout> & descriptorSetLayouts,
             std::vector<VkPushConstantRange> & pushConstants) override {

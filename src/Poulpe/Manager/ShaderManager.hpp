@@ -6,6 +6,13 @@
 
 namespace Poulpe
 {
+    enum class DescSetLayoutType {
+        Skybox, HUD, Entity
+    };
+    enum class VertexBindingType {
+        Vertex2D, Vertex3D
+    };
+
     class ShaderManager : IShaderManager
     {
     public:
@@ -20,20 +27,15 @@ namespace Poulpe
         std::function<void()> load(nlohmann::json config) override;
 
     private:
+
+        template <DescSetLayoutType T>
         VkDescriptorSetLayout createDescriptorSetLayout();
-        VkDescriptorSetLayout createDescriptorSetLayoutForHUD();
-        VkDescriptorSetLayout createDescriptorSetLayoutForSkybox();
         void createGraphicPipeline(std::string const & shaderName);
 
         std::vector<VkPipelineShaderStageCreateInfo> getShadersInfo(std::string const & shaderName);
 
-        VkPipelineVertexInputStateCreateInfo getVertexBindingDesc(
-            VkVertexInputBindingDescription bDesc,
-            std::array<VkVertexInputAttributeDescription, 6> attDesc);
-
-        VkPipelineVertexInputStateCreateInfo getVertexBindingDesc2D(
-            VkVertexInputBindingDescription bDesc,
-            std::array<VkVertexInputAttributeDescription, 3> attDesc);
+        template <VertexBindingType T>
+        VkPipelineVertexInputStateCreateInfo* getVertexInputState();
 
     private:
         nlohmann::json m_Config;

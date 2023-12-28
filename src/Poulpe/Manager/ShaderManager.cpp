@@ -60,166 +60,170 @@ namespace Poulpe
         return shaderFuture;
     }
 
+    template <DescSetLayoutType T>
     VkDescriptorSetLayout ShaderManager::createDescriptorSetLayout()
     {
-      VkDescriptorSetLayoutBinding uboLayoutBinding{};
-      uboLayoutBinding.binding = 0;
-      uboLayoutBinding.descriptorCount = 1;
-      uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-      uboLayoutBinding.pImmutableSamplers = nullptr;
-      uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+      std::vector<VkDescriptorSetLayoutBinding> bindings {};
 
-      VkDescriptorSetLayoutBinding samplerLayoutBinding{};
-      samplerLayoutBinding.binding = 1;
-      samplerLayoutBinding.descriptorCount = 7;
-      samplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-      samplerLayoutBinding.pImmutableSamplers = nullptr;
-      samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+      if constexpr (T == DescSetLayoutType::Entity) {
+        VkDescriptorSetLayoutBinding uboLayoutBinding{};
+        uboLayoutBinding.binding = 0;
+        uboLayoutBinding.descriptorCount = 1;
+        uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        uboLayoutBinding.pImmutableSamplers = nullptr;
+        uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
 
-      VkDescriptorSetLayoutBinding storageLayoutBinding{};
-      storageLayoutBinding.binding = 2;
-      storageLayoutBinding.descriptorCount = 1;
-      storageLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-      storageLayoutBinding.pImmutableSamplers = nullptr;
-      storageLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+        VkDescriptorSetLayoutBinding samplerLayoutBinding{};
+        samplerLayoutBinding.binding = 1;
+        samplerLayoutBinding.descriptorCount = 7;
+        samplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        samplerLayoutBinding.pImmutableSamplers = nullptr;
+        samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 
-      std::vector<VkDescriptorSetLayoutBinding> bindings = {
-          uboLayoutBinding, samplerLayoutBinding, storageLayoutBinding };
+        VkDescriptorSetLayoutBinding storageLayoutBinding{};
+        storageLayoutBinding.binding = 2;
+        storageLayoutBinding.descriptorCount = 1;
+        storageLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+        storageLayoutBinding.pImmutableSamplers = nullptr;
+        storageLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
 
-      VkDescriptorSetLayout desriptorSetLayout = m_Renderer->createDescriptorSetLayout(bindings);
+        bindings = { uboLayoutBinding, samplerLayoutBinding, storageLayoutBinding };
+      } else if constexpr (T == DescSetLayoutType::HUD || T == DescSetLayoutType::Skybox) {
+        VkDescriptorSetLayoutBinding uboLayoutBinding{};
+        uboLayoutBinding.binding = 0;
+        uboLayoutBinding.descriptorCount = 1;
+        uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        uboLayoutBinding.pImmutableSamplers = nullptr;
+        uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
 
-      return desriptorSetLayout;
+        VkDescriptorSetLayoutBinding samplerLayoutBinding{};
+        samplerLayoutBinding.binding = 1;
+        samplerLayoutBinding.descriptorCount = 1;
+        samplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        samplerLayoutBinding.pImmutableSamplers = nullptr;
+        samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+        bindings = { uboLayoutBinding, samplerLayoutBinding };
+      } else {
+        PLP_FATAL("unknown descSetLayoutType");
+        throw std::runtime_error("unknown descSetLayoutType");
+      }
+
+      return m_Renderer->createDescriptorSetLayout(bindings);
     }
 
-    VkDescriptorSetLayout ShaderManager::createDescriptorSetLayoutForHUD()
-    {
-      VkDescriptorSetLayoutBinding uboLayoutBinding{};
-      uboLayoutBinding.binding = 0;
-      uboLayoutBinding.descriptorCount = 1;
-      uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-      uboLayoutBinding.pImmutableSamplers = nullptr;
-      uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-
-      VkDescriptorSetLayoutBinding samplerLayoutBinding{};
-      samplerLayoutBinding.binding = 1;
-      samplerLayoutBinding.descriptorCount = 2;
-      samplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-      samplerLayoutBinding.pImmutableSamplers = nullptr;
-      samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-
-      std::vector<VkDescriptorSetLayoutBinding> bindings = {
-          uboLayoutBinding, samplerLayoutBinding };
-
-      VkDescriptorSetLayout desriptorSetLayout = m_Renderer->createDescriptorSetLayout(bindings);
-
-      return desriptorSetLayout;
-    }
-
-    VkDescriptorSetLayout ShaderManager::createDescriptorSetLayoutForSkybox()
-    {
-      VkDescriptorSetLayoutBinding uboLayoutBinding{};
-      uboLayoutBinding.binding = 0;
-      uboLayoutBinding.descriptorCount = 1;
-      uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-      uboLayoutBinding.pImmutableSamplers = nullptr;
-      uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-
-      VkDescriptorSetLayoutBinding samplerLayoutBinding{};
-      samplerLayoutBinding.binding = 1;
-      samplerLayoutBinding.descriptorCount = 1;
-      samplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-      samplerLayoutBinding.pImmutableSamplers = nullptr;
-      samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-
-      std::vector<VkDescriptorSetLayoutBinding> bindings = {
-          uboLayoutBinding, samplerLayoutBinding };
-
-      VkDescriptorSetLayout desriptorSetLayout = m_Renderer->createDescriptorSetLayout(bindings);
-
-      return desriptorSetLayout;
-    }
-
-    void ShaderManager::createGraphicPipeline(std::string const& shaderName)
+    void ShaderManager::createGraphicPipeline(std::string const & shaderName)
     {
       std::vector<VkDescriptorPoolSize> poolSizes{};
-      VkDescriptorPoolSize cp1;
-      cp1.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-      cp1.descriptorCount = 10;
+      VkDescriptorPoolSize dpsUbo;
+      dpsUbo.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+      dpsUbo.descriptorCount = 1000;
 
-      VkDescriptorPoolSize cp2;
-      cp2.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-      cp2.descriptorCount = 10000;
-      poolSizes.emplace_back(cp1);
-      poolSizes.emplace_back(cp2);
+      VkDescriptorPoolSize dpsIS;
+      dpsIS.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+      dpsIS.descriptorCount = 1000;
 
-      poolSizes.emplace_back(cp1);
-      poolSizes.emplace_back(cp2);
+      poolSizes.emplace_back(dpsUbo);
+      poolSizes.emplace_back(dpsIS);
 
-      VkDescriptorPoolSize cp3;
-      cp3.type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-      cp3.descriptorCount = 10;
-
-      VkDescriptorSetLayout descSetLayout;
-
-      auto descriptorPool = m_Renderer->createDescriptorPool(poolSizes, 10000);
-
-      if (shaderName == "skybox") {
-        descSetLayout = createDescriptorSetLayoutForSkybox();
-      } else if (shaderName == "grid" || shaderName == "2d") {
-        descSetLayout = createDescriptorSetLayoutForHUD();
-      } else {
-        descSetLayout = createDescriptorSetLayout();
-      }
-
-      std::vector<VkDescriptorSetLayout> dSetLayout = { descSetLayout };
-
-      std::vector<VkPushConstantRange> vkPcs = {};
-      VkPushConstantRange vkPc;
-      vkPc.offset = 0;
-      vkPc.size = sizeof(constants);
-      vkPc.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
-      vkPcs.emplace_back(vkPc);
-      VkPipelineLayout pipelineLayout = m_Renderer->createPipelineLayout(dSetLayout, vkPcs);
-
-      VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
-      VkVertexInputBindingDescription bDesc{};
-      
       auto shaders = getShadersInfo(shaderName);
 
-      if (shaderName == "grid" || shaderName == "2d") {
-        bDesc = Vertex2D::getBindingDescription();
-        std::array<VkVertexInputAttributeDescription, 3> attDesc = Vertex2D::getAttributeDescriptions();
-        vertexInputInfo = getVertexBindingDesc2D(bDesc, attDesc);
-      } else {
-        std::array<VkVertexInputAttributeDescription, 6> attDesc = Vertex::getAttributeDescriptions();
-        bDesc = Vertex::getBindingDescription();
-        vertexInputInfo = getVertexBindingDesc(bDesc, attDesc);
-      }
+      VkPipeline graphicPipeline{VK_NULL_HANDLE};
+      VkPipelineLayout pipelineLayout{VK_NULL_HANDLE};
+      VkDescriptorSetLayout descSetLayout{VK_NULL_HANDLE};
 
+      if (shaderName == "skybox") {
+        VkPipelineVertexInputStateCreateInfo* vertexInputInfo{nullptr};
+        descSetLayout = createDescriptorSetLayout<DescSetLayoutType::Skybox>();
+        vertexInputInfo = getVertexInputState<VertexBindingType::Vertex2D>();
 
-      VkPipeline graphicPipeline = VK_NULL_HANDLE;
+        std::vector<VkDescriptorSetLayout> dSetLayout = { descSetLayout };
 
-      //@todo clean
-      if (shaderName == "shadowMap" || shaderName == "shadowMapSpot" || shaderName == "quad") {
+        std::vector<VkPushConstantRange> vkPcs = {};
+        VkPushConstantRange vkPc;
+        vkPc.offset = 0;
+        vkPc.size = sizeof(constants);
+        vkPc.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+        vkPcs.emplace_back(vkPc);
+        
+        pipelineLayout = m_Renderer->createPipelineLayout(dSetLayout, vkPcs);
+
         graphicPipeline = m_Renderer->createGraphicsPipeline(
           pipelineLayout,
           shaderName,
           shaders,
-          vertexInputInfo,
-          VK_CULL_MODE_NONE,
-          true, true, true,
-          VK_POLYGON_MODE_FILL,
-          false, true);
-      } else {
-        graphicPipeline = m_Renderer->createGraphicsPipeline(
-          pipelineLayout,
-          shaderName,
-          shaders,
-          vertexInputInfo,
+          *vertexInputInfo,
           VK_CULL_MODE_BACK_BIT,
           true, true, true,
           VK_POLYGON_MODE_FILL);
+
+      } else if (shaderName == "grid" || shaderName == "2d") {
+        VkPipelineVertexInputStateCreateInfo* vertexInputInfo{nullptr};
+        descSetLayout = createDescriptorSetLayout<DescSetLayoutType::HUD>();
+        std::vector<VkDescriptorSetLayout> dSetLayout = { descSetLayout };
+        
+        vertexInputInfo = getVertexInputState<VertexBindingType::Vertex2D>();
+
+        std::vector<VkPushConstantRange> vkPcs = {};
+        VkPushConstantRange vkPc;
+        vkPc.offset = 0;
+        vkPc.size = sizeof(constants);
+        vkPc.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+        vkPcs.emplace_back(vkPc);
+
+        pipelineLayout = m_Renderer->createPipelineLayout(dSetLayout, vkPcs);
+        
+        graphicPipeline = m_Renderer->createGraphicsPipeline(
+          pipelineLayout,
+          shaderName,
+          shaders,
+          *vertexInputInfo,
+          VK_CULL_MODE_BACK_BIT,
+          true, true, true,
+          VK_POLYGON_MODE_FILL);
+      } else {
+        VkPipelineVertexInputStateCreateInfo* vertexInputInfo{nullptr};
+        
+        VkDescriptorPoolSize dpsSB;
+        dpsSB.type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+        dpsSB.descriptorCount = 10;
+
+        poolSizes.emplace_back(dpsSB);
+
+        descSetLayout = createDescriptorSetLayout<DescSetLayoutType::Entity>();
+        vertexInputInfo = getVertexInputState<VertexBindingType::Vertex3D>();
+
+        std::vector<VkDescriptorSetLayout> dSetLayout = { descSetLayout };
+
+        std::vector<VkPushConstantRange> vkPcs = {};
+        VkPushConstantRange vkPc;
+        vkPc.offset = 0;
+        vkPc.size = sizeof(constants);
+        vkPc.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+        vkPcs.emplace_back(vkPc);
+        
+        pipelineLayout = m_Renderer->createPipelineLayout(dSetLayout, vkPcs);
+        
+        bool hasColorAttachment{true};
+        bool hasDynamicDepthBias{false};
+
+        if (shaderName == "shadowMap" || shaderName == "shadowMapSpot" || shaderName == "quad") {
+          hasColorAttachment = false;
+          hasDynamicDepthBias = true;
+        }
+        graphicPipeline = m_Renderer->createGraphicsPipeline(
+          pipelineLayout,
+          shaderName,
+          shaders,
+          *vertexInputInfo,
+          VK_CULL_MODE_BACK_BIT,
+          true, true, true,
+          VK_POLYGON_MODE_FILL,
+          hasColorAttachment,
+          hasDynamicDepthBias);
       }
+    
+      auto descriptorPool = m_Renderer->createDescriptorPool(poolSizes, 10000);
 
       VulkanPipeline pipeline{};
       pipeline.pipeline = graphicPipeline;
@@ -252,31 +256,34 @@ namespace Poulpe
       return shadersStageInfos;
     }
 
-    VkPipelineVertexInputStateCreateInfo ShaderManager::getVertexBindingDesc(
-      VkVertexInputBindingDescription bDesc,
-      std::array<VkVertexInputAttributeDescription, 6> attDesc)
+    template <VertexBindingType T>
+    VkPipelineVertexInputStateCreateInfo* ShaderManager::getVertexInputState()
     {
-      VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
-      vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-      vertexInputInfo.vertexBindingDescriptionCount = 1;
-      vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(Vertex::getAttributeDescriptions().size());
-      vertexInputInfo.pVertexBindingDescriptions = & bDesc;
-      vertexInputInfo.pVertexAttributeDescriptions = attDesc.data();
+      VkPipelineVertexInputStateCreateInfo* vertexInputInfo = new VkPipelineVertexInputStateCreateInfo();
 
-      return vertexInputInfo;
+      if constexpr (T == VertexBindingType::Vertex3D) {
+      std::array<VkVertexInputAttributeDescription, 6> attDesc = Vertex::getAttributeDescriptions();
+      VkVertexInputBindingDescription bDesc = Vertex::getBindingDescription();
+
+      vertexInputInfo->sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
+      vertexInputInfo->vertexBindingDescriptionCount = 1;
+      vertexInputInfo->vertexAttributeDescriptionCount = static_cast<uint32_t>(Vertex::getAttributeDescriptions().size());
+      vertexInputInfo->pVertexBindingDescriptions = & bDesc;
+      vertexInputInfo->pVertexAttributeDescriptions = attDesc.data();
+    } else if constexpr (T == VertexBindingType::Vertex2D) {
+      std::array<VkVertexInputAttributeDescription, 3> attDesc = Vertex2D::getAttributeDescriptions();
+      
+      VkVertexInputBindingDescription bDesc = Vertex2D::getBindingDescription();
+
+      vertexInputInfo->sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
+      vertexInputInfo->vertexBindingDescriptionCount = 1;
+      vertexInputInfo->vertexAttributeDescriptionCount = static_cast<uint32_t>(Vertex2D::getAttributeDescriptions().size());
+      vertexInputInfo->pVertexBindingDescriptions = & bDesc;
+      vertexInputInfo->pVertexAttributeDescriptions = attDesc.data();
+    } else {
+      throw std::runtime_error("unknown vertex input state type");
     }
 
-    VkPipelineVertexInputStateCreateInfo ShaderManager::getVertexBindingDesc2D(
-      VkVertexInputBindingDescription bDesc,
-      std::array<VkVertexInputAttributeDescription, 3> attDesc)
-    {
-      VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
-      vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-      vertexInputInfo.vertexBindingDescriptionCount = 1;
-      vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(Vertex2D::getAttributeDescriptions().size());
-      vertexInputInfo.pVertexBindingDescriptions = & bDesc;
-      vertexInputInfo.pVertexAttributeDescriptions = attDesc.data();
-
-      return vertexInputInfo;
-    }
+    return vertexInputInfo;
+  }
 }

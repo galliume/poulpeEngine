@@ -6,8 +6,10 @@ namespace Poulpe
         VkDevice device,
         uint32_t memoryType,
         VkDeviceSize maxSize,
-        unsigned int index
+        unsigned int index,
+        VkDeviceSize alignment
     ) : m_Index(index),
+        m_Alignment(alignment),
         m_MemoryType(memoryType),
         m_Device(device)
     {
@@ -52,7 +54,7 @@ namespace Poulpe
         }
     }
 
-    void DeviceMemory::bindBufferToMemory(VkBuffer& buffer, VkDeviceSize size)
+    void DeviceMemory::bindBufferToMemory(VkBuffer & buffer, VkDeviceSize size)
     {
         VkResult result = vkBindBufferMemory(m_Device, buffer, *m_Memory, m_Offset);
 
@@ -60,7 +62,8 @@ namespace Poulpe
             PLP_ERROR("BindBuffer memory failed in bindBufferToMemory");
         }
 
-        m_Offset += size;
+
+        m_Offset += ((size / m_Alignment) + 1) * m_Alignment;
 
         if (m_Offset >= m_MaxSize) {
             m_IsFull = true;
@@ -69,10 +72,11 @@ namespace Poulpe
         m_Buffer.emplace_back(buffer);
     }
 
-    void DeviceMemory::bindImageToMemory(VkImage& image, VkDeviceSize size)
+    void DeviceMemory::bindImageToMemory(VkImage & image, VkDeviceSize size)
     {
         vkBindImageMemory(m_Device, image, *m_Memory, m_Offset);
-        m_Offset += size;
+        
+        m_Offset += ((size / m_Alignment) + 1) * m_Alignment;
 
         if (m_Offset >= m_MaxSize) {
             m_IsFull = true;

@@ -697,9 +697,9 @@ namespace Poulpe {
 
     //@todo refactor this...
     VkPipeline VulkanAPI::createGraphicsPipeline(
-        VkPipelineLayout & pipelineLayout,
+        VkPipelineLayout pipelineLayout,
         std::string_view name,
-        std::vector<VkPipelineShaderStageCreateInfo> & shadersCreateInfos,
+        std::vector<VkPipelineShaderStageCreateInfo> shadersCreateInfos,
         VkPipelineVertexInputStateCreateInfo & vertexInputInfo,
         VkCullModeFlagBits cullMode,
         bool depthTestEnable,
@@ -1652,8 +1652,12 @@ namespace Poulpe {
         if (size <= memRequirements.size) size = memRequirements.size + memRequirements.alignment;
         
         auto memoryType = findMemoryType(memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-        auto deviceMemory = m_DeviceMemoryPool->get(m_Device, size, memoryType, VK_BUFFER_USAGE_TRANSFER_DST_BIT 
-            | VK_BUFFER_USAGE_INDEX_BUFFER_BIT);
+        auto deviceMemory = m_DeviceMemoryPool->get(
+            m_Device,
+            size,
+            memoryType,
+            VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
+            memRequirements.alignment);
 
         auto offset = deviceMemory->getOffset();
         deviceMemory->bindBufferToMemory(buffer, size);
@@ -1694,8 +1698,12 @@ namespace Poulpe {
         uint32_t size = ((memRequirements.size / memRequirements.alignment) + 1) * memRequirements.alignment;
         if (size <= memRequirements.size) size = memRequirements.size + memRequirements.alignment;
 
-        auto deviceMemory = m_DeviceMemoryPool->get(m_Device, size, memoryType, VK_BUFFER_USAGE_TRANSFER_DST_BIT 
-            | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT);
+        auto deviceMemory = m_DeviceMemoryPool->get(
+            m_Device,
+            size,
+            memoryType,
+            VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+            memRequirements.alignment);
 
         auto offset = deviceMemory->getOffset();
         deviceMemory->bindBufferToMemory(buffer, size);
@@ -1738,8 +1746,12 @@ namespace Poulpe {
         uint32_t size = ((memRequirements.size / memRequirements.alignment) + 1) * memRequirements.alignment;
         if (size <= memRequirements.size) size = memRequirements.size + memRequirements.alignment;
 
-        auto deviceMemory = m_DeviceMemoryPool->get(m_Device, size, memoryType, VK_BUFFER_USAGE_TRANSFER_DST_BIT
-            | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT);
+        auto deviceMemory = m_DeviceMemoryPool->get(
+            m_Device,
+            size,
+            memoryType,
+            VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+            memRequirements.alignment);
 
         auto offset = deviceMemory->getOffset();
         deviceMemory->bindBufferToMemory(buffer, size);
@@ -1771,7 +1783,13 @@ namespace Poulpe {
         uint32_t size = ((memRequirements.size / memRequirements.alignment) + 1) * memRequirements.alignment;
         if (size <= memRequirements.size) size = memRequirements.size + memRequirements.alignment;
 
-        auto deviceMemory = m_DeviceMemoryPool->get(m_Device, size, memoryType, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT);
+        auto deviceMemory = m_DeviceMemoryPool->get(
+            m_Device,
+            size,
+            memoryType,
+            VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+            memRequirements.alignment);
+
         auto offset = deviceMemory->getOffset();
         deviceMemory->bindBufferToMemory(buffer, size);
 
@@ -1797,7 +1815,11 @@ namespace Poulpe {
         if (size <= memRequirements.size) size = memRequirements.size + memRequirements.alignment;
 
         auto deviceMemory = m_DeviceMemoryPool->get(
-          m_Device, size, memoryType, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+          m_Device,
+          size,
+          memoryType,
+          VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+          memRequirements.alignment,
           DeviceMemoryPool::DeviceBufferType::STORAGE);
 
         auto offset = deviceMemory->getOffset();
@@ -1825,7 +1847,13 @@ namespace Poulpe {
         auto memoryType = findMemoryType(memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT
             | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 
-        auto deviceMemory = m_DeviceMemoryPool->get(m_Device, size, memoryType, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
+        auto deviceMemory = m_DeviceMemoryPool->get(
+            m_Device,
+            size,
+            memoryType,
+            VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+            memRequirements.alignment);
+
         auto offset = deviceMemory->getOffset();
         deviceMemory->bindBufferToMemory(buffer, size);
 
@@ -1976,8 +2004,13 @@ namespace Poulpe {
         uint32_t size = ((memRequirements.size / memRequirements.alignment) + 1) * memRequirements.alignment;
         //if (size <= memRequirements.size) size = memRequirements.size + memRequirements.alignment;
 
-        auto deviceMemory = m_DeviceMemoryPool->get(m_Device, size, memoryType, 
-          VK_BUFFER_USAGE_TRANSFER_SRC_BIT, DeviceMemoryPool::DeviceBufferType::STAGING);
+        auto deviceMemory = m_DeviceMemoryPool->get(
+            m_Device,
+            size,
+            memoryType, 
+            VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+            memRequirements.alignment,
+            DeviceMemoryPool::DeviceBufferType::STAGING);
 
         deviceMemory->bindImageToMemory(image, size);
     }
@@ -2012,8 +2045,13 @@ namespace Poulpe {
         uint32_t size = ((memRequirements.size / memRequirements.alignment) + 1) * memRequirements.alignment;
         //if (size <= memRequirements.size) size = memRequirements.size + memRequirements.alignment;
 
-        auto deviceMemory = m_DeviceMemoryPool->get(m_Device, size, memoryType, 
-          VK_BUFFER_USAGE_TRANSFER_SRC_BIT, DeviceMemoryPool::DeviceBufferType::STAGING);
+        auto deviceMemory = m_DeviceMemoryPool->get(
+            m_Device,
+            size,
+            memoryType,
+            VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+            memRequirements.alignment,
+            DeviceMemoryPool::DeviceBufferType::STAGING);
 
         deviceMemory->bindImageToMemory(image, size);
     }
@@ -2115,8 +2153,13 @@ namespace Poulpe {
         uint32_t size = ((memRequirements.size / memRequirements.alignment) + 1) * memRequirements.alignment;
         //if (size <= memRequirements.size) size = memRequirements.size + memRequirements.alignment;
 
-        auto deviceMemory = m_DeviceMemoryPool->get(m_Device, size, memoryType, 
-          VK_BUFFER_USAGE_TRANSFER_SRC_BIT, DeviceMemoryPool::DeviceBufferType::STAGING);
+        auto deviceMemory = m_DeviceMemoryPool->get(
+            m_Device,
+            size,
+            memoryType,
+            VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+            memRequirements.alignment,
+            DeviceMemoryPool::DeviceBufferType::STAGING);
 
         deviceMemory->bindImageToMemory(image, size);
     }
@@ -2135,8 +2178,13 @@ namespace Poulpe {
         uint32_t size = ((memRequirements.size / memRequirements.alignment) + 1) * memRequirements.alignment;
         if (size <= memRequirements.size) size = memRequirements.size + memRequirements.alignment;
 
-        auto deviceMemory = m_DeviceMemoryPool->get(m_Device, size, memoryType, 
-          VK_BUFFER_USAGE_TRANSFER_SRC_BIT, DeviceMemoryPool::DeviceBufferType::STAGING);
+        auto deviceMemory = m_DeviceMemoryPool->get(
+            m_Device,
+            size,
+            memoryType, 
+            VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+            memRequirements.alignment,
+            DeviceMemoryPool::DeviceBufferType::STAGING);
 
         auto offset = deviceMemory->getOffset();
         deviceMemory->bindBufferToMemory(buffer, size);
@@ -2181,8 +2229,14 @@ namespace Poulpe {
         uint32_t size = ((memRequirements.size / memRequirements.alignment) + 1) * memRequirements.alignment;
         if (size <= memRequirements.size) size = memRequirements.size + memRequirements.alignment;
         
-        auto deviceMemory = m_DeviceMemoryPool->get(m_Device, size, memoryType, 
-          VK_BUFFER_USAGE_TRANSFER_SRC_BIT, DeviceMemoryPool::DeviceBufferType::STAGING,  true);
+        auto deviceMemory = m_DeviceMemoryPool->get(
+            m_Device,
+            size,
+            memoryType, 
+            VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+            memRequirements.alignment,
+            DeviceMemoryPool::DeviceBufferType::STAGING,
+            true);
 
         auto offset = deviceMemory->getOffset();
         deviceMemory->bindBufferToMemory(buffer, size);

@@ -28,9 +28,9 @@ namespace Poulpe
         virtual VkDescriptorSetLayout createDescriptorSetLayout(
             std::vector<VkDescriptorSetLayoutBinding> & pBindings) = 0;
         virtual VkPipeline createGraphicsPipeline(
-            VkPipelineLayout & pipelineLayout,
+            VkPipelineLayout pipelineLayout,
             std::string_view name,
-            std::vector<VkPipelineShaderStageCreateInfo> & shadersCreateInfos,
+            std::vector<VkPipelineShaderStageCreateInfo> shadersCreateInfos,
             VkPipelineVertexInputStateCreateInfo & vertexInputInfo,
             VkCullModeFlagBits cullMode = VK_CULL_MODE_BACK_BIT,
             bool depthTestEnable = true,

@@ -83,9 +83,10 @@ namespace Poulpe {
         VkPipelineLayout createPipelineLayout(std::vector<VkDescriptorSetLayout> const & descriptorSetLayouts,
             std::vector<VkPushConstantRange> const & pushConstants);
 
-        VkPipeline createGraphicsPipeline(VkPipelineLayout & pipelineLayout,
+        VkPipeline createGraphicsPipeline(
+            VkPipelineLayout pipelineLayout,
             std::string_view name,
-            std::vector<VkPipelineShaderStageCreateInfo> & shadersCreateInfos,
+            std::vector<VkPipelineShaderStageCreateInfo> shadersCreateInfos,
             VkPipelineVertexInputStateCreateInfo & vertexInputInfo,
             VkCullModeFlagBits cullMode = VK_CULL_MODE_BACK_BIT, 
             bool depthTestEnable = true,

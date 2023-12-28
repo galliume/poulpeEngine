@@ -854,4 +854,29 @@ namespace Poulpe
     {
         m_Pipelines[shaderName] = std::move(pipeline);
     }
+
+    VkPipeline Renderer::createGraphicsPipeline(
+    VkPipelineLayout pipelineLayout,
+    std::string_view name,
+    std::vector<VkPipelineShaderStageCreateInfo> shadersCreateInfos,
+    VkPipelineVertexInputStateCreateInfo & vertexInputInfo,
+    VkCullModeFlagBits cullMode,
+    bool depthTestEnable,
+    bool depthWriteEnable,
+    bool stencilTestEnable,
+    int polygoneMode, 
+    bool hasColorAttachment,
+    bool dynamicDepthBias) {
+        return m_API->createGraphicsPipeline(
+            pipelineLayout,
+            name,
+            shadersCreateInfos,
+            vertexInputInfo,
+            cullMode,
+            depthTestEnable, depthWriteEnable, stencilTestEnable,
+            polygoneMode,
+            hasColorAttachment,
+            dynamicDepthBias
+        );
+    }
 }
