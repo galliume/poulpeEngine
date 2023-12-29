@@ -76,7 +76,7 @@ namespace Poulpe
     {
         vkBindImageMemory(m_Device, image, *m_Memory, m_Offset);
         
-        m_Offset += ((size / m_Alignment) + 1) * m_Alignment;
+        m_Offset += size;// ((size / m_Alignment) + 1)* m_Alignment;
 
         if (m_Offset >= m_MaxSize) {
             m_IsFull = true;

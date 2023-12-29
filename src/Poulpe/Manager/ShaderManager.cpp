@@ -88,7 +88,23 @@ namespace Poulpe
         storageLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
 
         bindings = { uboLayoutBinding, samplerLayoutBinding, storageLayoutBinding };
-      } else if constexpr (T == DescSetLayoutType::HUD || T == DescSetLayoutType::Skybox) {
+      } else if constexpr (T == DescSetLayoutType::HUD) {
+        VkDescriptorSetLayoutBinding uboLayoutBinding{};
+        uboLayoutBinding.binding = 0;
+        uboLayoutBinding.descriptorCount = 1;
+        uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        uboLayoutBinding.pImmutableSamplers = nullptr;
+        uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+
+        VkDescriptorSetLayoutBinding samplerLayoutBinding{};
+        samplerLayoutBinding.binding = 1;
+        samplerLayoutBinding.descriptorCount = 2;
+        samplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        samplerLayoutBinding.pImmutableSamplers = nullptr;
+        samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+        bindings = { uboLayoutBinding, samplerLayoutBinding };
+      } else if constexpr (T == DescSetLayoutType::Skybox) {
         VkDescriptorSetLayoutBinding uboLayoutBinding{};
         uboLayoutBinding.binding = 0;
         uboLayoutBinding.descriptorCount = 1;
@@ -136,7 +152,7 @@ namespace Poulpe
         VkPipelineVertexInputStateCreateInfo* vertexInputInfo{nullptr};
         descSetLayout = createDescriptorSetLayout<DescSetLayoutType::Skybox>();
         std::vector<VkDescriptorSetLayout> dSetLayout = { descSetLayout };
-        vertexInputInfo = getVertexInputState<VertexBindingType::Vertex2D>();
+        vertexInputInfo = getVertexInputState<VertexBindingType::Vertex3D>();
 
         std::vector<VkPushConstantRange> vkPcs = {};
         VkPushConstantRange vkPc;
@@ -152,7 +168,7 @@ namespace Poulpe
           shaderName,
           shaders,
           *vertexInputInfo,
-          VK_CULL_MODE_BACK_BIT,
+          VK_CULL_MODE_NONE,
           true, true, true,
           VK_POLYGON_MODE_FILL);
 

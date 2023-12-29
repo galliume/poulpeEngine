@@ -185,6 +185,7 @@ namespace Poulpe
       std::string const  sb = (m_CurrentSkybox.empty()) ? static_cast<std::string>(appConfig["defaultSkybox"])
         : m_CurrentSkybox;
 
+      std::function<void()> entityFutures = m_EntityManager->load(levelData);
       std::function<void()> skyboxFuture = m_TextureManager->loadSkybox(sb);
       std::function<void()> shaderFuture = m_ShaderManager->load(m_ConfigManager->shaderConfig());
 
@@ -201,12 +202,11 @@ namespace Poulpe
       while (!m_ShaderManager->isLoadingDone()) {
         //PLP_WARN("loading {}", m_ShaderManager->isLoadingDone());
       }
+
       //while (!m_EntityManager->isLoadingDone()) {
       //    //PLP_WARN("loading {}", m_EntityManager->IsLoadingDone());
       //}
       setIsLoaded();
-
-      std::function<void()> entityFutures = m_EntityManager->load(levelData);
       Locator::getThreadPool()->submit(threadQueueName, entityFutures);
     }
 

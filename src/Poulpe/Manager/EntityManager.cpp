@@ -158,7 +158,7 @@ namespace Poulpe
                   part->setHasAnimation(hasAnimation);
                   part->setIsPointLight(isPointLight);
                 }
-                addEntity(std::move(parts));
+                addEntity(parts);
               }
             }
           } else {

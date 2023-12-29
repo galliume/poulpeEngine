@@ -224,7 +224,7 @@ namespace Poulpe
         //m_API->beginCommandBuffer(m_CommandBuffersShadowMap[m_CurrentFrame]);
         m_API->startMarker(m_CommandBuffersEntities[m_CurrentFrame], "shadow_map_" + pipelineName, 0.1, 0.2, 0.3);
 
-        m_API->transitionImageLayout(m_CommandBuffersEntities[m_CurrentFrame], m_DepthMapImages[m_ImageIndex],
+        m_API->transitionImageLayout(m_CommandBuffersEntities[m_CurrentFrame], m_DepthMapImages[m_CurrentFrame],
           VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, VK_IMAGE_ASPECT_DEPTH_BIT);
 
         VkClearColorValue colorClear = {};
@@ -237,7 +237,7 @@ namespace Poulpe
       
         VkRenderingAttachmentInfo depthAttachment{ };
         depthAttachment.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
-        depthAttachment.imageView = m_DepthMapImageViews[m_ImageIndex];
+        depthAttachment.imageView = m_DepthMapImageViews[m_CurrentFrame];
         depthAttachment.imageLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
         depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
         depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
@@ -264,11 +264,12 @@ namespace Poulpe
         vkCmdSetDepthBias(m_CommandBuffersEntities[m_CurrentFrame], depthBiasConstant, 0.0f, depthBiasSlope);
 
         for (auto& entity : *entities) {
+            if (!entity) continue;
 
             auto meshComponent = m_ComponentManager->getComponent<MeshComponent>(entity->getID());
-            Mesh* mesh = meshComponent->hasImpl<Mesh>();
+            if (!meshComponent) continue;
 
-            if (!mesh) continue;
+            Mesh* mesh = meshComponent->hasImpl<Mesh>();
 
             m_API->bindPipeline(m_CommandBuffersEntities[m_CurrentFrame], pipeline->pipeline);
                 
@@ -310,7 +311,7 @@ namespace Poulpe
         m_API->endMarker(m_CommandBuffersEntities[m_CurrentFrame]);
         m_API->endRendering(m_CommandBuffersEntities[m_CurrentFrame]);
 
-        m_API->transitionImageLayout(m_CommandBuffersEntities[m_CurrentFrame], m_DepthMapImages[m_ImageIndex],
+        m_API->transitionImageLayout(m_CommandBuffersEntities[m_CurrentFrame], m_DepthMapImages[m_CurrentFrame],
           VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_IMAGE_ASPECT_DEPTH_BIT);
 
  //       m_API->endCommandBuffer(m_CommandBuffersShadowMap[m_CurrentFrame]);
@@ -336,29 +337,30 @@ namespace Poulpe
 
           drawShadowMap(m_EntityManager->getEntities(), m_LightManager->getAmbientLight());
 
-          m_API->transitionImageLayout(m_CommandBuffersEntities[m_CurrentFrame], m_SwapChainImages[m_ImageIndex],
+          m_API->transitionImageLayout(m_CommandBuffersEntities[m_CurrentFrame], m_SwapChainImages[m_CurrentFrame],
             VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_ASPECT_COLOR_BIT);
 
-          m_API->transitionImageLayout(m_CommandBuffersEntities[m_CurrentFrame], m_SwapChainDepthImages[m_ImageIndex],
+          m_API->transitionImageLayout(m_CommandBuffersEntities[m_CurrentFrame], m_SwapChainDepthImages[m_CurrentFrame],
             VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL, VK_IMAGE_ASPECT_DEPTH_BIT);
 
           m_API->beginRendering(
             m_CommandBuffersEntities[m_CurrentFrame],
-            m_SwapChainImageViews[m_ImageIndex],
-            m_SwapChainDepthImageViews[m_ImageIndex],
+            m_SwapChainImageViews[m_CurrentFrame],
+            m_SwapChainDepthImageViews[m_CurrentFrame],
             VK_ATTACHMENT_LOAD_OP_LOAD,
             VK_ATTACHMENT_STORE_OP_STORE);
 
-          m_API->setViewPort(m_CommandBuffersEntities[m_CurrentFrame]);
-          m_API->setScissor(m_CommandBuffersEntities[m_CurrentFrame]);
+            m_API->setViewPort(m_CommandBuffersEntities[m_CurrentFrame]);
+            m_API->setScissor(m_CommandBuffersEntities[m_CurrentFrame]);
 
             m_API->startMarker(m_CommandBuffersEntities[m_CurrentFrame], "entities_drawing", 0.2, 0.2, 0.9);
 
             for (auto & entity : *m_EntityManager->getEntities()) {
+                if (!entity) continue;
                 auto meshComponent = m_ComponentManager->getComponent<MeshComponent>(entity->getID());
-                Mesh* mesh = meshComponent->hasImpl<Mesh>();
+                if (!meshComponent) continue;
 
-                if (!mesh) continue;
+                Mesh* mesh = meshComponent->hasImpl<Mesh>();
                 auto pipeline = getPipeline(mesh->getShaderName());
 
 
@@ -400,7 +402,7 @@ namespace Poulpe
 
             m_API->endMarker(m_CommandBuffersEntities[m_CurrentFrame]);
             endRendering(m_CommandBuffersEntities[m_CurrentFrame]);
-            //m_CmdsToSubmit.emplace_back(m_CmdEntitiesStatus[m_CurrentFrame].get());
+            m_CmdsToSubmit.emplace_back(m_CmdEntitiesStatus[m_CurrentFrame].get());
             m_CmdEntitiesStatus[m_CurrentFrame]->done.store(true);
         }
     }
@@ -409,7 +411,7 @@ namespace Poulpe
      {
         if (auto skybox = m_EntityManager->getSkybox()) {
 
-            beginRendering(m_CommandBuffersSkybox[m_CurrentFrame], VK_ATTACHMENT_LOAD_OP_CLEAR, VK_ATTACHMENT_STORE_OP_STORE, false);
+            beginRendering(m_CommandBuffersSkybox[m_CurrentFrame], VK_ATTACHMENT_LOAD_OP_CLEAR, VK_ATTACHMENT_STORE_OP_STORE);
             m_API->startMarker(m_CommandBuffersSkybox[m_CurrentFrame], "skybox_drawing", 0.3, 0.2, 0.1);
 
             auto meshComponent = m_ComponentManager->getComponent<MeshComponent>(skybox->getID());
@@ -433,11 +435,8 @@ namespace Poulpe
             m_API->endMarker(m_CommandBuffersSkybox[m_CurrentFrame]);
             endRendering(m_CommandBuffersSkybox[m_CurrentFrame]);
 
-            {
-              std::lock_guard<std::mutex> guard(m_MutexQueueSubmit);
-              m_CmdsToSubmit.emplace_back(m_CmdSkyboxStatus[m_CurrentFrame].get());
-              m_CmdSkyboxStatus[m_CurrentFrame]->done.store(true);
-            }
+            m_CmdsToSubmit.emplace_back(m_CmdSkyboxStatus[m_CurrentFrame].get());
+            m_CmdSkyboxStatus[m_CurrentFrame]->done.store(true);
         }
     }
 
@@ -470,11 +469,8 @@ namespace Poulpe
         m_API->endMarker(m_CommandBuffersHUD[m_CurrentFrame]);
         endRendering(m_CommandBuffersHUD[m_CurrentFrame]);
 
-        {
-          std::lock_guard<std::mutex> guard(m_MutexQueueSubmit);
-          m_CmdsToSubmit.emplace_back(m_CmdHUDStatus[m_CurrentFrame].get());
-          m_CmdHUDStatus[m_CurrentFrame]->done.store(true);
-        }
+        m_CmdsToSubmit.emplace_back(m_CmdHUDStatus[m_CurrentFrame].get());
+        m_CmdHUDStatus[m_CurrentFrame]->done.store(true);
     }
 
     void Renderer::drawBbox()
@@ -543,6 +539,11 @@ namespace Poulpe
 
         //std::string_view threadQueueName{ "render" };
 
+         //PLP_DEBUG("m_Nodraw: {}", m_Nodraw.load());
+         //PLP_DEBUG("m_CmdSkyboxStatus: {}", m_CmdSkyboxStatus[m_CurrentFrame]->done.load());
+         //PLP_DEBUG("m_CmdEntitiesStatus: {}", m_CmdEntitiesStatus[m_CurrentFrame]->done.load());
+         //PLP_DEBUG("m_CmdHUDStatus: {}", m_CmdHUDStatus[m_CurrentFrame]->done.load());
+
           //if (!m_CmdSkyboxStatus[m_CurrentFrame]->done.load() || m_Nodraw.load()) {
           //  m_CmdSkyboxStatus[m_CurrentFrame]->done.store(false);
           //  drawSkybox();
@@ -550,21 +551,15 @@ namespace Poulpe
           //}
           //if (!m_CmdEntitiesStatus[m_CurrentFrame]->done.load() || m_Nodraw.load()) {
           //  m_CmdEntitiesStatus[m_CurrentFrame]->done.store(false);
-          //  drawEntities();
+          drawSkybox();
+          drawEntities();
           //  //Locator::getThreadPool()->submit(threadQueueName, [this]() { drawEntities(); });
           //}
           //if (!m_CmdHUDStatus[m_CurrentFrame]->done.load() || m_Nodraw.load()) {
           //  m_CmdHUDStatus[m_CurrentFrame]->done.store(false);
-          //  drawHUD();
+            drawHUD();
           //  //Locator::getThreadPool()->submit(threadQueueName, [this]() { drawHUD(); });
           //}
-         drawSkybox();
-
-         //PLP_DEBUG("m_Nodraw: {}", m_Nodraw.load());
-         //PLP_DEBUG("m_CmdSkyboxStatus: {}", m_CmdSkyboxStatus[m_CurrentFrame]->done.load());
-         //PLP_DEBUG("m_CmdEntitiesStatus: {}", m_CmdEntitiesStatus[m_CurrentFrame]->done.load());
-         //PLP_DEBUG("m_CmdHUDStatus: {}", m_CmdHUDStatus[m_CurrentFrame]->done.load());
-
           submit();
         //@todo strip for release?
         //if (getDrawBbox()) {
@@ -668,16 +663,16 @@ namespace Poulpe
     {
         if (!continuousCmdBuffer) m_API->beginCommandBuffer(commandBuffer, VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT);
 
-        m_API->transitionImageLayout(commandBuffer, m_SwapChainImages[m_ImageIndex],
+        m_API->transitionImageLayout(commandBuffer, m_SwapChainImages[m_CurrentFrame],
           VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_ASPECT_COLOR_BIT);
 
-        m_API->transitionImageLayout(commandBuffer, m_SwapChainDepthImages[m_ImageIndex],
+        m_API->transitionImageLayout(commandBuffer, m_SwapChainDepthImages[m_CurrentFrame],
           VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL, VK_IMAGE_ASPECT_DEPTH_BIT);
 
         m_API->beginRendering(
           commandBuffer,
-          m_SwapChainImageViews[m_ImageIndex],
-          m_SwapChainDepthImageViews[m_ImageIndex],
+          m_SwapChainImageViews[m_CurrentFrame],
+          m_SwapChainDepthImageViews[m_CurrentFrame],
           loadOp,
           storeOp);
 
@@ -689,10 +684,10 @@ namespace Poulpe
     {
         m_API->endRendering(commandBuffer);
 
-        m_API->transitionImageLayout(commandBuffer, m_SwapChainImages[m_ImageIndex],
+        m_API->transitionImageLayout(commandBuffer, m_SwapChainImages[m_CurrentFrame],
           VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR, VK_IMAGE_ASPECT_COLOR_BIT);
 
-       m_API->transitionImageLayout(commandBuffer, m_SwapChainDepthImages[m_ImageIndex],
+       m_API->transitionImageLayout(commandBuffer, m_SwapChainDepthImages[m_CurrentFrame],
           VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR, VK_IMAGE_ASPECT_DEPTH_BIT);
 
         m_API->endCommandBuffer(commandBuffer);
@@ -721,7 +716,7 @@ namespace Poulpe
           waitStages.emplace_back(cmdToSubmit->stageFlags);
         }
 
-        PLP_WARN("submit: {} commands to index: {}", m_CmdsToSubmit.size(), m_CurrentFrame);
+        //PLP_WARN("submit: {} commands to index: {}", m_CmdsToSubmit.size(), m_CurrentFrame);
 
         VkSubmitInfo submitInfo{};
         submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -737,12 +732,6 @@ namespace Poulpe
         auto queue = m_API->getGraphicsQueues().at(0);
 
         VkResult submitResult = vkQueueSubmit(queue, 1, &submitInfo, m_InFlightFences[m_CurrentFrame]);
-
-        for (auto & cmdToSubmit : m_CmdsToSubmit) {
-            cmdToSubmit->done.store(false);
-        }
-
-        m_CmdsToSubmit.clear();
 
         if (submitResult != VK_SUCCESS) {
           PLP_ERROR("Error on queue submit: {}", submitResult);
@@ -768,6 +757,12 @@ namespace Poulpe
 
         m_CurrentFrame = (m_CurrentFrame + 1) % static_cast<uint32_t>(m_MAX_FRAMES_IN_FLIGHT);
         //PLP_WARN("current frame: {}", m_ImageIndex);
+        
+        for (auto & cmdToSubmit : m_CmdsToSubmit) {
+            cmdToSubmit->done.store(false);
+        }
+        m_CmdsToSubmit.clear();
+
         onFinishRender();
       }
     }

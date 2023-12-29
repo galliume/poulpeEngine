@@ -28,7 +28,6 @@ namespace Poulpe
     private:
         glm::vec3 m_Direction;
         glm::vec3 m_CameraFront;
-        glm::vec3 m_CameraRight;
         glm::vec3 m_CameraUp;
         glm::vec3 m_Pos;
         glm::vec3 m_Target;
