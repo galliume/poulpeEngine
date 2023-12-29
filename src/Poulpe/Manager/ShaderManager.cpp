@@ -135,9 +135,8 @@ namespace Poulpe
       if (shaderName == "skybox") {
         VkPipelineVertexInputStateCreateInfo* vertexInputInfo{nullptr};
         descSetLayout = createDescriptorSetLayout<DescSetLayoutType::Skybox>();
-        vertexInputInfo = getVertexInputState<VertexBindingType::Vertex2D>();
-
         std::vector<VkDescriptorSetLayout> dSetLayout = { descSetLayout };
+        vertexInputInfo = getVertexInputState<VertexBindingType::Vertex2D>();
 
         std::vector<VkPushConstantRange> vkPcs = {};
         VkPushConstantRange vkPc;
@@ -145,7 +144,7 @@ namespace Poulpe
         vkPc.size = sizeof(constants);
         vkPc.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
         vkPcs.emplace_back(vkPc);
-        
+
         pipelineLayout = m_Renderer->createPipelineLayout(dSetLayout, vkPcs);
 
         graphicPipeline = m_Renderer->createGraphicsPipeline(
@@ -161,7 +160,6 @@ namespace Poulpe
         VkPipelineVertexInputStateCreateInfo* vertexInputInfo{nullptr};
         descSetLayout = createDescriptorSetLayout<DescSetLayoutType::HUD>();
         std::vector<VkDescriptorSetLayout> dSetLayout = { descSetLayout };
-        
         vertexInputInfo = getVertexInputState<VertexBindingType::Vertex2D>();
 
         std::vector<VkPushConstantRange> vkPcs = {};
@@ -172,7 +170,7 @@ namespace Poulpe
         vkPcs.emplace_back(vkPc);
 
         pipelineLayout = m_Renderer->createPipelineLayout(dSetLayout, vkPcs);
-        
+
         graphicPipeline = m_Renderer->createGraphicsPipeline(
           pipelineLayout,
           shaderName,
@@ -183,7 +181,7 @@ namespace Poulpe
           VK_POLYGON_MODE_FILL);
       } else {
         VkPipelineVertexInputStateCreateInfo* vertexInputInfo{nullptr};
-        
+
         VkDescriptorPoolSize dpsSB;
         dpsSB.type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
         dpsSB.descriptorCount = 10;
@@ -201,7 +199,7 @@ namespace Poulpe
         vkPc.size = sizeof(constants);
         vkPc.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
         vkPcs.emplace_back(vkPc);
-        
+
         pipelineLayout = m_Renderer->createPipelineLayout(dSetLayout, vkPcs);
         
         bool hasColorAttachment{true};
@@ -262,24 +260,23 @@ namespace Poulpe
       VkPipelineVertexInputStateCreateInfo* vertexInputInfo = new VkPipelineVertexInputStateCreateInfo();
 
       if constexpr (T == VertexBindingType::Vertex3D) {
-      std::array<VkVertexInputAttributeDescription, 6> attDesc = Vertex::getAttributeDescriptions();
-      VkVertexInputBindingDescription bDesc = Vertex::getBindingDescription();
+      std::array<VkVertexInputAttributeDescription, 6>* attDesc = new std::array<VkVertexInputAttributeDescription, 6>(Vertex::getAttributeDescriptions());
+      VkVertexInputBindingDescription* bDesc = new VkVertexInputBindingDescription(Vertex::getBindingDescription());
 
       vertexInputInfo->sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
       vertexInputInfo->vertexBindingDescriptionCount = 1;
       vertexInputInfo->vertexAttributeDescriptionCount = static_cast<uint32_t>(Vertex::getAttributeDescriptions().size());
-      vertexInputInfo->pVertexBindingDescriptions = & bDesc;
-      vertexInputInfo->pVertexAttributeDescriptions = attDesc.data();
+      vertexInputInfo->pVertexBindingDescriptions = bDesc;
+      vertexInputInfo->pVertexAttributeDescriptions = attDesc->data();
     } else if constexpr (T == VertexBindingType::Vertex2D) {
-      std::array<VkVertexInputAttributeDescription, 3> attDesc = Vertex2D::getAttributeDescriptions();
-      
-      VkVertexInputBindingDescription bDesc = Vertex2D::getBindingDescription();
+      std::array<VkVertexInputAttributeDescription, 3>* attDesc = new std::array<VkVertexInputAttributeDescription, 3>(Vertex2D::getAttributeDescriptions());
+      VkVertexInputBindingDescription* bDesc = new VkVertexInputBindingDescription(Vertex2D::getBindingDescription());
 
       vertexInputInfo->sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
       vertexInputInfo->vertexBindingDescriptionCount = 1;
       vertexInputInfo->vertexAttributeDescriptionCount = static_cast<uint32_t>(Vertex2D::getAttributeDescriptions().size());
-      vertexInputInfo->pVertexBindingDescriptions = & bDesc;
-      vertexInputInfo->pVertexAttributeDescriptions = attDesc.data();
+      vertexInputInfo->pVertexBindingDescriptions = bDesc;
+      vertexInputInfo->pVertexAttributeDescriptions = attDesc->data();
     } else {
       throw std::runtime_error("unknown vertex input state type");
     }

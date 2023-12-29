@@ -9,7 +9,6 @@ namespace Poulpe
     void Crosshair::createDescriptorSet(IVisitable* const mesh)
     {
       Texture tex = m_TextureManager->getTextures()["crosshair_1"];
-      Texture tex2 = m_TextureManager->getTextures()["crosshair_2"];
 
       std::vector<VkDescriptorImageInfo> imageInfos;
       VkDescriptorImageInfo imageInfo{};
@@ -17,13 +16,7 @@ namespace Poulpe
       imageInfo.imageView = tex.getImageView();
       imageInfo.sampler = tex.getSampler();
 
-      VkDescriptorImageInfo imageInfo2{};
-      imageInfo2.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-      imageInfo2.imageView = tex2.getImageView();
-      imageInfo2.sampler = tex2.getSampler();
-
       imageInfos.emplace_back(imageInfo);
-      imageInfos.emplace_back(imageInfo2);
 
       auto pipeline = m_Renderer->getPipeline(mesh->getShaderName());
 

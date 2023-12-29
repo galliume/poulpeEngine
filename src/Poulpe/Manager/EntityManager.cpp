@@ -69,8 +69,12 @@ namespace Poulpe
         glm::vec3 endScale = glm::vec3(0.12, 0.12, 0.12);
     };
 
-    EntityManager::EntityManager(ComponentManager* componentManager)
-        : m_ComponentManager(componentManager)
+    EntityManager::EntityManager(ComponentManager* const componentManager,
+          LightManager* const lightManager,
+          TextureManager* const textureManager)
+        : m_ComponentManager(componentManager),
+          m_LightManager(lightManager),
+          m_TextureManager(textureManager)
     {
         initWorldGraph();
     }
@@ -259,8 +263,7 @@ namespace Poulpe
           //existingEntity->getMesh()->getBBox()->mesh->addUbos({ ubo });
 
           m_LoadedEntities[exisitingMesh->getName()][0] += 1;
-        }
-        else {
+        } else {
           auto entity = std::make_unique<Entity>();
 
           //@todo change for archetype id ?
@@ -275,7 +278,9 @@ namespace Poulpe
           m_ComponentManager->addComponent<MeshComponent>(entity->getID(), mesh);
 
           auto basicRdrImpl = RendererFactory::create<Basic>();
-          m_ComponentManager->addComponent<RenderComponent>(entity->getID(), &basicRdrImpl);
+          m_ComponentManager->addComponent<RenderComponent>(entity->getID(), basicRdrImpl);
+          basicRdrImpl->init(m_Renderer, m_TextureManager, m_LightManager);
+          basicRdrImpl->visit(0, mesh);
 
           m_WorldNode->addChild(entity.get());
 

@@ -11,11 +11,11 @@ namespace Poulpe
     {
     public:
         template <typename T, typename... TArgs>
-        static T& create(TArgs&&... args)
+        static T* create(TArgs&&... args)
         {
             T* entity(new T(std::forward<TArgs>(args)...));
 
-            return *entity;
+            return entity;
         }
     };
 }

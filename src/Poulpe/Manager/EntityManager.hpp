@@ -10,10 +10,12 @@ namespace Poulpe
     {
     public:
 
-        explicit EntityManager(ComponentManager* const componentManager);
+        explicit EntityManager(ComponentManager* const componentManager, 
+          LightManager* const lightManager,
+          TextureManager* const textureManager);
         virtual ~EntityManager() = default;
 
-        void inline addHUD(Entity* const entity) override { m_HUD.emplace_back(std::unique_ptr<Entity>(entity)); }
+        void inline addHUD(Entity* entity) override { m_HUD.emplace_back(std::unique_ptr<Entity>(entity)); }
         void inline addRenderer(IRenderer* const renderer) override { m_Renderer = renderer; }
         void clear() override;
         inline std::vector<std::unique_ptr<Entity>>* getEntities() override { return & m_Entities; }
@@ -36,6 +38,8 @@ namespace Poulpe
 
     private:
         ComponentManager* m_ComponentManager;
+        LightManager* m_LightManager;
+        TextureManager* m_TextureManager;
         
         std::vector<std::unique_ptr<Entity>> m_Entities{};
         std::vector<std::unique_ptr<Entity>> m_HUD{};

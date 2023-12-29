@@ -22,9 +22,12 @@ namespace Poulpe
     {
         m_Window = std::unique_ptr<Window>(window);
         m_ComponentManager = std::make_unique<ComponentManager>();
-        m_EntityManager = std::make_unique<EntityManager>(m_ComponentManager.get());
         m_LightManager = std::make_unique<LightManager>();
         m_TextureManager = std::make_unique<TextureManager>();
+        m_EntityManager = std::make_unique<EntityManager>(
+          m_ComponentManager.get(),
+          m_LightManager.get(),
+          m_TextureManager.get());
         
         m_Renderer = std::make_unique<Renderer>(
           m_Window.get(),
@@ -116,17 +119,17 @@ namespace Poulpe
         prepareSkybox();
         prepareHUD();
 
-        for (auto& entity : *m_EntityManager->getEntities()) {
+        //for (auto& entity : *m_EntityManager->getEntities()) {
 
-          auto* meshComponent = m_ComponentManager->getComponent<MeshComponent>(entity->getID());
-          Mesh* mesh = meshComponent->hasImpl<Mesh>();
+        //  auto* meshComponent = m_ComponentManager->getComponent<MeshComponent>(entity->getID());
+        //  Mesh* mesh = meshComponent->hasImpl<Mesh>();
 
-          if (mesh) {
-            auto renderComponent = m_ComponentManager->getComponent<RenderComponent>(entity->getID());
-            renderComponent->initPimpl(m_Renderer.get(), m_TextureManager.get(), m_LightManager.get());
-            renderComponent->visit(0, mesh);
-          }
-        }
+        //  if (mesh) {
+        //    auto renderComponent = m_ComponentManager->getComponent<RenderComponent>(entity->getID());
+        //    renderComponent->initPimpl(m_Renderer.get(), m_TextureManager.get(), m_LightManager.get());
+        //    renderComponent->visit(0, mesh);
+        //  }
+        //}
     }
 
     template <typename T>
@@ -143,21 +146,21 @@ namespace Poulpe
       m_ShowBbox = showBbox;
     }
 
-    void RenderManager::renderScene(float const deltaTime)
+    void RenderManager::renderScene([[maybe_unused]] float const deltaTime)
     {
         //@todo animate light
         //m_LightManager->animateAmbientLight(deltaTime);
 
-        for (auto& entity : *m_EntityManager->getEntities()) {
+        //for (auto& entity : *m_EntityManager->getEntities()) {
 
-            auto* meshComponent = m_ComponentManager->getComponent<MeshComponent>(entity->getID());
-            auto* animationComponent = m_ComponentManager->getComponent<AnimationComponent>(entity->getID());
-            Mesh* mesh = meshComponent->hasImpl<Mesh>();
+        //    auto* meshComponent = m_ComponentManager->getComponent<MeshComponent>(entity->getID());
+        //    auto* animationComponent = m_ComponentManager->getComponent<AnimationComponent>(entity->getID());
+        //    Mesh* mesh = meshComponent->hasImpl<Mesh>();
 
-            if (animationComponent && mesh) {
-                animationComponent->visit(deltaTime, mesh);
-            }
-        }
+        //    if (animationComponent && mesh) {
+        //        animationComponent->visit(deltaTime, mesh);
+        //    }
+        //}
 
         m_Renderer->renderScene();
 
@@ -177,7 +180,6 @@ namespace Poulpe
       auto const levelData = m_ConfigManager->loadLevelData(level);
       m_TextureManager->addConfig(m_ConfigManager->texturesConfig());
 
-      std::function<void()> entityFutures = m_EntityManager->load(levelData);
       std::function<void()> textureFuture = m_TextureManager->load();
 
       std::string const  sb = (m_CurrentSkybox.empty()) ? static_cast<std::string>(appConfig["defaultSkybox"])
@@ -186,7 +188,6 @@ namespace Poulpe
       std::function<void()> skyboxFuture = m_TextureManager->loadSkybox(sb);
       std::function<void()> shaderFuture = m_ShaderManager->load(m_ConfigManager->shaderConfig());
 
-      Locator::getThreadPool()->submit(threadQueueName, entityFutures);
       Locator::getThreadPool()->submit(threadQueueName, textureFuture);
       Locator::getThreadPool()->submit(threadQueueName, skyboxFuture);
       Locator::getThreadPool()->submit(threadQueueName, shaderFuture);
@@ -200,10 +201,13 @@ namespace Poulpe
       while (!m_ShaderManager->isLoadingDone()) {
         //PLP_WARN("loading {}", m_ShaderManager->isLoadingDone());
       }
-      //while (!m_EntityManager->IsLoadingDone()) {
+      //while (!m_EntityManager->isLoadingDone()) {
       //    //PLP_WARN("loading {}", m_EntityManager->IsLoadingDone());
       //}
       setIsLoaded();
+
+      std::function<void()> entityFutures = m_EntityManager->load(levelData);
+      Locator::getThreadPool()->submit(threadQueueName, entityFutures);
     }
 
     void RenderManager::prepareHUD()
@@ -211,18 +215,18 @@ namespace Poulpe
         auto* gridEntity = new Entity();
         auto* gridMesh = new Mesh();
         auto gridRdrImpl = RendererFactory::create<Grid>();
-        gridRdrImpl.init(m_Renderer.get(), m_TextureManager.get(), nullptr);
+        gridRdrImpl->init(m_Renderer.get(), m_TextureManager.get(), nullptr);
 
-        auto renderGridComponent = m_ComponentManager->addComponent<RenderComponent>(gridEntity->getID(), &gridRdrImpl);
+        auto renderGridComponent = m_ComponentManager->addComponent<RenderComponent>(gridEntity->getID(), gridRdrImpl);
         renderGridComponent.visit(0, gridMesh);
         m_ComponentManager->addComponent<MeshComponent>(gridEntity->getID(), gridMesh);
 
         auto* chEntity = new Entity();
         auto* chMesh = new Mesh();
         auto chRdrImpl = RendererFactory::create<Crosshair>();
-        chRdrImpl.init(m_Renderer.get(), m_TextureManager.get(), nullptr);
+        chRdrImpl->init(m_Renderer.get(), m_TextureManager.get(), nullptr);
 
-        auto renderCrosshairComponent = m_ComponentManager->addComponent<RenderComponent>(chEntity->getID(), &chRdrImpl);
+        auto renderCrosshairComponent = m_ComponentManager->addComponent<RenderComponent>(chEntity->getID(), chRdrImpl);
         renderCrosshairComponent.visit(0, chMesh);
         m_ComponentManager->addComponent<MeshComponent>(chEntity->getID(), chMesh);
 

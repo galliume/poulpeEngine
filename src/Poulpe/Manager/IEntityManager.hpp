@@ -6,6 +6,8 @@
 
 #include "Poulpe/Core/TinyObjLoader.hpp"
 
+#include "Poulpe/Manager/TextureManager.hpp"
+#include "Poulpe/Manager/LightManager.hpp"
 #include "Poulpe/Manager/ComponentManager.hpp"
 
 #include "Poulpe/Renderer/IRenderer.hpp"
@@ -20,7 +22,7 @@ namespace Poulpe
     public:
         virtual ~IEntityManager() = default;
 
-        virtual void addHUD(Entity* const entity) = 0;
+        virtual void addHUD(Entity* entity) = 0;
         virtual void addRenderer(IRenderer* const renderer) = 0;
         virtual void clear() = 0;
         virtual inline std::vector<std::unique_ptr<Entity>>* getEntities() = 0;

@@ -171,7 +171,7 @@ namespace Poulpe
         }
 
         Buffer createUniformBuffers(uint32_t uniformBuffersCount) override {
-            return m_API->createCubeUniformBuffers(uniformBuffersCount);
+            return m_API->createUniformBuffers(uniformBuffersCount);
         }
 
         std::vector<VkCommandBuffer> allocateCommandBuffers(VkCommandPool commandPool, uint32_t size = 1,

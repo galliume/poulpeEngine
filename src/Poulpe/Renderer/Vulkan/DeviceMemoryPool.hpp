@@ -22,7 +22,7 @@ namespace Poulpe
           uint32_t const memoryType,
           VkBufferUsageFlags const usage,
           VkDeviceSize const alignment,
-          DeviceBufferType const bufferType = DeviceBufferType::UNIFORM,
+          DeviceBufferType const bufferType,
           bool forceNew = false);
 
         std::unordered_map<uint32_t, std::unordered_map<VkBufferUsageFlags,
