@@ -2044,7 +2044,6 @@ namespace Poulpe {
         vkGetImageMemoryRequirements(m_Device, image, & memRequirements);
         auto memoryType = findMemoryType(memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
         uint32_t size = ((memRequirements.size / memRequirements.alignment) + 1) * memRequirements.alignment;
-        
 
         auto deviceMemory = m_DeviceMemoryPool->get(
             m_Device,

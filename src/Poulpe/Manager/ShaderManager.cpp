@@ -185,7 +185,7 @@ namespace Poulpe
           shaderName,
           shaders,
           *vertexInputInfo,
-          VK_CULL_MODE_NONE,
+          VK_CULL_MODE_BACK_BIT,
           true, true, true,
           VK_POLYGON_MODE_FILL);
 

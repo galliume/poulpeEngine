@@ -1,7 +1,7 @@
 #version 450
 #extension GL_EXT_nonuniform_qualifier : enable
 
-#define MAX_UBOS 1000
+#define MAX_UBOS 1
 
 struct UBO
 {

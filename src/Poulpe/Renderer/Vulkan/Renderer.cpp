@@ -223,6 +223,61 @@ namespace Poulpe
       std::string const pipelineName{ "shadowMap" };
       auto pipeline = getPipeline(pipelineName);
 
+      if (!m_DepthMapDescSetUpdated) {
+          for (auto& entity : entities) {
+
+          if (!entity) continue;
+          
+          auto meshComponent = m_ComponentManager->getComponent<MeshComponent>(entity->getID());
+          if (!meshComponent) continue;
+
+          Mesh* mesh = meshComponent->hasImpl<Mesh>();
+
+          //@todo move elsewhere
+          std::array<VkWriteDescriptorSet, 2> descriptorWrites{};
+          std::vector<VkDescriptorBufferInfo> bufferInfos;
+          std::vector<VkDescriptorBufferInfo> storageBufferInfos;
+
+          std::for_each(std::begin(*mesh->getUniformBuffers()), std::end(*mesh->getUniformBuffers()),
+            [&bufferInfos](const Buffer& uniformBuffer)
+            {
+              VkDescriptorBufferInfo bufferInfo{};
+              bufferInfo.buffer = uniformBuffer.buffer;
+              bufferInfo.offset = 0;
+              bufferInfo.range = VK_WHOLE_SIZE;
+              bufferInfos.emplace_back(bufferInfo);
+            });
+
+          std::for_each(std::begin(*mesh->getStorageBuffers()), std::end(*mesh->getStorageBuffers()),
+            [&storageBufferInfos](const Buffer& storageBuffers)
+            {
+              VkDescriptorBufferInfo bufferInfo{};
+              bufferInfo.buffer = storageBuffers.buffer;
+              bufferInfo.offset = 0;
+              bufferInfo.range = VK_WHOLE_SIZE;
+              storageBufferInfos.emplace_back(bufferInfo);
+            });
+
+          descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+          descriptorWrites[0].dstSet = pipeline->descSet;
+          descriptorWrites[0].dstBinding = 0;
+          descriptorWrites[0].dstArrayElement = 0;
+          descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+          descriptorWrites[0].descriptorCount = 1;
+          descriptorWrites[0].pBufferInfo = bufferInfos.data();
+
+          descriptorWrites[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+          descriptorWrites[1].dstSet = pipeline->descSet;
+          descriptorWrites[1].dstBinding = 1;
+          descriptorWrites[1].dstArrayElement = 0;
+          descriptorWrites[1].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+          descriptorWrites[1].descriptorCount = storageBufferInfos.size();
+          descriptorWrites[1].pBufferInfo = storageBufferInfos.data();
+
+          vkUpdateDescriptorSets(m_API->getDevice(), static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
+        }
+      }
+
       //m_API->beginCommandBuffer(m_CommandBuffersEntities[m_CurrentFrame]);
       m_API->startMarker(m_CommandBuffersEntities[m_CurrentFrame], "shadow_map_" + pipelineName, 0.1, 0.2, 0.3);
 
@@ -230,10 +285,10 @@ namespace Poulpe
         VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, VK_IMAGE_ASPECT_DEPTH_BIT);
 
       VkClearColorValue colorClear = {};
-      colorClear.float32[0] = 0.0f;
-      colorClear.float32[1] = 0.0f;
-      colorClear.float32[2] = 0.0f;
-      colorClear.float32[3] = 0.0f;
+      colorClear.float32[0] = 1.0f;
+      colorClear.float32[1] = 1.0f;
+      colorClear.float32[2] = 1.0f;
+      colorClear.float32[3] = 1.0f;
       
       VkClearDepthStencilValue depthStencil = { 1.f, 0 };
 
@@ -260,8 +315,8 @@ namespace Poulpe
       m_API->setViewPort(m_CommandBuffersEntities[m_CurrentFrame]);
       m_API->setScissor(m_CommandBuffersEntities[m_CurrentFrame]);
         
-      float depthBiasConstant = -1.25f;
-      float depthBiasSlope = 5.f;
+      float depthBiasConstant = 1.25f;
+      float depthBiasSlope = 1.75f;
 
       vkCmdSetDepthBias(m_CommandBuffersEntities[m_CurrentFrame], depthBiasConstant, 0.0f, depthBiasSlope);
 
@@ -273,69 +328,15 @@ namespace Poulpe
 
           Mesh* mesh = meshComponent->hasImpl<Mesh>();
 
-          //@todo move elsewhere
-          if (!m_DepthMapDescSetUpdated) {
-            std::vector<VkDescriptorImageInfo> imageInfos;
-            Texture tex;
-            tex = m_TextureManager->getTextures()[mesh->getData()->m_Textures.at(0)];
-            VkDescriptorImageInfo imageInfo{};
-            imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-            imageInfo.imageView = tex.getImageView();
-            imageInfo.sampler = tex.getSampler();
-            imageInfos.emplace_back(imageInfo);
-
-            std::array<VkWriteDescriptorSet, 2> descriptorWrites{};
-            std::vector<VkDescriptorBufferInfo> bufferInfos;
-            std::vector<VkDescriptorBufferInfo> storageBufferInfos;
-
-            std::for_each(std::begin(*mesh->getUniformBuffers()), std::end(*mesh->getUniformBuffers()),
-              [&bufferInfos](const Buffer& uniformBuffer)
-              {
-                VkDescriptorBufferInfo bufferInfo{};
-                bufferInfo.buffer = uniformBuffer.buffer;
-                bufferInfo.offset = 0;
-                bufferInfo.range = VK_WHOLE_SIZE;
-                bufferInfos.emplace_back(bufferInfo);
-              });
-
-            std::for_each(std::begin(*mesh->getStorageBuffers()), std::end(*mesh->getStorageBuffers()),
-              [&storageBufferInfos](const Buffer& storageBuffers)
-              {
-                VkDescriptorBufferInfo bufferInfo{};
-                bufferInfo.buffer = storageBuffers.buffer;
-                bufferInfo.offset = 0;
-                bufferInfo.range = VK_WHOLE_SIZE;
-                storageBufferInfos.emplace_back(bufferInfo);
-              });
-
-            descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-            descriptorWrites[0].dstSet = pipeline->descSet;
-            descriptorWrites[0].dstBinding = 0;
-            descriptorWrites[0].dstArrayElement = 0;
-            descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-            descriptorWrites[0].descriptorCount = 1;
-            descriptorWrites[0].pBufferInfo = bufferInfos.data();
-
-            descriptorWrites[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-            descriptorWrites[1].dstSet = pipeline->descSet;
-            descriptorWrites[1].dstBinding = 1;
-            descriptorWrites[1].dstArrayElement = 0;
-            descriptorWrites[1].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-            descriptorWrites[1].descriptorCount = storageBufferInfos.size();
-            descriptorWrites[1].pBufferInfo = storageBufferInfos.data();
-
-            vkUpdateDescriptorSets(m_API->getDevice(), static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
-          }
-
           m_API->bindPipeline(m_CommandBuffersEntities[m_CurrentFrame], pipeline->pipeline);
                 
           for (size_t i = 0; i < mesh->getData()->m_Ubos.size(); ++i) {
-              mesh->getData()->m_Ubos[i].projection = light.lightSpaceMatrix;
+            mesh->getData()->m_Ubos[i].projection = light.lightSpaceMatrix;
           }
 
           int min{ 0 };
           int max{ 0 };
-
+          //@todo wtf to refactor
           for (size_t i = 0; i < mesh->getUniformBuffers()->size(); ++i) {
               max = mesh->getData()->m_UbosOffset.at(i);
               auto ubos = std::vector<UniformBufferObject>(mesh->getData()->m_Ubos.begin() + min, mesh->getData()->m_Ubos.begin() + max);
@@ -397,16 +398,16 @@ namespace Poulpe
 
           drawShadowMap(m_Entities, m_LightManager->getAmbientLight());
 
-          m_API->transitionImageLayout(m_CommandBuffersEntities[m_CurrentFrame], m_SwapChainImages[m_ImageIndex],
+          m_API->transitionImageLayout(m_CommandBuffersEntities[m_CurrentFrame], m_SwapChainImages[m_CurrentFrame],
             VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_ASPECT_COLOR_BIT);
 
-          m_API->transitionImageLayout(m_CommandBuffersEntities[m_CurrentFrame], m_SwapChainDepthImages[m_ImageIndex],
+          m_API->transitionImageLayout(m_CommandBuffersEntities[m_CurrentFrame], m_SwapChainDepthImages[m_CurrentFrame],
             VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL, VK_IMAGE_ASPECT_DEPTH_BIT);
 
           m_API->beginRendering(
             m_CommandBuffersEntities[m_CurrentFrame],
-            m_SwapChainImageViews[m_ImageIndex],
-            m_SwapChainDepthImageViews[m_ImageIndex],
+            m_SwapChainImageViews[m_CurrentFrame],
+            m_SwapChainDepthImageViews[m_CurrentFrame],
             VK_ATTACHMENT_LOAD_OP_LOAD,
             VK_ATTACHMENT_STORE_OP_STORE);
 
@@ -617,7 +618,7 @@ namespace Poulpe
           //}
           //if (!m_CmdHUDStatus[m_CurrentFrame]->done.load() || m_Nodraw.load()) {
           //  m_CmdHUDStatus[m_CurrentFrame]->done.store(false);
-            //drawHUD();
+          //drawHUD();
           //  //Locator::getThreadPool()->submit(threadQueueName, [this]() { drawHUD(); });
           //}
           submit();
@@ -723,16 +724,16 @@ namespace Poulpe
     {
         if (!continuousCmdBuffer) m_API->beginCommandBuffer(commandBuffer, VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT);
 
-        m_API->transitionImageLayout(commandBuffer, m_SwapChainImages[m_ImageIndex],
+        m_API->transitionImageLayout(commandBuffer, m_SwapChainImages[m_CurrentFrame],
           VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_ASPECT_COLOR_BIT);
 
-        m_API->transitionImageLayout(commandBuffer, m_SwapChainDepthImages[m_ImageIndex],
+        m_API->transitionImageLayout(commandBuffer, m_SwapChainDepthImages[m_CurrentFrame],
           VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL, VK_IMAGE_ASPECT_DEPTH_BIT);
 
         m_API->beginRendering(
           commandBuffer,
-          m_SwapChainImageViews[m_ImageIndex],
-          m_SwapChainDepthImageViews[m_ImageIndex],
+          m_SwapChainImageViews[m_CurrentFrame],
+          m_SwapChainDepthImageViews[m_CurrentFrame],
           loadOp,
           storeOp);
 
@@ -744,10 +745,10 @@ namespace Poulpe
     {
         m_API->endRendering(commandBuffer);
 
-        m_API->transitionImageLayout(commandBuffer, m_SwapChainImages[m_ImageIndex],
+        m_API->transitionImageLayout(commandBuffer, m_SwapChainImages[m_CurrentFrame],
           VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR, VK_IMAGE_ASPECT_COLOR_BIT);
 
-       m_API->transitionImageLayout(commandBuffer, m_SwapChainDepthImages[m_ImageIndex],
+       m_API->transitionImageLayout(commandBuffer, m_SwapChainDepthImages[m_CurrentFrame],
           VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR, VK_IMAGE_ASPECT_DEPTH_BIT);
 
         m_API->endCommandBuffer(commandBuffer);
@@ -799,7 +800,7 @@ namespace Poulpe
         presentInfo.pWaitSemaphores = signalSemaphores.data();
         presentInfo.swapchainCount = 1;
         presentInfo.pSwapchains = swapChains.data();
-        presentInfo.pImageIndices = &m_ImageIndex;
+        presentInfo.pImageIndices = &m_CurrentFrame;
 
         presentInfo.pResults = nullptr;
         m_API->submit(queue, submitInfo, presentInfo,  m_InFlightFences[m_CurrentFrame]);
@@ -936,6 +937,7 @@ namespace Poulpe
       {
         std::lock_guard guard(m_MutexEntitySubmit);
         copy(entities.begin(), entities.end(), back_inserter(m_Entities));
+        m_DepthMapDescSetUpdated = false;
       }
     }
 }
