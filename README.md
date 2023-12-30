@@ -12,7 +12,8 @@
 
 [In video](https://www.youtube.com/watch?v=C7p9z6LhAig&list=PL4-Os8BWDCPmZt5HvJrSo6QDHkD9J4fJF)
 
-<img src="https://github.com/galliume/poulpeEngine/blob/main/screenshots/engine.jpg" width="100" height="100">
+<img src="https://github.com/galliume/poulpeEngine/blob/main/screenshots/viewport.jpg" width="100" height="100">
+
 ![actual_state1](screenshots/engine.jpg?raw=true "Poulpe Engine")
 ![actual_state2](screenshots/anim.gif?raw=true "Animation")
 ![actual_state3](screenshots/asyncload.gif?raw=true "Async loading")
