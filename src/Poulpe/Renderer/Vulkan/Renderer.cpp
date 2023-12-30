@@ -25,11 +25,13 @@ namespace Poulpe
       Window* const window,
       IEntityManager* const entityManager,
       ComponentManager* const componentManager,
-      ILightManager* const lightManager)
+      ILightManager* const lightManager,
+      ITextureManager* const textureManager)
         : m_Window(window),
           m_EntityManager(entityManager),
           m_ComponentManager(componentManager),
-          m_LightManager(lightManager)
+          m_LightManager(lightManager),
+          m_TextureManager(textureManager)
     {
         m_API = std::make_unique<VulkanAPI>(window);
     }
@@ -216,195 +218,254 @@ namespace Poulpe
         m_Deltatime = deltaTime;
     }
 
-    void Renderer::drawShadowMap(std::vector<std::unique_ptr<Entity>>* entities,  Light light)
+    void Renderer::drawShadowMap(std::vector<Entity*> entities,  Light light)
     {
       std::string const pipelineName{ "shadowMap" };
       auto pipeline = getPipeline(pipelineName);
 
-        //m_API->beginCommandBuffer(m_CommandBuffersShadowMap[m_CurrentFrame]);
-        m_API->startMarker(m_CommandBuffersEntities[m_CurrentFrame], "shadow_map_" + pipelineName, 0.1, 0.2, 0.3);
+      //m_API->beginCommandBuffer(m_CommandBuffersEntities[m_CurrentFrame]);
+      m_API->startMarker(m_CommandBuffersEntities[m_CurrentFrame], "shadow_map_" + pipelineName, 0.1, 0.2, 0.3);
 
-        m_API->transitionImageLayout(m_CommandBuffersEntities[m_CurrentFrame], m_DepthMapImages[m_CurrentFrame],
-          VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, VK_IMAGE_ASPECT_DEPTH_BIT);
+      m_API->transitionImageLayout(m_CommandBuffersEntities[m_CurrentFrame], m_DepthMapImages[0],
+        VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, VK_IMAGE_ASPECT_DEPTH_BIT);
 
-        VkClearColorValue colorClear = {};
-        colorClear.float32[0] = 1.0f;
-        colorClear.float32[1] = 1.0f;
-        colorClear.float32[2] = 1.0f;
-        colorClear.float32[3] = 1.0f;
+      VkClearColorValue colorClear = {};
+      colorClear.float32[0] = 0.0f;
+      colorClear.float32[1] = 0.0f;
+      colorClear.float32[2] = 0.0f;
+      colorClear.float32[3] = 0.0f;
       
-        VkClearDepthStencilValue depthStencil = { 1.f, 0 };
-      
-        VkRenderingAttachmentInfo depthAttachment{ };
-        depthAttachment.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
-        depthAttachment.imageView = m_DepthMapImageViews[m_CurrentFrame];
-        depthAttachment.imageLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-        depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-        depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-        depthAttachment.clearValue.depthStencil = depthStencil;
-        depthAttachment.clearValue.color = colorClear;
+      VkClearDepthStencilValue depthStencil = { 1.f, 0 };
 
-        VkRenderingInfo  renderingInfo{ };
-        renderingInfo.sType = VK_STRUCTURE_TYPE_RENDERING_INFO;
-        renderingInfo.renderArea.extent.width = m_API->getSwapChainExtent().width;
-        renderingInfo.renderArea.extent.height = m_API->getSwapChainExtent().height;
-        renderingInfo.layerCount = 1;
-        renderingInfo.pDepthAttachment = & depthAttachment;
-        renderingInfo.colorAttachmentCount = 0;
-        renderingInfo.flags = VK_SUBPASS_CONTENTS_INLINE;
+      VkRenderingAttachmentInfo depthAttachment{ };
+      depthAttachment.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
+      depthAttachment.imageView = m_DepthMapImageViews[0];
+      depthAttachment.imageLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+      depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+      depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+      depthAttachment.clearValue.depthStencil = depthStencil;
+      depthAttachment.clearValue.color = colorClear;
 
-        vkCmdBeginRenderingKHR(m_CommandBuffersEntities[m_CurrentFrame], & renderingInfo);
+      VkRenderingInfo  renderingInfo{ };
+      renderingInfo.sType = VK_STRUCTURE_TYPE_RENDERING_INFO;
+      renderingInfo.renderArea.extent.width = m_API->getSwapChainExtent().width;
+      renderingInfo.renderArea.extent.height = m_API->getSwapChainExtent().height;
+      renderingInfo.layerCount = 1;
+      renderingInfo.pDepthAttachment = & depthAttachment;
+      renderingInfo.colorAttachmentCount = 0;
+      renderingInfo.flags = VK_SUBPASS_CONTENTS_INLINE;
 
-        m_API->setViewPort(m_CommandBuffersEntities[m_CurrentFrame]);
-        m_API->setScissor(m_CommandBuffersEntities[m_CurrentFrame]);
+      vkCmdBeginRenderingKHR(m_CommandBuffersEntities[m_CurrentFrame], & renderingInfo);
+
+      m_API->setViewPort(m_CommandBuffersEntities[m_CurrentFrame]);
+      m_API->setScissor(m_CommandBuffersEntities[m_CurrentFrame]);
         
-        float depthBiasConstant = -1.25f;
-        float depthBiasSlope = 5.f;
+      float depthBiasConstant = -1.25f;
+      float depthBiasSlope = 5.f;
 
-        vkCmdSetDepthBias(m_CommandBuffersEntities[m_CurrentFrame], depthBiasConstant, 0.0f, depthBiasSlope);
+      vkCmdSetDepthBias(m_CommandBuffersEntities[m_CurrentFrame], depthBiasConstant, 0.0f, depthBiasSlope);
 
-        for (auto& entity : *entities) {
+      for (auto& entity : entities) {
+          if (!entity) continue;
+          
+          auto meshComponent = m_ComponentManager->getComponent<MeshComponent>(entity->getID());
+          if (!meshComponent) continue;
+
+          Mesh* mesh = meshComponent->hasImpl<Mesh>();
+
+          //@todo move elsewhere
+          if (!m_DepthMapDescSetUpdated) {
+            std::vector<VkDescriptorImageInfo> imageInfos;
+            Texture tex;
+            tex = m_TextureManager->getTextures()[mesh->getData()->m_Textures.at(0)];
+            VkDescriptorImageInfo imageInfo{};
+            imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+            imageInfo.imageView = tex.getImageView();
+            imageInfo.sampler = tex.getSampler();
+            imageInfos.emplace_back(imageInfo);
+
+            std::array<VkWriteDescriptorSet, 2> descriptorWrites{};
+            std::vector<VkDescriptorBufferInfo> bufferInfos;
+            std::vector<VkDescriptorBufferInfo> storageBufferInfos;
+
+            std::for_each(std::begin(*mesh->getUniformBuffers()), std::end(*mesh->getUniformBuffers()),
+              [&bufferInfos](const Buffer& uniformBuffer)
+              {
+                VkDescriptorBufferInfo bufferInfo{};
+                bufferInfo.buffer = uniformBuffer.buffer;
+                bufferInfo.offset = 0;
+                bufferInfo.range = VK_WHOLE_SIZE;
+                bufferInfos.emplace_back(bufferInfo);
+              });
+
+            std::for_each(std::begin(*mesh->getStorageBuffers()), std::end(*mesh->getStorageBuffers()),
+              [&storageBufferInfos](const Buffer& storageBuffers)
+              {
+                VkDescriptorBufferInfo bufferInfo{};
+                bufferInfo.buffer = storageBuffers.buffer;
+                bufferInfo.offset = 0;
+                bufferInfo.range = VK_WHOLE_SIZE;
+                storageBufferInfos.emplace_back(bufferInfo);
+              });
+
+            descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+            descriptorWrites[0].dstSet = pipeline->descSet;
+            descriptorWrites[0].dstBinding = 0;
+            descriptorWrites[0].dstArrayElement = 0;
+            descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+            descriptorWrites[0].descriptorCount = 1;
+            descriptorWrites[0].pBufferInfo = bufferInfos.data();
+
+            descriptorWrites[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+            descriptorWrites[1].dstSet = pipeline->descSet;
+            descriptorWrites[1].dstBinding = 1;
+            descriptorWrites[1].dstArrayElement = 0;
+            descriptorWrites[1].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+            descriptorWrites[1].descriptorCount = storageBufferInfos.size();
+            descriptorWrites[1].pBufferInfo = storageBufferInfos.data();
+
+            vkUpdateDescriptorSets(m_API->getDevice(), static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
+          }
+
+          m_API->bindPipeline(m_CommandBuffersEntities[m_CurrentFrame], pipeline->pipeline);
+                
+          for (size_t i = 0; i < mesh->getData()->m_Ubos.size(); ++i) {
+              mesh->getData()->m_Ubos[i].projection = light.lightSpaceMatrix;
+          }
+
+          int min{ 0 };
+          int max{ 0 };
+
+          for (size_t i = 0; i < mesh->getUniformBuffers()->size(); ++i) {
+              max = mesh->getData()->m_UbosOffset.at(i);
+              auto ubos = std::vector<UniformBufferObject>(mesh->getData()->m_Ubos.begin() + min, mesh->getData()->m_Ubos.begin() + max);
+              m_API->updateUniformBuffer(mesh->getUniformBuffers()->at(i), &ubos);
+
+              min = max;
+          }
+
+          constants pushConstants{};
+          pushConstants.textureIDBB = glm::vec3(mesh->getData()->m_TextureIndex, 0.0, 0.0);
+        
+          pushConstants.view = light.view;
+          pushConstants.viewPos = getCamera()->getPos();
+          pushConstants.mapsUsed = mesh->getData()->mapsUsed;
+
+          vkCmdPushConstants(m_CommandBuffersEntities[m_CurrentFrame], pipeline->pipelineLayout,
+              VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(constants), & pushConstants);
+
+          try {
+              if (m_RenderingStopped) return;
+              m_API->draw(m_CommandBuffersEntities[m_CurrentFrame], pipeline->descSet,
+              *pipeline, mesh->getData(), mesh->getData()->m_Ubos.size(), mesh->isIndexed());
+          }
+          catch (std::exception& e) {
+              PLP_DEBUG("Draw error: {}", e.what());
+          }
+      }
+
+      m_API->endMarker(m_CommandBuffersEntities[m_CurrentFrame]);
+      m_API->endRendering(m_CommandBuffersEntities[m_CurrentFrame]);
+
+      m_API->transitionImageLayout(m_CommandBuffersEntities[m_CurrentFrame], m_DepthMapImages[0],
+        VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_IMAGE_ASPECT_DEPTH_BIT);
+
+      m_DepthMapDescSetUpdated = true;
+      //m_API->endCommandBuffer(m_CommandBuffersEntities[m_CurrentFrame]);
+
+      //CommandToSubmit cmd{
+      //    m_CommandBuffersShadowMap[m_CurrentFrame],
+      //    VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+      //    m_ShadowMapSemaRenderFinished[m_CurrentFrame],
+      //    & m_CmdShadowMapStatus
+      //};
+
+      //{
+      //  std::lock_guard<std::mutex> guard(m_MutexQueueSubmit);
+      //  m_CmdsToSubmit.emplace_back(cmd);
+      //}
+    }
+
+    void Renderer::drawEntities()
+    {
+      {
+        std::lock_guard guard(m_MutexEntitySubmit);
+
+        if (0 < m_Entities.size()) {
+
+          m_API->beginCommandBuffer(m_CommandBuffersEntities[m_CurrentFrame], VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT);
+
+          drawShadowMap(m_Entities, m_LightManager->getAmbientLight());
+
+          m_API->transitionImageLayout(m_CommandBuffersEntities[m_CurrentFrame], m_SwapChainImages[m_ImageIndex],
+            VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_ASPECT_COLOR_BIT);
+
+          m_API->transitionImageLayout(m_CommandBuffersEntities[m_CurrentFrame], m_SwapChainDepthImages[m_ImageIndex],
+            VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL, VK_IMAGE_ASPECT_DEPTH_BIT);
+
+          m_API->beginRendering(
+            m_CommandBuffersEntities[m_CurrentFrame],
+            m_SwapChainImageViews[m_ImageIndex],
+            m_SwapChainDepthImageViews[m_ImageIndex],
+            VK_ATTACHMENT_LOAD_OP_LOAD,
+            VK_ATTACHMENT_STORE_OP_STORE);
+
+          m_API->setViewPort(m_CommandBuffersEntities[m_CurrentFrame]);
+          m_API->setScissor(m_CommandBuffersEntities[m_CurrentFrame]);
+
+          m_API->startMarker(m_CommandBuffersEntities[m_CurrentFrame], "entities_drawing", 0.2, 0.2, 0.9);
+
+          for (auto& entity : m_Entities) {
             if (!entity) continue;
-
             auto meshComponent = m_ComponentManager->getComponent<MeshComponent>(entity->getID());
             if (!meshComponent) continue;
 
             Mesh* mesh = meshComponent->hasImpl<Mesh>();
+            auto pipeline = getPipeline(mesh->getShaderName());
+
+
+            // if (m_HasClicked && mesh->IsHit(m_RayPick)) {
+            //    PLP_DEBUG("HIT ! {}", mesh->GetName());
+            // }
+            //m_HasClicked = false;
 
             m_API->bindPipeline(m_CommandBuffersEntities[m_CurrentFrame], pipeline->pipeline);
-                
+
             for (size_t i = 0; i < mesh->getData()->m_Ubos.size(); ++i) {
-                mesh->getData()->m_Ubos[i].projection = light.lightSpaceMatrix;
+              mesh->getData()->m_Ubos[i].projection = getPerspective();
             }
 
             int min{ 0 };
             int max{ 0 };
 
             for (size_t i = 0; i < mesh->getUniformBuffers()->size(); ++i) {
-                max = mesh->getData()->m_UbosOffset.at(i);
-                auto ubos = std::vector<UniformBufferObject>(mesh->getData()->m_Ubos.begin() + min, mesh->getData()->m_Ubos.begin() + max);
-                m_API->updateUniformBuffer(mesh->getUniformBuffers()->at(i), &ubos);
+              max = mesh->getData()->m_UbosOffset.at(i);
+              auto ubos = std::vector<UniformBufferObject>(mesh->getData()->m_Ubos.begin() + min, mesh->getData()->m_Ubos.begin() + max);
+              m_API->updateUniformBuffer(mesh->getUniformBuffers()->at(i), &ubos);
 
-                min = max;
+              min = max;
+
             }
-
-            constants pushConstants{};
-            pushConstants.textureIDBB = glm::vec3(mesh->getData()->m_TextureIndex, 0.0, 0.0);
-        
-            pushConstants.view = light.view;
-            pushConstants.viewPos = getCamera()->getPos();
-            pushConstants.mapsUsed = mesh->getData()->mapsUsed;
-
-            vkCmdPushConstants(m_CommandBuffersEntities[m_CurrentFrame], pipeline->pipelineLayout,
-                VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(constants), & pushConstants);
+            if (mesh->hasPushConstants()) {
+              mesh->applyPushConstants(m_CommandBuffersEntities[m_CurrentFrame], pipeline->pipelineLayout, this, mesh);
+            }
 
             try {
-                if (m_RenderingStopped) return;
-                m_API->draw(m_CommandBuffersEntities[m_CurrentFrame], *mesh->getDescSet(),
-                *pipeline, mesh->getData(), mesh->getData()->m_Ubos.size(), mesh->isIndexed());
+              if (m_RenderingStopped) return;
+              m_API->draw(m_CommandBuffersEntities[m_CurrentFrame], *mesh->getDescSet(),
+                *pipeline, mesh->getData(), mesh->isIndexed());
             }
             catch (std::exception& e) {
-                PLP_DEBUG("Draw error: {}", e.what());
+              PLP_DEBUG("Draw error: {}", e.what());
             }
+          }
+
+          m_API->endMarker(m_CommandBuffersEntities[m_CurrentFrame]);
+          endRendering(m_CommandBuffersEntities[m_CurrentFrame]);
+          m_CmdsToSubmit.emplace_back(m_CmdEntitiesStatus[m_CurrentFrame].get());
+          m_CmdEntitiesStatus[m_CurrentFrame]->done.store(true);
         }
-
-        m_API->endMarker(m_CommandBuffersEntities[m_CurrentFrame]);
-        m_API->endRendering(m_CommandBuffersEntities[m_CurrentFrame]);
-
-        m_API->transitionImageLayout(m_CommandBuffersEntities[m_CurrentFrame], m_DepthMapImages[m_CurrentFrame],
-          VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_IMAGE_ASPECT_DEPTH_BIT);
-
- //       m_API->endCommandBuffer(m_CommandBuffersShadowMap[m_CurrentFrame]);
-
-        //CommandToSubmit cmd{
-        //    m_CommandBuffersShadowMap[m_CurrentFrame],
-        //    VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-        //    m_ShadowMapSemaRenderFinished[m_CurrentFrame],
-        //    & m_CmdShadowMapStatus
-        //};
-
-        //{
-        //  std::lock_guard<std::mutex> guard(m_MutexQueueSubmit);
-        //  m_CmdsToSubmit.emplace_back(cmd);
-        //}
-    }
-
-    void Renderer::drawEntities()
-    {
-        if (0 < m_EntityManager->getEntities()->size()) {
-
-          m_API->beginCommandBuffer(m_CommandBuffersEntities[m_CurrentFrame], VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT);
-
-          drawShadowMap(m_EntityManager->getEntities(), m_LightManager->getAmbientLight());
-
-          m_API->transitionImageLayout(m_CommandBuffersEntities[m_CurrentFrame], m_SwapChainImages[m_CurrentFrame],
-            VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_ASPECT_COLOR_BIT);
-
-          m_API->transitionImageLayout(m_CommandBuffersEntities[m_CurrentFrame], m_SwapChainDepthImages[m_CurrentFrame],
-            VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL, VK_IMAGE_ASPECT_DEPTH_BIT);
-
-          m_API->beginRendering(
-            m_CommandBuffersEntities[m_CurrentFrame],
-            m_SwapChainImageViews[m_CurrentFrame],
-            m_SwapChainDepthImageViews[m_CurrentFrame],
-            VK_ATTACHMENT_LOAD_OP_LOAD,
-            VK_ATTACHMENT_STORE_OP_STORE);
-
-            m_API->setViewPort(m_CommandBuffersEntities[m_CurrentFrame]);
-            m_API->setScissor(m_CommandBuffersEntities[m_CurrentFrame]);
-
-            m_API->startMarker(m_CommandBuffersEntities[m_CurrentFrame], "entities_drawing", 0.2, 0.2, 0.9);
-
-            for (auto & entity : *m_EntityManager->getEntities()) {
-                if (!entity) continue;
-                auto meshComponent = m_ComponentManager->getComponent<MeshComponent>(entity->getID());
-                if (!meshComponent) continue;
-
-                Mesh* mesh = meshComponent->hasImpl<Mesh>();
-                auto pipeline = getPipeline(mesh->getShaderName());
-
-
-                // if (m_HasClicked && mesh->IsHit(m_RayPick)) {
-                //    PLP_DEBUG("HIT ! {}", mesh->GetName());
-                // }
-                //m_HasClicked = false;
-
-                m_API->bindPipeline(m_CommandBuffersEntities[m_CurrentFrame], pipeline->pipeline);
-
-                for (size_t i = 0; i < mesh->getData()->m_Ubos.size(); ++i) {
-                    mesh->getData()->m_Ubos[i].projection = getPerspective();
-                }
-
-                int min{ 0 };
-                int max{ 0 };
-
-                for (size_t i = 0; i < mesh->getUniformBuffers()->size(); ++i) {
-                  max = mesh->getData()->m_UbosOffset.at(i);
-                  auto ubos = std::vector<UniformBufferObject>(mesh->getData()->m_Ubos.begin() + min, mesh->getData()->m_Ubos.begin() + max);
-                  m_API->updateUniformBuffer(mesh->getUniformBuffers()->at(i), &ubos);
-
-                  min = max;
-
-                }
-                if (mesh->hasPushConstants()) {
-                  mesh->applyPushConstants(m_CommandBuffersEntities[m_CurrentFrame], pipeline->pipelineLayout, this, mesh);
-                }
-
-                try {
-                    if (m_RenderingStopped) return;
-                    m_API->draw(m_CommandBuffersEntities[m_CurrentFrame], *mesh->getDescSet(),
-                        *pipeline, mesh->getData(), mesh->getData()->m_Ubos.size(), mesh->isIndexed());
-                }
-                catch (std::exception & e) {
-                    PLP_DEBUG("Draw error: {}", e.what());
-                }
-            }
-
-            m_API->endMarker(m_CommandBuffersEntities[m_CurrentFrame]);
-            endRendering(m_CommandBuffersEntities[m_CurrentFrame]);
-            m_CmdsToSubmit.emplace_back(m_CmdEntitiesStatus[m_CurrentFrame].get());
-            m_CmdEntitiesStatus[m_CurrentFrame]->done.store(true);
-        }
+      }
     }
 
      void Renderer::drawSkybox()
@@ -430,7 +491,7 @@ namespace Poulpe
 
             if (m_RenderingStopped) return;
             m_API->draw(m_CommandBuffersSkybox[m_CurrentFrame], *mesh->getDescSet(), *pipeline,
-                skyboxData, skyboxData->m_Ubos.size(), false);
+                skyboxData, false);
 
             m_API->endMarker(m_CommandBuffersSkybox[m_CurrentFrame]);
             endRendering(m_CommandBuffersSkybox[m_CurrentFrame]);
@@ -462,8 +523,7 @@ namespace Poulpe
             }
 
             if (m_RenderingStopped) return;
-            m_API->draw(m_CommandBuffersHUD[m_CurrentFrame], *hudPart->getDescSet(), *pipeline,
-                hudPart->getData(), hudPart->getData()->m_Ubos.size());
+            m_API->draw(m_CommandBuffersHUD[m_CurrentFrame], *hudPart->getDescSet(), *pipeline, hudPart->getData());
         }
 
         m_API->endMarker(m_CommandBuffersHUD[m_CurrentFrame]);
@@ -557,7 +617,7 @@ namespace Poulpe
           //}
           //if (!m_CmdHUDStatus[m_CurrentFrame]->done.load() || m_Nodraw.load()) {
           //  m_CmdHUDStatus[m_CurrentFrame]->done.store(false);
-            drawHUD();
+            //drawHUD();
           //  //Locator::getThreadPool()->submit(threadQueueName, [this]() { drawHUD(); });
           //}
           submit();
@@ -663,16 +723,16 @@ namespace Poulpe
     {
         if (!continuousCmdBuffer) m_API->beginCommandBuffer(commandBuffer, VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT);
 
-        m_API->transitionImageLayout(commandBuffer, m_SwapChainImages[m_CurrentFrame],
+        m_API->transitionImageLayout(commandBuffer, m_SwapChainImages[m_ImageIndex],
           VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_ASPECT_COLOR_BIT);
 
-        m_API->transitionImageLayout(commandBuffer, m_SwapChainDepthImages[m_CurrentFrame],
+        m_API->transitionImageLayout(commandBuffer, m_SwapChainDepthImages[m_ImageIndex],
           VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL, VK_IMAGE_ASPECT_DEPTH_BIT);
 
         m_API->beginRendering(
           commandBuffer,
-          m_SwapChainImageViews[m_CurrentFrame],
-          m_SwapChainDepthImageViews[m_CurrentFrame],
+          m_SwapChainImageViews[m_ImageIndex],
+          m_SwapChainDepthImageViews[m_ImageIndex],
           loadOp,
           storeOp);
 
@@ -684,10 +744,10 @@ namespace Poulpe
     {
         m_API->endRendering(commandBuffer);
 
-        m_API->transitionImageLayout(commandBuffer, m_SwapChainImages[m_CurrentFrame],
+        m_API->transitionImageLayout(commandBuffer, m_SwapChainImages[m_ImageIndex],
           VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR, VK_IMAGE_ASPECT_COLOR_BIT);
 
-       m_API->transitionImageLayout(commandBuffer, m_SwapChainDepthImages[m_CurrentFrame],
+       m_API->transitionImageLayout(commandBuffer, m_SwapChainDepthImages[m_ImageIndex],
           VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR, VK_IMAGE_ASPECT_DEPTH_BIT);
 
         m_API->endCommandBuffer(commandBuffer);
@@ -731,13 +791,6 @@ namespace Poulpe
 
         auto queue = m_API->getGraphicsQueues().at(0);
 
-        VkResult submitResult = vkQueueSubmit(queue, 1, &submitInfo, m_InFlightFences[m_CurrentFrame]);
-
-        if (submitResult != VK_SUCCESS) {
-          PLP_ERROR("Error on queue submit: {}", submitResult);
-          throw std::runtime_error("Error on queueSubmit");
-        }
-
         std::vector<VkSwapchainKHR> swapChains{ m_SwapChain };
 
         VkPresentInfoKHR presentInfo{};
@@ -747,13 +800,9 @@ namespace Poulpe
         presentInfo.swapchainCount = 1;
         presentInfo.pSwapchains = swapChains.data();
         presentInfo.pImageIndices = &m_ImageIndex;
-        presentInfo.pResults = nullptr;
 
-        VkResult presentResult = vkQueuePresentKHR(queue, &presentInfo);
-        vkDeviceWaitIdle(m_API->getDevice());
-        if (presentResult != VK_SUCCESS) {
-          PLP_ERROR("Error on queue present: {}", presentResult);
-        }
+        presentInfo.pResults = nullptr;
+        m_API->submit(queue, submitInfo, presentInfo,  m_InFlightFences[m_CurrentFrame]);
 
         m_CurrentFrame = (m_CurrentFrame + 1) % static_cast<uint32_t>(m_MAX_FRAMES_IN_FLIGHT);
         //PLP_WARN("current frame: {}", m_ImageIndex);
@@ -799,7 +848,7 @@ namespace Poulpe
         m_Observers.push_back(observer);
     }
 
-    VkRenderPass Renderer::createImGuiRenderPass(VkFormat format)
+    /*VkRenderPass Renderer::createImGuiRenderPass(VkFormat format)
     {
         VkRenderPass renderPass{};
 
@@ -841,7 +890,7 @@ namespace Poulpe
             PLP_FATAL("failed to create imgui render pass : {}", result);
         }
         return renderPass;
-    }
+    }*/
 
     void Renderer::showGrid(bool show)
     {
@@ -880,5 +929,13 @@ namespace Poulpe
             hasColorAttachment,
             dynamicDepthBias
         );
+    }
+
+    void Renderer::addEntities(std::vector<Entity*> entities)
+    {
+      {
+        std::lock_guard guard(m_MutexEntitySubmit);
+        copy(entities.begin(), entities.end(), back_inserter(m_Entities));
+      }
     }
 }

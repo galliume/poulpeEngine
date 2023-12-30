@@ -36,7 +36,7 @@ namespace Poulpe
 
         float m_DeltaTime = 1.f;
         float m_Pitch;
-        float m_Speed = 1.0f;
+        float m_Speed = 10.0f;
         float m_Yaw = -90.0f;
     };
 }

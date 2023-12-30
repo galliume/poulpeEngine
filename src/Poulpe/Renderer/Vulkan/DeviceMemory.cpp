@@ -35,45 +35,54 @@ namespace Poulpe
 
     void DeviceMemory::allocateToMemory()
     {
+      {
+        std::lock_guard guard(m_MutexMemory);
         if (!m_IsAllocated) {
-            VkMemoryAllocateInfo allocInfo{};
-            allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-            allocInfo.allocationSize = m_MaxSize;
-            allocInfo.memoryTypeIndex = m_MemoryType;
+          VkMemoryAllocateInfo allocInfo{};
+          allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+          allocInfo.allocationSize = m_MaxSize;
+          allocInfo.memoryTypeIndex = m_MemoryType;
 
-            VkResult result = vkAllocateMemory(m_Device, &allocInfo, nullptr, m_Memory.get());
+          VkResult result = vkAllocateMemory(m_Device, &allocInfo, nullptr, m_Memory.get());
 
-            if (VK_SUCCESS != result) {
-                PLP_FATAL("error while allocating memory {}", result);
-                throw std::runtime_error("failed to allocate buffer memory!");
-            }
+          if (VK_SUCCESS != result) {
+            PLP_FATAL("error while allocating memory {}", result);
+            throw std::runtime_error("failed to allocate buffer memory!");
+          }
 
-            m_IsAllocated = true;
-        } else {
-            PLP_WARN("trying to re allocate memory already allocated.");
+          m_IsAllocated = true;
         }
+        else {
+          PLP_WARN("trying to re allocate memory already allocated.");
+        }
+      }
     }
 
     void DeviceMemory::bindBufferToMemory(VkBuffer & buffer, VkDeviceSize size)
     {
+      {
+        std::lock_guard guard(m_MutexMemory);
         VkResult result = vkBindBufferMemory(m_Device, buffer, *m_Memory, m_Offset);
 
         if (VK_SUCCESS != result) {
-            PLP_ERROR("BindBuffer memory failed in bindBufferToMemory");
+          PLP_ERROR("BindBuffer memory failed in bindBufferToMemory");
         }
 
 
         m_Offset += size;
 
         if (m_Offset >= m_MaxSize) {
-            m_IsFull = true;
+          m_IsFull = true;
         }
 
         m_Buffer.emplace_back(buffer);
+      }
     }
 
     void DeviceMemory::bindImageToMemory(VkImage & image, VkDeviceSize size)
     {
+      {
+        std::lock_guard guard(m_MutexMemory);
         vkBindImageMemory(m_Device, image, *m_Memory, m_Offset);
         
         m_Offset += size;// ((size / m_Alignment) + 1)* m_Alignment;
@@ -81,6 +90,7 @@ namespace Poulpe
         if (m_Offset >= m_MaxSize) {
             m_IsFull = true;
         }
+      }
     }
 
     bool DeviceMemory::hasEnoughSpaceLeft(VkDeviceSize size)

@@ -39,7 +39,7 @@ namespace Poulpe
         m_Renderer = renderer;
     }
 
-    void DestroyManager::cleanShaders(std::unordered_map<std::string, std::array<VkShaderModule, 2>> shaders)
+    void DestroyManager::cleanShaders(std::unordered_map<std::string, std::vector<VkShaderModule>> shaders)
     {
         for (auto shader : shaders) {
             vkDestroyShaderModule(m_Renderer->getDevice(), shader.second[0], nullptr);

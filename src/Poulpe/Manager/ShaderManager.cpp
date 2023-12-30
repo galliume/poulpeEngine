@@ -28,9 +28,7 @@ namespace Poulpe
       VkShaderModule vertexShaderModule = m_Renderer->createShaderModule(vertShaderCode);
       VkShaderModule fragShaderModule = m_Renderer->createShaderModule(fragShaderCode);
 
-      std::array<VkShaderModule, 2> module = { vertexShaderModule, fragShaderModule };
-
-      m_Shaders->shaders[name] = module;
+      m_Shaders->shaders[name] = { vertexShaderModule, fragShaderModule };
 
       createGraphicPipeline(name);
     }
@@ -120,6 +118,22 @@ namespace Poulpe
         samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 
         bindings = { uboLayoutBinding, samplerLayoutBinding };
+      } else if constexpr (T == DescSetLayoutType::Offscreen) {
+        VkDescriptorSetLayoutBinding uboLayoutBinding{};
+        uboLayoutBinding.binding = 0;
+        uboLayoutBinding.descriptorCount = 1;
+        uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        uboLayoutBinding.pImmutableSamplers = nullptr;
+        uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+
+        VkDescriptorSetLayoutBinding storageLayoutBinding{};
+        storageLayoutBinding.binding = 1;
+        storageLayoutBinding.descriptorCount = 1;
+        storageLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+        storageLayoutBinding.pImmutableSamplers = nullptr;
+        storageLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+
+        bindings = { uboLayoutBinding, storageLayoutBinding };
       } else {
         PLP_FATAL("unknown descSetLayoutType");
         throw std::runtime_error("unknown descSetLayoutType");
@@ -130,6 +144,8 @@ namespace Poulpe
 
     void ShaderManager::createGraphicPipeline(std::string const & shaderName)
     {
+      bool offscreen = (shaderName == "shadowMap") ? true : false;
+
       std::vector<VkDescriptorPoolSize> poolSizes{};
       VkDescriptorPoolSize dpsUbo;
       dpsUbo.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
@@ -140,9 +156,10 @@ namespace Poulpe
       dpsIS.descriptorCount = 1000;
 
       poolSizes.emplace_back(dpsUbo);
-      poolSizes.emplace_back(dpsIS);
 
-      auto shaders = getShadersInfo(shaderName);
+      if (!offscreen) poolSizes.emplace_back(dpsIS);
+
+      auto shaders = getShadersInfo(shaderName, offscreen);
 
       VkPipeline graphicPipeline{VK_NULL_HANDLE};
       VkPipelineLayout pipelineLayout{VK_NULL_HANDLE};
@@ -198,13 +215,22 @@ namespace Poulpe
       } else {
         VkPipelineVertexInputStateCreateInfo* vertexInputInfo{nullptr};
 
+        bool hasColorAttachment{true};
+        bool hasDynamicDepthBias{false};
+
         VkDescriptorPoolSize dpsSB;
         dpsSB.type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
         dpsSB.descriptorCount = 10;
 
         poolSizes.emplace_back(dpsSB);
 
-        descSetLayout = createDescriptorSetLayout<DescSetLayoutType::Entity>();
+        if (shaderName == "shadowMap" || shaderName == "shadowMapSpot") {
+          hasColorAttachment = false;
+          hasDynamicDepthBias = true;
+          descSetLayout = createDescriptorSetLayout<DescSetLayoutType::Offscreen>();
+        } else {
+          descSetLayout = createDescriptorSetLayout<DescSetLayoutType::Entity>();
+        }
         vertexInputInfo = getVertexInputState<VertexBindingType::Vertex3D>();
 
         std::vector<VkDescriptorSetLayout> dSetLayout = { descSetLayout };
@@ -218,13 +244,6 @@ namespace Poulpe
 
         pipelineLayout = m_Renderer->createPipelineLayout(dSetLayout, vkPcs);
         
-        bool hasColorAttachment{true};
-        bool hasDynamicDepthBias{false};
-
-        if (shaderName == "shadowMap" || shaderName == "shadowMapSpot" || shaderName == "quad") {
-          hasColorAttachment = false;
-          hasDynamicDepthBias = true;
-        }
         graphicPipeline = m_Renderer->createGraphicsPipeline(
           pipelineLayout,
           shaderName,
@@ -246,10 +265,13 @@ namespace Poulpe
       pipeline.descSetLayout = descSetLayout;
       pipeline.shaders = shaders;
 
+      if (shaderName == "shadowMap" || shaderName == "shadowMapSpot") {
+        pipeline.descSet = m_Renderer->createDescriptorSets(pipeline.descPool, { pipeline.descSetLayout }, 1);
+      }
       m_Renderer->addPipeline(shaderName, pipeline);
     }
 
-    std::vector<VkPipelineShaderStageCreateInfo> ShaderManager::getShadersInfo(std::string const & shaderName)
+    std::vector<VkPipelineShaderStageCreateInfo> ShaderManager::getShadersInfo(std::string const & shaderName, bool offscreen)
     {
       std::vector<VkPipelineShaderStageCreateInfo> shadersStageInfos;
 
@@ -260,12 +282,14 @@ namespace Poulpe
       vertShaderStageInfo.pName = "main";
       shadersStageInfos.emplace_back(vertShaderStageInfo);
 
-      VkPipelineShaderStageCreateInfo fragShaderStageInfo{};
-      fragShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-      fragShaderStageInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
-      fragShaderStageInfo.module = m_Shaders->shaders[shaderName][1];
-      fragShaderStageInfo.pName = "main";
-      shadersStageInfos.emplace_back(fragShaderStageInfo);
+      if (!offscreen) {
+        VkPipelineShaderStageCreateInfo fragShaderStageInfo{};
+        fragShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+        fragShaderStageInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
+        fragShaderStageInfo.module = m_Shaders->shaders[shaderName][1];
+        fragShaderStageInfo.pName = "main";
+        shadersStageInfos.emplace_back(fragShaderStageInfo);
+      }
 
       return shadersStageInfos;
     }

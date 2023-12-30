@@ -210,9 +210,13 @@ namespace Poulpe {
         void bindPipeline(VkCommandBuffer commandBuffer, VkPipeline pipeline);
 
         void draw(VkCommandBuffer commandBuffer, VkDescriptorSet descriptorSet, VulkanPipeline& pipeline, Data * data,
-            uint32_t uboCount, bool drawIndexed = true, uint32_t index = 0);
+            bool drawIndexed = true, uint32_t index = 0);
 
         VkResult queueSubmit(VkCommandBuffer commandBuffer, int queueIndex = 0);
+        void submit(VkQueue queue,
+          VkSubmitInfo submitInfo,
+          VkPresentInfoKHR presentInfo,
+          VkFence fence);
 
         void addPipelineBarriers(VkCommandBuffer commandBuffer, std::vector<VkImageMemoryBarrier> renderBarriers,
             VkPipelineStageFlags srcStageMask, VkPipelineStageFlags dstStageMask, VkDependencyFlags dependencyFlags);

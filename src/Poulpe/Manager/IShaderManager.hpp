@@ -10,7 +10,7 @@ namespace Poulpe
 {
     struct VulkanShaders
     {
-        std::unordered_map<std::string, std::array<VkShaderModule, 2>> shaders;
+        std::unordered_map<std::string, std::vector<VkShaderModule>> shaders;
     };
 
     class IShaderManager

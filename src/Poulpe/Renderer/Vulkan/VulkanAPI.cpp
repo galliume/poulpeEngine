@@ -1559,7 +1559,7 @@ namespace Poulpe {
     }
 
     void VulkanAPI::draw(VkCommandBuffer commandBuffer, VkDescriptorSet descriptorSet,
-        VulkanPipeline & pipeline, Data * data, uint32_t uboCount, bool drawIndexed, uint32_t index)
+        VulkanPipeline & pipeline, Data * data, bool drawIndexed, uint32_t index)
     {
         vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline.pipelineLayout,
             0, 1, & descriptorSet, 0, nullptr);
@@ -1573,7 +1573,7 @@ namespace Poulpe {
 
         if (drawIndexed) {
             vkCmdBindIndexBuffer(commandBuffer, data->m_IndicesBuffer.buffer, 0, VK_INDEX_TYPE_UINT32);
-            vkCmdDrawIndexed(commandBuffer, data->m_Indices.size(), uboCount, 0, 0, 0);
+            vkCmdDrawIndexed(commandBuffer, data->m_Indices.size(), data->m_Ubos.size(), 0, 0, 0);
         } else {
             vkCmdDraw(commandBuffer, data->m_Vertices.size(), 1, 0, index);
         }
@@ -2720,5 +2720,30 @@ namespace Poulpe {
         0, nullptr,
         1, &barrier
       );
+    }
+
+    void VulkanAPI::submit(
+      VkQueue queue,
+      VkSubmitInfo submitInfo,
+      VkPresentInfoKHR presentInfo,
+      VkFence fence)
+    {
+      {
+        std::lock_guard<std::mutex> guard(m_MutexQueueSubmit);
+        VkResult submitResult = vkQueueSubmit(queue, 1, &submitInfo, fence);
+
+        if (submitResult != VK_SUCCESS) {
+          PLP_ERROR("Error on queue submit: {}", submitResult);
+          throw std::runtime_error("Error on queueSubmit");
+        }
+
+        VkResult presentResult = vkQueuePresentKHR(queue, &presentInfo);
+
+        if (presentResult != VK_SUCCESS) {
+          PLP_ERROR("Error on queue present: {}", presentResult);
+        }
+
+        vkQueueWaitIdle(queue);
+      }
     }
 }

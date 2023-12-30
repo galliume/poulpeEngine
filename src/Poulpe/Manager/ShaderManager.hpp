@@ -7,7 +7,7 @@
 namespace Poulpe
 {
     enum class DescSetLayoutType {
-        Skybox, HUD, Entity
+        Skybox, HUD, Entity, Offscreen
     };
     enum class VertexBindingType {
         Vertex2D, Vertex3D
@@ -32,7 +32,7 @@ namespace Poulpe
         VkDescriptorSetLayout createDescriptorSetLayout();
         void createGraphicPipeline(std::string const & shaderName);
 
-        std::vector<VkPipelineShaderStageCreateInfo> getShadersInfo(std::string const & shaderName);
+        std::vector<VkPipelineShaderStageCreateInfo> getShadersInfo(std::string const & shaderName, bool offscreen = false);
 
         template <VertexBindingType T>
         VkPipelineVertexInputStateCreateInfo* getVertexInputState();
