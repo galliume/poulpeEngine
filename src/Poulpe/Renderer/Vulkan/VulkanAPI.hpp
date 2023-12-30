@@ -4,7 +4,7 @@
 
 #include "Poulpe/Core/PlpTypedef.hpp"
 
-#include "Poulpe/Renderer/IRenderer.hpp"
+#include "Poulpe/Renderer/IGraphicsAPI.hpp"
 #include "Poulpe/Renderer/Vulkan/DeviceMemoryPool.hpp"
 
 #include <stb_image.h>
@@ -41,11 +41,11 @@ namespace Poulpe {
         std::vector<VkPresentModeKHR> presentModes;
     };
 
-    class VulkanRenderer : public IRenderer
+    class VulkanAPI : public IGraphicsAPI
     {
     public:
-        VulkanRenderer(Window* window);
-        ~VulkanRenderer();
+        VulkanAPI(Window* window);
+        ~VulkanAPI();
 
         /**
         * Vulkan init functions, before main loop.
@@ -83,10 +83,18 @@ namespace Poulpe {
         VkPipelineLayout createPipelineLayout(std::vector<VkDescriptorSetLayout> const & descriptorSetLayouts,
             std::vector<VkPushConstantRange> const & pushConstants);
 
-        VkPipeline createGraphicsPipeline(VkPipelineLayout pipelineLayout, std::string_view name,
-            std::vector<VkPipelineShaderStageCreateInfo>shadersCreateInfos, VkPipelineVertexInputStateCreateInfo vertexInputInfo,
-            VkCullModeFlagBits cullMode = VK_CULL_MODE_BACK_BIT, bool depthTestEnable = true,
-            bool depthWriteEnable = true, bool stencilTestEnable = true, int polygoneMode = VK_POLYGON_MODE_FILL, bool hasColorAttachment = true, bool dynamicDepthBias = false);
+        VkPipeline createGraphicsPipeline(
+            VkPipelineLayout pipelineLayout,
+            std::string_view name,
+            std::vector<VkPipelineShaderStageCreateInfo> shadersCreateInfos,
+            VkPipelineVertexInputStateCreateInfo & vertexInputInfo,
+            VkCullModeFlagBits cullMode = VK_CULL_MODE_BACK_BIT, 
+            bool depthTestEnable = true,
+            bool depthWriteEnable = true,
+            bool stencilTestEnable = true,
+            int polygoneMode = VK_POLYGON_MODE_FILL,
+            bool hasColorAttachment = true,
+            bool dynamicDepthBias = false);
 
         VkSwapchainKHR createSwapChain(std::vector<VkImage> & swapChainImages,
             VkSwapchainKHR const & oldSwapChain = VK_NULL_HANDLE);
@@ -202,9 +210,13 @@ namespace Poulpe {
         void bindPipeline(VkCommandBuffer commandBuffer, VkPipeline pipeline);
 
         void draw(VkCommandBuffer commandBuffer, VkDescriptorSet descriptorSet, VulkanPipeline& pipeline, Data * data,
-            uint32_t uboCount, bool drawIndexed = true, uint32_t index = 0);
+            bool drawIndexed = true, uint32_t index = 0);
 
         VkResult queueSubmit(VkCommandBuffer commandBuffer, int queueIndex = 0);
+        void submit(VkQueue queue,
+          VkSubmitInfo submitInfo,
+          VkPresentInfoKHR presentInfo,
+          VkFence fence);
 
         void addPipelineBarriers(VkCommandBuffer commandBuffer, std::vector<VkImageMemoryBarrier> renderBarriers,
             VkPipelineStageFlags srcStageMask, VkPipelineStageFlags dstStageMask, VkDependencyFlags dependencyFlags);
@@ -289,7 +301,7 @@ namespace Poulpe {
 
         std::string getAPIVersion();
 
-       DeviceMemoryPool* getDeviceMemoryPool() { return m_DeviceMemoryPool.get(); }
+        DeviceMemoryPool* getDeviceMemoryPool() { return m_DeviceMemoryPool.get(); }
 
         void startMarker(VkCommandBuffer buffer, std::string const & name, float r, float g, float b, float a = 1.0);
 
@@ -351,7 +363,7 @@ namespace Poulpe {
         int32_t m_CurrentFrame{ 0 };
         uint32_t m_ExtensionCount;
         std::string m_apiVersion;
-        const uint32_t m_queueCount{ 2 };
+        const uint32_t m_queueCount{ 1 };
 
         Window* m_Window{ nullptr };
 

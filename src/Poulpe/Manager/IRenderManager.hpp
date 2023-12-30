@@ -14,7 +14,7 @@
 
 #include "Poulpe/GUI/Window.hpp"
 
-#include "Poulpe/Renderer/Adapter/VulkanAdapter.hpp"
+#include "Poulpe/Renderer/IRenderer.hpp"
 
 namespace Poulpe
 {
@@ -34,7 +34,7 @@ namespace Poulpe
         virtual void init() = 0;
         virtual bool isLoaded() = 0;
         virtual LightManager* getLightManager() = 0;
-        virtual VulkanAdapter* getRendererAdapter() = 0;
+        virtual IRenderer* getRenderer() = 0;
         virtual ShaderManager* getShaderManager() = 0;
         virtual TextureManager* getTextureManager() = 0;
         virtual Window* getWindow() = 0;

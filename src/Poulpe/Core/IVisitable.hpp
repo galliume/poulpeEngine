@@ -2,6 +2,8 @@
 
 #include "Poulpe/Core/PlpTypedef.hpp"
 
+#include "Poulpe/Renderer/IRenderer.hpp"
+
 namespace Poulpe
 {
     class IVisitable
@@ -22,7 +24,7 @@ namespace Poulpe
         virtual void setApplyPushConstants(
           std::function<void(VkCommandBuffer& commandBuffer,
           VkPipelineLayout pipelineLayout,
-          VulkanAdapter* const vulkanAdapter,
+          IRenderer* const vulkanAdapter,
           IVisitable* const mesh)> fn) = 0;
 
         virtual void setData(Data data) = 0;

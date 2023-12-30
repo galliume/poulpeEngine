@@ -6,7 +6,7 @@
 
 #include "Manager/RenderManager.hpp"
 
-#include "Renderer/Adapter/VulkanAdapter.hpp"
+#include "Renderer/IRenderer.hpp"
 
 namespace Poulpe
 {

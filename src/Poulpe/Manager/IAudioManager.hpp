@@ -10,7 +10,7 @@ namespace Poulpe
 
     public:
         IAudioManager() = default;
-        ~IAudioManager() = default;
+        virtual ~IAudioManager() = default;
 
         virtual std::vector<std::string> const getAmbientSound() = 0;
         virtual unsigned int getAmbientSoundIndex() = 0;

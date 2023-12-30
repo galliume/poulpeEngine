@@ -21,6 +21,6 @@ namespace Poulpe
     public:
         static std::vector<TinyObjData> loadData(std::string const & path, bool shouldInverseTextureY);
 
-        static std::vector<Poulpe::material_t> m_TinyObjMaterials;
+        static std::vector<material_t> m_TinyObjMaterials;
     };
 }

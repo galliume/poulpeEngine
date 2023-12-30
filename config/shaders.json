@@ -31,10 +31,6 @@
 	"shadowMapSpot": {
       "vert": "assets/shaders/spv/shadowMapSpot_vert.spv",
       "frag": "assets/shaders/spv/shadowMapSpot_frag.spv"
-    },
-    "quad": {
-      "vert": "assets/shaders/spv/quad_vert.spv",
-      "frag": "assets/shaders/spv/quad_frag.spv"
     }	
   }
  }

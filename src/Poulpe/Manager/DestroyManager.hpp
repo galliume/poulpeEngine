@@ -3,7 +3,7 @@
 #include "Poulpe/Component/Entity.hpp"
 #include "Poulpe/Component/Mesh.hpp"
 
-#include "Poulpe/Renderer/Vulkan/VulkanRenderer.hpp"
+#include "Poulpe/Renderer/IRenderer.hpp"
 
 /**
 * @TODO refactor all destroy system....
@@ -12,12 +12,14 @@ namespace Poulpe
 {
     class DestroyManager
     {
-    public:
+    public: 
         DestroyManager() = default;
 
-        //@todo should not be specific impl
-        void setRenderer(VulkanRenderer* renderer);
-        void addMemoryPool(DeviceMemoryPool* deviceMemoryPool) { m_DeviceMemoryPool = deviceMemoryPool; }
+        inline void addMemoryPool(DeviceMemoryPool* const deviceMemoryPool) { m_DeviceMemoryPool = deviceMemoryPool; }
+        void cleanDeviceMemory();
+
+        template<std::derived_from<Entity> T>
+        void cleanEntity(T* entity);
 
         template<std::derived_from<Entity> T>
         void cleanEntities(std::vector<std::unique_ptr<T>> & entities);
@@ -25,16 +27,13 @@ namespace Poulpe
         template<std::derived_from<Entity> T>
         void cleanEntities(std::vector<T*> & entities);
 
-        template<std::derived_from<Entity> T>
-        void cleanEntity(T* entity);
-
-        void cleanShaders(std::unordered_map<std::string, std::array<VkShaderModule, 2>> shaders);
-        void cleanTextures(std::unordered_map<std::string, Texture> textures);
+        void cleanShaders(std::unordered_map<std::string, std::vector<VkShaderModule>> shaders);
         void cleanTexture(Texture textures);
-        void cleanDeviceMemory();
+        void cleanTextures(std::unordered_map<std::string, Texture> textures);
+        void setRenderer(IRenderer* renderer);
 
     private:
-        VulkanRenderer* m_Renderer;
         DeviceMemoryPool* m_DeviceMemoryPool;
+        IRenderer* m_Renderer;
     };
 }

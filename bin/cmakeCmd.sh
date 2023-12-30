@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 configure() {
+	
 	if [ -d "./${CMAKE_BUILD_DIR}" ]; then
 		echo "Directory ${CMAKE_BUILD_DIR} exists."
 
@@ -8,6 +9,7 @@ configure() {
 			rm "./${CMAKE_BUILD_DIR}" -rf
 			echo "Directory ${CMAKE_BUILD_DIR} deleted."
 			mkdir "./${CMAKE_BUILD_DIR}"
+			mkdir "./${CMAKE_BUILD_DIR}/${CMAKE_BUILD_TYPE}"
 			echo "Directory ${CMAKE_BUILD_DIR} freshly recreated."
 		fi
 	else
@@ -16,16 +18,14 @@ configure() {
 		fi
 		
 		mkdir "./${CMAKE_BUILD_DIR}"
+		mkdir "./${CMAKE_BUILD_DIR}/${CMAKE_BUILD_TYPE}"
 		echo "Directory ${CMAKE_BUILD_DIR} freshly recreated."
 	fi
 
 	detectOs
 	OS=$?
 	
-	echo "Moving to ${CMAKE_BUILD_DIR}"
-	cd "./${CMAKE_BUILD_DIR}"
-
-
+	CMAKE_BUILD_DIR="${CMAKE_BUILD_DIR}/${CMAKE_BUILD_TYPE}"
 	NINJA=""
 	CONFIG_TYPE="-DCMAKE_CONFIGURATION_TYPES=Debug;Release;RelWithDebInfo"
 	CXX_COMPILER="-DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}"
@@ -33,6 +33,7 @@ configure() {
 	TOOLSET="-DCMAKE_GENERATOR_TOOLSET=${CMAKE_TOOLSET}"
 	USE_CCACHE="-DUSE_CCACHE=${USE_CCACHE}"
  	EXPORT_COMPILE_CMD="-DCMAKE_EXPORT_COMPILE_COMMANDS=ON"
+	CMAKE_BUILD_TYPE="-DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}"
 
 	if [[ "$OS" == 2 ]]; then
 		TOOLSET=""
@@ -52,8 +53,8 @@ configure() {
 	fi	
 
 	echo "Starting configuration with options: "
-	echo "Build dir: ${CMAKE_BUILD_DIR}/${CMAKE_BUILD_TYPE}"
-	echo "Building from: ../${CMAKE_BUILD_DIR}"
+	echo "Build dir: ${CMAKE_BUILD_DIR}"
+	echo "${CMAKE_BUILD_TYPE}"
 	echo "${CXX_COMPILER}"
 	echo "${C_COMPILER}"
 	echo "CMAKE_J: ${CMAKE_J}"
@@ -63,7 +64,9 @@ configure() {
 	echo "${USE_CCACHE}"
 	echo "${EXPORT_COMPILE_CMD}"
 
-	cmake ${NINJA} ${CONFIG_TYPE} ${CXX_COMPILER} ${C_COMPILER} ${TOOLSET} ${USE_CCACHE} ${EXPORT_COMPILE_CMD} ..
+	CMAKE_CMD="cmake -B ${CMAKE_BUILD_DIR} ${NINJA} ${CONFIG_TYPE} ${CMAKE_BUILD_TYPE} ${CXX_COMPILER} ${C_COMPILER} ${TOOLSET} ${USE_CCACHE} ${EXPORT_COMPILE_CMD}"
+	echo "${CMAKE_CMD}"
+	${CMAKE_CMD}
 
 	RESULT=$?
 	
@@ -75,7 +78,7 @@ configure() {
 build() {
 	if [ -d "./${CMAKE_BUILD_DIR}" ]; then
 		
-		cd "${CMAKE_BUILD_DIR}"
+		cd "${CMAKE_BUILD_DIR}/${CMAKE_BUILD_TYPE}"
 
 		echo "Starting building"
 		cmake --build . -j${CMAKE_J}

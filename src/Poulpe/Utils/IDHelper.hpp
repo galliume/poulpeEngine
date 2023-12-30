@@ -15,14 +15,14 @@ namespace Poulpe
     public:
         static IDType getGUID()
         {
-            std::uint64_t millis = std::chrono::duration_cast<std::chrono::milliseconds>(
+            auto millis = static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::milliseconds>(
                 std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::system_clock::now()).time_since_epoch()
-            ).count();
+            ).count());
 
             std::random_device rd;
             std::mt19937_64 gen(rd());
             std::uniform_int_distribution<uint64_t> dis(0, std::numeric_limits<uint64_t>::max());
-            uint64_t random_number = dis(gen);
+            std::uint64_t random_number = dis(gen);
 
             return millis + random_number;
         }

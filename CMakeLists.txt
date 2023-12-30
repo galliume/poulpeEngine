@@ -92,7 +92,6 @@ add_subdirectory(${PROJECT_SOURCE_DIR}/src/Poulpe/Core)
 add_subdirectory(${PROJECT_SOURCE_DIR}/src/Poulpe/GUI)
 add_subdirectory(${PROJECT_SOURCE_DIR}/src/Poulpe/Manager)
 add_subdirectory(${PROJECT_SOURCE_DIR}/src/Poulpe/Renderer)
-add_subdirectory(${PROJECT_SOURCE_DIR}/src/Poulpe/Renderer/Adapter)
 add_subdirectory(${PROJECT_SOURCE_DIR}/src/Poulpe/Renderer/Vulkan)
 add_subdirectory(${PROJECT_SOURCE_DIR}/src/Poulpe/Utils)
 
@@ -138,12 +137,17 @@ if(MSVC)
   set(DEBUG_OPTIONS "/WX;/W4")
   set(RELEASE_OPTIONS "-O2")
 else()
-  set(DEBUG_OPTIONS "-Wextra -Wshadow -Wformat=2 -Wunused -Wconversion -Werror")
+  set(DEBUG_OPTIONS "-Wall;-Wextra;-Wshadow;-Wformat=2;-Wunused;-Werror")
   set(RELEASE_OPTIONS "-O2")
 endif()
 
 target_compile_options(${PROJECT_NAME} PRIVATE "$<$<CONFIG:DEBUG>:${DEBUG_OPTIONS}>")
 target_compile_options(${PROJECT_NAME} PRIVATE "$<$<CONFIG:RELEASE>:${RELEASE_OPTIONS}>")
+
+target_compile_options(miniaudio PRIVATE
+  $<$<CXX_COMPILER_ID:MSVC>:/W0 /O2>
+  $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-w -O2>
+)
 
 target_compile_options(miniaudio PRIVATE
   $<$<CXX_COMPILER_ID:MSVC>:/W0 /O2>

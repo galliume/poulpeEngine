@@ -3,12 +3,11 @@
 #include "IInputManager.hpp"
 
 #include "Poulpe/Component/Camera.hpp"
+
 #include "Poulpe/GUI/Window.hpp"
 
 namespace Poulpe
 {
-    class VulkanAdapter; //@todo replace with interface
-
     class InputManager : IInputManager
     {
     public:
@@ -16,7 +15,6 @@ namespace Poulpe
 
         virtual void init(nlohmann::json inputConfig) override;
 
-        void inline addRenderer(Poulpe::VulkanAdapter* adapter) { m_Adapter = adapter; };
         void key(int key, int scancode, int action, int mods);
         void mouseButton(int button, int action, int mods);
         void saveLastMousePos(double xPos, double yPos);
@@ -30,7 +28,6 @@ namespace Poulpe
         double m_LastX;
         double m_LastY;
 
-        VulkanAdapter* m_Adapter;
         Camera* m_Camera;
         Window* m_Window;
 

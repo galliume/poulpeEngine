@@ -23,7 +23,8 @@ set(SRC_LIST ${CMAKE_CURRENT_SOURCE_DIR}/AudioManager.cpp
              ${CMAKE_CURRENT_SOURCE_DIR}/TextureManager.hpp
 	     ${CMAKE_CURRENT_SOURCE_DIR}/ComponentManager.cpp
              ${CMAKE_CURRENT_SOURCE_DIR}/ComponentManager.hpp
-	     ${CMAKE_CURRENT_SOURCE_DIR}/SystemManager.cpp
+             ${CMAKE_CURRENT_SOURCE_DIR}/IComponentManager.hpp
+             ${CMAKE_CURRENT_SOURCE_DIR}/SystemManager.cpp
              ${CMAKE_CURRENT_SOURCE_DIR}/SystemManager.hpp
 	     ${CMAKE_CURRENT_SOURCE_DIR}/ILightManager.hpp
              ${CMAKE_CURRENT_SOURCE_DIR}/LightManager.cpp

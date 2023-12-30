@@ -1,5 +1,4 @@
 #include "Skybox.hpp"
-#include "Poulpe/Renderer/Adapter/VulkanAdapter.hpp"
 
 namespace Poulpe
 {
@@ -18,10 +17,10 @@ namespace Poulpe
 
       imageInfos.emplace_back(imageInfo);
 
-      auto pipeline = m_Adapter->getPipeline(mesh->getShaderName());
-      VkDescriptorSet descSet = m_Adapter->rdr()->createDescriptorSets(pipeline->descPool, { pipeline->descSetLayout }, 1);
+      auto pipeline = m_Renderer->getPipeline(mesh->getShaderName());
+      VkDescriptorSet descSet = m_Renderer->createDescriptorSets(pipeline->descPool, { pipeline->descSetLayout }, 1);
 
-      m_Adapter->rdr()->updateDescriptorSets(*mesh->getUniformBuffers(), descSet, imageInfos);
+      m_Renderer->updateDescriptorSets(*mesh->getUniformBuffers(), descSet, imageInfos);
 
       mesh->setDescSet(descSet);
     }
@@ -30,13 +29,13 @@ namespace Poulpe
     {
         mesh->setApplyPushConstants([](VkCommandBuffer& commandBuffer,
             VkPipelineLayout pipelineLayout,
-            VulkanAdapter* const adapter,
+            IRenderer* const renderer,
             IVisitable* const mesh) {
 
             constants pushConstants{};
             pushConstants.textureIDBB = glm::vec3(mesh->getData()->m_TextureIndex, 0.0f, 0.0f);
-            pushConstants.view = glm::mat4(glm::mat3(adapter->getCamera()->lookAt()));
-            pushConstants.viewPos = adapter->getCamera()->getPos();
+            pushConstants.view = glm::mat4(glm::mat3(renderer->getCamera()->lookAt()));
+            pushConstants.viewPos = renderer->getCamera()->getPos();
 
             vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(constants),
                 & pushConstants);
@@ -96,20 +95,20 @@ namespace Poulpe
       UniformBufferObject ubo;
       ubo.model = glm::mat4(0.0f);
       //ubo.view = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
-      ubo.projection = m_Adapter->getPerspective();
+      ubo.projection = m_Renderer->getPerspective();
 
-      auto commandPool = m_Adapter->rdr()->createCommandPool();
+      auto commandPool = m_Renderer->createCommandPool();
 
       Data data;
       data.m_Textures.emplace_back("skybox");
       data.m_Vertices = skyVertices;
-      data.m_VertexBuffer = m_Adapter->rdr()->createVertexBuffer(commandPool, skyVertices);
+      data.m_VertexBuffer = m_Renderer->createVertexBuffer(commandPool, skyVertices);
       data.m_Ubos.emplace_back(ubo);
       data.m_TextureIndex = 0;
 
-      vkDestroyCommandPool(m_Adapter->rdr()->getDevice(), commandPool, nullptr);
+      vkDestroyCommandPool(m_Renderer->getDevice(), commandPool, nullptr);
 
-      Buffer uniformBuffer = m_Adapter->rdr()->createUniformBuffers(1);
+      Buffer uniformBuffer = m_Renderer->createUniformBuffers(1);
       mesh->getUniformBuffers()->emplace_back(uniformBuffer);
 
       mesh->setName("skybox");
@@ -118,7 +117,7 @@ namespace Poulpe
       setPushConstants(mesh);
 
       for (uint32_t i = 0; i < mesh->getUniformBuffers()->size(); i++) {
-        m_Adapter->rdr()->updateUniformBuffer(mesh->getUniformBuffers()->at(i), &data.m_Ubos);
+        m_Renderer->updateUniformBuffer(mesh->getUniformBuffers()->at(i), &data.m_Ubos);
       }
 
       createDescriptorSet(mesh);
