@@ -24,9 +24,6 @@ layout(push_constant) uniform constants
 layout(location = 0) in vec3 pos;
 layout(location = 1) in vec3 normal;
 layout(location = 2) in vec2 texCoord;
-layout(location = 3) in vec4 tangent;
-layout(location = 4) in vec4 fidtidBB;
-layout(location = 5) in vec3 vColor;
 
 vec3 unproject(float x, float y, float z, mat4 view, mat4 proj) {
     vec4 unprojected =  inverse(view) * inverse(proj) * vec4(x, y, z, 1.0);

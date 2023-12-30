@@ -7,7 +7,7 @@ namespace Poulpe
     {
     public:
         IConfigManager() = default;
-        ~IConfigManager() = default;
+        virtual ~IConfigManager() = default;
 
         virtual nlohmann::json appConfig() const = 0;
         virtual std::vector<std::string> listLevels() const = 0;

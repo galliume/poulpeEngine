@@ -13,7 +13,7 @@ namespace Poulpe
     
         ThreadPool() : m_Done(false), m_Joiner(m_Threads)
         {
-            unsigned const threadCount = 5;//std::thread::hardware_concurrency();
+            unsigned const threadCount = std::thread::hardware_concurrency() / 2;//using all threads capacity ?
 
             try {
                 for (unsigned i = 0; i < threadCount; ++i) {

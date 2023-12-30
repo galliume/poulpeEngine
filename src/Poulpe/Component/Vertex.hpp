@@ -15,7 +15,7 @@ namespace Poulpe
         alignas(16) glm::vec4 fidtidBB;
         alignas(16) glm::vec3 color;
 
-        static VkVertexInputBindingDescription GetBindingDescription() {
+        static VkVertexInputBindingDescription getBindingDescription() {
 
             VkVertexInputBindingDescription bindingDescription{};
             bindingDescription.binding = 0;
@@ -25,7 +25,7 @@ namespace Poulpe
             return bindingDescription;
         }
 
-        static std::array<VkVertexInputAttributeDescription, 6> GetAttributeDescriptions() {
+        static std::array<VkVertexInputAttributeDescription, 6> getAttributeDescriptions() {
 
             std::array<VkVertexInputAttributeDescription, 6> attributeDescriptions{};
             attributeDescriptions[0].binding = 0;

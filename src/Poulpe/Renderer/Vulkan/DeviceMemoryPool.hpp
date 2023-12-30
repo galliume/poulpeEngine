@@ -16,8 +16,14 @@ namespace Poulpe
           VkPhysicalDeviceMaintenance3Properties maintenanceProperties,
           VkPhysicalDeviceMemoryProperties memProperties);
 
-        DeviceMemory* get(VkDevice& device, VkDeviceSize size, uint32_t memoryType,
-          VkBufferUsageFlags usage, DeviceBufferType memType = DeviceBufferType::UNIFORM, bool forceNew = false);
+        DeviceMemory* get(
+          VkDevice const & device,
+          VkDeviceSize const size,
+          uint32_t const memoryType,
+          VkBufferUsageFlags const usage,
+          VkDeviceSize const alignment,
+          DeviceBufferType const bufferType,
+          bool forceNew = false);
 
         std::unordered_map<uint32_t, std::unordered_map<VkBufferUsageFlags,
           std::vector<std::unique_ptr<DeviceMemory>>>>* getPool() { return & m_Pool; }
@@ -35,7 +41,7 @@ namespace Poulpe
         std::vector<VkDeviceSize> m_MemoryAllocationSize{0};
         unsigned int m_DeviceMemoryCount{ 0 };
         unsigned int const m_MaxUniform{ 1000 };
-        unsigned int const m_MaxStorage{ 2 };
+        unsigned int const m_MaxStorage{ 5 };
         unsigned int const m_MaxStaging{ 5 };
     };
 }

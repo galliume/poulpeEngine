@@ -4,14 +4,13 @@
 
 namespace Poulpe
 {
-    class Crosshair : public AbstractRenderer
+    class ShadowMap : public AbstractRenderer
     {
     public:
-        Crosshair() = default;
-        ~Crosshair() = default;
+        ShadowMap() = default;
 
         void createDescriptorSet(IVisitable* const mesh) override;
         void setPushConstants(IVisitable* const mesh) override;
-        void visit(float const deltaTime, IVisitable* const mesh) override;
+        void visit(float const deltaTime, IVisitable* const visitable) override;
     };
 }

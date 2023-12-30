@@ -3,7 +3,7 @@
 
 namespace Poulpe
 {
-    class ConfigManager : IConfigManager
+    class ConfigManager : public IConfigManager
     {
     public:
         ConfigManager();

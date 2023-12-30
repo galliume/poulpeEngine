@@ -12,13 +12,13 @@ namespace Poulpe
         AbstractRenderer() = default;
         ~AbstractRenderer() = default;
 
-    void init(VulkanAdapter* const adapter,
-        TextureManager* const textureManager,
-        LightManager* const lightManager) override;
+    void init(IRenderer* const renderer,
+        ITextureManager* const textureManager,
+        ILightManager* const lightManager) override;
 
     protected:
-        VulkanAdapter* m_Adapter;
-        TextureManager* m_TextureManager;
-        LightManager* m_LightManager;
+        IRenderer* m_Renderer;
+        ITextureManager* m_TextureManager;
+        ILightManager* m_LightManager;
     };
 }

@@ -16,9 +16,9 @@ namespace Poulpe
     {
         alignas(16) glm::mat4 model;
         alignas(16) glm::mat4 projection;
-        alignas(4) float constant{ 1.0 };
-        alignas(4) float linear{ 0.09 };
-        alignas(4) float quadratic{ 0.032 };
+        alignas(4) float constant{ 1.0f };
+        alignas(4) float linear{ 0.09f };
+        alignas(4) float quadratic{ 0.032f };
         alignas(8) glm::vec2 texSize;
     };
 
@@ -37,7 +37,7 @@ namespace Poulpe
         //constant, linear, quadratiq
         alignas(16) glm::vec3 clq;
         //cutOff, outerCutoff Blank
-        alignas(16) glm::vec3 coB{ 1.0, 0.0, 0.0 };
+        alignas(16) glm::vec3 coB{ 1.0f, 0.0f, 0.0f };
         alignas(16) glm::mat4 view;
         alignas(16) glm::mat4 projection;
         alignas(16) glm::mat4 lightSpaceMatrix;

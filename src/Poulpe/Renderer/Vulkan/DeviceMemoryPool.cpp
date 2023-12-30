@@ -2,7 +2,8 @@
 
 namespace Poulpe
 {
-    DeviceMemoryPool::DeviceMemoryPool(VkPhysicalDeviceProperties2 deviceProperties,
+    DeviceMemoryPool::DeviceMemoryPool(
+      VkPhysicalDeviceProperties2 deviceProperties,
       VkPhysicalDeviceMaintenance3Properties maintenanceProperties,
       VkPhysicalDeviceMemoryProperties memProperties)
       : m_DeviceProperties(deviceProperties),
@@ -12,15 +13,20 @@ namespace Poulpe
         m_MemoryAllocationSize.resize(m_MemProperties.memoryTypeCount);
     }
 
-    DeviceMemory* DeviceMemoryPool::get(VkDevice& device, VkDeviceSize size,
-      uint32_t memoryType, VkBufferUsageFlags usage, DeviceBufferType bufferType,
+    DeviceMemory* DeviceMemoryPool::get(
+      VkDevice const & device,
+      VkDeviceSize const size,
+      uint32_t const memoryType,
+      VkBufferUsageFlags const usage,
+      VkDeviceSize const alignment,
+      DeviceBufferType const bufferType,
       bool forceNew)
     {
         if (m_MemoryAllocationCount > m_DeviceProperties.properties.limits.maxMemoryAllocationCount) {
           throw std::runtime_error("Max number of active allocations reached");
         }
 
-       unsigned int bufferSize;
+       VkDeviceSize bufferSize;
        VkDeviceSize maxBufferSize = m_MemProperties.memoryHeaps[m_MemProperties.memoryTypes[memoryType].heapIndex].size;
        std::string bufferTypeDebug;
 
@@ -63,7 +69,8 @@ namespace Poulpe
             throw std::runtime_error("Max size of memory allocation reached");
         }
 
-        m_Pool[memoryType][usage].emplace_back(std::make_unique<DeviceMemory>(device, memoryType, usage, bufferSize, m_DeviceMemoryCount));
+        m_Pool[memoryType][usage].emplace_back(std::make_unique<DeviceMemory>(
+          device, memoryType, bufferSize, m_DeviceMemoryCount, alignment));
         m_MemoryAllocationCount += 1;
         m_MemoryAllocationSize.at(memoryType) += bufferSize;
         /*PLP_DEBUG("DM CREATION: id {}, {}, type {} usage {} size {}", m_DeviceMemoryCount, bufferTypeDebug, memoryType, usage, bufferSize);*/
@@ -76,7 +83,8 @@ namespace Poulpe
           throw std::runtime_error("Max size of memory allocation reached");
         }
 
-        m_Pool[memoryType][usage].emplace_back(std::make_unique<DeviceMemory>(device, memoryType, usage, bufferSize, m_DeviceMemoryCount));
+        m_Pool[memoryType][usage].emplace_back(std::make_unique<DeviceMemory>(
+          device, memoryType, bufferSize, m_DeviceMemoryCount, alignment));
         m_MemoryAllocationCount += 1;
         m_MemoryAllocationSize.at(memoryType) += bufferSize;
         /*PLP_DEBUG("DM CREATION: id {}, {}, type {} usage {} size {}", m_DeviceMemoryCount, bufferTypeDebug, memoryType, usage, bufferSize);*/

@@ -80,8 +80,8 @@ namespace Poulpe
 
         for (auto& entities : m_EntityConfig["entities"].items()) {
             auto textures = entities.value();
-            for (auto& [key, path] : textures["textures"].items()) {
-                m_TexturesConfig["textures"][key] = static_cast<std::string>(path);
+            for (auto& [key, texpath] : textures["textures"].items()) {
+                m_TexturesConfig["textures"][key] = static_cast<std::string>(texpath);
             }
         }
         return m_EntityConfig;

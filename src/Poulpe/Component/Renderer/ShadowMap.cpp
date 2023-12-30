@@ -1,10 +1,10 @@
-#include "Basic.hpp"
+#include "ShadowMap.hpp"
 
 namespace Poulpe
 {
     struct constants;
 
-    void Basic::createDescriptorSet(IVisitable* const mesh)
+    void ShadowMap::createDescriptorSet(IVisitable* const mesh)
     {
       std::vector<VkDescriptorImageInfo> imageInfos;
       std::vector<VkDescriptorImageInfo> imageInfoSpec;
@@ -17,96 +17,12 @@ namespace Poulpe
         mesh->getData()->mapsUsed.w = 1.0f;
       }
 
-      Texture tex2;
-      tex2 = m_TextureManager->getTextures()["_plp_empty"];
-
-      Texture tex3;
-      tex3 = m_TextureManager->getTextures()["_plp_empty"];
-
-      Texture alpha;
-      alpha = m_TextureManager->getTextures()["_plp_empty"];
-
-      if (!mesh->getData()->m_Textures.at(1).empty()) {
-        tex2 = m_TextureManager->getTextures()[mesh->getData()->m_Textures.at(1)];
-      }
-
-      if (!mesh->getData()->m_Textures.at(2).empty()) {
-        tex3 = m_TextureManager->getTextures()[mesh->getData()->m_Textures.at(2)];
-      }
-
-      if (!mesh->getData()->m_TextureAlpha.empty()) {
-        mesh->getData()->mapsUsed.z = 1.0f;
-        alpha = m_TextureManager->getTextures()[mesh->getData()->m_TextureAlpha];
-      }
-
       VkDescriptorImageInfo imageInfo{};
       imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
       imageInfo.imageView = tex.getImageView();
       imageInfo.sampler = tex.getSampler();
 
-      VkDescriptorImageInfo imageInfo2{};
-      imageInfo2.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-      imageInfo2.imageView = tex2.getImageView();
-      imageInfo2.sampler = tex2.getSampler();
-
-      VkDescriptorImageInfo imageInfo3{};
-      imageInfo3.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-      imageInfo3.imageView = tex3.getImageView();
-      imageInfo3.sampler = tex3.getSampler();
-
-      VkDescriptorImageInfo imageInfoAlpha{};
-      imageInfoAlpha.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-      imageInfoAlpha.imageView = alpha.getImageView();
-      imageInfoAlpha.sampler = alpha.getSampler();
-
       imageInfos.emplace_back(imageInfo);
-      imageInfos.emplace_back(imageInfo2);
-      imageInfos.emplace_back(imageInfo3);
-      imageInfos.emplace_back(imageInfoAlpha);
-
-      std::string specMapName = "_plp_empty";
-      std::string bumpMapName = "_plp_empty";
-
-      if (!mesh->getData()->m_TextureSpecularMap.empty()
-        && m_TextureManager->getTextures().contains(mesh->getData()->m_TextureSpecularMap)) {
-        specMapName = mesh->getData()->m_TextureSpecularMap;
-        mesh->getData()->mapsUsed.y = 1.0f;
-      }
-
-      Texture texSpecularMap = m_TextureManager->getTextures()[specMapName];
-
-      if (!mesh->getData()->m_TextureBumpMap.empty()
-        && m_TextureManager->getTextures().contains(mesh->getData()->m_TextureBumpMap)) {
-        bumpMapName = mesh->getData()->m_TextureBumpMap;
-        mesh->getData()->mapsUsed.x = 1.0f;
-      }
-
-      Texture texBumpMap = m_TextureManager->getTextures()[bumpMapName];
-
-      VkDescriptorImageInfo imageInfoSpecularMap{};
-      imageInfoSpecularMap.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-      imageInfoSpecularMap.imageView = texSpecularMap.getImageView();
-      imageInfoSpecularMap.sampler = texSpecularMap.getSampler();
-
-      VkDescriptorImageInfo imageInfoBumpMap{};
-      imageInfoBumpMap.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-      imageInfoBumpMap.imageView = texBumpMap.getImageView();
-      imageInfoBumpMap.sampler = texBumpMap.getSampler();
-
-      VkDescriptorImageInfo shadowMapAmbient{};
-      shadowMapAmbient.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-      shadowMapAmbient.imageView = m_Renderer->getDepthMapImageViews()->at(0);
-      shadowMapAmbient.sampler = m_Renderer->getDepthMapSamplers()->at(0);
-
-      //VkDescriptorImageInfo shadowMapSpot{};
-      //shadowMapSpot.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-      //shadowMapSpot.imageView = m_Renderer->getDepthMapImageViews()->at(1);
-      //shadowMapSpot.sampler = m_Renderer->getDepthMapSamplers()->at(1);
-
-      imageInfos.emplace_back(imageInfoSpecularMap);
-      imageInfos.emplace_back(imageInfoBumpMap);
-      imageInfos.emplace_back(shadowMapAmbient);
-      //imageInfos.emplace_back(shadowMapSpot);
 
       auto pipeline = m_Renderer->getPipeline(mesh->getShaderName());
       VkDescriptorSet descSet = m_Renderer->createDescriptorSets(pipeline->descPool, { pipeline->descSetLayout }, 1);
@@ -122,7 +38,7 @@ namespace Poulpe
       mesh->setDescSet(descSet);
     }
 
-    void Basic::setPushConstants(IVisitable* const mesh)
+    void ShadowMap::setPushConstants(IVisitable* const mesh)
     {
         mesh->setApplyPushConstants([](
             VkCommandBuffer & commandBuffer, 
@@ -142,7 +58,7 @@ namespace Poulpe
         mesh->setHasPushConstants();
     }
 
-    void Basic::visit([[maybe_unused]] float const deltaTime, IVisitable* const mesh)
+    void ShadowMap::visit([[maybe_unused]] float const deltaTime, IVisitable* const mesh)
     {
       if (!mesh && !mesh->isDirty()) return;
 
