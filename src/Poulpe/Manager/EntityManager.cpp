@@ -150,14 +150,6 @@ namespace Poulpe
                 static_cast<bool>(data["inverseTextureY"]),
                 hasBbox, hasAnimation, isPointLight
               );
-
-              ////@todo add component type in json config file
-              //for (auto& part : parts) {
-              //  part->setHasBbox(hasBbox);
-              //  part->setHasAnimation(hasAnimation);
-              //  part->setIsPointLight(isPointLight);
-              //}
-              //addEntity(parts);
             }
           }
         } else {
@@ -220,13 +212,6 @@ namespace Poulpe
               hasBbox, hasAnimation, isPointLight
             );
 
-            //for (auto& part : parts) {
-            //  part->setHasBbox(hasBbox);
-            //  part->setHasAnimation(hasAnimation);
-            //  part->setIsPointLight(isPointLight);
-            //}
-            //addEntity(std::move(parts));
-
             TinyObjLoader::m_TinyObjMaterials.clear();
           }
         }
@@ -238,130 +223,13 @@ namespace Poulpe
     return entitiesFuture;
   }
 
-  EntityNode const * EntityManager::getWorldNode()
+  EntityNode * EntityManager::getWorldNode()
   {
     {
       std::lock_guard guard(m_MutexWorldNode);
       return m_WorldNode.get();
     }
   }
-
-  //void EntityManager::addEntity(Mesh* mesh)
-  //{
-    //auto* entity = new Entity();
-    ////@todo change for archetype id ?
-    //entity->setName(mesh->getName());
-
-    //if (mesh->hasAnimation()) {
-    //  //@todo temp until lua scripting
-    //  auto* animImpl = new AnimImpl();
-    //  m_ComponentManager->addComponent<AnimationComponent>(entity->getID(), animImpl);
-    //}
-
-    //m_ComponentManager->addComponent<MeshComponent>(entity->getID(), mesh);
-
-    //auto basicRdrImpl = RendererFactory::create<Basic>();
-    //m_ComponentManager->addComponent<RenderComponent>(entity->getID(), basicRdrImpl);
-    //basicRdrImpl->init(m_Renderer, m_TextureManager, m_LightManager);
-    //basicRdrImpl->visit(0, mesh);
-
-    //{
-    //  std::lock_guard guard(m_MutexWorldNode);
-    //  m_WorldNode->addChild(entity);
-    //}
-    //for (auto& mesh : meshes) {
-    //  uint64_t count = m_LoadedEntities.count(mesh->getName().c_str());
-
-    //  if (0 != count) {
-    //    Data* data = mesh->getData();
-
-    //    auto existingEntity = m_Entities[m_LoadedEntities[mesh->getName().c_str()][1]].get();
-
-    //    auto meshComponent = m_ComponentManager->getComponent<MeshComponent>(existingEntity->getID());
-    //    Mesh* exisitingMesh = meshComponent->hasImpl<Mesh>();
-    //    exisitingMesh->addUbos(data->m_Ubos);
-
-    //    //UniformBufferObject ubo{};
-
-    //    //glm::mat4 transform = glm::translate(
-    //    //    glm::mat4(1),
-    //    //    mesh->getBBox()->center) * glm::scale(glm::mat4(1),
-    //    //        mesh->getBBox()->size);
-
-    //    //ubo.model = mesh->getBBox()->position * transform;
-    //    //existingEntity->getMesh()->getBBox()->mesh->addUbos({ ubo });
-
-    //    m_LoadedEntities[exisitingMesh->getName()][0] += 1;
-    //  } else {
-    //    auto entity = std::make_unique<Entity>();
-
-    //    //@todo change for archetype id ?
-    //    entity->setName(mesh->getName());
-
-    //    if (mesh->hasAnimation()) {
-    //      //@todo temp until lua scripting
-    //      auto* animImpl = new AnimImpl();
-    //      m_ComponentManager->addComponent<AnimationComponent>(entity->getID(), animImpl);
-    //    }
-
-    //    m_ComponentManager->addComponent<MeshComponent>(entity->getID(), mesh);
-
-    //    auto basicRdrImpl = RendererFactory::create<Basic>();
-    //    m_ComponentManager->addComponent<RenderComponent>(entity->getID(), basicRdrImpl);
-    //    basicRdrImpl->init(m_Renderer, m_TextureManager, m_LightManager);
-    //    basicRdrImpl->visit(0, mesh);
-
-    //    uint32_t index = m_Entities.size();
-
-    //    m_LoadedEntities.insert({ entity->getName(), { 1, index } });
-
-    //    //auto tangentEntity = std::make_unique<Entity>();
-
-    //    //Mesh* tangentMesh = new Mesh();
-    //    //tangentMesh->setName(mesh->getName() + "_tangent");
-    //    //tangentMesh->setShaderName("tangent");
-
-    //    //auto tangent = mesh->getData()->m_Vertices.at(0).tangent;
-
-    //    //const std::vector<Vertex> vertices = {
-    //    //    {{-0.025f, -0.025f, 0.0f}, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}, { tangent.x, tangent.y, tangent.z, tangent.w }},
-    //    //    {{0.025f, -0.025f, 0.0f}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f}, { tangent.x, tangent.y, tangent.z, tangent.w }},
-    //    //    {{0.025f, 0.025f, 0.0f}, {0.0f, 0.0f, 1.0f}, {0.0f, 1.0f}, { tangent.x, tangent.y, tangent.z, tangent.w }},
-    //    //    {{-0.025f, 0.025f, 0.0f}, {1.0f, 1.0f, 1.0f}, {1.0f, 1.0f}, { tangent.x, tangent.y, tangent.z, tangent.w }}
-    //    //};
-
-    //    //const std::vector<uint32_t> indices = {
-    //    //    0, 1, 2, 2, 3, 0
-    //    //};
-
-    //    //Mesh::Data data{};
-    //    //data.m_Name = mesh->getName() + "_tangent";
-    //    //data.m_Texture = "mpoulpe";
-    //    //data.m_Indices = indices;
-    //    //data.m_Vertices = vertices;
-
-    //    //UniformBufferObject ubo{};
-    //    //ubo.model = glm::mat4(1.0f);
-    //    //ubo.model = glm::translate(ubo.model, glm::vec3(
-    //    //    entity->getMesh()->getData()->m_OriginPos.x,
-    //    //    entity->getMesh()->getData()->m_OriginPos.y,
-    //    //    entity->getMesh()->getData()->m_OriginPos.z
-    //    //));
-    //    //ubo.model = glm::scale(ubo.model, glm::vec3(1.0));
-
-    //    ////ubo.view = glm::mat4(1.0f);
-    //    //data.m_Ubos.emplace_back(ubo);
-    //    //tangentMesh->setData(data);
-    //    ////tangentMesh->setIsIndexed(false);
-
-    //    //tangentEntity->setMesh(tangentMesh);
-
-    //    //m_Entities.emplace_back(std::move(tangentEntity));
-    //    m_Entities.emplace_back(std::move(entity));
-    //    m_WorldNode->addChild(entity.get());
-    //  }
-    //}
-  //}
 
   void EntityManager::initMeshes(std::string const  & name,
     std::string const & path,
@@ -539,6 +407,7 @@ namespace Poulpe
       if (mesh->hasAnimation()) {
         //@todo temp until lua scripting
         auto* animImpl = new AnimImpl();
+        animImpl->init(m_Renderer, nullptr, nullptr);
         m_ComponentManager->addComponent<AnimationComponent>(entity->getID(), animImpl);
       }
 

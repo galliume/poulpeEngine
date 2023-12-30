@@ -1,5 +1,7 @@
 #include "Application.hpp"
 
+#include "PoulpeEngineConfig.h"
+
 #include "Poulpe/Manager/InputManager.hpp"
 
 namespace Poulpe
@@ -68,6 +70,13 @@ namespace Poulpe
             Locator::getCommandQueue()->execPostRequest();
 
             lastTime = currentTime;
+
+            std::stringstream title;
+            title << "PoulpeEngine ";
+            title << "v" << PoulpeEngine_VERSION_MAJOR << "." << PoulpeEngine_VERSION_MINOR;
+            title << " " << deltaTime << "ms";
+
+            glfwSetWindowTitle(m_RenderManager->getWindow()->get(), title.str().c_str());
         }
 
         m_RenderManager->cleanUp();

@@ -119,18 +119,6 @@ namespace Poulpe
 
         prepareSkybox();
         prepareHUD();
-
-        //for (auto& entity : *m_EntityManager->getEntities()) {
-
-        //  auto* meshComponent = m_ComponentManager->getComponent<MeshComponent>(entity->getID());
-        //  Mesh* mesh = meshComponent->hasImpl<Mesh>();
-
-        //  if (mesh) {
-        //    auto renderComponent = m_ComponentManager->getComponent<RenderComponent>(entity->getID());
-        //    renderComponent->initPimpl(m_Renderer.get(), m_TextureManager.get(), m_LightManager.get());
-        //    renderComponent->visit(0, mesh);
-        //  }
-        //}
     }
 
     template <typename T>
@@ -149,21 +137,25 @@ namespace Poulpe
 
     void RenderManager::renderScene([[maybe_unused]] float const deltaTime)
     {
+        m_Renderer->renderScene();
+
         //@todo animate light
         //m_LightManager->animateAmbientLight(deltaTime);
+        auto* worldNode = m_EntityManager->getWorldNode();
 
-        //for (auto& entity : *m_EntityManager->getEntities()) {
+        //@todo refactor with recursion when needed
+        for (auto leafNode : worldNode->getChildren()) {
+          for (auto entityNode : leafNode->getChildren()) {
+            auto entity = entityNode->getEntity();
+            auto* meshComponent = m_ComponentManager->getComponent<MeshComponent>(entity->getID());
+            auto* animationComponent = m_ComponentManager->getComponent<AnimationComponent>(entity->getID());
+            Mesh* mesh = meshComponent->hasImpl<Mesh>();
 
-        //    auto* meshComponent = m_ComponentManager->getComponent<MeshComponent>(entity->getID());
-        //    auto* animationComponent = m_ComponentManager->getComponent<AnimationComponent>(entity->getID());
-        //    Mesh* mesh = meshComponent->hasImpl<Mesh>();
-
-        //    if (animationComponent && mesh) {
-        //        animationComponent->visit(deltaTime, mesh);
-        //    }
-        //}
-
-        m_Renderer->renderScene();
+            if (animationComponent && mesh) {
+              animationComponent->visit(deltaTime, mesh);
+            }
+          }
+        }
 
         if (m_Refresh) {
             m_Renderer->setDrawBbox(m_ShowBbox);

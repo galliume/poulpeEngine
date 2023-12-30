@@ -30,6 +30,33 @@
 			"hasBbox": false,
 			"hasAnimation": true,
 			"isPointLight": false
-		}	
+		},
+		"SnowTerrain" : {
+			"mesh": "assets/mesh/SnowTerrain/SnowTerrain.obj",
+			"textures": {
+				"snowterrain": "assets/mesh/SnowTerrain/snowterrain.jpg"
+			},
+			"shader": "main_basic",
+			"positions": [
+				{"x": 0.0, "y": -0.25, "z": 0.0}
+			],
+			"scales": [
+				{"x": 1.0, "y": 1.0, "z": 1.0}
+			],
+			"rotations": [
+				{"x": 0.0, "y": 0.0, "z": 0.0}
+			],
+			"inverseTextureY": true,
+			"count": 1,
+			"padding": {
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"form": "positioned",
+			"hasBbox": false,
+			"hasAnimation": false,
+			"isPointLight": false			
+		}
 	}
 }

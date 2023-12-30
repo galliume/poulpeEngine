@@ -10,18 +10,19 @@ namespace Poulpe {
 
     public:
         EntityNode(Entity* entity) : m_Entity(std::unique_ptr<Entity>(entity)) {};
-        ~EntityNode() {};
+        ~EntityNode() {
+          for (auto child : m_Children) {
+            delete child;
+          }
+        };
 
         Entity* getEntity() const { return m_Entity.get(); }
         EntityNode* getParent() const { return m_Parent.get(); }
-        std::vector<std::unique_ptr<EntityNode>>* getChildren() { return &m_Children; }
+        std::vector<EntityNode*> getChildren() { return m_Children; }
 
         void addChild(EntityNode* child) {
-
-            std::unique_ptr<EntityNode> node = std::unique_ptr<EntityNode>(child);
-            node->setParent(this);
-
-            m_Children.emplace_back(std::move(node));
+            child->setParent(this);
+            m_Children.emplace_back(std::move(child));
         }
 
         void setParent(EntityNode* parent) { m_Parent = std::unique_ptr<EntityNode>(parent); }
@@ -30,7 +31,7 @@ namespace Poulpe {
         size_t size() const { return m_Children.size(); }
 
     private:
-        std::vector<std::unique_ptr<EntityNode>> m_Children;
+        std::vector<EntityNode*> m_Children;
         std::unique_ptr<Entity> m_Entity;
         std::unique_ptr<EntityNode> m_Parent;
     };

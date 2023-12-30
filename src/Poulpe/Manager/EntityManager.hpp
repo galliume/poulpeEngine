@@ -27,7 +27,7 @@ namespace Poulpe
     inline void setSkybox(Entity* const skybox) override { m_Skybox = std::unique_ptr<Entity>(skybox); }
     //void addEntity(Mesh* meshes);
     //inline size_t getTotalEntities() const { return m_Entities.size(); }
-    EntityNode const* getWorldNode() override;
+    EntityNode * getWorldNode() override;
     inline bool isLoadingDone() const { return m_LoadingDone.load(); }
     void initMeshes(std::string const & name,
       std::string const & path,
@@ -58,7 +58,6 @@ namespace Poulpe
     std::set<std::string> m_ObjLoaded{};
 
     std::unique_ptr<Entity> m_Skybox{nullptr};
-    std::unique_ptr<Entity> m_World;
     std::unique_ptr<EntityNode> m_WorldNode;
 
     std::mutex m_MutexWorldNode;
