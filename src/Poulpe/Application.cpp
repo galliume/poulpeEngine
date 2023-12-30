@@ -74,7 +74,8 @@ namespace Poulpe
             std::stringstream title;
             title << "PoulpeEngine ";
             title << "v" << PoulpeEngine_VERSION_MAJOR << "." << PoulpeEngine_VERSION_MINOR;
-            title << " " << deltaTime << "ms";
+            title << " " << deltaTime << " ms";
+            title << " " << 1 / deltaTime << " fps";
 
             glfwSetWindowTitle(m_RenderManager->getWindow()->get(), title.str().c_str());
         }
