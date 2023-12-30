@@ -12,9 +12,9 @@
 
 [In video](https://www.youtube.com/watch?v=C7p9z6LhAig&list=PL4-Os8BWDCPmZt5HvJrSo6QDHkD9J4fJF)
 
-<img src="https://github.com/galliume/poulpeEngine/blob/main/screenshots/viewport.jpg" width="500" height="500">
-<img src="https://github.com/galliume/poulpeEngine/blob/main/screenshots/anim.gif" width="500" height="500">
-<img src="https://github.com/galliume/poulpeEngine/blob/main/screenshots/asyncload.gif" width="500" height="500">
+<img src="https://github.com/galliume/poulpeEngine/blob/main/screenshots/viewport.jpg" width="800" height="600">
+<img src="https://github.com/galliume/poulpeEngine/blob/main/screenshots/anim.gif" width="800" height="450">
+<img src="https://github.com/galliume/poulpeEngine/blob/main/screenshots/asyncload.gif" width="800" height="450">
 
 All GUI has been stripped out from the engine.
 
