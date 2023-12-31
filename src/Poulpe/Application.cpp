@@ -4,6 +4,12 @@
 
 #include "Poulpe/Manager/InputManager.hpp"
 
+extern "C" {
+  #include <lua.h>
+  #include <lauxlib.h>
+  #include <lualib.h>
+}
+
 namespace Poulpe
 {
     std::atomic<int> Application::s_MaxFPS{ 0 };
@@ -39,6 +45,23 @@ namespace Poulpe
 
         m_RenderManager = std::make_unique<RenderManager>(window);
         m_RenderManager->init();
+
+        std::string cmd = "a = 7 + 11";
+        lua_State* L = luaL_newstate();
+        int r = luaL_dostring(L, cmd.c_str());
+
+        if (r == LUA_OK) {
+          lua_getglobal(L, "a");
+          if (lua_isnumber(L, -1)) {
+            float result = static_cast<float>(lua_tonumber(L, -1));
+            PLP_WARN("LUA result: {}", result);
+          }
+        } else {
+          std::string err = lua_tostring(L, -1);
+          PLP_WARN("LUA error: {}", err);
+        }
+
+        lua_close(L);
     }
 
     void Application::run()

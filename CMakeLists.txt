@@ -107,11 +107,54 @@ add_library(tiny_obj_loader STATIC
     ${PROJECT_SOURCE_DIR}/vendor/tiny_obj_loader/tiny_obj_loader.h
     ${PROJECT_SOURCE_DIR}/vendor/tiny_obj_loader/tiny_obj_loader.cc)
 
+
+add_library(
+  lua STATIC
+  ${PROJECT_SOURCE_DIR}/vendor/lua/lapi.c
+  ${PROJECT_SOURCE_DIR}/vendor/lua/lauxlib.c
+  ${PROJECT_SOURCE_DIR}/vendor/lua/lbaselib.c
+  ${PROJECT_SOURCE_DIR}/vendor/lua/lcode.c
+  ${PROJECT_SOURCE_DIR}/vendor/lua/lcorolib.c
+  ${PROJECT_SOURCE_DIR}/vendor/lua/lctype.c
+  ${PROJECT_SOURCE_DIR}/vendor/lua/ldblib.c
+  ${PROJECT_SOURCE_DIR}/vendor/lua/ldebug.c
+  ${PROJECT_SOURCE_DIR}/vendor/lua/ldo.c
+  ${PROJECT_SOURCE_DIR}/vendor/lua/ldump.c
+  ${PROJECT_SOURCE_DIR}/vendor/lua/lfunc.c
+  ${PROJECT_SOURCE_DIR}/vendor/lua/lgc.c
+  ${PROJECT_SOURCE_DIR}/vendor/lua/linit.c
+  ${PROJECT_SOURCE_DIR}/vendor/lua/liolib.c
+  ${PROJECT_SOURCE_DIR}/vendor/lua/llex.c
+  ${PROJECT_SOURCE_DIR}/vendor/lua/lmathlib.c
+  ${PROJECT_SOURCE_DIR}/vendor/lua/lmem.c
+  ${PROJECT_SOURCE_DIR}/vendor/lua/loadlib.c
+  ${PROJECT_SOURCE_DIR}/vendor/lua/lobject.c
+  ${PROJECT_SOURCE_DIR}/vendor/lua/lopcodes.c
+  ${PROJECT_SOURCE_DIR}/vendor/lua/loslib.c
+  ${PROJECT_SOURCE_DIR}/vendor/lua/lparser.c
+  ${PROJECT_SOURCE_DIR}/vendor/lua/lstate.c
+  ${PROJECT_SOURCE_DIR}/vendor/lua/lstring.c
+  ${PROJECT_SOURCE_DIR}/vendor/lua/lstrlib.c
+  ${PROJECT_SOURCE_DIR}/vendor/lua/ltable.c
+  ${PROJECT_SOURCE_DIR}/vendor/lua/ltablib.c 
+  ${PROJECT_SOURCE_DIR}/vendor/lua/ltests.c
+  ${PROJECT_SOURCE_DIR}/vendor/lua/ltm.c
+  ${PROJECT_SOURCE_DIR}/vendor/lua/lundump.c
+  ${PROJECT_SOURCE_DIR}/vendor/lua/lutf8lib.c
+  ${PROJECT_SOURCE_DIR}/vendor/lua/lvm.c
+  ${PROJECT_SOURCE_DIR}/vendor/lua/lzio.c
+  ${PROJECT_SOURCE_DIR}/vendor/lua/lauxlib.h
+  ${PROJECT_SOURCE_DIR}/vendor/lua/lua.h
+  ${PROJECT_SOURCE_DIR}/vendor/lua/luaconf.h
+  ${PROJECT_SOURCE_DIR}/vendor/lua/lualib.h
+)
+
 list(APPEND EXTRA_LIBS glfw)
 list(APPEND EXTRA_LIBS glm::glm)
 list(APPEND EXTRA_LIBS volk)
 list(APPEND EXTRA_LIBS miniaudio)
 list(APPEND EXTRA_LIBS tiny_obj_loader)
+list(APPEND EXTRA_LIBS lua)
 
 target_link_libraries(${PROJECT_NAME} PRIVATE ${EXTRA_LIBS} poulpe)
 
@@ -122,14 +165,16 @@ target_include_directories(${PROJECT_NAME} PRIVATE
                           "${PROJECT_SOURCE_DIR}/vendor/glm"
                           "${PROJECT_SOURCE_DIR}/vendor/volk"
                           "${PROJECT_SOURCE_DIR}/vendor/miniaudio/extras/miniaudio_split"
-                          "${PROJECT_SOURCE_DIR}/vendor/tiny_obj_loader")
+                          "${PROJECT_SOURCE_DIR}/vendor/tiny_obj_loader"
+              "${PROJECT_SOURCE_DIR}/vendor/lua")
 
 target_include_directories(${PROJECT_NAME} SYSTEM INTERFACE
                           "${PROJECT_SOURCE_DIR}/vendor/glfw"
                           "${PROJECT_SOURCE_DIR}/vendor/glm"
                           "${PROJECT_SOURCE_DIR}/vendor/volk"
                           "${PROJECT_SOURCE_DIR}/vendor/miniaudio/extras/miniaudio_split"
-                          "${PROJECT_SOURCE_DIR}/vendor/tiny_obj_loader")
+                          "${PROJECT_SOURCE_DIR}/vendor/tiny_obj_loader"
+              "${PROJECT_SOURCE_DIR}/vendor/lua")
 
 target_compile_definitions(${PROJECT_NAME} PRIVATE "$<$<CONFIG:DEBUG>:PLP_DEBUG_BUILD>")
 
@@ -159,6 +204,11 @@ target_compile_options(tiny_obj_loader PRIVATE
   $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-w -O2>
 )
 
+target_compile_options(lua PRIVATE
+  $<$<CXX_COMPILER_ID:MSVC>:/W0 /O2>
+  $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-w -O2>
+)
+
 #Filters for visual studio structure
 file(GLOB_RECURSE _source_list "${PROJECT_SOURCE_DIR}/src/**/*.cpp" "${PROJECT_SOURCE_DIR}/src/**/*.hpp")
 foreach(_source IN ITEMS ${_source_list})
@@ -180,30 +230,30 @@ set_property(DIRECTORY ${PROJECT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT ${PROJE
 find_program(CLANG_TIDY_EXE NAMES "clang-tidy")
 
 add_custom_command(
-	TARGET ${PROJECT_NAME} PRE_BUILD
-	COMMAND ${CMAKE_COMMAND} -E copy_directory
-			${CMAKE_CURRENT_SOURCE_DIR}/assets
-			$<TARGET_FILE_DIR:${PROJECT_NAME}>/assets
-	COMMENT "\r\n Copying assets")
+  TARGET ${PROJECT_NAME} PRE_BUILD
+  COMMAND ${CMAKE_COMMAND} -E copy_directory
+      ${CMAKE_CURRENT_SOURCE_DIR}/assets
+      $<TARGET_FILE_DIR:${PROJECT_NAME}>/assets
+  COMMENT "\r\n Copying assets")
 
 add_custom_command(
-	TARGET ${PROJECT_NAME} PRE_BUILD
-	COMMAND ${CMAKE_COMMAND} -E copy_directory
-			${CMAKE_CURRENT_SOURCE_DIR}/config
-			$<TARGET_FILE_DIR:${PROJECT_NAME}>/config
-	COMMENT "\r\n Copying config")
+  TARGET ${PROJECT_NAME} PRE_BUILD
+  COMMAND ${CMAKE_COMMAND} -E copy_directory
+      ${CMAKE_CURRENT_SOURCE_DIR}/config
+      $<TARGET_FILE_DIR:${PROJECT_NAME}>/config
+  COMMENT "\r\n Copying config")
 
 add_custom_command(
-	TARGET ${PROJECT_NAME} PRE_BUILD
-	COMMAND ${CMAKE_COMMAND} -E make_directory 
-			$<TARGET_FILE_DIR:${PROJECT_NAME}>/cache
-	COMMENT "\r\n Creating cache dir")
+  TARGET ${PROJECT_NAME} PRE_BUILD
+  COMMAND ${CMAKE_COMMAND} -E make_directory 
+      $<TARGET_FILE_DIR:${PROJECT_NAME}>/cache
+  COMMENT "\r\n Creating cache dir")
 
 add_custom_command(
-	TARGET ${PROJECT_NAME} PRE_BUILD
-	COMMAND ${CMAKE_COMMAND} -E make_directory 
-			$<TARGET_FILE_DIR:${PROJECT_NAME}>/lib
-	COMMENT "\r\n Creating lib dir")
+  TARGET ${PROJECT_NAME} PRE_BUILD
+  COMMAND ${CMAKE_COMMAND} -E make_directory 
+      $<TARGET_FILE_DIR:${PROJECT_NAME}>/lib
+  COMMENT "\r\n Creating lib dir")
 
 add_custom_target(
         CompilShaders ${CMAKE_CURRENT_SOURCE_DIR}/bin/shadersCompilation.sh
@@ -225,5 +275,8 @@ set_target_properties(volk PROPERTIES
     ARCHIVE_OUTPUT_DIRECTORY "$<TARGET_FILE_DIR:${PROJECT_NAME}>/lib"
 )
 set_target_properties(tiny_obj_loader PROPERTIES
+    ARCHIVE_OUTPUT_DIRECTORY "$<TARGET_FILE_DIR:${PROJECT_NAME}>/lib"
+)
+set_target_properties(lua PROPERTIES
     ARCHIVE_OUTPUT_DIRECTORY "$<TARGET_FILE_DIR:${PROJECT_NAME}>/lib"
 )
