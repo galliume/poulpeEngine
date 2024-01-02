@@ -9,7 +9,6 @@ configure() {
 			rm "./${CMAKE_BUILD_DIR}" -rf
 			echo "Directory ${CMAKE_BUILD_DIR} deleted."
 			mkdir "./${CMAKE_BUILD_DIR}"
-			mkdir "./${CMAKE_BUILD_DIR}/${CMAKE_BUILD_TYPE}"
 			echo "Directory ${CMAKE_BUILD_DIR} freshly recreated."
 		fi
 	else
@@ -18,14 +17,13 @@ configure() {
 		fi
 		
 		mkdir "./${CMAKE_BUILD_DIR}"
-		mkdir "./${CMAKE_BUILD_DIR}/${CMAKE_BUILD_TYPE}"
 		echo "Directory ${CMAKE_BUILD_DIR} freshly recreated."
 	fi
 
 	detectOs
 	OS=$?
 	
-	CMAKE_BUILD_DIR="${CMAKE_BUILD_DIR}/${CMAKE_BUILD_TYPE}"
+	CMAKE_BUILD_DIR="${CMAKE_BUILD_DIR}"
 	NINJA=""
 	CONFIG_TYPE="-DCMAKE_CONFIGURATION_TYPES=Debug;Release;RelWithDebInfo"
 	CXX_COMPILER="-DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}"
@@ -78,7 +76,7 @@ configure() {
 build() {
 	if [ -d "./${CMAKE_BUILD_DIR}" ]; then
 		
-		cd "${CMAKE_BUILD_DIR}/${CMAKE_BUILD_TYPE}"
+		cd "${CMAKE_BUILD_DIR}"
 
 		echo "Starting building"
 		cmake --build . -j${CMAKE_J}

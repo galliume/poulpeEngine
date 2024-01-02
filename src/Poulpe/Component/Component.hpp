@@ -35,7 +35,7 @@ namespace Poulpe
         void setOwner(IDType owner) { m_Owner = owner; }
 
         template<typename... TArgs>
-        void visit(float deltaTime, TArgs&&... args)
+        void visit(std::chrono::duration<float> deltaTime, TArgs&&... args)
         {
             m_Pimpl->visit(deltaTime, std::forward<TArgs>(args)...);
         }

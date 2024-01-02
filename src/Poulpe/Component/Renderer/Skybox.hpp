@@ -12,6 +12,6 @@ namespace Poulpe
 
         void createDescriptorSet(IVisitable* const mesh) override;
         void setPushConstants(IVisitable* const mesh) override;
-        void visit(float const deltaTime, IVisitable* const mesh) override;
+        void visit(std::chrono::duration<float> deltaTime, IVisitable* const mesh) override;
     };
 }

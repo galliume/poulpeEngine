@@ -38,7 +38,7 @@ namespace Poulpe
             [[maybe_unused]] ILightManager* const lightManager) override {};
         
         bool isDirty() override { return m_IsDirty.load(); }
-        void visit(float const deltaTime, IVisitable* const  visitable) override;
+        void visit(std::chrono::duration<float> deltaTime, IVisitable* const  visitable) override;
 
         virtual void setApplyPushConstants(
           std::function<void(VkCommandBuffer& commandBuffer,

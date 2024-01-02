@@ -20,13 +20,12 @@ namespace Poulpe
         void init();
         void run();
 
-        static std::atomic<float> s_MaxFPS;
+        static float s_MaxFPS;
 
     private:
         static Application* s_Instance;
 
         std::unique_ptr<RenderManager> m_RenderManager;
-
-        std::chrono::time_point<std::chrono::system_clock> m_StartRun;
+        std::chrono::steady_clock::time_point m_StartRun;
     };
 }

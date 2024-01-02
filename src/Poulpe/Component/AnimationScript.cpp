@@ -4,15 +4,12 @@
 
 #include "Poulpe/Core/Log.hpp"
 
-#include <glm/gtc/quaternion.hpp>
-#include <glm/gtx/quaternion.hpp>
-
 namespace Poulpe
 {
   static int wrapMove(lua_State* L)
   {
     AnimationScript* animScript = static_cast<AnimationScript*>(lua_touserdata(L, 1));
-    float deltaTime = static_cast<float>(lua_tonumber(L, 2));
+    auto deltaTime = std::chrono::duration<float, std::milli>(lua_tonumber(L, 2));
     float duration = static_cast<float>(lua_tonumber(L, 3));
     float targetX = static_cast<float>(lua_tonumber(L, 4));
     float targetY = static_cast<float>(lua_tonumber(L, 5));
@@ -30,7 +27,7 @@ namespace Poulpe
   static int wrapRotate(lua_State* L)
   {
     AnimationScript* animScript = static_cast<AnimationScript*>(lua_touserdata(L, 1));
-    float deltaTime = static_cast<float>(lua_tonumber(L, 2));
+    auto deltaTime = std::chrono::duration<float, std::milli>(lua_tonumber(L, 2));
     float duration = static_cast<float>(lua_tonumber(L, 3));
     float angleX = static_cast<float>(lua_tonumber(L, 4));
     float angleY = static_cast<float>(lua_tonumber(L, 5));
@@ -67,7 +64,7 @@ namespace Poulpe
     lua_close(m_lua_State);
   }
 
-  void AnimationScript::move(Data* data, float deltaTime, float duration, glm::vec3 target)
+  void AnimationScript::move(Data* data, std::chrono::duration<float> deltaTime, float duration, glm::vec3 target)
   {
     std::unique_ptr<AnimationMove> anim = std::make_unique<AnimationMove>();
     anim->duration = duration;
@@ -79,7 +76,7 @@ namespace Poulpe
     //PLP_TRACE("START at {}/{}/{}", data->m_OriginPos.x, data->m_OriginPos.y, data->m_OriginPos.z);
     //PLP_TRACE("TO {}/{}/{}", anim->target.x, anim->target.y, anim->target.z);
 
-    anim->update = [](AnimationMove* anim, Data* data, float deltaTime) {
+    anim->update = [](AnimationMove* anim, Data* data, std::chrono::duration<float> deltaTime) {
       
       float t = anim->elapsedTime / anim->duration;
       bool done{ false };
@@ -88,7 +85,7 @@ namespace Poulpe
         done = true;
         t = 1.f;
       }
-      anim->elapsedTime += deltaTime;
+      anim->elapsedTime += deltaTime.count();
 
       glm::vec3 target = glm::mix(data->m_OriginPos, anim->target, t);
       //PLP_TRACE("MOVING at {}/{}/{}", data->m_CurrentPos.x, data->m_CurrentPos.y, data->m_CurrentPos.z);
@@ -114,13 +111,13 @@ namespace Poulpe
     m_NewMoveAnimations.emplace_back(std::move(anim));
   }
 
-  void AnimationScript::rotate(Data* data, float deltaTime, float duration, glm::vec3 angle)
+  void AnimationScript::rotate(Data* data, std::chrono::duration<float> deltaTime, float duration, glm::vec3 angle)
   {
     std::unique_ptr<AnimationRotate> anim = std::make_unique<AnimationRotate>();
     anim->duration = duration;
     anim->angle = angle;
 
-    anim->update = [](AnimationRotate* anim, Data* data, float deltaTime) {
+    anim->update = [](AnimationRotate* anim, Data* data, std::chrono::duration<float> deltaTime) {
 
       float t = anim->elapsedTime / anim->duration;
       bool done{ false };
@@ -129,7 +126,7 @@ namespace Poulpe
         done = true;
         t = 1.f;
       }
-      anim->elapsedTime += deltaTime;
+      anim->elapsedTime += deltaTime.count();
 
       //@todo switch euler angles to quaternions
       glm::vec3 target = glm::mix(data->m_OriginRotation, anim->angle, t);
@@ -151,7 +148,7 @@ namespace Poulpe
     m_NewRotateAnimations.emplace_back(std::move(anim));
   }
 
-  void AnimationScript::visit(float const deltaTime, IVisitable* mesh)
+  void AnimationScript::visit(std::chrono::duration<float> deltaTime, IVisitable* mesh)
   {
     m_Data = mesh->getData();
 
@@ -168,7 +165,7 @@ namespace Poulpe
       lua_getglobal(m_lua_State, "nextMove");
       if (lua_isfunction(m_lua_State, -1)) {
         lua_pushlightuserdata(m_lua_State, this);
-        lua_pushnumber(m_lua_State, deltaTime);
+        lua_pushnumber(m_lua_State, deltaTime.count());
         checkLua(m_lua_State, lua_pcall(m_lua_State, 2, 1, 0));
       }
       m_MoveInit = true;
@@ -182,7 +179,7 @@ namespace Poulpe
         lua_getglobal(m_lua_State, "nextMove");
         if (lua_isfunction(m_lua_State, -1)) {
           lua_pushlightuserdata(m_lua_State, this);
-          lua_pushnumber(m_lua_State, deltaTime);
+          lua_pushnumber(m_lua_State, deltaTime.count());
           checkLua(m_lua_State, lua_pcall(m_lua_State, 2, 1, 0));
         }
       }
@@ -192,7 +189,7 @@ namespace Poulpe
       lua_getglobal(m_lua_State, "nextRotation");
       if (lua_isfunction(m_lua_State, -1)) {
         lua_pushlightuserdata(m_lua_State, this);
-        lua_pushnumber(m_lua_State, deltaTime);
+        lua_pushnumber(m_lua_State, deltaTime.count());
         checkLua(m_lua_State, lua_pcall(m_lua_State, 2, 1, 0));
       }
       m_RotateInit = true;
@@ -206,7 +203,7 @@ namespace Poulpe
         lua_getglobal(m_lua_State, "nextRotation");
         if (lua_isfunction(m_lua_State, -1)) {
           lua_pushlightuserdata(m_lua_State, this);
-          lua_pushnumber(m_lua_State, deltaTime);
+          lua_pushnumber(m_lua_State, deltaTime.count());
           checkLua(m_lua_State, lua_pcall(m_lua_State, 2, 1, 0));
         }
       }

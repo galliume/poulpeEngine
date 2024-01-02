@@ -30,7 +30,7 @@ namespace Poulpe
         void init() override;
         inline bool isLoaded()  override { return m_IsLoaded; }
         void refresh(uint32_t levelIndex, bool showBbox = false, std::string_view skybox = "debug") override;
-        void renderScene(float deltaTime) override;
+        void renderScene(std::chrono::duration<float> deltaTime) override;
         inline void setDrawBbox(bool draw) { m_Renderer->setDrawBbox(draw); };
         inline void setIsLoaded(bool loaded = true) override { m_IsLoaded = loaded; }
 

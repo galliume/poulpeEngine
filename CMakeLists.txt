@@ -184,7 +184,7 @@ if(MSVC)
   set(RELEASE_OPTIONS "-O2")
 else()
   set(DEBUG_OPTIONS "-Wall;-Wextra;-Wshadow;-Wformat=2;-Wunused;-Werror")
-  set(RELEASE_OPTIONS "-O2")
+  set(RELEASE_OPTIONS "-O3")
 endif()
 
 target_compile_options(${PROJECT_NAME} PRIVATE "$<$<CONFIG:DEBUG>:${DEBUG_OPTIONS}>")
@@ -192,22 +192,22 @@ target_compile_options(${PROJECT_NAME} PRIVATE "$<$<CONFIG:RELEASE>:${RELEASE_OP
 
 target_compile_options(miniaudio PRIVATE
   $<$<CXX_COMPILER_ID:MSVC>:/W0 /O2>
-  $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-w -O2>
+  $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-w -O3>
 )
 
 target_compile_options(miniaudio PRIVATE
   $<$<CXX_COMPILER_ID:MSVC>:/W0 /O2>
-  $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-w -O2>
+  $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-w -O3>
 )
 
 target_compile_options(tiny_obj_loader PRIVATE
   $<$<CXX_COMPILER_ID:MSVC>:/W0 /O2>
-  $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-w -O2>
+  $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-w -O3>
 )
 
 target_compile_options(lua PRIVATE
   $<$<CXX_COMPILER_ID:MSVC>:/W0 /O2>
-  $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-w -O2>
+  $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-w -O3>
 )
 
 #Filters for visual studio structure

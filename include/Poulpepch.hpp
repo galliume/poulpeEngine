@@ -15,3 +15,5 @@
 
 #include "Poulpe/Core/Log.hpp"
 #include "Poulpe/Core/Locator.hpp"
+
+#include <chrono>

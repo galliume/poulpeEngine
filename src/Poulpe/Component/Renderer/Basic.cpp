@@ -142,7 +142,7 @@ namespace Poulpe
         mesh->setHasPushConstants();
     }
 
-    void Basic::visit([[maybe_unused]] float const deltaTime, IVisitable* const mesh)
+    void Basic::visit([[maybe_unused]] std::chrono::duration<float> deltaTime, IVisitable* const mesh)
     {
       if (!mesh && !mesh->isDirty()) return;
 

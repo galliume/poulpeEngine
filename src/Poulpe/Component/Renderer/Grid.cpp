@@ -41,7 +41,7 @@ namespace Poulpe
         mesh->setHasPushConstants();
     }
 
-    void Grid::visit([[maybe_unused]] float const deltaTime, IVisitable* const mesh)
+    void Grid::visit([[maybe_unused]] std::chrono::duration<float> deltaTime, IVisitable* const mesh)
     {
       if (!mesh && !mesh->isDirty()) return;
 

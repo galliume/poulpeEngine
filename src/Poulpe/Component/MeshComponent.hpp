@@ -10,7 +10,7 @@ namespace Poulpe
     public:
         MeshComponent() : Component() {};
 
-        void visit(float const deltaTime, IVisitable* visitable)
+        void visit(std::chrono::duration<float> deltaTime, IVisitable* visitable)
         {
             Component::visit(deltaTime, visitable);
         }

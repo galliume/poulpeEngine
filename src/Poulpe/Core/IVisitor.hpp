@@ -17,6 +17,6 @@ namespace Poulpe
           ITextureManager* const textureManager,
           ILightManager* const lightManager) = 0;
         
-        virtual void visit(float const deltaTime, IVisitable* const visitable) = 0;
+        virtual void visit(std::chrono::duration<float> deltaTime, IVisitable* const visitable) = 0;
     };
 }

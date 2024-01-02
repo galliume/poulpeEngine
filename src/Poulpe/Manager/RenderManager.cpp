@@ -135,7 +135,7 @@ namespace Poulpe
       m_ShowBbox = showBbox;
     }
 
-    void RenderManager::renderScene([[maybe_unused]] float const deltaTime)
+    void RenderManager::renderScene(std::chrono::duration<float> deltaTime)
     {
         m_Renderer->renderScene();
 
@@ -211,7 +211,8 @@ namespace Poulpe
         gridRdrImpl->init(m_Renderer.get(), m_TextureManager.get(), nullptr);
 
         auto renderGridComponent = m_ComponentManager->addComponent<RenderComponent>(gridEntity->getID(), gridRdrImpl);
-        renderGridComponent.visit(0, gridMesh);
+        auto deltaTime = std::chrono::duration<float, std::milli>(0);
+        renderGridComponent.visit(deltaTime, gridMesh);
         m_ComponentManager->addComponent<MeshComponent>(gridEntity->getID(), gridMesh);
 
         auto* chEntity = new Entity();
@@ -220,7 +221,7 @@ namespace Poulpe
         chRdrImpl->init(m_Renderer.get(), m_TextureManager.get(), nullptr);
 
         auto renderCrosshairComponent = m_ComponentManager->addComponent<RenderComponent>(chEntity->getID(), chRdrImpl);
-        renderCrosshairComponent.visit(0, chMesh);
+        renderCrosshairComponent.visit(deltaTime, chMesh);
         m_ComponentManager->addComponent<MeshComponent>(chEntity->getID(), chMesh);
 
         m_EntityManager->addHUD(gridEntity);
@@ -235,7 +236,8 @@ namespace Poulpe
         skyRdrImpl->init(m_Renderer.get(), m_TextureManager.get(), nullptr);
 
         auto renderComponent = m_ComponentManager->addComponent<RenderComponent>(skyboxEntity->getID(), skyRdrImpl);
-        renderComponent.visit(0, skyboxMesh);
+        auto deltaTime = std::chrono::duration<float, std::milli>(0);
+        renderComponent.visit(deltaTime, skyboxMesh);
         m_ComponentManager->addComponent<MeshComponent>(skyboxEntity->getID(), skyboxMesh);
 
         m_EntityManager->setSkybox(skyboxEntity);

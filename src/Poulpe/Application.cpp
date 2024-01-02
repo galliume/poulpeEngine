@@ -6,7 +6,7 @@
 
 namespace Poulpe
 {
-    std::atomic<float> Application::s_MaxFPS{ 0.f };
+    float Application::s_MaxFPS{ 0.f };
     Application* Application::s_Instance{ nullptr };
 
     Application::Application()
@@ -19,15 +19,10 @@ namespace Poulpe
     void Application::init()
     {
         Log::init();
-        m_StartRun = std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::system_clock::now());
+        m_StartRun = std::chrono::steady_clock::now();
 
         auto* window = new Window();
         window->init("PoulpeEngine");
-
-        int width{ 0 };
-        int height{ 0 };
-
-        glfwGetWindowSize(window->get(), & width, & height);
 
         auto* inputManager = new InputManager(window);
         auto* cmdQueue = new CommandQueue();
@@ -43,25 +38,21 @@ namespace Poulpe
 
     void Application::run()
     {
-        auto endRun = std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::system_clock::now());
-        
-        PLP_TRACE("Loaded scene in {}", (endRun - m_StartRun).count());//@todo readable in seconds...
+        auto endRun = std::chrono::steady_clock::now();
+        std::chrono::duration<float> loadedTime = endRun - m_StartRun;
+        PLP_TRACE("Started in {} seconds", loadedTime.count());
 
-        auto lastTime = std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::system_clock::now());
+        auto lastTime = std::chrono::steady_clock::now();
 
         while (!glfwWindowShouldClose(m_RenderManager->getWindow()->get())) {
 
-            auto frameTarget = (1.0f / (s_MaxFPS.load() / 1000.0f)) / 1000.0f;
-            auto currentTime = std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::system_clock::now());
-            auto deltaTime = static_cast<float>(currentTime.time_since_epoch().count() - lastTime.time_since_epoch().count())
-                / 1000.0f;
+            auto frameTarget = (1.0f / (s_MaxFPS * 0.001f));
+            auto currentTime = std::chrono::steady_clock::now();
+            std::chrono::duration<float, std::milli> deltaTime = (currentTime - lastTime);
 
-            if (deltaTime < frameTarget && s_MaxFPS.load() != 0) continue;
+            if (deltaTime.count() < frameTarget && s_MaxFPS != 0) continue;
 
-            //PLP_TRACE("{} ms", deltaTime);
-           
-            m_RenderManager->getCamera()->updateDeltaTime(deltaTime);
-
+            m_RenderManager->getCamera()->updateSpeed(deltaTime);
             glfwPollEvents();
 
             Locator::getCommandQueue()->execPreRequest();
@@ -69,17 +60,15 @@ namespace Poulpe
             m_RenderManager->draw();
             Locator::getCommandQueue()->execPostRequest();
 
-            lastTime = currentTime;
-
             std::stringstream title;
             title << "PoulpeEngine ";
             title << "v" << PoulpeEngine_VERSION_MAJOR << "." << PoulpeEngine_VERSION_MINOR;
-            title << " " << deltaTime << " ms";
-            title << " " << 1 / deltaTime << " fps";
+            title << " " << deltaTime.count() << " ms";
+            title << " " << std::ceil(1 / (deltaTime.count() * 0.001)) << " fps";
 
             glfwSetWindowTitle(m_RenderManager->getWindow()->get(), title.str().c_str());
+            lastTime = currentTime;
         }
-
         m_RenderManager->cleanUp();
     }
 }

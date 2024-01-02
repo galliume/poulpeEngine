@@ -15,7 +15,7 @@ namespace Poulpe
           m_Pimpl = std::move(componentImpl);
         }
 
-        void visit(float const deltaTime, Mesh* mesh)
+        void visit(std::chrono::duration<float> deltaTime, Mesh* mesh)
         {
             Component::visit(deltaTime, mesh);
         }
