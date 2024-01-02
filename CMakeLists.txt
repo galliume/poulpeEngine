@@ -108,6 +108,7 @@ add_library(tiny_obj_loader STATIC
     ${PROJECT_SOURCE_DIR}/vendor/tiny_obj_loader/tiny_obj_loader.cc)
 
 
+#@todo include only used .c
 add_library(
   lua STATIC
   ${PROJECT_SOURCE_DIR}/vendor/lua/lapi.c

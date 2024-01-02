@@ -1,74 +1,13 @@
 #include "EntityManager.hpp"
 
 #include "Poulpe/Component/AnimationComponent.hpp"
+#include "Poulpe/Component/AnimationScript.hpp"
 #include "Poulpe/Component/Renderer/RendererFactory.hpp"
 
 #include <filesystem>
 
 namespace Poulpe
 {
-  class AnimImpl : public AbstractRenderer
-  {
-  public:
-    AnimImpl() = default;
-
-    void init(IRenderer* const renderer,
-        [[maybe_unused]] ITextureManager* const textureManager,
-        [[maybe_unused]] ILightManager* const lightManager) override
-    {
-        m_Renderer = renderer;
-    }
-    void setPushConstants([[maybe_unused]] IVisitable* const mesh) override {};
-    void createDescriptorSet([[maybe_unused]] IVisitable* const) override {};
-
-    void visit(float const deltaTime, IVisitable* const mesh) override
-    {
-        for (auto& ubo : mesh->getData()->m_Ubos) {
-
-            //mesh->getData()->m_CurrentPos.x -= 0.0001;
-            //mesh->getData()->m_CurrentPos.y -= 0.0001;
-            //mesh->getData()->m_CurrentPos.z -= 0.0001;
-            //if (!reverse) {
-            //    animationDuration -= 1.f;
-            //}
-            //else {
-            //    animationDuration += 1.f;
-            //}
-
-            //if (0 > animationDuration) {
-            //    animationDuration = 0.f;
-            //    reverse = true;
-            //}
-            //else if (3 < animationDuration) {
-            //    animationDuration = 3.f;
-            //    reverse = false;
-            //}
-
-            //auto scale = lerp(startScale, endScale, elapsedTime / animationDuration);
-
-            //elapsedTime += deltaTime;
-
-            //ubo.model = glm::mat4(1.0f);
-            //ubo.model = glm::translate(ubo.model, mesh->getData()->m_OriginPos);
-            //ubo.model = glm::scale(ubo.model, mesh->getData()->m_OriginScale);
-
-            auto angle = deltaTime * (std::rand() % 20);
-
-            ubo.model = glm::rotate(ubo.model, glm::radians(angle), mesh->getData()->m_OriginPos);
-
-            m_Renderer->updateUniformBuffer(mesh->getUniformBuffers()->at(0), &mesh->getData()->m_Ubos);
-        }
-
-    }
-
-    IRenderer* m_Renderer;
-    float animationDuration = 3.f;
-    float elapsedTime = 0.f;
-    bool reverse = false;
-    glm::vec3 startScale = glm::vec3(0.001, 0.001, 0.001);
-    glm::vec3 endScale = glm::vec3(0.12, 0.12, 0.12);
-  };
-
   EntityManager::EntityManager(ComponentManager* const componentManager,
     LightManager* const lightManager,
     TextureManager* const textureManager)
@@ -139,6 +78,11 @@ namespace Poulpe
               bool hasAnimation = static_cast<bool>(data["hasAnimation"]);
               bool isPointLight = static_cast<bool>(data["isPointLight"]);
 
+              std::vector<std::string> animationScripts{};
+              for (auto& [keyAnim, pathAnim] : data["animationScripts"].items()) {
+                animationScripts.emplace_back(static_cast<std::string>(pathAnim));
+              }
+
               initMeshes(
                 static_cast<std::string>(key),
                 static_cast<std::string>(data["mesh"]),
@@ -148,7 +92,7 @@ namespace Poulpe
                 scale,
                 rotation,
                 static_cast<bool>(data["inverseTextureY"]),
-                hasBbox, hasAnimation, isPointLight
+                hasBbox, hasAnimation, isPointLight, animationScripts
               );
             }
           }
@@ -199,6 +143,11 @@ namespace Poulpe
             bool hasAnimation = static_cast<bool>(data["hasAnimation"]);
             bool isPointLight = static_cast<bool>(data["isPointLight"]);
 
+            std::vector<std::string> animationScripts{};
+            for (auto& [keyAnim, pathAnim] : data["animationScripts"].items()) {
+              animationScripts.emplace_back(static_cast<std::string>(pathAnim));
+            }
+
             //@todo move init to a factory ?
             initMeshes(
               static_cast<std::string>(key),
@@ -209,7 +158,7 @@ namespace Poulpe
               scale,
               rotation,
               static_cast<bool>(data["inverseTextureY"]),
-              hasBbox, hasAnimation, isPointLight
+              hasBbox, hasAnimation, isPointLight, animationScripts
             );
 
             TinyObjLoader::m_TinyObjMaterials.clear();
@@ -241,7 +190,8 @@ namespace Poulpe
     bool shouldInverseTextureY,
     bool hasBbox,
     bool hasAnimation,
-    bool isPointLight)
+    bool isPointLight,
+    std::vector<std::string> animationScripts)
   {
     std::vector<Mesh*> meshes{};
 
@@ -348,8 +298,9 @@ namespace Poulpe
 
       UniformBufferObject ubo{};
       ubo.model = glm::mat4(1.0f);
-      ubo.model = glm::translate(ubo.model, pos);
       ubo.model = glm::scale(ubo.model, scale);
+
+      ubo.model = glm::translate(ubo.model, pos);
 
       ubo.model = glm::rotate(ubo.model, glm::radians(rotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
       ubo.model = glm::rotate(ubo.model, glm::radians(rotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
@@ -406,9 +357,11 @@ namespace Poulpe
 
       if (mesh->hasAnimation()) {
         //@todo temp until lua scripting
-        auto* animImpl = new AnimImpl();
-        animImpl->init(m_Renderer, nullptr, nullptr);
-        m_ComponentManager->addComponent<AnimationComponent>(entity->getID(), animImpl);
+        for (auto& anim : animationScripts) {
+          auto* animationScript = new AnimationScript(anim);
+          animationScript->init(m_Renderer, nullptr, nullptr);
+          m_ComponentManager->addComponent<AnimationComponent>(entity->getID(), animationScript);
+        }
       }
 
       m_ComponentManager->addComponent<MeshComponent>(entity->getID(), mesh);
