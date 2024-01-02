@@ -10,11 +10,7 @@ namespace Poulpe {
 
     public:
         EntityNode(Entity* entity) : m_Entity(std::unique_ptr<Entity>(entity)) {};
-        ~EntityNode() {
-          for (auto child : m_Children) {
-            delete child;
-          }
-        };
+        ~EntityNode() = default;
 
         Entity* getEntity() const { return m_Entity.get(); }
         EntityNode* getParent() const { return m_Parent.get(); }

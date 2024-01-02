@@ -22,3 +22,6 @@
 [submodule "volk"]
 	path = vendor/volk
 	url = https://github.com/zeux/volk.git
+[submodule "vendor/lua"]
+	path = vendor/lua
+	url = https://github.com/lua/lua.git

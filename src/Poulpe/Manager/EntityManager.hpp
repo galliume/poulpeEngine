@@ -38,7 +38,8 @@ namespace Poulpe
       bool shouldInverseTextureY,
       bool hasBbox,
       bool hasAnimation,
-      bool isPointLight);
+      bool isPointLight,
+      std::vector<std::string> animationScripts);
     void initWorldGraph();
 
   private:

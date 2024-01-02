@@ -20,7 +20,7 @@ namespace Poulpe
         void init();
         void run();
 
-        static std::atomic<int> s_MaxFPS;
+        static std::atomic<float> s_MaxFPS;
 
     private:
         static Application* s_Instance;

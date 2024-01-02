@@ -6,7 +6,7 @@
 
 namespace Poulpe
 {
-    std::atomic<int> Application::s_MaxFPS{ 0 };
+    std::atomic<float> Application::s_MaxFPS{ 0.f };
     Application* Application::s_Instance{ nullptr };
 
     Application::Application()

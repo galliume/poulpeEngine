@@ -36,15 +36,6 @@ namespace Poulpe
                 }
             }
             return nullptr;
-
-            //auto it = std::find_if(m_ComponentTypeMap[&typeid(T)].begin(), m_ComponentTypeMap[&typeid(T)].end(),
-            //    [&entityID](T & component) { return component.getOwner() == entityID; });
-
-            //if (it != m_ComponentTypeMap[&typeid(T)].end()) {
-            //    return static_cast<T*>(it);
-            //}else {
-            //    return nullptr;
-            //}
         }
 
         std::vector<const std::type_info*> getEntityComponents(IDType entityID) { return m_ComponentsEntityMap[entityID]; }
