@@ -12,6 +12,6 @@ namespace Poulpe
     void Mesh::visit(std::chrono::duration<float> deltaTime, IVisitable* visitable)
     {
         //@todo visit impl
-        PLP_WARN("visiting {} mesh {}", deltaTime, visitable->getName());
+        PLP_WARN("visiting {} mesh {}", deltaTime.count(), visitable->getName());
     }
 }
