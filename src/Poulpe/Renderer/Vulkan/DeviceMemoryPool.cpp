@@ -43,8 +43,6 @@ namespace Poulpe
              bufferSize = m_MaintenanceProperties.maxMemoryAllocationSize / m_MaxStaging;
              bufferTypeDebug = "STAGING";
            break;
-           default:
-             throw std::runtime_error("Memory type unknown");
       }
 
       auto poolType = m_Pool.find(memoryType);

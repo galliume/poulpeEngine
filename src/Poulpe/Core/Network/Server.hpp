@@ -6,6 +6,7 @@ namespace Poulpe
 {
   class Server
   {
+  public:
     Server() = default;
     ~Server() = default;
 

@@ -4,6 +4,8 @@
 #include "Poulpe/Component/AnimationScript.hpp"
 #include "Poulpe/Component/Renderer/RendererFactory.hpp"
 
+#include "Poulpe/Core/TinyObjLoader.hpp"
+
 #include <filesystem>
 
 namespace Poulpe
@@ -97,10 +99,10 @@ namespace Poulpe
             }
           }
         } else {
-          int count = static_cast<int>(data["count"]);
+          size_t count = static_cast<size_t>(data["count"]);
           form = static_cast<std::string>(data["form"]);
 
-          for (int i = 0; i < count; i++) {
+          for (size_t i = 0; i < count; i++) {
 
             glm::vec3 position{};
             auto positionData = (1 == data["positions"].size()) ? data["positions"].at(0) : data["positions"].at(i);
@@ -114,9 +116,9 @@ namespace Poulpe
             }
             else if ("line" == form) {
               position = glm::vec3(
-                static_cast<float>(positionData["x"]) + static_cast<float>(data["padding"]["x"]) * i,
-                static_cast<float>(positionData["y"]) + static_cast<float>(data["padding"]["y"]) * i,
-                static_cast<float>(positionData["z"]) + static_cast<float>(data["padding"]["z"]) * i
+                static_cast<float>(positionData["x"]) + static_cast<float>(data["padding"]["x"]) * static_cast<float>(i),
+                static_cast<float>(positionData["y"]) + static_cast<float>(data["padding"]["y"]) * static_cast<float>(i),
+                static_cast<float>(positionData["z"]) + static_cast<float>(data["padding"]["z"]) * static_cast<float>(i)
               );
             }
 

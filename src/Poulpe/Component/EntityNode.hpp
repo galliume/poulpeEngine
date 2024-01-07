@@ -9,7 +9,7 @@ namespace Poulpe {
     class EntityNode {
 
     public:
-        EntityNode(Entity* entity) : m_Entity(std::unique_ptr<Entity>(entity)) {};
+        EntityNode(Entity* entity) : m_Entity(std::unique_ptr<Entity>(entity)) {}
         ~EntityNode() = default;
 
         Entity* getEntity() const { return m_Entity.get(); }

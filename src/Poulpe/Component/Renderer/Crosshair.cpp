@@ -39,7 +39,7 @@ namespace Poulpe
         mesh->setApplyPushConstants([](
             VkCommandBuffer & commandBuffer, VkPipelineLayout pipelineLayout,
             [[maybe_unused]] IRenderer* const renderer,
-            [[maybe_unused]] IVisitable* const mesh) {
+            [[maybe_unused]] IVisitable* const meshCH) {
   
             float id = static_cast<float>(Renderer::s_Crosshair);
 

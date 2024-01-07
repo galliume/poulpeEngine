@@ -6,6 +6,8 @@
 
 #include "Poulpe/Renderer/Vulkan/VulkanAPI.hpp"
 
+#include <stb_image.h>
+
 namespace Poulpe
 {
   class Entity;

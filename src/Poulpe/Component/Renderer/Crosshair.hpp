@@ -8,7 +8,7 @@ namespace Poulpe
     {
     public:
         Crosshair() = default;
-        ~Crosshair() = default;
+        ~Crosshair() override = default;
 
         void createDescriptorSet(IVisitable* const mesh) override;
         void setPushConstants(IVisitable* const mesh) override;

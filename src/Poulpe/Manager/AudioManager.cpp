@@ -41,8 +41,7 @@ namespace Poulpe
         if (State::PLAY == m_State) {
           m_AmbientSoundIndex = index;
         }
-      }
-      catch (std::out_of_range const& exc) {
+      } catch (std::out_of_range const&) {
         PLP_WARN("Ambient sound index {} does not exists.", index);
       }
     }

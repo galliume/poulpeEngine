@@ -1,6 +1,13 @@
 #pragma once
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wreserved-identifier"
+#pragma clang diagnostic ignored "-Wold-style-cast"
+#pragma clang diagnostic ignored "-Wformat"
+#pragma clang diagnostic ignored "-Wunused-function"
 #include <miniaudio.h>
+#pragma clang diagnostic pop
+
 #include <nlohmann/json.hpp>
 
 namespace Poulpe

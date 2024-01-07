@@ -7,7 +7,7 @@ namespace Poulpe
     class AnimationComponent : public Component
     {
     public:
-        AnimationComponent() : Component() {};
+        AnimationComponent() : Component() {}
 
         template<typename T>
         void init(T* componentImpl)

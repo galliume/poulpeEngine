@@ -6,10 +6,11 @@ namespace Poulpe
 {
   class Socket
   {
-    Socket() = default;
+  public:
+    Socket(ISocket* socket);
     ~Socket() = default;
 
   private:
-    std::unique_ptr<Socket> m_pimpl;
+    std::unique_ptr<ISocket> m_Pimpl;
   };
 }

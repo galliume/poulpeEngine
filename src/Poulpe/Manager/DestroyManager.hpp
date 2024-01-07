@@ -5,9 +5,7 @@
 
 #include "Poulpe/Renderer/IRenderer.hpp"
 
-/**
-* @TODO refactor all destroy system....
-*/
+//@TODO refactor all destroy system...
 namespace Poulpe
 {
     class DestroyManager

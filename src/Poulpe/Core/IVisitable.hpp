@@ -9,7 +9,7 @@ namespace Poulpe
     class IVisitable
     {
     public:
-        virtual ~IVisitable() {};
+        virtual ~IVisitable() {}
 
         virtual Data* getData() = 0;
         virtual material_t const getMaterial() const = 0;

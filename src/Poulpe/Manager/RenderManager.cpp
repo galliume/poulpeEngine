@@ -14,6 +14,8 @@
 
 #include "Poulpe/Component/Renderer/RendererFactory.hpp"
 
+#include "Poulpe/Core/TinyObjLoader.hpp"
+
 #include "Poulpe/Renderer/Vulkan/Renderer.hpp"
 
 namespace Poulpe
@@ -70,8 +72,8 @@ namespace Poulpe
     {
         //m_DestroyManager->cleanEntities(*m_EntityManager->getEntities());
 
-        auto hud = m_EntityManager->getHUD();
-        m_DestroyManager->cleanEntities(*hud);
+        //auto hud = m_EntityManager->getHUD();
+        //m_DestroyManager->cleanEntities(*hud);
 
         m_DestroyManager->cleanShaders(m_ShaderManager->getShaders()->shaders);
         m_DestroyManager->cleanTextures(m_TextureManager->getTextures());

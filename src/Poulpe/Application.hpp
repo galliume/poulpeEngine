@@ -16,11 +16,11 @@ namespace Poulpe
     public:
         Application();
 
-        inline static Application* get() { return s_Instance; };
+        inline static Application* get() { return s_Instance; }
         void init();
         void run();
 
-        static float s_MaxFPS;
+        static unsigned int s_MaxFPS;
 
     private:
         static Application* s_Instance;

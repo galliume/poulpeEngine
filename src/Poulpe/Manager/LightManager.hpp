@@ -9,7 +9,7 @@ namespace Poulpe
     public:
 
         LightManager();
-        ~LightManager() = default;
+        ~LightManager() override = default;
 
         void animateAmbientLight(float deltaTime) override;
         inline Light getAmbientLight() override { return m_AmbientLight; }

@@ -104,7 +104,7 @@ namespace Poulpe
         semaType.sType = VK_STRUCTURE_TYPE_SEMAPHORE_TYPE_CREATE_INFO;
         semaType.semaphoreType = VK_SEMAPHORE_TYPE_BINARY;
         semaType.initialValue = 0;
-        semaType.pNext = NULL;
+        semaType.pNext = nullptr;
 
         VkSemaphoreCreateInfo sema{};
         sema.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
@@ -154,25 +154,25 @@ namespace Poulpe
             if (VK_SUCCESS != result) PLP_ERROR("can't create m_InFlightFences fence");
 
             auto cmdSky = std::make_unique<DrawCommand>();
-            cmdSky->buffer = &m_CommandBuffersSkybox[i],
-            cmdSky->stageFlags = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-            cmdSky->semaphore = &m_SkyboxSemaRenderFinished[i],
+            cmdSky->buffer = &m_CommandBuffersSkybox[i];
+            cmdSky->stageFlags = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+            cmdSky->semaphore = &m_SkyboxSemaRenderFinished[i];
             cmdSky->done.store(false);
 
             m_CmdSkyboxStatus[i] = std::move(cmdSky);
 
             auto cmdHUD = std::make_unique<DrawCommand>();
-            cmdHUD->buffer = &m_CommandBuffersHUD[i],
-            cmdHUD->stageFlags = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-            cmdHUD->semaphore = &m_HUDSemaRenderFinished[i],
+            cmdHUD->buffer = &m_CommandBuffersHUD[i];
+            cmdHUD->stageFlags = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+            cmdHUD->semaphore = &m_HUDSemaRenderFinished[i];
             cmdHUD->done.store(false);
 
             m_CmdHUDStatus[i] = std::move(cmdHUD);
 
             auto cmdEntities = std::make_unique<DrawCommand>();
-            cmdEntities->buffer = &m_CommandBuffersEntities[i],
-            cmdEntities->stageFlags = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-            cmdEntities->semaphore = &m_EntitiesSemaRenderFinished[i],
+            cmdEntities->buffer = &m_CommandBuffersEntities[i];
+            cmdEntities->stageFlags = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+            cmdEntities->semaphore = &m_EntitiesSemaRenderFinished[i];
             cmdEntities->done.store(false);
 
             m_CmdEntitiesStatus[i] = std::move(cmdEntities);
@@ -271,7 +271,7 @@ namespace Poulpe
           descriptorWrites[1].dstBinding = 1;
           descriptorWrites[1].dstArrayElement = 0;
           descriptorWrites[1].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-          descriptorWrites[1].descriptorCount = storageBufferInfos.size();
+          descriptorWrites[1].descriptorCount = static_cast<uint32_t>(storageBufferInfos.size());
           descriptorWrites[1].pBufferInfo = storageBufferInfos.data();
 
           vkUpdateDescriptorSets(m_API->getDevice(), static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
@@ -279,7 +279,7 @@ namespace Poulpe
       }
 
       //m_API->beginCommandBuffer(m_CommandBuffersEntities[m_CurrentFrame]);
-      m_API->startMarker(m_CommandBuffersEntities[m_CurrentFrame], "shadow_map_" + pipelineName, 0.1, 0.2, 0.3);
+      m_API->startMarker(m_CommandBuffersEntities[m_CurrentFrame], "shadow_map_" + pipelineName, 0.1f, 0.2f, 0.3f);
 
       m_API->transitionImageLayout(m_CommandBuffersEntities[m_CurrentFrame], m_DepthMapImages[0],
         VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, VK_IMAGE_ASPECT_DEPTH_BIT);
@@ -334,8 +334,8 @@ namespace Poulpe
             mesh->getData()->m_Ubos[i].projection = light.lightSpaceMatrix;
           }
 
-          int min{ 0 };
-          int max{ 0 };
+          unsigned int min{ 0 };
+          unsigned int max{ 0 };
           //@todo wtf to refactor
           for (size_t i = 0; i < mesh->getUniformBuffers()->size(); ++i) {
               max = mesh->getData()->m_UbosOffset.at(i);
@@ -414,7 +414,7 @@ namespace Poulpe
           m_API->setViewPort(m_CommandBuffersEntities[m_CurrentFrame]);
           m_API->setScissor(m_CommandBuffersEntities[m_CurrentFrame]);
 
-          m_API->startMarker(m_CommandBuffersEntities[m_CurrentFrame], "entities_drawing", 0.2, 0.2, 0.9);
+          m_API->startMarker(m_CommandBuffersEntities[m_CurrentFrame], "entities_drawing", 0.2f, 0.2f, 0.9f);
 
           for (auto& entity : m_Entities) {
             if (!entity) continue;
@@ -436,8 +436,8 @@ namespace Poulpe
               mesh->getData()->m_Ubos[i].projection = getPerspective();
             }
 
-            int min{ 0 };
-            int max{ 0 };
+            uint32_t min{ 0 };
+            uint32_t max{ 0 };
 
             for (size_t i = 0; i < mesh->getUniformBuffers()->size(); ++i) {
               max = mesh->getData()->m_UbosOffset.at(i);
@@ -474,7 +474,7 @@ namespace Poulpe
         if (auto skybox = m_EntityManager->getSkybox()) {
 
             beginRendering(m_CommandBuffersSkybox[m_CurrentFrame], VK_ATTACHMENT_LOAD_OP_CLEAR, VK_ATTACHMENT_STORE_OP_STORE);
-            m_API->startMarker(m_CommandBuffersSkybox[m_CurrentFrame], "skybox_drawing", 0.3, 0.2, 0.1);
+            m_API->startMarker(m_CommandBuffersSkybox[m_CurrentFrame], "skybox_drawing", 0.3f, 0.2f, 0.1f);
 
             auto meshComponent = m_ComponentManager->getComponent<MeshComponent>(skybox->getID());
             Mesh* mesh = meshComponent->hasImpl<Mesh>();
@@ -505,7 +505,7 @@ namespace Poulpe
     void Renderer::drawHUD()
     {
         beginRendering(m_CommandBuffersHUD[m_CurrentFrame]);
-        m_API->startMarker(m_CommandBuffersHUD[m_CurrentFrame], "hud_drawing", 0.3, 0.2, 0.1);
+        m_API->startMarker(m_CommandBuffersHUD[m_CurrentFrame], "hud_drawing", 0.3f, 0.2f, 0.1f);
 
         for (auto const & entity : * m_EntityManager->getHUD()) {
 
@@ -782,12 +782,12 @@ namespace Poulpe
         VkSubmitInfo submitInfo{};
         submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
         submitInfo.pCommandBuffers = cmdBuffers.data();
-        submitInfo.commandBufferCount = cmdBuffers.size();
+        submitInfo.commandBufferCount = static_cast<uint32_t>(cmdBuffers.size());
         submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-        submitInfo.pWaitDstStageMask = waitStages.data();;
-        submitInfo.signalSemaphoreCount = signalSemaphores.size();
+        submitInfo.pWaitDstStageMask = waitStages.data();
+        submitInfo.signalSemaphoreCount = static_cast<uint32_t>(signalSemaphores.size());
         submitInfo.pSignalSemaphores = signalSemaphores.data();
-        submitInfo.waitSemaphoreCount = waitSemaphores.size();
+        submitInfo.waitSemaphoreCount = static_cast<uint32_t>(waitSemaphores.size());
         submitInfo.pWaitSemaphores = waitSemaphores.data();
 
         auto queue = m_API->getGraphicsQueues().at(0);
@@ -796,7 +796,7 @@ namespace Poulpe
 
         VkPresentInfoKHR presentInfo{};
         presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
-        presentInfo.waitSemaphoreCount = signalSemaphores.size();
+        presentInfo.waitSemaphoreCount = static_cast<uint32_t>(signalSemaphores.size());
         presentInfo.pWaitSemaphores = signalSemaphores.data();
         presentInfo.swapchainCount = 1;
         presentInfo.pSwapchains = swapChains.data();

@@ -22,7 +22,7 @@ namespace Poulpe
     {
     public:
         Mesh() = default;
-        ~Mesh() = default;
+        ~Mesh() override = default;
 
         Data* getData() override { return & m_Data; }
         material_t const getMaterial() const override { return m_Material; }
@@ -35,7 +35,7 @@ namespace Poulpe
         void init(
             [[maybe_unused]] IRenderer* const renderer,
             [[maybe_unused]] ITextureManager* const textureManager, 
-            [[maybe_unused]] ILightManager* const lightManager) override {};
+            [[maybe_unused]] ILightManager* const lightManager) override {}
         
         bool isDirty() override { return m_IsDirty.load(); }
         void visit(std::chrono::duration<float> deltaTime, IVisitable* const  visitable) override;
@@ -44,7 +44,7 @@ namespace Poulpe
           std::function<void(VkCommandBuffer& commandBuffer,
             VkPipelineLayout pipelineLayout,
             IRenderer* const renderer,
-            IVisitable* const mesh)> fn) override { m_ApplyPushConstants = fn; };
+            IVisitable* const mesh)> fn) override { m_ApplyPushConstants = fn; }
 
         void setData(Data data) override { m_Data = std::move(data); }
         void setDescSet(VkDescriptorSet descSet) override { m_DescSet = descSet; }

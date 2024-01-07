@@ -12,7 +12,6 @@ namespace Poulpe
     {
     public:
         Component() { m_ID = GUIDGenerator::getGUID(); }
-        ~Component() { delete m_Pimpl; }
 
         IDType getID() { return m_ID; }
         IDType getOwner() { return m_Owner; }

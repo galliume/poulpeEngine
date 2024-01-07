@@ -8,7 +8,7 @@ namespace Poulpe
     {
     public:
         Grid() = default;
-        ~Grid() = default;
+        ~Grid() override = default;
 
         void createDescriptorSet(IVisitable* const mesh) override;
         void setPushConstants(IVisitable* const mesh) override;

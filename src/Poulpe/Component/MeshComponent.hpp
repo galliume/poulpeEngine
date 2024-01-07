@@ -8,7 +8,7 @@ namespace Poulpe
     class MeshComponent : public Component
     {
     public:
-        MeshComponent() : Component() {};
+        MeshComponent() : Component() {}
 
         void visit(std::chrono::duration<float> deltaTime, IVisitable* visitable)
         {

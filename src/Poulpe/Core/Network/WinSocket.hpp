@@ -2,11 +2,19 @@
 
 #include "ISocket.hpp"
 
+#include <WinSock2.h>
+
 namespace Poulpe
 {
   class WinSocket : public ISocket
   {
-    WinSocket() = default;
-    ~WinSocket() = default;
+  public:
+    WinSocket();
+    ~WinSocket();
+
+    int checkError();
+  private:
+    WSADATA m_Data;
+    SOCKET m_Socket;
   };
 }

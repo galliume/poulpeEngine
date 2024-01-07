@@ -45,7 +45,7 @@ namespace Poulpe {
     {
     public:
         VulkanAPI(Window* window);
-        ~VulkanAPI();
+        ~VulkanAPI() override;
 
         /**
         * Vulkan init functions, before main loop.
@@ -263,7 +263,7 @@ namespace Poulpe {
 
         inline uint32_t getQueueFamily() const { return m_QueueFamilyIndices.graphicsFamily.value(); }
 
-        inline VkInstance getInstance() const { return m_Instance; };
+        inline VkInstance getInstance() const { return m_Instance; }
 
         inline VkPhysicalDevice getPhysicalDevice() const { return m_PhysicalDevice; }
 
@@ -309,7 +309,7 @@ namespace Poulpe {
 
         uint32_t getQueueCount() { return m_queueCount; }
 
-        std::vector<VkQueue> getPresentQueue() { return m_PresentQueues; };
+        std::vector<VkQueue> getPresentQueue() { return m_PresentQueues; }
 
         void waitIdle();
 

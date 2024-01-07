@@ -43,13 +43,13 @@ namespace Poulpe
         mesh->setApplyPushConstants([](
             VkCommandBuffer & commandBuffer, 
             VkPipelineLayout pipelineLayout,
-            IRenderer* const renderer, IVisitable* const mesh) {
+            IRenderer* const renderer, IVisitable* const meshS) {
 
             constants pushConstants{};
-            pushConstants.textureIDBB = glm::vec3(mesh->getData()->m_TextureIndex, 0.0, 0.0);
+            pushConstants.textureIDBB = glm::vec3(meshS->getData()->m_TextureIndex, 0.0, 0.0);
             pushConstants.view = renderer->getCamera()->lookAt();
             pushConstants.viewPos = renderer->getCamera()->getPos();
-            pushConstants.mapsUsed = mesh->getData()->mapsUsed;
+            pushConstants.mapsUsed = meshS->getData()->mapsUsed;
 
             vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(constants),
                 & pushConstants);
