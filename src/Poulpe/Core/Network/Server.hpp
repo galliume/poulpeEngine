@@ -4,13 +4,18 @@
 
 namespace Poulpe
 {
-  class Server
+  class Server : public IServer
   {
   public:
-    Server() = default;
-    ~Server() = default;
+    Server(IServer* server);
+    ~Server() override = default;
+
+    void bind(std::string const& port) override;
+    void listen() override;
+    void read() override;
+    void send(std::string message) override;
 
   private:
-    std::unique_ptr<IServer> m_pimpl;
+    IServer* m_Pimpl;
   };
 }

@@ -4,13 +4,15 @@
 
 #include "Poulpe/Manager/InputManager.hpp"
 
-#include "Poulpe/Core/Network/ISocket.hpp"
+#include "Poulpe/Core/Network/Server.hpp"
 #include "Poulpe/Core/Network/Socket.hpp"
 //@todo detect OS
+#include "Poulpe/Core/Network/WinServer.hpp"
 #include "Poulpe/Core/Network/WinSocket.hpp"
 
 #include <GLFW/glfw3.h>
 
+//@todo find a better way than this
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdouble-promotion"
 #pragma clang diagnostic ignored "-Wmissing-prototypes"
@@ -21,7 +23,6 @@
 #pragma clang diagnostic ignored "-Wcovered-switch-default"
 #pragma clang diagnostic ignored "-Wcast-align"
 #pragma clang diagnostic ignored "-Wimplicit-int-float-conversion"
-#pragma clang diagnostic ignored "-Wcast-function-type-strict"
 #pragma clang diagnostic ignored "-Wmissing-variable-declarations"
 #pragma clang diagnostic ignored "-Wcomma"
 #pragma clang diagnostic ignored "-Wformat"
@@ -32,13 +33,16 @@
 #pragma clang diagnostic ignored "-Wundef"
 #pragma clang diagnostic ignored "-Wimplicit-int-conversion"
 #pragma clang diagnostic ignored "-Wtautological-type-limit-compare"
+#pragma clang diagnostic ignored "-Wcast-function-type-strict"
 #define MINIAUDIO_IMPLEMENTATION
 #include <miniaudio.h>
 #pragma clang diagnostic pop
 
+#include <thread>
+
 namespace Poulpe
 {
-    unsigned int Application::s_MaxFPS{ 0 };
+    unsigned int Application::s_MaxFPS{ 60 };
     Application* Application::s_Instance{ nullptr };
 
     Application::Application()
@@ -82,7 +86,27 @@ namespace Poulpe
         * @todo start server mode
         * @todo start socket
         **/
-        [[maybe_unused]]Socket* socket = new Socket(new WinSocket());
+        std::shared_ptr<Server> server = std::make_shared<Server>(new WinServer());
+        server->bind("8289");
+        server->listen();
+
+        //Locator::getThreadPool()->submit("winServer", [&server]() {
+        //  server->bind("8289");
+        //  server->listen();
+        //});
+
+        //std::this_thread::sleep_for(std::chrono::milliseconds(3000));
+
+        //std::shared_ptr<Socket> clientSocket = std::make_shared<Socket>(new WinSocket());
+        //Locator::getThreadPool()->submit("winClient", [&clientSocket]() {
+        //  clientSocket->bind("127.0.0.1", 8289);
+        //  clientSocket->connect();
+        //  clientSocket->listen();
+        //});
+
+        server->send("Hello from PoulpeEngine!");
+        //clientSocket->read();
+        //server->read();
 
         while (!glfwWindowShouldClose(m_RenderManager->getWindow()->get())) {
 

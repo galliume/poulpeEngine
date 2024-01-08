@@ -4,7 +4,7 @@
 
 namespace Poulpe
 {
-  class UnixSocket : public ISocket
+  class UnixSocket
   {
   public:
     UnixSocket() = default;
