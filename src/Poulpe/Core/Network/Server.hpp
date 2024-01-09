@@ -11,6 +11,8 @@ namespace Poulpe
     ~Server() override = default;
 
     void bind(std::string const& port) override;
+    void close() override;
+    inline ServerStatus getStatus() override { return m_Pimpl->getStatus(); }
     void listen() override;
     void read() override;
     void send(std::string message) override;

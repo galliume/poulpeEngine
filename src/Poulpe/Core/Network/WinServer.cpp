@@ -2,6 +2,8 @@
 
 #include <vector>
 
+#if defined(_WIN32) || defined(WIN32)
+
 #include <WS2tcpip.h>
 
 namespace Poulpe
@@ -9,6 +11,24 @@ namespace Poulpe
   WinServer::~WinServer()
   {
     ::closesocket(m_ServSocket);
+
+    for (auto& socket : m_Sockets) {
+      ::closesocket(socket);
+    }
+    ::WSACleanup();
+  }
+
+  void WinServer::close()
+  {
+    ::closesocket(m_ServSocket);
+
+    int status = ::WSAGetLastError();
+
+    if (0 != status) {
+      PLP_ERROR("Error on WinServer close {}", status);
+    }
+
+    m_Status = ServerStatus::NOT_RUNNING;
   }
 
   void WinServer::bind(std::string const& port)
@@ -29,7 +49,7 @@ namespace Poulpe
     hints.ai_family = AF_INET;
     hints.ai_socktype = SOCK_STREAM;
     hints.ai_protocol = IPPROTO_TCP;
-    //hints.ai_flags = AI_PASSIVE;
+    hints.ai_flags = AI_PASSIVE;
 
     status = ::getaddrinfo("localhost", port.c_str(), &hints, &results);
 
@@ -81,23 +101,24 @@ namespace Poulpe
       return;
     }
 
-    PLP_TRACE("Start accepting");
+    m_Status = ServerStatus::RUNNING;
+    PLP_TRACE("Server running");
 
     while (true) {
       SOCKET socket = ::accept(m_ServSocket, nullptr, nullptr);
       
-      PLP_TRACE("Socket accepted");
-
       if (socket == INVALID_SOCKET)
       {
         PLP_ERROR("ServerSocket can't accept {}", ::WSAGetLastError());
         ::closesocket(m_ServSocket);
         ::WSACleanup();
-      }
-
-      {
-        std::lock_guard guard(m_MutexSockets);
-        m_Sockets.emplace_back(socket);
+      } else {
+        PLP_TRACE("Client connected");
+        {
+          std::lock_guard guard(m_MutexSockets);
+          m_Sockets.emplace_back(socket);
+        }
+        send("Connected to PoulpeEngine!");
       }
     }
   }
@@ -136,3 +157,5 @@ namespace Poulpe
     }
   }
 }
+
+#endif

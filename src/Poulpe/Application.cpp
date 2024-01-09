@@ -4,12 +4,6 @@
 
 #include "Poulpe/Manager/InputManager.hpp"
 
-#include "Poulpe/Core/Network/Server.hpp"
-#include "Poulpe/Core/Network/Socket.hpp"
-//@todo detect OS
-#include "Poulpe/Core/Network/WinServer.hpp"
-#include "Poulpe/Core/Network/WinSocket.hpp"
-
 #include <GLFW/glfw3.h>
 
 //@todo find a better way than this
@@ -70,6 +64,8 @@ namespace Poulpe
 
         m_RenderManager = std::make_unique<RenderManager>(window);
         m_RenderManager->init();
+
+        m_NetworkManager = std::make_unique<NetworkManager>();
     }
 
     void Application::run()
@@ -79,34 +75,6 @@ namespace Poulpe
         PLP_TRACE("Started in {} seconds", loadedTime.count());
 
         auto lastTime = std::chrono::steady_clock::now();
-
-
-        /**
-        * PoulpeEdit integration
-        * @todo start server mode
-        * @todo start socket
-        **/
-        std::shared_ptr<Server> server = std::make_shared<Server>(new WinServer());
-        server->bind("8289");
-        server->listen();
-
-        //Locator::getThreadPool()->submit("winServer", [&server]() {
-        //  server->bind("8289");
-        //  server->listen();
-        //});
-
-        //std::this_thread::sleep_for(std::chrono::milliseconds(3000));
-
-        //std::shared_ptr<Socket> clientSocket = std::make_shared<Socket>(new WinSocket());
-        //Locator::getThreadPool()->submit("winClient", [&clientSocket]() {
-        //  clientSocket->bind("127.0.0.1", 8289);
-        //  clientSocket->connect();
-        //  clientSocket->listen();
-        //});
-
-        server->send("Hello from PoulpeEngine!");
-        //clientSocket->read();
-        //server->read();
 
         while (!glfwWindowShouldClose(m_RenderManager->getWindow()->get())) {
 
@@ -134,5 +102,10 @@ namespace Poulpe
             lastTime = currentTime;
         }
         m_RenderManager->cleanUp();
+    }
+
+    void Application::startServer(std::string const& port)
+    {
+      m_NetworkManager->startServer(port);
     }
 }

@@ -25,13 +25,32 @@
 
 int main(int argc, char** argv)
 {
-    if (argc < 2) {
-      std::cout << argv[0] << " Version " << PoulpeEngine_VERSION_MAJOR << "."
-              << PoulpeEngine_VERSION_MINOR << std::endl;
+    std::cout << argv[0] << " Version " << PoulpeEngine_VERSION_MAJOR << "." << PoulpeEngine_VERSION_MINOR << std::endl;
+
+    bool serverMode{ false };
+    std::string port{ "8289" };
+
+    //@todo clean cmd line parser
+    for (int i = 1; i < argc; ++i) {
+      switch (i) {
+      case 1:
+        serverMode = true;
+        break;
+      case 2:
+        port = argv[i];
+        break;
+      }
+    }
+    std::unique_ptr<Poulpe::Application> app = std::make_unique<Poulpe::Application>();
+    app->init();
+
+    PLP_TRACE("serverMode {}", serverMode);
+
+    if (serverMode) {
+      PLP_TRACE("port {}", port);
+      app->startServer(port);
     }
 
-    std::unique_ptr<Poulpe::Application>app = std::make_unique<Poulpe::Application>();
-    app->init();
     app->run();
 
     return 0;

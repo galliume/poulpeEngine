@@ -12,6 +12,11 @@ namespace Poulpe
     m_Pimpl->bind(port);
   }
 
+  void Server::close()
+  {
+    m_Pimpl->close();
+  }
+
   void Server::listen()
   {
     m_Pimpl->listen();

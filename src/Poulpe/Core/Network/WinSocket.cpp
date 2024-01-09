@@ -1,11 +1,24 @@
 #include "WinSocket.hpp"
 
+#if defined(_WIN32) || defined(WIN32)
+
 //https://learn.microsoft.com/en-us/windows/win32/api/winsock2/
 #include <WinSock2.h>
 #include <ws2tcpip.h>
 
 namespace Poulpe
 {
+  WinSocket::WinSocket()
+  {
+    WSAStartup(MAKEWORD(2, 2), &m_Data);
+
+    m_Socket = ::socket(AF_INET, SOCK_STREAM, 0);
+
+    if (INVALID_SOCKET == m_Socket) {
+      throw std::runtime_error("Error while creating the socket");
+    }
+  }
+
   WinSocket::~WinSocket()
   {
    ::closesocket(m_Socket);
@@ -32,14 +45,6 @@ namespace Poulpe
 
   void WinSocket::bind(std::string const& ip, unsigned short const port)
   {
-    WSAStartup(MAKEWORD(2, 2), &m_Data);
-
-    m_Socket = ::socket(AF_INET, SOCK_STREAM, 0);
-
-    if (INVALID_SOCKET == m_Socket) {
-      throw std::runtime_error("Error while creating the socket");
-    }
-
     ::inet_pton(AF_INET, ip.c_str(), & m_SockAddrIn.sin_addr.s_addr);
     m_SockAddrIn.sin_family = AF_INET;
     m_SockAddrIn.sin_port = ::htons(port);
@@ -91,3 +96,5 @@ namespace Poulpe
     WSACleanup();
   }
 }
+
+#endif

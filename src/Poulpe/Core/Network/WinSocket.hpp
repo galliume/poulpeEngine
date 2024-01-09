@@ -2,6 +2,8 @@
 
 #include "ISocket.hpp"
 
+#if defined(_WIN32) || defined(WIN32)
+
 #include <WinSock2.h>
 
 namespace Poulpe
@@ -10,7 +12,7 @@ namespace Poulpe
   class WinSocket : public ISocket
   {
   public:
-    WinSocket() = default;
+    WinSocket();
     ~WinSocket() override;
 
     void close() override;
@@ -31,3 +33,5 @@ namespace Poulpe
     unsigned short m_Port;
   };
 }
+
+#endif
