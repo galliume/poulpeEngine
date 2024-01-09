@@ -4,8 +4,6 @@
 #include "Poulpe/Component/Entity.hpp"
 #include "Poulpe/Component/EntityNode.hpp"
 
-#include "Poulpe/Core/TinyObjLoader.hpp"
-
 #include "Poulpe/Manager/TextureManager.hpp"
 #include "Poulpe/Manager/LightManager.hpp"
 #include "Poulpe/Manager/ComponentManager.hpp"

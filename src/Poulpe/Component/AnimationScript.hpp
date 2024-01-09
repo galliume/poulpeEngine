@@ -27,7 +27,7 @@ namespace Poulpe
     };
 
     AnimationScript(std::string const & scriptPath);
-    ~AnimationScript();
+    ~AnimationScript() override;
 
     Data* getData() { return m_Data; }
 

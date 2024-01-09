@@ -8,7 +8,7 @@ namespace Poulpe
     {
     public:
         Skybox() = default;
-        ~Skybox() = default;
+        ~Skybox() override = default;
 
         void createDescriptorSet(IVisitable* const mesh) override;
         void setPushConstants(IVisitable* const mesh) override;

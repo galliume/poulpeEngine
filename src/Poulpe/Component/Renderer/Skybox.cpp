@@ -30,10 +30,10 @@ namespace Poulpe
         mesh->setApplyPushConstants([](VkCommandBuffer& commandBuffer,
             VkPipelineLayout pipelineLayout,
             IRenderer* const renderer,
-            IVisitable* const mesh) {
+            IVisitable* const meshS) {
 
             constants pushConstants{};
-            pushConstants.textureIDBB = glm::vec3(mesh->getData()->m_TextureIndex, 0.0f, 0.0f);
+            pushConstants.textureIDBB = glm::vec3(meshS->getData()->m_TextureIndex, 0.0f, 0.0f);
             pushConstants.view = glm::mat4(glm::mat3(renderer->getCamera()->lookAt()));
             pushConstants.viewPos = renderer->getCamera()->getPos();
 

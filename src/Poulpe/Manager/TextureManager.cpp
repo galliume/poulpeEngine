@@ -85,13 +85,15 @@ namespace Poulpe
     uint32_t mipLevels = 1;
     VkCommandPool commandPool = m_Renderer->createCommandPool();
 
-    texWidth = static_cast<uint32_t>(texWidth);
-    texHeight = static_cast<uint32_t>(texHeight);
-    texChannels = static_cast<uint32_t>(texChannels);
-
     VkCommandBuffer commandBuffer = m_Renderer->allocateCommandBuffers(commandPool)[0];
     m_Renderer->beginCommandBuffer(commandBuffer);
-    m_Renderer->createSkyboxTextureImage(commandBuffer, skyboxPixels, texWidth, texHeight, mipLevels, skyboxImage, VK_FORMAT_R8G8B8A8_SRGB);
+    m_Renderer->createSkyboxTextureImage(commandBuffer,
+      skyboxPixels,
+      static_cast<uint32_t>(texWidth),
+      static_cast<uint32_t>(texHeight),
+      mipLevels,
+      skyboxImage,
+      VK_FORMAT_R8G8B8A8_SRGB);
 
     VkImageView textureImageView = m_Renderer->createSkyboxImageView(skyboxImage, VK_FORMAT_R8G8B8A8_SRGB, mipLevels);
     VkSampler textureSampler = m_Renderer->createSkyboxTextureSampler(mipLevels);
@@ -100,9 +102,9 @@ namespace Poulpe
     m_Skybox.setImageView(textureImageView);
     m_Skybox.setSampler(textureSampler);
     m_Skybox.setMipLevels(mipLevels);
-    m_Skybox.setWidth(texWidth);
-    m_Skybox.setHeight(texHeight);
-    m_Skybox.setChannels(texChannels);
+    m_Skybox.setWidth(static_cast<uint32_t>(texWidth));
+    m_Skybox.setHeight(static_cast<uint32_t>(texHeight));
+    m_Skybox.setChannels(static_cast<uint32_t>(texChannels));
     m_Skybox.setIsPublic(true);
 
     vkFreeCommandBuffers(m_Renderer->getDevice(), commandPool, 1, &commandBuffer);
@@ -139,7 +141,13 @@ namespace Poulpe
     VkCommandBuffer commandBuffer = m_Renderer->allocateCommandBuffers(commandPool)[0];
 
     m_Renderer->beginCommandBuffer(commandBuffer);
-    m_Renderer->createTextureImage(commandBuffer, pixels, texWidth, texHeight, mipLevels, textureImage, VK_FORMAT_R8G8B8A8_SRGB);
+    m_Renderer->createTextureImage(commandBuffer,
+      pixels,
+      static_cast<uint32_t>(texWidth),
+      static_cast<uint32_t>(texHeight),
+      mipLevels,
+      textureImage,
+      VK_FORMAT_R8G8B8A8_SRGB);
 
     VkImageView textureImageView = m_Renderer->createImageView(textureImage, VK_FORMAT_R8G8B8A8_SRGB, mipLevels);
     VkSampler textureSampler = m_Renderer->createTextureSampler(mipLevels);
@@ -150,9 +158,9 @@ namespace Poulpe
     texture.setImageView(textureImageView);
     texture.setSampler(textureSampler);
     texture.setMipLevels(mipLevels);
-    texture.setWidth(texWidth);
-    texture.setHeight(texHeight);
-    texture.setChannels(texChannels);
+    texture.setWidth(static_cast<uint32_t>(texWidth));
+    texture.setHeight(static_cast<uint32_t>(texHeight));
+    texture.setChannels(static_cast<uint32_t>(texChannels));
     texture.setIsPublic(isPublic);
     texture.setPath(path);
 

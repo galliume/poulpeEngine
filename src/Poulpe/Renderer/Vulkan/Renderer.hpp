@@ -32,7 +32,7 @@ namespace Poulpe
       ILightManager* const lightManager,
       ITextureManager* const textureManager
     );
-    ~Renderer() = default;
+    ~Renderer() override = default;
 
     inline void addCamera(Camera* const camera) override { m_Camera = camera; }
     void addEntities(std::vector<Entity*> entities) override;
@@ -53,15 +53,15 @@ namespace Poulpe
     void drawSkybox();
     void endRendering(VkCommandBuffer commandBuffer);
     inline Camera* getCamera() override { return m_Camera; }
-    inline uint32_t getCurrentFrameIndex() const { return m_CurrentFrame; };
-    inline std::vector<VkImageView>* getDepthMapImageViews() override { return & m_DepthMapImageViews; };
-    inline std::vector<VkSampler>* getDepthMapSamplers() override { return & m_DepthMapSamplers; };
-    inline bool getDrawBbox() { return m_DrawBbox; };
+    inline uint32_t getCurrentFrameIndex() const { return m_CurrentFrame; }
+    inline std::vector<VkImageView>* getDepthMapImageViews() override { return & m_DepthMapImageViews; }
+    inline std::vector<VkSampler>* getDepthMapSamplers() override { return & m_DepthMapSamplers; }
+    inline bool getDrawBbox() { return m_DrawBbox; }
     inline std::vector<VkDescriptorSetLayout>* getDescriptorSetLayouts() override { return & m_DescriptorSetLayouts; }
     inline VkDevice getDevice() override { return m_API->getDevice(); }
     inline glm::mat4 getPerspective() override { return m_Perspective; }
-    VulkanPipeline* getPipeline(std::string const & shaderName) override { return & m_Pipelines[shaderName]; };
-    inline VkSwapchainKHR getSwapChain() { return m_SwapChain; };
+    VulkanPipeline* getPipeline(std::string const & shaderName) override { return & m_Pipelines[shaderName]; }
+    inline VkSwapchainKHR getSwapChain() { return m_SwapChain; }
     inline std::vector<VkImage>* getSwapChainImages() override { return & m_SwapChainImages; }
     inline  std::vector<VkImageView>* getSwapChainImageViews() { return &m_SwapChainImageViews; }
     void immediateSubmit(std::function<void(VkCommandBuffer cmd)> && function, int queueIndex = 0) override;
@@ -69,11 +69,11 @@ namespace Poulpe
     void recreateSwapChain() override;
     void renderScene() override;
     void setDeltatime(float deltaTime) override;
-    inline void setDrawBbox(bool draw) override { m_DrawBbox = draw; };
+    inline void setDrawBbox(bool draw) override { m_DrawBbox = draw; }
     void setRayPick(float x, float y, float z, int width, int height);
     void shouldRecreateSwapChain() override;
     void showGrid(bool show) override;
-    inline void stopRendering() override { m_RenderingStopped = true; };
+    inline void stopRendering() override { m_RenderingStopped = true; }
 
     //void RenderForImGui(VkCommandBuffer cmdBuffer, VkFramebuffer swapChainFramebuffer);
     //std::pair<VkSampler, VkImageView> getImguiTexture() {
@@ -95,7 +95,7 @@ namespace Poulpe
       VkCommandBufferUsageFlagBits flags = VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT,
       VkCommandBufferInheritanceInfo inheritanceInfo = {}) override {
         return m_API->beginCommandBuffer(commandBuffer, flags, inheritanceInfo);
-    };
+    }
     VkCommandPool createCommandPool() override {
       return m_API->createCommandPool();
     }
@@ -111,7 +111,7 @@ namespace Poulpe
       std::vector<VkDescriptorSetLayout> const & descriptorSetLayouts,
       uint32_t count = 100) override {
         return m_API->createDescriptorSets(descriptorPool, descriptorSetLayouts, count);
-    };
+    }
     VkPipeline createGraphicsPipeline(
       VkPipelineLayout pipelineLayout,
       std::string_view name,
@@ -168,7 +168,7 @@ namespace Poulpe
     }
     Buffer createStorageBuffers(size_t storageBuffer) override {
       return m_API->createStorageBuffers(storageBuffer);
-    };
+    }
     void createTextureImage(VkCommandBuffer& commandBuffer,
       stbi_uc* pixels,
       uint32_t texWidth,
@@ -183,7 +183,7 @@ namespace Poulpe
           mipLevels,
           textureImage,
           format);
-    };
+    }
     VkSampler createTextureSampler(uint32_t mipLevels) override {
       return m_API->createTextureSampler(mipLevels);
     }

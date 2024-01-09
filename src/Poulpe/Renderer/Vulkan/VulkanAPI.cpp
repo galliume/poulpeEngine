@@ -5,6 +5,13 @@
 #include <set>
 #include <volk.h>
 
+//@todo this class needs a huge clean up
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wcast-function-type-strict"
+#pragma clang diagnostic ignored "-Wold-style-cast"
+#pragma clang diagnostic ignored "-Wsign-conversion"
+#pragma clang diagnostic ignored "-Wshorten-64-to-32"
+
 namespace Poulpe {
 
     VkResult CreateDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerCreateInfoEXT const * pCreateInfo,
@@ -40,20 +47,22 @@ namespace Poulpe {
 
         switch (messageSeverity)
         {
-        case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT:
-        {
-            PLP_FATAL("{} : {}", messageType, pCallbackData->pMessage);
-            break;
-        }
-        case VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT:
-        {
-            PLP_WARN("{} : {}", messageType, pCallbackData->pMessage);
-            break;
-        }
-        default:
-        {
-            //PLP_TRACE("{} : {}", messageType, pCallbackData->pMessage);
-        }
+          case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT:
+          {
+              PLP_FATAL("{} : {}", messageType, pCallbackData->pMessage);
+              break;
+          }
+          case VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT:
+          {
+              PLP_WARN("{} : {}", messageType, pCallbackData->pMessage);
+              break;
+          }
+          case VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT:
+          case VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT:
+          case VK_DEBUG_UTILS_MESSAGE_SEVERITY_FLAG_BITS_MAX_ENUM_EXT:
+          {
+              PLP_TRACE("{} : {}", messageType, pCallbackData->pMessage);
+          }
         }
         return VK_FALSE;
     }
@@ -843,7 +852,7 @@ namespace Poulpe {
                 "_" + std::to_string(m_DeviceProps.deviceID) + "_" + name.data() + ".bin";
 
             bool badCache = false;
-            size_t cacheFileSize = 0;
+            std::streamsize cacheFileSize = 0;
             void* cacheFileData = nullptr;
             std::string pReadFile = "";
 
@@ -1384,20 +1393,20 @@ namespace Poulpe {
       std::vector<VkDescriptorBufferInfo> storageBufferInfos;
 
       std::for_each(std::begin(uniformBuffers), std::end(uniformBuffers),
-        [&bufferInfos](const Buffer& uniformBuffer)
+        [&bufferInfos](const Buffer& buffer)
         {
           VkDescriptorBufferInfo bufferInfo{};
-          bufferInfo.buffer = uniformBuffer.buffer;
+          bufferInfo.buffer = buffer.buffer;
           bufferInfo.offset = 0;
           bufferInfo.range = VK_WHOLE_SIZE;
           bufferInfos.emplace_back(bufferInfo);
         });
 
       std::for_each(std::begin(storageBuffers), std::end(storageBuffers),
-        [&storageBufferInfos](const Buffer& storageBuffers)
+        [&storageBufferInfos](const Buffer& buffer)
         {
           VkDescriptorBufferInfo bufferInfo{};
-          bufferInfo.buffer = storageBuffers.buffer;
+          bufferInfo.buffer = buffer.buffer;
           bufferInfo.offset = 0;
           bufferInfo.range = VK_WHOLE_SIZE;
           storageBufferInfos.emplace_back(bufferInfo);
@@ -1582,7 +1591,7 @@ namespace Poulpe {
     void VulkanAPI::addPipelineBarriers(VkCommandBuffer commandBuffer, std::vector<VkImageMemoryBarrier> renderBarriers,
         VkPipelineStageFlags srcStageMask, VkPipelineStageFlags dstStageMask, VkDependencyFlags dependencyFlags)
     {
-        vkCmdPipelineBarrier(commandBuffer, srcStageMask, dstStageMask, dependencyFlags, 0, 0, 0, 0,
+        vkCmdPipelineBarrier(commandBuffer, srcStageMask, dstStageMask, dependencyFlags, 0, nullptr, 0, nullptr,
             static_cast<uint32_t>(renderBarriers.size()), renderBarriers.data());
     }
 
@@ -2650,7 +2659,7 @@ namespace Poulpe {
       barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
       barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
       barrier.image = image;
-      barrier.subresourceRange.aspectMask = aspectFlags;;
+      barrier.subresourceRange.aspectMask = aspectFlags;
       barrier.subresourceRange.baseMipLevel = 0;
       barrier.subresourceRange.levelCount = 1;
       barrier.subresourceRange.baseArrayLayer = 0;
@@ -2746,3 +2755,5 @@ namespace Poulpe {
       }
     }
 }
+
+#pragma clang diagnostic pop

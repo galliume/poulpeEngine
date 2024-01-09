@@ -14,7 +14,7 @@ namespace Poulpe
 
     public:
         AudioManager() = default;
-        virtual ~AudioManager();
+        ~AudioManager() override;
 
         inline std::vector<std::string> const getAmbientSound() override { return m_AmbientSounds; }
         inline unsigned int getAmbientSoundIndex() override { return m_AmbientSoundIndex; }

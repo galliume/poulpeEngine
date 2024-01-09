@@ -13,9 +13,9 @@ namespace Poulpe
 
         void cleanUp() override;
         void draw() override;
-        inline void forceRefresh() { m_Refresh = true; };
-        inline uint32_t getAppHeight() { return getRenderer()->getSwapChainExtent().height; };
-        inline uint32_t getAppWidth() { return getRenderer()->getSwapChainExtent().width; };
+        inline void forceRefresh() { m_Refresh = true; }
+        inline uint32_t getAppHeight() { return getRenderer()->getSwapChainExtent().height; }
+        inline uint32_t getAppWidth() { return getRenderer()->getSwapChainExtent().width; }
         inline AudioManager* getAudioManager() override { return m_AudioManager.get(); }
         inline Camera* getCamera() override { return m_Camera.get(); }
         inline ComponentManager* getComponentManager() override { return m_ComponentManager.get(); }
@@ -31,7 +31,7 @@ namespace Poulpe
         inline bool isLoaded()  override { return m_IsLoaded; }
         void refresh(uint32_t levelIndex, bool showBbox = false, std::string_view skybox = "debug") override;
         void renderScene(std::chrono::duration<float> deltaTime) override;
-        inline void setDrawBbox(bool draw) { m_Renderer->setDrawBbox(draw); };
+        inline void setDrawBbox(bool draw) { m_Renderer->setDrawBbox(draw); }
         inline void setIsLoaded(bool loaded = true) override { m_IsLoaded = loaded; }
 
     private:

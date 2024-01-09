@@ -18,7 +18,7 @@
 
 All GUI has been stripped out from the engine.
 
-PoulpeEditor will be the GUI editor that will use PoulpeEngine to edit a level, coming soon.
+[PoulpeEdit](https://github.com/galliume/poulpeEdit) will be the GUI editor that will use PoulpeEngine to edit a level, coming soon.
 
 ### To execute 
 

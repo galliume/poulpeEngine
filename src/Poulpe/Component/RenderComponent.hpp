@@ -7,7 +7,7 @@ namespace Poulpe
     class RenderComponent : public Component
     {
     public:
-        RenderComponent() : Component() {};
+        RenderComponent() : Component() {}
 
         void visit(std::chrono::duration<float> deltaTime, IVisitable* visitable)
         {

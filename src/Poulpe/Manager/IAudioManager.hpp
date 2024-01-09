@@ -1,6 +1,7 @@
 #pragma once
 
 #include <miniaudio.h>
+
 #include <nlohmann/json.hpp>
 
 namespace Poulpe

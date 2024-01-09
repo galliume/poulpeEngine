@@ -11,12 +11,12 @@ namespace Poulpe
     class IVisitor
     {
     public:
-        virtual ~IVisitor() {};
+      virtual ~IVisitor() = default;
 
-        virtual void init(IRenderer* const adapter,
-          ITextureManager* const textureManager,
-          ILightManager* const lightManager) = 0;
+      virtual void init(IRenderer* const adapter,
+        ITextureManager* const textureManager,
+        ILightManager* const lightManager) = 0;
         
-        virtual void visit(std::chrono::duration<float> deltaTime, IVisitable* const visitable) = 0;
+      virtual void visit(std::chrono::duration<float> deltaTime, IVisitable* const visitable) = 0;
     };
 }

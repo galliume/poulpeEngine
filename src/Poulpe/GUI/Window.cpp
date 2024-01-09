@@ -1,6 +1,7 @@
 #include "Poulpe/GUI/Window.hpp"
 
-#include "stb_image.h"
+#define GLFW_INCLUDE_VULKAN
+#include <GLFW/glfw3.h>
 
 namespace Poulpe
 {
@@ -33,7 +34,7 @@ namespace Poulpe
         const int maxWidth = mode->width;
         const int maxHeight = mode->height; 
 
-        glfwSetWindowMonitor(m_Window, NULL, (maxWidth/2)-(WIDTH/2), (maxHeight/2) - (HEIGHT/2), WIDTH, HEIGHT, GLFW_DONT_CARE);
+        glfwSetWindowMonitor(m_Window, nullptr, (maxWidth/2)-(WIDTH/2), (maxHeight/2) - (HEIGHT/2), WIDTH, HEIGHT, GLFW_DONT_CARE);
         glfwSetWindowUserPointer(m_Window, this);
 
         glfwSetFramebufferSizeCallback(m_Window, []([[maybe_unused]] GLFWwindow* glfwWindow, [[maybe_unused]] int width, [[maybe_unused]] int height) {

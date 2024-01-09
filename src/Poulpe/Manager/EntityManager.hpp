@@ -13,7 +13,7 @@ namespace Poulpe
     explicit EntityManager(ComponentManager* const componentManager, 
       LightManager* const lightManager,
       TextureManager* const textureManager);
-    virtual ~EntityManager() = default;
+    ~EntityManager() override = default;
 
     void inline addHUD(Entity* entity) override { m_HUD.emplace_back(std::unique_ptr<Entity>(entity)); }
     void inline addRenderer(IRenderer* const renderer) override { m_Renderer = renderer; }

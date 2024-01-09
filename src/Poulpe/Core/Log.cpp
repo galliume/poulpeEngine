@@ -2,7 +2,7 @@
 
 namespace Poulpe {
 
-    std::shared_ptr<spdlog::logger> Log::s_Logger;
+    [[clang::no_destroy]] std::shared_ptr<spdlog::logger> Log::s_Logger;
 
     void Log::init()
     {

@@ -8,7 +8,7 @@ namespace Poulpe
     {
     public:
         TextureManager() = default;
-        virtual ~TextureManager() = default;
+        ~TextureManager() override = default;
 
         inline void addConfig(nlohmann::json config) override { m_TextureConfig = config; }
         std::vector<std::array<float, 3>> addNormalMapTexture(std::string const& name) override;
@@ -25,7 +25,7 @@ namespace Poulpe
         std::function<void()> loadSkybox(std::string_view skybox) override;
 
     private:
-        const int MAX_MIPLEVELS = 5;
+        const uint32_t MAX_MIPLEVELS = 5;
 
         IRenderer* m_Renderer{ nullptr };
         Texture m_Skybox;

@@ -30,7 +30,7 @@ namespace Poulpe
         mesh->setApplyPushConstants([](VkCommandBuffer& commandBuffer,
             VkPipelineLayout pipelineLayout,
             IRenderer* const renderer,
-            [[maybe_unused]] IVisitable* const mesh) {
+            [[maybe_unused]] IVisitable* const meshG) {
             
             constants pushConstants{};
             pushConstants.view = renderer->getCamera()->lookAt();

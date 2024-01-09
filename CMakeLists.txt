@@ -1,3 +1,6 @@
+#########################################################
+##################### PoulpeEngine Project ##############
+#########################################################
 cmake_minimum_required(VERSION 3.25.2)
 
 if (USE_CCACHE)
@@ -25,16 +28,8 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED            ON)
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules ${CMAKE_MODULE_PATH})
 set(CMAKE_NO_SYSTEM_FROM_IMPORTED ON)
-#set(CMAKE_CXX_CLANG_TIDY clang-tidy)
-
-set(gcc_like_cxx "$<COMPILE_LANG_AND_ID:CXX,ARMClang,AppleClang,Clang,GNU,LCC>")
-set(gcc_like_c "$<COMPILE_LANG_AND_ID:C,ARMClang,AppleClang,Clang,GNU,LCC>")
-set(msvc_cxx "$<COMPILE_LANG_AND_ID:CXX,MSVC>")
-set(msvc_c "$<COMPILE_LANG_AND_ID:C,MSVC>")
 set(GIT_SUBMODULE ON)
 set(GLFW_LIBRARY_TYPE STATIC)
-
-set(VOLK_PULL_IN_VULKAN false)
 #weird bug with vulkan loader ?
 set(CMAKE_MSVC_RUNTIME_LIBRARY "")
 #need to find how to have wayland on github actions...
@@ -43,24 +38,56 @@ set(GLFW_BUILD_X11 ON)
 set(GLFW_BUILD_DOCS OFF)
 set(GLFW_BUILD_TESTS OFF)
 set(GLFW_BUILD_EXAMPLES OFF)
+set(CMAKE_BUILD_TYPE ${CMAKE_BUILD_TYPE})
 
 message(STATUS "Generated with config types: ${CMAKE_CONFIGURATION_TYPES}")
 message(STATUS "CMAKE_CXX_STANDARD: ${CMAKE_CXX_STANDARD}")
 message(STATUS "CMAKE_CXX_STANDARD_REQUIRED: ${CMAKE_CXX_STANDARD_REQUIRED}")
 message(STATUS "CMAKE_BUILD_TYPE: ${CMAKE_BUILD_TYPE}")
 
-#set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /MD")
-#set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /MDd")
-
 include(gitSubModule)
+
+add_executable(${PROJECT_NAME} src/Poulpe.cpp)
 
 configure_file(PoulpeEngineConfig.h.in PoulpeEngineConfig.h)
 
 add_definitions(-DVK_NO_PROTOTYPES
                 -DVOLK_STATIC_DEFINES
-                -DIMGUI_IMPL_VULKAN_NO_PROTOTYPES
                 -D_CRT_SECURE_NO_WARNINGS)
 
+target_precompile_headers(${PROJECT_NAME} PRIVATE include/Poulpepch.hpp)
+
+include_directories(${PROJECT_SOURCE_DIR}/src)
+
+add_subdirectory(${PROJECT_SOURCE_DIR}/src/Poulpe)
+add_subdirectory(${PROJECT_SOURCE_DIR}/src/Poulpe/Component)
+add_subdirectory(${PROJECT_SOURCE_DIR}/src/Poulpe/Component/Renderer)
+add_subdirectory(${PROJECT_SOURCE_DIR}/src/Poulpe/Core)
+add_subdirectory(${PROJECT_SOURCE_DIR}/src/Poulpe/Core/Network)
+add_subdirectory(${PROJECT_SOURCE_DIR}/src/Poulpe/GUI)
+add_subdirectory(${PROJECT_SOURCE_DIR}/src/Poulpe/Manager)
+add_subdirectory(${PROJECT_SOURCE_DIR}/src/Poulpe/Renderer)
+add_subdirectory(${PROJECT_SOURCE_DIR}/src/Poulpe/Renderer/Vulkan)
+add_subdirectory(${PROJECT_SOURCE_DIR}/src/Poulpe/Utils)
+
+target_include_directories(${PROJECT_NAME} PRIVATE "${PROJECT_BINARY_DIR}")
+target_compile_definitions(${PROJECT_NAME} PRIVATE "$<$<CONFIG:DEBUG>:PLP_DEBUG_BUILD>")
+
+if(MSVC)
+  set(DEBUG_OPTIONS "/WX;/MDd;/Wall;/MDd;/std:c++20;/std:c17;/fp:fast;-Wno-unused-macros;-Wno-old-style-cast;-Wno-reserved-identifier;-Wno-documentation;-Wno-nonportable-system-include-path;-Wno-documentation-unknown-command;-Wno-unsafe-buffer-usage;-Wno-ctad-maybe-unsupported;-Wno-c++98-compat;-Wno-c++98-compat-pedantic;/Zc:__cplusplus")
+  set(RELEASE_OPTIONS "-O2;/Obd2;/Ot;/MD;/fp:fast")
+else()
+  set(DEBUG_OPTIONS "-Weverything;-Wno-unsafe-buffer-usage;-Wno-ctad-maybe-unsupported;-Wno-c++98-compat;-Wno-c++98-compat-pedantic")
+  set(RELEASE_OPTIONS "-O2")
+endif()
+
+target_compile_options(${PROJECT_NAME} PRIVATE "$<$<CONFIG:DEBUG>:${DEBUG_OPTIONS}>")
+target_compile_options(${PROJECT_NAME} PRIVATE "$<$<CONFIG:RELEASE>:${RELEASE_OPTIONS}>")
+#########################################################
+
+#########################################################
+##################### External libs #####################
+#########################################################
 if (DEFINED ENV{VULKAN_SDK}) 
   cmake_path(SET VULKAN_PATH "$ENV{VULKAN_SDK}/Include")
   message(STATUS "Found Vulkan include dir: ${VULKAN_PATH}")  
@@ -73,40 +100,17 @@ else()
   message(FATAL_ERROR "The env var VULKAN_SDK nor VULKAN_SDK_ACTIONS not found.")
 endif()
 
-include_directories(${PROJECT_SOURCE_DIR}/src
-                    ${PROJECT_SOURCE_DIR}/vendor/glfw/include
+include_directories(${PROJECT_SOURCE_DIR}/vendor/miniaudio
                     ${PROJECT_SOURCE_DIR}/vendor/spdlog/include
-                    ${PROJECT_SOURCE_DIR}/vendor/glm
                     ${PROJECT_SOURCE_DIR}/vendor/stb
-                    ${PROJECT_SOURCE_DIR}/vendor/nlohmann/include
                     ${VULKAN_PATH})
-
-add_executable(${PROJECT_NAME} src/Poulpe.cpp)
-
-target_precompile_headers(${PROJECT_NAME} PRIVATE include/Poulpepch.hpp)
-
-add_subdirectory(${PROJECT_SOURCE_DIR}/src/Poulpe)
-add_subdirectory(${PROJECT_SOURCE_DIR}/src/Poulpe/Component)
-add_subdirectory(${PROJECT_SOURCE_DIR}/src/Poulpe/Component/Renderer)
-add_subdirectory(${PROJECT_SOURCE_DIR}/src/Poulpe/Core)
-add_subdirectory(${PROJECT_SOURCE_DIR}/src/Poulpe/GUI)
-add_subdirectory(${PROJECT_SOURCE_DIR}/src/Poulpe/Manager)
-add_subdirectory(${PROJECT_SOURCE_DIR}/src/Poulpe/Renderer)
-add_subdirectory(${PROJECT_SOURCE_DIR}/src/Poulpe/Renderer/Vulkan)
-add_subdirectory(${PROJECT_SOURCE_DIR}/src/Poulpe/Utils)
 
 add_subdirectory(${PROJECT_SOURCE_DIR}/vendor/glfw)
 add_subdirectory(${PROJECT_SOURCE_DIR}/vendor/glm)
+add_subdirectory(${PROJECT_SOURCE_DIR}/vendor/nlohmann)
+add_subdirectory(${PROJECT_SOURCE_DIR}/vendor/spdlog)
+add_subdirectory(${PROJECT_SOURCE_DIR}/vendor/tiny_obj_loader)
 add_subdirectory(${PROJECT_SOURCE_DIR}/vendor/volk)
-
-add_library(miniaudio STATIC 
-    ${PROJECT_SOURCE_DIR}/vendor/miniaudio/extras/miniaudio_split/miniaudio.h
-    ${PROJECT_SOURCE_DIR}/vendor/miniaudio/extras/miniaudio_split/miniaudio.c)
-
-add_library(tiny_obj_loader STATIC 
-    ${PROJECT_SOURCE_DIR}/vendor/tiny_obj_loader/tiny_obj_loader.h
-    ${PROJECT_SOURCE_DIR}/vendor/tiny_obj_loader/tiny_obj_loader.cc)
-
 
 #@todo include only used .c
 add_library(
@@ -150,66 +154,65 @@ add_library(
   ${PROJECT_SOURCE_DIR}/vendor/lua/lualib.h
 )
 
+target_compile_options(lua PUBLIC
+  $<$<CXX_COMPILER_ID:MSVC>:${RELEASE_OPTIONS}>
+  $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:${RELEASE_OPTIONS}>
+)
+
+if(MSVC)
+  list(APPEND EXTRA_LIBS Ws2_32)
+endif()
+
 list(APPEND EXTRA_LIBS glfw)
 list(APPEND EXTRA_LIBS glm::glm)
-list(APPEND EXTRA_LIBS volk)
-list(APPEND EXTRA_LIBS miniaudio)
-list(APPEND EXTRA_LIBS tiny_obj_loader)
 list(APPEND EXTRA_LIBS lua)
+list(APPEND EXTRA_LIBS nlohmann_json)
+list(APPEND EXTRA_LIBS spdlog)
+list(APPEND EXTRA_LIBS tinyobjloader)
+list(APPEND EXTRA_LIBS volk)
 
 target_link_libraries(${PROJECT_NAME} PRIVATE ${EXTRA_LIBS} poulpe)
 
-target_include_directories(${PROJECT_NAME} PRIVATE "${PROJECT_BINARY_DIR}")
-
 target_include_directories(${PROJECT_NAME} PRIVATE
-                          "${PROJECT_SOURCE_DIR}/vendor/glfw"
-                          "${PROJECT_SOURCE_DIR}/vendor/glm"
-                          "${PROJECT_SOURCE_DIR}/vendor/volk"
-                          "${PROJECT_SOURCE_DIR}/vendor/miniaudio/extras/miniaudio_split"
-                          "${PROJECT_SOURCE_DIR}/vendor/tiny_obj_loader"
-              "${PROJECT_SOURCE_DIR}/vendor/lua")
-
+                          ${PROJECT_SOURCE_DIR}/vendor/glfw
+                          ${PROJECT_SOURCE_DIR}/vendor/glfw/include
+                          ${PROJECT_SOURCE_DIR}/vendor/glm
+                          ${PROJECT_SOURCE_DIR}/vendor/lua
+                          ${PROJECT_SOURCE_DIR}/vendor/miniaudio
+                          ${PROJECT_SOURCE_DIR}/vendor/nlohmann/include
+                          ${PROJECT_SOURCE_DIR}/vendor/tiny_obj_loader
+                          ${PROJECT_SOURCE_DIR}/vendor/volk)
+                          
 target_include_directories(${PROJECT_NAME} SYSTEM INTERFACE
-                          "${PROJECT_SOURCE_DIR}/vendor/glfw"
-                          "${PROJECT_SOURCE_DIR}/vendor/glm"
-                          "${PROJECT_SOURCE_DIR}/vendor/volk"
-                          "${PROJECT_SOURCE_DIR}/vendor/miniaudio/extras/miniaudio_split"
-                          "${PROJECT_SOURCE_DIR}/vendor/tiny_obj_loader"
-              "${PROJECT_SOURCE_DIR}/vendor/lua")
+                          ${PROJECT_SOURCE_DIR}/vendor/glfw
+                          ${PROJECT_SOURCE_DIR}/vendor/glfw/include
+                          ${PROJECT_SOURCE_DIR}/vendor/glm
+                          ${PROJECT_SOURCE_DIR}/vendor/lua
+                          ${PROJECT_SOURCE_DIR}/vendor/miniaudio
+                          ${PROJECT_SOURCE_DIR}/vendor/nlohmann/include
+                          ${PROJECT_SOURCE_DIR}/vendor/tiny_obj_loader
+                          ${PROJECT_SOURCE_DIR}/vendor/volk)
 
-target_compile_definitions(${PROJECT_NAME} PRIVATE "$<$<CONFIG:DEBUG>:PLP_DEBUG_BUILD>")
-
-if(MSVC)
-  set(DEBUG_OPTIONS "/WX;/W4")
-  set(RELEASE_OPTIONS "-O2")
-else()
-  set(DEBUG_OPTIONS "-Wall;-Wextra;-Wshadow;-Wformat=2;-Wunused;-Werror")
-  set(RELEASE_OPTIONS "-O3")
-endif()
-
-target_compile_options(${PROJECT_NAME} PRIVATE "$<$<CONFIG:DEBUG>:${DEBUG_OPTIONS}>")
-target_compile_options(${PROJECT_NAME} PRIVATE "$<$<CONFIG:RELEASE>:${RELEASE_OPTIONS}>")
-
-target_compile_options(miniaudio PRIVATE
-  $<$<CXX_COMPILER_ID:MSVC>:/W0 /O2>
-  $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-w -O3>
+set_target_properties(glfw PROPERTIES
+    ARCHIVE_OUTPUT_DIRECTORY "$<TARGET_FILE_DIR:${PROJECT_NAME}>/lib"
 )
-
-target_compile_options(miniaudio PRIVATE
-  $<$<CXX_COMPILER_ID:MSVC>:/W0 /O2>
-  $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-w -O3>
+set_target_properties(lua PROPERTIES
+    ARCHIVE_OUTPUT_DIRECTORY "$<TARGET_FILE_DIR:${PROJECT_NAME}>/lib"
 )
-
-target_compile_options(tiny_obj_loader PRIVATE
-  $<$<CXX_COMPILER_ID:MSVC>:/W0 /O2>
-  $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-w -O3>
+set_target_properties(spdlog PROPERTIES
+    ARCHIVE_OUTPUT_DIRECTORY "$<TARGET_FILE_DIR:${PROJECT_NAME}>/lib"
 )
-
-target_compile_options(lua PRIVATE
-  $<$<CXX_COMPILER_ID:MSVC>:/W0 /O2>
-  $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-w -O3>
+set_target_properties(tinyobjloader PROPERTIES
+    ARCHIVE_OUTPUT_DIRECTORY "$<TARGET_FILE_DIR:${PROJECT_NAME}>/lib"
 )
+set_target_properties(volk PROPERTIES
+    ARCHIVE_OUTPUT_DIRECTORY "$<TARGET_FILE_DIR:${PROJECT_NAME}>/lib"
+)
+#########################################################
 
+#########################################################
+##################### Miscellaneous #####################
+#########################################################
 #Filters for visual studio structure
 file(GLOB_RECURSE _source_list "${PROJECT_SOURCE_DIR}/src/**/*.cpp" "${PROJECT_SOURCE_DIR}/src/**/*.hpp")
 foreach(_source IN ITEMS ${_source_list})
@@ -224,9 +227,6 @@ set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreadedDebugDLL$<$<CONFIG:Debug>:Debug>")
 
 set_property(TARGET ${PROJECT_NAME} PROPERTY VS_DEBUGGER_WORKING_DIRECTORY ${PROJECT_SOURCE_DIR})
 set_property(DIRECTORY ${PROJECT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT ${PROJECT_NAME})
-
-#target_compile_options(${PROJECT_NAME} PRIVATE -fsanitize=address)
-#target_link_options(${PROJECT_NAME} PRIVATE -fsanitize=address)
 
 find_program(CLANG_TIDY_EXE NAMES "clang-tidy")
 
@@ -265,19 +265,4 @@ add_custom_target(
 #    COMMAND dot -Tsvg graph/plp.dot -o graph/plp.svg
 #    WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
 #)
-
-set_target_properties(miniaudio PROPERTIES
-    ARCHIVE_OUTPUT_DIRECTORY "$<TARGET_FILE_DIR:${PROJECT_NAME}>/lib"
-)
-set_target_properties(glfw PROPERTIES
-    ARCHIVE_OUTPUT_DIRECTORY "$<TARGET_FILE_DIR:${PROJECT_NAME}>/lib"
-)
-set_target_properties(volk PROPERTIES
-    ARCHIVE_OUTPUT_DIRECTORY "$<TARGET_FILE_DIR:${PROJECT_NAME}>/lib"
-)
-set_target_properties(tiny_obj_loader PROPERTIES
-    ARCHIVE_OUTPUT_DIRECTORY "$<TARGET_FILE_DIR:${PROJECT_NAME}>/lib"
-)
-set_target_properties(lua PROPERTIES
-    ARCHIVE_OUTPUT_DIRECTORY "$<TARGET_FILE_DIR:${PROJECT_NAME}>/lib"
-)
+#########################################################

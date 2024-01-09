@@ -10,7 +10,7 @@ namespace Poulpe
     {
     public:
         AbstractRenderer() = default;
-        ~AbstractRenderer() = default;
+        ~AbstractRenderer() override = default;
 
     void init(IRenderer* const renderer,
         ITextureManager* const textureManager,

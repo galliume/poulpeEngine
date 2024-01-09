@@ -7,15 +7,15 @@ namespace Poulpe
     {
     public:
         ConfigManager();
-        virtual ~ConfigManager() = default;
+        ~ConfigManager() override = default;
 
-        virtual nlohmann::json appConfig() const override { return m_AppConfig; };
+        virtual nlohmann::json appConfig() const override { return m_AppConfig; }
         virtual std::vector<std::string> listLevels() const override;
         virtual std::vector<std::string> listSkybox() const override;
         virtual nlohmann::json loadLevelData(std::string const & levelName) override;
-        virtual nlohmann::json shaderConfig() const override { return m_ShaderConfig;  };
-        virtual nlohmann::json soundConfig() const override { return m_SoundConfig ;};
-        virtual nlohmann::json texturesConfig() const override { return m_TexturesConfig; };
+        virtual nlohmann::json shaderConfig() const override { return m_ShaderConfig;  }
+        virtual nlohmann::json soundConfig() const override { return m_SoundConfig ;}
+        virtual nlohmann::json texturesConfig() const override { return m_TexturesConfig; }
 
     private:
         std::string const m_LevelPath{ "config/levels/" };

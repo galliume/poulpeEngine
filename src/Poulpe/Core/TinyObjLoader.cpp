@@ -3,13 +3,13 @@
 #define TINYOBJLOADER_IMPLEMENTATION
 //#define TINYOBJLOADER_USE_MAPBOX_EARCUT
 //#include "mapbox/earcut.hpp"
-#include "tiny_obj_loader.h"
+#include <tiny_obj_loader.h>
 
 #include <filesystem>
 
 namespace Poulpe
 {
-    std::vector<material_t> TinyObjLoader::m_TinyObjMaterials{};
+    [[clang::no_destroy]] std::vector<material_t> TinyObjLoader::m_TinyObjMaterials{};
 
     std::vector<TinyObjData> TinyObjLoader::loadData(std::string const & path, [[maybe_unused]] bool shouldInverseTextureY)
     {
@@ -92,11 +92,11 @@ namespace Poulpe
             std::vector<int> ids{};
             ids.resize(4);
             int samplerId = 0;
-            std::unordered_map<int, float> texidsmap;
+            std::unordered_map<int, int> texidsmap;
 
             for (size_t f = 0; f < shapes[s].mesh.num_face_vertices.size(); f++) {
                 size_t fv = size_t(shapes[s].mesh.num_face_vertices[f]);
-
+                 
                 int id = (-1 != shapes[s].mesh.material_ids[f]) ? shapes[s].mesh.material_ids[f] : 0;
 
                 if (!texidsmap.contains(id)) {
@@ -106,7 +106,7 @@ namespace Poulpe
                     samplerId += 1;
                 }
                 //@todo work for only 10 textures per face, but well...
-                float t =(texidsmap[id] == 0) ? 0.0f : texidsmap[id] / 10.0f;
+                float t =(texidsmap[id] == 0) ? 0.0f : static_cast<float>(texidsmap[id]) / 10.0f;
 
                 // Loop over vertices in the face.
                 for (size_t v = 0; v < fv; v++) {
@@ -174,7 +174,7 @@ namespace Poulpe
                 index_offset += fv;
 
                 // per-face material
-                data.materialId = (-1 != shapes[s].mesh.material_ids[f]) ? shapes[s].mesh.material_ids[f] : 0;
+                data.materialId = (-1 != shapes[s].mesh.material_ids[f]) ? static_cast<uint32_t>(shapes[s].mesh.material_ids[f]) : 0;
                 data.facesMaterialId.emplace_back(shapes[s].mesh.material_ids[f]);
                 data.materialsID = materialsID;
             }
