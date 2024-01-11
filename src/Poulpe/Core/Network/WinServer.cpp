@@ -5,6 +5,7 @@
 #if defined(_WIN32) || defined(WIN32)
 
 #include <WS2tcpip.h>
+#include <ws2ipdef.h>
 
 namespace Poulpe
 {
@@ -36,68 +37,89 @@ namespace Poulpe
     int status = WSAStartup(MAKEWORD(2, 2), & m_Data);
 
     if (status != 0 ) {
-      PLP_ERROR("getaddrinfo failed with error: {}", status);
+      PLP_ERROR("WSAStartup failed with error: {}", status);
       WSACleanup();
     }
 
     PLP_TRACE("WSAStartup: {}", m_Data.szSystemStatus);
 
     addrinfo hints;
-    addrinfo* results{ nullptr };
+    addrinfo* servInfo{ nullptr }, *p;
+    memset(&hints, 0, sizeof hints);
 
     ZeroMemory(& hints, sizeof(hints));
-    hints.ai_family = AF_INET;
+    hints.ai_family = AF_INET6;
     hints.ai_socktype = SOCK_STREAM;
-    hints.ai_protocol = IPPROTO_TCP;
     hints.ai_flags = AI_PASSIVE;
 
-    status = ::getaddrinfo("localhost", port.c_str(), &hints, &results);
+    #pragma clang diagnostic push
+    #pragma clang diagnostic ignored "-Wzero-as-null-pointer-constant"
+    status = ::getaddrinfo(NULL, port.c_str(), &hints, &servInfo);
+    #pragma clang diagnostic pop
 
     if (status != 0) {
-      PLP_ERROR("getaddrinfo failed with error: {} {}", status, port);
+      PLP_ERROR("getaddrinfo failed with error: {} {}", gai_strerrorA(status), port);
       WSACleanup();
     }
 
-    m_ServSocket = ::socket(results->ai_family, results->ai_socktype, results->ai_protocol);
+    char ipstr[INET6_ADDRSTRLEN];
+
+    for (p = servInfo; p != nullptr; p = p->ai_next) {
+      void *addr;
+      std::string ipver;
+
+      if (p->ai_family == AF_INET6) {
+        #pragma clang diagnostic push
+        #pragma clang diagnostic ignored "-Wcast-align"
+        struct sockaddr_in6 *ipv6 = (struct sockaddr_in6 *)p->ai_addr;
+        #pragma clang diagnostic pop
+        addr = &(ipv6->sin6_addr);
+      }
+
+      inet_ntop(p->ai_family, addr, ipstr, sizeof ipstr);
+      PLP_TRACE("Server IP: {}", ipstr);
+    }
+
+    m_ServSocket = ::socket(servInfo->ai_family, servInfo->ai_socktype, servInfo->ai_protocol);
 
     if (m_ServSocket == INVALID_SOCKET) {
-      PLP_ERROR("ServerSocket failed with error: {}", ::WSAGetLastError());
-      ::freeaddrinfo(results);
+      PLP_ERROR("ServerSocket failed with error: {}", ::gai_strerrorA(WSAGetLastError()));
+      ::freeaddrinfo(servInfo);
       ::WSACleanup();
     }
 
-    ::bind(m_ServSocket, results->ai_addr, (int)results->ai_addrlen);
-
-    status = WSAGetLastError();
-
-    if (status != 0) {
-      PLP_ERROR("bind failed with error: {}", ::WSAGetLastError());
-      ::freeaddrinfo(results);
-      ::closesocket(m_ServSocket);
-      ::WSACleanup();
-    }
-
-    bool option{ false };
+    bool option{ true };
     int optionLen = sizeof (bool);
     setsockopt(m_ServSocket, SOL_SOCKET, SO_REUSEADDR, (char *) & option, optionLen);
 
     status = WSAGetLastError();
 
     if (status != 0) {
-      PLP_ERROR("setsockopt failed {}", WSAGetLastError());
+      PLP_ERROR("setsockopt failed {}", gai_strerrorA(WSAGetLastError()));
     }
 
-    ::freeaddrinfo(results);
+    ::bind(m_ServSocket, servInfo->ai_addr, static_cast<int>(servInfo->ai_addrlen));
+
+    status = WSAGetLastError();
+
+    if (status != 0) {
+      PLP_ERROR("bind failed with error: {}", gai_strerrorA(status));
+      ::freeaddrinfo(servInfo);
+      ::closesocket(m_ServSocket);
+      ::WSACleanup();
+    }
+
+    ::freeaddrinfo(servInfo);
   }
 
   void WinServer::listen()
   {
-    ::listen(m_ServSocket, SOMAXCONN);
+    ::listen(m_ServSocket, 10);
 
     int status = ::WSAGetLastError();
 
     if (0 != status) {
-      PLP_ERROR("ServerSocket can't listen {}", status);
+      PLP_ERROR("ServerSocket can't listen {}", gai_strerrorA(status));
       return;
     }
 
@@ -109,7 +131,7 @@ namespace Poulpe
       
       if (socket == INVALID_SOCKET)
       {
-        PLP_ERROR("ServerSocket can't accept {}", ::WSAGetLastError());
+        PLP_ERROR("ServerSocket can't accept {}", ::gai_strerrorA(WSAGetLastError()));
         ::closesocket(m_ServSocket);
         ::WSACleanup();
       } else {

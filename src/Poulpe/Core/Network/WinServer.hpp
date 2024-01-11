@@ -24,6 +24,7 @@ namespace Poulpe
   private:
     SOCKET m_ServSocket;
     WSADATA m_Data;
+    //sockaddr_in6 m_SocketAddr;
 
     std::vector<SOCKET> m_Sockets;
 

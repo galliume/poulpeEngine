@@ -5,6 +5,7 @@
 #if defined(_WIN32) || defined(WIN32)
 
 #include <WinSock2.h>
+#include <WS2tcpip.h>
 
 namespace Poulpe
 {
@@ -26,7 +27,7 @@ namespace Poulpe
   private:
     WSADATA m_Data;
     SOCKET m_Socket;
-    SOCKADDR_IN m_SockAddrIn;
+    SOCKADDR_IN6 m_SockAddrIn;
     SocketStatus m_Status{ SocketStatus::NOT_CONNECTED};
 
     std::string m_IP;
