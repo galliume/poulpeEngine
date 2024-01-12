@@ -27,18 +27,20 @@ int main(int argc, char** argv)
 {
     std::cout << argv[0] << " Version " << PoulpeEngine_VERSION_MAJOR << "." << PoulpeEngine_VERSION_MINOR << std::endl;
 
-    bool serverMode{ true };
-    std::string port{ "8289" };
+    bool serverMode{ false };
+    std::string port{ 0 };
 
-    //@todo clean cmd line parser
-    for (int i = 1; i < argc; ++i) {
-      switch (i) {
-      case 1:
+    for (int i = 0; i < argc; ++i) {
+      std::string argument = argv[i];
+      if ("--server" == argument || "-S" == argument) {
         serverMode = true;
-        break;
-      case 2:
-        port = argv[i];
-        break;
+      } else if (argument.find("--port") != std::string::npos) {
+        std::size_t pos = argument.find("=");
+        if (pos == std::string::npos) {
+          PLP_WARN("bad argument {}", argument);
+        } else {
+          port = argument.substr(++pos, argument.size());
+        }
       }
     }
     std::unique_ptr<Poulpe::Application> app = std::make_unique<Poulpe::Application>();
