@@ -12,10 +12,7 @@ namespace Poulpe
   WinServer::~WinServer()
   {
     ::closesocket(m_ServSocket);
-
-    for (auto& socket : m_Sockets) {
-      ::closesocket(socket);
-    }
+    ::closesocket(m_Socket);
     ::WSACleanup();
   }
 
@@ -44,11 +41,11 @@ namespace Poulpe
     PLP_TRACE("WSAStartup: {}", m_Data.szSystemStatus);
 
     addrinfo hints;
-    addrinfo* servInfo{ nullptr }, *p;
+    addrinfo* servInfo{ nullptr }, *serv;
     memset(&hints, 0, sizeof hints);
 
     ZeroMemory(& hints, sizeof(hints));
-    hints.ai_family = AF_INET6;
+    hints.ai_family = AF_UNSPEC;
     hints.ai_socktype = SOCK_STREAM;
     hints.ai_flags = AI_PASSIVE;
 
@@ -62,25 +59,23 @@ namespace Poulpe
       WSACleanup();
     }
 
-    char ipstr[INET6_ADDRSTRLEN];
-
-    for (p = servInfo; p != nullptr; p = p->ai_next) {
-      void *addr;
-      std::string ipver;
-
-      if (p->ai_family == AF_INET6) {
-        #pragma clang diagnostic push
-        #pragma clang diagnostic ignored "-Wcast-align"
-        struct sockaddr_in6 *ipv6 = (struct sockaddr_in6 *)p->ai_addr;
-        #pragma clang diagnostic pop
-        addr = &(ipv6->sin6_addr);
+    for (serv = servInfo; serv != nullptr; serv = serv->ai_next) {
+      if (serv->ai_family == AF_INET) {
+        m_ServSocket = ::socket(serv->ai_family, serv->ai_socktype, serv->ai_protocol);
+        if (m_ServSocket == static_cast<unsigned long long>(- 1)) {
+          PLP_WARN("Socket creation failed {}", WSAGetLastError());
+          continue;
+        }
+        break;
+      } else if (serv->ai_family == AF_INET6) {
+        m_ServSocket = ::socket(serv->ai_family, serv->ai_socktype, serv->ai_protocol);
+        if (m_ServSocket == static_cast<unsigned long long>(- 1)) {
+          PLP_WARN("Socket creation failed {}", WSAGetLastError());
+          continue;
+        }
+        break;
       }
-
-      inet_ntop(p->ai_family, addr, ipstr, sizeof ipstr);
-      PLP_TRACE("Server IP: {}", ipstr);
     }
-
-    m_ServSocket = ::socket(servInfo->ai_family, servInfo->ai_socktype, servInfo->ai_protocol);
 
     if (m_ServSocket == INVALID_SOCKET) {
       PLP_ERROR("ServerSocket failed with error: {}", ::gai_strerrorA(WSAGetLastError()));
@@ -98,16 +93,25 @@ namespace Poulpe
       PLP_ERROR("setsockopt failed {}", gai_strerrorA(WSAGetLastError()));
     }
 
-    ::bind(m_ServSocket, servInfo->ai_addr, static_cast<int>(servInfo->ai_addrlen));
+    ::bind(m_ServSocket, serv->ai_addr, static_cast<int>(serv->ai_addrlen));
 
     status = WSAGetLastError();
 
     if (status != 0) {
       PLP_ERROR("bind failed with error: {}", gai_strerrorA(status));
-      ::freeaddrinfo(servInfo);
       ::closesocket(m_ServSocket);
       ::WSACleanup();
     }
+
+    char s[INET6_ADDRSTRLEN];
+
+    if (serv->ai_addr->sa_family == AF_INET) {
+      inet_ntop(serv->ai_family, &(((struct sockaddr_in*)serv)->sin_addr), s, sizeof s);
+    } else {
+      inet_ntop(serv->ai_family, &(((struct sockaddr_in6*)serv)->sin6_addr), s, sizeof s);
+    }
+
+    PLP_TRACE("Connecting to {}", s);
 
     ::freeaddrinfo(servInfo);
   }
@@ -125,22 +129,41 @@ namespace Poulpe
 
     m_Status = ServerStatus::RUNNING;
     PLP_TRACE("Server running");
+    bool done{ false };
+    char s[INET6_ADDRSTRLEN];
 
-    while (true) {
-      SOCKET socket = ::accept(m_ServSocket, nullptr, nullptr);
+    while (!done) {
+      struct sockaddr_storage clientAddr;
+      int sinSize = sizeof(clientAddr);
+      SOCKET socket = ::accept(m_ServSocket, (struct sockaddr *)&clientAddr, &sinSize);
       
       if (socket == INVALID_SOCKET)
       {
+        perror("accept");
+
         PLP_ERROR("ServerSocket can't accept {}", ::gai_strerrorA(WSAGetLastError()));
         ::closesocket(m_ServSocket);
         ::WSACleanup();
       } else {
+        auto addr = (struct sockaddr*)&clientAddr;
+
+        #pragma clang diagnostic push
+        #pragma clang diagnostic ignored "-Wcast-align"
+        if (clientAddr.ss_family == AF_INET) {
+          inet_ntop(clientAddr.ss_family, &(((struct sockaddr_in*)addr)->sin_addr), s, sizeof(s));
+        } else {
+          inet_ntop(clientAddr.ss_family, &(((struct sockaddr_in6*)addr)->sin6_addr), s, sizeof(s));
+        }
+        #pragma clang diagnostic pop
+
+        PLP_TRACE("server: got connection from {}", s);
+
         PLP_TRACE("Client connected");
         {
           std::lock_guard guard(m_MutexSockets);
-          m_Sockets.emplace_back(socket);
+          m_Socket = socket;
         }
-        send("Connected to PoulpeEngine!");
+        send("Connected to PoulpeEngine!\0");
       }
     }
   }
@@ -149,10 +172,12 @@ namespace Poulpe
   {
     {
       std::lock_guard guard(m_MutexSockets);
-
-      for (auto& socket : m_Sockets) {
-        ::send(socket, message.data(), static_cast<int>(message.size()), 0);
+      int status = ::send(m_Socket, message.data(), static_cast<int>(message.size()), 0);
+      if (status == -1) {
+        int err = WSAGetLastError();
+        PLP_ERROR("Can't send data: [{}] {}", err, gai_strerrorA(err));
       }
+      PLP_TRACE("sended: {}", message.data());
     }
   }
 
@@ -166,16 +191,14 @@ namespace Poulpe
     {
       std::lock_guard guard(m_MutexSockets);
 
-      for (auto& socket : m_Sockets) {
-        do {
-          status = ::recv(socket, recvbuf, recvbuflen, 0);
-          PLP_TRACE("bytes received {}", status);
-          PLP_TRACE("received {}", recvbuf);
-        } while (status > 0);
+      do {
+        status = ::recv(m_Socket, recvbuf, recvbuflen, 0);
+        PLP_TRACE("bytes received {}", status);
+        PLP_TRACE("received {}", recvbuf);
+      } while (status > 0);
 
-        closesocket(socket);
-        WSACleanup();
-      }
+      closesocket(m_Socket);
+      WSACleanup();
     }
   }
 }

@@ -26,7 +26,7 @@ namespace Poulpe
     WSADATA m_Data;
     //sockaddr_in6 m_SocketAddr;
 
-    std::vector<SOCKET> m_Sockets;
+    SOCKET m_Socket;
 
     std::mutex m_MutexSockets;
 

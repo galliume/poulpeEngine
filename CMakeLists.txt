@@ -215,6 +215,7 @@ set_target_properties(volk PROPERTIES
 #########################################################
 #Filters for visual studio structure
 file(GLOB_RECURSE _source_list "${PROJECT_SOURCE_DIR}/src/**/*.cpp" "${PROJECT_SOURCE_DIR}/src/**/*.hpp")
+file(GLOB_RECURSE _source_list "${PROJECT_SOURCE_DIR}/src/*.cpp" "${PROJECT_SOURCE_DIR}/src/*.hpp")
 foreach(_source IN ITEMS ${_source_list})
     get_filename_component(_source_path "${_source}" PATH)
     string(REPLACE "${CMAKE_SOURCE_DIR}" "" _group_path "${_source_path}")
