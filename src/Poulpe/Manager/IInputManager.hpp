@@ -4,12 +4,12 @@
 
 namespace Poulpe
 {
-    class IInputManager
-    {
-    public:
-        IInputManager() = default;
-        ~IInputManager() = default;
+  class IInputManager
+  {
+  public:
+    IInputManager() = default;
+    ~IInputManager() = default;
 
-        virtual void init(nlohmann::json inputConfig) = 0;
-    };
+    virtual void init(nlohmann::json inputConfig) = 0;
+  };
 }
