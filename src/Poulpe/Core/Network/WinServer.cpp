@@ -6,9 +6,16 @@
 
 #include <WS2tcpip.h>
 #include <ws2ipdef.h>
+#include <WinSock2.h>
 
 namespace Poulpe
 {
+  WinServer::WinServer(IAPIManager* APIManager):
+    m_APIManager(APIManager)
+  {
+
+  }
+
   WinServer::~WinServer()
   {
     ::closesocket(m_ServSocket);
@@ -114,6 +121,7 @@ namespace Poulpe
     PLP_TRACE("Connecting to {}", s);
 
     ::freeaddrinfo(servInfo);
+    m_Status = ServerStatus::RUNNING;
   }
 
   void WinServer::listen()
@@ -127,8 +135,6 @@ namespace Poulpe
       return;
     }
 
-    m_Status = ServerStatus::RUNNING;
-    PLP_TRACE("Server running");
     bool done{ false };
     char s[INET6_ADDRSTRLEN];
 
@@ -136,9 +142,8 @@ namespace Poulpe
       struct sockaddr_storage clientAddr;
       int sinSize = sizeof(clientAddr);
       SOCKET socket = ::accept(m_ServSocket, (struct sockaddr *)&clientAddr, &sinSize);
-      
-      if (socket == INVALID_SOCKET)
-      {
+
+      if (socket == INVALID_SOCKET) {
         perror("accept");
 
         PLP_ERROR("ServerSocket can't accept {}", ::gai_strerrorA(WSAGetLastError()));
@@ -157,13 +162,17 @@ namespace Poulpe
         #pragma clang diagnostic pop
 
         PLP_TRACE("server: got connection from {}", s);
-
         PLP_TRACE("Client connected");
+
         {
           std::lock_guard guard(m_MutexSockets);
           m_Socket = socket;
         }
         send("Connected to PoulpeEngine!\0");
+
+        Locator::getThreadPool()->submit("winServerRead", [this]() {
+          read();
+        });
       }
     }
   }
@@ -183,22 +192,47 @@ namespace Poulpe
 
   void WinServer::read()
   {
-    char recvbuf[512];
-    int recvbuflen = 512;
-
+    std::array<pollfd, 1> sockets;
+    sockets[0].fd = m_Socket;
+    sockets[0].events = POLLIN;
+    const int timeout{ 5000 };//500ms
+    bool hangup{ false };
     int status{ 0 };
+    std::string message;
 
-    {
-      std::lock_guard guard(m_MutexSockets);
+    while (!hangup) {
+      status = WSAPoll(sockets.data(), sockets.size(), timeout);
+      if (status == 0) {
+        PLP_TRACE("poll timeout");
+      } else if (status == SOCKET_ERROR) {
+        int err = WSAGetLastError();
+        PLP_WARN("Error will polling: [{}] {}", err, gai_strerrorA(err));
+        hangup = true;
+      } else {
+        int events = sockets[0].revents & POLLIN;
+        if (events) {
+          PLP_TRACE("events poll for socket id: {}", sockets[0].fd);
+          const int size = 10000;
+          std::vector<char> buffer(size);//tmp
+          int recvstatus{ 0 };
 
-      do {
-        status = ::recv(m_Socket, recvbuf, recvbuflen, 0);
-        PLP_TRACE("bytes received {}", status);
-        PLP_TRACE("received {}", recvbuf);
-      } while (status > 0);
+          message.clear();
 
-      closesocket(m_Socket);
-      WSACleanup();
+          do {
+            recvstatus = ::recv(m_Socket, buffer.data(), size, 0);
+            message.append(buffer.data());
+            if (std::strcmp(buffer.data(), "\r\n") == 0) {
+              recvstatus = -1;
+            }
+          } while (recvstatus > 0);
+            if (message == "quit") hangup = true;
+            m_APIManager->received(message);
+        } else {
+          PLP_WARN("unexpected events poll for socket id: {}", sockets[0].fd);
+          perror("send");
+          hangup = true;
+        }
+      }
     }
   }
 }

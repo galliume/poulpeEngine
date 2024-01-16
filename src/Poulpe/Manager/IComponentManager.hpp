@@ -7,10 +7,10 @@
 
 namespace Poulpe
 {
-    class IComponentManager
-    {
-    public:
+  class IComponentManager
+  {
+  public:
 
-        ~IComponentManager() = default;
-   };
+    ~IComponentManager() = default;
+  };
 }

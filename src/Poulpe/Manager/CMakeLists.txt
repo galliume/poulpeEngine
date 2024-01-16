@@ -30,6 +30,10 @@ set(SRC_LIST ${CMAKE_CURRENT_SOURCE_DIR}/AudioManager.cpp
              ${CMAKE_CURRENT_SOURCE_DIR}/LightManager.cpp
 	         ${CMAKE_CURRENT_SOURCE_DIR}/LightManager.hpp
 			 ${CMAKE_CURRENT_SOURCE_DIR}/NetworkManager.cpp
-	         ${CMAKE_CURRENT_SOURCE_DIR}/NetworkManager.hpp)
+	         ${CMAKE_CURRENT_SOURCE_DIR}/NetworkManager.hpp
+			 ${CMAKE_CURRENT_SOURCE_DIR}/INetworkManager.hpp
+			 ${CMAKE_CURRENT_SOURCE_DIR}/IAPIManager.hpp
+			 ${CMAKE_CURRENT_SOURCE_DIR}/APIManager.cpp
+	         ${CMAKE_CURRENT_SOURCE_DIR}/APIManager.hpp)
 
 target_sources(PoulpeEngine PRIVATE ${SRC_LIST})
