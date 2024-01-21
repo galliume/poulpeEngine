@@ -195,7 +195,7 @@ namespace Poulpe
     std::array<pollfd, 1> sockets;
     sockets[0].fd = m_Socket;
     sockets[0].events = POLLIN;
-    const int timeout{ 5000 };//500ms
+    const int timeout{ 1000 };//1s
     bool hangup{ false };
     int status{ 0 };
     std::string message;
@@ -221,9 +221,10 @@ namespace Poulpe
           do {
             recvstatus = ::recv(m_Socket, buffer.data(), size, 0);
             message.append(buffer.data());
-            if (std::strcmp(buffer.data(), "\r\n") == 0) {
+            if (std::strcmp(buffer.data(), "\0") == 0) {
               recvstatus = -1;
             }
+            PLP_WARN("status: {} msg: {}", recvstatus, message);
           } while (recvstatus > 0);
             if (message == "quit") hangup = true;
             m_APIManager->received(message);

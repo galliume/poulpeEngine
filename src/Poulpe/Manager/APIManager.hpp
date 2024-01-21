@@ -2,16 +2,22 @@
 
 #include "IAPIManager.hpp"
 
+#include "IRenderManager.hpp"
+
 namespace Poulpe
 {
   class APIManager : public IAPIManager
   {
   public:
-    APIManager() = default;
+    APIManager(IRenderManager* renderManager);
     ~APIManager() override = default;
 
     void received(std::string const& message) override;
-  private:
 
+  private:
+    void updateSkybox();
+
+  private:
+    IRenderManager* m_RenderManager{ nullptr };
   };
 }

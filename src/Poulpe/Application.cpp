@@ -65,7 +65,7 @@ namespace Poulpe
         m_RenderManager = std::make_unique<RenderManager>(window);
         m_RenderManager->init();
 
-        m_APIManager = std::make_unique<APIManager>();
+        m_APIManager = std::make_unique<APIManager>(m_RenderManager.get());
         m_NetworkManager = std::make_unique<NetworkManager>(m_APIManager.get());
     }
 
