@@ -6,7 +6,7 @@
 
 namespace Poulpe
 {
-    class RenderManager : IRenderManager
+    class RenderManager : public IRenderManager
     {
     public:
         RenderManager(Window* window);
