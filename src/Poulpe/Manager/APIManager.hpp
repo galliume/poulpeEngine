@@ -15,7 +15,7 @@ namespace Poulpe
     void received(std::string const& message) override;
 
   private:
-    void updateSkybox();
+    void updateSkybox(std::vector<std::string> const & params);
 
   private:
     IRenderManager* m_RenderManager{ nullptr };
