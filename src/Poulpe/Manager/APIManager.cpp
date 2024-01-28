@@ -20,7 +20,8 @@ namespace Poulpe
     *   functionName_param1_param2_etc
     *
     *   functionName is a string terminated by "_"
-    *   each param end with "_"   * 
+    *   each param end with "_"
+    * 
     *   message: loadSkybox_bluesky
     *   function to call loadSkybox with param bluesky
     */
