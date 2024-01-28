@@ -20,8 +20,7 @@ namespace Poulpe
     *   functionName_param1_param2_etc
     *
     *   functionName is a string terminated by "_"
-    *   each param end with "_"
-    * 
+    *   each param end with "_"   * 
     *   message: loadSkybox_bluesky
     *   function to call loadSkybox with param bluesky
     */
@@ -45,6 +44,8 @@ namespace Poulpe
 
     if (funcName == "updateSkybox") {
       updateSkybox(params);
+    } else if (funcName == "updateLevel") {
+      updateLevel(params);
     } else {
       PLP_ERROR("Unknown API func: {}", funcName);
     }
@@ -78,6 +79,33 @@ namespace Poulpe
     };
 
     Command cmd{request};
+    Poulpe::Locator::getCommandQueue()->add(cmd);
+  }
+
+  void APIManager::updateLevel(std::vector<std::string> const & params)
+  {
+    if (params.size() == 0 || params.size() > 1) return;
+
+    std::string level = params.at(0);
+
+    std::function<void()> request = [this, level]() {
+
+      auto levels = m_RenderManager->getConfigManager()->listLevels();
+      uint32_t index{ 0 };
+
+      auto it = std::find(levels.begin(), levels.end(), level);
+    
+      if (it != levels.end()) {
+        index = static_cast<uint32_t>(std::distance(levels.begin(), it));
+
+        m_RenderManager->getRenderer()->waitIdle();
+        m_RenderManager->refresh(index);
+      } else {
+        PLP_WARN("Level {} not found", level);
+      }
+    };
+
+    Command cmd{request, WhenToExecute::POST_RENDERING};
     Poulpe::Locator::getCommandQueue()->add(cmd);
   }
 }

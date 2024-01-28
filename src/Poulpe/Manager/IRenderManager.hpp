@@ -38,6 +38,7 @@ namespace Poulpe
     virtual ShaderManager* getShaderManager() = 0;
     virtual TextureManager* getTextureManager() = 0;
     virtual Window* getWindow() = 0;
+    virtual void loadLevel(uint32_t levelIndex) = 0;
     virtual void renderScene(std::chrono::duration<float> deltaTime) = 0;
     virtual void setIsLoaded(bool loaded = true) = 0;
     virtual void refresh(uint32_t levelIndex, bool showBbox = false, std::string_view skybox = "debug") = 0;

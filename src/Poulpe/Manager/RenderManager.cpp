@@ -128,6 +128,13 @@ namespace Poulpe
       return ((1.0f - t) * startValue) + (t * endValue);
     }
 
+    void RenderManager::loadLevel(uint32_t levelIndex)
+    {
+      m_CurrentLevel = m_ConfigManager->listLevels().at(levelIndex);
+      m_IsLoaded = false;
+      m_Refresh = true;
+    }
+
     void RenderManager::refresh(uint32_t levelIndex, bool showBbox, std::string_view skybox)
     {
       m_CurrentLevel = m_ConfigManager->listLevels().at(levelIndex);
