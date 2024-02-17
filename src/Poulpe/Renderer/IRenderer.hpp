@@ -100,7 +100,6 @@ namespace Poulpe
     virtual inline void stopRendering() = 0;
     virtual void waitIdle() = 0;
     virtual void shouldRecreateSwapChain() = 0;
-    virtual void recreateSwapChain() = 0;
     virtual inline VkPhysicalDeviceProperties getDeviceProperties() const = 0;
     virtual Buffer createStorageBuffers(size_t storageBuffer) = 0;
     virtual void updateStorageBuffer(Buffer & buffer, ObjectBuffer objectBuffer) = 0;

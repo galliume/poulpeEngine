@@ -187,11 +187,6 @@ namespace Poulpe
         }
     }
 
-    void Renderer::recreateSwapChain()
-    {
- 
-    }
-
     void Renderer::shouldRecreateSwapChain()
     {
         if (Window::m_FramebufferResized == true) {
@@ -199,8 +194,6 @@ namespace Poulpe
             while (m_Window->isMinimized()) {
                 m_Window->wait();
             }
-            recreateSwapChain();
-
             Window::m_FramebufferResized = false;
         }
     }
