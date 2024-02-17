@@ -107,7 +107,6 @@ namespace Poulpe
       m_Pool.clear();
 
       m_MemoryAllocationCount = 0; //should be zero anyway
-      m_MemoryAllocationSize.clear();
       m_DeviceMemoryCount = 0; //should be zero anyway
     }
 

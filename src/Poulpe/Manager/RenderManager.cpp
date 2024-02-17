@@ -83,8 +83,7 @@ namespace Poulpe
         m_EntityManager->clear();
         m_ShaderManager->clear();
         m_Renderer->clear();
-        //m_DestroyManager->CleanDeviceMemory();
-        //m_Renderer->InitMemoryPool();
+        m_DestroyManager->cleanDeviceMemory();
         m_ComponentManager->clear();
     }
 
@@ -99,10 +98,8 @@ namespace Poulpe
         TinyObjLoader::m_TinyObjMaterials.clear();
 
         if (m_Refresh) {
-            m_Renderer->stopRendering();
             m_Renderer->waitIdle();
             cleanUp();
-            m_Renderer->recreateSwapChain();
             setIsLoaded(false);
             m_Refresh = false;
             m_EntityManager->initWorldGraph();
@@ -138,7 +135,7 @@ namespace Poulpe
     void RenderManager::refresh(uint32_t levelIndex, bool showBbox, std::string_view skybox)
     {
       m_CurrentLevel = m_ConfigManager->listLevels().at(levelIndex);
-      m_CurrentSkybox = skybox;
+      //m_CurrentSkybox = skybox;
       m_IsLoaded = false;
       m_Refresh = true;
       m_ShowBbox = showBbox;
@@ -146,6 +143,13 @@ namespace Poulpe
 
     void RenderManager::renderScene(std::chrono::duration<float> deltaTime)
     {
+        if (m_Refresh) {
+            m_Renderer->setDrawBbox(m_ShowBbox);
+            init();
+            m_Refresh = false;
+            m_ShowBbox = false;
+        }
+
         m_Renderer->renderScene();
 
         //@todo animate light
@@ -164,13 +168,6 @@ namespace Poulpe
               animationComponent->visit(deltaTime, mesh);
             }
           }
-        }
-
-        if (m_Refresh) {
-            m_Renderer->setDrawBbox(m_ShowBbox);
-            init();
-            m_Refresh = false;
-            m_ShowBbox = false;
         }
     }
 

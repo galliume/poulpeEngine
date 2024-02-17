@@ -66,7 +66,6 @@ namespace Poulpe
     inline  std::vector<VkImageView>* getSwapChainImageViews() { return &m_SwapChainImageViews; }
     void immediateSubmit(std::function<void(VkCommandBuffer cmd)> && function, int queueIndex = 0) override;
     void init() override;
-    void recreateSwapChain() override;
     void renderScene() override;
     void setDeltatime(float deltaTime) override;
     inline void setDrawBbox(bool draw) override { m_DrawBbox = draw; }
