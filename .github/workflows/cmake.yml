@@ -35,6 +35,5 @@ jobs:
     - name: Configure && Build
       run: |
         cd main
-        chmod +x ./bin/plpBuild.sh
-        ./bin/plpBuild.sh -l true
-        ./bin/plpBuild.sh -i 
+        chmod +x ./bin/build.sh
+        ./bin/build.sh -c -b

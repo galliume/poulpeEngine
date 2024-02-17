@@ -20,11 +20,11 @@ All GUI has been stripped out from the engine.
 
 [PoulpeEdit](https://github.com/galliume/poulpeEdit) will be the GUI editor that will use PoulpeEngine to edit a level, coming soon.
 
-### To execute 
+### To compile && execute 
 
 Install the latest Vulkan SDK https://vulkan.lunarg.com/ and be sure to have the env variable VULKAN_SDK properly set to your Vulkan SDK installation folder.
 
-Compile shaders (windows or linux) : 
+Compile shaders (Windows && Linux) : 
 ```
 ./bin/plpShadersCompilation.sh
 ```	
@@ -32,44 +32,16 @@ Compile shaders (windows or linux) :
 Generate the project with CMake :
 
 ```
-clear && ./bin/plpBuild.sh && ./bin/plpBuild.sh -i
+./bin/build.sh -c
 ```
 
-Compile with your IDE the project generated in build/Debug or build/Release
-
-By default the project is compiled with clang+ (see in ./bin/plpBuild.sh)
-
-plpBuild.sh can take those options (here are the default values)
-
->-a: Build directory [default to CMAKE_BUILD_DIR="build"]
->
->-b: CXX compiler [default to CMAKE_CXX_COMPILER="clang++"]
->
->-c: C compiler [default to CMAKE_C_COMPILER="clang"]
->
->-d: Cmake build type [default to CMAKE_BUILD_TYPE="Debug"]
->
->-e: Clean build dir [default to REFRESH_BUILD_DIR=false]
->
->-f: Number of parallels jobs [default to CMAKE_J=8]
->
->-g: CMake toolset (-T) [default to CMAKE_TOOLSET="ClangCL"]
->
->-h Display help	
->
->-i: Build
->
->-j: Run PoulpeEngine
->
->-k: Build and Run
->
->-l: Use Ninja [default to USE_NINJA=true]
-
-For exemple, if you want to build a Release in a folder named foo and force a clean refresh of the folder:
+Then open the .sln with VisualStudio or compile it with -b option
 
 ```
-./bin/plpBuild.sh -afoo -dRelease -etrue
+./bin/build.sh -b
 ```
+
+By default the project is compiled with clang and with the build system VisualStudio 17 2022 for Windows or Ninja for Linux (see in ./bin/build.sh)
 
 ### All meshes can be found here:
 
