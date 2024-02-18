@@ -11,7 +11,7 @@ namespace Poulpe
         ~TextureManager() override = default;
 
         inline void addConfig(nlohmann::json config) override { m_TextureConfig = config; }
-        std::vector<std::array<float, 3>> addNormalMapTexture(std::string const& name) override;
+        Texture addNormalMapTexture(std::string const& name) override;
         inline void addRenderer(IRenderer* renderer) override { m_Renderer = renderer; }
         void addSkyBox(std::vector<std::string> const & skyboxImages) override;
         void addTexture(std::string const & name, std::string const & path, bool isPublic = false) override;

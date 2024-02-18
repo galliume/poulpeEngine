@@ -9,6 +9,7 @@ layout(location = 0) in VS_OUT {
     vec2 fTexCoord;
     vec3 fNormal;
     vec3 fPos;
+    //x bump map, y specular map, z alpha, w blank
     vec4 fMapsUsed;
     vec4 fViewPos;
     mat3 TBN;
@@ -63,6 +64,7 @@ float filterPCF(vec4 sc);
 
 float near = 0.1;
 float far  = 100.0;
+int scale = 24;
 
 float LinearizeDepth(float depth)
 {
@@ -77,11 +79,11 @@ void main()
 
     vec3 normal = normalize(fs_in.fNormal);
 
-    if (fs_in.fMapsUsed.x > 0.5) {
-      vec3 nm = texture(texSampler[5], fs_in.fTexCoord).xyz * 2.0 - vec3(1.0);
-      nm = fs_in.TBN * nm;
-      normal = vec3(normalize(nm));
-    }
+    if (fs_in.fMapsUsed.x > 0.9 && fs_in.fMapsUsed.x < 1.1) {
+      normal = texture(texSampler[5], fs_in.fTexCoord).rgb;
+      normal = normal * 2.0 - 1.0;
+      normal = normalize(fs_in.TBN * normal);
+    } 
 
     int id = 0;
     //@todo ugly but avoid floating point issues when casting to int
@@ -92,11 +94,11 @@ void main()
     }
 
     vec4 texColor = texture(texSampler[id], fs_in.fTexCoord);
-    if (fs_in.fMapsUsed.w > 0.5) {
+    if (fs_in.fMapsUsed.w > 0.9 && fs_in.fMapsUsed.w < 1.1) {
       texColor = vec4(fs_in.fvColor, 1.0);
     }
 
-    //float shadow = ShadowCalculation(fs_in.fShadowCoord / fs_in.fShadowCoord.w, vec2(0.0));
+    //float shadowAmbient = ShadowCalculation(fs_in.fShadowCoordAmbient / fs_in.fShadowCoordAmbient.w, vec2(0.0));
     float shadowAmbient = filterPCF(fs_in.fShadowCoordAmbient / fs_in.fShadowCoordAmbient.w);
     //float shadowSpot = filterPCF(fs_in.fShadowCoordAmbient / fs_in.fShadowCoordAmbient.w);
 
@@ -109,12 +111,12 @@ void main()
 
     color += CalcSpotLight(texColor, spotLight, normal, fs_in.fPos.xyz, viewDir, 1.0);
 
-    if (fs_in.fMapsUsed.z > 0.5) {
+    if (fs_in.fMapsUsed.z > 0.9 && fs_in.fMapsUsed.z < 1.1) {
         vec4 mask = texture(texSampler[3], fs_in.fTexCoord);
 //        fColor = mix(fColor, mask, mask.a);
-        if (mask.r < 0.7) discard;
+        if (mask.r < 0.5) discard;
     }
-    if (texColor.a < 0.7) discard;
+    if (texColor.a < 0.5) discard;
 
     fColor = vec4(color, 1.0);
 
@@ -134,7 +136,7 @@ vec3 CalcDirLight(vec4 color, Light dirLight, vec3 normal, vec3 viewDir, float s
     vec3 h = normalize(lightDir + viewDir);
     vec3 specular = vec3(0.0);
 
-    if (fs_in.fMapsUsed.y > 0.5) {
+    if (fs_in.fMapsUsed.y > 0.9 && fs_in.fMapsUsed.y < 1.1) {
       float spec = pow(clamp(dot(normal, h), 0.0, 1.0), material.shiIorDiss.x) * float(dot(normal, h) > 0.0);
       specular = dirLight.color * (spec * dirLight.ads.z * material.specular * texture(texSampler[4], fs_in.fTexCoord).xyz);
     } else {
@@ -159,7 +161,7 @@ vec3 CalcPointLight(vec4 color, Light pointLight, vec3 normal, vec3 fragPos, vec
     vec3 h = normalize(lightDir + viewDir);
     vec3 specular = vec3(0.0);
 
-    if (fs_in.fMapsUsed.y > 0.5) {
+    if (fs_in.fMapsUsed.y > 0.9 && fs_in.fMapsUsed.y < 1.1) {
       float spec = pow(clamp(dot(normal, h), 0.0, 1.0), material.shiIorDiss.x) * float(dot(normal, h) > 0.0);
       specular =  pointLight.color * (spec * pointLight.ads.z * material.specular * texture(texSampler[4], fs_in.fTexCoord).xyz);
     } else {
@@ -192,7 +194,7 @@ vec3 CalcSpotLight(vec4 color, Light spotlight, vec3 normal, vec3 fragPos, vec3 
     vec3 h = normalize(lightDir + viewDir);
     vec3 specular = vec3(0.0);
 
-    if (fs_in.fMapsUsed.y > 0.5) {
+    if (fs_in.fMapsUsed.y > 0.9 && fs_in.fMapsUsed.y < 1.1) {
         float spec = pow(clamp(dot(normal, h), 0.0, 1.0), material.shiIorDiss.x) * float(dot(normal, h) > 0.0);
         specular = spotlight.color * (spec * spotlight.ads.z * material.specular * texture(texSampler[4], fs_in.fTexCoord).xyz);
     } else {

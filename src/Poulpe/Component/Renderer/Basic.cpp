@@ -66,6 +66,7 @@ namespace Poulpe
 
       std::string specMapName = "_plp_empty";
       std::string bumpMapName = "_plp_empty";
+      Texture texBumpMap = m_TextureManager->getTextures()[bumpMapName];
 
       if (!mesh->getData()->m_TextureSpecularMap.empty()
         && m_TextureManager->getTextures().contains(mesh->getData()->m_TextureSpecularMap)) {
@@ -79,9 +80,8 @@ namespace Poulpe
         && m_TextureManager->getTextures().contains(mesh->getData()->m_TextureBumpMap)) {
         bumpMapName = mesh->getData()->m_TextureBumpMap;
         mesh->getData()->mapsUsed.x = 1.0f;
+        texBumpMap = m_TextureManager->addNormalMapTexture(bumpMapName);
       }
-
-      Texture texBumpMap = m_TextureManager->getTextures()[bumpMapName];
 
       VkDescriptorImageInfo imageInfoSpecularMap{};
       imageInfoSpecularMap.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;

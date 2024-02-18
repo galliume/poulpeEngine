@@ -1,61 +1,79 @@
 #include "TextureManager.hpp"
 
 #include <filesystem>
+#include <stb_image_write.h>
 
 namespace Poulpe
 {
-  std::vector<std::array<float, 3>> TextureManager::addNormalMapTexture(std::string const& name)
+  Texture TextureManager::addNormalMapTexture(std::string const& name)
   {
+    Texture texture;
+    
     if (!m_Textures.contains(name)) {
       PLP_TRACE("Texture {} does not exists, can't create normal map", name);
-      return {};
+      return texture;
     }
 
     Texture& originalTexture = m_Textures[name];
     auto const path = originalTexture.getPath();
 
-    if (!originalTexture.getNormalMap().empty()) {
-      return originalTexture.getNormalMap();
-    }
-
     int texWidth = 0, texHeight = 0, texChannels = 0;
-    stbi_uc* pixels = stbi_load(path.c_str(), &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
+    stbi_uc* pixels = stbi_load(path.c_str(), &texWidth, &texHeight, &texChannels, STBI_grey);
 
     if (!pixels) {
       PLP_FATAL("failed to load texture image %s", name);
-      return {};
+      return texture;
     }
 
-    std::vector<std::array<float, 3>> normalMapTexture;
+    size_t const size = static_cast<size_t>(texWidth * texHeight)*3;
+    std::vector<unsigned char> pixelsToSave(size);
 
-    for (int y = 0; y < texHeight; ++y) {
+    uint64_t index{ 0 };
 
-      int ym1 = (y - 1) & (texHeight - 1);
-      int yp1 = (y + 1) & (texHeight - 1);
+    std::string const mapName = originalTexture.getName() + "_normal_map";
+    std::string const fileName{ "./cache/" + mapName + ".png"};
 
-      unsigned char* centerRow = pixels + y * texWidth;
-      unsigned char* upperRow = pixels + ym1 * texWidth;
-      unsigned char* lowerRow = pixels + yp1 * texWidth;
+    if (!std::filesystem::exists(fileName)) {
 
-      for (int x = 0; x < texWidth; ++x) {
-        int xm1 = (x - 1) & (texWidth - 1);
-        int xp1 = (x + 1) & (texWidth - 1);
+      for (int y = 0; y < texHeight; ++y) {
 
-        float dx = (centerRow[xp1] - centerRow[xm1]) * 0.5f;
-        float dy = (lowerRow[x] - upperRow[x]) * 0.5f;
+        int ym1 = (y - 1) & (texHeight - 1);
+        int yp1 = (y + 1) & (texHeight - 1);
 
-        float nz = 1.0f / std::sqrt(dx * dx + dy * dy + 1.0f);
-        float nx = std::fmin(std::fmax(-dx * nz, -1.0f), 1.0f);
-        float ny = std::fmin(std::fmax(-dy * nz, -1.0f), 1.0f);
+        unsigned char* centerRow = pixels + y * texWidth;
+        unsigned char* upperRow = pixels + ym1 * texWidth;
+        unsigned char* lowerRow = pixels + yp1 * texWidth;
 
-        std::array<float, 3>d{ nx, ny, nz };
-        normalMapTexture.emplace_back(d);
+        for (int x = 0; x < texWidth; ++x) {
+          int xm1 = (x - 1) & (texWidth - 1);
+          int xp1 = (x + 1) & (texWidth - 1);
+
+          float dx = (centerRow[xp1] - centerRow[xm1]) * 0.5f;
+          float dy = (lowerRow[x] - upperRow[x]) * 0.5f;
+
+          float nz = 1.0f / std::sqrt(dx * dx + dy * dy + 1.0f);
+          float nx = std::fmin(std::fmax(-dx * nz, -1.0f), 1.0f);
+          float ny = std::fmin(std::fmax(-dy * nz, -1.0f), 1.0f);
+
+          unsigned char nxuc = static_cast<unsigned char>(((nx + 1.0f) / 2.0f) * 255.0f);
+          unsigned char nyuc = static_cast<unsigned char>(((ny + 1.0f) / 2.0f) * 255.0f);
+          unsigned char nzuc = static_cast<unsigned char>(((nz + 1.0f) / 2.0f) * 255.0f);
+
+          pixelsToSave[++index] = nyuc;
+          pixelsToSave[++index] = nzuc;
+          pixelsToSave[++index] = nxuc;
+        }
       }
+
+      stbi_write_png(fileName.c_str(), texWidth, texHeight, 3, pixelsToSave.data(), texWidth * 3);
+
     }
+    
+    addTexture(mapName, fileName, false);
 
-    originalTexture.setNormalMap(std::move(normalMapTexture));
+    texture = m_Textures[mapName];
 
-    return originalTexture.getNormalMap();
+    return texture;
   }
 
   void TextureManager::addSkyBox(std::vector<std::string> const& skyboxImages)
@@ -115,7 +133,7 @@ namespace Poulpe
   {
     if (!std::filesystem::exists(path.c_str())) {
       PLP_FATAL("texture file {} does not exits.", path);
-      //return;
+      return;
     }
 
     if (0 != m_Textures.count(name.c_str())) {

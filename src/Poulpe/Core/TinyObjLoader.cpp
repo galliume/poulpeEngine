@@ -77,7 +77,7 @@ namespace Poulpe
         std::unordered_map<uint32_t, Vertex*> listVertex;
         std::unordered_map<uint32_t, Vertex*> iToVertex;
 
-        //uint32_t i = 0, k = 0;
+        uint32_t i = 0, k = 0;
 
         //glm::vec3 pos = glm::vec3(0.0f);
         for (uint32_t s = 0; s < shapes.size(); s++) {
@@ -155,7 +155,7 @@ namespace Poulpe
                         uniqueVertices[vertex] = static_cast<uint32_t>(data.vertices.size());
                         data.vertices.push_back(vertex);
 
-                       /* triangles[i][0] = 3 * size_t(idx.vertex_index) + 0;
+                        triangles[i][0] = 3 * size_t(idx.vertex_index) + 0;
                         triangles[i][1] = 3 * size_t(idx.vertex_index) + 1;
                         triangles[i][2] = 3 * size_t(idx.vertex_index) + 2;
                     
@@ -165,9 +165,9 @@ namespace Poulpe
 
                         iToVertex[i] = &vertex;
 
-                        i += 1;*/
+                        i += 1;
                     }
-                    //k += 1;
+                    k += 1;
                     data.indices.push_back(uniqueVertices[vertex]);
                 }
 
@@ -180,67 +180,67 @@ namespace Poulpe
             }
 
             //tangeant
-            //std::vector<glm::vec3> tangents{};
-            //std::vector<glm::vec3> bitangents{};
-            //auto def = glm::vec3(0.0f);
+            std::vector<glm::vec3> tangents{};
+            std::vector<glm::vec3> bitangents{};
+            auto def = glm::vec3(0.0f);
 
-            //for (size_t i = 0; i < k*2; ++i) {
-            //    tangents.emplace_back(def);
-            //    bitangents.emplace_back(def);
-            //}
+            for (size_t i = 0; i < k*2; ++i) {
+                tangents.emplace_back(def);
+                bitangents.emplace_back(def);
+            }
 
-            //for (size_t i = 0; i < triangles.size(); ++i)
-            //{
-            //    uint32_t i0 = triangles[i][0];
-            //    uint32_t i1 = triangles[i][1];
-            //    uint32_t i2 = triangles[i][2];
+            for (size_t i = 0; i < triangles.size(); ++i)
+            {
+                uint32_t i0 = triangles[i][0];
+                uint32_t i1 = triangles[i][1];
+                uint32_t i2 = triangles[i][2];
  
-            //    auto& vertex01 = listVertex[i0];
-            //    auto& vertex02 = listVertex[i1];
-            //    auto& vertex03 = listVertex[i2];
+                auto& vertex01 = listVertex[i0];
+                auto& vertex02 = listVertex[i1];
+                auto& vertex03 = listVertex[i2];
 
-            //    glm::vec3 & p0 = vertex01->pos;
-            //    glm::vec3 & p1 = vertex02->pos;
-            //    glm::vec3 & p2 = vertex03->pos;
+                glm::vec3 & p0 = vertex01->pos;
+                glm::vec3 & p1 = vertex02->pos;
+                glm::vec3 & p2 = vertex03->pos;
  
-            //    glm::vec2 & w0 = vertex01->texCoord;
-            //    glm::vec2 & w1 = vertex02->texCoord;
-            //    glm::vec2 & w2 = vertex03->texCoord;
+                glm::vec2 & w0 = vertex01->texCoord;
+                glm::vec2 & w1 = vertex02->texCoord;
+                glm::vec2 & w2 = vertex03->texCoord;
 
-            //    glm::vec3 e1 = p1 - p0;
-            //    glm::vec3 e2 = p2 - p0;
+                glm::vec3 e1 = p1 - p0;
+                glm::vec3 e2 = p2 - p0;
 
-            //    float x1 = w1.x - w0.x;
-            //    float y1 = w1.y - w0.y;
-            //    float x2 = w2.x - w0.x;
-            //    float y2 = w2.y - w0.y;
+                float x1 = w1.x - w0.x;
+                float y1 = w1.y - w0.y;
+                float x2 = w2.x - w0.x;
+                float y2 = w2.y - w0.y;
 
-            //    float r = 1.0f / (x1 * y2 - x2 * y1);
-            //    glm::vec3 t = (e1 * y2 - e2 * y1) * r;
-            //    glm::vec3 b = (e2 * x1 - e1 * x2) * r;
+                float r = 1.0f / (x1 * y2 - x2 * y1);
+                glm::vec3 t = (e1 * y2 - e2 * y1) * r;
+                glm::vec3 b = (e2 * x1 - e1 * x2) * r;
 
-            //    tangents[i0] += t;
-            //    tangents[i1] += t;
-            //    tangents[i2] += t;
+                tangents[i0] += t;
+                tangents[i1] += t;
+                tangents[i2] += t;
 
-            //    bitangents[i0] += b;
-            //    bitangents[i1] += b;
-            //    bitangents[i2] += b;
-            //}
+                bitangents[i0] += b;
+                bitangents[i1] += b;
+                bitangents[i2] += b;
+            }
 
-            //for (size_t i = 0; i < triangles.size(); ++i) {
-            //    auto& vertex = iToVertex[i];
+            for (size_t i = 0; i < triangles.size(); ++i) {
+                auto& vertex = iToVertex[i];
 
-            //    auto t = tangents[i];
-            //    auto b = bitangents[i];
-            //    auto n = vertex->normal;
+                auto t = tangents[i];
+                auto b = bitangents[i];
+                auto n = vertex->normal;
 
-            //    auto a =  glm::normalize((t - n * (glm::dot(t, n) / glm::dot(n, n))));
-            //    auto w = (glm::dot(glm::cross(t, b), n) > 0.0f) ? 1.0f : -1.0f;
+                //auto a =  glm::normalize((t - n * (glm::dot(t, n) / glm::dot(n, n))));
+                auto w = (glm::dot(glm::cross(t, b), n) > 0.0f) ? 1.0f : -1.0f;
 
-            //    //data.vertices.at(i).texCoord.y *= w;
-            //    vertex->tangent = glm::vec4{a.x, a.y, a.z, w};
-            //}
+                //data.vertices.at(i).texCoord.y *= w;
+                vertex->tangent = glm::vec4{t, w};
+            }
 
             dataList.emplace_back(data);
         }
