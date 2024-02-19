@@ -25,13 +25,18 @@ namespace Poulpe
       return texture;
     }
 
-    size_t const size = static_cast<size_t>(texWidth * texHeight)*3;
+    size_t const size = static_cast<size_t>(texWidth * texHeight) * 3;
     std::vector<unsigned char> pixelsToSave(size);
+    size_t const sizeHM = static_cast<size_t>(texWidth * texHeight);
+    std::vector<unsigned char> heightMapData(sizeHM);
 
     uint64_t index{ 0 };
+    uint64_t indexP{ 0 };
 
     std::string const mapName = originalTexture.getName() + "_normal_map";
+    std::string const parallaxMapName = originalTexture.getName() + "_parallax_map";
     std::string const fileName{ "./cache/" + mapName + ".png"};
+    std::string const parallaxFileName{ "./cache/" + parallaxMapName + ".png"};
 
     if (!std::filesystem::exists(fileName)) {
 
@@ -50,7 +55,7 @@ namespace Poulpe
 
           float dx = (centerRow[xp1] - centerRow[xm1]) * 0.5f;
           float dy = (lowerRow[x] - upperRow[x]) * 0.5f;
-
+        
           float nz = 1.0f / std::sqrt(dx * dx + dy * dy + 1.0f);
           float nx = std::fmin(std::fmax(-dx * nz, -1.0f), 1.0f);
           float ny = std::fmin(std::fmax(-dy * nz, -1.0f), 1.0f);
@@ -62,14 +67,22 @@ namespace Poulpe
           pixelsToSave[++index] = nyuc;
           pixelsToSave[++index] = nzuc;
           pixelsToSave[++index] = nxuc;
+
+          glm::vec normal = glm::vec2(dx, dy);
+          float heightValue = glm::length(normal) * 2.0f - 1.0f;
+
+          heightMapData[++indexP] = static_cast<unsigned char>(heightValue);
         }
       }
 
       stbi_write_png(fileName.c_str(), texWidth, texHeight, 3, pixelsToSave.data(), texWidth * 3);
+      stbi_write_png(parallaxFileName.c_str(), texWidth, texHeight, 1, heightMapData.data(), texWidth);
 
+      stbi_image_free(pixels);
     }
     
     addTexture(mapName, fileName, false);
+    addTexture(parallaxMapName, parallaxFileName, false);
 
     texture = m_Textures[mapName];
 

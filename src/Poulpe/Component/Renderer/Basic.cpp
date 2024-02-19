@@ -66,7 +66,9 @@ namespace Poulpe
 
       std::string specMapName = "_plp_empty";
       std::string bumpMapName = "_plp_empty";
+
       Texture texBumpMap = m_TextureManager->getTextures()[bumpMapName];
+      Texture parallaxMap = m_TextureManager->getTextures()[bumpMapName];
 
       if (!mesh->getData()->m_TextureSpecularMap.empty()
         && m_TextureManager->getTextures().contains(mesh->getData()->m_TextureSpecularMap)) {
@@ -79,8 +81,11 @@ namespace Poulpe
       if (!mesh->getData()->m_TextureBumpMap.empty()
         && m_TextureManager->getTextures().contains(mesh->getData()->m_TextureBumpMap)) {
         bumpMapName = mesh->getData()->m_TextureBumpMap;
+        std::string const parallaxMapName = bumpMapName + "_parallax_map";
+
         mesh->getData()->mapsUsed.x = 1.0f;
         texBumpMap = m_TextureManager->addNormalMapTexture(bumpMapName);
+        parallaxMap = m_TextureManager->getTextures()[parallaxMapName];
       }
 
       VkDescriptorImageInfo imageInfoSpecularMap{};
@@ -92,6 +97,11 @@ namespace Poulpe
       imageInfoBumpMap.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
       imageInfoBumpMap.imageView = texBumpMap.getImageView();
       imageInfoBumpMap.sampler = texBumpMap.getSampler();
+
+      VkDescriptorImageInfo imageInfoParallaxMap{};
+      imageInfoParallaxMap.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+      imageInfoParallaxMap.imageView = parallaxMap.getImageView();
+      imageInfoParallaxMap.sampler = parallaxMap.getSampler();
 
       VkDescriptorImageInfo shadowMapAmbient{};
       shadowMapAmbient.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
@@ -106,6 +116,7 @@ namespace Poulpe
       imageInfos.emplace_back(imageInfoSpecularMap);
       imageInfos.emplace_back(imageInfoBumpMap);
       imageInfos.emplace_back(shadowMapAmbient);
+      imageInfos.emplace_back(imageInfoParallaxMap);
       //imageInfos.emplace_back(shadowMapSpot);
 
       auto pipeline = m_Renderer->getPipeline(mesh->getShaderName());
