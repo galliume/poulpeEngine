@@ -9,6 +9,25 @@
 
 namespace Poulpe
 {
+
+    static void computeTangentBasis(
+      const glm::vec3& v0, const glm::vec3& v1, const glm::vec3& v2,
+      const glm::vec2& uv0, const glm::vec2& uv1, const glm::vec2& uv2,
+      glm::vec3& tangent, glm::vec3& bitangent) {
+
+      glm::vec3 e1 = v1 - v0;
+      glm::vec3 e2 = v2 - v0;
+
+      float x1 = uv1.x - uv0.x;
+      float y1 = uv1.y - uv0.y;
+      float x2 = uv2.x - uv0.x;
+      float y2 = uv2.y - uv0.y;
+
+      float r = 1.0f / (x1 * y2 - x2 * y1);
+      tangent = (e1 * y2 - e2 * y1) * r;
+      bitangent = (e2 * x1 - e1 * x2) * r;
+    }
+
     [[clang::no_destroy]] std::vector<material_t> TinyObjLoader::m_TinyObjMaterials{};
 
     std::vector<TinyObjData> TinyObjLoader::loadData(std::string const & path, [[maybe_unused]] bool shouldInverseTextureY)
@@ -77,9 +96,6 @@ namespace Poulpe
         std::unordered_map<uint32_t, Vertex*> listVertex;
         std::unordered_map<uint32_t, Vertex*> iToVertex;
 
-        uint32_t i = 0, k = 0;
-
-        //glm::vec3 pos = glm::vec3(0.0f);
         for (uint32_t s = 0; s < shapes.size(); s++) {
 
             TinyObjData data;
@@ -107,6 +123,8 @@ namespace Poulpe
                 }
                 //@todo work for only 10 textures per face, but well...
                 float t =(texidsmap[id] == 0) ? 0.0f : static_cast<float>(texidsmap[id]) / 10.0f;
+                glm::vec3 tangent;
+                glm::vec3 bitangent;
 
                 // Loop over vertices in the face.
                 for (size_t v = 0; v < fv; v++) {
@@ -114,7 +132,7 @@ namespace Poulpe
                     Vertex vertex{};
                     vertex.fidtidBB = glm::vec4(static_cast<float>(f), t, 0.0f, 0.0f);
 
-                    // access to vertex
+                      // access to vertex
                     tinyobj::index_t idx = shapes[s].mesh.indices[index_offset + v];
                     tinyobj::real_t vx = attrib.vertices[3 * size_t(idx.vertex_index) + 0];
                     tinyobj::real_t vy = attrib.vertices[3 * size_t(idx.vertex_index) + 1];
@@ -149,102 +167,59 @@ namespace Poulpe
 
                      vertex.color = { red, green, blue };
 
-                    vertex.tangent = glm::vec4(0.0f);
-
-                    if (uniqueVertices.count(vertex) == 0) {
-                        uniqueVertices[vertex] = static_cast<uint32_t>(data.vertices.size());
-                        data.vertices.push_back(vertex);
-
-                        triangles[i][0] = 3 * size_t(idx.vertex_index) + 0;
-                        triangles[i][1] = 3 * size_t(idx.vertex_index) + 1;
-                        triangles[i][2] = 3 * size_t(idx.vertex_index) + 2;
+                    //@todo works only for triangles
+                    tinyobj::index_t idx1;
+                    tinyobj::index_t idx2;
                     
-                        listVertex[3 * size_t(idx.vertex_index) + 0] = &vertex;
-                        listVertex[3 * size_t(idx.vertex_index) + 1] = &vertex;
-                        listVertex[3 * size_t(idx.vertex_index) + 2] = &vertex;
+                    if (static_cast<int>(v) == 0) {
+                      idx1 = shapes[s].mesh.indices[index_offset + 1];
+                      idx2 = shapes[s].mesh.indices[index_offset + 2];
+                   
+                      if (idx.texcoord_index >= 0 && idx1.texcoord_index >= 0 && idx2.texcoord_index >= 0) {
 
-                        iToVertex[i] = &vertex;
+                        glm::vec3 pos1 = glm::vec3(attrib.vertices[3 * size_t(idx1.vertex_index) + 0],
+                          attrib.vertices[3 * size_t(idx1.vertex_index) + 1],
+                          attrib.vertices[3 * size_t(idx1.vertex_index) + 2]);
 
-                        i += 1;
-                    }
-                    k += 1;
-                    data.indices.push_back(uniqueVertices[vertex]);
+                        glm::vec3 pos2 = glm::vec3(attrib.vertices[3 * size_t(idx2.vertex_index) + 0],
+                          attrib.vertices[3 * size_t(idx2.vertex_index) + 1],
+                          attrib.vertices[3 * size_t(idx2.vertex_index) + 2]);
+
+                        glm::vec2 texCoord1 = glm::vec2(attrib.texcoords[2 * size_t(idx1.texcoord_index) + 0],
+                          attrib.texcoords[2 * size_t(idx1.texcoord_index) + 1]);
+                        if (shouldInverseTextureY) texCoord1.y *= -1.0f;
+
+                        glm::vec2 texCoord2 = glm::vec2(attrib.texcoords[2 * size_t(idx2.texcoord_index) + 0],
+                          attrib.texcoords[2 * size_t(idx2.texcoord_index) + 1]);
+                        if (shouldInverseTextureY) texCoord2.y *= -1.0f;
+
+                        computeTangentBasis(vertex.pos, pos1, pos2, vertex.texCoord, texCoord1, texCoord2, tangent, bitangent);
+                      }
+                   }
+                    auto a = glm::normalize((tangent - vertex.normal * (glm::dot(tangent, vertex.normal) / glm::dot(vertex.normal, vertex.normal))));
+                    
+                    //handedness
+                    auto w = (glm::dot(glm::cross(tangent, bitangent), vertex.normal) > 0.0f) ? 1.0f : -1.0f;
+
+                    vertex.tangent = glm::vec4{ a.x, a.y, a.z, w };
+                    vertex.bitangent = bitangent;
+
+                   if (uniqueVertices.count(vertex) == 0) {
+                     uniqueVertices[vertex] = static_cast<uint32_t>(data.vertices.size());
+                     data.vertices.push_back(vertex);
+                   }
+                   data.indices.push_back(uniqueVertices[vertex]);
                 }
-
                 index_offset += fv;
 
-                // per-face material
-                data.materialId = (-1 != shapes[s].mesh.material_ids[f]) ? static_cast<uint32_t>(shapes[s].mesh.material_ids[f]) : 0;
-                data.facesMaterialId.emplace_back(shapes[s].mesh.material_ids[f]);
-                data.materialsID = materialsID;
+              // per-face material
+              data.materialId = (-1 != shapes[s].mesh.material_ids[f]) ? static_cast<uint32_t>(shapes[s].mesh.material_ids[f]) : 0;
+              data.facesMaterialId.emplace_back(shapes[s].mesh.material_ids[f]);
+              data.materialsID = materialsID;
             }
-
-            //tangeant
-            std::vector<glm::vec3> tangents{};
-            std::vector<glm::vec3> bitangents{};
-            auto def = glm::vec3(0.0f);
-
-            for (size_t i = 0; i < k*2; ++i) {
-                tangents.emplace_back(def);
-                bitangents.emplace_back(def);
-            }
-
-            for (size_t i = 0; i < triangles.size(); ++i)
-            {
-                uint32_t i0 = triangles[i][0];
-                uint32_t i1 = triangles[i][1];
-                uint32_t i2 = triangles[i][2];
- 
-                auto& vertex01 = listVertex[i0];
-                auto& vertex02 = listVertex[i1];
-                auto& vertex03 = listVertex[i2];
-
-                glm::vec3 & p0 = vertex01->pos;
-                glm::vec3 & p1 = vertex02->pos;
-                glm::vec3 & p2 = vertex03->pos;
- 
-                glm::vec2 & w0 = vertex01->texCoord;
-                glm::vec2 & w1 = vertex02->texCoord;
-                glm::vec2 & w2 = vertex03->texCoord;
-
-                glm::vec3 e1 = p1 - p0;
-                glm::vec3 e2 = p2 - p0;
-
-                float x1 = w1.x - w0.x;
-                float y1 = w1.y - w0.y;
-                float x2 = w2.x - w0.x;
-                float y2 = w2.y - w0.y;
-
-                float r = 1.0f / (x1 * y2 - x2 * y1);
-                glm::vec3 t = (e1 * y2 - e2 * y1) * r;
-                glm::vec3 b = (e2 * x1 - e1 * x2) * r;
-
-                tangents[i0] += t;
-                tangents[i1] += t;
-                tangents[i2] += t;
-
-                bitangents[i0] += b;
-                bitangents[i1] += b;
-                bitangents[i2] += b;
-            }
-
-            for (size_t i = 0; i < triangles.size(); ++i) {
-                auto& vertex = iToVertex[i];
-
-                auto t = tangents[i];
-                auto b = bitangents[i];
-                auto n = vertex->normal;
-
-                //auto a =  glm::normalize((t - n * (glm::dot(t, n) / glm::dot(n, n))));
-                auto w = (glm::dot(glm::cross(t, b), n) > 0.0f) ? 1.0f : -1.0f;
-
-                //data.vertices.at(i).texCoord.y *= w;
-                vertex->tangent = glm::vec4{t, w};
-            }
-
             dataList.emplace_back(data);
-        }
-
-        return dataList;
+          }
+       return dataList;
     }
 }
+

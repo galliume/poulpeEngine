@@ -26,8 +26,9 @@ layout(location = 0) in vec3 pos;
 layout(location = 1) in vec3 normal;
 layout(location = 2) in vec2 texCoord;
 layout(location = 3) in vec4 tangent;
-layout(location = 4) in vec4 fidtidBB;
-layout(location = 5) in vec3 vColor;
+layout(location = 4) in vec3 bitangent;
+layout(location = 5) in vec4 fidtidBB;
+layout(location = 6) in vec3 vColor;
 
 layout(location = 0) out VS_OUT {
     flat int fTextureID;
@@ -36,7 +37,7 @@ layout(location = 0) out VS_OUT {
     vec3 fPos;
     vec4 fMapsUsed;
     vec4 fViewPos;
-    mat3 TBN;
+    vec4 fTangent;
     vec4 fShadowCoordAmbient;
     vec4 fShadowCoordSpot;
     //faceId texture ID blank blank
@@ -90,12 +91,12 @@ void main()
     gl_Position = ubos[gl_InstanceIndex].projection * pc.view * ubos[gl_InstanceIndex].model * vec4(pos, 1.0);
 
     
-    vec3 t = normalize(vec3(ubos[gl_InstanceIndex].model * vec4(tangent.xyz, 0.0)));
-    vec3 n = normalize(vec3(ubos[gl_InstanceIndex].model * vec4(normal, 0.0)));
-    vec3 b = normalize(vec3(ubos[gl_InstanceIndex].model * vec4(cross(n, t) * tangent.w, 0.0)));
-    mat3 TBN = mat3(t, b, n);
-    vs_out.TBN = TBN;
-
+//    vec3 t = normalize(vec3(ubos[gl_InstanceIndex].model * vec4(tangent.xyz, 0.0)));
+//    vec3 n = normalize(vec3(ubos[gl_InstanceIndex].model * vec4(normal, 0.0)));
+//    vec3 b = normalize(vec3(ubos[gl_InstanceIndex].model * vec4(cross(n, t) * tangent.w, 0.0)));
+//    mat3 TBN = mat3(t, b, n);
+//    vs_out.TBN = TBN;
+    vs_out.fTangent = tangent;
     vs_out.fNormal = normal;
     //vs_out.fNormal = mat3(transpose(inverse(ubos[gl_InstanceIndex].model))) * normal;
     vs_out.fPos = vec3(ubos[gl_InstanceIndex].model * vec4(pos, 1.0));
