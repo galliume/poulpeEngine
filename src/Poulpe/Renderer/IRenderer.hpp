@@ -91,7 +91,7 @@ namespace Poulpe
        VkImageAspectFlags aspectFlags = VK_IMAGE_ASPECT_COLOR_BIT) = 0;
     virtual VkSampler createSkyboxTextureSampler(uint32_t mipLevels) = 0;
     virtual void createTextureImage(VkCommandBuffer& commandBuffer, stbi_uc* pixels, uint32_t texWidth, uint32_t texHeight,
-      uint32_t mipLevels, VkImage& textureImage, VkFormat format) = 0;
+      uint32_t mipLevels, VkImage& textureImage, VkFormat format, int channel = STBI_rgb_alpha) = 0;
     virtual VkImageView createImageView(VkImage image, VkFormat format, uint32_t mipLevels,
       VkImageAspectFlags aspectFlags = VK_IMAGE_ASPECT_COLOR_BIT) = 0;
     virtual VkSampler createTextureSampler(uint32_t mipLevels) = 0;

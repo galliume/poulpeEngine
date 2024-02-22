@@ -18,7 +18,7 @@ namespace Poulpe
         virtual void addRenderer(IRenderer* const renderer) = 0;
         virtual Texture addNormalMapTexture(std::string const & name) = 0;
         virtual void addSkyBox(std::vector<std::string> const & skyboxImages) = 0;
-        virtual void addTexture(std::string const & name, std::string const & path, bool isPublic = false) = 0;
+        virtual void addTexture(std::string const & name, std::string const & path, bool isPublic = false, VkFormat format = VK_FORMAT_R8G8B8A8_SRGB, int stbiChannel = STBI_rgb_alpha) = 0;
         virtual inline std::unordered_map<std::string, std::string> getPaths() const = 0;
         virtual inline const Texture getSkyboxTexture() const = 0;
         virtual inline std::unordered_map<std::string, Texture> getTextures() = 0;

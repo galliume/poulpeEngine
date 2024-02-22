@@ -25,10 +25,14 @@ namespace Poulpe
       return texture;
     }
 
-    size_t const size = static_cast<size_t>(texWidth * texHeight) * 3;
+    int const scale = 4;
+    int const width = texWidth * scale;
+    int const height = texHeight * scale;
+
+    size_t const size = static_cast<size_t>(width * height) * 4;//RGBA
     std::vector<unsigned char> pixelsToSave(size);
-    size_t const sizeHM = static_cast<size_t>(texWidth * texHeight);
-    std::vector<unsigned char> heightMapData(sizeHM);
+    size_t const sizeHM = static_cast<size_t>(width * height);//R
+    std::vector<char> heightMapData(sizeHM);
 
     uint64_t index{ 0 };
     uint64_t indexP{ 0 };
@@ -40,49 +44,59 @@ namespace Poulpe
 
     if (!std::filesystem::exists(fileName)) {
 
-      for (int y = 0; y < texHeight; ++y) {
+      for (int y = 0; y < height; ++y) {
 
-        int ym1 = (y - 1) & (texHeight - 1);
-        int yp1 = (y + 1) & (texHeight - 1);
+        int const scaledY = y / scale;
 
-        unsigned char* centerRow = pixels + y * texWidth;
+        int ym1 = (scaledY - 1) & (texHeight - 1);
+        int yp1 = (scaledY + 1) & (texHeight - 1);
+
+        unsigned char* centerRow = pixels + scaledY * texWidth;
         unsigned char* upperRow = pixels + ym1 * texWidth;
         unsigned char* lowerRow = pixels + yp1 * texWidth;
 
-        for (int x = 0; x < texWidth; ++x) {
-          int xm1 = (x - 1) & (texWidth - 1);
-          int xp1 = (x + 1) & (texWidth - 1);
+        for (int x = 0; x < width; ++x) {
+
+          int const scaledX = x / scale;
+
+          int xm1 = (scaledX - 1) & (texWidth - 1);
+          int xp1 = (scaledX + 1) & (texWidth - 1);
 
           float dx = (centerRow[xp1] - centerRow[xm1]) * 0.5f;
-          float dy = (lowerRow[x] - upperRow[x]) * 0.5f;
-        
+          float dy = (lowerRow[scaledX] - upperRow[scaledX]) * 0.5f;
+
           float nz = 1.0f / std::sqrt(dx * dx + dy * dy + 1.0f);
           float nx = std::fmin(std::fmax(-dx * nz, -1.0f), 1.0f);
           float ny = std::fmin(std::fmax(-dy * nz, -1.0f), 1.0f);
 
-          unsigned char nxuc = static_cast<unsigned char>(((nx + 1.0f) / 2.0f) * 255.0f);
-          unsigned char nyuc = static_cast<unsigned char>(((ny + 1.0f) / 2.0f) * 255.0f);
-          unsigned char nzuc = static_cast<unsigned char>(((nz + 1.0f) / 2.0f) * 255.0f);
+          float intensity = (pixels[scaledY * texWidth + scaledX] * 2.0f - 1.0f) * nz;
+          float color = (intensity * 0.5f + 0.5f);
 
-          pixelsToSave[++index] = nyuc;
-          pixelsToSave[++index] = nzuc;
-          pixelsToSave[++index] = nxuc;
+          heightMapData[++indexP] = static_cast<char>(color);
 
-          glm::vec normal = glm::vec2(dx, dy);
-          float heightValue = glm::length(normal) * 2.0f - 1.0f;
+          float r = (nx * 0.5f + 0.5f) * 256.0f;
+          float g = (ny * 0.5f + 0.5f) * 256.0f;
+          float b = (nz * 0.5f + 0.5f) * 256.0f;
 
-          heightMapData[++indexP] = static_cast<unsigned char>(heightValue);
+          if (r > 255.0f) r = 255.0f;
+          if (g > 255.0f) g = 255.0f;
+          if (b > 255.0f) b = 255.0f;
+
+          pixelsToSave[++index] = static_cast<unsigned char>(g);
+          pixelsToSave[++index] = static_cast<unsigned char>(b);
+          pixelsToSave[++index] = static_cast<unsigned char>(255.0f);
+          pixelsToSave[++index] = static_cast<unsigned char>(r);
         }
       }
 
-      stbi_write_png(fileName.c_str(), texWidth, texHeight, 3, pixelsToSave.data(), texWidth * 3);
-      stbi_write_png(parallaxFileName.c_str(), texWidth, texHeight, 1, heightMapData.data(), texWidth);
+      stbi_write_png(fileName.c_str(), width, height, 4, pixelsToSave.data(), width * 4);
+      stbi_write_png(parallaxFileName.c_str(), width, height, 1, heightMapData.data(), width);
 
       stbi_image_free(pixels);
     }
     
-    addTexture(mapName, fileName, false);
-    addTexture(parallaxMapName, parallaxFileName, false);
+    addTexture(mapName, fileName, false, VK_FORMAT_R8G8B8A8_UNORM, STBI_rgb_alpha);
+    addTexture(parallaxMapName, parallaxFileName, false, VK_FORMAT_R8_UNORM, STBI_grey);
 
     texture = m_Textures[mapName];
 
@@ -142,7 +156,7 @@ namespace Poulpe
     vkDestroyCommandPool(m_Renderer->getDevice(), commandPool, nullptr);
   }
 
-  void TextureManager::addTexture(std::string const& name, std::string const& path, bool isPublic)
+  void TextureManager::addTexture(std::string const& name, std::string const& path, bool isPublic, VkFormat format, int stbiChannel)
   {
     if (!std::filesystem::exists(path.c_str())) {
       PLP_FATAL("texture file {} does not exits.", path);
@@ -150,14 +164,14 @@ namespace Poulpe
     }
 
     if (0 != m_Textures.count(name.c_str())) {
-      PLP_TRACE("Texture {} already imported", name);
+      //PLP_TRACE("Texture {} already imported", name);
       return;
     }
 
     m_Paths.insert({ name, path });
 
     int texWidth = 0, texHeight = 0, texChannels = 0;
-    stbi_uc* pixels = stbi_load(path.c_str(), &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
+    stbi_uc* pixels = stbi_load(path.c_str(), &texWidth, &texHeight, &texChannels, stbiChannel);
 
     if (!pixels) {
       PLP_FATAL("failed to load texture image %s", name);
@@ -178,9 +192,10 @@ namespace Poulpe
       static_cast<uint32_t>(texHeight),
       mipLevels,
       textureImage,
-      VK_FORMAT_R8G8B8A8_SRGB);
+      format,
+      stbiChannel);
 
-    VkImageView textureImageView = m_Renderer->createImageView(textureImage, VK_FORMAT_R8G8B8A8_SRGB, mipLevels);
+    VkImageView textureImageView = m_Renderer->createImageView(textureImage, format, mipLevels);
     VkSampler textureSampler = m_Renderer->createTextureSampler(mipLevels);
 
     Texture texture;

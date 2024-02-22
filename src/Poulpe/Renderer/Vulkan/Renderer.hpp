@@ -175,14 +175,16 @@ namespace Poulpe
       uint32_t texHeight,
       uint32_t mipLevels,
       VkImage& textureImage,
-      VkFormat format) override {
+      VkFormat format,
+      int channel = STBI_rgb_alpha) override {
         return m_API->createTextureImage(commandBuffer,
           pixels,
           texWidth,
           texHeight,
           mipLevels,
           textureImage,
-          format);
+          format,
+          channel);
     }
     VkSampler createTextureSampler(uint32_t mipLevels) override {
       return m_API->createTextureSampler(mipLevels);

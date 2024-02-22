@@ -147,7 +147,7 @@ namespace Poulpe {
             VkImageAspectFlags aspectFlags = VK_IMAGE_ASPECT_COLOR_BIT);
 
         void createTextureImage(VkCommandBuffer& commandBuffer, stbi_uc* pixels, uint32_t texWidth, uint32_t texHeight,
-            uint32_t mipLevels, VkImage& textureImage, VkFormat format);
+            uint32_t mipLevels, VkImage& textureImage, VkFormat format, int channel);
 
         void createSkyboxTextureImage(VkCommandBuffer& commandBuffer, std::vector<stbi_uc*>& skyboxPixels, uint32_t texWidth,
             uint32_t texHeight, uint32_t mipLevels, VkImage& textureImage, VkFormat format);

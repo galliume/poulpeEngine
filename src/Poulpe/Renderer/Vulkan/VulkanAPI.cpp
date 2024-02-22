@@ -7,10 +7,10 @@
 
 //@todo this class needs a huge clean up
 #pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wcast-function-type-strict"
 #pragma clang diagnostic ignored "-Wold-style-cast"
 #pragma clang diagnostic ignored "-Wsign-conversion"
 #pragma clang diagnostic ignored "-Wshorten-64-to-32"
+#pragma clang diagnostic ignored "-Wcast-function-type-strict"
 
 namespace Poulpe {
 
@@ -57,8 +57,9 @@ namespace Poulpe {
               PLP_WARN("{} : {}", messageType, pCallbackData->pMessage);
               break;
           }
-          case VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT:
           case VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT:
+          case VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT:
+            break;
           case VK_DEBUG_UTILS_MESSAGE_SEVERITY_FLAG_BITS_MAX_ENUM_EXT:
           {
               PLP_TRACE("{} : {}", messageType, pCallbackData->pMessage);
@@ -1355,6 +1356,15 @@ namespace Poulpe {
         storageBufferInfo.range = VK_WHOLE_SIZE;
         storageBufferInfos.emplace_back(storageBufferInfo);
 
+        std::vector<VkDescriptorImageInfo> imageInfos2;
+
+        if (imageInfo.size() > 4) {
+          for (size_t i{ 3 }; i < imageInfo.size(); i++) {
+            imageInfos2.emplace_back(imageInfo[i]);
+            imageInfo.erase(imageInfo.begin() + i);
+          }
+        }
+
         descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
         descriptorWrites[0].dstSet = descriptorSet;
         descriptorWrites[0].dstBinding = 0;
@@ -1375,9 +1385,17 @@ namespace Poulpe {
         descriptorWrites[2].dstSet = descriptorSet;
         descriptorWrites[2].dstBinding = 2;
         descriptorWrites[2].dstArrayElement = 0;
-        descriptorWrites[2].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-        descriptorWrites[2].descriptorCount = storageBufferInfos.size();
-        descriptorWrites[2].pBufferInfo = storageBufferInfos.data();
+        descriptorWrites[2].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        descriptorWrites[2].descriptorCount = imageInfos2.size();
+        descriptorWrites[2].pImageInfo = imageInfos2.data();
+
+        descriptorWrites[3].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        descriptorWrites[3].dstSet = descriptorSet;
+        descriptorWrites[3].dstBinding = 3;
+        descriptorWrites[3].dstArrayElement = 0;
+        descriptorWrites[3].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+        descriptorWrites[3].descriptorCount = storageBufferInfos.size();
+        descriptorWrites[3].pBufferInfo = storageBufferInfos.data();
 
         vkUpdateDescriptorSets(m_Device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
     }
@@ -1388,7 +1406,7 @@ namespace Poulpe {
       VkDescriptorSet& descriptorSet,
       std::vector<VkDescriptorImageInfo>& imageInfo)
     {
-      std::array<VkWriteDescriptorSet, 3> descriptorWrites{};
+      std::array<VkWriteDescriptorSet, 4> descriptorWrites{};
       std::vector<VkDescriptorBufferInfo> bufferInfos;
       std::vector<VkDescriptorBufferInfo> storageBufferInfos;
 
@@ -1412,6 +1430,16 @@ namespace Poulpe {
           storageBufferInfos.emplace_back(bufferInfo);
         });
 
+      std::vector<VkDescriptorImageInfo> imageInfo2;
+
+      if (imageInfo.size() > 4) {
+        auto it = imageInfo.begin() + 4;
+        while (it != imageInfo.end()) {
+          imageInfo2.emplace_back(std::move(*it));
+          it = imageInfo.erase(it);
+        }
+      }
+
       descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
       descriptorWrites[0].dstSet = descriptorSet;
       descriptorWrites[0].dstBinding = 0;
@@ -1432,9 +1460,17 @@ namespace Poulpe {
       descriptorWrites[2].dstSet = descriptorSet;
       descriptorWrites[2].dstBinding = 2;
       descriptorWrites[2].dstArrayElement = 0;
-      descriptorWrites[2].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-      descriptorWrites[2].descriptorCount = storageBufferInfos.size();
-      descriptorWrites[2].pBufferInfo = storageBufferInfos.data();
+      descriptorWrites[2].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+      descriptorWrites[2].descriptorCount = imageInfo2.size();
+      descriptorWrites[2].pImageInfo = imageInfo2.data();
+
+      descriptorWrites[3].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+      descriptorWrites[3].dstSet = descriptorSet;
+      descriptorWrites[3].dstBinding = 3;
+      descriptorWrites[3].dstArrayElement = 0;
+      descriptorWrites[3].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+      descriptorWrites[3].descriptorCount = storageBufferInfos.size();
+      descriptorWrites[3].pBufferInfo = storageBufferInfos.data();
 
       vkUpdateDescriptorSets(m_Device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
     }
@@ -2174,9 +2210,9 @@ namespace Poulpe {
     }
 
     void VulkanAPI::createTextureImage(VkCommandBuffer & commandBuffer, stbi_uc* pixels, uint32_t texWidth,
-        uint32_t texHeight, uint32_t mipLevels, VkImage & textureImage, VkFormat format)
+        uint32_t texHeight, uint32_t mipLevels, VkImage & textureImage, VkFormat format, int channel)
     {
-        VkDeviceSize imageSize = texWidth * texHeight * 4;
+        VkDeviceSize imageSize = texWidth * texHeight * channel;
         VkBuffer buffer = createBuffer(imageSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT);
         VkMemoryRequirements memRequirements;
         vkGetBufferMemoryRequirements(m_Device, buffer, & memRequirements);
@@ -2205,7 +2241,7 @@ namespace Poulpe {
 
         stbi_image_free(pixels);
 
-        createImage(texWidth, texHeight, mipLevels, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_TILING_OPTIMAL,
+        createImage(texWidth, texHeight, mipLevels, VK_SAMPLE_COUNT_1_BIT, format, VK_IMAGE_TILING_OPTIMAL,
             VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
             VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, textureImage);
 

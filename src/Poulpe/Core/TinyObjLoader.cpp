@@ -24,8 +24,8 @@ namespace Poulpe
       float y2 = uv2.y - uv0.y;
 
       float r = 1.0f / (x1 * y2 - x2 * y1);
-      tangent = (e1 * y2 - e2 * y1) * r;
-      bitangent = (e2 * x1 - e1 * x2) * r;
+      tangent += (e1 * y2 - e2 * y1) * r;
+      bitangent += (e2 * x1 - e1 * x2) * r;
     }
 
     [[clang::no_destroy]] std::vector<material_t> TinyObjLoader::m_TinyObjMaterials{};
@@ -91,10 +91,7 @@ namespace Poulpe
 
         std::unordered_map<Vertex, uint32_t> uniqueVertices{};
         
-        //@todo refacto...
-        std::unordered_map<uint32_t, std::array<unsigned int, 3>> triangles;
-        std::unordered_map<uint32_t, Vertex*> listVertex;
-        std::unordered_map<uint32_t, Vertex*> iToVertex;
+        size_t vIndex{ 0 };
 
         for (uint32_t s = 0; s < shapes.size(); s++) {
 
@@ -196,21 +193,30 @@ namespace Poulpe
                         computeTangentBasis(vertex.pos, pos1, pos2, vertex.texCoord, texCoord1, texCoord2, tangent, bitangent);
                       }
                    }
-                    auto a = glm::normalize((tangent - vertex.normal * (glm::dot(tangent, vertex.normal) / glm::dot(vertex.normal, vertex.normal))));
-                    
-                    //handedness
-                    auto w = (glm::dot(glm::cross(tangent, bitangent), vertex.normal) > 0.0f) ? 1.0f : -1.0f;
-
-                    vertex.tangent = glm::vec4{ a.x, a.y, a.z, w };
-                    vertex.bitangent = bitangent;
-
                    if (uniqueVertices.count(vertex) == 0) {
                      uniqueVertices[vertex] = static_cast<uint32_t>(data.vertices.size());
                      data.vertices.push_back(vertex);
+                     vIndex += 1;
                    }
-                   data.indices.push_back(uniqueVertices[vertex]);
+                  data.indices.push_back(uniqueVertices[vertex]);
                 }
                 index_offset += fv;
+
+                size_t start = data.vertices.size() - vIndex;
+
+                for (size_t i = start; i < data.vertices.size(); i++) {
+                  auto& vertex = data.vertices.at(i);
+
+                  //orthonormalize tangent
+                  glm::vec3 ot = glm::normalize((tangent - vertex.normal * (glm::dot(tangent, vertex.normal) / glm::dot(vertex.normal, vertex.normal))));
+
+                  //handedness
+                  auto w = (glm::dot(glm::cross(tangent, bitangent), vertex.normal) > 0.0f) ? 1.0f : -1.0f;
+
+                  vertex.tangent = glm::vec4{ ot, w };
+                  vertex.bitangent = bitangent;
+                }
+                vIndex = 0;
 
               // per-face material
               data.materialId = (-1 != shapes[s].mesh.material_ids[f]) ? static_cast<uint32_t>(shapes[s].mesh.material_ids[f]) : 0;

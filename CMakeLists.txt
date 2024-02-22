@@ -74,7 +74,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE "${PROJECT_BINARY_DIR}")
 target_compile_definitions(${PROJECT_NAME} PRIVATE "$<$<CONFIG:DEBUG>:PLP_DEBUG_BUILD>")
 
 if(MSVC)
-  set(DEBUG_OPTIONS "/WX;/MDd;/Wall;/MDd;/std:c++20;/std:c17;/fp:fast;-Wno-unused-macros;-Wno-old-style-cast;-Wno-reserved-identifier;-Wno-documentation;-Wno-nonportable-system-include-path;-Wno-documentation-unknown-command;-Wno-unsafe-buffer-usage;-Wno-ctad-maybe-unsupported;-Wno-c++98-compat;-Wno-c++98-compat-pedantic;/Zc:__cplusplus")
+  set(DEBUG_OPTIONS "/WX;/MDd;/Wall;/MDd;/std:c++20;/std:c17;/fp:fast;-Wno-unused-macros;-Wno-old-style-cast;-Wno-reserved-identifier;-Wno-documentation;-Wno-nonportable-system-include-path;-Wno-documentation-unknown-command;-Wno-ctad-maybe-unsupported;-Wno-c++98-compat;-Wno-c++98-compat-pedantic;/Zc:__cplusplus")
   set(RELEASE_OPTIONS "-O2;/Obd2;/Ot;/MD;/fp:fast")
 else()
   set(DEBUG_OPTIONS "-Weverything;-Wno-unsafe-buffer-usage;-Wno-ctad-maybe-unsupported;-Wno-c++98-compat;-Wno-c++98-compat-pedantic")
@@ -234,32 +234,42 @@ find_program(CLANG_TIDY_EXE NAMES "clang-tidy")
 add_custom_command(
   TARGET ${PROJECT_NAME} PRE_BUILD
   COMMAND ${CMAKE_COMMAND} -E copy_directory
-      ${CMAKE_CURRENT_SOURCE_DIR}/assets
-      $<TARGET_FILE_DIR:${PROJECT_NAME}>/assets
-  COMMENT "\r\n Copying assets")
-
+      ${CMAKE_CURRENT_SOURCE_DIR}/assets/shaders
+      $<TARGET_FILE_DIR:${PROJECT_NAME}>/assets/shaders)
+  
+add_custom_command(
+  TARGET ${PROJECT_NAME} PRE_BUILD
+  COMMAND ${CMAKE_COMMAND} -E copy_directory
+      ${CMAKE_CURRENT_SOURCE_DIR}/assets/scripts
+      $<TARGET_FILE_DIR:${PROJECT_NAME}>/assets/scripts)
+	  
 add_custom_command(
   TARGET ${PROJECT_NAME} PRE_BUILD
   COMMAND ${CMAKE_COMMAND} -E copy_directory
       ${CMAKE_CURRENT_SOURCE_DIR}/config
-      $<TARGET_FILE_DIR:${PROJECT_NAME}>/config
-  COMMENT "\r\n Copying config")
+      $<TARGET_FILE_DIR:${PROJECT_NAME}>/config)
 
 add_custom_command(
   TARGET ${PROJECT_NAME} PRE_BUILD
   COMMAND ${CMAKE_COMMAND} -E make_directory 
-      $<TARGET_FILE_DIR:${PROJECT_NAME}>/cache
-  COMMENT "\r\n Creating cache dir")
+      $<TARGET_FILE_DIR:${PROJECT_NAME}>/cache)
 
 add_custom_command(
   TARGET ${PROJECT_NAME} PRE_BUILD
   COMMAND ${CMAKE_COMMAND} -E make_directory 
-      $<TARGET_FILE_DIR:${PROJECT_NAME}>/lib
-  COMMENT "\r\n Creating lib dir")
+      $<TARGET_FILE_DIR:${PROJECT_NAME}>/lib)
 
 add_custom_target(
-        CompilShaders ${CMAKE_CURRENT_SOURCE_DIR}/bin/shadersCompilation.sh
-        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+  __UpdateAssets 
+  ${CMAKE_COMMAND} -E copy_directory
+  ${CMAKE_CURRENT_SOURCE_DIR}/assets
+  $<TARGET_FILE_DIR:${PROJECT_NAME}>/assets
+  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+
+add_custom_target(
+	__CompilShaders
+	${CMAKE_CURRENT_SOURCE_DIR}/bin/shadersCompilation.sh
+	WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 
 #add_custom_target(graphviz ALL
 #    COMMAND ${CMAKE_COMMAND} "--graphviz=graph/plp.dot" ..

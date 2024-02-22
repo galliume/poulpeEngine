@@ -73,19 +73,26 @@ namespace Poulpe
 
         VkDescriptorSetLayoutBinding samplerLayoutBinding{};
         samplerLayoutBinding.binding = 1;
-        samplerLayoutBinding.descriptorCount = 8;
+        samplerLayoutBinding.descriptorCount = 4;
         samplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
         samplerLayoutBinding.pImmutableSamplers = nullptr;
         samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 
+        VkDescriptorSetLayoutBinding samplerLayoutBinding2{};
+        samplerLayoutBinding2.binding = 2;
+        samplerLayoutBinding2.descriptorCount = 4;
+        samplerLayoutBinding2.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        samplerLayoutBinding2.pImmutableSamplers = nullptr;
+        samplerLayoutBinding2.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
         VkDescriptorSetLayoutBinding storageLayoutBinding{};
-        storageLayoutBinding.binding = 2;
+        storageLayoutBinding.binding = 3;
         storageLayoutBinding.descriptorCount = 1;
         storageLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
         storageLayoutBinding.pImmutableSamplers = nullptr;
         storageLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
 
-        bindings = { uboLayoutBinding, samplerLayoutBinding, storageLayoutBinding };
+        bindings = { uboLayoutBinding, samplerLayoutBinding, samplerLayoutBinding2, storageLayoutBinding };
       } else if constexpr (T == DescSetLayoutType::HUD) {
         VkDescriptorSetLayoutBinding uboLayoutBinding{};
         uboLayoutBinding.binding = 0;

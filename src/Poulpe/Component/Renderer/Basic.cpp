@@ -59,11 +59,6 @@ namespace Poulpe
       imageInfoAlpha.imageView = alpha.getImageView();
       imageInfoAlpha.sampler = alpha.getSampler();
 
-      imageInfos.emplace_back(imageInfo);
-      imageInfos.emplace_back(imageInfo2);
-      imageInfos.emplace_back(imageInfo3);
-      imageInfos.emplace_back(imageInfoAlpha);
-
       std::string specMapName = "_plp_empty";
       std::string bumpMapName = "_plp_empty";
 
@@ -112,11 +107,17 @@ namespace Poulpe
       //shadowMapSpot.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
       //shadowMapSpot.imageView = m_Renderer->getDepthMapImageViews()->at(1);
       //shadowMapSpot.sampler = m_Renderer->getDepthMapSamplers()->at(1);
+      //Set 0
+      imageInfos.emplace_back(imageInfo);
+      imageInfos.emplace_back(imageInfo2);
+      imageInfos.emplace_back(imageInfo3);
+      imageInfos.emplace_back(imageInfoAlpha);
 
+      //Set 1
       imageInfos.emplace_back(imageInfoSpecularMap);
       imageInfos.emplace_back(imageInfoBumpMap);
-      imageInfos.emplace_back(shadowMapAmbient);
       imageInfos.emplace_back(imageInfoParallaxMap);
+      imageInfos.emplace_back(shadowMapAmbient);
       //imageInfos.emplace_back(shadowMapSpot);
 
       auto pipeline = m_Renderer->getPipeline(mesh->getShaderName());

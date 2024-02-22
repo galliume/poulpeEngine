@@ -37,12 +37,16 @@ layout(location = 0) out VS_OUT {
     vec3 fPos;
     vec4 fMapsUsed;
     vec4 fViewPos;
+    mat3 TBN;
     vec4 fTangent;
     vec4 fShadowCoordAmbient;
     vec4 fShadowCoordSpot;
     //faceId texture ID blank blank
     vec4 ffidtidBB;
     vec3 fvColor;
+    vec3 viewT;
+    vec3 lightT;
+    vec3 posT;
 } vs_out;
 
 
@@ -73,7 +77,7 @@ struct Material
 };
 
 #define NR_POINT_LIGHTS 2
-layout(binding = 2) buffer ObjectBuffer {
+layout(binding = 3) buffer ObjectBuffer {
     Light ambientLight;
     Light pointLights[NR_POINT_LIGHTS];
     Light spotLight;
@@ -86,18 +90,20 @@ const mat4 biasMat = mat4(
     0.0, 0.0, 1.0, 0.0,
     0.5, 0.5, 0.0, 1.0 );
 
+void CalculateTangentSpaceVL(vec3 position, vec3 normal, vec4 tangent, vec3 v, vec3 l, out vec3 vtan, out vec3 ltan);
+
 void main()
 {
     gl_Position = ubos[gl_InstanceIndex].projection * pc.view * ubos[gl_InstanceIndex].model * vec4(pos, 1.0);
 
-    
-//    vec3 t = normalize(vec3(ubos[gl_InstanceIndex].model * vec4(tangent.xyz, 0.0)));
-//    vec3 n = normalize(vec3(ubos[gl_InstanceIndex].model * vec4(normal, 0.0)));
-//    vec3 b = normalize(vec3(ubos[gl_InstanceIndex].model * vec4(cross(n, t) * tangent.w, 0.0)));
-//    mat3 TBN = mat3(t, b, n);
-//    vs_out.TBN = TBN;
+    vec3 t = normalize(mat3(ubos[gl_InstanceIndex].model) * tangent.xyz);
+    vec3 n = normalize(mat3(ubos[gl_InstanceIndex].model) * normal);
+    vec3 b = normalize(mat3(ubos[gl_InstanceIndex].model) * bitangent);
+
+    vs_out.TBN = transpose(mat3(t, b, n));
+
     vs_out.fTangent = tangent;
-    vs_out.fNormal = normal;
+    vs_out.fNormal = vs_out.TBN * normal;
     //vs_out.fNormal = mat3(transpose(inverse(ubos[gl_InstanceIndex].model))) * normal;
     vs_out.fPos = vec3(ubos[gl_InstanceIndex].model * vec4(pos, 1.0));
     vs_out.fTexCoord = texCoord;
@@ -108,4 +114,14 @@ void main()
     vs_out.fShadowCoordSpot = (biasMat * spotLight.lightSpaceMatrix * ubos[gl_InstanceIndex].model) * vec4(pos, 1.0);
     vs_out.ffidtidBB = fidtidBB;
     vs_out.fvColor = vColor;
-} 
+
+    vs_out.posT = vs_out.TBN * vs_out.fPos;
+    CalculateTangentSpaceVL(vs_out.fPos, normal, tangent, vs_out.fViewPos.xyz, ambientLight.direction, vs_out.viewT, vs_out.lightT);
+}
+
+void CalculateTangentSpaceVL(vec3 position, vec3 normal, vec4 tangent, vec3 v, vec3 l, out vec3 vtan, out vec3 ltan)
+{ 
+  vec3 bitangent = cross(normal, tangent.xyz) * tangent.w;
+  vtan = vec3(dot(tangent.xyz, v), dot(bitangent, v), dot(normal, v));
+  ltan = vec3(dot(tangent.xyz, l), dot(bitangent, l), dot(normal, l));
+}
