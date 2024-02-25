@@ -5,8 +5,6 @@
 layout(location = 0) out vec4 fColor;
 
 layout(location = 0) in VS_OUT {
-    mat3 MPV;//matrice projection*view
-    mat3 ITMPV;//inverse transpose matrice projection*view
     flat int fTextureID;
     vec2 fTexCoord;
     vec3 fNormal;
@@ -25,7 +23,6 @@ layout(location = 0) in VS_OUT {
     vec3 viewT;
     vec3 lightT;
     vec3 posT;
-    mat4 model;
 } fs_in;
 
 struct Light {
@@ -94,9 +91,6 @@ void main()
     vec3 lPointLightTan[NR_POINT_LIGHTS];
     vec3 spotLightDir = normalize(spotLight.position - fs_in.fPos);
     vec2 texCoord = fs_in.fTexCoord;
-    vec3 tangent = vec3(fs_in.fTangent.xyz - dot(fs_in.fTangent.xyz, normal) * normal);
-    vec3 bit = cross(fs_in.fNormal, fs_in.fTangent.xyz) * fs_in.fTangent.w;
-    mat3 TBN = mat3(tangent, bit, normal);
 
     int id = 0;
     //@todo ugly but avoid floating point issues when casting to int
@@ -113,16 +107,22 @@ void main()
     }
     
     if (fs_in.fMapsUsed.x > 0.9 && fs_in.fMapsUsed.x < 1.1) {
-      //vec3 vDir = fs_in.viewT;
-      //lightDir = fs_in.lightT;
+      //vec3 vdir = normalize(fs_in.viewT - fs_in.posT);
+      //viewDir = normalize(fs_in.viewT);
+      //lightDir = normalize(fs_in.lightT);
 
-      //texCoord = ParallaxMapping(fs_in.fTexCoord, vDir, id);
+      //texCoord = ParallaxMapping(fs_in.fTexCoord, vdir, id);
 
+      vec3 n = normalize(fs_in.fNormal);
       vec2 tmpM = texture(texSampler2[1], texCoord).xy;
+
       vec3 m = vec3(tmpM, sqrt(1.0 - tmpM.x * tmpM.x - tmpM.y * tmpM.y));
-      m = 2.0 * m - 1.0;
-      normal = normalize(TBN * m);
-    }
+      vec3 t = normalize(fs_in.fTangent.xyz - n * dot(fs_in.fTangent.xyz, n));
+      vec3 b = cross(n, fs_in.fTangent.xyz) * fs_in.fTangent.w;
+      normal = normalize(t * m.x + b * m.y + n * m.z);
+
+//      texColor = texture(texSampler[id], texCoord);
+    } 
 
     if (fs_in.fMapsUsed.w > 0.9 && fs_in.fMapsUsed.w < 1.1) {
       texColor = vec4(fs_in.fvColor, 1.0);
@@ -132,13 +132,15 @@ void main()
     float shadowAmbient = filterPCF(fs_in.fShadowCoordAmbient / fs_in.fShadowCoordAmbient.w);
     //float shadowSpot = filterPCF(fs_in.fShadowCoordAmbient / fs_in.fShadowCoordAmbient.w);
 
-    vec3 pixelColor = CalcDirLight(texColor, ambientLight, normal, viewDir, shadowAmbient, lightDir, texCoord);
+    //vec3 pixelColor = CalcDirLight(texColor, ambientLight, normal, viewDir, shadowAmbient, lightDir, texCoord);
 
     for(int i = 0; i < NR_POINT_LIGHTS; i++) {
-        pixelColor += CalcPointLight(texColor, pointLights[i], normal, fs_in.fPos.xyz, viewDir, lightDir, texCoord);
+        //vec3 lightDir = normalize(pointLights[i].position - fs_in.fPos) * lPointLightTan[i];
+
+        //pixelColor += CalcPointLight(texColor, pointLights[i], normal, fs_in.fPos.xyz, viewDir, lightDir, texCoord);
     }
 
-    pixelColor += CalcSpotLight(texColor, spotLight, normal, fs_in.fPos.xyz, viewDir, shadowAmbient, spotLightDir, texCoord);
+    //pixelColor += CalcSpotLight(texColor, spotLight, normal, fs_in.fPos.xyz, viewDir, shadowAmbient, spotLightDir, texCoord);
 
     if (fs_in.fMapsUsed.z > 0.9 && fs_in.fMapsUsed.z < 1.1) {
         vec4 mask = texture(texSampler[3], texCoord);
@@ -149,6 +151,7 @@ void main()
 
 
     //pixelColor = normal.xyz;
+    vec3 pixelColor = normal;
     fColor = vec4(pixelColor, 1.0);
 
     //fColor = vec4(fs_in.fShadowCoord.st, 0, 1);
@@ -159,7 +162,7 @@ void main()
 vec3 CalcDirLight(vec4 color, Light dirLight, vec3 normal, vec3 viewDir, float shadow, vec3 lightDir, vec2 texCoord)
 {
     vec3 ambient = GetAmbientLight();
-
+    viewDir = normalize(-viewDir);
     float diff = max(dot(normal, lightDir), 0.0);
     vec3 diffuse =  dirLight.color * material.diffuse * diff;
 
@@ -174,14 +177,13 @@ vec3 CalcDirLight(vec4 color, Light dirLight, vec3 normal, vec3 viewDir, float s
       specular =  dirLight.color * (dirLight.ads.z * spec * material.specular);
     }
 
-    return (ambient + shadow * (diffuse + specular)) * color.xyz;
+    return (ambient + (diffuse + specular)) * color.xyz;
 }
 
 vec3 CalcPointLight(vec4 color, Light pointLight, vec3 normal, vec3 fragPos, vec3 viewDir, vec3 lightDir, vec2 texCoord)
 {
     vec3 ambient = GetAmbientLight();
-    ambient += pointLight.color * material.ambient * pointLight.ads.x;
-    
+
     float distance = length(pointLight.position - fs_in.fPos);
     float attenuation = 1.0 / (pointLight.clq.x + pointLight.clq.y * distance + pointLight.clq.z * (distance * distance));
 
@@ -209,7 +211,6 @@ vec3 CalcPointLight(vec4 color, Light pointLight, vec3 normal, vec3 fragPos, vec
 vec3 CalcSpotLight(vec4 color, Light spotlight, vec3 normal, vec3 fragPos, vec3 viewDir, float shadow, vec3 lightDir, vec2 texCoord)
 {
     vec3 ambient = GetAmbientLight();
-    ambient += spotlight.color * material.ambient * spotlight.ads.x;
 
     float theta = dot(lightDir, normalize(-spotlight.direction));
     float epsilon   = spotlight.coB.x - spotlight.coB.y;
@@ -287,7 +288,7 @@ vec2 ParallaxMapping(vec2 texCoord, vec3 viewDir, int id)
     for (int i = 0; i < k; ++i)
     {
       float parallax = texture(texSampler2[2], texCoord).x;
-      texCoord -= pdir * parallax;
+      texCoord += pdir * parallax;
     }
     return texCoord;
 //    float height_scale = 0.1;

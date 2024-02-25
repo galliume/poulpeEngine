@@ -1,6 +1,5 @@
 #version 450
 #extension GL_EXT_nonuniform_qualifier : enable
-//#extension GL_KHR_vulkan_glsl : enable
 
 #define MAX_UBOS 1
 
@@ -32,8 +31,8 @@ layout(location = 5) in vec4 fidtidBB;
 layout(location = 6) in vec3 vColor;
 
 layout(location = 0) out VS_OUT {
-    mat3 MPV;//matrice projection*view
-    mat3 ITMPV;//inverse transpose matrice projection*view
+    mat4 MPV;//matrice projection*view
+    mat4 ITMPV;//inverse transpose matrice projection*view
     flat int fTextureID;
     vec2 fTexCoord;
     vec3 fNormal;
@@ -51,7 +50,6 @@ layout(location = 0) out VS_OUT {
     vec3 viewT;
     vec3 lightT;
     vec3 posT;
-    mat4 model;
 } vs_out;
 
 
@@ -103,39 +101,28 @@ void main()
 {
     gl_Position = ubos[gl_InstanceIndex].projection * pc.view * ubos[gl_InstanceIndex].model * vec4(pos, 1.0);
 
-    //@todo compute CPU side
-    vs_out.MPV = mat3(ubos[gl_InstanceIndex].projection * pc.view);
-    vs_out.ITMPV = transpose(inverse(vs_out.MPV));
-    //
+    vec3 norm = mat3(transpose(inverse(ubos[gl_InstanceIndex].model))) * normal;
+
+    vec3 t = normalize(vec3(ubos[gl_InstanceIndex].model * vec4(tangent.xyz, 0.0)));
+    vec3 n = normalize(vec3(ubos[gl_InstanceIndex].model * vec4(normal, 0.0)));
+    vec3 b = normalize(vec3(ubos[gl_InstanceIndex].model * vec4(cross(n, t) * tangent.w, 0.0)));
+
+    vs_out.TBN = transpose(mat3(t, b, n));//from tangent space to object space
+
+    vs_out.fTangent = tangent;
+    vs_out.fNormal = norm;
+    vs_out.fBitangent = bitangent;
+    vs_out.fPos = vec3(ubos[gl_InstanceIndex].model * vec4(pos, 1.0));
     vs_out.fTexCoord = texCoord;
     vs_out.fTextureID = int(pc.textureIDBB.x);//ID conversion should be ok
     vs_out.fMapsUsed = pc.mapsUsed;
+    vs_out.fViewPos = pc.viewPos;
     vs_out.fShadowCoordAmbient = (biasMat * ambientLight.lightSpaceMatrix * ubos[gl_InstanceIndex].model) * vec4(pos, 1.0);
     vs_out.fShadowCoordSpot = (biasMat * spotLight.lightSpaceMatrix * ubos[gl_InstanceIndex].model) * vec4(pos, 1.0);
     vs_out.ffidtidBB = fidtidBB;
     vs_out.fvColor = vColor;
 
-    vs_out.fBitangent = vec3(ubos[gl_InstanceIndex].model * vec4(bitangent, 0.0));
-    vs_out.fTangent = ubos[gl_InstanceIndex].model * tangent;
-    vs_out.fTangent.w = tangent.w;
-    vs_out.fNormal = vec3(ubos[gl_InstanceIndex].model * vec4(normal, 0.0));
-    vs_out.fPos = vec3(ubos[gl_InstanceIndex].model * vec4(pos, 0.0));
-    vs_out.fViewPos = ubos[gl_InstanceIndex].model * pc.viewPos;
-
-    ambientLight.position = vec3(ubos[gl_InstanceIndex].model * vec4(ambientLight.position,0.0));
-    spotLight.position = vec3(ubos[gl_InstanceIndex].model * vec4(spotLight.position,0.0));
-    for(int i = 0; i < NR_POINT_LIGHTS; i++) {
-      pointLights[i].position = vec3(ubos[gl_InstanceIndex].model * vec4(pointLights[i].position,0.0));
-    }
- 
-    vec3 t = normalize(vec3(ubos[gl_InstanceIndex].model * vec4(vs_out.fTangent.xyz, 0.0)));
-    vec3 n = normalize(vec3(ubos[gl_InstanceIndex].model * vec4(vs_out.fNormal, 0.0)));
-    vec3 b = normalize(vec3(ubos[gl_InstanceIndex].model * vec4(cross(n, t) * tangent.w, 0.0)));
-
-    vs_out.TBN = transpose(mat3(t, b, n));
-
     vs_out.posT = vs_out.TBN * vs_out.fPos;
-    vs_out.model = ubos[gl_InstanceIndex].model;
 
 //    if (vs_out.fMapsUsed.x > 0.9 && vs_out.fMapsUsed.x < 1.1) {
 //      vec3 n = normalize(vs_out.fNormal);

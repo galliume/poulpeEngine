@@ -25,22 +25,22 @@ namespace Poulpe
       return texture;
     }
 
-    int const scale = 4;
+    int const scale = 2;
     int const width = texWidth * scale;
     int const height = texHeight * scale;
 
-    size_t const size = static_cast<size_t>(width * height) * 4;//RGBA
-    std::vector<unsigned char> pixelsToSave(size);
-    size_t const sizeHM = static_cast<size_t>(width * height);//R
-    std::vector<char> heightMapData(sizeHM);
+    size_t const size = static_cast<size_t>(width * height) * 2;
+    std::vector<float> pixelsToSave(size);
+    size_t const sizeHM = static_cast<size_t>(width * height);
+    std::vector<float> heightMapData(sizeHM);
 
     uint64_t index{ 0 };
     uint64_t indexP{ 0 };
 
     std::string const mapName = originalTexture.getName() + "_normal_map";
     std::string const parallaxMapName = originalTexture.getName() + "_parallax_map";
-    std::string const fileName{ "./cache/" + mapName + ".png"};
-    std::string const parallaxFileName{ "./cache/" + parallaxMapName + ".png"};
+    std::string const fileName{ "./cache/" + mapName + ".hdr"};
+    std::string const parallaxFileName{ "./cache/" + parallaxMapName + ".hdr"};
 
     if (!std::filesystem::exists(fileName)) {
 
@@ -59,44 +59,33 @@ namespace Poulpe
 
           int const scaledX = x / scale;
 
-          int xm1 = (scaledX - 1) & (texWidth - 1);
-          int xp1 = (scaledX + 1) & (texWidth - 1);
+          int xm1 = static_cast<int>((scaledX - 1) & (texWidth - 1));
+          int xp1 = static_cast<int>((scaledX + 1) & (texWidth - 1));
 
-          float dx = (centerRow[xp1] - centerRow[xm1]) * 0.5f;
-          float dy = (lowerRow[scaledX] - upperRow[scaledX]) * 0.5f;
-
+          float dx = (static_cast<float>(centerRow[xp1]) - static_cast<float>(centerRow[xm1])) * 24.f * 0.5f;
+          float dy = (static_cast<float>(lowerRow[scaledX]) - static_cast<float>(upperRow[scaledX])) * 24.f * 0.5f;
+          
           float nz = 1.0f / std::sqrt(dx * dx + dy * dy + 1.0f);
           float nx = std::fmin(std::fmax(-dx * nz, -1.0f), 1.0f);
           float ny = std::fmin(std::fmax(-dy * nz, -1.0f), 1.0f);
-
-          float intensity = (pixels[scaledY * texWidth + scaledX] * 2.0f - 1.0f) * nz;
-          float color = (intensity * 0.5f + 0.5f);
-
-          heightMapData[++indexP] = static_cast<char>(color);
-
-          float r = (nx * 0.5f + 0.5f) * 256.0f;
-          float g = (ny * 0.5f + 0.5f) * 256.0f;
-          float b = (nz * 0.5f + 0.5f) * 256.0f;
-
-          if (r > 255.0f) r = 255.0f;
-          if (g > 255.0f) g = 255.0f;
-          if (b > 255.0f) b = 255.0f;
-
-          pixelsToSave[++index] = static_cast<unsigned char>(g);
-          pixelsToSave[++index] = static_cast<unsigned char>(b);
-          pixelsToSave[++index] = static_cast<unsigned char>(255.0f);
-          pixelsToSave[++index] = static_cast<unsigned char>(r);
+          
+          pixelsToSave[++index] = nx;
+          pixelsToSave[++index] = ny;
+          //pixelsToSave[++index] = nz;
+          
+          float nzh = (pixels[scaledY * texWidth + scaledX]) * nz;
+          heightMapData[++indexP] = nzh;
         }
       }
 
-      stbi_write_png(fileName.c_str(), width, height, 4, pixelsToSave.data(), width * 4);
-      stbi_write_png(parallaxFileName.c_str(), width, height, 1, heightMapData.data(), width);
+      stbi_write_hdr(fileName.c_str(), width, height, 2, pixelsToSave.data());
+      stbi_write_hdr(parallaxFileName.c_str(), width, height, 1, heightMapData.data());
 
       stbi_image_free(pixels);
     }
     
-    addTexture(mapName, fileName, false, VK_FORMAT_R8G8B8A8_UNORM, STBI_rgb_alpha);
-    addTexture(parallaxMapName, parallaxFileName, false, VK_FORMAT_R8_UNORM, STBI_grey);
+    addTexture(mapName, fileName, false, VK_FORMAT_R8G8_SNORM, 2);
+    addTexture(parallaxMapName, parallaxFileName, false, VK_FORMAT_R8_UNORM, 1);
 
     texture = m_Textures[mapName];
 

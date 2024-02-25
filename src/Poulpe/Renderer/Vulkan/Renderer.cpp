@@ -408,7 +408,7 @@ namespace Poulpe
             m_CommandBuffersEntities[m_CurrentFrame],
             m_SwapChainImageViews[m_CurrentFrame],
             m_SwapChainDepthImageViews[m_CurrentFrame],
-            VK_ATTACHMENT_LOAD_OP_LOAD,
+            VK_ATTACHMENT_LOAD_OP_CLEAR,
             VK_ATTACHMENT_STORE_OP_STORE);
 
           m_API->setViewPort(m_CommandBuffersEntities[m_CurrentFrame]);
@@ -473,7 +473,7 @@ namespace Poulpe
      {
         if (auto skybox = m_EntityManager->getSkybox()) {
 
-            beginRendering(m_CommandBuffersSkybox[m_CurrentFrame], VK_ATTACHMENT_LOAD_OP_CLEAR, VK_ATTACHMENT_STORE_OP_STORE);
+            beginRendering(m_CommandBuffersSkybox[m_CurrentFrame], VK_ATTACHMENT_LOAD_OP_LOAD, VK_ATTACHMENT_STORE_OP_STORE);
             m_API->startMarker(m_CommandBuffersSkybox[m_CurrentFrame], "skybox_drawing", 0.3f, 0.2f, 0.1f);
 
             auto meshComponent = m_ComponentManager->getComponent<MeshComponent>(skybox->getID());
@@ -612,8 +612,8 @@ namespace Poulpe
           //}
           //if (!m_CmdEntitiesStatus[m_CurrentFrame]->done.load() || m_Nodraw.load()) {
           //  m_CmdEntitiesStatus[m_CurrentFrame]->done.store(false);
-          drawSkybox();
           drawEntities();
+          drawSkybox();
           //  //Locator::getThreadPool()->submit(threadQueueName, [this]() { drawEntities(); });
           //}
           //if (!m_CmdHUDStatus[m_CurrentFrame]->done.load() || m_Nodraw.load()) {

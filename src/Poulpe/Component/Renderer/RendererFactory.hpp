@@ -4,6 +4,7 @@
 #include "Basic.hpp"
 #include "Grid.hpp"
 #include "Skybox.hpp"
+#include "Normal.hpp"
 
 namespace Poulpe
 {
