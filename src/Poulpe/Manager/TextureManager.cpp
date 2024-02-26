@@ -73,7 +73,7 @@ namespace Poulpe
           pixelsToSave[++index] = ny;
           //pixelsToSave[++index] = nz;
           
-          float nzh = (pixels[scaledY * texWidth + scaledX]) * nz;
+          float nzh = static_cast<float>((pixels[scaledY * texWidth + scaledX]) * 2.0f - 1.0f) * nz;
           heightMapData[++indexP] = nzh;
         }
       }
@@ -83,9 +83,9 @@ namespace Poulpe
 
       stbi_image_free(pixels);
     }
-    
+    //@todo compressed format: VK_FORMAT_BC5_SNORM_BLOCK
     addTexture(mapName, fileName, false, VK_FORMAT_R8G8_SNORM, 2);
-    addTexture(parallaxMapName, parallaxFileName, false, VK_FORMAT_R8_UNORM, 1);
+    addTexture(parallaxMapName, parallaxFileName, false, VK_FORMAT_R8_SNORM, 1);
 
     texture = m_Textures[mapName];
 
