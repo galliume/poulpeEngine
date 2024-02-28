@@ -1,4 +1,4 @@
-#include "Crosshair.hpp"
+#include "Normal.hpp"
 
 #include "Poulpe/Core/PlpTypedef.hpp"
 
@@ -6,10 +6,9 @@
 
 namespace Poulpe
 {
-    void Crosshair::createDescriptorSet(IVisitable* const mesh)
+    void Normal::createDescriptorSet(IVisitable* const mesh)
     {
-      Texture tex = m_TextureManager->getTextures()["crosshair_1"];
-      Texture tex2 = m_TextureManager->getTextures()["crosshair_2"];
+      Texture tex = m_TextureManager->getTextures()["_plp_empty"];
 
       std::vector<VkDescriptorImageInfo> imageInfos;
       VkDescriptorImageInfo imageInfo{};
@@ -17,13 +16,7 @@ namespace Poulpe
       imageInfo.imageView = tex.getImageView();
       imageInfo.sampler = tex.getSampler();
 
-      VkDescriptorImageInfo imageInfo2{};
-      imageInfo2.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-      imageInfo2.imageView = tex2.getImageView();
-      imageInfo2.sampler = tex2.getSampler();
-
       imageInfos.emplace_back(imageInfo);
-      imageInfos.emplace_back(imageInfo2);
 
       auto pipeline = m_Renderer->getPipeline(mesh->getShaderName());
 
@@ -34,7 +27,7 @@ namespace Poulpe
       mesh->setDescSet(descSet);
     }
 
-    void Crosshair::setPushConstants(IVisitable* const mesh)
+    void Normal::setPushConstants(IVisitable* const mesh)
     {
         mesh->setApplyPushConstants([](
             VkCommandBuffer & commandBuffer, VkPipelineLayout pipelineLayout,
@@ -51,18 +44,15 @@ namespace Poulpe
         mesh->setHasPushConstants();
     }
 
-    void Crosshair::visit([[maybe_unused]] std::chrono::duration<float> deltaTime, IVisitable* const mesh)
+    void Normal::visit([[maybe_unused]] std::chrono::duration<float> deltaTime, IVisitable* const mesh)
     {
       if (!mesh && !mesh->isDirty()) return;
 
       const std::vector<Vertex> vertices = {
-          {{-0.025f, -0.025f, 0.0f}, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, {0.0, 0.0, 0.0 }},
-          {{0.025f, -0.025f, 0.0f}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, {0.0, 0.0, 0.0 }},
-          {{0.025f, 0.025f, 0.0f}, {0.0f, 0.0f, 1.0f}, {0.0f, 1.0f}, {0.0f, 0.0f, 0.0f, 0.0f},  {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, {0.0, 0.0, 0.0 }},
-          {{-0.025f, 0.025f, 0.0f}, {1.0f, 1.0f, 1.0f}, {1.0f, 1.0f}, {0.0f, 0.0f, 0.0f, 0.0f},  {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, {0.0, 0.0, 0.0 }}
+          {{-0.025f, -0.025f, 0.0f}, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, {0.0, 0.0, 0.0 }}
       };
       const std::vector<uint32_t> indices = {
-          0, 1, 2, 2, 3, 0
+          0, 1
       };
 
       auto commandPool = m_Renderer->createCommandPool();
@@ -70,7 +60,7 @@ namespace Poulpe
       UniformBufferObject ubo{};
 
       Data data;
-      data.m_Textures.emplace_back("crosshair");
+      data.m_Textures.emplace_back("normal");
       data.m_TextureIndex = 0;
       data.m_VertexBuffer = m_Renderer->createVertexBuffer(commandPool, vertices);
       data.m_IndicesBuffer = m_Renderer->createIndexBuffer(commandPool, indices);
@@ -79,8 +69,8 @@ namespace Poulpe
 
       vkDestroyCommandPool(m_Renderer->getDevice(), commandPool, nullptr);
 
-      mesh->setName("crosshair");
-      mesh->setShaderName("2d");
+      mesh->setName("normal");
+      mesh->setShaderName("normal");
       mesh->getUniformBuffers()->emplace_back(m_Renderer->createUniformBuffers(1));
 
       setPushConstants(mesh);

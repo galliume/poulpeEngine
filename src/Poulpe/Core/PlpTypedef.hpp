@@ -50,8 +50,8 @@ namespace Poulpe
         alignas(16) glm::vec3 specular;
         alignas(16) glm::vec3 transmittance;
         alignas(16) glm::vec3 emission;
-        //shininess, ior, diss
-        alignas(16) glm::vec3 shiIorDiss;
+        //shininess, ior, diss, Illum
+        alignas(16) glm::vec4 shiIorDissIllum;
     };
 
     struct ObjectBuffer

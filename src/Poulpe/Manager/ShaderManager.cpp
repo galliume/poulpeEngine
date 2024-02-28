@@ -73,19 +73,26 @@ namespace Poulpe
 
         VkDescriptorSetLayoutBinding samplerLayoutBinding{};
         samplerLayoutBinding.binding = 1;
-        samplerLayoutBinding.descriptorCount = 7;
+        samplerLayoutBinding.descriptorCount = 4;
         samplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
         samplerLayoutBinding.pImmutableSamplers = nullptr;
         samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 
+        VkDescriptorSetLayoutBinding samplerLayoutBinding2{};
+        samplerLayoutBinding2.binding = 2;
+        samplerLayoutBinding2.descriptorCount = 4;
+        samplerLayoutBinding2.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        samplerLayoutBinding2.pImmutableSamplers = nullptr;
+        samplerLayoutBinding2.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
         VkDescriptorSetLayoutBinding storageLayoutBinding{};
-        storageLayoutBinding.binding = 2;
+        storageLayoutBinding.binding = 3;
         storageLayoutBinding.descriptorCount = 1;
         storageLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
         storageLayoutBinding.pImmutableSamplers = nullptr;
         storageLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
 
-        bindings = { uboLayoutBinding, samplerLayoutBinding, storageLayoutBinding };
+        bindings = { uboLayoutBinding, samplerLayoutBinding, samplerLayoutBinding2, storageLayoutBinding };
       } else if constexpr (T == DescSetLayoutType::HUD) {
         VkDescriptorSetLayoutBinding uboLayoutBinding{};
         uboLayoutBinding.binding = 0;
@@ -300,7 +307,7 @@ namespace Poulpe
       VkPipelineVertexInputStateCreateInfo* vertexInputInfo = new VkPipelineVertexInputStateCreateInfo();
 
       if constexpr (T == VertexBindingType::Vertex3D) {
-      std::array<VkVertexInputAttributeDescription, 6>* attDesc = new std::array<VkVertexInputAttributeDescription, 6>(Vertex::getAttributeDescriptions());
+      std::array<VkVertexInputAttributeDescription,7>* attDesc = new std::array<VkVertexInputAttributeDescription,7>(Vertex::getAttributeDescriptions());
       VkVertexInputBindingDescription* bDesc = new VkVertexInputBindingDescription(Vertex::getBindingDescription());
 
       vertexInputInfo->sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;

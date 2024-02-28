@@ -59,13 +59,11 @@ namespace Poulpe
       imageInfoAlpha.imageView = alpha.getImageView();
       imageInfoAlpha.sampler = alpha.getSampler();
 
-      imageInfos.emplace_back(imageInfo);
-      imageInfos.emplace_back(imageInfo2);
-      imageInfos.emplace_back(imageInfo3);
-      imageInfos.emplace_back(imageInfoAlpha);
-
       std::string specMapName = "_plp_empty";
       std::string bumpMapName = "_plp_empty";
+
+      Texture texBumpMap = m_TextureManager->getTextures()[bumpMapName];
+      Texture parallaxMap = m_TextureManager->getTextures()[bumpMapName];
 
       if (!mesh->getData()->m_TextureSpecularMap.empty()
         && m_TextureManager->getTextures().contains(mesh->getData()->m_TextureSpecularMap)) {
@@ -78,10 +76,12 @@ namespace Poulpe
       if (!mesh->getData()->m_TextureBumpMap.empty()
         && m_TextureManager->getTextures().contains(mesh->getData()->m_TextureBumpMap)) {
         bumpMapName = mesh->getData()->m_TextureBumpMap;
-        mesh->getData()->mapsUsed.x = 1.0f;
-      }
+        std::string const parallaxMapName = bumpMapName + "_parallax_map";
 
-      Texture texBumpMap = m_TextureManager->getTextures()[bumpMapName];
+        mesh->getData()->mapsUsed.x = 1.0f;
+        texBumpMap = m_TextureManager->addNormalMapTexture(bumpMapName);
+        parallaxMap = m_TextureManager->getTextures()[parallaxMapName];
+      }
 
       VkDescriptorImageInfo imageInfoSpecularMap{};
       imageInfoSpecularMap.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
@@ -93,6 +93,11 @@ namespace Poulpe
       imageInfoBumpMap.imageView = texBumpMap.getImageView();
       imageInfoBumpMap.sampler = texBumpMap.getSampler();
 
+      VkDescriptorImageInfo imageInfoParallaxMap{};
+      imageInfoParallaxMap.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+      imageInfoParallaxMap.imageView = parallaxMap.getImageView();
+      imageInfoParallaxMap.sampler = parallaxMap.getSampler();
+
       VkDescriptorImageInfo shadowMapAmbient{};
       shadowMapAmbient.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
       shadowMapAmbient.imageView = m_Renderer->getDepthMapImageViews()->at(0);
@@ -102,9 +107,16 @@ namespace Poulpe
       //shadowMapSpot.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
       //shadowMapSpot.imageView = m_Renderer->getDepthMapImageViews()->at(1);
       //shadowMapSpot.sampler = m_Renderer->getDepthMapSamplers()->at(1);
+      //Set 0
+      imageInfos.emplace_back(imageInfo);
+      imageInfos.emplace_back(imageInfo2);
+      imageInfos.emplace_back(imageInfo3);
+      imageInfos.emplace_back(imageInfoAlpha);
 
+      //Set 1
       imageInfos.emplace_back(imageInfoSpecularMap);
       imageInfos.emplace_back(imageInfoBumpMap);
+      imageInfos.emplace_back(imageInfoParallaxMap);
       imageInfos.emplace_back(shadowMapAmbient);
       //imageInfos.emplace_back(shadowMapSpot);
 
@@ -191,8 +203,8 @@ namespace Poulpe
       material.specular = mesh->getMaterial().specular;
       material.transmittance = mesh->getMaterial().transmittance;
       material.emission = mesh->getMaterial().emission;
-      material.shiIorDiss = glm::vec3(mesh->getMaterial().shininess,
-        mesh->getMaterial().ior, mesh->getMaterial().illum);
+      material.shiIorDissIllum = glm::vec4(mesh->getMaterial().shininess,
+        mesh->getMaterial().ior, mesh->getMaterial().dissolve, mesh->getMaterial().illum);
 
       objectBuffer.pointLights[0] = m_LightManager->getPointLights().at(0);
       objectBuffer.pointLights[1] = m_LightManager->getPointLights().at(1);

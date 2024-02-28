@@ -1,6 +1,5 @@
 #version 450
 #extension GL_EXT_nonuniform_qualifier : enable
-//#extension GL_KHR_vulkan_glsl : enable
 
 #define MAX_UBOS 1
 
@@ -32,12 +31,15 @@ layout(location = 5) in vec4 fidtidBB;
 layout(location = 6) in vec3 vColor;
 
 layout(location = 0) out VS_OUT {
+    mat4 MPV;//matrice projection*view
+    mat4 ITMPV;//inverse transpose matrice projection*view
     flat int fTextureID;
     vec2 fTexCoord;
     vec3 fNormal;
     vec3 fPos;
     vec4 fMapsUsed;
     vec4 fViewPos;
+    mat3 TBN;
     vec4 fTangent;
     vec3 fBitangent;
     vec4 fShadowCoordAmbient;
@@ -45,9 +47,9 @@ layout(location = 0) out VS_OUT {
     //faceId texture ID blank blank
     vec4 ffidtidBB;
     vec3 fvColor;
-    mat4 viewMatrix;
-    mat4 modelMatrix;
-    mat4 viewModelMatrix;
+    vec3 viewT;
+    vec3 lightT;
+    vec3 posT;
 } vs_out;
 
 
@@ -73,8 +75,8 @@ struct Material
     vec3 specular;
     vec3 transmittance;
     vec3 emission;
-    //shininess, ior, diss, illum
-    vec4 shiIorDissIllum;
+    //shininess, ior, diss
+    vec3 shiIorDiss;
 };
 
 #define NR_POINT_LIGHTS 2
@@ -99,34 +101,28 @@ void main()
 {
     gl_Position = ubos[gl_InstanceIndex].projection * pc.view * ubos[gl_InstanceIndex].model * vec4(pos, 1.0);
 
-    //@todo compute CPU side
-    //vs_out.MPV = mat3(ubos[gl_InstanceIndex].projection * pc.view);
-    //vs_out.ITMPV = transpose(inverse(vs_out.MPV));
-    //
+    vec3 norm = mat3(transpose(inverse(ubos[gl_InstanceIndex].model))) * normal;
+
+    vec3 t = normalize(vec3(ubos[gl_InstanceIndex].model * vec4(tangent.xyz, 0.0)));
+    vec3 n = normalize(vec3(ubos[gl_InstanceIndex].model * vec4(normal, 0.0)));
+    vec3 b = normalize(vec3(ubos[gl_InstanceIndex].model * vec4(cross(n, t) * tangent.w, 0.0)));
+
+    vs_out.TBN = transpose(mat3(t, b, n));//from tangent space to object space
+
+    vs_out.fTangent = tangent;
+    vs_out.fNormal = norm;
+    vs_out.fBitangent = bitangent;
+    vs_out.fPos = vec3(ubos[gl_InstanceIndex].model * vec4(pos, 1.0));
     vs_out.fTexCoord = texCoord;
     vs_out.fTextureID = int(pc.textureIDBB.x);//ID conversion should be ok
     vs_out.fMapsUsed = pc.mapsUsed;
-    vs_out.fShadowCoordAmbient = (biasMat * ambientLight.lightSpaceMatrix * ubos[gl_InstanceIndex].model) * vec4(pos, 0.0);
-    vs_out.fShadowCoordSpot = (biasMat * spotLight.lightSpaceMatrix * ubos[gl_InstanceIndex].model) * vec4(pos, 0.0);
+    vs_out.fViewPos = pc.viewPos;
+    vs_out.fShadowCoordAmbient = (biasMat * ambientLight.lightSpaceMatrix * ubos[gl_InstanceIndex].model) * vec4(pos, 1.0);
+    vs_out.fShadowCoordSpot = (biasMat * spotLight.lightSpaceMatrix * ubos[gl_InstanceIndex].model) * vec4(pos, 1.0);
     vs_out.ffidtidBB = fidtidBB;
     vs_out.fvColor = vColor;
 
-    vs_out.fBitangent = bitangent;
-    vs_out.fTangent = tangent;
-    vs_out.fNormal = normal;
-    vs_out.fPos = pos;
-    vs_out.fViewPos = pc.viewPos;
- 
-//    vec3 t = normalize(vec3(ubos[gl_InstanceIndex].model * vec4(vs_out.fTangent.xyz, 0.0)));
-//    vec3 n = normalize(vec3(ubos[gl_InstanceIndex].model * vec4(vs_out.fNormal, 0.0)));
-//    vec3 b = normalize(vec3(ubos[gl_InstanceIndex].model * vec4(cross(n, t) * tangent.w, 0.0)));
-//
-//    vs_out.TBN = transpose(mat3(t, b, n));
-//
-//    vs_out.posT = vs_out.TBN * vs_out.fPos;
-    vs_out.viewMatrix = pc.view;
-    vs_out.modelMatrix = ubos[gl_InstanceIndex].model;
-    vs_out.viewModelMatrix = pc.view * ubos[gl_InstanceIndex].model;
+    vs_out.posT = vs_out.TBN * vs_out.fPos;
 
 //    if (vs_out.fMapsUsed.x > 0.9 && vs_out.fMapsUsed.x < 1.1) {
 //      vec3 n = normalize(vs_out.fNormal);
@@ -134,7 +130,7 @@ void main()
 //      vs_out.fNormal = vec3(tmpM, sqrt(1.0 - tmpM.x * tmpM.x - tmpM.y * tmpM.y));
 //    }
 //
-    //CalculateTangentSpaceVL(vs_out.fPos, vs_out.fNormal, vs_out.fTangent, vs_out.fViewPos.xyz, ambientLight.position, vs_out.viewT, vs_out.lightT);
+    CalculateTangentSpaceVL(vs_out.fPos, vs_out.fNormal, vs_out.fTangent, vs_out.fViewPos.xyz, ambientLight.position, vs_out.viewT, vs_out.lightT);
 }
 
 void CalculateTangentSpaceVL(vec3 position, vec3 normal, vec4 tangent, vec3 cameraPos, vec3 lightPos, out vec3 vtan, out vec3 ltan)

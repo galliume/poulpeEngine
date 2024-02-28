@@ -16,10 +16,15 @@
 #pragma clang diagnostic ignored "-Wdouble-promotion"
 #pragma clang diagnostic ignored "-Wimplicit-int-conversion"
 #pragma clang diagnostic ignored "-Wimplicit-fallthrough"
+#pragma clang diagnostic ignored "-Wextra-semi-stmt"
+#pragma clang diagnostic ignored "-Wmissing-field-initializers"
+#pragma clang diagnostic ignored "-Wmissing-prototypes"
 
-#define STBI_NO_SIMD
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
+
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include <stb_image_write.h>
 
 #pragma clang diagnostic pop
 

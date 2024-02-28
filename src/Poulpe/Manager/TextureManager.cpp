@@ -1,61 +1,95 @@
 #include "TextureManager.hpp"
 
 #include <filesystem>
+#include <stb_image_write.h>
 
 namespace Poulpe
 {
-  std::vector<std::array<float, 3>> TextureManager::addNormalMapTexture(std::string const& name)
+  Texture TextureManager::addNormalMapTexture(std::string const& name)
   {
+    Texture texture;
+    
     if (!m_Textures.contains(name)) {
       PLP_TRACE("Texture {} does not exists, can't create normal map", name);
-      return {};
+      return texture;
     }
 
     Texture& originalTexture = m_Textures[name];
     auto const path = originalTexture.getPath();
 
-    if (!originalTexture.getNormalMap().empty()) {
-      return originalTexture.getNormalMap();
-    }
-
     int texWidth = 0, texHeight = 0, texChannels = 0;
-    stbi_uc* pixels = stbi_load(path.c_str(), &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
+    stbi_uc* pixels = stbi_load(path.c_str(), &texWidth, &texHeight, &texChannels, STBI_grey);
 
     if (!pixels) {
       PLP_FATAL("failed to load texture image %s", name);
-      return {};
+      return texture;
     }
 
-    std::vector<std::array<float, 3>> normalMapTexture;
+    int const scale = 2;
+    int const width = texWidth * scale;
+    int const height = texHeight * scale;
 
-    for (int y = 0; y < texHeight; ++y) {
+    size_t const size = static_cast<size_t>(width * height) * 2;
+    std::vector<float> pixelsToSave(size);
+    size_t const sizeHM = static_cast<size_t>(width * height);
+    std::vector<float> heightMapData(sizeHM);
 
-      int ym1 = (y - 1) & (texHeight - 1);
-      int yp1 = (y + 1) & (texHeight - 1);
+    uint64_t index{ 0 };
+    uint64_t indexP{ 0 };
 
-      unsigned char* centerRow = pixels + y * texWidth;
-      unsigned char* upperRow = pixels + ym1 * texWidth;
-      unsigned char* lowerRow = pixels + yp1 * texWidth;
+    std::string const mapName = originalTexture.getName() + "_normal_map";
+    std::string const parallaxMapName = originalTexture.getName() + "_parallax_map";
+    std::string const fileName{ "./cache/" + mapName + ".hdr"};
+    std::string const parallaxFileName{ "./cache/" + parallaxMapName + ".hdr"};
 
-      for (int x = 0; x < texWidth; ++x) {
-        int xm1 = (x - 1) & (texWidth - 1);
-        int xp1 = (x + 1) & (texWidth - 1);
+    if (!std::filesystem::exists(fileName)) {
 
-        float dx = (centerRow[xp1] - centerRow[xm1]) * 0.5f;
-        float dy = (lowerRow[x] - upperRow[x]) * 0.5f;
+      for (int y = 0; y < height; ++y) {
 
-        float nz = 1.0f / std::sqrt(dx * dx + dy * dy + 1.0f);
-        float nx = std::fmin(std::fmax(-dx * nz, -1.0f), 1.0f);
-        float ny = std::fmin(std::fmax(-dy * nz, -1.0f), 1.0f);
+        int const scaledY = y / scale;
 
-        std::array<float, 3>d{ nx, ny, nz };
-        normalMapTexture.emplace_back(d);
+        int ym1 = (scaledY - 1) & (texHeight - 1);
+        int yp1 = (scaledY + 1) & (texHeight - 1);
+
+        unsigned char* centerRow = pixels + scaledY * texWidth;
+        unsigned char* upperRow = pixels + ym1 * texWidth;
+        unsigned char* lowerRow = pixels + yp1 * texWidth;
+
+        for (int x = 0; x < width; ++x) {
+
+          int const scaledX = x / scale;
+
+          int xm1 = static_cast<int>((scaledX - 1) & (texWidth - 1));
+          int xp1 = static_cast<int>((scaledX + 1) & (texWidth - 1));
+
+          float dx = (static_cast<float>(centerRow[xp1]) - static_cast<float>(centerRow[xm1])) * 24.f * 0.5f;
+          float dy = (static_cast<float>(lowerRow[scaledX]) - static_cast<float>(upperRow[scaledX])) * 24.f * 0.5f;
+          
+          float nz = 1.0f / std::sqrt(dx * dx + dy * dy + 1.0f);
+          float nx = std::fmin(std::fmax(-dx * nz, -1.0f), 1.0f);
+          float ny = std::fmin(std::fmax(-dy * nz, -1.0f), 1.0f);
+          
+          pixelsToSave[++index] = nx;
+          pixelsToSave[++index] = ny;
+          //pixelsToSave[++index] = nz;
+          
+          float nzh = static_cast<float>((pixels[scaledY * texWidth + scaledX]) * 2.0f - 1.0f) * nz;
+          heightMapData[++indexP] = nzh;
+        }
       }
+
+      stbi_write_hdr(fileName.c_str(), width, height, 2, pixelsToSave.data());
+      stbi_write_hdr(parallaxFileName.c_str(), width, height, 1, heightMapData.data());
+
+      stbi_image_free(pixels);
     }
+    //@todo compressed format: VK_FORMAT_BC5_SNORM_BLOCK
+    addTexture(mapName, fileName, false, VK_FORMAT_R8G8_SNORM, 2);
+    addTexture(parallaxMapName, parallaxFileName, false, VK_FORMAT_R8_SNORM, 1);
 
-    originalTexture.setNormalMap(std::move(normalMapTexture));
+    texture = m_Textures[mapName];
 
-    return originalTexture.getNormalMap();
+    return texture;
   }
 
   void TextureManager::addSkyBox(std::vector<std::string> const& skyboxImages)
@@ -111,22 +145,22 @@ namespace Poulpe
     vkDestroyCommandPool(m_Renderer->getDevice(), commandPool, nullptr);
   }
 
-  void TextureManager::addTexture(std::string const& name, std::string const& path, bool isPublic)
+  void TextureManager::addTexture(std::string const& name, std::string const& path, bool isPublic, VkFormat format, int stbiChannel)
   {
     if (!std::filesystem::exists(path.c_str())) {
       PLP_FATAL("texture file {} does not exits.", path);
-      //return;
+      return;
     }
 
     if (0 != m_Textures.count(name.c_str())) {
-      PLP_TRACE("Texture {} already imported", name);
+      //PLP_TRACE("Texture {} already imported", name);
       return;
     }
 
     m_Paths.insert({ name, path });
 
     int texWidth = 0, texHeight = 0, texChannels = 0;
-    stbi_uc* pixels = stbi_load(path.c_str(), &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
+    stbi_uc* pixels = stbi_load(path.c_str(), &texWidth, &texHeight, &texChannels, stbiChannel);
 
     if (!pixels) {
       PLP_FATAL("failed to load texture image %s", name);
@@ -147,9 +181,10 @@ namespace Poulpe
       static_cast<uint32_t>(texHeight),
       mipLevels,
       textureImage,
-      VK_FORMAT_R8G8B8A8_SRGB);
+      format,
+      stbiChannel);
 
-    VkImageView textureImageView = m_Renderer->createImageView(textureImage, VK_FORMAT_R8G8B8A8_SRGB, mipLevels);
+    VkImageView textureImageView = m_Renderer->createImageView(textureImage, format, mipLevels);
     VkSampler textureSampler = m_Renderer->createTextureSampler(mipLevels);
 
     Texture texture;

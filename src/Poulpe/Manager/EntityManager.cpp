@@ -373,6 +373,12 @@ namespace Poulpe
       basicRdrImpl->init(m_Renderer, m_TextureManager, m_LightManager);
       auto deltaTime = std::chrono::duration<float, std::milli>(0);
       basicRdrImpl->visit(deltaTime, mesh);
+      
+      //auto* normalEntity = new Entity();
+      //auto normalRdrImpl = RendererFactory::create<Normal>();
+      //normalRdrImpl->init(m_Renderer, m_TextureManager, m_LightManager);
+      //m_ComponentManager->addComponent<RenderComponent>(normalEntity->getID(), normalRdrImpl);
+      //normalRdrImpl->visit(deltaTime, mesh);
 
       auto* entityNode = new EntityNode(entity);
 
