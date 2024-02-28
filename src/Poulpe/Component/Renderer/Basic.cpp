@@ -203,8 +203,8 @@ namespace Poulpe
       material.specular = mesh->getMaterial().specular;
       material.transmittance = mesh->getMaterial().transmittance;
       material.emission = mesh->getMaterial().emission;
-      material.shiIorDiss = glm::vec3(mesh->getMaterial().shininess,
-        mesh->getMaterial().ior, mesh->getMaterial().illum);
+      material.shiIorDissIllum = glm::vec4(mesh->getMaterial().shininess,
+        mesh->getMaterial().ior, mesh->getMaterial().dissolve, mesh->getMaterial().illum);
 
       objectBuffer.pointLights[0] = m_LightManager->getPointLights().at(0);
       objectBuffer.pointLights[1] = m_LightManager->getPointLights().at(1);

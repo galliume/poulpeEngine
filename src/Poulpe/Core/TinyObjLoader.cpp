@@ -68,6 +68,7 @@ namespace Poulpe
           mat.shininess = material.shininess;
           mat.ior = material.ior;
           mat.dissolve = material.dissolve;
+          mat.illum = material.illum;
 
           auto cleanName = [](std::string const & name) -> std::string {
               std::string cleaned{ name };
@@ -84,7 +85,6 @@ namespace Poulpe
           mat.specularHighlightTexname = cleanName(material.specular_highlight_texname);
           mat.bumpTexname = cleanName(material.bump_texname);
           mat.alphaTexname = cleanName(material.alpha_texname);
-          mat.illum = material.illum;
 
           m_TinyObjMaterials.emplace_back(mat);
         }

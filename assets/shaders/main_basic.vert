@@ -73,8 +73,8 @@ struct Material
     vec3 specular;
     vec3 transmittance;
     vec3 emission;
-    //shininess, ior, diss
-    vec3 shiIorDiss;
+    //shininess, ior, diss, illum
+    vec4 shiIorDissIllum;
 };
 
 #define NR_POINT_LIGHTS 2
@@ -116,9 +116,6 @@ void main()
     vs_out.fNormal = normal;
     vs_out.fPos = pos;
     vs_out.fViewPos = pc.viewPos;
-
-    ambientLight.position = vec3(ubos[gl_InstanceIndex].model * vec4(ambientLight.position,0.0));
-    spotLight.position = vec3(ubos[gl_InstanceIndex].model * vec4(spotLight.position,0.0));
  
 //    vec3 t = normalize(vec3(ubos[gl_InstanceIndex].model * vec4(vs_out.fTangent.xyz, 0.0)));
 //    vec3 n = normalize(vec3(ubos[gl_InstanceIndex].model * vec4(vs_out.fNormal, 0.0)));

@@ -45,8 +45,8 @@ struct Material
     vec3 specular;
     vec3 transmittance;
     vec3 emission;
-    //shininess, ior, diss
-    vec3 shiIorDiss;
+    //shininess, ior, diss, illum
+    vec4 shiIorDissIllum;
 };
 
 layout(binding = 1) uniform sampler2D texSampler[4];
@@ -60,7 +60,11 @@ layout(binding = 3) buffer ObjectBuffer {
     Material material;
 };
 
-vec3 CalcDirLight(vec4 color, Light dirLight, vec3 normal, vec3 viewDir, float shadow, vec2 texCoord);
+#define PI 3.14159
+
+//vec3 CalcDirLight(vec4 color, Light dirLight, vec3 normal, vec3 viewDir, float shadow, vec2 texCoord);
+vec3 CalcDirLight(Light light, vec3 viewDir, vec3 fragPos, vec3 normal, vec2 texCoord);
+
 vec3 CalcPointLight(vec4 color, Light pointLight, vec3 normal, vec3 fragPos, vec3 viewDir, vec2 texCoord);
 vec3 CalcSpotLight(vec4 color, Light spotLight, vec3 normal, vec3 fragPos, vec3 viewDir, float shadow, vec2 texCoord);
 
@@ -92,66 +96,57 @@ void main()
     vec3 viewPos = fs_in.fViewPos.xyz;
     vec3 fragPos = fs_in.fPos;
     vec3 normal  = fs_in.fNormal;
+    vec2 texCoord = fs_in.fTexCoord;
     
-    vec3 viewDir = normalize(viewPos - fragPos);
 //    for(int i = 0; i < NR_POINT_LIGHTS; i++) {
 //      pointLights[i].position = vec3(fs_in.model * vec4(pointLights[i].position, 0.0));
 //    }
     
-    vec2 texCoord = fs_in.fTexCoord;
-
-    int id = 0;
-    //@todo ugly but avoid floating point issues when casting to int
-    if (fs_in.ffidtidBB.y > 0.0 && fs_in.ffidtidBB.y < 0.2) {
-      id = 1;
-    } else if (fs_in.ffidtidBB.y > 0.1 && fs_in.ffidtidBB.y < 0.3) {
-      id = 2;
-    }
-
-    vec4 texColor = texture(texSampler[id], texCoord);
-    
     if (fs_in.fMapsUsed.x > 0.9 && fs_in.fMapsUsed.x < 1.1) {
-//      vec2 tmpM = texture(texSampler2[1], texCoord).xy * 0.5 + 0.5;
-//      vec3 m = vec3(tmpM, sqrt(1.0 - tmpM.x * tmpM.x - tmpM.y * tmpM.y));
-//      m = normalize(m);
-//
-//    vec3 tangent = normalize(fs_in.fTangent.xyz - normal * dot(fs_in.fTangent.xyz, normal));
-//    vec3 bitangent = cross(fs_in.fNormal, fs_in.fTangent.xyz) * fs_in.fTangent.w;
-//    normal = normalize(tangent * m.x + bitangent * m.y + normal * m.z);
-      //spotLightDir = normalize(spotLightDir * TBN);
-//      
-//      for(int i = 0; i < NR_POINT_LIGHTS; i++) {
-//        pointLights[i].position = normalize(pointLights[i].position * TBN);
-//      }
+      vec2 tmpM = texture(texSampler2[1], texCoord).xy * 0.5 + 0.5;
+      vec3 m = vec3(tmpM, sqrt(1.0 - tmpM.x * tmpM.x - tmpM.y * tmpM.y));
+      normal = normalize(m);
 
-//      viewDir = normalize(tangent * viewDir.x + bitangent * viewDir.y + normal * viewDir.z);
+      //vec3 tangent = normalize(fs_in.fTangent.xyz - normal * dot(fs_in.fTangent.xyz, normal));
+      //vec3 bitangent = cross(fs_in.fNormal, fs_in.fTangent.xyz) * fs_in.fTangent.w;
+      //normal = normalize(tangent * m.x + bitangent * m.y + normal * m.z);
+
+   //   vec3 viewDir = FromObjectSpaceToViewSpace(viewPos - fragPos);
+   //   viewDir = normalize(tangent * viewDir.x + bitangent * viewDir.y + normal * viewDir.z);
+
+//      int id = 0;
+//      if (fs_in.ffidtidBB.y > 0.0 && fs_in.ffidtidBB.y < 0.2) {
+//        id = 1;
+//      } else if (fs_in.ffidtidBB.y > 0.1 && fs_in.ffidtidBB.y < 0.3) {
+//        id = 2;
+//      }
 //
 //      texCoord = ParallaxMapping(fs_in.fTexCoord, viewDir, id);
-//      texColor = texture(texSampler[id], texCoord);
     }
 
-    if (fs_in.fMapsUsed.w > 0.9 && fs_in.fMapsUsed.w < 1.1) {
-      texColor = vec4(fs_in.fvColor, 1.0);
-    }
+//    if (fs_in.fMapsUsed.w > 0.9 && fs_in.fMapsUsed.w < 1.1) {
+//      texColor = vec4(fs_in.fvColor, 1.0);
+//    }
 
     //float shadowAmbient = ShadowCalculation(fs_in.fShadowCoordAmbient / fs_in.fShadowCoordAmbient.w, vec2(0.0));
-    float shadowAmbient = 1.0;//FilterPCF(fs_in.fShadowCoordAmbient / fs_in.fShadowCoordAmbient.w);
+    //float shadowAmbient = FilterPCF(fs_in.fShadowCoordAmbient / fs_in.fShadowCoordAmbient.w);
     //float shadowSpot = filterPCF(fs_in.fShadowCoordAmbient / fs_in.fShadowCoordAmbient.w);
 
     //vec3 pixelColor = CalcDirLight(texColor, ambientLight, normal, viewDir, shadowAmbient, texCoord);
+    vec3 pixelColor = CalcDirLight(ambientLight, viewPos, fragPos, normal, texCoord);
 
     //for(int i = 0; i < NR_POINT_LIGHTS; i++) {
         //pixelColor += CalcPointLight(texColor, pointLights[i], normal, fs_in.fPos.xyz, viewDir, texCoord);
     //}
 
-    vec3 pixelColor = CalcSpotLight(texColor, spotLight, normal, viewPos, viewDir, shadowAmbient, texCoord);
+    //pixelColor += CalcSpotLight(texColor, spotLight, normal, viewPos, viewDir, shadowAmbient, texCoord);
 
-    if (fs_in.fMapsUsed.z > 0.9 && fs_in.fMapsUsed.z < 1.1) {
-        vec4 mask = texture(texSampler[3], texCoord);
-//        fColor = mix(fColor, mask, mask.a);
-        if (mask.r < 0.7) discard;
-    }
-    if (texColor.a < 0.7) discard;
+//    if (fs_in.fMapsUsed.z > 0.9 && fs_in.fMapsUsed.z < 1.1) {
+//        vec4 mask = texture(texSampler[3], texCoord);
+////        fColor = mix(fColor, mask, mask.a);
+//        if (mask.r < 0.7) discard;
+//    }
+//    if (texColor.a < 0.7) discard;
 
 
     //pixelColor = normal.xyz;
@@ -162,28 +157,70 @@ void main()
     //fColor = vec4(vec3(depthValue), 1.0);
 }
 
-vec3 CalcDirLight(vec4 color, Light dirLight, vec3 normal, vec3 viewDir, float shadow, vec2 texCoord)
+//vec3 CalcDirLight(vec4 color, Light dirLight, vec3 normal, vec3 viewDir, float shadow, vec2 texCoord)
+vec3 CalcDirLight(Light light, vec3 viewPos, vec3 fragPos, vec3 normal, vec2 texCoord)
 {
-    vec3 ambient = GetAmbientLight();
+  float luminanceFlux = light.ads.x;
+  vec3 viewDir = viewPos - fragPos;
+  vec3 lightDir = normalize(light.position - fragPos);
+  vec3 n = normalize(normal);
 
-    vec3 n = FromObjectSpaceToViewSpace(normal);
-    vec3 l = FromObjectSpaceToViewSpace(-dirLight.direction);
+  float luminousExitance = luminanceFlux / dot(n, viewDir);
+  float luminance = pow(luminanceFlux, 2) / (dot(n, viewDir));
+  
+  int id = 0;
+  if (fs_in.ffidtidBB.y > 0.0 && fs_in.ffidtidBB.y < 0.2) {
+    id = 1;
+  } else if (fs_in.ffidtidBB.y > 0.1 && fs_in.ffidtidBB.y < 0.3) {
+    id = 2;
+  }
 
-    float diff = max(dot(n, l), 0.0);
-    vec3 diffuse =  dirLight.color * material.diffuse * diff;
+  vec4 texColor = texture(texSampler[id], texCoord);
+  if (fs_in.fMapsUsed.z > 0.9 && fs_in.fMapsUsed.z < 1.1) {
+    vec4 mask = texture(texSampler[3], texCoord);
+    if (mask.r < 0.7) discard;
+  }
+  if (texColor.a < 0.7) discard;
 
-    vec3 h = normalize(l + FromObjectSpaceToViewSpace(viewDir));
-    vec3 specular = vec3(0.0);
+  vec3 ambientColor = (texColor * PI).xyz;
+  vec3 diffuseColor = (texColor / PI).xyz * light.ads.y;
+  vec3 lightColor = light.color;
 
-    if (fs_in.fMapsUsed.y > 0.9 && fs_in.fMapsUsed.y < 1.1) {
-      float spec = pow(clamp(dot(n, h), 0.0, 1.0), material.shiIorDiss.x) * float(dot(n, h) > 0.0);
-      specular = dirLight.color * (spec * dirLight.ads.z * material.specular * texture(texSampler2[0], texCoord).xyz);
-    } else {
-      float spec = pow(clamp(dot(n, h), 0.0, 1.0), material.shiIorDiss.x) * float(dot(n, h) > 0.0);
-      specular =  dirLight.color * (dirLight.ads.z * spec * material.specular);
-    }
+  vec3 directColor =  lightColor * clamp(dot(n, lightDir), 0.0, 1.0);
 
-    return (ambient + shadow * (diffuse + specular)) * color.xyz;
+  vec4 specularColor;
+  vec3 h = normalize(-lightDir + viewDir);
+
+  vec3 specular = vec3(0.0);
+
+  if (fs_in.fMapsUsed.y > 0.9 && fs_in.fMapsUsed.y < 1.1) {
+    vec4 specularColor = texture(texSampler2[0], texCoord);
+    float highlight = pow(clamp(dot(n, h), 0.0, 1.0), material.shiIorDissIllum.x) * float(dot(n, lightDir) > 0.0);
+    vec3 specular = lightColor * specularColor.xyz * highlight * light.ads.z * material.specular;
+  }
+
+  return ((ambientColor + directColor + specular) * diffuseColor);
+
+//    vec3 ambient = GetAmbientLight();
+//
+//    vec3 n = FromObjectSpaceToViewSpace(normal);
+//    vec3 l = FromObjectSpaceToViewSpace(-dirLight.direction);
+//
+//    float diff = max(dot(n, l), 0.0);
+//    vec3 diffuse =  dirLight.color * material.diffuse * diff;
+//
+//    vec3 h = normalize(l + FromObjectSpaceToViewSpace(viewDir));
+//    vec3 specular = vec3(0.0);
+//
+//    if (fs_in.fMapsUsed.y > 0.9 && fs_in.fMapsUsed.y < 1.1) {
+//      float spec = pow(clamp(dot(n, h), 0.0, 1.0), material.shiIorDissIllum.x) * float(dot(n, h) > 0.0);
+//      specular = dirLight.color * (spec * dirLight.ads.z * material.specular * texture(texSampler2[0], texCoord).xyz);
+//    } else {
+//      float spec = pow(clamp(dot(n, h), 0.0, 1.0), material.shiIorDissIllum.x) * float(dot(n, h) > 0.0);
+//      specular =  dirLight.color * (dirLight.ads.z * spec * material.specular);
+//    }
+//
+//    return (ambient + shadow * (diffuse + specular)) * color.xyz;
 }
 
 vec3 CalcPointLight(vec4 color, Light pointLight, vec3 normal, vec3 fragPos, vec3 viewDir, vec2 texCoord)
@@ -204,10 +241,10 @@ vec3 CalcPointLight(vec4 color, Light pointLight, vec3 normal, vec3 fragPos, vec
     vec3 specular = vec3(0.0);
 
     if (fs_in.fMapsUsed.y > 0.9 && fs_in.fMapsUsed.y < 1.1) {
-      float spec = pow(clamp(dot(n, h), 0.0, 1.0), material.shiIorDiss.x) * float(dot(n, h) > 0.0);
+      float spec = pow(clamp(dot(n, h), 0.0, 1.0), material.shiIorDissIllum.x) * float(dot(n, h) > 0.0);
       specular =  pointLight.color * (spec * pointLight.ads.z * material.specular * texture(texSampler2[0], texCoord).xyz);
     } else {
-      float spec = pow(clamp(dot(n, h), 0.0, 1.0), material.shiIorDiss.x) * float(dot(n, h) > 0.0);
+      float spec = pow(clamp(dot(n, h), 0.0, 1.0), material.shiIorDissIllum.x) * float(dot(n, h) > 0.0);
       specular = pointLight.color * (pointLight.ads.z * spec * material.specular);
     }
 
@@ -241,10 +278,10 @@ vec3 CalcSpotLight(vec4 color, Light spotlight, vec3 normal, vec3 fragPos, vec3 
     vec3 specular = vec3(0.0);
 
     if (fs_in.fMapsUsed.y > 0.9 && fs_in.fMapsUsed.y < 1.1) {
-        float spec = pow(clamp(dot(n, h), 0.0, 1.0), material.shiIorDiss.x) * float(dot(n, h) > 0.0);
+        float spec = pow(clamp(dot(n, h), 0.0, 1.0), material.shiIorDissIllum.x) * float(dot(n, h) > 0.0);
         specular = spotlight.color * (spec * spotlight.ads.z * material.specular * texture(texSampler2[0], texCoord).xyz);
     } else {
-        float spec = pow(clamp(dot(n, h), 0.0, 1.0), material.shiIorDiss.x) * float(dot(n, h) > 0.0);
+        float spec = pow(clamp(dot(n, h), 0.0, 1.0), material.shiIorDissIllum.x) * float(dot(n, h) > 0.0);
         specular = spotlight.color * (spotlight.ads.z * spec * material.specular);
     }
 
@@ -302,7 +339,7 @@ vec2 ParallaxMapping(vec2 texCoord, vec3 vDir, int id)
     vec2 pdir = vDir.xy * u;
     for (int i = 0; i < k; ++i)
     {
-      float parallax = normalize(texture(texSampler2[2], texCoord) * 0.5 + 0.5).x;
+      float parallax = normalize(texture(texSampler2[2], texCoord)).x;
       texCoord += pdir * parallax;
     }
     return texCoord;
