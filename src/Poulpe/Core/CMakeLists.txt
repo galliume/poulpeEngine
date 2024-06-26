@@ -15,6 +15,7 @@ set(SRC_LIST ${CMAKE_CURRENT_SOURCE_DIR}/PlpTypedef.hpp
              ${CMAKE_CURRENT_SOURCE_DIR}/CommandQueue.cpp
              ${CMAKE_CURRENT_SOURCE_DIR}/CommandQueue.hpp
 			 ${CMAKE_CURRENT_SOURCE_DIR}/IObserver.hpp
-			 ${CMAKE_CURRENT_SOURCE_DIR}/IVisitable.hpp)
+			 ${CMAKE_CURRENT_SOURCE_DIR}/IVisitable.hpp
+			 ${CMAKE_CURRENT_SOURCE_DIR}/LockFreeStack.hpp)
 
 target_sources(PoulpeEngine PRIVATE ${SRC_LIST})
