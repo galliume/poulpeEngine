@@ -231,31 +231,31 @@ set_property(DIRECTORY ${PROJECT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT ${PROJE
 
 find_program(CLANG_TIDY_EXE NAMES "clang-tidy")
 
-add_custom_command(
-  TARGET ${PROJECT_NAME} PRE_BUILD
-  COMMAND ${CMAKE_COMMAND} -E copy_directory
-      ${CMAKE_CURRENT_SOURCE_DIR}/assets
-      $<TARGET_FILE_DIR:${PROJECT_NAME}>/assets
-  COMMENT "\r\n Copying assets")
+#add_custom_command(
+#  TARGET ${PROJECT_NAME} PRE_BUILD
+#  COMMAND ${CMAKE_COMMAND} -E copy_directory
+#      ${CMAKE_CURRENT_SOURCE_DIR}/assets
+#      $<TARGET_FILE_DIR:${PROJECT_NAME}>/assets
+#  COMMENT "\r\n Copying assets")
+#
+#add_custom_command(
+#  TARGET ${PROJECT_NAME} PRE_BUILD
+#  COMMAND ${CMAKE_COMMAND} -E copy_directory
+#      ${CMAKE_CURRENT_SOURCE_DIR}/config
+#      $<TARGET_FILE_DIR:${PROJECT_NAME}>/config
+#  COMMENT "\r\n Copying config")
 
-add_custom_command(
-  TARGET ${PROJECT_NAME} PRE_BUILD
-  COMMAND ${CMAKE_COMMAND} -E copy_directory
-      ${CMAKE_CURRENT_SOURCE_DIR}/config
-      $<TARGET_FILE_DIR:${PROJECT_NAME}>/config
-  COMMENT "\r\n Copying config")
-
-add_custom_command(
-  TARGET ${PROJECT_NAME} PRE_BUILD
-  COMMAND ${CMAKE_COMMAND} -E make_directory 
-      $<TARGET_FILE_DIR:${PROJECT_NAME}>/cache
-  COMMENT "\r\n Creating cache dir")
-
-add_custom_command(
-  TARGET ${PROJECT_NAME} PRE_BUILD
-  COMMAND ${CMAKE_COMMAND} -E make_directory 
-      $<TARGET_FILE_DIR:${PROJECT_NAME}>/lib
-  COMMENT "\r\n Creating lib dir")
+#add_custom_command(
+#  TARGET ${PROJECT_NAME} PRE_BUILD
+#  COMMAND ${CMAKE_COMMAND} -E make_directory 
+#      $<TARGET_FILE_DIR:${PROJECT_NAME}>/cache
+#  COMMENT "\r\n Creating cache dir")
+#
+#add_custom_command(
+#  TARGET ${PROJECT_NAME} PRE_BUILD
+#  COMMAND ${CMAKE_COMMAND} -E make_directory 
+#      $<TARGET_FILE_DIR:${PROJECT_NAME}>/lib
+#  COMMENT "\r\n Creating lib dir")
 
 add_custom_target(
         CompilShaders ${CMAKE_CURRENT_SOURCE_DIR}/bin/shadersCompilation.sh

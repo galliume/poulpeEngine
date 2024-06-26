@@ -1,5 +1,6 @@
 #include "InputManager.hpp"
 
+
 namespace Poulpe
 {
     bool InputManager::m_CanMoveCamera = false;
@@ -96,6 +97,8 @@ namespace Poulpe
                     m_Camera->up();
                 } else if (key == m_KeyboardKeys[config["down"]]) {
                     m_Camera->down();
+                } else if (key == 1)
+                {
                 }
                 break;
             }
