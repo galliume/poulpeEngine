@@ -1,8 +1,9 @@
 {
 	"entities": {
-		"powerplant" : {
-			"mesh": "assets/mesh/powerplant/powerplant.obj",
+		"dragon" : {
+			"mesh": "assets/mesh/gallery/gallery.obj",
 			"textures": {
+				"gallery": "assets/mesh/gallery/gallery.jpg"
 			},
 			"shader": "main_basic_no_texture",
 			"positions": [
@@ -27,6 +28,6 @@
 			"isPointLight": false,
 			"animationScripts": {
 			}
-		}	
+		}
 	}
 }

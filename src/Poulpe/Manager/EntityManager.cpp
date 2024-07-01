@@ -230,9 +230,9 @@ namespace Poulpe
       std::string nameTexture {"_plp_empty"};
       std::string name2Texture {"_plp_empty"};
       std::string name3Texture {"_plp_empty"};
-      std::string nameTextureSpecularMap;
-      std::string bumpTexname;
-      std::string alphaTexname;
+      std::string nameTextureSpecularMap {"_plp_empty"};
+      std::string bumpTexname {"_plp_empty"};
+      std::string alphaTexname {"_plp_empty"};
 
       if (!TinyObjLoader::m_TinyObjMaterials.empty()) {
                 
