@@ -42,7 +42,7 @@ namespace Poulpe
           allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
           allocInfo.allocationSize = m_MaxSize;
           allocInfo.memoryTypeIndex = m_MemoryType;
-
+          PLP_DEBUG("m_MaxSize: {}", m_MaxSize);
           VkResult result = vkAllocateMemory(m_Device, &allocInfo, nullptr, m_Memory.get());
 
           if (VK_SUCCESS != result) {
@@ -67,7 +67,6 @@ namespace Poulpe
         if (VK_SUCCESS != result) {
           PLP_ERROR("BindBuffer memory failed in bindBufferToMemory");
         }
-
 
         m_Offset += size;
 

@@ -1625,9 +1625,11 @@ namespace Poulpe {
         VkMemoryRequirements memRequirements;
         vkGetBufferMemoryRequirements(m_Device, buffer, & memRequirements);
 
+        uint32_t allocatedSize = ((memRequirements.size / memRequirements.alignment) + 1) * memRequirements.alignment;
+
         VkMemoryAllocateInfo allocInfo{};
         allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-        allocInfo.allocationSize = memRequirements.size;
+        allocInfo.allocationSize = allocatedSize;
         allocInfo.memoryTypeIndex = findMemoryType(memRequirements.memoryTypeBits, properties);
 
         if (vkAllocateMemory(m_Device, &allocInfo, nullptr, & bufferMemory) != VK_SUCCESS) {
@@ -1658,8 +1660,7 @@ namespace Poulpe {
         VkMemoryRequirements memRequirements;
         vkGetBufferMemoryRequirements(m_Device, buffer, & memRequirements);
         uint32_t size = ((memRequirements.size / memRequirements.alignment) + 1) * memRequirements.alignment;
-        
-        
+
         auto memoryType = findMemoryType(memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
         auto deviceMemory = m_DeviceMemoryPool->get(
             m_Device,
@@ -1667,7 +1668,7 @@ namespace Poulpe {
             memoryType,
             VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
             memRequirements.alignment,
-            DeviceMemoryPool::DeviceBufferType::UNIFORM);
+            DeviceMemoryPool::DeviceBufferType::STORAGE);
 
         auto offset = deviceMemory->getOffset();
         deviceMemory->bindBufferToMemory(buffer, size);
@@ -2185,7 +2186,6 @@ namespace Poulpe {
             | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 
         uint32_t size = ((memRequirements.size / memRequirements.alignment) + 1) * memRequirements.alignment;
-        
 
         auto deviceMemory = m_DeviceMemoryPool->get(
             m_Device,

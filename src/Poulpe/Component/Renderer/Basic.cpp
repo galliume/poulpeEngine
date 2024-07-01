@@ -8,6 +8,7 @@ namespace Poulpe
     {
       std::vector<VkDescriptorImageInfo> imageInfos;
       std::vector<VkDescriptorImageInfo> imageInfoSpec;
+
       mesh->getData()->mapsUsed = glm::vec4(0.0f);
 
       Texture tex;
@@ -18,25 +19,16 @@ namespace Poulpe
       }
 
       Texture tex2;
-      tex2 = m_TextureManager->getTextures()["_plp_empty"];
+      tex2 = m_TextureManager->getTextures()[mesh->getData()->m_Textures.at(1)];
 
       Texture tex3;
-      tex3 = m_TextureManager->getTextures()["_plp_empty"];
+      tex3 = m_TextureManager->getTextures()[mesh->getData()->m_Textures.at(2)];
 
       Texture alpha;
-      alpha = m_TextureManager->getTextures()["_plp_empty"];
-
-      if (!mesh->getData()->m_Textures.at(1).empty()) {
-        tex2 = m_TextureManager->getTextures()[mesh->getData()->m_Textures.at(1)];
-      }
-
-      if (!mesh->getData()->m_Textures.at(2).empty()) {
-        tex3 = m_TextureManager->getTextures()[mesh->getData()->m_Textures.at(2)];
-      }
-
-      if (!mesh->getData()->m_TextureAlpha.empty()) {
+      alpha = m_TextureManager->getTextures()[mesh->getData()->m_TextureAlpha];
+  
+      if (mesh->getData()->m_TextureAlpha != "_plp_empty") {
         mesh->getData()->mapsUsed.z = 1.0f;
-        alpha = m_TextureManager->getTextures()[mesh->getData()->m_TextureAlpha];
       }
 
       VkDescriptorImageInfo imageInfo{};

@@ -37,10 +37,20 @@ namespace Poulpe
            break;
            case DeviceBufferType::UNIFORM:
              bufferSize = m_DeviceProperties.properties.limits.maxUniformBufferRange * m_MaxUniform;
+
+             if (size > bufferSize) {
+               VkDeviceSize const countBuffers{ (size / m_DeviceProperties.properties.limits.maxUniformBufferRange) + 1 };
+               bufferSize = m_DeviceProperties.properties.limits.maxUniformBufferRange * countBuffers;
+             }
              bufferTypeDebug = "UNIFORM";
            break;
            case DeviceBufferType::STAGING:
              bufferSize = m_MaintenanceProperties.maxMemoryAllocationSize / m_MaxStaging;
+              if (size > bufferSize) {
+               VkDeviceSize const countBuffers{ (size / m_MaintenanceProperties.maxMemoryAllocationSize) + 1 };
+               bufferSize = m_MaintenanceProperties.maxMemoryAllocationSize * countBuffers;
+             }
+
              bufferTypeDebug = "STAGING";
            break;
       }
