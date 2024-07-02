@@ -18,7 +18,6 @@ layout(push_constant) uniform constants
     vec3 textureIDBB;
     mat4 view;
     vec4 viewPos;
-    vec3 mapsUsed;
 } pc;
 
 layout(location = 0) in vec3 pos;

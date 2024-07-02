@@ -1668,7 +1668,7 @@ namespace Poulpe {
             memoryType,
             VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
             memRequirements.alignment,
-            DeviceMemoryPool::DeviceBufferType::STORAGE);
+            DeviceMemoryPool::DeviceBufferType::UNIFORM);
 
         auto offset = deviceMemory->getOffset();
         deviceMemory->bindBufferToMemory(buffer, size);

@@ -8,14 +8,9 @@ namespace Poulpe
     {
       std::vector<VkDescriptorImageInfo> imageInfos;
       std::vector<VkDescriptorImageInfo> imageInfoSpec;
-      mesh->getData()->mapsUsed = glm::vec4(0.0f);
 
       Texture tex;
       tex = m_TextureManager->getTextures()[mesh->getData()->m_Textures.at(0)];
-
-      if (tex.getName() == "_plp_empty") {
-        mesh->getData()->mapsUsed.w = 1.0f;
-      }
 
       VkDescriptorImageInfo imageInfo{};
       imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
@@ -49,7 +44,6 @@ namespace Poulpe
             pushConstants.textureIDBB = glm::vec3(meshS->getData()->m_TextureIndex, 0.0, 0.0);
             pushConstants.view = renderer->getCamera()->lookAt();
             pushConstants.viewPos = renderer->getCamera()->getPos();
-            pushConstants.mapsUsed = meshS->getData()->mapsUsed;
 
             vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(constants),
                 & pushConstants);

@@ -19,7 +19,6 @@ layout(push_constant) uniform constants
     vec3 textureIDBB;
     mat4 view;
     vec4 viewPos;
-    vec4 mapsUsed;
 } pc;
 
 layout(location = 0) in vec3 pos;
@@ -34,7 +33,6 @@ layout(location = 0) out VS_OUT {
     vec2 fTexCoord;
     vec3 fNormal;
     vec3 fPos;
-    vec4 fMapsUsed;
     vec4 fViewPos;
     mat3 TBN;
     vec4 fShadowCoordAmbient;
@@ -101,7 +99,6 @@ void main()
     vs_out.fPos = vec3(ubos[gl_InstanceIndex].model * vec4(pos, 1.0));
     vs_out.fTexCoord = texCoord;
     vs_out.fTextureID = int(pc.textureIDBB.x);//ID conversion should be ok
-    vs_out.fMapsUsed = pc.mapsUsed;
     vs_out.fViewPos = pc.viewPos;
     vs_out.fShadowCoordAmbient = (biasMat * ambientLight.lightSpaceMatrix * ubos[gl_InstanceIndex].model) * vec4(pos, 1.0);
     vs_out.fShadowCoordSpot = (biasMat * spotLight.lightSpaceMatrix * ubos[gl_InstanceIndex].model) * vec4(pos, 1.0);

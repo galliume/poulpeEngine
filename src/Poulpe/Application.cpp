@@ -36,7 +36,7 @@
 
 namespace Poulpe
 {
-    unsigned int Application::s_MaxFPS{ 0 };
+    unsigned int Application::s_MaxFPS{ 120 };
     Application* Application::s_Instance{ nullptr };
 
     Application::Application()
