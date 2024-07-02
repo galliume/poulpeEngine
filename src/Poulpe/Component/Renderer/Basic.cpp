@@ -9,14 +9,8 @@ namespace Poulpe
       std::vector<VkDescriptorImageInfo> imageInfos;
       std::vector<VkDescriptorImageInfo> imageInfoSpec;
 
-      mesh->getData()->mapsUsed = glm::vec4(0.0f);
-
       Texture tex;
       tex = m_TextureManager->getTextures()[mesh->getData()->m_Textures.at(0)];
-
-      if (tex.getName() == "_plp_empty") {
-        mesh->getData()->mapsUsed.w = 1.0f;
-      }
 
       Texture tex2;
       tex2 = m_TextureManager->getTextures()[mesh->getData()->m_Textures.at(1)];
@@ -26,10 +20,6 @@ namespace Poulpe
 
       Texture alpha;
       alpha = m_TextureManager->getTextures()[mesh->getData()->m_TextureAlpha];
-  
-      if (mesh->getData()->m_TextureAlpha != "_plp_empty") {
-        mesh->getData()->mapsUsed.z = 1.0f;
-      }
 
       VkDescriptorImageInfo imageInfo{};
       imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
@@ -62,7 +52,6 @@ namespace Poulpe
       if (!mesh->getData()->m_TextureSpecularMap.empty()
         && m_TextureManager->getTextures().contains(mesh->getData()->m_TextureSpecularMap)) {
         specMapName = mesh->getData()->m_TextureSpecularMap;
-        mesh->getData()->mapsUsed.y = 1.0f;
       }
 
       Texture texSpecularMap = m_TextureManager->getTextures()[specMapName];
@@ -70,7 +59,6 @@ namespace Poulpe
       if (!mesh->getData()->m_TextureBumpMap.empty()
         && m_TextureManager->getTextures().contains(mesh->getData()->m_TextureBumpMap)) {
         bumpMapName = mesh->getData()->m_TextureBumpMap;
-        mesh->getData()->mapsUsed.x = 1.0f;
       }
 
       Texture texBumpMap = m_TextureManager->getTextures()[bumpMapName];
@@ -125,7 +113,6 @@ namespace Poulpe
             pushConstants.textureIDBB = glm::vec3(meshB->getData()->m_TextureIndex, 0.0, 0.0);
             pushConstants.view = renderer->getCamera()->lookAt();
             pushConstants.viewPos = renderer->getCamera()->getPos();
-            pushConstants.mapsUsed = meshB->getData()->mapsUsed;
 
             vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(constants),
                 & pushConstants);

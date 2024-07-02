@@ -350,7 +350,6 @@ namespace Poulpe
         
           pushConstants.view = light.view;
           pushConstants.viewPos = getCamera()->getPos();
-          pushConstants.mapsUsed = mesh->getData()->mapsUsed;
 
           vkCmdPushConstants(m_CommandBuffersEntities[m_CurrentFrame], pipeline->pipelineLayout,
               VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(constants), & pushConstants);

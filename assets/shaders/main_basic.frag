@@ -9,7 +9,6 @@ layout(location = 0) in VS_OUT {
     vec2 fTexCoord;
     vec3 fNormal;
     vec3 fPos;
-    vec4 fMapsUsed;
     vec4 fViewPos;
     mat3 TBN;
     vec4 fShadowCoordAmbient;
@@ -45,6 +44,11 @@ struct Material
     vec3 shiIorDiss;
 };
 
+//index 0 to 2: main textures
+//3: alpha
+//4: specular map
+//5: bump map
+//6: shadow map
 layout(binding = 1) uniform sampler2D texSampler[7];
 
 #define NR_POINT_LIGHTS 2
@@ -77,7 +81,9 @@ void main()
 
     vec3 normal = normalize(fs_in.fNormal);
 
-    if (fs_in.fMapsUsed.x > 0.5) {
+    ivec2 texBumMapSize = textureSize(texSampler[5], 0);
+
+    if (texBumMapSize.x == 1 && texBumMapSize.y == 1) {
       vec3 nm = texture(texSampler[5], fs_in.fTexCoord).xyz * 2.0 - vec3(1.0);
       nm = fs_in.TBN * nm;
       normal = vec3(normalize(nm));
@@ -91,9 +97,12 @@ void main()
       id = 2;
     }
 
+    ivec2 texSize = textureSize(texSampler[id], 0);
     vec4 texColor = texture(texSampler[id], fs_in.fTexCoord);
-    if (fs_in.fMapsUsed.w > 0.5) {
-      texColor = vec4(fs_in.fvColor, 1.0);
+
+    //should be _plp_empty texture, so discarded
+    if (texSize.x == 1 && texSize.y == 1) {
+      discard;
     }
 
     //float shadow = ShadowCalculation(fs_in.fShadowCoord / fs_in.fShadowCoord.w, vec2(0.0));
@@ -109,7 +118,8 @@ void main()
 
     color += CalcSpotLight(texColor, spotLight, normal, fs_in.fPos.xyz, viewDir, 1.0);
 
-    if (fs_in.fMapsUsed.z > 0.5) {
+    ivec2 texMaskSize = textureSize(texSampler[3], 0);
+    if (texMaskSize.x != 1 && texMaskSize.y != 1) {
         vec4 mask = texture(texSampler[3], fs_in.fTexCoord);
 //        fColor = mix(fColor, mask, mask.a);
         if (mask.r < 0.7) discard;
@@ -134,12 +144,14 @@ vec3 CalcDirLight(vec4 color, Light dirLight, vec3 normal, vec3 viewDir, float s
     vec3 h = normalize(lightDir + viewDir);
     vec3 specular = vec3(0.0);
 
-    if (fs_in.fMapsUsed.y > 0.5) {
-      float spec = pow(clamp(dot(normal, h), 0.0, 1.0), material.shiIorDiss.x) * float(dot(normal, h) > 0.0);
-      specular = dirLight.color * (spec * dirLight.ads.z * material.specular * texture(texSampler[4], fs_in.fTexCoord).xyz);
-    } else {
+    ivec2 texSize = textureSize(texSampler[4], 0);
+
+    if (texSize.x == 1 && texSize.y == 1) {
       float spec = pow(clamp(dot(normal, h), 0.0, 1.0), material.shiIorDiss.x) * float(dot(normal, h) > 0.0);
       specular =  dirLight.color * (dirLight.ads.z * spec * material.specular);
+    } else {
+      float spec = pow(clamp(dot(normal, h), 0.0, 1.0), material.shiIorDiss.x) * float(dot(normal, h) > 0.0);
+      specular = dirLight.color * (spec * dirLight.ads.z * material.specular * texture(texSampler[4], fs_in.fTexCoord).xyz);
     }
 
     return (ambient + shadow * (diffuse + specular)) * color.xyz ;
@@ -159,12 +171,14 @@ vec3 CalcPointLight(vec4 color, Light pointLight, vec3 normal, vec3 fragPos, vec
     vec3 h = normalize(lightDir + viewDir);
     vec3 specular = vec3(0.0);
 
-    if (fs_in.fMapsUsed.y > 0.5) {
-      float spec = pow(clamp(dot(normal, h), 0.0, 1.0), material.shiIorDiss.x) * float(dot(normal, h) > 0.0);
-      specular =  pointLight.color * (spec * pointLight.ads.z * material.specular * texture(texSampler[4], fs_in.fTexCoord).xyz);
-    } else {
+    ivec2 texSize = textureSize(texSampler[4], 0);
+
+    if (texSize.x == 1 && texSize.y == 1) {
       float spec = pow(clamp(dot(normal, h), 0.0, 1.0), material.shiIorDiss.x) * float(dot(normal, h) > 0.0);
       specular = pointLight.color * (pointLight.ads.z * spec * material.specular);
+    } else {
+      float spec = pow(clamp(dot(normal, h), 0.0, 1.0), material.shiIorDiss.x) * float(dot(normal, h) > 0.0);
+      specular =  pointLight.color * (spec * pointLight.ads.z * material.specular * texture(texSampler[4], fs_in.fTexCoord).xyz);
     }
 
     ambient *= attenuation;
@@ -192,12 +206,14 @@ vec3 CalcSpotLight(vec4 color, Light spotlight, vec3 normal, vec3 fragPos, vec3 
     vec3 h = normalize(lightDir + viewDir);
     vec3 specular = vec3(0.0);
 
-    if (fs_in.fMapsUsed.y > 0.5) {
-        float spec = pow(clamp(dot(normal, h), 0.0, 1.0), material.shiIorDiss.x) * float(dot(normal, h) > 0.0);
-        specular = spotlight.color * (spec * spotlight.ads.z * material.specular * texture(texSampler[4], fs_in.fTexCoord).xyz);
-    } else {
+    ivec2 texSize = textureSize(texSampler[4], 0);
+
+    if (texSize.x == 1 && texSize.y == 1) {
         float spec = pow(clamp(dot(normal, h), 0.0, 1.0), material.shiIorDiss.x) * float(dot(normal, h) > 0.0);
         specular = spotlight.color * (spotlight.ads.z * spec * material.specular);
+    } else {
+        float spec = pow(clamp(dot(normal, h), 0.0, 1.0), material.shiIorDiss.x) * float(dot(normal, h) > 0.0);
+        specular = spotlight.color * (spec * spotlight.ads.z * material.specular * texture(texSampler[4], fs_in.fTexCoord).xyz);
     }
 
     ambient *= attenuation * intensity;
@@ -223,6 +239,12 @@ float ShadowCalculation(vec4 shadowCoord, vec2 off)
 
 float filterPCF(vec4 shadowCoord)
 {
+    ivec2 texSize = textureSize(texSampler[6], 0);
+    //should be _plp_empty texture, so no shadow
+    if (texSize.x == 1 && texSize.y == 1) {
+      return 1.0;
+    }
+
     ivec2 texDim = textureSize(texSampler[6], 0);
     float scale = 1.5;
     float dx = scale * 1.0 / float(texDim.x);

@@ -1,13 +1,13 @@
 {
 	"entities": {
-		"dragon" : {
+		"gallery" : {
 			"mesh": "assets/mesh/gallery/gallery.obj",
 			"textures": {
 				"gallery": "assets/mesh/gallery/gallery.jpg"
 			},
-			"shader": "main_basic_no_texture",
+			"shader": "main_basic",
 			"positions": [
-				{"x": 5.0, "y": 2.5, "z": 5.0}
+				{"x": 0.0, "y": 0.0, "z": 0.0}
 			],
 			"scales": [
 				{"x": 0.1, "y": 0.1, "z": 0.1}
@@ -15,7 +15,7 @@
 			"rotations": [
 				{"x": 0.0, "y": 0.0, "z": 0.0}
 			],
-			"inverseTextureY": false,
+			"inverseTextureY": true,
 			"count": 1,
 			"padding": {
 				"x": 0,

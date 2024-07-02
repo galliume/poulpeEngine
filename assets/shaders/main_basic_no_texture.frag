@@ -9,7 +9,6 @@ layout(location = 0) in VS_OUT {
     vec2 fTexCoord;
     vec3 fNormal;
     vec3 fPos;
-    vec3 fMapsUsed;
     vec4 fViewPos;
     mat3 TBN;
 } fs_in;

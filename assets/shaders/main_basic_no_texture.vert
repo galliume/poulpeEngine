@@ -19,7 +19,6 @@ layout(push_constant) uniform constants
     vec3 textureIDBB;
     mat4 view;
     vec4 viewPos;
-    vec3 mapsUsed;
 } pc;
 
 
@@ -35,7 +34,6 @@ layout(location = 0) out VS_OUT {
     vec2 fTexCoord;
     vec3 fNormal;
     vec3 fPos;
-    vec3 fMapsUsed;
     vec4 fViewPos;
     mat3 TBN;
 } vs_out;
@@ -56,6 +54,5 @@ void main()
     vs_out.fPos = vec3(ubos[gl_InstanceIndex].model * vec4(pos, 1.0));
     vs_out.fTexCoord = texCoord;
     vs_out.fTextureID = int(pc.textureIDBB.x);
-    vs_out.fMapsUsed = pc.mapsUsed;
     vs_out.fViewPos = pc.viewPos;
 } 

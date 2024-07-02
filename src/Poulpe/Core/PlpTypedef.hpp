@@ -87,7 +87,6 @@ namespace Poulpe
       alignas(16) glm::vec3 textureIDBB;
       alignas(16) glm::mat4 view;
       alignas(16) glm::vec4 viewPos;
-      alignas(16) glm::vec4 mapsUsed = glm::vec4(0.0f);
     };
 
     struct Buffer {
@@ -117,8 +116,6 @@ namespace Poulpe
       glm::vec3 m_CurrentPos;
       glm::vec3 m_CurrentRotation;
       glm::vec3 m_CurrentScale;
-      //x = specularMap, y = bumpMap
-      glm::vec4 mapsUsed = glm::vec4(0.0f);
       glm::vec3 tangeant;
     };
 
