@@ -1,0 +1,90 @@
+{
+	"entities": {
+		"rungholt": {
+			"mesh": "assets/mesh/rungholt/rungholt.obj",
+			"textures": {
+				"rungholt-Alpha": "assets/mesh/rungholt/rungholt-Alpha.png",
+				"rungholt-RGB": "assets/mesh/rungholt/rungholt-RGB.png",
+				"rungholt-RGBA": "assets/mesh/rungholt/rungholt-RGBA.png"
+			},
+			"shader": "main_basic",
+			"positions": [
+				{
+					"x": 0.0,
+					"y": 0.0,
+					"z": 0.0
+				}
+			],
+			"scales": [
+				{
+					"x": 0.1,
+					"y": 0.1,
+					"z": 0.1
+				}
+			],
+			"rotations": [
+				{
+					"x": 0.0,
+					"y": 0.0,
+					"z": 0.0
+				}
+			],
+			"inverseTextureY": true,
+			"count": 1,
+			"padding": {
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"form": "positioned",
+			"hasBbox": false,
+			"hasAnimation": false,
+			"isPointLight": false,
+			"animationScripts": {
+			}
+		},
+		"house": {
+			"mesh": "assets/mesh/rungholt/house.obj",
+			"textures": {
+				"house-Alpha": "assets/mesh/rungholt/house-Alpha.png",
+				"house-RGB": "assets/mesh/rungholt/house-RGB.png",
+				"house-RGBA": "assets/mesh/rungholt/house-RGBA.png"
+			},
+			"shader": "main_basic",
+			"positions": [
+				{
+					"x": 0.0,
+					"y": 0.0,
+					"z": 0.0
+				}
+			],
+			"scales": [
+				{
+					"x": 0.1,
+					"y": 0.1,
+					"z": 0.1
+				}
+			],
+			"rotations": [
+				{
+					"x": 0.0,
+					"y": 0.0,
+					"z": 0.0
+				}
+			],
+			"inverseTextureY": true,
+			"count": 1,
+			"padding": {
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"form": "positioned",
+			"hasBbox": false,
+			"hasAnimation": false,
+			"isPointLight": false,
+			"animationScripts": {
+			}
+		}
+	}
+}

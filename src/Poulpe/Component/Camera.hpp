@@ -43,7 +43,7 @@ namespace Poulpe
     glm::mat4 m_View;
 
     float m_Pitch;
-    float m_velocity{ 1.0f };
+    float m_velocity{ 10.0f };
     float m_Speed{ m_velocity };
     float m_Yaw{ -90.0f };
   };

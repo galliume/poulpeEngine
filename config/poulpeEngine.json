@@ -1,9 +1,9 @@
 {
-	"defaultLevel": "sponza",
+	"defaultLevel": "backpack",
 	"defaultSkybox": "debug",
 	"ambientMusic": false,
 	"input": {
-		"current" : "keyboard",
+		"current": "keyboard",
 		"keyboard": {
 			"unlockCamera": "c",
 			"forward": "w",
