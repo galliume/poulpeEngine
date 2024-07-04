@@ -17,6 +17,13 @@ namespace Poulpe
         virtual nlohmann::json soundConfig() const override { return m_SoundConfig ;}
         virtual nlohmann::json texturesConfig() const override { return m_TexturesConfig; }
 
+        template<typename T>
+        requires std::same_as<T, std::string> || std::same_as<T, unsigned int>
+        void updateConfig(std::string const & configName, T const & value)
+        {
+         m_AppConfig[configName] = value;
+        }
+
     private:
         std::string const m_LevelPath{ "config/levels/" };
 

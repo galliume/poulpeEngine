@@ -2,7 +2,6 @@
 
 #include "AudioManager.hpp"
 #include "ComponentManager.hpp"
-#include "ConfigManager.hpp"
 #include "EntityManager.hpp"
 #include "LightManager.hpp"
 #include "ShaderManager.hpp"
@@ -38,7 +37,6 @@ namespace Poulpe
           m_LightManager.get(),
           m_TextureManager.get());
 
-        m_ConfigManager = std::make_unique<ConfigManager>();
         m_AudioManager = std::make_unique<AudioManager>();
         m_ShaderManager = std::make_unique<ShaderManager>();
         m_DestroyManager = std::make_unique<DestroyManager>();
@@ -50,7 +48,7 @@ namespace Poulpe
         m_DestroyManager->setRenderer(m_Renderer.get());
         m_DestroyManager->addMemoryPool(m_Renderer->getDeviceMemoryPool());
 
-        nlohmann::json appConfig = m_ConfigManager->appConfig();
+        nlohmann::json appConfig = Poulpe::Locator::getConfigManager()->appConfig();
         if (appConfig["defaultLevel"].empty()) {
             PLP_WARN("defaultLevel conf not set.");
         }
@@ -108,11 +106,13 @@ namespace Poulpe
             m_EntityManager->initWorldGraph();
         }
        
-        nlohmann::json appConfig = m_ConfigManager->appConfig();
-        nlohmann::json textureConfig = m_ConfigManager->texturesConfig();
+        auto * const configManager = Poulpe::Locator::getConfigManager();
+
+        nlohmann::json appConfig = configManager->appConfig();
+        nlohmann::json textureConfig = configManager->texturesConfig();
 
         m_AudioManager->init();
-        m_AudioManager->load(m_ConfigManager->soundConfig());
+        m_AudioManager->load(configManager->soundConfig());
 
         loadData(m_CurrentLevel);
 
@@ -130,7 +130,7 @@ namespace Poulpe
 
     void RenderManager::refresh(uint32_t levelIndex, bool showBbox, std::string_view skybox)
     {
-      m_CurrentLevel = m_ConfigManager->listLevels().at(levelIndex);
+      m_CurrentLevel = Poulpe::Locator::getConfigManager()->listLevels().at(levelIndex);
       m_CurrentSkybox = skybox;
       m_IsLoaded = false;
       m_Refresh = true;
@@ -169,11 +169,13 @@ namespace Poulpe
 
     void RenderManager::loadData(std::string const & level)
     {
-      nlohmann::json appConfig = m_ConfigManager->appConfig();
+      auto * const configManager = Poulpe::Locator::getConfigManager();
+
+      nlohmann::json appConfig = configManager->appConfig();
       std::string_view threadQueueName{ "loading" };
 
-      auto const levelData = m_ConfigManager->loadLevelData(level);
-      m_TextureManager->addConfig(m_ConfigManager->texturesConfig());
+      auto const levelData = configManager->loadLevelData(level);
+      m_TextureManager->addConfig(configManager->texturesConfig());
 
       std::function<void()> textureFuture = m_TextureManager->load();
 
@@ -182,7 +184,7 @@ namespace Poulpe
 
       std::function<void()> entityFutures = m_EntityManager->load(levelData);
       std::function<void()> skyboxFuture = m_TextureManager->loadSkybox(sb);
-      std::function<void()> shaderFuture = m_ShaderManager->load(m_ConfigManager->shaderConfig());
+      std::function<void()> shaderFuture = m_ShaderManager->load(configManager->shaderConfig());
 
       Locator::getThreadPool()->submit(threadQueueName, textureFuture);
       Locator::getThreadPool()->submit(threadQueueName, skyboxFuture);

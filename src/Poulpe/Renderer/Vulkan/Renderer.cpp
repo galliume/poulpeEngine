@@ -349,7 +349,7 @@ namespace Poulpe
           pushConstants.textureIDBB = glm::vec3(mesh->getData()->m_TextureIndex, 0.0, 0.0);
         
           pushConstants.view = light.view;
-          pushConstants.viewPos = getCamera()->getPos();
+          pushConstants.viewPos = glm::vec4(light.position, 1.0);
 
           vkCmdPushConstants(m_CommandBuffersEntities[m_CurrentFrame], pipeline->pipelineLayout,
               VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(constants), & pushConstants);

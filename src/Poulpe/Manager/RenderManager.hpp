@@ -6,6 +6,7 @@
 
 namespace Poulpe
 {
+    //@todo rename to SceneManager?
     class RenderManager : public IRenderManager
     {
     public:
@@ -19,7 +20,6 @@ namespace Poulpe
         inline AudioManager* getAudioManager() override { return m_AudioManager.get(); }
         inline Camera* getCamera() override { return m_Camera.get(); }
         inline ComponentManager* getComponentManager() override { return m_ComponentManager.get(); }
-        inline ConfigManager* getConfigManager() override { return m_ConfigManager.get(); }
         inline DestroyManager* getDestroyManager() override { return m_DestroyManager.get(); }
         inline EntityManager* getEntityManager() override { return m_EntityManager.get(); }
         inline LightManager* getLightManager() override { return m_LightManager.get(); }
@@ -55,7 +55,6 @@ namespace Poulpe
 
         std::unique_ptr<AudioManager> m_AudioManager;
         std::unique_ptr<ComponentManager> m_ComponentManager;
-        std::unique_ptr<ConfigManager> m_ConfigManager;
         std::unique_ptr<DestroyManager> m_DestroyManager;
         std::unique_ptr<EntityManager> m_EntityManager;
         std::unique_ptr<LightManager> m_LightManager;
