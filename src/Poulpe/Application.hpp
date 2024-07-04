@@ -23,9 +23,6 @@ namespace Poulpe
         void run();
         void startServer(std::string const& port);
 
-    public:
-        static unsigned int s_MaxFPS;
-
     private:
         static Application* s_Instance;
 

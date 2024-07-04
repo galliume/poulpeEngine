@@ -28,7 +28,6 @@ namespace Poulpe
     virtual AudioManager* getAudioManager() = 0;
     virtual Camera* getCamera() = 0;
     virtual ComponentManager* getComponentManager() = 0;
-    virtual ConfigManager* getConfigManager() = 0;
     virtual DestroyManager* getDestroyManager() = 0;
     virtual EntityManager* getEntityManager() = 0;
     virtual void init() = 0;

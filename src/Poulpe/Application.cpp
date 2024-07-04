@@ -2,6 +2,7 @@
 
 #include "PoulpeEngineConfig.h"
 
+#include "Poulpe/Manager/ConfigManager.hpp"
 #include "Poulpe/Manager/InputManager.hpp"
 
 #include <GLFW/glfw3.h>
@@ -36,7 +37,6 @@
 
 namespace Poulpe
 {
-    unsigned int Application::s_MaxFPS{ 60 };
     Application* Application::s_Instance{ nullptr };
 
     Application::Application()
@@ -54,13 +54,15 @@ namespace Poulpe
         auto* window = new Window();
         window->init("PoulpeEngine");
 
+        auto* configManager = new ConfigManager();
         auto* inputManager = new InputManager(window);
         auto* cmdQueue = new CommandQueue();
         auto* threadPool = new ThreadPool();
 
+        Poulpe::Locator::setConfigManager(configManager);
         Poulpe::Locator::setInputManager(inputManager);
-        Poulpe::Locator::setCommandQueue(cmdQueue);
         Poulpe::Locator::setThreadPool(threadPool);
+        Poulpe::Locator::setCommandQueue(cmdQueue);
 
         m_RenderManager = std::make_unique<RenderManager>(window);
         m_RenderManager->init();
@@ -71,19 +73,20 @@ namespace Poulpe
 
     void Application::run()
     {
-        auto endRun = std::chrono::steady_clock::now();
-        std::chrono::duration<float> loadedTime = endRun - m_StartRun;
+        auto const endRun = std::chrono::steady_clock::now();
+        std::chrono::duration<float> const loadedTime = endRun - m_StartRun;
         PLP_TRACE("Started in {} seconds", loadedTime.count());
 
         auto lastTime = std::chrono::steady_clock::now();
 
         while (!glfwWindowShouldClose(m_RenderManager->getWindow()->get())) {
 
-            auto frameTarget = (1.0f / (static_cast<float>(s_MaxFPS) * 0.001f));
-            auto currentTime = std::chrono::steady_clock::now();
-            std::chrono::duration<float, std::milli> deltaTime = (currentTime - lastTime);
+            auto const fpsLimit = static_cast<unsigned int>(Poulpe::Locator::getConfigManager()->appConfig()["fpsLimit"]);
+            auto const frameTarget = (1.0f / (static_cast<float>(fpsLimit) * 0.001f));
+            auto const currentTime = std::chrono::steady_clock::now();
+            std::chrono::duration<float, std::milli> const deltaTime = (currentTime - lastTime);
 
-            if (deltaTime.count() < frameTarget && s_MaxFPS != 0) continue;
+            if (deltaTime.count() < frameTarget && fpsLimit != 0) continue;
 
             m_RenderManager->getCamera()->updateSpeed(deltaTime);
             glfwPollEvents();

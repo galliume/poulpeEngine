@@ -44,7 +44,18 @@ namespace Poulpe
             { "w", GLFW_KEY_W },
             { "x", GLFW_KEY_X },
             { "y", GLFW_KEY_Y },
-            { "z", GLFW_KEY_Z }
+            { "z", GLFW_KEY_Z },
+            { "0", GLFW_KEY_0 },
+            { "1", GLFW_KEY_1 },
+            { "2", GLFW_KEY_2 },
+            { "3", GLFW_KEY_3 },
+            { "4", GLFW_KEY_4 },
+            { "5", GLFW_KEY_5 },
+            { "6", GLFW_KEY_6 },
+            { "7", GLFW_KEY_7 },
+            { "8", GLFW_KEY_8 },
+            { "9", GLFW_KEY_9 },
+
         };
 
         glfwSetWindowUserPointer(m_Window->get(), this);
@@ -97,8 +108,9 @@ namespace Poulpe
                     m_Camera->up();
                 } else if (key == m_KeyboardKeys[config["down"]]) {
                     m_Camera->down();
-                } else if (key == 1)
+                } else if (key == m_KeyboardKeys[config["unlockFPS"]])
                 {
+                  Poulpe::Locator::getConfigManager()->updateConfig<unsigned int>("fpsLimit", 0);
                 }
                 break;
             }
