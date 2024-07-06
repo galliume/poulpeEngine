@@ -11,7 +11,7 @@
 			},
 			"shader": "main_basic",
 			"positions": [
-				{"x": 5.0, "y": 2.5, "z": 5.0}
+				{"x": 0.0, "y": 2.5, "z": 0.0}
 			],
 			"scales": [
 				{"x": 0.1, "y": 0.1, "z": 0.1}
@@ -32,19 +32,27 @@
 			"isPointLight": false,
 			"animationScripts": {
 				"anim0" : "assets/scripts/animation/backpack/anim0.lua"
-			}
+			},
+			"hasShadow": true
 		},
-		"Grass_Block" : {
-			"mesh": "assets/mesh/minecraft/Grass_Block.obj",
+		"free_palm" : {
+			"mesh": "assets/mesh/trees/palm_1/free_palm.obj",
 			"textures": {
-				"Grass_Block_TEX": "assets/mesh/minecraft/Grass_Block_TEX.png"
+				"bark_roughness": "assets/mesh/trees/palm_1/bark_roughness.png",
+				"leaf": "assets/mesh/trees/palm_1/leaf.png",
+				"leaf_ao": "assets/mesh/trees/palm_1/leaf_ao.png",
+				"leaf_normal": "assets/mesh/trees/palm_1/leaf_normal.png",
+				"leaf_roughness": "assets/mesh/trees/palm_1/leaf_roughness.png",
+				"bark": "assets/mesh/trees/palm_1/bark.png",
+				"bark_ao": "assets/mesh/trees/palm_1/bark_ao.png",
+				"bark_normal": "assets/mesh/trees/palm_1/bark_normal.png"
 			},
 			"shader": "main_basic",
 			"positions": [
-				{"x": 0.3, "y": 1.0, "z": 0.0}
+				{"x": -10.0, "y": -1.0, "z": -10.0}
 			],
 			"scales": [
-				{"x": 0.05, "y": 0.05, "z": 0.05}
+				{"x": 0.1, "y": 0.1, "z": 0.1}
 			],
 			"rotations": [
 				{"x": 0.0, "y": 0.0, "z": 0.0}
@@ -58,12 +66,13 @@
 			},
 			"form": "positioned",
 			"hasBbox": false,
-			"hasAnimation": true,
+			"hasAnimation": false,
 			"animationScripts": {
 				"anim0" : "assets/scripts/animation/grassBlock/anim0.lua"
 			},
-			"isPointLight": false
-		},
+			"isPointLight": false,
+			"hasShadow": true
+		},	
 		"SnowTerrain" : {
 			"mesh": "assets/mesh/SnowTerrain/SnowTerrain.obj",
 			"textures": {
@@ -89,7 +98,8 @@
 			"form": "positioned",
 			"hasBbox": false,
 			"hasAnimation": false,
-			"isPointLight": false			
+			"isPointLight": false,
+			"hasShadow": false	
 		}
 	}
 }

@@ -139,32 +139,32 @@ namespace Poulpe
 
     void RenderManager::renderScene(std::chrono::duration<float> deltaTime)
     {
-        m_Renderer->renderScene();
+      //@todo animate light
+      //m_LightManager->animateAmbientLight(deltaTime);
+      auto* worldNode = m_EntityManager->getWorldNode();
 
-        //@todo animate light
-        //m_LightManager->animateAmbientLight(deltaTime);
-        auto* worldNode = m_EntityManager->getWorldNode();
+      //@todo refactor with recursion when needed
+      for (auto leafNode : worldNode->getChildren()) {
+        for (auto entityNode : leafNode->getChildren()) {
+          auto entity = entityNode->getEntity();
+          auto* meshComponent = m_ComponentManager->getComponent<MeshComponent>(entity->getID());
+          auto* animationComponent = m_ComponentManager->getComponent<AnimationComponent>(entity->getID());
+          Mesh* mesh = meshComponent->hasImpl<Mesh>();
 
-        //@todo refactor with recursion when needed
-        for (auto leafNode : worldNode->getChildren()) {
-          for (auto entityNode : leafNode->getChildren()) {
-            auto entity = entityNode->getEntity();
-            auto* meshComponent = m_ComponentManager->getComponent<MeshComponent>(entity->getID());
-            auto* animationComponent = m_ComponentManager->getComponent<AnimationComponent>(entity->getID());
-            Mesh* mesh = meshComponent->hasImpl<Mesh>();
-
-            if (animationComponent && mesh) {
-              animationComponent->visit(deltaTime, mesh);
-            }
+          if (animationComponent && mesh) {
+            animationComponent->visit(deltaTime, mesh);
           }
         }
+      }
 
-        if (m_Refresh) {
-            m_Renderer->setDrawBbox(m_ShowBbox);
-            init();
-            m_Refresh = false;
-            m_ShowBbox = false;
-        }
+      m_Renderer->renderScene();
+
+      if (m_Refresh) {
+        m_Renderer->setDrawBbox(m_ShowBbox);
+        init();
+        m_Refresh = false;
+        m_ShowBbox = false;
+      }
     }
 
     void RenderManager::loadData(std::string const & level)
@@ -179,7 +179,7 @@ namespace Poulpe
 
       std::function<void()> textureFuture = m_TextureManager->load();
 
-      std::string const  sb = (m_CurrentSkybox.empty()) ? static_cast<std::string>(appConfig["defaultSkybox"])
+      std::string const sb = (m_CurrentSkybox.empty()) ? static_cast<std::string>(appConfig["defaultSkybox"])
         : m_CurrentSkybox;
 
       std::function<void()> entityFutures = m_EntityManager->load(levelData);
@@ -236,9 +236,9 @@ namespace Poulpe
     {
         auto* skyboxEntity = new Entity();
         auto* skyboxMesh = new Mesh();
+        skyboxMesh->setHasShadow(false);
         auto* skyRdrImpl = new Skybox();
         skyRdrImpl->init(m_Renderer.get(), m_TextureManager.get(), nullptr);
-
         auto renderComponent = m_ComponentManager->addComponent<RenderComponent>(skyboxEntity->getID(), skyRdrImpl);
         auto deltaTime = std::chrono::duration<float, std::milli>(0);
         renderComponent.visit(deltaTime, skyboxMesh);

@@ -145,6 +145,7 @@ namespace Poulpe
     void ShaderManager::createGraphicPipeline(std::string const & shaderName)
     {
       bool offscreen = (shaderName == "shadowMap") ? true : false;
+      auto cullMode = VK_CULL_MODE_BACK_BIT;
 
       std::vector<VkDescriptorPoolSize> poolSizes{};
       VkDescriptorPoolSize dpsUbo;
@@ -224,24 +225,24 @@ namespace Poulpe
 
         poolSizes.emplace_back(dpsSB);
 
+        std::vector<VkPushConstantRange> vkPcs = {};
+        VkPushConstantRange vkPc;
+        vkPc.offset = 0;
+        vkPc.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+        vkPc.size = sizeof(constants);
+
         if (shaderName == "shadowMap" || shaderName == "shadowMapSpot") {
           hasColorAttachment = false;
-          hasDynamicDepthBias = true;
+          hasDynamicDepthBias = false;
+          cullMode = VK_CULL_MODE_FRONT_BIT;
           descSetLayout = createDescriptorSetLayout<DescSetLayoutType::Offscreen>();
         } else {
           descSetLayout = createDescriptorSetLayout<DescSetLayoutType::Entity>();
         }
         vertexInputInfo = getVertexInputState<VertexBindingType::Vertex3D>();
 
-        std::vector<VkDescriptorSetLayout> dSetLayout = { descSetLayout };
-
-        std::vector<VkPushConstantRange> vkPcs = {};
-        VkPushConstantRange vkPc;
-        vkPc.offset = 0;
-        vkPc.size = sizeof(constants);
-        vkPc.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
         vkPcs.emplace_back(vkPc);
-
+        std::vector<VkDescriptorSetLayout> dSetLayout = { descSetLayout };
         pipelineLayout = m_Renderer->createPipelineLayout(dSetLayout, vkPcs);
         
         graphicPipeline = m_Renderer->createGraphicsPipeline(
@@ -249,7 +250,7 @@ namespace Poulpe
           shaderName,
           shaders,
           *vertexInputInfo,
-          VK_CULL_MODE_BACK_BIT,
+          cullMode,
           true, true, true,
           VK_POLYGON_MODE_FILL,
           hasColorAttachment,

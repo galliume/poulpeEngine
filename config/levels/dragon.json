@@ -4,9 +4,9 @@
 			"mesh": "assets/mesh/dragon/dragon.obj",
 			"textures": {
 			},
-			"shader": "main_basic",
+			"shader": "main_basic_no_texture",
 			"positions": [
-				{"x": 0.0, "y": 0.0, "z": 0.0}
+				{"x": 0.0, "y": 1.0, "z": 0.0}
 			],
 			"scales": [
 				{"x": 1.1, "y": 1.1, "z": 1.1}
@@ -23,10 +23,40 @@
 			},
 			"form": "positioned",
 			"hasBbox": false,
-			"hasAnimation": false,
+			"hasAnimation": true,
 			"isPointLight": false,
 			"animationScripts": {
-			}
+				"anim0" : "assets/scripts/animation/backpack/anim0.lua"
+			},
+			"hasShadow": true
+		},
+		"SnowTerrain" : {
+			"mesh": "assets/mesh/SnowTerrain/SnowTerrain.obj",
+			"textures": {
+				"snowterrain": "assets/mesh/SnowTerrain/snowterrain.jpg"
+			},
+			"shader": "main_basic_no_texture",
+			"positions": [
+				{"x": 0.0, "y": -0.25, "z": 0.0}
+			],
+			"scales": [
+				{"x": 1.0, "y": 1.0, "z": 1.0}
+			],
+			"rotations": [
+				{"x": 0.0, "y": 0.0, "z": 0.0}
+			],
+			"inverseTextureY": true,
+			"count": 1,
+			"padding": {
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"form": "positioned",
+			"hasBbox": false,
+			"hasAnimation": false,
+			"isPointLight": false,
+			"hasShadow": false	
 		}
 	}
 }

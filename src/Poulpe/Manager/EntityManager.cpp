@@ -94,7 +94,8 @@ namespace Poulpe
                 scale,
                 rotation,
                 static_cast<bool>(data["inverseTextureY"]),
-                hasBbox, hasAnimation, isPointLight, animationScripts
+                hasBbox, hasAnimation, isPointLight, animationScripts,
+                static_cast<bool>(data["hasShadow"])
               );
             }
           }
@@ -160,7 +161,8 @@ namespace Poulpe
               scale,
               rotation,
               static_cast<bool>(data["inverseTextureY"]),
-              hasBbox, hasAnimation, isPointLight, animationScripts
+              hasBbox, hasAnimation, isPointLight, animationScripts,
+              static_cast<bool>(data["hasShadow"])
             );
 
             TinyObjLoader::m_TinyObjMaterials.clear();
@@ -182,6 +184,7 @@ namespace Poulpe
     }
   }
 
+  //@todo: ugly replace all parameters by a property object.
   void EntityManager::initMeshes(std::string const  & name,
     std::string const & path,
     [[maybe_unused]] std::vector<std::string> const & textureNames,
@@ -193,7 +196,8 @@ namespace Poulpe
     bool hasBbox,
     bool hasAnimation,
     bool isPointLight,
-    std::vector<std::string> animationScripts)
+    std::vector<std::string> animationScripts,
+    bool hasShadow)
   {
     std::vector<Mesh*> meshes{};
 
@@ -212,6 +216,7 @@ namespace Poulpe
     Entity* rootMeshEntity = new Entity();
     rootMeshEntity->setName(name);
     rootMeshEntity->setVisible(false);
+
     EntityNode* rootMeshEntityNode = new EntityNode(rootMeshEntity);
     std::vector<Entity*> tmpToSubmit{};
 
@@ -223,62 +228,66 @@ namespace Poulpe
       mesh->setHasAnimation(hasAnimation);
       mesh->setHasBbox(hasBbox);
       mesh->setIsPointLight(isPointLight);
+      mesh->setHasShadow(hasShadow);
       //std::vector<Mesh::BBox> bboxs{};
-            
+
       unsigned int const tex1ID = listData[i].materialsID.at(0);
 
-      std::string nameTexture {"_plp_empty"};
-      std::string name2Texture {"_plp_empty"};
-      std::string name3Texture {"_plp_empty"};
-      std::string nameTextureSpecularMap {"_plp_empty"};
-      std::string bumpTexname {"_plp_empty"};
-      std::string alphaTexname {"_plp_empty"};
+      std::string nameTexture{ "_plp_empty" };
+      std::string name2Texture{ "_plp_empty" };
+      std::string name3Texture{ "_plp_empty" };
+      std::string nameTextureSpecularMap{ "_plp_empty" };
+      std::string bumpTexname{ "_plp_empty" };
+      std::string alphaTexname{ "_plp_empty" };
 
       if (!TinyObjLoader::m_TinyObjMaterials.empty()) {
-                
-          //@todo material per textures...
-          mesh->setMaterial(TinyObjLoader::m_TinyObjMaterials.at(listData[i].materialsID.at(0)));
-            
-          //@todo temp
-          //@todo separate into 2 storage buffer of 3 texSample
 
-          if (!TinyObjLoader::m_TinyObjMaterials.at(tex1ID).ambientTexname.empty()) {
-              nameTexture = TinyObjLoader::m_TinyObjMaterials.at(tex1ID).ambientTexname;
-          } else if (!TinyObjLoader::m_TinyObjMaterials.at(tex1ID).diffuseTexname.empty()) {
-              nameTexture = TinyObjLoader::m_TinyObjMaterials.at(tex1ID).diffuseTexname;
+        //@todo material per textures...
+        mesh->setMaterial(TinyObjLoader::m_TinyObjMaterials.at(listData[i].materialsID.at(0)));
+
+        //@todo temp
+        //@todo separate into 2 storage buffer of 3 texSample
+
+        if (!TinyObjLoader::m_TinyObjMaterials.at(tex1ID).ambientTexname.empty()) {
+          nameTexture = TinyObjLoader::m_TinyObjMaterials.at(tex1ID).ambientTexname;
+        }
+        else if (!TinyObjLoader::m_TinyObjMaterials.at(tex1ID).diffuseTexname.empty()) {
+          nameTexture = TinyObjLoader::m_TinyObjMaterials.at(tex1ID).diffuseTexname;
+        }
+
+        //@todo to refacto & clean
+        if (1 < listData[i].materialsID.size()) {
+          unsigned int const tex2ID = listData[i].materialsID.at(1);
+
+          if (!TinyObjLoader::m_TinyObjMaterials.at(tex2ID).ambientTexname.empty()) {
+            name2Texture = TinyObjLoader::m_TinyObjMaterials.at(tex2ID).ambientTexname;
           }
-
-          //@todo to refacto & clean
-          if (1 < listData[i].materialsID.size()) {
-              unsigned int const tex2ID = listData[i].materialsID.at(1);
-
-              if (!TinyObjLoader::m_TinyObjMaterials.at(tex2ID).ambientTexname.empty()) {
-                  name2Texture = TinyObjLoader::m_TinyObjMaterials.at(tex2ID).ambientTexname;
-              } else if (!TinyObjLoader::m_TinyObjMaterials.at(tex2ID).diffuseTexname.empty()) {
-                  name2Texture = TinyObjLoader::m_TinyObjMaterials.at(tex2ID).diffuseTexname;
-              }
+          else if (!TinyObjLoader::m_TinyObjMaterials.at(tex2ID).diffuseTexname.empty()) {
+            name2Texture = TinyObjLoader::m_TinyObjMaterials.at(tex2ID).diffuseTexname;
           }
-          if (2 < listData[i].materialsID.size()) {
-            unsigned int const tex3ID = listData[i].materialsID.at(2);
+        }
+        if (2 < listData[i].materialsID.size()) {
+          unsigned int const tex3ID = listData[i].materialsID.at(2);
 
-            if (!TinyObjLoader::m_TinyObjMaterials.at(tex3ID).ambientTexname.empty()) {
-              name3Texture = TinyObjLoader::m_TinyObjMaterials.at(tex3ID).ambientTexname;
-            } else if (!TinyObjLoader::m_TinyObjMaterials.at(tex3ID).diffuseTexname.empty()) {
-              name3Texture = TinyObjLoader::m_TinyObjMaterials.at(tex3ID).diffuseTexname;
-            }
+          if (!TinyObjLoader::m_TinyObjMaterials.at(tex3ID).ambientTexname.empty()) {
+            name3Texture = TinyObjLoader::m_TinyObjMaterials.at(tex3ID).ambientTexname;
           }
+          else if (!TinyObjLoader::m_TinyObjMaterials.at(tex3ID).diffuseTexname.empty()) {
+            name3Texture = TinyObjLoader::m_TinyObjMaterials.at(tex3ID).diffuseTexname;
+          }
+        }
 
-          if (!TinyObjLoader::m_TinyObjMaterials.at(listData[i].materialId).specularTexname.empty()) {
-              nameTextureSpecularMap = TinyObjLoader::m_TinyObjMaterials.at(listData[i].materialId).specularTexname;
-          }
+        if (!TinyObjLoader::m_TinyObjMaterials.at(listData[i].materialId).specularTexname.empty()) {
+          nameTextureSpecularMap = TinyObjLoader::m_TinyObjMaterials.at(listData[i].materialId).specularTexname;
+        }
 
-          if (!TinyObjLoader::m_TinyObjMaterials.at(listData[i].materialId).bumpTexname.empty()) {
-              bumpTexname = TinyObjLoader::m_TinyObjMaterials.at(listData[i].materialId).bumpTexname;
-          }
+        if (!TinyObjLoader::m_TinyObjMaterials.at(listData[i].materialId).bumpTexname.empty()) {
+          bumpTexname = TinyObjLoader::m_TinyObjMaterials.at(listData[i].materialId).bumpTexname;
+        }
 
-          if (!TinyObjLoader::m_TinyObjMaterials.at(listData[i].materialId).alphaTexname.empty()) {
-            alphaTexname = TinyObjLoader::m_TinyObjMaterials.at(listData[i].materialId).alphaTexname;
-          }
+        if (!TinyObjLoader::m_TinyObjMaterials.at(listData[i].materialId).alphaTexname.empty()) {
+          alphaTexname = TinyObjLoader::m_TinyObjMaterials.at(listData[i].materialId).alphaTexname;
+        }
       }
 
       Data data{};
@@ -313,15 +322,19 @@ namespace Poulpe
       //ubo.view = glm::mat4(1.0f);
       data.m_Ubos.emplace_back(ubo);
 
-      float xMax = data.m_Vertices.at(0).pos.x;
-      float yMax = data.m_Vertices.at(0).pos.y;
-      float zMax = data.m_Vertices.at(0).pos.z;
+      glm::vec3 center = glm::vec3(0.0);
+      glm::vec3 size = glm::vec3(0.0);
 
-      float xMin = xMax;
-      float yMin = yMax;
-      float zMin = zMax;
+      if (data.m_Vertices.size() > 0) {
+        float xMax = data.m_Vertices.at(0).pos.x;
+        float yMax = data.m_Vertices.at(0).pos.y;
+        float zMax = data.m_Vertices.at(0).pos.z;
 
-      for (size_t j = 0; j < data.m_Vertices.size(); j++) {
+        float xMin = xMax;
+        float yMin = yMax;
+        float zMin = zMax;
+
+        for (size_t j = 0; j < data.m_Vertices.size(); j++) {
 
           glm::vec3 vertex = glm::vec4(data.m_Vertices.at(j).pos, 1.0f);
 
@@ -335,10 +348,11 @@ namespace Poulpe
           if (y > yMax) yMax = y;
           if (z > zMax) zMax = z;
           if (z < zMin) zMin = z;
-      }
+        }
 
-      glm::vec3 center = glm::vec3((xMin + xMax) / 2, (yMin + yMax) / 2, (zMin + zMax) / 2);
-      glm::vec3 size = glm::vec3((xMax - xMin) / 2, (yMax - yMin) / 2, (zMax - zMin) / 2);
+        center = glm::vec3((xMin + xMax) / 2, (yMin + yMax) / 2, (zMin + zMax) / 2);
+        size = glm::vec3((xMax - xMin) / 2, (yMax - yMin) / 2, (zMax - zMin) / 2);
+      }
 
       /*BBox* box = new BBox();
       box->position = data.m_Ubos.at(0).model;

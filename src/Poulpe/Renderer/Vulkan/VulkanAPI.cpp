@@ -402,6 +402,7 @@ namespace Poulpe {
         deviceFeatures.sampleRateShading = VK_TRUE;
         deviceFeatures.imageCubeArray = VK_TRUE;
         deviceFeatures.geometryShader = VK_TRUE;
+        deviceFeatures.depthClamp = VK_TRUE;
 
         VkPhysicalDeviceDescriptorIndexingFeatures descriptorIndexing{};
         descriptorIndexing.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES;
@@ -421,7 +422,7 @@ namespace Poulpe {
         shader_draw_parameters_features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_DRAW_PARAMETERS_FEATURES;
         shader_draw_parameters_features.pNext = &vkFeatures13;
         shader_draw_parameters_features.shaderDrawParameters = VK_TRUE;
-        
+
         //VkPhysicalDeviceExtendedDynamicState3FeaturesEXT extDynamicState{};
         //extDynamicState.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_EXTENDED_DYNAMIC_STATE_3_FEATURES_EXT;
         //extDynamicState.pNext = &shader_draw_parameters_features;
@@ -749,7 +750,7 @@ namespace Poulpe {
 
         VkPipelineRasterizationStateCreateInfo rasterizer{};
         rasterizer.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
-        rasterizer.depthClampEnable = VK_FALSE;
+        rasterizer.depthClampEnable = VK_TRUE;
         rasterizer.rasterizerDiscardEnable = VK_FALSE;
         rasterizer.polygonMode = static_cast<VkPolygonMode>(polygoneMode);
         rasterizer.lineWidth = 1.0f;
@@ -775,7 +776,7 @@ namespace Poulpe {
         depthStencil.depthTestEnable = (depthTestEnable == true) ? VK_TRUE : VK_FALSE;
         depthStencil.depthWriteEnable = (depthWriteEnable == true) ? VK_TRUE : VK_FALSE;
         depthStencil.depthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL;
-        depthStencil.depthBoundsTestEnable = VK_FALSE;
+        depthStencil.depthBoundsTestEnable = VK_TRUE;
         depthStencil.minDepthBounds = 0.0f;
         depthStencil.maxDepthBounds = 1.0f;
         depthStencil.stencilTestEnable = (stencilTestEnable == true) ? VK_TRUE : VK_FALSE;
@@ -1570,16 +1571,18 @@ namespace Poulpe {
     void VulkanAPI::draw(VkCommandBuffer commandBuffer, VkDescriptorSet descriptorSet,
         VulkanPipeline & pipeline, Data * data, bool drawIndexed, uint32_t index)
     {
-        vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline.pipelineLayout,
-            0, 1, & descriptorSet, 0, nullptr);
+        /*vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline.pipelineLayout,
+            0, 1, & descriptorSet, 0, nullptr);*/
 
-        vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline.pipeline);
+        //vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline.pipeline);
 
         VkBuffer vertexBuffers[] = { data->m_VertexBuffer.buffer };
         VkDeviceSize offsets[] = { 0 };
 
-        vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
-
+        if (data->m_VertexBuffer.size > 0) {
+          vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
+        }
+        
         if (drawIndexed) {
             vkCmdBindIndexBuffer(commandBuffer, data->m_IndicesBuffer.buffer, 0, VK_INDEX_TYPE_UINT32);
             vkCmdDrawIndexed(commandBuffer, data->m_Indices.size(), data->m_Ubos.size(), 0, 0, 0);
@@ -2031,8 +2034,8 @@ namespace Poulpe {
         VkImageCreateInfo imageInfo{};
         imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
         imageInfo.imageType = VK_IMAGE_TYPE_2D;
-        imageInfo.extent.width = getSwapChainExtent().width;
-        imageInfo.extent.height = getSwapChainExtent().height;
+        imageInfo.extent.width = 2048;
+        imageInfo.extent.height = 2048;
         imageInfo.extent.depth = 1;
         imageInfo.mipLevels = 1;
         imageInfo.arrayLayers = 1;

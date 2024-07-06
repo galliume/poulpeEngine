@@ -218,66 +218,11 @@ namespace Poulpe
         m_Deltatime = deltaTime;
     }
 
-    void Renderer::drawShadowMap(std::vector<Entity*> entities,  Light light)
+    void Renderer::drawShadowMap()
     {
       std::string const pipelineName{ "shadowMap" };
       auto pipeline = getPipeline(pipelineName);
-
-      if (!m_DepthMapDescSetUpdated) {
-          for (auto& entity : entities) {
-
-          if (!entity) continue;
-          
-          auto meshComponent = m_ComponentManager->getComponent<MeshComponent>(entity->getID());
-          if (!meshComponent) continue;
-
-          Mesh* mesh = meshComponent->hasImpl<Mesh>();
-
-          //@todo move elsewhere
-          std::array<VkWriteDescriptorSet, 2> descriptorWrites{};
-          std::vector<VkDescriptorBufferInfo> bufferInfos;
-          std::vector<VkDescriptorBufferInfo> storageBufferInfos;
-
-          std::for_each(std::begin(*mesh->getUniformBuffers()), std::end(*mesh->getUniformBuffers()),
-            [&bufferInfos](const Buffer& uniformBuffer)
-            {
-              VkDescriptorBufferInfo bufferInfo{};
-              bufferInfo.buffer = uniformBuffer.buffer;
-              bufferInfo.offset = 0;
-              bufferInfo.range = VK_WHOLE_SIZE;
-              bufferInfos.emplace_back(bufferInfo);
-            });
-
-          std::for_each(std::begin(*mesh->getStorageBuffers()), std::end(*mesh->getStorageBuffers()),
-            [&storageBufferInfos](const Buffer& storageBuffers)
-            {
-              VkDescriptorBufferInfo bufferInfo{};
-              bufferInfo.buffer = storageBuffers.buffer;
-              bufferInfo.offset = 0;
-              bufferInfo.range = VK_WHOLE_SIZE;
-              storageBufferInfos.emplace_back(bufferInfo);
-            });
-
-          descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-          descriptorWrites[0].dstSet = pipeline->descSet;
-          descriptorWrites[0].dstBinding = 0;
-          descriptorWrites[0].dstArrayElement = 0;
-          descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-          descriptorWrites[0].descriptorCount = 1;
-          descriptorWrites[0].pBufferInfo = bufferInfos.data();
-
-          descriptorWrites[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-          descriptorWrites[1].dstSet = pipeline->descSet;
-          descriptorWrites[1].dstBinding = 1;
-          descriptorWrites[1].dstArrayElement = 0;
-          descriptorWrites[1].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-          descriptorWrites[1].descriptorCount = static_cast<uint32_t>(storageBufferInfos.size());
-          descriptorWrites[1].pBufferInfo = storageBufferInfos.data();
-
-          vkUpdateDescriptorSets(m_API->getDevice(), static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
-        }
-      }
-
+  
       //m_API->beginCommandBuffer(m_CommandBuffersEntities[m_CurrentFrame]);
       m_API->startMarker(m_CommandBuffersEntities[m_CurrentFrame], "shadow_map_" + pipelineName, 0.1f, 0.2f, 0.3f);
 
@@ -301,10 +246,13 @@ namespace Poulpe
       depthAttachment.clearValue.depthStencil = depthStencil;
       depthAttachment.clearValue.color = colorClear;
 
+      uint32_t const width{ 2048 };// m_API->getSwapChainExtent().width
+      uint32_t const height{ 2048 };//  m_API->getSwapChainExtent().height
+
       VkRenderingInfo  renderingInfo{ };
       renderingInfo.sType = VK_STRUCTURE_TYPE_RENDERING_INFO;
-      renderingInfo.renderArea.extent.width = m_API->getSwapChainExtent().width;
-      renderingInfo.renderArea.extent.height = m_API->getSwapChainExtent().height;
+      renderingInfo.renderArea.extent.width = width;
+      renderingInfo.renderArea.extent.height = height;
       renderingInfo.layerCount = 1;
       renderingInfo.pDepthAttachment = & depthAttachment;
       renderingInfo.colorAttachmentCount = 0;
@@ -312,56 +260,74 @@ namespace Poulpe
 
       vkCmdBeginRenderingKHR(m_CommandBuffersEntities[m_CurrentFrame], & renderingInfo);
 
-      m_API->setViewPort(m_CommandBuffersEntities[m_CurrentFrame]);
-      m_API->setScissor(m_CommandBuffersEntities[m_CurrentFrame]);
+      VkViewport viewport;
+      viewport.x = 0;
+      viewport.y = 0;
+      viewport.width = width;
+      viewport.height = height;
+      viewport.minDepth = 0.0f;
+      viewport.maxDepth = 1.0f;
+
+      vkCmdSetViewport(m_CommandBuffersEntities[m_CurrentFrame], 0, 1, &viewport);
+      VkRect2D scissor = { { 0, 0 }, { width, height } };
+
+      vkCmdSetScissor(m_CommandBuffersEntities[m_CurrentFrame], 0, 1, & scissor);
         
-      float depthBiasConstant = 1.25f;
-      float depthBiasSlope = 1.75f;
+      float depthBiasConstant = 0.0f;
+      float depthBiasSlope = 0.0f;
 
-      vkCmdSetDepthBias(m_CommandBuffersEntities[m_CurrentFrame], depthBiasConstant, 0.0f, depthBiasSlope);
+      //vkCmdSetDepthClampEnableEXT(m_CommandBuffersEntities[m_CurrentFrame], VK_TRUE);
+      //vkCmdSetDepthBias(m_CommandBuffersEntities[m_CurrentFrame], depthBiasConstant, 0.0f, depthBiasSlope);
 
-      for (auto& entity : entities) {
-          if (!entity) continue;
+      for (auto& entity : m_Entities) {
+        if (!entity) continue;
           
-          auto meshComponent = m_ComponentManager->getComponent<MeshComponent>(entity->getID());
-          if (!meshComponent) continue;
+        auto meshComponent = m_ComponentManager->getComponent<MeshComponent>(entity->getID());
+        if (!meshComponent) continue;
 
-          Mesh* mesh = meshComponent->hasImpl<Mesh>();
+        Mesh* mesh = meshComponent->hasImpl<Mesh>();
+
+        if (!mesh->hasShadow()) continue;
+
+        uint32_t min{ 0 };
+        uint32_t max{ 0 };
+
+        for (size_t i = 0; i < mesh->getUniformBuffers()->size(); ++i) {
+          max = mesh->getData()->m_UbosOffset.at(i);
+          auto ubos = std::vector<UniformBufferObject>(mesh->getData()->m_Ubos.begin() + min, mesh->getData()->m_Ubos.begin() + max);
+          m_API->updateUniformBuffer(mesh->getUniformBuffers()->at(i), &ubos);
+
+          min = max;
+        }
+
+        constants pushConstants{};
+        pushConstants.textureIDBB = glm::vec3(mesh->getData()->m_TextureIndex, 0.0, 0.0);
+        pushConstants.view = getCamera()->lookAt();
+        pushConstants.viewPos = getCamera()->getPos();
+
+        vkCmdPushConstants(m_CommandBuffersEntities[m_CurrentFrame], pipeline->pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(constants),
+            & pushConstants);
+
+        try {
+          vkCmdBindDescriptorSets(
+            m_CommandBuffersEntities[m_CurrentFrame],
+            VK_PIPELINE_BIND_POINT_GRAPHICS,
+            pipeline->pipelineLayout,
+            0, 1, mesh->getShadowMapDescSet(), 0, nullptr);
 
           m_API->bindPipeline(m_CommandBuffersEntities[m_CurrentFrame], pipeline->pipeline);
-                
-          for (size_t i = 0; i < mesh->getData()->m_Ubos.size(); ++i) {
-            mesh->getData()->m_Ubos[i].projection = light.lightSpaceMatrix;
-          }
 
-          unsigned int min{ 0 };
-          unsigned int max{ 0 };
-          //@todo wtf to refactor
-          for (size_t i = 0; i < mesh->getUniformBuffers()->size(); ++i) {
-              max = mesh->getData()->m_UbosOffset.at(i);
-              auto ubos = std::vector<UniformBufferObject>(mesh->getData()->m_Ubos.begin() + min, mesh->getData()->m_Ubos.begin() + max);
-              m_API->updateUniformBuffer(mesh->getUniformBuffers()->at(i), &ubos);
-
-              min = max;
-          }
-
-          constants pushConstants{};
-          pushConstants.textureIDBB = glm::vec3(mesh->getData()->m_TextureIndex, 0.0, 0.0);
-        
-          pushConstants.view = light.view;
-          pushConstants.viewPos = glm::vec4(light.position, 1.0);
-
-          vkCmdPushConstants(m_CommandBuffersEntities[m_CurrentFrame], pipeline->pipelineLayout,
-              VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(constants), & pushConstants);
-
-          try {
-              if (m_RenderingStopped) return;
-              m_API->draw(m_CommandBuffersEntities[m_CurrentFrame], pipeline->descSet,
-              *pipeline, mesh->getData(), mesh->getData()->m_Ubos.size(), mesh->isIndexed());
-          }
-          catch (std::exception& e) {
-              PLP_DEBUG("Draw error: {}", e.what());
-          }
+          m_API->draw(
+            m_CommandBuffersEntities[m_CurrentFrame],
+            *mesh->getShadowMapDescSet(),
+            *pipeline,
+            mesh->getData(),
+            mesh->getData()->m_Ubos.size(),
+            mesh->isIndexed());
+        }
+        catch (std::exception& e) {
+            PLP_DEBUG("Draw error: {}", e.what());
+        }
       }
 
       m_API->endMarker(m_CommandBuffersEntities[m_CurrentFrame]);
@@ -371,19 +337,6 @@ namespace Poulpe
         VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_IMAGE_ASPECT_DEPTH_BIT);
 
       m_DepthMapDescSetUpdated = true;
-      //m_API->endCommandBuffer(m_CommandBuffersEntities[m_CurrentFrame]);
-
-      //CommandToSubmit cmd{
-      //    m_CommandBuffersShadowMap[m_CurrentFrame],
-      //    VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-      //    m_ShadowMapSemaRenderFinished[m_CurrentFrame],
-      //    & m_CmdShadowMapStatus
-      //};
-
-      //{
-      //  std::lock_guard<std::mutex> guard(m_MutexQueueSubmit);
-      //  m_CmdsToSubmit.emplace_back(cmd);
-      //}
     }
 
     void Renderer::drawEntities()
@@ -393,9 +346,9 @@ namespace Poulpe
 
         if (0 < m_Entities.size()) {
 
-          m_API->beginCommandBuffer(m_CommandBuffersEntities[m_CurrentFrame], VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT);
+          m_API->beginCommandBuffer(m_CommandBuffersEntities[m_CurrentFrame]);
 
-          drawShadowMap(m_Entities, m_LightManager->getAmbientLight());
+          drawShadowMap();
 
           m_API->transitionImageLayout(m_CommandBuffersEntities[m_CurrentFrame], m_SwapChainImages[m_CurrentFrame],
             VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_ASPECT_COLOR_BIT);
@@ -407,7 +360,7 @@ namespace Poulpe
             m_CommandBuffersEntities[m_CurrentFrame],
             m_SwapChainImageViews[m_CurrentFrame],
             m_SwapChainDepthImageViews[m_CurrentFrame],
-            VK_ATTACHMENT_LOAD_OP_LOAD,
+            VK_ATTACHMENT_LOAD_OP_DONT_CARE,
             VK_ATTACHMENT_STORE_OP_STORE);
 
           m_API->setViewPort(m_CommandBuffersEntities[m_CurrentFrame]);
@@ -429,7 +382,6 @@ namespace Poulpe
             // }
             //m_HasClicked = false;
 
-            m_API->bindPipeline(m_CommandBuffersEntities[m_CurrentFrame], pipeline->pipeline);
 
             for (size_t i = 0; i < mesh->getData()->m_Ubos.size(); ++i) {
               mesh->getData()->m_Ubos[i].projection = getPerspective();
@@ -444,13 +396,20 @@ namespace Poulpe
               m_API->updateUniformBuffer(mesh->getUniformBuffers()->at(i), &ubos);
 
               min = max;
-
             }
+
             if (mesh->hasPushConstants()) {
               mesh->applyPushConstants(m_CommandBuffersEntities[m_CurrentFrame], pipeline->pipelineLayout, this, mesh);
             }
 
             try {
+              
+              vkCmdBindDescriptorSets(m_CommandBuffersEntities[m_CurrentFrame],
+                VK_PIPELINE_BIND_POINT_GRAPHICS,
+                pipeline->pipelineLayout,
+                0, 1, mesh->getDescSet(), 0, nullptr);
+              m_API->bindPipeline(m_CommandBuffersEntities[m_CurrentFrame], pipeline->pipeline);
+
               if (m_RenderingStopped) return;
               m_API->draw(m_CommandBuffersEntities[m_CurrentFrame], *mesh->getDescSet(),
                 *pipeline, mesh->getData(), mesh->isIndexed());
@@ -483,13 +442,19 @@ namespace Poulpe
             Data* skyboxData = mesh->getData();
             auto pipeline = getPipeline(mesh->getShaderName());
 
-            m_API->bindPipeline(m_CommandBuffersSkybox[m_CurrentFrame], pipeline->pipeline);
-
             if (mesh->hasPushConstants()) {
               mesh->applyPushConstants(m_CommandBuffersSkybox[m_CurrentFrame], pipeline->pipelineLayout, this, mesh);
             }
 
             if (m_RenderingStopped) return;
+            
+            vkCmdBindDescriptorSets(m_CommandBuffersSkybox[m_CurrentFrame],
+                VK_PIPELINE_BIND_POINT_GRAPHICS,
+                pipeline->pipelineLayout,
+                0, 1, mesh->getDescSet(), 0, nullptr);
+            
+            m_API->bindPipeline(m_CommandBuffersSkybox[m_CurrentFrame], pipeline->pipeline);
+            
             m_API->draw(m_CommandBuffersSkybox[m_CurrentFrame], *mesh->getDescSet(), *pipeline,
                 skyboxData, false);
 

@@ -27,7 +27,8 @@
 			"hasAnimation": false,
 			"isPointLight": false,
 			"animationScripts": {
-			}
+			},
+			"hasShadow": true
 		}
 	}
 }

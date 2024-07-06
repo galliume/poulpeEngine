@@ -68,31 +68,31 @@ void main()
     vec3 viewDir = normalize(fs_in.fViewPos.xyz - fs_in.fPos.xyz);
     vec3 lights = CalcDirLight(ambientLight, normal, viewDir);
     
-    for(int i = 0; i < NR_POINT_LIGHTS; i++) {
-        lights += CalcPointLight(pointLights[i], normal, fs_in.fPos.xyz, viewDir);
-    }
+    //for(int i = 0; i < NR_POINT_LIGHTS; i++) {
+    //    lights += CalcPointLight(pointLights[i], normal, fs_in.fPos.xyz, viewDir);
+    //}
 
     //
-	lights += CalcSpotLight(spotLight, normal, fs_in.fPos.xyz, viewDir);
+	//lights += CalcSpotLight(spotLight, normal, fs_in.fPos.xyz, viewDir);
 
     fColor = vec4(lights, 0.9f);
 }
 
 vec3 CalcDirLight(Light dirLight, vec3 normal, vec3 viewDir)
 {
-    vec3 lightDir = normalize(-dirLight.position);
-    vec3 ambient = dirLight.ads.x * dirLight.color * color;
+    vec3 lightDir = normalize(-dirLight.direction);
+    vec3 ambient = dirLight.color * material.ambient * dirLight.ads.x;
 
     float diff = max(dot(normal, lightDir), 0.0);
-    vec3 diffuse = diff * dirLight.ads.y * color;
+    vec3 diffuse =  dirLight.color * material.diffuse * diff * dirLight.ads.y;
 
     vec3 h = normalize(lightDir + viewDir);
-    vec3 specular = vec3(1.0);
+    vec3 specular = vec3(0.0);
 
-    float spec = pow(clamp(dot(normal, h), 0.0, 1.0), 1.0) * float(dot(normal, h) > 0.0);
-    specular *= dirLight.ads.z * spec;
+    float spec = pow(clamp(dot(normal, h), 0.0, 1.0), material.shiIorDiss.x) * float(dot(normal, h) > 0.0);
+    specular =  dirLight.color * (dirLight.ads.z * spec * material.specular);
 
-    return (ambient + diffuse + specular);
+    return vec3(0, 1, 0) ;
 }
 
 vec3 CalcPointLight(Light pointLight, vec3 normal, vec3 fragPos, vec3 viewDir)

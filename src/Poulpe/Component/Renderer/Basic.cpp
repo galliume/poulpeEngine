@@ -100,6 +100,53 @@ namespace Poulpe
       }
 
       mesh->setDescSet(descSet);
+
+      std::array<VkWriteDescriptorSet, 2> descriptorWrites{};
+      std::vector<VkDescriptorBufferInfo> bufferInfos;
+      std::vector<VkDescriptorBufferInfo> storageBufferInfos;
+
+      std::for_each(std::begin(*mesh->getUniformBuffers()), std::end(*mesh->getUniformBuffers()),
+        [&bufferInfos](const Buffer& uniformBuffer)
+        {
+          VkDescriptorBufferInfo bufferInfo{};
+          bufferInfo.buffer = uniformBuffer.buffer;
+          bufferInfo.offset = 0;
+          bufferInfo.range = VK_WHOLE_SIZE;
+          bufferInfos.emplace_back(bufferInfo);
+        });
+
+     auto shadowMapPipeline = m_Renderer->getPipeline("shadowMap");
+     VkDescriptorSet shadowMapDescSet = m_Renderer->createDescriptorSets(shadowMapPipeline->descPool, { shadowMapPipeline->descSetLayout }, 1);
+
+      std::for_each(std::begin(*mesh->getStorageBuffers()), std::end(*mesh->getStorageBuffers()),
+        [&storageBufferInfos](const Buffer& storageBuffers)
+        {
+          VkDescriptorBufferInfo bufferInfo{};
+          bufferInfo.buffer = storageBuffers.buffer;
+          bufferInfo.offset = 0;
+          bufferInfo.range = VK_WHOLE_SIZE;
+          storageBufferInfos.emplace_back(bufferInfo);
+        });
+
+      descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+      descriptorWrites[0].dstSet = shadowMapDescSet;
+      descriptorWrites[0].dstBinding = 0;
+      descriptorWrites[0].dstArrayElement = 0;
+      descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+      descriptorWrites[0].descriptorCount = 1;
+      descriptorWrites[0].pBufferInfo = bufferInfos.data();
+
+      descriptorWrites[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+      descriptorWrites[1].dstSet = shadowMapDescSet;
+      descriptorWrites[1].dstBinding = 1;
+      descriptorWrites[1].dstArrayElement = 0;
+      descriptorWrites[1].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+      descriptorWrites[1].descriptorCount = static_cast<uint32_t>(storageBufferInfos.size());
+      descriptorWrites[1].pBufferInfo = storageBufferInfos.data();
+
+      vkUpdateDescriptorSets(m_Renderer->getDevice(), static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
+
+      mesh->setShadowMapDescSet(shadowMapDescSet);
     }
 
     void Basic::setPushConstants(IVisitable* const mesh)

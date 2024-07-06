@@ -39,7 +39,8 @@ namespace Poulpe
       bool hasBbox,
       bool hasAnimation,
       bool isPointLight,
-      std::vector<std::string> animationScripts);
+      std::vector<std::string> animationScripts,
+      bool hasShadow);
     void initWorldGraph();
 
   private:

@@ -4,26 +4,26 @@ namespace Poulpe
 {
     LightManager::LightManager()
     {
-        m_AmbientLight.color = glm::vec3(1.0f);
-        m_AmbientLight.position = glm::vec3(-1.0f, 10.f, -1.f);
-        m_AmbientLight.direction = glm::vec3(-0.1f, -1.0, 0.0);
+        m_AmbientLight.color = glm::vec3(1.f);
+        m_AmbientLight.position = glm::vec3(-2.0f, 4.0f, -1.0f);
+        m_AmbientLight.direction = glm::vec3(0.1f, -1.0, 0.0);
         //ambient diffuse specular
         m_AmbientLight.ads = glm::vec3(0.5f, 0.7f, 1.0f);
         m_AmbientLight.clq = glm::vec3(0.0f);
 
         m_AmbientLight.view = glm::lookAt(
-            m_AmbientLight.position,
-            m_AmbientLight.position + m_AmbientLight.direction,
-            glm::vec3(0.0f, 1.0f, 0.0f));
+          glm::vec3(-2.0f, 4.0f, -1.0f),
+          glm::vec3( 0.0f, 0.0f,  0.0f),
+          glm::vec3( 0.0f, 1.0f,  0.0f));
 
-        float near_plane = 1.f, far_plane = 100.f;
+        float near_plane = 1.f, far_plane = 7.5f;
         
-        //auto projection = glm::perspective(glm::radians(45.0f),
+        //auto projection = glm::perspective(glm::radians(45.f),
         //    static_cast<float>(2560) / static_cast<float>(1440),
         //    near_plane, far_plane);
 
         auto projection = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, near_plane, far_plane);
-        //projection[1][1] *= -1;
+        projection[1][1] *= -1;
 
         m_AmbientLight.projection = projection;
         m_AmbientLight.lightSpaceMatrix = m_AmbientLight.projection * m_AmbientLight.view;

@@ -1,7 +1,7 @@
 {
 	"entities": {
 		"San_Miguel" : {
-			"mesh": "assets/mesh/San_Miguel/san-miguel-low-poly.obj",
+			"mesh": "assets/mesh/San_Miguel/san-miguel.obj",
 			"textures": {
 				"textures_0001_carros": "assets/mesh/San_Miguel/textures/0001_carros.png",
 				"textures_027_Cola_Caballo_06-30-1997": "assets/mesh/San_Miguel/textures/027_Cola_Caballo_06-30-1997.png",
@@ -337,7 +337,7 @@
 			"rotations": [
 				{"x": 0.0, "y": 0.0, "z": 0.0}
 			],
-			"inverseTextureY": false,
+			"inverseTextureY": true,
 			"count": 1,
 			"padding": {
 				"x": 0,
@@ -347,7 +347,10 @@
 			"form": "positioned",
 			"hasBbox": false,
 			"hasAnimation": false,
-			"isPointLight": false
+			"isPointLight": false,
+			"hasShadow": false,
+			"animationScripts": {
+			}	
 		}	
 	}
 }

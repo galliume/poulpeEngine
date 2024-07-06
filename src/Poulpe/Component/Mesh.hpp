@@ -48,6 +48,7 @@ namespace Poulpe
 
         void setData(Data data) override { m_Data = std::move(data); }
         void setDescSet(VkDescriptorSet descSet) override { m_DescSet = descSet; }
+        void setShadowMapDescSet(VkDescriptorSet descSet) override { m_ShadowMapDescSet = descSet; }
         void setHasBufferStorage(bool has = true) override { m_HasStorageBuffer = has; }
         void setHasPushConstants(bool has = true) override { m_HasPushContants = has; }
         void setIsDirty(bool dirty = true) override { m_IsDirty.store(dirty); }
@@ -60,17 +61,20 @@ namespace Poulpe
         void applyPushConstants(TArgs&&... args) { m_ApplyPushConstants(std::forward<TArgs>(args)...); }
 
         VkDescriptorSet* getDescSet() { return & m_DescSet; }
+        VkDescriptorSet* getShadowMapDescSet() { return & m_ShadowMapDescSet; }
 
         bool hasAnimation() const { return m_HasAnimation; }
         bool hasBbox() const { return m_HasBbox; }
         bool hasBufferStorage() const { return m_HasStorageBuffer; }
         bool hasPushConstants() const { return m_HasPushContants; }
-        
+        bool hasShadow() { return m_HasShadow; }
+
         void setHasAnimation(bool has = true) { m_HasAnimation = has; }
         void setHasBbox(bool hasBbox = false) { m_HasBbox = hasBbox; }
         void setIsIndexed(bool indexed) { m_IsIndexed = indexed; }
         void setIsPointLight(bool is = true) { m_IsPointLight = is; }
         void setMaterial(material_t material) { m_Material = material; }
+        void setHasShadow(bool hasShadow) { m_HasShadow = hasShadow; }
         
         bool isIndexed() const { return m_IsIndexed; }
         bool isPointLight() const { return m_IsPointLight; }
@@ -92,12 +96,14 @@ namespace Poulpe
         bool m_HasStorageBuffer{ false };
         bool m_IsIndexed{ true };
         bool m_IsPointLight{ false };
-       
+        bool m_HasShadow{ false };
+
         std::vector<Buffer> m_StorageBuffers;
         std::vector<Buffer> m_UniformBuffers;
         
         Data m_Data;
         VkDescriptorSet m_DescSet;
+        VkDescriptorSet m_ShadowMapDescSet;
         material_t m_Material;
 
         std::function<void(VkCommandBuffer& commandBuffer,
