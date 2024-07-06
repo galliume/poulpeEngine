@@ -45,13 +45,13 @@ namespace Poulpe
 
     struct Material
     {
-        alignas(16) glm::vec3 ambient;
-        alignas(16) glm::vec3 diffuse;
-        alignas(16) glm::vec3 specular;
-        alignas(16) glm::vec3 transmittance;
-        alignas(16) glm::vec3 emission;
-        //shininess, ior, diss
-        alignas(16) glm::vec3 shiIorDiss;
+      alignas(16) glm::vec3 ambient { 1 };
+      alignas(16) glm::vec3 diffuse { 1 };
+      alignas(16) glm::vec3 specular { 1 };
+      alignas(16) glm::vec3 transmittance { 1 };
+      alignas(16) glm::vec3 emission { 1 };
+      //shininess, ior, diss
+      alignas(16) glm::vec3 shiIorDiss { 1 };
     };
 
     struct ObjectBuffer
@@ -89,6 +89,12 @@ namespace Poulpe
       alignas(16) glm::vec4 viewPos;
     };
 
+    struct shadowMapConstants
+    {
+      alignas(16) glm::mat4 lightSpaceMatrix;
+      alignas(16) glm::vec3 pos;
+    };
+
     struct Buffer {
       VkBuffer buffer;
       DeviceMemory* memory;
@@ -107,9 +113,9 @@ namespace Poulpe
       std::vector<uint32_t> m_Indices;
       std::vector<UniformBufferObject> m_Ubos;
       std::vector<uint32_t> m_UbosOffset;
-      Buffer m_VertexBuffer = { nullptr, nullptr, 0, 0 };
-      Buffer m_IndicesBuffer = { nullptr, nullptr, 0, 0 };
-      uint32_t m_TextureIndex = 0;
+      Buffer m_VertexBuffer { nullptr, nullptr, 0, 0 };
+      Buffer m_IndicesBuffer { nullptr, nullptr, 0, 0 };
+      uint32_t m_TextureIndex { 0 };
       glm::vec3 m_OriginPos;
       glm::vec3 m_OriginScale;
       glm::vec3 m_OriginRotation;

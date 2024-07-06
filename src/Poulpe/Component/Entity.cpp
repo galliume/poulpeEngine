@@ -20,7 +20,7 @@ namespace Poulpe
         //   GetBBox()->minY,
         //   GetBBox()->maxZ,
         //   GetBBox()->minZ
-        //);
+        //);                          
         // Oriented BBox intersection: http://www.opengl-tutorial.org/miscellaneous/clicking-on-objects/picking-with-custom-ray-obb-function/
         // 
         // 

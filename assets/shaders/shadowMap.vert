@@ -13,20 +13,19 @@ layout(set = 0, binding = 0) uniform UniformBufferObject {
    UBO ubos[MAX_UBOS];
 };
 
+layout(push_constant) uniform constants
+{
+    vec3 textureIDBB;
+    mat4 view;
+    vec4 viewPos;
+} pc;
+
 layout(location = 0) in vec3 pos;
 layout(location = 1) in vec3 normal;
 layout(location = 2) in vec2 texCoord;
 layout(location = 3) in vec4 tangent;
 layout(location = 4) in vec4 fidtidBB;
 layout(location = 5) in vec3 vColor;
-
-layout(push_constant) uniform constants
-{
-    //texture ID blank blank
-    vec3 textureIDBB;
-    mat4 view;
-    vec4 viewPos;
-} pc;
 
 struct Light {
     vec3 color;
@@ -55,7 +54,7 @@ struct Material
 };
 
 #define NR_POINT_LIGHTS 2
-layout(binding = 1) buffer ObjectBuffer {
+layout(set = 0, binding = 1) buffer ObjectBuffer {
     Light ambientLight;
     Light pointLights[NR_POINT_LIGHTS];
     Light spotLight;

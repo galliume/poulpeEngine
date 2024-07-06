@@ -41,7 +41,8 @@
 			"hasAnimation": false,
 			"isPointLight": false,
 			"animationScripts": {
-			}
+			},
+			"hasShadow": true			
 		},
 		"house": {
 			"mesh": "assets/mesh/rungholt/house.obj",
@@ -84,7 +85,8 @@
 			"hasAnimation": false,
 			"isPointLight": false,
 			"animationScripts": {
-			}
+			},
+			"hasShadow": true			
 		}
 	}
 }

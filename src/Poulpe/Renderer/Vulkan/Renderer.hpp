@@ -49,7 +49,7 @@ namespace Poulpe
     void drawBbox();
     void drawEntities();
     void drawHUD();
-    void drawShadowMap(std::vector<Entity*> entities, Light light);
+    void drawShadowMap();
     void drawSkybox();
     void endRendering(VkCommandBuffer commandBuffer);
     inline Camera* getCamera() override { return m_Camera; }
@@ -306,7 +306,6 @@ namespace Poulpe
     std::vector<VkImageView> m_DepthMapImageViews;
     std::vector<VkSampler> m_DepthMapSamplers;
     bool m_DepthMapDescSetUpdated{ false };
-    
 
     std::unordered_map<std::string, VulkanPipeline> m_Pipelines;
 

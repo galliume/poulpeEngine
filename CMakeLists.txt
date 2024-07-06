@@ -74,7 +74,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE "${PROJECT_BINARY_DIR}")
 target_compile_definitions(${PROJECT_NAME} PRIVATE "$<$<CONFIG:DEBUG>:PLP_DEBUG_BUILD>")
 
 if(MSVC)
-  set(DEBUG_OPTIONS "/WX;/MDd;/Wall;/MDd;/std:c++20;/std:c17;/fp:fast;-Wno-unused-macros;-Wno-old-style-cast;-Wno-reserved-identifier;-Wno-documentation;-Wno-nonportable-system-include-path;-Wno-documentation-unknown-command;-Wno-unsafe-buffer-usage;-Wno-ctad-maybe-unsupported;-Wno-c++98-compat;-Wno-c++98-compat-pedantic;/Zc:__cplusplus")
+  set(DEBUG_OPTIONS "/MDd;/Wall;/std:c++20;/std:c17;-Wno-unused-macros;-Wno-old-style-cast;-Wno-reserved-identifier;-Wno-documentation;-Wno-nonportable-system-include-path;-Wno-documentation-unknown-command;-Wno-unsafe-buffer-usage;-Wno-ctad-maybe-unsupported;-Wno-c++98-compat;-Wno-c++98-compat-pedantic;/Zc:__cplusplus")
   set(RELEASE_OPTIONS "-O2;/Obd2;/Ot;/MD;/fp:fast")
 else()
   set(DEBUG_OPTIONS "-Weverything;-Wno-unsafe-buffer-usage;-Wno-ctad-maybe-unsupported;-Wno-c++98-compat;-Wno-c++98-compat-pedantic")

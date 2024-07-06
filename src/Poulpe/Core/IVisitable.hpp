@@ -6,6 +6,7 @@
 
 namespace Poulpe
 {
+    //todo rename to IMeshVisitable?
     class IVisitable
     {
     public:
@@ -29,6 +30,7 @@ namespace Poulpe
 
         virtual void setData(Data data) = 0;
         virtual void setDescSet(VkDescriptorSet descSet) = 0;
+        virtual void setShadowMapDescSet(VkDescriptorSet descSet) = 0;
         virtual void setHasBufferStorage(bool has = true) = 0;
         virtual void setHasPushConstants(bool has = true) = 0;
         virtual void setIsDirty(bool is) = 0;

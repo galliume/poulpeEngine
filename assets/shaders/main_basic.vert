@@ -35,7 +35,7 @@ layout(location = 0) out VS_OUT {
     vec3 fPos;
     vec4 fViewPos;
     mat3 TBN;
-    vec4 fShadowCoordAmbient;
+    vec4 fAmbientLightSpace;
     vec4 fShadowCoordSpot;
     //faceId texture ID blank blank
     vec4 ffidtidBB;
@@ -85,9 +85,6 @@ const mat4 biasMat = mat4(
 
 void main()
 {
-    gl_Position = ubos[gl_InstanceIndex].projection * pc.view * ubos[gl_InstanceIndex].model * vec4(pos, 1.0);
-
-    
     vec3 t = normalize(vec3(ubos[gl_InstanceIndex].model * vec4(tangent.xyz, 0.0)));
     vec3 n = normalize(vec3(ubos[gl_InstanceIndex].model * vec4(normal, 0.0)));
     vec3 b = normalize(vec3(ubos[gl_InstanceIndex].model * vec4(cross(n, t) * tangent.w, 0.0)));
@@ -100,8 +97,10 @@ void main()
     vs_out.fTexCoord = texCoord;
     vs_out.fTextureID = int(pc.textureIDBB.x);//ID conversion should be ok
     vs_out.fViewPos = pc.viewPos;
-    vs_out.fShadowCoordAmbient = (biasMat * ambientLight.lightSpaceMatrix * ubos[gl_InstanceIndex].model) * vec4(pos, 1.0);
-    vs_out.fShadowCoordSpot = (biasMat * spotLight.lightSpaceMatrix * ubos[gl_InstanceIndex].model) * vec4(pos, 1.0);
+    vs_out.fAmbientLightSpace = ambientLight.lightSpaceMatrix * vec4(vs_out.fPos, 1.0);
+    vs_out.fShadowCoordSpot = (biasMat * spotLight.lightSpaceMatrix) * vec4(vs_out.fPos, 1.0);
     vs_out.ffidtidBB = fidtidBB;
     vs_out.fvColor = vColor;
+
+    gl_Position = ubos[gl_InstanceIndex].projection * pc.view * vec4(vs_out.fPos, 1.0);
 } 

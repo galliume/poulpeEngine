@@ -11,7 +11,7 @@ layout(location = 0) in VS_OUT {
     vec3 fPos;
     vec4 fViewPos;
     mat3 TBN;
-    vec4 fShadowCoordAmbient;
+    vec4 fAmbientLightSpace;
     vec4 fShadowCoordSpot;
     //faceId texture ID blank blank
     vec4 ffidtidBB;
@@ -62,8 +62,7 @@ layout(binding = 2) buffer ObjectBuffer {
 vec3 CalcDirLight(vec4 color, Light dirLight, vec3 normal, vec3 viewDir, float shadow);
 vec3 CalcPointLight(vec4 color, Light pointLight, vec3 normal, vec3 fragPos, vec3 viewDir);
 vec3 CalcSpotLight(vec4 color, Light pointLight, vec3 normal, vec3 fragPos, vec3 viewDir, float shadow);
-float ShadowCalculation(vec4 shadowCoord, vec2 off);
-float filterPCF(vec4 sc);
+float ShadowCalculation(vec4 lightSpace);
 
 float near = 0.1;
 float far  = 100.0;
@@ -102,17 +101,13 @@ void main()
     
     //should be _plp_empty texture, so discarded or not ?
     if (texSize.x == 1 && texSize.y == 1) {
-      texColor = vec4(1.0, 0.0, 1.0, 0.9);
+      discard;
     } else {
       texColor = texture(texSampler[id], fs_in.fTexCoord);
     }
 
-    //float shadow = ShadowCalculation(fs_in.fShadowCoord / fs_in.fShadowCoord.w, vec2(0.0));
-    float shadowAmbient = 0.0;
-    
-    //should be _plp_empty texture, so no shadow
-      shadowAmbient = filterPCF(fs_in.fShadowCoordAmbient / fs_in.fShadowCoordAmbient.w);
-    //float shadowSpot = filterPCF(fs_in.fShadowCoordAmbient / fs_in.fShadowCoordAmbient.w);
+    float shadowAmbient = 0.0;//1 not in shadow, 0 in shadow
+    shadowAmbient = ShadowCalculation(fs_in.fAmbientLightSpace);
 
     vec3 viewDir = normalize(fs_in.fViewPos.xyz - fs_in.fPos.xyz);
     vec3 color = CalcDirLight(texColor, ambientLight, normal, viewDir, shadowAmbient);
@@ -121,7 +116,7 @@ void main()
 //        color += CalcPointLight(texColor, pointLights[i], normal, fs_in.fPos.xyz, viewDir);
 //    }
 
-    //color += CalcSpotLight(texColor, spotLight, normal, fs_in.fPos.xyz, viewDir, 1.0);
+//    color += CalcSpotLight(texColor, spotLight, normal, fs_in.fPos.xyz, viewDir, 1.0);
 
     ivec2 texMaskSize = textureSize(texSampler[3], 0);
     if (texMaskSize.x != 1 && texMaskSize.y != 1) {
@@ -132,10 +127,6 @@ void main()
     if (texColor.a < 0.7) discard;
 
     fColor = vec4(color, 1.0);
-
-    //fColor = vec4(fs_in.fShadowCoord.st, 0, 1);
-    //float depthValue = texture(texSampler[4], fs_in.fTexCoord).r;
-    //fColor = vec4(vec3(depthValue), 1.0);
 }
 
 vec3 CalcDirLight(vec4 color, Light dirLight, vec3 normal, vec3 viewDir, float shadow)
@@ -151,15 +142,15 @@ vec3 CalcDirLight(vec4 color, Light dirLight, vec3 normal, vec3 viewDir, float s
 
     ivec2 texSize = textureSize(texSampler[4], 0);
 
-    if (texSize.x == 1 && texSize.y == 1) {
-      float spec = pow(clamp(dot(normal, h), 0.0, 1.0), material.shiIorDiss.x) * float(dot(normal, h) > 0.0);
-      specular =  dirLight.color * (dirLight.ads.z * spec * material.specular);
-    } else {
+//    if (texSize.x == 1 && texSize.y == 1) {
+//      float spec = pow(clamp(dot(normal, h), 0.0, 1.0), material.shiIorDiss.x) * float(dot(normal, h) > 0.0);
+//      specular =  dirLight.color * (dirLight.ads.z * spec * material.specular);
+//    } else {
       float spec = pow(clamp(dot(normal, h), 0.0, 1.0), material.shiIorDiss.x) * float(dot(normal, h) > 0.0);
       specular = dirLight.color * (spec * dirLight.ads.z * material.specular * texture(texSampler[4], fs_in.fTexCoord).xyz);
-    }
+//    }
 
-    return (ambient + shadow * (diffuse + specular)) * color.xyz ;
+    return (ambient + (1 - shadow) * (diffuse + specular)) * color.xyz ;
 }
 
 vec3 CalcPointLight(vec4 color, Light pointLight, vec3 normal, vec3 fragPos, vec3 viewDir)
@@ -228,39 +219,30 @@ vec3 CalcSpotLight(vec4 color, Light spotlight, vec3 normal, vec3 fragPos, vec3 
     return (ambient + shadow * (diffuse + specular)) * color.xyz;
 }
 
-float ShadowCalculation(vec4 shadowCoord, vec2 off)
+float ShadowCalculation(vec4 shadowCoord)
 {
-    float shadow = 1.0;
-    if (shadowCoord.z > -1.0 && shadowCoord.z < 1.0)
+    vec3 coord = shadowCoord.xyz / shadowCoord.w;
+    coord = coord * 0.5 + 0.5;
+
+    float closestDepth = texture(texSampler[6], coord.xy).r;
+    float currentDepth = coord.z;
+    float bias = max(0.05 * (1.0 - dot(fs_in.fNormal, ambientLight.direction)), 0.005);
+
+    float shadow = 0.1;
+    vec2 texelSize = 1.0 / textureSize(texSampler[6], 0);
+    int scale = 1;
+    for(int x = -scale; x <= scale; ++x)
     {
-        float dist = texture(texSampler[6], shadowCoord.st + off).r;
-        if (shadowCoord.w > 0.0 && dist < shadowCoord.z)
+        for(int y = -scale; y <= scale; ++y)
         {
-            shadow = 0.1;
+            float pcfDepth = texture(texSampler[6], coord.xy + vec2(x, y) * texelSize).r; 
+            shadow += currentDepth - bias > pcfDepth ? 1.0 : 0.0;
         }
     }
+    shadow /= 9.0;
+
+    if(coord.z > 1.0)
+        shadow = 0.0;
+    
     return shadow;
-}
-
-float filterPCF(vec4 shadowCoord)
-{
-    ivec2 texDim = textureSize(texSampler[6], 0);
-    float scale = 1.5;
-    float dx = scale * 1.0 / float(texDim.x);
-    float dy = scale * 1.0 / float(texDim.y);
-
-    float shadowFactor = 0.0;
-    int count = 0;
-    int range = 1;
-    
-    for (int x = -range; x <= range; x++)
-    {
-        for (int y = -range; y <= range; y++)
-        {
-            shadowFactor += ShadowCalculation(shadowCoord, vec2(dx*x, dy*y));
-            count++;
-        }
-    
-    }
-    return shadowFactor / count;
 }

@@ -2,6 +2,7 @@
 	"defaultLevel": "backpack",
 	"defaultSkybox": "debug",
 	"ambientMusic": false,
+	"fpsLimit": 60,
 	"input": {
 		"current": "keyboard",
 		"keyboard": {
@@ -11,7 +12,8 @@
 			"left": "a",
 			"right": "d",
 			"up": "q",
-			"down": "e"
+			"down": "e",
+			"unlockFPS": "0"
 		}
 	}
 }

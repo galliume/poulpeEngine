@@ -129,14 +129,14 @@ namespace Poulpe
       anim->elapsedTime += deltaTime.count();
 
       //@todo switch euler angles to quaternions
-      glm::vec3 target = glm::mix(data->m_OriginRotation, anim->angle, t);
+      data->m_CurrentRotation = glm::mix(data->m_OriginRotation, anim->angle, t);
 
       glm::mat4 model = glm::mat4(1.0f);
       model = glm::scale(model, data->m_OriginScale);
       model = glm::translate(model, data->m_OriginPos);
-      model = glm::rotate(model, glm::radians(target.x), glm::vec3(1.0f, 0.0f, 0.0f));
-      model = glm::rotate(model, glm::radians(target.y), glm::vec3(0.0f, 1.0f, 0.0f));
-      model = glm::rotate(model, glm::radians(target.z), glm::vec3(0.0f, 0.0f, 1.0f));
+      model = glm::rotate(model, glm::radians(data->m_CurrentRotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
+      model = glm::rotate(model, glm::radians(data->m_CurrentRotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
+      model = glm::rotate(model, glm::radians(data->m_CurrentRotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
 
       for (auto& ubo : data->m_Ubos) {
         ubo.model = model;

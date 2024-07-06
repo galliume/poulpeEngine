@@ -51,12 +51,17 @@ namespace Poulpe
           mat.dissolve = material.dissolve;
 
           auto cleanName = [](std::string const & name) -> std::string {
-              std::string cleaned{ name };
-              if (name.size() > 0) {
-                  cleaned.resize(cleaned.size() - 4); //remove extension
-                  std::replace(cleaned.begin(), cleaned.end(), '\\', '_');
-              }
-              return cleaned;
+            std::string cleaned;
+
+            if (name.size() > 0) {
+
+              size_t lastindex = name.find_last_of(".");
+              cleaned = name.substr(0, lastindex);
+
+              std::replace(cleaned.begin(), cleaned.end(), '\\', '_');
+              std::replace(cleaned.begin(), cleaned.end(), '/', '_');
+            }
+            return cleaned;
           };
 
           mat.ambientTexname = cleanName(material.ambient_texname);
