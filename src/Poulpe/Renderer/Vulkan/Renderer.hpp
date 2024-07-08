@@ -50,12 +50,15 @@ namespace Poulpe
     void drawEntities();
     void drawHUD();
     void drawShadowMap();
+    void drawPointLightsShadowMap();
     void drawSkybox();
     void endRendering(VkCommandBuffer commandBuffer);
     inline Camera* getCamera() override { return m_Camera; }
     inline uint32_t getCurrentFrameIndex() const { return m_CurrentFrame; }
     inline std::vector<VkImageView>* getDepthMapImageViews() override { return & m_DepthMapImageViews; }
     inline std::vector<VkSampler>* getDepthMapSamplers() override { return & m_DepthMapSamplers; }
+    inline std::vector<VkImageView>* getPointLightsDepthMapImageViews() override { return & m_PointLightsDepthMapImageViews; }
+    inline std::vector<VkSampler>* getPointLightsDepthMapSamplers() override { return & m_PointLightsDepthMapSamplers; }
     inline bool getDrawBbox() { return m_DrawBbox; }
     inline std::vector<VkDescriptorSetLayout>* getDescriptorSetLayouts() override { return & m_DescriptorSetLayouts; }
     inline VkDevice getDevice() override { return m_API->getDevice(); }
@@ -304,8 +307,12 @@ namespace Poulpe
 
     std::vector<VkImage> m_DepthMapImages;
     std::vector<VkImageView> m_DepthMapImageViews;
-    std::vector<VkSampler> m_DepthMapSamplers;
-    bool m_DepthMapDescSetUpdated{ false };
+    std::vector<VkSampler> m_DepthMapSamplers{};
+    bool m_AmbiantShadowMapDone{ false };
+
+    std::vector<VkImage> m_PointLightsDepthMapImages;
+    std::vector<VkImageView> m_PointLightsDepthMapImageViews;
+    std::vector<VkSampler> m_PointLightsDepthMapSamplers{};
 
     std::unordered_map<std::string, VulkanPipeline> m_Pipelines;
 

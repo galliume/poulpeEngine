@@ -75,8 +75,9 @@ namespace Poulpe
 
       VkDescriptorImageInfo shadowMapAmbient{};
       shadowMapAmbient.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-      shadowMapAmbient.imageView = m_Renderer->getDepthMapImageViews()->at(0);
-      shadowMapAmbient.sampler = m_Renderer->getDepthMapSamplers()->at(0);
+      shadowMapAmbient.imageView = m_Renderer->getPointLightsDepthMapImageViews()->at(0);
+      //shadowMapAmbient.imageView = m_Renderer->getDepthMapImageViews()->at(0);
+      shadowMapAmbient.sampler = m_Renderer->getPointLightsDepthMapSamplers()->at(0);
 
       //VkDescriptorImageInfo shadowMapSpot{};
       //shadowMapSpot.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;

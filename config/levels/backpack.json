@@ -68,7 +68,6 @@
 			"hasBbox": false,
 			"hasAnimation": false,
 			"animationScripts": {
-				"anim0" : "assets/scripts/animation/grassBlock/anim0.lua"
 			},
 			"isPointLight": false,
 			"hasShadow": true

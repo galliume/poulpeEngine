@@ -81,6 +81,43 @@
 			"isPointLight": false,
 			"hasShadow": true			
 		},
+		"free_palm" : {
+			"mesh": "assets/mesh/trees/palm_1/free_palm.obj",
+			"textures": {
+				"bark_roughness": "assets/mesh/trees/palm_1/bark_roughness.png",
+				"leaf": "assets/mesh/trees/palm_1/leaf.png",
+				"leaf_ao": "assets/mesh/trees/palm_1/leaf_ao.png",
+				"leaf_normal": "assets/mesh/trees/palm_1/leaf_normal.png",
+				"leaf_roughness": "assets/mesh/trees/palm_1/leaf_roughness.png",
+				"bark": "assets/mesh/trees/palm_1/bark.png",
+				"bark_ao": "assets/mesh/trees/palm_1/bark_ao.png",
+				"bark_normal": "assets/mesh/trees/palm_1/bark_normal.png"
+			},
+			"shader": "main_basic",
+			"positions": [
+				{"x": -20.0, "y": -1.0, "z": -15.0}
+			],
+			"scales": [
+				{"x": 0.1, "y": 0.1, "z": 0.1}
+			],
+			"rotations": [
+				{"x": 0.0, "y": 0.0, "z": 0.0}
+			],
+			"inverseTextureY": true,
+			"count": 1,
+			"padding": {
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"form": "positioned",
+			"hasBbox": false,
+			"hasAnimation": false,
+			"animationScripts": {
+			},
+			"isPointLight": false,
+			"hasShadow": true
+		},
 		"SnowTerrain" : {
 			"mesh": "assets/mesh/SnowTerrain/SnowTerrain.obj",
 			"textures": {
@@ -107,7 +144,7 @@
 			"hasBbox": false,
 			"hasAnimation": false,
 			"isPointLight": false,
-			"hasShadow": true			
+			"hasShadow": false			
 		}
 	}
 }
