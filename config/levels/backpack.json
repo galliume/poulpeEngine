@@ -11,7 +11,7 @@
 			},
 			"shader": "main_basic",
 			"positions": [
-				{"x": 0.0, "y": 2.5, "z": 0.0}
+				{"x": -5.0, "y": 2.5, "z": 0.0}
 			],
 			"scales": [
 				{"x": 0.1, "y": 0.1, "z": 0.1}
@@ -72,6 +72,37 @@
 			},
 			"isPointLight": false,
 			"hasShadow": true
+		},
+		"Grass_Block" : {
+			"mesh": "assets/mesh/minecraft/Grass_Block.obj",
+			"textures": {
+				"Grass_Block_TEX": "assets/mesh/minecraft/Grass_Block_TEX.png"
+			},
+			"shader": "main_basic",
+			"positions": [
+				{"x": 0.3, "y": 1.0, "z": 0.0}
+			],
+			"scales": [
+				{"x": 0.05, "y": 0.05, "z": 0.05}
+			],
+			"rotations": [
+				{"x": 0.0, "y": 0.0, "z": 0.0}
+			],
+			"inverseTextureY": true,
+			"count": 1,
+			"padding": {
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"form": "positioned",
+			"hasBbox": false,
+			"hasAnimation": true,
+			"animationScripts": {
+				"anim0" : "assets/scripts/animation/grassBlock/anim0.lua"
+			},
+			"isPointLight": false,
+			"hasShadow": true	
 		},	
 		"SnowTerrain" : {
 			"mesh": "assets/mesh/SnowTerrain/SnowTerrain.obj",

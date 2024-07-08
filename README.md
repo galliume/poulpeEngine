@@ -14,7 +14,7 @@
 
 <img src="https://github.com/galliume/poulpeEngine/blob/main/screenshots/engine.jpg" width="800" height="600">
 <img src="https://github.com/galliume/poulpeEngine/blob/main/screenshots/anim.gif" width="800" height="450">
-<img src="https://github.com/galliume/poulpeEngine/blob/main/screenshots/asyncload.gif" width="800" height="450">
+<img src="https://github.com/galliume/poulpeEngine/blob/main/screenshots/rungholt.png" width="800" height="450">
 
 All GUI has been stripped out from the engine.
 
