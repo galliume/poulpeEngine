@@ -52,6 +52,8 @@ namespace Poulpe
     virtual VkShaderModule createShaderModule(std::vector<char> & code) = 0;
     virtual std::vector<VkImageView>* getDepthMapImageViews() = 0;
     virtual std::vector<VkSampler>* getDepthMapSamplers() = 0;
+    virtual inline std::vector<VkImageView>* getPointLightsDepthMapImageViews() = 0;
+    virtual inline std::vector<VkSampler>* getPointLightsDepthMapSamplers() = 0;
     virtual inline std::vector<VkDescriptorSetLayout>* getDescriptorSetLayouts() = 0;
     virtual inline VkDevice getDevice() = 0;
     virtual VulkanPipeline* getPipeline(std::string const & shaderName) = 0;

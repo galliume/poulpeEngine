@@ -60,7 +60,7 @@ layout(binding = 2) buffer ObjectBuffer {
 };
 
 vec3 CalcDirLight(vec4 color, Light dirLight, vec3 normal, vec3 viewDir, float shadow);
-vec3 CalcPointLight(vec4 color, Light pointLight, vec3 normal, vec3 fragPos, vec3 viewDir);
+vec3 CalcPointLight(vec4 color, Light pointLight, vec3 normal, vec3 fragPos, vec3 viewDir, float shadow);
 vec3 CalcSpotLight(vec4 color, Light pointLight, vec3 normal, vec3 fragPos, vec3 viewDir, float shadow);
 float ShadowCalculation(vec4 lightSpace);
 
@@ -106,15 +106,15 @@ void main()
       texColor = texture(texSampler[id], fs_in.fTexCoord);
     }
 
-    float shadowAmbient = 0.0;//1 not in shadow, 0 in shadow
-    shadowAmbient = ShadowCalculation(fs_in.fAmbientLightSpace);
+    //1 not in shadow, 0 in shadow
+    float shadow = ShadowCalculation(fs_in.fAmbientLightSpace);
 
     vec3 viewDir = normalize(fs_in.fViewPos.xyz - fs_in.fPos.xyz);
-    vec3 color = CalcDirLight(texColor, ambientLight, normal, viewDir, shadowAmbient);
+    vec3 color = CalcDirLight(texColor, ambientLight, normal, viewDir, shadow);
     
-//    for(int i = 0; i < NR_POINT_LIGHTS; i++) {
-//        color += CalcPointLight(texColor, pointLights[i], normal, fs_in.fPos.xyz, viewDir);
-//    }
+    for(int i = 0; i < NR_POINT_LIGHTS; i++) {
+        color += CalcPointLight(texColor, pointLights[i], normal, fs_in.fPos.xyz, viewDir, shadow);
+    }
 
 //    color += CalcSpotLight(texColor, spotLight, normal, fs_in.fPos.xyz, viewDir, 1.0);
 
@@ -142,18 +142,18 @@ vec3 CalcDirLight(vec4 color, Light dirLight, vec3 normal, vec3 viewDir, float s
 
     ivec2 texSize = textureSize(texSampler[4], 0);
 
-//    if (texSize.x == 1 && texSize.y == 1) {
-//      float spec = pow(clamp(dot(normal, h), 0.0, 1.0), material.shiIorDiss.x) * float(dot(normal, h) > 0.0);
-//      specular =  dirLight.color * (dirLight.ads.z * spec * material.specular);
-//    } else {
+    if (texSize.x == 1 && texSize.y == 1) {
+      float spec = pow(clamp(dot(normal, h), 0.0, 1.0), material.shiIorDiss.x) * float(dot(normal, h) > 0.0);
+      specular =  dirLight.color * (dirLight.ads.z * spec * material.specular);
+    } else {
       float spec = pow(clamp(dot(normal, h), 0.0, 1.0), material.shiIorDiss.x) * float(dot(normal, h) > 0.0);
       specular = dirLight.color * (spec * dirLight.ads.z * material.specular * texture(texSampler[4], fs_in.fTexCoord).xyz);
-//    }
+    }
 
     return (ambient + (1 - shadow) * (diffuse + specular)) * color.xyz ;
 }
 
-vec3 CalcPointLight(vec4 color, Light pointLight, vec3 normal, vec3 fragPos, vec3 viewDir)
+vec3 CalcPointLight(vec4 color, Light pointLight, vec3 normal, vec3 fragPos, vec3 viewDir, float shadow)
 {
     vec3 lightDir = normalize(pointLight.position - fs_in.fPos);
     vec3 ambient = pointLight.color * material.ambient * pointLight.ads.x;
@@ -181,7 +181,7 @@ vec3 CalcPointLight(vec4 color, Light pointLight, vec3 normal, vec3 fragPos, vec
     diffuse *= attenuation;
     specular *= attenuation;
 
-    return (ambient + diffuse + specular) * color.xyz;
+    return (ambient + (1 - shadow) * (diffuse + specular)) * color.xyz;
 }
 
 vec3 CalcSpotLight(vec4 color, Light spotlight, vec3 normal, vec3 fragPos, vec3 viewDir, float shadow)
@@ -216,7 +216,7 @@ vec3 CalcSpotLight(vec4 color, Light spotlight, vec3 normal, vec3 fragPos, vec3 
     diffuse *= attenuation * intensity;
     specular *= attenuation * intensity;
 
-    return (ambient + shadow * (diffuse + specular)) * color.xyz;
+    return (ambient + (1 - shadow) * (diffuse + specular)) * color.xyz;
 }
 
 float ShadowCalculation(vec4 shadowCoord)

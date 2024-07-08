@@ -181,6 +181,9 @@ namespace Poulpe {
 
         void setResolution(unsigned int width, unsigned int height);
 
+        void createShadowCubeMap(uint32_t width, uint32_t height, VkSampleCountFlagBits numSamples,
+          VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image);
+        
         /**
         * Vulkan drawing functions, in main loop
         **/

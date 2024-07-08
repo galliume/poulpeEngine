@@ -144,7 +144,7 @@ namespace Poulpe
 
     void ShaderManager::createGraphicPipeline(std::string const & shaderName)
     {
-      bool offscreen = (shaderName == "shadowMap") ? true : false;
+      bool offscreen = (shaderName == "shadowMap" || shaderName == "pointLightsShadowMap") ? true : false;
       auto cullMode = VK_CULL_MODE_BACK_BIT;
 
       std::vector<VkDescriptorPoolSize> poolSizes{};
@@ -231,7 +231,7 @@ namespace Poulpe
         vkPc.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
         vkPc.size = sizeof(constants);
 
-        if (shaderName == "shadowMap" || shaderName == "shadowMapSpot") {
+        if (shaderName == "shadowMap" || shaderName == "shadowMapSpot" || shaderName == "pointLightsShadowMap") {
           hasColorAttachment = false;
           hasDynamicDepthBias = false;
           cullMode = VK_CULL_MODE_FRONT_BIT;
@@ -266,7 +266,8 @@ namespace Poulpe
       pipeline.descSetLayout = descSetLayout;
       pipeline.shaders = shaders;
 
-      if (shaderName == "shadowMap" || shaderName == "shadowMapSpot") {
+      //@todo refactor...
+      if (shaderName == "shadowMap" || shaderName == "shadowMapSpot" || shaderName == "pointLightsShadowMap") {
         pipeline.descSet = m_Renderer->createDescriptorSets(pipeline.descPool, { pipeline.descSetLayout }, 1);
       }
       m_Renderer->addPipeline(shaderName, pipeline);

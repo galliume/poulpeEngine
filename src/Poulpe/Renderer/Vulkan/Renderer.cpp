@@ -179,11 +179,22 @@ namespace Poulpe
         }
 
         for (size_t i = 0; i < m_MAX_FRAMES_IN_FLIGHT; ++i) {
-          VkImage image{};
-          m_API->createDepthMapImage(image);
-          m_DepthMapImages.emplace_back(image);
-          m_DepthMapImageViews.emplace_back(m_API->createDepthMapImageView(image));
+          VkImage shadowMapImage{};
+          m_API->createDepthMapImage(shadowMapImage);
+          m_DepthMapImages.emplace_back(shadowMapImage);
+          m_DepthMapImageViews.emplace_back(m_API->createDepthMapImageView(shadowMapImage));
           m_DepthMapSamplers.emplace_back(m_API->createDepthMapSampler());
+
+          VkImage pointLightsShadowMap{};
+          
+          m_API->createShadowCubeMap(
+            2048, 2048, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_D32_SFLOAT, VK_IMAGE_TILING_OPTIMAL,
+            VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+            VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, pointLightsShadowMap);
+          
+          m_PointLightsDepthMapImages.emplace_back(pointLightsShadowMap);
+          m_PointLightsDepthMapImageViews.emplace_back(m_API->createSkyboxImageView(pointLightsShadowMap, VK_FORMAT_D32_SFLOAT, 1, VK_IMAGE_ASPECT_DEPTH_BIT));
+          m_PointLightsDepthMapSamplers.emplace_back(m_API->createSkyboxTextureSampler(1));
         }
     }
 
@@ -273,8 +284,8 @@ namespace Poulpe
 
       vkCmdSetScissor(m_CommandBuffersEntities[m_CurrentFrame], 0, 1, & scissor);
         
-      float depthBiasConstant = 0.0f;
-      float depthBiasSlope = 0.0f;
+      //float const depthBiasConstant = 0.00005f;
+      //float const depthBiasSlope = 0.0005f;
 
       //vkCmdSetDepthClampEnableEXT(m_CommandBuffersEntities[m_CurrentFrame], VK_TRUE);
       //vkCmdSetDepthBias(m_CommandBuffersEntities[m_CurrentFrame], depthBiasConstant, 0.0f, depthBiasSlope);
@@ -336,7 +347,128 @@ namespace Poulpe
       m_API->transitionImageLayout(m_CommandBuffersEntities[m_CurrentFrame], m_DepthMapImages[0],
         VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_IMAGE_ASPECT_DEPTH_BIT);
 
-      m_DepthMapDescSetUpdated = true;
+      m_AmbiantShadowMapDone = true;
+    }
+
+    void Renderer::drawPointLightsShadowMap()
+    {
+      std::string const pipelineName{ "pointLightsShadowMap" };
+      auto pipeline = getPipeline(pipelineName);
+  
+      //m_API->beginCommandBuffer(m_CommandBuffersEntities[m_CurrentFrame]);
+      m_API->startMarker(m_CommandBuffersEntities[m_CurrentFrame], "point_lights_shadow_map_" + pipelineName, 0.1f, 0.2f, 0.3f);
+
+      m_API->transitionImageLayout(m_CommandBuffersEntities[m_CurrentFrame], m_DepthMapImages[0],
+        VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, VK_IMAGE_ASPECT_DEPTH_BIT);
+
+      VkClearColorValue colorClear = {};
+      colorClear.float32[0] = 1.0f;
+      colorClear.float32[1] = 1.0f;
+      colorClear.float32[2] = 1.0f;
+      colorClear.float32[3] = 1.0f;
+      
+      VkClearDepthStencilValue depthStencil = { 1.f, 0 };
+
+      VkRenderingAttachmentInfo depthAttachment{ };
+      depthAttachment.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
+      depthAttachment.imageView = m_PointLightsDepthMapImageViews[0];
+      depthAttachment.imageLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+      depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+      depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+      depthAttachment.clearValue.depthStencil = depthStencil;
+      depthAttachment.clearValue.color = colorClear;
+
+      uint32_t const width{ 2048 };// m_API->getSwapChainExtent().width
+      uint32_t const height{ 2048 };//  m_API->getSwapChainExtent().height
+
+      VkRenderingInfo  renderingInfo{ };
+      renderingInfo.sType = VK_STRUCTURE_TYPE_RENDERING_INFO;
+      renderingInfo.renderArea.extent.width = width;
+      renderingInfo.renderArea.extent.height = height;
+      renderingInfo.layerCount = 1;
+      renderingInfo.pDepthAttachment = & depthAttachment;
+      renderingInfo.colorAttachmentCount = 0;
+      renderingInfo.flags = VK_SUBPASS_CONTENTS_INLINE;
+
+      vkCmdBeginRenderingKHR(m_CommandBuffersEntities[m_CurrentFrame], & renderingInfo);
+
+      VkViewport viewport;
+      viewport.x = 0;
+      viewport.y = 0;
+      viewport.width = width;
+      viewport.height = height;
+      viewport.minDepth = 0.0f;
+      viewport.maxDepth = 1.0f;
+
+      vkCmdSetViewport(m_CommandBuffersEntities[m_CurrentFrame], 0, 1, &viewport);
+      VkRect2D scissor = { { 0, 0 }, { width, height } };
+
+      vkCmdSetScissor(m_CommandBuffersEntities[m_CurrentFrame], 0, 1, & scissor);
+        
+      //float const depthBiasConstant = 0.00005f;
+      //float const depthBiasSlope = 0.0005f;
+
+      //vkCmdSetDepthClampEnableEXT(m_CommandBuffersEntities[m_CurrentFrame], VK_TRUE);
+      //vkCmdSetDepthBias(m_CommandBuffersEntities[m_CurrentFrame], depthBiasConstant, 0.0f, depthBiasSlope);
+
+      for (auto& entity : m_Entities) {
+        if (!entity) continue;
+          
+        auto meshComponent = m_ComponentManager->getComponent<MeshComponent>(entity->getID());
+        if (!meshComponent) continue;
+
+        Mesh* mesh = meshComponent->hasImpl<Mesh>();
+
+        if (!mesh->hasShadow()) continue;
+
+        uint32_t min{ 0 };
+        uint32_t max{ 0 };
+
+        for (size_t i = 0; i < mesh->getUniformBuffers()->size(); ++i) {
+          max = mesh->getData()->m_UbosOffset.at(i);
+          auto ubos = std::vector<UniformBufferObject>(mesh->getData()->m_Ubos.begin() + min, mesh->getData()->m_Ubos.begin() + max);
+          m_API->updateUniformBuffer(mesh->getUniformBuffers()->at(i), &ubos);
+
+          min = max;
+        }
+
+        constants pushConstants{};
+        pushConstants.textureIDBB = glm::vec3(mesh->getData()->m_TextureIndex, 0.0, 0.0);
+        pushConstants.view = getCamera()->lookAt();
+        pushConstants.viewPos = getCamera()->getPos();
+
+        vkCmdPushConstants(m_CommandBuffersEntities[m_CurrentFrame], pipeline->pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(constants),
+            & pushConstants);
+
+        try {
+          vkCmdBindDescriptorSets(
+            m_CommandBuffersEntities[m_CurrentFrame],
+            VK_PIPELINE_BIND_POINT_GRAPHICS,
+            pipeline->pipelineLayout,
+            0, 1, mesh->getShadowMapDescSet(), 0, nullptr);
+
+          m_API->bindPipeline(m_CommandBuffersEntities[m_CurrentFrame], pipeline->pipeline);
+
+          m_API->draw(
+            m_CommandBuffersEntities[m_CurrentFrame],
+            *mesh->getShadowMapDescSet(),
+            *pipeline,
+            mesh->getData(),
+            mesh->getData()->m_Ubos.size(),
+            mesh->isIndexed());
+        }
+        catch (std::exception& e) {
+            PLP_DEBUG("Draw error: {}", e.what());
+        }
+      }
+
+      m_API->endMarker(m_CommandBuffersEntities[m_CurrentFrame]);
+      m_API->endRendering(m_CommandBuffersEntities[m_CurrentFrame]);
+
+      m_API->transitionImageLayout(m_CommandBuffersEntities[m_CurrentFrame], m_DepthMapImages[0],
+        VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_IMAGE_ASPECT_DEPTH_BIT);
+
+      m_AmbiantShadowMapDone = true;
     }
 
     void Renderer::drawEntities()
@@ -348,7 +480,8 @@ namespace Poulpe
 
           m_API->beginCommandBuffer(m_CommandBuffersEntities[m_CurrentFrame]);
 
-          drawShadowMap();
+          if (!m_AmbiantShadowMapDone) drawShadowMap();
+          drawPointLightsShadowMap();
 
           m_API->transitionImageLayout(m_CommandBuffersEntities[m_CurrentFrame], m_SwapChainImages[m_CurrentFrame],
             VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_ASPECT_COLOR_BIT);
@@ -901,7 +1034,7 @@ namespace Poulpe
       {
         std::lock_guard guard(m_MutexEntitySubmit);
         copy(entities.begin(), entities.end(), back_inserter(m_Entities));
-        m_DepthMapDescSetUpdated = false;
+        m_AmbiantShadowMapDone = false;
       }
     }
 }
