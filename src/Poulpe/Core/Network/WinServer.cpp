@@ -56,10 +56,7 @@ namespace Poulpe
     hints.ai_socktype = SOCK_STREAM;
     hints.ai_flags = AI_PASSIVE;
 
-    #pragma clang diagnostic push
-    #pragma clang diagnostic ignored "-Wzero-as-null-pointer-constant"
     status = ::getaddrinfo(NULL, port.c_str(), &hints, &servInfo);
-    #pragma clang diagnostic pop
 
     if (status != 0) {
       PLP_ERROR("getaddrinfo failed with error: {} {}", gai_strerrorA(status), port);
@@ -152,14 +149,11 @@ namespace Poulpe
       } else {
         auto addr = (struct sockaddr*)&clientAddr;
 
-        #pragma clang diagnostic push
-        #pragma clang diagnostic ignored "-Wcast-align"
         if (clientAddr.ss_family == AF_INET) {
           inet_ntop(clientAddr.ss_family, &(((struct sockaddr_in*)addr)->sin_addr), s, sizeof(s));
         } else {
           inet_ntop(clientAddr.ss_family, &(((struct sockaddr_in6*)addr)->sin6_addr), s, sizeof(s));
         }
-        #pragma clang diagnostic pop
 
         PLP_TRACE("server: got connection from {}", s);
         PLP_TRACE("Client connected");

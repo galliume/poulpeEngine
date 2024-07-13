@@ -4,24 +4,9 @@
 
 #include <iostream>
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wreserved-identifier"
-#pragma clang diagnostic ignored "-Wreserved-macro-identifier"
-#pragma clang diagnostic ignored "-Wzero-as-null-pointer-constant"
-#pragma clang diagnostic ignored "-Wcast-qual"
-#pragma clang diagnostic ignored "-Wold-style-cast"
-#pragma clang diagnostic ignored "-Wsign-conversion"
-#pragma clang diagnostic ignored "-Wdisabled-macro-expansion"
-#pragma clang diagnostic ignored "-Wcast-align"
-#pragma clang diagnostic ignored "-Wdouble-promotion"
-#pragma clang diagnostic ignored "-Wimplicit-int-conversion"
-#pragma clang diagnostic ignored "-Wimplicit-fallthrough"
-
-#define STBI_NO_SIMD
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
-#pragma clang diagnostic pop
 
 int main(int argc, char** argv)
 {

@@ -16,8 +16,6 @@
 <img src="https://github.com/galliume/poulpeEngine/blob/main/screenshots/anim.gif" width="800" height="450">
 <img src="https://github.com/galliume/poulpeEngine/blob/main/screenshots/rungholt.png" width="800" height="450">
 
-All GUI has been stripped out from the engine.
-
 [PoulpeEdit](https://github.com/galliume/poulpeEdit) will be the GUI editor that will use PoulpeEngine to edit a level, coming soon.
 
 ### To compile && execute 
@@ -26,22 +24,25 @@ Install the latest Vulkan SDK https://vulkan.lunarg.com/ and be sure to have the
 
 Compile shaders (Windows && Linux) : 
 ```
-./bin/plpShadersCompilation.sh
+bin/plpShadersCompilation.sh
 ```	
 
-Generate the project with CMake :
-
+Building help:
 ```
-./bin/build.sh -c
-```
+bin/build.sh -h
+```	
 
-Then open the .sln with VisualStudio or compile it with -b option
-
+Generate the project with CMake and build it:
 ```
-./bin/build.sh -b
+bin/build.sh -c -r -b
 ```
 
-By default the project is compiled with clang and with the build system VisualStudio 17 2022 for Windows or Ninja for Linux (see in ./bin/build.sh)
+Or just configure it
+```
+bin/build.sh -c
+``` 
+
+Then open the .sln with VisualStudio
 
 ### All meshes can be found here:
 

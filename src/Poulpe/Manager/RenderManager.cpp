@@ -139,6 +139,8 @@ namespace Poulpe
 
     void RenderManager::renderScene(std::chrono::duration<float> deltaTime)
     {
+      m_Renderer->renderScene();
+
       //@todo animate light
       //m_LightManager->animateAmbientLight(deltaTime);
       auto* worldNode = m_EntityManager->getWorldNode();
@@ -157,14 +159,13 @@ namespace Poulpe
         }
       }
 
-      m_Renderer->renderScene();
-
       if (m_Refresh) {
         m_Renderer->setDrawBbox(m_ShowBbox);
         init();
         m_Refresh = false;
         m_ShowBbox = false;
       }
+
     }
 
     void RenderManager::loadData(std::string const & level)

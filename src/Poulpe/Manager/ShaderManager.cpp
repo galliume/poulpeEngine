@@ -233,9 +233,10 @@ namespace Poulpe
 
         if (shaderName == "shadowMap" || shaderName == "shadowMapSpot") {
           hasColorAttachment = false;
-          hasDynamicDepthBias = false;
+          hasDynamicDepthBias = true;
           cullMode = VK_CULL_MODE_FRONT_BIT;
           descSetLayout = createDescriptorSetLayout<DescSetLayoutType::Offscreen>();
+          vkPc.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
         } else {
           descSetLayout = createDescriptorSetLayout<DescSetLayoutType::Entity>();
         }
@@ -275,6 +276,8 @@ namespace Poulpe
     std::vector<VkPipelineShaderStageCreateInfo> ShaderManager::getShadersInfo(std::string const & shaderName, bool offscreen)
     {
       std::vector<VkPipelineShaderStageCreateInfo> shadersStageInfos;
+
+      //@todo use pSpecializationInfo
 
       VkPipelineShaderStageCreateInfo vertShaderStageInfo{};
       vertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
