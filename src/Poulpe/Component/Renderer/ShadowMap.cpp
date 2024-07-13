@@ -45,7 +45,7 @@ namespace Poulpe
             pushConstants.view = renderer->getCamera()->lookAt();
             pushConstants.viewPos = renderer->getCamera()->getPos();
 
-            vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(constants),
+            vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(constants),
                 & pushConstants);
         });
 

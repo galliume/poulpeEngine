@@ -370,11 +370,11 @@ namespace Poulpe {
         const std::vector<const char*> m_ValidationLayers{ "VK_LAYER_KHRONOS_validation" };
         const std::vector<const char*> m_DeviceExtensions{
             VK_KHR_PUSH_DESCRIPTOR_EXTENSION_NAME,
-            VK_KHR_MAINTENANCE_4_EXTENSION_NAME,
             VK_KHR_SWAPCHAIN_EXTENSION_NAME,
-            VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME,
+            VK_EXT_EXTENDED_DYNAMIC_STATE_3_EXTENSION_NAME,
             VK_EXT_PIPELINE_CREATION_CACHE_CONTROL_EXTENSION_NAME,
-            VK_EXT_EXTENDED_DYNAMIC_STATE_3_EXTENSION_NAME
+            VK_KHR_MAINTENANCE_4_EXTENSION_NAME,
+            VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME
         };
 
         bool m_InstanceCreated{ false };

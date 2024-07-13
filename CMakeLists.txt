@@ -74,11 +74,15 @@ target_include_directories(${PROJECT_NAME} PRIVATE "${PROJECT_BINARY_DIR}")
 target_compile_definitions(${PROJECT_NAME} PRIVATE "$<$<CONFIG:DEBUG>:PLP_DEBUG_BUILD>")
 
 if(MSVC)
-  set(DEBUG_OPTIONS "/MDd;/Wall;/std:c++20;/std:c17;-Wno-unused-macros;-Wno-old-style-cast;-Wno-reserved-identifier;-Wno-documentation;-Wno-nonportable-system-include-path;-Wno-documentation-unknown-command;-Wno-unsafe-buffer-usage;-Wno-ctad-maybe-unsupported;-Wno-c++98-compat;-Wno-c++98-compat-pedantic;/Zc:__cplusplus")
-  set(RELEASE_OPTIONS "-O2;/Obd2;/Ot;/MD;/fp:fast")
+  set(DEBUG_OPTIONS "/MDd;/Wall;/fp:fast;/std:c++20;/Zc:__cplusplus")
+  set(RELEASE_OPTIONS "/MD;/O2;/Ot;/fp:fast;/Zc:__cplusplus")
+  set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /MDd")
+  set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} /MDd")
+  set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /MD")
+  set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} /MD")
 else()
-  set(DEBUG_OPTIONS "-Weverything;-Wno-unsafe-buffer-usage;-Wno-ctad-maybe-unsupported;-Wno-c++98-compat;-Wno-c++98-compat-pedantic")
-  set(RELEASE_OPTIONS "-O2")
+  set(DEBUG_OPTIONS "-Weverything;-std=c++20;")
+  set(RELEASE_OPTIONS "-O3;")
 endif()
 
 target_compile_options(${PROJECT_NAME} PRIVATE "$<$<CONFIG:DEBUG>:${DEBUG_OPTIONS}>")
@@ -154,11 +158,6 @@ add_library(
   ${PROJECT_SOURCE_DIR}/vendor/lua/lualib.h
 )
 
-target_compile_options(lua PUBLIC
-  $<$<CXX_COMPILER_ID:MSVC>:${RELEASE_OPTIONS}>
-  $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:${RELEASE_OPTIONS}>
-)
-
 if(MSVC)
   list(APPEND EXTRA_LIBS Ws2_32)
 endif()
@@ -167,7 +166,7 @@ list(APPEND EXTRA_LIBS glfw)
 list(APPEND EXTRA_LIBS glm::glm)
 list(APPEND EXTRA_LIBS lua)
 list(APPEND EXTRA_LIBS nlohmann_json)
-list(APPEND EXTRA_LIBS spdlog)
+list(APPEND EXTRA_LIBS spdlog::spdlog)
 list(APPEND EXTRA_LIBS tinyobjloader)
 list(APPEND EXTRA_LIBS volk)
 
@@ -226,8 +225,8 @@ endforeach()
 
 set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreadedDebugDLL$<$<CONFIG:Debug>:Debug>")
 
-set_property(TARGET ${PROJECT_NAME} PROPERTY VS_DEBUGGER_WORKING_DIRECTORY ${PROJECT_SOURCE_DIR})
 set_property(DIRECTORY ${PROJECT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT ${PROJECT_NAME})
+set_property(TARGET ${PROJECT_NAME} PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}")
 
 find_program(CLANG_TIDY_EXE NAMES "clang-tidy")
 

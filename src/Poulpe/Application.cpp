@@ -7,31 +7,8 @@
 
 #include <GLFW/glfw3.h>
 
-//@todo find a better way than this
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdouble-promotion"
-#pragma clang diagnostic ignored "-Wmissing-prototypes"
-#pragma clang diagnostic ignored "-Wzero-as-null-pointer-constant"
-#pragma clang diagnostic ignored "-Wsign-conversion"
-#pragma clang diagnostic ignored "-Wcast-qual"
-#pragma clang diagnostic ignored "-Wformat-nonliteral"
-#pragma clang diagnostic ignored "-Wcovered-switch-default"
-#pragma clang diagnostic ignored "-Wcast-align"
-#pragma clang diagnostic ignored "-Wimplicit-int-float-conversion"
-#pragma clang diagnostic ignored "-Wmissing-variable-declarations"
-#pragma clang diagnostic ignored "-Wcomma"
-#pragma clang diagnostic ignored "-Wformat"
-#pragma clang diagnostic ignored "-Wswitch-enum"
-#pragma clang diagnostic ignored "-Wfloat-equal"
-#pragma clang diagnostic ignored "-Wextra-semi-stmt"
-#pragma clang diagnostic ignored "-Wimplicit-fallthrough"
-#pragma clang diagnostic ignored "-Wundef"
-#pragma clang diagnostic ignored "-Wimplicit-int-conversion"
-#pragma clang diagnostic ignored "-Wtautological-type-limit-compare"
-#pragma clang diagnostic ignored "-Wcast-function-type-strict"
 #define MINIAUDIO_IMPLEMENTATION
 #include <miniaudio.h>
-#pragma clang diagnostic pop
 
 #include <thread>
 

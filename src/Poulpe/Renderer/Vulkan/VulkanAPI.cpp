@@ -6,12 +6,6 @@
 #include <volk.h>
 
 //@todo this class needs a huge clean up
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wcast-function-type-strict"
-#pragma clang diagnostic ignored "-Wold-style-cast"
-#pragma clang diagnostic ignored "-Wsign-conversion"
-#pragma clang diagnostic ignored "-Wshorten-64-to-32"
-
 namespace Poulpe {
 
     VkResult CreateDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerCreateInfoEXT const * pCreateInfo,
@@ -402,7 +396,6 @@ namespace Poulpe {
         deviceFeatures.sampleRateShading = VK_TRUE;
         deviceFeatures.imageCubeArray = VK_TRUE;
         deviceFeatures.geometryShader = VK_TRUE;
-        deviceFeatures.depthClamp = VK_TRUE;
 
         VkPhysicalDeviceDescriptorIndexingFeatures descriptorIndexing{};
         descriptorIndexing.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES;
@@ -423,10 +416,11 @@ namespace Poulpe {
         shader_draw_parameters_features.pNext = &vkFeatures13;
         shader_draw_parameters_features.shaderDrawParameters = VK_TRUE;
 
-        //VkPhysicalDeviceExtendedDynamicState3FeaturesEXT extDynamicState{};
-        //extDynamicState.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_EXTENDED_DYNAMIC_STATE_3_FEATURES_EXT;
-        //extDynamicState.pNext = &shader_draw_parameters_features;
-        //extDynamicState.extendedDynamicState3DepthClampEnable = VK_TRUE;
+        VkPhysicalDeviceExtendedDynamicState3FeaturesEXT extDynamicState{};
+        extDynamicState.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_EXTENDED_DYNAMIC_STATE_3_FEATURES_EXT;
+        extDynamicState.extendedDynamicState3DepthClampEnable = VK_TRUE;
+        extDynamicState.extendedDynamicState3RasterizationSamples = VK_TRUE;
+        extDynamicState.pNext = &shader_draw_parameters_features;
 
         VkDeviceCreateInfo createInfo{};
         createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
@@ -435,7 +429,7 @@ namespace Poulpe {
         createInfo.pEnabledFeatures = &deviceFeatures;
         createInfo.enabledExtensionCount = static_cast<uint32_t>(m_DeviceExtensions.size());
         createInfo.ppEnabledExtensionNames = m_DeviceExtensions.data();
-        createInfo.pNext = &shader_draw_parameters_features;
+        createInfo.pNext = &extDynamicState;
 
         if (vkCreateDevice(m_PhysicalDevice, & createInfo, nullptr, &m_Device) != VK_SUCCESS) {
             PLP_FATAL("failed to create logical device!");
@@ -750,13 +744,13 @@ namespace Poulpe {
 
         VkPipelineRasterizationStateCreateInfo rasterizer{};
         rasterizer.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
-        rasterizer.depthClampEnable = VK_TRUE;
+        rasterizer.depthClampEnable = VK_FALSE;
         rasterizer.rasterizerDiscardEnable = VK_FALSE;
         rasterizer.polygonMode = static_cast<VkPolygonMode>(polygoneMode);
         rasterizer.lineWidth = 1.0f;
         rasterizer.cullMode = cullMode;
         rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
-        rasterizer.depthBiasEnable = VK_TRUE;
+        rasterizer.depthBiasEnable = VK_FALSE;
         rasterizer.depthBiasConstantFactor = 0.f;
         rasterizer.depthBiasClamp = 0.0f;
         rasterizer.depthBiasSlopeFactor = 0.0f;
@@ -776,7 +770,7 @@ namespace Poulpe {
         depthStencil.depthTestEnable = (depthTestEnable == true) ? VK_TRUE : VK_FALSE;
         depthStencil.depthWriteEnable = (depthWriteEnable == true) ? VK_TRUE : VK_FALSE;
         depthStencil.depthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL;
-        depthStencil.depthBoundsTestEnable = VK_TRUE;
+        depthStencil.depthBoundsTestEnable = VK_FALSE;
         depthStencil.minDepthBounds = 0.0f;
         depthStencil.maxDepthBounds = 1.0f;
         depthStencil.stencilTestEnable = (stencilTestEnable == true) ? VK_TRUE : VK_FALSE;
@@ -2758,5 +2752,3 @@ namespace Poulpe {
       }
     }
 }
-
-#pragma clang diagnostic pop

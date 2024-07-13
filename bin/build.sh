@@ -4,17 +4,32 @@
 ############################################
 
 showusage() {
-    echo "~~~~~~~~~~~~~~ PoulpeEngine ~~~~~~~~~~~~~~~~~"
-    echo "-c|--config           CMake config		   "
-    echo "-b|--build            Build PoulpeEdit	   "
-    echo "-h|--help             Show this help		   "
-    echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+cat << EOF 
+~~~~~~~~~~~~~~ PoulpeEngine ~~~~~~~~~~~~~~~~~
+-c|--config           CMake config		   
+-b|--build            Build PoulpeEdit	   
+-h|--help             Show this help		   
+-d|--debug            Debug build (default)  
+-r|--release          Release build 		   
+
+Examples:
+
+Configure and start a release build:
+ > bin/build -c -r -b
+
+Configure and start a debug build:
+ > bin/build -c -b
+
+* use git bash for Windows
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+EOF
 }
 
 configPoulpeEngine=0
 buildPoulpeEngine=0
 buildSystem="Ninja"
 toolSet=""
+configuration="Debug"
 
 ROOT_DIR="$(dirname "$0")"
 . "${ROOT_DIR}/utils.sh"
@@ -24,24 +39,32 @@ OS=$?
 
 if [[ "$OS" -ne 2 ]]; then
 	buildSystem="Visual Studio 17 2022"
-	toolSet="ClangCL"
+	toolSet="v143"
 fi
 	
 while [[ $# -gt 0 ]]; do
     argument="$1"
     case "$argument" in
+	  -b|--build)
+        buildPoulpeEngine=1
+        shift
+        ;;
       -c|--config)
         configPoulpeEngine=1
         shift
         ;;
-      -b|--build)
-        buildPoulpeEngine=1
+      -d|--debug)
+        configuration="Debug"
         shift
-        ;;
+        ;;		
       -h|--help)
         showusage
         exit 0
-        ;;
+        ;;		
+      -r|--release)
+        configuration="Release"
+        shift
+        ;;				
       *|-*|--*)
         echo "Unknown option $argument"
 
@@ -55,16 +78,11 @@ if [[ configPoulpeEngine -eq 1 ]]
 then
     cmake -B ./build \
 		  -G "$buildSystem" \
-          -DCMAKE_C_COMPILER:STRING="clang" \
-          -DCMAKE_BUILD_TYPE:STRING="Debug" \
           -DCMAKE_GENERATOR_TOOLSET:STRING="$toolSet" \
-		  -DCMAKE_CXX_COMPILER:STRING="clang" \
-		  -DCMAKE_C_COMPILER:STRING="clang" \
 		  -DUSE_CCACHE:BOOL="ON"
-		  
 fi
 
 if [[ buildPoulpeEngine -eq 1 ]]
 then
-    cmake --build ./build/ -j20
+    cmake --build ./build/ --config $configuration -j20
 fi
