@@ -1,17 +1,18 @@
 #include "TinyObjLoader.hpp"
 
 #define TINYOBJLOADER_IMPLEMENTATION
-//#define TINYOBJLOADER_USE_MAPBOX_EARCUT
-//#include "mapbox/earcut.hpp"
+#define TINYOBJLOADER_USE_MAPBOX_EARCUT
+#include <mapbox/earcut.hpp>
 #include <tiny_obj_loader.h>
 
 #include <filesystem>
 
 namespace Poulpe
 {
-    [[clang::no_destroy]] std::vector<material_t> TinyObjLoader::m_TinyObjMaterials{};
-
-    std::vector<TinyObjData> TinyObjLoader::loadData(std::string const & path, [[maybe_unused]] bool shouldInverseTextureY)
+    std::vector<TinyObjData> TinyObjLoader::loadData(
+      std::string const & path,
+      std::vector<material_t> & tinyObjMaterials,
+      [[maybe_unused]] bool shouldInverseTextureY)
     {
         std::vector<TinyObjData> dataList = {};
 
@@ -36,7 +37,7 @@ namespace Poulpe
         auto& attrib = reader.GetAttrib();
         auto& shapes = reader.GetShapes();
         auto& materials = reader.GetMaterials();
-                    
+
         for (auto & material : materials) {
           
           material_t mat{};
@@ -72,7 +73,7 @@ namespace Poulpe
           mat.alphaTexname = cleanName(material.alpha_texname);
           mat.illum = material.illum;
 
-          m_TinyObjMaterials.emplace_back(mat);
+          tinyObjMaterials.emplace_back(mat);
         }
 
         std::unordered_map<Vertex, uint32_t> uniqueVertices{};

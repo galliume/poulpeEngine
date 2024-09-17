@@ -85,18 +85,20 @@ namespace Poulpe
                 animationScripts.emplace_back(static_cast<std::string>(pathAnim));
               }
 
-              initMeshes(
-                static_cast<std::string>(key),
-                static_cast<std::string>(data["mesh"]),
-                textures,
-                static_cast<std::string>(data["shader"]),
-                position,
-                scale,
-                rotation,
-                static_cast<bool>(data["inverseTextureY"]),
-                hasBbox, hasAnimation, isPointLight, animationScripts,
-                static_cast<bool>(data["hasShadow"])
-              );
+              //Locator::getThreadPool()->submit("loadingAsset", [this, &key, &data, &textures, &position, &scale, &rotation, hasBbox, hasAnimation, isPointLight, &animationScripts]() {
+                initMeshes(
+                  static_cast<std::string>(key),
+                  static_cast<std::string>(data["mesh"]),
+                  textures,
+                  static_cast<std::string>(data["shader"]),
+                  position,
+                  scale,
+                  rotation,
+                  static_cast<bool>(data["inverseTextureY"]),
+                  hasBbox, hasAnimation, isPointLight, animationScripts,
+                  static_cast<bool>(data["hasShadow"])
+                );
+              //});
             }
           }
         } else {
@@ -152,20 +154,20 @@ namespace Poulpe
             }
 
             //@todo move init to a factory ?
-            initMeshes(
-              static_cast<std::string>(key),
-              static_cast<std::string>(data["mesh"]),
-              textures,
-              static_cast<std::string>(data["shader"]),
-              position,
-              scale,
-              rotation,
-              static_cast<bool>(data["inverseTextureY"]),
-              hasBbox, hasAnimation, isPointLight, animationScripts,
-              static_cast<bool>(data["hasShadow"])
-            );
-
-            TinyObjLoader::m_TinyObjMaterials.clear();
+            //Locator::getThreadPool()->submit("loadingAsset", [this, &key, &data, &textures, &position, &scale, &rotation, hasBbox, hasAnimation, isPointLight, &animationScripts]() {
+              initMeshes(
+                static_cast<std::string>(key),
+                static_cast<std::string>(data["mesh"]),
+                textures,
+                static_cast<std::string>(data["shader"]),
+                position,
+                scale,
+                rotation,
+                static_cast<bool>(data["inverseTextureY"]),
+                hasBbox, hasAnimation, isPointLight, animationScripts,
+                static_cast<bool>(data["hasShadow"])
+              );
+            //});
           }
         }
       }
@@ -211,7 +213,8 @@ namespace Poulpe
     //m_ObjLoaded.insert(path);
 
     //@todo not reload an already loaded obj
-    std::vector<TinyObjData> listData = TinyObjLoader::loadData(path, shouldInverseTextureY);
+    std::vector<material_t> tinyObjMaterials{};
+    std::vector<TinyObjData> listData = TinyObjLoader::loadData(path, tinyObjMaterials, shouldInverseTextureY);
 
     Entity* rootMeshEntity = new Entity();
     rootMeshEntity->setName(name);
@@ -240,53 +243,53 @@ namespace Poulpe
       std::string bumpTexname{ "_plp_empty" };
       std::string alphaTexname{ "_plp_empty" };
 
-      if (!TinyObjLoader::m_TinyObjMaterials.empty()) {
+      if (!tinyObjMaterials.empty()) {
 
         //@todo material per textures...
-        mesh->setMaterial(TinyObjLoader::m_TinyObjMaterials.at(listData[i].materialsID.at(0)));
+        mesh->setMaterial(tinyObjMaterials.at(listData[i].materialsID.at(0)));
 
         //@todo temp
         //@todo separate into 2 storage buffer of 3 texSample
 
-        if (!TinyObjLoader::m_TinyObjMaterials.at(tex1ID).ambientTexname.empty()) {
-          nameTexture = TinyObjLoader::m_TinyObjMaterials.at(tex1ID).ambientTexname;
+        if (!tinyObjMaterials.at(tex1ID).ambientTexname.empty()) {
+          nameTexture = tinyObjMaterials.at(tex1ID).ambientTexname;
         }
-        else if (!TinyObjLoader::m_TinyObjMaterials.at(tex1ID).diffuseTexname.empty()) {
-          nameTexture = TinyObjLoader::m_TinyObjMaterials.at(tex1ID).diffuseTexname;
+        else if (!tinyObjMaterials.at(tex1ID).diffuseTexname.empty()) {
+          nameTexture = tinyObjMaterials.at(tex1ID).diffuseTexname;
         }
 
         //@todo to refacto & clean
         if (1 < listData[i].materialsID.size()) {
           unsigned int const tex2ID = listData[i].materialsID.at(1);
 
-          if (!TinyObjLoader::m_TinyObjMaterials.at(tex2ID).ambientTexname.empty()) {
-            name2Texture = TinyObjLoader::m_TinyObjMaterials.at(tex2ID).ambientTexname;
+          if (!tinyObjMaterials.at(tex2ID).ambientTexname.empty()) {
+            name2Texture = tinyObjMaterials.at(tex2ID).ambientTexname;
           }
-          else if (!TinyObjLoader::m_TinyObjMaterials.at(tex2ID).diffuseTexname.empty()) {
-            name2Texture = TinyObjLoader::m_TinyObjMaterials.at(tex2ID).diffuseTexname;
+          else if (!tinyObjMaterials.at(tex2ID).diffuseTexname.empty()) {
+            name2Texture = tinyObjMaterials.at(tex2ID).diffuseTexname;
           }
         }
         if (2 < listData[i].materialsID.size()) {
           unsigned int const tex3ID = listData[i].materialsID.at(2);
 
-          if (!TinyObjLoader::m_TinyObjMaterials.at(tex3ID).ambientTexname.empty()) {
-            name3Texture = TinyObjLoader::m_TinyObjMaterials.at(tex3ID).ambientTexname;
+          if (!tinyObjMaterials.at(tex3ID).ambientTexname.empty()) {
+            name3Texture = tinyObjMaterials.at(tex3ID).ambientTexname;
           }
-          else if (!TinyObjLoader::m_TinyObjMaterials.at(tex3ID).diffuseTexname.empty()) {
-            name3Texture = TinyObjLoader::m_TinyObjMaterials.at(tex3ID).diffuseTexname;
+          else if (!tinyObjMaterials.at(tex3ID).diffuseTexname.empty()) {
+            name3Texture = tinyObjMaterials.at(tex3ID).diffuseTexname;
           }
         }
 
-        if (!TinyObjLoader::m_TinyObjMaterials.at(listData[i].materialId).specularTexname.empty()) {
-          nameTextureSpecularMap = TinyObjLoader::m_TinyObjMaterials.at(listData[i].materialId).specularTexname;
+        if (!tinyObjMaterials.at(listData[i].materialId).specularTexname.empty()) {
+          nameTextureSpecularMap = tinyObjMaterials.at(listData[i].materialId).specularTexname;
         }
 
-        if (!TinyObjLoader::m_TinyObjMaterials.at(listData[i].materialId).bumpTexname.empty()) {
-          bumpTexname = TinyObjLoader::m_TinyObjMaterials.at(listData[i].materialId).bumpTexname;
+        if (!tinyObjMaterials.at(listData[i].materialId).bumpTexname.empty()) {
+          bumpTexname = tinyObjMaterials.at(listData[i].materialId).bumpTexname;
         }
 
-        if (!TinyObjLoader::m_TinyObjMaterials.at(listData[i].materialId).alphaTexname.empty()) {
-          alphaTexname = TinyObjLoader::m_TinyObjMaterials.at(listData[i].materialId).alphaTexname;
+        if (!tinyObjMaterials.at(listData[i].materialId).alphaTexname.empty()) {
+          alphaTexname = tinyObjMaterials.at(listData[i].materialId).alphaTexname;
         }
       }
 
@@ -398,11 +401,12 @@ namespace Poulpe
         tmpToSubmit.clear();
       }
     }
+
     m_Renderer->addEntities(tmpToSubmit);
     tmpToSubmit.clear();
-
     m_WorldNode->addChild(rootMeshEntityNode);
-  }
+
+   }
 
   void EntityManager::initWorldGraph()
   {
