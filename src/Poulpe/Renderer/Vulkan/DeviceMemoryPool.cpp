@@ -26,31 +26,20 @@ namespace Poulpe
           throw std::runtime_error("Max number of active allocations reached");
         }
 
-       VkDeviceSize bufferSize;
-       VkDeviceSize maxBufferSize = m_MemProperties.memoryHeaps[m_MemProperties.memoryTypes[memoryType].heapIndex].size;
-       std::string bufferTypeDebug;
+        VkDeviceSize bufferSize{
+          m_MemProperties.memoryHeaps[m_MemProperties.memoryTypes[memoryType].heapIndex].size
+        };
+        bufferSize /= 10;
+        std::string bufferTypeDebug;
 
        switch (bufferType) {
            case DeviceBufferType::STORAGE:
-             bufferSize = maxBufferSize / m_MaxStorage;
              bufferTypeDebug = "STORAGE";
            break;
            case DeviceBufferType::UNIFORM:
-             bufferSize = m_DeviceProperties.properties.limits.maxUniformBufferRange * m_MaxUniform;
-
-             if (size > bufferSize) {
-               VkDeviceSize const countBuffers{ (size / m_DeviceProperties.properties.limits.maxUniformBufferRange) + 1 };
-               bufferSize = m_DeviceProperties.properties.limits.maxUniformBufferRange * countBuffers;
-             }
              bufferTypeDebug = "UNIFORM";
            break;
            case DeviceBufferType::STAGING:
-             bufferSize = m_MaintenanceProperties.maxMemoryAllocationSize / m_MaxStaging;
-              if (size > bufferSize) {
-               VkDeviceSize const countBuffers{ (size / m_MaintenanceProperties.maxMemoryAllocationSize) + 1 };
-               bufferSize = m_MaintenanceProperties.maxMemoryAllocationSize * countBuffers;
-             }
-
              bufferTypeDebug = "STAGING";
            break;
       }
@@ -73,10 +62,6 @@ namespace Poulpe
           }
         }
 
-        if (m_MemoryAllocationSize.at(memoryType) + bufferSize > maxBufferSize) {
-            throw std::runtime_error("Max size of memory allocation reached");
-        }
-
         m_Pool[memoryType][usage].emplace_back(std::make_unique<DeviceMemory>(
           device, memoryType, bufferSize, m_DeviceMemoryCount, alignment));
         m_MemoryAllocationCount += 1;
@@ -87,7 +72,7 @@ namespace Poulpe
         return m_Pool[memoryType][usage].back().get();
       } else {
 
-        if (m_MemoryAllocationSize.at(memoryType) + bufferSize > maxBufferSize) {
+        if (m_MemoryAllocationSize.at(memoryType) + bufferSize > m_MaintenanceProperties.maxMemoryAllocationSize) {
           throw std::runtime_error("Max size of memory allocation reached");
         }
 
