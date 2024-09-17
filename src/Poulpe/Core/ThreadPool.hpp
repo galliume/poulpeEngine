@@ -31,13 +31,8 @@ namespace Poulpe
     template<typename FunctionType>
     void submit(std::string_view queueName, FunctionType f)
     {
-
-      if (m_WorkQueue.contains(queueName)) {
-        m_WorkQueue.at(queueName).push(std::function<void()>(f));
-      } else{
-        m_WorkQueue[queueName];
-        m_WorkQueue.at(queueName).push(std::function<void()>(f));
-      }
+      auto& workEntry = m_WorkQueue[queueName];
+      workEntry.push(std::function<void()>(f));
     }
 
     bool isPoolEmpty(std::string_view poolName)
