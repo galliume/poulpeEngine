@@ -8,7 +8,7 @@ namespace Poulpe
         m_AmbientLight.position = glm::vec3(-2.0f, 4.0f, -1.0f);
         m_AmbientLight.direction = glm::vec3(0.1f, -1.0, 0.0);
         //ambient diffuse specular
-        m_AmbientLight.ads = glm::vec3(0.5f, 0.7f, 1.0f);
+        m_AmbientLight.ads = glm::vec3(10.5f, 0.7f, 1.0f);
         m_AmbientLight.clq = glm::vec3(0.0f);
 
         m_AmbientLight.view = glm::lookAt(

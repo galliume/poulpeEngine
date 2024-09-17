@@ -7,42 +7,45 @@
 
 namespace Poulpe
 {
-    class ComponentManager
+  class ComponentManager
+  {
+  public:
+
+    ComponentManager() = default;
+    ~ComponentManager() = default;
+
+    template <typename T, typename IDType, typename Component, typename... TArgs>
+    T& addComponent(IDType entityID, Component* componentImpl, TArgs&&... args)
     {
-    public:
+      T* newComponent(new T(std::forward<TArgs>(args)...));
+      newComponent->init(componentImpl);
+      newComponent->setOwner(entityID);
 
-        ComponentManager() = default;
-        ~ComponentManager() = default;
+      {
+        std::lock_guard mutex(m_Mutex);
+        m_ComponentTypeMap[&typeid(*newComponent)].emplace_back(newComponent);
+        m_ComponentsEntityMap[entityID].emplace_back(&typeid(*newComponent));
+      }
+      return *newComponent;
+    }
 
-        template <typename T, typename IDType, typename Component, typename... TArgs>
-        T& addComponent(IDType entityID, Component* componentImpl, TArgs&&... args)
-        {
-            T* newComponent(new T(std::forward<TArgs>(args)...));
-            newComponent->init(componentImpl);
-            newComponent->setOwner(entityID);
+    template <typename T>
+    T* getComponent(IDType entityID) {
 
-            m_ComponentTypeMap[&typeid(*newComponent)].emplace_back(newComponent);
-            m_ComponentsEntityMap[entityID].emplace_back(&typeid(*newComponent));
-
-            return *newComponent;
+      for (auto component : m_ComponentTypeMap[&typeid(T)]) {
+        if (component->getOwner() == entityID) {
+          return static_cast<T*>(component);
         }
+      }
+      return nullptr;
+    }
 
-        template <typename T>
-        T* getComponent(IDType entityID) {
+    std::vector<const std::type_info*> getEntityComponents(IDType entityID) { return m_ComponentsEntityMap[entityID]; }
+    void clear();
 
-            for (auto component : m_ComponentTypeMap[&typeid(T)]) {
-                if (component->getOwner() == entityID) {
-                    return static_cast<T*>(component);
-                }
-            }
-            return nullptr;
-        }
-
-        std::vector<const std::type_info*> getEntityComponents(IDType entityID) { return m_ComponentsEntityMap[entityID]; }
-        void clear();
-
-    private:
-        std::unordered_map<const std::type_info*, std::vector<Component*>> m_ComponentTypeMap;
-        std::unordered_map<IDType, std::vector<const std::type_info*>> m_ComponentsEntityMap;
-    };
+  private:
+    std::unordered_map<const std::type_info*, std::vector<Component*>> m_ComponentTypeMap;
+    std::unordered_map<IDType, std::vector<const std::type_info*>> m_ComponentsEntityMap;
+    std::mutex m_Mutex;
+  };
 }
