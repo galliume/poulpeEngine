@@ -31,16 +31,7 @@ namespace Poulpe
     inline bool isLoadingDone() const { return m_LoadingDone.load(); }
     void initMeshes(std::string const & name,
       std::string const & path,
-      std::vector<std::string> const & textureNames,
-      std::string const & shader,
-      glm::vec3 const & pos, glm::vec3 const & scale, 
-      glm::vec3 rotation,
-      bool shouldInverseTextureY,
-      bool hasBbox,
-      bool hasAnimation,
-      bool isPointLight,
-      std::vector<std::string> animationScripts,
-      bool hasShadow);
+      EntityOptions const entityOptions);
     void initWorldGraph();
 
   private:

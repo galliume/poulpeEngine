@@ -36,6 +36,7 @@ namespace Poulpe
 
     inline void addCamera(Camera* const camera) override { m_Camera = camera; }
     void addEntities(std::vector<Entity*> entities) override;
+    void addEntity(Entity* entity) override;
     void addPipeline(std::string const & shaderName, VulkanPipeline pipeline) override;
     void attachObserver(IObserver* const observer) override;
     void beginRendering(VkCommandBuffer commandBuffer,

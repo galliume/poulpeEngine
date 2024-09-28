@@ -85,17 +85,21 @@ namespace Poulpe
                 animationScripts.emplace_back(static_cast<std::string>(pathAnim));
               }
 
+              EntityOptions entityOptions{
+                static_cast<std::string>(data["shader"]),
+                position, scale, rotation,
+                static_cast<bool>(data["hasBbox"]),
+                static_cast<bool>(data["hasAnimation"]),
+                static_cast<bool>(data["isPointLight"]),
+                animationScripts,
+                static_cast<bool>(data["hasShadow"]),
+                static_cast<bool>(data["inverseTextureY"])
+              };
+
               initMeshes(
                 static_cast<std::string>(key),
                 static_cast<std::string>(data["mesh"]),
-                textures,
-                static_cast<std::string>(data["shader"]),
-                position,
-                scale,
-                rotation,
-                static_cast<bool>(data["inverseTextureY"]),
-                hasBbox, hasAnimation, isPointLight, animationScripts,
-                static_cast<bool>(data["hasShadow"])
+                entityOptions
               );
             }
           }
@@ -152,17 +156,21 @@ namespace Poulpe
             }
 
             //@todo move init to a factory ?
+            EntityOptions entityOptions{
+              static_cast<std::string>(data["shader"]),
+              position, scale, rotation,
+              static_cast<bool>(data["hasBbox"]),
+              static_cast<bool>(data["hasAnimation"]),
+              static_cast<bool>(data["isPointLight"]),
+              animationScripts,
+              static_cast<bool>(data["hasShadow"]),
+              static_cast<bool>(data["inverseTextureY"])
+            };
+
             initMeshes(
               static_cast<std::string>(key),
               static_cast<std::string>(data["mesh"]),
-              textures,
-              static_cast<std::string>(data["shader"]),
-              position,
-              scale,
-              rotation,
-              static_cast<bool>(data["inverseTextureY"]),
-              hasBbox, hasAnimation, isPointLight, animationScripts,
-              static_cast<bool>(data["hasShadow"])
+              entityOptions
             );
 
             TinyObjLoader::m_TinyObjMaterials.clear();
@@ -187,17 +195,7 @@ namespace Poulpe
   //@todo: ugly replace all parameters by a property object.
   void EntityManager::initMeshes(std::string const  & name,
     std::string const & path,
-    [[maybe_unused]] std::vector<std::string> const & textureNames,
-    std::string const & shader,
-    glm::vec3 const & pos,
-    glm::vec3 const & scale,
-    glm::vec3 rotation,
-    bool shouldInverseTextureY,
-    bool hasBbox,
-    bool hasAnimation,
-    bool isPointLight,
-    std::vector<std::string> animationScripts,
-    bool hasShadow)
+    EntityOptions const entityOptions)
   {
     SCOPED_TIMER();
 
@@ -213,26 +211,22 @@ namespace Poulpe
     //m_ObjLoaded.insert(path);
 
     //@todo not reload an already loaded obj
-    std::vector<TinyObjData> const listData = TinyObjLoader::loadData(path, shouldInverseTextureY);
-
     Entity* rootMeshEntity = new Entity();
     rootMeshEntity->setName(name);
     rootMeshEntity->setVisible(false);
 
-    EntityNode* rootMeshEntityNode = new EntityNode(rootMeshEntity);
-    std::vector<Entity*> tmpToSubmit{};
-
-    for (size_t i = 0; i < listData.size(); i++) {
-
-      auto const & _data = listData[i];
+    //for (size_t i = 0; i < listData.size(); i++) {
+    auto callback = [this, & name, rootMeshEntity, & entityOptions](TinyObjData const& _data) {
+      
+      EntityNode* rootMeshEntityNode = new EntityNode(rootMeshEntity);
 
       Mesh* mesh = new Mesh();
       mesh->setName(_data.name);
-      mesh->setShaderName(shader);
-      mesh->setHasAnimation(hasAnimation);
-      mesh->setHasBbox(hasBbox);
-      mesh->setIsPointLight(isPointLight);
-      mesh->setHasShadow(hasShadow);
+      mesh->setShaderName(entityOptions.shader);
+      mesh->setHasAnimation(entityOptions.hasAnimation);
+      mesh->setHasBbox(entityOptions.hasBbox);
+      mesh->setIsPointLight(entityOptions.isPointLight);
+      mesh->setHasShadow(entityOptions.hasShadow);
       //std::vector<Mesh::BBox> bboxs{};
 
       unsigned int const tex1ID = _data.materialsID.at(0);
@@ -251,7 +245,6 @@ namespace Poulpe
 
         //@todo temp
         //@todo separate into 2 storage buffer of 3 texSample
-
         auto const& tex1 = TinyObjLoader::m_TinyObjMaterials.at(tex1ID);
 
         if (!tex1.ambientTexname.empty()) {
@@ -306,22 +299,22 @@ namespace Poulpe
       data.m_TextureAlpha = alphaTexname;
       data.m_Vertices = _data.vertices;
       data.m_Indices = _data.indices;
-      data.m_OriginPos = pos;
-      data.m_CurrentPos = pos;
-      data.m_OriginScale = scale;
-      data.m_CurrentScale = scale;
-      data.m_OriginRotation = rotation;
-      data.m_CurrentRotation = rotation;
+      data.m_OriginPos = entityOptions.pos;
+      data.m_CurrentPos = entityOptions.pos;
+      data.m_OriginScale = entityOptions.scale;
+      data.m_CurrentScale = entityOptions.scale;
+      data.m_OriginRotation = entityOptions.rotation;
+      data.m_CurrentRotation = entityOptions.rotation;
 
       UniformBufferObject ubo{};
       ubo.model = glm::mat4(1.0f);
-      ubo.model = glm::scale(ubo.model, scale);
+      ubo.model = glm::scale(ubo.model, entityOptions.scale);
 
-      ubo.model = glm::translate(ubo.model, pos);
+      ubo.model = glm::translate(ubo.model, entityOptions.pos);
 
-      ubo.model = glm::rotate(ubo.model, glm::radians(rotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
-      ubo.model = glm::rotate(ubo.model, glm::radians(rotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
-      ubo.model = glm::rotate(ubo.model, glm::radians(rotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
+      ubo.model = glm::rotate(ubo.model, glm::radians(entityOptions.rotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
+      ubo.model = glm::rotate(ubo.model, glm::radians(entityOptions.rotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
+      ubo.model = glm::rotate(ubo.model, glm::radians(entityOptions.rotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
 
       ubo.texSize = glm::vec2(0.0);
 
@@ -379,7 +372,7 @@ namespace Poulpe
 
       if (mesh->hasAnimation()) {
         //@todo temp until lua scripting
-        for (auto& anim : animationScripts) {
+        for (auto& anim : entityOptions.animationScripts) {
           auto* animationScript = new AnimationScript(anim);
           animationScript->init(m_Renderer, nullptr, nullptr);
           m_ComponentManager->addComponent<AnimationComponent>(entity->getID(), animationScript);
@@ -398,16 +391,11 @@ namespace Poulpe
 
       rootMeshEntityNode->addChild(entityNode);
 
-      tmpToSubmit.emplace_back(entityNode->getEntity());
-      if (tmpToSubmit.size() >= 10) {
-        m_Renderer->addEntities(tmpToSubmit);
-        tmpToSubmit.clear();
-      }
-    }
-    m_Renderer->addEntities(tmpToSubmit);
-    tmpToSubmit.clear();
+      m_Renderer->addEntity(entityNode->getEntity());
+      m_WorldNode->addChild(rootMeshEntityNode);
+    };
 
-    m_WorldNode->addChild(rootMeshEntityNode);
+    TinyObjLoader::loadData(path, entityOptions.shouldInverseTextureY, callback);
   }
 
   void EntityManager::initWorldGraph()

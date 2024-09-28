@@ -13,12 +13,10 @@ namespace Poulpe
 {
   [[clang::no_destroy]] std::vector<material_t> TinyObjLoader::m_TinyObjMaterials{};
 
-  std::vector<TinyObjData> TinyObjLoader::loadData(std::string const & path, [[maybe_unused]] bool shouldInverseTextureY)
+  void TinyObjLoader::loadData(
+    std::string const & path, bool shouldInverseTextureY,
+    std::function<void(TinyObjData const& _data)> callback)
   {
-    SCOPED_TIMER();
-
-    std::vector<TinyObjData> dataList = {};
-
     tinyobj::ObjReader reader;
     tinyobj::ObjReaderConfig reader_config;
 
@@ -75,8 +73,9 @@ namespace Poulpe
     //uint32_t i = 0, k = 0;
 
     //glm::vec3 pos = glm::vec3(0.0f);
-    dataList.reserve(shapes.size());
+    //dataList.reserve(shapes.size());
     size_t const size = shapes.size();
+    size_t count{ 0 };
 
     std::shared_mutex mutex;
     std::condition_variable cv;
@@ -85,7 +84,7 @@ namespace Poulpe
       auto const & shape = shapes[s];
 
       Locator::getThreadPool()->submit("LoadingOBJ", [
-        shape, s, attrib, shouldInverseTextureY, &dataList, &mutex, &cv, size]() {
+        shape, s, attrib, shouldInverseTextureY, &mutex, &cv, size, & count, callback]() {
 
           std::unordered_map<Vertex, uint32_t> uniqueVertices{};
 
@@ -255,9 +254,10 @@ namespace Poulpe
 
           {
             std::unique_lock guard(mutex);
-            dataList.emplace_back(data);
+            callback(data);
+            count += 1;
 
-            if (size == dataList.size())
+            if (size == count)
             {
               cv.notify_one();
             }
@@ -270,10 +270,8 @@ namespace Poulpe
 
     while (cv.wait_for(waitLock, std::chrono::seconds(1)) == std::cv_status::timeout)
     {
-      PLP_WARN("Loading {}/{}", dataList.size(), size);
+      PLP_WARN("Loading {}/{}", count, size);
     }
-
-    return dataList;
   }
 
   std::string const TinyObjLoader::cleanName(std::string const & name)

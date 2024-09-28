@@ -904,4 +904,13 @@ namespace Poulpe
         m_DepthMapDescSetUpdated = false;
       }
     }
+
+    void Renderer::addEntity(Entity* entity)
+    {
+      {
+        std::lock_guard guard(m_MutexEntitySubmit);
+        m_Entities.emplace_back(entity);
+        m_DepthMapDescSetUpdated = false;
+      }
+    }
 }

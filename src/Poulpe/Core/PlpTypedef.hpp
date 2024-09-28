@@ -138,4 +138,17 @@ namespace Poulpe
     //  float maxZ;
     //  float minZ;
     //};
+    struct EntityOptions
+    {
+      std::string const& shader;
+      glm::vec3 const& pos;
+      glm::vec3 const& scale;
+      glm::vec3 rotation;
+      bool hasBbox;
+      bool hasAnimation;
+      bool isPointLight;
+      std::vector<std::string> animationScripts;
+      bool hasShadow;
+      bool shouldInverseTextureY;
+    };
 }
