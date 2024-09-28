@@ -94,7 +94,6 @@ namespace Poulpe
     void RenderManager::init()
     {
         //@todo clean all thoses
-        TinyObjLoader::m_TinyObjMaterials.clear();
 
         if (m_Refresh) {
             m_Renderer->stopRendering();
