@@ -19,6 +19,7 @@ namespace Poulpe
 
     virtual inline void addCamera(Camera* const camera) = 0;
     virtual void addEntities(std::vector<Entity*> entities) = 0;
+    virtual void addEntity(Entity* entity) = 0;
     virtual void addPipeline(std::string const & shaderName, VulkanPipeline pipeline) = 0;
     virtual void attachObserver(IObserver* const observer) = 0;
     virtual void destroy() = 0;
