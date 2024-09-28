@@ -59,7 +59,7 @@ namespace Poulpe
                   //    std::this_thread::yield();
                   //}
                   
-                std::shared_ptr<std::function<void()>> task = queueThread.pop();
+                std::unique_ptr<std::function<void()>> task = queueThread.pop();
 
                 if (task) {
                   (*task.get())();
