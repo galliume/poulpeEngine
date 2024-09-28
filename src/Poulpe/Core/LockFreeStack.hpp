@@ -14,7 +14,7 @@ public:
     while (!head.compare_exchange_weak(newNode->next, newNode));
   }
 
-  std::shared_ptr<T> pop()
+  std::unique_ptr<T> pop()
   {
     ++threadsInPop;
 
@@ -22,7 +22,7 @@ public:
 
     while (oldHead && !head.compare_exchange_weak(oldHead, oldHead->next));
 
-    std::shared_ptr<T> res;
+    std::unique_ptr<T> res;
 
     if (oldHead) {
       res.swap(oldHead->data);
@@ -36,11 +36,11 @@ public:
 private:
   struct node
   {
-    std::shared_ptr<T> data;
+    std::unique_ptr<T> data;
     node* next;
 
     node(T _data)
-      : data(std::make_shared<T>(std::move(_data)))
+      : data(std::make_unique<T>(std::move(_data)))
     {
 
     }

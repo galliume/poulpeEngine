@@ -19,8 +19,11 @@ namespace Poulpe
 
     {
     public:
-        static std::vector<TinyObjData> loadData(std::string const & path, bool shouldInverseTextureY);
+      static std::vector<TinyObjData> loadData(std::string const & path, bool shouldInverseTextureY);
 
-        static std::vector<material_t> m_TinyObjMaterials;
+      static std::vector<material_t> m_TinyObjMaterials;
+
+    private:
+      static std::string const cleanName(std::string const & name);
     };
 }
