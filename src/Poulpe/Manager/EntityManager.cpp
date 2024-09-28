@@ -172,8 +172,6 @@ namespace Poulpe
               static_cast<std::string>(data["mesh"]),
               entityOptions
             );
-
-            TinyObjLoader::m_TinyObjMaterials.clear();
           }
         }
       }
@@ -192,7 +190,6 @@ namespace Poulpe
     }
   }
 
-  //@todo: ugly replace all parameters by a property object.
   void EntityManager::initMeshes(std::string const  & name,
     std::string const & path,
     EntityOptions const entityOptions)
@@ -215,8 +212,8 @@ namespace Poulpe
     rootMeshEntity->setName(name);
     rootMeshEntity->setVisible(false);
 
-    //for (size_t i = 0; i < listData.size(); i++) {
-    auto callback = [this, & name, rootMeshEntity, & entityOptions](TinyObjData const& _data) {
+    auto callback = [this, & name, rootMeshEntity, entityOptions](
+      TinyObjData const& _data, std::vector<material_t> const& materials) {
       
       EntityNode* rootMeshEntityNode = new EntityNode(rootMeshEntity);
 
@@ -238,14 +235,14 @@ namespace Poulpe
       std::string bumpTexname{ "_plp_empty" };
       std::string alphaTexname{ "_plp_empty" };
 
-      if (!TinyObjLoader::m_TinyObjMaterials.empty()) {
+      if (!materials.empty()) {
 
         //@todo material per textures...
-        mesh->setMaterial(TinyObjLoader::m_TinyObjMaterials.at(_data.materialsID.at(0)));
+        mesh->setMaterial(materials.at(_data.materialsID.at(0)));
 
         //@todo temp
         //@todo separate into 2 storage buffer of 3 texSample
-        auto const& tex1 = TinyObjLoader::m_TinyObjMaterials.at(tex1ID);
+        auto const& tex1 = materials.at(tex1ID);
 
         if (!tex1.ambientTexname.empty()) {
           nameTexture = tex1.ambientTexname;
@@ -255,7 +252,7 @@ namespace Poulpe
 
         //@todo to refacto & clean
         if (1 < _data.materialsID.size()) {
-          auto const& tex2 = TinyObjLoader::m_TinyObjMaterials.at(_data.materialsID.at(1));
+          auto const& tex2 = materials.at(_data.materialsID.at(1));
 
           if (!tex2.ambientTexname.empty()) {
             name2Texture = tex2.ambientTexname;
@@ -264,7 +261,7 @@ namespace Poulpe
           }
         }
         if (2 < _data.materialsID.size()) {
-          auto const& tex3 = TinyObjLoader::m_TinyObjMaterials.at(_data.materialsID.at(2));
+          auto const& tex3 = materials.at(_data.materialsID.at(2));
 
           if (!tex3.ambientTexname.empty()) {
             name3Texture = tex3.ambientTexname;
@@ -274,7 +271,7 @@ namespace Poulpe
           }
         }
 
-        auto const& mat = TinyObjLoader::m_TinyObjMaterials.at(_data.materialId);
+        auto const& mat = materials.at(_data.materialId);
 
         if (!mat.specularTexname.empty()) {
           nameTextureSpecularMap = mat.specularTexname;
