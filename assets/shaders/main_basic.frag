@@ -122,9 +122,9 @@ void main()
     if (texMaskSize.x != 1 && texMaskSize.y != 1) {
         vec4 mask = texture(texSampler[3], fs_in.fTexCoord);
 //        fColor = mix(fColor, mask, mask.a);
-        if (mask.r < 0.7) discard;
+        if (mask.r < 0.2) discard;
     }
-    if (texColor.a < 0.7) discard;
+    //if (texColor.a < 0.1) discard;
 
     fColor = vec4(color, 1.0);
 }

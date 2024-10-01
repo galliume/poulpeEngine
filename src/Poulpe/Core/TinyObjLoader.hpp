@@ -21,10 +21,13 @@ namespace Poulpe
     public:
       void static loadData(
         std::string const & path,
-        bool shouldInverseTextureY,
-        std::function<void(TinyObjData const& _data, std::vector<material_t> const& materials)> callback);
+        bool const shouldInverseTextureY,
+        std::function<void(
+          TinyObjData const& _data,
+          std::vector<material_t> const& materials,
+          bool const exists)> callback);
 
     private:
-      static std::string const cleanName(std::string const & name);
+      static std::string const cleanName(std::string const& name);
     };
 }

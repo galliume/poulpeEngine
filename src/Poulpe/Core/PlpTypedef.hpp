@@ -140,15 +140,16 @@ namespace Poulpe
     //};
     struct EntityOptions
     {
-      std::string const& shader;
-      glm::vec3 const& pos;
-      glm::vec3 const& scale;
-      glm::vec3 rotation;
-      bool hasBbox;
-      bool hasAnimation;
-      bool isPointLight;
-      std::vector<std::string> animationScripts;
-      bool hasShadow;
-      bool shouldInverseTextureY;
+      std::string_view shader{};
+      glm::vec3 const& pos{};
+      glm::vec3 const& scale{};
+      glm::vec3 rotation{};
+      bool hasBbox{ false };
+      bool hasAnimation{ false };
+      bool isPointLight{ false };
+      std::vector<std::string> animationScripts{};
+      bool hasShadow{ false };
+      bool shouldInverseTextureY{ false };
+      bool isIndexed{ false };
     };
 }

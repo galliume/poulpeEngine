@@ -1,0 +1,38 @@
+{
+	"entities": {
+		"lpshead" : {
+			"mesh": "assets/mesh/lpshead/head.OBJ",
+			"textures": {
+				"bump": "assets/mesh/lpshead/bump.png",
+				"bump-lowRes": "assets/mesh/lpshead/bump-lowRes.png",
+				"lambertian": "assets/mesh/lpshead/lambertian.jpg"
+			},
+			"shader": "main_basic",
+			"positions": [
+				{"x": -5.0, "y": 2.5, "z": 0.0}
+			],
+			"scales": [
+				{"x": 0.1, "y": 0.1, "z": 0.1}
+			],
+			"rotations": [
+				{"x": 0.0, "y": 0.0, "z": 0.0}
+			],
+			"inverseTextureY": false,
+			"count": 1,
+			"padding": {
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"form": "positioned",
+			"hasBbox": false,
+			"hasAnimation": false,
+			"isPointLight": false,
+			"animationScripts": {
+				"anim0" : "assets/scripts/animation/backpack/anim0.lua"
+			},
+			"hasShadow": false,
+			"isIndexed": false
+		}
+	}
+}
