@@ -287,7 +287,7 @@ namespace Poulpe
 
         Mesh* mesh = meshComponent->hasImpl<Mesh>();
 
-        if (!mesh->hasShadow()) continue;
+        if (!mesh->hasShadow() || mesh->getUniformBuffers()->empty()) continue;
 
         uint32_t min{ 0 };
         uint32_t max{ 0 };
@@ -369,11 +369,19 @@ namespace Poulpe
           m_API->startMarker(m_CommandBuffersEntities[m_CurrentFrame], "entities_drawing", 0.2f, 0.2f, 0.9f);
 
           for (auto& entity : m_Entities) {
-            if (!entity) continue;
+            if (!entity || entity->getID() == NULL)
+            {
+              PLP_ERROR("ENTITY ID NULL");
+              continue;
+            }
             auto meshComponent = m_ComponentManager->getComponent<MeshComponent>(entity->getID());
             if (!meshComponent) continue;
 
             Mesh* mesh = meshComponent->hasImpl<Mesh>();
+            if (mesh->getUniformBuffers()->empty()) {
+              continue;
+            }
+
             auto pipeline = getPipeline(mesh->getShaderName());
 
 
@@ -403,11 +411,12 @@ namespace Poulpe
             }
 
             try {
-              
+
               vkCmdBindDescriptorSets(m_CommandBuffersEntities[m_CurrentFrame],
                 VK_PIPELINE_BIND_POINT_GRAPHICS,
                 pipeline->pipelineLayout,
                 0, 1, mesh->getDescSet(), 0, nullptr);
+
               m_API->bindPipeline(m_CommandBuffersEntities[m_CurrentFrame], pipeline->pipeline);
 
               if (m_RenderingStopped) return;
@@ -437,7 +446,7 @@ namespace Poulpe
             auto meshComponent = m_ComponentManager->getComponent<MeshComponent>(skybox->getID());
             Mesh* mesh = meshComponent->hasImpl<Mesh>();
             
-            if (!mesh) return;
+            if (!mesh || mesh->getUniformBuffers()->empty()) return;
 
             Data* skyboxData = mesh->getData();
             auto pipeline = getPipeline(mesh->getShaderName());
@@ -911,6 +920,31 @@ namespace Poulpe
         std::lock_guard guard(m_MutexEntitySubmit);
         m_Entities.emplace_back(entity);
         m_DepthMapDescSetUpdated = false;
+      }
+    }
+
+    void Renderer::updateData(std::string const& name, UniformBufferObject const & ubo, std::vector<Vertex> const & vertices)
+    {
+      {
+        std::lock_guard guard(m_MutexEntitySubmit);
+      
+        for (auto& entity : m_Entities)
+        {
+          if (entity->getName() == name)
+          {
+            auto meshComponent = m_ComponentManager->getComponent<MeshComponent>(entity->getID());
+            if (!meshComponent) continue;
+
+            Mesh* mesh = meshComponent->hasImpl<Mesh>();
+            //std::copy(vertices.begin(), vertices.end(), back_inserter(mesh->getData()->m_Vertices));
+            mesh->addUbos({ std::move(ubo) });
+
+            //auto basicRdrImpl = m_ComponentManager->getComponent<RenderComponent>(entity->getID());
+            //auto deltaTime = std::chrono::duration<float, std::milli>(0);
+            //basicRdrImpl->visit(deltaTime, mesh);
+            return;
+          }
+        }
       }
     }
 }

@@ -3,6 +3,7 @@
 #include "IEntityManager.hpp"
 
 #include <set>
+#include <shared_mutex>
 
 namespace Poulpe
 {
@@ -23,15 +24,13 @@ namespace Poulpe
     //inline size_t getInstancedCount() const override { return m_Entities.size(); }
     //inline std::unordered_map<std::string, std::array<uint32_t, 2>> getLoadedEntities() override { return m_LoadedEntities; }
     inline Entity* getSkybox() override { return m_Skybox.get(); }
-    std::function<void()> load(nlohmann::json levelConfig) override;
+    void load(nlohmann::json const& levelConfig) override;
     inline void setSkybox(Entity* const skybox) override { m_Skybox = std::unique_ptr<Entity>(skybox); }
     //void addEntity(Mesh* meshes);
     //inline size_t getTotalEntities() const { return m_Entities.size(); }
     EntityNode * getWorldNode() override;
     inline bool isLoadingDone() const { return m_LoadingDone.load(); }
-    void initMeshes(std::string const & name,
-      std::string const & path,
-      EntityOptions const entityOptions);
+    void initMeshes(std::string const& name, nlohmann::json const data);
     void initWorldGraph();
 
   private:
@@ -54,5 +53,7 @@ namespace Poulpe
     std::unique_ptr<EntityNode> m_WorldNode;
 
     std::mutex m_MutexWorldNode;
+    std::shared_mutex m_SharedMutex;
+
   };
 }

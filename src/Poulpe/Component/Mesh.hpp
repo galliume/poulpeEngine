@@ -98,13 +98,13 @@ namespace Poulpe
         bool m_IsPointLight{ false };
         bool m_HasShadow{ false };
 
-        std::vector<Buffer> m_StorageBuffers;
-        std::vector<Buffer> m_UniformBuffers;
+        std::vector<Buffer> m_StorageBuffers{};
+        std::vector<Buffer> m_UniformBuffers{};
         
-        Data m_Data;
-        VkDescriptorSet m_DescSet;
-        VkDescriptorSet m_ShadowMapDescSet;
-        material_t m_Material;
+        Data m_Data{};
+        VkDescriptorSet m_DescSet{nullptr};
+        VkDescriptorSet m_ShadowMapDescSet{nullptr};
+        material_t m_Material{};
 
         std::function<void(VkCommandBuffer& commandBuffer,
           VkPipelineLayout pipelineLayout,

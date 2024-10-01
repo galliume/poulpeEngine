@@ -149,10 +149,17 @@ namespace Poulpe
         for (auto entityNode : leafNode->getChildren()) {
           auto entity = entityNode->getEntity();
           auto* meshComponent = m_ComponentManager->getComponent<MeshComponent>(entity->getID());
-          auto* animationComponent = m_ComponentManager->getComponent<AnimationComponent>(entity->getID());
           Mesh* mesh = meshComponent->hasImpl<Mesh>();
+          
+          if (!mesh) continue;
 
-          if (animationComponent && mesh) {
+          auto* animationComponent = m_ComponentManager->getComponent<AnimationComponent>(entity->getID());
+          auto basicRdrImpl = m_ComponentManager->getComponent<RenderComponent>(entity->getID());
+
+          if (mesh->isDirty() && basicRdrImpl) {
+            basicRdrImpl->visit(deltaTime, mesh);
+          }
+          if (animationComponent) {
             animationComponent->visit(deltaTime, mesh);
           }
         }
@@ -182,7 +189,6 @@ namespace Poulpe
       std::string const sb = (m_CurrentSkybox.empty()) ? static_cast<std::string>(appConfig["defaultSkybox"])
         : m_CurrentSkybox;
 
-      std::function<void()> entityFutures = m_EntityManager->load(levelData);
       std::function<void()> skyboxFuture = m_TextureManager->loadSkybox(sb);
       std::function<void()> shaderFuture = m_ShaderManager->load(configManager->shaderConfig());
 
@@ -204,7 +210,8 @@ namespace Poulpe
       //    //PLP_WARN("loading {}", m_EntityManager->IsLoadingDone());
       //}
       setIsLoaded();
-      Locator::getThreadPool()->submit(threadQueueName, entityFutures);
+      m_EntityManager->load(levelData);
+      //Locator::getThreadPool()->submit(threadQueueName, entityFutures);
     }
 
     void RenderManager::prepareHUD()

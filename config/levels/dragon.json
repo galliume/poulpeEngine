@@ -35,7 +35,7 @@
 			"textures": {
 				"snowterrain": "assets/mesh/SnowTerrain/snowterrain.jpg"
 			},
-			"shader": "main_basic_no_texture",
+			"shader": "main_basic",
 			"positions": [
 				{"x": 0.0, "y": -0.25, "z": 0.0}
 			],

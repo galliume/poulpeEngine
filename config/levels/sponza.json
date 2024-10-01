@@ -70,17 +70,14 @@
 			],
 			"inverseTextureY": true,
 			"count": 1,
-			"padding": {
-				"x": 0,
-				"y": 0,
-				"z": 0
-			},
-			"form": "positioned",
 			"hasBbox": false,
 			"hasAnimation": false,
 			"isPointLight": false,
-			"hasShadow": true			
-		},
+			"animationScripts": {
+			},
+			"hasShadow": true,	
+			"isIndexed": true						
+		}, 
 		"SnowTerrain" : {
 			"mesh": "assets/mesh/SnowTerrain/SnowTerrain.obj",
 			"textures": {
@@ -98,16 +95,13 @@
 			],
 			"inverseTextureY": true,
 			"count": 1,
-			"padding": {
-				"x": 0,
-				"y": 0,
-				"z": 0
-			},
-			"form": "positioned",
 			"hasBbox": false,
 			"hasAnimation": false,
 			"isPointLight": false,
-			"hasShadow": true			
+			"animationScripts": {
+			},			
+			"hasShadow": true,
+			"isIndexed": true			
 		}
 	}
 }

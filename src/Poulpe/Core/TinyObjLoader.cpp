@@ -1,19 +1,21 @@
 #include "TinyObjLoader.hpp"
 
 #define TINYOBJLOADER_IMPLEMENTATION
-//#define TINYOBJLOADER_USE_MAPBOX_EARCUT
-//#include "mapbox/earcut.hpp"
+  #define TINYOBJLOADER_USE_MAPBOX_EARCUT
+#include "mapbox/earcut.hpp"
 #include <tiny_obj_loader.h>
 
 #include <filesystem>
-#include <future>
-#include <shared_mutex>
 
 namespace Poulpe
 {
   void TinyObjLoader::loadData(
-    std::string const & path, bool shouldInverseTextureY,
-    std::function<void(TinyObjData const& _data, std::vector<material_t> const& materials)> callback)
+    std::string const& path,
+    bool const shouldInverseTextureY,
+    std::function<void(
+      TinyObjData const& _data,
+      std::vector<material_t> const& materials,
+      bool const exists)> callback)
   {
     tinyobj::ObjReader reader;
     tinyobj::ObjReaderConfig reader_config;
@@ -21,14 +23,19 @@ namespace Poulpe
     std::filesystem::path p = path;
     reader_config.mtl_search_path = p.remove_filename().string();
     reader_config.vertex_color = true;
+    reader_config.triangulate = true;
 
-    if (!reader.ParseFromFile(path, reader_config)) {
-      if (!reader.Error().empty()) {
+    PLP_WARN("{}", path);
+
+    {
+      SCOPED_TIMER();
+      if (!reader.ParseFromFile(path, reader_config)) {
+        if (!reader.Error().empty()) {
           PLP_ERROR("TinyObjReader: {}", reader.Error());
+        }
+        exit(1);
       }
-      exit(1);
     }
-
     if (!reader.Warning().empty()) {
       PLP_WARN("TinyObjReader: {}", reader.Warning());
     }
@@ -45,18 +52,13 @@ namespace Poulpe
     //uint32_t i = 0, k = 0;
 
     //glm::vec3 pos = glm::vec3(0.0f);
-    //dataList.reserve(shapes.size());
     size_t const size = shapes.size();
     size_t count{ 0 };
-
-    std::shared_mutex mutex;
-    std::condition_variable cv;
 
     for (uint32_t s = 0; s < shapes.size(); s++) {
       auto const & shape = shapes[s];
 
-      Locator::getThreadPool()->submit("LoadingOBJ", [
-        shape, s, attrib, shouldInverseTextureY, &mutex, &cv, size, & count, & materials, callback]() {
+      Locator::getThreadPool()->submit("LoadingOBJ", [=]() {
 
         std::vector<material_t> meshMaterials;
         meshMaterials.reserve(materials.size());
@@ -93,10 +95,10 @@ namespace Poulpe
         std::vector<uint32_t> materialsID;
 
         // Loop over faces(polygon)
-        size_t index_offset = 0;
+        size_t index_offset{ 0 };
         std::vector<int> ids{};
         ids.resize(4);
-        int samplerId = 0;
+        int samplerId{ 0 };
         std::unordered_map<int, int> texidsmap;
 
         texidsmap.reserve(shape.mesh.num_face_vertices.size());
@@ -163,20 +165,7 @@ namespace Poulpe
                 if (uniqueVertices.count(vertex) == 0) {
                     uniqueVertices[vertex] = static_cast<uint32_t>(data.vertices.size());
                     data.vertices.push_back(vertex);
-
-                    /* triangles[i][0] = 3 * size_t(idx.vertex_index) + 0;
-                    triangles[i][1] = 3 * size_t(idx.vertex_index) + 1;
-                    triangles[i][2] = 3 * size_t(idx.vertex_index) + 2;
-                    
-                    listVertex[3 * size_t(idx.vertex_index) + 0] = &vertex;
-                    listVertex[3 * size_t(idx.vertex_index) + 1] = &vertex;
-                    listVertex[3 * size_t(idx.vertex_index) + 2] = &vertex;
-
-                    iToVertex[i] = &vertex;
-
-                    i += 1;*/
                 }
-                //k += 1;
                 data.indices.push_back(uniqueVertices[vertex]);
             }
 
@@ -187,96 +176,14 @@ namespace Poulpe
             data.facesMaterialId.emplace_back(shape.mesh.material_ids[f]);
             data.materialsID = materialsID;
         }
-
-        //tangeant
-        //std::vector<glm::vec3> tangents{};
-        //std::vector<glm::vec3> bitangents{};
-        //auto def = glm::vec3(0.0f);
-
-        //for (size_t i = 0; i < k*2; ++i) {
-        //    tangents.emplace_back(def);
-        //    bitangents.emplace_back(def);
-        //}
-
-        //for (size_t i = 0; i < triangles.size(); ++i)
-        //{
-        //    uint32_t i0 = triangles[i][0];
-        //    uint32_t i1 = triangles[i][1];
-        //    uint32_t i2 = triangles[i][2];
- 
-        //    auto& vertex01 = listVertex[i0];
-        //    auto& vertex02 = listVertex[i1];
-        //    auto& vertex03 = listVertex[i2];
-
-        //    glm::vec3 & p0 = vertex01->pos;
-        //    glm::vec3 & p1 = vertex02->pos;
-        //    glm::vec3 & p2 = vertex03->pos;
- 
-        //    glm::vec2 & w0 = vertex01->texCoord;
-        //    glm::vec2 & w1 = vertex02->texCoord;
-        //    glm::vec2 & w2 = vertex03->texCoord;
-
-        //    glm::vec3 e1 = p1 - p0;
-        //    glm::vec3 e2 = p2 - p0;
-
-        //    float x1 = w1.x - w0.x;
-        //    float y1 = w1.y - w0.y;
-        //    float x2 = w2.x - w0.x;
-        //    float y2 = w2.y - w0.y;
-
-        //    float r = 1.0f / (x1 * y2 - x2 * y1);
-        //    glm::vec3 t = (e1 * y2 - e2 * y1) * r;
-        //    glm::vec3 b = (e2 * x1 - e1 * x2) * r;
-
-        //    tangents[i0] += t;
-        //    tangents[i1] += t;
-        //    tangents[i2] += t;
-
-        //    bitangents[i0] += b;
-        //    bitangents[i1] += b;
-        //    bitangents[i2] += b;
-        //}
-
-        //for (size_t i = 0; i < triangles.size(); ++i) {
-        //    auto& vertex = iToVertex[i];
-
-        //    auto t = tangents[i];
-        //    auto b = bitangents[i];
-        //    auto n = vertex->normal;
-
-        //    auto a =  glm::normalize((t - n * (glm::dot(t, n) / glm::dot(n, n))));
-        //    auto w = (glm::dot(glm::cross(t, b), n) > 0.0f) ? 1.0f : -1.0f;
-
-        //    //data.vertices.at(i).texCoord.y *= w;
-        //    vertex->tangent = glm::vec4{a.x, a.y, a.z, w};
-        //}
-
-        {
-          std::unique_lock guard(mutex);
-          callback(data, meshMaterials);
-          count += 1;
-          //PLP_WARN("Loading {}/{}", count, size);
-
-          if (size == count)
-          {
-            cv.notify_one();
-          }
-        }
+        callback(data, meshMaterials, false);
       });
-    }
-
-    std::mutex waitMutex;
-    std::unique_lock waitLock(waitMutex);
-
-    while (cv.wait_for(waitLock, std::chrono::seconds(1)) == std::cv_status::timeout)
-    {
-      PLP_WARN("Loading...");
     }
   }
 
   std::string const TinyObjLoader::cleanName(std::string const & name)
   {
-    std::string cleaned;
+    std::string cleaned{};
 
     if (name.size() > 0) {
       size_t lastindex = name.find_last_of(".");
@@ -285,6 +192,7 @@ namespace Poulpe
       std::replace(cleaned.begin(), cleaned.end(), '\\', '_');
       std::replace(cleaned.begin(), cleaned.end(), '/', '_');
     }
+
     return cleaned;
   };
 }

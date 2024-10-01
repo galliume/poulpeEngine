@@ -31,18 +31,13 @@
 			],
 			"inverseTextureY": true,
 			"count": 1,
-			"padding": {
-				"x": 0,
-				"y": 0,
-				"z": 0
-			},
-			"form": "positioned",
 			"hasBbox": false,
 			"hasAnimation": false,
 			"isPointLight": false,
 			"animationScripts": {
 			},
-			"hasShadow": true			
+			"hasShadow": true,
+			"isIndexed": true
 		},
 		"house": {
 			"mesh": "assets/mesh/rungholt/house.obj",
@@ -75,18 +70,13 @@
 			],
 			"inverseTextureY": true,
 			"count": 1,
-			"padding": {
-				"x": 0,
-				"y": 0,
-				"z": 0
-			},
-			"form": "positioned",
 			"hasBbox": false,
 			"hasAnimation": false,
 			"isPointLight": false,
 			"animationScripts": {
 			},
-			"hasShadow": true			
+			"hasShadow": true,
+			"isIndexed": true			
 		}
 	}
 }

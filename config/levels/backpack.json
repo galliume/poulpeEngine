@@ -33,7 +33,8 @@
 			"animationScripts": {
 				"anim0" : "assets/scripts/animation/backpack/anim0.lua"
 			},
-			"hasShadow": true
+			"hasShadow": true,
+			"isIndexed": true
 		},
 		"free_palm" : {
 			"mesh": "assets/mesh/trees/palm_1/free_palm.obj",
@@ -71,7 +72,8 @@
 				"anim0" : "assets/scripts/animation/grassBlock/anim0.lua"
 			},
 			"isPointLight": false,
-			"hasShadow": true
+			"hasShadow": true,
+			"isIndexed": true
 		},
 		"Grass_Block" : {
 			"mesh": "assets/mesh/minecraft/Grass_Block.obj",
@@ -102,7 +104,8 @@
 				"anim0" : "assets/scripts/animation/grassBlock/anim0.lua"
 			},
 			"isPointLight": false,
-			"hasShadow": true	
+			"hasShadow": true,
+			"isIndexed": true			
 		},	
 		"SnowTerrain" : {
 			"mesh": "assets/mesh/SnowTerrain/SnowTerrain.obj",
@@ -130,7 +133,8 @@
 			"hasBbox": false,
 			"hasAnimation": false,
 			"isPointLight": false,
-			"hasShadow": false	
+			"hasShadow": false,
+			"isIndexed": true			
 		}
 	}
 }

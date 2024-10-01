@@ -350,7 +350,8 @@
 			"isPointLight": false,
 			"hasShadow": false,
 			"animationScripts": {
-			}	
+			},
+			"isIndexed": true
 		}	
 	}
 }
