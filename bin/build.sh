@@ -79,7 +79,9 @@ then
     cmake -B ./build \
 		  -G "$buildSystem" \
           -DCMAKE_GENERATOR_TOOLSET:STRING="$toolSet" \
-		  -DUSE_CCACHE:BOOL="ON"
+		  -DUSE_CCACHE:BOOL="ON" \
+		  -DASSIMP_BUILD_ASSIMP_TOOLS:BOOL="ON" \
+		  -DASSIMP_INSTALL:BOOL="OFF"
 fi
 
 if [[ buildPoulpeEngine -eq 1 ]]

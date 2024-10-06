@@ -132,6 +132,8 @@
 			"form": "positioned",
 			"hasBbox": false,
 			"hasAnimation": false,
+			"animationScripts": {
+			},
 			"isPointLight": false,
 			"hasShadow": false,
 			"isIndexed": true			

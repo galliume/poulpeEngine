@@ -152,4 +152,14 @@ namespace Poulpe
       bool shouldInverseTextureY{ false };
       bool isIndexed{ false };
     };
+
+    struct PlpMeshData
+    {
+      std::string name;
+      uint32_t materialId = 0;
+      std::vector<uint32_t> facesMaterialId;
+      std::vector<uint32_t> indices;
+      std::vector<uint32_t> materialsID;
+      std::vector<Vertex> vertices;
+    };
 }
