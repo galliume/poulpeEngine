@@ -4,7 +4,7 @@
 #include "Poulpe/Component/AnimationScript.hpp"
 #include "Poulpe/Component/Renderer/RendererFactory.hpp"
 
-#include "Poulpe/Core/TinyObjLoader.hpp"
+#include "Poulpe/Core/AssimpLoader.hpp"
 
 #include <filesystem>
 #include <future>
@@ -73,11 +73,9 @@ namespace Poulpe
     auto const& inverseTextureY = data["inverseTextureY"].template get<bool>();
 
     auto callback = [this, data, path, rootMeshEntity](
-      TinyObjData const& _data,
+      PlpMeshData const& _data,
       std::vector<material_t> const& materials,
       bool const exists) {
-
-      SCOPED_TIMER();
 
     auto const& positionData = data["positions"].at(0);
 
@@ -310,7 +308,8 @@ namespace Poulpe
       }
     };
 
-    TinyObjLoader::loadData(path, inverseTextureY, callback);
+    //TinyObjLoader::loadData(path, inverseTextureY, callback);
+    AssimpLoader::loadData(path, inverseTextureY, callback);
   }
 
   void EntityManager::initWorldGraph()

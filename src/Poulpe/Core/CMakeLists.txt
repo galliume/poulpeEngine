@@ -6,8 +6,8 @@ set(SRC_LIST ${CMAKE_CURRENT_SOURCE_DIR}/PlpTypedef.hpp
              ${CMAKE_CURRENT_SOURCE_DIR}/Log.hpp
              ${CMAKE_CURRENT_SOURCE_DIR}/ThreadPool.hpp
              ${CMAKE_CURRENT_SOURCE_DIR}/ThreadSafeQueue.hpp
-             ${CMAKE_CURRENT_SOURCE_DIR}/TinyObjLoader.cpp
-             ${CMAKE_CURRENT_SOURCE_DIR}/TinyObjLoader.hpp
+             ${CMAKE_CURRENT_SOURCE_DIR}/AssimpLoader.cpp
+             ${CMAKE_CURRENT_SOURCE_DIR}/AssimpLoader.hpp
              ${CMAKE_CURRENT_SOURCE_DIR}/Tools.cpp
              ${CMAKE_CURRENT_SOURCE_DIR}/Tools.hpp
              ${CMAKE_CURRENT_SOURCE_DIR}/Command.cpp

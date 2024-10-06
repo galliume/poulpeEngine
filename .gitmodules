@@ -16,12 +16,12 @@
 [submodule "nlohmann"]
 	path = vendor/nlohmann
 	url = https://github.com/nlohmann/json.git
-[submodule "tiny_obj_loader"]
-	path = vendor/tiny_obj_loader
-	url = https://github.com/tinyobjloader/tinyobjloader.git
 [submodule "volk"]
 	path = vendor/volk
 	url = https://github.com/zeux/volk.git
 [submodule "vendor/lua"]
 	path = vendor/lua
 	url = https://github.com/lua/lua.git
+[submodule "vendor/assimp"]
+	path = vendor/assimp
+	url = https://github.com/assimp/assimp

@@ -107,13 +107,14 @@ endif()
 include_directories(${PROJECT_SOURCE_DIR}/vendor/miniaudio
                     ${PROJECT_SOURCE_DIR}/vendor/spdlog/include
                     ${PROJECT_SOURCE_DIR}/vendor/stb
+					${PROJECT_SOURCE_DIR}/vendor/assimp/include
                     ${VULKAN_PATH})
 
 add_subdirectory(${PROJECT_SOURCE_DIR}/vendor/glfw)
 add_subdirectory(${PROJECT_SOURCE_DIR}/vendor/glm)
 add_subdirectory(${PROJECT_SOURCE_DIR}/vendor/nlohmann)
 add_subdirectory(${PROJECT_SOURCE_DIR}/vendor/spdlog)
-add_subdirectory(${PROJECT_SOURCE_DIR}/vendor/tiny_obj_loader)
+add_subdirectory(${PROJECT_SOURCE_DIR}/vendor/assimp)
 add_subdirectory(${PROJECT_SOURCE_DIR}/vendor/volk)
 
 #@todo include only used .c
@@ -167,7 +168,7 @@ list(APPEND EXTRA_LIBS glm::glm)
 list(APPEND EXTRA_LIBS lua)
 list(APPEND EXTRA_LIBS nlohmann_json)
 list(APPEND EXTRA_LIBS spdlog::spdlog)
-list(APPEND EXTRA_LIBS tinyobjloader)
+list(APPEND EXTRA_LIBS assimp)
 list(APPEND EXTRA_LIBS volk)
 
 target_link_libraries(${PROJECT_NAME} PRIVATE ${EXTRA_LIBS} poulpe)
@@ -179,7 +180,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE
                           ${PROJECT_SOURCE_DIR}/vendor/lua
                           ${PROJECT_SOURCE_DIR}/vendor/miniaudio
                           ${PROJECT_SOURCE_DIR}/vendor/nlohmann/include
-                          ${PROJECT_SOURCE_DIR}/vendor/tiny_obj_loader
+                          ${PROJECT_SOURCE_DIR}/vendor/assimp/include
                           ${PROJECT_SOURCE_DIR}/vendor/volk)
                           
 target_include_directories(${PROJECT_NAME} SYSTEM INTERFACE
@@ -189,7 +190,7 @@ target_include_directories(${PROJECT_NAME} SYSTEM INTERFACE
                           ${PROJECT_SOURCE_DIR}/vendor/lua
                           ${PROJECT_SOURCE_DIR}/vendor/miniaudio
                           ${PROJECT_SOURCE_DIR}/vendor/nlohmann/include
-                          ${PROJECT_SOURCE_DIR}/vendor/tiny_obj_loader
+                          ${PROJECT_SOURCE_DIR}/vendor/assimp/include
                           ${PROJECT_SOURCE_DIR}/vendor/volk)
 
 set_target_properties(glfw PROPERTIES
@@ -201,9 +202,7 @@ set_target_properties(lua PROPERTIES
 set_target_properties(spdlog PROPERTIES
     ARCHIVE_OUTPUT_DIRECTORY "$<TARGET_FILE_DIR:${PROJECT_NAME}>/lib"
 )
-set_target_properties(tinyobjloader PROPERTIES
-    ARCHIVE_OUTPUT_DIRECTORY "$<TARGET_FILE_DIR:${PROJECT_NAME}>/lib"
-)
+
 set_target_properties(volk PROPERTIES
     ARCHIVE_OUTPUT_DIRECTORY "$<TARGET_FILE_DIR:${PROJECT_NAME}>/lib"
 )

@@ -13,8 +13,6 @@
 
 #include "Poulpe/Component/Renderer/RendererFactory.hpp"
 
-#include "Poulpe/Core/TinyObjLoader.hpp"
-
 #include "Poulpe/Renderer/Vulkan/Renderer.hpp"
 
 namespace Poulpe
