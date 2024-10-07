@@ -1,0 +1,35 @@
+{
+	"entities": {
+		"aircraft" : {
+			"mesh": "assets/mesh/E-45-Aircraft/E 45 Aircraft_obj.obj",
+			"textures": {
+				"textures_E-45 _col": "assets/mesh/E-45-Aircraft/textures/E-45 _col.jpg",
+				"textures_E-45 _col_3": "assets/mesh/E-45-Aircraft/textures/E-45 _col_3.jpg",
+				"textures_E-45_col_2": "assets/mesh/E-45-Aircraft/textures/E-45_col_2.jpg",
+				"textures_E-45_glass_nor_": "assets/mesh/E-45-Aircraft/textures/E-45_glass_nor_.jpg",
+				"textures_E-45_REF 1": "assets/mesh/E-45-Aircraft/textures/E-45_REF 1.jpg",
+				"textures_E-45-nor_1": "assets/mesh/E-45-Aircraft/textures/E-45-nor_1.jpg",
+				"textures_E-45-steel detail_2_col": "assets/mesh/E-45-Aircraft/textures/E-45-steel detail_2_col.jpg"
+			},
+			"shader": "main_basic",
+			"positions": [
+				{"x": -5.0, "y": 2.5, "z": 0.0}
+			],
+			"scales": [
+				{"x": 0.1, "y": 0.1, "z": 0.1}
+			],
+			"rotations": [
+				{"x": 0.0, "y": 0.0, "z": 0.0}
+			],
+			"inverseTextureY": true,
+			"count": 1,
+			"hasBbox": false,
+			"hasAnimation": true,
+			"isPointLight": false,
+			"animationScripts": {
+			},
+			"hasShadow": true,
+			"isIndexed": true
+		}
+	}
+}

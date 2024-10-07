@@ -17,7 +17,7 @@ namespace Poulpe
     Assimp::Importer importer;
   
     const aiScene* scene = importer.ReadFile(path,
-      aiProcess_Triangulate | aiProcess_JoinIdenticalVertices
+      aiProcess_Triangulate | aiProcess_JoinIdenticalVertices | aiProcess_GenNormals 
     );
 
     if (nullptr == scene) {
@@ -119,48 +119,46 @@ namespace Poulpe
 
     for (unsigned int i{ 0 }; i < scene->mNumMeshes; i++) {
       PlpMeshData meshData{};
-      {
-        SCOPED_TIMER();
-        aiMesh const* mesh = scene->mMeshes[i];
-        meshData.name = mesh->mName.C_Str() + std::to_string(i);
 
-        unsigned int count{ 1 };
+      aiMesh const* mesh = scene->mMeshes[i];
+      meshData.name = mesh->mName.C_Str() + std::to_string(i);
+      unsigned int count{ 0 };
 
-        for (unsigned int f{ 0 }; f < mesh->mNumFaces; f++) {
-          aiFace const* face = &mesh->mFaces[f];
+      for (unsigned int f{ 0 }; f < mesh->mNumFaces; f++) {
+        aiFace const* face = &mesh->mFaces[f];
 
-          for (unsigned int j{ 0 }; j < face->mNumIndices; j++) {
+        for (unsigned int j{ 0 }; j < face->mNumIndices; j++) {
 
-            aiVector3D vertices = mesh->mVertices[face->mIndices[j]];
-            Vertex vertex{};
-            vertex.fidtidBB = glm::vec4(static_cast<float>(j), mesh->mMaterialIndex, 0.0f, 0.0f);
-            vertex.pos = { vertices.x, vertices.y, vertices.z };
+          aiVector3D vertices = mesh->mVertices[face->mIndices[j]];
+          Vertex vertex{};
+          vertex.fidtidBB = glm::vec4(static_cast<float>(j), mesh->mMaterialIndex, 0.0f, 0.0f);
+          vertex.pos = { vertices.x, vertices.y, vertices.z };
 
-            if (mesh->HasNormals()) {
-                aiVector3D const& normal = mesh->mNormals[face->mIndices[j]];
-                vertex.normal = { normal.x, normal.y, normal.z };
-            } else {
-              vertex.normal = { 1.0f, 1.0f, 1.0f };
-            }
-
-            if (mesh->mNumUVComponents[0] > 0) {
-              aiVector3D texCoord = mesh->mTextureCoords[0][face->mIndices[j]];
-              vertex.texCoord = { texCoord.x, texCoord.y };
-              if (shouldInverseTextureY) vertex.texCoord.y *= -1.0f;
-            }
-
-            vertex.color = { 1.0f, 1.0f, 1.0f };
-
-            meshData.vertices.push_back(std::move(vertex));
-            meshData.indices.push_back(count);
-            count += 1;
+          if (mesh->HasNormals()) {
+              aiVector3D const& normal = mesh->mNormals[face->mIndices[j]];
+              vertex.normal = { normal.x, normal.y, normal.z };
+          } else {
+            vertex.normal = { 1.0f, 1.0f, 1.0f };
           }
-          meshData.materialId = mesh->mMaterialIndex;
-          meshData.materialsID = { mesh->mMaterialIndex };
-          meshData.facesMaterialId.emplace_back(mesh->mMaterialIndex);
+
+          if (mesh->mNumUVComponents[0] > 0) {
+            aiVector3D texCoord = mesh->mTextureCoords[0][face->mIndices[j]];
+            vertex.texCoord = { texCoord.x, texCoord.y };
+            if (shouldInverseTextureY) vertex.texCoord.y *= -1.0f;
+          }
+
+          vertex.color = { 1.0f, 1.0f, 1.0f };
+
+          meshData.vertices.push_back(std::move(vertex));
+          meshData.indices.push_back(count);
+          count += 1;
         }
-        callback(meshData, materials, false);
+        meshData.materialId = mesh->mMaterialIndex;
+        meshData.materialsID = { mesh->mMaterialIndex };
+        meshData.facesMaterialId.emplace_back(mesh->mMaterialIndex);
       }
+      callback(meshData, materials, false);
+      count = meshData.indices.size();
     }
   }
 

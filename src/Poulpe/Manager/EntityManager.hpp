@@ -53,7 +53,7 @@ namespace Poulpe
     std::unique_ptr<EntityNode> m_WorldNode;
 
     std::mutex m_MutexWorldNode;
-    std::shared_mutex m_SharedMutex;
+    mutable std::shared_mutex m_SharedMutex;
 
   };
 }

@@ -299,7 +299,8 @@ namespace Poulpe
       auto* entityNode = new EntityNode(entity);
 
       {
-        std::unique_lock guard(m_SharedMutex);
+        std::shared_lock guard(m_SharedMutex);
+
         basicRdrImpl->init(m_Renderer, m_TextureManager, m_LightManager);
         basicRdrImpl->visit(deltaTime, mesh);
         rootMeshEntityNode->addChild(entityNode);
