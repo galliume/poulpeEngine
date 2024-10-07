@@ -16,12 +16,6 @@
 			],
 			"inverseTextureY": false,
 			"count": 1,
-			"padding": {
-				"x": 0,
-				"y": 0,
-				"z": 0
-			},
-			"form": "positioned",
 			"hasBbox": false,
 			"hasAnimation": false,
 			"isPointLight": false,
