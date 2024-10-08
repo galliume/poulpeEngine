@@ -436,7 +436,7 @@ namespace Poulpe {
             return;
         }
 
-        for (uint32_t i = 0; i < m_queueCount; i++) {
+        for (uint32_t i { 0 }; i < m_queueCount; i++) {
             m_GraphicsQueues[i] = VK_NULL_HANDLE;
             m_PresentQueues[i] = VK_NULL_HANDLE;
             vkGetDeviceQueue(m_Device, indices.graphicsFamily.value(), 0, & m_GraphicsQueues[i]);
@@ -1077,7 +1077,7 @@ namespace Poulpe {
 
         swapChainFramebuffers.resize(swapChainImageViews.size());
 
-        for (size_t i = 0; i < swapChainImageViews.size(); i++) {
+        for (size_t i { 0 }; i < swapChainImageViews.size(); i++) {
 
             std::array<VkImageView, 3> attachments = {
                 *colorImageView.data(),
@@ -1205,7 +1205,7 @@ namespace Poulpe {
         fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
         fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
 
-        for (int i = 0; i < m_MAX_FRAMES_IN_FLIGHT; i++) {
+        for (int i { 0 }; i < m_MAX_FRAMES_IN_FLIGHT; i++) {
             if (vkCreateSemaphore(m_Device, &semaphoreInfo, nullptr,
                 & imageAvailableSemaphores[static_cast<size_t>(i)]) != VK_SUCCESS
                 || vkCreateSemaphore(m_Device, &semaphoreInfo, nullptr,
@@ -1973,7 +1973,7 @@ namespace Poulpe {
         VkPhysicalDeviceMemoryProperties memProperties;
         vkGetPhysicalDeviceMemoryProperties(m_PhysicalDevice, &memProperties);
 
-        for (uint32_t i = 0; i < memProperties.memoryTypeCount; i++) {
+        for (uint32_t i { 0 }; i < memProperties.memoryTypeCount; i++) {
             if ((typeFilter & (1 << i)) && (memProperties.memoryTypes[i].propertyFlags & properties) == properties) {
                 m_MaxMemoryHeap = memProperties.memoryHeaps[memProperties.memoryTypes[i].heapIndex].size;
                 return i;
@@ -2251,7 +2251,7 @@ namespace Poulpe {
         VkDeviceSize layerSize = imageSize / 6;
         vkMapMemory(m_Device, *deviceMemory->getMemory(), offset, size, 0, (void**)&data);
 
-        for (uint32_t i = 0; i < skyboxPixels.size(); i++) {
+        for (uint32_t i { 0 }; i < skyboxPixels.size(); i++) {
             memcpy(data + layerSize * i, skyboxPixels[i], layerSize);
         }
 
@@ -2277,7 +2277,7 @@ namespace Poulpe {
         endCommandBuffer(commandBuffer);
         queueSubmit(commandBuffer);
 
-        for (uint32_t i = 0; i < skyboxPixels.size(); i++) {
+        for (uint32_t i { 0 }; i < skyboxPixels.size(); i++) {
             stbi_image_free(skyboxPixels[i]);
         }
         //m_DeviceMemoryPool->clear(deviceMemory);
@@ -2380,7 +2380,7 @@ namespace Poulpe {
     {
         std::vector<VkBufferImageCopy> bufferCopyRegions;
 
-        for (uint32_t i = 0; i < skyboxPixels.size(); i++) {
+        for (uint32_t i { 0 }; i < skyboxPixels.size(); i++) {
 
             for (uint32_t mipLevel = 0; mipLevel < mipLevels; mipLevel++) {
 
@@ -2543,7 +2543,7 @@ namespace Poulpe {
 
     //void VulkanAPI::destroySemaphores(std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>> semaphores)
     //{
-    //    for (int i = 0; i < m_MAX_FRAMES_IN_FLIGHT; i++) {
+    //    for (int i { 0 }; i < m_MAX_FRAMES_IN_FLIGHT; i++) {
     //        
     //        if (nullptr != semaphores.first[i]) vkDestroySemaphore(m_Device, semaphores.first[i], nullptr);
     //        if (nullptr != semaphores.second[i]) vkDestroySemaphore(m_Device, semaphores.second[i], nullptr);
@@ -2552,10 +2552,10 @@ namespace Poulpe {
 
     //void VulkanAPI::destroyFences()
     //{
-    //    for (size_t i = 0; i < m_InFlightFences.size(); ++i) {
+    //    for (size_t i { 0 }; i < m_InFlightFences.size(); ++i) {
     //        vkDestroyFence(m_Device, m_InFlightFences[i], nullptr);
     //    }
-    //    for (size_t i = 0; i < m_ImagesInFlight.size(); ++i) {
+    //    for (size_t i { 0 }; i < m_ImagesInFlight.size(); ++i) {
     //        vkDestroyFence(m_Device, m_ImagesInFlight[i], nullptr);
     //    }
     //}
@@ -2593,10 +2593,10 @@ namespace Poulpe {
     //void VulkanAPI::destroySwapchain(VkDevice device, VkSwapchainKHR swapChain,
     //    std::vector<VkFramebuffer> swapChainFramebuffers, std::vector<VkImageView> swapChainImageViews)
     //{
-    //    for (uint32_t i = 0; i < swapChainFramebuffers.size(); ++i) {
+    //    for (uint32_t i { 0 }; i < swapChainFramebuffers.size(); ++i) {
     //        vkDestroyFramebuffer(device, swapChainFramebuffers[i], nullptr);
     //    }
-    //    for (uint32_t i = 0; i < swapChainImageViews.size(); ++i) {
+    //    for (uint32_t i { 0 }; i < swapChainImageViews.size(); ++i) {
     //        vkDestroyImageView(device, swapChainImageViews[i], nullptr);
     //    }
     //    vkDestroySwapchainKHR(device, swapChain, nullptr);

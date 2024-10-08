@@ -6,18 +6,12 @@ namespace Poulpe
 
     void Grid::createDescriptorSet(IVisitable* const mesh)
     {
-      Texture ctex = m_TextureManager->getTextures()["mpoulpe"];
+      Texture const ctex{ m_TextureManager->getTextures()["mpoulpe"] };
 
       std::vector<VkDescriptorImageInfo> imageInfos{};
+      imageInfos.emplace_back(ctex.getSampler(), ctex.getImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
-      VkDescriptorImageInfo imageInfo{};
-      imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-      imageInfo.imageView = ctex.getImageView();
-      imageInfo.sampler = ctex.getSampler();
-
-      imageInfos.emplace_back(imageInfo);
-
-      auto pipeline = m_Renderer->getPipeline(mesh->getShaderName());
+      auto const pipeline = m_Renderer->getPipeline(mesh->getShaderName());
       VkDescriptorSet descSet = m_Renderer->createDescriptorSets(pipeline->descPool, { pipeline->descSetLayout }, 1);
 
       m_Renderer->updateDescriptorSets(*mesh->getUniformBuffers(), descSet, imageInfos);
@@ -45,13 +39,13 @@ namespace Poulpe
     {
       if (!mesh && !mesh->isDirty()) return;
 
-      std::vector<Vertex> const vertices = {
+      std::vector<Vertex> const vertices {
           {{-1.f, -1.f, 0.0f}, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}},
           {{1.f, -1.f, 0.0f}, {0.0f, 1.0f, 0.0f}, {1.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}},
           {{1.0f, 1.f, 0.0f}, {0.0f, 0.0f, 1.0f}, {0.0f, 1.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}},
           {{-1.f, 1.f, 0.0f}, {1.0f, 1.0f, 1.0f}, {1.0f, 1.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}}
       };
-      std::vector<uint32_t> const indices = {
+      std::vector<uint32_t> const indices {
           0, 1, 2, 2, 3, 0
       };
 
@@ -76,7 +70,7 @@ namespace Poulpe
 
       setPushConstants(mesh);
 
-      for (uint32_t i = 0; i < mesh->getUniformBuffers()->size(); i++) {
+      for (uint32_t i{ 0 }; i < mesh->getUniformBuffers()->size(); i++) {
         //gridData.m_Ubos[i].view = m_Renderer->GetCamera()->LookAt();
         gridData.m_Ubos[i].projection = m_Renderer->getPerspective();
 

@@ -14,11 +14,11 @@ namespace Poulpe
 
     ThreadPool() : m_Done(false), m_Joiner(m_Threads)
     {
-      unsigned const threadCount = std::thread::hardware_concurrency() / 2;
+      unsigned const threadCount = std::thread::hardware_concurrency();
 
       try {
-        for (unsigned i = 0; i < threadCount; ++i) {
-          m_Threads.push_back(std::thread(&ThreadPool::WorkerThreads, this));
+        for (unsigned i{ 0 }; i < threadCount; ++i) {
+          m_Threads.emplace_back(std::thread(&ThreadPool::WorkerThreads, this));
         }
       }
       catch (...) {
@@ -47,28 +47,28 @@ namespace Poulpe
     }
 
   private:
-      void WorkerThreads()
-      {
-          while (!m_Done) {
-              //std::function<void()> task;
-              //@todo add priority order
-              for (auto& [queueName, queueThread]: m_WorkQueue) {
-                  //if (!queueThread.empty() && queueThread.tryPop(task)) {
-                  //    task();
-                  //} else {
-                  //    std::this_thread::yield();
-                  //}
-                  
-                std::unique_ptr<std::function<void()>> task = queueThread.pop();
+    void WorkerThreads()
+    {
+      while (!m_Done) {
+        //std::function<void()> task;
+        //@todo add priority order
+        std::ranges::for_each(m_WorkQueue, [](auto &pair) {
+            //if (!queueThread.empty() && queueThread.tryPop(task)) {
+            //    task();
+            //} else {
+            //    std::this_thread::yield();
+            //}
+          auto& [queueName, queueThread] = pair;
+          std::unique_ptr<std::function<void()>> task = queueThread.pop();
 
-                if (task) {
-                  (*task.get())();
-                } else {
-                  std::this_thread::yield();
-                }
-              }
+          if (task) {
+            (*task.get())();
+          } else {
+            std::this_thread::yield();
           }
+        });
       }
+    }
 
   private:
       std::atomic_bool m_Done;
