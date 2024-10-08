@@ -91,7 +91,7 @@ namespace Poulpe
       auto pipeline = m_Renderer->getPipeline(mesh->getShaderName());
       VkDescriptorSet descSet = m_Renderer->createDescriptorSets(pipeline->descPool, { pipeline->descSetLayout }, 1);
 
-      for (size_t i = 0; i < mesh->getUniformBuffers()->size(); ++i) {
+      for (size_t i{ 0 }; i < mesh->getUniformBuffers()->size(); ++i) {
 
         m_Renderer->updateDescriptorSets(
           *mesh->getUniformBuffers(),
@@ -182,7 +182,7 @@ namespace Poulpe
       uint32_t uboRemaining = (totalInstances - uboOffset > 0) ? totalInstances - uboOffset : 0;
       uint32_t nbUbo = uboOffset;
 
-      for (size_t i = 0; i < uniformBuffersCount; ++i) {
+      for (size_t i{ 0 }; i < uniformBuffersCount; ++i) {
 
         mesh->getData()->m_UbosOffset.emplace_back(uboOffset);
         Buffer uniformBuffer = m_Renderer->createUniformBuffers(nbUbo);
@@ -200,7 +200,7 @@ namespace Poulpe
       data->m_IndicesBuffer = m_Renderer->createIndexBuffer(commandPool, data->m_Indices);
       data->m_TextureIndex = 0;
 
-      for (size_t i = 0; i < mesh->getData()->m_Ubos.size(); ++i) {
+      for (size_t i{ 0 }; i < mesh->getData()->m_Ubos.size(); ++i) {
         mesh->getData()->m_Ubos[i].projection = m_Renderer->getPerspective();
 
         if (m_TextureManager->getTextures().contains(mesh->getData()->m_TextureBumpMap)) {
@@ -238,7 +238,7 @@ namespace Poulpe
       unsigned int min{ 0 };
       unsigned int max{ 0 };
 
-      for (size_t i = 0; i < mesh->getUniformBuffers()->size(); ++i) {
+      for (size_t i{ 0 }; i < mesh->getUniformBuffers()->size(); ++i) {
         max = mesh->getData()->m_UbosOffset.at(i);
         auto ubos = std::vector<UniformBufferObject>(mesh->getData()->m_Ubos.begin() + min, mesh->getData()->m_Ubos.begin() + max);
 

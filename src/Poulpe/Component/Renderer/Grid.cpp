@@ -76,7 +76,7 @@ namespace Poulpe
 
       setPushConstants(mesh);
 
-      for (uint32_t i = 0; i < mesh->getUniformBuffers()->size(); i++) {
+      for (uint32_t i{ 0 }; i < mesh->getUniformBuffers()->size(); i++) {
         //gridData.m_Ubos[i].view = m_Renderer->GetCamera()->LookAt();
         gridData.m_Ubos[i].projection = m_Renderer->getPerspective();
 

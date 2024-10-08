@@ -32,19 +32,19 @@ namespace Poulpe
   {
     m_LevelConfig = levelConfig;
 
-    for (auto const& entityConf : m_LevelConfig["entities"].items()) {
+    std::ranges::for_each(m_LevelConfig["entities"].items(), [&](auto const& entityConf) {
 
-      auto const& key = entityConf.key();
-      auto const& data = entityConf.value();
+      auto const& key{ entityConf.key() };
+      auto const& data{ entityConf.value() };
 
       size_t const count = data["count"].template get<size_t>();
 
-      for (size_t i = 0; i < count; i++) {
-        Locator::getThreadPool()->submit("LoadingOBJ", [this, &key, &data]() {
+      for (size_t i{ 0 }; i < count; i++) {
+        Locator::getThreadPool()->submit("LoadingOBJ", [&]() {
           initMeshes(key, data);
         });
       }
-    }
+    });
 
     m_LoadingDone.store(true);
   }

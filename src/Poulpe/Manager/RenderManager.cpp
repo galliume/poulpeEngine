@@ -142,26 +142,25 @@ namespace Poulpe
       //m_LightManager->animateAmbientLight(deltaTime);
       auto* worldNode = m_EntityManager->getWorldNode();
 
-      //@todo refactor with recursion when needed
-      for (auto leafNode : worldNode->getChildren()) {
-        for (auto entityNode : leafNode->getChildren()) {
-          auto entity = entityNode->getEntity();
+      std::ranges::for_each(worldNode->getChildren(), [&](const auto& leafNode) {
+        std::ranges::for_each(leafNode->getChildren(), [&](const auto& entityNode) {
+          auto const& entity = entityNode->getEntity();
           auto* meshComponent = m_ComponentManager->getComponent<MeshComponent>(entity->getID());
           Mesh* mesh = meshComponent->hasImpl<Mesh>();
-          
-          if (!mesh) continue;
+        
+          if (mesh) {
+            auto basicRdrImpl = m_ComponentManager->getComponent<RenderComponent>(entity->getID());
+            if (mesh->isDirty() && basicRdrImpl) {
+              basicRdrImpl->visit(deltaTime, mesh);
+            }
 
-          auto* animationComponent = m_ComponentManager->getComponent<AnimationComponent>(entity->getID());
-          auto basicRdrImpl = m_ComponentManager->getComponent<RenderComponent>(entity->getID());
-
-          if (mesh->isDirty() && basicRdrImpl) {
-            basicRdrImpl->visit(deltaTime, mesh);
+            auto* animationComponent = m_ComponentManager->getComponent<AnimationComponent>(entity->getID());
+            if (animationComponent) {
+              animationComponent->visit(deltaTime, mesh);
+            }
           }
-          if (animationComponent) {
-            animationComponent->visit(deltaTime, mesh);
-          }
-        }
-      }
+        });
+      });
 
       if (m_Refresh) {
         m_Renderer->setDrawBbox(m_ShowBbox);

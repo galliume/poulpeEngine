@@ -85,7 +85,7 @@ namespace Poulpe
 
       setPushConstants(mesh);
 
-      for (uint32_t i = 0; i < mesh->getUniformBuffers()->size(); i++) {
+      for (uint32_t i{ 0 }; i < mesh->getUniformBuffers()->size(); i++) {
         data.m_Ubos[i].projection = m_Renderer->getPerspective();
 
         m_Renderer->updateUniformBuffer(mesh->getUniformBuffers()->at(i), &data.m_Ubos);
