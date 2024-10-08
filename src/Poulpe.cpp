@@ -14,7 +14,7 @@ int main(int argc, char** argv)
     bool serverMode{ false };
     std::string port{ "9371" };
 
-    for (int i = 0; i < argc; ++i) {
+    for (int i { 0 }; i < argc; ++i) {
       std::string argument = argv[i];
       if ("--server" == argument || "-S" == argument) {
         serverMode = true;
