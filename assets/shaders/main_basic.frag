@@ -52,7 +52,7 @@ struct Material
 layout(binding = 1) uniform sampler2D texSampler[7];
 
 #define NR_POINT_LIGHTS 2
-layout(binding = 2) buffer ObjectBuffer {
+layout(binding = 2) readonly buffer ObjectBuffer {
     Light ambientLight;
     Light pointLights[NR_POINT_LIGHTS];
     Light spotLight;

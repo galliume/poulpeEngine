@@ -26,6 +26,7 @@ namespace Poulpe
     }
 
     std::vector<material_t> materials{};
+    materials.reserve(scene->mNumMaterials);
 
     if (scene->HasMaterials()) {
       for (auto i{ 0 }; i < scene->mNumMaterials; ++i) {
@@ -127,6 +128,10 @@ namespace Poulpe
       for (unsigned int f{ 0 }; f < mesh->mNumFaces; f++) {
         aiFace const* face = &mesh->mFaces[f];
 
+        meshData.vertices.reserve(face->mNumIndices);
+        meshData.indices.reserve(face->mNumIndices);
+        meshData.facesMaterialId.reserve(face->mNumIndices);
+
         for (unsigned int j{ 0 }; j < face->mNumIndices; j++) {
 
           aiVector3D vertices = mesh->mVertices[face->mIndices[j]];
@@ -149,7 +154,7 @@ namespace Poulpe
 
           vertex.color = { 1.0f, 1.0f, 1.0f };
 
-          meshData.vertices.push_back(std::move(vertex));
+          meshData.vertices.emplace_back(std::move(vertex));
           meshData.indices.push_back(count);
           count += 1;
         }

@@ -6,23 +6,15 @@ namespace Poulpe
 
     void ShadowMap::createDescriptorSet(IVisitable* const mesh)
     {
-      std::vector<VkDescriptorImageInfo> imageInfos;
-      std::vector<VkDescriptorImageInfo> imageInfoSpec;
+      Texture const tex{ m_TextureManager->getTextures()[mesh->getData()->m_Textures.at(0)] };
 
-      Texture tex;
-      tex = m_TextureManager->getTextures()[mesh->getData()->m_Textures.at(0)];
+      std::vector<VkDescriptorImageInfo> imageInfos{};
+      imageInfos.emplace_back(tex.getSampler(), tex.getImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
-      VkDescriptorImageInfo imageInfo{};
-      imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-      imageInfo.imageView = tex.getImageView();
-      imageInfo.sampler = tex.getSampler();
-
-      imageInfos.emplace_back(imageInfo);
-
-      auto pipeline = m_Renderer->getPipeline(mesh->getShaderName());
+      auto const pipeline = m_Renderer->getPipeline(mesh->getShaderName());
       VkDescriptorSet descSet = m_Renderer->createDescriptorSets(pipeline->descPool, { pipeline->descSetLayout }, 1);
 
-      for (size_t i = 0; i < mesh->getUniformBuffers()->size(); ++i) {
+      for (size_t i{ 0 }; i < mesh->getUniformBuffers()->size(); ++i) {
 
         m_Renderer->updateDescriptorSets(
           *mesh->getUniformBuffers(),
@@ -56,17 +48,17 @@ namespace Poulpe
     {
       if (!mesh && !mesh->isDirty()) return;
 
-      uint32_t totalInstances = static_cast<uint32_t>(mesh->getData()->m_Ubos.size());
-      uint32_t maxUniformBufferRange = m_Renderer->getDeviceProperties().limits.maxUniformBufferRange;
-      uint32_t uniformBufferChunkSize = maxUniformBufferRange / sizeof(UniformBufferObject);
-      uint32_t uniformBuffersCount = static_cast<uint32_t>(std::ceil(static_cast<float>(totalInstances) / static_cast<float>(uniformBufferChunkSize)));
+      uint32_t const totalInstances{ static_cast<uint32_t>(mesh->getData()->m_Ubos.size()) };
+      uint32_t const maxUniformBufferRange{ m_Renderer->getDeviceProperties().limits.maxUniformBufferRange };
+      uint32_t const uniformBufferChunkSize{ maxUniformBufferRange / sizeof(UniformBufferObject) };
+      uint32_t const uniformBuffersCount{ static_cast<uint32_t>(std::ceil(static_cast<float>(totalInstances) / static_cast<float>(uniformBufferChunkSize))) };
 
       //@todo fix memory management...
-      uint32_t uboOffset = (totalInstances > uniformBufferChunkSize) ? uniformBufferChunkSize : totalInstances;
-      uint32_t uboRemaining = (totalInstances - uboOffset > 0) ? totalInstances - uboOffset : 0;
-      uint32_t nbUbo = uboOffset;
+      uint32_t uboOffset{ (totalInstances > uniformBufferChunkSize) ? uniformBufferChunkSize : totalInstances };
+      uint32_t uboRemaining { (totalInstances - uboOffset > 0) ? totalInstances - uboOffset : 0};
+      uint32_t nbUbo { uboOffset};
 
-      for (size_t i = 0; i < uniformBuffersCount; ++i) {
+      for (size_t i{ 0 }; i < uniformBuffersCount; ++i) {
 
         mesh->getData()->m_UbosOffset.emplace_back(uboOffset);
         Buffer uniformBuffer = m_Renderer->createUniformBuffers(nbUbo);
@@ -78,13 +70,13 @@ namespace Poulpe
       }
 
       auto commandPool = m_Renderer->createCommandPool();
-      auto data = mesh->getData();
+      auto const& data = mesh->getData();
 
       data->m_VertexBuffer = m_Renderer->createVertexBuffer(commandPool, data->m_Vertices);
       data->m_IndicesBuffer = m_Renderer->createIndexBuffer(commandPool, data->m_Indices);
       data->m_TextureIndex = 0;
 
-      for (size_t i = 0; i < mesh->getData()->m_Ubos.size(); ++i) {
+      for (size_t i{ 0 }; i < mesh->getData()->m_Ubos.size(); ++i) {
         mesh->getData()->m_Ubos[i].projection = m_Renderer->getPerspective();
 
         if (m_TextureManager->getTextures().contains(mesh->getData()->m_TextureBumpMap)) {
@@ -92,8 +84,6 @@ namespace Poulpe
           mesh->getData()->m_Ubos[i].texSize = glm::vec2(tex.getWidth(), tex.getHeight());
         }
       }
-
-      ObjectBuffer objectBuffer{};
 
       Material material{};
       material.ambient = mesh->getMaterial().ambient;
@@ -104,16 +94,15 @@ namespace Poulpe
       material.shiIorDiss = glm::vec3(mesh->getMaterial().shininess,
         mesh->getMaterial().ior, mesh->getMaterial().illum);
 
+      ObjectBuffer objectBuffer{};
       objectBuffer.pointLights[0] = m_LightManager->getPointLights().at(0);
       objectBuffer.pointLights[1] = m_LightManager->getPointLights().at(1);
 
       objectBuffer.spotLight = m_LightManager->getSpotLights().at(0);
-
       objectBuffer.ambientLight = m_LightManager->getAmbientLight();
-
       objectBuffer.material = material;
 
-      auto size = sizeof(objectBuffer);
+      auto const size = sizeof(objectBuffer);
       auto storageBuffer = m_Renderer->createStorageBuffers(size);
       mesh->addStorageBuffer(storageBuffer);
       m_Renderer->updateStorageBuffer(mesh->getStorageBuffers()->at(0), objectBuffer);
@@ -122,7 +111,7 @@ namespace Poulpe
       unsigned int min{ 0 };
       unsigned int max{ 0 };
 
-      for (size_t i = 0; i < mesh->getUniformBuffers()->size(); ++i) {
+      for (size_t i{ 0 }; i < mesh->getUniformBuffers()->size(); ++i) {
         max = mesh->getData()->m_UbosOffset.at(i);
         auto ubos = std::vector<UniformBufferObject>(mesh->getData()->m_Ubos.begin() + min, mesh->getData()->m_Ubos.begin() + max);
 
