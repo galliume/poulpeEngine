@@ -40,7 +40,7 @@ namespace Poulpe
       size_t const count = data["count"].template get<size_t>();
 
       for (size_t i{ 0 }; i < count; i++) {
-        Locator::getThreadPool()->submit("LoadingOBJ", [&]() {
+        Locator::getThreadPool()->submit([&]() {
           initMeshes(key, data);
         });
       }
@@ -296,18 +296,16 @@ namespace Poulpe
 
       auto basicRdrImpl = RendererFactory::create<Basic>();
       m_ComponentManager->addComponent<RenderComponent>(entity->getID(), basicRdrImpl);
-      
-      auto deltaTime = std::chrono::duration<float, std::milli>(0);
-      auto* entityNode = new EntityNode(entity);
+
+      basicRdrImpl->init(m_Renderer, m_TextureManager, m_LightManager);
+      auto const deltaTime = std::chrono::duration<float, std::milli>(0);
+      basicRdrImpl->visit(deltaTime, mesh);
 
       {
         std::shared_lock guard(m_SharedMutex);
-
-        basicRdrImpl->init(m_Renderer, m_TextureManager, m_LightManager);
-        basicRdrImpl->visit(deltaTime, mesh);
-        rootMeshEntityNode->addChild(entityNode);
-        m_Renderer->addEntity(entityNode->getEntity());
+        auto* entityNode = rootMeshEntityNode->addChild(new EntityNode(entity));
         m_WorldNode->addChild(rootMeshEntityNode);
+        m_Renderer->addEntity(entityNode->getEntity());
       }
     };
 

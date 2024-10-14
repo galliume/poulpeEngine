@@ -221,7 +221,7 @@ namespace Poulpe
   void Renderer::drawShadowMap()
   {
     std::string const pipelineName{ "shadowMap" };
-    auto pipeline = getPipeline(pipelineName);
+    auto const& pipeline = getPipeline(pipelineName);
   
     //m_API->beginCommandBuffer(m_CommandBuffersEntities[m_CurrentFrame]);
     m_API->startMarker(m_CommandBuffersEntities[m_CurrentFrame], "shadow_map_" + pipelineName, 0.1f, 0.2f, 0.3f);
@@ -272,16 +272,14 @@ namespace Poulpe
     VkRect2D scissor = { { 0, 0 }, { width, height } };
 
     vkCmdSetScissor(m_CommandBuffersEntities[m_CurrentFrame], 0, 1, & scissor);
-        
-    float depthBiasConstant = 0.0f;
-    float depthBiasSlope = 0.0f;
+
+    float const depthBiasConstant = 0.0f;
+    float const depthBiasSlope = 0.0f;
 
     //vkCmdSetDepthClampEnableEXT(m_CommandBuffersEntities[m_CurrentFrame], VK_TRUE);
     //vkCmdSetDepthBias(m_CommandBuffersEntities[m_CurrentFrame], depthBiasConstant, 0.0f, depthBiasSlope);
 
     std::ranges::for_each(m_Entities, [&](auto const& entity) {
-      //if (!entity) continue;
-
       auto meshComponent = m_ComponentManager->getComponent<MeshComponent>(entity->getID());
       if (meshComponent) {
         Mesh* mesh = meshComponent->hasImpl<Mesh>();
@@ -291,12 +289,12 @@ namespace Poulpe
           uint32_t min{ 0 };
           uint32_t max{ 0 };
 
-          for (size_t i { 0 }; i < mesh->getUniformBuffers()->size(); ++i) {
+          for (size_t i{ 0 }; i < mesh->getUniformBuffers()->size(); ++i) {
             max = mesh->getData()->m_UbosOffset.at(i);
             auto ubos = std::vector<UniformBufferObject>(mesh->getData()->m_Ubos.begin() + min, mesh->getData()->m_Ubos.begin() + max);
-            m_API->updateUniformBuffer(mesh->getUniformBuffers()->at(i), &ubos);
-
             min = max;
+            if (ubos.empty()) continue;
+            m_API->updateUniformBuffer(mesh->getUniformBuffers()->at(i), &ubos);
           }
 
           constants pushConstants{};
@@ -344,7 +342,6 @@ namespace Poulpe
   {
     //{
     //  std::lock_guard guard(m_MutexEntitySubmit);
-
       if (0 < m_Entities.size()) {
 
         m_API->beginCommandBuffer(m_CommandBuffersEntities[m_CurrentFrame]);
@@ -369,52 +366,79 @@ namespace Poulpe
 
         m_API->startMarker(m_CommandBuffersEntities[m_CurrentFrame], "entities_drawing", 0.2f, 0.2f, 0.9f);
 
+        //std::vector<VkDrawIndexedIndirectCommand> drawCommands{};
+        //drawCommands.reserve(m_Entities.size());
+
+        //unsigned int firstInstance { 0 };
+        //std::ranges::for_each(m_Entities, [&](auto const& entity) {
+        //  auto meshComponent = m_ComponentManager->getComponent<MeshComponent>(entity->getID());
+        //  if (meshComponent) {
+        //    Mesh* mesh = meshComponent->hasImpl<Mesh>();
+
+        //    drawCommands.emplace_back(
+        //       mesh->getData()->m_Vertices.size(),
+        //       1, 0, 0, firstInstance);
+        //    firstInstance += 1;
+        //  }
+        //});
+
+        //auto indirectBuffer = m_API->createIndirectCommandsBuffer(drawCommands);
+
+        VulkanPipeline lastPipeline;
+
+        size_t num{ 0 };
         std::ranges::for_each(m_Entities, [&](auto const& entity) {
-          if (entity && entity->getID() != NULL) {
+          auto meshComponent = m_ComponentManager->getComponent<MeshComponent>(entity->getID());
+          if (meshComponent) {
 
-            auto meshComponent = m_ComponentManager->getComponent<MeshComponent>(entity->getID());
-            if (meshComponent) {
+            Mesh* mesh = meshComponent->hasImpl<Mesh>();
+            if (!mesh->getUniformBuffers()->empty()) {
 
-              Mesh* mesh = meshComponent->hasImpl<Mesh>();
-              if (!mesh->getUniformBuffers()->empty()) {
+              //@todo check if the pipeline really need to be updated
+              auto pipeline = getPipeline(mesh->getShaderName());
 
-                auto pipeline = getPipeline(mesh->getShaderName());
+              for (size_t i{ 0 }; i < mesh->getData()->m_Ubos.size(); ++i) {
+                mesh->getData()->m_Ubos[i].projection = getPerspective();
+              }
 
-                for (size_t i{ 0 }; i < mesh->getData()->m_Ubos.size(); ++i) {
-                  mesh->getData()->m_Ubos[i].projection = getPerspective();
-                }
+              uint32_t min{ 0 };
+              uint32_t max{ 0 };
 
-                uint32_t min{ 0 };
-                uint32_t max{ 0 };
+              for (size_t i{ 0 }; i < mesh->getUniformBuffers()->size(); ++i) {
+                max = mesh->getData()->m_UbosOffset.at(i);
+                auto ubos = std::vector<UniformBufferObject>(mesh->getData()->m_Ubos.begin() + min, mesh->getData()->m_Ubos.begin() + max);
+                min = max;
+                if (ubos.empty()) continue;
+                m_API->updateUniformBuffer(mesh->getUniformBuffers()->at(i), &ubos);
+              }
 
-                for (size_t i{ 0 }; i < mesh->getUniformBuffers()->size(); ++i) {
-                  max = mesh->getData()->m_UbosOffset.at(i);
-                  auto ubos = std::vector<UniformBufferObject>(mesh->getData()->m_Ubos.begin() + min, mesh->getData()->m_Ubos.begin() + max);
-                  m_API->updateUniformBuffer(mesh->getUniformBuffers()->at(i), &ubos);
+              if (mesh->hasPushConstants()) {
+                mesh->applyPushConstants(m_CommandBuffersEntities[m_CurrentFrame], pipeline->pipelineLayout, this, mesh);
+              }
 
-                  min = max;
-                }
+              try {
 
-                if (mesh->hasPushConstants()) {
-                  mesh->applyPushConstants(m_CommandBuffersEntities[m_CurrentFrame], pipeline->pipelineLayout, this, mesh);
-                }
+                vkCmdBindDescriptorSets(m_CommandBuffersEntities[m_CurrentFrame],
+                  VK_PIPELINE_BIND_POINT_GRAPHICS,
+                  pipeline->pipelineLayout,
+                  0, 1, mesh->getDescSet(), 0, nullptr);
 
-                try {
+                m_API->bindPipeline(m_CommandBuffersEntities[m_CurrentFrame], pipeline->pipeline);
 
-                  vkCmdBindDescriptorSets(m_CommandBuffersEntities[m_CurrentFrame],
-                    VK_PIPELINE_BIND_POINT_GRAPHICS,
-                    pipeline->pipelineLayout,
-                    0, 1, mesh->getDescSet(), 0, nullptr);
-
-                  m_API->bindPipeline(m_CommandBuffersEntities[m_CurrentFrame], pipeline->pipeline);
-
-                  if (m_RenderingStopped) return;
-                  m_API->draw(m_CommandBuffersEntities[m_CurrentFrame], *mesh->getDescSet(),
-                    *pipeline, mesh->getData(), mesh->isIndexed());
-                }
-                catch (std::exception& e) {
-                  PLP_DEBUG("Draw error: {}", e.what());
-                }
+                if (m_RenderingStopped) return;
+                m_API->draw(m_CommandBuffersEntities[m_CurrentFrame], *mesh->getDescSet(),
+                  *pipeline, mesh->getData(), mesh->isIndexed());
+                /*vkCmdDrawIndexedIndirect(
+                  m_CommandBuffersEntities[m_CurrentFrame],
+                  indirectBuffer.buffer,
+                  0,
+                  1,
+                  sizeof(VkDrawIndexedIndirectCommand));*/
+                
+                num += 1;
+              }
+              catch (std::exception& e) {
+                PLP_DEBUG("Draw error: {}", e.what());
               }
             }
           }
@@ -578,8 +602,11 @@ namespace Poulpe
         //if (!m_CmdEntitiesStatus[m_CurrentFrame]->done.load() || m_Nodraw.load()) {
         //  m_CmdEntitiesStatus[m_CurrentFrame]->done.store(false);
         drawSkybox();
-        drawEntities();
-        //  //Locator::getThreadPool()->submit(threadQueueName, [this]() { drawEntities(); });
+        {
+          std::lock_guard guard(m_MutexEntitySubmit);
+          drawEntities();
+        }
+          //  //Locator::getThreadPool()->submit(threadQueueName, [this]() { drawEntities(); });
         //}
         //if (!m_CmdHUDStatus[m_CurrentFrame]->done.load() || m_Nodraw.load()) {
         //  m_CmdHUDStatus[m_CurrentFrame]->done.store(false);
@@ -593,22 +620,6 @@ namespace Poulpe
       //        drawBbox();
       //    });
       //}
-  }
-
-  void Renderer::draw()
-  {
-      //if (m_RenderingStopped) {
-      //    {
-      //      m_RenderingStopped = false;
-      //      clearRendererScreen();
-      //    }
-      //    return;
-      //}
-      //std::string_view threadQueueName{ "render" };
-
-      //Locator::getThreadPool()->Submit("submit", [=, this]() { Submit({ cmds.at(0), cmds.at(1)}); });
-      //Locator::getThreadPool()->Submit("submit", [=, this]() { Submit({ cmds.at(2) }); });
-      //submit();
   }
 
   void Renderer::clearRendererScreen()
@@ -725,7 +736,7 @@ namespace Poulpe
         m_Nodraw.store(true);
         return;
       }
-       
+
       m_Nodraw.store(false);
       
       {

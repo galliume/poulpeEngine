@@ -1841,6 +1841,45 @@ namespace Poulpe {
         return uniformBuffer;
     }
 
+    Buffer VulkanAPI::createIndirectCommandsBuffer(std::vector<VkDrawIndexedIndirectCommand> const& drawCommands)
+    {
+      VkBuffer buffer{ createBuffer(
+        sizeof(VkDrawIndexedIndirectCommand) * drawCommands.size(),
+        VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT) };
+        
+        VkMemoryRequirements memRequirements;
+        vkGetBufferMemoryRequirements(m_Device, buffer, & memRequirements);
+
+        auto const memoryType{ findMemoryType(memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT | VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT) };
+        auto const size{ ((memRequirements.size / memRequirements.alignment) + 1) * memRequirements.alignment };
+
+        auto deviceMemory{ m_DeviceMemoryPool->get(
+          m_Device,
+          size,
+          memoryType,
+          VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT,
+          memRequirements.alignment,
+          DeviceMemoryPool::DeviceBufferType::STORAGE) };
+
+        auto const offset {deviceMemory->getOffset()};
+        deviceMemory->bindBufferToMemory(buffer, size);
+
+        Buffer indirectBuffer{ std::move(buffer), deviceMemory, offset, size };
+
+        {
+          indirectBuffer.memory->lock();
+
+          auto memory{ indirectBuffer.memory->getMemory() };
+          void* data;
+          vkMapMemory(m_Device, *memory, indirectBuffer.offset, indirectBuffer.size, 0, &data);
+          memcpy(data, drawCommands.data(), indirectBuffer.size);
+          vkUnmapMemory(m_Device, *memory);
+
+          indirectBuffer.memory->unLock();
+        }
+        return indirectBuffer;
+    }
+
     Buffer VulkanAPI::createCubeUniformBuffers(uint32_t uniformBuffersCount)
     {
         VkDeviceSize bufferSize = sizeof(CubeUniformBufferObject) * uniformBuffersCount;

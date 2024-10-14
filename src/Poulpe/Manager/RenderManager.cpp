@@ -84,11 +84,6 @@ namespace Poulpe
         m_ComponentManager->clear();
     }
 
-    void RenderManager::draw()
-    {
-      m_Renderer->draw();
-    }
-
     void RenderManager::init()
     {
         //@todo clean all thoses
@@ -105,16 +100,17 @@ namespace Poulpe
        
         auto * const configManager = Poulpe::Locator::getConfigManager();
 
-        nlohmann::json appConfig = configManager->appConfig();
-        nlohmann::json textureConfig = configManager->texturesConfig();
+        nlohmann::json const& appConfig = configManager->appConfig();
+        nlohmann::json const& textureConfig = configManager->texturesConfig();
 
         m_AudioManager->init();
         m_AudioManager->load(configManager->soundConfig());
 
         loadData(m_CurrentLevel);
 
-        if (static_cast<bool>(appConfig["ambientMusic"]))
-            m_AudioManager->startAmbient();
+        if (static_cast<bool>(appConfig["ambientMusic"])) {
+          m_AudioManager->startAmbient();
+        }
 
         prepareSkybox();
         prepareHUD();
@@ -175,24 +171,25 @@ namespace Poulpe
     {
       auto * const configManager = Poulpe::Locator::getConfigManager();
 
-      nlohmann::json appConfig = configManager->appConfig();
+      nlohmann::json const& appConfig = configManager->appConfig();
       std::string_view threadQueueName{ "loading" };
 
-      auto const levelData = configManager->loadLevelData(level);
+      auto const& levelData = configManager->loadLevelData(level);
       m_TextureManager->addConfig(configManager->texturesConfig());
 
-      std::function<void()> textureFuture = m_TextureManager->load();
+      std::function<void()> textureFuture{ m_TextureManager->load() };
 
-      std::string const sb = (m_CurrentSkybox.empty()) ? static_cast<std::string>(appConfig["defaultSkybox"])
-        : m_CurrentSkybox;
+      std::string const sb{ (m_CurrentSkybox.empty()) ? static_cast<std::string>(appConfig["defaultSkybox"])
+        : m_CurrentSkybox };
 
       std::function<void()> skyboxFuture = m_TextureManager->loadSkybox(sb);
       std::function<void()> shaderFuture = m_ShaderManager->load(configManager->shaderConfig());
 
-      Locator::getThreadPool()->submit(threadQueueName, textureFuture);
-      Locator::getThreadPool()->submit(threadQueueName, skyboxFuture);
-      Locator::getThreadPool()->submit(threadQueueName, shaderFuture);
+      Locator::getThreadPool()->submit(textureFuture);
+      Locator::getThreadPool()->submit(skyboxFuture);
+      Locator::getThreadPool()->submit(shaderFuture);
 
+      //@todo ugly to refactor
       while (!m_TextureManager->isTexturesLoadingDone()) {
         //PLP_WARN("loading {}", m_TextureManager->isTexturesLoadingDone());
       }
@@ -213,41 +210,44 @@ namespace Poulpe
 
     void RenderManager::prepareHUD()
     {
-        auto* gridEntity = new Entity();
-        auto* gridMesh = new Mesh();
-        auto gridRdrImpl = RendererFactory::create<Grid>();
-        gridRdrImpl->init(m_Renderer.get(), m_TextureManager.get(), nullptr);
+      //@todo clean raw pointers
+      auto* gridEntity{ new Entity() };
+      auto* gridMesh{ new Mesh() };
+      auto gridRdrImpl{ RendererFactory::create<Grid>() };
+      gridRdrImpl->init(m_Renderer.get(), m_TextureManager.get(), nullptr);
 
-        auto renderGridComponent = m_ComponentManager->addComponent<RenderComponent>(gridEntity->getID(), gridRdrImpl);
-        auto deltaTime = std::chrono::duration<float, std::milli>(0);
-        renderGridComponent.visit(deltaTime, gridMesh);
-        m_ComponentManager->addComponent<MeshComponent>(gridEntity->getID(), gridMesh);
+      auto renderGridComponent{ m_ComponentManager->addComponent<RenderComponent>(gridEntity->getID(), gridRdrImpl) };
+      auto deltaTime{ std::chrono::duration<float, std::milli>(0) };
+      renderGridComponent.visit(deltaTime, gridMesh);
+      m_ComponentManager->addComponent<MeshComponent>(gridEntity->getID(), gridMesh);
 
-        auto* chEntity = new Entity();
-        auto* chMesh = new Mesh();
-        auto chRdrImpl = RendererFactory::create<Crosshair>();
-        chRdrImpl->init(m_Renderer.get(), m_TextureManager.get(), nullptr);
+      auto* chEntity{ new Entity() };
+      auto* chMesh{ new Mesh() };
+      auto chRdrImpl{ RendererFactory::create<Crosshair>() };
+      chRdrImpl->init(m_Renderer.get(), m_TextureManager.get(), nullptr);
 
-        auto renderCrosshairComponent = m_ComponentManager->addComponent<RenderComponent>(chEntity->getID(), chRdrImpl);
-        renderCrosshairComponent.visit(deltaTime, chMesh);
-        m_ComponentManager->addComponent<MeshComponent>(chEntity->getID(), chMesh);
+      auto renderCrosshairComponent{ m_ComponentManager->addComponent<RenderComponent>(chEntity->getID(), chRdrImpl) };
+      renderCrosshairComponent.visit(deltaTime, chMesh);
+      m_ComponentManager->addComponent<MeshComponent>(chEntity->getID(), chMesh);
 
-        m_EntityManager->addHUD(gridEntity);
-        m_EntityManager->addHUD(chEntity);
+      m_EntityManager->addHUD(gridEntity);
+      m_EntityManager->addHUD(chEntity);
     }
 
     void RenderManager::prepareSkybox()
     {
-        auto* skyboxEntity = new Entity();
-        auto* skyboxMesh = new Mesh();
-        skyboxMesh->setHasShadow(false);
-        auto* skyRdrImpl = new Skybox();
-        skyRdrImpl->init(m_Renderer.get(), m_TextureManager.get(), nullptr);
-        auto renderComponent = m_ComponentManager->addComponent<RenderComponent>(skyboxEntity->getID(), skyRdrImpl);
-        auto deltaTime = std::chrono::duration<float, std::milli>(0);
-        renderComponent.visit(deltaTime, skyboxMesh);
-        m_ComponentManager->addComponent<MeshComponent>(skyboxEntity->getID(), skyboxMesh);
+      auto* skyboxEntity{ new Entity() };
+      auto* skyboxMesh{new Mesh()};
+      skyboxMesh->setHasShadow(false);
+      
+      auto* skyRdrImpl{ new Skybox() };
+      skyRdrImpl->init(m_Renderer.get(), m_TextureManager.get(), nullptr);
 
-        m_EntityManager->setSkybox(skyboxEntity);
+      auto renderComponent{ m_ComponentManager->addComponent<RenderComponent>(skyboxEntity->getID(), skyRdrImpl) };
+      auto deltaTime = std::chrono::duration<float, std::milli>(0);
+      renderComponent.visit(deltaTime, skyboxMesh);
+
+      m_ComponentManager->addComponent<MeshComponent>(skyboxEntity->getID(), skyboxMesh);
+      m_EntityManager->setSkybox(skyboxEntity);
     }
 }

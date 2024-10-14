@@ -164,7 +164,7 @@ namespace Poulpe
         }
         send("Connected to PoulpeEngine!\0");
 
-        Locator::getThreadPool()->submit("winServerRead", [this]() {
+        Locator::getThreadPool()->submit([this]() {
           read();
         });
       }

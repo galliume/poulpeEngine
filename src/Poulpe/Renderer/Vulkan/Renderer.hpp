@@ -47,7 +47,6 @@ namespace Poulpe
     void clear() override;
     void clearRendererScreen();
     void destroy() override;
-    void draw() override;
     void drawBbox();
     void drawEntities();
     void drawHUD();
@@ -231,6 +230,8 @@ namespace Poulpe
         m_API->updateStorageBuffer(buffer, objectBuffer);
     }
     void waitIdle() override { m_API->waitIdle(); }
+
+    std::string getAPIVersion() override { return m_API->getAPIVersion(); }
 
   public:
     //IMGUI config

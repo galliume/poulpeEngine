@@ -10,6 +10,6 @@ namespace Poulpe
     IInputManager() = default;
     ~IInputManager() = default;
 
-    virtual void init(nlohmann::json inputConfig) = 0;
+    virtual void init(nlohmann::json const& inputConfig) = 0;
   };
 }

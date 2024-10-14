@@ -6,13 +6,13 @@ namespace Poulpe
     bool InputManager::m_CanMoveCamera = false;
     bool InputManager::m_FirtMouseMove = true;
 
-    InputManager::InputManager(Window* const window) : m_Window(window)
+    InputManager::InputManager(Window const * const window) : m_Window(window)
     {
         int width, height;
         glfwGetWindowSize(m_Window->get(), & width, & height);
     }
     
-    void InputManager::init(nlohmann::json const inputConfig)
+    void InputManager::init(nlohmann::json const& inputConfig)
     {
         m_InputConfig = inputConfig;
 

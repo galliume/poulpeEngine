@@ -195,9 +195,9 @@ namespace Poulpe
         max = mesh->getData()->m_UbosOffset.at(i);
         auto ubos = std::vector<UniformBufferObject>(mesh->getData()->m_Ubos.begin() + min, mesh->getData()->m_Ubos.begin() + max);
 
-        m_Renderer->updateUniformBuffer(mesh->getUniformBuffers()->at(i), &ubos);
-
         min = max;
+        if (ubos.empty()) continue;
+        m_Renderer->updateUniformBuffer(mesh->getUniformBuffers()->at(i), &ubos);
       }
 
       createDescriptorSet(mesh);
