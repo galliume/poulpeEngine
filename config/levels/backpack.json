@@ -113,6 +113,60 @@
 			"isPointLight": false,
 			"hasShadow": false,
 			"isIndexed": true			
+		},
+		"kakashi" : {
+			"mesh": "assets/mesh/kakashi/kakashi.fbx",
+			"textures": {
+				"texture_badan": "assets/mesh/kakashi/texture/badan.png",
+				"texture_mata": "assets/mesh/kakashi/texture/mata.png",
+				"texture_sharingan": "assets/mesh/kakashi/texture/sharingan.png",
+				"texture_tangan": "assets/mesh/kakashi/texture/tangan.png"
+			},
+			"shader": "main_basic",
+			"positions": [
+				{"x": 30.0, "y": 0.0, "z": 30.0}
+			],
+			"scales": [
+				{"x": 0.02, "y": 0.02, "z": 0.02}
+			],
+			"rotations": [
+				{"x": -90.0, "y": 0.0, "z": 0.0}
+			],
+			"inverseTextureY": true,
+			"count": 1,
+			"hasBbox": false,
+			"hasAnimation": false,
+			"animationScripts": {
+			},
+			"isPointLight": false,
+			"hasShadow": true,
+			"isIndexed": true			
+		},
+		"Skelet" : {
+			"mesh": "assets/mesh/skelet/skelet.FBX",
+			"textures": {
+				"Skeleton_Body": "assets/mesh/skelet/Skeleton_Body.png"
+			},
+			"shader": "main_basic",
+			"positions": [
+				{"x": 0.0, "y": 0.0, "z": 0.0}
+			],
+			"scales": [
+				{"x": 0.02, "y": 0.02, "z": 0.02}
+			],
+			"rotations": [
+				{"x": -90.0, "y": 0.0, "z": 0.0}
+			],
+			"inverseTextureY": true,
+			"count": 1,
+			"hasBbox": false,
+			"hasAnimation": true,
+			"animationScripts": {
+				"run" : "assets/scripts/animation/skelet/run.lua"				
+			},
+			"isPointLight": false,
+			"hasShadow": true,
+			"isIndexed": true			
 		}
 	}
 }

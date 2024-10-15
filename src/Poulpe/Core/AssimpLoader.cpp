@@ -6,6 +6,29 @@
 
 namespace Poulpe
 {
+  //helper from learnopengl
+  static inline glm::mat4 ConvertMatrixToGLMFormat(const aiMatrix4x4& from)
+	{
+		glm::mat4 to;
+		//the a,b,c,d in assimp is the row ; the 1,2,3,4 is the column
+		to[0][0] = from.a1; to[1][0] = from.a2; to[2][0] = from.a3; to[3][0] = from.a4;
+		to[0][1] = from.b1; to[1][1] = from.b2; to[2][1] = from.b3; to[3][1] = from.b4;
+		to[0][2] = from.c1; to[1][2] = from.c2; to[2][2] = from.c3; to[3][2] = from.c4;
+		to[0][3] = from.d1; to[1][3] = from.d2; to[2][3] = from.d3; to[3][3] = from.d4;
+		return to;
+	}
+
+	static inline glm::vec3 GetGLMVec(const aiVector3D& vec) 
+	{ 
+		return glm::vec3(vec.x, vec.y, vec.z); 
+	}
+
+	static inline glm::quat GetGLMQuat(const aiQuaternion& pOrientation)
+	{
+		return glm::quat(pOrientation.w, pOrientation.x, pOrientation.y, pOrientation.z);
+	}
+  //
+
   void AssimpLoader::loadData(
         std::string const & path,
         bool const shouldInverseTextureY,
@@ -17,7 +40,7 @@ namespace Poulpe
     Assimp::Importer importer;
   
     const aiScene* scene = importer.ReadFile(path,
-      aiProcess_Triangulate | aiProcess_JoinIdenticalVertices | aiProcess_GenNormals 
+      aiProcess_Triangulate | aiProcess_JoinIdenticalVertices | aiProcess_GenNormals
     );
 
     if (nullptr == scene) {
@@ -118,6 +141,47 @@ namespace Poulpe
       }
     }
 
+    std::vector<Animation> animations{};
+    std::vector<Rotation> rotations{};
+    std::vector<Position> positions{};
+    std::vector<Scale> scales{};
+
+    animations.reserve(scene->mNumAnimations);
+    for (unsigned int i{ 0 }; i < scene->mNumAnimations; i++) {
+
+      aiAnimation const* animation = scene->mAnimations[i];
+
+      animations.emplace_back(i, animation->mName.C_Str(), animation->mDuration);
+
+      //PLP_DEBUG("Animation {}, duration {}", animation->mName.C_Str(), animation->mDuration);
+      for (unsigned int j{ 0 }; j < animation->mNumChannels; j++) {
+        aiNodeAnim const* node = animation->mChannels[j];
+        
+        rotations.reserve(node->mNumRotationKeys);
+        for (unsigned int r{ 0 }; r < node->mNumRotationKeys; r++) {
+          aiQuatKey const& rotKey = node->mRotationKeys[r];
+          //PLP_DEBUG("rot {} x {} y {} z {}", rotKey.mTime, rotKey.mValue.x, rotKey.mValue.y, rotKey.mValue.z);
+          rotations.emplace_back(i, rotKey.mTime, GetGLMQuat(rotKey.mValue));
+        }
+
+        positions.reserve(node->mNumPositionKeys);
+        for (unsigned int p{ 0 }; p < node->mNumPositionKeys; p++) {
+          aiVectorKey const& posKey = node->mPositionKeys[p];
+          //PLP_DEBUG("pos {} x {} y {} z {}", posKey.mTime, posKey.mValue.x, posKey.mValue.y, posKey.mValue.z);
+          positions.emplace_back(i, posKey.mTime, GetGLMVec(posKey.mValue));
+        }
+
+        scales.reserve(node->mNumScalingKeys);
+        for (unsigned int s{ 0 }; s < node->mNumScalingKeys; s++) {
+          aiVectorKey const& scaleKey = node->mScalingKeys[s];
+          //PLP_DEBUG("scale {} x {} y {} z {}", scaleKey.mTime, scaleKey.mValue.x, scaleKey.mValue.y, scaleKey.mValue.z);
+          scales.emplace_back(i, scaleKey.mTime, GetGLMVec(scaleKey.mValue));
+        }
+      }
+    }
+
+    std::vector<Bone> bones{};
+
     for (unsigned int i{ 0 }; i < scene->mNumMeshes; i++) {
       PlpMeshData meshData{};
 
@@ -125,6 +189,21 @@ namespace Poulpe
       meshData.name = mesh->mName.C_Str() + std::to_string(i);
       unsigned int count{ 0 };
 
+      if (mesh->HasBones()) {
+        bones.reserve(mesh->mNumBones);
+        for (unsigned int b{ 0 }; b < mesh->mNumBones; b++) {
+          aiBone const* bone = mesh->mBones[b];
+
+          std::unordered_map<unsigned int, float> weights{};
+
+          weights.reserve(bone->mNumWeights);
+          for (unsigned int w{ 0 }; w < bone->mNumWeights; w++) {
+            aiVertexWeight aiWeight = bone->mWeights[w];
+            weights[aiWeight.mVertexId] = aiWeight.mWeight;
+          }
+          bones.emplace_back(bone->mName.C_Str(), ConvertMatrixToGLMFormat(bone->mOffsetMatrix), weights);
+        }
+      }
       for (unsigned int f{ 0 }; f < mesh->mNumFaces; f++) {
         aiFace const* face = &mesh->mFaces[f];
 
@@ -179,6 +258,7 @@ namespace Poulpe
       std::replace(cleaned.begin(), cleaned.end(), '/', '_');
     }
 
+    PLP_DEBUG("asset: {} -> {}", name, cleaned);
     return cleaned;
   };
 }

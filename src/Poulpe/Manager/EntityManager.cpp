@@ -86,8 +86,8 @@ namespace Poulpe
       positionData["z"].template get<float>()
     );
 
-    auto const scaleData = data["scales"].at(0);
-    auto const rotationData = data["rotations"].at(0);
+    auto const& scaleData = data["scales"].at(0);
+    auto const& rotationData = data["rotations"].at(0);
 
     glm::vec3 const scale = glm::vec3(
       scaleData["x"].template get<float>(),
