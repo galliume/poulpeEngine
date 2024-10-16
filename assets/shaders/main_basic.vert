@@ -9,7 +9,7 @@ struct UBO
     mat4 projection;
 };
 
-layout(set = 0, binding = 0) uniform UniformBufferObject {
+layout(set = 0, binding = 0) readonly uniform UniformBufferObject {
    UBO ubos[MAX_UBOS];
 };
 
@@ -70,7 +70,7 @@ struct Material
 };
 
 #define NR_POINT_LIGHTS 2
-layout(binding = 2) buffer ObjectBuffer {
+layout(set = 0, binding = 2) readonly buffer ObjectBuffer {
     Light ambientLight;
     Light pointLights[NR_POINT_LIGHTS];
     Light spotLight;

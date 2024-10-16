@@ -9,7 +9,7 @@ struct UBO
     mat4 projection;
 };
 
-layout(set = 0, binding = 0) uniform UniformBufferObject {
+layout(set = 0, binding = 0) readonly uniform UniformBufferObject {
    UBO ubos[MAX_UBOS];
 };
 

@@ -97,9 +97,9 @@ namespace Poulpe
       model = glm::rotate(model, glm::radians(data->m_OriginRotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
       model = glm::rotate(model, glm::radians(data->m_OriginRotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
 
-      for (auto& ubo : data->m_Ubos) {
+      std::ranges::for_each(data->m_Ubos, [&model](auto& ubo) {
         ubo.model = model;
-      }
+      });
 
       if (done) {
         data->m_OriginPos = target;
@@ -138,9 +138,9 @@ namespace Poulpe
       model = glm::rotate(model, glm::radians(data->m_CurrentRotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
       model = glm::rotate(model, glm::radians(data->m_CurrentRotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
 
-      for (auto& ubo : data->m_Ubos) {
+      std::ranges::for_each(data->m_Ubos, [&model](auto& ubo) {
         ubo.model = model;
-      }
+      });
 
       anim->done = done;
     };
@@ -152,12 +152,13 @@ namespace Poulpe
   {
     m_Data = mesh->getData();
 
-    for (auto& anim : m_NewMoveAnimations) {
+    std::ranges::for_each(m_NewMoveAnimations, [&](auto& anim) {
       m_MoveAnimations.emplace_back(std::move(anim));
-    }
-    for (auto& anim : m_NewRotateAnimations) {
+    });
+    std::ranges::for_each(m_NewRotateAnimations, [&](auto& anim) {
       m_RotateAnimations.emplace_back(std::move(anim));
-    }
+    });
+
     m_NewMoveAnimations.clear();
     m_NewRotateAnimations.clear();
 
@@ -171,7 +172,7 @@ namespace Poulpe
       m_MoveInit = true;
     }
 
-    for (auto& anim : m_MoveAnimations) {
+    std::ranges::for_each(m_MoveAnimations, [&](auto& anim) {
 
       anim->update(anim.get(), mesh->getData(), deltaTime);
 
@@ -183,7 +184,7 @@ namespace Poulpe
           checkLua(m_lua_State, lua_pcall(m_lua_State, 2, 1, 0));
         }
       }
-    }
+    });
 
     if (!m_RotateInit) {
       lua_getglobal(m_lua_State, "nextRotation");
@@ -195,8 +196,7 @@ namespace Poulpe
       m_RotateInit = true;
     }
 
-    for (auto& anim : m_RotateAnimations) {
-
+    std::ranges::for_each(m_RotateAnimations, [&](auto& anim) {
       anim->update(anim.get(), mesh->getData(), deltaTime);
 
       if (anim->done) {
@@ -207,7 +207,7 @@ namespace Poulpe
           checkLua(m_lua_State, lua_pcall(m_lua_State, 2, 1, 0));
         }
       }
-    }
+    });
 
     std::erase_if(m_MoveAnimations, [](auto& anim) { return anim->done; });
     std::erase_if(m_RotateAnimations, [](auto& anim) { return anim->done; });

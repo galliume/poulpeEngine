@@ -1,7 +1,7 @@
 {
 	"entities": {
 		"San_Miguel" : {
-			"mesh": "assets/mesh/San_Miguel/san-miguel.obj",
+			"mesh": "assets/mesh/San_Miguel/san-miguel-low-poly.obj",
 			"textures": {
 				"textures_0001_carros": "assets/mesh/San_Miguel/textures/0001_carros.png",
 				"textures_027_Cola_Caballo_06-30-1997": "assets/mesh/San_Miguel/textures/027_Cola_Caballo_06-30-1997.png",
