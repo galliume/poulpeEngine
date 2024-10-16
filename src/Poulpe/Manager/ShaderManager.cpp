@@ -43,7 +43,6 @@ namespace Poulpe
   {
     m_Config = config;
 
-    std::function shaderFuture = [&]() {
       std::ranges::for_each(m_Config["shader"].items(), [&](auto& shader) {
         auto const& key = static_cast<std::string>(shader.key());
         auto const& data = shader.value();
@@ -51,7 +50,8 @@ namespace Poulpe
         addShader(key, data["vert"], data["frag"]);
       });
       m_LoadingDone = true;
-    };
+
+    std::function shaderFuture = [&]() {};
 
     return shaderFuture;
   }

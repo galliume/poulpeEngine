@@ -35,7 +35,12 @@ namespace Poulpe
         std::function<void(
           PlpMeshData const& _data,
           std::vector<material_t> const& materials,
-          bool const exists)> callback)
+          bool const exists,
+          std::vector<Bone> const& bones,
+          std::vector<Animation> const& animations,
+          std::vector<Position> const& positions,
+          std::vector<Rotation> const& rotations,
+          std::vector<Scale> const& scales)> callback)
   {
     Assimp::Importer importer;
   
@@ -161,6 +166,7 @@ namespace Poulpe
         for (unsigned int r{ 0 }; r < node->mNumRotationKeys; r++) {
           aiQuatKey const& rotKey = node->mRotationKeys[r];
           //PLP_DEBUG("rot {} x {} y {} z {}", rotKey.mTime, rotKey.mValue.x, rotKey.mValue.y, rotKey.mValue.z);
+          //rotations.emplace_back(i, rotKey.mTime, GetGLMQuat(rotKey.mValue));
           rotations.emplace_back(i, rotKey.mTime, GetGLMQuat(rotKey.mValue));
         }
 
@@ -241,7 +247,7 @@ namespace Poulpe
         meshData.materialsID = { mesh->mMaterialIndex };
         meshData.facesMaterialId.emplace_back(mesh->mMaterialIndex);
       }
-      callback(meshData, materials, false);
+      callback(meshData, materials, false, bones, animations, positions, rotations, scales);
       count = meshData.indices.size();
     }
   }

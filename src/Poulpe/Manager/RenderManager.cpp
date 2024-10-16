@@ -8,6 +8,7 @@
 #include "TextureManager.hpp"
 
 #include "Poulpe/Component/AnimationComponent.hpp"
+#include "Poulpe/Component/BoneAnimationComponent.hpp"
 #include "Poulpe/Component/MeshComponent.hpp"
 #include "Poulpe/Component/RenderComponent.hpp"
 
@@ -145,14 +146,20 @@ namespace Poulpe
           Mesh* mesh = meshComponent->hasImpl<Mesh>();
         
           if (mesh) {
-            auto basicRdrImpl = m_ComponentManager->getComponent<RenderComponent>(entity->getID());
-            if (mesh->isDirty() && basicRdrImpl) {
-              basicRdrImpl->visit(deltaTime, mesh);
-            }
-
             auto* animationComponent = m_ComponentManager->getComponent<AnimationComponent>(entity->getID());
             if (animationComponent) {
               animationComponent->visit(deltaTime, mesh);
+            }
+
+            auto* boneAnimationComponent = m_ComponentManager->getComponent<BoneAnimationComponent>(entity->getID());
+            if (boneAnimationComponent) {
+              boneAnimationComponent->visit(deltaTime, mesh);
+              mesh->setIsDirty(true);
+            }
+
+            auto basicRdrImpl = m_ComponentManager->getComponent<RenderComponent>(entity->getID());
+            if (mesh->isDirty() && basicRdrImpl) {
+              basicRdrImpl->visit(deltaTime, mesh);
             }
           }
         });

@@ -2,6 +2,8 @@
 
 #include "Poulpe/Component/AnimationComponent.hpp"
 #include "Poulpe/Component/AnimationScript.hpp"
+#include "Poulpe/Component/BoneAnimationComponent.hpp"
+#include "Poulpe/Component/BoneAnimationScript.hpp"
 #include "Poulpe/Component/Renderer/RendererFactory.hpp"
 
 #include "Poulpe/Core/AssimpLoader.hpp"
@@ -75,7 +77,12 @@ namespace Poulpe
     auto callback = [this, data, path, rootMeshEntity](
       PlpMeshData const& _data,
       std::vector<material_t> const& materials,
-      bool const exists) {
+      bool const exists,
+      std::vector<Bone> const& bones,
+      std::vector<Animation> const& animations,
+      std::vector<Position> const& positions,
+      std::vector<Rotation> const& rotations,
+      std::vector<Scale> const& scales) {
 
     auto const& positionData = data["positions"].at(0);
 
@@ -290,6 +297,12 @@ namespace Poulpe
           animationScript->init(m_Renderer, nullptr, nullptr);
           m_ComponentManager->addComponent<AnimationComponent>(entity->getID(), animationScript);
         }
+      }
+
+      if (!animations.empty()) {
+        auto* boneAnimationScript = new BoneAnimationScript(bones, animations, positions, rotations, scales);
+        m_ComponentManager->addComponent<BoneAnimationComponent>(
+          entity->getID(), boneAnimationScript);
       }
 
       m_ComponentManager->addComponent<MeshComponent>(entity->getID(), mesh);

@@ -160,9 +160,8 @@
 			"inverseTextureY": true,
 			"count": 1,
 			"hasBbox": false,
-			"hasAnimation": true,
+			"hasAnimation": false,
 			"animationScripts": {
-				"run" : "assets/scripts/animation/skelet/run.lua"				
 			},
 			"isPointLight": false,
 			"hasShadow": true,
