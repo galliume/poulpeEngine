@@ -106,7 +106,8 @@ configure_file(PoulpeEngineConfig.h.in PoulpeEngineConfig.h)
 
 add_definitions(-DVK_NO_PROTOTYPES
                 -DVOLK_STATIC_DEFINES
-                -D_CRT_SECURE_NO_WARNINGS)
+                -D_CRT_SECURE_NO_WARNINGS
+				-DDWIN32_LEAN_AND_MEAN)
 
 target_precompile_headers(${PROJECT_NAME} PRIVATE include/Poulpepch.hpp)
 
@@ -128,15 +129,15 @@ target_compile_definitions(${PROJECT_NAME} PRIVATE "$<$<CONFIG:DEBUG>:PLP_DEBUG_
 
 if(MSVC)
   #set_target_properties(${PROJECT_NAME} PROPERTIES CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
-  set(DEBUG_OPTIONS "/MDd;/Wall;/fp:fast;/std:c++20;/Zc:__cplusplus")
-  set(RELEASE_OPTIONS "/MD;/Ox;/Ot;/fp:fast;/Zc:__cplusplus")
+  set(DEBUG_OPTIONS "/MDd;/Wall;/fp:fast;/std:c++20;/Zc:__cplusplus/-Wno-c++98-compat/-Wno-c++98-compat-pedantic")
+  set(RELEASE_OPTIONS "/MD;/Ox;/Ot;/fp:fast;/std:c++20;/Zc:__cplusplus/-Wno-c++98-compat/-Wno-c++98-compat-pedantic")
   set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /MDd")
   set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} /MDd")
   set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /MD /GL")
   set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} /MD")
 else()
-  set(DEBUG_OPTIONS "-Weverything;-std=c++20;")
-  set(RELEASE_OPTIONS "-O3;")
+  set(DEBUG_OPTIONS "-Weverything;-std=c++20;-Wno-c++98-compat;-Wno-c++98-compat-pedantic")
+  set(RELEASE_OPTIONS "-O3;-std=c++20;-Wno-c++98-compat;-Wno-c++98-compat-pedantic")
 endif()
 
 target_compile_options(${PROJECT_NAME} PRIVATE "$<$<CONFIG:DEBUG>:${DEBUG_OPTIONS}>")
@@ -158,19 +159,28 @@ else()
   message(FATAL_ERROR "The env var VULKAN_SDK nor VULKAN_SDK_ACTIONS not found.")
 endif()
 
-include_directories(${PROJECT_SOURCE_DIR}/vendor/miniaudio
-                    ${PROJECT_SOURCE_DIR}/vendor/spdlog/include
+target_include_directories(${PROJECT_NAME} PUBLIC
+					${PROJECT_SOURCE_DIR}/vendor/assimp/include					
+					${PROJECT_SOURCE_DIR}/vendor/lua
+					${PROJECT_SOURCE_DIR}/vendor/miniaudio					
+					${PROJECT_SOURCE_DIR}/vendor/nlohmann/include
                     ${PROJECT_SOURCE_DIR}/vendor/stb
-					${PROJECT_SOURCE_DIR}/vendor/assimp/include
                     ${VULKAN_PATH})
 
+add_subdirectory(${PROJECT_SOURCE_DIR}/vendor/assimp)
 add_subdirectory(${PROJECT_SOURCE_DIR}/vendor/glfw)
 add_subdirectory(${PROJECT_SOURCE_DIR}/vendor/glm)
 add_subdirectory(${PROJECT_SOURCE_DIR}/vendor/nlohmann)
 add_subdirectory(${PROJECT_SOURCE_DIR}/vendor/spdlog)
-add_subdirectory(${PROJECT_SOURCE_DIR}/vendor/assimp)
 add_subdirectory(${PROJECT_SOURCE_DIR}/vendor/volk)
 
+target_compile_options(assimp PRIVATE -w -Wno-error)
+target_compile_options(assimp_cmd PRIVATE -w -Wno-deprecated-copy)
+
+if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+target_compile_options(assimp_viewer PRIVATE -w -Wno-error)
+endif()
+								  
 #@todo include only used .c
 add_library(
   lua STATIC
@@ -226,39 +236,34 @@ list(APPEND EXTRA_LIBS assimp)
 list(APPEND EXTRA_LIBS volk)
 
 target_link_libraries(${PROJECT_NAME} PRIVATE ${EXTRA_LIBS} poulpe)
+                       
+set(PLP_LIB_DIR "$<TARGET_FILE_DIR:${PROJECT_NAME}>/lib")
+set(PLP_BIN_DIR "$<TARGET_FILE_DIR:${PROJECT_NAME}>")
 
-target_include_directories(${PROJECT_NAME} PRIVATE
-                          ${PROJECT_SOURCE_DIR}/vendor/glfw
-                          ${PROJECT_SOURCE_DIR}/vendor/glfw/include
-                          ${PROJECT_SOURCE_DIR}/vendor/glm
-                          ${PROJECT_SOURCE_DIR}/vendor/lua
-                          ${PROJECT_SOURCE_DIR}/vendor/miniaudio
-                          ${PROJECT_SOURCE_DIR}/vendor/nlohmann/include
-                          ${PROJECT_SOURCE_DIR}/vendor/assimp/include
-                          ${PROJECT_SOURCE_DIR}/vendor/volk)
-                          
-target_include_directories(${PROJECT_NAME} SYSTEM INTERFACE
-                          ${PROJECT_SOURCE_DIR}/vendor/glfw
-                          ${PROJECT_SOURCE_DIR}/vendor/glfw/include
-                          ${PROJECT_SOURCE_DIR}/vendor/glm
-                          ${PROJECT_SOURCE_DIR}/vendor/lua
-                          ${PROJECT_SOURCE_DIR}/vendor/miniaudio
-                          ${PROJECT_SOURCE_DIR}/vendor/nlohmann/include
-                          ${PROJECT_SOURCE_DIR}/vendor/assimp/include
-                          ${PROJECT_SOURCE_DIR}/vendor/volk)
-
+set_target_properties(assimp PROPERTIES
+  LIBRARY_OUTPUT_DIRECTORY ${PLP_BIN_DIR} 
+  RUNTIME_OUTPUT_DIRECTORY ${PLP_BIN_DIR} 
+  ARCHIVE_OUTPUT_DIRECTORY ${PLP_BIN_DIR} 
+)
 set_target_properties(glfw PROPERTIES
-    ARCHIVE_OUTPUT_DIRECTORY "$<TARGET_FILE_DIR:${PROJECT_NAME}>/lib"
+  LIBRARY_OUTPUT_DIRECTORY ${PLP_BIN_DIR} 
+  RUNTIME_OUTPUT_DIRECTORY ${PLP_BIN_DIR} 
+  ARCHIVE_OUTPUT_DIRECTORY ${PLP_BIN_DIR} 
 )
 set_target_properties(lua PROPERTIES
-    ARCHIVE_OUTPUT_DIRECTORY "$<TARGET_FILE_DIR:${PROJECT_NAME}>/lib"
+  LIBRARY_OUTPUT_DIRECTORY ${PLP_BIN_DIR} 
+  RUNTIME_OUTPUT_DIRECTORY ${PLP_BIN_DIR} 
+  ARCHIVE_OUTPUT_DIRECTORY ${PLP_BIN_DIR} 
 )
 set_target_properties(spdlog PROPERTIES
-    ARCHIVE_OUTPUT_DIRECTORY "$<TARGET_FILE_DIR:${PROJECT_NAME}>/lib"
+  LIBRARY_OUTPUT_DIRECTORY ${PLP_BIN_DIR} 
+  RUNTIME_OUTPUT_DIRECTORY ${PLP_BIN_DIR} 
+  ARCHIVE_OUTPUT_DIRECTORY ${PLP_BIN_DIR} 
 )
-
 set_target_properties(volk PROPERTIES
-    ARCHIVE_OUTPUT_DIRECTORY "$<TARGET_FILE_DIR:${PROJECT_NAME}>/lib"
+  LIBRARY_OUTPUT_DIRECTORY ${PLP_BIN_DIR} 
+  RUNTIME_OUTPUT_DIRECTORY ${PLP_BIN_DIR} 
+  ARCHIVE_OUTPUT_DIRECTORY ${PLP_BIN_DIR} 
 )
 #########################################################
 

@@ -39,7 +39,7 @@ OS=$?
 
 if [[ "$OS" -ne 2 ]]; then
 	buildSystem="Visual Studio 17 2022"
-	toolSet="v143"
+	toolSet="ClangCL"
 fi
 	
 while [[ $# -gt 0 ]]; do
@@ -78,10 +78,13 @@ if [[ configPoulpeEngine -eq 1 ]]
 then
     cmake -B ./build \
 		  -G "$buildSystem" \
-          -DCMAKE_GENERATOR_TOOLSET:STRING="$toolSet" \
+		  -DCMAKE_GENERATOR_TOOLSET:STRING="$toolSet" \
 		  -DUSE_CCACHE:BOOL="ON" \
 		  -DASSIMP_BUILD_ASSIMP_TOOLS:BOOL="ON" \
-		  -DASSIMP_INSTALL:BOOL="OFF"
+		  -DASSIMP_INSTALL:BOOL="OFF" \
+		  -DCMAKE_BUILD_TYPE:STRING="$configuration" \
+		  -DCMAKE_C_COMPILER:STRING="clang" \
+		  -DCMAKE_CXX_COMPILER:STRING="clang"
 fi
 
 if [[ buildPoulpeEngine -eq 1 ]]

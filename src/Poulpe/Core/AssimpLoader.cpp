@@ -204,9 +204,9 @@ namespace Poulpe
 
           aiVector3D vertices = mesh->mVertices[face->mIndices[j]];
           Vertex vertex{};
-          vertex.bonesIds.reserve(4);
+          vertex.bonesIds.resize(4);
           std::fill(vertex.bonesIds.begin(), vertex.bonesIds.end(), -1);
-          vertex.weights.reserve(4);
+          vertex.weights.resize(4);
           std::fill(vertex.weights.begin(), vertex.weights.end(), 0.0f);
 
           vertex.fidtidBB = glm::vec4(static_cast<float>(j), mesh->mMaterialIndex, 0.0f, 0.0f);
@@ -268,7 +268,6 @@ namespace Poulpe
             auto const weight = aiWeight.mWeight;
 
             auto& vtex = meshData.vertices.at(id);
-
             for (auto bW{ 0 }; bW < 4; bW++) {
               if (vtex.weights[bW] < 0) {
                 vtex.weights[bW] = weight;

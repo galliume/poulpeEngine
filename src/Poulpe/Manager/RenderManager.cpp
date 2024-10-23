@@ -141,7 +141,9 @@ namespace Poulpe
 
       std::ranges::for_each(worldNode->getChildren(), [&](const auto& leafNode) {
         std::ranges::for_each(leafNode->getChildren(), [&](const auto& entityNode) {
+          
           auto const& entity = entityNode->getEntity();
+
           auto* meshComponent = m_ComponentManager->getComponent<MeshComponent>(entity->getID());
           auto mesh = meshComponent->template hasImpl<Mesh>();
         

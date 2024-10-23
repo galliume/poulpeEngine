@@ -100,7 +100,7 @@ namespace Poulpe
     VkBuffer buffer{ VK_NULL_HANDLE };
     DeviceMemory* memory;
     uint32_t offset;
-    uint32_t size;
+    unsigned long long size;
   };
 
   struct Data {

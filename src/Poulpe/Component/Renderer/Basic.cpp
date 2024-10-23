@@ -131,13 +131,13 @@ namespace Poulpe
       if (mesh->getData()->m_UbosOffset.empty()) {
         uint32_t const totalInstances{ static_cast<uint32_t>(mesh->getData()->m_Ubos.size()) };
         uint32_t const maxUniformBufferRange{ m_Renderer->getDeviceProperties().limits.maxUniformBufferRange };
-        uint32_t const uniformBufferChunkSize{ maxUniformBufferRange / sizeof(UniformBufferObject) };
+        unsigned long long const uniformBufferChunkSize{ maxUniformBufferRange / sizeof(UniformBufferObject) };
         uint32_t const uniformBuffersCount{ static_cast<uint32_t>(std::ceil(static_cast<float>(totalInstances) / static_cast<float>(uniformBufferChunkSize))) };
 
         //@todo fix memory management...
-        uint32_t uboOffset{ (totalInstances > uniformBufferChunkSize) ? uniformBufferChunkSize : totalInstances };
-        uint32_t uboRemaining{ (totalInstances - uboOffset > 0) ? totalInstances - uboOffset : 0 };
-        uint32_t nbUbo{ uboOffset };
+        unsigned long long uboOffset{ (totalInstances > uniformBufferChunkSize) ? uniformBufferChunkSize : totalInstances };
+        unsigned long long uboRemaining{ (totalInstances - uboOffset > 0) ? totalInstances - uboOffset : 0 };
+        unsigned long long nbUbo{ uboOffset };
 
         for (size_t i{ 0 }; i < uniformBuffersCount; ++i) {
 
