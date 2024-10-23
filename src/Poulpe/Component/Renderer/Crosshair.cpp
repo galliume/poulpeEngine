@@ -28,8 +28,8 @@ namespace Poulpe
     {
         mesh->setApplyPushConstants([](
             VkCommandBuffer & commandBuffer, VkPipelineLayout pipelineLayout,
-            [[maybe_unused]] IRenderer* const renderer,
-            [[maybe_unused]] IVisitable* const meshCH) {
+             IRenderer* const renderer,
+             IVisitable* const meshCH) {
   
             float id = static_cast<float>(Renderer::s_Crosshair);
 
@@ -41,7 +41,7 @@ namespace Poulpe
         mesh->setHasPushConstants();
     }
 
-    void Crosshair::visit([[maybe_unused]] std::chrono::duration<float> deltaTime, IVisitable* const mesh)
+    void Crosshair::visit( std::chrono::duration<float> deltaTime, IVisitable* const mesh)
     {
       if (!mesh && !mesh->isDirty()) return;
 

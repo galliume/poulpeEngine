@@ -683,7 +683,7 @@ namespace Poulpe
   }
 
   void Renderer::immediateSubmit(std::function<void(VkCommandBuffer cmd)> && function,
-      [[maybe_unused]] int queueIndex)
+       int queueIndex)
   {
       auto commandPool = m_API->createCommandPool();
       VkCommandBuffer cmd = m_API->allocateCommandBuffers(commandPool)[0];
@@ -793,7 +793,7 @@ namespace Poulpe
     }
   }
 
-  void Renderer::setRayPick(float x, float y, float z, [[maybe_unused]] int width, [[maybe_unused]] int height)
+  void Renderer::setRayPick(float x, float y, float z,  int width,  int height)
   {
       glm::vec3 rayNds = glm::vec3(x, y, z);
       glm::vec4 rayClip = glm::vec4(rayNds.x, rayNds.y, -1.0, 1.0);

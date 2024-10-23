@@ -60,17 +60,17 @@ namespace Poulpe
 
         glfwSetWindowUserPointer(m_Window->get(), this);
 
-        glfwSetKeyCallback(m_Window->get(), []([[maybe_unused]] GLFWwindow* window, int key, int scancode, int action, int mods) {
+        glfwSetKeyCallback(m_Window->get(), []( GLFWwindow* window, int key, int scancode, int action, int mods) {
             InputManager* inputManager = Locator::getInputManager();
             inputManager->key(key, scancode, action, mods);
         });
 
-        glfwSetCursorPosCallback(m_Window->get(), []([[maybe_unused]] GLFWwindow* window, double xPos, double yPos) {
+        glfwSetCursorPosCallback(m_Window->get(), []( GLFWwindow* window, double xPos, double yPos) {
             InputManager* inputManager = Locator::getInputManager();
             inputManager->updateMousePos(xPos, yPos);
         });
 
-        glfwSetMouseButtonCallback(m_Window->get(), []([[maybe_unused]] GLFWwindow* window, int button, int action, int mods) {
+        glfwSetMouseButtonCallback(m_Window->get(), []( GLFWwindow* window, int button, int action, int mods) {
             InputManager* inputManager = Locator::getInputManager();
             inputManager->mouseButton(button, action, mods);
         });
@@ -78,9 +78,9 @@ namespace Poulpe
 
     void InputManager::key(
         int const key,
-        [[maybe_unused]] int const scancode,
+         int const scancode,
         int const action,
-        [[maybe_unused]] const int mods)
+         const int mods)
     {
         const auto config = m_InputConfig[m_InputConfig["current"]];
 
@@ -123,8 +123,8 @@ namespace Poulpe
 
     void InputManager::mouseButton(
         int const button, 
-        [[maybe_unused]] int const action,
-        [[maybe_unused]] int const mods)
+         int const action,
+         int const mods)
     {
       if (GLFW_MOUSE_BUTTON_LEFT == button) {
         int width, height;

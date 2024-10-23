@@ -143,9 +143,14 @@ namespace Poulpe
         std::ranges::for_each(leafNode->getChildren(), [&](const auto& entityNode) {
           auto const& entity = entityNode->getEntity();
           auto* meshComponent = m_ComponentManager->getComponent<MeshComponent>(entity->getID());
-          Mesh* mesh = meshComponent->hasImpl<Mesh>();
+          auto mesh = meshComponent->template hasImpl<Mesh>();
         
           if (mesh) {
+            auto basicRdrImpl = m_ComponentManager->getComponent<RenderComponent>(entity->getID());
+            if (mesh->isDirty() && basicRdrImpl) {
+              basicRdrImpl->visit(deltaTime, mesh);
+            }
+
             auto* animationComponent = m_ComponentManager->getComponent<AnimationComponent>(entity->getID());
             if (animationComponent) {
               animationComponent->visit(deltaTime, mesh);
@@ -153,13 +158,18 @@ namespace Poulpe
 
             auto* boneAnimationComponent = m_ComponentManager->getComponent<BoneAnimationComponent>(entity->getID());
             if (boneAnimationComponent) {
-              boneAnimationComponent->visit(deltaTime, mesh);
-              mesh->setIsDirty(true);
-            }
+              //boneAnimationComponent->visit(deltaTime, mesh);
+              //mesh->setIsDirty(true);
 
-            auto basicRdrImpl = m_ComponentManager->getComponent<RenderComponent>(entity->getID());
-            if (mesh->isDirty() && basicRdrImpl) {
-              basicRdrImpl->visit(deltaTime, mesh);
+              /*if (mesh->hasBufferStorage()) {
+                auto buffer{ mesh->getStorageBuffers()->at(0) };
+                ObjectBuffer* objectBuffer = mesh->getObjectBuffer();
+
+                objectBuffer->boneIds = {};
+                objectBuffer->weights = {};
+
+                m_Renderer->updateStorageBuffer(buffer, *objectBuffer);
+              }*/
             }
           }
         });

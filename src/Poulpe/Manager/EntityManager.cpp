@@ -78,7 +78,6 @@ namespace Poulpe
       PlpMeshData const& _data,
       std::vector<material_t> const& materials,
       bool const exists,
-      std::vector<Bone> const& bones,
       std::vector<Animation> const& animations,
       std::vector<Position> const& positions,
       std::vector<Rotation> const& rotations,
@@ -297,12 +296,12 @@ namespace Poulpe
           animationScript->init(m_Renderer, nullptr, nullptr);
           m_ComponentManager->addComponent<AnimationComponent>(entity->getID(), animationScript);
         }
-      }
 
-      if (!animations.empty()) {
-        auto* boneAnimationScript = new BoneAnimationScript(bones, animations, positions, rotations, scales);
-        m_ComponentManager->addComponent<BoneAnimationComponent>(
-          entity->getID(), boneAnimationScript);
+        if (!animations.empty()) {
+          auto* boneAnimationScript = new BoneAnimationScript(animations, positions, rotations, scales);
+          m_ComponentManager->addComponent<BoneAnimationComponent>(
+            entity->getID(), boneAnimationScript);
+        }
       }
 
       m_ComponentManager->addComponent<MeshComponent>(entity->getID(), mesh);

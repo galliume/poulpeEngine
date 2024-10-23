@@ -35,7 +35,7 @@ namespace Poulpe {
         VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
         VkDebugUtilsMessageTypeFlagsEXT messageType,
         VkDebugUtilsMessengerCallbackDataEXT const * pCallbackData,
-         [[maybe_unused]] void* pUserData)
+          void* pUserData)
     {
         spdlog::set_pattern("%^[%T] %n: %v%$");
 
@@ -498,7 +498,7 @@ namespace Poulpe {
         return VK_PRESENT_MODE_FIFO_KHR;
     }
 
-    VkExtent2D VulkanAPI::chooseSwapExtent([[maybe_unused]] VkSurfaceCapabilitiesKHR const & capabilities)
+    VkExtent2D VulkanAPI::chooseSwapExtent( VkSurfaceCapabilitiesKHR const & capabilities)
     {
         if (capabilities.currentExtent.width != UINT32_MAX) {
             return capabilities.currentExtent;
@@ -1658,7 +1658,7 @@ namespace Poulpe {
         vkGetBufferMemoryRequirements(m_Device, buffer, & memRequirements);
         uint32_t size = ((memRequirements.size / memRequirements.alignment) + 1) * memRequirements.alignment;
 
-        auto memoryType = findMemoryType(memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+        auto memoryType = findMemoryType(memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
         auto deviceMemory = m_DeviceMemoryPool->get(
             m_Device,
             size,
@@ -1702,7 +1702,7 @@ namespace Poulpe {
         VkMemoryRequirements memRequirements;
         vkGetBufferMemoryRequirements(m_Device, buffer, & memRequirements);
 
-        auto memoryType = findMemoryType(memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+        auto memoryType = findMemoryType(memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
         uint32_t size = ((memRequirements.size / memRequirements.alignment) + 1) * memRequirements.alignment;
 
         auto deviceMemory = m_DeviceMemoryPool->get(
@@ -1750,7 +1750,7 @@ namespace Poulpe {
         VkMemoryRequirements memRequirements;
         vkGetBufferMemoryRequirements(m_Device, buffer, &memRequirements);
 
-        auto memoryType = findMemoryType(memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+        auto memoryType = findMemoryType(memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
         uint32_t size = ((memRequirements.size / memRequirements.alignment) + 1) * memRequirements.alignment;
         
         auto deviceMemory = m_DeviceMemoryPool->get(
@@ -2396,7 +2396,7 @@ namespace Poulpe {
     }
 
     void VulkanAPI::copyBufferToImage(VkCommandBuffer & commandBuffer, VkBuffer& buffer, VkImage & image,
-        uint32_t width, uint32_t height, [[maybe_unused]] uint32_t mipLevels)
+        uint32_t width, uint32_t height,  uint32_t mipLevels)
     {
         VkBufferImageCopy region{};
         region.bufferOffset = 0;

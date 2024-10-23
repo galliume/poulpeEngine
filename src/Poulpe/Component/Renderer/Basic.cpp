@@ -124,37 +124,63 @@ namespace Poulpe
         mesh->setHasPushConstants();
     }
 
-    void Basic::visit([[maybe_unused]] std::chrono::duration<float> deltaTime, IVisitable* const mesh)
+    void Basic::visit( std::chrono::duration<float> deltaTime, IVisitable* const mesh)
     {
       if (!mesh && !mesh->isDirty()) return;
 
-      uint32_t const totalInstances{ static_cast<uint32_t>(mesh->getData()->m_Ubos.size()) };
-      uint32_t const maxUniformBufferRange{ m_Renderer->getDeviceProperties().limits.maxUniformBufferRange };
-      uint32_t const uniformBufferChunkSize{ maxUniformBufferRange / sizeof(UniformBufferObject) };
-      uint32_t const uniformBuffersCount{ static_cast<uint32_t>(std::ceil(static_cast<float>(totalInstances) / static_cast<float>(uniformBufferChunkSize))) };
+      if (mesh->getData()->m_UbosOffset.empty()) {
+        uint32_t const totalInstances{ static_cast<uint32_t>(mesh->getData()->m_Ubos.size()) };
+        uint32_t const maxUniformBufferRange{ m_Renderer->getDeviceProperties().limits.maxUniformBufferRange };
+        uint32_t const uniformBufferChunkSize{ maxUniformBufferRange / sizeof(UniformBufferObject) };
+        uint32_t const uniformBuffersCount{ static_cast<uint32_t>(std::ceil(static_cast<float>(totalInstances) / static_cast<float>(uniformBufferChunkSize))) };
 
-      //@todo fix memory management...
-      uint32_t uboOffset{ (totalInstances > uniformBufferChunkSize) ? uniformBufferChunkSize : totalInstances };
-      uint32_t uboRemaining { (totalInstances - uboOffset > 0) ? totalInstances - uboOffset : 0};
-      uint32_t nbUbo { uboOffset};
+        //@todo fix memory management...
+        uint32_t uboOffset{ (totalInstances > uniformBufferChunkSize) ? uniformBufferChunkSize : totalInstances };
+        uint32_t uboRemaining{ (totalInstances - uboOffset > 0) ? totalInstances - uboOffset : 0 };
+        uint32_t nbUbo{ uboOffset };
 
-      for (size_t i{ 0 }; i < uniformBuffersCount; ++i) {
+        for (size_t i{ 0 }; i < uniformBuffersCount; ++i) {
 
-        mesh->getData()->m_UbosOffset.emplace_back(uboOffset);
-        Buffer uniformBuffer = m_Renderer->createUniformBuffers(nbUbo);
-        mesh->getUniformBuffers()->emplace_back(uniformBuffer);
+          mesh->getData()->m_UbosOffset.emplace_back(uboOffset);
+          Buffer uniformBuffer = m_Renderer->createUniformBuffers(nbUbo);
+          mesh->getUniformBuffers()->emplace_back(uniformBuffer);
 
-        uboOffset = (uboRemaining > uniformBufferChunkSize) ? uboOffset + uniformBufferChunkSize : uboOffset + uboRemaining;
-        nbUbo = (uboRemaining > uniformBufferChunkSize) ? uniformBufferChunkSize : uboRemaining;
-        uboRemaining = (totalInstances - uboOffset > 0) ? totalInstances - uboOffset : 0;
+          uboOffset = (uboRemaining > uniformBufferChunkSize) ? uboOffset + uniformBufferChunkSize : uboOffset + uboRemaining;
+          nbUbo = (uboRemaining > uniformBufferChunkSize) ? uniformBufferChunkSize : uboRemaining;
+          uboRemaining = (totalInstances - uboOffset > 0) ? totalInstances - uboOffset : 0;
+        }
       }
 
-      auto commandPool = m_Renderer->createCommandPool();
       auto const& data = mesh->getData();
-
-      data->m_VertexBuffer = m_Renderer->createVertexBuffer(commandPool, data->m_Vertices);
-      data->m_IndicesBuffer = m_Renderer->createIndexBuffer(commandPool, data->m_Indices);
       data->m_TextureIndex = 0;
+
+      if (data->m_VertexBuffer.buffer == VK_NULL_HANDLE) {
+        auto commandPool = m_Renderer->createCommandPool();
+        data->m_VertexBuffer = m_Renderer->createVertexBuffer(commandPool, data->m_Vertices);
+        data->m_IndicesBuffer = m_Renderer->createIndexBuffer(commandPool, data->m_Indices);
+      } else {
+        //suppose we have to update data
+        {
+          data->m_VertexBuffer.memory->lock();
+
+          void* newData;
+          vkMapMemory(m_Renderer->getDevice(), *data->m_VertexBuffer.memory->getMemory(), data->m_VertexBuffer.offset, data->m_VertexBuffer.size, 0, &newData);
+          memcpy(newData, data->m_Vertices.data(), data->m_VertexBuffer.size);
+          vkUnmapMemory(m_Renderer->getDevice(), *data->m_VertexBuffer.memory->getMemory());
+
+          data->m_VertexBuffer.memory->unLock();
+        }
+        {
+          data->m_IndicesBuffer.memory->lock();
+
+          void* newData;
+          vkMapMemory(m_Renderer->getDevice(), *data->m_IndicesBuffer.memory->getMemory(), data->m_IndicesBuffer.offset, data->m_IndicesBuffer.size, 0, &newData);
+          memcpy(newData, data->m_Indices.data(), data->m_IndicesBuffer.size);
+          vkUnmapMemory(m_Renderer->getDevice(), *data->m_IndicesBuffer.memory->getMemory());
+
+          data->m_IndicesBuffer.memory->unLock();
+        }
+      }
 
       for (size_t i{ 0 }; i < mesh->getData()->m_Ubos.size(); ++i) {
         mesh->getData()->m_Ubos[i].projection = m_Renderer->getPerspective();
@@ -165,28 +191,33 @@ namespace Poulpe
         }
       }
 
-      Material material{};
-      material.ambient = mesh->getMaterial().ambient;
-      material.diffuse = mesh->getMaterial().diffuse;
-      material.specular = mesh->getMaterial().specular;
-      material.transmittance = mesh->getMaterial().transmittance;
-      material.emission = mesh->getMaterial().emission;
-      material.shiIorDiss = glm::vec3(mesh->getMaterial().shininess,
-        mesh->getMaterial().ior, mesh->getMaterial().illum);
+      if (mesh->getStorageBuffers()->empty()) {
 
-      ObjectBuffer objectBuffer{};
-      objectBuffer.pointLights[0] = m_LightManager->getPointLights().at(0);
-      objectBuffer.pointLights[1] = m_LightManager->getPointLights().at(1);
+        Material material{};
+        material.ambient = mesh->getMaterial().ambient;
+        material.diffuse = mesh->getMaterial().diffuse;
+        material.specular = mesh->getMaterial().specular;
+        material.transmittance = mesh->getMaterial().transmittance;
+        material.emission = mesh->getMaterial().emission;
+        material.shiIorDiss = glm::vec3(mesh->getMaterial().shininess,
+          mesh->getMaterial().ior, mesh->getMaterial().illum);
 
-      objectBuffer.spotLight = m_LightManager->getSpotLights().at(0);
-      objectBuffer.ambientLight = m_LightManager->getAmbientLight();
-      objectBuffer.material = material;
+        ObjectBuffer objectBuffer{};
+        objectBuffer.pointLights[0] = m_LightManager->getPointLights().at(0);
+        objectBuffer.pointLights[1] = m_LightManager->getPointLights().at(1);
+        objectBuffer.spotLight = m_LightManager->getSpotLights().at(0);
+        objectBuffer.ambientLight = m_LightManager->getAmbientLight();
+        objectBuffer.material = material;
 
-      auto const size = sizeof(objectBuffer);
-      auto storageBuffer = m_Renderer->createStorageBuffers(size);
-      mesh->addStorageBuffer(storageBuffer);
-      m_Renderer->updateStorageBuffer(mesh->getStorageBuffers()->at(0), objectBuffer);
-      mesh->setHasBufferStorage();
+        auto const size{ sizeof(objectBuffer) };
+        auto storageBuffer{ m_Renderer->createStorageBuffers(size) };
+
+        mesh->setObjectBuffer(objectBuffer);
+        mesh->addStorageBuffer(storageBuffer);
+        mesh->setHasBufferStorage();
+
+        m_Renderer->updateStorageBuffer(mesh->getStorageBuffers()->at(0), objectBuffer);
+      }
 
       unsigned int min{ 0 };
       unsigned int max{ 0 };
@@ -200,8 +231,11 @@ namespace Poulpe
         m_Renderer->updateUniformBuffer(mesh->getUniformBuffers()->at(i), &ubos);
       }
 
-      createDescriptorSet(mesh);
-      setPushConstants(mesh);
+      if (*mesh->getDescSet() == NULL) {
+
+        createDescriptorSet(mesh);
+        setPushConstants(mesh);
+      }
       mesh->setIsDirty(false);
     }
 }

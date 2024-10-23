@@ -2,6 +2,7 @@
 #extension GL_EXT_nonuniform_qualifier : enable
 
 #define MAX_UBOS 1
+#define NR_POINT_LIGHTS 2
 
 struct UBO
 {
@@ -19,6 +20,7 @@ layout(push_constant) uniform constants
     vec3 textureIDBB;
     mat4 view;
     vec4 viewPos;
+    vec4 totalPosition;
 } pc;
 
 layout(location = 0) in vec3 pos;
@@ -69,7 +71,6 @@ struct Material
     vec3 shiIorDiss;
 };
 
-#define NR_POINT_LIGHTS 2
 layout(set = 0, binding = 2) readonly buffer ObjectBuffer {
     Light ambientLight;
     Light pointLights[NR_POINT_LIGHTS];
@@ -102,5 +103,5 @@ void main()
     vs_out.ffidtidBB = fidtidBB;
     vs_out.fvColor = vColor;
 
-    gl_Position = ubos[gl_InstanceIndex].projection * pc.view * vec4(vs_out.fPos, 1.0);
+    gl_Position = ubos[gl_InstanceIndex].projection * pc.view * vec4(vs_out.fPos, 1.0) * pc.totalPosition;
 } 

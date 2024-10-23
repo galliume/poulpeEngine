@@ -21,7 +21,6 @@ namespace Poulpe
         BoneAnimationMove* anim,
         Data* data,
         std::chrono::duration<float> deltaTime,
-        std::vector<Bone> const& bones,
         std::vector<Animation> const& animations,
         std::vector<Position> const& positions,
         std::vector<Rotation> const& rotations,
@@ -32,7 +31,6 @@ namespace Poulpe
   {
   public:
     BoneAnimationScript(
-      std::vector<Bone> const& bones,
       std::vector<Animation> const& animations,
       std::vector<Position> const& positions,
       std::vector<Rotation> const& rotations,
@@ -42,8 +40,8 @@ namespace Poulpe
     Data* getData() { return m_Data; }
 
     void init(IRenderer* const renderer,
-      [[maybe_unused]] ITextureManager* const textureManager,
-      [[maybe_unused]] ILightManager* const lightManager) override
+       ITextureManager* const textureManager,
+       ILightManager* const lightManager) override
     {
         m_Renderer = renderer;
     }
@@ -64,7 +62,6 @@ namespace Poulpe
     std::vector<std::unique_ptr<BoneAnimationMove>> m_MoveAnimations{};
     std::vector<std::unique_ptr<BoneAnimationMove>> m_NewMoveAnimations{};
 
-    std::vector<Bone> m_Bones{};
     std::vector<Animation> m_Animations{};
     std::vector<Position> m_Positions{};
     std::vector<Rotation> m_Rotations{};

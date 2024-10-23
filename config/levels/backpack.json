@@ -160,7 +160,7 @@
 			"inverseTextureY": true,
 			"count": 1,
 			"hasBbox": false,
-			"hasAnimation": false,
+			"hasAnimation": true,
 			"animationScripts": {
 			},
 			"isPointLight": false,

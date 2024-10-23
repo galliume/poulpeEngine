@@ -24,7 +24,7 @@ namespace Poulpe
         mesh->setApplyPushConstants([](VkCommandBuffer& commandBuffer,
             VkPipelineLayout pipelineLayout,
             IRenderer* const renderer,
-            [[maybe_unused]] IVisitable* const meshG) {
+             IVisitable* const meshG) {
             
             constants pushConstants{};
             pushConstants.view = renderer->getCamera()->lookAt();
@@ -35,7 +35,7 @@ namespace Poulpe
         mesh->setHasPushConstants();
     }
 
-    void Grid::visit([[maybe_unused]] std::chrono::duration<float> deltaTime, IVisitable* const mesh)
+    void Grid::visit( std::chrono::duration<float> deltaTime, IVisitable* const mesh)
     {
       if (!mesh && !mesh->isDirty()) return;
 

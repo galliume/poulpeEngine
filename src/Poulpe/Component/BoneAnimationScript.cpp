@@ -21,13 +21,11 @@ namespace Poulpe
   }
 
   BoneAnimationScript::BoneAnimationScript(
-    std::vector<Bone> const& bones,
     std::vector<Animation> const& animations,
     std::vector<Position> const& positions,
     std::vector<Rotation> const& rotations,
     std::vector<Scale> const& scales)
-    : m_Bones(bones)
-    , m_Animations(animations)
+    : m_Animations(animations)
     , m_Positions(positions)
     , m_Rotations(rotations)
     , m_Scales(scales)
@@ -62,7 +60,6 @@ namespace Poulpe
       BoneAnimationMove* anim,
       Data* data,
       std::chrono::duration<float> deltaTime,
-      std::vector<Bone> const& bones,
       std::vector<Animation> const& animations,
       std::vector<Position> const& positions,
       std::vector<Rotation> const& rotations,
@@ -73,13 +70,8 @@ namespace Poulpe
         return;
       }
 
-      //run: from 814.0 to 831.0
-      auto const& b{ bones.at(0) };
-      auto const& a{ animations.at(0) };
-      auto const& p{ positions.at(0) };
-      auto const& r{ rotations.at(0) };
-      auto const& s{ scales.at(0) };
 
+      //run: from 814.0 to 831.0
       anim->duration = 17;//run duration
       float t = anim->elapsedTime / anim->duration;
       bool done{ false };
@@ -91,12 +83,12 @@ namespace Poulpe
         t = 1.f;
       }
       anim->elapsedTime += deltaTime.count();
-      PLP_DEBUG("e {} d {} t {} index {} delta {}", anim->elapsedTime, anim->duration, t, index, deltaTime.count());
+      //PLP_DEBUG("e {} d {} t {} index {} delta {}", anim->elapsedTime, anim->duration, t, index, deltaTime.count());
 
-      glm::vec3 newPos = glm::mix(data->m_OriginPos, p.value, t);
-      glm::quat newRot = glm::mix(glm::quat(data->m_OriginPos), r.value, t);
-      glm::vec3 newScale = glm::mix(data->m_OriginPos, s.value, t);
-      
+      //glm::vec3 newPos = glm::mix(data->m_OriginPos, p.value, t);
+      //glm::quat newRot = glm::mix(glm::quat(data->m_OriginPos), r.value, t);
+      //glm::vec3 newScale = glm::mix(data->m_OriginPos, s.value, t);
+      //
       //PLP_DEBUG("Animation: {} {} {}", a.id, a.name, a.duration);
       //PLP_DEBUG("MOVING at {}/{}/{}", newPos.x, newPos.y, newPos.z);
       //PLP_DEBUG("Rotation {}/{}/{}", newRot.x, newRot.y, newRot.z);
@@ -108,23 +100,22 @@ namespace Poulpe
       //model *= glm::toMat4(newRot);
       //model = glm::scale(model, newScale);
 
+      //std::ranges::for_each(bones, [&data, &index, &positions, &rotations, &scales](auto const& bone) {
+      //  std::ranges::for_each(bone.weights, [&data, &index, &bone, &positions, &rotations, &scales](auto const& weight) {
+      //    auto& vertex = data->m_Vertices[weight.first];
+      //    auto& pos = positions[index];
+      //    auto& rot = rotations[index];
+      //    auto& scale = scales[index];
 
-      std::ranges::for_each(bones, [&data, &index, &positions, &rotations, &scales](auto const& bone) {
-        std::ranges::for_each(bone.weights, [&data, &index, &bone, &positions, &rotations, &scales](auto const& weight) {
-          auto& vertex = data->m_Vertices[weight.first];
-          auto& pos = positions[index];
-          auto& rot = rotations[index];
-          auto& scale = scales[index];
+      //    glm::mat4 translationMatrix = glm::translate(glm::mat4(1.0f), pos.value);
+      //    glm::mat4 rotationMatrix = glm::toMat4(rot.value);
+      //    glm::mat4 scaleMatrix = glm::scale(glm::mat4(1.0f), scale.value);
+      //    glm::mat4 transform = translationMatrix * rotationMatrix * scaleMatrix * bone.offsetMatrix;
 
-          glm::mat4 translationMatrix = glm::translate(glm::mat4(1.0f), pos.value);
-          glm::mat4 rotationMatrix = glm::toMat4(rot.value);
-          glm::mat4 scaleMatrix = glm::scale(glm::mat4(1.0f), scale.value);
-          glm::mat4 transform = translationMatrix * rotationMatrix * scaleMatrix * bone.offsetMatrix;
-
-          glm::vec4 transformedPosition = transform * glm::vec4(vertex.pos, 1.0f);
-          vertex.pos += weight.second * glm::vec3(transformedPosition);
-        });
-      });
+      //    glm::vec4 transformedPosition = transform * glm::vec4(vertex.pos, 1.0f);
+      //    vertex.pos += weight.second * glm::vec3(transformedPosition);
+      //  });
+      //});
       //std::ranges::for_each(data->m_Ubos, [&model](auto& ubo) {
       //  ubo.model = model;
       //});
@@ -138,7 +129,7 @@ namespace Poulpe
       //}
       anim->done = done;
     };
-    animMove->update(animMove.get(), dataMove, deltaTimeMove, m_Bones, m_Animations, m_Positions, m_Rotations, m_Scales);
+    animMove->update(animMove.get(), dataMove, deltaTimeMove, m_Animations, m_Positions, m_Rotations, m_Scales);
     m_NewMoveAnimations.emplace_back(std::move(animMove));
   }
 
@@ -164,7 +155,7 @@ namespace Poulpe
 
     std::ranges::for_each(m_MoveAnimations, [&](auto& anim) {
 
-      anim->update(anim.get(), mesh->getData(), deltaTime, m_Bones, m_Animations, m_Positions, m_Rotations, m_Scales);
+      anim->update(anim.get(), mesh->getData(), deltaTime, m_Animations, m_Positions, m_Rotations, m_Scales);
 
       if (anim->done) {
         lua_getglobal(m_lua_State, "nextMove");

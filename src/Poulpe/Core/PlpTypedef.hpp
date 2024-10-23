@@ -87,6 +87,7 @@ namespace Poulpe
     alignas(16) glm::vec3 textureIDBB;
     alignas(16) glm::mat4 view;
     alignas(16) glm::vec4 viewPos;
+    alignas(16) glm::vec4 totalPosition{ 1.0 };
   };
 
   struct shadowMapConstants
@@ -96,7 +97,7 @@ namespace Poulpe
   };
 
   struct Buffer {
-    VkBuffer buffer;
+    VkBuffer buffer{ VK_NULL_HANDLE };
     DeviceMemory* memory;
     uint32_t offset;
     uint32_t size;
@@ -154,9 +155,9 @@ namespace Poulpe
   };
 
   struct Bone {
+    unsigned int id{};
     std::string name{};
     glm::mat4 offsetMatrix{};
-    std::unordered_map<unsigned int, float> weights{};//@todo do better than an unordered_map
   };
 
   struct Animation {
@@ -186,6 +187,7 @@ namespace Poulpe
   struct PlpMeshData
   {
     std::string name;
+    unsigned int id{};
     uint32_t materialId = 0;
     std::vector<uint32_t> facesMaterialId{};
     std::vector<uint32_t> indices{};

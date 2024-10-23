@@ -277,8 +277,8 @@ namespace Poulpe
     Window* m_Window{ nullptr };
     IEntityManager* m_EntityManager{ nullptr };
     ComponentManager* m_ComponentManager{ nullptr };
-    [[maybe_unused]] ILightManager* m_LightManager{ nullptr };
-    [[maybe_unused]] ITextureManager* m_TextureManager{ nullptr };
+    ILightManager* m_LightManager{ nullptr };
+    ITextureManager* m_TextureManager{ nullptr };
 
     //@todo move to meshManager
     std::vector<VkImageView>m_SwapChainDepthImageViews{};

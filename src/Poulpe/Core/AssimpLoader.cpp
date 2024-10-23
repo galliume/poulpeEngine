@@ -36,7 +36,6 @@ namespace Poulpe
           PlpMeshData const& _data,
           std::vector<material_t> const& materials,
           bool const exists,
-          std::vector<Bone> const& bones,
           std::vector<Animation> const& animations,
           std::vector<Position> const& positions,
           std::vector<Rotation> const& rotations,
@@ -151,6 +150,7 @@ namespace Poulpe
     std::vector<Position> positions{};
     std::vector<Scale> scales{};
 
+
     animations.reserve(scene->mNumAnimations);
     for (unsigned int i{ 0 }; i < scene->mNumAnimations; i++) {
 
@@ -186,30 +186,13 @@ namespace Poulpe
       }
     }
 
-    std::vector<Bone> bones{};
-
     for (unsigned int i{ 0 }; i < scene->mNumMeshes; i++) {
       PlpMeshData meshData{};
-
+     
       aiMesh const* mesh = scene->mMeshes[i];
       meshData.name = mesh->mName.C_Str() + std::to_string(i);
       unsigned int count{ 0 };
 
-      if (mesh->HasBones()) {
-        bones.reserve(mesh->mNumBones);
-        for (unsigned int b{ 0 }; b < mesh->mNumBones; b++) {
-          aiBone const* bone = mesh->mBones[b];
-
-          std::unordered_map<unsigned int, float> weights{};
-
-          weights.reserve(bone->mNumWeights);
-          for (unsigned int w{ 0 }; w < bone->mNumWeights; w++) {
-            aiVertexWeight aiWeight = bone->mWeights[w];
-            weights[aiWeight.mVertexId] = aiWeight.mWeight;
-          }
-          bones.emplace_back(bone->mName.C_Str(), ConvertMatrixToGLMFormat(bone->mOffsetMatrix), weights);
-        }
-      }
       for (unsigned int f{ 0 }; f < mesh->mNumFaces; f++) {
         aiFace const* face = &mesh->mFaces[f];
 
@@ -221,6 +204,11 @@ namespace Poulpe
 
           aiVector3D vertices = mesh->mVertices[face->mIndices[j]];
           Vertex vertex{};
+          vertex.bonesIds.reserve(4);
+          std::fill(vertex.bonesIds.begin(), vertex.bonesIds.end(), -1);
+          vertex.weights.reserve(4);
+          std::fill(vertex.weights.begin(), vertex.weights.end(), 0.0f);
+
           vertex.fidtidBB = glm::vec4(static_cast<float>(j), mesh->mMaterialIndex, 0.0f, 0.0f);
           vertex.pos = { vertices.x, vertices.y, vertices.z };
 
@@ -247,7 +235,50 @@ namespace Poulpe
         meshData.materialsID = { mesh->mMaterialIndex };
         meshData.facesMaterialId.emplace_back(mesh->mMaterialIndex);
       }
-      callback(meshData, materials, false, bones, animations, positions, rotations, scales);
+
+      std::unordered_map<std::string, Bone> bonesMap{};
+      unsigned int boneCounter{ 0 };
+      
+      if (mesh->HasBones()) {
+
+        for (unsigned int b{ 0 }; b < mesh->mNumBones; b++) {
+          aiBone const* bone = mesh->mBones[b];
+
+          int boneID{ -1 };
+          std::string const& boneName{ bone->mName.C_Str() };
+  
+          if (bonesMap.contains(boneName)) {
+            boneID = bonesMap[boneName].id;
+          } else {
+            Bone boneData{};
+            boneData.id = boneCounter;
+            boneData.name = boneName;
+            boneData.offsetMatrix = ConvertMatrixToGLMFormat(bone->mOffsetMatrix);
+            bonesMap.emplace(boneName, std::move(boneData));
+
+            boneCounter++;
+          }
+
+          std::unordered_map<unsigned int, float> weights{};
+
+          for (unsigned int w{ 0 }; w < bone->mNumWeights; w++) {
+            aiVertexWeight aiWeight = bone->mWeights[w];
+
+            auto const id = aiWeight.mVertexId;
+            auto const weight = aiWeight.mWeight;
+
+            auto& vtex = meshData.vertices.at(id);
+
+            for (auto bW{ 0 }; bW < 4; bW++) {
+              if (vtex.weights[bW] < 0) {
+                vtex.weights[bW] = weight;
+                vtex.bonesIds[bW] = boneID;
+              }
+            }
+          }
+        }
+      }
+      callback(meshData, materials, false, animations, positions, rotations, scales);
       count = meshData.indices.size();
     }
   }

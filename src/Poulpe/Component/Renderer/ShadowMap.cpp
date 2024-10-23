@@ -44,7 +44,7 @@ namespace Poulpe
         mesh->setHasPushConstants();
     }
 
-    void ShadowMap::visit([[maybe_unused]] std::chrono::duration<float> deltaTime, IVisitable* const mesh)
+    void ShadowMap::visit( std::chrono::duration<float> deltaTime, IVisitable* const mesh)
     {
       if (!mesh && !mesh->isDirty()) return;
 
