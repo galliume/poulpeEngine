@@ -135,7 +135,7 @@ if(MSVC)
   set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} /MD")
 else()
   set(DEBUG_OPTIONS "-Weverything;-std=c++20;")
-  set(RELEASE_OPTIONS "-O3;")
+  set(RELEASE_OPTIONS "-O3;-std=c++20;")
 endif()
 
 target_compile_options(${PROJECT_NAME} PRIVATE "$<$<CONFIG:DEBUG>:${DEBUG_OPTIONS}>")
