@@ -31,15 +31,7 @@ namespace Poulpe
         auto* window = new Window();
         window->init("PoulpeEngine");
 
-        auto* configManager = new ConfigManager();
-        auto* inputManager = new InputManager(window);
-        auto* cmdQueue = new CommandQueue();
-        auto* threadPool = new ThreadPool();
-
-        Poulpe::Locator::setConfigManager(configManager);
-        Poulpe::Locator::setInputManager(inputManager);
-        Poulpe::Locator::setThreadPool(threadPool);
-        Poulpe::Locator::setCommandQueue(cmdQueue);
+        Poulpe::Locator::init(window);
 
         m_RenderManager = std::make_unique<RenderManager>(window);
         m_RenderManager->init();
@@ -70,15 +62,13 @@ namespace Poulpe
 
             Locator::getCommandQueue()->execPreRequest();
             m_RenderManager->renderScene(deltaTime);
-            m_RenderManager->draw();
             Locator::getCommandQueue()->execPostRequest();
 
             std::stringstream title;
-            title << "PoulpeEngine ";
-            title << "v" << PoulpeEngine_VERSION_MAJOR << "." << PoulpeEngine_VERSION_MINOR;
-            title << " " << deltaTime.count() << " ms";
-            title << " " << std::ceil(1.f / (deltaTime.count() * 0.001f)) << " fps";
-
+            title << "PoulpeEngine v" << PoulpeEngine_VERSION_MAJOR << "." << PoulpeEngine_VERSION_MINOR
+              << " API Version: " << m_RenderManager->getRenderer()->getAPIVersion()
+              << " " << deltaTime.count() << " ms"
+              << " " << std::ceil(1.f / (deltaTime.count() * 0.001f)) << " fps";
             glfwSetWindowTitle(m_RenderManager->getWindow()->get(), title.str().c_str());
             lastTime = currentTime;
         }

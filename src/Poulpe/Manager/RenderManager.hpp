@@ -13,7 +13,6 @@ namespace Poulpe
         RenderManager(Window* window);
 
         void cleanUp() override;
-        void draw() override;
         inline void forceRefresh() { m_Refresh = true; }
         inline uint32_t getAppHeight() { return getRenderer()->getSwapChainExtent().height; }
         inline uint32_t getAppWidth() { return getRenderer()->getSwapChainExtent().width; }

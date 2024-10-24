@@ -24,7 +24,6 @@ namespace Poulpe
     virtual void addPipeline(std::string const & shaderName, VulkanPipeline pipeline) = 0;
     virtual void attachObserver(IObserver* const observer) = 0;
     virtual void destroy() = 0;
-    virtual void draw() = 0;
     virtual inline Camera* getCamera() = 0;
     virtual VkCommandPool createCommandPool() = 0;
     virtual VkDescriptorPool createDescriptorPool(
@@ -106,5 +105,6 @@ namespace Poulpe
     virtual inline VkPhysicalDeviceProperties getDeviceProperties() const = 0;
     virtual Buffer createStorageBuffers(size_t storageBuffer) = 0;
     virtual void updateStorageBuffer(Buffer & buffer, ObjectBuffer objectBuffer) = 0;
+    virtual std::string getAPIVersion() = 0;
   };
 }

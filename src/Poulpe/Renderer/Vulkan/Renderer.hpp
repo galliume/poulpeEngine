@@ -47,7 +47,6 @@ namespace Poulpe
     void clear() override;
     void clearRendererScreen();
     void destroy() override;
-    void draw() override;
     void drawBbox();
     void drawEntities();
     void drawHUD();
@@ -232,6 +231,8 @@ namespace Poulpe
     }
     void waitIdle() override { m_API->waitIdle(); }
 
+    std::string getAPIVersion() override { return m_API->getAPIVersion(); }
+
   public:
     //IMGUI config
     static std::atomic<float> s_FogDensity;
@@ -276,8 +277,8 @@ namespace Poulpe
     Window* m_Window{ nullptr };
     IEntityManager* m_EntityManager{ nullptr };
     ComponentManager* m_ComponentManager{ nullptr };
-    [[maybe_unused]] ILightManager* m_LightManager{ nullptr };
-    [[maybe_unused]] ITextureManager* m_TextureManager{ nullptr };
+    ILightManager* m_LightManager{ nullptr };
+    ITextureManager* m_TextureManager{ nullptr };
 
     //@todo move to meshManager
     std::vector<VkImageView>m_SwapChainDepthImageViews{};

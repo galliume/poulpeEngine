@@ -22,7 +22,7 @@ namespace Poulpe
     #if defined(_WIN32) || defined(WIN32)
     m_Server = std::make_shared<Server>(new WinServer(m_APIManager));
 
-    Locator::getThreadPool()->submit("winServerListen", [this, &port]() {
+    Locator::getThreadPool()->submit([this, &port]() {
       m_Server->bind(port);
       m_Server->listen();
     });

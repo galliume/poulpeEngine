@@ -18,6 +18,7 @@ namespace Poulpe
         virtual const std::string getShaderName() const = 0;
         virtual std::vector<Buffer>* getStorageBuffers() = 0;
         virtual std::vector<Buffer>* getUniformBuffers() = 0;
+        virtual VkDescriptorSet* getDescSet() = 0;
 
         virtual void addStorageBuffer(Buffer& buffer) = 0;
         virtual bool isDirty() = 0;
@@ -36,5 +37,6 @@ namespace Poulpe
         virtual void setIsDirty(bool is) = 0;
         virtual void setName(std::string_view name) = 0;
         virtual void setShaderName(std::string_view name) = 0;
+        virtual void setObjectBuffer(ObjectBuffer objectBuffer) = 0;
     };
 }

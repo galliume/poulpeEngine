@@ -4,20 +4,23 @@
 
 namespace Poulpe
 {
+  class AssimpLoader
 
-    class AssimpLoader
+  {
+  public:
+    void static loadData(
+      std::string const & path,
+      bool const shouldInverseTextureY,
+      std::function<void(
+        PlpMeshData const& _data,
+        std::vector<material_t> const& materials,
+        bool const exists,
+        std::vector<Animation> const& animations,
+        std::vector<Position> const& positions,
+        std::vector<Rotation> const& rotations,
+        std::vector<Scale> const& scales)> callback);
 
-    {
-    public:
-      void static loadData(
-        std::string const & path,
-        bool const shouldInverseTextureY,
-        std::function<void(
-          PlpMeshData const& _data,
-          std::vector<material_t> const& materials,
-          bool const exists)> callback);
-
-    private:
-      static std::string const cleanName(std::string const& name);
-    };
+  private:
+     static std::string const cleanName(std::string const& name);
+  };
 }

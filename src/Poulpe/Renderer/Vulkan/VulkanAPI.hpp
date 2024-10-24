@@ -23,7 +23,7 @@ namespace Poulpe {
         VkDescriptorSet descSet;
         VkPipelineCache pipelineCache;
         VkPipeline pipeline;
-        std::vector<VkPipelineShaderStageCreateInfo> shaders;
+        std::vector<VkPipelineShaderStageCreateInfo> shaders{};
     };
 
     struct QueueFamilyIndices {
@@ -176,6 +176,8 @@ namespace Poulpe {
         void initMemoryPool();
 
         Buffer createStorageBuffers(size_t storageBuffer);
+     
+        Buffer createIndirectCommandsBuffer(std::vector<VkDrawIndexedIndirectCommand> const& drawCommands);
 
         void updateStorageBuffer(Buffer & buffer, ObjectBuffer objectBuffer);
 

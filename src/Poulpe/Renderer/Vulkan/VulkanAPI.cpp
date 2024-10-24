@@ -35,7 +35,7 @@ namespace Poulpe {
         VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
         VkDebugUtilsMessageTypeFlagsEXT messageType,
         VkDebugUtilsMessengerCallbackDataEXT const * pCallbackData,
-         [[maybe_unused]] void* pUserData)
+          void* pUserData)
     {
         spdlog::set_pattern("%^[%T] %n: %v%$");
 
@@ -436,7 +436,7 @@ namespace Poulpe {
             return;
         }
 
-        for (uint32_t i = 0; i < m_queueCount; i++) {
+        for (uint32_t i { 0 }; i < m_queueCount; i++) {
             m_GraphicsQueues[i] = VK_NULL_HANDLE;
             m_PresentQueues[i] = VK_NULL_HANDLE;
             vkGetDeviceQueue(m_Device, indices.graphicsFamily.value(), 0, & m_GraphicsQueues[i]);
@@ -498,7 +498,7 @@ namespace Poulpe {
         return VK_PRESENT_MODE_FIFO_KHR;
     }
 
-    VkExtent2D VulkanAPI::chooseSwapExtent([[maybe_unused]] VkSurfaceCapabilitiesKHR const & capabilities)
+    VkExtent2D VulkanAPI::chooseSwapExtent( VkSurfaceCapabilitiesKHR const & capabilities)
     {
         if (capabilities.currentExtent.width != UINT32_MAX) {
             return capabilities.currentExtent;
@@ -1077,7 +1077,7 @@ namespace Poulpe {
 
         swapChainFramebuffers.resize(swapChainImageViews.size());
 
-        for (size_t i = 0; i < swapChainImageViews.size(); i++) {
+        for (size_t i { 0 }; i < swapChainImageViews.size(); i++) {
 
             std::array<VkImageView, 3> attachments = {
                 *colorImageView.data(),
@@ -1205,7 +1205,7 @@ namespace Poulpe {
         fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
         fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
 
-        for (int i = 0; i < m_MAX_FRAMES_IN_FLIGHT; i++) {
+        for (int i { 0 }; i < m_MAX_FRAMES_IN_FLIGHT; i++) {
             if (vkCreateSemaphore(m_Device, &semaphoreInfo, nullptr,
                 & imageAvailableSemaphores[static_cast<size_t>(i)]) != VK_SUCCESS
                 || vkCreateSemaphore(m_Device, &semaphoreInfo, nullptr,
@@ -1658,7 +1658,7 @@ namespace Poulpe {
         vkGetBufferMemoryRequirements(m_Device, buffer, & memRequirements);
         uint32_t size = ((memRequirements.size / memRequirements.alignment) + 1) * memRequirements.alignment;
 
-        auto memoryType = findMemoryType(memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+        auto memoryType = findMemoryType(memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
         auto deviceMemory = m_DeviceMemoryPool->get(
             m_Device,
             size,
@@ -1702,7 +1702,7 @@ namespace Poulpe {
         VkMemoryRequirements memRequirements;
         vkGetBufferMemoryRequirements(m_Device, buffer, & memRequirements);
 
-        auto memoryType = findMemoryType(memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+        auto memoryType = findMemoryType(memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
         uint32_t size = ((memRequirements.size / memRequirements.alignment) + 1) * memRequirements.alignment;
 
         auto deviceMemory = m_DeviceMemoryPool->get(
@@ -1750,7 +1750,7 @@ namespace Poulpe {
         VkMemoryRequirements memRequirements;
         vkGetBufferMemoryRequirements(m_Device, buffer, &memRequirements);
 
-        auto memoryType = findMemoryType(memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+        auto memoryType = findMemoryType(memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
         uint32_t size = ((memRequirements.size / memRequirements.alignment) + 1) * memRequirements.alignment;
         
         auto deviceMemory = m_DeviceMemoryPool->get(
@@ -1839,6 +1839,45 @@ namespace Poulpe {
         uniformBuffer.size = size;
 
         return uniformBuffer;
+    }
+
+    Buffer VulkanAPI::createIndirectCommandsBuffer(std::vector<VkDrawIndexedIndirectCommand> const& drawCommands)
+    {
+      VkBuffer buffer{ createBuffer(
+        sizeof(VkDrawIndexedIndirectCommand) * drawCommands.size(),
+        VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT) };
+        
+        VkMemoryRequirements memRequirements;
+        vkGetBufferMemoryRequirements(m_Device, buffer, & memRequirements);
+
+        auto const memoryType{ findMemoryType(memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT | VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT) };
+        auto const size{ ((memRequirements.size / memRequirements.alignment) + 1) * memRequirements.alignment };
+
+        auto deviceMemory{ m_DeviceMemoryPool->get(
+          m_Device,
+          size,
+          memoryType,
+          VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT,
+          memRequirements.alignment,
+          DeviceMemoryPool::DeviceBufferType::STORAGE) };
+
+        auto const offset {deviceMemory->getOffset()};
+        deviceMemory->bindBufferToMemory(buffer, size);
+
+        Buffer indirectBuffer{ std::move(buffer), deviceMemory, offset, size };
+
+        {
+          indirectBuffer.memory->lock();
+
+          auto memory{ indirectBuffer.memory->getMemory() };
+          void* data;
+          vkMapMemory(m_Device, *memory, indirectBuffer.offset, indirectBuffer.size, 0, &data);
+          memcpy(data, drawCommands.data(), indirectBuffer.size);
+          vkUnmapMemory(m_Device, *memory);
+
+          indirectBuffer.memory->unLock();
+        }
+        return indirectBuffer;
     }
 
     Buffer VulkanAPI::createCubeUniformBuffers(uint32_t uniformBuffersCount)
@@ -1973,7 +2012,7 @@ namespace Poulpe {
         VkPhysicalDeviceMemoryProperties memProperties;
         vkGetPhysicalDeviceMemoryProperties(m_PhysicalDevice, &memProperties);
 
-        for (uint32_t i = 0; i < memProperties.memoryTypeCount; i++) {
+        for (uint32_t i { 0 }; i < memProperties.memoryTypeCount; i++) {
             if ((typeFilter & (1 << i)) && (memProperties.memoryTypes[i].propertyFlags & properties) == properties) {
                 m_MaxMemoryHeap = memProperties.memoryHeaps[memProperties.memoryTypes[i].heapIndex].size;
                 return i;
@@ -2251,7 +2290,7 @@ namespace Poulpe {
         VkDeviceSize layerSize = imageSize / 6;
         vkMapMemory(m_Device, *deviceMemory->getMemory(), offset, size, 0, (void**)&data);
 
-        for (uint32_t i = 0; i < skyboxPixels.size(); i++) {
+        for (uint32_t i { 0 }; i < skyboxPixels.size(); i++) {
             memcpy(data + layerSize * i, skyboxPixels[i], layerSize);
         }
 
@@ -2277,7 +2316,7 @@ namespace Poulpe {
         endCommandBuffer(commandBuffer);
         queueSubmit(commandBuffer);
 
-        for (uint32_t i = 0; i < skyboxPixels.size(); i++) {
+        for (uint32_t i { 0 }; i < skyboxPixels.size(); i++) {
             stbi_image_free(skyboxPixels[i]);
         }
         //m_DeviceMemoryPool->clear(deviceMemory);
@@ -2357,7 +2396,7 @@ namespace Poulpe {
     }
 
     void VulkanAPI::copyBufferToImage(VkCommandBuffer & commandBuffer, VkBuffer& buffer, VkImage & image,
-        uint32_t width, uint32_t height, [[maybe_unused]] uint32_t mipLevels)
+        uint32_t width, uint32_t height,  uint32_t mipLevels)
     {
         VkBufferImageCopy region{};
         region.bufferOffset = 0;
@@ -2380,7 +2419,7 @@ namespace Poulpe {
     {
         std::vector<VkBufferImageCopy> bufferCopyRegions;
 
-        for (uint32_t i = 0; i < skyboxPixels.size(); i++) {
+        for (uint32_t i { 0 }; i < skyboxPixels.size(); i++) {
 
             for (uint32_t mipLevel = 0; mipLevel < mipLevels; mipLevel++) {
 
@@ -2543,7 +2582,7 @@ namespace Poulpe {
 
     //void VulkanAPI::destroySemaphores(std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>> semaphores)
     //{
-    //    for (int i = 0; i < m_MAX_FRAMES_IN_FLIGHT; i++) {
+    //    for (int i { 0 }; i < m_MAX_FRAMES_IN_FLIGHT; i++) {
     //        
     //        if (nullptr != semaphores.first[i]) vkDestroySemaphore(m_Device, semaphores.first[i], nullptr);
     //        if (nullptr != semaphores.second[i]) vkDestroySemaphore(m_Device, semaphores.second[i], nullptr);
@@ -2552,10 +2591,10 @@ namespace Poulpe {
 
     //void VulkanAPI::destroyFences()
     //{
-    //    for (size_t i = 0; i < m_InFlightFences.size(); ++i) {
+    //    for (size_t i { 0 }; i < m_InFlightFences.size(); ++i) {
     //        vkDestroyFence(m_Device, m_InFlightFences[i], nullptr);
     //    }
-    //    for (size_t i = 0; i < m_ImagesInFlight.size(); ++i) {
+    //    for (size_t i { 0 }; i < m_ImagesInFlight.size(); ++i) {
     //        vkDestroyFence(m_Device, m_ImagesInFlight[i], nullptr);
     //    }
     //}
@@ -2593,10 +2632,10 @@ namespace Poulpe {
     //void VulkanAPI::destroySwapchain(VkDevice device, VkSwapchainKHR swapChain,
     //    std::vector<VkFramebuffer> swapChainFramebuffers, std::vector<VkImageView> swapChainImageViews)
     //{
-    //    for (uint32_t i = 0; i < swapChainFramebuffers.size(); ++i) {
+    //    for (uint32_t i { 0 }; i < swapChainFramebuffers.size(); ++i) {
     //        vkDestroyFramebuffer(device, swapChainFramebuffers[i], nullptr);
     //    }
-    //    for (uint32_t i = 0; i < swapChainImageViews.size(); ++i) {
+    //    for (uint32_t i { 0 }; i < swapChainImageViews.size(); ++i) {
     //        vkDestroyImageView(device, swapChainImageViews[i], nullptr);
     //    }
     //    vkDestroySwapchainKHR(device, swapChain, nullptr);

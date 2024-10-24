@@ -37,7 +37,7 @@ namespace Poulpe
         bool m_IsAllocated{false};
         bool m_IsFull{false};
 
-        [[maybe_unused]]VkDeviceSize m_Alignment;
+        VkDeviceSize m_Alignment;
         VkDeviceSize m_MaxSize;
         uint32_t m_MemoryType;
         //@todo check with deviceProps.limits.bufferImageGranularity;

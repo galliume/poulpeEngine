@@ -18,6 +18,6 @@ namespace Poulpe
 
   private:
     std::shared_ptr<Server> m_Server;
-    [[maybe_unused]]IAPIManager* m_APIManager;
+    IAPIManager* m_APIManager;
   };
 }
