@@ -58,9 +58,11 @@ namespace Poulpe
 
     std::function<void()> request = [this, skyboxName]() {
       PLP_TRACE("skyboxName: {}", skyboxName);
-      auto loading = m_RenderManager->getTextureManager()->loadSkybox(skyboxName);
+      std::latch count_down{ 1 };
 
-      loading();
+      std::jthread textures(std::move(std::bind(m_RenderManager->getTextureManager()->loadSkybox(skyboxName), std::ref(count_down))));
+
+      count_down.wait();
 
       auto skybox = m_RenderManager->getEntityManager()->getSkybox();
       auto meshComponent = m_RenderManager->getComponentManager()->getComponent<MeshComponent>(skybox->getID());
