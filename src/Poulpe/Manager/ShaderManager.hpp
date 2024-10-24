@@ -24,7 +24,7 @@ namespace Poulpe
     void clear();
     inline VulkanShaders* getShaders() const override { return m_Shaders.get(); }
     inline bool isLoadingDone() { return m_LoadingDone.load(); }
-    std::function<void()> load(nlohmann::json config) override;
+    std::function<void(std::latch& count_down)> load(nlohmann::json config) override;
 
   private:
     template <DescSetLayoutType T>

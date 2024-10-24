@@ -8,6 +8,8 @@
 
 #include <stb_image.h>
 
+#include <latch>
+
 namespace Poulpe
 {
   class Entity;
