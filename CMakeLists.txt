@@ -153,6 +153,8 @@ else()
   message(FATAL_ERROR "The env var VULKAN_SDK nor VULKAN_SDK_ACTIONS not found.")
 endif()
 
+find_package(assimp CONFIG REQUIRED)
+
 target_include_directories(${PROJECT_NAME} PUBLIC
           ${PROJECT_SOURCE_DIR}/vendor/assimp/include
           ${PROJECT_SOURCE_DIR}/vendor/lua
@@ -168,14 +170,13 @@ add_subdirectory(${PROJECT_SOURCE_DIR}/vendor/nlohmann)
 add_subdirectory(${PROJECT_SOURCE_DIR}/vendor/spdlog)
 add_subdirectory(${PROJECT_SOURCE_DIR}/vendor/volk)
 
+
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
   set(LIB_DEBUG_OPTIONS /MDd /fp:fast /std:c++20 -w -Wno-error -Wno-deprecated-non-prototype -Wno-unsafe-buffer-usage -g)
   set(LIB_RELEASE_OPTIONS /MD /fp:fast /std:c++20 -w -Wno-error -Wno-deprecated-non-prototype -Wno-unsafe-buffer-usage)
 
-  target_compile_options(assimp PRIVATE "$<$<CONFIG:DEBUG>:${LIB_DEBUG_OPTIONS}>")
   target_compile_options(spdlog PRIVATE "$<$<CONFIG:DEBUG>:${LIB_DEBUG_OPTIONS}>")
 
-  target_compile_options(assimp PRIVATE "$<$<CONFIG:RELEASE>:${LIB_RELEASE_OPTIONS}>")
   target_compile_options(spdlog PRIVATE "$<$<CONFIG:RELEASE>:${LIB_RELEASE_OPTIONS}>")
 endif()
 
@@ -234,7 +235,7 @@ list(APPEND EXTRA_LIBS glm::glm)
 list(APPEND EXTRA_LIBS lua)
 list(APPEND EXTRA_LIBS nlohmann_json)
 list(APPEND EXTRA_LIBS spdlog::spdlog)
-list(APPEND EXTRA_LIBS assimp)
+list(APPEND EXTRA_LIBS assimp::assimp)
 list(APPEND EXTRA_LIBS volk)
 
 target_link_libraries(${PROJECT_NAME} PRIVATE ${EXTRA_LIBS} poulpe)

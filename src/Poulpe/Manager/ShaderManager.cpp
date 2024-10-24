@@ -20,6 +20,7 @@ namespace Poulpe
     if (!std::filesystem::exists(fragPath)) {
       PLP_FATAL("fragment shader file {} does not exits.", fragPath);
       return;
+
     }
 
     auto vertShaderCode = Tools::readFile(vertPath);
@@ -39,21 +40,21 @@ namespace Poulpe
     m_LoadingDone = false;
   }
 
-  std::function<void()> ShaderManager::load(nlohmann::json config)
+  std::function<void(std::latch& count_down)> ShaderManager::load(nlohmann::json config)
   {
     m_Config = config;
 
-      std::ranges::for_each(m_Config["shader"].items(), [&](auto& shader) {
-        auto const& key = static_cast<std::string>(shader.key());
-        auto const& data = shader.value();
+    return [this](std::latch& count_down) {
+      for (auto & shader : m_Config["shader"].items()) {
+
+        auto key = static_cast<std::string>(shader.key());
+        auto data = shader.value();
 
         addShader(key, data["vert"], data["frag"]);
-      });
+      }
+      count_down.count_down();
       m_LoadingDone = true;
-
-    std::function shaderFuture = [&]() {};
-
-    return shaderFuture;
+    };
   }
 
   template <DescSetLayoutType T>

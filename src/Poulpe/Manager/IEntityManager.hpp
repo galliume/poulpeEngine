@@ -29,7 +29,7 @@ namespace Poulpe
     //virtual std::unordered_map<std::string, std::array<uint32_t, 2>> getLoadedEntities() = 0;
     virtual inline Entity* getSkybox() = 0;
     virtual EntityNode * getWorldNode() = 0;
-    virtual void load(nlohmann::json const& levelConfig) = 0;
+    virtual std::function<void()> load(nlohmann::json const& levelConfig) = 0;
     virtual inline void setSkybox(Entity* const skybox) = 0;
   };
 }

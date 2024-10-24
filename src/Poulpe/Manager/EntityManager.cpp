@@ -30,25 +30,26 @@ namespace Poulpe
     //m_LoadedEntities.clear();
   }
 
-  void EntityManager::load(nlohmann::json const& levelConfig)
+  std::function<void()> EntityManager::load(nlohmann::json const& levelConfig)
   {
     m_LevelConfig = levelConfig;
 
-    std::ranges::for_each(m_LevelConfig["entities"].items(), [&](auto const& entityConf) {
+    return [this]() {
+      std::ranges::for_each(m_LevelConfig["entities"].items(), [&](auto const& entityConf) {
 
-      auto const& key{ entityConf.key() };
-      auto const& data{ entityConf.value() };
+        auto const& key = entityConf.key();
+        auto const& data = entityConf.value();
+        size_t const count = data["count"].template get<size_t>();
 
-      size_t const count = data["count"].template get<size_t>();
+        for (size_t i{ 0 }; i < count; i++) {
+          Locator::getThreadPool()->submit([&]() {
+            initMeshes(key, data);
+          });
+        }
+      });
 
-      for (size_t i{ 0 }; i < count; i++) {
-        Locator::getThreadPool()->submit([&]() {
-          initMeshes(key, data);
-        });
-      }
-    });
-
-    m_LoadingDone.store(true);
+      m_LoadingDone.store(true);
+    };
   }
 
   EntityNode * EntityManager::getWorldNode()

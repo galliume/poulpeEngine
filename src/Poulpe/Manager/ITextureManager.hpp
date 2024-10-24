@@ -6,6 +6,8 @@
 
 #include "Poulpe/Component/Texture.hpp"
 
+#include <latch>
+
 namespace Poulpe
 {
     class ITextureManager
@@ -22,7 +24,7 @@ namespace Poulpe
         virtual inline std::unordered_map<std::string, std::string> getPaths() const = 0;
         virtual inline const Texture getSkyboxTexture() const = 0;
         virtual inline std::unordered_map<std::string, Texture> getTextures() = 0;
-        virtual std::function<void()> load() = 0;
-        virtual std::function<void()> loadSkybox(std::string_view) = 0;
+        virtual std::function<void(std::latch& count_down)> load() = 0;
+        virtual std::function<void(std::latch& count_down)> loadSkybox(std::string_view) = 0;
     };
 }
