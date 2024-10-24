@@ -15,6 +15,8 @@
 
 #include "Poulpe/Renderer/Vulkan/Renderer.hpp"
 
+#include <latch>
+
 namespace Poulpe
 {    
     RenderManager::RenderManager(Window* const window)
@@ -182,34 +184,19 @@ namespace Poulpe
       auto const levelData = configManager->loadLevelData(level);
       m_TextureManager->addConfig(configManager->texturesConfig());
 
-      std::function<void()> textureFuture = m_TextureManager->load();
-
       std::string const sb = (m_CurrentSkybox.empty()) ? static_cast<std::string>(appConfig["defaultSkybox"])
         : m_CurrentSkybox;
 
-      std::function<void()> skyboxFuture = m_TextureManager->loadSkybox(sb);
-      std::function<void()> shaderFuture = m_ShaderManager->load(configManager->shaderConfig());
+      std::latch count_down{ 3 };
 
-      Locator::getThreadPool()->submit(threadQueueName, textureFuture);
-      Locator::getThreadPool()->submit(threadQueueName, skyboxFuture);
-      Locator::getThreadPool()->submit(threadQueueName, shaderFuture);
+      std::jthread textures(std::move(std::bind(m_TextureManager->load(), std::ref(count_down))));
+      std::jthread skybox(std::move(std::bind(m_TextureManager->loadSkybox(sb), std::ref(count_down))));
+      std::jthread shaders(std::move(std::bind(m_ShaderManager->load(configManager->shaderConfig()), std::ref(count_down))));
 
-      while (!m_TextureManager->isTexturesLoadingDone()) {
-        //PLP_WARN("loading {}", m_TextureManager->isTexturesLoadingDone());
-      }
-      while (!m_TextureManager->isSkyboxLoadingDone()) {
-        //PLP_WARN("loading {}", m_TextureManager->isSkyboxLoadingDone());
-      }
-      while (!m_ShaderManager->isLoadingDone()) {
-        //PLP_WARN("loading {}", m_ShaderManager->isLoadingDone());
-      }
-
-      //while (!m_EntityManager->isLoadingDone()) {
-      //    //PLP_WARN("loading {}", m_EntityManager->IsLoadingDone());
-      //}
+      count_down.wait();
       setIsLoaded();
-      m_EntityManager->load(levelData);
-      //Locator::getThreadPool()->submit(threadQueueName, entityFutures);
+
+      std::jthread entities(std::move(m_EntityManager->load(levelData)));
     }
 
     void RenderManager::prepareHUD()

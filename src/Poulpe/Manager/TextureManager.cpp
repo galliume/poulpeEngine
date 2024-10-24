@@ -177,9 +177,9 @@ namespace Poulpe
     m_TextureConfig.clear();
   }
 
-  std::function<void()> TextureManager::load()
+  std::function<void(std::latch& count_down)> TextureManager::load()
   {
-    std::function<void()> textureFuture = [this]() {
+    return [this](std::latch& count_down) {
       std::filesystem::path p = std::filesystem::current_path();
 
       for (auto& [key, path] : m_TextureConfig["textures"].items()) {
@@ -187,24 +187,24 @@ namespace Poulpe
         addTexture(key, absolutePath, true);
       }
 
+      count_down.count_down();
       m_TexturesLoadingDone.store(true);
     };
-
-    return textureFuture;
   }
 
-  std::function<void()> TextureManager::loadSkybox(std::string_view skybox)
+  std::function<void(std::latch& count_down)> TextureManager::loadSkybox(std::string_view skybox)
   {
     m_SkyboxName = skybox;
-    std::function<void()> skyboxFuture = [this]() {
+
+    return [this](std::latch& count_down) {
       std::vector<std::string>skyboxImages;
       for (auto& texture : m_TextureConfig["skybox"][m_SkyboxName].items()) {
         skyboxImages.emplace_back(texture.value());
       }
       addSkyBox(skyboxImages);
+      count_down.arrive_and_wait();
+
       m_SkyboxLoadingDone.store(true);
     };
-
-    return skyboxFuture;
   }
 }

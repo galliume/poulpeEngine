@@ -21,8 +21,8 @@ namespace Poulpe
         inline std::unordered_map<std::string, Texture> getTextures() override { return m_Textures; }
         inline bool isSkyboxLoadingDone() { return m_SkyboxLoadingDone.load(); }
         inline bool isTexturesLoadingDone() { return m_TexturesLoadingDone.load(); }
-        std::function<void()> load() override;
-        std::function<void()> loadSkybox(std::string_view skybox) override;
+        std::function<void(std::latch& count_down)> load() override;
+        std::function<void(std::latch& count_down)> loadSkybox(std::string_view skybox) override;
 
     private:
         const uint32_t MAX_MIPLEVELS = 5;

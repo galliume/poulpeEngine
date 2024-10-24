@@ -24,7 +24,7 @@ namespace Poulpe
     //inline size_t getInstancedCount() const override { return m_Entities.size(); }
     //inline std::unordered_map<std::string, std::array<uint32_t, 2>> getLoadedEntities() override { return m_LoadedEntities; }
     inline Entity* getSkybox() override { return m_Skybox.get(); }
-    void load(nlohmann::json const& levelConfig) override;
+    std::function<void()> load(nlohmann::json const& levelConfig) override;
     inline void setSkybox(Entity* const skybox) override { m_Skybox = std::unique_ptr<Entity>(skybox); }
     //void addEntity(Mesh* meshes);
     //inline size_t getTotalEntities() const { return m_Entities.size(); }
