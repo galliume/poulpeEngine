@@ -89,6 +89,7 @@ set(ASSIMP_BUILD_X3D_IMPORTER OFF)
 set(ASSIMP_BUILD_GLTF_IMPORTER ON)
 set(ASSIMP_BUILD_3MF_IMPORTER OFF)
 set(ASSIMP_BUILD_MMD_IMPORTER OFF)
+set(ASSIMP_BUILD_ASSIMP_TOOLS OFF)
 
 message(STATUS "Generated with config types: ${CMAKE_CONFIGURATION_TYPES}")
 message(STATUS "CMAKE_CXX_STANDARD: ${CMAKE_CXX_STANDARD}")
@@ -123,13 +124,8 @@ add_subdirectory(${PROJECT_SOURCE_DIR}/src/Poulpe/Utils)
 
 target_include_directories(${PROJECT_NAME} PRIVATE "${PROJECT_BINARY_DIR}")
 
-if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
-  set(DEBUG_OPTIONS /MDd /Wall /fp:fast /std:c++20 /Zc:__cplusplus -g)
-  set(RELEASE_OPTIONS /MD /O2 /Ot /fp:fast /Zc:__cplusplus)
-else()
-  set(DEBUG_OPTIONS -Weverything -std=c++20 -Wno-c++98-compat -Wno-c++98-compat-pedantic -g)
-  set(RELEASE_OPTIONS -O3 -std=c++20 -Wno-c++98-compat -Wno-c++98-compat-pedantic)
-endif()
+set(DEBUG_OPTIONS -Weverything -std=c++20 -ffast-math -Wno-c++98-compat -Wno-c++98-compat-pedantic -g)
+set(RELEASE_OPTIONS -O3 -std=c++20 -ffast-math -Wno-c++98-compat -Wno-c++98-compat-pedantic)
 
 target_compile_options(${PROJECT_NAME} PRIVATE "$<$<CONFIG:DEBUG>:${DEBUG_OPTIONS}>")
 target_compile_definitions(${PROJECT_NAME} PRIVATE "$<$<CONFIG:DEBUG>:PLP_DEBUG_BUILD>")
@@ -153,8 +149,6 @@ else()
   message(FATAL_ERROR "The env var VULKAN_SDK nor VULKAN_SDK_ACTIONS not found.")
 endif()
 
-find_package(assimp CONFIG REQUIRED)
-
 target_include_directories(${PROJECT_NAME} PUBLIC
           ${PROJECT_SOURCE_DIR}/vendor/assimp/include
           ${PROJECT_SOURCE_DIR}/vendor/lua
@@ -169,16 +163,6 @@ add_subdirectory(${PROJECT_SOURCE_DIR}/vendor/glm)
 add_subdirectory(${PROJECT_SOURCE_DIR}/vendor/nlohmann)
 add_subdirectory(${PROJECT_SOURCE_DIR}/vendor/spdlog)
 add_subdirectory(${PROJECT_SOURCE_DIR}/vendor/volk)
-
-
-if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
-  set(LIB_DEBUG_OPTIONS /MDd /fp:fast /std:c++20 -w -Wno-error -Wno-deprecated-non-prototype -Wno-unsafe-buffer-usage -g)
-  set(LIB_RELEASE_OPTIONS /MD /fp:fast /std:c++20 -w -Wno-error -Wno-deprecated-non-prototype -Wno-unsafe-buffer-usage)
-
-  target_compile_options(spdlog PRIVATE "$<$<CONFIG:DEBUG>:${LIB_DEBUG_OPTIONS}>")
-
-  target_compile_options(spdlog PRIVATE "$<$<CONFIG:RELEASE>:${LIB_RELEASE_OPTIONS}>")
-endif()
 
 #if (CMAKE_BUILD_TYPE STREQUAL "Debug")
 #target_compile_options(assimp_viewer PRIVATE -w -Wno-error)
@@ -243,11 +227,6 @@ target_link_libraries(${PROJECT_NAME} PRIVATE ${EXTRA_LIBS} poulpe)
 set(PLP_LIB_DIR "$<TARGET_FILE_DIR:${PROJECT_NAME}>/lib")
 set(PLP_BIN_DIR "$<TARGET_FILE_DIR:${PROJECT_NAME}>")
 
-set_target_properties(assimp PROPERTIES
-  LIBRARY_OUTPUT_DIRECTORY ${PLP_BIN_DIR}
-  RUNTIME_OUTPUT_DIRECTORY ${PLP_BIN_DIR}
-  ARCHIVE_OUTPUT_DIRECTORY ${PLP_BIN_DIR}
-)
 set_target_properties(glfw PROPERTIES
   LIBRARY_OUTPUT_DIRECTORY ${PLP_BIN_DIR}
   RUNTIME_OUTPUT_DIRECTORY ${PLP_BIN_DIR}

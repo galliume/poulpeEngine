@@ -32,9 +32,7 @@ List existing presets
 cmake --list-presets
 
 "windows-debug"              - Debug
-"windows-debug-no-toolset"   - Debug no toolset
 "windows-release"            - Release
-"windows-release-no-toolset" - Release no toolset
 "linux-debug"                - Debug
 "linux-release"              - Release
 ```

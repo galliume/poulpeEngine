@@ -82,6 +82,26 @@
       }
     },
     {
+      "name": "ASSIMP_WARNINGS_AS_ERRORS_OFF",
+      "hidden": true,
+      "cacheVariables": {
+        "ASSIMP_WARNINGS_AS_ERRORS": {
+          "type": "BOOL",
+          "value": "FALSE"
+        }
+      }
+    },
+    {
+      "name": "ASSIMP_WARNINGS_AS_ERRORS_ON",
+      "hidden": true,
+      "cacheVariables": {
+        "ASSIMP_WARNINGS_AS_ERRORS": {
+          "type": "BOOL",
+          "value": "TRUE"
+        }
+      }
+    },
+    {
       "name": "ASSIMP_INSTALL_ON",
       "hidden": true,
       "cacheVariables": {
@@ -116,6 +136,26 @@
       "hidden": true,
       "cacheVariables": {
         "ASSIMP_BUILD_DEBUG": {
+          "type": "BOOL",
+          "value": "FALSE"
+        }
+      }
+    },
+    {
+      "name": "ASSIMP_EXPORT_OFF",
+      "hidden": true,
+      "cacheVariables": {
+        "ASSIMP_NO_EXPORT": {
+          "type": "BOOL",
+          "value": "TRUE"
+        }
+      }
+    },
+    {
+      "name": "ASSIMP_EXPORT_ON",
+      "hidden": true,
+      "cacheVariables": {
+        "ASSIMP_NO_EXPORT": {
           "type": "BOOL",
           "value": "FALSE"
         }
@@ -210,6 +250,26 @@
       "name": "GENERATOR_VS_17_2022",
       "hidden": true,
       "generator": "Visual Studio 17 2022"
-    }
+    },
+	{
+      "name": "CLANGCL_TOOLCHAIN_FILE",
+      "hidden": true,
+	   "cacheVariables": {
+        "toolchainFile": {
+          "type": "STRING",
+          "value": "clangcl-toolchain.cmake"
+        }
+      }		
+	},
+	{
+      "name": "CLANG_TOOLCHAIN_FILE",
+      "hidden": true,
+	   "cacheVariables": {
+        "toolchainFile": {
+          "type": "STRING",
+          "value": "clang-toolchain.cmake"
+        }
+      }		
+	}
   ]
 }
