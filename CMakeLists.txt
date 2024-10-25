@@ -38,11 +38,8 @@ set(GLFW_BUILD_X11 ON)
 set(GLFW_BUILD_DOCS OFF)
 set(GLFW_BUILD_TESTS OFF)
 set(GLFW_BUILD_EXAMPLES OFF)
-set(CMAKE_BUILD_TYPE ${CMAKE_BUILD_TYPE})
 
 #assimp format
-set(ASSIMP_NO_EXPORT ON)
-set(ASSIMP_INSTALL OFF)
 set(ASSIMP_BUILD_TESTS OFF)
 set(ASSIMP_BUILD_AMF_IMPORTER OFF)
 set(ASSIMP_BUILD_3DS_IMPORTER OFF)
@@ -107,9 +104,9 @@ configure_file(PoulpeEngineConfig.h.in PoulpeEngineConfig.h)
 add_definitions(-DVK_NO_PROTOTYPES
                 -DVOLK_STATIC_DEFINES
                 -D_CRT_SECURE_NO_WARNINGS
-				-DDWIN32_LEAN_AND_MEAN)
+                -DDWIN32_LEAN_AND_MEAN)
 
-target_precompile_headers(${PROJECT_NAME} PRIVATE include/Poulpepch.hpp)
+target_precompile_headers(${PROJECT_NAME} PRIVATE include/Poulpepch.hpp.pch)
 
 include_directories(${PROJECT_SOURCE_DIR}/src)
 
@@ -125,23 +122,20 @@ add_subdirectory(${PROJECT_SOURCE_DIR}/src/Poulpe/Renderer/Vulkan)
 add_subdirectory(${PROJECT_SOURCE_DIR}/src/Poulpe/Utils)
 
 target_include_directories(${PROJECT_NAME} PRIVATE "${PROJECT_BINARY_DIR}")
-target_compile_definitions(${PROJECT_NAME} PRIVATE "$<$<CONFIG:DEBUG>:PLP_DEBUG_BUILD>")
 
-if(MSVC)
-  #set_target_properties(${PROJECT_NAME} PROPERTIES CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
-  set(DEBUG_OPTIONS "/MDd;/Wall;/fp:fast;/std:c++20;/Zc:__cplusplus/-Wno-c++98-compat/-Wno-c++98-compat-pedantic")
-  set(RELEASE_OPTIONS "/MD;/Ox;/Ot;/fp:fast;/std:c++20;/Zc:__cplusplus/-Wno-c++98-compat/-Wno-c++98-compat-pedantic")
-  set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /MDd")
-  set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} /MDd")
-  set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /MD /GL")
-  set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} /MD")
+if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+  set(DEBUG_OPTIONS /MDd /Wall /fp:fast /std:c++20 /Zc:__cplusplus -g)
+  set(RELEASE_OPTIONS /MD /O2 /Ot /fp:fast /Zc:__cplusplus)
 else()
-  set(DEBUG_OPTIONS "-Weverything;-std=c++20;-Wno-c++98-compat;-Wno-c++98-compat-pedantic")
-  set(RELEASE_OPTIONS "-O3;-std=c++20;-Wno-c++98-compat;-Wno-c++98-compat-pedantic")
+  set(DEBUG_OPTIONS -Weverything -std=c++20 -Wno-c++98-compat -Wno-c++98-compat-pedantic -g)
+  set(RELEASE_OPTIONS -O3 -std=c++20 -Wno-c++98-compat -Wno-c++98-compat-pedantic)
 endif()
 
 target_compile_options(${PROJECT_NAME} PRIVATE "$<$<CONFIG:DEBUG>:${DEBUG_OPTIONS}>")
+target_compile_definitions(${PROJECT_NAME} PRIVATE "$<$<CONFIG:DEBUG>:PLP_DEBUG_BUILD>")
+
 target_compile_options(${PROJECT_NAME} PRIVATE "$<$<CONFIG:RELEASE>:${RELEASE_OPTIONS}>")
+
 #########################################################
 
 #########################################################
@@ -160,12 +154,12 @@ else()
 endif()
 
 target_include_directories(${PROJECT_NAME} PUBLIC
-					${PROJECT_SOURCE_DIR}/vendor/assimp/include					
-					${PROJECT_SOURCE_DIR}/vendor/lua
-					${PROJECT_SOURCE_DIR}/vendor/miniaudio					
-					${PROJECT_SOURCE_DIR}/vendor/nlohmann/include
-                    ${PROJECT_SOURCE_DIR}/vendor/stb
-                    ${VULKAN_PATH})
+          ${PROJECT_SOURCE_DIR}/vendor/assimp/include
+          ${PROJECT_SOURCE_DIR}/vendor/lua
+          ${PROJECT_SOURCE_DIR}/vendor/miniaudio
+          ${PROJECT_SOURCE_DIR}/vendor/nlohmann/include
+          ${PROJECT_SOURCE_DIR}/vendor/stb
+          ${VULKAN_PATH})
 
 add_subdirectory(${PROJECT_SOURCE_DIR}/vendor/assimp)
 add_subdirectory(${PROJECT_SOURCE_DIR}/vendor/glfw)
@@ -174,13 +168,21 @@ add_subdirectory(${PROJECT_SOURCE_DIR}/vendor/nlohmann)
 add_subdirectory(${PROJECT_SOURCE_DIR}/vendor/spdlog)
 add_subdirectory(${PROJECT_SOURCE_DIR}/vendor/volk)
 
-target_compile_options(assimp PRIVATE -w -Wno-error)
-target_compile_options(assimp_cmd PRIVATE -w -Wno-deprecated-copy)
+if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+  set(LIB_DEBUG_OPTIONS /MDd /fp:fast /std:c++20 -w -Wno-error -Wno-deprecated-non-prototype -Wno-unsafe-buffer-usage -g)
+  set(LIB_RELEASE_OPTIONS /MD /fp:fast /std:c++20 -w -Wno-error -Wno-deprecated-non-prototype -Wno-unsafe-buffer-usage)
 
-if (CMAKE_BUILD_TYPE STREQUAL "Debug")
-target_compile_options(assimp_viewer PRIVATE -w -Wno-error)
+  target_compile_options(assimp PRIVATE "$<$<CONFIG:DEBUG>:${LIB_DEBUG_OPTIONS}>")
+  target_compile_options(spdlog PRIVATE "$<$<CONFIG:DEBUG>:${LIB_DEBUG_OPTIONS}>")
+
+  target_compile_options(assimp PRIVATE "$<$<CONFIG:RELEASE>:${LIB_RELEASE_OPTIONS}>")
+  target_compile_options(spdlog PRIVATE "$<$<CONFIG:RELEASE>:${LIB_RELEASE_OPTIONS}>")
 endif()
-								  
+
+#if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+#target_compile_options(assimp_viewer PRIVATE -w -Wno-error)
+#endif()
+
 #@todo include only used .c
 add_library(
   lua STATIC
@@ -223,8 +225,8 @@ add_library(
   ${PROJECT_SOURCE_DIR}/vendor/lua/lualib.h
 )
 
-if(MSVC)
-  list(APPEND EXTRA_LIBS Ws2_32)
+if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+  list(APPEND EXTRA_LIBS Ws2_32 user32)
 endif()
 
 list(APPEND EXTRA_LIBS glfw)
@@ -236,34 +238,34 @@ list(APPEND EXTRA_LIBS assimp)
 list(APPEND EXTRA_LIBS volk)
 
 target_link_libraries(${PROJECT_NAME} PRIVATE ${EXTRA_LIBS} poulpe)
-                       
+
 set(PLP_LIB_DIR "$<TARGET_FILE_DIR:${PROJECT_NAME}>/lib")
 set(PLP_BIN_DIR "$<TARGET_FILE_DIR:${PROJECT_NAME}>")
 
 set_target_properties(assimp PROPERTIES
-  LIBRARY_OUTPUT_DIRECTORY ${PLP_BIN_DIR} 
-  RUNTIME_OUTPUT_DIRECTORY ${PLP_BIN_DIR} 
-  ARCHIVE_OUTPUT_DIRECTORY ${PLP_BIN_DIR} 
+  LIBRARY_OUTPUT_DIRECTORY ${PLP_BIN_DIR}
+  RUNTIME_OUTPUT_DIRECTORY ${PLP_BIN_DIR}
+  ARCHIVE_OUTPUT_DIRECTORY ${PLP_BIN_DIR}
 )
 set_target_properties(glfw PROPERTIES
-  LIBRARY_OUTPUT_DIRECTORY ${PLP_BIN_DIR} 
-  RUNTIME_OUTPUT_DIRECTORY ${PLP_BIN_DIR} 
-  ARCHIVE_OUTPUT_DIRECTORY ${PLP_BIN_DIR} 
+  LIBRARY_OUTPUT_DIRECTORY ${PLP_BIN_DIR}
+  RUNTIME_OUTPUT_DIRECTORY ${PLP_BIN_DIR}
+  ARCHIVE_OUTPUT_DIRECTORY ${PLP_BIN_DIR}
 )
 set_target_properties(lua PROPERTIES
-  LIBRARY_OUTPUT_DIRECTORY ${PLP_BIN_DIR} 
-  RUNTIME_OUTPUT_DIRECTORY ${PLP_BIN_DIR} 
-  ARCHIVE_OUTPUT_DIRECTORY ${PLP_BIN_DIR} 
+  LIBRARY_OUTPUT_DIRECTORY ${PLP_BIN_DIR}
+  RUNTIME_OUTPUT_DIRECTORY ${PLP_BIN_DIR}
+  ARCHIVE_OUTPUT_DIRECTORY ${PLP_BIN_DIR}
 )
 set_target_properties(spdlog PROPERTIES
-  LIBRARY_OUTPUT_DIRECTORY ${PLP_BIN_DIR} 
-  RUNTIME_OUTPUT_DIRECTORY ${PLP_BIN_DIR} 
-  ARCHIVE_OUTPUT_DIRECTORY ${PLP_BIN_DIR} 
+  LIBRARY_OUTPUT_DIRECTORY ${PLP_BIN_DIR}
+  RUNTIME_OUTPUT_DIRECTORY ${PLP_BIN_DIR}
+  ARCHIVE_OUTPUT_DIRECTORY ${PLP_BIN_DIR}
 )
 set_target_properties(volk PROPERTIES
-  LIBRARY_OUTPUT_DIRECTORY ${PLP_BIN_DIR} 
-  RUNTIME_OUTPUT_DIRECTORY ${PLP_BIN_DIR} 
-  ARCHIVE_OUTPUT_DIRECTORY ${PLP_BIN_DIR} 
+  LIBRARY_OUTPUT_DIRECTORY ${PLP_BIN_DIR}
+  RUNTIME_OUTPUT_DIRECTORY ${PLP_BIN_DIR}
+  ARCHIVE_OUTPUT_DIRECTORY ${PLP_BIN_DIR}
 )
 #########################################################
 
@@ -287,32 +289,6 @@ set_property(DIRECTORY ${PROJECT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT ${PROJE
 set_property(TARGET ${PROJECT_NAME} PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}")
 
 find_program(CLANG_TIDY_EXE NAMES "clang-tidy")
-
-#add_custom_command(
-#  TARGET ${PROJECT_NAME} PRE_BUILD
-#  COMMAND ${CMAKE_COMMAND} -E copy_directory
-#      ${CMAKE_CURRENT_SOURCE_DIR}/assets
-#      $<TARGET_FILE_DIR:${PROJECT_NAME}>/assets
-#  COMMENT "\r\n Copying assets")
-#
-#add_custom_command(
-#  TARGET ${PROJECT_NAME} PRE_BUILD
-#  COMMAND ${CMAKE_COMMAND} -E copy_directory
-#      ${CMAKE_CURRENT_SOURCE_DIR}/config
-#      $<TARGET_FILE_DIR:${PROJECT_NAME}>/config
-#  COMMENT "\r\n Copying config")
-
-#add_custom_command(
-#  TARGET ${PROJECT_NAME} PRE_BUILD
-#  COMMAND ${CMAKE_COMMAND} -E make_directory 
-#      $<TARGET_FILE_DIR:${PROJECT_NAME}>/cache
-#  COMMENT "\r\n Creating cache dir")
-#
-#add_custom_command(
-#  TARGET ${PROJECT_NAME} PRE_BUILD
-#  COMMAND ${CMAKE_COMMAND} -E make_directory 
-#      $<TARGET_FILE_DIR:${PROJECT_NAME}>/lib
-#  COMMENT "\r\n Creating lib dir")
 
 add_custom_target(
         CompilShaders ${CMAKE_CURRENT_SOURCE_DIR}/bin/shadersCompilation.sh

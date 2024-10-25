@@ -282,7 +282,7 @@ namespace Poulpe
     std::ranges::for_each(m_Entities, [&](auto const& entity) {
       auto meshComponent = m_ComponentManager->getComponent<MeshComponent>(entity->getID());
       if (meshComponent) {
-        Mesh* mesh = meshComponent->hasImpl<Mesh>();
+        Mesh* mesh = meshComponent->template hasImpl<Mesh>();
 
         if (mesh->hasShadow() && !mesh->getUniformBuffers()->empty()) {
 
@@ -391,7 +391,7 @@ namespace Poulpe
           auto meshComponent = m_ComponentManager->getComponent<MeshComponent>(entity->getID());
           if (meshComponent) {
 
-            Mesh* mesh = meshComponent->hasImpl<Mesh>();
+            Mesh* mesh = meshComponent->template hasImpl<Mesh>();
             if (!mesh->getUniformBuffers()->empty()) {
 
               //@todo check if the pipeline really need to be updated

@@ -1,0 +1,151 @@
+﻿{
+  "version": 6,
+  "include": [
+    "CMakeHiddenPresets.json"
+  ],
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 25,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "windows-debug",
+      "displayName": "Debug",
+      "description": "Windows Debug",
+      "architecture": {
+        "value": "x64",
+        "strategy": "external"
+      },
+      "toolset": "ClangCL",
+      "binaryDir": "${sourceDir}/build/${presetName}",
+      "inherits": [
+        "GENERATOR_NINJA",
+        "DEBUG_BUILD_TYPE",
+        "CCACHE_OFF",
+        "ASSIMP_TOOLS_OFF",
+        "ASSIMP_BUILD_SHARED_LIBS_OFF",
+        "ASSIMP_BUILD_FRAMEWORK_ON",
+        "C_COMPILER_CLANG_CL",
+        "CXX_COMPILER_CLANG_CL",
+        "SPDLOG_BUILD_SHARED_ON"
+      ],
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows"
+      },
+      "vendor": {
+        "microsoft.com/VisualStudioSettings/CMake/1.0": {
+          "intelliSenseMode": "windows-clang-x64"
+        }
+      }
+    },
+    {
+      "name": "windows-release",
+      "displayName": "Release",
+      "description": "Windows Release",
+      "architecture": {
+        "value": "x64",
+        "strategy": "external"
+      },
+      "binaryDir": "${sourceDir}/build/${presetName}",
+      "cacheVariables": {
+        "SPDLOG_BUILD_SHARED": {
+          "type": "BOOL",
+          "value": "ON"
+        }
+      },
+      "inherits": [
+        "GENERATOR_NINJA",
+        "RELEASE_BUILD_TYPE",
+        "CCACHE_OFF",
+        "ASSIMP_TOOLS_OFF",
+        "ASSIMP_INSTALL_OFF",
+        "ASSIMP_BUILD_SHARED_LIBS_OFF",
+        "C_COMPILER_CLANG_CL",
+        "CXX_COMPILER_CLANG_CL",
+        "SPDLOG_BUILD_SHARED_ON"
+      ],
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows"
+      }
+    },
+    {
+      "name": "linux-debug",
+      "displayName": "Debug",
+      "description": "Linux Debug",
+      "architecture": {
+        "value": "x64",
+        "strategy": "external"
+      },
+      "binaryDir": "${sourceDir}/build/${presetName}",
+      "inherits": [
+        "GENERATOR_NINJA",
+        "DEBUG_BUILD_TYPE",
+        "CCACHE_OFF",
+        "ASSIMP_TOOLS_OFF",
+        "ASSIMP_INSTALL_OFF",
+        "ASSIMP_BUILD_SHARED_LIBS_OFF",
+        "C_COMPILER_CLANG",
+        "CXX_COMPILER_CLANG",
+        "SPDLOG_BUILD_SHARED_ON"
+      ],
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Linux"
+      }
+    },
+    {
+      "name": "linux-release",
+      "displayName": "Release",
+      "description": "Linux Release",
+      "architecture": {
+        "value": "x64",
+        "strategy": "external"
+      },
+      "binaryDir": "${sourceDir}/build/${presetName}",
+      "inherits": [
+        "GENERATOR_NINJA",
+        "RELEASE_BUILD_TYPE",
+        "CCACHE_OFF",
+        "ASSIMP_TOOLS_OFF",
+        "ASSIMP_INSTALL_OFF",
+        "ASSIMP_BUILD_SHARED_LIBS_OFF",
+        "C_COMPILER_CLANG",
+        "CXX_COMPILER_CLANG",
+        "SPDLOG_BUILD_SHARED_ON"
+      ],
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Linux"
+      }
+    }
+  ],
+   "buildPresets": [
+    {
+      "name": "windows-debug",
+      "displayName": "Debug",
+      "configurePreset": "windows-debug"
+    },
+  {
+      "name": "windows-release",
+      "displayName": "Release",
+      "configurePreset": "windows-release"
+    },
+  {
+      "name": "linux-debug",
+      "displayName": "Debug",
+      "configurePreset": "linux-debug"
+    },
+  {
+      "name": "linux-release",
+      "displayName": "Release",
+      "configurePreset": "linux-release"
+    }
+  ]
+}
