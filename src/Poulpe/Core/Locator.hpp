@@ -16,18 +16,13 @@ namespace Poulpe {
         static ConfigManager* getConfigManager() { return m_ConfigManager.get(); }
         static ThreadPool* getThreadPool() { return m_ThreadPool.get(); }
         
-        static void setCommandQueue(CommandQueue* commandQueue) {
-          m_CommandQueue = std::unique_ptr<CommandQueue>(commandQueue);}
-
-        static void setInputManager(InputManager* inputManager) {
-          m_InputManager = std::unique_ptr<InputManager>(inputManager); }
-
-        static void setConfigManager(ConfigManager* configManager) {
-          m_ConfigManager = std::unique_ptr<ConfigManager>(configManager); }
-
-        //@todo inject with Interface not direct Impl
-        static void setThreadPool(ThreadPool* threadPool) {
-          m_ThreadPool = std::unique_ptr<ThreadPool>(threadPool); }
+        static void init(Window const * const window)
+        {
+          m_InputManager = std::make_unique<InputManager>(window);
+          m_CommandQueue = std::make_unique<CommandQueue>();
+          m_ConfigManager = std::make_unique<ConfigManager>();
+          m_ThreadPool = std::make_unique<ThreadPool>();
+        }
 
     private:
         inline static std::unique_ptr<CommandQueue> m_CommandQueue;

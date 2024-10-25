@@ -37,7 +37,7 @@ namespace Poulpe
         glfwSetWindowMonitor(m_Window, nullptr, (maxWidth/2)-(WIDTH/2), (maxHeight/2) - (HEIGHT/2), WIDTH, HEIGHT, GLFW_DONT_CARE);
         glfwSetWindowUserPointer(m_Window, this);
 
-        glfwSetFramebufferSizeCallback(m_Window, []([[maybe_unused]] GLFWwindow* glfwWindow, [[maybe_unused]] int width, [[maybe_unused]] int height) {
+        glfwSetFramebufferSizeCallback(m_Window, []( GLFWwindow* glfwWindow,  int width,  int height) {
             Window::m_FramebufferResized = true;
         });
 

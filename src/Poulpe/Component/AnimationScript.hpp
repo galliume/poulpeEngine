@@ -32,8 +32,8 @@ namespace Poulpe
     Data* getData() { return m_Data; }
 
     void init(IRenderer* const renderer,
-      [[maybe_unused]] ITextureManager* const textureManager,
-      [[maybe_unused]] ILightManager* const lightManager) override
+       ITextureManager* const textureManager,
+       ILightManager* const lightManager) override
     {
         m_Renderer = renderer;
     }

@@ -6,92 +6,48 @@ namespace Poulpe
 
     void Basic::createDescriptorSet(IVisitable* const mesh)
     {
-      std::vector<VkDescriptorImageInfo> imageInfos;
-      std::vector<VkDescriptorImageInfo> imageInfoSpec;
+      Texture const tex{ m_TextureManager->getTextures()[mesh->getData()->m_Textures.at(0)] };
+      Texture const tex2{ m_TextureManager->getTextures()[mesh->getData()->m_Textures.at(1)] };
+      Texture const tex3{ m_TextureManager->getTextures()[mesh->getData()->m_Textures.at(2)] };
+      Texture const alpha{ m_TextureManager->getTextures()[mesh->getData()->m_TextureAlpha] };
 
-      Texture tex;
-      tex = m_TextureManager->getTextures()[mesh->getData()->m_Textures.at(0)];
+      std::vector<VkDescriptorImageInfo> imageInfos{};
+      imageInfos.reserve(8);
+      imageInfos.emplace_back(tex.getSampler(), tex.getImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+      imageInfos.emplace_back(tex2.getSampler(), tex2.getImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+      imageInfos.emplace_back(tex3.getSampler(), tex3.getImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+      imageInfos.emplace_back(alpha.getSampler(), alpha.getImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
-      Texture tex2;
-      tex2 = m_TextureManager->getTextures()[mesh->getData()->m_Textures.at(1)];
-
-      Texture tex3;
-      tex3 = m_TextureManager->getTextures()[mesh->getData()->m_Textures.at(2)];
-
-      Texture alpha;
-      alpha = m_TextureManager->getTextures()[mesh->getData()->m_TextureAlpha];
-
-      VkDescriptorImageInfo imageInfo{};
-      imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-      imageInfo.imageView = tex.getImageView();
-      imageInfo.sampler = tex.getSampler();
-
-      VkDescriptorImageInfo imageInfo2{};
-      imageInfo2.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-      imageInfo2.imageView = tex2.getImageView();
-      imageInfo2.sampler = tex2.getSampler();
-
-      VkDescriptorImageInfo imageInfo3{};
-      imageInfo3.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-      imageInfo3.imageView = tex3.getImageView();
-      imageInfo3.sampler = tex3.getSampler();
-
-      VkDescriptorImageInfo imageInfoAlpha{};
-      imageInfoAlpha.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-      imageInfoAlpha.imageView = alpha.getImageView();
-      imageInfoAlpha.sampler = alpha.getSampler();
-
-      imageInfos.emplace_back(imageInfo);
-      imageInfos.emplace_back(imageInfo2);
-      imageInfos.emplace_back(imageInfo3);
-      imageInfos.emplace_back(imageInfoAlpha);
-
-      std::string specMapName = "_plp_empty";
-      std::string bumpMapName = "_plp_empty";
+      std::string specMapName{ "_plp_empty" };
+      std::string bumpMapName{ "_plp_empty" };
 
       if (!mesh->getData()->m_TextureSpecularMap.empty()
         && m_TextureManager->getTextures().contains(mesh->getData()->m_TextureSpecularMap)) {
         specMapName = mesh->getData()->m_TextureSpecularMap;
       }
 
-      Texture texSpecularMap = m_TextureManager->getTextures()[specMapName];
+      Texture const texSpecularMap{ m_TextureManager->getTextures()[specMapName] };
 
       if (!mesh->getData()->m_TextureBumpMap.empty()
         && m_TextureManager->getTextures().contains(mesh->getData()->m_TextureBumpMap)) {
         bumpMapName = mesh->getData()->m_TextureBumpMap;
       }
 
-      Texture texBumpMap = m_TextureManager->getTextures()[bumpMapName];
-
-      VkDescriptorImageInfo imageInfoSpecularMap{};
-      imageInfoSpecularMap.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-      imageInfoSpecularMap.imageView = texSpecularMap.getImageView();
-      imageInfoSpecularMap.sampler = texSpecularMap.getSampler();
-
-      VkDescriptorImageInfo imageInfoBumpMap{};
-      imageInfoBumpMap.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-      imageInfoBumpMap.imageView = texBumpMap.getImageView();
-      imageInfoBumpMap.sampler = texBumpMap.getSampler();
-
-      VkDescriptorImageInfo shadowMapAmbient{};
-      shadowMapAmbient.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-      shadowMapAmbient.imageView = m_Renderer->getDepthMapImageViews()->at(0);
-      shadowMapAmbient.sampler = m_Renderer->getDepthMapSamplers()->at(0);
+      Texture const texBumpMap{ m_TextureManager->getTextures()[bumpMapName] };
 
       //VkDescriptorImageInfo shadowMapSpot{};
       //shadowMapSpot.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
       //shadowMapSpot.imageView = m_Renderer->getDepthMapImageViews()->at(1);
       //shadowMapSpot.sampler = m_Renderer->getDepthMapSamplers()->at(1);
-
-      imageInfos.emplace_back(imageInfoSpecularMap);
-      imageInfos.emplace_back(imageInfoBumpMap);
-      imageInfos.emplace_back(shadowMapAmbient);
+      imageInfos.emplace_back(texSpecularMap.getSampler(), texSpecularMap.getImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+      imageInfos.emplace_back(texBumpMap.getSampler(), texBumpMap.getImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+      imageInfos.emplace_back(m_Renderer->getDepthMapSamplers()->at(0), m_Renderer->getDepthMapImageViews()->at(0), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
       //imageInfos.emplace_back(shadowMapSpot);
 
-      auto pipeline = m_Renderer->getPipeline(mesh->getShaderName());
-      VkDescriptorSet descSet = m_Renderer->createDescriptorSets(pipeline->descPool, { pipeline->descSetLayout }, 1);
+      auto const& pipeline = m_Renderer->getPipeline(mesh->getShaderName());
+      VkDescriptorSet descSet{ m_Renderer->createDescriptorSets(pipeline->descPool, { pipeline->descSetLayout }, 1) };
 
-      for (size_t i = 0; i < mesh->getUniformBuffers()->size(); ++i) {
+      for (size_t i{ 0 }; i < mesh->getUniformBuffers()->size(); ++i) {
 
         m_Renderer->updateDescriptorSets(
           *mesh->getUniformBuffers(),
@@ -115,7 +71,7 @@ namespace Poulpe
           bufferInfos.emplace_back(bufferInfo);
         });
 
-     auto shadowMapPipeline = m_Renderer->getPipeline("shadowMap");
+     auto const& shadowMapPipeline = m_Renderer->getPipeline("shadowMap");
      VkDescriptorSet shadowMapDescSet = m_Renderer->createDescriptorSets(shadowMapPipeline->descPool, { shadowMapPipeline->descSetLayout }, 1);
 
       std::for_each(std::begin(*mesh->getStorageBuffers()), std::end(*mesh->getStorageBuffers()),
@@ -168,39 +124,65 @@ namespace Poulpe
         mesh->setHasPushConstants();
     }
 
-    void Basic::visit([[maybe_unused]] std::chrono::duration<float> deltaTime, IVisitable* const mesh)
+    void Basic::visit( std::chrono::duration<float> deltaTime, IVisitable* const mesh)
     {
       if (!mesh && !mesh->isDirty()) return;
 
-      uint32_t totalInstances = static_cast<uint32_t>(mesh->getData()->m_Ubos.size());
-      uint32_t maxUniformBufferRange = m_Renderer->getDeviceProperties().limits.maxUniformBufferRange;
-      uint32_t uniformBufferChunkSize = maxUniformBufferRange / sizeof(UniformBufferObject);
-      uint32_t uniformBuffersCount = static_cast<uint32_t>(std::ceil(static_cast<float>(totalInstances) / static_cast<float>(uniformBufferChunkSize)));
+      if (mesh->getData()->m_UbosOffset.empty()) {
+        uint32_t const totalInstances{ static_cast<uint32_t>(mesh->getData()->m_Ubos.size()) };
+        uint32_t const maxUniformBufferRange{ m_Renderer->getDeviceProperties().limits.maxUniformBufferRange };
+        unsigned long long const uniformBufferChunkSize{ maxUniformBufferRange / sizeof(UniformBufferObject) };
+        uint32_t const uniformBuffersCount{ static_cast<uint32_t>(std::ceil(static_cast<float>(totalInstances) / static_cast<float>(uniformBufferChunkSize))) };
 
-      //@todo fix memory management...
-      uint32_t uboOffset = (totalInstances > uniformBufferChunkSize) ? uniformBufferChunkSize : totalInstances;
-      uint32_t uboRemaining = (totalInstances - uboOffset > 0) ? totalInstances - uboOffset : 0;
-      uint32_t nbUbo = uboOffset;
+        //@todo fix memory management...
+        unsigned long long uboOffset{ (totalInstances > uniformBufferChunkSize) ? uniformBufferChunkSize : totalInstances };
+        unsigned long long uboRemaining{ (totalInstances - uboOffset > 0) ? totalInstances - uboOffset : 0 };
+        unsigned long long nbUbo{ uboOffset };
 
-      for (size_t i = 0; i < uniformBuffersCount; ++i) {
+        for (size_t i{ 0 }; i < uniformBuffersCount; ++i) {
 
-        mesh->getData()->m_UbosOffset.emplace_back(uboOffset);
-        Buffer uniformBuffer = m_Renderer->createUniformBuffers(nbUbo);
-        mesh->getUniformBuffers()->emplace_back(uniformBuffer);
+          mesh->getData()->m_UbosOffset.emplace_back(uboOffset);
+          Buffer uniformBuffer = m_Renderer->createUniformBuffers(nbUbo);
+          mesh->getUniformBuffers()->emplace_back(uniformBuffer);
 
-        uboOffset = (uboRemaining > uniformBufferChunkSize) ? uboOffset + uniformBufferChunkSize : uboOffset + uboRemaining;
-        nbUbo = (uboRemaining > uniformBufferChunkSize) ? uniformBufferChunkSize : uboRemaining;
-        uboRemaining = (totalInstances - uboOffset > 0) ? totalInstances - uboOffset : 0;
+          uboOffset = (uboRemaining > uniformBufferChunkSize) ? uboOffset + uniformBufferChunkSize : uboOffset + uboRemaining;
+          nbUbo = (uboRemaining > uniformBufferChunkSize) ? uniformBufferChunkSize : uboRemaining;
+          uboRemaining = (totalInstances - uboOffset > 0) ? totalInstances - uboOffset : 0;
+        }
       }
 
-      auto commandPool = m_Renderer->createCommandPool();
-      auto data = mesh->getData();
-
-      data->m_VertexBuffer = m_Renderer->createVertexBuffer(commandPool, data->m_Vertices);
-      data->m_IndicesBuffer = m_Renderer->createIndexBuffer(commandPool, data->m_Indices);
+      auto const& data = mesh->getData();
       data->m_TextureIndex = 0;
 
-      for (size_t i = 0; i < mesh->getData()->m_Ubos.size(); ++i) {
+      if (data->m_VertexBuffer.buffer == VK_NULL_HANDLE) {
+        auto commandPool = m_Renderer->createCommandPool();
+        data->m_VertexBuffer = m_Renderer->createVertexBuffer(commandPool, data->m_Vertices);
+        data->m_IndicesBuffer = m_Renderer->createIndexBuffer(commandPool, data->m_Indices);
+      } else {
+        //suppose we have to update data
+        {
+          data->m_VertexBuffer.memory->lock();
+
+          void* newData;
+          vkMapMemory(m_Renderer->getDevice(), *data->m_VertexBuffer.memory->getMemory(), data->m_VertexBuffer.offset, data->m_VertexBuffer.size, 0, &newData);
+          memcpy(newData, data->m_Vertices.data(), data->m_VertexBuffer.size);
+          vkUnmapMemory(m_Renderer->getDevice(), *data->m_VertexBuffer.memory->getMemory());
+
+          data->m_VertexBuffer.memory->unLock();
+        }
+        {
+          data->m_IndicesBuffer.memory->lock();
+
+          void* newData;
+          vkMapMemory(m_Renderer->getDevice(), *data->m_IndicesBuffer.memory->getMemory(), data->m_IndicesBuffer.offset, data->m_IndicesBuffer.size, 0, &newData);
+          memcpy(newData, data->m_Indices.data(), data->m_IndicesBuffer.size);
+          vkUnmapMemory(m_Renderer->getDevice(), *data->m_IndicesBuffer.memory->getMemory());
+
+          data->m_IndicesBuffer.memory->unLock();
+        }
+      }
+
+      for (size_t i{ 0 }; i < mesh->getData()->m_Ubos.size(); ++i) {
         mesh->getData()->m_Ubos[i].projection = m_Renderer->getPerspective();
 
         if (m_TextureManager->getTextures().contains(mesh->getData()->m_TextureBumpMap)) {
@@ -209,46 +191,51 @@ namespace Poulpe
         }
       }
 
-      ObjectBuffer objectBuffer{};
+      if (mesh->getStorageBuffers()->empty()) {
 
-      Material material{};
-      material.ambient = mesh->getMaterial().ambient;
-      material.diffuse = mesh->getMaterial().diffuse;
-      material.specular = mesh->getMaterial().specular;
-      material.transmittance = mesh->getMaterial().transmittance;
-      material.emission = mesh->getMaterial().emission;
-      material.shiIorDiss = glm::vec3(mesh->getMaterial().shininess,
-        mesh->getMaterial().ior, mesh->getMaterial().illum);
+        Material material{};
+        material.ambient = mesh->getMaterial().ambient;
+        material.diffuse = mesh->getMaterial().diffuse;
+        material.specular = mesh->getMaterial().specular;
+        material.transmittance = mesh->getMaterial().transmittance;
+        material.emission = mesh->getMaterial().emission;
+        material.shiIorDiss = glm::vec3(mesh->getMaterial().shininess,
+          mesh->getMaterial().ior, mesh->getMaterial().illum);
 
-      objectBuffer.pointLights[0] = m_LightManager->getPointLights().at(0);
-      objectBuffer.pointLights[1] = m_LightManager->getPointLights().at(1);
+        ObjectBuffer objectBuffer{};
+        objectBuffer.pointLights[0] = m_LightManager->getPointLights().at(0);
+        objectBuffer.pointLights[1] = m_LightManager->getPointLights().at(1);
+        objectBuffer.spotLight = m_LightManager->getSpotLights().at(0);
+        objectBuffer.ambientLight = m_LightManager->getAmbientLight();
+        objectBuffer.material = material;
 
-      objectBuffer.spotLight = m_LightManager->getSpotLights().at(0);
+        auto const size{ sizeof(objectBuffer) };
+        auto storageBuffer{ m_Renderer->createStorageBuffers(size) };
 
-      objectBuffer.ambientLight = m_LightManager->getAmbientLight();
+        mesh->setObjectBuffer(objectBuffer);
+        mesh->addStorageBuffer(storageBuffer);
+        mesh->setHasBufferStorage();
 
-      objectBuffer.material = material;
-
-      auto size = sizeof(objectBuffer);
-      auto storageBuffer = m_Renderer->createStorageBuffers(size);
-      mesh->addStorageBuffer(storageBuffer);
-      m_Renderer->updateStorageBuffer(mesh->getStorageBuffers()->at(0), objectBuffer);
-      mesh->setHasBufferStorage();
+        m_Renderer->updateStorageBuffer(mesh->getStorageBuffers()->at(0), objectBuffer);
+      }
 
       unsigned int min{ 0 };
       unsigned int max{ 0 };
 
-      for (size_t i = 0; i < mesh->getUniformBuffers()->size(); ++i) {
+      for (size_t i{ 0 }; i < mesh->getUniformBuffers()->size(); ++i) {
         max = mesh->getData()->m_UbosOffset.at(i);
         auto ubos = std::vector<UniformBufferObject>(mesh->getData()->m_Ubos.begin() + min, mesh->getData()->m_Ubos.begin() + max);
 
-        m_Renderer->updateUniformBuffer(mesh->getUniformBuffers()->at(i), &ubos);
-
         min = max;
+        if (ubos.empty()) continue;
+        m_Renderer->updateUniformBuffer(mesh->getUniformBuffers()->at(i), &ubos);
       }
 
-      createDescriptorSet(mesh);
-      setPushConstants(mesh);
+      if (*mesh->getDescSet() == NULL) {
+
+        createDescriptorSet(mesh);
+        setPushConstants(mesh);
+      }
       mesh->setIsDirty(false);
     }
 }

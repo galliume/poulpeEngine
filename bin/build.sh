@@ -29,7 +29,7 @@ configPoulpeEngine=0
 buildPoulpeEngine=0
 buildSystem="Ninja"
 toolSet=""
-configuration="Debug"
+configuration="windows-x64-debug"
 
 ROOT_DIR="$(dirname "$0")"
 . "${ROOT_DIR}/utils.sh"
@@ -37,11 +37,6 @@ ROOT_DIR="$(dirname "$0")"
 detectOs
 OS=$?
 
-if [[ "$OS" -ne 2 ]]; then
-	buildSystem="Visual Studio 17 2022"
-	toolSet="v143"
-fi
-	
 while [[ $# -gt 0 ]]; do
     argument="$1"
     case "$argument" in
@@ -76,15 +71,10 @@ done
 
 if [[ configPoulpeEngine -eq 1 ]]
 then
-    cmake -B ./build \
-		  -G "$buildSystem" \
-          -DCMAKE_GENERATOR_TOOLSET:STRING="$toolSet" \
-		  -DUSE_CCACHE:BOOL="ON" \
-		  -DASSIMP_BUILD_ASSIMP_TOOLS:BOOL="ON" \
-		  -DASSIMP_INSTALL:BOOL="OFF"
+    cmake --preset "$configuration"
 fi
 
 if [[ buildPoulpeEngine -eq 1 ]]
 then
-    cmake --build ./build/ --config $configuration -j20
+    cmake --build --preset "$configuration" -j20
 fi

@@ -2,13 +2,13 @@
 #extension GL_ARB_separate_shader_objects : enable
 #extension GL_EXT_nonuniform_qualifier : enable
 
-layout(set = 0, binding = 0) uniform UniformBufferObject {
+layout(set = 0, binding = 0) readonly uniform UniformBufferObject {
     mat4 model;
     mat4 projection;
 } ubo;
 
-layout (location = 0) in vec3 pos;
-layout (location = 1) in vec3 normal;
+layout(location = 0) in vec3 pos;
+layout(location = 1) in vec3 normal;
 layout(location = 2) in vec2 texCoord;
 layout(location = 3) in vec4 tangent;
 layout(location = 4) in vec4 fidtidBB;

@@ -1,0 +1,215 @@
+{
+  "version": 6,
+  "configurePresets": [
+    {
+      "name": "DEBUG_BUILD_TYPE",
+      "hidden": true,
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": {
+          "type": "STRING",
+          "value": "Debug"
+        }
+      }
+    },
+    {
+      "name": "RELEASE_BUILD_TYPE",
+      "hidden": true,
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": {
+          "type": "STRING",
+          "value": "Release"
+        }
+      }
+    },
+    {
+      "name": "CCACHE_ON",
+      "hidden": true,
+      "cacheVariables": {
+        "USE_CCACHE": {
+          "type": "BOOL",
+          "value": "TRUE"
+        }
+      }
+    },
+    {
+      "name": "CCACHE_OFF",
+      "hidden": true,
+      "cacheVariables": {
+        "USE_CCACHE": {
+          "type": "BOOL",
+          "value": "FALSE"
+        }
+      }
+    },
+    {
+      "name": "ASSIMP_TOOLS_OFF",
+      "hidden": true,
+      "cacheVariables": {
+        "ASSIMP_BUILD_ASSIMP_TOOLS": {
+          "type": "BOOL",
+          "value": "FALSE"
+        }
+      }
+    },
+    {
+      "name": "ASSIMP_TOOLS_ON",
+      "hidden": true,
+      "cacheVariables": {
+        "ASSIMP_BUILD_ASSIMP_TOOLS": {
+          "type": "BOOL",
+          "value": "TRUE"
+        }
+      }
+    },
+    {
+      "name": "ASSIMP_BUILD_FRAMEWORK_OFF",
+      "hidden": true,
+      "cacheVariables": {
+        "ASSIMP_BUILD_FRAMEWORK": {
+          "type": "BOOL",
+          "value": "FALSE"
+        }
+      }
+    },
+    {
+      "name": "ASSIMP_BUILD_FRAMEWORK_ON",
+      "hidden": true,
+      "cacheVariables": {
+        "ASSIMP_BUILD_FRAMEWORK": {
+          "type": "BOOL",
+          "value": "TRUE"
+        }
+      }
+    },
+    {
+      "name": "ASSIMP_INSTALL_ON",
+      "hidden": true,
+      "cacheVariables": {
+        "ASSIMP_INSTALL": {
+          "type": "BOOL",
+          "value": "TRUE"
+        }
+      }
+    },
+    {
+      "name": "ASSIMP_INSTALL_OFF",
+      "hidden": true,
+      "cacheVariables": {
+        "ASSIMP_INSTALL": {
+          "type": "BOOL",
+          "value": "FALSE"
+        }
+      }
+    },
+    {
+      "name": "ASSIMP_BUILD_DEBUG_ON",
+      "hidden": true,
+      "cacheVariables": {
+        "ASSIMP_BUILD_DEBUG": {
+          "type": "BOOL",
+          "value": "TRUE"
+        }
+      }
+    },
+    {
+      "name": "ASSIMP_BUILD_DEBUG_OFF",
+      "hidden": true,
+      "cacheVariables": {
+        "ASSIMP_BUILD_DEBUG": {
+          "type": "BOOL",
+          "value": "FALSE"
+        }
+      }
+    },
+    {
+      "name": "ASSIMP_BUILD_SHARED_LIBS_OFF",
+      "hidden": true,
+      "cacheVariables": {
+        "BUILD_SHARED_LIBS": {
+          "type": "BOOL",
+          "value": "FALSE"
+        }
+      }
+    },
+    {
+      "name": "ASSIMP_BUILD_SHARED_LIBS_ON",
+      "hidden": true,
+      "cacheVariables": {
+        "BUILD_SHARED_LIBS": {
+          "type": "BOOL",
+          "value": "TRUE"
+        }
+      }
+    },
+    {
+      "name": "SPDLOG_BUILD_SHARED_OFF",
+      "hidden": true,
+      "cacheVariables": {
+        "BUILD_SHARED_LIBS": {
+          "type": "BOOL",
+          "value": "FALSE"
+        }
+      }
+    },
+    {
+      "name": "SPDLOG_BUILD_SHARED_ON",
+      "hidden": true,
+      "cacheVariables": {
+        "BUILD_SHARED_LIBS": {
+          "type": "BOOL",
+          "value": "TRUE"
+        }
+      }
+    },
+    {
+      "name": "C_COMPILER_CLANG_CL",
+      "hidden": true,
+      "cacheVariables": {
+        "CMAKE_C_COMPILER": {
+          "type": "STRING",
+          "value": "clang-cl"
+        }
+      }
+    },
+    {
+      "name": "CXX_COMPILER_CLANG_CL",
+      "hidden": true,
+      "cacheVariables": {
+        "CMAKE_CXX_COMPILER": {
+          "type": "STRING",
+          "value": "clang-cl"
+        }
+      }
+    },
+    {
+      "name": "C_COMPILER_CLANG",
+      "hidden": true,
+      "cacheVariables": {
+        "CMAKE_C_COMPILER": {
+          "type": "STRING",
+          "value": "clang"
+        }
+      }
+    },
+    {
+      "name": "CXX_COMPILER_CLANG",
+      "hidden": true,
+      "cacheVariables": {
+        "CMAKE_CXX_COMPILER": {
+          "type": "STRING",
+          "value": "clang++"
+        }
+      }
+    },
+    {
+      "name": "GENERATOR_NINJA",
+      "hidden": true,
+      "generator": "Ninja"
+    },
+    {
+      "name": "GENERATOR_VS_17_2022",
+      "hidden": true,
+      "generator": "Visual Studio 17 2022"
+    }
+  ]
+}

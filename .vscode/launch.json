@@ -2,15 +2,28 @@
     "version": "2.0.0",
     "configurations": [
         {
-            "name": "RBKDebug",
-            "type": "cppdbg",
+            "name": "(lldb) Start",
+            "type": "lldb",
             "request": "launch",
-            "program": "${workspaceFolder}\\build\\Rebulkan",
+            "program": "${workspaceFolder}\\build\\${input:compiler}\\PoulpeEngine.exe",
             "cwd": "${workspaceFolder}\\",
-            "logging": {
-              "moduleLoad": false,
-              "trace": true
-            }
+            "relativePathBase": "${workspaceFolder}",
         }
-    ]
+    ],
+    "inputs": [
+        {
+          "type": "pickString",
+          "id": "compiler",
+          "description": "Compiler/build to be used",
+          "options": [
+            "windows-debug",
+            "windows-release",
+            "windows-debug-no-toolset",
+            "windows-release-no-toolset",
+            "linux-debug",
+            "linux-release",
+        ],
+          "default": "windows-debug-no-toolset"
+        },
+      ]
 }

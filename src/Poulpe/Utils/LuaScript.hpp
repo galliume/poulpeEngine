@@ -12,7 +12,7 @@ extern "C" {
 
 namespace Poulpe
 {
-  [[maybe_unused]] static bool checkLua(lua_State* L, int r)
+   static bool checkLua(lua_State* L, int r)
   {
     if (r != LUA_OK) {
       std::string err = lua_tostring(L, -1);

@@ -9,7 +9,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     steps:
     
@@ -24,13 +24,31 @@ jobs:
         path: main
 
     - name: Install dependancies
-      run: sudo apt-get update && sudo apt-get install xorg-dev libglu1-mesa-dev libvulkan1 mesa-vulkan-drivers ninja-build
+      run: sudo apt-get update && sudo apt-get install build-essential xorg-dev libglu1-mesa-dev libvulkan1 mesa-vulkan-drivers clang ninja-build
 
     - name: Set env variable VULKAN_SDK_ACTIONS
       run: echo "VULKAN_SDK_ACTIONS=${{ github.workspace }}/external/include" >> $GITHUB_ENV
     
-    - name: Configure && Build
+    - name: Install VulkanSDK
       run: |
-        cd main
-        chmod +x ./bin/build.sh
-        ./bin/build.sh -c -r -b
+        wget -qO- https://packages.lunarg.com/lunarg-signing-key-pub.asc | sudo tee /etc/apt/trusted.gpg.d/lunarg.asc
+        sudo wget -qO /etc/apt/sources.list.d/lunarg-vulkan-noble.list http://packages.lunarg.com/vulkan/lunarg-vulkan-noble.list
+        sudo apt update
+        sudo apt install vulkan-sdk
+
+    - name: Check VulkanSDK
+      run: vulkaninfo
+
+    - name: Checks
+      run: |
+        clang --version
+        cmake --version
+      
+    - name: List Presets
+      run: cd main && cmake --list-presets
+    
+    - name: Configure
+      run: cd main && cmake --preset linux-release
+
+    - name: Build
+      run: cd main && cmake --build --preset linux-release

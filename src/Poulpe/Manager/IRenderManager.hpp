@@ -24,7 +24,6 @@ namespace Poulpe
     virtual ~IRenderManager() = default;
 
     virtual void cleanUp() = 0;
-    virtual void draw() = 0;
     virtual AudioManager* getAudioManager() = 0;
     virtual Camera* getCamera() = 0;
     virtual ComponentManager* getComponentManager() = 0;

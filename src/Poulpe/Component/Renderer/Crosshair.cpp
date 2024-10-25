@@ -8,29 +8,19 @@ namespace Poulpe
 {
     void Crosshair::createDescriptorSet(IVisitable* const mesh)
     {
-      Texture tex = m_TextureManager->getTextures()["crosshair_1"];
-      Texture tex2 = m_TextureManager->getTextures()["crosshair_2"];
+      Texture const tex{ m_TextureManager->getTextures()["crosshair_1"] };
+      Texture const tex2{ m_TextureManager->getTextures()["crosshair_2"] };
 
-      std::vector<VkDescriptorImageInfo> imageInfos;
-      VkDescriptorImageInfo imageInfo{};
-      imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-      imageInfo.imageView = tex.getImageView();
-      imageInfo.sampler = tex.getSampler();
+      std::vector<VkDescriptorImageInfo> imageInfos{};
+      imageInfos.reserve(2);
+      imageInfos.emplace_back(tex.getSampler(), tex.getImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+      imageInfos.emplace_back(tex2.getSampler(), tex2.getImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
-      VkDescriptorImageInfo imageInfo2{};
-      imageInfo2.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-      imageInfo2.imageView = tex2.getImageView();
-      imageInfo2.sampler = tex2.getSampler();
-
-      imageInfos.emplace_back(imageInfo);
-      imageInfos.emplace_back(imageInfo2);
-
-      auto pipeline = m_Renderer->getPipeline(mesh->getShaderName());
+      auto const& pipeline = m_Renderer->getPipeline(mesh->getShaderName());
 
       VkDescriptorSet descSet = m_Renderer->createDescriptorSets(pipeline->descPool, { pipeline->descSetLayout }, 1);
 
       m_Renderer->updateDescriptorSets(*mesh->getUniformBuffers(), descSet, imageInfos);
-
       mesh->setDescSet(descSet);
     }
 
@@ -38,8 +28,8 @@ namespace Poulpe
     {
         mesh->setApplyPushConstants([](
             VkCommandBuffer & commandBuffer, VkPipelineLayout pipelineLayout,
-            [[maybe_unused]] IRenderer* const renderer,
-            [[maybe_unused]] IVisitable* const meshCH) {
+             IRenderer* const renderer,
+             IVisitable* const meshCH) {
   
             float id = static_cast<float>(Renderer::s_Crosshair);
 
@@ -51,17 +41,17 @@ namespace Poulpe
         mesh->setHasPushConstants();
     }
 
-    void Crosshair::visit([[maybe_unused]] std::chrono::duration<float> deltaTime, IVisitable* const mesh)
+    void Crosshair::visit( std::chrono::duration<float> deltaTime, IVisitable* const mesh)
     {
       if (!mesh && !mesh->isDirty()) return;
 
-      const std::vector<Vertex> vertices = {
+      const std::vector<Vertex> vertices {
           {{-0.025f, -0.025f, 0.0f}, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, {0.0, 0.0, 0.0 }},
           {{0.025f, -0.025f, 0.0f}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, {0.0, 0.0, 0.0 }},
           {{0.025f, 0.025f, 0.0f}, {0.0f, 0.0f, 1.0f}, {0.0f, 1.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, {0.0, 0.0, 0.0 }},
           {{-0.025f, 0.025f, 0.0f}, {1.0f, 1.0f, 1.0f}, {1.0f, 1.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, {0.0, 0.0, 0.0 }}
       };
-      const std::vector<uint32_t> indices = {
+      const std::vector<uint32_t> indices {
           0, 1, 2, 2, 3, 0
       };
 
@@ -85,7 +75,7 @@ namespace Poulpe
 
       setPushConstants(mesh);
 
-      for (uint32_t i = 0; i < mesh->getUniformBuffers()->size(); i++) {
+      for (uint32_t i{ 0 }; i < mesh->getUniformBuffers()->size(); i++) {
         data.m_Ubos[i].projection = m_Renderer->getPerspective();
 
         m_Renderer->updateUniformBuffer(mesh->getUniformBuffers()->at(i), &data.m_Ubos);

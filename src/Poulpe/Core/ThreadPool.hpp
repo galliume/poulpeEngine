@@ -17,8 +17,8 @@ namespace Poulpe
       unsigned const threadCount = std::thread::hardware_concurrency() / 2;
 
       try {
-        for (unsigned i = 0; i < threadCount; ++i) {
-          m_Threads.push_back(std::thread(&ThreadPool::WorkerThreads, this));
+        for (unsigned i{ 0 }; i < threadCount; ++i) {
+          m_Threads.emplace_back(std::thread(&ThreadPool::WorkerThreads, this));
         }
       }
       catch (...) {
@@ -29,10 +29,9 @@ namespace Poulpe
     }
 
     template<typename FunctionType>
-    void submit(std::string_view queueName, FunctionType f)
+    void submit(FunctionType f)
     {
-      auto& workEntry = m_WorkQueue[queueName];
-      workEntry.push(std::function<void()>(f));
+      m_WorkQueue.push(std::function<void()>(f));
     }
 
     bool isPoolEmpty(std::string_view poolName)
@@ -47,33 +46,24 @@ namespace Poulpe
     }
 
   private:
-      void WorkerThreads()
-      {
-          while (!m_Done) {
-              //std::function<void()> task;
-              //@todo add priority order
-              for (auto& [queueName, queueThread]: m_WorkQueue) {
-                  //if (!queueThread.empty() && queueThread.tryPop(task)) {
-                  //    task();
-                  //} else {
-                  //    std::this_thread::yield();
-                  //}
-                  
-                std::unique_ptr<std::function<void()>> task = queueThread.pop();
+    void WorkerThreads()
+    {
+      while (!m_Done) {
+        //@todo add priority order
+        auto task{ m_WorkQueue.pop() };
 
-                if (task) {
-                  (*task.get())();
-                } else {
-                  std::this_thread::yield();
-                }
-              }
-          }
+        if (task) {
+          (*task.get())();
+        } else {
+          std::this_thread::yield();
+        }
       }
+    }
 
   private:
       std::atomic_bool m_Done;
       //std::unordered_map<std::string_view, ThreadSafeQueue<std::function<void()>>> m_WorkQueue;
-      std::unordered_map<std::string_view, LockFreeStack<std::function<void()>>> m_WorkQueue;
+      LockFreeStack<std::function<void()>> m_WorkQueue;
       std::vector<std::thread> m_Threads;
       joinThreads m_Joiner;
   };

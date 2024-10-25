@@ -5,7 +5,6 @@ namespace fs = std::filesystem;
 
 namespace Poulpe
 {
-
     ConfigManager::ConfigManager()
     {
         fs::path path{};
@@ -33,9 +32,9 @@ namespace Poulpe
 
       auto entries = fs::directory_iterator(m_LevelPath);
 
-      for (auto& entry : entries) {
+      std::ranges::for_each(entries, [&levels](auto& entry) {
         levels.emplace_back(entry.path().stem().string());
-      }
+      });
 
       return levels;
     }
@@ -47,9 +46,9 @@ namespace Poulpe
       std::string path = "assets/texture/skybox/";
       auto entries = fs::directory_iterator(path);
 
-      for (auto& entry : entries) {
+      std::ranges::for_each(entries, [&skybox](auto& entry) {
         skybox.emplace_back(entry.path().stem().string());
-      }
+      });
 
       return skybox;
     }
@@ -78,12 +77,12 @@ namespace Poulpe
 
         f.close();
 
-        for (auto& entities : m_EntityConfig["entities"].items()) {
-            auto textures = entities.value();
-            for (auto& [key, texpath] : textures["textures"].items()) {
-                m_TexturesConfig["textures"][key] = static_cast<std::string>(texpath);
-            }
-        }
+        std::ranges::for_each(m_EntityConfig["entities"].items(), [&](auto const& entities) {
+          auto textures = entities.value();
+          for (auto& [key, texpath] : textures["textures"].items()) {
+            m_TexturesConfig["textures"][key] = static_cast<std::string>(texpath);
+          }
+        });
         return m_EntityConfig;
     }
 }

@@ -6,18 +6,12 @@ namespace Poulpe
 
     void Skybox::createDescriptorSet(IVisitable* const mesh)
     {
-      Texture tex = m_TextureManager->getSkyboxTexture();
+      Texture const tex{ m_TextureManager->getSkyboxTexture() };
 
       std::vector<VkDescriptorImageInfo> imageInfos{};
+      imageInfos.emplace_back(tex.getSampler(), tex.getImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
-      VkDescriptorImageInfo imageInfo{};
-      imageInfo.sampler = tex.getSampler();
-      imageInfo.imageView = tex.getImageView();
-      imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-
-      imageInfos.emplace_back(imageInfo);
-
-      auto pipeline = m_Renderer->getPipeline(mesh->getShaderName());
+      auto const pipeline = m_Renderer->getPipeline(mesh->getShaderName());
       VkDescriptorSet descSet = m_Renderer->createDescriptorSets(pipeline->descPool, { pipeline->descSetLayout }, 1);
 
       m_Renderer->updateDescriptorSets(*mesh->getUniformBuffers(), descSet, imageInfos);
@@ -44,11 +38,11 @@ namespace Poulpe
         mesh->setHasPushConstants();
     }
 
-    void Skybox::visit([[maybe_unused]] std::chrono::duration<float> deltaTime, IVisitable* const mesh)
+    void Skybox::visit( std::chrono::duration<float> deltaTime, IVisitable* const mesh)
     {
       if (!mesh && !mesh->isDirty()) return;
 
-      std::vector<Vertex> const skyVertices = {
+      std::vector<Vertex> const skyVertices {
           {{-1.0f,  1.0f, -1.0f }, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}},
           {{-1.0f, -1.0f, -1.0f }, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}},
           {{ 1.0f, -1.0f, -1.0f }, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}},
@@ -116,7 +110,7 @@ namespace Poulpe
 
       setPushConstants(mesh);
 
-      for (uint32_t i = 0; i < mesh->getUniformBuffers()->size(); i++) {
+      for (uint32_t i{ 0 }; i < mesh->getUniformBuffers()->size(); i++) {
         m_Renderer->updateUniformBuffer(mesh->getUniformBuffers()->at(i), &data.m_Ubos);
       }
 

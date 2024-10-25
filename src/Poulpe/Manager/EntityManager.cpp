@@ -2,6 +2,8 @@
 
 #include "Poulpe/Component/AnimationComponent.hpp"
 #include "Poulpe/Component/AnimationScript.hpp"
+#include "Poulpe/Component/BoneAnimationComponent.hpp"
+#include "Poulpe/Component/BoneAnimationScript.hpp"
 #include "Poulpe/Component/Renderer/RendererFactory.hpp"
 
 #include "Poulpe/Core/AssimpLoader.hpp"
@@ -32,19 +34,19 @@ namespace Poulpe
   {
     m_LevelConfig = levelConfig;
 
-    for (auto const& entityConf : m_LevelConfig["entities"].items()) {
+    std::ranges::for_each(m_LevelConfig["entities"].items(), [&](auto const& entityConf) {
 
-      auto const& key = entityConf.key();
-      auto const& data = entityConf.value();
+      auto const& key{ entityConf.key() };
+      auto const& data{ entityConf.value() };
 
       size_t const count = data["count"].template get<size_t>();
 
-      for (size_t i = 0; i < count; i++) {
-        Locator::getThreadPool()->submit("LoadingOBJ", [this, &key, &data]() {
+      for (size_t i{ 0 }; i < count; i++) {
+        Locator::getThreadPool()->submit([&]() {
           initMeshes(key, data);
         });
       }
-    }
+    });
 
     m_LoadingDone.store(true);
   }
@@ -75,7 +77,11 @@ namespace Poulpe
     auto callback = [this, data, path, rootMeshEntity](
       PlpMeshData const& _data,
       std::vector<material_t> const& materials,
-      bool const exists) {
+      bool const exists,
+      std::vector<Animation> const& animations,
+      std::vector<Position> const& positions,
+      std::vector<Rotation> const& rotations,
+      std::vector<Scale> const& scales) {
 
     auto const& positionData = data["positions"].at(0);
 
@@ -86,8 +92,8 @@ namespace Poulpe
       positionData["z"].template get<float>()
     );
 
-    auto const scaleData = data["scales"].at(0);
-    auto const rotationData = data["rotations"].at(0);
+    auto const& scaleData = data["scales"].at(0);
+    auto const& rotationData = data["rotations"].at(0);
 
     glm::vec3 const scale = glm::vec3(
       scaleData["x"].template get<float>(),
@@ -101,6 +107,7 @@ namespace Poulpe
     );
 
     std::vector<std::string> textures{};
+    textures.reserve(data["textures"].size());
     for (auto& [keyTex, pathTex] : data["textures"].items()) {
       textures.emplace_back(static_cast<std::string>(keyTex));
     }
@@ -110,6 +117,7 @@ namespace Poulpe
     bool const isPointLight = data["isPointLight"].template get<bool>();
 
     std::vector<std::string> animationScripts{};
+    animationScripts.reserve(data["animationScripts"].size());
     for (auto& [keyAnim, pathAnim] : data["animationScripts"].items()) {
       animationScripts.emplace_back(static_cast<std::string>(pathAnim));
     }
@@ -288,24 +296,28 @@ namespace Poulpe
           animationScript->init(m_Renderer, nullptr, nullptr);
           m_ComponentManager->addComponent<AnimationComponent>(entity->getID(), animationScript);
         }
+
+        if (!animations.empty()) {
+          auto* boneAnimationScript = new BoneAnimationScript(animations, positions, rotations, scales);
+          m_ComponentManager->addComponent<BoneAnimationComponent>(
+            entity->getID(), boneAnimationScript);
+        }
       }
 
       m_ComponentManager->addComponent<MeshComponent>(entity->getID(), mesh);
 
       auto basicRdrImpl = RendererFactory::create<Basic>();
       m_ComponentManager->addComponent<RenderComponent>(entity->getID(), basicRdrImpl);
-      
-      auto deltaTime = std::chrono::duration<float, std::milli>(0);
-      auto* entityNode = new EntityNode(entity);
+
+      basicRdrImpl->init(m_Renderer, m_TextureManager, m_LightManager);
+      auto const deltaTime = std::chrono::duration<float, std::milli>(0);
+      basicRdrImpl->visit(deltaTime, mesh);
 
       {
         std::shared_lock guard(m_SharedMutex);
-
-        basicRdrImpl->init(m_Renderer, m_TextureManager, m_LightManager);
-        basicRdrImpl->visit(deltaTime, mesh);
-        rootMeshEntityNode->addChild(entityNode);
-        m_Renderer->addEntity(entityNode->getEntity());
+        auto* entityNode = rootMeshEntityNode->addChild(new EntityNode(entity));
         m_WorldNode->addChild(rootMeshEntityNode);
+        m_Renderer->addEntity(entityNode->getEntity());
       }
     };
 
