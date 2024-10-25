@@ -27,22 +27,29 @@ Compile shaders (Windows && Linux) :
 bin/plpShadersCompilation.sh
 ```	
 
-Building help:
+List existing presets
 ```
-bin/build.sh -h
-```	
+cmake --list-presets
 
-Generate the project with CMake and build it:
-```
-bin/build.sh -c -r -b
+"windows-debug"              - Debug
+"windows-debug-no-toolset"   - Debug no toolset
+"windows-release"            - Release
+"windows-release-no-toolset" - Release no toolset
+"linux-debug"                - Debug
+"linux-release"              - Release
 ```
 
-Or just configure it
+Configure with a preset
 ```
-bin/build.sh -c
+cmake --preset windows-debug
 ``` 
 
-Then open the .sln with VisualStudio
+Compile with a preset
+```
+cmake --build --preset windows-debug
+``` 
+
+Or open the project with a cmake able IDE (VS 2022, VS Code...)
 
 ### All meshes can be found here:
 
