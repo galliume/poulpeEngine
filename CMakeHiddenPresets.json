@@ -43,8 +43,8 @@
         "vendor-common",
         "GENERATOR_NINJA",
         "CCACHE_OFF",
-        "C_COMPILER_CLANG",
-        "CXX_COMPILER_CLANG"
+        "C_COMPILER_GCC",
+        "CXX_COMPILER_GCC"
       ],
       "condition": {
         "type": "equals",
@@ -590,6 +590,26 @@
         "CMAKE_CXX_COMPILER": {
           "type": "STRING",
           "value": "clang++"
+        }
+      }
+    },
+    {
+      "name": "C_COMPILER_GCC",
+      "hidden": true,
+      "cacheVariables": {
+        "CMAKE_C_COMPILER": {
+          "type": "STRING",
+          "value": "gcc"
+        }
+      }
+    },
+    {
+      "name": "CXX_COMPILER_GCC",
+      "hidden": true,
+      "cacheVariables": {
+        "CMAKE_CXX_COMPILER": {
+          "type": "STRING",
+          "value": "g++"
         }
       }
     },
