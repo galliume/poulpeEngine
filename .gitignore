@@ -64,3 +64,4 @@ build
 CMakeFiles
 rdrDoc
 assets/mesh
+CMakeUserPresets.json

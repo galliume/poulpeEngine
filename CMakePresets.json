@@ -1,11 +1,11 @@
 ﻿{
-  "version": 6,
+  "version": 8,
   "include": [
     "CMakeHiddenPresets.json"
   ],
   "cmakeMinimumRequired": {
     "major": 3,
-    "minor": 25,
+    "minor": 30,
     "patch": 0
   },
   "configurePresets": [
@@ -13,119 +13,41 @@
       "name": "windows-debug",
       "displayName": "Debug",
       "description": "Windows Debug",
-      "architecture": {
-        "value": "x64",
-        "strategy": "external"
-      },
-      "binaryDir": "${sourceDir}/build/${presetName}",
       "inherits": [
-        "GENERATOR_NINJA",
+        "windows-common",
         "DEBUG_BUILD_TYPE",
-        "CCACHE_OFF",
-        "ASSIMP_WARNINGS_AS_ERRORS_OFF",
-        "ASSIMP_TOOLS_OFF",
-        "ASSIMP_BUILD_SHARED_LIBS_OFF",
-        "ASSIMP_BUILD_FRAMEWORK_OFF",
-        "ASSIMP_EXPORT_OFF",
-        "SPDLOG_BUILD_SHARED_ON",
-        "C_COMPILER_CLANG_CL",
-        "CXX_COMPILER_CLANG_CL"
-      ],
-      "condition": {
-        "type": "equals",
-        "lhs": "${hostSystemName}",
-        "rhs": "Windows"
-      },
-      "vendor": {
-        "microsoft.com/VisualStudioSettings/CMake/1.0": {
-          "intelliSenseMode": "windows-clang-x64"
-        }
-      }
+        "DEBUG_CMAKE_C_FLAGS",
+        "DEBUG_CMAKE_CXX_FLAGS"
+      ] 
     },
     {
       "name": "windows-release",
       "displayName": "Release",
       "description": "Windows Release",
-      "architecture": {
-        "value": "x64",
-        "strategy": "external"
-      },
-      "toolset": "ClangCL",
-      "binaryDir": "${sourceDir}/build/${presetName}",
-      "cacheVariables": {
-        "SPDLOG_BUILD_SHARED": {
-          "type": "BOOL",
-          "value": "ON"
-        }
-      },
       "inherits": [
-        "GENERATOR_NINJA",
-        "RELEASE_BUILD_TYPE",
-        "CCACHE_OFF",
-        "ASSIMP_TOOLS_OFF",
-        "ASSIMP_INSTALL_OFF",
-        "ASSIMP_BUILD_SHARED_LIBS_OFF",
-        "SPDLOG_BUILD_SHARED_ON",
-        "C_COMPILER_CLANG_CL",
-        "CXX_COMPILER_CLANG_CL"
-      ],
-      "condition": {
-        "type": "equals",
-        "lhs": "${hostSystemName}",
-        "rhs": "Windows"
-      }
+        "windows-common",
+        "RELEASE_BUILD_TYPE"
+      ]
     },
     {
       "name": "linux-debug",
       "displayName": "Debug",
       "description": "Linux Debug",
-      "architecture": {
-        "value": "x64",
-        "strategy": "external"
-      },
-      "binaryDir": "${sourceDir}/build/${presetName}",
       "inherits": [
-        "GENERATOR_NINJA",
+        "linux-common",
         "DEBUG_BUILD_TYPE",
-        "CCACHE_OFF",
-        "ASSIMP_TOOLS_OFF",
-        "ASSIMP_INSTALL_OFF",
-        "ASSIMP_BUILD_SHARED_LIBS_OFF",
-        "SPDLOG_BUILD_SHARED_ON",
-        "C_COMPILER_CLANG",
-        "CXX_COMPILER_CLANG"
-      ],
-      "condition": {
-        "type": "equals",
-        "lhs": "${hostSystemName}",
-        "rhs": "Linux"
-      }
+        "DEBUG_CMAKE_C_FLAGS",
+        "DEBUG_CMAKE_CXX_FLAGS"
+      ]
     },
     {
       "name": "linux-release",
       "displayName": "Release",
       "description": "Linux Release",
-      "architecture": {
-        "value": "x64",
-        "strategy": "external"
-      },
-      "binaryDir": "${sourceDir}/build/${presetName}",
       "inherits": [
-        "GENERATOR_NINJA",
-        "RELEASE_BUILD_TYPE",
-        "CCACHE_OFF",
-        "ASSIMP_TOOLS_OFF",
-        "ASSIMP_INSTALL_OFF",
-        "ASSIMP_BUILD_SHARED_LIBS_OFF",
-        "SPDLOG_BUILD_SHARED_ON",
-        "C_COMPILER_CLANG",
-        "CXX_COMPILER_CLANG"
-      ],
-      "condition": {
-        "type": "equals",
-        "lhs": "${hostSystemName}",
-        "rhs": "Linux"
-      }
+        "linux-common",
+        "RELEASE_BUILD_TYPE"
+      ]
     }
   ],
    "buildPresets": [
