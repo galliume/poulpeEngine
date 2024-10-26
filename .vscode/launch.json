@@ -5,9 +5,10 @@
             "name": "(lldb) Start",
             "type": "lldb",
             "request": "launch",
-            "program": "${workspaceFolder}\\build\\${input:compiler}\\PoulpeEngine.exe",
-            "cwd": "${workspaceFolder}\\",
+            "program": "${workspaceFolder}/build/${input:compiler}/PoulpeEngine.exe",
+            "cwd": "${workspaceFolder}",
             "relativePathBase": "${workspaceFolder}",
+            "console": "externalTerminal"
         }
     ],
     "inputs": [
@@ -18,12 +19,10 @@
           "options": [
             "windows-debug",
             "windows-release",
-            "windows-debug-no-toolset",
-            "windows-release-no-toolset",
             "linux-debug",
             "linux-release",
         ],
-          "default": "windows-debug-no-toolset"
+          "default": "windows-debug"
         },
       ]
 }

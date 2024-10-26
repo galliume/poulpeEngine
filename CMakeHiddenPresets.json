@@ -1,6 +1,318 @@
 {
-  "version": 6,
+  "version": 8,
   "configurePresets": [
+    {
+      "name": "windows-common",
+      "hidden": true,
+      "description": "Windows common",
+      "architecture": {
+        "value": "x64",
+        "strategy": "external"
+      },
+      "binaryDir": "${sourceDir}/build/${presetName}",
+      "inherits": [
+        "common",
+        "vendor-common",
+        "GENERATOR_NINJA",
+        "CCACHE_OFF",
+        "C_COMPILER_CLANG_CL",
+        "CXX_COMPILER_CLANG_CL"
+      ],
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows"
+      },
+      "vendor": {
+        "microsoft.com/VisualStudioSettings/CMake/1.0": {
+          "intelliSenseMode": "windows-clang-x64"
+        }
+      }
+    },
+    {
+      "name": "linux-common",
+      "hidden": true,
+      "description": "Linux common",
+      "architecture": {
+        "value": "x64",
+        "strategy": "external"
+      },
+      "binaryDir": "${sourceDir}/build/${presetName}",
+      "inherits": [
+        "common",
+        "vendor-common",
+        "GENERATOR_NINJA",
+        "CCACHE_OFF",
+        "C_COMPILER_CLANG",
+        "CXX_COMPILER_CLANG"
+      ],
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Linux"
+      }
+    },
+    {
+      "name": "common",
+      "hidden": true,
+      "description": "common",
+      "cacheVariables": {
+        "CMAKE_CXX_STANDARD": {
+            "type": "STRING",
+            "value": "20"
+        },
+        "CMAKE_CXX_STANDARD_REQUIRED": {
+          "type": "BOOL",
+          "value": true
+        },
+        "CMAKE_C_STANDARD": {
+          "type": "STRING",
+          "value": "23"
+        },
+        "CMAKE_NO_SYSTEM_FROM_IMPORTED": {
+          "type": "STRING",
+          "value": "ON"
+        },
+        "GIT_SUBMODULE": {
+          "type": "STRING",
+          "value": "ON"
+        },
+        "CMAKE_MSVC_RUNTIME_LIBRARY": {
+          "type": "STRING",
+          "value": ""
+        },
+        "GLFW_BUILD_WAYLAND": {
+          "type": "STRING",
+          "value": "OFF"
+        },
+        "GLFW_BUILD_X11": {
+          "type": "STRING",
+          "value": "ON"
+        },
+        "GLFW_BUILD_DOCS": {
+          "type": "STRING",
+          "value": "OFF"
+        },
+        "GLFW_BUILD_TESTS": {
+          "type": "STRING",
+          "value": "OFF"
+        },
+        "GLFW_BUILD_EXAMPLES": {
+          "type": "STRING",
+          "value": "OFF"
+        },
+        "ASSIMP_BUILD_TESTS": {
+          "type": "STRING",
+          "value": "OFF"
+        },
+        "ASSIMP_BUILD_AMF_IMPORTER": {
+          "type": "STRING",
+          "value": "OFF"
+        },
+        "ASSIMP_BUILD_3DS_IMPORTER": {
+          "type": "STRING",
+          "value": "OFF"
+        },
+        "ASSIMP_BUILD_AC_IMPORTER": {
+          "type": "STRING",
+          "value": "OFF"
+        },
+        "ASSIMP_BUILD_ASE_IMPORTER": {
+          "type": "STRING",
+          "value": "OFF"
+        },
+        "ASSIMP_BUILD_ASSBIN_IMPORTER": {
+          "type": "STRING",
+          "value": "OFF"
+        },
+        "ASSIMP_BUILD_B3D_IMPORTER": {
+          "type": "STRING",
+          "value": "OFF"
+        },
+        "ASSIMP_BUILD_BVH_IMPORTER": {
+          "type": "STRING",
+          "value": "OFF"
+        },
+        "ASSIMP_BUILD_COLLADA_IMPORTER": {
+          "type": "STRING",
+          "value": "OFF"
+        },
+        "ASSIMP_BUILD_DXF_IMPORTER": {
+          "type": "STRING",
+          "value": "OFF"
+        },
+        "ASSIMP_BUILD_CSM_IMPORTER": {
+          "type": "STRING",
+          "value": "OFF"
+        },
+        "ASSIMP_BUILD_HMP_IMPORTER": {
+          "type": "STRING",
+          "value": "OFF"
+        },
+        "ASSIMP_BUILD_IRRMESH_IMPORTER": {
+          "type": "STRING",
+          "value": "OFF"
+        },
+        "ASSIMP_BUILD_IQM_IMPORTER": {
+          "type": "STRING",
+          "value": "OFF"
+        },
+        "ASSIMP_BUILD_IRR_IMPORTER": {
+          "type": "STRING",
+          "value": "OFF"
+        },
+        "ASSIMP_BUILD_LWO_IMPORTER": {
+          "type": "STRING",
+          "value": "OFF"
+        },
+        "ASSIMP_BUILD_LWS_IMPORTER": {
+          "type": "STRING",
+          "value": "OFF"
+        },
+        "ASSIMP_BUILD_M3D_IMPORTER": {
+          "type": "STRING",
+          "value": "OFF"
+        },
+        "ASSIMP_BUILD_MD2_IMPORTER": {
+          "type": "STRING",
+          "value": "OFF"
+        },
+        "ASSIMP_BUILD_MD3_IMPORTER": {
+          "type": "STRING",
+          "value": "OFF"
+        },
+        "ASSIMP_BUILD_MD5_IMPORTER": {
+          "type": "STRING",
+          "value": "OFF"
+        },
+        "ASSIMP_BUILD_MDC_IMPORTER": {
+          "type": "STRING",
+          "value": "OFF"
+        },
+        "ASSIMP_BUILD_MDL_IMPORTER": {
+          "type": "STRING",
+          "value": "OFF"
+        },
+        "ASSIMP_BUILD_NFF_IMPORTER": {
+          "type": "STRING",
+          "value": "OFF"
+        },
+        "ASSIMP_BUILD_NDO_IMPORTER": {
+          "type": "STRING",
+          "value": "OFF"
+        },
+        "ASSIMP_BUILD_OFF_IMPORTER": {
+          "type": "STRING",
+          "value": "OFF"
+        },
+        "ASSIMP_BUILD_OBJ_IMPORTER": {
+          "type": "STRING",
+          "value": "ON"
+        },
+        "ASSIMP_BUILD_OGRE_IMPORTER": {
+          "type": "STRING",
+          "value": "OFF"
+        },
+        "ASSIMP_BUILD_OPENGEX_IMPORTER": {
+          "type": "STRING",
+          "value": "OFF"
+        },
+        "ASSIMP_BUILD_PLY_IMPORTER": {
+          "type": "STRING",
+          "value": "OFF"
+        },
+        "ASSIMP_BUILD_MS3D_IMPORTER": {
+          "type": "STRING",
+          "value": "OFF"
+        },
+        "ASSIMP_BUILD_COB_IMPORTER": {
+          "type": "STRING",
+          "value": "OFF"
+        },
+        "ASSIMP_BUILD_BLEND_IMPORTER": {
+          "type": "STRING",
+          "value": "OFF"
+        },
+        "ASSIMP_BUILD_IFC_IMPORTER": {
+          "type": "STRING",
+          "value": "OFF"
+        },
+        "ASSIMP_BUILD_XGL_IMPORTER": {
+          "type": "STRING",
+          "value": "OFF"
+        },
+        "ASSIMP_BUILD_FBX_IMPORTER": {
+          "type": "STRING",
+          "value": "ON"
+        },
+        "ASSIMP_BUILD_Q3D_IMPORTER": {
+          "type": "STRING",
+          "value": "OFF"
+        },
+        "ASSIMP_BUILD_Q3BSP_IMPORTER": {
+          "type": "STRING",
+          "value": "OFF"
+        },
+        "ASSIMP_BUILD_RAW_IMPORTER": {
+          "type": "STRING",
+          "value": "OFF"
+        },
+        "ASSIMP_BUILD_SIB_IMPORTER": {
+          "type": "STRING",
+          "value": "OFF"
+        },
+        "ASSIMP_BUILD_SMD_IMPORTER": {
+          "type": "STRING",
+          "value": "OFF"
+        },
+        "ASSIMP_BUILD_STL_IMPORTER": {
+          "type": "STRING",
+          "value": "OFF"
+        },
+        "ASSIMP_BUILD_TERRAGEN_IMPORTER": {
+          "type": "STRING",
+          "value": "OFF"
+        },
+        "ASSIMP_BUILD_3D_IMPORTER": {
+          "type": "STRING",
+          "value": "OFF"
+        },
+        "ASSIMP_BUILD_X_IMPORTER": {
+          "type": "STRING",
+          "value": "OFF"
+        },
+        "ASSIMP_BUILD_X3D_IMPORTER": {
+          "type": "STRING",
+          "value": "OFF"
+        },
+        "ASSIMP_BUILD_GLTF_IMPORTER": {
+          "type": "STRING",
+          "value": "ON"
+        },
+        "ASSIMP_BUILD_3MF_IMPORTER": {
+          "type": "STRING",
+          "value": "OFF"
+        },
+        "ASSIMP_BUILD_MMD_IMPORTER": {
+          "type": "STRING",
+          "value": "OFF"
+        }
+      }
+    },
+    {
+      "name": "vendor-common",
+      "hidden": true,
+      "description": "Vendor common",
+      "inherits": [
+        "ASSIMP_WARNINGS_AS_ERRORS_OFF",
+        "ASSIMP_TOOLS_OFF",
+        "ASSIMP_BUILD_SHARED_LIBS_ON",
+        "ASSIMP_BUILD_FRAMEWORK_OFF",
+        "ASSIMP_EXPORT_OFF",
+        "SPDLOG_BUILD_SHARED_ON",
+        "GLFW_LIBRARY_TYPE_SHARED"
+      ]
+    },
     {
       "name": "DEBUG_BUILD_TYPE",
       "hidden": true,
@@ -185,7 +497,7 @@
       "name": "SPDLOG_BUILD_SHARED_OFF",
       "hidden": true,
       "cacheVariables": {
-        "BUILD_SHARED_LIBS": {
+        "SPDLOG_BUILD_SHARED": {
           "type": "BOOL",
           "value": "FALSE"
         }
@@ -195,9 +507,29 @@
       "name": "SPDLOG_BUILD_SHARED_ON",
       "hidden": true,
       "cacheVariables": {
-        "BUILD_SHARED_LIBS": {
+        "SPDLOG_BUILD_SHARED": {
           "type": "BOOL",
           "value": "TRUE"
+        }
+      }
+    },
+    {
+      "name": "GLFW_LIBRARY_TYPE_SHARED",
+      "hidden": true,
+      "cacheVariables": {
+        "GLFW_LIBRARY_TYPE": {
+          "type": "STRING",
+          "value": "SHARED"
+        }
+      }
+    },
+    {
+      "name": "GLFW_LIBRARY_TYPE_STATIC",
+      "hidden": true,
+      "cacheVariables": {
+        "GLFW_LIBRARY_TYPE": {
+          "type": "STRING",
+          "value": "STATIC"
         }
       }
     },
@@ -218,6 +550,26 @@
         "CMAKE_CXX_COMPILER": {
           "type": "STRING",
           "value": "clang-cl"
+        }
+      }
+    },
+    {
+      "name": "DEBUG_CMAKE_C_FLAGS",
+      "hidden": true,
+      "cacheVariables": {
+        "CMAKE_C_FLAGS": {
+          "type": "STRING",
+          "value": "-D_DEBUG -D_ITERATOR_DEBUG_LEVEL=2"
+        }
+      }
+    },
+    {
+      "name": "DEBUG_CMAKE_CXX_FLAGS",
+      "hidden": true,
+      "cacheVariables": {
+        "CMAKE_CXX_FLAGS": {
+          "type": "STRING",
+          "value": "-D_DEBUG -D_ITERATOR_DEBUG_LEVEL=2"
         }
       }
     },
@@ -251,25 +603,25 @@
       "hidden": true,
       "generator": "Visual Studio 17 2022"
     },
-	{
+    {
       "name": "CLANGCL_TOOLCHAIN_FILE",
       "hidden": true,
-	   "cacheVariables": {
+      "cacheVariables": {
         "toolchainFile": {
           "type": "STRING",
           "value": "clangcl-toolchain.cmake"
         }
-      }		
-	},
-	{
+      }
+    },
+    {
       "name": "CLANG_TOOLCHAIN_FILE",
       "hidden": true,
-	   "cacheVariables": {
+      "cacheVariables": {
         "toolchainFile": {
           "type": "STRING",
           "value": "clang-toolchain.cmake"
         }
-      }		
-	}
+      }
+    }
   ]
 }

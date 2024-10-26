@@ -1,7 +1,7 @@
 #########################################################
 ##################### PoulpeEngine Project ##############
 #########################################################
-cmake_minimum_required(VERSION 3.25.2)
+cmake_minimum_required(VERSION 3.30.0)
 
 if (USE_CCACHE)
   find_program(CCACHE_PROGRAM ccache)
@@ -22,80 +22,13 @@ project(PoulpeEngine
 
 add_library(poulpe INTERFACE)
 
-target_compile_features(poulpe INTERFACE cxx_std_20)
-
-set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_CXX_STANDARD_REQUIRED            ON)
-set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules ${CMAKE_MODULE_PATH})
-set(CMAKE_NO_SYSTEM_FROM_IMPORTED ON)
-set(GIT_SUBMODULE ON)
-set(GLFW_LIBRARY_TYPE STATIC)
-#weird bug with vulkan loader ?
-set(CMAKE_MSVC_RUNTIME_LIBRARY "")
-#need to find how to have wayland on github actions...
-set(GLFW_BUILD_WAYLAND OFF)
-set(GLFW_BUILD_X11 ON)
-set(GLFW_BUILD_DOCS OFF)
-set(GLFW_BUILD_TESTS OFF)
-set(GLFW_BUILD_EXAMPLES OFF)
-
-#assimp format
-set(ASSIMP_BUILD_TESTS OFF)
-set(ASSIMP_BUILD_AMF_IMPORTER OFF)
-set(ASSIMP_BUILD_3DS_IMPORTER OFF)
-set(ASSIMP_BUILD_AC_IMPORTER OFF)
-set(ASSIMP_BUILD_ASE_IMPORTER OFF)
-set(ASSIMP_BUILD_ASSBIN_IMPORTER OFF)
-set(ASSIMP_BUILD_B3D_IMPORTER OFF)
-set(ASSIMP_BUILD_BVH_IMPORTER OFF)
-set(ASSIMP_BUILD_COLLADA_IMPORTER OFF)
-set(ASSIMP_BUILD_DXF_IMPORTER OFF)
-set(ASSIMP_BUILD_CSM_IMPORTER OFF)
-set(ASSIMP_BUILD_HMP_IMPORTER OFF)
-set(ASSIMP_BUILD_IRRMESH_IMPORTER OFF)
-set(ASSIMP_BUILD_IQM_IMPORTER OFF)
-set(ASSIMP_BUILD_IRR_IMPORTER OFF)
-set(ASSIMP_BUILD_LWO_IMPORTER OFF)
-set(ASSIMP_BUILD_LWS_IMPORTER OFF)
-set(ASSIMP_BUILD_M3D_IMPORTER OFF)
-set(ASSIMP_BUILD_MD2_IMPORTER OFF)
-set(ASSIMP_BUILD_MD3_IMPORTER OFF)
-set(ASSIMP_BUILD_MD5_IMPORTER OFF)
-set(ASSIMP_BUILD_MDC_IMPORTER OFF)
-set(ASSIMP_BUILD_MDL_IMPORTER OFF)
-set(ASSIMP_BUILD_NFF_IMPORTER OFF)
-set(ASSIMP_BUILD_NDO_IMPORTER OFF)
-set(ASSIMP_BUILD_OFF_IMPORTER OFF)
-set(ASSIMP_BUILD_OBJ_IMPORTER ON)
-set(ASSIMP_BUILD_OGRE_IMPORTER OFF)
-set(ASSIMP_BUILD_OPENGEX_IMPORTER OFF)
-set(ASSIMP_BUILD_PLY_IMPORTER OFF)
-set(ASSIMP_BUILD_MS3D_IMPORTER OFF)
-set(ASSIMP_BUILD_COB_IMPORTER OFF)
-set(ASSIMP_BUILD_BLEND_IMPORTER OFF)
-set(ASSIMP_BUILD_IFC_IMPORTER OFF)
-set(ASSIMP_BUILD_XGL_IMPORTER OFF)
-set(ASSIMP_BUILD_FBX_IMPORTER ON)
-set(ASSIMP_BUILD_Q3D_IMPORTER OFF)
-set(ASSIMP_BUILD_Q3BSP_IMPORTER OFF)
-set(ASSIMP_BUILD_RAW_IMPORTER OFF)
-set(ASSIMP_BUILD_SIB_IMPORTER OFF)
-set(ASSIMP_BUILD_SMD_IMPORTER OFF)
-set(ASSIMP_BUILD_STL_IMPORTER OFF)
-set(ASSIMP_BUILD_TERRAGEN_IMPORTER OFF)
-set(ASSIMP_BUILD_3D_IMPORTER OFF)
-set(ASSIMP_BUILD_X_IMPORTER OFF)
-set(ASSIMP_BUILD_X3D_IMPORTER OFF)
-set(ASSIMP_BUILD_GLTF_IMPORTER ON)
-set(ASSIMP_BUILD_3MF_IMPORTER OFF)
-set(ASSIMP_BUILD_MMD_IMPORTER OFF)
-set(ASSIMP_BUILD_ASSIMP_TOOLS OFF)
-
+#target_compile_features(poulpe INTERFACE cxx_std_20)
 message(STATUS "Generated with config types: ${CMAKE_CONFIGURATION_TYPES}")
 message(STATUS "CMAKE_CXX_STANDARD: ${CMAKE_CXX_STANDARD}")
 message(STATUS "CMAKE_CXX_STANDARD_REQUIRED: ${CMAKE_CXX_STANDARD_REQUIRED}")
 message(STATUS "CMAKE_BUILD_TYPE: ${CMAKE_BUILD_TYPE}")
 
+set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules ${CMAKE_MODULE_PATH})
 include(gitSubModule)
 
 add_executable(${PROJECT_NAME} src/Poulpe.cpp)
@@ -124,13 +57,22 @@ add_subdirectory(${PROJECT_SOURCE_DIR}/src/Poulpe/Utils)
 
 target_include_directories(${PROJECT_NAME} PRIVATE "${PROJECT_BINARY_DIR}")
 
-set(DEBUG_OPTIONS -Weverything -std=c++20 -ffast-math -Wno-c++98-compat -Wno-c++98-compat-pedantic -g)
-set(RELEASE_OPTIONS -O3 -std=c++20 -ffast-math -Wno-c++98-compat -Wno-c++98-compat-pedantic)
+set(DEBUG_OPTIONS -Weverything -Wno-c++98-compat -Wno-c++98-compat-pedantic -g)
+set(RELEASE_OPTIONS -Wno-c++98-compat -Wno-c++98-compat-pedantic -flto)
+
+if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+  list(APPEND DEBUG_OPTIONS /MDd /Zc:__cplusplus /EHsc)
+  list(APPEND RELEASE_OPTIONS /O2 /Ob2 /MD /Zc:__cplusplus /EHsc)
+
+  target_link_options(${PROJECT_NAME} PRIVATE "$<$<CONFIG:RELEASE>:/LTCG>")
+else()
+  list(APPEND DEBUG_OPTIONS -O3)
+  list(APPEND RELEASE_OPTIONS -O3)
+endif()
 
 target_compile_options(${PROJECT_NAME} PRIVATE "$<$<CONFIG:DEBUG>:${DEBUG_OPTIONS}>")
-target_compile_definitions(${PROJECT_NAME} PRIVATE "$<$<CONFIG:DEBUG>:PLP_DEBUG_BUILD>")
-
 target_compile_options(${PROJECT_NAME} PRIVATE "$<$<CONFIG:RELEASE>:${RELEASE_OPTIONS}>")
+target_compile_definitions(${PROJECT_NAME} PRIVATE "$<$<CONFIG:DEBUG>:PLP_DEBUG_BUILD>")
 
 #########################################################
 
@@ -152,8 +94,10 @@ endif()
 target_include_directories(${PROJECT_NAME} PUBLIC
           ${PROJECT_SOURCE_DIR}/vendor/assimp/include
           ${PROJECT_SOURCE_DIR}/vendor/lua
+          ${PROJECT_SOURCE_DIR}/vendor/glm
           ${PROJECT_SOURCE_DIR}/vendor/miniaudio
           ${PROJECT_SOURCE_DIR}/vendor/nlohmann/include
+          ${PROJECT_SOURCE_DIR}/vendor/spdlog/include
           ${PROJECT_SOURCE_DIR}/vendor/stb
           ${VULKAN_PATH})
 
@@ -218,14 +162,32 @@ list(APPEND EXTRA_LIBS glfw)
 list(APPEND EXTRA_LIBS glm::glm)
 list(APPEND EXTRA_LIBS lua)
 list(APPEND EXTRA_LIBS nlohmann_json)
-list(APPEND EXTRA_LIBS spdlog::spdlog)
-list(APPEND EXTRA_LIBS assimp::assimp)
 list(APPEND EXTRA_LIBS volk)
+list(APPEND EXTRA_LIBS assimp::assimp)
+list(APPEND EXTRA_LIBS spdlog::spdlog)
 
 target_link_libraries(${PROJECT_NAME} PRIVATE ${EXTRA_LIBS} poulpe)
 
+set(LIB_DEBUG_OPTIONS -Wno-error -Wno-deprecated-non-prototype -Wno-unsafe-buffer-usage)
+set(LIB_RELEASE_OPTIONS -Wno-error -Wno-deprecated-non-prototype -Wno-unsafe-buffer-usage)
+
+list(APPEND LIB_DEBUG_OPTIONS ${DEBUG_OPTIONS})
+list(APPEND LIB_RELEASE_OPTIONS ${RELEASE_OPTIONS})
+
+target_compile_options(spdlog PRIVATE "$<$<CONFIG:DEBUG>:${LIB_DEBUG_OPTIONS}>")
+target_compile_options(spdlog PRIVATE "$<$<CONFIG:RELEASE>:${LIB_RELEASE_OPTIONS}>")
+
+target_compile_options(assimp PRIVATE "$<$<CONFIG:DEBUG>:${LIB_DEBUG_OPTIONS}>")
+target_compile_options(assimp PRIVATE "$<$<CONFIG:RELEASE>:${LIB_RELEASE_OPTIONS}>")
+
 set(PLP_LIB_DIR "$<TARGET_FILE_DIR:${PROJECT_NAME}>/lib")
 set(PLP_BIN_DIR "$<TARGET_FILE_DIR:${PROJECT_NAME}>")
+
+set_target_properties(assimp PROPERTIES
+  LIBRARY_OUTPUT_DIRECTORY ${PLP_BIN_DIR}
+  RUNTIME_OUTPUT_DIRECTORY ${PLP_BIN_DIR}
+  ARCHIVE_OUTPUT_DIRECTORY ${PLP_BIN_DIR}
+)
 
 set_target_properties(glfw PROPERTIES
   LIBRARY_OUTPUT_DIRECTORY ${PLP_BIN_DIR}
