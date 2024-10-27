@@ -30,6 +30,15 @@
       ]
     },
     {
+      "name": "windows-release-with-debug",
+      "displayName": "Release with debug symbols",
+      "description": "Windows Release with debug symbols",
+      "inherits": [
+        "windows-common",
+        "RELEASE_DEBUG_BUILD_TYPE"
+      ]
+    },
+    {
       "name": "linux-debug",
       "displayName": "Debug",
       "description": "Linux Debug",
@@ -47,6 +56,15 @@
       "inherits": [
         "linux-common",
         "RELEASE_BUILD_TYPE"
+      ]
+    },
+    {
+      "name": "linux-release-with-debug",
+      "displayName": "Release with debug symbols",
+      "description": "Linux Release with debug symbols",
+      "inherits": [
+        "linux-common",
+        "RELEASE_DEBUG_BUILD_TYPE"
       ]
     }
   ],

@@ -19,8 +19,10 @@
           "options": [
             "windows-debug",
             "windows-release",
+            "windows-release-with-debug",
             "linux-debug",
             "linux-release",
+            "linux-release-with-debug",
         ],
           "default": "windows-debug"
         },
