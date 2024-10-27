@@ -334,6 +334,16 @@
       }
     },
     {
+      "name": "RELEASE_DEBUG_BUILD_TYPE",
+      "hidden": true,
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": {
+          "type": "STRING",
+          "value": "RelWithDebInfo"
+        }
+      }
+    },
+    {
       "name": "CCACHE_ON",
       "hidden": true,
       "cacheVariables": {
