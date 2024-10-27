@@ -42,6 +42,7 @@ jobs:
     - name: Checks
       run: |
         clang --version
+        gcc --version
         cmake --version
       
     - name: List Presets

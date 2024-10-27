@@ -1,7 +1,7 @@
 #########################################################
 ##################### PoulpeEngine Project ##############
 #########################################################
-cmake_minimum_required(VERSION 3.30.0)
+cmake_minimum_required(VERSION 3.28.0)
 
 if (USE_CCACHE)
   find_program(CCACHE_PROGRAM ccache)
