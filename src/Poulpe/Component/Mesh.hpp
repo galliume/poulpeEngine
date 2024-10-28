@@ -57,7 +57,7 @@ namespace Poulpe
         void setIsDirty(bool dirty = true) override { m_IsDirty.store(dirty); }
         void setName(std::string_view  name) override { m_Name = name; }
         inline void setShaderName(std::string_view name) override { m_ShaderName = name; }
-        void setObjectBuffer(ObjectBuffer objectBuffer) { m_ObjectBuffer = std::move(objectBuffer); }
+        void setObjectBuffer(ObjectBuffer objectBuffer) override { m_ObjectBuffer = std::move(objectBuffer); }
 
         void addUbos(const std::vector<UniformBufferObject>& ubos);
 

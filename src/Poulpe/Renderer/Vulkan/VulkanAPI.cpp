@@ -1817,7 +1817,9 @@ namespace Poulpe {
         VkMemoryRequirements memRequirements;
         vkGetBufferMemoryRequirements(m_Device, buffer, & memRequirements);
 
-        auto memoryType = findMemoryType(memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT | VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
+        auto const flags { VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT | VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT};
+
+        auto memoryType = findMemoryType(memRequirements.memoryTypeBits, flags);
 
         uint32_t size = ((memRequirements.size / memRequirements.alignment) + 1) * memRequirements.alignment;
 
@@ -1825,7 +1827,7 @@ namespace Poulpe {
           m_Device,
           size,
           memoryType,
-          VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+          flags,
           memRequirements.alignment,
           DeviceMemoryPool::DeviceBufferType::STORAGE);
 

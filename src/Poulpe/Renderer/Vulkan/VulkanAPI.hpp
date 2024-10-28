@@ -22,7 +22,7 @@ namespace Poulpe {
         VkDescriptorSetLayout descSetLayout;
         VkDescriptorSet descSet;
         VkPipelineCache pipelineCache;
-        VkPipeline pipeline;
+        VkPipeline pipeline{VK_NULL_HANDLE};
         std::vector<VkPipelineShaderStageCreateInfo> shaders{};
     };
 

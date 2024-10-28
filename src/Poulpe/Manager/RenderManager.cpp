@@ -204,14 +204,17 @@ namespace Poulpe
       std::latch count_down{ 3 };
 
       std::jthread textures(std::move(std::bind(m_TextureManager->load(), std::ref(count_down))));
+      textures.detach();
       std::jthread skybox(std::move(std::bind(m_TextureManager->loadSkybox(sb), std::ref(count_down))));
+      skybox.detach();
       std::jthread shaders(std::move(std::bind(m_ShaderManager->load(configManager->shaderConfig()), std::ref(count_down))));
-
+      shaders.detach();
       count_down.wait();
 
       setIsLoaded();
 
       std::jthread entities(std::move(m_EntityManager->load(levelData)));
+      entities.detach();
     }
 
     void RenderManager::prepareHUD()
@@ -245,7 +248,8 @@ namespace Poulpe
       auto* skyboxEntity{ new Entity() };
       auto* skyboxMesh{new Mesh()};
       skyboxMesh->setHasShadow(false);
-      
+      skyboxMesh->setIsIndexed(false);
+
       auto* skyRdrImpl{ new Skybox() };
       skyRdrImpl->init(m_Renderer.get(), m_TextureManager.get(), nullptr);
 

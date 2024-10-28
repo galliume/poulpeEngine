@@ -61,7 +61,7 @@ namespace Poulpe
       std::latch count_down{ 1 };
 
       std::jthread textures(std::move(std::bind(m_RenderManager->getTextureManager()->loadSkybox(skyboxName), std::ref(count_down))));
-
+      textures.detach();
       count_down.wait();
 
       auto skybox = m_RenderManager->getEntityManager()->getSkybox();

@@ -14,6 +14,56 @@
 namespace Poulpe
 {
   struct DrawCommand {
+
+    DrawCommand(VkCommandBuffer* _buffer,
+               VkPipelineStageFlags _stageFlags,
+               VkSemaphore* _semaphore)
+    : buffer(_buffer)
+    , stageFlags(_stageFlags)
+    , semaphore(_semaphore)
+    {};
+
+    DrawCommand(DrawCommand& other) 
+    {
+      buffer = other.buffer;
+      stageFlags = other.stageFlags;
+      semaphore = other.semaphore;
+      done = false;
+    };
+
+    DrawCommand& operator=(DrawCommand& other) 
+    {
+      buffer = other.buffer;
+      stageFlags = other.stageFlags;
+      semaphore = other.semaphore;
+      done = false;
+
+      return *this;
+    };
+
+    DrawCommand operator=(DrawCommand other) 
+    {
+      buffer = other.buffer;
+      stageFlags = other.stageFlags;
+      semaphore = other.semaphore;
+      done = false;
+
+      return *this;
+    };
+
+    DrawCommand(DrawCommand&& other) noexcept 
+    {
+      buffer = std::move(other.buffer);
+      stageFlags = std::move(other.stageFlags);
+      semaphore = std::move(other.semaphore);
+      done = false;
+    };
+
+    ~DrawCommand()
+    {
+
+    }
+
     VkCommandBuffer* buffer;
     VkPipelineStageFlags stageFlags;
     VkSemaphore* semaphore;
@@ -40,19 +90,29 @@ namespace Poulpe
     void updateData(std::string const& name, UniformBufferObject const& ubo, std::vector<Vertex> const& vertices) override;
     void addPipeline(std::string const & shaderName, VulkanPipeline pipeline) override;
     void attachObserver(IObserver* const observer) override;
-    void beginRendering(VkCommandBuffer commandBuffer,
+    void beginRendering(
+      VkCommandBuffer commandBuffer,
+      VkImageView imageView,
+      VkImage image,
+      VkImageView depthImageView,
+      VkImage depthImage,
       VkAttachmentLoadOp loadOp = VK_ATTACHMENT_LOAD_OP_LOAD,
       VkAttachmentStoreOp storeOp = VK_ATTACHMENT_STORE_OP_STORE,
       bool continuousCmdBuffer = false);
     void clear() override;
     void clearRendererScreen();
     void destroy() override;
-    void drawBbox();
-    void drawEntities();
-    void drawHUD();
-    void drawShadowMap();
-    void drawSkybox();
-    void endRendering(VkCommandBuffer commandBuffer);
+    void draw(VkCommandBuffer& cmdBuffer, 
+              VkImageView& colorView,
+              VkImage& color,
+              VkImageView& depthView,                      
+              VkImage& depth,
+              std::vector<Entity*> const& entities,
+              std::latch& count_down,
+              unsigned int thread_id,
+              bool shadows = false);
+    void drawShadowMap(VkCommandBuffer &cmdBuffer);
+    void endRendering(VkCommandBuffer commandBuffer, VkImage image, VkImage depthImage);
     inline Camera* getCamera() override { return m_Camera; }
     inline uint32_t getCurrentFrameIndex() const { return m_CurrentFrame; }
     inline std::vector<VkImageView>* getDepthMapImageViews() override { return & m_DepthMapImageViews; }
@@ -63,8 +123,6 @@ namespace Poulpe
     inline glm::mat4 getPerspective() override { return m_Perspective; }
     VulkanPipeline* getPipeline(std::string const & shaderName) override { return & m_Pipelines[shaderName]; }
     inline VkSwapchainKHR getSwapChain() { return m_SwapChain; }
-    inline std::vector<VkImage>* getSwapChainImages() override { return & m_SwapChainImages; }
-    inline  std::vector<VkImageView>* getSwapChainImageViews() { return &m_SwapChainImageViews; }
     void immediateSubmit(std::function<void(VkCommandBuffer cmd)> && function, int queueIndex = 0) override;
     void init() override;
     void recreateSwapChain() override;
@@ -243,6 +301,7 @@ namespace Poulpe
 
   private:
     const size_t m_MAX_FRAMES_IN_FLIGHT{ 2 };
+    const size_t m_MAX_RENDER_THREAD{ 2 };
 
     void onFinishRender();
     void setPerspective();
@@ -251,20 +310,21 @@ namespace Poulpe
   private:
     std::unique_ptr<VulkanAPI> m_API{ nullptr };
     VkSwapchainKHR m_SwapChain{ nullptr };
-    std::vector<VkImage> m_SwapChainImages{};
-    std::vector<VkImageView> m_SwapChainImageViews{};
+
+    std::vector<VkImage> m_Images{};
+    std::vector<VkImageView> m_ImageViews{};
+    std::vector<VkImage> m_ImagesBis{};
+    std::vector<VkImageView> m_ImageViewsBis{};
+    std::vector<VkImage> m_ImagesTer{};
+    std::vector<VkImageView> m_ImageViewsTer{};
 
     VkCommandPool m_CommandPoolEntities{ nullptr };
+    VkCommandPool m_CommandPoolEntitiesBis{ nullptr };
+    VkCommandPool m_CommandPoolEntitiesTer{ nullptr };
+
     std::vector<VkCommandBuffer> m_CommandBuffersEntities{};
-
-    VkCommandPool m_CommandPoolBbox{ nullptr };
-    std::vector<VkCommandBuffer> m_CommandBuffersBbox{};
-
-    VkCommandPool m_CommandPoolSkybox{ nullptr };
-    std::vector<VkCommandBuffer> m_CommandBuffersSkybox{};
-
-    VkCommandPool m_CommandPoolHud{ nullptr };
-    std::vector<VkCommandBuffer> m_CommandBuffersHUD{};
+    std::vector<VkCommandBuffer> m_CommandBuffersEntitiesBis{};
+    std::vector<VkCommandBuffer> m_CommandBuffersEntitiesTer{};
 
     VkCommandPool m_CommandPoolShadowMap{ nullptr };
     std::vector<VkCommandBuffer> m_CommandBuffersShadowMap{};
@@ -281,8 +341,13 @@ namespace Poulpe
     ITextureManager* m_TextureManager{ nullptr };
 
     //@todo move to meshManager
-    std::vector<VkImageView>m_SwapChainDepthImageViews{};
-    std::vector<VkImage>m_SwapChainDepthImages{};
+    std::vector<VkImageView> m_DepthImageViews{};
+    std::vector<VkImage> m_DepthImages{};
+    std::vector<VkImageView> m_DepthImageViewsBis{};
+    std::vector<VkImage> m_DepthImagesBis{};
+    std::vector<VkImageView> m_DepthImageViewsTer{};
+    std::vector<VkImage> m_DepthImagesTer{};
+    
     glm::mat4 m_Perspective;
     //glm::mat4 m_lastLookAt;
     float m_Deltatime{ 0.0f };
@@ -300,8 +365,12 @@ namespace Poulpe
 
     bool m_RenderingStopped{ false };
 
-    std::vector<VkSampler> m_SwapChainSamplers{};
-    std::vector<VkSampler> m_SwapChainDepthSamplers{};
+    std::vector<VkSampler> m_Samplers{};
+    std::vector<VkSampler> m_DepthSamplers{};
+    std::vector<VkSampler> m_SamplersBis{};
+    std::vector<VkSampler> m_DepthSamplersBis{};
+    std::vector<VkSampler> m_SamplersTer{};
+    std::vector<VkSampler> m_DepthSamplersTer{};
 
     std::vector<IObserver*> m_Observers{};
 
@@ -310,29 +379,31 @@ namespace Poulpe
     std::vector<VkSampler> m_DepthMapSamplers;
     bool m_DepthMapDescSetUpdated{ false };
 
+    std::vector<VkImage> m_DepthMapImagesBis;
+    std::vector<VkImageView> m_DepthMapImageViewsBis;
+    std::vector<VkSampler> m_DepthMapSamplersBis;
+    bool m_DepthMapDescSetUpdatedBis{ false };
+    
+    std::vector<VkImage> m_DepthMapImagesTer;
+    std::vector<VkImageView> m_DepthMapImageViewsTer;
+    std::vector<VkSampler> m_DepthMapSamplersTer;
+    bool m_DepthMapDescSetUpdatedTer{ false };    
+    
     std::unordered_map<std::string, VulkanPipeline> m_Pipelines;
-
-    std::vector<VkSemaphore> m_EntitiesSemaRenderFinished;
-    std::vector<VkSemaphore> m_SkyboxSemaRenderFinished;
-    std::vector<VkSemaphore> m_HUDSemaRenderFinished;
-    std::vector<VkSemaphore> m_ShadowMapSemaRenderFinished;
 
     std::vector<VkSemaphore> m_ImageAvailable;
     std::vector<VkSemaphore> m_ShadowMapSemaImageAvailable;
+
+    std::vector<Entity*> m_Entities{};
+    std::vector<DrawCommand> m_CmdsToSubmit{};
+    
+    std::vector<VkSemaphore> m_EntitiesSemaRenderFinished;
+    std::vector<VkSemaphore> m_ShadowMapSemaRenderFinished;
 
     std::vector<VkFence> m_ImagesInFlight{};
     std::vector<VkFence> m_InFlightFences{};
 
     std::mutex m_MutexQueueSubmit;
     std::mutex m_MutexEntitySubmit;
-    std::vector<DrawCommand*> m_CmdsToSubmit{};
-
-    std::vector<std::unique_ptr<DrawCommand>> m_CmdSkyboxStatus{};
-    std::vector<std::unique_ptr<DrawCommand>> m_CmdEntitiesStatus{};
-    std::vector<std::unique_ptr<DrawCommand>> m_CmdHUDStatus{};
-
-    std::atomic_bool m_Nodraw{ true };
-
-    std::vector<Entity*> m_Entities{};
   };
 }

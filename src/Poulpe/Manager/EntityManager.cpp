@@ -42,9 +42,10 @@ namespace Poulpe
         size_t const count = data["count"].template get<size_t>();
 
         for (size_t i{ 0 }; i < count; i++) {
-          Locator::getThreadPool()->submit([&]() {
+          std::jthread entity([&]() {
             initMeshes(key, data);
           });
+          entity.detach();
         }
       });
 

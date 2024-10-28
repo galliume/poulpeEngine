@@ -59,7 +59,6 @@ namespace Poulpe
     virtual inline VkDevice getDevice() = 0;
     virtual VulkanPipeline* getPipeline(std::string const & shaderName) = 0;
     virtual inline glm::mat4 getPerspective() = 0;
-    virtual inline std::vector<VkImage>* getSwapChainImages() = 0;
     virtual inline VkExtent2D getSwapChainExtent() const = 0;
     virtual void immediateSubmit(std::function<void(VkCommandBuffer cmd)>&& function, int queueIndex = 0) = 0;
     virtual void init() = 0;
