@@ -41,16 +41,29 @@ namespace Poulpe
       m_RayPick = glm::vec3(0.0f);
       setPerspective();
 
-      m_SwapChain = m_API->createSwapChain(m_SwapChainImages);
+      m_SwapChain = m_API->createSwapChain(m_Images);
+      
+      m_ImageViews.resize(m_Images.size());
+      m_Samplers.resize(m_Images.size());       
+      m_DepthImages.resize(m_Images.size());
+      m_DepthImageViews.resize(m_Images.size());
+      m_DepthSamplers.resize(m_Images.size());
 
-      m_SwapChainImageViews.resize(m_SwapChainImages.size());
-      m_SwapChainSamplers.resize(m_SwapChainImages.size());
-        
-      m_SwapChainDepthImages.resize(m_SwapChainImages.size());
-      m_SwapChainDepthImageViews.resize(m_SwapChainImages.size());
-      m_SwapChainDepthSamplers.resize(m_SwapChainImages.size());
+      m_ImageViewsBis.resize(m_Images.size());
+      m_ImagesBis.resize(m_Images.size());
+      m_SamplersBis.resize(m_Images.size());       
+      m_DepthImagesBis.resize(m_Images.size());
+      m_DepthImageViewsBis.resize(m_Images.size());
+      m_DepthSamplersBis.resize(m_Images.size());
 
-      for (size_t i{ 0 }; i < m_SwapChainImages.size(); ++i) {
+      m_ImageViewsTer.resize(m_Images.size());
+      m_ImagesTer.resize(m_Images.size());
+      m_SamplersTer.resize(m_Images.size());       
+      m_DepthImagesTer.resize(m_Images.size());
+      m_DepthImageViewsTer.resize(m_Images.size());
+      m_DepthSamplersTer.resize(m_Images.size());
+
+      for (size_t i{ 0 }; i < m_Images.size(); ++i) {
           
         VkImage image;
 
@@ -59,10 +72,9 @@ namespace Poulpe
             | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
             VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, image);
 
-        //m_SwapChainImages[i] = image;
-        m_SwapChainImageViews[i] = m_API->createImageView(m_SwapChainImages[i],
+        m_ImageViews[i] = m_API->createImageView(m_Images[i],
           m_API->getSwapChainImageFormat(), VK_IMAGE_ASPECT_COLOR_BIT);
-        m_SwapChainSamplers[i] = m_API->createTextureSampler(1);
+        m_Samplers[i] = m_API->createTextureSampler(1);
 
         VkImage depthImage;
 
@@ -74,31 +86,61 @@ namespace Poulpe
         VkImageView depthImageView = m_API->createImageView(depthImage, VK_FORMAT_D32_SFLOAT, 1,
           VK_IMAGE_ASPECT_DEPTH_BIT);
 
-        m_SwapChainDepthImages[i] = depthImage;
-        m_SwapChainDepthImageViews[i] = depthImageView;
-        m_SwapChainDepthSamplers[i] = m_API->createTextureSampler(1);
+        m_DepthImages[i] = depthImage;
+        m_DepthImageViews[i] = depthImageView;
+        m_DepthSamplers[i] = m_API->createTextureSampler(1);
       }
+      for (size_t i{ 0 }; i < m_Images.size(); ++i) {
+        VkImageView depthImageView = m_API->createImageView(m_DepthImages[i], VK_FORMAT_D32_SFLOAT, 1,
+          VK_IMAGE_ASPECT_DEPTH_BIT);
 
+        m_DepthImageViewsBis[i] = depthImageView;
+        m_DepthSamplersBis[i] = m_API->createTextureSampler(1);
+      }      
+      for (size_t i{ 0 }; i < m_Images.size(); ++i) {
+        VkImageView depthImageView = m_API->createImageView(m_DepthImages[i], VK_FORMAT_D32_SFLOAT, 1,
+          VK_IMAGE_ASPECT_DEPTH_BIT);
+        m_DepthImageViewsTer[i] = depthImageView;
+        m_DepthSamplersTer[i] = m_API->createTextureSampler(1);
+      }
       m_CommandPoolEntities = m_API->createCommandPool();
+      m_CommandPoolEntitiesBis = m_API->createCommandPool();
+      m_CommandPoolEntitiesTer = m_API->createCommandPool();
 
       m_CommandBuffersEntities = m_API->allocateCommandBuffers(m_CommandPoolEntities,
-          static_cast<uint32_t>(m_SwapChainImageViews.size()));
+        static_cast<uint32_t>(m_ImageViews.size()));
 
-      m_CommandPoolBbox = m_API->createCommandPool();
-      m_CommandBuffersBbox = m_API->allocateCommandBuffers(m_CommandPoolBbox,
-          static_cast<uint32_t>(m_SwapChainImageViews.size()));
+      m_CommandBuffersEntitiesBis = m_API->allocateCommandBuffers(m_CommandPoolEntitiesBis,
+        static_cast<uint32_t>(m_ImageViews.size()));
 
-      m_CommandPoolSkybox = m_API->createCommandPool();
-      m_CommandBuffersSkybox = m_API->allocateCommandBuffers(m_CommandPoolSkybox,
-          static_cast<uint32_t>(m_SwapChainImageViews.size()));
-
-      m_CommandPoolHud = m_API->createCommandPool();
-      m_CommandBuffersHUD = m_API->allocateCommandBuffers(m_CommandPoolHud,
-          static_cast<uint32_t>(m_SwapChainImageViews.size()));
+      m_CommandBuffersEntitiesTer = m_API->allocateCommandBuffers(m_CommandPoolEntitiesTer,
+        static_cast<uint32_t>(m_ImageViews.size()));
 
       m_CommandPoolShadowMap = m_API->createCommandPool();
       m_CommandBuffersShadowMap = m_API->allocateCommandBuffers(m_CommandPoolShadowMap,
-        static_cast<uint32_t>(m_SwapChainImageViews.size()));
+        static_cast<uint32_t>(m_ImageViews.size()));
+
+      for (size_t i { 0 }; i < m_Images.size(); ++i) {
+        VkImage image{};
+        m_API->createDepthMapImage(image);
+        m_DepthMapImages.emplace_back(image);
+        m_DepthMapImageViews.emplace_back(m_API->createDepthMapImageView(image));
+        m_DepthMapSamplers.emplace_back(m_API->createDepthMapSampler());
+
+        // VkImage imageBis{};
+        // m_API->createDepthMapImage(imageBis);
+        // m_DepthMapImagesBis.emplace_back(imageBis);
+        // m_DepthMapImageViewsBis.emplace_back(m_API->createDepthMapImageView(imageBis));
+        // m_DepthMapSamplersBis.emplace_back(m_API->createDepthMapSampler());
+
+        // VkImage imageTer{};
+        // m_API->createDepthMapImage(imageTer);
+        // m_DepthMapImagesTer.emplace_back(imageTer);
+        // m_DepthMapImageViewsTer.emplace_back(m_API->createDepthMapImageView(imageTer));
+        // m_DepthMapSamplersTer.emplace_back(m_API->createDepthMapSampler());
+      }
+      
+      VkResult result{};
 
       VkSemaphoreTypeCreateInfo semaType;
       semaType.sType = VK_STRUCTURE_TYPE_SEMAPHORE_TYPE_CREATE_INFO;
@@ -109,37 +151,21 @@ namespace Poulpe
       VkSemaphoreCreateInfo sema{};
       sema.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
       sema.pNext = &semaType;
-
-      VkResult result{};
-
-      m_EntitiesSemaRenderFinished.resize(m_MAX_FRAMES_IN_FLIGHT);
-      m_SkyboxSemaRenderFinished.resize(m_MAX_FRAMES_IN_FLIGHT);
-      m_HUDSemaRenderFinished.resize(m_MAX_FRAMES_IN_FLIGHT);
-      m_ShadowMapSemaRenderFinished.resize(m_MAX_FRAMES_IN_FLIGHT);
-
-      m_ImageAvailable.resize(m_MAX_FRAMES_IN_FLIGHT);
+      
+      m_InFlightFences.resize(m_MAX_FRAMES_IN_FLIGHT);
+      m_ImagesInFlight.resize(m_MAX_FRAMES_IN_FLIGHT, VK_NULL_HANDLE);
 
       VkFenceCreateInfo fenceInfo{};
       fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
       fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
+      m_EntitiesSemaRenderFinished.resize(m_MAX_RENDER_THREAD);
+      m_ShadowMapSemaRenderFinished.resize(m_MAX_RENDER_THREAD);
+      m_ImageAvailable.resize(m_MAX_RENDER_THREAD);
 
-      m_InFlightFences.resize(m_MAX_FRAMES_IN_FLIGHT);
-      m_ImagesInFlight.resize(m_MAX_FRAMES_IN_FLIGHT, VK_NULL_HANDLE);
+       for (size_t i { 0 }; i < m_MAX_RENDER_THREAD; ++i) {
 
-      m_CmdSkyboxStatus.resize(m_MAX_FRAMES_IN_FLIGHT);
-      m_CmdHUDStatus.resize(m_MAX_FRAMES_IN_FLIGHT);
-      m_CmdEntitiesStatus.resize(m_MAX_FRAMES_IN_FLIGHT);
-
-      for (size_t i { 0 }; i < m_MAX_FRAMES_IN_FLIGHT; ++i) {
-
-            result = vkCreateSemaphore(m_API->getDevice(), &sema, nullptr, &m_EntitiesSemaRenderFinished[i]);
+          result = vkCreateSemaphore(m_API->getDevice(), &sema, nullptr, &m_EntitiesSemaRenderFinished[i]);
           if (VK_SUCCESS != result) PLP_ERROR("can't create m_EntitiesSemaRenderFinished semaphore");
-
-          result = vkCreateSemaphore(m_API->getDevice(), &sema, nullptr, &m_SkyboxSemaRenderFinished[i]);
-          if (VK_SUCCESS != result) PLP_ERROR("can't create m_SkyboxSemaRenderFinished semaphore");
-
-          result = vkCreateSemaphore(m_API->getDevice(), &sema, nullptr, &m_HUDSemaRenderFinished[i]);
-          if (VK_SUCCESS != result) PLP_ERROR("can't create m_HUDSemaRenderFinished semaphore");
 
           result = vkCreateSemaphore(m_API->getDevice(), &sema, nullptr, &m_ShadowMapSemaRenderFinished[i]);
           if (VK_SUCCESS != result) PLP_ERROR("can't create m_ShadowMapSemaRenderFinished semaphore");
@@ -152,38 +178,6 @@ namespace Poulpe
 
           result = vkCreateFence(m_API->getDevice(), &fenceInfo, nullptr, &m_InFlightFences[i]);
           if (VK_SUCCESS != result) PLP_ERROR("can't create m_InFlightFences fence");
-
-          auto cmdSky = std::make_unique<DrawCommand>();
-          cmdSky->buffer = &m_CommandBuffersSkybox[i];
-          cmdSky->stageFlags = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-          cmdSky->semaphore = &m_SkyboxSemaRenderFinished[i];
-          cmdSky->done.store(false);
-
-          m_CmdSkyboxStatus[i] = std::move(cmdSky);
-
-          auto cmdHUD = std::make_unique<DrawCommand>();
-          cmdHUD->buffer = &m_CommandBuffersHUD[i];
-          cmdHUD->stageFlags = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-          cmdHUD->semaphore = &m_HUDSemaRenderFinished[i];
-          cmdHUD->done.store(false);
-
-          m_CmdHUDStatus[i] = std::move(cmdHUD);
-
-          auto cmdEntities = std::make_unique<DrawCommand>();
-          cmdEntities->buffer = &m_CommandBuffersEntities[i];
-          cmdEntities->stageFlags = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-          cmdEntities->semaphore = &m_EntitiesSemaRenderFinished[i];
-          cmdEntities->done.store(false);
-
-          m_CmdEntitiesStatus[i] = std::move(cmdEntities);
-      }
-
-      for (size_t i { 0 }; i < m_MAX_FRAMES_IN_FLIGHT; ++i) {
-        VkImage image{};
-        m_API->createDepthMapImage(image);
-        m_DepthMapImages.emplace_back(image);
-        m_DepthMapImageViews.emplace_back(m_API->createDepthMapImageView(image));
-        m_DepthMapSamplers.emplace_back(m_API->createDepthMapSampler());
       }
   }
 
@@ -218,15 +212,15 @@ namespace Poulpe
       m_Deltatime = deltaTime;
   }
 
-  void Renderer::drawShadowMap()
+  void Renderer::drawShadowMap(VkCommandBuffer &cmdBuffer)
   {
     std::string const pipelineName{ "shadowMap" };
     auto const& pipeline = getPipeline(pipelineName);
   
     //m_API->beginCommandBuffer(m_CommandBuffersEntities[m_CurrentFrame]);
-    m_API->startMarker(m_CommandBuffersEntities[m_CurrentFrame], "shadow_map_" + pipelineName, 0.1f, 0.2f, 0.3f);
+    m_API->startMarker(cmdBuffer, "shadow_map_" + pipelineName, 0.1f, 0.2f, 0.3f);
 
-    m_API->transitionImageLayout(m_CommandBuffersEntities[m_CurrentFrame], m_DepthMapImages[0],
+    m_API->transitionImageLayout(cmdBuffer, m_DepthMapImages[0],
       VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, VK_IMAGE_ASPECT_DEPTH_BIT);
 
     VkClearColorValue colorClear = {};
@@ -258,7 +252,7 @@ namespace Poulpe
     renderingInfo.colorAttachmentCount = 0;
     renderingInfo.flags = VK_SUBPASS_CONTENTS_INLINE;
 
-    vkCmdBeginRenderingKHR(m_CommandBuffersEntities[m_CurrentFrame], & renderingInfo);
+    vkCmdBeginRenderingKHR(cmdBuffer, & renderingInfo);
 
     VkViewport viewport;
     viewport.x = 0;
@@ -268,10 +262,10 @@ namespace Poulpe
     viewport.minDepth = 0.0f;
     viewport.maxDepth = 1.0f;
 
-    vkCmdSetViewport(m_CommandBuffersEntities[m_CurrentFrame], 0, 1, &viewport);
+    vkCmdSetViewport(cmdBuffer, 0, 1, &viewport);
     VkRect2D scissor = { { 0, 0 }, { width, height } };
 
-    vkCmdSetScissor(m_CommandBuffersEntities[m_CurrentFrame], 0, 1, & scissor);
+    vkCmdSetScissor(cmdBuffer, 0, 1, & scissor);
 
     float const depthBiasConstant = 0.0f;
     float const depthBiasSlope = 0.0f;
@@ -279,12 +273,25 @@ namespace Poulpe
     //vkCmdSetDepthClampEnableEXT(m_CommandBuffersEntities[m_CurrentFrame], VK_TRUE);
     //vkCmdSetDepthBias(m_CommandBuffersEntities[m_CurrentFrame], depthBiasConstant, 0.0f, depthBiasSlope);
 
+    std::string last_shader{};
+    bool need_pipeline_update{true};
+    
     std::ranges::for_each(m_Entities, [&](auto const& entity) {
       auto meshComponent = m_ComponentManager->getComponent<MeshComponent>(entity->getID());
       if (meshComponent) {
         Mesh* mesh = meshComponent->template hasImpl<Mesh>();
 
         if (mesh->hasShadow() && !mesh->getUniformBuffers()->empty()) {
+
+          auto const& current_shader = mesh->getShaderName();
+
+          if (last_shader.empty()) {
+            last_shader = current_shader;
+          }
+          if (last_shader != current_shader) {
+            need_pipeline_update = true;
+            last_shader = current_shader;
+          }
 
           uint32_t min{ 0 };
           uint32_t max{ 0 };
@@ -302,105 +309,121 @@ namespace Poulpe
           pushConstants.view = getCamera()->lookAt();
           pushConstants.viewPos = getCamera()->getPos();
 
-          vkCmdPushConstants(m_CommandBuffersEntities[m_CurrentFrame], pipeline->pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(constants),
+          vkCmdPushConstants(cmdBuffer, pipeline->pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(constants),
             &pushConstants);
 
-          try {
-            vkCmdBindDescriptorSets(
-              m_CommandBuffersEntities[m_CurrentFrame],
-              VK_PIPELINE_BIND_POINT_GRAPHICS,
-              pipeline->pipelineLayout,
-              0, 1, mesh->getShadowMapDescSet(), 0, nullptr);
+          vkCmdBindDescriptorSets(
+            cmdBuffer,
+            VK_PIPELINE_BIND_POINT_GRAPHICS,
+            pipeline->pipelineLayout,
+            0, 1, mesh->getShadowMapDescSet(), 0, nullptr);
 
-            m_API->bindPipeline(m_CommandBuffersEntities[m_CurrentFrame], pipeline->pipeline);
+          if (need_pipeline_update) {
+            m_API->bindPipeline(cmdBuffer, pipeline->pipeline);
+            need_pipeline_update = false;
+          }
 
-            m_API->draw(
-              m_CommandBuffersEntities[m_CurrentFrame],
-              *mesh->getShadowMapDescSet(),
-              *pipeline,
-              mesh->getData(),
-              mesh->getData()->m_Ubos.size(),
-              mesh->isIndexed());
-          }
-          catch (std::exception& e) {
-            PLP_DEBUG("Draw error: {}", e.what());
-          }
+          m_API->draw(
+            cmdBuffer,
+            *mesh->getShadowMapDescSet(),
+            *pipeline,
+            mesh->getData(),
+            mesh->getData()->m_Ubos.size(),
+            mesh->isIndexed());
         }
       }
     });
 
-    m_API->endMarker(m_CommandBuffersEntities[m_CurrentFrame]);
-    m_API->endRendering(m_CommandBuffersEntities[m_CurrentFrame]);
+    m_API->endMarker(cmdBuffer);
+    m_API->endRendering(cmdBuffer);
 
-    m_API->transitionImageLayout(m_CommandBuffersEntities[m_CurrentFrame], m_DepthMapImages[0],
+    m_API->transitionImageLayout(cmdBuffer, m_DepthMapImages[0],
       VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_IMAGE_ASPECT_DEPTH_BIT);
 
     m_DepthMapDescSetUpdated = true;
   }
 
-  void Renderer::drawEntities()
+  void Renderer::draw(
+    VkCommandBuffer& cmdBuffer, 
+    VkImageView& colorView,
+    VkImage& color,
+    VkImageView& depthView,                      
+    VkImage& depth,
+    std::vector<Entity*> const& entities,
+    std::latch& count_down,
+    unsigned int thread_id,
+    bool shadows)
   {
-    //{
-    //  std::lock_guard guard(m_MutexEntitySubmit);
-      if (0 < m_Entities.size()) {
+    if (0 < entities.size()) {
+      m_API->beginCommandBuffer(cmdBuffer);
 
-        m_API->beginCommandBuffer(m_CommandBuffersEntities[m_CurrentFrame]);
+      if (shadows) {
+        drawShadowMap(cmdBuffer);
+      }
 
-        drawShadowMap();
+      m_API->transitionImageLayout(cmdBuffer, color,
+        VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_ASPECT_COLOR_BIT);
 
-        m_API->transitionImageLayout(m_CommandBuffersEntities[m_CurrentFrame], m_SwapChainImages[m_CurrentFrame],
-          VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_ASPECT_COLOR_BIT);
+      m_API->transitionImageLayout(cmdBuffer, depth,
+        VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL, VK_IMAGE_ASPECT_DEPTH_BIT);
 
-        m_API->transitionImageLayout(m_CommandBuffersEntities[m_CurrentFrame], m_SwapChainDepthImages[m_CurrentFrame],
-          VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL, VK_IMAGE_ASPECT_DEPTH_BIT);
+      m_API->beginRendering(
+        cmdBuffer,
+        colorView,
+        depthView,
+        VK_ATTACHMENT_LOAD_OP_CLEAR,
+        VK_ATTACHMENT_STORE_OP_STORE);
 
-        m_API->beginRendering(
-          m_CommandBuffersEntities[m_CurrentFrame],
-          m_SwapChainImageViews[m_CurrentFrame],
-          m_SwapChainDepthImageViews[m_CurrentFrame],
-          VK_ATTACHMENT_LOAD_OP_DONT_CARE,
-          VK_ATTACHMENT_STORE_OP_STORE);
+      m_API->setViewPort(cmdBuffer);
+      m_API->setScissor(cmdBuffer);
 
-        m_API->setViewPort(m_CommandBuffersEntities[m_CurrentFrame]);
-        m_API->setScissor(m_CommandBuffersEntities[m_CurrentFrame]);
+      m_API->startMarker(cmdBuffer, "drawing", 0.2f, 0.2f, 0.9f);
 
-        m_API->startMarker(m_CommandBuffersEntities[m_CurrentFrame], "entities_drawing", 0.2f, 0.2f, 0.9f);
+      //std::vector<VkDrawIndexedIndirectCommand> drawCommands{};
+      //drawCommands.reserve(m_Entities.size());
 
-        //std::vector<VkDrawIndexedIndirectCommand> drawCommands{};
-        //drawCommands.reserve(m_Entities.size());
+      //unsigned int firstInstance { 0 };
+      //std::ranges::for_each(m_Entities, [&](auto const& entity) {
+      //  auto meshComponent = m_ComponentManager->getComponent<MeshComponent>(entity->getID());
+      //  if (meshComponent) {
+      //    Mesh* mesh = meshComponent->hasImpl<Mesh>();
 
-        //unsigned int firstInstance { 0 };
-        //std::ranges::for_each(m_Entities, [&](auto const& entity) {
-        //  auto meshComponent = m_ComponentManager->getComponent<MeshComponent>(entity->getID());
-        //  if (meshComponent) {
-        //    Mesh* mesh = meshComponent->hasImpl<Mesh>();
+      //    drawCommands.emplace_back(
+      //       mesh->getData()->m_Vertices.size(),
+      //       1, 0, 0, firstInstance);
+      //    firstInstance += 1;
+      //  }
+      //});
 
-        //    drawCommands.emplace_back(
-        //       mesh->getData()->m_Vertices.size(),
-        //       1, 0, 0, firstInstance);
-        //    firstInstance += 1;
-        //  }
-        //});
+      //auto indirectBuffer = m_API->createIndirectCommandsBuffer(drawCommands);
 
-        //auto indirectBuffer = m_API->createIndirectCommandsBuffer(drawCommands);
+      std::string last_shader{};
+      bool need_pipeline_update{true};
 
-        VulkanPipeline lastPipeline;
+      size_t num{ 0 };
+      std::ranges::for_each(entities, [&](auto const& entity) {
+        auto meshComponent = m_ComponentManager->getComponent<MeshComponent>(entity->getID());
+        if (meshComponent) {
 
-        size_t num{ 0 };
-        std::ranges::for_each(m_Entities, [&](auto const& entity) {
-          auto meshComponent = m_ComponentManager->getComponent<MeshComponent>(entity->getID());
-          if (meshComponent) {
+          Mesh* mesh = meshComponent->template hasImpl<Mesh>();
+          if (!mesh->getUniformBuffers()->empty()) {
 
-            Mesh* mesh = meshComponent->template hasImpl<Mesh>();
-            if (!mesh->getUniformBuffers()->empty()) {
+            auto const& current_shader {mesh->getShaderName()};
+            auto pipeline = getPipeline(current_shader);
 
-              //@todo check if the pipeline really need to be updated
-              auto pipeline = getPipeline(mesh->getShaderName());
+            if (last_shader.empty()) {
+              last_shader = current_shader;
+            }
+            if (last_shader != current_shader) {
+              need_pipeline_update = true;
+              last_shader = current_shader;
+            }
+            
+            for (size_t i{ 0 }; i < mesh->getData()->m_Ubos.size(); ++i) {
+              mesh->getData()->m_Ubos[i].projection = getPerspective();
+            }
 
-              for (size_t i{ 0 }; i < mesh->getData()->m_Ubos.size(); ++i) {
-                mesh->getData()->m_Ubos[i].projection = getPerspective();
-              }
-
+            if (mesh->getData()->m_UbosOffset.size() > 0) {
               uint32_t min{ 0 };
               uint32_t max{ 0 };
 
@@ -411,252 +434,142 @@ namespace Poulpe
                 if (ubos.empty()) continue;
                 m_API->updateUniformBuffer(mesh->getUniformBuffers()->at(i), &ubos);
               }
-
-              if (mesh->hasPushConstants()) {
-                mesh->applyPushConstants(m_CommandBuffersEntities[m_CurrentFrame], pipeline->pipelineLayout, this, mesh);
-              }
-
-              try {
-
-                vkCmdBindDescriptorSets(m_CommandBuffersEntities[m_CurrentFrame],
-                  VK_PIPELINE_BIND_POINT_GRAPHICS,
-                  pipeline->pipelineLayout,
-                  0, 1, mesh->getDescSet(), 0, nullptr);
-
-                m_API->bindPipeline(m_CommandBuffersEntities[m_CurrentFrame], pipeline->pipeline);
-
-                if (m_RenderingStopped) return;
-                m_API->draw(m_CommandBuffersEntities[m_CurrentFrame], *mesh->getDescSet(),
-                  *pipeline, mesh->getData(), mesh->isIndexed());
-                /*vkCmdDrawIndexedIndirect(
-                  m_CommandBuffersEntities[m_CurrentFrame],
-                  indirectBuffer.buffer,
-                  0,
-                  1,
-                  sizeof(VkDrawIndexedIndirectCommand));*/
-                
-                num += 1;
-              }
-              catch (std::exception& e) {
-                PLP_DEBUG("Draw error: {}", e.what());
-              }
             }
-          }
-        });
 
-        m_API->endMarker(m_CommandBuffersEntities[m_CurrentFrame]);
-        endRendering(m_CommandBuffersEntities[m_CurrentFrame]);
-        m_CmdsToSubmit.emplace_back(m_CmdEntitiesStatus[m_CurrentFrame].get());
-        m_CmdEntitiesStatus[m_CurrentFrame]->done.store(true);
+            if (mesh->hasPushConstants()) {
+              mesh->applyPushConstants(cmdBuffer, pipeline->pipelineLayout, this, mesh);
+            }
+
+            vkCmdBindDescriptorSets(cmdBuffer,
+                                    VK_PIPELINE_BIND_POINT_GRAPHICS,
+                                    pipeline->pipelineLayout,
+                                    0, 1, mesh->getDescSet(), 0, nullptr);
+
+            if (need_pipeline_update) {
+              m_API->bindPipeline(cmdBuffer, pipeline->pipeline);
+              need_pipeline_update = false;
+            }
+
+            m_API->draw(cmdBuffer, *mesh->getDescSet(), *pipeline, mesh->getData(), mesh->isIndexed());
+            /*vkCmdDrawIndexedIndirect(
+              m_CommandBuffersEntities[m_CurrentFrame],
+              indirectBuffer.buffer,
+              0,
+              1,
+              sizeof(VkDrawIndexedIndirectCommand));*/
+            
+            num += 1;
+          }
+        }
+      });
+      if (entities.size() > 0) {
+        m_CmdsToSubmit.emplace_back(
+          &cmdBuffer, 
+          VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+          &m_EntitiesSemaRenderFinished[thread_id]
+        );
       }
-    //}
-  }
-
-    void Renderer::drawSkybox()
-    {
-      if (auto skybox = m_EntityManager->getSkybox()) {
-
-          beginRendering(m_CommandBuffersSkybox[m_CurrentFrame], VK_ATTACHMENT_LOAD_OP_CLEAR, VK_ATTACHMENT_STORE_OP_STORE);
-          m_API->startMarker(m_CommandBuffersSkybox[m_CurrentFrame], "skybox_drawing", 0.3f, 0.2f, 0.1f);
-
-          auto meshComponent = m_ComponentManager->getComponent<MeshComponent>(skybox->getID());
-          Mesh* mesh = meshComponent->hasImpl<Mesh>();
-            
-          if (!mesh || mesh->getUniformBuffers()->empty()) return;
-
-          Data* skyboxData = mesh->getData();
-          auto pipeline = getPipeline(mesh->getShaderName());
-
-          if (mesh->hasPushConstants()) {
-            mesh->applyPushConstants(m_CommandBuffersSkybox[m_CurrentFrame], pipeline->pipelineLayout, this, mesh);
-          }
-
-          if (m_RenderingStopped) return;
-            
-          vkCmdBindDescriptorSets(m_CommandBuffersSkybox[m_CurrentFrame],
-              VK_PIPELINE_BIND_POINT_GRAPHICS,
-              pipeline->pipelineLayout,
-              0, 1, mesh->getDescSet(), 0, nullptr);
-            
-          m_API->bindPipeline(m_CommandBuffersSkybox[m_CurrentFrame], pipeline->pipeline);
-            
-          m_API->draw(m_CommandBuffersSkybox[m_CurrentFrame], *mesh->getDescSet(), *pipeline,
-              skyboxData, false);
-
-          m_API->endMarker(m_CommandBuffersSkybox[m_CurrentFrame]);
-          endRendering(m_CommandBuffersSkybox[m_CurrentFrame]);
-
-          m_CmdsToSubmit.emplace_back(m_CmdSkyboxStatus[m_CurrentFrame].get());
-          m_CmdSkyboxStatus[m_CurrentFrame]->done.store(true);
-      }
-  }
-
-  void Renderer::drawHUD()
-  {
-      beginRendering(m_CommandBuffersHUD[m_CurrentFrame]);
-      m_API->startMarker(m_CommandBuffersHUD[m_CurrentFrame], "hud_drawing", 0.3f, 0.2f, 0.1f);
-
-      for (auto const & entity : * m_EntityManager->getHUD()) {
-
-          auto meshComponent = m_ComponentManager->getComponent<MeshComponent>(entity->getID());
-          Mesh* hudPart = meshComponent->hasImpl<Mesh>();
-
-          if (!hudPart || !entity->isVisible()) continue;
-            
-          auto pipeline = getPipeline(hudPart->getShaderName());
-
-          m_API->bindPipeline(m_CommandBuffersHUD[m_CurrentFrame], pipeline->pipeline);
-
-          if (hudPart->hasPushConstants()) {
-              hudPart->applyPushConstants(m_CommandBuffersHUD[m_CurrentFrame], pipeline->pipelineLayout, this,
-                  hudPart);
-          }
-
-          if (m_RenderingStopped) return;
-          m_API->draw(m_CommandBuffersHUD[m_CurrentFrame], *hudPart->getDescSet(), *pipeline, hudPart->getData());
-      }
-
-      m_API->endMarker(m_CommandBuffersHUD[m_CurrentFrame]);
-      endRendering(m_CommandBuffersHUD[m_CurrentFrame]);
-
-      m_CmdsToSubmit.emplace_back(m_CmdHUDStatus[m_CurrentFrame].get());
-      m_CmdHUDStatus[m_CurrentFrame]->done.store(true);
-  }
-
-  void Renderer::drawBbox()
-  {
-/*       auto & entities = *m_EntityManager->getEntities();
-
-      if (entities.size() > 0)
-      {
-          beginRendering(m_CommandBuffersBbox[m_CurrentFrame]);
-          m_API->startMarker(m_CommandBuffersBbox[m_CurrentFrame], "bbox_drawing", 0.3, 0.2, 0.1);
-
-          for (auto & entity : entities) {
-              Mesh* mesh = entity->getMesh();
-
-              if (!mesh || !mesh->hasBbox()) continue;
-              auto && bbox = mesh->getBBox()->mesh;
-
-              if (!bbox) continue;
-
-              m_API->bindPipeline(m_CommandBuffersBbox[m_CurrentFrame], bbox->getGraphicsPipeline());
-
-              if (m_HasClicked && entity->isHit(m_RayPick)) {
-                  PLP_DEBUG("HIT ! {}", mesh->getName());
-              }
-              m_HasClicked = false;
-
-              int index = m_CurrentFrame;
-              for (uint32_t i { 0 }; i < bbox->getUniformBuffers()->size(); i++) {
-                  index += i * 3;
-
-                  if (bbox->hasPushConstants() && nullptr != bbox->applyPushConstants)
-                      bbox->applyPushConstants(m_CommandBuffersBbox[m_CurrentFrame], bbox->getPipelineLayout(), this,
-                          bbox.get());
-
-                  if (m_RenderingStopped) return;
-
-                  m_API->draw(m_CommandBuffersBbox[m_CurrentFrame], bbox->getDescriptorSets().at(index), bbox.get(),
-                      bbox->getData(), mesh->getData()->m_Ubos.size());
-
-                  index = m_CurrentFrame;
-              }
-          }
-
-          m_API->endMarker(m_CommandBuffersBbox[m_CurrentFrame]);
-          endRendering(m_CommandBuffersBbox[m_CurrentFrame]);
-      }*/
+      m_API->endMarker(cmdBuffer);
+      endRendering(cmdBuffer, color, depth);
+      count_down.count_down();
+    }
   }
 
   void Renderer::renderScene()
   {
-      //uint32_t imageIndex{};
+    vkWaitForFences(m_API->getDevice(), 1, &m_InFlightFences[m_CurrentFrame], VK_TRUE, UINT64_MAX);
+    vkResetFences(m_API->getDevice(), 1, &m_InFlightFences[m_CurrentFrame]);
+    VkResult result = vkAcquireNextImageKHR(m_API->getDevice(), m_SwapChain, UINT64_MAX, m_ImageAvailable[m_CurrentFrame], VK_NULL_HANDLE, &m_ImageIndex);
 
-      vkWaitForFences(m_API->getDevice(), 1, &m_InFlightFences[m_CurrentFrame], VK_TRUE, UINT64_MAX);
-      vkResetFences(m_API->getDevice(), 1, &m_InFlightFences[m_CurrentFrame]);
-      VkResult result = vkAcquireNextImageKHR(m_API->getDevice(), m_SwapChain, UINT64_MAX, m_ImageAvailable[m_CurrentFrame], VK_NULL_HANDLE, &m_ImageIndex);
+    //@todo clean
+    if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR)
+    {
+        PLP_ERROR("Error on vkAcquireNextImageKHR {}", result);
+    }
+      
+    {
+      std::lock_guard guard(m_MutexEntitySubmit);
+      std::latch count_down{2};
 
-      //@todo clean
-      if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR)
-      {
-          PLP_ERROR("Error on vkAcquireNextImageKHR {}", result);
+      if (m_EntityManager->getSkybox()) {
+        std::jthread pack2([this, &count_down]() {            
+          draw(m_CommandBuffersEntitiesBis[m_CurrentFrame],
+              m_ImageViews[m_CurrentFrame],
+              m_Images[m_CurrentFrame],          
+              m_DepthImageViews[m_CurrentFrame], 
+              m_DepthImages[m_CurrentFrame],
+              {m_EntityManager->getSkybox()},
+              count_down,
+              0);
+        });
+        pack2.detach();
+      } else {
+        count_down.count_down();
+      };
+      
+      
+      if (m_Entities.size() > 0) {
+        std::jthread pack1([this, &count_down]() {
+            draw(
+              m_CommandBuffersEntities[m_CurrentFrame],
+              m_ImageViews[m_CurrentFrame],
+              m_Images[m_CurrentFrame],          
+              m_DepthImageViews[m_CurrentFrame], 
+              m_DepthImages[m_CurrentFrame], 
+              m_Entities,
+              count_down,
+              1,
+              true
+            );
+          }
+        );
+
+        pack1.detach();
+      } else {
+        count_down.count_down();
       }
-      //vkResetCommandBuffer(m_CommandBuffersEntities[m_CurrentFrame], 0);
-      //vkResetCommandBuffer(m_CommandBuffersHUD[m_CurrentFrame], 0);
-      //vkResetCommandBuffer(m_CommandBuffersShadowMap[m_CurrentFrame], 0);
-      //vkResetCommandBuffer(m_CommandBuffersSkybox[m_CurrentFrame], 0);
 
-      //std::string_view threadQueueName{ "render" };
-
-        //PLP_DEBUG("m_Nodraw: {}", m_Nodraw.load());
-        //PLP_DEBUG("m_CmdSkyboxStatus: {}", m_CmdSkyboxStatus[m_CurrentFrame]->done.load());
-        //PLP_DEBUG("m_CmdEntitiesStatus: {}", m_CmdEntitiesStatus[m_CurrentFrame]->done.load());
-        //PLP_DEBUG("m_CmdHUDStatus: {}", m_CmdHUDStatus[m_CurrentFrame]->done.load());
-
-        //if (!m_CmdSkyboxStatus[m_CurrentFrame]->done.load() || m_Nodraw.load()) {
-        //  m_CmdSkyboxStatus[m_CurrentFrame]->done.store(false);
-        //  drawSkybox();
-        //  //Locator::getThreadPool()->submit(threadQueueName, [this]() { drawSkybox(); });
-        //}
-        //if (!m_CmdEntitiesStatus[m_CurrentFrame]->done.load() || m_Nodraw.load()) {
-        //  m_CmdEntitiesStatus[m_CurrentFrame]->done.store(false);
-        drawSkybox();
-        {
-          std::lock_guard guard(m_MutexEntitySubmit);
-          drawEntities();
-        }
-          //  //Locator::getThreadPool()->submit(threadQueueName, [this]() { drawEntities(); });
-        //}
-        //if (!m_CmdHUDStatus[m_CurrentFrame]->done.load() || m_Nodraw.load()) {
-        //  m_CmdHUDStatus[m_CurrentFrame]->done.store(false);
-        //drawHUD();
-        //  //Locator::getThreadPool()->submit(threadQueueName, [this]() { drawHUD(); });
-        //}
-        submit();
-      //@todo strip for release?
-      //if (getDrawBbox()) {
-      //    Locator::getThreadPool()->submit(threadQueueName, [this] {
-      //        drawBbox();
-      //    });
-      //}
+      count_down.wait();
+        
+      submit();
+    }
   }
 
   void Renderer::clearRendererScreen()
   {
-      {
-          vkResetCommandBuffer(m_CommandBuffersEntities[m_CurrentFrame], 0);
-          vkResetCommandBuffer(m_CommandBuffersHUD[m_CurrentFrame], 0);
-          vkResetCommandBuffer(m_CommandBuffersSkybox[m_CurrentFrame], 0);
+      // {
+      //     vkResetCommandBuffer(m_CommandBuffersEntities[m_CurrentFrame], 0);
+      //     vkResetCommandBuffer(m_CommandBuffersHUD[m_CurrentFrame], 0);
+      //     vkResetCommandBuffer(m_CommandBuffersSkybox[m_CurrentFrame], 0);
 
-          beginRendering(m_CommandBuffersEntities[m_CurrentFrame]);
-          //do nothing !
-          endRendering(m_CommandBuffersEntities[m_CurrentFrame]);
+      //     beginRendering(m_CommandBuffersEntities[m_CurrentFrame]);
+      //     //do nothing !
+      //     endRendering(m_CommandBuffersEntities[m_CurrentFrame]);
 
-          beginRendering(m_CommandBuffersHUD[m_CurrentFrame]);
-          //do nothing !
-          endRendering(m_CommandBuffersHUD[m_CurrentFrame]);
+      //     beginRendering(m_CommandBuffersHUD[m_CurrentFrame]);
+      //     //do nothing !
+      //     endRendering(m_CommandBuffersHUD[m_CurrentFrame]);
 
-          beginRendering(m_CommandBuffersSkybox[m_CurrentFrame], VK_ATTACHMENT_LOAD_OP_CLEAR, VK_ATTACHMENT_STORE_OP_STORE);
-          //do nothing !
-          endRendering(m_CommandBuffersSkybox[m_CurrentFrame]);
+      //     beginRendering(m_CommandBuffersSkybox[m_CurrentFrame], VK_ATTACHMENT_LOAD_OP_CLEAR, VK_ATTACHMENT_STORE_OP_STORE);
+      //     //do nothing !
+      //     endRendering(m_CommandBuffersSkybox[m_CurrentFrame]);
 
-          std::vector<VkCommandBuffer> cmds{};
-          cmds.emplace_back(m_CommandBuffersSkybox[m_CurrentFrame]);
-          cmds.emplace_back(m_CommandBuffersEntities[m_CurrentFrame]);
-          cmds.emplace_back(m_CommandBuffersHUD[m_CurrentFrame]);
+      //     std::vector<VkCommandBuffer> cmds{};
+      //     cmds.emplace_back(m_CommandBuffersSkybox[m_CurrentFrame]);
+      //     cmds.emplace_back(m_CommandBuffersEntities[m_CurrentFrame]);
+      //     cmds.emplace_back(m_CommandBuffersHUD[m_CurrentFrame]);
 
-          if (getDrawBbox()) {
-              vkResetCommandBuffer(m_CommandBuffersBbox[m_CurrentFrame], 0);
+      //     if (getDrawBbox()) {
+      //         vkResetCommandBuffer(m_CommandBuffersBbox[m_CurrentFrame], 0);
 
-              beginRendering(m_CommandBuffersBbox[m_CurrentFrame]);
-              //do nothing !
-              endRendering(m_CommandBuffersBbox[m_CurrentFrame]);
-              cmds.emplace_back(m_CommandBuffersBbox[m_CurrentFrame]);
-          }
+      //         beginRendering(m_CommandBuffersBbox[m_CurrentFrame]);
+      //         //do nothing !
+      //         endRendering(m_CommandBuffersBbox[m_CurrentFrame]);
+      //         cmds.emplace_back(m_CommandBuffersBbox[m_CurrentFrame]);
+      //     }
 
-          submit();
-      }
+      //     submit();
+      // }
   }
 
   void Renderer::destroy()
@@ -695,21 +608,27 @@ namespace Poulpe
   }
 
   //@todo do to much to refacto
-  void Renderer::beginRendering(VkCommandBuffer commandBuffer, VkAttachmentLoadOp loadOp,
-      VkAttachmentStoreOp storeOp, bool continuousCmdBuffer)
+  void Renderer::beginRendering(
+    VkCommandBuffer commandBuffer,
+    VkImageView imageView,
+    VkImage image,
+    VkImageView depthImageView,
+    VkImage depthImage,
+    VkAttachmentLoadOp loadOp,
+    VkAttachmentStoreOp storeOp,
+    bool continuousCmdBuffer)
   {
       if (!continuousCmdBuffer) m_API->beginCommandBuffer(commandBuffer, VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT);
 
-      m_API->transitionImageLayout(commandBuffer, m_SwapChainImages[m_CurrentFrame],
+      m_API->transitionImageLayout(commandBuffer, image,
         VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_ASPECT_COLOR_BIT);
 
-      m_API->transitionImageLayout(commandBuffer, m_SwapChainDepthImages[m_CurrentFrame],
+      m_API->transitionImageLayout(commandBuffer, depthImage,
         VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL, VK_IMAGE_ASPECT_DEPTH_BIT);
 
-      m_API->beginRendering(
-        commandBuffer,
-        m_SwapChainImageViews[m_CurrentFrame],
-        m_SwapChainDepthImageViews[m_CurrentFrame],
+      m_API->beginRendering(commandBuffer,
+        imageView,
+        depthImageView,
         loadOp,
         storeOp);
 
@@ -717,14 +636,14 @@ namespace Poulpe
       m_API->setScissor(commandBuffer);
   }
 
-  void Renderer::endRendering(VkCommandBuffer commandBuffer)
+  void Renderer::endRendering(VkCommandBuffer commandBuffer, VkImage image, VkImage depthImage)
   {
       m_API->endRendering(commandBuffer);
 
-      m_API->transitionImageLayout(commandBuffer, m_SwapChainImages[m_CurrentFrame],
+      m_API->transitionImageLayout(commandBuffer, image,
         VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR, VK_IMAGE_ASPECT_COLOR_BIT);
 
-      m_API->transitionImageLayout(commandBuffer, m_SwapChainDepthImages[m_CurrentFrame],
+      m_API->transitionImageLayout(commandBuffer, depthImage,
         VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR, VK_IMAGE_ASPECT_DEPTH_BIT);
 
       m_API->endCommandBuffer(commandBuffer);
@@ -732,65 +651,55 @@ namespace Poulpe
 
   void Renderer::submit()
   {
-      if (m_CmdsToSubmit.empty()) {
-        m_Nodraw.store(true);
-        return;
-      }
-
-      m_Nodraw.store(false);
-      
-      {
-      std::lock_guard<std::mutex> guard(m_MutexQueueSubmit);
-
-      std::vector<VkCommandBuffer> cmdBuffers{};
-      std::vector<VkPipelineStageFlags> waitStages{ };
-      std::vector<VkSemaphore> waitSemaphores{ m_ImageAvailable[m_CurrentFrame] };
-      std::vector<VkSemaphore> signalSemaphores{};
-
-      for (auto cmdToSubmit : m_CmdsToSubmit) {
-        cmdBuffers.emplace_back(*cmdToSubmit->buffer);
-        signalSemaphores.emplace_back(*cmdToSubmit->semaphore);
-        waitStages.emplace_back(cmdToSubmit->stageFlags);
-      }
-
-      //PLP_WARN("submit: {} commands to index: {}", m_CmdsToSubmit.size(), m_CurrentFrame);
-
-      VkSubmitInfo submitInfo{};
-      submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-      submitInfo.pCommandBuffers = cmdBuffers.data();
-      submitInfo.commandBufferCount = static_cast<uint32_t>(cmdBuffers.size());
-      submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-      submitInfo.pWaitDstStageMask = waitStages.data();
-      submitInfo.signalSemaphoreCount = static_cast<uint32_t>(signalSemaphores.size());
-      submitInfo.pSignalSemaphores = signalSemaphores.data();
-      submitInfo.waitSemaphoreCount = static_cast<uint32_t>(waitSemaphores.size());
-      submitInfo.pWaitSemaphores = waitSemaphores.data();
-
-      auto queue = m_API->getGraphicsQueues().at(0);
-
-      std::vector<VkSwapchainKHR> swapChains{ m_SwapChain };
-
-      VkPresentInfoKHR presentInfo{};
-      presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
-      presentInfo.waitSemaphoreCount = static_cast<uint32_t>(signalSemaphores.size());
-      presentInfo.pWaitSemaphores = signalSemaphores.data();
-      presentInfo.swapchainCount = 1;
-      presentInfo.pSwapchains = swapChains.data();
-      presentInfo.pImageIndices = &m_CurrentFrame;
-
-      presentInfo.pResults = nullptr;
-      m_API->submit(queue, submitInfo, presentInfo,  m_InFlightFences[m_CurrentFrame]);
-
-      m_CurrentFrame = (m_CurrentFrame + 1) % static_cast<uint32_t>(m_MAX_FRAMES_IN_FLIGHT);
-      //PLP_WARN("current frame: {}", m_ImageIndex);
-        
-      for (auto & cmdToSubmit : m_CmdsToSubmit) {
-          cmdToSubmit->done.store(false);
-      }
-      m_CmdsToSubmit.clear();
-
-      onFinishRender();
+    if (m_CmdsToSubmit.empty()) {
+      return;
     }
+    
+    std::vector<VkCommandBuffer*> cmdBuffers{};
+    std::vector<VkPipelineStageFlags> waitStages{ };
+    std::vector<VkSemaphore> waitSemaphores{ m_ImageAvailable[m_CurrentFrame] };
+    std::vector<VkSemaphore*> signalSemaphores{};
+
+    for (DrawCommand const& cmdToSubmit : m_CmdsToSubmit) {
+      cmdBuffers.push_back(cmdToSubmit.buffer);
+      signalSemaphores.push_back(cmdToSubmit.semaphore);
+      waitStages.push_back(cmdToSubmit.stageFlags);
+    }
+
+    //PLP_WARN("submit: {} commands to index: {}", m_CmdsToSubmit.size(), m_CurrentFrame);
+
+    VkSubmitInfo submitInfo{};
+    submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+    submitInfo.pCommandBuffers = *cmdBuffers.data();
+    submitInfo.commandBufferCount = static_cast<uint32_t>(cmdBuffers.size());
+    submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+    submitInfo.pWaitDstStageMask = waitStages.data();
+    submitInfo.signalSemaphoreCount = static_cast<uint32_t>(signalSemaphores.size());
+    submitInfo.pSignalSemaphores = *signalSemaphores.data();
+    submitInfo.waitSemaphoreCount = static_cast<uint32_t>(waitSemaphores.size());
+    submitInfo.pWaitSemaphores = waitSemaphores.data();
+
+    auto queue = m_API->getGraphicsQueues().at(0);
+
+    std::vector<VkSwapchainKHR> swapChains{ m_SwapChain };
+
+    VkPresentInfoKHR presentInfo{};
+    presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+    presentInfo.waitSemaphoreCount = static_cast<uint32_t>(signalSemaphores.size());
+    presentInfo.pWaitSemaphores = *signalSemaphores.data();
+    presentInfo.swapchainCount = 1;
+    presentInfo.pSwapchains = swapChains.data();
+    presentInfo.pImageIndices = &m_CurrentFrame;
+
+    presentInfo.pResults = nullptr;
+    m_API->submit(queue, submitInfo, presentInfo,  m_InFlightFences[m_CurrentFrame]);
+
+    m_CurrentFrame = (m_CurrentFrame + 1) % static_cast<uint32_t>(m_MAX_FRAMES_IN_FLIGHT);
+    //PLP_WARN("current frame: {}", m_ImageIndex);
+      
+    m_CmdsToSubmit.clear();
+
+    onFinishRender();
   }
 
   void Renderer::setRayPick(float x, float y, float z,  int width,  int height)

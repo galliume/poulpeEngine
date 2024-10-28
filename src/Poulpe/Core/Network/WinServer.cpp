@@ -164,9 +164,10 @@ namespace Poulpe
         }
         send("Connected to PoulpeEngine!\0");
 
-        Locator::getThreadPool()->submit([this]() {
+        std::jthread readServer([this]() {
           read();
         });
+        readServer.detach();
       }
     }
   }

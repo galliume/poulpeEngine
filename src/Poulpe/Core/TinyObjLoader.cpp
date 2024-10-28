@@ -58,7 +58,7 @@ namespace Poulpe
     for (uint32_t s = 0; s < shapes.size(); s++) {
       auto const & shape = shapes[s];
 
-      Locator::getThreadPool()->submit("LoadingOBJ", [=]() {
+      std::jthread loading("LoadingOBJ", [=]() {
 
         std::vector<material_t> meshMaterials;
         meshMaterials.reserve(materials.size());

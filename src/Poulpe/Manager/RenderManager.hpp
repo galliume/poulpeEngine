@@ -2,7 +2,7 @@
 
 #include "IRenderManager.hpp"
 
-#include "Poulpe/Core/ThreadPool.hpp"
+//#include "Poulpe/Core/ThreadPool.hpp"
 
 namespace Poulpe
 {

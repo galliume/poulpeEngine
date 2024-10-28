@@ -20,7 +20,9 @@ namespace Poulpe
 
   void CommandQueue::execPostRequest()
   {
-    Locator::getThreadPool()->submit([this]() {
+    if (m_PostCmdQueue.empty()) return;
+    
+    std::jthread command([this]() {
       {
         std::lock_guard guard(m_Mutex);
 
@@ -32,11 +34,14 @@ namespace Poulpe
         }
       }
     });
+    command.detach();
   }
 
   void CommandQueue::execPreRequest()
   {
-    Locator::getThreadPool()->submit([this]() {
+    if (m_PreCmdQueue.empty()) return;
+
+    std::jthread command([this]() {
       {
         std::lock_guard guard(m_Mutex);
 
@@ -48,5 +53,6 @@ namespace Poulpe
         }
       }
     });
+    command.detach();
   }
 }
