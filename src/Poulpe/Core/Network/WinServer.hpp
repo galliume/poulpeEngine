@@ -1,26 +1,29 @@
 #pragma once
 
-#include "IServer.hpp"
-#include "Poulpe/Manager/IAPIManager.hpp"
-
 #if defined(_WIN32) || defined(WIN32)
+
+#include "Poulpe/Core/PlpTypedef.hpp"
+
+#include "Poulpe/Manager/APIManager.hpp"
 
 #include <WinSock2.h>
 
+#include <mutex>
+
 namespace Poulpe
 {
-  class WinServer : public IServer
+  class WinServer
   {
   public:
-    WinServer(IAPIManager* APIManager);
-    ~WinServer() override;
+    WinServer(APIManager* APIManager);
+    ~WinServer();
 
-    void bind(std::string const& port) override;
-    void close() override;
-    inline ServerStatus getStatus() override { return m_Status; }
-    void listen() override;
-    void read() override;
-    void send(std::string message) override;
+    void bind(std::string const& port);
+    void close();
+    inline ServerStatus getStatus() { return m_Status; }
+    void listen();
+    void read();
+    void send(std::string message);
 
   private:
     SOCKET m_ServSocket;
@@ -32,7 +35,7 @@ namespace Poulpe
     std::mutex m_MutexSockets;
 
     ServerStatus m_Status{ ServerStatus::NOT_RUNNING };
-    IAPIManager* m_APIManager;
+    APIManager* m_APIManager;
   };
 }
 

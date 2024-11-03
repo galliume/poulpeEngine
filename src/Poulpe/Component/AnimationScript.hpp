@@ -1,12 +1,19 @@
 #pragma once
 
-#include "Poulpe/Core/IVisitor.hpp"
+#include "Poulpe/Core/PlpTypedef.hpp"
 
 #include "Poulpe/Utils/LuaScript.hpp"
 
+#include <chrono>
+
 namespace Poulpe
 {
-   class AnimationScript : public IVisitor
+  class LightManager;
+  class Renderer;
+  class TextureManager;
+  class Mesh;
+
+  class AnimationScript
   {
   public:
     struct Animation
@@ -27,22 +34,22 @@ namespace Poulpe
     };
 
     AnimationScript(std::string const & scriptPath);
-    ~AnimationScript() override;
+    ~AnimationScript();
 
     Data* getData() { return m_Data; }
 
-    void init(IRenderer* const renderer,
-       ITextureManager* const textureManager,
-       ILightManager* const lightManager) override
+    void init(Renderer* const renderer,
+       TextureManager* const textureManager,
+       LightManager* const lightManager)
     {
         m_Renderer = renderer;
     }
     void move(Data* data, std::chrono::duration<float>, float duration, glm::vec3 target);
     void rotate(Data* data, std::chrono::duration<float>, float duration, glm::vec3 angle);
-    void visit(std::chrono::duration<float>, IVisitable* mesh) override;
+    void visit(std::chrono::duration<float>, Mesh* mesh);
 
   private:
-    IRenderer* m_Renderer;
+    Renderer* m_Renderer;
     std::string m_ScriptPath;
     lua_State* m_lua_State;
     Data* m_Data;

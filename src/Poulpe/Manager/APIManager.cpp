@@ -1,10 +1,20 @@
 #include "APIManager.hpp"
 
+#include "Poulpe/Core/PlpTypedef.hpp"
+
+#include "Poulpe/Component/MeshComponent.hpp"
+#include "Poulpe/Component/RenderComponent.hpp"
+
+#include "Poulpe/Core/Command.hpp"
+#include "Poulpe/Core/Locator.hpp"
+
+#include <latch>
+#include <ranges>
 #include <variant>
 
 namespace Poulpe
 {
-  APIManager::APIManager(IRenderManager* renderManager)
+  APIManager::APIManager(RenderManager* renderManager)
     : m_RenderManager(renderManager)
   {
 
@@ -60,23 +70,26 @@ namespace Poulpe
       PLP_TRACE("skyboxName: {}", skyboxName);
       std::latch count_down{ 1 };
 
+      //@todo why threaded ?...
       std::jthread textures(std::move(std::bind(m_RenderManager->getTextureManager()->loadSkybox(skyboxName), std::ref(count_down))));
       textures.detach();
       count_down.wait();
 
       auto skybox = m_RenderManager->getEntityManager()->getSkybox();
-      auto meshComponent = m_RenderManager->getComponentManager()->getComponent<MeshComponent>(skybox->getID());
-      auto meshRenderer = m_RenderManager->getComponentManager()->getComponent<RenderComponent>(skybox->getID());
+      auto* meshComponent = m_RenderManager->getManager()->get<MeshComponent>(skybox->getID());
+      auto* meshRenderer = m_RenderManager->getManager()->get<RenderComponent>(skybox->getID());
 
-      Mesh* mesh = meshComponent->hasImpl<Mesh>();
+      if (meshComponent != nullptr) return;
+
+      auto* mesh = meshComponent->has<Mesh>();
 
       if (!mesh) return;
       mesh->setIsDirty(true);
       mesh->getData()->m_TextureIndex = 1;
-      
+
       auto deltaTime = std::chrono::duration<float, std::milli>(0);
       //@todo add update to not re create the whole mesh...
-      meshRenderer->visit(deltaTime, mesh);
+      (*meshRenderer)(deltaTime, mesh);
     };
 
     Command cmd{request};

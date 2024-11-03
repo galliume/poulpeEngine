@@ -1,23 +1,13 @@
 #pragma once
 
+#include "Poulpe/Component/AnimationScript.hpp"
+
 #include "Component.hpp"
 
 namespace Poulpe
 {
-    class AnimationComponent : public Component
-    {
-    public:
-        AnimationComponent() : Component() {}
+  class AnimationComponent : public Component<AnimationComponent>
+  {
 
-        template<typename T>
-        void init(T* componentImpl)
-        {
-          m_Pimpl = std::move(componentImpl);
-        }
-
-        void visit(std::chrono::duration<float> deltaTime, Mesh* mesh)
-        {
-            Component::visit(deltaTime, mesh);
-        }
-    };
+  };
 }

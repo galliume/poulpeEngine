@@ -1,41 +1,48 @@
 #pragma once
 
-#include "ITextureManager.hpp"
+#include <Poulpe/Component/Texture.hpp>
+
+#include <nlohmann/json.hpp>
+#include <stb_image.h>
+
+#include <latch>
 
 namespace Poulpe
 {
-    class TextureManager : public ITextureManager
-    {
-    public:
-        TextureManager() = default;
-        ~TextureManager() override = default;
+  class Renderer;
 
-        inline void addConfig(nlohmann::json config) override { m_TextureConfig = config; }
-        std::vector<std::array<float, 3>> addNormalMapTexture(std::string const& name) override;
-        inline void addRenderer(IRenderer* renderer) override { m_Renderer = renderer; }
-        void addSkyBox(std::vector<std::string> const & skyboxImages) override;
-        void addTexture(std::string const & name, std::string const & path, bool isPublic = false) override;
-        void clear();
-        inline const Texture getSkyboxTexture() const override { return m_Skybox; }
-        inline std::unordered_map<std::string, std::string> getPaths() const override { return m_Paths; }
-        inline std::unordered_map<std::string, Texture> getTextures() override { return m_Textures; }
-        inline bool isSkyboxLoadingDone() { return m_SkyboxLoadingDone.load(); }
-        inline bool isTexturesLoadingDone() { return m_TexturesLoadingDone.load(); }
-        std::function<void(std::latch& count_down)> load() override;
-        std::function<void(std::latch& count_down)> loadSkybox(std::string_view skybox) override;
+  class TextureManager
+  {
+  public:
+    TextureManager() = default;
+    ~TextureManager() = default;
 
-    private:
-        const uint32_t MAX_MIPLEVELS = 5;
+    inline void addConfig(nlohmann::json config) { m_TextureConfig = config; }
+    std::vector<std::array<float, 3>> addNormalMapTexture(std::string const& name);
+    inline void addRenderer(Renderer* renderer) { m_Renderer = renderer; }
+    void addSkyBox(std::vector<std::string> const & skyboxImages);
+    void addTexture(std::string const & name, std::string const & path, bool isPublic = false);
+    void clear();
+    inline const Texture getSkyboxTexture() const { return m_Skybox; }
+    inline std::unordered_map<std::string, std::string> getPaths() const { return m_Paths; }
+    inline std::unordered_map<std::string, Texture> getTextures() { return m_Textures; }
+    inline bool isSkyboxLoadingDone() { return m_SkyboxLoadingDone.load(); }
+    inline bool isTexturesLoadingDone() { return m_TexturesLoadingDone.load(); }
+    std::function<void(std::latch& count_down)> load();
+    std::function<void(std::latch& count_down)> loadSkybox(std::string_view skybox);
 
-        IRenderer* m_Renderer{ nullptr };
-        Texture m_Skybox;
-        std::string m_SkyboxName;
-        nlohmann::json m_TextureConfig;
+  private:
+    const uint32_t MAX_MIPLEVELS = 5;
 
-        std::unordered_map<std::string, std::string> m_Paths;
-        std::unordered_map<std::string, Texture> m_Textures;
+    Renderer* m_Renderer{ nullptr };
+    Texture m_Skybox;
+    std::string m_SkyboxName;
+    nlohmann::json m_TextureConfig;
 
-        std::atomic_bool m_SkyboxLoadingDone{ false };
-        std::atomic_bool m_TexturesLoadingDone{ false };
-    };
+    std::unordered_map<std::string, std::string> m_Paths;
+    std::unordered_map<std::string, Texture> m_Textures;
+
+    std::atomic_bool m_SkyboxLoadingDone{ false };
+    std::atomic_bool m_TexturesLoadingDone{ false };
+  };
 }

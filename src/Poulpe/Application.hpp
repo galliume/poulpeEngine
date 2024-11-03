@@ -8,7 +8,7 @@
 #include "Manager/NetworkManager.hpp"
 #include "Manager/RenderManager.hpp"
 
-#include "Renderer/IRenderer.hpp"
+#include "Renderer/Vulkan/Renderer.hpp"
 
 namespace Poulpe
 {

@@ -1,8 +1,12 @@
 #pragma once
 
-#include "IShaderManager.hpp"
+#include "Poulpe/Core/PlpTypedef.hpp"
 
-#include "Poulpe/Renderer/IRenderer.hpp"
+#include "Poulpe/Renderer/Vulkan/Renderer.hpp"
+
+#include "vulkan/vulkan.h"
+
+#include <latch>
 
 namespace Poulpe
 {
@@ -13,18 +17,17 @@ namespace Poulpe
       Vertex2D, Vertex3D
   };
 
-  class ShaderManager : IShaderManager
+  class ShaderManager
   {
   public:
-    explicit ShaderManager();
-    ~ShaderManager() override = default;
+    ShaderManager();
 
-    inline void addRenderer(IRenderer* const renderer) override { m_Renderer = renderer; }
-    void addShader(std::string const & name, std::string const & vertPath, std::string const & fragPath) override;
+    inline void addRenderer(Renderer* const renderer)  { m_Renderer = renderer; }
+    void addShader(std::string const & name, std::string const & vertPath, std::string const & fragPath) ;
     void clear();
-    inline VulkanShaders* getShaders() const override { return m_Shaders.get(); }
+    inline VulkanShaders* getShaders() const  { return m_Shaders.get(); }
     inline bool isLoadingDone() { return m_LoadingDone.load(); }
-    std::function<void(std::latch& count_down)> load(nlohmann::json config) override;
+    std::function<void(std::latch& count_down)> load(nlohmann::json config) ;
 
   private:
     template <DescSetLayoutType T>
@@ -38,7 +41,7 @@ namespace Poulpe
 
     nlohmann::json m_Config;
     std::atomic_bool m_LoadingDone{ false };
-    IRenderer* m_Renderer{ nullptr };
+    Renderer* m_Renderer{ nullptr };
     std::unique_ptr<VulkanShaders> m_Shaders{ nullptr };
   };
 }

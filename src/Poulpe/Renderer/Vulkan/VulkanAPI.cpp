@@ -1144,7 +1144,7 @@ namespace Poulpe {
         return commandBuffers;
     }
 
-    void VulkanAPI::beginCommandBuffer(VkCommandBuffer commandBuffer, VkCommandBufferUsageFlagBits flags,
+    void VulkanAPI::beginCommandBuffer(VkCommandBuffer& commandBuffer, VkCommandBufferUsageFlagBits flags,
         VkCommandBufferInheritanceInfo inheritanceInfo)
     {
         vkResetCommandBuffer(commandBuffer, VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
@@ -1159,7 +1159,7 @@ namespace Poulpe {
         }
     }
 
-    void VulkanAPI::setViewPort(VkCommandBuffer commandBuffer)
+    void VulkanAPI::setViewPort(VkCommandBuffer& commandBuffer)
     {
         VkViewport viewport;
         viewport.x = 0;
@@ -1172,7 +1172,7 @@ namespace Poulpe {
         vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
     }
 
-    void VulkanAPI::setScissor(VkCommandBuffer commandBuffer)
+    void VulkanAPI::setScissor(VkCommandBuffer& commandBuffer)
     {
         VkRect2D scissor = { { 0, 0 }, { static_cast<uint32_t>(m_SwapChainExtent.width),
             static_cast<uint32_t>(m_SwapChainExtent.height) } };
@@ -1180,7 +1180,7 @@ namespace Poulpe {
         vkCmdSetScissor(commandBuffer, 0, 1, & scissor);
     }
 
-    void VulkanAPI::bindPipeline(VkCommandBuffer commandBuffer, VkPipeline pipeline)
+    void VulkanAPI::bindPipeline(VkCommandBuffer& commandBuffer, VkPipeline pipeline)
     {
         vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
     }
@@ -1461,7 +1461,7 @@ namespace Poulpe {
         vkUpdateDescriptorSets(m_Device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
     }
 
-    void VulkanAPI::beginRenderPass(VkRenderPass renderPass, VkCommandBuffer commandBuffer, VkFramebuffer framebuffer)
+    void VulkanAPI::beginRenderPass(VkRenderPass renderPass, VkCommandBuffer& commandBuffer, VkFramebuffer framebuffer)
     {
         VkRenderPassBeginInfo renderPassInfo{};
         renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
@@ -1481,12 +1481,12 @@ namespace Poulpe {
         //vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS);
     }
 
-    void VulkanAPI::endRenderPass(VkCommandBuffer commandBuffer)
+    void VulkanAPI::endRenderPass(VkCommandBuffer& commandBuffer)
     {
         vkCmdEndRenderPass(commandBuffer);
     }
 
-    void VulkanAPI::beginRendering(VkCommandBuffer commandBuffer,
+    void VulkanAPI::beginRendering(VkCommandBuffer& commandBuffer,
         VkImageView & colorImageView,
         VkImageView & depthImageView,
         VkAttachmentLoadOp const loadOp,
@@ -1528,17 +1528,17 @@ namespace Poulpe {
         vkCmdBeginRenderingKHR(commandBuffer, & renderingInfo);
     }
 
-    void VulkanAPI::endRendering(VkCommandBuffer commandBuffer)
+    void VulkanAPI::endRendering(VkCommandBuffer& commandBuffer)
     {
         vkCmdEndRenderingKHR(commandBuffer);
     }
 
-    void VulkanAPI::endCommandBuffer(VkCommandBuffer commandBuffer)
+    void VulkanAPI::endCommandBuffer(VkCommandBuffer& commandBuffer)
     {
         vkEndCommandBuffer(commandBuffer);
     }
 
-    VkResult VulkanAPI::queueSubmit(VkCommandBuffer commandBuffer, int queueIndex)
+    VkResult VulkanAPI::queueSubmit(VkCommandBuffer& commandBuffer, int queueIndex)
     {
         VkSubmitInfo submitInfo{};
         submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -1557,13 +1557,18 @@ namespace Poulpe {
         return result;
     }
 
-    void VulkanAPI::resetCommandPool(VkCommandPool commandPool)
+    void VulkanAPI::resetCommandPool(VkCommandPool& commandPool)
     {
         vkResetCommandPool(m_Device, commandPool, 0);
     }
 
-    void VulkanAPI::draw(VkCommandBuffer commandBuffer, VkDescriptorSet descriptorSet,
-        VulkanPipeline & pipeline, Data * data, bool drawIndexed, uint32_t index)
+    void VulkanAPI::draw(
+      VkCommandBuffer& commandBuffer,
+      VkDescriptorSet& descriptorSet,
+      VulkanPipeline & pipeline,
+      Data * data,
+      bool drawIndexed,
+      uint32_t index)
     {
         /*vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline.pipelineLayout,
             0, 1, & descriptorSet, 0, nullptr);*/
@@ -1585,7 +1590,7 @@ namespace Poulpe {
         }
     }
 
-    void VulkanAPI::addPipelineBarriers(VkCommandBuffer commandBuffer, std::vector<VkImageMemoryBarrier> renderBarriers,
+    void VulkanAPI::addPipelineBarriers(VkCommandBuffer& commandBuffer, std::vector<VkImageMemoryBarrier> renderBarriers,
         VkPipelineStageFlags srcStageMask, VkPipelineStageFlags dstStageMask, VkDependencyFlags dependencyFlags)
     {
         vkCmdPipelineBarrier(commandBuffer, srcStageMask, dstStageMask, dependencyFlags, 0, nullptr, 0, nullptr,
@@ -2324,7 +2329,7 @@ namespace Poulpe {
         //m_DeviceMemoryPool->clear(deviceMemory);
     }
 
-    void VulkanAPI::generateMipmaps(VkCommandBuffer commandBuffer, VkFormat imageFormat, VkImage image, uint32_t texWidth,
+    void VulkanAPI::generateMipmaps(VkCommandBuffer& commandBuffer, VkFormat imageFormat, VkImage image, uint32_t texWidth,
         uint32_t texHeight, uint32_t mipLevels, uint32_t layerCount) {
 
         VkFormatProperties formatProperties;
@@ -2442,7 +2447,7 @@ namespace Poulpe {
             static_cast<uint32_t>(bufferCopyRegions.size()), bufferCopyRegions.data());
     }
 
-    VkImageView VulkanAPI::createDepthResources(VkCommandBuffer commandBuffer)
+    VkImageView VulkanAPI::createDepthResources(VkCommandBuffer& commandBuffer)
     {
         VkImage depthImage{};
         //VkDeviceMemory depthImageMemory;
@@ -2684,7 +2689,7 @@ namespace Poulpe {
     }
 
     void VulkanAPI::transitionImageLayout(
-      VkCommandBuffer commandBuffer,
+      VkCommandBuffer& commandBuffer,
       VkImage image,
       VkImageLayout oldLayout,
       VkImageLayout newLayout,
@@ -2769,10 +2774,10 @@ namespace Poulpe {
     }
 
     void VulkanAPI::submit(
-      VkQueue queue,
-      VkSubmitInfo submitInfo,
-      VkPresentInfoKHR presentInfo,
-      VkFence fence)
+      VkQueue& queue,
+      VkSubmitInfo& submitInfo,
+      VkPresentInfoKHR& presentInfo,
+      VkFence& fence)
     {
       {
         std::lock_guard<std::mutex> guard(m_MutexQueueSubmit);

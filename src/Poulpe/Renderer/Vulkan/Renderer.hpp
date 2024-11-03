@@ -1,138 +1,124 @@
 #pragma once
 
+#include "Poulpe/Component/Camera.hpp"
+
+#include "Poulpe/core/PlpTypedef.hpp"
+
 #include "Poulpe/GUI/Window.hpp"
 
-#include "Poulpe/Manager/IComponentManager.hpp"
-#include "Poulpe/Manager/IEntityManager.hpp"
-#include "Poulpe/Manager/ILightManager.hpp"
-#include "Poulpe/Manager/ITextureManager.hpp"
+#include "Poulpe/Manager/EntityManager.hpp"
+#include "Poulpe/Manager/LightManager.hpp"
+#include "Poulpe/Manager/TextureManager.hpp"
 
-#include "Poulpe/Renderer/IRenderer.hpp"
+#include "Poulpe/Renderer/Vulkan/VulkanAPI.hpp"
 
 #include <future>
+#include <latch>
+#include <stb_image.h>
+#include <vulkan/vulkan.h>
 
 namespace Poulpe
 {
-  struct DrawCommand {
+  struct DrawCommands {
 
-    DrawCommand(VkCommandBuffer* _buffer,
-               VkPipelineStageFlags _stageFlags,
-               VkSemaphore* _semaphore)
-    : buffer(_buffer)
-    , stageFlags(_stageFlags)
-    , semaphore(_semaphore)
-    {};
+    public:
+      std::vector<VkCommandBuffer*> cmdBuffers;
+      std::vector<VkPipelineStageFlags> stageFlags;
+      std::vector<VkSemaphore*> semaphores;
 
-    DrawCommand(DrawCommand& other) 
-    {
-      buffer = other.buffer;
-      stageFlags = other.stageFlags;
-      semaphore = other.semaphore;
-      done = false;
-    };
+      DrawCommands(size_t const size)
+      {
+        cmdBuffers.reserve(size);
+        semaphores.reserve(size);
+        stageFlags.reserve(size);
+      }
 
-    DrawCommand& operator=(DrawCommand& other) 
-    {
-      buffer = other.buffer;
-      stageFlags = other.stageFlags;
-      semaphore = other.semaphore;
-      done = false;
+      void insert(VkCommandBuffer* cmdBuffer,
+        VkSemaphore* semaphore,
+        VkPipelineStageFlags flags = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT)
+      {
+        {
+          std::lock_guard guard(m);
+          cmdBuffers.emplace_back(cmdBuffer); 
+          stageFlags.emplace_back(flags);
+          semaphores.emplace_back(semaphore);
+        }
+      }
 
-      return *this;
-    };
-
-    DrawCommand operator=(DrawCommand other) 
-    {
-      buffer = other.buffer;
-      stageFlags = other.stageFlags;
-      semaphore = other.semaphore;
-      done = false;
-
-      return *this;
-    };
-
-    DrawCommand(DrawCommand&& other) noexcept 
-    {
-      buffer = std::move(other.buffer);
-      stageFlags = std::move(other.stageFlags);
-      semaphore = std::move(other.semaphore);
-      done = false;
-    };
-
-    ~DrawCommand()
-    {
-
-    }
-
-    VkCommandBuffer* buffer;
-    VkPipelineStageFlags stageFlags;
-    VkSemaphore* semaphore;
-    std::atomic_bool done{false};
+    private:
+      std::mutex m;
   };
 
-  class Renderer : public IRenderer, public std::enable_shared_from_this<Renderer>
+  class ComponentManager;
+  class DeviceMemoryPool;
+  class Entity;
+  class Vertex2D;
+  class VulkanPipeline;
+
+  class Renderer: public std::enable_shared_from_this<Renderer>
   {
 
   public:
 
     Renderer(
       Window* const window,
-      IEntityManager* const entityManager,
+      EntityManager* const entityManager,
       ComponentManager* const componentManager,
-      ILightManager* const lightManager,
-      ITextureManager* const textureManager
+      LightManager* const lightManager,
+      TextureManager* const textureManager
     );
-    ~Renderer() override = default;
+    ~Renderer()  = default;
 
-    inline void addCamera(Camera* const camera) override { m_Camera = camera; }
-    void addEntities(std::vector<Entity*> entities) override;
-    void addEntity(Entity* entity) override;
-    void updateData(std::string const& name, UniformBufferObject const& ubo, std::vector<Vertex> const& vertices) override;
-    void addPipeline(std::string const & shaderName, VulkanPipeline pipeline) override;
-    void attachObserver(IObserver* const observer) override;
+    inline void addCamera(Camera* const camera) { m_Camera = camera; }
+    void addEntities(std::vector<Entity*> entities) ;
+    void addEntity(Entity* entity) ;
+    void updateData(std::string const& name, UniformBufferObject const& ubo, std::vector<Vertex> const& vertices) ;
+    void addPipeline(std::string const & shaderName, VulkanPipeline pipeline) ;
+    //void attachObserver(IObserver* const observer) ;
     void beginRendering(
-      VkCommandBuffer commandBuffer,
-      VkImageView imageView,
-      VkImage image,
-      VkImageView depthImageView,
-      VkImage depthImage,
+      VkCommandBuffer& commandBuffer,
+      VkImageView& imageView,
+      VkImage& image,
+      VkImageView& depthImageView,
+      VkImage& depthImage,
       VkAttachmentLoadOp loadOp = VK_ATTACHMENT_LOAD_OP_LOAD,
       VkAttachmentStoreOp storeOp = VK_ATTACHMENT_STORE_OP_STORE,
       bool continuousCmdBuffer = false);
-    void clear() override;
+    void clear() ;
     void clearRendererScreen();
-    void destroy() override;
-    void draw(VkCommandBuffer& cmdBuffer, 
+    void destroy() ;
+    void draw(VkCommandBuffer& cmdBuffer,
+              DrawCommands& drawCmds,
               VkImageView& colorView,
               VkImage& color,
-              VkImageView& depthView,                      
+              VkImageView& depthView,
               VkImage& depth,
               std::vector<Entity*> const& entities,
               std::latch& count_down,
               unsigned int thread_id,
               bool shadows = false);
     void drawShadowMap(VkCommandBuffer &cmdBuffer);
-    void endRendering(VkCommandBuffer commandBuffer, VkImage image, VkImage depthImage);
-    inline Camera* getCamera() override { return m_Camera; }
+    void endRendering(VkCommandBuffer& commandBuffer, VkImage image, VkImage depthImage);
+    inline Camera* getCamera()  { return m_Camera; }
     inline uint32_t getCurrentFrameIndex() const { return m_CurrentFrame; }
-    inline std::vector<VkImageView>* getDepthMapImageViews() override { return & m_DepthMapImageViews; }
-    inline std::vector<VkSampler>* getDepthMapSamplers() override { return & m_DepthMapSamplers; }
+    inline std::vector<VkImageView>* getDepthMapImageViews()  { return & m_DepthMapImageViews; }
+    inline std::vector<VkSampler>* getDepthMapSamplers()  { return & m_DepthMapSamplers; }
     inline bool getDrawBbox() { return m_DrawBbox; }
-    inline std::vector<VkDescriptorSetLayout>* getDescriptorSetLayouts() override { return & m_DescriptorSetLayouts; }
-    inline VkDevice getDevice() override { return m_API->getDevice(); }
-    inline glm::mat4 getPerspective() override { return m_Perspective; }
-    VulkanPipeline* getPipeline(std::string const & shaderName) override { return & m_Pipelines[shaderName]; }
+    inline std::vector<VkDescriptorSetLayout>* getDescriptorSetLayouts()  { return & m_DescriptorSetLayouts; }
+    inline VkDevice getDevice()  { return m_API->getDevice(); }
+    inline glm::mat4 getPerspective()  { return m_Perspective; }
+    VulkanPipeline* getPipeline(std::string const & shaderName)  { return & m_Pipelines[shaderName]; }
     inline VkSwapchainKHR getSwapChain() { return m_SwapChain; }
-    void immediateSubmit(std::function<void(VkCommandBuffer cmd)> && function, int queueIndex = 0) override;
-    void init() override;
-    void recreateSwapChain() override;
-    void renderScene() override;
-    void setDeltatime(float deltaTime) override;
-    inline void setDrawBbox(bool draw) override { m_DrawBbox = draw; }
+    void immediateSubmit(std::function<void(VkCommandBuffer cmd)> && function, int queueIndex = 0) ;
+    void init() ;
+    void recreateSwapChain() ;
+    void renderScene() ;
+    void setDeltatime(float deltaTime) ;
+    inline void setDrawBbox(bool draw)  { m_DrawBbox = draw; }
     void setRayPick(float x, float y, float z, int width, int height);
-    void shouldRecreateSwapChain() override;
-    void showGrid(bool show) override;
-    inline void stopRendering() override { m_RenderingStopped = true; }
+    void shouldRecreateSwapChain() ;
+    void showGrid(bool show) ;
+    inline void stopRendering()  { m_RenderingStopped = true; }
 
     //void RenderForImGui(VkCommandBuffer cmdBuffer, VkFramebuffer swapChainFramebuffer);
     //std::pair<VkSampler, VkImageView> getImguiTexture() {
@@ -147,28 +133,28 @@ namespace Poulpe
     //@todo clean API call
     std::vector<VkCommandBuffer> allocateCommandBuffers(VkCommandPool commandPool,
       uint32_t size = 1,
-      bool isSecondary = false) override {
+      bool isSecondary = false)  {
         return m_API->allocateCommandBuffers(commandPool, size, isSecondary);
     }
-    void beginCommandBuffer(VkCommandBuffer commandBuffer,
+    void beginCommandBuffer(VkCommandBuffer& commandBuffer,
       VkCommandBufferUsageFlagBits flags = VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT,
-      VkCommandBufferInheritanceInfo inheritanceInfo = {}) override {
+      VkCommandBufferInheritanceInfo inheritanceInfo = {})  {
         return m_API->beginCommandBuffer(commandBuffer, flags, inheritanceInfo);
     }
-    VkCommandPool createCommandPool() override {
+    VkCommandPool createCommandPool()  {
       return m_API->createCommandPool();
     }
     VkDescriptorPool createDescriptorPool(std::vector<VkDescriptorPoolSize> & poolSizes,
       uint32_t maxSets = 100,
-      VkDescriptorPoolCreateFlags flags = VK_DESCRIPTOR_POOL_CREATE_UPDATE_AFTER_BIND_BIT) override {
+      VkDescriptorPoolCreateFlags flags = VK_DESCRIPTOR_POOL_CREATE_UPDATE_AFTER_BIND_BIT)  {
         return m_API->createDescriptorPool(poolSizes, maxSets, flags);
     }
-    VkDescriptorSetLayout createDescriptorSetLayout(std::vector<VkDescriptorSetLayoutBinding> & pBindings) override {
+    VkDescriptorSetLayout createDescriptorSetLayout(std::vector<VkDescriptorSetLayoutBinding> & pBindings)  {
       return m_API->createDescriptorSetLayout(pBindings);
     }
     VkDescriptorSet createDescriptorSets(VkDescriptorPool const & descriptorPool,
       std::vector<VkDescriptorSetLayout> const & descriptorSetLayouts,
-      uint32_t count = 100) override {
+      uint32_t count = 100)  {
         return m_API->createDescriptorSets(descriptorPool, descriptorSetLayouts, count);
     }
     VkPipeline createGraphicsPipeline(
@@ -182,22 +168,22 @@ namespace Poulpe
       bool stencilTestEnable = true,
       int polygoneMode = VK_POLYGON_MODE_FILL,
       bool hasColorAttachment = true,
-      bool dynamicDepthBias = false) override;
+      bool dynamicDepthBias = false) ;
     Buffer createIndexBuffer(VkCommandPool & commandPool,
-      std::vector<uint32_t> const & indices) override {
+      std::vector<uint32_t> const & indices)  {
         return m_API->createIndexBuffer(commandPool, indices);
     }
     VkImageView createImageView(VkImage image,
       VkFormat format,
       uint32_t mipLevels,
-      VkImageAspectFlags aspectFlags = VK_IMAGE_ASPECT_COLOR_BIT) override {
+      VkImageAspectFlags aspectFlags = VK_IMAGE_ASPECT_COLOR_BIT)  {
         return m_API->createImageView(image, format, mipLevels, aspectFlags);
     }
     VkPipelineLayout createPipelineLayout(std::vector<VkDescriptorSetLayout> & descriptorSetLayouts,
-      std::vector<VkPushConstantRange> & pushConstants) override {
+      std::vector<VkPushConstantRange> & pushConstants)  {
         return m_API->createPipelineLayout(descriptorSetLayouts, pushConstants);
     }
-    VkShaderModule createShaderModule(std::vector<char> & code) override {
+    VkShaderModule createShaderModule(std::vector<char> & code)  {
       return m_API->createShaderModule(code);
     }
     void createSkyboxTextureImage(VkCommandBuffer& commandBuffer,
@@ -206,7 +192,7 @@ namespace Poulpe
       uint32_t texHeight,
       uint32_t mipLevels,
       VkImage& textureImage,
-      VkFormat format) override {
+      VkFormat format)  {
         m_API->createSkyboxTextureImage(
           commandBuffer,
           skyboxPixels,
@@ -219,13 +205,13 @@ namespace Poulpe
     VkImageView createSkyboxImageView(VkImage image,
       VkFormat format,
       uint32_t mipLevels,
-      VkImageAspectFlags aspectFlags = VK_IMAGE_ASPECT_COLOR_BIT) override {
+      VkImageAspectFlags aspectFlags = VK_IMAGE_ASPECT_COLOR_BIT)  {
         return m_API->createSkyboxImageView(image, format, mipLevels, aspectFlags);
     }
-    VkSampler createSkyboxTextureSampler(uint32_t mipLevels) override {
+    VkSampler createSkyboxTextureSampler(uint32_t mipLevels)  {
       return m_API->createSkyboxTextureSampler(mipLevels);
     }
-    Buffer createStorageBuffers(size_t storageBuffer) override {
+    Buffer createStorageBuffers(size_t storageBuffer)  {
       return m_API->createStorageBuffers(storageBuffer);
     }
     void createTextureImage(VkCommandBuffer& commandBuffer,
@@ -234,7 +220,7 @@ namespace Poulpe
       uint32_t texHeight,
       uint32_t mipLevels,
       VkImage& textureImage,
-      VkFormat format) override {
+      VkFormat format)  {
         return m_API->createTextureImage(commandBuffer,
           pixels,
           texWidth,
@@ -243,53 +229,53 @@ namespace Poulpe
           textureImage,
           format);
     }
-    VkSampler createTextureSampler(uint32_t mipLevels) override {
+    VkSampler createTextureSampler(uint32_t mipLevels)  {
       return m_API->createTextureSampler(mipLevels);
     }
-    Buffer createUniformBuffers(uint32_t uniformBuffersCount) override {
+    Buffer createUniformBuffers(uint32_t uniformBuffersCount)  {
       return m_API->createUniformBuffers(uniformBuffersCount);
     }
     Buffer createVertexBuffer(VkCommandPool commandPool,
-      std::vector<Vertex> vertices) override {
+      std::vector<Vertex> vertices)  {
         return m_API->createVertexBuffer(commandPool, vertices);
     }
     Buffer createVertex2DBuffer(VkCommandPool & commandPool,
-      std::vector<Vertex2D> & vertices) override {
+      std::vector<Vertex2D> & vertices)  {
         return m_API->createVertex2DBuffer(commandPool, vertices);
     }
-    void endCommandBuffer(VkCommandBuffer commandBuffer) override {
+    void endCommandBuffer(VkCommandBuffer& commandBuffer)  {
       return m_API->endCommandBuffer(commandBuffer);
     }
-    DeviceMemoryPool* getDeviceMemoryPool() override { return m_API->getDeviceMemoryPool(); }
-    VkPhysicalDeviceProperties getDeviceProperties() const override { return m_API->getDeviceProperties(); }
-    inline VkExtent2D getSwapChainExtent() const override {
+    DeviceMemoryPool* getDeviceMemoryPool()  { return m_API->getDeviceMemoryPool(); }
+    VkPhysicalDeviceProperties getDeviceProperties() const  { return m_API->getDeviceProperties(); }
+    inline VkExtent2D getSwapChainExtent() const  {
       return m_API->getSwapChainExtent();
     }
     void updateDescriptorSets(
       std::vector<Buffer> & uniformBuffers,
       VkDescriptorSet & descriptorSet,
       std::vector<VkDescriptorImageInfo> & imageInfo,
-      VkDescriptorType type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER) override {
+      VkDescriptorType type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER)  {
         m_API->updateDescriptorSets(uniformBuffers, descriptorSet, imageInfo, type);
     }
     void updateDescriptorSets(
       std::vector<Buffer>& uniformBuffers,
       std::vector<Buffer>& storageBuffers,
       VkDescriptorSet& descriptorSet,
-      std::vector<VkDescriptorImageInfo>& imageInfo) override {
+      std::vector<VkDescriptorImageInfo>& imageInfo)  {
         m_API->updateDescriptorSets(uniformBuffers, storageBuffers, descriptorSet, imageInfo);
     }
     void updateUniformBuffer(Buffer & buffer,
-      std::vector<UniformBufferObject>* uniformBufferObjects) override {
+      std::vector<UniformBufferObject>* uniformBufferObjects)  {
         m_API->updateUniformBuffer(buffer, uniformBufferObjects);
     }
     void updateStorageBuffer(Buffer & buffer,
-      ObjectBuffer objectBuffer) override {
+      ObjectBuffer objectBuffer)  {
         m_API->updateStorageBuffer(buffer, objectBuffer);
     }
-    void waitIdle() override { m_API->waitIdle(); }
+    void waitIdle()  { m_API->waitIdle(); }
 
-    std::string getAPIVersion() override { return m_API->getAPIVersion(); }
+    std::string getAPIVersion()  { return m_API->getAPIVersion(); }
 
   public:
     //IMGUI config
@@ -305,7 +291,7 @@ namespace Poulpe
 
     void onFinishRender();
     void setPerspective();
-    void submit();
+    void submit(DrawCommands const& drawCmds);
 
   private:
     std::unique_ptr<VulkanAPI> m_API{ nullptr };
@@ -335,10 +321,10 @@ namespace Poulpe
         
     Camera* m_Camera{ nullptr };
     Window* m_Window{ nullptr };
-    IEntityManager* m_EntityManager{ nullptr };
+    EntityManager* m_EntityManager{ nullptr };
     ComponentManager* m_ComponentManager{ nullptr };
-    ILightManager* m_LightManager{ nullptr };
-    ITextureManager* m_TextureManager{ nullptr };
+    LightManager* m_LightManager{ nullptr };
+    TextureManager* m_TextureManager{ nullptr };
 
     //@todo move to meshManager
     std::vector<VkImageView> m_DepthImageViews{};
@@ -357,12 +343,7 @@ namespace Poulpe
 
     glm::vec3 m_RayPick;
     bool m_HasClicked{ false };
-
     bool m_DrawBbox{ false };
-    std::vector<std::future<void>> m_CmdLists{};
-    std::vector<std::future<void>> m_BufferedCmdLists{};
-    //uint32_t m_BufferedIndex = 0;
-
     bool m_RenderingStopped{ false };
 
     std::vector<VkSampler> m_Samplers{};
@@ -372,7 +353,7 @@ namespace Poulpe
     std::vector<VkSampler> m_SamplersTer{};
     std::vector<VkSampler> m_DepthSamplersTer{};
 
-    std::vector<IObserver*> m_Observers{};
+    //std::vector<IObserver*> m_Observers{};
 
     std::vector<VkImage> m_DepthMapImages;
     std::vector<VkImageView> m_DepthMapImageViews;
@@ -395,7 +376,7 @@ namespace Poulpe
     std::vector<VkSemaphore> m_ShadowMapSemaImageAvailable;
 
     std::vector<Entity*> m_Entities{};
-    std::vector<DrawCommand> m_CmdsToSubmit{};
+    std::vector<Entity*> m_EntitiesBuffer{};
     
     std::vector<VkSemaphore> m_EntitiesSemaRenderFinished;
     std::vector<VkSemaphore> m_ShadowMapSemaRenderFinished;

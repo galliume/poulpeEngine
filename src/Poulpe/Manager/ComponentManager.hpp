@@ -1,48 +1,64 @@
 #pragma once
 
+#include "Poulpe/Component/AnimationComponent.hpp"
+#include "Poulpe/Component/BoneAnimationComponent.hpp"
 #include "Poulpe/Component/MeshComponent.hpp"
 #include "Poulpe/Component/RenderComponent.hpp"
 
 #include <cstdint>
+#include <optional>
+#include <variant>
 
 namespace Poulpe
 {
-    class ComponentManager
+  class ComponentManager
+  {
+  public:
+
+    using Components = std::variant<
+      AnimationComponent,
+      BoneAnimationComponent,
+      MeshComponent,
+      RenderComponent>;
+
+    ComponentManager() = default;
+    ~ComponentManager() = default;
+
+    template <typename T, typename IDType, typename Component>
+    T* add(IDType entityID, Component componentImpl)
     {
-    public:
+      T* newComponent(new T());
+      newComponent->init(std::move(componentImpl.get()));
+      newComponent->setOwner(entityID);
 
-        ComponentManager() = default;
-        ~ComponentManager() = default;
+      m_ComponentTypeMap[&typeid(newComponent)].emplace_back(newComponent);
+      m_ComponentsEntityMap[entityID].emplace_back(&typeid(newComponent));
 
-        template <typename T, typename IDType, typename Component, typename... TArgs>
-        T& addComponent(IDType entityID, Component* componentImpl, TArgs&&... args)
-        {
-            T* newComponent(new T(std::forward<TArgs>(args)...));
-            newComponent->init(componentImpl);
-            newComponent->setOwner(entityID);
+      return newComponent;
+    }
 
-            m_ComponentTypeMap[&typeid(*newComponent)].emplace_back(newComponent);
-            m_ComponentsEntityMap[entityID].emplace_back(&typeid(*newComponent));
+    template <typename T>
+    T* get(IDType entityID) {
 
-            return *newComponent;
-        }
+      auto checkID = [entityID](auto& comp) {
+        return std::visit([entityID](auto const& concreteComp) {
+          return concreteComp.getID() == entityID;
+          }, comp);
+      };
 
-        template <typename T>
-        T* getComponent(IDType entityID) {
+      auto component = std::ranges::find_if(m_ComponentTypeMap[&typeid(T)], checkID);
 
-            for (auto component : m_ComponentTypeMap[&typeid(T)]) {
-                if (component->getOwner() == entityID) {
-                    return static_cast<T*>(component);
-                }
-            }
-            return nullptr;
-        }
+      if (component != m_ComponentTypeMap[&typeid(T)].end()) {
+        return std::get_if<T>(&*component);
+      }
+      return nullptr;
+    }
 
-        std::vector<const std::type_info*> getEntityComponents(IDType entityID) { return m_ComponentsEntityMap[entityID]; }
-        void clear();
+    std::vector<const std::type_info*> getEntityComponents(IDType entityID) { return m_ComponentsEntityMap[entityID]; }
+    void clear();
 
-    private:
-        std::unordered_map<const std::type_info*, std::vector<Component*>> m_ComponentTypeMap;
-        std::unordered_map<IDType, std::vector<const std::type_info*>> m_ComponentsEntityMap;
-    };
+  private:
+    std::unordered_map<const std::type_info*, std::vector<Components>> m_ComponentTypeMap;
+    std::unordered_map<IDType, std::vector<const std::type_info*>> m_ComponentsEntityMap;
+  };
 }

@@ -1,21 +1,24 @@
 #pragma once
-#include "IConfigManager.hpp"
+
+#include <nlohmann/json.hpp>
+
+#include <mutex>
 
 namespace Poulpe
 {
-    class ConfigManager : public IConfigManager
+    class ConfigManager
     {
     public:
         ConfigManager();
-        ~ConfigManager() override = default;
+        ~ConfigManager()  = default;
 
-        virtual nlohmann::json appConfig() const override { return m_AppConfig; }
-        virtual std::vector<std::string> listLevels() const override;
-        virtual std::vector<std::string> listSkybox() const override;
-        virtual nlohmann::json loadLevelData(std::string const & levelName) override;
-        virtual nlohmann::json shaderConfig() const override { return m_ShaderConfig;  }
-        virtual nlohmann::json soundConfig() const override { return m_SoundConfig ;}
-        virtual nlohmann::json texturesConfig() const override { return m_TexturesConfig; }
+        nlohmann::json appConfig() const  { return m_AppConfig; }
+        std::vector<std::string> listLevels() const ;
+        std::vector<std::string> listSkybox() const ;
+        nlohmann::json loadLevelData(std::string const & levelName) ;
+        nlohmann::json shaderConfig() const  { return m_ShaderConfig;  }
+        nlohmann::json soundConfig() const  { return m_SoundConfig ;}
+        nlohmann::json texturesConfig() const  { return m_TexturesConfig; }
 
         template<typename T>
         requires std::same_as<T, std::string> || std::same_as<T, unsigned int>

@@ -1,5 +1,7 @@
 #include "TextureManager.hpp"
 
+#include "RenderManager.hpp"
+
 #include <filesystem>
 
 namespace Poulpe

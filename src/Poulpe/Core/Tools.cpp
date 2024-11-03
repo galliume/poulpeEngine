@@ -1,5 +1,7 @@
 #include "Tools.hpp"
 
+#include <vector>
+
 namespace Poulpe
 {
     std::vector<char> Tools::readFile(const std::string & filename)

@@ -1,28 +1,27 @@
 #pragma once
 
-#include "ISocket.hpp"
-
 #if defined(_WIN32) || defined(WIN32)
+
+#include "Poulpe/Core/PlpTypedef.hpp"
 
 #include <WinSock2.h>
 #include <WS2tcpip.h>
 
 namespace Poulpe
 {
-
-  class WinSocket : public ISocket
+  class WinSocket
   {
   public:
     WinSocket();
-    ~WinSocket() override;
+    ~WinSocket();
 
-    void close() override;
-    void bind(std::string const& ip, unsigned short const port) override;
-    void connect() override;
-    inline std::string getIP() override { return m_IP; }
-    inline unsigned short getPort() override { return m_Port; }
-    void listen() override;
-    void read() override;
+    void close();
+    void bind(std::string const& ip, unsigned short const port);
+    void connect();
+    inline std::string getIP() { return m_IP; }
+    inline unsigned short getPort() { return m_Port; }
+    void listen();
+    void read();
 
   private:
     WSADATA m_Data;
