@@ -3,7 +3,8 @@
 #include "Poulpe/Component/Entity.hpp"
 #include "Poulpe/Component/Mesh.hpp"
 
-#include "Poulpe/Renderer/IRenderer.hpp"
+#include "Poulpe/Renderer/Vulkan/Renderer.hpp"
+#include "Poulpe/Renderer/Vulkan/DeviceMemoryPool.hpp"
 
 //@TODO refactor all destroy system...
 namespace Poulpe
@@ -28,10 +29,10 @@ namespace Poulpe
         void cleanShaders(std::unordered_map<std::string, std::vector<VkShaderModule>> shaders);
         void cleanTexture(Texture textures);
         void cleanTextures(std::unordered_map<std::string, Texture> textures);
-        void setRenderer(IRenderer* renderer);
+        void setRenderer(Renderer* renderer);
 
     private:
         DeviceMemoryPool* m_DeviceMemoryPool;
-        IRenderer* m_Renderer;
+        Renderer* m_Renderer;
     };
 }

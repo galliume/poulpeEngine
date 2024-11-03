@@ -4,7 +4,7 @@ namespace Poulpe
 {
     struct constants;
 
-    void ShadowMap::createDescriptorSet(IVisitable* const mesh)
+    void ShadowMap::createDescriptorSet(Mesh* mesh)
     {
       Texture const tex{ m_TextureManager->getTextures()[mesh->getData()->m_Textures.at(0)] };
 
@@ -25,12 +25,12 @@ namespace Poulpe
       mesh->setDescSet(descSet);
     }
 
-    void ShadowMap::setPushConstants(IVisitable* const mesh)
+    void ShadowMap::setPushConstants(Mesh* mesh)
     {
         mesh->setApplyPushConstants([](
             VkCommandBuffer & commandBuffer, 
             VkPipelineLayout pipelineLayout,
-            IRenderer* const renderer, IVisitable* const meshS) {
+            Renderer* const renderer, Mesh* const meshS) {
 
             constants pushConstants{};
             pushConstants.textureIDBB = glm::vec3(meshS->getData()->m_TextureIndex, 0.0, 0.0);
@@ -44,7 +44,7 @@ namespace Poulpe
         mesh->setHasPushConstants();
     }
 
-    void ShadowMap::visit( std::chrono::duration<float> deltaTime, IVisitable* const mesh)
+    void ShadowMap::operator()(std::chrono::duration<float> const& deltaTime, Mesh* mesh)
     {
       if (!mesh && !mesh->isDirty()) return;
 

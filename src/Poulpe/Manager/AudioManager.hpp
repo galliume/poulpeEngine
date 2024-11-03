@@ -1,10 +1,12 @@
 #pragma once
 
-#include "IAudioManager.hpp"
+#include <miniaudio.h>
+
+#include <nlohmann/json.hpp>
 
 namespace Poulpe
 {
-    class AudioManager : IAudioManager
+    class AudioManager
     {
         enum class State {
             STOP,
@@ -14,17 +16,17 @@ namespace Poulpe
 
     public:
         AudioManager() = default;
-        ~AudioManager() override;
+        ~AudioManager() ;
 
-        inline std::vector<std::string> const getAmbientSound() override { return m_AmbientSounds; }
-        inline unsigned int getAmbientSoundIndex() override { return m_AmbientSoundIndex; }
-        inline std::string getCurrentAmbientSound() override { return m_AmbientSounds[m_AmbientSoundIndex]; }
-        std::string const getState() override;
+        inline std::vector<std::string> const getAmbientSound()  { return m_AmbientSounds; }
+        inline unsigned int getAmbientSoundIndex()  { return m_AmbientSoundIndex; }
+        inline std::string getCurrentAmbientSound()  { return m_AmbientSounds[m_AmbientSoundIndex]; }
+        std::string const getState() ;
 
-        void load(nlohmann::json config) override;
-        void startAmbient(unsigned int const index = 0) override;
-        void stopAmbient() override;
-        void toggleLooping() override;
+        void load(nlohmann::json config) ;
+        void startAmbient(unsigned int const index = 0) ;
+        void stopAmbient() ;
+        void toggleLooping() ;
 
         void clear();
         void init();

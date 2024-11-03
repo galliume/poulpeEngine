@@ -2,8 +2,6 @@
 
 #include "Mesh.hpp"
 
-#include "Poulpe/Core/IVisitor.hpp"
-
 #include "Poulpe/Utils/IDHelper.hpp"
 
 namespace Poulpe

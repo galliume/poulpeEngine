@@ -2,9 +2,9 @@
 
 namespace Poulpe
 {
-  Socket::Socket(ISocket* socket)
+  Socket::Socket(Socket* socket)
   {
-    m_Pimpl = std::unique_ptr<ISocket>(socket);
+    m_Pimpl = std::unique_ptr<Socket>(socket);
   }
 
   Socket::~Socket()

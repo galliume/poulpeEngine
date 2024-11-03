@@ -2,7 +2,7 @@
 
 namespace Poulpe
 {
-  Server::Server(IServer* server)
+  Server::Server(Server* server)
   {
     m_Pimpl = server;
   }

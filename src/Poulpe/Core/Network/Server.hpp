@@ -1,23 +1,24 @@
 #pragma once
 
-#include "IServer.hpp"
+#include "Poulpe/Core/PlpTypedef.hpp"
 
 namespace Poulpe
 {
-  class Server : public IServer
+  class Server
   {
   public:
-    Server(IServer* server);
-    ~Server() override = default;
+    Server(Server* server);
+    ~Server() = default;
 
-    void bind(std::string const& port) override;
-    void close() override;
-    inline ServerStatus getStatus() override { return m_Pimpl->getStatus(); }
-    void listen() override;
-    void read() override;
-    void send(std::string message) override;
+    void bind(std::string const& port);
+    void close();
+    inline ServerStatus getStatus() { return m_Pimpl->getStatus(); }
+    void listen();
+    void read();
+    void send(std::string message);
 
   private:
-    IServer* m_Pimpl;
+    //@todo fixed pimpl...
+    Server* m_Pimpl;
   };
 }

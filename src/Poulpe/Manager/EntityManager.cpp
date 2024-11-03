@@ -8,6 +8,10 @@
 
 #include "Poulpe/Core/AssimpLoader.hpp"
 
+#include "Poulpe/Manager/ComponentManager.hpp"
+
+#include "glm/glm.hpp"
+
 #include <filesystem>
 #include <future>
 
@@ -139,7 +143,7 @@ namespace Poulpe
 
       EntityNode* rootMeshEntityNode = new EntityNode(rootMeshEntity);
 
-      Mesh* mesh = new Mesh();
+      auto mesh = std::unique_ptr<Mesh>();
       mesh->setName(_data.name);
       mesh->setShaderName(entityOptions.shader);
       mesh->setHasAnimation(entityOptions.hasAnimation);
@@ -294,26 +298,27 @@ namespace Poulpe
       if (mesh->hasAnimation()) {
         //@todo temp until lua scripting
         for (auto& anim : entityOptions.animationScripts) {
-          auto* animationScript = new AnimationScript(anim);
+          auto animationScript = std::make_unique<AnimationScript>(anim);
           animationScript->init(m_Renderer, nullptr, nullptr);
-          m_ComponentManager->addComponent<AnimationComponent>(entity->getID(), animationScript);
+          m_ComponentManager->add<AnimationComponent>(entity->getID(), std::move(animationScript));
         }
 
         if (!animations.empty()) {
-          auto* boneAnimationScript = new BoneAnimationScript(animations, positions, rotations, scales);
-          m_ComponentManager->addComponent<BoneAnimationComponent>(
-            entity->getID(), boneAnimationScript);
+          auto boneAnimationScript = std::make_unique<BoneAnimationScript>(animations, positions, rotations, scales);
+          m_ComponentManager->add<BoneAnimationComponent>(
+            entity->getID(), std::move(boneAnimationScript));
         }
       }
 
-      m_ComponentManager->addComponent<MeshComponent>(entity->getID(), mesh);
+      m_ComponentManager->add<MeshComponent>(entity->getID(), std::move(mesh));
 
       auto basicRdrImpl = RendererFactory::create<Basic>();
-      m_ComponentManager->addComponent<RenderComponent>(entity->getID(), basicRdrImpl);
 
       basicRdrImpl->init(m_Renderer, m_TextureManager, m_LightManager);
       auto const deltaTime = std::chrono::duration<float, std::milli>(0);
-      basicRdrImpl->visit(deltaTime, mesh);
+      (*basicRdrImpl)(deltaTime, mesh.get());
+
+      m_ComponentManager->add<RenderComponent>(entity->getID(), std::move(basicRdrImpl));
 
       {
         std::shared_lock guard(m_SharedMutex);

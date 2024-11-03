@@ -6,7 +6,7 @@
 
 namespace Poulpe
 {
-    void Crosshair::createDescriptorSet(IVisitable* const mesh)
+    void Crosshair::createDescriptorSet(Mesh* mesh)
     {
       Texture const tex{ m_TextureManager->getTextures()["crosshair_1"] };
       Texture const tex2{ m_TextureManager->getTextures()["crosshair_2"] };
@@ -24,12 +24,12 @@ namespace Poulpe
       mesh->setDescSet(descSet);
     }
 
-    void Crosshair::setPushConstants(IVisitable* const mesh)
+    void Crosshair::setPushConstants(Mesh* mesh)
     {
         mesh->setApplyPushConstants([](
             VkCommandBuffer & commandBuffer, VkPipelineLayout pipelineLayout,
-             IRenderer* const renderer,
-             IVisitable* const meshCH) {
+             Renderer* const renderer,
+             Mesh* const meshCH) {
   
             float id = static_cast<float>(Renderer::s_Crosshair);
 
@@ -41,7 +41,7 @@ namespace Poulpe
         mesh->setHasPushConstants();
     }
 
-    void Crosshair::visit( std::chrono::duration<float> deltaTime, IVisitable* const mesh)
+    void Crosshair::operator()(std::chrono::duration<float> const& deltaTime, Mesh* mesh)
     {
       if (!mesh && !mesh->isDirty()) return;
 

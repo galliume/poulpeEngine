@@ -2,6 +2,12 @@
 
 #include "Poulpe/Component/Vertex.hpp"
 
+#include <glm/fwd.hpp>
+
+#include <vulkan/vulkan.h>
+
+#include <unordered_map>
+
 namespace Poulpe
 {
   class DeviceMemory;
@@ -195,4 +201,29 @@ namespace Poulpe
     std::vector<Vertex> vertices{};
   };
 
+  enum class SocketStatus {
+    NOT_CONNECTED,
+    CONNECTED
+  };
+
+  enum class ServerStatus {
+    NOT_RUNNING,
+    RUNNING
+  };
+
+  struct VulkanShaders
+  {
+    std::unordered_map<std::string, std::vector<VkShaderModule>> shaders;
+  };
+
+  struct VulkanPipeline
+  {
+    VkPipelineLayout pipelineLayout;
+    VkDescriptorPool descPool;
+    VkDescriptorSetLayout descSetLayout;
+    VkDescriptorSet descSet;
+    VkPipelineCache pipelineCache;
+    VkPipeline pipeline;
+    std::vector<VkPipelineShaderStageCreateInfo> shaders{};
+  };
 }

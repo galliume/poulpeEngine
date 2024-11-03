@@ -4,7 +4,6 @@
 
 #include "Poulpe/Core/PlpTypedef.hpp"
 
-#include "Poulpe/Renderer/IGraphicsAPI.hpp"
 #include "Poulpe/Renderer/Vulkan/DeviceMemoryPool.hpp"
 
 #include <stb_image.h>
@@ -13,18 +12,6 @@ namespace Poulpe {
 
     VkResult CreateDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerCreateInfoEXT const * pCreateInfo,
         VkAllocationCallbacks const * pAllocator, VkDebugUtilsMessengerEXT* pCallback);
-
-
-    struct VulkanPipeline
-    {
-        VkPipelineLayout pipelineLayout;
-        VkDescriptorPool descPool;
-        VkDescriptorSetLayout descSetLayout;
-        VkDescriptorSet descSet;
-        VkPipelineCache pipelineCache;
-        VkPipeline pipeline{VK_NULL_HANDLE};
-        std::vector<VkPipelineShaderStageCreateInfo> shaders{};
-    };
 
     struct QueueFamilyIndices {
         std::optional<uint32_t> graphicsFamily;
@@ -41,11 +28,11 @@ namespace Poulpe {
         std::vector<VkPresentModeKHR> presentModes;
     };
 
-    class VulkanAPI : public IGraphicsAPI
+    class VulkanAPI
     {
     public:
         VulkanAPI(Window* window);
-        ~VulkanAPI() override;
+        ~VulkanAPI();
 
         /**
         * Vulkan init functions, before main loop.
@@ -162,7 +149,7 @@ namespace Poulpe {
 
         VkSampler createSkyboxTextureSampler(uint32_t mipLevels);
 
-        VkImageView createDepthResources(VkCommandBuffer commandBuffer);
+        VkImageView createDepthResources(VkCommandBuffer& commandBuffer);
 
         VkFormat findSupportedFormat(std::vector<VkFormat> const & candidates, VkImageTiling tiling,
             VkFormatFeatureFlags features);
@@ -186,44 +173,45 @@ namespace Poulpe {
         /**
         * Vulkan drawing functions, in main loop
         **/
-        void resetCommandPool(VkCommandPool commandPool);
+        void resetCommandPool(VkCommandPool& commandPool);
 
-        void beginCommandBuffer(VkCommandBuffer commandBuffer,
+        void beginCommandBuffer(VkCommandBuffer& commandBuffer,
             VkCommandBufferUsageFlagBits flags = VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT,
             VkCommandBufferInheritanceInfo inheritanceInfo = {});
-        void endCommandBuffer(VkCommandBuffer commandBuffer);
+        void endCommandBuffer(VkCommandBuffer& commandBuffer);
 
-        void beginRenderPass(VkRenderPass renderPass, VkCommandBuffer commandBuffer, VkFramebuffer framebuffer);
+        void beginRenderPass(VkRenderPass renderPass, VkCommandBuffer& commandBuffer, VkFramebuffer framebuffer);
 
-        void endRenderPass(VkCommandBuffer commandBuffer);
+        void endRenderPass(VkCommandBuffer& commandBuffer);
 
-        void beginRendering(VkCommandBuffer commandBuffer,
+        void beginRendering(VkCommandBuffer& commandBuffer,
             VkImageView & colorImageView,
             VkImageView & depthImageView,
             VkAttachmentLoadOp const loadOp,
             VkAttachmentStoreOp const storeOp);
 
-        void endRendering(VkCommandBuffer commandBuffer);
+        void endRendering(VkCommandBuffer& commandBuffer);
 
-        void setViewPort(VkCommandBuffer commandBuffer);
+        void setViewPort(VkCommandBuffer& commandBuffer);
 
-        void setScissor(VkCommandBuffer commandBuffer);
+        void setScissor(VkCommandBuffer& commandBuffer);
 
-        void bindPipeline(VkCommandBuffer commandBuffer, VkPipeline pipeline);
+        void bindPipeline(VkCommandBuffer& commandBuffer, VkPipeline pipeline);
 
-        void draw(VkCommandBuffer commandBuffer, VkDescriptorSet descriptorSet, VulkanPipeline& pipeline, Data * data,
+        void draw(VkCommandBuffer& commandBuffer, VkDescriptorSet& descriptorSet, VulkanPipeline& pipeline, Data * data,
             bool drawIndexed = true, uint32_t index = 0);
 
-        VkResult queueSubmit(VkCommandBuffer commandBuffer, int queueIndex = 0);
-        void submit(VkQueue queue,
-          VkSubmitInfo submitInfo,
-          VkPresentInfoKHR presentInfo,
-          VkFence fence);
+        VkResult queueSubmit(VkCommandBuffer& commandBuffer, int queueIndex = 0);
+        void submit(
+          VkQueue& queue,
+          VkSubmitInfo& submitInfo,
+          VkPresentInfoKHR& presentInfo,
+          VkFence& fence);
 
-        void addPipelineBarriers(VkCommandBuffer commandBuffer, std::vector<VkImageMemoryBarrier> renderBarriers,
+        void addPipelineBarriers(VkCommandBuffer& commandBuffer, std::vector<VkImageMemoryBarrier> renderBarriers,
             VkPipelineStageFlags srcStageMask, VkPipelineStageFlags dstStageMask, VkDependencyFlags dependencyFlags);
 
-        void generateMipmaps(VkCommandBuffer commandBuffer, VkFormat imageFormat, VkImage image, uint32_t texWidth,
+        void generateMipmaps(VkCommandBuffer& commandBuffer, VkFormat imageFormat, VkImage image, uint32_t texWidth,
             uint32_t texHeight, uint32_t mipLevels, uint32_t layerCount = 1);
 
         /**
@@ -334,7 +322,7 @@ namespace Poulpe {
         }
 
         void transitionImageLayout(
-          VkCommandBuffer commandBuffer,
+          VkCommandBuffer& commandBuffer,
           VkImage image,
           VkImageLayout oldLayout,
           VkImageLayout newLayout,

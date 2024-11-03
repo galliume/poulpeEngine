@@ -10,7 +10,7 @@
 
 namespace Poulpe
 {
-  WinServer::WinServer(IAPIManager* APIManager):
+  WinServer::WinServer(APIManager* APIManager):
     m_APIManager(APIManager)
   {
 

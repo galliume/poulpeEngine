@@ -1,19 +1,19 @@
 #pragma once
 
-#include "IInputManager.hpp"
-
 #include "Poulpe/Component/Camera.hpp"
 
 #include "Poulpe/GUI/Window.hpp"
 
+#include <nlohmann/json.hpp>
+
 namespace Poulpe
 {
-  class InputManager : IInputManager
+  class InputManager
   {
   public:
     explicit InputManager(Window const * const window);
 
-    virtual void init(nlohmann::json const& inputConfig) override;
+    virtual void init(nlohmann::json const& inputConfig) ;
 
     void key(int key, int scancode, int action, int mods);
     void mouseButton(int button, int action, int mods);

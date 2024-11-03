@@ -13,10 +13,10 @@ set(SRC_LIST ${CMAKE_CURRENT_SOURCE_DIR}/Camera.cpp
              ${CMAKE_CURRENT_SOURCE_DIR}/RenderComponent.hpp
              ${CMAKE_CURRENT_SOURCE_DIR}/AnimationComponent.hpp
              ${CMAKE_CURRENT_SOURCE_DIR}/MeshComponent.hpp
-			 ${CMAKE_CURRENT_SOURCE_DIR}/AnimationScript.cpp
+             ${CMAKE_CURRENT_SOURCE_DIR}/AnimationScript.cpp
              ${CMAKE_CURRENT_SOURCE_DIR}/AnimationScript.hpp
-			 ${CMAKE_CURRENT_SOURCE_DIR}/BoneAnimationComponent.hpp
-			 ${CMAKE_CURRENT_SOURCE_DIR}/BoneAnimationScript.hpp
-			 ${CMAKE_CURRENT_SOURCE_DIR}/BoneAnimationScript.cpp)
+             ${CMAKE_CURRENT_SOURCE_DIR}/BoneAnimationComponent.hpp
+             ${CMAKE_CURRENT_SOURCE_DIR}/BoneAnimationScript.hpp
+             ${CMAKE_CURRENT_SOURCE_DIR}/BoneAnimationScript.cpp)
 
 target_sources(PoulpeEngine PRIVATE ${SRC_LIST})

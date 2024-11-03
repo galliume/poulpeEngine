@@ -11,7 +11,7 @@
 
 namespace Poulpe
 {
-  NetworkManager::NetworkManager(IAPIManager* apiManager)
+  NetworkManager::NetworkManager(APIManager* apiManager)
     : m_APIManager(apiManager)
   {
 

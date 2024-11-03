@@ -4,7 +4,7 @@ namespace Poulpe
 {
     struct cPC;
 
-    void Grid::createDescriptorSet(IVisitable* const mesh)
+    void Grid::createDescriptorSet(Mesh* mesh)
     {
       Texture const ctex{ m_TextureManager->getTextures()["mpoulpe"] };
 
@@ -19,12 +19,12 @@ namespace Poulpe
       mesh->setDescSet(descSet);
     }
 
-    void Grid::setPushConstants(IVisitable* const mesh)
+    void Grid::setPushConstants(Mesh* mesh)
     {
         mesh->setApplyPushConstants([](VkCommandBuffer& commandBuffer,
             VkPipelineLayout pipelineLayout,
-            IRenderer* const renderer,
-             IVisitable* const meshG) {
+            Renderer* const renderer,
+             Mesh* const meshG) {
             
             constants pushConstants{};
             pushConstants.view = renderer->getCamera()->lookAt();
@@ -35,7 +35,7 @@ namespace Poulpe
         mesh->setHasPushConstants();
     }
 
-    void Grid::visit( std::chrono::duration<float> deltaTime, IVisitable* const mesh)
+    void Grid::operator()(std::chrono::duration<float> const& deltaTime, Mesh* mesh)
     {
       if (!mesh && !mesh->isDirty()) return;
 

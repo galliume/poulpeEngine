@@ -1,21 +1,19 @@
 #pragma once
 
-#include "Crosshair.hpp"
 #include "Basic.hpp"
+#include "Crosshair.hpp"
 #include "Grid.hpp"
 #include "Skybox.hpp"
 
 namespace Poulpe
 {
-    class RendererFactory
+  class RendererFactory
+  {
+  public:
+    template <typename T, typename... TArgs>
+    static std::unique_ptr<T> create(TArgs&&... args)
     {
-    public:
-        template <typename T, typename... TArgs>
-        static T* create(TArgs&&... args)
-        {
-            T* entity(new T(std::forward<TArgs>(args)...));
-
-            return entity;
-        }
-    };
+      return std::make_unique<T>(T(std::forward<TArgs>(args)...));
+    }
+  };
 }

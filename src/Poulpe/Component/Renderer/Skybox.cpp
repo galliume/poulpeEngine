@@ -4,7 +4,7 @@ namespace Poulpe
 {
     struct constants;
 
-    void Skybox::createDescriptorSet(IVisitable* const mesh)
+    void Skybox::createDescriptorSet(Mesh* mesh)
     {
       Texture const tex{ m_TextureManager->getSkyboxTexture() };
 
@@ -19,12 +19,12 @@ namespace Poulpe
       mesh->setDescSet(descSet);
     }
 
-    void Skybox::setPushConstants(IVisitable* const mesh)
+    void Skybox::setPushConstants(Mesh* mesh)
     {
         mesh->setApplyPushConstants([](VkCommandBuffer& commandBuffer,
             VkPipelineLayout pipelineLayout,
-            IRenderer* const renderer,
-            IVisitable* const meshS) {
+            Renderer* const renderer,
+            Mesh* const meshS) {
 
             constants pushConstants{};
             pushConstants.textureIDBB = glm::vec3(meshS->getData()->m_TextureIndex, 0.0f, 0.0f);
@@ -38,7 +38,7 @@ namespace Poulpe
         mesh->setHasPushConstants();
     }
 
-    void Skybox::visit( std::chrono::duration<float> deltaTime, IVisitable* const mesh)
+    void Skybox::visit(std::chrono::duration<float> deltaTime, Mesh* mesh)
     {
       if (!mesh && !mesh->isDirty()) return;
 

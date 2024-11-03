@@ -1,18 +1,13 @@
 #pragma once
 
+#include "Poulpe/Component/Mesh.hpp"
+
 #include "Component.hpp"
-#include "Mesh.hpp"
 
 namespace Poulpe
 {
-    class MeshComponent : public Component
-    {
-    public:
-        MeshComponent() : Component() {}
+  class MeshComponent : public Component<MeshComponent>
+  {
 
-        void visit(std::chrono::duration<float> deltaTime, IVisitable* visitable)
-        {
-            Component::visit(deltaTime, visitable);
-        }
-    };
+  };
 }

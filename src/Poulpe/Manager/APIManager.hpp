@@ -1,23 +1,21 @@
 #pragma once
 
-#include "IAPIManager.hpp"
-
-#include "IRenderManager.hpp"
+#include "Poulpe/Manager/RenderManager.hpp"
 
 namespace Poulpe
 {
-  class APIManager : public IAPIManager
+  class APIManager
   {
   public:
-    APIManager(IRenderManager* renderManager);
-    ~APIManager() override = default;
+    APIManager(RenderManager* renderManager);
+    ~APIManager()  = default;
 
-    void received(std::string const& message) override;
+    void received(std::string const& message);
 
   private:
     void updateSkybox(std::vector<std::string> const & params);
 
   private:
-    IRenderManager* m_RenderManager{ nullptr };
+    RenderManager* m_RenderManager{ nullptr };
   };
 }

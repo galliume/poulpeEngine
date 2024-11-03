@@ -34,7 +34,7 @@ namespace Poulpe
         }
     }
 
-    void DestroyManager::setRenderer(IRenderer* const renderer)
+    void DestroyManager::setRenderer(Renderer* const renderer)
     {
         m_Renderer = renderer;
     }

@@ -2,7 +2,11 @@
 
 #include "VulkanAPI.hpp"
 
+#include "Poulpe/Component/MeshComponent.hpp"
+
 #include "Poulpe/GUI/Window.hpp"
+
+#include "Poulpe/Manager/ComponentManager.hpp"
 
 #include "Poulpe/Renderer/Vulkan/VulkanAPI.hpp"
 
@@ -23,10 +27,10 @@ namespace Poulpe
     
   Renderer::Renderer(
     Window* const window,
-    IEntityManager* const entityManager,
+    EntityManager* const entityManager,
     ComponentManager* const componentManager,
-    ILightManager* const lightManager,
-    ITextureManager* const textureManager)
+    LightManager* const lightManager,
+    TextureManager* const textureManager)
       : m_Window(window),
         m_EntityManager(entityManager),
         m_ComponentManager(componentManager),
@@ -44,21 +48,21 @@ namespace Poulpe
       m_SwapChain = m_API->createSwapChain(m_Images);
       
       m_ImageViews.resize(m_Images.size());
-      m_Samplers.resize(m_Images.size());       
+      m_Samplers.resize(m_Images.size());
       m_DepthImages.resize(m_Images.size());
       m_DepthImageViews.resize(m_Images.size());
       m_DepthSamplers.resize(m_Images.size());
 
       m_ImageViewsBis.resize(m_Images.size());
       m_ImagesBis.resize(m_Images.size());
-      m_SamplersBis.resize(m_Images.size());       
+      m_SamplersBis.resize(m_Images.size());
       m_DepthImagesBis.resize(m_Images.size());
       m_DepthImageViewsBis.resize(m_Images.size());
       m_DepthSamplersBis.resize(m_Images.size());
 
       m_ImageViewsTer.resize(m_Images.size());
       m_ImagesTer.resize(m_Images.size());
-      m_SamplersTer.resize(m_Images.size());       
+      m_SamplersTer.resize(m_Images.size());
       m_DepthImagesTer.resize(m_Images.size());
       m_DepthImageViewsTer.resize(m_Images.size());
       m_DepthSamplersTer.resize(m_Images.size());
@@ -277,9 +281,9 @@ namespace Poulpe
     bool need_pipeline_update{true};
     
     std::ranges::for_each(m_Entities, [&](auto const& entity) {
-      auto meshComponent = m_ComponentManager->getComponent<MeshComponent>(entity->getID());
+      auto meshComponent = m_ComponentManager->get<MeshComponent>(entity->getID());
       if (meshComponent) {
-        Mesh* mesh = meshComponent->template hasImpl<Mesh>();
+        Mesh* mesh = meshComponent->template has<Mesh>();
 
         if (mesh->hasShadow() && !mesh->getUniformBuffers()->empty()) {
 
@@ -344,135 +348,135 @@ namespace Poulpe
   }
 
   void Renderer::draw(
-    VkCommandBuffer& cmdBuffer, 
+    VkCommandBuffer& cmdBuffer,
+    DrawCommands& drawCmds,
     VkImageView& colorView,
     VkImage& color,
-    VkImageView& depthView,                      
+    VkImageView& depthView,
     VkImage& depth,
     std::vector<Entity*> const& entities,
     std::latch& count_down,
     unsigned int thread_id,
     bool shadows)
   {
-    if (0 < entities.size()) {
-      m_API->beginCommandBuffer(cmdBuffer);
+    if (entities.empty()) return;
 
-      if (shadows) {
-        drawShadowMap(cmdBuffer);
-      }
+    vkResetCommandBuffer(cmdBuffer, 0);
 
-      m_API->transitionImageLayout(cmdBuffer, color,
-        VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_ASPECT_COLOR_BIT);
+    m_API->beginCommandBuffer(cmdBuffer);
 
-      m_API->transitionImageLayout(cmdBuffer, depth,
-        VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL, VK_IMAGE_ASPECT_DEPTH_BIT);
-
-      m_API->beginRendering(
-        cmdBuffer,
-        colorView,
-        depthView,
-        VK_ATTACHMENT_LOAD_OP_CLEAR,
-        VK_ATTACHMENT_STORE_OP_STORE);
-
-      m_API->setViewPort(cmdBuffer);
-      m_API->setScissor(cmdBuffer);
-
-      m_API->startMarker(cmdBuffer, "drawing", 0.2f, 0.2f, 0.9f);
-
-      //std::vector<VkDrawIndexedIndirectCommand> drawCommands{};
-      //drawCommands.reserve(m_Entities.size());
-
-      //unsigned int firstInstance { 0 };
-      //std::ranges::for_each(m_Entities, [&](auto const& entity) {
-      //  auto meshComponent = m_ComponentManager->getComponent<MeshComponent>(entity->getID());
-      //  if (meshComponent) {
-      //    Mesh* mesh = meshComponent->hasImpl<Mesh>();
-
-      //    drawCommands.emplace_back(
-      //       mesh->getData()->m_Vertices.size(),
-      //       1, 0, 0, firstInstance);
-      //    firstInstance += 1;
-      //  }
-      //});
-
-      //auto indirectBuffer = m_API->createIndirectCommandsBuffer(drawCommands);
-
-      std::string last_shader{};
-      bool need_pipeline_update{true};
-
-      size_t num{ 0 };
-      std::ranges::for_each(entities, [&](auto const& entity) {
-        auto meshComponent = m_ComponentManager->getComponent<MeshComponent>(entity->getID());
-        if (meshComponent) {
-
-          Mesh* mesh = meshComponent->template hasImpl<Mesh>();
-          if (!mesh->getUniformBuffers()->empty()) {
-
-            auto const& current_shader {mesh->getShaderName()};
-            auto pipeline = getPipeline(current_shader);
-
-            if (last_shader.empty()) {
-              last_shader = current_shader;
-            }
-            if (last_shader != current_shader) {
-              need_pipeline_update = true;
-              last_shader = current_shader;
-            }
-            
-            for (size_t i{ 0 }; i < mesh->getData()->m_Ubos.size(); ++i) {
-              mesh->getData()->m_Ubos[i].projection = getPerspective();
-            }
-
-            if (mesh->getData()->m_UbosOffset.size() > 0) {
-              uint32_t min{ 0 };
-              uint32_t max{ 0 };
-
-              for (size_t i{ 0 }; i < mesh->getUniformBuffers()->size(); ++i) {
-                max = mesh->getData()->m_UbosOffset.at(i);
-                auto ubos = std::vector<UniformBufferObject>(mesh->getData()->m_Ubos.begin() + min, mesh->getData()->m_Ubos.begin() + max);
-                min = max;
-                if (ubos.empty()) continue;
-                m_API->updateUniformBuffer(mesh->getUniformBuffers()->at(i), &ubos);
-              }
-            }
-
-            if (mesh->hasPushConstants()) {
-              mesh->applyPushConstants(cmdBuffer, pipeline->pipelineLayout, this, mesh);
-            }
-
-            vkCmdBindDescriptorSets(cmdBuffer,
-                                    VK_PIPELINE_BIND_POINT_GRAPHICS,
-                                    pipeline->pipelineLayout,
-                                    0, 1, mesh->getDescSet(), 0, nullptr);
-
-            if (need_pipeline_update) {
-              m_API->bindPipeline(cmdBuffer, pipeline->pipeline);
-              need_pipeline_update = false;
-            }
-
-            m_API->draw(cmdBuffer, *mesh->getDescSet(), *pipeline, mesh->getData(), mesh->isIndexed());
-            /*vkCmdDrawIndexedIndirect(
-              m_CommandBuffersEntities[m_CurrentFrame],
-              indirectBuffer.buffer,
-              0,
-              1,
-              sizeof(VkDrawIndexedIndirectCommand));*/
-            
-            num += 1;
-          }
-        }
-      });
-      if (entities.size() > 0) {
-        m_CmdsToSubmit.emplace_back(
-          &cmdBuffer, 
-          VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-          &m_EntitiesSemaRenderFinished[thread_id]
-        );
-      }
-      m_API->endMarker(cmdBuffer);
-      endRendering(cmdBuffer, color, depth);
-      count_down.count_down();
+    if (shadows) {
+      drawShadowMap(cmdBuffer);
     }
+
+    m_API->transitionImageLayout(cmdBuffer, color,
+      VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_ASPECT_COLOR_BIT);
+
+    m_API->transitionImageLayout(cmdBuffer, depth,
+      VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL, VK_IMAGE_ASPECT_DEPTH_BIT);
+
+    m_API->beginRendering(
+      cmdBuffer,
+      colorView,
+      depthView,
+      VK_ATTACHMENT_LOAD_OP_CLEAR,
+      VK_ATTACHMENT_STORE_OP_STORE);
+
+    m_API->setViewPort(cmdBuffer);
+    m_API->setScissor(cmdBuffer);
+
+    m_API->startMarker(cmdBuffer, "drawing", 0.2f, 0.2f, 0.9f);
+
+    //std::vector<VkDrawIndexedIndirectCommand> drawCommands{};
+    //drawCommands.reserve(m_Entities.size());
+
+    //unsigned int firstInstance { 0 };
+    //std::ranges::for_each(m_Entities, [&](auto const& entity) {
+    //  auto meshComponent = m_ComponentManager->get<MeshComponent>(entity->getID());
+    //  if (meshComponent) {
+    //    Mesh* mesh = meshComponent->has<Mesh>();
+
+    //    drawCommands.emplace_back(
+    //       mesh->getData()->m_Vertices.size(),
+    //       1, 0, 0, firstInstance);
+    //    firstInstance += 1;
+    //  }
+    //});
+
+    //auto indirectBuffer = m_API->createIndirectCommandsBuffer(drawCommands);
+
+    std::string last_shader{};
+    bool need_pipeline_update{true};
+
+    size_t num{ 0 };
+    std::ranges::for_each(entities, [&](auto const& entity) {
+      auto meshComponent = m_ComponentManager->get<MeshComponent>(entity->getID());
+      if (meshComponent) {
+
+        Mesh* mesh = meshComponent->template has<Mesh>();
+        if (!mesh->getUniformBuffers()->empty()) {
+
+          auto const& current_shader {mesh->getShaderName()};
+          auto pipeline = getPipeline(current_shader);
+
+          if (last_shader.empty()) {
+            last_shader = current_shader;
+          }
+          if (last_shader != current_shader) {
+            need_pipeline_update = true;
+            last_shader = current_shader;
+          }
+          
+          for (size_t i{ 0 }; i < mesh->getData()->m_Ubos.size(); ++i) {
+            mesh->getData()->m_Ubos[i].projection = getPerspective();
+          }
+
+          if (mesh->getData()->m_UbosOffset.size() > 0) {
+            uint32_t min{ 0 };
+            uint32_t max{ 0 };
+
+            for (size_t i{ 0 }; i < mesh->getUniformBuffers()->size(); ++i) {
+              max = mesh->getData()->m_UbosOffset.at(i);
+              auto ubos = std::vector<UniformBufferObject>(mesh->getData()->m_Ubos.begin() + min, mesh->getData()->m_Ubos.begin() + max);
+              min = max;
+              if (ubos.empty()) continue;
+              m_API->updateUniformBuffer(mesh->getUniformBuffers()->at(i), &ubos);
+            }
+          }
+
+          if (mesh->hasPushConstants()) {
+            mesh->applyPushConstants(cmdBuffer, pipeline->pipelineLayout, this, mesh);
+          }
+
+          vkCmdBindDescriptorSets(cmdBuffer,
+                                  VK_PIPELINE_BIND_POINT_GRAPHICS,
+                                  pipeline->pipelineLayout,
+                                  0, 1, mesh->getDescSet(), 0, nullptr);
+
+          if (need_pipeline_update) {
+            m_API->bindPipeline(cmdBuffer, pipeline->pipeline);
+            need_pipeline_update = false;
+          }
+
+          PLP_WARN("draw entities: {} thread_id {} frame {}", entities.size(), thread_id, m_CurrentFrame);
+          m_API->draw(cmdBuffer, *mesh->getDescSet(), *pipeline, mesh->getData(), mesh->isIndexed());
+          /*vkCmdDrawIndexedIndirect(
+            m_CommandBuffersEntities[m_CurrentFrame],
+            indirectBuffer.buffer,
+            0,
+            1,
+            sizeof(VkDrawIndexedIndirectCommand));*/
+          
+          num += 1;
+        }
+      }
+    });
+    m_API->endMarker(cmdBuffer);
+    endRendering(cmdBuffer, color, depth);
+    
+    drawCmds.insert(&cmdBuffer, &m_EntitiesSemaRenderFinished[thread_id]);
+
+    count_down.count_down();
   }
 
   void Renderer::renderScene()
@@ -486,53 +490,54 @@ namespace Poulpe
     {
         PLP_ERROR("Error on vkAcquireNextImageKHR {}", result);
     }
-      
-    {
-      std::lock_guard guard(m_MutexEntitySubmit);
-      std::latch count_down{2};
+    
+    std::latch count_down{2};
+    DrawCommands drawCmds{2};
 
-      if (m_EntityManager->getSkybox()) {
-        std::jthread pack2([this, &count_down]() {            
-          draw(m_CommandBuffersEntitiesBis[m_CurrentFrame],
-              m_ImageViews[m_CurrentFrame],
-              m_Images[m_CurrentFrame],          
-              m_DepthImageViews[m_CurrentFrame], 
-              m_DepthImages[m_CurrentFrame],
-              {m_EntityManager->getSkybox()},
-              count_down,
-              0);
-        });
-        pack2.detach();
-      } else {
-        count_down.count_down();
-      };
-      
-      
-      if (m_Entities.size() > 0) {
-        std::jthread pack1([this, &count_down]() {
-            draw(
-              m_CommandBuffersEntities[m_CurrentFrame],
-              m_ImageViews[m_CurrentFrame],
-              m_Images[m_CurrentFrame],          
-              m_DepthImageViews[m_CurrentFrame], 
-              m_DepthImages[m_CurrentFrame], 
-              m_Entities,
-              count_down,
-              1,
-              true
-            );
-          }
-        );
+    //if (m_EntityManager->getSkybox()) {
+    //  std::jthread pack2([this, &drawCmds, &count_down]() {
+        draw(m_CommandBuffersEntitiesBis[m_CurrentFrame],
+            drawCmds,
+            m_ImageViews[m_CurrentFrame],
+            m_Images[m_CurrentFrame],
+            m_DepthImageViews[m_CurrentFrame],
+            m_DepthImages[m_CurrentFrame],
+            {m_EntityManager->getSkybox()},
+            count_down,
+            0,
+            false);
+    //  });
+    //  pack2.detach();
+    //} else {
+      //count_down.count_down();
+//    };
 
-        pack1.detach();
-      } else {
-        count_down.count_down();
-      }
+  //  if (m_Entities.size() > 0) {
+  //    std::jthread pack1([this, &drawCmds, &count_down]() {
+          draw(
+            m_CommandBuffersEntities[m_CurrentFrame],
+            drawCmds,
+            m_ImageViews[m_CurrentFrame],
+            m_Images[m_CurrentFrame],
+            m_DepthImageViews[m_CurrentFrame],
+            m_DepthImages[m_CurrentFrame], 
+            m_Entities,
+            count_down,
+            1,
+            true
+          );
+    //    }
+    //  );
 
-      count_down.wait();
-        
-      submit();
-    }
+    //  pack1.detach();
+    //} else {
+    //  PLP_DEBUG("count down !");
+      //count_down.count_down();
+    //}
+
+    //count_down.wait();
+
+    submit(drawCmds);
   }
 
   void Renderer::clearRendererScreen()
@@ -609,11 +614,11 @@ namespace Poulpe
 
   //@todo do to much to refacto
   void Renderer::beginRendering(
-    VkCommandBuffer commandBuffer,
-    VkImageView imageView,
-    VkImage image,
-    VkImageView depthImageView,
-    VkImage depthImage,
+    VkCommandBuffer& commandBuffer,
+    VkImageView& imageView,
+    VkImage& image,
+    VkImageView& depthImageView,
+    VkImage& depthImage,
     VkAttachmentLoadOp loadOp,
     VkAttachmentStoreOp storeOp,
     bool continuousCmdBuffer)
@@ -636,7 +641,7 @@ namespace Poulpe
       m_API->setScissor(commandBuffer);
   }
 
-  void Renderer::endRendering(VkCommandBuffer commandBuffer, VkImage image, VkImage depthImage)
+  void Renderer::endRendering(VkCommandBuffer& commandBuffer, VkImage image, VkImage depthImage)
   {
       m_API->endRendering(commandBuffer);
 
@@ -649,33 +654,23 @@ namespace Poulpe
       m_API->endCommandBuffer(commandBuffer);
   }
 
-  void Renderer::submit()
+  void Renderer::submit(DrawCommands const& drawCmds)
   {
-    if (m_CmdsToSubmit.empty()) {
+    if (drawCmds.cmdBuffers.empty()) {
+      vkResetFences(m_API->getDevice(), 1, &m_InFlightFences[m_CurrentFrame]);
       return;
     }
     
-    std::vector<VkCommandBuffer*> cmdBuffers{};
-    std::vector<VkPipelineStageFlags> waitStages{ };
     std::vector<VkSemaphore> waitSemaphores{ m_ImageAvailable[m_CurrentFrame] };
-    std::vector<VkSemaphore*> signalSemaphores{};
-
-    for (DrawCommand const& cmdToSubmit : m_CmdsToSubmit) {
-      cmdBuffers.push_back(cmdToSubmit.buffer);
-      signalSemaphores.push_back(cmdToSubmit.semaphore);
-      waitStages.push_back(cmdToSubmit.stageFlags);
-    }
-
-    //PLP_WARN("submit: {} commands to index: {}", m_CmdsToSubmit.size(), m_CurrentFrame);
 
     VkSubmitInfo submitInfo{};
     submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-    submitInfo.pCommandBuffers = *cmdBuffers.data();
-    submitInfo.commandBufferCount = static_cast<uint32_t>(cmdBuffers.size());
+    submitInfo.pCommandBuffers = *drawCmds.cmdBuffers.data();
+    submitInfo.commandBufferCount = static_cast<uint32_t>(drawCmds.cmdBuffers.size());
     submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-    submitInfo.pWaitDstStageMask = waitStages.data();
-    submitInfo.signalSemaphoreCount = static_cast<uint32_t>(signalSemaphores.size());
-    submitInfo.pSignalSemaphores = *signalSemaphores.data();
+    submitInfo.pWaitDstStageMask = drawCmds.stageFlags.data();
+    submitInfo.signalSemaphoreCount = static_cast<uint32_t>(drawCmds.semaphores.size());
+    submitInfo.pSignalSemaphores = *drawCmds.semaphores.data();
     submitInfo.waitSemaphoreCount = static_cast<uint32_t>(waitSemaphores.size());
     submitInfo.pWaitSemaphores = waitSemaphores.data();
 
@@ -685,8 +680,8 @@ namespace Poulpe
 
     VkPresentInfoKHR presentInfo{};
     presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
-    presentInfo.waitSemaphoreCount = static_cast<uint32_t>(signalSemaphores.size());
-    presentInfo.pWaitSemaphores = *signalSemaphores.data();
+    presentInfo.waitSemaphoreCount = static_cast<uint32_t>(drawCmds.semaphores.size());
+    presentInfo.pWaitSemaphores = *drawCmds.semaphores.data();
     presentInfo.swapchainCount = 1;
     presentInfo.pSwapchains = swapChains.data();
     presentInfo.pImageIndices = &m_CurrentFrame;
@@ -696,8 +691,13 @@ namespace Poulpe
 
     m_CurrentFrame = (m_CurrentFrame + 1) % static_cast<uint32_t>(m_MAX_FRAMES_IN_FLIGHT);
     //PLP_WARN("current frame: {}", m_ImageIndex);
-      
-    m_CmdsToSubmit.clear();
+     
+    {
+      std::lock_guard guard(m_MutexEntitySubmit);
+      copy(m_EntitiesBuffer.begin(), m_EntitiesBuffer.end(), back_inserter(m_Entities));
+      m_EntitiesBuffer.clear();
+      m_EntitiesBuffer.shrink_to_fit();
+    }
 
     onFinishRender();
   }
@@ -723,16 +723,16 @@ namespace Poulpe
 
   void Renderer::onFinishRender()
   {
-      Event event{ "OnFinishRender" };
-      for (const auto& observer : m_Observers) {
-          observer->notify(event);
-      }
+      //Event event{ "OnFinishRender" };
+      //for (const auto& observer : m_Observers) {
+      //    observer->notify(event);
+      //}
   }
 
-  void Renderer::attachObserver(IObserver* observer)
-  {
-      m_Observers.push_back(observer);
-  }
+  //void Renderer::attachObserver(IObserver* observer)
+  //{
+  //  m_Observers.push_back(observer);
+  //}
 
   /*VkRenderPass Renderer::createImGuiRenderPass(VkFormat format)
   {
@@ -819,18 +819,18 @@ namespace Poulpe
 
   void Renderer::addEntities(std::vector<Entity*> entities)
   {
-    {
-      std::lock_guard guard(m_MutexEntitySubmit);
-      copy(entities.begin(), entities.end(), back_inserter(m_Entities));
+     {
+       std::lock_guard guard(m_MutexEntitySubmit);
+      copy(entities.begin(), entities.end(), back_inserter(m_EntitiesBuffer));
       m_DepthMapDescSetUpdated = false;
     }
   }
 
   void Renderer::addEntity(Entity* entity)
   {
-    {
+     {
       std::lock_guard guard(m_MutexEntitySubmit);
-      m_Entities.emplace_back(entity);
+      m_EntitiesBuffer.emplace_back(entity);
       m_DepthMapDescSetUpdated = false;
     }
   }
@@ -846,13 +846,13 @@ namespace Poulpe
 
       if (entityIt != m_Entities.end()) {
         auto const& entity = *entityIt;
-        auto meshComponent = m_ComponentManager->getComponent<MeshComponent>(entity->getID());
+        auto meshComponent = m_ComponentManager->get<MeshComponent>(entity->getID());
         if (meshComponent) {
-          Mesh* mesh = meshComponent->hasImpl<Mesh>();
+          Mesh* mesh = meshComponent->has<Mesh>();
           //std::copy(vertices.begin(), vertices.end(), back_inserter(mesh->getData()->m_Vertices));
           mesh->addUbos({ std::move(ubo) });
 
-          //auto basicRdrImpl = m_ComponentManager->getComponent<RenderComponent>(entity->getID());
+          //auto basicRdrImpl = m_ComponentManager->get<RenderComponent>(entity->getID());
           //auto deltaTime = std::chrono::duration<float, std::milli>(0);
           //basicRdrImpl->visit(deltaTime, mesh);
           return;

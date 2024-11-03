@@ -19,245 +19,244 @@
 #include <latch>
 
 namespace Poulpe
-{    
-    RenderManager::RenderManager(Window* const window)
-    {
-        m_Window = std::unique_ptr<Window>(window);
-        m_ComponentManager = std::make_unique<ComponentManager>();
-        m_LightManager = std::make_unique<LightManager>();
-        m_TextureManager = std::make_unique<TextureManager>();
-        m_EntityManager = std::make_unique<EntityManager>(
-          m_ComponentManager.get(),
-          m_LightManager.get(),
-          m_TextureManager.get());
+{
+  RenderManager::RenderManager(Window* const window)
+  {
+    m_Window = std::unique_ptr<Window>(window);
+    m_ComponentManager = std::make_unique<ComponentManager>();
+    m_LightManager = std::make_unique<LightManager>();
+    m_TextureManager = std::make_unique<TextureManager>();
+    m_EntityManager = std::make_unique<EntityManager>(
+      m_ComponentManager.get(),
+      m_LightManager.get(),
+      m_TextureManager.get());
         
-        m_Renderer = std::make_unique<Renderer>(
-          m_Window.get(),
-          m_EntityManager.get(),
-          m_ComponentManager.get(),
-          m_LightManager.get(),
-          m_TextureManager.get());
+    m_Renderer = std::make_unique<Renderer>(
+      m_Window.get(),
+      m_EntityManager.get(),
+      m_ComponentManager.get(),
+      m_LightManager.get(),
+      m_TextureManager.get());
 
-        m_AudioManager = std::make_unique<AudioManager>();
-        m_ShaderManager = std::make_unique<ShaderManager>();
-        m_DestroyManager = std::make_unique<DestroyManager>();
-        m_Camera = std::make_unique<Camera>();
+    m_AudioManager = std::make_unique<AudioManager>();
+    m_ShaderManager = std::make_unique<ShaderManager>();
+    m_DestroyManager = std::make_unique<DestroyManager>();
+    m_Camera = std::make_unique<Camera>();
 
-        m_Camera->init();
-        m_Renderer->init();
-        m_Renderer->addCamera(m_Camera.get());
-        m_DestroyManager->setRenderer(m_Renderer.get());
-        m_DestroyManager->addMemoryPool(m_Renderer->getDeviceMemoryPool());
+    m_Camera->init();
+    m_Renderer->init();
+    m_Renderer->addCamera(m_Camera.get());
+    m_DestroyManager->setRenderer(m_Renderer.get());
+    m_DestroyManager->addMemoryPool(m_Renderer->getDeviceMemoryPool());
 
-        nlohmann::json appConfig = Poulpe::Locator::getConfigManager()->appConfig();
-        if (appConfig["defaultLevel"].empty()) {
-            PLP_WARN("defaultLevel conf not set.");
-        }
+    nlohmann::json appConfig = Poulpe::Locator::getConfigManager()->appConfig();
+    if (appConfig["defaultLevel"].empty()) {
+        PLP_WARN("defaultLevel conf not set.");
+    }
         
-        m_CurrentLevel = static_cast<std::string>(appConfig["defaultLevel"]);
+    m_CurrentLevel = static_cast<std::string>(appConfig["defaultLevel"]);
 
-        Locator::getInputManager()->init(appConfig["input"]);
+    Locator::getInputManager()->init(appConfig["input"]);
 
-        //@todo, those managers should not have the usage of the renderer...
-        m_TextureManager->addRenderer(m_Renderer.get());
-        m_EntityManager->addRenderer(m_Renderer.get());
-        m_ShaderManager->addRenderer(m_Renderer.get());
+    //@todo, those managers should not have the usage of the renderer...
+    m_TextureManager->addRenderer(m_Renderer.get());
+    m_EntityManager->addRenderer(m_Renderer.get());
+    m_ShaderManager->addRenderer(m_Renderer.get());
         
-        Locator::getInputManager()->setCamera(m_Camera.get());
-        //end @todo
-    }
+    Locator::getInputManager()->setCamera(m_Camera.get());
+    //end @todo
+  }
 
-    void RenderManager::cleanUp()
-    {
-        //m_DestroyManager->cleanEntities(*m_EntityManager->getEntities());
+  void RenderManager::cleanUp()
+  {
+    //m_DestroyManager->cleanEntities(*m_EntityManager->getEntities());
 
-        //auto hud = m_EntityManager->getHUD();
-        //m_DestroyManager->cleanEntities(*hud);
+    //auto hud = m_EntityManager->getHUD();
+    //m_DestroyManager->cleanEntities(*hud);
 
-        m_DestroyManager->cleanShaders(m_ShaderManager->getShaders()->shaders);
-        m_DestroyManager->cleanTextures(m_TextureManager->getTextures());
-        m_DestroyManager->cleanTexture(m_TextureManager->getSkyboxTexture());
-        m_AudioManager->clear();
-        m_TextureManager->clear();
-        m_EntityManager->clear();
-        m_ShaderManager->clear();
-        m_Renderer->clear();
-        //m_DestroyManager->CleanDeviceMemory();
-        //m_Renderer->InitMemoryPool();
-        m_ComponentManager->clear();
-    }
+    m_DestroyManager->cleanShaders(m_ShaderManager->getShaders()->shaders);
+    m_DestroyManager->cleanTextures(m_TextureManager->getTextures());
+    m_DestroyManager->cleanTexture(m_TextureManager->getSkyboxTexture());
+    m_AudioManager->clear();
+    m_TextureManager->clear();
+    m_EntityManager->clear();
+    m_ShaderManager->clear();
+    m_Renderer->clear();
+    //m_DestroyManager->CleanDeviceMemory();
+    //m_Renderer->InitMemoryPool();
+    m_ComponentManager->clear();
+  }
 
-    void RenderManager::init()
-    {
-        //@todo clean all thoses
-
-        if (m_Refresh) {
-            m_Renderer->stopRendering();
-            m_Renderer->waitIdle();
-            cleanUp();
-            m_Renderer->recreateSwapChain();
-            setIsLoaded(false);
-            m_Refresh = false;
-            m_EntityManager->initWorldGraph();
-        }
-       
-        auto * const configManager = Poulpe::Locator::getConfigManager();
-
-        nlohmann::json const& appConfig = configManager->appConfig();
-        nlohmann::json const& textureConfig = configManager->texturesConfig();
-
-        m_AudioManager->init();
-        m_AudioManager->load(configManager->soundConfig());
-
-        loadData(m_CurrentLevel);
-
-        if (static_cast<bool>(appConfig["ambientMusic"])) {
-          m_AudioManager->startAmbient();
-        }
-
-        prepareSkybox();
-        prepareHUD();
-    }
-
-    template <typename T>
-    T lerp(T const& startValue, T const& endValue, float const& t) {
-      return ((1.0f - t) * startValue) + (t * endValue);
-    }
-
-    void RenderManager::refresh(uint32_t levelIndex, bool showBbox, std::string_view skybox)
-    {
-      m_CurrentLevel = Poulpe::Locator::getConfigManager()->listLevels().at(levelIndex);
-      m_CurrentSkybox = skybox;
-      m_IsLoaded = false;
-      m_Refresh = true;
-      m_ShowBbox = showBbox;
-    }
-
-    void RenderManager::renderScene(std::chrono::duration<float> deltaTime)
-    {
-      m_Renderer->renderScene();
-
-      //@todo animate light
-      //m_LightManager->animateAmbientLight(deltaTime);
-      auto* worldNode = m_EntityManager->getWorldNode();
-
-      std::ranges::for_each(worldNode->getChildren(), [&](const auto& leafNode) {
-        std::ranges::for_each(leafNode->getChildren(), [&](const auto& entityNode) {
-          
-          auto const& entity = entityNode->getEntity();
-
-          auto* meshComponent = m_ComponentManager->getComponent<MeshComponent>(entity->getID());
-          auto mesh = meshComponent->template hasImpl<Mesh>();
-        
-          if (mesh) {
-            auto basicRdrImpl = m_ComponentManager->getComponent<RenderComponent>(entity->getID());
-            if (mesh->isDirty() && basicRdrImpl) {
-              basicRdrImpl->visit(deltaTime, mesh);
-            }
-
-            auto* animationComponent = m_ComponentManager->getComponent<AnimationComponent>(entity->getID());
-            if (animationComponent) {
-              animationComponent->visit(deltaTime, mesh);
-            }
-
-            auto* boneAnimationComponent = m_ComponentManager->getComponent<BoneAnimationComponent>(entity->getID());
-            if (boneAnimationComponent) {
-              //boneAnimationComponent->visit(deltaTime, mesh);
-              //mesh->setIsDirty(true);
-
-              /*if (mesh->hasBufferStorage()) {
-                auto buffer{ mesh->getStorageBuffers()->at(0) };
-                ObjectBuffer* objectBuffer = mesh->getObjectBuffer();
-
-                objectBuffer->boneIds = {};
-                objectBuffer->weights = {};
-
-                m_Renderer->updateStorageBuffer(buffer, *objectBuffer);
-              }*/
-            }
-          }
-        });
-      });
-
-      if (m_Refresh) {
-        m_Renderer->setDrawBbox(m_ShowBbox);
-        init();
+  void RenderManager::init()
+  {
+    //@todo clean all thoses
+    if (m_Refresh) {
+        m_Renderer->stopRendering();
+        m_Renderer->waitIdle();
+        cleanUp();
+        m_Renderer->recreateSwapChain();
+        setIsLoaded(false);
         m_Refresh = false;
-        m_ShowBbox = false;
-      }
+        m_EntityManager->initWorldGraph();
+    }
+       
+    auto * const configManager = Poulpe::Locator::getConfigManager();
 
+    nlohmann::json const& appConfig = configManager->appConfig();
+    nlohmann::json const& textureConfig = configManager->texturesConfig();
+
+    m_AudioManager->init();
+    m_AudioManager->load(configManager->soundConfig());
+
+    loadData(m_CurrentLevel);
+
+    if (static_cast<bool>(appConfig["ambientMusic"])) {
+      m_AudioManager->startAmbient();
     }
 
-    void RenderManager::loadData(std::string const & level)
-    {
-      auto * const configManager = Poulpe::Locator::getConfigManager();
+    prepareSkybox();
+    prepareHUD();
+  }
 
-      nlohmann::json const& appConfig = configManager->appConfig();
-      std::string_view threadQueueName{ "loading" };
+  template <typename T>
+  T lerp(T const& startValue, T const& endValue, float const& t) {
+    return ((1.0f - t) * startValue) + (t * endValue);
+  }
 
-      auto const& levelData = configManager->loadLevelData(level);
-      m_TextureManager->addConfig(configManager->texturesConfig());
+  void RenderManager::refresh(uint32_t levelIndex, bool showBbox, std::string_view skybox)
+  {
+    m_CurrentLevel = Poulpe::Locator::getConfigManager()->listLevels().at(levelIndex);
+    m_CurrentSkybox = skybox;
+    m_IsLoaded = false;
+    m_Refresh = true;
+    m_ShowBbox = showBbox;
+  }
 
-      std::string const sb{ (m_CurrentSkybox.empty()) ? static_cast<std::string>(appConfig["defaultSkybox"])
-        : m_CurrentSkybox };
+  void RenderManager::renderScene(std::chrono::duration<float> deltaTime)
+  {
+    m_Renderer->renderScene();
 
-      std::latch count_down{ 3 };
+    //@todo animate light
+    //m_LightManager->animateAmbientLight(deltaTime);
+    auto* worldNode = m_EntityManager->getWorldNode();
 
-      std::jthread textures(std::move(std::bind(m_TextureManager->load(), std::ref(count_down))));
-      textures.detach();
-      std::jthread skybox(std::move(std::bind(m_TextureManager->loadSkybox(sb), std::ref(count_down))));
-      skybox.detach();
-      std::jthread shaders(std::move(std::bind(m_ShaderManager->load(configManager->shaderConfig()), std::ref(count_down))));
-      shaders.detach();
-      count_down.wait();
+    std::ranges::for_each(worldNode->getChildren(), [&](const auto& leafNode) {
+      std::ranges::for_each(leafNode->getChildren(), [&](const auto& entityNode) {
+          
+        auto const& entity = entityNode->getEntity();
 
-      setIsLoaded();
+        auto* meshComponent = m_ComponentManager->get<MeshComponent>(entity->getID());
+        auto mesh = meshComponent->template has<Mesh>();
+        
+        if (mesh) {
+          auto basicRdrImpl = m_ComponentManager->get<RenderComponent>(entity->getID());
+          if (mesh->isDirty() && basicRdrImpl) {
+            (*basicRdrImpl)(deltaTime, mesh);
+          }
 
-      std::jthread entities(std::move(m_EntityManager->load(levelData)));
-      entities.detach();
+          auto* animationComponent = m_ComponentManager->get<AnimationComponent>(entity->getID());
+          if (animationComponent) {
+            (*animationComponent)(deltaTime, mesh);
+          }
+
+          auto* boneAnimationComponent = m_ComponentManager->get<BoneAnimationComponent>(entity->getID());
+          if (boneAnimationComponent) {
+            //boneAnimationComponent->visit(deltaTime, mesh);
+            //mesh->setIsDirty(true);
+
+            /*if (mesh->hasBufferStorage()) {
+              auto buffer{ mesh->getStorageBuffers()->at(0) };
+              ObjectBuffer* objectBuffer = mesh->getObjectBuffer();
+
+              objectBuffer->boneIds = {};
+              objectBuffer->weights = {};
+
+              m_Renderer->updateStorageBuffer(buffer, *objectBuffer);
+            }*/
+          }
+        }
+      });
+    });
+
+    if (m_Refresh) {
+      m_Renderer->setDrawBbox(m_ShowBbox);
+      init();
+      m_Refresh = false;
+      m_ShowBbox = false;
     }
 
-    void RenderManager::prepareHUD()
-    {
-      //@todo clean raw pointers
-      auto* gridEntity{ new Entity() };
-      auto* gridMesh{ new Mesh() };
-      auto gridRdrImpl{ RendererFactory::create<Grid>() };
-      gridRdrImpl->init(m_Renderer.get(), m_TextureManager.get(), nullptr);
+  }
 
-      auto renderGridComponent{ m_ComponentManager->addComponent<RenderComponent>(gridEntity->getID(), gridRdrImpl) };
-      auto deltaTime{ std::chrono::duration<float, std::milli>(0) };
-      renderGridComponent.visit(deltaTime, gridMesh);
-      m_ComponentManager->addComponent<MeshComponent>(gridEntity->getID(), gridMesh);
+  void RenderManager::loadData(std::string const & level)
+  {
+    auto * const configManager = Poulpe::Locator::getConfigManager();
 
-      auto* chEntity{ new Entity() };
-      auto* chMesh{ new Mesh() };
-      auto chRdrImpl{ RendererFactory::create<Crosshair>() };
-      chRdrImpl->init(m_Renderer.get(), m_TextureManager.get(), nullptr);
+    nlohmann::json const& appConfig = configManager->appConfig();
+    std::string_view threadQueueName{ "loading" };
 
-      auto renderCrosshairComponent{ m_ComponentManager->addComponent<RenderComponent>(chEntity->getID(), chRdrImpl) };
-      renderCrosshairComponent.visit(deltaTime, chMesh);
-      m_ComponentManager->addComponent<MeshComponent>(chEntity->getID(), chMesh);
+    auto const& levelData = configManager->loadLevelData(level);
+    m_TextureManager->addConfig(configManager->texturesConfig());
 
-      m_EntityManager->addHUD(gridEntity);
-      m_EntityManager->addHUD(chEntity);
-    }
+    std::string const sb{ (m_CurrentSkybox.empty()) ? static_cast<std::string>(appConfig["defaultSkybox"])
+      : m_CurrentSkybox };
 
-    void RenderManager::prepareSkybox()
-    {
-      auto* skyboxEntity{ new Entity() };
-      auto* skyboxMesh{new Mesh()};
-      skyboxMesh->setHasShadow(false);
-      skyboxMesh->setIsIndexed(false);
+    std::latch count_down{ 3 };
 
-      auto* skyRdrImpl{ new Skybox() };
-      skyRdrImpl->init(m_Renderer.get(), m_TextureManager.get(), nullptr);
+    std::jthread textures(std::move(std::bind(m_TextureManager->load(), std::ref(count_down))));
+    textures.detach();
+    std::jthread skybox(std::move(std::bind(m_TextureManager->loadSkybox(sb), std::ref(count_down))));
+    skybox.detach();
+    std::jthread shaders(std::move(std::bind(m_ShaderManager->load(configManager->shaderConfig()), std::ref(count_down))));
+    shaders.detach();
+    count_down.wait();
 
-      auto renderComponent{ m_ComponentManager->addComponent<RenderComponent>(skyboxEntity->getID(), skyRdrImpl) };
-      auto deltaTime = std::chrono::duration<float, std::milli>(0);
-      renderComponent.visit(deltaTime, skyboxMesh);
+    setIsLoaded();
 
-      m_ComponentManager->addComponent<MeshComponent>(skyboxEntity->getID(), skyboxMesh);
-      m_EntityManager->setSkybox(skyboxEntity);
-    }
+    std::jthread entities(std::move(m_EntityManager->load(levelData)));
+    entities.detach();
+  }
+
+  void RenderManager::prepareHUD()
+  {
+    auto const deltaTime{ std::chrono::duration<float, std::milli>(0) };
+
+    auto gridEntity = std::make_unique<Entity>();
+    auto gridMesh = std::make_unique<Mesh>();
+    auto gridRdrImpl{ RendererFactory::create<Grid>() };
+    gridRdrImpl->init(m_Renderer.get(), m_TextureManager.get(), nullptr);
+
+    auto* renderGridComponent{ m_ComponentManager->add<RenderComponent>(gridEntity->getID(), std::move(gridRdrImpl)) };
+    (*renderGridComponent)(deltaTime, gridMesh);
+    m_ComponentManager->add<MeshComponent>(gridEntity->getID(), std::move(gridMesh));
+
+    auto chEntity = std::make_unique<Entity>();
+    auto chMesh = std::make_unique<Mesh>();
+    auto chRdrImpl{ RendererFactory::create<Crosshair>() };
+    chRdrImpl->init(m_Renderer.get(), m_TextureManager.get(), nullptr);
+
+    auto renderCrosshairComponent{ m_ComponentManager->add<RenderComponent>(chEntity->getID(), std::move(chRdrImpl)) };
+    (*renderCrosshairComponent)(deltaTime, chMesh);
+    m_ComponentManager->add<MeshComponent>(chEntity->getID(), std::move(chMesh));
+
+    m_EntityManager->addHUD(std::move(gridEntity));
+    m_EntityManager->addHUD(std::move(chEntity));
+  }
+
+  void RenderManager::prepareSkybox()
+  {
+    auto skyboxEntity = std::make_unique<Entity>();
+    auto skyboxMesh = std::make_unique<Mesh>();
+    skyboxMesh->setHasShadow(false);
+    skyboxMesh->setIsIndexed(false);
+
+    auto skyRdrImpl{ RendererFactory::create<Skybox>() };
+    skyRdrImpl->init(m_Renderer.get(), m_TextureManager.get(), nullptr);
+
+    auto* renderComponent{ m_ComponentManager->add<RenderComponent>(skyboxEntity->getID(), std::move(skyRdrImpl)) };
+    auto deltaTime = std::chrono::duration<float, std::milli>(0);
+    (*renderComponent)(deltaTime, skyboxMesh);
+
+    m_ComponentManager->add<MeshComponent>(skyboxEntity->getID(), std::move(skyboxMesh));
+    m_EntityManager->setSkybox(std::move(skyboxEntity));
+  }
 }
