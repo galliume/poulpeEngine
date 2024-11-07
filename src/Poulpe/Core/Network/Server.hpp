@@ -2,12 +2,19 @@
 
 #include "Poulpe/Core/PlpTypedef.hpp"
 
+//@todo fix Win/Linux impl
+#include "WinServer.hpp"
+
 namespace Poulpe
 {
   class Server
   {
   public:
-    Server(Server* server);
+    Server(WinServer* server)
+      : m_Pimpl(server)
+    {
+    }
+
     ~Server() = default;
 
     void bind(std::string const& port);
@@ -19,6 +26,6 @@ namespace Poulpe
 
   private:
     //@todo fixed pimpl...
-    Server* m_Pimpl;
+    WinServer* m_Pimpl;
   };
 }

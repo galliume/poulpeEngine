@@ -46,8 +46,8 @@ namespace Poulpe
     }
 
     template<typename T>
-    T* has() {
-      if (auto ptr = std::get_if<T>(m_Pimpl)) {
+    T* has() const {
+      if (auto ptr = std::get_if<std::unique_ptr<T>>(&m_Pimpl)) {
         return ptr->get();
       }
       return nullptr;

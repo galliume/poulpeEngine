@@ -225,8 +225,9 @@ namespace Poulpe
     auto gridRdrImpl{ RendererFactory::create<Grid>() };
     gridRdrImpl->init(m_Renderer.get(), m_TextureManager.get(), nullptr);
 
-    auto* renderGridComponent{ m_ComponentManager->add<RenderComponent>(gridEntity->getID(), std::move(gridRdrImpl)) };
-    (*renderGridComponent)(deltaTime, gridMesh);
+    (*gridRdrImpl)(deltaTime, gridMesh.get());
+
+    m_ComponentManager->add<RenderComponent>(gridEntity->getID(), std::move(gridRdrImpl));
     m_ComponentManager->add<MeshComponent>(gridEntity->getID(), std::move(gridMesh));
 
     auto chEntity = std::make_unique<Entity>();
@@ -234,8 +235,8 @@ namespace Poulpe
     auto chRdrImpl{ RendererFactory::create<Crosshair>() };
     chRdrImpl->init(m_Renderer.get(), m_TextureManager.get(), nullptr);
 
-    auto renderCrosshairComponent{ m_ComponentManager->add<RenderComponent>(chEntity->getID(), std::move(chRdrImpl)) };
-    (*renderCrosshairComponent)(deltaTime, chMesh);
+    (*chRdrImpl)(deltaTime, chMesh.get());
+    m_ComponentManager->add<RenderComponent>(chEntity->getID(), std::move(chRdrImpl));
     m_ComponentManager->add<MeshComponent>(chEntity->getID(), std::move(chMesh));
 
     m_EntityManager->addHUD(std::move(gridEntity));
@@ -253,7 +254,7 @@ namespace Poulpe
     skyRdrImpl->init(m_Renderer.get(), m_TextureManager.get(), nullptr);
 
     auto deltaTime = std::chrono::duration<float, std::milli>(0);
-    skyRdrImpl(deltaTime, skyboxMesh);
+    (*skyRdrImpl)(deltaTime, skyboxMesh.get());
 
     m_ComponentManager->add<RenderComponent>(skyboxEntity->getID(), std::move(skyRdrImpl));
     m_ComponentManager->add<MeshComponent>(skyboxEntity->getID(), std::move(skyboxMesh));

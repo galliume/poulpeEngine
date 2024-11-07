@@ -42,14 +42,14 @@ namespace Poulpe
 
       auto checkID = [entityID](auto& comp) {
         return std::visit([entityID](auto& concreteComp) {
-          return concreteComp.getID() == entityID;
+          return concreteComp->getID() == entityID;
           }, comp);
       };
 
       auto component = std::ranges::find_if(m_ComponentTypeMap[&typeid(T)], checkID);
 
       if (component != m_ComponentTypeMap[&typeid(T)].end()) {
-        return std::get_if<T>(&*component);
+        return (std::get_if<std::unique_ptr<T>>(&*component))->get();
       }
       return nullptr;
     }
