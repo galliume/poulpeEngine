@@ -69,7 +69,7 @@ namespace Poulpe
   {
     //std::vector<Mesh*> meshes{};
     //if (m_ObjLoaded.contains(path)) return meshes;
-       
+
     //m_ObjLoaded.insert(path);
 
     //@todo not reload an already loaded obj
@@ -129,7 +129,7 @@ namespace Poulpe
     }
 
     auto shader = data["shader"].template get<std::string>();
-  
+
     EntityOptions entityOptions = {
       shader, position, scale, rotation,
       data["hasBbox"].template get<bool>(),

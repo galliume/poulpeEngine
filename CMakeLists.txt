@@ -57,7 +57,7 @@ add_subdirectory(${PROJECT_SOURCE_DIR}/src/Poulpe/Utils)
 
 target_include_directories(${PROJECT_NAME} PRIVATE "${PROJECT_BINARY_DIR}")
 
-set(DEBUG_OPTIONS -Weverything -Wno-c++98-compat -Wno-c++98-compat-pedantic -g)
+set(DEBUG_OPTIONS -Wno-stringop-overflow -g)
 set(RELEASE_OPTIONS -Wno-c++98-compat -Wno-c++98-compat-pedantic -flto)
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
@@ -79,13 +79,13 @@ target_compile_definitions(${PROJECT_NAME} PRIVATE "$<$<CONFIG:DEBUG>:PLP_DEBUG_
 #########################################################
 ##################### External libs #####################
 #########################################################
-if (DEFINED ENV{VULKAN_SDK}) 
+if (DEFINED ENV{VULKAN_SDK})
   cmake_path(SET VULKAN_PATH "$ENV{VULKAN_SDK}/Include")
-  message(STATUS "Found Vulkan include dir: ${VULKAN_PATH}")  
+  message(STATUS "Found Vulkan include dir: ${VULKAN_PATH}")
   find_package(Vulkan REQUIRED)
 elseif (DEFINED ENV{VULKAN_SDK_ACTIONS})
   cmake_path(SET VULKAN_PATH "$ENV{VULKAN_SDK_ACTIONS}")
-  message(STATUS "Found Vulkan via GitHub Actions include dir: ${VULKAN_PATH}")  
+  message(STATUS "Found Vulkan via GitHub Actions include dir: ${VULKAN_PATH}")
   set(LOAD_VULKAN_LIB false)
 else()
   message(FATAL_ERROR "The env var VULKAN_SDK nor VULKAN_SDK_ACTIONS not found.")
@@ -141,7 +141,7 @@ add_library(
   ${PROJECT_SOURCE_DIR}/vendor/lua/lstring.c
   ${PROJECT_SOURCE_DIR}/vendor/lua/lstrlib.c
   ${PROJECT_SOURCE_DIR}/vendor/lua/ltable.c
-  ${PROJECT_SOURCE_DIR}/vendor/lua/ltablib.c 
+  ${PROJECT_SOURCE_DIR}/vendor/lua/ltablib.c
   ${PROJECT_SOURCE_DIR}/vendor/lua/ltests.c
   ${PROJECT_SOURCE_DIR}/vendor/lua/ltm.c
   ${PROJECT_SOURCE_DIR}/vendor/lua/lundump.c

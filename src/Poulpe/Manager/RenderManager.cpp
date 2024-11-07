@@ -30,7 +30,7 @@ namespace Poulpe
       m_ComponentManager.get(),
       m_LightManager.get(),
       m_TextureManager.get());
-        
+
     m_Renderer = std::make_unique<Renderer>(
       m_Window.get(),
       m_EntityManager.get(),
@@ -53,7 +53,7 @@ namespace Poulpe
     if (appConfig["defaultLevel"].empty()) {
         PLP_WARN("defaultLevel conf not set.");
     }
-        
+
     m_CurrentLevel = static_cast<std::string>(appConfig["defaultLevel"]);
 
     Locator::getInputManager()->init(appConfig["input"]);
@@ -62,7 +62,7 @@ namespace Poulpe
     m_TextureManager->addRenderer(m_Renderer.get());
     m_EntityManager->addRenderer(m_Renderer.get());
     m_ShaderManager->addRenderer(m_Renderer.get());
-        
+
     Locator::getInputManager()->setCamera(m_Camera.get());
     //end @todo
   }
@@ -99,7 +99,7 @@ namespace Poulpe
         m_Refresh = false;
         m_EntityManager->initWorldGraph();
     }
-       
+
     auto * const configManager = Poulpe::Locator::getConfigManager();
 
     nlohmann::json const& appConfig = configManager->appConfig();
@@ -142,12 +142,12 @@ namespace Poulpe
 
     std::ranges::for_each(worldNode->getChildren(), [&](const auto& leafNode) {
       std::ranges::for_each(leafNode->getChildren(), [&](const auto& entityNode) {
-          
+
         auto const& entity = entityNode->getEntity();
 
         auto* meshComponent = m_ComponentManager->get<MeshComponent>(entity->getID());
         auto mesh = meshComponent->template has<Mesh>();
-        
+
         if (mesh) {
           auto basicRdrImpl = m_ComponentManager->get<RenderComponent>(entity->getID());
           if (mesh->isDirty() && basicRdrImpl) {
@@ -252,10 +252,10 @@ namespace Poulpe
     auto skyRdrImpl{ RendererFactory::create<Skybox>() };
     skyRdrImpl->init(m_Renderer.get(), m_TextureManager.get(), nullptr);
 
-    auto* renderComponent{ m_ComponentManager->add<RenderComponent>(skyboxEntity->getID(), std::move(skyRdrImpl)) };
     auto deltaTime = std::chrono::duration<float, std::milli>(0);
-    (*renderComponent)(deltaTime, skyboxMesh);
+    skyRdrImpl(deltaTime, skyboxMesh);
 
+    m_ComponentManager->add<RenderComponent>(skyboxEntity->getID(), std::move(skyRdrImpl));
     m_ComponentManager->add<MeshComponent>(skyboxEntity->getID(), std::move(skyboxMesh));
     m_EntityManager->setSkybox(std::move(skyboxEntity));
   }
