@@ -2,7 +2,7 @@
 
 #include "Poulpe/Component/Camera.hpp"
 
-#include "Poulpe/core/PlpTypedef.hpp"
+#include "Poulpe/Core/PlpTypedef.hpp"
 
 #include "Poulpe/GUI/Window.hpp"
 
@@ -39,7 +39,7 @@ namespace Poulpe
       {
         {
           std::lock_guard guard(m);
-          cmdBuffers.emplace_back(cmdBuffer); 
+          cmdBuffers.emplace_back(cmdBuffer);
           stageFlags.emplace_back(flags);
           semaphores.emplace_back(semaphore);
         }
@@ -318,7 +318,7 @@ namespace Poulpe
     uint32_t m_CurrentFrame{ 0 };
     uint32_t m_ImageIndex;
     std::pair<std::vector<VkBuffer>, std::vector<VkDeviceMemory>> m_UniformBuffers{};
-        
+
     Camera* m_Camera{ nullptr };
     Window* m_Window{ nullptr };
     EntityManager* m_EntityManager{ nullptr };
@@ -333,7 +333,7 @@ namespace Poulpe
     std::vector<VkImage> m_DepthImagesBis{};
     std::vector<VkImageView> m_DepthImageViewsTer{};
     std::vector<VkImage> m_DepthImagesTer{};
-    
+
     glm::mat4 m_Perspective;
     //glm::mat4 m_lastLookAt;
     float m_Deltatime{ 0.0f };
@@ -364,12 +364,12 @@ namespace Poulpe
     std::vector<VkImageView> m_DepthMapImageViewsBis;
     std::vector<VkSampler> m_DepthMapSamplersBis;
     bool m_DepthMapDescSetUpdatedBis{ false };
-    
+
     std::vector<VkImage> m_DepthMapImagesTer;
     std::vector<VkImageView> m_DepthMapImageViewsTer;
     std::vector<VkSampler> m_DepthMapSamplersTer;
-    bool m_DepthMapDescSetUpdatedTer{ false };    
-    
+    bool m_DepthMapDescSetUpdatedTer{ false };
+
     std::unordered_map<std::string, VulkanPipeline> m_Pipelines;
 
     std::vector<VkSemaphore> m_ImageAvailable;
@@ -377,7 +377,7 @@ namespace Poulpe
 
     std::vector<Entity*> m_Entities{};
     std::vector<Entity*> m_EntitiesBuffer{};
-    
+
     std::vector<VkSemaphore> m_EntitiesSemaRenderFinished;
     std::vector<VkSemaphore> m_ShadowMapSemaRenderFinished;
 

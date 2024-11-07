@@ -16,32 +16,32 @@ namespace Poulpe
   public:
 
     using Components = std::variant<
-      AnimationComponent,
-      BoneAnimationComponent,
-      MeshComponent,
-      RenderComponent>;
+      std::unique_ptr<AnimationComponent>,
+      std::unique_ptr<BoneAnimationComponent>,
+      std::unique_ptr<MeshComponent>,
+      std::unique_ptr<RenderComponent>>;
 
     ComponentManager() = default;
     ~ComponentManager() = default;
 
     template <typename T, typename IDType, typename Component>
-    T* add(IDType entityID, Component componentImpl)
+    void add(IDType entityID, Component componentImpl)
     {
-      T* newComponent(new T());
-      newComponent->init(std::move(componentImpl.get()));
+      auto newComponent = std::make_unique<T>();
+      newComponent->init(std::move(componentImpl));
       newComponent->setOwner(entityID);
 
-      m_ComponentTypeMap[&typeid(newComponent)].emplace_back(newComponent);
+      m_ComponentTypeMap[&typeid(newComponent)].emplace_back(std::move(newComponent));
       m_ComponentsEntityMap[entityID].emplace_back(&typeid(newComponent));
 
-      return newComponent;
+      //return newComponent;
     }
 
     template <typename T>
     T* get(IDType entityID) {
 
       auto checkID = [entityID](auto& comp) {
-        return std::visit([entityID](auto const& concreteComp) {
+        return std::visit([entityID](auto& concreteComp) {
           return concreteComp.getID() == entityID;
           }, comp);
       };

@@ -26,26 +26,32 @@ namespace Poulpe
   {
   public:
     using ComponentImpl = std::variant<
-      AnimationScript,
-      BoneAnimationScript,
-      Basic,
-      Crosshair,
-      Grid,
-      Mesh,
-      ShadowMap,
-      Skybox>;
+      std::unique_ptr<AnimationScript>,
+      std::unique_ptr<BoneAnimationScript>,
+      std::unique_ptr<Basic>,
+      std::unique_ptr<Crosshair>,
+      std::unique_ptr<Grid>,
+      std::unique_ptr<Mesh>,
+      std::unique_ptr<ShadowMap>,
+      std::unique_ptr<Skybox>>;
 
     IDType getID() const { return m_ID; }
     IDType getOwner() const { return m_Owner; }
 
-    void init(ComponentImpl componentImpl)
+    template <typename T>
+    void init(std::unique_ptr<T> componentImpl)
     {
       m_ID = GUIDGenerator::getGUID();
-      m_Pimpl = std::make_unique<decltype(componentImpl)>(componentImpl);
+      m_Pimpl.emplace<std::unique_ptr<T>>(std::move(componentImpl));
     }
 
     template<typename T>
-    T* has() { return std::get_if<T>(&*m_Pimpl); }
+    T* has() {
+      if (auto ptr = std::get_if<T>(m_Pimpl)) {
+        return ptr->get();
+      }
+      return nullptr;
+    }
 
     void setOwner(IDType owner) { m_Owner = owner; }
 
@@ -58,7 +64,7 @@ namespace Poulpe
     }
 
   protected:
-    std::unique_ptr<ComponentImpl> m_Pimpl;
+    ComponentImpl m_Pimpl;
 
   private:
     IDType m_ID;

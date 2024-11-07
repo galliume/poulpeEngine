@@ -22,12 +22,12 @@ namespace Poulpe
       Renderer* const renderer,
       TextureManager* const textureManager,
       LightManager* const lightManager)
-    {
-      m_Renderer = renderer;
-      m_TextureManager = textureManager;
-      m_LightManager = lightManager;
-    }
-      void visit(std::chrono::duration<float> deltaTime, Mesh* mesh);
+      {
+        m_Renderer = renderer;
+        m_TextureManager = textureManager;
+        m_LightManager = lightManager;
+      }
+      void operator()(std::chrono::duration<float> deltaTime, Mesh* mesh);
 
   private:
     Renderer* m_Renderer;
