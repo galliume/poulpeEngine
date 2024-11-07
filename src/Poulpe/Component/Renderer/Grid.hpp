@@ -27,7 +27,7 @@ namespace Poulpe
       m_TextureManager = textureManager;
       m_LightManager = lightManager;
     }
-     void operator()(std::chrono::duration<float> const& deltaTime, Mesh* mesh);
+    void operator()(std::chrono::duration<float> const& deltaTime, Mesh* mesh);
   
   private:
     Renderer* m_Renderer;

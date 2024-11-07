@@ -2,11 +2,6 @@
 
 namespace Poulpe
 {
-  Server::Server(Server* server)
-  {
-    m_Pimpl = server;
-  }
-
   void Server::bind(std::string const& port)
   {
     m_Pimpl->bind(port);
