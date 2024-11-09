@@ -46,7 +46,7 @@ namespace Poulpe
     }
     void move(Data* data, std::chrono::duration<float>, float duration, glm::vec3 target);
     void rotate(Data* data, std::chrono::duration<float>, float duration, glm::vec3 angle);
-    void visit(std::chrono::duration<float>, Mesh* mesh);
+    void operator()(std::chrono::duration<float> const& deltaTime, Mesh * mesh);
 
   private:
     Renderer* m_Renderer;

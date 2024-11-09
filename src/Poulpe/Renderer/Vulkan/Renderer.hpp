@@ -71,6 +71,7 @@ namespace Poulpe
 
     inline void addCamera(Camera* const camera) { m_Camera = camera; }
     void addEntities(std::vector<Entity*> entities) ;
+    void swapBufferEntities();
     void addEntity(Entity* entity) ;
     void updateData(std::string const& name, UniformBufferObject const& ubo, std::vector<Vertex> const& vertices) ;
     void addPipeline(std::string const & shaderName, VulkanPipeline pipeline) ;

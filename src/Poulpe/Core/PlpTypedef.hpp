@@ -192,9 +192,9 @@ namespace Poulpe
 
   struct PlpMeshData
   {
-    std::string name;
+    std::string name{};
     unsigned int id{};
-    uint32_t materialId = 0;
+    uint32_t materialId{ 0 };
     std::vector<uint32_t> facesMaterialId{};
     std::vector<uint32_t> indices{};
     std::vector<uint32_t> materialsID{};
