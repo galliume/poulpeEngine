@@ -148,7 +148,7 @@ namespace Poulpe
     m_NewRotateAnimations.emplace_back(std::move(animRotate));
   }
 
-  void AnimationScript::visit(std::chrono::duration<float> deltaTime, Mesh* mesh)
+  void AnimationScript::operator()(std::chrono::duration<float> const& deltaTime, Mesh* mesh)
   {
     m_Data = mesh->getData();
 

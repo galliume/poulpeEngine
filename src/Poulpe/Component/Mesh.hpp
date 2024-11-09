@@ -21,12 +21,8 @@ namespace Poulpe
   class Mesh
   {
   public:
-    Mesh() = default;
-    ~Mesh() = default;
-
     Data* getData() { return & m_Data; }
     VkDescriptorSet* getDescSet() { return & m_DescSet; }
-        
     material_t const getMaterial() const { return m_Material; }
     std::string const getName() const { return m_Name; }
     inline const std::string getShaderName() const { return m_ShaderName; }
@@ -54,7 +50,7 @@ namespace Poulpe
     void setHasBufferStorage(bool has = true) { m_HasStorageBuffer = has; }
     void setHasPushConstants(bool has = true) { m_HasPushContants = has; }
     void setIsDirty(bool dirty = true) { m_IsDirty.store(dirty); }
-    void setName(std::string_view  name) { m_Name = name; }
+    void setName(std::string const& name) { m_Name = name; }
     inline void setShaderName(std::string_view name) { m_ShaderName = name; }
     void setObjectBuffer(ObjectBuffer objectBuffer) { m_ObjectBuffer = std::move(objectBuffer); }
 
@@ -86,8 +82,8 @@ namespace Poulpe
 
   private:
     //std::unique_ptr<BBox> m_BoundingBox;
-    std::string m_Name;
-    std::string m_ShaderName;
+    std::string m_Name{};
+    std::string m_ShaderName{};
 
     std::atomic<bool> m_IsDirty{ true };
 

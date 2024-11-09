@@ -458,7 +458,6 @@ namespace Poulpe
             need_pipeline_update = false;
           }
 
-          PLP_WARN("draw entities: {} thread_id {} frame {}", entities.size(), thread_id, m_CurrentFrame);
           m_API->draw(cmdBuffer, *mesh->getDescSet(), *pipeline, mesh->getData(), mesh->isIndexed());
           /*vkCmdDrawIndexedIndirect(
             m_CommandBuffersEntities[m_CurrentFrame],
@@ -481,6 +480,11 @@ namespace Poulpe
 
   void Renderer::renderScene()
   {
+    if (m_Entities.size() <= 0) {
+      swapBufferEntities();
+      return;
+    };
+
     vkWaitForFences(m_API->getDevice(), 1, &m_InFlightFences[m_CurrentFrame], VK_TRUE, UINT64_MAX);
     vkResetFences(m_API->getDevice(), 1, &m_InFlightFences[m_CurrentFrame]);
     VkResult result = vkAcquireNextImageKHR(m_API->getDevice(), m_SwapChain, UINT64_MAX, m_ImageAvailable[m_CurrentFrame], VK_NULL_HANDLE, &m_ImageIndex);
@@ -491,22 +495,24 @@ namespace Poulpe
         PLP_ERROR("Error on vkAcquireNextImageKHR {}", result);
     }
     
-    std::latch count_down{2};
-    DrawCommands drawCmds{2};
+    unsigned int const draw_count{ 1 };
+
+    std::latch count_down{draw_count};
+    DrawCommands drawCmds{draw_count};
 
     //if (m_EntityManager->getSkybox()) {
-    //  std::jthread pack2([this, &drawCmds, &count_down]() {
-        draw(m_CommandBuffersEntitiesBis[m_CurrentFrame],
-            drawCmds,
-            m_ImageViews[m_CurrentFrame],
-            m_Images[m_CurrentFrame],
-            m_DepthImageViews[m_CurrentFrame],
-            m_DepthImages[m_CurrentFrame],
-            {m_EntityManager->getSkybox()},
-            count_down,
-            0,
-            false);
-    //  });
+    ////  std::jthread pack2([this, &drawCmds, &count_down]() {
+    //    draw(m_CommandBuffersEntitiesBis[m_CurrentFrame],
+    //        drawCmds,
+    //        m_ImageViews[m_CurrentFrame],
+    //        m_Images[m_CurrentFrame],
+    //        m_DepthImageViews[m_CurrentFrame],
+    //        m_DepthImages[m_CurrentFrame],
+    //        {m_EntityManager->getSkybox()},
+    //        count_down,
+    //        0,
+    //        false);
+    //};
     //  pack2.detach();
     //} else {
       //count_down.count_down();
@@ -535,7 +541,7 @@ namespace Poulpe
       //count_down.count_down();
     //}
 
-    //count_down.wait();
+    count_down.wait();
 
     submit(drawCmds);
   }
@@ -691,15 +697,19 @@ namespace Poulpe
 
     m_CurrentFrame = (m_CurrentFrame + 1) % static_cast<uint32_t>(m_MAX_FRAMES_IN_FLIGHT);
     //PLP_WARN("current frame: {}", m_ImageIndex);
-     
+    swapBufferEntities();
+
+    onFinishRender();
+  }
+
+  void Renderer::swapBufferEntities()
+  {
     {
       std::lock_guard guard(m_MutexEntitySubmit);
       copy(m_EntitiesBuffer.begin(), m_EntitiesBuffer.end(), back_inserter(m_Entities));
       m_EntitiesBuffer.clear();
       m_EntitiesBuffer.shrink_to_fit();
     }
-
-    onFinishRender();
   }
 
   void Renderer::setRayPick(float x, float y, float z,  int width,  int height)

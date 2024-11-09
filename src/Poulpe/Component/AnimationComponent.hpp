@@ -8,6 +8,5 @@ namespace Poulpe
 {
   class AnimationComponent : public Component<AnimationComponent>
   {
-
   };
 }

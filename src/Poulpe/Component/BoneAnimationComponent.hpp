@@ -8,5 +8,6 @@ namespace Poulpe
 {
   class BoneAnimationComponent : public Component<BoneAnimationComponent>
   {
+
   };
 }

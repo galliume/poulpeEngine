@@ -55,7 +55,7 @@ namespace Poulpe
       Data* dataMove,
       std::chrono::duration<float> deltaTimeMove);
 
-    void visit(std::chrono::duration<float>, Mesh* mesh);
+    void operator()(std::chrono::duration<float> const& deltaTime, Mesh* mesh);
 
   private:
     std::string const m_ScriptPath{"./assets/scripts/animation/skelet/boneAnimation.lua"};

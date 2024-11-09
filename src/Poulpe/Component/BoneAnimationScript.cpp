@@ -133,7 +133,7 @@ namespace Poulpe
     m_NewMoveAnimations.emplace_back(std::move(animMove));
   }
 
-  void BoneAnimationScript::visit(std::chrono::duration<float> deltaTime, Mesh* mesh)
+  void BoneAnimationScript::operator()(std::chrono::duration<float> const& deltaTime, Mesh* mesh)
   {
     m_Data = mesh->getData();
 

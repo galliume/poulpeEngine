@@ -31,25 +31,25 @@ namespace Poulpe
       newComponent->init(std::move(componentImpl));
       newComponent->setOwner(entityID);
 
-      m_ComponentTypeMap[&typeid(newComponent)].emplace_back(std::move(newComponent));
-      m_ComponentsEntityMap[entityID].emplace_back(&typeid(newComponent));
-
-      //return newComponent;
+      m_ComponentTypeMap[&typeid(T)].emplace_back(std::move(newComponent));
+      m_ComponentsEntityMap[entityID].emplace_back(&typeid(T));
     }
 
     template <typename T>
     T* get(IDType entityID) {
-
-      auto checkID = [entityID](auto& comp) {
-        return std::visit([entityID](auto& concreteComp) {
-          return concreteComp->getID() == entityID;
-          }, comp);
-      };
-
-      auto component = std::ranges::find_if(m_ComponentTypeMap[&typeid(T)], checkID);
-
-      if (component != m_ComponentTypeMap[&typeid(T)].end()) {
-        return (std::get_if<std::unique_ptr<T>>(&*component))->get();
+      auto it = std::ranges::find_if(m_ComponentTypeMap[&typeid(T)], [&entityID](auto& component) {
+        if (auto ptr = std::get_if<std::unique_ptr<T>>(&component)) {
+          if (ptr != nullptr) {
+            return (*ptr)->getOwner() == entityID;
+          }
+        }
+        return false;
+      });
+      
+      if (it != m_ComponentTypeMap[&typeid(T)].end()) {
+        if (auto ptr = std::get_if<std::unique_ptr<T>>(&*it)) {
+            return ptr->get();
+        }
       }
       return nullptr;
     }

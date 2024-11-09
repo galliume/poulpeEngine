@@ -81,13 +81,13 @@ namespace Poulpe
     auto const& inverseTextureY = data["inverseTextureY"].template get<bool>();
 
     auto callback = [this, data, path, rootMeshEntity](
-      PlpMeshData const& _data,
-      std::vector<material_t> const& materials,
+      PlpMeshData const _data,
+      std::vector<material_t> const materials,
       bool const exists,
-      std::vector<Animation> const& animations,
-      std::vector<Position> const& positions,
-      std::vector<Rotation> const& rotations,
-      std::vector<Scale> const& scales) {
+      std::vector<Animation> const animations,
+      std::vector<Position> const positions,
+      std::vector<Rotation> const rotations,
+      std::vector<Scale> const scales) {
 
     auto const& positionData = data["positions"].at(0);
 
@@ -143,7 +143,7 @@ namespace Poulpe
 
       EntityNode* rootMeshEntityNode = new EntityNode(rootMeshEntity);
 
-      auto mesh = std::unique_ptr<Mesh>();
+      std::unique_ptr<Mesh>mesh = std::make_unique<Mesh>();
       mesh->setName(_data.name);
       mesh->setShaderName(entityOptions.shader);
       mesh->setHasAnimation(entityOptions.hasAnimation);
@@ -309,9 +309,6 @@ namespace Poulpe
             entity->getID(), std::move(boneAnimationScript));
         }
       }
-
-      m_ComponentManager->add<MeshComponent>(entity->getID(), std::move(mesh));
-
       auto basicRdrImpl = RendererFactory::create<Basic>();
 
       basicRdrImpl->init(m_Renderer, m_TextureManager, m_LightManager);
@@ -319,7 +316,7 @@ namespace Poulpe
       (*basicRdrImpl)(deltaTime, mesh.get());
 
       m_ComponentManager->add<RenderComponent>(entity->getID(), std::move(basicRdrImpl));
-
+      m_ComponentManager->add<MeshComponent>(entity->getID(), std::move(mesh));
       {
         std::shared_lock guard(m_SharedMutex);
         auto* entityNode = rootMeshEntityNode->addChild(new EntityNode(entity));
@@ -327,8 +324,6 @@ namespace Poulpe
         m_Renderer->addEntity(entityNode->getEntity());
       }
     };
-
-    //TinyObjLoader::loadData(path, inverseTextureY, callback);
     AssimpLoader::loadData(path, inverseTextureY, callback);
   }
 
