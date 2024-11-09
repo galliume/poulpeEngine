@@ -4,18 +4,24 @@
 
 //@todo fix Win/Linux impl
 #include "WinServer.hpp"
+#include "UnixServer.hpp"
 
 namespace Poulpe
 {
   class Server
   {
   public:
+#if defined(_WIN32) || defined(WIN32)
     Server(WinServer* server)
       : m_Pimpl(server)
     {
     }
-
-    ~Server() = default;
+#else
+    Server(UnixServer* server)
+      : m_Pimpl(server)
+    {
+    }
+#endif
 
     void bind(std::string const& port);
     void close();
@@ -26,6 +32,10 @@ namespace Poulpe
 
   private:
     //@todo fixed pimpl...
+#if defined(_WIN32) || defined(WIN32)
     WinServer* m_Pimpl;
+#else
+    UnixServer* m_Pimpl;
+#endif
   };
 }
