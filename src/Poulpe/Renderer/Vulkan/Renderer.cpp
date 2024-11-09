@@ -495,30 +495,30 @@ namespace Poulpe
         PLP_ERROR("Error on vkAcquireNextImageKHR {}", result);
     }
     
-    unsigned int const draw_count{ 1 };
+    unsigned int const draw_count{ 2 };
 
     std::latch count_down{draw_count};
     DrawCommands drawCmds{draw_count};
 
     //if (m_EntityManager->getSkybox()) {
     ////  std::jthread pack2([this, &drawCmds, &count_down]() {
-    //    draw(m_CommandBuffersEntitiesBis[m_CurrentFrame],
-    //        drawCmds,
-    //        m_ImageViews[m_CurrentFrame],
-    //        m_Images[m_CurrentFrame],
-    //        m_DepthImageViews[m_CurrentFrame],
-    //        m_DepthImages[m_CurrentFrame],
-    //        {m_EntityManager->getSkybox()},
-    //        count_down,
-    //        0,
-    //        false);
+        draw(m_CommandBuffersEntitiesBis[m_CurrentFrame],
+            drawCmds,
+            m_ImageViews[m_CurrentFrame],
+            m_Images[m_CurrentFrame],
+            m_DepthImageViews[m_CurrentFrame],
+            m_DepthImages[m_CurrentFrame],
+            {m_EntityManager->getSkybox()},
+            count_down,
+            0,
+            false);
     //};
     //  pack2.detach();
     //} else {
       //count_down.count_down();
 //    };
 
-  //  if (m_Entities.size() > 0) {
+    if (m_Entities.size() > 0) {
   //    std::jthread pack1([this, &drawCmds, &count_down]() {
           draw(
             m_CommandBuffersEntities[m_CurrentFrame],
@@ -532,7 +532,7 @@ namespace Poulpe
             1,
             true
           );
-    //    }
+        }
     //  );
 
     //  pack1.detach();
