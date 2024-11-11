@@ -27,7 +27,7 @@ namespace Poulpe
 
   private:
     SOCKET _ServSocket;
-    WSADATA _Data;
+    WSADATA _data;
     //sockaddr_in6 _SocketAddr;
 
     SOCKET _Socket{ 0 };

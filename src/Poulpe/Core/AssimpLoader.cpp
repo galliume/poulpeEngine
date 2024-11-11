@@ -104,37 +104,37 @@ namespace Poulpe
         if (mat->GetTextureCount(aiTextureType_AMBIENT) > 0) {
           aiString ambientTexturePath;
           if (mat->GetTexture(aiTextureType_AMBIENT, 0, &ambientTexturePath) == AI_SUCCESS) {
-              material.ambientTexname = AssimpLoader::cleanName(ambientTexturePath.C_Str());
+              material.name_texture_ambient = AssimpLoader::cleanName(ambientTexturePath.C_Str());
           }
         } 
         if (mat->GetTextureCount(aiTextureType_DIFFUSE) > 0) {
           aiString diffuseTexturePath;
           if (mat->GetTexture(aiTextureType_DIFFUSE, 0, &diffuseTexturePath) == AI_SUCCESS) {
-              material.diffuseTexname = AssimpLoader::cleanName(diffuseTexturePath.C_Str());
+              material.name_texture_diffuse = AssimpLoader::cleanName(diffuseTexturePath.C_Str());
           }
         }
         if (mat->GetTextureCount(aiTextureType_SPECULAR) > 0) {
           aiString specularTexturePath;
           if (mat->GetTexture(aiTextureType_SPECULAR, 0, &specularTexturePath) == AI_SUCCESS) {
-              material.specularTexname = AssimpLoader::cleanName(specularTexturePath.C_Str());
+              material.name_texture_specular = AssimpLoader::cleanName(specularTexturePath.C_Str());
           }
         }
         if (mat->GetTextureCount(aiTextureType_SHININESS) > 0) {
           aiString specularHighLightTexturePath;
           if (mat->GetTexture(aiTextureType_SHININESS, 0, &specularHighLightTexturePath) == AI_SUCCESS) {
-              material.specularHighlightTexname = AssimpLoader::cleanName(specularHighLightTexturePath.C_Str());
+              material.name_texture_specular_highlight = AssimpLoader::cleanName(specularHighLightTexturePath.C_Str());
           }
         }
         if (mat->GetTextureCount(aiTextureType_HEIGHT) > 0) {
           aiString bumpTexturePath;
           if (mat->GetTexture(aiTextureType_HEIGHT, 0, &bumpTexturePath) == AI_SUCCESS) {
-              material.bumpTexname = AssimpLoader::cleanName(bumpTexturePath.C_Str());
+              material.name_texture_bump = AssimpLoader::cleanName(bumpTexturePath.C_Str());
           }
         }
         if (mat->GetTextureCount(aiTextureType_OPACITY) > 0) {
           aiString alphaTexturePath;
           if (mat->GetTexture(aiTextureType_OPACITY, 0, &alphaTexturePath) == AI_SUCCESS) {
-              material.alphaTexname = AssimpLoader::cleanName(alphaTexturePath.C_Str());
+              material.name_texture_alpha = AssimpLoader::cleanName(alphaTexturePath.C_Str());
           }
         }
         //int illumModel;

@@ -17,12 +17,13 @@
 
 namespace Poulpe
 {
-  EntityManager::EntityManager(ComponentManager* const component_manager,
+  EntityManager::EntityManager(
+    ComponentManager* const component_manager,
     LightManager* const light_manager,
     TextureManager* const texture_manager)
-    : _component_manager(component_manager),
-    _light_manager(light_manager),
-    _texture_manager(texture_manager)
+    : _component_manager(component_manager)
+    , _light_manager(light_manager)
+    , _texture_manager(texture_manager)
   {
     initWorldGraph();
   }
@@ -34,15 +35,15 @@ namespace Poulpe
     //_LoadedEntities.clear();
   }
 
-  std::function<void()> EntityManager::load(nlohmann::json const& levelConfig)
+  std::function<void()> EntityManager::load(nlohmann::json const& lvl_config)
   {
-    _LevelConfig = levelConfig;
+    _lvl_config = lvl_config;
 
     return [this]() {
-      std::ranges::for_each(_LevelConfig["entities"].items(), [&](auto const& entityConf) {
+      std::ranges::for_each(_lvl_config["entities"].items(), [&](auto const& conf) {
 
-        auto const& key = entityConf.key();
-        auto const& data = entityConf.value();
+        auto const& key = conf.key();
+        auto const& data = conf.value();
         size_t const count = data["count"].template get<size_t>();
 
         for (size_t i{ 0 }; i < count; i++) {
@@ -52,20 +53,18 @@ namespace Poulpe
           entity.detach();
         }
       });
-
-      _LoadingDone.store(true);
     };
   }
 
   EntityNode * EntityManager::getWorldNode()
   {
     {
-      std::lock_guard guard(_MutexWorldNode);
-      return _WorldNode.get();
+      std::lock_guard guard(_mutex_world_node);
+      return _world_node.get();
     }
   }
 
-  void EntityManager::initMeshes(std::string const& name, nlohmann::json const data)
+  void EntityManager::initMeshes(std::string const& name, nlohmann::json const& data)
   {
     //std::vector<Mesh*> meshes{};
     //if (_ObjLoaded.contains(path)) return meshes;
@@ -73,14 +72,14 @@ namespace Poulpe
     //_ObjLoaded.insert(path);
 
     //@todo not reload an already loaded obj
-    Entity* rootMeshEntity = new Entity();
-    rootMeshEntity->setName(name);
-    rootMeshEntity->setVisible(false);
+    Entity* root_mesh_entity = new Entity();
+    root_mesh_entity->setName(name);
+    root_mesh_entity->setVisible(false);
 
     auto const& path = data["mesh"].template get<std::string>();
     auto const inverse_texture_y = data["inverseTextureY"].template get<bool>();
 
-    auto callback = [this, data, path, rootMeshEntity](
+    auto callback = [this, data, path, root_mesh_entity](
       PlpMeshData const _data,
       std::vector<material_t> const materials,
       bool const exists,
@@ -98,18 +97,18 @@ namespace Poulpe
       positionData["z"].template get<float>()
     );
 
-    auto const& scaleData = data["scales"].at(0);
-    auto const& rotationData = data["rotations"].at(0);
+    auto const& scale_data = data["scales"].at(0);
+    auto const& rotation_data = data["rotations"].at(0);
 
     glm::vec3 const scale = glm::vec3(
-      scaleData["x"].template get<float>(),
-      scaleData["y"].template get<float>(),
-      scaleData["z"].template get<float>()
+      scale_data["x"].template get<float>(),
+      scale_data["y"].template get<float>(),
+      scale_data["z"].template get<float>()
     );
     glm::vec3 const rotation = glm::vec3(
-      rotationData["x"].template get<float>(),
-      rotationData["y"].template get<float>(),
-      rotationData["z"].template get<float>()
+      rotation_data["x"].template get<float>(),
+      rotation_data["y"].template get<float>(),
+      rotation_data["z"].template get<float>()
     );
 
     std::vector<std::string> textures{};
@@ -118,49 +117,48 @@ namespace Poulpe
       textures.emplace_back(static_cast<std::string>(keyTex));
     }
 
-    bool const hasBbox = data["hasBbox"].template get<bool>();
-    bool const hasAnimation = data["hasAnimation"].template get<bool>();
-    bool const isPointLight = data["isPointLight"].template get<bool>();
+    bool const has_bbox = data["hasBbox"].template get<bool>();
+    bool const has_animation = data["hasAnimation"].template get<bool>();
+    bool const is_point_light = data["isPointLight"].template get<bool>();
 
-    std::vector<std::string> animationScripts{};
-    animationScripts.reserve(data["animationScripts"].size());
-    for (auto& [keyAnim, pathAnim] : data["animationScripts"].items()) {
-      animationScripts.emplace_back(static_cast<std::string>(pathAnim));
+    std::vector<std::string> animation_scripts{};
+    animation_scripts.reserve(data["animationScripts"].size());
+    for (auto& [key_anim, path_anim] : data["animationScripts"].items()) {
+      animation_scripts.emplace_back(static_cast<std::string>(path_anim));
     }
 
     auto shader = data["shader"].template get<std::string>();
 
-    EntityOptions entityOptions = {
+    EntityOptions entity_opts = {
       shader, position, scale, rotation,
       data["hasBbox"].template get<bool>(),
       data["hasAnimation"].template get<bool>(),
       data["isPointLight"].template get<bool>(),
-      animationScripts,
+      animation_scripts,
       data["hasShadow"].template get<bool>(),
       data["inverseTextureY"].template get<bool>(),
       data["isIndexed"].template get<bool>()
     };
 
-      EntityNode* rootMeshEntityNode = new EntityNode(rootMeshEntity);
+      EntityNode* root_mesh_entity_node = new EntityNode(root_mesh_entity);
 
       std::unique_ptr<Mesh>mesh = std::make_unique<Mesh>();
       mesh->setName(_data.name);
-      mesh->setShaderName(entityOptions.shader);
-      mesh->setHasAnimation(entityOptions.hasAnimation);
-      mesh->setHasBbox(entityOptions.hasBbox);
-      mesh->setIsPointLight(entityOptions.isPointLight);
-      mesh->setHasShadow(entityOptions.hasShadow);
-      mesh->setIsIndexed(entityOptions.isIndexed);
+      mesh->setShaderName(entity_opts.shader);
+      mesh->setHasAnimation(entity_opts.has_animation);
+      mesh->setIsPointLight(entity_opts.is_point_light);
+      mesh->setHasShadow(entity_opts.has_shadow);
+      mesh->setIsIndexed(entity_opts.is_indexed);
       //std::vector<Mesh::BBox> bboxs{};
 
       unsigned int const tex1ID = _data.materialsID.at(0);
 
-      std::string nameTexture{ "_plp_empty" };
-      std::string name2Texture{ "_plp_empty" };
-      std::string name3Texture{ "_plp_empty" };
-      std::string nameTextureSpecularMap{ "_plp_empty" };
-      std::string bumpTexname{ "_plp_empty" };
-      std::string alphaTexname{ "_plp_empty" };
+      std::string name_texture{ "_plp_empty" };
+      std::string name_texture2{ "_plp_empty" };
+      std::string name_texture3{ "_plp_empty" };
+      std::string name_specular_map{ "_plp_empty" };
+      std::string name_bump_map{ "_plp_empty" };
+      std::string name_alpha_map{ "_plp_empty" };
 
       if (!materials.empty()) {
 
@@ -171,74 +169,74 @@ namespace Poulpe
         //@todo separate into 2 storage buffer of 3 texSample
         auto const& tex1 = materials.at(tex1ID);
 
-        if (!tex1.ambientTexname.empty()) {
-          nameTexture = tex1.ambientTexname;
-        } else if (!tex1.diffuseTexname.empty()) {
-          nameTexture = tex1.diffuseTexname;
+        if (!tex1.name_texture_ambient.empty()) {
+          name_texture = tex1.name_texture_ambient;
+        } else if (!tex1.name_texture_diffuse.empty()) {
+          name_texture = tex1.name_texture_diffuse;
         }
 
         //@todo to refacto & clean
         if (1 < _data.materialsID.size()) {
           auto const& tex2 = materials.at(_data.materialsID.at(1));
 
-          if (!tex2.ambientTexname.empty()) {
-            name2Texture = tex2.ambientTexname;
-          } else if (!tex2.diffuseTexname.empty()) {
-            name2Texture = tex2.diffuseTexname;
+          if (!tex2.name_texture_ambient.empty()) {
+            name_texture2 = tex2.name_texture_ambient;
+          } else if (!tex2.name_texture_diffuse.empty()) {
+            name_texture2 = tex2.name_texture_diffuse;
           }
         }
         if (2 < _data.materialsID.size()) {
           auto const& tex3 = materials.at(_data.materialsID.at(2));
 
-          if (!tex3.ambientTexname.empty()) {
-            name3Texture = tex3.ambientTexname;
+          if (!tex3.name_texture_ambient.empty()) {
+            name_texture3 = tex3.name_texture_ambient;
           }
-          else if (!tex3.diffuseTexname.empty()) {
-            name3Texture = tex3.diffuseTexname;
+          else if (!tex3.name_texture_diffuse.empty()) {
+            name_texture3 = tex3.name_texture_diffuse;
           }
         }
 
         auto const& mat = materials.at(_data.materialId);
 
-        if (!mat.specularTexname.empty()) {
-          nameTextureSpecularMap = mat.specularTexname;
+        if (!mat.name_texture_specular.empty()) {
+          name_specular_map = mat.name_texture_specular;
         }
 
-        if (!mat.bumpTexname.empty()) {
-          bumpTexname = mat.bumpTexname;
+        if (!mat.name_texture_bump.empty()) {
+          name_bump_map = mat.name_texture_bump;
         }
 
-        if (!mat.alphaTexname.empty()) {
-          alphaTexname = mat.alphaTexname;
+        if (!mat.name_texture_alpha.empty()) {
+          name_alpha_map = mat.name_texture_alpha;
         }
       }
 
       Data data{};
-      data._name = _data.name + '_' + nameTexture;
-      data._textures.emplace_back(nameTexture);
-      data._textures.emplace_back(name2Texture);
-      data._textures.emplace_back(name3Texture);
-      data._specular_map = nameTextureSpecularMap;
-      data._bump_map = bumpTexname;
-      data._alpha = alphaTexname;
+      data._name = _data.name + '_' + name_texture;
+      data._textures.emplace_back(name_texture);
+      data._textures.emplace_back(name_texture2);
+      data._textures.emplace_back(name_texture3);
+      data._specular_map = name_specular_map;
+      data._bump_map = name_bump_map;
+      data._alpha = name_alpha_map;
       data._vertices = _data.vertices;
       data._Indices = _data.indices;
-      data._origin_pos = entityOptions.pos;
-      data._current_pos = entityOptions.pos;
-      data._origin_scale = entityOptions.scale;
-      data._current_scale = entityOptions.scale;
-      data._origin_rotation = entityOptions.rotation;
-      data._current_rotation = entityOptions.rotation;
+      data._origin_pos = entity_opts.pos;
+      data._current_pos = entity_opts.pos;
+      data._origin_scale = entity_opts.scale;
+      data._current_scale = entity_opts.scale;
+      data._origin_rotation = entity_opts.rotation;
+      data._current_rotation = entity_opts.rotation;
 
       UniformBufferObject ubo{};
       ubo.model = glm::mat4(1.0f);
-      ubo.model = glm::scale(ubo.model, entityOptions.scale);
+      ubo.model = glm::scale(ubo.model, entity_opts.scale);
 
-      ubo.model = glm::translate(ubo.model, entityOptions.pos);
+      ubo.model = glm::translate(ubo.model, entity_opts.pos);
 
-      ubo.model = glm::rotate(ubo.model, glm::radians(entityOptions.rotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
-      ubo.model = glm::rotate(ubo.model, glm::radians(entityOptions.rotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
-      ubo.model = glm::rotate(ubo.model, glm::radians(entityOptions.rotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
+      ubo.model = glm::rotate(ubo.model, glm::radians(entity_opts.rotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
+      ubo.model = glm::rotate(ubo.model, glm::radians(entity_opts.rotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
+      ubo.model = glm::rotate(ubo.model, glm::radians(entity_opts.rotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
 
       ubo.texSize = glm::vec2(0.0);
 
@@ -295,9 +293,9 @@ namespace Poulpe
       auto* entity = new Entity();
       entity->setName(_data.name);
 
-      if (mesh->hasAnimation()) {
+      if (mesh->has_animation()) {
         //@todo temp until lua scripting
-        for (auto& anim : entityOptions.animationScripts) {
+        for (auto& anim : entity_opts.animation_scripts) {
           auto animationScript = std::make_unique<AnimationScript>(anim);
           animationScript->init(_renderer, nullptr, nullptr);
           _component_manager->add<AnimationComponent>(entity->getID(), std::move(animationScript));
@@ -318,9 +316,9 @@ namespace Poulpe
       _component_manager->add<RenderComponent>(entity->getID(), std::move(basicRdrImpl));
       _component_manager->add<MeshComponent>(entity->getID(), std::move(mesh));
       {
-        std::shared_lock guard(_SharedMutex);
-        auto* entityNode = rootMeshEntityNode->addChild(new EntityNode(entity));
-        _WorldNode->addChild(rootMeshEntityNode);
+        std::shared_lock guard(_mutex_shared);
+        auto* entityNode = root_mesh_entity_node->addChild(new EntityNode(entity));
+        _world_node->addChild(root_mesh_entity_node);
         _renderer->addEntity(entityNode->getEntity());
       }
     };
@@ -333,6 +331,6 @@ namespace Poulpe
     _World->setName("_PLPWorld");
     _World->setVisible(false);
 
-    _WorldNode = std::make_unique<EntityNode>(_World);
+    _world_node = std::make_unique<EntityNode>(_World);
   }
 }

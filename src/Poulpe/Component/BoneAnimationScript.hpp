@@ -43,7 +43,7 @@ namespace Poulpe
       std::vector<Scale> const& scales);
     ~BoneAnimationScript();
 
-    Data* getData() { return _Data; }
+    Data* getData() { return _data; }
 
     void init(Renderer* const renderer,
        TextureManager* const texture_manager,
@@ -58,15 +58,15 @@ namespace Poulpe
     void operator()(std::chrono::duration<float> const& deltaTime, Mesh* mesh);
 
   private:
-    std::string const _ScriptPath{"./assets/scripts/animation/skelet/boneAnimation.lua"};
-    Data* _Data;
+    std::string const _script_path{"./assets/scripts/animation/skelet/boneAnimation.lua"};
+    Data* _data;
     Renderer* _renderer;
     lua_State* _lua_State;
 
-    bool _MoveInit{ false };
+    bool _move_init{ false };
     
-    std::vector<std::unique_ptr<BoneAnimationMove>> _MoveAnimations{};
-    std::vector<std::unique_ptr<BoneAnimationMove>> _NewMoveAnimations{};
+    std::vector<std::unique_ptr<BoneAnimationMove>> _moves{};
+    std::vector<std::unique_ptr<BoneAnimationMove>> _new_moves{};
 
     std::vector<Animation> _Animations{};
     std::vector<Position> _Positions{};

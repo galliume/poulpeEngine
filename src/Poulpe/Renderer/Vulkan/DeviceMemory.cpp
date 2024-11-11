@@ -11,7 +11,7 @@ namespace Poulpe
     ) : _Index(index),
         _Alignment(alignment),
         _MemoryType(memoryType),
-        _Device(device)
+        _device(device)
     {
         if (!_Memory) {
             _Memory = std::make_unique<VkDeviceMemory>();
@@ -43,7 +43,7 @@ namespace Poulpe
           allocInfo.allocationSize = _MaxSize;
           allocInfo.memoryTypeIndex = _MemoryType;
 
-          VkResult result = vkAllocateMemory(_Device, &allocInfo, nullptr, _Memory.get());
+          VkResult result = vkAllocateMemory(_device, &allocInfo, nullptr, _Memory.get());
 
           if (VK_SUCCESS != result) {
             PLP_FATAL("error while allocating memory {}", result);
@@ -62,7 +62,7 @@ namespace Poulpe
     {
       {
         std::lock_guard guard(_MutexMemory);
-        VkResult result = vkBindBufferMemory(_Device, buffer, *_Memory, _Offset);
+        VkResult result = vkBindBufferMemory(_device, buffer, *_Memory, _Offset);
 
         if (VK_SUCCESS != result) {
           PLP_ERROR("BindBuffer memory failed in bindBufferToMemory");
@@ -82,7 +82,7 @@ namespace Poulpe
     {
       {
         std::lock_guard guard(_MutexMemory);
-        vkBindImageMemory(_Device, image, *_Memory, _Offset);
+        vkBindImageMemory(_device, image, *_Memory, _Offset);
         
         _Offset += size;// ((size / _Alignment) + 1)* _Alignment;
 
@@ -105,11 +105,11 @@ namespace Poulpe
         for (auto buffer : _Buffer) {
             if (VK_NULL_HANDLE != buffer)
             {
-                vkDestroyBuffer(_Device, buffer, nullptr);
+                vkDestroyBuffer(_device, buffer, nullptr);
             }
         }
 
-        vkFreeMemory(_Device, *_Memory.get(), nullptr);
+        vkFreeMemory(_device, *_Memory.get(), nullptr);
 
         _MaxSize = 0;
         _Offset = 0;

@@ -79,12 +79,12 @@ namespace Poulpe
     float ior{ 1.0 };       // index of refraction
     float dissolve{ 1.0 };  // 1 == opaque; 0 == fully transparent
     int illum{ 1 };
-    std::string ambientTexname;             // map_Ka
-    std::string diffuseTexname;             // map_Kd
-    std::string specularTexname;            // map_Ks
-    std::string specularHighlightTexname;  // map_Ns
-    std::string bumpTexname;                // map_bump, map_Bump, bump
-    std::string alphaTexname; // map_d
+    std::string name_texture_ambient;             // map_Ka
+    std::string name_texture_diffuse;             // map_Kd
+    std::string name_texture_specular;            // map_Ks
+    std::string name_texture_specular_highlight;  // map_Ns
+    std::string name_texture_bump;                // map_bump, map_Bump, bump
+    std::string name_texture_alpha; // map_d
   };
 
   struct constants
@@ -151,13 +151,13 @@ namespace Poulpe
     glm::vec3 const& pos{};
     glm::vec3 const& scale{};
     glm::vec3 rotation{};
-    bool hasBbox{ false };
-    bool hasAnimation{ false };
-    bool isPointLight{ false };
-    std::vector<std::string> animationScripts{};
-    bool hasShadow{ false };
-    bool shouldInverseTextureY{ false };
-    bool isIndexed{ false };
+    bool has_bbox{ false };
+    bool has_animation{ false };
+    bool is_point_light{ false };
+    std::vector<std::string> animation_scripts{};
+    bool has_shadow{ false };
+    bool inverse_texture_y{ false };
+    bool is_indexed{ false };
   };
 
   struct Bone {

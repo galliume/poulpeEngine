@@ -44,7 +44,7 @@ namespace Poulpe
         uint32_t _Offset{0};
  
         std::vector<VkBuffer> _Buffer {};
-        VkDevice _Device;
+        VkDevice _device;
         std::unique_ptr<VkDeviceMemory> _Memory{nullptr};
         std::mutex _MutexMemory;
 

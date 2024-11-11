@@ -80,6 +80,11 @@
       "configurePreset": "windows-release"
     },
     {
+      "name": "windows-release-with-debug",
+      "displayName": "ReleaseWithDebSymbols",
+      "configurePreset": "windows-release-with-debug"
+    },
+    {
       "name": "linux-debug",
       "displayName": "Debug",
       "configurePreset": "linux-debug"
@@ -88,6 +93,11 @@
       "name": "linux-release",
       "displayName": "Release",
       "configurePreset": "linux-release"
+    },
+    {
+      "name": "linux-release-with-debug",
+      "displayName": "ReleaseWithDebSymbols",
+      "configurePreset": "linux-release-with-debug"
     }
   ]
 }

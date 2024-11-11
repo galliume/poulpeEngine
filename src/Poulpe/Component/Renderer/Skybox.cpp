@@ -100,10 +100,11 @@ namespace Poulpe
       data._ubos.emplace_back(ubo);
       data._texture_index = 0;
 
-      vkDestroyCommandPool(_renderer->getDevice(), commandPool, nullptr);
 
-      Buffer uniformBuffer = _renderer->createUniformBuffers(1);
+      Buffer uniformBuffer = _renderer->createUniformBuffers(1, commandPool);
       mesh->getUniformBuffers()->emplace_back(uniformBuffer);
+      
+      vkDestroyCommandPool(_renderer->getDevice(), commandPool, nullptr);
 
       mesh->setName("skybox");
       mesh->setShaderName("skybox");

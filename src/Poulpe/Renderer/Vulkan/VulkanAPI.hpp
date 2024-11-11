@@ -91,7 +91,7 @@ namespace Poulpe {
 
         VkCommandPool createCommandPool();
 
-        std::vector<VkCommandBuffer> allocateCommandBuffers(VkCommandPool commandPool, uint32_t size = 1,
+        std::vector<VkCommandBuffer> allocateCommandBuffers(VkCommandPool& commandPool, uint32_t size = 1,
             bool isSecondary = false);
 
         VkBuffer createBuffer(VkDeviceSize size, VkBufferUsageFlags usage);
@@ -115,7 +115,9 @@ namespace Poulpe {
 
         bool souldResizeSwapChain();
 
-        Buffer createUniformBuffers(uint32_t uniformBuffersCount);
+        Buffer createUniformBuffers(
+            uint32_t const uniformBuffersCount,
+            VkCommandPool& commandPool);
 
         Buffer createCubeUniformBuffers(uint32_t uniformBuffersCount);
 
@@ -128,10 +130,10 @@ namespace Poulpe {
             VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage & image);
 
         VkImageView createImageView(VkImage image, VkFormat format, uint32_t mipLevels,
-            VkImageAspectFlags aspectFlags = VK_IMAGE_ASPECT_COLOR_BIT);
+            VkImageAspectFlags aspect_flags = VK_IMAGE_ASPECT_COLOR_BIT);
         
         VkImageView createSkyboxImageView(VkImage image, VkFormat format, uint32_t mipLevels,
-            VkImageAspectFlags aspectFlags = VK_IMAGE_ASPECT_COLOR_BIT);
+            VkImageAspectFlags aspect_flags = VK_IMAGE_ASPECT_COLOR_BIT);
 
         void createTextureImage(VkCommandBuffer& cmd_buffer, stbi_uc* pixels, uint32_t texWidth, uint32_t texHeight,
             uint32_t mipLevels, VkImage& textureImage, VkFormat format);
@@ -158,11 +160,13 @@ namespace Poulpe {
 
         bool hasStencilComponent(VkFormat format);
 
-        VkDeviceSize getMaxMemoryHeap() { return _MaxMemoryHeap; }
+        VkDeviceSize getMaxMemoryHeap() { return _max_memory_heap; }
 
         void initMemoryPool();
 
-        Buffer createStorageBuffers(size_t storageBuffer);
+        Buffer createStorageBuffers(
+            ObjectBuffer const& storage_buffer,
+            VkCommandPool& command_pool);
      
         Buffer createIndirectCommandsBuffer(std::vector<VkDrawIndexedIndirectCommand> const& drawCommands);
 
@@ -205,8 +209,8 @@ namespace Poulpe {
         VkResult queueSubmit(VkCommandBuffer& cmd_buffer, int queueIndex = 0);
         void submit(
           VkQueue& queue,
-          VkSubmitInfo& submitInfo,
-          VkPresentInfoKHR& presentInfo,
+          std::vector<VkSubmitInfo> const& submit_infos,
+          VkPresentInfoKHR const& present_info,
           VkFence& fence);
 
         void addPipelineBarriers(VkCommandBuffer& cmd_buffer, std::vector<VkImageMemoryBarrier> renderBarriers,
@@ -240,47 +244,47 @@ namespace Poulpe {
         /*
         * Helper functions.
         */
-        inline const std::vector<const char*> getValidationLayers() const { return _ValidationLayers; }
+        inline const std::vector<const char*> getValidationLayers() const { return _validation_layers; }
 
-        inline const std::vector<VkExtensionProperties> getExtensions() const { return _Extensions; }
+        inline const std::vector<VkExtensionProperties> getExtensions() const { return _extensions; }
 
-        inline const std::vector<VkLayerProperties> getLayersAvailable() const { return _LayersAvailable; }
+        inline const std::vector<VkLayerProperties> getLayersAvailable() const { return _layers_available; }
 
-        inline bool isInstanceCreated() const { return _InstanceCreated; }
+        inline bool isInstanceCreated() const { return _instance_created; }
 
-        inline bool isValidationLayersEnabled() const { return _EnableValidationLayers; }
+        inline bool isValidationLayersEnabled() const { return _enable_validation_layers; }
 
-        inline uint32_t getExtensionCount() const { return _ExtensionCount; }
+        inline uint32_t getExtensionCount() const { return _extension_count; }
 
-        inline uint32_t getQueueFamily() const { return _QueueFamilyIndices.graphicsFamily.value(); }
+        inline uint32_t getQueueFamily() const { return _queue_family_indices.graphicsFamily.value(); }
 
-        inline VkInstance getInstance() const { return _Instance; }
+        inline VkInstance getInstance() const { return _instance; }
 
-        inline VkPhysicalDevice getPhysicalDevice() const { return _PhysicalDevice; }
+        inline VkPhysicalDevice getPhysicalDevice() const { return _physical_device; }
 
-        inline VkDevice getDevice() const { return _Device; }
+        inline VkDevice getDevice() const { return _device; }
 
-        inline std::vector<VkQueue> getGraphicsQueues() const { return _GraphicsQueues; }
+        inline std::vector<VkQueue> getGraphicsQueues() const { return _graphics_queues; }
 
-        inline VkPhysicalDeviceProperties getDeviceProperties() const { return _DeviceProps; }
+        inline VkPhysicalDeviceProperties getDeviceProperties() const { return _device_props; }
 
-        inline VkPhysicalDeviceFeatures getDeviceFeatures() const { return _DeviceFeatures; }
+        inline VkPhysicalDeviceFeatures getDeviceFeatures() const { return _device_features; }
 
         inline bool isFramebufferResized() { return _FramebufferResized; }
 
-        inline VkExtent2D getSwapChainExtent() const { return _SwapChainExtent; }
+        inline VkExtent2D getSwapChainExtent() const { return _swapchain_extent; }
 
-        inline VkSurfaceKHR getSurface() const { return _Surface; }
+        inline VkSurfaceKHR getSurface() const { return _surface; }
 
-        inline VkSurfaceFormatKHR getSurfaceFormat() const { return _SurfaceFormat; }
+        inline VkSurfaceFormatKHR getSurfaceFormat() const { return _surface_format; }
 
-        inline void resetCurrentFrameIndex() { _CurrentFrame = 0; }
+        inline void resetCurrentFrameIndex() { _current_frame = 0; }
 
-        inline int32_t getCurrentFrame() const { return _CurrentFrame; }
+        inline int32_t getCurrentFrame() const { return _current_frame; }
 
-        inline VkFormat getSwapChainImageFormat() const { return _SwapChainImageFormat; }
+        inline VkFormat getSwapChainImageFormat() const { return _swapchain_iImage_format; }
 
-        inline VkSampleCountFlagBits getMsaaSamples() const { return _MsaaSamples; }
+        inline VkSampleCountFlagBits getMsaaSamples() const { return _sample_count; }
 
         void initDetails();
 
@@ -292,15 +296,15 @@ namespace Poulpe {
 
         std::string getAPIVersion();
 
-        DeviceMemoryPool* getDeviceMemoryPool() { return _DeviceMemoryPool.get(); }
+        DeviceMemoryPool* getDeviceMemoryPool() { return _device_memory_pool.get(); }
 
         void startMarker(VkCommandBuffer buffer, std::string const & name, float r, float g, float b, float a = 1.0);
 
         void endMarker(VkCommandBuffer buffer);
 
-        uint32_t getQueueCount() { return _queueCount; }
+        uint32_t getQueueCount() { return _queue_count; }
 
-        std::vector<VkQueue> getPresentQueue() { return _PresentQueues; }
+        std::vector<VkQueue> getPresentQueue() { return _present_queues; }
 
         void waitIdle();
 
@@ -324,10 +328,10 @@ namespace Poulpe {
 
         void transitionImageLayout(
           VkCommandBuffer& cmd_buffer,
-          VkImage image,
-          VkImageLayout oldLayout,
-          VkImageLayout newLayout,
-          VkImageAspectFlags aspectFlags);
+          VkImage& image,
+          VkImageLayout old_layout,
+          VkImageLayout new_layout,
+          VkImageAspectFlags aspect_flags);
 
     public:
         bool _FramebufferResized = false;
@@ -351,15 +355,15 @@ namespace Poulpe {
         VkExtent2D chooseSwapExtent(VkSurfaceCapabilitiesKHR const & capabilities);
 
     private:
-        int32_t _CurrentFrame{ 0 };
-        uint32_t _ExtensionCount;
-        std::string _apiVersion;
-        const uint32_t _queueCount{ 1 };
+        int32_t _current_frame{ 0 };
+        uint32_t _extension_count;
+        std::string _api_version;
+        const uint32_t _queue_count{ 1 };
 
         Window* _window{ nullptr };
 
-        const std::vector<const char*> _ValidationLayers{ "VK_LAYER_KHRONOS_validation" };
-        const std::vector<const char*> _DeviceExtensions{
+        const std::vector<const char*> _validation_layers{ "VK_LAYER_KHRONOS_validation" };
+        const std::vector<const char*> _device_extensions{
             VK_KHR_PUSH_DESCRIPTOR_EXTENSION_NAME,
             VK_KHR_SWAPCHAIN_EXTENSION_NAME,
             VK_EXT_EXTENDED_DYNAMIC_STATE_3_EXTENSION_NAME,
@@ -368,53 +372,48 @@ namespace Poulpe {
             VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME
         };
 
-        bool _InstanceCreated{ false };
-        bool _EnableValidationLayers{ false };
+        bool _instance_created{ false };
+        bool _enable_validation_layers{ false };
 
-        VkInstance _Instance = VK_NULL_HANDLE;
-        VkPhysicalDevice _PhysicalDevice = VK_NULL_HANDLE;
-        VkPhysicalDeviceProperties _DeviceProps;
-        VkPhysicalDeviceFeatures _DeviceFeatures;
-        VkPhysicalDeviceProperties2 _DeviceProperties2;
-        VkPhysicalDeviceMaintenance3Properties _DeviceMaintenance3Properties;
+        VkInstance _instance = VK_NULL_HANDLE;
+        VkPhysicalDevice _physical_device = VK_NULL_HANDLE;
+        VkPhysicalDeviceProperties _device_props;
+        VkPhysicalDeviceFeatures _device_features;
+        VkPhysicalDeviceProperties2 _device_props2;
+        VkPhysicalDeviceMaintenance3Properties _device_maintenance3_props;
 
-        VkDevice _Device{ VK_NULL_HANDLE };
-        std::vector<VkQueue> _GraphicsQueues{};
-        std::vector<VkQueue> _PresentQueues{};
-        VkSurfaceKHR _Surface{ VK_NULL_HANDLE };
-        VkFormat _SwapChainImageFormat{};
-        VkExtent2D _SwapChainExtent{};
-        VkDebugUtilsMessengerEXT _DebugMessengerCallback{ VK_NULL_HANDLE };
-        QueueFamilyIndices _QueueFamilyIndices{};
-        VkSurfaceFormatKHR _SurfaceFormat{};
-        VkPresentModeKHR _PresentMode{};
-        SwapChainSupportDetails _SwapChainSupport{};
+        VkDevice _device{ VK_NULL_HANDLE };
+        std::vector<VkQueue> _graphics_queues{};
+        std::vector<VkQueue> _present_queues{};
+        VkSurfaceKHR _surface{ VK_NULL_HANDLE };
+        VkFormat _swapchain_iImage_format{};
+        VkExtent2D _swapchain_extent{};
+        VkDebugUtilsMessengerEXT _debug_msg_callback{ VK_NULL_HANDLE };
+        QueueFamilyIndices _queue_family_indices{};
+        VkSurfaceFormatKHR _surface_format{};
+        VkPresentModeKHR _present_mode{};
+        SwapChainSupportDetails _swapchain_support{};
 
-        std::vector<VkLayerProperties> _LayersAvailable{};
-        std::vector<VkExtensionProperties> _Extensions{};
-        std::vector<const char*> _RequiredExtensions{};
-        std::vector<VkFence> _InFlightFences{};
-        std::vector<VkFence> _ImagesInFlight{};
-        VkFence _Fence{};
+        std::vector<VkLayerProperties> _layers_available{};
+        std::vector<VkExtensionProperties> _extensions{};
+        std::vector<const char*> _required_extensions{};
+        std::vector<VkFence> _in_flight_fences{};
+        std::vector<VkFence> _images_in_flight{};
 
-        VkSampleCountFlagBits _MsaaSamples{ VK_SAMPLE_COUNT_8_BIT };
+        VkSampleCountFlagBits _sample_count{ VK_SAMPLE_COUNT_8_BIT };
 
-        std::mutex _MutexQueueSubmit{};
-        std::mutex _MutexDraw{};
-        std::mutex _MutexCmdBuffer{};
-        std::mutex _MutexAcquireNextImage{};
-        std::mutex _MutexGraphicsPipeline{};
+        std::mutex _mutex_queue_submit{};
 
-        VkDeviceSize _MaxMemoryHeap{};
-        std::unique_ptr<DeviceMemoryPool> _DeviceMemoryPool{ nullptr };
+        VkDeviceSize _max_memory_heap{};
+        std::unique_ptr<DeviceMemoryPool> _device_memory_pool{ nullptr };
 
-        VkFence _FenceAcquireImage{};
-        VkFence _FenceSubmit{};
-        VkFence _FenceBuffer{};
+        VkFence _fence_acquire_image{};
+        VkFence _fence_submit{};
+        VkFence _fence_buffer{};
 
         //@todo move to config file
-        //unsigned int _width{ 800 };
-        //unsigned int _height{ 600 };
+        // unsigned int _width{ 800 };
+        // unsigned int _height{ 600 };
         unsigned int _width{ 2560 };
         unsigned int _height{ 1440 };
 

@@ -93,20 +93,28 @@ namespace Poulpe
       VkAttachmentStoreOp storeOp = VK_ATTACHMENT_STORE_OP_STORE,
       bool continuousCmdBuffer = false);
     void clear() ;
-    void clearRendererScreen();
     void destroy() ;
-    void draw(VkCommandBuffer& cmd_buffer,
-              DrawCommands& drawCmds,
-              VkImageView& colorView,
-              VkImage& color,
-              VkImageView& depthView,
-              VkImage& depth,
-              std::vector<Entity*> const& entities,
-              std::latch& count_down,
-              unsigned int thread_id,
-              bool shadows = false);
-    void drawShadowMap(VkCommandBuffer &cmd_buffer);
-    void endRendering(VkCommandBuffer& cmd_buffer, VkImage image, VkImage depthImage);
+    void draw(
+      VkCommandBuffer& cmd_buffer,
+      DrawCommands& draw_cmds,
+      VkImageView& colorview,
+      VkImage& color,
+      VkImageView& depthview,
+      VkImage& depth,
+      std::vector<Entity*> const& entities,
+      VkAttachmentLoadOp const load_op,
+      std::latch& count_down,
+      unsigned int const thread_id);
+    void drawShadowMap(
+      VkCommandBuffer& cmd_buffer,
+      DrawCommands& draw_cmds,
+      VkImageView& depthview,
+      VkImage& depth,
+      std::vector<Entity*> const& entities,
+      VkAttachmentLoadOp const load_op,
+      std::latch& count_down,
+      unsigned int const thread_id);
+    void endRendering(VkCommandBuffer& cmd_buffer, VkImage image, VkImage depth_image);
     inline Camera* getCamera()  { return _camera; }
     inline uint32_t getCurrentFrameIndex() const { return _current_frame; }
     inline std::vector<VkImageView>* getDepthMapImageViews()  { return & _depthmap_imageviews; }
@@ -203,8 +211,10 @@ namespace Poulpe
     VkSampler createSkyboxTextureSampler(uint32_t mipLevels)  {
       return _vulkan->createSkyboxTextureSampler(mipLevels);
     }
-    Buffer createStorageBuffers(size_t storageBuffer)  {
-      return _vulkan->createStorageBuffers(storageBuffer);
+    Buffer createStorageBuffers(
+      ObjectBuffer const& storage_buffer,
+      VkCommandPool& command_pool) {
+      return _vulkan->createStorageBuffers(storage_buffer, command_pool);
     }
     void createTextureImage(VkCommandBuffer& cmd_buffer,
       stbi_uc* pixels,
@@ -224,8 +234,8 @@ namespace Poulpe
     VkSampler createTextureSampler(uint32_t mipLevels)  {
       return _vulkan->createTextureSampler(mipLevels);
     }
-    Buffer createUniformBuffers(uint32_t uniformBuffersCount)  {
-      return _vulkan->createUniformBuffers(uniformBuffersCount);
+    Buffer createUniformBuffers(uint32_t uniformBuffersCount, VkCommandPool& commandPool)  {
+      return _vulkan->createUniformBuffers(uniformBuffersCount, commandPool);
     }
     Buffer createVertexBuffer(VkCommandPool commandPool,
       std::vector<Vertex> vertices)  {
@@ -271,7 +281,7 @@ namespace Poulpe
 
   private:
     const uint32_t _MAX_FRAMES_IN_FLIGHT{ 2 };
-    const size_t _MAX_RENDER_THREAD{ 2 };
+    const size_t _MAX_RENDER_THREAD{ 3 };
 
     void onFinishRender();
     void setPerspective();
@@ -282,7 +292,7 @@ namespace Poulpe
     VkSwapchainKHR _swapchain{ nullptr };
 
     std::vector<VkImage> _images{};
-    std::vector<VkImageView> _image_views{};
+    std::vector<VkImageView> _imageviews{};
     std::vector<VkImage> _images2{};
     std::vector<VkImageView> _imageviews2{};
     std::vector<VkImage> _images3{};
@@ -311,7 +321,7 @@ namespace Poulpe
     TextureManager* _texture_manager{ nullptr };
 
     //@todo move to meshManager
-    std::vector<VkImageView> _depth_image_views{};
+    std::vector<VkImageView> _depth_imageviews{};
     std::vector<VkImage> _depth_images{};
     std::vector<VkImageView> _depth_imageviews2{};
     std::vector<VkImage> _depth_images2{};
@@ -357,8 +367,7 @@ namespace Poulpe
     std::vector<Entity*> _entities_buffer{};
 
     std::vector<VkSemaphore> _entities_sema_finished;
-    std::vector<VkSemaphore> _shadowmap_sema_finished;
-
+    
     std::vector<VkFence> _images_in_flight{};
     std::vector<VkFence> _fences_in_flight{};
 

@@ -129,36 +129,36 @@ namespace Poulpe
     _refresh = true;
   }
 
-  void RenderManager::renderScene(std::chrono::duration<float> deltaTime)
+  void RenderManager::renderScene(std::chrono::duration<float> deltatime)
   {
     _renderer->renderScene();
 
     //@todo animate light
-    //_light_manager->animateAmbientLight(deltaTime);
+    //_light_manager->animateAmbientLight(deltatime);
     auto* worldNode = _entity_manager->getWorldNode();
 
-    std::ranges::for_each(worldNode->getChildren(), [&](const auto& leafNode) {
-      std::ranges::for_each(leafNode->getChildren(), [&](const auto& entityNode) {
+    std::ranges::for_each(worldNode->getChildren(), [&](const auto& leaf_node) {
+      std::ranges::for_each(leaf_node->getChildren(), [&](const auto& entity_node) {
 
-        auto const& entity = entityNode->getEntity();
+        auto const& entity = entity_node->getEntity();
 
         auto* mesh_component = _component_manager->get<MeshComponent>(entity->getID());
         auto mesh = mesh_component->template has<Mesh>();
 
         if (mesh) {
-          auto basicRdrImpl = _component_manager->get<RenderComponent>(entity->getID());
-          if (mesh->isDirty() && basicRdrImpl) {
-            (*basicRdrImpl)(deltaTime, mesh);
+          auto rdr_impl = _component_manager->get<RenderComponent>(entity->getID());
+          if (mesh->isDirty() && rdr_impl) {
+            (*rdr_impl)(deltatime, mesh);
           }
 
-          //auto* animationComponent = _component_manager->get<AnimationComponent>(entity->getID());
-          //if (animationComponent) {
-          //  (*animationComponent)(deltaTime, mesh);
-          //}
+          auto* animation_component = _component_manager->get<AnimationComponent>(entity->getID());
+          if (animation_component) {
+            (*animation_component)(deltatime, mesh);
+          }
 
           //auto* boneAnimationComponent = _component_manager->get<BoneAnimationComponent>(entity->getID());
           //if (boneAnimationComponent) {
-            //boneAnimationComponent->visit(deltaTime, mesh);
+            //boneAnimationComponent->visit(deltatime, mesh);
             //mesh->setIsDirty(true);
 
             /*if (mesh->hasBufferStorage()) {
@@ -183,15 +183,14 @@ namespace Poulpe
 
   void RenderManager::loadData(std::string const & level)
   {
-    auto * const configManager = Poulpe::Locator::getConfigManager();
+    auto * const config_manager = Poulpe::Locator::getConfigManager();
 
-    nlohmann::json const& appConfig = configManager->appConfig();
-    std::string_view threadQueueName{ "loading" };
+    nlohmann::json const& app_config = config_manager->appConfig();
 
-    auto const& levelData = configManager->loadLevelData(level);
-    _texture_manager->addConfig(configManager->texturesConfig());
+    auto const& lvl_data = config_manager->loadLevelData(level);
+    _texture_manager->addConfig(config_manager->texturesConfig());
 
-    std::string const sb{ (_current_skybox.empty()) ? static_cast<std::string>(appConfig["defaultSkybox"])
+    std::string const sb{ (_current_skybox.empty()) ? static_cast<std::string>(app_config["defaultSkybox"])
       : _current_skybox };
 
     std::latch count_down{ 3 };
@@ -200,58 +199,58 @@ namespace Poulpe
     textures.detach();
     std::jthread skybox(std::move(std::bind(_texture_manager->loadSkybox(sb), std::ref(count_down))));
     skybox.detach();
-    std::jthread shaders(std::move(std::bind(_shader_manager->load(configManager->shaderConfig()), std::ref(count_down))));
+    std::jthread shaders(std::move(std::bind(_shader_manager->load(config_manager->shaderConfig()), std::ref(count_down))));
     shaders.detach();
     count_down.wait();
 
     setIsLoaded();
 
-    std::jthread entities(std::move(_entity_manager->load(levelData)));
+    std::jthread entities(std::move(_entity_manager->load(lvl_data)));
     entities.detach();
   }
 
   void RenderManager::prepareHUD()
   {
-    auto const deltaTime{ std::chrono::duration<float, std::milli>(0) };
+    auto const deltatime{ std::chrono::duration<float, std::milli>(0) };
 
-    auto gridEntity = std::make_unique<Entity>();
-    auto gridMesh = std::make_unique<Mesh>();
-    auto gridRdrImpl{ RendererFactory::create<Grid>() };
-    gridRdrImpl->init(_renderer.get(), _texture_manager.get(), nullptr);
+    auto grid_entity = std::make_unique<Entity>();
+    auto grid_mesh = std::make_unique<Mesh>();
+    auto grid_rdr_impl{ RendererFactory::create<Grid>() };
+    grid_rdr_impl->init(_renderer.get(), _texture_manager.get(), nullptr);
 
-    (*gridRdrImpl)(deltaTime, gridMesh.get());
+    (*grid_rdr_impl)(deltatime, grid_mesh.get());
 
-    _component_manager->add<RenderComponent>(gridEntity->getID(), std::move(gridRdrImpl));
-    _component_manager->add<MeshComponent>(gridEntity->getID(), std::move(gridMesh));
+    _component_manager->add<RenderComponent>(grid_entity->getID(), std::move(grid_rdr_impl));
+    _component_manager->add<MeshComponent>(grid_entity->getID(), std::move(grid_mesh));
 
-    auto chEntity = std::make_unique<Entity>();
-    auto chMesh = std::make_unique<Mesh>();
-    auto chRdrImpl{ RendererFactory::create<Crosshair>() };
-    chRdrImpl->init(_renderer.get(), _texture_manager.get(), nullptr);
+    auto crosshair_entity = std::make_unique<Entity>();
+    auto crosshair_mesh = std::make_unique<Mesh>();
+    auto crosshair_rdr_impl{ RendererFactory::create<Crosshair>() };
+    crosshair_rdr_impl->init(_renderer.get(), _texture_manager.get(), nullptr);
 
-    (*chRdrImpl)(deltaTime, chMesh.get());
-    _component_manager->add<RenderComponent>(chEntity->getID(), std::move(chRdrImpl));
-    _component_manager->add<MeshComponent>(chEntity->getID(), std::move(chMesh));
+    (*crosshair_rdr_impl)(deltatime, crosshair_mesh.get());
+    _component_manager->add<RenderComponent>(crosshair_entity->getID(), std::move(crosshair_rdr_impl));
+    _component_manager->add<MeshComponent>(crosshair_entity->getID(), std::move(crosshair_mesh));
 
-    _entity_manager->addHUD(std::move(gridEntity));
-    _entity_manager->addHUD(std::move(chEntity));
+    _entity_manager->addHUD(std::move(grid_entity));
+    _entity_manager->addHUD(std::move(crosshair_entity));
   }
 
   void RenderManager::prepareSkybox()
   {
-    auto skyboxEntity = std::make_unique<Entity>();
-    auto skyboxMesh = std::make_unique<Mesh>();
-    skyboxMesh->setHasShadow(false);
-    skyboxMesh->setIsIndexed(false);
+    auto skybox_entity = std::make_unique<Entity>();
+    auto skybox_mesh = std::make_unique<Mesh>();
+    skybox_mesh->setHasShadow(false);
+    skybox_mesh->setIsIndexed(false);
 
-    auto skyRdrImpl{ RendererFactory::create<Skybox>() };
-    skyRdrImpl->init(_renderer.get(), _texture_manager.get(), nullptr);
+    auto skybox_rdr_impl{ RendererFactory::create<Skybox>() };
+    skybox_rdr_impl->init(_renderer.get(), _texture_manager.get(), nullptr);
 
-    auto deltaTime = std::chrono::duration<float, std::milli>(0);
-    (*skyRdrImpl)(deltaTime, skyboxMesh.get());
+    auto deltatime = std::chrono::duration<float, std::milli>(0);
+    (*skybox_rdr_impl)(deltatime, skybox_mesh.get());
 
-    _component_manager->add<RenderComponent>(skyboxEntity->getID(), std::move(skyRdrImpl));
-    _component_manager->add<MeshComponent>(skyboxEntity->getID(), std::move(skyboxMesh));
-    _entity_manager->setSkybox(std::move(skyboxEntity));
+    _component_manager->add<RenderComponent>(skybox_entity->getID(), std::move(skybox_rdr_impl));
+    _component_manager->add<MeshComponent>(skybox_entity->getID(), std::move(skybox_mesh));
+    _entity_manager->setSkybox(std::move(skybox_entity));
   }
 }

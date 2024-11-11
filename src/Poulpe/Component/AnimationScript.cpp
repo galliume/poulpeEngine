@@ -44,10 +44,10 @@ namespace Poulpe
 
   AnimationScript::AnimationScript(std::string const& scriptPath)
   {
-    _ScriptPath = "./" + scriptPath;
+    _script_path = "./" + scriptPath;
 
-    if (!std::filesystem::exists(_ScriptPath)) {
-      PLP_FATAL("script file {} does not exits.", _ScriptPath);
+    if (!std::filesystem::exists(_script_path)) {
+      PLP_FATAL("script file {} does not exits.", _script_path);
       return;
     }
 
@@ -56,7 +56,7 @@ namespace Poulpe
     lua_register(_lua_State, "_Rotate", wrapRotate);
     lua_register(_lua_State, "_Move", wrapMove);
 
-    checkLua(_lua_State, luaL_dofile(_lua_State, _ScriptPath.c_str()));
+    checkLua(_lua_State, luaL_dofile(_lua_State, _script_path.c_str()));
   }
 
   AnimationScript::~AnimationScript()
@@ -108,16 +108,16 @@ namespace Poulpe
       anim->done = done;
     };
     animMove->update(animMove.get(), dataMove, deltaTimeMove);
-    _NewMoveAnimations.emplace_back(std::move(animMove));
+    _new_moves.emplace_back(std::move(animMove));
   }
 
   void AnimationScript::rotate(Data* dataRotate, std::chrono::duration<float> deltaTimeRotate, float duration, glm::vec3 angle)
   {
-    std::unique_ptr<AnimationRotate> animRotate = std::make_unique<AnimationRotate>();
-    animRotate->duration = duration;
-    animRotate->angle = angle;
+    std::unique_ptr<AnimationRotate> anim_rotate = std::make_unique<AnimationRotate>();
+    anim_rotate->duration = duration;
+    anim_rotate->angle = angle;
 
-    animRotate->update = [](AnimationRotate* anim, Data* data, std::chrono::duration<float> deltaTime) {
+    anim_rotate->update = [](AnimationRotate* anim, Data* data, std::chrono::duration<float> deltaTime) {
 
       float t = anim->elapsedTime / anim->duration;
       bool done{ false };
@@ -144,35 +144,35 @@ namespace Poulpe
 
       anim->done = done;
     };
-    animRotate->update(animRotate.get(), dataRotate, deltaTimeRotate);
-    _NewRotateAnimations.emplace_back(std::move(animRotate));
+    anim_rotate->update(anim_rotate.get(), dataRotate, deltaTimeRotate);
+    _new_rotates.emplace_back(std::move(anim_rotate));
   }
 
   void AnimationScript::operator()(std::chrono::duration<float> const& deltaTime, Mesh* mesh)
   {
-    _Data = mesh->getData();
+    _data = mesh->getData();
 
-    std::ranges::for_each(_NewMoveAnimations, [&](auto& anim) {
-      _MoveAnimations.emplace_back(std::move(anim));
+    std::ranges::for_each(_new_moves, [&](auto& anim) {
+      _moves.emplace_back(std::move(anim));
     });
-    std::ranges::for_each(_NewRotateAnimations, [&](auto& anim) {
-      _RotateAnimations.emplace_back(std::move(anim));
+    std::ranges::for_each(_new_rotates, [&](auto& anim) {
+      _rotates.emplace_back(std::move(anim));
     });
 
-    _NewMoveAnimations.clear();
-    _NewRotateAnimations.clear();
+    _new_moves.clear();
+    _new_rotates.clear();
 
-    if (!_MoveInit) {
+    if (!_move_init) {
       lua_getglobal(_lua_State, "nextMove");
       if (lua_isfunction(_lua_State, -1)) {
         lua_pushlightuserdata(_lua_State, this);
         lua_pushnumber(_lua_State, static_cast<double>(deltaTime.count()));
         checkLua(_lua_State, lua_pcall(_lua_State, 2, 1, 0));
       }
-      _MoveInit = true;
+      _move_init = true;
     }
 
-    std::ranges::for_each(_MoveAnimations, [&](auto& anim) {
+    std::ranges::for_each(_moves, [&](auto& anim) {
 
       anim->update(anim.get(), mesh->getData(), deltaTime);
 
@@ -186,17 +186,17 @@ namespace Poulpe
       }
     });
 
-    if (!_RotateInit) {
+    if (!_rotate_init) {
       lua_getglobal(_lua_State, "nextRotation");
       if (lua_isfunction(_lua_State, -1)) {
         lua_pushlightuserdata(_lua_State, this);
         lua_pushnumber(_lua_State, static_cast<double>(deltaTime.count()));
         checkLua(_lua_State, lua_pcall(_lua_State, 2, 1, 0));
       }
-      _RotateInit = true;
+      _rotate_init = true;
     }
 
-    std::ranges::for_each(_RotateAnimations, [&](auto& anim) {
+    std::ranges::for_each(_rotates, [&](auto& anim) {
       anim->update(anim.get(), mesh->getData(), deltaTime);
 
       if (anim->done) {
@@ -209,13 +209,13 @@ namespace Poulpe
       }
     });
 
-    std::erase_if(_MoveAnimations, [](auto& anim) { return anim->done; });
-    std::erase_if(_RotateAnimations, [](auto& anim) { return anim->done; });
+    std::erase_if(_moves, [](auto& anim) { return anim->done; });
+    std::erase_if(_rotates, [](auto& anim) { return anim->done; });
   }
     //lua_State* L = luaL_newstate();
     //luaL_openlibs(L);
 
-    //if (checkLua(L, luaL_dofile(L, _ScriptPath.c_str())))
+    //if (checkLua(L, luaL_dofile(L, _script_path.c_str())))
     //{
     //  lua_getglobal(L, "a");
     //  if (lua_isnumber(L, -1)) {

@@ -4,7 +4,7 @@ namespace Poulpe
 {
     void DestroyManager::cleanDeviceMemory()
     {
-        _DeviceMemoryPool->clear();
+        _device_memory_pool->clear();
     }
 
     template<std::derived_from<Entity> T>

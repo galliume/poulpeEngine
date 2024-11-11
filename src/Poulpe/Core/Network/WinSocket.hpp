@@ -24,7 +24,7 @@ namespace Poulpe
     void read();
 
   private:
-    WSADATA _Data;
+    WSADATA _data;
     SOCKET _Socket;
     SOCKADDR_IN6 _SockAddrIn;
     SocketStatus _Status{ SocketStatus::NOT_CONNECTED};

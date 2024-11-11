@@ -40,10 +40,10 @@ namespace Poulpe
 
     _swapchain = _vulkan->createSwapChain(_images);
 
-    _image_views.resize(_images.size());
+    _imageviews.resize(_images.size());
     _samplers.resize(_images.size());
     _depth_images.resize(_images.size());
-    _depth_image_views.resize(_images.size());
+    _depth_imageviews.resize(_images.size());
     _depth_samplers.resize(_images.size());
 
     _imageviews2.resize(_images.size());
@@ -68,7 +68,7 @@ namespace Poulpe
           | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
           VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, image);
 
-      _image_views[i] = _vulkan->createImageView(_images[i],
+      _imageviews[i] = _vulkan->createImageView(_images[i],
         _vulkan->getSwapChainImageFormat(), VK_IMAGE_ASPECT_COLOR_BIT);
       _samplers[i] = _vulkan->createTextureSampler(1);
 
@@ -83,7 +83,7 @@ namespace Poulpe
         VK_IMAGE_ASPECT_DEPTH_BIT);
 
       _depth_images[i] = depth_image;
-      _depth_image_views[i] = depth_imageview;
+      _depth_imageviews[i] = depth_imageview;
       _depth_samplers[i] = _vulkan->createTextureSampler(1);
     }
     for (size_t i{ 0 }; i < _images.size(); ++i) {
@@ -104,17 +104,17 @@ namespace Poulpe
     _cmd_pool_entities3 = _vulkan->createCommandPool();
 
     _cmd_buffer_entities = _vulkan->allocateCommandBuffers(_cmd_pool_entities,
-      static_cast<uint32_t>(_image_views.size()));
+      static_cast<uint32_t>(_imageviews.size()));
 
     _cmd_buffer_entities2 = _vulkan->allocateCommandBuffers(_cmd_pool_entities2,
-      static_cast<uint32_t>(_image_views.size()));
+      static_cast<uint32_t>(_imageviews.size()));
 
     _cmd_buffer_entities3 = _vulkan->allocateCommandBuffers(_cmd_pool_entities3,
-      static_cast<uint32_t>(_image_views.size()));
+      static_cast<uint32_t>(_imageviews.size()));
 
     _cmd_pool_shadowmap = _vulkan->createCommandPool();
     _cmd_buffer_shadowmap = _vulkan->allocateCommandBuffers(_cmd_pool_shadowmap,
-      static_cast<uint32_t>(_image_views.size()));
+      static_cast<uint32_t>(_imageviews.size()));
 
     for (size_t i { 0 }; i < _images.size(); ++i) {
       VkImage image{};
@@ -155,50 +155,56 @@ namespace Poulpe
     fence_info.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
     fence_info.flags = VK_FENCE_CREATE_SIGNALED_BIT;
     _entities_sema_finished.resize(_MAX_RENDER_THREAD);
-    _shadowmap_sema_finished.resize(_MAX_RENDER_THREAD);
     _image_available.resize(_MAX_RENDER_THREAD);
 
     for (size_t i { 0 }; i < _MAX_RENDER_THREAD; ++i) {
-
       result = vkCreateSemaphore(_vulkan->getDevice(), &sema_create_info, nullptr, &_entities_sema_finished[i]);
-      if (VK_SUCCESS != result) PLP_ERROR("can't create _EntitiesSemaRenderFinished semaphore");
-
-      result = vkCreateSemaphore(_vulkan->getDevice(), &sema_create_info, nullptr, &_shadowmap_sema_finished[i]);
-      if (VK_SUCCESS != result) PLP_ERROR("can't create _ShadowMapSemaRenderFinished semaphore");
-
+      if (VK_SUCCESS != result) PLP_ERROR("can't create _entities_sema_finished semaphore");
+    }
+    for (size_t i { 0 }; i < _MAX_FRAMES_IN_FLIGHT; ++i) {
       result = vkCreateSemaphore(_vulkan->getDevice(), &sema_create_info, nullptr, &_image_available[i]);
-      if (VK_SUCCESS != result) PLP_ERROR("can't create _ImageAvailable semaphore");
+      if (VK_SUCCESS != result) PLP_ERROR("can't create _image_available semaphore");
 
       result = vkCreateFence(_vulkan->getDevice(), &fence_info, nullptr, &_images_in_flight[i]);
-      if (VK_SUCCESS != result) PLP_ERROR("can't create _PreviousFrame fence");
+      if (VK_SUCCESS != result) PLP_ERROR("can't create _images_in_flight fence");
 
       result = vkCreateFence(_vulkan->getDevice(), &fence_info, nullptr, &_fences_in_flight[i]);
-      if (VK_SUCCESS != result) PLP_ERROR("can't create _InFlightFences fence");
+      if (VK_SUCCESS != result) PLP_ERROR("can't create _fences_in_flight fence");
     }
   }
 
   void Renderer::setPerspective()
-  {        
-      _perspective = glm::perspective(glm::radians(45.0f),
-          static_cast<float>(_vulkan->getSwapChainExtent().width) / static_cast<float>(_vulkan->getSwapChainExtent().height),
-          0.1f, 100.f);
-      _perspective[1][1] *= -1;
+  {
+    _perspective = glm::perspective(
+      glm::radians(45.0f),
+      static_cast<float>(_vulkan->getSwapChainExtent().width) / static_cast<float>(_vulkan->getSwapChainExtent().height),
+      0.1f, 100.f);
+    _perspective[1][1] *= -1;
   }
 
   void Renderer::setDeltatime(float deltatime)
   {
-      _deltatime = deltatime;
+    _deltatime = deltatime;
   }
 
-  void Renderer::drawShadowMap(VkCommandBuffer &cmd_buffer)
+  void Renderer::drawShadowMap(
+    VkCommandBuffer& cmd_buffer,
+    DrawCommands& draw_cmds,
+    VkImageView& depthview,
+    VkImage& depth,
+    std::vector<Entity*> const& entities,
+    VkAttachmentLoadOp const load_op,
+    std::latch& count_down,
+    unsigned int const thread_id
+  )
   {
     std::string const pipeline_name{ "shadowMap" };
     auto const& pipeline = getPipeline(pipeline_name);
   
-    //_API->beginCommandBuffer(_CommandBuffersEntities[_CurrentFrame]);
+    _vulkan->beginCommandBuffer(cmd_buffer);
     _vulkan->startMarker(cmd_buffer, "shadow_map_" + pipeline_name, 0.1f, 0.2f, 0.3f);
-
-    _vulkan->transitionImageLayout(cmd_buffer, _depthmap_images[0],
+    
+    _vulkan->transitionImageLayout(cmd_buffer, depth,
       VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, VK_IMAGE_ASPECT_DEPTH_BIT);
 
     VkClearColorValue color_clear = {};
@@ -211,26 +217,29 @@ namespace Poulpe
 
     VkRenderingAttachmentInfo depth_attachment_info{ };
     depth_attachment_info.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
-    depth_attachment_info.imageView = _depthmap_imageviews[0];
+    depth_attachment_info.imageView = depthview;
     depth_attachment_info.imageLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
     depth_attachment_info.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
     depth_attachment_info.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
     depth_attachment_info.clearValue.depthStencil = depth_stencil;
     depth_attachment_info.clearValue.color = color_clear;
 
-    uint32_t const width{ 2048 };// _API->getSwapChainExtent().width
-    uint32_t const height{ 2048 };//  _API->getSwapChainExtent().height
+    //uint32_t const width{ _vulkan->getSwapChainExtent().width };
+    //uint32_t const height{ _vulkan->getSwapChainExtent().height };
+    uint32_t const width{ 2048 };
+    uint32_t const height{ 2048 };
+
 
     VkRenderingInfo  rendering_info{ };
     rendering_info.sType = VK_STRUCTURE_TYPE_RENDERING_INFO;
     rendering_info.renderArea.extent.width = width;
     rendering_info.renderArea.extent.height = height;
     rendering_info.layerCount = 1;
-    rendering_info.pDepthAttachment = & depth_attachment_info;
+    rendering_info.pDepthAttachment = &depth_attachment_info;
     rendering_info.colorAttachmentCount = 0;
-    rendering_info.flags = VK_SUBPASS_CONTENTS_INLINE;
+    //rendering_info.flags = VK_SUBPASS_CONTENTS_INLINE;
 
-    vkCmdBeginRenderingKHR(cmd_buffer, & rendering_info);
+    vkCmdBeginRenderingKHR(cmd_buffer, &rendering_info);
 
     VkViewport viewport;
     viewport.x = 0;
@@ -243,23 +252,23 @@ namespace Poulpe
     vkCmdSetViewport(cmd_buffer, 0, 1, &viewport);
     VkRect2D scissor = { { 0, 0 }, { width, height } };
 
-    vkCmdSetScissor(cmd_buffer, 0, 1, & scissor);
+    vkCmdSetScissor(cmd_buffer, 0, 1, &scissor);
 
     //float const depthBiasConstant = 0.0f;
     //float const depthBiasSlope = 0.0f;
 
-    //vkCmdSetDepthClampEnableEXT(_CommandBuffersEntities[_CurrentFrame], VK_TRUE);
-    //vkCmdSetDepthBias(_CommandBuffersEntities[_CurrentFrame], depthBiasConstant, 0.0f, depthBiasSlope);
+    //vkCmdSetDepthClampEnableEXT(_CommandBuffersEntities[_current_frame], VK_TRUE);
+    //vkCmdSetDepthBias(_CommandBuffersEntities[_current_frame], depthBiasConstant, 0.0f, depthBiasSlope);
 
     std::string last_shader{};
     bool need_pipeline_update{true};
     
-    std::ranges::for_each(_entities, [&](auto const& entity) {
+    std::ranges::for_each(entities, [&](auto const& entity) {
       auto mesh_component = _component_manager->get<MeshComponent>(entity->getID());
       if (mesh_component) {
         Mesh* mesh = mesh_component->template has<Mesh>();
 
-        if (mesh->hasShadow() && !mesh->getUniformBuffers()->empty()) {
+        if (mesh->has_shadow() && !mesh->getUniformBuffers()->empty()) {
 
           auto const& current_shader = mesh->getShaderName();
 
@@ -271,17 +280,16 @@ namespace Poulpe
             last_shader = current_shader;
           }
 
-          constants push_constants{};
-          push_constants.textureIDBB = glm::vec3(mesh->getData()->_texture_index, 0.0, 0.0);
-          push_constants.view = getCamera()->lookAt();
-          push_constants.viewPos = getCamera()->getPos();
+          uint32_t min{ 0 };
+          uint32_t max{ 0 };
 
-          vkCmdPushConstants(
-            cmd_buffer,
-            pipeline->pipelineLayout,
-            VK_SHADER_STAGE_VERTEX_BIT,
-            0, sizeof(constants),
-            &push_constants);
+          for (size_t i{ 0 }; i < mesh->getUniformBuffers()->size(); ++i) {
+            max = mesh->getData()->_ubos_offset.at(i);
+            auto ubos = std::vector<UniformBufferObject>(mesh->getData()->_ubos.begin() + min, mesh->getData()->_ubos.begin() + max);
+            min = max;
+            if (ubos.empty()) continue;
+            _vulkan->updateUniformBuffer(mesh->getUniformBuffers()->at(i), &ubos);
+          }
 
           vkCmdBindDescriptorSets(
             cmd_buffer,
@@ -300,7 +308,7 @@ namespace Poulpe
             *pipeline,
             mesh->getData(),
             mesh->getData()->_ubos.size(),
-            mesh->isIndexed());
+            mesh->is_indexed());
         }
       }
     });
@@ -308,10 +316,18 @@ namespace Poulpe
     _vulkan->endMarker(cmd_buffer);
     _vulkan->endRendering(cmd_buffer);
 
-    _vulkan->transitionImageLayout(cmd_buffer, _depthmap_images[0],
-      VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_IMAGE_ASPECT_DEPTH_BIT);
+     _vulkan->transitionImageLayout(cmd_buffer, depth,
+       VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_IMAGE_ASPECT_DEPTH_BIT);
+ /*     _vulkan->transitionImageLayout(cmd_buffer, depth,
+        VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR, VK_IMAGE_ASPECT_DEPTH_BIT);*/
+
+    _vulkan->endCommandBuffer(cmd_buffer);
 
     _depthmap_descset_updated = true;
+
+    _draw_cmds.insert(&cmd_buffer, &_entities_sema_finished[thread_id]);
+
+    count_down.count_down();
   }
 
   void Renderer::draw(
@@ -322,19 +338,13 @@ namespace Poulpe
     VkImageView& depthview,
     VkImage& depth,
     std::vector<Entity*> const& entities,
+    VkAttachmentLoadOp const load_op,
     std::latch& count_down,
-    unsigned int thread_id,
-    bool shadows)
+    unsigned int const thread_id)
   {
     if (entities.empty()) return;
 
-    vkResetCommandBuffer(cmd_buffer, 0);
-
     _vulkan->beginCommandBuffer(cmd_buffer);
-
-    if (shadows) {
-      drawShadowMap(cmd_buffer);
-    }
 
     _vulkan->transitionImageLayout(cmd_buffer, color,
       VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_ASPECT_COLOR_BIT);
@@ -346,7 +356,7 @@ namespace Poulpe
       cmd_buffer,
       colorview,
       depthview,
-      VK_ATTACHMENT_LOAD_OP_CLEAR,
+      load_op,
       VK_ATTACHMENT_STORE_OP_STORE);
 
     _vulkan->setViewPort(cmd_buffer);
@@ -391,24 +401,29 @@ namespace Poulpe
           need_pipeline_update = true;
           last_shader = current_shader;
         }
-
         if (mesh->hasPushConstants()) {
           mesh->applyPushConstants(cmd_buffer, pipeline->pipelineLayout, this, mesh);
         }
 
-        vkCmdBindDescriptorSets(cmd_buffer,
-                                VK_PIPELINE_BIND_POINT_GRAPHICS,
-                                pipeline->pipelineLayout,
-                                0, 1, mesh->getDescSet(), 0, nullptr);
+        vkCmdBindDescriptorSets(
+          cmd_buffer,
+          VK_PIPELINE_BIND_POINT_GRAPHICS,
+          pipeline->pipelineLayout,
+          0, 1, mesh->getDescSet(), 0, nullptr);
 
         if (need_pipeline_update) {
           _vulkan->bindPipeline(cmd_buffer, pipeline->pipeline);
           need_pipeline_update = false;
         }
 
-        _vulkan->draw(cmd_buffer, *mesh->getDescSet(), *pipeline, mesh->getData(), mesh->isIndexed());
+        _vulkan->draw(
+          cmd_buffer,
+          *mesh->getDescSet(),
+          *pipeline,
+          mesh->getData(),
+          mesh->is_indexed());
         /*vkCmdDrawIndexedIndirect(
-          _CommandBuffersEntities[_CurrentFrame],
+          _CommandBuffersEntities[_current_frame],
           indirectBuffer.buffer,
           0,
           1,
@@ -419,112 +434,84 @@ namespace Poulpe
     });
     _vulkan->endMarker(cmd_buffer);
     endRendering(cmd_buffer, color, depth);
-    
-    draw_cmds.insert(&cmd_buffer, &_entities_sema_finished[thread_id]);
+
+    _draw_cmds.insert(&cmd_buffer, &_entities_sema_finished[thread_id]);
 
     count_down.count_down();
   }
 
   void Renderer::renderScene()
   {
-    if (_entities.size() <= 0) {
-      swapBufferEntities();
-      return;
-    };
-
     vkWaitForFences(_vulkan->getDevice(), 1, &_fences_in_flight[_current_frame], VK_TRUE, UINT64_MAX);
-    vkResetFences(_vulkan->getDevice(), 1, &_fences_in_flight[_current_frame]);
     VkResult result = vkAcquireNextImageKHR(_vulkan->getDevice(), _swapchain, UINT64_MAX, _image_available[_current_frame], VK_NULL_HANDLE, &_image_index);
+    vkResetFences(_vulkan->getDevice(), 1, &_fences_in_flight[_current_frame]);
+    
+    //@todo check properly result
 
-    //@todo clean
-    if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR)
-    {
-        PLP_ERROR("Error on vkAcquireNextImageKHR {}", result);
-    }
+    std::latch count_down{3};
 
-    std::latch count_down{1};
+    if (_entity_manager->getSkybox()) {
+      //std::jthread skybox_thread([&]() {
+        draw(
+          _cmd_buffer_entities2[_current_frame],
+          _draw_cmds,
+          _imageviews[_current_frame],
+          _images[_current_frame],
+          _depth_imageviews[_current_frame],
+          _depth_images[_current_frame],
+          {_entity_manager->getSkybox()},
+          VK_ATTACHMENT_LOAD_OP_CLEAR,
+          count_down,
+          0);
+        //});
+        //@todo bugfix when detach() ?
+        //skybox_thread.join();
+      } else {
+        count_down.count_down();
+      }
 
-    //if (_entity_manager->getSkybox()) {
-    ////  std::jthread pack2([this, &draw_cmds, &count_down]() {
-        //draw(_CommandBuffersEntitiesBis[_CurrentFrame],
-        //    draw_cmds,
-        //    _ImageViews[_CurrentFrame],
-        //    _Images[_CurrentFrame],
-        //    _DepthImageViews[_CurrentFrame],
-        //    _DepthImages[_CurrentFrame],
-        //    {_entity_manager->getSkybox()},
-        //    count_down,
-        //    0,
-        //    false);
-    //};
-    //  pack2.detach();
-    //} else {
-      //count_down.count_down();
-//    };
-
-    if (_entities.size() > 0) {
-  //    std::jthread pack1([this, &draw_cmds, &count_down]() {
+      if (_entities.size() > 0) {
+        std::jthread shadow_map_thread([&]() {
+          drawShadowMap(
+            _cmd_buffer_entities3[_current_frame],
+            _draw_cmds,
+            _depthmap_imageviews[_current_frame],
+            _depthmap_images[_current_frame],
+            _entities,
+            VK_ATTACHMENT_LOAD_OP_CLEAR,
+            count_down,
+            1
+          );
+        });
+        shadow_map_thread.detach();
+        
+        std::jthread entities_thread([&]() {
           draw(
             _cmd_buffer_entities[_current_frame],
             _draw_cmds,
-            _image_views[_current_frame],
+            _imageviews[_current_frame],
             _images[_current_frame],
-            _depth_image_views[_current_frame],
-            _depth_images[_current_frame], 
+            _depth_imageviews[_current_frame],
+            _depth_images[_current_frame],
             _entities,
+            VK_ATTACHMENT_LOAD_OP_LOAD,
             count_down,
-            1,
-            true
+            2
           );
-        }
-    //  );
-
-    //  pack1.detach();
-    //} else {
-    //  PLP_DEBUG("count down !");
-      //count_down.count_down();
-    //}
+        });
+        entities_thread.detach();
+      } else {
+        count_down.count_down();
+        count_down.count_down();
+      }
 
     count_down.wait();
-    
+
     submit(_draw_cmds);
-  }
 
-  void Renderer::clearRendererScreen()
-  {
-    // {
-    //     vkResetCommandBuffer(_CommandBuffersEntities[_CurrentFrame], 0);
-    //     vkResetCommandBuffer(_CommandBuffersHUD[_CurrentFrame], 0);
-    //     vkResetCommandBuffer(_CommandBuffersSkybox[_CurrentFrame], 0);
-
-    //     beginRendering(_CommandBuffersEntities[_CurrentFrame]);
-    //     //do nothing !
-    //     endRendering(_CommandBuffersEntities[_CurrentFrame]);
-
-    //     beginRendering(_CommandBuffersHUD[_CurrentFrame]);
-    //     //do nothing !
-    //     endRendering(_CommandBuffersHUD[_CurrentFrame]);
-
-    //     beginRendering(_CommandBuffersSkybox[_CurrentFrame], VK_ATTACHMENT_LOAD_OP_CLEAR, VK_ATTACHMENT_STORE_OP_STORE);
-    //     //do nothing !
-    //     endRendering(_CommandBuffersSkybox[_CurrentFrame]);
-
-    //     std::vector<VkCommandBuffer> cmds{};
-    //     cmds.emplace_back(_CommandBuffersSkybox[_CurrentFrame]);
-    //     cmds.emplace_back(_CommandBuffersEntities[_CurrentFrame]);
-    //     cmds.emplace_back(_CommandBuffersHUD[_CurrentFrame]);
-
-    //     if (getDrawBbox()) {
-    //         vkResetCommandBuffer(_CommandBuffersBbox[_CurrentFrame], 0);
-
-    //         beginRendering(_CommandBuffersBbox[_CurrentFrame]);
-    //         //do nothing !
-    //         endRendering(_CommandBuffersBbox[_CurrentFrame]);
-    //         cmds.emplace_back(_CommandBuffersBbox[_CurrentFrame]);
-    //     }
-
-    //     submit();
-    // }
+    if (_entities.size() <= 0) {
+      swapBufferEntities();
+    };
   }
 
   void Renderer::destroy()
@@ -582,7 +569,8 @@ namespace Poulpe
       _vulkan->transitionImageLayout(cmd_buffer, depth_image,
         VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL, VK_IMAGE_ASPECT_DEPTH_BIT);
 
-      _vulkan->beginRendering(cmd_buffer,
+      _vulkan->beginRendering(
+        cmd_buffer,
         imageview,
         depth_imageview,
         load_op,
@@ -592,14 +580,14 @@ namespace Poulpe
       _vulkan->setScissor(cmd_buffer);
   }
 
-  void Renderer::endRendering(VkCommandBuffer& cmd_buffer, VkImage image, VkImage depthImage)
+  void Renderer::endRendering(VkCommandBuffer& cmd_buffer, VkImage image, VkImage depth_image)
   {
       _vulkan->endRendering(cmd_buffer);
 
       _vulkan->transitionImageLayout(cmd_buffer, image,
         VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR, VK_IMAGE_ASPECT_COLOR_BIT);
 
-      _vulkan->transitionImageLayout(cmd_buffer, depthImage,
+      _vulkan->transitionImageLayout(cmd_buffer, depth_image,
         VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR, VK_IMAGE_ASPECT_DEPTH_BIT);
 
       _vulkan->endCommandBuffer(cmd_buffer);
@@ -611,20 +599,34 @@ namespace Poulpe
       vkResetFences(_vulkan->getDevice(), 1, &_fences_in_flight[_current_frame]);
       return;
     }
+
+    std::jthread swap([&]() {
+      if (!_entities_buffer.empty()) {
+        swapBufferEntities();
+      }
+    });
+    swap.detach();
     
-    std::vector<VkSemaphore> wait_semaphores{ _image_available[_current_frame] };
+    std::array<VkSemaphore, 1> wait_semaphores{ _image_available[_current_frame] };
 
-    VkSubmitInfo submit_info{};
-    submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-    submit_info.pCommandBuffers = *draw_cmds.cmd_buffers.data();
-    submit_info.commandBufferCount = static_cast<uint32_t>(draw_cmds.cmd_buffers.size());
-    submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-    submit_info.pWaitDstStageMask = draw_cmds.stage_flags.data();
-    submit_info.signalSemaphoreCount = static_cast<uint32_t>(draw_cmds.semaphores.size());
-    submit_info.pSignalSemaphores = *draw_cmds.semaphores.data();
-    submit_info.waitSemaphoreCount = static_cast<uint32_t>(wait_semaphores.size());
-    submit_info.pWaitSemaphores = wait_semaphores.data();
+    std::vector<VkSubmitInfo> submit_infos{};
+    for (size_t i{ 0 }; i < draw_cmds.cmd_buffers.size(); ++i) {
+      VkSubmitInfo submit_info{};
+      submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+      submit_info.pCommandBuffers = draw_cmds.cmd_buffers.at(i);
+      submit_info.commandBufferCount = 1;
+      submit_info.pWaitDstStageMask = &draw_cmds.stage_flags.at(i);
+      submit_info.signalSemaphoreCount = 1;
+      submit_info.pSignalSemaphores = draw_cmds.semaphores.at(i);
 
+      //@todo ugly but works ?
+      if (i == 0) {
+        submit_info.waitSemaphoreCount = 1;
+        submit_info.pWaitSemaphores = wait_semaphores.data();
+      }
+      submit_infos.emplace_back(submit_info);
+    };
+    
     auto queue = _vulkan->getGraphicsQueues().at(0);
 
     std::vector<VkSwapchainKHR> swapchains{ _swapchain };
@@ -635,19 +637,13 @@ namespace Poulpe
     present_info.pWaitSemaphores = *draw_cmds.semaphores.data();
     present_info.swapchainCount = 1;
     present_info.pSwapchains = swapchains.data();
-    present_info.pImageIndices = &_current_frame;
+    present_info.pImageIndices = &_image_index;
 
     present_info.pResults = nullptr;
 
-    _vulkan->submit(queue, submit_info, present_info, _fences_in_flight[_current_frame]);
+    _vulkan->submit(queue, submit_infos, present_info, _fences_in_flight[_current_frame]);
 
-    //_CurrentFrame = (_CurrentFrame + 1) % _MAX_FRAMES_IN_FLIGHT;
-    _current_frame += 1;
-    _current_frame = std::clamp(_current_frame, uint32_t{ 0 }, uint32_t{ 1 });
-    //PLP_WARN("current frame: {}", _ImageIndex);
-    if (!_entities_buffer.empty()) {
-      swapBufferEntities();
-    }
+    _current_frame = (_current_frame + 1) % _MAX_FRAMES_IN_FLIGHT;
 
     _draw_cmds.clear();
     onFinishRender();
@@ -691,50 +687,6 @@ namespace Poulpe
   //{
   //  _Observers.push_back(observer);
   //}
-
-  /*VkRenderPass Renderer::createImGuiRenderPass(VkFormat format)
-  {
-      VkRenderPass renderPass{};
-
-      VkAttachmentDescription attachment = {};
-      attachment.format = format;
-      attachment.samples = VK_SAMPLE_COUNT_1_BIT;
-      attachment.load_op = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-      attachment.store_op = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-      attachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-      attachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-      attachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-      attachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
-      VkAttachmentReference color_attachment = {};
-      color_attachment.attachment = 0;
-      color_attachment.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-      VkSubpassDescription subpass = {};
-      subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
-      subpass.colorAttachmentCount = 1;
-      subpass.pColorAttachments = &color_attachment;
-      VkSubpassDependency dependency = {};
-      dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
-      dependency.dstSubpass = 0;
-      dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-      dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-      dependency.srcAccessMask = 0;
-      dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-      VkRenderPassCreateInfo info = {};
-      info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-      info.attachmentCount = 1;
-      info.pAttachments = &attachment;
-      info.subpassCount = 1;
-      info.pSubpasses = &subpass;
-      info.dependencyCount = 1;
-      info.pDependencies = &dependency;
-
-      VkResult result = vkCreateRenderPass(_API->getDevice(), & info, nullptr, & renderPass);
-
-      if (result != VK_SUCCESS) {
-          PLP_FATAL("failed to create imgui render pass : {}", result);
-      }
-      return renderPass;
-  }*/
 
   void Renderer::showGrid(bool show)
   {

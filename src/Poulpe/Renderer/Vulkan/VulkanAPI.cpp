@@ -65,9 +65,9 @@ namespace Poulpe {
         : _window(window)
     {
 #ifdef PLP_DEBUG_BUILD
-        _EnableValidationLayers = true;
+        _enable_validation_layers = true;
 #else
-        _EnableValidationLayers = false;
+        _enable_validation_layers = false;
 #endif
 
         if (!glfwVulkanSupported()) {
@@ -94,23 +94,23 @@ namespace Poulpe {
         fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
         //VkFence fence;
 
-        vkCreateFence(_Device, & fenceInfo, nullptr, & _FenceAcquireImage);
-        vkCreateFence(_Device, & fenceInfo, nullptr, & _FenceSubmit);
-        vkCreateFence(_Device, & fenceInfo, nullptr, & _FenceBuffer);
+        vkCreateFence(_device, & fenceInfo, nullptr, & _fence_acquire_image);
+        vkCreateFence(_device, & fenceInfo, nullptr, & _fence_submit);
+        vkCreateFence(_device, & fenceInfo, nullptr, & _fence_buffer);
     }
 
     void VulkanAPI::initMemoryPool()
     {
         VkPhysicalDeviceMemoryProperties memProperties;
-        vkGetPhysicalDeviceMemoryProperties(_PhysicalDevice, & memProperties);
+        vkGetPhysicalDeviceMemoryProperties(_physical_device, & memProperties);
 
-        _DeviceMemoryPool = std::make_unique<DeviceMemoryPool>(
-          _DeviceProperties2, _DeviceMaintenance3Properties, memProperties);
+        _device_memory_pool = std::make_unique<DeviceMemoryPool>(
+          _device_props2, _device_maintenance3_props, memProperties);
     }
 
     std::string VulkanAPI::getAPIVersion()
     {
-        if (_apiVersion.empty()) {
+        if (_api_version.empty()) {
             uint32_t instanceVersion = VK_API_VERSION_1_3;
 
             //@todo fix unused ?
@@ -125,9 +125,9 @@ namespace Poulpe {
             uint32_t minor = VK_VERSION_MINOR(instanceVersion);
             uint32_t patch = VK_VERSION_PATCH(instanceVersion);
 
-            _apiVersion = std::to_string(major) + "." + std::to_string(minor) + "." + std::to_string(patch);
+            _api_version = std::to_string(major) + "." + std::to_string(minor) + "." + std::to_string(patch);
         }
-        return _apiVersion;
+        return _api_version;
     }
 
     void VulkanAPI::createInstance()
@@ -150,12 +150,12 @@ namespace Poulpe {
         createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
         createInfo.pApplicationInfo = &appInfo;
 
-        createInfo.enabledExtensionCount = static_cast<uint32_t>(_RequiredExtensions.size());
-        createInfo.ppEnabledExtensionNames = _RequiredExtensions.data();
+        createInfo.enabledExtensionCount = static_cast<uint32_t>(_required_extensions.size());
+        createInfo.ppEnabledExtensionNames = _required_extensions.data();
 
         VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo{};
 
-        if (_EnableValidationLayers) {
+        if (_enable_validation_layers) {
             debugCreateInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
             debugCreateInfo.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT 
                 | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
@@ -164,8 +164,8 @@ namespace Poulpe {
             debugCreateInfo.pfnUserCallback = DebugCallback;
             debugCreateInfo.pUserData = nullptr;
 
-            createInfo.enabledLayerCount = static_cast<uint32_t>(_ValidationLayers.size());
-            createInfo.ppEnabledLayerNames = _ValidationLayers.data();
+            createInfo.enabledLayerCount = static_cast<uint32_t>(_validation_layers.size());
+            createInfo.ppEnabledLayerNames = _validation_layers.data();
             createInfo.pNext = (VkDebugUtilsMessengerCreateInfoEXT*)&debugCreateInfo;
             PLP_TRACE("Validations enabled");
         } else {
@@ -175,33 +175,33 @@ namespace Poulpe {
 
         VkResult result = VK_SUCCESS;
 
-        result = vkCreateInstance(& createInfo, nullptr, &_Instance);
+        result = vkCreateInstance(& createInfo, nullptr, &_instance);
 
         if (VK_SUCCESS != result) {
             PLP_FATAL("Can't create VK instance : {}", result);
             throw std::runtime_error("Can't create VK instance.");
         }
 
-        _InstanceCreated = true;
+        _instance_created = true;
 
-        volkLoadInstance(_Instance);
+        volkLoadInstance(_instance);
     }
 
     void VulkanAPI::initDetails()
     {
-        _SwapChainSupport = querySwapChainSupport(_PhysicalDevice);
-        _SurfaceFormat = chooseSwapSurfaceFormat(_SwapChainSupport.formats);
-        _PresentMode = chooseSwapPresentMode(_SwapChainSupport.presentModes);
-        _SwapChainExtent = chooseSwapExtent(_SwapChainSupport.capabilities);
-        _SwapChainImageFormat = _SurfaceFormat.format;
+        _swapchain_support = querySwapChainSupport(_physical_device);
+        _surface_format = chooseSwapSurfaceFormat(_swapchain_support.formats);
+        _present_mode = chooseSwapPresentMode(_swapchain_support.presentModes);
+        _swapchain_extent = chooseSwapExtent(_swapchain_support.capabilities);
+        _swapchain_iImage_format = _surface_format.format;
     }
 
     void VulkanAPI::enumerateExtensions()
     {
-        vkEnumerateInstanceExtensionProperties(nullptr, & _ExtensionCount, nullptr);
-        std::vector<VkExtensionProperties> extensions(_ExtensionCount);
-        vkEnumerateInstanceExtensionProperties(nullptr, & _ExtensionCount, extensions.data());
-        _Extensions = extensions;
+        vkEnumerateInstanceExtensionProperties(nullptr, & _extension_count, nullptr);
+        std::vector<VkExtensionProperties> extensions(_extension_count);
+        vkEnumerateInstanceExtensionProperties(nullptr, & _extension_count, extensions.data());
+        _extensions = extensions;
     }
 
     bool VulkanAPI::checkValidationLayerSupport()
@@ -212,7 +212,7 @@ namespace Poulpe {
         std::vector<VkLayerProperties> availableLayers(layerCount);
         vkEnumerateInstanceLayerProperties(&layerCount, availableLayers.data());
 
-        for (std::string const layerName : _ValidationLayers) {
+        for (std::string const layerName : _validation_layers) {
             bool layerFound = false;
 
             for (auto const & layerProperties : availableLayers) {
@@ -225,7 +225,7 @@ namespace Poulpe {
                 return false;
             }
         }
-        _LayersAvailable = availableLayers;
+        _layers_available = availableLayers;
 
         return false;
     }
@@ -238,17 +238,17 @@ namespace Poulpe {
 
         std::vector<char const*> extensions(glfwExtensions, glfwExtensions + glfwExtensionCount);
         
-        if (_EnableValidationLayers) {
+        if (_enable_validation_layers) {
             extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
             //extensions.push_back(VK_EXT_DEBUG_REPORT_EXTENSION_NAME); deprecated
             //extensions.push_back(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME); deprecated
         }
-        _RequiredExtensions = extensions;
+        _required_extensions = extensions;
     }
 
     void VulkanAPI::setupDebugMessenger()
     {
-        if (!_EnableValidationLayers) return;
+        if (!_enable_validation_layers) return;
 
         VkDebugUtilsMessengerCreateInfoEXT createInfo{};
         createInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
@@ -259,7 +259,7 @@ namespace Poulpe {
         createInfo.pfnUserCallback = DebugCallback;
         createInfo.pUserData = nullptr;
 
-        if (CreateDebugUtilsMessengerEXT(_Instance, & createInfo, nullptr, &_DebugMessengerCallback) != VK_SUCCESS) {
+        if (CreateDebugUtilsMessengerEXT(_instance, & createInfo, nullptr, &_debug_msg_callback) != VK_SUCCESS) {
             PLP_ERROR("Can't create debug messenger.");
         }
     }
@@ -267,7 +267,7 @@ namespace Poulpe {
     void VulkanAPI::pickPhysicalDevice()
     {
         uint32_t deviceCount{ 0 };
-        vkEnumeratePhysicalDevices(_Instance, & deviceCount, nullptr);
+        vkEnumeratePhysicalDevices(_instance, & deviceCount, nullptr);
 
         if (deviceCount == 0) {
             PLP_FATAL("failed to find GPUs with Vulkan support!");
@@ -275,11 +275,11 @@ namespace Poulpe {
         }
 
         std::vector<VkPhysicalDevice> devices(deviceCount);
-        vkEnumeratePhysicalDevices(_Instance, & deviceCount, devices.data());
+        vkEnumeratePhysicalDevices(_instance, & deviceCount, devices.data());
 
         for (auto const & device : devices) {
             if (isDeviceSuitable(device)) {
-                _PhysicalDevice = device;
+                _physical_device = device;
 
                 VkPhysicalDeviceProperties deviceProperties;
                 VkPhysicalDeviceFeatures deviceFeatures;
@@ -294,17 +294,17 @@ namespace Poulpe {
                 vkGetPhysicalDeviceFeatures(device, &deviceFeatures);
                 vkGetPhysicalDeviceProperties2(device, &deviceProperties2);
 
-                _DeviceProps = deviceProperties;
-                _DeviceFeatures = deviceFeatures;
-                _DeviceProperties2 = deviceProperties2;
-                _DeviceMaintenance3Properties = deviceMaintenance3Properties;
+                _device_props = deviceProperties;
+                _device_features = deviceFeatures;
+                _device_props2 = deviceProperties2;
+                _device_maintenance3_props = deviceMaintenance3Properties;
 
-                _MsaaSamples = getMaxUsableSampleCount();
+                _sample_count = getMaxUsableSampleCount();
 
                 break;
             }
         }
-        if (_PhysicalDevice == VK_NULL_HANDLE) {
+        if (_physical_device == VK_NULL_HANDLE) {
             PLP_FATAL("failed to find a suitable GPU");
             exit(-1);
         }
@@ -333,7 +333,7 @@ namespace Poulpe {
         std::vector<VkExtensionProperties> availableExtensions(extensionCount);
         vkEnumerateDeviceExtensionProperties(device, nullptr, & extensionCount, availableExtensions.data());
 
-        std::set<std::string> requiredExtensions(_DeviceExtensions.begin(), _DeviceExtensions.end());
+        std::set<std::string> requiredExtensions(_device_extensions.begin(), _device_extensions.end());
 
         for (auto const & extension : availableExtensions) {
             requiredExtensions.erase(extension.extensionName);
@@ -352,40 +352,40 @@ namespace Poulpe {
         uint32_t i{ 0 };
         for (auto const & queueFamily : queueFamilies) {
             if (queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT) {
-                _QueueFamilyIndices.graphicsFamily = i;
+                _queue_family_indices.graphicsFamily = i;
             }
 
             VkBool32 presentSupport = false;
-            vkGetPhysicalDeviceSurfaceSupportKHR(device, i, _Surface, & presentSupport);
+            vkGetPhysicalDeviceSurfaceSupportKHR(device, i, _surface, & presentSupport);
 
             if (presentSupport) {
-                _QueueFamilyIndices.presentFamily = i;
+                _queue_family_indices.presentFamily = i;
             }
-            if (_QueueFamilyIndices.isComplete()) {
+            if (_queue_family_indices.isComplete()) {
                 break;
             }
             i++;
         }
-        return _QueueFamilyIndices;
+        return _queue_family_indices;
     }
 
     void VulkanAPI::createLogicalDevice()
     {
-        QueueFamilyIndices indices = findQueueFamilies(_PhysicalDevice);
+        QueueFamilyIndices indices = findQueueFamilies(_physical_device);
 
         std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
         std::set<uint32_t> uniqueQueueFamilies = { indices.graphicsFamily.value(), indices.presentFamily.value() };
 
         float queuePriority{ 1.0f };
-        _GraphicsQueues.resize(_queueCount);
-        _PresentQueues.resize(_queueCount);
+        _graphics_queues.resize(_queue_count);
+        _present_queues.resize(_queue_count);
 
         for (uint32_t queueFamily : uniqueQueueFamilies) {
 
             VkDeviceQueueCreateInfo queueCreateInfo{};
             queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
             queueCreateInfo.queueFamilyIndex = queueFamily;
-            queueCreateInfo.queueCount = _queueCount;
+            queueCreateInfo.queueCount = _queue_count;
             queueCreateInfo.pQueuePriorities = &queuePriority;
             queueCreateInfos.push_back(queueCreateInfo);
         }
@@ -427,27 +427,27 @@ namespace Poulpe {
         createInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfos.size());
         createInfo.pQueueCreateInfos = queueCreateInfos.data();
         createInfo.pEnabledFeatures = &deviceFeatures;
-        createInfo.enabledExtensionCount = static_cast<uint32_t>(_DeviceExtensions.size());
-        createInfo.ppEnabledExtensionNames = _DeviceExtensions.data();
+        createInfo.enabledExtensionCount = static_cast<uint32_t>(_device_extensions.size());
+        createInfo.ppEnabledExtensionNames = _device_extensions.data();
         createInfo.pNext = &extDynamicState;
 
-        if (vkCreateDevice(_PhysicalDevice, & createInfo, nullptr, &_Device) != VK_SUCCESS) {
+        if (vkCreateDevice(_physical_device, & createInfo, nullptr, &_device) != VK_SUCCESS) {
             PLP_FATAL("failed to create logical device!");
             return;
         }
 
-        for (uint32_t i { 0 }; i < _queueCount; i++) {
-            _GraphicsQueues[i] = VK_NULL_HANDLE;
-            _PresentQueues[i] = VK_NULL_HANDLE;
-            vkGetDeviceQueue(_Device, indices.graphicsFamily.value(), 0, & _GraphicsQueues[i]);
-            vkGetDeviceQueue(_Device, indices.presentFamily.value(), 0, & _PresentQueues[i]);
+        for (uint32_t i { 0 }; i < _queue_count; i++) {
+            _graphics_queues[i] = VK_NULL_HANDLE;
+            _present_queues[i] = VK_NULL_HANDLE;
+            vkGetDeviceQueue(_device, indices.graphicsFamily.value(), 0, & _graphics_queues[i]);
+            vkGetDeviceQueue(_device, indices.presentFamily.value(), 0, & _present_queues[i]);
         }
-        volkLoadDevice(_Device);
+        volkLoadDevice(_device);
     }
 
     void VulkanAPI::createSurface()
     {
-        VkResult result = glfwCreateWindowSurface(_Instance, _window->get(), nullptr, & _Surface);
+        VkResult result = glfwCreateWindowSurface(_instance, _window->get(), nullptr, & _surface);
 
         if (result != VK_SUCCESS) {
             PLP_FATAL("failed to create window surface!");
@@ -458,21 +458,21 @@ namespace Poulpe {
     const SwapChainSupportDetails VulkanAPI::querySwapChainSupport(VkPhysicalDevice device) const
     {
         SwapChainSupportDetails details;
-        vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, _Surface, & details.capabilities);
+        vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, _surface, & details.capabilities);
 
         uint32_t formatCount;
-        vkGetPhysicalDeviceSurfaceFormatsKHR(device, _Surface, & formatCount, nullptr);
+        vkGetPhysicalDeviceSurfaceFormatsKHR(device, _surface, & formatCount, nullptr);
 
         if (formatCount != 0) {
             details.formats.resize(formatCount);
-            vkGetPhysicalDeviceSurfaceFormatsKHR(device, _Surface, & formatCount, details.formats.data());
+            vkGetPhysicalDeviceSurfaceFormatsKHR(device, _surface, & formatCount, details.formats.data());
         }
         uint32_t presentModeCount;
-        vkGetPhysicalDeviceSurfacePresentModesKHR(device, _Surface, & presentModeCount, nullptr);
+        vkGetPhysicalDeviceSurfacePresentModesKHR(device, _surface, & presentModeCount, nullptr);
 
         if (presentModeCount != 0) {
             details.presentModes.resize(presentModeCount);
-            vkGetPhysicalDeviceSurfacePresentModesKHR(device, _Surface, &presentModeCount, details.presentModes.data());
+            vkGetPhysicalDeviceSurfacePresentModesKHR(device, _surface, &presentModeCount, details.presentModes.data());
         }
         return details;
     }
@@ -520,11 +520,11 @@ namespace Poulpe {
 
     uint32_t VulkanAPI::getImageCount() const
     {
-        uint32_t imageCount = _SwapChainSupport.capabilities.minImageCount;
+        uint32_t imageCount = _swapchain_support.capabilities.minImageCount;
 
-        if (_SwapChainSupport.capabilities.maxImageCount > 0 
-            && imageCount > _SwapChainSupport.capabilities.maxImageCount) {
-            imageCount = _SwapChainSupport.capabilities.maxImageCount;
+        if (_swapchain_support.capabilities.maxImageCount > 0 
+            && imageCount > _swapchain_support.capabilities.maxImageCount) {
+            imageCount = _swapchain_support.capabilities.maxImageCount;
         }
         return imageCount;
     }
@@ -544,22 +544,22 @@ namespace Poulpe {
 
         VkSwapchainCreateInfoKHR createInfo{};
         createInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
-        createInfo.surface = _Surface;
+        createInfo.surface = _surface;
         createInfo.minImageCount = imageCount;
-        createInfo.imageFormat = _SurfaceFormat.format;
-        createInfo.imageColorSpace = _SurfaceFormat.colorSpace;
-        createInfo.imageExtent = _SwapChainExtent;
+        createInfo.imageFormat = _surface_format.format;
+        createInfo.imageColorSpace = _surface_format.colorSpace;
+        createInfo.imageExtent = _swapchain_extent;
         createInfo.imageArrayLayers = 1;//1 unless stereoscopic app
         //use of VK_IMAGE_USAGE_TRANSFER_DST_BIT if post process is needed
         createInfo.imageUsage = VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT 
             | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
-        createInfo.preTransform = _SwapChainSupport.capabilities.currentTransform;
+        createInfo.preTransform = _swapchain_support.capabilities.currentTransform;
         createInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
-        createInfo.presentMode = _PresentMode;
+        createInfo.presentMode = _present_mode;
         createInfo.clipped = VK_TRUE;
         createInfo.oldSwapchain = oldSwapChain;
 
-        QueueFamilyIndices indices = findQueueFamilies(_PhysicalDevice);
+        QueueFamilyIndices indices = findQueueFamilies(_physical_device);
         uint32_t queueFamilyIndices[] = { indices.graphicsFamily.value(), indices.presentFamily.value() };
 
         if (indices.graphicsFamily != indices.presentFamily) {
@@ -573,14 +573,14 @@ namespace Poulpe {
         }
         VkResult result;
 
-        result = vkCreateSwapchainKHR(_Device, & createInfo, nullptr, & swapChain);
+        result = vkCreateSwapchainKHR(_device, & createInfo, nullptr, & swapChain);
 
         if (result != VK_SUCCESS) {
             PLP_FATAL("Swap chain failed " + std::to_string(result));
         }
-        vkGetSwapchainImagesKHR(_Device, swapChain, & imageCount, nullptr);
+        vkGetSwapchainImagesKHR(_device, swapChain, & imageCount, nullptr);
         swapChainImages.resize(imageCount);
-        vkGetSwapchainImagesKHR(_Device, swapChain, & imageCount, swapChainImages.data());
+        vkGetSwapchainImagesKHR(_device, swapChain, & imageCount, swapChainImages.data());
 
         return swapChain;
     }
@@ -589,7 +589,7 @@ namespace Poulpe {
     {
         VkExtent2D currentExtent = getSwapChainExtent();
 
-        SwapChainSupportDetails swapChainSupport = querySwapChainSupport(_PhysicalDevice);
+        SwapChainSupportDetails swapChainSupport = querySwapChainSupport(_physical_device);
         //VkSurfaceFormatKHR surfaceFormat = ChooseSwapSurfaceFormat(swapChainSupport.formats);
         //VkPresentModeKHR presentMode = ChooseSwapPresentMode(swapChainSupport.presentModes);
         VkExtent2D extent = chooseSwapExtent(swapChainSupport.capabilities);
@@ -622,7 +622,7 @@ namespace Poulpe {
 
         VkResult result{ VK_SUCCESS };
 
-        result = vkCreateImageView(_Device, & createInfo, nullptr, & swapChainImageView);
+        result = vkCreateImageView(_device, & createInfo, nullptr, & swapChainImageView);
 
         if (result != VK_SUCCESS) {
             PLP_ERROR("failed to create image views!");
@@ -650,7 +650,7 @@ namespace Poulpe {
 
         VkResult result{ VK_SUCCESS };
 
-        result = vkCreateImageView(_Device, & createInfo, nullptr, & swapChainImageView);
+        result = vkCreateImageView(_device, & createInfo, nullptr, & swapChainImageView);
 
         if (result != VK_SUCCESS) {
             PLP_ERROR("failed to create image views!");
@@ -669,7 +669,7 @@ namespace Poulpe {
         layoutInfo.pBindings = pBindings.data();
         layoutInfo.flags = VK_DESCRIPTOR_SET_LAYOUT_CREATE_UPDATE_AFTER_BIND_POOL_BIT;
         //VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT
-        if (vkCreateDescriptorSetLayout(_Device, & layoutInfo, nullptr, & descriptorSetLayout) != VK_SUCCESS)
+        if (vkCreateDescriptorSetLayout(_device, & layoutInfo, nullptr, & descriptorSetLayout) != VK_SUCCESS)
         {
             throw std::runtime_error("failed to create descriptor set layout!");
         }
@@ -691,7 +691,7 @@ namespace Poulpe {
         pipelineLayoutInfo.setLayoutCount = static_cast<uint32_t>(descriptorSetLayouts.size());
         pipelineLayoutInfo.pSetLayouts = descriptorSetLayouts.data();
 
-        VkResult result = vkCreatePipelineLayout(_Device, & pipelineLayoutInfo, nullptr, & graphicsPipelineLayout);
+        VkResult result = vkCreatePipelineLayout(_device, & pipelineLayoutInfo, nullptr, & graphicsPipelineLayout);
 
         if (result != VK_SUCCESS) {
             PLP_ERROR("failed to create pipeline layout!");
@@ -721,14 +721,14 @@ namespace Poulpe {
         VkViewport viewport{};
         viewport.x = 0.0f;
         viewport.y = 0.0f;
-        viewport.width = static_cast<float>(_SwapChainExtent.width);
-        viewport.height = static_cast<float>(_SwapChainExtent.height);
+        viewport.width = static_cast<float>(_swapchain_extent.width);
+        viewport.height = static_cast<float>(_swapchain_extent.height);
         viewport.minDepth = 0.0f;
         viewport.maxDepth = 1.0f;
 
         VkRect2D scissor{};
         scissor.offset = { 0, 0 };
-        scissor.extent = _SwapChainExtent;
+        scissor.extent = _swapchain_extent;
 
         VkPipelineViewportStateCreateInfo viewportState{};
         viewportState.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
@@ -759,7 +759,7 @@ namespace Poulpe {
         VkPipelineMultisampleStateCreateInfo multisampling{};
         multisampling.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
         multisampling.sampleShadingEnable = VK_FALSE;
-        multisampling.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;//_MsaaSamples;
+        multisampling.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;//_sample_count;
         multisampling.minSampleShading = 0.2f;
         multisampling.pSampleMask = nullptr;
         multisampling.alphaToCoverageEnable = VK_FALSE;
@@ -843,8 +843,8 @@ namespace Poulpe {
 
             //@todo move to a FileManager
             //@todo option to enable / disable pipeline cache
-            std::string cacheFileName = "./cache/pipeline_cache_data_" + std::to_string(_DeviceProps.vendorID) +
-                "_" + std::to_string(_DeviceProps.deviceID) + "_" + name.data() + ".bin";
+            std::string cacheFileName = "./cache/pipeline_cache_data_" + std::to_string(_device_props.vendorID) +
+                "_" + std::to_string(_device_props.deviceID) + "_" + name.data() + ".bin";
 
             bool badCache = false;
             std::streamsize cacheFileSize = 0;
@@ -893,19 +893,19 @@ namespace Poulpe {
                     badCache = true;
                     PLP_ERROR("Unsupported cache header version in {} got {}", cacheFileName, cacheHeaderVersion);
                 }
-                if (vendorID != static_cast<uint32_t>(_DeviceProps.vendorID)) {
+                if (vendorID != static_cast<uint32_t>(_device_props.vendorID)) {
                     badCache = true;
                     PLP_ERROR("Vendor ID mismatch in {} got {} expect {}", cacheFileName, vendorID,
-                        _DeviceProps.vendorID);
+                        _device_props.vendorID);
                 }
-                if (deviceID != static_cast<uint32_t>(_DeviceProps.deviceID)) {
+                if (deviceID != static_cast<uint32_t>(_device_props.deviceID)) {
                     badCache = true;
                     PLP_ERROR("Device ID mismatch in {} got {} expect {}", cacheFileName, deviceID,
-                        _DeviceProps.deviceID);
+                        _device_props.deviceID);
                 }
-                if (memcmp(pipelineCacheUUID,  _DeviceProps.pipelineCacheUUID, sizeof(pipelineCacheUUID)) != 0) {
+                if (memcmp(pipelineCacheUUID,  _device_props.pipelineCacheUUID, sizeof(pipelineCacheUUID)) != 0) {
                     PLP_ERROR("UUID mismatch in {} got {} expect {}", cacheFileName, *pipelineCacheUUID, 
-                        *_DeviceProps.pipelineCacheUUID);
+                        *_device_props.pipelineCacheUUID);
                 }
 
                 if (badCache) {
@@ -927,12 +927,12 @@ namespace Poulpe {
             pCreateInfo.initialDataSize = cacheFileSize;
             pCreateInfo.pInitialData = &cacheFileData;
 
-            VkResult result = vkCreatePipelineCache(_Device, & pCreateInfo, nullptr, & pipelineCache);
+            VkResult result = vkCreatePipelineCache(_device, & pCreateInfo, nullptr, & pipelineCache);
 
             if (result != VK_SUCCESS) {
                 PLP_ERROR("failed to get graphics pipeline cache size!");
             }
-            result = vkCreateGraphicsPipelines(_Device, pipelineCache, 1, & pipelineInfo, nullptr, & graphicsPipeline);
+            result = vkCreateGraphicsPipelines(_device, pipelineCache, 1, & pipelineInfo, nullptr, & graphicsPipeline);
 
             if (result != VK_SUCCESS) {
                 PLP_ERROR("failed to create graphics pipeline cache!");
@@ -942,7 +942,7 @@ namespace Poulpe {
                 void* data = nullptr;
 
                 //first call to get cache size with nullptr
-                result = vkGetPipelineCacheData(_Device, pipelineCache, & pDataSize, nullptr);
+                result = vkGetPipelineCacheData(_device, pipelineCache, & pDataSize, nullptr);
 
                 if (result != VK_SUCCESS) {
                     PLP_ERROR("failed to get graphics pipeline cache size!");
@@ -952,7 +952,7 @@ namespace Poulpe {
                 if (!data) {
                     PLP_ERROR("failed to resize cache buffer!");
                 } else {
-                    result = vkGetPipelineCacheData(_Device, pipelineCache, & pDataSize, data);
+                    result = vkGetPipelineCacheData(_device, pipelineCache, & pDataSize, data);
 
                     //@todo move to a FileManager
                     if (result == VK_SUCCESS) {
@@ -977,7 +977,7 @@ namespace Poulpe {
         VkShaderModule shaderModule{};
         VkResult result{ VK_SUCCESS };
 
-        result = vkCreateShaderModule(_Device, & createInfo, nullptr, &shaderModule);
+        result = vkCreateShaderModule(_device, & createInfo, nullptr, &shaderModule);
 
         if (result != VK_SUCCESS) {
             PLP_ERROR("failed to create shader module!");
@@ -987,7 +987,7 @@ namespace Poulpe {
 
     VkRenderPass* VulkanAPI::createRenderPass(VkSampleCountFlagBits const & msaaSamples)
     {
-        SwapChainSupportDetails swapChainSupport = querySwapChainSupport(_PhysicalDevice);
+        SwapChainSupportDetails swapChainSupport = querySwapChainSupport(_physical_device);
         VkSurfaceFormatKHR surfaceFormat = chooseSwapSurfaceFormat(swapChainSupport.formats);
 
         VkRenderPass* renderPass = new VkRenderPass();
@@ -1061,7 +1061,7 @@ namespace Poulpe {
         renderPassInfo.dependencyCount = 1;
         renderPassInfo.pDependencies = & dependency;
 
-        VkResult result = vkCreateRenderPass(_Device, & renderPassInfo, nullptr, renderPass);
+        VkResult result = vkCreateRenderPass(_device, & renderPassInfo, nullptr, renderPass);
 
         if (result != VK_SUCCESS) {
             PLP_FATAL("failed to create render pass!");
@@ -1090,11 +1090,11 @@ namespace Poulpe {
             framebufferInfo.renderPass = renderPass;
             framebufferInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
             framebufferInfo.pAttachments = attachments.data();
-            framebufferInfo.width = _SwapChainExtent.width;
-            framebufferInfo.height = _SwapChainExtent.height;
+            framebufferInfo.width = _swapchain_extent.width;
+            framebufferInfo.height = _swapchain_extent.height;
             framebufferInfo.layers = 1;
 
-            VkResult result = vkCreateFramebuffer(_Device, & framebufferInfo, nullptr, & swapChainFramebuffers[i]);
+            VkResult result = vkCreateFramebuffer(_device, & framebufferInfo, nullptr, & swapChainFramebuffers[i]);
 
             if (result != VK_SUCCESS) {
                 PLP_ERROR("failed to create framebuffer!");
@@ -1108,14 +1108,14 @@ namespace Poulpe {
     {
         VkCommandPool commandPool;
 
-        QueueFamilyIndices queueFamilyIndices = findQueueFamilies(_PhysicalDevice);
+        QueueFamilyIndices queueFamilyIndices = findQueueFamilies(_physical_device);
 
         VkCommandPoolCreateInfo poolInfo{};
         poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
         poolInfo.queueFamilyIndex = queueFamilyIndices.graphicsFamily.value();
         poolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
 
-        VkResult result = vkCreateCommandPool(_Device, & poolInfo, nullptr, & commandPool);
+        VkResult result = vkCreateCommandPool(_device, & poolInfo, nullptr, & commandPool);
 
         if (result != VK_SUCCESS) {
             PLP_ERROR("failed to create command pool!");
@@ -1123,7 +1123,7 @@ namespace Poulpe {
         return commandPool;
     }
 
-    std::vector<VkCommandBuffer> VulkanAPI::allocateCommandBuffers(VkCommandPool commandPool, uint32_t size,
+    std::vector<VkCommandBuffer> VulkanAPI::allocateCommandBuffers(VkCommandPool& commandPool, uint32_t size,
         bool isSecondary)
     {
         std::vector<VkCommandBuffer> commandBuffers;
@@ -1136,7 +1136,7 @@ namespace Poulpe {
         allocInfo.level = (!isSecondary) ? VK_COMMAND_BUFFER_LEVEL_PRIMARY : VK_COMMAND_BUFFER_LEVEL_SECONDARY;
         allocInfo.commandBufferCount = static_cast<uint32_t>(commandBuffers.size());
 
-        VkResult result = vkAllocateCommandBuffers(_Device, & allocInfo, commandBuffers.data());
+        VkResult result = vkAllocateCommandBuffers(_device, & allocInfo, commandBuffers.data());
 
         if (result != VK_SUCCESS) {
             PLP_ERROR("failed to allocate command buffers!");
@@ -1166,8 +1166,8 @@ namespace Poulpe {
         VkViewport viewport;
         viewport.x = 0;
         viewport.y = 0;
-        viewport.width = static_cast<float>(_SwapChainExtent.width);
-        viewport.height = static_cast<float>(_SwapChainExtent.height);
+        viewport.width = static_cast<float>(_swapchain_extent.width);
+        viewport.height = static_cast<float>(_swapchain_extent.height);
         viewport.minDepth = 0.0f;
         viewport.maxDepth = 1.0f;
 
@@ -1176,8 +1176,8 @@ namespace Poulpe {
 
     void VulkanAPI::setScissor(VkCommandBuffer& cmd_buffer)
     {
-        VkRect2D scissor = { { 0, 0 }, { static_cast<uint32_t>(_SwapChainExtent.width),
-            static_cast<uint32_t>(_SwapChainExtent.height) } };
+        VkRect2D scissor = { { 0, 0 }, { static_cast<uint32_t>(_swapchain_extent.width),
+            static_cast<uint32_t>(_swapchain_extent.height) } };
 
         vkCmdSetScissor(cmd_buffer, 0, 1, & scissor);
     }
@@ -1197,8 +1197,8 @@ namespace Poulpe {
 
         imageAvailableSemaphores.resize(_MAX_FRAMES_IN_FLIGHT);
         renderFinishedSemaphores.resize(_MAX_FRAMES_IN_FLIGHT);
-        _InFlightFences.resize(_MAX_FRAMES_IN_FLIGHT);
-        _ImagesInFlight.resize(swapChainImages.size(), VK_NULL_HANDLE);
+        _in_flight_fences.resize(_MAX_FRAMES_IN_FLIGHT);
+        _images_in_flight.resize(swapChainImages.size(), VK_NULL_HANDLE);
 
         VkSemaphoreCreateInfo semaphoreInfo{};
         semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
@@ -1208,12 +1208,12 @@ namespace Poulpe {
         fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
 
         for (int i { 0 }; i < _MAX_FRAMES_IN_FLIGHT; i++) {
-            if (vkCreateSemaphore(_Device, &semaphoreInfo, nullptr,
+            if (vkCreateSemaphore(_device, &semaphoreInfo, nullptr,
                 & imageAvailableSemaphores[static_cast<size_t>(i)]) != VK_SUCCESS
-                || vkCreateSemaphore(_Device, &semaphoreInfo, nullptr,
+                || vkCreateSemaphore(_device, &semaphoreInfo, nullptr,
                     & renderFinishedSemaphores[static_cast<size_t>(i)]) != VK_SUCCESS
-                || vkCreateFence(_Device, &fenceInfo, nullptr,
-                    & _InFlightFences[static_cast<size_t>(i)]) != VK_SUCCESS)
+                || vkCreateFence(_device, &fenceInfo, nullptr,
+                    & _in_flight_fences[static_cast<size_t>(i)]) != VK_SUCCESS)
             {
                 PLP_ERROR("failed to create semaphores!");
             }
@@ -1236,7 +1236,7 @@ namespace Poulpe {
         poolInfo.maxSets = maxSets;
         poolInfo.flags = flags;
 
-        if (vkCreateDescriptorPool(_Device, & poolInfo, nullptr, & descriptorPool) != VK_SUCCESS)
+        if (vkCreateDescriptorPool(_device, & poolInfo, nullptr, & descriptorPool) != VK_SUCCESS)
         {
             throw std::runtime_error("failed to create descriptor pool");
         }
@@ -1253,7 +1253,7 @@ namespace Poulpe {
         allocInfo.descriptorSetCount = count;
         allocInfo.pSetLayouts = descriptorSetLayouts.data();
 
-        VkResult result = vkAllocateDescriptorSets(_Device, & allocInfo, & descriptorSet);
+        VkResult result = vkAllocateDescriptorSets(_device, & allocInfo, & descriptorSet);
 
         if (result != VK_SUCCESS) {
             throw std::runtime_error("failed to allocate descriptor sets");
@@ -1293,7 +1293,7 @@ namespace Poulpe {
         descriptorWrites[1].descriptorCount = imageInfo.size();
         descriptorWrites[1].pImageInfo = imageInfo.data();
 
-        vkUpdateDescriptorSets(_Device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
+        vkUpdateDescriptorSets(_device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
     }
 
     void VulkanAPI::updateDescriptorSet(
@@ -1327,7 +1327,7 @@ namespace Poulpe {
         descriptorWrites[1].descriptorCount = imageInfo.size();
         descriptorWrites[1].pImageInfo = imageInfo.data();
 
-        vkUpdateDescriptorSets(_Device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
+        vkUpdateDescriptorSets(_device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
     }
 
     void VulkanAPI::updateDescriptorSet(
@@ -1376,7 +1376,7 @@ namespace Poulpe {
         descriptorWrites[2].descriptorCount = storageBufferInfos.size();
         descriptorWrites[2].pBufferInfo = storageBufferInfos.data();
 
-        vkUpdateDescriptorSets(_Device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
+        vkUpdateDescriptorSets(_device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
     }
 
     void VulkanAPI::updateDescriptorSets(
@@ -1433,7 +1433,7 @@ namespace Poulpe {
       descriptorWrites[2].descriptorCount = storageBufferInfos.size();
       descriptorWrites[2].pBufferInfo = storageBufferInfos.data();
 
-      vkUpdateDescriptorSets(_Device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
+      vkUpdateDescriptorSets(_device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
     }
 
     void VulkanAPI::updateStorageDescriptorSets(std::vector<Buffer> & uniformBuffers, VkDescriptorSet & descriptorSet,
@@ -1460,7 +1460,7 @@ namespace Poulpe {
         descriptorWrites[0].descriptorCount = bufferInfos.size();
         descriptorWrites[0].pBufferInfo = bufferInfos.data();
 
-        vkUpdateDescriptorSets(_Device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
+        vkUpdateDescriptorSets(_device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
     }
 
     void VulkanAPI::beginRenderPass(VkRenderPass renderPass, VkCommandBuffer& cmd_buffer, VkFramebuffer framebuffer)
@@ -1470,7 +1470,7 @@ namespace Poulpe {
         renderPassInfo.renderPass = renderPass;
         renderPassInfo.framebuffer = framebuffer;
         renderPassInfo.renderArea.offset = { 0, 0 };
-        renderPassInfo.renderArea.extent = _SwapChainExtent;
+        renderPassInfo.renderArea.extent = _swapchain_extent;
 
         std::array<VkClearValue, 2> clearValues{};
         clearValues[0].color = { {1.0f} };
@@ -1489,45 +1489,45 @@ namespace Poulpe {
     }
 
     void VulkanAPI::beginRendering(VkCommandBuffer& cmd_buffer,
-        VkImageView & colorImageView,
+        VkImageView & color_imageview,
         VkImageView & depth_imageview,
-        VkAttachmentLoadOp const loadOp,
-        VkAttachmentStoreOp const storeOp)
+        VkAttachmentLoadOp const load_op,
+        VkAttachmentStoreOp const store_op)
     {
-        VkClearColorValue colorClear = {};
-        colorClear.float32[0] = 1;
-        colorClear.float32[1] = 1;
-        colorClear.float32[2] = 1;
-        colorClear.float32[3] = 1;
+        VkClearColorValue color_clear = {};
+        color_clear.float32[0] = 1;
+        color_clear.float32[1] = 1;
+        color_clear.float32[2] = 1;
+        color_clear.float32[3] = 1;
 
         VkClearDepthStencilValue depthStencil = { 1.f, 0 };
 
-        VkRenderingAttachmentInfo colorAttachment{ };
-        colorAttachment.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
-        colorAttachment.imageView = colorImageView;
-        colorAttachment.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-        colorAttachment.loadOp = loadOp;
-        colorAttachment.storeOp = storeOp;
-        colorAttachment.clearValue.color = colorClear;
+        VkRenderingAttachmentInfo color_attachment{ };
+        color_attachment.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
+        color_attachment.imageView = color_imageview;
+        color_attachment.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+        color_attachment.loadOp = load_op;
+        color_attachment.storeOp = store_op;
+        color_attachment.clearValue.color = color_clear;
         
-        VkRenderingAttachmentInfo depthAttachment{ };
-        depthAttachment.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
-        depthAttachment.imageView = depth_imageview;
-        depthAttachment.imageLayout = VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL;
-        depthAttachment.loadOp = loadOp;
-        depthAttachment.storeOp = storeOp;
-        depthAttachment.clearValue.depthStencil = depthStencil;
+        VkRenderingAttachmentInfo depth_attachment{ };
+        depth_attachment.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
+        depth_attachment.imageView = depth_imageview;
+        depth_attachment.imageLayout = VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL;
+        depth_attachment.loadOp = load_op;
+        depth_attachment.storeOp = store_op;
+        depth_attachment.clearValue.depthStencil = depthStencil;
 
-        VkRenderingInfo renderingInfo{ };
-        renderingInfo.sType = VK_STRUCTURE_TYPE_RENDERING_INFO;
-        renderingInfo.renderArea.extent = _SwapChainExtent;
-        renderingInfo.layerCount = 1;
-        renderingInfo.colorAttachmentCount = 1;
-        renderingInfo.pColorAttachments = &colorAttachment;
-        renderingInfo.pDepthAttachment = &depthAttachment;
-        //renderingInfo.pStencilAttachment;
+        VkRenderingInfo rendering_info{ };
+        rendering_info.sType = VK_STRUCTURE_TYPE_RENDERING_INFO;
+        rendering_info.renderArea.extent = _swapchain_extent;
+        rendering_info.layerCount = 1;
+        rendering_info.colorAttachmentCount = 1;
+        rendering_info.pColorAttachments = &color_attachment;
+        rendering_info.pDepthAttachment = &depth_attachment;
+        //rendering_info.pStencilAttachment;
 
-        vkCmdBeginRenderingKHR(cmd_buffer, & renderingInfo);
+        vkCmdBeginRenderingKHR(cmd_buffer, & rendering_info);
     }
 
     void VulkanAPI::endRendering(VkCommandBuffer& cmd_buffer)
@@ -1549,20 +1549,20 @@ namespace Poulpe {
 
         VkResult result = VK_SUCCESS;
         {
-            std::lock_guard<std::mutex> guard(_MutexQueueSubmit);
-            vkResetFences(_Device, 1, &_FenceSubmit);
+            std::lock_guard<std::mutex> guard(_mutex_queue_submit);
+            vkResetFences(_device, 1, &_fence_submit);
 
-            result = vkQueueSubmit(_GraphicsQueues[queueIndex], 1, &submitInfo, _FenceSubmit);
-            vkWaitForFences(_Device, 1, & _FenceSubmit, VK_TRUE, UINT32_MAX);
+            result = vkQueueSubmit(_graphics_queues[queueIndex], 1, &submitInfo, _fence_submit);
+            vkWaitForFences(_device, 1, & _fence_submit, VK_TRUE, UINT32_MAX);
             vkResetCommandBuffer(cmd_buffer, VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
-            vkQueueWaitIdle(_GraphicsQueues[queueIndex]);
+            //vkQueueWaitIdle(_graphics_queues[queueIndex]);
         }
         return result;
     }
 
     void VulkanAPI::resetCommandPool(VkCommandPool& commandPool)
     {
-        vkResetCommandPool(_Device, commandPool, 0);
+        vkResetCommandPool(_device, commandPool, 0);
     }
 
     void VulkanAPI::draw(
@@ -1609,7 +1609,7 @@ namespace Poulpe {
         bufferInfo.usage = usage;
         bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-        if (vkCreateBuffer(_Device, & bufferInfo, nullptr, & buffer) != VK_SUCCESS) {
+        if (vkCreateBuffer(_device, & bufferInfo, nullptr, & buffer) != VK_SUCCESS) {
             throw std::runtime_error("failed to create buffer!");
         }
         return buffer;
@@ -1624,11 +1624,11 @@ namespace Poulpe {
         bufferInfo.usage = usage;
         bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-        if (vkCreateBuffer(_Device, & bufferInfo, nullptr, & buffer) != VK_SUCCESS) {
+        if (vkCreateBuffer(_device, & bufferInfo, nullptr, & buffer) != VK_SUCCESS) {
             throw std::runtime_error("failed to create buffer!");
         }
         VkMemoryRequirements memRequirements;
-        vkGetBufferMemoryRequirements(_Device, buffer, & memRequirements);
+        vkGetBufferMemoryRequirements(_device, buffer, & memRequirements);
 
         uint32_t allocatedSize = ((memRequirements.size / memRequirements.alignment) + 1) * memRequirements.alignment;
 
@@ -1637,10 +1637,10 @@ namespace Poulpe {
         allocInfo.allocationSize = allocatedSize;
         allocInfo.memoryTypeIndex = findMemoryType(memRequirements.memoryTypeBits, properties);
 
-        if (vkAllocateMemory(_Device, &allocInfo, nullptr, & bufferMemory) != VK_SUCCESS) {
+        if (vkAllocateMemory(_device, &allocInfo, nullptr, & bufferMemory) != VK_SUCCESS) {
             throw std::runtime_error("failed to allocate buffer memory!");
         }
-        VkResult result = vkBindBufferMemory(_Device, buffer, bufferMemory, 0);
+        VkResult result = vkBindBufferMemory(_device, buffer, bufferMemory, 0);
 
         if (result != VK_SUCCESS) {
             PLP_ERROR("Memory binding failed in createBuffer");
@@ -1657,18 +1657,18 @@ namespace Poulpe {
             | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
       
         void* data;
-        vkMapMemory(_Device, stagingBufferMemory, 0, bufferSize, 0, &data);
+        vkMapMemory(_device, stagingBufferMemory, 0, bufferSize, 0, &data);
         memcpy(data, indices.data(), static_cast<size_t>(bufferSize));
-        vkUnmapMemory(_Device, stagingBufferMemory);
+        vkUnmapMemory(_device, stagingBufferMemory);
 
         VkBuffer buffer = createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT);
         VkMemoryRequirements memRequirements;
-        vkGetBufferMemoryRequirements(_Device, buffer, & memRequirements);
+        vkGetBufferMemoryRequirements(_device, buffer, & memRequirements);
         uint32_t size = ((memRequirements.size / memRequirements.alignment) + 1) * memRequirements.alignment;
 
-        auto memoryType = findMemoryType(memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
-        auto deviceMemory = _DeviceMemoryPool->get(
-            _Device,
+        auto memoryType = findMemoryType(memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+        auto deviceMemory = _device_memory_pool->get(
+            _device,
             size,
             memoryType,
             VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
@@ -1686,8 +1686,8 @@ namespace Poulpe {
         meshBuffer.offset = offset;
         meshBuffer.size = size;
 
-        vkDestroyBuffer(_Device, stagingBuffer, nullptr);
-        vkFreeMemory(_Device, stagingBufferMemory, nullptr);
+        vkDestroyBuffer(_device, stagingBuffer, nullptr);
+        vkFreeMemory(_device, stagingBufferMemory, nullptr);
 
         return meshBuffer;
     }
@@ -1702,22 +1702,22 @@ namespace Poulpe {
             VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
 
         void* data;
-        vkMapMemory(_Device, stagingBufferMemory, 0, bufferSize, 0, &data);
+        vkMapMemory(_device, stagingBufferMemory, 0, bufferSize, 0, &data);
         memcpy(data, vertices.data(), static_cast<size_t>(bufferSize));
-        vkUnmapMemory(_Device, stagingBufferMemory);
+        vkUnmapMemory(_device, stagingBufferMemory);
 
         VkBuffer buffer = createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT);
         VkMemoryRequirements memRequirements;
-        vkGetBufferMemoryRequirements(_Device, buffer, & memRequirements);
+        vkGetBufferMemoryRequirements(_device, buffer, & memRequirements);
 
-        auto memoryType = findMemoryType(memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
+        auto memoryType = findMemoryType(memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
         uint32_t size = ((memRequirements.size / memRequirements.alignment) + 1) * memRequirements.alignment;
 
-        auto deviceMemory = _DeviceMemoryPool->get(
-            _Device,
+        auto deviceMemory = _device_memory_pool->get(
+            _device,
             size,
             memoryType,
-            VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+            VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
             memRequirements.alignment,
             DeviceMemoryPool::DeviceBufferType::UNIFORM);
 
@@ -1732,8 +1732,8 @@ namespace Poulpe {
         meshBuffer.offset = offset;
         meshBuffer.size = size;
         
-        vkDestroyBuffer(_Device, stagingBuffer, nullptr);
-        vkFreeMemory(_Device, stagingBufferMemory, nullptr);
+        vkDestroyBuffer(_device, stagingBuffer, nullptr);
+        vkFreeMemory(_device, stagingBufferMemory, nullptr);
 
         return meshBuffer;
     }
@@ -1750,22 +1750,22 @@ namespace Poulpe {
             VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
 
         void* data;
-        vkMapMemory(_Device, stagingBufferMemory, 0, bufferSize, 0, &data);
+        vkMapMemory(_device, stagingBufferMemory, 0, bufferSize, 0, &data);
         memcpy(data, vertices.data(), static_cast<size_t>(bufferSize));
-        vkUnmapMemory(_Device, stagingBufferMemory);
+        vkUnmapMemory(_device, stagingBufferMemory);
 
         VkBuffer buffer = createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT);
         VkMemoryRequirements memRequirements;
-        vkGetBufferMemoryRequirements(_Device, buffer, &memRequirements);
+        vkGetBufferMemoryRequirements(_device, buffer, &memRequirements);
 
-        auto memoryType = findMemoryType(memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
+        auto memoryType = findMemoryType(memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
         uint32_t size = ((memRequirements.size / memRequirements.alignment) + 1) * memRequirements.alignment;
         
-        auto deviceMemory = _DeviceMemoryPool->get(
-            _Device,
+        auto deviceMemory = _device_memory_pool->get(
+            _device,
             size,
             memoryType,
-            VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+            VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
             memRequirements.alignment,
             DeviceMemoryPool::DeviceBufferType::UNIFORM);
 
@@ -1780,26 +1780,29 @@ namespace Poulpe {
         meshBuffer.offset = offset;
         meshBuffer.size = size;
 
-        vkDestroyBuffer(_Device, stagingBuffer, nullptr);
-        vkFreeMemory(_Device, stagingBufferMemory, nullptr);
+        vkDestroyBuffer(_device, stagingBuffer, nullptr);
+        vkFreeMemory(_device, stagingBufferMemory, nullptr);
 
         return meshBuffer;
     }
 
-    Buffer VulkanAPI::createUniformBuffers(uint32_t uniformBuffersCount)
+    Buffer VulkanAPI::createUniformBuffers(
+        uint32_t const uniformBuffersCount,
+        VkCommandPool& commandPool)
     {
         VkDeviceSize bufferSize = sizeof(UniformBufferObject) * uniformBuffersCount;
         VkBuffer buffer = createBuffer(bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT);
         VkMemoryRequirements memRequirements;
-        vkGetBufferMemoryRequirements(_Device, buffer, &memRequirements);
+        vkGetBufferMemoryRequirements(_device, buffer, &memRequirements);
 
-        auto memoryType = findMemoryType(memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT
-            | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+        auto memoryType = findMemoryType(
+          memRequirements.memoryTypeBits,
+          VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 
         uint32_t size = ((memRequirements.size / memRequirements.alignment) + 1) * memRequirements.alignment;
         
-        auto deviceMemory = _DeviceMemoryPool->get(
-            _Device,
+        auto deviceMemory = _device_memory_pool->get(
+            _device,
             size,
             memoryType,
             VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
@@ -1818,21 +1821,36 @@ namespace Poulpe {
         return uniformBuffer;
     }
 
-    Buffer VulkanAPI::createStorageBuffers(size_t storageSize)
+    Buffer VulkanAPI::createStorageBuffers(
+        ObjectBuffer const& storage_buffer,
+        VkCommandPool& command_pool)
     {
-        VkDeviceSize bufferSize = storageSize;
-        VkBuffer buffer = createBuffer(bufferSize, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT);
+        VkDeviceSize bufferSize { sizeof(storage_buffer) };
+
+        VkBuffer stagingBuffer{};
+        VkDeviceMemory stagingBufferMemory{};
+
+        createBuffer(bufferSize, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
+
+        void* data;
+        vkMapMemory(_device, stagingBufferMemory, 0, bufferSize, 0, &data);
+        memcpy(data, &storage_buffer, static_cast<size_t>(bufferSize));
+        vkUnmapMemory(_device, stagingBufferMemory);
+        
+
+        VkBuffer buffer = createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT);
         VkMemoryRequirements memRequirements;
-        vkGetBufferMemoryRequirements(_Device, buffer, & memRequirements);
+        vkGetBufferMemoryRequirements(_device, buffer, & memRequirements);
 
-        auto const flags { VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT | VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT};
-
-        auto memoryType = findMemoryType(memRequirements.memoryTypeBits, flags);
+        auto memoryType = findMemoryType(memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 
         uint32_t size = ((memRequirements.size / memRequirements.alignment) + 1) * memRequirements.alignment;
 
-        auto deviceMemory = _DeviceMemoryPool->get(
-          _Device,
+        auto const flags { VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT };
+
+        auto deviceMemory = _device_memory_pool->get(
+          _device,
           size,
           memoryType,
           flags,
@@ -1842,11 +1860,16 @@ namespace Poulpe {
         auto offset = deviceMemory->getOffset();
         deviceMemory->bindBufferToMemory(buffer, size);
 
+        copyBuffer(command_pool, stagingBuffer, buffer, bufferSize);
+
         Buffer uniformBuffer;
         uniformBuffer.buffer = std::move(buffer);
         uniformBuffer.memory = deviceMemory;
         uniformBuffer.offset = offset;
         uniformBuffer.size = size;
+
+        vkDestroyBuffer(_device, stagingBuffer, nullptr);
+        vkFreeMemory(_device, stagingBufferMemory, nullptr);
 
         return uniformBuffer;
     }
@@ -1858,13 +1881,13 @@ namespace Poulpe {
         VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT) };
         
         VkMemoryRequirements memRequirements;
-        vkGetBufferMemoryRequirements(_Device, buffer, & memRequirements);
+        vkGetBufferMemoryRequirements(_device, buffer, & memRequirements);
 
         auto const memoryType{ findMemoryType(memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT | VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT) };
         auto const size{ ((memRequirements.size / memRequirements.alignment) + 1) * memRequirements.alignment };
 
-        auto deviceMemory{ _DeviceMemoryPool->get(
-          _Device,
+        auto deviceMemory{ _device_memory_pool->get(
+          _device,
           size,
           memoryType,
           VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT,
@@ -1881,9 +1904,9 @@ namespace Poulpe {
 
           auto memory{ indirectBuffer.memory->getMemory() };
           void* data;
-          vkMapMemory(_Device, *memory, indirectBuffer.offset, indirectBuffer.size, 0, &data);
+          vkMapMemory(_device, *memory, indirectBuffer.offset, indirectBuffer.size, 0, &data);
           memcpy(data, drawCommands.data(), indirectBuffer.size);
-          vkUnmapMemory(_Device, *memory);
+          vkUnmapMemory(_device, *memory);
 
           indirectBuffer.memory->unLock();
         }
@@ -1895,7 +1918,7 @@ namespace Poulpe {
         VkDeviceSize bufferSize = sizeof(CubeUniformBufferObject) * uniformBuffersCount;
         VkBuffer buffer = createBuffer(bufferSize, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
         VkMemoryRequirements memRequirements;
-        vkGetBufferMemoryRequirements(_Device, buffer, &memRequirements);
+        vkGetBufferMemoryRequirements(_device, buffer, &memRequirements);
 
         uint32_t size = ((memRequirements.size / memRequirements.alignment) + 1) * memRequirements.alignment;
         
@@ -1903,8 +1926,8 @@ namespace Poulpe {
         auto memoryType = findMemoryType(memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT
             | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 
-        auto deviceMemory = _DeviceMemoryPool->get(
-            _Device,
+        auto deviceMemory = _device_memory_pool->get(
+            _device,
             size,
             memoryType,
             VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
@@ -1923,34 +1946,34 @@ namespace Poulpe {
         return uniformBuffer;
     }
 
-    void VulkanAPI::updateUniformBuffer(Buffer & buffer, std::vector<UniformBufferObject>* uniformBufferObjects)
+    void VulkanAPI::updateUniformBuffer(Buffer& buffer, std::vector<UniformBufferObject>* uniformBufferObjects)
     {
-        {
-            buffer.memory->lock();
+      {
+        buffer.memory->lock();
 
-            auto memory = buffer.memory->getMemory();
-            void* data;
-            vkMapMemory(_Device, *memory, buffer.offset, buffer.size, 0, & data);
-            memcpy(data, uniformBufferObjects->data(), buffer.size);
-            vkUnmapMemory(_Device, *memory);
+        auto memory = buffer.memory->getMemory();
+        void* data;
+        vkMapMemory(_device, *memory, buffer.offset, buffer.size, 0, & data);
+        memcpy(data, uniformBufferObjects->data(), buffer.size);
+        vkUnmapMemory(_device, *memory);
 
-            buffer.memory->unLock();
-        }
+        buffer.memory->unLock();
+      }
     }
 
     void VulkanAPI::updateStorageBuffer(Buffer & buffer, ObjectBuffer objectBuffer)
     {
-        {
-            buffer.memory->lock();
+      {
+        buffer.memory->lock();
 
-            auto memory = buffer.memory->getMemory();
-            void* data;
-            vkMapMemory(_Device, *memory, buffer.offset, buffer.size, 0, &data);
-            memcpy(data, & objectBuffer, buffer.size);
-            vkUnmapMemory(_Device, *memory);
+        auto memory = buffer.memory->getMemory();
+        void* data;
+        vkMapMemory(_device, *memory, buffer.offset, buffer.size, 0, &data);
+        memcpy(data, & objectBuffer, buffer.size);
+        vkUnmapMemory(_device, *memory);
 
-            buffer.memory->unLock();
-        }
+        buffer.memory->unLock();
+      }
     }
 
     void VulkanAPI::copyBuffer(VkCommandPool commandPool, VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size,
@@ -1963,7 +1986,7 @@ namespace Poulpe {
         allocInfo.commandBufferCount = 1;
 
         VkCommandBuffer cmd_buffer{};
-        vkAllocateCommandBuffers(_Device, & allocInfo, & cmd_buffer);
+        vkAllocateCommandBuffers(_device, & allocInfo, & cmd_buffer);
 
         VkCommandBufferBeginInfo beginInfo{};
         beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -1985,13 +2008,13 @@ namespace Poulpe {
         submitInfo.pCommandBuffers = & cmd_buffer;
 
         {
-            std::lock_guard<std::mutex> guard(_MutexQueueSubmit);
-            vkResetFences(_Device, 1, & _FenceBuffer);
+            std::lock_guard<std::mutex> guard(_mutex_queue_submit);
+            vkResetFences(_device, 1, & _fence_buffer);
 
-            vkQueueSubmit(_GraphicsQueues[queueIndex], 1, & submitInfo, _FenceBuffer);
-            vkWaitForFences(_Device, 1, & _FenceBuffer, VK_TRUE, UINT32_MAX);
-            vkFreeCommandBuffers(_Device, commandPool, 1, & cmd_buffer);
-            vkQueueWaitIdle(_GraphicsQueues[queueIndex]);
+            vkQueueSubmit(_graphics_queues[queueIndex], 1, & submitInfo, _fence_buffer);
+            vkWaitForFences(_device, 1, & _fence_buffer, VK_TRUE, UINT32_MAX);
+            vkFreeCommandBuffers(_device, commandPool, 1, & cmd_buffer);
+            //vkQueueWaitIdle(_graphics_queues[queueIndex]);
         }
     }
 
@@ -2021,11 +2044,11 @@ namespace Poulpe {
     uint32_t VulkanAPI::findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties)
     {
         VkPhysicalDeviceMemoryProperties memProperties;
-        vkGetPhysicalDeviceMemoryProperties(_PhysicalDevice, &memProperties);
+        vkGetPhysicalDeviceMemoryProperties(_physical_device, &memProperties);
 
         for (uint32_t i { 0 }; i < memProperties.memoryTypeCount; i++) {
             if ((typeFilter & (1 << i)) && (memProperties.memoryTypes[i].propertyFlags & properties) == properties) {
-                _MaxMemoryHeap = memProperties.memoryHeaps[memProperties.memoryTypes[i].heapIndex].size;
+                _max_memory_heap = memProperties.memoryHeaps[memProperties.memoryTypes[i].heapIndex].size;
                 return i;
             }
         }
@@ -2051,21 +2074,21 @@ namespace Poulpe {
         imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
         VkResult result{ VK_SUCCESS };
-        result = vkCreateImage(_Device, & imageInfo, nullptr, &image);
+        result = vkCreateImage(_device, & imageInfo, nullptr, &image);
 
         if (result != VK_SUCCESS) {
             throw std::runtime_error("failed to create image!");
         }
         VkMemoryRequirements memRequirements;
-        vkGetImageMemoryRequirements(_Device, image, & memRequirements);
+        vkGetImageMemoryRequirements(_device, image, & memRequirements);
         auto memoryType = findMemoryType(memRequirements.memoryTypeBits, properties);
         uint32_t size = ((memRequirements.size / memRequirements.alignment) + 1) * memRequirements.alignment;
         
 
-        auto deviceMemory = _DeviceMemoryPool->get(
-            _Device,
+        auto deviceMemory = _device_memory_pool->get(
+            _device,
             size,
-            memoryType, 
+            memoryType,
             VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
             memRequirements.alignment,
             DeviceMemoryPool::DeviceBufferType::STAGING);
@@ -2098,12 +2121,12 @@ namespace Poulpe {
         }
 
         VkMemoryRequirements memRequirements;
-        vkGetImageMemoryRequirements(_Device, image, & memRequirements);
+        vkGetImageMemoryRequirements(_device, image, & memRequirements);
         auto memoryType = findMemoryType(memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
         uint32_t size = ((memRequirements.size / memRequirements.alignment) + 1) * memRequirements.alignment;
 
-        auto deviceMemory = _DeviceMemoryPool->get(
-            _Device,
+        auto deviceMemory = _device_memory_pool->get(
+            _device,
             size,
             memoryType,
             VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
@@ -2131,7 +2154,7 @@ namespace Poulpe {
 
         VkResult result{ VK_SUCCESS };
 
-        result = vkCreateImageView(_Device, & createInfo, nullptr, & depthMapImageView);
+        result = vkCreateImageView(_device, & createInfo, nullptr, & depthMapImageView);
 
         if (result != VK_SUCCESS) {
             PLP_ERROR("failed to create depth map image view.");
@@ -2157,7 +2180,7 @@ namespace Poulpe {
         samplerInfo.maxLod = 1.0f;
         samplerInfo.borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE;
 
-        if (vkCreateSampler(_Device, & samplerInfo, nullptr, & sampler) != VK_SUCCESS) {
+        if (vkCreateSampler(_device, & samplerInfo, nullptr, & sampler) != VK_SUCCESS) {
             throw std::runtime_error("failed to create depth map sampler!");
         }
         return sampler;
@@ -2171,11 +2194,11 @@ namespace Poulpe {
         framebufferInfo.renderPass = renderPass;
         framebufferInfo.attachmentCount = 1;
         framebufferInfo.pAttachments = &imageview;
-        framebufferInfo.width = _SwapChainExtent.width;
-        framebufferInfo.height = _SwapChainExtent.height;
+        framebufferInfo.width = _swapchain_extent.width;
+        framebufferInfo.height = _swapchain_extent.height;
         framebufferInfo.layers = 1;
 
-        VkResult result = vkCreateFramebuffer(_Device, &framebufferInfo, nullptr, & frameBuffer);
+        VkResult result = vkCreateFramebuffer(_device, &framebufferInfo, nullptr, & frameBuffer);
 
         if (result != VK_SUCCESS) {
             PLP_ERROR("failed to create framebuffer for depth map");
@@ -2201,17 +2224,17 @@ namespace Poulpe {
         imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
         imageInfo.flags = VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT;
 
-        if (vkCreateImage(_Device, &imageInfo, nullptr, & image) != VK_SUCCESS) {
+        if (vkCreateImage(_device, &imageInfo, nullptr, & image) != VK_SUCCESS) {
             throw std::runtime_error("failed to create image!");
         }
         VkMemoryRequirements memRequirements;
-        vkGetImageMemoryRequirements(_Device, image, & memRequirements);
+        vkGetImageMemoryRequirements(_device, image, & memRequirements);
         auto memoryType = findMemoryType(memRequirements.memoryTypeBits, properties);
         uint32_t size = ((memRequirements.size / memRequirements.alignment) + 1) * memRequirements.alignment;
         
 
-        auto deviceMemory = _DeviceMemoryPool->get(
-            _Device,
+        auto deviceMemory = _device_memory_pool->get(
+            _device,
             size,
             memoryType,
             VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
@@ -2227,17 +2250,17 @@ namespace Poulpe {
         VkDeviceSize imageSize = texWidth * texHeight * 4;
         VkBuffer buffer = createBuffer(imageSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT);
         VkMemoryRequirements memRequirements;
-        vkGetBufferMemoryRequirements(_Device, buffer, & memRequirements);
+        vkGetBufferMemoryRequirements(_device, buffer, & memRequirements);
 
         auto memoryType = findMemoryType(memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT
             | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 
         uint32_t size = ((memRequirements.size / memRequirements.alignment) + 1) * memRequirements.alignment;
 
-        auto deviceMemory = _DeviceMemoryPool->get(
-            _Device,
+        auto deviceMemory = _device_memory_pool->get(
+            _device,
             size,
-            memoryType, 
+            memoryType,
             VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
             memRequirements.alignment,
             DeviceMemoryPool::DeviceBufferType::STAGING);
@@ -2246,9 +2269,9 @@ namespace Poulpe {
         deviceMemory->bindBufferToMemory(buffer, size);
 
         void* data;
-        vkMapMemory(_Device, *deviceMemory->getMemory(), offset, size, 0, &data);
+        vkMapMemory(_device, *deviceMemory->getMemory(), offset, size, 0, &data);
         memcpy(data, pixels, static_cast<size_t>(size));
-        vkUnmapMemory(_Device, *deviceMemory->getMemory());
+        vkUnmapMemory(_device, *deviceMemory->getMemory());
 
         stbi_image_free(pixels);
 
@@ -2268,7 +2291,7 @@ namespace Poulpe {
         generateMipmaps(cmd_buffer, format, textureImage, texWidth, texHeight, mipLevels);
         endCommandBuffer(cmd_buffer);
         queueSubmit(cmd_buffer);
-        //_DeviceMemoryPool->clear(deviceMemory);
+        //_device_memory_pool->clear(deviceMemory);
     }
 
     void VulkanAPI::createSkyboxTextureImage(VkCommandBuffer & cmd_buffer, std::vector<stbi_uc*> & skyboxPixels,
@@ -2277,15 +2300,15 @@ namespace Poulpe {
         VkDeviceSize imageSize = texWidth * texHeight * 4 * 6;
         VkBuffer buffer = createBuffer(imageSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT);
         VkMemoryRequirements memRequirements;
-        vkGetBufferMemoryRequirements(_Device, buffer, & memRequirements);
+        vkGetBufferMemoryRequirements(_device, buffer, & memRequirements);
 
         auto memoryType = findMemoryType(memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
 
         uint32_t size = ((memRequirements.size / memRequirements.alignment) + 1) * memRequirements.alignment;
         
         
-        auto deviceMemory = _DeviceMemoryPool->get(
-            _Device,
+        auto deviceMemory = _device_memory_pool->get(
+            _device,
             size,
             memoryType, 
             VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
@@ -2298,13 +2321,13 @@ namespace Poulpe {
 
         stbi_uc* data;
         VkDeviceSize layerSize = imageSize / 6;
-        vkMapMemory(_Device, *deviceMemory->getMemory(), offset, size, 0, (void**)&data);
+        vkMapMemory(_device, *deviceMemory->getMemory(), offset, size, 0, (void**)&data);
 
         for (uint32_t i { 0 }; i < skyboxPixels.size(); i++) {
             memcpy(data + layerSize * i, skyboxPixels[i], layerSize);
         }
 
-        vkUnmapMemory(_Device, *deviceMemory->getMemory());
+        vkUnmapMemory(_device, *deviceMemory->getMemory());
         createSkyboxImage(texWidth, texHeight, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_TILING_OPTIMAL,
             VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
             VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, textureImage);
@@ -2329,14 +2352,14 @@ namespace Poulpe {
         for (uint32_t i { 0 }; i < skyboxPixels.size(); i++) {
             stbi_image_free(skyboxPixels[i]);
         }
-        //_DeviceMemoryPool->clear(deviceMemory);
+        //_device_memory_pool->clear(deviceMemory);
     }
 
     void VulkanAPI::generateMipmaps(VkCommandBuffer& cmd_buffer, VkFormat imageFormat, VkImage image, uint32_t texWidth,
         uint32_t texHeight, uint32_t mipLevels, uint32_t layerCount) {
 
         VkFormatProperties formatProperties;
-        vkGetPhysicalDeviceFormatProperties(_PhysicalDevice, imageFormat, & formatProperties);
+        vkGetPhysicalDeviceFormatProperties(_physical_device, imageFormat, & formatProperties);
 
         if (!(formatProperties.optimalTilingFeatures & VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_LINEAR_BIT)) {
             throw std::runtime_error("texture image format does not support linear blitting!");
@@ -2457,7 +2480,7 @@ namespace Poulpe {
         VkImageView depth_imageview{};
         VkFormat depthFormat = findDepthFormat();
 
-        createImage(_SwapChainExtent.width, _SwapChainExtent.height, 1, VK_SAMPLE_COUNT_1_BIT, depthFormat,
+        createImage(_swapchain_extent.width, _swapchain_extent.height, 1, VK_SAMPLE_COUNT_1_BIT, depthFormat,
             VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
             depthImage);
 
@@ -2489,7 +2512,7 @@ namespace Poulpe {
         samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
         samplerInfo.addressModeV = samplerInfo.addressModeU;
         samplerInfo.addressModeW = samplerInfo.addressModeU;
-        samplerInfo.maxAnisotropy = _DeviceProps.limits.maxSamplerAnisotropy;
+        samplerInfo.maxAnisotropy = _device_props.limits.maxSamplerAnisotropy;
         samplerInfo.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
         samplerInfo.unnormalizedCoordinates = VK_FALSE;
         samplerInfo.compareEnable = VK_FALSE;
@@ -2500,7 +2523,7 @@ namespace Poulpe {
         samplerInfo.mipLodBias = 0.0f;
         samplerInfo.borderColor = VK_BORDER_COLOR_FLOAT_TRANSPARENT_BLACK;
 
-        if (vkCreateSampler(_Device, & samplerInfo, nullptr, & textureSampler) != VK_SUCCESS) {
+        if (vkCreateSampler(_device, & samplerInfo, nullptr, & textureSampler) != VK_SUCCESS) {
             throw std::runtime_error("failed to create texture sampler!");
         }
         return textureSampler;
@@ -2527,7 +2550,7 @@ namespace Poulpe {
         samplerInfo.mipLodBias = 0.0f;
         samplerInfo.borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE;
 
-        if (vkCreateSampler(_Device, &samplerInfo, nullptr, & textureSampler) != VK_SUCCESS) {
+        if (vkCreateSampler(_device, &samplerInfo, nullptr, & textureSampler) != VK_SUCCESS) {
             throw std::runtime_error("failed to create texture sampler!");
         }
         return textureSampler;
@@ -2544,7 +2567,7 @@ namespace Poulpe {
     {
         for (VkFormat format : candidates) {
             VkFormatProperties props;
-            vkGetPhysicalDeviceFormatProperties(_PhysicalDevice, format, & props);
+            vkGetPhysicalDeviceFormatProperties(_physical_device, format, & props);
 
             if (tiling == VK_IMAGE_TILING_OPTIMAL && (props.optimalTilingFeatures & features) == features) {
                 return format;
@@ -2563,7 +2586,7 @@ namespace Poulpe {
     VkSampleCountFlagBits VulkanAPI::getMaxUsableSampleCount()
     {
         VkPhysicalDeviceProperties physicalDeviceProperties;
-        vkGetPhysicalDeviceProperties(_PhysicalDevice, & physicalDeviceProperties);
+        vkGetPhysicalDeviceProperties(_physical_device, & physicalDeviceProperties);
 
         VkSampleCountFlags counts = physicalDeviceProperties.limits.framebufferColorSampleCounts 
             & physicalDeviceProperties.limits.framebufferDepthSampleCounts;
@@ -2579,33 +2602,33 @@ namespace Poulpe {
 
     //void VulkanAPI::destroyPipeline(VkPipeline pipeline)
     //{
-    //    vkDestroyPipeline(_Device, pipeline, nullptr);
+    //    vkDestroyPipeline(_device, pipeline, nullptr);
     //}
 
     //void VulkanAPI::destroyPipelineData(VkPipelineLayout pipelineLayout, VkDescriptorPool descriptorPool,
     //    VkDescriptorSetLayout descriptorSetLayout)
     //{
-    //    vkDestroyDescriptorSetLayout(_Device, descriptorSetLayout, nullptr);
-    //    vkDestroyPipelineLayout(_Device, pipelineLayout, nullptr);
-    //    vkDestroyDescriptorPool(_Device, descriptorPool, nullptr);
+    //    vkDestroyDescriptorSetLayout(_device, descriptorSetLayout, nullptr);
+    //    vkDestroyPipelineLayout(_device, pipelineLayout, nullptr);
+    //    vkDestroyDescriptorPool(_device, descriptorPool, nullptr);
     //}
 
     //void VulkanAPI::destroySemaphores(std::pair<std::vector<VkSemaphore>, std::vector<VkSemaphore>> semaphores)
     //{
     //    for (int i { 0 }; i < _MAX_FRAMES_IN_FLIGHT; i++) {
     //        
-    //        if (nullptr != semaphores.first[i]) vkDestroySemaphore(_Device, semaphores.first[i], nullptr);
-    //        if (nullptr != semaphores.second[i]) vkDestroySemaphore(_Device, semaphores.second[i], nullptr);
+    //        if (nullptr != semaphores.first[i]) vkDestroySemaphore(_device, semaphores.first[i], nullptr);
+    //        if (nullptr != semaphores.second[i]) vkDestroySemaphore(_device, semaphores.second[i], nullptr);
     //    }
     //}
 
     //void VulkanAPI::destroyFences()
     //{
-    //    for (size_t i { 0 }; i < _InFlightFences.size(); ++i) {
-    //        vkDestroyFence(_Device, _InFlightFences[i], nullptr);
+    //    for (size_t i { 0 }; i < _in_flight_fences.size(); ++i) {
+    //        vkDestroyFence(_device, _in_flight_fences[i], nullptr);
     //    }
-    //    for (size_t i { 0 }; i < _ImagesInFlight.size(); ++i) {
-    //        vkDestroyFence(_Device, _ImagesInFlight[i], nullptr);
+    //    for (size_t i { 0 }; i < _images_in_flight.size(); ++i) {
+    //        vkDestroyFence(_device, _images_in_flight[i], nullptr);
     //    }
     //}
 
@@ -2613,28 +2636,28 @@ namespace Poulpe {
     //{
     //    if (VK_NULL_HANDLE == buffer) return;
 
-    //    vkDestroyBuffer(_Device, buffer, nullptr);
+    //    vkDestroyBuffer(_device, buffer, nullptr);
     //}
 
     //void VulkanAPI::destroyRenderPass(VkRenderPass* renderPass, VkCommandPool commandPool,
     //    std::vector<VkCommandBuffer> commandBuffers)
     //{
-    //    vkFreeCommandBuffers(_Device, commandPool, static_cast<uint32_t>(commandBuffers.size()), commandBuffers.data());
-    //    vkDestroyRenderPass(_Device, *renderPass, nullptr);
-    //    vkDestroyCommandPool(_Device, commandPool, nullptr);
+    //    vkFreeCommandBuffers(_device, commandPool, static_cast<uint32_t>(commandBuffers.size()), commandBuffers.data());
+    //    vkDestroyRenderPass(_device, *renderPass, nullptr);
+    //    vkDestroyCommandPool(_device, commandPool, nullptr);
     //}
 
     //void VulkanAPI::destroy()
     //{
-    //    vkDestroyFence(_Device, _Fence, nullptr);
-    //    vkDestroyDevice(_Device, nullptr);
+    //    vkDestroyFence(_device, _fence, nullptr);
+    //    vkDestroyDevice(_device, nullptr);
 
-    //    if (_EnableValidationLayers) {
-    //        DestroyDebugUtilsMessengerEXT(_Instance, _DebugMessengerCallback, nullptr);
+    //    if (_enable_validation_layers) {
+    //        DestroyDebugUtilsMessengerEXT(_instance, _debug_msg_callback, nullptr);
     //    }
 
-    //    vkDestroySurfaceKHR(_Instance, _Surface, nullptr);
-    //    vkDestroyInstance(_Instance, nullptr);
+    //    vkDestroySurfaceKHR(_instance, _surface, nullptr);
+    //    vkDestroyInstance(_instance, nullptr);
 
     //    PLP_TRACE("VK instance destroyed and cleaned");
     //}
@@ -2681,8 +2704,8 @@ namespace Poulpe {
 
     void VulkanAPI::waitIdle()
     {
-        vkQueueWaitIdle(_PresentQueues[0]);
-        vkDeviceWaitIdle(_Device);
+        vkQueueWaitIdle(_present_queues[0]);
+        vkDeviceWaitIdle(_device);
     }
 
     void VulkanAPI::setResolution(unsigned int width, unsigned int height)
@@ -2693,82 +2716,82 @@ namespace Poulpe {
 
     void VulkanAPI::transitionImageLayout(
       VkCommandBuffer& cmd_buffer,
-      VkImage image,
-      VkImageLayout oldLayout,
-      VkImageLayout newLayout,
-      VkImageAspectFlags aspectFlags)
+      VkImage& image,
+      VkImageLayout old_layout,
+      VkImageLayout new_layout,
+      VkImageAspectFlags aspect_flags)
     {
       VkImageMemoryBarrier barrier{};
       barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-      barrier.oldLayout = oldLayout;
-      barrier.newLayout = newLayout;
+      barrier.oldLayout = old_layout;
+      barrier.newLayout = new_layout;
       barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
       barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
       barrier.image = image;
-      barrier.subresourceRange.aspectMask = aspectFlags;
+      barrier.subresourceRange.aspectMask = aspect_flags;
       barrier.subresourceRange.baseMipLevel = 0;
       barrier.subresourceRange.levelCount = 1;
       barrier.subresourceRange.baseArrayLayer = 0;
       barrier.subresourceRange.layerCount = 1;
 
-      VkPipelineStageFlags sourceStage;
-      VkPipelineStageFlags destinationStage;
+      VkPipelineStageFlags source_stage;
+      VkPipelineStageFlags destination_stage;
 
-      if (oldLayout == VK_IMAGE_LAYOUT_UNDEFINED && newLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL) {
+      if (old_layout == VK_IMAGE_LAYOUT_UNDEFINED && new_layout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL) {
         barrier.srcAccessMask = 0;
         barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
 
-        sourceStage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
-        destinationStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
-      } else if (oldLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL && newLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL) {
+        source_stage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+        destination_stage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+      } else if (old_layout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL && new_layout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL) {
         barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
         barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
 
-        sourceStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
-        destinationStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
-      } else if (oldLayout == VK_IMAGE_LAYOUT_UNDEFINED && newLayout == VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL) {
+        source_stage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+        destination_stage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+      } else if (old_layout == VK_IMAGE_LAYOUT_UNDEFINED && new_layout == VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL) {
         barrier.srcAccessMask = 0;
         barrier.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
 
-        sourceStage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
-        destinationStage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-      } else if (oldLayout == VK_IMAGE_LAYOUT_UNDEFINED && newLayout == VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL) {
+        source_stage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+        destination_stage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+      } else if (old_layout == VK_IMAGE_LAYOUT_UNDEFINED && new_layout == VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL) {
         barrier.srcAccessMask = 0;
         barrier.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
 
-        sourceStage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
-        destinationStage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-      } else if (oldLayout == VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL && newLayout == VK_IMAGE_LAYOUT_PRESENT_SRC_KHR) {
+        source_stage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+        destination_stage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+      } else if (old_layout == VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL && new_layout == VK_IMAGE_LAYOUT_PRESENT_SRC_KHR) {
         barrier.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
         barrier.dstAccessMask = 0;
 
-        sourceStage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-        destinationStage = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
-      } else if (oldLayout == VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL && newLayout == VK_IMAGE_LAYOUT_PRESENT_SRC_KHR) {
+        source_stage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        destination_stage = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
+      } else if (old_layout == VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL && new_layout == VK_IMAGE_LAYOUT_PRESENT_SRC_KHR) {
         barrier.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
         barrier.dstAccessMask = 0;
 
-        sourceStage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-        destinationStage = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
-      } else if (oldLayout == VK_IMAGE_LAYOUT_UNDEFINED && newLayout == VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL) {
+        source_stage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        destination_stage = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
+      } else if (old_layout == VK_IMAGE_LAYOUT_UNDEFINED && new_layout == VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL) {
         barrier.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
         barrier.dstAccessMask = 0;
 
-        sourceStage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-        destinationStage = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
-      } else if (oldLayout == VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL && newLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL) {
+        source_stage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        destination_stage = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
+      } else if (old_layout == VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL && new_layout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL) {
         barrier.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
         barrier.dstAccessMask = 0;
 
-        sourceStage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-        destinationStage = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
+        source_stage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        destination_stage = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
       } else {
         throw std::invalid_argument("unsupported layout transition");
       }
 
       vkCmdPipelineBarrier(
         cmd_buffer,
-        sourceStage, destinationStage,
+        source_stage, destination_stage,
         0,
         0, nullptr,
         0, nullptr,
@@ -2778,28 +2801,28 @@ namespace Poulpe {
 
     void VulkanAPI::submit(
       VkQueue& queue,
-      VkSubmitInfo& submitInfo,
-      VkPresentInfoKHR& presentInfo,
+      std::vector<VkSubmitInfo> const& submit_infos,
+      VkPresentInfoKHR const& present_info,
       VkFence& fence)
     {
       {
         //SCOPED_TIMER();
 
-        std::lock_guard<std::mutex> guard(_MutexQueueSubmit);
-        VkResult submitResult = vkQueueSubmit(queue, 1, &submitInfo, fence);
+        std::lock_guard<std::mutex> guard(_mutex_queue_submit);
+        VkResult result = vkQueueSubmit(queue, submit_infos.size(), submit_infos.data(), fence);
 
-        if (submitResult != VK_SUCCESS) {
-          PLP_ERROR("Error on queue submit: {}", submitResult);
+        if (result != VK_SUCCESS) {
+          PLP_ERROR("Error on queue submit: {}", result);
           throw std::runtime_error("Error on queueSubmit");
         }
 
-        VkResult presentResult = vkQueuePresentKHR(queue, &presentInfo);
+        result = vkQueuePresentKHR(queue, &present_info);
 
-        if (presentResult != VK_SUCCESS) {
-          PLP_ERROR("Error on queue present: {}", presentResult);
+        if (result != VK_SUCCESS) {
+          PLP_ERROR("Error on queue present: {}", result);
         }
 
-        vkQueueWaitIdle(queue);
+        //vkQueueWaitIdle(queue);
       }
     }
 }
