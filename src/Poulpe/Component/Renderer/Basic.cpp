@@ -11,98 +11,98 @@ namespace Poulpe
       Texture const tex3{ _texture_manager->getTextures()[mesh->getData()->_textures.at(2)] };
       Texture const alpha{ _texture_manager->getTextures()[mesh->getData()->_alpha] };
 
-      std::vector<VkDescriptorImageInfo> imageInfos{};
-      imageInfos.reserve(8);
-      imageInfos.emplace_back(tex.getSampler(), tex.getImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-      imageInfos.emplace_back(tex2.getSampler(), tex2.getImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-      imageInfos.emplace_back(tex3.getSampler(), tex3.getImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-      imageInfos.emplace_back(alpha.getSampler(), alpha.getImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+      std::vector<VkDescriptorImageInfo> image_info{};
+      image_info.reserve(8);
+      image_info.emplace_back(tex.getSampler(), tex.getImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+      image_info.emplace_back(tex2.getSampler(), tex2.getImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+      image_info.emplace_back(tex3.getSampler(), tex3.getImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+      image_info.emplace_back(alpha.getSampler(), alpha.getImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
-      std::string specMapName{ "_plp_empty" };
-      std::string bumpMapName{ "_plp_empty" };
+      std::string specular_map_name{ "_plp_empty" };
+      std::string bump_map_name{ "_plp_empty" };
 
       if (!mesh->getData()->_specular_map.empty()
         && _texture_manager->getTextures().contains(mesh->getData()->_specular_map)) {
-        specMapName = mesh->getData()->_specular_map;
+        specular_map_name = mesh->getData()->_specular_map;
       }
 
-      Texture const texSpecularMap{ _texture_manager->getTextures()[specMapName] };
+      Texture const texture_specular{ _texture_manager->getTextures()[specular_map_name] };
 
       if (!mesh->getData()->_bump_map.empty()
         && _texture_manager->getTextures().contains(mesh->getData()->_bump_map)) {
-        bumpMapName = mesh->getData()->_bump_map;
+        bump_map_name = mesh->getData()->_bump_map;
       }
 
-      Texture const texBumpMap{ _texture_manager->getTextures()[bumpMapName] };
+      Texture const texture_bump{ _texture_manager->getTextures()[bump_map_name] };
 
       //VkDescriptorImageInfo shadowMapSpot{};
       //shadowMapSpot.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
       //shadowMapSpot.imageview = _renderer->getDepthMapImageViews()->at(1);
       //shadowMapSpot.sampler = _renderer->getDepthMapSamplers()->at(1);
-      imageInfos.emplace_back(texSpecularMap.getSampler(), texSpecularMap.getImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-      imageInfos.emplace_back(texBumpMap.getSampler(), texBumpMap.getImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-      imageInfos.emplace_back(_renderer->getDepthMapSamplers()->at(0), _renderer->getDepthMapImageViews()->at(0), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-      //imageInfos.emplace_back(shadowMapSpot);
+      image_info.emplace_back(texture_specular.getSampler(), texture_specular.getImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+      image_info.emplace_back(texture_bump.getSampler(), texture_bump.getImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+      image_info.emplace_back(_renderer->getDepthMapSamplers()->at(0), _renderer->getDepthMapImageViews()->at(0), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+      //image_info.emplace_back(shadowMapSpot);
 
       auto const& pipeline = _renderer->getPipeline(mesh->getShaderName());
-      VkDescriptorSet descSet{ _renderer->createDescriptorSets(pipeline->descPool, { pipeline->descSetLayout }, 1) };
+      VkDescriptorSet descset{ _renderer->createDescriptorSets(pipeline->descPool, { pipeline->descSetLayout }, 1) };
 
       for (size_t i{ 0 }; i < mesh->getUniformBuffers()->size(); ++i) {
 
         _renderer->updateDescriptorSets(
           *mesh->getUniformBuffers(),
           *mesh->getStorageBuffers(),
-          descSet, imageInfos);
+          descset, image_info);
       }
 
-      mesh->setDescSet(descSet);
+      mesh->setDescSet(descset);
 
-      std::array<VkWriteDescriptorSet, 2> descriptorWrites{};
-      std::vector<VkDescriptorBufferInfo> bufferInfos;
-      std::vector<VkDescriptorBufferInfo> storageBufferInfos;
+      std::array<VkWriteDescriptorSet, 2> descset_writes{};
+      std::vector<VkDescriptorBufferInfo> buffer_infos;
+      std::vector<VkDescriptorBufferInfo> buffer_storage_infos;
 
       std::for_each(std::begin(*mesh->getUniformBuffers()), std::end(*mesh->getUniformBuffers()),
-        [&bufferInfos](const Buffer& uniformBuffer)
+        [&buffer_infos](const Buffer& uniformBuffer)
         {
-          VkDescriptorBufferInfo bufferInfo{};
-          bufferInfo.buffer = uniformBuffer.buffer;
-          bufferInfo.offset = 0;
-          bufferInfo.range = VK_WHOLE_SIZE;
-          bufferInfos.emplace_back(bufferInfo);
+          VkDescriptorBufferInfo buffer_info{};
+          buffer_info.buffer = uniformBuffer.buffer;
+          buffer_info.offset = 0;
+          buffer_info.range = VK_WHOLE_SIZE;
+          buffer_infos.emplace_back(buffer_info);
         });
 
-     auto const& shadowMapPipeline = _renderer->getPipeline("shadowMap");
-     VkDescriptorSet shadowMapDescSet = _renderer->createDescriptorSets(shadowMapPipeline->descPool, { shadowMapPipeline->descSetLayout }, 1);
+     auto const& shadow_map_pipeline = _renderer->getPipeline("shadowMap");
+     VkDescriptorSet shadow_map_descset = _renderer->createDescriptorSets(shadow_map_pipeline->descPool, { shadow_map_pipeline->descSetLayout }, 1);
 
       std::for_each(std::begin(*mesh->getStorageBuffers()), std::end(*mesh->getStorageBuffers()),
-        [&storageBufferInfos](const Buffer& storageBuffers)
+        [&buffer_storage_infos](const Buffer& storageBuffers)
         {
-          VkDescriptorBufferInfo bufferInfo{};
-          bufferInfo.buffer = storageBuffers.buffer;
-          bufferInfo.offset = 0;
-          bufferInfo.range = VK_WHOLE_SIZE;
-          storageBufferInfos.emplace_back(bufferInfo);
+          VkDescriptorBufferInfo buffer_info{};
+          buffer_info.buffer = storageBuffers.buffer;
+          buffer_info.offset = 0;
+          buffer_info.range = VK_WHOLE_SIZE;
+          buffer_storage_infos.emplace_back(buffer_info);
         });
 
-      descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-      descriptorWrites[0].dstSet = shadowMapDescSet;
-      descriptorWrites[0].dstBinding = 0;
-      descriptorWrites[0].dstArrayElement = 0;
-      descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-      descriptorWrites[0].descriptorCount = 1;
-      descriptorWrites[0].pBufferInfo = bufferInfos.data();
+      descset_writes[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+      descset_writes[0].dstSet = shadow_map_descset;
+      descset_writes[0].dstBinding = 0;
+      descset_writes[0].dstArrayElement = 0;
+      descset_writes[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+      descset_writes[0].descriptorCount = 1;
+      descset_writes[0].pBufferInfo = buffer_infos.data();
 
-      descriptorWrites[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-      descriptorWrites[1].dstSet = shadowMapDescSet;
-      descriptorWrites[1].dstBinding = 1;
-      descriptorWrites[1].dstArrayElement = 0;
-      descriptorWrites[1].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-      descriptorWrites[1].descriptorCount = static_cast<uint32_t>(storageBufferInfos.size());
-      descriptorWrites[1].pBufferInfo = storageBufferInfos.data();
+      descset_writes[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+      descset_writes[1].dstSet = shadow_map_descset;
+      descset_writes[1].dstBinding = 1;
+      descset_writes[1].dstArrayElement = 0;
+      descset_writes[1].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+      descset_writes[1].descriptorCount = static_cast<uint32_t>(buffer_storage_infos.size());
+      descset_writes[1].pBufferInfo = buffer_storage_infos.data();
 
-      vkUpdateDescriptorSets(_renderer->getDevice(), static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
+      vkUpdateDescriptorSets(_renderer->getDevice(), static_cast<uint32_t>(descset_writes.size()), descset_writes.data(), 0, nullptr);
 
-      mesh->setShadowMapDescSet(shadowMapDescSet);
+      mesh->setShadowMapDescSet(shadow_map_descset);
     }
 
     void Basic::setPushConstants(Mesh* mesh)
@@ -128,6 +128,8 @@ namespace Poulpe
     {
       if (!mesh && !mesh->isDirty()) return;
 
+      auto commandPool = _renderer->createCommandPool();
+
       if (mesh->getData()->_ubos_offset.empty()) {
         uint32_t const totalInstances{ static_cast<uint32_t>(mesh->getData()->_ubos.size()) };
         uint32_t const maxUniformBufferRange{ _renderer->getDeviceProperties().limits.maxUniformBufferRange };
@@ -142,7 +144,7 @@ namespace Poulpe
         for (size_t i{ 0 }; i < uniformBuffersCount; ++i) {
 
           mesh->getData()->_ubos_offset.emplace_back(uboOffset);
-          Buffer uniformBuffer = _renderer->createUniformBuffers(nbUbo);
+          Buffer uniformBuffer = _renderer->createUniformBuffers(nbUbo, commandPool);
           mesh->getUniformBuffers()->emplace_back(uniformBuffer);
 
           uboOffset = (uboRemaining > uniformBufferChunkSize) ? uboOffset + uniformBufferChunkSize : uboOffset + uboRemaining;
@@ -155,7 +157,6 @@ namespace Poulpe
       data->_texture_index = 0;
 
       if (data->_vertex_buffer.buffer == VK_NULL_HANDLE) {
-        auto commandPool = _renderer->createCommandPool();
         data->_vertex_buffer = _renderer->createVertexBuffer(commandPool, data->_vertices);
         data->_indices_buffer = _renderer->createIndexBuffer(commandPool, data->_Indices);
       } else {
@@ -209,14 +210,13 @@ namespace Poulpe
         objectBuffer.ambientLight = _light_manager->getAmbientLight();
         objectBuffer.material = material;
 
-        auto const size{ sizeof(objectBuffer) };
-        auto storageBuffer{ _renderer->createStorageBuffers(size) };
+        auto storageBuffer{ _renderer->createStorageBuffers(objectBuffer, commandPool) };
 
         mesh->setObjectBuffer(objectBuffer);
         mesh->addStorageBuffer(storageBuffer);
         mesh->setHasBufferStorage();
 
-        _renderer->updateStorageBuffer(mesh->getStorageBuffers()->at(0), objectBuffer);
+        //_renderer->updateStorageBuffer(mesh->getStorageBuffers()->at(0), objectBuffer);
       }
 
       unsigned int min{ 0 };
@@ -237,5 +237,8 @@ namespace Poulpe
         setPushConstants(mesh);
       }
       mesh->setIsDirty(false);
+
+      vkDestroyCommandPool(_renderer->getDevice(), commandPool, nullptr);
+
     }
 }

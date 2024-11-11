@@ -30,8 +30,8 @@ namespace Poulpe
     , _Rotations(rotations)
     , _Scales(scales)
   {
-    if (!std::filesystem::exists(_ScriptPath)) {
-      PLP_FATAL("script file {} does not exits.", _ScriptPath);
+    if (!std::filesystem::exists(_script_path)) {
+      PLP_FATAL("script file {} does not exits.", _script_path);
       return;
     }
 
@@ -39,7 +39,7 @@ namespace Poulpe
     luaL_openlibs(_lua_State);
     lua_register(_lua_State, "_Move", wrapMove);
 
-    checkLua(_lua_State, luaL_dofile(_lua_State, _ScriptPath.c_str()));
+    checkLua(_lua_State, luaL_dofile(_lua_State, _script_path.c_str()));
   }
 
   BoneAnimationScript::~BoneAnimationScript()
@@ -130,30 +130,30 @@ namespace Poulpe
       anim->done = done;
     };
     animMove->update(animMove.get(), dataMove, deltaTimeMove, _Animations, _Positions, _Rotations, _Scales);
-    _NewMoveAnimations.emplace_back(std::move(animMove));
+    _new_moves.emplace_back(std::move(animMove));
   }
 
   void BoneAnimationScript::operator()(std::chrono::duration<float> const& deltaTime, Mesh* mesh)
   {
-    _Data = mesh->getData();
+    _data = mesh->getData();
 
-    std::ranges::for_each(_NewMoveAnimations, [&](auto& anim) {
-      _MoveAnimations.emplace_back(std::move(anim));
+    std::ranges::for_each(_new_moves, [&](auto& anim) {
+      _moves.emplace_back(std::move(anim));
     });
  
-    _NewMoveAnimations.clear();
+    _new_moves.clear();
 
-    if (!_MoveInit) {
+    if (!_move_init) {
       lua_getglobal(_lua_State, "nextMove");
       if (lua_isfunction(_lua_State, -1)) {
         lua_pushlightuserdata(_lua_State, this);
         lua_pushnumber(_lua_State, static_cast<double>(deltaTime.count()));
         checkLua(_lua_State, lua_pcall(_lua_State, 2, 1, 0));
       }
-      _MoveInit = true;
+      _move_init = true;
     }
 
-    std::ranges::for_each(_MoveAnimations, [&](auto& anim) {
+    std::ranges::for_each(_moves, [&](auto& anim) {
 
       anim->update(anim.get(), mesh->getData(), deltaTime, _Animations, _Positions, _Rotations, _Scales);
 
@@ -167,6 +167,6 @@ namespace Poulpe
       }
     });
 
-    std::erase_if(_MoveAnimations, [](auto& anim) { return anim->done; });
+    std::erase_if(_moves, [](auto& anim) { return anim->done; });
   }
 }

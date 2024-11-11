@@ -10,7 +10,7 @@ namespace Poulpe
 {
   WinSocket::WinSocket()
   {
-    WSAStartup(MAKEWORD(2, 2), &_Data);
+    WSAStartup(MAKEWORD(2, 2), &_data);
 
     _Socket = ::socket(AF_INET6, SOCK_STREAM, 0);
 

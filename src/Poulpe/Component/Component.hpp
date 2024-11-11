@@ -36,7 +36,7 @@ namespace Poulpe
       std::unique_ptr<Skybox>>;
 
     IDType getID() const { return _ID; }
-    IDType getOwner() const { return _Owner; }
+    IDType getOwner() const { return _owner; }
 
     template <typename T>
     void init(std::unique_ptr<T> componentImpl)
@@ -53,7 +53,7 @@ namespace Poulpe
       return nullptr;
     }
 
-    void setOwner(IDType owner) { _Owner = owner; }
+    void setOwner(IDType owner) { _owner = owner; }
 
     void operator()(std::chrono::duration<float> const& deltaTime, Mesh * mesh)
     {
@@ -69,6 +69,6 @@ namespace Poulpe
 
   private:
     IDType _ID{ 0 };
-    IDType _Owner{ 0 };
+    IDType _owner{ 0 };
   };
 }

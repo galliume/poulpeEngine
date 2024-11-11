@@ -62,12 +62,13 @@ namespace Poulpe
       gridData._Indices = indices;
       gridData._vertices = vertices;
 
-      vkDestroyCommandPool(_renderer->getDevice(), commandPool, nullptr);
 
       mesh->setName("grid");
       mesh->setShaderName("grid");
-      mesh->getUniformBuffers()->emplace_back(_renderer->createUniformBuffers(1));
+      mesh->getUniformBuffers()->emplace_back(_renderer->createUniformBuffers(1, commandPool));
 
+      vkDestroyCommandPool(_renderer->getDevice(), commandPool, nullptr);
+      
       setPushConstants(mesh);
 
       for (uint32_t i{ 0 }; i < mesh->getUniformBuffers()->size(); i++) {

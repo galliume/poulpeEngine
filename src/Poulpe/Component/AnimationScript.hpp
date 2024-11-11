@@ -36,7 +36,7 @@ namespace Poulpe
     AnimationScript(std::string const & scriptPath);
     ~AnimationScript();
 
-    Data* getData() { return _Data; }
+    Data* getData() { return _data; }
 
     void init(Renderer* const renderer,
        TextureManager* const texture_manager,
@@ -50,15 +50,15 @@ namespace Poulpe
 
   private:
     Renderer* _renderer;
-    std::string _ScriptPath;
+    std::string _script_path;
     lua_State* _lua_State;
-    Data* _Data;
-    bool _MoveInit{ false };
-    bool _RotateInit{ false };
+    Data* _data;
+    bool _move_init{ false };
+    bool _rotate_init{ false };
 
-    std::vector<std::unique_ptr<AnimationMove>> _MoveAnimations{};
-    std::vector<std::unique_ptr<AnimationMove>> _NewMoveAnimations{};
-    std::vector<std::unique_ptr<AnimationRotate>> _RotateAnimations{};
-    std::vector<std::unique_ptr<AnimationRotate>> _NewRotateAnimations{};
+    std::vector<std::unique_ptr<AnimationMove>> _moves{};
+    std::vector<std::unique_ptr<AnimationMove>> _new_moves{};
+    std::vector<std::unique_ptr<AnimationRotate>> _rotates{};
+    std::vector<std::unique_ptr<AnimationRotate>> _new_rotates{};
   };
 }

@@ -67,12 +67,12 @@ namespace Poulpe
       data._ubos.emplace_back(ubo);
       data._Indices = indices;
 
-      vkDestroyCommandPool(_renderer->getDevice(), commandPool, nullptr);
 
       mesh->setName("crosshair");
       mesh->setShaderName("2d");
-      mesh->getUniformBuffers()->emplace_back(_renderer->createUniformBuffers(1));
+      mesh->getUniformBuffers()->emplace_back(_renderer->createUniformBuffers(1, commandPool));
 
+      vkDestroyCommandPool(_renderer->getDevice(), commandPool, nullptr);
       setPushConstants(mesh);
 
       for (uint32_t i{ 0 }; i < mesh->getUniformBuffers()->size(); i++) {

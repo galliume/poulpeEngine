@@ -6,8 +6,6 @@
 
 #include "Poulpe/Core/PlpTypedef.hpp"
 
-#include "Poulpe/Renderer/Vulkan/DeviceMemory.hpp" //@todo should not be here
-
 #include <atomic>
 #include <functional>
 
@@ -17,96 +15,88 @@ namespace Poulpe
   class Renderer;
   class TextureManager;
 
-  //@todo should not be IVisitor
   class Mesh
   {
   public:
-    Data* getData() { return & _Data; }
-    VkDescriptorSet* getDescSet() { return & _DescSet; }
-    material_t const getMaterial() const { return _Material; }
+    Data* getData() { return & _data; }
+    VkDescriptorSet* getDescSet() { return & _descset; }
+    material_t const getMaterial() const { return _material; }
     std::string const getName() const { return _name; }
-    inline const std::string getShaderName() const { return _ShaderName; }
-    std::vector<Buffer>* getStorageBuffers() { return & _StorageBuffers; }
-    inline std::vector<Buffer>* getUniformBuffers() { return & _UniformBuffers; }
-    ObjectBuffer* getObjectBuffer() { return &_ObjectBuffer; };
+    inline const std::string getShaderName() const { return _shader_name; }
+    std::vector<Buffer>* getStorageBuffers() { return & _storage_buffers; }
+    inline std::vector<Buffer>* getUniformBuffers() { return & _uniform_buffers; }
+    ObjectBuffer* getObjectBuffer() { return &_object_buffer; };
 
-    void addStorageBuffer(Buffer& buffer) { _StorageBuffers.emplace_back(std::move(buffer)); }
+    void addStorageBuffer(Buffer& buffer) { _storage_buffers.emplace_back(std::move(buffer)); }
     void init(
           Renderer* const renderer,
           TextureManager* const texture_manager, 
           LightManager* const light_manager) {}
         
-    bool isDirty() { return _IsDirty.load(); }
+    bool isDirty() { return _is_dirty.load(); }
 
     virtual void setApplyPushConstants(
       std::function<void(VkCommandBuffer& cmd_buffer,
         VkPipelineLayout pipelineLayout,
         Renderer* const renderer,
-        Mesh* const mesh)> fn) { _ApplyPushConstants = fn; }
+        Mesh* const mesh)> fn) { _apply_push_constants = fn; }
 
-    void setData(Data data) { _Data = std::move(data); }
-    void setDescSet(VkDescriptorSet descSet) { _DescSet = descSet; }
-    void setShadowMapDescSet(VkDescriptorSet descSet) { _ShadowMapDescSet = descSet; }
-    void setHasBufferStorage(bool has = true) { _HasStorageBuffer = has; }
-    void setHasPushConstants(bool has = true) { _HasPushContants = has; }
-    void setIsDirty(bool dirty = true) { _IsDirty.store(dirty); }
+    void setData(Data data) { _data = std::move(data); }
+    void setDescSet(VkDescriptorSet descSet) { _descset = descSet; }
+    void setShadowMapDescSet(VkDescriptorSet descSet) { _shadowmap_descset = descSet; }
+    void setHasBufferStorage(bool has = true) { _has_storage_buffer = has; }
+    void setHasPushConstants(bool has = true) { _has_push_contants = has; }
+    void setIsDirty(bool dirty = true) { _is_dirty.store(dirty); }
     void setName(std::string const& name) { _name = name; }
-    inline void setShaderName(std::string_view name) { _ShaderName = name; }
-    void setObjectBuffer(ObjectBuffer objectBuffer) { _ObjectBuffer = std::move(objectBuffer); }
+    inline void setShaderName(std::string_view name) { _shader_name = name; }
+    void setObjectBuffer(ObjectBuffer objectBuffer) { _object_buffer = std::move(objectBuffer); }
 
     void addUbos(const std::vector<UniformBufferObject>& ubos);
 
     template<typename... TArgs>
-    void applyPushConstants(TArgs&&... args) { _ApplyPushConstants(std::forward<TArgs>(args)...); }
+    void applyPushConstants(TArgs&&... args) { _apply_push_constants(std::forward<TArgs>(args)...); }
 
-    VkDescriptorSet* getShadowMapDescSet() { return & _ShadowMapDescSet; }
+    VkDescriptorSet* getShadowMapDescSet() { return & _shadowmap_descset; }
 
-    bool hasAnimation() const { return _HasAnimation; }
-    bool hasBbox() const { return _HasBbox; }
-    bool hasBufferStorage() const { return _HasStorageBuffer; }
-    bool hasPushConstants() const { return _HasPushContants; }
-    bool hasShadow() { return _HasShadow; }
+    bool has_animation() const { return _has_animation; }
+    bool hasBufferStorage() const { return _has_storage_buffer; }
+    bool hasPushConstants() const { return _has_push_contants; }
+    bool has_shadow() { return _has_shadow; }
 
-    void setHasAnimation(bool has = true) { _HasAnimation = has; }
-    void setHasBbox(bool hasBbox = false) { _HasBbox = hasBbox; }
-    void setIsIndexed(bool indexed) { _IsIndexed = indexed; }
-    void setIsPointLight(bool is = true) { _IsPointLight = is; }
-    void setMaterial(material_t material) { _Material = material; }
-    void setHasShadow(bool hasShadow) { _HasShadow = hasShadow; }
-        
-    bool isIndexed() const { return _IsIndexed; }
-    bool isPointLight() const { return _IsPointLight; }
+    void setHasAnimation(bool has = true) { _has_animation = has; }
+    void setIsIndexed(bool indexed) { _is_indexed = indexed; }
+    void setIsPointLight(bool is = true) { _is_point_light = is; }
+    void setMaterial(material_t material) { _material = material; }
+    void setHasShadow(bool has_shadow) { _has_shadow = has_shadow; }
 
-    /*void addBBox(BBox* bbox) { _BoundingBox = std::unique_ptr<BBox>(bbox); }
-    BBox* getBBox() { return _BoundingBox.get(); }*/
+    bool is_indexed() const { return _is_indexed; }
+    bool is_point_light() const { return _is_point_light; }
 
   private:
-    //std::unique_ptr<BBox> _BoundingBox;
     std::string _name{};
-    std::string _ShaderName{};
+    std::string _shader_name{};
 
-    std::atomic<bool> _IsDirty{ true };
+    std::atomic<bool> _is_dirty{ true };
 
-    bool _HasAnimation{ true };
-    bool _HasBbox{ false };
-    bool _HasPushContants{ false };
-    bool _HasStorageBuffer{ false };
-    bool _IsIndexed{ true };
-    bool _IsPointLight{ false };
-    bool _HasShadow{ false };
+    bool _has_animation{ true };
+    bool _has_push_contants{ false };
+    bool _has_storage_buffer{ false };
+    bool _is_indexed{ true };
+    bool _is_point_light{ false };
+    bool _has_shadow{ false };
 
-    std::vector<Buffer> _StorageBuffers{};
-    std::vector<Buffer> _UniformBuffers{};
-    ObjectBuffer _ObjectBuffer;
+    std::vector<Buffer> _storage_buffers{};
+    std::vector<Buffer> _uniform_buffers{};
+    ObjectBuffer _object_buffer;
 
-    Data _Data{};
-    VkDescriptorSet _DescSet{};
-    VkDescriptorSet _ShadowMapDescSet{};
-    material_t _Material{};
+    Data _data{};
+    VkDescriptorSet _descset{};
+    VkDescriptorSet _shadowmap_descset{};
+    material_t _material{};
 
     std::function<void(VkCommandBuffer& cmd_buffer,
-      VkPipelineLayout pipelineLayout,
+      VkPipelineLayout pipeline_layout,
       Renderer* const renderer,
-      Mesh* const mesh)> _ApplyPushConstants = nullptr;
+      Mesh* const mesh)> _apply_push_constants = nullptr;
   };
 }

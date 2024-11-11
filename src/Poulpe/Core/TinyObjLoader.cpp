@@ -11,7 +11,7 @@ namespace Poulpe
 {
   void TinyObjLoader::loadData(
     std::string const& path,
-    bool const shouldInverseTextureY,
+    bool const inverse_texture_y,
     std::function<void(
       TinyObjData const& _data,
       std::vector<material_t> const& materials,
@@ -76,12 +76,12 @@ namespace Poulpe
           mat.ior = material.ior;
           mat.dissolve = material.dissolve;
 
-          mat.ambientTexname = TinyObjLoader::cleanName(material.ambient_texname);
-          mat.diffuseTexname = TinyObjLoader::cleanName(material.diffuse_texname);
-          mat.specularTexname = TinyObjLoader::cleanName(material.specular_texname);
-          mat.specularHighlightTexname = TinyObjLoader::cleanName(material.specular_highlight_texname);
-          mat.bumpTexname = TinyObjLoader::cleanName(material.bump_texname);
-          mat.alphaTexname = TinyObjLoader::cleanName(material.alpha_texname);
+          mat.name_texture_ambient = TinyObjLoader::cleanName(material.ambient_texname);
+          mat.name_texture_diffuse = TinyObjLoader::cleanName(material.diffuse_texname);
+          mat.name_texture_specular = TinyObjLoader::cleanName(material.specular_texname);
+          mat.name_texture_specular_highlight = TinyObjLoader::cleanName(material.specular_highlight_texname);
+          mat.name_texture_bump = TinyObjLoader::cleanName(material.bump_texname);
+          mat.name_texture_alpha = TinyObjLoader::cleanName(material.alpha_texname);
           mat.illum = material.illum;
 
           meshMaterials.emplace_back(mat);
@@ -150,7 +150,7 @@ namespace Poulpe
                     tinyobj::real_t ty = attrib.texcoords[2 * size_t(idx.texcoord_index) + 1];
 
                     vertex.texCoord = { tx, ty };
-                    if (shouldInverseTextureY) vertex.texCoord.y *= -1.0f;
+                    if (inverse_texture_y) vertex.texCoord.y *= -1.0f;
                 }
 
                 // Optional: vertex colors

@@ -58,10 +58,12 @@ namespace Poulpe
       unsigned long long uboRemaining { (totalInstances - uboOffset > 0) ? totalInstances - uboOffset : 0};
       unsigned long long nbUbo { uboOffset};
 
+      auto commandPool = _renderer->createCommandPool();
+
       for (size_t i{ 0 }; i < uniformBuffersCount; ++i) {
 
         mesh->getData()->_ubos_offset.emplace_back(uboOffset);
-        Buffer uniformBuffer = _renderer->createUniformBuffers(nbUbo);
+        Buffer uniformBuffer = _renderer->createUniformBuffers(nbUbo, commandPool);
         mesh->getUniformBuffers()->emplace_back(uniformBuffer);
 
         uboOffset = (uboRemaining > uniformBufferChunkSize) ? uboOffset + uniformBufferChunkSize : uboOffset + uboRemaining;
@@ -69,12 +71,13 @@ namespace Poulpe
         uboRemaining = (totalInstances - uboOffset > 0) ? totalInstances - uboOffset : 0;
       }
 
-      auto commandPool = _renderer->createCommandPool();
       auto const& data = mesh->getData();
 
       data->_vertex_buffer = _renderer->createVertexBuffer(commandPool, data->_vertices);
       data->_indices_buffer = _renderer->createIndexBuffer(commandPool, data->_Indices);
       data->_texture_index = 0;
+
+      vkDestroyCommandPool(_renderer->getDevice(), commandPool, nullptr);
 
       for (size_t i{ 0 }; i < mesh->getData()->_ubos.size(); ++i) {
         mesh->getData()->_ubos[i].projection = _renderer->getPerspective();
@@ -85,28 +88,28 @@ namespace Poulpe
         }
       }
 
-      Material material{};
-      material.ambient = mesh->getMaterial().ambient;
-      material.diffuse = mesh->getMaterial().diffuse;
-      material.specular = mesh->getMaterial().specular;
-      material.transmittance = mesh->getMaterial().transmittance;
-      material.emission = mesh->getMaterial().emission;
-      material.shiIorDiss = glm::vec3(mesh->getMaterial().shininess,
-        mesh->getMaterial().ior, mesh->getMaterial().illum);
+      // Material material{};
+      // material.ambient = mesh->getMaterial().ambient;
+      // material.diffuse = mesh->getMaterial().diffuse;
+      // material.specular = mesh->getMaterial().specular;
+      // material.transmittance = mesh->getMaterial().transmittance;
+      // material.emission = mesh->getMaterial().emission;
+      // material.shiIorDiss = glm::vec3(mesh->getMaterial().shininess,
+      //   mesh->getMaterial().ior, mesh->getMaterial().illum);
 
-      ObjectBuffer objectBuffer{};
-      objectBuffer.pointLights[0] = _light_manager->getPointLights().at(0);
-      objectBuffer.pointLights[1] = _light_manager->getPointLights().at(1);
+      // ObjectBuffer objectBuffer{};
+      // objectBuffer.pointLights[0] = _light_manager->getPointLights().at(0);
+      // objectBuffer.pointLights[1] = _light_manager->getPointLights().at(1);
 
-      objectBuffer.spotLight = _light_manager->getSpotLights().at(0);
-      objectBuffer.ambientLight = _light_manager->getAmbientLight();
-      objectBuffer.material = material;
+      // objectBuffer.spotLight = _light_manager->getSpotLights().at(0);
+      // objectBuffer.ambientLight = _light_manager->getAmbientLight();
+      // objectBuffer.material = material;
 
-      auto const size = sizeof(objectBuffer);
-      auto storageBuffer = _renderer->createStorageBuffers(size);
-      mesh->addStorageBuffer(storageBuffer);
-      _renderer->updateStorageBuffer(mesh->getStorageBuffers()->at(0), objectBuffer);
-      mesh->setHasBufferStorage();
+      // auto const size = sizeof(objectBuffer);
+      // auto storageBuffer = _renderer->createStorageBuffers(size);
+      // mesh->addStorageBuffer(storageBuffer);
+      // _renderer->updateStorageBuffer(mesh->getStorageBuffers()->at(0), objectBuffer);
+      // mesh->setHasBufferStorage();
 
       unsigned int min{ 0 };
       unsigned int max{ 0 };

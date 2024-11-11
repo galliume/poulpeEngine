@@ -38,14 +38,14 @@ namespace Poulpe
 
   void WinServer::bind(std::string const& port)
   {
-    int status = WSAStartup(MAKEWORD(2, 2), & _Data);
+    int status = WSAStartup(MAKEWORD(2, 2), & _data);
 
     if (status != 0 ) {
       PLP_ERROR("WSAStartup failed with error: {}", status);
       WSACleanup();
     }
 
-    PLP_TRACE("WSAStartup: {}", _Data.szSystemStatus);
+    PLP_TRACE("WSAStartup: {}", _data.szSystemStatus);
 
     addrinfo hints;
     addrinfo* servInfo{ nullptr }, *serv;

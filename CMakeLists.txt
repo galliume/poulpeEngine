@@ -64,7 +64,7 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
   list(APPEND DEBUG_OPTIONS /MDd /Od /Zi /Zc:__cplusplus /EHsc)
   list(APPEND RELEASE_OPTIONS /Ox /MD /Zc:__cplusplus /EHsc)
 
-  target_link_options(${PROJECT_NAME} PRIVATE $<$<CONFIG:RELEASE>:/LTCG /fsanitize=address>)
+  #target_link_options(${PROJECT_NAME} PRIVATE $<$<CONFIG:RELEASE>:/LTCG>)
   target_compile_options(${PROJECT_NAME} PRIVATE $<$<CONFIG:DEBUG>:/GA /Wall -Wno-c++98-compat -Wno-old-style-cast>)
 else()
   list(APPEND DEBUG_OPTIONS -O3)
