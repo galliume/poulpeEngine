@@ -12,17 +12,17 @@ namespace Poulpe
 
         path = "config/poulpeEngine.json";
         f.open(fs::absolute(path));
-        if (f.is_open()) m_AppConfig = nlohmann::json::parse(f);
+        if (f.is_open()) _app_config = nlohmann::json::parse(f);
         f.close();
   
         path = "config/sounds.json";
         f.open(fs::absolute(path));
-        if (f.is_open()) m_SoundConfig = nlohmann::json::parse(f);
+        if (f.is_open()) _sound_config = nlohmann::json::parse(f);
         f.close();
 
         path = "config/shaders.json";
         f.open(fs::absolute(path));
-        if (f.is_open()) m_ShaderConfig = nlohmann::json::parse(f);
+        if (f.is_open()) _shader_config = nlohmann::json::parse(f);
         f.close();
     }
 
@@ -30,7 +30,7 @@ namespace Poulpe
     {
       std::vector<std::string> levels;
 
-      auto entries = fs::directory_iterator(m_LevelPath);
+      auto entries = fs::directory_iterator(_LevelPath);
 
       std::ranges::for_each(entries, [&levels](auto& entry) {
         levels.emplace_back(entry.path().stem().string());
@@ -55,21 +55,21 @@ namespace Poulpe
 
     nlohmann::json ConfigManager::loadLevelData(std::string const & levelName)
     {
-        m_EntityConfig.clear();
-        m_TexturesConfig.clear();
+        _entity_config.clear();
+        _textures_config.clear();
 
         fs::path path{};
         std::ifstream f;
         path = "config/textures.json";
 
         f.open(fs::absolute(path));
-        if (f.is_open()) m_TexturesConfig = nlohmann::json::parse(f);
+        if (f.is_open()) _textures_config = nlohmann::json::parse(f);
         f.close();
 
-        fs::path level{ m_LevelPath + levelName + ".json" };
+        fs::path level{ _LevelPath + levelName + ".json" };
         try {
             f.open(fs::absolute(level), std::ios_base::in);
-            if (f.is_open()) m_EntityConfig = nlohmann::json::parse(f);
+            if (f.is_open()) _entity_config = nlohmann::json::parse(f);
         }
         catch (nlohmann::json::parse_error& ex) {
             PLP_ERROR("Parse error at byte {}", ex.byte);
@@ -77,12 +77,12 @@ namespace Poulpe
 
         f.close();
 
-        std::ranges::for_each(m_EntityConfig["entities"].items(), [&](auto const& entities) {
+        std::ranges::for_each(_entity_config["entities"].items(), [&](auto const& entities) {
           auto textures = entities.value();
-          for (auto& [key, texpath] : textures["textures"].items()) {
-            m_TexturesConfig["textures"][key] = static_cast<std::string>(texpath);
+          for (auto const& [key, texpath] : textures["textures"].items()) {
+            _textures_config["textures"][key] = static_cast<std::string>(texpath);
           }
         });
-        return m_EntityConfig;
+        return _entity_config;
     }
 }

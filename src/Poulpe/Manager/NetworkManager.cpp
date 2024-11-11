@@ -12,7 +12,7 @@
 namespace Poulpe
 {
   NetworkManager::NetworkManager(APIManager* apiManager)
-    : m_APIManager(apiManager)
+    : _APIManager(apiManager)
   {
 
   }
@@ -20,11 +20,11 @@ namespace Poulpe
   void NetworkManager::startServer(std::string const& port)
   {
     #if defined(_WIN32) || defined(WIN32)
-    m_Server = std::make_shared<Server>(new WinServer(m_APIManager));
+    _Server = std::make_shared<Server>(new WinServer(_APIManager));
 
     std::jthread listen([this, &port]() {
-      m_Server->bind(port);
-      m_Server->listen();
+      _Server->bind(port);
+      _Server->listen();
     });
     listen.detach();
     #endif

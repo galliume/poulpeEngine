@@ -4,16 +4,16 @@ namespace Poulpe
 {
     AudioManager::~AudioManager()
     {
-        ma_engine_stop(& m_Engine);
-        ma_engine_uninit(& m_Engine);
+        ma_engine_stop(& _Engine);
+        ma_engine_uninit(& _Engine);
     }
 
     std::string const AudioManager::getState()
     {
-      if (State::PLAY == m_State) {
+      if (State::PLAY == _State) {
         return "playing";
       }
-      else if (State::STOP == m_State) {
+      else if (State::STOP == _State) {
         return "stoped";
       }
       else {
@@ -25,21 +25,21 @@ namespace Poulpe
     void AudioManager::load(nlohmann::json config)
     {
         for (auto const & sound : config["ambient"].items()) {
-            m_AmbientSounds.emplace_back(sound.value());
+            _AmbientSounds.emplace_back(sound.value());
         }
     }
 
     void AudioManager::startAmbient(unsigned int const index)
     {
       try {
-        if (State::PLAY == m_State) {
-          stop(m_AmbientSound);
+        if (State::PLAY == _State) {
+          stop(_AmbientSound);
         }
 
-        start(m_AmbientSounds.at(index), m_AmbientSound);
+        start(_AmbientSounds.at(index), _AmbientSound);
 
-        if (State::PLAY == m_State) {
-          m_AmbientSoundIndex = index;
+        if (State::PLAY == _State) {
+          _AmbientSoundIndex = index;
         }
       } catch (std::out_of_range const&) {
         PLP_WARN("Ambient sound index {} does not exists.", index);
@@ -48,36 +48,36 @@ namespace Poulpe
 
     void AudioManager::stopAmbient()
     {
-      stop(m_AmbientSound);
+      stop(_AmbientSound);
     }
 
     void AudioManager::toggleLooping()
     {
-      if (ma_sound_is_looping(&m_AmbientSound)) {
-        ma_sound_set_looping(&m_AmbientSound, false);
+      if (ma_sound_is_looping(&_AmbientSound)) {
+        ma_sound_set_looping(&_AmbientSound, false);
       }
       else {
-        ma_sound_set_looping(&m_AmbientSound, true);
+        ma_sound_set_looping(&_AmbientSound, true);
       }
     }
 
     void AudioManager::clear()
     {
-      if (State::PLAY == m_State) {
+      if (State::PLAY == _State) {
         stopAmbient();
-        ma_engine_stop(&m_Engine);
-        ma_engine_uninit(&m_Engine);
+        ma_engine_stop(&_Engine);
+        ma_engine_uninit(&_Engine);
       }
 
-      m_AmbientSounds.clear();
+      _AmbientSounds.clear();
     }
 
     void AudioManager::init()
     {
-        m_State = State::STOP;
+        _State = State::STOP;
         ma_result result{ MA_ERROR };
 
-        result = ma_engine_init(nullptr, & m_Engine);
+        result = ma_engine_init(nullptr, & _Engine);
 
         if (MA_SUCCESS != result) {
             PLP_WARN("Cannot init mini audio {}", result);
@@ -89,31 +89,31 @@ namespace Poulpe
         ma_result result{ MA_ERROR };
         ma_uint32 flags{ MA_SOUND_FLAG_ASYNC };
 
-        result = ma_sound_init_from_file(& m_Engine, soundPath.c_str(), flags, nullptr, nullptr, & sound);
+        result = ma_sound_init_from_file(& _Engine, soundPath.c_str(), flags, nullptr, nullptr, & sound);
 
         if (result != MA_SUCCESS) {
             PLP_ERROR("Cannot init sound {}", soundPath.c_str());
-            m_State = State::ERR;
+            _State = State::ERR;
             return;
         }
 
-        if (m_Looping) {
+        if (_Looping) {
             ma_sound_set_looping(& sound, true);
         }
 
-        m_State = (MA_SUCCESS == ma_sound_start(& sound)) ? State::PLAY : State::ERR;
+        _State = (MA_SUCCESS == ma_sound_start(& sound)) ? State::PLAY : State::ERR;
     }
 
     void AudioManager::stop(ma_sound sound)
     {
-        if (State::PLAY != m_State) {
+        if (State::PLAY != _State) {
             return;
         }
 
         if (MA_SUCCESS == ma_sound_stop(& sound)) {
-            m_State = State::STOP;
+            _State = State::STOP;
         } else {
-            m_State = State::ERR;
+            _State = State::ERR;
         }
 
         ma_sound_uninit(& sound);

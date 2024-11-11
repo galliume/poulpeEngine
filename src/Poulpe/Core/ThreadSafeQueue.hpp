@@ -13,32 +13,32 @@ namespace Poulpe
         void push(T newValue)
         {
             {
-                std::lock_guard<std::mutex> lock(m_Mutex);
+                std::lock_guard<std::mutex> lock(_Mutex);
                 std::shared_ptr<T>data(std::make_shared<T>(std::move(newValue)));
-                m_DataQueue.push(data);
-                m_DataCond.notify_one();
+                _DataQueue.push(data);
+                _DataCond.notify_one();
             }
         }
 
         void waitAndPop(T& value)
         {
             {
-                std::unique_lock<std::mutex> lock(m_Mutex);
-                m_DataCond.wait(lock, [=, this] { return !m_DataQueue.empty(); });
+                std::unique_lock<std::mutex> lock(_Mutex);
+                _DataCond.wait(lock, [=, this] { return !_DataQueue.empty(); });
 
-                value = std::move(*m_DataQueue.front());
-                m_DataQueue.pop();
+                value = std::move(*_DataQueue.front());
+                _DataQueue.pop();
             }
         }
 
         std::shared_ptr<T> waitAndPop()
         {
             {
-                std::unique_lock<std::mutex> lock(m_Mutex);
-                m_DataCond.wait(lock, [=, this] { return !m_DataQueue.empty(); });
+                std::unique_lock<std::mutex> lock(_Mutex);
+                _DataCond.wait(lock, [=, this] { return !_DataQueue.empty(); });
 
-                std::shared_ptr<T> res = m_DataQueue.front();
-                m_DataQueue.pop();
+                std::shared_ptr<T> res = _DataQueue.front();
+                _DataQueue.pop();
                 return res;
             }
         }
@@ -46,11 +46,11 @@ namespace Poulpe
         bool tryPop(T& value)
         {
             {
-                std::lock_guard<std::mutex> lock(m_Mutex);
-                if (m_DataQueue.empty()) return false;
+                std::lock_guard<std::mutex> lock(_Mutex);
+                if (_DataQueue.empty()) return false;
 
-                value = std::move(*m_DataQueue.front());
-                m_DataQueue.pop();
+                value = std::move(*_DataQueue.front());
+                _DataQueue.pop();
             }
 
             return true;
@@ -59,11 +59,11 @@ namespace Poulpe
         std::shared_ptr<T> tryPop()
         {
             {
-                std::lock_guard<std::mutex> lock(m_Mutex);
-                if (m_DataQueue.empty()) return false;
+                std::lock_guard<std::mutex> lock(_Mutex);
+                if (_DataQueue.empty()) return false;
 
-                std::shared_ptr<T> res = m_DataQueue.front();
-                m_DataQueue.pop();
+                std::shared_ptr<T> res = _DataQueue.front();
+                _DataQueue.pop();
                 return res;
             }
         }
@@ -73,16 +73,16 @@ namespace Poulpe
             bool isEmpty{ false };
 
             {
-                std::lock_guard<std::mutex> lock(m_Mutex);
-                isEmpty = m_DataQueue.empty();
+                std::lock_guard<std::mutex> lock(_Mutex);
+                isEmpty = _DataQueue.empty();
             }
 
             return isEmpty;
         }
 
     private:
-        mutable std::mutex m_Mutex;
-        std::queue<std::shared_ptr<T>> m_DataQueue;
-        std::condition_variable m_DataCond;
+        mutable std::mutex _Mutex;
+        std::queue<std::shared_ptr<T>> _DataQueue;
+        std::condition_variable _DataCond;
     };
 }

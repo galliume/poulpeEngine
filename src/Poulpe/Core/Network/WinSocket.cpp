@@ -10,29 +10,29 @@ namespace Poulpe
 {
   WinSocket::WinSocket()
   {
-    WSAStartup(MAKEWORD(2, 2), &m_Data);
+    WSAStartup(MAKEWORD(2, 2), &_Data);
 
-    m_Socket = ::socket(AF_INET6, SOCK_STREAM, 0);
+    _Socket = ::socket(AF_INET6, SOCK_STREAM, 0);
 
-    if (INVALID_SOCKET == m_Socket) {
+    if (INVALID_SOCKET == _Socket) {
       throw std::runtime_error("Error while creating the socket");
     }
   }
 
   WinSocket::~WinSocket()
   {
-   ::closesocket(m_Socket);
+   ::closesocket(_Socket);
    ::WSACleanup();
   }
 
   void WinSocket::close()
   {
-    if (m_Status == SocketStatus::NOT_CONNECTED) {
+    if (_Status == SocketStatus::NOT_CONNECTED) {
       PLP_TRACE("socket already disconnected");
       return;
     }
 
-    closesocket(m_Socket);
+    closesocket(_Socket);
 
     int status = WSAGetLastError();
 
@@ -40,16 +40,16 @@ namespace Poulpe
       PLP_ERROR("Close socket failed {}", status);
     }
 
-    m_Status = SocketStatus::NOT_CONNECTED;
+    _Status = SocketStatus::NOT_CONNECTED;
   }
 
   void WinSocket::bind(std::string const& ip, unsigned short const port)
   {
-    ::inet_pton(AF_INET6, ip.c_str(), & m_SockAddrIn.sin6_addr);
-    m_SockAddrIn.sin6_family = AF_INET;
-    m_SockAddrIn.sin6_port = ::htons(port);
+    ::inet_pton(AF_INET6, ip.c_str(), & _SockAddrIn.sin6_addr);
+    _SockAddrIn.sin6_family = AF_INET;
+    _SockAddrIn.sin6_port = ::htons(port);
 
-    ::bind(m_Socket, (SOCKADDR*)&m_SockAddrIn, sizeof(m_SockAddrIn));
+    ::bind(_Socket, (SOCKADDR*)&_SockAddrIn, sizeof(_SockAddrIn));
 
     int status = WSAGetLastError();
 
@@ -57,13 +57,13 @@ namespace Poulpe
       PLP_ERROR("bind socket failed {}", status);
     }
 
-    m_IP = ip;
-    m_Port = port;
+    _IP = ip;
+    _Port = port;
   }
 
   void WinSocket::connect()
   {
-    ::connect(m_Socket, (SOCKADDR*) & m_SockAddrIn, sizeof(m_SockAddrIn));
+    ::connect(_Socket, (SOCKADDR*) & _SockAddrIn, sizeof(_SockAddrIn));
 
     int status = WSAGetLastError();
 
@@ -76,7 +76,7 @@ namespace Poulpe
 
   void WinSocket::listen()
   {
-    ::listen(m_Socket, 0); //@todo fix max connection?
+    ::listen(_Socket, 0); //@todo fix max connection?
   }
 
   void WinSocket::read()
@@ -87,12 +87,12 @@ namespace Poulpe
     int status{ 0 };
 
     do {
-      status = ::recv(m_Socket, recvbuf, recvbuflen, 0);
+      status = ::recv(_Socket, recvbuf, recvbuflen, 0);
       PLP_TRACE("bytes received {}", status);
       PLP_TRACE("received {}", recvbuf);
     } while (status > 0);
 
-    closesocket(m_Socket);
+    closesocket(_Socket);
     WSACleanup();
   }
 }

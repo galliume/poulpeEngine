@@ -67,7 +67,7 @@
         },
         "CMAKE_C_STANDARD": {
           "type": "STRING",
-          "value": "23"
+          "value": "17"
         },
         "CMAKE_NO_SYSTEM_FROM_IMPORTED": {
           "type": "STRING",
@@ -650,6 +650,16 @@
         "toolchainFile": {
           "type": "STRING",
           "value": "clang-toolchain.cmake"
+        }
+      }
+    },
+    {
+      "name": "ASAN_LIBRARY_PATH",
+      "hidden": true,
+      "cacheVariables": {
+        "CMAKE_LIBRARY_PATH": {
+          "type": "STRING",
+          "value": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\Llvm\\x64\\lib\\clang\\17\\lib\\windows"
         }
       }
     }

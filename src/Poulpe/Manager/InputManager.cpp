@@ -3,21 +3,21 @@
 
 namespace Poulpe
 {
-    bool InputManager::m_CanMoveCamera = false;
-    bool InputManager::m_FirtMouseMove = true;
+    bool InputManager::_CanMoveCamera = false;
+    bool InputManager::_FirtMouseMove = true;
 
-    InputManager::InputManager(Window const * const window) : m_Window(window)
+    InputManager::InputManager(Window const * const window) : _window(window)
     {
         int width, height;
-        glfwGetWindowSize(m_Window->get(), & width, & height);
+        glfwGetWindowSize(_window->get(), & width, & height);
     }
     
     void InputManager::init(nlohmann::json const& inputConfig)
     {
-        m_InputConfig = inputConfig;
+        _InputConfig = inputConfig;
 
         //@todo should not be here and take keyboard type (qwerty, azerty, etc).
-         m_KeyboardKeys = {
+         _KeyboardKeys = {
             { "left_ctrl", GLFW_KEY_LEFT_CONTROL },
             { "a", GLFW_KEY_A },
             { "b", GLFW_KEY_B },
@@ -58,19 +58,19 @@ namespace Poulpe
 
         };
 
-        glfwSetWindowUserPointer(m_Window->get(), this);
+        glfwSetWindowUserPointer(_window->get(), this);
 
-        glfwSetKeyCallback(m_Window->get(), []( GLFWwindow* window, int key, int scancode, int action, int mods) {
+        glfwSetKeyCallback(_window->get(), []( GLFWwindow* window, int key, int scancode, int action, int mods) {
             InputManager* inputManager = Locator::getInputManager();
             inputManager->key(key, scancode, action, mods);
         });
 
-        glfwSetCursorPosCallback(m_Window->get(), []( GLFWwindow* window, double xPos, double yPos) {
+        glfwSetCursorPosCallback(_window->get(), []( GLFWwindow* window, double xPos, double yPos) {
             InputManager* inputManager = Locator::getInputManager();
             inputManager->updateMousePos(xPos, yPos);
         });
 
-        glfwSetMouseButtonCallback(m_Window->get(), []( GLFWwindow* window, int button, int action, int mods) {
+        glfwSetMouseButtonCallback(_window->get(), []( GLFWwindow* window, int button, int action, int mods) {
             InputManager* inputManager = Locator::getInputManager();
             inputManager->mouseButton(button, action, mods);
         });
@@ -82,33 +82,33 @@ namespace Poulpe
         int const action,
          const int mods)
     {
-        const auto config = m_InputConfig[m_InputConfig["current"]];
+        const auto config = _InputConfig[_InputConfig["current"]];
 
         switch (action)
         {
             case GLFW_PRESS:
             case GLFW_REPEAT:
             {
-                if (key == m_KeyboardKeys[config["unlockCamera"]]) {
-                    if (!InputManager::m_CanMoveCamera) {
-                        glfwSetInputMode(m_Window->get(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+                if (key == _KeyboardKeys[config["unlockCamera"]]) {
+                    if (!InputManager::_CanMoveCamera) {
+                        glfwSetInputMode(_window->get(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
                     } else {
-                        glfwSetInputMode(m_Window->get(), GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+                        glfwSetInputMode(_window->get(), GLFW_CURSOR, GLFW_CURSOR_NORMAL);
                     }
-                    InputManager::m_CanMoveCamera = !InputManager::m_CanMoveCamera;
-                } else if (key == m_KeyboardKeys[config["forward"]]) {
-                    m_Camera->forward();
-                } else if (key == m_KeyboardKeys[config["backward"]]) {
-                    m_Camera->backward();
-                } else if (key == m_KeyboardKeys[config["left"]]) {
-                    m_Camera->left();
-                } else if (key == m_KeyboardKeys[config["right"]]) {
-                    m_Camera->right();
-                } else if (key == m_KeyboardKeys[config["up"]]) {
-                    m_Camera->up();
-                } else if (key == m_KeyboardKeys[config["down"]]) {
-                    m_Camera->down();
-                } else if (key == m_KeyboardKeys[config["unlockFPS"]])
+                    InputManager::_CanMoveCamera = !InputManager::_CanMoveCamera;
+                } else if (key == _KeyboardKeys[config["forward"]]) {
+                    _camera->forward();
+                } else if (key == _KeyboardKeys[config["backward"]]) {
+                    _camera->backward();
+                } else if (key == _KeyboardKeys[config["left"]]) {
+                    _camera->left();
+                } else if (key == _KeyboardKeys[config["right"]]) {
+                    _camera->right();
+                } else if (key == _KeyboardKeys[config["up"]]) {
+                    _camera->up();
+                } else if (key == _KeyboardKeys[config["down"]]) {
+                    _camera->down();
+                } else if (key == _KeyboardKeys[config["unlockFPS"]])
                 {
                   Poulpe::Locator::getConfigManager()->updateConfig<unsigned int>("fpsLimit", 0);
                 }
@@ -128,19 +128,19 @@ namespace Poulpe
     {
       if (GLFW_MOUSE_BUTTON_LEFT == button) {
         int width, height;
-        glfwGetWindowSize(m_Window->get(), &width, &height);
+        glfwGetWindowSize(_window->get(), &width, &height);
 
         double xpos, ypos;
-        glfwGetCursorPos(m_Window->get(), &xpos, &ypos);
+        glfwGetCursorPos(_window->get(), &xpos, &ypos);
       }
     }
 
     void InputManager::saveLastMousePos(double const xPos, double const yPos)
     {
-      m_LastX = xPos;
-      m_LastY = yPos;
+      _LastX = xPos;
+      _LastY = yPos;
 
-      InputManager::m_FirtMouseMove = true;
+      InputManager::_FirtMouseMove = true;
     }
 
     void InputManager::updateMousePos(double const x, double const y)
@@ -148,25 +148,25 @@ namespace Poulpe
         double xPos = x;
         double yPos = y;
 
-        if (!InputManager::m_CanMoveCamera) return;
+        if (!InputManager::_CanMoveCamera) return;
 
-        if (InputManager::m_FirtMouseMove) {
-            m_LastX = xPos;
-            m_LastY = yPos;
-            InputManager::m_FirtMouseMove = false;
+        if (InputManager::_FirtMouseMove) {
+            _LastX = xPos;
+            _LastY = yPos;
+            InputManager::_FirtMouseMove = false;
         }
 
-        double xoffset = xPos - m_LastX;
-        double yoffset = m_LastY - yPos;
+        double xoffset = xPos - _LastX;
+        double yoffset = _LastY - yPos;
 
-        m_LastX = xPos;
-        m_LastY = yPos;
+        _LastX = xPos;
+        _LastY = yPos;
     
         const double sensitivity = 0.5;
 
         xoffset *= sensitivity;
         yoffset *= sensitivity;
     
-        m_Camera->updatePos(xoffset, yoffset);
+        _camera->updatePos(xoffset, yoffset);
     }
 }

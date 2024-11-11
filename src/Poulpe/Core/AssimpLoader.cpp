@@ -31,7 +31,7 @@ namespace Poulpe
 
   void AssimpLoader::loadData(
         std::string const & path,
-        bool const shouldInverseTextureY,
+        bool const inverse_texture_y,
         std::function<void(
           PlpMeshData const _data,
           std::vector<material_t> const materials,
@@ -204,8 +204,8 @@ namespace Poulpe
 
           aiVector3D vertices = mesh->mVertices[face->mIndices[j]];
           Vertex vertex{};
-          vertex.bonesIds.resize(4);
-          std::fill(vertex.bonesIds.begin(), vertex.bonesIds.end(), -1);
+          vertex.bones_ids.resize(4);
+          std::fill(vertex.bones_ids.begin(), vertex.bones_ids.end(), -1);
           vertex.weights.resize(4);
           std::fill(vertex.weights.begin(), vertex.weights.end(), 0.0f);
 
@@ -222,7 +222,7 @@ namespace Poulpe
           if (mesh->mNumUVComponents[0] > 0) {
             aiVector3D texCoord = mesh->mTextureCoords[0][face->mIndices[j]];
             vertex.texCoord = { texCoord.x, texCoord.y };
-            if (shouldInverseTextureY) vertex.texCoord.y *= -1.0f;
+            if (inverse_texture_y) vertex.texCoord.y *= -1.0f;
           }
 
           vertex.color = { 1.0f, 1.0f, 1.0f };
@@ -271,7 +271,7 @@ namespace Poulpe
             for (auto bW{ 0 }; bW < 4; bW++) {
               if (vtex.weights[bW] < 0) {
                 vtex.weights[bW] = weight;
-                vtex.bonesIds[bW] = boneID;
+                vtex.bones_ids[bW] = boneID;
               }
             }
           }

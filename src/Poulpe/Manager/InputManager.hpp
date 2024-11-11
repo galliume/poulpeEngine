@@ -18,21 +18,21 @@ namespace Poulpe
     void key(int key, int scancode, int action, int mods);
     void mouseButton(int button, int action, int mods);
     void saveLastMousePos(double xPos, double yPos);
-    void inline setCamera(Camera * const camera) { m_Camera = camera; };
+    void inline setCamera(Camera * const camera) { _camera = camera; };
     void updateMousePos(double xPos, double yPo);
 
-    static bool m_CanMoveCamera;
-    static bool m_FirtMouseMove;
+    static bool _CanMoveCamera;
+    static bool _FirtMouseMove;
 
   private:
-    double m_LastX{ 0 };
-    double m_LastY{ 0 };
+    double _LastX{ 0 };
+    double _LastY{ 0 };
 
     //@todo clean this
-    Camera * m_Camera;
-    Window const * const m_Window;
+    Camera * _camera;
+    Window const * const _window;
 
-    nlohmann::json m_InputConfig;
-    std::unordered_map<std::string, int> m_KeyboardKeys{};
+    nlohmann::json _InputConfig;
+    std::unordered_map<std::string, int> _KeyboardKeys{};
   };
 }

@@ -35,25 +35,25 @@ namespace Poulpe
       std::unique_ptr<ShadowMap>,
       std::unique_ptr<Skybox>>;
 
-    IDType getID() const { return m_ID; }
-    IDType getOwner() const { return m_Owner; }
+    IDType getID() const { return _ID; }
+    IDType getOwner() const { return _Owner; }
 
     template <typename T>
     void init(std::unique_ptr<T> componentImpl)
     {
-      m_ID = GUIDGenerator::getGUID();
-      m_Pimpl.emplace<std::unique_ptr<T>>(std::move(componentImpl));
+      _ID = GUIDGenerator::getGUID();
+      _Pimpl.emplace<std::unique_ptr<T>>(std::move(componentImpl));
     }
 
     template<typename T>
     T* has() const {
-      if (auto ptr = std::get_if<std::unique_ptr<T>>(&m_Pimpl)) {
+      if (auto ptr = std::get_if<std::unique_ptr<T>>(&_Pimpl)) {
         return ptr->get();
       }
       return nullptr;
     }
 
-    void setOwner(IDType owner) { m_Owner = owner; }
+    void setOwner(IDType owner) { _Owner = owner; }
 
     void operator()(std::chrono::duration<float> const& deltaTime, Mesh * mesh)
     {
@@ -61,14 +61,14 @@ namespace Poulpe
         if constexpr (hasCallOperator<decltype(*component)>) {
           (*component)(deltaTime, mesh);
         }
-      }, m_Pimpl);
+      }, _Pimpl);
     }
 
   protected:
-    ComponentImpl m_Pimpl;
+    ComponentImpl _Pimpl;
 
   private:
-    IDType m_ID;
-    IDType m_Owner;
+    IDType _ID{ 0 };
+    IDType _Owner{ 0 };
   };
 }

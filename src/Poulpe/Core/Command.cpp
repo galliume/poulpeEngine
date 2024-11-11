@@ -3,7 +3,7 @@
 namespace Poulpe
 {
     Command::Command(std::function<void()> request, WhenToExecute w)
-        : m_Request(request), m_When(w)
+        : _Request(request), _When(w)
     {
     }
 
@@ -12,7 +12,7 @@ namespace Poulpe
     {
         Response response;
         
-        m_Request();
+        _Request();
 
         return response;
     }

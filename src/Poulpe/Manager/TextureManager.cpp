@@ -8,175 +8,174 @@ namespace Poulpe
 {
   std::vector<std::array<float, 3>> TextureManager::addNormalMapTexture(std::string const& name)
   {
-    if (!m_Textures.contains(name)) {
+    if (!_textures.contains(name)) {
       PLP_TRACE("Texture {} does not exists, can't create normal map", name);
       return {};
     }
 
-    Texture& originalTexture = m_Textures[name];
-    auto const path = originalTexture.getPath();
+    Texture& original_texture = _textures[name];
+    auto const path = original_texture.getPath();
 
-    if (!originalTexture.getNormalMap().empty()) {
-      return originalTexture.getNormalMap();
+    if (!original_texture.getNormalMap().empty()) {
+      return original_texture.getNormalMap();
     }
 
-    int texWidth = 0, texHeight = 0, texChannels = 0;
-    stbi_uc* pixels = stbi_load(path.c_str(), &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
+    int tex_width = 0, tex_height = 0, tex_channels = 0;
+    stbi_uc* pixels = stbi_load(path.c_str(), &tex_width, &tex_height, &tex_channels, STBI_rgb_alpha);
 
     if (!pixels) {
       PLP_FATAL("failed to load texture image %s", name);
       return {};
     }
 
-    std::vector<std::array<float, 3>> normalMapTexture;
+    std::vector<std::array<float, 3>> normal_map;
 
-    for (int y = 0; y < texHeight; ++y) {
+    for (int y = 0; y < tex_height; ++y) {
 
-      int ym1 = (y - 1) & (texHeight - 1);
-      int yp1 = (y + 1) & (texHeight - 1);
+      int ym1 = (y - 1) & (tex_height - 1);
+      int yp1 = (y + 1) & (tex_height - 1);
 
-      unsigned char* centerRow = pixels + y * texWidth;
-      unsigned char* upperRow = pixels + ym1 * texWidth;
-      unsigned char* lowerRow = pixels + yp1 * texWidth;
+      unsigned char* center_row = pixels + y * tex_width;
+      unsigned char* upper_row = pixels + ym1 * tex_width;
+      unsigned char* lower_row = pixels + yp1 * tex_width;
 
-      for (int x = 0; x < texWidth; ++x) {
-        int xm1 = (x - 1) & (texWidth - 1);
-        int xp1 = (x + 1) & (texWidth - 1);
+      for (int x = 0; x < tex_width; ++x) {
+        int xm1 = (x - 1) & (tex_width - 1);
+        int xp1 = (x + 1) & (tex_width - 1);
 
-        float dx = (centerRow[xp1] - centerRow[xm1]) * 0.5f;
-        float dy = (lowerRow[x] - upperRow[x]) * 0.5f;
+        float dx = (center_row[xp1] - center_row[xm1]) * 0.5f;
+        float dy = (lower_row[x] - upper_row[x]) * 0.5f;
 
         float nz = 1.0f / std::sqrt(dx * dx + dy * dy + 1.0f);
         float nx = std::fmin(std::fmax(-dx * nz, -1.0f), 1.0f);
         float ny = std::fmin(std::fmax(-dy * nz, -1.0f), 1.0f);
 
         std::array<float, 3>d{ nx, ny, nz };
-        normalMapTexture.emplace_back(d);
+        normal_map.emplace_back(d);
       }
     }
 
-    originalTexture.setNormalMap(std::move(normalMapTexture));
+    original_texture.setNormalMap(std::move(normal_map));
 
-    return originalTexture.getNormalMap();
+    return original_texture.getNormalMap();
   }
 
-  void TextureManager::addSkyBox(std::vector<std::string> const& skyboxImages)
+  void TextureManager::addSkyBox(std::vector<std::string> const& skybox_images)
   {
-    m_Skybox = {};
+    _skybox = {};
 
-    int texWidth = 0, texHeight = 0, texChannels = 0;
-    std::vector<stbi_uc*>skyboxPixels;
+    int tex_width = 0, tex_height = 0, tex_channels = 0;
+    std::vector<stbi_uc*>skybox_pixels;
 
-    for (std::string path : skyboxImages) {
+    for (std::string path : skybox_images) {
       if (!std::filesystem::exists(path)) {
         PLP_FATAL("texture file {} does not exits.", path);
         return;
       }
 
-      stbi_uc* pixels = stbi_load(path.c_str(), &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
+      stbi_uc* pixels = stbi_load(path.c_str(), &tex_width, &tex_height, &tex_channels, STBI_rgb_alpha);
 
       if (!pixels) {
         PLP_FATAL("failed to load skybox texture image %s", path);
         return;
       }
 
-      skyboxPixels.emplace_back(pixels);
+      skybox_pixels.emplace_back(pixels);
     }
 
-    VkImage skyboxImage = nullptr;
-    uint32_t mipLevels = 1;
-    VkCommandPool commandPool = m_Renderer->createCommandPool();
+    VkImage skybox_image = nullptr;
+    uint32_t mip_lvls = 1;
+    VkCommandPool commandPool = _renderer->createCommandPool();
 
-    VkCommandBuffer commandBuffer = m_Renderer->allocateCommandBuffers(commandPool)[0];
-    m_Renderer->beginCommandBuffer(commandBuffer);
-    m_Renderer->createSkyboxTextureImage(commandBuffer,
-      skyboxPixels,
-      static_cast<uint32_t>(texWidth),
-      static_cast<uint32_t>(texHeight),
-      mipLevels,
-      skyboxImage,
+    VkCommandBuffer cmd_buffer = _renderer->allocateCommandBuffers(commandPool)[0];
+    _renderer->beginCommandBuffer(cmd_buffer);
+    _renderer->createSkyboxTextureImage(cmd_buffer,
+      skybox_pixels,
+      static_cast<uint32_t>(tex_width),
+      static_cast<uint32_t>(tex_height),
+      mip_lvls,
+      skybox_image,
       VK_FORMAT_R8G8B8A8_SRGB);
 
-    VkImageView textureImageView = m_Renderer->createSkyboxImageView(skyboxImage, VK_FORMAT_R8G8B8A8_SRGB, mipLevels);
-    VkSampler textureSampler = m_Renderer->createSkyboxTextureSampler(mipLevels);
+    VkImageView texture_imageview = _renderer->createSkyboxImageView(skybox_image, VK_FORMAT_R8G8B8A8_SRGB, mip_lvls);
+    VkSampler texture_sampler = _renderer->createSkyboxTextureSampler(mip_lvls);
 
-    m_Skybox.setImage(skyboxImage);
-    m_Skybox.setImageView(textureImageView);
-    m_Skybox.setSampler(textureSampler);
-    m_Skybox.setMipLevels(mipLevels);
-    m_Skybox.setWidth(static_cast<uint32_t>(texWidth));
-    m_Skybox.setHeight(static_cast<uint32_t>(texHeight));
-    m_Skybox.setChannels(static_cast<uint32_t>(texChannels));
-    m_Skybox.setIsPublic(true);
+    _skybox.setImage(skybox_image);
+    _skybox.setImageView(texture_imageview);
+    _skybox.setSampler(texture_sampler);
+    _skybox.setMipLevels(mip_lvls);
+    _skybox.setWidth(static_cast<uint32_t>(tex_width));
+    _skybox.setHeight(static_cast<uint32_t>(tex_height));
+    _skybox.setChannels(static_cast<uint32_t>(tex_channels));
+    _skybox.setIsPublic(true);
 
-    vkFreeCommandBuffers(m_Renderer->getDevice(), commandPool, 1, &commandBuffer);
-    vkDestroyCommandPool(m_Renderer->getDevice(), commandPool, nullptr);
+    vkFreeCommandBuffers(_renderer->getDevice(), commandPool, 1, &cmd_buffer);
+    vkDestroyCommandPool(_renderer->getDevice(), commandPool, nullptr);
   }
 
-  void TextureManager::addTexture(std::string const& name, std::string const& path, bool isPublic)
+  void TextureManager::addTexture(std::string const& name, std::string const& path, bool is_public)
   {
     if (!std::filesystem::exists(path.c_str())) {
       PLP_FATAL("texture file {} does not exits.", path);
       //return;
     }
 
-    if (0 != m_Textures.count(name.c_str())) {
+    if (0 != _textures.count(name.c_str())) {
       PLP_TRACE("Texture {} already imported", name);
       return;
     }
 
-    m_Paths.insert({ name, path });
+    _paths.insert({ name, path });
 
-    int texWidth = 0, texHeight = 0, texChannels = 0;
-    stbi_uc* pixels = stbi_load(path.c_str(), &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
+    int tex_width = 0, tex_height = 0, tex_channels = 0;
+    stbi_uc* pixels = stbi_load(path.c_str(), &tex_width, &tex_height, &tex_channels, STBI_rgb_alpha);
 
     if (!pixels) {
       PLP_FATAL("failed to load texture image %s", name);
       return;
     }
 
-    VkImage textureImage = nullptr;
-    uint32_t mipLevels = static_cast<uint32_t>(std::floor(std::log2(std::max(texWidth, texHeight)))) + 1;
-    if (std::cmp_greater(mipLevels, MAX_MIPLEVELS)) mipLevels = MAX_MIPLEVELS;
+    VkImage texture_image = nullptr;
+    uint32_t mip_lvls = static_cast<uint32_t>(std::floor(std::log2(std::max(tex_width, tex_height)))) + 1;
+    if (std::cmp_greater(mip_lvls, MAX_MIPLEVELS)) mip_lvls = MAX_MIPLEVELS;
 
-    VkCommandPool commandPool = m_Renderer->createCommandPool();
-    VkCommandBuffer commandBuffer = m_Renderer->allocateCommandBuffers(commandPool)[0];
+    VkCommandPool commandPool = _renderer->createCommandPool();
+    VkCommandBuffer cmd_buffer = _renderer->allocateCommandBuffers(commandPool)[0];
 
-    m_Renderer->beginCommandBuffer(commandBuffer);
-    m_Renderer->createTextureImage(commandBuffer,
+    _renderer->beginCommandBuffer(cmd_buffer);
+    _renderer->createTextureImage(cmd_buffer,
       pixels,
-      static_cast<uint32_t>(texWidth),
-      static_cast<uint32_t>(texHeight),
-      mipLevels,
-      textureImage,
+      static_cast<uint32_t>(tex_width),
+      static_cast<uint32_t>(tex_height),
+      mip_lvls,
+      texture_image,
       VK_FORMAT_R8G8B8A8_SRGB);
 
-    VkImageView textureImageView = m_Renderer->createImageView(textureImage, VK_FORMAT_R8G8B8A8_SRGB, mipLevels);
-    VkSampler textureSampler = m_Renderer->createTextureSampler(mipLevels);
+    VkImageView texture_imageview = _renderer->createImageView(texture_image, VK_FORMAT_R8G8B8A8_SRGB, mip_lvls);
+    VkSampler texture_sampler = _renderer->createTextureSampler(mip_lvls);
 
     Texture texture;
     texture.setName(name);
-    texture.setImage(textureImage);
-    texture.setImageView(textureImageView);
-    texture.setSampler(textureSampler);
-    texture.setMipLevels(mipLevels);
-    texture.setWidth(static_cast<uint32_t>(texWidth));
-    texture.setHeight(static_cast<uint32_t>(texHeight));
-    texture.setChannels(static_cast<uint32_t>(texChannels));
-    texture.setIsPublic(isPublic);
+    texture.setImage(texture_image);
+    texture.setImageView(texture_imageview);
+    texture.setSampler(texture_sampler);
+    texture.setMipLevels(mip_lvls);
+    texture.setWidth(static_cast<uint32_t>(tex_width));
+    texture.setHeight(static_cast<uint32_t>(tex_height));
+    texture.setChannels(static_cast<uint32_t>(tex_channels));
+    texture.setIsPublic(is_public);
     texture.setPath(path);
 
-    m_Textures.emplace(name, texture);
-    vkFreeCommandBuffers(m_Renderer->getDevice(), commandPool, 1, &commandBuffer);
-    vkDestroyCommandPool(m_Renderer->getDevice(), commandPool, nullptr);
+    _textures.emplace(name, texture);
+
+    vkFreeCommandBuffers(_renderer->getDevice(), commandPool, 1, &cmd_buffer);
+    vkDestroyCommandPool(_renderer->getDevice(), commandPool, nullptr);
   }
 
   void TextureManager::clear()
   {
-    m_Textures.clear();
-    m_TexturesLoadingDone = false;
-    m_SkyboxLoadingDone = false;
-    m_TextureConfig.clear();
+    _textures.clear();
+    _texture_config.clear();
   }
 
   std::function<void(std::latch& count_down)> TextureManager::load()
@@ -184,31 +183,28 @@ namespace Poulpe
     return [this](std::latch& count_down) {
       std::filesystem::path p = std::filesystem::current_path();
 
-      for (auto& [key, path] : m_TextureConfig["textures"].items()) {
-        auto absolutePath = p.string() + "/" + static_cast<std::string>(path);
-        addTexture(key, absolutePath, true);
+      for (auto& [key, path] : _texture_config["textures"].items()) {
+        auto absolute_path = p.string() + "/" + static_cast<std::string>(path);
+        addTexture(key, absolute_path, true);
       }
 
       count_down.count_down();
-      m_TexturesLoadingDone.store(true);
-      };
+    };
   }
 
   std::function<void(std::latch& count_down)> TextureManager::loadSkybox(std::string_view skybox)
   {
-    m_SkyboxName = skybox;
+    _skybox_name = skybox;
 
     return [this](std::latch& count_down) {
-      std::vector<std::string>skyboxImages;
+      std::vector<std::string>skybox_images;
 
-      for (auto& texture : m_TextureConfig["skybox"][m_SkyboxName].items()) {
-        skyboxImages.emplace_back(texture.value());
+      for (auto& texture : _texture_config["skybox"][_skybox_name].items()) {
+        skybox_images.emplace_back(texture.value());
       }
 
-      addSkyBox(skyboxImages);
+      addSkyBox(skybox_images);
       count_down.arrive_and_wait();
-
-      m_SkyboxLoadingDone.store(true);
     };
   }
 }

@@ -15,7 +15,7 @@
 namespace Poulpe
 {
   APIManager::APIManager(RenderManager* renderManager)
-    : m_RenderManager(renderManager)
+    : _RenderManager(renderManager)
   {
 
   }
@@ -71,21 +71,21 @@ namespace Poulpe
       std::latch count_down{ 1 };
 
       //@todo why threaded ?...
-      std::jthread textures(std::move(std::bind(m_RenderManager->getTextureManager()->loadSkybox(skyboxName), std::ref(count_down))));
+      std::jthread textures(std::move(std::bind(_RenderManager->getTextureManager()->loadSkybox(skyboxName), std::ref(count_down))));
       textures.detach();
       count_down.wait();
 
-      auto skybox = m_RenderManager->getEntityManager()->getSkybox();
-      auto* meshComponent = m_RenderManager->getManager()->get<MeshComponent>(skybox->getID());
-      auto* meshRenderer = m_RenderManager->getManager()->get<RenderComponent>(skybox->getID());
+      auto skybox = _RenderManager->getEntityManager()->getSkybox();
+      auto* mesh_component = _RenderManager->getManager()->get<MeshComponent>(skybox->getID());
+      auto* meshRenderer = _RenderManager->getManager()->get<RenderComponent>(skybox->getID());
 
-      if (meshComponent != nullptr) return;
+      if (mesh_component != nullptr) return;
 
-      auto* mesh = meshComponent->has<Mesh>();
+      auto* mesh = mesh_component->has<Mesh>();
 
       if (!mesh) return;
       mesh->setIsDirty(true);
-      mesh->getData()->m_TextureIndex = 1;
+      mesh->getData()->_texture_index = 1;
 
       auto deltaTime = std::chrono::duration<float, std::milli>(0);
       //@todo add update to not re create the whole mesh...

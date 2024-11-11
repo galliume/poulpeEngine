@@ -17,36 +17,36 @@ namespace Poulpe
         void bindBufferToMemory(VkBuffer& buffer, VkDeviceSize size);
         void bindImageToMemory(VkImage& image, VkDeviceSize size);
         void clear();
-        unsigned int getID() const { return m_Index; }
+        unsigned int getID() const { return _Index; }
         VkDeviceMemory* getMemory();
-        uint32_t getOffset() const { return m_Offset; }
-        VkDeviceSize getSize() const { return m_MaxSize; }
-        VkDeviceSize getSpaceLeft() const { return m_MaxSize - m_Offset; }
-        VkDeviceSize getType() const { return m_MemoryType; }
+        uint32_t getOffset() const { return _Offset; }
+        VkDeviceSize getSize() const { return _MaxSize; }
+        VkDeviceSize getSpaceLeft() const { return _MaxSize - _Offset; }
+        VkDeviceSize getType() const { return _MemoryType; }
         bool hasEnoughSpaceLeft(VkDeviceSize size);
-        bool isFull() const {  return m_IsFull; }
-        void lock() { m_MutexMemory.lock(); }
-        void unLock() { m_MutexMemory.unlock(); }
+        bool isFull() const {  return _IsFull; }
+        void lock() { _MutexMemory.lock(); }
+        void unLock() { _MutexMemory.unlock(); }
 
     private:
         void allocateToMemory();
 
     private:
-        unsigned int m_Index{0};
+        unsigned int _Index{0};
         
-        bool m_IsAllocated{false};
-        bool m_IsFull{false};
+        bool _IsAllocated{false};
+        bool _IsFull{false};
 
-        VkDeviceSize m_Alignment;
-        VkDeviceSize m_MaxSize;
-        uint32_t m_MemoryType;
+        VkDeviceSize _Alignment;
+        VkDeviceSize _MaxSize;
+        uint32_t _MemoryType;
         //@todo check with deviceProps.limits.bufferImageGranularity;
-        uint32_t m_Offset{0};
+        uint32_t _Offset{0};
  
-        std::vector<VkBuffer> m_Buffer {};
-        VkDevice m_Device;
-        std::unique_ptr<VkDeviceMemory> m_Memory{nullptr};
-        std::mutex m_MutexMemory;
+        std::vector<VkBuffer> _Buffer {};
+        VkDevice _Device;
+        std::unique_ptr<VkDeviceMemory> _Memory{nullptr};
+        std::mutex _MutexMemory;
 
     };
 }

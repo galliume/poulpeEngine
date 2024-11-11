@@ -15,10 +15,10 @@ namespace Poulpe
         Command(std::function<void()> request, WhenToExecute w = WhenToExecute::PRE_RENDERING);
         
         Response execRequest();
-        WhenToExecute getWhenToExecute() const { return m_When; };
+        WhenToExecute getWhenToExecute() const { return _When; };
 
     private:
-        std::function<void()> m_Request;
-        WhenToExecute m_When;
+        std::function<void()> _Request;
+        WhenToExecute _When;
     };
 }

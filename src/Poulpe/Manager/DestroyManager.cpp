@@ -4,18 +4,18 @@ namespace Poulpe
 {
     void DestroyManager::cleanDeviceMemory()
     {
-        m_DeviceMemoryPool->clear();
+        _DeviceMemoryPool->clear();
     }
 
     template<std::derived_from<Entity> T>
     void DestroyManager::cleanEntity( T* const entity)
     {
         /*for (auto buffer : *entity->getMesh()->getUniformBuffers()) {
-            m_Renderer->destroyBuffer(buffer.buffer);
+            _renderer->destroyBuffer(buffer.buffer);
         }
 
-        m_Renderer->destroyBuffer(entity->getMesh()->getData()->m_VertexBuffer.buffer);
-        m_Renderer->destroyBuffer(entity->getMesh()->getData()->m_IndicesBuffer.buffer);*/
+        _renderer->destroyBuffer(entity->getMesh()->getData()->_vertex_buffer.buffer);
+        _renderer->destroyBuffer(entity->getMesh()->getData()->_indices_buffer.buffer);*/
     }
 
     template<std::derived_from<Entity> T>
@@ -36,22 +36,22 @@ namespace Poulpe
 
     void DestroyManager::setRenderer(Renderer* const renderer)
     {
-        m_Renderer = renderer;
+        _renderer = renderer;
     }
 
     void DestroyManager::cleanShaders(std::unordered_map<std::string, std::vector<VkShaderModule>> shaders)
     {
         for (auto shader : shaders) {
-            vkDestroyShaderModule(m_Renderer->getDevice(), shader.second[0], nullptr);
-            vkDestroyShaderModule(m_Renderer->getDevice(), shader.second[1], nullptr);
+            vkDestroyShaderModule(_renderer->getDevice(), shader.second[0], nullptr);
+            vkDestroyShaderModule(_renderer->getDevice(), shader.second[1], nullptr);
         }
     }
 
     void  DestroyManager::cleanTexture(Texture textures)
     {
-        vkDestroySampler(m_Renderer->getDevice(), textures.getSampler(), nullptr);
-        vkDestroyImage(m_Renderer->getDevice(), textures.getImage(), nullptr);
-        vkDestroyImageView(m_Renderer->getDevice(), textures.getImageView(), nullptr);
+        vkDestroySampler(_renderer->getDevice(), textures.getSampler(), nullptr);
+        vkDestroyImage(_renderer->getDevice(), textures.getImage(), nullptr);
+        vkDestroyImageView(_renderer->getDevice(), textures.getImageView(), nullptr);
     }
 
     void DestroyManager::cleanTextures(std::unordered_map<std::string, Texture> textures)

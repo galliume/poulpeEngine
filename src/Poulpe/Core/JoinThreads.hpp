@@ -7,15 +7,15 @@ namespace Poulpe
     class joinThreads
     {
     public:
-        explicit joinThreads(std::vector<std::thread>& threads) : m_Threads(threads) {};
+        explicit joinThreads(std::vector<std::thread>& threads) : _Threads(threads) {};
         ~joinThreads() {
-          for (unsigned long i{ 0 }; i < m_Threads.size(); ++i) {
-                if (m_Threads[i].joinable()) {
-                    m_Threads[i].join();
+          for (unsigned long i{ 0 }; i < _Threads.size(); ++i) {
+                if (_Threads[i].joinable()) {
+                    _Threads[i].join();
                 }
             }
         }
     private:
-        std::vector<std::thread>& m_Threads;
+        std::vector<std::thread>& _Threads;
     };
 }

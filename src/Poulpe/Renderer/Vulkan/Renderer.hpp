@@ -22,27 +22,34 @@ namespace Poulpe
   struct DrawCommands {
 
     public:
-      std::vector<VkCommandBuffer*> cmdBuffers;
-      std::vector<VkPipelineStageFlags> stageFlags;
+      std::vector<VkCommandBuffer*> cmd_buffers;
+      std::vector<VkPipelineStageFlags> stage_flags;
       std::vector<VkSemaphore*> semaphores;
 
       DrawCommands(size_t const size)
       {
-        cmdBuffers.reserve(size);
+        cmd_buffers.reserve(size);
         semaphores.reserve(size);
-        stageFlags.reserve(size);
+        stage_flags.reserve(size);
       }
 
-      void insert(VkCommandBuffer* cmdBuffer,
+      void insert(VkCommandBuffer* cmd_buffer,
         VkSemaphore* semaphore,
         VkPipelineStageFlags flags = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT)
       {
         {
           std::lock_guard guard(m);
-          cmdBuffers.emplace_back(cmdBuffer);
-          stageFlags.emplace_back(flags);
-          semaphores.emplace_back(semaphore);
+          cmd_buffers.push_back(cmd_buffer);
+          stage_flags.push_back(flags);
+          semaphores.push_back(semaphore);
         }
+      }
+
+      void clear()
+      {
+        cmd_buffers.clear();
+        stage_flags.clear();
+        semaphores.clear();
       }
 
     private:
@@ -62,14 +69,14 @@ namespace Poulpe
 
     Renderer(
       Window* const window,
-      EntityManager* const entityManager,
-      ComponentManager* const componentManager,
-      LightManager* const lightManager,
-      TextureManager* const textureManager
+      EntityManager* const entity_manager,
+      ComponentManager* const component_manager,
+      LightManager* const light_manager,
+      TextureManager* const texture_manager
     );
     ~Renderer()  = default;
 
-    inline void addCamera(Camera* const camera) { m_Camera = camera; }
+    inline void addCamera(Camera* const camera) { _camera = camera; }
     void addEntities(std::vector<Entity*> entities) ;
     void swapBufferEntities();
     void addEntity(Entity* entity) ;
@@ -77,10 +84,10 @@ namespace Poulpe
     void addPipeline(std::string const & shaderName, VulkanPipeline pipeline) ;
     //void attachObserver(IObserver* const observer) ;
     void beginRendering(
-      VkCommandBuffer& commandBuffer,
-      VkImageView& imageView,
+      VkCommandBuffer& cmd_buffer,
+      VkImageView& imageview,
       VkImage& image,
-      VkImageView& depthImageView,
+      VkImageView& depth_imageview,
       VkImage& depthImage,
       VkAttachmentLoadOp loadOp = VK_ATTACHMENT_LOAD_OP_LOAD,
       VkAttachmentStoreOp storeOp = VK_ATTACHMENT_STORE_OP_STORE,
@@ -88,7 +95,7 @@ namespace Poulpe
     void clear() ;
     void clearRendererScreen();
     void destroy() ;
-    void draw(VkCommandBuffer& cmdBuffer,
+    void draw(VkCommandBuffer& cmd_buffer,
               DrawCommands& drawCmds,
               VkImageView& colorView,
               VkImage& color,
@@ -98,65 +105,49 @@ namespace Poulpe
               std::latch& count_down,
               unsigned int thread_id,
               bool shadows = false);
-    void drawShadowMap(VkCommandBuffer &cmdBuffer);
-    void endRendering(VkCommandBuffer& commandBuffer, VkImage image, VkImage depthImage);
-    inline Camera* getCamera()  { return m_Camera; }
-    inline uint32_t getCurrentFrameIndex() const { return m_CurrentFrame; }
-    inline std::vector<VkImageView>* getDepthMapImageViews()  { return & m_DepthMapImageViews; }
-    inline std::vector<VkSampler>* getDepthMapSamplers()  { return & m_DepthMapSamplers; }
-    inline bool getDrawBbox() { return m_DrawBbox; }
-    inline std::vector<VkDescriptorSetLayout>* getDescriptorSetLayouts()  { return & m_DescriptorSetLayouts; }
-    inline VkDevice getDevice()  { return m_API->getDevice(); }
-    inline glm::mat4 getPerspective()  { return m_Perspective; }
-    VulkanPipeline* getPipeline(std::string const & shaderName)  { return & m_Pipelines[shaderName]; }
-    inline VkSwapchainKHR getSwapChain() { return m_SwapChain; }
+    void drawShadowMap(VkCommandBuffer &cmd_buffer);
+    void endRendering(VkCommandBuffer& cmd_buffer, VkImage image, VkImage depthImage);
+    inline Camera* getCamera()  { return _camera; }
+    inline uint32_t getCurrentFrameIndex() const { return _current_frame; }
+    inline std::vector<VkImageView>* getDepthMapImageViews()  { return & _depthmap_imageviews; }
+    inline std::vector<VkSampler>* getDepthMapSamplers()  { return & _depthmap_samplers; }
+    inline std::vector<VkDescriptorSetLayout>* getDescriptorSetLayouts()  { return & _descriptorset_layouts; }
+    inline VkDevice getDevice()  { return _vulkan->getDevice(); }
+    inline glm::mat4 getPerspective()  { return _perspective; }
+    VulkanPipeline* getPipeline(std::string const & shaderName)  { return & _pipelines[shaderName]; }
     void immediateSubmit(std::function<void(VkCommandBuffer cmd)> && function, int queueIndex = 0) ;
-    void init() ;
-    void recreateSwapChain() ;
-    void renderScene() ;
-    void setDeltatime(float deltaTime) ;
-    inline void setDrawBbox(bool draw)  { m_DrawBbox = draw; }
+    void init();
+    void renderScene();
+    void setDeltatime(float deltaTime);
     void setRayPick(float x, float y, float z, int width, int height);
-    void shouldRecreateSwapChain() ;
-    void showGrid(bool show) ;
-    inline void stopRendering()  { m_RenderingStopped = true; }
-
-    //void RenderForImGui(VkCommandBuffer cmdBuffer, VkFramebuffer swapChainFramebuffer);
-    //std::pair<VkSampler, VkImageView> getImguiTexture() {
-    //    return std::make_pair(m_SwapChainSamplers[m_CurrentFrame], m_SwapChainImageViews[m_CurrentFrame]);
-    //};
-    //std::pair<VkSampler, VkImageView> getImguiDepthImage() {
-    //    return std::make_pair(m_SwapChainDepthSamplers[m_CurrentFrame], m_SwapChainDepthImageViews[m_CurrentFrame]);
-    //};
-    //@todo add GuiManager
-    //VkRenderPass createImGuiRenderPass(VkFormat format);
+    void showGrid(bool show);
 
     //@todo clean API call
     std::vector<VkCommandBuffer> allocateCommandBuffers(VkCommandPool commandPool,
       uint32_t size = 1,
       bool isSecondary = false)  {
-        return m_API->allocateCommandBuffers(commandPool, size, isSecondary);
+        return _vulkan->allocateCommandBuffers(commandPool, size, isSecondary);
     }
-    void beginCommandBuffer(VkCommandBuffer& commandBuffer,
+    void beginCommandBuffer(VkCommandBuffer& cmd_buffer,
       VkCommandBufferUsageFlagBits flags = VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT,
       VkCommandBufferInheritanceInfo inheritanceInfo = {})  {
-        return m_API->beginCommandBuffer(commandBuffer, flags, inheritanceInfo);
+        return _vulkan->beginCommandBuffer(cmd_buffer, flags, inheritanceInfo);
     }
     VkCommandPool createCommandPool()  {
-      return m_API->createCommandPool();
+      return _vulkan->createCommandPool();
     }
     VkDescriptorPool createDescriptorPool(std::vector<VkDescriptorPoolSize> & poolSizes,
       uint32_t maxSets = 100,
       VkDescriptorPoolCreateFlags flags = VK_DESCRIPTOR_POOL_CREATE_UPDATE_AFTER_BIND_BIT)  {
-        return m_API->createDescriptorPool(poolSizes, maxSets, flags);
+        return _vulkan->createDescriptorPool(poolSizes, maxSets, flags);
     }
     VkDescriptorSetLayout createDescriptorSetLayout(std::vector<VkDescriptorSetLayoutBinding> & pBindings)  {
-      return m_API->createDescriptorSetLayout(pBindings);
+      return _vulkan->createDescriptorSetLayout(pBindings);
     }
     VkDescriptorSet createDescriptorSets(VkDescriptorPool const & descriptorPool,
       std::vector<VkDescriptorSetLayout> const & descriptorSetLayouts,
       uint32_t count = 100)  {
-        return m_API->createDescriptorSets(descriptorPool, descriptorSetLayouts, count);
+        return _vulkan->createDescriptorSets(descriptorPool, descriptorSetLayouts, count);
     }
     VkPipeline createGraphicsPipeline(
       VkPipelineLayout pipelineLayout,
@@ -172,30 +163,30 @@ namespace Poulpe
       bool dynamicDepthBias = false) ;
     Buffer createIndexBuffer(VkCommandPool & commandPool,
       std::vector<uint32_t> const & indices)  {
-        return m_API->createIndexBuffer(commandPool, indices);
+        return _vulkan->createIndexBuffer(commandPool, indices);
     }
     VkImageView createImageView(VkImage image,
       VkFormat format,
       uint32_t mipLevels,
       VkImageAspectFlags aspectFlags = VK_IMAGE_ASPECT_COLOR_BIT)  {
-        return m_API->createImageView(image, format, mipLevels, aspectFlags);
+        return _vulkan->createImageView(image, format, mipLevels, aspectFlags);
     }
     VkPipelineLayout createPipelineLayout(std::vector<VkDescriptorSetLayout> & descriptorSetLayouts,
       std::vector<VkPushConstantRange> & pushConstants)  {
-        return m_API->createPipelineLayout(descriptorSetLayouts, pushConstants);
+        return _vulkan->createPipelineLayout(descriptorSetLayouts, pushConstants);
     }
     VkShaderModule createShaderModule(std::vector<char> & code)  {
-      return m_API->createShaderModule(code);
+      return _vulkan->createShaderModule(code);
     }
-    void createSkyboxTextureImage(VkCommandBuffer& commandBuffer,
+    void createSkyboxTextureImage(VkCommandBuffer& cmd_buffer,
       std::vector<stbi_uc*>& skyboxPixels,
       uint32_t texWidth,
       uint32_t texHeight,
       uint32_t mipLevels,
       VkImage& textureImage,
       VkFormat format)  {
-        m_API->createSkyboxTextureImage(
-          commandBuffer,
+        _vulkan->createSkyboxTextureImage(
+          cmd_buffer,
           skyboxPixels,
           texWidth,
           texHeight,
@@ -207,22 +198,22 @@ namespace Poulpe
       VkFormat format,
       uint32_t mipLevels,
       VkImageAspectFlags aspectFlags = VK_IMAGE_ASPECT_COLOR_BIT)  {
-        return m_API->createSkyboxImageView(image, format, mipLevels, aspectFlags);
+        return _vulkan->createSkyboxImageView(image, format, mipLevels, aspectFlags);
     }
     VkSampler createSkyboxTextureSampler(uint32_t mipLevels)  {
-      return m_API->createSkyboxTextureSampler(mipLevels);
+      return _vulkan->createSkyboxTextureSampler(mipLevels);
     }
     Buffer createStorageBuffers(size_t storageBuffer)  {
-      return m_API->createStorageBuffers(storageBuffer);
+      return _vulkan->createStorageBuffers(storageBuffer);
     }
-    void createTextureImage(VkCommandBuffer& commandBuffer,
+    void createTextureImage(VkCommandBuffer& cmd_buffer,
       stbi_uc* pixels,
       uint32_t texWidth,
       uint32_t texHeight,
       uint32_t mipLevels,
       VkImage& textureImage,
       VkFormat format)  {
-        return m_API->createTextureImage(commandBuffer,
+        return _vulkan->createTextureImage(cmd_buffer,
           pixels,
           texWidth,
           texHeight,
@@ -231,161 +222,149 @@ namespace Poulpe
           format);
     }
     VkSampler createTextureSampler(uint32_t mipLevels)  {
-      return m_API->createTextureSampler(mipLevels);
+      return _vulkan->createTextureSampler(mipLevels);
     }
     Buffer createUniformBuffers(uint32_t uniformBuffersCount)  {
-      return m_API->createUniformBuffers(uniformBuffersCount);
+      return _vulkan->createUniformBuffers(uniformBuffersCount);
     }
     Buffer createVertexBuffer(VkCommandPool commandPool,
       std::vector<Vertex> vertices)  {
-        return m_API->createVertexBuffer(commandPool, vertices);
+        return _vulkan->createVertexBuffer(commandPool, vertices);
     }
     Buffer createVertex2DBuffer(VkCommandPool & commandPool,
       std::vector<Vertex2D> & vertices)  {
-        return m_API->createVertex2DBuffer(commandPool, vertices);
+        return _vulkan->createVertex2DBuffer(commandPool, vertices);
     }
-    void endCommandBuffer(VkCommandBuffer& commandBuffer)  {
-      return m_API->endCommandBuffer(commandBuffer);
+    void endCommandBuffer(VkCommandBuffer& cmd_buffer)  {
+      return _vulkan->endCommandBuffer(cmd_buffer);
     }
-    DeviceMemoryPool* getDeviceMemoryPool()  { return m_API->getDeviceMemoryPool(); }
-    VkPhysicalDeviceProperties getDeviceProperties() const  { return m_API->getDeviceProperties(); }
+    DeviceMemoryPool* getDeviceMemoryPool()  { return _vulkan->getDeviceMemoryPool(); }
+    VkPhysicalDeviceProperties getDeviceProperties() const  { return _vulkan->getDeviceProperties(); }
     inline VkExtent2D getSwapChainExtent() const  {
-      return m_API->getSwapChainExtent();
+      return _vulkan->getSwapChainExtent();
     }
     void updateDescriptorSets(
       std::vector<Buffer> & uniformBuffers,
       VkDescriptorSet & descriptorSet,
       std::vector<VkDescriptorImageInfo> & imageInfo,
       VkDescriptorType type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER)  {
-        m_API->updateDescriptorSets(uniformBuffers, descriptorSet, imageInfo, type);
+        _vulkan->updateDescriptorSets(uniformBuffers, descriptorSet, imageInfo, type);
     }
     void updateDescriptorSets(
       std::vector<Buffer>& uniformBuffers,
       std::vector<Buffer>& storageBuffers,
       VkDescriptorSet& descriptorSet,
       std::vector<VkDescriptorImageInfo>& imageInfo)  {
-        m_API->updateDescriptorSets(uniformBuffers, storageBuffers, descriptorSet, imageInfo);
+        _vulkan->updateDescriptorSets(uniformBuffers, storageBuffers, descriptorSet, imageInfo);
     }
     void updateUniformBuffer(Buffer & buffer,
       std::vector<UniformBufferObject>* uniformBufferObjects)  {
-        m_API->updateUniformBuffer(buffer, uniformBufferObjects);
+        _vulkan->updateUniformBuffer(buffer, uniformBufferObjects);
     }
     void updateStorageBuffer(Buffer & buffer,
       ObjectBuffer objectBuffer)  {
-        m_API->updateStorageBuffer(buffer, objectBuffer);
+        _vulkan->updateStorageBuffer(buffer, objectBuffer);
     }
-    void waitIdle()  { m_API->waitIdle(); }
+    void waitIdle()  { _vulkan->waitIdle(); }
 
-    std::string getAPIVersion()  { return m_API->getAPIVersion(); }
-
-  public:
-    //IMGUI config
-    static std::atomic<float> s_FogDensity;
-    static std::atomic<float> s_AmbiantLight;
-    static std::atomic<float> s_FogColor[3];
-    static std::atomic<int> s_Crosshair;
-    static std::atomic<int> s_PolygoneMode;
+    std::string getAPIVersion()  { return _vulkan->getAPIVersion(); }
 
   private:
-    const size_t m_MAX_FRAMES_IN_FLIGHT{ 2 };
-    const size_t m_MAX_RENDER_THREAD{ 2 };
+    const uint32_t _MAX_FRAMES_IN_FLIGHT{ 2 };
+    const size_t _MAX_RENDER_THREAD{ 2 };
 
     void onFinishRender();
     void setPerspective();
     void submit(DrawCommands const& drawCmds);
 
   private:
-    std::unique_ptr<VulkanAPI> m_API{ nullptr };
-    VkSwapchainKHR m_SwapChain{ nullptr };
+    std::unique_ptr<VulkanAPI> _vulkan{ nullptr };
+    VkSwapchainKHR _swapchain{ nullptr };
 
-    std::vector<VkImage> m_Images{};
-    std::vector<VkImageView> m_ImageViews{};
-    std::vector<VkImage> m_ImagesBis{};
-    std::vector<VkImageView> m_ImageViewsBis{};
-    std::vector<VkImage> m_ImagesTer{};
-    std::vector<VkImageView> m_ImageViewsTer{};
+    std::vector<VkImage> _images{};
+    std::vector<VkImageView> _image_views{};
+    std::vector<VkImage> _images2{};
+    std::vector<VkImageView> _imageviews2{};
+    std::vector<VkImage> _images3{};
+    std::vector<VkImageView> _imageviews3{};
 
-    VkCommandPool m_CommandPoolEntities{ nullptr };
-    VkCommandPool m_CommandPoolEntitiesBis{ nullptr };
-    VkCommandPool m_CommandPoolEntitiesTer{ nullptr };
+    VkCommandPool _cmd_pool_entities{ nullptr };
+    VkCommandPool _cmd_pool_entities2{ nullptr };
+    VkCommandPool _cmd_pool_entities3{ nullptr };
 
-    std::vector<VkCommandBuffer> m_CommandBuffersEntities{};
-    std::vector<VkCommandBuffer> m_CommandBuffersEntitiesBis{};
-    std::vector<VkCommandBuffer> m_CommandBuffersEntitiesTer{};
+    std::vector<VkCommandBuffer> _cmd_buffer_entities{};
+    std::vector<VkCommandBuffer> _cmd_buffer_entities2{};
+    std::vector<VkCommandBuffer> _cmd_buffer_entities3{};
 
-    VkCommandPool m_CommandPoolShadowMap{ nullptr };
-    std::vector<VkCommandBuffer> m_CommandBuffersShadowMap{};
+    VkCommandPool _cmd_pool_shadowmap{ nullptr };
+    std::vector<VkCommandBuffer> _cmd_buffer_shadowmap{};
 
-    uint32_t m_CurrentFrame{ 0 };
-    uint32_t m_ImageIndex;
-    std::pair<std::vector<VkBuffer>, std::vector<VkDeviceMemory>> m_UniformBuffers{};
+    uint32_t _current_frame{ 0 };
+    uint32_t _image_index;
+    std::pair<std::vector<VkBuffer>, std::vector<VkDeviceMemory>> _unifor_buffers{};
 
-    Camera* m_Camera{ nullptr };
-    Window* m_Window{ nullptr };
-    EntityManager* m_EntityManager{ nullptr };
-    ComponentManager* m_ComponentManager{ nullptr };
-    LightManager* m_LightManager{ nullptr };
-    TextureManager* m_TextureManager{ nullptr };
+    Camera* _camera{ nullptr };
+    Window* _window{ nullptr };
+    EntityManager* _entity_manager{ nullptr };
+    ComponentManager* _component_manager{ nullptr };
+    LightManager* _light_manager{ nullptr };
+    TextureManager* _texture_manager{ nullptr };
 
     //@todo move to meshManager
-    std::vector<VkImageView> m_DepthImageViews{};
-    std::vector<VkImage> m_DepthImages{};
-    std::vector<VkImageView> m_DepthImageViewsBis{};
-    std::vector<VkImage> m_DepthImagesBis{};
-    std::vector<VkImageView> m_DepthImageViewsTer{};
-    std::vector<VkImage> m_DepthImagesTer{};
+    std::vector<VkImageView> _depth_image_views{};
+    std::vector<VkImage> _depth_images{};
+    std::vector<VkImageView> _depth_imageviews2{};
+    std::vector<VkImage> _depth_images2{};
+    std::vector<VkImageView> _depth_imageviews3{};
+    std::vector<VkImage> _depth_images3{};
 
-    glm::mat4 m_Perspective;
-    //glm::mat4 m_lastLookAt;
-    float m_Deltatime{ 0.0f };
-    std::vector<glm::vec3>m_LightsPos;
-    std::vector<VkDescriptorPool>m_DescriptorPools;
-    std::vector<VkDescriptorSetLayout>m_DescriptorSetLayouts;
+    glm::mat4 _perspective;
+    //glm::mat4 _lastLookAt;
+    float _deltatime{ 0.0f };
+    std::vector<VkDescriptorPool>_descriptor_pools;
+    std::vector<VkDescriptorSetLayout>_descriptorset_layouts;
 
-    glm::vec3 m_RayPick;
-    bool m_HasClicked{ false };
-    bool m_DrawBbox{ false };
-    bool m_RenderingStopped{ false };
+    std::vector<VkSampler> _samplers{};
+    std::vector<VkSampler> _depth_samplers{};
+    std::vector<VkSampler> _samplers2{};
+    std::vector<VkSampler> _depth_samplers2{};
+    std::vector<VkSampler> _samplers3{};
+    std::vector<VkSampler> _depth_samplers3{};
 
-    std::vector<VkSampler> m_Samplers{};
-    std::vector<VkSampler> m_DepthSamplers{};
-    std::vector<VkSampler> m_SamplersBis{};
-    std::vector<VkSampler> m_DepthSamplersBis{};
-    std::vector<VkSampler> m_SamplersTer{};
-    std::vector<VkSampler> m_DepthSamplersTer{};
+    //std::vector<IObserver*> _Observers{};
 
-    //std::vector<IObserver*> m_Observers{};
+    std::vector<VkImage> _depthmap_images;
+    std::vector<VkImageView> _depthmap_imageviews;
+    std::vector<VkSampler> _depthmap_samplers;
+    bool _depthmap_descset_updated{ false };
 
-    std::vector<VkImage> m_DepthMapImages;
-    std::vector<VkImageView> m_DepthMapImageViews;
-    std::vector<VkSampler> m_DepthMapSamplers;
-    bool m_DepthMapDescSetUpdated{ false };
+    std::vector<VkImage> _depthmap_images2;
+    std::vector<VkImageView> _depthmap_imageviews2;
+    std::vector<VkSampler> _depthmap_samplers2;
+    bool _depthmap_descset_updated2{ false };
 
-    std::vector<VkImage> m_DepthMapImagesBis;
-    std::vector<VkImageView> m_DepthMapImageViewsBis;
-    std::vector<VkSampler> m_DepthMapSamplersBis;
-    bool m_DepthMapDescSetUpdatedBis{ false };
+    std::vector<VkImage> _depthmap_Images3;
+    std::vector<VkImageView> _depthmap_imageviews3;
+    std::vector<VkSampler> _depthmap_samplers3;
+    bool _depthmap_descset_updated3{ false };
 
-    std::vector<VkImage> m_DepthMapImagesTer;
-    std::vector<VkImageView> m_DepthMapImageViewsTer;
-    std::vector<VkSampler> m_DepthMapSamplersTer;
-    bool m_DepthMapDescSetUpdatedTer{ false };
+    std::unordered_map<std::string, VulkanPipeline> _pipelines;
 
-    std::unordered_map<std::string, VulkanPipeline> m_Pipelines;
+    std::vector<VkSemaphore> _image_available;
+    std::vector<VkSemaphore> _shadowmap_sema_img_available;
 
-    std::vector<VkSemaphore> m_ImageAvailable;
-    std::vector<VkSemaphore> m_ShadowMapSemaImageAvailable;
+    std::vector<Entity*> _entities{};
+    std::vector<Entity*> _entities_buffer{};
 
-    std::vector<Entity*> m_Entities{};
-    std::vector<Entity*> m_EntitiesBuffer{};
+    std::vector<VkSemaphore> _entities_sema_finished;
+    std::vector<VkSemaphore> _shadowmap_sema_finished;
 
-    std::vector<VkSemaphore> m_EntitiesSemaRenderFinished;
-    std::vector<VkSemaphore> m_ShadowMapSemaRenderFinished;
+    std::vector<VkFence> _images_in_flight{};
+    std::vector<VkFence> _fences_in_flight{};
 
-    std::vector<VkFence> m_ImagesInFlight{};
-    std::vector<VkFence> m_InFlightFences{};
+    std::mutex _mutex_queue_submit;
+    std::mutex _mutex_entity_submit;
 
-    std::mutex m_MutexQueueSubmit;
-    std::mutex m_MutexEntitySubmit;
+    DrawCommands _draw_cmds{1};
   };
 }

@@ -87,7 +87,7 @@ namespace Poulpe {
             VkSwapchainKHR const & oldSwapChain = VK_NULL_HANDLE);
 
         std::vector<VkFramebuffer> createFramebuffers(VkRenderPass renderPass, std::vector<VkImageView> swapChainImageViews,
-            std::vector<VkImageView> depthImageView, std::vector<VkImageView> colorImageView);
+            std::vector<VkImageView> depth_imageview, std::vector<VkImageView> colorImageView);
 
         VkCommandPool createCommandPool();
 
@@ -133,23 +133,23 @@ namespace Poulpe {
         VkImageView createSkyboxImageView(VkImage image, VkFormat format, uint32_t mipLevels,
             VkImageAspectFlags aspectFlags = VK_IMAGE_ASPECT_COLOR_BIT);
 
-        void createTextureImage(VkCommandBuffer& commandBuffer, stbi_uc* pixels, uint32_t texWidth, uint32_t texHeight,
+        void createTextureImage(VkCommandBuffer& cmd_buffer, stbi_uc* pixels, uint32_t texWidth, uint32_t texHeight,
             uint32_t mipLevels, VkImage& textureImage, VkFormat format);
 
-        void createSkyboxTextureImage(VkCommandBuffer& commandBuffer, std::vector<stbi_uc*>& skyboxPixels, uint32_t texWidth,
+        void createSkyboxTextureImage(VkCommandBuffer& cmd_buffer, std::vector<stbi_uc*>& skyboxPixels, uint32_t texWidth,
             uint32_t texHeight, uint32_t mipLevels, VkImage& textureImage, VkFormat format);
 
-        void copyBufferToImage(VkCommandBuffer& commandBuffer, VkBuffer& buffer, VkImage& image, uint32_t width,
+        void copyBufferToImage(VkCommandBuffer& cmd_buffer, VkBuffer& buffer, VkImage& image, uint32_t width,
             uint32_t height, uint32_t mipLevels = 0);
 
-        void copyBufferToImageSkybox(VkCommandBuffer & commandBuffer, VkBuffer & buffer, VkImage & image, uint32_t width,
+        void copyBufferToImageSkybox(VkCommandBuffer & cmd_buffer, VkBuffer & buffer, VkImage & image, uint32_t width,
             uint32_t height, std::vector<stbi_uc*>skyboxPixels, uint32_t mipLevels, uint32_t layerSize);
 
         VkSampler createTextureSampler(uint32_t mipLevels);
 
         VkSampler createSkyboxTextureSampler(uint32_t mipLevels);
 
-        VkImageView createDepthResources(VkCommandBuffer& commandBuffer);
+        VkImageView createDepthResources(VkCommandBuffer& cmd_buffer);
 
         VkFormat findSupportedFormat(std::vector<VkFormat> const & candidates, VkImageTiling tiling,
             VkFormatFeatureFlags features);
@@ -158,7 +158,7 @@ namespace Poulpe {
 
         bool hasStencilComponent(VkFormat format);
 
-        VkDeviceSize getMaxMemoryHeap() { return m_MaxMemoryHeap; }
+        VkDeviceSize getMaxMemoryHeap() { return _MaxMemoryHeap; }
 
         void initMemoryPool();
 
@@ -175,43 +175,44 @@ namespace Poulpe {
         **/
         void resetCommandPool(VkCommandPool& commandPool);
 
-        void beginCommandBuffer(VkCommandBuffer& commandBuffer,
+        void beginCommandBuffer(
+            VkCommandBuffer& cmd_buffer,
             VkCommandBufferUsageFlagBits flags = VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT,
             VkCommandBufferInheritanceInfo inheritanceInfo = {});
-        void endCommandBuffer(VkCommandBuffer& commandBuffer);
+        void endCommandBuffer(VkCommandBuffer& cmd_buffer);
 
-        void beginRenderPass(VkRenderPass renderPass, VkCommandBuffer& commandBuffer, VkFramebuffer framebuffer);
+        void beginRenderPass(VkRenderPass renderPass, VkCommandBuffer& cmd_buffer, VkFramebuffer framebuffer);
 
-        void endRenderPass(VkCommandBuffer& commandBuffer);
+        void endRenderPass(VkCommandBuffer& cmd_buffer);
 
-        void beginRendering(VkCommandBuffer& commandBuffer,
+        void beginRendering(VkCommandBuffer& cmd_buffer,
             VkImageView & colorImageView,
-            VkImageView & depthImageView,
+            VkImageView & depth_imageview,
             VkAttachmentLoadOp const loadOp,
             VkAttachmentStoreOp const storeOp);
 
-        void endRendering(VkCommandBuffer& commandBuffer);
+        void endRendering(VkCommandBuffer& cmd_buffer);
 
-        void setViewPort(VkCommandBuffer& commandBuffer);
+        void setViewPort(VkCommandBuffer& cmd_buffer);
 
-        void setScissor(VkCommandBuffer& commandBuffer);
+        void setScissor(VkCommandBuffer& cmd_buffer);
 
-        void bindPipeline(VkCommandBuffer& commandBuffer, VkPipeline pipeline);
+        void bindPipeline(VkCommandBuffer& cmd_buffer, VkPipeline pipeline);
 
-        void draw(VkCommandBuffer& commandBuffer, VkDescriptorSet& descriptorSet, VulkanPipeline& pipeline, Data * data,
+        void draw(VkCommandBuffer& cmd_buffer, VkDescriptorSet& descriptorSet, VulkanPipeline& pipeline, Data * data,
             bool drawIndexed = true, uint32_t index = 0);
 
-        VkResult queueSubmit(VkCommandBuffer& commandBuffer, int queueIndex = 0);
+        VkResult queueSubmit(VkCommandBuffer& cmd_buffer, int queueIndex = 0);
         void submit(
           VkQueue& queue,
           VkSubmitInfo& submitInfo,
           VkPresentInfoKHR& presentInfo,
           VkFence& fence);
 
-        void addPipelineBarriers(VkCommandBuffer& commandBuffer, std::vector<VkImageMemoryBarrier> renderBarriers,
+        void addPipelineBarriers(VkCommandBuffer& cmd_buffer, std::vector<VkImageMemoryBarrier> renderBarriers,
             VkPipelineStageFlags srcStageMask, VkPipelineStageFlags dstStageMask, VkDependencyFlags dependencyFlags);
 
-        void generateMipmaps(VkCommandBuffer& commandBuffer, VkFormat imageFormat, VkImage image, uint32_t texWidth,
+        void generateMipmaps(VkCommandBuffer& cmd_buffer, VkFormat imageFormat, VkImage image, uint32_t texWidth,
             uint32_t texHeight, uint32_t mipLevels, uint32_t layerCount = 1);
 
         /**
@@ -239,47 +240,47 @@ namespace Poulpe {
         /*
         * Helper functions.
         */
-        inline const std::vector<const char*> getValidationLayers() const { return m_ValidationLayers; }
+        inline const std::vector<const char*> getValidationLayers() const { return _ValidationLayers; }
 
-        inline const std::vector<VkExtensionProperties> getExtensions() const { return m_Extensions; }
+        inline const std::vector<VkExtensionProperties> getExtensions() const { return _Extensions; }
 
-        inline const std::vector<VkLayerProperties> getLayersAvailable() const { return m_LayersAvailable; }
+        inline const std::vector<VkLayerProperties> getLayersAvailable() const { return _LayersAvailable; }
 
-        inline bool isInstanceCreated() const { return m_InstanceCreated; }
+        inline bool isInstanceCreated() const { return _InstanceCreated; }
 
-        inline bool isValidationLayersEnabled() const { return m_EnableValidationLayers; }
+        inline bool isValidationLayersEnabled() const { return _EnableValidationLayers; }
 
-        inline uint32_t getExtensionCount() const { return m_ExtensionCount; }
+        inline uint32_t getExtensionCount() const { return _ExtensionCount; }
 
-        inline uint32_t getQueueFamily() const { return m_QueueFamilyIndices.graphicsFamily.value(); }
+        inline uint32_t getQueueFamily() const { return _QueueFamilyIndices.graphicsFamily.value(); }
 
-        inline VkInstance getInstance() const { return m_Instance; }
+        inline VkInstance getInstance() const { return _Instance; }
 
-        inline VkPhysicalDevice getPhysicalDevice() const { return m_PhysicalDevice; }
+        inline VkPhysicalDevice getPhysicalDevice() const { return _PhysicalDevice; }
 
-        inline VkDevice getDevice() const { return m_Device; }
+        inline VkDevice getDevice() const { return _Device; }
 
-        inline std::vector<VkQueue> getGraphicsQueues() const { return m_GraphicsQueues; }
+        inline std::vector<VkQueue> getGraphicsQueues() const { return _GraphicsQueues; }
 
-        inline VkPhysicalDeviceProperties getDeviceProperties() const { return m_DeviceProps; }
+        inline VkPhysicalDeviceProperties getDeviceProperties() const { return _DeviceProps; }
 
-        inline VkPhysicalDeviceFeatures getDeviceFeatures() const { return m_DeviceFeatures; }
+        inline VkPhysicalDeviceFeatures getDeviceFeatures() const { return _DeviceFeatures; }
 
-        inline bool isFramebufferResized() { return m_FramebufferResized; }
+        inline bool isFramebufferResized() { return _FramebufferResized; }
 
-        inline VkExtent2D getSwapChainExtent() const { return m_SwapChainExtent; }
+        inline VkExtent2D getSwapChainExtent() const { return _SwapChainExtent; }
 
-        inline VkSurfaceKHR getSurface() const { return m_Surface; }
+        inline VkSurfaceKHR getSurface() const { return _Surface; }
 
-        inline VkSurfaceFormatKHR getSurfaceFormat() const { return m_SurfaceFormat; }
+        inline VkSurfaceFormatKHR getSurfaceFormat() const { return _SurfaceFormat; }
 
-        inline void resetCurrentFrameIndex() { m_CurrentFrame = 0; }
+        inline void resetCurrentFrameIndex() { _CurrentFrame = 0; }
 
-        inline int32_t getCurrentFrame() const { return m_CurrentFrame; }
+        inline int32_t getCurrentFrame() const { return _CurrentFrame; }
 
-        inline VkFormat getSwapChainImageFormat() const { return m_SwapChainImageFormat; }
+        inline VkFormat getSwapChainImageFormat() const { return _SwapChainImageFormat; }
 
-        inline VkSampleCountFlagBits getMsaaSamples() const { return m_MsaaSamples; }
+        inline VkSampleCountFlagBits getMsaaSamples() const { return _MsaaSamples; }
 
         void initDetails();
 
@@ -291,22 +292,22 @@ namespace Poulpe {
 
         std::string getAPIVersion();
 
-        DeviceMemoryPool* getDeviceMemoryPool() { return m_DeviceMemoryPool.get(); }
+        DeviceMemoryPool* getDeviceMemoryPool() { return _DeviceMemoryPool.get(); }
 
         void startMarker(VkCommandBuffer buffer, std::string const & name, float r, float g, float b, float a = 1.0);
 
         void endMarker(VkCommandBuffer buffer);
 
-        uint32_t getQueueCount() { return m_queueCount; }
+        uint32_t getQueueCount() { return _queueCount; }
 
-        std::vector<VkQueue> getPresentQueue() { return m_PresentQueues; }
+        std::vector<VkQueue> getPresentQueue() { return _PresentQueues; }
 
         void waitIdle();
 
         void createDepthMapImage(VkImage & image);
         VkImageView createDepthMapImageView(VkImage image);
         VkSampler createDepthMapSampler();
-        void createDepthMapFrameBuffer(VkRenderPass & renderPass, VkImageView & imageView, VkFramebuffer & frameBuffer);
+        void createDepthMapFrameBuffer(VkRenderPass & renderPass, VkImageView & imageview, VkFramebuffer & frameBuffer);
 
         static const std::string getVendor(int vendorID)
         {
@@ -322,14 +323,14 @@ namespace Poulpe {
         }
 
         void transitionImageLayout(
-          VkCommandBuffer& commandBuffer,
+          VkCommandBuffer& cmd_buffer,
           VkImage image,
           VkImageLayout oldLayout,
           VkImageLayout newLayout,
           VkImageAspectFlags aspectFlags);
 
     public:
-        bool m_FramebufferResized = false;
+        bool _FramebufferResized = false;
 
     private:
         bool isDeviceSuitable(VkPhysicalDevice device);
@@ -350,15 +351,15 @@ namespace Poulpe {
         VkExtent2D chooseSwapExtent(VkSurfaceCapabilitiesKHR const & capabilities);
 
     private:
-        int32_t m_CurrentFrame{ 0 };
-        uint32_t m_ExtensionCount;
-        std::string m_apiVersion;
-        const uint32_t m_queueCount{ 1 };
+        int32_t _CurrentFrame{ 0 };
+        uint32_t _ExtensionCount;
+        std::string _apiVersion;
+        const uint32_t _queueCount{ 1 };
 
-        Window* m_Window{ nullptr };
+        Window* _window{ nullptr };
 
-        const std::vector<const char*> m_ValidationLayers{ "VK_LAYER_KHRONOS_validation" };
-        const std::vector<const char*> m_DeviceExtensions{
+        const std::vector<const char*> _ValidationLayers{ "VK_LAYER_KHRONOS_validation" };
+        const std::vector<const char*> _DeviceExtensions{
             VK_KHR_PUSH_DESCRIPTOR_EXTENSION_NAME,
             VK_KHR_SWAPCHAIN_EXTENSION_NAME,
             VK_EXT_EXTENDED_DYNAMIC_STATE_3_EXTENSION_NAME,
@@ -367,56 +368,56 @@ namespace Poulpe {
             VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME
         };
 
-        bool m_InstanceCreated{ false };
-        bool m_EnableValidationLayers{ false };
+        bool _InstanceCreated{ false };
+        bool _EnableValidationLayers{ false };
 
-        VkInstance m_Instance = VK_NULL_HANDLE;
-        VkPhysicalDevice m_PhysicalDevice = VK_NULL_HANDLE;
-        VkPhysicalDeviceProperties m_DeviceProps;
-        VkPhysicalDeviceFeatures m_DeviceFeatures;
-        VkPhysicalDeviceProperties2 m_DeviceProperties2;
-        VkPhysicalDeviceMaintenance3Properties m_DeviceMaintenance3Properties;
+        VkInstance _Instance = VK_NULL_HANDLE;
+        VkPhysicalDevice _PhysicalDevice = VK_NULL_HANDLE;
+        VkPhysicalDeviceProperties _DeviceProps;
+        VkPhysicalDeviceFeatures _DeviceFeatures;
+        VkPhysicalDeviceProperties2 _DeviceProperties2;
+        VkPhysicalDeviceMaintenance3Properties _DeviceMaintenance3Properties;
 
-        VkDevice m_Device{ VK_NULL_HANDLE };
-        std::vector<VkQueue> m_GraphicsQueues{};
-        std::vector<VkQueue> m_PresentQueues{};
-        VkSurfaceKHR m_Surface{ VK_NULL_HANDLE };
-        VkFormat m_SwapChainImageFormat{};
-        VkExtent2D m_SwapChainExtent{};
-        VkDebugUtilsMessengerEXT m_DebugMessengerCallback{ VK_NULL_HANDLE };
-        QueueFamilyIndices m_QueueFamilyIndices{};
-        VkSurfaceFormatKHR m_SurfaceFormat{};
-        VkPresentModeKHR m_PresentMode{};
-        SwapChainSupportDetails m_SwapChainSupport{};
+        VkDevice _Device{ VK_NULL_HANDLE };
+        std::vector<VkQueue> _GraphicsQueues{};
+        std::vector<VkQueue> _PresentQueues{};
+        VkSurfaceKHR _Surface{ VK_NULL_HANDLE };
+        VkFormat _SwapChainImageFormat{};
+        VkExtent2D _SwapChainExtent{};
+        VkDebugUtilsMessengerEXT _DebugMessengerCallback{ VK_NULL_HANDLE };
+        QueueFamilyIndices _QueueFamilyIndices{};
+        VkSurfaceFormatKHR _SurfaceFormat{};
+        VkPresentModeKHR _PresentMode{};
+        SwapChainSupportDetails _SwapChainSupport{};
 
-        std::vector<VkLayerProperties> m_LayersAvailable{};
-        std::vector<VkExtensionProperties> m_Extensions{};
-        std::vector<const char*> m_RequiredExtensions{};
-        std::vector<VkFence> m_InFlightFences{};
-        std::vector<VkFence> m_ImagesInFlight{};
-        VkFence m_Fence{};
+        std::vector<VkLayerProperties> _LayersAvailable{};
+        std::vector<VkExtensionProperties> _Extensions{};
+        std::vector<const char*> _RequiredExtensions{};
+        std::vector<VkFence> _InFlightFences{};
+        std::vector<VkFence> _ImagesInFlight{};
+        VkFence _Fence{};
 
-        VkSampleCountFlagBits m_MsaaSamples{ VK_SAMPLE_COUNT_8_BIT };
+        VkSampleCountFlagBits _MsaaSamples{ VK_SAMPLE_COUNT_8_BIT };
 
-        std::mutex m_MutexQueueSubmit{};
-        std::mutex m_MutexDraw{};
-        std::mutex m_MutexCmdBuffer{};
-        std::mutex m_MutexAcquireNextImage{};
-        std::mutex m_MutexGraphicsPipeline{};
+        std::mutex _MutexQueueSubmit{};
+        std::mutex _MutexDraw{};
+        std::mutex _MutexCmdBuffer{};
+        std::mutex _MutexAcquireNextImage{};
+        std::mutex _MutexGraphicsPipeline{};
 
-        VkDeviceSize m_MaxMemoryHeap{};
-        std::unique_ptr<DeviceMemoryPool> m_DeviceMemoryPool{ nullptr };
+        VkDeviceSize _MaxMemoryHeap{};
+        std::unique_ptr<DeviceMemoryPool> _DeviceMemoryPool{ nullptr };
 
-        VkFence m_FenceAcquireImage{};
-        VkFence m_FenceSubmit{};
-        VkFence m_FenceBuffer{};
+        VkFence _FenceAcquireImage{};
+        VkFence _FenceSubmit{};
+        VkFence _FenceBuffer{};
 
         //@todo move to config file
-        //unsigned int m_Width{ 800 };
-        //unsigned int m_Height{ 600 };
-        unsigned int m_Width{ 2560 };
-        unsigned int m_Height{ 1440 };
+        //unsigned int _width{ 800 };
+        //unsigned int _height{ 600 };
+        unsigned int _width{ 2560 };
+        unsigned int _height{ 1440 };
 
-        //VkMemoryRequirements m_MemRequirements;
+        //VkMemoryRequirements _MemRequirements;
     };
 }

@@ -6,11 +6,11 @@ namespace Poulpe
       VkPhysicalDeviceProperties2 deviceProperties,
       VkPhysicalDeviceMaintenance3Properties maintenanceProperties,
       VkPhysicalDeviceMemoryProperties memProperties)
-      : m_DeviceProperties(deviceProperties),
-        m_MaintenanceProperties(maintenanceProperties),
-        m_MemProperties(memProperties)
+      : _DeviceProperties(deviceProperties),
+        _MaintenanceProperties(maintenanceProperties),
+        _MemProperties(memProperties)
     {
-        m_MemoryAllocationSize.resize(m_MemProperties.memoryTypeCount);
+        _MemoryAllocationSize.resize(_MemProperties.memoryTypeCount);
     }
 
     DeviceMemory* DeviceMemoryPool::get(
@@ -22,42 +22,42 @@ namespace Poulpe
       DeviceBufferType const bufferType,
       bool forceNew)
     {
-        if (m_MemoryAllocationCount > m_DeviceProperties.properties.limits.maxMemoryAllocationCount) {
+        if (_MemoryAllocationCount > _DeviceProperties.properties.limits.maxMemoryAllocationCount) {
           throw std::runtime_error("Max number of active allocations reached");
         }
 
        VkDeviceSize bufferSize;
-       VkDeviceSize maxBufferSize = m_MemProperties.memoryHeaps[m_MemProperties.memoryTypes[memoryType].heapIndex].size;
+       VkDeviceSize maxBufferSize = _MemProperties.memoryHeaps[_MemProperties.memoryTypes[memoryType].heapIndex].size;
        std::string bufferTypeDebug;
 
        switch (bufferType) {
            case DeviceBufferType::STORAGE:
-             bufferSize = maxBufferSize / m_MaxStorage;
+             bufferSize = maxBufferSize / _MaxStorage;
              bufferTypeDebug = "STORAGE";
            break;
            case DeviceBufferType::UNIFORM:
-             bufferSize = m_DeviceProperties.properties.limits.maxUniformBufferRange * m_MaxUniform;
+             bufferSize = _DeviceProperties.properties.limits.maxUniformBufferRange * _MaxUniform;
 
              if (size > bufferSize) {
-               VkDeviceSize const countBuffers{ (size / m_DeviceProperties.properties.limits.maxUniformBufferRange) + 1 };
-               bufferSize = m_DeviceProperties.properties.limits.maxUniformBufferRange * countBuffers;
+               VkDeviceSize const countBuffers{ (size / _DeviceProperties.properties.limits.maxUniformBufferRange) + 1 };
+               bufferSize = _DeviceProperties.properties.limits.maxUniformBufferRange * countBuffers;
              }
              bufferTypeDebug = "UNIFORM";
            break;
            case DeviceBufferType::STAGING:
-             bufferSize = m_MaintenanceProperties.maxMemoryAllocationSize / m_MaxStaging;
+             bufferSize = _MaintenanceProperties.maxMemoryAllocationSize / _MaxStaging;
               if (size > bufferSize) {
-               VkDeviceSize const countBuffers{ (size / m_MaintenanceProperties.maxMemoryAllocationSize) + 1 };
-               bufferSize = m_MaintenanceProperties.maxMemoryAllocationSize * countBuffers;
+               VkDeviceSize const countBuffers{ (size / _MaintenanceProperties.maxMemoryAllocationSize) + 1 };
+               bufferSize = _MaintenanceProperties.maxMemoryAllocationSize * countBuffers;
              }
 
              bufferTypeDebug = "STAGING";
            break;
       }
 
-      auto poolType = m_Pool.find(memoryType);
+      auto poolType = _Pool.find(memoryType);
 
-      if (m_Pool.end() != poolType && !forceNew) {
+      if (_Pool.end() != poolType && !forceNew) {
         auto poolUsage = poolType->second.find(usage);
         if (poolType->second.end() != poolUsage) {
           for (size_t i{ 0 }; i < poolUsage->second.size(); ++i) {
@@ -73,32 +73,32 @@ namespace Poulpe
           }
         }
 
-        if (m_MemoryAllocationSize.at(memoryType) + bufferSize > maxBufferSize) {
+        if (_MemoryAllocationSize.at(memoryType) + bufferSize > maxBufferSize) {
             throw std::runtime_error("Max size of memory allocation reached");
         }
 
-        m_Pool[memoryType][usage].emplace_back(std::make_unique<DeviceMemory>(
-          device, memoryType, bufferSize, m_DeviceMemoryCount, alignment));
-        m_MemoryAllocationCount += 1;
-        m_MemoryAllocationSize.at(memoryType) += bufferSize;
-        /*PLP_DEBUG("DM CREATION: id {}, {}, type {} usage {} size {}", m_DeviceMemoryCount, bufferTypeDebug, memoryType, usage, bufferSize);*/
-        m_DeviceMemoryCount += 1;
-        m_MemorySizeAllocated += size;
-        return m_Pool[memoryType][usage].back().get();
+        _Pool[memoryType][usage].emplace_back(std::make_unique<DeviceMemory>(
+          device, memoryType, bufferSize, _DeviceMemoryCount, alignment));
+        _MemoryAllocationCount += 1;
+        _MemoryAllocationSize.at(memoryType) += bufferSize;
+        /*PLP_DEBUG("DM CREATION: id {}, {}, type {} usage {} size {}", _DeviceMemoryCount, bufferTypeDebug, memoryType, usage, bufferSize);*/
+        _DeviceMemoryCount += 1;
+        _MemorySizeAllocated += size;
+        return _Pool[memoryType][usage].back().get();
       } else {
 
-        if (m_MemoryAllocationSize.at(memoryType) + bufferSize > maxBufferSize) {
+        if (_MemoryAllocationSize.at(memoryType) + bufferSize > maxBufferSize) {
           throw std::runtime_error("Max size of memory allocation reached");
         }
 
-        m_Pool[memoryType][usage].emplace_back(std::make_unique<DeviceMemory>(
-          device, memoryType, bufferSize, m_DeviceMemoryCount, alignment));
-        m_MemoryAllocationCount += 1;
-        m_MemoryAllocationSize.at(memoryType) += bufferSize;
-        /*PLP_DEBUG("DM CREATION: id {}, {}, type {} usage {} size {}", m_DeviceMemoryCount, bufferTypeDebug, memoryType, usage, bufferSize);*/
-        m_DeviceMemoryCount += 1;
-        m_MemorySizeAllocated += size;
-        return m_Pool[memoryType][usage].back().get();
+        _Pool[memoryType][usage].emplace_back(std::make_unique<DeviceMemory>(
+          device, memoryType, bufferSize, _DeviceMemoryCount, alignment));
+        _MemoryAllocationCount += 1;
+        _MemoryAllocationSize.at(memoryType) += bufferSize;
+        /*PLP_DEBUG("DM CREATION: id {}, {}, type {} usage {} size {}", _DeviceMemoryCount, bufferTypeDebug, memoryType, usage, bufferSize);*/
+        _DeviceMemoryCount += 1;
+        _MemorySizeAllocated += size;
+        return _Pool[memoryType][usage].back().get();
       }
     }
 
@@ -106,7 +106,7 @@ namespace Poulpe
     {
       PLP_WARN("MEMORY POOL CLEANING");
 
-      for (auto& memoryType : m_Pool) {
+      for (auto& memoryType : _Pool) {
         for (auto& usage : memoryType.second) {
           for (auto& mem : usage.second) {
               clear(mem.get());
@@ -114,19 +114,19 @@ namespace Poulpe
         }
       }
 
-      m_Pool.clear();
+      _Pool.clear();
 
-      m_MemoryAllocationCount = 0; //should be zero anyway
-      m_MemoryAllocationSize.clear();
-      m_DeviceMemoryCount = 0; //should be zero anyway
+      _MemoryAllocationCount = 0; //should be zero anyway
+      _MemoryAllocationSize.clear();
+      _DeviceMemoryCount = 0; //should be zero anyway
     }
 
     void DeviceMemoryPool::clear(DeviceMemory * deviceMemory)
     {
-        m_MemoryAllocationSize.at(deviceMemory->getType()) -= deviceMemory->getSize();
-        m_MemoryAllocationCount -= 1;
-        m_DeviceMemoryCount -= 1;
+        _MemoryAllocationSize.at(deviceMemory->getType()) -= deviceMemory->getSize();
+        _MemoryAllocationCount -= 1;
+        _DeviceMemoryCount -= 1;
         deviceMemory->clear();
-        PLP_DEBUG("Clearing device memory id {}. {} left", deviceMemory->getID(), m_DeviceMemoryCount);
+        PLP_DEBUG("Clearing device memory id {}. {} left", deviceMemory->getID(), _DeviceMemoryCount);
     }
 }

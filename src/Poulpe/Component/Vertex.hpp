@@ -10,16 +10,16 @@ namespace Poulpe
   {
     alignas(16) glm::vec3 pos;
     alignas(16) glm::vec3 normal;
-    alignas(8) glm::vec2 texCoord;
+    alignas(16) glm::vec2 texCoord;
     alignas(16) glm::vec4 tangent;
     //faceId texture ID blank blank
     alignas(16) glm::vec4 fidtidBB;
     alignas(16) glm::vec3 color;
 
-    std::vector<int> bonesIds{};
+    std::vector<int> bones_ids{};
     std::vector<float> weights{};
 
-    static VkVertexInputBindingDescription getBindingDescription() 
+    static VkVertexInputBindingDescription getBindingDescription()
     {
       VkVertexInputBindingDescription bindingDescription{};
       bindingDescription.binding = 0;

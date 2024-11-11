@@ -6,10 +6,10 @@ namespace Poulpe
 
     void Basic::createDescriptorSet(Mesh* mesh)
     {
-      Texture const tex{ m_TextureManager->getTextures()[mesh->getData()->m_Textures.at(0)] };
-      Texture const tex2{ m_TextureManager->getTextures()[mesh->getData()->m_Textures.at(1)] };
-      Texture const tex3{ m_TextureManager->getTextures()[mesh->getData()->m_Textures.at(2)] };
-      Texture const alpha{ m_TextureManager->getTextures()[mesh->getData()->m_TextureAlpha] };
+      Texture const tex{ _texture_manager->getTextures()[mesh->getData()->_textures.at(0)] };
+      Texture const tex2{ _texture_manager->getTextures()[mesh->getData()->_textures.at(1)] };
+      Texture const tex3{ _texture_manager->getTextures()[mesh->getData()->_textures.at(2)] };
+      Texture const alpha{ _texture_manager->getTextures()[mesh->getData()->_alpha] };
 
       std::vector<VkDescriptorImageInfo> imageInfos{};
       imageInfos.reserve(8);
@@ -21,35 +21,35 @@ namespace Poulpe
       std::string specMapName{ "_plp_empty" };
       std::string bumpMapName{ "_plp_empty" };
 
-      if (!mesh->getData()->m_TextureSpecularMap.empty()
-        && m_TextureManager->getTextures().contains(mesh->getData()->m_TextureSpecularMap)) {
-        specMapName = mesh->getData()->m_TextureSpecularMap;
+      if (!mesh->getData()->_specular_map.empty()
+        && _texture_manager->getTextures().contains(mesh->getData()->_specular_map)) {
+        specMapName = mesh->getData()->_specular_map;
       }
 
-      Texture const texSpecularMap{ m_TextureManager->getTextures()[specMapName] };
+      Texture const texSpecularMap{ _texture_manager->getTextures()[specMapName] };
 
-      if (!mesh->getData()->m_TextureBumpMap.empty()
-        && m_TextureManager->getTextures().contains(mesh->getData()->m_TextureBumpMap)) {
-        bumpMapName = mesh->getData()->m_TextureBumpMap;
+      if (!mesh->getData()->_bump_map.empty()
+        && _texture_manager->getTextures().contains(mesh->getData()->_bump_map)) {
+        bumpMapName = mesh->getData()->_bump_map;
       }
 
-      Texture const texBumpMap{ m_TextureManager->getTextures()[bumpMapName] };
+      Texture const texBumpMap{ _texture_manager->getTextures()[bumpMapName] };
 
       //VkDescriptorImageInfo shadowMapSpot{};
       //shadowMapSpot.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-      //shadowMapSpot.imageView = m_Renderer->getDepthMapImageViews()->at(1);
-      //shadowMapSpot.sampler = m_Renderer->getDepthMapSamplers()->at(1);
+      //shadowMapSpot.imageview = _renderer->getDepthMapImageViews()->at(1);
+      //shadowMapSpot.sampler = _renderer->getDepthMapSamplers()->at(1);
       imageInfos.emplace_back(texSpecularMap.getSampler(), texSpecularMap.getImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
       imageInfos.emplace_back(texBumpMap.getSampler(), texBumpMap.getImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-      imageInfos.emplace_back(m_Renderer->getDepthMapSamplers()->at(0), m_Renderer->getDepthMapImageViews()->at(0), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+      imageInfos.emplace_back(_renderer->getDepthMapSamplers()->at(0), _renderer->getDepthMapImageViews()->at(0), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
       //imageInfos.emplace_back(shadowMapSpot);
 
-      auto const& pipeline = m_Renderer->getPipeline(mesh->getShaderName());
-      VkDescriptorSet descSet{ m_Renderer->createDescriptorSets(pipeline->descPool, { pipeline->descSetLayout }, 1) };
+      auto const& pipeline = _renderer->getPipeline(mesh->getShaderName());
+      VkDescriptorSet descSet{ _renderer->createDescriptorSets(pipeline->descPool, { pipeline->descSetLayout }, 1) };
 
       for (size_t i{ 0 }; i < mesh->getUniformBuffers()->size(); ++i) {
 
-        m_Renderer->updateDescriptorSets(
+        _renderer->updateDescriptorSets(
           *mesh->getUniformBuffers(),
           *mesh->getStorageBuffers(),
           descSet, imageInfos);
@@ -71,8 +71,8 @@ namespace Poulpe
           bufferInfos.emplace_back(bufferInfo);
         });
 
-     auto const& shadowMapPipeline = m_Renderer->getPipeline("shadowMap");
-     VkDescriptorSet shadowMapDescSet = m_Renderer->createDescriptorSets(shadowMapPipeline->descPool, { shadowMapPipeline->descSetLayout }, 1);
+     auto const& shadowMapPipeline = _renderer->getPipeline("shadowMap");
+     VkDescriptorSet shadowMapDescSet = _renderer->createDescriptorSets(shadowMapPipeline->descPool, { shadowMapPipeline->descSetLayout }, 1);
 
       std::for_each(std::begin(*mesh->getStorageBuffers()), std::end(*mesh->getStorageBuffers()),
         [&storageBufferInfos](const Buffer& storageBuffers)
@@ -100,7 +100,7 @@ namespace Poulpe
       descriptorWrites[1].descriptorCount = static_cast<uint32_t>(storageBufferInfos.size());
       descriptorWrites[1].pBufferInfo = storageBufferInfos.data();
 
-      vkUpdateDescriptorSets(m_Renderer->getDevice(), static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
+      vkUpdateDescriptorSets(_renderer->getDevice(), static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
 
       mesh->setShadowMapDescSet(shadowMapDescSet);
     }
@@ -108,16 +108,16 @@ namespace Poulpe
     void Basic::setPushConstants(Mesh* mesh)
     {
         mesh->setApplyPushConstants([](
-            VkCommandBuffer & commandBuffer,
+            VkCommandBuffer & cmd_buffer,
             VkPipelineLayout pipelineLayout,
             Renderer* const renderer, Mesh* const meshB) {
 
             constants pushConstants{};
-            pushConstants.textureIDBB = glm::vec3(meshB->getData()->m_TextureIndex, 0.0, 0.0);
+            pushConstants.textureIDBB = glm::vec3(meshB->getData()->_texture_index, 0.0, 0.0);
             pushConstants.view = renderer->getCamera()->lookAt();
             pushConstants.viewPos = renderer->getCamera()->getPos();
 
-            vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(constants),
+            vkCmdPushConstants(cmd_buffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(constants),
                 & pushConstants);
         });
 
@@ -128,9 +128,9 @@ namespace Poulpe
     {
       if (!mesh && !mesh->isDirty()) return;
 
-      if (mesh->getData()->m_UbosOffset.empty()) {
-        uint32_t const totalInstances{ static_cast<uint32_t>(mesh->getData()->m_Ubos.size()) };
-        uint32_t const maxUniformBufferRange{ m_Renderer->getDeviceProperties().limits.maxUniformBufferRange };
+      if (mesh->getData()->_ubos_offset.empty()) {
+        uint32_t const totalInstances{ static_cast<uint32_t>(mesh->getData()->_ubos.size()) };
+        uint32_t const maxUniformBufferRange{ _renderer->getDeviceProperties().limits.maxUniformBufferRange };
         unsigned long long const uniformBufferChunkSize{ maxUniformBufferRange / sizeof(UniformBufferObject) };
         uint32_t const uniformBuffersCount{ static_cast<uint32_t>(std::ceil(static_cast<float>(totalInstances) / static_cast<float>(uniformBufferChunkSize))) };
 
@@ -141,8 +141,8 @@ namespace Poulpe
 
         for (size_t i{ 0 }; i < uniformBuffersCount; ++i) {
 
-          mesh->getData()->m_UbosOffset.emplace_back(uboOffset);
-          Buffer uniformBuffer = m_Renderer->createUniformBuffers(nbUbo);
+          mesh->getData()->_ubos_offset.emplace_back(uboOffset);
+          Buffer uniformBuffer = _renderer->createUniformBuffers(nbUbo);
           mesh->getUniformBuffers()->emplace_back(uniformBuffer);
 
           uboOffset = (uboRemaining > uniformBufferChunkSize) ? uboOffset + uniformBufferChunkSize : uboOffset + uboRemaining;
@@ -152,42 +152,42 @@ namespace Poulpe
       }
 
       auto const& data = mesh->getData();
-      data->m_TextureIndex = 0;
+      data->_texture_index = 0;
 
-      if (data->m_VertexBuffer.buffer == VK_NULL_HANDLE) {
-        auto commandPool = m_Renderer->createCommandPool();
-        data->m_VertexBuffer = m_Renderer->createVertexBuffer(commandPool, data->m_Vertices);
-        data->m_IndicesBuffer = m_Renderer->createIndexBuffer(commandPool, data->m_Indices);
+      if (data->_vertex_buffer.buffer == VK_NULL_HANDLE) {
+        auto commandPool = _renderer->createCommandPool();
+        data->_vertex_buffer = _renderer->createVertexBuffer(commandPool, data->_vertices);
+        data->_indices_buffer = _renderer->createIndexBuffer(commandPool, data->_Indices);
       } else {
         //suppose we have to update data
         {
-          data->m_VertexBuffer.memory->lock();
+          data->_vertex_buffer.memory->lock();
 
           void* newData;
-          vkMapMemory(m_Renderer->getDevice(), *data->m_VertexBuffer.memory->getMemory(), data->m_VertexBuffer.offset, data->m_VertexBuffer.size, 0, &newData);
-          memcpy(newData, data->m_Vertices.data(), data->m_VertexBuffer.size);
-          vkUnmapMemory(m_Renderer->getDevice(), *data->m_VertexBuffer.memory->getMemory());
+          vkMapMemory(_renderer->getDevice(), *data->_vertex_buffer.memory->getMemory(), data->_vertex_buffer.offset, data->_vertex_buffer.size, 0, &newData);
+          memcpy(newData, data->_vertices.data(), data->_vertex_buffer.size);
+          vkUnmapMemory(_renderer->getDevice(), *data->_vertex_buffer.memory->getMemory());
 
-          data->m_VertexBuffer.memory->unLock();
+          data->_vertex_buffer.memory->unLock();
         }
         {
-          data->m_IndicesBuffer.memory->lock();
+          data->_indices_buffer.memory->lock();
 
           void* newData;
-          vkMapMemory(m_Renderer->getDevice(), *data->m_IndicesBuffer.memory->getMemory(), data->m_IndicesBuffer.offset, data->m_IndicesBuffer.size, 0, &newData);
-          memcpy(newData, data->m_Indices.data(), data->m_IndicesBuffer.size);
-          vkUnmapMemory(m_Renderer->getDevice(), *data->m_IndicesBuffer.memory->getMemory());
+          vkMapMemory(_renderer->getDevice(), *data->_indices_buffer.memory->getMemory(), data->_indices_buffer.offset, data->_indices_buffer.size, 0, &newData);
+          memcpy(newData, data->_Indices.data(), data->_indices_buffer.size);
+          vkUnmapMemory(_renderer->getDevice(), *data->_indices_buffer.memory->getMemory());
 
-          data->m_IndicesBuffer.memory->unLock();
+          data->_indices_buffer.memory->unLock();
         }
       }
 
-      for (size_t i{ 0 }; i < mesh->getData()->m_Ubos.size(); ++i) {
-        mesh->getData()->m_Ubos[i].projection = m_Renderer->getPerspective();
+      for (size_t i{ 0 }; i < mesh->getData()->_ubos.size(); ++i) {
+        mesh->getData()->_ubos[i].projection = _renderer->getPerspective();
 
-        if (m_TextureManager->getTextures().contains(mesh->getData()->m_TextureBumpMap)) {
-          auto const tex = m_TextureManager->getTextures()[mesh->getData()->m_TextureBumpMap];
-          mesh->getData()->m_Ubos[i].texSize = glm::vec2(tex.getWidth(), tex.getHeight());
+        if (_texture_manager->getTextures().contains(mesh->getData()->_bump_map)) {
+          auto const tex = _texture_manager->getTextures()[mesh->getData()->_bump_map];
+          mesh->getData()->_ubos[i].texSize = glm::vec2(tex.getWidth(), tex.getHeight());
         }
       }
 
@@ -203,32 +203,32 @@ namespace Poulpe
           mesh->getMaterial().ior, mesh->getMaterial().illum);
 
         ObjectBuffer objectBuffer{};
-        objectBuffer.pointLights[0] = m_LightManager->getPointLights().at(0);
-        objectBuffer.pointLights[1] = m_LightManager->getPointLights().at(1);
-        objectBuffer.spotLight = m_LightManager->getSpotLights().at(0);
-        objectBuffer.ambientLight = m_LightManager->getAmbientLight();
+        objectBuffer.pointLights[0] = _light_manager->getPointLights().at(0);
+        objectBuffer.pointLights[1] = _light_manager->getPointLights().at(1);
+        objectBuffer.spotLight = _light_manager->getSpotLights().at(0);
+        objectBuffer.ambientLight = _light_manager->getAmbientLight();
         objectBuffer.material = material;
 
         auto const size{ sizeof(objectBuffer) };
-        auto storageBuffer{ m_Renderer->createStorageBuffers(size) };
+        auto storageBuffer{ _renderer->createStorageBuffers(size) };
 
         mesh->setObjectBuffer(objectBuffer);
         mesh->addStorageBuffer(storageBuffer);
         mesh->setHasBufferStorage();
 
-        m_Renderer->updateStorageBuffer(mesh->getStorageBuffers()->at(0), objectBuffer);
+        _renderer->updateStorageBuffer(mesh->getStorageBuffers()->at(0), objectBuffer);
       }
 
       unsigned int min{ 0 };
       unsigned int max{ 0 };
 
       for (size_t i{ 0 }; i < mesh->getUniformBuffers()->size(); ++i) {
-        max = mesh->getData()->m_UbosOffset.at(i);
-        auto ubos = std::vector<UniformBufferObject>(mesh->getData()->m_Ubos.begin() + min, mesh->getData()->m_Ubos.begin() + max);
+        max = mesh->getData()->_ubos_offset.at(i);
+        auto ubos = std::vector<UniformBufferObject>(mesh->getData()->_ubos.begin() + min, mesh->getData()->_ubos.begin() + max);
 
         min = max;
         if (ubos.empty()) continue;
-        m_Renderer->updateUniformBuffer(mesh->getUniformBuffers()->at(i), &ubos);
+        _renderer->updateUniformBuffer(mesh->getUniformBuffers()->at(i), &ubos);
       }
 
       if (*mesh->getDescSet() == NULL) {

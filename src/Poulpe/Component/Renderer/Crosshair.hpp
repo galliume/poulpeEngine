@@ -20,18 +20,18 @@ namespace Poulpe
     void setPushConstants(Mesh* mesh);
     void init(
       Renderer* const renderer,
-      TextureManager* const textureManager,
-      LightManager* const lightManager)
+      TextureManager* const texture_manager,
+      LightManager* const light_manager)
     {
-        m_Renderer = renderer;
-        m_TextureManager = textureManager;
-        m_LightManager = lightManager;
+        _renderer = renderer;
+        _texture_manager = texture_manager;
+        _light_manager = light_manager;
     }
     void operator()(std::chrono::duration<float> const& deltaTime, Mesh* mesh);
 
   private:
-    Renderer* m_Renderer;
-    TextureManager* m_TextureManager;
-    LightManager* m_LightManager;
+    Renderer* _renderer;
+    TextureManager* _texture_manager;
+    LightManager* _light_manager;
   };
 }

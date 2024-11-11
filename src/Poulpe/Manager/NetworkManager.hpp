@@ -14,7 +14,7 @@ namespace Poulpe
     void startServer(std::string const& port);
 
   private:
-    std::shared_ptr<Server> m_Server;
-    APIManager* m_APIManager;
+    std::shared_ptr<Server> _Server;
+    APIManager* _APIManager;
   };
 }

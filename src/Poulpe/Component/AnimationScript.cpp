@@ -44,24 +44,24 @@ namespace Poulpe
 
   AnimationScript::AnimationScript(std::string const& scriptPath)
   {
-    m_ScriptPath = "./" + scriptPath;
+    _ScriptPath = "./" + scriptPath;
 
-    if (!std::filesystem::exists(m_ScriptPath)) {
-      PLP_FATAL("script file {} does not exits.", m_ScriptPath);
+    if (!std::filesystem::exists(_ScriptPath)) {
+      PLP_FATAL("script file {} does not exits.", _ScriptPath);
       return;
     }
 
-    m_lua_State = luaL_newstate();
-    luaL_openlibs(m_lua_State);
-    lua_register(m_lua_State, "_Rotate", wrapRotate);
-    lua_register(m_lua_State, "_Move", wrapMove);
+    _lua_State = luaL_newstate();
+    luaL_openlibs(_lua_State);
+    lua_register(_lua_State, "_Rotate", wrapRotate);
+    lua_register(_lua_State, "_Move", wrapMove);
 
-    checkLua(m_lua_State, luaL_dofile(m_lua_State, m_ScriptPath.c_str()));
+    checkLua(_lua_State, luaL_dofile(_lua_State, _ScriptPath.c_str()));
   }
 
   AnimationScript::~AnimationScript()
   { 
-    lua_close(m_lua_State);
+    lua_close(_lua_State);
   }
 
   void AnimationScript::move(Data* dataMove, std::chrono::duration<float> deltaTimeMove, float duration, glm::vec3 targetMove)
@@ -69,11 +69,11 @@ namespace Poulpe
     std::unique_ptr<AnimationMove> animMove = std::make_unique<AnimationMove>();
     animMove->duration = duration;
     animMove->target = glm::vec3(
-      dataMove->m_OriginPos.x + targetMove.x,
-      dataMove->m_OriginPos.y + targetMove.y,
-      dataMove->m_OriginPos.z + targetMove.z);
+      dataMove->_origin_pos.x + targetMove.x,
+      dataMove->_origin_pos.y + targetMove.y,
+      dataMove->_origin_pos.z + targetMove.z);
 
-    //PLP_TRACE("START at {}/{}/{}", data->m_OriginPos.x, data->m_OriginPos.y, data->m_OriginPos.z);
+    //PLP_TRACE("START at {}/{}/{}", data->_origin_pos.x, data->_origin_pos.y, data->_origin_pos.z);
     //PLP_TRACE("TO {}/{}/{}", anim->target.x, anim->target.y, anim->target.z);
 
     animMove->update = [](AnimationMove* anim, Data* data, std::chrono::duration<float> deltaTime) {
@@ -87,28 +87,28 @@ namespace Poulpe
       }
       anim->elapsedTime += deltaTime.count();
 
-      glm::vec3 target = glm::mix(data->m_OriginPos, anim->target, t);
-      //PLP_TRACE("MOVING at {}/{}/{}", data->m_CurrentPos.x, data->m_CurrentPos.y, data->m_CurrentPos.z);
+      glm::vec3 target = glm::mix(data->_origin_pos, anim->target, t);
+      //PLP_TRACE("MOVING at {}/{}/{}", data->_current_pos.x, data->_current_pos.y, data->_current_pos.z);
 
       glm::mat4 model = glm::mat4(1.0f);
-      model = glm::scale(model, data->m_OriginScale);
+      model = glm::scale(model, data->_origin_scale);
       model = glm::translate(model, target);
-      model = glm::rotate(model, glm::radians(data->m_OriginRotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
-      model = glm::rotate(model, glm::radians(data->m_OriginRotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
-      model = glm::rotate(model, glm::radians(data->m_OriginRotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
+      model = glm::rotate(model, glm::radians(data->_origin_rotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
+      model = glm::rotate(model, glm::radians(data->_origin_rotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
+      model = glm::rotate(model, glm::radians(data->_origin_rotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
 
-      std::ranges::for_each(data->m_Ubos, [&model](auto& ubo) {
+      std::ranges::for_each(data->_ubos, [&model](auto& ubo) {
         ubo.model = model;
       });
 
       if (done) {
-        data->m_OriginPos = target;
-        //PLP_TRACE("DONE at {}/{}/{}", data->m_OriginPos.x, data->m_OriginPos.y, data->m_OriginPos.z);
+        data->_origin_pos = target;
+        //PLP_TRACE("DONE at {}/{}/{}", data->_origin_pos.x, data->_origin_pos.y, data->_origin_pos.z);
       }
       anim->done = done;
     };
     animMove->update(animMove.get(), dataMove, deltaTimeMove);
-    m_NewMoveAnimations.emplace_back(std::move(animMove));
+    _NewMoveAnimations.emplace_back(std::move(animMove));
   }
 
   void AnimationScript::rotate(Data* dataRotate, std::chrono::duration<float> deltaTimeRotate, float duration, glm::vec3 angle)
@@ -129,93 +129,93 @@ namespace Poulpe
       anim->elapsedTime += deltaTime.count();
 
       //@todo switch euler angles to quaternions
-      data->m_CurrentRotation = glm::mix(data->m_OriginRotation, anim->angle, t);
+      data->_current_rotation = glm::mix(data->_origin_rotation, anim->angle, t);
 
       glm::mat4 model = glm::mat4(1.0f);
-      model = glm::scale(model, data->m_OriginScale);
-      model = glm::translate(model, data->m_OriginPos);
-      model = glm::rotate(model, glm::radians(data->m_CurrentRotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
-      model = glm::rotate(model, glm::radians(data->m_CurrentRotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
-      model = glm::rotate(model, glm::radians(data->m_CurrentRotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
+      model = glm::scale(model, data->_origin_scale);
+      model = glm::translate(model, data->_origin_pos);
+      model = glm::rotate(model, glm::radians(data->_current_rotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
+      model = glm::rotate(model, glm::radians(data->_current_rotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
+      model = glm::rotate(model, glm::radians(data->_current_rotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
 
-      std::ranges::for_each(data->m_Ubos, [&model](auto& ubo) {
+      std::ranges::for_each(data->_ubos, [&model](auto& ubo) {
         ubo.model = model;
       });
 
       anim->done = done;
     };
     animRotate->update(animRotate.get(), dataRotate, deltaTimeRotate);
-    m_NewRotateAnimations.emplace_back(std::move(animRotate));
+    _NewRotateAnimations.emplace_back(std::move(animRotate));
   }
 
   void AnimationScript::operator()(std::chrono::duration<float> const& deltaTime, Mesh* mesh)
   {
-    m_Data = mesh->getData();
+    _Data = mesh->getData();
 
-    std::ranges::for_each(m_NewMoveAnimations, [&](auto& anim) {
-      m_MoveAnimations.emplace_back(std::move(anim));
+    std::ranges::for_each(_NewMoveAnimations, [&](auto& anim) {
+      _MoveAnimations.emplace_back(std::move(anim));
     });
-    std::ranges::for_each(m_NewRotateAnimations, [&](auto& anim) {
-      m_RotateAnimations.emplace_back(std::move(anim));
+    std::ranges::for_each(_NewRotateAnimations, [&](auto& anim) {
+      _RotateAnimations.emplace_back(std::move(anim));
     });
 
-    m_NewMoveAnimations.clear();
-    m_NewRotateAnimations.clear();
+    _NewMoveAnimations.clear();
+    _NewRotateAnimations.clear();
 
-    if (!m_MoveInit) {
-      lua_getglobal(m_lua_State, "nextMove");
-      if (lua_isfunction(m_lua_State, -1)) {
-        lua_pushlightuserdata(m_lua_State, this);
-        lua_pushnumber(m_lua_State, static_cast<double>(deltaTime.count()));
-        checkLua(m_lua_State, lua_pcall(m_lua_State, 2, 1, 0));
+    if (!_MoveInit) {
+      lua_getglobal(_lua_State, "nextMove");
+      if (lua_isfunction(_lua_State, -1)) {
+        lua_pushlightuserdata(_lua_State, this);
+        lua_pushnumber(_lua_State, static_cast<double>(deltaTime.count()));
+        checkLua(_lua_State, lua_pcall(_lua_State, 2, 1, 0));
       }
-      m_MoveInit = true;
+      _MoveInit = true;
     }
 
-    std::ranges::for_each(m_MoveAnimations, [&](auto& anim) {
+    std::ranges::for_each(_MoveAnimations, [&](auto& anim) {
 
       anim->update(anim.get(), mesh->getData(), deltaTime);
 
       if (anim->done) {
-        lua_getglobal(m_lua_State, "nextMove");
-        if (lua_isfunction(m_lua_State, -1)) {
-          lua_pushlightuserdata(m_lua_State, this);
-          lua_pushnumber(m_lua_State, static_cast<double>(deltaTime.count()));
-          checkLua(m_lua_State, lua_pcall(m_lua_State, 2, 1, 0));
+        lua_getglobal(_lua_State, "nextMove");
+        if (lua_isfunction(_lua_State, -1)) {
+          lua_pushlightuserdata(_lua_State, this);
+          lua_pushnumber(_lua_State, static_cast<double>(deltaTime.count()));
+          checkLua(_lua_State, lua_pcall(_lua_State, 2, 1, 0));
         }
       }
     });
 
-    if (!m_RotateInit) {
-      lua_getglobal(m_lua_State, "nextRotation");
-      if (lua_isfunction(m_lua_State, -1)) {
-        lua_pushlightuserdata(m_lua_State, this);
-        lua_pushnumber(m_lua_State, static_cast<double>(deltaTime.count()));
-        checkLua(m_lua_State, lua_pcall(m_lua_State, 2, 1, 0));
+    if (!_RotateInit) {
+      lua_getglobal(_lua_State, "nextRotation");
+      if (lua_isfunction(_lua_State, -1)) {
+        lua_pushlightuserdata(_lua_State, this);
+        lua_pushnumber(_lua_State, static_cast<double>(deltaTime.count()));
+        checkLua(_lua_State, lua_pcall(_lua_State, 2, 1, 0));
       }
-      m_RotateInit = true;
+      _RotateInit = true;
     }
 
-    std::ranges::for_each(m_RotateAnimations, [&](auto& anim) {
+    std::ranges::for_each(_RotateAnimations, [&](auto& anim) {
       anim->update(anim.get(), mesh->getData(), deltaTime);
 
       if (anim->done) {
-        lua_getglobal(m_lua_State, "nextRotation");
-        if (lua_isfunction(m_lua_State, -1)) {
-          lua_pushlightuserdata(m_lua_State, this);
-          lua_pushnumber(m_lua_State, static_cast<double>(deltaTime.count()));
-          checkLua(m_lua_State, lua_pcall(m_lua_State, 2, 1, 0));
+        lua_getglobal(_lua_State, "nextRotation");
+        if (lua_isfunction(_lua_State, -1)) {
+          lua_pushlightuserdata(_lua_State, this);
+          lua_pushnumber(_lua_State, static_cast<double>(deltaTime.count()));
+          checkLua(_lua_State, lua_pcall(_lua_State, 2, 1, 0));
         }
       }
     });
 
-    std::erase_if(m_MoveAnimations, [](auto& anim) { return anim->done; });
-    std::erase_if(m_RotateAnimations, [](auto& anim) { return anim->done; });
+    std::erase_if(_MoveAnimations, [](auto& anim) { return anim->done; });
+    std::erase_if(_RotateAnimations, [](auto& anim) { return anim->done; });
   }
     //lua_State* L = luaL_newstate();
     //luaL_openlibs(L);
 
-    //if (checkLua(L, luaL_dofile(L, m_ScriptPath.c_str())))
+    //if (checkLua(L, luaL_dofile(L, _ScriptPath.c_str())))
     //{
     //  lua_getglobal(L, "a");
     //  if (lua_isnumber(L, -1)) {

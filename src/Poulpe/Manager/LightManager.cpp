@@ -4,14 +4,14 @@ namespace Poulpe
 {
     LightManager::LightManager()
     {
-        m_AmbientLight.color = glm::vec3(1.f);
-        m_AmbientLight.position = glm::vec3(-2.0f, 4.0f, -1.0f);
-        m_AmbientLight.direction = glm::vec3(0.1f, -1.0, 0.0);
+        _AmbientLight.color = glm::vec3(1.f);
+        _AmbientLight.position = glm::vec3(-2.0f, 4.0f, -1.0f);
+        _AmbientLight.direction = glm::vec3(0.1f, -1.0, 0.0);
         //ambient diffuse specular
-        m_AmbientLight.ads = glm::vec3(1.5f, 0.7f, 1.0f);
-        m_AmbientLight.clq = glm::vec3(0.0f);
+        _AmbientLight.ads = glm::vec3(1.5f, 0.7f, 1.0f);
+        _AmbientLight.clq = glm::vec3(0.0f);
 
-        m_AmbientLight.view = glm::lookAt(
+        _AmbientLight.view = glm::lookAt(
           glm::vec3(-2.0f, 4.0f, -1.0f),
           glm::vec3( 0.0f, 0.0f,  0.0f),
           glm::vec3( 0.0f, 1.0f,  0.0f));
@@ -25,8 +25,8 @@ namespace Poulpe
         auto projection = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, near_plane, far_plane);
         projection[1][1] *= -1;
 
-        m_AmbientLight.projection = projection;
-        m_AmbientLight.lightSpaceMatrix = m_AmbientLight.projection * m_AmbientLight.view;
+        _AmbientLight.projection = projection;
+        _AmbientLight.lightSpaceMatrix = _AmbientLight.projection * _AmbientLight.view;
 
         Light light;
         light.color = glm::vec3(1.0);
@@ -42,8 +42,8 @@ namespace Poulpe
         light2.ads = glm::vec3(0.7f, 0.9f, 1.0f);
         light2.clq = glm::vec3(1.0f, 0.7f, 1.8f);
 
-        m_PointLights.emplace_back(light);
-        m_PointLights.emplace_back(light2);
+        _PointLights.emplace_back(light);
+        _PointLights.emplace_back(light2);
 
         Light light3;
         light3.color = glm::vec3(0.13f, 0.35f, 0.89f);
@@ -63,25 +63,25 @@ namespace Poulpe
         light3.projection[1][1] *= -1;
         light3.lightSpaceMatrix = light3.view * light3.projection;
 
-        m_SpotLights.emplace_back(light3);
+        _SpotLights.emplace_back(light3);
     }
 
     void LightManager::animateAmbientLight(float deltaTime)
     {
-        m_AmbientLight.position.x += cos(glm::radians(deltaTime * 360.0f));
-        m_AmbientLight.direction.x += cos(glm::radians(deltaTime * 360.0f));
-        m_AmbientLight.position.z += sin(glm::radians(deltaTime * 360.0f));
-        m_AmbientLight.direction.z += sin(glm::radians(deltaTime * 360.0f));
+        _AmbientLight.position.x += cos(glm::radians(deltaTime * 360.0f));
+        _AmbientLight.direction.x += cos(glm::radians(deltaTime * 360.0f));
+        _AmbientLight.position.z += sin(glm::radians(deltaTime * 360.0f));
+        _AmbientLight.direction.z += sin(glm::radians(deltaTime * 360.0f));
 
-        m_AmbientLight.view = glm::lookAt(
-            m_AmbientLight.position,
-            m_AmbientLight.position + m_AmbientLight.direction,
+        _AmbientLight.view = glm::lookAt(
+            _AmbientLight.position,
+            _AmbientLight.position + _AmbientLight.direction,
             glm::vec3(0.0f, 1.0f,  0.0f));
 
         float near_plane = 1.f, far_plane = 7.5f;
-        m_AmbientLight.projection = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, near_plane, far_plane);
-        m_AmbientLight.projection[1][1] *= -1;
+        _AmbientLight.projection = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, near_plane, far_plane);
+        _AmbientLight.projection[1][1] *= -1;
 
-        m_AmbientLight.lightSpaceMatrix = m_AmbientLight.projection * m_AmbientLight.view;
+        _AmbientLight.lightSpaceMatrix = _AmbientLight.projection * _AmbientLight.view;
     }
 }

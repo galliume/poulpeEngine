@@ -8,35 +8,35 @@ namespace Poulpe
 {
     void Crosshair::createDescriptorSet(Mesh* mesh)
     {
-      Texture const tex{ m_TextureManager->getTextures()["crosshair_1"] };
-      Texture const tex2{ m_TextureManager->getTextures()["crosshair_2"] };
+      Texture const tex{ _texture_manager->getTextures()["crosshair_1"] };
+      Texture const tex2{ _texture_manager->getTextures()["crosshair_2"] };
 
       std::vector<VkDescriptorImageInfo> imageInfos{};
       imageInfos.reserve(2);
       imageInfos.emplace_back(tex.getSampler(), tex.getImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
       imageInfos.emplace_back(tex2.getSampler(), tex2.getImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
-      auto const& pipeline = m_Renderer->getPipeline(mesh->getShaderName());
+      auto const& pipeline = _renderer->getPipeline(mesh->getShaderName());
 
-      VkDescriptorSet descSet = m_Renderer->createDescriptorSets(pipeline->descPool, { pipeline->descSetLayout }, 1);
+      VkDescriptorSet descSet = _renderer->createDescriptorSets(pipeline->descPool, { pipeline->descSetLayout }, 1);
 
-      m_Renderer->updateDescriptorSets(*mesh->getUniformBuffers(), descSet, imageInfos);
+      _renderer->updateDescriptorSets(*mesh->getUniformBuffers(), descSet, imageInfos);
       mesh->setDescSet(descSet);
     }
 
     void Crosshair::setPushConstants(Mesh* mesh)
     {
         mesh->setApplyPushConstants([](
-            VkCommandBuffer & commandBuffer, VkPipelineLayout pipelineLayout,
+            VkCommandBuffer & cmd_buffer, VkPipelineLayout pipelineLayout,
              Renderer* const renderer,
              Mesh* const meshCH) {
   
-            float id = static_cast<float>(Renderer::s_Crosshair);
+            float id = 0.0f;
 
             constants pushConstants{};
             pushConstants.textureIDBB = glm::vec3(id, 0.0f, 0.0f);
 
-            vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(constants), & pushConstants);
+            vkCmdPushConstants(cmd_buffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(constants), & pushConstants);
         });
         mesh->setHasPushConstants();
     }
@@ -55,30 +55,30 @@ namespace Poulpe
           0, 1, 2, 2, 3, 0
       };
 
-      auto commandPool = m_Renderer->createCommandPool();
+      auto commandPool = _renderer->createCommandPool();
 
       UniformBufferObject ubo{};
 
       Data data;
-      data.m_Textures.emplace_back("crosshair");
-      data.m_TextureIndex = 0;
-      data.m_VertexBuffer = m_Renderer->createVertexBuffer(commandPool, vertices);
-      data.m_IndicesBuffer = m_Renderer->createIndexBuffer(commandPool, indices);
-      data.m_Ubos.emplace_back(ubo);
-      data.m_Indices = indices;
+      data._textures.emplace_back("crosshair");
+      data._texture_index = 0;
+      data._vertex_buffer = _renderer->createVertexBuffer(commandPool, vertices);
+      data._indices_buffer = _renderer->createIndexBuffer(commandPool, indices);
+      data._ubos.emplace_back(ubo);
+      data._Indices = indices;
 
-      vkDestroyCommandPool(m_Renderer->getDevice(), commandPool, nullptr);
+      vkDestroyCommandPool(_renderer->getDevice(), commandPool, nullptr);
 
       mesh->setName("crosshair");
       mesh->setShaderName("2d");
-      mesh->getUniformBuffers()->emplace_back(m_Renderer->createUniformBuffers(1));
+      mesh->getUniformBuffers()->emplace_back(_renderer->createUniformBuffers(1));
 
       setPushConstants(mesh);
 
       for (uint32_t i{ 0 }; i < mesh->getUniformBuffers()->size(); i++) {
-        data.m_Ubos[i].projection = m_Renderer->getPerspective();
+        data._ubos[i].projection = _renderer->getPerspective();
 
-        m_Renderer->updateUniformBuffer(mesh->getUniformBuffers()->at(i), &data.m_Ubos);
+        _renderer->updateUniformBuffer(mesh->getUniformBuffers()->at(i), &data._ubos);
       }
 
       createDescriptorSet(mesh);

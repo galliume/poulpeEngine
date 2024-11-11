@@ -13,19 +13,19 @@ namespace Poulpe
   public:
 #if defined(_WIN32) || defined(WIN32)
     Server(WinServer* server)
-      : m_Pimpl(server)
+      : _Pimpl(server)
     {
     }
 #else
     Server(UnixServer* server)
-      : m_Pimpl(server)
+      : _Pimpl(server)
     {
     }
 #endif
 
     void bind(std::string const& port);
     void close();
-    inline ServerStatus getStatus() { return m_Pimpl->getStatus(); }
+    inline ServerStatus getStatus() { return _Pimpl->getStatus(); }
     void listen();
     void read();
     void send(std::string message);
@@ -33,9 +33,9 @@ namespace Poulpe
   private:
     //@todo fixed pimpl...
 #if defined(_WIN32) || defined(WIN32)
-    WinServer* m_Pimpl;
+    WinServer* _Pimpl;
 #else
-    UnixServer* m_Pimpl;
+    UnixServer* _Pimpl;
 #endif
   };
 }

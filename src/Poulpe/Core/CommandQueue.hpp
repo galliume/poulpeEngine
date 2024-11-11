@@ -18,9 +18,9 @@ namespace Poulpe
         void execPreRequest();
 
     private:
-        mutable std::mutex m_Mutex;
+        mutable std::mutex _Mutex;
 
-        std::queue<std::shared_ptr<Command>> m_PostCmdQueue;
-        std::queue<std::shared_ptr<Command>> m_PreCmdQueue;
+        std::queue<std::shared_ptr<Command>> _PostCmdQueue;
+        std::queue<std::shared_ptr<Command>> _PreCmdQueue;
     };
 }

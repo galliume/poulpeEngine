@@ -26,22 +26,22 @@ namespace Poulpe
           bool forceNew = false);
 
         std::unordered_map<uint32_t, std::unordered_map<VkBufferUsageFlags,
-          std::vector<std::unique_ptr<DeviceMemory>>>>* getPool() { return & m_Pool; }
+          std::vector<std::unique_ptr<DeviceMemory>>>>* getPool() { return & _Pool; }
 
         void clear(DeviceMemory * deviceMemory);
         void clear();
 
     private:
-        std::unordered_map<uint32_t, std::unordered_map<VkBufferUsageFlags, std::vector<std::unique_ptr<DeviceMemory>>>> m_Pool;
-        VkPhysicalDeviceProperties2 m_DeviceProperties;
-         VkPhysicalDeviceMaintenance3Properties m_MaintenanceProperties;
-        VkPhysicalDeviceMemoryProperties m_MemProperties;
-        VkDeviceSize m_MemoryAllocationCount{ 0 };
-        VkDeviceSize m_MemorySizeAllocated{ 0 };
-        std::vector<VkDeviceSize> m_MemoryAllocationSize{0};
-        unsigned int m_DeviceMemoryCount{ 0 };
-        unsigned int const m_MaxUniform{ 1000 };
-        unsigned int const m_MaxStorage{ 5 };
-        unsigned int const m_MaxStaging{ 5 };
+        std::unordered_map<uint32_t, std::unordered_map<VkBufferUsageFlags, std::vector<std::unique_ptr<DeviceMemory>>>> _Pool;
+        VkPhysicalDeviceProperties2 _DeviceProperties;
+         VkPhysicalDeviceMaintenance3Properties _MaintenanceProperties;
+        VkPhysicalDeviceMemoryProperties _MemProperties;
+        VkDeviceSize _MemoryAllocationCount{ 0 };
+        VkDeviceSize _MemorySizeAllocated{ 0 };
+        std::vector<VkDeviceSize> _MemoryAllocationSize{0};
+        unsigned int _DeviceMemoryCount{ 0 };
+        unsigned int const _MaxUniform{ 1000 };
+        unsigned int const _MaxStorage{ 5 };
+        unsigned int const _MaxStaging{ 5 };
     };
 }
