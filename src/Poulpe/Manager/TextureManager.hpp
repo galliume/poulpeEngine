@@ -14,35 +14,27 @@ namespace Poulpe
   class TextureManager
   {
   public:
-    TextureManager() = default;
-    ~TextureManager() = default;
-
-    inline void addConfig(nlohmann::json config) { m_TextureConfig = config; }
+    inline void addConfig(nlohmann::json config) { _texture_config = config; }
     std::vector<std::array<float, 3>> addNormalMapTexture(std::string const& name);
-    inline void addRenderer(Renderer* renderer) { m_Renderer = renderer; }
-    void addSkyBox(std::vector<std::string> const & skyboxImages);
-    void addTexture(std::string const & name, std::string const & path, bool isPublic = false);
+    inline void addRenderer(Renderer* renderer) { _renderer = renderer; }
+    void addSkyBox(std::vector<std::string> const & skybox_images);
+    void addTexture(std::string const & name, std::string const & path, bool is_public = false);
     void clear();
-    inline const Texture getSkyboxTexture() const { return m_Skybox; }
-    inline std::unordered_map<std::string, std::string> getPaths() const { return m_Paths; }
-    inline std::unordered_map<std::string, Texture> getTextures() { return m_Textures; }
-    inline bool isSkyboxLoadingDone() { return m_SkyboxLoadingDone.load(); }
-    inline bool isTexturesLoadingDone() { return m_TexturesLoadingDone.load(); }
+    inline const Texture getSkyboxTexture() const { return _skybox; }
+    inline std::unordered_map<std::string, std::string> getPaths() const { return _paths; }
+    inline std::unordered_map<std::string, Texture> getTextures() { return _textures; }
     std::function<void(std::latch& count_down)> load();
     std::function<void(std::latch& count_down)> loadSkybox(std::string_view skybox);
 
   private:
     const uint32_t MAX_MIPLEVELS = 5;
 
-    Renderer* m_Renderer{ nullptr };
-    Texture m_Skybox;
-    std::string m_SkyboxName;
-    nlohmann::json m_TextureConfig;
+    Renderer* _renderer{ nullptr };
+    Texture _skybox;
+    std::string _skybox_name;
+    nlohmann::json _texture_config;
 
-    std::unordered_map<std::string, std::string> m_Paths;
-    std::unordered_map<std::string, Texture> m_Textures;
-
-    std::atomic_bool m_SkyboxLoadingDone{ false };
-    std::atomic_bool m_TexturesLoadingDone{ false };
+    std::unordered_map<std::string, std::string> _paths;
+    std::unordered_map<std::string, Texture> _textures;
   };
 }

@@ -6,32 +6,32 @@ namespace Poulpe
 
     void Skybox::createDescriptorSet(Mesh* mesh)
     {
-      Texture const tex{ m_TextureManager->getSkyboxTexture() };
+      Texture const tex{ _texture_manager->getSkyboxTexture() };
 
       std::vector<VkDescriptorImageInfo> imageInfos{};
       imageInfos.emplace_back(tex.getSampler(), tex.getImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
-      auto const pipeline = m_Renderer->getPipeline(mesh->getShaderName());
-      VkDescriptorSet descSet = m_Renderer->createDescriptorSets(pipeline->descPool, { pipeline->descSetLayout }, 1);
+      auto const pipeline = _renderer->getPipeline(mesh->getShaderName());
+      VkDescriptorSet descSet = _renderer->createDescriptorSets(pipeline->descPool, { pipeline->descSetLayout }, 1);
 
-      m_Renderer->updateDescriptorSets(*mesh->getUniformBuffers(), descSet, imageInfos);
+      _renderer->updateDescriptorSets(*mesh->getUniformBuffers(), descSet, imageInfos);
 
       mesh->setDescSet(descSet);
     }
 
     void Skybox::setPushConstants(Mesh* mesh)
     {
-        mesh->setApplyPushConstants([](VkCommandBuffer& commandBuffer,
+        mesh->setApplyPushConstants([](VkCommandBuffer& cmd_buffer,
             VkPipelineLayout pipelineLayout,
             Renderer* const renderer,
             Mesh* const meshS) {
 
             constants pushConstants{};
-            pushConstants.textureIDBB = glm::vec3(meshS->getData()->m_TextureIndex, 0.0f, 0.0f);
+            pushConstants.textureIDBB = glm::vec3(meshS->getData()->_texture_index, 0.0f, 0.0f);
             pushConstants.view = glm::mat4(glm::mat3(renderer->getCamera()->lookAt()));
             pushConstants.viewPos = renderer->getCamera()->getPos();
 
-            vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(constants),
+            vkCmdPushConstants(cmd_buffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(constants),
                 & pushConstants);
         });
 
@@ -89,20 +89,20 @@ namespace Poulpe
       UniformBufferObject ubo;
       ubo.model = glm::mat4(0.0f);
       //ubo.view = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
-      ubo.projection = m_Renderer->getPerspective();
+      ubo.projection = _renderer->getPerspective();
 
-      auto commandPool = m_Renderer->createCommandPool();
+      auto commandPool = _renderer->createCommandPool();
 
       Data data;
-      data.m_Textures.emplace_back("skybox");
-      data.m_Vertices = skyVertices;
-      data.m_VertexBuffer = m_Renderer->createVertexBuffer(commandPool, skyVertices);
-      data.m_Ubos.emplace_back(ubo);
-      data.m_TextureIndex = 0;
+      data._textures.emplace_back("skybox");
+      data._vertices = skyVertices;
+      data._vertex_buffer = _renderer->createVertexBuffer(commandPool, skyVertices);
+      data._ubos.emplace_back(ubo);
+      data._texture_index = 0;
 
-      vkDestroyCommandPool(m_Renderer->getDevice(), commandPool, nullptr);
+      vkDestroyCommandPool(_renderer->getDevice(), commandPool, nullptr);
 
-      Buffer uniformBuffer = m_Renderer->createUniformBuffers(1);
+      Buffer uniformBuffer = _renderer->createUniformBuffers(1);
       mesh->getUniformBuffers()->emplace_back(uniformBuffer);
 
       mesh->setName("skybox");
@@ -111,7 +111,7 @@ namespace Poulpe
       setPushConstants(mesh);
 
       for (uint32_t i{ 0 }; i < mesh->getUniformBuffers()->size(); i++) {
-        m_Renderer->updateUniformBuffer(mesh->getUniformBuffers()->at(i), &data.m_Ubos);
+        _renderer->updateUniformBuffer(mesh->getUniformBuffers()->at(i), &data._ubos);
       }
 
       createDescriptorSet(mesh);

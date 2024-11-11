@@ -8,6 +8,6 @@ namespace Poulpe
     class Mesh2D : public Mesh
     {
     public:
-        std::vector<Vertex2D> m_Vertices;
+        std::vector<Vertex2D> _vertices;
     };
 }

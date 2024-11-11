@@ -6,22 +6,22 @@ namespace Poulpe
 
     void Grid::createDescriptorSet(Mesh* mesh)
     {
-      Texture const ctex{ m_TextureManager->getTextures()["mpoulpe"] };
+      Texture const ctex{ _texture_manager->getTextures()["mpoulpe"] };
 
       std::vector<VkDescriptorImageInfo> imageInfos{};
       imageInfos.emplace_back(ctex.getSampler(), ctex.getImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
-      auto const pipeline = m_Renderer->getPipeline(mesh->getShaderName());
-      VkDescriptorSet descSet = m_Renderer->createDescriptorSets(pipeline->descPool, { pipeline->descSetLayout }, 1);
+      auto const pipeline = _renderer->getPipeline(mesh->getShaderName());
+      VkDescriptorSet descSet = _renderer->createDescriptorSets(pipeline->descPool, { pipeline->descSetLayout }, 1);
 
-      m_Renderer->updateDescriptorSets(*mesh->getUniformBuffers(), descSet, imageInfos);
+      _renderer->updateDescriptorSets(*mesh->getUniformBuffers(), descSet, imageInfos);
 
       mesh->setDescSet(descSet);
     }
 
     void Grid::setPushConstants(Mesh* mesh)
     {
-        mesh->setApplyPushConstants([](VkCommandBuffer& commandBuffer,
+        mesh->setApplyPushConstants([](VkCommandBuffer& cmd_buffer,
             VkPipelineLayout pipelineLayout,
             Renderer* const renderer,
              Mesh* const meshG) {
@@ -30,7 +30,7 @@ namespace Poulpe
             pushConstants.view = renderer->getCamera()->lookAt();
             pushConstants.viewPos = glm::vec4(0.1f, 50.f, 0.f, 0.f);
 
-            vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(constants), & pushConstants);
+            vkCmdPushConstants(cmd_buffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(constants), & pushConstants);
         });
         mesh->setHasPushConstants();
     }
@@ -49,32 +49,32 @@ namespace Poulpe
           0, 1, 2, 2, 3, 0
       };
 
-      auto commandPool = m_Renderer->createCommandPool();
+      auto commandPool = _renderer->createCommandPool();
 
       UniformBufferObject ubo{};
 
       Data gridData;
-      gridData.m_Textures.emplace_back("grid");
-      gridData.m_TextureIndex = 0;
-      gridData.m_VertexBuffer = m_Renderer->createVertexBuffer(commandPool, vertices);
-      gridData.m_IndicesBuffer = m_Renderer->createIndexBuffer(commandPool, indices);
-      gridData.m_Ubos.emplace_back(ubo);
-      gridData.m_Indices = indices;
-      gridData.m_Vertices = vertices;
+      gridData._textures.emplace_back("grid");
+      gridData._texture_index = 0;
+      gridData._vertex_buffer = _renderer->createVertexBuffer(commandPool, vertices);
+      gridData._indices_buffer = _renderer->createIndexBuffer(commandPool, indices);
+      gridData._ubos.emplace_back(ubo);
+      gridData._Indices = indices;
+      gridData._vertices = vertices;
 
-      vkDestroyCommandPool(m_Renderer->getDevice(), commandPool, nullptr);
+      vkDestroyCommandPool(_renderer->getDevice(), commandPool, nullptr);
 
       mesh->setName("grid");
       mesh->setShaderName("grid");
-      mesh->getUniformBuffers()->emplace_back(m_Renderer->createUniformBuffers(1));
+      mesh->getUniformBuffers()->emplace_back(_renderer->createUniformBuffers(1));
 
       setPushConstants(mesh);
 
       for (uint32_t i{ 0 }; i < mesh->getUniformBuffers()->size(); i++) {
-        //gridData.m_Ubos[i].view = m_Renderer->GetCamera()->LookAt();
-        gridData.m_Ubos[i].projection = m_Renderer->getPerspective();
+        //gridData._ubos[i].view = _renderer->GetCamera()->LookAt();
+        gridData._ubos[i].projection = _renderer->getPerspective();
 
-        m_Renderer->updateUniformBuffer(mesh->getUniformBuffers()->at(i), &gridData.m_Ubos);
+        _renderer->updateUniformBuffer(mesh->getUniformBuffers()->at(i), &gridData._ubos);
       }
 
       createDescriptorSet(mesh);

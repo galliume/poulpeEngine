@@ -11,21 +11,21 @@
 namespace Poulpe
 {
   WinServer::WinServer(APIManager* APIManager):
-    m_APIManager(APIManager)
+    _APIManager(APIManager)
   {
 
   }
 
   WinServer::~WinServer()
   {
-    ::closesocket(m_ServSocket);
-    ::closesocket(m_Socket);
+    ::closesocket(_ServSocket);
+    ::closesocket(_Socket);
     ::WSACleanup();
   }
 
   void WinServer::close()
   {
-    ::closesocket(m_ServSocket);
+    ::closesocket(_ServSocket);
 
     int status = ::WSAGetLastError();
 
@@ -33,19 +33,19 @@ namespace Poulpe
       PLP_ERROR("Error on WinServer close {}", status);
     }
 
-    m_Status = ServerStatus::NOT_RUNNING;
+    _Status = ServerStatus::NOT_RUNNING;
   }
 
   void WinServer::bind(std::string const& port)
   {
-    int status = WSAStartup(MAKEWORD(2, 2), & m_Data);
+    int status = WSAStartup(MAKEWORD(2, 2), & _Data);
 
     if (status != 0 ) {
       PLP_ERROR("WSAStartup failed with error: {}", status);
       WSACleanup();
     }
 
-    PLP_TRACE("WSAStartup: {}", m_Data.szSystemStatus);
+    PLP_TRACE("WSAStartup: {}", _Data.szSystemStatus);
 
     addrinfo hints;
     addrinfo* servInfo{ nullptr }, *serv;
@@ -65,15 +65,15 @@ namespace Poulpe
 
     for (serv = servInfo; serv != nullptr; serv = serv->ai_next) {
       if (serv->ai_family == AF_INET) {
-        m_ServSocket = ::socket(serv->ai_family, serv->ai_socktype, serv->ai_protocol);
-        if (m_ServSocket == static_cast<unsigned long long>(- 1)) {
+        _ServSocket = ::socket(serv->ai_family, serv->ai_socktype, serv->ai_protocol);
+        if (_ServSocket == static_cast<unsigned long long>(- 1)) {
           PLP_WARN("Socket creation failed {}", WSAGetLastError());
           continue;
         }
         break;
       } else if (serv->ai_family == AF_INET6) {
-        m_ServSocket = ::socket(serv->ai_family, serv->ai_socktype, serv->ai_protocol);
-        if (m_ServSocket == static_cast<unsigned long long>(- 1)) {
+        _ServSocket = ::socket(serv->ai_family, serv->ai_socktype, serv->ai_protocol);
+        if (_ServSocket == static_cast<unsigned long long>(- 1)) {
           PLP_WARN("Socket creation failed {}", WSAGetLastError());
           continue;
         }
@@ -81,7 +81,7 @@ namespace Poulpe
       }
     }
 
-    if (m_ServSocket == INVALID_SOCKET) {
+    if (_ServSocket == INVALID_SOCKET) {
       PLP_ERROR("ServerSocket failed with error: {}", ::gai_strerrorA(WSAGetLastError()));
       ::freeaddrinfo(servInfo);
       ::WSACleanup();
@@ -89,7 +89,7 @@ namespace Poulpe
 
     bool option{ true };
     int optionLen = sizeof (bool);
-    setsockopt(m_ServSocket, SOL_SOCKET, SO_REUSEADDR, (char *) & option, optionLen);
+    setsockopt(_ServSocket, SOL_SOCKET, SO_REUSEADDR, (char *) & option, optionLen);
 
     status = WSAGetLastError();
 
@@ -97,13 +97,13 @@ namespace Poulpe
       PLP_ERROR("setsockopt failed {}", gai_strerrorA(WSAGetLastError()));
     }
 
-    ::bind(m_ServSocket, serv->ai_addr, static_cast<int>(serv->ai_addrlen));
+    ::bind(_ServSocket, serv->ai_addr, static_cast<int>(serv->ai_addrlen));
 
     status = WSAGetLastError();
 
     if (status != 0) {
       PLP_ERROR("bind failed with error: {}", gai_strerrorA(status));
-      ::closesocket(m_ServSocket);
+      ::closesocket(_ServSocket);
       ::WSACleanup();
     }
 
@@ -118,12 +118,12 @@ namespace Poulpe
     PLP_TRACE("Connecting to {}", s);
 
     ::freeaddrinfo(servInfo);
-    m_Status = ServerStatus::RUNNING;
+    _Status = ServerStatus::RUNNING;
   }
 
   void WinServer::listen()
   {
-    ::listen(m_ServSocket, 10);
+    ::listen(_ServSocket, 10);
 
     int status = ::WSAGetLastError();
 
@@ -138,13 +138,13 @@ namespace Poulpe
     while (!done) {
       struct sockaddr_storage clientAddr;
       int sinSize = sizeof(clientAddr);
-      SOCKET socket = ::accept(m_ServSocket, (struct sockaddr *)&clientAddr, &sinSize);
+      SOCKET socket = ::accept(_ServSocket, (struct sockaddr *)&clientAddr, &sinSize);
 
       if (socket == INVALID_SOCKET) {
         perror("accept");
 
         PLP_ERROR("ServerSocket can't accept {}", ::gai_strerrorA(WSAGetLastError()));
-        ::closesocket(m_ServSocket);
+        ::closesocket(_ServSocket);
         ::WSACleanup();
       } else {
         auto addr = (struct sockaddr*)&clientAddr;
@@ -159,8 +159,8 @@ namespace Poulpe
         PLP_TRACE("Client connected");
 
         {
-          std::lock_guard guard(m_MutexSockets);
-          m_Socket = socket;
+          std::lock_guard guard(_MutexSockets);
+          _Socket = socket;
         }
         send("Connected to PoulpeEngine!\0");
 
@@ -175,8 +175,8 @@ namespace Poulpe
   void WinServer::send(std::string message)
   {
     {
-      std::lock_guard guard(m_MutexSockets);
-      int status = ::send(m_Socket, message.data(), static_cast<int>(message.size()), 0);
+      std::lock_guard guard(_MutexSockets);
+      int status = ::send(_Socket, message.data(), static_cast<int>(message.size()), 0);
       if (status == -1) {
         int err = WSAGetLastError();
         PLP_ERROR("Can't send data: [{}] {}", err, gai_strerrorA(err));
@@ -188,7 +188,7 @@ namespace Poulpe
   void WinServer::read()
   {
     std::array<pollfd, 1> sockets;
-    sockets[0].fd = m_Socket;
+    sockets[0].fd = _Socket;
     sockets[0].events = POLLIN;
     const int timeout{ 1000 };//1s
     bool hangup{ false };
@@ -214,7 +214,7 @@ namespace Poulpe
           message.clear();
 
           do {
-            recvstatus = ::recv(m_Socket, buffer.data(), size, 0);
+            recvstatus = ::recv(_Socket, buffer.data(), size, 0);
             message.append(buffer.data());
             if (std::strcmp(buffer.data(), "\0") == 0) {
               recvstatus = -1;
@@ -222,7 +222,7 @@ namespace Poulpe
             PLP_WARN("status: {} msg: {}", recvstatus, message);
           } while (recvstatus > 0);
             if (message == "quit") hangup = true;
-            m_APIManager->received(message);
+            _APIManager->received(message);
         } else {
           PLP_WARN("unexpected events poll for socket id: {}", sockets[0].fd);
           perror("send");

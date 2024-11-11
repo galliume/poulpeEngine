@@ -81,13 +81,13 @@ void main()
 
     vec3 normal = normalize(fs_in.fNormal);
 
-    ivec2 texBumMapSize = textureSize(texSampler[5], 0);
+//    ivec2 texBumMapSize = textureSize(texSampler[5], 0);
 
-    if (texBumMapSize.x != 1 && texBumMapSize.y != 1) {
-      vec3 nm = texture(texSampler[5], fs_in.fTexCoord).xyz * 2.0 - vec3(1.0);
-      nm = fs_in.TBN * nm;
-      normal = vec3(normalize(nm));
-    }
+//    if (texBumMapSize.x != 1 && texBumMapSize.y != 1) {
+//      vec3 nm = texture(texSampler[5], fs_in.fTexCoord).xyz * 2.0 - vec3(1.0);
+//      nm = fs_in.TBN * nm;
+//      normal = vec3(normalize(nm));
+//    }
 
     int id = 0;
     //@todo ugly but avoid floating point issues when casting to int
@@ -97,21 +97,21 @@ void main()
       id = 2;
     }
 
-    ivec2 texSize = textureSize(texSampler[id], 0);
+    //ivec2 texSize = textureSize(texSampler[id], 0);
     vec4 texColor;
     
     //should be _plp_empty texture, so discarded or not ?
-    if (texSize.x == 1 && texSize.y == 1) {
-      discard;
-    } else {
+//    if (texSize.x == 1 && texSize.y == 1) {
+//      discard;
+//    } else {
       texColor = texture(texSampler[id], fs_in.fTexCoord);
-    }
+//    }
 
-    float shadowAmbient = 0.0;//1 not in shadow, 0 in shadow
-    shadowAmbient = ShadowCalculation(fs_in.fAmbientLightSpace);
+    float shadowAmbient = 1.0;//1 not in shadow, 0 in shadow
+    //shadowAmbient = ShadowCalculation(fs_in.fAmbientLightSpace);
 
     vec3 viewDir = normalize(fs_in.fViewPos.xyz - fs_in.fPos.xyz);
-    vec3 color = CalcDirLight(texColor, ambientLight, normal, viewDir, shadowAmbient);
+//    vec3 color = CalcDirLight(texColor, ambientLight, normal, viewDir, shadowAmbient);
     
 //    for(int i = 0; i < NR_POINT_LIGHTS; i++) {
 //        color += CalcPointLight(texColor, pointLights[i], normal, fs_in.fPos.xyz, viewDir);
@@ -119,15 +119,15 @@ void main()
 
 //    color += CalcSpotLight(texColor, spotLight, normal, fs_in.fPos.xyz, viewDir, 1.0);
 
-    ivec2 texMaskSize = textureSize(texSampler[3], 0);
-    if (texMaskSize.x != 1 && texMaskSize.y != 1) {
-        vec4 mask = texture(texSampler[3], fs_in.fTexCoord);
-//        fColor = mix(fColor, mask, mask.a);
-        if (mask.r < 0.2) discard;
-    }
-    //if (texColor.a < 0.1) discard;
+//    ivec2 texMaskSize = textureSize(texSampler[3], 0);
+//    if (texMaskSize.x != 1 && texMaskSize.y != 1) {
+//        vec4 mask = texture(texSampler[3], fs_in.fTexCoord);
+////        fColor = mix(fColor, mask, mask.a);
+//        if (mask.r < 0.2) discard;
+//    }
+    if (texColor.a < 0.5) discard;
 
-    fColor = vec4(color, 1.0);
+    fColor = vec4(texColor);
 }
 
 vec3 CalcDirLight(vec4 color, Light dirLight, vec3 normal, vec3 viewDir, float shadow)

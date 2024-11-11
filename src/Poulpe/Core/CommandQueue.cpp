@@ -10,27 +10,27 @@ namespace Poulpe
   void CommandQueue::add(Command& cmd)
   {
     {
-      std::lock_guard<std::mutex> lock(m_Mutex);
+      std::lock_guard<std::mutex> lock(_Mutex);
       std::shared_ptr<Command> cmdToQueue(std::make_shared<Command>(std::move(cmd)));
 
-      if (cmd.getWhenToExecute() == WhenToExecute::PRE_RENDERING) m_PreCmdQueue.push(cmdToQueue);
-      else if (cmd.getWhenToExecute() == WhenToExecute::POST_RENDERING) m_PostCmdQueue.push(cmdToQueue);
+      if (cmd.getWhenToExecute() == WhenToExecute::PRE_RENDERING) _PreCmdQueue.push(cmdToQueue);
+      else if (cmd.getWhenToExecute() == WhenToExecute::POST_RENDERING) _PostCmdQueue.push(cmdToQueue);
     }
   }
 
   void CommandQueue::execPostRequest()
   {
-    if (m_PostCmdQueue.empty()) return;
+    if (_PostCmdQueue.empty()) return;
     
     std::jthread command([this]() {
       {
-        std::lock_guard guard(m_Mutex);
+        std::lock_guard guard(_Mutex);
 
-        while (!m_PostCmdQueue.empty())
+        while (!_PostCmdQueue.empty())
         {
-          std::shared_ptr<Command> cmd = m_PostCmdQueue.front();
+          std::shared_ptr<Command> cmd = _PostCmdQueue.front();
           cmd->execRequest();
-          m_PostCmdQueue.pop();
+          _PostCmdQueue.pop();
         }
       }
     });
@@ -39,17 +39,17 @@ namespace Poulpe
 
   void CommandQueue::execPreRequest()
   {
-    if (m_PreCmdQueue.empty()) return;
+    if (_PreCmdQueue.empty()) return;
 
     std::jthread command([this]() {
       {
-        std::lock_guard guard(m_Mutex);
+        std::lock_guard guard(_Mutex);
 
-        while (!m_PreCmdQueue.empty())
+        while (!_PreCmdQueue.empty())
         {
-          std::shared_ptr<Command> cmd = m_PreCmdQueue.front();
+          std::shared_ptr<Command> cmd = _PreCmdQueue.front();
           cmd->execRequest();
-          m_PreCmdQueue.pop();
+          _PreCmdQueue.pop();
         }
       }
     });

@@ -20,22 +20,22 @@ namespace Poulpe
 
     void bind(std::string const& port);
     void close();
-    inline ServerStatus getStatus() { return m_Status; }
+    inline ServerStatus getStatus() { return _Status; }
     void listen();
     void read();
     void send(std::string message);
 
   private:
-    SOCKET m_ServSocket;
-    WSADATA m_Data;
-    //sockaddr_in6 m_SocketAddr;
+    SOCKET _ServSocket;
+    WSADATA _Data;
+    //sockaddr_in6 _SocketAddr;
 
-    SOCKET m_Socket{ 0 };
+    SOCKET _Socket{ 0 };
 
-    std::mutex m_MutexSockets;
+    std::mutex _MutexSockets;
 
-    ServerStatus m_Status{ ServerStatus::NOT_RUNNING };
-    APIManager* m_APIManager;
+    ServerStatus _Status{ ServerStatus::NOT_RUNNING };
+    APIManager* _APIManager;
   };
 }
 

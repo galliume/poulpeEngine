@@ -17,29 +17,29 @@
 
 namespace Poulpe
 {
-  EntityManager::EntityManager(ComponentManager* const componentManager,
-    LightManager* const lightManager,
-    TextureManager* const textureManager)
-    : m_ComponentManager(componentManager),
-    m_LightManager(lightManager),
-    m_TextureManager(textureManager)
+  EntityManager::EntityManager(ComponentManager* const component_manager,
+    LightManager* const light_manager,
+    TextureManager* const texture_manager)
+    : _component_manager(component_manager),
+    _light_manager(light_manager),
+    _texture_manager(texture_manager)
   {
     initWorldGraph();
   }
 
   void EntityManager::clear()
   {
-    //m_Entities.clear();
-    m_HUD.clear();
-    //m_LoadedEntities.clear();
+    //_Entities.clear();
+    _HUD.clear();
+    //_LoadedEntities.clear();
   }
 
   std::function<void()> EntityManager::load(nlohmann::json const& levelConfig)
   {
-    m_LevelConfig = levelConfig;
+    _LevelConfig = levelConfig;
 
     return [this]() {
-      std::ranges::for_each(m_LevelConfig["entities"].items(), [&](auto const& entityConf) {
+      std::ranges::for_each(_LevelConfig["entities"].items(), [&](auto const& entityConf) {
 
         auto const& key = entityConf.key();
         auto const& data = entityConf.value();
@@ -53,24 +53,24 @@ namespace Poulpe
         }
       });
 
-      m_LoadingDone.store(true);
+      _LoadingDone.store(true);
     };
   }
 
   EntityNode * EntityManager::getWorldNode()
   {
     {
-      std::lock_guard guard(m_MutexWorldNode);
-      return m_WorldNode.get();
+      std::lock_guard guard(_MutexWorldNode);
+      return _WorldNode.get();
     }
   }
 
   void EntityManager::initMeshes(std::string const& name, nlohmann::json const data)
   {
     //std::vector<Mesh*> meshes{};
-    //if (m_ObjLoaded.contains(path)) return meshes;
+    //if (_ObjLoaded.contains(path)) return meshes;
 
-    //m_ObjLoaded.insert(path);
+    //_ObjLoaded.insert(path);
 
     //@todo not reload an already loaded obj
     Entity* rootMeshEntity = new Entity();
@@ -78,7 +78,7 @@ namespace Poulpe
     rootMeshEntity->setVisible(false);
 
     auto const& path = data["mesh"].template get<std::string>();
-    auto const& inverseTextureY = data["inverseTextureY"].template get<bool>();
+    auto const inverse_texture_y = data["inverseTextureY"].template get<bool>();
 
     auto callback = [this, data, path, rootMeshEntity](
       PlpMeshData const _data,
@@ -214,21 +214,21 @@ namespace Poulpe
       }
 
       Data data{};
-      data.m_Name = _data.name + '_' + nameTexture;
-      data.m_Textures.emplace_back(nameTexture);
-      data.m_Textures.emplace_back(name2Texture);
-      data.m_Textures.emplace_back(name3Texture);
-      data.m_TextureSpecularMap = nameTextureSpecularMap;
-      data.m_TextureBumpMap = bumpTexname;
-      data.m_TextureAlpha = alphaTexname;
-      data.m_Vertices = _data.vertices;
-      data.m_Indices = _data.indices;
-      data.m_OriginPos = entityOptions.pos;
-      data.m_CurrentPos = entityOptions.pos;
-      data.m_OriginScale = entityOptions.scale;
-      data.m_CurrentScale = entityOptions.scale;
-      data.m_OriginRotation = entityOptions.rotation;
-      data.m_CurrentRotation = entityOptions.rotation;
+      data._name = _data.name + '_' + nameTexture;
+      data._textures.emplace_back(nameTexture);
+      data._textures.emplace_back(name2Texture);
+      data._textures.emplace_back(name3Texture);
+      data._specular_map = nameTextureSpecularMap;
+      data._bump_map = bumpTexname;
+      data._alpha = alphaTexname;
+      data._vertices = _data.vertices;
+      data._Indices = _data.indices;
+      data._origin_pos = entityOptions.pos;
+      data._current_pos = entityOptions.pos;
+      data._origin_scale = entityOptions.scale;
+      data._current_scale = entityOptions.scale;
+      data._origin_rotation = entityOptions.rotation;
+      data._current_rotation = entityOptions.rotation;
 
       UniformBufferObject ubo{};
       ubo.model = glm::mat4(1.0f);
@@ -243,23 +243,23 @@ namespace Poulpe
       ubo.texSize = glm::vec2(0.0);
 
       //ubo.view = glm::mat4(1.0f);
-      data.m_Ubos.emplace_back(ubo);
+      data._ubos.emplace_back(ubo);
 
       glm::vec3 center = glm::vec3(0.0);
       glm::vec3 size = glm::vec3(0.0);
 
-      //if (data.m_Vertices.size() > 0) {
-      //  float xMax = data.m_Vertices.at(0).pos.x;
-      //  float yMax = data.m_Vertices.at(0).pos.y;
-      //  float zMax = data.m_Vertices.at(0).pos.z;
+      //if (data._vertices.size() > 0) {
+      //  float xMax = data._vertices.at(0).pos.x;
+      //  float yMax = data._vertices.at(0).pos.y;
+      //  float zMax = data._vertices.at(0).pos.z;
 
       //  float xMin = xMax;
       //  float yMin = yMax;
       //  float zMin = zMax;
 
-      //  for (size_t j = 0; j < data.m_Vertices.size(); j++) {
+      //  for (size_t j = 0; j < data._vertices.size(); j++) {
 
-      //    glm::vec3 vertex = glm::vec4(data.m_Vertices.at(j).pos, 1.0f);
+      //    glm::vec3 vertex = glm::vec4(data._vertices.at(j).pos, 1.0f);
 
       //    float x = vertex.x;
       //    float y = vertex.y;
@@ -278,7 +278,7 @@ namespace Poulpe
       //}
 
       /*BBox* box = new BBox();
-      box->position = data.m_Ubos.at(0).model;
+      box->position = data._ubos.at(0).model;
       box->center = center;
       box->size = size;
       box->mesh = std::make_unique<Mesh>();
@@ -299,40 +299,40 @@ namespace Poulpe
         //@todo temp until lua scripting
         for (auto& anim : entityOptions.animationScripts) {
           auto animationScript = std::make_unique<AnimationScript>(anim);
-          animationScript->init(m_Renderer, nullptr, nullptr);
-          m_ComponentManager->add<AnimationComponent>(entity->getID(), std::move(animationScript));
+          animationScript->init(_renderer, nullptr, nullptr);
+          _component_manager->add<AnimationComponent>(entity->getID(), std::move(animationScript));
         }
 
         if (!animations.empty()) {
           auto boneAnimationScript = std::make_unique<BoneAnimationScript>(animations, positions, rotations, scales);
-          m_ComponentManager->add<BoneAnimationComponent>(
+          _component_manager->add<BoneAnimationComponent>(
             entity->getID(), std::move(boneAnimationScript));
         }
       }
       auto basicRdrImpl = RendererFactory::create<Basic>();
 
-      basicRdrImpl->init(m_Renderer, m_TextureManager, m_LightManager);
+      basicRdrImpl->init(_renderer, _texture_manager, _light_manager);
       auto const deltaTime = std::chrono::duration<float, std::milli>(0);
       (*basicRdrImpl)(deltaTime, mesh.get());
 
-      m_ComponentManager->add<RenderComponent>(entity->getID(), std::move(basicRdrImpl));
-      m_ComponentManager->add<MeshComponent>(entity->getID(), std::move(mesh));
+      _component_manager->add<RenderComponent>(entity->getID(), std::move(basicRdrImpl));
+      _component_manager->add<MeshComponent>(entity->getID(), std::move(mesh));
       {
-        std::shared_lock guard(m_SharedMutex);
+        std::shared_lock guard(_SharedMutex);
         auto* entityNode = rootMeshEntityNode->addChild(new EntityNode(entity));
-        m_WorldNode->addChild(rootMeshEntityNode);
-        m_Renderer->addEntity(entityNode->getEntity());
+        _WorldNode->addChild(rootMeshEntityNode);
+        _renderer->addEntity(entityNode->getEntity());
       }
     };
-    AssimpLoader::loadData(path, inverseTextureY, callback);
+    AssimpLoader::loadData(path, inverse_texture_y, callback);
   }
 
   void EntityManager::initWorldGraph()
   {
-    Entity* m_World = new Entity();
-    m_World->setName("_PLPWorld");
-    m_World->setVisible(false);
+    Entity* _World = new Entity();
+    _World->setName("_PLPWorld");
+    _World->setVisible(false);
 
-    m_WorldNode = std::make_unique<EntityNode>(m_World);
+    _WorldNode = std::make_unique<EntityNode>(_World);
   }
 }

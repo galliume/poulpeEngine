@@ -12,17 +12,17 @@ namespace Poulpe
   {
   public:
 
-    ThreadPool() : m_Done(false), m_Joiner(m_Threads)
+    ThreadPool() : _Done(false), _Joiner(_Threads)
     {
       unsigned const threadCount = std::thread::hardware_concurrency();
 
       try {
         for (unsigned i{ 0 }; i < threadCount; ++i) {
-          m_Threads.emplace_back(std::thread(&ThreadPool::WorkerThreads, this));
+          _Threads.emplace_back(std::thread(&ThreadPool::WorkerThreads, this));
         }
       }
       catch (...) {
-        m_Done = true;
+        _Done = true;
 
         throw;
       }
@@ -31,26 +31,26 @@ namespace Poulpe
     template<typename FunctionType>
     void submit(FunctionType f)
     {
-      m_WorkQueue.push(std::function<void()>(f));
+      _WorkQueue.push(std::function<void()>(f));
     }
 
     bool isPoolEmpty(std::string_view poolName)
     {
-      //return (m_WorkQueue.contains(poolName)) ? m_WorkQueue[poolName].empty() : true;
+      //return (_WorkQueue.contains(poolName)) ? _WorkQueue[poolName].empty() : true;
       return false;
     }
 
     ~ThreadPool()
     {
-      m_Done = true;
+      _Done = true;
     }
 
   private:
     void WorkerThreads()
     {
-      while (!m_Done) {
+      while (!_Done) {
         //@todo add priority order
-        auto task{ m_WorkQueue.pop() };
+        auto task{ _WorkQueue.pop() };
 
         if (task) {
           (*task.get())();
@@ -61,10 +61,10 @@ namespace Poulpe
     }
 
   private:
-      std::atomic_bool m_Done;
-      //std::unordered_map<std::string_view, ThreadSafeQueue<std::function<void()>>> m_WorkQueue;
-      LockFreeStack<std::function<void()>> m_WorkQueue;
-      std::vector<std::thread> m_Threads;
-      joinThreads m_Joiner;
+      std::atomic_bool _Done;
+      //std::unordered_map<std::string_view, ThreadSafeQueue<std::function<void()>>> _WorkQueue;
+      LockFreeStack<std::function<void()>> _WorkQueue;
+      std::vector<std::thread> _Threads;
+      joinThreads _Joiner;
   };
 }

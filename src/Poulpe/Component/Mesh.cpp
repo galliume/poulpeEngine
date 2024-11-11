@@ -4,6 +4,6 @@ namespace Poulpe
 {
     void Mesh::addUbos(const std::vector<UniformBufferObject>& ubos)
     {
-        m_Data.m_Ubos.insert(m_Data.m_Ubos.end(), ubos.begin(), ubos.end());
+        _Data._ubos.insert(_Data._ubos.end(), ubos.begin(), ubos.end());
     }
 }

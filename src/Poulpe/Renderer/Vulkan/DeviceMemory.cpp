@@ -8,49 +8,49 @@ namespace Poulpe
         VkDeviceSize maxSize,
         unsigned int index,
         VkDeviceSize alignment
-    ) : m_Index(index),
-        m_Alignment(alignment),
-        m_MemoryType(memoryType),
-        m_Device(device)
+    ) : _Index(index),
+        _Alignment(alignment),
+        _MemoryType(memoryType),
+        _Device(device)
     {
-        if (!m_Memory) {
-            m_Memory = std::make_unique<VkDeviceMemory>();
-            m_MaxSize = maxSize;
+        if (!_Memory) {
+            _Memory = std::make_unique<VkDeviceMemory>();
+            _MaxSize = maxSize;
             allocateToMemory();
         }
     }
 
     VkDeviceMemory* DeviceMemory::getMemory()
     {
-        if (!m_Memory) {
-            m_Memory = std::make_unique<VkDeviceMemory>();
-            m_Offset = 0;
-            m_IsFull = false;
-            m_IsAllocated = false;
+        if (!_Memory) {
+            _Memory = std::make_unique<VkDeviceMemory>();
+            _Offset = 0;
+            _IsFull = false;
+            _IsAllocated = false;
             allocateToMemory();
         }
 
-        return m_Memory.get();
+        return _Memory.get();
     }
 
     void DeviceMemory::allocateToMemory()
     {
       {
-        std::lock_guard guard(m_MutexMemory);
-        if (!m_IsAllocated) {
+        std::lock_guard guard(_MutexMemory);
+        if (!_IsAllocated) {
           VkMemoryAllocateInfo allocInfo{};
           allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-          allocInfo.allocationSize = m_MaxSize;
-          allocInfo.memoryTypeIndex = m_MemoryType;
+          allocInfo.allocationSize = _MaxSize;
+          allocInfo.memoryTypeIndex = _MemoryType;
 
-          VkResult result = vkAllocateMemory(m_Device, &allocInfo, nullptr, m_Memory.get());
+          VkResult result = vkAllocateMemory(_Device, &allocInfo, nullptr, _Memory.get());
 
           if (VK_SUCCESS != result) {
             PLP_FATAL("error while allocating memory {}", result);
             throw std::runtime_error("failed to allocate buffer memory!");
           }
 
-          m_IsAllocated = true;
+          _IsAllocated = true;
         }
         else {
           PLP_WARN("trying to re allocate memory already allocated.");
@@ -61,60 +61,60 @@ namespace Poulpe
     void DeviceMemory::bindBufferToMemory(VkBuffer & buffer, VkDeviceSize size)
     {
       {
-        std::lock_guard guard(m_MutexMemory);
-        VkResult result = vkBindBufferMemory(m_Device, buffer, *m_Memory, m_Offset);
+        std::lock_guard guard(_MutexMemory);
+        VkResult result = vkBindBufferMemory(_Device, buffer, *_Memory, _Offset);
 
         if (VK_SUCCESS != result) {
           PLP_ERROR("BindBuffer memory failed in bindBufferToMemory");
         }
 
-        m_Offset += size;
+        _Offset += size;
 
-        if (m_Offset >= m_MaxSize) {
-          m_IsFull = true;
+        if (_Offset >= _MaxSize) {
+          _IsFull = true;
         }
 
-        m_Buffer.emplace_back(buffer);
+        _Buffer.emplace_back(buffer);
       }
     }
 
     void DeviceMemory::bindImageToMemory(VkImage & image, VkDeviceSize size)
     {
       {
-        std::lock_guard guard(m_MutexMemory);
-        vkBindImageMemory(m_Device, image, *m_Memory, m_Offset);
+        std::lock_guard guard(_MutexMemory);
+        vkBindImageMemory(_Device, image, *_Memory, _Offset);
         
-        m_Offset += size;// ((size / m_Alignment) + 1)* m_Alignment;
+        _Offset += size;// ((size / _Alignment) + 1)* _Alignment;
 
-        if (m_Offset >= m_MaxSize) {
-            m_IsFull = true;
+        if (_Offset >= _MaxSize) {
+            _IsFull = true;
         }
       }
     }
 
     bool DeviceMemory::hasEnoughSpaceLeft(VkDeviceSize size)
     { 
-        bool hasEnoughSpaceLeft = m_MaxSize - m_Offset >= size;
-        if (!hasEnoughSpaceLeft) m_IsFull = true;
+        bool hasEnoughSpaceLeft = _MaxSize - _Offset >= size;
+        if (!hasEnoughSpaceLeft) _IsFull = true;
 
         return hasEnoughSpaceLeft;
     }
 
     void DeviceMemory::clear()
     {
-        for (auto buffer : m_Buffer) {
+        for (auto buffer : _Buffer) {
             if (VK_NULL_HANDLE != buffer)
             {
-                vkDestroyBuffer(m_Device, buffer, nullptr);
+                vkDestroyBuffer(_Device, buffer, nullptr);
             }
         }
 
-        vkFreeMemory(m_Device, *m_Memory.get(), nullptr);
+        vkFreeMemory(_Device, *_Memory.get(), nullptr);
 
-        m_MaxSize = 0;
-        m_Offset = 0;
-        m_IsFull = false;
+        _MaxSize = 0;
+        _Offset = 0;
+        _IsFull = false;
 
-        m_Memory.reset();
+        _Memory.reset();
     }
 }

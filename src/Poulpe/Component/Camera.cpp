@@ -4,46 +4,46 @@ namespace Poulpe
 {
   void Camera::init()
   {
-    m_Pos = glm::vec3(-0.2f, 0.2f, 0.0f);
-    m_Target = glm::vec3(0.0f, 0.0f, 0.0f);
-    m_Direction = glm::normalize(m_Pos - m_Target);
+    _Pos = glm::vec3(-0.2f, 0.2f, 0.0f);
+    _Target = glm::vec3(0.0f, 0.0f, 0.0f);
+    _Direction = glm::normalize(_Pos - _Target);
 
-    m_CameraUp = glm::vec3(0.0f, 1.0f,  0.0f);
-    m_CameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
+    _CameraUp = glm::vec3(0.0f, 1.0f,  0.0f);
+    _CameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
 
-    m_View = glm::lookAt(m_Pos, m_Pos + m_CameraFront, m_CameraUp);
+    _View = glm::lookAt(_Pos, _Pos + _CameraFront, _CameraUp);
   }
 
   void Camera::backward()
   {
     //auto direction = mat4_backward();
-    //m_Pos -= direction * (m_Speed * m_DeltaTime.count());
-    m_Pos -= m_CameraFront * m_Speed;
+    //_Pos -= direction * (_Speed * _DeltaTime.count());
+    _Pos -= _CameraFront * _Speed;
   }
 
   void Camera::down()
   {
-    m_Pos += m_CameraUp * m_Speed;
+    _Pos += _CameraUp * _Speed;
   }
 
   void Camera::forward()
   {
-    m_Pos += m_CameraFront * m_Speed;
+    _Pos += _CameraFront * _Speed;
   }
 
   void Camera::left()
   {
-    m_Pos -= glm::normalize(glm::cross(m_CameraFront, m_CameraUp)) * m_Speed;
+    _Pos -= glm::normalize(glm::cross(_CameraFront, _CameraUp)) * _Speed;
   }
 
   void Camera::right()
   {
-    m_Pos += glm::normalize(glm::cross(m_CameraFront, m_CameraUp)) * m_Speed;
+    _Pos += glm::normalize(glm::cross(_CameraFront, _CameraUp)) * _Speed;
   }
 
   void Camera::up()
   {
-    m_Pos -= m_CameraUp * m_Speed;
+    _Pos -= _CameraUp * _Speed;
   }
 
   /**
@@ -115,80 +115,80 @@ namespace Poulpe
 
   glm::mat4 Camera::lookAt()
   {
-    m_View = glm::lookAt(m_Pos, m_Pos + m_CameraFront, m_CameraUp);
-    return m_View;
+    _View = glm::lookAt(_Pos, _Pos + _CameraFront, _CameraUp);
+    return _View;
   }
 
   void Camera::updateSpeed(std::chrono::duration<float> deltaTime)
   {
-    m_Speed = m_velocity * deltaTime.count();
+    _Speed = _velocity * deltaTime.count();
   }
 
   void Camera::updatePos(double xoffset, double yoffset)
   {
-    m_Yaw += static_cast<float>(xoffset);
-    m_Pitch += static_cast<float>(yoffset);
+    _Yaw += static_cast<float>(xoffset);
+    _Pitch += static_cast<float>(yoffset);
 
-    if (m_Pitch > 89.0f) {
-        m_Pitch = 89.0f;
+    if (_Pitch > 89.0f) {
+        _Pitch = 89.0f;
     }
-    if (m_Pitch < -89.0f) {
-        m_Pitch = -89.0f;
+    if (_Pitch < -89.0f) {
+        _Pitch = -89.0f;
     }
 
     glm::vec3 direction{};
-    direction.x = static_cast<float>(cos(glm::radians(m_Yaw)) * cos(glm::radians(m_Pitch)));
-    direction.y = static_cast<float>(sin(glm::radians(m_Pitch)));
-    direction.z = static_cast<float>(sin(glm::radians(m_Yaw)) * cos(glm::radians(m_Pitch)));
-    m_CameraFront = glm::normalize(direction);
+    direction.x = static_cast<float>(cos(glm::radians(_Yaw)) * cos(glm::radians(_Pitch)));
+    direction.y = static_cast<float>(sin(glm::radians(_Pitch)));
+    direction.z = static_cast<float>(sin(glm::radians(_Yaw)) * cos(glm::radians(_Pitch)));
+    _CameraFront = glm::normalize(direction);
   }
 
   glm::vec3 Camera::mat4_backward()
   {
     glm::vec3 vec;
-    vec.x = m_View[2][0];
-    vec.y = m_View[2][1];
-    vec.y = m_View[2][2];
+    vec.x = _View[2][0];
+    vec.y = _View[2][1];
+    vec.y = _View[2][2];
     return vec;
   }
   glm::vec3 Camera::mat4_down()
   {
     glm::vec3 vec;
-    vec.x = -m_View[1][0];
-    vec.y = -m_View[1][1];
-    vec.y = -m_View[1][2];
+    vec.x = -_View[1][0];
+    vec.y = -_View[1][1];
+    vec.y = -_View[1][2];
     return vec;
   }
   glm::vec3 Camera::mat4_forward()
   {
     glm::vec3 vec;
-    vec.x = -m_View[2][0];
-    vec.y = -m_View[2][1];
-    vec.y = -m_View[2][2];
+    vec.x = -_View[2][0];
+    vec.y = -_View[2][1];
+    vec.y = -_View[2][2];
     return vec;
   }
   glm::vec3 Camera::mat4_left()
   {
     glm::vec3 vec;
-    vec.x = -m_View[2][0];
-    vec.y = -m_View[2][1];
-    vec.y = -m_View[2][2];
+    vec.x = -_View[2][0];
+    vec.y = -_View[2][1];
+    vec.y = -_View[2][2];
     return vec;
   }
   glm::vec3 Camera::mat4_right()
   {
     glm::vec3 vec;
-    vec.x = m_View[2][0];
-    vec.y = m_View[2][1];
-    vec.y = m_View[2][2];
+    vec.x = _View[2][0];
+    vec.y = _View[2][1];
+    vec.y = _View[2][2];
     return vec;
   }
   glm::vec3 Camera::mat4_up()
   {
     glm::vec3 vec;
-    vec.x = m_View[0][0];
-    vec.y = m_View[0][1];
-    vec.y = m_View[0][2];
+    vec.x = _View[0][0];
+    vec.y = _View[0][1];
+    vec.y = _View[0][2];
     return vec;
   }
 }

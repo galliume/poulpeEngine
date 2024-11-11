@@ -8,11 +8,11 @@ namespace Poulpe
   {
   public:
     Window() = default;
-    //m_Window: delete is done in Application.cpp with glfwFunction
+    //_window: delete is done in Application.cpp with glfwFunction
 
-    inline GLFWwindow* get() const { return m_Window; }
+    inline GLFWwindow* get() const { return _window; }
 
-    inline void setVSync(bool active) { m_ActiveVSync = active; }
+    inline void setVSync(bool active) { _ActiveVSync = active; }
 
     void hide();
     void init(std::string_view windowTitle);
@@ -20,10 +20,10 @@ namespace Poulpe
     void quit();
     void wait();
 
-    static bool m_FramebufferResized;
+    static bool _FramebufferResized;
 
   private:
-    bool m_ActiveVSync = true;
-    GLFWwindow* m_Window = nullptr;
+    bool _ActiveVSync = true;
+    GLFWwindow* _window = nullptr;
   };
 }

@@ -18,7 +18,7 @@
         "DEBUG_BUILD_TYPE",
         "DEBUG_CMAKE_C_FLAGS",
         "DEBUG_CMAKE_CXX_FLAGS"
-      ] 
+      ]
     },
     {
       "name": "windows-release",

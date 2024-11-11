@@ -110,26 +110,26 @@ namespace Poulpe
   };
 
   struct Data {
-    std::string m_Name;
-    std::vector<std::string> m_Textures;
-    std::string m_TextureSpecularMap;
-    std::string m_TextureBumpMap;
-    std::string m_TextureNormalMap;
-    std::string m_TextureAlpha;
-    std::vector<Vertex> m_Vertices;
-    std::vector<uint32_t> m_Indices;
-    std::vector<UniformBufferObject> m_Ubos;
-    std::vector<uint32_t> m_UbosOffset;
-    Buffer m_VertexBuffer { nullptr, nullptr, 0, 0 };
-    Buffer m_IndicesBuffer { nullptr, nullptr, 0, 0 };
-    uint32_t m_TextureIndex { 0 };
-    glm::vec3 m_OriginPos;
-    glm::vec3 m_OriginScale;
-    glm::vec3 m_OriginRotation;
-    glm::vec3 m_CurrentPos;
-    glm::vec3 m_CurrentRotation;
-    glm::vec3 m_CurrentScale;
-    glm::vec3 tangeant;
+    std::string _name;
+    std::vector<std::string> _textures;
+    std::string _specular_map;
+    std::string _bump_map;
+    std::string _normal_map;
+    std::string _alpha;
+    std::vector<Vertex> _vertices;
+    std::vector<uint32_t> _Indices;
+    std::vector<UniformBufferObject> _ubos;
+    std::vector<uint32_t> _ubos_offset;
+    Buffer _vertex_buffer { nullptr, nullptr, 0, 0 };
+    Buffer _indices_buffer { nullptr, nullptr, 0, 0 };
+    uint32_t _texture_index { 0 };
+    glm::vec3 _origin_pos;
+    glm::vec3 _origin_scale;
+    glm::vec3 _origin_rotation;
+    glm::vec3 _current_pos;
+    glm::vec3 _current_rotation;
+    glm::vec3 _current_scale;
+    glm::vec3 _tangeant;
   };
 
   //struct BBox

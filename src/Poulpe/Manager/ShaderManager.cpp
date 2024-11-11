@@ -9,7 +9,7 @@ namespace Poulpe
 {
   ShaderManager::ShaderManager()
   {
-    m_Shaders = std::make_unique<VulkanShaders>();
+    _Shaders = std::make_unique<VulkanShaders>();
   }
 
   void ShaderManager::addShader(std::string const& name, std::string const& vertPath, std::string const& fragPath)
@@ -29,26 +29,26 @@ namespace Poulpe
     auto vertShaderCode = Tools::readFile(vertPath);
     auto fragShaderCode = Tools::readFile(fragPath);
 
-    VkShaderModule vertexShaderModule = m_Renderer->createShaderModule(vertShaderCode);
-    VkShaderModule fragShaderModule = m_Renderer->createShaderModule(fragShaderCode);
+    VkShaderModule vertexShaderModule = _renderer->createShaderModule(vertShaderCode);
+    VkShaderModule fragShaderModule = _renderer->createShaderModule(fragShaderCode);
 
-    m_Shaders->shaders[name] = { vertexShaderModule, fragShaderModule };
+    _Shaders->shaders[name] = { vertexShaderModule, fragShaderModule };
 
     createGraphicPipeline(name);
   }
 
   void ShaderManager::clear()
   {
-    m_Shaders->shaders.clear();
-    m_LoadingDone = false;
+    _Shaders->shaders.clear();
+    _LoadingDone = false;
   }
 
   std::function<void(std::latch& count_down)> ShaderManager::load(nlohmann::json config)
   {
-    m_Config = config;
+    _Config = config;
 
     return [this](std::latch& count_down) {
-      for (auto & shader : m_Config["shader"].items()) {
+      for (auto & shader : _Config["shader"].items()) {
 
         auto key = static_cast<std::string>(shader.key());
         auto data = shader.value();
@@ -56,7 +56,7 @@ namespace Poulpe
         addShader(key, data["vert"], data["frag"]);
       }
       count_down.count_down();
-      m_LoadingDone = true;
+      _LoadingDone = true;
     };
   }
 
@@ -141,7 +141,7 @@ namespace Poulpe
       throw std::runtime_error("unknown descSetLayoutType");
     }
 
-    return m_Renderer->createDescriptorSetLayout(bindings);
+    return _renderer->createDescriptorSetLayout(bindings);
   }
 
   void ShaderManager::createGraphicPipeline(std::string const & shaderName)
@@ -181,9 +181,9 @@ namespace Poulpe
       vkPc.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
       vkPcs.emplace_back(vkPc);
 
-      pipelineLayout = m_Renderer->createPipelineLayout(dSetLayout, vkPcs);
+      pipelineLayout = _renderer->createPipelineLayout(dSetLayout, vkPcs);
 
-      graphicPipeline = m_Renderer->createGraphicsPipeline(
+      graphicPipeline = _renderer->createGraphicsPipeline(
         pipelineLayout,
         shaderName,
         shaders,
@@ -205,9 +205,9 @@ namespace Poulpe
       vkPc.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
       vkPcs.emplace_back(vkPc);
 
-      pipelineLayout = m_Renderer->createPipelineLayout(dSetLayout, vkPcs);
+      pipelineLayout = _renderer->createPipelineLayout(dSetLayout, vkPcs);
 
-      graphicPipeline = m_Renderer->createGraphicsPipeline(
+      graphicPipeline = _renderer->createGraphicsPipeline(
         pipelineLayout,
         shaderName,
         shaders,
@@ -246,9 +246,9 @@ namespace Poulpe
 
       vkPcs.emplace_back(vkPc);
       std::vector<VkDescriptorSetLayout> dSetLayout = { descSetLayout };
-      pipelineLayout = m_Renderer->createPipelineLayout(dSetLayout, vkPcs);
+      pipelineLayout = _renderer->createPipelineLayout(dSetLayout, vkPcs);
         
-      graphicPipeline = m_Renderer->createGraphicsPipeline(
+      graphicPipeline = _renderer->createGraphicsPipeline(
         pipelineLayout,
         shaderName,
         shaders,
@@ -260,7 +260,7 @@ namespace Poulpe
         hasDynamicDepthBias);
     }
     
-    auto descriptorPool = m_Renderer->createDescriptorPool(poolSizes, 10000);
+    auto descriptorPool = _renderer->createDescriptorPool(poolSizes, 10000);
 
     VulkanPipeline pipeline{};
     pipeline.pipeline = graphicPipeline;
@@ -270,9 +270,9 @@ namespace Poulpe
     pipeline.shaders = shaders;
 
     if (shaderName == "shadowMap" || shaderName == "shadowMapSpot") {
-      pipeline.descSet = m_Renderer->createDescriptorSets(pipeline.descPool, { pipeline.descSetLayout }, 1);
+      pipeline.descSet = _renderer->createDescriptorSets(pipeline.descPool, { pipeline.descSetLayout }, 1);
     }
-    m_Renderer->addPipeline(shaderName, pipeline);
+    _renderer->addPipeline(shaderName, pipeline);
   }
 
   std::vector<VkPipelineShaderStageCreateInfo> ShaderManager::getShadersInfo(std::string const & shaderName, bool offscreen)
@@ -284,7 +284,7 @@ namespace Poulpe
     VkPipelineShaderStageCreateInfo vertShaderStageInfo{};
     vertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
     vertShaderStageInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
-    vertShaderStageInfo.module = m_Shaders->shaders[shaderName][0];
+    vertShaderStageInfo.module = _Shaders->shaders[shaderName][0];
     vertShaderStageInfo.pName = "main";
     shadersStageInfos.emplace_back(vertShaderStageInfo);
 
@@ -292,7 +292,7 @@ namespace Poulpe
       VkPipelineShaderStageCreateInfo fragShaderStageInfo{};
       fragShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
       fragShaderStageInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
-      fragShaderStageInfo.module = m_Shaders->shaders[shaderName][1];
+      fragShaderStageInfo.module = _Shaders->shaders[shaderName][1];
       fragShaderStageInfo.pName = "main";
       shadersStageInfos.emplace_back(fragShaderStageInfo);
     }

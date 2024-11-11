@@ -31,22 +31,22 @@ namespace Poulpe
       newComponent->init(std::move(componentImpl));
       newComponent->setOwner(entityID);
 
-      m_ComponentTypeMap[&typeid(T)].emplace_back(std::move(newComponent));
-      m_ComponentsEntityMap[entityID].emplace_back(&typeid(T));
+      _ComponentTypeMap[&typeid(T)].emplace_back(std::move(newComponent));
+      _ComponentsEntityMap[entityID].emplace_back(&typeid(T));
     }
 
     template <typename T>
     T* get(IDType entityID) {
-      auto it = std::ranges::find_if(m_ComponentTypeMap[&typeid(T)], [&entityID](auto& component) {
+      auto it = std::ranges::find_if(_ComponentTypeMap[&typeid(T)], [&entityID](auto& component) {
         if (auto ptr = std::get_if<std::unique_ptr<T>>(&component)) {
-          if (ptr != nullptr) {
+          if (ptr) {
             return (*ptr)->getOwner() == entityID;
           }
         }
         return false;
       });
       
-      if (it != m_ComponentTypeMap[&typeid(T)].end()) {
+      if (it != _ComponentTypeMap[&typeid(T)].end()) {
         if (auto ptr = std::get_if<std::unique_ptr<T>>(&*it)) {
             return ptr->get();
         }
@@ -54,11 +54,11 @@ namespace Poulpe
       return nullptr;
     }
 
-    std::vector<const std::type_info*> getEntityComponents(IDType entityID) { return m_ComponentsEntityMap[entityID]; }
+    std::vector<const std::type_info*> getEntityComponents(IDType entityID) { return _ComponentsEntityMap[entityID]; }
     void clear();
 
   private:
-    std::unordered_map<const std::type_info*, std::vector<Components>> m_ComponentTypeMap;
-    std::unordered_map<IDType, std::vector<const std::type_info*>> m_ComponentsEntityMap;
+    std::unordered_map<const std::type_info*, std::vector<Components>> _ComponentTypeMap;
+    std::unordered_map<IDType, std::vector<const std::type_info*>> _ComponentsEntityMap;
   };
 }

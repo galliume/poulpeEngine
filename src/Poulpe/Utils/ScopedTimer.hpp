@@ -8,7 +8,7 @@ public:
   using ClockType = std::chrono::steady_clock;
 
   ScopedTimer(const char* func)
-    : m_FunctionName(func), m_Start(ClockType::now()) {};
+    : _FunctionName(func), _Start(ClockType::now()) {};
 
   ScopedTimer(const ScopedTimer&) = delete;
   ScopedTimer(ScopedTimer&&) = delete;
@@ -19,15 +19,15 @@ public:
   ~ScopedTimer()
   {
     auto stop = ClockType::now();
-    auto duration = (stop - m_Start);
+    auto duration = (stop - _Start);
     auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
     
-    std::cout << ms << " ms " << m_FunctionName << "\n";
+    std::cout << ms << " ms " << _FunctionName << "\n";
   }
 
 private:
-  const char* m_FunctionName{};
-  const ClockType::time_point m_Start{};
+  const char* _FunctionName{};
+  const ClockType::time_point _Start{};
 };
 
 #define USE_SCOPED_TIMER 1

@@ -7,7 +7,7 @@ namespace Poulpe
 {
     Entity::Entity()
     {
-        m_ID = GUIDGenerator::getGUID();
+        _ID = GUIDGenerator::getGUID();
     }
 
     bool Entity::isHit(glm::vec3 point)
@@ -31,7 +31,7 @@ namespace Poulpe
 
         //glm::vec4 tmp = (glm::inverse(GetCamera()->GetView()) * rayEye);
         //glm::vec3 rayWor = glm::vec3(tmp.x, tmp.y, tmp.z);
-        //m_RayPick = glm::normalize(rayWor);
+        //_RayPick = glm::normalize(rayWor);
 
         PLP_DEBUG("point x:{} y{} z:{}", point.x, point.y, point.z);
 

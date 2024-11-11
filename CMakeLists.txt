@@ -57,22 +57,23 @@ add_subdirectory(${PROJECT_SOURCE_DIR}/src/Poulpe/Utils)
 
 target_include_directories(${PROJECT_NAME} PRIVATE "${PROJECT_BINARY_DIR}")
 
-set(DEBUG_OPTIONS -Wno-stringop-overflow -g)
+set(DEBUG_OPTIONS -g)
 set(RELEASE_OPTIONS -Wno-c++98-compat -Wno-c++98-compat-pedantic -flto)
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
-  list(APPEND DEBUG_OPTIONS /MDd /Zc:__cplusplus /EHsc)
-  list(APPEND RELEASE_OPTIONS /O2 /Ob2 /MD /Zc:__cplusplus /EHsc)
+  list(APPEND DEBUG_OPTIONS /MDd /Od /Zi /Zc:__cplusplus /EHsc)
+  list(APPEND RELEASE_OPTIONS /Ox /MD /Zc:__cplusplus /EHsc)
 
-  target_link_options(${PROJECT_NAME} PRIVATE "$<$<CONFIG:RELEASE>:/LTCG>")
+  target_link_options(${PROJECT_NAME} PRIVATE $<$<CONFIG:RELEASE>:/LTCG /fsanitize=address>)
+  target_compile_options(${PROJECT_NAME} PRIVATE $<$<CONFIG:DEBUG>:/GA /Wall -Wno-c++98-compat -Wno-old-style-cast>)
 else()
   list(APPEND DEBUG_OPTIONS -O3)
   list(APPEND RELEASE_OPTIONS -O3)
 endif()
 
-target_compile_options(${PROJECT_NAME} PRIVATE "$<$<CONFIG:DEBUG>:${DEBUG_OPTIONS}>")
-target_compile_options(${PROJECT_NAME} PRIVATE "$<$<CONFIG:RELEASE>:${RELEASE_OPTIONS}>")
-target_compile_definitions(${PROJECT_NAME} PRIVATE "$<$<CONFIG:DEBUG>:PLP_DEBUG_BUILD>")
+target_compile_options(${PROJECT_NAME} PRIVATE $<$<CONFIG:DEBUG>:${DEBUG_OPTIONS}>)
+target_compile_options(${PROJECT_NAME} PRIVATE $<$<CONFIG:RELEASE>:${RELEASE_OPTIONS}>)
+target_compile_definitions(${PROJECT_NAME} PRIVATE $<$<CONFIG:DEBUG>:PLP_DEBUG_BUILD>)
 
 #########################################################
 
@@ -91,7 +92,7 @@ else()
   message(FATAL_ERROR "The env var VULKAN_SDK nor VULKAN_SDK_ACTIONS not found.")
 endif()
 
-target_include_directories(${PROJECT_NAME} PUBLIC
+target_include_directories(${PROJECT_NAME} PRIVATE
           ${PROJECT_SOURCE_DIR}/vendor/assimp/include
           ${PROJECT_SOURCE_DIR}/vendor/lua
           ${PROJECT_SOURCE_DIR}/vendor/glm
@@ -174,11 +175,11 @@ set(LIB_RELEASE_OPTIONS -Wno-error -Wno-deprecated-non-prototype -Wno-unsafe-buf
 list(APPEND LIB_DEBUG_OPTIONS ${DEBUG_OPTIONS})
 list(APPEND LIB_RELEASE_OPTIONS ${RELEASE_OPTIONS})
 
-target_compile_options(spdlog PRIVATE "$<$<CONFIG:DEBUG>:${LIB_DEBUG_OPTIONS}>")
-target_compile_options(spdlog PRIVATE "$<$<CONFIG:RELEASE>:${LIB_RELEASE_OPTIONS}>")
+target_compile_options(spdlog PRIVATE $<$<CONFIG:DEBUG>:${LIB_DEBUG_OPTIONS}>)
+target_compile_options(spdlog PRIVATE $<$<CONFIG:RELEASE>:${LIB_RELEASE_OPTIONS}>)
 
-target_compile_options(assimp PRIVATE "$<$<CONFIG:DEBUG>:${LIB_DEBUG_OPTIONS}>")
-target_compile_options(assimp PRIVATE "$<$<CONFIG:RELEASE>:${LIB_RELEASE_OPTIONS}>")
+target_compile_options(assimp PRIVATE $<$<CONFIG:DEBUG>:${LIB_DEBUG_OPTIONS}>)
+target_compile_options(assimp PRIVATE $<$<CONFIG:RELEASE>:${LIB_RELEASE_OPTIONS}>)
 
 set(PLP_LIB_DIR "$<TARGET_FILE_DIR:${PROJECT_NAME}>/lib")
 set(PLP_BIN_DIR "$<TARGET_FILE_DIR:${PROJECT_NAME}>")

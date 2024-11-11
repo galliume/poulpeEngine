@@ -27,25 +27,24 @@ namespace Poulpe
     RenderManager(Window* window);
 
     void cleanUp();
-    inline void forceRefresh() { m_Refresh = true; }
+    inline void forceRefresh() { _refresh = true; }
     inline uint32_t getAppHeight() { return getRenderer()->getSwapChainExtent().height; }
     inline uint32_t getAppWidth() { return getRenderer()->getSwapChainExtent().width; }
-    inline AudioManager* getAudioManager() { return m_AudioManager.get(); }
-    inline Camera* getCamera() { return m_Camera.get(); }
-    inline ComponentManager* getManager() { return m_ComponentManager.get(); }
-    inline DestroyManager* getDestroyManager() { return m_DestroyManager.get(); }
-    inline EntityManager* getEntityManager() { return m_EntityManager.get(); }
-    inline LightManager* getLightManager() { return m_LightManager.get(); }
-    inline Renderer* getRenderer() { return m_Renderer.get(); }
-    inline ShaderManager* getShaderManager() { return m_ShaderManager.get(); }
-    inline TextureManager* getTextureManager() { return m_TextureManager.get(); }
-    inline Window* getWindow() { return m_Window.get(); }
+    inline AudioManager* getAudioManager() { return _audio_manager.get(); }
+    inline Camera* getCamera() { return _camera.get(); }
+    inline ComponentManager* getManager() { return _component_manager.get(); }
+    inline DestroyManager* getDestroyManager() { return _destroy_manager.get(); }
+    inline EntityManager* getEntityManager() { return _entity_manager.get(); }
+    inline LightManager* getLightManager() { return _light_manager.get(); }
+    inline Renderer* getRenderer() { return _renderer.get(); }
+    inline ShaderManager* getShaderManager() { return _shader_manager.get(); }
+    inline TextureManager* getTextureManager() { return _texture_manager.get(); }
+    inline Window* getWindow() { return _window.get(); }
     void init();
-    inline bool isLoaded()  { return m_IsLoaded; }
+    inline bool isLoaded()  { return _is_loaded; }
     void refresh(uint32_t levelIndex, bool showBbox = false, std::string_view skybox = "debug");
     void renderScene(std::chrono::duration<float> deltaTime);
-    inline void setDrawBbox(bool draw) { m_Renderer->setDrawBbox(draw); }
-    inline void setIsLoaded(bool loaded = true) { m_IsLoaded = loaded; }
+    inline void setIsLoaded(bool loaded = true) { _is_loaded = loaded; }
 
   private:
     void loadData(std::string const & level);
@@ -55,25 +54,24 @@ namespace Poulpe
     void prepareSkybox();
 
   private:
-    std::string m_CurrentLevel;
-    std::string m_CurrentSkybox;
+    std::string _current_level;
+    std::string _current_skybox;
 
-    bool m_IsLoaded{ false };
-    bool m_Refresh{ false };
-    bool m_ShowBbox{ false };
+    bool _is_loaded{ false };
+    bool _refresh{ false };
 
-    std::unique_ptr<Camera> m_Camera;
-    std::unique_ptr<Renderer> m_Renderer;
-    std::unique_ptr<Window> m_Window;
+    std::unique_ptr<Camera> _camera;
+    std::unique_ptr<Renderer> _renderer;
+    std::unique_ptr<Window> _window;
 
-    std::unique_ptr<AudioManager> m_AudioManager;
-    std::unique_ptr<ComponentManager> m_ComponentManager;
-    std::unique_ptr<DestroyManager> m_DestroyManager;
-    std::unique_ptr<EntityManager> m_EntityManager;
-    std::unique_ptr<LightManager> m_LightManager;
-    std::unique_ptr<ShaderManager> m_ShaderManager;
-    std::unique_ptr<TextureManager> m_TextureManager;
+    std::unique_ptr<AudioManager> _audio_manager;
+    std::unique_ptr<ComponentManager> _component_manager;
+    std::unique_ptr<DestroyManager> _destroy_manager;
+    std::unique_ptr<EntityManager> _entity_manager;
+    std::unique_ptr<LightManager> _light_manager;
+    std::unique_ptr<ShaderManager> _shader_manager;
+    std::unique_ptr<TextureManager> _texture_manager;
 
-    std::vector<VkDescriptorPool> m_DescriptorPools;
+    std::vector<VkDescriptorPool> _descriptor_pools;
   };
 }

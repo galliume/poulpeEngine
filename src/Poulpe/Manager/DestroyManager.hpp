@@ -14,7 +14,7 @@ namespace Poulpe
     public: 
         DestroyManager() = default;
 
-        inline void addMemoryPool(DeviceMemoryPool* const deviceMemoryPool) { m_DeviceMemoryPool = deviceMemoryPool; }
+        inline void addMemoryPool(DeviceMemoryPool* const deviceMemoryPool) { _DeviceMemoryPool = deviceMemoryPool; }
         void cleanDeviceMemory();
 
         template<std::derived_from<Entity> T>
@@ -32,7 +32,7 @@ namespace Poulpe
         void setRenderer(Renderer* renderer);
 
     private:
-        DeviceMemoryPool* m_DeviceMemoryPool;
-        Renderer* m_Renderer;
+        DeviceMemoryPool* _DeviceMemoryPool;
+        Renderer* _renderer;
     };
 }

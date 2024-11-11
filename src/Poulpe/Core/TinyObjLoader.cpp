@@ -101,10 +101,10 @@ namespace Poulpe
         int samplerId{ 0 };
         std::unordered_map<int, int> texidsmap;
 
-        texidsmap.reserve(shape.mesh.num_face_vertices.size());
+        texidsmap.reserve(shape.mesh.nu_face_vertices.size());
 
-        for (size_t f = 0; f < shape.mesh.num_face_vertices.size(); f++) {
-            size_t fv = size_t(shape.mesh.num_face_vertices[f]);
+        for (size_t f = 0; f < shape.mesh.nu_face_vertices.size(); f++) {
+            size_t fv = size_t(shape.mesh.nu_face_vertices[f]);
                  
             int id = (-1 != shape.mesh.material_ids[f]) ? shape.mesh.material_ids[f] : 0;
 

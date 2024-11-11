@@ -20,49 +20,49 @@ namespace Poulpe
   {
   public:
 
-    explicit EntityManager(ComponentManager* const componentManager,
-      LightManager* const lightManager,
-      TextureManager* const textureManager);
+    explicit EntityManager(ComponentManager* const component_manager,
+      LightManager* const light_manager,
+      TextureManager* const texture_manager);
     ~EntityManager() = default;
 
-    void inline addHUD(std::unique_ptr<Entity> entity) { m_HUD.emplace_back(std::move(entity)); }
-    void inline addRenderer(Renderer* const renderer) { m_Renderer = renderer; }
+    void inline addHUD(std::unique_ptr<Entity> entity) { _HUD.emplace_back(std::move(entity)); }
+    void inline addRenderer(Renderer* const renderer) { _renderer = renderer; }
     void clear();
-    //inline std::vector<std::unique_ptr<Entity>>* getEntities() { return & m_Entities; }
-    inline std::vector<std::unique_ptr<Entity>>* getHUD() { return & m_HUD; }
-    //inline size_t getInstancedCount() const { return m_Entities.size(); }
-    //inline std::unordered_map<std::string, std::array<uint32_t, 2>> getLoadedEntities() { return m_LoadedEntities; }
-    inline Entity* getSkybox() { return m_Skybox.get(); }
+    //inline std::vector<std::unique_ptr<Entity>>* getEntities() { return & _Entities; }
+    inline std::vector<std::unique_ptr<Entity>>* getHUD() { return & _HUD; }
+    //inline size_t getInstancedCount() const { return _Entities.size(); }
+    //inline std::unordered_map<std::string, std::array<uint32_t, 2>> getLoadedEntities() { return _LoadedEntities; }
+    inline Entity* getSkybox() { return _skybox.get(); }
     std::function<void()> load(nlohmann::json const& levelConfig);
-    inline void setSkybox(std::unique_ptr<Entity> skybox) { m_Skybox = std::move(skybox); }
+    inline void setSkybox(std::unique_ptr<Entity> skybox) { _skybox = std::move(skybox); }
     //void addEntity(Mesh* meshes);
-    //inline size_t getTotalEntities() const { return m_Entities.size(); }
+    //inline size_t getTotalEntities() const { return _Entities.size(); }
     EntityNode * getWorldNode();
-    inline bool isLoadingDone() const { return m_LoadingDone.load(); }
+    inline bool isLoadingDone() const { return _LoadingDone.load(); }
     void initMeshes(std::string const& name, nlohmann::json const data);
     void initWorldGraph();
 
   private:
-    ComponentManager* m_ComponentManager;
-    LightManager* m_LightManager;
-    TextureManager* m_TextureManager;
+    ComponentManager* _component_manager;
+    LightManager* _light_manager;
+    TextureManager* _texture_manager;
         
-    //std::vector<std::unique_ptr<Entity>> m_Entities{};
-    std::vector<std::unique_ptr<Entity>> m_HUD{};
+    //std::vector<std::unique_ptr<Entity>> _Entities{};
+    std::vector<std::unique_ptr<Entity>> _HUD{};
         
-    nlohmann::json m_LevelConfig;
-    //std::unordered_map<std::string, std::array<uint32_t, 2>> m_LoadedEntities{};
-    std::atomic_bool m_LoadingDone{ false };
+    nlohmann::json _LevelConfig;
+    //std::unordered_map<std::string, std::array<uint32_t, 2>> _LoadedEntities{};
+    std::atomic_bool _LoadingDone{ false };
         
-    Renderer* m_Renderer{nullptr};
+    Renderer* _renderer{nullptr};
         
-    std::set<std::string> m_ObjLoaded{};
+    std::set<std::string> _ObjLoaded{};
 
-    std::unique_ptr<Entity> m_Skybox{nullptr};
-    std::unique_ptr<EntityNode> m_WorldNode;
+    std::unique_ptr<Entity> _skybox{nullptr};
+    std::unique_ptr<EntityNode> _WorldNode;
 
-    std::mutex m_MutexWorldNode;
-    mutable std::shared_mutex m_SharedMutex;
+    std::mutex _MutexWorldNode;
+    mutable std::shared_mutex _SharedMutex;
 
   };
 }

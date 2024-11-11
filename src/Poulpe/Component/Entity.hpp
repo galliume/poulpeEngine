@@ -13,20 +13,20 @@ namespace Poulpe
     Entity();
     ~Entity() = default;
         
-    inline IDType getID() const { return m_ID; }
-    inline std::string getName() const { return m_Name; }
+    inline IDType getID() const { return _ID; }
+    inline std::string getName() const { return _name; }
 
-    void setName(std::string const & name) { m_Name = name; }
-    void setVisible(bool visible) { m_IsVisible = visible; }
+    void setName(std::string const & name) { _name = name; }
+    void setVisible(bool visible) { _IsVisible = visible; }
 
     bool isDirty() const { return true; }
     bool isHit(glm::vec3 point);
-    bool isVisible() { return m_IsVisible; }
+    bool isVisible() { return _IsVisible; }
 
   private:
-    IDType m_ID{ 0 };
-    std::string m_Name{};
+    IDType _ID{ 0 };
+    std::string _name{};
 
-    bool m_IsVisible{ true };
+    bool _IsVisible{ true };
   };
 }
