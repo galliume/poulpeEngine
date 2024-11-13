@@ -198,7 +198,7 @@ namespace Poulpe
 
         meshData.vertices.reserve(face->mNumIndices);
         meshData.indices.reserve(face->mNumIndices);
-        meshData.facesMaterialId.reserve(face->mNumIndices);
+        meshData.face_material_ID.reserve(face->mNumIndices);
 
         for (unsigned int j{ 0 }; j < face->mNumIndices; j++) {
 
@@ -231,9 +231,9 @@ namespace Poulpe
           meshData.indices.push_back(count);
           count += 1;
         }
-        meshData.materialId = mesh->mMaterialIndex;
-        meshData.materialsID = { mesh->mMaterialIndex };
-        meshData.facesMaterialId.emplace_back(mesh->mMaterialIndex);
+        meshData.material_ID = mesh->mMaterialIndex;
+        meshData.materials_ID = { mesh->mMaterialIndex };
+        meshData.face_material_ID.emplace_back(mesh->mMaterialIndex);
       }
 
       std::unordered_map<std::string, Bone> bonesMap{};
@@ -253,7 +253,7 @@ namespace Poulpe
             Bone boneData{};
             boneData.id = boneCounter;
             boneData.name = boneName;
-            boneData.offsetMatrix = ConvertMatrixToGLMFormat(bone->mOffsetMatrix);
+            boneData.offset_matrix = ConvertMatrixToGLMFormat(bone->mOffsetMatrix);
             bonesMap.emplace(boneName, std::move(boneData));
 
             boneCounter++;

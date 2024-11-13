@@ -15,7 +15,7 @@ namespace Poulpe
   struct CameraUBO {
     alignas(16) glm::mat4 view;
     alignas(16) glm::mat4 proj;
-    alignas(16) glm::mat4 projXview;
+    alignas(16) glm::mat4 proj_x_view;
   };
 
   struct UniformBufferObject
@@ -25,7 +25,7 @@ namespace Poulpe
     alignas(4) float constant{ 1.0f };
     alignas(4) float linear{ 0.09f };
     alignas(4) float quadratic{ 0.032f };
-    alignas(8) glm::vec2 texSize;
+    alignas(8) glm::vec2 tex_size;
   };
 
   struct CubeUniformBufferObject : UniformBufferObject
@@ -46,7 +46,7 @@ namespace Poulpe
     alignas(16) glm::vec3 coB{ 1.0f, 0.0f, 0.0f };
     alignas(16) glm::mat4 view;
     alignas(16) glm::mat4 projection;
-    alignas(16) glm::mat4 lightSpaceMatrix;
+    alignas(16) glm::mat4 light_space_matrix;
   };
 
   struct Material
@@ -57,14 +57,14 @@ namespace Poulpe
     alignas(16) glm::vec3 transmittance { 1 };
     alignas(16) glm::vec3 emission { 1 };
     //shininess, ior, diss
-    alignas(16) glm::vec3 shiIorDiss { 1 };
+    alignas(16) glm::vec3 shi_ior_diss { 1 };
   };
 
   struct ObjectBuffer
   {
-    Light ambientLight;
-    std::array<Light, 2> pointLights;
-    Light spotLight;
+    Light ambient_light;
+    std::array<Light, 2> point_lights;
+    Light spot_light;
     Material material;
   };
 
@@ -91,12 +91,12 @@ namespace Poulpe
   {
     alignas(16) glm::mat4 view;
     alignas(16) glm::vec4 viewPos;
-    alignas(16) glm::vec4 totalPosition{ 1.0 };
+    alignas(16) glm::vec4 total_position{ 1.0 };
   };
 
   struct shadowMapConstants
   {
-    alignas(16) glm::mat4 lightSpaceMatrix;
+    alignas(16) glm::mat4 light_space_matrix;
     alignas(16) glm::vec3 pos;
   };
 
@@ -130,19 +130,6 @@ namespace Poulpe
     glm::vec3 _tangeant;
   };
 
-  //struct BBox
-  //{
-  //  glm::mat4 position;
-  //  glm::vec3 center;
-  //  glm::vec3 size;
-  //  std::unique_ptr<Mesh> mesh;
-  //  float maxX;
-  //  float minX;
-  //  float maxY;
-  //  float minY;
-  //  float maxZ;
-  //  float minZ;
-  //};
   struct EntityOptions
   {
     std::string_view shader{};
@@ -161,7 +148,7 @@ namespace Poulpe
   struct Bone {
     unsigned int id{};
     std::string name{};
-    glm::mat4 offsetMatrix{};
+    glm::mat4 offset_matrix{};
   };
 
   struct Animation {
@@ -171,19 +158,19 @@ namespace Poulpe
   };
 
   struct Rotation {
-    unsigned int animationId;
+    unsigned int animation_ID;
     double time;
     glm::quat value;
   };
 
   struct Position {
-    unsigned int animationId;
+    unsigned int animation_ID;
     double time;
     glm::vec3 value;
   };
 
   struct Scale {
-    unsigned int animationId;
+    unsigned int animation_ID;
     double time;
     glm::vec3 value;
   };
@@ -192,10 +179,10 @@ namespace Poulpe
   {
     std::string name{};
     unsigned int id{};
-    uint32_t materialId{ 0 };
-    std::vector<uint32_t> facesMaterialId{};
+    uint32_t material_ID{ 0 };
+    std::vector<uint32_t> face_material_ID{};
     std::vector<uint32_t> indices{};
-    std::vector<uint32_t> materialsID{};
+    std::vector<uint32_t> materials_ID{};
     std::vector<Vertex> vertices{};
   };
 
@@ -216,11 +203,11 @@ namespace Poulpe
 
   struct VulkanPipeline
   {
-    VkPipelineLayout pipelineLayout;
-    VkDescriptorPool descPool;
-    VkDescriptorSetLayout descSetLayout;
-    VkDescriptorSet descSet;
-    VkPipelineCache pipelineCache;
+    VkPipelineLayout pipeline_layout;
+    VkDescriptorPool desc_pool;
+    VkDescriptorSetLayout descset_layout;
+    VkDescriptorSet descset;
+    VkPipelineCache pipeline_cache;
     VkPipeline pipeline;
     std::vector<VkPipelineShaderStageCreateInfo> shaders{};
   };

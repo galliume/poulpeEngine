@@ -7,11 +7,11 @@ namespace Poulpe
 {
     struct TinyObjData
     {
-        uint32_t materialId = 0;
+        uint32_t material_ID = 0;
         std::string name;
-        std::vector<uint32_t> facesMaterialId;
+        std::vector<uint32_t> face_material_ID;
         std::vector<uint32_t> indices;
-        std::vector<uint32_t> materialsID;
+        std::vector<uint32_t> materials_ID;
         std::vector<Vertex> vertices;
     };
 

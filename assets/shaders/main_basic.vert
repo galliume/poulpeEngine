@@ -100,5 +100,5 @@ void main()
     vs_out.fvColor = vColor;
 	vs_out.fTextureID = int(fidtidBB.y);
 
-    gl_Position = ubos[gl_InstanceIndex].projection * pc.view * vec4(vs_out.fPos, 1.0) * pc.totalPosition;
+    gl_Position = ubos[gl_InstanceIndex].projection * pc.view * vec4(vs_out.fPos, 1.0);
 } 

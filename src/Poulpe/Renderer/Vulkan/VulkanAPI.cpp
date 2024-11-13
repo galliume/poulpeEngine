@@ -701,7 +701,7 @@ namespace Poulpe {
 
     //@todo refactor this...
     VkPipeline VulkanAPI::createGraphicsPipeline(
-        VkPipelineLayout pipelineLayout,
+        VkPipelineLayout pipeline_layout,
         std::string_view name,
         std::vector<VkPipelineShaderStageCreateInfo> shadersCreateInfos,
         VkPipelineVertexInputStateCreateInfo & vertexInputInfo,
@@ -818,7 +818,7 @@ namespace Poulpe {
         pipelineInfo.pMultisampleState = & multisampling;
         pipelineInfo.pDepthStencilState = & depthStencil;
         pipelineInfo.pColorBlendState = & colorBlending;
-        pipelineInfo.layout = pipelineLayout;
+        pipelineInfo.layout = pipeline_layout;
         pipelineInfo.renderPass = VK_NULL_HANDLE;
         pipelineInfo.subpass = 0;
         pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
@@ -921,18 +921,18 @@ namespace Poulpe {
                 }
             }
 
-            VkPipelineCache pipelineCache;
+            VkPipelineCache pipeline_cache;
             VkPipelineCacheCreateInfo pCreateInfo = { };
             pCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO;
             pCreateInfo.initialDataSize = cacheFileSize;
             pCreateInfo.pInitialData = &cacheFileData;
 
-            VkResult result = vkCreatePipelineCache(_device, & pCreateInfo, nullptr, & pipelineCache);
+            VkResult result = vkCreatePipelineCache(_device, & pCreateInfo, nullptr, & pipeline_cache);
 
             if (result != VK_SUCCESS) {
                 PLP_ERROR("failed to get graphics pipeline cache size!");
             }
-            result = vkCreateGraphicsPipelines(_device, pipelineCache, 1, & pipelineInfo, nullptr, & graphicsPipeline);
+            result = vkCreateGraphicsPipelines(_device, pipeline_cache, 1, & pipelineInfo, nullptr, & graphicsPipeline);
 
             if (result != VK_SUCCESS) {
                 PLP_ERROR("failed to create graphics pipeline cache!");
@@ -942,7 +942,7 @@ namespace Poulpe {
                 void* data = nullptr;
 
                 //first call to get cache size with nullptr
-                result = vkGetPipelineCacheData(_device, pipelineCache, & pDataSize, nullptr);
+                result = vkGetPipelineCacheData(_device, pipeline_cache, & pDataSize, nullptr);
 
                 if (result != VK_SUCCESS) {
                     PLP_ERROR("failed to get graphics pipeline cache size!");
@@ -952,7 +952,7 @@ namespace Poulpe {
                 if (!data) {
                     PLP_ERROR("failed to resize cache buffer!");
                 } else {
-                    result = vkGetPipelineCacheData(_device, pipelineCache, & pDataSize, data);
+                    result = vkGetPipelineCacheData(_device, pipeline_cache, & pDataSize, data);
 
                     //@todo move to a FileManager
                     if (result == VK_SUCCESS) {
@@ -1573,7 +1573,7 @@ namespace Poulpe {
       bool drawIndexed,
       uint32_t index)
     {
-        /*vkCmdBindDescriptorSets(cmd_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline.pipelineLayout,
+        /*vkCmdBindDescriptorSets(cmd_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline.pipeline_layout,
             0, 1, & descriptorSet, 0, nullptr);*/
 
         //vkCmdBindPipeline(cmd_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline.pipeline);
@@ -2605,11 +2605,11 @@ namespace Poulpe {
     //    vkDestroyPipeline(_device, pipeline, nullptr);
     //}
 
-    //void VulkanAPI::destroyPipelineData(VkPipelineLayout pipelineLayout, VkDescriptorPool descriptorPool,
+    //void VulkanAPI::destroyPipelineData(VkPipelineLayout pipeline_layout, VkDescriptorPool descriptorPool,
     //    VkDescriptorSetLayout descriptorSetLayout)
     //{
     //    vkDestroyDescriptorSetLayout(_device, descriptorSetLayout, nullptr);
-    //    vkDestroyPipelineLayout(_device, pipelineLayout, nullptr);
+    //    vkDestroyPipelineLayout(_device, pipeline_layout, nullptr);
     //    vkDestroyDescriptorPool(_device, descriptorPool, nullptr);
     //}
 

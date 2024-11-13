@@ -18,16 +18,16 @@ namespace Poulpe
 
       auto const& pipeline = _renderer->getPipeline(mesh->getShaderName());
 
-      VkDescriptorSet descSet = _renderer->createDescriptorSets(pipeline->descPool, { pipeline->descSetLayout }, 1);
+      VkDescriptorSet descset = _renderer->createDescriptorSets(pipeline->desc_pool, { pipeline->descset_layout }, 1);
 
-      _renderer->updateDescriptorSets(*mesh->getUniformBuffers(), descSet, imageInfos);
-      mesh->setDescSet(descSet);
+      _renderer->updateDescriptorSets(*mesh->getUniformBuffers(), descset, imageInfos);
+      mesh->setDescSet(descset);
     }
 
     void Crosshair::setPushConstants(Mesh* mesh)
     {
         mesh->setApplyPushConstants([](
-            VkCommandBuffer & cmd_buffer, VkPipelineLayout pipelineLayout,
+            VkCommandBuffer & cmd_buffer, VkPipelineLayout pipeline_layout,
              Renderer* const renderer,
              Mesh* const meshCH) {
   
@@ -36,7 +36,7 @@ namespace Poulpe
             constants pushConstants{};
             //pushConstants.textureIDBB = glm::vec3(id, 0.0f, 0.0f);
 
-            vkCmdPushConstants(cmd_buffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(constants), & pushConstants);
+            vkCmdPushConstants(cmd_buffer, pipeline_layout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(constants), & pushConstants);
         });
         mesh->setHasPushConstants();
     }

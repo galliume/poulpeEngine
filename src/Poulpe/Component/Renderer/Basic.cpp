@@ -45,7 +45,7 @@ namespace Poulpe
       //image_info.emplace_back(shadowMapSpot);
 
       auto const& pipeline = _renderer->getPipeline(mesh->getShaderName());
-      VkDescriptorSet descset{ _renderer->createDescriptorSets(pipeline->descPool, { pipeline->descSetLayout }, 1) };
+      VkDescriptorSet descset{ _renderer->createDescriptorSets(pipeline->desc_pool, { pipeline->descset_layout }, 1) };
 
       for (size_t i{ 0 }; i < mesh->getUniformBuffers()->size(); ++i) {
 
@@ -72,7 +72,7 @@ namespace Poulpe
         });
 
      auto const& shadow_map_pipeline = _renderer->getPipeline("shadowMap");
-     VkDescriptorSet shadow_map_descset = _renderer->createDescriptorSets(shadow_map_pipeline->descPool, { shadow_map_pipeline->descSetLayout }, 1);
+     VkDescriptorSet shadow_map_descset = _renderer->createDescriptorSets(shadow_map_pipeline->desc_pool, { shadow_map_pipeline->descset_layout }, 1);
 
       std::for_each(std::begin(*mesh->getStorageBuffers()), std::end(*mesh->getStorageBuffers()),
         [&buffer_storage_infos](const Buffer& storageBuffers)
@@ -109,14 +109,14 @@ namespace Poulpe
     {
         mesh->setApplyPushConstants([](
             VkCommandBuffer & cmd_buffer,
-            VkPipelineLayout pipelineLayout,
+            VkPipelineLayout pipeline_layout,
             Renderer* const renderer, Mesh* const meshB) {
 
             constants pushConstants{};
             pushConstants.view = renderer->getCamera()->lookAt();
             pushConstants.viewPos = renderer->getCamera()->getPos();
 
-            vkCmdPushConstants(cmd_buffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(constants),
+            vkCmdPushConstants(cmd_buffer, pipeline_layout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(constants),
                 & pushConstants);
         });
 
@@ -187,7 +187,7 @@ namespace Poulpe
 
         if (_texture_manager->getTextures().contains(mesh->getData()->_bump_map)) {
           auto const tex = _texture_manager->getTextures()[mesh->getData()->_bump_map];
-          mesh->getData()->_ubos[i].texSize = glm::vec2(tex.getWidth(), tex.getHeight());
+          mesh->getData()->_ubos[i].tex_size = glm::vec2(tex.getWidth(), tex.getHeight());
         }
       }
 
@@ -199,14 +199,14 @@ namespace Poulpe
         material.specular = mesh->getMaterial().specular;
         material.transmittance = mesh->getMaterial().transmittance;
         material.emission = mesh->getMaterial().emission;
-        material.shiIorDiss = glm::vec3(mesh->getMaterial().shininess,
+        material.shi_ior_diss = glm::vec3(mesh->getMaterial().shininess,
           mesh->getMaterial().ior, mesh->getMaterial().illum);
 
         ObjectBuffer objectBuffer{};
-        objectBuffer.pointLights[0] = _light_manager->getPointLights().at(0);
-        objectBuffer.pointLights[1] = _light_manager->getPointLights().at(1);
-        objectBuffer.spotLight = _light_manager->getSpotLights().at(0);
-        objectBuffer.ambientLight = _light_manager->getAmbientLight();
+        objectBuffer.point_lights[0] = _light_manager->getPointLights().at(0);
+        objectBuffer.point_lights[1] = _light_manager->getPointLights().at(1);
+        objectBuffer.spot_light = _light_manager->getSpotLights().at(0);
+        objectBuffer.ambient_light = _light_manager->getAmbientLight();
         objectBuffer.material = material;
 
         auto storageBuffer{ _renderer->createStorageBuffers(objectBuffer, commandPool) };

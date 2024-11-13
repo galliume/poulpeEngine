@@ -113,7 +113,7 @@ namespace Poulpe
     }
 
     prepareSkybox();
-    prepareHUD();
+    //prepareHUD();
   }
 
   template <typename T>
@@ -135,45 +135,49 @@ namespace Poulpe
 
     //@todo animate light
     //_light_manager->animateAmbientLight(deltatime);
-    auto* worldNode = _entity_manager->getWorldNode();
+    {
+      std::lock_guard guard(_entity_manager->lockWorldNode());
 
-    std::ranges::for_each(worldNode->getChildren(), [&](const auto& leaf_node) {
-      std::ranges::for_each(leaf_node->getChildren(), [&](const auto& entity_node) {
+      auto* worldNode = _entity_manager->getWorldNode();
 
-        auto const& entity = entity_node->getEntity();
+      std::ranges::for_each(worldNode->getChildren(), [&](const auto& leaf_node) {
+        std::ranges::for_each(leaf_node->getChildren(), [&](const auto& entity_node) {
 
-        auto* mesh_component = _component_manager->get<MeshComponent>(entity->getID());
-        auto mesh = mesh_component->template has<Mesh>();
+          auto const& entity = entity_node->getEntity();
 
-        if (mesh) {
-          auto rdr_impl = _component_manager->get<RenderComponent>(entity->getID());
-          if (mesh->isDirty() && rdr_impl) {
-            (*rdr_impl)(deltatime, mesh);
+          auto* mesh_component = _component_manager->get<MeshComponent>(entity->getID());
+          auto mesh = mesh_component->template has<Mesh>();
+
+          if (mesh) {
+            auto rdr_impl = _component_manager->get<RenderComponent>(entity->getID());
+            if (mesh->isDirty() && rdr_impl) {
+              (*rdr_impl)(deltatime, mesh);
+            }
+
+            auto* animation_component = _component_manager->get<AnimationComponent>(entity->getID());
+            if (animation_component) {
+              (*animation_component)(deltatime, mesh);
+            }
+
+            //auto* boneAnimationComponent = _component_manager->get<BoneAnimationComponent>(entity->getID());
+            //if (boneAnimationComponent) {
+              //boneAnimationComponent->visit(deltatime, mesh);
+              //mesh->setIsDirty(true);
+
+              /*if (mesh->hasBufferStorage()) {
+                auto buffer{ mesh->getStorageBuffers()->at(0) };
+                ObjectBuffer* objectBuffer = mesh->getObjectBuffer();
+
+                objectBuffer->boneIds = {};
+                objectBuffer->weights = {};
+
+                _renderer->updateStorageBuffer(buffer, *objectBuffer);
+              }*/
+              //}
           }
-
-          auto* animation_component = _component_manager->get<AnimationComponent>(entity->getID());
-          if (animation_component) {
-            (*animation_component)(deltatime, mesh);
-          }
-
-          //auto* boneAnimationComponent = _component_manager->get<BoneAnimationComponent>(entity->getID());
-          //if (boneAnimationComponent) {
-            //boneAnimationComponent->visit(deltatime, mesh);
-            //mesh->setIsDirty(true);
-
-            /*if (mesh->hasBufferStorage()) {
-              auto buffer{ mesh->getStorageBuffers()->at(0) };
-              ObjectBuffer* objectBuffer = mesh->getObjectBuffer();
-
-              objectBuffer->boneIds = {};
-              objectBuffer->weights = {};
-
-              _renderer->updateStorageBuffer(buffer, *objectBuffer);
-            }*/
-          //}
-        }
+        });
       });
-    });
+    }
 
     if (_refresh) {
       init();

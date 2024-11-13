@@ -12,31 +12,31 @@ namespace Poulpe
       imageInfos.emplace_back(tex.getSampler(), tex.getImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
       auto const pipeline = _renderer->getPipeline(mesh->getShaderName());
-      VkDescriptorSet descSet = _renderer->createDescriptorSets(pipeline->descPool, { pipeline->descSetLayout }, 1);
+      VkDescriptorSet descset = _renderer->createDescriptorSets(pipeline->desc_pool, { pipeline->descset_layout }, 1);
 
       for (size_t i{ 0 }; i < mesh->getUniformBuffers()->size(); ++i) {
 
         _renderer->updateDescriptorSets(
           *mesh->getUniformBuffers(),
           *mesh->getStorageBuffers(),
-          descSet, imageInfos);
+          descset, imageInfos);
       }
 
-      mesh->setDescSet(descSet);
+      mesh->setDescSet(descset);
     }
 
     void ShadowMap::setPushConstants(Mesh* mesh)
     {
         mesh->setApplyPushConstants([](
             VkCommandBuffer & cmd_buffer, 
-            VkPipelineLayout pipelineLayout,
+            VkPipelineLayout pipeline_layout,
             Renderer* const renderer, Mesh* const meshS) {
 
             constants pushConstants{};
             pushConstants.view = renderer->getCamera()->lookAt();
             pushConstants.viewPos = renderer->getCamera()->getPos();
 
-            vkCmdPushConstants(cmd_buffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(constants),
+            vkCmdPushConstants(cmd_buffer, pipeline_layout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(constants),
                 & pushConstants);
         });
 
@@ -83,7 +83,7 @@ namespace Poulpe
 
         if (_texture_manager->getTextures().contains(mesh->getData()->_bump_map)) {
           auto const tex = _texture_manager->getTextures()[mesh->getData()->_bump_map];
-          mesh->getData()->_ubos[i].texSize = glm::vec2(tex.getWidth(), tex.getHeight());
+          mesh->getData()->_ubos[i].tex_size = glm::vec2(tex.getWidth(), tex.getHeight());
         }
       }
 
@@ -93,15 +93,15 @@ namespace Poulpe
       // material.specular = mesh->getMaterial().specular;
       // material.transmittance = mesh->getMaterial().transmittance;
       // material.emission = mesh->getMaterial().emission;
-      // material.shiIorDiss = glm::vec3(mesh->getMaterial().shininess,
+      // material.shi_ior_diss = glm::vec3(mesh->getMaterial().shininess,
       //   mesh->getMaterial().ior, mesh->getMaterial().illum);
 
       // ObjectBuffer objectBuffer{};
-      // objectBuffer.pointLights[0] = _light_manager->getPointLights().at(0);
-      // objectBuffer.pointLights[1] = _light_manager->getPointLights().at(1);
+      // objectBuffer.point_lights[0] = _light_manager->getPointLights().at(0);
+      // objectBuffer.point_lights[1] = _light_manager->getPointLights().at(1);
 
-      // objectBuffer.spotLight = _light_manager->getSpotLights().at(0);
-      // objectBuffer.ambientLight = _light_manager->getAmbientLight();
+      // objectBuffer.spot_light = _light_manager->getSpotLights().at(0);
+      // objectBuffer.ambient_light = _light_manager->getAmbientLight();
       // objectBuffer.material = material;
 
       // auto const size = sizeof(objectBuffer);

@@ -58,10 +58,7 @@ namespace Poulpe
 
   EntityNode * EntityManager::getWorldNode()
   {
-    {
-      std::lock_guard guard(_mutex_world_node);
       return _world_node.get();
-    }
   }
 
   void EntityManager::initMeshes(std::string const& name, nlohmann::json const& data)
@@ -151,7 +148,7 @@ namespace Poulpe
       mesh->setIsIndexed(entity_opts.is_indexed);
       //std::vector<Mesh::BBox> bboxs{};
 
-      unsigned int const tex1ID = _data.materialsID.at(0);
+      unsigned int const tex1ID = _data.materials_ID.at(0);
 
       std::string name_texture{ "_plp_empty" };
       std::string name_texture2{ "_plp_empty" };
@@ -163,7 +160,7 @@ namespace Poulpe
       if (!materials.empty()) {
 
         //@todo material per textures...
-        mesh->setMaterial(materials.at(_data.materialsID.at(0)));
+        mesh->setMaterial(materials.at(_data.materials_ID.at(0)));
 
         //@todo temp
         //@todo separate into 2 storage buffer of 3 texSample
@@ -176,8 +173,8 @@ namespace Poulpe
         }
 
         //@todo to refacto & clean
-        if (1 < _data.materialsID.size()) {
-          auto const& tex2 = materials.at(_data.materialsID.at(1));
+        if (1 < _data.materials_ID.size()) {
+          auto const& tex2 = materials.at(_data.materials_ID.at(1));
 
           if (!tex2.name_texture_ambient.empty()) {
             name_texture2 = tex2.name_texture_ambient;
@@ -185,8 +182,8 @@ namespace Poulpe
             name_texture2 = tex2.name_texture_diffuse;
           }
         }
-        if (2 < _data.materialsID.size()) {
-          auto const& tex3 = materials.at(_data.materialsID.at(2));
+        if (2 < _data.materials_ID.size()) {
+          auto const& tex3 = materials.at(_data.materials_ID.at(2));
 
           if (!tex3.name_texture_ambient.empty()) {
             name_texture3 = tex3.name_texture_ambient;
@@ -196,7 +193,7 @@ namespace Poulpe
           }
         }
 
-        auto const& mat = materials.at(_data.materialId);
+        auto const& mat = materials.at(_data.material_ID);
 
         if (!mat.name_texture_specular.empty()) {
           name_specular_map = mat.name_texture_specular;
@@ -238,7 +235,7 @@ namespace Poulpe
       ubo.model = glm::rotate(ubo.model, glm::radians(entity_opts.rotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
       ubo.model = glm::rotate(ubo.model, glm::radians(entity_opts.rotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
 
-      ubo.texSize = glm::vec2(0.0);
+      ubo.tex_size = glm::vec2(0.0);
 
       //ubo.view = glm::mat4(1.0f);
       data._ubos.emplace_back(ubo);

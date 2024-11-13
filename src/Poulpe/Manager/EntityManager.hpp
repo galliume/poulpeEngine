@@ -40,6 +40,7 @@ namespace Poulpe
     EntityNode * getWorldNode();
     void initMeshes(std::string const& name, nlohmann::json const& data);
     void initWorldGraph();
+    std::mutex& lockWorldNode() { return _mutex_world_node; };
 
   private:
     ComponentManager* _component_manager;

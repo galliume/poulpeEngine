@@ -71,7 +71,7 @@ namespace Poulpe {
             std::vector<VkPushConstantRange> const & pushConstants);
 
         VkPipeline createGraphicsPipeline(
-            VkPipelineLayout pipelineLayout,
+            VkPipelineLayout pipeline_layout,
             std::string_view name,
             std::vector<VkPipelineShaderStageCreateInfo> shadersCreateInfos,
             VkPipelineVertexInputStateCreateInfo & vertexInputInfo,
@@ -224,7 +224,7 @@ namespace Poulpe {
         **/
         //void destroyPipeline(VkPipeline pipeline);
 
-        //void destroyPipelineData(VkPipelineLayout pipelineLayout, VkDescriptorPool descriptorPool,
+        //void destroyPipelineData(VkPipelineLayout pipeline_layout, VkDescriptorPool descriptorPool,
         //    VkDescriptorSetLayout descriptorSetLayout);
 
         //void destroySwapchain(VkDevice device, VkSwapchainKHR swapChain, std::vector<VkFramebuffer> swapChainFramebuffers,

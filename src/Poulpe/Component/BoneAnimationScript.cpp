@@ -110,7 +110,7 @@ namespace Poulpe
       //    glm::mat4 translationMatrix = glm::translate(glm::mat4(1.0f), pos.value);
       //    glm::mat4 rotationMatrix = glm::toMat4(rot.value);
       //    glm::mat4 scaleMatrix = glm::scale(glm::mat4(1.0f), scale.value);
-      //    glm::mat4 transform = translationMatrix * rotationMatrix * scaleMatrix * bone.offsetMatrix;
+      //    glm::mat4 transform = translationMatrix * rotationMatrix * scaleMatrix * bone.offset_matrix;
 
       //    glm::vec4 transformedPosition = transform * glm::vec4(vertex.pos, 1.0f);
       //    vertex.pos += weight.second * glm::vec3(transformedPosition);

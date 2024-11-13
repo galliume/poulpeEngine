@@ -92,7 +92,7 @@ namespace Poulpe
         TinyObjData data;
         data.name = shape.name + "_" + std::to_string(s);
         std::vector<uint32_t> indices;
-        std::vector<uint32_t> materialsID;
+        std::vector<uint32_t> materials_ID;
 
         // Loop over faces(polygon)
         size_t index_offset{ 0 };
@@ -110,7 +110,7 @@ namespace Poulpe
 
             if (!texidsmap.contains(id)) {
                 ids.emplace_back(id);
-                materialsID.emplace_back(id);
+                materials_ID.emplace_back(id);
                 texidsmap[id] = samplerId;
                 samplerId += 1;
             }
@@ -172,9 +172,9 @@ namespace Poulpe
             index_offset += fv;
 
             // per-face material
-            data.materialId = (-1 != shape.mesh.material_ids[f]) ? static_cast<uint32_t>(shape.mesh.material_ids[f]) : 0;
-            data.facesMaterialId.emplace_back(shape.mesh.material_ids[f]);
-            data.materialsID = materialsID;
+            data.material_ID = (-1 != shape.mesh.material_ids[f]) ? static_cast<uint32_t>(shape.mesh.material_ids[f]) : 0;
+            data.face_material_ID.emplace_back(shape.mesh.material_ids[f]);
+            data.materials_ID = materials_ID;
         }
         callback(data, meshMaterials, false);
       });

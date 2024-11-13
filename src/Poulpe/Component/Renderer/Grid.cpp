@@ -12,17 +12,17 @@ namespace Poulpe
       imageInfos.emplace_back(ctex.getSampler(), ctex.getImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
       auto const pipeline = _renderer->getPipeline(mesh->getShaderName());
-      VkDescriptorSet descSet = _renderer->createDescriptorSets(pipeline->descPool, { pipeline->descSetLayout }, 1);
+      VkDescriptorSet descset = _renderer->createDescriptorSets(pipeline->desc_pool, { pipeline->descset_layout }, 1);
 
-      _renderer->updateDescriptorSets(*mesh->getUniformBuffers(), descSet, imageInfos);
+      _renderer->updateDescriptorSets(*mesh->getUniformBuffers(), descset, imageInfos);
 
-      mesh->setDescSet(descSet);
+      mesh->setDescSet(descset);
     }
 
     void Grid::setPushConstants(Mesh* mesh)
     {
         mesh->setApplyPushConstants([](VkCommandBuffer& cmd_buffer,
-            VkPipelineLayout pipelineLayout,
+            VkPipelineLayout pipeline_layout,
             Renderer* const renderer,
              Mesh* const meshG) {
             
@@ -30,7 +30,7 @@ namespace Poulpe
             pushConstants.view = renderer->getCamera()->lookAt();
             pushConstants.viewPos = glm::vec4(0.1f, 50.f, 0.f, 0.f);
 
-            vkCmdPushConstants(cmd_buffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(constants), & pushConstants);
+            vkCmdPushConstants(cmd_buffer, pipeline_layout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(constants), & pushConstants);
         });
         mesh->setHasPushConstants();
     }

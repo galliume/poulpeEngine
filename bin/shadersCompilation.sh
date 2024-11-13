@@ -11,7 +11,6 @@ echo "Compiling shaders"
 
 #@todo read from config/shaders.json
 shaders=("main_basic" "main_basic_no_texture" "skybox"
-        "2d" "grid" "ambient_light" "tangent"
         "shadowMap" "shadowMapSpot")
 
 for shader in ${shaders[@]}; do

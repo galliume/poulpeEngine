@@ -37,13 +37,13 @@ namespace Poulpe
 
     virtual void setApplyPushConstants(
       std::function<void(VkCommandBuffer& cmd_buffer,
-        VkPipelineLayout pipelineLayout,
+        VkPipelineLayout pipeline_layout,
         Renderer* const renderer,
         Mesh* const mesh)> fn) { _apply_push_constants = fn; }
 
     void setData(Data data) { _data = std::move(data); }
-    void setDescSet(VkDescriptorSet descSet) { _descset = descSet; }
-    void setShadowMapDescSet(VkDescriptorSet descSet) { _shadowmap_descset = descSet; }
+    void setDescSet(VkDescriptorSet descset) { _descset = descset; }
+    void setShadowMapDescSet(VkDescriptorSet descset) { _shadowmap_descset = descset; }
     void setHasBufferStorage(bool has = true) { _has_storage_buffer = has; }
     void setHasPushConstants(bool has = true) { _has_push_contants = has; }
     void setIsDirty(bool dirty = true) { _is_dirty.store(dirty); }

@@ -165,13 +165,13 @@ namespace Poulpe
     auto shaders = getShadersInfo(shaderName, offscreen);
 
     VkPipeline graphicPipeline{VK_NULL_HANDLE};
-    VkPipelineLayout pipelineLayout{VK_NULL_HANDLE};
-    VkDescriptorSetLayout descSetLayout{VK_NULL_HANDLE};
+    VkPipelineLayout pipeline_layout{VK_NULL_HANDLE};
+    VkDescriptorSetLayout descset_layout{VK_NULL_HANDLE};
 
     if (shaderName == "skybox") {
       VkPipelineVertexInputStateCreateInfo* vertexInputInfo{nullptr};
-      descSetLayout = createDescriptorSetLayout<DescSetLayoutType::Skybox>();
-      std::vector<VkDescriptorSetLayout> dSetLayout = { descSetLayout };
+      descset_layout = createDescriptorSetLayout<DescSetLayoutType::Skybox>();
+      std::vector<VkDescriptorSetLayout> dSetLayout = { descset_layout };
       vertexInputInfo = getVertexInputState<VertexBindingType::Vertex3D>();
 
       std::vector<VkPushConstantRange> vkPcs = {};
@@ -181,10 +181,10 @@ namespace Poulpe
       vkPc.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
       vkPcs.emplace_back(vkPc);
 
-      pipelineLayout = _renderer->createPipelineLayout(dSetLayout, vkPcs);
+      pipeline_layout = _renderer->createPipelineLayout(dSetLayout, vkPcs);
 
       graphicPipeline = _renderer->createGraphicsPipeline(
-        pipelineLayout,
+        pipeline_layout,
         shaderName,
         shaders,
         *vertexInputInfo,
@@ -194,8 +194,8 @@ namespace Poulpe
 
     } else if (shaderName == "grid" || shaderName == "2d") {
       VkPipelineVertexInputStateCreateInfo* vertexInputInfo{nullptr};
-      descSetLayout = createDescriptorSetLayout<DescSetLayoutType::HUD>();
-      std::vector<VkDescriptorSetLayout> dSetLayout = { descSetLayout };
+      descset_layout = createDescriptorSetLayout<DescSetLayoutType::HUD>();
+      std::vector<VkDescriptorSetLayout> dSetLayout = { descset_layout };
       vertexInputInfo = getVertexInputState<VertexBindingType::Vertex2D>();
 
       std::vector<VkPushConstantRange> vkPcs = {};
@@ -205,10 +205,10 @@ namespace Poulpe
       vkPc.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
       vkPcs.emplace_back(vkPc);
 
-      pipelineLayout = _renderer->createPipelineLayout(dSetLayout, vkPcs);
+      pipeline_layout = _renderer->createPipelineLayout(dSetLayout, vkPcs);
 
       graphicPipeline = _renderer->createGraphicsPipeline(
-        pipelineLayout,
+        pipeline_layout,
         shaderName,
         shaders,
         *vertexInputInfo,
@@ -237,19 +237,19 @@ namespace Poulpe
         hasColorAttachment = false;
         hasDynamicDepthBias = true;
         cullMode = VK_CULL_MODE_FRONT_BIT;
-        descSetLayout = createDescriptorSetLayout<DescSetLayoutType::Offscreen>();
+        descset_layout = createDescriptorSetLayout<DescSetLayoutType::Offscreen>();
         vkPc.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
       } else {
-        descSetLayout = createDescriptorSetLayout<DescSetLayoutType::Entity>();
+        descset_layout = createDescriptorSetLayout<DescSetLayoutType::Entity>();
       }
       vertexInputInfo = getVertexInputState<VertexBindingType::Vertex3D>();
 
       vkPcs.emplace_back(vkPc);
-      std::vector<VkDescriptorSetLayout> dSetLayout = { descSetLayout };
-      pipelineLayout = _renderer->createPipelineLayout(dSetLayout, vkPcs);
+      std::vector<VkDescriptorSetLayout> dSetLayout = { descset_layout };
+      pipeline_layout = _renderer->createPipelineLayout(dSetLayout, vkPcs);
         
       graphicPipeline = _renderer->createGraphicsPipeline(
-        pipelineLayout,
+        pipeline_layout,
         shaderName,
         shaders,
         *vertexInputInfo,
@@ -264,13 +264,13 @@ namespace Poulpe
 
     VulkanPipeline pipeline{};
     pipeline.pipeline = graphicPipeline;
-    pipeline.pipelineLayout = pipelineLayout;
-    pipeline.descPool = descriptorPool;
-    pipeline.descSetLayout = descSetLayout;
+    pipeline.pipeline_layout = pipeline_layout;
+    pipeline.desc_pool = descriptorPool;
+    pipeline.descset_layout = descset_layout;
     pipeline.shaders = shaders;
 
     if (shaderName == "shadowMap" || shaderName == "shadowMapSpot") {
-      pipeline.descSet = _renderer->createDescriptorSets(pipeline.descPool, { pipeline.descSetLayout }, 1);
+      pipeline.descset = _renderer->createDescriptorSets(pipeline.desc_pool, { pipeline.descset_layout }, 1);
     }
     _renderer->addPipeline(shaderName, pipeline);
   }

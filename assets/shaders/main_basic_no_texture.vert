@@ -15,8 +15,6 @@ layout(set = 0, binding = 0) readonly uniform UniformBufferObject {
 
 layout(push_constant) uniform constants
 {
-    //texture ID blank blank
-    vec3 textureIDBB;
     mat4 view;
     vec4 viewPos;
 } pc;
@@ -53,6 +51,6 @@ void main()
     //fNormal = mat3(transpose(inverse(ubos[gl_InstanceIndex].model))) * normal;
     vs_out.fPos = vec3(ubos[gl_InstanceIndex].model * vec4(pos, 1.0));
     vs_out.fTexCoord = texCoord;
-    vs_out.fTextureID = int(pc.textureIDBB.x);
+    vs_out.fTextureID = 0;
     vs_out.fViewPos = pc.viewPos;
 } 

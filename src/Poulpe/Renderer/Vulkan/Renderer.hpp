@@ -158,7 +158,7 @@ namespace Poulpe
         return _vulkan->createDescriptorSets(descriptorPool, descriptorSetLayouts, count);
     }
     VkPipeline createGraphicsPipeline(
-      VkPipelineLayout pipelineLayout,
+      VkPipelineLayout pipeline_layout,
       std::string_view name,
       std::vector<VkPipelineShaderStageCreateInfo> shadersCreateInfos,
       VkPipelineVertexInputStateCreateInfo & vertexInputInfo,

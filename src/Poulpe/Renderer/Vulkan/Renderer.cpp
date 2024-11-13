@@ -294,7 +294,7 @@ namespace Poulpe
           vkCmdBindDescriptorSets(
             cmd_buffer,
             VK_PIPELINE_BIND_POINT_GRAPHICS,
-            pipeline->pipelineLayout,
+            pipeline->pipeline_layout,
             0, 1, mesh->getShadowMapDescSet(), 0, nullptr);
 
           if (need_pipeline_update) {
@@ -402,13 +402,13 @@ namespace Poulpe
           last_shader = current_shader;
         }
         if (mesh->hasPushConstants()) {
-          mesh->applyPushConstants(cmd_buffer, pipeline->pipelineLayout, this, mesh);
+          mesh->applyPushConstants(cmd_buffer, pipeline->pipeline_layout, this, mesh);
         }
 
         vkCmdBindDescriptorSets(
           cmd_buffer,
           VK_PIPELINE_BIND_POINT_GRAPHICS,
-          pipeline->pipelineLayout,
+          pipeline->pipeline_layout,
           0, 1, mesh->getDescSet(), 0, nullptr);
 
         if (need_pipeline_update) {
@@ -703,7 +703,7 @@ namespace Poulpe
   }
 
   VkPipeline Renderer::createGraphicsPipeline(
-  VkPipelineLayout pipelineLayout,
+  VkPipelineLayout pipeline_layout,
   std::string_view name,
   std::vector<VkPipelineShaderStageCreateInfo> shadersCreateInfos,
   VkPipelineVertexInputStateCreateInfo & vertexInputInfo,
@@ -715,7 +715,7 @@ namespace Poulpe
   bool hasColorAttachment,
   bool dynamicDepthBias) {
       return _vulkan->createGraphicsPipeline(
-          pipelineLayout,
+          pipeline_layout,
           name,
           shadersCreateInfos,
           vertexInputInfo,

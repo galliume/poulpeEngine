@@ -26,7 +26,7 @@ namespace Poulpe
         projection[1][1] *= -1;
 
         _AmbientLight.projection = projection;
-        _AmbientLight.lightSpaceMatrix = _AmbientLight.projection * _AmbientLight.view;
+        _AmbientLight.light_space_matrix = _AmbientLight.projection * _AmbientLight.view;
 
         Light light;
         light.color = glm::vec3(1.0);
@@ -61,7 +61,7 @@ namespace Poulpe
 
         light3.projection = glm::perspective(glm::radians(45.0f), 2560.f / 1440.f, 1.f, 100.f);
         light3.projection[1][1] *= -1;
-        light3.lightSpaceMatrix = light3.view * light3.projection;
+        light3.light_space_matrix = light3.view * light3.projection;
 
         _SpotLights.emplace_back(light3);
     }
@@ -82,6 +82,6 @@ namespace Poulpe
         _AmbientLight.projection = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, near_plane, far_plane);
         _AmbientLight.projection[1][1] *= -1;
 
-        _AmbientLight.lightSpaceMatrix = _AmbientLight.projection * _AmbientLight.view;
+        _AmbientLight.light_space_matrix = _AmbientLight.projection * _AmbientLight.view;
     }
 }
