@@ -33,7 +33,6 @@ namespace Poulpe
             Renderer* const renderer, Mesh* const meshS) {
 
             constants pushConstants{};
-            pushConstants.textureIDBB = glm::vec3(meshS->getData()->_texture_index, 0.0, 0.0);
             pushConstants.view = renderer->getCamera()->lookAt();
             pushConstants.viewPos = renderer->getCamera()->getPos();
 

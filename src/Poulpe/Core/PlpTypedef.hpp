@@ -89,8 +89,6 @@ namespace Poulpe
 
   struct constants
   {
-    //textureID blank blank
-    alignas(16) glm::vec3 textureIDBB;
     alignas(16) glm::mat4 view;
     alignas(16) glm::vec4 viewPos;
     alignas(16) glm::vec4 totalPosition{ 1.0 };
