@@ -15,8 +15,8 @@ shaders=("main_basic" "main_basic_no_texture" "skybox"
         "shadowMap" "shadowMapSpot")
 
 for shader in ${shaders[@]}; do
-    ${GLSLC_BIN} ./assets/shaders/${shader}.vert -o ./assets/shaders/spv/${shader}_vert.spv
-    ${GLSLC_BIN} ./assets/shaders/${shader}.frag -o ./assets/shaders/spv/${shader}_frag.spv
+    ${GLSLC_BIN} -O ./assets/shaders/${shader}.vert -o ./assets/shaders/spv/${shader}_vert.spv
+    ${GLSLC_BIN} -O ./assets/shaders/${shader}.frag -o ./assets/shaders/spv/${shader}_frag.spv
     echo "Shader [${shader}] compiled"
 done
 

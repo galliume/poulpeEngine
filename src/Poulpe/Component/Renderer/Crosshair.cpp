@@ -34,7 +34,7 @@ namespace Poulpe
             float id = 0.0f;
 
             constants pushConstants{};
-            pushConstants.textureIDBB = glm::vec3(id, 0.0f, 0.0f);
+            //pushConstants.textureIDBB = glm::vec3(id, 0.0f, 0.0f);
 
             vkCmdPushConstants(cmd_buffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(constants), & pushConstants);
         });

@@ -209,7 +209,7 @@ namespace Poulpe
           vertex.weights.resize(4);
           std::fill(vertex.weights.begin(), vertex.weights.end(), 0.0f);
 
-          vertex.fidtidBB = glm::vec4(static_cast<float>(j), mesh->mMaterialIndex, 0.0f, 0.0f);
+          vertex.fidtidBB = glm::vec4(static_cast<float>(j), static_cast<float>(mesh->mMaterialIndex), 0.0f, 0.0f);
           vertex.pos = { vertices.x, vertices.y, vertices.z };
 
           if (mesh->HasNormals()) {

@@ -75,43 +75,27 @@ float LinearizeDepth(float depth)
 
 void main()
 {
-    vec3 debugDiffuse = vec3(1.0, 0.0, 0.0); // Debugging color for diffuse
-    vec3 debugAmbient = vec3(0.0, 1.0, 0.0); // Debugging color for ambient
-    vec3 debugSpecular = vec3(0.0, 0.0, 1.0); // Debugging color for specular
+    //vec3 debugDiffuse = vec3(1.0, 0.0, 0.0); // Debugging color for diffuse
+    //vec3 debugAmbient = vec3(0.0, 1.0, 0.0); // Debugging color for ambient
+    //vec3 debugSpecular = vec3(0.0, 0.0, 1.0); // Debugging color for specular
 
-    vec3 normal = normalize(fs_in.fNormal);
+    vec3 normal = fs_in.fNormal;
 
-//    ivec2 texBumMapSize = textureSize(texSampler[5], 0);
+    ivec2 texBumMapSize = textureSize(texSampler[5], 0);
 
-//    if (texBumMapSize.x != 1 && texBumMapSize.y != 1) {
-//      vec3 nm = texture(texSampler[5], fs_in.fTexCoord).xyz * 2.0 - vec3(1.0);
-//      nm = fs_in.TBN * nm;
-//      normal = vec3(normalize(nm));
-//    }
-
-    int id = 0;
-    //@todo ugly but avoid floating point issues when casting to int
-    if (fs_in.ffidtidBB.y > 0.0 && fs_in.ffidtidBB.y < 0.2) {
-      id = 1;
-    } else if (fs_in.ffidtidBB.y > 0.1 && fs_in.ffidtidBB.y < 0.3) {
-      id = 2;
+    if (texBumMapSize.x != 1 && texBumMapSize.y != 1) {
+      vec3 nm = texture(texSampler[5], fs_in.fTexCoord).xyz * 2.0 - vec3(1.0);
+      nm = fs_in.TBN * nm;
+      normal = vec3(normalize(nm));
     }
 
-    //ivec2 texSize = textureSize(texSampler[id], 0);
-    vec4 texColor;
-    
-    //should be _plp_empty texture, so discarded or not ?
-//    if (texSize.x == 1 && texSize.y == 1) {
-//      discard;
-//    } else {
-      texColor = texture(texSampler[id], fs_in.fTexCoord);
-//    }
-
+    vec4 texColor = texture(texSampler[0], fs_in.fTexCoord);
+ 
     float shadowAmbient = 1.0;//1 not in shadow, 0 in shadow
-    //shadowAmbient = ShadowCalculation(fs_in.fAmbientLightSpace);
+    shadowAmbient = ShadowCalculation(fs_in.fAmbientLightSpace);
 
     vec3 viewDir = normalize(fs_in.fViewPos.xyz - fs_in.fPos.xyz);
-//    vec3 color = CalcDirLight(texColor, ambientLight, normal, viewDir, shadowAmbient);
+    vec3 color = CalcDirLight(texColor, ambientLight, normal, viewDir, shadowAmbient);
     
 //    for(int i = 0; i < NR_POINT_LIGHTS; i++) {
 //        color += CalcPointLight(texColor, pointLights[i], normal, fs_in.fPos.xyz, viewDir);
@@ -119,15 +103,15 @@ void main()
 
 //    color += CalcSpotLight(texColor, spotLight, normal, fs_in.fPos.xyz, viewDir, 1.0);
 
-//    ivec2 texMaskSize = textureSize(texSampler[3], 0);
-//    if (texMaskSize.x != 1 && texMaskSize.y != 1) {
-//        vec4 mask = texture(texSampler[3], fs_in.fTexCoord);
-////        fColor = mix(fColor, mask, mask.a);
-//        if (mask.r < 0.2) discard;
-//    }
+    ivec2 texMaskSize = textureSize(texSampler[3], 0);
+    if (texMaskSize.x != 1 && texMaskSize.y != 1) {
+        vec4 mask = texture(texSampler[3], fs_in.fTexCoord);
+//        fColor = mix(fColor, mask, mask.a);
+        if (mask.r < 0.2) discard;
+    }
     if (texColor.a < 0.5) discard;
 
-    fColor = vec4(texColor);
+    fColor = vec4(color, 1.0);
 }
 
 vec3 CalcDirLight(vec4 color, Light dirLight, vec3 normal, vec3 viewDir, float shadow)
@@ -141,14 +125,14 @@ vec3 CalcDirLight(vec4 color, Light dirLight, vec3 normal, vec3 viewDir, float s
     vec3 h = normalize(lightDir + viewDir);
     vec3 specular = vec3(0.0);
 
-    ivec2 texSize = textureSize(texSampler[4], 0);
+//    ivec2 texSize = textureSize(texSampler[4], 0);
 
 //    if (texSize.x == 1 && texSize.y == 1) {
-//      float spec = pow(clamp(dot(normal, h), 0.0, 1.0), material.shiIorDiss.x) * float(dot(normal, h) > 0.0);
-//      specular =  dirLight.color * (dirLight.ads.z * spec * material.specular);
-//    } else {
       float spec = pow(clamp(dot(normal, h), 0.0, 1.0), material.shiIorDiss.x) * float(dot(normal, h) > 0.0);
-      specular = dirLight.color * (spec * dirLight.ads.z * material.specular * texture(texSampler[4], fs_in.fTexCoord).xyz);
+      specular =  dirLight.color * (dirLight.ads.z * spec * material.specular);
+//    } else {
+      //float spec = pow(clamp(dot(normal, h), 0.0, 1.0), material.shiIorDiss.x) * float(dot(normal, h) > 0.0);
+      //specular = dirLight.color * (spec * dirLight.ads.z * material.specular * texture(texSampler[4], fs_in.fTexCoord).xyz);
 //    }
 
     return (ambient + (1 - shadow) * (diffuse + specular)) * color.xyz ;
