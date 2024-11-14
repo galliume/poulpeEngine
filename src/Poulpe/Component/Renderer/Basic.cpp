@@ -7,15 +7,11 @@ namespace Poulpe
     void Basic::createDescriptorSet(Mesh* mesh)
     {
       Texture const tex{ _texture_manager->getTextures()[mesh->getData()->_textures.at(0)] };
-      Texture const tex2{ _texture_manager->getTextures()[mesh->getData()->_textures.at(1)] };
-      Texture const tex3{ _texture_manager->getTextures()[mesh->getData()->_textures.at(2)] };
       Texture const alpha{ _texture_manager->getTextures()[mesh->getData()->_alpha] };
 
       std::vector<VkDescriptorImageInfo> image_info{};
-      image_info.reserve(8);
+      image_info.reserve(5);
       image_info.emplace_back(tex.getSampler(), tex.getImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-      image_info.emplace_back(tex2.getSampler(), tex2.getImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-      image_info.emplace_back(tex3.getSampler(), tex3.getImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
       image_info.emplace_back(alpha.getSampler(), alpha.getImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
       std::string specular_map_name{ "_plp_empty" };

@@ -129,7 +129,7 @@ namespace Poulpe
     _refresh = true;
   }
 
-  void RenderManager::renderScene(std::chrono::duration<float> deltatime)
+  void RenderManager::renderScene(std::chrono::duration<float> const deltatime)
   {
     _renderer->renderScene();
 

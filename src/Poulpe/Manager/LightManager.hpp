@@ -2,6 +2,8 @@
 
 #include "Poulpe/Core/PlpTypedef.hpp"
 
+#include <chrono>
+
 namespace Poulpe
 {
   class LightManager
@@ -10,14 +12,14 @@ namespace Poulpe
 
     LightManager();
 
-    void animateAmbientLight(float deltaTime);
-    inline Light getAmbientLight() { return _AmbientLight; }
-    inline std::vector<Light> getPointLights() { return _PointLights; }
-    inline std::vector<Light> getSpotLights() { return _SpotLights; }
+    void animateAmbientLight(std::chrono::duration<float> const deltaTime);
+    inline Light getAmbientLight() { return _ambient; }
+    inline std::vector<Light> getPointLights() { return _points; }
+    inline std::vector<Light> getSpotLights() { return _spots; }
 
   private:
-    Light _AmbientLight{};
-    std::vector<Light> _PointLights{};
-    std::vector<Light> _SpotLights{};
+    Light _ambient{};
+    std::vector<Light> _points{};
+    std::vector<Light> _spots{};
   };
 }

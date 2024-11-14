@@ -151,8 +151,6 @@ namespace Poulpe
       unsigned int const tex1ID = _data.materials_ID.at(0);
 
       std::string name_texture{ "_plp_empty" };
-      std::string name_texture2{ "_plp_empty" };
-      std::string name_texture3{ "_plp_empty" };
       std::string name_specular_map{ "_plp_empty" };
       std::string name_bump_map{ "_plp_empty" };
       std::string name_alpha_map{ "_plp_empty" };
@@ -170,27 +168,6 @@ namespace Poulpe
           name_texture = tex1.name_texture_ambient;
         } else if (!tex1.name_texture_diffuse.empty()) {
           name_texture = tex1.name_texture_diffuse;
-        }
-
-        //@todo to refacto & clean
-        if (1 < _data.materials_ID.size()) {
-          auto const& tex2 = materials.at(_data.materials_ID.at(1));
-
-          if (!tex2.name_texture_ambient.empty()) {
-            name_texture2 = tex2.name_texture_ambient;
-          } else if (!tex2.name_texture_diffuse.empty()) {
-            name_texture2 = tex2.name_texture_diffuse;
-          }
-        }
-        if (2 < _data.materials_ID.size()) {
-          auto const& tex3 = materials.at(_data.materials_ID.at(2));
-
-          if (!tex3.name_texture_ambient.empty()) {
-            name_texture3 = tex3.name_texture_ambient;
-          }
-          else if (!tex3.name_texture_diffuse.empty()) {
-            name_texture3 = tex3.name_texture_diffuse;
-          }
         }
 
         auto const& mat = materials.at(_data.material_ID);
@@ -211,8 +188,6 @@ namespace Poulpe
       Data data{};
       data._name = _data.name + '_' + name_texture;
       data._textures.emplace_back(name_texture);
-      data._textures.emplace_back(name_texture2);
-      data._textures.emplace_back(name_texture3);
       data._specular_map = name_specular_map;
       data._bump_map = name_bump_map;
       data._alpha = name_alpha_map;
