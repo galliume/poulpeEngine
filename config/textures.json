@@ -21,6 +21,14 @@
 			"assets/texture/skybox/debug/bottom.jpg",
 			"assets/texture/skybox/debug/front.jpg",
 			"assets/texture/skybox/debug/back.jpg"
+		],
+		"dark": [
+			"assets/texture/skybox/dark/right.jpg",
+			"assets/texture/skybox/dark/left.jpg",
+			"assets/texture/skybox/dark/top.jpg",
+			"assets/texture/skybox/dark/bottom.jpg",
+			"assets/texture/skybox/dark/front.jpg",
+			"assets/texture/skybox/dark/back.jpg"
 		]
 	}
 }

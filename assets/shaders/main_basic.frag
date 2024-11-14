@@ -43,7 +43,7 @@ struct Material
   vec3 transmittance;
   vec3 emission;
   //shininess, ior, diss
-  vec3 shiIorDiss;
+  vec3 shi_ior_diss;
 };
 
 //0: main texture
@@ -81,13 +81,13 @@ void main()
 
   vec3 normal = fs_in.fNormal;
 
-  ivec2 texBumMapSize = textureSize(texSampler[3], 0);
-
-  if (texBumMapSize.x != 1 && texBumMapSize.y != 1) {
-    vec3 nm = texture(texSampler[3], fs_in.fTexCoord).xyz * 2.0 - vec3(1.0);
-    nm = fs_in.TBN * nm;
-    normal = vec3(normalize(nm));
-  }
+//  ivec2 texBumMapSize = textureSize(texSampler[3], 0);
+//
+//  if (texBumMapSize.x != 1 && texBumMapSize.y != 1) {
+//    vec3 nm = texture(texSampler[3], fs_in.fTexCoord).xyz * 2.0 - vec3(1.0);
+//    nm = fs_in.TBN * nm;
+//    normal = vec3(normalize(nm));
+//  }
 
   vec4 texColor = texture(texSampler[0], fs_in.fTexCoord);
  
@@ -97,9 +97,9 @@ void main()
   vec3 viewDir = normalize(fs_in.fViewPos.xyz - fs_in.fPos.xyz);
   vec3 color = CalcDirLight(texColor, ambientLight, normal, viewDir, shadowAmbient);
 
-  for(int i = 0; i < NR_POINT_LIGHTS; i++) {
-    color += CalcPointLight(texColor, pointLights[i], normal, fs_in.fPos.xyz, viewDir);
-  }
+//  for(int i = 0; i < NR_POINT_LIGHTS; i++) {
+//    color += CalcPointLight(texColor, pointLights[i], normal, fs_in.fPos.xyz, viewDir);
+//  }
 
 //  color += CalcSpotLight(texColor, spotLight, normal, fs_in.fPos.xyz, viewDir, 1.0);
 
@@ -109,33 +109,37 @@ void main()
 //        fColor = mix(fColor, mask, mask.a);
     if (mask.r < 0.2) discard;
   }
-  if (texColor.a < 0.5) discard;
+  if (texColor.a < 0.1) discard;
 
   fColor = vec4(color, 1.0);
 }
 
 vec3 CalcDirLight(vec4 color, Light dirLight, vec3 normal, vec3 viewDir, float shadow)
 {
-  vec3 lightDir = normalize(-dirLight.direction);
+  vec3 lightDir = normalize(dirLight.position - fs_in.fPos);
   vec3 ambient = dirLight.color * material.ambient * dirLight.ads.x;
 
   float diff = max(dot(normal, lightDir), 0.0);
-  vec3 diffuse =  dirLight.color * material.diffuse * diff * dirLight.ads.y;
+  vec3 diffuse = dirLight.color * (diff * material.diffuse);
 
   vec3 h = normalize(lightDir + viewDir);
   vec3 specular = vec3(0.0);
 
+//  float spec = 0.0;
+//  spec = pow(max(dot(normal, h), 0.0), 1.0);
+//  specular = spec * dirLight.color;
+//
 //    ivec2 texSize = textureSize(texSampler[4], 0);
 
 //    if (texSize.x == 1 && texSize.y == 1) {
-    float spec = pow(clamp(dot(normal, h), 0.0, 1.0), material.shiIorDiss.x) * float(dot(normal, h) > 0.0);
-    specular =  dirLight.color * (dirLight.ads.z * spec * material.specular);
-//    } else {
     //float spec = pow(clamp(dot(normal, h), 0.0, 1.0), material.shiIorDiss.x) * float(dot(normal, h) > 0.0);
-    //specular = dirLight.color * (spec * dirLight.ads.z * material.specular * texture(texSampler[2], fs_in.fTexCoord).xyz);
+    //specular =  dirLight.color * (dirLight.ads.z * spec * material.specular);
+//    } else {
+    float spec = pow(clamp(dot(normal, h), 0.0, 1.0), material.shi_ior_diss.r) * float(dot(normal, h) > 0.0);
+    specular = dirLight.color * (spec * material.specular.r) * texture(texSampler[2], fs_in.fTexCoord).xyz;
 //    }
 
-  return (ambient + (1 - shadow) * (diffuse + specular)) * color.xyz ;
+  return (ambient + (1 - shadow) * (diffuse + specular)) * color.xyz;
 }
 
 vec3 CalcPointLight(vec4 color, Light pointLight, vec3 normal, vec3 fragPos, vec3 viewDir)
@@ -146,21 +150,14 @@ vec3 CalcPointLight(vec4 color, Light pointLight, vec3 normal, vec3 fragPos, vec
   float distance = length(pointLight.position - fs_in.fPos);
   float attenuation = 1.0 / (pointLight.clq.x + pointLight.clq.y * distance + pointLight.clq.z * (distance * distance));
 
-  float diff = max(dot(normal, lightDir), 0.0);
-  vec3 diffuse = pointLight.color * material.diffuse * diff * pointLight.ads.y;
+ float diff = max(dot(normal, lightDir), 0.0);
+  vec3 diffuse = pointLight.color * (diff * material.diffuse);
 
   vec3 h = normalize(lightDir + viewDir);
   vec3 specular = vec3(0.0);
 
-  ivec2 texSize = textureSize(texSampler[4], 0);
-
-  if (texSize.x == 1 && texSize.y == 1) {
-    float spec = pow(clamp(dot(normal, h), 0.0, 1.0), material.shiIorDiss.x) * float(dot(normal, h) > 0.0);
-    specular = pointLight.color * (pointLight.ads.z * spec * material.specular);
-  } else {
-    float spec = pow(clamp(dot(normal, h), 0.0, 1.0), material.shiIorDiss.x) * float(dot(normal, h) > 0.0);
-    specular =  pointLight.color * (spec * pointLight.ads.z * material.specular * texture(texSampler[2], fs_in.fTexCoord).xyz);
-  }
+  float spec = pow(clamp(dot(normal, h), 0.0, 1.0), material.shi_ior_diss.r) * float(dot(normal, h) > 0.0);
+  specular = pointLight.color * (spec * material.specular.r) * texture(texSampler[2], fs_in.fTexCoord).xyz;
 
   ambient *= attenuation;
   diffuse *= attenuation;
@@ -190,10 +187,10 @@ vec3 CalcSpotLight(vec4 color, Light spotlight, vec3 normal, vec3 fragPos, vec3 
   ivec2 texSize = textureSize(texSampler[4], 0);
 
   if (texSize.x == 1 && texSize.y == 1) {
-    float spec = pow(clamp(dot(normal, h), 0.0, 1.0), material.shiIorDiss.x) * float(dot(normal, h) > 0.0);
+    float spec = pow(clamp(dot(normal, h), 0.0, 1.0), material.shi_ior_diss.x) * float(dot(normal, h) > 0.0);
     specular = spotlight.color * (spotlight.ads.z * spec * material.specular);
   } else {
-    float spec = pow(clamp(dot(normal, h), 0.0, 1.0), material.shiIorDiss.x) * float(dot(normal, h) > 0.0);
+    float spec = pow(clamp(dot(normal, h), 0.0, 1.0), material.shi_ior_diss.x) * float(dot(normal, h) > 0.0);
     specular = spotlight.color * (spec * spotlight.ads.z * material.specular * texture(texSampler[2], fs_in.fTexCoord).xyz);
   }
 
@@ -207,7 +204,7 @@ vec3 CalcSpotLight(vec4 color, Light spotlight, vec3 normal, vec3 fragPos, vec3 
 float ShadowCalculation(vec4 shadowCoord)
 {
   vec3 coord = shadowCoord.xyz / shadowCoord.w;
-  coord = coord * 0.5 + 0.5;
+  //coord = coord * 0.5 + 0.5;
 
   float closestDepth = texture(texSampler[4], coord.xy).r;
   float currentDepth = coord.z;
@@ -227,7 +224,7 @@ float ShadowCalculation(vec4 shadowCoord)
   shadow /= 9.0;
 
   if(coord.z > 1.0)
-      shadow = 0.0;
-    
+    shadow = 0.0;
+
   return shadow;
 }

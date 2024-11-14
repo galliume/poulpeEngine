@@ -11,7 +11,7 @@
 namespace Poulpe
 {
   WinServer::WinServer(APIManager* APIManager):
-    _APIManager(APIManager)
+    _api_manager(APIManager)
   {
 
   }
@@ -222,7 +222,7 @@ namespace Poulpe
             PLP_WARN("status: {} msg: {}", recvstatus, message);
           } while (recvstatus > 0);
             if (message == "quit") hangup = true;
-            _APIManager->received(message);
+            _api_manager->received(message);
         } else {
           PLP_WARN("unexpected events poll for socket id: {}", sockets[0].fd);
           perror("send");

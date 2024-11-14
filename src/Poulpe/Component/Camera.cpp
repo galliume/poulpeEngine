@@ -119,9 +119,9 @@ namespace Poulpe
     return _view;
   }
 
-  void Camera::updateSpeed(std::chrono::duration<float> deltaTime)
+  void Camera::updateSpeed(std::chrono::duration<float> const deltatime)
   {
-    _speed = _velocity * deltaTime.count();
+    _speed = _velocity * deltatime.count();
   }
 
   void Camera::updatePos(double xoffset, double yoffset)

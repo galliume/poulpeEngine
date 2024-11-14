@@ -66,7 +66,7 @@ struct Material
   vec3 transmittance;
   vec3 emission;
   //shininess, ior, diss
-  vec3 shiIorDiss;
+  vec3 shi_ior_diss;
 };
 
 layout(set = 0, binding = 2) readonly buffer ObjectBuffer {
@@ -90,11 +90,11 @@ void main()
   mat3 TBN = transpose(mat3(t, b, n));
   vs_out.TBN = TBN;
 
-  vs_out.fNormal = normal;
+  vs_out.fNormal = normalize(mat3(transpose(inverse(ubos[gl_InstanceIndex].model))) * normal);
   vs_out.fPos = vec3(ubos[gl_InstanceIndex].model * vec4(pos, 1.0));
   vs_out.fTexCoord = texCoord;
   vs_out.fViewPos = pc.viewPos;
-  vs_out.fAmbientLightSpace = ambientLight.lightSpaceMatrix * vec4(vs_out.fPos, 1.0);
+  vs_out.fAmbientLightSpace = ambientLight.lightSpaceMatrix * ubos[gl_InstanceIndex].model * vec4(vs_out.fPos, 1.0);
   vs_out.fShadowCoordSpot = (biasMat * spotLight.lightSpaceMatrix) * vec4(vs_out.fPos, 1.0);
   vs_out.ffidtidBB = fidtidBB;
   vs_out.fvColor = vColor;

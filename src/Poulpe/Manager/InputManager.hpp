@@ -13,26 +13,26 @@ namespace Poulpe
   public:
     explicit InputManager(Window const * const window);
 
-    virtual void init(nlohmann::json const& inputConfig) ;
+    virtual void init(nlohmann::json const& input_config) ;
 
-    void key(int key, int scancode, int action, int mods);
+    void key(int key, int scan_code, int action, int mods);
     void mouseButton(int button, int action, int mods);
-    void saveLastMousePos(double xPos, double yPos);
+    void saveLastMousePos(double x_pos, double y_pos);
     void inline setCamera(Camera * const camera) { _camera = camera; };
-    void updateMousePos(double xPos, double yPo);
+    void updateMousePos(double x_pos, double y_pos);
 
-    static bool _CanMoveCamera;
-    static bool _FirtMouseMove;
+    static bool _can_move_camera;
+    static bool _first_move_mouse;
 
   private:
-    double _LastX{ 0 };
-    double _LastY{ 0 };
+    double _last_x{ 0 };
+    double _last_y{ 0 };
 
     //@todo clean this
     Camera * _camera;
     Window const * const _window;
 
-    nlohmann::json _InputConfig;
-    std::unordered_map<std::string, int> _KeyboardKeys{};
+    nlohmann::json _input_config;
+    std::unordered_map<std::string, int> _keyboard_keys{};
   };
 }
