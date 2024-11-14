@@ -22,8 +22,8 @@ namespace Poulpe
 
     glm::mat4 frustumProj(float fovy, float s, float n, float f);
     glm::mat4 lookAt();
-    void updateSpeed(std::chrono::duration<float> deltaTime);
-    void updatePos(double xoffset, double yoffset);
+    void updateSpeed(std::chrono::duration<float> const deltatime);
+    void updatePos(double x_offset, double y_offset);
 
   private:
     glm::vec3 mat4_backward();
@@ -43,7 +43,7 @@ namespace Poulpe
     glm::mat4 _view;
 
     float _pitch;
-    float _velocity{ 10.0f };
+    float _velocity{ 1.0f };
     float _speed{ _velocity };
     float _yaw{ -90.0f };
   };

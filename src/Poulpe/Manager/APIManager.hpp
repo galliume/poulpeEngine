@@ -16,6 +16,6 @@ namespace Poulpe
     void updateSkybox(std::vector<std::string> const & params);
 
   private:
-    RenderManager* _RenderManager{ nullptr };
+    RenderManager* _render_manager{ nullptr };
   };
 }

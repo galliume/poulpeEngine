@@ -4,7 +4,7 @@
 			"mesh": "assets/mesh/powerplant/powerplant.obj",
 			"textures": {
 			},
-			"shader": "main_basic_no_texture",
+			"shader": "main_basic",
 			"positions": [
 				{"x": 0.0, "y": 0.0, "z": 0.0}
 			],

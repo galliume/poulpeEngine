@@ -15,6 +15,6 @@ namespace Poulpe
 
   private:
     std::shared_ptr<Server> _Server;
-    APIManager* _APIManager;
+    APIManager* _api_manager;
   };
 }

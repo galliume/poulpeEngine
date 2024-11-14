@@ -15,7 +15,7 @@
 namespace Poulpe
 {
   APIManager::APIManager(RenderManager* renderManager)
-    : _RenderManager(renderManager)
+    : _render_manager(renderManager)
   {
 
   }
@@ -71,13 +71,13 @@ namespace Poulpe
       std::latch count_down{ 1 };
 
       //@todo why threaded ?...
-      std::jthread textures(std::move(std::bind(_RenderManager->getTextureManager()->loadSkybox(skyboxName), std::ref(count_down))));
+      std::jthread textures(std::move(std::bind(_render_manager->getTextureManager()->loadSkybox(skyboxName), std::ref(count_down))));
       textures.detach();
       count_down.wait();
 
-      auto skybox = _RenderManager->getEntityManager()->getSkybox();
-      auto* mesh_component = _RenderManager->getManager()->get<MeshComponent>(skybox->getID());
-      auto* meshRenderer = _RenderManager->getManager()->get<RenderComponent>(skybox->getID());
+      auto skybox = _render_manager->getEntityManager()->getSkybox();
+      auto* mesh_component = _render_manager->getManager()->get<MeshComponent>(skybox->getID());
+      auto* meshRenderer = _render_manager->getManager()->get<RenderComponent>(skybox->getID());
 
       if (mesh_component != nullptr) return;
 

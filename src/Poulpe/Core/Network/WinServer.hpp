@@ -35,7 +35,7 @@ namespace Poulpe
     std::mutex _MutexSockets;
 
     ServerStatus _Status{ ServerStatus::NOT_RUNNING };
-    APIManager* _APIManager;
+    APIManager* _api_manager;
   };
 }
 

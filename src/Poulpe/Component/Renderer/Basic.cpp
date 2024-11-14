@@ -198,6 +198,11 @@ namespace Poulpe
         material.shi_ior_diss = glm::vec3(mesh->getMaterial().shininess,
           mesh->getMaterial().ior, mesh->getMaterial().illum);
 
+        PLP_DEBUG("ambient {}",  material.ambient.r);
+        PLP_DEBUG("diffuse {}",  material.diffuse.r);
+        PLP_DEBUG("specular {}",  material.specular.r);
+        PLP_DEBUG("shi_ior_diss {}",  material.shi_ior_diss.x);
+
         ObjectBuffer objectBuffer{};
         objectBuffer.point_lights[0] = _light_manager->getPointLights().at(0);
         objectBuffer.point_lights[1] = _light_manager->getPointLights().at(1);
