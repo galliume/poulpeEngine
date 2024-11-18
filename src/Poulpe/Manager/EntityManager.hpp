@@ -40,7 +40,7 @@ namespace Poulpe
     EntityNode * getWorldNode();
     void initMeshes(std::string const& name, nlohmann::json const& data);
     void initWorldGraph();
-    std::mutex& lockWorldNode() { return _mutex_world_node; };
+    std::shared_mutex& lockWorldNode() { return _mutex_world_node; };
 
   private:
     ComponentManager* _component_manager;
@@ -57,7 +57,7 @@ namespace Poulpe
     std::unique_ptr<Entity> _skybox{nullptr};
     std::unique_ptr<EntityNode> _world_node;
 
-    std::mutex _mutex_world_node;
+    std::shared_mutex _mutex_world_node;
     mutable std::shared_mutex _mutex_shared;
 
   };

@@ -79,7 +79,7 @@ void main()
   //vec3 debugAmbient = vec3(0.0, 1.0, 0.0); // Debugging color for ambient
   //vec3 debugSpecular = vec3(0.0, 0.0, 1.0); // Debugging color for specular
 
-  vec3 normal = fs_in.fNormal;
+  vec3 normal = normalize(fs_in.fNormal);
 
 //  ivec2 texBumMapSize = textureSize(texSampler[3], 0);
 //
@@ -116,8 +116,8 @@ void main()
 
 vec3 CalcDirLight(vec4 color, Light dirLight, vec3 normal, vec3 viewDir, float shadow)
 {
-  vec3 lightDir = normalize(dirLight.position - fs_in.fPos);
-  vec3 ambient = dirLight.color * material.ambient * dirLight.ads.x;
+  vec3 lightDir = normalize(-dirLight.direction - fs_in.fPos);
+  vec3 ambient = dirLight.color * (material.ambient);
 
   float diff = max(dot(normal, lightDir), 0.0);
   vec3 diffuse = dirLight.color * (diff * material.diffuse);
@@ -136,7 +136,7 @@ vec3 CalcDirLight(vec4 color, Light dirLight, vec3 normal, vec3 viewDir, float s
     //specular =  dirLight.color * (dirLight.ads.z * spec * material.specular);
 //    } else {
     float spec = pow(clamp(dot(normal, h), 0.0, 1.0), material.shi_ior_diss.r) * float(dot(normal, h) > 0.0);
-    specular = dirLight.color * (spec * material.specular.r) * texture(texSampler[2], fs_in.fTexCoord).xyz;
+    specular = dirLight.color * (spec) * texture(texSampler[2], fs_in.fTexCoord).xyz;
 //    }
 
   return (ambient + (1 - shadow) * (diffuse + specular)) * color.xyz;
@@ -201,17 +201,17 @@ vec3 CalcSpotLight(vec4 color, Light spotlight, vec3 normal, vec3 fragPos, vec3 
   return (ambient + shadow * (diffuse + specular)) * color.xyz;
 }
 
-float ShadowCalculation(vec4 shadowCoord)
+float ShadowCalculation(vec4 ambientLightSpace)
 {
-  vec3 coord = shadowCoord.xyz / shadowCoord.w;
+  vec3 coord = ambientLightSpace.xyz / ambientLightSpace.w;
   //coord = coord * 0.5 + 0.5;
 
   float closestDepth = texture(texSampler[4], coord.xy).r;
   float currentDepth = coord.z;
-  float bias = max(0.05 * (1.0 - dot(fs_in.fNormal, ambientLight.direction)), 0.005);
+  float bias = max(0.05 * (1.0 - dot(fs_in.fNormal, -ambientLight.direction)), 0.005);
 
   float shadow = 0.1;
-  vec2 texelSize = 1.0 / textureSize(texSampler[4], 0);
+  vec2 texelSize = textureSize(texSampler[4], 0);
   int scale = 1;
   for(int x = -scale; x <= scale; ++x)
   {
@@ -224,7 +224,9 @@ float ShadowCalculation(vec4 shadowCoord)
   shadow /= 9.0;
 
   if(coord.z > 1.0)
-    shadow = 0.0;
+      shadow = 0.0;
+    
+
 
   return shadow;
 }
