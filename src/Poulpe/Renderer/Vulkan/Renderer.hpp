@@ -1,4 +1,5 @@
 #pragma once
+#pragma once
 
 #include "Poulpe/Component/Camera.hpp"
 
@@ -22,26 +23,27 @@ namespace Poulpe
   struct DrawCommands {
 
     public:
-      std::vector<VkCommandBuffer*> cmd_buffers;
-      std::vector<VkPipelineStageFlags> stage_flags;
-      std::vector<VkSemaphore*> semaphores;
+      std::vector<VkCommandBuffer*> cmd_buffers{};
+      std::vector<VkPipelineStageFlags> stage_flags{};
+      std::vector<VkSemaphore*> semaphores{};
 
       DrawCommands(size_t const size)
+        : _size(size)
       {
-        cmd_buffers.reserve(size);
-        semaphores.reserve(size);
-        stage_flags.reserve(size);
+        init();
       }
 
-      void insert(VkCommandBuffer* cmd_buffer,
+      void insert(
+        VkCommandBuffer* cmd_buffer,
         VkSemaphore* semaphore,
+        unsigned int const thread_id,
         VkPipelineStageFlags flags = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT)
       {
         {
-          std::lock_guard guard(m);
-          cmd_buffers.push_back(cmd_buffer);
-          stage_flags.push_back(flags);
-          semaphores.push_back(semaphore);
+          std::lock_guard guard(_m);
+          cmd_buffers[thread_id] = cmd_buffer;
+          stage_flags[thread_id] = flags;
+          semaphores[thread_id] = semaphore;
         }
       }
 
@@ -50,10 +52,33 @@ namespace Poulpe
         cmd_buffers.clear();
         stage_flags.clear();
         semaphores.clear();
+
+        init();
+      }
+
+      bool has_cmd() const
+      {
+        bool has_cmd{ false };
+
+        std::ranges::for_each(cmd_buffers, [&has_cmd](auto const& cmd) {
+          if (cmd != nullptr) {
+            has_cmd = true;
+          }
+        });
+        return has_cmd;
       }
 
     private:
-      std::mutex m;
+
+      void init()
+      {
+        cmd_buffers.resize(_size, nullptr);
+        stage_flags.resize(_size, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT);
+        semaphores.resize(_size, nullptr);
+      }
+
+      std::mutex _m;
+      size_t _size;
   };
 
   class ComponentManager;
@@ -78,7 +103,6 @@ namespace Poulpe
 
     inline void addCamera(Camera* const camera) { _camera = camera; }
     void addEntities(std::vector<Entity*> entities) ;
-    void swapBufferEntities();
     void addEntity(Entity* entity) ;
     void updateData(std::string const& name, UniformBufferObject const& ubo, std::vector<Vertex> const& vertices) ;
     void addPipeline(std::string const & shaderName, VulkanPipeline pipeline) ;
@@ -91,9 +115,11 @@ namespace Poulpe
       VkImage& depthImage,
       VkAttachmentLoadOp loadOp = VK_ATTACHMENT_LOAD_OP_LOAD,
       VkAttachmentStoreOp storeOp = VK_ATTACHMENT_STORE_OP_STORE,
+      bool const has_depth_attachment = true,
       bool continuousCmdBuffer = false);
-    void clear() ;
-    void destroy() ;
+    void clear();
+    void destroy();
+
     void draw(
       VkCommandBuffer& cmd_buffer,
       DrawCommands& draw_cmds,
@@ -104,7 +130,9 @@ namespace Poulpe
       std::vector<Entity*> const& entities,
       VkAttachmentLoadOp const load_op,
       std::latch& count_down,
-      unsigned int const thread_id);
+      unsigned int const thread_id,
+      bool const has_depth_attachment = true);
+
     void drawShadowMap(
       VkCommandBuffer& cmd_buffer,
       DrawCommands& draw_cmds,
@@ -114,11 +142,19 @@ namespace Poulpe
       VkAttachmentLoadOp const load_op,
       std::latch& count_down,
       unsigned int const thread_id);
-    void endRendering(VkCommandBuffer& cmd_buffer, VkImage image, VkImage depth_image);
+
+    void endRendering(
+      VkCommandBuffer& cmd_buffer,
+      VkImage& image,
+      VkImage& depth_image,
+      bool const has_depth_attachment = true);
+
     inline Camera* getCamera()  { return _camera; }
     inline uint32_t getCurrentFrameIndex() const { return _current_frame; }
-    inline std::vector<VkImageView>* getDepthMapImageViews()  { return & _depthmap_imageviews; }
-    inline std::vector<VkSampler>* getDepthMapSamplers()  { return & _depthmap_samplers; }
+    inline VkImageView getDepthMapImageViews()  { return  _depthmap_imageviews.at(_current_frame); }
+    inline VkSampler getDepthMapSamplers()  { return _depthmap_samplers.at(_current_frame); }
+    inline VkImageView getDepthImageViews()  { return _depth_imageviews.at(_current_frame); }
+    inline VkSampler getDepthSamplers()  { return  _depth_samplers.at(_current_frame); }
     inline std::vector<VkDescriptorSetLayout>* getDescriptorSetLayouts()  { return & _descriptorset_layouts; }
     inline VkDevice getDevice()  { return _vulkan->getDevice(); }
     inline glm::mat4 getPerspective()  { return _perspective; }
@@ -287,6 +323,8 @@ namespace Poulpe
     void setPerspective();
     void submit(DrawCommands const& drawCmds);
 
+    void swapBufferEntities();
+
   private:
     std::unique_ptr<VulkanAPI> _vulkan{ nullptr };
     VkSwapchainKHR _swapchain{ nullptr };
@@ -374,6 +412,6 @@ namespace Poulpe
     std::mutex _mutex_queue_submit;
     std::mutex _mutex_entity_submit;
 
-    DrawCommands _draw_cmds{1};
+    DrawCommands _draw_cmds{3};
   };
 }

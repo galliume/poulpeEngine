@@ -37,7 +37,7 @@ namespace Poulpe
       //shadowMapSpot.sampler = _renderer->getDepthMapSamplers()->at(1);
       image_info.emplace_back(texture_specular.getSampler(), texture_specular.getImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
       image_info.emplace_back(texture_bump.getSampler(), texture_bump.getImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-      image_info.emplace_back(_renderer->getDepthMapSamplers()->at(0), _renderer->getDepthMapImageViews()->at(0), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+      image_info.emplace_back(_renderer->getDepthMapSamplers(), _renderer->getDepthMapImageViews(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
       //image_info.emplace_back(shadowMapSpot);
 
       auto const& pipeline = _renderer->getPipeline(mesh->getShaderName());
@@ -198,10 +198,10 @@ namespace Poulpe
         material.shi_ior_diss = glm::vec3(mesh->getMaterial().shininess,
           mesh->getMaterial().ior, mesh->getMaterial().illum);
 
-        PLP_DEBUG("ambient {}",  material.ambient.r);
-        PLP_DEBUG("diffuse {}",  material.diffuse.r);
-        PLP_DEBUG("specular {}",  material.specular.r);
-        PLP_DEBUG("shi_ior_diss {}",  material.shi_ior_diss.x);
+        //PLP_DEBUG("ambient {}",  material.ambient.r);
+        //PLP_DEBUG("diffuse {}",  material.diffuse.r);
+        //PLP_DEBUG("specular {}",  material.specular.r);
+        //PLP_DEBUG("shi_ior_diss {}",  material.shi_ior_diss.x);
 
         ObjectBuffer objectBuffer{};
         objectBuffer.point_lights[0] = _light_manager->getPointLights().at(0);

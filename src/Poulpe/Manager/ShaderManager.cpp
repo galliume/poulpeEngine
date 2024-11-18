@@ -9,7 +9,7 @@ namespace Poulpe
 {
   ShaderManager::ShaderManager()
   {
-    _Shaders = std::make_unique<VulkanShaders>();
+    _shaders = std::make_unique<VulkanShaders>();
   }
 
   void ShaderManager::addShader(std::string const& name, std::string const& vertPath, std::string const& fragPath)
@@ -32,14 +32,14 @@ namespace Poulpe
     VkShaderModule vertexShaderModule = _renderer->createShaderModule(vertShaderCode);
     VkShaderModule fragShaderModule = _renderer->createShaderModule(fragShaderCode);
 
-    _Shaders->shaders[name] = { vertexShaderModule, fragShaderModule };
+    _shaders->shaders[name] = { vertexShaderModule, fragShaderModule };
 
     createGraphicPipeline(name);
   }
 
   void ShaderManager::clear()
   {
-    _Shaders->shaders.clear();
+    _shaders->shaders.clear();
     _LoadingDone = false;
   }
 
@@ -284,7 +284,7 @@ namespace Poulpe
     VkPipelineShaderStageCreateInfo vertShaderStageInfo{};
     vertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
     vertShaderStageInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
-    vertShaderStageInfo.module = _Shaders->shaders[shaderName][0];
+    vertShaderStageInfo.module = _shaders->shaders[shaderName][0];
     vertShaderStageInfo.pName = "main";
     shadersStageInfos.emplace_back(vertShaderStageInfo);
 
@@ -292,7 +292,7 @@ namespace Poulpe
       VkPipelineShaderStageCreateInfo fragShaderStageInfo{};
       fragShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
       fragShaderStageInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
-      fragShaderStageInfo.module = _Shaders->shaders[shaderName][1];
+      fragShaderStageInfo.module = _shaders->shaders[shaderName][1];
       fragShaderStageInfo.pName = "main";
       shadersStageInfos.emplace_back(fragShaderStageInfo);
     }

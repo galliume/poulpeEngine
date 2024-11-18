@@ -222,7 +222,7 @@ namespace Poulpe
           if (mesh->mNumUVComponents[0] > 0) {
             aiVector3D texCoord = mesh->mTextureCoords[0][face->mIndices[j]];
             vertex.texCoord = { texCoord.x, texCoord.y };
-            if (inverse_texture_y) vertex.texCoord.y *= -1.0f;
+            if (!inverse_texture_y) vertex.texCoord.y *= -1.0f;
           }
 
           vertex.color = { 1.0f, 1.0f, 1.0f };
@@ -294,7 +294,7 @@ namespace Poulpe
       std::replace(cleaned.begin(), cleaned.end(), '/', '_');
     }
 
-    PLP_DEBUG("asset: {} -> {}", name, cleaned);
+    //PLP_DEBUG("asset: {} -> {}", name, cleaned);
     return cleaned;
   };
 }

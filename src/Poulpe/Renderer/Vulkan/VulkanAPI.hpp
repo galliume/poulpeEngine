@@ -189,11 +189,13 @@ namespace Poulpe {
 
         void endRenderPass(VkCommandBuffer& cmd_buffer);
 
-        void beginRendering(VkCommandBuffer& cmd_buffer,
-            VkImageView & colorImageView,
-            VkImageView & depth_imageview,
-            VkAttachmentLoadOp const loadOp,
-            VkAttachmentStoreOp const storeOp);
+        void beginRendering(
+          VkCommandBuffer& cmd_buffer,
+          VkImageView& color_imageview,
+          VkImageView& depth_imageview,
+          VkAttachmentLoadOp const loadOp,
+          VkAttachmentStoreOp const storeOp,
+          bool const has_depth_attachment);
 
         void endRendering(VkCommandBuffer& cmd_buffer);
 
@@ -308,8 +310,8 @@ namespace Poulpe {
 
         void waitIdle();
 
-        void createDepthMapImage(VkImage & image);
-        VkImageView createDepthMapImageView(VkImage image);
+        void createDepthMapImage(VkImage& image);
+        VkImageView createDepthMapImageView(VkImage& image);
         VkSampler createDepthMapSampler();
         void createDepthMapFrameBuffer(VkRenderPass & renderPass, VkImageView & imageview, VkFramebuffer & frameBuffer);
 

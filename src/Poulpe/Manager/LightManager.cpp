@@ -5,16 +5,16 @@ namespace Poulpe
   LightManager::LightManager()
   {
     _ambient.color = glm::vec3(1.f);
-    _ambient.position = glm::vec3(1.5f, 1.5f, 1.5f);
-    _ambient.direction = glm::vec3(0.1f, -1.0, 0.0);
+    _ambient.position = glm::vec3(1.5f, 6.0f, 1.5f);
+    _ambient.direction = glm::vec3(0.1f, 1.0, 0.0);
     //ambient diffuse specular
     _ambient.ads = glm::vec3(0.0f, 0.0f, 0.0f);
     _ambient.clq = glm::vec3(0.0f);
 
     _ambient.view = glm::lookAt(
-      glm::vec3(-2.0f, 4.0f, -1.0f),
-      glm::vec3( 0.0f, 0.0f,  0.0f),
-      glm::vec3( 0.0f, 1.0f,  0.0f));
+      glm::vec3(-0.1f, 5.0f, -0.1f),
+      glm::vec3(0.0f, 0.0f, 0.0f),
+      glm::vec3(0.0f, 1.0f, 0.0f));
 
     float near_plane = 1.f, far_plane = 7.5f;
         
@@ -23,7 +23,7 @@ namespace Poulpe
     //    near_plane, far_plane);
 
     auto projection = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, near_plane, far_plane);
-    projection[1][1] *= -1;
+    //projection[1][1] *= -1;
 
     _ambient.projection = projection;
     _ambient.light_space_matrix = _ambient.projection * _ambient.view;

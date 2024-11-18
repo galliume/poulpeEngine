@@ -46,19 +46,17 @@ namespace Poulpe
     _depth_imageviews.resize(_images.size());
     _depth_samplers.resize(_images.size());
 
+     _depth_images2.resize(_images.size());
+    _depth_imageviews2.resize(_images.size());
+    _depth_samplers2.resize(_images.size());
+
     _imageviews2.resize(_images.size());
     _images2.resize(_images.size());
     _samplers2.resize(_images.size());
-    _depth_images2.resize(_images.size());
-    _depth_imageviews2.resize(_images.size());
-    _depth_samplers2.resize(_images.size());
 
     _imageviews3.resize(_images.size());
     _images3.resize(_images.size());
     _samplers3.resize(_images.size());
-    _depth_images3.resize(_images.size());
-    _depth_imageviews3.resize(_images.size());
-    _depth_samplers3.resize(_images.size());
 
     for (size_t i{ 0 }; i < _images.size(); ++i) {
       VkImage image;
@@ -75,30 +73,32 @@ namespace Poulpe
       VkImage depth_image;
 
       _vulkan->createImage(_vulkan->getSwapChainExtent().width, _vulkan->getSwapChainExtent().height, 1,
-        VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_D32_SFLOAT, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_SAMPLED_BIT
+        VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_D16_UNORM, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_SAMPLED_BIT
         | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
         VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, depth_image);
 
-      VkImageView depth_imageview = _vulkan->createImageView(depth_image, VK_FORMAT_D32_SFLOAT, 1,
+      VkImageView depth_imageview = _vulkan->createImageView(depth_image, VK_FORMAT_D16_UNORM, 1,
         VK_IMAGE_ASPECT_DEPTH_BIT);
 
-      _depth_images[i] = depth_image;
-      _depth_imageviews[i] = depth_imageview;
-      _depth_samplers[i] = _vulkan->createTextureSampler(1);
-    }
-    for (size_t i{ 0 }; i < _images.size(); ++i) {
-      VkImageView depth_imageview = _vulkan->createImageView(_depth_images[i], VK_FORMAT_D32_SFLOAT, 1,
+      _depth_images[i] = std::move(depth_image);
+      _depth_imageviews[i] = std::move(depth_imageview);
+      _depth_samplers[i] = std::move(_vulkan->createTextureSampler(1));
+
+      VkImage depth_image2;
+
+      _vulkan->createImage(_vulkan->getSwapChainExtent().width, _vulkan->getSwapChainExtent().height, 1,
+        VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_D16_UNORM, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_SAMPLED_BIT
+        | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
+        VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, depth_image2);
+
+      VkImageView depth_imageview2 = _vulkan->createImageView(depth_image2, VK_FORMAT_D16_UNORM, 1,
         VK_IMAGE_ASPECT_DEPTH_BIT);
 
-      _depth_imageviews2[i] = depth_imageview;
-      _depth_samplers2[i] = _vulkan->createTextureSampler(1);
+      _depth_images2[i] = std::move(depth_image2);
+      _depth_imageviews2[i] = std::move(depth_imageview2);
+      _depth_samplers2[i] = std::move(_vulkan->createTextureSampler(1));
     }
-    for (size_t i{ 0 }; i < _images.size(); ++i) {
-      VkImageView depth_imageview = _vulkan->createImageView(_depth_images[i], VK_FORMAT_D32_SFLOAT, 1,
-        VK_IMAGE_ASPECT_DEPTH_BIT);
-      _depth_imageviews3[i] = depth_imageview;
-      _depth_samplers3[i] = _vulkan->createTextureSampler(1);
-    }
+
     _cmd_pool_entities = _vulkan->createCommandPool();
     _cmd_pool_entities2 = _vulkan->createCommandPool();
     _cmd_pool_entities3 = _vulkan->createCommandPool();
@@ -205,30 +205,29 @@ namespace Poulpe
     _vulkan->startMarker(cmd_buffer, "shadow_map_" + pipeline_name, 0.1f, 0.2f, 0.3f);
     
     _vulkan->transitionImageLayout(cmd_buffer, depth,
-      VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, VK_IMAGE_ASPECT_DEPTH_BIT);
+      VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL, VK_IMAGE_ASPECT_DEPTH_BIT);
 
     VkClearColorValue color_clear = {};
     color_clear.float32[0] = 1.0f;
     color_clear.float32[1] = 1.0f;
     color_clear.float32[2] = 1.0f;
-    color_clear.float32[3] = 1.0f;
-      
+    color_clear.float32[3] = 0.0f;
+
     VkClearDepthStencilValue depth_stencil = { 1.f, 0 };
 
     VkRenderingAttachmentInfo depth_attachment_info{ };
     depth_attachment_info.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
     depth_attachment_info.imageView = depthview;
-    depth_attachment_info.imageLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+    depth_attachment_info.imageLayout = VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL;
     depth_attachment_info.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
     depth_attachment_info.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
     depth_attachment_info.clearValue.depthStencil = depth_stencil;
     depth_attachment_info.clearValue.color = color_clear;
 
-    //uint32_t const width{ _vulkan->getSwapChainExtent().width };
-    //uint32_t const height{ _vulkan->getSwapChainExtent().height };
-    uint32_t const width{ 2048 };
-    uint32_t const height{ 2048 };
-
+    uint32_t const width{ _vulkan->getSwapChainExtent().width };
+    uint32_t const height{ _vulkan->getSwapChainExtent().height };
+    //uint32_t const width{ 2048 };
+    //uint32_t const height{ 2048 };
 
     VkRenderingInfo  rendering_info{ };
     rendering_info.sType = VK_STRUCTURE_TYPE_RENDERING_INFO;
@@ -237,7 +236,7 @@ namespace Poulpe
     rendering_info.layerCount = 1;
     rendering_info.pDepthAttachment = &depth_attachment_info;
     rendering_info.colorAttachmentCount = 0;
-    //rendering_info.flags = VK_SUBPASS_CONTENTS_INLINE;
+    rendering_info.flags = VK_SUBPASS_CONTENTS_INLINE;
 
     vkCmdBeginRenderingKHR(cmd_buffer, &rendering_info);
 
@@ -317,7 +316,7 @@ namespace Poulpe
     _vulkan->endRendering(cmd_buffer);
 
      _vulkan->transitionImageLayout(cmd_buffer, depth,
-       VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_IMAGE_ASPECT_DEPTH_BIT);
+       VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_IMAGE_ASPECT_DEPTH_BIT);
  /*     _vulkan->transitionImageLayout(cmd_buffer, depth,
         VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR, VK_IMAGE_ASPECT_DEPTH_BIT);*/
 
@@ -325,7 +324,7 @@ namespace Poulpe
 
     _depthmap_descset_updated = true;
 
-    _draw_cmds.insert(&cmd_buffer, &_entities_sema_finished[thread_id]);
+    _draw_cmds.insert(&cmd_buffer, &_entities_sema_finished[thread_id], thread_id);
 
     count_down.count_down();
   }
@@ -340,7 +339,8 @@ namespace Poulpe
     std::vector<Entity*> const& entities,
     VkAttachmentLoadOp const load_op,
     std::latch& count_down,
-    unsigned int const thread_id)
+    unsigned int const thread_id,
+    bool const has_depth_attachment)
   {
     if (entities.empty()) return;
 
@@ -349,15 +349,18 @@ namespace Poulpe
     _vulkan->transitionImageLayout(cmd_buffer, color,
       VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_ASPECT_COLOR_BIT);
 
-    _vulkan->transitionImageLayout(cmd_buffer, depth,
-      VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL, VK_IMAGE_ASPECT_DEPTH_BIT);
+    if (has_depth_attachment) {
+      _vulkan->transitionImageLayout(cmd_buffer, depth,
+        VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL, VK_IMAGE_ASPECT_DEPTH_BIT);
+    }
 
     _vulkan->beginRendering(
       cmd_buffer,
       colorview,
       depthview,
       load_op,
-      VK_ATTACHMENT_STORE_OP_STORE);
+      VK_ATTACHMENT_STORE_OP_STORE,
+      has_depth_attachment);
 
     _vulkan->setViewPort(cmd_buffer);
     _vulkan->setScissor(cmd_buffer);
@@ -433,9 +436,9 @@ namespace Poulpe
       }
     });
     _vulkan->endMarker(cmd_buffer);
-    endRendering(cmd_buffer, color, depth);
+    endRendering(cmd_buffer, color, depth, has_depth_attachment);
 
-    _draw_cmds.insert(&cmd_buffer, &_entities_sema_finished[thread_id]);
+    _draw_cmds.insert(&cmd_buffer, &_entities_sema_finished[thread_id], thread_id);
 
     count_down.count_down();
   }
@@ -443,11 +446,10 @@ namespace Poulpe
   void Renderer::renderScene()
   {
     vkWaitForFences(_vulkan->getDevice(), 1, &_fences_in_flight[_current_frame], VK_TRUE, UINT64_MAX);
+    //@todo check properly result
     VkResult result = vkAcquireNextImageKHR(_vulkan->getDevice(), _swapchain, UINT64_MAX, _image_available[_current_frame], VK_NULL_HANDLE, &_image_index);
     vkResetFences(_vulkan->getDevice(), 1, &_fences_in_flight[_current_frame]);
     
-    //@todo check properly result
-
     std::latch count_down{3};
 
     if (_entity_manager->getSkybox()) {
@@ -462,48 +464,49 @@ namespace Poulpe
           {_entity_manager->getSkybox()},
           VK_ATTACHMENT_LOAD_OP_CLEAR,
           count_down,
-          0);
+          0,
+          true);
         //});
         //@todo bugfix when detach() ?
         //skybox_thread.join();
-      } else {
-        count_down.count_down();
-      }
+    } else {
+      count_down.count_down();
+    }
 
-      if (_entities.size() > 0) {
-        std::jthread shadow_map_thread([&]() {
-          drawShadowMap(
-            _cmd_buffer_entities3[_current_frame],
-            _draw_cmds,
-            _depthmap_imageviews[_current_frame],
-            _depthmap_images[_current_frame],
-            _entities,
-            VK_ATTACHMENT_LOAD_OP_CLEAR,
-            count_down,
-            1
-          );
-        });
-        shadow_map_thread.detach();
+    if (_entities.size() > 0) {
+    //  std::jthread shadow_map_thread([&]() {
+        drawShadowMap(
+          _cmd_buffer_entities3[_current_frame],
+          _draw_cmds,
+          _depthmap_imageviews[_current_frame],
+          _depthmap_images[_current_frame],
+          _entities,
+          VK_ATTACHMENT_LOAD_OP_LOAD,
+          count_down,
+          1
+        );
+      //});
+      //shadow_map_thread.detach();
         
-        std::jthread entities_thread([&]() {
-          draw(
-            _cmd_buffer_entities[_current_frame],
-            _draw_cmds,
-            _imageviews[_current_frame],
-            _images[_current_frame],
-            _depth_imageviews[_current_frame],
-            _depth_images[_current_frame],
-            _entities,
-            VK_ATTACHMENT_LOAD_OP_LOAD,
-            count_down,
-            2
-          );
-        });
-        entities_thread.detach();
-      } else {
-        count_down.count_down();
-        count_down.count_down();
-      }
+      //std::jthread entities_thread([&]() {
+        draw(
+          _cmd_buffer_entities[_current_frame],
+          _draw_cmds,
+          _imageviews[_current_frame],
+          _images[_current_frame],
+          _depth_imageviews[_current_frame],
+          _depth_images[_current_frame],
+          _entities,
+          VK_ATTACHMENT_LOAD_OP_LOAD,
+          count_down,
+          2, true
+        );
+      //});
+      //entities_thread.detach();
+    } else {
+      count_down.count_down();
+      count_down.count_down();
+    }
 
     count_down.wait();
 
@@ -559,6 +562,7 @@ namespace Poulpe
     VkImage& depth_image,
     VkAttachmentLoadOp load_op,
     VkAttachmentStoreOp store_op,
+    bool const has_depth_attachment,
     bool continuous_cmd_buffer)
   {
       if (!continuous_cmd_buffer) _vulkan->beginCommandBuffer(cmd_buffer, VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT);
@@ -566,36 +570,45 @@ namespace Poulpe
       _vulkan->transitionImageLayout(cmd_buffer, image,
         VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_ASPECT_COLOR_BIT);
 
-      _vulkan->transitionImageLayout(cmd_buffer, depth_image,
-        VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL, VK_IMAGE_ASPECT_DEPTH_BIT);
+      if (has_depth_attachment) {
+        _vulkan->transitionImageLayout(cmd_buffer, depth_image,
+          VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL, VK_IMAGE_ASPECT_DEPTH_BIT);
+      }
 
       _vulkan->beginRendering(
         cmd_buffer,
         imageview,
         depth_imageview,
         load_op,
-        store_op);
+        store_op,
+        has_depth_attachment);
 
       _vulkan->setViewPort(cmd_buffer);
       _vulkan->setScissor(cmd_buffer);
   }
 
-  void Renderer::endRendering(VkCommandBuffer& cmd_buffer, VkImage image, VkImage depth_image)
+  void Renderer::endRendering(
+    VkCommandBuffer& cmd_buffer,
+    VkImage& image,
+    VkImage& depth_image,
+    bool const has_depth_attachment)
   {
       _vulkan->endRendering(cmd_buffer);
 
       _vulkan->transitionImageLayout(cmd_buffer, image,
         VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR, VK_IMAGE_ASPECT_COLOR_BIT);
 
-      _vulkan->transitionImageLayout(cmd_buffer, depth_image,
-        VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR, VK_IMAGE_ASPECT_DEPTH_BIT);
+      if (has_depth_attachment) {
+        _vulkan->transitionImageLayout(cmd_buffer, depth_image,
+          VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_IMAGE_ASPECT_DEPTH_BIT);
+      }
 
       _vulkan->endCommandBuffer(cmd_buffer);
   }
 
   void Renderer::submit(DrawCommands const& draw_cmds)
   {
-    if (draw_cmds.cmd_buffers.empty()) {
+    if (!draw_cmds.has_cmd()) {
       vkResetFences(_vulkan->getDevice(), 1, &_fences_in_flight[_current_frame]);
       return;
     }
@@ -606,11 +619,15 @@ namespace Poulpe
       }
     });
     swap.detach();
-    
-    std::array<VkSemaphore, 1> wait_semaphores{ _image_available[_current_frame] };
-
     std::vector<VkSubmitInfo> submit_infos{};
+    bool has_semaphore{ false };
+
+    std::vector<VkSemaphore*> semaphores{ };
+
     for (size_t i{ 0 }; i < draw_cmds.cmd_buffers.size(); ++i) {
+
+      if (draw_cmds.cmd_buffers.at(i) == nullptr) continue;
+
       VkSubmitInfo submit_info{};
       submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
       submit_info.pCommandBuffers = draw_cmds.cmd_buffers.at(i);
@@ -620,11 +637,14 @@ namespace Poulpe
       submit_info.pSignalSemaphores = draw_cmds.semaphores.at(i);
 
       //@todo ugly but works ?
-      if (i == 0) {
+      if (!has_semaphore) {
         submit_info.waitSemaphoreCount = 1;
-        submit_info.pWaitSemaphores = wait_semaphores.data();
+        submit_info.pWaitSemaphores = &_image_available[_current_frame];
+        has_semaphore = true;
       }
       submit_infos.emplace_back(submit_info);
+      
+      semaphores.push_back(draw_cmds.semaphores.at(i));
     };
     
     auto queue = _vulkan->getGraphicsQueues().at(0);
@@ -633,8 +653,8 @@ namespace Poulpe
 
     VkPresentInfoKHR present_info{};
     present_info.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
-    present_info.waitSemaphoreCount = static_cast<uint32_t>(draw_cmds.semaphores.size());
-    present_info.pWaitSemaphores = *draw_cmds.semaphores.data();
+    present_info.waitSemaphoreCount = static_cast<uint32_t>(semaphores.size());
+    present_info.pWaitSemaphores = *semaphores.data();
     present_info.swapchainCount = 1;
     present_info.pSwapchains = swapchains.data();
     present_info.pImageIndices = &_image_index;
@@ -647,16 +667,6 @@ namespace Poulpe
 
     _draw_cmds.clear();
     onFinishRender();
-  }
-
-  void Renderer::swapBufferEntities()
-  {
-    {
-      std::lock_guard guard(_mutex_entity_submit);
-      copy(_entities_buffer.begin(), _entities_buffer.end(), back_inserter(_entities));
-      _entities_buffer.clear();
-      _entities_buffer.shrink_to_fit();
-    }
   }
 
   void Renderer::setRayPick(float x, float y, float z,  int width,  int height)
@@ -729,8 +739,8 @@ namespace Poulpe
 
   void Renderer::addEntities(std::vector<Entity*> entities)
   {
-     {
-       std::lock_guard guard(_mutex_entity_submit);
+    {
+      std::lock_guard guard(_mutex_entity_submit);
       copy(entities.begin(), entities.end(), back_inserter(_entities_buffer));
       _depthmap_descset_updated = false;
     }
@@ -738,8 +748,9 @@ namespace Poulpe
 
   void Renderer::addEntity(Entity* entity)
   {
-     {
+    {
       std::lock_guard guard(_mutex_entity_submit);
+
       _entities_buffer.emplace_back(entity);
       _depthmap_descset_updated = false;
     }
@@ -768,6 +779,16 @@ namespace Poulpe
           return;
         }
       }
+    }
+  }
+
+  void Renderer::swapBufferEntities()
+  {
+    {
+      std::lock_guard guard(_mutex_entity_submit);
+      copy(_entities_buffer.begin(), _entities_buffer.end(), back_inserter(_entities));
+      _entities_buffer.clear();
+      _entities_buffer.shrink_to_fit();
     }
   }
 }

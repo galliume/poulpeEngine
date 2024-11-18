@@ -90,11 +90,11 @@ void main()
   mat3 TBN = transpose(mat3(t, b, n));
   vs_out.TBN = TBN;
 
-  vs_out.fNormal = normalize(mat3(transpose(inverse(ubos[gl_InstanceIndex].model))) * normal);
+  vs_out.fNormal = transpose(inverse(mat3(ubos[gl_InstanceIndex].model))) * normal;
   vs_out.fPos = vec3(ubos[gl_InstanceIndex].model * vec4(pos, 1.0));
   vs_out.fTexCoord = texCoord;
   vs_out.fViewPos = pc.viewPos;
-  vs_out.fAmbientLightSpace = ambientLight.lightSpaceMatrix * ubos[gl_InstanceIndex].model * vec4(vs_out.fPos, 1.0);
+  vs_out.fAmbientLightSpace = ambientLight.lightSpaceMatrix * vec4(vs_out.fPos, 1.0);
   vs_out.fShadowCoordSpot = (biasMat * spotLight.lightSpaceMatrix) * vec4(vs_out.fPos, 1.0);
   vs_out.ffidtidBB = fidtidBB;
   vs_out.fvColor = vColor;
