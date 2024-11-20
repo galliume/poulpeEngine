@@ -28,8 +28,8 @@ namespace Poulpe
 
     void cleanUp();
     inline void forceRefresh() { _refresh = true; }
-    inline uint32_t getAppHeight() { return getRenderer()->getSwapChainExtent().height; }
-    inline uint32_t getAppWidth() { return getRenderer()->getSwapChainExtent().width; }
+    inline uint32_t getAppHeight() { return getRenderer()->getAPI()->getSwapChainExtent().height; }
+    inline uint32_t getAppWidth() { return getRenderer()->getAPI()->getSwapChainExtent().width; }
     inline AudioManager* getAudioManager() { return _audio_manager.get(); }
     inline Camera* getCamera() { return _camera.get(); }
     inline ComponentManager* getManager() { return _component_manager.get(); }

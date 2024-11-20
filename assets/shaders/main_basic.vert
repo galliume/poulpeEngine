@@ -92,6 +92,7 @@ void main()
 
   vs_out.fNormal = transpose(inverse(mat3(ubos[gl_InstanceIndex].model))) * normal;
   vs_out.fPos = vec3(ubos[gl_InstanceIndex].model * vec4(pos, 1.0));
+  //vs_out.fNormal = (ubos[gl_InstanceIndex].model * vec4(normal, 0.0)).xyz;
   vs_out.fTexCoord = texCoord;
   vs_out.fViewPos = pc.viewPos;
   vs_out.fAmbientLightSpace = ambientLight.lightSpaceMatrix * vec4(vs_out.fPos, 1.0);

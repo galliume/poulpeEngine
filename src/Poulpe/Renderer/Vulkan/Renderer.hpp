@@ -104,9 +104,16 @@ namespace Poulpe
     inline void addCamera(Camera* const camera) { _camera = camera; }
     void addEntities(std::vector<Entity*> entities) ;
     void addEntity(Entity* entity) ;
-    void updateData(std::string const& name, UniformBufferObject const& ubo, std::vector<Vertex> const& vertices) ;
-    void addPipeline(std::string const & shaderName, VulkanPipeline pipeline) ;
-    //void attachObserver(IObserver* const observer) ;
+    
+    void updateData(
+      std::string const& name,
+      UniformBufferObject const& ubo,
+      std::vector<Vertex> const& vertices) ;
+    
+    void addPipeline(
+      std::string const& shaderName,
+      VulkanPipeline& pipeline) ;
+    
     void beginRendering(
       VkCommandBuffer& cmd_buffer,
       VkImageView& imageview,
@@ -117,6 +124,7 @@ namespace Poulpe
       VkAttachmentStoreOp storeOp = VK_ATTACHMENT_STORE_OP_STORE,
       bool const has_depth_attachment = true,
       bool continuousCmdBuffer = false);
+
     void clear();
     void destroy();
 
@@ -149,7 +157,7 @@ namespace Poulpe
       VkImage& depth_image,
       bool const has_depth_attachment = true);
 
-    inline Camera* getCamera()  { return _camera; }
+    inline Camera* getCamera() { return _camera; }
     inline uint32_t getCurrentFrameIndex() const { return _current_frame; }
     inline VkImageView getDepthMapImageViews()  { return  _depthmap_imageviews.at(_current_frame); }
     inline VkSampler getDepthMapSamplers()  { return _depthmap_samplers.at(_current_frame); }
@@ -162,158 +170,19 @@ namespace Poulpe
     void immediateSubmit(std::function<void(VkCommandBuffer cmd)> && function, int queueIndex = 0) ;
     void init();
     void renderScene();
-    void setDeltatime(float deltaTime);
-    void setRayPick(float x, float y, float z, int width, int height);
-    void showGrid(bool show);
+    
+    void setDeltatime(float const deltaTime);
 
-    //@todo clean API call
-    std::vector<VkCommandBuffer> allocateCommandBuffers(VkCommandPool commandPool,
-      uint32_t size = 1,
-      bool isSecondary = false)  {
-        return _vulkan->allocateCommandBuffers(commandPool, size, isSecondary);
-    }
-    void beginCommandBuffer(VkCommandBuffer& cmd_buffer,
-      VkCommandBufferUsageFlagBits flags = VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT,
-      VkCommandBufferInheritanceInfo inheritanceInfo = {})  {
-        return _vulkan->beginCommandBuffer(cmd_buffer, flags, inheritanceInfo);
-    }
-    VkCommandPool createCommandPool()  {
-      return _vulkan->createCommandPool();
-    }
-    VkDescriptorPool createDescriptorPool(std::vector<VkDescriptorPoolSize> & poolSizes,
-      uint32_t maxSets = 100,
-      VkDescriptorPoolCreateFlags flags = VK_DESCRIPTOR_POOL_CREATE_UPDATE_AFTER_BIND_BIT)  {
-        return _vulkan->createDescriptorPool(poolSizes, maxSets, flags);
-    }
-    VkDescriptorSetLayout createDescriptorSetLayout(std::vector<VkDescriptorSetLayoutBinding> & pBindings)  {
-      return _vulkan->createDescriptorSetLayout(pBindings);
-    }
-    VkDescriptorSet createDescriptorSets(VkDescriptorPool const & descriptorPool,
-      std::vector<VkDescriptorSetLayout> const & descriptorSetLayouts,
-      uint32_t count = 100)  {
-        return _vulkan->createDescriptorSets(descriptorPool, descriptorSetLayouts, count);
-    }
-    VkPipeline createGraphicsPipeline(
-      VkPipelineLayout pipeline_layout,
-      std::string_view name,
-      std::vector<VkPipelineShaderStageCreateInfo> shadersCreateInfos,
-      VkPipelineVertexInputStateCreateInfo & vertexInputInfo,
-      VkCullModeFlagBits cullMode = VK_CULL_MODE_BACK_BIT,
-      bool depthTestEnable = true,
-      bool depthWriteEnable = true,
-      bool stencilTestEnable = true,
-      int polygoneMode = VK_POLYGON_MODE_FILL,
-      bool hasColorAttachment = true,
-      bool dynamicDepthBias = false) ;
-    Buffer createIndexBuffer(VkCommandPool & commandPool,
-      std::vector<uint32_t> const & indices)  {
-        return _vulkan->createIndexBuffer(commandPool, indices);
-    }
-    VkImageView createImageView(VkImage image,
-      VkFormat format,
-      uint32_t mipLevels,
-      VkImageAspectFlags aspectFlags = VK_IMAGE_ASPECT_COLOR_BIT)  {
-        return _vulkan->createImageView(image, format, mipLevels, aspectFlags);
-    }
-    VkPipelineLayout createPipelineLayout(std::vector<VkDescriptorSetLayout> & descriptorSetLayouts,
-      std::vector<VkPushConstantRange> & pushConstants)  {
-        return _vulkan->createPipelineLayout(descriptorSetLayouts, pushConstants);
-    }
-    VkShaderModule createShaderModule(std::vector<char> & code)  {
-      return _vulkan->createShaderModule(code);
-    }
-    void createSkyboxTextureImage(VkCommandBuffer& cmd_buffer,
-      std::vector<stbi_uc*>& skyboxPixels,
-      uint32_t texWidth,
-      uint32_t texHeight,
-      uint32_t mipLevels,
-      VkImage& textureImage,
-      VkFormat format)  {
-        _vulkan->createSkyboxTextureImage(
-          cmd_buffer,
-          skyboxPixels,
-          texWidth,
-          texHeight,
-          mipLevels,
-          textureImage,
-          format);
-    }
-    VkImageView createSkyboxImageView(VkImage image,
-      VkFormat format,
-      uint32_t mipLevels,
-      VkImageAspectFlags aspectFlags = VK_IMAGE_ASPECT_COLOR_BIT)  {
-        return _vulkan->createSkyboxImageView(image, format, mipLevels, aspectFlags);
-    }
-    VkSampler createSkyboxTextureSampler(uint32_t mipLevels)  {
-      return _vulkan->createSkyboxTextureSampler(mipLevels);
-    }
-    Buffer createStorageBuffers(
-      ObjectBuffer const& storage_buffer,
-      VkCommandPool& command_pool) {
-      return _vulkan->createStorageBuffers(storage_buffer, command_pool);
-    }
-    void createTextureImage(VkCommandBuffer& cmd_buffer,
-      stbi_uc* pixels,
-      uint32_t texWidth,
-      uint32_t texHeight,
-      uint32_t mipLevels,
-      VkImage& textureImage,
-      VkFormat format)  {
-        return _vulkan->createTextureImage(cmd_buffer,
-          pixels,
-          texWidth,
-          texHeight,
-          mipLevels,
-          textureImage,
-          format);
-    }
-    VkSampler createTextureSampler(uint32_t mipLevels)  {
-      return _vulkan->createTextureSampler(mipLevels);
-    }
-    Buffer createUniformBuffers(uint32_t uniformBuffersCount, VkCommandPool& commandPool)  {
-      return _vulkan->createUniformBuffers(uniformBuffersCount, commandPool);
-    }
-    Buffer createVertexBuffer(VkCommandPool commandPool,
-      std::vector<Vertex> vertices)  {
-        return _vulkan->createVertexBuffer(commandPool, vertices);
-    }
-    Buffer createVertex2DBuffer(VkCommandPool & commandPool,
-      std::vector<Vertex2D> & vertices)  {
-        return _vulkan->createVertex2DBuffer(commandPool, vertices);
-    }
-    void endCommandBuffer(VkCommandBuffer& cmd_buffer)  {
-      return _vulkan->endCommandBuffer(cmd_buffer);
-    }
-    DeviceMemoryPool* getDeviceMemoryPool()  { return _vulkan->getDeviceMemoryPool(); }
-    VkPhysicalDeviceProperties getDeviceProperties() const  { return _vulkan->getDeviceProperties(); }
-    inline VkExtent2D getSwapChainExtent() const  {
-      return _vulkan->getSwapChainExtent();
-    }
-    void updateDescriptorSets(
-      std::vector<Buffer> & uniformBuffers,
-      VkDescriptorSet & descriptorSet,
-      std::vector<VkDescriptorImageInfo> & imageInfo,
-      VkDescriptorType type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER)  {
-        _vulkan->updateDescriptorSets(uniformBuffers, descriptorSet, imageInfo, type);
-    }
-    void updateDescriptorSets(
-      std::vector<Buffer>& uniformBuffers,
-      std::vector<Buffer>& storageBuffers,
-      VkDescriptorSet& descriptorSet,
-      std::vector<VkDescriptorImageInfo>& imageInfo)  {
-        _vulkan->updateDescriptorSets(uniformBuffers, storageBuffers, descriptorSet, imageInfo);
-    }
-    void updateUniformBuffer(Buffer & buffer,
-      std::vector<UniformBufferObject>* uniformBufferObjects)  {
-        _vulkan->updateUniformBuffer(buffer, uniformBufferObjects);
-    }
-    void updateStorageBuffer(Buffer & buffer,
-      ObjectBuffer objectBuffer)  {
-        _vulkan->updateStorageBuffer(buffer, objectBuffer);
-    }
-    void waitIdle()  { _vulkan->waitIdle(); }
+    void setRayPick(
+      float const x,
+      float const y,
+      float const z,
+      int const width,
+      int const height);
+    
+    void showGrid(bool const show);
 
-    std::string getAPIVersion()  { return _vulkan->getAPIVersion(); }
+    VulkanAPI * const getAPI() const { return _vulkan.get(); }
 
   private:
     const uint32_t _MAX_FRAMES_IN_FLIGHT{ 2 };

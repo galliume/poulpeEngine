@@ -64,39 +64,40 @@ namespace Poulpe
 
         material.name = mat->GetName().C_Str();
 
-        aiColor3D ambientColor(0.f, 0.f, 0.f);
+        aiColor3D ambientColor(1.f);
         if (mat->Get(AI_MATKEY_COLOR_AMBIENT, ambientColor) == AI_SUCCESS) {
           material.ambient = { ambientColor.r, ambientColor.g, ambientColor.b };
-
+          if (material.ambient.r == 0) material.ambient = glm::vec3{ 1.f };
         }
-        aiColor3D diffuseColor(0.f, 0.f, 0.f);
+        aiColor3D diffuseColor(1.f);
         if (mat->Get(AI_MATKEY_COLOR_DIFFUSE, diffuseColor) == AI_SUCCESS) {
           material.diffuse = { diffuseColor.r, diffuseColor.g, diffuseColor.b };
-
+          if (material.diffuse.r == 0) material.diffuse = glm::vec3{ 1.f };
         }
-        aiColor3D specularColor(0.f, 0.f, 0.f);
+        aiColor3D specularColor(1.f);
         if (mat->Get(AI_MATKEY_COLOR_SPECULAR, specularColor) == AI_SUCCESS) {
           material.specular = { specularColor.r, specularColor.g, specularColor.b };
-
+          if (material.specular.r == 0) material.specular = glm::vec3{ 1.f };
         }
-        aiColor3D transmittanceColor(0.f, 0.f, 0.f);
+        aiColor3D transmittanceColor(1.f);
         if (mat->Get(AI_MATKEY_COLOR_TRANSPARENT, transmittanceColor) == AI_SUCCESS) {
           material.transmittance = { transmittanceColor.r, transmittanceColor.g, transmittanceColor.b };
-
+          if (material.transmittance.r == 0) material.transmittance = glm::vec3{ 1.f };
         }
-        float shininess;
+        float shininess{ 1.f };
         if (mat->Get(AI_MATKEY_SHININESS, shininess) == AI_SUCCESS) {
-          material.shininess = shininess;
+          material.shininess = (0.0f <= shininess) ? shininess : 1.f;
         }
+
         aiColor3D emissionColor;
         if (mat->Get(AI_MATKEY_EMISSIVE_INTENSITY, emissionColor) == AI_SUCCESS) {
           material.emission = { emissionColor.r, emissionColor.g, emissionColor.b };
         }
-        float ior;
+        float ior{ 1.f };
         if (mat->Get(AI_MATKEY_REFRACTI, ior) == AI_SUCCESS) {
           material.ior = ior;
         }
-        float dissolve;
+        float dissolve{ 1.f };
         if (mat->Get(AI_MATKEY_OPACITY, dissolve) == AI_SUCCESS) {
           material.dissolve = dissolve;
         }
@@ -295,6 +296,7 @@ namespace Poulpe
     }
 
     //PLP_DEBUG("asset: {} -> {}", name, cleaned);
+
     return cleaned;
   };
 }

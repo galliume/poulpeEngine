@@ -67,7 +67,7 @@ namespace Poulpe
 
       std::stringstream title;
       title << "PoulpeEngine v" << PoulpeEngine_VERSION_MAJOR << "." << PoulpeEngine_VERSION_MINOR
-        << " API Version: " << _render_manager->getRenderer()->getAPIVersion()
+        << " Vulkan version: " << _render_manager->getRenderer()->getAPI()->getAPIVersion()
         << " " << deltatime.count() << " ms"
         << " " << std::ceil(1.f / (deltatime.count() * 0.001f)) << " fps";
       glfwSetWindowTitle(_render_manager->getWindow()->get(), title.str().c_str());

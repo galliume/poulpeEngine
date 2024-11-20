@@ -29,8 +29,8 @@ namespace Poulpe
     auto vertShaderCode = Tools::readFile(vertPath);
     auto fragShaderCode = Tools::readFile(fragPath);
 
-    VkShaderModule vertexShaderModule = _renderer->createShaderModule(vertShaderCode);
-    VkShaderModule fragShaderModule = _renderer->createShaderModule(fragShaderCode);
+    VkShaderModule vertexShaderModule = _renderer->getAPI()->createShaderModule(vertShaderCode);
+    VkShaderModule fragShaderModule = _renderer->getAPI()->createShaderModule(fragShaderCode);
 
     _shaders->shaders[name] = { vertexShaderModule, fragShaderModule };
 
@@ -141,7 +141,7 @@ namespace Poulpe
       throw std::runtime_error("unknown descSetLayoutType");
     }
 
-    return _renderer->createDescriptorSetLayout(bindings);
+    return _renderer->getAPI()->createDescriptorSetLayout(bindings);
   }
 
   void ShaderManager::createGraphicPipeline(std::string const & shaderName)
@@ -181,9 +181,9 @@ namespace Poulpe
       vkPc.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
       vkPcs.emplace_back(vkPc);
 
-      pipeline_layout = _renderer->createPipelineLayout(dSetLayout, vkPcs);
+      pipeline_layout = _renderer->getAPI()->createPipelineLayout(dSetLayout, vkPcs);
 
-      graphicPipeline = _renderer->createGraphicsPipeline(
+      graphicPipeline = _renderer->getAPI()->createGraphicsPipeline(
         pipeline_layout,
         shaderName,
         shaders,
@@ -205,9 +205,9 @@ namespace Poulpe
       vkPc.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
       vkPcs.emplace_back(vkPc);
 
-      pipeline_layout = _renderer->createPipelineLayout(dSetLayout, vkPcs);
+      pipeline_layout = _renderer->getAPI()->createPipelineLayout(dSetLayout, vkPcs);
 
-      graphicPipeline = _renderer->createGraphicsPipeline(
+      graphicPipeline = _renderer->getAPI()->createGraphicsPipeline(
         pipeline_layout,
         shaderName,
         shaders,
@@ -246,9 +246,9 @@ namespace Poulpe
 
       vkPcs.emplace_back(vkPc);
       std::vector<VkDescriptorSetLayout> dSetLayout = { descset_layout };
-      pipeline_layout = _renderer->createPipelineLayout(dSetLayout, vkPcs);
+      pipeline_layout = _renderer->getAPI()->createPipelineLayout(dSetLayout, vkPcs);
         
-      graphicPipeline = _renderer->createGraphicsPipeline(
+      graphicPipeline = _renderer->getAPI()->createGraphicsPipeline(
         pipeline_layout,
         shaderName,
         shaders,
@@ -260,7 +260,7 @@ namespace Poulpe
         hasDynamicDepthBias);
     }
     
-    auto descriptorPool = _renderer->createDescriptorPool(poolSizes, 10000);
+    auto descriptorPool = _renderer->getAPI()->createDescriptorPool(poolSizes, 10000);
 
     VulkanPipeline pipeline{};
     pipeline.pipeline = graphicPipeline;
@@ -270,7 +270,7 @@ namespace Poulpe
     pipeline.shaders = shaders;
 
     if (shaderName == "shadowMap" || shaderName == "shadowMapSpot") {
-      pipeline.descset = _renderer->createDescriptorSets(pipeline.desc_pool, { pipeline.descset_layout }, 1);
+      pipeline.descset = _renderer->getAPI()->createDescriptorSets(pipeline.desc_pool, { pipeline.descset_layout }, 1);
     }
     _renderer->addPipeline(shaderName, pipeline);
   }

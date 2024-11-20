@@ -115,7 +115,7 @@ namespace Poulpe
     std::string _normal_map;
     std::string _alpha;
     std::vector<Vertex> _vertices;
-    std::vector<uint32_t> _Indices;
+    std::vector<uint32_t> _indices;
     std::vector<UniformBufferObject> _ubos;
     std::vector<uint32_t> _ubos_offset;
     Buffer _vertex_buffer { nullptr, nullptr, 0, 0 };

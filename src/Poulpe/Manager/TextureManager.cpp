@@ -85,11 +85,12 @@ namespace Poulpe
 
     VkImage skybox_image = nullptr;
     uint32_t mip_lvls = 1;
-    VkCommandPool commandPool = _renderer->createCommandPool();
+    VkCommandPool commandPool = _renderer->getAPI()->createCommandPool();
 
-    VkCommandBuffer cmd_buffer = _renderer->allocateCommandBuffers(commandPool)[0];
-    _renderer->beginCommandBuffer(cmd_buffer);
-    _renderer->createSkyboxTextureImage(cmd_buffer,
+    VkCommandBuffer cmd_buffer = _renderer->getAPI()->allocateCommandBuffers(commandPool)[0];
+    _renderer->getAPI()->beginCommandBuffer(cmd_buffer);
+    _renderer->getAPI()->createSkyboxTextureImage(
+      cmd_buffer,
       skybox_pixels,
       static_cast<uint32_t>(tex_width),
       static_cast<uint32_t>(tex_height),
@@ -97,8 +98,8 @@ namespace Poulpe
       skybox_image,
       VK_FORMAT_R8G8B8A8_SRGB);
 
-    VkImageView texture_imageview = _renderer->createSkyboxImageView(skybox_image, VK_FORMAT_R8G8B8A8_SRGB, mip_lvls);
-    VkSampler texture_sampler = _renderer->createSkyboxTextureSampler(mip_lvls);
+    VkImageView texture_imageview = _renderer->getAPI()->createSkyboxImageView(skybox_image, VK_FORMAT_R8G8B8A8_SRGB, mip_lvls);
+    VkSampler texture_sampler = _renderer->getAPI()->createSkyboxTextureSampler(mip_lvls);
 
     _skybox.setImage(skybox_image);
     _skybox.setImageView(texture_imageview);
@@ -139,11 +140,11 @@ namespace Poulpe
     uint32_t mip_lvls = static_cast<uint32_t>(std::floor(std::log2(std::max(tex_width, tex_height)))) + 1;
     if (std::cmp_greater(mip_lvls, MAX_MIPLEVELS)) mip_lvls = MAX_MIPLEVELS;
 
-    VkCommandPool commandPool = _renderer->createCommandPool();
-    VkCommandBuffer cmd_buffer = _renderer->allocateCommandBuffers(commandPool)[0];
+    VkCommandPool commandPool = _renderer->getAPI()->createCommandPool();
+    VkCommandBuffer cmd_buffer = _renderer->getAPI()->allocateCommandBuffers(commandPool)[0];
 
-    _renderer->beginCommandBuffer(cmd_buffer);
-    _renderer->createTextureImage(cmd_buffer,
+    _renderer->getAPI()->beginCommandBuffer(cmd_buffer);
+    _renderer->getAPI()->createTextureImage(cmd_buffer,
       pixels,
       static_cast<uint32_t>(tex_width),
       static_cast<uint32_t>(tex_height),
@@ -151,8 +152,8 @@ namespace Poulpe
       texture_image,
       VK_FORMAT_R8G8B8A8_SRGB);
 
-    VkImageView texture_imageview = _renderer->createImageView(texture_image, VK_FORMAT_R8G8B8A8_SRGB, mip_lvls);
-    VkSampler texture_sampler = _renderer->createTextureSampler(mip_lvls);
+    VkImageView texture_imageview = _renderer->getAPI()->createImageView(texture_image, VK_FORMAT_R8G8B8A8_SRGB, mip_lvls);
+    VkSampler texture_sampler = _renderer->getAPI()->createTextureSampler(mip_lvls);
 
     Texture texture;
     texture.setName(name);
