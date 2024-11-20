@@ -205,7 +205,7 @@ namespace Poulpe
     _vulkan->startMarker(cmd_buffer, "shadow_map_" + pipeline_name, 0.1f, 0.2f, 0.3f);
     
     _vulkan->transitionImageLayout(cmd_buffer, depth,
-      VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL, VK_IMAGE_ASPECT_DEPTH_BIT);
+      VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, VK_IMAGE_ASPECT_DEPTH_BIT);
 
     VkClearColorValue color_clear = {};
     color_clear.float32[0] = 1.0f;
@@ -316,7 +316,7 @@ namespace Poulpe
     _vulkan->endRendering(cmd_buffer);
 
      _vulkan->transitionImageLayout(cmd_buffer, depth,
-       VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_IMAGE_ASPECT_DEPTH_BIT);
+       VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_IMAGE_ASPECT_DEPTH_BIT);
  /*     _vulkan->transitionImageLayout(cmd_buffer, depth,
         VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR, VK_IMAGE_ASPECT_DEPTH_BIT);*/
 
@@ -324,7 +324,7 @@ namespace Poulpe
 
     _depthmap_descset_updated = true;
 
-    _draw_cmds.insert(&cmd_buffer, &_entities_sema_finished[thread_id], thread_id);
+    _draw_cmds.insert(&cmd_buffer, &_entities_sema_finished[thread_id], thread_id, VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL);
 
     count_down.count_down();
   }
@@ -342,7 +342,10 @@ namespace Poulpe
     unsigned int const thread_id,
     bool const has_depth_attachment)
   {
-    if (entities.empty()) return;
+    if (entities.empty()) {
+      count_down.count_down();
+      return;
+    }
 
     _vulkan->beginCommandBuffer(cmd_buffer);
 
@@ -351,7 +354,7 @@ namespace Poulpe
 
     if (has_depth_attachment) {
       _vulkan->transitionImageLayout(cmd_buffer, depth,
-        VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL, VK_IMAGE_ASPECT_DEPTH_BIT);
+        VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, VK_IMAGE_ASPECT_DEPTH_BIT);
     }
 
     _vulkan->beginRendering(
@@ -474,35 +477,35 @@ namespace Poulpe
     }
 
     if (_entities.size() > 0) {
-    //  std::jthread shadow_map_thread([&]() {
+     std::jthread shadow_map_thread([&]() {
         drawShadowMap(
-          _cmd_buffer_entities3[_current_frame],
-          _draw_cmds,
-          _depthmap_imageviews[_current_frame],
-          _depthmap_images[_current_frame],
-          _entities,
-          VK_ATTACHMENT_LOAD_OP_LOAD,
-          count_down,
-          1
+         _cmd_buffer_entities3[_current_frame],
+         _draw_cmds,
+         _depthmap_imageviews[_current_frame],
+         _depthmap_images[_current_frame],
+         _entities,
+         VK_ATTACHMENT_LOAD_OP_LOAD,
+         count_down,
+         1
         );
-      //});
-      //shadow_map_thread.detach();
+      });
+      shadow_map_thread.detach();
         
-      //std::jthread entities_thread([&]() {
+      std::jthread entities_thread([&]() {
         draw(
-          _cmd_buffer_entities[_current_frame],
-          _draw_cmds,
-          _imageviews[_current_frame],
-          _images[_current_frame],
-          _depth_imageviews[_current_frame],
-          _depth_images[_current_frame],
-          _entities,
-          VK_ATTACHMENT_LOAD_OP_LOAD,
-          count_down,
-          2, true
+         _cmd_buffer_entities[_current_frame],
+         _draw_cmds,
+         _imageviews[_current_frame],
+         _images[_current_frame],
+         _depth_imageviews[_current_frame],
+         _depth_images[_current_frame],
+         _entities,
+         VK_ATTACHMENT_LOAD_OP_LOAD,
+         count_down,
+         2, true
         );
-      //});
-      //entities_thread.detach();
+      });
+      entities_thread.detach();
     } else {
       count_down.count_down();
       count_down.count_down();
@@ -572,7 +575,7 @@ namespace Poulpe
 
       if (has_depth_attachment) {
         _vulkan->transitionImageLayout(cmd_buffer, depth_image,
-          VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL, VK_IMAGE_ASPECT_DEPTH_BIT);
+          VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, VK_IMAGE_ASPECT_DEPTH_BIT);
       }
 
       _vulkan->beginRendering(
@@ -593,17 +596,17 @@ namespace Poulpe
     VkImage& depth_image,
     bool const has_depth_attachment)
   {
-      _vulkan->endRendering(cmd_buffer);
+    _vulkan->endRendering(cmd_buffer);
 
-      _vulkan->transitionImageLayout(cmd_buffer, image,
-        VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR, VK_IMAGE_ASPECT_COLOR_BIT);
+    _vulkan->transitionImageLayout(cmd_buffer, image,
+      VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR, VK_IMAGE_ASPECT_COLOR_BIT);
 
-      if (has_depth_attachment) {
-        _vulkan->transitionImageLayout(cmd_buffer, depth_image,
-          VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_IMAGE_ASPECT_DEPTH_BIT);
-      }
+    if (has_depth_attachment) {
+      _vulkan->transitionImageLayout(cmd_buffer, depth_image,
+        VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_IMAGE_ASPECT_DEPTH_BIT);
+    }
 
-      _vulkan->endCommandBuffer(cmd_buffer);
+    _vulkan->endCommandBuffer(cmd_buffer);
   }
 
   void Renderer::submit(DrawCommands const& draw_cmds)
@@ -613,12 +616,6 @@ namespace Poulpe
       return;
     }
 
-    std::jthread swap([&]() {
-      if (!_entities_buffer.empty()) {
-        swapBufferEntities();
-      }
-    });
-    swap.detach();
     std::vector<VkSubmitInfo> submit_infos{};
     bool has_semaphore{ false };
 
@@ -667,74 +664,55 @@ namespace Poulpe
 
     _draw_cmds.clear();
     onFinishRender();
+
+    if (!_entities_buffer.empty()) {
+      swapBufferEntities();
+    }
   }
 
-  void Renderer::setRayPick(float x, float y, float z,  int width,  int height)
+  void Renderer::setRayPick(
+    float const x,
+    float const y,
+    float const z,
+    int const width,
+    int const height)
   {
-      glm::vec3 rayNds = glm::vec3(x, y, z);
-      glm::vec4 rayClip = glm::vec4(rayNds.x, rayNds.y, -1.0, 1.0);
-      glm::vec4 rayEye = glm::inverse(getPerspective()) * rayClip;
-      rayEye = glm::vec4(rayEye.x, rayEye.y, -1.0, 0.0);
+    glm::vec3 rayNds = glm::vec3(x, y, z);
+    glm::vec4 rayClip = glm::vec4(rayNds.x, rayNds.y, -1.0, 1.0);
+    glm::vec4 rayEye = glm::inverse(getPerspective()) * rayClip;
+    rayEye = glm::vec4(rayEye.x, rayEye.y, -1.0, 0.0);
 
-      glm::vec4 tmp = (glm::inverse(getCamera()->getView()) * rayEye);
-      glm::vec3 rayWor = glm::vec3(tmp.x, tmp.y, tmp.z);
+    glm::vec4 tmp = (glm::inverse(getCamera()->getView()) * rayEye);
+    glm::vec3 rayWor = glm::vec3(tmp.x, tmp.y, tmp.z);
   }
 
   void Renderer::clear()
   {
-      _entity_manager->clear();
+    _entity_manager->clear();
   }
 
   void Renderer::onFinishRender()
   {
-      //Event event{ "OnFinishRender" };
-      //for (const auto& observer : _Observers) {
-      //    observer->notify(event);
-      //}
+    //Event event{ "OnFinishRender" };
+    //for (const auto& observer : _Observers) {
+    //    observer->notify(event);
+    //}
   }
 
-  //void Renderer::attachObserver(IObserver* observer)
-  //{
-  //  _Observers.push_back(observer);
-  //}
-
-  void Renderer::showGrid(bool show)
+  void Renderer::showGrid(bool const show)
   {
-      for (auto & hud : *_entity_manager->getHUD()) {
-          if ("grid" == hud->getName()) {
-              hud->setVisible(show);
-          }
+    for (auto & hud : *_entity_manager->getHUD()) {
+      if ("grid" == hud->getName()) {
+        hud->setVisible(show);
       }
+    }
   }
 
-  void Renderer::addPipeline(std::string const & shaderName, VulkanPipeline pipeline)
+  void Renderer::addPipeline(
+    std::string const& shaderName,
+    VulkanPipeline& pipeline)
   {
-      _pipelines[shaderName] = std::move(pipeline);
-  }
-
-  VkPipeline Renderer::createGraphicsPipeline(
-  VkPipelineLayout pipeline_layout,
-  std::string_view name,
-  std::vector<VkPipelineShaderStageCreateInfo> shadersCreateInfos,
-  VkPipelineVertexInputStateCreateInfo & vertexInputInfo,
-  VkCullModeFlagBits cullMode,
-  bool depthTestEnable,
-  bool depthWriteEnable,
-  bool stencilTestEnable,
-  int polygoneMode, 
-  bool hasColorAttachment,
-  bool dynamicDepthBias) {
-      return _vulkan->createGraphicsPipeline(
-          pipeline_layout,
-          name,
-          shadersCreateInfos,
-          vertexInputInfo,
-          cullMode,
-          depthTestEnable, depthWriteEnable, stencilTestEnable,
-          polygoneMode,
-          hasColorAttachment,
-          dynamicDepthBias
-      );
+    _pipelines[shaderName] = std::move(pipeline);
   }
 
   void Renderer::addEntities(std::vector<Entity*> entities)

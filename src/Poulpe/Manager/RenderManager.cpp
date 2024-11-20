@@ -47,7 +47,7 @@ namespace Poulpe
     _renderer->init();
     _renderer->addCamera(_camera.get());
     _destroy_manager->setRenderer(_renderer.get());
-    _destroy_manager->addMemoryPool(_renderer->getDeviceMemoryPool());
+    _destroy_manager->addMemoryPool(_renderer->getAPI()->getDeviceMemoryPool());
 
     nlohmann::json appConfig = Poulpe::Locator::getConfigManager()->appConfig();
     if (appConfig["defaultLevel"].empty()) {
@@ -91,7 +91,7 @@ namespace Poulpe
   {
     //@todo clean all thoses
     if (_refresh) {
-        _renderer->waitIdle();
+        _renderer->getAPI()->waitIdle();
         cleanUp();
         setIsLoaded(false);
         _refresh = false;

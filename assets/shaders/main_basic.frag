@@ -116,30 +116,26 @@ void main()
 
 vec3 CalcDirLight(vec4 color, Light dirLight, vec3 normal, vec3 viewDir, float shadow)
 {
-  vec3 lightDir = normalize(-dirLight.direction - fs_in.fPos);
-  vec3 ambient = dirLight.color * (material.ambient);
+  vec3 lightDir = normalize(dirLight.position - fs_in.fPos);
+  vec3 ambient = (dirLight.color * vec3(texture(texSampler[0], fs_in.fTexCoord))) * dirLight.ads.x;
 
   float diff = max(dot(normal, lightDir), 0.0);
-  vec3 diffuse = dirLight.color * (diff * material.diffuse);
+  vec3 diffuse =  (diff * vec3(texture(texSampler[0], fs_in.fTexCoord))) * dirLight.ads.y;
 
-  vec3 h = normalize(lightDir + viewDir);
-  vec3 specular = vec3(0.0);
+  //vec3 reflectDir = reflect(-dirLight.position, normal);
+  vec3 halfwayDir = normalize(lightDir + viewDir);
+  float spec = pow(max(dot(normal, halfwayDir), 0.0), material.shi_ior_diss.x);
 
-//  float spec = 0.0;
-//  spec = pow(max(dot(normal, h), 0.0), 1.0);
-//  specular = spec * dirLight.color;
-//
-//    ivec2 texSize = textureSize(texSampler[4], 0);
+  vec3 specular = vec3(1.f);
+  ivec2 texSize = textureSize(texSampler[2], 0);
 
-//    if (texSize.x == 1 && texSize.y == 1) {
-    //float spec = pow(clamp(dot(normal, h), 0.0, 1.0), material.shiIorDiss.x) * float(dot(normal, h) > 0.0);
-    //specular =  dirLight.color * (dirLight.ads.z * spec * material.specular);
-//    } else {
-    float spec = pow(clamp(dot(normal, h), 0.0, 1.0), material.shi_ior_diss.r) * float(dot(normal, h) > 0.0);
-    specular = dirLight.color * (spec) * texture(texSampler[2], fs_in.fTexCoord).xyz;
-//    }
+  if (texSize.x == 1 && texSize.y == 1) {
+    specular = (material.specular * spec) * dirLight.color * dirLight.ads.z;
+  } else {
+    specular = (vec3(texture(texSampler[2], fs_in.fTexCoord)) * spec) * dirLight.color * dirLight.ads.z;
+  }
 
-  return (ambient + (1 - shadow) * (diffuse + specular)) * color.xyz;
+  return (ambient + (1.0 - shadow) * (diffuse + specular)) * color.xyz;
 }
 
 vec3 CalcPointLight(vec4 color, Light pointLight, vec3 normal, vec3 fragPos, vec3 viewDir)
@@ -204,11 +200,11 @@ vec3 CalcSpotLight(vec4 color, Light spotlight, vec3 normal, vec3 fragPos, vec3 
 float ShadowCalculation(vec4 ambientLightSpace)
 {
   vec3 coord = ambientLightSpace.xyz / ambientLightSpace.w;
-  //coord = coord * 0.5 + 0.5;
+  coord = coord * 0.5 + 0.5;
 
   float closestDepth = texture(texSampler[4], coord.xy).r;
   float currentDepth = coord.z;
-  float bias = max(0.05 * (1.0 - dot(fs_in.fNormal, -ambientLight.direction)), 0.005);
+  float bias = max(0.05 * (1.0 - dot(fs_in.fNormal, ambientLight.direction)), 0.005);
 
   float shadow = 0.1;
   vec2 texelSize = textureSize(texSampler[4], 0);

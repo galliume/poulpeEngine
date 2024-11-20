@@ -192,7 +192,7 @@ namespace Poulpe
       data._bump_map = name_bump_map;
       data._alpha = name_alpha_map;
       data._vertices = _data.vertices;
-      data._Indices = _data.indices;
+      data._indices = _data.indices;
       data._origin_pos = entity_opts.pos;
       data._current_pos = entity_opts.pos;
       data._origin_scale = entity_opts.scale;
