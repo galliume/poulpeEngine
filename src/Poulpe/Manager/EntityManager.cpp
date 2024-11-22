@@ -58,7 +58,7 @@ namespace Poulpe
 
   EntityNode * EntityManager::getWorldNode()
   {
-      return _world_node.get();
+    return _world_node.get();
   }
 
   void EntityManager::initMeshes(std::string const& name, nlohmann::json const& data)

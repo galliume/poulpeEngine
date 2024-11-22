@@ -24,7 +24,7 @@ namespace Poulpe
 
     public:
       std::vector<VkCommandBuffer*> cmd_buffers{};
-      std::vector<VkPipelineStageFlags> stage_flags{};
+      std::vector<std::vector<VkPipelineStageFlags>> stage_flags{};
       std::vector<VkSemaphore*> semaphores{};
 
       DrawCommands(size_t const size)
@@ -37,7 +37,7 @@ namespace Poulpe
         VkCommandBuffer* cmd_buffer,
         VkSemaphore* semaphore,
         unsigned int const thread_id,
-        VkPipelineStageFlags flags = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT)
+        std::vector<VkPipelineStageFlags> flags = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT })
       {
         {
           std::lock_guard guard(_m);
@@ -73,7 +73,7 @@ namespace Poulpe
       void init()
       {
         cmd_buffers.resize(_size, nullptr);
-        stage_flags.resize(_size, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT);
+        stage_flags.resize(_size, { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT });
         semaphores.resize(_size, nullptr);
       }
 

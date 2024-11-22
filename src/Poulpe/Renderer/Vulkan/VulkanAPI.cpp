@@ -394,6 +394,8 @@ namespace Poulpe {
     device_features.sampleRateShading = VK_TRUE;
     device_features.imageCubeArray = VK_TRUE;
     device_features.geometryShader = VK_TRUE;
+    device_features.depthBiasClamp = VK_TRUE;
+    device_features.depthClamp = VK_TRUE;
 
     VkPhysicalDeviceDescriptorIndexingFeatures descriptor_indexing{};
     descriptor_indexing.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES;
@@ -750,7 +752,7 @@ namespace Poulpe {
 
     VkPipelineRasterizationStateCreateInfo rasterizer{};
     rasterizer.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
-    rasterizer.depthClampEnable = VK_FALSE;
+    rasterizer.depthClampEnable = VK_TRUE;
     rasterizer.rasterizerDiscardEnable = VK_FALSE;
     rasterizer.polygonMode = static_cast<VkPolygonMode>(polygone_mode);
     rasterizer.lineWidth = 1.0f;
@@ -760,7 +762,7 @@ namespace Poulpe {
     rasterizer.depthBiasConstantFactor = 0.f;
     rasterizer.depthBiasClamp = 0.0f;
     rasterizer.depthBiasSlopeFactor = 0.0f;
-    //rasterizer.pNext = &depth_clip_state;
+    rasterizer.pNext = &depth_clip_state;
 
     VkPipelineMultisampleStateCreateInfo multi_sampling{};
     multi_sampling.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
@@ -838,7 +840,7 @@ namespace Poulpe {
     rendering_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO_KHR;
     rendering_create_info.colorAttachmentCount = has_color_attachment ? 1 : 0;
     if (has_color_attachment) rendering_create_info.pColorAttachmentFormats = & format;
-    if (has_depth_test) rendering_create_info.depthAttachmentFormat = VK_FORMAT_D16_UNORM; //(VK_FORMAT_D16_UNORM) 
+    if (has_depth_test) rendering_create_info.depthAttachmentFormat = VK_FORMAT_D24_UNORM_S8_UINT; //(VK_FORMAT_D24_UNORM_S8_UINT) 
 
     pipeline_info.pNext = & rendering_create_info;
 
@@ -1154,7 +1156,7 @@ namespace Poulpe {
     VkCommandBufferUsageFlagBits const flags,
     VkCommandBufferInheritanceInfo const inheritance_info)
   {
-    vkResetCommandBuffer(cmd_buffer, VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
+    vkResetCommandBuffer(cmd_buffer, 0);
 
     VkCommandBufferBeginInfo begin_info{};
     begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -1224,7 +1226,7 @@ namespace Poulpe {
     alloc_info.descriptorPool = descriptor_pool;
     alloc_info.descriptorSetCount = count;
     alloc_info.pSetLayouts = descset_layout.data();
-
+    
     VkResult result = vkAllocateDescriptorSets(_device, & alloc_info, & descset);
 
     if (result != VK_SUCCESS) {
@@ -1473,8 +1475,7 @@ namespace Poulpe {
     VkImageView& color_imageview,
     VkImageView& depth_imageview,
     VkAttachmentLoadOp const load_op,
-    VkAttachmentStoreOp const store_op,
-    bool has_depth_attachment)
+    VkAttachmentStoreOp const store_op)
   {
     VkRenderingInfo rendering_info{ };
     rendering_info.sType = VK_STRUCTURE_TYPE_RENDERING_INFO;
@@ -1493,24 +1494,22 @@ namespace Poulpe {
     color_attachment.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
     color_attachment.imageView = color_imageview;
     color_attachment.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-    color_attachment.loadOp = load_op;
+    color_attachment.loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
     color_attachment.storeOp = store_op;
     color_attachment.clearValue.color = color_clear;
 
-    if (has_depth_attachment) {
-      VkClearDepthStencilValue depth_stencil { 1.f, 0 };
+    VkClearDepthStencilValue depth_stencil { 1.f, 0 };
 
-      VkRenderingAttachmentInfo depth_attachment{ };
-      depth_attachment.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
-      depth_attachment.imageView = depth_imageview;
-      depth_attachment.imageLayout = VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL;
-      depth_attachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-      depth_attachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-      depth_attachment.clearValue.depthStencil = depth_stencil;
-      rendering_info.pDepthAttachment = &depth_attachment;
-    }
+    VkRenderingAttachmentInfo depth_attachment{ };
+    depth_attachment.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
+    depth_attachment.imageView = depth_imageview;
+    depth_attachment.imageLayout = VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL;
+    depth_attachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+    depth_attachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+    depth_attachment.clearValue.depthStencil = depth_stencil;
 
     rendering_info.pColorAttachments = &color_attachment;
+    rendering_info.pDepthAttachment = &depth_attachment;
     //rendering_info.pStencilAttachment;
 
     vkCmdBeginRendering(cmd_buffer, &rendering_info);
@@ -2105,8 +2104,8 @@ namespace Poulpe {
 
   void VulkanAPI::createDepthMapImage(VkImage& image)
   {
-    uint32_t const width{ getSwapChainExtent().width };
-    uint32_t const height{ getSwapChainExtent().height };
+    uint32_t const width{ getSwapChainExtent().width * 8 };
+    uint32_t const height{ getSwapChainExtent().height * 8 };
 
     VkImageCreateInfo image_info{};
     image_info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
@@ -2116,7 +2115,7 @@ namespace Poulpe {
     image_info.extent.depth = 1;
     image_info.mipLevels = 1;
     image_info.arrayLayers = 1;
-    image_info.format = VK_FORMAT_D16_UNORM;
+    image_info.format = VK_FORMAT_D24_UNORM_S8_UINT;
     image_info.tiling = VK_IMAGE_TILING_OPTIMAL;
     image_info.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
     image_info.usage = VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT 
@@ -2154,7 +2153,7 @@ namespace Poulpe {
     create_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
     create_info.image = image;
     create_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
-    create_info.format = VK_FORMAT_D16_UNORM;
+    create_info.format = VK_FORMAT_D24_UNORM_S8_UINT;
     create_info.subresourceRange = {};
     create_info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
     create_info.subresourceRange.baseMipLevel = 0;
@@ -2532,7 +2531,7 @@ namespace Poulpe {
 
     depth_imageview = createImageView(depth_image, depth_format, 1);
 
-    VkImageAspectFlags aspect_mask = VK_IMAGE_ASPECT_DEPTH_BIT;
+    VkImageAspectFlags aspect_mask = VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT;
 
     if (hasStencilComponent(depth_format)) {
       aspect_mask |= VK_IMAGE_ASPECT_STENCIL_BIT;
@@ -2607,7 +2606,7 @@ namespace Poulpe {
 
   VkFormat VulkanAPI::findDepthFormat()
   {
-    return findSupportedFormat({ VK_FORMAT_D32_SFLOAT, VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT, VK_FORMAT_D16_UNORM },
+    return findSupportedFormat({ VK_FORMAT_D24_UNORM_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT },
       VK_IMAGE_TILING_OPTIMAL, VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT);
   }
 
@@ -2631,7 +2630,7 @@ namespace Poulpe {
 
   bool VulkanAPI::hasStencilComponent(VkFormat const format)
   {
-    return format == VK_FORMAT_D16_UNORM || VK_FORMAT_D32_SFLOAT_S8_UINT || format == VK_FORMAT_D24_UNORM_S8_UINT;
+    return format == VK_FORMAT_D24_UNORM_S8_UINT || VK_FORMAT_D24_UNORM_S8_UINT || format == VK_FORMAT_D24_UNORM_S8_UINT;
   }
 
   VkSampleCountFlagBits VulkanAPI::getMaxUsableSampleCount()
@@ -2726,18 +2725,21 @@ namespace Poulpe {
 
       source_stage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
       destination_stage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+    
     } else if (old_layout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL && new_layout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL) {
       barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
       barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
 
       source_stage = VK_PIPELINE_STAGE_TRANSFER_BIT;
       destination_stage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+    
     } else if (old_layout == VK_IMAGE_LAYOUT_UNDEFINED && new_layout == VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL) {
       barrier.srcAccessMask = 0;
       barrier.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
 
-      source_stage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+      source_stage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
       destination_stage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+   
     } else if (old_layout == VK_IMAGE_LAYOUT_UNDEFINED && new_layout == VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL) {
       barrier.srcAccessMask = 0;
       barrier.dstAccessMask = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
@@ -2750,18 +2752,21 @@ namespace Poulpe {
 
       source_stage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
       destination_stage = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
+    
     } else if (old_layout == VK_IMAGE_LAYOUT_UNDEFINED && new_layout == VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL) {
       barrier.srcAccessMask = 0;
       barrier.dstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
 
-      source_stage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+      source_stage = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
       destination_stage = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+    
     } else if (old_layout == VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL && new_layout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL) {
       barrier.srcAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
       barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
 
-      source_stage = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+      source_stage = VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
       destination_stage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+
     } else {
       throw std::invalid_argument("unsupported layout transition");
     }
@@ -2800,6 +2805,7 @@ namespace Poulpe {
       }
 
       //vkQueueWaitIdle(queue);
+      //vkDeviceWaitIdle(_device);
     }
   }
 }

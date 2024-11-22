@@ -149,6 +149,7 @@ namespace Poulpe
           auto mesh = mesh_component->template has<Mesh>();
 
           if (mesh) {
+
             auto rdr_impl = _component_manager->get<RenderComponent>(entity->getID());
             if (mesh->isDirty() && rdr_impl) {
               (*rdr_impl)(deltatime, mesh);
