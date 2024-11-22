@@ -177,7 +177,7 @@ namespace Poulpe {
       VkMemoryPropertyFlags const properties,
       VkImage& image);
 
-    void createSkyboxImage(
+    void createCubeImage(
       uint32_t const width,
       uint32_t const height,
       VkSampleCountFlagBits const num_samples,
@@ -193,7 +193,7 @@ namespace Poulpe {
       uint32_t const mip_lvl,
       VkImageAspectFlags const aspect_flags = VK_IMAGE_ASPECT_COLOR_BIT);
         
-    VkImageView createSkyboxImageView(
+    VkImageView createCubeImageView(
       VkImage& image,
       VkFormat const format,
       uint32_t const mip_lvl,
@@ -236,7 +236,7 @@ namespace Poulpe {
 
     VkSampler createTextureSampler(uint32_t const mip_lvl);
 
-    VkSampler createSkyboxTextureSampler(uint32_t const mip_lvl);
+    VkSampler createCubeTextureSampler(uint32_t const mip_lvl);
 
     VkImageView createDepthResources(VkCommandBuffer& cmd_buffer);
 
@@ -435,7 +435,8 @@ namespace Poulpe {
       VkImage& image,
       VkImageLayout const old_layout,
       VkImageLayout const new_layout,
-      VkImageAspectFlags const aspect_flags);
+      VkImageAspectFlags const aspect_flags,
+      size_t const base_array_layer = 0);
 
 public:
     bool _FramebufferResized = false;
@@ -518,10 +519,10 @@ private:
     VkFence _fence_buffer{};
 
     //@todo move to config file
-    unsigned int _width{ 800 };
-    unsigned int _height{ 600 };
-    // unsigned int _width{ 2560 };
-    // unsigned int _height{ 1440 };
+    //unsigned int _width{ 800 };
+    //unsigned int _height{ 600 };
+     unsigned int _width{ 2560 };
+     unsigned int _height{ 1440 };
 
     //VkMemoryRequirements _MemRequirements;
   };

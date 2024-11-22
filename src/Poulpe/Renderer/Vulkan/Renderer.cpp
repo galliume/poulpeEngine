@@ -73,11 +73,11 @@ namespace Poulpe
       VkImage depth_image;
 
       _vulkan->createImage(_vulkan->getSwapChainExtent().width, _vulkan->getSwapChainExtent().height, 1,
-        VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_D24_UNORM_S8_UINT, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_SAMPLED_BIT
+        VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_D32_SFLOAT_S8_UINT, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_SAMPLED_BIT
         | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
         VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, depth_image);
 
-      VkImageView depth_imageview = _vulkan->createImageView(depth_image, VK_FORMAT_D24_UNORM_S8_UINT, 1,
+      VkImageView depth_imageview = _vulkan->createImageView(depth_image, VK_FORMAT_D32_SFLOAT_S8_UINT, 1,
         VK_IMAGE_ASPECT_DEPTH_BIT);
 
       _depth_images[i] = std::move(depth_image);
@@ -87,11 +87,11 @@ namespace Poulpe
       VkImage depth_image2;
 
       _vulkan->createImage(_vulkan->getSwapChainExtent().width, _vulkan->getSwapChainExtent().height, 1,
-        VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_D24_UNORM_S8_UINT, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_SAMPLED_BIT
+        VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_D32_SFLOAT_S8_UINT, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_SAMPLED_BIT
         | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
         VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, depth_image2);
 
-      VkImageView depth_imageview2 = _vulkan->createImageView(depth_image2, VK_FORMAT_D24_UNORM_S8_UINT, 1,
+      VkImageView depth_imageview2 = _vulkan->createImageView(depth_image2, VK_FORMAT_D32_SFLOAT_S8_UINT, 1,
         VK_IMAGE_ASPECT_DEPTH_BIT);
 
       _depth_images2[i] = std::move(depth_image2);
@@ -116,6 +116,10 @@ namespace Poulpe
     _cmd_buffer_shadowmap = _vulkan->allocateCommandBuffers(_cmd_pool_shadowmap,
       static_cast<uint32_t>(_imageviews.size()));
 
+    uint32_t const width{ _vulkan->getSwapChainExtent().width };
+    uint32_t const height{ _vulkan->getSwapChainExtent().height };
+    auto const usage{ VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT };
+    
     for (size_t i { 0 }; i < _images.size(); ++i) {
       VkImage image{};
       _vulkan->createDepthMapImage(image);
@@ -123,17 +127,24 @@ namespace Poulpe
       _depthmap_imageviews.emplace_back(_vulkan->createDepthMapImageView(image));
       _depthmap_samplers.emplace_back(_vulkan->createDepthMapSampler());
 
-      // VkImage imageBis{};
-      // _API->createDepthMapImage(imageBis);
-      // _DepthMapImagesBis.emplace_back(imageBis);
-      // _DepthMapImageViewsBis.emplace_back(_API->createDepthMapImageView(imageBis));
-      // _DepthMapSamplersBis.emplace_back(_API->createDepthMapSampler());
+      VkImage cube_image{};
 
-      // VkImage imageTer{};
-      // _API->createDepthMapImage(imageTer);
-      // _DepthMapImagesTer.emplace_back(imageTer);
-      // _DepthMapImageViewsTer.emplace_back(_API->createDepthMapImageView(imageTer));
-      // _DepthMapSamplersTer.emplace_back(_API->createDepthMapSampler());
+      _vulkan->createCubeImage(
+        width, width,
+        VK_SAMPLE_COUNT_1_BIT,
+        VK_FORMAT_D32_SFLOAT_S8_UINT,
+        VK_IMAGE_TILING_OPTIMAL,
+        usage,
+        VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+        cube_image);
+
+      _depthmap_cube_images.emplace_back(cube_image);
+
+      _depthmap_cube_imageviews.emplace_back(
+        _vulkan->createCubeImageView(
+        cube_image, VK_FORMAT_D32_SFLOAT_S8_UINT, 1, VK_IMAGE_ASPECT_DEPTH_BIT));
+
+      _depthmap_cube_samplers.emplace_back(_vulkan->createCubeTextureSampler(1));
     }
 
     VkResult result{};
@@ -224,8 +235,8 @@ namespace Poulpe
     depth_attachment_info.clearValue.depthStencil = depth_stencil;
     depth_attachment_info.clearValue.color = color_clear;
 
-    uint32_t const width{ _vulkan->getSwapChainExtent().width * 8 };
-    uint32_t const height{ _vulkan->getSwapChainExtent().height * 8 };
+    uint32_t const width{ _vulkan->getSwapChainExtent().width * 5 };
+    uint32_t const height{ _vulkan->getSwapChainExtent().height * 5 };
     //uint32_t const width{ 2048 };
     //uint32_t const height{ 2048 };
 
@@ -316,14 +327,150 @@ namespace Poulpe
     _vulkan->endMarker(cmd_buffer);
     _vulkan->endRendering(cmd_buffer);
 
+    for (size_t i{ 0 }; i < 6; ++i) {
+      _vulkan->transitionImageLayout(cmd_buffer, depth,
+        VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT, i);
+    }
+     /*     _vulkan->transitionImageLayout(cmd_buffer, depth,
+        VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR, VK_IMAGE_ASPECT_DEPTH_BIT);*/
+
+    _vulkan->endCommandBuffer(cmd_buffer);
+
+    std::vector<VkPipelineStageFlags> flags { VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT };
+    //VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL
+    _draw_cmds.insert(&cmd_buffer, &_entities_sema_finished[thread_id], thread_id, flags);
+
+    count_down.count_down();
+  }
+
+  void Renderer::drawPointLightMap(
+    VkCommandBuffer& cmd_buffer,
+    DrawCommands& draw_cmds,
+    VkImageView& depthview,
+    VkImage& depth,
+    std::vector<Entity*> const& entities,
+    VkAttachmentLoadOp const load_op,
+    std::latch& count_down,
+    unsigned int const thread_id
+  )
+  {
+    std::string const pipeline_name{ "pointLightShadowMap" };
+    auto const& pipeline = getPipeline(pipeline_name);
+  
+    _vulkan->beginCommandBuffer(cmd_buffer);
+    _vulkan->startMarker(cmd_buffer, "pointlight_map_" + pipeline_name, 0.1f, 0.2f, 0.3f);
+    
+    _vulkan->transitionImageLayout(cmd_buffer, depth,
+      VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT);
+
+    VkClearColorValue color_clear = {};
+    color_clear.float32[0] = 1.0f;
+    color_clear.float32[1] = 1.0f;
+    color_clear.float32[2] = 1.0f;
+    color_clear.float32[3] = 0.0f;
+
+    VkClearDepthStencilValue depth_stencil = { 1.f, 0 };
+
+    VkRenderingAttachmentInfo depth_attachment_info{ };
+    depth_attachment_info.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
+    depth_attachment_info.imageView = depthview;
+    depth_attachment_info.imageLayout = VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL;
+    depth_attachment_info.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+    depth_attachment_info.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+    depth_attachment_info.clearValue.depthStencil = depth_stencil;
+    depth_attachment_info.clearValue.color = color_clear;
+
+    uint32_t const width{ _vulkan->getSwapChainExtent().width };
+    uint32_t const height{ _vulkan->getSwapChainExtent().height };
+    //uint32_t const width{ 2048 };
+    //uint32_t const height{ 2048 };
+
+    VkRenderingInfo  rendering_info{ };
+    rendering_info.sType = VK_STRUCTURE_TYPE_RENDERING_INFO;
+    rendering_info.renderArea.extent.width = width;
+    rendering_info.renderArea.extent.height = width;
+    rendering_info.layerCount = 1;
+    rendering_info.pDepthAttachment = &depth_attachment_info;
+    rendering_info.colorAttachmentCount = 0;
+    //rendering_info.flags = VK_SUBPASS_CONTENTS_INLINE;
+
+    vkCmdBeginRenderingKHR(cmd_buffer, &rendering_info);
+
+    VkViewport viewport;
+    viewport.x = 0;
+    viewport.y = 0;
+    viewport.width = width;
+    viewport.height = width;
+    viewport.minDepth = 0.0f;
+    viewport.maxDepth = 1.0f;
+
+    vkCmdSetViewport(cmd_buffer, 0, 1, &viewport);
+    VkRect2D scissor = { { 0, 0 }, { width, width } };
+
+    vkCmdSetScissor(cmd_buffer, 0, 1, &scissor);
+
+    std::string last_shader{};
+    bool need_pipeline_update{true};
+    
+    std::ranges::for_each(entities, [&](auto const& entity) {
+      auto mesh_component = _component_manager->get<MeshComponent>(entity->getID());
+      if (mesh_component) {
+        Mesh* mesh = mesh_component->template has<Mesh>();
+
+        if (mesh->has_shadow() && !mesh->getUniformBuffers()->empty()) {
+
+          auto const& current_shader = mesh->getShaderName();
+
+          if (last_shader.empty()) {
+            last_shader = current_shader;
+          }
+          if (last_shader != current_shader) {
+            need_pipeline_update = true;
+            last_shader = current_shader;
+          }
+
+          uint32_t min{ 0 };
+          uint32_t max{ 0 };
+
+          for (size_t i{ 0 }; i < mesh->getUniformBuffers()->size(); ++i) {
+            max = mesh->getData()->_ubos_offset.at(i);
+            auto ubos = std::vector<UniformBufferObject>(mesh->getData()->_ubos.begin() + min, mesh->getData()->_ubos.begin() + max);
+            min = max;
+            if (ubos.empty()) continue;
+            _vulkan->updateUniformBuffer(mesh->getUniformBuffers()->at(i), &ubos);
+          }
+
+          vkCmdBindDescriptorSets(
+            cmd_buffer,
+            VK_PIPELINE_BIND_POINT_GRAPHICS,
+            pipeline->pipeline_layout,
+            0, 1, mesh->getShadowMapDescSet(), 0, nullptr);
+
+          if (need_pipeline_update) {
+            _vulkan->bindPipeline(cmd_buffer, pipeline->pipeline);
+            need_pipeline_update = true;
+          }
+
+          _vulkan->draw(
+            cmd_buffer,
+            *mesh->getShadowMapDescSet(),
+            *pipeline,
+            mesh->getData(),
+            mesh->getData()->_ubos.size(),
+            mesh->is_indexed());
+        }
+      }
+    });
+
+    _vulkan->endMarker(cmd_buffer);
+    _vulkan->endRendering(cmd_buffer);
+
      _vulkan->transitionImageLayout(cmd_buffer, depth,
        VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT);
  /*     _vulkan->transitionImageLayout(cmd_buffer, depth,
         VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR, VK_IMAGE_ASPECT_DEPTH_BIT);*/
 
     _vulkan->endCommandBuffer(cmd_buffer);
-
-    _depthmap_descset_updated = true;
 
     std::vector<VkPipelineStageFlags> flags { VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT };
     //VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL
@@ -489,11 +636,11 @@ namespace Poulpe
 
     if (_entities.size() > 0) {
      std::jthread shadow_map_thread([&]() {
-        drawShadowMap(
+        drawPointLightMap(
          _cmd_buffer_entities3[_current_frame],
          _draw_cmds,
-         _depthmap_imageviews[_current_frame],
-         _depthmap_images[_current_frame],
+         _depthmap_cube_imageviews[_current_frame],
+         _depthmap_cube_images[_current_frame],
          _entities,
          VK_ATTACHMENT_LOAD_OP_LOAD,
          count_down,
@@ -730,7 +877,6 @@ namespace Poulpe
     {
       std::lock_guard guard(_mutex_entity_submit);
       copy(entities.begin(), entities.end(), back_inserter(_entities_buffer));
-      _depthmap_descset_updated = false;
     }
   }
 
@@ -740,7 +886,6 @@ namespace Poulpe
       std::lock_guard guard(_mutex_entity_submit);
 
       _entities_buffer.emplace_back(entity);
-      _depthmap_descset_updated = false;
     }
   }
 

@@ -634,13 +634,13 @@ namespace Poulpe {
     return swapchain_image_view;
   }
 
-  VkImageView VulkanAPI::createSkyboxImageView(
+  VkImageView VulkanAPI::createCubeImageView(
     VkImage& image,
     VkFormat const format,
     uint32_t const mip_lvl,
     VkImageAspectFlags const aspect_flags)
   {
-    VkImageView swapchain_image_view{};
+    VkImageView imageview{};
 
     VkImageViewCreateInfo create_info{};
     create_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
@@ -657,12 +657,12 @@ namespace Poulpe {
 
     VkResult result{ VK_SUCCESS };
 
-    result = vkCreateImageView(_device, &create_info, nullptr, &swapchain_image_view);
+    result = vkCreateImageView(_device, &create_info, nullptr, &imageview);
 
     if (result != VK_SUCCESS) {
       PLP_ERROR("failed to create image views!");
     }
-    return swapchain_image_view;
+    return imageview;
   }
 
   VkDescriptorSetLayout VulkanAPI::createDescriptorSetLayout(
@@ -840,7 +840,7 @@ namespace Poulpe {
     rendering_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO_KHR;
     rendering_create_info.colorAttachmentCount = has_color_attachment ? 1 : 0;
     if (has_color_attachment) rendering_create_info.pColorAttachmentFormats = & format;
-    if (has_depth_test) rendering_create_info.depthAttachmentFormat = VK_FORMAT_D24_UNORM_S8_UINT; //(VK_FORMAT_D24_UNORM_S8_UINT) 
+    if (has_depth_test) rendering_create_info.depthAttachmentFormat = VK_FORMAT_D32_SFLOAT_S8_UINT; //(VK_FORMAT_D32_SFLOAT_S8_UINT ) 
 
     pipeline_info.pNext = & rendering_create_info;
 
@@ -2104,8 +2104,8 @@ namespace Poulpe {
 
   void VulkanAPI::createDepthMapImage(VkImage& image)
   {
-    uint32_t const width{ getSwapChainExtent().width * 8 };
-    uint32_t const height{ getSwapChainExtent().height * 8 };
+    uint32_t const width{ getSwapChainExtent().width * 5 };
+    uint32_t const height{ getSwapChainExtent().height * 5 };
 
     VkImageCreateInfo image_info{};
     image_info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
@@ -2115,7 +2115,7 @@ namespace Poulpe {
     image_info.extent.depth = 1;
     image_info.mipLevels = 1;
     image_info.arrayLayers = 1;
-    image_info.format = VK_FORMAT_D24_UNORM_S8_UINT;
+    image_info.format = VK_FORMAT_D32_SFLOAT_S8_UINT;
     image_info.tiling = VK_IMAGE_TILING_OPTIMAL;
     image_info.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
     image_info.usage = VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT 
@@ -2153,7 +2153,7 @@ namespace Poulpe {
     create_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
     create_info.image = image;
     create_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
-    create_info.format = VK_FORMAT_D24_UNORM_S8_UINT;
+    create_info.format = VK_FORMAT_D32_SFLOAT_S8_UINT;
     create_info.subresourceRange = {};
     create_info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
     create_info.subresourceRange.baseMipLevel = 0;
@@ -2216,7 +2216,7 @@ namespace Poulpe {
     }
   }
 
-  void VulkanAPI::createSkyboxImage(
+  void VulkanAPI::createCubeImage(
     uint32_t const width,
     uint32_t const height,
     VkSampleCountFlagBits const num_samples,
@@ -2359,7 +2359,7 @@ namespace Poulpe {
     }
 
     vkUnmapMemory(_device, *device_memory->getMemory());
-    createSkyboxImage(tex_width, tex_height, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_TILING_OPTIMAL,
+    createCubeImage(tex_width, tex_height, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_TILING_OPTIMAL,
         VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
         VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, texture_image);
 
@@ -2577,7 +2577,7 @@ namespace Poulpe {
     return texture_sampler;
   }
 
-  VkSampler VulkanAPI::createSkyboxTextureSampler(uint32_t const mip_lvl)
+  VkSampler VulkanAPI::createCubeTextureSampler(uint32_t const mip_lvl)
   {
     VkSampler texture_sampler{};
 
@@ -2606,7 +2606,7 @@ namespace Poulpe {
 
   VkFormat VulkanAPI::findDepthFormat()
   {
-    return findSupportedFormat({ VK_FORMAT_D24_UNORM_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT },
+    return findSupportedFormat({ VK_FORMAT_D32_SFLOAT_S8_UINT  },
       VK_IMAGE_TILING_OPTIMAL, VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT);
   }
 
@@ -2630,7 +2630,7 @@ namespace Poulpe {
 
   bool VulkanAPI::hasStencilComponent(VkFormat const format)
   {
-    return format == VK_FORMAT_D24_UNORM_S8_UINT || VK_FORMAT_D24_UNORM_S8_UINT || format == VK_FORMAT_D24_UNORM_S8_UINT;
+    return format == VK_FORMAT_D32_SFLOAT_S8_UINT;
   }
 
   VkSampleCountFlagBits VulkanAPI::getMaxUsableSampleCount()
@@ -2701,7 +2701,8 @@ namespace Poulpe {
     VkImage& image,
     VkImageLayout const old_layout,
     VkImageLayout const new_layout,
-    VkImageAspectFlags const aspect_flags)
+    VkImageAspectFlags const aspect_flags,
+    size_t const base_array_layer)
   {
     VkImageMemoryBarrier barrier{};
     barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
@@ -2713,7 +2714,7 @@ namespace Poulpe {
     barrier.subresourceRange.aspectMask = aspect_flags;
     barrier.subresourceRange.baseMipLevel = 0;
     barrier.subresourceRange.levelCount = 1;
-    barrier.subresourceRange.baseArrayLayer = 0;
+    barrier.subresourceRange.baseArrayLayer = base_array_layer;
     barrier.subresourceRange.layerCount = 1;
 
     VkPipelineStageFlags source_stage;

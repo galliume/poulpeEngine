@@ -87,29 +87,6 @@ namespace Poulpe
       }
     }
 
-    // Material material{};
-    // material.ambient = mesh->getMaterial().ambient;
-    // material.diffuse = mesh->getMaterial().diffuse;
-    // material.specular = mesh->getMaterial().specular;
-    // material.transmittance = mesh->getMaterial().transmittance;
-    // material.emission = mesh->getMaterial().emission;
-    // material.shi_ior_diss = glm::vec3(mesh->getMaterial().shininess,
-    //   mesh->getMaterial().ior, mesh->getMaterial().illum);
-
-    // ObjectBuffer objectBuffer{};
-    // objectBuffer.point_lights[0] = _light_manager->getPointLights().at(0);
-    // objectBuffer.point_lights[1] = _light_manager->getPointLights().at(1);
-
-    // objectBuffer.spot_light = _light_manager->getSpotLights().at(0);
-    // objectBuffer.ambient_light = _light_manager->getAmbientLight();
-    // objectBuffer.material = material;
-
-    // auto const size = sizeof(objectBuffer);
-    // auto storageBuffer = _renderer->createStorageBuffers(size);
-    // mesh->addStorageBuffer(storageBuffer);
-    // _renderer->updateStorageBuffer(mesh->getStorageBuffers()->at(0), objectBuffer);
-    // mesh->setHasBufferStorage();
-
     unsigned int min{ 0 };
     unsigned int max{ 0 };
 
