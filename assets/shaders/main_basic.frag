@@ -128,8 +128,8 @@ vec3 CalcDirLight(vec4 color, Light dirLight, vec3 normal, vec3 viewDir, float s
   vec3 diffuse =  (diff * vec3(texture(texSampler[0], fs_in.fTexCoord))) * dirLight.ads.y;
 
   vec3 reflectDir = reflect(-dirLight.position, normal);
-  //vec3 halfwayDir = normalize(lightDir + viewDir);
-  float spec = pow(max(dot(viewDir, reflectDir), 0.0), 1);
+  vec3 halfwayDir = normalize(lightDir + viewDir);
+  float spec = pow(max(dot(normal, halfwayDir), 0.0), 1);
 
   vec3 specular = vec3(1.f);
   ivec2 texSize = textureSize(texSampler[2], 0);
@@ -208,8 +208,8 @@ float ShadowCalculation(vec4 ambientLightSpace)
   //coord.y = 1.0 - coord.y;
   ivec2 texDim = textureSize(texSampler[4], 0);
   float scale = 1.5;
-  float dx = scale * 1.0 / float(texDim.x);
-  float dy = scale * 1.0 / float(texDim.y);
+  float dx = 1.0 / float(texDim.x);
+  float dy = 1.0 / float(texDim.y);
 
   float shadow = 0.0;
   int count = 0;
