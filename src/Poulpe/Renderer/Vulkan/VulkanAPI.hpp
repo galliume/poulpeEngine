@@ -288,8 +288,7 @@ namespace Poulpe {
       VkImageView& color_imageview,
       VkImageView& depth_imageview,
       VkAttachmentLoadOp const loadOp,
-      VkAttachmentStoreOp const storeOp,
-      bool const has_depth_attachment);
+      VkAttachmentStoreOp const storeOp);
 
     void endRendering(VkCommandBuffer& cmd_buffer);
 
@@ -474,7 +473,9 @@ private:
         VK_EXT_EXTENDED_DYNAMIC_STATE_3_EXTENSION_NAME,
         VK_EXT_PIPELINE_CREATION_CACHE_CONTROL_EXTENSION_NAME,
         VK_KHR_MAINTENANCE_4_EXTENSION_NAME,
-        VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME
+        VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME,
+        VK_KHR_SYNCHRONIZATION_2_EXTENSION_NAME,
+        VK_EXT_DEPTH_CLIP_ENABLE_EXTENSION_NAME,
     };
 
     bool _instance_created{ false };
