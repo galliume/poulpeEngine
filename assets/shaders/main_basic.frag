@@ -63,7 +63,7 @@ layout(binding = 2) readonly buffer ObjectBuffer {
 vec3 CalcDirLight(vec4 color, Light dirLight, vec3 normal, vec3 viewDir, float shadow);
 vec3 CalcPointLight(vec4 color, Light pointLight, vec3 normal, vec3 fragPos, vec3 viewDir);
 vec3 CalcSpotLight(vec4 color, Light pointLight, vec3 normal, vec3 fragPos, vec3 viewDir, float shadow);
-float ShadowCalculation(vec4 lightSpace);
+float ShadowCalculation(vec4 lightSpace, vec3 normal);
 
 float near = 0.1;
 float far  = 100.0;
@@ -92,7 +92,7 @@ void main()
   vec4 texColor = texture(texSampler[0], fs_in.fTexCoord);
  
   //float shadowAmbient = 1.0;//1 not in shadow, 0 in shadow
-  float shadowAmbient = ShadowCalculation(fs_in.fAmbientLightSpace);
+  float shadowAmbient = ShadowCalculation(fs_in.fAmbientLightSpace, normal);
 
   vec3 viewDir = normalize(fs_in.fViewPos.xyz - fs_in.fPos.xyz);
   vec3 color = CalcDirLight(texColor, ambientLight, normal, viewDir, shadowAmbient);
@@ -121,6 +121,12 @@ void main()
 
 vec3 CalcDirLight(vec4 color, Light dirLight, vec3 normal, vec3 viewDir, float shadow)
 {
+  ivec2 texSize = textureSize(texSampler[3], 0);
+
+  if (texSize.x != 1 && texSize.y != 1) {
+    normal = vec3(texture(texSampler[3], fs_in.fTexCoord));
+  }
+
   vec3 lightDir = normalize(dirLight.position - fs_in.fPos);
   vec3 ambient = (dirLight.color * vec3(texture(texSampler[0], fs_in.fTexCoord))) * dirLight.ads.x;
 
@@ -132,7 +138,7 @@ vec3 CalcDirLight(vec4 color, Light dirLight, vec3 normal, vec3 viewDir, float s
   float spec = pow(max(dot(normal, halfwayDir), 0.0), 1);
 
   vec3 specular = vec3(1.f);
-  ivec2 texSize = textureSize(texSampler[2], 0);
+  texSize = textureSize(texSampler[2], 0);
 
   if (texSize.x == 1 && texSize.y == 1) {
     specular = (material.specular * spec) * dirLight.color * dirLight.ads.z;
@@ -202,7 +208,7 @@ vec3 CalcSpotLight(vec4 color, Light spotlight, vec3 normal, vec3 fragPos, vec3 
   return ((ambient + diffuse + specular) * shadow) * color.xyz;
 }
 
-float ShadowCalculation(vec4 ambientLightSpace)
+float ShadowCalculation(vec4 ambientLightSpace, vec3 normal)
 {
   vec4 coord = ambientLightSpace / ambientLightSpace.w;
   //coord.y = 1.0 - coord.y;
@@ -215,7 +221,7 @@ float ShadowCalculation(vec4 ambientLightSpace)
   int count = 0;
   int range = 1;
   vec3 lightDir = normalize(ambientLight.position - fs_in.fPos);
-  float bias = max(0.05 * (1.0 - dot(normalize(fs_in.fNormal), lightDir)), 0.005);
+  float bias = max(0.05 * (1.0 - dot(normalize(normal), lightDir)), 0.005);
 
   for (int x = -range; x <= range; x++)
   {

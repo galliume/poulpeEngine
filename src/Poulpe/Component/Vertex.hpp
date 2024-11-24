@@ -6,6 +6,13 @@
 
 namespace Poulpe
 {
+  /*
+    format:
+    float : VK_FORMAT_R32_SFLOAT
+    vec2 : VK_FORMAT_R32G32_SFLOAT
+    vec3 : VK_FORMAT_R32G32B32_SFLOAT
+    vec4 : VK_FORMAT_R32G32B32A32_SFLOAT
+  */
   struct Vertex
   {
     alignas(16) glm::vec3 pos;
@@ -49,12 +56,12 @@ namespace Poulpe
 
       attributeDescriptions[3].binding = 0;
       attributeDescriptions[3].location = 3;
-      attributeDescriptions[3].format = VK_FORMAT_R32G32B32_SFLOAT;
+      attributeDescriptions[3].format = VK_FORMAT_R32G32B32A32_SFLOAT;
       attributeDescriptions[3].offset = offsetof(Vertex, tangent);
 
       attributeDescriptions[4].binding = 0;
       attributeDescriptions[4].location = 4;
-      attributeDescriptions[4].format = VK_FORMAT_R32G32B32_SFLOAT;
+      attributeDescriptions[4].format = VK_FORMAT_R32G32B32A32_SFLOAT;
       attributeDescriptions[4].offset = offsetof(Vertex, fidtidBB);
 
       attributeDescriptions[5].binding = 0;

@@ -56,7 +56,18 @@
 				"textures_vase_plant_spec": "assets/mesh/sponza/textures/vase_plant_spec.png",
 				"textures_vase_round": "assets/mesh/sponza/textures/vase_round.png",
 				"textures_vase_round_bump": "assets/mesh/sponza/textures/vase_round_bump.png",
-				"textures_vase_round_spec": "assets/mesh/sponza/textures/vase_round_spec.png"
+				"textures_vase_round_spec": "assets/mesh/sponza/textures/vase_round_spec.png",
+				"textures_sponza_thorn_normal":"assets/mesh/sponza/textures/sponza_thorn_normal.png",
+				"textures_sponza_column_b_normal":"assets/mesh/sponza/textures/sponza_column_b_normal.png",
+				"textures_sponza_column_a_normal":"assets/mesh/sponza/textures/sponza_column_a_normal.png",
+				"textures_sponza_arch_normal":"assets/mesh/sponza/textures/sponza_arch_normal.png",
+				"textures_spnza_bricks_a_normal":"assets/mesh/sponza/textures/spnza_bricks_a_normal.png",
+				"textures_vase_normal":"assets/mesh/sponza/textures/vase_normal.png",
+				"textures_sponza_column_c_normal":"assets/mesh/sponza/textures/sponza_column_c_normal.png",
+				"textures_vase_round_normal":"assets/mesh/sponza/textures/vase_round_normal.png",
+				"textures_lion_normal":"assets/mesh/sponza/textures/lion_normal.png",
+				"textures_lion2_normal":"assets/mesh/sponza/textures/lion2_normal.png",
+				"textures_background_normal":"assets/mesh/sponza/textures/background_normal.png"
 			},           
 			"shader": "main_basic",
 			"positions": [

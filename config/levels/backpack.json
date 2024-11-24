@@ -1,5 +1,32 @@
 {
 	"entities": {
+		"crate" : {
+			"mesh": "assets/mesh/crate/Crate1.obj",
+			"textures": {
+				"crate_1": "assets/mesh/crate/crate_1.jpg",
+				"crate_1_normal": "assets/mesh/crate/crate_1_normal.png"
+			},
+			"shader": "main_basic",
+			"positions": [
+				{"x": -0.0, "y": 5.5, "z": 0.0}
+			],
+			"scales": [
+				{"x": 0.1, "y": 0.1, "z": 0.1}
+			],
+			"rotations": [
+				{"x": 0.0, "y": 0.0, "z": 0.0}
+			],
+			"inverseTextureY": false,
+			"count": 1,
+			"hasBbox": false,
+			"hasAnimation": true,
+			"isPointLight": false,
+			"animationScripts": {
+				"anim0" : "assets/scripts/animation/backpack/anim0.lua"
+			},
+			"hasShadow": true,
+			"isIndexed": true
+		},
 		"backpack" : {
 			"mesh": "assets/mesh/backpack/backpack.obj",
 			"textures": {
