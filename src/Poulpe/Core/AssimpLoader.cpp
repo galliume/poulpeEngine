@@ -44,7 +44,7 @@ namespace Poulpe
     Assimp::Importer importer;
   
     const aiScene* scene = importer.ReadFile(path,
-      aiProcess_Triangulate | aiProcess_JoinIdenticalVertices | aiProcess_GenNormals
+      aiProcess_Triangulate | aiProcess_JoinIdenticalVertices | aiProcess_GenNormals | aiProcess_CalcTangentSpace
     );
 
     if (nullptr == scene) {
@@ -213,6 +213,21 @@ namespace Poulpe
           vertex.fidtidBB = glm::vec4(static_cast<float>(j), static_cast<float>(mesh->mMaterialIndex), 0.0f, 0.0f);
           vertex.pos = { vertices.x, vertices.y, vertices.z };
 
+          glm::vec4 tangent(1.f);
+
+          if (nullptr != mesh->mTangents) {
+            for (unsigned int t{ 0 }; t < mesh->mNumVertices; ++t) {
+              tangent.x += mesh->mTangents[t].x;
+              tangent.y += mesh->mTangents[t].y;
+              tangent.z += mesh->mTangents[t].z;
+            }
+            tangent.x /= mesh->mNumVertices;
+            tangent.y /= mesh->mNumVertices;
+            tangent.z /= mesh->mNumVertices;
+          }
+          vertex.tangent = tangent;
+          
+
           if (mesh->HasNormals()) {
               aiVector3D const& normal = mesh->mNormals[face->mIndices[j]];
               vertex.normal = { normal.x, normal.y, normal.z };
@@ -223,7 +238,7 @@ namespace Poulpe
           if (mesh->mNumUVComponents[0] > 0) {
             aiVector3D texCoord = mesh->mTextureCoords[0][face->mIndices[j]];
             vertex.texCoord = { texCoord.x, texCoord.y };
-            if (inverse_texture_y) vertex.texCoord.y *= -1.0f;
+            if (!inverse_texture_y) vertex.texCoord.y *= -1.0f;
           }
 
           vertex.color = { 1.0f, 1.0f, 1.0f };
