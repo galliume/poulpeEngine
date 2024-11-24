@@ -67,12 +67,12 @@ namespace Poulpe
     _spots.emplace_back(light3);
   }
 
-  void LightManager::animateAmbientLight(std::chrono::duration<float> const deltatime)
+  void LightManager::animateAmbientLight(double const delta_time)
   {
-    _ambient.position.x += cos(glm::radians(deltatime.count() * 360.0f));
-    _ambient.direction.x += cos(glm::radians(deltatime.count() * 360.0f));
-    _ambient.position.z += sin(glm::radians(deltatime.count() * 360.0f));
-    _ambient.direction.z += sin(glm::radians(deltatime.count() * 360.0f));
+    _ambient.position.x += cos(glm::radians(delta_time * 360.0f));
+    _ambient.direction.x += cos(glm::radians(delta_time * 360.0f));
+    _ambient.position.z += sin(glm::radians(delta_time * 360.0f));
+    _ambient.direction.z += sin(glm::radians(delta_time * 360.0f));
 
     _ambient.view = glm::lookAt(
       _ambient.position,

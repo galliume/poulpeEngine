@@ -12,7 +12,7 @@ namespace Poulpe
 
     LightManager();
 
-    void animateAmbientLight(std::chrono::duration<float> const deltaTime);
+    void animateAmbientLight(double const delta_time);
     inline Light getAmbientLight() { return _ambient; }
     inline std::vector<Light> getPointLights() { return _points; }
     inline std::vector<Light> getSpotLights() { return _spots; }

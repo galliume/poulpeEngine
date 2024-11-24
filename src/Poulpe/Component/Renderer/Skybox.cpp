@@ -37,7 +37,7 @@ namespace Poulpe
     mesh->setHasPushConstants();
   }
 
-  void Skybox::operator()(std::chrono::duration<float> deltaTime, Mesh* mesh)
+  void Skybox::operator()(double delta_time, Mesh* mesh)
   {
     if (!mesh && !mesh->isDirty()) return;
 

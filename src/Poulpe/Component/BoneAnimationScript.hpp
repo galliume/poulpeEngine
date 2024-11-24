@@ -26,7 +26,7 @@ namespace Poulpe
     std::function<void(
       BoneAnimationMove* anim,
       Data* data,
-      std::chrono::duration<float> deltaTime,
+      double delta_time,
       std::vector<Animation> const& animations,
       std::vector<Position> const& positions,
       std::vector<Rotation> const& rotations,
@@ -53,9 +53,9 @@ namespace Poulpe
     }
     void move(
       Data* dataMove,
-      std::chrono::duration<float> deltaTimeMove);
+      double delta_timeMove);
 
-    void operator()(std::chrono::duration<float> const& deltaTime, Mesh* mesh);
+    void operator()(double const delta_time, Mesh* mesh);
 
   private:
     std::string const _script_path{"./assets/scripts/animation/skelet/boneAnimation.lua"};

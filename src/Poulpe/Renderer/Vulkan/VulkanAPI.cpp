@@ -490,11 +490,6 @@ namespace Poulpe {
 
   VkPresentModeKHR VulkanAPI::chooseSwapPresentMode(std::vector<VkPresentModeKHR> const & available_present_modes)
   {
-    for (auto const & available_present_mode : available_present_modes) {
-      if (available_present_mode == VK_PRESENT_MODE_MAILBOX_KHR) {
-        return available_present_mode;
-      }
-    }
     return VK_PRESENT_MODE_FIFO_KHR;
   }
 

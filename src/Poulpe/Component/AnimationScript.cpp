@@ -9,7 +9,7 @@ namespace Poulpe
   static int wrapMove(lua_State* L)
   {
     AnimationScript* animScript = static_cast<AnimationScript*>(lua_touserdata(L, 1));
-    auto deltaTime = std::chrono::duration<float, std::milli>(lua_tonumber(L, 2));
+    double const delta_time{ static_cast<double>(lua_tonumber(L, 2)) };
     float duration = static_cast<float>(lua_tonumber(L, 3));
     float targetX = static_cast<float>(lua_tonumber(L, 4));
     float targetY = static_cast<float>(lua_tonumber(L, 5));
@@ -17,7 +17,7 @@ namespace Poulpe
 
     animScript->move(
       animScript->getData(),
-      deltaTime,
+      delta_time,
       duration,
       glm::vec3(targetX, targetY, targetZ));
 
@@ -27,17 +27,17 @@ namespace Poulpe
   static int wrapRotate(lua_State* L)
   {
     AnimationScript* animScript = static_cast<AnimationScript*>(lua_touserdata(L, 1));
-    auto deltaTime = std::chrono::duration<float, std::milli>(lua_tonumber(L, 2));
+    double const delta_time{ static_cast<double>(lua_tonumber(L, 2)) };
     float duration = static_cast<float>(lua_tonumber(L, 3));
-    float angleX = static_cast<float>(lua_tonumber(L, 4));
-    float angleY = static_cast<float>(lua_tonumber(L, 5));
-    float angleZ = static_cast<float>(lua_tonumber(L, 6));
+    float angle_x = static_cast<float>(lua_tonumber(L, 4));
+    float angle_y = static_cast<float>(lua_tonumber(L, 5));
+    float angle_z = static_cast<float>(lua_tonumber(L, 6));
 
     animScript->rotate(
       animScript->getData(),
-      deltaTime,
+      delta_time,
       duration,
-      glm::vec3(angleX, angleY, angleZ));
+      glm::vec3(angle_x, angle_y, angle_z));
 
     return 0;
   }
@@ -64,20 +64,20 @@ namespace Poulpe
     lua_close(_lua_State);
   }
 
-  void AnimationScript::move(Data* dataMove, std::chrono::duration<float> deltaTimeMove, float duration, glm::vec3 targetMove)
+  void AnimationScript::move(Data* data_move, double delta_time, float duration, glm::vec3 target_move)
   {
-    std::unique_ptr<AnimationMove> animMove = std::make_unique<AnimationMove>();
-    animMove->duration = duration;
-    animMove->target = glm::vec3(
-      dataMove->_origin_pos.x + targetMove.x,
-      dataMove->_origin_pos.y + targetMove.y,
-      dataMove->_origin_pos.z + targetMove.z);
+    std::unique_ptr<AnimationMove> anim_move = std::make_unique<AnimationMove>();
+    anim_move->duration = duration;
+    anim_move->target = glm::vec3(
+      data_move->_origin_pos.x + target_move.x,
+      data_move->_origin_pos.y + target_move.y,
+      data_move->_origin_pos.z + target_move.z);
 
     //PLP_TRACE("START at {}/{}/{}", data->_origin_pos.x, data->_origin_pos.y, data->_origin_pos.z);
     //PLP_TRACE("TO {}/{}/{}", anim->target.x, anim->target.y, anim->target.z);
 
-    animMove->update = [](AnimationMove* anim, Data* data, std::chrono::duration<float> deltaTime) {
-      
+    anim_move->update = [](AnimationMove* anim, Data* data, double delta_time) {
+
       float t = anim->elapsedTime / anim->duration;
       bool done{ false };
 
@@ -85,8 +85,7 @@ namespace Poulpe
         done = true;
         t = 1.f;
       }
-      anim->elapsedTime += deltaTime.count();
-
+      
       glm::vec3 target = glm::mix(data->_origin_pos, anim->target, t);
       //PLP_TRACE("MOVING at {}/{}/{}", data->_current_pos.x, data->_current_pos.y, data->_current_pos.z);
 
@@ -101,23 +100,25 @@ namespace Poulpe
         ubo.model = model;
       });
 
+      anim->elapsedTime += delta_time;
+
       if (done) {
         data->_origin_pos = target;
         //PLP_TRACE("DONE at {}/{}/{}", data->_origin_pos.x, data->_origin_pos.y, data->_origin_pos.z);
       }
       anim->done = done;
     };
-    animMove->update(animMove.get(), dataMove, deltaTimeMove);
-    _new_moves.emplace_back(std::move(animMove));
+    anim_move->update(anim_move.get(), data_move, delta_time);
+    _new_moves.emplace_back(std::move(anim_move));
   }
 
-  void AnimationScript::rotate(Data* dataRotate, std::chrono::duration<float> deltaTimeRotate, float duration, glm::vec3 angle)
+  void AnimationScript::rotate(Data* dataRotate, double delta_time, float duration, glm::vec3 angle)
   {
     std::unique_ptr<AnimationRotate> anim_rotate = std::make_unique<AnimationRotate>();
     anim_rotate->duration = duration;
     anim_rotate->angle = angle;
 
-    anim_rotate->update = [](AnimationRotate* anim, Data* data, std::chrono::duration<float> deltaTime) {
+    anim_rotate->update = [](AnimationRotate* anim, Data* data, double delta_time) {
 
       float t = anim->elapsedTime / anim->duration;
       bool done{ false };
@@ -126,7 +127,7 @@ namespace Poulpe
         done = true;
         t = 1.f;
       }
-      anim->elapsedTime += deltaTime.count();
+      anim->elapsedTime += delta_time;
 
       //@todo switch euler angles to quaternions
       data->_current_rotation = glm::mix(data->_origin_rotation, anim->angle, t);
@@ -144,11 +145,11 @@ namespace Poulpe
 
       anim->done = done;
     };
-    anim_rotate->update(anim_rotate.get(), dataRotate, deltaTimeRotate);
+    anim_rotate->update(anim_rotate.get(), dataRotate, delta_time);
     _new_rotates.emplace_back(std::move(anim_rotate));
   }
 
-  void AnimationScript::operator()(std::chrono::duration<float> const& deltaTime, Mesh* mesh)
+  void AnimationScript::operator()(double const delta_time, Mesh* mesh)
   {
     _data = mesh->getData();
 
@@ -166,7 +167,7 @@ namespace Poulpe
       lua_getglobal(_lua_State, "nextMove");
       if (lua_isfunction(_lua_State, -1)) {
         lua_pushlightuserdata(_lua_State, this);
-        lua_pushnumber(_lua_State, static_cast<double>(deltaTime.count()));
+        lua_pushnumber(_lua_State, delta_time);
         checkLua(_lua_State, lua_pcall(_lua_State, 2, 1, 0));
       }
       _move_init = true;
@@ -174,13 +175,13 @@ namespace Poulpe
 
     std::ranges::for_each(_moves, [&](auto& anim) {
 
-      anim->update(anim.get(), mesh->getData(), deltaTime);
+      anim->update(anim.get(), mesh->getData(), delta_time);
 
       if (anim->done) {
         lua_getglobal(_lua_State, "nextMove");
         if (lua_isfunction(_lua_State, -1)) {
           lua_pushlightuserdata(_lua_State, this);
-          lua_pushnumber(_lua_State, static_cast<double>(deltaTime.count()));
+          lua_pushnumber(_lua_State, delta_time);
           checkLua(_lua_State, lua_pcall(_lua_State, 2, 1, 0));
         }
       }
@@ -190,20 +191,20 @@ namespace Poulpe
       lua_getglobal(_lua_State, "nextRotation");
       if (lua_isfunction(_lua_State, -1)) {
         lua_pushlightuserdata(_lua_State, this);
-        lua_pushnumber(_lua_State, static_cast<double>(deltaTime.count()));
+        lua_pushnumber(_lua_State, delta_time);
         checkLua(_lua_State, lua_pcall(_lua_State, 2, 1, 0));
       }
       _rotate_init = true;
     }
 
     std::ranges::for_each(_rotates, [&](auto& anim) {
-      anim->update(anim.get(), mesh->getData(), deltaTime);
+      anim->update(anim.get(), mesh->getData(), delta_time);
 
       if (anim->done) {
         lua_getglobal(_lua_State, "nextRotation");
         if (lua_isfunction(_lua_State, -1)) {
           lua_pushlightuserdata(_lua_State, this);
-          lua_pushnumber(_lua_State, static_cast<double>(deltaTime.count()));
+          lua_pushnumber(_lua_State, delta_time);
           checkLua(_lua_State, lua_pcall(_lua_State, 2, 1, 0));
         }
       }

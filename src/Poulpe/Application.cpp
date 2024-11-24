@@ -42,35 +42,73 @@ namespace Poulpe
 
   void Application::run()
   {
-    auto const end_run = std::chrono::steady_clock::now();
-    std::chrono::duration<float> const loaded_time = end_run - _start_run;
-    PLP_TRACE("Started in {} seconds", loaded_time.count());
+    using namespace std::chrono;
 
-    auto last_time = std::chrono::steady_clock::now();
+    double const loaded_time{ duration<double>(
+      steady_clock::now() - _start_run).count()};
+    
+    PLP_TRACE("Started in {} seconds", loaded_time);
+
+    duration<double> const title_rate{1.0};
+    duration<double> title_update{ title_rate};
+
+    auto current_time{ steady_clock::now() };
+
+    double accumulator{ 0.0 };
+    double total_time{ 0.0 };
+    double const dt{ 0.01 };
+   
+    double ms_count{0.0};
+    double fps_count{0.0};
+    size_t frame_count{ 0 };
+    auto last_time_debug_updated{ steady_clock::now() };
 
     while (!glfwWindowShouldClose(_render_manager->getWindow()->get())) {
-
-      auto const fps_limit = static_cast<unsigned int>(Poulpe::Locator::getConfigManager()->appConfig()["fpsLimit"]);
-      auto const frame_target = (1.0f / (static_cast<float>(fps_limit) * 0.001f));
-      auto const current_time = std::chrono::steady_clock::now();
-      std::chrono::duration<float, std::milli> deltatime = (current_time - last_time);
-
-      if (deltatime.count() < frame_target && fps_limit != 0) continue;
-      last_time = current_time;
-      
-      _render_manager->getCamera()->updateSpeed(deltatime);
       glfwPollEvents();
 
+      auto const new_time{ steady_clock::now() };
+      double frame_time{ duration<double>((new_time - current_time)).count() };
+
+      if (frame_time > 0.25) {
+        frame_time = 0.25;
+      }
+      accumulator += frame_time;
+
+      //cf https://gafferongames.com/post/fix_your_timestep/
+      while (accumulator >= dt) {
+        _render_manager->getCamera()->updateSpeed(dt);
+  
+        accumulator -= dt;
+        total_time += dt;
+      }
+      _render_manager->updateScene(frame_time);
+
       //Locator::getCommandQueue()->execPreRequest();
-      _render_manager->renderScene(deltatime);
+      _render_manager->renderScene();
       //Locator::getCommandQueue()->execPostRequest();
+
+      auto const elasped_time_since_begining{ duration<double>(
+      steady_clock::now() - _start_run).count() };
+
+      //@todo check if it's correct with accumulator method...
+      if ((duration<double>(steady_clock::now() - last_time_debug_updated)).count() > 1.0) {
+        ms_count = frame_time * 1000.;
+        fps_count = 1 / frame_time;
+        last_time_debug_updated = steady_clock::now();
+      }
 
       std::stringstream title;
       title << "PoulpeEngine v" << PoulpeEngine_VERSION_MAJOR << "." << PoulpeEngine_VERSION_MINOR
         << " Vulkan version: " << _render_manager->getRenderer()->getAPI()->getAPIVersion()
-        << " " << deltatime.count() << " ms"
-        << " " << std::ceil(1.f / (deltatime.count() * 0.001f)) << " fps";
+        << " Frame " << frame_count << " "
+        << " Elapsed time " << elasped_time_since_begining << " "
+        << " " << ms_count << " ms"
+        << " " << fps_count << " fps";
       glfwSetWindowTitle(_render_manager->getWindow()->get(), title.str().c_str());
+
+      ++frame_count;
+      
+      current_time = new_time;
     }
     _render_manager->cleanUp();
   }

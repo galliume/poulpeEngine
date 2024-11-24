@@ -182,9 +182,9 @@ namespace Poulpe
     _perspective[1][1] *= -1;
   }
 
-  void Renderer::setDeltatime(float deltatime)
+  void Renderer::setDeltatime(float delta_time)
   {
-    _deltatime = deltatime;
+    _delta_time = delta_time;
   }
 
   void Renderer::drawShadowMap(
@@ -762,8 +762,8 @@ namespace Poulpe
           mesh->addUbos({ std::move(ubo) });
 
           //auto basicRdrImpl = _component_manager->get<RenderComponent>(entity->getID());
-          //auto deltatime = std::chrono::duration<float, std::milli>(0);
-          //basicRdrImpl->visit(deltatime, mesh);
+          //auto delta_time = std::chrono::duration<float, std::milli>(0);
+          //basicRdrImpl->visit(delta_time, mesh);
           return;
         }
       }

@@ -43,7 +43,8 @@ namespace Poulpe
     void init();
     inline bool isLoaded()  { return _is_loaded; }
     void refresh(uint32_t levelIndex, bool showBbox = false, std::string_view skybox = "debug");
-    void renderScene(std::chrono::duration<float> const deltaTime);
+    void updateScene(double const delta_time);
+    void renderScene();
     inline void setIsLoaded(bool loaded = true) { _is_loaded = loaded; }
 
   private:

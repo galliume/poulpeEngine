@@ -11,11 +11,11 @@ namespace Poulpe
   static int wrapMove(lua_State* L)
   {
     BoneAnimationScript* animScript = static_cast<BoneAnimationScript*>(lua_touserdata(L, 1));
-    auto deltaTime = std::chrono::duration<float, std::milli>(lua_tonumber(L, 2));
+    double const delta_time{ static_cast<double>(lua_tonumber(L, 2)) };
 
     animScript->move(
       animScript->getData(),
-      deltaTime);
+      delta_time);
 
     return 0;
   }
@@ -49,7 +49,7 @@ namespace Poulpe
 
   void BoneAnimationScript::move(
     Data* dataMove,
-    std::chrono::duration<float> deltaTimeMove)
+    double delta_timeMove)
   {
     std::unique_ptr<BoneAnimationMove> animMove = std::make_unique<BoneAnimationMove>();
 
@@ -59,7 +59,7 @@ namespace Poulpe
     animMove->update = [] (
       BoneAnimationMove* anim,
       Data* data,
-      std::chrono::duration<float> deltaTime,
+      double delta_time,
       std::vector<Animation> const& animations,
       std::vector<Position> const& positions,
       std::vector<Rotation> const& rotations,
@@ -82,8 +82,8 @@ namespace Poulpe
         done = true;
         t = 1.f;
       }
-      anim->elapsedTime += deltaTime.count();
-      //PLP_DEBUG("e {} d {} t {} index {} delta {}", anim->elapsedTime, anim->duration, t, index, deltaTime.count());
+      anim->elapsedTime += delta_time;
+      //PLP_DEBUG("e {} d {} t {} index {} delta {}", anim->elapsedTime, anim->duration, t, index, delta_time.count());
 
       //glm::vec3 newPos = glm::mix(data->_origin_pos, p.value, t);
       //glm::quat newRot = glm::mix(glm::quat(data->_origin_pos), r.value, t);
@@ -129,11 +129,11 @@ namespace Poulpe
       //}
       anim->done = done;
     };
-    animMove->update(animMove.get(), dataMove, deltaTimeMove, _Animations, _Positions, _Rotations, _Scales);
+    animMove->update(animMove.get(), dataMove, delta_timeMove, _Animations, _Positions, _Rotations, _Scales);
     _new_moves.emplace_back(std::move(animMove));
   }
 
-  void BoneAnimationScript::operator()(std::chrono::duration<float> const& deltaTime, Mesh* mesh)
+  void BoneAnimationScript::operator()(double const delta_time, Mesh* mesh)
   {
     _data = mesh->getData();
 
@@ -147,7 +147,7 @@ namespace Poulpe
       lua_getglobal(_lua_State, "nextMove");
       if (lua_isfunction(_lua_State, -1)) {
         lua_pushlightuserdata(_lua_State, this);
-        lua_pushnumber(_lua_State, static_cast<double>(deltaTime.count()));
+        lua_pushnumber(_lua_State, delta_time);
         checkLua(_lua_State, lua_pcall(_lua_State, 2, 1, 0));
       }
       _move_init = true;
@@ -155,13 +155,13 @@ namespace Poulpe
 
     std::ranges::for_each(_moves, [&](auto& anim) {
 
-      anim->update(anim.get(), mesh->getData(), deltaTime, _Animations, _Positions, _Rotations, _Scales);
+      anim->update(anim.get(), mesh->getData(), delta_time, _Animations, _Positions, _Rotations, _Scales);
 
       if (anim->done) {
         lua_getglobal(_lua_State, "nextMove");
         if (lua_isfunction(_lua_State, -1)) {
           lua_pushlightuserdata(_lua_State, this);
-          lua_pushnumber(_lua_State, static_cast<double>(deltaTime.count()));
+          lua_pushnumber(_lua_State, delta_time);
           checkLua(_lua_State, lua_pcall(_lua_State, 2, 1, 0));
         }
       }
