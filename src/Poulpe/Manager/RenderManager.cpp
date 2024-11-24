@@ -129,12 +129,10 @@ namespace Poulpe
     _refresh = true;
   }
 
-  void RenderManager::renderScene(std::chrono::duration<float> const deltatime)
+  void RenderManager::updateScene(double const delta_time)
   {
-    _renderer->renderScene();
-
     //@todo animate light
-    //_light_manager->animateAmbientLight(deltatime);
+    //_light_manager->animateAmbientLight(delta_time);
     {
       std::lock_guard guard(_entity_manager->lockWorldNode());
 
@@ -152,17 +150,17 @@ namespace Poulpe
 
             auto rdr_impl = _component_manager->get<RenderComponent>(entity->getID());
             if (mesh->isDirty() && rdr_impl) {
-              (*rdr_impl)(deltatime, mesh);
+              (*rdr_impl)(delta_time, mesh);
             }
 
             auto* animation_component = _component_manager->get<AnimationComponent>(entity->getID());
             if (animation_component) {
-              (*animation_component)(deltatime, mesh);
+              (*animation_component)(delta_time, mesh);
             }
 
             //auto* boneAnimationComponent = _component_manager->get<BoneAnimationComponent>(entity->getID());
             //if (boneAnimationComponent) {
-              //boneAnimationComponent->visit(deltatime, mesh);
+              //boneAnimationComponent->visit(delta_time, mesh);
               //mesh->setIsDirty(true);
 
               /*if (mesh->hasBufferStorage()) {
@@ -180,10 +178,14 @@ namespace Poulpe
       });
     }
 
-    if (_refresh) {
-      init();
-      _refresh = false;
-    }
+    //if (_refresh) {
+    //  init();
+    //  _refresh = false;
+    //}
+  }
+  void RenderManager::renderScene()
+  {
+    _renderer->renderScene();
   }
 
   void RenderManager::loadData(std::string const & level)
@@ -216,14 +218,14 @@ namespace Poulpe
 
   void RenderManager::prepareHUD()
   {
-    auto const deltatime{ std::chrono::duration<float, std::milli>(0) };
+    double const delta_time{ 0.0 };
 
     auto grid_entity = std::make_unique<Entity>();
     auto grid_mesh = std::make_unique<Mesh>();
     auto grid_rdr_impl{ RendererFactory::create<Grid>() };
     grid_rdr_impl->init(_renderer.get(), _texture_manager.get(), nullptr);
 
-    (*grid_rdr_impl)(deltatime, grid_mesh.get());
+    (*grid_rdr_impl)(delta_time, grid_mesh.get());
 
     _component_manager->add<RenderComponent>(grid_entity->getID(), std::move(grid_rdr_impl));
     _component_manager->add<MeshComponent>(grid_entity->getID(), std::move(grid_mesh));
@@ -233,7 +235,7 @@ namespace Poulpe
     auto crosshair_rdr_impl{ RendererFactory::create<Crosshair>() };
     crosshair_rdr_impl->init(_renderer.get(), _texture_manager.get(), nullptr);
 
-    (*crosshair_rdr_impl)(deltatime, crosshair_mesh.get());
+    (*crosshair_rdr_impl)(delta_time, crosshair_mesh.get());
     _component_manager->add<RenderComponent>(crosshair_entity->getID(), std::move(crosshair_rdr_impl));
     _component_manager->add<MeshComponent>(crosshair_entity->getID(), std::move(crosshair_mesh));
 
@@ -251,8 +253,8 @@ namespace Poulpe
     auto skybox_rdr_impl{ RendererFactory::create<Skybox>() };
     skybox_rdr_impl->init(_renderer.get(), _texture_manager.get(), nullptr);
 
-    auto deltatime = std::chrono::duration<float, std::milli>(0);
-    (*skybox_rdr_impl)(deltatime, skybox_mesh.get());
+    double const delta_time{ 0.0 };
+    (*skybox_rdr_impl)(delta_time, skybox_mesh.get());
 
     _component_manager->add<RenderComponent>(skybox_entity->getID(), std::move(skybox_rdr_impl));
     _component_manager->add<MeshComponent>(skybox_entity->getID(), std::move(skybox_mesh));

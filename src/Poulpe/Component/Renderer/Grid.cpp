@@ -35,7 +35,7 @@ namespace Poulpe
         mesh->setHasPushConstants();
     }
 
-    void Grid::operator()(std::chrono::duration<float> const& deltaTime, Mesh* mesh)
+    void Grid::operator()(double const delta_time, Mesh* mesh)
     {
       if (!mesh && !mesh->isDirty()) return;
 

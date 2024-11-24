@@ -24,7 +24,7 @@ namespace Poulpe
         glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
         glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
         glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-
+        glfwSwapInterval(1);
         _window = glfwCreateWindow(WIDTH, HEIGHT, window_title.data(), nullptr, nullptr);
 
         glfwSetWindowSizeLimits(_window, 800, 600, 2560, 1440);

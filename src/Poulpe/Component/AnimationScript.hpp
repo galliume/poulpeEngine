@@ -25,12 +25,12 @@ namespace Poulpe
     struct AnimationMove : public Animation
     {
       glm::vec3 target{ 0.0f };
-      std::function<void(AnimationMove* anim, Data* data, std::chrono::duration<float> deltaTime)> update;
+      std::function<void(AnimationMove* anim, Data* data, double delta_time)> update;
     };
     struct AnimationRotate : public Animation
     {
       glm::vec3 angle{ 0.0f };
-      std::function<void(AnimationRotate* anim, Data* data, std::chrono::duration<float>)> update;
+      std::function<void(AnimationRotate* anim, Data* data, double)> update;
     };
 
     AnimationScript(std::string const & scriptPath);
@@ -44,9 +44,9 @@ namespace Poulpe
     {
         _renderer = renderer;
     }
-    void move(Data* data, std::chrono::duration<float>, float duration, glm::vec3 target);
-    void rotate(Data* data, std::chrono::duration<float>, float duration, glm::vec3 angle);
-    void operator()(std::chrono::duration<float> const& deltaTime, Mesh * mesh);
+    void move(Data* data, double delta_time, float duration, glm::vec3 target);
+    void rotate(Data* data, double delta_time, float duration, glm::vec3 angle);
+    void operator()(double const delta_time, Mesh * mesh);
 
   private:
     Renderer* _renderer;

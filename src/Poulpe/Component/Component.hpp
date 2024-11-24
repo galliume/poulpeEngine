@@ -17,8 +17,8 @@
 namespace Poulpe
 {
   template<typename T>
-  concept hasCallOperator = requires(T t, std::chrono::duration<float> const& deltaTime, Mesh * mesh) {
-    { t(deltaTime, mesh) };
+  concept hasCallOperator = requires(T t, double const delta_time, Mesh * mesh) {
+    { t(delta_time, mesh) };
   };
 
   template<typename Class>
@@ -55,11 +55,11 @@ namespace Poulpe
 
     void setOwner(IDType owner) { _owner = owner; }
 
-    void operator()(std::chrono::duration<float> const& deltaTime, Mesh * mesh)
+    void operator()(double const delta_time, Mesh * mesh)
     {
       std::visit([&](auto& component) {
         if constexpr (hasCallOperator<decltype(*component)>) {
-          (*component)(deltaTime, mesh);
+          (*component)(delta_time, mesh);
         }
       }, _Pimpl);
     }

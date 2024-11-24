@@ -6,8 +6,7 @@ namespace Poulpe
   {
     _position = glm::vec3(-0.2f, 0.2f, 0.0f);
     _target = glm::vec3(0.0f, 0.0f, 0.0f);
-    _direction = glm::normalize(_position - _target);
-
+   
     _camera_up = glm::vec3(0.0f, 1.0f,  0.0f);
     _camera_front = glm::vec3(0.0f, 0.0f, -1.0f);
 
@@ -119,9 +118,9 @@ namespace Poulpe
     return _view;
   }
 
-  void Camera::updateSpeed(std::chrono::duration<float> const deltatime)
+  void Camera::updateSpeed(double const delta_time)
   {
-    _speed = _velocity * deltatime.count();
+    _speed = _pixel_distance * delta_time;
   }
 
   void Camera::updatePos(double xoffset, double yoffset)

@@ -108,7 +108,7 @@ namespace Poulpe
     mesh->setHasPushConstants();
   }
 
-  void Basic::operator()(std::chrono::duration<float> const& deltaTime, Mesh* mesh)
+  void Basic::operator()(double const delta_time, Mesh* mesh)
   {
     if (!mesh && !mesh->isDirty()) return;
 

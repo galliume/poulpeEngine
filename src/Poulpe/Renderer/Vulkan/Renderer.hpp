@@ -171,7 +171,7 @@ namespace Poulpe
     void init();
     void renderScene();
     
-    void setDeltatime(float const deltaTime);
+    void setDeltatime(float const delta_time);
 
     void setRayPick(
       float const x,
@@ -237,7 +237,7 @@ namespace Poulpe
 
     glm::mat4 _perspective;
     //glm::mat4 _lastLookAt;
-    float _deltatime{ 0.0f };
+    float _delta_time{ 0.0f };
     std::vector<VkDescriptorPool>_descriptor_pools;
     std::vector<VkDescriptorSetLayout>_descriptorset_layouts;
 

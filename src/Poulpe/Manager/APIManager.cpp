@@ -87,9 +87,9 @@ namespace Poulpe
       mesh->setIsDirty(true);
       mesh->getData()->_texture_index = 1;
 
-      auto deltaTime = std::chrono::duration<float, std::milli>(0);
+      double const delta_time{ 0.0 };
       //@todo add update to not re create the whole mesh...
-      (*meshRenderer)(deltaTime, mesh);
+      (*meshRenderer)(delta_time, mesh);
     };
 
     Command cmd{request};

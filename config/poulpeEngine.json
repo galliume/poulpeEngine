@@ -2,7 +2,7 @@
 	"defaultLevel": "backpack",
 	"defaultSkybox": "debug",
 	"ambientMusic": false,
-	"fpsLimit": 60,
+	"fpsLimit": 30,
 	"input": {
 		"current": "keyboard",
 		"keyboard": {

@@ -43,7 +43,7 @@ namespace Poulpe
     mesh->setHasPushConstants();
   }
 
-  void ShadowMap::operator()(std::chrono::duration<float> const& deltaTime, Mesh* mesh)
+  void ShadowMap::operator()(double const delta_time, Mesh* mesh)
   {
     if (!mesh && !mesh->isDirty()) return;
 

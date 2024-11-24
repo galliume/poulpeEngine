@@ -29,6 +29,6 @@ namespace Poulpe
     std::unique_ptr<APIManager> _api_manager;
     std::unique_ptr<NetworkManager> _network_manager;
     std::unique_ptr<RenderManager> _render_manager;
-    std::chrono::steady_clock::time_point _start_run;
+    std::chrono::time_point<std::chrono::steady_clock> _start_run;
   };
 }
