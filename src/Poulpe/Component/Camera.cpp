@@ -4,45 +4,43 @@ namespace Poulpe
 {
   void Camera::init()
   {
-    _position = glm::vec3(-0.2f, 0.2f, 0.0f);
-    _target = glm::vec3(0.0f, 0.0f, 0.0f);
-   
+    _camera_pos = glm::vec3(0.0f, 0.0f, 3.0f);
     _camera_up = glm::vec3(0.0f, 1.0f,  0.0f);
     _camera_front = glm::vec3(0.0f, 0.0f, -1.0f);
 
-    _view = glm::lookAt(_position, _position + _camera_front, _camera_up);
+    _view = glm::lookAt(_camera_pos, _camera_pos + _camera_front, _camera_up);
   }
 
   void Camera::backward()
   {
     //auto direction = mat4_backward();
-    //_position -= direction * (_speed * _DeltaTime.count());
-    _position -= _camera_front * _speed;
+    //_camera_pos -= direction * (_speed * _DeltaTime.count());
+    _camera_pos -= _camera_front * _speed;
   }
 
   void Camera::down()
   {
-    _position += _camera_up * _speed;
+    _camera_pos += _camera_up * _speed;
   }
 
   void Camera::forward()
   {
-    _position += _camera_front * _speed;
+    _camera_pos += _camera_front * _speed;
   }
 
   void Camera::left()
   {
-    _position -= glm::normalize(glm::cross(_camera_front, _camera_up)) * _speed;
+    _camera_pos -= glm::normalize(glm::cross(_camera_front, _camera_up)) * _speed;
   }
 
   void Camera::right()
   {
-    _position += glm::normalize(glm::cross(_camera_front, _camera_up)) * _speed;
+    _camera_pos += glm::normalize(glm::cross(_camera_front, _camera_up)) * _speed;
   }
 
   void Camera::up()
   {
-    _position -= _camera_up * _speed;
+    _camera_pos -= _camera_up * _speed;
   }
 
   /**
@@ -114,7 +112,7 @@ namespace Poulpe
 
   glm::mat4 Camera::lookAt()
   {
-    _view = glm::lookAt(_position, _position + _camera_front, _camera_up);
+    _view = glm::lookAt(_camera_pos, _camera_pos + _camera_front, _camera_up);
     return _view;
   }
 

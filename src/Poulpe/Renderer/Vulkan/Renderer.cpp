@@ -419,7 +419,7 @@ namespace Poulpe
           pipeline->pipeline_layout,
           0, 1, mesh->getDescSet(), 0, nullptr);
 
-        if (need_pipeline_update) {
+        if (1==1) {
           _vulkan->bindPipeline(cmd_buffer, pipeline->pipeline);
           need_pipeline_update = true;
         }

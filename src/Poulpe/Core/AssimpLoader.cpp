@@ -44,7 +44,12 @@ namespace Poulpe
     Assimp::Importer importer;
   
     const aiScene* scene = importer.ReadFile(path,
-      aiProcess_Triangulate | aiProcess_JoinIdenticalVertices | aiProcess_GenNormals | aiProcess_CalcTangentSpace
+      aiProcess_Triangulate | 
+      aiProcess_JoinIdenticalVertices | 
+      aiProcess_GenNormals | 
+      aiProcess_CalcTangentSpace |
+      aiProcess_FlipUVs |
+      aiProcess_OptimizeMeshes
     );
 
     if (nullptr == scene) {
@@ -126,10 +131,22 @@ namespace Poulpe
               material.name_texture_specular_highlight = AssimpLoader::cleanName(specularHighLightTexturePath.C_Str());
           }
         }
-        if (mat->GetTextureCount(aiTextureType_HEIGHT) > 0) {
-          aiString bumpTexturePath;
-          if (mat->GetTexture(aiTextureType_HEIGHT, 0, &bumpTexturePath) == AI_SUCCESS) {
-              material.name_texture_bump = AssimpLoader::cleanName(bumpTexturePath.C_Str());
+
+        bool const is_obj {std::filesystem::path(path).extension() == ".obj"};
+        
+        if (is_obj) {
+          if (mat->GetTextureCount(aiTextureType_HEIGHT) > 0) {
+            aiString bumpTexturePath;
+            if (mat->GetTexture(aiTextureType_HEIGHT, 0, &bumpTexturePath) == AI_SUCCESS) {
+                material.name_texture_bump = AssimpLoader::cleanName(bumpTexturePath.C_Str());
+            }
+          }
+        } else {
+          if (mat->GetTextureCount(aiTextureType_NORMALS) > 0) {
+            aiString bumpTexturePath;
+            if (mat->GetTexture(aiTextureType_NORMALS, 0, &bumpTexturePath) == AI_SUCCESS) {
+                material.name_texture_bump = AssimpLoader::cleanName(bumpTexturePath.C_Str());
+            }
           }
         }
         if (mat->GetTextureCount(aiTextureType_OPACITY) > 0) {
@@ -213,20 +230,15 @@ namespace Poulpe
           vertex.fidtidBB = glm::vec4(static_cast<float>(j), static_cast<float>(mesh->mMaterialIndex), 0.0f, 0.0f);
           vertex.pos = { vertices.x, vertices.y, vertices.z };
 
-          glm::vec4 tangent(1.f);
+          glm::vec4 tangent(0.f, 0.f, 1.f, 1.f);
 
           if (nullptr != mesh->mTangents) {
-            for (unsigned int t{ 0 }; t < mesh->mNumVertices; ++t) {
-              tangent.x += mesh->mTangents[t].x;
-              tangent.y += mesh->mTangents[t].y;
-              tangent.z += mesh->mTangents[t].z;
-            }
-            tangent.x /= mesh->mNumVertices;
-            tangent.y /= mesh->mNumVertices;
-            tangent.z /= mesh->mNumVertices;
+              tangent.x += mesh->mTangents[j].x;
+              tangent.y += mesh->mTangents[j].y;
+              tangent.z += mesh->mTangents[j].z;
           }
           vertex.tangent = tangent;
-          
+          //if (inverse_texture_y) vertex.tangent.y *= -1.0f;
 
           if (mesh->HasNormals()) {
               aiVector3D const& normal = mesh->mNormals[face->mIndices[j]];
@@ -234,11 +246,12 @@ namespace Poulpe
           } else {
             vertex.normal = { 1.0f, 1.0f, 1.0f };
           }
-
+          //if (inverse_texture_y) vertex.normal.y *= -1.0f;
+          
           if (mesh->mNumUVComponents[0] > 0) {
             aiVector3D texCoord = mesh->mTextureCoords[0][face->mIndices[j]];
             vertex.texCoord = { texCoord.x, texCoord.y };
-            if (!inverse_texture_y) vertex.texCoord.y *= -1.0f;
+            //if (inverse_texture_y) vertex.texCoord.y *= -1.0f;
           }
 
           vertex.color = { 1.0f, 1.0f, 1.0f };

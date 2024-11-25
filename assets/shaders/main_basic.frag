@@ -12,12 +12,14 @@ layout(location = 0) in VS_OUT {
   vec3 fNormal;
   vec3 fPos;
   vec4 fViewPos;
-  mat3 TBN;
   vec4 fAmbientLightSpace;
   vec4 fShadowCoordSpot;
   //faceId texture ID blank blank
   vec4 ffidtidBB;
   vec3 fvColor;
+  vec3 TangentLightPos;
+  vec3 TangentViewPos;
+  vec3 TangentFragPos;
 } fs_in;
 
 struct Light {
@@ -80,21 +82,19 @@ void main()
   //vec3 debugSpecular = vec3(0.0, 0.0, 1.0); // Debugging color for specular
 
   vec3 normal = normalize(fs_in.fNormal);
+  ivec2 texSize = textureSize(texSampler[3], 0);
 
-//  ivec2 texBumMapSize = textureSize(texSampler[3], 0);
-//
-//  if (texBumMapSize.x != 1 && texBumMapSize.y != 1) {
-//    vec3 nm = texture(texSampler[3], fs_in.fTexCoord).xyz * 2.0 - vec3(1.0);
-//    nm = fs_in.TBN * nm;
-//    normal = vec3(normalize(nm));
-//  }
+  if (texSize.x != 1 && texSize.y != 1) {
+    normal = texture(texSampler[3], fs_in.fTexCoord).xyz;
+    normal = normalize(normal * 2.0 - 1.0);
+  }
 
   vec4 texColor = texture(texSampler[0], fs_in.fTexCoord);
  
   //float shadowAmbient = 1.0;//1 not in shadow, 0 in shadow
   float shadowAmbient = ShadowCalculation(fs_in.fAmbientLightSpace, normal);
 
-  vec3 viewDir = normalize(fs_in.fViewPos.xyz - fs_in.fPos.xyz);
+  vec3 viewDir = normalize(fs_in.TangentViewPos.xyz - fs_in.TangentFragPos.xyz);
   vec3 color = CalcDirLight(texColor, ambientLight, normal, viewDir, shadowAmbient);
 
 //  for(int i = 0; i < NR_POINT_LIGHTS; i++) {
@@ -112,7 +112,7 @@ void main()
   if (texColor.a < 0.1) discard;
 
 
-  //color = color / (color + vec3(1.0));
+  color = color / (color + vec3(1.0));
   //color = vec3(-shadowAmbient);
   color = pow(color, vec3(1.0 / 2.2));
   
@@ -121,24 +121,18 @@ void main()
 
 vec3 CalcDirLight(vec4 color, Light dirLight, vec3 normal, vec3 viewDir, float shadow)
 {
-  ivec2 texSize = textureSize(texSampler[3], 0);
-
-  if (texSize.x != 1 && texSize.y != 1) {
-    normal = vec3(texture(texSampler[3], fs_in.fTexCoord));
-  }
-
-  vec3 lightDir = normalize(dirLight.position - fs_in.fPos);
+  vec3 lightDir = normalize(fs_in.TangentLightPos - fs_in.TangentFragPos);
   vec3 ambient = (dirLight.color * vec3(texture(texSampler[0], fs_in.fTexCoord))) * dirLight.ads.x;
 
   float diff = max(dot(normal, lightDir), 0.0);
   vec3 diffuse =  (diff * vec3(texture(texSampler[0], fs_in.fTexCoord))) * dirLight.ads.y;
 
-  vec3 reflectDir = reflect(-dirLight.position, normal);
+  //vec3 reflectDir = reflect(-dirLight.position, normal);
   vec3 halfwayDir = normalize(lightDir + viewDir);
   float spec = pow(max(dot(normal, halfwayDir), 0.0), 1);
 
   vec3 specular = vec3(1.f);
-  texSize = textureSize(texSampler[2], 0);
+  ivec2 texSize = textureSize(texSampler[2], 0);
 
   if (texSize.x == 1 && texSize.y == 1) {
     specular = (material.specular * spec) * dirLight.color * dirLight.ads.z;
@@ -146,7 +140,7 @@ vec3 CalcDirLight(vec4 color, Light dirLight, vec3 normal, vec3 viewDir, float s
     specular = (vec3(texture(texSampler[2], fs_in.fTexCoord)) * spec) * dirLight.color * dirLight.ads.z;
   }
 
-  return (ambient + shadow * (diffuse + specular)) * color.xyz;
+  return (ambient +   (diffuse + specular)) * color.xyz;
 }
 
 vec3 CalcPointLight(vec4 color, Light pointLight, vec3 normal, vec3 fragPos, vec3 viewDir)

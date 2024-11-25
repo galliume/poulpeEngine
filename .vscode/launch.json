@@ -5,7 +5,7 @@
             "name": "(lldb) Start",
             "type": "lldb",
             "request": "launch",
-            "program": "${workspaceFolder}/build/${input:compiler}/PoulpeEngine.exe",
+            "program": "${workspaceFolder}/build/windows-debug/PoulpeEngine.exe",
             "cwd": "${workspaceFolder}",
             "relativePathBase": "${workspaceFolder}",
             "console": "externalTerminal"
