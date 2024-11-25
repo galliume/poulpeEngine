@@ -3,8 +3,8 @@
 		"crate" : {
 			"mesh": "assets/mesh/crate/Crate1.obj",
 			"textures": {
-				"crate_1": "assets/mesh/crate/crate_1.jpg",
-				"crate_1_normal": "assets/mesh/crate/crate_1_normal.png"
+				"brickwall": "assets/mesh/crate/brickwall.jpg",
+				"brickwall_normal": "assets/mesh/crate/brickwall_normal.jpg"
 			},
 			"shader": "main_basic",
 			"positions": [

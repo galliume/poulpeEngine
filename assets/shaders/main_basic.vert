@@ -2,6 +2,7 @@
 #extension GL_EXT_nonuniform_qualifier : enable
 
 #define MAX_UBOS 1
+
 #define NR_POINT_LIGHTS 2
 
 struct UBO
@@ -34,12 +35,14 @@ layout(location = 0) out VS_OUT {
   vec3 fNormal;
   vec3 fPos;
   vec4 fViewPos;
-  mat3 TBN;
   vec4 fAmbientLightSpace;
   vec4 fShadowCoordSpot;
   //faceId texture ID blank blank
   vec4 ffidtidBB;
   vec3 fvColor;
+  vec3 TangentLightPos;
+  vec3 TangentViewPos;
+  vec3 TangentFragPos;
 } vs_out;
 
 
@@ -84,13 +87,15 @@ const mat4 biasMat = mat4(
 
 void main()
 {
-  vec3 t = normalize(vec3(ubos[gl_InstanceIndex].model * vec4(tangent.xyz, 0.0)));
-  vec3 n = normalize(vec3(ubos[gl_InstanceIndex].model * vec4(normal, 0.0)));
-  vec3 b = normalize(vec3(ubos[gl_InstanceIndex].model * vec4(cross(n, t) * tangent.w, 0.0)));
-  mat3 TBN = transpose(mat3(t, b, n));
-  vs_out.TBN = TBN;
+  mat3 normalMatrix = transpose(inverse(mat3(ubos[gl_InstanceIndex].model)));
 
-  //vs_out.fNormal = transpose(inverse(mat3(ubos[gl_InstanceIndex].model))) * normal;
+  vec3 t = normalize(normalMatrix * tangent.xyz);
+  vec3 n = normalize(normalMatrix * normal);
+  t = normalize(t - dot(t, n) * n);
+  vec3 b = cross(n, t);
+  mat3 TBN = transpose(mat3(t, b, n));
+
+  vs_out.fNormal = normalMatrix * normal;
   vs_out.fPos = vec3(ubos[gl_InstanceIndex].model * vec4(pos, 1.0));
   vs_out.fNormal = (ubos[gl_InstanceIndex].model * vec4(normal, 0.0)).xyz;
   vs_out.fTexCoord = texCoord;
@@ -100,6 +105,9 @@ void main()
   vs_out.ffidtidBB = fidtidBB;
   vs_out.fvColor = vColor;
   vs_out.fTextureID = int(fidtidBB.y);
+  vs_out.TangentLightPos = TBN * ambientLight.position;
+  vs_out.TangentViewPos  = TBN * vs_out.fViewPos.xyz;
+  vs_out.TangentFragPos  = TBN * vs_out.fPos;
 
   gl_Position = ubos[gl_InstanceIndex].projection * pc.view * vec4(vs_out.fPos, 1.0);
 } 

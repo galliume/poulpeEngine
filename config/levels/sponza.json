@@ -67,7 +67,8 @@
 				"textures_vase_round_normal":"assets/mesh/sponza/textures/vase_round_normal.png",
 				"textures_lion_normal":"assets/mesh/sponza/textures/lion_normal.png",
 				"textures_lion2_normal":"assets/mesh/sponza/textures/lion2_normal.png",
-				"textures_background_normal":"assets/mesh/sponza/textures/background_normal.png"
+				"textures_background_normal":"assets/mesh/sponza/textures/background_normal.png",
+				"textures_chain_texture_normal": "assets/mesh/sponza/textures/chain_texture_normal.png"
 			},           
 			"shader": "main_basic",
 			"positions": [

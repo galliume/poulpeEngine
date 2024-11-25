@@ -16,7 +16,7 @@ namespace Poulpe
     void right();
     void up();
 
-    inline glm::vec4 getPos() { return glm::vec4(_position, 1.0f); }
+    inline glm::vec4 getPos() { return glm::vec4(_camera_pos, 1.0f); }
     inline glm::mat4 getView() { return _view; }
 
     glm::mat4 frustumProj(float fovy, float s, float n, float f);
@@ -35,8 +35,7 @@ namespace Poulpe
   private:
     glm::vec3 _camera_front;
     glm::vec3 _camera_up;
-    glm::vec3 _position;
-    glm::vec3 _target;
+    glm::vec3 _camera_pos;
 
     glm::mat4 _view;
 
