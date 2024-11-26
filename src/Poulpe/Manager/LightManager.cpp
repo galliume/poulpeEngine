@@ -4,11 +4,11 @@ namespace Poulpe
 {
   LightManager::LightManager()
   {
-    _ambient.color = glm::vec3(0.68f, 0.65f, 0.43f);
+    _ambient.color = glm::vec3(1.f, 1.f, 1.f);
     _ambient.position = glm::vec3(0.5f, 10.0f, 1.6f);
     _ambient.direction = glm::vec3(-0.1f, 5.0f, -0.1f);
     //ambient diffuse specular
-    _ambient.ads = glm::vec3(0.3f, 0.5f, 1.f);
+    _ambient.ads = glm::vec3(0.5f, 0.5f, 1.f);
     _ambient.clq = glm::vec3(0.0f);
 
     _ambient.view = glm::lookAt(
@@ -43,7 +43,31 @@ namespace Poulpe
     light2.ads = glm::vec3(0.2f, 0.2f, 0.4f);
     light2.clq = glm::vec3(1.0f, 0.7f, 1.8f);
 
-    _points.emplace_back(light);
+    float aspect = (float)2560/(float)2560;
+    float near = 1.0f;
+    float far = 25.0f;
+    glm::mat4 shadowProj = glm::perspective(glm::radians(90.0f), aspect, near, far);
+
+    std::vector<glm::mat4> shadowTransforms;
+    shadowTransforms.push_back(
+      shadowProj * glm::lookAt(light2.position, light2.position + glm::vec3( 1.0, 0.0, 0.0), glm::vec3(0.0,-1.0, 0.0)));
+
+    shadowTransforms.push_back(
+      shadowProj * glm::lookAt(light2.position, light2.position + glm::vec3(-1.0, 0.0, 0.0), glm::vec3(0.0,-1.0, 0.0)));
+
+    shadowTransforms.push_back(
+      shadowProj * glm::lookAt(light2.position, light2.position + glm::vec3( 0.0, 1.0, 0.0), glm::vec3(0.0, 0.0, 1.0)));
+
+    shadowTransforms.push_back(
+      shadowProj * glm::lookAt(light2.position, light2.position + glm::vec3( 0.0,-1.0, 0.0), glm::vec3(0.0, 0.0,-1.0)));
+
+    shadowTransforms.push_back(
+      shadowProj * glm::lookAt(light2.position, light2.position + glm::vec3( 0.0, 0.0, 1.0), glm::vec3(0.0,-1.0, 0.0)));
+
+    shadowTransforms.push_back(
+      shadowProj * glm::lookAt(light2.position, light2.position + glm::vec3( 0.0, 0.0,-1.0), glm::vec3(0.0,-1.0, 0.0)));
+
+    //_points.emplace_back(light);
     _points.emplace_back(light2);
 
     Light light3;

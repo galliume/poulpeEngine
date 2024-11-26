@@ -151,6 +151,16 @@ namespace Poulpe
       std::latch& count_down,
       unsigned int const thread_id);
 
+    void drawPointLightMap(
+      VkCommandBuffer& cmd_buffer,
+      DrawCommands& draw_cmds,
+      VkImageView& depthview,
+      VkImage& depth,
+      std::vector<Entity*> const& entities,
+      VkAttachmentLoadOp const load_op,
+      std::latch& count_down,
+      unsigned int const thread_id);
+
     void endRendering(
       VkCommandBuffer& cmd_buffer,
       VkImage& image,
@@ -253,12 +263,14 @@ namespace Poulpe
     std::vector<VkImage> _depthmap_images;
     std::vector<VkImageView> _depthmap_imageviews;
     std::vector<VkSampler> _depthmap_samplers;
-    bool _depthmap_descset_updated{ false };
+
+    std::vector<VkImage> _depthmap_cube_images;
+    std::vector<VkImageView> _depthmap_cube_imageviews;
+    std::vector<VkSampler> _depthmap_cube_samplers;
 
     std::vector<VkImage> _depthmap_images2;
     std::vector<VkImageView> _depthmap_imageviews2;
     std::vector<VkSampler> _depthmap_samplers2;
-    bool _depthmap_descset_updated2{ false };
 
     std::vector<VkImage> _depthmap_Images3;
     std::vector<VkImageView> _depthmap_imageviews3;

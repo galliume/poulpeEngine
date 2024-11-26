@@ -2,7 +2,7 @@
 #extension GL_EXT_nonuniform_qualifier : enable
 #extension GL_ARB_separate_shader_objects : enable
 
-#define NR_POINT_LIGHTS 2
+#define NR_POINT_LIGHTS 1
 
 layout(location = 0) out vec4 fColor;
 
@@ -97,9 +97,9 @@ void main()
   vec3 viewDir = normalize(fs_in.fViewPos.xyz - fs_in.fPos.xyz);
   vec3 color = CalcDirLight(texColor, ambientLight, normal, viewDir, shadowAmbient);
 
-//  for(int i = 0; i < NR_POINT_LIGHTS; i++) {
-//    color += CalcPointLight(texColor, pointLights[i], normal, fs_in.fPos.xyz, viewDir);
-//  }
+  for(int i = 0; i < NR_POINT_LIGHTS; i++) {
+    color += CalcPointLight(texColor, pointLights[i], normal, fs_in.fPos.xyz, viewDir);
+  }
 
 //  color += CalcSpotLight(texColor, spotLight, normal, fs_in.fPos.xyz, viewDir, 1.0);
 
@@ -112,7 +112,7 @@ void main()
   if (texColor.a < 0.1) discard;
 
 
-  //color = color / (color + vec3(1.0));
+  color = color / (color + vec3(1.0));
   //color = vec3(-shadowAmbient);
   color = pow(color, vec3(1.0 / 2.2));
   
@@ -127,7 +127,7 @@ vec3 CalcDirLight(vec4 color, Light dirLight, vec3 normal, vec3 viewDir, float s
   float diff = max(dot(normal, lightDir), 0.0);
   vec3 diffuse =  (diff * vec3(texture(texSampler[0], fs_in.fTexCoord))) * dirLight.ads.y;
 
-  vec3 reflectDir = reflect(-dirLight.position, normal);
+  //vec3 reflectDir = reflect(-dirLight.position, normal);
   vec3 halfwayDir = normalize(lightDir + viewDir);
   float spec = pow(max(dot(normal, halfwayDir), 0.0), 1);
 

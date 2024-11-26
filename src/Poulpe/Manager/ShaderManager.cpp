@@ -12,27 +12,41 @@ namespace Poulpe
     _shaders = std::make_unique<VulkanShaders>();
   }
 
-  void ShaderManager::addShader(std::string const& name, std::string const& vertPath, std::string const& fragPath)
+  void ShaderManager::addShader(
+    std::string const& name,
+    std::string const& vert,
+    std::string const& frag,
+    std::string const& geom)
   {
 
-    if (!std::filesystem::exists(vertPath)) {
-      PLP_FATAL("vertex shader file {} does not exits.", vertPath);
+    if (!std::filesystem::exists(vert)) {
+      PLP_FATAL("vertex shader file {} does not exits.", vert);
       return;
     }
 
-    if (!std::filesystem::exists(fragPath)) {
-      PLP_FATAL("fragment shader file {} does not exits.", fragPath);
+    if (!std::filesystem::exists(frag)) {
+      PLP_FATAL("fragment shader file {} does not exits.", frag);
       return;
-
     }
 
-    auto vertShaderCode = Tools::readFile(vertPath);
-    auto fragShaderCode = Tools::readFile(fragPath);
+    if (!geom.empty() && !std::filesystem::exists(geom)) {
+      PLP_FATAL("geometry shader file {} does not exits.", geom);
+      return;
+    }
 
-    VkShaderModule vertexShaderModule = _renderer->getAPI()->createShaderModule(vertShaderCode);
-    VkShaderModule fragShaderModule = _renderer->getAPI()->createShaderModule(fragShaderCode);
+    auto const vert_code = Tools::readFile(vert);
+    auto const frag_code = Tools::readFile(frag);
 
-    _shaders->shaders[name] = { vertexShaderModule, fragShaderModule };
+    VkShaderModule vertex_module = _renderer->getAPI()->createShaderModule(vert_code);
+    VkShaderModule frag_module = _renderer->getAPI()->createShaderModule(frag_code);
+
+    _shaders->shaders[name] = { vertex_module, frag_module };
+
+    if (!geom.empty()) {
+      auto const geom_code = Tools::readFile(geom);
+      VkShaderModule geom_module = _renderer->getAPI()->createShaderModule(geom_code);
+      _shaders->shaders[name].emplace_back(geom_module);
+    }
 
     createGraphicPipeline(name);
   }
@@ -40,23 +54,21 @@ namespace Poulpe
   void ShaderManager::clear()
   {
     _shaders->shaders.clear();
-    _LoadingDone = false;
   }
 
   std::function<void(std::latch& count_down)> ShaderManager::load(nlohmann::json config)
   {
-    _Config = config;
+    _config = config;
 
     return [this](std::latch& count_down) {
-      for (auto & shader : _Config["shader"].items()) {
+      for (auto & shader : _config["shader"].items()) {
 
         auto key = static_cast<std::string>(shader.key());
         auto data = shader.value();
 
-        addShader(key, data["vert"], data["frag"]);
+        addShader(key, data["vert"], data["frag"], data["geom"]);
       }
       count_down.count_down();
-      _LoadingDone = true;
     };
   }
 
@@ -146,7 +158,7 @@ namespace Poulpe
 
   void ShaderManager::createGraphicPipeline(std::string const & shaderName)
   {
-    bool offscreen = (shaderName == "shadowMap") ? true : false;
+    bool offscreen = (shaderName == "shadowMap" || shaderName == "pointLightShadowMap") ? true : false;
     auto cullMode = VK_CULL_MODE_BACK_BIT;
 
     std::vector<VkDescriptorPoolSize> poolSizes{};
@@ -233,12 +245,12 @@ namespace Poulpe
       vkPc.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
       vkPc.size = sizeof(constants);
 
-      if (shaderName == "shadowMap" || shaderName == "shadowMapSpot") {
+      if (shaderName == "shadowMap" || shaderName == "pointLightShadowMap") {
         hasColorAttachment = false;
         hasDynamicDepthBias = true;
         cullMode = VK_CULL_MODE_FRONT_BIT;
         descset_layout = createDescriptorSetLayout<DescSetLayoutType::Offscreen>();
-        vkPc.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+        vkPc.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_GEOMETRY_BIT;
       } else {
         descset_layout = createDescriptorSetLayout<DescSetLayoutType::Entity>();
       }
@@ -269,7 +281,7 @@ namespace Poulpe
     pipeline.descset_layout = descset_layout;
     pipeline.shaders = shaders;
 
-    if (shaderName == "shadowMap" || shaderName == "shadowMapSpot") {
+    if (shaderName == "shadowMap" || shaderName == "pointLightShadowMap") {
       pipeline.descset = _renderer->getAPI()->createDescriptorSets(pipeline.desc_pool, { pipeline.descset_layout }, 1);
     }
     _renderer->addPipeline(shaderName, pipeline);

@@ -98,8 +98,8 @@ namespace Poulpe
       skybox_image,
       VK_FORMAT_R8G8B8A8_SRGB);
 
-    VkImageView texture_imageview = _renderer->getAPI()->createSkyboxImageView(skybox_image, VK_FORMAT_R8G8B8A8_SRGB, mip_lvls);
-    VkSampler texture_sampler = _renderer->getAPI()->createSkyboxTextureSampler(mip_lvls);
+    VkImageView texture_imageview = _renderer->getAPI()->createCubeImageView(skybox_image, VK_FORMAT_R8G8B8A8_SRGB, mip_lvls);
+    VkSampler texture_sampler = _renderer->getAPI()->createCubeTextureSampler(mip_lvls);
 
     _skybox.setImage(skybox_image);
     _skybox.setImageView(texture_imageview);

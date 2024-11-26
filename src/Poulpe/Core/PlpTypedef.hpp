@@ -63,7 +63,7 @@ namespace Poulpe
   struct ObjectBuffer
   {
     Light ambient_light;
-    std::array<Light, 2> point_lights;
+    std::array<Light, 1> point_lights;
     Light spot_light;
     Material material;
   };

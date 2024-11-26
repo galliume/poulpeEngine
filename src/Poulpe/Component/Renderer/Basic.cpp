@@ -194,7 +194,7 @@ namespace Poulpe
 
       ObjectBuffer objectBuffer{};
       objectBuffer.point_lights[0] = _light_manager->getPointLights().at(0);
-      objectBuffer.point_lights[1] = _light_manager->getPointLights().at(1);
+      //objectBuffer.point_lights[1] = _light_manager->getPointLights().at(1);
       objectBuffer.spot_light = _light_manager->getSpotLights().at(0);
       objectBuffer.ambient_light = _light_manager->getAmbientLight();
       objectBuffer.material = material;

@@ -2,19 +2,28 @@
   "shader": {
     "main_basic": {
       "vert": "assets/shaders/spv/main_basic_vert.spv",
-      "frag": "assets/shaders/spv/main_basic_frag.spv"
+      "frag": "assets/shaders/spv/main_basic_frag.spv",
+	  "geom": ""
     },
     "main_basic_no_texture": {
       "vert": "assets/shaders/spv/main_basic_no_texture_vert.spv",
-      "frag": "assets/shaders/spv/main_basic_no_texture_frag.spv"
-    },
+      "frag": "assets/shaders/spv/main_basic_no_texture_frag.spv",
+	  "geom": ""
+	},
     "skybox": {
       "vert": "assets/shaders/spv/skybox_vert.spv",
-      "frag": "assets/shaders/spv/skybox_frag.spv"
+      "frag": "assets/shaders/spv/skybox_frag.spv",
+	  "geom": ""
     },
     "shadowMap": {
       "vert": "assets/shaders/spv/shadowMap_vert.spv",
-      "frag": "assets/shaders/spv/shadowMap_frag.spv"
+      "frag": "assets/shaders/spv/shadowMap_frag.spv",
+	  "geom": ""
+    },
+    "pointLightShadowMap": {
+      "vert": "assets/shaders/spv/pointLightShadowMap_vert.spv",
+      "frag": "assets/shaders/spv/pointLightShadowMap_frag.spv",	  
+	  "geom": "assets/shaders/spv/pointLightShadowMap_geom.spv"
     }	
   }
 }
