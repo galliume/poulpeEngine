@@ -2099,8 +2099,8 @@ namespace Poulpe {
 
   void VulkanAPI::createDepthMapImage(VkImage& image)
   {
-    uint32_t const width{ getSwapChainExtent().width * 8 };
-    uint32_t const height{ getSwapChainExtent().height * 8 };
+    uint32_t const width{ getSwapChainExtent().width * 2 };
+    uint32_t const height{ getSwapChainExtent().height * 2 };
 
     VkImageCreateInfo image_info{};
     image_info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;

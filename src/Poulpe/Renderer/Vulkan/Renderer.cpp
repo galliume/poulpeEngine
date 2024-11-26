@@ -224,8 +224,8 @@ namespace Poulpe
     depth_attachment_info.clearValue.depthStencil = depth_stencil;
     depth_attachment_info.clearValue.color = color_clear;
 
-    uint32_t const width{ _vulkan->getSwapChainExtent().width * 8 };
-    uint32_t const height{ _vulkan->getSwapChainExtent().height * 8 };
+    uint32_t const width{ _vulkan->getSwapChainExtent().width * 2 };
+    uint32_t const height{ _vulkan->getSwapChainExtent().height * 2 };
     //uint32_t const width{ 2048 };
     //uint32_t const height{ 2048 };
 

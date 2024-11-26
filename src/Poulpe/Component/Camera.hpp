@@ -40,8 +40,8 @@ namespace Poulpe
     glm::mat4 _view;
 
     float _pitch;
-    unsigned int const _pixel_distance{ 3 };
-    float _speed { 3.0f };
+    unsigned int const _pixel_distance{ 10 };
+    float _speed { _pixel_distance };
     float _yaw{ -90.0f };
   };
 }

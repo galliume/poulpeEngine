@@ -1,67 +1,65 @@
 #version 450
 #extension GL_EXT_nonuniform_qualifier : enable
 
-#define MAX_UBOS 1
-
 struct UBO
 {
-    mat4 model;
-    mat4 projection;
+  mat4 model;
+  mat4 projection;
 };
 
 layout(set = 0, binding = 0) readonly uniform UniformBufferObject {
-   UBO ubos[MAX_UBOS];
+  UBO ubo;
 };
 
 layout(push_constant) uniform constants
 {
-    vec3 textureIDBB;
-    mat4 view;
-    vec4 viewPos;
+  mat4 view;
+  vec4 view_position;
+  vec4 total_position;
 } pc;
 
-layout(location = 0) in vec3 pos;
+layout(location = 0) in vec3 position;
 layout(location = 1) in vec3 normal;
-layout(location = 2) in vec2 texCoord;
+layout(location = 2) in vec2 texture_coord;
 layout(location = 3) in vec4 tangent;
 layout(location = 4) in vec4 fidtidBB;
-layout(location = 5) in vec3 vColor;
+layout(location = 5) in vec3 color;
 
 struct Light {
-    vec3 color;
-    vec3 direction;
-    vec3 position;
-    //ambiance diffuse specular
-    vec3 ads;
-    //constant, linear, quadratiq
-    vec3 clq;
-    //cutOff, outerCutoff, Blank
-    vec3 coB;
-    mat4 view;
-    mat4 projection;
-    mat4 lightSpaceMatrix;
+  mat4 light_space_matrix;
+  mat4 projection;
+  mat4 view;
+  //ambiance diffuse specular
+  vec3 ads;
+  //constant, linear, quadratiq
+  vec3 clq;
+  //cutOff, outerCutoff, Blank
+  vec3 coB;
+  vec3 color;
+  vec3 direction;
+  vec3 position;
 };
 
 struct Material
 {
-    vec3 ambient;
-    vec3 diffuse;
-    vec3 specular;
-    vec3 transmittance;
-    vec3 emission;
-    //shininess, ior, diss
-    vec3 shiIorDiss;
+  vec3 ambient;
+  vec3 diffuse;
+  vec3 specular;
+  vec3 transmittance;
+  vec3 emission;
+  //shininess, ior, diss
+  vec3 shi_ior_diss;
 };
 
 #define NR_POINT_LIGHTS 2
 layout(set = 0, binding = 1) readonly buffer ObjectBuffer {
-    Light ambientLight;
-    Light pointLights[NR_POINT_LIGHTS];
-    Light spotLight;
-    Material material;
+  Light sun_light;
+  Light point_lights[NR_POINT_LIGHTS];
+  Light spot_light;
+  Material material;
 };
 
 void main()
 {
-    gl_Position = ambientLight.lightSpaceMatrix * ubos[gl_InstanceIndex].model * vec4(pos, 1.0);
+  gl_Position = sun_light.light_space_matrix * ubo.model * vec4(position, 1.0);
 } 
