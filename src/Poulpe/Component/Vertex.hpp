@@ -17,7 +17,7 @@ namespace Poulpe
   {
     alignas(16) glm::vec3 pos;
     alignas(16) glm::vec3 normal;
-    alignas(16) glm::vec2 texCoord;
+    alignas(16) glm::vec2 texture_coord;
     alignas(16) glm::vec4 tangent;
     //faceId texture ID blank blank
     alignas(16) glm::vec4 fidtidBB;
@@ -52,7 +52,7 @@ namespace Poulpe
       attributeDescriptions[2].binding = 0;
       attributeDescriptions[2].location = 2;
       attributeDescriptions[2].format = VK_FORMAT_R32G32_SFLOAT;
-      attributeDescriptions[2].offset = offsetof(Vertex, texCoord);
+      attributeDescriptions[2].offset = offsetof(Vertex, texture_coord);
 
       attributeDescriptions[3].binding = 0;
       attributeDescriptions[3].location = 3;
@@ -75,7 +75,7 @@ namespace Poulpe
     bool operator==(const Vertex& other) const
     {
       return pos == other.pos && normal == other.normal 
-        && texCoord == other.texCoord && other.tangent == tangent
+        && texture_coord == other.texture_coord && other.tangent == tangent
         && fidtidBB == other.fidtidBB && color == other.color;
     }
   };
@@ -86,7 +86,7 @@ namespace std {
     size_t operator()(Poulpe::Vertex const& vertex) const {
       return ((((((((hash<glm::vec3>()(vertex.pos) ^
         (hash<glm::vec3>()(vertex.normal) << 1)) >> 1) ^
-        (hash<glm::vec2>()(vertex.texCoord) << 1)) >> 1) ^
+        (hash<glm::vec2>()(vertex.texture_coord) << 1)) >> 1) ^
         (hash<glm::vec3>()(vertex.tangent) << 1)) >> 1) ^
         (hash<glm::vec3>()(vertex.fidtidBB) << 1)) >> 1) ^
         (hash<glm::vec3>()(vertex.color) << 1);

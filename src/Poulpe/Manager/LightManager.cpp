@@ -4,14 +4,14 @@ namespace Poulpe
 {
   LightManager::LightManager()
   {
-    _ambient.color = glm::vec3(0.68f, 0.65f, 0.43f);
-    _ambient.position = glm::vec3(0.5f, 15.0f, 0.6f);
-    _ambient.direction = glm::vec3(-0.1f, 5.0f, -0.1f);
+    _sun.color = glm::vec3(0.68f, 0.65f, 0.43f);
+    _sun.position = glm::vec3(0.5f, 15.0f, 0.6f);
+    _sun.direction = glm::vec3(-0.1f, 5.0f, -0.1f);
     //ambient diffuse specular
-    _ambient.ads = glm::vec3(0.3f, 0.5f, 1.f);
-    _ambient.clq = glm::vec3(0.0f);
+    _sun.ads = glm::vec3(0.3f, 0.5f, 1.f);
+    _sun.clq = glm::vec3(0.0f);
 
-    _ambient.view = glm::lookAt(
+    _sun.view = glm::lookAt(
       glm::vec3(-0.1f, 5.0f, -0.1f),
       glm::vec3(0.0f, 0.0f, 0.0f),
       glm::vec3(0.0f, 1.0f, 0.0f));
@@ -25,8 +25,8 @@ namespace Poulpe
     auto projection = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, near_plane, far_plane);
     //projection[1][1] *= -1;
 
-    _ambient.projection = projection;
-    _ambient.light_space_matrix = _ambient.projection * _ambient.view;
+    _sun.projection = projection;
+    _sun.light_space_matrix = _sun.projection * _sun.view;
 
     Light light;
     light.color = glm::vec3(1.0);
@@ -67,22 +67,22 @@ namespace Poulpe
     _spots.emplace_back(light3);
   }
 
-  void LightManager::animateAmbientLight(double const delta_time)
+  void LightManager::animateSunLight(double const delta_time)
   {
-    _ambient.position.x += cos(glm::radians(delta_time * 360.0f));
-    _ambient.direction.x += cos(glm::radians(delta_time * 360.0f));
-    _ambient.position.z += sin(glm::radians(delta_time * 360.0f));
-    _ambient.direction.z += sin(glm::radians(delta_time * 360.0f));
+    _sun.position.x += cos(glm::radians(delta_time * 360.0f));
+    _sun.direction.x += cos(glm::radians(delta_time * 360.0f));
+    _sun.position.z += sin(glm::radians(delta_time * 360.0f));
+    _sun.direction.z += sin(glm::radians(delta_time * 360.0f));
 
-    _ambient.view = glm::lookAt(
-      _ambient.position,
-      _ambient.position + _ambient.direction,
+    _sun.view = glm::lookAt(
+      _sun.position,
+      _sun.position + _sun.direction,
       glm::vec3(0.0f, 1.0f,  0.0f));
 
     float near_plane = 1.f, far_plane = 7.5f;
-    _ambient.projection = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, near_plane, far_plane);
-    _ambient.projection[1][1] *= -1;
+    _sun.projection = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, near_plane, far_plane);
+    _sun.projection[1][1] *= -1;
 
-    _ambient.light_space_matrix = _ambient.projection * _ambient.view;
+    _sun.light_space_matrix = _sun.projection * _sun.view;
   }
 }
