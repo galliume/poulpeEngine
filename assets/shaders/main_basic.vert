@@ -1,8 +1,6 @@
 #version 450
 #extension GL_EXT_nonuniform_qualifier : enable
 
-#define MAX_UBOS 1
-
 #define NR_POINT_LIGHTS 2
 
 struct UBO
@@ -12,53 +10,49 @@ struct UBO
 };
 
 layout(set = 0, binding = 0) readonly uniform UniformBufferObject {
-  UBO ubos[MAX_UBOS];
+  UBO ubo;
 };
 
 layout(push_constant) uniform constants
 {
   mat4 view;
-  vec4 viewPos;
-  vec4 totalPosition;
+  vec4 view_position;
+  vec4 total_position;
 } pc;
 
-layout(location = 0) in vec3 pos;
+layout(location = 0) in vec3 position;
 layout(location = 1) in vec3 normal;
-layout(location = 2) in vec2 texCoord;
+layout(location = 2) in vec2 texture_coord;
 layout(location = 3) in vec4 tangent;
 layout(location = 4) in vec4 fidtidBB;
-layout(location = 5) in vec3 vColor;
+layout(location = 5) in vec3 color;
 
-layout(location = 0) out VS_OUT {
-  flat int fTextureID;
-  vec2 fTexCoord;
-  vec3 fNormal;
-  vec3 fPos;
-  vec4 fViewPos;
-  vec4 fAmbientLightSpace;
-  vec4 fShadowCoordSpot;
-  //faceId texture ID blank blank
-  vec4 ffidtidBB;
-  vec3 fvColor;
-  vec3 TangentLightPos;
-  vec3 TangentViewPos;
-  vec3 TangentFragPos;
-} vs_out;
-
+layout(location = 0) out FRAG_VAR {
+  vec4 sun_light_space;
+  vec4 view_position;
+  vec3 color;
+  vec3 normal;
+  vec3 position;
+  vec3 tangent_light_pos;
+  vec3 tangent_frag_pos;
+  vec3 tangent_view_pos;
+  vec2 texture_coord;
+  flat int texture_ID;
+} frag_var;
 
 struct Light {
-  vec3 color;
-  vec3 direction;
-  vec3 position;
+  mat4 light_space_matrix;
+  mat4 projection;
+  mat4 view;
   //ambiance diffuse specular
   vec3 ads;
   //constant, linear, quadratiq
   vec3 clq;
   //cutOff, outerCutoff, Blank
   vec3 coB;
-  mat4 view;
-  mat4 projection;
-  mat4 lightSpaceMatrix;
+  vec3 color;
+  vec3 direction;
+  vec3 position;
 };
 
 struct Material
@@ -73,9 +67,9 @@ struct Material
 };
 
 layout(set = 0, binding = 2) readonly buffer ObjectBuffer {
-  Light ambientLight;
-  Light pointLights[NR_POINT_LIGHTS];
-  Light spotLight;
+  Light sun_light;
+  Light point_lights[NR_POINT_LIGHTS];
+  Light spot_light;
   Material material;
 };
 
@@ -87,27 +81,25 @@ const mat4 biasMat = mat4(
 
 void main()
 {
-  mat3 normalMatrix = transpose(inverse(mat3(ubos[gl_InstanceIndex].model)));
+  mat3 normal_matrix = transpose(inverse(mat3(ubo.model)));
 
-  vec3 t = normalize(normalMatrix * tangent.xyz);
-  vec3 n = normalize(normalMatrix * normal);
+  vec3 t = normalize(normal_matrix * tangent.xyz);
+  vec3 n = normalize(normal_matrix * normal);
   t = normalize(t - dot(t, n) * n);
   vec3 b = cross(n, t);
   mat3 TBN = transpose(mat3(t, b, n));
 
-  vs_out.fNormal = normalMatrix * normal;
-  vs_out.fPos = vec3(ubos[gl_InstanceIndex].model * vec4(pos, 1.0));
-  vs_out.fNormal = (ubos[gl_InstanceIndex].model * vec4(normal, 0.0)).xyz;
-  vs_out.fTexCoord = texCoord;
-  vs_out.fViewPos = pc.viewPos;
-  vs_out.fAmbientLightSpace = (biasMat * ambientLight.lightSpaceMatrix * ubos[gl_InstanceIndex].model) * vec4(pos, 1.0);
-  vs_out.fShadowCoordSpot = (biasMat * spotLight.lightSpaceMatrix) * vec4(vs_out.fPos, 1.0);
-  vs_out.ffidtidBB = fidtidBB;
-  vs_out.fvColor = vColor;
-  vs_out.fTextureID = int(fidtidBB.y);
-  vs_out.TangentLightPos = TBN * ambientLight.position;
-  vs_out.TangentViewPos  = TBN * vs_out.fViewPos.xyz;
-  vs_out.TangentFragPos  = TBN * vs_out.fPos;
+  frag_var.normal = normal_matrix * normal;
+  //frag_var.normal = (ubo.model * vec4(normal, 0.0)).xyz;
+  frag_var.position = vec3(ubo.model * vec4(position, 1.0));
+  frag_var.texture_coord = texture_coord;
+  frag_var.view_position = pc.view_position;
+  frag_var.sun_light_space = (biasMat * sun_light.light_space_matrix * ubo.model) * vec4(position, 1.0);
+  frag_var.color = color;
+  frag_var.texture_ID = int(fidtidBB.y);
+  frag_var.tangent_light_pos = TBN * sun_light.position;
+  frag_var.tangent_view_pos = TBN * frag_var.tangent_view_pos.xyz;
+  frag_var.tangent_frag_pos = TBN * frag_var.position;
 
-  gl_Position = ubos[gl_InstanceIndex].projection * pc.view * vec4(vs_out.fPos, 1.0);
+  gl_Position = ubo.projection * pc.view * vec4(frag_var.position, 1.0);
 } 

@@ -44,14 +44,11 @@ namespace Poulpe
 
         auto const& key = conf.key();
         auto const& data = conf.value();
-        size_t const count = data["count"].template get<size_t>();
 
-        for (size_t i{ 0 }; i < count; i++) {
-          std::jthread entity([&]() {
-            initMeshes(key, data);
-          });
-          entity.detach();
-        }
+        std::jthread entity([&]() {
+          initMeshes(key, data);
+        });
+        entity.detach();
       });
     };
   }

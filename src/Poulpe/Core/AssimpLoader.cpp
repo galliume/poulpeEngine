@@ -43,14 +43,19 @@ namespace Poulpe
   {
     Assimp::Importer importer;
   
-    const aiScene* scene = importer.ReadFile(path,
-      aiProcess_Triangulate | 
-      aiProcess_JoinIdenticalVertices | 
-      aiProcess_GenNormals | 
+
+    auto flags{
+      aiProcess_Triangulate |
+      aiProcess_JoinIdenticalVertices |
+      aiProcess_GenNormals |
       aiProcess_CalcTangentSpace |
-      aiProcess_FlipUVs |
-      aiProcess_OptimizeMeshes
-    );
+      aiProcess_OptimizeMeshes };
+
+    if (inverse_texture_y) {
+      flags |= aiProcess_FlipUVs;
+    }
+
+    const aiScene* scene = importer.ReadFile(path, flags);
 
     if (nullptr == scene) {
       PLP_ERROR("Error while importing file {}: {}", path, importer.GetErrorString());
@@ -249,9 +254,9 @@ namespace Poulpe
           //if (inverse_texture_y) vertex.normal.y *= -1.0f;
           
           if (mesh->mNumUVComponents[0] > 0) {
-            aiVector3D texCoord = mesh->mTextureCoords[0][face->mIndices[j]];
-            vertex.texCoord = { texCoord.x, texCoord.y };
-            //if (inverse_texture_y) vertex.texCoord.y *= -1.0f;
+            aiVector3D texture_coord = mesh->mTextureCoords[0][face->mIndices[j]];
+            vertex.texture_coord = { texture_coord.x, texture_coord.y };
+            //if (inverse_texture_y) vertex.texture_coord.y *= -1.0f;
           }
 
           vertex.color = { 1.0f, 1.0f, 1.0f };
@@ -306,6 +311,7 @@ namespace Poulpe
           }
         }
       }
+
       callback(std::move(meshData), materials, false, animations, positions, rotations, scales);
       count = meshData.indices.size();
     }
