@@ -62,7 +62,7 @@ namespace Poulpe
       VkImage image;
 
       _vulkan->createImage(_vulkan->getSwapChainExtent().width, _vulkan->getSwapChainExtent().height, 1,
-          VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_B8G8R8A8_UNORM, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_SRC_BIT 
+          VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_B8G8R8A8_SRGB, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_SRC_BIT 
           | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
           VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, image);
 
@@ -73,11 +73,11 @@ namespace Poulpe
       VkImage depth_image;
 
       _vulkan->createImage(_vulkan->getSwapChainExtent().width, _vulkan->getSwapChainExtent().height, 1,
-        VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_D24_UNORM_S8_UINT, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_SAMPLED_BIT
+        VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_D32_SFLOAT_S8_UINT, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_SAMPLED_BIT
         | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
         VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, depth_image);
 
-      VkImageView depth_imageview = _vulkan->createImageView(depth_image, VK_FORMAT_D24_UNORM_S8_UINT, 1,
+      VkImageView depth_imageview = _vulkan->createImageView(depth_image, VK_FORMAT_D32_SFLOAT_S8_UINT, 1,
         VK_IMAGE_ASPECT_DEPTH_BIT);
 
       _depth_images[i] = std::move(depth_image);
@@ -87,11 +87,11 @@ namespace Poulpe
       VkImage depth_image2;
 
       _vulkan->createImage(_vulkan->getSwapChainExtent().width, _vulkan->getSwapChainExtent().height, 1,
-        VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_D24_UNORM_S8_UINT, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_SAMPLED_BIT
+        VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_D32_SFLOAT_S8_UINT, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_SAMPLED_BIT
         | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
         VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, depth_image2);
 
-      VkImageView depth_imageview2 = _vulkan->createImageView(depth_image2, VK_FORMAT_D24_UNORM_S8_UINT, 1,
+      VkImageView depth_imageview2 = _vulkan->createImageView(depth_image2, VK_FORMAT_D32_SFLOAT_S8_UINT, 1,
         VK_IMAGE_ASPECT_DEPTH_BIT);
 
       _depth_images2[i] = std::move(depth_image2);
@@ -258,27 +258,13 @@ namespace Poulpe
     //float const depth_bias_clamp{ 0.0f };
 
     //vkCmdSetDepthClampEnableEXT(cmd_buffer, VK_TRUE);
-    //vkCmdSetDepthBias(cmd_buffer, depth_bias_constant, depth_bias_clamp, depth_bias_slope);
-
-    std::string last_shader{};
-    bool need_pipeline_update{true};
-    
+    //vkCmdSetDepthBias(cmd_buffer, depth_bias_constant, depth_bias_clamp, depth_bias_slope);    
     std::ranges::for_each(entities, [&](auto const& entity) {
       auto mesh_component = _component_manager->get<MeshComponent>(entity->getID());
       if (mesh_component) {
         Mesh* mesh = mesh_component->template has<Mesh>();
 
         if (mesh->has_shadow() && !mesh->getUniformBuffers()->empty()) {
-
-          auto const& current_shader = mesh->getShaderName();
-
-          if (last_shader.empty()) {
-            last_shader = current_shader;
-          }
-          if (last_shader != current_shader) {
-            need_pipeline_update = true;
-            last_shader = current_shader;
-          }
 
           uint32_t min{ 0 };
           uint32_t max{ 0 };
@@ -297,10 +283,7 @@ namespace Poulpe
             pipeline->pipeline_layout,
             0, 1, mesh->getShadowMapDescSet(), 0, nullptr);
 
-          if (need_pipeline_update) {
-            _vulkan->bindPipeline(cmd_buffer, pipeline->pipeline);
-            need_pipeline_update = true;
-          }
+          _vulkan->bindPipeline(cmd_buffer, pipeline->pipeline);
 
           _vulkan->draw(
             cmd_buffer,
@@ -322,8 +305,6 @@ namespace Poulpe
         VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR, VK_IMAGE_ASPECT_DEPTH_BIT);*/
 
     _vulkan->endCommandBuffer(cmd_buffer);
-
-    _depthmap_descset_updated = true;
 
     std::vector<VkPipelineStageFlags> flags { VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT };
     //VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL
@@ -390,25 +371,14 @@ namespace Poulpe
 
     //auto indirectBuffer = _API->createIndirectCommandsBuffer(drawCommands);
 
-    std::string last_shader{};
-    bool need_pipeline_update{true};
-
     size_t num{ 0 };
     std::ranges::for_each(entities, [&](auto const& entity) {
       auto mesh_component = _component_manager->get<MeshComponent>(entity->getID());
       if (mesh_component) {
 
         Mesh* mesh = mesh_component->template has<Mesh>();
-        auto const& current_shader {mesh->getShaderName()};
-        auto pipeline = getPipeline(current_shader);
+        auto pipeline = getPipeline(mesh->getShaderName());
 
-        if (last_shader.empty()) {
-          last_shader = current_shader;
-        }
-        if (last_shader != current_shader) {
-          need_pipeline_update = true;
-          last_shader = current_shader;
-        }
         if (mesh->hasPushConstants()) {
           mesh->applyPushConstants(cmd_buffer, pipeline->pipeline_layout, this, mesh);
         }
@@ -419,11 +389,8 @@ namespace Poulpe
           pipeline->pipeline_layout,
           0, 1, mesh->getDescSet(), 0, nullptr);
 
-        if (1==1) {
-          _vulkan->bindPipeline(cmd_buffer, pipeline->pipeline);
-          need_pipeline_update = true;
-        }
-
+        _vulkan->bindPipeline(cmd_buffer, pipeline->pipeline);
+        
         _vulkan->draw(
           cmd_buffer,
           *mesh->getDescSet(),
@@ -467,7 +434,7 @@ namespace Poulpe
     std::latch count_down{3};
 
     if (_entity_manager->getSkybox()) {
-      //std::jthread skybox_thread([&]() {
+      std::jthread skybox_thread([&]() {
         draw(
           _cmd_buffer_entities2[_current_frame],
           _draw_cmds,
@@ -480,9 +447,8 @@ namespace Poulpe
           count_down,
           0,
           true);
-        //});
-        //@todo bugfix when detach() ?
-        //skybox_thread.join();
+       });
+       skybox_thread.join();
     } else {
       count_down.count_down();
     }

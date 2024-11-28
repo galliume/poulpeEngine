@@ -101,7 +101,8 @@ namespace Poulpe
     auto * const configManager = Poulpe::Locator::getConfigManager();
 
     nlohmann::json const& appConfig = configManager->appConfig();
-    nlohmann::json const& textureConfig = configManager->texturesConfig();
+    //nlohmann::json const& textureConfig = configManager->texturesConfig();
+    //nlohmann::json const& textureMapConfig = configManager->texturesMapConfig();
 
     _audio_manager->init();
     _audio_manager->load(configManager->soundConfig());

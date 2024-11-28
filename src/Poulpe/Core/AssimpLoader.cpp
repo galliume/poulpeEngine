@@ -259,7 +259,16 @@ namespace Poulpe
             //if (inverse_texture_y) vertex.texture_coord.y *= -1.0f;
           }
 
-          vertex.color = { 1.0f, 1.0f, 1.0f };
+          glm::vec4 color{ 1.0f };
+
+          if (mesh->HasVertexColors(j)) {
+            color = glm::vec4(
+              mesh->mColors[j]->r,
+              mesh->mColors[j]->g,
+              mesh->mColors[j]->b,
+              mesh->mColors[j]->a);
+          }
+          vertex.color = color;
 
           meshData.vertices.emplace_back(std::move(vertex));
           meshData.indices.push_back(count);
