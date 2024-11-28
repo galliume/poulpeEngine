@@ -14,11 +14,15 @@ namespace Poulpe
   class TextureManager
   {
   public:
-    inline void addConfig(nlohmann::json config) { _texture_config = config; }
+    inline void addConfig(nlohmann::json const& config) { _texture_config = config; }
     std::vector<std::array<float, 3>> addNormalMapTexture(std::string const& name);
     inline void addRenderer(Renderer* renderer) { _renderer = renderer; }
     void addSkyBox(std::vector<std::string> const & skybox_images);
-    void addTexture(std::string const & name, std::string const & path, bool is_public = false);
+    void addTexture(
+      std::string const& name,
+      std::string const& path,
+      bool const is_unorm,
+      bool const is_public = false);
     void clear();
     inline const Texture getSkyboxTexture() const { return _skybox; }
     inline std::unordered_map<std::string, std::string> getPaths() const { return _paths; }

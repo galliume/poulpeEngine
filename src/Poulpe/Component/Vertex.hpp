@@ -21,7 +21,7 @@ namespace Poulpe
     alignas(16) glm::vec4 tangent;
     //faceId texture ID blank blank
     alignas(16) glm::vec4 fidtidBB;
-    alignas(16) glm::vec3 color;
+    alignas(16) glm::vec4 color;
 
     std::vector<int> bones_ids{};
     std::vector<float> weights{};
@@ -66,7 +66,7 @@ namespace Poulpe
 
       attributeDescriptions[5].binding = 0;
       attributeDescriptions[5].location = 5;
-      attributeDescriptions[5].format = VK_FORMAT_R32G32B32_SFLOAT;
+      attributeDescriptions[5].format = VK_FORMAT_R32G32B32A32_SFLOAT;
       attributeDescriptions[5].offset = offsetof(Vertex, color);
 
       return attributeDescriptions;

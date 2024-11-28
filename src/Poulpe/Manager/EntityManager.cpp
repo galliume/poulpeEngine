@@ -110,7 +110,9 @@ namespace Poulpe
     for (auto& [keyTex, pathTex] : data["textures"].items()) {
       textures.emplace_back(static_cast<std::string>(keyTex));
     }
-
+    for (auto& [keyTex, pathTex] : data["textures_map"].items()) {
+      textures.emplace_back(static_cast<std::string>(keyTex));
+    }
     bool const has_bbox = data["hasBbox"].template get<bool>();
     bool const has_animation = data["hasAnimation"].template get<bool>();
     bool const is_point_light = data["isPointLight"].template get<bool>();

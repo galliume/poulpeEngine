@@ -3,7 +3,9 @@
 		"crate" : {
 			"mesh": "assets/mesh/crate/Crate1.obj",
 			"textures": {
-				"brickwall": "assets/mesh/crate/brickwall.jpg",
+				"brickwall": "assets/mesh/crate/brickwall.jpg"
+			},
+			"textures_map": {
 				"brickwall_normal": "assets/mesh/crate/brickwall_normal.jpg"
 			},
 			"shader": "main_basic",
@@ -30,8 +32,10 @@
 		"backpack" : {
 			"mesh": "assets/mesh/backpack/backpack.obj",
 			"textures": {
+				"diffuse": "assets/mesh/backpack/diffuse.jpg"
+			},
+			"textures_map": {
 				"ao": "assets/mesh/backpack/ao.jpg",
-				"diffuse": "assets/mesh/backpack/diffuse.jpg",
 				"normal": "assets/mesh/backpack/normal.png",
 				"roughness": "assets/mesh/backpack/roughness.jpg",
 				"specular": "assets/mesh/backpack/specular.jpg"
@@ -60,14 +64,16 @@
 		"free_palm" : {
 			"mesh": "assets/mesh/trees/palm_1/free_palm.obj",
 			"textures": {
-				"bark_roughness": "assets/mesh/trees/palm_1/bark_roughness.png",
 				"leaf": "assets/mesh/trees/palm_1/leaf.png",
+				"bark": "assets/mesh/trees/palm_1/bark.png"
+			},
+			"textures_map": {
+				"bark_roughness": "assets/mesh/trees/palm_1/bark_roughness.png",
+				"bark_ao": "assets/mesh/trees/palm_1/bark_ao.png",
+				"bark_normal": "assets/mesh/trees/palm_1/bark_normal.png",
 				"leaf_ao": "assets/mesh/trees/palm_1/leaf_ao.png",
 				"leaf_normal": "assets/mesh/trees/palm_1/leaf_normal.png",
-				"leaf_roughness": "assets/mesh/trees/palm_1/leaf_roughness.png",
-				"bark": "assets/mesh/trees/palm_1/bark.png",
-				"bark_ao": "assets/mesh/trees/palm_1/bark_ao.png",
-				"bark_normal": "assets/mesh/trees/palm_1/bark_normal.png"
+				"leaf_roughness": "assets/mesh/trees/palm_1/leaf_roughness.png"
 			},
 			"shader": "main_basic",
 			"positions": [
@@ -95,6 +101,8 @@
 			"textures": {
 				"Grass_Block_TEX": "assets/mesh/minecraft/Grass_Block_TEX.png"
 			},
+			"textures_map": {
+			},
 			"shader": "main_basic",
 			"positions": [
 				{"x": 0.3, "y": 1.0, "z": 0.0}
@@ -120,6 +128,8 @@
 			"mesh": "assets/mesh/SnowTerrain/SnowTerrain.obj",
 			"textures": {
 				"snowterrain": "assets/mesh/SnowTerrain/snowterrain.jpg"
+			},
+			"textures_map": {
 			},
 			"shader": "main_basic",
 			"positions": [

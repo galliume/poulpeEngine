@@ -480,7 +480,7 @@ namespace Poulpe {
   VkSurfaceFormatKHR VulkanAPI::chooseSwapSurfaceFormat(std::vector<VkSurfaceFormatKHR> const & available_formats)
   {
     for (auto const & available_format : available_formats) {
-      if (available_format.format == VK_FORMAT_B8G8R8A8_UNORM 
+      if (available_format.format == VK_FORMAT_B8G8R8A8_SRGB
         && available_format.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR) {
         return available_format;
       }
@@ -835,7 +835,7 @@ namespace Poulpe {
     rendering_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO_KHR;
     rendering_create_info.colorAttachmentCount = has_color_attachment ? 1 : 0;
     if (has_color_attachment) rendering_create_info.pColorAttachmentFormats = & format;
-    if (has_depth_test) rendering_create_info.depthAttachmentFormat = VK_FORMAT_D24_UNORM_S8_UINT; //(VK_FORMAT_D24_UNORM_S8_UINT) 
+    if (has_depth_test) rendering_create_info.depthAttachmentFormat = VK_FORMAT_D32_SFLOAT_S8_UINT; //(VK_FORMAT_D32_SFLOAT_S8_UINT) 
 
     pipeline_info.pNext = & rendering_create_info;
 
@@ -2110,7 +2110,7 @@ namespace Poulpe {
     image_info.extent.depth = 1;
     image_info.mipLevels = 1;
     image_info.arrayLayers = 1;
-    image_info.format = VK_FORMAT_D24_UNORM_S8_UINT;
+    image_info.format = VK_FORMAT_D32_SFLOAT_S8_UINT;
     image_info.tiling = VK_IMAGE_TILING_OPTIMAL;
     image_info.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
     image_info.usage = VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT 
@@ -2148,7 +2148,7 @@ namespace Poulpe {
     create_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
     create_info.image = image;
     create_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
-    create_info.format = VK_FORMAT_D24_UNORM_S8_UINT;
+    create_info.format = VK_FORMAT_D32_SFLOAT_S8_UINT;
     create_info.subresourceRange = {};
     create_info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
     create_info.subresourceRange.baseMipLevel = 0;
@@ -2294,7 +2294,7 @@ namespace Poulpe {
 
     stbi_image_free(pixels);
 
-    createImage(tex_width, tex_height, mip_lvl, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_TILING_OPTIMAL,
+    createImage(tex_width, tex_height, mip_lvl, VK_SAMPLE_COUNT_1_BIT, format, VK_IMAGE_TILING_OPTIMAL,
       VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
       VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, texture_image);
 
@@ -2601,7 +2601,7 @@ namespace Poulpe {
 
   VkFormat VulkanAPI::findDepthFormat()
   {
-    return findSupportedFormat({ VK_FORMAT_D24_UNORM_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT },
+    return findSupportedFormat({ VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D32_SFLOAT_S8_UINT },
       VK_IMAGE_TILING_OPTIMAL, VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT);
   }
 
@@ -2625,7 +2625,7 @@ namespace Poulpe {
 
   bool VulkanAPI::hasStencilComponent(VkFormat const format)
   {
-    return format == VK_FORMAT_D24_UNORM_S8_UINT || VK_FORMAT_D24_UNORM_S8_UINT || format == VK_FORMAT_D24_UNORM_S8_UINT;
+    return format == VK_FORMAT_D32_SFLOAT_S8_UINT || VK_FORMAT_D32_SFLOAT_S8_UINT || format == VK_FORMAT_D32_SFLOAT_S8_UINT;
   }
 
   VkSampleCountFlagBits VulkanAPI::getMaxUsableSampleCount()

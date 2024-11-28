@@ -25,13 +25,13 @@ layout(location = 1) in vec3 normal;
 layout(location = 2) in vec2 texture_coord;
 layout(location = 3) in vec4 tangent;
 layout(location = 4) in vec4 fidtidBB;
-layout(location = 5) in vec3 color;
+layout(location = 5) in vec4 color;
 
 layout(location = 0) out FRAG_VAR {
   mat3 TBN;
   vec4 sun_light_space;
   vec4 view_position;
-  vec3 color;
+  vec4 color;
   vec3 normal;
   vec3 position;
   vec3 tangent_light_pos;
@@ -91,7 +91,7 @@ void main()
   mat3 TBN = transpose(mat3(t, b, n));
 
   frag_var.TBN = TBN;
-  frag_var.normal = transpose(inverse(mat3(ubo.model))) * normal;;
+  frag_var.normal = (ubo.model * vec4(normal, 0.0)).xyz;
   frag_var.position = vec3(ubo.model * vec4(position, 1.0));
   frag_var.texture_coord = texture_coord;
   frag_var.view_position = pc.view_position;

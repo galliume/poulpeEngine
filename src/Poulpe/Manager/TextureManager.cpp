@@ -114,7 +114,11 @@ namespace Poulpe
     vkDestroyCommandPool(_renderer->getDevice(), commandPool, nullptr);
   }
 
-  void TextureManager::addTexture(std::string const& name, std::string const& path, bool is_public)
+  void TextureManager::addTexture(
+    std::string const& name,
+    std::string const& path,
+    bool const is_unorm,
+    bool const is_public)
   {
     if (!std::filesystem::exists(path.c_str())) {
       PLP_FATAL("texture file {} does not exits.", path);
@@ -143,6 +147,8 @@ namespace Poulpe
     VkCommandPool commandPool = _renderer->getAPI()->createCommandPool();
     VkCommandBuffer cmd_buffer = _renderer->getAPI()->allocateCommandBuffers(commandPool)[0];
 
+    VkFormat format = (is_unorm) ? VK_FORMAT_R8G8B8A8_UNORM : VK_FORMAT_R8G8B8A8_SRGB;
+
     _renderer->getAPI()->beginCommandBuffer(cmd_buffer);
     _renderer->getAPI()->createTextureImage(cmd_buffer,
       pixels,
@@ -150,9 +156,9 @@ namespace Poulpe
       static_cast<uint32_t>(tex_height),
       mip_lvls,
       texture_image,
-      VK_FORMAT_R8G8B8A8_SRGB);
+      format);
 
-    VkImageView texture_imageview = _renderer->getAPI()->createImageView(texture_image, VK_FORMAT_R8G8B8A8_SRGB, mip_lvls);
+    VkImageView texture_imageview = _renderer->getAPI()->createImageView(texture_image, format, mip_lvls);
     VkSampler texture_sampler = _renderer->getAPI()->createTextureSampler(mip_lvls);
 
     Texture texture;
@@ -186,9 +192,12 @@ namespace Poulpe
 
       for (auto& [key, path] : _texture_config["textures"].items()) {
         auto absolute_path = p.string() + "/" + static_cast<std::string>(path);
-        addTexture(key, absolute_path, true);
+        addTexture(key, absolute_path, false, true);
       }
-
+      for (auto& [key, path] : _texture_config["textures_map"].items()) {
+        auto absolute_path = p.string() + "/" + static_cast<std::string>(path);
+        addTexture(key, absolute_path, true, true);
+      }
       count_down.count_down();
     };
   }
