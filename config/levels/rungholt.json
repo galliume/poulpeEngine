@@ -3,9 +3,11 @@
 		"rungholt": {
 			"mesh": "assets/mesh/rungholt/rungholt.obj",
 			"textures": {
-				"rungholt-Alpha": "assets/mesh/rungholt/rungholt-Alpha.png",
 				"rungholt-RGB": "assets/mesh/rungholt/rungholt-RGB.png",
 				"rungholt-RGBA": "assets/mesh/rungholt/rungholt-RGBA.png"
+			},
+			"textures_map": {
+				"rungholt-Alpha": "assets/mesh/rungholt/rungholt-Alpha.png"
 			},
 			"shader": "main_basic",
 			"positions": [
@@ -42,9 +44,11 @@
 		"house": {
 			"mesh": "assets/mesh/rungholt/house.obj",
 			"textures": {
-				"house-Alpha": "assets/mesh/rungholt/house-Alpha.png",
 				"house-RGB": "assets/mesh/rungholt/house-RGB.png",
 				"house-RGBA": "assets/mesh/rungholt/house-RGBA.png"
+			},
+			"textures_map": {
+				"house-Alpha": "assets/mesh/rungholt/house-Alpha.png"
 			},
 			"shader": "main_basic",
 			"positions": [

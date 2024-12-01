@@ -287,8 +287,8 @@ namespace Poulpe {
       VkCommandBuffer& cmd_buffer,
       VkImageView& color_imageview,
       VkImageView& depth_imageview,
-      VkAttachmentLoadOp const loadOp,
-      VkAttachmentStoreOp const storeOp);
+      VkAttachmentLoadOp const load_op,
+      VkAttachmentStoreOp const store_op);
 
     void endRendering(VkCommandBuffer& cmd_buffer);
 
@@ -306,7 +306,7 @@ namespace Poulpe {
       bool const is_indexed = true,
       uint32_t const index = 0);
 
-    VkResult queueSubmit(VkCommandBuffer& cmd_buffer, int const queueIndex = 0);
+    VkResult queueSubmit(VkCommandBuffer& cmd_buffer, int const queue_index = 0);
 
     void submit(
       VkQueue& queue,
