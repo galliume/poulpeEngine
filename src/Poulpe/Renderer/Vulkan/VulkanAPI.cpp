@@ -1472,6 +1472,11 @@ namespace Poulpe {
     VkAttachmentLoadOp const load_op,
     VkAttachmentStoreOp const store_op)
   {
+    //VkAttachmentLoadOp loadOp{ VK_ATTACHMENT_LOAD_OP_LOAD };
+    //if (VK_IMAGE_LAYOUT_UNDEFINED == load_op) {
+    //  loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+    //}
+
     VkRenderingInfo rendering_info{ };
     rendering_info.sType = VK_STRUCTURE_TYPE_RENDERING_INFO;
     rendering_info.renderArea.extent = _swapchain_extent;
@@ -1480,16 +1485,16 @@ namespace Poulpe {
 
     VkClearColorValue color_clear = {};
 
-    color_clear.float32[0] = 0.0f;
-    color_clear.float32[1] = 0.0f;
-    color_clear.float32[2] = 0.0f;
+    color_clear.float32[0] = 1.0f;
+    color_clear.float32[1] = 1.0f;
+    color_clear.float32[2] = 1.0f;
     color_clear.float32[3] = 1.0f;
 
     VkRenderingAttachmentInfo color_attachment{ };
     color_attachment.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
     color_attachment.imageView = color_imageview;
     color_attachment.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-    color_attachment.loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+    color_attachment.loadOp = load_op;
     color_attachment.storeOp = store_op;
     color_attachment.clearValue.color = color_clear;
 
@@ -1499,8 +1504,8 @@ namespace Poulpe {
     depth_attachment.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
     depth_attachment.imageView = depth_imageview;
     depth_attachment.imageLayout = VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL;
-    depth_attachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-    depth_attachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+    depth_attachment.loadOp = load_op;
+    depth_attachment.storeOp = store_op;
     depth_attachment.clearValue.depthStencil = depth_stencil;
 
     rendering_info.pColorAttachments = &color_attachment;
@@ -1520,7 +1525,7 @@ namespace Poulpe {
     vkEndCommandBuffer(cmd_buffer);
   }
 
-  VkResult VulkanAPI::queueSubmit(VkCommandBuffer& cmd_buffer, int const queueIndex)
+  VkResult VulkanAPI::queueSubmit(VkCommandBuffer& cmd_buffer, int const queue_index)
   {
     VkSubmitInfo submit_info{};
     submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -1532,7 +1537,7 @@ namespace Poulpe {
       std::lock_guard<std::mutex> guard(_mutex_queue_submit);
       vkResetFences(_device, 1, &_fence_submit);
 
-      result = vkQueueSubmit(_graphics_queues[queueIndex], 1, &submit_info, _fence_submit);
+      result = vkQueueSubmit(_graphics_queues[queue_index], 1, &submit_info, _fence_submit);
       vkWaitForFences(_device, 1, & _fence_submit, VK_TRUE, UINT32_MAX);
       vkResetCommandBuffer(cmd_buffer, VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
       //vkQueueWaitIdle(_graphics_queues[queue_index]);
@@ -2601,7 +2606,7 @@ namespace Poulpe {
 
   VkFormat VulkanAPI::findDepthFormat()
   {
-    return findSupportedFormat({ VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D32_SFLOAT_S8_UINT },
+    return findSupportedFormat({ VK_FORMAT_D32_SFLOAT, VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT },
       VK_IMAGE_TILING_OPTIMAL, VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT);
   }
 
@@ -2625,7 +2630,7 @@ namespace Poulpe {
 
   bool VulkanAPI::hasStencilComponent(VkFormat const format)
   {
-    return format == VK_FORMAT_D32_SFLOAT_S8_UINT || VK_FORMAT_D32_SFLOAT_S8_UINT || format == VK_FORMAT_D32_SFLOAT_S8_UINT;
+    return format == VK_FORMAT_D32_SFLOAT_S8_UINT || format == VK_FORMAT_D24_UNORM_S8_UINT;
   }
 
   VkSampleCountFlagBits VulkanAPI::getMaxUsableSampleCount()

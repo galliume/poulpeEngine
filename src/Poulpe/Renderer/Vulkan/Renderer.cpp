@@ -72,12 +72,22 @@ namespace Poulpe
 
       VkImage depth_image;
 
-      _vulkan->createImage(_vulkan->getSwapChainExtent().width, _vulkan->getSwapChainExtent().height, 1,
-        VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_D32_SFLOAT_S8_UINT, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_SAMPLED_BIT
-        | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
-        VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, depth_image);
+      _vulkan->createImage(
+        _vulkan->getSwapChainExtent().width,
+        _vulkan->getSwapChainExtent().height, 1,
+        VK_SAMPLE_COUNT_1_BIT,
+        VK_FORMAT_D32_SFLOAT_S8_UINT,
+        VK_IMAGE_TILING_OPTIMAL,
+        VK_IMAGE_USAGE_SAMPLED_BIT
+        | VK_IMAGE_USAGE_TRANSFER_SRC_BIT
+        | VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
+        VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+        depth_image);
 
-      VkImageView depth_imageview = _vulkan->createImageView(depth_image, VK_FORMAT_D32_SFLOAT_S8_UINT, 1,
+      VkImageView depth_imageview = _vulkan->createImageView(
+        depth_image,
+        VK_FORMAT_D32_SFLOAT_S8_UINT,
+        1,
         VK_IMAGE_ASPECT_DEPTH_BIT);
 
       _depth_images[i] = std::move(depth_image);
@@ -86,12 +96,23 @@ namespace Poulpe
 
       VkImage depth_image2;
 
-      _vulkan->createImage(_vulkan->getSwapChainExtent().width, _vulkan->getSwapChainExtent().height, 1,
-        VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_D32_SFLOAT_S8_UINT, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_SAMPLED_BIT
-        | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
-        VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, depth_image2);
+      _vulkan->createImage(
+        _vulkan->getSwapChainExtent().width,
+        _vulkan->getSwapChainExtent().height,
+        1,
+        VK_SAMPLE_COUNT_1_BIT,
+        VK_FORMAT_D32_SFLOAT_S8_UINT,
+        VK_IMAGE_TILING_OPTIMAL,
+        VK_IMAGE_USAGE_SAMPLED_BIT
+        | VK_IMAGE_USAGE_TRANSFER_SRC_BIT
+        | VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
+        VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+        depth_image2);
 
-      VkImageView depth_imageview2 = _vulkan->createImageView(depth_image2, VK_FORMAT_D32_SFLOAT_S8_UINT, 1,
+      VkImageView depth_imageview2 = _vulkan->createImageView(
+        depth_image2,
+        VK_FORMAT_D32_SFLOAT_S8_UINT,
+        1,
         VK_IMAGE_ASPECT_DEPTH_BIT);
 
       _depth_images2[i] = std::move(depth_image2);
