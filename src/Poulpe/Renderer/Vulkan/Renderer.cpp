@@ -199,7 +199,7 @@ namespace Poulpe
     _perspective = glm::perspective(
       glm::radians(45.0f),
       static_cast<float>(_vulkan->getSwapChainExtent().width) / static_cast<float>(_vulkan->getSwapChainExtent().height),
-      0.1f, 100.f);
+      0.1f, 500.f);
     _perspective[1][1] *= -1;
   }
 
@@ -245,8 +245,8 @@ namespace Poulpe
     depth_attachment_info.clearValue.depthStencil = depth_stencil;
     depth_attachment_info.clearValue.color = color_clear;
 
-    uint32_t const width{ _vulkan->getSwapChainExtent().width * 2 };
-    uint32_t const height{ _vulkan->getSwapChainExtent().height * 2 };
+    uint32_t const width{ _vulkan->getSwapChainExtent().width * 4 };
+    uint32_t const height{ _vulkan->getSwapChainExtent().height * 4 };
     //uint32_t const width{ 2048 };
     //uint32_t const height{ 2048 };
 
@@ -320,14 +320,14 @@ namespace Poulpe
     _vulkan->endMarker(cmd_buffer);
     _vulkan->endRendering(cmd_buffer);
 
-     _vulkan->transitionImageLayout(cmd_buffer, depth,
-       VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT);
+   /*  _vulkan->transitionImageLayout(cmd_buffer, depth,
+       VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT);*/
  /*     _vulkan->transitionImageLayout(cmd_buffer, depth,
         VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR, VK_IMAGE_ASPECT_DEPTH_BIT);*/
 
     _vulkan->endCommandBuffer(cmd_buffer);
 
-    std::vector<VkPipelineStageFlags> flags { VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT };
+    std::vector<VkPipelineStageFlags> flags { VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL };
     //VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL
     _draw_cmds.insert(&cmd_buffer, &_entities_sema_finished[thread_id], thread_id, flags);
 
@@ -432,7 +432,7 @@ namespace Poulpe
     endRendering(cmd_buffer, color, depth, has_depth_attachment);
 
     std::vector<VkPipelineStageFlags> flags { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
-    if (has_depth_attachment) flags.emplace_back(VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT);
+    if (has_depth_attachment) flags.emplace_back(VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
 
     _draw_cmds.insert(&cmd_buffer, &_entities_sema_finished[thread_id], thread_id, flags);
 
@@ -498,7 +498,7 @@ namespace Poulpe
          _depth_imageviews[_current_frame],
          _depth_images[_current_frame],
          _entities,
-         VK_ATTACHMENT_LOAD_OP_LOAD,
+         VK_ATTACHMENT_LOAD_OP_DONT_CARE,
          count_down,
          2, true
         );
@@ -598,10 +598,10 @@ namespace Poulpe
     _vulkan->transitionImageLayout(cmd_buffer, image,
       VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR, VK_IMAGE_ASPECT_COLOR_BIT);
 
-    if (has_depth_attachment) {
-      _vulkan->transitionImageLayout(cmd_buffer, depth_image,
-        VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT);
-    }
+    //if (has_depth_attachment) {
+    //  _vulkan->transitionImageLayout(cmd_buffer, depth_image,
+    //    VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT);
+    //}
 
     _vulkan->endCommandBuffer(cmd_buffer);
   }

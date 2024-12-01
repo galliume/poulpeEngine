@@ -1485,9 +1485,9 @@ namespace Poulpe {
 
     VkClearColorValue color_clear = {};
 
-    color_clear.float32[0] = 1.0f;
-    color_clear.float32[1] = 1.0f;
-    color_clear.float32[2] = 1.0f;
+    color_clear.float32[0] = 0.025f;
+    color_clear.float32[1] = 0.025f;
+    color_clear.float32[2] = 0.025f;
     color_clear.float32[3] = 1.0f;
 
     VkRenderingAttachmentInfo color_attachment{ };
@@ -2104,8 +2104,8 @@ namespace Poulpe {
 
   void VulkanAPI::createDepthMapImage(VkImage& image)
   {
-    uint32_t const width{ getSwapChainExtent().width * 2 };
-    uint32_t const height{ getSwapChainExtent().height * 2 };
+    uint32_t const width{ getSwapChainExtent().width * 4 };
+    uint32_t const height{ getSwapChainExtent().height * 4 };
 
     VkImageCreateInfo image_info{};
     image_info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;

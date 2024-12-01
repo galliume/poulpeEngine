@@ -18,6 +18,8 @@ layout(location = 0) in FRAG_VAR {
   vec3 tangent_view_pos;
   vec2 texture_coord;
   flat int texture_ID;
+  mat4 model;
+  vec4 tangent;
 } var;
 
 struct Light {
@@ -68,17 +70,28 @@ float ShadowCalculation(vec4 lightSpace, vec3 normal);
 void main()
 {
   vec3 normal = normalize(var.normal);
-  float shadow_ambient = ShadowCalculation(var.sun_light_space, normal);
   
   ivec2 tex_size = textureSize(tex_sampler[3], 0);
 
   if (tex_size.x != 1 && tex_size.y != 1) {
     normal = texture(tex_sampler[3], var.texture_coord).xyz;
+    normal.z = sqrt(1 - normal.x * normal.x - normal.y * normal.y);
     normal = normalize(normal * 2.0 - 1.0);
+  
+    mat3 normal_matrix = transpose(inverse(mat3(var.model)));
+
+    vec3 t = normalize(normal_matrix * var.tangent.xyz);
+    vec3 n = normalize(normal_matrix * normal);
+    t = normalize(t - dot(t, n) * n);
+    vec3 b = cross(n, t);
+    mat3 TBN = transpose(mat3(t, b, n));
+    
+    normal *= TBN;
   }
 
+  float shadow_ambient = ShadowCalculation(var.sun_light_space, normal);
   vec4 texture_color = texture(tex_sampler[0], var.texture_coord);
-  vec3 ambient_color = vec3(1.0) * 0.3;
+  vec3 ambient_color = sun_light.color;
 
   vec3 view_dir = normalize(var.tangent_view_pos.xyz - var.tangent_frag_pos.xyz);
   vec3 sun_light_dir = normalize(-sun_light.direction);
@@ -118,12 +131,12 @@ vec3 CalcDirLight(vec4 color, vec3 ambient, Light light, vec3 light_dir, vec3 no
   ivec2 tex_size = textureSize(tex_sampler[2], 0);
 
   if (tex_size.x == 1 && tex_size.y == 1) {
-    specular = (material.specular * spec) * light.color;
+    specular = (material.specular * spec);
   } else {
-    specular = (vec3(texture(tex_sampler[2], var.texture_coord)) * spec) * light.color;
+    specular = (vec3(texture(tex_sampler[2], var.texture_coord)) * spec);
   }
 
-  return (ambient + diffuse + specular) * color.xyz;
+  return (ambient + (shadow * (diffuse + specular))) * color.xyz;
 }
 
 vec3 CalcPointLight(vec4 color, vec3 ambient, Light light, vec3 normal, vec3 view_dir, float shadow)
@@ -171,9 +184,9 @@ float ShadowCalculation(vec4 light_space, vec3 normal)
   float shadow = 0.0;
   int count = 0;
   int range = 1;
-  //vec3 light_dir = normalize(-sun_light.direction);
+  //vec3 light_dir = normalize(-sun_light.direction * var.TBN);
   vec3 light_dir = normalize(sun_light.position - var.position);
-  float bias = max(0.05 * (1.0 - dot(normalize(normal), light_dir)), 0.005);
+  float bias = max(0.05 * (1.0 - dot(normalize(var.normal), light_dir)), 0.005);
 
   for (int x = -range; x <= range; x++)
   {
