@@ -39,6 +39,8 @@ layout(location = 0) out FRAG_VAR {
   vec3 tangent_view_pos;
   vec2 texture_coord;
   flat int texture_ID;
+  mat4 model;
+  vec4 tangent;
 } frag_var;
 
 struct Light {
@@ -82,25 +84,31 @@ const mat4 biasMat = mat4(
 
 void main()
 {
+  vec3 norm = normal;
+  norm.z = sqrt(1 - normal.x * normal.x - normal.y * normal.y);
+  norm = normalize(norm);
+  
   mat3 normal_matrix = transpose(inverse(mat3(ubo.model)));
 
   vec3 t = normalize(normal_matrix * tangent.xyz);
-  vec3 n = normalize(normal_matrix * normal);
+  vec3 n = normalize(normal_matrix * norm);
   t = normalize(t - dot(t, n) * n);
   vec3 b = cross(n, t);
   mat3 TBN = transpose(mat3(t, b, n));
 
   frag_var.TBN = TBN;
-  frag_var.normal = (ubo.model * vec4(normal, 0.0)).xyz;
+  frag_var.normal =  normal_matrix * norm;
   frag_var.position = vec3(ubo.model * vec4(position, 1.0));
   frag_var.texture_coord = texture_coord;
   frag_var.view_position = pc.view_position;
-  frag_var.sun_light_space = (biasMat * sun_light.light_space_matrix * ubo.model) * vec4(position, 1.0);
+  frag_var.sun_light_space = (biasMat * sun_light.light_space_matrix * mat4(TBN)) * vec4(frag_var.position, 1.0);
   frag_var.color = color;
   frag_var.texture_ID = int(fidtidBB.y);
   frag_var.tangent_light_pos = TBN * sun_light.position;
   frag_var.tangent_view_pos = TBN * frag_var.view_position.xyz;
   frag_var.tangent_frag_pos = TBN * frag_var.position;
-
+  frag_var.model = ubo.model;
+  frag_var.tangent = tangent;
+  
   gl_Position = ubo.projection * pc.view * vec4(frag_var.position, 1.0);
 } 
