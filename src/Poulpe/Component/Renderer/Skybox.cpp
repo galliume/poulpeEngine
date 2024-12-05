@@ -28,7 +28,7 @@ namespace Poulpe
 
       constants pushConstants{};
       pushConstants.view = glm::mat4(glm::mat3(renderer->getCamera()->lookAt()));
-      pushConstants.viewPos = renderer->getCamera()->getPos();
+      pushConstants.view_position = renderer->getCamera()->getPos();
 
       vkCmdPushConstants(cmd_buffer, pipeline_layout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(constants),
         &pushConstants);

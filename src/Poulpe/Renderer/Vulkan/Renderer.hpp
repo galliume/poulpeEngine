@@ -137,6 +137,7 @@ namespace Poulpe
       VkImage& depth,
       std::vector<Entity*> const& entities,
       VkAttachmentLoadOp const load_op,
+      VkAttachmentStoreOp const store_op,
       std::latch& count_down,
       unsigned int const thread_id,
       bool const has_depth_attachment = true);
@@ -147,7 +148,6 @@ namespace Poulpe
       VkImageView& depthview,
       VkImage& depth,
       std::vector<Entity*> const& entities,
-      VkAttachmentLoadOp const load_op,
       std::latch& count_down,
       unsigned int const thread_id);
 

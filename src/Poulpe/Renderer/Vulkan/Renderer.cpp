@@ -76,7 +76,7 @@ namespace Poulpe
         _vulkan->getSwapChainExtent().width,
         _vulkan->getSwapChainExtent().height, 1,
         VK_SAMPLE_COUNT_1_BIT,
-        VK_FORMAT_D32_SFLOAT_S8_UINT,
+        VK_FORMAT_D24_UNORM_S8_UINT,
         VK_IMAGE_TILING_OPTIMAL,
         VK_IMAGE_USAGE_SAMPLED_BIT
         | VK_IMAGE_USAGE_TRANSFER_SRC_BIT
@@ -86,7 +86,7 @@ namespace Poulpe
 
       VkImageView depth_imageview = _vulkan->createImageView(
         depth_image,
-        VK_FORMAT_D32_SFLOAT_S8_UINT,
+        VK_FORMAT_D24_UNORM_S8_UINT,
         1,
         VK_IMAGE_ASPECT_DEPTH_BIT);
 
@@ -101,7 +101,7 @@ namespace Poulpe
         _vulkan->getSwapChainExtent().height,
         1,
         VK_SAMPLE_COUNT_1_BIT,
-        VK_FORMAT_D32_SFLOAT_S8_UINT,
+        VK_FORMAT_D24_UNORM_S8_UINT,
         VK_IMAGE_TILING_OPTIMAL,
         VK_IMAGE_USAGE_SAMPLED_BIT
         | VK_IMAGE_USAGE_TRANSFER_SRC_BIT
@@ -111,7 +111,7 @@ namespace Poulpe
 
       VkImageView depth_imageview2 = _vulkan->createImageView(
         depth_image2,
-        VK_FORMAT_D32_SFLOAT_S8_UINT,
+        VK_FORMAT_D24_UNORM_S8_UINT,
         1,
         VK_IMAGE_ASPECT_DEPTH_BIT);
 
@@ -199,7 +199,7 @@ namespace Poulpe
     _perspective = glm::perspective(
       glm::radians(45.0f),
       static_cast<float>(_vulkan->getSwapChainExtent().width) / static_cast<float>(_vulkan->getSwapChainExtent().height),
-      0.1f, 500.f);
+      0.1f, 50.f);
     _perspective[1][1] *= -1;
   }
 
@@ -214,7 +214,6 @@ namespace Poulpe
     VkImageView& depthview,
     VkImage& depth,
     std::vector<Entity*> const& entities,
-    VkAttachmentLoadOp const load_op,
     std::latch& count_down,
     unsigned int const thread_id
   )
@@ -320,8 +319,8 @@ namespace Poulpe
     _vulkan->endMarker(cmd_buffer);
     _vulkan->endRendering(cmd_buffer);
 
-   /*  _vulkan->transitionImageLayout(cmd_buffer, depth,
-       VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT);*/
+     _vulkan->transitionImageLayout(cmd_buffer, depth,
+       VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT); 
  /*     _vulkan->transitionImageLayout(cmd_buffer, depth,
         VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR, VK_IMAGE_ASPECT_DEPTH_BIT);*/
 
@@ -343,6 +342,7 @@ namespace Poulpe
     VkImage& depth,
     std::vector<Entity*> const& entities,
     VkAttachmentLoadOp const load_op,
+    VkAttachmentStoreOp const store_op,
     std::latch& count_down,
     unsigned int const thread_id,
     bool const has_depth_attachment)
@@ -367,7 +367,8 @@ namespace Poulpe
       colorview,
       depthview,
       load_op,
-      VK_ATTACHMENT_STORE_OP_STORE);
+      store_op,
+      has_depth_attachment);
 
     _vulkan->setViewPort(cmd_buffer);
     _vulkan->setScissor(cmd_buffer);
@@ -465,9 +466,10 @@ namespace Poulpe
           _depth_images[_current_frame],
           {_entity_manager->getSkybox()},
           VK_ATTACHMENT_LOAD_OP_CLEAR,
+          VK_ATTACHMENT_STORE_OP_STORE,
           count_down,
           0,
-          true);
+          false);
        });
        skybox_thread.join();
     } else {
@@ -482,7 +484,6 @@ namespace Poulpe
          _depthmap_imageviews[_current_frame],
          _depthmap_images[_current_frame],
          _entities,
-         VK_ATTACHMENT_LOAD_OP_LOAD,
          count_down,
          1
         );
@@ -498,7 +499,8 @@ namespace Poulpe
          _depth_imageviews[_current_frame],
          _depth_images[_current_frame],
          _entities,
-         VK_ATTACHMENT_LOAD_OP_DONT_CARE,
+         VK_ATTACHMENT_LOAD_OP_CLEAR,
+         VK_ATTACHMENT_STORE_OP_STORE,
          count_down,
          2, true
         );
@@ -581,7 +583,8 @@ namespace Poulpe
         imageview,
         depth_imageview,
         load_op,
-        store_op);
+        store_op,
+        has_depth_attachment);
 
       _vulkan->setViewPort(cmd_buffer);
       _vulkan->setScissor(cmd_buffer);

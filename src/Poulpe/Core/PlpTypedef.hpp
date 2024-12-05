@@ -90,7 +90,7 @@ namespace Poulpe
   struct constants
   {
     alignas(16) glm::mat4 view;
-    alignas(16) glm::vec4 viewPos;
+    alignas(16) glm::vec3 view_position;
     alignas(16) glm::vec4 total_position{ 1.0 };
   };
 

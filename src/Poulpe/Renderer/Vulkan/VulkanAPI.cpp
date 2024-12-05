@@ -480,7 +480,7 @@ namespace Poulpe {
   VkSurfaceFormatKHR VulkanAPI::chooseSwapSurfaceFormat(std::vector<VkSurfaceFormatKHR> const & available_formats)
   {
     for (auto const & available_format : available_formats) {
-      if (available_format.format == VK_FORMAT_B8G8R8A8_SRGB
+      if (available_format.format == VK_FORMAT_B8G8R8A8_UNORM
         && available_format.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR) {
         return available_format;
       }
@@ -835,8 +835,9 @@ namespace Poulpe {
     rendering_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO_KHR;
     rendering_create_info.colorAttachmentCount = has_color_attachment ? 1 : 0;
     if (has_color_attachment) rendering_create_info.pColorAttachmentFormats = & format;
-    if (has_depth_test) rendering_create_info.depthAttachmentFormat = VK_FORMAT_D32_SFLOAT_S8_UINT; //(VK_FORMAT_D32_SFLOAT_S8_UINT) 
-
+    if (has_depth_test) {
+      rendering_create_info.depthAttachmentFormat = VK_FORMAT_D24_UNORM_S8_UINT; //(VK_FORMAT_D24_UNORM_S8_UINT) 
+    }
     pipeline_info.pNext = & rendering_create_info;
 
     VkPipeline graphics_pipeline = nullptr;
@@ -1470,13 +1471,9 @@ namespace Poulpe {
     VkImageView& color_imageview,
     VkImageView& depth_imageview,
     VkAttachmentLoadOp const load_op,
-    VkAttachmentStoreOp const store_op)
+    VkAttachmentStoreOp const store_op,
+    bool const has_depth_attachment)
   {
-    //VkAttachmentLoadOp loadOp{ VK_ATTACHMENT_LOAD_OP_LOAD };
-    //if (VK_IMAGE_LAYOUT_UNDEFINED == load_op) {
-    //  loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-    //}
-
     VkRenderingInfo rendering_info{ };
     rendering_info.sType = VK_STRUCTURE_TYPE_RENDERING_INFO;
     rendering_info.renderArea.extent = _swapchain_extent;
@@ -1488,7 +1485,7 @@ namespace Poulpe {
     color_clear.float32[0] = 0.025f;
     color_clear.float32[1] = 0.025f;
     color_clear.float32[2] = 0.025f;
-    color_clear.float32[3] = 1.0f;
+    color_clear.float32[3] = 0.0f;
 
     VkRenderingAttachmentInfo color_attachment{ };
     color_attachment.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
@@ -1498,7 +1495,7 @@ namespace Poulpe {
     color_attachment.storeOp = store_op;
     color_attachment.clearValue.color = color_clear;
 
-    VkClearDepthStencilValue depth_stencil { 1.f, 0 };
+    VkClearDepthStencilValue depth_stencil{ 1.f, 0 };
 
     VkRenderingAttachmentInfo depth_attachment{ };
     depth_attachment.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
@@ -1506,10 +1503,11 @@ namespace Poulpe {
     depth_attachment.imageLayout = VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL;
     depth_attachment.loadOp = load_op;
     depth_attachment.storeOp = store_op;
+    depth_attachment.clearValue.color = color_clear;
     depth_attachment.clearValue.depthStencil = depth_stencil;
+    rendering_info.pDepthAttachment = &depth_attachment;
 
     rendering_info.pColorAttachments = &color_attachment;
-    rendering_info.pDepthAttachment = &depth_attachment;
     //rendering_info.pStencilAttachment;
 
     vkCmdBeginRendering(cmd_buffer, &rendering_info);
@@ -2115,7 +2113,7 @@ namespace Poulpe {
     image_info.extent.depth = 1;
     image_info.mipLevels = 1;
     image_info.arrayLayers = 1;
-    image_info.format = VK_FORMAT_D32_SFLOAT_S8_UINT;
+    image_info.format = VK_FORMAT_D24_UNORM_S8_UINT;
     image_info.tiling = VK_IMAGE_TILING_OPTIMAL;
     image_info.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
     image_info.usage = VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT 
@@ -2153,7 +2151,7 @@ namespace Poulpe {
     create_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
     create_info.image = image;
     create_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
-    create_info.format = VK_FORMAT_D32_SFLOAT_S8_UINT;
+    create_info.format = VK_FORMAT_D24_UNORM_S8_UINT;
     create_info.subresourceRange = {};
     create_info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
     create_info.subresourceRange.baseMipLevel = 0;
@@ -2271,7 +2269,8 @@ namespace Poulpe {
     VkImage& texture_image,
     VkFormat const format)
   {
-    VkDeviceSize image_size = tex_width * tex_height * 4;
+    auto scale = (format == VK_FORMAT_R8G8B8_UNORM) ? 3 : 4;
+    VkDeviceSize image_size = tex_width * tex_height * scale;
     VkBuffer buffer = createBuffer(image_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT);
     VkMemoryRequirements mem_requirements;
     vkGetBufferMemoryRequirements(_device, buffer, & mem_requirements);

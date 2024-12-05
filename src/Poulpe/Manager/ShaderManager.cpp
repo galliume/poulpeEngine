@@ -189,7 +189,7 @@ namespace Poulpe
         shaders,
         *vertexInputInfo,
         VK_CULL_MODE_BACK_BIT,
-        true, true, true,
+        false, false, false,
         VK_POLYGON_MODE_FILL);
 
     } else if (shaderName == "grid" || shaderName == "2d") {
@@ -260,7 +260,7 @@ namespace Poulpe
         hasDynamicDepthBias);
     }
     
-    auto descriptorPool = _renderer->getAPI()->createDescriptorPool(poolSizes, 10000);
+    auto descriptorPool = _renderer->getAPI()->createDescriptorPool(poolSizes, 1000);
 
     VulkanPipeline pipeline{};
     pipeline.pipeline = graphicPipeline;

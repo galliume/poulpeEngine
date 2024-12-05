@@ -235,22 +235,31 @@ namespace Poulpe
           vertex.fidtidBB = glm::vec4(static_cast<float>(j), static_cast<float>(mesh->mMaterialIndex), 0.0f, 0.0f);
           vertex.pos = { vertices.x, vertices.y, vertices.z };
 
+          if (mesh->HasNormals()) {
+            aiVector3D const& normal = mesh->mNormals[face->mIndices[j]];
+            vertex.normal = { normal.x, normal.y, normal.z };
+          } else {
+            vertex.normal = { 1.0f, 1.0f, 1.0f };
+          }
+
           glm::vec4 tangent(0.f, 0.f, 1.f, 1.f);
 
           if (nullptr != mesh->mTangents) {
               tangent.x += mesh->mTangents[j].x;
               tangent.y += mesh->mTangents[j].y;
               tangent.z += mesh->mTangents[j].z;
+
+              auto bitangent{ glm::vec3(
+                mesh->mBitangents[j].x,
+                mesh->mBitangents[j].y,
+                mesh->mBitangents[j].z) };
+
+              //handedness
+              tangent.w = glm::dot(glm::cross(glm::vec3(tangent.x, tangent.y, tangent.z), bitangent), vertex.normal) > 0.0f ? 1.0f : - 1.0f;
           }
           vertex.tangent = tangent;
           //if (inverse_texture_y) vertex.tangent.y *= -1.0f;
 
-          if (mesh->HasNormals()) {
-              aiVector3D const& normal = mesh->mNormals[face->mIndices[j]];
-              vertex.normal = { normal.x, normal.y, normal.z };
-          } else {
-            vertex.normal = { 1.0f, 1.0f, 1.0f };
-          }
           //if (inverse_texture_y) vertex.normal.y *= -1.0f;
           
           if (mesh->mNumUVComponents[0] > 0) {

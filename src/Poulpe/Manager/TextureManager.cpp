@@ -132,8 +132,12 @@ namespace Poulpe
 
     _paths.insert({ name, path });
 
+    auto flags{ STBI_rgb_alpha };
+
+    //if (is_unorm) flags = STBI_default;
+
     int tex_width = 0, tex_height = 0, tex_channels = 0;
-    stbi_uc* pixels = stbi_load(path.c_str(), &tex_width, &tex_height, &tex_channels, STBI_rgb_alpha);
+    stbi_uc* pixels = stbi_load(path.c_str(), &tex_width, &tex_height, &tex_channels, flags);
 
     if (!pixels) {
       PLP_FATAL("failed to load texture image %s", name);
@@ -143,11 +147,12 @@ namespace Poulpe
     VkImage texture_image = nullptr;
     uint32_t mip_lvls = static_cast<uint32_t>(std::floor(std::log2(std::max(tex_width, tex_height)))) + 1;
     if (std::cmp_greater(mip_lvls, MAX_MIPLEVELS)) mip_lvls = MAX_MIPLEVELS;
-
+    
     VkCommandPool commandPool = _renderer->getAPI()->createCommandPool();
     VkCommandBuffer cmd_buffer = _renderer->getAPI()->allocateCommandBuffers(commandPool)[0];
 
-    VkFormat format = (is_unorm) ? VK_FORMAT_R8G8B8A8_UNORM : VK_FORMAT_R8G8B8A8_SRGB;
+    //@todo check BC compressed format
+    VkFormat format = (is_unorm) ? VK_FORMAT_R8G8B8A8_UNORM: VK_FORMAT_R8G8B8A8_SRGB;
 
     _renderer->getAPI()->beginCommandBuffer(cmd_buffer);
     _renderer->getAPI()->createTextureImage(cmd_buffer,

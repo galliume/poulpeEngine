@@ -288,7 +288,8 @@ namespace Poulpe {
       VkImageView& color_imageview,
       VkImageView& depth_imageview,
       VkAttachmentLoadOp const load_op,
-      VkAttachmentStoreOp const store_op);
+      VkAttachmentStoreOp const store_op,
+      bool const has_depth_attachment);
 
     void endRendering(VkCommandBuffer& cmd_buffer);
 
