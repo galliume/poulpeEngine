@@ -3,23 +3,28 @@
 #extension GL_ARB_separate_shader_objects : enable
 
 #define NR_POINT_LIGHTS 2
+#define PI 3.1415926538
+#define DIFFUSE_INDEX 0
+#define ALPHA_INDEX 1
+#define SPECULAR_INDEX 2
+#define NORMAL_INDEX 3
+#define SHADOW_MAP_INDEX 4
+#define GAMMA_TRESHOLD 0.0031308
 
 layout(location = 0) out vec4 final_color;
 
 layout(location = 0) in FRAG_VAR {
-  mat3 TBN;
-  vec4 sun_light_space;
-  vec4 view_position;
   vec4 color;
+  vec4 light_space;
+  vec3 light_dir;
+  vec3 ltan;
   vec3 normal;
   vec3 position;
-  vec3 tangent_light_pos;
-  vec3 tangent_frag_pos;
-  vec3 tangent_view_pos;
-  vec2 texture_coord;
-  flat int texture_ID;
-  mat4 model;
   vec4 tangent;
+  vec3 view_dir;
+  vec3 view_position;
+  vec3 vtan;
+  vec2 texture_coord;
 } var;
 
 struct Light {
@@ -48,11 +53,6 @@ struct Material
   vec3 shi_ior_diss;
 };
 
-//0: main texture
-//1: alpha
-//2: specular map
-//3: bump map
-//4: shadow map
 layout(binding = 1) uniform sampler2D tex_sampler[5];
 
 layout(binding = 2) readonly buffer ObjectBuffer {
@@ -62,121 +62,99 @@ layout(binding = 2) readonly buffer ObjectBuffer {
   Material material;
 };
 
-vec3 CalcDirLight(vec4 color, vec3 ambient, Light light, vec3 light_dir, vec3 normal, vec3 view_dir, float shadow);
-vec3 CalcPointLight(vec4 color, vec3 ambient, Light light, vec3 normal, vec3 view_dir, float shadow);
-
-float ShadowCalculation(vec4 lightSpace, vec3 normal);
-
-void main()
+vec3 DiffuseReflection(vec3 n, vec3 l, vec3 light_color, vec3 ambient_color, vec3 diffuse_color)
 {
-  vec3 normal = normalize(var.normal);
-  
-  ivec2 tex_size = textureSize(tex_sampler[3], 0);
+  vec3 direct_color = light_color * clamp(dot(n, l), 0.0, 1.0);
+  return (ambient_color + direct_color) * diffuse_color;
+}
 
+vec3 SpecularReflection(vec3 n, vec3 l, float alpha, float nl, vec3 light_color, vec3 specular_color)
+{
+  float highlight = pow(clamp(dot(n, l), 0.0, 1.0), alpha) * float(nl > 0.0);
+  return (light_color * specular_color * highlight);
+}
+
+vec3 FetchNormal(out vec3 view_dir, out vec3 light_dir)
+{
+  vec3 normal = var.normal;
+  view_dir = var.view_dir;
+  light_dir = var.light_dir;
+
+  ivec2 tex_size = textureSize(tex_sampler[NORMAL_INDEX], 0);
+
+  //@todo get rid of if
   if (tex_size.x != 1 && tex_size.y != 1) {
-    normal = texture(tex_sampler[3], var.texture_coord).xyz;
-    normal.z = sqrt(1 - normal.x * normal.x - normal.y * normal.y);
-    normal = normalize(normal * 2.0 - 1.0);
-  
-    mat3 normal_matrix = transpose(inverse(mat3(var.model)));
+    vec3 m = texture(tex_sampler[NORMAL_INDEX], var.texture_coord).xyz;
+    //vec3 n = normalize(var.normal);
+    //vec3 t = normalize(var.tangent.xyz - n * dot(var.tangent.xyz, n));
+    //vec3 b = cross(var.normal, var.tangent.xyz) * var.tangent.w;
+    //normal = normalize(vec3(t * m.x + b * m.y + n * m.z));
+    normal = normal * 2.0 - 1.0;
+    normal.z = sqrt(1.0 - normal.x * normal.x - normal.y * normal.y);
 
-    vec3 t = normalize(normal_matrix * var.tangent.xyz);
-    vec3 n = normalize(normal_matrix * normal);
-    t = normalize(t - dot(t, n) * n);
-    vec3 b = cross(n, t);
-    mat3 TBN = transpose(mat3(t, b, n));
-    
-    normal *= TBN;
+    view_dir = var.vtan;
+    light_dir = var.ltan;
   }
 
-  float shadow_ambient = ShadowCalculation(var.sun_light_space, normal);
-  vec4 texture_color = texture(tex_sampler[0], var.texture_coord);
-  vec3 ambient_color = sun_light.color;
+  view_dir = normalize(view_dir);
+  light_dir = normalize(light_dir);
 
-  vec3 view_dir = normalize(var.tangent_view_pos.xyz - var.tangent_frag_pos.xyz);
-  vec3 sun_light_dir = normalize(-sun_light.direction);
-
-  vec3 color = CalcDirLight(texture_color, ambient_color, sun_light, sun_light_dir, normal, view_dir, shadow_ambient);
-//
-//  for(int i = 0; i < NR_POINT_LIGHTS; i++) {
-//    color += CalcPointLight(texture_color, ambient_color, point_lights[i], normal, view_dir, shadow_ambient);
-//  }
-
-  ivec2 mask_size = textureSize(tex_sampler[1], 0);
-  if (mask_size.x != 1 && mask_size.y != 1) {
-    vec4 mask = texture(tex_sampler[1], var.texture_coord);
-//        fColor = mix(fColor, mask, mask.a);
-    if (mask.r < 0.2) discard;
-  }
-  if (texture_color.a < 0.1) discard;
-
-
-  //color = color / (color + vec3(1.0));
-  //color = vec3(-shadowAmbient);
-  //color = pow(color, vec3(1.0 / 2.2));
-
-  final_color = vec4(color, 1.0);
+  return normalize(normal);
 }
 
-vec3 CalcDirLight(vec4 color, vec3 ambient, Light light, vec3 light_dir, vec3 normal, vec3 view_dir, float shadow)
+float InverseSquareAttenuation(vec3 p, vec3 l)
 {
-  float diff = max(dot(normal, light_dir), 0.0);
-  vec3 diffuse =  (diff * vec3(texture(tex_sampler[0], var.texture_coord)));
+  float r = 5.0;
+  float r_max = 50.0;
+  vec2 atten_const = vec2(1.0);
+  atten_const.x = (r * r) / (r_max * r_max - r * r);
+  atten_const.y = (r_max * r_max);
 
-  //vec3 reflectDir = reflect(-light.position, normal);
-  vec3 halfway_dir = normalize(light_dir + view_dir);
-  float spec = pow(max(dot(normal, halfway_dir), 0.0), 1);
-
-  vec3 specular = vec3(1.f);
-  ivec2 tex_size = textureSize(tex_sampler[2], 0);
-
-  if (tex_size.x == 1 && tex_size.y == 1) {
-    specular = (material.specular * spec);
-  } else {
-    specular = (vec3(texture(tex_sampler[2], var.texture_coord)) * spec);
-  }
-
-  return (ambient + (shadow * (diffuse + specular))) * color.xyz;
+  vec3 l_dir = l - p;
+  float r2 = dot(l_dir, l_dir);
+  return clamp(atten_const.x * (atten_const.y / r2 - 1.0), 0.0, 1.0);
 }
 
-vec3 CalcPointLight(vec4 color, vec3 ambient, Light light, vec3 normal, vec3 view_dir, float shadow)
+float ExponentialAttenuation(vec3 p, vec3 l)
 {
-  vec3 light_dir = normalize(-light.direction);
+  float k = 2.0;
+  float r_max = 7.0;
+  vec3 atten_const = vec3(1.0);
+  atten_const.x = -(k * k) / (r_max * r_max);
+  atten_const.y = 1.0 / (1.0 - exp(-(k * k)));
+  atten_const.z = exp(-(k * k)) / (1.0 - exp(-(k * k)));
 
-  float distance = length(light.position - var.position);
-  float attenuation = 1.0 / (light.clq.x + light.clq.y * distance + light.clq.z * (distance * distance));
+  vec3 l_dir = l - p;
+  float r2 = dot(l_dir, l_dir);
+  return clamp(exp(r2 * atten_const.x) * atten_const.y - atten_const.z, 0.0, 1.0);
+}
 
-  float diff = max(dot(normal, light_dir), 0.0);
-  vec3 diffuse =  (diff * vec3(texture(tex_sampler[0], var.texture_coord)));
+float SmoothAttenuation(vec3 p, vec3 l)
+{
+  float r_max = 15.0;
+  vec2 atten_const = vec2(1.0);
+  atten_const.x = 1.0 / (r_max * r_max);
+  atten_const.y = 2.0 / r_max;
 
-  //vec3 reflectDir = reflect(-light.position, normal);
-  vec3 halfway_dir = normalize(light_dir + view_dir);
-  float spec = pow(max(dot(normal, halfway_dir), 0.0), 1);
+  vec3 l_dir = l - p;
+  float r2 = dot(l_dir, l_dir);
+  return clamp(r2 * atten_const.x * (sqrt(r2) * atten_const.y - 3.0) + 1.0, 0.0, 1.0);
+}
 
-  vec3 specular = vec3(1.f);
-  ivec2 tex_size = textureSize(tex_sampler[2], 0);
-
-  if (tex_size.x == 1 && tex_size.y == 1) {
-    specular = (material.specular * spec);
+float linear_to_sRGB(float color)
+{
+  if (color <= GAMMA_TRESHOLD) {
+    return color * 12.92;
   } else {
-    specular = (vec3(texture(tex_sampler[2], var.texture_coord)) * spec) ;
+    return pow((color * 1.055), 1/2.4) - 0.055;
   }
-  ambient *= light.color * light.ads.x;
-  diffuse *= light.color * light.ads.y;
-  specular *= light.color * light.ads.z;
-
-  ambient *= attenuation;
-  diffuse *= attenuation;
-  specular *= attenuation;
-
-  return (ambient + diffuse + specular) * color.xyz;
 }
 
 float ShadowCalculation(vec4 light_space, vec3 normal)
 {
   vec4 coord = light_space / light_space.w;
   //coord.y = 1.0 - coord.y;
-  ivec2 tex_dim = textureSize(tex_sampler[4], 0);
+  ivec2 tex_dim = textureSize(tex_sampler[SHADOW_MAP_INDEX], 0);
   float scale = 1.5;
   float dx = 1.0 / float(tex_dim.x);
   float dy = 1.0 / float(tex_dim.y);
@@ -184,21 +162,21 @@ float ShadowCalculation(vec4 light_space, vec3 normal)
   float shadow = 0.0;
   int count = 0;
   int range = 1;
-  //vec3 light_dir = normalize(-sun_light.direction * var.TBN);
-  vec3 light_dir = normalize(sun_light.position - var.position);
-  float bias = max(0.05 * (1.0 - dot(normalize(var.normal), light_dir)), 0.005);
+  //vec3 light_dir = normalize(-sun_light.direction);
+  vec3 light_dir = normalize(var.light_dir);
+  float bias = max(0.05 * (1.0 - dot(normalize(normal), light_dir)), 0.005);
 
   for (int x = -range; x <= range; x++)
   {
     for (int y = -range; y <= range; y++)
     {
-      float pcf_depth = texture(tex_sampler[4], coord.xy + vec2(x*dx, y*dy)).x;
+      float pcf_depth = texture(tex_sampler[SHADOW_MAP_INDEX], coord.xy + vec2(x*dx, y*dy)).x;
       shadow += coord.z - bias > pcf_depth ? 1.0 : 0.0;
       count++;
     }
   
   }
-  shadow /= count;
+  shadow /= 13;
 
   if(coord.z > 1.0) {
     shadow = 0.0;
@@ -206,3 +184,50 @@ float ShadowCalculation(vec4 light_space, vec3 normal)
 
   return (1.0 - shadow);
 }
+
+void main()
+{
+  vec4 alpha_color = texture(tex_sampler[ALPHA_INDEX], var.texture_coord);
+  ivec2 alpha_size = textureSize(tex_sampler[ALPHA_INDEX], 0);
+
+  if (alpha_size.x != 1 && alpha_size.y != 1 && alpha_color.r < 0.2) {
+    discard;
+  }
+
+  vec4 diffuse = texture(tex_sampler[DIFFUSE_INDEX], var.texture_coord);
+  vec4 diffuse_color = (vec4(material.diffuse, 1.0) / PI) * diffuse;
+  if (diffuse_color.a < 0.2) discard;
+
+  vec3 ambient_color = diffuse.xyz * PI;
+  vec3 light_color = sun_light.color;
+  vec3 specular_color = texture(tex_sampler[SPECULAR_INDEX], var.texture_coord).rgb;
+  vec3 view_dir; vec3 light_dir;
+  vec3 normal = FetchNormal(view_dir, light_dir);
+  vec3 halfway_dir = normalize(light_dir + view_dir);
+  float nl = dot(normal, halfway_dir);
+  float shadow = ShadowCalculation(var.light_space, normal);
+
+  //float luminance = 0.212639 * light_color.r + 0.715169 * light_color.g + 0.072192 * light_color.b;
+
+  //vec3 spot = max(cos(var.position.z / (var.position)), 0);
+  float attenuation = InverseSquareAttenuation(var.position, sun_light.position);
+  vec3 color = attenuation * DiffuseReflection(normal, light_dir, light_color, ambient_color, diffuse_color.xyz);
+
+  ivec2 tex_size = textureSize(tex_sampler[SPECULAR_INDEX], 0);
+
+  //@todo get rid of if
+  if (tex_size.x != 1 && tex_size.y != 1) {
+    color += SpecularReflection(normal, halfway_dir, material.shi_ior_diss.x, nl, light_color, specular_color);
+  } 
+
+  color *= shadow;
+
+  //color = color / (color + vec3(1.0));
+  color.r = linear_to_sRGB(color.r);
+  color.g = linear_to_sRGB(color.g);
+  color.b = linear_to_sRGB(color.b);
+  //color = pow(color, vec3(1.0 / 2.2));
+
+  final_color = vec4(color, 1.0);
+}
+

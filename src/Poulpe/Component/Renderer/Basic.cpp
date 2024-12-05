@@ -15,11 +15,18 @@ namespace Poulpe
     image_info.emplace_back(alpha.getSampler(), alpha.getImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
     std::string const bump_map_name{ mesh->getData()->_bump_map };
+    Texture texture_bump{ _texture_manager->getTextures()[bump_map_name] };
+    
+    if (texture_bump.getWidth() == 0) {
+      texture_bump = _texture_manager->getTextures()["_plp_empty"];
+    }
+
     std::string const specular_map_name{ mesh->getData()->_specular_map };
+    Texture texture_specular{ _texture_manager->getTextures()[specular_map_name] };
 
-    Texture const texture_specular{ _texture_manager->getTextures()[specular_map_name] };
-    Texture const texture_bump{ _texture_manager->getTextures()[bump_map_name] };
-
+    if (texture_specular.getWidth() == 0) {
+      texture_specular = _texture_manager->getTextures()["_plp_empty"];
+    }
     //VkDescriptorImageInfo shadowMapSpot{};
     //shadowMapSpot.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
     //shadowMapSpot.imageview = _renderer->getDepthMapImageViews()->at(1);
@@ -99,7 +106,7 @@ namespace Poulpe
 
       constants pushConstants{};
       pushConstants.view = renderer->getCamera()->lookAt();
-      pushConstants.viewPos = renderer->getCamera()->getPos();
+      pushConstants.view_position = renderer->getCamera()->getPos();
 
       vkCmdPushConstants(cmd_buffer, pipeline_layout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(constants),
         &pushConstants);

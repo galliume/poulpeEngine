@@ -21,7 +21,7 @@ layout(location = 2) out vec4 fModelPos;
 layout(push_constant) uniform constants
 {
     mat4 view;
-    vec4 viewPos;
+    vec3 view_position;
 } pc;
 
 void main() 
@@ -31,6 +31,6 @@ void main()
     vec4 p = ubo.projection * pc.view * vec4(pos, 1.0);
     gl_Position = p.xyww;
     fModelPos = gl_Position;
-    fCameraPos = ubo.projection * pc.view * ubo.model * pc.viewPos;
+    fCameraPos = ubo.projection * pc.view * ubo.model * vec4(pc.view_position, 1.0);
 
 }

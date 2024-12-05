@@ -14,7 +14,7 @@ layout(set = 0, binding = 0) readonly uniform UniformBufferObject {
 layout(push_constant) uniform constants
 {
   mat4 view;
-  vec4 view_position;
+  vec3 view_position;
   vec4 total_position;
 } pc;
 
