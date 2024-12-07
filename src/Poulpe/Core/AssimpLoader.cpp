@@ -209,6 +209,8 @@ namespace Poulpe
       }
     }
 
+    size_t countdown { scene->mNumMeshes };
+
     for (unsigned int i{ 0 }; i < scene->mNumMeshes; i++) {
       PlpMeshData meshData{};
      
@@ -329,6 +331,9 @@ namespace Poulpe
           }
         }
       }
+
+      --countdown;
+      meshData.id = countdown;
 
       callback(std::move(meshData), materials, false, animations, positions, rotations, scales);
       count = meshData.indices.size();

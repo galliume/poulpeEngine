@@ -103,7 +103,7 @@ namespace Poulpe
 
     inline void addCamera(Camera* const camera) { _camera = camera; }
     void addEntities(std::vector<Entity*> entities) ;
-    void addEntity(Entity* entity) ;
+    void addEntity(Entity* entity, bool const is_last) ;
     
     void updateData(
       std::string const& name,
@@ -253,17 +253,15 @@ namespace Poulpe
     std::vector<VkImage> _depthmap_images;
     std::vector<VkImageView> _depthmap_imageviews;
     std::vector<VkSampler> _depthmap_samplers;
-    bool _depthmap_descset_updated{ false };
 
     std::vector<VkImage> _depthmap_images2;
     std::vector<VkImageView> _depthmap_imageviews2;
     std::vector<VkSampler> _depthmap_samplers2;
-    bool _depthmap_descset_updated2{ false };
 
     std::vector<VkImage> _depthmap_Images3;
     std::vector<VkImageView> _depthmap_imageviews3;
     std::vector<VkSampler> _depthmap_samplers3;
-    bool _depthmap_descset_updated3{ false };
+    bool _update_shadow_map { true };
 
     std::unordered_map<std::string, VulkanPipeline> _pipelines;
 
@@ -272,7 +270,9 @@ namespace Poulpe
 
     std::vector<Entity*> _entities{};
     std::vector<Entity*> _entities_buffer{};
-
+    unsigned int const _entities_buffer_swap_treshold{ 50 };
+    bool _force_entities_buffer_swap{ false };
+    
     std::vector<VkSemaphore> _entities_sema_finished;
     
     std::vector<VkFence> _images_in_flight{};

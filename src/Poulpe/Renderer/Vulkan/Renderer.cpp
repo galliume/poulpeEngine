@@ -330,6 +330,7 @@ namespace Poulpe
     //VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL
     _draw_cmds.insert(&cmd_buffer, &_entities_sema_finished[thread_id], thread_id, flags);
 
+    _update_shadow_map = false;
     count_down.count_down();
   }
 
@@ -477,18 +478,22 @@ namespace Poulpe
     }
 
     if (_entities.size() > 0) {
-     std::jthread shadow_map_thread([&]() {
-        drawShadowMap(
-         _cmd_buffer_entities3[_current_frame],
-         _draw_cmds,
-         _depthmap_imageviews[_current_frame],
-         _depthmap_images[_current_frame],
-         _entities,
-         count_down,
-         1
-        );
-      });
-      shadow_map_thread.detach();
+      if (_update_shadow_map) {
+        std::jthread shadow_map_thread([&]() {
+          drawShadowMap(
+            _cmd_buffer_entities3[_current_frame],
+            _draw_cmds,
+            _depthmap_imageviews[_current_frame],
+            _depthmap_images[_current_frame],
+            _entities,
+            count_down,
+            1
+          );
+        });
+        shadow_map_thread.detach();
+      } else {
+        count_down.count_down();
+      }
         
       std::jthread entities_thread([&]() {
         draw(
@@ -720,17 +725,17 @@ namespace Poulpe
     {
       std::lock_guard guard(_mutex_entity_submit);
       copy(entities.begin(), entities.end(), back_inserter(_entities_buffer));
-      _depthmap_descset_updated = false;
     }
   }
 
-  void Renderer::addEntity(Entity* entity)
+  void Renderer::addEntity(Entity* entity, bool const is_last)
   {
     {
       std::lock_guard guard(_mutex_entity_submit);
 
       _entities_buffer.emplace_back(entity);
-      _depthmap_descset_updated = false;
+
+      _force_entities_buffer_swap = is_last;
     }
   }
 
@@ -762,11 +767,16 @@ namespace Poulpe
 
   void Renderer::swapBufferEntities()
   {
+    if (_entities_buffer.size() < _entities_buffer_swap_treshold 
+        && !_force_entities_buffer_swap) return;
+
     {
       std::lock_guard guard(_mutex_entity_submit);
       copy(_entities_buffer.begin(), _entities_buffer.end(), back_inserter(_entities));
       _entities_buffer.clear();
       _entities_buffer.shrink_to_fit();
+      _update_shadow_map = true;
+      _force_entities_buffer_swap = false;
     }
   }
 }

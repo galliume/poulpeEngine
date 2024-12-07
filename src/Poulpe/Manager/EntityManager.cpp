@@ -290,7 +290,9 @@ namespace Poulpe
         std::shared_lock guard(_mutex_shared);
         auto* entityNode = root_mesh_entity_node->addChild(new EntityNode(entity));
         _world_node->addChild(root_mesh_entity_node);
-        _renderer->addEntity(entityNode->getEntity());
+        bool const is_last{ (_data.id == 0) ? true : false };
+
+        _renderer->addEntity(entityNode->getEntity(), is_last);
       }
     };
     AssimpLoader::loadData(path, inverse_texture_y, callback);

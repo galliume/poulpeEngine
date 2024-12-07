@@ -16,7 +16,7 @@ namespace Poulpe
       glm::vec3(0.0f, 0.0f, 0.0f),
       glm::vec3(0.0f, 1.0f, 0.0f));
 
-    float near_plane = 0.1f, far_plane = 7.5f;
+    float near_plane = 1.0f, far_plane = 7.5f;
         
     //auto projection = glm::perspective(glm::radians(45.f),
     //    static_cast<float>(2560) / static_cast<float>(1440),
