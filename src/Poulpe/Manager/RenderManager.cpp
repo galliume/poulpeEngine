@@ -137,9 +137,9 @@ namespace Poulpe
     {
       std::lock_guard guard(_entity_manager->lockWorldNode());
 
-      auto* worldNode = _entity_manager->getWorldNode();
+      auto* world_node = _entity_manager->getWorldNode();
 
-      std::ranges::for_each(worldNode->getChildren(), [&](const auto& leaf_node) {
+      std::ranges::for_each(world_node->getChildren(), [&](const auto& leaf_node) {
         std::ranges::for_each(leaf_node->getChildren(), [&](const auto& entity_node) {
 
           auto const& entity = entity_node->getEntity();
@@ -154,8 +154,8 @@ namespace Poulpe
               (*rdr_impl)(delta_time, mesh);
             }
 
-            auto* animation_component = _component_manager->get<AnimationComponent>(entity->getID());
-            if (animation_component) {
+            auto* animation_component = _component_manager->get<AnimationComponent>(leaf_node->getEntity()->getID());
+            if (animation_component && leaf_node->isLoaded()) {
               (*animation_component)(delta_time, mesh);
             }
 

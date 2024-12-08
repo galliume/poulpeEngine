@@ -33,7 +33,9 @@ namespace Poulpe
     //shadowMapSpot.sampler = _renderer->getDepthMapSamplers()->at(1);
     image_info.emplace_back(texture_specular.getSampler(), texture_specular.getImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
     image_info.emplace_back(texture_bump.getSampler(), texture_bump.getImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-    image_info.emplace_back(_renderer->getDepthMapSamplers(), _renderer->getDepthMapImageViews(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+
+    std::vector<VkDescriptorImageInfo> depth_map_image_info{};
+    depth_map_image_info.emplace_back(_renderer->getDepthMapSamplers(), _renderer->getDepthMapImageViews(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
     //image_info.emplace_back(shadowMapSpot);
 
     auto const& pipeline = _renderer->getPipeline(mesh->getShaderName());
@@ -44,7 +46,7 @@ namespace Poulpe
       _renderer->getAPI()->updateDescriptorSets(
         *mesh->getUniformBuffers(),
         *mesh->getStorageBuffers(),
-        descset, image_info);
+        descset, image_info, depth_map_image_info);
     }
 
     mesh->setDescSet(descset);

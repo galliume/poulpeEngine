@@ -54,7 +54,7 @@
 			"inverseTextureY": false,
 			"count": 1,
 			"hasBbox": false,
-			"hasAnimation": false,
+			"hasAnimation": true,
 			"isPointLight": false,
 			"animationScripts": {
 				"anim0" : "assets/scripts/animation/backpack/anim0.lua"
@@ -91,7 +91,6 @@
 			"hasBbox": false,
 			"hasAnimation": false,
 			"animationScripts": {
-				"anim0" : "assets/scripts/animation/grassBlock/anim0.lua"
 			},
 			"isPointLight": false,
 			"hasShadow": true,
@@ -149,7 +148,7 @@
 			"animationScripts": {
 			},
 			"isPointLight": false,
-			"hasShadow": true,
+			"hasShadow": false,
 			"isIndexed": true			
 		}
 	}

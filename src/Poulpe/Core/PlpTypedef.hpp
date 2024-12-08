@@ -96,8 +96,7 @@ namespace Poulpe
 
   struct shadowMapConstants
   {
-    alignas(16) glm::mat4 light_space_matrix;
-    alignas(16) glm::vec3 pos;
+    alignas(16) glm::mat4 view;
   };
 
   struct Buffer {
@@ -117,6 +116,7 @@ namespace Poulpe
     std::vector<Vertex> _vertices;
     std::vector<uint32_t> _indices;
     std::vector<UniformBufferObject> _ubos;
+    UniformBufferObject _original_ubo;
     std::vector<uint32_t> _ubos_offset;
     Buffer _vertex_buffer { nullptr, nullptr, 0, 0 };
     Buffer _indices_buffer { nullptr, nullptr, 0, 0 };

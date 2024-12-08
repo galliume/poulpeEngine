@@ -59,7 +59,8 @@
 				"textures_vase_plant_spec": "assets/mesh/sponza/textures/vase_plant_spec.tga",				
 				"textures_vase_round_ddn": "assets/mesh/sponza/textures/vase_round_ddn.tga",
 				"textures_vase_round_spec": "assets/mesh/sponza/textures/vase_round_spec.tga",
-				"textures_sponza_curtain_ddn" : "assets/mesh/sponza/textures/sponza_curtain_ddn.tga"
+				"textures_sponza_curtain_ddn" : "assets/mesh/sponza/textures/sponza_curtain_ddn.tga",
+				"textures_vase_hanging_ddn": "assets/mesh/sponza/textures/vase_hanging_ddn.tga"
 			},
 			"shader": "main_basic",
 			"positions": [
@@ -105,7 +106,7 @@
 			"isPointLight": false,
 			"animationScripts": {
 			},			
-			"hasShadow": false,
+			"hasShadow": true,
 			"isIndexed": true			
 		}
 	}
