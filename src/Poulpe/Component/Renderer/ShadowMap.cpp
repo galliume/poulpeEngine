@@ -8,8 +8,9 @@ namespace Poulpe
   {
     Texture const tex{ _texture_manager->getTextures()[mesh->getData()->_textures.at(0)] };
 
-    std::vector<VkDescriptorImageInfo> imageInfos{};
-    imageInfos.emplace_back(tex.getSampler(), tex.getImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+    std::vector<VkDescriptorImageInfo> image_infos{};
+    image_infos.emplace_back(tex.getSampler(), tex.getImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+    std::vector<VkDescriptorImageInfo> depth_map_image_infos{};
 
     auto const pipeline = _renderer->getPipeline(mesh->getShaderName());
     VkDescriptorSet descset = _renderer->getAPI()->createDescriptorSets(pipeline->desc_pool, { pipeline->descset_layout }, 1);
@@ -19,7 +20,7 @@ namespace Poulpe
       _renderer->getAPI()->updateDescriptorSets(
         *mesh->getUniformBuffers(),
         *mesh->getStorageBuffers(),
-        descset, imageInfos);
+        descset, image_infos, depth_map_image_infos);
     }
 
     mesh->setDescSet(descset);

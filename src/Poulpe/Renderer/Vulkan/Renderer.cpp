@@ -36,6 +36,8 @@ namespace Poulpe
 
   void Renderer::init()
   {
+    _entities_buffer.reserve(_entities_buffer_swap_treshold);
+
     setPerspective();
 
     _swapchain = _vulkan->createSwapChain(_images);
@@ -76,7 +78,7 @@ namespace Poulpe
         _vulkan->getSwapChainExtent().width,
         _vulkan->getSwapChainExtent().height, 1,
         VK_SAMPLE_COUNT_1_BIT,
-        VK_FORMAT_D24_UNORM_S8_UINT,
+        VK_FORMAT_D16_UNORM,
         VK_IMAGE_TILING_OPTIMAL,
         VK_IMAGE_USAGE_SAMPLED_BIT
         | VK_IMAGE_USAGE_TRANSFER_SRC_BIT
@@ -86,7 +88,7 @@ namespace Poulpe
 
       VkImageView depth_imageview = _vulkan->createImageView(
         depth_image,
-        VK_FORMAT_D24_UNORM_S8_UINT,
+        VK_FORMAT_D16_UNORM,
         1,
         VK_IMAGE_ASPECT_DEPTH_BIT);
 
@@ -101,7 +103,7 @@ namespace Poulpe
         _vulkan->getSwapChainExtent().height,
         1,
         VK_SAMPLE_COUNT_1_BIT,
-        VK_FORMAT_D24_UNORM_S8_UINT,
+        VK_FORMAT_D16_UNORM,
         VK_IMAGE_TILING_OPTIMAL,
         VK_IMAGE_USAGE_SAMPLED_BIT
         | VK_IMAGE_USAGE_TRANSFER_SRC_BIT
@@ -111,7 +113,7 @@ namespace Poulpe
 
       VkImageView depth_imageview2 = _vulkan->createImageView(
         depth_image2,
-        VK_FORMAT_D24_UNORM_S8_UINT,
+        VK_FORMAT_D16_UNORM,
         1,
         VK_IMAGE_ASPECT_DEPTH_BIT);
 
@@ -225,7 +227,7 @@ namespace Poulpe
     _vulkan->startMarker(cmd_buffer, "shadow_map_" + pipeline_name, 0.1f, 0.2f, 0.3f);
     
     _vulkan->transitionImageLayout(cmd_buffer, depth,
-      VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT);
+      VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL, VK_IMAGE_ASPECT_DEPTH_BIT);
 
     VkClearColorValue color_clear = {};
     color_clear.float32[0] = 1.0f;
@@ -278,24 +280,26 @@ namespace Poulpe
     //float const depth_bias_clamp{ 0.0f };
 
     //vkCmdSetDepthClampEnableEXT(cmd_buffer, VK_TRUE);
-    //vkCmdSetDepthBias(cmd_buffer, depth_bias_constant, depth_bias_clamp, depth_bias_slope);    
+    //vkCmdSetDepthBias(cmd_buffer, depth_bias_constant, depth_bias_clamp, depth_bias_slope);
+    auto const view { _light_manager->getSunLight().view };
+
     std::ranges::for_each(entities, [&](auto const& entity) {
       auto mesh_component = _component_manager->get<MeshComponent>(entity->getID());
       if (mesh_component) {
         Mesh* mesh = mesh_component->template has<Mesh>();
 
-        if (mesh->has_shadow() && !mesh->getUniformBuffers()->empty()) {
+        if (mesh->has_shadow()) {
 
-          uint32_t min{ 0 };
-          uint32_t max{ 0 };
+          shadowMapConstants push_constants{};
+          push_constants.view = view;
 
-          for (size_t i{ 0 }; i < mesh->getUniformBuffers()->size(); ++i) {
-            max = mesh->getData()->_ubos_offset.at(i);
-            auto ubos = std::vector<UniformBufferObject>(mesh->getData()->_ubos.begin() + min, mesh->getData()->_ubos.begin() + max);
-            min = max;
-            if (ubos.empty()) continue;
-            _vulkan->updateUniformBuffer(mesh->getUniformBuffers()->at(i), &ubos);
-          }
+          vkCmdPushConstants(
+            cmd_buffer,
+            pipeline->pipeline_layout,
+            VK_SHADER_STAGE_VERTEX_BIT,
+            0,
+            sizeof(shadowMapConstants),
+            &push_constants);
 
           vkCmdBindDescriptorSets(
             cmd_buffer,
@@ -320,13 +324,13 @@ namespace Poulpe
     _vulkan->endRendering(cmd_buffer);
 
      _vulkan->transitionImageLayout(cmd_buffer, depth,
-       VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT); 
+       VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_IMAGE_ASPECT_DEPTH_BIT); 
  /*     _vulkan->transitionImageLayout(cmd_buffer, depth,
         VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR, VK_IMAGE_ASPECT_DEPTH_BIT);*/
 
     _vulkan->endCommandBuffer(cmd_buffer);
 
-    std::vector<VkPipelineStageFlags> flags { VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL };
+    std::vector<VkPipelineStageFlags> flags { VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL };
     //VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL
     _draw_cmds.insert(&cmd_buffer, &_entities_sema_finished[thread_id], thread_id, flags);
 
@@ -360,7 +364,7 @@ namespace Poulpe
 
     if (has_depth_attachment) {
       _vulkan->transitionImageLayout(cmd_buffer, depth,
-        VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT);
+        VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, VK_IMAGE_ASPECT_DEPTH_BIT);
     }
 
     _vulkan->beginRendering(
@@ -401,6 +405,19 @@ namespace Poulpe
 
         Mesh* mesh = mesh_component->template has<Mesh>();
         auto pipeline = getPipeline(mesh->getShaderName());
+        
+        if (!mesh->getUniformBuffers()->empty()) {
+          uint32_t min{ 0 };
+          uint32_t max{ 0 };
+
+          for (size_t i{ 0 }; i < mesh->getUniformBuffers()->size(); ++i) {
+            max = (!mesh->getData()->_ubos_offset.empty()) ? mesh->getData()->_ubos_offset.at(i) : 1;
+            auto ubos = std::vector<UniformBufferObject>(mesh->getData()->_ubos.begin() + min, mesh->getData()->_ubos.begin() + max);
+            min = max;
+            if (ubos.empty()) continue;
+            _vulkan->updateUniformBuffer(mesh->getUniformBuffers()->at(i), &ubos);
+          }
+        }
 
         if (mesh->hasPushConstants()) {
           mesh->applyPushConstants(cmd_buffer, pipeline->pipeline_layout, this, mesh);
@@ -478,6 +495,7 @@ namespace Poulpe
     }
 
     if (_entities.size() > 0) {
+      _update_shadow_map = true;
       if (_update_shadow_map) {
         std::jthread shadow_map_thread([&]() {
           drawShadowMap(
@@ -504,7 +522,7 @@ namespace Poulpe
          _depth_imageviews[_current_frame],
          _depth_images[_current_frame],
          _entities,
-         VK_ATTACHMENT_LOAD_OP_CLEAR,
+         VK_ATTACHMENT_LOAD_OP_LOAD,
          VK_ATTACHMENT_STORE_OP_STORE,
          count_down,
          2, true
@@ -580,7 +598,7 @@ namespace Poulpe
 
       if (has_depth_attachment) {
         _vulkan->transitionImageLayout(cmd_buffer, depth_image,
-          VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT);
+          VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, VK_IMAGE_ASPECT_DEPTH_BIT);
       }
 
       _vulkan->beginRendering(
@@ -767,14 +785,13 @@ namespace Poulpe
 
   void Renderer::swapBufferEntities()
   {
-    if (_entities_buffer.size() < _entities_buffer_swap_treshold 
+    if (_entities_buffer.size() < _entities_buffer_swap_treshold
         && !_force_entities_buffer_swap) return;
 
     {
       std::lock_guard guard(_mutex_entity_submit);
       copy(_entities_buffer.begin(), _entities_buffer.end(), back_inserter(_entities));
       _entities_buffer.clear();
-      _entities_buffer.shrink_to_fit();
       _update_shadow_map = true;
       _force_entities_buffer_swap = false;
     }
