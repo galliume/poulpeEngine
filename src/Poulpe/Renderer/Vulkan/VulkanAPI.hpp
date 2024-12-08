@@ -66,7 +66,8 @@ namespace Poulpe {
       std::vector<Buffer>& uniformBuffers,
       std::vector<Buffer>& storageBuffers,
       VkDescriptorSet& descriptorSet,
-      std::vector<VkDescriptorImageInfo>& imageInfo);
+      std::vector<VkDescriptorImageInfo>& imageInfo,
+      std::vector<VkDescriptorImageInfo>& depth_map_image_info);
 
     void updateDescriptorSet(
       Buffer& uniform_buffer,

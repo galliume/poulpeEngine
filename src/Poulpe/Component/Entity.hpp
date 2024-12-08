@@ -11,22 +11,21 @@ namespace Poulpe
 
   public:
     Entity();
-    ~Entity() = default;
-        
-    inline IDType getID() const { return _ID; }
-    inline std::string getName() const { return _name; }
+
+    IDType getID() const { return _ID; }
+    std::string getName() const { return _name; }
 
     void setName(std::string const & name) { _name = name; }
-    void setVisible(bool visible) { _IsVisible = visible; }
+    void setVisible(bool const visible) { _is_visible = visible; }
 
     bool isDirty() const { return true; }
     bool isHit(glm::vec3 point);
-    bool isVisible() { return _IsVisible; }
+    bool isVisible() const { return _is_visible; }
 
   private:
     IDType _ID{ 0 };
     std::string _name{};
 
-    bool _IsVisible{ true };
+    bool _is_visible{ true };
   };
 }
