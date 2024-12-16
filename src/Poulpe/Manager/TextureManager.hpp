@@ -28,6 +28,7 @@ namespace Poulpe
       std::string const& name,
       std::string const& path,
       ktx_transcode_fmt_e const target_format,
+      VkImageAspectFlags const aspect_flags,
       bool const is_public = false);
     void clear();
     inline const Texture getSkyboxTexture() const { return _skybox; }
@@ -37,7 +38,10 @@ namespace Poulpe
     std::function<void(std::latch& count_down)> loadSkybox(std::string_view skybox);
 
   private:
-    void add(std::string const& name, nlohmann::json const& data);
+    void add(
+      std::string const& name,
+      nlohmann::json const& data,
+      VkImageAspectFlags const aspect_flags);
 
   private:
     const uint32_t MAX_MIPLEVELS = 5;

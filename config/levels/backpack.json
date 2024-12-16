@@ -3,11 +3,22 @@
 		"crate" : {
 			"mesh": "assets/mesh/crate/debug_crate.obj",
 			"textures": {
-				"container2": "assets/mesh/crate/container2.png"
+				"container2": {
+					"path": "assets/mesh/crate/container2.ktx",
+					"ktx_format": "KTX_TTF_BC7_RGBA"
+				}
 			},
-			"textures_map": {
-				"crate_1_normal": "assets/mesh/crate/crate_1_normal.png",
-				"container2_specular": "assets/mesh/crate/container2_specular.png"
+			"orm": {
+				"container2_specular": {
+					"path" : "assets/mesh/crate/container2_specular.ktx",
+					"ktx_format": "KTX_TTF_BC5_RG"
+				}
+			},
+			"normal": {
+				"crate_1_normal": {
+					"path": "assets/mesh/crate/crate_1_normal.ktx",
+					"ktx_format": "KTX_TTF_BC5_RG"
+				}
 			},
 			"shader": "main_basic",
 			"positions": [
@@ -33,13 +44,30 @@
 		"backpack" : {
 			"mesh": "assets/mesh/backpack/backpack.obj",
 			"textures": {
-				"diffuse": "assets/mesh/backpack/diffuse.jpg"
+				"diffuse": {
+					"path": "assets/mesh/backpack/diffuse.ktx",
+					"ktx_format": "KTX_TTF_BC7_RGBA"
+				}
 			},
-			"textures_map": {
-				"ao": "assets/mesh/backpack/ao.jpg",
-				"normal": "assets/mesh/backpack/normal.png",
-				"roughness": "assets/mesh/backpack/roughness.jpg",
-				"specular": "assets/mesh/backpack/specular.jpg"
+			"orm": {
+				"ao": { 
+					"path" : "assets/mesh/backpack/ao.ktx",
+					"ktx_format": "KTX_TTF_BC5_RG"
+				},
+				"roughness": {
+					"path" : "assets/mesh/backpack/roughness.ktx",
+					"ktx_format" : "KTX_TTF_BC5_RG"
+				},
+				"specular": {
+					"path" : "assets/mesh/backpack/specular.ktx",
+					"ktx_format": "KTX_TTF_BC5_RG"
+				}
+			},
+			"normal": {
+				"normal": {
+					"path" : "assets/mesh/backpack/normal.ktx",
+					"ktx_format": "KTX_TTF_BC5_RG"
+				}
 			},
 			"shader": "main_basic",
 			"positions": [
@@ -65,16 +93,42 @@
 		"free_palm" : {
 			"mesh": "assets/mesh/trees/palm_1/free_palm.obj",
 			"textures": {
-				"leaf": "assets/mesh/trees/palm_1/leaf.png",
-				"bark": "assets/mesh/trees/palm_1/bark.png"
+				"leaf": {
+					"path" : "assets/mesh/trees/palm_1/leaf.ktx",
+					"ktx_format": "KTX_TTF_BC7_RGBA"
+				},
+				"bark": {
+					"path" : "assets/mesh/trees/palm_1/bark.ktx",
+					"ktx_format" : "KTX_TTF_BC7_RGBA"
+				}
 			},
-			"textures_map": {
-				"bark_roughness": "assets/mesh/trees/palm_1/bark_roughness.png",
-				"bark_ao": "assets/mesh/trees/palm_1/bark_ao.png",
-				"bark_normal": "assets/mesh/trees/palm_1/bark_normal.png",
-				"leaf_ao": "assets/mesh/trees/palm_1/leaf_ao.png",
-				"leaf_normal": "assets/mesh/trees/palm_1/leaf_normal.png",
-				"leaf_roughness": "assets/mesh/trees/palm_1/leaf_roughness.png"
+			"orm": {
+				"bark_roughness": {
+					"path" : "assets/mesh/trees/palm_1/bark_roughness.ktx",
+					"ktx_format" : "KTX_TTF_BC5_RG"
+				},
+				"bark_ao": {
+					"path" : "assets/mesh/trees/palm_1/bark_ao.ktx",
+					"ktx_format" : "KTX_TTF_BC5_RG"
+				},			
+				"leaf_ao": {
+					"path" : "assets/mesh/trees/palm_1/leaf_ao.ktx",
+					"ktx_format": "KTX_TTF_BC5_RG"
+				},
+				"leaf_roughness": {
+					"path" : "assets/mesh/trees/palm_1/leaf_roughness.ktx",
+					"ktx_format": "KTX_TTF_BC5_RG"
+				}
+			},
+			"normal": {
+				"bark_normal": {
+					"path" : "assets/mesh/trees/palm_1/bark_normal.ktx",
+					"ktx_format" : "KTX_TTF_BC5_RG"
+				},
+				"leaf_normal": {
+					"path" : "assets/mesh/trees/palm_1/leaf_normal.ktx",
+					"ktx_format": "KTX_TTF_BC5_RG"
+				}
 			},
 			"shader": "main_basic",
 			"positions": [
@@ -99,9 +153,14 @@
 		"Grass_Block" : {
 			"mesh": "assets/mesh/minecraft/Grass_Block.obj",
 			"textures": {
-				"Grass_Block_TEX": "assets/mesh/minecraft/Grass_Block_TEX.png"
+				"Grass_Block_TEX": {
+					"path" : "assets/mesh/minecraft/Grass_Block_TEX.ktx",
+					"ktx_format": "KTX_TTF_BC7_RGBA"
+				}
 			},
-			"textures_map": {
+			"orm": {
+			},
+			"normal": {
 			},
 			"shader": "main_basic",
 			"positions": [
@@ -127,9 +186,14 @@
 		"SnowTerrain" : {
 			"mesh": "assets/mesh/SnowTerrain/SnowTerrain.obj",
 			"textures": {
-				"snowterrain": "assets/mesh/SnowTerrain/snowterrain.jpg"
+				"snowterrain": {
+					"path" : "assets/mesh/SnowTerrain/snowterrain.ktx",
+					"ktx_format" : "KTX_TTF_BC7_RGBA"
+				}
 			},
-			"textures_map": {
+			"orm": {
+			},
+			"normal": {
 			},
 			"shader": "main_basic",
 			"positions": [

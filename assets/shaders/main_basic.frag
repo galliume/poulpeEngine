@@ -238,6 +238,6 @@ void main()
 
   //final_color = vec4(vec3(gray_scale_luminance), 1.0);
   
-  final_color = vec4(diffuse_color.xyz, 1.0);
+  final_color = vec4(color.xyz, 1.0);
 }
 

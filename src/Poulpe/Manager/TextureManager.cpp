@@ -191,6 +191,7 @@ namespace Poulpe
     std::string const& name,
     std::string const& path,
     ktx_transcode_fmt_e const target_format,
+    VkImageAspectFlags const aspect_flags,
     bool const is_public)
   {
     if (!std::filesystem::exists(path.c_str())) {
@@ -202,7 +203,6 @@ namespace Poulpe
       PLP_TRACE("Texture {} already imported", name);
       return;
     }
-      PLP_TRACE("Texture {} already imported", name);
 
     _paths.insert({ name, path });
 
@@ -222,7 +222,7 @@ namespace Poulpe
     _renderer->getAPI()->beginCommandBuffer(cmd_buffer);
     _renderer->getAPI()->createKTXImage(cmd_buffer, ktx_texture, texture_image);
 
-    VkImageView texture_imageview = _renderer->getAPI()->createKTXImageView(ktx_texture, texture_image, VK_IMAGE_ASPECT_COLOR_BIT);
+    VkImageView texture_imageview = _renderer->getAPI()->createKTXImageView(ktx_texture, texture_image, aspect_flags);
     VkSampler texture_sampler = _renderer->getAPI()->createKTXSampler(ktx_texture);
 
     Texture texture;
@@ -252,19 +252,22 @@ namespace Poulpe
   {
     return [this](std::latch& count_down) {
       for (auto& [key, texture_data] : _texture_config["textures"].items()) {
-        add(key, texture_data);
+        add(key, texture_data, VK_IMAGE_ASPECT_COLOR_BIT);
       }
       for (auto& [key, texture_data] : _texture_config["normal"].items()) {
-        add(key, texture_data);
+        add(key, texture_data, VK_IMAGE_ASPECT_COLOR_BIT);
       }
       for (auto& [key, texture_data] : _texture_config["orm"].items()) {
-        add(key, texture_data);
+        add(key, texture_data, VK_IMAGE_ASPECT_COLOR_BIT);
       }
       count_down.count_down();
     };
   }
 
-  void TextureManager::add(std::string const& name, nlohmann::json const& data)
+  void TextureManager::add(
+    std::string const& name,
+    nlohmann::json const& data,
+    VkImageAspectFlags const aspect_flags)
   {
     std::filesystem::path p = std::filesystem::current_path();
 
@@ -281,11 +284,13 @@ namespace Poulpe
       fmt = KTX_TTF_BC5_RG;
     } else if (ktx_format == "KTX_TTF_BC3_RGBA") {
       fmt = KTX_TTF_BC3_RGBA;
+    } else if (ktx_format == "KTX_TTF_BC4_R") {
+      fmt = KTX_TTF_BC4_R;
     } else {
       PLP_ERROR("Unknown ktx_format {}", ktx_format);
     }
 
-    addKTXTexture(name, path, fmt, true);
+    addKTXTexture(name, path, fmt, aspect_flags, true);
   }
 
   std::function<void(std::latch& count_down)> TextureManager::loadSkybox(std::string_view skybox)
