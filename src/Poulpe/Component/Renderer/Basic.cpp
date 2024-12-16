@@ -27,12 +27,21 @@ namespace Poulpe
     if (texture_specular.getWidth() == 0) {
       texture_specular = _texture_manager->getTextures()["_plp_empty"];
     }
+
+    std::string const metal_roughness_map_name{ mesh->getData()->_metal_roughness};
+    Texture texture_metal_roughness { _texture_manager->getTextures()[metal_roughness_map_name] };
+
+    if (texture_metal_roughness.getWidth() == 0) {
+      texture_metal_roughness = _texture_manager->getTextures()["_plp_empty"];
+    }
+
     //VkDescriptorImageInfo shadowMapSpot{};
     //shadowMapSpot.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
     //shadowMapSpot.imageview = _renderer->getDepthMapImageViews()->at(1);
     //shadowMapSpot.sampler = _renderer->getDepthMapSamplers()->at(1);
     image_info.emplace_back(texture_specular.getSampler(), texture_specular.getImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
     image_info.emplace_back(texture_bump.getSampler(), texture_bump.getImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+    image_info.emplace_back(texture_metal_roughness.getSampler(), texture_metal_roughness.getImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
     std::vector<VkDescriptorImageInfo> depth_map_image_info{};
     depth_map_image_info.emplace_back(_renderer->getDepthMapSamplers(), _renderer->getDepthMapImageViews(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
@@ -199,7 +208,7 @@ namespace Poulpe
       //PLP_DEBUG("ambient {}",  material.ambient.r);
       //PLP_DEBUG("diffuse {}",  material.diffuse.r);
       //PLP_DEBUG("specular {}",  material.specular.r);
-      //PLP_DEBUG("shi_ior_diss {}",  material.shi_ior_diss.x);
+      //PLP_DEBUG("shi_ior_diss {} {}", material.shi_ior_diss.x, material.shi_ior_diss.y);
 
       ObjectBuffer objectBuffer{};
       objectBuffer.point_lights[0] = _light_manager->getPointLights().at(0);

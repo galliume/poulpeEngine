@@ -600,6 +600,7 @@ namespace Poulpe {
     VkImage& image,
     VkFormat const format,
     uint32_t const mip_lvl,
+    unsigned int scale,
     VkImageAspectFlags const aspect_flags)
   {
     VkImageView swapchain_image_view{};
@@ -610,9 +611,16 @@ namespace Poulpe {
     create_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
     create_info.format = format;
     create_info.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
-    create_info.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
-    create_info.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
-    create_info.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
+
+    if (scale >= 2) {
+      create_info.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
+    }
+    if (scale >= 3) {
+      create_info.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
+    }
+    if (scale == 4) {
+      create_info.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
+    }
     create_info.subresourceRange.aspectMask = aspect_flags;
     create_info.subresourceRange.baseMipLevel = 0;
     create_info.subresourceRange.levelCount = mip_lvl;
@@ -932,7 +940,7 @@ namespace Poulpe {
       if (result != VK_SUCCESS) {
         PLP_ERROR("failed to get graphics pipeline cache size!");
       }
-      result = vkCreateGraphicsPipelines(_device, pipeline_cache, 1, & pipeline_info, nullptr, & graphics_pipeline);
+      result = vkCreateGraphicsPipelines(_device, VK_NULL_HANDLE, 1, & pipeline_info, nullptr, & graphics_pipeline);
 
       if (result != VK_SUCCESS) {
         PLP_ERROR("failed to create graphics pipeline cache!");
@@ -2277,9 +2285,9 @@ namespace Poulpe {
     uint32_t const tex_height,
     uint32_t const mip_lvl,
     VkImage& texture_image,
-    VkFormat const format)
+    VkFormat const format,
+    unsigned int const scale)
   {
-    auto scale = (format == VK_FORMAT_R8G8B8_UNORM) ? 3 : 4;
     VkDeviceSize image_size = tex_width * tex_height * scale;
     VkBuffer buffer = createBuffer(image_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT);
     VkMemoryRequirements mem_requirements;
@@ -2324,6 +2332,7 @@ namespace Poulpe {
       static_cast<uint32_t>(tex_height), mip_lvl);
 
     generateMipmaps(cmd_buffer, format, texture_image, tex_width, tex_height, mip_lvl);
+    
     endCommandBuffer(cmd_buffer);
     queueSubmit(cmd_buffer);
     //_device_memory_pool->clear(device_memory);
@@ -2450,9 +2459,10 @@ namespace Poulpe {
       blit.dstSubresource.baseArrayLayer = 0;
       blit.dstSubresource.layerCount = layer_count;
 
-      vkCmdBlitImage(cmd_buffer, image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, image,
-        VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, & blit, VK_FILTER_LINEAR);
-
+      if (image_format != VK_FORMAT_BC5_UNORM_BLOCK && image_format != VK_FORMAT_BC7_SRGB_BLOCK) {
+        vkCmdBlitImage(cmd_buffer, image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, image,
+          VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &blit, VK_FILTER_LINEAR);
+      }
       barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
       barrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
       barrier.srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
@@ -2538,7 +2548,7 @@ namespace Poulpe {
       VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
       depth_image);
 
-    depth_imageview = createImageView(depth_image, depth_format, 1);
+    depth_imageview = createImageView(depth_image, depth_format, 1, 1);
 
     VkImageAspectFlags aspect_mask = VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT;
 
@@ -2821,5 +2831,150 @@ namespace Poulpe {
       //vkQueueWaitIdle(queue);
       //vkDeviceWaitIdle(_device);
     }
+  }
+
+  void VulkanAPI::createKTXImage(
+    VkCommandBuffer& cmd_buffer,
+    ktxTexture2 * ktx_texture,
+    VkImage& image)
+  {
+    VkBuffer buffer = createBuffer(ktx_texture->dataSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT);
+    VkMemoryRequirements mem_requirements;
+
+    vkGetBufferMemoryRequirements(_device, buffer, &mem_requirements);
+
+    auto const memory_type = findMemoryType(mem_requirements.memoryTypeBits,
+                                      VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+
+    VkDeviceSize const size { mem_requirements.size};
+
+    auto device_memory = _device_memory_pool->get(
+      _device,
+      mem_requirements.size,
+      memory_type,
+      VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+      mem_requirements.alignment,
+      DeviceMemoryPool::DeviceBufferType::STAGING);
+
+    auto const offset = device_memory->getOffset();
+    device_memory->bindBufferToMemory(buffer, size);
+
+    void* data;
+    vkMapMemory(_device, *device_memory->getMemory(), offset, size, 0, &data);
+    memcpy(data, ktx_texture->pData, static_cast<size_t>(size));
+    vkUnmapMemory(_device, *device_memory->getMemory());
+
+    VkFormat const format = (VkFormat) ktx_texture->vkFormat;
+    auto const width { static_cast<uint32_t>(ktx_texture->baseWidth) };
+    auto const height { static_cast<uint32_t>(ktx_texture->baseHeight) };
+    auto const mip_lvl{ ktx_texture->numLevels };
+
+    createImage(width,
+                height,
+                mip_lvl,
+                VK_SAMPLE_COUNT_1_BIT,
+                format,
+                VK_IMAGE_TILING_OPTIMAL,
+                VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+                VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+                image);
+
+    auto rdr_barrier = setupImageMemoryBarrier(
+      image, 0, VK_ACCESS_TRANSFER_WRITE_BIT, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+
+    std::vector<VkImageMemoryBarrier> barrier{ rdr_barrier };
+
+    addPipelineBarriers(cmd_buffer,
+                        barrier,
+                        VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
+                        VK_PIPELINE_STAGE_TRANSFER_BIT,
+                        VK_DEPENDENCY_BY_REGION_BIT);
+
+    copyBufferToImage(cmd_buffer,
+                      buffer,
+                      image,
+                      width,
+                      height,
+                      mip_lvl);
+
+    generateMipmaps(cmd_buffer, format, image, width, height, mip_lvl);
+    
+    endCommandBuffer(cmd_buffer);
+    queueSubmit(cmd_buffer);
+    //_device_memory_pool->clear(device_memory);
+  }
+
+
+  //KTX
+
+  VkImageView VulkanAPI::createKTXImageView(
+    ktxTexture2 * ktx_texture,
+    VkImage& image,
+    VkImageAspectFlags aspect_flags)
+  {
+    VkFormat const format = (VkFormat) ktx_texture->vkFormat;
+
+    VkImageViewCreateInfo create_info{};
+    create_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+    create_info.image = image;
+
+    if (ktx_texture->numDimensions == 1) {
+      create_info.viewType = VK_IMAGE_VIEW_TYPE_1D;
+    } else if (ktx_texture->numDimensions == 2) {
+      create_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
+    } else if (ktx_texture->numDimensions == 3) {
+      create_info.viewType = VK_IMAGE_VIEW_TYPE_3D;
+    }
+
+    create_info.format = format;
+    create_info.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
+    create_info.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
+    create_info.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
+    create_info.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
+
+    create_info.subresourceRange.aspectMask = aspect_flags;
+    create_info.subresourceRange.baseMipLevel = 0;
+    create_info.subresourceRange.levelCount = ktx_texture->numLevels;
+    create_info.subresourceRange.baseArrayLayer = 0;
+    create_info.subresourceRange.layerCount = 1;
+
+    VkResult result{ VK_SUCCESS };
+    VkImageView image_view{};
+
+    result = vkCreateImageView(_device, &create_info, nullptr, &image_view);
+
+    if (result != VK_SUCCESS) {
+      PLP_ERROR("failed to create image view.");
+    }
+
+    return image_view;
+  }
+
+  VkSampler VulkanAPI::createKTXSampler(ktxTexture2 * ktx_texture)
+  {
+    VkSampler texture_sampler{};
+
+    VkSamplerCreateInfo sample_info{};
+    sample_info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+    sample_info.magFilter = VK_FILTER_LINEAR;
+    sample_info.minFilter = VK_FILTER_LINEAR;
+    sample_info.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+    sample_info.addressModeV = sample_info.addressModeU;
+    sample_info.addressModeW = sample_info.addressModeU;
+    sample_info.maxAnisotropy = _device_props.limits.maxSamplerAnisotropy;
+    sample_info.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
+    sample_info.unnormalizedCoordinates = VK_FALSE;
+    sample_info.compareEnable = VK_FALSE;
+    sample_info.compareOp = VK_COMPARE_OP_ALWAYS;
+    sample_info.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+    sample_info.minLod = 0.0f;
+    sample_info.maxLod = static_cast<float>(ktx_texture->numLevels);
+    sample_info.mipLodBias = 0.0f;
+    sample_info.borderColor = VK_BORDER_COLOR_FLOAT_TRANSPARENT_BLACK;
+
+    if (vkCreateSampler(_device, & sample_info, nullptr, & texture_sampler) != VK_SUCCESS) {
+      throw std::runtime_error("failed to create texture sampler!");
+    }
+    return texture_sampler;
   }
 }

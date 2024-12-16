@@ -69,7 +69,7 @@ namespace Poulpe
           VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, image);
 
       _imageviews[i] = _vulkan->createImageView(_images[i],
-        _vulkan->getSwapChainImageFormat(), VK_IMAGE_ASPECT_COLOR_BIT);
+        _vulkan->getSwapChainImageFormat(), VK_IMAGE_ASPECT_COLOR_BIT, 4);
       _samplers[i] = _vulkan->createTextureSampler(1);
 
       VkImage depth_image;
@@ -89,6 +89,7 @@ namespace Poulpe
       VkImageView depth_imageview = _vulkan->createImageView(
         depth_image,
         VK_FORMAT_D16_UNORM,
+        1,
         1,
         VK_IMAGE_ASPECT_DEPTH_BIT);
 
@@ -114,6 +115,7 @@ namespace Poulpe
       VkImageView depth_imageview2 = _vulkan->createImageView(
         depth_image2,
         VK_FORMAT_D16_UNORM,
+        1,
         1,
         VK_IMAGE_ASPECT_DEPTH_BIT);
 
@@ -522,7 +524,7 @@ namespace Poulpe
          _depth_imageviews[_current_frame],
          _depth_images[_current_frame],
          _entities,
-         VK_ATTACHMENT_LOAD_OP_LOAD,
+         VK_ATTACHMENT_LOAD_OP_CLEAR,
          VK_ATTACHMENT_STORE_OP_STORE,
          count_down,
          2, true

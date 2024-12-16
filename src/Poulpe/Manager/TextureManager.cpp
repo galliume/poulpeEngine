@@ -117,7 +117,7 @@ namespace Poulpe
   void TextureManager::addTexture(
     std::string const& name,
     std::string const& path,
-    bool const is_unorm,
+    VkFormat const format,
     bool const is_public)
   {
     if (!std::filesystem::exists(path.c_str())) {
@@ -129,12 +129,17 @@ namespace Poulpe
       PLP_TRACE("Texture {} already imported", name);
       return;
     }
+      PLP_TRACE("Texture {} already imported", name);
 
     _paths.insert({ name, path });
 
     auto flags{ STBI_rgb_alpha };
+    unsigned int scale{ 4 };
 
-    //if (is_unorm) flags = STBI_default;
+    if (format == VK_FORMAT_BC5_UNORM_BLOCK) {
+      flags = STBI_grey_alpha;
+      scale = 2;
+    }
 
     int tex_width = 0, tex_height = 0, tex_channels = 0;
     stbi_uc* pixels = stbi_load(path.c_str(), &tex_width, &tex_height, &tex_channels, flags);
@@ -151,9 +156,6 @@ namespace Poulpe
     VkCommandPool commandPool = _renderer->getAPI()->createCommandPool();
     VkCommandBuffer cmd_buffer = _renderer->getAPI()->allocateCommandBuffers(commandPool)[0];
 
-    //@todo check BC compressed format
-    VkFormat format = (is_unorm) ? VK_FORMAT_R8G8B8A8_UNORM: VK_FORMAT_R8G8B8A8_SRGB;
-
     _renderer->getAPI()->beginCommandBuffer(cmd_buffer);
     _renderer->getAPI()->createTextureImage(cmd_buffer,
       pixels,
@@ -161,9 +163,10 @@ namespace Poulpe
       static_cast<uint32_t>(tex_height),
       mip_lvls,
       texture_image,
-      format);
+      format,
+      scale);
 
-    VkImageView texture_imageview = _renderer->getAPI()->createImageView(texture_image, format, mip_lvls);
+    VkImageView texture_imageview = _renderer->getAPI()->createImageView(texture_image, format, mip_lvls, scale);
     VkSampler texture_sampler = _renderer->getAPI()->createTextureSampler(mip_lvls);
 
     Texture texture;
@@ -184,6 +187,61 @@ namespace Poulpe
     vkDestroyCommandPool(_renderer->getDevice(), commandPool, nullptr);
   }
 
+  void TextureManager::addKTXTexture(
+    std::string const& name,
+    std::string const& path,
+    ktx_transcode_fmt_e const target_format,
+    bool const is_public)
+  {
+    if (!std::filesystem::exists(path.c_str())) {
+      PLP_FATAL("texture file {} does not exits.", path);
+      //return;
+    }
+
+    if (0 != _textures.count(name.c_str())) {
+      PLP_TRACE("Texture {} already imported", name);
+      return;
+    }
+      PLP_TRACE("Texture {} already imported", name);
+
+    _paths.insert({ name, path });
+
+    ktxTexture2 *ktx_texture;
+    KTX_error_code result = ktxTexture_CreateFromNamedFile(path.c_str(), KTX_TEXTURE_CREATE_LOAD_IMAGE_DATA_BIT, (ktxTexture**)&ktx_texture);
+
+    if (ktxTexture2_NeedsTranscoding(ktx_texture)) {
+      ktxTexture2_TranscodeBasis(ktx_texture, target_format, 0);
+    }
+
+    VkFormat format = (VkFormat) ktx_texture->vkFormat;
+    VkImage texture_image = nullptr;
+   
+    VkCommandPool commandPool = _renderer->getAPI()->createCommandPool();
+    VkCommandBuffer cmd_buffer = _renderer->getAPI()->allocateCommandBuffers(commandPool)[0];
+
+    _renderer->getAPI()->beginCommandBuffer(cmd_buffer);
+    _renderer->getAPI()->createKTXImage(cmd_buffer, ktx_texture, texture_image);
+
+    VkImageView texture_imageview = _renderer->getAPI()->createKTXImageView(ktx_texture, texture_image, VK_IMAGE_ASPECT_COLOR_BIT);
+    VkSampler texture_sampler = _renderer->getAPI()->createKTXSampler(ktx_texture);
+
+    Texture texture;
+    texture.setName(name);
+    texture.setImage(texture_image);
+    texture.setImageView(texture_imageview);
+    texture.setSampler(texture_sampler);
+    texture.setMipLevels(ktx_texture->numLevels);
+    texture.setWidth(static_cast<uint32_t>(ktx_texture->baseWidth));
+    texture.setHeight(static_cast<uint32_t>(ktx_texture->baseHeight));
+    texture.setIsPublic(is_public);
+    texture.setPath(path);
+
+    _textures.emplace(name, texture);
+
+    vkFreeCommandBuffers(_renderer->getDevice(), commandPool, 1, &cmd_buffer);
+    vkDestroyCommandPool(_renderer->getDevice(), commandPool, nullptr);
+  }
+
   void TextureManager::clear()
   {
     _textures.clear();
@@ -193,18 +251,41 @@ namespace Poulpe
   std::function<void(std::latch& count_down)> TextureManager::load()
   {
     return [this](std::latch& count_down) {
-      std::filesystem::path p = std::filesystem::current_path();
-
-      for (auto& [key, path] : _texture_config["textures"].items()) {
-        auto absolute_path = p.string() + "/" + static_cast<std::string>(path);
-        addTexture(key, absolute_path, false, true);
+      for (auto& [key, texture_data] : _texture_config["textures"].items()) {
+        add(key, texture_data);
       }
-      for (auto& [key, path] : _texture_config["textures_map"].items()) {
-        auto absolute_path = p.string() + "/" + static_cast<std::string>(path);
-        addTexture(key, absolute_path, true, true);
+      for (auto& [key, texture_data] : _texture_config["normal"].items()) {
+        add(key, texture_data);
+      }
+      for (auto& [key, texture_data] : _texture_config["orm"].items()) {
+        add(key, texture_data);
       }
       count_down.count_down();
     };
+  }
+
+  void TextureManager::add(std::string const& name, nlohmann::json const& data)
+  {
+    std::filesystem::path p = std::filesystem::current_path();
+
+    std::string const path{ p.string() + "/" + data.at("path").get<std::string>() };
+    std::string const ktx_format{ data.at("ktx_format").get<std::string>() };
+
+    ktx_transcode_fmt_e fmt{};
+
+    if (ktx_format == "KTX_TTF_BC7_RGBA") {
+      fmt = KTX_TTF_BC7_RGBA;
+    } else if (ktx_format == "KTX_TTF_BC1_RGB") {
+      fmt = KTX_TTF_BC1_RGB;
+    } else if (ktx_format == "KTX_TTF_BC5_RG") {
+      fmt = KTX_TTF_BC5_RG;
+    } else if (ktx_format == "KTX_TTF_BC3_RGBA") {
+      fmt = KTX_TTF_BC3_RGBA;
+    } else {
+      PLP_ERROR("Unknown ktx_format {}", ktx_format);
+    }
+
+    addKTXTexture(name, path, fmt, true);
   }
 
   std::function<void(std::latch& count_down)> TextureManager::loadSkybox(std::string_view skybox)
