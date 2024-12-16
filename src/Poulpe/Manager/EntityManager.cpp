@@ -69,11 +69,13 @@ namespace Poulpe
     Entity* root_mesh_entity = new Entity();
     root_mesh_entity->setName(name);
     root_mesh_entity->setVisible(false);
+    
+    EntityNode* root_mesh_entity_node = new EntityNode(root_mesh_entity);
 
     auto const& path = data["mesh"].template get<std::string>();
     auto const inverse_texture_y = data["inverseTextureY"].template get<bool>();
 
-    auto callback = [this, data, path, root_mesh_entity](
+    auto callback = [this, data, path, root_mesh_entity_node](
       PlpMeshData const _data,
       std::vector<material_t> const materials,
       bool const exists,
@@ -110,9 +112,13 @@ namespace Poulpe
     for (auto& [keyTex, pathTex] : data["textures"].items()) {
       textures.emplace_back(static_cast<std::string>(keyTex));
     }
-    for (auto& [keyTex, pathTex] : data["textures_map"].items()) {
+    for (auto& [keyTex, pathTex] : data["normal"].items()) {
       textures.emplace_back(static_cast<std::string>(keyTex));
     }
+    for (auto& [keyTex, pathTex] : data["orm"].items()) {
+      textures.emplace_back(static_cast<std::string>(keyTex));
+    }
+
     bool const has_bbox = data["hasBbox"].template get<bool>();
     bool const has_animation = data["hasAnimation"].template get<bool>();
     bool const is_point_light = data["isPointLight"].template get<bool>();
@@ -136,7 +142,6 @@ namespace Poulpe
       data["isIndexed"].template get<bool>()
     };
 
-      EntityNode* root_mesh_entity_node = new EntityNode(root_mesh_entity);
 
       std::unique_ptr<Mesh>mesh = std::make_unique<Mesh>();
       mesh->setName(_data.name);
@@ -153,6 +158,7 @@ namespace Poulpe
       std::string name_specular_map{ "_plp_empty" };
       std::string name_bump_map{ "_plp_empty" };
       std::string name_alpha_map{ "_plp_empty" };
+      std::string name_texture_metal_roughness{ "_plp_empty" };
 
       if (!materials.empty()) {
 
@@ -182,6 +188,10 @@ namespace Poulpe
         if (!mat.name_texture_alpha.empty()) {
           name_alpha_map = mat.name_texture_alpha;
         }
+
+        if (!mat.name_texture_metal_roughness.empty()) {
+          name_texture_metal_roughness = mat.name_texture_metal_roughness;
+        }
       }
 
       Data data{};
@@ -190,6 +200,7 @@ namespace Poulpe
       data._specular_map = name_specular_map;
       data._bump_map = name_bump_map;
       data._alpha = name_alpha_map;
+      data._metal_roughness = name_texture_metal_roughness;
       data._vertices = _data.vertices;
       data._indices = _data.indices;
       data._origin_pos = entity_opts.pos;
@@ -213,6 +224,7 @@ namespace Poulpe
 
       //ubo.view = glm::mat4(1.0f);
       data._ubos.emplace_back(ubo);
+      data._original_ubo = ubo;
 
       glm::vec3 center = glm::vec3(0.0);
       glm::vec3 size = glm::vec3(0.0);
@@ -260,24 +272,12 @@ namespace Poulpe
 
       mesh->setData(data);
       //mesh->addBBox(box);
+      
+      bool const is_last{ (_data.id == 0) ? true : false };
 
       auto* entity = new Entity();
       entity->setName(_data.name);
-
-      if (mesh->has_animation()) {
-        //@todo temp until lua scripting
-        for (auto& anim : entity_opts.animation_scripts) {
-          auto animationScript = std::make_unique<AnimationScript>(anim);
-          animationScript->init(_renderer, nullptr, nullptr);
-          _component_manager->add<AnimationComponent>(entity->getID(), std::move(animationScript));
-        }
-
-        if (!animations.empty()) {
-          auto boneAnimationScript = std::make_unique<BoneAnimationScript>(animations, positions, rotations, scales);
-          _component_manager->add<BoneAnimationComponent>(
-            entity->getID(), std::move(boneAnimationScript));
-        }
-      }
+     
       auto basicRdrImpl = RendererFactory::create<Basic>();
 
       basicRdrImpl->init(_renderer, _texture_manager, _light_manager);
@@ -286,13 +286,30 @@ namespace Poulpe
 
       _component_manager->add<RenderComponent>(entity->getID(), std::move(basicRdrImpl));
       _component_manager->add<MeshComponent>(entity->getID(), std::move(mesh));
-      {
-        std::shared_lock guard(_mutex_shared);
-        auto* entityNode = root_mesh_entity_node->addChild(new EntityNode(entity));
-        _world_node->addChild(root_mesh_entity_node);
-        bool const is_last{ (_data.id == 0) ? true : false };
+      auto* entityNode = root_mesh_entity_node->addChild(new EntityNode(entity));
+      _renderer->addEntity(entityNode->getEntity(), is_last);
+      
+      if (is_last) {
+        {
+          if (has_animation) {
+            //@todo temp until lua scripting
+            for (auto& anim : entity_opts.animation_scripts) {
+              auto animationScript = std::make_unique<AnimationScript>(anim);
+              animationScript->init(_renderer, nullptr, nullptr);
+              _component_manager->add<AnimationComponent>(root_mesh_entity_node->getEntity()->getID(), std::move(animationScript));
+            }
 
-        _renderer->addEntity(entityNode->getEntity(), is_last);
+            if (!animations.empty()) {
+              auto boneAnimationScript = std::make_unique<BoneAnimationScript>(animations, positions, rotations, scales);
+              _component_manager->add<BoneAnimationComponent>(
+              root_mesh_entity_node->getEntity()->getID(), std::move(boneAnimationScript));
+            }
+          }
+
+          std::shared_lock guard(_mutex_shared);
+          root_mesh_entity_node->setIsLoaded(true);
+          _world_node->addChild(root_mesh_entity_node);
+        }
       }
     };
     AssimpLoader::loadData(path, inverse_texture_y, callback);

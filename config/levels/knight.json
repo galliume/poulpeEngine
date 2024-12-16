@@ -1,0 +1,67 @@
+{
+  "entities": {
+    "knight" : {
+      "mesh": "assets/mesh/pkg_e_knight_anim/knight_USD_PREVIEW_SURFACE_ANIM_002_1.usd",
+      "textures": {
+        "Textures_cloth_diffuse_D": "assets/mesh/pkg_e_knight_anim/Textures/cloth_diffuse_D.png",
+        "Textures_leather_diffuse_D": "assets/mesh/pkg_e_knight_anim/Textures/leather_diffuse_D.png",
+        "Textures_shield_final_diffuse_A": "assets/mesh/pkg_e_knight_anim/Textures/shield_final_diffuse_A.png",
+        "Textures_sword_diffuse_C": "assets/mesh/pkg_e_knight_anim/Textures/sword_diffuse_C.png"
+      },
+      "textures_map": {
+        "Textures_brushed_metal_rough_D": "assets/mesh/pkg_e_knight_anim/Textures/brushed_metal_rough_D.png",
+        "Textures_brushed_metal_rough_F": "assets/mesh/pkg_e_knight_anim/Textures/brushed_metal_rough_F.png",
+        "Textures_cloth_normal_D": "assets/mesh/pkg_e_knight_anim/Textures/cloth_normal_D.png",
+        "Textures_shield_final_normal_A": "assets/mesh/pkg_e_knight_anim/Textures/shield_final_normal_A.png",
+        "Textures_sword_rough_D": "assets/mesh/pkg_e_knight_anim/Textures/sword_rough_D.png"
+      },
+      "shader": "main_basic",
+      "positions": [
+        {"x": 0.0, "y": 1.0, "z": 0.0 }
+      ],
+      "scales": [
+        {"x": 1.0, "y": 1.0, "z": 1.0}
+      ],
+      "rotations": [
+        {"x": 0.0, "y": 0.0, "z": 0.0}
+      ],
+      "inverseTextureY": false,
+      "count": 1,
+      "hasBbox": false,
+      "hasAnimation": false,
+      "isPointLight": false,
+      "animationScripts": {
+        "anim0" : "assets/scripts/animation/backpack/anim0.lua"
+      },
+      "hasShadow": true,
+      "isIndexed": true
+    },
+	"SnowTerrain" : {
+		"mesh": "assets/mesh/SnowTerrain/SnowTerrain.obj",
+		"textures": {
+			"snowterrain": "assets/mesh/SnowTerrain/snowterrain.jpg"
+		},
+		"textures_map": {
+		},
+		"shader": "main_basic",
+		"positions": [
+			{"x": 0.0, "y": -0.25, "z": 0.0}
+		],
+		"scales": [
+			{"x": 1.0, "y": 1.0, "z": 1.0}
+		],
+		"rotations": [
+			{"x": 0.0, "y": 0.0, "z": 0.0}
+		],
+		"inverseTextureY": true,
+		"count": 1,
+		"hasBbox": false,
+		"hasAnimation": false,
+		"animationScripts": {
+		},
+		"isPointLight": false,
+		"hasShadow": false,
+		"isIndexed": true			
+	}
+  }
+}

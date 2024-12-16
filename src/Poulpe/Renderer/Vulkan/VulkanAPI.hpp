@@ -6,6 +6,7 @@
 
 #include "Poulpe/Renderer/Vulkan/DeviceMemoryPool.hpp"
 
+#include <ktx.h>
 #include <stb_image.h>
 
 namespace Poulpe {
@@ -66,7 +67,8 @@ namespace Poulpe {
       std::vector<Buffer>& uniformBuffers,
       std::vector<Buffer>& storageBuffers,
       VkDescriptorSet& descriptorSet,
-      std::vector<VkDescriptorImageInfo>& imageInfo);
+      std::vector<VkDescriptorImageInfo>& imageInfo,
+      std::vector<VkDescriptorImageInfo>& depth_map_image_info);
 
     void updateDescriptorSet(
       Buffer& uniform_buffer,
@@ -191,6 +193,7 @@ namespace Poulpe {
       VkImage& image,
       VkFormat const format,
       uint32_t const mip_lvl,
+      unsigned int scale,
       VkImageAspectFlags const aspect_flags = VK_IMAGE_ASPECT_COLOR_BIT);
         
     VkImageView createSkyboxImageView(
@@ -206,7 +209,8 @@ namespace Poulpe {
       uint32_t const tex_height,
       uint32_t const mip_lvl,
       VkImage& texture_image,
-      VkFormat const format);
+      VkFormat const format,
+      unsigned int const scale);
 
     void createSkyboxTextureImage(
       VkCommandBuffer& cmd_buffer,
@@ -437,6 +441,20 @@ namespace Poulpe {
       VkImageLayout const old_layout,
       VkImageLayout const new_layout,
       VkImageAspectFlags const aspect_flags);
+
+
+    //KTX
+    void createKTXImage(
+      VkCommandBuffer& cmd_buffer,
+      ktxTexture2 * ktx_texture,
+      VkImage& image);
+
+    VkImageView createKTXImageView(
+      ktxTexture2 * ktx_texture,
+      VkImage& image,
+      VkImageAspectFlags aspect_flags);
+
+    VkSampler createKTXSampler(ktxTexture2 * ktx_texture);
 
 public:
     bool _FramebufferResized = false;

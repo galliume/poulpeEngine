@@ -1,0 +1,44 @@
+{
+	"entities": {
+		"NormalTangentMirrorTest" : {
+			"mesh": "assets/mesh/NormalTangentMirrorTest/gLTF/NormalTangentMirrorTest.gltf",
+			"textures": {
+				"NormalTangentMirrorTest_BaseColor": {
+					"path" : "assets/mesh/NormalTangentMirrorTest/glTF/NormalTangentMirrorTest_BaseColor.ktx",
+					"ktx_format": "KTX_TTF_BC7_RGBA"
+				}
+			},
+			"orm": {
+				"NormalTangentMirrorTest_OcclusionRoughnessMetallic": {
+					"path" : "assets/mesh/NormalTangentMirrorTest/glTF/NormalTangentMirrorTest_OcclusionRoughnessMetallic.ktx",
+					"ktx_format": "KTX_TTF_BC5_RG"
+				}
+			},
+			"normal": {
+				"NormalTangentTest_Normal": {
+					"path": "assets/mesh/NormalTangentMirrorTest/glTF/NormalTangentTest_Normal.ktx",
+					"ktx_format" : "KTX_TTF_BC5_RG"
+				}
+			},
+			"shader": "main_basic",
+			"positions": [
+				{"x": 0.0, "y": 0.0, "z": -2.0}
+			],
+			"scales": [
+				{"x": 1.0, "y": 1.0, "z": 1.0 }
+			],
+			"rotations": [
+				{"x": 0.0, "y": 0.0, "z": 0.0}
+			],
+			"inverseTextureY": true,
+			"count": 1,
+			"hasBbox": false,
+			"hasAnimation": false,
+			"isPointLight": false,
+			"animationScripts": {
+			},
+			"hasShadow": true,	
+			"isIndexed": true						
+		}
+	}
+}
