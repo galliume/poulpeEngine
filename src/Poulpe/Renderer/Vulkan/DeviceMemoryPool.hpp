@@ -42,7 +42,7 @@ namespace Poulpe
 
     unsigned int _device_memory_count{ 0 };
     unsigned int const _max_uniform{ 1000 };
-    unsigned int const _max_storage{ 5 };
-    unsigned int const _max_staging{ 5 };
+    unsigned int const _max_storage{ 10 };
+    unsigned int const _max_staging{ 10 };
   };
 }

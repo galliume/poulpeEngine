@@ -49,11 +49,11 @@ namespace Poulpe
       aiProcess_JoinIdenticalVertices |
       aiProcess_GenNormals |
       aiProcess_CalcTangentSpace |
-      aiProcess_OptimizeMeshes };
+      aiProcess_OptimizeMeshes
+    };
+//      flags |= aiProcess_FlipUVs;
 
-    if (inverse_texture_y) {
-      flags |= aiProcess_FlipUVs;
-    }
+    PLP_DEBUG("Loading {}", path);
 
     const aiScene* scene = importer.ReadFile(path, flags);
 
@@ -72,27 +72,29 @@ namespace Poulpe
 
         material_t material{};
 
+        aiString texture_file;
+        mat->Get(AI_MATKEY_TEXTURE(aiTextureType_DIFFUSE, 0), texture_file);
+        if(auto texture = scene->GetEmbeddedTexture(texture_file.C_Str())) {
+          //returned pointer is not null, read texture from memory
+        }
+        //PLP_DEBUG("texture_file {}", texture_file.C_Str());
         material.name = mat->GetName().C_Str();
 
         aiColor3D ambientColor(1.f);
         if (mat->Get(AI_MATKEY_COLOR_AMBIENT, ambientColor) == AI_SUCCESS) {
           material.ambient = { ambientColor.r, ambientColor.g, ambientColor.b };
-          if (material.ambient.r == 0) material.ambient = glm::vec3{ 1.f };
         }
         aiColor3D diffuseColor(1.f);
         if (mat->Get(AI_MATKEY_COLOR_DIFFUSE, diffuseColor) == AI_SUCCESS) {
           material.diffuse = { diffuseColor.r, diffuseColor.g, diffuseColor.b };
-          if (material.diffuse.r == 0) material.diffuse = glm::vec3{ 1.f };
         }
         aiColor3D specularColor(1.f);
         if (mat->Get(AI_MATKEY_COLOR_SPECULAR, specularColor) == AI_SUCCESS) {
           material.specular = { specularColor.r, specularColor.g, specularColor.b };
-          if (material.specular.r == 0) material.specular = glm::vec3{ 1.f };
         }
         aiColor3D transmittanceColor(1.f);
         if (mat->Get(AI_MATKEY_COLOR_TRANSPARENT, transmittanceColor) == AI_SUCCESS) {
           material.transmittance = { transmittanceColor.r, transmittanceColor.g, transmittanceColor.b };
-          if (material.transmittance.r == 0) material.transmittance = glm::vec3{ 1.f };
         }
         float shininess{ 1.f };
         if (mat->Get(AI_MATKEY_SHININESS, shininess) == AI_SUCCESS) {
@@ -160,6 +162,12 @@ namespace Poulpe
               material.name_texture_alpha = AssimpLoader::cleanName(alphaTexturePath.C_Str());
           }
         }
+        if (mat->GetTextureCount(aiTextureType_UNKNOWN) > 0) {
+          aiString metalRoughnessTexturePath;
+          if (mat->GetTexture(aiTextureType_UNKNOWN, 0, &metalRoughnessTexturePath) == AI_SUCCESS) {
+              material.name_texture_metal_roughness = AssimpLoader::cleanName(metalRoughnessTexturePath.C_Str());
+          }
+        }
         //int illumModel;
         //if (mat->Get(AI_MATKEY_ILLUM, illumModel) == AI_SUCCESS) {
         //  material.illum = material.illum;
@@ -210,9 +218,11 @@ namespace Poulpe
     }
 
     size_t countdown { scene->mNumMeshes };
-
+    //PLP_DEBUG("{} meshes to load", scene->mNumMeshes);
     for (unsigned int i{ 0 }; i < scene->mNumMeshes; i++) {
       PlpMeshData meshData{};
+      
+      //PLP_DEBUG("{}/{} done", i, scene->mNumMeshes);
      
       aiMesh const* mesh = scene->mMeshes[i];
       meshData.name = mesh->mName.C_Str() + std::to_string(i);
@@ -246,7 +256,7 @@ namespace Poulpe
 
           glm::vec4 tangent(0.f, 0.f, 1.f, 1.f);
 
-          if (nullptr != mesh->mTangents) {
+          if (mesh->HasTangentsAndBitangents()) {
               tangent.x += mesh->mTangents[j].x;
               tangent.y += mesh->mTangents[j].y;
               tangent.z += mesh->mTangents[j].z;
@@ -267,7 +277,7 @@ namespace Poulpe
           if (mesh->mNumUVComponents[0] > 0) {
             aiVector3D texture_coord = mesh->mTextureCoords[0][face->mIndices[j]];
             vertex.texture_coord = { texture_coord.x, texture_coord.y };
-            //if (inverse_texture_y) vertex.texture_coord.y *= -1.0f;
+            if (inverse_texture_y) vertex.texture_coord.y *= -1.0f;
           }
 
           glm::vec4 color{ 1.0f };

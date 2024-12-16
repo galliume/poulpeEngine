@@ -63,12 +63,12 @@ namespace Poulpe
         for (size_t i{ 0 }; i < poolUsage->second.size(); ++i) {
           auto& dm = poolUsage->second.at(i);
           if (!dm->isFull() && dm->hasEnoughSpaceLeft(size)) {
-            //PLP_DEBUG("DM REUSE OK: id {}, {}, type {} usage {} size {}/{}",
-            //  dm.get()->getID(), buffer_type_debug, memory_type, usage, size, dm->getSpaceLeft());
+            // PLP_DEBUG("DM REUSE OK: id {}, {}, type {} usage {} size {}/{}",
+            //   dm.get()->getID(), buffer_type_debug, memory_type, usage, size, dm->getSpaceLeft());
             return dm.get();
           } else {
-            /*PLP_DEBUG("DM REUSE KO: id {}, {}, type {} usage {} size {}/{}",
-              dm.get()->getID(), buffer_type_debug, memory_type, usage, size, dm->getSpaceLeft());*/
+            // PLP_DEBUG("DM REUSE KO: id {}, {}, type {} usage {} size {}/{}",
+            //   dm.get()->getID(), buffer_type_debug, memory_type, usage, size, dm->getSpaceLeft());
           }
         }
       }
@@ -81,7 +81,7 @@ namespace Poulpe
         device, memory_type, buffer_size, _device_memory_count, alignment));
       _memory_allocation_count += 1;
       _memory_allocation_size.at(memory_type) += buffer_size;
-      /*PLP_DEBUG("DM CREATION: id {}, {}, type {} usage {} size {}", _device_memory_count, buffer_type_debug, memory_type, usage, buffer_size);*/
+      //PLP_DEBUG("DM CREATION: id {}, {}, type {} usage {} size {}", _device_memory_count, buffer_type_debug, memory_type, usage, buffer_size);
       _device_memory_count += 1;
       _memory_size_allocated += size;
       return _pool[memory_type][usage].back().get();
@@ -95,7 +95,7 @@ namespace Poulpe
         device, memory_type, buffer_size, _device_memory_count, alignment));
       _memory_allocation_count += 1;
       _memory_allocation_size.at(memory_type) += buffer_size;
-      /*PLP_DEBUG("DM CREATION: id {}, {}, type {} usage {} size {}", _device_memory_count, buffer_type_debug, memory_type, usage, buffer_size);*/
+      //PLP_DEBUG("DM CREATION: id {}, {}, type {} usage {} size {}", _device_memory_count, buffer_type_debug, memory_type, usage, buffer_size);
       _device_memory_count += 1;
       _memory_size_allocated += size;
       return _pool[memory_type][usage].back().get();

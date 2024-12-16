@@ -92,6 +92,14 @@ else()
   message(FATAL_ERROR "The env var VULKAN_SDK nor VULKAN_SDK_ACTIONS not found.")
 endif()
 
+if (DEFINED ENV{KTX_SDK})
+  cmake_path(SET KTX_PATH "$ENV{KTX_SDK}/include")
+  message(STATUS "Found KTX include dir: ${KTX_PATH}")
+  find_package(KTX REQUIRED)
+ else()
+  message(FATAL_ERROR "The env var KTX_SDK not found.")
+endif()
+
 target_include_directories(${PROJECT_NAME} PRIVATE
           ${PROJECT_SOURCE_DIR}/vendor/assimp/include
           ${PROJECT_SOURCE_DIR}/vendor/lua
@@ -100,7 +108,8 @@ target_include_directories(${PROJECT_NAME} PRIVATE
           ${PROJECT_SOURCE_DIR}/vendor/nlohmann/include
           ${PROJECT_SOURCE_DIR}/vendor/spdlog/include
           ${PROJECT_SOURCE_DIR}/vendor/stb
-          ${VULKAN_PATH})
+          ${VULKAN_PATH}
+          ${KTX_PATH})
 
 add_subdirectory(${PROJECT_SOURCE_DIR}/vendor/assimp)
 add_subdirectory(${PROJECT_SOURCE_DIR}/vendor/glfw)
@@ -166,6 +175,7 @@ list(APPEND EXTRA_LIBS nlohmann_json)
 list(APPEND EXTRA_LIBS volk)
 list(APPEND EXTRA_LIBS assimp::assimp)
 list(APPEND EXTRA_LIBS spdlog::spdlog)
+list(APPEND EXTRA_LIBS KTX::ktx)
 
 target_link_libraries(${PROJECT_NAME} PRIVATE ${EXTRA_LIBS} poulpe)
 

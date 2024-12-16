@@ -112,9 +112,13 @@ namespace Poulpe
     for (auto& [keyTex, pathTex] : data["textures"].items()) {
       textures.emplace_back(static_cast<std::string>(keyTex));
     }
-    for (auto& [keyTex, pathTex] : data["textures_map"].items()) {
+    for (auto& [keyTex, pathTex] : data["normal"].items()) {
       textures.emplace_back(static_cast<std::string>(keyTex));
     }
+    for (auto& [keyTex, pathTex] : data["orm"].items()) {
+      textures.emplace_back(static_cast<std::string>(keyTex));
+    }
+
     bool const has_bbox = data["hasBbox"].template get<bool>();
     bool const has_animation = data["hasAnimation"].template get<bool>();
     bool const is_point_light = data["isPointLight"].template get<bool>();
@@ -154,6 +158,7 @@ namespace Poulpe
       std::string name_specular_map{ "_plp_empty" };
       std::string name_bump_map{ "_plp_empty" };
       std::string name_alpha_map{ "_plp_empty" };
+      std::string name_texture_metal_roughness{ "_plp_empty" };
 
       if (!materials.empty()) {
 
@@ -183,6 +188,10 @@ namespace Poulpe
         if (!mat.name_texture_alpha.empty()) {
           name_alpha_map = mat.name_texture_alpha;
         }
+
+        if (!mat.name_texture_metal_roughness.empty()) {
+          name_texture_metal_roughness = mat.name_texture_metal_roughness;
+        }
       }
 
       Data data{};
@@ -191,6 +200,7 @@ namespace Poulpe
       data._specular_map = name_specular_map;
       data._bump_map = name_bump_map;
       data._alpha = name_alpha_map;
+      data._metal_roughness = name_texture_metal_roughness;
       data._vertices = _data.vertices;
       data._indices = _data.indices;
       data._origin_pos = entity_opts.pos;

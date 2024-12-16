@@ -296,6 +296,26 @@
         "ASSIMP_BUILD_MMD_IMPORTER": {
           "type": "STRING",
           "value": "OFF"
+        },
+        "ASSIMP_BUILD_USD_IMPORTER": {
+          "type": "STRING",
+          "value": "OFF"
+        },
+        "TINYUSDZ_CXX_MP_FLAG": {
+          "type": "BOOL",
+          "value": "FALSE"
+        },
+        "TINYUSDZ_NO_WERROR": {
+          "type": "BOOL",
+          "value": "TRUE"
+        },
+        "TINYUSDZ_BUILD_SHARED_LIBS": {
+          "type": "BOOL",
+          "value": "TRUE"
+        },
+        "TINYUSDZ_CXX_EXCEPTIONS_DEFAULT": {
+          "type": "BOOL",
+          "value": "FALSE"
         }
       }
     },

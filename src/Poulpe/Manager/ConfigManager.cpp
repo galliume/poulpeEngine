@@ -79,14 +79,14 @@ namespace Poulpe
 
     std::ranges::for_each(_entity_config["entities"].items(), [&](auto const& entities) {
       auto textures = entities.value();
-      for (auto const& [key, texpath] : textures["textures"].items()) {
-        _textures_config["textures"][key] = static_cast<std::string>(texpath);
+      for (auto const& [key, data] : textures["textures"].items()) {
+        _textures_config["textures"][key] = data;
       }
-    });
-    std::ranges::for_each(_entity_config["entities"].items(), [&](auto const& entities) {
-      auto textures = entities.value();
-      for (auto const& [key, texpath] : textures["textures_map"].items()) {
-        _textures_config["textures_map"][key] = static_cast<std::string>(texpath);
+      for (auto const& [key, data] : textures["orm"].items()) {
+        _textures_config["orm"][key] = data;
+      }
+      for (auto const& [key, data] : textures["normal"].items()) {
+        _textures_config["normal"][key] = data;
       }
     });
     return _entity_config;

@@ -2,6 +2,7 @@
 
 #include <Poulpe/Component/Texture.hpp>
 
+#include <ktx.h>
 #include <nlohmann/json.hpp>
 #include <stb_image.h>
 
@@ -21,7 +22,12 @@ namespace Poulpe
     void addTexture(
       std::string const& name,
       std::string const& path,
-      bool const is_unorm,
+      VkFormat const format,
+      bool const is_public = false);
+    void addKTXTexture(
+      std::string const& name,
+      std::string const& path,
+      ktx_transcode_fmt_e const target_format,
       bool const is_public = false);
     void clear();
     inline const Texture getSkyboxTexture() const { return _skybox; }
@@ -29,6 +35,9 @@ namespace Poulpe
     inline std::unordered_map<std::string, Texture> getTextures() { return _textures; }
     std::function<void(std::latch& count_down)> load();
     std::function<void(std::latch& count_down)> loadSkybox(std::string_view skybox);
+
+  private:
+    void add(std::string const& name, nlohmann::json const& data);
 
   private:
     const uint32_t MAX_MIPLEVELS = 5;

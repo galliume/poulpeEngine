@@ -57,7 +57,7 @@ namespace Poulpe
     alignas(16) glm::vec3 transmittance { 1 };
     alignas(16) glm::vec3 emission { 1 };
     //shininess, ior, diss
-    alignas(16) glm::vec3 shi_ior_diss { 1 };
+    alignas(16) glm::vec3 shi_ior_diss { 0 };
   };
 
   struct ObjectBuffer
@@ -75,8 +75,8 @@ namespace Poulpe
     glm::vec3 specular{ 1.0 };
     glm::vec3 transmittance{ 1.0 };
     glm::vec3 emission{ 1.0 };
-    float shininess{ 1.0 };
-    float ior{ 1.0 };       // index of refraction
+    float shininess{ 0.0 };
+    float ior{ 0.0 };       // index of refraction
     float dissolve{ 1.0 };  // 1 == opaque; 0 == fully transparent
     int illum{ 1 };
     std::string name_texture_ambient;             // map_Ka
@@ -85,6 +85,7 @@ namespace Poulpe
     std::string name_texture_specular_highlight;  // map_Ns
     std::string name_texture_bump;                // map_bump, map_Bump, bump
     std::string name_texture_alpha; // map_d
+    std::string name_texture_metal_roughness; //metal roughness
   };
 
   struct constants
@@ -113,6 +114,7 @@ namespace Poulpe
     std::string _bump_map;
     std::string _normal_map;
     std::string _alpha;
+    std::string _metal_roughness;
     std::vector<Vertex> _vertices;
     std::vector<uint32_t> _indices;
     std::vector<UniformBufferObject> _ubos;
