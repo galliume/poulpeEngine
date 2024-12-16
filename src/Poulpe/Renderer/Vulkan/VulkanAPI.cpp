@@ -2843,7 +2843,7 @@ namespace Poulpe {
 
     vkGetBufferMemoryRequirements(_device, buffer, &mem_requirements);
 
-    auto const memory_type = findMemoryType(mem_requirements.memoryTypeBits,
+    auto memory_type = findMemoryType(mem_requirements.memoryTypeBits,
                                       VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 
     VkDeviceSize const size { mem_requirements.size};
@@ -2869,15 +2869,50 @@ namespace Poulpe {
     auto const height { static_cast<uint32_t>(ktx_texture->baseHeight) };
     auto const mip_lvl{ ktx_texture->numLevels };
 
-    createImage(width,
-                height,
-                mip_lvl,
-                VK_SAMPLE_COUNT_1_BIT,
-                format,
-                VK_IMAGE_TILING_OPTIMAL,
-                VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
-                VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-                image);
+    VkImageType image_type{VK_IMAGE_TYPE_1D};
+
+    if (ktx_texture->numDimensions == 2) {
+      image_type = VK_IMAGE_TYPE_2D;
+    } else if (ktx_texture->numDimensions == 3) {
+      image_type = VK_IMAGE_TYPE_3D;
+    }
+
+    VkImageCreateInfo image_info{};
+    image_info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+    image_info.imageType = image_type;
+    image_info.extent.width = width;
+    image_info.extent.height = height;
+    image_info.extent.depth = 1;
+    image_info.mipLevels = mip_lvl;
+    image_info.arrayLayers = 1;
+    image_info.format = format;
+    image_info.tiling = VK_IMAGE_TILING_OPTIMAL;
+    image_info.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+    image_info.usage = VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+    image_info.samples = VK_SAMPLE_COUNT_1_BIT;
+    image_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+
+    VkResult result{ VK_SUCCESS };
+    result = vkCreateImage(_device, & image_info, nullptr, &image);
+
+    if (result != VK_SUCCESS) {
+      throw std::runtime_error("failed to create image!");
+    }
+
+    VkMemoryRequirements image_mem_requirements;
+    vkGetImageMemoryRequirements(_device, image, & image_mem_requirements);
+    memory_type = findMemoryType(image_mem_requirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+    uint32_t image_size = ((image_mem_requirements.size / image_mem_requirements.alignment) + 1) * image_mem_requirements.alignment;
+
+    device_memory = _device_memory_pool->get(
+      _device,
+      image_size,
+      memory_type,
+      VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+      image_mem_requirements.alignment,
+      DeviceMemoryPool::DeviceBufferType::STAGING);
+
+    device_memory->bindImageToMemory(image, image_size);
 
     auto rdr_barrier = setupImageMemoryBarrier(
       image, 0, VK_ACCESS_TRANSFER_WRITE_BIT, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);

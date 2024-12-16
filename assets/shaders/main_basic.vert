@@ -94,11 +94,11 @@ void main()
   mat4 inversed_model = inverse(ubo.model);
 
   vec3 pos = (ubo.model * vec4(position, 1.0)).xyz;
-  vec3 n = normal_matrix * normal;
+  vec3 n = normal;
   vec4 t = vec4(normal_matrix * tangent.xyz, tangent.w);
-  vec3 p = (ubo.model * vec4(position, 1.0)).xyz;
-  vec3 vp = (ubo.model * vec4(pc.view_position, 1.0)).xyz;
-  vec3 lp = (ubo.model * vec4(sun_light.position, 1.0)).xyz;
+  vec3 p = (inversed_model * vec4(position, 1.0)).xyz;
+  vec3 vp = (inversed_model * vec4(pc.view_position, 1.0)).xyz;
+  vec3 lp = (inversed_model * vec4(sun_light.position, 1.0)).xyz;
 
   vec3 vtan; vec3 ltan;
 
@@ -111,8 +111,8 @@ void main()
   frag_var.light_space = (ubo.projection * sun_light.view * vec4(frag_var.position, 1.0));
   frag_var.tangent = t;
   frag_var.texture_coord = texture_coord;
-  frag_var.view_position = vp;
-  frag_var.light_position = lp;
+  frag_var.view_position = pc.view_position;
+  frag_var.light_position = sun_light.position;
   frag_var.normal = n;
 
   gl_Position = ubo.projection * pc.view * vec4(pos, 1.0);

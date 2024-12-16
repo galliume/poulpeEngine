@@ -5,8 +5,8 @@
 			"ktx_format": "KTX_TTF_BC7_RGBA"
 		},
 		"_plp_empty": {
-			"path": "assets/texture/mpoulpe.ktx",
-			"ktx_format": "KTX_TTF_BC7_RGBA"
+			"path": "assets/texture/_plp_empty.ktx",
+			"ktx_format": "KTX_TTF_BC4_R"
 		}
 	},
 	"skybox": {
