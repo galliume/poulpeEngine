@@ -4,6 +4,9 @@
 
 #include <filesystem>
 
+//@todo tmp
+#include <cstdlib>
+
 namespace Poulpe
 {
   std::vector<std::array<float, 3>> TextureManager::addNormalMapTexture(std::string const& name)
@@ -275,21 +278,44 @@ namespace Poulpe
     std::string const ktx_format{ data.at("ktx_format").get<std::string>() };
 
     ktx_transcode_fmt_e fmt{};
+    std::string target_type{ "RGBA" };
+    std::string assign_oetf{ "srgb" };
 
     if (ktx_format == "KTX_TTF_BC7_RGBA") {
       fmt = KTX_TTF_BC7_RGBA;
     } else if (ktx_format == "KTX_TTF_BC1_RGB") {
+      target_type = "RGB";
       fmt = KTX_TTF_BC1_RGB;
     } else if (ktx_format == "KTX_TTF_BC5_RG") {
+      target_type = "RG";
+      assign_oetf = "linear";
       fmt = KTX_TTF_BC5_RG;
     } else if (ktx_format == "KTX_TTF_BC3_RGBA") {
       fmt = KTX_TTF_BC3_RGBA;
     } else if (ktx_format == "KTX_TTF_BC4_R") {
+      target_type = "R";
+      assign_oetf = "linear";
       fmt = KTX_TTF_BC4_R;
     } else {
       PLP_ERROR("Unknown ktx_format {}", ktx_format);
     }
 
+    if (!std::filesystem::exists(path)) {
+      std::filesystem::path file_name{ path };
+      std::string original_name{ file_name.string()};
+
+      if (std::filesystem::exists(file_name.replace_extension("jpg"))) {
+        original_name = file_name.string();
+      } else if (std::filesystem::exists(file_name.replace_extension("png"))) { 
+        original_name = file_name.string();
+      }
+      std::string cmd{
+        "toktx --t2 --encode uastc --target_type " + target_type + \
+        " --assign_oetf " + assign_oetf + " \"" + path + "\" \"" + original_name + "\""
+      };
+      //PLP_DEBUG("{}", cmd);
+      std::system(cmd.c_str());
+    }
     addKTXTexture(name, path, fmt, aspect_flags, true);
   }
 
