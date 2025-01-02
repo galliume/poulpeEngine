@@ -760,7 +760,7 @@ namespace Poulpe {
     rasterizer.polygonMode = static_cast<VkPolygonMode>(polygone_mode);
     rasterizer.lineWidth = 1.0f;
     rasterizer.cullMode = cull_mode;
-    rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
+    rasterizer.frontFace = VK_FRONT_FACE_CLOCKWISE;
     rasterizer.depthBiasEnable = VK_FALSE;
     rasterizer.depthBiasConstantFactor = 0.f;
     rasterizer.depthBiasClamp = 0.0f;
@@ -2576,19 +2576,18 @@ namespace Poulpe {
     sample_info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
     sample_info.magFilter = VK_FILTER_LINEAR;
     sample_info.minFilter = VK_FILTER_LINEAR;
-    sample_info.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+    sample_info.addressModeU = VK_SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT;
     sample_info.addressModeV = sample_info.addressModeU;
     sample_info.addressModeW = sample_info.addressModeU;
     sample_info.maxAnisotropy = _device_props.limits.maxSamplerAnisotropy;
-    sample_info.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
+    sample_info.borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE;
     sample_info.unnormalizedCoordinates = VK_FALSE;
     sample_info.compareEnable = VK_FALSE;
-    sample_info.compareOp = VK_COMPARE_OP_ALWAYS;
+    sample_info.compareOp = VK_COMPARE_OP_LESS;
     sample_info.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
     sample_info.minLod = 0.0f;
     sample_info.maxLod = static_cast<float>(mip_lvl);
     sample_info.mipLodBias = 0.0f;
-    sample_info.borderColor = VK_BORDER_COLOR_FLOAT_TRANSPARENT_BLACK;
 
     if (vkCreateSampler(_device, & sample_info, nullptr, & texture_sampler) != VK_SUCCESS) {
       throw std::runtime_error("failed to create texture sampler!");
@@ -2993,19 +2992,18 @@ namespace Poulpe {
     sample_info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
     sample_info.magFilter = VK_FILTER_LINEAR;
     sample_info.minFilter = VK_FILTER_LINEAR;
-    sample_info.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+    sample_info.addressModeU = VK_SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT;
     sample_info.addressModeV = sample_info.addressModeU;
     sample_info.addressModeW = sample_info.addressModeU;
     sample_info.maxAnisotropy = _device_props.limits.maxSamplerAnisotropy;
-    sample_info.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
+    sample_info.borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE;
     sample_info.unnormalizedCoordinates = VK_FALSE;
-    sample_info.compareEnable = VK_FALSE;
-    sample_info.compareOp = VK_COMPARE_OP_ALWAYS;
+    sample_info.compareEnable = VK_TRUE;
+    sample_info.compareOp = VK_COMPARE_OP_LESS;
     sample_info.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
     sample_info.minLod = 0.0f;
     sample_info.maxLod = static_cast<float>(ktx_texture->numLevels);
     sample_info.mipLodBias = 0.0f;
-    sample_info.borderColor = VK_BORDER_COLOR_FLOAT_TRANSPARENT_BLACK;
 
     if (vkCreateSampler(_device, & sample_info, nullptr, & texture_sampler) != VK_SUCCESS) {
       throw std::runtime_error("failed to create texture sampler!");

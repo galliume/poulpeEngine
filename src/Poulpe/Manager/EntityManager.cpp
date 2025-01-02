@@ -73,7 +73,7 @@ namespace Poulpe
     EntityNode* root_mesh_entity_node = new EntityNode(root_mesh_entity);
 
     auto const& path = data["mesh"].template get<std::string>();
-    auto const inverse_texture_y = data["inverseTextureY"].template get<bool>();
+    auto const flip_Y = data["flipY"].template get<bool>();
 
     auto callback = [this, data, path, root_mesh_entity_node](
       PlpMeshData const _data,
@@ -138,7 +138,7 @@ namespace Poulpe
       data["isPointLight"].template get<bool>(),
       animation_scripts,
       data["hasShadow"].template get<bool>(),
-      data["inverseTextureY"].template get<bool>(),
+      data["flipY"].template get<bool>(),
       data["isIndexed"].template get<bool>()
     };
 
@@ -312,7 +312,7 @@ namespace Poulpe
         }
       }
     };
-    AssimpLoader::loadData(path, inverse_texture_y, callback);
+    AssimpLoader::loadData(path, flip_Y, callback);
   }
 
   void EntityManager::initWorldGraph()

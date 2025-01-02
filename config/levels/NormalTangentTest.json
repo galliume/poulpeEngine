@@ -1,22 +1,22 @@
 {
 	"entities": {
-		"NormalTangentMirrorTest" : {
-			"mesh": "assets/mesh/NormalTangentMirrorTest/gLTF/NormalTangentMirrorTest.gltf",
+		"NormalTangentTest" : {
+			"mesh": "assets/mesh/NormalTangentTest/gLTF/NormalTangentTest.gltf",
 			"textures": {
-				"NormalTangentMirrorTest_BaseColor": {
-					"path" : "assets/mesh/NormalTangentMirrorTest/glTF/NormalTangentMirrorTest_BaseColor.ktx2",
+				"NormalTangentTest_BaseColor": {
+					"path" : "assets/mesh/NormalTangentTest/glTF/NormalTangentTest_BaseColor.ktx2",
 					"ktx_format": "KTX_TTF_BC7_RGBA"
 				}
 			},
 			"orm": {
-				"NormalTangentMirrorTest_OcclusionRoughnessMetallic": {
-					"path" : "assets/mesh/NormalTangentMirrorTest/glTF/NormalTangentMirrorTest_OcclusionRoughnessMetallic.ktx2",
+				"NormalTangentTest_OcclusionRoughnessMetallic": {
+					"path" : "assets/mesh/NormalTangentTest/glTF/NormalTangentTest_OcclusionRoughnessMetallic.ktx2",
 					"ktx_format": "KTX_TTF_BC7_RGBA"
 				}
 			},
 			"normal": {
 				"NormalTangentTest_Normal": {
-					"path": "assets/mesh/NormalTangentMirrorTest/glTF/NormalTangentTest_Normal.ktx2",
+					"path": "assets/mesh/NormalTangentTest/glTF/NormalTangentTest_Normal.ktx2",
 					"ktx_format" : "KTX_TTF_BC7_RGBA"
 				}
 			},
@@ -51,10 +51,14 @@
 			"orm": {
 			},
 			"normal": {
+				"NormalMap": {
+					"path" : "assets/mesh/SnowTerrain/NormalMap.ktx2",
+					"ktx_format" : "KTX_TTF_BC7_RGBA"
+				}
 			},
 			"shader": "main_basic",
 			"positions": [
-				{"x": 0.0, "y": 0.25, "z": 0.0}
+				{"x": 0.0, "y": 1.25, "z": 0.0}
 			],
 			"scales": [
 				{"x": 1.0, "y": 1.0, "z": 1.0}
@@ -62,14 +66,14 @@
 			"rotations": [
 				{"x": 0.0, "y": 0.0, "z": 0.0}
 			],
-			"flipY": false,
+			"flipY": true,
 			"count": 1,
 			"hasBbox": false,
 			"hasAnimation": false,
 			"animationScripts": {
 			},
 			"isPointLight": false,
-			"hasShadow": false,
+			"hasShadow": true,
 			"isIndexed": true			
 		}
 	}

@@ -143,7 +143,7 @@ namespace Poulpe
     bool is_point_light{ false };
     std::vector<std::string> animation_scripts{};
     bool has_shadow{ false };
-    bool inverse_texture_y{ false };
+    bool flip_Y{ false };
     bool is_indexed{ false };
   };
 

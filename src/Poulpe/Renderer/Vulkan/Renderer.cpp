@@ -204,7 +204,7 @@ namespace Poulpe
       glm::radians(45.0f),
       static_cast<float>(_vulkan->getSwapChainExtent().width) / static_cast<float>(_vulkan->getSwapChainExtent().height),
       0.1f, 50.f);
-    _perspective[1][1] *= -1;
+    //_perspective[1][1] *= -1;
   }
 
   void Renderer::setDeltatime(float delta_time)

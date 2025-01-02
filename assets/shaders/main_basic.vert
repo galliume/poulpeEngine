@@ -24,20 +24,21 @@ layout(location = 0) in vec3 position;
 layout(location = 1) in vec3 normal;
 layout(location = 2) in vec2 texture_coord;
 layout(location = 3) in vec4 tangent;
-layout(location = 4) in vec4 fidtidBB;
-layout(location = 5) in vec4 color;
+layout(location = 4) in vec4 bitangent;
+layout(location = 5) in vec4 fidtidBB;
+layout(location = 6) in vec4 color;
 
 layout(location = 0) out FRAG_VAR {
   vec4 color;
   vec4 light_space;
-  vec4 tangent;
-  vec3 light_position;
-  vec3 position;
-  vec3 view_position;
+  vec3 frag_pos;
+  vec3 light_pos;
+  vec3 view_pos;
+  vec3 t_light_dir;
+  vec3 t_view_dir;
+  vec3 t_plight_dir[NR_POINT_LIGHTS];
+  vec3 t_pview_dir[NR_POINT_LIGHTS];
   vec2 texture_coord;
-  vec3 view_dir;
-  vec3 light_dir;
-  vec3 normal;
 } frag_var;
 
 struct Light {
@@ -90,30 +91,23 @@ void TangentSpaceVL(vec3 pos, vec3 camera_pos, vec3 light_pos, vec3 normal, vec4
 
 void main()
 {
-  mat3 normal_matrix = transpose(inverse(mat3(ubo.model)));
   mat4 inversed_model = inverse(ubo.model);
+  mat3 normal_matrix = transpose(inverse(mat3(ubo.model)));
+  vec3 norm = normal_matrix * normal;
+  //norm.y *= -1.0;
+  //norm *= normal_matrix;
 
-  vec3 pos = (ubo.model * vec4(position, 1.0)).xyz;
-  vec3 n = normal;
-  vec4 t = vec4(normal_matrix * tangent.xyz, tangent.w);
-  vec3 p = (inversed_model * vec4(position, 1.0)).xyz;
-  vec3 vp = (inversed_model * vec4(pc.view_position, 1.0)).xyz;
-  vec3 lp = (inversed_model * vec4(sun_light.position, 1.0)).xyz;
+  frag_var.frag_pos = mat3(ubo.model) * position;
+  frag_var.light_pos = sun_light.position;
+  frag_var.view_pos = pc.view_position;
 
-  vec3 vtan; vec3 ltan;
+  TangentSpaceVL(frag_var.frag_pos, frag_var.view_pos, frag_var.light_pos, norm, tangent, frag_var.t_view_dir, frag_var.t_light_dir);
+  TangentSpaceVL(frag_var.frag_pos, frag_var.view_pos, point_lights[0].position, norm, tangent, frag_var.t_pview_dir[0], frag_var.t_plight_dir[0]);
+  TangentSpaceVL(frag_var.frag_pos, frag_var.view_pos, point_lights[1].position, norm, tangent, frag_var.t_pview_dir[1], frag_var.t_plight_dir[1]);
 
-  TangentSpaceVL(p, vp, lp, n, t, vtan, ltan);
-
-  frag_var.view_dir = vtan;
-  frag_var.light_dir = ltan;
-  frag_var.position = p;
   frag_var.color = color;
-  frag_var.light_space = (ubo.projection * sun_light.view * vec4(frag_var.position, 1.0));
-  frag_var.tangent = t;
+  frag_var.light_space = (ubo.projection * sun_light.view * vec4(frag_var.frag_pos, 1.0));
   frag_var.texture_coord = texture_coord;
-  frag_var.view_position = pc.view_position;
-  frag_var.light_position = sun_light.position;
-  frag_var.normal = n;
 
-  gl_Position = ubo.projection * pc.view * vec4(pos, 1.0);
+  gl_Position = ubo.projection * pc.view * ubo.model * vec4(position, 1.0f);
 } 

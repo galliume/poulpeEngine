@@ -1,7 +1,6 @@
 #include "AssimpLoader.hpp"
 
 #include <assimp/Importer.hpp>
-#include <assimp/scene.h>
 #include <assimp/postprocess.h>
 
 namespace Poulpe
@@ -31,7 +30,7 @@ namespace Poulpe
 
   void AssimpLoader::loadData(
         std::string const & path,
-        bool const inverse_texture_y,
+        bool const flip_Y,
         std::function<void(
           PlpMeshData const _data,
           std::vector<material_t> const materials,
@@ -45,13 +44,14 @@ namespace Poulpe
   
 
     auto flags{
-      aiProcess_Triangulate |
-      aiProcess_JoinIdenticalVertices |
-      aiProcess_GenNormals |
-      aiProcess_CalcTangentSpace |
-      aiProcess_OptimizeMeshes
+        aiProcess_Triangulate
+      | aiProcess_OptimizeMeshes
+      | aiProcess_GenNormals
+      | aiProcess_CalcTangentSpace
+      | aiProcess_MakeLeftHanded
+      | aiProcess_FlipWindingOrder
+      | aiProcess_FlipUVs
     };
-//      flags |= aiProcess_FlipUVs;
 
     PLP_DEBUG("Loading {}", path);
 
@@ -217,92 +217,131 @@ namespace Poulpe
       }
     }
 
-    size_t countdown { scene->mNumMeshes };
-    //PLP_DEBUG("{} meshes to load", scene->mNumMeshes);
-    for (unsigned int i{ 0 }; i < scene->mNumMeshes; i++) {
-      PlpMeshData meshData{};
-      
-      //PLP_DEBUG("{}/{} done", i, scene->mNumMeshes);
-     
-      aiMesh const* mesh = scene->mMeshes[i];
-      meshData.name = mesh->mName.C_Str() + std::to_string(i);
+    std::vector<PlpMeshData> mesh_data{};
+    process(scene->mRootNode, scene, mesh_data, flip_Y);
+
+    size_t id{ mesh_data.size() };
+    for (auto& data : mesh_data) {
+      --id;
+      data.id = id;
+      callback(data, materials, false, animations, positions, rotations, scales);
+    }
+  }
+
+  std::string const AssimpLoader::cleanName(std::string const & name)
+  {
+    std::string cleaned{};
+
+    if (name.size() > 0) {
+      size_t lastindex = name.find_last_of(".");
+      cleaned = name.substr(0, lastindex);
+
+      std::replace(cleaned.begin(), cleaned.end(), '\\', '_');
+      std::replace(cleaned.begin(), cleaned.end(), '/', '_');
+    }
+
+    //PLP_DEBUG("asset: {} -> {}", name, cleaned);
+
+    return cleaned;
+  }
+
+  void AssimpLoader::process(
+    aiNode* node,
+    const aiScene *scene,
+    std::vector<PlpMeshData>& data,
+    bool const flip_Y)
+  {
+    for (unsigned int i{ 0 }; i < node->mNumMeshes; i++) {
+      PlpMeshData mesh_data{};
+
+      aiMesh const* mesh = scene->mMeshes[node->mMeshes[i]];
+      mesh_data.name = mesh->mName.C_Str() + std::to_string(i);
       unsigned int count{ 0 };
+      glm::vec3 n{ 0.5f, 0.5f, 1.0f };
+
+      mesh_data.vertices.reserve(mesh->mNumVertices);
+      for (unsigned int v{ 0 }; v < mesh->mNumVertices; v++) {
+        aiVector3D vertices = mesh->mVertices[v];
+
+        Vertex vertex{};
+        vertex.bones_ids.resize(4);
+        std::fill(vertex.bones_ids.begin(), vertex.bones_ids.end(), -1);
+        vertex.weights.resize(4);
+        std::fill(vertex.weights.begin(), vertex.weights.end(), 0.0f);
+
+        vertex.fidtidBB = glm::vec4(static_cast<float>(v), static_cast<float>(mesh->mMaterialIndex), 0.0f, 0.0f);
+        vertex.pos = { vertices.x, vertices.y, vertices.z };
+        vertex.normal = n;
+
+        if (mesh->HasNormals()) {
+          aiVector3D const& normal = mesh->mNormals[v];
+          vertex.normal = { normal.x, normal.y, normal.z };
+        } else {
+          PLP_WARN("NO NORMAL");
+        }
+
+        if (flip_Y) vertex.pos.y *= -1.0f;
+
+        glm::vec4 tangent(0.f, 0.f, 1.f, 1.f);
+        glm::vec4 bitangent(0.f, 0.f, 1.f, 1.f);
+
+        if (mesh->HasTangentsAndBitangents()) {
+          tangent.x += mesh->mTangents[v].x;
+          tangent.y += mesh->mTangents[v].y;
+          tangent.z += mesh->mTangents[v].z;
+
+          bitangent = glm::vec4(
+            mesh->mBitangents[v].x,
+            mesh->mBitangents[v].y,
+            mesh->mBitangents[v].z,
+            0.0f);
+
+          //handedness
+          tangent.w = glm::dot(
+            glm::cross(
+              glm::vec3(tangent.x, tangent.y, tangent.z),
+              glm::vec3(bitangent.x, bitangent.y, bitangent.z)),
+            vertex.normal) < 0.0f ? -1.0f : 1.0f;
+        }
+        vertex.tangent = tangent;
+        vertex.bitangent = bitangent;
+
+        if (mesh->mNumUVComponents[0] > 0) {
+          aiVector3D texture_coord = mesh->mTextureCoords[0][v];
+          vertex.texture_coord = { texture_coord.x, texture_coord.y };
+          if (flip_Y) vertex.texture_coord.y *= -1.0f;
+        }
+
+        glm::vec4 color{ 1.0f };
+
+        if (mesh->HasVertexColors(v)) {
+          color = glm::vec4(
+            mesh->mColors[v]->r,
+            mesh->mColors[v]->g,
+            mesh->mColors[v]->b,
+            mesh->mColors[v]->a);
+        }
+        vertex.color = color;
+
+        mesh_data.vertices.emplace_back(std::move(vertex));
+      }
 
       for (unsigned int f{ 0 }; f < mesh->mNumFaces; f++) {
         aiFace const* face = &mesh->mFaces[f];
 
-        meshData.vertices.reserve(face->mNumIndices);
-        meshData.indices.reserve(face->mNumIndices);
-        meshData.face_material_ID.reserve(face->mNumIndices);
+        mesh_data.indices.reserve(face->mNumIndices);
 
         for (unsigned int j{ 0 }; j < face->mNumIndices; j++) {
-
-          aiVector3D vertices = mesh->mVertices[face->mIndices[j]];
-          Vertex vertex{};
-          vertex.bones_ids.resize(4);
-          std::fill(vertex.bones_ids.begin(), vertex.bones_ids.end(), -1);
-          vertex.weights.resize(4);
-          std::fill(vertex.weights.begin(), vertex.weights.end(), 0.0f);
-
-          vertex.fidtidBB = glm::vec4(static_cast<float>(j), static_cast<float>(mesh->mMaterialIndex), 0.0f, 0.0f);
-          vertex.pos = { vertices.x, vertices.y, vertices.z };
-
-          if (mesh->HasNormals()) {
-            aiVector3D const& normal = mesh->mNormals[face->mIndices[j]];
-            vertex.normal = { normal.x, normal.y, normal.z };
-          } else {
-            vertex.normal = { 1.0f, 1.0f, 1.0f };
-          }
-
-          glm::vec4 tangent(0.f, 0.f, 1.f, 1.f);
-
-          if (mesh->HasTangentsAndBitangents()) {
-              tangent.x += mesh->mTangents[j].x;
-              tangent.y += mesh->mTangents[j].y;
-              tangent.z += mesh->mTangents[j].z;
-
-              auto bitangent{ glm::vec3(
-                mesh->mBitangents[j].x,
-                mesh->mBitangents[j].y,
-                mesh->mBitangents[j].z) };
-
-              //handedness
-              tangent.w = glm::dot(glm::cross(glm::vec3(tangent.x, tangent.y, tangent.z), bitangent), vertex.normal) > 0.0f ? 1.0f : - 1.0f;
-          }
-          vertex.tangent = tangent;
-          //if (inverse_texture_y) vertex.tangent.y *= -1.0f;
-
-          //if (inverse_texture_y) vertex.normal.y *= -1.0f;
-          
-          if (mesh->mNumUVComponents[0] > 0) {
-            aiVector3D texture_coord = mesh->mTextureCoords[0][face->mIndices[j]];
-            vertex.texture_coord = { texture_coord.x, texture_coord.y };
-            if (inverse_texture_y) vertex.texture_coord.y *= -1.0f;
-          }
-
-          glm::vec4 color{ 1.0f };
-
-          if (mesh->HasVertexColors(j)) {
-            color = glm::vec4(
-              mesh->mColors[j]->r,
-              mesh->mColors[j]->g,
-              mesh->mColors[j]->b,
-              mesh->mColors[j]->a);
-          }
-          vertex.color = color;
-
-          meshData.vertices.emplace_back(std::move(vertex));
-          meshData.indices.push_back(count);
+          mesh_data.indices.push_back(face->mIndices[j]);
           count += 1;
         }
-        meshData.material_ID = mesh->mMaterialIndex;
-        meshData.materials_ID = { mesh->mMaterialIndex };
-        meshData.face_material_ID.emplace_back(mesh->mMaterialIndex);
+        mesh_data.material_ID = mesh->mMaterialIndex;
+        mesh_data.materials_ID = { mesh->mMaterialIndex };
       }
 
       std::unordered_map<std::string, Bone> bonesMap{};
       unsigned int boneCounter{ 0 };
-      
+
       if (mesh->HasBones()) {
 
         for (unsigned int b{ 0 }; b < mesh->mNumBones; b++) {
@@ -310,7 +349,7 @@ namespace Poulpe
 
           int boneID{ -1 };
           std::string const& boneName{ bone->mName.C_Str() };
-  
+
           if (bonesMap.contains(boneName)) {
             boneID = bonesMap[boneName].id;
           } else {
@@ -331,7 +370,7 @@ namespace Poulpe
             auto const id = aiWeight.mVertexId;
             auto const weight = aiWeight.mWeight;
 
-            auto& vtex = meshData.vertices.at(id);
+            auto& vtex = mesh_data.vertices.at(id);
             for (auto bW{ 0 }; bW < 4; bW++) {
               if (vtex.weights[bW] < 0) {
                 vtex.weights[bW] = weight;
@@ -341,29 +380,11 @@ namespace Poulpe
           }
         }
       }
+      data.emplace_back(mesh_data);
+    }
 
-      --countdown;
-      meshData.id = countdown;
-
-      callback(std::move(meshData), materials, false, animations, positions, rotations, scales);
-      count = meshData.indices.size();
+    for (unsigned int i{ 0 }; i < node->mNumChildren; i++) {
+      process(node->mChildren[i], scene, data, flip_Y);
     }
   }
-
-  std::string const AssimpLoader::cleanName(std::string const & name)
-  {
-    std::string cleaned{};
-
-    if (name.size() > 0) {
-      size_t lastindex = name.find_last_of(".");
-      cleaned = name.substr(0, lastindex);
-
-      std::replace(cleaned.begin(), cleaned.end(), '\\', '_');
-      std::replace(cleaned.begin(), cleaned.end(), '/', '_');
-    }
-
-    //PLP_DEBUG("asset: {} -> {}", name, cleaned);
-
-    return cleaned;
-  };
 }

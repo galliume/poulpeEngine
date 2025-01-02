@@ -22,14 +22,14 @@ layout(location = 0) out vec4 final_color;
 layout(location = 0) in FRAG_VAR {
   vec4 color;
   vec4 light_space;
-  vec4 tangent;
-  vec3 light_position;
-  vec3 position;
-  vec3 view_position;
+  vec3 frag_pos;
+  vec3 light_pos;
+  vec3 view_pos;
+  vec3 t_light_dir;
+  vec3 t_view_dir;
+  vec3 t_plight_dir[NR_POINT_LIGHTS];
+  vec3 t_pview_dir[NR_POINT_LIGHTS];
   vec2 texture_coord;
-  vec3 view_dir;
-  vec3 light_dir;
-  vec3 normal;
 } var;
 
 struct Light {
@@ -69,19 +69,7 @@ layout(binding = 2) readonly buffer ObjectBuffer {
 
 layout(binding = 3) uniform sampler2DShadow tex_shadow_sampler[1];
 
-vec3 DiffuseReflection(vec3 n, vec3 l, vec3 light_color, vec3 ambient_color, vec3 diffuse_color)
-{
-  vec3 direct_color = light_color * clamp(dot(n, l), 0.0, 1.0);
-  return (ambient_color + direct_color) * diffuse_color;
-}
-
-vec3 SpecularReflection(vec3 n, vec3 l, float alpha, float nl, vec3 light_color, vec3 specular_color)
-{
-  float highlight = pow(clamp(dot(n, l), 0.0, 1.0), alpha) * float(nl > 0.0);
-  return (light_color * specular_color * highlight);
-}
-
-float InverseSquareAttenuation(vec3 p, vec3 l)
+float InverseSquareAttenuation(vec3 l_dir)
 {
   float r = 1.0;
   float r_max = 5.0;
@@ -89,15 +77,14 @@ float InverseSquareAttenuation(vec3 p, vec3 l)
   atten_const.x = (r * r) / (r_max * r_max - r * r);
   atten_const.y = (r_max * r_max);
 
-  vec3 l_dir = l - p;
   float r2 = dot(l_dir, l_dir);
-  return clamp(atten_const.x * (atten_const.y / r2 - 1.0), 0.0, 1.0);
+  return max(atten_const.x * (atten_const.y / r2 - 1.0), 0.0);
 }
 
 float ExponentialAttenuation(vec3 p, vec3 l)
 {
   float k = 2.0;
-  float r_max = 400.0;
+  float r_max = 30.0;
   vec3 atten_const = vec3(1.0);
   float neg_k_square = -(k * k);
   float exp_k_neg_square = exp(neg_k_square);
@@ -107,7 +94,7 @@ float ExponentialAttenuation(vec3 p, vec3 l)
 
   vec3 l_dir = abs(l - p);
   float r2 = dot(l_dir, l_dir);
-  return clamp(exp(r2 * atten_const.x) * atten_const.y - atten_const.z, 0.0, 1.0);
+  return max(exp(r2 * atten_const.x) * atten_const.y - atten_const.z, 0.0);
 }
 
 float SmoothAttenuation(vec3 p, vec3 l)
@@ -119,7 +106,7 @@ float SmoothAttenuation(vec3 p, vec3 l)
 
   vec3 l_dir = l - p;
   float r2 = dot(l_dir, l_dir);
-  return clamp(r2 * atten_const.x * (sqrt(r2) * atten_const.y - 3.0) + 1.0, 0.0, 1.0);
+  return max(r2 * atten_const.x * (sqrt(r2) * atten_const.y - 3.0) + 1.0, 0.0);
 }
 
 float linear_to_sRGB(float color)
@@ -174,70 +161,50 @@ float ShadowCalculation(vec4 light_space, vec3 normal)
 void main()
 {
   vec4 alpha_color = texture(tex_sampler[ALPHA_INDEX], var.texture_coord);
-
   ivec2 alpha_size = textureSize(tex_sampler[ALPHA_INDEX], 0);
 
-  if (alpha_size.x != 1 && alpha_size.y != 1 && alpha_color.r < 0.2) {
+  if (alpha_size.x != 1 && alpha_size.y != 1 && alpha_color.r < 0.1) {
     discard;
   }
 
-  vec4 diffuse_color = texture(tex_sampler[DIFFUSE_INDEX], var.texture_coord);
+  vec3 normal = normalize((texture(tex_sampler[NORMAL_INDEX], var.texture_coord).xyz - 0.5) * 2.0);
 
-  if (diffuse_color.a < 0.2) discard;
+  vec3 p = var.frag_pos;
+  vec3 v = var.view_pos;
 
-  vec3 diffuse_light = diffuse_color.xyz;
-  vec3 sun_light_color = vec3(1.0);
+  vec4 combined = texture(tex_sampler[METAL_ROUGHNESS_INDEX], var.texture_coord);
+  float ao = combined.r;//ao ?
+  float metallic = combined.b;
+  float roughness = combined.g;
 
-  float gray_scale_luminance = 0.212639 * sun_light_color.r + 0.715169 * sun_light_color.g + 0.072192 * sun_light_color.b;
-  vec3 ambient_color = vec3(gray_scale_luminance);
+  vec4 C_diffuse = texture(tex_sampler[DIFFUSE_INDEX], var.texture_coord);
 
-  vec3 normal = normalize(var.normal);
-  ivec2 tex_size = textureSize(tex_sampler[NORMAL_INDEX], 0);
-//  if (tex_size.x != 1 && tex_size.y != 1) {
-//    normal = texture(tex_sampler[NORMAL_INDEX], var.texture_coord).xyz;
-//    normal.z = sqrt(1.0 - normal.x * normal.x - normal.y * normal.y);
-//    normal = normalize(normal);
-//  }
-  //normal.y *= -1.0;
-
-  vec3 p = normalize(var.position);
-  vec3 v = normalize(var.view_position);
-  vec3 l = normalize(var.light_position);
-  vec3 l_dir = normalize(l - p);
-  vec3 v_dir = normalize(v - p);
-//  vec3 l_dir = normalize(var.light_dir);
-//  vec3 v_dir = normalize(var.view_dir);
-
-  float attenuation = ExponentialAttenuation(p, l);
-  //intensity
-  float I = 1200 / (4 * PI);
-  vec3 illum = sun_light_color * I;
-  float shadow = ShadowCalculation(var.light_space, normal);
-
-  //tangent space
-  vec3 halfway_dir = normalize(l_dir + v_dir);
-  float nl = clamp(dot(normal, halfway_dir), 0.0, 1.0);
-
-  vec3 color = DiffuseReflection(normal, l_dir, illum, ambient_color, diffuse_light);
+  if (C_diffuse.a < 0.1) discard;
+  vec3 diffuse_color = C_diffuse.xyz;
+  vec3 C_ambient = C_diffuse.xyz * 0.5;
+  vec3 C_light = sun_light.color * 0.001;
   
-  tex_size = textureSize(tex_sampler[SPECULAR_INDEX], 0);
+  vec3 ambient = C_ambient * C_light;
+  vec3 color = ambient;
 
-  //@todo get rid of if
-  if (tex_size.x != 1 && tex_size.y != 1) {
-    vec3 specular_color = texture(tex_sampler[SPECULAR_INDEX], var.texture_coord).rgb;
-    //color += SpecularReflection(normal, halfway_dir, material.shi_ior_diss.x, nl, illum, specular_color);
+  for (int i = 0; i < NR_POINT_LIGHTS; ++i) {
+   vec3 l_dir = abs(point_lights[i].position - p);
+   float attenuation = InverseSquareAttenuation(l_dir);
+   C_light = point_lights[i].color * attenuation;
+   
+   float NdL = max(dot(normal, normalize(-var.t_plight_dir[i])), 0.0);
+
+   color += diffuse_color * C_light * NdL;
+
+   //vec3 r = 2 * NdL * normal - l;
+
   }
-  //color *= shadow;
-  color /= 80;
 
-  color = color / (color + vec3(1.0));
+  //color *= PI;
+
   color.r = linear_to_sRGB(color.r);
   color.g = linear_to_sRGB(color.g);
   color.b = linear_to_sRGB(color.b);
-  //color = pow(color, vec3(1.0 / 2.2));
-
-  //final_color = vec4(vec3(gray_scale_luminance), 1.0);
   
-  final_color = vec4(color.xyz, 1.0);
+  final_color = vec4(color, 1.0);
 }
-

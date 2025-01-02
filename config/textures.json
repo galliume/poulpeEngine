@@ -1,12 +1,12 @@
 {
 	"textures": {
 		"mpoulpe": {
-			"path": "assets/texture/mpoulpe.ktx",
+			"path": "assets/texture/mpoulpe.ktx2",
 			"ktx_format": "KTX_TTF_BC7_RGBA"
 		},
 		"_plp_empty": {
-			"path": "assets/texture/_plp_empty.ktx",
-			"ktx_format": "KTX_TTF_BC4_R"
+			"path": "assets/texture/_plp_empty.ktx2",
+			"ktx_format": "KTX_TTF_BC7_RGBA"
 		}
 	},
 	"skybox": {

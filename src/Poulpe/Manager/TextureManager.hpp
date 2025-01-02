@@ -12,6 +12,12 @@ namespace Poulpe
 {
   class Renderer;
 
+  enum class TEXTURE_TYPE {
+    DIFFUSE,
+    NORMAL,
+    ORM
+  };
+
   class TextureManager
   {
   public:
@@ -27,7 +33,6 @@ namespace Poulpe
     void addKTXTexture(
       std::string const& name,
       std::string const& path,
-      ktx_transcode_fmt_e const target_format,
       VkImageAspectFlags const aspect_flags,
       bool const is_public = false);
     void clear();
@@ -41,7 +46,8 @@ namespace Poulpe
     void add(
       std::string const& name,
       nlohmann::json const& data,
-      VkImageAspectFlags const aspect_flags);
+      VkImageAspectFlags const aspect_flags,
+      TEXTURE_TYPE texture_type);
 
   private:
     const uint32_t MAX_MIPLEVELS = 5;
