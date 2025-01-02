@@ -2,15 +2,18 @@
 
 #include "PlpTypedef.hpp"
 
+#include <assimp/scene.h>
+
 namespace Poulpe
 {
+
   class AssimpLoader
 
   {
   public:
     void static loadData(
       std::string const & path,
-      bool const inverse_texture_y,
+      bool const flip_Y,
       std::function<void(
         PlpMeshData const _data,
         std::vector<material_t> const materials,
@@ -22,5 +25,9 @@ namespace Poulpe
 
   private:
      static std::string const cleanName(std::string const& name);
+     static void process(aiNode* node,
+       const aiScene *scene,
+       std::vector<PlpMeshData>& mesh_data,
+       bool const flip_Y);
   };
 }

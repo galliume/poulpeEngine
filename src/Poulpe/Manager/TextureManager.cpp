@@ -193,7 +193,6 @@ namespace Poulpe
   void TextureManager::addKTXTexture(
     std::string const& name,
     std::string const& path,
-    ktx_transcode_fmt_e const target_format,
     VkImageAspectFlags const aspect_flags,
     bool const is_public)
   {
@@ -213,12 +212,12 @@ namespace Poulpe
     KTX_error_code result = ktxTexture_CreateFromNamedFile(path.c_str(), KTX_TEXTURE_CREATE_LOAD_IMAGE_DATA_BIT, (ktxTexture**)&ktx_texture);
 
     if (ktxTexture2_NeedsTranscoding(ktx_texture)) {
-      ktxTexture2_TranscodeBasis(ktx_texture, target_format, 0);
+      ktxTexture2_TranscodeBasis(ktx_texture, KTX_TTF_BC7_RGBA, 0);
     }
 
     VkFormat format = (VkFormat) ktx_texture->vkFormat;
     VkImage texture_image = nullptr;
-   
+
     VkCommandPool commandPool = _renderer->getAPI()->createCommandPool();
     VkCommandBuffer cmd_buffer = _renderer->getAPI()->allocateCommandBuffers(commandPool)[0];
 
@@ -255,13 +254,13 @@ namespace Poulpe
   {
     return [this](std::latch& count_down) {
       for (auto& [key, texture_data] : _texture_config["textures"].items()) {
-        add(key, texture_data, VK_IMAGE_ASPECT_COLOR_BIT);
+        add(key, texture_data, VK_IMAGE_ASPECT_COLOR_BIT, TEXTURE_TYPE::DIFFUSE);
       }
       for (auto& [key, texture_data] : _texture_config["normal"].items()) {
-        add(key, texture_data, VK_IMAGE_ASPECT_COLOR_BIT);
+        add(key, texture_data, VK_IMAGE_ASPECT_COLOR_BIT, TEXTURE_TYPE::NORMAL);
       }
       for (auto& [key, texture_data] : _texture_config["orm"].items()) {
-        add(key, texture_data, VK_IMAGE_ASPECT_COLOR_BIT);
+        add(key, texture_data, VK_IMAGE_ASPECT_COLOR_BIT, TEXTURE_TYPE::ORM);
       }
       count_down.count_down();
     };
@@ -270,34 +269,25 @@ namespace Poulpe
   void TextureManager::add(
     std::string const& name,
     nlohmann::json const& data,
-    VkImageAspectFlags const aspect_flags)
+    VkImageAspectFlags const aspect_flags,
+    TEXTURE_TYPE texture_type)
   {
     std::filesystem::path p = std::filesystem::current_path();
 
     std::string const path{ p.string() + "/" + data.at("path").get<std::string>() };
     std::string const ktx_format{ data.at("ktx_format").get<std::string>() };
 
-    ktx_transcode_fmt_e fmt{};
-    std::string target_type{ "RGBA" };
-    std::string assign_oetf{ "srgb" };
+    std::string oetf{ "srgb" };
 
-    if (ktx_format == "KTX_TTF_BC7_RGBA") {
-      fmt = KTX_TTF_BC7_RGBA;
-    } else if (ktx_format == "KTX_TTF_BC1_RGB") {
-      target_type = "RGB";
-      fmt = KTX_TTF_BC1_RGB;
-    } else if (ktx_format == "KTX_TTF_BC5_RG") {
-      target_type = "RG";
-      assign_oetf = "linear";
-      fmt = KTX_TTF_BC5_RG;
-    } else if (ktx_format == "KTX_TTF_BC3_RGBA") {
-      fmt = KTX_TTF_BC3_RGBA;
-    } else if (ktx_format == "KTX_TTF_BC4_R") {
-      target_type = "R";
-      assign_oetf = "linear";
-      fmt = KTX_TTF_BC4_R;
-    } else {
-      PLP_ERROR("Unknown ktx_format {}", ktx_format);
+    switch (texture_type) {
+    case TEXTURE_TYPE::NORMAL:
+      oetf = "linear";
+      break;
+    case TEXTURE_TYPE::ORM:
+      break;
+    default:
+    case TEXTURE_TYPE::DIFFUSE:
+      break;
     }
 
     if (!std::filesystem::exists(path)) {
@@ -310,13 +300,13 @@ namespace Poulpe
         original_name = file_name.string();
       }
       std::string cmd{
-        "toktx --t2 --encode uastc --target_type " + target_type + \
-        " --assign_oetf " + assign_oetf + " \"" + path + "\" \"" + original_name + "\""
+        "ktx create --encode uastc --format " + ktx_format + " --assign-oetf " + oetf + \
+        " \"" + original_name + "\" \"" + path + "\" "
       };
-      //PLP_DEBUG("{}", cmd);
+      PLP_DEBUG("{}", cmd);
       std::system(cmd.c_str());
     }
-    addKTXTexture(name, path, fmt, aspect_flags, true);
+    addKTXTexture(name, path, aspect_flags, true);
   }
 
   std::function<void(std::latch& count_down)> TextureManager::loadSkybox(std::string_view skybox)

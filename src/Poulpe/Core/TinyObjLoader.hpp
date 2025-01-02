@@ -21,7 +21,7 @@ namespace Poulpe
     public:
       void static loadData(
         std::string const & path,
-        bool const inverse_texture_y,
+        bool const flip_Y,
         std::function<void(
           TinyObjData const& _data,
           std::vector<material_t> const& materials,

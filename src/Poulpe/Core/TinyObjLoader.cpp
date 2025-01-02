@@ -11,7 +11,7 @@ namespace Poulpe
 {
   void TinyObjLoader::loadData(
     std::string const& path,
-    bool const inverse_texture_y,
+    bool const flip_Y,
     std::function<void(
       TinyObjData const& _data,
       std::vector<material_t> const& materials,
@@ -150,7 +150,7 @@ namespace Poulpe
                     tinyobj::real_t ty = attrib.texcoords[2 * size_t(idx.texcoord_index) + 1];
 
                     vertex.texCoord = { tx, ty };
-                    if (inverse_texture_y) vertex.texCoord.y *= -1.0f;
+                    if (flip_Y) vertex.texCoord.y *= -1.0f;
                 }
 
               // Optional: vertex colors

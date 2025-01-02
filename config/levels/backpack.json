@@ -4,25 +4,25 @@
 			"mesh": "assets/mesh/crate/debug_crate.obj",
 			"textures": {
 				"container2": {
-					"path": "assets/mesh/crate/container2.ktx",
-					"ktx_format": "KTX_TTF_BC7_RGBA"
+					"path": "assets/mesh/crate/container2.ktx2",
+					"ktx_format": "R8G8B8A8_SRGB"
 				}
 			},
 			"orm": {
 				"container2_specular": {
-					"path" : "assets/mesh/crate/container2_specular.ktx",
-					"ktx_format": "KTX_TTF_BC5_RG"
+					"path" : "assets/mesh/crate/container2_specular.ktx2",
+					"ktx_format": "R8G8B8A8_SRGB"
 				}
 			},
 			"normal": {
 				"crate_1_normal": {
-					"path": "assets/mesh/crate/crate_1_normal.ktx",
-					"ktx_format": "KTX_TTF_BC5_RG"
+					"path": "assets/mesh/crate/crate_1_normal.ktx2",
+					"ktx_format": "R8G8B8A8_UNORM"
 				}
 			},
 			"shader": "main_basic",
 			"positions": [
-				{"x": 0.0, "y": 1.0, "z": 0.0 }
+				{"x": 0.0, "y": -1.0, "z": 0.0 }
 			],
 			"scales": [
 				{"x": 1.0, "y": 1.0, "z": 1.0}
@@ -30,7 +30,7 @@
 			"rotations": [
 				{"x": 0.0, "y": 0.0, "z": 0.0}
 			],
-			"inverseTextureY": false,
+			"flipY": true,
 			"count": 1,
 			"hasBbox": false,
 			"hasAnimation": true,
@@ -45,33 +45,33 @@
 			"mesh": "assets/mesh/backpack/backpack.obj",
 			"textures": {
 				"diffuse": {
-					"path": "assets/mesh/backpack/diffuse.ktx",
-					"ktx_format": "KTX_TTF_BC7_RGBA"
+					"path": "assets/mesh/backpack/diffuse.ktx2",
+					"ktx_format": "R8G8B8A8_SRGB"
 				}
 			},
 			"orm": {
 				"ao": { 
-					"path" : "assets/mesh/backpack/ao.ktx",
-					"ktx_format": "KTX_TTF_BC5_RG"
+					"path" : "assets/mesh/backpack/ao.ktx2",
+					"ktx_format": "R8G8B8A8_SRGB"
 				},
 				"roughness": {
-					"path" : "assets/mesh/backpack/roughness.ktx",
-					"ktx_format" : "KTX_TTF_BC5_RG"
+					"path" : "assets/mesh/backpack/roughness.ktx2",
+					"ktx_format" : "R8G8B8A8_SRGB"
 				},
 				"specular": {
-					"path" : "assets/mesh/backpack/specular.ktx",
-					"ktx_format": "KTX_TTF_BC5_RG"
+					"path" : "assets/mesh/backpack/specular.ktx2",
+					"ktx_format": "R8G8B8A8_SRGB"
 				}
 			},
 			"normal": {
 				"normal": {
-					"path" : "assets/mesh/backpack/normal.ktx",
-					"ktx_format": "KTX_TTF_BC5_RG"
+					"path" : "assets/mesh/backpack/normal.ktx2",
+					"ktx_format": "R8G8B8A8_UNORM"
 				}
 			},
 			"shader": "main_basic",
 			"positions": [
-				{"x": -5.0, "y": 2.5, "z": 0.0}
+				{"x": -5.0, "y": -2.5, "z": 0.0}
 			],
 			"scales": [
 				{"x": 1.0, "y": 1.0, "z": 1.0}
@@ -79,7 +79,7 @@
 			"rotations": [
 				{"x": 0.0, "y": 0.0, "z": 0.0}
 			],
-			"inverseTextureY": false,
+			"flipY": true,
 			"count": 1,
 			"hasBbox": false,
 			"hasAnimation": true,
@@ -94,40 +94,40 @@
 			"mesh": "assets/mesh/trees/palm_1/free_palm.obj",
 			"textures": {
 				"leaf": {
-					"path" : "assets/mesh/trees/palm_1/leaf.ktx",
-					"ktx_format": "KTX_TTF_BC7_RGBA"
+					"path" : "assets/mesh/trees/palm_1/leaf.ktx2",
+					"ktx_format": "R8G8B8A8_SRGB"
 				},
 				"bark": {
-					"path" : "assets/mesh/trees/palm_1/bark.ktx",
-					"ktx_format" : "KTX_TTF_BC7_RGBA"
+					"path" : "assets/mesh/trees/palm_1/bark.ktx2",
+					"ktx_format" : "R8G8B8A8_SRGB"
 				}
 			},
 			"orm": {
 				"bark_roughness": {
-					"path" : "assets/mesh/trees/palm_1/bark_roughness.ktx",
-					"ktx_format" : "KTX_TTF_BC5_RG"
+					"path" : "assets/mesh/trees/palm_1/bark_roughness.ktx2",
+					"ktx_format" : "R8G8B8A8_SRGB"
 				},
 				"bark_ao": {
-					"path" : "assets/mesh/trees/palm_1/bark_ao.ktx",
-					"ktx_format" : "KTX_TTF_BC5_RG"
+					"path" : "assets/mesh/trees/palm_1/bark_ao.ktx2",
+					"ktx_format" : "R8G8B8A8_SRGB"
 				},			
 				"leaf_ao": {
-					"path" : "assets/mesh/trees/palm_1/leaf_ao.ktx",
-					"ktx_format": "KTX_TTF_BC5_RG"
+					"path" : "assets/mesh/trees/palm_1/leaf_ao.ktx2",
+					"ktx_format": "R8G8B8A8_SRGB"
 				},
 				"leaf_roughness": {
-					"path" : "assets/mesh/trees/palm_1/leaf_roughness.ktx",
-					"ktx_format": "KTX_TTF_BC5_RG"
+					"path" : "assets/mesh/trees/palm_1/leaf_roughness.ktx2",
+					"ktx_format": "R8G8B8A8_SRGB"
 				}
 			},
 			"normal": {
 				"bark_normal": {
-					"path" : "assets/mesh/trees/palm_1/bark_normal.ktx",
-					"ktx_format" : "KTX_TTF_BC5_RG"
+					"path" : "assets/mesh/trees/palm_1/bark_normal.ktx2",
+					"ktx_format" : "R8G8B8A8_UNORM"
 				},
 				"leaf_normal": {
-					"path" : "assets/mesh/trees/palm_1/leaf_normal.ktx",
-					"ktx_format": "KTX_TTF_BC5_RG"
+					"path" : "assets/mesh/trees/palm_1/leaf_normal.ktx2",
+					"ktx_format": "R8G8B8A8_UNORM"
 				}
 			},
 			"shader": "main_basic",
@@ -140,7 +140,7 @@
 			"rotations": [
 				{"x": 0.0, "y": 0.0, "z": 0.0}
 			],
-			"inverseTextureY": true,
+			"flipY": true,
 			"count": 1,
 			"hasBbox": false,
 			"hasAnimation": false,
@@ -154,8 +154,8 @@
 			"mesh": "assets/mesh/minecraft/Grass_Block.obj",
 			"textures": {
 				"Grass_Block_TEX": {
-					"path" : "assets/mesh/minecraft/Grass_Block_TEX.ktx",
-					"ktx_format": "KTX_TTF_BC7_RGBA"
+					"path" : "assets/mesh/minecraft/Grass_Block_TEX.ktx2",
+					"ktx_format": "R8G8B8A8_SRGB"
 				}
 			},
 			"orm": {
@@ -172,7 +172,7 @@
 			"rotations": [
 				{"x": 0.0, "y": 0.0, "z": 0.0}
 			],
-			"inverseTextureY": true,
+			"flipY": true,
 			"count": 1,
 			"hasBbox": false,
 			"hasAnimation": true,
@@ -187,8 +187,8 @@
 			"mesh": "assets/mesh/SnowTerrain/SnowTerrain.obj",
 			"textures": {
 				"snowterrain": {
-					"path" : "assets/mesh/SnowTerrain/snowterrain.ktx",
-					"ktx_format" : "KTX_TTF_BC7_RGBA"
+					"path" : "assets/mesh/SnowTerrain/snowterrain.ktx2",
+					"ktx_format" : "R8G8B8A8_SRGB"
 				}
 			},
 			"orm": {
@@ -197,7 +197,7 @@
 			},
 			"shader": "main_basic",
 			"positions": [
-				{"x": 0.0, "y": -0.25, "z": 0.0}
+				{"x": 0.0, "y": 0.25, "z": 0.0}
 			],
 			"scales": [
 				{"x": 1.0, "y": 1.0, "z": 1.0}
@@ -205,7 +205,7 @@
 			"rotations": [
 				{"x": 0.0, "y": 0.0, "z": 0.0}
 			],
-			"inverseTextureY": true,
+			"flipY": false,
 			"count": 1,
 			"hasBbox": false,
 			"hasAnimation": false,
