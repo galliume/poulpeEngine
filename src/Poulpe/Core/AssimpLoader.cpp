@@ -17,9 +17,9 @@ namespace Poulpe
 		return to;
 	}
 
-	static inline glm::vec3 GetGLMVec(const aiVector3D& vec) 
-	{ 
-		return glm::vec3(vec.x, vec.y, vec.z); 
+	static inline glm::vec3 GetGLMVec(const aiVector3D& vec)
+	{
+		return glm::vec3(vec.x, vec.y, vec.z);
 	}
 
 	static inline glm::quat GetGLMQuat(const aiQuaternion& pOrientation)
@@ -41,9 +41,9 @@ namespace Poulpe
           std::vector<Scale> const scales)> callback)
   {
     Assimp::Importer importer;
-  
 
-    auto flags{
+
+    auto flags {
         aiProcess_Triangulate
       | aiProcess_OptimizeMeshes
       | aiProcess_GenNormals
@@ -67,7 +67,7 @@ namespace Poulpe
 
     if (scene->HasMaterials()) {
       for (auto i{ 0 }; i < scene->mNumMaterials; ++i) {
-       
+
         auto const& mat = scene->mMaterials[i];
 
         material_t material{};
@@ -119,7 +119,7 @@ namespace Poulpe
           if (mat->GetTexture(aiTextureType_AMBIENT, 0, &ambientTexturePath) == AI_SUCCESS) {
               material.name_texture_ambient = AssimpLoader::cleanName(ambientTexturePath.C_Str());
           }
-        } 
+        }
         if (mat->GetTextureCount(aiTextureType_DIFFUSE) > 0) {
           aiString diffuseTexturePath;
           if (mat->GetTexture(aiTextureType_DIFFUSE, 0, &diffuseTexturePath) == AI_SUCCESS) {
@@ -140,7 +140,7 @@ namespace Poulpe
         }
 
         bool const is_obj {std::filesystem::path(path).extension() == ".obj"};
-        
+
         if (is_obj) {
           if (mat->GetTextureCount(aiTextureType_HEIGHT) > 0) {
             aiString bumpTexturePath;
@@ -192,7 +192,7 @@ namespace Poulpe
       //PLP_DEBUG("Animation {}, duration {}", animation->mName.C_Str(), animation->mDuration);
       for (unsigned int j{ 0 }; j < animation->mNumChannels; j++) {
         aiNodeAnim const* node = animation->mChannels[j];
-        
+
         rotations.reserve(node->mNumRotationKeys);
         for (unsigned int r{ 0 }; r < node->mNumRotationKeys; r++) {
           aiQuatKey const& rotKey = node->mRotationKeys[r];
@@ -260,7 +260,9 @@ namespace Poulpe
       glm::vec3 n{ 0.5f, 0.5f, 1.0f };
 
       mesh_data.vertices.reserve(mesh->mNumVertices);
+
       for (unsigned int v{ 0 }; v < mesh->mNumVertices; v++) {
+
         aiVector3D vertices = mesh->mVertices[v];
 
         Vertex vertex{};
@@ -269,13 +271,13 @@ namespace Poulpe
         vertex.weights.resize(4);
         std::fill(vertex.weights.begin(), vertex.weights.end(), 0.0f);
 
-        vertex.fidtidBB = glm::vec4(static_cast<float>(v), static_cast<float>(mesh->mMaterialIndex), 0.0f, 0.0f);
         vertex.pos = { vertices.x, vertices.y, vertices.z };
         vertex.normal = n;
 
         if (mesh->HasNormals()) {
           aiVector3D const& normal = mesh->mNormals[v];
           vertex.normal = { normal.x, normal.y, normal.z };
+          //if (flip_Y) vertex.normal.y = 1.0f - vertex.normal.y;
         } else {
           PLP_WARN("NO NORMAL");
         }
@@ -309,10 +311,10 @@ namespace Poulpe
         if (mesh->mNumUVComponents[0] > 0) {
           aiVector3D texture_coord = mesh->mTextureCoords[0][v];
           vertex.texture_coord = { texture_coord.x, texture_coord.y };
-          if (flip_Y) vertex.texture_coord.y *= -1.0f;
+          //if (flip_Y) vertex.texture_coord.y *= -1.0f;
         }
 
-        glm::vec4 color{ 1.0f };
+        glm::vec4 color{ 1.0f, 0.0f, 0.0f, 1.0f };
 
         if (mesh->HasVertexColors(v)) {
           color = glm::vec4(
@@ -320,6 +322,7 @@ namespace Poulpe
             mesh->mColors[v]->g,
             mesh->mColors[v]->b,
             mesh->mColors[v]->a);
+          PLP_DEBUG("r: {} g: {} b: {} a: {}", color.x, color.y, color.z, color.w);
         }
         vertex.color = color;
 
@@ -333,7 +336,6 @@ namespace Poulpe
 
         for (unsigned int j{ 0 }; j < face->mNumIndices; j++) {
           mesh_data.indices.push_back(face->mIndices[j]);
-          count += 1;
         }
         mesh_data.material_ID = mesh->mMaterialIndex;
         mesh_data.materials_ID = { mesh->mMaterialIndex };

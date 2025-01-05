@@ -15,8 +15,8 @@ namespace Poulpe
             VkDeviceSize alignment
         );
 
-        void bindBufferToMemory(VkBuffer& buffer, VkDeviceSize size);
-        void bindImageToMemory(VkImage& image, VkDeviceSize size);
+        void bindBufferToMemory(VkBuffer& buffer, VkDeviceSize const offset);
+        void bindImageToMemory(VkImage& image, VkDeviceSize const offset);
         void clear();
         unsigned int getID() const { return _index; }
         VkDeviceMemory* getMemory();
@@ -34,7 +34,7 @@ namespace Poulpe
 
     private:
         unsigned int _index{0};
-        
+
         bool _is_allocated{false};
         bool _is_full{false};
 
@@ -42,8 +42,8 @@ namespace Poulpe
         VkDeviceSize _max_size;
         uint32_t _memory_type;
         //@todo check with deviceProps.limits.bufferImageGranularity;
-        uint32_t _offset{0};
- 
+        VkDeviceSize _offset{0};
+
         std::vector<VkBuffer> _buffer {};
         VkDevice _device;
         std::unique_ptr<VkDeviceMemory> _memory{nullptr};

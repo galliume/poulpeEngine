@@ -15,7 +15,7 @@ namespace Poulpe {
         static InputManager* getInputManager() { return _InputManager.get(); }
         static ConfigManager* getConfigManager() { return _ConfigManager.get(); }
         //static ThreadPool* getThreadPool() { return _ThreadPool.get(); }
-        
+
         static void init(Window const * const window)
         {
           _InputManager = std::make_unique<InputManager>(window);

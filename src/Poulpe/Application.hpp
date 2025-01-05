@@ -1,17 +1,15 @@
 #pragma once
 
-#include "Core/CommandQueue.hpp"
-
-#include "GUI/Window.hpp"
-
 #include "Manager/APIManager.hpp"
 #include "Manager/NetworkManager.hpp"
 #include "Manager/RenderManager.hpp"
 
-#include "Renderer/Vulkan/Renderer.hpp"
-
 namespace Poulpe
 {
+  class CommandQueue;
+  class Renderer;
+  class Window;
+
   class Application
   {
 

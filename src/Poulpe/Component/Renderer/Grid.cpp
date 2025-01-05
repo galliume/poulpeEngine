@@ -25,7 +25,7 @@ namespace Poulpe
             VkPipelineLayout pipeline_layout,
             Renderer* const renderer,
              Mesh* const meshG) {
-            
+
             constants pushConstants{};
             pushConstants.view = renderer->getCamera()->lookAt();
             pushConstants.view_position = glm::vec4(0.1f, 50.f, 0.f, 0.f);
@@ -68,7 +68,7 @@ namespace Poulpe
       mesh->getUniformBuffers()->emplace_back(_renderer->getAPI()->createUniformBuffers(1, commandPool));
 
       vkDestroyCommandPool(_renderer->getDevice(), commandPool, nullptr);
-      
+
       setPushConstants(mesh);
 
       for (uint32_t i{ 0 }; i < mesh->getUniformBuffers()->size(); i++) {

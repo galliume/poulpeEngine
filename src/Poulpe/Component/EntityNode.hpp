@@ -32,7 +32,7 @@ namespace Poulpe {
     std::vector<EntityNode*> _children;
     std::unique_ptr<Entity> _entity;
     std::unique_ptr<EntityNode> _parent;
-    
+
     bool _is_loaded{ false };
   };
 }

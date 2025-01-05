@@ -11,7 +11,7 @@ namespace Poulpe
     Response Command::execRequest()
     {
         Response response;
-        
+
         _Request();
 
         return response;

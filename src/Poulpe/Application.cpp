@@ -2,8 +2,14 @@
 
 #include "PoulpeEngineConfig.h"
 
+#include "Core/CommandQueue.hpp"
+
+#include "GUI/Window.hpp"
+
 #include "Poulpe/Manager/ConfigManager.hpp"
 #include "Poulpe/Manager/InputManager.hpp"
+
+#include "Renderer/Vulkan/Renderer.hpp"
 
 #include <GLFW/glfw3.h>
 
@@ -46,7 +52,7 @@ namespace Poulpe
 
     double const loaded_time{ duration<double>(
       steady_clock::now() - _start_run).count()};
-    
+
     PLP_TRACE("Started in {} seconds", loaded_time);
 
     duration<double> const title_rate{1.0};
@@ -57,13 +63,22 @@ namespace Poulpe
     double accumulator{ 0.0 };
     double total_time{ 0.0 };
     double const dt{ 0.01 };
-   
+
     double ms_count{0.0};
     double fps_count{0.0};
     size_t frame_count{ 0 };
     auto last_time_debug_updated{ steady_clock::now() };
 
     while (!glfwWindowShouldClose(_render_manager->getWindow()->get())) {
+
+      //@todo reload level
+      //if (Poulpe::Locator::getConfigManager()->reload()) {
+      //  _render_manager->getRenderer()->getAPI()->waitIdle();
+      //  _render_manager->forceRefresh();
+      //  _render_manager->init();
+      //  Poulpe::Locator::getConfigManager()->setReload();
+      //}
+
       glfwPollEvents();
 
       auto const new_time{ steady_clock::now() };
@@ -77,7 +92,7 @@ namespace Poulpe
       //cf https://gafferongames.com/post/fix_your_timestep/
       while (accumulator >= dt) {
         _render_manager->getCamera()->updateSpeed(dt);
-  
+
         accumulator -= dt;
         total_time += dt;
       }
@@ -107,7 +122,7 @@ namespace Poulpe
       glfwSetWindowTitle(_render_manager->getWindow()->get(), title.str().c_str());
 
       ++frame_count;
-      
+
       current_time = new_time;
     }
     _render_manager->cleanUp();

@@ -13,7 +13,7 @@ namespace Poulpe
     {
     public:
         Command(std::function<void()> request, WhenToExecute w = WhenToExecute::PRE_RENDERING);
-        
+
         Response execRequest();
         WhenToExecute getWhenToExecute() const { return _When; };
 

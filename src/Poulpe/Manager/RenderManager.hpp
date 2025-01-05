@@ -42,7 +42,6 @@ namespace Poulpe
     inline Window* getWindow() { return _window.get(); }
     void init();
     inline bool isLoaded()  { return _is_loaded; }
-    void refresh(uint32_t levelIndex, bool showBbox = false, std::string_view skybox = "debug");
     void updateScene(double const delta_time);
     void renderScene();
     inline void setIsLoaded(bool loaded = true) { _is_loaded = loaded; }
@@ -74,5 +73,7 @@ namespace Poulpe
     std::unique_ptr<TextureManager> _texture_manager;
 
     std::vector<VkDescriptorPool> _descriptor_pools;
+
+    std::chrono::time_point<std::chrono::system_clock> _last_reload;
   };
 }

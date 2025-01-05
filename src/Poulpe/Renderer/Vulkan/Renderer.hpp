@@ -104,16 +104,16 @@ namespace Poulpe
     inline void addCamera(Camera* const camera) { _camera = camera; }
     void addEntities(std::vector<Entity*> entities) ;
     void addEntity(Entity* entity, bool const is_last) ;
-    
+
     void updateData(
       std::string const& name,
       UniformBufferObject const& ubo,
       std::vector<Vertex> const& vertices) ;
-    
+
     void addPipeline(
       std::string const& shaderName,
       VulkanPipeline& pipeline) ;
-    
+
     void beginRendering(
       VkCommandBuffer& cmd_buffer,
       VkImageView& imageview,
@@ -170,7 +170,7 @@ namespace Poulpe
     void immediateSubmit(std::function<void(VkCommandBuffer cmd)> && function, int queueIndex = 0) ;
     void init();
     void renderScene();
-    
+
     void setDeltatime(float const delta_time);
 
     void setRayPick(
@@ -179,7 +179,7 @@ namespace Poulpe
       float const z,
       int const width,
       int const height);
-    
+
     void showGrid(bool const show);
 
     VulkanAPI * const getAPI() const { return _vulkan.get(); }
@@ -272,9 +272,9 @@ namespace Poulpe
     std::vector<Entity*> _entities_buffer{};
     unsigned int const _entities_buffer_swap_treshold{ 50 };
     bool _force_entities_buffer_swap{ false };
-    
+
     std::vector<VkSemaphore> _entities_sema_finished;
-    
+
     std::vector<VkFence> _images_in_flight{};
     std::vector<VkFence> _fences_in_flight{};
 

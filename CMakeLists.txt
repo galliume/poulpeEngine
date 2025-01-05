@@ -58,7 +58,7 @@ add_subdirectory(${PROJECT_SOURCE_DIR}/src/Poulpe/Utils)
 target_include_directories(${PROJECT_NAME} PRIVATE "${PROJECT_BINARY_DIR}")
 
 set(DEBUG_OPTIONS -g)
-set(RELEASE_OPTIONS -Wno-c++98-compat -Wno-c++98-compat-pedantic -flto)
+set(RELEASE_OPTIONS )
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
   list(APPEND DEBUG_OPTIONS /MDd /Od /Zi /Zc:__cplusplus /EHsc)
@@ -67,8 +67,8 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
   #target_link_options(${PROJECT_NAME} PRIVATE $<$<CONFIG:RELEASE>:/LTCG>)
   target_compile_options(${PROJECT_NAME} PRIVATE $<$<CONFIG:DEBUG>:/GA /Wall -Wno-c++98-compat -Wno-old-style-cast>)
 else()
-  list(APPEND DEBUG_OPTIONS -O3)
-  list(APPEND RELEASE_OPTIONS -O3)
+  list(APPEND DEBUG_OPTIONS -O0 -std=c++20 -Wall)
+  list(APPEND RELEASE_OPTIONS -O3 -std=c++20 -Wall)
 endif()
 
 target_compile_options(${PROJECT_NAME} PRIVATE $<$<CONFIG:DEBUG>:${DEBUG_OPTIONS}>)
@@ -92,24 +92,25 @@ else()
   message(FATAL_ERROR "The env var VULKAN_SDK nor VULKAN_SDK_ACTIONS not found.")
 endif()
 
+cmake_path(SET KTX_PATH "")
+
 if (DEFINED ENV{KTX_SDK})
   cmake_path(SET KTX_PATH "$ENV{KTX_SDK}/include")
   message(STATUS "Found KTX include dir: ${KTX_PATH}")
+  
   find_package(KTX REQUIRED)
- else()
-  message(FATAL_ERROR "The env var KTX_SDK not found.")
 endif()
-
+  
 target_include_directories(${PROJECT_NAME} PRIVATE
           ${PROJECT_SOURCE_DIR}/vendor/assimp/include
-          ${PROJECT_SOURCE_DIR}/vendor/lua
           ${PROJECT_SOURCE_DIR}/vendor/glm
+          ${PROJECT_SOURCE_DIR}/vendor/lua
           ${PROJECT_SOURCE_DIR}/vendor/miniaudio
           ${PROJECT_SOURCE_DIR}/vendor/nlohmann/include
           ${PROJECT_SOURCE_DIR}/vendor/spdlog/include
           ${PROJECT_SOURCE_DIR}/vendor/stb
           ${VULKAN_PATH}
-          ${KTX_PATH})
+		  ${KTX_PATH})
 
 add_subdirectory(${PROJECT_SOURCE_DIR}/vendor/assimp)
 add_subdirectory(${PROJECT_SOURCE_DIR}/vendor/glfw)

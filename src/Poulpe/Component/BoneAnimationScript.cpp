@@ -43,7 +43,7 @@ namespace Poulpe
   }
 
   BoneAnimationScript::~BoneAnimationScript()
-  { 
+  {
     lua_close(_lua_State);
   }
 
@@ -64,7 +64,7 @@ namespace Poulpe
       std::vector<Position> const& positions,
       std::vector<Rotation> const& rotations,
       std::vector<Scale> const& scales) {
-      
+
       if (animations.empty()) {
         anim->done = true;
         return;
@@ -140,7 +140,7 @@ namespace Poulpe
     std::ranges::for_each(_new_moves, [&](auto& anim) {
       _moves.emplace_back(std::move(anim));
     });
- 
+
     _new_moves.clear();
 
     if (!_move_init) {

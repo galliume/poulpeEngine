@@ -25,20 +25,20 @@ namespace Poulpe
 
     /*
     *   @todo: improve first naive draft
-    * 
+    *
     *   message format is:
     *   functionName_param1_param2_etc
     *
     *   functionName is a string terminated by "_"
     *   each param end with "_"
-    * 
+    *
     *   message: loadSkybox_bluesky
     *   function to call loadSkybox with param bluesky
     */
     size_t funcNamePos = message.find("_");
     std::string funcName = message.substr(0, funcNamePos);
     PLP_TRACE("funcName: {}", funcName);
-  
+
     std::vector<std::string> params;
     std::string buffer;
 
@@ -50,7 +50,7 @@ namespace Poulpe
         buffer += c;
       }
     }
-    
+
     params.emplace_back(buffer);
 
     if (funcName == "updateSkybox") {

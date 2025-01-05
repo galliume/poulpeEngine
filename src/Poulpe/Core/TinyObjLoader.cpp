@@ -105,7 +105,7 @@ namespace Poulpe
 
         for (size_t f = 0; f < shape.mesh.nu_face_vertices.size(); f++) {
             size_t fv = size_t(shape.mesh.nu_face_vertices[f]);
-                 
+
             int id = (-1 != shape.mesh.material_ids[f]) ? shape.mesh.material_ids[f] : 0;
 
             if (!texidsmap.contains(id)) {

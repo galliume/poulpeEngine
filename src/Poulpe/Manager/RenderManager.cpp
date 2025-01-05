@@ -49,15 +49,6 @@ namespace Poulpe
     _destroy_manager->setRenderer(_renderer.get());
     _destroy_manager->addMemoryPool(_renderer->getAPI()->getDeviceMemoryPool());
 
-    nlohmann::json appConfig = Poulpe::Locator::getConfigManager()->appConfig();
-    if (appConfig["defaultLevel"].empty()) {
-        PLP_WARN("defaultLevel conf not set.");
-    }
-
-    _current_level = static_cast<std::string>(appConfig["defaultLevel"]);
-
-    Locator::getInputManager()->init(appConfig["input"]);
-
     //@todo, those managers should not have the usage of the renderer...
     _texture_manager->addRenderer(_renderer.get());
     _entity_manager->addRenderer(_renderer.get());
@@ -89,16 +80,19 @@ namespace Poulpe
 
   void RenderManager::init()
   {
+    auto * const configManager = Poulpe::Locator::getConfigManager();
+
     //@todo clean all thoses
     if (_refresh) {
         _renderer->getAPI()->waitIdle();
         cleanUp();
+        //_renderer->getAPI()->getDeviceMemoryPool()->clear();
+        _texture_manager->clear();
         setIsLoaded(false);
         _refresh = false;
         _entity_manager->initWorldGraph();
+        configManager->load();
     }
-
-    auto * const configManager = Poulpe::Locator::getConfigManager();
 
     nlohmann::json const& appConfig = configManager->appConfig();
     //nlohmann::json const& textureConfig = configManager->texturesConfig();
@@ -107,9 +101,17 @@ namespace Poulpe
     _audio_manager->init();
     _audio_manager->load(configManager->soundConfig());
 
+    Locator::getInputManager()->init(appConfig["input"]);
+    
+    if (appConfig["defaultLevel"].empty()) {
+      PLP_WARN("defaultLevel conf not set.");
+    }
+
+    _current_level = appConfig["defaultLevel"].get<std::string>();
+
     loadData(_current_level);
 
-    if (static_cast<bool>(appConfig["ambientMusic"])) {
+    if (appConfig["ambientMusic"].get<bool>()) {
       _audio_manager->startAmbient();
     }
 
@@ -122,20 +124,26 @@ namespace Poulpe
     return ((1.0f - t) * startValue) + (t * endValue);
   }
 
-  void RenderManager::refresh(uint32_t levelIndex, bool showBbox, std::string_view skybox)
-  {
-    _current_level = Poulpe::Locator::getConfigManager()->listLevels().at(levelIndex);
-    _current_skybox = skybox;
-    _is_loaded = false;
-    _refresh = true;
-  }
-
   void RenderManager::updateScene(double const delta_time)
   {
     //@todo animate light
     //_light_manager->animateAmbientLight(delta_time);
     {
       std::lock_guard guard(_entity_manager->lockWorldNode());
+
+      auto * const config_manager = Poulpe::Locator::getConfigManager();
+
+      //@todo improve this draft for simple shader hot reload
+      if (config_manager->reloadShaders()) {
+        std::filesystem::path p = std::filesystem::current_path();
+        auto cmd{ p.string() + "/bin/shadersCompilation.sh" };
+        std::system(cmd.c_str());
+
+        std::latch count_down{ 1 };
+        _shader_manager->load(config_manager->shaderConfig())(count_down);
+
+        config_manager->setReloadShaders(false);
+      }
 
       auto* world_node = _entity_manager->getWorldNode();
 

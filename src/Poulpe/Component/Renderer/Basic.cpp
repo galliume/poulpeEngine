@@ -16,7 +16,7 @@ namespace Poulpe
 
     std::string const bump_map_name{ mesh->getData()->_bump_map };
     Texture texture_bump{ _texture_manager->getTextures()[bump_map_name] };
-    
+
     if (texture_bump.getWidth() == 0) {
       texture_bump = _texture_manager->getTextures()["_plp_empty"];
     }
@@ -187,11 +187,6 @@ namespace Poulpe
 
     for (size_t i{ 0 }; i < mesh->getData()->_ubos.size(); ++i) {
       mesh->getData()->_ubos[i].projection = _renderer->getPerspective();
-
-      if (_texture_manager->getTextures().contains(mesh->getData()->_bump_map)) {
-        auto const tex = _texture_manager->getTextures()[mesh->getData()->_bump_map];
-        mesh->getData()->_ubos[i].tex_size = glm::vec2(tex.getWidth(), tex.getHeight());
-      }
     }
 
     if (mesh->getStorageBuffers()->empty()) {

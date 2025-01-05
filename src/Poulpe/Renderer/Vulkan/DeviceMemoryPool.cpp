@@ -36,24 +36,15 @@ namespace Poulpe
         buffer_type_debug = "STORAGE";
       break;
       case DeviceBufferType::UNIFORM:
-        buffer_size = _device_props.properties.limits.maxUniformBufferRange * _max_uniform;
-
-        if (size > buffer_size) {
-          VkDeviceSize const count_buffer{ (size / _device_props.properties.limits.maxUniformBufferRange) + 1 };
-          buffer_size = _device_props.properties.limits.maxUniformBufferRange * count_buffer;
-        }
+        buffer_size = max_buffer_size / _max_uniform;
         buffer_type_debug = "UNIFORM";
       break;
       case DeviceBufferType::STAGING:
-        buffer_size = _maintenance_props.maxMemoryAllocationSize / _max_staging;
-        if (size > buffer_size) {
-          VkDeviceSize const count_buffer{ (size / _maintenance_props.maxMemoryAllocationSize) + 1 };
-          buffer_size = _maintenance_props.maxMemoryAllocationSize * count_buffer;
-        }
-
+        buffer_size = max_buffer_size / _max_staging;
         buffer_type_debug = "STAGING";
       break;
     }
+    //PLP_DEBUG("type: {} {} allocated size: {} size: {} buffer size: {} max: {}", buffer_type_debug, memory_type, _memory_allocation_size.at(memory_type), size, buffer_size, max_buffer_size);
 
     auto pool_type = _pool.find(memory_type);
 
@@ -63,18 +54,20 @@ namespace Poulpe
         for (size_t i{ 0 }; i < poolUsage->second.size(); ++i) {
           auto& dm = poolUsage->second.at(i);
           if (!dm->isFull() && dm->hasEnoughSpaceLeft(size)) {
-            // PLP_DEBUG("DM REUSE OK: id {}, {}, type {} usage {} size {}/{}",
-            //   dm.get()->getID(), buffer_type_debug, memory_type, usage, size, dm->getSpaceLeft());
+            //  PLP_DEBUG("DM REUSE OK: id {}, {}, type {} usage {} size {}/{}",
+            //    dm.get()->getID(), buffer_type_debug, memory_type, usage, size, dm->getSpaceLeft());
             return dm.get();
           } else {
-            // PLP_DEBUG("DM REUSE KO: id {}, {}, type {} usage {} size {}/{}",
-            //   dm.get()->getID(), buffer_type_debug, memory_type, usage, size, dm->getSpaceLeft());
+            //  PLP_DEBUG("DM REUSE KO: id {}, {}, type {} usage {} size {}/{}",
+            //    dm.get()->getID(), buffer_type_debug, memory_type, usage, size, dm->getSpaceLeft());
           }
         }
       }
 
+
       if (_memory_allocation_size.at(memory_type) + buffer_size > max_buffer_size) {
-          throw std::runtime_error("Max size of memory allocation reached");
+        PLP_DEBUG("type: {} {} allocated size: {} size: {} buffer size: {} max: {}", buffer_type_debug, memory_type, _memory_allocation_size.at(memory_type), size, buffer_size, max_buffer_size);
+        throw std::runtime_error("Max size of memory allocation reached");
       }
 
       _pool[memory_type][usage].emplace_back(std::make_unique<DeviceMemory>(
@@ -118,6 +111,7 @@ namespace Poulpe
 
     _memory_allocation_count = 0; //should be zero anyway
     _memory_allocation_size.clear();
+    _memory_allocation_size.resize(_memory_props.memoryTypeCount);
     _device_memory_count = 0; //should be zero anyway
   }
 

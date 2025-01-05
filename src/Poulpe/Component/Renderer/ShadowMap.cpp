@@ -29,7 +29,7 @@ namespace Poulpe
   void ShadowMap::setPushConstants(Mesh* mesh)
   {
     mesh->setApplyPushConstants([](
-      VkCommandBuffer & cmd_buffer, 
+      VkCommandBuffer & cmd_buffer,
       VkPipelineLayout pipeline_layout,
       Renderer* const renderer, Mesh* const meshS) {
 
@@ -81,11 +81,6 @@ namespace Poulpe
 
     for (size_t i{ 0 }; i < mesh->getData()->_ubos.size(); ++i) {
       mesh->getData()->_ubos[i].projection = _renderer->getPerspective();
-
-      if (_texture_manager->getTextures().contains(mesh->getData()->_bump_map)) {
-        auto const tex = _texture_manager->getTextures()[mesh->getData()->_bump_map];
-        mesh->getData()->_ubos[i].tex_size = glm::vec2(tex.getWidth(), tex.getHeight());
-      }
     }
 
     // Material material{};

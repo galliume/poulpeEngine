@@ -3,7 +3,12 @@
 #include <iostream>
 #include <filesystem>
 #include <set>
+
+#include <GLFW/glfw3.h>
 #include <volk.h>
+
+#include "Poulpe/GUI/Window.hpp"
+
 
 //@todo this class needs a huge clean up
 namespace Poulpe {
@@ -157,9 +162,9 @@ namespace Poulpe {
 
     if (_enable_validation_layers) {
       debug_create_info.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
-      debug_create_info.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT 
+      debug_create_info.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT
           | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
-      debug_create_info.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT 
+      debug_create_info.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT
           | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
       debug_create_info.pfnUserCallback = DebugCallback;
       debug_create_info.pUserData = nullptr;
@@ -237,7 +242,7 @@ namespace Poulpe {
     glfw_ext = glfwGetRequiredInstanceExtensions(& glfw_ext_count);
 
     std::vector<char const*> extensions(glfw_ext, glfw_ext + glfw_ext_count);
-        
+
     if (_enable_validation_layers) {
         extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
         //extensions.push_back(VK_EXT_DEBUG_REPORT_EXTENSION_NAME); deprecated
@@ -252,9 +257,9 @@ namespace Poulpe {
 
     VkDebugUtilsMessengerCreateInfoEXT create_info{};
     create_info.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
-    create_info.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT 
+    create_info.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT
         | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
-    create_info.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT 
+    create_info.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT
         | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
     create_info.pfnUserCallback = DebugCallback;
     create_info.pUserData = nullptr;
@@ -285,7 +290,7 @@ namespace Poulpe {
         VkPhysicalDeviceFeatures devices_features;
         VkPhysicalDeviceMaintenance3Properties device_maintenance3_props{};
         device_maintenance3_props.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MAINTENANCE_3_PROPERTIES;
-            
+
         VkPhysicalDeviceProperties2 device_props2{};
         device_props2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2;
         device_props2.pNext = &device_maintenance3_props;
@@ -396,6 +401,7 @@ namespace Poulpe {
     device_features.geometryShader = VK_TRUE;
     device_features.depthBiasClamp = VK_TRUE;
     device_features.depthClamp = VK_TRUE;
+    device_features.geometryShader = VK_TRUE;
 
     VkPhysicalDeviceDescriptorIndexingFeatures descriptor_indexing{};
     descriptor_indexing.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES;
@@ -517,7 +523,7 @@ namespace Poulpe {
   {
     uint32_t image_count = _swapchain_support.capabilities.minImageCount;
 
-    if (_swapchain_support.capabilities.maxImageCount > 0 
+    if (_swapchain_support.capabilities.maxImageCount > 0
       && image_count > _swapchain_support.capabilities.maxImageCount) {
       image_count = _swapchain_support.capabilities.maxImageCount;
     }
@@ -547,7 +553,7 @@ namespace Poulpe {
     create_info.imageExtent = _swapchain_extent;
     create_info.imageArrayLayers = 1;//1 unless stereoscopic app
     //use of VK_IMAGE_USAGE_TRANSFER_DST_BIT if post process is needed
-    create_info.imageUsage = VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT 
+    create_info.imageUsage = VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT
         | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
     create_info.preTransform = _swapchain_support.capabilities.currentTransform;
     create_info.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
@@ -751,15 +757,15 @@ namespace Poulpe {
     //@todo extension not working ?
     VkPipelineRasterizationDepthClipStateCreateInfoEXT depth_clip_state{};
     depth_clip_state.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_DEPTH_CLIP_STATE_CREATE_INFO_EXT;
-    depth_clip_state.depthClipEnable = VK_TRUE;
+    depth_clip_state.depthClipEnable = VK_FALSE;
 
     VkPipelineRasterizationStateCreateInfo rasterizer{};
     rasterizer.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
-    rasterizer.depthClampEnable = VK_TRUE;
+    rasterizer.depthClampEnable = VK_FALSE;
     rasterizer.rasterizerDiscardEnable = VK_FALSE;
     rasterizer.polygonMode = static_cast<VkPolygonMode>(polygone_mode);
     rasterizer.lineWidth = 1.0f;
-    rasterizer.cullMode = cull_mode;
+    rasterizer.cullMode = VK_CULL_MODE_NONE;
     rasterizer.frontFace = VK_FRONT_FACE_CLOCKWISE;
     rasterizer.depthBiasEnable = VK_FALSE;
     rasterizer.depthBiasConstantFactor = 0.f;
@@ -812,7 +818,7 @@ namespace Poulpe {
     std::vector<VkDynamicState> dynamic_states{
         VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR};
     if (has_dynamic_depth_bias) dynamic_states.emplace_back(VK_DYNAMIC_STATE_DEPTH_BIAS);
-        
+
     VkPipelineDynamicStateCreateInfo dynamic_state{};
     dynamic_state.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
     dynamic_state.dynamicStateCount = dynamic_states.size();
@@ -843,8 +849,8 @@ namespace Poulpe {
     rendering_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO_KHR;
     rendering_create_info.colorAttachmentCount = has_color_attachment ? 1 : 0;
     rendering_create_info.pColorAttachmentFormats = & format;
-    rendering_create_info.depthAttachmentFormat = VK_FORMAT_D16_UNORM; //(VK_FORMAT_D24_UNORM_S8_UINT) 
-    
+    rendering_create_info.depthAttachmentFormat = VK_FORMAT_D16_UNORM; //(VK_FORMAT_D24_UNORM_S8_UINT)
+
     pipeline_info.pNext = & rendering_create_info;
 
     VkPipeline graphics_pipeline = nullptr;
@@ -1229,7 +1235,7 @@ namespace Poulpe {
     alloc_info.descriptorPool = descriptor_pool;
     alloc_info.descriptorSetCount = count;
     alloc_info.pSetLayouts = descset_layout.data();
-    
+
     VkResult result = vkAllocateDescriptorSets(_device, & alloc_info, & descset);
 
     if (result != VK_SUCCESS) {
@@ -1578,7 +1584,7 @@ namespace Poulpe {
     if (data->_vertex_buffer.size > 0) {
       vkCmdBindVertexBuffers(cmd_buffer, 0, 1, vertex_buffers, offsets);
     }
-        
+
     if (is_indexed) {
       vkCmdBindIndexBuffer(cmd_buffer, data->_indices_buffer.buffer, 0, VK_INDEX_TYPE_UINT32);
       vkCmdDrawIndexed(cmd_buffer, data->_indices.size(), data->_ubos.size(), 0, 0, 0);
@@ -1634,7 +1640,7 @@ namespace Poulpe {
     VkMemoryRequirements mem_requirements;
     vkGetBufferMemoryRequirements(_device, buffer, & mem_requirements);
 
-    uint32_t allocated_size = ((mem_requirements.size / mem_requirements.alignment) + 1) * mem_requirements.alignment;
+    uint32_t allocated_size = align_to(size, mem_requirements.alignment);
 
     VkMemoryAllocateInfo alloc_info{};
     alloc_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
@@ -1659,9 +1665,9 @@ namespace Poulpe {
 
     VkBuffer staging_buffer;
     VkDeviceMemory staging_device_memory;
-    createBuffer(buffer_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT 
+    createBuffer(buffer_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT
         | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, staging_buffer, staging_device_memory);
-      
+
     void* data;
     vkMapMemory(_device, staging_device_memory, 0, buffer_size, 0, &data);
     memcpy(data, indices.data(), static_cast<size_t>(buffer_size));
@@ -1670,7 +1676,9 @@ namespace Poulpe {
     VkBuffer buffer = createBuffer(buffer_size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT);
     VkMemoryRequirements mem_requirements;
     vkGetBufferMemoryRequirements(_device, buffer, & mem_requirements);
-    uint32_t size = ((mem_requirements.size / mem_requirements.alignment) + 1) * mem_requirements.alignment;
+    uint32_t const size = mem_requirements.size;
+
+    uint32_t const bind_offset = align_to(size, mem_requirements.alignment);
 
     auto memory_type = findMemoryType(mem_requirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
     auto device_memory = _device_memory_pool->get(
@@ -1681,8 +1689,8 @@ namespace Poulpe {
       mem_requirements.alignment,
       DeviceMemoryPool::DeviceBufferType::UNIFORM);
 
-    auto offset = device_memory->getOffset();
-    device_memory->bindBufferToMemory(buffer, size);
+    auto const offset { device_memory->getOffset() };
+    device_memory->bindBufferToMemory(buffer, bind_offset);
 
     copyBuffer(cmd_pool, staging_buffer, buffer, buffer_size);
 
@@ -1717,7 +1725,9 @@ namespace Poulpe {
     vkGetBufferMemoryRequirements(_device, buffer, & mem_requirements);
 
     auto memory_type = findMemoryType(mem_requirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-    uint32_t size = ((mem_requirements.size / mem_requirements.alignment) + 1) * mem_requirements.alignment;
+    uint32_t const size = mem_requirements.size;
+
+    uint32_t const bind_offset = align_to(size, mem_requirements.alignment);
 
     auto device_memory = _device_memory_pool->get(
       _device,
@@ -1727,8 +1737,8 @@ namespace Poulpe {
       mem_requirements.alignment,
       DeviceMemoryPool::DeviceBufferType::UNIFORM);
 
-    auto offset = device_memory->getOffset();
-    device_memory->bindBufferToMemory(buffer, size);
+    auto const offset { device_memory->getOffset() };
+    device_memory->bindBufferToMemory(buffer, bind_offset);
 
     copyBuffer(commandPool, staging_buffer, buffer, buffer_size);
 
@@ -1765,7 +1775,9 @@ namespace Poulpe {
     vkGetBufferMemoryRequirements(_device, buffer, &mem_requirements);
 
     auto memory_type = findMemoryType(mem_requirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-    uint32_t size = ((mem_requirements.size / mem_requirements.alignment) + 1) * mem_requirements.alignment;
+    uint32_t const size = mem_requirements.size;
+
+    uint32_t const bind_offset = align_to(size, mem_requirements.alignment);
 
     auto device_memory = _device_memory_pool->get(
       _device,
@@ -1775,8 +1787,8 @@ namespace Poulpe {
       mem_requirements.alignment,
       DeviceMemoryPool::DeviceBufferType::UNIFORM);
 
-    auto offset = device_memory->getOffset();
-    device_memory->bindBufferToMemory(buffer, size);
+    auto const offset { device_memory->getOffset() };
+    device_memory->bindBufferToMemory(buffer, bind_offset);
 
     copyBuffer(cmd_pool, staging_buffer, buffer, buffer_size);
 
@@ -1805,7 +1817,9 @@ namespace Poulpe {
       mem_requirements.memoryTypeBits,
       VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 
-    uint32_t size = ((mem_requirements.size / mem_requirements.alignment) + 1) * mem_requirements.alignment;
+    uint32_t const size = mem_requirements.size;
+
+    uint32_t const bind_offset = align_to(size, mem_requirements.alignment);
 
     auto device_memory = _device_memory_pool->get(
       _device,
@@ -1815,8 +1829,8 @@ namespace Poulpe {
       mem_requirements.alignment,
       DeviceMemoryPool::DeviceBufferType::UNIFORM);
 
-    auto offset = device_memory->getOffset();
-    device_memory->bindBufferToMemory(buffer, size);
+    auto const offset { device_memory->getOffset() };
+    device_memory->bindBufferToMemory(buffer, bind_offset);
 
     Buffer uniform_buffer;
     uniform_buffer.buffer = std::move(buffer);
@@ -1850,7 +1864,9 @@ namespace Poulpe {
 
     auto memoryType = findMemoryType(mem_requirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 
-    uint32_t size = ((mem_requirements.size / mem_requirements.alignment) + 1) * mem_requirements.alignment;
+    uint32_t const size = mem_requirements.size;
+
+    uint32_t const bind_offset = align_to(size, mem_requirements.alignment);
 
     auto const flags { VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT };
 
@@ -1862,8 +1878,8 @@ namespace Poulpe {
       mem_requirements.alignment,
       DeviceMemoryPool::DeviceBufferType::STORAGE);
 
-    auto offset = device_memory->getOffset();
-    device_memory->bindBufferToMemory(buffer, size);
+    auto const offset { device_memory->getOffset() };
+    device_memory->bindBufferToMemory(buffer, bind_offset);
 
     copyBuffer(command_pool, staging_buffer, buffer, buffer_size);
 
@@ -1884,12 +1900,14 @@ namespace Poulpe {
     VkBuffer buffer{ createBuffer(
       sizeof(VkDrawIndexedIndirectCommand) * draw_cmds.size(),
       VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT) };
-        
+
     VkMemoryRequirements mem_requirements;
     vkGetBufferMemoryRequirements(_device, buffer, & mem_requirements);
 
     auto const memory_type{ findMemoryType(mem_requirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT | VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT) };
-    auto const size{ ((mem_requirements.size / mem_requirements.alignment) + 1) * mem_requirements.alignment };
+    auto const size{ mem_requirements.size };
+
+    uint32_t const bind_offset = align_to(size, mem_requirements.alignment);
 
     auto device_memory{ _device_memory_pool->get(
       _device,
@@ -1899,8 +1917,8 @@ namespace Poulpe {
       mem_requirements.alignment,
       DeviceMemoryPool::DeviceBufferType::STORAGE) };
 
-    auto const offset {device_memory->getOffset()};
-    device_memory->bindBufferToMemory(buffer, size);
+    auto const offset { device_memory->getOffset() };
+    device_memory->bindBufferToMemory(buffer, bind_offset);
 
     Buffer indirect_buffer{ std::move(buffer), device_memory, offset, size };
 
@@ -1925,7 +1943,9 @@ namespace Poulpe {
     VkMemoryRequirements mem_requirements;
     vkGetBufferMemoryRequirements(_device, buffer, &mem_requirements);
 
-    uint32_t size = ((mem_requirements.size / mem_requirements.alignment) + 1) * mem_requirements.alignment;
+    uint32_t const size = mem_requirements.size;
+
+    uint32_t const bind_offset = align_to(size, mem_requirements.alignment);
 
     auto memory_type = findMemoryType(mem_requirements.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT
       | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
@@ -1938,8 +1958,8 @@ namespace Poulpe {
       mem_requirements.alignment,
       DeviceMemoryPool::DeviceBufferType::UNIFORM);
 
-    auto offset = device_memory->getOffset();
-    device_memory->bindBufferToMemory(buffer, size);
+    auto const offset { device_memory->getOffset() };
+    device_memory->bindBufferToMemory(buffer, bind_offset);
 
     Buffer uniform_buffer;
     uniform_buffer.buffer = std::move(buffer);
@@ -2103,7 +2123,9 @@ namespace Poulpe {
     VkMemoryRequirements mem_requirements;
     vkGetImageMemoryRequirements(_device, image, & mem_requirements);
     auto memory_type = findMemoryType(mem_requirements.memoryTypeBits, properties);
-    uint32_t size = ((mem_requirements.size / mem_requirements.alignment) + 1) * mem_requirements.alignment;
+    uint32_t size = mem_requirements.size;
+
+    uint32_t const offset = align_to(size, mem_requirements.alignment);
 
     auto device_memory = _device_memory_pool->get(
       _device,
@@ -2113,7 +2135,7 @@ namespace Poulpe {
       mem_requirements.alignment,
       DeviceMemoryPool::DeviceBufferType::STAGING);
 
-    device_memory->bindImageToMemory(image, size);
+    device_memory->bindImageToMemory(image, offset);
   }
 
   void VulkanAPI::createDepthMapImage(VkImage& image)
@@ -2132,11 +2154,11 @@ namespace Poulpe {
     image_info.format = VK_FORMAT_D16_UNORM;
     image_info.tiling = VK_IMAGE_TILING_OPTIMAL;
     image_info.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-    image_info.usage = VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT 
+    image_info.usage = VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT
         | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
     image_info.samples = VK_SAMPLE_COUNT_1_BIT;
     image_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-        
+
     VkResult result = vkCreateImage(getDevice(), & image_info, nullptr, & image);
 
     if (result != VK_SUCCESS) {
@@ -2146,7 +2168,9 @@ namespace Poulpe {
     VkMemoryRequirements mem_requirements;
     vkGetImageMemoryRequirements(_device, image, & mem_requirements);
     auto memoryType = findMemoryType(mem_requirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-    uint32_t size = ((mem_requirements.size / mem_requirements.alignment) + 1) * mem_requirements.alignment;
+    uint32_t size = mem_requirements.size;
+
+    uint32_t const offset = align_to(size, mem_requirements.alignment);
 
     auto device_memory = _device_memory_pool->get(
       _device,
@@ -2156,7 +2180,7 @@ namespace Poulpe {
       mem_requirements.alignment,
       DeviceMemoryPool::DeviceBufferType::STAGING);
 
-    device_memory->bindImageToMemory(image, size);
+    device_memory->bindImageToMemory(image, offset);
   }
 
   VkImageView VulkanAPI::createDepthMapImageView(VkImage& image)
@@ -2198,13 +2222,14 @@ namespace Poulpe {
     sampler_info.addressModeV = sampler_info.addressModeU;
     sampler_info.addressModeW = sampler_info.addressModeU;
     sampler_info.mipLodBias = 0.0f;
-    sampler_info.maxAnisotropy = 1.0f;
     sampler_info.minLod = 0.0f;
     sampler_info.maxLod = 1.0f;
     sampler_info.borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE;
-    sampler_info.compareEnable = VK_TRUE;
-    sampler_info.compareOp = VK_COMPARE_OP_LESS;
-
+    sampler_info.compareEnable = VK_FALSE;
+    sampler_info.compareOp = VK_COMPARE_OP_ALWAYS;
+    sampler_info.anisotropyEnable = VK_FALSE;
+    sampler_info.maxAnisotropy = 0.0f;
+    
     if (vkCreateSampler(_device, &sampler_info, nullptr, &sampler) != VK_SUCCESS) {
       throw std::runtime_error("failed to create depth map sampler!");
     }
@@ -2265,7 +2290,9 @@ namespace Poulpe {
     VkMemoryRequirements mem_requirements;
     vkGetImageMemoryRequirements(_device, image, & mem_requirements);
     auto memoryType = findMemoryType(mem_requirements.memoryTypeBits, properties);
-    uint32_t size = ((mem_requirements.size / mem_requirements.alignment) + 1) * mem_requirements.alignment;
+    uint32_t size = mem_requirements.size;
+
+    uint32_t const offset = align_to(size, mem_requirements.alignment);
 
     auto device_memory = _device_memory_pool->get(
       _device,
@@ -2275,7 +2302,7 @@ namespace Poulpe {
       mem_requirements.alignment,
       DeviceMemoryPool::DeviceBufferType::STAGING);
 
-    device_memory->bindImageToMemory(image, size);
+    device_memory->bindImageToMemory(image, offset);
   }
 
   void VulkanAPI::createTextureImage(
@@ -2296,7 +2323,8 @@ namespace Poulpe {
     auto memory_type = findMemoryType(mem_requirements.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT
       | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 
-    uint32_t size = ((mem_requirements.size / mem_requirements.alignment) + 1) * mem_requirements.alignment;
+    VkDeviceSize const size { mem_requirements.size};
+    VkDeviceSize const bind_offset{ align_to(size, mem_requirements.alignment) };
 
     auto device_memory = _device_memory_pool->get(
       _device,
@@ -2306,8 +2334,8 @@ namespace Poulpe {
       mem_requirements.alignment,
       DeviceMemoryPool::DeviceBufferType::STAGING);
 
-    auto offset = device_memory->getOffset();
-    device_memory->bindBufferToMemory(buffer, size);
+    auto const offset { device_memory->getOffset() };
+    device_memory->bindBufferToMemory(buffer, bind_offset);
 
     void* data;
     vkMapMemory(_device, *device_memory->getMemory(), offset, size, 0, &data);
@@ -2332,7 +2360,7 @@ namespace Poulpe {
       static_cast<uint32_t>(tex_height), mip_lvl);
 
     generateMipmaps(cmd_buffer, format, texture_image, tex_width, tex_height, mip_lvl);
-    
+
     endCommandBuffer(cmd_buffer);
     queueSubmit(cmd_buffer);
     //_device_memory_pool->clear(device_memory);
@@ -2354,19 +2382,21 @@ namespace Poulpe {
 
     auto memory_type = findMemoryType(mem_requirements.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
 
-    uint32_t size = ((mem_requirements.size / mem_requirements.alignment) + 1) * mem_requirements.alignment;
+    uint32_t const size = mem_requirements.size;
+
+    uint32_t const bind_offset = align_to(size, mem_requirements.alignment);
 
     auto device_memory = _device_memory_pool->get(
       _device,
       size,
-      memory_type, 
+      memory_type,
       VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
       mem_requirements.alignment,
       DeviceMemoryPool::DeviceBufferType::STAGING,
       true);
 
-    auto offset = device_memory->getOffset();
-    device_memory->bindBufferToMemory(buffer, size);
+    auto const offset { device_memory->getOffset() };
+    device_memory->bindBufferToMemory(buffer, bind_offset);
 
     stbi_uc* data;
     VkDeviceSize layerSize = image_size / 6;
@@ -2580,7 +2610,6 @@ namespace Poulpe {
     sample_info.addressModeV = sample_info.addressModeU;
     sample_info.addressModeW = sample_info.addressModeU;
     sample_info.maxAnisotropy = _device_props.limits.maxSamplerAnisotropy;
-    sample_info.borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE;
     sample_info.unnormalizedCoordinates = VK_FALSE;
     sample_info.compareEnable = VK_FALSE;
     sample_info.compareOp = VK_COMPARE_OP_LESS;
@@ -2588,6 +2617,7 @@ namespace Poulpe {
     sample_info.minLod = 0.0f;
     sample_info.maxLod = static_cast<float>(mip_lvl);
     sample_info.mipLodBias = 0.0f;
+    sample_info.borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE;
 
     if (vkCreateSampler(_device, & sample_info, nullptr, & texture_sampler) != VK_SUCCESS) {
       throw std::runtime_error("failed to create texture sampler!");
@@ -2603,7 +2633,7 @@ namespace Poulpe {
     sampler_info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
     sampler_info.magFilter = VK_FILTER_NEAREST;
     sampler_info.minFilter = VK_FILTER_LINEAR;
-    sampler_info.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER;
+    sampler_info.addressModeU = VK_SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT;
     sampler_info.addressModeV = sampler_info.addressModeU;
     sampler_info.addressModeW = sampler_info.addressModeU;
     sampler_info.anisotropyEnable = VK_FALSE;
@@ -2743,21 +2773,21 @@ namespace Poulpe {
 
       source_stage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
       destination_stage = VK_PIPELINE_STAGE_TRANSFER_BIT;
-    
+
     } else if (old_layout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL && new_layout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL) {
       barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
       barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
 
       source_stage = VK_PIPELINE_STAGE_TRANSFER_BIT;
       destination_stage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
-    
+
     } else if (old_layout == VK_IMAGE_LAYOUT_UNDEFINED && new_layout == VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL) {
       barrier.srcAccessMask = 0;
       barrier.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
 
       source_stage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
       destination_stage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-   
+
     } else if (old_layout == VK_IMAGE_LAYOUT_UNDEFINED && new_layout == VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL) {
       barrier.srcAccessMask = 0;
       barrier.dstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
@@ -2770,14 +2800,14 @@ namespace Poulpe {
 
       source_stage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
       destination_stage = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
-    
+
     } else if (old_layout == VK_IMAGE_LAYOUT_UNDEFINED && new_layout == VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL) {
       barrier.srcAccessMask = 0;
       barrier.dstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
 
       source_stage = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
       destination_stage = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
-    
+
     } else if (old_layout == VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL && new_layout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL) {
       barrier.srcAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
       barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
@@ -2793,7 +2823,7 @@ namespace Poulpe {
     }else {
       throw std::invalid_argument("unsupported layout transition");
     }
-    
+
     vkCmdPipelineBarrier(
       cmd_buffer,
       source_stage, destination_stage,
@@ -2818,7 +2848,6 @@ namespace Poulpe {
 
       if (result != VK_SUCCESS) {
         PLP_ERROR("Error on queue submit: {}", result);
-        throw std::runtime_error("Error on queueSubmit");
       }
 
       result = vkQueuePresentKHR(queue, &present_info);
@@ -2847,6 +2876,8 @@ namespace Poulpe {
 
     VkDeviceSize const size { mem_requirements.size};
 
+    uint32_t const bind_offset = align_to(size, mem_requirements.alignment);
+
     auto device_memory = _device_memory_pool->get(
       _device,
       mem_requirements.size,
@@ -2855,8 +2886,8 @@ namespace Poulpe {
       mem_requirements.alignment,
       DeviceMemoryPool::DeviceBufferType::STAGING);
 
-    auto const offset = device_memory->getOffset();
-    device_memory->bindBufferToMemory(buffer, size);
+    auto const offset { device_memory->getOffset() };
+    device_memory->bindBufferToMemory(buffer, bind_offset);
 
     void* data;
     vkMapMemory(_device, *device_memory->getMemory(), offset, size, 0, &data);
@@ -2901,7 +2932,9 @@ namespace Poulpe {
     VkMemoryRequirements image_mem_requirements;
     vkGetImageMemoryRequirements(_device, image, & image_mem_requirements);
     memory_type = findMemoryType(image_mem_requirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-    uint32_t image_size = ((image_mem_requirements.size / image_mem_requirements.alignment) + 1) * image_mem_requirements.alignment;
+    uint32_t const image_size = image_mem_requirements.size;
+
+    uint32_t const image_bind_offset = align_to(image_size, image_mem_requirements.alignment);
 
     device_memory = _device_memory_pool->get(
       _device,
@@ -2911,7 +2944,7 @@ namespace Poulpe {
       image_mem_requirements.alignment,
       DeviceMemoryPool::DeviceBufferType::STAGING);
 
-    device_memory->bindImageToMemory(image, image_size);
+    device_memory->bindImageToMemory(image, image_bind_offset);
 
     auto rdr_barrier = setupImageMemoryBarrier(
       image, 0, VK_ACCESS_TRANSFER_WRITE_BIT, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
@@ -2932,7 +2965,7 @@ namespace Poulpe {
                       mip_lvl);
 
     generateMipmaps(cmd_buffer, format, image, width, height, mip_lvl);
-    
+
     endCommandBuffer(cmd_buffer);
     queueSubmit(cmd_buffer);
     //_device_memory_pool->clear(device_memory);
@@ -2988,26 +3021,39 @@ namespace Poulpe {
   {
     VkSampler texture_sampler{};
 
-    VkSamplerCreateInfo sample_info{};
-    sample_info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
-    sample_info.magFilter = VK_FILTER_LINEAR;
-    sample_info.minFilter = VK_FILTER_LINEAR;
-    sample_info.addressModeU = VK_SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT;
-    sample_info.addressModeV = sample_info.addressModeU;
-    sample_info.addressModeW = sample_info.addressModeU;
-    sample_info.maxAnisotropy = _device_props.limits.maxSamplerAnisotropy;
-    sample_info.borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE;
-    sample_info.unnormalizedCoordinates = VK_FALSE;
-    sample_info.compareEnable = VK_TRUE;
-    sample_info.compareOp = VK_COMPARE_OP_LESS;
-    sample_info.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
-    sample_info.minLod = 0.0f;
-    sample_info.maxLod = static_cast<float>(ktx_texture->numLevels);
-    sample_info.mipLodBias = 0.0f;
-
-    if (vkCreateSampler(_device, & sample_info, nullptr, & texture_sampler) != VK_SUCCESS) {
+    VkSamplerCreateInfo sampler_info{};
+    sampler_info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+    sampler_info.magFilter = VK_FILTER_LINEAR;
+    sampler_info.minFilter = VK_FILTER_LINEAR;
+    sampler_info.addressModeU = VK_SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT;
+    sampler_info.addressModeV = sampler_info.addressModeU;
+    sampler_info.addressModeW = sampler_info.addressModeU;
+    sampler_info.unnormalizedCoordinates = VK_FALSE;
+    sampler_info.compareEnable = VK_FALSE;
+    sampler_info.compareOp = VK_COMPARE_OP_ALWAYS;
+    sampler_info.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+    sampler_info.minLod = 0.0f;
+    sampler_info.maxLod = static_cast<float>(ktx_texture->numLevels);
+    sampler_info.mipLodBias = 0.0f;
+    sampler_info.borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE;
+    sampler_info.anisotropyEnable = VK_TRUE;
+    sampler_info.maxAnisotropy = _device_props.limits.maxSamplerAnisotropy;
+    
+    if (vkCreateSampler(_device, & sampler_info, nullptr, & texture_sampler) != VK_SUCCESS) {
       throw std::runtime_error("failed to create texture sampler!");
     }
     return texture_sampler;
+  }
+
+  VkDeviceSize VulkanAPI::align_to(VkDeviceSize const size, VkDeviceSize const alignment)
+  {
+    //VkDeviceSize const offset { (size + alignment - 1) & ~(alignment - 1)};
+    auto const remainder = size % alignment;
+
+    //PLP_DEBUG("size: {} alignment: {} ", size, alignment);
+    if (remainder == 0) return size;
+    VkDeviceSize const offset {size + (alignment - remainder)};
+
+    return offset;
   }
 }

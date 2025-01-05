@@ -46,14 +46,14 @@ namespace Poulpe
     ComponentManager* _component_manager;
     LightManager* _light_manager;
     TextureManager* _texture_manager;
-        
+
     //std::vector<std::unique_ptr<Entity>> _Entities{};
     std::vector<std::unique_ptr<Entity>> _HUD{};
-        
+
     nlohmann::json _lvl_config;
-        
+
     Renderer* _renderer{nullptr};
-        
+
     std::unique_ptr<Entity> _skybox{nullptr};
     std::unique_ptr<EntityNode> _world_node;
 

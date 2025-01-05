@@ -30,11 +30,11 @@ namespace Poulpe
         _window = glfwCreateWindow(WIDTH, HEIGHT, window_title.data(), nullptr, nullptr);
 
         glfwSetWindowSizeLimits(_window, 800, 600, 2560, 1440);
-          
+
         const GLFWvidmode * mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
 
         const int maxWidth = mode->width;
-        const int maxHeight = mode->height; 
+        const int maxHeight = mode->height;
 
         glfwSetWindowMonitor(_window, nullptr, (maxWidth/2)-(WIDTH/2), (maxHeight/2) - (HEIGHT/2), WIDTH, HEIGHT, GLFW_DONT_CARE);
         glfwSetWindowUserPointer(_window, this);

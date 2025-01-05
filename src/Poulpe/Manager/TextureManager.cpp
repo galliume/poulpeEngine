@@ -155,7 +155,7 @@ namespace Poulpe
     VkImage texture_image = nullptr;
     uint32_t mip_lvls = static_cast<uint32_t>(std::floor(std::log2(std::max(tex_width, tex_height)))) + 1;
     if (std::cmp_greater(mip_lvls, MAX_MIPLEVELS)) mip_lvls = MAX_MIPLEVELS;
-    
+
     VkCommandPool commandPool = _renderer->getAPI()->createCommandPool();
     VkCommandBuffer cmd_buffer = _renderer->getAPI()->allocateCommandBuffers(commandPool)[0];
 
@@ -296,7 +296,7 @@ namespace Poulpe
 
       if (std::filesystem::exists(file_name.replace_extension("jpg"))) {
         original_name = file_name.string();
-      } else if (std::filesystem::exists(file_name.replace_extension("png"))) { 
+      } else if (std::filesystem::exists(file_name.replace_extension("png"))) {
         original_name = file_name.string();
       }
       std::string cmd{

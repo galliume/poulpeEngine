@@ -21,7 +21,7 @@ namespace Poulpe
   void CommandQueue::execPostRequest()
   {
     if (_PostCmdQueue.empty()) return;
-    
+
     std::jthread command([this]() {
       {
         std::lock_guard guard(_Mutex);

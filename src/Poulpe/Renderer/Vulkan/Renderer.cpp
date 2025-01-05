@@ -64,7 +64,7 @@ namespace Poulpe
       VkImage image;
 
       _vulkan->createImage(_vulkan->getSwapChainExtent().width, _vulkan->getSwapChainExtent().height, 1,
-          VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_B8G8R8A8_SRGB, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_SRC_BIT 
+          VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_B8G8R8A8_SRGB, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_SRC_BIT
           | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
           VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, image);
 
@@ -172,7 +172,7 @@ namespace Poulpe
     VkSemaphoreCreateInfo sema_create_info{};
     sema_create_info.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
     sema_create_info.pNext = &sema_type_info;
-      
+
     _fences_in_flight.resize(_MAX_FRAMES_IN_FLIGHT);
     _images_in_flight.resize(_MAX_FRAMES_IN_FLIGHT, VK_NULL_HANDLE);
 
@@ -224,10 +224,10 @@ namespace Poulpe
   {
     std::string const pipeline_name{ "shadowMap" };
     auto const& pipeline = getPipeline(pipeline_name);
-  
+
     _vulkan->beginCommandBuffer(cmd_buffer);
     _vulkan->startMarker(cmd_buffer, "shadow_map_" + pipeline_name, 0.1f, 0.2f, 0.3f);
-    
+
     _vulkan->transitionImageLayout(cmd_buffer, depth,
       VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL, VK_IMAGE_ASPECT_DEPTH_BIT);
 
@@ -290,7 +290,7 @@ namespace Poulpe
       if (mesh_component) {
         Mesh* mesh = mesh_component->template has<Mesh>();
 
-        if (mesh->has_shadow()) {
+        if (mesh->hasShadow()) {
 
           shadowMapConstants push_constants{};
           push_constants.view = view;
@@ -326,7 +326,7 @@ namespace Poulpe
     _vulkan->endRendering(cmd_buffer);
 
      _vulkan->transitionImageLayout(cmd_buffer, depth,
-       VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_IMAGE_ASPECT_DEPTH_BIT); 
+       VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_IMAGE_ASPECT_DEPTH_BIT);
  /*     _vulkan->transitionImageLayout(cmd_buffer, depth,
         VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR, VK_IMAGE_ASPECT_DEPTH_BIT);*/
 
@@ -399,6 +399,7 @@ namespace Poulpe
     //});
 
     //auto indirectBuffer = _API->createIndirectCommandsBuffer(drawCommands);
+    auto * const config_manager = Poulpe::Locator::getConfigManager();
 
     size_t num{ 0 };
     std::ranges::for_each(entities, [&](auto const& entity) {
@@ -407,7 +408,7 @@ namespace Poulpe
 
         Mesh* mesh = mesh_component->template has<Mesh>();
         auto pipeline = getPipeline(mesh->getShaderName());
-        
+
         if (!mesh->getUniformBuffers()->empty()) {
           uint32_t min{ 0 };
           uint32_t max{ 0 };
@@ -432,7 +433,7 @@ namespace Poulpe
           0, 1, mesh->getDescSet(), 0, nullptr);
 
         _vulkan->bindPipeline(cmd_buffer, pipeline->pipeline);
-        
+
         _vulkan->draw(
           cmd_buffer,
           *mesh->getDescSet(),
@@ -445,7 +446,27 @@ namespace Poulpe
           0,
           1,
           sizeof(VkDrawIndexedIndirectCommand));*/
-          
+
+
+        if (mesh->debugNormal() && config_manager->normalDebug()) {
+          auto normal_pipeline = getPipeline("normal_debug");
+
+          vkCmdBindDescriptorSets(
+            cmd_buffer,
+            VK_PIPELINE_BIND_POINT_GRAPHICS,
+            normal_pipeline->pipeline_layout,
+            0, 1, mesh->getDescSet(), 0, nullptr);
+
+          _vulkan->bindPipeline(cmd_buffer, normal_pipeline->pipeline);
+
+          _vulkan->draw(
+            cmd_buffer,
+            normal_pipeline->descset,
+            *normal_pipeline,
+            mesh->getData(),
+            mesh->is_indexed());
+        }
+
         num += 1;
       }
     });
@@ -514,7 +535,7 @@ namespace Poulpe
       } else {
         count_down.count_down();
       }
-        
+
       std::jthread entities_thread([&]() {
         draw(
          _cmd_buffer_entities[_current_frame],
@@ -665,10 +686,10 @@ namespace Poulpe
         has_semaphore = true;
       }
       submit_infos.emplace_back(submit_info);
-      
+
       semaphores.push_back(draw_cmds.semaphores.at(i));
     };
-    
+
     auto queue = _vulkan->getGraphicsQueues().at(0);
 
     std::vector<VkSwapchainKHR> swapchains{ _swapchain };

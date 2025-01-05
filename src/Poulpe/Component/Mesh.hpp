@@ -30,9 +30,9 @@ namespace Poulpe
     void addStorageBuffer(Buffer& buffer) { _storage_buffers.emplace_back(std::move(buffer)); }
     void init(
           Renderer* const renderer,
-          TextureManager* const texture_manager, 
+          TextureManager* const texture_manager,
           LightManager* const light_manager) {}
-        
+
     bool isDirty() { return _is_dirty.load(); }
 
     virtual void setApplyPushConstants(
@@ -47,6 +47,7 @@ namespace Poulpe
     void setHasBufferStorage(bool has = true) { _has_storage_buffer = has; }
     void setHasPushConstants(bool has = true) { _has_push_contants = has; }
     void setIsDirty(bool dirty = true) { _is_dirty.store(dirty); }
+    void setDebugNormal(bool const debug) { _debug_normal = debug; }
     void setName(std::string const& name) { _name = name; }
     inline void setShaderName(std::string_view name) { _shader_name = name; }
     void setObjectBuffer(ObjectBuffer objectBuffer) { _object_buffer = std::move(objectBuffer); }
@@ -58,10 +59,11 @@ namespace Poulpe
 
     VkDescriptorSet* getShadowMapDescSet() { return & _shadowmap_descset; }
 
-    bool has_animation() const { return _has_animation; }
+    bool hasAnimation() const { return _has_animation; }
     bool hasBufferStorage() const { return _has_storage_buffer; }
     bool hasPushConstants() const { return _has_push_contants; }
-    bool has_shadow() { return _has_shadow; }
+    bool hasShadow() const { return _has_shadow; }
+    bool debugNormal() const { return _debug_normal; }
 
     void setHasAnimation(bool has = true) { _has_animation = has; }
     void setIsIndexed(bool indexed) { _is_indexed = indexed; }
@@ -84,6 +86,7 @@ namespace Poulpe
     bool _is_indexed{ true };
     bool _is_point_light{ false };
     bool _has_shadow{ false };
+    bool _debug_normal{ false };
 
     std::vector<Buffer> _storage_buffers{};
     std::vector<Buffer> _uniform_buffers{};

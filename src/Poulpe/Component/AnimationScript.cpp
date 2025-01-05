@@ -60,7 +60,7 @@ namespace Poulpe
   }
 
   AnimationScript::~AnimationScript()
-  { 
+  {
     lua_close(_lua_State);
   }
 
@@ -85,7 +85,7 @@ namespace Poulpe
         done = true;
         t = 1.f;
       }
-      
+
       glm::vec3 target = glm::mix(data->_origin_pos, anim->target, t);
       //PLP_TRACE("MOVING at {}/{}/{}", data->_current_pos.x, data->_current_pos.y, data->_current_pos.z);
 

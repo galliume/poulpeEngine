@@ -30,7 +30,7 @@ namespace Poulpe
       VkCommandBuffer & cmd_buffer, VkPipelineLayout pipeline_layout,
         Renderer* const renderer,
         Mesh* const meshCH) {
-  
+
       float id = 0.0f;
 
       constants pushConstants{};

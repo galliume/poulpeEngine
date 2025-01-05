@@ -1,13 +1,12 @@
 #pragma once
 
-#include "Poulpe/Component/Camera.hpp"
-
-#include "Poulpe/GUI/Window.hpp"
-
 #include <nlohmann/json.hpp>
 
 namespace Poulpe
 {
+  class Camera;
+  class Window;
+
   class InputManager
   {
   public:

@@ -15,14 +15,12 @@ namespace Poulpe
   */
   struct Vertex
   {
-    alignas(16) glm::vec3 pos;
-    alignas(16) glm::vec3 normal;
-    alignas(16) glm::vec2 texture_coord;
-    alignas(16) glm::vec4 tangent;
-    alignas(16) glm::vec4 bitangent;
-    //faceId texture ID blank blank
-    alignas(16) glm::vec4 fidtidBB;
-    alignas(16) glm::vec4 color;
+    glm::vec3 pos;
+    glm::vec3 normal;
+    glm::vec2 texture_coord;
+    glm::vec4 tangent;
+    glm::vec4 bitangent;
+    glm::vec4 color;
 
     std::vector<int> bones_ids{};
     std::vector<float> weights{};
@@ -37,9 +35,9 @@ namespace Poulpe
       return bindingDescription;
     }
 
-    static std::array<VkVertexInputAttributeDescription, 7> getAttributeDescriptions() 
+    static std::array<VkVertexInputAttributeDescription,  6> getAttributeDescriptions()
     {
-      std::array<VkVertexInputAttributeDescription, 7> attributeDescriptions{};
+      std::array<VkVertexInputAttributeDescription, 6> attributeDescriptions{};
       attributeDescriptions[0].binding = 0;
       attributeDescriptions[0].location = 0;
       attributeDescriptions[0].format = VK_FORMAT_R32G32B32_SFLOAT;
@@ -68,34 +66,28 @@ namespace Poulpe
       attributeDescriptions[5].binding = 0;
       attributeDescriptions[5].location = 5;
       attributeDescriptions[5].format = VK_FORMAT_R32G32B32A32_SFLOAT;
-      attributeDescriptions[5].offset = offsetof(Vertex, fidtidBB);
-
-      attributeDescriptions[6].binding = 0;
-      attributeDescriptions[6].location = 6;
-      attributeDescriptions[6].format = VK_FORMAT_R32G32B32A32_SFLOAT;
-      attributeDescriptions[6].offset = offsetof(Vertex, color);
+      attributeDescriptions[5].offset = offsetof(Vertex, color);
 
       return attributeDescriptions;
     }
 
-    bool operator==(const Vertex& other) const
+  /*  bool operator==(const Vertex& other) const
     {
-      return pos == other.pos && normal == other.normal 
+      return pos == other.pos && normal == other.normal
         && texture_coord == other.texture_coord && other.tangent == tangent
-        && fidtidBB == other.fidtidBB && color == other.color;
-    }
+        && color == other.color;
+    }*/
   };
 }
 
-namespace std {
-  template<> struct hash<Poulpe::Vertex> {
-    size_t operator()(Poulpe::Vertex const& vertex) const {
-      return ((((((((hash<glm::vec3>()(vertex.pos) ^
-        (hash<glm::vec3>()(vertex.normal) << 1)) >> 1) ^
-        (hash<glm::vec2>()(vertex.texture_coord) << 1)) >> 1) ^
-        (hash<glm::vec3>()(vertex.tangent) << 1)) >> 1) ^
-        (hash<glm::vec3>()(vertex.fidtidBB) << 1)) >> 1) ^
-        (hash<glm::vec3>()(vertex.color) << 1);
-    }
-  };
-}
+//namespace std {
+//  template<> struct hash<Poulpe::Vertex> {
+//    size_t operator()(Poulpe::Vertex const& vertex) const {
+//      return ((((((((hash<glm::vec3>()(vertex.pos) ^
+//        (hash<glm::vec3>()(vertex.normal) << 1)) >> 1) ^
+//        (hash<glm::vec2>()(vertex.texture_coord) << 1)) >> 1) ^
+//        (hash<glm::vec3>()(vertex.tangent) << 1)) >> 1) ^
+//        (hash<glm::vec3>()(vertex.color) << 1)));
+//    }
+//  };
+//}

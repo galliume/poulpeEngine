@@ -69,7 +69,7 @@ namespace Poulpe
     Entity* root_mesh_entity = new Entity();
     root_mesh_entity->setName(name);
     root_mesh_entity->setVisible(false);
-    
+
     EntityNode* root_mesh_entity_node = new EntityNode(root_mesh_entity);
 
     auto const& path = data["mesh"].template get<std::string>();
@@ -139,7 +139,8 @@ namespace Poulpe
       animation_scripts,
       data["hasShadow"].template get<bool>(),
       data["flipY"].template get<bool>(),
-      data["isIndexed"].template get<bool>()
+      data["isIndexed"].template get<bool>(),
+      data["debugNormal"].template get<bool>()
     };
 
 
@@ -151,6 +152,7 @@ namespace Poulpe
       mesh->setHasShadow(entity_opts.has_shadow);
       mesh->setIsIndexed(entity_opts.is_indexed);
       //std::vector<Mesh::BBox> bboxs{};
+      mesh->setDebugNormal(entity_opts.debug_normal);
 
       unsigned int const tex1ID = _data.materials_ID.at(0);
 
@@ -220,7 +222,7 @@ namespace Poulpe
       ubo.model = glm::rotate(ubo.model, glm::radians(entity_opts.rotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
       ubo.model = glm::rotate(ubo.model, glm::radians(entity_opts.rotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
 
-      ubo.tex_size = glm::vec2(0.0);
+      //ubo.inversed_model = glm::inverse(ubo.model);
 
       //ubo.view = glm::mat4(1.0f);
       data._ubos.emplace_back(ubo);
@@ -272,12 +274,12 @@ namespace Poulpe
 
       mesh->setData(data);
       //mesh->addBBox(box);
-      
+
       bool const is_last{ (_data.id == 0) ? true : false };
 
       auto* entity = new Entity();
       entity->setName(_data.name);
-     
+
       auto basicRdrImpl = RendererFactory::create<Basic>();
 
       basicRdrImpl->init(_renderer, _texture_manager, _light_manager);
@@ -288,7 +290,7 @@ namespace Poulpe
       _component_manager->add<MeshComponent>(entity->getID(), std::move(mesh));
       auto* entityNode = root_mesh_entity_node->addChild(new EntityNode(entity));
       _renderer->addEntity(entityNode->getEntity(), is_last);
-      
+
       if (is_last) {
         {
           if (has_animation) {

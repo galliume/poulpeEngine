@@ -1,0 +1,66 @@
+{
+	"entities": {
+		"OrientationTest" : {
+			"mesh": "assets/mesh/OrientationTest/glTF/OrientationTest.gltf",
+			"textures": {
+			},
+			"orm": {
+			},
+			"normal" : {
+			},
+			"shader": "main_basic",
+			"positions": [
+				{"x": 0.0, "y": -2.5, "z": 0.0}
+			],
+			"scales": [
+				{"x": 0.05, "y": 0.05, "z": 0.05}
+			],
+			"rotations": [
+				{"x": 0.0, "y": 0.0, "z": 0.0}
+			],
+			"flipY": true,
+			"count": 1,
+			"hasBbox": false,
+			"hasAnimation": false,
+			"isPointLight": false,
+			"animationScripts": {
+			},
+			"hasShadow": true,	
+			"isIndexed": true,
+			"debugNormal": true
+		},
+		"Fox" : {
+			"mesh": "assets/mesh/Fox/glTF/Fox.gltf",
+			"textures": {
+				"Texture": {
+					"path" : "assets/mesh/Fox/glTF/Texture.ktx2",
+					"ktx_format": "R8G8B8A8_SRGB"
+				}
+			},
+			"orm": {
+			},
+			"normal" : {
+			},
+			"shader": "main_basic",
+			"positions": [
+				{"x": 0.0, "y": -2.5, "z": 0.0}
+			],
+			"scales": [
+				{"x": 0.05, "y": 0.05, "z": 0.05}
+			],
+			"rotations": [
+				{"x": 0.0, "y": 0.0, "z": 0.0}
+			],
+			"flipY": true,
+			"count": 1,
+			"hasBbox": false,
+			"hasAnimation": false,
+			"isPointLight": false,
+			"animationScripts": {
+			},
+			"hasShadow": true,	
+			"isIndexed": false,
+			"debugNormal": true
+		}
+	}
+}
