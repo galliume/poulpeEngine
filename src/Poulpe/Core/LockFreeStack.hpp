@@ -61,7 +61,7 @@ private:
   {
     if (threadsInPop == 1) {
       node* nodesToDelete = toBeDeleted.exchange(nullptr);
-    
+
       if (!--threadsInPop) {
         deleteNodes(nodesToDelete);
       } else if (nodesToDelete) {

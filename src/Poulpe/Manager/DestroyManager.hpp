@@ -4,14 +4,15 @@
 #include "Poulpe/Component/Mesh.hpp"
 
 #include "Poulpe/Renderer/Vulkan/Renderer.hpp"
-#include "Poulpe/Renderer/Vulkan/DeviceMemoryPool.hpp"
 
 //@TODO refactor all destroy system...
 namespace Poulpe
 {
+    class DeviceMemoryPool;
+
     class DestroyManager
     {
-    public: 
+    public:
         DestroyManager() = default;
 
         inline void addMemoryPool(DeviceMemoryPool* const deviceMemoryPool) { _device_memory_pool = deviceMemoryPool; }

@@ -9,7 +9,7 @@ namespace Poulpe
   {
   public:
     NetworkManager(APIManager* apiManager);
-    
+
     void received(std::string const& notification);
     void startServer(std::string const& port);
 

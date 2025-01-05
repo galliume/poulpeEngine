@@ -1,5 +1,9 @@
 #include "InputManager.hpp"
 
+#include "Poulpe/Component/Camera.hpp"
+
+#include "Poulpe/GUI/Window.hpp"
+
 namespace Poulpe
 {
   bool InputManager::_can_move_camera = false;
@@ -10,7 +14,7 @@ namespace Poulpe
     int width, height;
     glfwGetWindowSize(_window->get(), & width, & height);
   }
-    
+
   void InputManager::init(nlohmann::json const& input_config)
   {
     _input_config = input_config;
@@ -109,7 +113,17 @@ namespace Poulpe
         } else if (key == _keyboard_keys[config["unlockFPS"]])
         {
           Poulpe::Locator::getConfigManager()->updateConfig<unsigned int>("fpsLimit", 0);
+        } else if (key == _keyboard_keys[config["reloadShader"]])
+        {
+          Poulpe::Locator::getConfigManager()->setReloadShaders(true);
+        } else if (key == _keyboard_keys[config["normalDebug"]])
+        {
+          Poulpe::Locator::getConfigManager()->setNormalDebug();
+        } else if (key == _keyboard_keys[config["reload"]])
+        {
+          Poulpe::Locator::getConfigManager()->setReload();
         }
+
         break;
       }
       case GLFW_RELEASE:

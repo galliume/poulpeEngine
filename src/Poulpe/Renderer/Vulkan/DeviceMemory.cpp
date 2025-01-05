@@ -58,17 +58,24 @@ namespace Poulpe
       }
     }
 
-    void DeviceMemory::bindBufferToMemory(VkBuffer & buffer, VkDeviceSize size)
+    void DeviceMemory::bindBufferToMemory(VkBuffer & buffer, VkDeviceSize const offset)
     {
       {
         std::lock_guard guard(_mutex_memory);
+
+        auto const remainder {_offset % offset};
+
+        if (remainder != 0) {
+          _offset += (offset - remainder);
+        }
+
         VkResult result = vkBindBufferMemory(_device, buffer, *_memory, _offset);
 
         if (VK_SUCCESS != result) {
-          PLP_ERROR("BindBuffer memory failed in bindBufferToMemory");
+          PLP_DEBUG("BindBuffer memory failed in bindBufferToMemory");
         }
 
-        _offset += size;
+        _offset += offset;
 
         if (_offset >= _max_size) {
           _is_full = true;
@@ -78,13 +85,23 @@ namespace Poulpe
       }
     }
 
-    void DeviceMemory::bindImageToMemory(VkImage & image, VkDeviceSize size)
+    void DeviceMemory::bindImageToMemory(VkImage & image, VkDeviceSize const offset)
     {
       {
         std::lock_guard guard(_mutex_memory);
-        vkBindImageMemory(_device, image, *_memory, _offset);
-        
-        _offset += size;// ((size / _alignment) + 1)* _alignment;
+
+        auto const remainder {_offset % offset};
+        if (remainder != 0) {
+          _offset += (offset - remainder);
+        }
+
+        VkResult result = vkBindImageMemory(_device, image, *_memory, _offset);
+
+        if (VK_SUCCESS != result) {
+          PLP_DEBUG("BindImageMemory failed in bindImageToMemory");
+        }
+
+        _offset += offset;
 
         if (_offset >= _max_size) {
             _is_full = true;
@@ -93,11 +110,24 @@ namespace Poulpe
     }
 
     bool DeviceMemory::hasEnoughSpaceLeft(VkDeviceSize size)
-    { 
-        bool has_enought_space_left = _max_size - _offset >= size;
+    {
+      {
+        std::lock_guard guard(_mutex_memory);
+        auto offset { _offset };
+
+        auto const remainder {offset % size};
+
+        if (remainder != 0) {
+          offset += (size - remainder);
+        }
+
+        bool has_enought_space_left { _max_size - offset > size };
+
+        //PLP_DEBUG("max size: {} offset: {} size {} :{}", _max_size, offset, size, (_max_size - offset));
         if (!has_enought_space_left) _is_full = true;
 
         return has_enought_space_left;
+      }
     }
 
     void DeviceMemory::clear()

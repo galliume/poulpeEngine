@@ -195,7 +195,7 @@ namespace Poulpe {
       uint32_t const mip_lvl,
       unsigned int scale,
       VkImageAspectFlags const aspect_flags = VK_IMAGE_ASPECT_COLOR_BIT);
-        
+
     VkImageView createSkyboxImageView(
       VkImage& image,
       VkFormat const format,
@@ -260,7 +260,7 @@ namespace Poulpe {
     Buffer createStorageBuffers(
         ObjectBuffer const& storage_buffer,
         VkCommandPool& command_pool);
-     
+
     Buffer createIndirectCommandsBuffer(
       std::vector<VkDrawIndexedIndirectCommand> const& drawCommands);
 
@@ -477,6 +477,8 @@ private:
     uint32_t findMemoryType(uint32_t const type_filter, VkMemoryPropertyFlags const properties);
     VkExtent2D chooseSwapExtent(VkSurfaceCapabilitiesKHR const& capabilities);
 
+    VkDeviceSize align_to(VkDeviceSize const size, VkDeviceSize const alignment);
+
 private:
     int32_t _current_frame{ 0 };
     uint32_t _extension_count;
@@ -537,10 +539,10 @@ private:
     VkFence _fence_buffer{};
 
     //@todo move to config file
-    unsigned int _width{ 800 };
-    unsigned int _height{ 600 };
-    // unsigned int _width{ 2560 };
-    // unsigned int _height{ 1440 };
+    //unsigned int _width{ 800 };
+    //unsigned int _height{ 600 };
+     unsigned int _width{ 2560 };
+     unsigned int _height{ 1440 };
 
     //VkMemoryRequirements _MemRequirements;
   };

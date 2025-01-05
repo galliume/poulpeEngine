@@ -21,11 +21,8 @@ namespace Poulpe
   struct UniformBufferObject
   {
     alignas(16) glm::mat4 model;
+    //alignas(16) glm::mat4 inversed_model;
     alignas(16) glm::mat4 projection;
-    alignas(4) float constant{ 1.0f };
-    alignas(4) float linear{ 0.09f };
-    alignas(4) float quadratic{ 0.032f };
-    alignas(8) glm::vec2 tex_size;
   };
 
   struct CubeUniformBufferObject : UniformBufferObject
@@ -145,6 +142,7 @@ namespace Poulpe
     bool has_shadow{ false };
     bool flip_Y{ false };
     bool is_indexed{ false };
+    bool debug_normal{ false };
   };
 
   struct Bone {
@@ -211,6 +209,7 @@ namespace Poulpe
     VkDescriptorSet descset;
     VkPipelineCache pipeline_cache;
     VkPipeline pipeline;
+
     std::vector<VkPipelineShaderStageCreateInfo> shaders{};
   };
 }

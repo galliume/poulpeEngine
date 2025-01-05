@@ -1,5 +1,5 @@
 {
-	"defaultLevel": "sponza",
+	"defaultLevel": "orientationTest",
 	"defaultSkybox": "debug",
 	"ambientMusic": false,
 	"fpsLimit": 30,
@@ -13,7 +13,10 @@
 			"right": "d",
 			"up": "q",
 			"down": "e",
-			"unlockFPS": "0"
+			"unlockFPS": "0",
+			"reloadShader": "1",
+			"normalDebug": "2",
+			"reload": "r"
 		}
 	}
 }

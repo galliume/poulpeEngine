@@ -301,6 +301,10 @@
           "type": "STRING",
           "value": "OFF"
         },
+        "ASSIMP_DOUBLE_PRECISION_": {
+          "type": "STRING",
+          "value": "ON"
+        },
         "TINYUSDZ_CXX_MP_FLAG": {
           "type": "BOOL",
           "value": "FALSE"

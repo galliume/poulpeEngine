@@ -302,7 +302,8 @@
 			"animationScripts": {
 			},
 			"hasShadow": true,	
-			"isIndexed": true						
+			"isIndexed": true,
+			"debugNormal": true
 		}, 
 		"SnowTerrain" : {
 			"mesh": "assets/mesh/SnowTerrain/SnowTerrain.obj",
@@ -338,7 +339,8 @@
 			"animationScripts": {
 			},			
 			"hasShadow": true,
-			"isIndexed": true			
+			"isIndexed": true,
+			"debugNormal": true
 		}
 	}
 }

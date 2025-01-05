@@ -23,10 +23,13 @@ namespace Poulpe
     ShaderManager();
 
     inline void addRenderer(Renderer* const renderer)  { _renderer = renderer; }
-    void addShader(std::string const & name, std::string const & vertPath, std::string const & fragPath) ;
+    void ShaderManager::addShader(
+      std::string const& name,
+      std::string const& vert_path,
+      std::string const& frag_path,
+      std::string const& geom_path);
     void clear();
     inline VulkanShaders* getShaders() const  { return _shaders.get(); }
-    inline bool isLoadingDone() { return _LoadingDone.load(); }
     std::function<void(std::latch& count_down)> load(nlohmann::json config) ;
 
   private:
@@ -39,8 +42,7 @@ namespace Poulpe
     template <VertexBindingType T>
     VkPipelineVertexInputStateCreateInfo* getVertexInputState();
 
-    nlohmann::json _Config;
-    std::atomic_bool _LoadingDone{ false };
+    nlohmann::json _config;
     Renderer* _renderer{ nullptr };
     std::unique_ptr<VulkanShaders> _shaders{ nullptr };
   };

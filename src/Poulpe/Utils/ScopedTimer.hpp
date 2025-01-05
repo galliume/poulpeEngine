@@ -21,7 +21,7 @@ public:
     auto stop = ClockType::now();
     auto duration = (stop - _Start);
     auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
-    
+
     std::cout << ms << " ms " << _FunctionName << "\n";
   }
 

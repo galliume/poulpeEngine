@@ -64,7 +64,7 @@ namespace Poulpe
     lua_State* _lua_State;
 
     bool _move_init{ false };
-    
+
     std::vector<std::unique_ptr<BoneAnimationMove>> _moves{};
     std::vector<std::unique_ptr<BoneAnimationMove>> _new_moves{};
 

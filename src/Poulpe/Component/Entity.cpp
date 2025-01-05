@@ -20,10 +20,10 @@ namespace Poulpe
         //   GetBBox()->minY,
         //   GetBBox()->maxZ,
         //   GetBBox()->minZ
-        //);                          
+        //);
         // Oriented BBox intersection: http://www.opengl-tutorial.org/miscellaneous/clicking-on-objects/picking-with-custom-ray-obb-function/
-        // 
-        // 
+        //
+        //
         //glm::vec3 rayNds = glm::vec3(x, y, z);
         //glm::vec4 rayClip = glm::vec4(rayNds.x, rayNds.y, -1.0, 1.0);
         //glm::vec4 rayEye = glm::inverse(GetPerspective()) * rayClip;

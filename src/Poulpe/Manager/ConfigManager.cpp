@@ -7,6 +7,11 @@ namespace Poulpe
 {
   ConfigManager::ConfigManager()
   {
+    load();
+  }
+
+  void ConfigManager::load()
+  {
     fs::path path{};
     std::ifstream f;
 
@@ -14,7 +19,7 @@ namespace Poulpe
     f.open(fs::absolute(path));
     if (f.is_open()) _app_config = nlohmann::json::parse(f);
     f.close();
-  
+
     path = "config/sounds.json";
     f.open(fs::absolute(path));
     if (f.is_open()) _sound_config = nlohmann::json::parse(f);
