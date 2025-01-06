@@ -6,8 +6,17 @@ namespace Poulpe
 
   void Basic::createDescriptorSet(Mesh* mesh)
   {
-    Texture const tex{ _texture_manager->getTextures()[mesh->getData()->_textures.at(0)] };
-    Texture const alpha{ _texture_manager->getTextures()[mesh->getData()->_alpha] };
+    Texture tex { _texture_manager->getTextures()[mesh->getData()->_textures.at(0)] };
+    tex.setSampler(_renderer->getAPI()->createKTXSampler(
+      mesh->getMaterial().texture_diffuse_wrap_mode_u,
+      mesh->getMaterial().texture_diffuse_wrap_mode_v,
+      tex.getMipLevels()));
+
+    Texture alpha { _texture_manager->getTextures()[mesh->getData()->_alpha] };
+    alpha.setSampler(_renderer->getAPI()->createKTXSampler(
+      mesh->getMaterial().texture_alpha_wrap_mode_u,
+      mesh->getMaterial().texture_alpha_wrap_mode_v,
+      alpha.getMipLevels()));
 
     std::vector<VkDescriptorImageInfo> image_info{};
     image_info.reserve(5);
@@ -16,32 +25,70 @@ namespace Poulpe
 
     std::string const bump_map_name{ mesh->getData()->_bump_map };
     Texture texture_bump{ _texture_manager->getTextures()[bump_map_name] };
+     texture_bump.setSampler(_renderer->getAPI()->createKTXSampler(
+      mesh->getMaterial().texture_bump_wrap_mode_u,
+      mesh->getMaterial().texture_bump_wrap_mode_v,
+      texture_bump.getMipLevels()));
 
     if (texture_bump.getWidth() == 0) {
       texture_bump = _texture_manager->getTextures()["_plp_empty"];
     }
 
-    std::string const specular_map_name{ mesh->getData()->_specular_map };
+    std::string specular_map_name{ mesh->getData()->_specular_map };
     Texture texture_specular{ _texture_manager->getTextures()[specular_map_name] };
+    texture_specular.setSampler(_renderer->getAPI()->createKTXSampler(
+    mesh->getMaterial().texture_specular_wrap_mode_u,
+    mesh->getMaterial().texture_specular_wrap_mode_v,
+    texture_specular.getMipLevels()));
 
     if (texture_specular.getWidth() == 0) {
       texture_specular = _texture_manager->getTextures()["_plp_empty"];
     }
 
-    std::string const metal_roughness_map_name{ mesh->getData()->_metal_roughness};
+    std::string metal_roughness_map_name{ mesh->getData()->_metal_roughness};
     Texture texture_metal_roughness { _texture_manager->getTextures()[metal_roughness_map_name] };
+    texture_metal_roughness.setSampler(_renderer->getAPI()->createKTXSampler(
+    mesh->getMaterial().texture_metal_roughness_wrap_mode_u,
+    mesh->getMaterial().texture_metal_roughness_wrap_mode_v,
+    texture_metal_roughness.getMipLevels()));
 
     if (texture_metal_roughness.getWidth() == 0) {
       texture_metal_roughness = _texture_manager->getTextures()["_plp_empty"];
+    }
+
+    std::string emissive_map_name{ mesh->getData()->_emissive};
+    Texture texture_emissive { _texture_manager->getTextures()[emissive_map_name] };
+    texture_emissive.setSampler(_renderer->getAPI()->createKTXSampler(
+    mesh->getMaterial().texture_emissive_wrap_mode_u,
+    mesh->getMaterial().texture_emissive_wrap_mode_v,
+    texture_emissive.getMipLevels()));
+
+    if (texture_emissive.getWidth() == 0) {
+      texture_emissive = _texture_manager->getTextures()["_plp_empty"];
+
+    }
+
+    std::string ao_map_name{ mesh->getData()->_ao};
+    Texture texture_ao { _texture_manager->getTextures()[ao_map_name] };
+    texture_ao.setSampler(_renderer->getAPI()->createKTXSampler(
+    mesh->getMaterial().texture_ao_wrap_mode_u,
+    mesh->getMaterial().texture_ao_wrap_mode_v,
+    texture_ao.getMipLevels()));
+
+    if (texture_ao.getWidth() == 0) {
+      texture_ao = _texture_manager->getTextures()["_plp_empty"];
+
     }
 
     //VkDescriptorImageInfo shadowMapSpot{};
     //shadowMapSpot.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
     //shadowMapSpot.imageview = _renderer->getDepthMapImageViews()->at(1);
     //shadowMapSpot.sampler = _renderer->getDepthMapSamplers()->at(1);
-    image_info.emplace_back(texture_specular.getSampler(), texture_specular.getImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
     image_info.emplace_back(texture_bump.getSampler(), texture_bump.getImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+    image_info.emplace_back(texture_specular.getSampler(), texture_specular.getImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
     image_info.emplace_back(texture_metal_roughness.getSampler(), texture_metal_roughness.getImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+    image_info.emplace_back(texture_emissive.getSampler(), texture_emissive.getImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+    image_info.emplace_back(texture_ao.getSampler(), texture_ao.getImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
     std::vector<VkDescriptorImageInfo> depth_map_image_info{};
     depth_map_image_info.emplace_back(_renderer->getDepthMapSamplers(), _renderer->getDepthMapImageViews(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
@@ -137,11 +184,14 @@ namespace Poulpe
       uint32_t const maxUniformBufferRange{ _renderer->getAPI()->getDeviceProperties().limits.maxUniformBufferRange };
       unsigned long long const uniformBufferChunkSize{ maxUniformBufferRange / sizeof(UniformBufferObject) };
       uint32_t const uniformBuffersCount{ static_cast<uint32_t>(std::ceil(static_cast<float>(totalInstances) / static_cast<float>(uniformBufferChunkSize))) };
+      
+      //PLP_DEBUG("total {} max range {} count {}", totalInstances, maxUniformBufferRange, uniformBuffersCount);
 
       //@todo fix memory management...
       unsigned long long uboOffset{ (totalInstances > uniformBufferChunkSize) ? uniformBufferChunkSize : totalInstances };
       unsigned long long uboRemaining{ (totalInstances - uboOffset > 0) ? totalInstances - uboOffset : 0 };
       unsigned long long nbUbo{ uboOffset };
+      //PLP_DEBUG("uboOffset {} uboRemaining {} nbUbo {}", uboOffset, uboRemaining, nbUbo);
 
       for (size_t i{ 0 }; i < uniformBuffersCount; ++i) {
 

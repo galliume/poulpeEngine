@@ -174,7 +174,7 @@ namespace Poulpe
     _last_x = x_pos;
     _last_y = y_pos;
 
-    const double sensitivity = 0.5;
+    const double sensitivity = 0.05;
 
     x_offset *= sensitivity;
     y_offset *= sensitivity;

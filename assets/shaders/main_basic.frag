@@ -5,9 +5,11 @@
 //texture map index
 #define DIFFUSE_INDEX 0
 #define ALPHA_INDEX 1
-#define SPECULAR_INDEX 2
-#define NORMAL_INDEX 3
+#define NORMAL_INDEX 2
+#define SPECULAR_INDEX 3
 #define METAL_ROUGHNESS_INDEX 4
+#define EMISSIVE_INDEX 5
+#define AO_INDEX 6
 
 //depth / shadow map index
 #define SHADOW_MAP_INDEX 0
@@ -57,7 +59,7 @@ struct Material
   vec3 shi_ior_diss;
 };
 
-layout(binding = 1) uniform sampler2D tex_sampler[5];
+layout(binding = 1) uniform sampler2D tex_sampler[7];
 
 layout(binding = 2) readonly buffer ObjectBuffer {
   Light sun_light;
@@ -166,61 +168,69 @@ void main()
     discard;
   }
 
-  vec3 normal = texture(tex_sampler[NORMAL_INDEX], var.texture_coord).xyz * 2.0 - 1.0;
+  vec3 normal = vec3(1.0); 
+  normal.xy = texture(tex_sampler[NORMAL_INDEX], var.texture_coord).ga;
+  normal.xy = normal.xy * 0.5 - 0.5;
+  normal.z = sqrt(1 - dot(normal.xy, normal.xy));
+  normal = normalize(normal);
 
-  vec3 p = var.t_frag_pos;
-  vec3 v = var.t_view_dir;
+  vec3 p = normalize(var.t_frag_pos);
+  vec3 v = normalize(var.t_view_dir);
 
-  vec4 combined = texture(tex_sampler[METAL_ROUGHNESS_INDEX], var.texture_coord);
-  float ao = combined.r;//check if correct
-  float metallic = combined.b;
-  float roughness = combined.g;
+  vec2 metal_roughness = texture(tex_sampler[METAL_ROUGHNESS_INDEX], var.texture_coord).rg;
+  float metallic = metal_roughness.r;
+  float roughness = metal_roughness.g;
+
+  float ao = texture(tex_sampler[AO_INDEX], var.texture_coord).r;
 
   vec4 albedo = texture(tex_sampler[DIFFUSE_INDEX], var.texture_coord);
-  if (albedo.a < 0.1) discard;
+  //if (albedo.a < 0.1) discard;
 
-  vec4 C_ambient = vec4(material.ambient, 1.0);
-  vec4 C_diffuse = vec4(material.diffuse, 1.0);
-  vec4 C_light = vec4(sun_light.color * 0.1, 1.0) * 0.2;
+  vec4 C_ambient = vec4(material.ambient, 1.0) * albedo;
+  vec4 C_diffuse = vec4(material.diffuse, 1.0) * albedo / PI;
+  vec4 C_light = vec4(sun_light.color * 0.1, 1.0);
   vec4 C_specular = vec4(material.specular, 1.0);
-  
-  vec4 diffuse_color = C_diffuse / PI;
-  
-  vec4 color = albedo * C_ambient * C_light;
+
+  vec4 color = C_ambient * C_light * ao;
 
   vec3 F0 = vec3(0.04);
-  F0 = mix(F0, diffuse_color.xyz, metallic);
+  F0 = mix(F0, C_diffuse.xyz, metallic);
 
   for (int i = 1; i < NR_POINT_LIGHTS; ++i) {
-   
-   vec3 a = normalize(point_lights[i].position - var.frag_pos);
-   float attenuation = InverseSquareAttenuation(a);
-   //float distance = length(var.t_plight_pos[i] - p);
-   //float attenuation = 1.0 / (distance * distance);
-   C_light = vec4(point_lights[i].color, 1.0) * 0.01;
-   
-   vec3 l = normalize(var.t_plight_pos[i] - p);
-   vec3 h = normalize(v + l);
-   float r = max(dot(h, v), 0.0);
 
-   //Fresnel
-   //if F0 < 0.02, no reflectance ?
-   vec3 F = F0 + (1 - F0) * pow(clamp(1.0 - r, 0.0, 1.0), 5.0);
+    vec3 light_pos = normalize(var.t_plight_pos[i]);
+    vec3 l = normalize(light_pos - p);
+    vec3 h = normalize(v + l);
+    float r = max(dot(h, v), 0.0);
 
-   float NdL = max(dot(normalize(normal), l), 0.0);
-   
-   vec3 kS = F;
-   vec3 kD = vec3(1.0) - kS;
-   kD *= 1.0 - metallic;
+    float distance = length(point_lights[i].position - var.frag_pos);
+    float attenuation = 1.0 / (distance * distance);
+    //float attenuation = InverseSquareAttenuation(l);
+    C_light = vec4(vec3(1.0), 1.0);
 
-   color += vec4(vec3((C_diffuse.xyz) * C_light.xyz * NdL), 1.0);
+    //Fresnel
+    //if F0 < 0.02, no reflectance ?
+    vec3 F = F0 + (1 - F0) * pow(clamp(1.0 - r, 0.0, 1.0), 5.0);
+
+    float NdL = max(dot(normal, l), 0.0);
+
+    vec3 kS = F;
+    vec3 kD = vec3(1.0) - kS;
+    kD *= 1.0 - metallic;
+
+    color += (vec4(kD, 1.0) * C_diffuse) * C_light;
   }
 
+  vec3 l = normalize(var.t_plight_pos[1] - p);
+  float diff = max(dot(l, normal), 0.0);
+
+  //color = (C_ambient * albedo * 0.2) + (C_diffuse * albedo * diff);
+  //color = C_diffuse;
   color *= PI;
 
   color.r = linear_to_sRGB(color.r);
   color.g = linear_to_sRGB(color.g);
   color.b = linear_to_sRGB(color.b);
-  
-  final_color = vec4(1.0, 1.0, 2.0, 1.0);
+
+  final_color = vec4(color.xyz , 1.0);
 }

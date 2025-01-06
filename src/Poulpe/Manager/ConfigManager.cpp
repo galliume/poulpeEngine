@@ -87,11 +87,17 @@ namespace Poulpe
       for (auto const& [key, data] : textures["textures"].items()) {
         _textures_config["textures"][key] = data;
       }
-      for (auto const& [key, data] : textures["orm"].items()) {
-        _textures_config["orm"][key] = data;
+      for (auto const& [key, data] : textures["mr"].items()) {
+        _textures_config["mr"][key] = data;
       }
       for (auto const& [key, data] : textures["normal"].items()) {
         _textures_config["normal"][key] = data;
+      }
+      for (auto const& [key, data] : textures["emissive"].items()) {
+        _textures_config["emissive"][key] = data;
+      }
+      for (auto const& [key, data] : textures["ao"].items()) {
+        _textures_config["ao"][key] = data;
       }
     });
     return _entity_config;

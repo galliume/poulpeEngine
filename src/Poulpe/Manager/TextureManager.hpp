@@ -15,7 +15,9 @@ namespace Poulpe
   enum class TEXTURE_TYPE {
     DIFFUSE,
     NORMAL,
-    ORM
+    MR,//metalRoughness
+    EMISSIVE,
+    AO//ambientOcclusion
   };
 
   class TextureManager
@@ -34,6 +36,7 @@ namespace Poulpe
       std::string const& name,
       std::string const& path,
       VkImageAspectFlags const aspect_flags,
+      ktx_transcode_fmt_e const transcoding,
       bool const is_public = false);
     void clear();
     inline const Texture getSkyboxTexture() const { return _skybox; }

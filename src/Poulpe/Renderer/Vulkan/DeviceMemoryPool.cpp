@@ -31,19 +31,27 @@ namespace Poulpe
     std::string buffer_type_debug;
 
     switch (buffer_type) {
-      case DeviceBufferType::STORAGE:
-        buffer_size = max_buffer_size / _max_storage;
-        buffer_type_debug = "STORAGE";
-      break;
       case DeviceBufferType::UNIFORM:
-        buffer_size = max_buffer_size / _max_uniform;
+        buffer_size = max_buffer_size;
+
+        if (buffer_size > _device_props.properties.limits.maxUniformBufferRange) {
+          buffer_size = _device_props.properties.limits.maxUniformBufferRange;
+        }
+
         buffer_type_debug = "UNIFORM";
       break;
       case DeviceBufferType::STAGING:
+
         buffer_size = max_buffer_size / _max_staging;
+
+        if (buffer_size >= _device_props.properties.limits.maxStorageBufferRange) {
+          buffer_size = _device_props.properties.limits.maxStorageBufferRange / _max_staging;
+        }
+
         buffer_type_debug = "STAGING";
       break;
     }
+    
     //PLP_DEBUG("type: {} {} allocated size: {} size: {} buffer size: {} max: {}", buffer_type_debug, memory_type, _memory_allocation_size.at(memory_type), size, buffer_size, max_buffer_size);
 
     auto pool_type = _pool.find(memory_type);

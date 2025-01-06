@@ -102,7 +102,8 @@ namespace Poulpe {
       bool const has_stencil_test = true,
       int const polygone_mode = VK_POLYGON_MODE_FILL,
       bool const has_color_attachment = true,
-      bool const has_dynamic_depth_bias = false);
+      bool const has_dynamic_depth_bias = false,
+      bool const has_dynamic_culling = false);
 
     VkSwapchainKHR createSwapChain(
       std::vector<VkImage> & swapChainImages,
@@ -454,7 +455,11 @@ namespace Poulpe {
       VkImage& image,
       VkImageAspectFlags aspect_flags);
 
-    VkSampler createKTXSampler(ktxTexture2 * ktx_texture);
+    VkSamplerAddressMode getSamplerAddressMode(TextureWrapMode mode);
+    VkSampler createKTXSampler(
+      TextureWrapMode const wrap_mode_u,
+      TextureWrapMode const wrap_mode_v,
+      float const mip_lvl);
 
 public:
     bool _FramebufferResized = false;

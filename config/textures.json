@@ -1,12 +1,10 @@
 {
 	"textures": {
 		"mpoulpe": {
-			"path": "assets/texture/mpoulpe.ktx2",
-			"ktx_format": "R8G8B8A8_SRGB"
+			"path": "assets/texture/mpoulpe.ktx2"
 		},
 		"_plp_empty": {
-			"path": "assets/texture/_plp_empty.ktx2",
-			"ktx_format": "R8G8B8A8_SRGB"
+			"path": "assets/texture/_plp_empty.ktx2"
 		}
 	},
 	"skybox": {

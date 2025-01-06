@@ -9,7 +9,7 @@ namespace Poulpe
   {
   public:
     enum class DeviceBufferType {
-      UNIFORM, STORAGE, STAGING
+      UNIFORM, STAGING
     };
 
     DeviceMemoryPool(
@@ -42,8 +42,6 @@ namespace Poulpe
     std::vector<VkDeviceSize> _memory_allocation_size{0};
 
     unsigned int _device_memory_count{ 0 };
-    unsigned int const _max_uniform{ 100 };
-    unsigned int const _max_storage{ 10 };
-    unsigned int const _max_staging{ 10 };
+    unsigned int const _max_staging{ 20 };
   };
 }

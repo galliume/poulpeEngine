@@ -115,7 +115,15 @@ namespace Poulpe
     for (auto& [keyTex, pathTex] : data["normal"].items()) {
       textures.emplace_back(static_cast<std::string>(keyTex));
     }
-    for (auto& [keyTex, pathTex] : data["orm"].items()) {
+    for (auto& [keyTex, pathTex] : data["mr"].items()) {
+      textures.emplace_back(static_cast<std::string>(keyTex));
+    }
+
+    for (auto& [keyTex, pathTex] : data["emissive"].items()) {
+      textures.emplace_back(static_cast<std::string>(keyTex));
+    }
+
+    for (auto& [keyTex, pathTex] : data["ao"].items()) {
       textures.emplace_back(static_cast<std::string>(keyTex));
     }
 
@@ -161,6 +169,8 @@ namespace Poulpe
       std::string name_bump_map{ "_plp_empty" };
       std::string name_alpha_map{ "_plp_empty" };
       std::string name_texture_metal_roughness{ "_plp_empty" };
+      std::string name_texture_emissive{ "_plp_empty" };
+      std::string name_texture_ao{ "_plp_empty" };
 
       if (!materials.empty()) {
 
@@ -194,6 +204,12 @@ namespace Poulpe
         if (!mat.name_texture_metal_roughness.empty()) {
           name_texture_metal_roughness = mat.name_texture_metal_roughness;
         }
+        if (!mat.name_texture_emissive.empty()) {
+          name_texture_emissive = mat.name_texture_emissive;
+        }
+        if (!mat.name_texture_ao.empty()) {
+          name_texture_ao = mat.name_texture_ao;
+        }
       }
 
       Data data{};
@@ -203,6 +219,8 @@ namespace Poulpe
       data._bump_map = name_bump_map;
       data._alpha = name_alpha_map;
       data._metal_roughness = name_texture_metal_roughness;
+      data._emissive = name_texture_emissive;
+      data._ao = name_texture_ao;
       data._vertices = _data.vertices;
       data._indices = _data.indices;
       data._origin_pos = entity_opts.pos;
@@ -222,6 +240,7 @@ namespace Poulpe
       ubo.model = glm::rotate(ubo.model, glm::radians(entity_opts.rotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
       ubo.model = glm::rotate(ubo.model, glm::radians(entity_opts.rotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
 
+      ubo.model *= _data.transform_matrix;
       //ubo.inversed_model = glm::inverse(ubo.model);
 
       //ubo.view = glm::mat4(1.0f);

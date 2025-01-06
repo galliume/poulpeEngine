@@ -4,25 +4,22 @@
 			"mesh": "assets/mesh/NormalTangentTest/gLTF/NormalTangentTest.gltf",
 			"textures": {
 				"NormalTangentTest_BaseColor": {
-					"path" : "assets/mesh/NormalTangentTest/glTF/NormalTangentTest_BaseColor.ktx2",
-					"ktx_format": "KTX_TTF_BC7_RGBA"
+					"path" : "assets/mesh/NormalTangentTest/glTF/NormalTangentTest_BaseColor.ktx2"
 				}
 			},
 			"orm": {
 				"NormalTangentTest_OcclusionRoughnessMetallic": {
-					"path" : "assets/mesh/NormalTangentTest/glTF/NormalTangentTest_OcclusionRoughnessMetallic.ktx2",
-					"ktx_format": "KTX_TTF_BC7_RGBA"
+					"path" : "assets/mesh/NormalTangentTest/glTF/NormalTangentTest_OcclusionRoughnessMetallic.ktx2"
 				}
 			},
 			"normal": {
 				"NormalTangentTest_Normal": {
-					"path": "assets/mesh/NormalTangentTest/glTF/NormalTangentTest_Normal.ktx2",
-					"ktx_format" : "KTX_TTF_BC7_RGBA"
+					"path": "assets/mesh/NormalTangentTest/glTF/NormalTangentTest_Normal.ktx2"
 				}
 			},
 			"shader": "main_basic",
 			"positions": [
-				{"x": 0.0, "y": -1.0, "z": -2.0}
+				{"x": 0.0, "y": 0.0, "z": 0.0}
 			],
 			"scales": [
 				{"x": 1.0, "y": 1.0, "z": 1.0 }
@@ -37,44 +34,9 @@
 			"isPointLight": false,
 			"animationScripts": {
 			},
-			"hasShadow": true,	
-			"isIndexed": true						
-		},
-		"SnowTerrain" : {
-			"mesh": "assets/mesh/SnowTerrain/SnowTerrain.obj",
-			"textures": {
-				"snowterrain": {
-					"path" : "assets/mesh/SnowTerrain/snowterrain.ktx2",
-					"ktx_format" : "KTX_TTF_BC7_RGBA"
-				}
-			},
-			"orm": {
-			},
-			"normal": {
-				"NormalMap": {
-					"path" : "assets/mesh/SnowTerrain/NormalMap.ktx2",
-					"ktx_format" : "KTX_TTF_BC7_RGBA"
-				}
-			},
-			"shader": "main_basic",
-			"positions": [
-				{"x": 0.0, "y": 1.25, "z": 0.0}
-			],
-			"scales": [
-				{"x": 1.0, "y": 1.0, "z": 1.0}
-			],
-			"rotations": [
-				{"x": 0.0, "y": 0.0, "z": 0.0}
-			],
-			"flipY": true,
-			"count": 1,
-			"hasBbox": false,
-			"hasAnimation": false,
-			"animationScripts": {
-			},
-			"isPointLight": false,
 			"hasShadow": true,
-			"isIndexed": true			
+			"isIndexed": true,
+			"debugNormal": true
 		}
 	}
 }

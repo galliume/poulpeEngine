@@ -87,7 +87,7 @@ namespace Poulpe
 
       VkDescriptorSetLayoutBinding samplerLayoutBinding{};
       samplerLayoutBinding.binding = 1;
-      samplerLayoutBinding.descriptorCount = 5;
+      samplerLayoutBinding.descriptorCount = 7;
       samplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
       samplerLayoutBinding.pImmutableSamplers = nullptr;
       samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
@@ -167,6 +167,7 @@ namespace Poulpe
   {
     bool offscreen = (shaderName == "shadowMap") ? true : false;
     auto cullMode = VK_CULL_MODE_BACK_BIT;
+    bool has_dynamic_culling{ false };
 
     std::vector<VkDescriptorPoolSize> poolSizes{};
     VkDescriptorPoolSize dpsUbo;
@@ -184,6 +185,7 @@ namespace Poulpe
     auto shaders = getShadersInfo(shaderName, offscreen);
 
     VkPipeline graphicPipeline{VK_NULL_HANDLE};
+    VkPipeline graphicPipelineBis{VK_NULL_HANDLE};
     VkPipelineLayout pipeline_layout{VK_NULL_HANDLE};
     VkDescriptorSetLayout descset_layout{VK_NULL_HANDLE};
 
@@ -238,7 +240,7 @@ namespace Poulpe
       VkPipelineVertexInputStateCreateInfo* vertexInputInfo{nullptr};
 
       bool hasColorAttachment{true};
-      bool hasDynamicDepthBias{false};
+      bool has_dynamic_depth_bias{false};
 
       VkDescriptorPoolSize dpsSB;
       dpsSB.type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
@@ -251,14 +253,18 @@ namespace Poulpe
       vkPc.offset = 0;
       vkPc.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
       vkPc.size = sizeof(constants);
+      has_dynamic_culling = true;
 
+      bool need_bis{ true };
       if (shaderName == "shadowMap" || shaderName == "shadowMapSpot") {
         hasColorAttachment = false;
-        hasDynamicDepthBias = true;
+        has_dynamic_depth_bias = true;
+        has_dynamic_culling = false;
         cullMode = VK_CULL_MODE_FRONT_BIT;
         descset_layout = createDescriptorSetLayout<DescSetLayoutType::Offscreen>();
         vkPc.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
         vkPc.size = sizeof(shadowMapConstants);
+        need_bis = false;
       } else {
         descset_layout = createDescriptorSetLayout<DescSetLayoutType::Entity>();
       }
@@ -277,13 +283,29 @@ namespace Poulpe
         true, true, true,
         VK_POLYGON_MODE_FILL,
         hasColorAttachment,
-        hasDynamicDepthBias);
+        has_dynamic_depth_bias,
+        has_dynamic_culling);
+
+      if (need_bis) {
+        graphicPipelineBis = _renderer->getAPI()->createGraphicsPipeline(
+          pipeline_layout,
+          shaderName,
+          shaders,
+          *vertexInputInfo,
+          VK_CULL_MODE_NONE,
+          true, true, true,
+          VK_POLYGON_MODE_FILL,
+          hasColorAttachment,
+          has_dynamic_depth_bias,
+          has_dynamic_culling);
+      }
     }
 
     auto descriptorPool = _renderer->getAPI()->createDescriptorPool(poolSizes, 1000);
 
     VulkanPipeline pipeline{};
     pipeline.pipeline = graphicPipeline;
+    pipeline.pipeline_bis = graphicPipelineBis;
     pipeline.pipeline_layout = pipeline_layout;
     pipeline.desc_pool = descriptorPool;
     pipeline.descset_layout = descset_layout;
@@ -336,7 +358,7 @@ namespace Poulpe
     VkPipelineVertexInputStateCreateInfo* vertexInputInfo = new VkPipelineVertexInputStateCreateInfo();
 
     if constexpr (T == VertexBindingType::Vertex3D) {
-      std::array<VkVertexInputAttributeDescription, 6>* attDesc = new std::array<VkVertexInputAttributeDescription, 6>(Vertex::getAttributeDescriptions());
+      std::array<VkVertexInputAttributeDescription, 5>* attDesc = new std::array<VkVertexInputAttributeDescription, 5>(Vertex::getAttributeDescriptions());
       VkVertexInputBindingDescription* bDesc = new VkVertexInputBindingDescription(Vertex::getBindingDescription());
 
       vertexInputInfo->sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;

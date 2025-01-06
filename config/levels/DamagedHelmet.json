@@ -1,0 +1,53 @@
+{
+	"entities": {
+		"DamagedHelmet" : {
+			"mesh": "assets/mesh/DamagedHelmet/glTF/DamagedHelmet.gltf",
+			"textures": {
+				"Default_albedo": {
+					"path": "assets/mesh/DamagedHelmet/glTF/Default_albedo.ktx2"
+				}
+			},
+			"ao": {
+				"Default_AO": {
+					"path": "assets/mesh/DamagedHelmet/glTF/Default_AO.ktx2"
+				}
+			},
+			"mr": {
+				"Default_metalRoughness": {
+					"path": "assets/mesh/DamagedHelmet/glTF/Default_metalRoughness.ktx2"
+				}
+			},
+			"emissive": {
+				"Default_emissive": {
+					"path": "assets/mesh/DamagedHelmet/glTF/Default_emissive.ktx2"
+				}
+			},
+			"normal" : {
+				"Default_normal": {
+					"path": "assets/mesh/DamagedHelmet/glTF/Default_normal.ktx2"
+				}
+			},
+			"shader": "main_basic",
+			"positions": [
+				{"x": 0.0, "y": 0.0, "z": 0.0}
+			],
+			"scales": [
+				{"x": 1.0, "y": 1.0, "z": 1.0}
+			],
+			"rotations": [
+				{"x": 90.0, "y": 180.0, "z": 0.0}
+			],
+			"flipY": false,
+			"count": 1,
+			"hasBbox": false,
+			"hasAnimation": false,
+			"isPointLight": false,
+			"animationScripts": {
+				"anim0" : "assets/scripts/animation/helmet/anim0.lua"
+			},
+			"hasShadow": true,	
+			"isIndexed": true,
+			"debugNormal": true
+		}
+	}
+}

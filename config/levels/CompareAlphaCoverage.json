@@ -1,0 +1,51 @@
+{
+	"entities": {
+		"CompareAlphaCoverage" : {
+			"mesh": "assets/mesh/CompareAlphaCoverage/glTF/CompareAlphaCoverage.gltf",
+			"textures": {
+				"FloorBaseColor": {
+					"path": "assets/mesh/CompareAlphaCoverage/glTF/FloorBaseColor.ktx2"
+				},
+				"FurBaseColorAlpha": {
+					"path": "assets/mesh/CompareAlphaCoverage/glTF/FurBaseColorAlpha.ktx2"
+				},
+				"FurEmissive": {
+					"path": "assets/mesh/CompareAlphaCoverage/glTF/FurEmissive.ktx2"
+				}
+			},
+			"orm": {
+				"FurORM": {
+					"path": "assets/mesh/CompareAlphaCoverage/glTF/FurORM.ktx2"
+				}
+			},
+			"normal" : {
+				"FloorNormal": {
+					"path": "assets/mesh/CompareAlphaCoverage/glTF/FloorNormal.ktx2"
+				},
+				"FurNormal": {
+					"path": "assets/mesh/CompareAlphaCoverage/glTF/FurNormal.ktx2"
+				}
+			},
+			"shader": "main_basic",
+			"positions": [
+				{"x": 0.0, "y": 0.0, "z": 0.0}
+			],
+			"scales": [
+				{"x": 0.05, "y": 0.05, "z": 0.05}
+			],
+			"rotations": [
+				{"x": 90.0, "y": 0.0, "z": 180.0}
+			],
+			"flipY": false,
+			"count": 1,
+			"hasBbox": false,
+			"hasAnimation": false,
+			"isPointLight": false,
+			"animationScripts": {
+			},
+			"hasShadow": true,	
+			"isIndexed": true,
+			"debugNormal": true
+		}
+	}
+}
