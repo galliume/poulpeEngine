@@ -4,28 +4,23 @@
 			"mesh": "assets/mesh/backpack/backpack.obj",
 			"textures": {
 				"diffuse": {
-					"path": "assets/mesh/backpack/diffuse.ktx2",
-					"ktx_format": "R8G8B8A8_SRGB"
+					"path": "assets/mesh/backpack/diffuse.ktx2"
 				}
 			},
 			"orm": {
 				"ao": { 
-					"path" : "assets/mesh/backpack/ao.ktx2",
-					"ktx_format": "R8G8B8A8_SRGB"
+					"path" : "assets/mesh/backpack/ao.ktx2"
 				},
 				"roughness": {
-					"path" : "assets/mesh/backpack/roughness.ktx2",
-					"ktx_format" : "R8G8B8A8_SRGB"
+					"path" : "assets/mesh/backpack/roughness.ktx2"
 				},
 				"specular": {
-					"path" : "assets/mesh/backpack/specular.ktx2",
-					"ktx_format": "R8G8B8A8_SRGB"
+					"path" : "assets/mesh/backpack/specular.ktx2"
 				}
 			},
 			"normal": {
 				"normal": {
-					"path" : "assets/mesh/backpack/normal.ktx2",
-					"ktx_format": "R8G8B8A8_UNORM"
+					"path" : "assets/mesh/backpack/normal.ktx2"
 				}
 			},
 			"shader": "main_basic",
@@ -53,8 +48,7 @@
 			"mesh": "assets/mesh/SnowTerrain/SnowTerrain.obj",
 			"textures": {
 				"snowterrain": {
-					"path" : "assets/mesh/SnowTerrain/snowterrain.ktx2",
-					"ktx_format" : "R8G8B8A8_SRGB"
+					"path" : "assets/mesh/SnowTerrain/snowterrain.ktx2"
 				}
 			},
 			"orm": {

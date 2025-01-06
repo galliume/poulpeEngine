@@ -1,287 +1,224 @@
 {
 	"entities": {
 		"sponza" : {
-			"mesh": "assets/mesh/sponza/Sponza.gltf",
+			"mesh": "assets/mesh/Sponza/glTF/Sponza.gltf",
 			"textures": {
 				"white": {
-					"path" : "assets/texture/_plp_empty.ktx2",
-					"ktx_format" : "R8G8B8A8_SRGB"
+					"path" : "assets/mesh/Sponza/glTF/white.ktx2"
 				},
 				"8750083169368950601": {
-					"path" : "assets/mesh/sponza/8750083169368950601.ktx2",
-					"ktx_format": "R8G8B8A8_SRGB"
+					"path" : "assets/mesh/Sponza/glTF/8750083169368950601.ktx2"
 				},
 				"8481240838833932244": {
-					"path" : "assets/mesh/sponza/8481240838833932244.ktx2",
-					"ktx_format" : "R8G8B8A8_SRGB"
+					"path" : "assets/mesh/Sponza/glTF/8481240838833932244.ktx2"
 				},
 				"8006627369776289000": {
-					"path" : "assets/mesh/sponza/8006627369776289000.ktx2",
-					"ktx_format" : "R8G8B8A8_SRGB"
+					"path" : "assets/mesh/Sponza/glTF/8006627369776289000.ktx2"
 				},
 				"7441062115984513793": {
-					"path" : "assets/mesh/sponza/7441062115984513793.ktx2",
-					"ktx_format" : "R8G8B8A8_SRGB"
+					"path" : "assets/mesh/Sponza/glTF/7441062115984513793.ktx2"
 				},
 				"6772804448157695701": {
-					"path" : "assets/mesh/sponza/6772804448157695701.ktx2",
-					"ktx_format" : "R8G8B8A8_SRGB"
+					"path" : "assets/mesh/Sponza/glTF/6772804448157695701.ktx2"
 				},
 				"7268504077753552595": {
-					"path" : "assets/mesh/sponza/7268504077753552595.ktx2",
-					"ktx_format" : "R8G8B8A8_SRGB"
+					"path" : "assets/mesh/Sponza/glTF/7268504077753552595.ktx2"
 				},
 				"6151467286084645207": {
-					"path" : "assets/mesh/sponza/6151467286084645207.ktx2",
-					"ktx_format" : "R8G8B8A8_SRGB"
+					"path" : "assets/mesh/Sponza/glTF/6151467286084645207.ktx2"
 				},
 				"6047387724914829168": {
-					"path" : "assets/mesh/sponza/6047387724914829168.ktx2",
-					"ktx_format" : "R8G8B8A8_SRGB"
+					"path" : "assets/mesh/Sponza/glTF/6047387724914829168.ktx2"
 				},
 				"5823059166183034438": {
-					"path" : "assets/mesh/sponza/5823059166183034438.ktx2",
-					"ktx_format" : "R8G8B8A8_SRGB"
+					"path" : "assets/mesh/Sponza/glTF/5823059166183034438.ktx2"
 				},
 				"5792855332885324923": {
-					"path" : "assets/mesh/sponza/5792855332885324923.ktx2",
-					"ktx_format" : "R8G8B8A8_SRGB"
+					"path" : "assets/mesh/Sponza/glTF/5792855332885324923.ktx2"
 				},
 				"5061699253647017043": {
-					"path" : "assets/mesh/sponza/5061699253647017043.ktx2",
-					"ktx_format" : "R8G8B8A8_SRGB"
+					"path" : "assets/mesh/Sponza/glTF/5061699253647017043.ktx2"
 				},
 				"4975155472559461469": {
-					"path" : "assets/mesh/sponza/4975155472559461469.ktx2",
-					"ktx_format" : "R8G8B8A8_SRGB"
+					"path" : "assets/mesh/Sponza/glTF/4975155472559461469.ktx2"
 				},
 				"4675343432951571524": {
-					"path" : "assets/mesh/sponza/4675343432951571524.ktx2",
-					"ktx_format" : "R8G8B8A8_SRGB"
+					"path" : "assets/mesh/Sponza/glTF/4675343432951571524.ktx2"
 				},
 				"2969916736137545357": {
-					"path" : "assets/mesh/sponza/2969916736137545357.ktx2",
-					"ktx_format" : "R8G8B8A8_SRGB"
+					"path" : "assets/mesh/Sponza/glTF/2969916736137545357.ktx2"
 				},
 				"2775690330959970771": {
-					"path" : "assets/mesh/sponza/2775690330959970771.ktx2",
-					"ktx_format" : "R8G8B8A8_SRGB"
+					"path" : "assets/mesh/Sponza/glTF/2775690330959970771.ktx2"
 				},
 				"2185409758123873465": {
-					"path" : "assets/mesh/sponza/2185409758123873465.ktx2",
-					"ktx_format" : "R8G8B8A8_SRGB"
+					"path" : "assets/mesh/Sponza/glTF/2185409758123873465.ktx2"
 				},
 				"17876391417123941155": {
-					"path" : "assets/mesh/sponza/17876391417123941155.ktx2",
-					"ktx_format" : "R8G8B8A8_SRGB"
+					"path" : "assets/mesh/Sponza/glTF/17876391417123941155.ktx2"
 				},
 				"15295713303328085182": {
-					"path" : "assets/mesh/sponza/15295713303328085182.ktx2",
-					"ktx_format" : "R8G8B8A8_SRGB"
+					"path" : "assets/mesh/Sponza/glTF/15295713303328085182.ktx2"
 				},
 				"16275776544635328252": {
-					"path" : "assets/mesh/sponza/16275776544635328252.ktx2",
-					"ktx_format" : "R8G8B8A8_SRGB"
+					"path" : "assets/mesh/Sponza/glTF/16275776544635328252.ktx2"
 				},
 				"14650633544276105767": {
-					"path" : "assets/mesh/sponza/14650633544276105767.ktx2",
-					"ktx_format" : "R8G8B8A8_SRGB"
+					"path" : "assets/mesh/Sponza/glTF/14650633544276105767.ktx2"
 				},
 				"11490520546946913238": {
-					"path" : "assets/mesh/sponza/11490520546946913238.ktx2",
-					"ktx_format" : "R8G8B8A8_SRGB"
+					"path" : "assets/mesh/Sponza/glTF/11490520546946913238.ktx2"
 				},
 				"11474523244911310074": {
-					"path" : "assets/mesh/sponza/11474523244911310074.ktx2",
-					"ktx_format" : "R8G8B8A8_SRGB"
+					"path" : "assets/mesh/Sponza/glTF/11474523244911310074.ktx2"
 				},
 				"755318871556304029": {
-					"path" : "assets/mesh/sponza/755318871556304029.ktx2",
-					"ktx_format" : "R8G8B8A8_SRGB"
+					"path" : "assets/mesh/Sponza/glTF/755318871556304029.ktx2"
 				}
 			},
-			"orm": {
+			"emissive": {
+
+			},
+			"ao": {
+
+			},
+			"mr": {
 				"9916269861720640319": {
-					"path" : "assets/mesh/sponza/9916269861720640319.ktx2",
-					"ktx_format": "R8G8B8A8_SRGB"
+					"path" : "assets/mesh/Sponza/glTF/9916269861720640319.ktx2"
 				},
 				"9288698199695299068": {
-					"path" : "assets/mesh/sponza/9288698199695299068.ktx2",
-					"ktx_format": "R8G8B8A8_SRGB"
+					"path" : "assets/mesh/Sponza/glTF/9288698199695299068.ktx2"
 				},
 				"8783994986360286082": {
-					"path" : "assets/mesh/sponza/8783994986360286082.ktx2",
-					"ktx_format": "R8G8B8A8_SRGB"
+					"path" : "assets/mesh/Sponza/glTF/8783994986360286082.ktx2"
 				},
 				"8747919177698443163": {
-					"path" : "assets/mesh/sponza/8747919177698443163.ktx2",
-					"ktx_format": "R8G8B8A8_SRGB"
+					"path" : "assets/mesh/Sponza/glTF/8747919177698443163.ktx2"
 				},
 				"8503262930880235456": {
-					"path" : "assets/mesh/sponza/8503262930880235456.ktx2",
-					"ktx_format": "R8G8B8A8_SRGB"
+					"path" : "assets/mesh/Sponza/glTF/8503262930880235456.ktx2"
 				},
 				"8114461559286000061": {
-					"path" : "assets/mesh/sponza/8114461559286000061.ktx2",
-					"ktx_format": "R8G8B8A8_SRGB"
+					"path" : "assets/mesh/Sponza/glTF/8114461559286000061.ktx2"
 				},
 				"8051790464816141987": {
-					"path" : "assets/mesh/sponza/8051790464816141987.ktx2",
-					"ktx_format": "R8G8B8A8_SRGB"
+					"path" : "assets/mesh/Sponza/glTF/8051790464816141987.ktx2"
 				},
 				"7815564343179553343": {
-					"path" : "assets/mesh/sponza/7815564343179553343.ktx2",
-					"ktx_format": "R8G8B8A8_SRGB"
+					"path" : "assets/mesh/Sponza/glTF/7815564343179553343.ktx2"
 				},
 				"4871783166746854860": {
-					"path" : "assets/mesh/sponza/4871783166746854860.ktx2",
-					"ktx_format": "R8G8B8A8_SRGB"
+					"path" : "assets/mesh/Sponza/glTF/4871783166746854860.ktx2"
 				},
 				"3455394979645218238": {
-					"path" : "assets/mesh/sponza/3455394979645218238.ktx2",
-					"ktx_format": "R8G8B8A8_SRGB"
+					"path" : "assets/mesh/Sponza/glTF/3455394979645218238.ktx2"
 				},
 				"3371964815757888145": {
-					"path" : "assets/mesh/sponza/3371964815757888145.ktx2",
-					"ktx_format": "R8G8B8A8_SRGB"
+					"path" : "assets/mesh/Sponza/glTF/3371964815757888145.ktx2"
 				},
 				"2411100444841994089": {
-					"path" : "assets/mesh/sponza/2411100444841994089.ktx2",
-					"ktx_format": "R8G8B8A8_SRGB"
+					"path" : "assets/mesh/Sponza/glTF/2411100444841994089.ktx2"
 				},
 				"17556969131407844942": {
-					"path" : "assets/mesh/sponza/17556969131407844942.ktx2",
-					"ktx_format": "R8G8B8A8_SRGB"
+					"path" : "assets/mesh/Sponza/glTF/17556969131407844942.ktx2"
 				},
 				"16885566240357350108": {
-					"path" : "assets/mesh/sponza/16885566240357350108.ktx2",
-					"ktx_format": "R8G8B8A8_SRGB"
+					"path" : "assets/mesh/Sponza/glTF/16885566240357350108.ktx2"
 				},
 				"13824894030729245199": {
-					"path" : "assets/mesh/sponza/13824894030729245199.ktx2",
-					"ktx_format": "R8G8B8A8_SRGB"
+					"path" : "assets/mesh/Sponza/glTF/13824894030729245199.ktx2"
 				},
 				"13196865903111448057": {
-					"path" : "assets/mesh/sponza/13196865903111448057.ktx2",
-					"ktx_format": "R8G8B8A8_SRGB"
+					"path" : "assets/mesh/Sponza/glTF/13196865903111448057.ktx2"
 				},
 				"1219024358953944284": {
-					"path" : "assets/mesh/sponza/1219024358953944284.ktx2",
-					"ktx_format": "R8G8B8A8_SRGB"
+					"path" : "assets/mesh/Sponza/glTF/1219024358953944284.ktx2"
 				},
 				"11968150294050148237": {
-					"path" : "assets/mesh/sponza/11968150294050148237.ktx2",
-					"ktx_format": "R8G8B8A8_SRGB"
+					"path" : "assets/mesh/Sponza/glTF/11968150294050148237.ktx2"
 				},
 				"11872827283454512094": {
-					"path" : "assets/mesh/sponza/11872827283454512094.ktx2",
-					"ktx_format": "R8G8B8A8_SRGB"
+					"path" : "assets/mesh/Sponza/glTF/11872827283454512094.ktx2"
 				},
 				"10381718147657362067": {
-					"path" : "assets/mesh/sponza/10381718147657362067.ktx2",
-					"ktx_format": "R8G8B8A8_SRGB"
+					"path" : "assets/mesh/Sponza/glTF/10381718147657362067.ktx2"
 				},
 				"715093869573992647": {
-					"path" : "assets/mesh/sponza/715093869573992647.ktx2",
-					"ktx_format": "R8G8B8A8_SRGB"
+					"path" : "assets/mesh/Sponza/glTF/715093869573992647.ktx2"
+				},
+				"466164707995436622": {
+					"path" : "assets/mesh/Sponza/glTF/466164707995436622.ktx2"
 				}
 			},
 			"normal" : {
 				"8773302468495022225": {
-					"path" : "assets/mesh/sponza/8773302468495022225.ktx2",
-					"ktx_format": "R8G8B8A8_UNORM"
+					"path" : "assets/mesh/Sponza/glTF/8773302468495022225.ktx2"
 				},
 				"7645212358685992005": {
-					"path" : "assets/mesh/sponza/7645212358685992005.ktx2",
-					"ktx_format": "R8G8B8A8_UNORM"
+					"path" : "assets/mesh/Sponza/glTF/7645212358685992005.ktx2"
 				},				
 				"7056944414013900257": {
-					"path" : "assets/mesh/sponza/7056944414013900257.ktx2",
-					"ktx_format": "R8G8B8A8_UNORM"
+					"path" : "assets/mesh/Sponza/glTF/7056944414013900257.ktx2"
 				},				
 				"6667038893015345571": {
-					"path" : "assets/mesh/sponza/6667038893015345571.ktx2",
-					"ktx_format": "R8G8B8A8_UNORM"
+					"path" : "assets/mesh/Sponza/glTF/6667038893015345571.ktx2"
 				},				
 				"6593109234861095314": {
-					"path" : "assets/mesh/sponza/6593109234861095314.ktx2",
-					"ktx_format": "R8G8B8A8_UNORM"
+					"path" : "assets/mesh/Sponza/glTF/6593109234861095314.ktx2"
 				},				
 				"4910669866631290573": {
-					"path" : "assets/mesh/sponza/4910669866631290573.ktx2",
-					"ktx_format": "R8G8B8A8_UNORM"
+					"path" : "assets/mesh/Sponza/glTF/4910669866631290573.ktx2"
 				},				
 				"4601176305987539675": {
-					"path" : "assets/mesh/sponza/4601176305987539675.ktx2",
-					"ktx_format": "R8G8B8A8_UNORM"
+					"path" : "assets/mesh/Sponza/glTF/4601176305987539675.ktx2"
 				},				
 				"4477655471536070370": {
-					"path" : "assets/mesh/sponza/4477655471536070370.ktx2",
-					"ktx_format": "R8G8B8A8_UNORM"
+					"path" : "assets/mesh/Sponza/glTF/4477655471536070370.ktx2"
 				},				
 				"3827035219084910048": {
-					"path" : "assets/mesh/sponza/3827035219084910048.ktx2",
-					"ktx_format": "R8G8B8A8_UNORM"
+					"path" : "assets/mesh/Sponza/glTF/3827035219084910048.ktx2"
 				},				
 				"3628158980083700836": {
-					"path" : "assets/mesh/sponza/3628158980083700836.ktx2",
-					"ktx_format": "R8G8B8A8_UNORM"
+					"path" : "assets/mesh/Sponza/glTF/3628158980083700836.ktx2"
 				},				
 				"2374361008830720677": {
-					"path" : "assets/mesh/sponza/2374361008830720677.ktx2",
-					"ktx_format": "R8G8B8A8_UNORM"
+					"path" : "assets/mesh/Sponza/glTF/2374361008830720677.ktx2"
 				},				
 				"2299742237651021498": {
-					"path" : "assets/mesh/sponza/2299742237651021498.ktx2",
-					"ktx_format": "R8G8B8A8_UNORM"
+					"path" : "assets/mesh/Sponza/glTF/2299742237651021498.ktx2"
 				},				
 				"2051777328469649772": {
-					"path" : "assets/mesh/sponza/2051777328469649772.ktx2",
-					"ktx_format": "R8G8B8A8_UNORM"
+					"path" : "assets/mesh/Sponza/glTF/2051777328469649772.ktx2"
 				},				
 				"16299174074766089871": {
-					"path" : "assets/mesh/sponza/16299174074766089871.ktx2",
-					"ktx_format": "R8G8B8A8_UNORM"
+					"path" : "assets/mesh/Sponza/glTF/16299174074766089871.ktx2"
 				},				
 				"15722799267630235092": {
-					"path" : "assets/mesh/sponza/15722799267630235092.ktx2",
-					"ktx_format": "R8G8B8A8_UNORM"
+					"path" : "assets/mesh/Sponza/glTF/15722799267630235092.ktx2"
 				},				
 				"14267839433702832875": {
-					"path" : "assets/mesh/sponza/14267839433702832875.ktx2",
-					"ktx_format": "R8G8B8A8_UNORM"
+					"path" : "assets/mesh/Sponza/glTF/14267839433702832875.ktx2"
 				},				
 				"14170708867020035030": {
-					"path" : "assets/mesh/sponza/14170708867020035030.ktx2",
-					"ktx_format": "R8G8B8A8_UNORM"
+					"path" : "assets/mesh/Sponza/glTF/14170708867020035030.ktx2"
 				},				
 				"14118779221266351425": {
-					"path" : "assets/mesh/sponza/14118779221266351425.ktx2",
-					"ktx_format": "R8G8B8A8_UNORM"
+					"path" : "assets/mesh/Sponza/glTF/14118779221266351425.ktx2"
 				},				
 				"13982482287905699490": {
-					"path" : "assets/mesh/sponza/13982482287905699490.ktx2",
-					"ktx_format": "R8G8B8A8_UNORM"
+					"path" : "assets/mesh/Sponza/glTF/13982482287905699490.ktx2"
 				},
 				"12501374198249454378": {
-					"path" : "assets/mesh/sponza/12501374198249454378.ktx2",
-					"ktx_format": "R8G8B8A8_UNORM"
+					"path" : "assets/mesh/Sponza/glTF/12501374198249454378.ktx2"
 				},
 				"10388182081421875623": {
-					"path" : "assets/mesh/sponza/10388182081421875623.ktx2",
-					"ktx_format": "R8G8B8A8_UNORM"
+					"path" : "assets/mesh/Sponza/glTF/10388182081421875623.ktx2"
 				},
 				"759203620573749278": {
-					"path" : "assets/mesh/sponza/759203620573749278.ktx2",
-					"ktx_format": "R8G8B8A8_UNORM"
-				},
-				"466164707995436622": {
-					"path" : "assets/mesh/sponza/466164707995436622.ktx2",
-					"ktx_format": "R8G8B8A8_UNORM"
+					"path" : "assets/mesh/Sponza/glTF/759203620573749278.ktx2"
 				},
 				"332936164838540657": {
-					"path" : "assets/mesh/sponza/332936164838540657.ktx2",
-					"ktx_format": "R8G8B8A8_UNORM"
+					"path" : "assets/mesh/Sponza/glTF/332936164838540657.ktx2"
 				}
 			},
 			"shader": "main_basic",
@@ -294,7 +231,7 @@
 			"rotations": [
 				{"x": 0.0, "y": 0.0, "z": 0.0}
 			],
-			"flipY": true,
+			"flipY": false,
 			"count": 1,
 			"hasBbox": false,
 			"hasAnimation": false,
@@ -304,26 +241,30 @@
 			"hasShadow": true,	
 			"isIndexed": true,
 			"debugNormal": true
-		}, 
+		},
 		"SnowTerrain" : {
 			"mesh": "assets/mesh/SnowTerrain/SnowTerrain.obj",
 			"textures": {
 				"snowterrain": {
-					"path" : "assets/mesh/SnowTerrain/snowterrain.ktx2",
-					"ktx_format": "R8G8B8A8_SRGB"
+					"path" : "assets/mesh/SnowTerrain/snowterrain.ktx2"
 				}
 			},
-			"orm": {
+			"mr": {
+			},
+			"emissive": {
+
+			},
+			"ao": {
+
 			},
 			"normal": {
 				"NormalMap": {
-					"path" : "assets/mesh/SnowTerrain/NormalMap.ktx2",
-					"ktx_format" : "R8G8B8A8_SRGB"
+					"path" : "assets/mesh/SnowTerrain/NormalMap.ktx2"
 				}
 			},
 			"shader": "main_basic",
 			"positions": [
-				{"x": 0.0, "y": 0.5, "z": 0.0}
+				{"x": 0.0, "y": -0.4, "z": 0.0}
 			],
 			"scales": [
 				{"x": 1.0, "y": 1.0, "z": 1.0}
@@ -331,13 +272,13 @@
 			"rotations": [
 				{"x": 0.0, "y": 0.0, "z": 0.0}
 			],
-			"flipY": false,
+			"flipY": true,
 			"count": 1,
 			"hasBbox": false,
 			"hasAnimation": false,
 			"isPointLight": false,
 			"animationScripts": {
-			},			
+			},
 			"hasShadow": true,
 			"isIndexed": true,
 			"debugNormal": true

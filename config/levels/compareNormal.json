@@ -2,14 +2,13 @@
 	"entities": {
 		"compareNormal" : {
 			"mesh": "assets/mesh/CompareNormal/glTF/CompareNormal.gltf",
-			"textures": {				
+			"textures": {
 			},
-			"orm": {				
+			"orm": {
 			},
 			"normal": {	
 				"Compare_Normal_img0": {
-					"path": "assets/mesh/CompareNormal/glTF/Compare_Normal_img0.ktx2",
-					"ktx_format" : "R8G8B8A8_UNORM"
+					"path": "assets/mesh/CompareNormal/glTF/Compare_Normal_img0.ktx2"
 				}
 			},
 			"shader": "main_basic",
@@ -22,15 +21,16 @@
 			"rotations": [
 				{"x": 0.0, "y": 180.0, "z": 0.0}
 			],
-			"flipY": true,
+			"flipY": false,
 			"count": 1,
 			"hasBbox": false,
 			"hasAnimation": false,
 			"isPointLight": false,
 			"animationScripts": {
 			},
-			"hasShadow": true,	
-			"isIndexed": true						
+			"hasShadow": true,
+			"isIndexed": true,
+			"debugNormal": true
 		}
 	}
 }

@@ -20,7 +20,7 @@ namespace Poulpe
 
   void Camera::down()
   {
-    _camera_pos -= _camera_up * _speed;
+    _camera_pos += _camera_up * _speed;
   }
 
   void Camera::forward()
@@ -40,7 +40,7 @@ namespace Poulpe
 
   void Camera::up()
   {
-    _camera_pos += _camera_up * _speed;
+    _camera_pos -= _camera_up * _speed;
   }
 
   /**
@@ -124,7 +124,7 @@ namespace Poulpe
   void Camera::updatePos(double xoffset, double yoffset)
   {
     _yaw -= static_cast<float>(xoffset);
-    _pitch -= static_cast<float>(yoffset);
+    _pitch += static_cast<float>(yoffset);
 
     if (_pitch > 89.0f) {
       _pitch = 89.0f;

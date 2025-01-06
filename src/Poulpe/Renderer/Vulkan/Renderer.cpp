@@ -204,7 +204,7 @@ namespace Poulpe
       glm::radians(45.0f),
       static_cast<float>(_vulkan->getSwapChainExtent().width) / static_cast<float>(_vulkan->getSwapChainExtent().height),
       0.1f, 50.f);
-    //_perspective[1][1] *= -1;
+     _perspective[1][1] *= -1;
   }
 
   void Renderer::setDeltatime(float delta_time)
@@ -432,7 +432,11 @@ namespace Poulpe
           pipeline->pipeline_layout,
           0, 1, mesh->getDescSet(), 0, nullptr);
 
-        _vulkan->bindPipeline(cmd_buffer, pipeline->pipeline);
+        if (mesh->getMaterial().double_sided == true && pipeline->pipeline_bis != VK_NULL_HANDLE) {
+          _vulkan->bindPipeline(cmd_buffer, pipeline->pipeline_bis);
+        } else {
+          _vulkan->bindPipeline(cmd_buffer, pipeline->pipeline);
+        }
 
         _vulkan->draw(
           cmd_buffer,
@@ -545,7 +549,7 @@ namespace Poulpe
          _depth_imageviews[_current_frame],
          _depth_images[_current_frame],
          _entities,
-         VK_ATTACHMENT_LOAD_OP_CLEAR,
+         VK_ATTACHMENT_LOAD_OP_LOAD,
          VK_ATTACHMENT_STORE_OP_STORE,
          count_down,
          2, true

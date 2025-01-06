@@ -25,7 +25,7 @@ _print()
     fi
 
     if [[ "$type" == "2" ]] ; then 
-        echo -e "\e[1;41m $text \e[0m"        
+        echo -e "\e[1;41m $text \e[0m"
     fi
 }
 
@@ -83,7 +83,7 @@ done
 geom_shaders=("normal")
 for shader in ${geom_shaders[@]}; do
     compile ${shader} "geom"
-done		
+done
 
 duration=$SECONDS
 print_text "Done in $((duration / 60)) minutes and $((duration % 60)) seconds."

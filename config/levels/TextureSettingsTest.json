@@ -1,0 +1,42 @@
+{
+	"entities": {
+		"TextureSettingsTest" : {
+			"mesh": "assets/mesh/TextureSettingsTest/glTF/TextureSettingsTest.gltf",
+			"textures": {
+				"CheckAndX": {
+					"path": "assets/mesh/TextureSettingsTest/glTF/CheckAndX.ktx2"
+				},
+				"CheckAndX_V": {
+					"path": "assets/mesh/TextureSettingsTest/glTF/CheckAndX_V.ktx2"
+				},
+				"TextureTestLabels": {
+					"path": "assets/mesh/TextureSettingsTest/glTF/TextureTestLabels.ktx2"
+				}
+			},
+			"orm": {
+			},
+			"normal" : {
+			},
+			"shader": "main_basic",
+			"positions": [
+				{"x": 0.0, "y": 0.0, "z": 0.0}
+			],
+			"scales": [
+				{"x": 0.05, "y": 0.05, "z": 0.05}
+			],
+			"rotations": [
+				{"x": 90.0, "y": 0.0, "z": 180.0}
+			],
+			"flipY": false,
+			"count": 1,
+			"hasBbox": false,
+			"hasAnimation": false,
+			"isPointLight": false,
+			"animationScripts": {
+			},
+			"hasShadow": true,	
+			"isIndexed": true,
+			"debugNormal": true
+		}
+	}
+}

@@ -24,8 +24,7 @@ layout(location = 0) in vec3 position;
 layout(location = 1) in vec3 normal;
 layout(location = 2) in vec2 texture_coord;
 layout(location = 3) in vec4 tangent;
-layout(location = 4) in vec4 bitangent;
-layout(location = 5) in vec4 color;
+layout(location = 4) in vec4 color;
 
 layout(location = 0) out FRAG_VAR {
   vec3 frag_pos;
@@ -89,26 +88,26 @@ void TangentSpaceVL(vec3 pos, vec3 camera_pos, vec3 light_pos, vec3 normal, vec4
 
 void main()
 {
-  mat4 inversed_model = inverse(ubo.model);
-  mat3 normal_matrix = transpose(mat3(inversed_model));
+  mat3 inversed_model = inverse(mat3(ubo.model));
+  mat3 normal_matrix = transpose(inversed_model);
   vec3 norm = normal_matrix * normal;
 
-  vec3 T = normalize(vec3(ubo.model * vec4(tangent.xyz, 0.0)));
-  vec3 N = normalize(vec3(ubo.model * vec4(normal, 0.0)));
+  vec3 T = normalize(normal_matrix * tangent.xyz);
+  vec3 N = normalize(norm);
   T = normalize(T - dot(T, N) * N);
   vec3 B = cross(N, T);
   mat3 TBN = transpose(mat3(T, B, N));
-
-  frag_var.frag_pos = mat3(ubo.model) * position;
+  
+  frag_var.frag_pos = position;
   frag_var.t_frag_pos = TBN * frag_var.frag_pos;
 
   frag_var.light_pos = sun_light.position;
   frag_var.view_pos = pc.view_position;
 
-  frag_var.t_view_dir =  (TBN * (mat3(ubo.model) * frag_var.view_pos)) - frag_var.t_frag_pos;  
-  frag_var.t_light_dir = (TBN * (mat3(ubo.model) * frag_var.light_pos)) - frag_var.t_frag_pos;
+  frag_var.t_view_dir =  (TBN * frag_var.view_pos) - frag_var.t_frag_pos;
+  frag_var.t_light_dir = (TBN * frag_var.light_pos) - frag_var.t_frag_pos;
   
-  frag_var.t_plight_pos[0] = TBN  * point_lights[0].position;
+  frag_var.t_plight_pos[0] = TBN * point_lights[0].position;
   frag_var.t_plight_pos[1] = TBN * point_lights[1].position;
   
   // TangentSpaceVL(frag_var.frag_pos, frag_var.view_pos, frag_var.light_pos, norm, tangent, frag_var.t_view_dir, frag_var.t_light_dir);
@@ -117,6 +116,7 @@ void main()
 
   //frag_var.light_space = (ubo.projection * sun_light.view * vec4(frag_var.frag_pos, 1.0));
   frag_var.texture_coord = texture_coord;
-  
+  frag_var.norm = normal;
+
   gl_Position = ubo.projection * pc.view * ubo.model * vec4(position, 1.0f);
 } 

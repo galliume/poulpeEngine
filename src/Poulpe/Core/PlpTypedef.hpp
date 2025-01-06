@@ -65,6 +65,12 @@ namespace Poulpe
     Material material;
   };
 
+  enum class TextureWrapMode {
+    WRAP,
+    CLAMP_TO_EDGE,
+    MIRROR_REPEAT
+  };
+
   struct material_t {
     std::string name;
     glm::vec3 ambient{ 1.0 };
@@ -76,13 +82,45 @@ namespace Poulpe
     float ior{ 0.0 };       // index of refraction
     float dissolve{ 1.0 };  // 1 == opaque; 0 == fully transparent
     int illum{ 1 };
+    bool double_sided{ false };
+    bool alpha_mode{ false }; //false = MASK true = BLEND
+    float alpha_cut_off{ 1.0 };
+
     std::string name_texture_ambient;             // map_Ka
+    TextureWrapMode texture_ambient_wrap_mode_u;
+    TextureWrapMode texture_ambient_wrap_mode_v;
+
     std::string name_texture_diffuse;             // map_Kd
+    TextureWrapMode texture_diffuse_wrap_mode_u;
+    TextureWrapMode texture_diffuse_wrap_mode_v;
+
     std::string name_texture_specular;            // map_Ks
+    TextureWrapMode texture_specular_wrap_mode_u;
+    TextureWrapMode texture_specular_wrap_mode_v;
+
     std::string name_texture_specular_highlight;  // map_Ns
+    TextureWrapMode texture_specular_highlight_wrap_mode_u;
+    TextureWrapMode texture_specular_highlight_wrap_mode_v;
+
     std::string name_texture_bump;                // map_bump, map_Bump, bump
+    TextureWrapMode texture_bump_wrap_mode_u;
+    TextureWrapMode texture_bump_wrap_mode_v;
+
     std::string name_texture_alpha; // map_d
+    TextureWrapMode texture_alpha_wrap_mode_u;
+    TextureWrapMode texture_alpha_wrap_mode_v;
+
     std::string name_texture_metal_roughness; //metal roughness
+    TextureWrapMode texture_metal_roughness_wrap_mode_u;
+    TextureWrapMode texture_metal_roughness_wrap_mode_v;
+
+    std::string name_texture_emissive;
+    TextureWrapMode texture_emissive_wrap_mode_u;
+    TextureWrapMode texture_emissive_wrap_mode_v;
+
+    std::string name_texture_ao;
+    TextureWrapMode texture_ao_wrap_mode_u;
+    TextureWrapMode texture_ao_wrap_mode_v;
   };
 
   struct constants
@@ -112,6 +150,8 @@ namespace Poulpe
     std::string _normal_map;
     std::string _alpha;
     std::string _metal_roughness;
+    std::string _emissive;
+    std::string _ao;
     std::vector<Vertex> _vertices;
     std::vector<uint32_t> _indices;
     std::vector<UniformBufferObject> _ubos;
@@ -184,6 +224,7 @@ namespace Poulpe
     std::vector<uint32_t> indices{};
     std::vector<uint32_t> materials_ID{};
     std::vector<Vertex> vertices{};
+    glm::mat4 transform_matrix{};
   };
 
   enum class SocketStatus {
@@ -209,6 +250,7 @@ namespace Poulpe
     VkDescriptorSet descset;
     VkPipelineCache pipeline_cache;
     VkPipeline pipeline;
+    VkPipeline pipeline_bis;
 
     std::vector<VkPipelineShaderStageCreateInfo> shaders{};
   };

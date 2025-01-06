@@ -114,10 +114,28 @@ namespace Poulpe
           material.dissolve = dissolve;
         }
 
+        std::string alpha_mode{};
+        if (mat->Get(AI_MATKEY_BLEND_FUNC, alpha_mode) == AI_SUCCESS) {
+          material.alpha_mode = ("MASK" == alpha_mode) ? true : false;
+        }
+        float alpha_cut_off;
+        if (mat->Get(AI_MATKEY_OPACITY, alpha_cut_off) == AI_SUCCESS) {
+          material.alpha_cut_off = alpha_cut_off;
+        }
+
+        aiTextureMapMode wrap_mode_u;
+        aiTextureMapMode wrap_mode_v;
+
         if (mat->GetTextureCount(aiTextureType_AMBIENT) > 0) {
           aiString ambientTexturePath;
           if (mat->GetTexture(aiTextureType_AMBIENT, 0, &ambientTexturePath) == AI_SUCCESS) {
               material.name_texture_ambient = AssimpLoader::cleanName(ambientTexturePath.C_Str());
+          }
+          if (mat->Get(AI_MATKEY_MAPPINGMODE_U(aiTextureType_AMBIENT, 0), wrap_mode_u) == AI_SUCCESS) {
+            material.texture_ambient_wrap_mode_u = TextureWrapMode(wrap_mode_u);
+          }
+          if (mat->Get(AI_MATKEY_MAPPINGMODE_V(aiTextureType_AMBIENT, 0), wrap_mode_v) == AI_SUCCESS) {
+            material.texture_ambient_wrap_mode_v = TextureWrapMode(wrap_mode_v);
           }
         }
         if (mat->GetTextureCount(aiTextureType_DIFFUSE) > 0) {
@@ -125,17 +143,35 @@ namespace Poulpe
           if (mat->GetTexture(aiTextureType_DIFFUSE, 0, &diffuseTexturePath) == AI_SUCCESS) {
               material.name_texture_diffuse = AssimpLoader::cleanName(diffuseTexturePath.C_Str());
           }
+          if (mat->Get(AI_MATKEY_MAPPINGMODE_U(aiTextureType_DIFFUSE, 0), wrap_mode_u) == AI_SUCCESS) {
+            material.texture_diffuse_wrap_mode_u = TextureWrapMode(wrap_mode_u);
+          }
+          if (mat->Get(AI_MATKEY_MAPPINGMODE_V(aiTextureType_DIFFUSE, 0), wrap_mode_v) == AI_SUCCESS) {
+            material.texture_diffuse_wrap_mode_v = TextureWrapMode(wrap_mode_v);
+          }
         }
         if (mat->GetTextureCount(aiTextureType_SPECULAR) > 0) {
           aiString specularTexturePath;
           if (mat->GetTexture(aiTextureType_SPECULAR, 0, &specularTexturePath) == AI_SUCCESS) {
               material.name_texture_specular = AssimpLoader::cleanName(specularTexturePath.C_Str());
           }
+          if (mat->Get(AI_MATKEY_MAPPINGMODE_U(aiTextureType_SPECULAR, 0), wrap_mode_u) == AI_SUCCESS) {
+            material.texture_specular_wrap_mode_u = TextureWrapMode(wrap_mode_u);
+          }
+          if (mat->Get(AI_MATKEY_MAPPINGMODE_V(aiTextureType_SPECULAR, 0), wrap_mode_v) == AI_SUCCESS) {
+            material.texture_specular_wrap_mode_v = TextureWrapMode(wrap_mode_v);
+          }
         }
         if (mat->GetTextureCount(aiTextureType_SHININESS) > 0) {
           aiString specularHighLightTexturePath;
           if (mat->GetTexture(aiTextureType_SHININESS, 0, &specularHighLightTexturePath) == AI_SUCCESS) {
               material.name_texture_specular_highlight = AssimpLoader::cleanName(specularHighLightTexturePath.C_Str());
+          }
+          if (mat->Get(AI_MATKEY_MAPPINGMODE_U(aiTextureType_SHININESS, 0), wrap_mode_u) == AI_SUCCESS) {
+            material.texture_specular_highlight_wrap_mode_u = TextureWrapMode(wrap_mode_u);
+          }
+          if (mat->Get(AI_MATKEY_MAPPINGMODE_V(aiTextureType_SHININESS, 0), wrap_mode_v) == AI_SUCCESS) {
+            material.texture_specular_highlight_wrap_mode_v = TextureWrapMode(wrap_mode_v);
           }
         }
 
@@ -147,12 +183,24 @@ namespace Poulpe
             if (mat->GetTexture(aiTextureType_HEIGHT, 0, &bumpTexturePath) == AI_SUCCESS) {
                 material.name_texture_bump = AssimpLoader::cleanName(bumpTexturePath.C_Str());
             }
+            if (mat->Get(AI_MATKEY_MAPPINGMODE_U(aiTextureType_HEIGHT, 0), wrap_mode_u) == AI_SUCCESS) {
+            material.texture_bump_wrap_mode_u = TextureWrapMode(wrap_mode_u);
+            }
+            if (mat->Get(AI_MATKEY_MAPPINGMODE_V(aiTextureType_HEIGHT, 0), wrap_mode_v) == AI_SUCCESS) {
+              material.texture_bump_wrap_mode_v = TextureWrapMode(wrap_mode_v);
+            }
           }
         } else {
           if (mat->GetTextureCount(aiTextureType_NORMALS) > 0) {
             aiString bumpTexturePath;
             if (mat->GetTexture(aiTextureType_NORMALS, 0, &bumpTexturePath) == AI_SUCCESS) {
                 material.name_texture_bump = AssimpLoader::cleanName(bumpTexturePath.C_Str());
+            }
+            if (mat->Get(AI_MATKEY_MAPPINGMODE_U(aiTextureType_NORMALS, 0), wrap_mode_u) == AI_SUCCESS) {
+            material.texture_bump_wrap_mode_u = TextureWrapMode(wrap_mode_u);
+            }
+            if (mat->Get(AI_MATKEY_MAPPINGMODE_V(aiTextureType_NORMALS, 0), wrap_mode_v) == AI_SUCCESS) {
+              material.texture_bump_wrap_mode_v = TextureWrapMode(wrap_mode_v);
             }
           }
         }
@@ -161,17 +209,58 @@ namespace Poulpe
           if (mat->GetTexture(aiTextureType_OPACITY, 0, &alphaTexturePath) == AI_SUCCESS) {
               material.name_texture_alpha = AssimpLoader::cleanName(alphaTexturePath.C_Str());
           }
+          if (mat->Get(AI_MATKEY_MAPPINGMODE_U(aiTextureType_OPACITY, 0), wrap_mode_u) == AI_SUCCESS) {
+            material.texture_alpha_wrap_mode_u = TextureWrapMode(wrap_mode_u);
+          }
+          if (mat->Get(AI_MATKEY_MAPPINGMODE_V(aiTextureType_OPACITY, 0), wrap_mode_v) == AI_SUCCESS) {
+            material.texture_alpha_wrap_mode_v = TextureWrapMode(wrap_mode_v);
+          }
         }
         if (mat->GetTextureCount(aiTextureType_UNKNOWN) > 0) {
           aiString metalRoughnessTexturePath;
           if (mat->GetTexture(aiTextureType_UNKNOWN, 0, &metalRoughnessTexturePath) == AI_SUCCESS) {
               material.name_texture_metal_roughness = AssimpLoader::cleanName(metalRoughnessTexturePath.C_Str());
           }
+          if (mat->Get(AI_MATKEY_MAPPINGMODE_U(aiTextureType_UNKNOWN, 0), wrap_mode_u) == AI_SUCCESS) {
+            material.texture_metal_roughness_wrap_mode_u = TextureWrapMode(wrap_mode_u);
+          }
+          if (mat->Get(AI_MATKEY_MAPPINGMODE_V(aiTextureType_UNKNOWN, 0), wrap_mode_v) == AI_SUCCESS) {
+            material.texture_metal_roughness_wrap_mode_v = TextureWrapMode(wrap_mode_v);
+          }
+        }
+        if (mat->GetTextureCount(aiTextureType_EMISSIVE) > 0) {
+          aiString texturePath;
+          if (mat->GetTexture(aiTextureType_EMISSIVE, 0, &texturePath) == AI_SUCCESS) {
+              material.name_texture_emissive = AssimpLoader::cleanName(texturePath.C_Str());
+          }
+          if (mat->Get(AI_MATKEY_MAPPINGMODE_U(aiTextureType_EMISSIVE, 0), wrap_mode_u) == AI_SUCCESS) {
+            material.texture_emissive_wrap_mode_u = TextureWrapMode(wrap_mode_u);
+          }
+          if (mat->Get(AI_MATKEY_MAPPINGMODE_V(aiTextureType_EMISSIVE, 0), wrap_mode_v) == AI_SUCCESS) {
+            material.texture_emissive_wrap_mode_v = TextureWrapMode(wrap_mode_v);
+          }
+        }
+        if (mat->GetTextureCount(aiTextureType_LIGHTMAP) > 0) {
+          aiString texturePath;
+          if (mat->GetTexture(aiTextureType_LIGHTMAP, 0, &texturePath) == AI_SUCCESS) {
+              material.name_texture_ao = AssimpLoader::cleanName(texturePath.C_Str());
+          }
+          if (mat->Get(AI_MATKEY_MAPPINGMODE_U(aiTextureType_LIGHTMAP, 0), wrap_mode_u) == AI_SUCCESS) {
+            material.texture_ao_wrap_mode_u = TextureWrapMode(wrap_mode_u);
+          }
+          if (mat->Get(AI_MATKEY_MAPPINGMODE_V(aiTextureType_LIGHTMAP, 0), wrap_mode_v) == AI_SUCCESS) {
+            material.texture_ao_wrap_mode_v = TextureWrapMode(wrap_mode_v);
+          }
         }
         //int illumModel;
         //if (mat->Get(AI_MATKEY_ILLUM, illumModel) == AI_SUCCESS) {
         //  material.illum = material.illum;
         //}
+        int isDoubleSided = 0;
+        if (mat->Get(AI_MATKEY_TWOSIDED, isDoubleSided) == AI_SUCCESS) {
+          material.double_sided = (isDoubleSided == 1) ? true : false;
+        }
+
         materials.emplace_back(material);
       }
     }
@@ -180,7 +269,6 @@ namespace Poulpe
     std::vector<Rotation> rotations{};
     std::vector<Position> positions{};
     std::vector<Scale> scales{};
-
 
     animations.reserve(scene->mNumAnimations);
     for (unsigned int i{ 0 }; i < scene->mNumAnimations; i++) {
@@ -251,8 +339,12 @@ namespace Poulpe
     std::vector<PlpMeshData>& data,
     bool const flip_Y)
   {
+    glm::mat4 transform_matrix = 
+    (node->mParent != nullptr) ? ConvertMatrixToGLMFormat(node->mTransformation) : glm::mat4(1.0f);
+
     for (unsigned int i{ 0 }; i < node->mNumMeshes; i++) {
       PlpMeshData mesh_data{};
+      mesh_data.transform_matrix = transform_matrix;
 
       aiMesh const* mesh = scene->mMeshes[node->mMeshes[i]];
       mesh_data.name = mesh->mName.C_Str() + std::to_string(i);
@@ -266,12 +358,14 @@ namespace Poulpe
         aiVector3D vertices = mesh->mVertices[v];
 
         Vertex vertex{};
-        vertex.bones_ids.resize(4);
-        std::fill(vertex.bones_ids.begin(), vertex.bones_ids.end(), -1);
-        vertex.weights.resize(4);
-        std::fill(vertex.weights.begin(), vertex.weights.end(), 0.0f);
+        //vertex.bones_ids.resize(4);
+        //std::fill(vertex.bones_ids.begin(), vertex.bones_ids.end(), -1);
+        //vertex.weights.resize(4);
+        //std::fill(vertex.weights.begin(), vertex.weights.end(), 0.0f);
 
         vertex.pos = { vertices.x, vertices.y, vertices.z };
+        if (flip_Y) vertex.pos.y *= -1.0f;
+
         vertex.normal = n;
 
         if (mesh->HasNormals()) {
@@ -281,8 +375,6 @@ namespace Poulpe
         } else {
           PLP_WARN("NO NORMAL");
         }
-
-        if (flip_Y) vertex.pos.y *= -1.0f;
 
         glm::vec4 tangent(0.f, 0.f, 1.f, 1.f);
         glm::vec4 bitangent(0.f, 0.f, 1.f, 1.f);
@@ -306,7 +398,7 @@ namespace Poulpe
             vertex.normal) < 0.0f ? -1.0f : 1.0f;
         }
         vertex.tangent = tangent;
-        vertex.bitangent = bitangent;
+        //vertex.bitangent = bitangent;
 
         if (mesh->mNumUVComponents[0] > 0) {
           aiVector3D texture_coord = mesh->mTextureCoords[0][v];
@@ -322,7 +414,6 @@ namespace Poulpe
             mesh->mColors[v]->g,
             mesh->mColors[v]->b,
             mesh->mColors[v]->a);
-          PLP_DEBUG("r: {} g: {} b: {} a: {}", color.x, color.y, color.z, color.w);
         }
         vertex.color = color;
 
@@ -372,13 +463,13 @@ namespace Poulpe
             auto const id = aiWeight.mVertexId;
             auto const weight = aiWeight.mWeight;
 
-            auto& vtex = mesh_data.vertices.at(id);
-            for (auto bW{ 0 }; bW < 4; bW++) {
-              if (vtex.weights[bW] < 0) {
-                vtex.weights[bW] = weight;
-                vtex.bones_ids[bW] = boneID;
-              }
-            }
+            //auto& vtex = mesh_data.vertices.at(id);
+            //for (auto bW{ 0 }; bW < 4; bW++) {
+            //  if (vtex.weights[bW] < 0) {
+            //    vtex.weights[bW] = weight;
+            //    vtex.bones_ids[bW] = boneID;
+            //  }
+            //}
           }
         }
       }
@@ -387,6 +478,22 @@ namespace Poulpe
 
     for (unsigned int i{ 0 }; i < node->mNumChildren; i++) {
       process(node->mChildren[i], scene, data, flip_Y);
+    }
+  }
+
+  TextureWrapMode AssimpLoader::getTextureWrapMode(aiTextureMapMode const wrap_mode_u)
+  {
+    switch (wrap_mode_u)
+    {
+    case 1:
+      return TextureWrapMode::CLAMP_TO_EDGE;
+    case 2:
+      return TextureWrapMode::MIRROR_REPEAT;
+      break;
+    case 0:
+    default:
+      return TextureWrapMode::WRAP;
+      break;
     }
   }
 }

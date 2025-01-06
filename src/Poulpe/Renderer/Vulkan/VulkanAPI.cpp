@@ -728,7 +728,8 @@ namespace Poulpe {
     bool const has_stencil_test,
     int const polygone_mode,
     bool const has_color_attachment,
-    bool const has_dynamic_depth_bias)
+    bool const has_dynamic_depth_bias,
+    bool const has_dynamic_culling)
   {
     VkPipelineInputAssemblyStateCreateInfo input_assembly{};
     input_assembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
@@ -765,7 +766,7 @@ namespace Poulpe {
     rasterizer.rasterizerDiscardEnable = VK_FALSE;
     rasterizer.polygonMode = static_cast<VkPolygonMode>(polygone_mode);
     rasterizer.lineWidth = 1.0f;
-    rasterizer.cullMode = VK_CULL_MODE_NONE;
+    rasterizer.cullMode = cull_mode;
     rasterizer.frontFace = VK_FRONT_FACE_CLOCKWISE;
     rasterizer.depthBiasEnable = VK_FALSE;
     rasterizer.depthBiasConstantFactor = 0.f;
@@ -816,8 +817,11 @@ namespace Poulpe {
     color_blending.blendConstants[3] = 1.0f;
 
     std::vector<VkDynamicState> dynamic_states{
-        VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR};
+        VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR };
     if (has_dynamic_depth_bias) dynamic_states.emplace_back(VK_DYNAMIC_STATE_DEPTH_BIAS);
+    
+    //@todo does not work ? crash with a weird bug about depth attachment format undefined ?
+    //if (has_dynamic_cull_mode) dynamic_states.emplace_back(VK_DYNAMIC_STATE_CULL_MODE);
 
     VkPipelineDynamicStateCreateInfo dynamic_state{};
     dynamic_state.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
@@ -833,7 +837,7 @@ namespace Poulpe {
     pipeline_info.pViewportState = & viewport_state;
     pipeline_info.pRasterizationState = & rasterizer;
     pipeline_info.pMultisampleState = & multi_sampling;
-    if (has_depth_test) pipeline_info.pDepthStencilState = & depth_stencil;
+    pipeline_info.pDepthStencilState = & depth_stencil;
     pipeline_info.pColorBlendState = & color_blending;
     pipeline_info.layout = pipeline_layout;
     pipeline_info.renderPass = VK_NULL_HANDLE;
@@ -850,6 +854,7 @@ namespace Poulpe {
     rendering_create_info.colorAttachmentCount = has_color_attachment ? 1 : 0;
     rendering_create_info.pColorAttachmentFormats = & format;
     rendering_create_info.depthAttachmentFormat = VK_FORMAT_D16_UNORM; //(VK_FORMAT_D24_UNORM_S8_UINT)
+    //rendering_create_info.stencilAttachmentFormat = VK_FORMAT_S8_UINT;
 
     pipeline_info.pNext = & rendering_create_info;
 
@@ -1687,7 +1692,7 @@ namespace Poulpe {
       memory_type,
       VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
       mem_requirements.alignment,
-      DeviceMemoryPool::DeviceBufferType::UNIFORM);
+      DeviceMemoryPool::DeviceBufferType::STAGING);
 
     auto const offset { device_memory->getOffset() };
     device_memory->bindBufferToMemory(buffer, bind_offset);
@@ -1735,7 +1740,7 @@ namespace Poulpe {
       memory_type,
       VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
       mem_requirements.alignment,
-      DeviceMemoryPool::DeviceBufferType::UNIFORM);
+      DeviceMemoryPool::DeviceBufferType::STAGING);
 
     auto const offset { device_memory->getOffset() };
     device_memory->bindBufferToMemory(buffer, bind_offset);
@@ -1876,7 +1881,7 @@ namespace Poulpe {
       memoryType,
       flags,
       mem_requirements.alignment,
-      DeviceMemoryPool::DeviceBufferType::STORAGE);
+      DeviceMemoryPool::DeviceBufferType::STAGING);
 
     auto const offset { device_memory->getOffset() };
     device_memory->bindBufferToMemory(buffer, bind_offset);
@@ -1915,7 +1920,7 @@ namespace Poulpe {
       memory_type,
       VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT,
       mem_requirements.alignment,
-      DeviceMemoryPool::DeviceBufferType::STORAGE) };
+      DeviceMemoryPool::DeviceBufferType::STAGING) };
 
     auto const offset { device_memory->getOffset() };
     device_memory->bindBufferToMemory(buffer, bind_offset);
@@ -2895,6 +2900,7 @@ namespace Poulpe {
     vkUnmapMemory(_device, *device_memory->getMemory());
 
     VkFormat const format = (VkFormat) ktx_texture->vkFormat;
+    
     auto const width { static_cast<uint32_t>(ktx_texture->baseWidth) };
     auto const height { static_cast<uint32_t>(ktx_texture->baseHeight) };
     auto const mip_lvl{ ktx_texture->numLevels };
@@ -3017,27 +3023,47 @@ namespace Poulpe {
     return image_view;
   }
 
-  VkSampler VulkanAPI::createKTXSampler(ktxTexture2 * ktx_texture)
+  VkSamplerAddressMode VulkanAPI::getSamplerAddressMode(TextureWrapMode mode)
+  {
+    switch (mode)
+    {
+    case TextureWrapMode::WRAP:
+      return VK_SAMPLER_ADDRESS_MODE_REPEAT;
+    case TextureWrapMode::CLAMP_TO_EDGE:
+      return VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+    case TextureWrapMode::MIRROR_REPEAT:
+    default:
+      return VK_SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT;
+    }
+  }
+
+  VkSampler VulkanAPI::createKTXSampler(
+    TextureWrapMode const wrap_mode_u,
+    TextureWrapMode const wrap_mode_v,
+    float const mip_lvl)
   {
     VkSampler texture_sampler{};
+
+    VkSamplerAddressMode mode_u { getSamplerAddressMode(wrap_mode_u) };
+    VkSamplerAddressMode mode_v { getSamplerAddressMode(wrap_mode_v) };
 
     VkSamplerCreateInfo sampler_info{};
     sampler_info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
     sampler_info.magFilter = VK_FILTER_LINEAR;
     sampler_info.minFilter = VK_FILTER_LINEAR;
-    sampler_info.addressModeU = VK_SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT;
-    sampler_info.addressModeV = sampler_info.addressModeU;
-    sampler_info.addressModeW = sampler_info.addressModeU;
+    sampler_info.addressModeU = mode_u;
+    sampler_info.addressModeV = mode_v;
+    sampler_info.addressModeW = mode_v;
     sampler_info.unnormalizedCoordinates = VK_FALSE;
     sampler_info.compareEnable = VK_FALSE;
-    sampler_info.compareOp = VK_COMPARE_OP_ALWAYS;
+    sampler_info.compareOp = VK_COMPARE_OP_LESS;
     sampler_info.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
     sampler_info.minLod = 0.0f;
-    sampler_info.maxLod = static_cast<float>(ktx_texture->numLevels);
+    sampler_info.maxLod = mip_lvl;
     sampler_info.mipLodBias = 0.0f;
     sampler_info.borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE;
-    sampler_info.anisotropyEnable = VK_TRUE;
-    sampler_info.maxAnisotropy = _device_props.limits.maxSamplerAnisotropy;
+    sampler_info.anisotropyEnable = VK_FALSE;
+    sampler_info.maxAnisotropy = 1;
     
     if (vkCreateSampler(_device, & sampler_info, nullptr, & texture_sampler) != VK_SUCCESS) {
       throw std::runtime_error("failed to create texture sampler!");

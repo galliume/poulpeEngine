@@ -4,8 +4,7 @@
 			"mesh": "assets/mesh/TextureCoordinateTest/glTF/TextureCoordinateTest.gltf",
 			"textures": {
 				"TextureCoordinateTemplate": {
-					"path": "assets/mesh/TextureCoordinateTest/glTF/TextureCoordinateTemplate.ktx2",
-					"ktx_format": "R8G8B8A8_SRGB"
+					"path": "assets/mesh/TextureCoordinateTest/glTF/TextureCoordinateTemplate.ktx2"
 				}
 			},
 			"orm": {

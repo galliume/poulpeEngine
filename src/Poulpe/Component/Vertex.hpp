@@ -12,18 +12,18 @@ namespace Poulpe
     vec2 : VK_FORMAT_R32G32_SFLOAT
     vec3 : VK_FORMAT_R32G32B32_SFLOAT
     vec4 : VK_FORMAT_R32G32B32A32_SFLOAT
-  */
+
+    float alignas(4)
+    vec2 alignas(8)
+    vec3/vec4/mat4 alignas(16)
+    */
   struct Vertex
   {
-    glm::vec3 pos;
-    glm::vec3 normal;
-    glm::vec2 texture_coord;
-    glm::vec4 tangent;
-    glm::vec4 bitangent;
-    glm::vec4 color;
-
-    std::vector<int> bones_ids{};
-    std::vector<float> weights{};
+    alignas(16) glm::vec3 pos;
+    alignas(16) glm::vec3 normal;
+    alignas(8)   glm::vec2 texture_coord;
+    alignas(16) glm::vec4 tangent;
+    alignas(16) glm::vec4 color;
 
     static VkVertexInputBindingDescription getBindingDescription()
     {
@@ -35,9 +35,9 @@ namespace Poulpe
       return bindingDescription;
     }
 
-    static std::array<VkVertexInputAttributeDescription,  6> getAttributeDescriptions()
+    static std::array<VkVertexInputAttributeDescription,  5> getAttributeDescriptions()
     {
-      std::array<VkVertexInputAttributeDescription, 6> attributeDescriptions{};
+      std::array<VkVertexInputAttributeDescription, 5> attributeDescriptions{};
       attributeDescriptions[0].binding = 0;
       attributeDescriptions[0].location = 0;
       attributeDescriptions[0].format = VK_FORMAT_R32G32B32_SFLOAT;
@@ -61,12 +61,7 @@ namespace Poulpe
       attributeDescriptions[4].binding = 0;
       attributeDescriptions[4].location = 4;
       attributeDescriptions[4].format = VK_FORMAT_R32G32B32A32_SFLOAT;
-      attributeDescriptions[4].offset = offsetof(Vertex, bitangent);
-
-      attributeDescriptions[5].binding = 0;
-      attributeDescriptions[5].location = 5;
-      attributeDescriptions[5].format = VK_FORMAT_R32G32B32A32_SFLOAT;
-      attributeDescriptions[5].offset = offsetof(Vertex, color);
+      attributeDescriptions[4].offset = offsetof(Vertex, color);
 
       return attributeDescriptions;
     }

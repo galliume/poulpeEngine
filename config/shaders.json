@@ -20,7 +20,7 @@
       "frag": "assets/shaders/spv/shadowMap_frag.spv",
       "geom": ""
     },
-	"normal_debug": {
+    "normal_debug": {
       "vert": "assets/shaders/spv/normal_vert.spv",
       "frag": "assets/shaders/spv/normal_frag.spv",
       "geom": "assets/shaders/spv/normal_geom.spv"
