@@ -180,27 +180,11 @@ namespace Poulpe {
       VkMemoryPropertyFlags const properties,
       VkImage& image);
 
-    void createSkyboxImage(
-      uint32_t const width,
-      uint32_t const height,
-      VkSampleCountFlagBits const num_samples,
-      VkFormat const format,
-      VkImageTiling const tiling,
-      VkImageUsageFlags const usage,
-      VkMemoryPropertyFlags const properties,
-      VkImage& image);
-
     VkImageView createImageView(
       VkImage& image,
       VkFormat const format,
       uint32_t const mip_lvl,
       unsigned int scale,
-      VkImageAspectFlags const aspect_flags = VK_IMAGE_ASPECT_COLOR_BIT);
-
-    VkImageView createSkyboxImageView(
-      VkImage& image,
-      VkFormat const format,
-      uint32_t const mip_lvl,
       VkImageAspectFlags const aspect_flags = VK_IMAGE_ASPECT_COLOR_BIT);
 
     void createTextureImage(
@@ -213,15 +197,6 @@ namespace Poulpe {
       VkFormat const format,
       unsigned int const scale);
 
-    void createSkyboxTextureImage(
-      VkCommandBuffer& cmd_buffer,
-      std::vector<stbi_uc*>& pixels,
-      uint32_t const tex_width,
-      uint32_t const tex_height,
-      uint32_t const mip_lvl,
-      VkImage& texture_image,
-      VkFormat const format);
-
     void copyBufferToImage(
       VkCommandBuffer& cmd_buffer,
       VkBuffer& buffer, VkImage& image,
@@ -229,20 +204,7 @@ namespace Poulpe {
       uint32_t const height,
       uint32_t const mipLevels = 0);
 
-    void copyBufferToImageSkybox(
-      VkCommandBuffer& cmd_buffer,
-      VkBuffer& buffer,
-      VkImage& image,
-      uint32_t const width,
-      uint32_t const height,
-      std::vector<stbi_uc*>& pixels,
-      uint32_t const mip_lvl,
-      uint32_t const layer_size);
-
     VkSampler createTextureSampler(uint32_t const mip_lvl);
-
-    VkSampler createSkyboxTextureSampler(uint32_t const mip_lvl);
-
     VkImageView createDepthResources(VkCommandBuffer& cmd_buffer);
 
     VkFormat findSupportedFormat(

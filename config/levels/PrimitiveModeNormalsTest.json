@@ -1,20 +1,23 @@
 {
 	"entities": {
-		"compareNormal" : {
-			"mesh": "assets/mesh/CompareNormal/glTF/CompareNormal.gltf",
+		"PrimitiveModeNormalsTest" : {
+			"mesh": "assets/mesh/PrimitiveModeNormalsTest/gLTF/PrimitiveModeNormalsTest.gltf",
 			"textures": {
+				"Labels": {
+					"path" : "assets/mesh/PrimitiveModeNormalsTest/glTF/Labels.ktx2"
+				}
+			},
+			"ao": {
+
 			},
 			"mr": {
+
 			},
 			"emissive": {
 
 			},
-			"ao":{
-			},
-			"normal": {	
-				"Compare_Normal_img0": {
-					"path": "assets/mesh/CompareNormal/glTF/Compare_Normal_img0.ktx2"
-				}
+			"normal": {
+
 			},
 			"shader": "main_basic",
 			"positions": [
@@ -24,7 +27,7 @@
 				{"x": 1.0, "y": 1.0, "z": 1.0 }
 			],
 			"rotations": [
-				{"x": 180.0, "y": 180.0, "z": 180.0}
+				{"x": 0.0, "y": 180.0, "z": 0.0}
 			],
 			"flipY": false,
 			"count": 1,

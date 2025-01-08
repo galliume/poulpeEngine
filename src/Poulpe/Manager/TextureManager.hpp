@@ -26,12 +26,9 @@ namespace Poulpe
     inline void addConfig(nlohmann::json const& config) { _texture_config = config; }
     std::vector<std::array<float, 3>> addNormalMapTexture(std::string const& name);
     inline void addRenderer(Renderer* renderer) { _renderer = renderer; }
-    void addSkyBox(std::vector<std::string> const & skybox_images);
-    void addTexture(
-      std::string const& name,
-      std::string const& path,
-      VkFormat const format,
-      bool const is_public = false);
+    void addSkyBox(
+      std::string const& skybox_name,
+      std::vector<std::string> const & skybox_images);
     void addKTXTexture(
       std::string const& name,
       std::string const& path,
@@ -39,7 +36,7 @@ namespace Poulpe
       ktx_transcode_fmt_e const transcoding,
       bool const is_public = false);
     void clear();
-    inline const Texture getSkyboxTexture() const { return _skybox; }
+    inline Texture getSkyboxTexture() { return _textures[_skybox_name]; }
     inline std::unordered_map<std::string, std::string> getPaths() const { return _paths; }
     inline std::unordered_map<std::string, Texture> getTextures() { return _textures; }
     std::function<void(std::latch& count_down)> load();
@@ -56,7 +53,6 @@ namespace Poulpe
     const uint32_t MAX_MIPLEVELS = 5;
 
     Renderer* _renderer{ nullptr };
-    Texture _skybox;
     std::string _skybox_name;
     nlohmann::json _texture_config;
 
