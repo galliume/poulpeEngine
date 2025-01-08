@@ -55,6 +55,7 @@ namespace Poulpe
     alignas(16) glm::vec3 emission { 1 };
     //shininess, ior, diss
     alignas(16) glm::vec3 shi_ior_diss { 0 };
+    alignas(16) glm::vec3 alpha { 0 };//{x:alpha mode, y: cutoff);
   };
 
   struct ObjectBuffer
@@ -83,7 +84,7 @@ namespace Poulpe
     float dissolve{ 1.0 };  // 1 == opaque; 0 == fully transparent
     int illum{ 1 };
     bool double_sided{ false };
-    bool alpha_mode{ false }; //false = MASK true = BLEND
+    float alpha_mode{ 0.0 }; //0.0: OPAQUE 1.0: MASK 2.0: BLEND
     float alpha_cut_off{ 1.0 };
 
     std::string name_texture_ambient;             // map_Ka

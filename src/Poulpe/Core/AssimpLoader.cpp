@@ -115,13 +115,15 @@ namespace Poulpe
         }
 
         std::string alpha_mode{};
+        material.alpha_mode = 0.0f;//OPAQUE
         if (mat->Get(AI_MATKEY_BLEND_FUNC, alpha_mode) == AI_SUCCESS) {
-          material.alpha_mode = ("MASK" == alpha_mode) ? true : false;
+          material.alpha_mode = ("MASK" == alpha_mode) ? 1.0 : 2.0;
         }
         float alpha_cut_off;
         if (mat->Get(AI_MATKEY_OPACITY, alpha_cut_off) == AI_SUCCESS) {
           material.alpha_cut_off = alpha_cut_off;
         }
+        PLP_DEBUG("mode:{} {}", material.alpha_mode, material.alpha_cut_off);
 
         if (mat->GetTextureCount(aiTextureType_AMBIENT) > 0) {
           aiString texture_path;

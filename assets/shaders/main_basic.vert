@@ -62,6 +62,7 @@ struct Material
   vec3 emission;
   //shininess, ior, diss
   vec3 shi_ior_diss;
+  vec3 alpha;
 };
 
 layout(set = 0, binding = 2) readonly buffer ObjectBuffer {

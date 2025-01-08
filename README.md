@@ -104,7 +104,7 @@ down : A
 - [ ] CompareIor
 - [ ] CompareIridescence
 - [ ] CompareMetallic
-- [ x ] CompareNormal
+- [x] CompareNormal
 - [ ] CompareRoughness
 - [ ] CompareSheen
 - [ ] CompareSpecular
@@ -120,17 +120,17 @@ down : A
 - [ ] MultiUVTest
 - [ ] NegativeScaleTest
 - [ ] NodePerformanceTest
-- [ x ] NormalTangentMirrorTest
-- [ x ] NormalTangentTest
-- [ x ] OrientationTest
+- [x] NormalTangentMirrorTest
+- [x] NormalTangentTest
+- [x] OrientationTest
 - [ ] PlaysetLightTest
 - [ ] PrimitiveModeNormalsTest
 - [ ] SheenTestGrid
 - [ ] SpecularTest
-- [ x ] TextureCoordinateTest
+- [x] TextureCoordinateTest
 - [ ] TextureEncodingTest
 - [ ] TextureLinearInterpolationTest
-- [ x ] TextureSettingsTest
+- [x] TextureSettingsTest
 - [ ] TextureTransformMultiTest
 - [ ] TextureTransformTest
 - [ ] TransmissionRoughnessTest

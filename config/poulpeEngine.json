@@ -1,5 +1,5 @@
 {
-	"defaultLevel": "VirtualCity",
+	"defaultLevel": "AlphaBlendModeTest",
 	"defaultSkybox": "bluesky",
 	"ambientMusic": false,
 	"fpsLimit": 30,
