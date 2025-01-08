@@ -104,7 +104,6 @@ endif()
 target_include_directories(${PROJECT_NAME} PRIVATE
           ${PROJECT_SOURCE_DIR}/vendor/assimp/include
           ${PROJECT_SOURCE_DIR}/vendor/glm
-          ${PROJECT_SOURCE_DIR}/vendor/KTX-Software/include
           ${PROJECT_SOURCE_DIR}/vendor/lua
           ${PROJECT_SOURCE_DIR}/vendor/miniaudio
           ${PROJECT_SOURCE_DIR}/vendor/nlohmann/include
@@ -168,9 +167,6 @@ add_library(
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
   list(APPEND EXTRA_LIBS Ws2_32 user32)
-else()
-  #@todo find a way to install KTX on github server
-  add_subdirectory(${PROJECT_SOURCE_DIR}/vendor/KTX-Software)
 endif()
 
 list(APPEND EXTRA_LIBS glfw)
@@ -180,6 +176,8 @@ list(APPEND EXTRA_LIBS nlohmann_json)
 list(APPEND EXTRA_LIBS volk)
 list(APPEND EXTRA_LIBS assimp::assimp)
 list(APPEND EXTRA_LIBS spdlog::spdlog)
+
+#@todo find a way to install KTX on github server
 list(APPEND EXTRA_LIBS KTX::ktx)
 
 target_link_libraries(${PROJECT_NAME} PRIVATE ${EXTRA_LIBS} poulpe)
