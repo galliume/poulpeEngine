@@ -202,22 +202,21 @@ namespace Poulpe
     std::filesystem::path file_name{ path };
     std::string original_name{ file_name.string()};
 
-    //@todo check if useful ?
-    bool has_alpha{ true };
-
-    if (std::filesystem::exists(file_name.replace_extension("jpg"))) {
-      original_name = file_name.string();
-    } else if (std::filesystem::exists(file_name.replace_extension("png"))) {
-      original_name = file_name.string();
-      has_alpha = true;
-    }
-
+    bool has_alpha{ false };
     std::string oetf{ "srgb" };
     std::string options { " --encode uastc --uastc-quality 2 --zstd 11 " };
 
     //https://github.khronos.org/KTX-Software/libktx/ktx_8h.html#a30cc58c576392303d9a5a54b57ef29b5
     std::string  ktx_format{ "R8G8B8A8_SRGB" }; //diffuse default
     ktx_transcode_fmt_e transcoding { KTX_TTF_BC1_RGB };//diffuse default
+
+    if (std::filesystem::exists(file_name.replace_extension("jpg"))) {
+      original_name = file_name.string();
+    } else if (std::filesystem::exists(file_name.replace_extension("png"))) {
+      original_name = file_name.string();
+      has_alpha = true;
+      transcoding = KTX_TTF_BC7_RGBA;
+    }
 
     if (name == "_plp_empty") {
       transcoding = KTX_TTF_BC7_RGBA;

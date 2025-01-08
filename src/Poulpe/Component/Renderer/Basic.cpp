@@ -246,8 +246,13 @@ namespace Poulpe
       material.specular = mesh->getMaterial().specular;
       material.transmittance = mesh->getMaterial().transmittance;
       material.emission = mesh->getMaterial().emission;
-      material.shi_ior_diss = glm::vec3(mesh->getMaterial().shininess,
-        mesh->getMaterial().ior, mesh->getMaterial().illum);
+      
+      material.shi_ior_diss = glm::vec3(
+        mesh->getMaterial().shininess,
+        mesh->getMaterial().ior,
+        mesh->getMaterial().dissolve);
+
+      material.alpha = glm::vec3(mesh->getMaterial().alpha_mode, mesh->getMaterial().alpha_cut_off, 1.0);
 
       //PLP_DEBUG("ambient {}",  material.ambient.r);
       //PLP_DEBUG("diffuse {}",  material.diffuse.r);

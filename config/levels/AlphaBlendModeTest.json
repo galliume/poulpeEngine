@@ -1,0 +1,53 @@
+{
+	"entities": {
+		"AlphaBlendModeTest" : {
+			"mesh": "assets/mesh/AlphaBlendModeTest/gLTF/AlphaBlendModeTest.gltf",
+			"textures": {
+				"AlphaBlendLabels": {
+					"path" : "assets/mesh/AlphaBlendModeTest/glTF/AlphaBlendLabels.ktx2"
+				},
+				"MatBed_baseColor": {
+					"path" : "assets/mesh/AlphaBlendModeTest/glTF/MatBed_baseColor.ktx2"
+				}
+			},
+			"ao": {
+				"MatBed_occlusionRoughnessMetallic": {
+					"path" : "assets/mesh/AlphaBlendModeTest/glTF/MatBed_occlusionRoughnessMetallic.ktx2"
+				}
+			},
+			"mr": {
+				"MatBed_occlusionRoughnessMetallic": {
+					"path" : "assets/mesh/AlphaBlendModeTest/glTF/MatBed_occlusionRoughnessMetallic.ktx2"
+				}
+			},
+			"emissive": {
+
+			},
+			"normal": {
+				"MatBed_normal": {
+					"path": "assets/mesh/AlphaBlendModeTest/glTF/MatBed_normal.ktx2"
+				}
+			},
+			"shader": "main_basic",
+			"positions": [
+				{"x": 0.0, "y": -1.0, "z": -2.0}
+			],
+			"scales": [
+				{"x": 1.0, "y": 1.0, "z": 1.0 }
+			],
+			"rotations": [
+				{"x": 0.0, "y": 180.0, "z": 0.0}
+			],
+			"flipY": false,
+			"count": 1,
+			"hasBbox": false,
+			"hasAnimation": false,
+			"isPointLight": false,
+			"animationScripts": {
+			},
+			"hasShadow": true,
+			"isIndexed": true,
+			"debugNormal": true
+		}
+	}
+}

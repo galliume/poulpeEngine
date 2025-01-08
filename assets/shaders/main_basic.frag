@@ -57,6 +57,7 @@ struct Material
   vec3 emission;
   //shininess, ior, diss
   vec3 shi_ior_diss;
+  vec3 alpha;
 };
 
 layout(binding = 1) uniform sampler2D tex_sampler[7];
@@ -166,7 +167,7 @@ void main()
   if (alpha_size.x != 1 && alpha_size.y != 1 && alpha_color.r < 0.1) {
     discard;
   }
-
+ 
   vec3 normal = vec3(1.0); 
   normal.xy = texture(tex_sampler[NORMAL_INDEX], var.texture_coord).xy;
   normal.xy = normal.xy * 2.0 - 1.0;
@@ -198,11 +199,11 @@ void main()
   }
 
   vec4 albedo = texture(tex_sampler[DIFFUSE_INDEX], var.texture_coord);
+
   ivec2 albedo_size = textureSize(tex_sampler[DIFFUSE_INDEX], 0);
   if (albedo_size.x == 1 && albedo_size.y == 1) {
     albedo = vec4(material.ambient, 1.0);
   }
-  if (albedo.a < 0.1) discard;
 
   vec4 C_ambient = vec4(material.ambient, 1.0) * albedo;
   vec4 C_diffuse = vec4(material.diffuse, 1.0) * albedo / PI;
