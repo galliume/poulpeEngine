@@ -56,19 +56,17 @@ Or open the project with a cmake able IDE (VS 2022, VS Code...)
 
 ### All meshes can be found here:
 
-Survival backpack: https://sketchfab.com/3d-models/survival-guitar-backpack-799f8c4511f84fab8c3f12887f7e6b36
+glTF samples can be fetch here: [glTF-Sample-Assets](https://github.com/KhronosGroup/glTF-Sample-Assets)
 
-Sponza: https://casual-effects.com/data/index.html
+or
 
-Dragon: https://casual-effects.com/data/index.html
-
-Moon: https://free3d.com/3d-model/moon-photorealistic-2k-853071.html
+from Morgan McGuire's [Computer Graphics Archive](https://casual-effects.com/data)
 
 Just download, unzip and copy paste in assets/mesh.
 
 All levels are described in config/levels, for those meshes they should be fine as it is.
 
-Models downloaded from Morgan McGuire's [Computer Graphics Archive](https://casual-effects.com/data)
+To change the level update config/poulpeEngine.json key defaultLevel, copy/paste the file name of the level to be loaded.
 
 [help to configure the project](https://github.com/galliume/poulpeEngine/wiki/Env-config)
 
@@ -137,8 +135,6 @@ down : A
 - [ ] TransmissionTest
 - [ ] TransmissionThinwallTestGrid
 - [ ] UnlitTest
-
-glTF samples can be fetch here: [glTF-Sample-Assets](https://github.com/KhronosGroup/glTF-Sample-Assets)
 
 ### Resources
 
