@@ -90,12 +90,13 @@ void main()
 {
   mat3 inversed_model = inverse(mat3(ubo.model));
   mat3 normal_matrix = transpose(inversed_model);
-  vec3 norm = normal_matrix * normal;
+  vec3 norm = normalize(normal_matrix * normal);
+  float handedness = tangent.w;
 
   vec3 T = normalize(normal_matrix * tangent.xyz);
   vec3 N = normalize(norm);
   T = normalize(T - dot(T, N) * N);
-  vec3 B = cross(N, T);
+  vec3 B = normalize(cross(N, T) * tangent.w);
   mat3 TBN = transpose(mat3(T, B, N));
   
   frag_var.frag_pos = position;
@@ -116,7 +117,7 @@ void main()
 
   //frag_var.light_space = (ubo.projection * sun_light.view * vec4(frag_var.frag_pos, 1.0));
   frag_var.texture_coord = texture_coord;
-  frag_var.norm = normal;
+  frag_var.norm = TBN * norm;
 
   gl_Position = ubo.projection * pc.view * ubo.model * vec4(position, 1.0f);
 } 

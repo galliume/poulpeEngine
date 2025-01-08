@@ -1,19 +1,47 @@
 {
   "entities": {
     "knight" : {
-      "mesh": "assets/mesh/pkg_e_knight_anim/knight_USD_PREVIEW_SURFACE_ANIM_002_1.usd",
+      "mesh": "assets/mesh/pkg_e_knight_anim/Exports/FBX/Knight_USD_002.fbx",
       "textures": {
-        "Textures_cloth_diffuse_D": "assets/mesh/pkg_e_knight_anim/Textures/cloth_diffuse_D.png",
-        "Textures_leather_diffuse_D": "assets/mesh/pkg_e_knight_anim/Textures/leather_diffuse_D.png",
-        "Textures_shield_final_diffuse_A": "assets/mesh/pkg_e_knight_anim/Textures/shield_final_diffuse_A.png",
-        "Textures_sword_diffuse_C": "assets/mesh/pkg_e_knight_anim/Textures/sword_diffuse_C.png"
+        "Textures_cloth_diffuse_D": {
+          "path": "assets/mesh/pkg_e_knight_anim/Textures/cloth_diffuse_D.ktx2"
+        },
+        "Textures_leather_diffuse_D":{
+          "path": "assets/mesh/pkg_e_knight_anim/Textures/leather_diffuse_D.ktx2"
+        },
+        "Textures_shield_final_diffuse_A": {
+          "path" : "assets/mesh/pkg_e_knight_anim/Textures/shield_final_diffuse_A.ktx2"
+        },
+        "Textures_sword_diffuse_C": {
+          "path": "assets/mesh/pkg_e_knight_anim/Textures/sword_diffuse_C.ktx2"
+        }
       },
       "textures_map": {
-        "Textures_brushed_metal_rough_D": "assets/mesh/pkg_e_knight_anim/Textures/brushed_metal_rough_D.png",
-        "Textures_brushed_metal_rough_F": "assets/mesh/pkg_e_knight_anim/Textures/brushed_metal_rough_F.png",
-        "Textures_cloth_normal_D": "assets/mesh/pkg_e_knight_anim/Textures/cloth_normal_D.png",
-        "Textures_shield_final_normal_A": "assets/mesh/pkg_e_knight_anim/Textures/shield_final_normal_A.png",
-        "Textures_sword_rough_D": "assets/mesh/pkg_e_knight_anim/Textures/sword_rough_D.png"
+      },
+      "mr":{
+        "Textures_brushed_metal_rough_D": {
+          "path": "assets/mesh/pkg_e_knight_anim/Textures/brushed_metal_rough_D.ktx2"
+        },
+        "Textures_brushed_metal_rough_F": { 
+          "path": "assets/mesh/pkg_e_knight_anim/Textures/brushed_metal_rough_F.ktx2"
+        },
+        "Textures_sword_rough_D": {
+          "path": "assets/mesh/pkg_e_knight_anim/Textures/sword_rough_D.ktx2"
+        }        
+      },
+      "ao": {
+        
+      },
+      "emissive": {
+
+      },
+      "normal": {
+        "Textures_cloth_normal_D": {
+          "path" : "assets/mesh/pkg_e_knight_anim/Textures/cloth_normal_D.ktx2"
+        },
+        "Textures_shield_final_normal_A": {
+          "path": "assets/mesh/pkg_e_knight_anim/Textures/shield_final_normal_A.ktx2"
+        }
       },
       "shader": "main_basic",
       "positions": [
@@ -25,7 +53,7 @@
       "rotations": [
         {"x": 0.0, "y": 0.0, "z": 0.0}
       ],
-      "inverseTextureY": false,
+      "flipY": false,
       "count": 1,
       "hasBbox": false,
       "hasAnimation": false,
@@ -34,34 +62,8 @@
         "anim0" : "assets/scripts/animation/backpack/anim0.lua"
       },
       "hasShadow": true,
-      "isIndexed": true
-    },
-	"SnowTerrain" : {
-		"mesh": "assets/mesh/SnowTerrain/SnowTerrain.obj",
-		"textures": {
-			"snowterrain": "assets/mesh/SnowTerrain/snowterrain.jpg"
-		},
-		"textures_map": {
-		},
-		"shader": "main_basic",
-		"positions": [
-			{"x": 0.0, "y": -0.25, "z": 0.0}
-		],
-		"scales": [
-			{"x": 1.0, "y": 1.0, "z": 1.0}
-		],
-		"rotations": [
-			{"x": 0.0, "y": 0.0, "z": 0.0}
-		],
-		"inverseTextureY": true,
-		"count": 1,
-		"hasBbox": false,
-		"hasAnimation": false,
-		"animationScripts": {
-		},
-		"isPointLight": false,
-		"hasShadow": false,
-		"isIndexed": true			
-	}
+      "isIndexed": true,
+      "debugNormal": true
+    }
   }
 }

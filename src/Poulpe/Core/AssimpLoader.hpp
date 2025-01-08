@@ -29,6 +29,6 @@ namespace Poulpe
        const aiScene *scene,
        std::vector<PlpMeshData>& mesh_data,
        bool const flip_Y);
-    static TextureWrapMode AssimpLoader::getTextureWrapMode(aiTextureMapMode const wrap_mode);
+    static TextureWrapMode getTextureWrapMode(aiTextureMapMode const wrap_mode);
   };
 }

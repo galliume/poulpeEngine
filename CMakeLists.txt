@@ -61,7 +61,7 @@ set(DEBUG_OPTIONS -g)
 set(RELEASE_OPTIONS )
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
-  list(APPEND DEBUG_OPTIONS /MDd /Od /Zi /Zc:__cplusplus /EHsc)
+  list(APPEND DEBUG_OPTIONS /MDd /Od /Ob0 /RTC1 /Zi /Zc:__cplusplus /EHsc)
   list(APPEND RELEASE_OPTIONS /Ox /MD /Zc:__cplusplus /EHsc)
 
   #target_link_options(${PROJECT_NAME} PRIVATE $<$<CONFIG:RELEASE>:/LTCG>)
@@ -104,13 +104,14 @@ endif()
 target_include_directories(${PROJECT_NAME} PRIVATE
           ${PROJECT_SOURCE_DIR}/vendor/assimp/include
           ${PROJECT_SOURCE_DIR}/vendor/glm
+          ${PROJECT_SOURCE_DIR}/vendor/KTX-Software/include
           ${PROJECT_SOURCE_DIR}/vendor/lua
           ${PROJECT_SOURCE_DIR}/vendor/miniaudio
           ${PROJECT_SOURCE_DIR}/vendor/nlohmann/include
           ${PROJECT_SOURCE_DIR}/vendor/spdlog/include
           ${PROJECT_SOURCE_DIR}/vendor/stb
           ${VULKAN_PATH}
-		  ${KTX_PATH})
+          ${KTX_PATH})
 
 add_subdirectory(${PROJECT_SOURCE_DIR}/vendor/assimp)
 add_subdirectory(${PROJECT_SOURCE_DIR}/vendor/glfw)
@@ -167,6 +168,9 @@ add_library(
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
   list(APPEND EXTRA_LIBS Ws2_32 user32)
+else()
+  #@todo find a way to install KTX on github server
+  add_subdirectory(${PROJECT_SOURCE_DIR}/vendor/KTX-Software)
 endif()
 
 list(APPEND EXTRA_LIBS glfw)
@@ -179,9 +183,6 @@ list(APPEND EXTRA_LIBS spdlog::spdlog)
 list(APPEND EXTRA_LIBS KTX::ktx)
 
 target_link_libraries(${PROJECT_NAME} PRIVATE ${EXTRA_LIBS} poulpe)
-
-set(LIB_DEBUG_OPTIONS -Wno-error -Wno-deprecated-non-prototype -Wno-unsafe-buffer-usage)
-set(LIB_RELEASE_OPTIONS -Wno-error -Wno-deprecated-non-prototype -Wno-unsafe-buffer-usage)
 
 list(APPEND LIB_DEBUG_OPTIONS ${DEBUG_OPTIONS})
 list(APPEND LIB_RELEASE_OPTIONS ${RELEASE_OPTIONS})

@@ -10,7 +10,13 @@
 					"path": "assets/mesh/TextureLinearInterpolationTest/glTF/0_0_0-0_255_0.ktx2"
 				}
 			},
-			"orm": {
+			"mr": {
+			},
+			"emissive": {
+
+			},
+			"ao": {
+
 			},
 			"normal" : {
 			},
