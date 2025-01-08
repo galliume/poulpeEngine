@@ -1,6 +1,6 @@
 {
-	"defaultLevel": "sponza",
-	"defaultSkybox": "debug",
+	"defaultLevel": "DamagedHelmet",
+	"defaultSkybox": "bluesky",
 	"ambientMusic": false,
 	"fpsLimit": 30,
 	"input": {

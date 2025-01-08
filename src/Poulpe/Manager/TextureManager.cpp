@@ -63,131 +63,46 @@ namespace Poulpe
     return original_texture.getNormalMap();
   }
 
-  void TextureManager::addSkyBox(std::vector<std::string> const& skybox_images)
+  void TextureManager::addSkyBox(
+    std::string const& skybox_name,
+    std::vector<std::string> const& skybox_images)
   {
-    _skybox = {};
+    std::filesystem::path p{ std::filesystem::current_path()};
 
-    int tex_width = 0, tex_height = 0, tex_channels = 0;
-    std::vector<stbi_uc*>skybox_pixels;
+    std::string path { p.string() + "/assets/texture/" + skybox_name + ".ktx2"};
+    std::string files {};
 
-    for (std::string path : skybox_images) {
-      if (!std::filesystem::exists(path)) {
-        PLP_FATAL("texture file {} does not exits.", path);
-        return;
+    for (auto const& image : skybox_images) {
+      std::string const path{ p.string() + "/" + image };
+      std::filesystem::path file_name{ path };
+      std::string original_name{ file_name.string()};
+
+      if (std::filesystem::exists(file_name.replace_extension("jpg"))) {
+        original_name = file_name.string();
+      } else if (std::filesystem::exists(file_name.replace_extension("png"))) {
+        original_name = file_name.string();
       }
 
-      stbi_uc* pixels = stbi_load(path.c_str(), &tex_width, &tex_height, &tex_channels, STBI_rgb_alpha);
-
-      if (!pixels) {
-        PLP_FATAL("failed to load skybox texture image %s", path);
-        return;
-      }
-
-      skybox_pixels.emplace_back(pixels);
+      files.append("\"" + original_name + "\" ");
     }
 
-    VkImage skybox_image = nullptr;
-    uint32_t mip_lvls = 1;
-    VkCommandPool commandPool = _renderer->getAPI()->createCommandPool();
+    std::string oetf{ "srgb" };
+    std::string options { " --encode uastc --uastc-quality 2 --zstd 11 " };
 
-    VkCommandBuffer cmd_buffer = _renderer->getAPI()->allocateCommandBuffers(commandPool)[0];
-    _renderer->getAPI()->beginCommandBuffer(cmd_buffer);
-    _renderer->getAPI()->createSkyboxTextureImage(
-      cmd_buffer,
-      skybox_pixels,
-      static_cast<uint32_t>(tex_width),
-      static_cast<uint32_t>(tex_height),
-      mip_lvls,
-      skybox_image,
-      VK_FORMAT_R8G8B8A8_SRGB);
+    //https://github.khronos.org/KTX-Software/libktx/ktx_8h.html#a30cc58c576392303d9a5a54b57ef29b5
+    std::string  ktx_format{ "R8G8B8A8_SRGB" }; //diffuse default
+    ktx_transcode_fmt_e transcoding { KTX_TTF_BC1_RGB };//diffuse default
 
-    VkImageView texture_imageview = _renderer->getAPI()->createSkyboxImageView(skybox_image, VK_FORMAT_R8G8B8A8_SRGB, mip_lvls);
-    VkSampler texture_sampler = _renderer->getAPI()->createSkyboxTextureSampler(mip_lvls);
-
-    _skybox.setImage(skybox_image);
-    _skybox.setImageView(texture_imageview);
-    _skybox.setSampler(texture_sampler);
-    _skybox.setMipLevels(mip_lvls);
-    _skybox.setWidth(static_cast<uint32_t>(tex_width));
-    _skybox.setHeight(static_cast<uint32_t>(tex_height));
-    _skybox.setChannels(static_cast<uint32_t>(tex_channels));
-    _skybox.setIsPublic(true);
-
-    vkFreeCommandBuffers(_renderer->getDevice(), commandPool, 1, &cmd_buffer);
-    vkDestroyCommandPool(_renderer->getDevice(), commandPool, nullptr);
-  }
-
-  void TextureManager::addTexture(
-    std::string const& name,
-    std::string const& path,
-    VkFormat const format,
-    bool const is_public)
-  {
-    if (!std::filesystem::exists(path.c_str())) {
-      PLP_FATAL("texture file {} does not exits.", path);
-      //return;
+    if (!std::filesystem::exists(path)) {
+      std::string cmd{
+        "ktx create  --format " + ktx_format + " --assign-oetf " + oetf + " --convert-oetf " + oetf \
+        + " --cubemap " + files + " " + path
+      };
+      PLP_DEBUG("{}", cmd);
+      std::system(cmd.c_str());
     }
 
-    if (0 != _textures.count(name.c_str())) {
-      PLP_TRACE("Texture {} already imported", name);
-      return;
-    }
-      PLP_TRACE("Texture {} already imported", name);
-
-    _paths.insert({ name, path });
-
-    auto flags{ STBI_rgb_alpha };
-    unsigned int scale{ 4 };
-
-    if (format == VK_FORMAT_BC5_UNORM_BLOCK) {
-      flags = STBI_grey_alpha;
-      scale = 2;
-    }
-
-    int tex_width = 0, tex_height = 0, tex_channels = 0;
-    stbi_uc* pixels = stbi_load(path.c_str(), &tex_width, &tex_height, &tex_channels, flags);
-
-    if (!pixels) {
-      PLP_FATAL("failed to load texture image %s", name);
-      return;
-    }
-
-    VkImage texture_image = nullptr;
-    uint32_t mip_lvls = static_cast<uint32_t>(std::floor(std::log2(std::max(tex_width, tex_height)))) + 1;
-    if (std::cmp_greater(mip_lvls, MAX_MIPLEVELS)) mip_lvls = MAX_MIPLEVELS;
-
-    VkCommandPool commandPool = _renderer->getAPI()->createCommandPool();
-    VkCommandBuffer cmd_buffer = _renderer->getAPI()->allocateCommandBuffers(commandPool)[0];
-
-    _renderer->getAPI()->beginCommandBuffer(cmd_buffer);
-    _renderer->getAPI()->createTextureImage(cmd_buffer,
-      pixels,
-      static_cast<uint32_t>(tex_width),
-      static_cast<uint32_t>(tex_height),
-      mip_lvls,
-      texture_image,
-      format,
-      scale);
-
-    VkImageView texture_imageview = _renderer->getAPI()->createImageView(texture_image, format, mip_lvls, scale);
-    VkSampler texture_sampler = _renderer->getAPI()->createTextureSampler(mip_lvls);
-
-    Texture texture;
-    texture.setName(name);
-    texture.setImage(texture_image);
-    texture.setImageView(texture_imageview);
-    texture.setSampler(texture_sampler);
-    texture.setMipLevels(mip_lvls);
-    texture.setWidth(static_cast<uint32_t>(tex_width));
-    texture.setHeight(static_cast<uint32_t>(tex_height));
-    texture.setChannels(static_cast<uint32_t>(tex_channels));
-    texture.setIsPublic(is_public);
-    texture.setPath(path);
-
-    _textures.emplace(name, texture);
-
-    vkFreeCommandBuffers(_renderer->getDevice(), commandPool, 1, &cmd_buffer);
-    vkDestroyCommandPool(_renderer->getDevice(), commandPool, nullptr);
+    addKTXTexture(skybox_name, path, VK_IMAGE_ASPECT_COLOR_BIT, transcoding, true);
   }
 
   void TextureManager::addKTXTexture(
@@ -212,17 +127,22 @@ namespace Poulpe
     ktxTexture2 *ktx_texture;
     KTX_error_code result = ktxTexture_CreateFromNamedFile(path.c_str(), KTX_TEXTURE_CREATE_LOAD_IMAGE_DATA_BIT, (ktxTexture**)&ktx_texture);
 
-    if (ktxTexture2_NeedsTranscoding(ktx_texture)) {
-      ktxTexture2_TranscodeBasis(ktx_texture, transcoding, 0);
+    if (result != KTX_SUCCESS) {
+      PLP_WARN("Error while loading KTX file: {} error: {}", path, ktxErrorString(result));
     }
 
-    VkFormat format = (VkFormat) ktx_texture->vkFormat;
-    VkImage texture_image = nullptr;
+    if (ktxTexture2_NeedsTranscoding(ktx_texture)) {
+      result = ktxTexture2_TranscodeBasis(ktx_texture, transcoding, 0);
+    }
+
+    if (result != KTX_SUCCESS) {
+      PLP_WARN("Error while transcoding KTX file: {} error: {}", path, ktxErrorString(result));
+    }
 
     VkCommandPool commandPool = _renderer->getAPI()->createCommandPool();
     VkCommandBuffer cmd_buffer = _renderer->getAPI()->allocateCommandBuffers(commandPool)[0];
+    VkImage texture_image = nullptr;
 
-    _renderer->getAPI()->beginCommandBuffer(cmd_buffer);
     _renderer->getAPI()->createKTXImage(cmd_buffer, ktx_texture, texture_image);
 
     VkImageView texture_imageview = _renderer->getAPI()->createKTXImageView(ktx_texture, texture_image, aspect_flags);
@@ -293,7 +213,7 @@ namespace Poulpe
     }
 
     std::string oetf{ "srgb" };
-    std::string options {};
+    std::string options { " --encode uastc --uastc-quality 2 --zstd 11 " };
 
     //https://github.khronos.org/KTX-Software/libktx/ktx_8h.html#a30cc58c576392303d9a5a54b57ef29b5
     std::string  ktx_format{ "R8G8B8A8_SRGB" }; //diffuse default
@@ -332,7 +252,7 @@ namespace Poulpe
 
     if (!std::filesystem::exists(path)) {
       std::string cmd{
-        "ktx create --encode uastc --format " + ktx_format + " --assign-oetf " + oetf + " --convert-oetf " + oetf \
+        "ktx create  --format " + ktx_format + " --assign-oetf " + oetf + " --convert-oetf " + oetf \
         + options + " \"" + original_name + "\" \"" + path + "\" "
       };
       PLP_DEBUG("{}", cmd);
@@ -353,7 +273,7 @@ namespace Poulpe
         skybox_images.emplace_back(texture.value());
       }
 
-      addSkyBox(skybox_images);
+      addSkyBox(_skybox_name, skybox_images);
       count_down.arrive_and_wait();
     };
   }

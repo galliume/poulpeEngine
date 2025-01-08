@@ -643,37 +643,6 @@ namespace Poulpe {
     return swapchain_image_view;
   }
 
-  VkImageView VulkanAPI::createSkyboxImageView(
-    VkImage& image,
-    VkFormat const format,
-    uint32_t const mip_lvl,
-    VkImageAspectFlags const aspect_flags)
-  {
-    VkImageView swapchain_image_view{};
-
-    VkImageViewCreateInfo create_info{};
-    create_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-    create_info.image = image;
-    create_info.viewType = VK_IMAGE_VIEW_TYPE_CUBE;
-    create_info.format = format;
-    create_info.components.r = VK_COMPONENT_SWIZZLE_R;
-    create_info.components.g = VK_COMPONENT_SWIZZLE_G;
-    create_info.components.b = VK_COMPONENT_SWIZZLE_B;
-    create_info.components.a = VK_COMPONENT_SWIZZLE_A;
-    create_info.subresourceRange = { aspect_flags, 0, 1, 0, 1 };
-    create_info.subresourceRange.levelCount = mip_lvl;
-    create_info.subresourceRange.layerCount = 6;
-
-    VkResult result{ VK_SUCCESS };
-
-    result = vkCreateImageView(_device, &create_info, nullptr, &swapchain_image_view);
-
-    if (result != VK_SUCCESS) {
-      PLP_ERROR("failed to create image views!");
-    }
-    return swapchain_image_view;
-  }
-
   VkDescriptorSetLayout VulkanAPI::createDescriptorSetLayout(
     std::vector<VkDescriptorSetLayoutBinding> const& bindings)
   {
@@ -1900,12 +1869,23 @@ namespace Poulpe {
     return uniform_buffer;
   }
 
+  //@todo fix create buffer (see ktx image creation)
   Buffer VulkanAPI::createIndirectCommandsBuffer(std::vector<VkDrawIndexedIndirectCommand> const& draw_cmds)
   {
     VkBuffer buffer{ createBuffer(
       sizeof(VkDrawIndexedIndirectCommand) * draw_cmds.size(),
       VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT) };
 
+    // VkBuffer buffer;
+    // VkDeviceMemory staging_device_memory;
+
+    //  createBuffer(
+    //   ktx_texture->dataSize,
+    //   VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+    //   VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT,
+    //   buffer,
+    //   staging_device_memory);
+      
     VkMemoryRequirements mem_requirements;
     vkGetBufferMemoryRequirements(_device, buffer, & mem_requirements);
 
@@ -2128,9 +2108,9 @@ namespace Poulpe {
     VkMemoryRequirements mem_requirements;
     vkGetImageMemoryRequirements(_device, image, & mem_requirements);
     auto memory_type = findMemoryType(mem_requirements.memoryTypeBits, properties);
-    uint32_t size = mem_requirements.size;
-
-    uint32_t const offset = align_to(size, mem_requirements.alignment);
+    
+    VkDeviceSize const size { mem_requirements.size};
+    VkDeviceSize const offset {align_to(size, mem_requirements.alignment)};
 
     auto device_memory = _device_memory_pool->get(
       _device,
@@ -2262,54 +2242,6 @@ namespace Poulpe {
     }
   }
 
-  void VulkanAPI::createSkyboxImage(
-    uint32_t const width,
-    uint32_t const height,
-    VkSampleCountFlagBits const num_samples,
-    VkFormat const format,
-    VkImageTiling const tiling,
-    VkImageUsageFlags const usage,
-    VkMemoryPropertyFlags const properties,
-    VkImage& image)
-  {
-    VkImageCreateInfo image_info{};
-    image_info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
-    image_info.imageType = VK_IMAGE_TYPE_2D;
-    image_info.extent.width = width;
-    image_info.extent.height = height;
-    image_info.extent.depth = 1;
-    image_info.mipLevels = 1;
-    image_info.arrayLayers = 6;
-    image_info.format = format;
-    image_info.tiling = tiling;
-    image_info.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-    image_info.usage = usage;
-    image_info.samples = num_samples;
-    image_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-    image_info.flags = VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT;
-
-    if (vkCreateImage(_device, &image_info, nullptr, & image) != VK_SUCCESS) {
-      throw std::runtime_error("failed to create image!");
-    }
-
-    VkMemoryRequirements mem_requirements;
-    vkGetImageMemoryRequirements(_device, image, & mem_requirements);
-    auto memoryType = findMemoryType(mem_requirements.memoryTypeBits, properties);
-    uint32_t size = mem_requirements.size;
-
-    uint32_t const offset = align_to(size, mem_requirements.alignment);
-
-    auto device_memory = _device_memory_pool->get(
-      _device,
-      size,
-      memoryType,
-      VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-      mem_requirements.alignment,
-      DeviceMemoryPool::DeviceBufferType::STAGING);
-
-    device_memory->bindImageToMemory(image, offset);
-  }
-
   void VulkanAPI::createTextureImage(
     VkCommandBuffer& cmd_buffer,
     stbi_uc* pixels,
@@ -2320,32 +2252,31 @@ namespace Poulpe {
     VkFormat const format,
     unsigned int const scale)
   {
-    VkDeviceSize image_size = tex_width * tex_height * scale;
-    VkBuffer buffer = createBuffer(image_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT);
+    VkDeviceSize image_size { tex_width * tex_height * scale };
+
+    VkBuffer buffer;
+    VkDeviceMemory staging_device_memory;
+
+     createBuffer(
+      image_size,
+      VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+      VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT,
+      buffer,
+      staging_device_memory);
+
     VkMemoryRequirements mem_requirements;
     vkGetBufferMemoryRequirements(_device, buffer, & mem_requirements);
 
-    auto memory_type = findMemoryType(mem_requirements.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT
-      | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+    auto memory_type = findMemoryType(
+      mem_requirements.memoryTypeBits,
+      VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 
     VkDeviceSize const size { mem_requirements.size};
-    VkDeviceSize const bind_offset{ align_to(size, mem_requirements.alignment) };
-
-    auto device_memory = _device_memory_pool->get(
-      _device,
-      size,
-      memory_type,
-      VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-      mem_requirements.alignment,
-      DeviceMemoryPool::DeviceBufferType::STAGING);
-
-    auto const offset { device_memory->getOffset() };
-    device_memory->bindBufferToMemory(buffer, bind_offset);
 
     void* data;
-    vkMapMemory(_device, *device_memory->getMemory(), offset, size, 0, &data);
+    vkMapMemory(_device, staging_device_memory, 0, size, 0, &data);
     memcpy(data, pixels, static_cast<size_t>(size));
-    vkUnmapMemory(_device, *device_memory->getMemory());
+    vkUnmapMemory(_device, staging_device_memory);
 
     stbi_image_free(pixels);
 
@@ -2369,75 +2300,8 @@ namespace Poulpe {
     endCommandBuffer(cmd_buffer);
     queueSubmit(cmd_buffer);
     //_device_memory_pool->clear(device_memory);
-  }
-
-  void VulkanAPI::createSkyboxTextureImage(
-    VkCommandBuffer& cmd_buffer,
-    std::vector<stbi_uc*>& pixels,
-    uint32_t const tex_width,
-    uint32_t const tex_height,
-    uint32_t const mip_lvl,
-    VkImage& texture_image,
-    VkFormat const format)
-  {
-    VkDeviceSize image_size = tex_width * tex_height * 4 * 6;
-    VkBuffer buffer = createBuffer(image_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT);
-    VkMemoryRequirements mem_requirements;
-    vkGetBufferMemoryRequirements(_device, buffer, & mem_requirements);
-
-    auto memory_type = findMemoryType(mem_requirements.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
-
-    uint32_t const size = mem_requirements.size;
-
-    uint32_t const bind_offset = align_to(size, mem_requirements.alignment);
-
-    auto device_memory = _device_memory_pool->get(
-      _device,
-      size,
-      memory_type,
-      VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-      mem_requirements.alignment,
-      DeviceMemoryPool::DeviceBufferType::STAGING,
-      true);
-
-    auto const offset { device_memory->getOffset() };
-    device_memory->bindBufferToMemory(buffer, bind_offset);
-
-    stbi_uc* data;
-    VkDeviceSize layerSize = image_size / 6;
-    vkMapMemory(_device, *device_memory->getMemory(), offset, size, 0, (void**)&data);
-
-    for (uint32_t i { 0 }; i < pixels.size(); i++) {
-      memcpy(data + layerSize * i, pixels[i], layerSize);
-    }
-
-    vkUnmapMemory(_device, *device_memory->getMemory());
-    createSkyboxImage(tex_width, tex_height, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_TILING_OPTIMAL,
-        VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
-        VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, texture_image);
-
-    VkImageMemoryBarrier rdr_barrier = setupImageMemoryBarrier(texture_image, 0, VK_ACCESS_TRANSFER_WRITE_BIT,
-      VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
-
-    rdr_barrier.subresourceRange.layerCount = 6;
-    rdr_barrier.subresourceRange.baseMipLevel = 0;
-    rdr_barrier.subresourceRange.levelCount = mip_lvl;
-
-    std::vector<VkImageMemoryBarrier> barrier{ rdr_barrier };
-    addPipelineBarriers(cmd_buffer, barrier, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
-      VK_PIPELINE_STAGE_TRANSFER_BIT, VK_DEPENDENCY_BY_REGION_BIT);
-
-    copyBufferToImageSkybox(cmd_buffer, buffer, texture_image, tex_width, tex_height, pixels, mip_lvl,
-        image_size / 6);
-
-    generateMipmaps(cmd_buffer, format, texture_image, tex_width, tex_height, mip_lvl, 6);
-    endCommandBuffer(cmd_buffer);
-    queueSubmit(cmd_buffer);
-
-    for (uint32_t i { 0 }; i < pixels.size(); i++) {
-      stbi_image_free(pixels[i]);
-    }
-    //_device_memory_pool->clear(device_memory);
+    vkFreeMemory(_device, staging_device_memory, nullptr);
+    vkDestroyBuffer(_device, buffer, nullptr);
   }
 
   void VulkanAPI::generateMipmaps(
@@ -2542,37 +2406,6 @@ namespace Poulpe {
     vkCmdCopyBufferToImage(cmd_buffer, buffer, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, & region);
   }
 
-  void VulkanAPI::copyBufferToImageSkybox(
-    VkCommandBuffer& cmd_buffer,
-    VkBuffer& buffer,
-    VkImage & image,
-    uint32_t const width,
-    uint32_t const height,
-    std::vector<stbi_uc*>& pixels,
-    uint32_t const mip_lvl,
-    uint32_t const layer_size)
-  {
-    std::vector<VkBufferImageCopy> buffer_copy_regions;
-
-    for (uint32_t i { 0 }; i < pixels.size(); i++) {
-      for (uint32_t mipLevel = 0; mipLevel < mip_lvl; mipLevel++) {
-        VkBufferImageCopy region{};
-        region.bufferOffset = layer_size * i;
-        region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-        region.imageSubresource.mipLevel = mipLevel;
-        region.imageSubresource.baseArrayLayer = i;
-        region.imageSubresource.layerCount = 1;
-        region.imageExtent.width =  width >> mipLevel;
-        region.imageExtent.height = height >> mipLevel;
-        region.imageExtent.depth = 1;
-
-        buffer_copy_regions.emplace_back(region);
-      }
-    }
-    vkCmdCopyBufferToImage(cmd_buffer, buffer, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-      static_cast<uint32_t>(buffer_copy_regions.size()), buffer_copy_regions.data());
-  }
-
   VkImageView VulkanAPI::createDepthResources(VkCommandBuffer& cmd_buffer)
   {
     VkImage depth_image{};
@@ -2625,33 +2458,6 @@ namespace Poulpe {
     sample_info.borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE;
 
     if (vkCreateSampler(_device, & sample_info, nullptr, & texture_sampler) != VK_SUCCESS) {
-      throw std::runtime_error("failed to create texture sampler!");
-    }
-    return texture_sampler;
-  }
-
-  VkSampler VulkanAPI::createSkyboxTextureSampler(uint32_t const mip_lvl)
-  {
-    VkSampler texture_sampler{};
-
-    VkSamplerCreateInfo sampler_info{};
-    sampler_info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
-    sampler_info.magFilter = VK_FILTER_NEAREST;
-    sampler_info.minFilter = VK_FILTER_LINEAR;
-    sampler_info.addressModeU = VK_SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT;
-    sampler_info.addressModeV = sampler_info.addressModeU;
-    sampler_info.addressModeW = sampler_info.addressModeU;
-    sampler_info.anisotropyEnable = VK_FALSE;
-    sampler_info.maxAnisotropy = 1.0f;
-    sampler_info.compareEnable = VK_FALSE;
-    sampler_info.compareOp = VK_COMPARE_OP_NEVER;
-    sampler_info.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
-    sampler_info.minLod = 0.0f;
-    sampler_info.maxLod = static_cast<float>(mip_lvl);
-    sampler_info.mipLodBias = 0.0f;
-    sampler_info.borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE;
-
-    if (vkCreateSampler(_device, &sampler_info, nullptr, & texture_sampler) != VK_SUCCESS) {
       throw std::runtime_error("failed to create texture sampler!");
     }
     return texture_sampler;
@@ -2871,7 +2677,16 @@ namespace Poulpe {
     ktxTexture2 * ktx_texture,
     VkImage& image)
   {
-    VkBuffer buffer = createBuffer(ktx_texture->dataSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT);
+    VkBuffer buffer;
+    VkDeviceMemory staging_device_memory;
+
+     createBuffer(
+      ktx_texture->dataSize,
+      VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+      VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT,
+      buffer,
+      staging_device_memory);
+
     VkMemoryRequirements mem_requirements;
 
     vkGetBufferMemoryRequirements(_device, buffer, &mem_requirements);
@@ -2881,23 +2696,10 @@ namespace Poulpe {
 
     VkDeviceSize const size { mem_requirements.size};
 
-    uint32_t const bind_offset = align_to(size, mem_requirements.alignment);
-
-    auto device_memory = _device_memory_pool->get(
-      _device,
-      mem_requirements.size,
-      memory_type,
-      VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-      mem_requirements.alignment,
-      DeviceMemoryPool::DeviceBufferType::STAGING);
-
-    auto const offset { device_memory->getOffset() };
-    device_memory->bindBufferToMemory(buffer, bind_offset);
-
     void* data;
-    vkMapMemory(_device, *device_memory->getMemory(), offset, size, 0, &data);
+    vkMapMemory(_device, staging_device_memory, 0, size, 0, &data);
     memcpy(data, ktx_texture->pData, static_cast<size_t>(size));
-    vkUnmapMemory(_device, *device_memory->getMemory());
+    vkUnmapMemory(_device, staging_device_memory);
 
     VkFormat const format = (VkFormat) ktx_texture->vkFormat;
     
@@ -2928,6 +2730,11 @@ namespace Poulpe {
     image_info.samples = VK_SAMPLE_COUNT_1_BIT;
     image_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
+    if (ktx_texture->isCubemap) {
+      image_info.flags = VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT;
+      image_info.arrayLayers = 6;
+    }
+
     VkResult result{ VK_SUCCESS };
     result = vkCreateImage(_device, & image_info, nullptr, &image);
 
@@ -2942,7 +2749,7 @@ namespace Poulpe {
 
     uint32_t const image_bind_offset = align_to(image_size, image_mem_requirements.alignment);
 
-    device_memory = _device_memory_pool->get(
+    auto device_memory = _device_memory_pool->get(
       _device,
       image_size,
       memory_type,
@@ -2955,7 +2762,15 @@ namespace Poulpe {
     auto rdr_barrier = setupImageMemoryBarrier(
       image, 0, VK_ACCESS_TRANSFER_WRITE_BIT, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
 
+    if (ktx_texture->isCubemap) {
+      rdr_barrier.subresourceRange.layerCount = 6;
+      rdr_barrier.subresourceRange.baseMipLevel = 0;
+      rdr_barrier.subresourceRange.levelCount = mip_lvl;
+    }
+
     std::vector<VkImageMemoryBarrier> barrier{ rdr_barrier };
+
+    beginCommandBuffer(cmd_buffer);
 
     addPipelineBarriers(cmd_buffer,
                         barrier,
@@ -2963,22 +2778,44 @@ namespace Poulpe {
                         VK_PIPELINE_STAGE_TRANSFER_BIT,
                         VK_DEPENDENCY_BY_REGION_BIT);
 
-    copyBufferToImage(cmd_buffer,
-                      buffer,
-                      image,
-                      width,
-                      height,
-                      mip_lvl);
+    std::vector<VkBufferImageCopy> buffer_copy_regions;
+
+    auto const layer_size{ image_size / ktx_texture->numFaces };
+
+    for (auto i { 0 }; i < ktx_texture->numFaces; i++) {
+      for (auto mip{ 0 }; mip < mip_lvl; mip++) {
+        VkBufferImageCopy region{};
+        region.bufferOffset = layer_size * i;
+        region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        region.imageSubresource.mipLevel = mip;
+        region.imageSubresource.baseArrayLayer = i;
+        region.imageSubresource.layerCount = 1;
+        region.imageExtent.width =  width >> mip;
+        region.imageExtent.height = height >> mip;
+        region.imageExtent.depth = 1;
+
+        buffer_copy_regions.emplace_back(region);
+      }
+    }
+
+    vkCmdCopyBufferToImage(
+      cmd_buffer,
+      buffer,
+      image,
+      VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+      buffer_copy_regions.size(),
+      buffer_copy_regions.data());
 
     generateMipmaps(cmd_buffer, format, image, width, height, mip_lvl);
 
     endCommandBuffer(cmd_buffer);
     queueSubmit(cmd_buffer);
+    
+    vkFreeMemory(_device, staging_device_memory, nullptr);
+    vkDestroyBuffer(_device, buffer, nullptr);
+
     //_device_memory_pool->clear(device_memory);
   }
-
-
-  //KTX
 
   VkImageView VulkanAPI::createKTXImageView(
     ktxTexture2 * ktx_texture,
@@ -2990,13 +2827,16 @@ namespace Poulpe {
     VkImageViewCreateInfo create_info{};
     create_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
     create_info.image = image;
-
+    
     if (ktx_texture->numDimensions == 1) {
       create_info.viewType = VK_IMAGE_VIEW_TYPE_1D;
     } else if (ktx_texture->numDimensions == 2) {
       create_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
     } else if (ktx_texture->numDimensions == 3) {
       create_info.viewType = VK_IMAGE_VIEW_TYPE_3D;
+    }
+    if (ktx_texture->isCubemap == true) {
+      create_info.viewType = VK_IMAGE_VIEW_TYPE_CUBE;
     }
 
     create_info.format = format;
@@ -3009,7 +2849,8 @@ namespace Poulpe {
     create_info.subresourceRange.baseMipLevel = 0;
     create_info.subresourceRange.levelCount = ktx_texture->numLevels;
     create_info.subresourceRange.baseArrayLayer = 0;
-    create_info.subresourceRange.layerCount = 1;
+    create_info.subresourceRange.layerCount = ktx_texture->numFaces;
+
 
     VkResult result{ VK_SUCCESS };
     VkImageView image_view{};
@@ -3082,4 +2923,5 @@ namespace Poulpe {
 
     return offset;
   }
+  
 }

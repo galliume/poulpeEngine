@@ -18,17 +18,12 @@ namespace Poulpe
       mesh->getMaterial().texture_alpha_wrap_mode_v,
       alpha.getMipLevels()));
 
-    std::vector<VkDescriptorImageInfo> image_info{};
-    image_info.reserve(5);
-    image_info.emplace_back(tex.getSampler(), tex.getImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-    image_info.emplace_back(alpha.getSampler(), alpha.getImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-
     std::string const bump_map_name{ mesh->getData()->_bump_map };
     Texture texture_bump{ _texture_manager->getTextures()[bump_map_name] };
      texture_bump.setSampler(_renderer->getAPI()->createKTXSampler(
       mesh->getMaterial().texture_bump_wrap_mode_u,
       mesh->getMaterial().texture_bump_wrap_mode_v,
-      texture_bump.getMipLevels()));
+      1));
 
     if (texture_bump.getWidth() == 0) {
       texture_bump = _texture_manager->getTextures()["_plp_empty"];
@@ -84,6 +79,10 @@ namespace Poulpe
     //shadowMapSpot.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
     //shadowMapSpot.imageview = _renderer->getDepthMapImageViews()->at(1);
     //shadowMapSpot.sampler = _renderer->getDepthMapSamplers()->at(1);
+    std::vector<VkDescriptorImageInfo> image_info{};
+    image_info.reserve(7);
+    image_info.emplace_back(tex.getSampler(), tex.getImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+    image_info.emplace_back(alpha.getSampler(), alpha.getImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
     image_info.emplace_back(texture_bump.getSampler(), texture_bump.getImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
     image_info.emplace_back(texture_specular.getSampler(), texture_specular.getImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
     image_info.emplace_back(texture_metal_roughness.getSampler(), texture_metal_roughness.getImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
