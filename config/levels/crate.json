@@ -3,8 +3,23 @@
 		"crate" : {
 			"mesh": "assets/mesh/crate/Crate1.obj",
 			"textures": {
-				"brickwall": "assets/mesh/crate/brickwall.jpg",
-				"brickwall_normal": "assets/mesh/crate/brickwall_normal.jpg"
+				"brickwall": {
+					"path": "assets/mesh/crate/brickwall.ktx2"
+				}
+			},
+			"ao": {
+				
+			},
+			"mr": {
+
+			},
+			"emissive": {
+				
+			},
+			"normal": {
+				"brickwall_normal": {
+					"path": "assets/mesh/crate/brickwall_normal.ktx2"
+				}
 			},
 			"shader": "main_basic",
 			"positions": [
@@ -16,7 +31,7 @@
 			"rotations": [
 				{"x": 0.0, "y": 0.0, "z": 0.0}
 			],
-			"inverseTextureY": false,
+			"flipY": false,
 			"count": 1,
 			"hasBbox": false,
 			"hasAnimation": false,
@@ -24,32 +39,8 @@
 			"animationScripts": {
 			},
 			"hasShadow": true,
-			"isIndexed": true
-		},	
-		"SnowTerrain" : {
-			"mesh": "assets/mesh/SnowTerrain/SnowTerrain.obj",
-			"textures": {
-				"snowterrain": "assets/mesh/SnowTerrain/snowterrain.jpg"
-			},
-			"shader": "main_basic",
-			"positions": [
-				{"x": 0.0, "y": -0.25, "z": 0.0}
-			],
-			"scales": [
-				{"x": 1.0, "y": 1.0, "z": 1.0}
-			],
-			"rotations": [
-				{"x": 0.0, "y": 0.0, "z": 0.0}
-			],
-			"inverseTextureY": true,
-			"count": 1,
-			"hasBbox": false,
-			"hasAnimation": false,
-			"animationScripts": {
-			},
-			"isPointLight": false,
-			"hasShadow": false,
-			"isIndexed": true			
+			"isIndexed": true,
+			"debugNormal": true
 		}
 	}
 }

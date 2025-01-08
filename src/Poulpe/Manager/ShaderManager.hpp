@@ -23,7 +23,7 @@ namespace Poulpe
     ShaderManager();
 
     inline void addRenderer(Renderer* const renderer)  { _renderer = renderer; }
-    void ShaderManager::addShader(
+    void addShader(
       std::string const& name,
       std::string const& vert_path,
       std::string const& frag_path,

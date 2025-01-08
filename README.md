@@ -88,6 +88,58 @@ up : E
 
 down : A
 
+### glTF tests
+
+- [ ] AlphaBlendModeTest
+- [ ] AnisotropyRotationTest
+- [ ] AnisotropyStrengthTest
+- [ ] ClearCoatTest
+- [ ] CompareAlphaCoverage
+- [ ] CompareAmbientOcclusion
+- [ ] CompareAnisotropy
+- [ ] CompareBaseColor
+- [ ] CompareClearcoat
+- [ ] CompareDispersion
+- [ ] CompareEmissiveStrength
+- [ ] CompareIor
+- [ ] CompareIridescence
+- [ ] CompareMetallic
+- [ x ] CompareNormal
+- [ ] CompareRoughness
+- [ ] CompareSheen
+- [ ] CompareSpecular
+- [ ] CompareTransmission
+- [ ] CompareVolume
+- [ ] DispersionTest
+- [ ] EmissiveStrengthTest
+- [ ] EnvironmentTest
+- [ ] InterpolationTest
+- [ ] IORTestGrid
+- [ ] MorphPrimitivesTest
+- [ ] MorphStressTest
+- [ ] MultiUVTest
+- [ ] NegativeScaleTest
+- [ ] NodePerformanceTest
+- [ x ] NormalTangentMirrorTest
+- [ x ] NormalTangentTest
+- [ x ] OrientationTest
+- [ ] PlaysetLightTest
+- [ ] PrimitiveModeNormalsTest
+- [ ] SheenTestGrid
+- [ ] SpecularTest
+- [ x ] TextureCoordinateTest
+- [ ] TextureEncodingTest
+- [ ] TextureLinearInterpolationTest
+- [ x ] TextureSettingsTest
+- [ ] TextureTransformMultiTest
+- [ ] TextureTransformTest
+- [ ] TransmissionRoughnessTest
+- [ ] TransmissionTest
+- [ ] TransmissionThinwallTestGrid
+- [ ] UnlitTest
+
+glTF samples can be fetch here: [glTF-Sample-Assets](https://github.com/KhronosGroup/glTF-Sample-Assets)
+
 ### Resources
 
 [Vulkan Programming Guide](https://www.amazon.fr/Vulkan-Programming-Guide-Official-Learning/dp/0134464540/)

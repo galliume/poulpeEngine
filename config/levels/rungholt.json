@@ -3,11 +3,27 @@
 		"rungholt": {
 			"mesh": "assets/mesh/rungholt/rungholt.obj",
 			"textures": {
-				"rungholt-RGB": "assets/mesh/rungholt/rungholt-RGB.png",
-				"rungholt-RGBA": "assets/mesh/rungholt/rungholt-RGBA.png"
+				"rungholt-RGB": {
+					"path" : "assets/mesh/rungholt/rungholt-RGB.ktx2"
+				},
+				"rungholt-RGBA": {
+					"path": "assets/mesh/rungholt/rungholt-RGBA.ktx2"
+				},
+				"rungholt-Alpha": {
+					"path" : "assets/mesh/rungholt/rungholt-Alpha.ktx2"
+				}
 			},
-			"textures_map": {
-				"rungholt-Alpha": "assets/mesh/rungholt/rungholt-Alpha.png"
+			"normal": {
+
+			},
+			"ao": {
+
+			},
+			"emissive": {
+
+			},
+			"mr": {
+
 			},
 			"shader": "main_basic",
 			"positions": [
@@ -31,7 +47,7 @@
 					"z": 0.0
 				}
 			],
-			"inverseTextureY": true,
+			"flipY": false,
 			"count": 1,
 			"hasBbox": false,
 			"hasAnimation": false,
@@ -39,17 +55,34 @@
 			"animationScripts": {
 			},
 			"hasShadow": true,
-			"isIndexed": true
+			"isIndexed": true,
+			"debugNormal": true
 		},
 		"house": {
 			"mesh": "assets/mesh/rungholt/house.obj",
 			"textures": {
-				"house-RGB": "assets/mesh/rungholt/house-RGB.png",
-				"house-RGBA": "assets/mesh/rungholt/house-RGBA.png"
+				"house-RGB": {
+					"path": "assets/mesh/rungholt/house-RGB.ktx2"
+				},
+				"house-RGBA": {
+					"path": "assets/mesh/rungholt/house-RGBA.ktx2"
+				},
+				"house-Alpha": {
+					"path": "assets/mesh/rungholt/house-Alpha.ktx2"
+				}
 			},
-			"textures_map": {
-				"house-Alpha": "assets/mesh/rungholt/house-Alpha.png"
+			"normal": {
+
 			},
+			"ao": {
+
+			},
+			"emissive": {
+
+			},
+			"mr": {
+
+			},			
 			"shader": "main_basic",
 			"positions": [
 				{
@@ -72,7 +105,7 @@
 					"z": 0.0
 				}
 			],
-			"inverseTextureY": true,
+			"flipY": false,
 			"count": 1,
 			"hasBbox": false,
 			"hasAnimation": false,
@@ -80,7 +113,8 @@
 			"animationScripts": {
 			},
 			"hasShadow": true,
-			"isIndexed": true			
+			"isIndexed": true,
+			"debugNormal": true		
 		}
 	}
 }

@@ -13,7 +13,13 @@
 					"path": "assets/mesh/TextureSettingsTest/glTF/TextureTestLabels.ktx2"
 				}
 			},
-			"orm": {
+			"mr": {
+			},
+			"emissive": {
+
+			},
+			"ao": {
+
 			},
 			"normal" : {
 			},

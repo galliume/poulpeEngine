@@ -98,14 +98,13 @@ float ExponentialAttenuation(vec3 p, vec3 l)
   return max(exp(r2 * atten_const.x) * atten_const.y - atten_const.z, 0.0);
 }
 
-float SmoothAttenuation(vec3 p, vec3 l)
+float SmoothAttenuation(vec3 l_dir)
 {
-  float r_max = 15.0;
+  float r_max = 5.0;
   vec2 atten_const = vec2(1.0);
   atten_const.x = 1.0 / (r_max * r_max);
   atten_const.y = 2.0 / r_max;
 
-  vec3 l_dir = l - p;
   float r2 = dot(l_dir, l_dir);
   return max(r2 * atten_const.x * (sqrt(r2) * atten_const.y - 3.0) + 1.0, 0.0);
 }
@@ -169,26 +168,45 @@ void main()
   }
 
   vec3 normal = vec3(1.0); 
-  normal.xy = texture(tex_sampler[NORMAL_INDEX], var.texture_coord).ga;
-  normal.xy = normal.xy * 0.5 - 0.5;
+  normal.xy = texture(tex_sampler[NORMAL_INDEX], var.texture_coord).xy;
+  normal.xy = normal.xy * 2.0 - 1.0;
   normal.z = sqrt(1 - dot(normal.xy, normal.xy));
   normal = normalize(normal);
 
-  vec3 p = normalize(var.t_frag_pos);
-  vec3 v = normalize(var.t_view_dir);
+  ivec2 normal_size = textureSize(tex_sampler[NORMAL_INDEX], 0);
+  if (normal_size.x == 1 && normal_size.y == 1) {
+    normal = normalize(var.norm);
+  }
+
+  vec3 p = var.t_frag_pos;
+  vec3 v = var.t_view_dir;
 
   vec2 metal_roughness = texture(tex_sampler[METAL_ROUGHNESS_INDEX], var.texture_coord).rg;
   float metallic = metal_roughness.r;
   float roughness = metal_roughness.g;
 
+  ivec2 mr_size = textureSize(tex_sampler[METAL_ROUGHNESS_INDEX], 0);
+  if (mr_size.x == 1 && mr_size.y == 1) {
+    metallic = 0.0;
+    roughness = 1.0;
+  }
+
   float ao = texture(tex_sampler[AO_INDEX], var.texture_coord).r;
+  ivec2 ao_size = textureSize(tex_sampler[AO_INDEX], 0);
+  if (ao_size.x == 1 && ao_size.y == 1) {
+    ao = 1.0;
+  }
 
   vec4 albedo = texture(tex_sampler[DIFFUSE_INDEX], var.texture_coord);
-  //if (albedo.a < 0.1) discard;
+  ivec2 albedo_size = textureSize(tex_sampler[DIFFUSE_INDEX], 0);
+  if (albedo_size.x == 1 && albedo_size.y == 1) {
+    albedo = vec4(material.ambient, 1.0);
+  }
+  if (albedo.a < 0.1) discard;
 
   vec4 C_ambient = vec4(material.ambient, 1.0) * albedo;
   vec4 C_diffuse = vec4(material.diffuse, 1.0) * albedo / PI;
-  vec4 C_light = vec4(sun_light.color * 0.1, 1.0);
+  vec4 C_light = vec4(sun_light.color, 0.0) * 0.03;
   vec4 C_specular = vec4(material.specular, 1.0);
 
   vec4 color = C_ambient * C_light * ao;
@@ -198,15 +216,15 @@ void main()
 
   for (int i = 1; i < NR_POINT_LIGHTS; ++i) {
 
-    vec3 light_pos = normalize(var.t_plight_pos[i]);
+    vec3 light_pos = var.t_plight_pos[i];
     vec3 l = normalize(light_pos - p);
     vec3 h = normalize(v + l);
     float r = max(dot(h, v), 0.0);
 
-    float distance = length(point_lights[i].position - var.frag_pos);
-    float attenuation = 1.0 / (distance * distance);
-    //float attenuation = InverseSquareAttenuation(l);
-    C_light = vec4(vec3(1.0), 1.0);
+    //float distance = length(point_lights[i].position - var.frag_pos);
+    //float attenuation = 1.0 / (distance * distance);
+    float attenuation = SmoothAttenuation(l);
+    C_light = vec4(point_lights[i].color, 1.0);
 
     //Fresnel
     //if F0 < 0.02, no reflectance ?
@@ -218,19 +236,14 @@ void main()
     vec3 kD = vec3(1.0) - kS;
     kD *= 1.0 - metallic;
 
-    color += (vec4(kD, 1.0) * C_diffuse) * C_light;
+    color += (vec4(kD, 1.0) * C_diffuse) * C_light * NdL;
   }
 
-  vec3 l = normalize(var.t_plight_pos[1] - p);
-  float diff = max(dot(l, normal), 0.0);
-
-  //color = (C_ambient * albedo * 0.2) + (C_diffuse * albedo * diff);
-  //color = C_diffuse;
   color *= PI;
 
   color.r = linear_to_sRGB(color.r);
   color.g = linear_to_sRGB(color.g);
   color.b = linear_to_sRGB(color.b);
 
-  final_color = vec4(color.xyz , 1.0);
+  final_color = vec4(color.xyz, 1.0);
 }

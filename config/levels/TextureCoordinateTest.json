@@ -7,21 +7,27 @@
 					"path": "assets/mesh/TextureCoordinateTest/glTF/TextureCoordinateTemplate.ktx2"
 				}
 			},
-			"orm": {
+			"mr": {
+			},
+			"emissive": {
+
+			},
+			"ao": {
+
 			},
 			"normal" : {
 			},
 			"shader": "main_basic",
 			"positions": [
-				{"x": 0.0, "y": -2.5, "z": 0.0}
-			],
-			"scales": [
-				{"x": 0.05, "y": 0.05, "z": 0.05}
-			],
-			"rotations": [
 				{"x": 0.0, "y": 0.0, "z": 0.0}
 			],
-			"flipY": true,
+			"scales": [
+				{"x": 0.5, "y": 0.5, "z": 0.5}
+			],
+			"rotations": [
+				{"x": 0.0, "y": 180.0, "z": 0.0}
+			],
+			"flipY": false,
 			"count": 1,
 			"hasBbox": false,
 			"hasAnimation": false,
