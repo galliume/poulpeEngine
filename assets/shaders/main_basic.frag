@@ -2,6 +2,8 @@
 #extension GL_EXT_nonuniform_qualifier : enable
 #extension GL_ARB_separate_shader_objects : enable
 
+#define TEXTURE_COUNT 8
+
 //texture map index
 #define DIFFUSE_INDEX 0
 #define ALPHA_INDEX 1
@@ -10,6 +12,7 @@
 #define METAL_ROUGHNESS_INDEX 4
 #define EMISSIVE_INDEX 5
 #define AO_INDEX 6
+#define BASE_COLOR_INDEX 7
 
 //depth / shadow map index
 #define SHADOW_MAP_INDEX 0
@@ -28,9 +31,10 @@ layout(location = 0) in FRAG_VAR {
   vec3 t_frag_pos;
   vec3 t_light_dir;
   vec3 t_view_dir;
-  vec3 t_plight_pos[NR_POINT_LIGHTS]; 
+  vec3 t_plight_pos[NR_POINT_LIGHTS];
   vec2 texture_coord;
   vec3 norm;
+  vec4 color;
 } var;
 
 struct Light {
@@ -50,17 +54,28 @@ struct Light {
 
 struct Material
 {
+  vec3 base_color;
   vec3 ambient;
   vec3 diffuse;
   vec3 specular;
   vec3 transmittance;
   vec3 emission;
-  //shininess, ior, diss
-  vec3 shi_ior_diss;
+  vec3 shi_ior_diss; //shininess, ior, diss
   vec3 alpha;
+  vec3 mr_factor;
+  vec3 normal_translation;//z: 0 no translation 1.0 translation
+  vec3 normal_scale; //z: 0 no scale 1.0 scale
+  vec3 normal_rotation; //y: 0 no rotation 1.0 rotation
+  vec3 diffuse_translation;//z: 0 no translation 1.0 translation
+  vec3 diffuse_scale; //z: 0 no scale 1.0 scale
+  vec3 diffuse_rotation; //y: 0 no rotation 1.0 rotation
+  vec3 emissive_translation;//z: 0 no translation 1.0 translation
+  vec3 emissive_scale; //z: 0 no scale 1.0 scale
+  vec3 emissive_rotation; //y: 0 no rotation 1.0 rotation
+  vec3 strength;//x: normal strength, y occlusion strength
 };
 
-layout(binding = 1) uniform sampler2D tex_sampler[7];
+layout(binding = 1) uniform sampler2D tex_sampler[TEXTURE_COUNT];
 
 layout(binding = 2) readonly buffer ObjectBuffer {
   Light sun_light;
@@ -159,6 +174,21 @@ float ShadowCalculation(vec4 light_space, vec3 normal)
   return light;
 }
 
+//https://github.com/KhronosGroup/glTF/blob/main/extensions/2.0/Khronos/KHR_texture_transform/README.md
+vec2 transform_uv(vec3 t, vec3 s, vec3 r, vec2 c)
+{
+  mat3 translation = mat3(1,0,0, 0,1,0, t.x, -t.y, 1);
+  mat3 rotation = mat3(
+      cos(r.x), sin(r.x), 0,
+     -sin(r.x), cos(r.x), 0,
+      0, 0, 1);
+  mat3 scale = mat3(s.x, 0, 0, 0, s.y, 0, 0, 0, 1);
+  mat3 matrix = translation * rotation * scale;
+  vec2 uvTransformed = (matrix * vec3(c.xy, 1)).xy;
+
+  return uvTransformed;
+}
+
 void main()
 {
   vec4 alpha_color = texture(tex_sampler[ALPHA_INDEX], var.texture_coord);
@@ -168,6 +198,12 @@ void main()
     discard;
   }
  
+//  vec2 normal_coord = transform_uv(
+//    material.normal_translation,
+//    material.normal_scale,
+//    material.normal_rotation,
+//    var.texture_coord); 
+
   vec3 normal = vec3(1.0); 
   normal.xy = texture(tex_sampler[NORMAL_INDEX], var.texture_coord).xy;
   normal.xy = normal.xy * 2.0 - 1.0;
@@ -183,13 +219,13 @@ void main()
   vec3 v = var.t_view_dir;
 
   vec2 metal_roughness = texture(tex_sampler[METAL_ROUGHNESS_INDEX], var.texture_coord).rg;
-  float metallic = metal_roughness.r;
-  float roughness = metal_roughness.g;
+  float metallic = metal_roughness.r * material.mr_factor.x;
+  float roughness = metal_roughness.g * material.mr_factor.y;
 
   ivec2 mr_size = textureSize(tex_sampler[METAL_ROUGHNESS_INDEX], 0);
   if (mr_size.x == 1 && mr_size.y == 1) {
-    metallic = 0.0;
-    roughness = 1.0;
+    metallic = material.mr_factor.x;
+    roughness = material.mr_factor.y;
   }
 
   float ao = texture(tex_sampler[AO_INDEX], var.texture_coord).r;
@@ -197,20 +233,45 @@ void main()
   if (ao_size.x == 1 && ao_size.y == 1) {
     ao = 1.0;
   }
+  //ao *= material.strength.y;//occlusion strength
+
+//  vec2 diffuse_coord = var.texture_coord;
+//  if (material.diffuse_translation.z >1.5) {
+//    diffuse_coord = transform_uv(
+//      material.diffuse_translation,
+//      material.diffuse_scale,
+//      material.diffuse_rotation,
+//      var.texture_coord);
+//  }
 
   vec4 albedo = texture(tex_sampler[DIFFUSE_INDEX], var.texture_coord);
+  if (albedo.w < 0.1) discard;
+  albedo *= vec4(material.base_color, 1.0);
+  albedo *= var.color;
 
   ivec2 albedo_size = textureSize(tex_sampler[DIFFUSE_INDEX], 0);
   if (albedo_size.x == 1 && albedo_size.y == 1) {
-    albedo = vec4(material.ambient, 1.0);
+    albedo = vec4(material.base_color, 1.0);
   }
 
   vec4 C_ambient = vec4(material.ambient, 1.0) * albedo;
   vec4 C_diffuse = vec4(material.diffuse, 1.0) * albedo / PI;
-  vec4 C_light = vec4(sun_light.color, 0.0) * 0.03;
+  vec4 C_light = vec4(sun_light.color, 0.0) * 0.005;
   vec4 C_specular = vec4(material.specular, 1.0);
 
   vec4 color = C_ambient * C_light * ao;
+
+  vec2 emissive_coord = transform_uv(
+    material.emissive_translation,
+    material.emissive_scale,
+    material.emissive_rotation,
+    var.texture_coord); 
+
+  vec4 emissive_color = texture(tex_sampler[EMISSIVE_INDEX], -emissive_coord);
+  ivec2 emissive_color_size = textureSize(tex_sampler[EMISSIVE_INDEX], 0);
+  if (emissive_color_size.x != 1 && emissive_color_size.y != 1) {
+    color += vec4(material.emission, 1.0) * emissive_color;
+  }
 
   vec3 F0 = vec3(0.04);
   F0 = mix(F0, C_diffuse.xyz, metallic);
@@ -225,7 +286,8 @@ void main()
     //float distance = length(point_lights[i].position - var.frag_pos);
     //float attenuation = 1.0 / (distance * distance);
     float attenuation = SmoothAttenuation(l);
-    C_light = vec4(point_lights[i].color, 1.0);
+    //C_light = vec4(point_lights[i].color, 1.0);
+    C_light = vec4(1.0);
 
     //Fresnel
     //if F0 < 0.02, no reflectance ?

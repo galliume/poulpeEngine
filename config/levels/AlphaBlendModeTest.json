@@ -1,6 +1,6 @@
 {
 	"entities": {
-		"AlphaBlendModeTest" : {
+		"	" : {
 			"mesh": "assets/mesh/AlphaBlendModeTest/gLTF/AlphaBlendModeTest.gltf",
 			"textures": {
 				"AlphaBlendLabels": {

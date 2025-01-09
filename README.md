@@ -95,7 +95,7 @@ down : A
 - [ ] CompareAlphaCoverage
 - [ ] CompareAmbientOcclusion
 - [ ] CompareAnisotropy
-- [ ] CompareBaseColor
+- [x] CompareBaseColor
 - [ ] CompareClearcoat
 - [ ] CompareDispersion
 - [ ] CompareEmissiveStrength

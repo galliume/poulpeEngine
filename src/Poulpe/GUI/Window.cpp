@@ -16,8 +16,8 @@ namespace Poulpe
   {
     //const int WIDTH = 2560;
     //const int HEIGHT = 1440;
-    const int WIDTH = 1920;
-    const int HEIGHT = 1080;
+    const int WIDTH = 2560;
+    const int HEIGHT = 1440;
 
     glfwInit();
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);

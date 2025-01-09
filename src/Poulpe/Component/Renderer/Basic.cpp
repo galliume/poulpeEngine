@@ -60,7 +60,6 @@ namespace Poulpe
 
     if (texture_emissive.getWidth() == 0) {
       texture_emissive = _texture_manager->getTextures()["_plp_empty"];
-
     }
 
     std::string ao_map_name{ mesh->getData()->_ao};
@@ -73,6 +72,17 @@ namespace Poulpe
     if (texture_ao.getWidth() == 0) {
       texture_ao = _texture_manager->getTextures()["_plp_empty"];
 
+    }
+ 
+    std::string base_color_map_name{ mesh->getData()->_base_color};
+    Texture texture_base_color { _texture_manager->getTextures()[base_color_map_name] };
+    texture_base_color.setSampler(_renderer->getAPI()->createKTXSampler(
+    mesh->getMaterial().texture_base_color_wrap_mode_u,
+    mesh->getMaterial().texture_base_color_wrap_mode_v,
+    texture_base_color.getMipLevels()));
+
+    if (texture_base_color.getWidth() == 0) {
+      texture_base_color = _texture_manager->getTextures()["_plp_empty"];
     }
 
     //VkDescriptorImageInfo shadowMapSpot{};
@@ -88,6 +98,7 @@ namespace Poulpe
     image_info.emplace_back(texture_metal_roughness.getSampler(), texture_metal_roughness.getImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
     image_info.emplace_back(texture_emissive.getSampler(), texture_emissive.getImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
     image_info.emplace_back(texture_ao.getSampler(), texture_ao.getImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+    image_info.emplace_back(texture_base_color.getSampler(), texture_base_color.getImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
     std::vector<VkDescriptorImageInfo> depth_map_image_info{};
     depth_map_image_info.emplace_back(_renderer->getDepthMapSamplers(), _renderer->getDepthMapImageViews(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
@@ -241,18 +252,35 @@ namespace Poulpe
     if (mesh->getStorageBuffers()->empty()) {
 
       Material material{};
+      material.base_color = mesh->getMaterial().base_color;
       material.ambient = mesh->getMaterial().ambient;
       material.diffuse = mesh->getMaterial().diffuse;
       material.specular = mesh->getMaterial().specular;
       material.transmittance = mesh->getMaterial().transmittance;
       material.emission = mesh->getMaterial().emission;
-      
+      material.mr_factor = mesh->getMaterial().mr_factor;
+
       material.shi_ior_diss = glm::vec3(
         mesh->getMaterial().shininess,
         mesh->getMaterial().ior,
         mesh->getMaterial().dissolve);
 
       material.alpha = glm::vec3(mesh->getMaterial().alpha_mode, mesh->getMaterial().alpha_cut_off, 1.0);
+
+      //@todo needed to modify assimp sources glTF2Asset.h textureTransformSupported = true (preview ?)
+      material.normal_translation = mesh->getMaterial().normal_translation;//z: 0 no translation 1.0 translation
+      material.normal_scale = mesh->getMaterial().normal_scale; //z: 0 no scale 1.0 scale
+      material.normal_rotation = { mesh->getMaterial().normal_rotation.x, mesh->getMaterial().normal_rotation.y, 1.0 }; //y: 0 no rotation 1.0 rotation
+
+      material.diffuse_translation = mesh->getMaterial().diffuse_translation;//z: 0 no translation 1.0 translation
+      material.diffuse_scale = mesh->getMaterial().diffuse_scale; //z: 0 no scale 1.0 scale
+      material.diffuse_rotation = { mesh->getMaterial().diffuse_rotation.x, mesh->getMaterial().diffuse_rotation.y, 1.0 }; //y: 0 no rotation 1.0 rotation
+  
+      material.emissive_translation = mesh->getMaterial().emissive_translation;//z: 0 no translation 1.0 translation
+      material.emissive_scale = mesh->getMaterial().emissive_scale; //z: 0 no scale 1.0 scale
+      material.emissive_rotation = { mesh->getMaterial().emissive_rotation.x, mesh->getMaterial().emissive_rotation.y, 1.0 }; //y: 0 no rotation 1.0 rotation
+  
+      material.strength = { mesh->getMaterial().normal_strength, mesh->getMaterial().occlusion_strength, 0.0 };//x normal strength, y occlusion strength
 
       //PLP_DEBUG("ambient {}",  material.ambient.r);
       //PLP_DEBUG("diffuse {}",  material.diffuse.r);

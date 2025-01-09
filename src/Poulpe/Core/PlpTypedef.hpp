@@ -48,14 +48,25 @@ namespace Poulpe
 
   struct Material
   {
+    alignas(16) glm::vec3 base_color { 1 };
     alignas(16) glm::vec3 ambient { 1 };
     alignas(16) glm::vec3 diffuse { 1 };
     alignas(16) glm::vec3 specular { 1 };
     alignas(16) glm::vec3 transmittance { 1 };
     alignas(16) glm::vec3 emission { 1 };
-    //shininess, ior, diss
-    alignas(16) glm::vec3 shi_ior_diss { 0 };
+    alignas(16) glm::vec3 shi_ior_diss { 0 }; //shininess, ior, diss
     alignas(16) glm::vec3 alpha { 0 };//{x:alpha mode, y: cutoff);
+    alignas(16) glm::vec3 mr_factor{0};//x:metallic, y:roughness, z: blank
+    alignas(16) glm::vec3 normal_translation{ 0.0 };//z: 0 no translation 1.0 translation
+    alignas(16) glm::vec3 normal_scale{ 0.0 }; //z: 0 no scale 1.0 scale
+    alignas(16) glm::vec3 normal_rotation{ 0.0 }; //y: 0 no rotation 1.0 rotation
+    alignas(16) glm::vec3 diffuse_translation{ 0.0 };//z: 0 no translation 1.0 translation
+    alignas(16) glm::vec3 diffuse_scale{ 0.0 }; //z: 0 no scale 1.0 scale
+    alignas(16) glm::vec3 diffuse_rotation{ 0.0 }; //y: 0 no rotation 1.0 rotation
+    alignas(16) glm::vec3 emissive_translation{ 0.0 };//z: 0 no translation 1.0 translation
+    alignas(16) glm::vec3 emissive_scale{ 0.0 }; //z: 0 no scale 1.0 scale
+    alignas(16) glm::vec3 emissive_rotation{ 0.0 }; //y: 0 no rotation 1.0 rotation
+    alignas(16) glm::vec3 strength{ 1.0 };//x: normal strength, y occlusion strength
   };
 
   struct ObjectBuffer
@@ -74,11 +85,13 @@ namespace Poulpe
 
   struct material_t {
     std::string name;
+    glm::vec3 base_color{1.0};
     glm::vec3 ambient{ 1.0 };
     glm::vec3 diffuse{ 1.0 };
     glm::vec3 specular{ 1.0 };
     glm::vec3 transmittance{ 1.0 };
     glm::vec3 emission{ 1.0 };
+    glm::vec3 mr_factor{ 1.0 };//x:metallic, y:roughness, z: blank
     float shininess{ 0.0 };
     float ior{ 0.0 };       // index of refraction
     float dissolve{ 1.0 };  // 1 == opaque; 0 == fully transparent
@@ -122,6 +135,26 @@ namespace Poulpe
     std::string name_texture_ao;
     TextureWrapMode texture_ao_wrap_mode_u;
     TextureWrapMode texture_ao_wrap_mode_v;
+
+    std::string name_texture_base_color;
+    TextureWrapMode texture_base_color_wrap_mode_u;
+    TextureWrapMode texture_base_color_wrap_mode_v;
+
+    glm::vec3 normal_translation{ 0.0, 0.0, 0.0 };//z: 0 no translation 1.0 translation
+    glm::vec3 normal_scale{ 0.0, 0.0, 0.0 }; //z: 0 no scale 1.0 scale
+    glm::vec2 normal_rotation{ 0.0, 0.0 }; //y: 0 no rotation 1.0 rotation
+
+    glm::vec3 diffuse_translation{ 0.0, 0.0, 0.0 };//z: 0 no translation 1.0 translation
+    glm::vec3 diffuse_scale{ 0.0, 0.0, 0.0 }; //z: 0 no scale 1.0 scale
+    glm::vec2 diffuse_rotation{ 0.0, 0.0 }; //y: 0 no rotation 1.0 rotation
+    
+    glm::vec3 emissive_translation{ 0.0, 0.0, 0.0 };//z: 0 no translation 1.0 translation
+    glm::vec3 emissive_scale{ 0.0, 0.0, 0.0 }; //z: 0 no scale 1.0 scale
+    glm::vec2 emissive_rotation{ 0.0, 0.0 }; //y: 0 no rotation 1.0 rotation
+
+    float normal_strength{ 1.0 };//use only for normal map
+    float occlusion_strength{ 1.0 };//use only for occlusion
+
   };
 
   struct constants
@@ -153,6 +186,7 @@ namespace Poulpe
     std::string _metal_roughness;
     std::string _emissive;
     std::string _ao;
+    std::string _base_color;
     std::vector<Vertex> _vertices;
     std::vector<uint32_t> _indices;
     std::vector<UniformBufferObject> _ubos;

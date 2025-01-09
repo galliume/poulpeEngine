@@ -171,6 +171,7 @@ namespace Poulpe
       std::string name_texture_metal_roughness{ "_plp_empty" };
       std::string name_texture_emissive{ "_plp_empty" };
       std::string name_texture_ao{ "_plp_empty" };
+      std::string name_texture_base_color{ "_plp_empty" };
 
       if (!materials.empty()) {
 
@@ -210,6 +211,9 @@ namespace Poulpe
         if (!mat.name_texture_ao.empty()) {
           name_texture_ao = mat.name_texture_ao;
         }
+        if (!mat.name_texture_base_color.empty()) {
+          name_texture_base_color = mat.name_texture_base_color;
+        }
       }
 
       Data data{};
@@ -221,6 +225,7 @@ namespace Poulpe
       data._metal_roughness = name_texture_metal_roughness;
       data._emissive = name_texture_emissive;
       data._ao = name_texture_ao;
+      data._base_color = name_texture_base_color;
       data._vertices = _data.vertices;
       data._indices = _data.indices;
       data._origin_pos = entity_opts.pos;
