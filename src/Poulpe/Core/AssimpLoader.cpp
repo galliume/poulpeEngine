@@ -80,6 +80,10 @@ namespace Poulpe
         //PLP_DEBUG("texture_file {}", texture_file.C_Str());
         material.name = mat->GetName().C_Str();
 
+        aiColor3D baseColor(1.f);
+        if (mat->Get(AI_MATKEY_BASE_COLOR, baseColor) == AI_SUCCESS) {
+          material.base_color = { baseColor.r, baseColor.g, baseColor.b };
+        }
         aiColor3D ambientColor(1.f);
         if (mat->Get(AI_MATKEY_COLOR_AMBIENT, ambientColor) == AI_SUCCESS) {
           material.ambient = { ambientColor.r, ambientColor.g, ambientColor.b };
@@ -123,7 +127,16 @@ namespace Poulpe
         if (mat->Get(AI_MATKEY_OPACITY, alpha_cut_off) == AI_SUCCESS) {
           material.alpha_cut_off = alpha_cut_off;
         }
-        PLP_DEBUG("mode:{} {}", material.alpha_mode, material.alpha_cut_off);
+        float m;
+        if (mat->Get(AI_MATKEY_METALLIC_FACTOR, m) == AI_SUCCESS) {
+          material.mr_factor.x = m;
+        }
+        float r;
+        if (mat->Get(AI_MATKEY_ROUGHNESS_FACTOR, r) == AI_SUCCESS) {
+          material.mr_factor.y = r;
+        }
+      
+        //PLP_DEBUG("mode:{} {}", material.alpha_mode, material.alpha_cut_off);
 
         if (mat->GetTextureCount(aiTextureType_AMBIENT) > 0) {
           aiString texture_path;
@@ -139,6 +152,10 @@ namespace Poulpe
           if (mat->Get(AI_MATKEY_MAPPINGMODE_V(aiTextureType_AMBIENT, 0), wrap_mode_v) == AI_SUCCESS) {
             material.texture_ambient_wrap_mode_v = getTextureWrapMode(wrap_mode_v);
           }
+          aiUVTransform transform{};
+          if (mat->Get(AI_MATKEY_UVTRANSFORM(aiTextureType_AMBIENT, 0), transform) == AI_SUCCESS) {
+            
+          }
         }
         if (mat->GetTextureCount(aiTextureType_DIFFUSE) > 0) {
           aiString texture_path;
@@ -153,6 +170,12 @@ namespace Poulpe
           }
           if (mat->Get(AI_MATKEY_MAPPINGMODE_V(aiTextureType_DIFFUSE, 0), wrap_mode_v) == AI_SUCCESS) {
             material.texture_diffuse_wrap_mode_v = getTextureWrapMode(wrap_mode_v);
+          }
+          aiUVTransform transform{};
+          if (mat->Get(AI_MATKEY_UVTRANSFORM(aiTextureType_DIFFUSE, 0), transform) == AI_SUCCESS) {
+            material.diffuse_translation = glm::vec3(transform.mTranslation.x, transform.mTranslation.y, 1.0);
+            material.diffuse_scale = glm::vec3(transform.mScaling.x, transform.mScaling.y, 1.0);
+            material.diffuse_rotation = glm::vec2(transform.mRotation, 1.0);
           }
         }
         if (mat->GetTextureCount(aiTextureType_SPECULAR) > 0) {
@@ -203,6 +226,12 @@ namespace Poulpe
             if (mat->Get(AI_MATKEY_MAPPINGMODE_V(aiTextureType_HEIGHT, 0), wrap_mode_v) == AI_SUCCESS) {
               material.texture_bump_wrap_mode_v = getTextureWrapMode(wrap_mode_v);
             }
+            aiUVTransform transform{};
+            if (mat->Get(AI_MATKEY_UVTRANSFORM(aiTextureType_HEIGHT, 0), transform) == AI_SUCCESS) {
+              material.normal_translation = glm::vec3(transform.mTranslation.x, transform.mTranslation.y, 1.0);
+              material.normal_scale = glm::vec3(transform.mScaling.x, transform.mScaling.y, 1.0);
+              material.normal_rotation = glm::vec2(transform.mRotation, 1.0);
+            }
           }
         } else {
           if (mat->GetTextureCount(aiTextureType_NORMALS) > 0) {
@@ -219,6 +248,16 @@ namespace Poulpe
             if (mat->Get(AI_MATKEY_MAPPINGMODE_V(aiTextureType_NORMALS, 0), wrap_mode_v) == AI_SUCCESS) {
               material.texture_bump_wrap_mode_v = getTextureWrapMode(wrap_mode_v);
             }
+            aiUVTransform transform{};
+            if (mat->Get(AI_MATKEY_UVTRANSFORM(aiTextureType_NORMALS, 0), transform) == AI_SUCCESS) {
+              material.normal_translation = glm::vec3(transform.mTranslation.x, transform.mTranslation.y, 1.0);
+              material.normal_scale = glm::vec3(transform.mScaling.x, transform.mScaling.y, 1.0);
+              material.normal_rotation = glm::vec2(transform.mRotation, 1.0);
+            }
+            float strength{ 1.0 };
+            //if (mat->Get(AI_MATKEY_UVTRANSFORM(aiTextureType_NORMALS, 0), strength) == AI_SUCCESS) {
+            //  material.normal_strength = strength;
+            //}
           }
         }
         if (mat->GetTextureCount(aiTextureType_OPACITY) > 0) {
@@ -265,6 +304,12 @@ namespace Poulpe
           if (mat->Get(AI_MATKEY_MAPPINGMODE_V(aiTextureType_EMISSIVE, 0), wrap_mode_v) == AI_SUCCESS) {
             material.texture_emissive_wrap_mode_v = getTextureWrapMode(wrap_mode_v);
           }
+          aiUVTransform transform{};
+          if (mat->Get(AI_MATKEY_UVTRANSFORM(aiTextureType_EMISSIVE, 0), transform) == AI_SUCCESS) {
+            material.emissive_translation = glm::vec3(transform.mTranslation.x, transform.mTranslation.y, 1.0);
+            material.emissive_scale = glm::vec3(transform.mScaling.x, transform.mScaling.y, 1.0);
+            material.emissive_rotation = glm::vec2(transform.mRotation, 1.0);
+          }
         }
         if (mat->GetTextureCount(aiTextureType_LIGHTMAP) > 0) {
           aiString texture_path;
@@ -279,6 +324,25 @@ namespace Poulpe
           }
           if (mat->Get(AI_MATKEY_MAPPINGMODE_V(aiTextureType_LIGHTMAP, 0), wrap_mode_v) == AI_SUCCESS) {
             material.texture_ao_wrap_mode_v = getTextureWrapMode(wrap_mode_v);
+          }
+          float strength{ 1.0 };
+          if (mat->Get(AI_MATKEY_UVTRANSFORM(aiTextureType_LIGHTMAP, 0), strength) == AI_SUCCESS) {
+            material.occlusion_strength = strength;
+          }
+        }
+        if (mat->GetTextureCount(aiTextureType_BASE_COLOR) > 0) {
+          aiString texture_path;
+          aiTextureMapMode wrap_mode_u { aiTextureMapMode_Clamp };
+          aiTextureMapMode wrap_mode_v { aiTextureMapMode_Clamp };
+
+          if (mat->GetTexture(aiTextureType_BASE_COLOR, 0, &texture_path) == AI_SUCCESS) {
+              material.name_texture_base_color = AssimpLoader::cleanName(texture_path.C_Str());
+          }
+          if (mat->Get(AI_MATKEY_MAPPINGMODE_U(aiTextureType_BASE_COLOR, 0), wrap_mode_u) == AI_SUCCESS) {
+            material.texture_base_color_wrap_mode_u = getTextureWrapMode(wrap_mode_u);
+          }
+          if (mat->Get(AI_MATKEY_MAPPINGMODE_V(aiTextureType_BASE_COLOR, 0), wrap_mode_v) == AI_SUCCESS) {
+            material.texture_base_color_wrap_mode_v = getTextureWrapMode(wrap_mode_v);
           }
         }
         //int illumModel;
@@ -408,7 +472,7 @@ namespace Poulpe
           n = vertex.normal;
           //if (flip_Y) vertex.normal.y = 1.0f - vertex.normal.y;
         } else {
-          //PLP_WARN("NO NORMAL");
+          PLP_WARN("NO NORMAL");
         }
 
         glm::vec4 tangent(0.5f);
@@ -445,15 +509,27 @@ namespace Poulpe
           //if (flip_Y) vertex.texture_coord.y *= -1.0f;
         }
 
-        glm::vec4 color{ 1.0f, 0.0f, 0.0f, 1.0f };
+        glm::vec4 color{ 0.0f };
 
-        if (mesh->HasVertexColors(v)) {
-          color = glm::vec4(
-            mesh->mColors[v]->r,
-            mesh->mColors[v]->g,
-            mesh->mColors[v]->b,
-            mesh->mColors[v]->a);
+        auto nb_colors{ 0 };
+        for (auto i{ 0 }; i < AI_MAX_NUMBER_OF_COLOR_SETS; i++) {
+          if (mesh->HasVertexColors(i)) {
+            auto const& v_color = mesh->mColors[i][v];
+              color += glm::vec4(
+                v_color.r,
+                v_color.g,
+                v_color.b,
+                v_color.a);
+              nb_colors += 1;
+          }
         }
+
+        if (nb_colors == 0) {
+          color = glm::vec4(1.0f);
+        } else {
+          color /= static_cast<float>(nb_colors);
+        }
+        
         vertex.color = color;
 
         mesh_data.vertices.emplace_back(std::move(vertex));

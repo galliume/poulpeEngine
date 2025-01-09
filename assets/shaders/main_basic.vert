@@ -36,6 +36,7 @@ layout(location = 0) out FRAG_VAR {
   vec3 t_plight_pos[NR_POINT_LIGHTS];
   vec2 texture_coord;
   vec3 norm;
+  vec4 color;
 } frag_var;
 
 struct Light {
@@ -55,14 +56,25 @@ struct Light {
 
 struct Material
 {
+  vec3 base_color;
   vec3 ambient;
   vec3 diffuse;
   vec3 specular;
   vec3 transmittance;
   vec3 emission;
-  //shininess, ior, diss
-  vec3 shi_ior_diss;
+  vec3 shi_ior_diss; //shininess, ior, diss
   vec3 alpha;
+  vec3 mr_factor;
+  vec3 normal_translation;//z: 0 no translation 1.0 translation
+  vec3 normal_scale; //z: 0 no scale 1.0 scale
+  vec3 normal_rotation; //y: 0 no rotation 1.0 rotation
+  vec3 diffuse_translation;//z: 0 no translation 1.0 translation
+  vec3 diffuse_scale; //z: 0 no scale 1.0 scale
+  vec3 diffuse_rotation; //y: 0 no rotation 1.0 rotation
+  vec3 emissive_translation;//z: 0 no translation 1.0 translation
+  vec3 emissive_scale; //z: 0 no scale 1.0 scale
+  vec3 emissive_rotation; //y: 0 no rotation 1.0 rotation
+  vec3 strength;//x: normal strength, y occlusion strength
 };
 
 layout(set = 0, binding = 2) readonly buffer ObjectBuffer {
@@ -106,7 +118,7 @@ void main()
   frag_var.light_pos = sun_light.position;
   frag_var.view_pos = pc.view_position;
 
-  frag_var.t_view_dir =  (TBN * frag_var.view_pos) - frag_var.t_frag_pos;
+  frag_var.t_view_dir = (TBN * frag_var.view_pos) - frag_var.t_frag_pos;
   frag_var.t_light_dir = (TBN * frag_var.light_pos) - frag_var.t_frag_pos;
   
   frag_var.t_plight_pos[0] = TBN * point_lights[0].position;
@@ -119,6 +131,6 @@ void main()
   //frag_var.light_space = (ubo.projection * sun_light.view * vec4(frag_var.frag_pos, 1.0));
   frag_var.texture_coord = texture_coord;
   frag_var.norm = TBN * norm;
-
+  frag_var.color = color;
   gl_Position = ubo.projection * pc.view * ubo.model * vec4(position, 1.0f);
 } 

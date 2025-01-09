@@ -1,0 +1,54 @@
+{
+	"entities": {
+		"TextureTransformTest" : {
+			"mesh": "assets/mesh/TextureTransformTest/glTF/TextureTransformTest.gltf",
+			"textures": {
+				"Arrow": {
+					"path": "assets/mesh/TextureTransformTest/glTF/Arrow.ktx2"
+				},
+				"Correct": {
+					"path": "assets/mesh/TextureTransformTest/glTF/Correct.ktx2"
+				},
+				"Error": {
+					"path": "assets/mesh/TextureTransformTest/glTF/Error.ktx2"
+				},
+				"NotSupported": {
+					"path": "assets/mesh/TextureTransformTest/glTF/NotSupported.ktx2"
+				},
+				"UV": {
+					"path": "assets/mesh/TextureTransformTest/glTF/UV.ktx2"
+				}
+			},
+			"mr": {
+			},
+			"emissive": {
+
+			},
+			"ao": {
+
+			},
+			"normal" : {
+			},
+			"shader": "main_basic",
+			"positions": [
+				{"x": 0.0, "y": 0.0, "z": 0.0}
+			],
+			"scales": [
+				{"x": 1.0, "y": 1.0, "z": 1.0}
+			],
+			"rotations": [
+				{"x": 0.0, "y": 0.0, "z": 0.0}
+			],
+			"flipY": false,
+			"count": 1,
+			"hasBbox": false,
+			"hasAnimation": false,
+			"isPointLight": false,
+			"animationScripts": {
+			},
+			"hasShadow": true,	
+			"isIndexed": true,
+			"debugNormal": true
+		}
+	}
+}

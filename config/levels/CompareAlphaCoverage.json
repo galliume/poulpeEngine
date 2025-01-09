@@ -8,15 +8,20 @@
 				},
 				"FurBaseColorAlpha": {
 					"path": "assets/mesh/CompareAlphaCoverage/glTF/FurBaseColorAlpha.ktx2"
-				},
+				}
+			},
+			"mr": {
+				"FurORM": {
+					"path": "assets/mesh/CompareAlphaCoverage/glTF/FurORM.ktx2"
+				}
+			},
+			"emissive": {
 				"FurEmissive": {
 					"path": "assets/mesh/CompareAlphaCoverage/glTF/FurEmissive.ktx2"
 				}
 			},
-			"orm": {
-				"FurORM": {
-					"path": "assets/mesh/CompareAlphaCoverage/glTF/FurORM.ktx2"
-				}
+			"ao": {
+
 			},
 			"normal" : {
 				"FloorNormal": {
