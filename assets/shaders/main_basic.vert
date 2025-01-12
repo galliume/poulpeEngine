@@ -37,6 +37,9 @@ layout(location = 0) out FRAG_VAR {
   vec2 texture_coord;
   vec3 norm;
   vec4 color;
+  vec3 tangent;
+  vec3 bitangent;
+  mat3 TBN;
 } frag_var;
 
 struct Light {
@@ -103,13 +106,15 @@ void main()
 {
   mat3 inversed_model = inverse(mat3(ubo.model));
   mat3 normal_matrix = transpose(inversed_model);
-  vec3 norm = normalize(normal_matrix * normal);
+  vec3 norm = normal;
+  //norm.z = sqrt(1 - dot(norm.xy, norm.xy));
+  norm = normalize(normal_matrix * normal);
   float handedness = tangent.w;
 
   vec3 T = normalize(normal_matrix * tangent.xyz);
   vec3 N = normalize(norm);
   T = normalize(T - dot(T, N) * N);
-  vec3 B = normalize(cross(N, T) * tangent.w);
+  vec3 B = normalize(cross(N, T) * handedness);
   mat3 TBN = transpose(mat3(T, B, N));
   
   frag_var.frag_pos = position;
@@ -118,11 +123,11 @@ void main()
   frag_var.light_pos = sun_light.position;
   frag_var.view_pos = pc.view_position;
 
-  frag_var.t_view_dir = (TBN * frag_var.view_pos) - frag_var.t_frag_pos;
-  frag_var.t_light_dir = (TBN * frag_var.light_pos) - frag_var.t_frag_pos;
+  frag_var.t_view_dir = TBN * (frag_var.view_pos - frag_var.frag_pos);
+  frag_var.t_light_dir = TBN * (frag_var.light_pos - frag_var.frag_pos);
   
-  frag_var.t_plight_pos[0] = TBN * point_lights[0].position;
-  frag_var.t_plight_pos[1] = TBN * point_lights[1].position;
+  frag_var.t_plight_pos[0] = TBN * (point_lights[0].position);
+  frag_var.t_plight_pos[1] = TBN * (point_lights[1].position);
   
   // TangentSpaceVL(frag_var.frag_pos, frag_var.view_pos, frag_var.light_pos, norm, tangent, frag_var.t_view_dir, frag_var.t_light_dir);
   // TangentSpaceVL(frag_var.frag_pos, frag_var.view_pos, point_lights[0].position, norm, tangent, frag_var.t_pview_dir[0], frag_var.t_plight_dir[0]);
@@ -130,7 +135,10 @@ void main()
 
   //frag_var.light_space = (ubo.projection * sun_light.view * vec4(frag_var.frag_pos, 1.0));
   frag_var.texture_coord = texture_coord;
-  frag_var.norm = TBN * norm;
+  frag_var.norm = norm;
   frag_var.color = color;
+  frag_var.tangent = T;
+  frag_var.bitangent = B;
+  frag_var.TBN = TBN;
   gl_Position = ubo.projection * pc.view * ubo.model * vec4(position, 1.0f);
 } 
