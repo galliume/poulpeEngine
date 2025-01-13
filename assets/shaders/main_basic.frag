@@ -198,7 +198,7 @@ void main()
   ivec2 alpha_size = textureSize(tex_sampler[ALPHA_INDEX], 0);
 
   if (alpha_size.x != 1 && alpha_size.y != 1 && alpha_color.r < 0.1) {
-    //discard;
+    discard;
   }
  
 //  vec2 normal_coord = transform_uv(
@@ -208,20 +208,20 @@ void main()
 //    var.texture_coord); 
 
   vec3 normal = vec3(1.0); 
-  normal.xy = texture(tex_sampler[NORMAL_INDEX], var.texture_coord).ga;
+  normal.xy = texture(tex_sampler[NORMAL_INDEX], var.texture_coord).xy;
   normal.xy = normal.xy * 2.0 - 1.0;
   normal.z = sqrt(1 - dot(normal.xy, normal.xy));
 
   ivec2 normal_size = textureSize(tex_sampler[NORMAL_INDEX], 0);
-  if (normal_size.x <= 5.0) {
-    normal = var.norm;
-    //normal.z = sqrt(1 - dot(normal.xy, normal.xy));
+  if (normal_size.x <= 2.0) {
+    normal = var.norm * 2.0 - 1.0;
+    normal.z = sqrt(1 - dot(normal.xy, normal.xy));
     normal = var.TBN * normal;
   }
 
   normal = normalize(normal * material.strength.x);
 
-  vec2 metal_roughness = texture(tex_sampler[METAL_ROUGHNESS_INDEX], var.texture_coord).rg;
+  vec2 metal_roughness = texture(tex_sampler[METAL_ROUGHNESS_INDEX], var.texture_coord).xy;
   float metallic = metal_roughness.r * material.mr_factor.x;
   float roughness = metal_roughness.g * material.mr_factor.y;
 
@@ -234,6 +234,7 @@ void main()
   roughness = max(roughness, 0.1);
   
   float roughness2 = roughness * roughness; 
+  //roughness2 = roughness2 * roughness2;
 
   float ao = texture(tex_sampler[AO_INDEX], var.texture_coord).r;
   ivec2 ao_size = textureSize(tex_sampler[AO_INDEX], 0);
@@ -274,7 +275,7 @@ void main()
   float P =  5.0 * (1.0 - roughness); 
 
   vec4 out_lights = vec4(0.0, 0.0, 0.0, 1.0);
-  for (int i = 0; i < 1; ++i) {
+  for (int i = 0; i < NR_POINT_LIGHTS; ++i) {
 
     vec3 light_pos = var.t_plight_pos[i];
     vec3 l = normalize(light_pos - p);
@@ -288,50 +289,56 @@ void main()
     //C_light = vec4(point_lights[i].color, 1.0);
 
     //Fresnel
-    //if F0 < 0.02, no reflectance ?
     float NdL = max(dot(normal, l), 0.0);
-
+    float NdL2 = NdL*NdL;
     //GGX distribution
     //@todo do anisotropic
     //Not anisotropic
     vec3 h = normalize(l + v);
-    float NdH = max(dot(normal, h), 0.0);
+    float NdH = dot(normal, h);
     float NdH2 = NdH*NdH;
-    float NdV = max(dot(normal, v), 0.0);
+    float NdV = dot(normal, v);
+    float NdV2 = NdV*NdV;
+    float HdV = dot(h, v);
+    float HdV2 = HdV*HdV;
+    float HdL = dot(h, l);
+    float HdL2 = HdL*HdL;
 
     //Fresnel reflectance
     vec3 bounce = (20.0 / 21.0) * F0 + (1.0 / 21.0);
-    vec3 F = bounce + (F90 - bounce) * pow(max(1.0 - NdL, 0.0), 1/P);
+    vec3 F = bounce + (F90 - bounce) * pow(max(1.0 - NdL, 0.0), 1.0/P);
     //vec3 F = F0 + (F90 - F0) * pow(max(1.0 - NdL, 0.0), 1/P);
     //vec3 F = F0 + (1 - F0) * pow(max(1.0 - NdL, 0.0), 5);
-    if (NdL < 0.09) {
-      F = mix(F0, F90, pow(1.0 - NdL, 5.0));
-    }
 
     vec3 kD = (vec3(1.0) - F) * (1.0 - metallic);
 
     //masking
-    float G1 = (2.0 * NdV) / (NdV * (2.0 - roughness) + roughness);
-    //float G2 = 0.5 / mix(2.0 * NdL * NdV, NdL + NdV, roughness);
-    float G2 = 0.5 * (1.0 + (2.0 * NdL * NdV) / (NdL + NdV + roughness));
+    float delta_mv = sqrt(roughness2 + (1.0 - roughness2) * HdV2);
+    float delta_ml = sqrt(roughness2 + (1.0 - roughness2) * HdL2);
+//    float delta_nv = (1 - sqrt(1 + (1.0 / roughness2))) / 2;
+//    float delta_nl = sqrt(roughness2 + (1.0 - roughness2) * HdL2);
 
-    float tmp = (1.0 + NdH2 * (roughness2 - 1.0));
+    float chi = (HdV > 0) ? 1.0 : 0.0;
+    float chi2 = (HdL > 0) ? 1.0 : 0.0;
+    float G1 = chi / (1 + delta_mv);
+    float G2 = (chi * chi2) / (1 + delta_mv + delta_ml);
+
+    //float G1 = NdL / (NdL * (2.0 - roughness2) + roughness2);
+    //float G2 = 0.5 / mix(2.0 * NdL * NdV, NdL + NdV, roughness2);
+    //float G2 = 0.5 * (1.0 + (2.0 * NdL * NdV) / (NdL + NdV + roughness2));
+
+    float tmp = PI * (1.0 + NdH2 * (roughness2 - 1.0));
     float NDF = (roughness2) / (PI * (tmp * tmp));
 
     vec3 specular = (NDF * (G1 * G2) * F) / ((4.0 * max(NdV, 0.0) * max(NdL, 0.0)) + 0.0001);
-    //specular *= C_specular.xyz;
-
-    //vec3 diffuse = (21 / (20 * PI)) * ((1 - F0) * C_diffuse.xyz) * (1 - pow(1 - NdL, 5)) * (1 - pow(1 - NdH, 5));
-    vec3 diffuse = C_diffuse.xyz;
-
-    if (NdL > 0.09) {
+    
+    //vec3 diffuse = (21.0 / (20.0 * PI))  * (C_diffuse.xyz * (1.0 - F)) *  (1.0 - pow(1.0 - NdL, 5.0)) * (1.0 - pow(1.0 - NdH, 5.0));
+    vec3 diffuse = (1 - F) * C_diffuse.xyz;
     out_lights += vec4((kD * diffuse + specular) * C_light.xyz * NdL , 1.0);
-    } else {
-    out_lights += vec4((kD * diffuse )  * NdL , 1.0);
-    }
   }
   
-  vec4 color = C_ambient + out_lights;
+  vec4 color = C_ambient + out_lights * PI;
+  color *= PI;
 
   vec2 emissive_coord = transform_uv(
     material.emissive_translation,
@@ -345,7 +352,6 @@ void main()
     color += vec4(material.emission, 1.0) * emissive_color;
   }
 
-  color *= PI;
   
   color.r = linear_to_sRGB(color.r);
   color.g = linear_to_sRGB(color.g);

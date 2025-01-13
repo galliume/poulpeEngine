@@ -230,8 +230,8 @@ namespace Poulpe
         break;
       case TEXTURE_TYPE::MR:
         oetf = "linear";
-        transcoding = KTX_TTF_BC5_RG;
-        ktx_format = "R8G8_UNORM";
+        transcoding = KTX_TTF_BC7_RGBA;
+        ktx_format = "R8G8B8A8_UNORM";
         break;
       case TEXTURE_TYPE::EMISSIVE:
         //@todo check if correct
