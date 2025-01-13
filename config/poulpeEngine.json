@@ -1,6 +1,6 @@
 {
-	"defaultLevel": "CompareBaseColor",
-	"defaultSkybox": "bluesky",
+	"defaultLevel": "DamagedHelmet",
+	"defaultSkybox": "debug",
 	"ambientMusic": false,
 	"fpsLimit": 30,
 	"input": {

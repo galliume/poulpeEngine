@@ -1,0 +1,47 @@
+{
+	"entities": {
+		"AttenuationTest" : {
+			"mesh": "assets/mesh/AttenuationTest/glTF/AttenuationTest.gltf",
+			"textures": {
+				"AttenuationLabels": {
+					"path": "assets/mesh/AttenuationTest/glTF/AttenuationLabels.ktx2"
+				},
+				"PlainGrid": {
+					"path": "assets/mesh/AttenuationTest/glTF/PlainGrid.ktx2"
+				},
+				"ThicknessTexture": {
+					"path": "assets/mesh/AttenuationTest/glTF/ThicknessTexture.ktx2"
+				}
+			},
+			"mr": {
+			},
+			"emissive": {
+			},
+			"ao": {
+
+			},
+			"normal" : {
+			},
+			"shader": "main_basic",
+			"positions": [
+				{"x": 0.0, "y": 0.0, "z": 0.0}
+			],
+			"scales": [
+				{"x": 1.0, "y": 1.0, "z": 1.0}
+			],
+			"rotations": [
+				{"x": 0.0, "y": 0.0, "z": 0.0}
+			],
+			"flipY": false,
+			"count": 1,
+			"hasBbox": false,
+			"hasAnimation": false,
+			"isPointLight": false,
+			"animationScripts": {
+			},
+			"hasShadow": true,	
+			"isIndexed": true,
+			"debugNormal": true
+		}
+	}
+}
