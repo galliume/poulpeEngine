@@ -48,12 +48,12 @@ namespace Poulpe
 
   struct Material
   {
-    alignas(16) glm::vec3 base_color { 1 };
-    alignas(16) glm::vec3 ambient { 1 };
-    alignas(16) glm::vec3 diffuse { 1 };
-    alignas(16) glm::vec3 specular { 1 };
+    alignas(16) glm::vec4 base_color { 1 };
+    alignas(16) glm::vec4 ambient { 1 };
+    alignas(16) glm::vec4 diffuse { 1 };
+    alignas(16) glm::vec4 specular { 1 };
     alignas(16) glm::vec3 transmittance { 1 };
-    alignas(16) glm::vec3 emission { 1 };
+    alignas(16) glm::vec4 emission { 1 };
     alignas(16) glm::vec3 shi_ior_diss { 0 }; //shininess, ior, diss
     alignas(16) glm::vec3 alpha { 0 };//{x:alpha mode, y: cutoff);
     alignas(16) glm::vec3 mr_factor{0};//x:metallic, y:roughness, z: blank
@@ -85,12 +85,12 @@ namespace Poulpe
 
   struct material_t {
     std::string name;
-    glm::vec3 base_color{1.0};
-    glm::vec3 ambient{ 1.0 };
-    glm::vec3 diffuse{ 1.0 };
-    glm::vec3 specular{ 1.0 };
+    glm::vec4 base_color{1.0};
+    glm::vec4 ambient{ 1.0 };
+    glm::vec4 diffuse{ 1.0 };
+    glm::vec4 specular{ 1.0 };
     glm::vec3 transmittance{ 1.0 };
-    glm::vec3 emission{ 1.0 };
+    glm::vec4 emission{ 1.0 };
     glm::vec3 mr_factor{ 1.0 };//x:metallic, y:roughness, z: blank
     float shininess{ 0.0 };
     float ior{ 0.0 };       // index of refraction

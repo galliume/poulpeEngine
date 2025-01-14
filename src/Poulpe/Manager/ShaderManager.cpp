@@ -338,7 +338,6 @@ namespace Poulpe
       frag_info.pName = "main";
       shaders_infos.emplace_back(frag_info);
 
-      //@todo option normal on/off
       if (_shaders->shaders[shaderName].size() > 2) {
         VkPipelineShaderStageCreateInfo geom_info{};
         geom_info.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;

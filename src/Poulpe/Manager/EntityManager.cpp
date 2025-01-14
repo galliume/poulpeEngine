@@ -172,11 +172,15 @@ namespace Poulpe
       std::string name_texture_emissive{ "_plp_empty" };
       std::string name_texture_ao{ "_plp_empty" };
       std::string name_texture_base_color{ "_plp_empty" };
+      float alpha_mode{ 0.0 };
 
       if (!materials.empty()) {
 
-        //@todo material per textures...
-        mesh->setMaterial(materials.at(_data.materials_ID.at(0)));
+        auto const& mat = materials.at(_data.material_ID);
+        alpha_mode = mat.alpha_mode;
+
+        //@todo should not in mesh, but just an ID pointing to the material
+        mesh->setMaterial(mat);
 
         //@todo temp
         //@todo separate into 2 storage buffer of 3 texSample
@@ -188,7 +192,6 @@ namespace Poulpe
           name_texture = tex1.name_texture_diffuse;
         }
 
-        auto const& mat = materials.at(_data.material_ID);
 
         if (!mat.name_texture_specular.empty()) {
           name_specular_map = mat.name_texture_specular;
@@ -313,8 +316,14 @@ namespace Poulpe
       _component_manager->add<RenderComponent>(entity->getID(), std::move(basicRdrImpl));
       _component_manager->add<MeshComponent>(entity->getID(), std::move(mesh));
       auto* entityNode = root_mesh_entity_node->addChild(new EntityNode(entity));
+      
       _renderer->addEntity(entityNode->getEntity(), is_last);
 
+      /*if (alpha_mode == 2.0) {
+        _renderer->addTransparentEntity(entityNode->getEntity(), is_last);
+      } else {
+        _renderer->addEntity(entityNode->getEntity(), is_last);
+      }*/
       if (is_last) {
         {
           if (has_animation) {

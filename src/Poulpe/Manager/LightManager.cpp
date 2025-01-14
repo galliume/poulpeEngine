@@ -30,8 +30,8 @@ namespace Poulpe
     _sun.light_space_matrix = _sun.projection * _sun.view;
 
     Light light;
-    light.color = glm::vec3(0.33f, 0.33f, 0.99f);
-    light.position = glm::vec3(1.5f, 4.0f, -3.0f);
+    light.color = glm::vec3(1.0);
+    light.position = glm::vec3(0.0f, 10.0f, 0.0f);
     light.direction = glm::vec3(-0.1f, -1.0, 0.0);
     light.ads = glm::vec3(10.0f, 30.0f, 40.0f);
     light.clq = glm::vec3(1.0f, 0.7f, 1.8f);

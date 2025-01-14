@@ -426,6 +426,9 @@ namespace Poulpe {
     ext_dynamic_state.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_EXTENDED_DYNAMIC_STATE_3_FEATURES_EXT;
     ext_dynamic_state.extendedDynamicState3DepthClampEnable = VK_TRUE;
     ext_dynamic_state.extendedDynamicState3RasterizationSamples = VK_TRUE;
+    ext_dynamic_state.extendedDynamicState3ColorBlendEnable = VK_TRUE;
+    ext_dynamic_state.extendedDynamicState3ColorBlendEquation = VK_TRUE;
+
     ext_dynamic_state.pNext = &shader_draw_parameters_features;
 
     VkDeviceCreateInfo create_info{};
@@ -771,7 +774,7 @@ namespace Poulpe {
     color_blend_attachment.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
     color_blend_attachment.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
     color_blend_attachment.colorBlendOp = VK_BLEND_OP_ADD;
-    color_blend_attachment.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
+    color_blend_attachment.srcAlphaBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
     color_blend_attachment.dstAlphaBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
     color_blend_attachment.alphaBlendOp = VK_BLEND_OP_ADD;
 
@@ -786,7 +789,10 @@ namespace Poulpe {
     color_blending.blendConstants[3] = 1.0f;
 
     std::vector<VkDynamicState> dynamic_states{
-        VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR };
+        VK_DYNAMIC_STATE_VIEWPORT,
+        VK_DYNAMIC_STATE_SCISSOR,
+        VK_DYNAMIC_STATE_COLOR_BLEND_ENABLE_EXT,
+        VK_DYNAMIC_STATE_COLOR_BLEND_EQUATION_EXT };
     if (has_dynamic_depth_bias) dynamic_states.emplace_back(VK_DYNAMIC_STATE_DEPTH_BIAS);
     
     //@todo does not work ? crash with a weird bug about depth attachment format undefined ?
@@ -1447,7 +1453,7 @@ namespace Poulpe {
     rdr_pass_info.renderArea.extent = _swapchain_extent;
 
     std::array<VkClearValue, 2> clear_value{};
-    clear_value[0].color = { 0.0f, 0.0f, 0.0f, 1.0f };
+    clear_value[0].color = { 0.0f, 0.0f, 0.0f, 0.0f };
     clear_value[1].depthStencil = { 1.0f, 0 };
 
     rdr_pass_info.clearValueCount = static_cast<uint32_t>(clear_value.size());
@@ -1478,9 +1484,9 @@ namespace Poulpe {
 
     VkClearColorValue color_clear = {};
 
-    color_clear.float32[0] = 0.025f;
-    color_clear.float32[1] = 0.025f;
-    color_clear.float32[2] = 0.025f;
+    color_clear.float32[0] = 0.0f;
+    color_clear.float32[1] = 0.0f;
+    color_clear.float32[2] = 0.0f;
     color_clear.float32[3] = 0.0f;
 
     VkRenderingAttachmentInfo color_attachment{ };
@@ -2630,6 +2636,12 @@ namespace Poulpe {
       barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
 
       source_stage = VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
+      destination_stage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+    } else if (old_layout == VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL && new_layout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL) {
+      barrier.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+      barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+
+      source_stage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
       destination_stage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
     }else {
       throw std::invalid_argument("unsupported layout transition");

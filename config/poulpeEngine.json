@@ -1,6 +1,6 @@
 {
-	"defaultLevel": "DamagedHelmet",
-	"defaultSkybox": "debug",
+	"defaultLevel": "AlphaBlendModeTest",
+	"defaultSkybox": "bluesky",
 	"ambientMusic": false,
 	"fpsLimit": 30,
 	"input": {

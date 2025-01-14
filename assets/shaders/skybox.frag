@@ -12,10 +12,5 @@ layout(binding = 1) uniform samplerCube texSampler[];
 
 void main() 
 { 
-    fColor = texture(texSampler[0], fTexCoord);
-	
-	vec3 lightColor = vec3(1.0f, 1.0f, 1.0f);
-
-	vec3 ambient = lightColor * lightColor;
-    fColor = vec4(ambient, 1.0f) * fColor;
+		fColor = texture(texSampler[0], fTexCoord);
 }
