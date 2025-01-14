@@ -4,7 +4,6 @@
 #include <assimp/postprocess.h>
 
 #include <assimp/GltfMaterial.h>
-
 namespace Poulpe
 {
   //helper from learnopengl
@@ -82,87 +81,81 @@ namespace Poulpe
         //PLP_DEBUG("texture_file {}", texture_file.C_Str());
         material.name = mat->GetName().C_Str();
 
-        aiColor4D baseColor(1.f);
-        if (mat->Get(AI_MATKEY_BASE_COLOR, baseColor) == aiReturn_SUCCESS) {
-          material.base_color = { baseColor.r, baseColor.g, baseColor.b, baseColor.a };
+        aiColor3D baseColor(1.f);
+        if (mat->Get(AI_MATKEY_BASE_COLOR, baseColor) == AI_SUCCESS) {
+          material.base_color = { baseColor.r, baseColor.g, baseColor.b };
         }
-        aiColor4D ambientColor(1.f);
-        if (mat->Get(AI_MATKEY_COLOR_AMBIENT, ambientColor) == aiReturn_SUCCESS) {
-          material.ambient = { ambientColor.r, ambientColor.g, ambientColor.b, ambientColor.a };
+        aiColor3D ambientColor(1.f);
+        if (mat->Get(AI_MATKEY_COLOR_AMBIENT, ambientColor) == AI_SUCCESS) {
+          material.ambient = { ambientColor.r, ambientColor.g, ambientColor.b };
         }
-        aiColor4D diffuseColor(1.f);
-        if (mat->Get(AI_MATKEY_COLOR_DIFFUSE, diffuseColor) == aiReturn_SUCCESS) {
-          material.diffuse = { diffuseColor.r, diffuseColor.g, diffuseColor.b, diffuseColor.a };
+        aiColor3D diffuseColor(1.f);
+        if (mat->Get(AI_MATKEY_COLOR_DIFFUSE, diffuseColor) == AI_SUCCESS) {
+          material.diffuse = { diffuseColor.r, diffuseColor.g, diffuseColor.b };
         }
-        aiColor4D specularColor(1.f);
-        if (mat->Get(AI_MATKEY_COLOR_SPECULAR, specularColor) == aiReturn_SUCCESS) {
-          material.specular = { specularColor.r, specularColor.g, specularColor.b, specularColor.a };
+        aiColor3D specularColor(1.f);
+        if (mat->Get(AI_MATKEY_COLOR_SPECULAR, specularColor) == AI_SUCCESS) {
+          material.specular = { specularColor.r, specularColor.g, specularColor.b };
         }
         aiColor3D transmittanceColor(1.f);
-        if (mat->Get(AI_MATKEY_COLOR_TRANSPARENT, transmittanceColor) == aiReturn_SUCCESS) {
+        if (mat->Get(AI_MATKEY_COLOR_TRANSPARENT, transmittanceColor) == AI_SUCCESS) {
           material.transmittance = { transmittanceColor.r, transmittanceColor.g, transmittanceColor.b };
         }
         float shininess{ 1.f };
-        if (mat->Get(AI_MATKEY_SHININESS, shininess) == aiReturn_SUCCESS) {
+        if (mat->Get(AI_MATKEY_SHININESS, shininess) == AI_SUCCESS) {
           material.shininess = (0.0f <= shininess) ? shininess : 1.f;
         }
 
-        aiColor4D emission_color;
-        if (mat->Get(AI_MATKEY_EMISSIVE_INTENSITY, emission_color) == aiReturn_SUCCESS) {
-          material.emission = { emission_color.r, emission_color.g, emission_color.b, emission_color.a };
+        aiColor3D emissionColor;
+        if (mat->Get(AI_MATKEY_EMISSIVE_INTENSITY, emissionColor) == AI_SUCCESS) {
+          material.emission = { emissionColor.r, emissionColor.g, emissionColor.b };
         }
         float ior{ 1.f };
-        if (mat->Get(AI_MATKEY_REFRACTI, ior) == aiReturn_SUCCESS) {
+        if (mat->Get(AI_MATKEY_REFRACTI, ior) == AI_SUCCESS) {
           material.ior = ior;
         }
         float dissolve{ 1.f };
-        if (mat->Get(AI_MATKEY_OPACITY, dissolve) == aiReturn_SUCCESS) {
+        if (mat->Get(AI_MATKEY_OPACITY, dissolve) == AI_SUCCESS) {
           material.dissolve = dissolve;
         }
 
         //useless ?
-        aiString alpha_mode;
-        aiString mask{ "MASK" };
-        aiString opaque{ "OPAQUE" };
-        aiString blend{ "BLEND" };
+        std::string alpha_mode{};
         material.alpha_mode = 0.0f;//OPAQUE
-        if (mat->Get(AI_MATKEY_GLTF_ALPHAMODE, alpha_mode) == aiReturn_SUCCESS) {
-          float mode{ 0.0f };//OPAQUE by default
-
-          if (alpha_mode == mask) mode = 1.0f;
-          else if (alpha_mode == blend) mode = 2.0f;
-
-          material.alpha_mode = mode;
+        if (mat->Get(AI_MATKEY_GLTF_ALPHAMODE, alpha_mode) == AI_SUCCESS) {
+          material.alpha_mode = ("MASK" == alpha_mode) ? 1.0 : 2.0;
         }
         float alpha_cut_off;
-        if (mat->Get(AI_MATKEY_GLTF_ALPHACUTOFF, alpha_cut_off) == aiReturn_SUCCESS) {
+        if (mat->Get(AI_MATKEY_GLTF_ALPHACUTOFF, alpha_cut_off) == AI_SUCCESS) {
           material.alpha_cut_off = alpha_cut_off;
         }
         float m;
-        if (mat->Get(AI_MATKEY_METALLIC_FACTOR, m) == aiReturn_SUCCESS) {
+        if (mat->Get(AI_MATKEY_METALLIC_FACTOR, m) == AI_SUCCESS) {
           material.mr_factor.x = m;
         }
         float r;
-        if (mat->Get(AI_MATKEY_ROUGHNESS_FACTOR, r) == aiReturn_SUCCESS) {
+        if (mat->Get(AI_MATKEY_ROUGHNESS_FACTOR, r) == AI_SUCCESS) {
           material.mr_factor.y = r;
         }
       
+        PLP_DEBUG("mode:{} {}", material.alpha_mode, material.alpha_cut_off);
+
         if (mat->GetTextureCount(aiTextureType_AMBIENT) > 0) {
           aiString texture_path;
           aiTextureMapMode wrap_mode_u { aiTextureMapMode_Clamp };
           aiTextureMapMode wrap_mode_v { aiTextureMapMode_Clamp };
 
-          if (mat->GetTexture(aiTextureType_AMBIENT, 0, &texture_path) == aiReturn_SUCCESS) {
+          if (mat->GetTexture(aiTextureType_AMBIENT, 0, &texture_path) == AI_SUCCESS) {
               material.name_texture_ambient = AssimpLoader::cleanName(texture_path.C_Str());
           }
-          if (mat->Get(AI_MATKEY_MAPPINGMODE_U(aiTextureType_AMBIENT, 0), wrap_mode_u) == aiReturn_SUCCESS) {
+          if (mat->Get(AI_MATKEY_MAPPINGMODE_U(aiTextureType_AMBIENT, 0), wrap_mode_u) == AI_SUCCESS) {
             material.texture_ambient_wrap_mode_u = getTextureWrapMode(wrap_mode_u);
           }
-          if (mat->Get(AI_MATKEY_MAPPINGMODE_V(aiTextureType_AMBIENT, 0), wrap_mode_v) == aiReturn_SUCCESS) {
+          if (mat->Get(AI_MATKEY_MAPPINGMODE_V(aiTextureType_AMBIENT, 0), wrap_mode_v) == AI_SUCCESS) {
             material.texture_ambient_wrap_mode_v = getTextureWrapMode(wrap_mode_v);
           }
           aiUVTransform transform{};
-          if (mat->Get(AI_MATKEY_UVTRANSFORM(aiTextureType_AMBIENT, 0), transform) == aiReturn_SUCCESS) {
+          if (mat->Get(AI_MATKEY_UVTRANSFORM(aiTextureType_AMBIENT, 0), transform) == AI_SUCCESS) {
             
           }
         }
@@ -171,17 +164,17 @@ namespace Poulpe
           aiTextureMapMode wrap_mode_u { aiTextureMapMode_Clamp };
           aiTextureMapMode wrap_mode_v { aiTextureMapMode_Clamp };
 
-          if (mat->GetTexture(aiTextureType_DIFFUSE, 0, &texture_path) == aiReturn_SUCCESS) {
+          if (mat->GetTexture(aiTextureType_DIFFUSE, 0, &texture_path) == AI_SUCCESS) {
               material.name_texture_diffuse = AssimpLoader::cleanName(texture_path.C_Str());
           }
-          if (mat->Get(AI_MATKEY_MAPPINGMODE_U(aiTextureType_DIFFUSE, 0), wrap_mode_u) == aiReturn_SUCCESS) {
+          if (mat->Get(AI_MATKEY_MAPPINGMODE_U(aiTextureType_DIFFUSE, 0), wrap_mode_u) == AI_SUCCESS) {
             material.texture_diffuse_wrap_mode_u = getTextureWrapMode(wrap_mode_u);
           }
-          if (mat->Get(AI_MATKEY_MAPPINGMODE_V(aiTextureType_DIFFUSE, 0), wrap_mode_v) == aiReturn_SUCCESS) {
+          if (mat->Get(AI_MATKEY_MAPPINGMODE_V(aiTextureType_DIFFUSE, 0), wrap_mode_v) == AI_SUCCESS) {
             material.texture_diffuse_wrap_mode_v = getTextureWrapMode(wrap_mode_v);
           }
           aiUVTransform transform{};
-          if (mat->Get(AI_MATKEY_UVTRANSFORM(aiTextureType_DIFFUSE, 0), transform) == aiReturn_SUCCESS) {
+          if (mat->Get(AI_MATKEY_UVTRANSFORM(aiTextureType_DIFFUSE, 0), transform) == AI_SUCCESS) {
             material.diffuse_translation = glm::vec3(transform.mTranslation.x, transform.mTranslation.y, 1.0);
             material.diffuse_scale = glm::vec3(transform.mScaling.x, transform.mScaling.y, 1.0);
             material.diffuse_rotation = glm::vec2(transform.mRotation, 1.0);
@@ -192,13 +185,13 @@ namespace Poulpe
           aiTextureMapMode wrap_mode_u { aiTextureMapMode_Clamp };
           aiTextureMapMode wrap_mode_v { aiTextureMapMode_Clamp };
 
-          if (mat->GetTexture(aiTextureType_SPECULAR, 0, &texture_path) == aiReturn_SUCCESS) {
+          if (mat->GetTexture(aiTextureType_SPECULAR, 0, &texture_path) == AI_SUCCESS) {
               material.name_texture_specular = AssimpLoader::cleanName(texture_path.C_Str());
           }
-          if (mat->Get(AI_MATKEY_MAPPINGMODE_U(aiTextureType_SPECULAR, 0), wrap_mode_u) == aiReturn_SUCCESS) {
+          if (mat->Get(AI_MATKEY_MAPPINGMODE_U(aiTextureType_SPECULAR, 0), wrap_mode_u) == AI_SUCCESS) {
             material.texture_specular_wrap_mode_u = getTextureWrapMode(wrap_mode_u);
           }
-          if (mat->Get(AI_MATKEY_MAPPINGMODE_V(aiTextureType_SPECULAR, 0), wrap_mode_v) == aiReturn_SUCCESS) {
+          if (mat->Get(AI_MATKEY_MAPPINGMODE_V(aiTextureType_SPECULAR, 0), wrap_mode_v) == AI_SUCCESS) {
             material.texture_specular_wrap_mode_v = getTextureWrapMode(wrap_mode_v);
           }
         }
@@ -207,13 +200,13 @@ namespace Poulpe
           aiTextureMapMode wrap_mode_u { aiTextureMapMode_Clamp };
           aiTextureMapMode wrap_mode_v { aiTextureMapMode_Clamp };
 
-          if (mat->GetTexture(aiTextureType_SHININESS, 0, &texture_path) == aiReturn_SUCCESS) {
+          if (mat->GetTexture(aiTextureType_SHININESS, 0, &texture_path) == AI_SUCCESS) {
               material.name_texture_specular_highlight = AssimpLoader::cleanName(texture_path.C_Str());
           }
-          if (mat->Get(AI_MATKEY_MAPPINGMODE_U(aiTextureType_SHININESS, 0), wrap_mode_u) == aiReturn_SUCCESS) {
+          if (mat->Get(AI_MATKEY_MAPPINGMODE_U(aiTextureType_SHININESS, 0), wrap_mode_u) == AI_SUCCESS) {
             material.texture_specular_highlight_wrap_mode_u = getTextureWrapMode(wrap_mode_u);
           }
-          if (mat->Get(AI_MATKEY_MAPPINGMODE_V(aiTextureType_SHININESS, 0), wrap_mode_v) == aiReturn_SUCCESS) {
+          if (mat->Get(AI_MATKEY_MAPPINGMODE_V(aiTextureType_SHININESS, 0), wrap_mode_v) == AI_SUCCESS) {
             material.texture_specular_highlight_wrap_mode_v = getTextureWrapMode(wrap_mode_v);
           }
         }
@@ -226,17 +219,17 @@ namespace Poulpe
             aiTextureMapMode wrap_mode_u { aiTextureMapMode_Clamp };
             aiTextureMapMode wrap_mode_v { aiTextureMapMode_Clamp };
 
-            if (mat->GetTexture(aiTextureType_HEIGHT, 0, &texture_path) == aiReturn_SUCCESS) {
+            if (mat->GetTexture(aiTextureType_HEIGHT, 0, &texture_path) == AI_SUCCESS) {
                 material.name_texture_bump = AssimpLoader::cleanName(texture_path.C_Str());
             }
-            if (mat->Get(AI_MATKEY_MAPPINGMODE_U(aiTextureType_HEIGHT, 0), wrap_mode_u) == aiReturn_SUCCESS) {
+            if (mat->Get(AI_MATKEY_MAPPINGMODE_U(aiTextureType_HEIGHT, 0), wrap_mode_u) == AI_SUCCESS) {
               material.texture_bump_wrap_mode_u = getTextureWrapMode(wrap_mode_u);
             }
-            if (mat->Get(AI_MATKEY_MAPPINGMODE_V(aiTextureType_HEIGHT, 0), wrap_mode_v) == aiReturn_SUCCESS) {
+            if (mat->Get(AI_MATKEY_MAPPINGMODE_V(aiTextureType_HEIGHT, 0), wrap_mode_v) == AI_SUCCESS) {
               material.texture_bump_wrap_mode_v = getTextureWrapMode(wrap_mode_v);
             }
             aiUVTransform transform{};
-            if (mat->Get(AI_MATKEY_UVTRANSFORM(aiTextureType_HEIGHT, 0), transform) == aiReturn_SUCCESS) {
+            if (mat->Get(AI_MATKEY_UVTRANSFORM(aiTextureType_HEIGHT, 0), transform) == AI_SUCCESS) {
               material.normal_translation = glm::vec3(transform.mTranslation.x, transform.mTranslation.y, 1.0);
               material.normal_scale = glm::vec3(transform.mScaling.x, transform.mScaling.y, 1.0);
               material.normal_rotation = glm::vec2(transform.mRotation, 1.0);
@@ -248,23 +241,23 @@ namespace Poulpe
             aiTextureMapMode wrap_mode_u { aiTextureMapMode_Clamp };
             aiTextureMapMode wrap_mode_v { aiTextureMapMode_Clamp };
 
-            if (mat->GetTexture(aiTextureType_NORMALS, 0, &texture_path) == aiReturn_SUCCESS) {
+            if (mat->GetTexture(aiTextureType_NORMALS, 0, &texture_path) == AI_SUCCESS) {
                 material.name_texture_bump = AssimpLoader::cleanName(texture_path.C_Str());
             }
-            if (mat->Get(AI_MATKEY_MAPPINGMODE_U(aiTextureType_NORMALS, 0), wrap_mode_u) == aiReturn_SUCCESS) {
+            if (mat->Get(AI_MATKEY_MAPPINGMODE_U(aiTextureType_NORMALS, 0), wrap_mode_u) == AI_SUCCESS) {
               material.texture_bump_wrap_mode_u = getTextureWrapMode(wrap_mode_u);
             }
-            if (mat->Get(AI_MATKEY_MAPPINGMODE_V(aiTextureType_NORMALS, 0), wrap_mode_v) == aiReturn_SUCCESS) {
+            if (mat->Get(AI_MATKEY_MAPPINGMODE_V(aiTextureType_NORMALS, 0), wrap_mode_v) == AI_SUCCESS) {
               material.texture_bump_wrap_mode_v = getTextureWrapMode(wrap_mode_v);
             }
             aiUVTransform transform{};
-            if (mat->Get(AI_MATKEY_UVTRANSFORM(aiTextureType_NORMALS, 0), transform) == aiReturn_SUCCESS) {
+            if (mat->Get(AI_MATKEY_UVTRANSFORM(aiTextureType_NORMALS, 0), transform) == AI_SUCCESS) {
               material.normal_translation = glm::vec3(transform.mTranslation.x, transform.mTranslation.y, 1.0);
               material.normal_scale = glm::vec3(transform.mScaling.x, transform.mScaling.y, 1.0);
               material.normal_rotation = glm::vec2(transform.mRotation, 1.0);
             }
             float strength{ 1.0 };
-            //if (mat->Get(AI_MATKEY_UVTRANSFORM(aiTextureType_NORMALS, 0), strength) == aiReturn_SUCCESS) {
+            //if (mat->Get(AI_MATKEY_UVTRANSFORM(aiTextureType_NORMALS, 0), strength) == AI_SUCCESS) {
             //  material.normal_strength = strength;
             //}
           }
@@ -274,13 +267,13 @@ namespace Poulpe
           aiTextureMapMode wrap_mode_u { aiTextureMapMode_Clamp };
           aiTextureMapMode wrap_mode_v { aiTextureMapMode_Clamp };
 
-          if (mat->GetTexture(aiTextureType_OPACITY, 0, &texture_path) == aiReturn_SUCCESS) {
+          if (mat->GetTexture(aiTextureType_OPACITY, 0, &texture_path) == AI_SUCCESS) {
               material.name_texture_alpha = AssimpLoader::cleanName(texture_path.C_Str());
           }
-          if (mat->Get(AI_MATKEY_MAPPINGMODE_U(aiTextureType_OPACITY, 0), wrap_mode_u) == aiReturn_SUCCESS) {
+          if (mat->Get(AI_MATKEY_MAPPINGMODE_U(aiTextureType_OPACITY, 0), wrap_mode_u) == AI_SUCCESS) {
             material.texture_alpha_wrap_mode_u = getTextureWrapMode(wrap_mode_u);
           }
-          if (mat->Get(AI_MATKEY_MAPPINGMODE_V(aiTextureType_OPACITY, 0), wrap_mode_v) == aiReturn_SUCCESS) {
+          if (mat->Get(AI_MATKEY_MAPPINGMODE_V(aiTextureType_OPACITY, 0), wrap_mode_v) == AI_SUCCESS) {
             material.texture_alpha_wrap_mode_v = getTextureWrapMode(wrap_mode_v);
           }
         }
@@ -289,13 +282,13 @@ namespace Poulpe
           aiTextureMapMode wrap_mode_u { aiTextureMapMode_Clamp };
           aiTextureMapMode wrap_mode_v { aiTextureMapMode_Clamp };
 
-          if (mat->GetTexture(aiTextureType_UNKNOWN, 0, &texture_path) == aiReturn_SUCCESS) {
+          if (mat->GetTexture(aiTextureType_UNKNOWN, 0, &texture_path) == AI_SUCCESS) {
               material.name_texture_metal_roughness = AssimpLoader::cleanName(texture_path.C_Str());
           }
-          if (mat->Get(AI_MATKEY_MAPPINGMODE_U(aiTextureType_UNKNOWN, 0), wrap_mode_u) == aiReturn_SUCCESS) {
+          if (mat->Get(AI_MATKEY_MAPPINGMODE_U(aiTextureType_UNKNOWN, 0), wrap_mode_u) == AI_SUCCESS) {
             material.texture_metal_roughness_wrap_mode_u = getTextureWrapMode(wrap_mode_u);
           }
-          if (mat->Get(AI_MATKEY_MAPPINGMODE_V(aiTextureType_UNKNOWN, 0), wrap_mode_v) == aiReturn_SUCCESS) {
+          if (mat->Get(AI_MATKEY_MAPPINGMODE_V(aiTextureType_UNKNOWN, 0), wrap_mode_v) == AI_SUCCESS) {
             material.texture_metal_roughness_wrap_mode_v = getTextureWrapMode(wrap_mode_v);
           }
         }
@@ -304,17 +297,17 @@ namespace Poulpe
           aiTextureMapMode wrap_mode_u { aiTextureMapMode_Clamp };
           aiTextureMapMode wrap_mode_v { aiTextureMapMode_Clamp };
           
-          if (mat->GetTexture(aiTextureType_EMISSIVE, 0, &texture_path) == aiReturn_SUCCESS) {
+          if (mat->GetTexture(aiTextureType_EMISSIVE, 0, &texture_path) == AI_SUCCESS) {
               material.name_texture_emissive = AssimpLoader::cleanName(texture_path.C_Str());
           }
-          if (mat->Get(AI_MATKEY_MAPPINGMODE_U(aiTextureType_EMISSIVE, 0), wrap_mode_u) == aiReturn_SUCCESS) {
+          if (mat->Get(AI_MATKEY_MAPPINGMODE_U(aiTextureType_EMISSIVE, 0), wrap_mode_u) == AI_SUCCESS) {
             material.texture_emissive_wrap_mode_u = getTextureWrapMode(wrap_mode_u);
           }
-          if (mat->Get(AI_MATKEY_MAPPINGMODE_V(aiTextureType_EMISSIVE, 0), wrap_mode_v) == aiReturn_SUCCESS) {
+          if (mat->Get(AI_MATKEY_MAPPINGMODE_V(aiTextureType_EMISSIVE, 0), wrap_mode_v) == AI_SUCCESS) {
             material.texture_emissive_wrap_mode_v = getTextureWrapMode(wrap_mode_v);
           }
           aiUVTransform transform{};
-          if (mat->Get(AI_MATKEY_UVTRANSFORM(aiTextureType_EMISSIVE, 0), transform) == aiReturn_SUCCESS) {
+          if (mat->Get(AI_MATKEY_UVTRANSFORM(aiTextureType_EMISSIVE, 0), transform) == AI_SUCCESS) {
             material.emissive_translation = glm::vec3(transform.mTranslation.x, transform.mTranslation.y, 1.0);
             material.emissive_scale = glm::vec3(transform.mScaling.x, transform.mScaling.y, 1.0);
             material.emissive_rotation = glm::vec2(transform.mRotation, 1.0);
@@ -325,17 +318,17 @@ namespace Poulpe
           aiTextureMapMode wrap_mode_u { aiTextureMapMode_Clamp };
           aiTextureMapMode wrap_mode_v { aiTextureMapMode_Clamp };
 
-          if (mat->GetTexture(aiTextureType_LIGHTMAP, 0, &texture_path) == aiReturn_SUCCESS) {
+          if (mat->GetTexture(aiTextureType_LIGHTMAP, 0, &texture_path) == AI_SUCCESS) {
               material.name_texture_ao = AssimpLoader::cleanName(texture_path.C_Str());
           }
-          if (mat->Get(AI_MATKEY_MAPPINGMODE_U(aiTextureType_LIGHTMAP, 0), wrap_mode_u) == aiReturn_SUCCESS) {
+          if (mat->Get(AI_MATKEY_MAPPINGMODE_U(aiTextureType_LIGHTMAP, 0), wrap_mode_u) == AI_SUCCESS) {
             material.texture_ao_wrap_mode_u = getTextureWrapMode(wrap_mode_u);
           }
-          if (mat->Get(AI_MATKEY_MAPPINGMODE_V(aiTextureType_LIGHTMAP, 0), wrap_mode_v) == aiReturn_SUCCESS) {
+          if (mat->Get(AI_MATKEY_MAPPINGMODE_V(aiTextureType_LIGHTMAP, 0), wrap_mode_v) == AI_SUCCESS) {
             material.texture_ao_wrap_mode_v = getTextureWrapMode(wrap_mode_v);
           }
           float strength{ 1.0 };
-          if (mat->Get(AI_MATKEY_UVTRANSFORM(aiTextureType_LIGHTMAP, 0), strength) == aiReturn_SUCCESS) {
+          if (mat->Get(AI_MATKEY_UVTRANSFORM(aiTextureType_LIGHTMAP, 0), strength) == AI_SUCCESS) {
             material.occlusion_strength = strength;
           }
         }
@@ -344,22 +337,22 @@ namespace Poulpe
           aiTextureMapMode wrap_mode_u { aiTextureMapMode_Clamp };
           aiTextureMapMode wrap_mode_v { aiTextureMapMode_Clamp };
 
-          if (mat->GetTexture(aiTextureType_BASE_COLOR, 0, &texture_path) == aiReturn_SUCCESS) {
+          if (mat->GetTexture(aiTextureType_BASE_COLOR, 0, &texture_path) == AI_SUCCESS) {
               material.name_texture_base_color = AssimpLoader::cleanName(texture_path.C_Str());
           }
-          if (mat->Get(AI_MATKEY_MAPPINGMODE_U(aiTextureType_BASE_COLOR, 0), wrap_mode_u) == aiReturn_SUCCESS) {
+          if (mat->Get(AI_MATKEY_MAPPINGMODE_U(aiTextureType_BASE_COLOR, 0), wrap_mode_u) == AI_SUCCESS) {
             material.texture_base_color_wrap_mode_u = getTextureWrapMode(wrap_mode_u);
           }
-          if (mat->Get(AI_MATKEY_MAPPINGMODE_V(aiTextureType_BASE_COLOR, 0), wrap_mode_v) == aiReturn_SUCCESS) {
+          if (mat->Get(AI_MATKEY_MAPPINGMODE_V(aiTextureType_BASE_COLOR, 0), wrap_mode_v) == AI_SUCCESS) {
             material.texture_base_color_wrap_mode_v = getTextureWrapMode(wrap_mode_v);
           }
         }
         //int illumModel;
-        //if (mat->Get(AI_MATKEY_ILLUM, illumModel) == aiReturn_SUCCESS) {
+        //if (mat->Get(AI_MATKEY_ILLUM, illumModel) == AI_SUCCESS) {
         //  material.illum = material.illum;
         //}
         int isDoubleSided = 0;
-        if (mat->Get(AI_MATKEY_TWOSIDED, isDoubleSided) == aiReturn_SUCCESS) {
+        if (mat->Get(AI_MATKEY_TWOSIDED, isDoubleSided) == AI_SUCCESS) {
           material.double_sided = (isDoubleSided == 1) ? true : false;
         }
 

@@ -59,12 +59,12 @@ struct Light {
 
 struct Material
 {
-  vec3 base_color;
-  vec3 ambient;
-  vec3 diffuse;
-  vec3 specular;
+  vec4 base_color;
+  vec4 ambient;
+  vec4 diffuse;
+  vec4 specular;
   vec3 transmittance;
-  vec3 emission;
+  vec4 emission;
   vec3 shi_ior_diss; //shininess, ior, diss
   vec3 alpha;
   vec3 mr_factor;

@@ -232,9 +232,9 @@ namespace Poulpe
       VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL, VK_IMAGE_ASPECT_DEPTH_BIT);
 
     VkClearColorValue color_clear = {};
-    color_clear.float32[0] = 0.0f;
-    color_clear.float32[1] = 0.0f;
-    color_clear.float32[2] = 0.0f;
+    color_clear.float32[0] = 1.0f;
+    color_clear.float32[1] = 1.0f;
+    color_clear.float32[2] = 1.0f;
     color_clear.float32[3] = 0.0f;
 
     VkClearDepthStencilValue depth_stencil = { 1.f, 0 };
@@ -285,23 +285,6 @@ namespace Poulpe
     //vkCmdSetDepthBias(cmd_buffer, depth_bias_constant, depth_bias_clamp, depth_bias_slope);
     auto const view { _light_manager->getSunLight().view };
 
-    //std::vector<VkBool32> blend_enable{ VK_TRUE, VK_TRUE};
-    //vkCmdSetColorBlendEnableEXT(cmd_buffer, 0, 2, blend_enable.data());
-
-    std::vector<VkBool32> blend_enable{ VK_FALSE };
-    vkCmdSetColorBlendEnableEXT(cmd_buffer, 0, 1, blend_enable.data());
-    VkColorBlendEquationEXT colorBlendEquation{};
-
-		colorBlendEquation.colorBlendOp = VK_BLEND_OP_ADD;
-    colorBlendEquation.colorBlendOp = VK_BLEND_OP_ADD;
-    colorBlendEquation.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
-    colorBlendEquation.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
-    colorBlendEquation.alphaBlendOp = VK_BLEND_OP_ADD;
-    colorBlendEquation.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
-    colorBlendEquation.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
-				
-		vkCmdSetColorBlendEquationEXT(cmd_buffer, 0, 1, &colorBlendEquation);
-
     std::ranges::for_each(entities, [&](auto const& entity) {
       auto mesh_component = _component_manager->get<MeshComponent>(entity->getID());
       if (mesh_component) {
@@ -351,7 +334,7 @@ namespace Poulpe
 
     std::vector<VkPipelineStageFlags> flags { VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL };
     //VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL
-    _draw_cmds.insert(&cmd_buffer, &_entities_sema_finished[thread_id], thread_id, false, flags);
+    _draw_cmds.insert(&cmd_buffer, &_entities_sema_finished[thread_id], thread_id, flags);
 
     _update_shadow_map = false;
     count_down.count_down();
@@ -369,9 +352,7 @@ namespace Poulpe
     VkAttachmentStoreOp const store_op,
     std::latch& count_down,
     unsigned int const thread_id,
-    bool const is_attachment,
-    bool const has_depth_attachment,
-    bool const has_alpha_blend)
+    bool const has_depth_attachment)
   {
     if (entities.empty()) {
       count_down.count_down();
@@ -399,7 +380,7 @@ namespace Poulpe
     _vulkan->setViewPort(cmd_buffer);
     _vulkan->setScissor(cmd_buffer);
 
-    _vulkan->startMarker(cmd_buffer, "drawing_" + std::to_string(thread_id), 0.2f, 0.2f, 0.9f);
+    _vulkan->startMarker(cmd_buffer, "drawing", 0.2f, 0.2f, 0.9f);
 
     //std::vector<VkDrawIndexedIndirectCommand> drawCommands{};
     //drawCommands.reserve(_Entities.size());
@@ -421,20 +402,6 @@ namespace Poulpe
     auto * const config_manager = Poulpe::Locator::getConfigManager();
 
     size_t num{ 0 };
-    std::vector<VkBool32> blend_enable{ VK_FALSE };
-    vkCmdSetColorBlendEnableEXT(cmd_buffer, 0, 1, blend_enable.data());
-    VkColorBlendEquationEXT colorBlendEquation{};
-
-		colorBlendEquation.colorBlendOp = VK_BLEND_OP_ADD;
-    colorBlendEquation.colorBlendOp = VK_BLEND_OP_ADD;
-    colorBlendEquation.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
-    colorBlendEquation.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
-    colorBlendEquation.alphaBlendOp = VK_BLEND_OP_ADD;
-    colorBlendEquation.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
-    colorBlendEquation.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
-				
-		vkCmdSetColorBlendEquationEXT(cmd_buffer, 0, 1, &colorBlendEquation);
-
     std::ranges::for_each(entities, [&](auto const& entity) {
       auto mesh_component = _component_manager->get<MeshComponent>(entity->getID());
       if (mesh_component) {
@@ -459,18 +426,14 @@ namespace Poulpe
           mesh->applyPushConstants(cmd_buffer, pipeline->pipeline_layout, this, mesh);
         }
 
-        auto const alpha_mode{ mesh->getMaterial().alpha_mode };
-
-        if (has_alpha_blend && alpha_mode > 0.0f) {
-          std::vector<VkBool32> blend_enable{ VK_TRUE };
-          vkCmdSetColorBlendEnableEXT(cmd_buffer, 0, 1, blend_enable.data());
-        }
-
         vkCmdBindDescriptorSets(
           cmd_buffer,
           VK_PIPELINE_BIND_POINT_GRAPHICS,
           pipeline->pipeline_layout,
           0, 1, mesh->getDescSet(), 0, nullptr);
+
+        std::vector<VkBool32> blend_enable{ VK_TRUE, VK_TRUE };
+        vkCmdSetColorBlendEnableEXT(cmd_buffer, 0, 3, blend_enable.data());
 
         if (mesh->getMaterial().double_sided == true && pipeline->pipeline_bis != VK_NULL_HANDLE) {
           _vulkan->bindPipeline(cmd_buffer, pipeline->pipeline_bis);
@@ -515,12 +478,12 @@ namespace Poulpe
       }
     });
     _vulkan->endMarker(cmd_buffer);
-    endRendering(cmd_buffer, color, depth, is_attachment, has_depth_attachment);
+    endRendering(cmd_buffer, color, depth, has_depth_attachment);
 
     std::vector<VkPipelineStageFlags> flags { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
     if (has_depth_attachment) flags.emplace_back(VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
 
-    _draw_cmds.insert(&cmd_buffer, &_entities_sema_finished[thread_id], thread_id, is_attachment, flags);
+    _draw_cmds.insert(&cmd_buffer, &_entities_sema_finished[thread_id], thread_id, flags);
 
     count_down.count_down();
   }
@@ -541,19 +504,22 @@ namespace Poulpe
     std::latch count_down{3};
 
     if (_entity_manager->getSkybox()) {
-      draw(
-        _cmd_buffer_entities2[_current_frame],
-        _draw_cmds,
-        _imageviews[_current_frame],
-        _images[_current_frame],
-        _depth_imageviews[_current_frame],
-        _depth_images[_current_frame],
-        {_entity_manager->getSkybox()},
-        VK_ATTACHMENT_LOAD_OP_CLEAR,
-        VK_ATTACHMENT_STORE_OP_STORE,
-        count_down,
-        0,
-        false, false);
+      std::jthread skybox_thread([&]() {
+        draw(
+          _cmd_buffer_entities2[_current_frame],
+          _draw_cmds,
+          _imageviews[_current_frame],
+          _images[_current_frame],
+          _depth_imageviews[_current_frame],
+          _depth_images[_current_frame],
+          {_entity_manager->getSkybox()},
+          VK_ATTACHMENT_LOAD_OP_CLEAR,
+          VK_ATTACHMENT_STORE_OP_STORE,
+          count_down,
+          0,
+          false);
+       });
+       skybox_thread.join();
     } else {
       count_down.count_down();
     }
@@ -589,25 +555,10 @@ namespace Poulpe
          VK_ATTACHMENT_LOAD_OP_LOAD,
          VK_ATTACHMENT_STORE_OP_STORE,
          count_down,
-         2, false, true
+         2, true
         );
-        //draw(
-        // _cmd_buffer_entities[_current_frame],
-        // _draw_cmds,
-        // _imageviews[_current_frame],
-        // _images[_current_frame],
-        // _depth_imageviews[_current_frame],
-        // _depth_images[_current_frame],
-        // _transparent_entities,
-        // VK_ATTACHMENT_LOAD_OP_LOAD,
-        // VK_ATTACHMENT_STORE_OP_STORE,
-        // count_down,
-        // 3, false, true
-        //);
       });
       entities_thread.detach();
-
-      //@todo add post process (alpha blending, etc.)
     } else {
       count_down.count_down();
       count_down.count_down();
@@ -696,12 +647,10 @@ namespace Poulpe
     VkCommandBuffer& cmd_buffer,
     VkImage& image,
     VkImage& depth_image,
-    bool const is_attachment,
     bool const has_depth_attachment)
   {
     _vulkan->endRendering(cmd_buffer);
 
-    VkImageLayout final = (is_attachment) ? VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL : VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
     _vulkan->transitionImageLayout(cmd_buffer, image,
       VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR, VK_IMAGE_ASPECT_COLOR_BIT);
 
@@ -727,7 +676,7 @@ namespace Poulpe
 
     for (size_t i{ 0 }; i < draw_cmds.cmd_buffers.size(); ++i) {
 
-      if (draw_cmds.cmd_buffers.at(i) == nullptr || draw_cmds.is_attachments.at(i) == true) continue;
+      if (draw_cmds.cmd_buffers.at(i) == nullptr) continue;
 
       VkSubmitInfo submit_info{};
       submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -837,16 +786,6 @@ namespace Poulpe
       _force_entities_buffer_swap = is_last;
     }
   }
-  void Renderer::addTransparentEntity(Entity* entity, bool const is_last)
-  {
-    {
-      std::lock_guard guard(_mutex_entity_submit);
-
-      _transparent_entities_buffer.emplace_back(entity);
-
-      _force_entities_buffer_swap = is_last;
-    }
-  }
 
   void Renderer::updateData(std::string const& name, UniformBufferObject const& ubo, std::vector<Vertex> const& vertices)
   {
@@ -883,10 +822,6 @@ namespace Poulpe
       std::lock_guard guard(_mutex_entity_submit);
       copy(_entities_buffer.begin(), _entities_buffer.end(), back_inserter(_entities));
       _entities_buffer.clear();
-
-      copy(_transparent_entities_buffer.begin(), _transparent_entities_buffer.end(), back_inserter(_transparent_entities));
-      _transparent_entities_buffer.clear();
-
       _update_shadow_map = true;
       _force_entities_buffer_swap = false;
     }
