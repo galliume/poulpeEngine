@@ -12,7 +12,7 @@
 
 [In video](https://www.youtube.com/watch?v=C7p9z6LhAig&list=PL4-Os8BWDCPmZt5HvJrSo6QDHkD9J4fJF)
 
-<img src="https://github.com/galliume/poulpeEngine/blob/main/screenshots/sponza.jpg" width="800" height="600">
+<img src="https://github.com/galliume/poulpeEngine/blob/main/screenshots/sponza.png" width="800" height="600">
 <img src="https://github.com/galliume/poulpeEngine/blob/main/screenshots/helmet.png" width="800" height="450">
 
 [PoulpeEdit](https://github.com/galliume/poulpeEdit) will be the GUI editor that will use PoulpeEngine to edit a level, coming soon.
