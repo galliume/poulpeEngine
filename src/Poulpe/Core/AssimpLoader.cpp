@@ -120,7 +120,6 @@ namespace Poulpe
           material.dissolve = dissolve;
         }
 
-        //useless ?
         aiString alpha_mode;
         aiString mask{ "MASK" };
         aiString opaque{ "OPAQUE" };
@@ -163,7 +162,9 @@ namespace Poulpe
           }
           aiUVTransform transform{};
           if (mat->Get(AI_MATKEY_UVTRANSFORM(aiTextureType_AMBIENT, 0), transform) == aiReturn_SUCCESS) {
-            
+             material.ambient_translation = glm::vec3(transform.mTranslation.x, transform.mTranslation.y, 1.0);
+             material.ambient_scale = glm::vec3(transform.mScaling.x, transform.mScaling.y, 1.0);
+             material.ambient_rotation = glm::vec2(transform.mRotation, 1.0);
           }
         }
         if (mat->GetTextureCount(aiTextureType_DIFFUSE) > 0) {
@@ -297,6 +298,12 @@ namespace Poulpe
           }
           if (mat->Get(AI_MATKEY_MAPPINGMODE_V(aiTextureType_UNKNOWN, 0), wrap_mode_v) == aiReturn_SUCCESS) {
             material.texture_metal_roughness_wrap_mode_v = getTextureWrapMode(wrap_mode_v);
+          }
+          aiUVTransform transform{};
+          if (mat->Get(AI_MATKEY_UVTRANSFORM(aiTextureType_UNKNOWN, 0), transform) == aiReturn_SUCCESS) {
+            material.mr_translation = glm::vec3(transform.mTranslation.x, transform.mTranslation.y, 1.0);
+            material.mr_scale = glm::vec3(transform.mScaling.x, transform.mScaling.y, 1.0);
+            material.mr_rotation = glm::vec2(transform.mRotation, 1.0);
           }
         }
         if (mat->GetTextureCount(aiTextureType_EMISSIVE) > 0) {

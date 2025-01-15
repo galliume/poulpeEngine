@@ -66,15 +66,21 @@ struct Material
   vec3 shi_ior_diss; //shininess, ior, diss
   vec3 alpha;
   vec3 mr_factor;
-  vec3 normal_translation;//z: 0 no translation 1.0 translation
-  vec3 normal_scale; //z: 0 no scale 1.0 scale
-  vec3 normal_rotation; //y: 0 no rotation 1.0 rotation
-  vec3 diffuse_translation;//z: 0 no translation 1.0 translation
-  vec3 diffuse_scale; //z: 0 no scale 1.0 scale
-  vec3 diffuse_rotation; //y: 0 no rotation 1.0 rotation
-  vec3 emissive_translation;//z: 0 no translation 1.0 translation
-  vec3 emissive_scale; //z: 0 no scale 1.0 scale
-  vec3 emissive_rotation; //y: 0 no rotation 1.0 rotation
+  vec3 normal_translation;
+  vec3 normal_scale; 
+  vec3 normal_rotation; 
+  vec3 ambient_translation;
+  vec3 ambient_scale; 
+  vec3 ambient_rotation; 
+  vec3 diffuse_translation;
+  vec3 diffuse_scale; 
+  vec3 diffuse_rotation; 
+  vec3 emissive_translation;
+  vec3 emissive_scale; 
+  vec3 emissive_rotation; 
+  vec3 mr_translation;
+  vec3 mr_scale; 
+  vec3 mr_rotation; 
   vec3 strength;//x: normal strength, y occlusion strength
 };
 
@@ -104,7 +110,7 @@ float InverseSquareAttenuation(vec3 l_dir)
 float ExponentialAttenuation(vec3 p, vec3 l)
 {
   float k = 2.0;
-  float r_max = 30.0;
+  float r_max = 550.0;
   vec3 atten_const = vec3(1.0);
   float neg_k_square = -(k * k);
   float exp_k_neg_square = exp(neg_k_square);
@@ -180,13 +186,16 @@ float ShadowCalculation(vec4 light_space, vec3 normal)
 //https://github.com/KhronosGroup/glTF/blob/main/extensions/2.0/Khronos/KHR_texture_transform/README.md
 vec2 transform_uv(vec3 t, vec3 s, vec3 r, vec2 c)
 {
+  if (t.z < 0.5) return c;//no transform needed
+
   mat3 translation = mat3(1,0,0, 0,1,0, t.x, -t.y, 1);
   mat3 rotation = mat3(
       cos(r.x), sin(r.x), 0,
      -sin(r.x), cos(r.x), 0,
       0, 0, 1);
   mat3 scale = mat3(s.x, 0, 0, 0, s.y, 0, 0, 0, 1);
-  mat3 matrix = translation * rotation * scale;
+  mat3 matrix = mat3(1.0);
+  matrix *= translation * rotation * scale;
   vec2 uvTransformed = (matrix * vec3(c.xy, 1)).xy;
 
   return uvTransformed;
@@ -201,38 +210,41 @@ void main()
     if (material.alpha.x == 1.0 && alpha_color.r < material.alpha.y) discard;
   }
  
-//  vec2 normal_coord = transform_uv(
-//    material.normal_translation,
-//    material.normal_scale,
-//    material.normal_rotation,
-//    var.texture_coord); 
+  vec2 normal_coord = transform_uv(
+    material.normal_translation,
+    material.normal_scale,
+    material.normal_rotation,
+    var.texture_coord); 
 
-  vec3 normal = vec3(1.0); 
-  normal.xy = texture(tex_sampler[NORMAL_INDEX], var.texture_coord).xy;
-  normal.xy = normal.xy * 2.0 - 1.0;
-  normal.z = sqrt(1 - dot(normal.xy, normal.xy));
+  vec2 xy = texture(tex_sampler[NORMAL_INDEX], normal_coord).xy;
+  xy = xy.xy * 2.0 - 1.0;
+  xy.y = -xy.y; 
+  float z = clamp(sqrt(1 - dot(xy, xy)), 0.0, 1.0);
+  vec3 normal = vec3(xy, z);
 
   ivec2 normal_size = textureSize(tex_sampler[NORMAL_INDEX], 0);
   if (normal_size.x <= 2.0) {
     normal = var.norm;
-    normal.z = sqrt(1 - dot(normal.xy, normal.xy));
     normal = var.TBN * normal;
   }
-
   normal = normalize(normal * material.strength.x);
 
-  vec2 metal_roughness = texture(tex_sampler[METAL_ROUGHNESS_INDEX], var.texture_coord).rg;
-  float metallic = metal_roughness.r;
-  float roughness = metal_roughness.g;
+  vec2 mr_coord = transform_uv(
+    material.mr_translation,
+    material.mr_scale,
+    material.mr_rotation,
+    var.texture_coord); 
+
+  vec2 metal_roughness = texture(tex_sampler[METAL_ROUGHNESS_INDEX], mr_coord).rg;
+  float metallic = metal_roughness.r ;
+  float roughness = metal_roughness.g * material.mr_factor.y;
 
   ivec2 mr_size = textureSize(tex_sampler[METAL_ROUGHNESS_INDEX], 0);
-  if (mr_size.x == 1 && mr_size.y == 1) {
+  if (mr_size.x <= 2.0) {
     metallic = material.mr_factor.x;
     roughness = material.mr_factor.y;
   }
-  metallic = max(metallic, 0.1);
-  roughness = max(roughness, 0.1);
-  
+
   float roughness2 = roughness * roughness; 
   roughness2 = roughness2 * roughness2;
 
@@ -241,31 +253,27 @@ void main()
   if (ao_size.x == 1 && ao_size.y == 1) {
     ao = 1.0;
   }
-  //ao *= material.strength.y;//occlusion strength
+  ao *= material.strength.y;//occlusion strength
 
-//  vec2 diffuse_coord = var.texture_coord;
-//  if (material.diffuse_translation.z >1.5) {
-//    diffuse_coord = transform_uv(
-//      material.diffuse_translation,
-//      material.diffuse_scale,
-//      material.diffuse_rotation,
-//      var.texture_coord);
-//  }
-
-  vec4 albedo = texture(tex_sampler[DIFFUSE_INDEX], var.texture_coord);
+  vec2 diffuse_coord = transform_uv(
+    material.diffuse_translation,
+    material.diffuse_scale,
+    material.diffuse_rotation,
+    var.texture_coord);
+  
+  vec4 albedo = texture(tex_sampler[DIFFUSE_INDEX], diffuse_coord);
   float color_alpha = albedo.a;
   
-  if (material.alpha.x == 1.0 && albedo.w < material.alpha.y) discard;
-  
-  albedo *= material.base_color;
-  albedo *= var.color;
+  if (material.alpha.x == 1.0 && color_alpha < material.alpha.y) discard;
+  if (material.base_color.a < material.shi_ior_diss.z) discard;
 
   ivec2 albedo_size = textureSize(tex_sampler[DIFFUSE_INDEX], 0);
   if (albedo_size.x == 1 && albedo_size.y == 1) {
     albedo = material.base_color;
   }
+  albedo *= var.color;
 
-  vec4 C_light = vec4(sun_light.color, 0.0) * 0.1;
+  vec4 C_light = vec4(sun_light.color, 0.0) * 0.001;
   vec4 C_ambient = material.ambient * albedo * C_light * ao;
   vec4 C_diffuse = material.diffuse * albedo / PI;
   vec4 C_specular = material.specular;
@@ -277,14 +285,14 @@ void main()
   float P =  5.0 * (1.0 - roughness); 
 
   vec4 out_lights = vec4(0.0, 0.0, 0.0, 1.0);
-  for (int i = 1; i < NR_POINT_LIGHTS; ++i) {
+  for (int i = 0; i < NR_POINT_LIGHTS; ++i) {
 
     vec3 light_pos = var.t_plight_pos[i];
     vec3 l = normalize(light_pos - p);
 
     //float distance = length(point_lights[i].position - var.frag_pos);
     //float attenuation = 1.0 / (distance * distance);
-    float attenuation = SmoothAttenuation(l);
+    float attenuation = ExponentialAttenuation(p, light_pos);
     vec3 l_color = point_lights[i].color;
     C_light = vec4(l_color * attenuation, 1.0);
     vec3 F90 = mix(F0, vec3(1.0), metallic);//vec3(1.0); //point_lights[i].color;
@@ -297,13 +305,13 @@ void main()
     //@todo do anisotropic
     //Not anisotropic
     vec3 h = normalize(l + v);
-    float NdH = dot(normal, h);
+    float NdH = max(dot(normal, h), 0.0);
     float NdH2 = NdH*NdH;
-    float NdV = dot(normal, v);
+    float NdV = max(dot(normal, v), 0.0);
     float NdV2 = NdV*NdV;
-    float HdV = dot(h, v);
+    float HdV = max(dot(h, v), 0.0);
     float HdV2 = HdV*HdV;
-    float HdL = dot(h, l);
+    float HdL = max(dot(h, l), 0.0);
     float HdL2 = HdL*HdL;
 
     //Fresnel reflectance
@@ -315,26 +323,31 @@ void main()
     vec3 kD = (vec3(1.0) - F) * (1.0 - metallic);
 
     //masking
-    float delta_mv = sqrt(roughness2 + (1.0 - roughness2) * HdV2);
-    float delta_ml = sqrt(roughness2 + (1.0 - roughness2) * HdL2);
-//    float delta_nv = (1 - sqrt(1 + (1.0 / roughness2))) / 2;
-//    float delta_nl = sqrt(roughness2 + (1.0 - roughness2) * HdL2);
+//    float delta_mv = sqrt(roughness2 + (1.0 - roughness2) * HdV2);
+//    float delta_ml = sqrt(roughness2 + (1.0 - roughness2) * HdL2);
+//    float delta_mv = (1 - sqrt(1 + (1.0 / roughness2))) / 2;
+//    float delta_ml = sqrt(roughness2 + (1.0 - roughness2) * HdL2);
 
-    float chi = (HdV > 0.0) ? 1.0 : 0.0;
-    float chi2 = (HdL > 0.0) ? 1.0 : 0.0;
-    float G1 = chi / (1 + delta_mv);
-    float G2 = (chi * chi2) / (1 + delta_mv + delta_ml);
+//    float chi = (HdV > 0.0) ? 1.0 : 0.0;
+//    float chi2 = (HdL > 0.0) ? 1.0 : 0.0;
+    //float G1 = chi / (1 + delta_mv);
+    //float G2 = (chi * chi2) / (1 + delta_mv + delta_ml);
 
     //float G1 = NdL / (NdL * (2.0 - roughness2) + roughness2);
-    //float G2 = 0.5 / mix(2.0 * NdL * NdV, NdL + NdV, roughness2);
-    //float G2 = 0.5 * (1.0 + (2.0 * NdL * NdV) / (NdL + NdV + roughness2));
+    //float G2 = 0.5 / mix(2.0 * NdL * NdH, NdL + NdH, roughness2);
+    //float G2 = 0.5 * (1.0 + (2.0 * NdL * NdH) / (NdL + NdH + roughness2));
 
     float tmp = PI * (1.0 + NdH2 * (roughness2 - 1.0));
     float NDF = (roughness2) / (PI * (tmp * tmp));
 
+    float r = roughness2 + 1.0;
+    float k = (r*r) / 8.0;
+    float G1 = NdL / (NdL * (1.0 - k) + k);
+    float G2 = NdV / (NdV * (1.0 - k) + k);
+
     vec3 specular = (NDF * (G1 * G2) * F) / ((4.0 * max(NdV, 0.0) * max(NdL, 0.0)) + 0.0001) ;
     
-    //vec3 diffuse = (21.0 / (20.0 * PI))  * (C_diffuse.xyz * (1.0 - F)) *  (1.0 - pow(1.0 - NdL, 5.0)) * (1.0 - pow(1.0 - NdH, 5.0));
+    //vec3 diffuse = (21.0 / (20.0 * PI))  * (C_diffuse.xyz * (1.0 - F)) *  (1.0 - pow(1.0 - NdL, 5.0)) * (1.0 - pow(1.0 - NdV, 5.0));
     vec3 diffuse = (1 - F) * C_diffuse.xyz;
     out_lights += vec4((kD * diffuse + specular) * C_light.xyz * NdL , 1.0);
   }
@@ -348,7 +361,7 @@ void main()
     material.emissive_rotation,
     var.texture_coord); 
 
-  vec4 emissive_color = texture(tex_sampler[EMISSIVE_INDEX], -emissive_coord);
+  vec4 emissive_color = texture(tex_sampler[EMISSIVE_INDEX], emissive_coord);
   ivec2 emissive_color_size = textureSize(tex_sampler[EMISSIVE_INDEX], 0);
   if (emissive_color_size.x != 1 && emissive_color_size.y != 1) {
     color += material.emission * emissive_color;
@@ -360,8 +373,6 @@ void main()
 
   final_color = color;
 
-//@todo post process for alpha blending
-//this is just to show where alpha blending is needed (same color as the skybox?)
   if (material.alpha.x == 2.0) {
     final_color = vec4(color.xyz, color_alpha);
   }

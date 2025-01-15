@@ -68,15 +68,21 @@ struct Material
   vec3 shi_ior_diss; //shininess, ior, diss
   vec3 alpha;
   vec3 mr_factor;
-  vec3 normal_translation;//z: 0 no translation 1.0 translation
-  vec3 normal_scale; //z: 0 no scale 1.0 scale
-  vec3 normal_rotation; //y: 0 no rotation 1.0 rotation
-  vec3 diffuse_translation;//z: 0 no translation 1.0 translation
-  vec3 diffuse_scale; //z: 0 no scale 1.0 scale
-  vec3 diffuse_rotation; //y: 0 no rotation 1.0 rotation
-  vec3 emissive_translation;//z: 0 no translation 1.0 translation
-  vec3 emissive_scale; //z: 0 no scale 1.0 scale
-  vec3 emissive_rotation; //y: 0 no rotation 1.0 rotation
+  vec3 normal_translation;
+  vec3 normal_scale; 
+  vec3 normal_rotation; 
+  vec3 ambient_translation;
+  vec3 ambient_scale; 
+  vec3 ambient_rotation; 
+  vec3 diffuse_translation;
+  vec3 diffuse_scale; 
+  vec3 diffuse_rotation; 
+  vec3 emissive_translation;
+  vec3 emissive_scale; 
+  vec3 emissive_rotation; 
+  vec3 mr_translation;
+  vec3 mr_scale; 
+  vec3 mr_rotation; 
   vec3 strength;//x: normal strength, y occlusion strength
 };
 

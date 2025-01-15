@@ -1,0 +1,47 @@
+{
+	"entities": {
+		"CompareMetallic" : {
+			"mesh": "assets/mesh/CompareMetallic/gLTF/CompareMetallic.gltf",
+			"textures": {
+				"Compare_Metallic_img0": {
+					"path" : "assets/mesh/CompareMetallic/glTF/Compare_Metallic_img0.ktx2"
+				},
+				"Compare_Metallic_img1": {
+					"path" : "assets/mesh/CompareMetallic/glTF/Compare_Metallic_img1.ktx2"
+				}
+			},
+			"ao": {
+
+			},
+			"mr": {
+
+			},
+			"emissive": {
+
+			},
+			"normal": {
+
+			},
+			"shader": "main_basic",
+			"positions": [
+				{"x": 0.0, "y": -1.0, "z": -2.0}
+			],
+			"scales": [
+				{"x": 1.0, "y": 1.0, "z": 1.0 }
+			],
+			"rotations": [
+				{"x": 0.0, "y": 180.0, "z": 0.0}
+			],
+			"flipY": false,
+			"count": 1,
+			"hasBbox": false,
+			"hasAnimation": false,
+			"isPointLight": false,
+			"animationScripts": {
+			},
+			"hasShadow": true,
+			"isIndexed": true,
+			"debugNormal": true
+		}
+	}
+}

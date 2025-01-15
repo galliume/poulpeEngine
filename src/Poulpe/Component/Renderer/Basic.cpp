@@ -98,7 +98,7 @@ namespace Poulpe
     image_info.emplace_back(texture_metal_roughness.getSampler(), texture_metal_roughness.getImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
     image_info.emplace_back(texture_emissive.getSampler(), texture_emissive.getImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
     image_info.emplace_back(texture_ao.getSampler(), texture_ao.getImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-    image_info.emplace_back(texture_base_color.getSampler(), texture_base_color.getImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+    image_info.emplace_back(tex.getSampler(), tex.getImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
     std::vector<VkDescriptorImageInfo> depth_map_image_info{};
     depth_map_image_info.emplace_back(_renderer->getDepthMapSamplers(), _renderer->getDepthMapImageViews(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
@@ -268,18 +268,26 @@ namespace Poulpe
       material.alpha = glm::vec3(mesh->getMaterial().alpha_mode, mesh->getMaterial().alpha_cut_off, 1.0);
 
       //@todo needed to modify assimp sources glTF2Asset.h textureTransformSupported = true (preview ?)
-      material.normal_translation = mesh->getMaterial().normal_translation;//z: 0 no translation 1.0 translation
-      material.normal_scale = mesh->getMaterial().normal_scale; //z: 0 no scale 1.0 scale
-      material.normal_rotation = { mesh->getMaterial().normal_rotation.x, mesh->getMaterial().normal_rotation.y, 1.0 }; //y: 0 no rotation 1.0 rotation
+      material.ambient_translation = mesh->getMaterial().ambient_translation;
+      material.ambient_scale = mesh->getMaterial().ambient_scale;
+      material.ambient_rotation = { mesh->getMaterial().ambient_rotation.x, mesh->getMaterial().ambient_rotation.y, 1.0 };
 
-      material.diffuse_translation = mesh->getMaterial().diffuse_translation;//z: 0 no translation 1.0 translation
-      material.diffuse_scale = mesh->getMaterial().diffuse_scale; //z: 0 no scale 1.0 scale
-      material.diffuse_rotation = { mesh->getMaterial().diffuse_rotation.x, mesh->getMaterial().diffuse_rotation.y, 1.0 }; //y: 0 no rotation 1.0 rotation
+      material.normal_translation = mesh->getMaterial().normal_translation;
+      material.normal_scale = mesh->getMaterial().normal_scale;
+      material.normal_rotation = { mesh->getMaterial().normal_rotation.x, mesh->getMaterial().normal_rotation.y, 1.0 };
+
+      material.diffuse_translation = mesh->getMaterial().diffuse_translation;
+      material.diffuse_scale = mesh->getMaterial().diffuse_scale;
+      material.diffuse_rotation = { mesh->getMaterial().diffuse_rotation.x, mesh->getMaterial().diffuse_rotation.y, 1.0 };
   
-      material.emissive_translation = mesh->getMaterial().emissive_translation;//z: 0 no translation 1.0 translation
-      material.emissive_scale = mesh->getMaterial().emissive_scale; //z: 0 no scale 1.0 scale
-      material.emissive_rotation = { mesh->getMaterial().emissive_rotation.x, mesh->getMaterial().emissive_rotation.y, 1.0 }; //y: 0 no rotation 1.0 rotation
-  
+      material.emissive_translation = mesh->getMaterial().emissive_translation;
+      material.emissive_scale = mesh->getMaterial().emissive_scale;
+      material.emissive_rotation = { mesh->getMaterial().emissive_rotation.x, mesh->getMaterial().emissive_rotation.y, 1.0 };
+
+      material.mr_translation = mesh->getMaterial().mr_translation;
+      material.mr_scale = mesh->getMaterial().mr_scale;
+      material.mr_rotation = { mesh->getMaterial().mr_rotation.x, mesh->getMaterial().mr_rotation.y, 1.0 };
+
       material.strength = { mesh->getMaterial().normal_strength, mesh->getMaterial().occlusion_strength, 0.0 };//x normal strength, y occlusion strength
 
       //PLP_DEBUG("ambient {}",  material.ambient.r);

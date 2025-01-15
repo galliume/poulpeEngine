@@ -57,15 +57,21 @@ namespace Poulpe
     alignas(16) glm::vec3 shi_ior_diss { 0 }; //shininess, ior, diss
     alignas(16) glm::vec3 alpha { 0 };//{x:alpha mode, y: cutoff);
     alignas(16) glm::vec3 mr_factor{0};//x:metallic, y:roughness, z: blank
-    alignas(16) glm::vec3 normal_translation{ 0.0 };//z: 0 no translation 1.0 translation
-    alignas(16) glm::vec3 normal_scale{ 0.0 }; //z: 0 no scale 1.0 scale
-    alignas(16) glm::vec3 normal_rotation{ 0.0 }; //y: 0 no rotation 1.0 rotation
-    alignas(16) glm::vec3 diffuse_translation{ 0.0 };//z: 0 no translation 1.0 translation
-    alignas(16) glm::vec3 diffuse_scale{ 0.0 }; //z: 0 no scale 1.0 scale
-    alignas(16) glm::vec3 diffuse_rotation{ 0.0 }; //y: 0 no rotation 1.0 rotation
-    alignas(16) glm::vec3 emissive_translation{ 0.0 };//z: 0 no translation 1.0 translation
-    alignas(16) glm::vec3 emissive_scale{ 0.0 }; //z: 0 no scale 1.0 scale
-    alignas(16) glm::vec3 emissive_rotation{ 0.0 }; //y: 0 no rotation 1.0 rotation
+    alignas(16) glm::vec3 normal_translation{ 0.0 };
+    alignas(16) glm::vec3 normal_scale{ 1.0 };
+    alignas(16) glm::vec3 normal_rotation{ 0.0 };
+    alignas(16) glm::vec3 ambient_translation{ 0.0 };
+    alignas(16) glm::vec3 ambient_scale{ 1.0 };
+    alignas(16) glm::vec3 ambient_rotation{ 0.0 };
+    alignas(16) glm::vec3 diffuse_translation{ 0.0 };
+    alignas(16) glm::vec3 diffuse_scale{ 1.0 };
+    alignas(16) glm::vec3 diffuse_rotation{ 0.0 };
+    alignas(16) glm::vec3 emissive_translation{ 0.0 };
+    alignas(16) glm::vec3 emissive_scale{ 1.0 };
+    alignas(16) glm::vec3 emissive_rotation{ 0.0 };
+    alignas(16) glm::vec3 mr_translation{ 0.0 };
+    alignas(16) glm::vec3 mr_scale{ 1.0 };
+    alignas(16) glm::vec3 mr_rotation{ 0.0 };
     alignas(16) glm::vec3 strength{ 1.0 };//x: normal strength, y occlusion strength
   };
 
@@ -140,20 +146,28 @@ namespace Poulpe
     TextureWrapMode texture_base_color_wrap_mode_u;
     TextureWrapMode texture_base_color_wrap_mode_v;
 
-    glm::vec3 normal_translation{ 0.0, 0.0, 0.0 };//z: 0 no translation 1.0 translation
-    glm::vec3 normal_scale{ 0.0, 0.0, 0.0 }; //z: 0 no scale 1.0 scale
-    glm::vec2 normal_rotation{ 0.0, 0.0 }; //y: 0 no rotation 1.0 rotation
+    glm::vec3 normal_translation{ 0.0 };
+    glm::vec3 normal_scale{ 1.0 };
+    glm::vec2 normal_rotation{ 0.0 };
 
-    glm::vec3 diffuse_translation{ 0.0, 0.0, 0.0 };//z: 0 no translation 1.0 translation
-    glm::vec3 diffuse_scale{ 0.0, 0.0, 0.0 }; //z: 0 no scale 1.0 scale
-    glm::vec2 diffuse_rotation{ 0.0, 0.0 }; //y: 0 no rotation 1.0 rotation
+    glm::vec3 ambient_translation{ 0.0 };
+    glm::vec3 ambient_scale{ 1.0 };
+    glm::vec2 ambient_rotation{ 0.0 };
+
+    glm::vec3 diffuse_translation{ 0.0 };
+    glm::vec3 diffuse_scale{ 1.0 };
+    glm::vec2 diffuse_rotation{ 0.0 };
     
-    glm::vec3 emissive_translation{ 0.0, 0.0, 0.0 };//z: 0 no translation 1.0 translation
-    glm::vec3 emissive_scale{ 0.0, 0.0, 0.0 }; //z: 0 no scale 1.0 scale
-    glm::vec2 emissive_rotation{ 0.0, 0.0 }; //y: 0 no rotation 1.0 rotation
+    glm::vec3 emissive_translation{ 0.0 };
+    glm::vec3 emissive_scale{ 1.0 };
+    glm::vec2 emissive_rotation{ 0.0 };
 
-    float normal_strength{ 1.0 };//use only for normal map
-    float occlusion_strength{ 1.0 };//use only for occlusion
+    glm::vec3 mr_translation{ 0.0 };
+    glm::vec3 mr_scale{ 1.0 };
+    glm::vec2 mr_rotation{ 0.0 };
+
+    float normal_strength{ 1.0 };
+    float occlusion_strength{ 1.0 };
 
   };
 
