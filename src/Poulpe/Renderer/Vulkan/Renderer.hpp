@@ -118,17 +118,6 @@ namespace Poulpe
       std::string const& shaderName,
       VulkanPipeline& pipeline) ;
 
-    void beginRendering(
-      VkCommandBuffer& cmd_buffer,
-      VkImageView& imageview,
-      VkImage& image,
-      VkImageView& depth_imageview,
-      VkImage& depthImage,
-      VkAttachmentLoadOp loadOp = VK_ATTACHMENT_LOAD_OP_LOAD,
-      VkAttachmentStoreOp storeOp = VK_ATTACHMENT_STORE_OP_STORE,
-      bool const has_depth_attachment = true,
-      bool continuousCmdBuffer = false);
-
     void clear();
     void destroy();
 
@@ -166,8 +155,8 @@ namespace Poulpe
 
     inline Camera* getCamera() { return _camera; }
     inline uint32_t getCurrentFrameIndex() const { return _current_frame; }
-    inline VkSampler getCurrentSampler() { return _samplers[_current_frame]; }
-    inline VkImageView getCurrentImageView() { return _imageviews[_current_frame]; }
+    inline VkSampler getCurrentSampler() { return _samplers2[_current_frame]; }
+    inline VkImageView getCurrentImageView() { return _imageviews2[_current_frame]; }
     inline VkImageView getDepthMapImageViews()  { return  _depthmap_imageviews.at(_current_frame); }
     inline VkSampler getDepthMapSamplers()  { return _depthmap_samplers.at(_current_frame); }
     inline VkImageView getDepthImageViews()  { return _depth_imageviews.at(_current_frame); }
@@ -195,7 +184,7 @@ namespace Poulpe
 
   private:
     const uint32_t _MAX_FRAMES_IN_FLIGHT{ 2 };
-    const size_t _MAX_RENDER_THREAD{ 3 };
+    const size_t _MAX_RENDER_THREAD{ 4 };
 
     void onFinishRender();
     void setPerspective();
@@ -217,10 +206,12 @@ namespace Poulpe
     VkCommandPool _cmd_pool_entities{ nullptr };
     VkCommandPool _cmd_pool_entities2{ nullptr };
     VkCommandPool _cmd_pool_entities3{ nullptr };
+    VkCommandPool _cmd_pool_entities4{ nullptr };
 
     std::vector<VkCommandBuffer> _cmd_buffer_entities{};
     std::vector<VkCommandBuffer> _cmd_buffer_entities2{};
     std::vector<VkCommandBuffer> _cmd_buffer_entities3{};
+    std::vector<VkCommandBuffer> _cmd_buffer_entities4{};
 
     VkCommandPool _cmd_pool_shadowmap{ nullptr };
     std::vector<VkCommandBuffer> _cmd_buffer_shadowmap{};

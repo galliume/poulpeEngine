@@ -204,7 +204,7 @@ namespace Poulpe
 
     bool has_alpha{ false };
     std::string oetf{ "srgb" };
-    std::string options { " --encode uastc --uastc-quality 2 --zstd 11 " };
+    std::string options { " --encode basis-lz --clevel 3 --qlevel 126 " };
 
     //https://github.khronos.org/KTX-Software/libktx/ktx_8h.html#a30cc58c576392303d9a5a54b57ef29b5
     std::string  ktx_format{ "R8G8B8A8_SRGB" }; //diffuse default
@@ -224,9 +224,9 @@ namespace Poulpe
     switch (texture_type) {
       case TEXTURE_TYPE::NORMAL:
         oetf = "linear";
-        options.append(" --normal-mode ");
-        transcoding = (has_alpha) ? KTX_TTF_BC5_RG : KTX_TTF_BC7_RGBA ;
-        ktx_format = (has_alpha) ? "R8G8_UNORM" : "R8G8B8A8_UNORM";
+        options.append("  --normal-mode ");
+        transcoding = KTX_TTF_BC5_RG;
+        ktx_format = "R8G8_UNORM";
         break;
       case TEXTURE_TYPE::MR:
         oetf = "linear";

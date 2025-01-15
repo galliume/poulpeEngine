@@ -489,7 +489,7 @@ namespace Poulpe {
   VkSurfaceFormatKHR VulkanAPI::chooseSwapSurfaceFormat(std::vector<VkSurfaceFormatKHR> const & available_formats)
   {
     for (auto const & available_format : available_formats) {
-      if (available_format.format == VK_FORMAT_B8G8R8A8_UNORM
+      if (available_format.format == VK_FORMAT_R16G16B16A16_UNORM
         && available_format.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR) {
         return available_format;
       }
@@ -1474,6 +1474,7 @@ namespace Poulpe {
     VkImageView& depth_imageview,
     VkAttachmentLoadOp const load_op,
     VkAttachmentStoreOp const store_op,
+    VkImageLayout const color_image_layout,
     bool const has_depth_attachment)
   {
     VkRenderingInfo rendering_info{ };
@@ -1492,7 +1493,7 @@ namespace Poulpe {
     VkRenderingAttachmentInfo color_attachment{ };
     color_attachment.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
     color_attachment.imageView = color_imageview;
-    color_attachment.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+    color_attachment.imageLayout = color_image_layout;
     color_attachment.loadOp = load_op;
     color_attachment.storeOp = store_op;
     color_attachment.clearValue.color = color_clear;
