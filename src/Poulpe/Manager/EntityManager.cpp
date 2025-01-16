@@ -317,13 +317,13 @@ namespace Poulpe
       _component_manager->add<MeshComponent>(entity->getID(), std::move(mesh));
       auto* entityNode = root_mesh_entity_node->addChild(new EntityNode(entity));
       
-      //_renderer->addEntity(entityNode->getEntity(), is_last);
+      _renderer->addEntity(entityNode->getEntity(), is_last);
 
-      if (alpha_mode == 2.0) {
-        _renderer->addTransparentEntity(entityNode->getEntity(), is_last);
-      } else {
-        _renderer->addEntity(entityNode->getEntity(), is_last);
-      }
+      //if (alpha_mode == 2.0) {
+      //  _renderer->addTransparentEntity(entityNode->getEntity(), is_last);
+      //} else {
+      //  _renderer->addEntity(entityNode->getEntity(), is_last);
+      //}
 
       if (is_last) {
         {

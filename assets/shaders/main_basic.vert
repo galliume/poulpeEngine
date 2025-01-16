@@ -40,6 +40,7 @@ layout(location = 0) out FRAG_VAR {
   vec3 tangent;
   vec3 bitangent;
   mat3 TBN;
+  vec4 light_space;
 } frag_var;
 
 struct Light {
@@ -113,8 +114,10 @@ void main()
   mat3 inversed_model = inverse(mat3(ubo.model));
   mat3 normal_matrix = transpose(inversed_model);
   vec3 norm = normal;
-  //norm.z = sqrt(1 - dot(norm.xy, norm.xy));
-  norm = normalize(normal_matrix * normal);
+  norm.y = -norm.y; 
+  norm.z = clamp(sqrt(1 - dot(norm.xy, norm.xy)), 0.0, 1.0);
+  norm = normal_matrix * normal;
+
   float handedness = tangent.w;
 
   vec3 T = normalize(normal_matrix * tangent.xyz);
@@ -139,7 +142,8 @@ void main()
   // TangentSpaceVL(frag_var.frag_pos, frag_var.view_pos, point_lights[0].position, norm, tangent, frag_var.t_pview_dir[0], frag_var.t_plight_dir[0]);
   // TangentSpaceVL(frag_var.frag_pos, frag_var.view_pos, point_lights[1].position, norm, tangent, frag_var.t_pview_dir[1], frag_var.t_plight_dir[1]);
 
-  //frag_var.light_space = (ubo.projection * sun_light.view * vec4(frag_var.frag_pos, 1.0));
+  frag_var.light_space = (ubo.projection * sun_light.view * ubo.model) * vec4(frag_var.frag_pos , 1.0);
+  
   frag_var.texture_coord = texture_coord;
   frag_var.norm = norm;
   frag_var.color = color;

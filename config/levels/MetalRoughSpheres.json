@@ -1,0 +1,43 @@
+{
+	"entities": {
+		"MetalRoughSpheres" : {
+			"mesh": "assets/mesh/MetalRoughSpheres/gLTF/MetalRoughSpheres.gltf",
+			"textures": {
+				"Spheres_BaseColor": {
+					"path" : "assets/mesh/MetalRoughSpheres/glTF/Spheres_BaseColor.ktx2"
+				}
+			},
+			"ao": {
+			},
+			"mr": {
+				"Spheres_MetalRough": {
+					"path" : "assets/mesh/MetalRoughSpheres/glTF/Spheres_MetalRough.ktx2"
+				}
+			},
+			"emissive": {
+			},
+			"normal": {
+			},
+			"shader": "main_basic",
+			"positions": [
+				{"x": 0.0, "y": 0.0, "z": -30.0}
+			],
+			"scales": [
+				{"x": 1.0, "y": 1.0, "z": 1.0 }
+			],
+			"rotations": [
+				{"x": -90.0, "y": 180.0, "z": 0.0}
+			],
+			"flipY": false,
+			"count": 1,
+			"hasBbox": false,
+			"hasAnimation": false,
+			"isPointLight": false,
+			"animationScripts": {
+			},
+			"hasShadow": true,
+			"isIndexed": true,
+			"debugNormal": true
+		}
+	}
+}

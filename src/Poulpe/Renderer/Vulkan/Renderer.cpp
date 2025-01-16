@@ -67,7 +67,7 @@ namespace Poulpe
         _vulkan->getSwapChainExtent().width,
         _vulkan->getSwapChainExtent().height, 1,
         VK_SAMPLE_COUNT_1_BIT,
-        VK_FORMAT_R16G16B16A16_UNORM,
+        VK_FORMAT_R8G8B8A8_UNORM,
         VK_IMAGE_TILING_OPTIMAL,
         VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
         VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
@@ -86,7 +86,7 @@ namespace Poulpe
         _vulkan->getSwapChainExtent().width, 
         _vulkan->getSwapChainExtent().height, 1,
         VK_SAMPLE_COUNT_1_BIT, 
-        VK_FORMAT_R16G16B16A16_UNORM,
+        VK_FORMAT_R8G8B8A8_UNORM,
         VK_IMAGE_TILING_OPTIMAL,
         VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
         VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
@@ -96,7 +96,7 @@ namespace Poulpe
 
       _imageviews2[i] = _vulkan->createImageView(
         _images2[i],
-        VK_FORMAT_R16G16B16A16_UNORM,
+        VK_FORMAT_R8G8B8A8_UNORM,
         VK_IMAGE_ASPECT_COLOR_BIT, 4);
 
       _samplers2[i] = _vulkan->createTextureSampler(1);
@@ -253,10 +253,10 @@ namespace Poulpe
       VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL, VK_IMAGE_ASPECT_DEPTH_BIT);
 
     VkClearColorValue color_clear = {};
-    color_clear.float32[0] = 0.0f;
-    color_clear.float32[1] = 0.0f;
-    color_clear.float32[2] = 0.0f;
-    color_clear.float32[3] = 0.0f;
+    color_clear.float32[0] = 1.0f;
+    color_clear.float32[1] = 1.0f;
+    color_clear.float32[2] = 1.0f;
+    color_clear.float32[3] = 1.0f;
 
     VkClearDepthStencilValue depth_stencil = { 1.f, 0 };
 
@@ -269,8 +269,8 @@ namespace Poulpe
     depth_attachment_info.clearValue.depthStencil = depth_stencil;
     depth_attachment_info.clearValue.color = color_clear;
 
-    uint32_t const width{ _vulkan->getSwapChainExtent().width * 4 };
-    uint32_t const height{ _vulkan->getSwapChainExtent().height * 4 };
+    uint32_t const width{ _vulkan->getSwapChainExtent().width * 2 };
+    uint32_t const height{ _vulkan->getSwapChainExtent().height * 2 };
     //uint32_t const width{ 2048 };
     //uint32_t const height{ 2048 };
 

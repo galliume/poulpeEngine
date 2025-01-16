@@ -489,7 +489,7 @@ namespace Poulpe {
   VkSurfaceFormatKHR VulkanAPI::chooseSwapSurfaceFormat(std::vector<VkSurfaceFormatKHR> const & available_formats)
   {
     for (auto const & available_format : available_formats) {
-      if (available_format.format == VK_FORMAT_R16G16B16A16_UNORM
+      if (available_format.format == VK_FORMAT_R8G8B8A8_UNORM
         && available_format.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR) {
         return available_format;
       }
@@ -2132,8 +2132,8 @@ namespace Poulpe {
 
   void VulkanAPI::createDepthMapImage(VkImage& image)
   {
-    uint32_t const width{ getSwapChainExtent().width * 4 };
-    uint32_t const height{ getSwapChainExtent().height * 4 };
+    uint32_t const width{ getSwapChainExtent().width * 2 };
+    uint32_t const height{ getSwapChainExtent().height * 2 };
 
     VkImageCreateInfo image_info{};
     image_info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
