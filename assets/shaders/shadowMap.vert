@@ -4,7 +4,6 @@
 struct UBO
 {
   mat4 model;
-  mat4 inversed_model; 
   mat4 projection;
 };
 

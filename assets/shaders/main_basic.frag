@@ -38,6 +38,7 @@ layout(location = 0) in FRAG_VAR {
   vec3 tangent;
   vec3 bitangent;  
   mat3 TBN;
+  vec4 light_space;
 } var;
 
 struct Light {
@@ -143,43 +144,31 @@ float linear_to_sRGB(float color)
   }
 }
 
-float ShadowCalculation(vec4 light_space, vec3 normal)
+float ShadowCalculation(vec4 light_space, float NdL)
 {
   vec3 p = light_space.xyz / light_space.w;
   p = p * 0.5 + 0.5;
 
-  float light = texture(tex_shadow_sampler[SHADOW_MAP_INDEX], p);
+    // Shadow map resolution
+    ivec2 shadow_size = textureSize(tex_shadow_sampler[SHADOW_MAP_INDEX], 0);
+    vec2 texel_size = 1.0 / vec2(shadow_size);
 
-  ivec2 shadow_offset = textureSize(tex_shadow_sampler[SHADOW_MAP_INDEX], 0);
-  float dx = 1.0 / float(shadow_offset.x);
-  float dy = 1.0 / float(shadow_offset.y);
-  float bias = max(0.05 * (1.0 - dot(normal, sun_light.direction)), 0.005);
-  
-  p.x -= dx;
-  p.y -= dy;
-  light += texture(tex_shadow_sampler[SHADOW_MAP_INDEX], p, bias);
-  p.x += dx * 2.0;
-  light += texture(tex_shadow_sampler[SHADOW_MAP_INDEX], p, bias);
-  p.y += dy * 2.0;
-  light += texture(tex_shadow_sampler[SHADOW_MAP_INDEX], p, bias);
-  p.x += dx * 2.0;
-  light += texture(tex_shadow_sampler[SHADOW_MAP_INDEX], p, bias);
+    // Shadow bias (to avoid self-shadowing)
+    float bias = max(0.05 * (1.0 - NdL), 0.005);
+    p.z -= bias;
 
-/*
-  int range = 1;
-
-  for (int x = -range; x <= range; x++)
-  {
-    for (int y = -range; y <= range; y++)
+    // Percentage Closer Filtering (PCF) using 4-tap bilinear filter
+    float light = 0.0;
+    for (int x = -1; x <= 1; x++)
     {
-      p.x += x * dx;
-      p.y += y * dy;
-      light += texture(tex_shadow_sampler[SHADOW_MAP_INDEX], p);
+        for (int y = -1; y <= 1; y++)
+        {
+            vec2 offset = vec2(x, y) * texel_size;
+            light += texture(tex_shadow_sampler[SHADOW_MAP_INDEX], vec3(p.xy + offset, p.z));
+        }
     }
-  }
-  */
-  light *= 0.2;
-
+  light /= 9.0;
+  
   return light;
 }
 
@@ -224,9 +213,9 @@ void main()
 
   ivec2 normal_size = textureSize(tex_sampler[NORMAL_INDEX], 0);
   if (normal_size.x <= 2.0) {
-    normal = var.norm;
-    normal = var.TBN * normal;
+    normal = var.TBN * var.norm;
   }
+
   normal = normalize(normal * material.strength.x);
 
   vec2 mr_coord = transform_uv(
@@ -235,15 +224,26 @@ void main()
     material.mr_rotation,
     var.texture_coord); 
 
-  vec2 metal_roughness = texture(tex_sampler[METAL_ROUGHNESS_INDEX], mr_coord).rg;
-  float metallic = metal_roughness.r ;
-  float roughness = metal_roughness.g * material.mr_factor.y;
+  vec2 metal_roughness = texture(tex_sampler[METAL_ROUGHNESS_INDEX], mr_coord).bg;
+  float metallic = metal_roughness.x * material.mr_factor.x;
+  float roughness = metal_roughness.y * material.mr_factor.y;
 
   ivec2 mr_size = textureSize(tex_sampler[METAL_ROUGHNESS_INDEX], 0);
   if (mr_size.x <= 2.0) {
     metallic = material.mr_factor.x;
     roughness = material.mr_factor.y;
   }
+//  final_color = vec4(1.0, roughness, metallic, 1.0); // Red for zero metallic
+//      return;
+//     // Debugging: Output metallic and roughness values
+//  if (metallic == 0.0) {
+//    final_color = vec4(1.0, 0.0, 0.0, 1.0); // Red for zero metallic
+//    return;
+//  }
+//  if (roughness == 0.0) {
+//    final_color = vec4(0.0, 1.0, 0.0, 1.0); // Green for zero roughness
+//    return;
+//  }
 
   float roughness2 = roughness * roughness; 
   roughness2 = roughness2 * roughness2;
@@ -273,7 +273,7 @@ void main()
   }
   albedo *= var.color;
 
-  vec4 C_light = vec4(sun_light.color, 0.0) * 0.001;
+  vec4 C_light = vec4(sun_light.color, 0.0) * 0.1;
   vec4 C_ambient = material.ambient * albedo * C_light * ao;
   vec4 C_diffuse = material.diffuse * albedo / PI;
   vec4 C_specular = material.specular;
@@ -285,6 +285,7 @@ void main()
   float P =  5.0 * (1.0 - roughness); 
 
   vec4 out_lights = vec4(0.0, 0.0, 0.0, 1.0);
+
   for (int i = 0; i < NR_POINT_LIGHTS; ++i) {
 
     vec3 light_pos = var.t_plight_pos[i];
@@ -294,7 +295,7 @@ void main()
     //float attenuation = 1.0 / (distance * distance);
     float attenuation = ExponentialAttenuation(p, light_pos);
     vec3 l_color = point_lights[i].color;
-    C_light = vec4(l_color * attenuation, 1.0);
+    C_light = vec4(l_color, 1.0) * attenuation;
     vec3 F90 = mix(F0, vec3(1.0), metallic);//vec3(1.0); //point_lights[i].color;
     //C_light = vec4(point_lights[i].color, 1.0);
 
@@ -337,10 +338,10 @@ void main()
     //float G2 = 0.5 / mix(2.0 * NdL * NdH, NdL + NdH, roughness2);
     //float G2 = 0.5 * (1.0 + (2.0 * NdL * NdH) / (NdL + NdH + roughness2));
 
-    float tmp = PI * (1.0 + NdH2 * (roughness2 - 1.0));
+    float tmp = (1.0 + NdH2 * (roughness2 - 1.0));
     float NDF = (roughness2) / (PI * (tmp * tmp));
 
-    float r = roughness2 + 1.0;
+    float r = roughness + 1.0;
     float k = (r*r) / 8.0;
     float G1 = NdL / (NdL * (1.0 - k) + k);
     float G2 = NdV / (NdV * (1.0 - k) + k);
@@ -352,9 +353,12 @@ void main()
     out_lights += vec4((kD * diffuse + specular) * C_light.xyz * NdL , 1.0);
   }
   
-  vec4 color = C_ambient + out_lights;
-  color *= PI;
+  vec3 l = normalize(var.light_pos - var.frag_pos);
+  float NdL = max(dot(var.norm, l), 0.0);
+  float shadow = ShadowCalculation(var.light_space, NdL);
 
+  vec4 color = C_ambient + out_lights;
+  
   vec2 emissive_coord = transform_uv(
     material.emissive_translation,
     material.emissive_scale,
