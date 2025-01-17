@@ -191,8 +191,9 @@ namespace Poulpe
     void submit(DrawCommands const& drawCmds);
 
     void swapBufferEntities();
-
-  private:
+    void swapBufferTransparentEntities();
+  
+private:
     std::unique_ptr<VulkanAPI> _vulkan{ nullptr };
     VkSwapchainKHR _swapchain{ nullptr };
 
@@ -269,11 +270,16 @@ namespace Poulpe
     std::vector<VkSemaphore> _shadowmap_sema_img_available;
 
     std::vector<Entity*> _entities{};
-    std::vector<Entity*> _transparent_entities{};
     std::vector<Entity*> _entities_buffer{};
-    std::vector<Entity*> _transparent_entities_buffer{};
     unsigned int const _entities_buffer_swap_treshold{ 50 };
     bool _force_entities_buffer_swap{ false };
+    std::mutex _mutex_entity_submit;
+    
+    std::vector<Entity*> _transparent_entities{};
+    std::vector<Entity*> _transparent_entities_buffer{};
+    unsigned int const _transparent_entities_buffer_swap_treshold{ 50 };
+    bool _force_transparent_entities_buffer_swap{ false };
+    std::mutex _mutex_transparent_entity_submit;
 
     std::vector<VkSemaphore> _entities_sema_finished;
 
@@ -281,7 +287,6 @@ namespace Poulpe
     std::vector<VkFence> _fences_in_flight{};
 
     std::mutex _mutex_queue_submit;
-    std::mutex _mutex_entity_submit;
 
     DrawCommands _draw_cmds{_MAX_RENDER_THREAD};
   };

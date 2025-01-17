@@ -23,7 +23,7 @@ Install the latest Vulkan SDK https://vulkan.lunarg.com/ and be sure to have the
 
 Compile shaders (Windows && Linux) : 
 ```
-bin/plpShadersCompilation.sh
+bin/shaders_compil.sh
 ```	
 
 List existing presets

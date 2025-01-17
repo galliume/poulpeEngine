@@ -147,29 +147,26 @@ float linear_to_sRGB(float color)
 float ShadowCalculation(vec4 light_space, float NdL)
 {
   vec3 p = light_space.xyz / light_space.w;
-  p = p * 0.5 + 0.5;
-
-    // Shadow map resolution
-    ivec2 shadow_size = textureSize(tex_shadow_sampler[SHADOW_MAP_INDEX], 0);
-    vec2 texel_size = 1.0 / vec2(shadow_size);
-
-    // Shadow bias (to avoid self-shadowing)
-    float bias = max(0.05 * (1.0 - NdL), 0.005);
-    p.z -= bias;
-
-    // Percentage Closer Filtering (PCF) using 4-tap bilinear filter
-    float light = 0.0;
-    for (int x = -1; x <= 1; x++)
-    {
-        for (int y = -1; y <= 1; y++)
-        {
-            vec2 offset = vec2(x, y) * texel_size;
-            light += texture(tex_shadow_sampler[SHADOW_MAP_INDEX], vec3(p.xy + offset, p.z));
-        }
-    }
-  light /= 9.0;
+  float light = texture(tex_shadow_sampler[SHADOW_MAP_INDEX], p);
   
-  return light;
+  ivec2 size = textureSize(tex_shadow_sampler[SHADOW_MAP_INDEX], 0);
+  float shadow_xoffset = 1.0 / size.x;
+  float shadow_yoffset = 1.0 / size.y;
+  float bias = max(0.05 * (1.0 - NdL), 0.005);
+  
+  p.x -= shadow_xoffset;
+  p.y -= shadow_yoffset;
+  light += texture(tex_shadow_sampler[SHADOW_MAP_INDEX], p, bias);
+  p.x += shadow_xoffset * 2.0;
+  light += texture(tex_shadow_sampler[SHADOW_MAP_INDEX], p, bias);
+  p.y += shadow_yoffset * 2.0;
+  light += texture(tex_shadow_sampler[SHADOW_MAP_INDEX], p, bias);
+  p.x += shadow_xoffset * 2.0;
+  light += texture(tex_shadow_sampler[SHADOW_MAP_INDEX], p, bias);
+
+  light *= 0.2;
+
+  return 1.0 + light;
 }
 
 //https://github.com/KhronosGroup/glTF/blob/main/extensions/2.0/Khronos/KHR_texture_transform/README.md
@@ -273,7 +270,7 @@ void main()
   }
   albedo *= var.color;
 
-  vec4 C_light = vec4(sun_light.color, 0.0) * 0.1;
+  vec4 C_light = vec4(sun_light.color, 0.0) * 0.7;
   vec4 C_ambient = material.ambient * albedo * C_light * ao;
   vec4 C_diffuse = material.diffuse * albedo / PI;
   vec4 C_specular = material.specular;
@@ -295,7 +292,7 @@ void main()
     //float attenuation = 1.0 / (distance * distance);
     float attenuation = ExponentialAttenuation(p, light_pos);
     vec3 l_color = point_lights[i].color;
-    C_light = vec4(l_color, 1.0) * attenuation;
+    C_light = vec4(l_color, 1.0) * attenuation * 2.0;
     vec3 F90 = mix(F0, vec3(1.0), metallic);//vec3(1.0); //point_lights[i].color;
     //C_light = vec4(point_lights[i].color, 1.0);
 
@@ -358,6 +355,7 @@ void main()
   float shadow = ShadowCalculation(var.light_space, NdL);
 
   vec4 color = C_ambient + out_lights;
+  color.xyz *= shadow;
   
   vec2 emissive_coord = transform_uv(
     material.emissive_translation,
@@ -371,9 +369,7 @@ void main()
     color += material.emission * emissive_color;
   }
 
-  color.r = linear_to_sRGB(color.r);
-  color.g = linear_to_sRGB(color.g);
-  color.b = linear_to_sRGB(color.b);
+
 
   final_color = color;
 

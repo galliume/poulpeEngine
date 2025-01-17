@@ -655,6 +655,9 @@ namespace Poulpe
     if (_entities.size() <= 0) {
       swapBufferEntities();
     };
+    if (_transparent_entities.size() <= 0) {
+      swapBufferTransparentEntities();
+    };
   }
 
   void Renderer::destroy()
@@ -773,6 +776,9 @@ namespace Poulpe
     if (!_entities_buffer.empty()) {
       swapBufferEntities();
     }
+    if (!_transparent_entities_buffer.empty()) {
+      swapBufferTransparentEntities();
+    }
   }
 
   void Renderer::setRayPick(
@@ -841,11 +847,11 @@ namespace Poulpe
   void Renderer::addTransparentEntity(Entity* entity, bool const is_last)
   {
     {
-      std::lock_guard guard(_mutex_entity_submit);
+      std::lock_guard guard(_mutex_transparent_entity_submit);
 
       _transparent_entities_buffer.emplace_back(entity);
 
-      _force_entities_buffer_swap = is_last;
+      _force_transparent_entities_buffer_swap = is_last;
     }
   }
 
@@ -885,11 +891,22 @@ namespace Poulpe
       copy(_entities_buffer.begin(), _entities_buffer.end(), back_inserter(_entities));
       _entities_buffer.clear();
 
+      _update_shadow_map = true;
+      _force_entities_buffer_swap = false;
+    }
+  }
+
+  void Renderer::swapBufferTransparentEntities()
+  {
+    if (_transparent_entities_buffer.size() < _transparent_entities_buffer_swap_treshold
+        && !_force_transparent_entities_buffer_swap) return;
+
+    {
       copy(_transparent_entities_buffer.begin(), _transparent_entities_buffer.end(), back_inserter(_transparent_entities));
       _transparent_entities_buffer.clear();
 
       _update_shadow_map = true;
-      _force_entities_buffer_swap = false;
+      _force_transparent_entities_buffer_swap = false;
     }
   }
 }

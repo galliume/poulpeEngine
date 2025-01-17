@@ -142,7 +142,7 @@ void main()
   // TangentSpaceVL(frag_var.frag_pos, frag_var.view_pos, point_lights[0].position, norm, tangent, frag_var.t_pview_dir[0], frag_var.t_plight_dir[0]);
   // TangentSpaceVL(frag_var.frag_pos, frag_var.view_pos, point_lights[1].position, norm, tangent, frag_var.t_pview_dir[1], frag_var.t_plight_dir[1]);
 
-  frag_var.light_space = (ubo.projection * sun_light.view * ubo.model) * vec4(frag_var.frag_pos , 1.0);
+  frag_var.light_space = (biasMat * ubo.projection * sun_light.view * ubo.model) * vec4(frag_var.frag_pos , 1.0);
   
   frag_var.texture_coord = texture_coord;
   frag_var.norm = norm;

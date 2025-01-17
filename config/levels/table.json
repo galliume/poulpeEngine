@@ -1,0 +1,62 @@
+{
+  "entities": {
+		"table": {
+			"mesh": "assets/mesh/DamagedHelmet/glTF/coffee_table_round_01_4k.gltf",
+			"textures": {
+				"textures_coffee_table_round_01_diff_4k": {
+					"path": "assets/mesh/DamagedHelmet/glTF/textures/coffee_table_round_01_diff_4k.ktx2"
+				}
+			},
+			"ao": {
+				"textures_ao": {
+					"path": "assets/mesh/DamagedHelmet/glTF/textures/ao.ktx2"
+				}
+			},
+			"mr": {
+				"textures_coffee_table_round_01_arm_4k": {
+					"path": "assets/mesh/DamagedHelmet/glTF/textures/coffee_table_round_01_arm_4k.ktx2"
+				}
+			},
+			"emissive": {
+			},
+			"normal": {
+				"textures_coffee_table_round_01_nor_gl_4k": {
+					"path": "assets/mesh/DamagedHelmet/glTF/textures/coffee_table_round_01_nor_gl_4k.ktx2"
+				}
+			},
+			"shader": "main_basic",
+			"positions": [
+				{
+					"x": 0.0,
+					"y": -10.0,
+					"z": 0.0
+				}
+			],
+			"scales": [
+				{
+					"x": 1.0,
+					"y": 1.0,
+					"z": 1.0
+				}
+			],
+			"rotations": [
+				{
+					"x": 90.0,
+					"y": 180.0,
+					"z": 0.0
+				}
+			],
+			"flipY": false,
+			"count": 1,
+			"hasBbox": false,
+			"hasAnimation": false,
+			"isPointLight": false,
+			"animationScripts": {
+				"anim0": "assets/scripts/animation/helmet/anim0.lua"
+			},
+			"hasShadow": true,
+			"isIndexed": true,
+			"debugNormal": true
+		}
+  }
+}
