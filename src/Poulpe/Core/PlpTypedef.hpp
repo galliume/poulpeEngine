@@ -72,6 +72,9 @@ namespace Poulpe
     alignas(16) glm::vec3 mr_translation{ 0.0 };
     alignas(16) glm::vec3 mr_scale{ 1.0 };
     alignas(16) glm::vec3 mr_rotation{ 0.0 };
+    alignas(16) glm::vec3 transmission_translation{ 0.0 };
+    alignas(16) glm::vec3 transmission_scale{ 1.0 };
+    alignas(16) glm::vec3 transmission_rotation{ 0.0 };
     alignas(16) glm::vec3 strength{ 1.0 };//x: normal strength, y occlusion strength
   };
 
@@ -146,6 +149,10 @@ namespace Poulpe
     TextureWrapMode texture_base_color_wrap_mode_u;
     TextureWrapMode texture_base_color_wrap_mode_v;
 
+    std::string name_texture_transmission;
+    TextureWrapMode texture_transmission_wrap_mode_u;
+    TextureWrapMode texture_transmission_wrap_mode_v;
+
     glm::vec3 normal_translation{ 0.0 };
     glm::vec3 normal_scale{ 1.0 };
     glm::vec2 normal_rotation{ 0.0 };
@@ -166,9 +173,13 @@ namespace Poulpe
     glm::vec3 mr_scale{ 1.0 };
     glm::vec2 mr_rotation{ 0.0 };
 
+    glm::vec3 transmission_translation{ 0.0 };
+    glm::vec3 transmission_scale{ 1.0 };
+    glm::vec2 transmission_rotation{ 0.0 };
+
     float normal_strength{ 1.0 };
     float occlusion_strength{ 1.0 };
-
+    float transmission_strength{ 1.0 };
   };
 
   struct constants
@@ -201,6 +212,7 @@ namespace Poulpe
     std::string _emissive;
     std::string _ao;
     std::string _base_color;
+    std::string _transmission;
     std::vector<Vertex> _vertices;
     std::vector<uint32_t> _indices;
     std::vector<UniformBufferObject> _ubos;
@@ -211,11 +223,12 @@ namespace Poulpe
     uint32_t _texture_index { 0 };
     glm::vec3 _origin_pos;
     glm::vec3 _origin_scale;
-    glm::vec3 _origin_rotation;
+    glm::quat _origin_rotation;
     glm::vec3 _current_pos;
-    glm::vec3 _current_rotation;
+    glm::quat _current_rotation;
     glm::vec3 _current_scale;
     glm::vec3 _tangeant;
+    glm::mat4 _transform_matrix;
   };
 
   struct EntityOptions
@@ -223,7 +236,7 @@ namespace Poulpe
     std::string_view shader{};
     glm::vec3 const& pos{};
     glm::vec3 const& scale{};
-    glm::vec3 rotation{};
+    glm::quat rotation;
     bool has_bbox{ false };
     bool has_animation{ false };
     bool is_point_light{ false };

@@ -99,6 +99,9 @@ namespace Poulpe
       for (auto const& [key, data] : textures["ao"].items()) {
         _textures_config["ao"][key] = data;
       }
+      for (auto const& [key, data] : textures["transmission"].items()) {
+        _textures_config["transmission"][key] = data;
+      }
     });
     return _entity_config;
   }

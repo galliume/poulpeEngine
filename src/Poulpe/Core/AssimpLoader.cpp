@@ -102,11 +102,6 @@ namespace Poulpe
         if (mat->Get(AI_MATKEY_COLOR_TRANSPARENT, transmittanceColor) == aiReturn_SUCCESS) {
           material.transmittance = { transmittanceColor.r, transmittanceColor.g, transmittanceColor.b };
         }
-        float shininess{ 1.f };
-        if (mat->Get(AI_MATKEY_SHININESS, shininess) == aiReturn_SUCCESS) {
-          material.shininess = (0.0f <= shininess) ? shininess : 1.f;
-        }
-
         aiColor4D emission_color;
         if (mat->Get(AI_MATKEY_EMISSIVE_INTENSITY, emission_color) == aiReturn_SUCCESS) {
           material.emission = { emission_color.r, emission_color.g, emission_color.b, emission_color.a };
@@ -145,7 +140,20 @@ namespace Poulpe
         if (mat->Get(AI_MATKEY_ROUGHNESS_FACTOR, r) == aiReturn_SUCCESS) {
           material.mr_factor.y = r;
         }
-      
+        float transmission_strength{ 1.0 };
+        if (mat->Get(AI_MATKEY_TRANSMISSION_FACTOR, transmission_strength) == aiReturn_SUCCESS) {
+          material.transmission_strength = transmission_strength;
+        }
+        float ao_strength{ 1.0 };
+        if (mat->Get(AI_MATKEY_UVTRANSFORM(aiTextureType_LIGHTMAP, 0), ao_strength) == aiReturn_SUCCESS) {
+          material.occlusion_strength = ao_strength;
+        }
+        float glossiness{ 1.0 };
+        if (mat->Get(AI_MATKEY_SHININESS_STRENGTH, glossiness) == aiReturn_SUCCESS) {
+          material.shininess = glossiness;
+        }
+        
+
         if (mat->GetTextureCount(aiTextureType_AMBIENT) > 0) {
           aiString texture_path;
           aiTextureMapMode wrap_mode_u { aiTextureMapMode_Clamp };
@@ -341,11 +349,8 @@ namespace Poulpe
           if (mat->Get(AI_MATKEY_MAPPINGMODE_V(aiTextureType_LIGHTMAP, 0), wrap_mode_v) == aiReturn_SUCCESS) {
             material.texture_ao_wrap_mode_v = getTextureWrapMode(wrap_mode_v);
           }
-          float strength{ 1.0 };
-          if (mat->Get(AI_MATKEY_UVTRANSFORM(aiTextureType_LIGHTMAP, 0), strength) == aiReturn_SUCCESS) {
-            material.occlusion_strength = strength;
-          }
         }
+
         if (mat->GetTextureCount(aiTextureType_BASE_COLOR) > 0) {
           aiString texture_path;
           aiTextureMapMode wrap_mode_u { aiTextureMapMode_Clamp };
@@ -361,6 +366,29 @@ namespace Poulpe
             material.texture_base_color_wrap_mode_v = getTextureWrapMode(wrap_mode_v);
           }
         }
+        if (mat->GetTextureCount(aiTextureType_TRANSMISSION) > 0) {
+          aiString texture_path;
+          aiTextureMapMode wrap_mode_u { aiTextureMapMode_Clamp };
+          aiTextureMapMode wrap_mode_v { aiTextureMapMode_Clamp };
+          
+          if (mat->GetTexture(aiTextureType_TRANSMISSION, 0, &texture_path) == aiReturn_SUCCESS) {
+              material.name_texture_transmission = AssimpLoader::cleanName(texture_path.C_Str());
+          }
+          if (mat->Get(AI_MATKEY_MAPPINGMODE_U(aiTextureType_TRANSMISSION, 0), wrap_mode_u) == aiReturn_SUCCESS) {
+            material.texture_transmission_wrap_mode_u = getTextureWrapMode(wrap_mode_u);
+          }
+          if (mat->Get(AI_MATKEY_MAPPINGMODE_V(aiTextureType_TRANSMISSION, 0), wrap_mode_v) == aiReturn_SUCCESS) {
+            material.texture_transmission_wrap_mode_v = getTextureWrapMode(wrap_mode_v);
+          }
+          aiUVTransform transform{};
+          if (mat->Get(AI_MATKEY_UVTRANSFORM(aiTextureType_TRANSMISSION, 0), transform) == aiReturn_SUCCESS) {
+            material.transmission_translation = glm::vec3(transform.mTranslation.x, transform.mTranslation.y, 1.0);
+            material.transmission_scale = glm::vec3(transform.mScaling.x, transform.mScaling.y, 1.0);
+            material.transmission_rotation = glm::vec2(transform.mRotation, 1.0);
+          }
+        }
+
+
         //int illumModel;
         //if (mat->Get(AI_MATKEY_ILLUM, illumModel) == aiReturn_SUCCESS) {
         //  material.illum = material.illum;

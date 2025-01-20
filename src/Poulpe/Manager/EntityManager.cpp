@@ -102,29 +102,47 @@ namespace Poulpe
       scale_data["z"].template get<float>()
     );
     glm::vec3 const rotation = glm::vec3(
-      rotation_data["x"].template get<float>(),
-      rotation_data["y"].template get<float>(),
-      rotation_data["z"].template get<float>()
+      glm::radians(rotation_data["x"].template get<float>()),
+      glm::radians(rotation_data["y"].template get<float>()),
+      glm::radians(rotation_data["z"].template get<float>())
     );
 
     std::vector<std::string> textures{};
-    textures.reserve(data["textures"].size());
-    for (auto& [keyTex, pathTex] : data["textures"].items()) {
-      textures.emplace_back(static_cast<std::string>(keyTex));
-    }
-    for (auto& [keyTex, pathTex] : data["normal"].items()) {
-      textures.emplace_back(static_cast<std::string>(keyTex));
-    }
-    for (auto& [keyTex, pathTex] : data["mr"].items()) {
-      textures.emplace_back(static_cast<std::string>(keyTex));
+
+    if (data.contains("textures")) {
+      for (auto& [keyTex, pathTex] : data["textures"].items()) {
+        textures.emplace_back(static_cast<std::string>(keyTex));
+      }
     }
 
-    for (auto& [keyTex, pathTex] : data["emissive"].items()) {
-      textures.emplace_back(static_cast<std::string>(keyTex));
+    if (data.contains("normal")) {
+      for (auto& [keyTex, pathTex] : data["normal"].items()) {
+        textures.emplace_back(static_cast<std::string>(keyTex));
+      }
     }
 
-    for (auto& [keyTex, pathTex] : data["ao"].items()) {
-      textures.emplace_back(static_cast<std::string>(keyTex));
+    if (data.contains("mr")) {
+      for (auto& [keyTex, pathTex] : data["mr"].items()) {
+        textures.emplace_back(static_cast<std::string>(keyTex));
+      }
+    }
+
+    if (data.contains("ao")) {
+      for (auto& [keyTex, pathTex] : data["emissive"].items()) {
+        textures.emplace_back(static_cast<std::string>(keyTex));
+      }
+    }
+
+    if (data.contains("ao")) {
+      for (auto& [keyTex, pathTex] : data["ao"].items()) {
+        textures.emplace_back(static_cast<std::string>(keyTex));
+      }
+    }
+
+    if (data.contains("transmission")) {
+      for (auto& [keyTex, pathTex] : data["transmission"].items()) {
+        textures.emplace_back(static_cast<std::string>(keyTex));
+      }
     }
 
     bool const has_bbox = data["hasBbox"].template get<bool>();
@@ -140,7 +158,7 @@ namespace Poulpe
     auto shader = data["shader"].template get<std::string>();
 
     EntityOptions entity_opts = {
-      shader, position, scale, rotation,
+      shader, position, scale, glm::quat(rotation),
       data["hasBbox"].template get<bool>(),
       data["hasAnimation"].template get<bool>(),
       data["isPointLight"].template get<bool>(),
@@ -172,6 +190,7 @@ namespace Poulpe
       std::string name_texture_emissive{ "_plp_empty" };
       std::string name_texture_ao{ "_plp_empty" };
       std::string name_texture_base_color{ "_plp_empty" };
+      std::string name_texture_transmission{ "_plp_empty" };
       float alpha_mode{ 0.0 };
 
       if (!materials.empty()) {
@@ -217,6 +236,9 @@ namespace Poulpe
         if (!mat.name_texture_base_color.empty()) {
           name_texture_base_color = mat.name_texture_base_color;
         }
+        if (!mat.name_texture_transmission.empty()) {
+          name_texture_transmission = mat.name_texture_transmission;
+        }
       }
 
       Data data{};
@@ -229,6 +251,7 @@ namespace Poulpe
       data._emissive = name_texture_emissive;
       data._ao = name_texture_ao;
       data._base_color = name_texture_base_color;
+      data._transmission = name_texture_transmission;
       data._vertices = _data.vertices;
       data._indices = _data.indices;
       data._origin_pos = entity_opts.pos;
@@ -237,17 +260,13 @@ namespace Poulpe
       data._current_scale = entity_opts.scale;
       data._origin_rotation = entity_opts.rotation;
       data._current_rotation = entity_opts.rotation;
+      data._transform_matrix = _data.transform_matrix;
 
       UniformBufferObject ubo{};
       ubo.model = glm::mat4(1.0f);
       ubo.model = glm::scale(ubo.model, entity_opts.scale);
-
       ubo.model = glm::translate(ubo.model, entity_opts.pos);
-
-      ubo.model = glm::rotate(ubo.model, glm::radians(entity_opts.rotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
-      ubo.model = glm::rotate(ubo.model, glm::radians(entity_opts.rotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
-      ubo.model = glm::rotate(ubo.model, glm::radians(entity_opts.rotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
-
+      ubo.model *= glm::mat4_cast(entity_opts.rotation);
       ubo.model *= _data.transform_matrix;
       //ubo.inversed_model = glm::inverse(ubo.model);
 

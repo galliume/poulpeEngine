@@ -100,6 +100,19 @@ namespace Poulpe
     image_info.emplace_back(texture_ao.getSampler(), texture_ao.getImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
     image_info.emplace_back(tex.getSampler(), tex.getImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
+    std::vector<VkDescriptorImageInfo> cubemap_info{};
+
+    Texture texture_environment{ _texture_manager->getSkyboxTexture() };
+    texture_environment.setSampler(_renderer->getAPI()->createKTXSampler(
+      TextureWrapMode::CLAMP_TO_EDGE,
+      TextureWrapMode::CLAMP_TO_EDGE,
+      0));
+
+    if (texture_environment.getWidth() == 0) {
+      texture_environment = _texture_manager->getTextures()["_plp_empty"];
+    }
+    cubemap_info.emplace_back(texture_environment.getSampler(), texture_environment.getImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+
     std::vector<VkDescriptorImageInfo> depth_map_image_info{};
     depth_map_image_info.emplace_back(_renderer->getDepthMapSamplers(), _renderer->getDepthMapImageViews(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
     //image_info.emplace_back(shadowMapSpot);
@@ -112,7 +125,7 @@ namespace Poulpe
       _renderer->getAPI()->updateDescriptorSets(
         *mesh->getUniformBuffers(),
         *mesh->getStorageBuffers(),
-        descset, image_info, depth_map_image_info);
+        descset, image_info, depth_map_image_info, cubemap_info);
     }
 
     mesh->setDescSet(descset);

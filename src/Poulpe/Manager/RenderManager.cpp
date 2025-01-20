@@ -136,7 +136,7 @@ namespace Poulpe
       //@todo improve this draft for simple shader hot reload
       if (config_manager->reloadShaders()) {
         std::filesystem::path p = std::filesystem::current_path();
-        auto cmd{ p.string() + "/bin/shadersCompilation.sh" };
+        auto cmd{ p.string() + "/bin/shaders_compil.sh" };
         std::system(cmd.c_str());
 
         std::latch count_down{ 1 };

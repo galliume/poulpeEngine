@@ -106,7 +106,20 @@ namespace Poulpe
       depthMapsamplerLayoutBinding.pImmutableSamplers = nullptr;
       depthMapsamplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 
-      bindings = { uboLayoutBinding, samplerLayoutBinding, storageLayoutBinding, depthMapsamplerLayoutBinding };
+      VkDescriptorSetLayoutBinding cubeMapsamplerLayoutBinding{};
+      cubeMapsamplerLayoutBinding.binding = 4;
+      cubeMapsamplerLayoutBinding.descriptorCount = 1;
+      cubeMapsamplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+      cubeMapsamplerLayoutBinding.pImmutableSamplers = nullptr;
+      cubeMapsamplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+      bindings = {
+        uboLayoutBinding,
+        samplerLayoutBinding,
+        storageLayoutBinding,
+        depthMapsamplerLayoutBinding,
+        cubeMapsamplerLayoutBinding };
+
     } else if constexpr (T == DescSetLayoutType::HUD) {
       VkDescriptorSetLayoutBinding uboLayoutBinding{};
       uboLayoutBinding.binding = 0;

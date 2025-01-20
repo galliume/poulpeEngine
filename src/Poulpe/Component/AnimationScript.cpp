@@ -33,11 +33,19 @@ namespace Poulpe
     float angle_y = static_cast<float>(lua_tonumber(L, 5));
     float angle_z = static_cast<float>(lua_tonumber(L, 6));
 
+    //PLP_DEBUG("delta time {} duration {} x {} y {} z {}", delta_time, duration, angle_x, angle_y, angle_z);
+
+    glm::quat qx = glm::angleAxis(glm::radians(angle_x), glm::vec3(1, 0, 0));
+    glm::quat qy = glm::angleAxis(glm::radians(angle_y), glm::vec3(0, 1, 0));
+    glm::quat qz = glm::angleAxis(glm::radians(angle_z), glm::vec3(0, 0, 1));
+    
+    glm::quat rotation = qx * qy * qz;
+
     animScript->rotate(
       animScript->getData(),
       delta_time,
       duration,
-      glm::vec3(angle_x, angle_y, angle_z));
+      rotation);
 
     return 0;
   }
@@ -112,16 +120,20 @@ namespace Poulpe
     _new_moves.emplace_back(std::move(anim_move));
   }
 
-  void AnimationScript::rotate(Data* dataRotate, double delta_time, float duration, glm::vec3 angle)
+  void AnimationScript::rotate(Data* data_rotate, double delta_time, float duration, glm::quat angle)
   {
     std::unique_ptr<AnimationRotate> anim_rotate = std::make_unique<AnimationRotate>();
     anim_rotate->duration = duration;
     anim_rotate->angle = angle;
 
+    //PLP_DEBUG("START at {}/{}/{}", data_rotate->_origin_rotation.x, data_rotate->_origin_rotation.y, data_rotate->_origin_rotation.z);
+    //PLP_DEBUG("TO {}/{}/{}", anim_rotate->angle.x, anim_rotate->angle.y, anim_rotate->angle.z);
+
     anim_rotate->update = [](AnimationRotate* anim, Data* data, double delta_time) {
 
-      float t = anim->elapsedTime / anim->duration;
+      float t{ glm::clamp(anim->elapsedTime / anim->duration, 0.0f, 1.0f) };
       bool done{ false };
+
 
       if (anim->elapsedTime >= anim->duration) {
         done = true;
@@ -129,27 +141,20 @@ namespace Poulpe
       }
       anim->elapsedTime += delta_time;
 
-      //@todo switch euler angles to quaternions
-      data->_current_rotation = glm::mix(data->_current_rotation, anim->angle, t);
+      data->_current_rotation = glm::mix(data->_origin_rotation, anim->angle, t);
 
       glm::mat4 model = glm::mat4(1.0f);
-      //model = glm::scale(model, data->_origin_scale);
-      //model = glm::translate(model, data->_origin_pos);
-
-      model = glm::rotate(model, glm::radians(data->_current_rotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
-      model = glm::rotate(model, glm::radians(data->_current_rotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
-      model = glm::rotate(model, glm::radians(data->_current_rotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
+      model = glm::scale(model, data->_current_scale);
+      model = glm::translate(model, data->_current_pos);
+      model *= glm::mat4_cast(data->_current_rotation);
 
       std::ranges::for_each(data->_ubos, [&model](auto& ubo) {
         ubo.model = model;
       });
 
       anim->done = done;
-      if (done) {
-        data->_current_rotation = data->_origin_rotation;
-      }
     };
-    anim_rotate->update(anim_rotate.get(), dataRotate, delta_time);
+    anim_rotate->update(anim_rotate.get(), data_rotate, delta_time);
     _new_rotates.emplace_back(std::move(anim_rotate));
   }
 

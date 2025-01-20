@@ -1,0 +1,64 @@
+{
+	"entities": {
+		"CompareIor": {
+			"mesh": "assets/mesh/CompareIor/gLTF/CompareIor.gltf",
+			"textures": {
+				"Compare_Ior_img0": {
+					"path": "assets/mesh/CompareIor/glTF/Compare_Ior_img0.ktx2"
+				},
+				"Compare_Ior_img1": {
+					"path": "assets/mesh/CompareIor/glTF/Compare_Ior_img1.ktx2"
+				}
+			},
+			"ao": {
+			},
+			"mr": {
+				"Compare_Ior_img2": {
+					"path": "assets/mesh/CompareIor/glTF/Compare_Ior_img2.ktx2"
+				}
+			},
+			"emissive": {
+
+			},
+			"normal": {
+			},
+			"transmission": {
+				"Compare_Ior_img3": {
+					"path": "assets/mesh/CompareIor/glTF/Compare_Ior_img3.ktx2"
+				}
+			},
+			"shader": "main_basic",
+			"positions": [
+				{
+					"x": 0.0,
+					"y": -1.0,
+					"z": -2.0
+				}
+			],
+			"scales": [
+				{
+					"x": 1.0,
+					"y": 1.0,
+					"z": 1.0
+				}
+			],
+			"rotations": [
+				{
+					"x": 180.0,
+					"y": 0.0,
+					"z": 180.0
+				}
+			],
+			"flipY": false,
+			"count": 1,
+			"hasBbox": false,
+			"hasAnimation": false,
+			"isPointLight": false,
+			"animationScripts": {
+			},
+			"hasShadow": true,
+			"isIndexed": true,
+			"debugNormal": true
+		}
+	}
+}

@@ -187,6 +187,9 @@ namespace Poulpe
       for (auto& [key, texture_data] : _texture_config["ao"].items()) {
         add(key, texture_data, VK_IMAGE_ASPECT_COLOR_BIT, TEXTURE_TYPE::AO);
       }
+      for (auto& [key, texture_data] : _texture_config["transmission"].items()) {
+        add(key, texture_data, VK_IMAGE_ASPECT_COLOR_BIT, TEXTURE_TYPE::EMISSIVE);
+      }
       count_down.count_down();
     };
   }
