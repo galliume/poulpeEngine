@@ -84,6 +84,9 @@ struct Material
   vec3 mr_translation;
   vec3 mr_scale; 
   vec3 mr_rotation; 
+  vec3 transmission_translation;
+  vec3 transmission_scale; 
+  vec3 transmission_rotation;
   vec3 strength;//x: normal strength, y occlusion strength
 };
 

@@ -1,6 +1,6 @@
 function _rotation01(animScript, deltaTime)
   while true do
-    _Rotate(animScript, deltaTime, 1, 10.0, 10.0, 10.0)
+    _Rotate(animScript, deltaTime, 2, 0.0, 180.0, 0.0)
     coroutine.yield()
   end
 end

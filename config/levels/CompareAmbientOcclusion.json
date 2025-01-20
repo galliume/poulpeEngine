@@ -1,0 +1,65 @@
+{
+	"entities": {
+		"CompareAmbientOcclusion": {
+			"mesh": "assets/mesh/CompareAmbientOcclusion/gLTF/CompareAmbientOcclusion.gltf",
+			"textures": {
+				"FruitBaseColor": {
+					"path": "assets/mesh/CompareAmbientOcclusion/glTF/FruitBaseColor.ktx2"
+				}
+			},
+			"ao": {
+				"BasketORM": {
+					"path": "assets/mesh/CompareAmbientOcclusion/glTF/BasketORM.ktx2"
+				},
+				"FruitORM": {
+					"path": "assets/mesh/CompareAmbientOcclusion/glTF/FruitORM.ktx2"
+				}
+			},
+			"mr": {
+				"BasketORM": {
+					"path": "assets/mesh/CompareAmbientOcclusion/glTF/BasketORM.ktx2"
+				},
+				"FruitORM": {
+					"path": "assets/mesh/CompareAmbientOcclusion/glTF/FruitORM.ktx2"
+				}
+			},
+			"emissive": {
+
+			},
+			"normal": {
+			},
+			"shader": "main_basic",
+			"positions": [
+				{
+					"x": 0.0,
+					"y": -1.0,
+					"z": -2.0
+				}
+			],
+			"scales": [
+				{
+					"x": 1.0,
+					"y": 1.0,
+					"z": 1.0
+				}
+			],
+			"rotations": [
+				{
+					"x": 0.0,
+					"y": 180.0,
+					"z": 0.0
+				}
+			],
+			"flipY": false,
+			"count": 1,
+			"hasBbox": false,
+			"hasAnimation": false,
+			"isPointLight": false,
+			"animationScripts": {
+			},
+			"hasShadow": true,
+			"isIndexed": true,
+			"debugNormal": true
+		}
+	}
+}

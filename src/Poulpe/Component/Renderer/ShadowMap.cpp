@@ -11,6 +11,7 @@ namespace Poulpe
     std::vector<VkDescriptorImageInfo> image_infos{};
     image_infos.emplace_back(tex.getSampler(), tex.getImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
     std::vector<VkDescriptorImageInfo> depth_map_image_infos{};
+    std::vector<VkDescriptorImageInfo> cube_maps_infos{};
 
     auto const pipeline = _renderer->getPipeline(mesh->getShaderName());
     VkDescriptorSet descset = _renderer->getAPI()->createDescriptorSets(pipeline->desc_pool, { pipeline->descset_layout }, 1);
@@ -20,7 +21,10 @@ namespace Poulpe
       _renderer->getAPI()->updateDescriptorSets(
         *mesh->getUniformBuffers(),
         *mesh->getStorageBuffers(),
-        descset, image_infos, depth_map_image_infos);
+        descset,
+        image_infos,
+        depth_map_image_infos,
+        cube_maps_infos);
     }
 
     mesh->setDescSet(descset);
@@ -37,8 +41,13 @@ namespace Poulpe
       pushConstants.view = renderer->getCamera()->lookAt();
       pushConstants.view_position = renderer->getCamera()->getPos();
 
-      vkCmdPushConstants(cmd_buffer, pipeline_layout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(constants),
-          & pushConstants);
+      vkCmdPushConstants(
+        cmd_buffer,
+        pipeline_layout,
+        VK_SHADER_STAGE_VERTEX_BIT,
+        0,
+        sizeof(constants),
+        &pushConstants);
     });
 
     mesh->setHasPushConstants();

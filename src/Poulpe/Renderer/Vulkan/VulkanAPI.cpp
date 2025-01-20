@@ -1350,9 +1350,10 @@ namespace Poulpe {
     std::vector<Buffer>& storage_buffers,
     VkDescriptorSet& descset,
     std::vector<VkDescriptorImageInfo>& image_info,
-    std::vector<VkDescriptorImageInfo>& depth_map_image_info)
+    std::vector<VkDescriptorImageInfo>& depth_map_image_info,
+    std::vector<VkDescriptorImageInfo>& cube_map_image_info)
   {
-    std::array<VkWriteDescriptorSet, 4> desc_writes{};
+    std::array<VkWriteDescriptorSet, 5> desc_writes{};
     std::vector<VkDescriptorBufferInfo> buffer_infos;
     std::vector<VkDescriptorBufferInfo> storage_buffer_infos;
 
@@ -1407,6 +1408,14 @@ namespace Poulpe {
     desc_writes[3].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
     desc_writes[3].descriptorCount = depth_map_image_info.size();
     desc_writes[3].pImageInfo = depth_map_image_info.data();
+
+    desc_writes[4].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    desc_writes[4].dstSet = descset;
+    desc_writes[4].dstBinding = 4;
+    desc_writes[4].dstArrayElement = 0;
+    desc_writes[4].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    desc_writes[4].descriptorCount = cube_map_image_info.size();
+    desc_writes[4].pImageInfo = cube_map_image_info.data();
 
     vkUpdateDescriptorSets(_device, static_cast<uint32_t>(desc_writes.size()), desc_writes.data(), 0, nullptr);
   }
