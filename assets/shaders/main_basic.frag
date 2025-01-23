@@ -339,7 +339,7 @@ void main()
   vec3 kS = F0 + (1.0 - F0) * pow(clamp(1.0 - cos_t, 0.0, 1.0), 5.0);
   vec3 kD = 1.0 - kS;
 
-  vec4 C_light = vec4(sun_light.color, 0.0) * 0.0005;
+  vec4 C_light = vec4(sun_light.color, 0.0) * 0.05;
   vec4 C_diffuse = albedo / PI;
   vec4 C_specular = material.specular;
   vec4 C_ambient = C_diffuse * C_light * ao;
@@ -381,7 +381,6 @@ void main()
 
     float D = GGXDistribution(NdH2, roughness2);
 
-    //useless ? see 9.8 pages 337
     float G1 = SmithGeometryGGX(roughness2 / 2, NdL);
     float G2 = SmithGeometryGGX(roughness2 / 2, NdH);
     
@@ -411,10 +410,10 @@ void main()
   float G = G1 * G2;
 
   vec3 specular = (D * G * F) / max(4.0 * NdV, 0.0001);
-  vec3 radiance = sun_light.color * 0.0005;
+  vec3 radiance = sun_light.color * 0.5;
   vec3 C_sun = (C_diffuse.xyz + specular) * radiance * ao;
 
-  vec4 color = vec4(C_ambient.xyz + C_sun + out_lights, color_alpha);
+  vec4 color = vec4(C_ambient.xyz + out_lights, color_alpha);
   color.xyz *= shadow;
   color *= PI;
 

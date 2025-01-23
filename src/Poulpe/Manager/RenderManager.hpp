@@ -52,6 +52,7 @@ namespace Poulpe
     //@todo move to EntityManager
     void prepareHUD();
     void prepareSkybox();
+    void prepareTerrain();
 
   private:
     std::string _current_level;

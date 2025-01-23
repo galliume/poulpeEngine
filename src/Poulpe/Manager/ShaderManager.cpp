@@ -168,7 +168,23 @@ namespace Poulpe
       storageLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
 
       bindings = { uboLayoutBinding, storageLayoutBinding };
-    } else {
+    } else if constexpr (T == DescSetLayoutType::Terrain) {
+      VkDescriptorSetLayoutBinding uboLayoutBinding{};
+      uboLayoutBinding.binding = 0;
+      uboLayoutBinding.descriptorCount = 1;
+      uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+      uboLayoutBinding.pImmutableSamplers = nullptr;
+      uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+
+      VkDescriptorSetLayoutBinding samplerLayoutBinding{};
+      samplerLayoutBinding.binding = 1;
+      samplerLayoutBinding.descriptorCount = 1;
+      samplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+      samplerLayoutBinding.pImmutableSamplers = nullptr;
+      samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+
+      bindings = { uboLayoutBinding, samplerLayoutBinding };
+    }else {
       PLP_FATAL("unknown descSetLayoutType");
       throw std::runtime_error("unknown descSetLayoutType");
     }
@@ -176,6 +192,7 @@ namespace Poulpe
     return _renderer->getAPI()->createDescriptorSetLayout(bindings);
   }
 
+  //@todo refacto and simplify...
   void ShaderManager::createGraphicPipeline(std::string const & shaderName)
   {
     bool offscreen = (shaderName == "shadowMap") ? true : false;
@@ -205,6 +222,30 @@ namespace Poulpe
     if (shaderName == "skybox") {
       VkPipelineVertexInputStateCreateInfo* vertexInputInfo{nullptr};
       descset_layout = createDescriptorSetLayout<DescSetLayoutType::Skybox>();
+      std::vector<VkDescriptorSetLayout> dSetLayout = { descset_layout };
+      vertexInputInfo = getVertexInputState<VertexBindingType::Vertex3D>();
+
+      std::vector<VkPushConstantRange> vkPcs = {};
+      VkPushConstantRange vkPc;
+      vkPc.offset = 0;
+      vkPc.size = sizeof(constants);
+      vkPc.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+      vkPcs.emplace_back(vkPc);
+
+      pipeline_layout = _renderer->getAPI()->createPipelineLayout(dSetLayout, vkPcs);
+
+      graphicPipeline = _renderer->getAPI()->createGraphicsPipeline(
+        pipeline_layout,
+        shaderName,
+        shaders,
+        *vertexInputInfo,
+        VK_CULL_MODE_BACK_BIT,
+        false, false, false,
+        VK_POLYGON_MODE_FILL);
+
+    } else if (shaderName == "terrain") {
+      VkPipelineVertexInputStateCreateInfo* vertexInputInfo{nullptr};
+      descset_layout = createDescriptorSetLayout<DescSetLayoutType::Terrain>();
       std::vector<VkDescriptorSetLayout> dSetLayout = { descset_layout };
       vertexInputInfo = getVertexInputState<VertexBindingType::Vertex3D>();
 

@@ -1,4 +1,9 @@
 {
+	"terrain": {
+		"46_016_3_028_13_512_512": {
+			"path": "assets/texture/terrain/46_016_3_028_13_512_512.ktx2"
+		}
+	},
 	"entities": {
 		"DamagedHelmet": {
 			"mesh": "assets/mesh/DamagedHelmet/glTF/DamagedHelmet.gltf",
@@ -60,7 +65,8 @@
 			"hasShadow": true,
 			"isIndexed": true,
 			"debugNormal": true
-		},
+		}
+	},
 		"table": {
 			"mesh": "assets/mesh/DamagedHelmet/glTF/modern_coffee_table_02_4k.gltf",
 			"textures": {
@@ -126,5 +132,4 @@
 			"isIndexed": true,
 			"debugNormal": true
 		}
-	}
 }

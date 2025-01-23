@@ -83,26 +83,46 @@ namespace Poulpe
     f.close();
 
     std::ranges::for_each(_entity_config["entities"].items(), [&](auto const& entities) {
-      auto textures = entities.value();
-      for (auto const& [key, data] : textures["textures"].items()) {
-        _textures_config["textures"][key] = data;
+      auto const& textures = entities.value();
+      
+      if (textures.contains("textures")) {
+        for (auto const& [key, data] : textures["textures"].items()) {
+          _textures_config["textures"][key] = data;
+        }
       }
-      for (auto const& [key, data] : textures["mr"].items()) {
-        _textures_config["mr"][key] = data;
+      if (textures.contains("mr")) {
+        for (auto const& [key, data] : textures["mr"].items()) {
+          _textures_config["mr"][key] = data;
+        }
       }
-      for (auto const& [key, data] : textures["normal"].items()) {
-        _textures_config["normal"][key] = data;
+      if (textures.contains("normal")) {
+        for (auto const& [key, data] : textures["normal"].items()) {
+          _textures_config["normal"][key] = data;
+        }
       }
-      for (auto const& [key, data] : textures["emissive"].items()) {
-        _textures_config["emissive"][key] = data;
+      if (textures.contains("emissive")) {
+        for (auto const& [key, data] : textures["emissive"].items()) {
+          _textures_config["emissive"][key] = data;
+        }
       }
-      for (auto const& [key, data] : textures["ao"].items()) {
-        _textures_config["ao"][key] = data;
+      if (textures.contains("ao")) {
+        for (auto const& [key, data] : textures["ao"].items()) {
+          _textures_config["ao"][key] = data;
+        }
       }
-      for (auto const& [key, data] : textures["transmission"].items()) {
-        _textures_config["transmission"][key] = data;
+      if (textures.contains("transmission")) {
+        for (auto const& [key, data] : textures["transmission"].items()) {
+          _textures_config["transmission"][key] = data;
+        }
       }
     });
+
+    std::ranges::for_each(_entity_config["terrain"].items(), [&](auto const& terrain) {
+      auto const& key = terrain.key();
+      auto const& data = terrain.value();
+      _textures_config["terrain"][key] = data;      
+    });
+
     return _entity_config;
   }
 }

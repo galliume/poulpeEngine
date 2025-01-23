@@ -9,6 +9,7 @@
 #include "Poulpe/Component/Renderer/Grid.hpp"
 #include "Poulpe/Component/Renderer/ShadowMap.hpp"
 #include "Poulpe/Component/Renderer/Skybox.hpp"
+#include "Poulpe/Component/Renderer/Terrain.hpp"
 
 #include "Poulpe/Utils/IDHelper.hpp"
 
@@ -33,7 +34,8 @@ namespace Poulpe
       std::unique_ptr<Grid>,
       std::unique_ptr<Mesh>,
       std::unique_ptr<ShadowMap>,
-      std::unique_ptr<Skybox>>;
+      std::unique_ptr<Skybox>,
+      std::unique_ptr<Terrain>>;
 
     IDType getID() const { return _ID; }
     IDType getOwner() const { return _owner; }
@@ -42,12 +44,12 @@ namespace Poulpe
     void init(std::unique_ptr<T> componentImpl)
     {
       _ID = GUIDGenerator::getGUID();
-      _Pimpl.emplace<std::unique_ptr<T>>(std::move(componentImpl));
+      _pimpl.emplace<std::unique_ptr<T>>(std::move(componentImpl));
     }
 
     template<typename T>
     T* has() const {
-      if (auto ptr = std::get_if<std::unique_ptr<T>>(&_Pimpl)) {
+      if (auto ptr = std::get_if<std::unique_ptr<T>>(&_pimpl)) {
         return ptr->get();
       }
       return nullptr;
@@ -61,11 +63,11 @@ namespace Poulpe
         if constexpr (hasCallOperator<decltype(*component)>) {
           (*component)(delta_time, mesh);
         }
-      }, _Pimpl);
+      }, _pimpl);
     }
 
   protected:
-    ComponentImpl _Pimpl;
+    ComponentImpl _pimpl;
 
   private:
     IDType _ID{ 0 };

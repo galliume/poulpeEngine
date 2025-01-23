@@ -12,13 +12,13 @@ namespace Poulpe
     TextureWrapMode::CLAMP_TO_EDGE,
     tex.getMipLevels()));
 
-    std::vector<VkDescriptorImageInfo> imageInfos{};
-    imageInfos.emplace_back(tex.getSampler(), tex.getImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+    std::vector<VkDescriptorImageInfo> image_infos{};
+    image_infos.emplace_back(tex.getSampler(), tex.getImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
     auto const pipeline = _renderer->getPipeline(mesh->getShaderName());
     VkDescriptorSet descset = _renderer->getAPI()->createDescriptorSets(pipeline->desc_pool, { pipeline->descset_layout }, 1);
 
-    _renderer->getAPI()->updateDescriptorSets(*mesh->getUniformBuffers(), descset, imageInfos);
+    _renderer->getAPI()->updateDescriptorSets(*mesh->getUniformBuffers(), descset, image_infos);
 
     mesh->setDescSet(descset);
   }

@@ -33,8 +33,11 @@ namespace Poulpe
     //inline size_t getInstancedCount() const { return _Entities.size(); }
     //inline std::unordered_map<std::string, std::array<uint32_t, 2>> getLoadedEntities() { return _LoadedEntities; }
     inline Entity* getSkybox() { return _skybox.get(); }
+    inline Entity* getTerrain() { return _terrain.get(); }
+
     std::function<void()> load(nlohmann::json const& lvl_config);
     inline void setSkybox(std::unique_ptr<Entity> skybox) { _skybox = std::move(skybox); }
+    inline void setTerrain(std::unique_ptr<Entity> terrain) { _terrain = std::move(terrain); }
     //void addEntity(Mesh* meshes);
     //inline size_t getTotalEntities() const { return _Entities.size(); }
     EntityNode * getWorldNode();
@@ -55,6 +58,8 @@ namespace Poulpe
     Renderer* _renderer{nullptr};
 
     std::unique_ptr<Entity> _skybox{nullptr};
+    std::unique_ptr<Entity> _terrain{nullptr};
+
     std::unique_ptr<EntityNode> _world_node;
 
     mutable std::shared_mutex _mutex_shared;

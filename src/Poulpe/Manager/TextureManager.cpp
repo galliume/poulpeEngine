@@ -190,6 +190,9 @@ namespace Poulpe
       for (auto& [key, texture_data] : _texture_config["transmission"].items()) {
         add(key, texture_data, VK_IMAGE_ASPECT_COLOR_BIT, TEXTURE_TYPE::EMISSIVE);
       }
+      for (auto& [key, texture_data] : _texture_config["terrain"].items()) {
+        add(_terrain_name, texture_data, VK_IMAGE_ASPECT_COLOR_BIT, TEXTURE_TYPE::TERRAIN);
+      }
       count_down.count_down();
     };
   }
@@ -245,6 +248,11 @@ namespace Poulpe
       case TEXTURE_TYPE::AO:
         oetf = "linear";
         transcoding = KTX_TTF_BC4_R ;
+        ktx_format = "R8_UNORM";
+        break;
+      case TEXTURE_TYPE::TERRAIN:
+        oetf = "linear";
+        transcoding = KTX_TTF_BC4_R;
         ktx_format = "R8_UNORM";
         break;
       default:

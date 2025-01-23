@@ -566,7 +566,12 @@ namespace Poulpe
 
     std::latch count_down{4};
 
+    std::vector<Entity*> world{};
     if (_entity_manager->getSkybox()) {
+      world.emplace_back(_entity_manager->getSkybox());
+    }
+
+    if (!world.empty()) {
       draw(
         _cmd_buffer_entities2[_current_frame],
         _draw_cmds,
@@ -574,7 +579,7 @@ namespace Poulpe
         _images[_current_frame],
         _depth_imageviews[_current_frame],
         _depth_images[_current_frame],
-        {_entity_manager->getSkybox()},
+        world,
         VK_ATTACHMENT_LOAD_OP_CLEAR,
         VK_ATTACHMENT_STORE_OP_STORE,
         count_down,
@@ -585,6 +590,11 @@ namespace Poulpe
     }
 
     if (_entities.size() > 0) {
+
+      if (!_terrain_added && _entity_manager->getTerrain()) {
+        _entities.emplace_back(_entity_manager->getTerrain());
+      }
+
       _update_shadow_map = true;
       if (_update_shadow_map) {
         std::jthread shadow_map_thread([&]() {
