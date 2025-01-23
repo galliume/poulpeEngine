@@ -4,6 +4,7 @@
 #include "Crosshair.hpp"
 #include "Grid.hpp"
 #include "Skybox.hpp"
+#include "Terrain.hpp"
 
 namespace Poulpe
 {

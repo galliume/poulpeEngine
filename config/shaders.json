@@ -24,6 +24,11 @@
       "vert": "assets/shaders/spv/normal_vert.spv",
       "frag": "assets/shaders/spv/normal_frag.spv",
       "geom": "assets/shaders/spv/normal_geom.spv"
+    },
+    "terrain": {
+      "vert": "assets/shaders/spv/terrain_vert.spv",
+      "frag": "assets/shaders/spv/terrain_frag.spv",
+      "geom": ""
     }
   }
 }

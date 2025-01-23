@@ -116,6 +116,7 @@ namespace Poulpe
     }
 
     prepareSkybox();
+    prepareTerrain();
     //prepareHUD();
   }
 
@@ -268,5 +269,24 @@ namespace Poulpe
     _component_manager->add<RenderComponent>(skybox_entity->getID(), std::move(skybox_rdr_impl));
     _component_manager->add<MeshComponent>(skybox_entity->getID(), std::move(skybox_mesh));
     _entity_manager->setSkybox(std::move(skybox_entity));
+  }
+
+  void RenderManager::prepareTerrain()
+  {
+    auto entity = std::make_unique<Entity>();
+    auto mesh = std::make_unique<Mesh>();
+    mesh->setHasShadow(false);
+    mesh->setIsIndexed(true);
+    mesh->setShaderName("terrain");
+
+    auto rdr_impl{ RendererFactory::create<Terrain>() };
+    rdr_impl->init(_renderer.get(), _texture_manager.get(), nullptr);
+
+    double const delta_time{ 0.0 };
+    (*rdr_impl)(delta_time, mesh.get());
+
+    _component_manager->add<RenderComponent>(entity->getID(), std::move(rdr_impl));
+    _component_manager->add<MeshComponent>(entity->getID(), std::move(mesh));
+    _entity_manager->setTerrain(std::move(entity));
   }
 }

@@ -21,7 +21,7 @@ namespace Poulpe
   {
     alignas(16) glm::vec3 pos;
     alignas(16) glm::vec3 normal;
-    alignas(8)   glm::vec2 texture_coord;
+    alignas(8)  glm::vec2 texture_coord;
     alignas(16) glm::vec4 tangent;
     alignas(16) glm::vec4 color;
 

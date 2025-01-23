@@ -11,7 +11,7 @@
 namespace Poulpe
 {
   enum class DescSetLayoutType {
-      Skybox, HUD, Entity, Offscreen
+      Skybox, HUD, Entity, Offscreen, Terrain
   };
   enum class VertexBindingType {
       Vertex2D, Vertex3D

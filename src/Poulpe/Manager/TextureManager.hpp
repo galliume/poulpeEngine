@@ -17,7 +17,8 @@ namespace Poulpe
     NORMAL,
     MR,//metalRoughness
     EMISSIVE,
-    AO//ambientOcclusion
+    AO,//ambientOcclusion,
+    TERRAIN
   };
 
   class TextureManager
@@ -41,6 +42,7 @@ namespace Poulpe
     inline std::unordered_map<std::string, Texture> getTextures() { return _textures; }
     std::function<void(std::latch& count_down)> load();
     std::function<void(std::latch& count_down)> loadSkybox(std::string_view skybox);
+    Texture getTerrainTexture() { return _textures[_terrain_name]; }
 
   private:
     void add(
@@ -54,6 +56,7 @@ namespace Poulpe
 
     Renderer* _renderer{ nullptr };
     std::string _skybox_name;
+    std::string _terrain_name {"_plp_terrain"};
     nlohmann::json _texture_config;
 
     std::unordered_map<std::string, std::string> _paths;

@@ -73,7 +73,7 @@ namespace Poulpe
 
       for (uint32_t i{ 0 }; i < mesh->getUniformBuffers()->size(); i++) {
         //gridData._ubos[i].view = _renderer->GetCamera()->LookAt();
-        gridData._ubos[i].projection = _renderer->getPerspective();
+          gridData._ubos[i].projection = _renderer->getPerspective();
 
         _renderer->getAPI()->updateUniformBuffer(mesh->getUniformBuffers()->at(i), &gridData._ubos);
       }
