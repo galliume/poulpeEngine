@@ -178,7 +178,7 @@ namespace Poulpe
 
       VkDescriptorSetLayoutBinding samplerLayoutBinding{};
       samplerLayoutBinding.binding = 1;
-      samplerLayoutBinding.descriptorCount = 1;
+      samplerLayoutBinding.descriptorCount = 4;
       samplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
       samplerLayoutBinding.pImmutableSamplers = nullptr;
       samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
@@ -192,12 +192,21 @@ namespace Poulpe
     return _renderer->getAPI()->createDescriptorSetLayout(bindings);
   }
 
-  //@todo refacto and simplify...
-  void ShaderManager::createGraphicPipeline(std::string const & shaderName)
+  void ShaderManager::createGraphicPipeline(std::string const & shader_name)
   {
-    bool offscreen = (shaderName == "shadowMap") ? true : false;
-    auto cullMode = VK_CULL_MODE_BACK_BIT;
-    bool has_dynamic_culling{ false };
+    bool offscreen = (shader_name == "shadowMap") ? true : false;
+    bool need_bis{ false };
+
+    PipeLineCreateInfo pipeline_create_infos{};
+    pipeline_create_infos.name = shader_name;
+    pipeline_create_infos.cull_mode = VK_CULL_MODE_BACK_BIT;
+    pipeline_create_infos.has_depth_test = true;
+    pipeline_create_infos.has_depth_write = true;
+    pipeline_create_infos.has_stencil_test = true;
+    pipeline_create_infos.polygone_mode = VK_POLYGON_MODE_FILL;
+    pipeline_create_infos.has_color_attachment = true;
+    pipeline_create_infos.has_dynamic_depth_bias = true;
+    pipeline_create_infos.has_dynamic_culling = false;
 
     std::vector<VkDescriptorPoolSize> poolSizes{};
     VkDescriptorPoolSize dpsUbo;
@@ -212,166 +221,100 @@ namespace Poulpe
 
     if (!offscreen) poolSizes.emplace_back(dpsIS);
 
-    auto shaders = getShadersInfo(shaderName, offscreen);
+    auto shaders = getShadersInfo(shader_name, offscreen);
 
-    VkPipeline graphicPipeline{VK_NULL_HANDLE};
-    VkPipeline graphicPipelineBis{VK_NULL_HANDLE};
+    VkPipeline graphic_pipeline{VK_NULL_HANDLE};
+    VkPipeline graphic_pipeline_bis{VK_NULL_HANDLE};
     VkPipelineLayout pipeline_layout{VK_NULL_HANDLE};
     VkDescriptorSetLayout descset_layout{VK_NULL_HANDLE};
+    VkPipelineVertexInputStateCreateInfo* vertex_input_info{nullptr};
+    VkPushConstantRange push_constants{};
+    
+    vertex_input_info = getVertexInputState<VertexBindingType::Vertex3D>();
 
-    if (shaderName == "skybox") {
-      VkPipelineVertexInputStateCreateInfo* vertexInputInfo{nullptr};
+    if (shader_name == "skybox") {
       descset_layout = createDescriptorSetLayout<DescSetLayoutType::Skybox>();
-      std::vector<VkDescriptorSetLayout> dSetLayout = { descset_layout };
-      vertexInputInfo = getVertexInputState<VertexBindingType::Vertex3D>();
 
-      std::vector<VkPushConstantRange> vkPcs = {};
-      VkPushConstantRange vkPc;
-      vkPc.offset = 0;
-      vkPc.size = sizeof(constants);
-      vkPc.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
-      vkPcs.emplace_back(vkPc);
+      push_constants.offset = 0;
+      push_constants.size = sizeof(constants);
+      push_constants.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
 
-      pipeline_layout = _renderer->getAPI()->createPipelineLayout(dSetLayout, vkPcs);
+      pipeline_create_infos.has_depth_test = false;
+      pipeline_create_infos.has_depth_write = false;
+      pipeline_create_infos.has_stencil_test = false;
+      pipeline_create_infos.has_color_attachment = false;
+      pipeline_create_infos.has_dynamic_depth_bias = false;
 
-      graphicPipeline = _renderer->getAPI()->createGraphicsPipeline(
-        pipeline_layout,
-        shaderName,
-        shaders,
-        *vertexInputInfo,
-        VK_CULL_MODE_BACK_BIT,
-        false, false, false,
-        VK_POLYGON_MODE_FILL);
-
-    } else if (shaderName == "terrain") {
-      VkPipelineVertexInputStateCreateInfo* vertexInputInfo{nullptr};
+    } else if (shader_name == "terrain") {
       descset_layout = createDescriptorSetLayout<DescSetLayoutType::Terrain>();
-      std::vector<VkDescriptorSetLayout> dSetLayout = { descset_layout };
-      vertexInputInfo = getVertexInputState<VertexBindingType::Vertex3D>();
 
-      std::vector<VkPushConstantRange> vkPcs = {};
-      VkPushConstantRange vkPc;
-      vkPc.offset = 0;
-      vkPc.size = sizeof(constants);
-      vkPc.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
-      vkPcs.emplace_back(vkPc);
+      push_constants.offset = 0;
+      push_constants.size = sizeof(constants);
+      push_constants.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
 
-      pipeline_layout = _renderer->getAPI()->createPipelineLayout(dSetLayout, vkPcs);
-
-      graphicPipeline = _renderer->getAPI()->createGraphicsPipeline(
-        pipeline_layout,
-        shaderName,
-        shaders,
-        *vertexInputInfo,
-        VK_CULL_MODE_BACK_BIT,
-        false, false, false,
-        VK_POLYGON_MODE_FILL);
-
-    } else if (shaderName == "grid" || shaderName == "2d") {
-      VkPipelineVertexInputStateCreateInfo* vertexInputInfo{nullptr};
-      descset_layout = createDescriptorSetLayout<DescSetLayoutType::HUD>();
-      std::vector<VkDescriptorSetLayout> dSetLayout = { descset_layout };
-      vertexInputInfo = getVertexInputState<VertexBindingType::Vertex2D>();
-
-      std::vector<VkPushConstantRange> vkPcs = {};
-      VkPushConstantRange vkPc;
-      vkPc.offset = 0;
-      vkPc.size = sizeof(constants);
-      vkPc.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
-      vkPcs.emplace_back(vkPc);
-
-      pipeline_layout = _renderer->getAPI()->createPipelineLayout(dSetLayout, vkPcs);
-
-      graphicPipeline = _renderer->getAPI()->createGraphicsPipeline(
-        pipeline_layout,
-        shaderName,
-        shaders,
-        *vertexInputInfo,
-        VK_CULL_MODE_BACK_BIT,
-        true, true, true,
-        VK_POLYGON_MODE_FILL);
+      pipeline_create_infos.has_depth_test = true;
+      pipeline_create_infos.has_depth_write = true;
+      pipeline_create_infos.has_stencil_test = false;
+      pipeline_create_infos.has_dynamic_depth_bias = false;
+      //pipeline_create_infos.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP;
+      //pipeline_create_infos.polygone_mode = VK_POLYGON_MODE_LINE;
     } else {
-      VkPipelineVertexInputStateCreateInfo* vertexInputInfo{nullptr};
-
-      bool hasColorAttachment{true};
-      bool has_dynamic_depth_bias{false};
-
       VkDescriptorPoolSize dpsSB;
       dpsSB.type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
       dpsSB.descriptorCount = 10;
 
       poolSizes.emplace_back(dpsSB);
 
-      std::vector<VkPushConstantRange> vkPcs = {};
-      VkPushConstantRange vkPc;
-      vkPc.offset = 0;
-      vkPc.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
-      vkPc.size = sizeof(constants);
-      has_dynamic_culling = true;
+      push_constants.offset = 0;
+      push_constants.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+      push_constants.size = sizeof(constants);
 
-      bool need_bis{ true };
-      if (shaderName == "shadowMap" || shaderName == "shadowMapSpot") {
-        hasColorAttachment = false;
-        has_dynamic_depth_bias = true;
-        has_dynamic_culling = false;
-        cullMode = VK_CULL_MODE_FRONT_BIT;
+      need_bis = true;
+      descset_layout = createDescriptorSetLayout<DescSetLayoutType::Entity>();
+
+      if (shader_name == "shadowMap" || shader_name == "shadowMapSpot") {
+        pipeline_create_infos.cull_mode = VK_CULL_MODE_FRONT_BIT;
+        pipeline_create_infos.has_color_attachment = false;
+        pipeline_create_infos.has_dynamic_depth_bias = true;
+
         descset_layout = createDescriptorSetLayout<DescSetLayoutType::Offscreen>();
-        vkPc.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-        vkPc.size = sizeof(shadowMapConstants);
+        push_constants.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+        push_constants.size = sizeof(shadowMapConstants);
         need_bis = false;
-      } else {
-        descset_layout = createDescriptorSetLayout<DescSetLayoutType::Entity>();
-      }
-      vertexInputInfo = getVertexInputState<VertexBindingType::Vertex3D>();
-
-      vkPcs.emplace_back(vkPc);
-      std::vector<VkDescriptorSetLayout> dSetLayout = { descset_layout };
-      pipeline_layout = _renderer->getAPI()->createPipelineLayout(dSetLayout, vkPcs);
-
-      graphicPipeline = _renderer->getAPI()->createGraphicsPipeline(
-        pipeline_layout,
-        shaderName,
-        shaders,
-        *vertexInputInfo,
-        cullMode,
-        true, true, true,
-        VK_POLYGON_MODE_FILL,
-        hasColorAttachment,
-        has_dynamic_depth_bias,
-        has_dynamic_culling);
-
-      if (need_bis) {
-        graphicPipelineBis = _renderer->getAPI()->createGraphicsPipeline(
-          pipeline_layout,
-          shaderName,
-          shaders,
-          *vertexInputInfo,
-          VK_CULL_MODE_NONE,
-          true, true, true,
-          VK_POLYGON_MODE_FILL,
-          hasColorAttachment,
-          has_dynamic_depth_bias,
-          has_dynamic_culling);
       }
     }
+   
+    pipeline_layout = _renderer->getAPI()->createPipelineLayout({ descset_layout }, { push_constants });
 
+    pipeline_create_infos.shaders_create_info = shaders;
+    pipeline_create_infos.vertex_input_info = std::move(vertex_input_info);
+    pipeline_create_infos.pipeline_layout = pipeline_layout;
+
+    graphic_pipeline = _renderer->getAPI()->createGraphicsPipeline(pipeline_create_infos);
     auto descriptorPool = _renderer->getAPI()->createDescriptorPool(poolSizes, 1000);
 
+    if (need_bis) {
+      pipeline_create_infos.cull_mode = VK_CULL_MODE_NONE;
+      pipeline_create_infos.polygone_mode = VK_POLYGON_MODE_FILL;
+
+      graphic_pipeline_bis = _renderer->getAPI()->createGraphicsPipeline(pipeline_create_infos);
+    }
+
     VulkanPipeline pipeline{};
-    pipeline.pipeline = graphicPipeline;
-    pipeline.pipeline_bis = graphicPipelineBis;
+    pipeline.pipeline = graphic_pipeline;
+    pipeline.pipeline_bis = graphic_pipeline_bis;
     pipeline.pipeline_layout = pipeline_layout;
     pipeline.desc_pool = descriptorPool;
     pipeline.descset_layout = descset_layout;
     pipeline.shaders = shaders;
 
-    if (shaderName == "shadowMap" || shaderName == "shadowMapSpot" || "normal_debug") {
+    if (shader_name == "shadowMap" || shader_name == "shadowMapSpot" || "normal_debug") {
       pipeline.descset = _renderer->getAPI()->createDescriptorSets(pipeline.desc_pool, { pipeline.descset_layout }, 1);
     }
-    _renderer->addPipeline(shaderName, pipeline);
+    _renderer->addPipeline(shader_name, pipeline);
   }
 
-  std::vector<VkPipelineShaderStageCreateInfo> ShaderManager::getShadersInfo(std::string const & shaderName, bool offscreen)
+  std::vector<VkPipelineShaderStageCreateInfo> ShaderManager::getShadersInfo(std::string const & shader_name, bool offscreen)
   {
     std::vector<VkPipelineShaderStageCreateInfo> shaders_infos;
 
@@ -380,7 +323,7 @@ namespace Poulpe
     VkPipelineShaderStageCreateInfo vertex_info{};
     vertex_info.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
     vertex_info.stage = VK_SHADER_STAGE_VERTEX_BIT;
-    vertex_info.module = _shaders->shaders[shaderName][0];
+    vertex_info.module = _shaders->shaders[shader_name][0];
     vertex_info.pName = "main";
     shaders_infos.emplace_back(vertex_info);
 
@@ -388,15 +331,15 @@ namespace Poulpe
       VkPipelineShaderStageCreateInfo frag_info{};
       frag_info.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
       frag_info.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
-      frag_info.module = _shaders->shaders[shaderName][1];
+      frag_info.module = _shaders->shaders[shader_name][1];
       frag_info.pName = "main";
       shaders_infos.emplace_back(frag_info);
 
-      if (_shaders->shaders[shaderName].size() > 2) {
+      if (_shaders->shaders[shader_name].size() > 2) {
         VkPipelineShaderStageCreateInfo geom_info{};
         geom_info.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
         geom_info.stage = VK_SHADER_STAGE_GEOMETRY_BIT;
-        geom_info.module = _shaders->shaders[shaderName][2];
+        geom_info.module = _shaders->shaders[shader_name][2];
         geom_info.pName = "main";
         shaders_infos.emplace_back(geom_info);
       }
@@ -408,30 +351,30 @@ namespace Poulpe
   template <VertexBindingType T>
   VkPipelineVertexInputStateCreateInfo* ShaderManager::getVertexInputState()
   {
-    VkPipelineVertexInputStateCreateInfo* vertexInputInfo = new VkPipelineVertexInputStateCreateInfo();
+    VkPipelineVertexInputStateCreateInfo* vertex_input_info = new VkPipelineVertexInputStateCreateInfo();
 
     if constexpr (T == VertexBindingType::Vertex3D) {
       std::array<VkVertexInputAttributeDescription, 5>* attDesc = new std::array<VkVertexInputAttributeDescription, 5>(Vertex::getAttributeDescriptions());
       VkVertexInputBindingDescription* bDesc = new VkVertexInputBindingDescription(Vertex::getBindingDescription());
 
-      vertexInputInfo->sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-      vertexInputInfo->vertexBindingDescriptionCount = 1;
-      vertexInputInfo->vertexAttributeDescriptionCount = static_cast<uint32_t>(Vertex::getAttributeDescriptions().size());
-      vertexInputInfo->pVertexBindingDescriptions = bDesc;
-      vertexInputInfo->pVertexAttributeDescriptions = attDesc->data();
+      vertex_input_info->sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
+      vertex_input_info->vertexBindingDescriptionCount = 1;
+      vertex_input_info->vertexAttributeDescriptionCount = static_cast<uint32_t>(Vertex::getAttributeDescriptions().size());
+      vertex_input_info->pVertexBindingDescriptions = bDesc;
+      vertex_input_info->pVertexAttributeDescriptions = attDesc->data();
     } else if constexpr (T == VertexBindingType::Vertex2D) {
       std::array<VkVertexInputAttributeDescription, 3>* attDesc = new std::array<VkVertexInputAttributeDescription, 3>(Vertex2D::getAttributeDescriptions());
       VkVertexInputBindingDescription* bDesc = new VkVertexInputBindingDescription(Vertex2D::getBindingDescription());
 
-      vertexInputInfo->sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-      vertexInputInfo->vertexBindingDescriptionCount = 1;
-      vertexInputInfo->vertexAttributeDescriptionCount = static_cast<uint32_t>(Vertex2D::getAttributeDescriptions().size());
-      vertexInputInfo->pVertexBindingDescriptions = bDesc;
-      vertexInputInfo->pVertexAttributeDescriptions = attDesc->data();
+      vertex_input_info->sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
+      vertex_input_info->vertexBindingDescriptionCount = 1;
+      vertex_input_info->vertexAttributeDescriptionCount = static_cast<uint32_t>(Vertex2D::getAttributeDescriptions().size());
+      vertex_input_info->pVertexBindingDescriptions = bDesc;
+      vertex_input_info->pVertexAttributeDescriptions = attDesc->data();
     } else {
       throw std::runtime_error("unknown vertex input state type");
     }
 
-    return vertexInputInfo;
+    return vertex_input_info;
   }
 }

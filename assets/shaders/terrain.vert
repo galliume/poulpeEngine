@@ -20,21 +20,24 @@ layout(push_constant) uniform constants
 layout(location = 0) in vec3 position;
 layout(location = 1) in vec3 normal;
 layout(location = 2) in vec2 texture_coord;
+layout(location = 3) in vec4 tangent;
+layout(location = 4) in vec4 weights;
 
 layout(binding = 1) uniform sampler2D tex_sampler[1];
 
-layout(location = 0) out vec2 coord;
-layout(location = 1) out vec3 pos;
+layout(location = 0) out vec2 out_texture_coord;
+layout(location = 1) out vec4 out_weights;
+layout(location = 2) out vec3 out_position;
 
 void main()
 {
   float height = texture(tex_sampler[0], texture_coord).r;
 
-  vec4 p = ubo.model * vec4(position, 1.0);
-  p.y = height * 4.0 - 5.0;
+  vec4 p = vec4(position, 1.0);
 
-  coord = texture_coord;
-  pos = position;
+  out_texture_coord = texture_coord;
+  out_weights = weights;
+  out_position = position;
 
   gl_Position = ubo.projection * pc.view * p;
 }

@@ -689,23 +689,11 @@ namespace Poulpe {
   }
 
   //@todo refactor this...
-  VkPipeline VulkanAPI::createGraphicsPipeline(
-    VkPipelineLayout& pipeline_layout,
-    std::string_view name,
-    std::vector<VkPipelineShaderStageCreateInfo>& shaders_create_info,
-    VkPipelineVertexInputStateCreateInfo& vertex_input_info,
-    VkCullModeFlagBits const cull_mode,
-    bool const has_depth_test,
-    bool const has_depth_write,
-    bool const has_stencil_test,
-    int const polygone_mode,
-    bool const has_color_attachment,
-    bool const has_dynamic_depth_bias,
-    bool const has_dynamic_culling)
+  VkPipeline VulkanAPI::createGraphicsPipeline(PipeLineCreateInfo const& pipeline_create_info)
   {
     VkPipelineInputAssemblyStateCreateInfo input_assembly{};
     input_assembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
-    input_assembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+    input_assembly.topology = pipeline_create_info.topology;
     input_assembly.primitiveRestartEnable = VK_FALSE;
 
     VkViewport viewport{};
@@ -736,9 +724,9 @@ namespace Poulpe {
     rasterizer.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
     rasterizer.depthClampEnable = VK_FALSE;
     rasterizer.rasterizerDiscardEnable = VK_FALSE;
-    rasterizer.polygonMode = static_cast<VkPolygonMode>(polygone_mode);
+    rasterizer.polygonMode = pipeline_create_info.polygone_mode;
     rasterizer.lineWidth = 1.0f;
-    rasterizer.cullMode = cull_mode;
+    rasterizer.cullMode = pipeline_create_info.cull_mode;
     rasterizer.frontFace = VK_FRONT_FACE_CLOCKWISE;
     rasterizer.depthBiasEnable = VK_FALSE;
     rasterizer.depthBiasConstantFactor = 0.f;
@@ -757,13 +745,13 @@ namespace Poulpe {
 
     VkPipelineDepthStencilStateCreateInfo depth_stencil{};
     depth_stencil.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
-    depth_stencil.depthTestEnable = (has_depth_test == true) ? VK_TRUE : VK_FALSE;
-    depth_stencil.depthWriteEnable = (has_depth_write == true) ? VK_TRUE : VK_FALSE;
+    depth_stencil.depthTestEnable = (pipeline_create_info.has_depth_test == true) ? VK_TRUE : VK_FALSE;
+    depth_stencil.depthWriteEnable = (pipeline_create_info.has_depth_write == true) ? VK_TRUE : VK_FALSE;
     depth_stencil.depthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL;
     depth_stencil.depthBoundsTestEnable = VK_FALSE;
     depth_stencil.minDepthBounds = 0.0f;
     depth_stencil.maxDepthBounds = 1.0f;
-    depth_stencil.stencilTestEnable = (has_stencil_test == true) ? VK_TRUE : VK_FALSE;
+    depth_stencil.stencilTestEnable = (pipeline_create_info.has_stencil_test == true) ? VK_TRUE : VK_FALSE;
     depth_stencil.front = {};
     depth_stencil.back = {};
 
@@ -793,7 +781,7 @@ namespace Poulpe {
         VK_DYNAMIC_STATE_SCISSOR,
         VK_DYNAMIC_STATE_COLOR_BLEND_ENABLE_EXT,
         VK_DYNAMIC_STATE_COLOR_BLEND_EQUATION_EXT };
-    if (has_dynamic_depth_bias) dynamic_states.emplace_back(VK_DYNAMIC_STATE_DEPTH_BIAS);
+    if (pipeline_create_info.has_dynamic_depth_bias) dynamic_states.emplace_back(VK_DYNAMIC_STATE_DEPTH_BIAS);
     
     //@todo does not work ? crash with a weird bug about depth attachment format undefined ?
     //if (has_dynamic_cull_mode) dynamic_states.emplace_back(VK_DYNAMIC_STATE_CULL_MODE);
@@ -805,16 +793,16 @@ namespace Poulpe {
 
     VkGraphicsPipelineCreateInfo pipeline_info{};
     pipeline_info.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
-    pipeline_info.stageCount = static_cast<uint32_t>(shaders_create_info.size());
-    pipeline_info.pStages = shaders_create_info.data();
-    pipeline_info.pVertexInputState = & vertex_input_info;
+    pipeline_info.stageCount = static_cast<uint32_t>(pipeline_create_info.shaders_create_info.size());
+    pipeline_info.pStages = pipeline_create_info.shaders_create_info.data();
+    pipeline_info.pVertexInputState = pipeline_create_info.vertex_input_info;
     pipeline_info.pInputAssemblyState = & input_assembly;
     pipeline_info.pViewportState = & viewport_state;
     pipeline_info.pRasterizationState = & rasterizer;
     pipeline_info.pMultisampleState = & multi_sampling;
     pipeline_info.pDepthStencilState = & depth_stencil;
     pipeline_info.pColorBlendState = & color_blending;
-    pipeline_info.layout = pipeline_layout;
+    pipeline_info.layout = pipeline_create_info.pipeline_layout;
     pipeline_info.renderPass = VK_NULL_HANDLE;
     pipeline_info.subpass = 0;
     pipeline_info.basePipelineHandle = VK_NULL_HANDLE;
@@ -826,7 +814,7 @@ namespace Poulpe {
 
     VkPipelineRenderingCreateInfoKHR rendering_create_info = { };
     rendering_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO_KHR;
-    rendering_create_info.colorAttachmentCount = has_color_attachment ? 1 : 0;
+    rendering_create_info.colorAttachmentCount = pipeline_create_info.has_color_attachment ? 1 : 0;
     rendering_create_info.pColorAttachmentFormats = & format;
     rendering_create_info.depthAttachmentFormat = VK_FORMAT_D16_UNORM; //(VK_FORMAT_D24_UNORM_S8_UINT)
     //rendering_create_info.stencilAttachmentFormat = VK_FORMAT_S8_UINT;
@@ -841,7 +829,7 @@ namespace Poulpe {
       //@todo move to a FileManager
       //@todo option to enable / disable pipeline cache
       std::string cache_filename = "./cache/pipeline_cache_data_" + std::to_string(_device_props.vendorID) +
-          "_" + std::to_string(_device_props.deviceID) + "_" + name.data() + ".bin";
+          "_" + std::to_string(_device_props.deviceID) + "_" + pipeline_create_info.name.data() + ".bin";
 
       bool bad_cache = false;
       std::streamsize cache_file_size = 0;

@@ -275,7 +275,7 @@ namespace Poulpe
   {
     auto entity = std::make_unique<Entity>();
     auto mesh = std::make_unique<Mesh>();
-    mesh->setHasShadow(false);
+    mesh->setHasShadow(true);
     mesh->setIsIndexed(true);
     mesh->setShaderName("terrain");
 

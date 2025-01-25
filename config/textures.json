@@ -5,6 +5,21 @@
 		},
 		"_plp_empty": {
 			"path": "assets/texture/_plp_empty.ktx2"
+		},
+		"terrain_grass": {
+			"path": "assets/texture/terrain/grass.ktx2"
+		},
+		"terrain_snow": {
+			"path": "assets/texture/terrain/snow.ktx2"
+		},
+		"terrain_water": {
+			"path": "assets/texture/terrain/water.ktx2"
+		},
+		"terrain_ground": {
+			"path": "assets/texture/terrain/ground.ktx2"
+		},
+		"terrain_sand": {
+			"path": "assets/texture/terrain/sand.ktx2"
 		}
 	},
 	"skybox": {

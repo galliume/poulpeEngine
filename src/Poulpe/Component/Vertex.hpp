@@ -72,6 +72,13 @@ namespace Poulpe
         && texture_coord == other.texture_coord && other.tangent == tangent
         && color == other.color;
     }*/
+    Vertex operator-(Vertex const& rhs)
+    {
+      Vertex v = rhs;
+      v.pos = rhs.pos - pos;
+
+      return v;
+    }
   };
 }
 
