@@ -32,6 +32,24 @@ namespace Poulpe {
     std::vector<VkPresentModeKHR> presentModes;
   };
 
+  struct PipeLineCreateInfo
+  {
+    VkPipelineLayout pipeline_layout;
+    std::string_view name;
+    std::vector<VkPipelineShaderStageCreateInfo> shaders_create_info;
+    VkPipelineVertexInputStateCreateInfo* vertex_input_info;
+    VkCullModeFlagBits cull_mode = VK_CULL_MODE_BACK_BIT;
+    VkPrimitiveTopology topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+    VkPolygonMode polygone_mode = VK_POLYGON_MODE_FILL;
+
+    bool has_color_attachment{ false };
+    bool has_depth_test{ false };
+    bool has_depth_write{ false };
+    bool has_dynamic_culling{ false };
+    bool has_dynamic_depth_bias{ false };
+    bool has_stencil_test{ false };
+  };
+
   class VulkanAPI
   {
   public:
@@ -92,29 +110,17 @@ namespace Poulpe {
       std::vector<VkDescriptorSetLayout> const& descset_layouts,
       std::vector<VkPushConstantRange> const& push_const);
 
-    VkPipeline createGraphicsPipeline(
-      VkPipelineLayout& pipeline_layout,
-      std::string_view name,
-      std::vector<VkPipelineShaderStageCreateInfo>& shaders_create_info,
-      VkPipelineVertexInputStateCreateInfo& vertex_input_info,
-      VkCullModeFlagBits const cull_mode = VK_CULL_MODE_BACK_BIT,
-      bool const has_depth_test = true,
-      bool const has_depth_write = true,
-      bool const has_stencil_test = true,
-      int const polygone_mode = VK_POLYGON_MODE_FILL,
-      bool const has_color_attachment = true,
-      bool const has_dynamic_depth_bias = false,
-      bool const has_dynamic_culling = false);
+    VkPipeline createGraphicsPipeline(PipeLineCreateInfo const& pipeline_create_info);
 
     VkSwapchainKHR createSwapChain(
-      std::vector<VkImage> & swapChainImages,
-      VkSwapchainKHR const & oldSwapChain = VK_NULL_HANDLE);
+      std::vector<VkImage> & swapchain_images,
+      VkSwapchainKHR const & old_swapchain = VK_NULL_HANDLE);
 
     std::vector<VkFramebuffer> createFramebuffers(
       VkRenderPass& rdr_pass,
       std::vector<VkImageView>& swapchain_image_views,
       std::vector<VkImageView>& depth_imageview,
-      std::vector<VkImageView>& colorImageView);
+      std::vector<VkImageView>& color_image_view);
 
     VkCommandPool createCommandPool();
 

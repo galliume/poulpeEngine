@@ -339,7 +339,7 @@ void main()
   vec3 kS = F0 + (1.0 - F0) * pow(clamp(1.0 - cos_t, 0.0, 1.0), 5.0);
   vec3 kD = 1.0 - kS;
 
-  vec4 C_light = vec4(sun_light.color, 0.0) * 0.05;
+  vec4 C_light = vec4(sun_light.color, 0.0) * 0.5;
   vec4 C_diffuse = albedo / PI;
   vec4 C_specular = material.specular;
   vec4 C_ambient = C_diffuse * C_light * ao;
@@ -350,32 +350,25 @@ void main()
 
   vec3 N = normal;
 
-  for (int i = 0; i < NR_POINT_LIGHTS; ++i) {
+  for (int i = 1; i < NR_POINT_LIGHTS; ++i) {
 
     vec3 light_pos = var.t_plight_pos[i];
-    vec3 l = normalize(-light_pos - p);
+    vec3 l = normalize(light_pos - p);
 
     //float distance = length(point_lights[i].position - var.frag_pos);
     //float attenuation = 1.0 / (distance * distance);
     float attenuation = ExponentialAttenuation(p, light_pos);
     vec3 l_color = point_lights[i].color;
-    C_light = vec4(l_color, 1.0) * attenuation;
+    C_light = vec4(l_color, 1.0) * attenuation * 0.5;
    
    //Fresnel
     float NdL = max(dot(N, l), 0.0);
-    float NdL2 = NdL*NdL;
     //GGX distribution
     //@todo do anisotropic
-    //Not anisotropic
     vec3 h = normalize(l + v);
     float NdH = max(dot(N, h), 0.0);
     float NdH2 = NdH*NdH;
     float NdV = max(dot(N, v), 0.0);
-    float NdV2 = NdV*NdV;
-    float HdV = max(dot(h, v), 0.0);
-    float HdV2 = HdV*HdV;
-    float HdL = max(dot(h, l), 0.0);
-    float HdL2 = HdL*HdL;
 
     vec3 F = FresnelSchlick(F0, NdH, metallic);
 
@@ -388,12 +381,12 @@ void main()
 
     vec3 specular = (D * G * F) / max(4.0 * NdL * NdV, 0.0001);
 
-    //vec3 diffuse = (21.0 / (20.0 * PI))  * (albedo.xyz * (1.0 - F)) *  (1.0 - pow(1.0 - NdL, 5.0)) * (1.0 - pow(1.0 - NdV, 5.0));
+    vec3 diffuse = (21.0 / (20.0 * PI))  * (C_diffuse.xyz * (1.0 - F));
 
-    out_lights += (kD * C_diffuse.xyz + specular) * C_light.xyz * NdL;
+    out_lights += (kD * diffuse + specular) * C_light.xyz * NdL;
   }
   
-  vec3 l = normalize(-var.t_light_dir);
+  vec3 l = normalize(var.t_light_dir);
   float NdL = max(dot(N, l), 0.0);
   vec3 h = normalize(l + v);
   float NdH = max(dot(N, h), 0.0);
@@ -415,7 +408,7 @@ void main()
 
   vec4 color = vec4(C_ambient.xyz + out_lights, color_alpha);
   color.xyz *= shadow;
-  color *= PI;
+  //color *= PI;
 
   vec2 emissive_coord = transform_uv(
     material.emissive_translation,

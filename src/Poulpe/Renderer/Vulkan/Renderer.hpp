@@ -289,8 +289,5 @@ private:
     std::mutex _mutex_queue_submit;
 
     DrawCommands _draw_cmds{_MAX_RENDER_THREAD};
-
-    //@todo tmp
-    bool _terrain_added{ false };
   };
 }
