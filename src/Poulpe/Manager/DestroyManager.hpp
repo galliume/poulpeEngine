@@ -27,7 +27,7 @@ namespace Poulpe
         template<std::derived_from<Entity> T>
         void cleanEntities(std::vector<T*> & entities);
 
-        void cleanShaders(std::unordered_map<std::string, std::vector<VkShaderModule>> shaders);
+        void cleanShaders(std::unordered_map<std::string, std::unordered_map<std::string, VkShaderModule>> shaders);
         void cleanTexture(Texture textures);
         void cleanTextures(std::unordered_map<std::string, Texture> textures);
         void setRenderer(Renderer* renderer);

@@ -276,7 +276,7 @@ namespace Poulpe
     auto entity = std::make_unique<Entity>();
     auto mesh = std::make_unique<Mesh>();
     mesh->setHasShadow(true);
-    mesh->setIsIndexed(true);
+    mesh->setIsIndexed(false);
     mesh->setShaderName("terrain");
 
     auto rdr_impl{ RendererFactory::create<Terrain>() };
