@@ -39,7 +39,7 @@ float attenuation(float min, float max, float x)
 }
 
 void main()
-{
+{  
   float u = gl_TessCoord.x;
   float v = gl_TessCoord.y;
 
@@ -51,6 +51,7 @@ void main()
   vec2 t0 = (t01 - t00) * u + t00;
   vec2 t1 = (t11 - t10) * u + t10;
   vec2 texCoord = (t1 - t0) * v + t0;
+  out_texture_coord = texCoord * 1000.0;
 
   float height = texture(tex_sampler[0], texCoord).r;
 
@@ -58,6 +59,8 @@ void main()
   out_weights.y = attenuation(0.1f, 0.3f, height);
   out_weights.z = attenuation(0.2f, 0.9f, height);
   out_weights.w = attenuation(0.7f, 1.2f, height);
+
+  height *= 100.0f;
 
   vec4 p00 = gl_in[0].gl_Position;
   vec4 p01 = gl_in[1].gl_Position;
@@ -70,7 +73,9 @@ void main()
 
   vec4 p0 = (p01 - p00) * u + p00;
   vec4 p1 = (p11 - p10) * u + p10;
-  vec4 p = (p1 - p0) * v + p0 + normal * height;
-  p.y *= 6.0;
+  vec4 p = (p1 - p0) * v + p0;
+  p += normal * height;
+  p.y -= 5.0f;
+
   gl_Position = ubo.projection * pc.view * ubo.model * p;
 }

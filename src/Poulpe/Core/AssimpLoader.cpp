@@ -1,4 +1,5 @@
 #include "AssimpLoader.hpp"
+#include "AssimpLoader.hpp"
 
 #include <assimp/Importer.hpp>
 #include <assimp/postprocess.h>

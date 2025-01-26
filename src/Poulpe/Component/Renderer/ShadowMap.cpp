@@ -37,9 +37,9 @@ namespace Poulpe
       VkPipelineLayout pipeline_layout,
       Renderer* const renderer, Mesh* const meshS) {
 
-      constants pushConstants{};
-      pushConstants.view = renderer->getCamera()->lookAt();
-      pushConstants.view_position = renderer->getCamera()->getPos();
+      constants push_constants{};
+      push_constants.view = renderer->getCamera()->lookAt();
+      push_constants.view_position = renderer->getCamera()->getPos();
 
       vkCmdPushConstants(
         cmd_buffer,
@@ -47,7 +47,7 @@ namespace Poulpe
         VK_SHADER_STAGE_VERTEX_BIT,
         0,
         sizeof(constants),
-        &pushConstants);
+        &push_constants);
     });
 
     mesh->setHasPushConstants();
@@ -91,29 +91,6 @@ namespace Poulpe
     for (size_t i{ 0 }; i < mesh->getData()->_ubos.size(); ++i) {
       mesh->getData()->_ubos[i].projection = _renderer->getPerspective();
     }
-
-    // Material material{};
-    // material.ambient = mesh->getMaterial().ambient;
-    // material.diffuse = mesh->getMaterial().diffuse;
-    // material.specular = mesh->getMaterial().specular;
-    // material.transmittance = mesh->getMaterial().transmittance;
-    // material.emission = mesh->getMaterial().emission;
-    // material.shi_ior_diss = glm::vec3(mesh->getMaterial().shininess,
-    //   mesh->getMaterial().ior, mesh->getMaterial().illum);
-
-    // ObjectBuffer objectBuffer{};
-    // objectBuffer.point_lights[0] = _light_manager->getPointLights().at(0);
-    // objectBuffer.point_lights[1] = _light_manager->getPointLights().at(1);
-
-    // objectBuffer.spot_light = _light_manager->getSpotLights().at(0);
-    // objectBuffer.ambient_light = _light_manager->getAmbientLight();
-    // objectBuffer.material = material;
-
-    // auto const size = sizeof(objectBuffer);
-    // auto storageBuffer = _renderer->createStorageBuffers(size);
-    // mesh->addStorageBuffer(storageBuffer);
-    // _renderer->updateStorageBuffer(mesh->getStorageBuffers()->at(0), objectBuffer);
-    // mesh->setHasBufferStorage();
 
     unsigned int min{ 0 };
     unsigned int max{ 0 };

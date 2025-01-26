@@ -1,6 +1,11 @@
 {
+	"terrain": {
+		"46_016_3_028_13_512_512": {
+			"path": "assets/texture/terrain/height_map_1.ktx2"
+		}
+	},
 	"entities": {
-		"CompareBaseColor" : {
+		"CompareBaseColor": {
 			"mesh": "assets/mesh/CompareBaseColor/glTF/CompareBaseColor.gltf",
 			"textures": {
 				"Compare_Basecolor_img1": {
@@ -17,17 +22,29 @@
 			"ao": {
 
 			},
-			"normal" : {
+			"normal": {
 			},
 			"shader": "main_basic",
 			"positions": [
-				{"x": 0.0, "y": 0.0, "z": 0.0}
+				{
+					"x": 0.0,
+					"y": 0.0,
+					"z": 0.0
+				}
 			],
 			"scales": [
-				{"x": 1.0, "y": 1.0, "z": 1.0}
+				{
+					"x": 1.0,
+					"y": 1.0,
+					"z": 1.0
+				}
 			],
 			"rotations": [
-				{"x": 0.0, "y": 0.0, "z": 0.0}
+				{
+					"x": 0.0,
+					"y": 0.0,
+					"z": 0.0
+				}
 			],
 			"flipY": false,
 			"count": 1,
@@ -36,7 +53,7 @@
 			"isPointLight": false,
 			"animationScripts": {
 			},
-			"hasShadow": true,	
+			"hasShadow": true,
 			"isIndexed": true,
 			"debugNormal": true
 		}

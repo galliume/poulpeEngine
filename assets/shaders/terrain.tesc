@@ -31,17 +31,16 @@ void main()
 
   if(gl_InvocationID == 0)
   {
-    const int MIN_TESS_LEVEL = 32;
-    const int MAX_TESS_LEVEL = 512;
-    const float MIN_DISTANCE = 10;
-    const float MAX_DISTANCE = 20;
+    const int MIN_TESS_LEVEL = 4;
+    const int MAX_TESS_LEVEL = 64;
+    const float MIN_DISTANCE = 20;
+    const float MAX_DISTANCE = 800;
 
     vec4 eyeSpacePos00 = pc.view * ubo.model * gl_in[0].gl_Position;
     vec4 eyeSpacePos01 = pc.view * ubo.model * gl_in[1].gl_Position;
     vec4 eyeSpacePos10 = pc.view * ubo.model * gl_in[2].gl_Position;
     vec4 eyeSpacePos11 = pc.view * ubo.model * gl_in[3].gl_Position;
 
-    // "distance" from camera scaled between 0 and 1
     float distance00 = clamp( (abs(eyeSpacePos00.z) - MIN_DISTANCE) / (MAX_DISTANCE-MIN_DISTANCE), 0.0, 1.0 );
     float distance01 = clamp( (abs(eyeSpacePos01.z) - MIN_DISTANCE) / (MAX_DISTANCE-MIN_DISTANCE), 0.0, 1.0 );
     float distance10 = clamp( (abs(eyeSpacePos10.z) - MIN_DISTANCE) / (MAX_DISTANCE-MIN_DISTANCE), 0.0, 1.0 );
