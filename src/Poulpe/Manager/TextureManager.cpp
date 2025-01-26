@@ -251,11 +251,9 @@ namespace Poulpe
         ktx_format = "R8_UNORM";
         break;
       case TEXTURE_TYPE::TERRAIN:
-        //no compression needed as it's not for a shader,
-        //and reading data from an uncompressed format is easier
         oetf = "linear";
-        transcoding = KTX_TTF_RGBA32;
-        ktx_format = "R8G8B8A8_UNORM";
+        transcoding = KTX_TTF_BC4_R;
+        ktx_format = "R8_UNORM";
         break;
       default:
       case TEXTURE_TYPE::DIFFUSE:

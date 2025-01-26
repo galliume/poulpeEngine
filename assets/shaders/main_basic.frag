@@ -43,7 +43,7 @@ layout(location = 0) in FRAG_VAR {
   vec3 norm;
   vec4 color;
   vec3 tangent;
-  vec3 bitangent;  
+  vec3 bitangent;
   mat3 TBN;
   vec4 light_space;
 } var;
@@ -160,10 +160,6 @@ float ShadowCalculation(vec4 light_space, float NdL)
 {
   vec3 p = light_space.xyz / light_space.w;
   //p = p * 0.5 + 0.5;
-  
-  if (p.z > 1.0) {
-    return 1.0;
-  }
 
   float light = texture(tex_shadow_sampler[SHADOW_MAP_INDEX], p);
   
@@ -205,31 +201,29 @@ vec2 transform_uv(vec3 t, vec3 s, vec3 r, vec2 c)
   return uvTransformed;
 }
 
-vec3 FresnelSchlick(vec3 F0, float NdH, float metallic)
+vec3 FresnelSchlick(vec3 F0, float NdH, float P)
 {
-  
   vec3 bounce = (20.0 / 21.0) * F0 + (1.0 / 21.0);
-  vec3 F = bounce + (bounce - F0) * pow(max(1.0 - NdH, 0.0), 5.0);
-  vec3 kD = (vec3(1.0) - F) * (1.0 - metallic);
+  vec3 F = bounce + (1 - bounce) * pow(max(1.0 - NdH, 0.0), 5.0);
 
-  return kD;
+  return F;
 }
 
 float GGXDistribution(float NdH2, float roughness2)
 {
   float tmp = (1.0 + NdH2 * (roughness2 - 1.0));
-  float D = (roughness2 * INV_PI) / (tmp * tmp);
+  float D = (roughness2) / (PI * tmp * tmp);
 
   return D;
 }
 
 float SmithGeometryGGX(float alpha, float theta)
 {
+  alpha += 1.0;
   float alpha2 = alpha * alpha;
-  float theta_tan = tan(theta);
-  float theta_tan2 = theta_tan * theta_tan;
+  alpha2 /= 8.0;
 
-  return 2 / (1 + sqrt(1 + alpha2 * theta_tan2));
+  return theta / (theta * (1.0 - alpha2) + alpha2);
 }
 
 void main()
@@ -249,7 +243,7 @@ void main()
 
   vec2 xy = texture(tex_sampler[NORMAL_INDEX], normal_coord).xy;
   xy = xy.xy * 2.0 - 1.0;
-  xy.y = -xy.y; 
+  //xy.y = -xy.y;
   float z = clamp(sqrt(1 - dot(xy, xy)), 0.0, 1.0);
   vec3 normal = vec3(xy, z);
 
@@ -264,7 +258,7 @@ void main()
     material.mr_translation,
     material.mr_scale,
     material.mr_rotation,
-    var.texture_coord); 
+    var.texture_coord);
 
   vec2 metal_roughness = texture(tex_sampler[METAL_ROUGHNESS_INDEX], mr_coord).bg;
   float metallic = metal_roughness.x * material.mr_factor.x;
@@ -272,15 +266,15 @@ void main()
 
   ivec2 mr_size = textureSize(tex_sampler[METAL_ROUGHNESS_INDEX], 0);
   if (mr_size.x <= 2.0) {
-    roughness = 1.0;
-    metallic = 1.0;
+    metallic = material.mr_factor.x;
+    roughness = material.mr_factor.y;
   }
 
   vec2 transmission_coord = transform_uv(
     material.transmission_translation,
     material.transmission_scale,
     material.transmission_rotation,
-    var.texture_coord); 
+    var.texture_coord);
 
   vec2 transmission = texture(tex_sampler[TRANSMISSION_INDEX], transmission_coord).bg;
   transmission.xy *= material.strength.z;
@@ -290,17 +284,6 @@ void main()
     transmission = vec2(1.0) * material.strength.z;
   }
 
-//  final_color = vec4(0.0, 0.0, 0.0, 1.0); // Red for zero metallic
-//     // Debugging: Output metallic and roughness values
-//  if (metallic == 0.0) {
-//    final_color = vec4(1.0, 0.0, 0.0, 1.0); // Red for zero metallic
-//    return;
-//  }
-//  if (roughness == 0.0) {
-//    final_color = vec4(0.0, 1.0, 0.0, 1.0); // Green for zero roughness
-//    return;
-//  }
-//return;
   float roughness2 = roughness * roughness; 
   roughness2 = roughness2 * roughness2;
 
@@ -323,92 +306,90 @@ void main()
   if (material.alpha.x == 1.0 && color_alpha < material.alpha.y) discard;
   if (material.base_color.a < material.shi_ior_diss.z) discard;
 
+  albedo *= material.base_color * var.color;
   ivec2 albedo_size = textureSize(tex_sampler[DIFFUSE_INDEX], 0);
   if (albedo_size.x == 1 && albedo_size.y == 1) {
-    albedo = var.color;
+    albedo = material.base_color * var.color;
   }
-  albedo *= material.base_color;
   
   vec3 p = var.t_frag_pos;
-  vec3 v = var.t_view_dir;
+  vec3 v = normalize(var.t_view_dir);
 
   vec3 irradiance = texture(cube_maps[ENVIRONMENT_MAP_INDEX], var.norm).rgb;
   vec3 F0 = mix(vec3(0.04), albedo.xyz, metallic);
 
-  float cos_t = max(dot(normal, normalize(v)), 0.0);
-  vec3 kS = F0 + (1.0 - F0) * pow(clamp(1.0 - cos_t, 0.0, 1.0), 5.0);
-  vec3 kD = 1.0 - kS;
-
-  vec4 C_light = vec4(sun_light.color, 0.0) * 0.5;
   vec4 C_diffuse = albedo / PI;
   vec4 C_specular = material.specular;
-  vec4 C_ambient = C_diffuse * C_light * ao;
   
-  float P =  5.0 * (1.0 - roughness); 
+  float P = 5.0 * (1.0 - roughness); 
 
   vec3 out_lights = vec3(0.0);
 
-  vec3 N = normal;
-
-  for (int i = 1; i < NR_POINT_LIGHTS; ++i) {
+  for (int i = 0; i < NR_POINT_LIGHTS; ++i) {
 
     vec3 light_pos = var.t_plight_pos[i];
     vec3 l = normalize(light_pos - p);
 
-    //float distance = length(point_lights[i].position - var.frag_pos);
-    //float attenuation = 1.0 / (distance * distance);
     float attenuation = ExponentialAttenuation(p, light_pos);
-    vec3 l_color = point_lights[i].color;
-    C_light = vec4(l_color, 1.0) * attenuation * 0.5;
+    vec3 l_color = vec3(1.0);//point_lights[i].color;
+    vec4 C_light = vec4(l_color, 1.0) * attenuation;
    
-   //Fresnel
-    float NdL = max(dot(N, l), 0.0);
-    //GGX distribution
+    float NdL = max(dot(normal, l), 0.0);
+
     //@todo do anisotropic
     vec3 h = normalize(l + v);
-    float NdH = max(dot(N, h), 0.0);
+    float NdH = max(dot(normal, h), 0.0);
     float NdH2 = NdH*NdH;
-    float NdV = max(dot(N, v), 0.0);
+    float NdV = max(dot(normal, v), 0.0);
 
-    vec3 F = FresnelSchlick(F0, NdH, metallic);
+    vec3 F = FresnelSchlick(F0, NdH, P);
 
     float D = GGXDistribution(NdH2, roughness2);
 
     float G1 = SmithGeometryGGX(roughness2 / 2, NdL);
-    float G2 = SmithGeometryGGX(roughness2 / 2, NdH);
+    float G2 = SmithGeometryGGX(roughness2 / 2, NdV);
     
     float G = G1 * G2;
 
-    vec3 specular = (D * G * F) / max(4.0 * NdL * NdV, 0.0001);
+    vec3 specular = (D * G * F) / (4.0 * NdV * NdL + 0.0001);
 
     vec3 diffuse = (21.0 / (20.0 * PI))  * (C_diffuse.xyz * (1.0 - F));
+
+    vec3 kD = vec3(1.0) - F;
+    kD *= 1.0 - metallic;
 
     out_lights += (kD * diffuse + specular) * C_light.xyz * NdL;
   }
   
   vec3 l = normalize(var.t_light_dir);
-  float NdL = max(dot(N, l), 0.0);
+  float NdL = max(dot(normal, l), 0.0);
   vec3 h = normalize(l + v);
-  float NdH = max(dot(N, h), 0.0);
+  float NdH = max(dot(normal, h), 0.0);
   float NdH2 = NdH*NdH;
-  float NdV = max(dot(N, v), 0.0);
+  float NdV = max(dot(normal, v), 0.0);
 
-  float shadow = ShadowCalculation(var.light_space, NdL);
 
   //directional sun light
-  vec3 F = FresnelSchlick(F0, NdH, metallic);
+  vec3 F = FresnelSchlick(F0, NdH, P);
   float D = GGXDistribution(NdH2, roughness2);
   float G1 = SmithGeometryGGX(roughness2 / 2, NdL);
-  float G2 = SmithGeometryGGX(roughness2 / 2, NdH);
+  float G2 = SmithGeometryGGX(roughness2 / 2, NdV);
   float G = G1 * G2;
+  vec3 diffuse = (21.0 / (20.0 * PI))  * (C_diffuse.xyz * (1.0 - F));
+  vec3 kD = vec3(1.0) - F;
+  kD *= 1.0 - metallic;
 
-  vec3 specular = (D * G * F) / max(4.0 * NdV, 0.0001);
-  vec3 radiance = sun_light.color * 0.5;
-  vec3 C_sun = (C_diffuse.xyz + specular) * radiance * ao;
+  vec3 specular = (D * G * F) / (4.0 * NdL * NdV + 0.01);
+  vec3 radiance = sun_light.color * 0.001 * ao;
+  vec3 C_sun = (kD * C_diffuse.xyz + specular) * radiance;
 
-  vec4 color = vec4(C_ambient.xyz + out_lights, color_alpha);
+  vec3 C_ambient = albedo.xyz * ao * 0.001;
+
+  vec4 color = vec4(C_ambient + C_sun + out_lights, color_alpha);
+  
+  float shadow = ShadowCalculation(var.light_space, NdL);
   color.xyz *= shadow;
-  //color *= PI;
+  color *= PI;
 
   vec2 emissive_coord = transform_uv(
     material.emissive_translation,

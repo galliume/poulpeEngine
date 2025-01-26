@@ -118,7 +118,7 @@ void main()
   mat3 normal_matrix = transpose(inversed_model);
   vec3 norm = normal;
   norm.y = -norm.y; 
-  norm.z = clamp(sqrt(1 - dot(norm.xy, norm.xy)), 0.0, 1.0);
+  //norm.z = clamp(sqrt(1 - dot(norm.xy, norm.xy)), 0.0, 1.0);
   norm = normal_matrix * normal;
 
   float handedness = tangent.w;
