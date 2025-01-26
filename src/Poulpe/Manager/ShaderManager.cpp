@@ -291,7 +291,7 @@ namespace Poulpe
       pipeline_create_infos.has_dynamic_depth_bias = false;
       pipeline_create_infos.is_patch_list = true;
       pipeline_create_infos.topology = VK_PRIMITIVE_TOPOLOGY_PATCH_LIST;
-      pipeline_create_infos.polygone_mode = VK_POLYGON_MODE_LINE;
+      //pipeline_create_infos.polygone_mode = VK_POLYGON_MODE_LINE;
     } else {
       VkDescriptorPoolSize dpsSB;
       dpsSB.type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;

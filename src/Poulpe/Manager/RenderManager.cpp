@@ -275,10 +275,9 @@ namespace Poulpe
   {
     auto entity = std::make_unique<Entity>();
     auto mesh = std::make_unique<Mesh>();
-    mesh->setHasShadow(true);
+    mesh->setHasShadow(false);
     mesh->setIsIndexed(false);
     mesh->setShaderName("terrain");
-
     auto rdr_impl{ RendererFactory::create<Terrain>() };
     rdr_impl->init(_renderer.get(), _texture_manager.get(), nullptr);
 
@@ -288,5 +287,7 @@ namespace Poulpe
     _component_manager->add<RenderComponent>(entity->getID(), std::move(rdr_impl));
     _component_manager->add<MeshComponent>(entity->getID(), std::move(mesh));
     _entity_manager->setTerrain(std::move(entity));
+
+    _renderer->addEntity(_entity_manager->getTerrain(), true);
   }
 }

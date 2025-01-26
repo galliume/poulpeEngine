@@ -570,9 +570,6 @@ namespace Poulpe
     if (_entity_manager->getSkybox()) {
       world.emplace_back(_entity_manager->getSkybox());
     }
-    if (_entity_manager->getTerrain()) {
-      world.emplace_back(_entity_manager->getTerrain());
-    }
 
     if (!world.empty()) {
       draw(
@@ -587,13 +584,12 @@ namespace Poulpe
         VK_ATTACHMENT_STORE_OP_STORE,
         count_down,
         0,
-        false, true);
+        false, false);
     } else {
       count_down.count_down();
     }
 
     if (_entities.size() > 0) {
-
       _update_shadow_map = true;
       if (_update_shadow_map) {
         std::jthread shadow_map_thread([&]() {

@@ -1,7 +1,7 @@
 {
 	"terrain": {
 		"46_016_3_028_13_512_512": {
-			"path": "assets/texture/terrain/46_016_3_028_13_512_512.ktx2"
+			"path": "assets/texture/terrain/height_map_1.ktx2"
 		}
 	},
 	"entities": {

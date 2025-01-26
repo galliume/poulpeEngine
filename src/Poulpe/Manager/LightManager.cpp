@@ -12,7 +12,7 @@ namespace Poulpe
     _sun.clq = glm::vec3(0.0f);
 
     _sun.view = glm::lookAt(
-      glm::vec3(-0.1f, 7.0f, -0.1f),
+      glm::vec3(0.1f, 40.0f, 0.1f),
       glm::vec3(0.0f, 0.0f, 0.0f),
       glm::vec3(0.0f, 1.0f, 0.0f));
 
@@ -37,9 +37,9 @@ namespace Poulpe
     light.clq = glm::vec3(1.0f, 0.7f, 1.8f);
 
     Light light2;
-    light2.color = glm::vec3(0.33f, 0.33f, 0.33f);
+    light2.color = glm::vec3(1.f);
     //light2.position = glm::vec3(-1.2f, 0.1f, 0.4f);
-    light2.position = glm::vec3(50.0f, 50.0f, 10.0f);
+    light2.position = glm::vec3(2.2f, 2.0f, -2.5f);
     light2.direction = glm::vec3(-0.1f, -1.0, 0.0);
     light2.ads = glm::vec3(1.2f, 1.2f, 1.4f);
     light2.clq = glm::vec3(1.0f, 0.09f, 0.032f);
