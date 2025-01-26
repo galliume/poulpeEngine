@@ -23,21 +23,17 @@ layout(location = 2) in vec2 texture_coord;
 layout(location = 3) in vec4 tangent;
 layout(location = 4) in vec4 weights;
 
-layout(binding = 1) uniform sampler2D tex_sampler[1];
+layout(binding = 1) uniform sampler2D tex_sampler[5];
 
 layout(location = 0) out vec2 out_texture_coord;
-layout(location = 1) out vec4 out_weights;
-layout(location = 2) out vec3 out_position;
+layout(location = 1) out vec3 out_position;
 
 void main()
 {
-  float height = texture(tex_sampler[0], texture_coord).r;
-
   vec4 p = vec4(position, 1.0);
 
   out_texture_coord = texture_coord;
-  out_weights = weights;
   out_position = position;
 
-  gl_Position = ubo.projection * pc.view * p;
+  gl_Position = p;
 }

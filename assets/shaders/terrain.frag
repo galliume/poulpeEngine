@@ -4,18 +4,18 @@
 
 #define GAMMA_TRESHOLD 0.0031308
 
-#define TERRAIN_GROUND 0
-#define TERRAIN_GRASS 1
-#define TERRAIN_SNOW 2
-#define TERRAIN_SAND 3
+#define HEIGHT_MAP 0
+#define TERRAIN_GROUND 1
+#define TERRAIN_GRASS 2
+#define TERRAIN_SNOW 3
+#define TERRAIN_SAND 4
 
 layout(location = 0) out vec4 final_color;
 
 layout(location = 0) in vec2 in_texture_coord;
 layout(location = 1) in vec4 in_weights;
-layout(location = 2) in vec3 in_position;
 
-layout(binding = 1) uniform sampler2D tex_sampler[4];
+layout(binding = 1) uniform sampler2D tex_sampler[5];
 
 float linear_to_sRGB(float color)
 {
@@ -38,7 +38,6 @@ vec3 tex_color(int index)
 
 void main()
 {
-  float height = in_position.y;
   vec3 color = vec3(0.0);
 
   color += tex_color(TERRAIN_SAND) * in_weights.x;

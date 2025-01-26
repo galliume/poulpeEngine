@@ -27,7 +27,10 @@ namespace Poulpe
       std::string const& name,
       std::string const& vert_path,
       std::string const& frag_path,
-      std::string const& geom_path);
+      std::string const& geom_path,
+      std::string const& tese_path,
+      std::string const& tesc_path);
+    
     void clear();
     inline VulkanShaders* getShaders() const  { return _shaders.get(); }
     std::function<void(std::latch& count_down)> load(nlohmann::json config) ;

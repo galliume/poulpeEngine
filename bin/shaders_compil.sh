@@ -85,5 +85,15 @@ for shader in ${geom_shaders[@]}; do
     compile ${shader} "geom"
 done
 
+tesc_shaders=("terrain")
+for shader in ${tesc_shaders[@]}; do
+    compile ${shader} "tesc"
+done
+
+tese_shaders=("terrain")
+for shader in ${tese_shaders[@]}; do
+    compile ${shader} "tese"
+done
+
 duration=$SECONDS
 print_text "Done in $((duration / 60)) minutes and $((duration % 60)) seconds."

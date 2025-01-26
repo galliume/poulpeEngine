@@ -24,6 +24,17 @@ namespace Poulpe
 
   void Terrain::createDescriptorSet(Mesh* mesh)
   {
+    Texture height_map { _texture_manager->getTerrainTexture()};
+    
+    height_map.setSampler(_renderer->getAPI()->createKTXSampler(
+      TextureWrapMode::WRAP,
+      TextureWrapMode::WRAP,
+      0));
+
+    if (height_map.getWidth() == 0) {
+      height_map = _texture_manager->getTextures()["_plp_empty"];
+
+    }
     Texture ground { _texture_manager->getTextures()["terrain_ground"]};
     
     ground.setSampler(_renderer->getAPI()->createKTXSampler(
@@ -69,6 +80,7 @@ namespace Poulpe
     }
 
     std::vector<VkDescriptorImageInfo> image_infos{};
+    image_infos.emplace_back(height_map.getSampler(), height_map.getImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
     image_infos.emplace_back(ground.getSampler(), ground.getImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
     image_infos.emplace_back(grass.getSampler(), grass.getImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
     image_infos.emplace_back(snow.getSampler(), snow.getImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
@@ -96,7 +108,10 @@ namespace Poulpe
       vkCmdPushConstants(
         cmd_buffer,
         pipeline_layout,
-        VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
+        VK_SHADER_STAGE_VERTEX_BIT 
+        | VK_SHADER_STAGE_FRAGMENT_BIT
+        | VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT
+        | VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT,
         0,
         sizeof(constants),
         &pushConstants);
@@ -127,57 +142,66 @@ namespace Poulpe
     int const width{ static_cast<int>(ktx_texture->baseWidth) };
     int const height{ static_cast<int>(ktx_texture->baseHeight) };
 
-    float const scale{ 6.0f };
-    float const shift{ 3.0f };
+    float const scale{ 7.0f };
+    float const shift{ 6.0f };
+    float const texture_scale{ 100.0f };
+    unsigned int const rez{ 20 };
 
-    for(auto i = 0; i < height; i++) {
-      for(auto j = 0; j < width; j++) {
-        auto const x{ -height / 2 + j };
-        auto const z{ -width / 2 + i };
+    for(auto i = 0; i < rez - 1; i++) {
+      for(auto j = 0; j < rez - 1; j++) {
 
-        glm::vec2 const uv{
-          static_cast<float>(j) / (width - 1) * 100.0,
-          static_cast<float>(i) / (height - 1) * 100.0 };
+        float const y{ 0.0f };
 
+        Vertex v{ 
+          { -width/2.0f + width*i/(float)rez, y, -height/2.0f + height*j/(float)rez },
+          {1.0f, 1.0f, 0.0f}, {i / (float)rez, j / (float)rez }, {0.0f, 0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}};
 
-        size_t texel_index = (i * width + j) * channels;
-        unsigned char* texel = p_data + texel_index;
-    
-        auto y = static_cast<float>(texel[0]) / 255.0f;
+        Vertex v2{ 
+          {-width/2.0f + width*(i+1)/(float)rez, y, -height/2.0f + height*j/(float)rez },
+          {1.0f, 1.0f, 0.0f}, {(i+1) / (float)rez, j / (float)rez }, {0.0f, 0.0f, 0.0f, 0.0f}, { 0.0f, 0.0f, 0.0f, 0.0f } };
 
-        //color is useless so replace it with weights for textures smoothing
-        glm::vec4 weights{
-          attenuation(-0.2f, 0.2f, y),
-          attenuation(0.15f, 0.3f, y),
-          attenuation(0.25f, 0.9f, y),
-          attenuation(0.8f, 1.2f, y)
-        };
+        Vertex v3{ 
+          {-width/2.0f + width*i/(float)rez, y, -height/2.0f + height*(j+1)/(float)rez },
+          {1.0f, 1.0f, 0.0f}, {i / (float)rez, (j+1) / (float)rez }, {0.0f, 0.0f, 0.0f, 0.0f}, { 0.0f, 0.0f, 0.0f, 0.0f } };
 
-        y = y * scale - shift;
+        Vertex v4{ 
+          {-width/2.0f + width*(i+1)/(float)rez, y, -height/2.0f + height*(j+1)/(float)rez },
+          {1.0f, 1.0f, 0.0f}, {(i+1) / (float)rez, (j+1) / (float)rez }, {0.0f, 0.0f, 0.0f, 0.0f}, { 0.0f, 0.0f, 0.0f, 0.0f } };
 
-        Vertex v{ {x, y, z }, {1.0f, 0.0f, 0.0f}, uv, {0.0f, 0.0f, 0.0f, 0.0f}, { weights } };
+        //v.texture_coord.x  *= texture_scale;
+        //v2.texture_coord.x *= texture_scale;
+        //v3.texture_coord.x *= texture_scale;
+        //v4.texture_coord.x *= texture_scale;
+
+        //v.texture_coord.y  *= texture_scale;
+        //v2.texture_coord.y *= texture_scale;
+        //v3.texture_coord.y *= texture_scale;
+        //v4.texture_coord.y *= texture_scale;
 
         vertices.push_back(v);
+        vertices.push_back(v2);
+        vertices.push_back(v3);
+        vertices.push_back(v4);
       }
     }
 
-    std::vector<uint32_t> indices{};
-    for(unsigned int i = 0; i < height - 1; i++) {
-      for(unsigned int j = 0; j < width - 1; j++) {
-        uint32_t bottom_left = i * width + j;
-        uint32_t top_left = (i + 1) * width + j;
-        uint32_t top_right = (i + 1) * width + j + 1;
-        uint32_t bottom_right = i * width + j + 1;
+    //std::vector<uint32_t> indices{};
+    //for(unsigned int i = 0; i < height - 1; i++) {
+    //  for(unsigned int j = 0; j < width - 1; j++) {
+    //    uint32_t bottom_left = i * width + j;
+    //    uint32_t top_left = (i + 1) * width + j;
+    //    uint32_t top_right = (i + 1) * width + j + 1;
+    //    uint32_t bottom_right = i * width + j + 1;
 
-        indices.push_back(bottom_left);
-        indices.push_back(top_left);
-        indices.push_back(top_right);
+    //    indices.push_back(bottom_left);
+    //    indices.push_back(top_left);
+    //    indices.push_back(top_right);
 
-        indices.push_back(bottom_left);
-        indices.push_back(top_right);
-        indices.push_back(bottom_right);
-      }
-    }
+    //    indices.push_back(bottom_left);
+    //    indices.push_back(top_right);
+    //    indices.push_back(bottom_right);
+    //  }
+    //}
 
     UniformBufferObject ubo;
     ubo.model = glm::mat4(1.0f);
@@ -191,10 +215,11 @@ namespace Poulpe
     auto const& data = mesh->getData();
 
     data->_vertices = vertices;
-    data->_indices = indices;
+    //data->_indices = indices;
+    data->is_quad = true;
 
     data->_vertex_buffer = _renderer->getAPI()->createVertexBuffer(commandPool, vertices);
-    data->_indices_buffer = _renderer->getAPI()->createIndexBuffer(commandPool, indices);
+    //data->_indices_buffer = _renderer->getAPI()->createIndexBuffer(commandPool, indices);
     data->_texture_index = 0;
     data->_ubos.emplace_back(ubo);
 
