@@ -402,6 +402,7 @@ namespace Poulpe {
     device_features.depthBiasClamp = VK_TRUE;
     device_features.depthClamp = VK_TRUE;
     device_features.geometryShader = VK_TRUE;
+    device_features.tessellationShader = VK_TRUE;
 
     VkPhysicalDeviceDescriptorIndexingFeatures descriptor_indexing{};
     descriptor_indexing.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES;
@@ -808,6 +809,15 @@ namespace Poulpe {
     pipeline_info.basePipelineHandle = VK_NULL_HANDLE;
     pipeline_info.basePipelineIndex = -1;
     pipeline_info.pDynamicState = & dynamic_state;
+
+    if (pipeline_create_info.is_patch_list) {
+      VkPipelineTessellationStateCreateInfo tesselation_create_info;
+      tesselation_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_TESSELLATION_STATE_CREATE_INFO;
+      tesselation_create_info.patchControlPoints = 4;
+      tesselation_create_info.pNext = NULL;
+      tesselation_create_info.flags = 0;
+      pipeline_info.pTessellationState = &tesselation_create_info;
+    }
 
     VkFormat format = getSwapChainImageFormat();
     VkFormat depth_format = findDepthFormat();

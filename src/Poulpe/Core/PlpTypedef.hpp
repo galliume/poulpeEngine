@@ -229,6 +229,7 @@ namespace Poulpe
     glm::vec3 _current_scale;
     glm::vec3 _tangeant;
     glm::mat4 _transform_matrix;
+    bool is_quad{ false };
   };
 
   struct EntityOptions
@@ -301,7 +302,7 @@ namespace Poulpe
 
   struct VulkanShaders
   {
-    std::unordered_map<std::string, std::vector<VkShaderModule>> shaders;
+    std::unordered_map<std::string, std::unordered_map<std::string, VkShaderModule>> shaders;
   };
 
   struct VulkanPipeline

@@ -48,6 +48,7 @@ namespace Poulpe {
     bool has_dynamic_culling{ false };
     bool has_dynamic_depth_bias{ false };
     bool has_stencil_test{ false };
+    bool is_patch_list{ false };
   };
 
   class VulkanAPI

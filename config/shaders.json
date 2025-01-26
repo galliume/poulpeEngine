@@ -3,32 +3,44 @@
     "main_basic": {
       "vert": "assets/shaders/spv/main_basic_vert.spv",
       "frag": "assets/shaders/spv/main_basic_frag.spv",
-      "geom": ""
+      "geom": "",
+      "tesc": "",
+      "tese": ""
     },
     "main_basic_no_texture": {
       "vert": "assets/shaders/spv/main_basic_no_texture_vert.spv",
       "frag": "assets/shaders/spv/main_basic_no_texture_frag.spv",
-      "geom": ""
+      "geom": "",
+      "tesc": "",
+      "tese": ""
     },
     "skybox": {
       "vert": "assets/shaders/spv/skybox_vert.spv",
       "frag": "assets/shaders/spv/skybox_frag.spv",
-      "geom": ""
+      "geom": "",
+      "tesc": "",
+      "tese": ""
     },
     "shadowMap": {
       "vert": "assets/shaders/spv/shadowMap_vert.spv",
       "frag": "assets/shaders/spv/shadowMap_frag.spv",
-      "geom": ""
+      "geom": "",
+      "tesc": "",
+      "tese": ""
     },
     "normal_debug": {
       "vert": "assets/shaders/spv/normal_vert.spv",
       "frag": "assets/shaders/spv/normal_frag.spv",
-      "geom": "assets/shaders/spv/normal_geom.spv"
+      "geom": "assets/shaders/spv/normal_geom.spv",
+      "tesc": "",
+      "tese": ""
     },
     "terrain": {
       "vert": "assets/shaders/spv/terrain_vert.spv",
       "frag": "assets/shaders/spv/terrain_frag.spv",
-      "geom": ""
+      "geom": "",
+      "tesc": "assets/shaders/spv/terrain_tesc.spv",
+      "tese": "assets/shaders/spv/terrain_tese.spv"
     }
   }
 }

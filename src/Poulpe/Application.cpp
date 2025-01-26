@@ -119,7 +119,7 @@ namespace Poulpe
         << " Elapsed time " << elasped_time_since_begining << " "
         << " " << ms_count << " ms"
         << " " << fps_count << " fps";
-      glfwSetWindowTitle(_render_manager->getWindow()->get(), title.str().c_str());
+      //glfwSetWindowTitle(_render_manager->getWindow()->get(), title.str().c_str());
 
       ++frame_count;
 
