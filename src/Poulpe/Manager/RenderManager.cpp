@@ -129,6 +129,7 @@ namespace Poulpe
   {
     //@todo animate light
     //_light_manager->animateAmbientLight(delta_time);
+
     {
       std::lock_guard guard(_entity_manager->lockWorldNode());
 
@@ -157,6 +158,12 @@ namespace Poulpe
           auto mesh = mesh_component->template has<Mesh>();
 
           if (mesh) {
+            //if (mesh->hasBufferStorage()) {
+            //  auto objectBuffer = mesh->getObjectBuffer();
+            //  objectBuffer->point_lights[0] = _light_manager->getPointLights().at(0);
+
+            //  _renderer->getAPI()->updateStorageBuffer(mesh->getStorageBuffers()->at(0), *objectBuffer);
+            //}
 
             auto rdr_impl = _component_manager->get<RenderComponent>(entity->getID());
             if (mesh->isDirty() && rdr_impl) {

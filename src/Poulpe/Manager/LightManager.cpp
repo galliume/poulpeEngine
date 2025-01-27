@@ -5,8 +5,8 @@ namespace Poulpe
   LightManager::LightManager()
   {
     _sun.color = glm::vec3(1.f, 1.f, 1.f);
-    _sun.position = glm::vec3(10.f, 20000.f, -10.f);
-    _sun.direction =  glm::vec3(-2.1f, 0.0f, 0.0f);
+    _sun.position = glm::vec3(10.f, 200.f, -10.f);
+    _sun.direction =  glm::vec3(-0.2f, -1.0f, -0.3f);
     //ambient diffuse specular
     _sun.ads = glm::vec3(10.f, 0.5f, 1.f);
     _sun.clq = glm::vec3(0.0f);
@@ -30,19 +30,19 @@ namespace Poulpe
     _sun.light_space_matrix = _sun.projection * _sun.view;
 
     Light light;
-    light.color = glm::vec3(1.0);
-    light.position = glm::vec3(0.0f, 50.0f, 0.0f);
+    light.color = glm::vec3(255.f/255.f, 100.f/255.f, 0.f);
+    light.position = glm::vec3(0.0f, 0.5f, 0.0f);
     light.direction = glm::vec3(-0.1f, -1.0, 0.0);
     light.ads = glm::vec3(10.0f, 30.0f, 40.0f);
     light.clq = glm::vec3(1.0f, 0.7f, 1.8f);
 
     Light light2;
-    light2.color = glm::vec3(1.f, 0.1f, 0.1f);
+    light2.color = glm::vec3(1.0f);
     //light2.position = glm::vec3(-1.2f, 0.1f, 0.4f);
-    light2.position = glm::vec3(2.2f, 50.0f, -2.5f);
+    light2.position = glm::vec3(4.f, 3.0f, -1.5f);
     light2.direction = glm::vec3(-0.1f, -1.0, 0.0);
     light2.ads = glm::vec3(1.2f, 1.2f, 1.4f);
-    light2.clq = glm::vec3(1.0f, 0.09f, 0.032f);
+    light2.clq = glm::vec3(1.0f, 0.7f, 1.8f);
 
     _points.emplace_back(light2);
     _points.emplace_back(light);
@@ -66,6 +66,14 @@ namespace Poulpe
     light3.light_space_matrix = light3.view * light3.projection;
 
     _spots.emplace_back(light3);
+  }
+
+  void LightManager::animateAmbientLight(double const delta_time)
+  {
+    auto& light1 = _points.at(0);
+    light1.position.x += cos(glm::radians(delta_time * 360.0f));
+    light1.position.z += sin(glm::radians(delta_time * 360.0f));
+    light1.color *= delta_time;
   }
 
   void LightManager::animateSunLight(double const delta_time)

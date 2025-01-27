@@ -28,19 +28,13 @@ layout(location = 4) in vec4 color;
 
 layout(location = 0) out FRAG_VAR {
   vec3 frag_pos;
-  vec3 light_pos;
   vec3 view_pos;
-  vec3 t_frag_pos;
-  vec3 t_light_dir;
-  vec3 t_view_dir;
-  vec3 t_plight_pos[NR_POINT_LIGHTS];
   vec2 texture_coord;
   vec3 norm;
   vec4 color;
-  vec3 tangent;
-  vec3 bitangent;
   mat3 TBN;
   vec4 light_space;
+  mat4 model;
 } frag_var;
 
 struct Light {
@@ -103,55 +97,30 @@ const mat4 biasMat = mat4(
   0.0, 0.0, 1.0, 0.0,
   0.5, 0.5, 0.0, 1.0);
 
-void TangentSpaceVL(vec3 pos, vec3 camera_pos, vec3 light_pos, vec3 normal, vec4 tangent, out vec3 vtan, out vec3 ltan)
-{
-  vec3 bitangent = cross(normal, tangent.xyz) * tangent.w;
-  vec3 v = camera_pos - pos;
-  vec3 l = light_pos - pos;
-  vtan = vec3(dot(tangent.xyz, v), dot(bitangent, v), dot(normal, v));
-  ltan = vec3(dot(tangent.xyz, l), dot(bitangent, l), dot(normal, l));
-}
-
 void main()
 {
-  mat3 inversed_model = inverse(mat3(ubo.model));
-  mat3 normal_matrix = transpose(inversed_model);
-  vec3 norm = normal;
-  norm.y = -norm.y; 
-  //norm.z = clamp(sqrt(1 - dot(norm.xy, norm.xy)), 0.0, 1.0);
-  norm = normal_matrix * normal;
-
-  float handedness = tangent.w;
+  mat3 normal_matrix = transpose(inverse(mat3(ubo.model)));
+  vec3 norm = normalize(normal_matrix * normal);
 
   vec3 T = normalize(normal_matrix * tangent.xyz);
-  vec3 N = normalize(norm);
+  vec3 N = norm;
   T = normalize(T - dot(T, N) * N);
-  vec3 B = normalize(cross(N, T) * handedness);
-  mat3 TBN = transpose(mat3(T, B, N));
-  
-  frag_var.frag_pos = position;
-  frag_var.t_frag_pos = TBN * frag_var.frag_pos;
+  vec3 B = normalize(cross(N, T));
 
-  frag_var.light_pos = sun_light.position;
+  if (tangent.w < 0.0) B = -B;
+
+  mat3 TBN = mat3(T, B, N);
+
+  frag_var.TBN = TBN;
+
+  vec4 world_pos = ubo.model * vec4(position, 1.0f);
+  frag_var.frag_pos = world_pos.xyz;
   frag_var.view_pos = pc.view_position;
-
-  frag_var.t_view_dir = TBN * (frag_var.view_pos - frag_var.frag_pos);
-  frag_var.t_light_dir = TBN * (frag_var.light_pos - frag_var.frag_pos);
-  
-  frag_var.t_plight_pos[0] = TBN * (point_lights[0].position);
-  frag_var.t_plight_pos[1] = TBN * (point_lights[1].position);
-  
-  // TangentSpaceVL(frag_var.frag_pos, frag_var.view_pos, frag_var.light_pos, norm, tangent, frag_var.t_view_dir, frag_var.t_light_dir);
-  // TangentSpaceVL(frag_var.frag_pos, frag_var.view_pos, point_lights[0].position, norm, tangent, frag_var.t_pview_dir[0], frag_var.t_plight_dir[0]);
-  // TangentSpaceVL(frag_var.frag_pos, frag_var.view_pos, point_lights[1].position, norm, tangent, frag_var.t_pview_dir[1], frag_var.t_plight_dir[1]);
-
-  frag_var.light_space = (biasMat * ubo.projection * sun_light.view * ubo.model) * vec4(frag_var.frag_pos , 1.0);
-  
+  frag_var.light_space = (biasMat * ubo.projection * sun_light.view * ubo.model) * vec4(position, 1.0);
   frag_var.texture_coord = texture_coord;
   frag_var.norm = norm;
   frag_var.color = color;
-  frag_var.tangent = T;
-  frag_var.bitangent = B;
-  frag_var.TBN = TBN;
-  gl_Position = ubo.projection * pc.view * ubo.model * vec4(position, 1.0f);
+  frag_var.model = ubo.model;
+
+  gl_Position = ubo.projection * pc.view * world_pos;
 } 

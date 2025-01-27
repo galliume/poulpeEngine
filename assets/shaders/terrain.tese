@@ -26,6 +26,9 @@ layout(location = 0) in vec2 in_texture_coord[];
 
 layout(location = 0) out vec2 out_texture_coord;
 layout(location = 1) out vec4 out_weights;
+layout(location = 2) out vec4 out_normal;
+layout(location = 3) out vec3 out_position;
+layout(location = 4) out vec3 out_view_position;
 
 float attenuation(float min, float max, float x)
 {
@@ -34,7 +37,7 @@ float attenuation(float min, float max, float x)
   float distance = abs(x - mid);
 
   float att = clamp((half_range - distance) / half_range, 0.0f, 1.0f);
-  
+
   return att;
 }
 
@@ -51,7 +54,7 @@ void main()
   vec2 t0 = (t01 - t00) * u + t00;
   vec2 t1 = (t11 - t10) * u + t10;
   vec2 texCoord = (t1 - t0) * v + t0;
-  out_texture_coord = texCoord * 1000.0;
+  out_texture_coord = texCoord * 500.0;
 
   float height = texture(tex_sampler[0], texCoord).r;
 
@@ -60,7 +63,7 @@ void main()
   out_weights.z = attenuation(0.2f, 0.9f, height);
   out_weights.w = attenuation(0.7f, 1.2f, height);
 
-  height *= 100.0f;
+  height *= 50.0f;
 
   vec4 p00 = gl_in[0].gl_Position;
   vec4 p01 = gl_in[1].gl_Position;
@@ -76,6 +79,10 @@ void main()
   vec4 p = (p1 - p0) * v + p0;
   p += normal * height;
   p.y -= 5.0f;
+
+  out_normal = normal;
+  out_position = p.xyz;
+  out_view_position = pc.view_position;
 
   gl_Position = ubo.projection * pc.view * ubo.model * p;
 }
