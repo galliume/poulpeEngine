@@ -262,7 +262,7 @@ namespace Poulpe
 
     if (!std::filesystem::exists(path)) {
       std::string cmd{
-        "ktx create  --format " + ktx_format + " --assign-oetf " + oetf + " --convert-oetf " + oetf \
+        "ktx create  --format " + ktx_format + " --assign-oetf " + oetf  \
         + options + " \"" + original_name + "\" \"" + path + "\" "
       };
       PLP_DEBUG("{}", cmd);

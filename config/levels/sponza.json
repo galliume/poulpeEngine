@@ -258,6 +258,64 @@
 			"hasShadow": true,
 			"isIndexed": true,
 			"debugNormal": true
+		},
+		"cage_lamp": {
+			"mesh": "assets/mesh/cage_lamp/scene.gltf",
+			"textures": {
+				"textures_CageCandle_lp_5_lp_default_baseColor": {
+					"path": "assets/mesh/cage_lamp/textures/CageCandle_lp_5_lp_default_baseColor.ktx2"
+				}
+			},
+			"ao": {
+			},
+			"mr": {
+				"textures_CageCandle_lp_5_lp_default_metallicRoughness": {
+					"path": "assets/mesh/cage_lamp/textures/CageCandle_lp_5_lp_default_metallicRoughness.ktx2"
+				}
+			},
+			"emissive": {
+				"textures_CageCandle_lp_5_lp_default_emissive": {
+					"path": "assets/mesh/cage_lamp/textures/CageCandle_lp_5_lp_default_emissive.ktx2"
+				}
+			},
+			"normal": {
+				"textures_CageCandle_lp_5_lp_default_normal": {
+					"path": "assets/mesh/cage_lamp/textures/CageCandle_lp_5_lp_default_normal.ktx2"
+				}
+			},
+			"shader": "main_basic",
+			"positions": [
+				{
+					"x": 1.0,
+					"y": 50.0,
+					"z": 1.0
+				}
+			],
+			"scales": [
+				{
+					"x": 0.01,
+					"y": 0.01,
+					"z": 0.01
+				}
+			],
+			"rotations": [
+				{
+					"x": 90.0,
+					"y": 0.0,
+					"z": 0.0
+				}
+			],
+			"flipY": false,
+			"count": 1,
+			"hasBbox": false,
+			"hasAnimation": false,
+			"isPointLight": false,
+			"animationScripts": {
+				"anim0": "assets/scripts/animation/helmet/anim0.lua"
+			},
+			"hasShadow": true,
+			"isIndexed": true,
+			"debugNormal": true
 		}
 	}
 }

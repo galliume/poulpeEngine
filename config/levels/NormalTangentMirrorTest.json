@@ -1,18 +1,25 @@
 {
+	"terrain": {
+		"46_016_3_028_13_512_512": {
+			"path": "assets/texture/terrain/height_map_1.ktx2"
+		}
+	},
 	"entities": {
-		"NormalTangentMirrorTest" : {
+		"NormalTangentMirrorTest": {
 			"mesh": "assets/mesh/NormalTangentMirrorTest/gLTF/NormalTangentMirrorTest.gltf",
 			"textures": {
 				"NormalTangentMirrorTest_BaseColor": {
-					"path" : "assets/mesh/NormalTangentMirrorTest/glTF/NormalTangentMirrorTest_BaseColor.ktx2"
+					"path": "assets/mesh/NormalTangentMirrorTest/glTF/NormalTangentMirrorTest_BaseColor.ktx2"
 				}
 			},
 			"ao": {
-
+				"NormalTangentMirrorTest_OcclusionRoughnessMetallic": {
+					"path": "assets/mesh/NormalTangentMirrorTest/glTF/NormalTangentMirrorTest_OcclusionRoughnessMetallic.ktx2"
+				}
 			},
 			"mr": {
 				"NormalTangentMirrorTest_OcclusionRoughnessMetallic": {
-					"path" : "assets/mesh/NormalTangentMirrorTest/glTF/NormalTangentMirrorTest_OcclusionRoughnessMetallic.ktx2"
+					"path": "assets/mesh/NormalTangentMirrorTest/glTF/NormalTangentMirrorTest_OcclusionRoughnessMetallic.ktx2"
 				}
 			},
 			"emissive": {
@@ -25,13 +32,25 @@
 			},
 			"shader": "main_basic",
 			"positions": [
-				{"x": 0.0, "y": -1.0, "z": -2.0}
+				{
+					"x": 0.0,
+					"y": -1.0,
+					"z": -2.0
+				}
 			],
 			"scales": [
-				{"x": 1.0, "y": 1.0, "z": 1.0 }
+				{
+					"x": 1.0,
+					"y": 1.0,
+					"z": 1.0
+				}
 			],
 			"rotations": [
-				{"x": 0.0, "y": 180.0, "z": 0.0}
+				{
+					"x": 0.0,
+					"y": 180.0,
+					"z": 0.0
+				}
 			],
 			"flipY": false,
 			"count": 1,
