@@ -316,6 +316,58 @@
 			"hasShadow": true,
 			"isIndexed": true,
 			"debugNormal": true
+		},
+		"trump": {
+			"mesh": "assets/mesh/trump/scene.gltf",
+			"textures": {
+				"textures_TrumpLPmat_diffuse": {
+					"path": "assets/mesh/trump/textures/TrumpLPmat_diffuse.ktx2"
+				}
+			},
+			"ao": {
+			},
+			"mr": {
+
+			},
+			"emissive": {
+
+			},
+			"normal": {
+
+			},
+			"shader": "main_basic",
+			"positions": [
+				{
+					"x": 170.0,
+					"y": 0.0,
+					"z": 0.0
+				}
+			],
+			"scales": [
+				{
+					"x": 0.1,
+					"y": 0.1,
+					"z": 0.1
+				}
+			],
+			"rotations": [
+				{
+					"x": 60.0,
+					"y": 90.0,
+					"z": 0.0
+				}
+			],
+			"flipY": false,
+			"count": 1,
+			"hasBbox": false,
+			"hasAnimation": false,
+			"isPointLight": false,
+			"animationScripts": {
+				"anim0": "assets/scripts/animation/helmet/anim0.lua"
+			},
+			"hasShadow": true,
+			"isIndexed": true,
+			"debugNormal": true
 		}
 	}
 }

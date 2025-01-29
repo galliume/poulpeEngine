@@ -25,5 +25,6 @@ namespace Poulpe
   private:
     bool _ActiveVSync = true;
     GLFWwindow* _window = nullptr;
+    GLFWmonitor* _monitor = nullptr;
   };
 }

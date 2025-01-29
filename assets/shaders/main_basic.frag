@@ -64,29 +64,28 @@ struct Material
   vec4 diffuse;
   vec4 specular;
   vec3 transmittance;
-  vec4 emission;
   vec3 shi_ior_diss; //shininess, ior, diss
   vec3 alpha;
-  vec3 mr_factor;
+  vec3 mre_factor;
   vec3 normal_translation;
-  vec3 normal_scale; 
-  vec3 normal_rotation; 
+  vec3 normal_scale;
+  vec3 normal_rotation;
   vec3 ambient_translation;
-  vec3 ambient_scale; 
-  vec3 ambient_rotation; 
+  vec3 ambient_scale;
+  vec3 ambient_rotation;
   vec3 diffuse_translation;
-  vec3 diffuse_scale; 
-  vec3 diffuse_rotation; 
+  vec3 diffuse_scale;
+  vec3 diffuse_rotation;
   vec3 emissive_translation;
-  vec3 emissive_scale; 
-  vec3 emissive_rotation; 
+  vec3 emissive_scale;
+  vec3 emissive_rotation;
   vec3 mr_translation;
-  vec3 mr_scale; 
+  vec3 mr_scale;
   vec3 mr_rotation;
   vec3 transmission_translation;
-  vec3 transmission_scale; 
-  vec3 transmission_rotation;  
-  vec3 strength;//x: normal strength, y occlusion strength, z transmission strength
+  vec3 transmission_scale;
+  vec3 transmission_rotation;
+  vec3 strength;//x: normal strength, y occlusion strength
 };
 
 layout(binding = 1) uniform sampler2D tex_sampler[TEXTURE_COUNT];
@@ -223,6 +222,41 @@ float SmithGeometryGGX(float roughness, float theta)
   return theta / (theta * (1.0 - k) + k);
 }
 
+vec3 linear_to_hdr10(vec3 color, float white_point)
+{
+  // Convert Rec.709 to Rec.2020 color space to broaden the palette
+  const mat3 from709to2020 = mat3(
+      0.6274040, 0.3292820, 0.0433136,
+      0.0690970, 0.9195400, 0.0113612,
+      0.0163916, 0.0880132, 0.8955950
+  );
+  //color = from709to2020 * color;
+
+  // Normalize HDR scene values ([0..>1] to [0..1]) for ST.2084 curve
+  const float st2084_max = 10000.0;
+  color *= white_point / st2084_max;
+
+  // Apply ST.2084 (PQ curve) for HDR10 standard
+  const float m1 = 2610.0 / 4096.0 / 4.0;
+  const float m2 = 2523.0 / 4096.0 * 128.0;
+  const float c1 = 3424.0 / 4096.0;
+  const float c2 = 2413.0 / 4096.0 * 32.0;
+  const float c3 = 2392.0 / 4096.0 * 32.0;
+  vec3 cp = pow(abs(color), vec3(m1));
+  color = pow((c1 + c2 * cp) / (1.0 + c3 * cp), vec3(m2));
+
+  return color;
+}
+
+vec3 srgb_to_linear(vec3 color)
+{ 
+  float gamma        = 2.4f; // The sRGB curve for mid tones to high lights resembles a gamma of 2.4
+  vec3 linear_low  = color / 12.92;
+  vec3 linear_high = pow((color + 0.055) / 1.055, vec3(gamma));
+  vec3 is_high     = step(0.0404482362771082, color);
+  return mix(linear_low, linear_high, is_high);
+}
+
 void main()
 {
   vec4 alpha_color = texture(tex_sampler[ALPHA_INDEX], var.texture_coord);
@@ -259,13 +293,13 @@ void main()
     var.texture_coord);
 
   vec3 metal_roughness = texture(tex_sampler[METAL_ROUGHNESS_INDEX], mr_coord).rgb;
-  float metallic = metal_roughness.x * material.mr_factor.b;
-  float roughness = metal_roughness.y * material.mr_factor.g;
+  float metallic = metal_roughness.x * material.mre_factor.b;
+  float roughness = metal_roughness.y * material.mre_factor.g;
 
   ivec2 mr_size = textureSize(tex_sampler[METAL_ROUGHNESS_INDEX], 0);
   if (mr_size.x <= 2.0) {
-    metallic = material.mr_factor.x;
-    roughness = material.mr_factor.y;
+    metallic = material.mre_factor.x;
+    roughness = material.mre_factor.y;
   }
 
   vec2 transmission_coord = transform_uv(
@@ -296,6 +330,9 @@ void main()
     var.texture_coord);
   
   vec4 albedo = texture(tex_sampler[DIFFUSE_INDEX], diffuse_coord);
+  //albedo.xyz = srgb_to_linear(albedo.xyz);
+  albedo.xyz = albedo.xyz;
+
   float color_alpha = albedo.a;
   
   if (material.alpha.x == 1.0 && color_alpha < 0.9) discard;
@@ -317,7 +354,7 @@ void main()
   vec4 C_specular = material.specular;
   
   //@todo looks good but is it ok?
-  float P = material.mr_factor.y * (1.0 - roughness); 
+  float P = material.mre_factor.y * (1.0 - roughness); 
 
   vec3 out_lights = vec3(0.0);
 
@@ -341,10 +378,10 @@ void main()
   kD *= 1.0 - metallic;
 
   vec3 specular = (D * G * F) / (4.0 * NdL * NdV + 0.0001);
-  vec3 radiance = sun_light.color * ao;
+  //vec3 radiance = srgb_to_linear(sun_light.color.rgb) * ao;
+  vec3 radiance = vec3(1.0) * ao;
   vec3 C_sun = (kD * C_diffuse.xyz + specular) * radiance * NdL;
-  C_sun *= 0.001;
-  vec3 C_ambient = albedo.xyz * ao * 0.001;
+  vec3 C_ambient = albedo.xyz * ao * 0.0001;
 
   for (int i = 1; i < NR_POINT_LIGHTS; ++i) {
 
@@ -355,7 +392,8 @@ void main()
     //float attenuation = SmoothAttenuation(l);
     float d = length(light_pos - p);
     float attenuation = 1.0 / (point_lights[i].clq.x + point_lights[i].clq.y * d + point_lights[i].clq.z * (d * d));
-    vec3 C_light = point_lights[i].color * attenuation;
+    //vec3 C_light = srgb_to_linear(point_lights[i].color.rgb) * attenuation;
+    vec3 C_light = point_lights[i].color.rgb * attenuation * 3.0;
    
     vec3 h = normalize(l + v);
     float NdL = max(dot(normal, l), 0.0);
@@ -381,32 +419,40 @@ void main()
   }
 
   vec4 color = vec4(C_ambient + C_sun + out_lights , color_alpha);
-  
+
   float shadow = ShadowCalculation(var.light_space, NdL);
   color.xyz *= shadow;
-  color.xyz *= PI;
+  //color.xyz *= PI;
 
   vec2 emissive_coord = transform_uv(
     material.emissive_translation,
     material.emissive_scale,
     material.emissive_rotation,
-    var.texture_coord); 
+    var.texture_coord);
 
   vec4 emissive_color = texture(tex_sampler[EMISSIVE_INDEX], emissive_coord);
+  //emissive_color.xyz = srgb_to_linear(emissive_color.xyz);
+  emissive_color.xyz = emissive_color.xyz;
+
   ivec2 emissive_color_size = textureSize(tex_sampler[EMISSIVE_INDEX], 0);
   if (emissive_color_size.x != 1 && emissive_color_size.y != 1) {
-    color += material.emission * emissive_color;
+    color += material.mre_factor.z * emissive_color;
   }
+//
+  float exposure = 0.5;
+  color.rgb = vec3(1.0) - exp(-color.rgb * exposure);
+//
+//  color.r = linear_to_sRGB(color.r);
+//  color.g = linear_to_sRGB(color.g);
+//  color.b = linear_to_sRGB(color.b);
 
-  //color = color / (color + vec4(1.0));
-
-  color.r = linear_to_sRGB(color.r);
-  color.g = linear_to_sRGB(color.g);
-  color.b = linear_to_sRGB(color.b);
-
-  final_color = color;
+  //final_color = color;
+  //@todo check how to get the precise value
+  float white_point = 350;
+  final_color = vec4(0.0, 0.0, 0.0, 1.0);
+  final_color.rgb = linear_to_hdr10(color.rgb, white_point);
 
   if (material.alpha.x == 2.0) {
-    final_color = vec4(color.xyz, color_alpha);
+    final_color = vec4(linear_to_hdr10(color.rgb, white_point), color_alpha);
   }
 }
