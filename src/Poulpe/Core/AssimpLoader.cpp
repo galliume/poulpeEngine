@@ -103,9 +103,9 @@ namespace Poulpe
         if (mat->Get(AI_MATKEY_COLOR_TRANSPARENT, transmittanceColor) == aiReturn_SUCCESS) {
           material.transmittance = { transmittanceColor.r, transmittanceColor.g, transmittanceColor.b };
         }
-        aiColor4D emission_color;
-        if (mat->Get(AI_MATKEY_EMISSIVE_INTENSITY, emission_color) == aiReturn_SUCCESS) {
-          material.emission = { emission_color.r, emission_color.g, emission_color.b, emission_color.a };
+        float e_factor;
+        if (mat->Get(AI_MATKEY_EMISSIVE_INTENSITY, e_factor) == aiReturn_SUCCESS) {
+          material.mre_factor.z = e_factor;
         }
         float ior{ 1.f };
         if (mat->Get(AI_MATKEY_REFRACTI, ior) == aiReturn_SUCCESS) {
@@ -135,11 +135,11 @@ namespace Poulpe
         }
         float m;
         if (mat->Get(AI_MATKEY_METALLIC_FACTOR, m) == aiReturn_SUCCESS) {
-          material.mr_factor.x = m;
+          material.mre_factor.x = m;
         }
         float r;
         if (mat->Get(AI_MATKEY_ROUGHNESS_FACTOR, r) == aiReturn_SUCCESS) {
-          material.mr_factor.y = r;
+          material.mre_factor.y = r;
         }
         float transmission_strength{ 1.0 };
         if (mat->Get(AI_MATKEY_TRANSMISSION_FACTOR, transmission_strength) == aiReturn_SUCCESS) {

@@ -18,7 +18,7 @@ namespace Poulpe
     MR,//metalRoughness
     EMISSIVE,
     AO,//ambientOcclusion,
-    TERRAIN
+    HEIGHT
   };
 
   class TextureManager

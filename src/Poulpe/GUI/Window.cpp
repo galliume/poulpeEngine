@@ -26,22 +26,31 @@ namespace Poulpe
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_SRGB_CAPABLE, GLFW_TRUE);
 
-    glfwSwapInterval(1);
+    //@todo check HDR support with GLFW ?
+    auto _monitor = glfwGetPrimaryMonitor();
+    const GLFWvidmode * mode = glfwGetVideoMode(_monitor);
+
+    glfwWindowHint(GLFW_RED_BITS, mode->redBits);
+    glfwWindowHint(GLFW_GREEN_BITS, mode->greenBits);
+    glfwWindowHint(GLFW_BLUE_BITS, mode->blueBits);
+    glfwWindowHint(GLFW_REFRESH_RATE, mode->refreshRate);
+
+    auto window = glfwCreateWindow(mode->width, mode->height, "PoulpeEngine", _monitor, NULL);
+
     _window = glfwCreateWindow(WIDTH, HEIGHT, window_title.data(), nullptr, nullptr);
+    //glfwSetWindowSizeLimits(_window, 800, 600, 2560, 1440);
 
-    glfwSetWindowSizeLimits(_window, 800, 600, 2560, 1440);
+   /* const int maxWidth = mode->width;
+    const int maxHeight = mode->height;*/
 
-    const GLFWvidmode * mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
-
-    const int maxWidth = mode->width;
-    const int maxHeight = mode->height;
-
-    glfwSetWindowMonitor(_window, nullptr, (maxWidth/2)-(WIDTH/2), (maxHeight/2) - (HEIGHT/2), WIDTH, HEIGHT, GLFW_DONT_CARE);
+    //glfwSetWindowMonitor(_window, nullptr, (maxWidth/2)-(WIDTH/2), (maxHeight/2) - (HEIGHT/2), WIDTH, HEIGHT, GLFW_DONT_CARE);
     glfwSetWindowUserPointer(_window, this);
 
     glfwSetFramebufferSizeCallback(_window, []( GLFWwindow*, int, int) {
         Window::_FramebufferResized = true;
     });
+    
+    glfwSwapInterval(1);
 
     //glfwSetInputMode(_window, GLFW_STICKY_MOUSE_BUTTONS, GLFW_TRUE);
     //glfwSetInputMode(_window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);

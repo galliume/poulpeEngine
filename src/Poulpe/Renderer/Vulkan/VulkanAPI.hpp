@@ -103,7 +103,7 @@ namespace Poulpe {
       std::vector<VkDescriptorImageInfo>& image_info);
 
     void updateStorageDescriptorSets(
-      std::vector<Buffer> &uniform_buffers,
+      std::vector<Buffer>& uniform_buffers,
       VkDescriptorSet& desc_set,
       VkDescriptorType const type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER);
 
@@ -114,8 +114,8 @@ namespace Poulpe {
     VkPipeline createGraphicsPipeline(PipeLineCreateInfo const& pipeline_create_info);
 
     VkSwapchainKHR createSwapChain(
-      std::vector<VkImage> & swapchain_images,
-      VkSwapchainKHR const & old_swapchain = VK_NULL_HANDLE);
+      std::vector<VkImage>& swapchain_images,
+      VkSwapchainKHR const& old_swapchain = VK_NULL_HANDLE);
 
     std::vector<VkFramebuffer> createFramebuffers(
       VkRenderPass& rdr_pass,
@@ -229,8 +229,8 @@ namespace Poulpe {
     void initMemoryPool();
 
     Buffer createStorageBuffers(
-        ObjectBuffer const& storage_buffer,
-        VkCommandPool& command_pool);
+      ObjectBuffer const& storage_buffer,
+      VkCommandPool& command_pool);
 
     Buffer createIndirectCommandsBuffer(
       std::vector<VkDrawIndexedIndirectCommand> const& drawCommands);
@@ -396,15 +396,15 @@ namespace Poulpe {
 
     static const std::string getVendor(int vendorID)
     {
-        std::unordered_map<int, std::string> vendors;
-        vendors[0x1002] = "AMD";
-        vendors[0x1010] = "ImgTec";
-        vendors[0x10DE] = "NVIDIA";
-        vendors[0x13B5] = "ARM";
-        vendors[0x5143] = "Qualcomm";
-        vendors[0x8086] = "INTEL";
+      std::unordered_map<int, std::string> vendors;
+      vendors[0x1002] = "AMD";
+      vendors[0x1010] = "ImgTec";
+      vendors[0x10DE] = "NVIDIA";
+      vendors[0x13B5] = "ARM";
+      vendors[0x5143] = "Qualcomm";
+      vendors[0x8086] = "INTEL";
 
-        return vendors[vendorID];
+      return vendors[vendorID];
     }
 
     void transitionImageLayout(
@@ -418,11 +418,11 @@ namespace Poulpe {
     //KTX
     void createKTXImage(
       VkCommandBuffer& cmd_buffer,
-      ktxTexture2 * ktx_texture,
+      ktxTexture2* ktx_texture,
       VkImage& image);
 
     VkImageView createKTXImageView(
-      ktxTexture2 * ktx_texture,
+      ktxTexture2* ktx_texture,
       VkImage& image,
       VkImageAspectFlags aspect_flags);
 
@@ -432,8 +432,20 @@ namespace Poulpe {
       TextureWrapMode const wrap_mode_v,
       float const mip_lvl);
 
-public:
+  public:
     bool _FramebufferResized = false;
+
+    //VK_COLOR_SPACE_HDR10_ST2084_EXT
+    VkColorSpaceKHR PLP_VK_COLOR_SPACE{ VK_COLOR_SPACE_HDR10_ST2084_EXT };
+
+    //https://panoskarabelas.com/blog/posts/hdr_in_under_10_minutes/
+    //VK_FORMAT_A2B10G10R10_UNORM_PACK32
+    VkFormat PLP_VK_FORMAT_SURFACE { VK_FORMAT_A2B10G10R10_UNORM_PACK32 };
+    VkFormat PLP_VK_FORMAT_COLOR { VK_FORMAT_A2B10G10R10_UNORM_PACK32 };
+    //VK_FORMAT_D16_UNORM, VK_FORMAT_D32_SFLOAT
+    VkFormat PLP_VK_FORMAT_DEPTH { VK_FORMAT_D32_SFLOAT }; //VK_FORMAT_D16_UNORM
+    //VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT
+    VkFormat PLP_VK_FORMAT_DEPTH_STENCIL { VK_FORMAT_D32_SFLOAT_S8_UINT };
 
 private:
     bool isDeviceSuitable(VkPhysicalDevice& device);
@@ -472,7 +484,7 @@ private:
         VK_KHR_MAINTENANCE_4_EXTENSION_NAME,
         VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME,
         VK_KHR_SYNCHRONIZATION_2_EXTENSION_NAME,
-        VK_EXT_DEPTH_CLIP_ENABLE_EXTENSION_NAME,
+        VK_EXT_DEPTH_CLIP_ENABLE_EXTENSION_NAME
     };
 
     bool _instance_created{ false };

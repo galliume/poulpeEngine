@@ -78,7 +78,7 @@ void main()
   vec4 p1 = (p11 - p10) * u + p10;
   vec4 p = (p1 - p0) * v + p0;
   p += normal * height;
-  p.y -= 5.0f;
+  p.y -= 1.5f;
 
   out_normal = normal;
   out_position = p.xyz;

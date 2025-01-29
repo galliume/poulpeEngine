@@ -67,7 +67,7 @@ namespace Poulpe
         _vulkan->getSwapChainExtent().width,
         _vulkan->getSwapChainExtent().height, 1,
         VK_SAMPLE_COUNT_1_BIT,
-        VK_FORMAT_R8G8B8A8_UNORM,
+        _vulkan->PLP_VK_FORMAT_COLOR,
         VK_IMAGE_TILING_OPTIMAL,
         VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
         VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
@@ -85,8 +85,8 @@ namespace Poulpe
       _vulkan->createImage(
         _vulkan->getSwapChainExtent().width, 
         _vulkan->getSwapChainExtent().height, 1,
-        VK_SAMPLE_COUNT_1_BIT, 
-        VK_FORMAT_R8G8B8A8_UNORM,
+        VK_SAMPLE_COUNT_1_BIT,
+        _vulkan->PLP_VK_FORMAT_COLOR,
         VK_IMAGE_TILING_OPTIMAL,
         VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
         VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
@@ -96,7 +96,7 @@ namespace Poulpe
 
       _imageviews2[i] = _vulkan->createImageView(
         _images2[i],
-        VK_FORMAT_R8G8B8A8_UNORM,
+        _vulkan->PLP_VK_FORMAT_COLOR,
         VK_IMAGE_ASPECT_COLOR_BIT, 4);
 
       _samplers2[i] = _vulkan->createTextureSampler(1);
@@ -107,7 +107,7 @@ namespace Poulpe
         _vulkan->getSwapChainExtent().width,
         _vulkan->getSwapChainExtent().height, 1,
         VK_SAMPLE_COUNT_1_BIT,
-        VK_FORMAT_D16_UNORM,
+        _vulkan->PLP_VK_FORMAT_DEPTH,
         VK_IMAGE_TILING_OPTIMAL,
         VK_IMAGE_USAGE_SAMPLED_BIT
         | VK_IMAGE_USAGE_TRANSFER_SRC_BIT
@@ -117,7 +117,7 @@ namespace Poulpe
 
       VkImageView depth_imageview = _vulkan->createImageView(
         depth_image,
-        VK_FORMAT_D16_UNORM,
+        _vulkan->PLP_VK_FORMAT_DEPTH,
         1,
         1,
         VK_IMAGE_ASPECT_DEPTH_BIT);
@@ -133,7 +133,7 @@ namespace Poulpe
         _vulkan->getSwapChainExtent().height,
         1,
         VK_SAMPLE_COUNT_1_BIT,
-        VK_FORMAT_D16_UNORM,
+        _vulkan->PLP_VK_FORMAT_DEPTH,
         VK_IMAGE_TILING_OPTIMAL,
         VK_IMAGE_USAGE_SAMPLED_BIT
         | VK_IMAGE_USAGE_TRANSFER_SRC_BIT
@@ -143,7 +143,7 @@ namespace Poulpe
 
       VkImageView depth_imageview2 = _vulkan->createImageView(
         depth_image2,
-        VK_FORMAT_D16_UNORM,
+        _vulkan->PLP_VK_FORMAT_DEPTH,
         1,
         1,
         VK_IMAGE_ASPECT_DEPTH_BIT);

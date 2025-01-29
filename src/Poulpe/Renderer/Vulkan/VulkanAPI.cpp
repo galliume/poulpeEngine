@@ -145,7 +145,7 @@ namespace Poulpe {
 
     VkApplicationInfo app_info{};
 
-    app_info.apiVersion = VK_API_VERSION_1_3;
+    app_info.apiVersion = VK_API_VERSION_1_4;
     app_info.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
     app_info.pApplicationName = "PoulpeEngine";
     app_info.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
@@ -244,6 +244,7 @@ namespace Poulpe {
     std::vector<char const*> extensions(glfw_ext, glfw_ext + glfw_ext_count);
 
     if (_enable_validation_layers) {
+        extensions.push_back(VK_EXT_SWAPCHAIN_COLOR_SPACE_EXTENSION_NAME);
         extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
         //extensions.push_back(VK_EXT_DEBUG_REPORT_EXTENSION_NAME); deprecated
         //extensions.push_back(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME); deprecated
@@ -490,8 +491,8 @@ namespace Poulpe {
   VkSurfaceFormatKHR VulkanAPI::chooseSwapSurfaceFormat(std::vector<VkSurfaceFormatKHR> const & available_formats)
   {
     for (auto const & available_format : available_formats) {
-      if (available_format.format == VK_FORMAT_R8G8B8A8_UNORM
-        && available_format.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR) {
+      if (available_format.format == PLP_VK_FORMAT_SURFACE
+        && available_format.colorSpace == PLP_VK_COLOR_SPACE) {
         return available_format;
       }
     }
@@ -826,7 +827,7 @@ namespace Poulpe {
     rendering_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO_KHR;
     rendering_create_info.colorAttachmentCount = pipeline_create_info.has_color_attachment ? 1 : 0;
     rendering_create_info.pColorAttachmentFormats = & format;
-    rendering_create_info.depthAttachmentFormat = VK_FORMAT_D16_UNORM; //(VK_FORMAT_D24_UNORM_S8_UINT)
+    rendering_create_info.depthAttachmentFormat = PLP_VK_FORMAT_DEPTH; //(VK_FORMAT_D24_UNORM_S8_UINT)
     //rendering_create_info.stencilAttachmentFormat = VK_FORMAT_S8_UINT;
 
     pipeline_info.pNext = & rendering_create_info;
@@ -2150,7 +2151,7 @@ namespace Poulpe {
     image_info.extent.depth = 1;
     image_info.mipLevels = 1;
     image_info.arrayLayers = 1;
-    image_info.format = VK_FORMAT_D16_UNORM;
+    image_info.format = PLP_VK_FORMAT_DEPTH;
     image_info.tiling = VK_IMAGE_TILING_OPTIMAL;
     image_info.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
     image_info.usage = VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT
@@ -2190,7 +2191,7 @@ namespace Poulpe {
     create_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
     create_info.image = image;
     create_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
-    create_info.format = VK_FORMAT_D16_UNORM;
+    create_info.format = PLP_VK_FORMAT_DEPTH;
     create_info.subresourceRange = {};
     create_info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
     create_info.subresourceRange.baseMipLevel = 0;
@@ -2479,7 +2480,7 @@ namespace Poulpe {
 
   VkFormat VulkanAPI::findDepthFormat()
   {
-    return findSupportedFormat({ VK_FORMAT_D16_UNORM, VK_FORMAT_D32_SFLOAT, VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT },
+    return findSupportedFormat({ PLP_VK_FORMAT_DEPTH, PLP_VK_FORMAT_DEPTH_STENCIL },
       VK_IMAGE_TILING_OPTIMAL, VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT);
   }
 
@@ -2503,7 +2504,7 @@ namespace Poulpe {
 
   bool VulkanAPI::hasStencilComponent(VkFormat const format)
   {
-    return format == VK_FORMAT_D16_UNORM || format == VK_FORMAT_D32_SFLOAT_S8_UINT || format == VK_FORMAT_D24_UNORM_S8_UINT;
+    return format == PLP_VK_FORMAT_DEPTH || format == PLP_VK_FORMAT_DEPTH_STENCIL;
   }
 
   VkSampleCountFlagBits VulkanAPI::getMaxUsableSampleCount()

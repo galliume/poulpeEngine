@@ -39,13 +39,13 @@
 			"assets/texture/skybox/debug/front.jpg",
 			"assets/texture/skybox/debug/back.jpg"
 		],
-		"dark": [
-			"assets/texture/skybox/dark/right.jpg",
-			"assets/texture/skybox/dark/left.jpg",
-			"assets/texture/skybox/dark/top.jpg",
-			"assets/texture/skybox/dark/bottom.jpg",
-			"assets/texture/skybox/dark/front.jpg",
-			"assets/texture/skybox/dark/back.jpg"
+		"desert_road": [
+			"assets/texture/skybox/desert_road/right.png",
+			"assets/texture/skybox/desert_road/left.png",
+			"assets/texture/skybox/desert_road/top.png",
+			"assets/texture/skybox/desert_road/bottom.png",
+			"assets/texture/skybox/desert_road/front.png",
+			"assets/texture/skybox/desert_road/back.png"
 		]
 	}
 }
