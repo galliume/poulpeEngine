@@ -53,6 +53,7 @@ namespace Poulpe
     void prepareHUD();
     void prepareSkybox();
     void prepareTerrain();
+    void prepareWater();
 
   private:
     std::string _current_level;

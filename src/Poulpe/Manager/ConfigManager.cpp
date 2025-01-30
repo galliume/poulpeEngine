@@ -120,7 +120,13 @@ namespace Poulpe
     std::ranges::for_each(_entity_config["terrain"].items(), [&](auto const& terrain) {
       auto const& key = terrain.key();
       auto const& data = terrain.value();
-      _textures_config["terrain"][key] = data;      
+      _textures_config["terrain"][key] = data;
+    });
+
+    std::ranges::for_each(_entity_config["water"].items(), [&](auto const& water) {
+      auto const& key = water.key();
+      auto const& data = water.value();
+      _textures_config["water"][key] = data;
     });
 
     return _entity_config;

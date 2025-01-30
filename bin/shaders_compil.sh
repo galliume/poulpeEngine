@@ -73,7 +73,8 @@ print_text "Compiling shaders"
 
 #@todo read from config/shaders.json
 shaders=("main_basic" "main_basic_no_texture" "skybox"
-        "shadowMap" "shadowMapSpot" "normal" "terrain")
+        "shadowMap" "shadowMapSpot" "normal" "terrain"
+        "water")
 
 for shader in ${shaders[@]}; do
     compile ${shader} "vert"
@@ -85,12 +86,12 @@ for shader in ${geom_shaders[@]}; do
     compile ${shader} "geom"
 done
 
-tesc_shaders=("terrain")
+tesc_shaders=("terrain" "water")
 for shader in ${tesc_shaders[@]}; do
     compile ${shader} "tesc"
 done
 
-tese_shaders=("terrain")
+tese_shaders=("terrain" "water")
 for shader in ${tese_shaders[@]}; do
     compile ${shader} "tese"
 done

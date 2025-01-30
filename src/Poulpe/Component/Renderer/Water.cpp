@@ -1,4 +1,4 @@
-#include "Terrain.hpp"
+#include "Water.hpp"
 
 namespace Poulpe
 {
@@ -11,69 +11,21 @@ namespace Poulpe
     int heighest_height;
   };
 
-  void Terrain::createDescriptorSet(Mesh* mesh)
+  void Water::createDescriptorSet(Mesh* mesh)
   {
-    Texture height_map { _texture_manager->getTerrainTexture()};
+    Texture tex { _texture_manager->getWaterTexture()};
     
-    height_map.setSampler(_renderer->getAPI()->createKTXSampler(
+    tex.setSampler(_renderer->getAPI()->createKTXSampler(
       TextureWrapMode::WRAP,
       TextureWrapMode::WRAP,
       0));
 
-    if (height_map.getWidth() == 0) {
-      height_map = _texture_manager->getTextures()["_plp_empty"];
-
+    if (tex.getWidth() == 0) {
+      tex = _texture_manager->getTextures()["_plp_empty"];
     }
-    Texture ground { _texture_manager->getTextures()["terrain_ground"]};
-    
-    ground.setSampler(_renderer->getAPI()->createKTXSampler(
-      TextureWrapMode::WRAP,
-      TextureWrapMode::WRAP,
-      0));
-
-    if (ground.getWidth() == 0) {
-      ground = _texture_manager->getTextures()["_plp_empty"];
-    }
-
-    Texture grass { _texture_manager->getTextures()["terrain_grass"]};
-    
-    grass.setSampler(_renderer->getAPI()->createKTXSampler(
-      TextureWrapMode::WRAP,
-      TextureWrapMode::WRAP,
-      0));
-
-    if (grass.getWidth() == 0) {
-      grass = _texture_manager->getTextures()["_plp_empty"];
-    }
-
-    Texture snow { _texture_manager->getTextures()["terrain_snow"]};
-    
-    snow.setSampler(_renderer->getAPI()->createKTXSampler(
-      TextureWrapMode::WRAP,
-      TextureWrapMode::WRAP,
-      0));
-
-    if (snow.getWidth() == 0) {
-      snow = _texture_manager->getTextures()["_plp_empty"];
-    }
-
-    Texture sand { _texture_manager->getTextures()["terrain_sand"]};
-
-    sand.setSampler(_renderer->getAPI()->createKTXSampler(
-      TextureWrapMode::WRAP,
-      TextureWrapMode::WRAP,
-      0));
-
-    if (sand.getWidth() == 0) {
-      sand = _texture_manager->getTextures()["_plp_empty"];
-    }
-
+   
     std::vector<VkDescriptorImageInfo> image_infos{};
-    image_infos.emplace_back(height_map.getSampler(), height_map.getImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-    image_infos.emplace_back(ground.getSampler(), ground.getImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-    image_infos.emplace_back(grass.getSampler(), grass.getImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-    image_infos.emplace_back(snow.getSampler(), snow.getImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-    image_infos.emplace_back(sand.getSampler(), sand.getImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+    image_infos.emplace_back(tex.getSampler(), tex.getImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
     auto const pipeline = _renderer->getPipeline(mesh->getShaderName());
     VkDescriptorSet descset = _renderer->getAPI()->createDescriptorSets(pipeline->desc_pool, { pipeline->descset_layout }, 1);
@@ -83,7 +35,7 @@ namespace Poulpe
     mesh->setDescSet(descset);
   }
 
-  void Terrain::setPushConstants(Mesh* mesh)
+  void Water::setPushConstants(Mesh* mesh)
   {
     mesh->setApplyPushConstants([](
       VkCommandBuffer & cmd_buffer,
@@ -109,7 +61,7 @@ namespace Poulpe
     mesh->setHasPushConstants();
   }
 
-  void Terrain::operator()(double const delta_time, Mesh* mesh)
+  void Water::operator()(double const delta_time, Mesh* mesh)
   {
     if (!mesh && !mesh->isDirty()) return;
 

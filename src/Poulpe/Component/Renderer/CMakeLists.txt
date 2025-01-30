@@ -10,6 +10,8 @@ set(SRC_LIST ${CMAKE_CURRENT_SOURCE_DIR}/Crosshair.cpp
              ${CMAKE_CURRENT_SOURCE_DIR}/ShadowMap.hpp
              ${CMAKE_CURRENT_SOURCE_DIR}/Terrain.cpp
              ${CMAKE_CURRENT_SOURCE_DIR}/Terrain.hpp
+			 ${CMAKE_CURRENT_SOURCE_DIR}/Water.cpp
+             ${CMAKE_CURRENT_SOURCE_DIR}/Water.hpp
              ${CMAKE_CURRENT_SOURCE_DIR}/RendererFactory.hpp)
 
 target_sources(PoulpeEngine PRIVATE ${SRC_LIST})

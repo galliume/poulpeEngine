@@ -5,6 +5,7 @@
 #include "Grid.hpp"
 #include "Skybox.hpp"
 #include "Terrain.hpp"
+#include "Water.hpp"
 
 namespace Poulpe
 {

@@ -50,6 +50,32 @@ namespace Poulpe
     return 0;
   }
 
+  static int wrapWave(lua_State* L)
+  {
+    AnimationScript* animScript = static_cast<AnimationScript*>(lua_touserdata(L, 1));
+    double const delta_time{ static_cast<double>(lua_tonumber(L, 2)) };
+    float duration = static_cast<float>(lua_tonumber(L, 3));
+    float angle_x = static_cast<float>(lua_tonumber(L, 4));
+    float angle_y = static_cast<float>(lua_tonumber(L, 5));
+    float angle_z = static_cast<float>(lua_tonumber(L, 6));
+
+    //PLP_DEBUG("delta time {} duration {} x {} y {} z {}", delta_time, duration, angle_x, angle_y, angle_z);
+
+    glm::quat qx = glm::angleAxis(glm::radians(angle_x), glm::vec3(1, 0, 0));
+    glm::quat qy = glm::angleAxis(glm::radians(angle_y), glm::vec3(0, 1, 0));
+    glm::quat qz = glm::angleAxis(glm::radians(angle_z), glm::vec3(0, 0, 1));
+    
+    glm::quat rotation = qx * qy * qz;
+
+    animScript->wave(
+      animScript->getData(),
+      delta_time,
+      duration,
+      rotation);
+
+    return 0;
+  }
+
   AnimationScript::AnimationScript(std::string const& scriptPath)
   {
     _script_path = "./" + scriptPath;
@@ -63,6 +89,7 @@ namespace Poulpe
     luaL_openlibs(_lua_State);
     lua_register(_lua_State, "_Rotate", wrapRotate);
     lua_register(_lua_State, "_Move", wrapMove);
+    lua_register(_lua_State, "_Wave", wrapWave);
 
     checkLua(_lua_State, luaL_dofile(_lua_State, _script_path.c_str()));
   }
@@ -158,6 +185,44 @@ namespace Poulpe
     _new_rotates.emplace_back(std::move(anim_rotate));
   }
 
+  void AnimationScript::wave(Data* data_rotate, double delta_time, float duration, glm::quat angle)
+  {
+    std::unique_ptr<AnimationWave> anim_wave = std::make_unique<AnimationWave>();
+    anim_wave->duration = duration;
+    anim_wave->angle = angle;
+
+    //PLP_DEBUG("START at {}/{}/{}", data_rotate->_origin_rotation.x, data_rotate->_origin_rotation.y, data_rotate->_origin_rotation.z);
+    //PLP_DEBUG("TO {}/{}/{}", anim_rotate->angle.x, anim_rotate->angle.y, anim_rotate->angle.z);
+
+    anim_wave->update = [](AnimationWave* anim, Data* data, double delta_time) {
+
+      float t{ glm::clamp(anim->elapsedTime / anim->duration, 0.0f, 1.0f) };
+      bool done{ false };
+
+
+      if (anim->elapsedTime >= anim->duration) {
+        done = true;
+        t = 1.f;
+      }
+      anim->elapsedTime += delta_time;
+
+      data->_current_rotation = glm::mix(data->_origin_rotation, anim->angle, t);
+
+      glm::mat4 model = glm::mat4(1.0f);
+      model = glm::scale(model, data->_current_scale);
+      model = glm::translate(model, data->_current_pos);
+      model *= glm::mat4_cast(data->_current_rotation);
+
+      std::ranges::for_each(data->_ubos, [&model](auto& ubo) {
+        ubo.model = model;
+      });
+
+      anim->done = done;
+    };
+    anim_wave->update(anim_wave.get(), data_rotate, delta_time);
+    _new_waves.emplace_back(std::move(anim_wave));
+  }
+
   void AnimationScript::operator()(double const delta_time, Mesh* mesh)
   {
     _data = mesh->getData();
@@ -168,9 +233,12 @@ namespace Poulpe
     std::ranges::for_each(_new_rotates, [&](auto& anim) {
       _rotates.emplace_back(std::move(anim));
     });
-
+    std::ranges::for_each(_new_waves, [&](auto& anim) {
+      _waves.emplace_back(std::move(anim));
+    });
     _new_moves.clear();
     _new_rotates.clear();
+    _new_waves.clear();
 
     if (!_move_init) {
       lua_getglobal(_lua_State, "nextMove");
@@ -219,8 +287,32 @@ namespace Poulpe
       }
     });
 
+    if (!_wave_init) {
+      lua_getglobal(_lua_State, "nextWave");
+      if (lua_isfunction(_lua_State, -1)) {
+        lua_pushlightuserdata(_lua_State, this);
+        lua_pushnumber(_lua_State, delta_time);
+        checkLua(_lua_State, lua_pcall(_lua_State, 2, 1, 0));
+      }
+      _wave_init = true;
+    }
+
+    std::ranges::for_each(_waves, [&](auto& anim) {
+      anim->update(anim.get(), mesh->getData(), delta_time);
+
+      if (anim->done) {
+        lua_getglobal(_lua_State, "nextWave");
+        if (lua_isfunction(_lua_State, -1)) {
+          lua_pushlightuserdata(_lua_State, this);
+          lua_pushnumber(_lua_State, delta_time);
+          checkLua(_lua_State, lua_pcall(_lua_State, 2, 1, 0));
+        }
+      }
+    });
+
     std::erase_if(_moves, [](auto& anim) { return anim->done; });
     std::erase_if(_rotates, [](auto& anim) { return anim->done; });
+    std::erase_if(_waves, [](auto& anim) { return anim->done; });
   }
     //lua_State* L = luaL_newstate();
     //luaL_openlibs(L);
