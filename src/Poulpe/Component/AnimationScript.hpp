@@ -9,9 +9,9 @@
 namespace Poulpe
 {
   class LightManager;
+  class Mesh;
   class Renderer;
   class TextureManager;
-  class Mesh;
 
   class AnimationScript
   {
@@ -32,6 +32,11 @@ namespace Poulpe
       glm::quat angle;
       std::function<void(AnimationRotate* anim, Data* data, double)> update;
     };
+    struct AnimationWave : public Animation
+    {
+      glm::quat angle;
+      std::function<void(AnimationWave* anim, Data* data, double)> update;
+    };
 
     AnimationScript(std::string const & scriptPath);
     ~AnimationScript();
@@ -46,6 +51,7 @@ namespace Poulpe
     }
     void move(Data* data, double delta_time, float duration, glm::vec3 target);
     void rotate(Data* data, double delta_time, float duration, glm::quat angle);
+    void wave(Data* data, double delta_time, float duration, glm::quat angle);
     void operator()(double const delta_time, Mesh * mesh);
 
   private:
@@ -55,10 +61,13 @@ namespace Poulpe
     Data* _data;
     bool _move_init{ false };
     bool _rotate_init{ false };
+    bool _wave_init{ false };
 
     std::vector<std::unique_ptr<AnimationMove>> _moves{};
     std::vector<std::unique_ptr<AnimationMove>> _new_moves{};
     std::vector<std::unique_ptr<AnimationRotate>> _rotates{};
     std::vector<std::unique_ptr<AnimationRotate>> _new_rotates{};
+    std::vector<std::unique_ptr<AnimationWave>> _waves{};
+    std::vector<std::unique_ptr<AnimationWave>> _new_waves{};
   };
 }

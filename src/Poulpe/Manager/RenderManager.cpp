@@ -117,6 +117,7 @@ namespace Poulpe
 
     prepareSkybox();
     prepareTerrain();
+    prepareWater();
     //prepareHUD();
   }
 
@@ -145,6 +146,16 @@ namespace Poulpe
         _shader_manager->load(config_manager->shaderConfig())(count_down);
 
         config_manager->setReloadShaders(false);
+      }
+
+      auto entity = _entity_manager->getWater();
+      auto* mesh_component = _component_manager->get<MeshComponent>(entity->getID());
+      auto mesh = mesh_component->template has<Mesh>();
+      if (mesh) {
+        auto* animation_component = _component_manager->get<AnimationComponent>(entity->getID());
+        if (animation_component) {
+          //(*animation_component)(delta_time, mesh);
+        }
       }
 
       auto* world_node = _entity_manager->getWorldNode();
@@ -296,5 +307,32 @@ namespace Poulpe
     _entity_manager->setTerrain(std::move(entity));
 
     _renderer->addEntity(_entity_manager->getTerrain(), true);
+  }
+
+  void RenderManager::prepareWater()
+  {
+    auto entity = std::make_unique<Entity>();
+    auto mesh = std::make_unique<Mesh>();
+    mesh->setHasShadow(false);
+    mesh->setIsIndexed(false);
+    mesh->setShaderName("water");
+    mesh->setName("_plp_water");
+
+    auto rdr_impl{ RendererFactory::create<Water>() };
+    rdr_impl->init(_renderer.get(), _texture_manager.get(), nullptr);
+
+    double const delta_time{ 0.0 };
+    (*rdr_impl)(delta_time, mesh.get());
+
+    _component_manager->add<RenderComponent>(entity->getID(), std::move(rdr_impl));
+    _component_manager->add<MeshComponent>(entity->getID(), std::move(mesh));
+
+    auto animationScript = std::make_unique<AnimationScript>("assets/scripts/animation/water/anim0.lua");
+    animationScript->init(_renderer.get(), nullptr, nullptr);
+    _component_manager->add<AnimationComponent>(entity->getID(), std::move(animationScript));
+
+    _entity_manager->setWater(std::move(entity));
+
+    _renderer->addEntity(_entity_manager->getWater(), true);
   }
 }

@@ -202,6 +202,9 @@ namespace Poulpe
       for (auto& [key, texture_data] : _texture_config["terrain"].items()) {
         add(_terrain_name, texture_data, VK_IMAGE_ASPECT_COLOR_BIT, TEXTURE_TYPE::HEIGHT);
       }
+      for (auto& [key, texture_data] : _texture_config["water"].items()) {
+        add(_water_name, texture_data, VK_IMAGE_ASPECT_COLOR_BIT, TEXTURE_TYPE::DIFFUSE);
+      }
       count_down.count_down();
     };
   }

@@ -10,6 +10,7 @@
 #include "Poulpe/Component/Renderer/ShadowMap.hpp"
 #include "Poulpe/Component/Renderer/Skybox.hpp"
 #include "Poulpe/Component/Renderer/Terrain.hpp"
+#include "Poulpe/Component/Renderer/Water.hpp"
 
 #include "Poulpe/Utils/IDHelper.hpp"
 
@@ -35,7 +36,8 @@ namespace Poulpe
       std::unique_ptr<Mesh>,
       std::unique_ptr<ShadowMap>,
       std::unique_ptr<Skybox>,
-      std::unique_ptr<Terrain>>;
+      std::unique_ptr<Terrain>,
+      std::unique_ptr<Water>>;
 
     IDType getID() const { return _ID; }
     IDType getOwner() const { return _owner; }

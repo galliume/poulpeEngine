@@ -214,7 +214,28 @@ namespace Poulpe
                                         | VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT;
 
       bindings = { uboLayoutBinding, samplerLayoutBinding };
-    }else {
+      } else if constexpr (T == DescSetLayoutType::Water) {
+      VkDescriptorSetLayoutBinding uboLayoutBinding{};
+      uboLayoutBinding.binding = 0;
+      uboLayoutBinding.descriptorCount = 1;
+      uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+      uboLayoutBinding.pImmutableSamplers = nullptr;
+      uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT
+                                    | VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT
+                                    | VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT;
+
+      VkDescriptorSetLayoutBinding samplerLayoutBinding{};
+      samplerLayoutBinding.binding = 1;
+      samplerLayoutBinding.descriptorCount = 1;
+      samplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+      samplerLayoutBinding.pImmutableSamplers = nullptr;
+      samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT 
+                                        | VK_SHADER_STAGE_FRAGMENT_BIT
+                                        | VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT
+                                        | VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT;
+
+      bindings = { uboLayoutBinding, samplerLayoutBinding };
+    } else {
       PLP_FATAL("unknown descSetLayoutType");
       throw std::runtime_error("unknown descSetLayoutType");
     }
@@ -262,6 +283,7 @@ namespace Poulpe
     
     vertex_input_info = getVertexInputState<VertexBindingType::Vertex3D>();
 
+    //@todo replace shader_name == with a shader_type ==
     if (shader_name == "skybox") {
       descset_layout = createDescriptorSetLayout<DescSetLayoutType::Skybox>();
 
@@ -275,9 +297,13 @@ namespace Poulpe
       pipeline_create_infos.has_color_attachment = false;
       pipeline_create_infos.has_dynamic_depth_bias = false;
 
-    } else if (shader_name == "terrain") {
-      descset_layout = createDescriptorSetLayout<DescSetLayoutType::Terrain>();
-
+    } else if (shader_name == "terrain" || shader_name == "water") {
+      if (shader_name == "water") {
+        descset_layout = createDescriptorSetLayout<DescSetLayoutType::Water>();
+        pipeline_create_infos.polygone_mode = VK_POLYGON_MODE_LINE;
+      } else {
+        descset_layout = createDescriptorSetLayout<DescSetLayoutType::Terrain>();
+      }
       push_constants.offset = 0;
       push_constants.size = sizeof(constants);
       push_constants.stageFlags = VK_SHADER_STAGE_VERTEX_BIT 
@@ -291,7 +317,6 @@ namespace Poulpe
       pipeline_create_infos.has_dynamic_depth_bias = false;
       pipeline_create_infos.is_patch_list = true;
       pipeline_create_infos.topology = VK_PRIMITIVE_TOPOLOGY_PATCH_LIST;
-      //pipeline_create_infos.polygone_mode = VK_POLYGON_MODE_LINE;
     } else {
       VkDescriptorPoolSize dpsSB;
       dpsSB.type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;

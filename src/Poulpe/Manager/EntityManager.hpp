@@ -34,10 +34,13 @@ namespace Poulpe
     //inline std::unordered_map<std::string, std::array<uint32_t, 2>> getLoadedEntities() { return _LoadedEntities; }
     inline Entity* getSkybox() { return _skybox.get(); }
     inline Entity* getTerrain() { return _terrain.get(); }
+    inline Entity* getWater() { return _water.get(); }
 
     std::function<void()> load(nlohmann::json const& lvl_config);
     inline void setSkybox(std::unique_ptr<Entity> skybox) { _skybox = std::move(skybox); }
     inline void setTerrain(std::unique_ptr<Entity> terrain) { _terrain = std::move(terrain); }
+    inline void setWater(std::unique_ptr<Entity> water) { _water = std::move(water); }
+
     //void addEntity(Mesh* meshes);
     //inline size_t getTotalEntities() const { return _Entities.size(); }
     EntityNode * getWorldNode();
@@ -59,6 +62,7 @@ namespace Poulpe
 
     std::unique_ptr<Entity> _skybox{nullptr};
     std::unique_ptr<Entity> _terrain{nullptr};
+    std::unique_ptr<Entity> _water{nullptr};
 
     std::unique_ptr<EntityNode> _world_node;
 

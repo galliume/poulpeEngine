@@ -4,6 +4,11 @@
 			"path": "assets/texture/terrain/height_map_1.ktx2"
 		}
 	},
+	"water": {
+		"water": {
+			"path": "assets/texture/water/water.ktx2"
+		}
+	},
 	"entities": {
 		"sponza": {
 			"mesh": "assets/mesh/Sponza/glTF/Sponza.gltf",

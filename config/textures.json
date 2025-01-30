@@ -12,8 +12,8 @@
 		"terrain_snow": {
 			"path": "assets/texture/terrain/snow.ktx2"
 		},
-		"terrain_water": {
-			"path": "assets/texture/terrain/water.ktx2"
+		"water_water": {
+			"path": "assets/texture/water/water.ktx2"
 		},
 		"terrain_ground": {
 			"path": "assets/texture/terrain/ground.ktx2"
