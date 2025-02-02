@@ -28,6 +28,8 @@ namespace Poulpe {
     bool hasChildren() { return !_children.empty(); }
     size_t size() const { return _children.size(); }
 
+    void clear() { _children.clear(); }
+
   private:
     std::vector<EntityNode*> _children;
     std::unique_ptr<Entity> _entity;

@@ -5,7 +5,7 @@ namespace Poulpe
   LightManager::LightManager()
   {
     _sun.color = glm::vec3(1.f, 1.f, 1.f);
-    _sun.position = glm::vec3(10.f, 200.f, -10.f);
+    _sun.position = glm::vec3(0.f, 200.f, 0.f);
     _sun.direction =  glm::vec3(-0.2f, -1.0f, -0.3f);
     //ambient diffuse specular
     _sun.ads = glm::vec3(10.f, 0.5f, 1.f);

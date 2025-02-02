@@ -62,6 +62,7 @@ namespace Poulpe
   {
     _entity_config.clear();
     _textures_config.clear();
+    _lvl_config.clear();
 
     fs::path path{};
     std::ifstream f;
@@ -81,6 +82,12 @@ namespace Poulpe
     }
 
     f.close();
+
+    std::ranges::for_each(_entity_config["camera"].items(), [&](auto const& camera) {
+      auto const& key = camera.key();
+      auto const& data = camera.value();
+      _lvl_config["camera"][key] = data;
+    });
 
     std::ranges::for_each(_entity_config["entities"].items(), [&](auto const& entities) {
       auto const& textures = entities.value();

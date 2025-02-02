@@ -157,14 +157,17 @@ namespace Poulpe
     inline uint32_t getCurrentFrameIndex() const { return _current_frame; }
     inline VkSampler getCurrentSampler() { return _samplers2[_current_frame]; }
     inline VkImageView getCurrentImageView() { return _imageviews2[_current_frame]; }
-    inline VkImageView getDepthMapImageViews()  { return  _depthmap_imageviews.at(_current_frame); }
-    inline VkSampler getDepthMapSamplers()  { return _depthmap_samplers.at(_current_frame); }
-    inline VkImageView getDepthImageViews()  { return _depth_imageviews.at(_current_frame); }
-    inline VkSampler getDepthSamplers()  { return  _depth_samplers.at(_current_frame); }
-    inline std::vector<VkDescriptorSetLayout>* getDescriptorSetLayouts()  { return & _descriptorset_layouts; }
+    inline VkImageView getDepthMapImageViews() { return  _depthmap_imageviews.at(_current_frame); }
+    inline VkSampler getDepthMapSamplers() { return _depthmap_samplers.at(_current_frame); }
+    inline VkImageView getDepthImageViews() { return _depth_imageviews.at(_current_frame); }
+    inline VkImageView getDepthImageViews2() { return _depth_imageviews2.at(_current_frame); }
+    inline VkSampler getDepthSamplers() { return  _depth_samplers.at(_current_frame); }
+    inline VkSampler getDepthSamplers2() { return  _depth_samplers2.at(_current_frame); }
+    inline VkImageView getVisibleDepthImageView() { return _visible_depth_imageview; }
+    inline std::vector<VkDescriptorSetLayout>* getDescriptorSetLayouts() { return & _descriptorset_layouts; }
     inline VkDevice getDevice()  { return _vulkan->getDevice(); }
     inline glm::mat4 getPerspective()  { return _perspective; }
-    VulkanPipeline* getPipeline(std::string const & shaderName)  { return & _pipelines[shaderName]; }
+    VulkanPipeline* getPipeline(std::string const & shaderName) { return & _pipelines[shaderName]; }
     void immediateSubmit(std::function<void(VkCommandBuffer cmd)> && function, int queueIndex = 0) ;
     void init();
     void renderScene();
@@ -181,6 +184,8 @@ namespace Poulpe
     void showGrid(bool const show);
 
     VulkanAPI * const getAPI() const { return _vulkan.get(); }
+
+    void clearScreen();
 
   private:
     const uint32_t _MAX_FRAMES_IN_FLIGHT{ 2 };
@@ -236,6 +241,9 @@ private:
     std::vector<VkImageView> _depth_imageviews3{};
     std::vector<VkImage> _depth_images3{};
 
+    VkImageView _visible_depth_imageview;
+    VkImage _visible_depth_image;
+
     glm::mat4 _perspective;
     //glm::mat4 _lastLookAt;
     float _delta_time{ 0.0f };
@@ -248,6 +256,8 @@ private:
     std::vector<VkSampler> _depth_samplers2{};
     std::vector<VkSampler> _samplers3{};
     std::vector<VkSampler> _depth_samplers3{};
+
+    VkSampler _visible_depth_sampler{};
 
     //std::vector<IObserver*> _Observers{};
 

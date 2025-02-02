@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Poulpe/Component/Mesh.hpp"
+
 #include "Poulpe/Core/PlpTypedef.hpp"
 
 #include "Poulpe/Utils/LuaScript.hpp"
@@ -9,7 +11,6 @@
 namespace Poulpe
 {
   class LightManager;
-  class Mesh;
   class Renderer;
   class TextureManager;
 
@@ -30,18 +31,21 @@ namespace Poulpe
     struct AnimationRotate : public Animation
     {
       glm::quat angle;
-      std::function<void(AnimationRotate* anim, Data* data, double)> update;
+      std::function<void(AnimationRotate* anim, Data* data, double delta_time)> update;
     };
     struct AnimationWave : public Animation
     {
-      glm::quat angle;
-      std::function<void(AnimationWave* anim, Data* data, double)> update;
+      Mesh* mesh;
+      float amplitude{0.0f};
+      float lambda{0.0f};
+      std::function<void(AnimationWave* anim, double delta_time)> update;
     };
 
     AnimationScript(std::string const & scriptPath);
     ~AnimationScript();
 
-    Data* getData() { return _data; }
+    Data* getData() { return _mesh->getData(); }
+    Mesh* getMesh() { return _mesh; }
 
     void init(Renderer* const renderer,
        TextureManager* const texture_manager,
@@ -51,14 +55,14 @@ namespace Poulpe
     }
     void move(Data* data, double delta_time, float duration, glm::vec3 target);
     void rotate(Data* data, double delta_time, float duration, glm::quat angle);
-    void wave(Data* data, double delta_time, float duration, glm::quat angle);
+    void wave(Mesh* mesh, double const delta_time, float const duration, float const amplitude, float const lambda);
     void operator()(double const delta_time, Mesh * mesh);
 
   private:
     Renderer* _renderer;
     std::string _script_path;
     lua_State* _lua_State;
-    Data* _data;
+    Mesh* _mesh;
     bool _move_init{ false };
     bool _rotate_init{ false };
     bool _wave_init{ false };

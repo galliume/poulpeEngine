@@ -30,9 +30,7 @@ namespace Poulpe
 
   void EntityManager::clear()
   {
-    //_Entities.clear();
-    _HUD.clear();
-    //_LoadedEntities.clear();
+    _world_node->clear();
   }
 
   std::function<void()> EntityManager::load(nlohmann::json const& lvl_config)
@@ -264,8 +262,8 @@ namespace Poulpe
 
       UniformBufferObject ubo{};
       ubo.model = glm::mat4(1.0f);
-      ubo.model = glm::scale(ubo.model, entity_opts.scale);
       ubo.model = glm::translate(ubo.model, entity_opts.pos);
+      ubo.model = glm::scale(ubo.model, entity_opts.scale);
       ubo.model *= glm::mat4_cast(entity_opts.rotation);
       ubo.model *= _data.transform_matrix;
       //ubo.inversed_model = glm::inverse(ubo.model);

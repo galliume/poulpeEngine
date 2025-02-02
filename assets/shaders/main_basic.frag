@@ -137,7 +137,7 @@ float SmoothAttenuation(vec3 l)
   atten_const.x = 1.0 / (r_max * r_max);
   atten_const.y = 2.0 / r_max;
 
-  vec3 l_dir = abs(l);
+  vec3 l_dir = abs(l); //length not abs !!!
   float r2 = dot(l_dir, l_dir);
   return max(r2 * atten_const.x * (sqrt(r2) * atten_const.y - 3.0) + 1.0, 0.0);
 }
@@ -198,18 +198,25 @@ vec2 transform_uv(vec3 t, vec3 s, vec3 r, vec2 c)
 
 vec3 FresnelSchlick(vec3 F0, vec3 F90, float NdH, float P)
 {
-  vec3 bounce = (20.0 / 21.0) * F0 + (1.0 / 21.0);
   vec3 F = F0 + (F90 - F0) * pow(max(1.0 - NdH, 0.0), 1/P);
 
   return F;
 }
 
+float ReflectionBounce(vec3 F0)
+{
+  return length((20.0 / 21.0) * F0 + (1.0 / 21.0));
+}
+
 float GGXDistribution(float NdH, float roughness)
 {
+
+  float gamma = 2.0;
+
   float a = roughness * roughness;
   float a2 = a * a;
-  float tmp = ((NdH * NdH) * (a - 1.0) + 1.0);
-  float D = a / (PI * tmp * tmp);
+  float tmp = ((NdH * NdH) * (a2 - 1.0) + 1.0);
+  float D = a2 / (PI * tmp * tmp);
 
   return D;
 }
@@ -257,6 +264,14 @@ vec3 srgb_to_linear(vec3 color)
   return mix(linear_low, linear_high, is_high);
 }
 
+vec3 Diffuse(vec3 diffuse, vec3 F0, float NdL, float NdV)
+{
+  float a = 1.0 - pow(1.0 - max(NdL, 0.0), 5);
+  float b = 1.0 - pow(1.0 - max(NdV, 0.0), 5);
+
+  return (21.0 / (20.0 * PI)) * (1.0 - F0) * diffuse * a * b;
+}
+
 void main()
 {
   vec4 alpha_color = texture(tex_sampler[ALPHA_INDEX], var.texture_coord);
@@ -279,6 +294,7 @@ void main()
   vec3 normal = vec3(xy, z);
   normal = var.TBN * normal;
 
+  //@todo use bitmask
   ivec2 normal_size = textureSize(tex_sampler[NORMAL_INDEX], 0);
   if (normal_size.x <= 2.0) {
     normal = var.norm;
@@ -335,7 +351,7 @@ void main()
 
   float color_alpha = albedo.a;
   
-  if (material.alpha.x == 1.0 && color_alpha < 0.9) discard;
+  if (material.alpha.x == 1.0 && color_alpha < material.alpha.y) discard;
   if (material.base_color.a < material.alpha.y) discard;
 
   albedo *= material.base_color * var.color;
@@ -359,16 +375,22 @@ void main()
   vec3 out_lights = vec3(0.0);
 
   vec3 F90 = vec3(1.0);
-  
-    //directional sun light
-  vec3 l = normalize(-sun_light.direction);
+
+  //directional sun light
+  //vec3 l = normalize(-sun_light.direction);
+  float d = length(sun_light.position - p) * length(sun_light.position - p);
+  //float d = 100000.0;//sun distance approx ?
+  float radius = d * tan(0.00463);//sun approx angle
+  vec3 l = (sun_light.position - p) / d;
   vec3 h = normalize(l + v);
   float NdL = max(dot(normal, l), 0.0);
   float HdV = max(dot(h, v), 0.0);
   float NdV = max(dot(normal, v), 0.0);
   float NdH = max(dot(normal, h), 0.0);
 
-  vec3 F = FresnelSchlick(F0, F90, HdV, P);
+  float f = ReflectionBounce(F0);
+  vec3 F = FresnelSchlick(F0, F90, HdV, P) * f;
+  float sun_roughness = roughness + (radius / (2 * d));
   float D = GGXDistribution(NdH, roughness);
   float G1 = SmithGeometryGGX(roughness, NdV);
   float G2 = SmithGeometryGGX(roughness, NdL);
@@ -379,8 +401,14 @@ void main()
 
   vec3 specular = (D * G * F) / (4.0 * NdL * NdV + 0.0001);
   //vec3 radiance = srgb_to_linear(sun_light.color.rgb) * ao;
-  vec3 radiance = vec3(1.0) * ao;
-  vec3 C_sun = (kD * C_diffuse.xyz + specular) * radiance * NdL;
+  vec3 diffuse = C_diffuse.xyz + Diffuse(C_diffuse.xyz, F0, NdL, NdV);
+
+  vec3 radiance = (((radius * radius) / d) + 0.0001) * vec3(sun_light.color);
+  radiance *= ((NdL + 1.0) / 2.0) * ((NdL + 1.0) / 2.0);
+  radiance *= ao ;
+
+   //vec3 radiance = vec3(1.0) * ao;
+  vec3 C_sun = (kD * diffuse + specular) * radiance;
   vec3 C_ambient = albedo.xyz * ao * 0.0001;
 
   for (int i = 1; i < NR_POINT_LIGHTS; ++i) {
@@ -401,7 +429,8 @@ void main()
     float NdV = max(dot(normal, v), 0.0);
     float HdV = max(dot(h, v), 0.0);
 
-    vec3 F = FresnelSchlick(F0, F90, HdV, P);
+    float f = ReflectionBounce(F0);
+    vec3 F = FresnelSchlick(F0, F90, HdV, P) * f;
 
     float D = GGXDistribution(NdH, roughness);
 
@@ -415,14 +444,16 @@ void main()
     vec3 kD = vec3(1.0) - F;
     kD *= 1.0 - metallic;
 
-    out_lights += (kD * C_diffuse.xyz + specular) * C_light * NdL;
+    vec3 diffuse = C_diffuse.xyz + Diffuse(C_diffuse.xyz, F0, NdL, NdV);
+
+    out_lights += (kD * diffuse + specular) * C_light * NdL;
   }
 
-  vec4 color = vec4(C_ambient + C_sun + out_lights , color_alpha);
+  vec4 color = vec4(C_ambient + C_sun + out_lights, color_alpha);
 
   float shadow = ShadowCalculation(var.light_space, NdL);
   color.xyz *= shadow;
-  //color.xyz *= PI;
+  color.xyz *= PI;
 
   vec2 emissive_coord = transform_uv(
     material.emissive_translation,
@@ -439,7 +470,7 @@ void main()
     color += material.mre_factor.z * emissive_color;
   }
 //
-  float exposure = 0.5;
+  float exposure = 1.0;
   color.rgb = vec3(1.0) - exp(-color.rgb * exposure);
 //
 //  color.r = linear_to_sRGB(color.r);

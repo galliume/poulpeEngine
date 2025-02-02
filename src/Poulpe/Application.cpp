@@ -71,14 +71,6 @@ namespace Poulpe
 
     while (!glfwWindowShouldClose(_render_manager->getWindow()->get())) {
 
-      //@todo reload level
-      //if (Poulpe::Locator::getConfigManager()->reload()) {
-      //  _render_manager->getRenderer()->getAPI()->waitIdle();
-      //  _render_manager->forceRefresh();
-      //  _render_manager->init();
-      //  Poulpe::Locator::getConfigManager()->setReload();
-      //}
-
       glfwPollEvents();
 
       auto const new_time{ steady_clock::now() };
@@ -102,8 +94,8 @@ namespace Poulpe
       _render_manager->renderScene();
       //Locator::getCommandQueue()->execPostRequest();
 
-      auto const elasped_time_since_begining{ duration<double>(
-      steady_clock::now() - _start_run).count() };
+      auto const _elapsed_time{ duration<double>(steady_clock::now() - _start_run).count() };
+      Poulpe::Locator::getConfigManager()->setElapsedTime(_elapsed_time);
 
       //@todo check if it's correct with accumulator method...
       if ((duration<double>(steady_clock::now() - last_time_debug_updated)).count() > 1.0) {
@@ -116,7 +108,7 @@ namespace Poulpe
       title << "PoulpeEngine v" << PoulpeEngine_VERSION_MAJOR << "." << PoulpeEngine_VERSION_MINOR
         << " Vulkan version: " << _render_manager->getRenderer()->getAPI()->getAPIVersion()
         << " Frame " << frame_count << " "
-        << " Elapsed time " << elasped_time_since_begining << " "
+        << " Elapsed time " << _elapsed_time << " "
         << " " << ms_count << " ms"
         << " " << fps_count << " fps";
       glfwSetWindowTitle(_render_manager->getWindow()->get(), title.str().c_str());
@@ -124,6 +116,12 @@ namespace Poulpe
       ++frame_count;
 
       current_time = new_time;
+
+      if (Poulpe::Locator::getConfigManager()->reload()) {
+        _render_manager->cleanUp();
+        _render_manager->init();
+        Poulpe::Locator::getConfigManager()->setReload(false);
+      }
     }
     _render_manager->cleanUp();
   }

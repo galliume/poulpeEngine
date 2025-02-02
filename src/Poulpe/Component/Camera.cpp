@@ -2,13 +2,14 @@
 
 namespace Poulpe
 {
-  void Camera::init()
+  void Camera::init(glm::vec3 const& start_pos)
   {
-    _camera_pos = glm::vec3(0.0f, 0.0f, 3.0f);
+    _camera_pos = start_pos;
     _camera_up = glm::vec3(0.0f, 1.0f,  0.0f);
     _camera_front = glm::vec3(0.0f, 0.0f, -1.0f);
 
     _view = glm::lookAt(_camera_pos, _camera_pos + _camera_front, _camera_up);
+    _init = true;
   }
 
   void Camera::backward()

@@ -29,6 +29,7 @@ layout(location = 1) out vec4 out_weights;
 layout(location = 2) out vec4 out_normal;
 layout(location = 3) out vec3 out_position;
 layout(location = 4) out vec3 out_view_position;
+layout(location = 5) out mat3 out_inverse_model;
 
 float attenuation(float min, float max, float x)
 {
@@ -81,8 +82,9 @@ void main()
   p.y -= 1.5f;
 
   out_normal = normal;
-  out_position = p.xyz;
+  out_position = mat3(ubo.model) * p.xyz;
   out_view_position = pc.view_position;
+  out_inverse_model = inverse(mat3(ubo.model));
 
   gl_Position = ubo.projection * pc.view * ubo.model * p;
 }

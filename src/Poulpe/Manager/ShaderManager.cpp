@@ -226,7 +226,7 @@ namespace Poulpe
 
       VkDescriptorSetLayoutBinding samplerLayoutBinding{};
       samplerLayoutBinding.binding = 1;
-      samplerLayoutBinding.descriptorCount = 1;
+      samplerLayoutBinding.descriptorCount = 2;
       samplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
       samplerLayoutBinding.pImmutableSamplers = nullptr;
       samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT 
@@ -300,7 +300,7 @@ namespace Poulpe
     } else if (shader_name == "terrain" || shader_name == "water") {
       if (shader_name == "water") {
         descset_layout = createDescriptorSetLayout<DescSetLayoutType::Water>();
-        pipeline_create_infos.polygone_mode = VK_POLYGON_MODE_LINE;
+        //pipeline_create_infos.polygone_mode = VK_POLYGON_MODE_LINE;
       } else {
         descset_layout = createDescriptorSetLayout<DescSetLayoutType::Terrain>();
       }

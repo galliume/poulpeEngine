@@ -20,7 +20,7 @@ namespace Poulpe
   public:
     Data* getData() { return & _data; }
     VkDescriptorSet* getDescSet() { return & _descset; }
-    material_t const getMaterial() const { return _material; }
+    material_t& getMaterial() { return _material; }
     std::string const getName() const { return _name; }
     inline const std::string getShaderName() const { return _shader_name; }
     std::vector<Buffer>* getStorageBuffers() { return & _storage_buffers; }
@@ -74,6 +74,9 @@ namespace Poulpe
     bool is_indexed() const { return _is_indexed; }
     bool is_point_light() const { return _is_point_light; }
 
+    glm::vec4 getOptions() { return _options; };
+    void setOptions(glm::vec4 options) { _options = options; };
+
   private:
     std::string _name{};
     std::string _shader_name{};
@@ -101,5 +104,7 @@ namespace Poulpe
       VkPipelineLayout pipeline_layout,
       Renderer* const renderer,
       Mesh* const mesh)> _apply_push_constants = nullptr;
+
+    glm::vec4 _options{ 0.0 }; //used for options as push constants
   };
 }

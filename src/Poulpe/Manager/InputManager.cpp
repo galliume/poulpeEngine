@@ -121,7 +121,7 @@ namespace Poulpe
           Poulpe::Locator::getConfigManager()->setNormalDebug();
         } else if (key == _keyboard_keys[config["reload"]])
         {
-          Poulpe::Locator::getConfigManager()->setReload();
+          Poulpe::Locator::getConfigManager()->setReload(true);
         }
 
         break;
