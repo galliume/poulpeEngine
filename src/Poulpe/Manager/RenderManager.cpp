@@ -43,7 +43,6 @@ namespace Poulpe
     _destroy_manager = std::make_unique<DestroyManager>();
     _camera = std::make_unique<Camera>();
 
-    _camera->init();
     _renderer->init();
     _renderer->addCamera(_camera.get());
     _destroy_manager->setRenderer(_renderer.get());
@@ -60,11 +59,6 @@ namespace Poulpe
 
   void RenderManager::cleanUp()
   {
-    //_destroy_manager->cleanEntities(*_entity_manager->getEntities());
-
-    //auto hud = _entity_manager->getHUD();
-    //_destroy_manager->cleanEntities(*hud);
-
     _destroy_manager->cleanShaders(_shader_manager->getShaders()->shaders);
     _destroy_manager->cleanTextures(_texture_manager->getTextures());
     _destroy_manager->cleanTexture(_texture_manager->getSkyboxTexture());
@@ -73,8 +67,7 @@ namespace Poulpe
     _entity_manager->clear();
     _shader_manager->clear();
     _renderer->clear();
-    //_destroy_manager->CleanDeviceMemory();
-    //_renderer->InitMemoryPool();
+
     _component_manager->clear();
   }
 
@@ -82,21 +75,7 @@ namespace Poulpe
   {
     auto * const configManager = Poulpe::Locator::getConfigManager();
 
-    //@todo clean all thoses
-    if (_refresh) {
-        _renderer->getAPI()->waitIdle();
-        cleanUp();
-        //_renderer->getAPI()->getDeviceMemoryPool()->clear();
-        _texture_manager->clear();
-        setIsLoaded(false);
-        _refresh = false;
-        _entity_manager->initWorldGraph();
-        configManager->load();
-    }
-
     nlohmann::json const& appConfig = configManager->appConfig();
-    //nlohmann::json const& textureConfig = configManager->texturesConfig();
-    //nlohmann::json const& textureMapConfig = configManager->texturesMapConfig();
 
     _audio_manager->init();
     _audio_manager->load(configManager->soundConfig());
@@ -113,6 +92,17 @@ namespace Poulpe
 
     if (appConfig["ambientMusic"].get<bool>()) {
       _audio_manager->startAmbient();
+    }
+
+    if (!_camera->isInit()) {
+      auto const& lvl_config{ configManager->lvlConfig() };
+      auto const& camera{ lvl_config["camera"] };
+      glm::vec3 start_pos = {
+        camera["position"]["x"].template get<float>(),
+        camera["position"]["y"].template get<float>(),
+        camera["position"]["z"].template get<float>() };
+
+      _camera->init(start_pos);
     }
 
     prepareSkybox();
@@ -149,12 +139,14 @@ namespace Poulpe
       }
 
       auto entity = _entity_manager->getWater();
-      auto* mesh_component = _component_manager->get<MeshComponent>(entity->getID());
-      auto mesh = mesh_component->template has<Mesh>();
-      if (mesh) {
-        auto* animation_component = _component_manager->get<AnimationComponent>(entity->getID());
-        if (animation_component) {
-          //(*animation_component)(delta_time, mesh);
+      if (entity != nullptr) {
+        auto* mesh_component = _component_manager->get<MeshComponent>(entity->getID());
+        auto mesh = mesh_component->template has<Mesh>();
+        if (mesh) {
+          auto* animation_component = _component_manager->get<AnimationComponent>(entity->getID());
+          if (animation_component) {
+            (*animation_component)(delta_time, mesh);
+          }
         }
       }
 
@@ -329,10 +321,10 @@ namespace Poulpe
 
     auto animationScript = std::make_unique<AnimationScript>("assets/scripts/animation/water/anim0.lua");
     animationScript->init(_renderer.get(), nullptr, nullptr);
-    _component_manager->add<AnimationComponent>(entity->getID(), std::move(animationScript));
+    //_component_manager->add<AnimationComponent>(entity->getID(), std::move(animationScript));
 
     _entity_manager->setWater(std::move(entity));
 
-    _renderer->addEntity(_entity_manager->getWater(), true);
+    _renderer->addTransparentEntity(_entity_manager->getWater(), true);
   }
 }

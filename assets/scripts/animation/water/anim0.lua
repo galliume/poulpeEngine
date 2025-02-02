@@ -1,6 +1,6 @@
 function _Wave01(animScript, deltaTime)
   while true do
-    _Wave(animScript, deltaTime, 1, 0.0, 2.0, 0.0)
+    _Wave(animScript, deltaTime, 5, 2.0, 1.0)
     coroutine.yield()
   end
 end

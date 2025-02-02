@@ -17,6 +17,7 @@ layout(location = 1) in vec4 in_weights;
 layout(location = 2) in vec4 in_normal;
 layout(location = 3) in vec3 in_position;
 layout(location = 4) in vec3 in_view_position;
+layout(location = 5) in mat3 in_inverse_model;
 
 layout(binding = 1) uniform sampler2D tex_sampler[5];
 
@@ -90,9 +91,13 @@ void main()
   //@todo a point lights...
 
   //sun directionnal light
-  vec3 light_pos = vec3(0.0, 10000000.0, 0.0);
+  vec3 light_pos = vec3(0.0, 100000.0, 0.0);
 
-  vec3 norm = normalize(in_normal.xyz);
+  //vec3 norm = normalize(in_normal.xyz);
+  vec3 x = dFdx(in_position);
+  vec3 y = dFdy(in_position);
+  vec3 norm = in_inverse_model * normalize(cross(x, y));
+
   vec3 light_dir = normalize(light_pos - in_position);
   float diff = max(dot(norm, light_dir), 0.0);
   vec3 diffuse = diff * light_color;

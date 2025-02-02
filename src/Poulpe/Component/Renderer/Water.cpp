@@ -26,6 +26,7 @@ namespace Poulpe
    
     std::vector<VkDescriptorImageInfo> image_infos{};
     image_infos.emplace_back(tex.getSampler(), tex.getImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+    image_infos.emplace_back(_renderer->getDepthSamplers(), _renderer->getDepthImageViews(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
     auto const pipeline = _renderer->getPipeline(mesh->getShaderName());
     VkDescriptorSet descset = _renderer->getAPI()->createDescriptorSets(pipeline->desc_pool, { pipeline->descset_layout }, 1);
@@ -41,10 +42,15 @@ namespace Poulpe
       VkCommandBuffer & cmd_buffer,
       VkPipelineLayout pipeline_layout,
       Renderer* const renderer, Mesh* const meshS) {
+      
+      glm::vec4 options{
+        Poulpe::Locator::getConfigManager()->getElapsedTime(),
+        0.0f, 0.0f, 0.0f};
 
-      constants pushConstants{};
-      pushConstants.view = renderer->getCamera()->lookAt();
-      pushConstants.view_position = renderer->getCamera()->getPos();
+      constants constants{};
+      constants.view = renderer->getCamera()->lookAt();
+      constants.view_position = renderer->getCamera()->getPos();
+      constants.total_position = options;
 
       vkCmdPushConstants(
         cmd_buffer,
@@ -55,7 +61,7 @@ namespace Poulpe
         | VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT,
         0,
         sizeof(constants),
-        &pushConstants);
+        &constants);
     });
 
     mesh->setHasPushConstants();
@@ -69,30 +75,32 @@ namespace Poulpe
  
     std::vector<Vertex> vertices;
     int const width{ static_cast<int>(tex.getWidth()) };
-    int const height{ static_cast<int>(tex.getHeight())};
+    int const height{ static_cast<int>(tex.getHeight()) };
 
-    unsigned int const rez{ 20 };
+    uint32_t const rez{ 50 };
+    uint32_t index{ 0 };
 
     for(auto i = 0; i < rez - 1; i++) {
       for(auto j = 0; j < rez - 1; j++) {
 
+        index = i + j;
         float const y{ 0.0f };
 
         Vertex v{ 
           { -width/2.0f + width*i/(float)rez, y, -height/2.0f + height*j/(float)rez },
-          {1.0f, 1.0f, 0.0f}, {i / (float)rez, j / (float)rez }, {0.0f, 0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}};
+          {1.0f, 1.0f, 0.0f}, {i / (float)rez, j / (float)rez }, {0.0f, 0.0f, 0.0f, 0.0f}, { index, 0.0f, 0.0f, 0.0f}};
 
         Vertex v2{ 
           {-width/2.0f + width*(i+1)/(float)rez, y, -height/2.0f + height*j/(float)rez },
-          {1.0f, 1.0f, 0.0f}, {(i+1) / (float)rez, j / (float)rez }, {0.0f, 0.0f, 0.0f, 0.0f}, { 0.0f, 0.0f, 0.0f, 0.0f } };
+          {1.0f, 1.0f, 0.0f}, {(i+1) / (float)rez, j / (float)rez }, {0.0f, 0.0f, 0.0f, 0.0f}, { index, 0.0f, 0.0f, 0.0f } };
 
         Vertex v3{ 
           {-width/2.0f + width*i/(float)rez, y, -height/2.0f + height*(j+1)/(float)rez },
-          {1.0f, 1.0f, 0.0f}, {i / (float)rez, (j+1) / (float)rez }, {0.0f, 0.0f, 0.0f, 0.0f}, { 0.0f, 0.0f, 0.0f, 0.0f } };
+          {1.0f, 1.0f, 0.0f}, {i / (float)rez, (j+1) / (float)rez }, {0.0f, 0.0f, 0.0f, 0.0f}, { index, 0.0f, 0.0f, 0.0f } };
 
         Vertex v4{ 
           {-width/2.0f + width*(i+1)/(float)rez, y, -height/2.0f + height*(j+1)/(float)rez },
-          {1.0f, 1.0f, 0.0f}, {(i+1) / (float)rez, (j+1) / (float)rez }, {0.0f, 0.0f, 0.0f, 0.0f}, { 0.0f, 0.0f, 0.0f, 0.0f } };
+          {1.0f, 1.0f, 0.0f}, {(i+1) / (float)rez, (j+1) / (float)rez }, {0.0f, 0.0f, 0.0f, 0.0f}, { index, 0.0f, 0.0f, 0.0f } };
 
         vertices.push_back(v);
         vertices.push_back(v2);
@@ -116,6 +124,8 @@ namespace Poulpe
     data->_vertex_buffer = _renderer->getAPI()->createVertexBuffer(commandPool, vertices);
     data->_texture_index = 0;
     data->_ubos.emplace_back(ubo);
+
+    mesh->getMaterial().alpha_mode = 2.0;//BLEND
 
     mesh->getData()->_ubos_offset.emplace_back(1);
     mesh->getUniformBuffers()->emplace_back(_renderer->getAPI()->createUniformBuffers(1, commandPool));

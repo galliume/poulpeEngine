@@ -55,23 +55,17 @@ namespace Poulpe
     AnimationScript* animScript = static_cast<AnimationScript*>(lua_touserdata(L, 1));
     double const delta_time{ static_cast<double>(lua_tonumber(L, 2)) };
     float duration = static_cast<float>(lua_tonumber(L, 3));
-    float angle_x = static_cast<float>(lua_tonumber(L, 4));
-    float angle_y = static_cast<float>(lua_tonumber(L, 5));
-    float angle_z = static_cast<float>(lua_tonumber(L, 6));
+    float amplitude = static_cast<float>(lua_tonumber(L, 4));
+    float lambda = static_cast<float>(lua_tonumber(L, 5));
 
-    //PLP_DEBUG("delta time {} duration {} x {} y {} z {}", delta_time, duration, angle_x, angle_y, angle_z);
-
-    glm::quat qx = glm::angleAxis(glm::radians(angle_x), glm::vec3(1, 0, 0));
-    glm::quat qy = glm::angleAxis(glm::radians(angle_y), glm::vec3(0, 1, 0));
-    glm::quat qz = glm::angleAxis(glm::radians(angle_z), glm::vec3(0, 0, 1));
-    
-    glm::quat rotation = qx * qy * qz;
+    PLP_DEBUG("delta time {} duration {} amplitude {} lambda {}", delta_time, duration, amplitude, lambda);
 
     animScript->wave(
-      animScript->getData(),
+      animScript->getMesh(),
       delta_time,
       duration,
-      rotation);
+      amplitude,
+      lambda);
 
     return 0;
   }
@@ -99,19 +93,19 @@ namespace Poulpe
     lua_close(_lua_State);
   }
 
-  void AnimationScript::move(Data* data_move, double delta_time, float duration, glm::vec3 target_move)
+  void AnimationScript::move(Data* data, double delta_time, float duration, glm::vec3 target_move)
   {
-    std::unique_ptr<AnimationMove> anim_move = std::make_unique<AnimationMove>();
-    anim_move->duration = duration;
-    anim_move->target = glm::vec3(
-      data_move->_origin_pos.x + target_move.x,
-      data_move->_origin_pos.y + target_move.y,
-      data_move->_origin_pos.z + target_move.z);
+    std::unique_ptr<AnimationMove> anim = std::make_unique<AnimationMove>();
+    anim->duration = duration;
+    anim->target = glm::vec3(
+      data->_origin_pos.x + target_move.x,
+      data->_origin_pos.y + target_move.y,
+      data->_origin_pos.z + target_move.z);
 
     //PLP_TRACE("START at {}/{}/{}", data->_origin_pos.x, data->_origin_pos.y, data->_origin_pos.z);
     //PLP_TRACE("TO {}/{}/{}", anim->target.x, anim->target.y, anim->target.z);
 
-    anim_move->update = [](AnimationMove* anim, Data* data, double delta_time) {
+    anim->update = [](AnimationMove* anim, Data* data, double delta_time) {
 
       float t = anim->elapsedTime / anim->duration;
       bool done{ false };
@@ -143,20 +137,20 @@ namespace Poulpe
       }
       anim->done = done;
     };
-    anim_move->update(anim_move.get(), data_move, delta_time);
-    _new_moves.emplace_back(std::move(anim_move));
+    anim->update(anim.get(), data, delta_time);
+    _new_moves.emplace_back(std::move(anim));
   }
 
-  void AnimationScript::rotate(Data* data_rotate, double delta_time, float duration, glm::quat angle)
+  void AnimationScript::rotate(Data* data, double delta_time, float duration, glm::quat angle)
   {
-    std::unique_ptr<AnimationRotate> anim_rotate = std::make_unique<AnimationRotate>();
-    anim_rotate->duration = duration;
-    anim_rotate->angle = angle;
+    std::unique_ptr<AnimationRotate> anim = std::make_unique<AnimationRotate>();
+    anim->duration = duration;
+    anim->angle = angle;
 
-    //PLP_DEBUG("START at {}/{}/{}", data_rotate->_origin_rotation.x, data_rotate->_origin_rotation.y, data_rotate->_origin_rotation.z);
-    //PLP_DEBUG("TO {}/{}/{}", anim_rotate->angle.x, anim_rotate->angle.y, anim_rotate->angle.z);
+    //PLP_DEBUG("START at {}/{}/{}", data->_origin_rotation.x, data->_origin_rotation.y, data->_origin_rotation.z);
+    //PLP_DEBUG("TO {}/{}/{}", anim->angle.x, anim->angle.y, anim->angle.z);
 
-    anim_rotate->update = [](AnimationRotate* anim, Data* data, double delta_time) {
+    anim->update = [](AnimationRotate* anim, Data* data, double delta_time) {
 
       float t{ glm::clamp(anim->elapsedTime / anim->duration, 0.0f, 1.0f) };
       bool done{ false };
@@ -181,24 +175,24 @@ namespace Poulpe
 
       anim->done = done;
     };
-    anim_rotate->update(anim_rotate.get(), data_rotate, delta_time);
-    _new_rotates.emplace_back(std::move(anim_rotate));
+    anim->update(anim.get(), data, delta_time);
+    _new_rotates.emplace_back(std::move(anim));
   }
 
-  void AnimationScript::wave(Data* data_rotate, double delta_time, float duration, glm::quat angle)
+  void AnimationScript::wave(Mesh* mesh, double const delta_time, float const duration, float const amplitude, float const lambda)
   {
-    std::unique_ptr<AnimationWave> anim_wave = std::make_unique<AnimationWave>();
-    anim_wave->duration = duration;
-    anim_wave->angle = angle;
+    std::unique_ptr<AnimationWave> anim = std::make_unique<AnimationWave>();
+    anim->duration = duration;
+    anim->amplitude = amplitude;
+    anim->lambda = lambda;
+    anim->mesh = mesh;
 
-    //PLP_DEBUG("START at {}/{}/{}", data_rotate->_origin_rotation.x, data_rotate->_origin_rotation.y, data_rotate->_origin_rotation.z);
-    //PLP_DEBUG("TO {}/{}/{}", anim_rotate->angle.x, anim_rotate->angle.y, anim_rotate->angle.z);
-
-    anim_wave->update = [](AnimationWave* anim, Data* data, double delta_time) {
-
+    anim->update = [](AnimationWave* anim, double delta_time) {
       float t{ glm::clamp(anim->elapsedTime / anim->duration, 0.0f, 1.0f) };
+      
+      //PLP_DEBUG("elapsed: {} duration: {} t: {}", anim->elapsedTime, anim->duration, t);
+      //PLP_DEBUG("amplitude: {} lambda: {}", anim->amplitude, anim->lambda);
       bool done{ false };
-
 
       if (anim->elapsedTime >= anim->duration) {
         done = true;
@@ -206,26 +200,29 @@ namespace Poulpe
       }
       anim->elapsedTime += delta_time;
 
-      data->_current_rotation = glm::mix(data->_origin_rotation, anim->angle, t);
+      float const speed{ 5.0f * (2.0f / anim->lambda) };
+      float const x{ anim->mesh->getData()->_current_pos.y };
+      float const omega{ 2.0f / anim->lambda };
+      float const phi{ 10.f * (2.0f / anim->lambda)};
 
-      glm::mat4 model = glm::mat4(1.0f);
-      model = glm::scale(model, data->_current_scale);
-      model = glm::translate(model, data->_current_pos);
-      model *= glm::mat4_cast(data->_current_rotation);
+      float y = anim->amplitude * sin(x * omega + t * phi);
 
-      std::ranges::for_each(data->_ubos, [&model](auto& ubo) {
-        ubo.model = model;
-      });
+      y = std::max(y, 0.0f);
+      
+      anim->mesh->setOptions({x, y, 0.0, 0.0});
 
       anim->done = done;
+      //PLP_DEBUG("y: {}", y);
     };
-    anim_wave->update(anim_wave.get(), data_rotate, delta_time);
-    _new_waves.emplace_back(std::move(anim_wave));
+
+    anim->update(anim.get(), delta_time);
+    _new_waves.emplace_back(std::move(anim));
   }
 
   void AnimationScript::operator()(double const delta_time, Mesh* mesh)
   {
-    _data = mesh->getData();
+    _mesh = mesh;
+    auto _data = mesh->getData();
 
     std::ranges::for_each(_new_moves, [&](auto& anim) {
       _moves.emplace_back(std::move(anim));
@@ -298,7 +295,7 @@ namespace Poulpe
     }
 
     std::ranges::for_each(_waves, [&](auto& anim) {
-      anim->update(anim.get(), mesh->getData(), delta_time);
+      anim->update(anim.get(), delta_time);
 
       if (anim->done) {
         lua_getglobal(_lua_State, "nextWave");

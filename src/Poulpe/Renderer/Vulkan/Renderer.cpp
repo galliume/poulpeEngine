@@ -111,6 +111,7 @@ namespace Poulpe
         VK_IMAGE_TILING_OPTIMAL,
         VK_IMAGE_USAGE_SAMPLED_BIT
         | VK_IMAGE_USAGE_TRANSFER_SRC_BIT
+        | VK_IMAGE_USAGE_TRANSFER_DST_BIT
         | VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
         VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
         depth_image);
@@ -137,6 +138,7 @@ namespace Poulpe
         VK_IMAGE_TILING_OPTIMAL,
         VK_IMAGE_USAGE_SAMPLED_BIT
         | VK_IMAGE_USAGE_TRANSFER_SRC_BIT
+        | VK_IMAGE_USAGE_TRANSFER_DST_BIT
         | VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
         VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
         depth_image2);
@@ -224,7 +226,7 @@ namespace Poulpe
     _perspective = glm::perspective(
       glm::radians(45.0f),
       static_cast<float>(_vulkan->getSwapChainExtent().width) / static_cast<float>(_vulkan->getSwapChainExtent().height),
-      0.1f, 500.f);
+      0.1f, 1000.f);
      _perspective[1][1] *= -1;
   }
 
@@ -247,7 +249,7 @@ namespace Poulpe
     auto const& pipeline = getPipeline(pipeline_name);
 
     _vulkan->beginCommandBuffer(cmd_buffer);
-    _vulkan->startMarker(cmd_buffer, "shadow_map_" + pipeline_name, 0.1f, 0.2f, 0.3f);
+    _vulkan->startMarker(cmd_buffer, "shadow_map", 0.1f, 0.2f, 0.3f);
 
     _vulkan->transitionImageLayout(cmd_buffer, depth,
       VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL, VK_IMAGE_ASPECT_DEPTH_BIT);
@@ -404,12 +406,15 @@ namespace Poulpe
     VkImageLayout const undefined_layout{ VK_IMAGE_LAYOUT_UNDEFINED };
     VkImageLayout const begin_color_layout{ VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL };
     VkImageLayout const begin_depth_layout{ VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL };
+    VkImageLayout const general { VK_IMAGE_LAYOUT_GENERAL };
     VkImageAspectFlagBits const color_aspect { VK_IMAGE_ASPECT_COLOR_BIT };
     VkImageAspectFlagBits const depth_aspect{ VK_IMAGE_ASPECT_DEPTH_BIT };
 
-    _vulkan->transitionImageLayout(cmd_buffer, color, undefined_layout, begin_color_layout, color_aspect);
-
-    if (has_depth_attachment) {
+    if (thread_id == 0) {
+      _vulkan->transitionImageLayout(cmd_buffer, color, undefined_layout, begin_color_layout, color_aspect);
+    }
+    
+    if (has_depth_attachment && thread_id == 0 || thread_id == 3) {
       _vulkan->transitionImageLayout(cmd_buffer, depth, undefined_layout, begin_depth_layout, depth_aspect);
     }
 
@@ -425,7 +430,14 @@ namespace Poulpe
     _vulkan->setViewPort(cmd_buffer);
     _vulkan->setScissor(cmd_buffer);
 
-    _vulkan->startMarker(cmd_buffer, "drawing_" + std::to_string(thread_id), 0.2f, 0.2f, 0.9f);
+    float const marker_color_r {static_cast<float>(rand() % 255) / 255.0f};
+    float const marker_color_g { static_cast<float>(rand() % 255) / 255.0f };
+    float const marker_color_b { static_cast<float>(rand() % 255) / 255.0f };
+
+    _vulkan->startMarker(
+      cmd_buffer, 
+      "drawing_" + std::to_string(thread_id), 
+      marker_color_r, marker_color_g, marker_color_b);
 
     //std::vector<VkDrawIndexedIndirectCommand> drawCommands{};
     //drawCommands.reserve(_Entities.size());
@@ -458,7 +470,7 @@ namespace Poulpe
     colorBlendEquation.alphaBlendOp = VK_BLEND_OP_ADD;
     colorBlendEquation.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
     colorBlendEquation.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
-				
+
 		vkCmdSetColorBlendEquationEXT(cmd_buffer, 0, 1, &colorBlendEquation);
 
     std::ranges::for_each(entities, [&](auto const& entity) {
@@ -517,7 +529,6 @@ namespace Poulpe
           1,
           sizeof(VkDrawIndexedIndirectCommand));*/
 
-
         if (mesh->debugNormal() && config_manager->normalDebug()) {
           auto normal_pipeline = getPipeline("normal_debug");
 
@@ -564,6 +575,8 @@ namespace Poulpe
 
     vkResetFences(_vulkan->getDevice(), 1, &_fences_in_flight[_current_frame]);
 
+    clearScreen();
+
     std::latch count_down{4};
 
     std::vector<Entity*> world{};
@@ -583,8 +596,7 @@ namespace Poulpe
         VK_ATTACHMENT_LOAD_OP_CLEAR,
         VK_ATTACHMENT_STORE_OP_STORE,
         count_down,
-        0,
-        false, false);
+        0, false, false);
     } else {
       count_down.count_down();
     }
@@ -623,10 +635,11 @@ namespace Poulpe
          VK_ATTACHMENT_LOAD_OP_LOAD,
          VK_ATTACHMENT_STORE_OP_STORE,
          count_down,
-         2, has_transparent_entities, true
+         2, false, false
         );
 
         if (has_transparent_entities) {
+
           draw(
             _cmd_buffer_entities[_current_frame],
             _draw_cmds,
@@ -805,6 +818,8 @@ namespace Poulpe
   void Renderer::clear()
   {
     _entity_manager->clear();
+    //@todo clean memory
+    //_vulkan->getDeviceMemoryPool()->clear();
   }
 
   void Renderer::onFinishRender()
@@ -913,5 +928,49 @@ namespace Poulpe
       _update_shadow_map = true;
       _force_transparent_entities_buffer_swap = false;
     }
+  }
+
+  void Renderer::clearScreen()
+  {
+    VkClearColorValue clear_color = {};
+
+    clear_color.float32[0] = 0.2f;
+    clear_color.float32[1] = 0.4f;
+    clear_color.float32[2] = 0.3f;
+    clear_color.float32[3] = 0.0f;
+
+    VkClearDepthStencilValue depth_stencil_clear_color{ 1.f, 0 };
+
+    VkImageSubresourceRange image_range = {};
+    image_range.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+    image_range.levelCount = 1;
+    image_range.layerCount = 1;
+
+    VkImageSubresourceRange depth_image_range = {};
+    depth_image_range.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
+    depth_image_range.levelCount = 1;
+    depth_image_range.layerCount = 1;
+
+    VkCommandBufferBeginInfo begin_info = {};
+    begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+    begin_info.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
+
+    vkBeginCommandBuffer(_cmd_buffer_entities[_current_frame], &begin_info);
+    vkCmdClearColorImage(_cmd_buffer_entities[_current_frame], _images[_current_frame], VK_IMAGE_LAYOUT_GENERAL, &clear_color, 1, &image_range);
+    vkCmdClearDepthStencilImage(_cmd_buffer_entities[_current_frame], _depth_images[_current_frame], VK_IMAGE_LAYOUT_GENERAL, &depth_stencil_clear_color, 1, &depth_image_range);
+    vkEndCommandBuffer(_cmd_buffer_entities[_current_frame]);
+
+    vkBeginCommandBuffer(_cmd_buffer_entities2[_current_frame], &begin_info);
+    vkCmdClearColorImage(_cmd_buffer_entities2[_current_frame], _images[_current_frame], VK_IMAGE_LAYOUT_GENERAL, &clear_color, 1, &image_range);
+    vkCmdClearDepthStencilImage(_cmd_buffer_entities2[_current_frame], _depth_images2[_current_frame], VK_IMAGE_LAYOUT_GENERAL, &depth_stencil_clear_color, 1, &depth_image_range);
+    vkEndCommandBuffer(_cmd_buffer_entities2[_current_frame]);
+
+    vkBeginCommandBuffer(_cmd_buffer_entities3[_current_frame], &begin_info);
+    vkCmdClearColorImage(_cmd_buffer_entities3[_current_frame], _images[_current_frame], VK_IMAGE_LAYOUT_GENERAL, &clear_color, 1, &image_range);
+    vkEndCommandBuffer(_cmd_buffer_entities3[_current_frame]);
+
+    vkBeginCommandBuffer(_cmd_buffer_entities4[_current_frame], &begin_info);
+    vkCmdClearColorImage(_cmd_buffer_entities4[_current_frame], _images[_current_frame], VK_IMAGE_LAYOUT_GENERAL, &clear_color, 1, &image_range);
+    vkEndCommandBuffer(_cmd_buffer_entities4[_current_frame]);
   }
 }

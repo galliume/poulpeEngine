@@ -7,7 +7,7 @@ namespace Poulpe
   class Camera
   {
   public:
-    void init();
+    void init(glm::vec3 const& start_pos);
 
     void backward();
     void down();
@@ -23,6 +23,8 @@ namespace Poulpe
     glm::mat4 lookAt();
     void updateSpeed(double const delta_time);
     void updatePos(double x_offset, double y_offset);
+
+    bool const isInit() { return _init; };
 
   private:
     glm::vec3 mat4_backward();
@@ -43,5 +45,7 @@ namespace Poulpe
     float const _pixel_distance{ 100.0f };
     float _speed { _pixel_distance };
     float _yaw{ -90.0f };
+
+    bool _init{ false };
   };
 }

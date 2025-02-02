@@ -9,6 +9,13 @@
 			"path": "assets/texture/water/water.ktx2"
 		}
 	},
+	"camera": {
+		"position": {
+				"x": 220.0,
+				"y": 24.0,
+				"z": 100.0
+			}
+	},
 	"entities": {
 		"sponza": {
 			"mesh": "assets/mesh/Sponza/glTF/Sponza.gltf",
@@ -235,7 +242,7 @@
 			"positions": [
 				{
 					"x": 0.0,
-					"y": -2.5,
+					"y": 10.5,
 					"z": 0.0
 				}
 			],
@@ -249,7 +256,7 @@
 			"rotations": [
 				{
 					"x": 0.0,
-					"y": 0.0,
+					"y": 180.0,
 					"z": 0.0
 				}
 			],
@@ -291,9 +298,9 @@
 			"shader": "main_basic",
 			"positions": [
 				{
-					"x": 1.0,
-					"y": 50.0,
-					"z": 1.0
+					"x": 0.0,
+					"y": 5.0,
+					"z": 0.0
 				}
 			],
 			"scales": [
@@ -322,11 +329,11 @@
 			"isIndexed": true,
 			"debugNormal": true
 		},
-		"trump": {
-			"mesh": "assets/mesh/trump/scene.gltf",
+		"fox": {
+			"mesh": "assets/mesh/Fox/glTF/Fox.gltf",
 			"textures": {
-				"textures_TrumpLPmat_diffuse": {
-					"path": "assets/mesh/trump/textures/TrumpLPmat_diffuse.ktx2"
+				"Texture": {
+					"path": "assets/mesh/Fox/glTF/Texture.ktx2"
 				}
 			},
 			"ao": {
@@ -343,9 +350,9 @@
 			"shader": "main_basic",
 			"positions": [
 				{
-					"x": 170.0,
-					"y": 0.0,
-					"z": 0.0
+					"x": 200.0,
+					"y": 15.0,
+					"z": 100.0
 				}
 			],
 			"scales": [
@@ -357,8 +364,8 @@
 			],
 			"rotations": [
 				{
-					"x": 60.0,
-					"y": 90.0,
+					"x": 0.0,
+					"y": 0.0,
 					"z": 0.0
 				}
 			],
