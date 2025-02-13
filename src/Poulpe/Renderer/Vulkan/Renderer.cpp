@@ -577,7 +577,7 @@ namespace Poulpe
 
     clearScreen();
 
-    std::latch count_down{4};
+    std::latch count_down{3};
 
     std::vector<Entity*> world{};
     if (_entity_manager->getSkybox()) {
@@ -622,7 +622,10 @@ namespace Poulpe
 
       std::jthread entities_thread([&]() {
 
-        bool const has_transparent_entities{ !_transparent_entities.empty() };
+        auto entities{ _entities };
+        if (!_transparent_entities.empty()) {
+          std::copy(_transparent_entities.begin(), _transparent_entities.end(), std::back_inserter(entities));
+        }
 
         draw(
          _cmd_buffer_entities4[_current_frame],
@@ -631,37 +634,17 @@ namespace Poulpe
          _images[_current_frame],
          _depth_imageviews[_current_frame],
          _depth_images[_current_frame],
-         _entities,
+         entities,
          VK_ATTACHMENT_LOAD_OP_LOAD,
          VK_ATTACHMENT_STORE_OP_STORE,
          count_down,
-         2, false, false
+         2, true, true
         );
-
-        if (has_transparent_entities) {
-
-          draw(
-            _cmd_buffer_entities[_current_frame],
-            _draw_cmds,
-            _imageviews[_current_frame],
-            _images[_current_frame],
-            _depth_imageviews[_current_frame],
-            _depth_images[_current_frame],
-            _transparent_entities,
-            VK_ATTACHMENT_LOAD_OP_LOAD,
-            VK_ATTACHMENT_STORE_OP_STORE,
-            count_down,
-            3, false, true
-          );
-        } else {
-          count_down.count_down();
-        }
       });
       entities_thread.detach();
 
       //@todo add post process (alpha blending, etc.)
     } else {
-      count_down.count_down();
       count_down.count_down();
       count_down.count_down();
     }

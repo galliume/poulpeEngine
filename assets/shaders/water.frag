@@ -17,6 +17,13 @@ layout(location = 4) in mat3 in_inverse_model;
 
 layout(binding = 1) uniform sampler2D tex_sampler[2];
 
+layout(push_constant) uniform constants
+{
+  mat4 view;
+  vec3 view_position;
+  vec4 options;
+} pc;
+
 float linear_to_sRGB(float color)
 {
   if (color <= GAMMA_TRESHOLD) {
@@ -73,28 +80,57 @@ vec3 tex_color(int index)
 
 float LinearizeDepth(float depth) 
 {
+  float z = depth * 2.0 - 1.0;
   float near = 0.1;
   float far = 1000.0;
 
-  return near * far / (far - depth * (far - near));
-}
+  return (2.0 * near * far) / (far + near - z * (far - near));
+ }
 
 void main()
 {
   //@todo do PBR for water ?
-  vec3 water_color = vec3(0.f,105.f/255.f,148.f/255.f);
-  //color =  tex_color(DIFFUSE_INDEX);
+  ivec2 tex_size = textureSize(tex_sampler[DEPTH_INDEX], 0);
+  vec2 depth_coord = vec2(gl_FragCoord.x, gl_FragCoord.y);
+  depth_coord.x /= tex_size.x;
+  depth_coord.y /= tex_size.y;
 
-  float water_depth = LinearizeDepth(gl_FragCoord.z);
-  float terrain_depth = LinearizeDepth(texture(tex_sampler[DEPTH_INDEX], in_texture_coord).r);
-  float depth = abs(terrain_depth - water_depth);
-  float falloff_distance = 0.1;
-  float edge_sharpness  = 0.005;
+  float t = pc.options.x;
+  vec2 foam_coord = in_texture_coord;
+  vec2 scaledUV = foam_coord * 500;
+  float edgePatternScroll = 0.1;
 
-  float foam_factor = smoothstep(falloff_distance, falloff_distance * edge_sharpness, depth);
-  vec3 foam_color = vec3(1.0, 0.0, 0.0);
+  float channelA = texture(tex_sampler[DIFFUSE_INDEX], scaledUV - vec2(edgePatternScroll, cos(foam_coord.x))).r;
+  float channelB = texture(tex_sampler[DIFFUSE_INDEX], scaledUV * 0.5 + vec2(sin(foam_coord.y), edgePatternScroll)).b;
 
-  vec3 color = vec3(water_depth);//mix(water_color, foam_color, foam_factor);
+  float mask = (channelA + channelB) * 0.95;
+  mask = pow(mask, 2);
+  mask = clamp(mask, 0, 1);
+
+  float depth_diff = abs(LinearizeDepth(gl_FragCoord.z) - LinearizeDepth(texture(tex_sampler[DEPTH_INDEX], depth_coord).r));
+  float falloff_distance = 1.0;
+  float edge_falloff = 0.0;
+  float bias = 0.1;
+
+  vec3 deep_color = vec3(3.0 / 255.0, 84.0 / 255.0, 139.0 / 255.0);
+  vec3 shallow_color = vec3(64.0 / 255.0, 164.0 / 255.0, 223.0 / 255.0);
+  vec4 foam_color = vec4(1.0, 1.0, 1.0, 1.0);
+  float depth_factor = smoothstep(0.0, 20.0, depth_diff);
+  //float foam_factor = smoothstep(0.0, 0.5, depth_diff);
+
+  vec4 color = vec4(mix(shallow_color, deep_color, depth_factor), 0.8);
+
+  if(depth_diff < falloff_distance * edge_falloff)
+  {
+    float leading = depth_diff / (falloff_distance * edge_falloff);
+    color.a *= leading;
+    mask *= leading;
+  }
+
+  // Calculate linear falloff value
+  float fall_off = 1.0 - (depth_diff / falloff_distance) + bias;
+  vec3 edge = foam_color.rgb * fall_off * foam_color.a;
+  color.rgb += clamp(edge - vec3(mask), 0.0, 1.0);
 
   vec3 light_color = vec3(1.0);
   vec3 ambient = 0.1 * light_color;
@@ -118,19 +154,20 @@ void main()
   float spec = pow(max(dot(view_dir, reflect_dir), 0.0), 2);
   vec3 specular = 0.5 * spec * light_color;
 
-  vec3 result = (ambient + diffuse + specular) * color;
+  vec3 result = (ambient + diffuse + specular) * color.xyz;
 
-  float exposure = 10.0;
+  float exposure = 2.0;
   result.rgb = vec3(1.0) - exp(-result.rgb* exposure);
 
   //@todo check how to get the precise value
   float white_point = 350;
-  final_color = vec4(0.0, 0.0, 0.0, 0.2);
+  final_color = vec4(0.0, 0.0, 0.0, color.a);
   final_color.rgb = linear_to_hdr10(result.rgb, white_point);
+  //final_color = vec4(vec3(LinearizeDepth(gl_FragCoord.z)), 1.0);
+   //final_color = vec4(vec3(depth_diff, 0.0, 1.0 - depth_diff), 1.0);
 
+   //final_color = vec4(vec3(LinearizeDepth(texture(tex_sampler[DEPTH_INDEX], depth_coord).r))/1000.0, 1.0);
 //  result.r = linear_to_sRGB(result.r);
 //  result.g = linear_to_sRGB(result.g);
-//  result.b = linear_to_sRGB(result.b);
-
-  final_color.rgb = result;
+//  result.b = linear_to_sRGB(result.b);²
 }

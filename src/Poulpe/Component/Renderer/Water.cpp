@@ -77,7 +77,7 @@ namespace Poulpe
     int const width{ static_cast<int>(tex.getWidth()) };
     int const height{ static_cast<int>(tex.getHeight()) };
 
-    uint32_t const rez{ 50 };
+    uint32_t const rez{ 20 };
     uint32_t index{ 0 };
 
     for(auto i = 0; i < rez - 1; i++) {

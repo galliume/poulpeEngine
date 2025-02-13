@@ -109,7 +109,7 @@ void main()
 
   vec3 result = (ambient + diffuse + specular) * color;
 
-  float exposure = 0.5;
+  float exposure = 1.0;
   result.rgb = vec3(1.0) - exp(-result.rgb* exposure);
 
   //@todo check how to get the precise value

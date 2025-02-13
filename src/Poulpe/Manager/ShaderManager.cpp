@@ -301,8 +301,10 @@ namespace Poulpe
       if (shader_name == "water") {
         descset_layout = createDescriptorSetLayout<DescSetLayoutType::Water>();
         //pipeline_create_infos.polygone_mode = VK_POLYGON_MODE_LINE;
+        pipeline_create_infos.has_depth_write = false;
       } else {
         descset_layout = createDescriptorSetLayout<DescSetLayoutType::Terrain>();
+        pipeline_create_infos.has_depth_write = true;
       }
       push_constants.offset = 0;
       push_constants.size = sizeof(constants);
@@ -312,7 +314,6 @@ namespace Poulpe
                                   | VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT;
 
       pipeline_create_infos.has_depth_test = true;
-      pipeline_create_infos.has_depth_write = true;
       pipeline_create_infos.has_stencil_test = false;
       pipeline_create_infos.has_dynamic_depth_bias = false;
       pipeline_create_infos.is_patch_list = true;
