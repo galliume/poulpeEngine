@@ -61,13 +61,12 @@ void main()
   vec4 p1 = (p11 - p10) * u + p10;
   vec4 p = (p1 - p0) * v + p0;
 
-  //p += normal;// * (displacement * falloff);
-  p.y += 6.f;
+  p.y += 5.f;
 
   float A = 1.0f;
-  float L = 5.0f;
+  float L = 10.0f;
   float w = 1.0f / L;
-  float S = 2.0f;
+  float S = 4.0f;
   float t = pc.options.x;
 
   float A_factor = 0.82;
@@ -115,7 +114,7 @@ void main()
   out_position = out_inverse_model * p.xyz;
   out_normal = transpose(out_inverse_model) * cross(bitangent, tangent);
   out_view_position = out_inverse_model * pc.view_position;
-  out_texture_coord = texCoord * 500.0;
+  out_texture_coord = texCoord;
 
   gl_Position = ubo.projection * pc.view * ubo.model * p;
 }

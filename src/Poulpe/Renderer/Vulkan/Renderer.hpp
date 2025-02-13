@@ -189,7 +189,7 @@ namespace Poulpe
 
   private:
     const uint32_t _MAX_FRAMES_IN_FLIGHT{ 2 };
-    const size_t _MAX_RENDER_THREAD{ 4 };
+    const size_t _MAX_RENDER_THREAD{ 3 };
 
     void onFinishRender();
     void setPerspective();
