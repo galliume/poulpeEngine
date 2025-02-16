@@ -26,11 +26,10 @@ layout(push_constant) uniform constants
 
 void main() 
 {
-    fTexCoord = pos.xyz;
-    //gl_Position = vec4(pos.xyz, 1.0);
-    vec4 p = ubo.projection * pc.view * vec4(pos, 1.0);
-    gl_Position = p.xyww;
-    fModelPos = gl_Position;
-    fCameraPos = ubo.projection * pc.view * ubo.model * vec4(pc.view_position, 1.0);
-
+  fTexCoord = pos.xyz;
+  //gl_Position = vec4(pos.xyz, 1.0);
+  vec4 p = ubo.projection * pc.view * vec4(pos, 1.0);
+  gl_Position = p.xyww;
+  fModelPos = gl_Position;
+  fCameraPos = ubo.projection * pc.view * ubo.model * vec4(pc.view_position, 1.0);
 }

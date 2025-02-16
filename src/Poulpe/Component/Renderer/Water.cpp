@@ -23,15 +23,94 @@ namespace Poulpe
     if (tex.getWidth() == 0) {
       tex = _texture_manager->getTextures()["_plp_empty"];
     }
-   
+
+    std::string const normal{ "_water_normal" };
+    Texture texture_normal{ _texture_manager->getTextures()[normal] };
+     texture_normal.setSampler(_renderer->getAPI()->createKTXSampler(
+      mesh->getMaterial().texture_bump_wrap_mode_u,
+      mesh->getMaterial().texture_bump_wrap_mode_v,
+      1));
+
+    if (texture_normal.getWidth() == 0) {
+      texture_normal = _texture_manager->getTextures()["_plp_empty"];
+    }
+
+    std::string const normal2{ "_water_normal2" };
+    Texture texture_normal2{ _texture_manager->getTextures()[normal2] };
+     texture_normal2.setSampler(_renderer->getAPI()->createKTXSampler(
+      mesh->getMaterial().texture_bump_wrap_mode_u,
+      mesh->getMaterial().texture_bump_wrap_mode_v,
+      1));
+
+    if (texture_normal2.getWidth() == 0) {
+      texture_normal2 = _texture_manager->getTextures()["_plp_empty"];
+
+    }
+
+    Texture env { _texture_manager->getSkyboxTexture() };
+    env.setSampler(_renderer->getAPI()->createKTXSampler(
+    TextureWrapMode::CLAMP_TO_EDGE,
+    TextureWrapMode::CLAMP_TO_EDGE,
+    env.getMipLevels()));
+
     std::vector<VkDescriptorImageInfo> image_infos{};
     image_infos.emplace_back(tex.getSampler(), tex.getImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
     image_infos.emplace_back(_renderer->getDepthSamplers(), _renderer->getDepthImageViews(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+    image_infos.emplace_back(texture_normal.getSampler(), texture_normal.getImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+    image_infos.emplace_back(texture_normal2.getSampler(), texture_normal2.getImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+    image_infos.emplace_back(_renderer->getCurrentSampler(), _renderer->getCurrentImageView(), VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
+    
+    std::vector<VkDescriptorImageInfo> env_image_infos{};
+    env_image_infos.emplace_back(env.getSampler(), env.getImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
     auto const pipeline = _renderer->getPipeline(mesh->getShaderName());
     VkDescriptorSet descset = _renderer->getAPI()->createDescriptorSets(pipeline->desc_pool, { pipeline->descset_layout }, 1);
 
-    _renderer->getAPI()->updateDescriptorSets(*mesh->getUniformBuffers(), descset, image_infos);
+    //_renderer->getAPI()->updateDescriptorSets(*mesh->getUniformBuffers(), descset, image_infos);
+
+    std::array<VkWriteDescriptorSet, 3> desc_writes{};
+    std::vector<VkDescriptorBufferInfo> buffer_infos;
+
+    std::for_each(std::begin(*mesh->getUniformBuffers()), std::end(*mesh->getUniformBuffers()),
+    [& buffer_infos](const Buffer & uniformBuffer)
+    {
+      VkDescriptorBufferInfo buffer_info{};
+      buffer_info.buffer = uniformBuffer.buffer;
+      buffer_info.offset = 0;
+      buffer_info.range = VK_WHOLE_SIZE;
+      buffer_infos.emplace_back(buffer_info);
+    });
+
+    desc_writes[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    desc_writes[0].dstSet = descset;
+    desc_writes[0].dstBinding = 0;
+    desc_writes[0].dstArrayElement = 0;
+    desc_writes[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    desc_writes[0].descriptorCount = 1;
+    desc_writes[0].pBufferInfo = buffer_infos.data();
+
+    desc_writes[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    desc_writes[1].dstSet = descset;
+    desc_writes[1].dstBinding = 1;
+    desc_writes[1].dstArrayElement = 0;
+    desc_writes[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    desc_writes[1].descriptorCount = image_infos.size();
+    desc_writes[1].pImageInfo = image_infos.data();
+
+    desc_writes[2].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    desc_writes[2].dstSet = descset;
+    desc_writes[2].dstBinding = 2;
+    desc_writes[2].dstArrayElement = 0;
+    desc_writes[2].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    desc_writes[2].descriptorCount = env_image_infos.size();
+    desc_writes[2].pImageInfo = env_image_infos.data();
+
+    vkUpdateDescriptorSets(
+      _renderer->getAPI()->getDevice(),
+      static_cast<uint32_t>(desc_writes.size()),
+      desc_writes.data(),
+      0,
+      nullptr);
 
     mesh->setDescSet(descset);
   }
@@ -77,7 +156,7 @@ namespace Poulpe
     int const width{ static_cast<int>(tex.getWidth()) };
     int const height{ static_cast<int>(tex.getHeight()) };
 
-    uint32_t const rez{ 20 };
+    uint32_t const rez{ 50 };
     uint32_t index{ 0 };
 
     for(auto i = 0; i < rez - 1; i++) {

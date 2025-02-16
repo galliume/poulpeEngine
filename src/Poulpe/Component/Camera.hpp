@@ -21,10 +21,13 @@ namespace Poulpe
 
     glm::mat4 frustumProj(float fovy, float s, float n, float f);
     glm::mat4 lookAt();
-    void updateSpeed(double const delta_time);
-    void updatePos(double x_offset, double y_offset);
+    void updateDeltaTime(double const delta_time) { _delta_time = delta_time; };
+    void updateAngle(double const x_offset, double const y_offset);
+    void move();
 
     bool const isInit() { return _init; };
+
+    glm::vec3 getDeltaTime();
 
   private:
     glm::vec3 mat4_backward();
@@ -39,12 +42,15 @@ namespace Poulpe
     glm::vec3 _camera_up;
     glm::vec3 _camera_pos;
 
+    glm::vec3 _next_pos;
+    glm::vec3 _next_front;
+
     glm::mat4 _view;
 
     float _pitch;
-    float const _pixel_distance{ 100.0f };
-    float _speed { _pixel_distance };
     float _yaw{ -90.0f };
+    float const _acceleration{ 100.f };
+    double _delta_time{ 0.0 };
 
     bool _init{ false };
   };

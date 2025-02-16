@@ -24,8 +24,6 @@ layout(location = 2) in vec2 texture_coord;
 layout(location = 3) in vec4 tangent;
 layout(location = 4) in vec4 options;
 
-layout(binding = 1) uniform sampler2D tex_sampler[2];
-
 layout(location = 0) out vec2 out_texture_coord;
 layout(location = 1) out vec4 out_options;
 

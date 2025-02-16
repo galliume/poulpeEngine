@@ -3,12 +3,22 @@
 #extension GL_ARB_separate_shader_objects : enable
 
 #define GAMMA_TRESHOLD 0.0031308
+#define PI 3.141592653589793238462643383279
 
 #define HEIGHT_MAP 0
 #define TERRAIN_GROUND 1
 #define TERRAIN_GRASS 2
 #define TERRAIN_SNOW 3
 #define TERRAIN_SAND 4
+#define HI_NOISE 5
+#define LOW_NOISE 6
+
+layout(push_constant) uniform constants
+{
+  mat4 view;
+  vec3 view_position;
+  vec4 options;
+} pc;
 
 layout(location = 0) out vec4 final_color;
 
@@ -19,7 +29,8 @@ layout(location = 3) in vec3 in_position;
 layout(location = 4) in vec3 in_view_position;
 layout(location = 5) in mat3 in_inverse_model;
 
-layout(binding = 1) uniform sampler2D tex_sampler[5];
+layout(binding = 1) uniform sampler2D tex_sampler[7];
+layout(binding = 2) uniform samplerCube env_sampler[];
 
 float linear_to_sRGB(float color)
 {
@@ -75,6 +86,54 @@ vec3 tex_color(int index)
   return color;
 }
 
+vec3 FresnelSchlick(vec3 F0, vec3 F90, float NdH, float P)
+{
+  return F0 + (F90 - F0) * pow(clamp(1.0 - NdH, 0.0, 1.0), 5);
+}
+
+float ReflectionBounce(vec3 F0)
+{
+  return length((20.0 / 21.0) * F0 + (1.0 / 21.0));
+}
+
+float GGXDistribution(float NdH, float roughness)
+{
+  float gamma = 2.0;
+
+  float a = roughness * roughness;
+  float a2 = a * a;
+  float tmp = ((NdH * NdH) * (a2 - 1.0) + 1.0);
+  float D = a2 / (PI * tmp * tmp);
+
+  return D;
+}
+
+float SmithGeometryGGX(float roughness, float theta)
+{
+  float a = roughness + 1.0;
+  float k = (a * a) / 8.0;
+
+  return theta / (theta * (1.0 - k) + k);
+}
+
+vec3 Diffuse(vec3 diffuse, vec3 F0, float NdL, float NdV)
+{
+  float a = 1.0 - pow(1.0 - max(NdL, 0.0), 5);
+  float b = 1.0 - pow(1.0 - max(NdV, 0.0), 5);
+
+  return (21.0 / (20.0 * PI)) * (1.0 - F0) * diffuse * a * b;
+}
+
+//double turbulence(double x, double y, double z, double f)
+//{
+//  const int W = 256;
+//
+//  double t = -.5;
+//  for (; f < = W / 12; f *= 2)
+//    t += abs(noise(x, y, z, f) / f);
+//  return t;
+//}
+
 void main()
 {
   //@todo do PBR for terrain ?
@@ -96,20 +155,66 @@ void main()
   //vec3 norm = normalize(in_normal.xyz);
   vec3 x = dFdx(in_position);
   vec3 y = dFdy(in_position);
-  vec3 norm = in_inverse_model * normalize(cross(x, y));
+  vec3 in_normal = in_inverse_model * normalize(cross(x, y));
 
-  vec3 light_dir = normalize(light_pos - in_position);
-  float diff = max(dot(norm, light_dir), 0.0);
-  vec3 diffuse = diff * light_color;
+  vec3 p = in_position;
+  vec3 v = normalize(pc.view_position - p);
+  vec3 i = normalize(p - pc.view_position);
 
-  vec3 view_dir = normalize(in_view_position - in_position);
-  vec3 reflect_dir = reflect(-light_dir, norm);
-  float spec = pow(max(dot(view_dir, reflect_dir), 0.0), 32);
-  vec3 specular = 0.5 * spec * light_color;
+  vec3 l = normalize(light_pos - p);
+  vec3 h = normalize(v + l);
 
-  vec3 result = (ambient + diffuse + specular) * color;
+  float HdV = max(dot(h, v), 0.0);
+  float NdH = max(dot(in_normal, h), 0.0);
+  float NdL = max(dot(in_normal, l), 0.0);
+  float NdV = max(dot(in_normal, v), 0.0);
 
-  float exposure = 1.0;
+  vec3 F0 = vec3(0.02);
+  vec3 F90 = vec3(1.0);
+  float metallic = 0.2;
+  float P = 1.0;
+  float roughness = 0.0;
+
+  float D = GGXDistribution(NdH, roughness);
+  float G1 = SmithGeometryGGX(roughness, NdV);
+  float G2 = SmithGeometryGGX(roughness, NdL);
+  float G = G1 * G2;
+
+  float f = ReflectionBounce(F0);
+  vec3 F = FresnelSchlick(F0, F90, HdV, P);
+
+  vec3 specular = (D * G * F) / (4.0 * NdV * NdL + 0.0001);
+  vec3 diffuse = color.rgb + Diffuse(color.rgb, F0, NdL, NdV);
+
+  vec3 kD = vec3(1.0) - F;
+  kD *= 1.0 - metallic;
+  
+  //vec3 r = reflect(i, normalize(in_normal));
+  //vec3 env_color = vec3(texture(env_sampler[0], r).rgb);
+  //diffuse =  mix(env_color, diffuse, 1.0);
+
+  vec3 C_sun = (kD * diffuse + specular) * light_color * NdL;
+  vec3 C_ambient = vec3(0.03) * vec3(1.0);
+  vec3 result = (C_ambient + C_sun);
+
+//  vec3 i = normalize(in_position - pc.view_position);
+//
+//  vec3 r = reflect(i, normalize(norm));
+//  vec3 env_color = vec3(texture(env_sampler[0], r).rgb);
+//  
+//  vec3 light_dir = normalize(light_pos - in_position);
+//  float diff = max(dot(norm, light_dir), 0.0);
+//  vec3 diffuse = diff * light_color;
+//  diffuse =  mix(env_color, diffuse, 1.0);
+//
+//  vec3 view_dir = normalize(in_view_position - in_position);
+//  vec3 reflect_dir = reflect(-light_dir, norm);
+//  float spec = pow(max(dot(view_dir, reflect_dir), 0.0), 32);
+//  vec3 specular = 0.5 * spec * light_color;
+//
+//  vec3 result = (ambient + diffuse + specular) * color;
+
+  float exposure = 0.3;
   result.rgb = vec3(1.0) - exp(-result.rgb* exposure);
 
   //@todo check how to get the precise value

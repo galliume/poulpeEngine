@@ -155,8 +155,8 @@ namespace Poulpe
 
     inline Camera* getCamera() { return _camera; }
     inline uint32_t getCurrentFrameIndex() const { return _current_frame; }
-    inline VkSampler getCurrentSampler() { return _samplers2[_current_frame]; }
-    inline VkImageView getCurrentImageView() { return _imageviews2[_current_frame]; }
+    inline VkSampler getCurrentSampler() { return _samplers[_previous_frame]; }
+    inline VkImageView getCurrentImageView() { return _imageviews[_previous_frame]; }
     inline VkImageView getDepthMapImageViews() { return  _depthmap_imageviews.at(_current_frame); }
     inline VkSampler getDepthMapSamplers() { return _depthmap_samplers.at(_current_frame); }
     inline VkImageView getDepthImageViews() { return _depth_imageviews.at(_current_frame); }
@@ -223,6 +223,7 @@ private:
     std::vector<VkCommandBuffer> _cmd_buffer_shadowmap{};
 
     uint32_t _current_frame{ 0 };
+    uint32_t _previous_frame{ 0 };
     uint32_t _image_index;
     std::pair<std::vector<VkBuffer>, std::vector<VkDeviceMemory>> _unifor_buffers{};
 
