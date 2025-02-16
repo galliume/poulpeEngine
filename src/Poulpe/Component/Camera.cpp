@@ -1,10 +1,13 @@
 #include "Camera.hpp"
 
+#include <numbers>
+
 namespace Poulpe
 {
   void Camera::init(glm::vec3 const& start_pos)
   {
-    _camera_pos = start_pos;
+    _next_front = glm::normalize(glm::vec3(1.0, 0.0, 1.0) * glm::vec3(2.0 * std::numbers::pi / 1000.0));
+    _camera_pos = _next_pos = start_pos;
     _camera_up = glm::vec3(0.0f, 1.0f,  0.0f);
     _camera_front = glm::vec3(0.0f, 0.0f, -1.0f);
 
@@ -14,34 +17,32 @@ namespace Poulpe
 
   void Camera::backward()
   {
-    //auto direction = mat4_backward();
-    //_camera_pos -= direction * (_speed * _DeltaTime.count());
-    _camera_pos -= _camera_front * _speed;
+    _next_pos -= (_camera_front * _acceleration * getDeltaTime());
   }
 
   void Camera::down()
   {
-    _camera_pos += _camera_up * _speed;
+    _next_pos += (_camera_up * _acceleration * getDeltaTime());
   }
 
   void Camera::forward()
   {
-    _camera_pos += _camera_front * _speed;
+    _next_pos += (_camera_front * _acceleration * getDeltaTime());
   }
 
   void Camera::left()
   {
-    _camera_pos += glm::normalize(glm::cross(_camera_front, _camera_up)) * _speed;
+    _next_pos += glm::normalize(glm::cross(_camera_front, _camera_up)) * _acceleration * getDeltaTime();
   }
 
   void Camera::right()
   {
-    _camera_pos -= glm::normalize(glm::cross(_camera_front, _camera_up)) * _speed;
+    _next_pos -= glm::normalize(glm::cross(_camera_front, _camera_up)) * _acceleration * getDeltaTime();
   }
 
   void Camera::up()
   {
-    _camera_pos -= _camera_up * _speed;
+    _next_pos -= (_camera_up * _acceleration * getDeltaTime());
   }
 
   /**
@@ -111,18 +112,18 @@ namespace Poulpe
     return frustumProj;
   }
 
+  glm::vec3 Camera::getDeltaTime()
+  {
+    return glm::vec3(_delta_time);
+  }
+
   glm::mat4 Camera::lookAt()
   {
     _view = glm::lookAt(_camera_pos, _camera_pos + _camera_front, _camera_up);
     return _view;
   }
 
-  void Camera::updateSpeed(double const delta_time)
-  {
-    _speed = _pixel_distance * delta_time;
-  }
-
-  void Camera::updatePos(double xoffset, double yoffset)
+  void Camera::updateAngle(double const xoffset, double const yoffset)
   {
     _yaw -= static_cast<float>(xoffset);
     _pitch += static_cast<float>(yoffset);
@@ -135,10 +136,17 @@ namespace Poulpe
     }
 
     glm::vec3 direction{};
-    direction.x = static_cast<float>(cos(glm::radians(_yaw)) * cos(glm::radians(_pitch)));
-    direction.y = static_cast<float>(sin(glm::radians(_pitch)));
-    direction.z = static_cast<float>(sin(glm::radians(_yaw)) * cos(glm::radians(_pitch)));
-    _camera_front = glm::normalize(direction);
+    direction.x = static_cast<float>(_acceleration * cos(glm::radians(_yaw)) * cos(glm::radians(_pitch)));
+    direction.y = static_cast<float>(_acceleration * sin(glm::radians(_pitch)));
+    direction.z = static_cast<float>(_acceleration * sin(glm::radians(_yaw)) * cos(glm::radians(_pitch)));
+
+    _next_front = glm::normalize(direction * glm::vec3(2.0 * std::numbers::pi / 1000.0));
+  }
+
+  void Camera::move()
+  {
+    _camera_front = _next_front;
+    _camera_pos = _next_pos;
   }
 
   glm::vec3 Camera::mat4_backward()

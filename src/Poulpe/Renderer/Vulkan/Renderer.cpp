@@ -769,7 +769,8 @@ namespace Poulpe
 
     _vulkan->submit(queue, submit_infos, present_info, _fences_in_flight[_current_frame]);
 
-    _current_frame = (_current_frame + 1) % _MAX_FRAMES_IN_FLIGHT;
+    _previous_frame = _current_frame;
+    _current_frame = (_current_frame + _MAX_FRAMES_IN_FLIGHT - 1) % _MAX_FRAMES_IN_FLIGHT;
 
     _draw_cmds.clear();
     onFinishRender();

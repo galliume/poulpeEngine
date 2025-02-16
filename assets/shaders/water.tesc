@@ -31,8 +31,8 @@ void main()
 
   if(gl_InvocationID == 0)
   {
-    const int MIN_TESS_LEVEL = 32;
-    const int MAX_TESS_LEVEL = 32;
+    const int MIN_TESS_LEVEL = 4;
+    const int MAX_TESS_LEVEL = 2048;
     const float MIN_DISTANCE = 20;
     const float MAX_DISTANCE = 800;
 

@@ -205,7 +205,7 @@ namespace Poulpe
 
       VkDescriptorSetLayoutBinding samplerLayoutBinding{};
       samplerLayoutBinding.binding = 1;
-      samplerLayoutBinding.descriptorCount = 5;
+      samplerLayoutBinding.descriptorCount = 7;
       samplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
       samplerLayoutBinding.pImmutableSamplers = nullptr;
       samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT 
@@ -213,7 +213,14 @@ namespace Poulpe
                                         | VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT
                                         | VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT;
 
-      bindings = { uboLayoutBinding, samplerLayoutBinding };
+      VkDescriptorSetLayoutBinding envSamplerLayoutBinding{};
+      envSamplerLayoutBinding.binding = 2;
+      envSamplerLayoutBinding.descriptorCount = 1;
+      envSamplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+      envSamplerLayoutBinding.pImmutableSamplers = nullptr;
+      envSamplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+      bindings = { uboLayoutBinding, samplerLayoutBinding, envSamplerLayoutBinding };
       } else if constexpr (T == DescSetLayoutType::Water) {
       VkDescriptorSetLayoutBinding uboLayoutBinding{};
       uboLayoutBinding.binding = 0;
@@ -226,7 +233,7 @@ namespace Poulpe
 
       VkDescriptorSetLayoutBinding samplerLayoutBinding{};
       samplerLayoutBinding.binding = 1;
-      samplerLayoutBinding.descriptorCount = 2;
+      samplerLayoutBinding.descriptorCount = 5;
       samplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
       samplerLayoutBinding.pImmutableSamplers = nullptr;
       samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT 
@@ -234,7 +241,14 @@ namespace Poulpe
                                         | VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT
                                         | VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT;
 
-      bindings = { uboLayoutBinding, samplerLayoutBinding };
+      VkDescriptorSetLayoutBinding envSamplerLayoutBinding{};
+      envSamplerLayoutBinding.binding = 2;
+      envSamplerLayoutBinding.descriptorCount = 1;
+      envSamplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+      envSamplerLayoutBinding.pImmutableSamplers = nullptr;
+      envSamplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+      bindings = { uboLayoutBinding, samplerLayoutBinding, envSamplerLayoutBinding };
     } else {
       PLP_FATAL("unknown descSetLayoutType");
       throw std::runtime_error("unknown descSetLayoutType");

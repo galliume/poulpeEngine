@@ -70,7 +70,6 @@ namespace Poulpe
     auto last_time_debug_updated{ steady_clock::now() };
 
     while (!glfwWindowShouldClose(_render_manager->getWindow()->get())) {
-
       glfwPollEvents();
 
       auto const new_time{ steady_clock::now() };
@@ -83,7 +82,8 @@ namespace Poulpe
 
       //cf https://gafferongames.com/post/fix_your_timestep/
       while (accumulator >= dt) {
-        _render_manager->getCamera()->updateSpeed(dt);
+        _render_manager->getCamera()->updateDeltaTime(dt);
+        _render_manager->getCamera()->move();
 
         accumulator -= dt;
         total_time += dt;

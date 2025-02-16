@@ -29,10 +29,10 @@ layout(location = 0) in vec2 in_texture_coord[];
 layout(location = 1) in vec4 in_options[];
 
 layout(location = 0) out vec2 out_texture_coord;
-layout(location = 1) out vec3 out_normal;
-layout(location = 2) out vec3 out_position;
-layout(location = 3) out vec3 out_view_position;
-layout(location = 4) out mat3 out_inverse_model;
+layout(location = 1) out vec3 out_position;
+layout(location = 2) out vec3 out_view_position;
+layout(location = 3) out mat3 out_TBN;
+layout(location = 6) out vec3 out_normal;
 
 void main()
 {  
@@ -63,58 +63,87 @@ void main()
 
   p.y += 5.f;
 
-  float A = 1.0f;
-  float L = 10.0f;
-  float w = 1.0f / L;
-  float S = 4.0f;
+  float A = 0.1f;
+  float L = 12.0f;
+  const float g = 9.81f;
+  float w = 2.0f / L;
+  //float w = sqrt(9.8 * ((2.0 * PI) / L));
+  float S = 5.0f; 
   float t = pc.options.x;
 
-  float A_factor = 0.82;
-  float w_factor = 1.18;
-  float t_factor = 1.07;
-
-  vec2 gradient = vec2(0.0);
+  vec3 bi = vec3(0.0);
+  vec3 ta = vec3(0.0);
+  vec3 n = vec3(0.0);
+  
   //@todo improve seed
   float seed = PI;
-  
-  float previous_x = 0.0;
+  float previous_dx = 0.0;
+  vec4 displacement = vec4(0.0, 0.0, 0.0, 1.0);
 
-  for (int i = 0; i < 16; i++) {
-    seed = fract(sin(seed * 43758.5453 + i) * 43758.5453);
-    float angle = seed * 2.0f * PI;
+  float steepness = 2.5;
+  float steepness_factor = 0.66;
+  float A_factor = 0.82;
+  float w_factor = 1.18;
+  
+  const int waves_count = 16;
+  for (int i = 0; i < waves_count; i++) {
+    //speed
     float phi = S * (2.0f / L);
 
+    //direction
+    seed = fract(sin(seed * 43758.5453 + i) * 43758.5453);
+    float angle = seed * PI;
     vec2 D = vec2(cos(angle), sin(angle));
 
-    float DdP = dot(D, p.xz);
-    DdP += previous_x * 0.5;
-    float x = DdP * w + (t * t_factor) * phi;
-    float e = exp(sin(x) - 1.0);
-    float height = A * sin(e);
+    //Wi(x, y, t) = Ai * sin(Di dot (x, y) * wi + t * phii);
+    float X = (dot(D, p.xz) + previous_dx) * w + t * phi;
+    float W = A * sin(X);
 
-    p.y += height;
+    float WA = w * A;
+    float S = sin(w * dot(D, p.xz) + t * phi);
+    float C = cos(w * dot(D, p.xz) + t * phi);
 
-    float dHdx = -w * D.x * A * e * cos(x);
-    float dHdz = -w * D.y * A * e * cos(x);  
+    //bitangent
+    bi.x += steepness * (D.x * D.x) * WA * S;
+    bi.z += steepness * (D.x * D.y) * WA * S;
+    bi.y += D.x * WA * C;
+    
+    //tangent
+    ta.x += steepness * (D.x * D.y) * WA * S;
+    ta.z += steepness * (D.y * D.y) * WA * S;
+    ta.y += D.y * WA * C;
 
-    gradient += vec2(dHdx, dHdz);
-    previous_x = dHdx;
+    //normal
+    n.x += D.x * WA * C;
+    n.z += D.y * WA * C;
+    n.y += steepness * WA * S;
+
+    displacement.x += (steepness * A * D.x * cos(X));
+    displacement.z += (steepness * A * D.y * cos(X));
+    displacement.y += W;
+
+    previous_dx = displacement.x;
 
     A *= A_factor;
     w *= w_factor;
-    t_factor *= 1.07;
+    steepness *= clamp(steepness_factor, 0.0, 1.0);
   }
 
-  //gradient = normalize(gradient);
-  vec3 bitangent = normalize(vec3(1.0, 0.0, gradient.x));
-  vec3 tangent = normalize(vec3(0.0, 1.0, gradient.y));
-  //out_normal = normalize(vec3(-gradient.x, -gradient.y, 1.0));
+  p.y += 2.5+displacement.y;
 
-  out_inverse_model = inverse(mat3(ubo.model));
-  out_position = out_inverse_model * p.xyz;
-  out_normal = transpose(out_inverse_model) * cross(bitangent, tangent);
-  out_view_position = out_inverse_model * pc.view_position;
+  mat4 trans_model = transpose(inverse(ubo.model));
+  vec3 bitangent = normalize(trans_model * vec4(1.0 - bi.x, bi.y, -bi.z, 1.0)).xyz;
+  vec3 tangent = normalize(trans_model * vec4(-ta.x, ta.y, 1.0 - ta.z, 1.0)).xyz;
+  vec3 N = normalize(trans_model * vec4(-n.x, 1.0 - n.y, -n.z, 1.0)).xyz;
+  //vec3 N = normalize(cross(tangent, bitangent));
+
+  mat3 TBN = mat3(tangent, bitangent, N);
+
+  out_TBN = TBN;
+  out_position = (ubo.model * vec4(p.xyz, 1.0)).xyz;
+  out_normal = N;
   out_texture_coord = texCoord;
+  out_view_position = pc.view_position;
 
   gl_Position = ubo.projection * pc.view * ubo.model * p;
 }

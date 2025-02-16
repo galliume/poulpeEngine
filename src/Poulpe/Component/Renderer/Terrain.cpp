@@ -68,17 +68,93 @@ namespace Poulpe
       sand = _texture_manager->getTextures()["_plp_empty"];
     }
 
+    Texture low_noise { _texture_manager->getTextures()["terrain_low_noise"]};
+
+    low_noise.setSampler(_renderer->getAPI()->createKTXSampler(
+      TextureWrapMode::WRAP,
+      TextureWrapMode::WRAP,
+      0));
+
+    if (low_noise.getWidth() == 0) {
+      low_noise = _texture_manager->getTextures()["_plp_empty"];
+    }
+
+    Texture hi_noise { _texture_manager->getTextures()["terrain_hi_noise"]};
+
+    hi_noise.setSampler(_renderer->getAPI()->createKTXSampler(
+      TextureWrapMode::WRAP,
+      TextureWrapMode::WRAP,
+      0));
+
+    if (hi_noise.getWidth() == 0) {
+      hi_noise = _texture_manager->getTextures()["_plp_empty"];
+    }
+
     std::vector<VkDescriptorImageInfo> image_infos{};
     image_infos.emplace_back(height_map.getSampler(), height_map.getImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
     image_infos.emplace_back(ground.getSampler(), ground.getImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
     image_infos.emplace_back(grass.getSampler(), grass.getImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
     image_infos.emplace_back(snow.getSampler(), snow.getImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
     image_infos.emplace_back(sand.getSampler(), sand.getImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+    image_infos.emplace_back(hi_noise.getSampler(), hi_noise.getImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+    image_infos.emplace_back(low_noise.getSampler(), low_noise.getImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+
+    Texture env { _texture_manager->getSkyboxTexture() };
+    env.setSampler(_renderer->getAPI()->createKTXSampler(
+    TextureWrapMode::CLAMP_TO_EDGE,
+    TextureWrapMode::CLAMP_TO_EDGE,
+    env.getMipLevels()));
+
+    std::vector<VkDescriptorImageInfo> env_image_infos{};
+    env_image_infos.emplace_back(env.getSampler(), env.getImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
     auto const pipeline = _renderer->getPipeline(mesh->getShaderName());
     VkDescriptorSet descset = _renderer->getAPI()->createDescriptorSets(pipeline->desc_pool, { pipeline->descset_layout }, 1);
 
-    _renderer->getAPI()->updateDescriptorSets(*mesh->getUniformBuffers(), descset, image_infos);
+    //_renderer->getAPI()->updateDescriptorSets(*mesh->getUniformBuffers(), descset, image_infos);
+    std::array<VkWriteDescriptorSet, 3> desc_writes{};
+    std::vector<VkDescriptorBufferInfo> buffer_infos;
+
+    std::for_each(std::begin(*mesh->getUniformBuffers()), std::end(*mesh->getUniformBuffers()),
+    [& buffer_infos](const Buffer & uniformBuffer)
+    {
+      VkDescriptorBufferInfo buffer_info{};
+      buffer_info.buffer = uniformBuffer.buffer;
+      buffer_info.offset = 0;
+      buffer_info.range = VK_WHOLE_SIZE;
+      buffer_infos.emplace_back(buffer_info);
+    });
+
+    desc_writes[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    desc_writes[0].dstSet = descset;
+    desc_writes[0].dstBinding = 0;
+    desc_writes[0].dstArrayElement = 0;
+    desc_writes[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    desc_writes[0].descriptorCount = 1;
+    desc_writes[0].pBufferInfo = buffer_infos.data();
+
+    desc_writes[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    desc_writes[1].dstSet = descset;
+    desc_writes[1].dstBinding = 1;
+    desc_writes[1].dstArrayElement = 0;
+    desc_writes[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    desc_writes[1].descriptorCount = image_infos.size();
+    desc_writes[1].pImageInfo = image_infos.data();
+
+    desc_writes[2].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    desc_writes[2].dstSet = descset;
+    desc_writes[2].dstBinding = 2;
+    desc_writes[2].dstArrayElement = 0;
+    desc_writes[2].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    desc_writes[2].descriptorCount = env_image_infos.size();
+    desc_writes[2].pImageInfo = env_image_infos.data();
+
+    vkUpdateDescriptorSets(
+      _renderer->getAPI()->getDevice(),
+      static_cast<uint32_t>(desc_writes.size()),
+      desc_writes.data(),
+      0,
+      nullptr);
 
     mesh->setDescSet(descset);
   }

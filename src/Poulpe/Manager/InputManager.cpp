@@ -179,6 +179,6 @@ namespace Poulpe
     x_offset *= sensitivity;
     y_offset *= sensitivity;
 
-    _camera->updatePos(x_offset, y_offset);
+    _camera->updateAngle(x_offset, y_offset);
   }
 }

@@ -133,7 +133,11 @@ namespace Poulpe
     std::ranges::for_each(_entity_config["water"].items(), [&](auto const& water) {
       auto const& key = water.key();
       auto const& data = water.value();
-      _textures_config["water"][key] = data;
+      if (key == "_water_normal" || key == "_water_normal2") {
+        _textures_config["normal"][key] = data;
+      } else {
+        _textures_config["water"][key] = data;
+      }
     });
 
     return _entity_config;

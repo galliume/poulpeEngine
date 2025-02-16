@@ -12,14 +12,17 @@
 		"terrain_snow": {
 			"path": "assets/texture/terrain/snow.ktx2"
 		},
-		"water_water": {
-			"path": "assets/texture/water/water.ktx2"
-		},
 		"terrain_ground": {
 			"path": "assets/texture/terrain/ground.ktx2"
 		},
 		"terrain_sand": {
 			"path": "assets/texture/terrain/sand.ktx2"
+		},
+		"terrain_low_noise": {
+			"path": "assets/texture/terrain/low_noise.ktx2"
+		},
+		"terrain_hi_noise": {
+			"path": "assets/texture/terrain/hi_noise.ktx2"
 		}
 	},
 	"skybox": {
