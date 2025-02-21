@@ -1,6 +1,29 @@
 {
+	"terrain": {
+		"46_016_3_028_13_512_512": {
+			"path": "assets/texture/terrain/height_map_1.ktx2"
+		}
+	},
+	"water": {
+		"_water_foam": {
+			"path": "assets/texture/water/_water_foam.ktx2"
+		},
+		"_water_normal": {
+			"path": "assets/texture/water/_water_normal.ktx2"
+		},
+		"_water_normal2": {
+			"path": "assets/texture/water/_water_normal2.ktx2"
+		}
+	},
+	"camera": {
+		"position": {
+			"x": 0.0,
+			"y": 0.0,
+			"z": 0.0
+		}
+	},
 	"entities": {
-		"TextureSettingsTest" : {
+		"TextureSettingsTest": {
 			"mesh": "assets/mesh/TextureSettingsTest/glTF/TextureSettingsTest.gltf",
 			"textures": {
 				"CheckAndX": {
@@ -21,17 +44,29 @@
 			"ao": {
 
 			},
-			"normal" : {
+			"normal": {
 			},
 			"shader": "main_basic",
 			"positions": [
-				{"x": 0.0, "y": 0.0, "z": 0.0}
+				{
+					"x": 0.0,
+					"y": 0.0,
+					"z": 0.0
+				}
 			],
 			"scales": [
-				{"x": 0.05, "y": 0.05, "z": 0.05}
+				{
+					"x": 0.05,
+					"y": 0.05,
+					"z": 0.05
+				}
 			],
 			"rotations": [
-				{"x": 90.0, "y": 0.0, "z": 180.0}
+				{
+					"x": 90.0,
+					"y": 0.0,
+					"z": 180.0
+				}
 			],
 			"flipY": false,
 			"count": 1,
@@ -40,7 +75,7 @@
 			"isPointLight": false,
 			"animationScripts": {
 			},
-			"hasShadow": true,	
+			"hasShadow": true,
 			"isIndexed": true,
 			"debugNormal": true
 		}

@@ -1,5 +1,28 @@
 {
-  "entities": {
+	"terrain": {
+		"46_016_3_028_13_512_512": {
+			"path": "assets/texture/terrain/height_map_1.ktx2"
+		}
+	},
+	"water": {
+		"_water_foam": {
+			"path": "assets/texture/water/_water_foam.ktx2"
+		},
+		"_water_normal": {
+			"path": "assets/texture/water/_water_normal.ktx2"
+		},
+		"_water_normal2": {
+			"path": "assets/texture/water/_water_normal2.ktx2"
+		}
+	},
+	"camera": {
+		"position": {
+			"x": 0.0,
+			"y": 0.0,
+			"z": 0.0
+		}
+	},
+	"entities": {
 		"table": {
 			"mesh": "assets/mesh/DamagedHelmet/glTF/coffee_table_round_01_4k.gltf",
 			"textures": {
@@ -58,5 +81,5 @@
 			"isIndexed": true,
 			"debugNormal": true
 		}
-  }
+	}
 }

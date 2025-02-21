@@ -4,6 +4,24 @@
       "path": "assets/texture/terrain/height_map_1.ktx2"
     }
   },
+  "water": {
+    "_water_foam": {
+      "path": "assets/texture/water/_water_foam.ktx2"
+    },
+    "_water_normal": {
+      "path": "assets/texture/water/_water_normal.ktx2"
+    },
+    "_water_normal2": {
+      "path": "assets/texture/water/_water_normal2.ktx2"
+    }
+  },
+  "camera": {
+    "position": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0
+    }
+  },
   "entities": {
     "knight": {
       "mesh": "assets/mesh/pkg_e_knight_anim/Exports/FBX/Knight_USD_002.fbx",
