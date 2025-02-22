@@ -103,152 +103,169 @@ namespace Poulpe
     std::vector<VkDescriptorSetLayoutBinding> bindings {};
 
     if constexpr (T == DescSetLayoutType::Entity) {
-      VkDescriptorSetLayoutBinding uboLayoutBinding{};
-      uboLayoutBinding.binding = 0;
-      uboLayoutBinding.descriptorCount = 1;
-      uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-      uboLayoutBinding.pImmutableSamplers = nullptr;
-      uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_GEOMETRY_BIT;
+      VkDescriptorSetLayoutBinding ubo_binding{};
+      ubo_binding.binding = 0;
+      ubo_binding.descriptorCount = 1;
+      ubo_binding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+      ubo_binding.pImmutableSamplers = nullptr;
+      ubo_binding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_GEOMETRY_BIT;
 
-      VkDescriptorSetLayoutBinding samplerLayoutBinding{};
-      samplerLayoutBinding.binding = 1;
-      samplerLayoutBinding.descriptorCount = 8;
-      samplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-      samplerLayoutBinding.pImmutableSamplers = nullptr;
-      samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+      VkDescriptorSetLayoutBinding sampler_binding{};
+      sampler_binding.binding = 1;
+      sampler_binding.descriptorCount = 8;
+      sampler_binding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+      sampler_binding.pImmutableSamplers = nullptr;
+      sampler_binding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 
-      VkDescriptorSetLayoutBinding storageLayoutBinding{};
-      storageLayoutBinding.binding = 2;
-      storageLayoutBinding.descriptorCount = 1;
-      storageLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-      storageLayoutBinding.pImmutableSamplers = nullptr;
-      storageLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+      VkDescriptorSetLayoutBinding storage_binding{};
+      storage_binding.binding = 2;
+      storage_binding.descriptorCount = 1;
+      storage_binding.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+      storage_binding.pImmutableSamplers = nullptr;
+      storage_binding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
 
-      VkDescriptorSetLayoutBinding depthMapsamplerLayoutBinding{};
-      depthMapsamplerLayoutBinding.binding = 3;
-      depthMapsamplerLayoutBinding.descriptorCount = 1;
-      depthMapsamplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-      depthMapsamplerLayoutBinding.pImmutableSamplers = nullptr;
-      depthMapsamplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+      VkDescriptorSetLayoutBinding depth_map_binding{};
+      depth_map_binding.binding = 3;
+      depth_map_binding.descriptorCount = 1;
+      depth_map_binding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+      depth_map_binding.pImmutableSamplers = nullptr;
+      depth_map_binding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 
-      VkDescriptorSetLayoutBinding cubeMapsamplerLayoutBinding{};
-      cubeMapsamplerLayoutBinding.binding = 4;
-      cubeMapsamplerLayoutBinding.descriptorCount = 1;
-      cubeMapsamplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-      cubeMapsamplerLayoutBinding.pImmutableSamplers = nullptr;
-      cubeMapsamplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+      VkDescriptorSetLayoutBinding cubemap_binding{};
+      cubemap_binding.binding = 4;
+      cubemap_binding.descriptorCount = 1;
+      cubemap_binding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+      cubemap_binding.pImmutableSamplers = nullptr;
+      cubemap_binding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 
       bindings = {
-        uboLayoutBinding,
-        samplerLayoutBinding,
-        storageLayoutBinding,
-        depthMapsamplerLayoutBinding,
-        cubeMapsamplerLayoutBinding };
+        ubo_binding,
+        sampler_binding,
+        storage_binding,
+        depth_map_binding,
+        cubemap_binding };
 
-    } else if constexpr (T == DescSetLayoutType::HUD) {
-      VkDescriptorSetLayoutBinding uboLayoutBinding{};
-      uboLayoutBinding.binding = 0;
-      uboLayoutBinding.descriptorCount = 1;
-      uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-      uboLayoutBinding.pImmutableSamplers = nullptr;
-      uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+    } else if constexpr (T == DescSetLayoutType::Text) {
+      VkDescriptorSetLayoutBinding ubo_binding{};
+      ubo_binding.binding = 0;
+      ubo_binding.descriptorCount = 1;
+      ubo_binding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+      ubo_binding.pImmutableSamplers = nullptr;
+      ubo_binding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
 
-      VkDescriptorSetLayoutBinding samplerLayoutBinding{};
-      samplerLayoutBinding.binding = 1;
-      samplerLayoutBinding.descriptorCount = 2;
-      samplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-      samplerLayoutBinding.pImmutableSamplers = nullptr;
-      samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+      VkDescriptorSetLayoutBinding sampler_binding{};
+      sampler_binding.binding = 1;
+      sampler_binding.descriptorCount = 1;
+      sampler_binding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+      sampler_binding.pImmutableSamplers = nullptr;
+      sampler_binding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 
-      bindings = { uboLayoutBinding, samplerLayoutBinding };
+      bindings = { ubo_binding, sampler_binding };
     } else if constexpr (T == DescSetLayoutType::Skybox) {
-      VkDescriptorSetLayoutBinding uboLayoutBinding{};
-      uboLayoutBinding.binding = 0;
-      uboLayoutBinding.descriptorCount = 1;
-      uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-      uboLayoutBinding.pImmutableSamplers = nullptr;
-      uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+      VkDescriptorSetLayoutBinding ubo_binding{};
+      ubo_binding.binding = 0;
+      ubo_binding.descriptorCount = 1;
+      ubo_binding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+      ubo_binding.pImmutableSamplers = nullptr;
+      ubo_binding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
 
-      VkDescriptorSetLayoutBinding samplerLayoutBinding{};
-      samplerLayoutBinding.binding = 1;
-      samplerLayoutBinding.descriptorCount = 1;
-      samplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-      samplerLayoutBinding.pImmutableSamplers = nullptr;
-      samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+      VkDescriptorSetLayoutBinding sampler_binding{};
+      sampler_binding.binding = 1;
+      sampler_binding.descriptorCount = 1;
+      sampler_binding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+      sampler_binding.pImmutableSamplers = nullptr;
+      sampler_binding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 
-      bindings = { uboLayoutBinding, samplerLayoutBinding };
+      bindings = { ubo_binding, sampler_binding };
     } else if constexpr (T == DescSetLayoutType::Offscreen) {
-      VkDescriptorSetLayoutBinding uboLayoutBinding{};
-      uboLayoutBinding.binding = 0;
-      uboLayoutBinding.descriptorCount = 1;
-      uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-      uboLayoutBinding.pImmutableSamplers = nullptr;
-      uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+      VkDescriptorSetLayoutBinding ubo_bingind{};
+      ubo_bingind.binding = 0;
+      ubo_bingind.descriptorCount = 1;
+      ubo_bingind.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+      ubo_bingind.pImmutableSamplers = nullptr;
+      ubo_bingind.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
 
-      VkDescriptorSetLayoutBinding storageLayoutBinding{};
-      storageLayoutBinding.binding = 1;
-      storageLayoutBinding.descriptorCount = 1;
-      storageLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-      storageLayoutBinding.pImmutableSamplers = nullptr;
-      storageLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+      VkDescriptorSetLayoutBinding storage_binding{};
+      storage_binding.binding = 1;
+      storage_binding.descriptorCount = 1;
+      storage_binding.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+      storage_binding.pImmutableSamplers = nullptr;
+      storage_binding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
 
-      bindings = { uboLayoutBinding, storageLayoutBinding };
+      bindings = { ubo_bingind, storage_binding };
     } else if constexpr (T == DescSetLayoutType::Terrain) {
-      VkDescriptorSetLayoutBinding uboLayoutBinding{};
-      uboLayoutBinding.binding = 0;
-      uboLayoutBinding.descriptorCount = 1;
-      uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-      uboLayoutBinding.pImmutableSamplers = nullptr;
-      uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT
+      VkDescriptorSetLayoutBinding ubo_binding{};
+      ubo_binding.binding = 0;
+      ubo_binding.descriptorCount = 1;
+      ubo_binding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+      ubo_binding.pImmutableSamplers = nullptr;
+      ubo_binding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT
                                     | VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT
                                     | VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT;
 
-      VkDescriptorSetLayoutBinding samplerLayoutBinding{};
-      samplerLayoutBinding.binding = 1;
-      samplerLayoutBinding.descriptorCount = 7;
-      samplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-      samplerLayoutBinding.pImmutableSamplers = nullptr;
-      samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT 
+      VkDescriptorSetLayoutBinding sampler_binding{};
+      sampler_binding.binding = 1;
+      sampler_binding.descriptorCount = 7;
+      sampler_binding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+      sampler_binding.pImmutableSamplers = nullptr;
+      sampler_binding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT 
                                         | VK_SHADER_STAGE_FRAGMENT_BIT
                                         | VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT
                                         | VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT;
 
-      VkDescriptorSetLayoutBinding envSamplerLayoutBinding{};
-      envSamplerLayoutBinding.binding = 2;
-      envSamplerLayoutBinding.descriptorCount = 1;
-      envSamplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-      envSamplerLayoutBinding.pImmutableSamplers = nullptr;
-      envSamplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+      VkDescriptorSetLayoutBinding env_sampler_binding{};
+      env_sampler_binding.binding = 2;
+      env_sampler_binding.descriptorCount = 1;
+      env_sampler_binding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+      env_sampler_binding.pImmutableSamplers = nullptr;
+      env_sampler_binding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 
-      bindings = { uboLayoutBinding, samplerLayoutBinding, envSamplerLayoutBinding };
-      } else if constexpr (T == DescSetLayoutType::Water) {
-      VkDescriptorSetLayoutBinding uboLayoutBinding{};
-      uboLayoutBinding.binding = 0;
-      uboLayoutBinding.descriptorCount = 1;
-      uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-      uboLayoutBinding.pImmutableSamplers = nullptr;
-      uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT
-                                    | VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT
-                                    | VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT;
+      bindings = { ubo_binding, sampler_binding, env_sampler_binding };
+    }
+    else if constexpr (T == DescSetLayoutType::Water) {
+      VkDescriptorSetLayoutBinding ubo_binding{};
+      ubo_binding.binding = 0;
+      ubo_binding.descriptorCount = 1;
+      ubo_binding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+      ubo_binding.pImmutableSamplers = nullptr;
+      ubo_binding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT
+        | VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT
+        | VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT;
 
-      VkDescriptorSetLayoutBinding samplerLayoutBinding{};
-      samplerLayoutBinding.binding = 1;
-      samplerLayoutBinding.descriptorCount = 5;
-      samplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-      samplerLayoutBinding.pImmutableSamplers = nullptr;
-      samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT 
-                                        | VK_SHADER_STAGE_FRAGMENT_BIT
-                                        | VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT
-                                        | VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT;
+      VkDescriptorSetLayoutBinding sampler_binding{};
+      sampler_binding.binding = 1;
+      sampler_binding.descriptorCount = 5;
+      sampler_binding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+      sampler_binding.pImmutableSamplers = nullptr;
+      sampler_binding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT
+        | VK_SHADER_STAGE_FRAGMENT_BIT
+        | VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT
+        | VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT;
 
-      VkDescriptorSetLayoutBinding envSamplerLayoutBinding{};
-      envSamplerLayoutBinding.binding = 2;
-      envSamplerLayoutBinding.descriptorCount = 1;
-      envSamplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-      envSamplerLayoutBinding.pImmutableSamplers = nullptr;
-      envSamplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+      VkDescriptorSetLayoutBinding env_sampler_binding{};
+      env_sampler_binding.binding = 2;
+      env_sampler_binding.descriptorCount = 1;
+      env_sampler_binding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+      env_sampler_binding.pImmutableSamplers = nullptr;
+      env_sampler_binding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 
-      bindings = { uboLayoutBinding, samplerLayoutBinding, envSamplerLayoutBinding };
+      bindings = { ubo_binding, sampler_binding, env_sampler_binding };
+    } else if constexpr (T == DescSetLayoutType::Text) {
+      VkDescriptorSetLayoutBinding ubo_binding{};
+      ubo_binding.binding = 0;
+      ubo_binding.descriptorCount = 1;
+      ubo_binding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+      ubo_binding.pImmutableSamplers = nullptr;
+      ubo_binding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+
+      VkDescriptorSetLayoutBinding sampler_binding{};
+      sampler_binding.binding = 1;
+      sampler_binding.descriptorCount = 1;
+      sampler_binding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+      sampler_binding.pImmutableSamplers = nullptr;
+      sampler_binding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+      bindings = { ubo_binding, sampler_binding };
     } else {
       PLP_FATAL("unknown descSetLayoutType");
       throw std::runtime_error("unknown descSetLayoutType");
@@ -298,7 +315,21 @@ namespace Poulpe
     vertex_input_info = getVertexInputState<VertexBindingType::Vertex3D>();
 
     //@todo replace shader_name == with a shader_type ==
-    if (shader_name == "skybox") {
+    if (shader_name == "text") {
+      need_bis = true;
+      descset_layout = createDescriptorSetLayout<DescSetLayoutType::Text>();
+
+      push_constants.offset = 0;
+      push_constants.size = sizeof(constants);
+      push_constants.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+
+      pipeline_create_infos.has_depth_test = true;
+      pipeline_create_infos.has_depth_write = true;
+      pipeline_create_infos.has_stencil_test = false;
+      pipeline_create_infos.has_color_attachment = true;
+      pipeline_create_infos.has_dynamic_depth_bias = false;
+
+    } else if (shader_name == "skybox") {
       descset_layout = createDescriptorSetLayout<DescSetLayoutType::Skybox>();
 
       push_constants.offset = 0;

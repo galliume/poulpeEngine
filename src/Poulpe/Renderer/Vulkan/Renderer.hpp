@@ -108,6 +108,7 @@ namespace Poulpe
     void addEntities(std::vector<Entity*> entities) ;
     void addEntity(Entity* entity, bool const is_last) ;
     void addTransparentEntity(Entity* entity, bool const is_last) ;
+    void addTextEntity(Entity* entity, bool const is_last) ;
 
     void updateData(
       std::string const& name,
@@ -197,6 +198,7 @@ namespace Poulpe
 
     void swapBufferEntities();
     void swapBufferTransparentEntities();
+    void swapBufferTextEntities();
   
 private:
     std::unique_ptr<VulkanAPI> _vulkan{ nullptr };
@@ -291,6 +293,12 @@ private:
     unsigned int const _transparent_entities_buffer_swap_treshold{ 50 };
     bool _force_transparent_entities_buffer_swap{ false };
     std::mutex _mutex_transparent_entity_submit;
+
+    std::vector<Entity*> _text_entities{};
+    std::vector<Entity*> _text_entities_buffer{};
+    unsigned int const _text_entities_buffer_swap_treshold{ 50 };
+    bool _force_text_entities_buffer_swap{ false };
+    std::mutex _mutex_text_entities_submit;
 
     std::vector<VkSemaphore> _entities_sema_finished;
 

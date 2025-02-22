@@ -626,6 +626,9 @@ namespace Poulpe
         if (!_transparent_entities.empty()) {
           std::copy(_transparent_entities.begin(), _transparent_entities.end(), std::back_inserter(entities));
         }
+        if (!_text_entities.empty()) {
+          std::copy(_text_entities.begin(), _text_entities.end(), std::back_inserter(entities));
+        }
 
         draw(
          _cmd_buffer_entities4[_current_frame],
@@ -658,6 +661,9 @@ namespace Poulpe
     };
     if (_transparent_entities.size() <= 0) {
       swapBufferTransparentEntities();
+    };
+    if (_text_entities.size() <= 0) {
+      swapBufferTextEntities();
     };
   }
 
@@ -781,6 +787,9 @@ namespace Poulpe
     if (!_transparent_entities_buffer.empty()) {
       swapBufferTransparentEntities();
     }
+    if (!_text_entities_buffer.empty()) {
+      swapBufferTextEntities();
+    }
   }
 
   void Renderer::setRayPick(
@@ -859,6 +868,17 @@ namespace Poulpe
     }
   }
 
+  void Renderer::addTextEntity(Entity* entity, bool const is_last)
+  {
+    {
+      std::lock_guard guard(_mutex_text_entities_submit);
+
+      _text_entities_buffer.emplace_back(entity);
+
+      _force_text_entities_buffer_swap = is_last;
+    }
+  }
+
   void Renderer::updateData(std::string const& name, UniformBufferObject const& ubo, std::vector<Vertex> const& vertices)
   {
     {
@@ -911,6 +931,20 @@ namespace Poulpe
 
       _update_shadow_map = true;
       _force_transparent_entities_buffer_swap = false;
+    }
+  }
+
+  void Renderer::swapBufferTextEntities()
+  {
+    if (_text_entities_buffer.size() < _text_entities_buffer_swap_treshold
+        && !_force_text_entities_buffer_swap) return;
+
+    {
+      copy(_text_entities_buffer.begin(), _text_entities_buffer.end(), back_inserter(_text_entities));
+      _text_entities_buffer.clear();
+
+      _update_shadow_map = true;
+      _force_text_entities_buffer_swap = false;
     }
   }
 

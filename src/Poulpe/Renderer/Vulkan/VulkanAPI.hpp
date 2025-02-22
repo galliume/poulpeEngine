@@ -6,6 +6,9 @@
 
 #include "Poulpe/Renderer/Vulkan/DeviceMemoryPool.hpp"
 
+#include <ft2build.h>
+#include FT_FREETYPE_H
+
 #include <ktx.h>
 #include <stb_image.h>
 
@@ -423,6 +426,17 @@ namespace Poulpe {
 
     VkImageView createKTXImageView(
       ktxTexture2* ktx_texture,
+      VkImage& image,
+      VkImageAspectFlags aspect_flags);
+
+    //Font
+    void createFontImage(
+      VkCommandBuffer& cmd_buffer,
+      FT_Face face,
+      VkImage& image);
+
+    VkImageView createFontImageView(
+      FT_Face face,
       VkImage& image,
       VkImageAspectFlags aspect_flags);
 

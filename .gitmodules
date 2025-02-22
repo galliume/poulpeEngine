@@ -25,3 +25,6 @@
 [submodule "vendor/assimp"]
 	path = vendor/assimp
 	url = https://github.com/assimp/assimp
+[submodule "vendor/freeType"]
+	path = vendor/freeType
+	url = https://gitlab.freedesktop.org/freetype/freetype.git

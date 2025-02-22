@@ -148,8 +148,8 @@ namespace Poulpe
       PLP_WARN("Error while transcoding KTX file: {} error: {}", path, ktxErrorString(result));
     }
 
-    VkCommandPool commandPool = _renderer->getAPI()->createCommandPool();
-    VkCommandBuffer cmd_buffer = _renderer->getAPI()->allocateCommandBuffers(commandPool)[0];
+    VkCommandPool cmd_pool = _renderer->getAPI()->createCommandPool();
+    VkCommandBuffer cmd_buffer = _renderer->getAPI()->allocateCommandBuffers(cmd_pool)[0];
     VkImage texture_image = nullptr;
 
     _renderer->getAPI()->createKTXImage(cmd_buffer, ktx_texture, texture_image);
@@ -168,8 +168,8 @@ namespace Poulpe
 
     _textures.emplace(name, texture);
 
-    vkFreeCommandBuffers(_renderer->getDevice(), commandPool, 1, &cmd_buffer);
-    vkDestroyCommandPool(_renderer->getDevice(), commandPool, nullptr);
+    vkFreeCommandBuffers(_renderer->getDevice(), cmd_pool, 1, &cmd_buffer);
+    vkDestroyCommandPool(_renderer->getDevice(), cmd_pool, nullptr);
   }
 
   void TextureManager::clear()

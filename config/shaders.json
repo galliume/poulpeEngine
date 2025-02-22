@@ -48,6 +48,13 @@
       "geom": "",
       "tesc": "assets/shaders/spv/water_tesc.spv",
       "tese": "assets/shaders/spv/water_tese.spv"
+    },
+    "text": {
+      "vert": "assets/shaders/spv/text_vert.spv",
+      "frag": "assets/shaders/spv/text_frag.spv",
+      "geom": "",
+      "tesc": "",
+      "tese": ""
     }
   }
 }

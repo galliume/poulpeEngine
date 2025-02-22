@@ -6,6 +6,7 @@
 #include "Poulpe/Manager/ComponentManager.hpp"
 #include "Poulpe/Manager/DestroyManager.hpp"
 #include "Poulpe/Manager/EntityManager.hpp"
+#include "Poulpe/Manager/FontManager.hpp"
 #include "Poulpe/Manager/LightManager.hpp"
 #include "Poulpe/Manager/ShaderManager.hpp"
 #include "Poulpe/Manager/TextureManager.hpp"
@@ -54,6 +55,7 @@ namespace Poulpe
     void prepareSkybox();
     void prepareTerrain();
     void prepareWater();
+    void prepareText();
 
   private:
     std::string _current_level;
@@ -70,6 +72,7 @@ namespace Poulpe
     std::unique_ptr<ComponentManager> _component_manager;
     std::unique_ptr<DestroyManager> _destroy_manager;
     std::unique_ptr<EntityManager> _entity_manager;
+    std::unique_ptr<FontManager> _font_manager;
     std::unique_ptr<LightManager> _light_manager;
     std::unique_ptr<ShaderManager> _shader_manager;
     std::unique_ptr<TextureManager> _texture_manager;
