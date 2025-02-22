@@ -103,6 +103,7 @@ endif()
   
 target_include_directories(${PROJECT_NAME} PRIVATE
           ${PROJECT_SOURCE_DIR}/vendor/assimp/include
+          ${PROJECT_SOURCE_DIR}/vendor/freeType/include
           ${PROJECT_SOURCE_DIR}/vendor/glm
           ${PROJECT_SOURCE_DIR}/vendor/lua
           ${PROJECT_SOURCE_DIR}/vendor/miniaudio
@@ -113,6 +114,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE
           ${KTX_PATH})
 
 add_subdirectory(${PROJECT_SOURCE_DIR}/vendor/assimp)
+add_subdirectory(${PROJECT_SOURCE_DIR}/vendor/freeType)
 add_subdirectory(${PROJECT_SOURCE_DIR}/vendor/glfw)
 add_subdirectory(${PROJECT_SOURCE_DIR}/vendor/glm)
 add_subdirectory(${PROJECT_SOURCE_DIR}/vendor/nlohmann)
@@ -169,6 +171,7 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
   list(APPEND EXTRA_LIBS Ws2_32 user32)
 endif()
 
+list(APPEND EXTRA_LIBS freetype)
 list(APPEND EXTRA_LIBS glfw)
 list(APPEND EXTRA_LIBS glm::glm)
 list(APPEND EXTRA_LIBS lua)
@@ -216,6 +219,12 @@ set_target_properties(spdlog PROPERTIES
   ARCHIVE_OUTPUT_DIRECTORY ${PLP_BIN_DIR}
 )
 set_target_properties(volk PROPERTIES
+  LIBRARY_OUTPUT_DIRECTORY ${PLP_BIN_DIR}
+  RUNTIME_OUTPUT_DIRECTORY ${PLP_BIN_DIR}
+  ARCHIVE_OUTPUT_DIRECTORY ${PLP_BIN_DIR}
+)
+
+set_target_properties(freetype PROPERTIES
   LIBRARY_OUTPUT_DIRECTORY ${PLP_BIN_DIR}
   RUNTIME_OUTPUT_DIRECTORY ${PLP_BIN_DIR}
   ARCHIVE_OUTPUT_DIRECTORY ${PLP_BIN_DIR}

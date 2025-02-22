@@ -23,6 +23,8 @@ set(SRC_LIST ${CMAKE_CURRENT_SOURCE_DIR}/AudioManager.cpp
              ${CMAKE_CURRENT_SOURCE_DIR}/NetworkManager.cpp
              ${CMAKE_CURRENT_SOURCE_DIR}/NetworkManager.hpp
              ${CMAKE_CURRENT_SOURCE_DIR}/APIManager.cpp
-             ${CMAKE_CURRENT_SOURCE_DIR}/APIManager.hpp)
+             ${CMAKE_CURRENT_SOURCE_DIR}/APIManager.hpp
+             ${CMAKE_CURRENT_SOURCE_DIR}/FontManager.cpp
+             ${CMAKE_CURRENT_SOURCE_DIR}/FontManager.hpp)
 
 target_sources(PoulpeEngine PRIVATE ${SRC_LIST})

@@ -74,7 +74,7 @@ print_text "Compiling shaders"
 #@todo read from config/shaders.json
 shaders=("main_basic" "main_basic_no_texture" "skybox"
         "shadowMap" "shadowMapSpot" "normal" "terrain"
-        "water")
+        "water" "text")
 
 for shader in ${shaders[@]}; do
     compile ${shader} "vert"

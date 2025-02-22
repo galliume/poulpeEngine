@@ -1,12 +1,5 @@
 #include "RenderManager.hpp"
 
-#include "AudioManager.hpp"
-#include "ComponentManager.hpp"
-#include "EntityManager.hpp"
-#include "LightManager.hpp"
-#include "ShaderManager.hpp"
-#include "TextureManager.hpp"
-
 #include "Poulpe/Component/AnimationComponent.hpp"
 #include "Poulpe/Component/BoneAnimationComponent.hpp"
 #include "Poulpe/Component/MeshComponent.hpp"
@@ -47,6 +40,10 @@ namespace Poulpe
     _renderer->addCamera(_camera.get());
     _destroy_manager->setRenderer(_renderer.get());
     _destroy_manager->addMemoryPool(_renderer->getAPI()->getDeviceMemoryPool());
+
+    _font_manager = std::make_unique<FontManager>();
+    _font_manager->addRenderer(_renderer.get());
+    _font_manager->load();
 
     //@todo, those managers should not have the usage of the renderer...
     _texture_manager->addRenderer(_renderer.get());
@@ -108,6 +105,7 @@ namespace Poulpe
     prepareSkybox();
     prepareTerrain();
     prepareWater();
+    prepareText();
     //prepareHUD();
   }
 
@@ -265,20 +263,20 @@ namespace Poulpe
 
   void RenderManager::prepareSkybox()
   {
-    auto skybox_entity = std::make_unique<Entity>();
-    auto skybox_mesh = std::make_unique<Mesh>();
-    skybox_mesh->setHasShadow(false);
-    skybox_mesh->setIsIndexed(false);
+    auto entity = std::make_unique<Entity>();
+    auto mesh = std::make_unique<Mesh>();
+    mesh->setHasShadow(false);
+    mesh->setIsIndexed(false);
 
-    auto skybox_rdr_impl{ RendererFactory::create<Skybox>() };
-    skybox_rdr_impl->init(_renderer.get(), _texture_manager.get(), nullptr);
+    auto rdr_impl{ RendererFactory::create<Skybox>() };
+    rdr_impl->init(_renderer.get(), _texture_manager.get(), nullptr);
 
     double const delta_time{ 0.0 };
-    (*skybox_rdr_impl)(delta_time, skybox_mesh.get());
+    (*rdr_impl)(delta_time, mesh.get());
 
-    _component_manager->add<RenderComponent>(skybox_entity->getID(), std::move(skybox_rdr_impl));
-    _component_manager->add<MeshComponent>(skybox_entity->getID(), std::move(skybox_mesh));
-    _entity_manager->setSkybox(std::move(skybox_entity));
+    _component_manager->add<RenderComponent>(entity->getID(), std::move(rdr_impl));
+    _component_manager->add<MeshComponent>(entity->getID(), std::move(mesh));
+    _entity_manager->setSkybox(std::move(entity));
   }
 
   void RenderManager::prepareTerrain()
@@ -326,5 +324,29 @@ namespace Poulpe
     _entity_manager->setWater(std::move(entity));
 
     _renderer->addTransparentEntity(_entity_manager->getWater(), true);
+  }
+
+  void RenderManager::prepareText()
+  {
+    auto entity = std::make_unique<Entity>();
+    auto mesh = std::make_unique<Mesh>();
+    mesh->setHasShadow(false);
+    mesh->setIsIndexed(false);
+    mesh->setShaderName("text");
+    mesh->setName("_plp_text");
+
+    auto rdr_impl{ RendererFactory::create<Text>() };
+    rdr_impl->init(_renderer.get(), _texture_manager.get(), nullptr);
+    rdr_impl->addFontManager(_font_manager.get());
+
+    double const delta_time{ 0.0 };
+    (*rdr_impl)(delta_time, mesh.get());
+
+    _component_manager->add<RenderComponent>(entity->getID(), std::move(rdr_impl));
+    _component_manager->add<MeshComponent>(entity->getID(), std::move(mesh));
+
+    _entity_manager->addText(std::move(entity));
+
+    _renderer->addTextEntity(_entity_manager->getText(0), true);
   }
 }
