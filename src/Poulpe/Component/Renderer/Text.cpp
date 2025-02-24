@@ -6,6 +6,17 @@ namespace Poulpe
 
   void Text::createDescriptorSet(Mesh* mesh)
   {
+    Texture atlas { _texture_manager->getTextures()["_plp_font_atlas"]};
+    
+    atlas.setSampler(_renderer->getAPI()->createKTXSampler(
+      TextureWrapMode::WRAP,
+      TextureWrapMode::WRAP,
+      0));
+
+    if (atlas.getWidth() == 0) {
+      atlas = _texture_manager->getTextures()["_plp_empty"];
+    }
+
     auto const sampler = _renderer->getAPI()->createKTXSampler(
       TextureWrapMode::CLAMP_TO_EDGE,
       TextureWrapMode::CLAMP_TO_EDGE,
@@ -14,7 +25,7 @@ namespace Poulpe
     std::vector<VkDescriptorImageInfo> image_infos{};
 
     auto ch = _font_manager->get('I');
-    image_infos.emplace_back(sampler, ch.texture.getImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+    image_infos.emplace_back(sampler, atlas.getImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
     auto const pipeline = _renderer->getPipeline(mesh->getShaderName());
     VkDescriptorSet descset = _renderer->getAPI()->createDescriptorSets(pipeline->desc_pool, { pipeline->descset_layout }, 1);
@@ -94,11 +105,11 @@ namespace Poulpe
     if (!mesh && !mesh->isDirty()) return;
   
     std::vector<Vertex> vertices;
-    float scale{100.0f};
-    float x{1000.0f};
-    float y{1000.0f};
+    float scale{5.0f};
+    float x{100.0f};
+    float y{100.0f};
 
-    auto ch = _font_manager->get('I');
+    auto ch = _font_manager->get('O');
 
     float xpos = x + ch.bearing.x * scale;
     float ypos = y - (ch.size.y - ch.bearing.y) * scale;
@@ -157,8 +168,8 @@ namespace Poulpe
     ubo.projection = glm::ortho(
       0.0f,
       static_cast<float>(_renderer->getAPI()->getSwapChainExtent().width),
-      0.0f,
-      static_cast<float>(_renderer->getAPI()->getSwapChainExtent().height));
+      static_cast<float>(_renderer->getAPI()->getSwapChainExtent().height),
+      0.0f);
 
     auto commandPool = _renderer->getAPI()->createCommandPool();
 
@@ -173,8 +184,8 @@ namespace Poulpe
 
     mesh->getData()->_ubos_offset.emplace_back(1);
     mesh->getUniformBuffers()->emplace_back(_renderer->getAPI()->createUniformBuffers(1, commandPool));
-    mesh->getMaterial().double_sided = true;
-    mesh->getMaterial().alpha_mode = 2.0;//BLEND
+    //mesh->getMaterial().double_sided = true;
+    mesh->getMaterial().alpha_mode = 0.0;//BLEND
 
     for (size_t i{ 0 }; i < mesh->getData()->_ubos.size(); ++i) {
       mesh->getData()->_ubos[i].projection = _renderer->getPerspective();

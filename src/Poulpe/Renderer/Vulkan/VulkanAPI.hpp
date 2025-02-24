@@ -6,8 +6,7 @@
 
 #include "Poulpe/Renderer/Vulkan/DeviceMemoryPool.hpp"
 
-#include <ft2build.h>
-#include FT_FREETYPE_H
+#include "Poulpe/Manager/FontManager.hpp"
 
 #include <ktx.h>
 #include <stb_image.h>
@@ -432,11 +431,10 @@ namespace Poulpe {
     //Font
     void createFontImage(
       VkCommandBuffer& cmd_buffer,
-      FT_Face face,
+      FontAtlas const& atlas,
       VkImage& image);
 
     VkImageView createFontImageView(
-      FT_Face face,
       VkImage& image,
       VkImageAspectFlags aspect_flags);
 

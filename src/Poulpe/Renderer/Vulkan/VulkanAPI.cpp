@@ -9,7 +9,6 @@
 
 #include "Poulpe/GUI/Window.hpp"
 
-
 //@todo this class needs a huge clean up
 namespace Poulpe {
 
@@ -2975,10 +2974,10 @@ namespace Poulpe {
   
   void VulkanAPI::createFontImage(
     VkCommandBuffer& cmd_buffer,
-    FT_Face face,
+    FontAtlas const& atlas,
     VkImage& image)
   {
-    auto const data_size{face->glyph->bitmap.width * face->glyph->bitmap.rows};
+    auto const data_size{ atlas.mem_size };
 
     VkBuffer buffer;
     VkDeviceMemory staging_device_memory;
@@ -3001,13 +3000,13 @@ namespace Poulpe {
 
     void* data;
     vkMapMemory(_device, staging_device_memory, 0, size, 0, &data);
-    memcpy(data,face->glyph->bitmap.buffer, static_cast<size_t>(size));
+    memcpy(data, atlas.flatten().data(), static_cast<size_t>(size));
     vkUnmapMemory(_device, staging_device_memory);
 
-    VkFormat const format = VK_FORMAT_R8_SRGB;
+    VkFormat const format{ VK_FORMAT_R8G8B8A8_SRGB };
     
-    auto const width { static_cast<uint32_t>(face->glyph->bitmap.width) };
-    auto const height { static_cast<uint32_t>(face->glyph->bitmap.rows) };
+    auto const width { static_cast<uint32_t>(atlas.width) };
+    auto const height { static_cast<uint32_t>(atlas.height) };
     auto const mip_lvl{ 1 };
 
     VkImageType image_type{VK_IMAGE_TYPE_2D};
@@ -3098,11 +3097,10 @@ namespace Poulpe {
   }
 
   VkImageView VulkanAPI::createFontImageView(
-    FT_Face face,
     VkImage& image,
     VkImageAspectFlags aspect_flags)
   {
-    VkFormat const format{ VK_FORMAT_R8_SRGB };
+    VkFormat const format{ VK_FORMAT_R8G8B8A8_SRGB };
 
     VkImageViewCreateInfo create_info{};
     create_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
