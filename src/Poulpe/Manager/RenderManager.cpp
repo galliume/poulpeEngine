@@ -43,7 +43,9 @@ namespace Poulpe
 
     _font_manager = std::make_unique<FontManager>();
     _font_manager->addRenderer(_renderer.get());
-    _font_manager->load();
+    auto atlas = _font_manager->load();
+
+    _texture_manager->addTexture(atlas);
 
     //@todo, those managers should not have the usage of the renderer...
     _texture_manager->addRenderer(_renderer.get());
