@@ -44,6 +44,7 @@ namespace Poulpe
     std::function<void(std::latch& count_down)> loadSkybox(std::string_view skybox);
     Texture getTerrainTexture() { return _textures[_terrain_name]; }
     Texture getWaterTexture() { return _textures[_water_name]; }
+    void addTexture(Texture texture) { _textures[texture.getName()] = std::move(texture); }
 
   private:
     void add(

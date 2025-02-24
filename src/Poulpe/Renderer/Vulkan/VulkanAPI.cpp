@@ -1,5 +1,7 @@
 #include "VulkanAPI.hpp"
 
+#include "Poulpe/Manager/FontManager.hpp"
+
 #include <iostream>
 #include <filesystem>
 #include <set>
@@ -65,6 +67,7 @@ namespace Poulpe {
     return VK_FALSE;
   }
 
+  
   VulkanAPI::VulkanAPI(Window* window)
     : _window(window)
   {
@@ -2974,10 +2977,19 @@ namespace Poulpe {
   
   void VulkanAPI::createFontImage(
     VkCommandBuffer& cmd_buffer,
-    FontAtlas const& atlas,
+    std::unordered_map<char, FontCharacter> const& characters,
     VkImage& image)
-  {
-    auto const data_size{ atlas.mem_size };
+  {;
+
+    size_t width{ 0 };
+    size_t height{ 0 };
+    
+    for (auto const& [name, character] : characters) {
+      width += character.size.x;
+      height += character.size.y;
+    }
+
+    auto const data_size{ width * height * 4};
 
     VkBuffer buffer;
     VkDeviceMemory staging_device_memory;
@@ -2998,28 +3010,32 @@ namespace Poulpe {
 
     VkDeviceSize const size { mem_requirements.size};
 
-    void* data;
-    vkMapMemory(_device, staging_device_memory, 0, size, 0, &data);
-    memcpy(data, atlas.flatten().data(), static_cast<size_t>(size));
-    vkUnmapMemory(_device, staging_device_memory);
+    unsigned char* data;
 
-    VkFormat const format{ VK_FORMAT_R8G8B8A8_SRGB };
+    vkMapMemory(_device, staging_device_memory, 0, size, 0, (void**) & data);
     
-    auto const width { static_cast<uint32_t>(atlas.width) };
-    auto const height { static_cast<uint32_t>(atlas.height) };
-    auto const mip_lvl{ 1 };
+    VkDeviceSize offset{0};
+    for (auto const& [name, character] : characters) {
+      
+      auto const size{ character.buffer.size() };
+      memcpy(data + offset, character.buffer.data(), size);
 
-    VkImageType image_type{VK_IMAGE_TYPE_2D};
+      offset += size;
+    }
+    
+    vkUnmapMemory(_device, staging_device_memory);
+    
+    auto const mip_lvl{ 1 };
 
     VkImageCreateInfo image_info{};
     image_info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
-    image_info.imageType = image_type;
+    image_info.imageType = VK_IMAGE_TYPE_2D;
     image_info.extent.width = width;
     image_info.extent.height = height;
     image_info.extent.depth = 1;
     image_info.mipLevels = mip_lvl;
     image_info.arrayLayers = 1;
-    image_info.format = format;
+    image_info.format = PLP_VK_FORMAT_FONT;
     image_info.tiling = VK_IMAGE_TILING_OPTIMAL;
     image_info.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
     image_info.usage = VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
@@ -3085,8 +3101,6 @@ namespace Poulpe {
       buffer_copy_regions.size(),
       buffer_copy_regions.data());
 
-    generateMipmaps(cmd_buffer, format, image, width, height, mip_lvl);
-
     endCommandBuffer(cmd_buffer);
     queueSubmit(cmd_buffer);
     
@@ -3100,18 +3114,16 @@ namespace Poulpe {
     VkImage& image,
     VkImageAspectFlags aspect_flags)
   {
-    VkFormat const format{ VK_FORMAT_R8G8B8A8_SRGB };
-
     VkImageViewCreateInfo create_info{};
     create_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
     create_info.image = image;
     create_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
 
-    create_info.format = format;
+    create_info.format = PLP_VK_FORMAT_FONT;
     create_info.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
     create_info.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
     create_info.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
-    create_info.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
+    create_info.components.a = VK_COMPONENT_SWIZZLE_ONE;
 
     create_info.subresourceRange.aspectMask = aspect_flags;
     create_info.subresourceRange.baseMipLevel = 0;

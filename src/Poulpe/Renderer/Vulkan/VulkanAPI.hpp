@@ -6,8 +6,6 @@
 
 #include "Poulpe/Renderer/Vulkan/DeviceMemoryPool.hpp"
 
-#include "Poulpe/Manager/FontManager.hpp"
-
 #include <ktx.h>
 #include <stb_image.h>
 
@@ -52,6 +50,8 @@ namespace Poulpe {
     bool has_stencil_test{ false };
     bool is_patch_list{ false };
   };
+
+  struct FontCharacter;
 
   class VulkanAPI
   {
@@ -431,7 +431,7 @@ namespace Poulpe {
     //Font
     void createFontImage(
       VkCommandBuffer& cmd_buffer,
-      FontAtlas const& atlas,
+      std::unordered_map<char, FontCharacter> const& characters,
       VkImage& image);
 
     VkImageView createFontImageView(
@@ -458,6 +458,7 @@ namespace Poulpe {
     VkFormat PLP_VK_FORMAT_DEPTH { VK_FORMAT_D32_SFLOAT }; //VK_FORMAT_D16_UNORM
     //VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT
     VkFormat PLP_VK_FORMAT_DEPTH_STENCIL { VK_FORMAT_D32_SFLOAT_S8_UINT };
+    VkFormat PLP_VK_FORMAT_FONT{ VK_FORMAT_R8G8B8A8_SRGB };
 
 private:
     bool isDeviceSuitable(VkPhysicalDevice& device);
