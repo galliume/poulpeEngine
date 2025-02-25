@@ -21,6 +21,7 @@ namespace Poulpe
     long advance;
     unsigned int mem_size{ 0 };
     std::vector<unsigned char> buffer;
+    int pitch{ 0 };
     int x_offset{ 0 };
     int y_offset{ 0 };
   };
@@ -30,6 +31,9 @@ namespace Poulpe
   public:
 
     std::unordered_map<char, FontCharacter> characters;
+
+    size_t getAtlasWidth() const { return _atlas_width; }
+    size_t getAtlasHeight() const { return _atlas_height; }
 
     FontManager() = default;
     ~FontManager() ;
@@ -42,5 +46,8 @@ namespace Poulpe
 
   private:
     Renderer* _renderer{ nullptr };
+
+    size_t _atlas_width{ 0 };
+    size_t _atlas_height{ 0 };
   };
 }

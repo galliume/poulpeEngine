@@ -23,7 +23,7 @@ namespace Poulpe
     }
 
     //FT_Set_Pixel_Sizes(face, 0, 48);
-    //FT_Set_Char_Size(face, 0, 16 * 64, 96, 96);
+    FT_Set_Char_Size(face, 0, 16 * 64, 96, 96);
 
 
     if (FT_Load_Char(face, 'X', FT_LOAD_RENDER))
@@ -38,14 +38,15 @@ namespace Poulpe
     auto offset{0.0f};
     int x_offset{ 0 };
     int y_offset{ 0 };
-    int const max_row_width{ 64 };
+    int const max_row_width{ 256 };
     int max_row_height{ 0 };
     
+    _atlas_width = max_row_width;
+
     //FT_Set_Pixel_Sizes(face, 10, 10); //@todo find good pixel size
 
     int a = 0;
-    for (FT_ULong c = 0; c < 128; c++) {
-      if (a != 0) continue;
+    for (FT_ULong c = 0; c < face->num_glyphs; c++) {
 
       if (FT_Load_Char(face, c, FT_LOAD_RENDER)) {
         PLP_ERROR("FREETYTPE: Failed to load Glyph");
@@ -70,8 +71,9 @@ namespace Poulpe
 
       auto const glyph_width { face_glyph->bitmap.width };
       auto const glyph_height { face_glyph->bitmap.rows };
+      auto const glyph_pitch{ face_glyph->bitmap.pitch };
 
-      std::vector<unsigned char> r_buffer{};
+    std::vector<unsigned char> r_buffer{};
       r_buffer.resize(glyph_width * glyph_height * 4, 0);
 
       auto buffer = face_glyph->bitmap.buffer;
@@ -88,16 +90,17 @@ namespace Poulpe
           r_buffer[index++] = 0xff;
           r_buffer[index++] = gray_value;
         }
-        glyph += face_glyph->bitmap.pitch;
+        glyph += glyph_pitch;
       }
 
       FontCharacter character {
         c,
-        glm::ivec2(face->glyph->bitmap.width, face->glyph->bitmap.rows),
-        glm::ivec2(face->glyph->bitmap_left, face->glyph->bitmap_top),
-        face->glyph->advance.x,
-        face->glyph->bitmap.width * face->glyph->bitmap.rows,
+        glm::ivec2(glyph_width, glyph_height),
+        glm::ivec2(face_glyph->bitmap_left, face_glyph->bitmap_top),
+        face_glyph->advance.x,
+        glyph_width * glyph_height,
         r_buffer,
+        glyph_pitch,
         0,
         0
       };
@@ -106,7 +109,8 @@ namespace Poulpe
      
       if (x_offset + character.size.x >= max_row_width) {
         x_offset = 0;
-        y_offset += max_row_height;
+        y_offset += max_row_height + 1;
+        _atlas_height += max_row_height + 1;
         max_row_height = 0;
       }
 
@@ -116,15 +120,17 @@ namespace Poulpe
 
       characters[c] = character;
 
-      offset += face->glyph->bitmap.width + 1;
+      offset += face->glyph->bitmap.width;
       a += 1;
     }
+
+    _atlas_height += max_row_height;
 
     FT_Done_Face(face);
     FT_Done_FreeType(ft);
 
     VkImage image = nullptr;
-    _renderer->getAPI()->createFontImage(cmd_buffer, characters, image);
+    _renderer->getAPI()->createFontImage(cmd_buffer, characters, _atlas_width, _atlas_height, image);
 
     VkImageView imageview = _renderer->getAPI()->createFontImageView(image, VK_IMAGE_ASPECT_COLOR_BIT);
 

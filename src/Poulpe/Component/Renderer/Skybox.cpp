@@ -94,19 +94,19 @@ namespace Poulpe
     //ubo.view = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
     ubo.projection = _renderer->getPerspective();
 
-    auto commandPool = _renderer->getAPI()->createCommandPool();
+    auto cmd_pool = _renderer->getAPI()->createCommandPool();
 
     Data data;
     data._textures.emplace_back("skybox");
     data._vertices = skyVertices;
-    data._vertex_buffer = _renderer->getAPI()->createVertexBuffer(commandPool, skyVertices);
+    data._vertex_buffer = _renderer->getAPI()->createVertexBuffer(cmd_pool, skyVertices);
     data._ubos.emplace_back(ubo);
     data._texture_index = 0;
 
-    Buffer uniform_buffer = _renderer->getAPI()->createUniformBuffers(1, commandPool);
+    Buffer uniform_buffer = _renderer->getAPI()->createUniformBuffers(1, cmd_pool);
     mesh->getUniformBuffers()->emplace_back(uniform_buffer);
 
-    vkDestroyCommandPool(_renderer->getDevice(), commandPool, nullptr);
+    vkDestroyCommandPool(_renderer->getDevice(), cmd_pool, nullptr);
 
     mesh->setName("skybox");
     mesh->setShaderName("skybox");
