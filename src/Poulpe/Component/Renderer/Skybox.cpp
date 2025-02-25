@@ -45,7 +45,7 @@ namespace Poulpe
   {
     if (!mesh && !mesh->isDirty()) return;
 
-    std::vector<Vertex> const skyVertices {
+    std::vector<Vertex> const vertices {
       {{-1.0f,  1.0f, -1.0f }, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f} },
       {{-1.0f, -1.0f, -1.0f }, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f} },
       {{ 1.0f, -1.0f, -1.0f }, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f} },
@@ -98,8 +98,8 @@ namespace Poulpe
 
     Data data;
     data._textures.emplace_back("skybox");
-    data._vertices = skyVertices;
-    data._vertex_buffer = _renderer->getAPI()->createVertexBuffer(cmd_pool, skyVertices);
+    data._vertices = vertices;
+    data._vertex_buffer = _renderer->getAPI()->createVertexBuffer(cmd_pool, vertices);
     data._ubos.emplace_back(ubo);
     data._texture_index = 0;
 
