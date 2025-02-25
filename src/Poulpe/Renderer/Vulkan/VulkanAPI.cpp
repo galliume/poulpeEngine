@@ -2978,16 +2978,10 @@ namespace Poulpe {
   void VulkanAPI::createFontImage(
     VkCommandBuffer& cmd_buffer,
     std::unordered_map<char, FontCharacter> const& characters,
+    size_t const width,
+    size_t const height,
     VkImage& image)
   {;
-
-    size_t width{ 0 };
-    size_t height{ 0 };
-    
-    for (auto const& [name, character] : characters) {
-      width += character.size.x;
-      height += character.size.y;
-    }
 
     auto const data_size{ width * height * 4};
 
@@ -3014,15 +3008,23 @@ namespace Poulpe {
 
     vkMapMemory(_device, staging_device_memory, 0, size, 0, (void**) & data);
     
-    VkDeviceSize offset{0};
-    for (auto const& [name, character] : characters) {
-      
-      auto const size{ character.buffer.size() };
-      memcpy(data + offset, character.buffer.data(), size);
+    int offset {0};
 
-      offset += size;
+    for (auto const& [name, character] : characters) {
+
+      auto const glyph_width{ character.size.x };
+      auto const glyph_height{ character.size.y };
+      auto buffer = character.buffer.data();
+
+      for (int y{ 0 }; y < glyph_height; y++) {
+        memcpy(
+          data + ((y + character.y_offset) * width + character.x_offset) * 4,
+          buffer + (y * glyph_width * 4),
+          glyph_width * 4
+        );
+      }
     }
-    
+
     vkUnmapMemory(_device, staging_device_memory);
     
     auto const mip_lvl{ 1 };
@@ -3041,7 +3043,7 @@ namespace Poulpe {
     image_info.usage = VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
     image_info.samples = VK_SAMPLE_COUNT_1_BIT;
     image_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-
+    
     VkResult result{ VK_SUCCESS };
     result = vkCreateImage(_device, & image_info, nullptr, &image);
 
@@ -3090,6 +3092,9 @@ namespace Poulpe {
     region.imageExtent.width =  width;
     region.imageExtent.height = height;
     region.imageExtent.depth = 1;
+    region.bufferRowLength = width;
+    region.bufferImageHeight = height;
+    region.imageOffset = { 0, 0, 0 };
 
     buffer_copy_regions.emplace_back(region);
 

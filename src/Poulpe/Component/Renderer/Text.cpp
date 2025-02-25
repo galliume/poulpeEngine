@@ -23,8 +23,6 @@ namespace Poulpe
       1);
  
     std::vector<VkDescriptorImageInfo> image_infos{};
-
-    auto ch = _font_manager->get('I');
     image_infos.emplace_back(sampler, atlas.getImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
     auto const pipeline = _renderer->getPipeline(mesh->getShaderName());
@@ -105,11 +103,11 @@ namespace Poulpe
     if (!mesh && !mesh->isDirty()) return;
   
     std::vector<Vertex> vertices;
-    float scale{5.0f};
-    float x{100.0f};
-    float y{100.0f};
+    float scale{1.0f};
+    float x{-100.0f};
+    float y{-100.0f};
 
-    auto ch = _font_manager->get('O');
+    auto ch = _font_manager->get('I');
 
     float xpos = x + ch.bearing.x * scale;
     float ypos = y - (ch.size.y - ch.bearing.y) * scale;
@@ -117,81 +115,90 @@ namespace Poulpe
     float w = ch.size.x * scale;
     float h = ch.size.y * scale;
 
-    Vertex v{
+    float const width { static_cast<float>(_font_manager->getAtlasWidth()) };
+    float const height { static_cast<float>(_font_manager->getAtlasHeight()) };
+
+    float u0 { ch.x_offset / width };
+    float v0 { ch.y_offset / height };
+    float u1 { (ch.x_offset + ch.size.x) / width };
+    float v1 { (ch.y_offset + ch.size.y) / height };
+
+    Vertex top_left_1{
       { xpos, ypos + h, 0.0f},
-      {1.0f, 1.0f, 0.0f}, { 0.0f, 0.0f },
+      {1.0f, 1.0f, 0.0f}, { u0, v1 },
       {0.0f, 0.0f, 0.0f, 0.0f},
       { 0.0, 0.0f, 0.0f, 0.0f} };
 
-    Vertex v1{
+    Vertex bottom_left_1{
       { xpos, ypos, 0.0f},
-      {1.0f, 1.0f, 0.0f}, { 0.0f, 1.0f },
+      {1.0f, 1.0f, 0.0f}, { u0, v0 },
       {0.0f, 0.0f, 0.0f, 0.0f},
       { 0.0, 0.0f, 0.0f, 0.0f} };
 
-    Vertex v2{
+    Vertex top_right_1{
       { xpos + w, ypos, 0.0f},
-      {1.0f, 1.0f, 0.0f}, { 1.0f, 1.0f },
+      {1.0f, 1.0f, 0.0f}, { u1, v1 },
       {0.0f, 0.0f, 0.0f, 0.0f},
       { 0.0, 0.0f, 0.0f, 0.0f} };
 
-    Vertex v3{
+    Vertex bottom_left_2{
       { xpos, ypos + h, 0.0f},
-      {1.0f, 1.0f, 0.0f}, { 0.0f, 0.0f },
+      {1.0f, 1.0f, 0.0f}, { u0, v0 },
       {0.0f, 0.0f, 0.0f, 0.0f},
       { 0.0, 0.0f, 0.0f, 0.0f} };
 
-    Vertex v4{
+    Vertex bottom_right_2{
       { xpos + w, ypos, 0.0f},
-      {1.0f, 1.0f, 0.0f}, { 1.0f, 1.0f },
+      {1.0f, 1.0f, 0.0f}, { u1, v0 },
       {0.0f, 0.0f, 0.0f, 0.0f},
       { 0.0, 0.0f, 0.0f, 0.0f} };
 
-    Vertex v5{
+    Vertex top_right_2{
       { xpos + w, ypos + h, 0.0f},
-      {1.0f, 1.0f, 0.0f}, { 1.0f, 0.0f },
+      {1.0f, 1.0f, 0.0f}, { u1, v1 },
       {0.0f, 0.0f, 0.0f, 0.0f},
       { 0.0, 0.0f, 0.0f, 0.0f} };
 
-    vertices.emplace_back(v);
-    vertices.emplace_back(v1);
-    vertices.emplace_back(v2);
-    vertices.emplace_back(v3);
-    vertices.emplace_back(v4);
-    vertices.emplace_back(v5);
+    vertices.emplace_back(top_left_1);
+    vertices.emplace_back(bottom_left_1);
+    vertices.emplace_back(top_right_1);
+    vertices.emplace_back(bottom_left_2);
+    vertices.emplace_back(bottom_right_2);
+    vertices.emplace_back(top_right_2);
 
     x += (ch.advance >> 6) * scale;
 
-    UniformBufferObject ubo;
-    ubo.model = glm::mat4(1.0f);
-
-    ubo.projection = glm::ortho(
+    glm::mat4 projection{glm::ortho(
       0.0f,
       static_cast<float>(_renderer->getAPI()->getSwapChainExtent().width),
       static_cast<float>(_renderer->getAPI()->getSwapChainExtent().height),
-      0.0f);
+      0.0f)};
 
-    auto commandPool = _renderer->getAPI()->createCommandPool();
+    UniformBufferObject ubo;
+    ubo.model = glm::mat4(1.0f);
+    ubo.projection = projection;
+
+    auto cmd_pool = _renderer->getAPI()->createCommandPool();
 
     auto const& data = mesh->getData();
 
     data->_vertices = vertices;
     //data->_indices = indices;
 
-    data->_vertex_buffer = _renderer->getAPI()->createVertexBuffer(commandPool, vertices);
+    data->_vertex_buffer = _renderer->getAPI()->createVertexBuffer(cmd_pool, vertices);
     data->_texture_index = 0;
     data->_ubos.emplace_back(ubo);
 
     mesh->getData()->_ubos_offset.emplace_back(1);
-    mesh->getUniformBuffers()->emplace_back(_renderer->getAPI()->createUniformBuffers(1, commandPool));
+    mesh->getUniformBuffers()->emplace_back(_renderer->getAPI()->createUniformBuffers(1, cmd_pool));
     //mesh->getMaterial().double_sided = true;
     mesh->getMaterial().alpha_mode = 0.0;//BLEND
 
     for (size_t i{ 0 }; i < mesh->getData()->_ubos.size(); ++i) {
-      mesh->getData()->_ubos[i].projection = _renderer->getPerspective();
+      mesh->getData()->_ubos[i].projection = projection;
     }
 
-    vkDestroyCommandPool(_renderer->getDevice(), commandPool, nullptr);
+    vkDestroyCommandPool(_renderer->getDevice(), cmd_pool, nullptr);
 
     unsigned int min{ 0 };
     unsigned int max{ 0 };
