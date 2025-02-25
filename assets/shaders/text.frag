@@ -11,6 +11,6 @@ layout(binding = 1) uniform sampler2D tex_sampler[1];
 
 void main()
 {
-  vec4 sampled = vec4(1.0, 1.0, 1.0, texture(tex_sampler[0], in_tex_coords).r);
-  final_color = vec4(1.0, 1.0, 1.0, 1.0) * sampled;
+  vec4 sampled = texture(tex_sampler[0], in_tex_coords);
+  final_color = vec4(in_color, 1.0) * sampled;
 }

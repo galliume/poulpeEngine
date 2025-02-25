@@ -8,6 +8,13 @@ struct UBO
   mat4 projection;
 };
 
+layout(push_constant) uniform constants
+{
+    mat4 view;
+    vec3 view_position;
+    vec4 options;
+} pc;
+
 layout(set = 0, binding = 0) uniform UniformBufferObject {
   UBO ubo;
 };
@@ -21,7 +28,9 @@ layout(location = 1) out vec3 out_color;
 
 void main()
 {
-  gl_Position = ubo.projection * vec4(position.xy, 0.0, 1.0);
+  vec4 p = ubo.projection * vec4(position, 1.0);
+  //vec4 p = ubo.projection * pc.view * vec4(position, 1.0);
+  gl_Position = p;
   out_tex_coords = texture_coord;
   out_color = color;
 }

@@ -104,75 +104,89 @@ namespace Poulpe
   
     std::vector<Vertex> vertices;
     float scale{1.0f};
-    float x{-100.0f};
-    float y{-100.0f};
+    float x{100.0f};
+    float y{100.0f};
 
-    auto ch = _font_manager->get('I');
+    std::string text{ "PoulpeEngine @ € $ 0 1 2 3 4 5 6 7 8 9" };
+    std::string::const_iterator c;
 
-    float xpos = x + ch.bearing.x * scale;
-    float ypos = y - (ch.size.y - ch.bearing.y) * scale;
+    for (c = text.begin(); c != text.end(); c++) {
+      auto ch = _font_manager->get(*c);
 
-    float w = ch.size.x * scale;
-    float h = ch.size.y * scale;
+      if (ch.size.x == 0 && ch.size.y == 0) {
+        x += 5;
+        continue;
+      }
 
-    float const width { static_cast<float>(_font_manager->getAtlasWidth()) };
-    float const height { static_cast<float>(_font_manager->getAtlasHeight()) };
+      float xpos = x + ch.bearing.x * scale;
+      float ypos = y - ch.bearing.y * scale;
 
-    float u0 { ch.x_offset / width };
-    float v0 { ch.y_offset / height };
-    float u1 { (ch.x_offset + ch.size.x) / width };
-    float v1 { (ch.y_offset + ch.size.y) / height };
+      float w = ch.size.x * scale;
+      float h = ch.size.y * scale;
 
-    Vertex top_left_1{
-      { xpos, ypos + h, 0.0f},
-      {1.0f, 1.0f, 0.0f}, { u0, v1 },
-      {0.0f, 0.0f, 0.0f, 0.0f},
-      { 0.0, 0.0f, 0.0f, 0.0f} };
+      float const width{ static_cast<float>(_font_manager->getAtlasWidth()) };
+      float const height{ static_cast<float>(_font_manager->getAtlasHeight()) };
 
-    Vertex bottom_left_1{
-      { xpos, ypos, 0.0f},
-      {1.0f, 1.0f, 0.0f}, { u0, v0 },
-      {0.0f, 0.0f, 0.0f, 0.0f},
-      { 0.0, 0.0f, 0.0f, 0.0f} };
+      float u0{ ch.x_offset / width };
+      float v0{ (ch.y_offset + ch.size.y) / height };
+      float u1{ (ch.x_offset + ch.size.x) / width };
+      float v1{ ch.y_offset / height };
 
-    Vertex top_right_1{
-      { xpos + w, ypos, 0.0f},
-      {1.0f, 1.0f, 0.0f}, { u1, v1 },
-      {0.0f, 0.0f, 0.0f, 0.0f},
-      { 0.0, 0.0f, 0.0f, 0.0f} };
+      glm::vec3 color{ 0.5, 0.3, 0.6 };
+      
+      Vertex vertex_1{
+        { xpos, ypos + h, 0.0f},
+        color, { u0, v0 },
+        {0.0f, 0.0f, 0.0f, 0.0f},
+        { 0.0, 0.0f, 0.0f, 0.0f} };
 
-    Vertex bottom_left_2{
-      { xpos, ypos + h, 0.0f},
-      {1.0f, 1.0f, 0.0f}, { u0, v0 },
-      {0.0f, 0.0f, 0.0f, 0.0f},
-      { 0.0, 0.0f, 0.0f, 0.0f} };
+      Vertex vertex_2{
+        { xpos, ypos, 0.0f},
+        color, { u0, v1 },
+        {0.0f, 0.0f, 0.0f, 0.0f},
+        { 0.0, 0.0f, 0.0f, 0.0f} };
 
-    Vertex bottom_right_2{
-      { xpos + w, ypos, 0.0f},
-      {1.0f, 1.0f, 0.0f}, { u1, v0 },
-      {0.0f, 0.0f, 0.0f, 0.0f},
-      { 0.0, 0.0f, 0.0f, 0.0f} };
+      Vertex vertex_3{
+        { xpos + w, ypos, 0.0f},
+        color, { u1, v1 },
+        {0.0f, 0.0f, 0.0f, 0.0f},
+        { 0.0, 0.0f, 0.0f, 0.0f} };
 
-    Vertex top_right_2{
-      { xpos + w, ypos + h, 0.0f},
-      {1.0f, 1.0f, 0.0f}, { u1, v1 },
-      {0.0f, 0.0f, 0.0f, 0.0f},
-      { 0.0, 0.0f, 0.0f, 0.0f} };
+      Vertex vertex_4{
+        { xpos, ypos + h, 0.0f},
+        color, { u0, v0 },
+        {0.0f, 0.0f, 0.0f, 0.0f},
+        { 0.0, 0.0f, 0.0f, 0.0f} };
 
-    vertices.emplace_back(top_left_1);
-    vertices.emplace_back(bottom_left_1);
-    vertices.emplace_back(top_right_1);
-    vertices.emplace_back(bottom_left_2);
-    vertices.emplace_back(bottom_right_2);
-    vertices.emplace_back(top_right_2);
+      Vertex vertex_5{
+        { xpos + w, ypos, 0.0f},
+        color, { u1, v1 },
+        {0.0f, 0.0f, 0.0f, 0.0f},
+        { 0.0, 0.0f, 0.0f, 0.0f} };
 
-    x += (ch.advance >> 6) * scale;
+      Vertex vertex_6{
+        { xpos + w, ypos + h, 0.0f},
+        color, { u1, v0 },
+        {0.0f, 0.0f, 0.0f, 0.0f},
+        { 0.0, 0.0f, 0.0f, 0.0f} };
 
-    glm::mat4 projection{glm::ortho(
+      vertices.emplace_back(vertex_1);
+      vertices.emplace_back(vertex_2);
+      vertices.emplace_back(vertex_3);
+      vertices.emplace_back(vertex_4);
+      vertices.emplace_back(vertex_5);
+      vertices.emplace_back(vertex_6);
+
+      x += (ch.advance >> 6) * scale;
+    }
+
+    glm::mat4 projection{ glm::ortho(
       0.0f,
       static_cast<float>(_renderer->getAPI()->getSwapChainExtent().width),
-      static_cast<float>(_renderer->getAPI()->getSwapChainExtent().height),
-      0.0f)};
+      0.0f,
+      static_cast<float>(_renderer->getAPI()->getSwapChainExtent().height)) };
+    
+    //glm::mat4 projection{_renderer->getPerspective()};
 
     UniformBufferObject ubo;
     ubo.model = glm::mat4(1.0f);
@@ -192,7 +206,7 @@ namespace Poulpe
     mesh->getData()->_ubos_offset.emplace_back(1);
     mesh->getUniformBuffers()->emplace_back(_renderer->getAPI()->createUniformBuffers(1, cmd_pool));
     //mesh->getMaterial().double_sided = true;
-    mesh->getMaterial().alpha_mode = 0.0;//BLEND
+    mesh->getMaterial().alpha_mode = 2.0;//BLEND
 
     for (size_t i{ 0 }; i < mesh->getData()->_ubos.size(); ++i) {
       mesh->getData()->_ubos[i].projection = projection;
