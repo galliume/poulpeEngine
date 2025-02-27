@@ -103,22 +103,22 @@ endif()
   
 target_include_directories(${PROJECT_NAME} PRIVATE
           ${PROJECT_SOURCE_DIR}/vendor/assimp/include
+          ${PROJECT_SOURCE_DIR}/vendor/fmt/include
           ${PROJECT_SOURCE_DIR}/vendor/freeType/include
           ${PROJECT_SOURCE_DIR}/vendor/glm
           ${PROJECT_SOURCE_DIR}/vendor/lua
           ${PROJECT_SOURCE_DIR}/vendor/miniaudio
           ${PROJECT_SOURCE_DIR}/vendor/nlohmann/include
-          ${PROJECT_SOURCE_DIR}/vendor/spdlog/include
           ${PROJECT_SOURCE_DIR}/vendor/stb
           ${VULKAN_PATH}
           ${KTX_PATH})
 
 add_subdirectory(${PROJECT_SOURCE_DIR}/vendor/assimp)
+add_subdirectory(${PROJECT_SOURCE_DIR}/vendor/fmt)
 add_subdirectory(${PROJECT_SOURCE_DIR}/vendor/freeType)
 add_subdirectory(${PROJECT_SOURCE_DIR}/vendor/glfw)
 add_subdirectory(${PROJECT_SOURCE_DIR}/vendor/glm)
 add_subdirectory(${PROJECT_SOURCE_DIR}/vendor/nlohmann)
-add_subdirectory(${PROJECT_SOURCE_DIR}/vendor/spdlog)
 add_subdirectory(${PROJECT_SOURCE_DIR}/vendor/volk)
 
 #if (CMAKE_BUILD_TYPE STREQUAL "Debug")
@@ -171,6 +171,7 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
   list(APPEND EXTRA_LIBS Ws2_32 user32)
 endif()
 
+list(APPEND EXTRA_LIBS fmt)
 list(APPEND EXTRA_LIBS freetype)
 list(APPEND EXTRA_LIBS glfw)
 list(APPEND EXTRA_LIBS glm::glm)
@@ -178,7 +179,6 @@ list(APPEND EXTRA_LIBS lua)
 list(APPEND EXTRA_LIBS nlohmann_json)
 list(APPEND EXTRA_LIBS volk)
 list(APPEND EXTRA_LIBS assimp::assimp)
-list(APPEND EXTRA_LIBS spdlog::spdlog)
 
 #@todo find a way to install KTX on github server
 list(APPEND EXTRA_LIBS KTX::ktx)
@@ -188,11 +188,11 @@ target_link_libraries(${PROJECT_NAME} PRIVATE ${EXTRA_LIBS} poulpe)
 list(APPEND LIB_DEBUG_OPTIONS ${DEBUG_OPTIONS})
 list(APPEND LIB_RELEASE_OPTIONS ${RELEASE_OPTIONS})
 
-target_compile_options(spdlog PRIVATE $<$<CONFIG:DEBUG>:${LIB_DEBUG_OPTIONS}>)
-target_compile_options(spdlog PRIVATE $<$<CONFIG:RELEASE>:${LIB_RELEASE_OPTIONS}>)
-
 target_compile_options(assimp PRIVATE $<$<CONFIG:DEBUG>:${LIB_DEBUG_OPTIONS}>)
 target_compile_options(assimp PRIVATE $<$<CONFIG:RELEASE>:${LIB_RELEASE_OPTIONS}>)
+
+target_compile_options(fmt PRIVATE $<$<CONFIG:DEBUG>:${LIB_DEBUG_OPTIONS}>)
+target_compile_options(fmt PRIVATE $<$<CONFIG:RELEASE>:${LIB_RELEASE_OPTIONS}>)
 
 set(PLP_LIB_DIR "$<TARGET_FILE_DIR:${PROJECT_NAME}>/lib")
 set(PLP_BIN_DIR "$<TARGET_FILE_DIR:${PROJECT_NAME}>")
@@ -213,11 +213,7 @@ set_target_properties(lua PROPERTIES
   RUNTIME_OUTPUT_DIRECTORY ${PLP_BIN_DIR}
   ARCHIVE_OUTPUT_DIRECTORY ${PLP_BIN_DIR}
 )
-set_target_properties(spdlog PROPERTIES
-  LIBRARY_OUTPUT_DIRECTORY ${PLP_BIN_DIR}
-  RUNTIME_OUTPUT_DIRECTORY ${PLP_BIN_DIR}
-  ARCHIVE_OUTPUT_DIRECTORY ${PLP_BIN_DIR}
-)
+
 set_target_properties(volk PROPERTIES
   LIBRARY_OUTPUT_DIRECTORY ${PLP_BIN_DIR}
   RUNTIME_OUTPUT_DIRECTORY ${PLP_BIN_DIR}
@@ -225,6 +221,12 @@ set_target_properties(volk PROPERTIES
 )
 
 set_target_properties(freetype PROPERTIES
+  LIBRARY_OUTPUT_DIRECTORY ${PLP_BIN_DIR}
+  RUNTIME_OUTPUT_DIRECTORY ${PLP_BIN_DIR}
+  ARCHIVE_OUTPUT_DIRECTORY ${PLP_BIN_DIR}
+)
+
+set_target_properties(fmt PROPERTIES
   LIBRARY_OUTPUT_DIRECTORY ${PLP_BIN_DIR}
   RUNTIME_OUTPUT_DIRECTORY ${PLP_BIN_DIR}
   ARCHIVE_OUTPUT_DIRECTORY ${PLP_BIN_DIR}

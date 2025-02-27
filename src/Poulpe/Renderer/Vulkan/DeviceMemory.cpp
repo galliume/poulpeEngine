@@ -46,7 +46,8 @@ namespace Poulpe
           VkResult result = vkAllocateMemory(_device, &alloc_info, nullptr, _memory.get());
 
           if (VK_SUCCESS != result) {
-            PLP_FATAL("error while allocating memory {}", result);
+            //@todo use fmt::format specifier
+            PLP_FATAL("error while allocating memory {}", static_cast<int>(result));
             throw std::runtime_error("failed to allocate buffer memory!");
           }
 

@@ -43,8 +43,6 @@ namespace Poulpe {
     VkDebugUtilsMessengerCallbackDataEXT const * data,
     void* pUserData)
   {
-    spdlog::set_pattern("%^[%T] %n: %v%$");
-
     switch (severity)
     {
       case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT:
@@ -185,7 +183,7 @@ namespace Poulpe {
     result = vkCreateInstance(& create_info, nullptr, &_instance);
 
     if (VK_SUCCESS != result) {
-      PLP_FATAL("Can't create VK instance : {}", result);
+      PLP_FATAL("Can't create VK instance : {}", static_cast<int>(result));
       throw std::runtime_error("Can't create VK instance.");
     }
 
@@ -585,7 +583,7 @@ namespace Poulpe {
     result = vkCreateSwapchainKHR(_device, & create_info, nullptr, & swapchain);
 
     if (result != VK_SUCCESS) {
-        PLP_FATAL("Swap chain failed " + std::to_string(result));
+        PLP_FATAL("Swap chain failed {}", static_cast<int>(result));
     }
     vkGetSwapchainImagesKHR(_device, swapchain, &image_count, nullptr);
     swapchain_images.resize(image_count);
@@ -2709,13 +2707,13 @@ namespace Poulpe {
       VkResult result = vkQueueSubmit(queue, submit_infos.size(), submit_infos.data(), fence);
 
       if (result != VK_SUCCESS) {
-        PLP_ERROR("Error on queue submit: {}", result);
+        PLP_ERROR("Error on queue submit: {}", static_cast<int>(result));
       }
 
       result = vkQueuePresentKHR(queue, &present_info);
 
       if (result != VK_SUCCESS) {
-        PLP_ERROR("Error on queue present: {}", result);
+        PLP_ERROR("Error on queue present: {}", static_cast<int>(result));
       }
 
       //vkQueueWaitIdle(queue);

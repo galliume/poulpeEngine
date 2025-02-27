@@ -31,7 +31,6 @@ namespace Poulpe
 
   void Application::init()
   {
-    Log::init();
     _start_run = std::chrono::steady_clock::now();
 
     auto* window = new Window();
