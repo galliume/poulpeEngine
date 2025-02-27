@@ -5,6 +5,8 @@
 
 #include "Command.hpp"
 
+#include <mutex>
+
 namespace Poulpe
 {
     class CommandQueue

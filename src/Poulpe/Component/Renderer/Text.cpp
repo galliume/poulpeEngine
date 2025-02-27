@@ -115,7 +115,7 @@ namespace Poulpe
 
     for (c = text.begin(); c != text.end(); c++) {
 
-      auto ch = _font_manager->get(*c);
+      auto const ch = _font_manager->get(*c);
 
       if (ch.size.x == 0 && ch.size.y == 0) {
         x += 5;

@@ -78,7 +78,7 @@ namespace Poulpe
     result = ma_engine_init(nullptr, & _engine);
 
     if (MA_SUCCESS != result) {
-      PLP_WARN("Cannot init mini audio {}", result);
+      PLP_WARN("Cannot init mini audio {}", static_cast<int>(result));
     }
   }
 
@@ -95,7 +95,7 @@ namespace Poulpe
       return;
     }
 
-    if (_Looping) {
+    if (_loop) {
       ma_sound_set_looping(& sound, true);
     }
 
