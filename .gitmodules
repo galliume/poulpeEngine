@@ -1,9 +1,6 @@
 [submodule "glfw"]
 	path = vendor/glfw
 	url = https://github.com/glfw/glfw.git
-[submodule "spdlog"]
-	path = vendor/spdlog
-	url = https://github.com/gabime/spdlog.git
 [submodule "glm"]
 	path = vendor/glm
 	url = https://github.com/g-truc/glm.git
@@ -28,3 +25,6 @@
 [submodule "vendor/freeType"]
 	path = vendor/freeType
 	url = https://gitlab.freedesktop.org/freetype/freetype.git
+[submodule "vendor/fmt"]
+	path = vendor/fmt
+	url = https://github.com/fmtlib/fmt.git

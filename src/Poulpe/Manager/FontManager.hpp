@@ -15,7 +15,7 @@ namespace Poulpe
   class Renderer;
 
   struct FontCharacter {
-    unsigned int tex_id;
+    unsigned int index;
     glm::ivec2 size;
     glm::ivec2 bearing;
     long advance;
@@ -30,24 +30,27 @@ namespace Poulpe
   {
   public:
 
-    std::unordered_map<char, FontCharacter> characters;
+    std::unordered_map<unsigned int, FontCharacter> characters;
 
-    size_t getAtlasWidth() const { return _atlas_width; }
-    size_t getAtlasHeight() const { return _atlas_height; }
+    unsigned int getAtlasWidth() const { return _atlas_width; }
+    unsigned int getAtlasHeight() const { return _atlas_height; }
 
     FontManager() = default;
-    ~FontManager() ;
+    ~FontManager();
 
     inline void addRenderer(Renderer* renderer) { _renderer = renderer; }
 
-    FontCharacter get(char const c) { return characters[c]; }
+    FontCharacter get(unsigned int c);
 
     Texture load();
 
   private:
     Renderer* _renderer{ nullptr };
 
-    size_t _atlas_width{ 0 };
-    size_t _atlas_height{ 0 };
+    unsigned int _atlas_width{ 0 };
+    unsigned int _atlas_height{ 0 };
+
+    FT_Face _face;
+    FT_Library _ft;
   };
 }
