@@ -431,7 +431,7 @@ namespace Poulpe {
     //Font
     void createFontImage(
       VkCommandBuffer& cmd_buffer,
-      std::unordered_map<char, FontCharacter> const& characters,
+      std::unordered_map<unsigned int, FontCharacter> const& characters,
       size_t const width,
       size_t const height,
       VkImage& image);

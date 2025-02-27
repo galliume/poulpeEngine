@@ -1,5 +1,8 @@
 #include "Text.hpp"
 
+#include <ft2build.h>
+#include FT_FREETYPE_H
+
 namespace Poulpe
 {
   struct constants;
@@ -111,6 +114,7 @@ namespace Poulpe
     std::string::const_iterator c;
 
     for (c = text.begin(); c != text.end(); c++) {
+
       auto ch = _font_manager->get(*c);
 
       if (ch.size.x == 0 && ch.size.y == 0) {
