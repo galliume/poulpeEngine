@@ -1,7 +1,5 @@
 #pragma once
 
-#include <fstream>
-
 #include <fmt/color.h>
 #include <fmt/chrono.h>
 #include <fmt/core.h>

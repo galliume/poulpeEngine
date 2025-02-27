@@ -1,15 +1,16 @@
 #include "VulkanAPI.hpp"
 
-#include "Poulpe/Manager/FontManager.hpp"
+#include "Poulpe/GUI/Window.hpp"
 
-#include <iostream>
-#include <filesystem>
-#include <set>
+#include "Poulpe/Manager/FontManager.hpp"
 
 #include <GLFW/glfw3.h>
 #include <volk.h>
 
-#include "Poulpe/GUI/Window.hpp"
+#include <iostream>
+#include <filesystem>
+#include <fstream>
+#include <set>
 
 //@todo this class needs a huge clean up
 namespace Poulpe {
