@@ -1,7 +1,9 @@
-#include "Text.hpp"
+﻿#include "Text.hpp"
 
 #include <ft2build.h>
 #include FT_FREETYPE_H
+
+#include <fmt/format.h>
 
 namespace Poulpe
 {
@@ -107,13 +109,15 @@ namespace Poulpe
   
     std::vector<Vertex> vertices;
     float scale{1.0f};
-    float x{100.0f};
-    float y{100.0f};
+    float x{300.0f};
+    float y{400.0f};
 
-    std::string text{ "PoulpeEngine @ � $ 0 1 2 3 4 5 6 7 8 9" };
-    std::string::const_iterator c;
+    std::string text{ "PoulpeEngine @ € $ 0 1 2 3 4 5 6 7 8 9 é è ù ü ä ö π ∞ 1 2 β Æ ‰ Ü Γ Đ Ặ" };
+    //std::string::const_iterator c;
 
-    for (c = text.begin(); c != text.end(); c++) {
+    auto const utf16_text = fmt::detail::utf8_to_utf16(text).str();
+
+    for (auto c = utf16_text.begin(); c != utf16_text.end(); c++) {
 
       auto const ch = _font_manager->get(*c);
 
@@ -136,7 +140,7 @@ namespace Poulpe
       float u1{ (ch.x_offset + ch.size.x) / width };
       float v1{ ch.y_offset / height };
 
-      glm::vec3 color{ 0.5, 0.3, 0.6 };
+      glm::vec3 color{ 0.0f };
       
       Vertex vertex_1{
         { xpos, ypos + h, 0.0f},

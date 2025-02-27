@@ -18,6 +18,7 @@ namespace Poulpe
 
     //if (FT_New_Face(_ft, "./assets/fonts/montserrat/Montserrat-Regular.ttf", 0, &_face))
     if (FT_New_Face(_ft, "./assets/fonts/bitter/BitterPro-Regular.ttf", 0, &_face))
+    //if (FT_New_Face(_ft, "./assets/fonts/poly/Poly-Regular.otf", 0, &_face))
     {
       PLP_ERROR("FREETYPE: Failed to load font");
       return texture;
@@ -66,10 +67,10 @@ namespace Poulpe
 
     FT_ULong c;
     FT_UInt glyph_index;
-    //c = FT_Get_First_Char(face, &glyph_index);
+    c = FT_Get_First_Char(_face, &glyph_index);
 
-    //while (glyph_index != 0) {
-    for (FT_ULong c = 0; c < 256; c++) {
+    while (glyph_index != 0) {
+    //for (FT_ULong c = 0; c < 0xFFFF; c++) {
       bool renderable{true};
       
       //PLP_DEBUG("loading char {} glyph {}", c, glyph_index);
@@ -153,7 +154,7 @@ namespace Poulpe
 
         offset += _face->glyph->bitmap.width;
       }
-      //c = FT_Get_Next_Char(_face, c, &glyph_index);
+      c = FT_Get_Next_Char(_face, c, &glyph_index);
     }
 
     _atlas_height += max_row_height + 50;
