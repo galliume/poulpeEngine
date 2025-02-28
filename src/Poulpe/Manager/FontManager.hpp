@@ -29,6 +29,15 @@ namespace Poulpe
   class FontManager
   {
   public:
+    struct Text
+    {
+      std::string name;//must be unique, not robust for the moment
+      std::string const text;
+      glm::vec3 position { 0.0f };
+      glm::vec3 color {1.0f};
+      float scale{1.0f};
+      bool dynamic { false };
+    };
 
     std::unordered_map<unsigned int, FontCharacter> characters;
 

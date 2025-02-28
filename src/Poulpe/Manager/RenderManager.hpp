@@ -46,6 +46,9 @@ namespace Poulpe
     void updateScene(double const delta_time);
     void renderScene();
     inline void setIsLoaded(bool loaded = true) { _is_loaded = loaded; }
+    void addText(FontManager::Text const& text);
+
+    void updateText(std::string const& name, std::string const& text);
 
   private:
     void loadData(std::string const & level);
@@ -55,7 +58,6 @@ namespace Poulpe
     void prepareSkybox();
     void prepareTerrain();
     void prepareWater();
-    void prepareText();
 
   private:
     std::string _current_level;
@@ -76,6 +78,8 @@ namespace Poulpe
     std::unique_ptr<LightManager> _light_manager;
     std::unique_ptr<ShaderManager> _shader_manager;
     std::unique_ptr<TextureManager> _texture_manager;
+
+    std::unordered_map<std::string, IDType> _texts;
 
     std::vector<VkDescriptorPool> _descriptor_pools;
 

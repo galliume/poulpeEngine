@@ -68,7 +68,46 @@ namespace Poulpe
     size_t frame_count{ 0 };
     auto last_time_debug_updated{ steady_clock::now() };
 
+    FontManager::Text frame_counter {
+      .name = "_plp_frame_counter",
+      .text = "Frame ",
+      .position = glm::vec3(10.0f, 0.0f, 0.0f),
+      .color = glm::vec3(1.0f, 1.0f, 0.0f),
+      .dynamic = true
+    };
+    _render_manager->addText(frame_counter);
+    FontManager::Text elapsed_time{
+      .name = "_plp_elapsed_time",
+      .text = "Elapsed time 0",
+      .position = glm::vec3(10.0f, 20.0f, 0.0f),
+      .color = glm::vec3(1.0f, 1.0f, 0.0f),
+      .dynamic = true
+    };
+    _render_manager->addText(elapsed_time);
+    FontManager::Text ms_counter{
+      .name = "_plp_ms_counter",
+      .text = "0 ms",
+      .position = glm::vec3(10.0f, 40.0f, 0.0f),
+      .color = glm::vec3(0.5f, 1.0f, 0.0f),
+      .dynamic = true
+    };
+    _render_manager->addText(ms_counter);
+    FontManager::Text camera_pos {
+      .name = "_plp_camera_pos",
+      .text = "Position x: 0.0 y: 0.0 z: 0.0",
+      .position = glm::vec3(10.0f, 60.0f, 0.0f),
+      .color = glm::vec3(0.5f, 1.0f, 0.0f),
+      .dynamic = true
+    };
+    _render_manager->addText(camera_pos);
+
+    std::stringstream title;
+    title << "PoulpeEngine v" << PoulpeEngine_VERSION_MAJOR << "." << PoulpeEngine_VERSION_MINOR
+      << " Vulkan version: " << _render_manager->getRenderer()->getAPI()->getAPIVersion();
+    glfwSetWindowTitle(_render_manager->getWindow()->get(), title.str().c_str());
+
     while (!glfwWindowShouldClose(_render_manager->getWindow()->get())) {
+
       glfwPollEvents();
 
       auto const new_time{ steady_clock::now() };
@@ -100,17 +139,16 @@ namespace Poulpe
       if ((duration<double>(steady_clock::now() - last_time_debug_updated)).count() > 1.0) {
         ms_count = frame_time * 1000.;
         fps_count = 1 / frame_time;
+
+        _render_manager->updateText("_plp_ms_counter", std::format("{:<.2f}ms {:<.2f}fps", ms_count, fps_count));
+        
         last_time_debug_updated = steady_clock::now();
       }
-
-      std::stringstream title;
-      title << "PoulpeEngine v" << PoulpeEngine_VERSION_MAJOR << "." << PoulpeEngine_VERSION_MINOR
-        << " Vulkan version: " << _render_manager->getRenderer()->getAPI()->getAPIVersion()
-        << " Frame " << frame_count << " "
-        << " Elapsed time " << _elapsed_time << " "
-        << " " << ms_count << " ms"
-        << " " << fps_count << " fps";
-      glfwSetWindowTitle(_render_manager->getWindow()->get(), title.str().c_str());
+      _render_manager->updateText("_plp_frame_counter", std::format("Frame {:<}", frame_count));
+      _render_manager->updateText("_plp_elapsed_time", std::format("Elapsed time {:<.2f}", _elapsed_time));
+ 
+      auto const& camera_pos = _render_manager->getCamera()->getPos();
+      _render_manager->updateText("_plp_camera_pos", std::format("Position x: {:<.2f} y: {:<.2f} z: {:<.2f}", camera_pos.x, camera_pos.y, camera_pos.z));
 
       ++frame_count;
 

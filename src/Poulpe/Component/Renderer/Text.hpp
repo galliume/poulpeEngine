@@ -30,10 +30,25 @@ namespace Poulpe
 
     void addFontManager(FontManager* font_manager) { _font_manager = font_manager; }
 
+    void setText(std::string_view text) { _text = text; }
+    void setPosition(glm::vec3 const& position) { _position = position; }
+    void setColor(glm::vec3 const& color) { _color = color; }
+    void setScale(float const scale) { _scale = scale; }
+    void setDynamic(bool const is_dynamic = true) { _is_dynamic = is_dynamic; }
+
+    bool const isDynamic() const { return _is_dynamic; }
+
   private:
     Renderer* _renderer;
     TextureManager* _texture_manager;
     LightManager* _light_manager;
     FontManager* _font_manager;
+
+    std::string _text{};
+    glm::vec3 _position{};
+    glm::vec3 _color{};
+    float _scale{1.0f};
+
+    bool _is_dynamic{false};
   };
 }
