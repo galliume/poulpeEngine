@@ -107,7 +107,13 @@ namespace Poulpe
     prepareSkybox();
     prepareTerrain();
     prepareWater();
-    prepareText();
+
+    FontManager::Text text {
+      .text = "PoulpeEngine @ € $ 0 1 2 3 4 5 6 7 8 9 é è ù ü ä ö π ∞ 1 2 β Æ ‰ Ü Γ Đ Ặ",
+      .position = glm::vec3(10.0f, 80.0f, 0.0f),
+      .color = glm::vec3(1.0f, 0.0f, 0.0f),
+    };
+    addText(text);
     //prepareHUD();
   }
 
@@ -149,6 +155,18 @@ namespace Poulpe
           }
         }
       }
+
+      std::ranges::for_each(_entity_manager->getTexts(), [&](auto const& entity) {
+        auto* mesh_component = _component_manager->get<MeshComponent>(entity->getID());
+        auto mesh = mesh_component->template has<Mesh>();
+
+        if (mesh) {
+          auto rdr_impl = _component_manager->get<RenderComponent>(entity->getID());
+          if (mesh->isDirty() && rdr_impl) {
+            (*rdr_impl)(delta_time, mesh);
+          }
+        }
+      });
 
       auto* world_node = _entity_manager->getWorldNode();
 
@@ -196,6 +214,8 @@ namespace Poulpe
           }
         });
       });
+
+      
     }
 
     //if (_refresh) {
@@ -328,27 +348,53 @@ namespace Poulpe
     _renderer->addTransparentEntity(_entity_manager->getWater(), true);
   }
 
-  void RenderManager::prepareText()
+  void RenderManager::addText(FontManager::Text const& text)
   {
     auto entity = std::make_unique<Entity>();
     auto mesh = std::make_unique<Mesh>();
     mesh->setHasShadow(false);
     mesh->setIsIndexed(false);
     mesh->setShaderName("text");
-    mesh->setName("_plp_text");
+    mesh->setName("_plp_text_" + std::to_string(entity->getID()));
 
     auto rdr_impl{ RendererFactory::create<Text>() };
     rdr_impl->init(_renderer.get(), _texture_manager.get(), nullptr);
     rdr_impl->addFontManager(_font_manager.get());
-
+    rdr_impl->setText(text.text);
+    rdr_impl->setPosition(text.position);
+    rdr_impl->setColor(text.color);
+    rdr_impl->setScale(text.scale);
+    rdr_impl->setDynamic(text.dynamic);
+    
     double const delta_time{ 0.0 };
     (*rdr_impl)(delta_time, mesh.get());
 
     _component_manager->add<RenderComponent>(entity->getID(), std::move(rdr_impl));
     _component_manager->add<MeshComponent>(entity->getID(), std::move(mesh));
 
-    _entity_manager->addText(std::move(entity));
+    _texts[text.name] = entity->getID();
 
-    _renderer->addTextEntity(_entity_manager->getText(0), true);
+    auto index = _entity_manager->addText(std::move(entity));
+
+    _renderer->addTextEntity(_entity_manager->getText(index), true);
+  }
+
+  void RenderManager::updateText(std::string const& name, std::string const& text)
+  {
+    auto const entity_id = _texts[name];
+
+    auto mesh_component = _component_manager->get<MeshComponent>(entity_id);
+    if (mesh_component) {
+      auto mesh = mesh_component->has<Mesh>();
+      auto rdr_impl = _component_manager->get<RenderComponent>(entity_id);
+      if (rdr_impl) {
+        auto text_rdr = rdr_impl->has<Text>();
+
+        if (text_rdr) {
+          text_rdr->setText(text);
+          mesh->setIsDirty(true);
+        }
+      }
+    }
   }
 }

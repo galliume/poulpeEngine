@@ -1,7 +1,6 @@
 set(SRC_LIST ${CMAKE_CURRENT_SOURCE_DIR}/PlpTypedef.hpp
              ${CMAKE_CURRENT_SOURCE_DIR}/JoinThreads.hpp
              ${CMAKE_CURRENT_SOURCE_DIR}/Locator.hpp
-             ${CMAKE_CURRENT_SOURCE_DIR}/Log.cpp
              ${CMAKE_CURRENT_SOURCE_DIR}/Log.hpp
              ${CMAKE_CURRENT_SOURCE_DIR}/ThreadPool.hpp
              ${CMAKE_CURRENT_SOURCE_DIR}/ThreadSafeQueue.hpp

@@ -622,6 +622,7 @@ namespace Poulpe
 
       std::jthread entities_thread([&]() {
 
+        //@todo find a cleaner way to do this
         auto entities{ _entities };
         if (!_transparent_entities.empty()) {
           std::copy(_transparent_entities.begin(), _transparent_entities.end(), std::back_inserter(entities));

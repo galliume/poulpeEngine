@@ -35,9 +35,8 @@ namespace Poulpe
     glfwWindowHint(GLFW_BLUE_BITS, mode->blueBits);
     glfwWindowHint(GLFW_REFRESH_RATE, mode->refreshRate);
 
-    auto window = glfwCreateWindow(mode->width, mode->height, "PoulpeEngine", _monitor, NULL);
-
-    _window = glfwCreateWindow(WIDTH, HEIGHT, window_title.data(), nullptr, nullptr);
+    //_window = glfwCreateWindow(mode->width, mode->height, window_title.data(), _monitor, nullptr);
+    _window = glfwCreateWindow(WIDTH, HEIGHT, window_title.data(), NULL, nullptr);
     //glfwSetWindowSizeLimits(_window, 800, 600, 2560, 1440);
 
    /* const int maxWidth = mode->width;
