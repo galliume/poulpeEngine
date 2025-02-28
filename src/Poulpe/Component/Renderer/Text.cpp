@@ -108,14 +108,11 @@ namespace Poulpe
     if (!mesh && !mesh->isDirty()) return;
   
     std::vector<Vertex> vertices;
-    float scale{1.0f};
-    float x{300.0f};
-    float y{400.0f};
 
-    std::string text{ "PoulpeEngine @ € $ 0 1 2 3 4 5 6 7 8 9 é è ù ü ä ö π ∞ 1 2 β Æ ‰ Ü Γ Đ Ặ" };
-    //std::string::const_iterator c;
+    auto x { _position.x };
+    auto y { _position.y };
 
-    auto const utf16_text = fmt::detail::utf8_to_utf16(text).str();
+    auto const utf16_text = fmt::detail::utf8_to_utf16(_text).str();
 
     for (auto c = utf16_text.begin(); c != utf16_text.end(); c++) {
 
@@ -126,11 +123,11 @@ namespace Poulpe
         continue;
       }
 
-      float xpos = x + ch.bearing.x * scale;
-      float ypos = y - ch.bearing.y * scale;
+      float xpos = x + ch.bearing.x * _scale;
+      float ypos = y - ch.bearing.y * _scale;
 
-      float w = ch.size.x * scale;
-      float h = ch.size.y * scale;
+      float w = ch.size.x * _scale;
+      float h = ch.size.y * _scale;
 
       float const width{ static_cast<float>(_font_manager->getAtlasWidth()) };
       float const height{ static_cast<float>(_font_manager->getAtlasHeight()) };
@@ -139,42 +136,40 @@ namespace Poulpe
       float v0{ (ch.y_offset + ch.size.y) / height };
       float u1{ (ch.x_offset + ch.size.x) / width };
       float v1{ ch.y_offset / height };
-
-      glm::vec3 color{ 0.0f };
       
       Vertex vertex_1{
         { xpos, ypos + h, 0.0f},
-        color, { u0, v0 },
+        _color, { u0, v0 },
         {0.0f, 0.0f, 0.0f, 0.0f},
         { 0.0, 0.0f, 0.0f, 0.0f} };
 
       Vertex vertex_2{
         { xpos, ypos, 0.0f},
-        color, { u0, v1 },
+        _color, { u0, v1 },
         {0.0f, 0.0f, 0.0f, 0.0f},
         { 0.0, 0.0f, 0.0f, 0.0f} };
 
       Vertex vertex_3{
         { xpos + w, ypos, 0.0f},
-        color, { u1, v1 },
+        _color, { u1, v1 },
         {0.0f, 0.0f, 0.0f, 0.0f},
         { 0.0, 0.0f, 0.0f, 0.0f} };
 
       Vertex vertex_4{
         { xpos, ypos + h, 0.0f},
-        color, { u0, v0 },
+        _color, { u0, v0 },
         {0.0f, 0.0f, 0.0f, 0.0f},
         { 0.0, 0.0f, 0.0f, 0.0f} };
 
       Vertex vertex_5{
         { xpos + w, ypos, 0.0f},
-        color, { u1, v1 },
+        _color, { u1, v1 },
         {0.0f, 0.0f, 0.0f, 0.0f},
         { 0.0, 0.0f, 0.0f, 0.0f} };
 
       Vertex vertex_6{
         { xpos + w, ypos + h, 0.0f},
-        color, { u1, v0 },
+        _color, { u1, v0 },
         {0.0f, 0.0f, 0.0f, 0.0f},
         { 0.0, 0.0f, 0.0f, 0.0f} };
 
@@ -185,7 +180,7 @@ namespace Poulpe
       vertices.emplace_back(vertex_5);
       vertices.emplace_back(vertex_6);
 
-      x += (ch.advance >> 6) * scale;
+      x += (ch.advance >> 6) * _scale;
     }
 
     glm::mat4 projection{ glm::ortho(
@@ -209,9 +204,14 @@ namespace Poulpe
 
     data->_vertex_buffer = _renderer->getAPI()->createVertexBuffer(cmd_pool, vertices);
     data->_texture_index = 0;
+    
+    data->_ubos.clear();
     data->_ubos.emplace_back(ubo);
 
+    mesh->getData()->_ubos_offset.clear();
     mesh->getData()->_ubos_offset.emplace_back(1);
+    
+    mesh->getUniformBuffers()->clear();
     mesh->getUniformBuffers()->emplace_back(_renderer->getAPI()->createUniformBuffers(1, cmd_pool));
     //mesh->getMaterial().double_sided = true;
     mesh->getMaterial().alpha_mode = 2.0;//BLEND
@@ -233,8 +233,10 @@ namespace Poulpe
       if (ubos.empty()) continue;
       _renderer->getAPI()->updateUniformBuffer(mesh->getUniformBuffers()->at(i), &ubos);
     }
-
-    createDescriptorSet(mesh);
+    
+    if (*mesh->getDescSet() == NULL) {
+      createDescriptorSet(mesh);
+    } 
     setPushConstants(mesh);
     mesh->setIsDirty(false);
   }
