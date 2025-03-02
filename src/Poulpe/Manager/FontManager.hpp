@@ -36,7 +36,7 @@ namespace Poulpe
       glm::vec3 position { 0.0f };
       glm::vec3 color {1.0f};
       float scale{1.0f};
-      bool dynamic { false };
+      bool flat{true}; // flat: 2D UI text, not flat: 3D text
     };
 
     std::unordered_map<unsigned int, FontCharacter> characters;

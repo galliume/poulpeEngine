@@ -34,9 +34,9 @@ namespace Poulpe
     void setPosition(glm::vec3 const& position) { _position = position; }
     void setColor(glm::vec3 const& color) { _color = color; }
     void setScale(float const scale) { _scale = scale; }
-    void setDynamic(bool const is_dynamic = true) { _is_dynamic = is_dynamic; }
+    void setFlat(bool const is_flat = true) { _is_flat = is_flat; }
 
-    bool const isDynamic() const { return _is_dynamic; }
+    bool const isFlat() const { return _is_flat; }
 
   private:
     Renderer* _renderer;
@@ -48,7 +48,6 @@ namespace Poulpe
     glm::vec3 _position{};
     glm::vec3 _color{};
     float _scale{1.0f};
-
-    bool _is_dynamic{false};
+    bool _is_flat{true};
   };
 }

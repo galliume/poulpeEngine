@@ -143,7 +143,8 @@ namespace Poulpe {
 
     Buffer createVertexBuffer(
       VkCommandPool& commandPool,
-      std::vector<Vertex> const& vertices);
+      std::vector<Vertex> const& vertices,
+      VkMemoryPropertyFlags const flags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
 
     Buffer createVertex2DBuffer(
       VkCommandPool& cmd_pool,

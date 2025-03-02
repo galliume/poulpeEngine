@@ -812,8 +812,8 @@ namespace Poulpe {
     pipeline_info.basePipelineIndex = -1;
     pipeline_info.pDynamicState = & dynamic_state;
 
+    VkPipelineTessellationStateCreateInfo tesselation_create_info{};
     if (pipeline_create_info.is_patch_list) {
-      VkPipelineTessellationStateCreateInfo tesselation_create_info;
       tesselation_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_TESSELLATION_STATE_CREATE_INFO;
       tesselation_create_info.patchControlPoints = 4;
       tesselation_create_info.pNext = NULL;
@@ -1696,14 +1696,22 @@ namespace Poulpe {
     return mesh_buffer;
   }
 
-  Buffer VulkanAPI::createVertexBuffer(VkCommandPool& commandPool, std::vector<Vertex> const& vertices)
+  Buffer VulkanAPI::createVertexBuffer(
+    VkCommandPool& commandPool,
+    std::vector<Vertex> const& vertices,
+    VkMemoryPropertyFlags const flags)
   {
     VkDeviceSize buffer_size = sizeof(Vertex) * vertices.size();
     VkBuffer staging_buffer{};
     VkDeviceMemory staging_device_memory{};
 
-    createBuffer(buffer_size, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-      VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, staging_buffer, staging_device_memory);
+    createBuffer(
+      buffer_size,
+      VK_BUFFER_USAGE_VERTEX_BUFFER_BIT
+        | VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+      flags
+        | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+      staging_buffer, staging_device_memory);
 
     void* data;
     vkMapMemory(_device, staging_device_memory, 0, buffer_size, 0, &data);

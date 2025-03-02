@@ -4,6 +4,9 @@
 #include FT_FREETYPE_H
 
 #include <fmt/format.h>
+#include <glm/glm.hpp>
+
+#include <algorithm>
 
 namespace Poulpe
 {
@@ -80,8 +83,8 @@ namespace Poulpe
       Renderer* const renderer, Mesh* const meshS) {
       
       glm::vec4 options{
-        Poulpe::Locator::getConfigManager()->getElapsedTime(),
-        0.0f, 0.0f, 0.0f};
+        meshS->getOptions().x,
+        Poulpe::Locator::getConfigManager()->getElapsedTime(), 0.0f, 0.0f};
 
       constants constants{};
       constants.view = renderer->getCamera()->lookAt();
@@ -112,7 +115,7 @@ namespace Poulpe
     auto x { _position.x };
     auto y { _position.y };
 
-    auto const utf16_text = fmt::detail::utf8_to_utf16(_text).str();
+    auto const utf16_text{ fmt::detail::utf8_to_utf16(_text).str() };
 
     for (auto c = utf16_text.begin(); c != utf16_text.end(); c++) {
 
@@ -183,42 +186,75 @@ namespace Poulpe
       x += (ch.advance >> 6) * _scale;
     }
 
-    glm::mat4 projection{ glm::ortho(
-      0.0f,
-      static_cast<float>(_renderer->getAPI()->getSwapChainExtent().width),
-      0.0f,
-      static_cast<float>(_renderer->getAPI()->getSwapChainExtent().height)) };
+    auto const width{
+        static_cast<float>(_renderer->getAPI()->getSwapChainExtent().width)};
+    auto const height{
+      static_cast<float>(_renderer->getAPI()->getSwapChainExtent().height) };
+
+    glm::mat4 projection{ glm::ortho(0.0f, width, 0.0f, height) };
     
-    //glm::mat4 projection{_renderer->getPerspective()};
+    glm::vec4 options{ 0.0f };
+    
+    if (!isFlat()) {
+      projection = _renderer->getPerspective();
 
-    UniformBufferObject ubo;
-    ubo.model = glm::mat4(1.0f);
-    ubo.projection = projection;
-
-    auto cmd_pool = _renderer->getAPI()->createCommandPool();
+      options.x = 1.0f;
+      mesh->getMaterial().double_sided = true;
+    }
+    
+    mesh->setOptions(options);
 
     auto const& data = mesh->getData();
 
     data->_vertices = vertices;
-    //data->_indices = indices;
-
-    data->_vertex_buffer = _renderer->getAPI()->createVertexBuffer(cmd_pool, vertices);
     data->_texture_index = 0;
-    
-    data->_ubos.clear();
-    data->_ubos.emplace_back(ubo);
 
-    mesh->getData()->_ubos_offset.clear();
-    mesh->getData()->_ubos_offset.emplace_back(1);
-    
-    mesh->getUniformBuffers()->clear();
-    mesh->getUniformBuffers()->emplace_back(_renderer->getAPI()->createUniformBuffers(1, cmd_pool));
-    //mesh->getMaterial().double_sided = true;
-    mesh->getMaterial().alpha_mode = 2.0;//BLEND
+    auto cmd_pool = _renderer->getAPI()->createCommandPool();
+    data->_vertex_buffer = _renderer->getAPI()->createVertexBuffer(cmd_pool, vertices);
 
-    for (size_t i{ 0 }; i < mesh->getData()->_ubos.size(); ++i) {
-      mesh->getData()->_ubos[i].projection = projection;
-    }
+    if (data->_ubos.empty()) {
+      
+      UniformBufferObject ubo;
+      ubo.model = glm::mat4(1.0f);
+      ubo.projection = projection;
+
+      data->_ubos.emplace_back(ubo);
+      mesh->getData()->_ubos_offset.emplace_back(1);
+      mesh->getUniformBuffers()->emplace_back(_renderer->getAPI()->createUniformBuffers(1, cmd_pool));
+
+      mesh->getMaterial().alpha_mode = 1.0;
+
+      for (size_t i{ 0 }; i < mesh->getData()->_ubos.size(); ++i) {
+        mesh->getData()->_ubos[i].projection = projection;
+      }
+    } 
+    //else {
+      // VkDeviceMemory staging_device_memory{};
+      // VkDeviceSize buffer_size = sizeof(Vertex) * vertices.size();
+      // VkBuffer staging_buffer{};
+
+      //_renderer->getAPI()->createBuffer(
+      //  buffer_size,
+      //  VK_BUFFER_USAGE_VERTEX_BUFFER_BIT
+      //    | VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+      //  VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT
+      //    | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+      //  staging_buffer, staging_device_memory);
+
+      //void* void_data;
+      //vkMapMemory(_renderer->getDevice(), staging_device_memory, 0, buffer_size, 0, &void_data);
+      //memcpy(void_data, vertices.data(), static_cast<size_t>(buffer_size));
+      //vkUnmapMemory(_renderer->getDevice(), staging_device_memory);
+
+      //_renderer->getAPI()->copyBuffer(
+      //  cmd_pool,
+      //  data->_vertex_buffer.buffer,
+      //  staging_buffer,
+      //  buffer_size);
+
+      //vkDestroyBuffer(_renderer->getDevice(), staging_buffer, nullptr);
+      //vkFreeMemory(_renderer->getDevice(), staging_device_memory, nullptr);
+    //}
 
     vkDestroyCommandPool(_renderer->getDevice(), cmd_pool, nullptr);
 
