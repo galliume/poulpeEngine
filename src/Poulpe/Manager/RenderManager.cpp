@@ -109,9 +109,12 @@ namespace Poulpe
     prepareWater();
 
     FontManager::Text text {
-      .text = "PoulpeEngine @ € $ 0 1 2 3 4 5 6 7 8 9 é è ù ü ä ö π ∞ 1 2 β Æ ‰ Ü Γ Đ Ặ",
-      .position = glm::vec3(10.0f, 80.0f, 0.0f),
-      .color = glm::vec3(1.0f, 0.0f, 0.0f),
+      .name = "_plp_title",
+      .text = "PoulpeEngine @ € $ 0 1 2 3 4 5 6 7 8 9 é è ù ü ä ö π ∞ β Æ ‰ Ü Γ Đ Ặ",
+      .position = glm::vec3(-200.0f, -100.0f, 0.0f), //@todo fix this -
+      .color = glm::vec3(0.5f, 0.2f, 0.2f),
+      .scale = 0.5f,
+      .flat = false
     };
     addText(text);
     //prepareHUD();
@@ -364,7 +367,7 @@ namespace Poulpe
     rdr_impl->setPosition(text.position);
     rdr_impl->setColor(text.color);
     rdr_impl->setScale(text.scale);
-    rdr_impl->setDynamic(text.dynamic);
+    rdr_impl->setFlat(text.flat);
     
     double const delta_time{ 0.0 };
     (*rdr_impl)(delta_time, mesh.get());
@@ -392,6 +395,26 @@ namespace Poulpe
 
         if (text_rdr) {
           text_rdr->setText(text);
+          mesh->setIsDirty(true);
+        }
+      }
+    }
+  }
+  
+  //@todo better way to update text
+  void RenderManager::updateTextColor(std::string const& name, glm::vec3 const& color)
+  {
+    auto const entity_id = _texts[name];
+
+    auto mesh_component = _component_manager->get<MeshComponent>(entity_id);
+    if (mesh_component) {
+      auto mesh = mesh_component->has<Mesh>();
+      auto rdr_impl = _component_manager->get<RenderComponent>(entity_id);
+      if (rdr_impl) {
+        auto text_rdr = rdr_impl->has<Text>();
+
+        if (text_rdr) {
+          text_rdr->setColor(color);
           mesh->setIsDirty(true);
         }
       }

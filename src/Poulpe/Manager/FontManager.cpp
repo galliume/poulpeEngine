@@ -16,11 +16,11 @@ namespace Poulpe
       return texture;
     }
 
-    //if (FT_New_Face(_ft, "./assets/fonts/montserrat/Montserrat-Regular.ttf", 0, &_face))
-    if (FT_New_Face(_ft, "./assets/fonts/bitter/BitterPro-Regular.ttf", 0, &_face))
-    //if (FT_New_Face(_ft, "./assets/fonts/poly/Poly-Regular.otf", 0, &_face))
+    auto const font{Poulpe::Locator::getConfigManager()->appConfig()["font"].get<std::string>()};
+
+    if (FT_New_Face(_ft, font.c_str(), 0, &_face))
     {
-      PLP_ERROR("FREETYPE: Failed to load font");
+      PLP_ERROR("FREETYPE: Failed to load font {}", font.c_str());
       return texture;
     }
     
@@ -70,21 +70,14 @@ namespace Poulpe
     c = FT_Get_First_Char(_face, &glyph_index);
 
     while (glyph_index != 0) {
-    //for (FT_ULong c = 0; c < 0xFFFF; c++) {
+
       bool renderable{true};
-      
-      //PLP_DEBUG("loading char {} glyph {}", c, glyph_index);
 
       glyph_index = FT_Get_Char_Index(_face, c);
       if (FT_Load_Glyph(_face, glyph_index, FT_LOAD_RENDER)) {
         PLP_DEBUG("FREETYTPE: Failed to load Glyph");
         renderable = false;
       }
-
-      //if (FT_Load_Char(face, c, FT_LOAD_RENDER)) {
-      //  PLP_ERROR("FREETYTPE: Failed to load Glyph");
-      //  continue;
-      //}
 
       if (FT_Render_Glyph(_face->glyph, FT_RENDER_MODE_NORMAL)) {
         PLP_DEBUG("FREETYTPE: Failed to render Glyph");

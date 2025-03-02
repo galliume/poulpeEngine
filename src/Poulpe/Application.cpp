@@ -73,7 +73,6 @@ namespace Poulpe
       .text = "Frame ",
       .position = glm::vec3(10.0f, 0.0f, 0.0f),
       .color = glm::vec3(1.0f, 1.0f, 0.0f),
-      .dynamic = true
     };
     _render_manager->addText(frame_counter);
     FontManager::Text elapsed_time{
@@ -81,7 +80,6 @@ namespace Poulpe
       .text = "Elapsed time 0",
       .position = glm::vec3(10.0f, 20.0f, 0.0f),
       .color = glm::vec3(1.0f, 1.0f, 0.0f),
-      .dynamic = true
     };
     _render_manager->addText(elapsed_time);
     FontManager::Text ms_counter{
@@ -89,15 +87,13 @@ namespace Poulpe
       .text = "0 ms",
       .position = glm::vec3(10.0f, 40.0f, 0.0f),
       .color = glm::vec3(0.5f, 1.0f, 0.0f),
-      .dynamic = true
     };
     _render_manager->addText(ms_counter);
     FontManager::Text camera_pos {
       .name = "_plp_camera_pos",
       .text = "Position x: 0.0 y: 0.0 z: 0.0",
       .position = glm::vec3(10.0f, 60.0f, 0.0f),
-      .color = glm::vec3(0.5f, 1.0f, 0.0f),
-      .dynamic = true
+      .color = glm::vec3(1.0f, 1.0f, 1.0f),
     };
     _render_manager->addText(camera_pos);
 
@@ -139,11 +135,10 @@ namespace Poulpe
       if ((duration<double>(steady_clock::now() - last_time_debug_updated)).count() > 1.0) {
         ms_count = frame_time * 1000.;
         fps_count = 1 / frame_time;
-
-        _render_manager->updateText("_plp_ms_counter", std::format("{:<.2f}ms {:<.2f}fps", ms_count, fps_count));
-        
         last_time_debug_updated = steady_clock::now();
       }
+
+      _render_manager->updateText("_plp_ms_counter", std::format("{:<.2f}ms {:<.2f}fps", ms_count, fps_count));
       _render_manager->updateText("_plp_frame_counter", std::format("Frame {:<}", frame_count));
       _render_manager->updateText("_plp_elapsed_time", std::format("Elapsed time {:<.2f}", _elapsed_time));
  

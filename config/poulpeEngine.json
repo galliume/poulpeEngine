@@ -3,6 +3,7 @@
 	"defaultSkybox": "desert_road",
 	"ambientMusic": false,
 	"fpsLimit": 30,
+	"font": "./assets/fonts/bitter/BitterPro-Regular.ttf",
 	"input": {
 		"current": "keyboard",
 		"keyboard": {

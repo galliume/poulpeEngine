@@ -49,7 +49,8 @@ namespace Poulpe
     void addText(FontManager::Text const& text);
 
     void updateText(std::string const& name, std::string const& text);
-
+    void updateTextColor(std::string const& name, glm::vec3 const& color);
+ 
   private:
     void loadData(std::string const & level);
 
