@@ -9,7 +9,7 @@ namespace Poulpe
     public:
         DeviceMemory(
             VkDevice device,
-            uint32_t memory_type,
+            VkMemoryPropertyFlags memory_type,
             VkDeviceSize max_size,
             unsigned int index,
             VkDeviceSize alignment
@@ -23,7 +23,7 @@ namespace Poulpe
         uint32_t getOffset() const { return _offset; }
         VkDeviceSize getSize() const { return _max_size; }
         VkDeviceSize getSpaceLeft() const { return _max_size - _offset; }
-        VkDeviceSize getType() const { return _memory_type; }
+        VkMemoryPropertyFlags getType() const { return _memory_type; }
         bool hasEnoughSpaceLeft(VkDeviceSize size);
         bool isFull() const {  return _is_full; }
         void lock() { _mutex_memory.lock(); }
@@ -40,7 +40,7 @@ namespace Poulpe
 
         VkDeviceSize _alignment;
         VkDeviceSize _max_size;
-        uint32_t _memory_type;
+        VkMemoryPropertyFlags _memory_type;
         //@todo check with deviceProps.limits.bufferImageGranularity;
         VkDeviceSize _offset{0};
 

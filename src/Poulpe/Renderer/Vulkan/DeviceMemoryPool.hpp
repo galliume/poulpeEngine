@@ -20,20 +20,20 @@ namespace Poulpe
     DeviceMemory* get(
       VkDevice const & device,
       VkDeviceSize const size,
-      uint32_t const memory_type,
+      VkMemoryPropertyFlags  const memory_type,
       VkBufferUsageFlags const usage,
       VkDeviceSize const alignment,
       DeviceBufferType const buffer_type,
       bool force_new = false);
 
-    std::unordered_map<uint32_t, std::unordered_map<VkBufferUsageFlags,
+    std::unordered_map<VkMemoryPropertyFlags, std::unordered_map<VkBufferUsageFlags,
       std::vector<std::unique_ptr<DeviceMemory>>>>* getPool() { return & _pool; }
 
     void clear(DeviceMemory * device_memory);
     void clear();
 
   private:
-    std::unordered_map<uint32_t, std::unordered_map<VkBufferUsageFlags, std::vector<std::unique_ptr<DeviceMemory>>>> _pool;
+    std::unordered_map<VkMemoryPropertyFlags, std::unordered_map<VkBufferUsageFlags, std::vector<std::unique_ptr<DeviceMemory>>>> _pool;
     VkPhysicalDeviceProperties2 _device_props;
     VkPhysicalDeviceMaintenance3Properties _maintenance_props;
     VkPhysicalDeviceMemoryProperties _memory_props;

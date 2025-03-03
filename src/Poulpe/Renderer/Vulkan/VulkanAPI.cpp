@@ -1675,7 +1675,7 @@ namespace Poulpe {
       _device,
       size,
       memory_type,
-      VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
+      VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
       mem_requirements.alignment,
       DeviceMemoryPool::DeviceBufferType::STAGING);
 
@@ -1698,10 +1698,10 @@ namespace Poulpe {
 
   Buffer VulkanAPI::createVertexBuffer(
     VkCommandPool& commandPool,
-    std::vector<Vertex> const& vertices,
-    VkMemoryPropertyFlags const flags)
+    std::vector<Vertex> const& vertices)
   {
     VkDeviceSize buffer_size = sizeof(Vertex) * vertices.size();
+
     VkBuffer staging_buffer{};
     VkDeviceMemory staging_device_memory{};
 
@@ -1709,8 +1709,7 @@ namespace Poulpe {
       buffer_size,
       VK_BUFFER_USAGE_VERTEX_BUFFER_BIT
         | VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-      flags
-        | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+        VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
       staging_buffer, staging_device_memory);
 
     void* data;
@@ -1718,7 +1717,11 @@ namespace Poulpe {
     memcpy(data, vertices.data(), static_cast<size_t>(buffer_size));
     vkUnmapMemory(_device, staging_device_memory);
 
-    VkBuffer buffer = createBuffer(buffer_size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT);
+    VkBuffer buffer = createBuffer(
+      buffer_size,
+      VK_BUFFER_USAGE_TRANSFER_DST_BIT
+      | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT);
+      
     VkMemoryRequirements mem_requirements;
     vkGetBufferMemoryRequirements(_device, buffer, & mem_requirements);
 
@@ -1731,7 +1734,7 @@ namespace Poulpe {
       _device,
       size,
       memory_type,
-      VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+      VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
       mem_requirements.alignment,
       DeviceMemoryPool::DeviceBufferType::STAGING);
 
@@ -1743,7 +1746,7 @@ namespace Poulpe {
     Buffer mesh_buffer;
     mesh_buffer.buffer = std::move(buffer);
     mesh_buffer.memory = device_memory;
-    mesh_buffer.offset = offset;
+    mesh_buffer.offset = bind_offset;
     mesh_buffer.size = size;
 
     vkDestroyBuffer(_device, staging_buffer, nullptr);
@@ -1781,7 +1784,7 @@ namespace Poulpe {
       _device,
       size,
       memory_type,
-      VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+      VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
       mem_requirements.alignment,
       DeviceMemoryPool::DeviceBufferType::UNIFORM);
 
@@ -1823,7 +1826,7 @@ namespace Poulpe {
       _device,
       size,
       memoryType,
-      VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+      VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
       mem_requirements.alignment,
       DeviceMemoryPool::DeviceBufferType::UNIFORM);
 
@@ -2014,7 +2017,8 @@ namespace Poulpe {
     VkBuffer& src_buffer,
     VkBuffer& dst_buffer,
     VkDeviceSize const size,
-    int const queue_index)
+    VkDeviceSize dst_offset,
+    int const queue_index)//@todo check if transfer queue is really used...
   {
     VkCommandBufferAllocateInfo alloc_info{};
     alloc_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
@@ -2032,8 +2036,8 @@ namespace Poulpe {
     vkBeginCommandBuffer(cmd_buffer, &begin_info);
 
     VkBufferCopy copy_region{};
-    copy_region.srcOffset = 0; // Optional
-    copy_region.dstOffset = 0; // Optional
+    copy_region.srcOffset = 0;
+    copy_region.dstOffset = dst_offset;
     copy_region.size = size;
 
     vkCmdCopyBuffer(cmd_buffer, src_buffer, dst_buffer, 1, & copy_region);
@@ -2042,14 +2046,19 @@ namespace Poulpe {
     VkSubmitInfo submit_info{};
     submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
     submit_info.commandBufferCount = 1;
-    submit_info.pCommandBuffers = & cmd_buffer;
+    submit_info.pCommandBuffers = &cmd_buffer;
 
     {
       std::lock_guard<std::mutex> guard(_mutex_queue_submit);
-      vkResetFences(_device, 1, & _fence_buffer);
+      vkResetFences(_device, 1, &_fence_buffer);
 
-      vkQueueSubmit(_graphics_queues[queue_index], 1, & submit_info, _fence_buffer);
-      vkWaitForFences(_device, 1, & _fence_buffer, VK_TRUE, UINT32_MAX);
+      VkResult result = vkQueueSubmit(_graphics_queues[queue_index], 1, & submit_info, _fence_buffer);
+
+      if (result != VK_SUCCESS) {
+        PLP_ERROR("failed to copy buffer.");
+      }
+
+      vkWaitForFences(_device, 1, &_fence_buffer, VK_TRUE, UINT32_MAX);
       vkFreeCommandBuffers(_device, cmd_pool, 1, & cmd_buffer);
       //vkQueueWaitIdle(_graphics_queues[queue_index]);
     }
@@ -2140,7 +2149,7 @@ namespace Poulpe {
       _device,
       size,
       memory_type,
-      VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+      VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
       mem_requirements.alignment,
       DeviceMemoryPool::DeviceBufferType::STAGING);
 
@@ -2185,7 +2194,7 @@ namespace Poulpe {
       _device,
       size,
       memoryType,
-      VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+      VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
       mem_requirements.alignment,
       DeviceMemoryPool::DeviceBufferType::STAGING);
 
@@ -2811,7 +2820,7 @@ namespace Poulpe {
       _device,
       image_size,
       memory_type,
-      VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+      VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
       image_mem_requirements.alignment,
       DeviceMemoryPool::DeviceBufferType::STAGING);
 
@@ -3069,7 +3078,7 @@ namespace Poulpe {
       _device,
       image_size,
       memory_type,
-      VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+      VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
       image_mem_requirements.alignment,
       DeviceMemoryPool::DeviceBufferType::STAGING);
 

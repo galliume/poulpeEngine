@@ -4,7 +4,7 @@ namespace Poulpe
 {
     DeviceMemory::DeviceMemory(
         VkDevice device,
-        uint32_t memory_type,
+        VkMemoryPropertyFlags memory_type,
         VkDeviceSize max_size,
         unsigned int index,
         VkDeviceSize alignment
@@ -69,7 +69,7 @@ namespace Poulpe
         if (remainder != 0) {
           _offset += (offset - remainder);
         }
-
+        PLP_DEBUG("offset {}", _offset);
         VkResult result = vkBindBufferMemory(_device, buffer, *_memory, _offset);
 
         if (VK_SUCCESS != result) {

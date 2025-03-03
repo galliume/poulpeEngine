@@ -16,7 +16,7 @@ namespace Poulpe
   DeviceMemory* DeviceMemoryPool::get(
     VkDevice const & device,
     VkDeviceSize const size,
-    uint32_t const memory_type,
+    VkMemoryPropertyFlags const memory_type,
     VkBufferUsageFlags const usage,
     VkDeviceSize const alignment,
     DeviceBufferType const buffer_type,

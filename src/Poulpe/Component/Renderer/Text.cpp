@@ -210,9 +210,9 @@ namespace Poulpe
     data->_texture_index = 0;
 
     auto cmd_pool = _renderer->getAPI()->createCommandPool();
-    data->_vertex_buffer = _renderer->getAPI()->createVertexBuffer(cmd_pool, vertices);
 
     if (data->_ubos.empty()) {
+      data->_vertex_buffer = _renderer->getAPI()->createVertexBuffer(cmd_pool, vertices);
       
       UniformBufferObject ubo;
       ubo.model = glm::mat4(1.0f);
@@ -228,33 +228,35 @@ namespace Poulpe
         mesh->getData()->_ubos[i].projection = projection;
       }
     } 
-    //else {
-      // VkDeviceMemory staging_device_memory{};
-      // VkDeviceSize buffer_size = sizeof(Vertex) * vertices.size();
-      // VkBuffer staging_buffer{};
+    else {
+      VkDeviceMemory staging_device_memory{};
+      VkDeviceSize buffer_size = sizeof(Vertex) * vertices.size();
 
-      //_renderer->getAPI()->createBuffer(
-      //  buffer_size,
-      //  VK_BUFFER_USAGE_VERTEX_BUFFER_BIT
-      //    | VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-      //  VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT
-      //    | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-      //  staging_buffer, staging_device_memory);
+      VkBuffer staging_buffer{};
 
-      //void* void_data;
-      //vkMapMemory(_renderer->getDevice(), staging_device_memory, 0, buffer_size, 0, &void_data);
-      //memcpy(void_data, vertices.data(), static_cast<size_t>(buffer_size));
-      //vkUnmapMemory(_renderer->getDevice(), staging_device_memory);
+      _renderer->getAPI()->createBuffer(
+       buffer_size,
+       VK_BUFFER_USAGE_VERTEX_BUFFER_BIT
+         | VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+       VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT
+         | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+       staging_buffer, staging_device_memory);
 
-      //_renderer->getAPI()->copyBuffer(
-      //  cmd_pool,
-      //  data->_vertex_buffer.buffer,
-      //  staging_buffer,
-      //  buffer_size);
+      void* void_data;
+      vkMapMemory(_renderer->getDevice(), staging_device_memory, 0, buffer_size, 0, &void_data);
+      memcpy(void_data, vertices.data(), static_cast<size_t>(buffer_size));
+      vkUnmapMemory(_renderer->getDevice(), staging_device_memory);
 
-      //vkDestroyBuffer(_renderer->getDevice(), staging_buffer, nullptr);
-      //vkFreeMemory(_renderer->getDevice(), staging_device_memory, nullptr);
-    //}
+      _renderer->getAPI()->copyBuffer(
+        cmd_pool,
+        staging_buffer,
+        data->_vertex_buffer.buffer,
+        buffer_size,
+        0);
+
+      vkDestroyBuffer(_renderer->getDevice(), staging_buffer, nullptr);
+      vkFreeMemory(_renderer->getDevice(), staging_device_memory, nullptr);
+    }
 
     vkDestroyCommandPool(_renderer->getDevice(), cmd_pool, nullptr);
 
