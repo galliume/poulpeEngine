@@ -143,8 +143,7 @@ namespace Poulpe {
 
     Buffer createVertexBuffer(
       VkCommandPool& commandPool,
-      std::vector<Vertex> const& vertices,
-      VkMemoryPropertyFlags const flags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
+      std::vector<Vertex> const& vertices);
 
     Buffer createVertex2DBuffer(
       VkCommandPool& cmd_pool,
@@ -168,6 +167,7 @@ namespace Poulpe {
       VkBuffer& src_buffer,
       VkBuffer& dst_buffer,
       VkDeviceSize const size,
+      VkDeviceSize dst_offset = 0,
       int const queue_index = 0);
 
     bool souldResizeSwapChain();

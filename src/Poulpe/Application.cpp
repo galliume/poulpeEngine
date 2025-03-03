@@ -70,28 +70,28 @@ namespace Poulpe
 
     FontManager::Text frame_counter {
       .name = "_plp_frame_counter",
-      .text = "Frame ",
+      .text = "Frame 000000",
       .position = glm::vec3(10.0f, 0.0f, 0.0f),
       .color = glm::vec3(1.0f, 1.0f, 0.0f),
     };
     _render_manager->addText(frame_counter);
     FontManager::Text elapsed_time{
       .name = "_plp_elapsed_time",
-      .text = "Elapsed time 0",
+      .text = "Elapsed time 000000",
       .position = glm::vec3(10.0f, 20.0f, 0.0f),
       .color = glm::vec3(1.0f, 1.0f, 0.0f),
     };
     _render_manager->addText(elapsed_time);
     FontManager::Text ms_counter{
       .name = "_plp_ms_counter",
-      .text = "0 ms",
+      .text = "000.000 ms 000.000 fps",
       .position = glm::vec3(10.0f, 40.0f, 0.0f),
       .color = glm::vec3(0.5f, 1.0f, 0.0f),
     };
     _render_manager->addText(ms_counter);
     FontManager::Text camera_pos {
       .name = "_plp_camera_pos",
-      .text = "Position x: 0.0 y: 0.0 z: 0.0",
+      .text = "Position x: 000.000 y: 000.000 z: 000.000",
       .position = glm::vec3(10.0f, 60.0f, 0.0f),
       .color = glm::vec3(1.0f, 1.0f, 1.0f),
     };
