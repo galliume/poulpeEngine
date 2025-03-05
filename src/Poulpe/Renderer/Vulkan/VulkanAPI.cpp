@@ -117,7 +117,7 @@ namespace Poulpe {
   std::string VulkanAPI::getAPIVersion()
   {
     if (_api_version.empty()) {
-      uint32_t version = VK_API_VERSION_1_3;
+      uint32_t version = VK_API_VERSION_1_4;
 
       //@todo fix unused ?
       auto tmp = PFN_vkEnumerateInstanceVersion(vkGetInstanceProcAddr(nullptr, "vkEnumerateInstanceVersion"));

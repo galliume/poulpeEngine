@@ -46,7 +46,7 @@ namespace Poulpe
       return texture;
     }
 
-    FT_Set_Char_Size(_face, 0, 16 * 64, 96 * 4, 96 * 4);
+    FT_Set_Char_Size(_face, 0, FONT_HEIGHT, FONT_RESOLUTION, FONT_RESOLUTION);
 
     if (FT_Load_Char(_face, 'X', FT_LOAD_RENDER))
     {

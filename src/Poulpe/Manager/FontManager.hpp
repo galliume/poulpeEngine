@@ -61,5 +61,9 @@ namespace Poulpe
 
     FT_Face _face;
     FT_Library _ft;
+
+    //@todo move to config
+    unsigned int FONT_HEIGHT{ 768 };
+    unsigned int FONT_RESOLUTION{ 512 };
   };
 }
