@@ -110,10 +110,10 @@ namespace Poulpe
 
     FontManager::Text text {
       .name = "_plp_title",
-      .text = "PoulpeEngine @ € $ 0 1 2 3 4 5 6 7 8 9 é è ù ü ä ö π ∞ β Æ ‰ Ü Γ Đ Ặ",
+      .text = " Ω Thank you ! ₲ ◀ MrPoulpe ▶™",
       .position = glm::vec3(-200.0f, -100.0f, 0.0f), //@todo fix this -
-      .color = glm::vec3(0.5f, 0.2f, 0.2f),
-      .scale = 0.5f,
+      .color = glm::vec3(1.0f, 0.2f, 0.6f),
+      .scale = 1.f,
       .flat = false
     };
     addText(text);

@@ -2999,7 +2999,7 @@ namespace Poulpe {
     VkImage& image)
   {;
 
-    auto const data_size{ width * height * 4};
+    auto const data_size{ width * height };
 
     VkBuffer buffer;
     VkDeviceMemory staging_device_memory;
@@ -3034,9 +3034,9 @@ namespace Poulpe {
 
       for (int y{ 0 }; y < glyph_height; y++) {
         memcpy(
-          data + ((y + character.y_offset) * width + character.x_offset) * 4,
-          buffer + (y * glyph_width * 4),
-          glyph_width * 4
+          data + ((y + character.y_offset) * width + character.x_offset) ,
+          buffer + (y * glyph_width),
+          glyph_width
         );
       }
     }

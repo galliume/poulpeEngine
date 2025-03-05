@@ -71,14 +71,14 @@ namespace Poulpe
     FontManager::Text frame_counter {
       .name = "_plp_frame_counter",
       .text = "Frame 000000",
-      .position = glm::vec3(10.0f, 0.0f, 0.0f),
+      .position = glm::vec3(10.0f, 20.0f, 0.0f),
       .color = glm::vec3(1.0f, 1.0f, 0.0f),
     };
     _render_manager->addText(frame_counter);
     FontManager::Text elapsed_time{
       .name = "_plp_elapsed_time",
       .text = "Elapsed time 000000",
-      .position = glm::vec3(10.0f, 20.0f, 0.0f),
+      .position = glm::vec3(200.0f, 20.0f, 0.0f),
       .color = glm::vec3(1.0f, 1.0f, 0.0f),
     };
     _render_manager->addText(elapsed_time);

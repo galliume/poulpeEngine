@@ -46,7 +46,7 @@ namespace Poulpe
       return texture;
     }
 
-    FT_Set_Char_Size(_face, 0, 16 * 64, 96, 96);
+    FT_Set_Char_Size(_face, 0, 16 * 64, 96 * 4, 96 * 4);
 
     if (FT_Load_Char(_face, 'X', FT_LOAD_RENDER))
     {
@@ -60,7 +60,7 @@ namespace Poulpe
     auto offset{0.0f};
     int x_offset{ 0 };
     int y_offset{ 0 };
-    int const max_row_width{ 256 };
+    int const max_row_width{ 2048 };
     int max_row_height{ 0 };
     
     _atlas_width = max_row_width;
@@ -79,7 +79,7 @@ namespace Poulpe
         renderable = false;
       }
 
-      if (FT_Render_Glyph(_face->glyph, FT_RENDER_MODE_NORMAL)) {
+      if (FT_Render_Glyph(_face->glyph, FT_RENDER_MODE_SDF)) {
         PLP_DEBUG("FREETYTPE: Failed to render Glyph");
         renderable = false;
       }
@@ -92,29 +92,22 @@ namespace Poulpe
       }
 
       if (renderable) {
-        std::vector<unsigned char> r_buffer{};
+        std::vector<int8_t> r_buffer{};
       
-        unsigned int glyph_width{ 0 };
-        unsigned int glyph_height{ 0 };
-        int glyph_pitch{ 0 };
+        auto const glyph_width{ _face->glyph->bitmap.width };
+        auto const glyph_height{ _face->glyph->bitmap.rows };
+        auto const glyph_pitch{ _face->glyph->bitmap.pitch };
 
-        glyph_width = _face->glyph->bitmap.width;
-        glyph_height = _face->glyph->bitmap.rows;
-        glyph_pitch = _face->glyph->bitmap.pitch;
-
-        r_buffer.resize(glyph_width * glyph_height * 4, 0);
+        r_buffer.resize(glyph_width * glyph_height, 0x000);
 
         auto buffer = _face->glyph->bitmap.buffer;
         int index{ 0 };
 
         for (auto y{ 0 }; y < glyph_height; y++) {
-          const uint8_t* row_buffer = buffer + y * glyph_pitch;
+          int8_t const * row_buffer = reinterpret_cast<int8_t const *>(buffer) + y * glyph_pitch;
           for (auto x{ 0 }; x < glyph_width; x++) {
-            auto gray_value = row_buffer[x];
-            r_buffer[index++] = 0xff;
-            r_buffer[index++] = 0xff;
-            r_buffer[index++] = 0xff;
-            r_buffer[index++] = gray_value;
+            int8_t sdf = row_buffer[x];
+            r_buffer[index++] = sdf;
           }
         }
 
