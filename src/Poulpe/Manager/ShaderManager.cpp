@@ -323,7 +323,7 @@ namespace Poulpe
       push_constants.size = sizeof(constants);
       push_constants.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
 
-      pipeline_create_infos.has_depth_test = false;
+      pipeline_create_infos.has_depth_test = true;
       pipeline_create_infos.has_depth_write = false;
       pipeline_create_infos.has_stencil_test = false;
       pipeline_create_infos.has_color_attachment = true;

@@ -96,7 +96,7 @@ namespace Poulpe
     if (!_camera->isInit()) {
       auto const& lvl_config{ configManager->lvlConfig() };
       auto const& camera{ lvl_config["camera"] };
-      glm::vec3 start_pos = {
+      glm::vec3 const start_pos = {
         camera["position"]["x"].template get<float>(),
         camera["position"]["y"].template get<float>(),
         camera["position"]["z"].template get<float>() };
@@ -110,10 +110,10 @@ namespace Poulpe
 
     FontManager::Text text {
       .name = "_plp_title",
-      .text = " Ω Thank you ! ₲ ◀ MrPoulpe ▶™",
+      .text = "@ € $ 0 7 é è ù ü ä ö π ∞ β Æ ‰ Ü Γ Đ Ặ Ω ! ₲ ◀ MrPoulpe ▶™",
       .position = glm::vec3(-200.0f, -100.0f, 0.0f), //@todo fix this -
       .color = glm::vec3(1.0f, 0.2f, 0.6f),
-      .scale = 1.f,
+      .scale = 0.2,
       .flat = false
     };
     addText(text);

@@ -25,12 +25,15 @@ layout(location = 2) in vec2 texture_coord;
 
 layout(location = 0) out vec2 out_tex_coords;
 layout(location = 1) out vec3 out_color;
+layout(location = 2) out vec3 out_options;
 
 void main()
 {
+  vec3 options = vec3(0.0, 0.0, 1.0);
   vec4 p = ubo.projection * vec4(position, 1.0);
   
   if (pc.options.x > 0.5) {
+    options.x = 1.0;
     vec3 tmp = position;
     tmp = 1.0-tmp;
     p = ubo.projection * pc.view * ubo.model * vec4(tmp, 1.0);
@@ -39,4 +42,5 @@ void main()
   gl_Position = p;
   out_tex_coords = texture_coord;
   out_color = color;
+  out_options = options;
 }
