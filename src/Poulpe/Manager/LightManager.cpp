@@ -31,7 +31,7 @@ namespace Poulpe
 
     Light light;
     light.color = glm::vec3(255.f/255.f, 100.f/255.f, 0.f);
-    light.position = glm::vec3(0.0f, 0.5f, 0.0f);
+    light.position = glm::vec3(0.0f, 20.f, 0.0f);
     light.direction = glm::vec3(-0.1f, -1.0, 0.0);
     light.ads = glm::vec3(10.0f, 30.0f, 40.0f);
     light.clq = glm::vec3(1.0f, 0.7f, 1.8f);
@@ -39,7 +39,7 @@ namespace Poulpe
     Light light2;
     light2.color = glm::vec3(1.0f);
     //light2.position = glm::vec3(-1.2f, 0.1f, 0.4f);
-    light2.position = glm::vec3(4.f, 3.0f, -1.5f);
+    light2.position = glm::vec3(4.f, 25.0f, -1.5f);
     light2.direction = glm::vec3(-0.1f, -1.0, 0.0);
     light2.ads = glm::vec3(1.2f, 1.2f, 1.4f);
     light2.clq = glm::vec3(1.0f, 0.7f, 1.8f);

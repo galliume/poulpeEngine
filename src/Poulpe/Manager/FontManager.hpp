@@ -20,7 +20,7 @@ namespace Poulpe
     glm::ivec2 bearing;
     long advance;
     unsigned int mem_size{ 0 };
-    std::vector<unsigned char> buffer;
+    std::vector<int8_t> buffer;
     int pitch{ 0 };
     int x_offset{ 0 };
     int y_offset{ 0 };
@@ -35,7 +35,7 @@ namespace Poulpe
       std::string const text;
       glm::vec3 position { 0.0f };
       glm::vec3 color {1.0f};
-      float scale{1.0f};
+      float scale{0.25f};
       bool flat{true}; // flat: 2D UI text, not flat: 3D text
     };
 
