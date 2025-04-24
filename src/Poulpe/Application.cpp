@@ -7,6 +7,7 @@
 #include "GUI/Window.hpp"
 
 #include "Poulpe/Manager/ConfigManager.hpp"
+#include "Poulpe/Manager/DbManager.hpp"
 #include "Poulpe/Manager/InputManager.hpp"
 
 #include "Renderer/Vulkan/Renderer.hpp"
@@ -43,6 +44,8 @@ namespace Poulpe
 
     _api_manager = std::make_unique<APIManager>(_render_manager.get());
     _network_manager = std::make_unique<NetworkManager>(_api_manager.get());
+
+    auto db_manager = std::make_unique<DbManager>();
   }
 
   void Application::run()

@@ -11,7 +11,7 @@ int main(int argc, char** argv)
 {
     std::cout << argv[0] << " Version " << PoulpeEngine_VERSION_MAJOR << "." << PoulpeEngine_VERSION_MINOR << std::endl;
 
-    bool serverMode{ false };
+    bool serverMode{ true };
     std::string port{ "9371" };
 
     for (int i { 0 }; i < argc; ++i) {
