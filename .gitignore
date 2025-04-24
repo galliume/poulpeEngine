@@ -67,3 +67,4 @@ assets/mesh
 CMakeUserPresets.json
 *.ktx2
 *.checksum
+*.sqlite

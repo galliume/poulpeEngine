@@ -101,6 +101,8 @@ if (DEFINED ENV{KTX_SDK})
   find_package(KTX REQUIRED)
 endif()
   
+target_include_directories(${PROJECT_NAME} PRIVATE "${PROJECT_SOURCE_DIR}/vendor/sqlite")
+
 target_include_directories(${PROJECT_NAME} PRIVATE
           ${PROJECT_SOURCE_DIR}/vendor/assimp/include
           ${PROJECT_SOURCE_DIR}/vendor/fmt/include
@@ -182,6 +184,7 @@ list(APPEND EXTRA_LIBS assimp::assimp)
 
 #@todo find a way to install KTX on github server
 list(APPEND EXTRA_LIBS KTX::ktx)
+list(APPEND EXTRA_LIBS ${PROJECT_SOURCE_DIR}/vendor/sqlite/sqlite3.lib)
 
 target_link_libraries(${PROJECT_NAME} PRIVATE ${EXTRA_LIBS} poulpe)
 
