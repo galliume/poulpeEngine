@@ -59,7 +59,7 @@
       "cacheVariables": {
         "CMAKE_CXX_STANDARD": {
             "type": "STRING",
-            "value": "20"
+            "value": "23"
         },
         "CMAKE_CXX_STANDARD_REQUIRED": {
           "type": "BOOL",

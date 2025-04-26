@@ -8,81 +8,59 @@
 
 namespace Poulpe
 {
-  static int wrapMove(lua_State* L)
-  {
-    BoneAnimationScript* animScript = static_cast<BoneAnimationScript*>(lua_touserdata(L, 1));
-    double const delta_time{ static_cast<double>(lua_tonumber(L, 2)) };
-
-    animScript->move(
-      animScript->getData(),
-      delta_time);
-
-    return 0;
-  }
-
   BoneAnimationScript::BoneAnimationScript(
     std::vector<Animation> const& animations,
-    std::vector<Position> const& positions,
-    std::vector<Rotation> const& rotations,
-    std::vector<Scale> const& scales)
-    : _Animations(animations)
-    , _Positions(positions)
-    , _Rotations(rotations)
-    , _Scales(scales)
+    std::unordered_map<std::string, std::vector<Position>> const& positions,
+    std::unordered_map<std::string, std::vector<Rotation>> const& rotations,
+    std::unordered_map<std::string, std::vector<Scale>> const& scales)
+    : _animations(std::move(animations))
+    , _positions(std::move(positions))
+    , _rotations(std::move(rotations))
+    , _scales(std::move(scales))
   {
-    if (!std::filesystem::exists(_script_path)) {
-      PLP_FATAL("script file {} does not exits.", _script_path);
-      return;
-    }
 
-    _lua_State = luaL_newstate();
-    luaL_openlibs(_lua_State);
-    lua_register(_lua_State, "_Move", wrapMove);
-
-    checkLua(_lua_State, luaL_dofile(_lua_State, _script_path.c_str()));
   }
 
   BoneAnimationScript::~BoneAnimationScript()
   {
-    lua_close(_lua_State);
+
   }
 
   void BoneAnimationScript::move(
     Data* dataMove,
     double delta_timeMove)
   {
-    std::unique_ptr<BoneAnimationMove> animMove = std::make_unique<BoneAnimationMove>();
+    //std::unique_ptr<BoneAnimationMove> animMove = std::make_unique<BoneAnimationMove>();
 
     //PLP_TRACE("START at {}/{}/{}", dataMove->_origin_pos.x, dataMove->_origin_pos.y, dataMove->_origin_pos.z);
-    //PLP_TRACE("TO {}/{}/{}", animMove->target.x, animMove->target.y, animMove->target.z);
 
-    animMove->update = [] (
-      BoneAnimationMove* anim,
-      Data* data,
-      double delta_time,
-      std::vector<Animation> const& animations,
-      std::vector<Position> const& positions,
-      std::vector<Rotation> const& rotations,
-      std::vector<Scale> const& scales) {
+    //animMove->update = [] (
+    //  BoneAnimationMove* anim,
+    //  Data* data,
+    //  double delta_time,
+    //  std::vector<Animation> const& animations,
+    //  std::vector<Position> const& positions,
+    //  std::vector<Rotation> const& rotations,
+    //  std::vector<Scale> const& scales) {
 
-      if (animations.empty()) {
-        anim->done = true;
-        return;
-      }
+    //  if (animations.empty()) {
+    //    anim->done = true;
+    //    return;
+    //  }
 
 
-      //run: from 814.0 to 831.0
-      anim->duration = 17;//run duration
-      float t = anim->elapsedTime / anim->duration;
-      bool done{ false };
+    //  //run: from 814.0 to 831.0
+    //  anim->duration = 17;//run duration
+    //  float t = anim->elapsedTime / anim->duration;
+    //  bool done{ false };
 
-      unsigned int const index = 814 + static_cast<int>(std::ceil(anim->elapsedTime));
+    //  unsigned int const index = 814 + static_cast<int>(std::ceil(anim->elapsedTime));
 
-      if (anim->elapsedTime >= anim->duration) {
-        done = true;
-        t = 1.f;
-      }
-      anim->elapsedTime += delta_time;
+    //  if (anim->elapsedTime >= anim->duration) {
+    //    done = true;
+    //    t = 1.f;
+    //  }
+    //  anim->elapsedTime += delta_time;
       //PLP_DEBUG("e {} d {} t {} index {} delta {}", anim->elapsedTime, anim->duration, t, index, delta_time.count());
 
       //glm::vec3 newPos = glm::mix(data->_origin_pos, p.value, t);
@@ -127,10 +105,10 @@ namespace Poulpe
       //  data->_origin_scale = newScale;
       //  //PLP_TRACE("DONE at {}/{}/{}", data->_origin_pos.x, data->_origin_pos.y, data->_origin_pos.z);
       //}
-      anim->done = done;
-    };
-    animMove->update(animMove.get(), dataMove, delta_timeMove, _Animations, _Positions, _Rotations, _Scales);
-    _new_moves.emplace_back(std::move(animMove));
+     //anim->done = done;
+    //};
+    //animMove->update(animMove.get(), dataMove, delta_timeMove, _animations, _positions, _rotations, _scales);
+    //_new_moves.emplace_back(std::move(animMove));
   }
 
   void BoneAnimationScript::operator()(double const delta_time, Mesh* mesh)
@@ -143,30 +121,49 @@ namespace Poulpe
 
     _new_moves.clear();
 
-    if (!_move_init) {
-      lua_getglobal(_lua_State, "nextMove");
-      if (lua_isfunction(_lua_State, -1)) {
-        lua_pushlightuserdata(_lua_State, this);
-        lua_pushnumber(_lua_State, delta_time);
-        checkLua(_lua_State, lua_pcall(_lua_State, 2, 1, 0));
-      }
-      _move_init = true;
-    }
+    //if (!_move_init) {
+    if (_moves.empty() && !_animations.empty()) {
 
-    std::ranges::for_each(_moves, [&](auto& anim) {
+      auto const& anim{ _animations.at(2) };
+      auto const duration{ anim.duration * 0.001 };//ms
 
-      anim->update(anim.get(), mesh->getData(), delta_time, _Animations, _Positions, _Rotations, _Scales);
+      float t = _elapsed_time / duration;
+      bool done{ false };
 
-      if (anim->done) {
-        lua_getglobal(_lua_State, "nextMove");
-        if (lua_isfunction(_lua_State, -1)) {
-          lua_pushlightuserdata(_lua_State, this);
-          lua_pushnumber(_lua_State, delta_time);
-          checkLua(_lua_State, lua_pcall(_lua_State, 2, 1, 0));
+      auto positions_by_id = [](
+        int anim_id,
+        std::unordered_map<std::string, std::vector<Position>> const& positions_map) {
+          return positions_map
+            | std::views::transform([](auto const& pair) -> auto const& { return pair.second; })
+            | std::views::join
+            | std::views::filter([=](auto const& pos) { return pos.animation_ID == anim_id; });
+        };
+
+      std::ranges::for_each(
+        positions_by_id(anim.id, _positions),
+        [&](auto const& pos) {
+          PLP_DEBUG("anim ID {} time {} x {} y {} z {}", anim.id, pos.time, pos.value.x, pos.value.y, pos.value.z); 
+
+          std::ranges::for_each(_data->_bones, [&](auto const& b) {
+            auto const& bone = b.second;
+            PLP_DEBUG("bone: {}", bone.name);
+
+            std::ranges::for_each(bone.weights, [&](auto const& weight) {
+              auto const& vertex = _data->_vertices.at(weight.vertex_id);
+              //vertex.pos = {pos.value.x, pos.value.y, pos.value.z};
+            });
+          });
         }
-      }
-    });
+      );
 
-    std::erase_if(_moves, [](auto& anim) { return anim->done; });
+      if (_elapsed_time >= duration) {
+        _elapsed_time = 0;
+        t = 1.f;
+      }
+
+      _elapsed_time += delta_time;
+      //PLP_DEBUG("anim {} elapased time {} duration {} t {} delta {}", anim.name, 
+      //_elapsed_time, duration, t, delta_time);
+    }
   }
 }

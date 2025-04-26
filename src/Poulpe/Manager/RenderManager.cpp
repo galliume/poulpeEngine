@@ -199,10 +199,13 @@ namespace Poulpe
               (*animation_component)(delta_time, mesh);
             }
 
-            //auto* boneAnimationComponent = _component_manager->get<BoneAnimationComponent>(entity->getID());
-            //if (boneAnimationComponent) {
-              //boneAnimationComponent->visit(delta_time, mesh);
+            auto* boneAnimationComponent = _component_manager->get<BoneAnimationComponent>(leaf_node->getEntity()->getID());
+            if (boneAnimationComponent) {
+              (*boneAnimationComponent)(delta_time, mesh);
               //mesh->setIsDirty(true);
+
+
+
 
               /*if (mesh->hasBufferStorage()) {
                 auto buffer{ mesh->getStorageBuffers()->at(0) };
@@ -213,7 +216,7 @@ namespace Poulpe
 
                 _renderer->updateStorageBuffer(buffer, *objectBuffer);
               }*/
-              //}
+              }
           }
         });
       });

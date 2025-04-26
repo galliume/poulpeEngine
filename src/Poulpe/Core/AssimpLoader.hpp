@@ -19,9 +19,9 @@ namespace Poulpe
         std::vector<material_t> const materials,
         bool const exists,
         std::vector<Animation> const animations,
-        std::vector<Position> const positions,
-        std::vector<Rotation> const rotations,
-        std::vector<Scale> const scales)> callback);
+        std::unordered_map<std::string, std::vector<Poulpe::Position>> const positions,
+        std::unordered_map<std::string, std::vector<Poulpe::Rotation>> const rotations,
+        std::unordered_map<std::string, std::vector<Poulpe::Scale>> const scales)> callback);
 
   private:
      static std::string const cleanName(std::string const& name);

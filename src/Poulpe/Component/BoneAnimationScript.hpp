@@ -1,8 +1,6 @@
 #pragma once
 #include "Poulpe/Core/PlpTypedef.hpp"
 
-#include "Poulpe/Utils/LuaScript.hpp"
-
 #include <chrono>
 
 namespace Poulpe
@@ -24,13 +22,12 @@ namespace Poulpe
     glm::vec3 rot{ 0.0f };
     glm::vec3 scale{ 0.0f };
     std::function<void(
-      BoneAnimationMove* anim,
       Data* data,
       double delta_time,
       std::vector<Animation> const& animations,
-      std::vector<Position> const& positions,
-      std::vector<Rotation> const& rotations,
-      std::vector<Scale> const& scales)> update;
+      std::unordered_map<std::string, std::vector<Position>> const& positions,
+      std::unordered_map<std::string, std::vector<Rotation>> const& rotations,
+      std::unordered_map<std::string, std::vector<Scale>> const& scales)> update;
   };
 
   class BoneAnimationScript
@@ -38,9 +35,9 @@ namespace Poulpe
   public:
     BoneAnimationScript(
       std::vector<Animation> const& animations,
-      std::vector<Position> const& positions,
-      std::vector<Rotation> const& rotations,
-      std::vector<Scale> const& scales);
+      std::unordered_map<std::string, std::vector<Position>> const& positions,
+      std::unordered_map<std::string, std::vector<Rotation>> const& rotations,
+      std::unordered_map<std::string, std::vector<Scale>> const& scales);
     ~BoneAnimationScript();
 
     Data* getData() { return _data; }
@@ -58,19 +55,19 @@ namespace Poulpe
     void operator()(double const delta_time, Mesh* mesh);
 
   private:
-    std::string const _script_path{"./assets/scripts/animation/skelet/boneAnimation.lua"};
     Data* _data;
     Renderer* _renderer;
-    lua_State* _lua_State;
+
+    float _elapsed_time{ 0.f };
 
     bool _move_init{ false };
 
     std::vector<std::unique_ptr<BoneAnimationMove>> _moves{};
     std::vector<std::unique_ptr<BoneAnimationMove>> _new_moves{};
 
-    std::vector<Animation> _Animations{};
-    std::vector<Position> _Positions{};
-    std::vector<Rotation> _Rotations{};
-    std::vector<Scale> _Scales{};
+    std::vector<Animation> _animations{};
+    std::unordered_map<std::string, std::vector<Position>> _positions{};
+    std::unordered_map<std::string, std::vector<Rotation>> _rotations{};
+    std::unordered_map<std::string, std::vector<Scale>> _scales{};
   };
 }

@@ -78,9 +78,9 @@ namespace Poulpe
       std::vector<material_t> const materials,
       bool const exists,
       std::vector<Animation> const animations,
-      std::vector<Position> const positions,
-      std::vector<Rotation> const rotations,
-      std::vector<Scale> const scales) {
+      std::unordered_map<std::string, std::vector<Position>> const positions,
+      std::unordered_map<std::string, std::vector<Rotation>> const rotations,
+      std::unordered_map<std::string, std::vector<Scale>> const scales) {
 
     auto const& positionData = data["positions"].at(0);
 
@@ -259,6 +259,7 @@ namespace Poulpe
       data._origin_rotation = entity_opts.rotation;
       data._current_rotation = entity_opts.rotation;
       data._transform_matrix = _data.transform_matrix;
+      data._bones = _data.bones;
 
       UniformBufferObject ubo{};
       ubo.model = glm::mat4(1.0f);
@@ -344,6 +345,7 @@ namespace Poulpe
 
       if (is_last) {
         {
+          //lua scripted animation
           if (has_animation) {
             //@todo temp until lua scripting
             for (auto& anim : entity_opts.animation_scripts) {
@@ -351,12 +353,12 @@ namespace Poulpe
               animationScript->init(_renderer, nullptr, nullptr);
               _component_manager->add<AnimationComponent>(root_mesh_entity_node->getEntity()->getID(), std::move(animationScript));
             }
-
-            if (!animations.empty()) {
-              auto boneAnimationScript = std::make_unique<BoneAnimationScript>(animations, positions, rotations, scales);
-              _component_manager->add<BoneAnimationComponent>(
-              root_mesh_entity_node->getEntity()->getID(), std::move(boneAnimationScript));
-            }
+          }
+          //skeleton animation
+          if (!animations.empty()) {
+            auto boneAnimationScript = std::make_unique<BoneAnimationScript>(animations, positions, rotations, scales);
+            _component_manager->add<BoneAnimationComponent>(
+            root_mesh_entity_node->getEntity()->getID(), std::move(boneAnimationScript));
           }
 
           std::shared_lock guard(_mutex_shared);
