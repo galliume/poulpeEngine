@@ -39,9 +39,9 @@ namespace Poulpe
           std::vector<material_t> const materials,
           bool const exists,
           std::vector<Animation> const animations,
-          std::vector<Position> const positions,
-          std::vector<Rotation> const rotations,
-          std::vector<Scale> const scales)> callback)
+          std::unordered_map<std::string, std::vector<Position>> const positions,
+          std::unordered_map<std::string, std::vector<Rotation>> const rotations,
+          std::unordered_map<std::string, std::vector<Scale>> const scales)> callback)
   {
     Assimp::Importer importer;
 
@@ -404,11 +404,12 @@ namespace Poulpe
     }
 
     std::vector<Animation> animations{};
-    std::vector<Rotation> rotations{};
-    std::vector<Position> positions{};
-    std::vector<Scale> scales{};
+    std::unordered_map<std::string, std::vector<Rotation>> rotations{};
+    std::unordered_map<std::string, std::vector<Position>> positions{};
+    std::unordered_map<std::string, std::vector<Scale>> scales{};
 
     animations.reserve(scene->mNumAnimations);
+
     for (unsigned int i{ 0 }; i < scene->mNumAnimations; i++) {
 
       aiAnimation const* animation = scene->mAnimations[i];
@@ -418,28 +419,34 @@ namespace Poulpe
       //PLP_DEBUG("Animation {}, duration {}", animation->mName.C_Str(), animation->mDuration);
       for (unsigned int j{ 0 }; j < animation->mNumChannels; j++) {
         aiNodeAnim const* node = animation->mChannels[j];
+        std::string const node_name{ node->mNodeName.C_Str() };
 
-        rotations.reserve(node->mNumRotationKeys);
+        std::vector<Rotation>rots{};
         for (unsigned int r{ 0 }; r < node->mNumRotationKeys; r++) {
+          rots.reserve(node->mNumRotationKeys);
           aiQuatKey const& rotKey = node->mRotationKeys[r];
           //PLP_DEBUG("rot {} x {} y {} z {}", rotKey.mTime, rotKey.mValue.x, rotKey.mValue.y, rotKey.mValue.z);
-          //rotations.emplace_back(i, rotKey.mTime, GetGLMQuat(rotKey.mValue));
-          rotations.emplace_back(i, rotKey.mTime, GetGLMQuat(rotKey.mValue));
+          rots.emplace_back(i, rotKey.mTime, GetGLMQuat(rotKey.mValue));
         }
+        rotations[node_name] = rots;
 
-        positions.reserve(node->mNumPositionKeys);
+        std::vector<Position> pos{};
         for (unsigned int p{ 0 }; p < node->mNumPositionKeys; p++) {
+          pos.reserve(node->mNumPositionKeys);
           aiVectorKey const& posKey = node->mPositionKeys[p];
           //PLP_DEBUG("pos {} x {} y {} z {}", posKey.mTime, posKey.mValue.x, posKey.mValue.y, posKey.mValue.z);
-          positions.emplace_back(i, posKey.mTime, GetGLMVec(posKey.mValue));
+          pos.emplace_back(i, posKey.mTime, GetGLMVec(posKey.mValue));
         }
+        positions[node_name] = pos;
 
-        scales.reserve(node->mNumScalingKeys);
+        std::vector<Scale> sc{};
         for (unsigned int s{ 0 }; s < node->mNumScalingKeys; s++) {
+          sc.reserve(node->mNumScalingKeys);
           aiVectorKey const& scaleKey = node->mScalingKeys[s];
           //PLP_DEBUG("scale {} x {} y {} z {}", scaleKey.mTime, scaleKey.mValue.x, scaleKey.mValue.y, scaleKey.mValue.z);
-          scales.emplace_back(i, scaleKey.mTime, GetGLMVec(scaleKey.mValue));
+          sc.emplace_back(i, scaleKey.mTime, GetGLMVec(scaleKey.mValue));
         }
+        scales[node_name] = sc;
       }
     }
 
@@ -589,46 +596,29 @@ namespace Poulpe
         mesh_data.materials_ID = { mesh->mMaterialIndex };
       }
 
-      std::unordered_map<std::string, Bone> bonesMap{};
-      unsigned int boneCounter{ 0 };
+      std::unordered_map<std::string, Bone> bones_map{};
 
       if (mesh->HasBones()) {
 
+        Bone bone_data{};
         for (unsigned int b{ 0 }; b < mesh->mNumBones; b++) {
           aiBone const* bone = mesh->mBones[b];
 
           int boneID{ -1 };
-          std::string const& boneName{ bone->mName.C_Str() };
+          std::string const& bone_name{ bone->mName.C_Str() };
 
-          if (bonesMap.contains(boneName)) {
-            boneID = bonesMap[boneName].id;
-          } else {
-            Bone boneData{};
-            boneData.id = boneCounter;
-            boneData.name = boneName;
-            boneData.offset_matrix = ConvertMatrixToGLMFormat(bone->mOffsetMatrix);
-            bonesMap.emplace(boneName, std::move(boneData));
-
-            boneCounter++;
-          }
+          bone_data.name = bone_name;
+          bone_data.offset_matrix = ConvertMatrixToGLMFormat(bone->mOffsetMatrix);
 
           std::unordered_map<unsigned int, float> weights{};
 
           for (unsigned int w{ 0 }; w < bone->mNumWeights; w++) {
-            aiVertexWeight aiWeight = bone->mWeights[w];
-
-            auto const id = aiWeight.mVertexId;
-            auto const weight = aiWeight.mWeight;
-
-            //auto& vtex = mesh_data.vertices.at(id);
-            //for (auto bW{ 0 }; bW < 4; bW++) {
-            //  if (vtex.weights[bW] < 0) {
-            //    vtex.weights[bW] = weight;
-            //    vtex.bones_ids[bW] = boneID;
-            //  }
-            //}
+            aiVertexWeight const& aiWeight = bone->mWeights[w];
+            bone_data.weights.emplace_back(aiWeight.mVertexId, aiWeight.mWeight);
           }
+          bones_map[bone_data.name] = std::move(bone_data);
         }
+        mesh_data.bones = bones_map;
       }
       data.emplace_back(mesh_data);
     }

@@ -198,6 +198,17 @@ namespace Poulpe
     uint32_t offset;
     unsigned long long size;
   };
+ 
+  struct BoneWeight {
+    unsigned int vertex_id;
+    float weight;
+  };
+
+  struct Bone {
+    std::string name{};
+    glm::mat4 offset_matrix{};
+    std::vector<BoneWeight> weights{};
+  };
 
   struct Data {
     std::string _name;
@@ -227,6 +238,7 @@ namespace Poulpe
     glm::vec3 _current_scale;
     glm::vec3 _tangeant;
     glm::mat4 _transform_matrix;
+    std::unordered_map<std::string, Bone> _bones{};
   };
 
   struct EntityOptions
@@ -243,12 +255,6 @@ namespace Poulpe
     bool flip_Y{ false };
     bool is_indexed{ false };
     bool debug_normal{ false };
-  };
-
-  struct Bone {
-    unsigned int id{};
-    std::string name{};
-    glm::mat4 offset_matrix{};
   };
 
   struct Animation {
@@ -285,6 +291,7 @@ namespace Poulpe
     std::vector<uint32_t> materials_ID{};
     std::vector<Vertex> vertices{};
     glm::mat4 transform_matrix{};
+    std::unordered_map<std::string, Bone> bones{};
   };
 
   enum class SocketStatus {
