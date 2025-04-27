@@ -73,6 +73,10 @@
           "type": "STRING",
           "value": "ON"
         },
+        "CMAKE_POLICY_VERSION_MINIMUM": {
+          "type" : "STRING",
+          "value": "3.5"
+        },
         "GIT_SUBMODULE": {
           "type": "STRING",
           "value": "ON"

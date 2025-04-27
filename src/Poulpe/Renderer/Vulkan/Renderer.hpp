@@ -105,19 +105,14 @@ namespace Poulpe
     ~Renderer()  = default;
 
     inline void addCamera(Camera* const camera) { _camera = camera; }
-    void addEntities(std::vector<Entity*> entities) ;
-    void addEntity(Entity* entity, bool const is_last) ;
-    void addTransparentEntity(Entity* entity, bool const is_last) ;
-    void addTextEntity(Entity* entity, bool const is_last) ;
-
-    void updateData(
-      std::string const& name,
-      UniformBufferObject const& ubo,
-      std::vector<Vertex> const& vertices) ;
+    void addEntities(std::vector<Entity*> entities);
+    void addEntity(Entity* entity, bool const is_last);
+    void addTransparentEntity(Entity* entity, bool const is_last);
+    void addTextEntity(Entity* entity, bool const is_last);
 
     void addPipeline(
       std::string const& shaderName,
-      VulkanPipeline& pipeline) ;
+      VulkanPipeline& pipeline);
 
     void clear();
     void destroy();

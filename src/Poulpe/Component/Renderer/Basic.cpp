@@ -200,66 +200,42 @@ namespace Poulpe
   {
     if (!mesh && !mesh->isDirty()) return;
 
-    auto commandPool = _renderer->getAPI()->createCommandPool();
+    auto cmd_pool = _renderer->getAPI()->createCommandPool();
 
-    if (mesh->getData()->_ubos_offset.empty()) {
-      uint32_t const totalInstances{ static_cast<uint32_t>(mesh->getData()->_ubos.size()) };
-      uint32_t const maxUniformBufferRange{ _renderer->getAPI()->getDeviceProperties().limits.maxUniformBufferRange };
-      unsigned long long const uniformBufferChunkSize{ maxUniformBufferRange / sizeof(UniformBufferObject) };
-      uint32_t const uniformBuffersCount{ static_cast<uint32_t>(std::ceil(static_cast<float>(totalInstances) / static_cast<float>(uniformBufferChunkSize))) };
-      
-      //PLP_DEBUG("total {} max range {} count {}", totalInstances, maxUniformBufferRange, uniformBuffersCount);
+    if (mesh->getUniformBuffers()->empty()) {
+      std::ranges::for_each(mesh->getData()->_bones, [&](auto const& bone) {
+        
+        auto const& b{ bone.second };
 
-      //@todo fix memory management...
-      unsigned long long uboOffset{ (totalInstances > uniformBufferChunkSize) ? uniformBufferChunkSize : totalInstances };
-      unsigned long long uboRemaining{ (totalInstances - uboOffset > 0) ? totalInstances - uboOffset : 0 };
-      unsigned long long nbUbo{ uboOffset };
-      //PLP_DEBUG("uboOffset {} uboRemaining {} nbUbo {}", uboOffset, uboRemaining, nbUbo);
-
-      for (size_t i{ 0 }; i < uniformBuffersCount; ++i) {
-
-        mesh->getData()->_ubos_offset.emplace_back(uboOffset);
-        Buffer uniformBuffer = _renderer->getAPI()->createUniformBuffers(nbUbo, commandPool);
-        mesh->getUniformBuffers()->emplace_back(uniformBuffer);
-
-        uboOffset = (uboRemaining > uniformBufferChunkSize) ? uboOffset + uniformBufferChunkSize : uboOffset + uboRemaining;
-        nbUbo = (uboRemaining > uniformBufferChunkSize) ? uniformBufferChunkSize : uboRemaining;
-        uboRemaining = (totalInstances - uboOffset > 0) ? totalInstances - uboOffset : 0;
-      }
+        Buffer uniformBuffer = _renderer->getAPI()->createUniformBuffers(1, cmd_pool);
+        mesh->getUniformBuffers()->emplace_back(std::move(uniformBuffer));
+      });
+    }
+    if (mesh->getUniformBuffers()->empty()) { //no bones
+      Buffer uniformBuffer = _renderer->getAPI()->createUniformBuffers(1, cmd_pool);
+      mesh->getUniformBuffers()->emplace_back(std::move(uniformBuffer));
     }
 
     auto const& data = mesh->getData();
     data->_texture_index = 0;
 
     if (data->_vertex_buffer.buffer == VK_NULL_HANDLE) {
-      data->_vertex_buffer = _renderer->getAPI()->createVertexBuffer(commandPool, data->_vertices);
-      data->_indices_buffer = _renderer->getAPI()->createIndexBuffer(commandPool, data->_indices);
+      data->_vertex_buffer = _renderer->getAPI()->createVertexBuffer(cmd_pool, data->_vertices);
+      data->_indices_buffer = _renderer->getAPI()->createIndexBuffer(cmd_pool, data->_indices);
     } else {
       //suppose we have to update data
       {
         data->_vertex_buffer.memory->lock();
-
-        void* newData;
-        vkMapMemory(_renderer->getDevice(), *data->_vertex_buffer.memory->getMemory(), data->_vertex_buffer.offset, data->_vertex_buffer.size, 0, &newData);
-        memcpy(newData, data->_vertices.data(), data->_vertex_buffer.size);
-        vkUnmapMemory(_renderer->getDevice(), *data->_vertex_buffer.memory->getMemory());
-
+        auto *buffer { data->_vertex_buffer.memory->getBuffer(data->_vertex_buffer.index) };
+        _renderer->getAPI()->updateVertexBuffer(cmd_pool, data->_vertices, buffer);
         data->_vertex_buffer.memory->unLock();
-      }
-      {
-        data->_indices_buffer.memory->lock();
-
-        void* newData;
-        vkMapMemory(_renderer->getDevice(), *data->_indices_buffer.memory->getMemory(), data->_indices_buffer.offset, data->_indices_buffer.size, 0, &newData);
-        memcpy(newData, data->_indices.data(), data->_indices_buffer.size);
-        vkUnmapMemory(_renderer->getDevice(), *data->_indices_buffer.memory->getMemory());
-
-        data->_indices_buffer.memory->unLock();
       }
     }
 
-    for (size_t i{ 0 }; i < mesh->getData()->_ubos.size(); ++i) {
-      mesh->getData()->_ubos[i].projection = _renderer->getPerspective();
+    for (auto i{ 0 }; i < mesh->getData()->_ubos.size(); i++) {
+      std::ranges::for_each(mesh->getData()->_ubos.at(i), [&](auto& ubo) {
+        ubo.projection = _renderer->getPerspective();
+      });
     }
 
     if (mesh->getStorageBuffers()->empty()) {
@@ -314,7 +290,7 @@ namespace Poulpe
       objectBuffer.sun_light = _light_manager->getSunLight();
       objectBuffer.material = material;
 
-      auto storageBuffer{ _renderer->getAPI()->createStorageBuffers(objectBuffer, commandPool) };
+      auto storageBuffer{ _renderer->getAPI()->createStorageBuffers(objectBuffer, cmd_pool) };
 
       mesh->setObjectBuffer(objectBuffer);
       mesh->addStorageBuffer(storageBuffer);
@@ -327,21 +303,19 @@ namespace Poulpe
     unsigned int max{ 0 };
 
     for (size_t i{ 0 }; i < mesh->getUniformBuffers()->size(); ++i) {
-      max = mesh->getData()->_ubos_offset.at(i);
-      auto ubos = std::vector<UniformBufferObject>(mesh->getData()->_ubos.begin() + min, mesh->getData()->_ubos.begin() + max);
 
-      min = max;
-      if (ubos.empty()) continue;
-      _renderer->getAPI()->updateUniformBuffer(mesh->getUniformBuffers()->at(i), &ubos);
+      auto& ubos{ mesh->getUniformBuffers()->at(i) };
+      auto& ubos_data{ mesh->getData()->_ubos.at(i) };
+
+      _renderer->getAPI()->updateUniformBuffer(ubos, &ubos_data);
     }
 
     if (*mesh->getDescSet() == NULL) {
-
       createDescriptorSet(mesh);
       setPushConstants(mesh);
     }
     mesh->setIsDirty(false);
 
-    vkDestroyCommandPool(_renderer->getDevice(), commandPool, nullptr);
+    vkDestroyCommandPool(_renderer->getDevice(), cmd_pool, nullptr);
   }
 }

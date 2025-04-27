@@ -270,7 +270,25 @@ namespace Poulpe
       //ubo.inversed_model = glm::inverse(ubo.model);
 
       //ubo.view = glm::mat4(1.0f);
-      data._ubos.emplace_back(ubo);
+      
+      std::vector<std::vector<UniformBufferObject>> ubos{};
+      ubos.reserve(data._bones.size());
+
+      std::ranges::for_each(data._bones, [&](auto& bone) {
+        
+        auto const& b{ bone.second };
+        std::vector<UniformBufferObject> tmp_ubos{ };
+        tmp_ubos.resize(b.weights.size());
+
+        std::fill(tmp_ubos.begin(), tmp_ubos.end(), ubo);
+        ubos.push_back(tmp_ubos);
+      });
+
+      if (ubos.empty()) { //no bones
+        ubos.push_back({ ubo });
+      }
+
+      data._ubos = ubos;
       data._original_ubo = ubo;
 
       glm::vec3 center = glm::vec3(0.0);

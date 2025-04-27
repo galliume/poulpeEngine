@@ -224,42 +224,35 @@ namespace Poulpe
         vertices.push_back(v4);
       }
     }
-
-    UniformBufferObject ubo;
-    ubo.model = glm::mat4(1.0f);
-
-    ubo.projection = _renderer->getPerspective();
-
+    auto const& data = mesh->getData();
     auto commandPool = _renderer->getAPI()->createCommandPool();
 
-    auto const& data = mesh->getData();
+    std::vector<UniformBufferObject> ubos{};
+    ubos.reserve(1);
+    UniformBufferObject ubo;
+    ubo.model = glm::mat4(1.0f);
+    ubo.projection = _renderer->getPerspective();
+    ubos.push_back(ubo);
 
     data->_vertices = vertices;
-    //data->_indices = indices;
-
     data->_vertex_buffer = _renderer->getAPI()->createVertexBuffer(commandPool, vertices);
     data->_texture_index = 0;
-    data->_ubos.emplace_back(ubo);
+    data->_ubos.resize(1);
+    data->_ubos[0] = ubos;
 
     mesh->getData()->_ubos_offset.emplace_back(1);
     mesh->getUniformBuffers()->emplace_back(_renderer->getAPI()->createUniformBuffers(1, commandPool));
 
-    for (size_t i{ 0 }; i < mesh->getData()->_ubos.size(); ++i) {
-      mesh->getData()->_ubos[i].projection = _renderer->getPerspective();
+    for (auto i{ 0 }; i < mesh->getData()->_ubos.size(); i++) {
+      std::ranges::for_each(mesh->getData()->_ubos.at(i), [&](auto& ubo) {
+        ubo.projection = _renderer->getPerspective();
+      });
     }
 
     vkDestroyCommandPool(_renderer->getDevice(), commandPool, nullptr);
 
-    unsigned int min{ 0 };
-    unsigned int max{ 0 };
-
-    for (size_t i{ 0 }; i < mesh->getUniformBuffers()->size(); ++i) {
-      max = mesh->getData()->_ubos_offset.at(i);
-      auto ubos = std::vector<UniformBufferObject>(mesh->getData()->_ubos.begin() + min, mesh->getData()->_ubos.begin() + max);
-
-      min = max;
-      if (ubos.empty()) continue;
-      _renderer->getAPI()->updateUniformBuffer(mesh->getUniformBuffers()->at(i), &ubos);
+    if (!mesh->getData()->_ubos.empty()) {
+      _renderer->getAPI()->updateUniformBuffer(mesh->getUniformBuffers()->at(0), &mesh->getData()->_ubos.at(0));
     }
 
     createDescriptorSet(mesh);

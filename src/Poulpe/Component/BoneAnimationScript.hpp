@@ -1,4 +1,5 @@
 #pragma once
+
 #include "Poulpe/Core/PlpTypedef.hpp"
 
 #include <chrono>
@@ -30,6 +31,9 @@ namespace Poulpe
       std::unordered_map<std::string, std::vector<Scale>> const& scales)> update;
   };
 
+  template <typename T>
+  concept isAnimOperation = std::derived_from<T, AnimOperation>;
+
   class BoneAnimationScript
   {
   public:
@@ -46,7 +50,7 @@ namespace Poulpe
        TextureManager* const texture_manager,
        LightManager* const light_manager)
     {
-        _renderer = renderer;
+      _renderer = renderer;
     }
     void move(
       Data* dataMove,
@@ -61,6 +65,7 @@ namespace Poulpe
     float _elapsed_time{ 0.f };
 
     bool _move_init{ false };
+    bool _done{false};
 
     std::vector<std::unique_ptr<BoneAnimationMove>> _moves{};
     std::vector<std::unique_ptr<BoneAnimationMove>> _new_moves{};
@@ -69,5 +74,51 @@ namespace Poulpe
     std::unordered_map<std::string, std::vector<Position>> _positions{};
     std::unordered_map<std::string, std::vector<Rotation>> _rotations{};
     std::unordered_map<std::string, std::vector<Scale>> _scales{};
+
+    template<isAnimOperation T>
+    auto interpolate(
+      T const& start,
+      T const& end,
+      float current_time,
+      AnimInterpolation interpolation)
+    {
+      float t = (current_time - start.time) / (end.time - start.time);
+
+      if constexpr (std::same_as<decltype(start.value), glm::vec3>) {
+        switch (interpolation) {
+        case AnimInterpolation::STEP:
+          return start.value;
+
+        case AnimInterpolation::LINEAR:
+          return glm::vec3{
+            std::lerp(start.value.x, end.value.x, t),
+            std::lerp(start.value.y, end.value.y, t),
+            std::lerp(start.value.z, end.value.z, t)
+          };
+
+        case AnimInterpolation::CUBIC_SPLINE:
+          //@todo
+          return start.value;
+        }
+        return start.value;
+      } else if constexpr (std::same_as<decltype(start.value), glm::quat>) {
+        switch (interpolation) {
+        case AnimInterpolation::STEP:
+          return start.value;
+
+        case AnimInterpolation::SPHERICAL_LINEAR:
+          return glm::quat{
+            glm::slerp(start.value, end.value, t),
+          };
+
+        case AnimInterpolation::CUBIC_SPLINE:
+          //@todo
+          return start.value;
+        }
+        return start.value;
+      } else {
+        static_assert(false, "Unsupported value type in interpolate()");
+      }
+    }
   };
 }
