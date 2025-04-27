@@ -30,5 +30,6 @@ namespace Poulpe
        std::vector<PlpMeshData>& mesh_data,
        bool const flip_Y);
     static TextureWrapMode getTextureWrapMode(aiTextureMapMode const wrap_mode);
+    static AnimInterpolation AssimpLoader::getInterpolation(aiAnimInterpolation const assimp_interpolation);
   };
 }

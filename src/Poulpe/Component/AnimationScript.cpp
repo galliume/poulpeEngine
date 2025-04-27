@@ -125,9 +125,11 @@ namespace Poulpe
       model = glm::rotate(model, glm::radians(data->_origin_rotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
       model = glm::rotate(model, glm::radians(data->_origin_rotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
 
-      std::ranges::for_each(data->_ubos, [&model](auto& ubo) {
-        ubo.model = model;
-      });
+      for (auto i{ 0 }; i < data->_ubos.size(); i++) {
+        std::ranges::for_each(data->_ubos.at(i), [&model](auto& ubo) {
+          ubo.model = model;
+        });
+      }
 
       anim->elapsedTime += delta_time;
 
@@ -169,9 +171,11 @@ namespace Poulpe
       model = glm::translate(model, data->_current_pos);
       model *= glm::mat4_cast(data->_current_rotation);
 
-      std::ranges::for_each(data->_ubos, [&model](auto& ubo) {
-        ubo.model = model;
-      });
+      for (auto i{ 0 }; i < data->_ubos.size(); i++) {
+        std::ranges::for_each(data->_ubos.at(i), [&model](auto& ubo) {
+          ubo.model = model;
+        });
+      }
 
       anim->done = done;
     };

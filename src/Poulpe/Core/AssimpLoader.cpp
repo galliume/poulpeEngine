@@ -10,25 +10,25 @@ namespace Poulpe
 {
   //helper from learnopengl
   static inline glm::mat4 ConvertMatrixToGLMFormat(const aiMatrix4x4& from)
-	{
-		glm::mat4 to;
-		//the a,b,c,d in assimp is the row ; the 1,2,3,4 is the column
-		to[0][0] = from.a1; to[1][0] = from.a2; to[2][0] = from.a3; to[3][0] = from.a4;
-		to[0][1] = from.b1; to[1][1] = from.b2; to[2][1] = from.b3; to[3][1] = from.b4;
-		to[0][2] = from.c1; to[1][2] = from.c2; to[2][2] = from.c3; to[3][2] = from.c4;
-		to[0][3] = from.d1; to[1][3] = from.d2; to[2][3] = from.d3; to[3][3] = from.d4;
-		return to;
-	}
+  {
+    glm::mat4 to;
+    //the a,b,c,d in assimp is the row ; the 1,2,3,4 is the column
+    to[0][0] = from.a1; to[1][0] = from.a2; to[2][0] = from.a3; to[3][0] = from.a4;
+    to[0][1] = from.b1; to[1][1] = from.b2; to[2][1] = from.b3; to[3][1] = from.b4;
+    to[0][2] = from.c1; to[1][2] = from.c2; to[2][2] = from.c3; to[3][2] = from.c4;
+    to[0][3] = from.d1; to[1][3] = from.d2; to[2][3] = from.d3; to[3][3] = from.d4;
+    return to;
+  }
 
-	static inline glm::vec3 GetGLMVec(const aiVector3D& vec)
-	{
-		return glm::vec3(vec.x, vec.y, vec.z);
-	}
+  static inline glm::vec3 GetGLMVec(const aiVector3D& vec)
+  {
+    return glm::vec3(vec.x, vec.y, vec.z);
+  }
 
-	static inline glm::quat GetGLMQuat(const aiQuaternion& pOrientation)
-	{
-		return glm::quat(pOrientation.w, pOrientation.x, pOrientation.y, pOrientation.z);
-	}
+  static inline glm::quat GetGLMQuat(const aiQuaternion& pOrientation)
+  {
+    return glm::quat(pOrientation.w, pOrientation.x, pOrientation.y, pOrientation.z);
+  }
   //
 
   void AssimpLoader::loadData(
@@ -414,7 +414,8 @@ namespace Poulpe
 
       aiAnimation const* animation = scene->mAnimations[i];
 
-      animations.emplace_back(i, animation->mName.C_Str(), animation->mDuration);
+      auto const ticks_per_s = (animation->mTicksPerSecond > 0) ? animation->mTicksPerSecond : 25.0;
+      animations.emplace_back(i, animation->mName.C_Str(), animation->mDuration, ticks_per_s);
 
       //PLP_DEBUG("Animation {}, duration {}", animation->mName.C_Str(), animation->mDuration);
       for (unsigned int j{ 0 }; j < animation->mNumChannels; j++) {
@@ -422,29 +423,40 @@ namespace Poulpe
         std::string const node_name{ node->mNodeName.C_Str() };
 
         std::vector<Rotation>rots{};
+        unsigned int id{ 0 };
         for (unsigned int r{ 0 }; r < node->mNumRotationKeys; r++) {
           rots.reserve(node->mNumRotationKeys);
-          aiQuatKey const& rotKey = node->mRotationKeys[r];
-          //PLP_DEBUG("rot {} x {} y {} z {}", rotKey.mTime, rotKey.mValue.x, rotKey.mValue.y, rotKey.mValue.z);
-          rots.emplace_back(i, rotKey.mTime, GetGLMQuat(rotKey.mValue));
+          aiQuatKey const& rotation_key = node->mRotationKeys[r];
+          auto interpolation{ getInterpolation(rotation_key.mInterpolation) };
+          //PLP_DEBUG("rot {} x {} y {} z {}", rotation_key.mTime, rotation_key.mValue.x, rotation_key.mValue.y, rotation_key.mValue.z);
+          rots.emplace_back(Rotation{ id, i, rotation_key.mTime, interpolation, GetGLMQuat(rotation_key.mValue) });
+          id += 1;
         }
         rotations[node_name] = rots;
 
+        id = 0;
         std::vector<Position> pos{};
         for (unsigned int p{ 0 }; p < node->mNumPositionKeys; p++) {
           pos.reserve(node->mNumPositionKeys);
-          aiVectorKey const& posKey = node->mPositionKeys[p];
-          //PLP_DEBUG("pos {} x {} y {} z {}", posKey.mTime, posKey.mValue.x, posKey.mValue.y, posKey.mValue.z);
-          pos.emplace_back(i, posKey.mTime, GetGLMVec(posKey.mValue));
+          aiVectorKey const& pos_key = node->mPositionKeys[p];
+          auto interpolation{ getInterpolation(pos_key.mInterpolation) };
+
+          //PLP_DEBUG("pos {} x {} y {} z {}", pos_key.mTime, pos_key.mValue.x, pos_key.mValue.y, pos_key.mValue.z);
+          pos.emplace_back(Position{ id, i, pos_key.mTime, interpolation, GetGLMVec(pos_key.mValue) });
+          id += 1;
         }
         positions[node_name] = pos;
 
+        id = 0;
         std::vector<Scale> sc{};
         for (unsigned int s{ 0 }; s < node->mNumScalingKeys; s++) {
           sc.reserve(node->mNumScalingKeys);
-          aiVectorKey const& scaleKey = node->mScalingKeys[s];
-          //PLP_DEBUG("scale {} x {} y {} z {}", scaleKey.mTime, scaleKey.mValue.x, scaleKey.mValue.y, scaleKey.mValue.z);
-          sc.emplace_back(i, scaleKey.mTime, GetGLMVec(scaleKey.mValue));
+          aiVectorKey const& scale_key = node->mScalingKeys[s];
+          auto interpolation{ getInterpolation(scale_key.mInterpolation) };
+
+          //PLP_DEBUG("scale {} x {} y {} z {}", scale_key.mTime, scale_key.mValue.x, scale_key.mValue.y, scale_key.mValue.z);
+          sc.emplace_back(Scale{ id, i, scale_key.mTime, interpolation, GetGLMVec(scale_key.mValue) });
+          id += 1;
         }
         scales[node_name] = sc;
       }
@@ -642,5 +654,21 @@ namespace Poulpe
       return TextureWrapMode::WRAP;
       break;
     }
+  }
+  
+  AnimInterpolation AssimpLoader::getInterpolation(aiAnimInterpolation const assimp_interpolation)
+  {
+    AnimInterpolation interpolation{ AnimInterpolation::STEP };
+    switch (assimp_interpolation) {
+    case aiAnimInterpolation_Linear :
+      interpolation = AnimInterpolation::LINEAR;
+      break;
+    case aiAnimInterpolation_Spherical_Linear :
+      interpolation = AnimInterpolation::SPHERICAL_LINEAR;
+      break;
+      case aiAnimInterpolation_Cubic_Spline:
+        interpolation = AnimInterpolation::CUBIC_SPLINE;
+    }
+    return interpolation;
   }
 }

@@ -481,15 +481,8 @@ namespace Poulpe
         auto pipeline = getPipeline(mesh->getShaderName());
 
         if (!mesh->getUniformBuffers()->empty()) {
-          uint32_t min{ 0 };
-          uint32_t max{ 0 };
-
           for (size_t i{ 0 }; i < mesh->getUniformBuffers()->size(); ++i) {
-            max = (!mesh->getData()->_ubos_offset.empty()) ? mesh->getData()->_ubos_offset.at(i) : 1;
-            auto ubos = std::vector<UniformBufferObject>(mesh->getData()->_ubos.begin() + min, mesh->getData()->_ubos.begin() + max);
-            min = max;
-            if (ubos.empty()) continue;
-            _vulkan->updateUniformBuffer(mesh->getUniformBuffers()->at(i), &ubos);
+            _vulkan->updateUniformBuffer(mesh->getUniformBuffers()->at(i), &mesh->getData()->_ubos.at(i));
           }
         }
 
@@ -877,32 +870,6 @@ namespace Poulpe
       _text_entities_buffer.emplace_back(entity);
 
       _force_text_entities_buffer_swap = is_last;
-    }
-  }
-
-  void Renderer::updateData(std::string const& name, UniformBufferObject const& ubo, std::vector<Vertex> const& vertices)
-  {
-    {
-      std::lock_guard guard(_mutex_entity_submit);
-
-      auto const& entity_it = std::ranges::find_if(_entities, [&name](auto const& entity) {
-        return entity->getName() == name;
-      });
-
-      if (entity_it != _entities.end()) {
-        auto const& entity = *entity_it;
-        auto mesh_component = _component_manager->get<MeshComponent>(entity->getID());
-        if (mesh_component) {
-          Mesh* mesh = mesh_component->has<Mesh>();
-          //std::copy(vertices.begin(), vertices.end(), back_inserter(mesh->getData()->_vertices));
-          mesh->addUbos({ std::move(ubo) });
-
-          //auto basicRdrImpl = _component_manager->get<RenderComponent>(entity->getID());
-          //auto delta_time = std::chrono::duration<float, std::milli>(0);
-          //basicRdrImpl->visit(delta_time, mesh);
-          return;
-        }
-      }
     }
   }
 

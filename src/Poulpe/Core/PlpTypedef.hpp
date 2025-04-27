@@ -197,6 +197,7 @@ namespace Poulpe
     DeviceMemory* memory;
     uint32_t offset;
     unsigned long long size;
+    unsigned int index{ 0 };
   };
  
   struct BoneWeight {
@@ -224,7 +225,7 @@ namespace Poulpe
     std::string _transmission;
     std::vector<Vertex> _vertices;
     std::vector<uint32_t> _indices;
-    std::vector<UniformBufferObject> _ubos;
+    std::vector<std::vector<UniformBufferObject>> _ubos;
     UniformBufferObject _original_ubo;
     std::vector<uint32_t> _ubos_offset;
     Buffer _vertex_buffer { nullptr, nullptr, 0, 0 };
@@ -261,23 +262,32 @@ namespace Poulpe
     unsigned int id;
     std::string name{};
     float duration{ 0.0 };
+    float ticks_per_s{ 25.0 };
   };
 
-  struct Rotation {
+  enum class AnimInterpolation {
+    STEP,
+    LINEAR,
+    SPHERICAL_LINEAR,
+    CUBIC_SPLINE
+  };
+
+  struct AnimOperation {
+    unsigned int id;
     unsigned int animation_ID;
     double time;
+    AnimInterpolation interpolation;
+  };
+
+  struct Rotation : public AnimOperation {
     glm::quat value;
   };
 
-  struct Position {
-    unsigned int animation_ID;
-    double time;
+  struct Position : public AnimOperation {
     glm::vec3 value;
   };
 
-  struct Scale {
-    unsigned int animation_ID;
-    double time;
+  struct Scale : public AnimOperation {
     glm::vec3 value;
   };
 

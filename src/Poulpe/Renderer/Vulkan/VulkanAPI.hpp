@@ -145,6 +145,11 @@ namespace Poulpe {
       VkCommandPool& commandPool,
       std::vector<Vertex> const& vertices);
 
+    void updateVertexBuffer(
+      VkCommandPool& commandPool,
+      std::vector<Vertex> const& new_vertices,
+      VkBuffer& buffer_to_update);
+
     Buffer createVertex2DBuffer(
       VkCommandPool& cmd_pool,
       std::vector<Vertex2D> const& vertices);

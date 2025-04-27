@@ -52,7 +52,7 @@ namespace Poulpe
     inline void setShaderName(std::string_view name) { _shader_name = name; }
     void setObjectBuffer(ObjectBuffer objectBuffer) { _object_buffer = std::move(objectBuffer); }
 
-    void addUbos(const std::vector<UniformBufferObject>& ubos);
+    void addUbos(std::vector<std::vector<UniformBufferObject>> const& ubos);
 
     template<typename... TArgs>
     void applyPushConstants(TArgs&&... args) { _apply_push_constants(std::forward<TArgs>(args)...); }

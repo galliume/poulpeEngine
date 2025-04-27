@@ -1680,7 +1680,7 @@ namespace Poulpe {
       DeviceMemoryPool::DeviceBufferType::STAGING);
 
     auto const offset { device_memory->getOffset() };
-    device_memory->bindBufferToMemory(buffer, bind_offset);
+    auto const index{ device_memory->bindBufferToMemory(buffer, bind_offset) };
 
     copyBuffer(cmd_pool, staging_buffer, buffer, buffer_size);
 
@@ -1689,6 +1689,7 @@ namespace Poulpe {
     mesh_buffer.memory = device_memory;
     mesh_buffer.offset = offset;
     mesh_buffer.size = size;
+    mesh_buffer.index = index;
 
     vkDestroyBuffer(_device, staging_buffer, nullptr);
     vkFreeMemory(_device, staging_device_memory, nullptr);
@@ -1739,7 +1740,7 @@ namespace Poulpe {
       DeviceMemoryPool::DeviceBufferType::STAGING);
 
     auto const offset { device_memory->getOffset() };
-    device_memory->bindBufferToMemory(buffer, bind_offset);
+    auto const index{ device_memory->bindBufferToMemory(buffer, bind_offset) };
 
     copyBuffer(commandPool, staging_buffer, buffer, buffer_size);
 
@@ -1748,11 +1749,40 @@ namespace Poulpe {
     mesh_buffer.memory = device_memory;
     mesh_buffer.offset = bind_offset;
     mesh_buffer.size = size;
+    mesh_buffer.index = index;
 
     vkDestroyBuffer(_device, staging_buffer, nullptr);
     vkFreeMemory(_device, staging_device_memory, nullptr);
 
     return mesh_buffer;
+  }
+
+  void VulkanAPI::updateVertexBuffer(
+      VkCommandPool& commandPool,
+      std::vector<Vertex> const& new_vertices,
+      VkBuffer& buffer_to_update)
+  {
+    VkDeviceSize buffer_size = sizeof(Vertex) * new_vertices.size();
+
+    VkBuffer staging_buffer{};
+    VkDeviceMemory staging_device_memory{};
+
+    createBuffer(
+      buffer_size,
+      VK_BUFFER_USAGE_VERTEX_BUFFER_BIT
+        | VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+        VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+      staging_buffer, staging_device_memory);
+
+    void* data;
+    vkMapMemory(_device, staging_device_memory, 0, buffer_size, 0, &data);
+    memcpy(data, new_vertices.data(), static_cast<size_t>(buffer_size));
+    vkUnmapMemory(_device, staging_device_memory);
+
+    copyBuffer(commandPool, staging_buffer, buffer_to_update, buffer_size);
+
+    vkDestroyBuffer(_device, staging_buffer, nullptr);
+    vkFreeMemory(_device, staging_device_memory, nullptr);
   }
 
   Buffer VulkanAPI::createVertex2DBuffer(
@@ -1789,7 +1819,7 @@ namespace Poulpe {
       DeviceMemoryPool::DeviceBufferType::UNIFORM);
 
     auto const offset { device_memory->getOffset() };
-    device_memory->bindBufferToMemory(buffer, bind_offset);
+    auto const index{ device_memory->bindBufferToMemory(buffer, bind_offset) };
 
     copyBuffer(cmd_pool, staging_buffer, buffer, buffer_size);
 
@@ -1798,6 +1828,7 @@ namespace Poulpe {
     mesh_buffer.memory = device_memory;
     mesh_buffer.offset = offset;
     mesh_buffer.size = size;
+    mesh_buffer.index = index;
 
     vkDestroyBuffer(_device, staging_buffer, nullptr);
     vkFreeMemory(_device, staging_device_memory, nullptr);
@@ -1831,13 +1862,14 @@ namespace Poulpe {
       DeviceMemoryPool::DeviceBufferType::UNIFORM);
 
     auto const offset { device_memory->getOffset() };
-    device_memory->bindBufferToMemory(buffer, bind_offset);
+    auto const index{ device_memory->bindBufferToMemory(buffer, bind_offset) };
 
     Buffer uniform_buffer;
     uniform_buffer.buffer = std::move(buffer);
     uniform_buffer.memory = device_memory;
     uniform_buffer.offset = offset;
     uniform_buffer.size = size;
+    uniform_buffer.index = index;
 
     return uniform_buffer;
   }
@@ -1880,7 +1912,7 @@ namespace Poulpe {
       DeviceMemoryPool::DeviceBufferType::STAGING);
 
     auto const offset { device_memory->getOffset() };
-    device_memory->bindBufferToMemory(buffer, bind_offset);
+    auto const index{ device_memory->bindBufferToMemory(buffer, bind_offset) };
 
     copyBuffer(command_pool, staging_buffer, buffer, buffer_size);
 
@@ -1889,6 +1921,7 @@ namespace Poulpe {
     uniform_buffer.memory = device_memory;
     uniform_buffer.offset = offset;
     uniform_buffer.size = size;
+    uniform_buffer.index = index;
 
     vkDestroyBuffer(_device, staging_buffer, nullptr);
     vkFreeMemory(_device, staging_device_memory, nullptr);
@@ -1930,9 +1963,9 @@ namespace Poulpe {
       DeviceMemoryPool::DeviceBufferType::STAGING) };
 
     auto const offset { device_memory->getOffset() };
-    device_memory->bindBufferToMemory(buffer, bind_offset);
+    auto const index{ device_memory->bindBufferToMemory(buffer, bind_offset) };
 
-    Buffer indirect_buffer{ std::move(buffer), device_memory, offset, size };
+    Buffer indirect_buffer{ std::move(buffer), device_memory, offset, size, index };
 
     {
       indirect_buffer.memory->lock();
@@ -1971,13 +2004,14 @@ namespace Poulpe {
       DeviceMemoryPool::DeviceBufferType::UNIFORM);
 
     auto const offset { device_memory->getOffset() };
-    device_memory->bindBufferToMemory(buffer, bind_offset);
+    auto const index{ device_memory->bindBufferToMemory(buffer, bind_offset) };
 
     Buffer uniform_buffer;
     uniform_buffer.buffer = std::move(buffer);
     uniform_buffer.memory = device_memory;
     uniform_buffer.offset = offset;
     uniform_buffer.size = size;
+    uniform_buffer.index = index;
 
     return uniform_buffer;
   }

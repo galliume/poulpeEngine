@@ -57,51 +57,36 @@ namespace Poulpe
   {
     if (!mesh && !mesh->isDirty()) return;
 
-    uint32_t const totalInstances{ static_cast<uint32_t>(mesh->getData()->_ubos.size()) };
-    uint32_t const maxUniformBufferRange{ _renderer->getAPI()->getDeviceProperties().limits.maxUniformBufferRange };
-    unsigned long long const uniformBufferChunkSize{ maxUniformBufferRange / sizeof(UniformBufferObject) };
-    uint32_t const uniformBuffersCount{ static_cast<uint32_t>(std::ceil(static_cast<float>(totalInstances) / static_cast<float>(uniformBufferChunkSize))) };
+    auto cmd_pool = _renderer->getAPI()->createCommandPool();
+    auto const ubo_count { 1 };
 
-    //@todo fix memory management...
-    unsigned long long uboOffset{ (totalInstances > uniformBufferChunkSize) ? uniformBufferChunkSize : totalInstances };
-    unsigned long long uboRemaining { (totalInstances - uboOffset > 0) ? totalInstances - uboOffset : 0};
-    unsigned long long nbUbo { uboOffset};
-
-    auto commandPool = _renderer->getAPI()->createCommandPool();
-
-    for (size_t i{ 0 }; i < uniformBuffersCount; ++i) {
-
-      mesh->getData()->_ubos_offset.emplace_back(uboOffset);
-      Buffer uniformBuffer = _renderer->getAPI()->createUniformBuffers(nbUbo, commandPool);
+    for (size_t i{ 0 }; i < ubo_count; ++i) {
+      Buffer uniformBuffer = _renderer->getAPI()->createUniformBuffers(1, cmd_pool);
       mesh->getUniformBuffers()->emplace_back(uniformBuffer);
-
-      uboOffset = (uboRemaining > uniformBufferChunkSize) ? uboOffset + uniformBufferChunkSize : uboOffset + uboRemaining;
-      nbUbo = (uboRemaining > uniformBufferChunkSize) ? uniformBufferChunkSize : uboRemaining;
-      uboRemaining = (totalInstances - uboOffset > 0) ? totalInstances - uboOffset : 0;
     }
-
+    
     auto const& data = mesh->getData();
 
-    data->_vertex_buffer = _renderer->getAPI()->createVertexBuffer(commandPool, data->_vertices);
-    data->_indices_buffer = _renderer->getAPI()->createIndexBuffer(commandPool, data->_indices);
+    data->_vertex_buffer = _renderer->getAPI()->createVertexBuffer(cmd_pool, data->_vertices);
+    data->_indices_buffer = _renderer->getAPI()->createIndexBuffer(cmd_pool, data->_indices);
     data->_texture_index = 0;
 
-    vkDestroyCommandPool(_renderer->getDevice(), commandPool, nullptr);
+    vkDestroyCommandPool(_renderer->getDevice(), cmd_pool, nullptr);
 
-    for (size_t i{ 0 }; i < mesh->getData()->_ubos.size(); ++i) {
-      mesh->getData()->_ubos[i].projection = _renderer->getPerspective();
+    for (auto i{ 0 }; i < mesh->getData()->_ubos.size(); i++) {
+      std::ranges::for_each(mesh->getData()->_ubos.at(i), [&](auto& ubo) {
+        ubo.projection = _renderer->getPerspective();
+      });
     }
 
-    unsigned int min{ 0 };
-    unsigned int max{ 0 };
+    if (mesh->getData()->_ubos_offset.empty()) {
+      std::ranges::for_each(mesh->getData()->_bones, [&](auto const& bone) {
+        
+        auto const& b{ bone.second };
 
-    for (size_t i{ 0 }; i < mesh->getUniformBuffers()->size(); ++i) {
-      max = mesh->getData()->_ubos_offset.at(i);
-      auto ubos = std::vector<UniformBufferObject>(mesh->getData()->_ubos.begin() + min, mesh->getData()->_ubos.begin() + max);
-
-      _renderer->getAPI()->updateUniformBuffer(mesh->getUniformBuffers()->at(i), &ubos);
-
-      min = max;
+        Buffer uniformBuffer = _renderer->getAPI()->createUniformBuffers(b.weights.size(), cmd_pool);
+        mesh->getUniformBuffers()->emplace_back(uniformBuffer);
+      });
     }
 
     createDescriptorSet(mesh);

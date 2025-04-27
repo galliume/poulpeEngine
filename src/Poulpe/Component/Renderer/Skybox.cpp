@@ -89,18 +89,22 @@ namespace Poulpe
       {{ 1.0f, -1.0f,  1.0f }, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f} }
     };
 
-    UniformBufferObject ubo;
+    std::vector<UniformBufferObject> ubos{};
+    ubos.reserve(1);
+
+    UniformBufferObject ubo{};
     ubo.model = glm::mat4(0.0f);
     //ubo.view = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
     ubo.projection = _renderer->getPerspective();
-
+    ubos.push_back({ ubo });
     auto cmd_pool = _renderer->getAPI()->createCommandPool();
 
-    Data data;
+    Data data{};
     data._textures.emplace_back("skybox");
     data._vertices = vertices;
     data._vertex_buffer = _renderer->getAPI()->createVertexBuffer(cmd_pool, vertices);
-    data._ubos.emplace_back(ubo);
+    data._ubos.resize(1);
+    data._ubos[0] = ubos;
     data._texture_index = 0;
 
     Buffer uniform_buffer = _renderer->getAPI()->createUniformBuffers(1, cmd_pool);
@@ -113,9 +117,7 @@ namespace Poulpe
 
     setPushConstants(mesh);
 
-    for (uint32_t i{ 0 }; i < mesh->getUniformBuffers()->size(); i++) {
-      _renderer->getAPI()->updateUniformBuffer(mesh->getUniformBuffers()->at(i), &data._ubos);
-    }
+    _renderer->getAPI()->updateUniformBuffer(mesh->getUniformBuffers()->at(0), &data._ubos.at(0));
 
     createDescriptorSet(mesh);
     mesh->setData(data);

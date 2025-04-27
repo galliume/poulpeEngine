@@ -113,6 +113,8 @@ namespace Poulpe
 
   void BoneAnimationScript::operator()(double const delta_time, Mesh* mesh)
   {
+    if (_done) return;
+
     _data = mesh->getData();
 
     std::ranges::for_each(_new_moves, [&](auto& anim) {
@@ -125,42 +127,122 @@ namespace Poulpe
     if (_moves.empty() && !_animations.empty()) {
 
       auto const& anim{ _animations.at(2) };
-      auto const duration{ anim.duration * 0.001 };//ms
+      auto const duration{ (anim.duration / anim.ticks_per_s) };//ms
 
-      float t = _elapsed_time / duration;
-      bool done{ false };
+      ////float t = _elapsed_time / duration;
+      //auto positions_by_id = [](
+      //  int anim_id,
+      //  std::unordered_map<std::string, std::vector<Position>> const& positions_map) {
+      //    return positions_map
+      //      | std::views::transform([](auto const& pair) -> auto const& { return pair.second; })
+      //      | std::views::join
+      //      | std::views::filter([=](auto const& pos) { return pos.animation_ID == anim_id; });
+      //  };
 
-      auto positions_by_id = [](
+      //std::ranges::for_each(
+      //  positions_by_id(anim.id, _positions),
+      //  [&](auto const& pos) {
+      //    //PLP_DEBUG("anim ID {} time {} x {} y {} z {}", anim.id, pos.time, pos.value.x, pos.value.y, pos.value.z); 
+
+      //    std::ranges::for_each(_data->_bones, [&](auto const& b) {
+      //      auto const& bone = b.second;
+      //      //PLP_DEBUG("bone: {}", bone.name);
+
+      //      if (_positions[bone.name].size() >= 1) {
+      //        Position start{ _positions[bone.name][0] };
+      //        Position end{ _positions[bone.name][0] };
+      //        end.time = anim.duration;
+
+      //        if (_positions[bone.name].size() > 1) {
+      //          for (auto i{ 0 }; i < _positions.size() - 1; i++) {
+      //            if (_positions[bone.name][i].time <= _elapsed_time && _positions[bone.name][i + 1].time <= _elapsed_time) {
+      //              start = _positions[bone.name][i];
+      //              end = _positions[bone.name][i + 1];
+      //              break;
+      //            }
+      //          }
+      //        }
+
+      //        auto const new_pos = interpolate<Position>(start, end, _elapsed_time, start.interpolation);
+
+      //        std::ranges::for_each(bone.weights, [&](auto const& b) {
+
+      //          if (b.vertex_id < _data->_vertices.size() - 1) {
+      //            auto& vertex = _data->_vertices.at(b.vertex_id);
+      //            vertex.pos.x += (new_pos.x * 0.001) * b.weight;
+      //            vertex.pos.y += (new_pos.y * 0.001) * b.weight;
+      //            vertex.pos.z += (new_pos.z * 0.001) * b.weight;
+      //            //PLP_DEBUG("key time : {} ", pos.time);
+      //          }
+      //          });
+      //      }
+      //    });
+      //  });
+
+        auto rotations_by_id = [](
         int anim_id,
-        std::unordered_map<std::string, std::vector<Position>> const& positions_map) {
-          return positions_map
+        std::unordered_map<std::string, std::vector<Rotation>> const& rotations_map) {
+          return rotations_map
             | std::views::transform([](auto const& pair) -> auto const& { return pair.second; })
             | std::views::join
-            | std::views::filter([=](auto const& pos) { return pos.animation_ID == anim_id; });
+            | std::views::filter([=](auto const& rot) { return rot.animation_ID == anim_id; });
         };
 
       std::ranges::for_each(
-        positions_by_id(anim.id, _positions),
-        [&](auto const& pos) {
-          PLP_DEBUG("anim ID {} time {} x {} y {} z {}", anim.id, pos.time, pos.value.x, pos.value.y, pos.value.z); 
+        rotations_by_id(anim.id, _rotations),
+        [&](auto const& rot) {
+          //PLP_DEBUG("anim ID {} time {} x {} y {} z {}", anim.id, pos.time, pos.value.x, pos.value.y, pos.value.z); 
 
           std::ranges::for_each(_data->_bones, [&](auto const& b) {
             auto const& bone = b.second;
-            PLP_DEBUG("bone: {}", bone.name);
+            //PLP_DEBUG("bone: {}", bone.name);
+            if (_rotations[bone.name].size() >= 1) {
+              Rotation start{ _rotations[bone.name][0] };
+              Rotation end{ _rotations[bone.name][0] };
+              end.time = anim.duration;
 
-            std::ranges::for_each(bone.weights, [&](auto const& weight) {
-              auto const& vertex = _data->_vertices.at(weight.vertex_id);
-              //vertex.pos = {pos.value.x, pos.value.y, pos.value.z};
-            });
+              if (_rotations[bone.name].size() > 1) {
+                for (auto i{ 0 }; i < _rotations.size() - 1; i++) {
+                  if (_rotations[bone.name][i].time <= _elapsed_time && _rotations[bone.name][i + 1].time <= _elapsed_time) {
+                    start = _rotations[bone.name][i];
+                    end = _rotations[bone.name][i + 1];
+                    break;
+                  }
+                }
+              }
+
+              {
+                SCOPED_TIMER();
+
+                auto const new_rot = interpolate<Rotation>(start, end, _elapsed_time, start.interpolation);
+                glm::mat4 model = glm::mat4(1.0f);
+                model = glm::scale(model, _data->_current_scale);
+                model = glm::translate(model, _data->_current_pos);
+
+                std::ranges::for_each(bone.weights, [&](auto const& b) {
+
+                  model *= glm::mat4_cast(new_rot * b.weight);
+
+                  //if (start.id < _data->_ubos.size()) {
+                  //  std::ranges::for_each(_data->_ubos.at(start.id), [&model](auto& ubo) {
+                  //    ubo.model = model;
+                  //  });
+                  //}
+                  });
+              }
+            }
           });
-        }
-      );
+        });
+
 
       if (_elapsed_time >= duration) {
         _elapsed_time = 0;
-        t = 1.f;
+        //t = 1.f;
+        //mesh->setIsDirty(false);
+        //_done = true;
+      } else {
+        mesh->setIsDirty();
       }
-
       _elapsed_time += delta_time;
       //PLP_DEBUG("anim {} elapased time {} duration {} t {} delta {}", anim.name, 
       //_elapsed_time, duration, t, delta_time);

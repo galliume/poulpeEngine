@@ -18,6 +18,7 @@ namespace Poulpe
             _max_size = max_size;
             allocateToMemory();
         }
+        _buffer_offsets.emplace_back(0);
     }
 
     VkDeviceMemory* DeviceMemory::getMemory()
@@ -59,7 +60,7 @@ namespace Poulpe
       }
     }
 
-    void DeviceMemory::bindBufferToMemory(VkBuffer & buffer, VkDeviceSize const offset)
+    unsigned int DeviceMemory::bindBufferToMemory(VkBuffer & buffer, VkDeviceSize const offset)
     {
       {
         std::lock_guard guard(_mutex_memory);
@@ -76,6 +77,7 @@ namespace Poulpe
           PLP_DEBUG("BindBuffer memory failed in bindBufferToMemory");
         }
 
+        _buffer_offsets.emplace_back(_offset);
         _offset += offset;
 
         if (_offset >= _max_size) {
@@ -83,6 +85,8 @@ namespace Poulpe
         }
 
         _buffer.emplace_back(buffer);
+        _buffer_count += 1;
+        return _buffer_count - 1;
       }
     }
 
