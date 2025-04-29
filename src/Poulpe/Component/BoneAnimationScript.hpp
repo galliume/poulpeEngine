@@ -75,17 +75,24 @@ namespace Poulpe
     std::unordered_map<std::string, std::vector<Rotation>> _rotations{};
     std::unordered_map<std::string, std::vector<Scale>> _scales{};
 
+    std::unordered_map<std::string, std::vector<Position>> _cache_positions{};
+    std::unordered_map<std::string, std::vector<Rotation>> _cache_rotations{};
+    std::unordered_map<std::string, std::vector<Scale>> _cache_scales{};
+
+    std::vector<glm::mat4> _bone_matrices;
+
     template<isAnimOperation T>
     auto interpolate(
       T const& start,
       T const& end,
-      float current_time,
-      AnimInterpolation interpolation)
+      float current_time)
     {
-      float t = (current_time - start.time) / (end.time - start.time);
+      float duration = end.time - start.time;
+      float t = (duration == 0.0f) ? 0.0f : (current_time - start.time) / duration;
+      t = std::clamp(t, 0.0f, 1.0f);
 
       if constexpr (std::same_as<decltype(start.value), glm::vec3>) {
-        switch (interpolation) {
+        switch (start.interpolation) {
         case AnimInterpolation::STEP:
           return start.value;
 
@@ -102,20 +109,19 @@ namespace Poulpe
         }
         return start.value;
       } else if constexpr (std::same_as<decltype(start.value), glm::quat>) {
-        switch (interpolation) {
+        switch (start.interpolation) {
         case AnimInterpolation::STEP:
           return start.value;
 
         case AnimInterpolation::SPHERICAL_LINEAR:
-          return glm::quat{
-            glm::slerp(start.value, end.value, t),
-          };
+          return glm::slerp(start.value, end.value, t);
 
         case AnimInterpolation::CUBIC_SPLINE:
           //@todo
           return start.value;
+        default:
+          return start.value;
         }
-        return start.value;
       } else {
         static_assert(false, "Unsupported value type in interpolate()");
       }

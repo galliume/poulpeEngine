@@ -245,7 +245,7 @@ void main()
   vec3 r = reflect(i, normalize(in_normal));
   vec3 env_color = vec3(texture(env_sampler[0], r).rgb);
   
-  diffuse =  mix(env_color, diffuse, transmittance);
+  diffuse =  mix(env_color, diffuse, 0.3);
 
   vec3 C_sun = (kD * diffuse + specular) * light_color * NdL;
 

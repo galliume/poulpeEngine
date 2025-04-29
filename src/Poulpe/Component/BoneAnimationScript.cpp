@@ -30,85 +30,7 @@ namespace Poulpe
     Data* dataMove,
     double delta_timeMove)
   {
-    //std::unique_ptr<BoneAnimationMove> animMove = std::make_unique<BoneAnimationMove>();
 
-    //PLP_TRACE("START at {}/{}/{}", dataMove->_origin_pos.x, dataMove->_origin_pos.y, dataMove->_origin_pos.z);
-
-    //animMove->update = [] (
-    //  BoneAnimationMove* anim,
-    //  Data* data,
-    //  double delta_time,
-    //  std::vector<Animation> const& animations,
-    //  std::vector<Position> const& positions,
-    //  std::vector<Rotation> const& rotations,
-    //  std::vector<Scale> const& scales) {
-
-    //  if (animations.empty()) {
-    //    anim->done = true;
-    //    return;
-    //  }
-
-
-    //  //run: from 814.0 to 831.0
-    //  anim->duration = 17;//run duration
-    //  float t = anim->elapsedTime / anim->duration;
-    //  bool done{ false };
-
-    //  unsigned int const index = 814 + static_cast<int>(std::ceil(anim->elapsedTime));
-
-    //  if (anim->elapsedTime >= anim->duration) {
-    //    done = true;
-    //    t = 1.f;
-    //  }
-    //  anim->elapsedTime += delta_time;
-      //PLP_DEBUG("e {} d {} t {} index {} delta {}", anim->elapsedTime, anim->duration, t, index, delta_time.count());
-
-      //glm::vec3 newPos = glm::mix(data->_origin_pos, p.value, t);
-      //glm::quat newRot = glm::mix(glm::quat(data->_origin_pos), r.value, t);
-      //glm::vec3 newScale = glm::mix(data->_origin_pos, s.value, t);
-      //
-      //PLP_DEBUG("Animation: {} {} {}", a.id, a.name, a.duration);
-      //PLP_DEBUG("MOVING at {}/{}/{}", newPos.x, newPos.y, newPos.z);
-      //PLP_DEBUG("Rotation {}/{}/{}", newRot.x, newRot.y, newRot.z);
-      //PLP_DEBUG("Scale {}/{}/{}", newScale.x, newScale.y, newScale.z);
-
-      //data->_vertices
-      //glm::mat4 model = glm::mat4(1.0f);
-      //model = glm::translate(model, newPos);
-      //model *= glm::toMat4(newRot);
-      //model = glm::scale(model, newScale);
-
-      //std::ranges::for_each(bones, [&data, &index, &positions, &rotations, &scales](auto const& bone) {
-      //  std::ranges::for_each(bone.weights, [&data, &index, &bone, &positions, &rotations, &scales](auto const& weight) {
-      //    auto& vertex = data->_vertices[weight.first];
-      //    auto& pos = positions[index];
-      //    auto& rot = rotations[index];
-      //    auto& scale = scales[index];
-
-      //    glm::mat4 translationMatrix = glm::translate(glm::mat4(1.0f), pos.value);
-      //    glm::mat4 rotationMatrix = glm::toMat4(rot.value);
-      //    glm::mat4 scaleMatrix = glm::scale(glm::mat4(1.0f), scale.value);
-      //    glm::mat4 transform = translationMatrix * rotationMatrix * scaleMatrix * bone.offset_matrix;
-
-      //    glm::vec4 transformedPosition = transform * glm::vec4(vertex.pos, 1.0f);
-      //    vertex.pos += weight.second * glm::vec3(transformedPosition);
-      //  });
-      //});
-      //std::ranges::for_each(data->_ubos, [&model](auto& ubo) {
-      //  ubo.model = model;
-      //});
-
-      //if (done) {
-      //  data->_origin_pos = newPos;
-      //  //@todo switch all rotation to glm::quat
-      //  data->_origin_rotation = glm::eulerAngles(newRot);
-      //  data->_origin_scale = newScale;
-      //  //PLP_TRACE("DONE at {}/{}/{}", data->_origin_pos.x, data->_origin_pos.y, data->_origin_pos.z);
-      //}
-     //anim->done = done;
-    //};
-    //animMove->update(animMove.get(), dataMove, delta_timeMove, _animations, _positions, _rotations, _scales);
-    //_new_moves.emplace_back(std::move(animMove));
   }
 
   void BoneAnimationScript::operator()(double const delta_time, Mesh* mesh)
@@ -129,111 +51,140 @@ namespace Poulpe
       auto const& anim{ _animations.at(2) };
       auto const duration{ (anim.duration / anim.ticks_per_s) };//ms
 
-      ////float t = _elapsed_time / duration;
-      //auto positions_by_id = [](
-      //  int anim_id,
-      //  std::unordered_map<std::string, std::vector<Position>> const& positions_map) {
-      //    return positions_map
-      //      | std::views::transform([](auto const& pair) -> auto const& { return pair.second; })
-      //      | std::views::join
-      //      | std::views::filter([=](auto const& pos) { return pos.animation_ID == anim_id; });
-      //  };
+      if (_cache_scales.empty()) {
+        _cache_scales = _scales
+          | std::views::filter([&](auto const& pair) {
+              auto const& [bone_name, scales_list] = pair;
+              return std::ranges::any_of(scales_list, [&](auto const& rot) {
+                return rot.animation_ID == anim.id;
+                });
+            })
+          | std::ranges::to<std::unordered_map>();
+      }
 
-      //std::ranges::for_each(
-      //  positions_by_id(anim.id, _positions),
-      //  [&](auto const& pos) {
-      //    //PLP_DEBUG("anim ID {} time {} x {} y {} z {}", anim.id, pos.time, pos.value.x, pos.value.y, pos.value.z); 
+      if (_cache_positions.empty()) {
+        _cache_positions = _positions
+          | std::views::filter([&](auto const& pair) {
+              auto const& [bone_name, position_list] = pair;
+              return std::ranges::any_of(position_list, [&](auto const& rot) {
+                return rot.animation_ID == anim.id;
+                });
+            })
+          | std::ranges::to<std::unordered_map>();
+        }
 
-      //    std::ranges::for_each(_data->_bones, [&](auto const& b) {
-      //      auto const& bone = b.second;
-      //      //PLP_DEBUG("bone: {}", bone.name);
+      if (_cache_rotations.empty()) {
+        _cache_rotations = _rotations
+          | std::views::filter([&](auto const& pair) {
+              auto const& [bone_name, rotation_list] = pair;
+              return std::ranges::any_of(rotation_list, [&](auto const& rot) {
+                return rot.animation_ID == anim.id;
+                });
+            })
+          | std::ranges::to<std::unordered_map>();
+      }
 
-      //      if (_positions[bone.name].size() >= 1) {
-      //        Position start{ _positions[bone.name][0] };
-      //        Position end{ _positions[bone.name][0] };
-      //        end.time = anim.duration;
+      _bone_matrices.clear();
+      _bone_matrices.resize(_data->_bones.size());
 
-      //        if (_positions[bone.name].size() > 1) {
-      //          for (auto i{ 0 }; i < _positions.size() - 1; i++) {
-      //            if (_positions[bone.name][i].time <= _elapsed_time && _positions[bone.name][i + 1].time <= _elapsed_time) {
-      //              start = _positions[bone.name][i];
-      //              end = _positions[bone.name][i + 1];
-      //              break;
-      //            }
-      //          }
-      //        }
+      std::ranges::for_each(_data->_bones, [&](auto const& b) {
+        auto const& bone = b.second;
 
-      //        auto const new_pos = interpolate<Position>(start, end, _elapsed_time, start.interpolation);
+        auto new_scale{ glm::vec3(1.0f) };
+        auto new_position{ glm::vec3(1.0f) };
+        auto new_rotation{ glm::quat() };
 
-      //        std::ranges::for_each(bone.weights, [&](auto const& b) {
+        //PLP_DEBUG("bone: {}", bone.name);
+        auto const scales_size{ _cache_scales[bone.name].size() };
 
-      //          if (b.vertex_id < _data->_vertices.size() - 1) {
-      //            auto& vertex = _data->_vertices.at(b.vertex_id);
-      //            vertex.pos.x += (new_pos.x * 0.001) * b.weight;
-      //            vertex.pos.y += (new_pos.y * 0.001) * b.weight;
-      //            vertex.pos.z += (new_pos.z * 0.001) * b.weight;
-      //            //PLP_DEBUG("key time : {} ", pos.time);
-      //          }
-      //          });
-      //      }
-      //    });
-      //  });
+        if (scales_size >= 1) {
+          Scale scale_start{ _cache_scales[bone.name][0] };
+          scale_start.interpolation = AnimInterpolation::STEP;
 
-        auto rotations_by_id = [](
-        int anim_id,
-        std::unordered_map<std::string, std::vector<Rotation>> const& rotations_map) {
-          return rotations_map
-            | std::views::transform([](auto const& pair) -> auto const& { return pair.second; })
-            | std::views::join
-            | std::views::filter([=](auto const& rot) { return rot.animation_ID == anim_id; });
+          Scale scale_end{ _cache_scales[bone.name][0] };
+          scale_end.time = anim.duration;
+
+          if (scales_size > 1) {
+            auto& scale_keys = _cache_scales[bone.name];
+            auto it = std::ranges::adjacent_find(scale_keys, [&](auto const& a, auto const& b) {
+              return a.time <= _elapsed_time && b.time >= _elapsed_time;
+              });
+
+            if (it != scale_keys.end() - 1) {
+              scale_start = *it;
+              scale_end = *(it + 1);
+            }
+          }
+          new_scale = interpolate<Scale>(scale_start, scale_end, _elapsed_time);
         };
 
-      std::ranges::for_each(
-        rotations_by_id(anim.id, _rotations),
-        [&](auto const& rot) {
-          //PLP_DEBUG("anim ID {} time {} x {} y {} z {}", anim.id, pos.time, pos.value.x, pos.value.y, pos.value.z); 
+        auto const positions_size{ _cache_positions[bone.name].size() };
 
-          std::ranges::for_each(_data->_bones, [&](auto const& b) {
-            auto const& bone = b.second;
-            //PLP_DEBUG("bone: {}", bone.name);
-            if (_rotations[bone.name].size() >= 1) {
-              Rotation start{ _rotations[bone.name][0] };
-              Rotation end{ _rotations[bone.name][0] };
-              end.time = anim.duration;
+        if (positions_size >= 1) {
+          Position position_start{ _cache_positions[bone.name][0] };
+          position_start.interpolation = AnimInterpolation::STEP;
+          Position position_end{ _cache_positions[bone.name][0] };
+          position_end.time = anim.duration;
 
-              if (_rotations[bone.name].size() > 1) {
-                for (auto i{ 0 }; i < _rotations.size() - 1; i++) {
-                  if (_rotations[bone.name][i].time <= _elapsed_time && _rotations[bone.name][i + 1].time <= _elapsed_time) {
-                    start = _rotations[bone.name][i];
-                    end = _rotations[bone.name][i + 1];
-                    break;
-                  }
-                }
-              }
+          if (positions_size > 1) {
+            auto& position_keys = _cache_positions[bone.name];
+            auto it = std::ranges::adjacent_find(position_keys, [&](auto const& a, auto const& b) {
+              return a.time <= _elapsed_time && b.time >= _elapsed_time;
+              });
 
-              {
-                SCOPED_TIMER();
-
-                auto const new_rot = interpolate<Rotation>(start, end, _elapsed_time, start.interpolation);
-                glm::mat4 model = glm::mat4(1.0f);
-                model = glm::scale(model, _data->_current_scale);
-                model = glm::translate(model, _data->_current_pos);
-
-                std::ranges::for_each(bone.weights, [&](auto const& b) {
-
-                  model *= glm::mat4_cast(new_rot * b.weight);
-
-                  //if (start.id < _data->_ubos.size()) {
-                  //  std::ranges::for_each(_data->_ubos.at(start.id), [&model](auto& ubo) {
-                  //    ubo.model = model;
-                  //  });
-                  //}
-                  });
-              }
+            if (it != position_keys.end() - 1) {
+              position_start = *it;
+              position_end = *(it + 1);
             }
-          });
-        });
+          }
+          new_position = interpolate<Position>(position_start, position_end, _elapsed_time);
+        }
 
+        auto const rotations_size{ _cache_rotations[bone.name].size() };
+
+        if (rotations_size >= 1) {
+          Rotation rotation_start{ _cache_rotations[bone.name][0] };
+          rotation_start.interpolation = AnimInterpolation::STEP;
+
+          Rotation rotation_end{ _cache_rotations[bone.name][0] };
+          rotation_end.time = anim.duration;
+
+          if (rotations_size > 1) {
+            auto& rotation_keys = _cache_rotations[bone.name];
+            auto it = std::ranges::adjacent_find(rotation_keys, [&](auto const& a, auto const& b) {
+              return a.time <= _elapsed_time && b.time >= _elapsed_time;
+              });
+
+            if (it != rotation_keys.end() - 1) {
+              rotation_start = *it;
+              rotation_end = *(it + 1);
+            }
+          }
+
+          new_rotation = interpolate<Rotation>(rotation_start, rotation_end, _elapsed_time);
+        };
+
+        glm::mat4 transform = glm::mat4(1.0f);
+        transform = glm::translate(transform, new_position);
+        transform *= glm::toMat4(new_rotation);
+        transform = glm::scale(transform, new_scale);
+
+        glm::mat4 final_transform = _data->_inverse_transform_matrix * transform * bone.offset_matrix;
+        _bone_matrices[bone.id] = final_transform;
+      });
+
+      for (auto& vertex : _data->_vertices) {
+        glm::vec4 result = glm::vec4(0.0f);
+        for (auto i{ 0 }; i < 4; ++i) {
+          if (i > vertex.bone_ids.size() - 1) break;
+          auto bone_id{ vertex.bone_ids[i] };
+          auto w{ vertex.bone_weights[i] };
+          if (w > 0.0f) {
+              result += _bone_matrices[bone_id] * glm::vec4(vertex.pos, 1.0f) * w;
+          }
+        }
+        vertex.pos = glm::vec3(result);
+      }
 
       if (_elapsed_time >= duration) {
         _elapsed_time = 0;
