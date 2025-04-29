@@ -83,6 +83,7 @@ namespace Poulpe
     std::array<Light, 2> point_lights;
     Light spot_light;
     Material material;
+    std::vector<glm::mat4>bone_matrices;
   };
 
   enum class TextureWrapMode {
@@ -206,11 +207,13 @@ namespace Poulpe
   };
 
   struct Bone {
+    unsigned int id;
     std::string name{};
     glm::mat4 offset_matrix{};
     std::vector<BoneWeight> weights{};
   };
 
+  //@todo needs huge refactoring
   struct Data {
     std::string _name;
     std::vector<std::string> _textures;
@@ -239,6 +242,7 @@ namespace Poulpe
     glm::vec3 _current_scale;
     glm::vec3 _tangeant;
     glm::mat4 _transform_matrix;
+    glm::mat4 _inverse_transform_matrix;
     std::unordered_map<std::string, Bone> _bones{};
   };
 
@@ -301,6 +305,7 @@ namespace Poulpe
     std::vector<uint32_t> materials_ID{};
     std::vector<Vertex> vertices{};
     glm::mat4 transform_matrix{};
+    glm::mat4 inverse_transform_matrix{};
     std::unordered_map<std::string, Bone> bones{};
   };
 

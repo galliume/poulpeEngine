@@ -502,6 +502,7 @@ namespace Poulpe
     for (unsigned int i{ 0 }; i < node->mNumMeshes; i++) {
       PlpMeshData mesh_data{};
       mesh_data.transform_matrix = transform_matrix;
+      mesh_data.inverse_transform_matrix = glm::inverse(transform_matrix);
 
       aiMesh const* mesh = scene->mMeshes[node->mMeshes[i]];
       mesh_data.name = mesh->mName.C_Str() + std::to_string(i);
@@ -613,20 +614,25 @@ namespace Poulpe
       if (mesh->HasBones()) {
 
         Bone bone_data{};
-        for (unsigned int b{ 0 }; b < mesh->mNumBones; b++) {
+
+        for (auto b{ 0 }; b < mesh->mNumBones; b++) {
           aiBone const* bone = mesh->mBones[b];
 
-          int boneID{ -1 };
           std::string const& bone_name{ bone->mName.C_Str() };
 
+          bone_data.id = b;
           bone_data.name = bone_name;
           bone_data.offset_matrix = ConvertMatrixToGLMFormat(bone->mOffsetMatrix);
 
           std::unordered_map<unsigned int, float> weights{};
 
-          for (unsigned int w{ 0 }; w < bone->mNumWeights; w++) {
+          for (auto w{ 0 }; w < bone->mNumWeights; w++) {
             aiVertexWeight const& aiWeight = bone->mWeights[w];
             bone_data.weights.emplace_back(aiWeight.mVertexId, aiWeight.mWeight);
+
+            auto& vertex = mesh_data.vertices.at(aiWeight.mVertexId + i);
+            vertex.bone_ids.emplace_back(b);
+            vertex.bone_weights.emplace_back(aiWeight.mWeight);
           }
           bones_map[bone_data.name] = std::move(bone_data);
         }

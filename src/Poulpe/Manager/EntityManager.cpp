@@ -259,6 +259,7 @@ namespace Poulpe
       data._origin_rotation = entity_opts.rotation;
       data._current_rotation = entity_opts.rotation;
       data._transform_matrix = _data.transform_matrix;
+      data._inverse_transform_matrix = _data.inverse_transform_matrix;
       data._bones = _data.bones;
 
       UniformBufferObject ubo{};

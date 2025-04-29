@@ -63,12 +63,15 @@ void main()
 
   p.y += 5.f;
 
-  float A = 0.1f;
   float L = 12.0f;
+  float A = 0.05f * L;
   const float g = 9.81f;
   float w = 2.0f / L;
+  float w_pic = 0.1f;
+  float L_pic = w_pic / 2.0f;
+  float A_pic = 0.1f * L_pic;
   //float w = sqrt(9.8 * ((2.0 * PI) / L));
-  float S = 5.0f; 
+  float S = 3.0f; //m/s
   float t = pc.options.x;
 
   vec3 bi = vec3(0.0);
@@ -84,19 +87,24 @@ void main()
   float steepness_factor = 0.66;
   float A_factor = 0.82;
   float w_factor = 1.18;
-  
+  float l_factor = 0.75;
+
   const int waves_count = 16;
   for (int i = 0; i < waves_count; i++) {
     //speed
+    //S *= A/A_pic;
     float phi = S * (2.0f / L);
 
     //direction
     seed = fract(sin(seed * 43758.5453 + i) * 43758.5453);
-    float angle = seed * PI;
+    float angle = seed * 2.0f*PI;
     vec2 D = vec2(cos(angle), sin(angle));
+  
+    //phase
+    float phase = seed * (2.0 * PI);
 
     //Wi(x, y, t) = Ai * sin(Di dot (x, y) * wi + t * phii);
-    float X = (dot(D, p.xz) + previous_dx) * w + t * phi;
+    float X = (dot(D, p.xz)) * w + t * phi + phase;
     float W = A * sin(X);
 
     float WA = w * A;
