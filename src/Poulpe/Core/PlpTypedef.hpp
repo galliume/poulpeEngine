@@ -283,7 +283,7 @@ namespace Poulpe
   struct AnimOperation {
     unsigned int id;
     unsigned int animation_ID;
-    double time;
+    float time;
     AnimInterpolation interpolation;
   };
 

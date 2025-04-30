@@ -423,39 +423,39 @@ namespace Poulpe
         std::string const node_name{ node->mNodeName.C_Str() };
 
         std::vector<Rotation>rots{};
+        rots.reserve(node->mNumRotationKeys);
         unsigned int id{ 0 };
         for (unsigned int r{ 0 }; r < node->mNumRotationKeys; r++) {
-          rots.reserve(node->mNumRotationKeys);
           aiQuatKey const& rotation_key = node->mRotationKeys[r];
-          auto interpolation{ getInterpolation(rotation_key.mInterpolation) };
+          auto const interpolation{ getInterpolation(rotation_key.mInterpolation) };
           //PLP_DEBUG("rot {} x {} y {} z {}", rotation_key.mTime, rotation_key.mValue.x, rotation_key.mValue.y, rotation_key.mValue.z);
-          rots.emplace_back(Rotation{ id, i, rotation_key.mTime, interpolation, GetGLMQuat(rotation_key.mValue) });
+          rots.emplace_back(Rotation{ id, i, static_cast<float>(rotation_key.mTime), interpolation, GetGLMQuat(rotation_key.mValue) });
           id += 1;
         }
         rotations[node_name] = rots;
 
         id = 0;
         std::vector<Position> pos{};
+        pos.reserve(node->mNumPositionKeys + 1);
         for (unsigned int p{ 0 }; p < node->mNumPositionKeys; p++) {
-          pos.reserve(node->mNumPositionKeys);
           aiVectorKey const& pos_key = node->mPositionKeys[p];
-          auto interpolation{ getInterpolation(pos_key.mInterpolation) };
+          auto const interpolation{ getInterpolation(pos_key.mInterpolation) };
 
           //PLP_DEBUG("pos {} x {} y {} z {}", pos_key.mTime, pos_key.mValue.x, pos_key.mValue.y, pos_key.mValue.z);
-          pos.emplace_back(Position{ id, i, pos_key.mTime, interpolation, GetGLMVec(pos_key.mValue) });
+          pos.emplace_back(Position{ id, i, static_cast<float>(pos_key.mTime), interpolation, GetGLMVec(pos_key.mValue) });
           id += 1;
         }
         positions[node_name] = pos;
 
         id = 0;
         std::vector<Scale> sc{};
+        sc.reserve(node->mNumScalingKeys);
         for (unsigned int s{ 0 }; s < node->mNumScalingKeys; s++) {
-          sc.reserve(node->mNumScalingKeys);
           aiVectorKey const& scale_key = node->mScalingKeys[s];
-          auto interpolation{ getInterpolation(scale_key.mInterpolation) };
+          auto const interpolation{ getInterpolation(scale_key.mInterpolation) };
 
           //PLP_DEBUG("scale {} x {} y {} z {}", scale_key.mTime, scale_key.mValue.x, scale_key.mValue.y, scale_key.mValue.z);
-          sc.emplace_back(Scale{ id, i, scale_key.mTime, interpolation, GetGLMVec(scale_key.mValue) });
+          sc.emplace_back(Scale{ id, i, static_cast<float>(scale_key.mTime), interpolation, GetGLMVec(scale_key.mValue) });
           id += 1;
         }
         scales[node_name] = sc;
