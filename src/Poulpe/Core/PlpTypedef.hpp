@@ -209,8 +209,11 @@ namespace Poulpe
   struct Bone {
     unsigned int id;
     std::string name{};
+    glm::mat4 bind_pose_transform{};
+    glm::mat4 local_transform{};
     glm::mat4 offset_matrix{};
     std::vector<BoneWeight> weights{};
+    std::vector<std::string> children{};
   };
 
   //@todo needs huge refactoring
@@ -244,6 +247,7 @@ namespace Poulpe
     glm::mat4 _transform_matrix;
     glm::mat4 _inverse_transform_matrix;
     std::unordered_map<std::string, Bone> _bones{};
+    std::string _root_bone_name{};
   };
 
   struct EntityOptions
@@ -307,6 +311,7 @@ namespace Poulpe
     glm::mat4 transform_matrix{};
     glm::mat4 inverse_transform_matrix{};
     std::unordered_map<std::string, Bone> bones{};
+    std::string root_bone_name{};
   };
 
   enum class SocketStatus {

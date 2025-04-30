@@ -258,9 +258,9 @@ namespace Poulpe
       data._current_scale = entity_opts.scale;
       data._origin_rotation = entity_opts.rotation;
       data._current_rotation = entity_opts.rotation;
-      data._transform_matrix = _data.transform_matrix;
       data._inverse_transform_matrix = _data.inverse_transform_matrix;
       data._bones = _data.bones;
+      data._root_bone_name = _data.root_bone_name;
 
       UniformBufferObject ubo{};
       ubo.model = glm::mat4(1.0f);
@@ -268,6 +268,7 @@ namespace Poulpe
       ubo.model = glm::scale(ubo.model, entity_opts.scale);
       ubo.model *= glm::mat4_cast(entity_opts.rotation);
       ubo.model *= _data.transform_matrix;
+      data._transform_matrix = ubo.model;
       //ubo.inversed_model = glm::inverse(ubo.model);
 
       //ubo.view = glm::mat4(1.0f);

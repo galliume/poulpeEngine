@@ -81,6 +81,11 @@ namespace Poulpe
 
     std::vector<glm::mat4> _bone_matrices;
 
+    void updateBoneTransforms(
+      Animation const& anim,
+      std::string const& bone_name,
+      glm::mat4 const& parent_transform);
+
     template<isAnimOperation T>
     auto interpolate(
       T const& start,

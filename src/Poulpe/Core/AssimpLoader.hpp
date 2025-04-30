@@ -28,6 +28,7 @@ namespace Poulpe
      static void process(aiNode* node,
        const aiScene *scene,
        std::vector<PlpMeshData>& mesh_data,
+       glm::mat4 const& global_transform,
        bool const flip_Y);
     static TextureWrapMode getTextureWrapMode(aiTextureMapMode const wrap_mode);
     static AnimInterpolation AssimpLoader::getInterpolation(aiAnimInterpolation const assimp_interpolation);
