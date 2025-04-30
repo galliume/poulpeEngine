@@ -462,8 +462,10 @@ namespace Poulpe
       }
     }
 
+    glm::mat4 const global_transform = ConvertMatrixToGLMFormat(scene->mRootNode->mTransformation);
+
     std::vector<PlpMeshData> mesh_data{};
-    process(scene->mRootNode, scene, mesh_data, flip_Y);
+    process(scene->mRootNode, scene, mesh_data, global_transform, flip_Y);
 
     size_t id{ mesh_data.size() };
     for (auto& data : mesh_data) {
@@ -494,15 +496,16 @@ namespace Poulpe
     aiNode* node,
     const aiScene *scene,
     std::vector<PlpMeshData>& data,
+    glm::mat4 const& global_transform,
     bool const flip_Y)
   {
-    glm::mat4 transform_matrix = 
-    (node->mParent != nullptr) ? ConvertMatrixToGLMFormat(node->mTransformation) : glm::mat4(1.0f);
+    glm::mat4 local_transform = ConvertMatrixToGLMFormat(node->mTransformation);
+    auto transform_matrix = global_transform * local_transform;
 
     for (unsigned int i{ 0 }; i < node->mNumMeshes; i++) {
       PlpMeshData mesh_data{};
       mesh_data.transform_matrix = transform_matrix;
-      mesh_data.inverse_transform_matrix = glm::inverse(transform_matrix);
+      mesh_data.inverse_transform_matrix = glm::inverse(global_transform);
 
       aiMesh const* mesh = scene->mMeshes[node->mMeshes[i]];
       mesh_data.name = mesh->mName.C_Str() + std::to_string(i);
@@ -521,13 +524,12 @@ namespace Poulpe
         aiVector3D vertices = mesh->mVertices[v];
 
         Vertex vertex{};
-        //vertex.bones_ids.resize(4);
-        //std::fill(vertex.bones_ids.begin(), vertex.bones_ids.end(), -1);
-        //vertex.weights.resize(4);
-        //std::fill(vertex.weights.begin(), vertex.weights.end(), 0.0f);
+        vertex.bone_ids.resize(4, 0);
+        vertex.bone_weights.resize(4, 0.0f);
 
         vertex.pos = { vertices.x, vertices.y, vertices.z };
         if (flip_Y) vertex.pos.y *= -1.0f;
+        vertex.original_pos = vertex.pos;
 
         vertex.normal = n;
 
@@ -619,20 +621,44 @@ namespace Poulpe
           aiBone const* bone = mesh->mBones[b];
 
           std::string const& bone_name{ bone->mName.C_Str() };
-
+          if (b == 0) mesh_data.root_bone_name = bone_name;
+          aiNode const* bone_node = scene->mRootNode->FindNode(bone_name.c_str());
           bone_data.id = b;
           bone_data.name = bone_name;
           bone_data.offset_matrix = ConvertMatrixToGLMFormat(bone->mOffsetMatrix);
+
+          glm::mat4 local_transform = glm::mat4(1.0f);
+          aiNode const* current = bone_node;
+
+          while (current) {
+            local_transform = ConvertMatrixToGLMFormat(current->mTransformation) * local_transform;
+            current = current->mParent;
+          }
+          bone_data.bind_pose_transform = local_transform;
+          bone_data.local_transform = local_transform;
 
           std::unordered_map<unsigned int, float> weights{};
 
           for (auto w{ 0 }; w < bone->mNumWeights; w++) {
             aiVertexWeight const& aiWeight = bone->mWeights[w];
             bone_data.weights.emplace_back(aiWeight.mVertexId, aiWeight.mWeight);
-
-            auto& vertex = mesh_data.vertices.at(aiWeight.mVertexId + i);
-            vertex.bone_ids.emplace_back(b);
-            vertex.bone_weights.emplace_back(aiWeight.mWeight);
+          }
+          for (auto& weight : bone_data.weights) {
+            auto& vertex = mesh_data.vertices.at(weight.vertex_id);
+            for (int i = 0; i < 4; ++i) {
+              if (vertex.bone_weights[i] == 0.0f) {
+                vertex.bone_ids[i] = bone_data.id;
+                vertex.bone_weights[i] = weight.weight;
+                break;
+              }
+            }
+          }
+          for (auto i{ 0 }; i < bone_node->mNumChildren; i++) {
+            aiNode* child = bone_node->mChildren[i];
+            if (child) {
+              std::string const& child_name{ child->mName.C_Str() };
+              bone_data.children.emplace_back(child_name);
+            }
           }
           bones_map[bone_data.name] = std::move(bone_data);
         }
@@ -642,7 +668,7 @@ namespace Poulpe
     }
 
     for (unsigned int i{ 0 }; i < node->mNumChildren; i++) {
-      process(node->mChildren[i], scene, data, flip_Y);
+      process(node->mChildren[i], scene, data, global_transform, flip_Y);
     }
   }
 
