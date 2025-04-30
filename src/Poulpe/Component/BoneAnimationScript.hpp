@@ -62,7 +62,7 @@ namespace Poulpe
     Data* _data;
     Renderer* _renderer;
 
-    float _elapsed_time{ 0.f };
+    float _elapsed_time{ 0.0f };
 
     bool _move_init{ false };
     bool _done{false};
@@ -81,10 +81,30 @@ namespace Poulpe
 
     std::vector<glm::mat4> _bone_matrices;
 
+
     void updateBoneTransforms(
       Animation const& anim,
       std::string const& bone_name,
       glm::mat4 const& parent_transform);
+
+    template<isAnimOperation T>
+    std::pair<T, T> findKeyframe(
+      std::vector<T> const& key_frames,
+      float const time,
+      float const duration) {
+
+      if (key_frames.size() == 1) {
+        return { key_frames[0], key_frames[0] };
+      }
+
+      for (auto i{ 0 }; i < key_frames.size() - 1; ++i) {
+        if (time >= key_frames[i].time && time < key_frames[i + 1].time) {
+          return { key_frames[i], key_frames[i + 1] };
+        }
+      }
+
+      return { key_frames.back(), key_frames.front() };
+    }
 
     template<isAnimOperation T>
     auto interpolate(
@@ -119,7 +139,7 @@ namespace Poulpe
           return start.value;
 
         case AnimInterpolation::SPHERICAL_LINEAR:
-          return glm::slerp(start.value, end.value, t);
+          return glm::normalize(glm::slerp(start.value, end.value, t));
 
         case AnimInterpolation::CUBIC_SPLINE:
           //@todo

@@ -86,7 +86,7 @@ namespace Poulpe
 
       _bone_matrices.clear();
       _bone_matrices.resize(_data->_bones.size());
-
+      _elapsed_time = fmod(_elapsed_time, anim.duration);
       updateBoneTransforms(anim, _data->_root_bone_name, glm::mat4(1.0f));
 
       for (auto& vertex : _data->_vertices) {
@@ -102,14 +102,16 @@ namespace Poulpe
       }
 
       if (_elapsed_time >= duration) {
-        _elapsed_time = 0;
+        _elapsed_time = 0.0f;
         //t = 1.f;
         //mesh->setIsDirty(false);.
         //_done = true;
       } else {
         mesh->setIsDirty();
+        _elapsed_time += delta_time * 1000.0f;
       }
-      _elapsed_time += delta_time * 1000.0f;
+      //_elapsed_time = std::clamp(_elapsed_time, 0.f, duration);
+      //PLP_DEBUG("_elapsed_time {} duration {} ", _elapsed_time, duration);
       //PLP_DEBUG("anim {} elapased time {} duration {} t {} delta {}", anim.name, 
       //_elapsed_time, duration, t, delta_time);
     }
@@ -117,107 +119,54 @@ namespace Poulpe
 
   void BoneAnimationScript::updateBoneTransforms(
     Animation const& anim,
-    std::string const& bone_name, 
+    std::string const& bone_name,
     glm::mat4 const& parent_transform)
   {
     auto const& bone = _data->_bones[bone_name];
 
-      auto new_scale{ glm::vec3(1.0f) };
-      auto new_position{ glm::vec3(1.0f) };
-      auto new_rotation{ glm::quat() };
+    auto new_scale{ glm::vec3(1.0f) };
+    auto new_position{ glm::vec3(1.0f) };
+    auto new_rotation{ glm::quat(0, 0, 0, 0) };
 
-      //PLP_DEBUG("bone: {}", bone.name);
-      auto const& scales_data{ _cache_scales[bone.name] };
-      auto const scales_size{ scales_data.size() };
+    //PLP_DEBUG("bone: {}", bone.name);
+    auto const& scales_data{ _cache_scales[bone.name] };
 
-      if (scales_size >= 1) {
-        Scale scale_start{ scales_data[0] };
-        scale_start.interpolation = AnimInterpolation::STEP;
+    if (!scales_data.empty()) {
+      Scale scale_start;
+      Scale scale_end;
+      std::tie(scale_start, scale_end) = findKeyframe<Scale>(scales_data, fmod(_elapsed_time, anim.duration), anim.duration);
+      new_scale = interpolate<Scale>(scale_start, scale_end, _elapsed_time);
+    }
 
-        Scale scale_end{ scales_data[0] };
-        scale_end.time = anim.duration;
+    auto const& positions_data = _cache_positions[bone.name];
 
-        if (scales_size > 1) {
-          auto it = std::ranges::adjacent_find(scales_data, [&](auto const& x, auto const& y) {
-            return x.time <= _elapsed_time && y.time >= _elapsed_time;
-            });
+    if (!positions_data.empty()) {
+      Position position_start;
+      Position position_end;
+      std::tie(position_start, position_end) = findKeyframe<Position>(positions_data, fmod(_elapsed_time, anim.duration), anim.duration);
+      new_position = interpolate<Position>(position_start, position_end, _elapsed_time);
+    }
 
-          if (it != scales_data.end()) {
-            scale_start = *it;
+    auto const& rotations_data{ _cache_rotations[bone.name] };
 
-            if ((it + 1) != scales_data.end()) {
-              scale_end = *(it + 1);
-            } else {
-              scale_end = scales_data.front();
-            }
-          }
-        }
-        new_scale = interpolate<Scale>(scale_start, scale_end, _elapsed_time);
-      }
+    if (!rotations_data.empty()) {
+      Rotation rotation_start ;
+      Rotation rotation_end;
+      std::tie(rotation_start, rotation_end) = findKeyframe<Rotation>(rotations_data, fmod(_elapsed_time, anim.duration), anim.duration);
 
-      auto const& positions_data = _cache_positions[bone.name];
-      auto const positions_size{ positions_data.size() };
+      if (glm::dot(rotation_start.value, rotation_end.value) < 0.0f) rotation_end.value = -rotation_end.value;
+      new_rotation = interpolate<Rotation>(rotation_start, rotation_end, _elapsed_time);
+    };
 
-      if (positions_size >= 1) {
-        Position position_start{ positions_data[0] };
-        position_start.interpolation = AnimInterpolation::STEP;
-        Position position_end{ positions_data[0] };
+    glm::mat4 const S = glm::scale(glm::mat4(1.0f), new_scale);
+    glm::mat4 const R = glm::toMat4(new_rotation);
+    glm::mat4 const T = glm::translate(glm::mat4(1.0f), new_position);
+    glm::mat4 const transform = T * R * S;
 
-        if (positions_size > 1) {
-          auto it = std::ranges::adjacent_find(positions_data, [&](auto const& x, auto const& y) {
-            return x.time <= _elapsed_time && y.time >= _elapsed_time;
-            });
+    glm::mat4 global = parent_transform * transform;
 
-          if (it != positions_data.end()) {
-            position_start = *it;
-
-            if ((it + 1) != positions_data.end()) {
-              position_end = *(it + 1);
-            } else {
-              position_end = positions_data.front();
-            }
-          }
-        }
-        new_position = interpolate<Position>(position_start, position_end, _elapsed_time);
-      }
-
-      auto const& rotations_data{ _cache_rotations[bone.name] };
-      auto const rotations_size{ rotations_data.size() };
-
-      if (rotations_size >= 1) {
-        Rotation rotation_start{ rotations_data[0] };
-        rotation_start.interpolation = AnimInterpolation::STEP;
-
-        Rotation rotation_end{ rotations_data[0] };
-        rotation_end.time = anim.duration;
-
-        if (rotations_size > 1) {
-          auto it = std::ranges::adjacent_find(rotations_data, [&](auto const& x, auto const& y) {
-            return x.time <= _elapsed_time && y.time >= _elapsed_time;
-            });
-
-          if (it != rotations_data.end()) {
-            rotation_start = *it;
-
-            if ((it + 1) != rotations_data.end()) {
-              rotation_end = *(it + 1);
-            } else {
-              rotation_end = rotations_data.front();
-            }
-          }
-        }
-        new_rotation = interpolate<Rotation>(rotation_start, rotation_end, _elapsed_time);
-      };
-
-      glm::mat4 const S = glm::scale(glm::mat4(1.0f), new_scale);
-      glm::mat4 const R = glm::toMat4(new_rotation);
-      glm::mat4 const T = glm::translate(glm::mat4(1.0f), new_position);
-      glm::mat4 const transform = T * R * S;
-
-      glm::mat4 global = parent_transform * transform;
-
-      glm::mat4 final_transform = _data->_inverse_transform_matrix * global * bone.offset_matrix;
-      _bone_matrices[bone.id] = final_transform;
+    glm::mat4 final_transform = _data->_inverse_transform_matrix * global * bone.offset_matrix;
+    _bone_matrices[bone.id] = final_transform;
 
     for (auto child : bone.children) {
       updateBoneTransforms(anim, child, global);

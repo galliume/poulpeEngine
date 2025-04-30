@@ -262,12 +262,15 @@ namespace Poulpe
       data._bones = _data.bones;
       data._root_bone_name = _data.root_bone_name;
 
+      glm::mat4 const S = glm::scale(glm::mat4(1.0f), entity_opts.scale);
+      glm::mat4 const R = glm::toMat4(entity_opts.rotation);
+      glm::mat4 const T = glm::translate(glm::mat4(1.0f), entity_opts.pos);
+      glm::mat4 const transform = T * R * S;
+
       UniformBufferObject ubo{};
-      ubo.model = glm::mat4(1.0f);
-      ubo.model = glm::translate(ubo.model, entity_opts.pos);
-      ubo.model = glm::scale(ubo.model, entity_opts.scale);
-      ubo.model *= glm::mat4_cast(entity_opts.rotation);
-      ubo.model *= _data.transform_matrix;
+      ubo.model = transform;
+
+      //ubo.model *= _data.transform_matrix;
       data._transform_matrix = ubo.model;
       //ubo.inversed_model = glm::inverse(ubo.model);
 
