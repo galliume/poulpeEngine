@@ -78,9 +78,9 @@ namespace Poulpe
       std::vector<material_t> const materials,
       bool const exists,
       std::vector<Animation> const animations,
-      std::unordered_map<std::string, std::vector<Position>> const positions,
-      std::unordered_map<std::string, std::vector<Rotation>> const rotations,
-      std::unordered_map<std::string, std::vector<Scale>> const scales) {
+      std::unordered_map<std::string, std::vector<std::vector<Position>>> const positions,
+      std::unordered_map<std::string, std::vector<std::vector<Rotation>>> const rotations,
+      std::unordered_map<std::string, std::vector<std::vector<Scale>>> const scales) {
 
     auto const& positionData = data["positions"].at(0);
 
