@@ -39,9 +39,9 @@ namespace Poulpe
           std::vector<material_t> const materials,
           bool const exists,
           std::vector<Animation> const animations,
-          std::unordered_map<std::string, std::vector<Position>> const positions,
-          std::unordered_map<std::string, std::vector<Rotation>> const rotations,
-          std::unordered_map<std::string, std::vector<Scale>> const scales)> callback)
+          std::unordered_map<std::string, std::vector<std::vector<Position>>> const positions,
+          std::unordered_map<std::string, std::vector<std::vector<Rotation>>> const rotations,
+          std::unordered_map<std::string, std::vector<std::vector<Scale>>> const scales)> callback)
   {
     Assimp::Importer importer;
 
@@ -404,9 +404,9 @@ namespace Poulpe
     }
 
     std::vector<Animation> animations{};
-    std::unordered_map<std::string, std::vector<Rotation>> rotations{};
-    std::unordered_map<std::string, std::vector<Position>> positions{};
-    std::unordered_map<std::string, std::vector<Scale>> scales{};
+    std::unordered_map<std::string, std::vector<std::vector<Rotation>>> rotations{};
+    std::unordered_map<std::string, std::vector<std::vector<Position>>> positions{};
+    std::unordered_map<std::string, std::vector<std::vector<Scale>>> scales{};
 
     animations.reserve(scene->mNumAnimations);
 
@@ -421,6 +421,9 @@ namespace Poulpe
       for (unsigned int j{ 0 }; j < animation->mNumChannels; j++) {
         aiNodeAnim const* node = animation->mChannels[j];
         std::string const node_name{ node->mNodeName.C_Str() };
+        rotations[node_name].reserve(scene->mNumAnimations);
+        positions[node_name].reserve(scene->mNumAnimations);
+        scales[node_name].reserve(scene->mNumAnimations);
 
         std::vector<Rotation>rots{};
         rots.reserve(node->mNumRotationKeys);
@@ -432,7 +435,11 @@ namespace Poulpe
           rots.emplace_back(Rotation{ id, i, static_cast<float>(rotation_key.mTime), interpolation, GetGLMQuat(rotation_key.mValue) });
           id += 1;
         }
-        rotations[node_name] = rots;
+        //auto rot_duplicate = rots.front();
+        //rot_duplicate.id = rots.size() + 1;
+        //rot_duplicate.time = animation->mDuration;
+        //rots.emplace_back(rot_duplicate);
+        rotations[node_name].push_back(rots);
 
         id = 0;
         std::vector<Position> pos{};
@@ -445,7 +452,11 @@ namespace Poulpe
           pos.emplace_back(Position{ id, i, static_cast<float>(pos_key.mTime), interpolation, GetGLMVec(pos_key.mValue) });
           id += 1;
         }
-        positions[node_name] = pos;
+        //auto pos_duplicate = pos.front();
+        //pos_duplicate.id = pos.size() + 1;
+        //pos_duplicate.time = animation->mDuration;
+        //pos.emplace_back(pos_duplicate);
+        positions[node_name].push_back(pos);
 
         id = 0;
         std::vector<Scale> sc{};
@@ -458,7 +469,11 @@ namespace Poulpe
           sc.emplace_back(Scale{ id, i, static_cast<float>(scale_key.mTime), interpolation, GetGLMVec(scale_key.mValue) });
           id += 1;
         }
-        scales[node_name] = sc;
+        //auto sc_duplicate = sc.front();
+        //sc_duplicate.id = sc.size() + 1;
+        //sc_duplicate.time = animation->mDuration;
+        //sc.emplace_back(sc_duplicate);
+        scales[node_name].push_back(sc);
       }
     }
 

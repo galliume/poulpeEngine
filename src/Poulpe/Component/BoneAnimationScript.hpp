@@ -26,9 +26,9 @@ namespace Poulpe
       Data* data,
       double delta_time,
       std::vector<Animation> const& animations,
-      std::unordered_map<std::string, std::vector<Position>> const& positions,
-      std::unordered_map<std::string, std::vector<Rotation>> const& rotations,
-      std::unordered_map<std::string, std::vector<Scale>> const& scales)> update;
+      std::unordered_map<std::string, std::vector<std::vector<Position>>> const& positions,
+      std::unordered_map<std::string, std::vector<std::vector<Rotation>>> const& rotations,
+      std::unordered_map<std::string, std::vector<std::vector<Scale>>> const& scales)> update;
   };
 
   template <typename T>
@@ -39,9 +39,9 @@ namespace Poulpe
   public:
     BoneAnimationScript(
       std::vector<Animation> const& animations,
-      std::unordered_map<std::string, std::vector<Position>> const& positions,
-      std::unordered_map<std::string, std::vector<Rotation>> const& rotations,
-      std::unordered_map<std::string, std::vector<Scale>> const& scales);
+      std::unordered_map<std::string, std::vector<std::vector<Position>>> const& positions,
+      std::unordered_map<std::string, std::vector<std::vector<Rotation>>> const& rotations,
+      std::unordered_map<std::string, std::vector<std::vector<Scale>>> const& scales);
     ~BoneAnimationScript();
 
     Data* getData() { return _data; }
@@ -66,18 +66,15 @@ namespace Poulpe
 
     bool _move_init{ false };
     bool _done{false};
+    unsigned int _anim_id{ 0 };
 
     std::vector<std::unique_ptr<BoneAnimationMove>> _moves{};
     std::vector<std::unique_ptr<BoneAnimationMove>> _new_moves{};
 
     std::vector<Animation> _animations{};
-    std::unordered_map<std::string, std::vector<Position>> _positions{};
-    std::unordered_map<std::string, std::vector<Rotation>> _rotations{};
-    std::unordered_map<std::string, std::vector<Scale>> _scales{};
-
-    std::unordered_map<std::string, std::vector<Position>> _cache_positions{};
-    std::unordered_map<std::string, std::vector<Rotation>> _cache_rotations{};
-    std::unordered_map<std::string, std::vector<Scale>> _cache_scales{};
+    std::unordered_map<std::string, std::vector<std::vector<Position>>> _positions{};
+    std::unordered_map<std::string, std::vector<std::vector<Rotation>>> _rotations{};
+    std::unordered_map<std::string, std::vector<std::vector<Scale>>> _scales{};
 
     std::vector<glm::mat4> _bone_matrices;
 
@@ -85,7 +82,8 @@ namespace Poulpe
     void updateBoneTransforms(
       Animation const& anim,
       std::string const& bone_name,
-      glm::mat4 const& parent_transform);
+      glm::mat4 const& parent_transform,
+      float const duration);
 
     template<isAnimOperation T>
     std::pair<T, T> findKeyframe(
@@ -98,7 +96,7 @@ namespace Poulpe
       }
 
       for (auto i{ 0 }; i < key_frames.size() - 1; ++i) {
-        if (time >= key_frames[i].time && time < key_frames[i + 1].time) {
+        if (time >= key_frames[i].time && time <= key_frames[i + 1].time) {
           return { key_frames[i], key_frames[i + 1] };
         }
       }
