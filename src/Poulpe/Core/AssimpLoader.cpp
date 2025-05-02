@@ -6,6 +6,8 @@
 
 #include <assimp/GltfMaterial.h>
 
+#include <filesystem>
+
 namespace Poulpe
 {
   //helper from learnopengl
@@ -56,8 +58,6 @@ namespace Poulpe
       | aiProcess_FlipUVs
     };
 
-    PLP_DEBUG("Loading {}", path);
-
     const aiScene* scene = importer.ReadFile(path, flags);
 
     if (nullptr == scene) {
@@ -68,7 +68,11 @@ namespace Poulpe
     std::vector<material_t> materials{};
     materials.reserve(scene->mNumMaterials);
 
+    std::filesystem::path file_name{ path };
+    auto const& texture_prefix{ file_name.stem().string() + "_"};
+
     if (scene->HasMaterials()) {
+
       for (auto i{ 0 }; i < scene->mNumMaterials; ++i) {
 
         auto const& mat = scene->mMaterials[i];
@@ -161,7 +165,7 @@ namespace Poulpe
           aiTextureMapMode wrap_mode_v { aiTextureMapMode_Clamp };
 
           if (mat->GetTexture(aiTextureType_AMBIENT, 0, &texture_path) == aiReturn_SUCCESS) {
-              material.name_texture_ambient = AssimpLoader::cleanName(texture_path.C_Str());
+              material.name_texture_ambient = AssimpLoader::cleanName(texture_path.C_Str(), texture_prefix);
           }
           if (mat->Get(AI_MATKEY_MAPPINGMODE_U(aiTextureType_AMBIENT, 0), wrap_mode_u) == aiReturn_SUCCESS) {
             material.texture_ambient_wrap_mode_u = getTextureWrapMode(wrap_mode_u);
@@ -182,7 +186,7 @@ namespace Poulpe
           aiTextureMapMode wrap_mode_v { aiTextureMapMode_Clamp };
 
           if (mat->GetTexture(aiTextureType_DIFFUSE, 0, &texture_path) == aiReturn_SUCCESS) {
-              material.name_texture_diffuse = AssimpLoader::cleanName(texture_path.C_Str());
+              material.name_texture_diffuse = AssimpLoader::cleanName(texture_path.C_Str(), texture_prefix);
           }
           if (mat->Get(AI_MATKEY_MAPPINGMODE_U(aiTextureType_DIFFUSE, 0), wrap_mode_u) == aiReturn_SUCCESS) {
             material.texture_diffuse_wrap_mode_u = getTextureWrapMode(wrap_mode_u);
@@ -203,7 +207,7 @@ namespace Poulpe
           aiTextureMapMode wrap_mode_v { aiTextureMapMode_Clamp };
 
           if (mat->GetTexture(aiTextureType_SPECULAR, 0, &texture_path) == aiReturn_SUCCESS) {
-              material.name_texture_specular = AssimpLoader::cleanName(texture_path.C_Str());
+              material.name_texture_specular = AssimpLoader::cleanName(texture_path.C_Str(), texture_prefix);
           }
           if (mat->Get(AI_MATKEY_MAPPINGMODE_U(aiTextureType_SPECULAR, 0), wrap_mode_u) == aiReturn_SUCCESS) {
             material.texture_specular_wrap_mode_u = getTextureWrapMode(wrap_mode_u);
@@ -218,7 +222,7 @@ namespace Poulpe
           aiTextureMapMode wrap_mode_v { aiTextureMapMode_Clamp };
 
           if (mat->GetTexture(aiTextureType_SHININESS, 0, &texture_path) == aiReturn_SUCCESS) {
-              material.name_texture_specular_highlight = AssimpLoader::cleanName(texture_path.C_Str());
+              material.name_texture_specular_highlight = AssimpLoader::cleanName(texture_path.C_Str(), texture_prefix);
           }
           if (mat->Get(AI_MATKEY_MAPPINGMODE_U(aiTextureType_SHININESS, 0), wrap_mode_u) == aiReturn_SUCCESS) {
             material.texture_specular_highlight_wrap_mode_u = getTextureWrapMode(wrap_mode_u);
@@ -237,7 +241,7 @@ namespace Poulpe
             aiTextureMapMode wrap_mode_v { aiTextureMapMode_Clamp };
 
             if (mat->GetTexture(aiTextureType_HEIGHT, 0, &texture_path) == aiReturn_SUCCESS) {
-                material.name_texture_bump = AssimpLoader::cleanName(texture_path.C_Str());
+                material.name_texture_bump = AssimpLoader::cleanName(texture_path.C_Str(), texture_prefix);
             }
             if (mat->Get(AI_MATKEY_MAPPINGMODE_U(aiTextureType_HEIGHT, 0), wrap_mode_u) == aiReturn_SUCCESS) {
               material.texture_bump_wrap_mode_u = getTextureWrapMode(wrap_mode_u);
@@ -259,7 +263,7 @@ namespace Poulpe
             aiTextureMapMode wrap_mode_v { aiTextureMapMode_Clamp };
 
             if (mat->GetTexture(aiTextureType_NORMALS, 0, &texture_path) == aiReturn_SUCCESS) {
-                material.name_texture_bump = AssimpLoader::cleanName(texture_path.C_Str());
+                material.name_texture_bump = AssimpLoader::cleanName(texture_path.C_Str(), texture_prefix);
             }
             if (mat->Get(AI_MATKEY_MAPPINGMODE_U(aiTextureType_NORMALS, 0), wrap_mode_u) == aiReturn_SUCCESS) {
               material.texture_bump_wrap_mode_u = getTextureWrapMode(wrap_mode_u);
@@ -285,7 +289,7 @@ namespace Poulpe
           aiTextureMapMode wrap_mode_v { aiTextureMapMode_Clamp };
 
           if (mat->GetTexture(aiTextureType_OPACITY, 0, &texture_path) == aiReturn_SUCCESS) {
-              material.name_texture_alpha = AssimpLoader::cleanName(texture_path.C_Str());
+              material.name_texture_alpha = AssimpLoader::cleanName(texture_path.C_Str(), texture_prefix);
           }
           if (mat->Get(AI_MATKEY_MAPPINGMODE_U(aiTextureType_OPACITY, 0), wrap_mode_u) == aiReturn_SUCCESS) {
             material.texture_alpha_wrap_mode_u = getTextureWrapMode(wrap_mode_u);
@@ -300,7 +304,7 @@ namespace Poulpe
           aiTextureMapMode wrap_mode_v { aiTextureMapMode_Clamp };
 
           if (mat->GetTexture(aiTextureType_UNKNOWN, 0, &texture_path) == aiReturn_SUCCESS) {
-              material.name_texture_metal_roughness = AssimpLoader::cleanName(texture_path.C_Str());
+              material.name_texture_metal_roughness = AssimpLoader::cleanName(texture_path.C_Str(), texture_prefix);
           }
           if (mat->Get(AI_MATKEY_MAPPINGMODE_U(aiTextureType_UNKNOWN, 0), wrap_mode_u) == aiReturn_SUCCESS) {
             material.texture_metal_roughness_wrap_mode_u = getTextureWrapMode(wrap_mode_u);
@@ -321,7 +325,7 @@ namespace Poulpe
           aiTextureMapMode wrap_mode_v { aiTextureMapMode_Clamp };
           
           if (mat->GetTexture(aiTextureType_EMISSIVE, 0, &texture_path) == aiReturn_SUCCESS) {
-              material.name_texture_emissive = AssimpLoader::cleanName(texture_path.C_Str());
+              material.name_texture_emissive = AssimpLoader::cleanName(texture_path.C_Str(), texture_prefix);
           }
           if (mat->Get(AI_MATKEY_MAPPINGMODE_U(aiTextureType_EMISSIVE, 0), wrap_mode_u) == aiReturn_SUCCESS) {
             material.texture_emissive_wrap_mode_u = getTextureWrapMode(wrap_mode_u);
@@ -342,7 +346,7 @@ namespace Poulpe
           aiTextureMapMode wrap_mode_v { aiTextureMapMode_Clamp };
 
           if (mat->GetTexture(aiTextureType_LIGHTMAP, 0, &texture_path) == aiReturn_SUCCESS) {
-              material.name_texture_ao = AssimpLoader::cleanName(texture_path.C_Str());
+              material.name_texture_ao = AssimpLoader::cleanName(texture_path.C_Str(), texture_prefix);
           }
           if (mat->Get(AI_MATKEY_MAPPINGMODE_U(aiTextureType_LIGHTMAP, 0), wrap_mode_u) == aiReturn_SUCCESS) {
             material.texture_ao_wrap_mode_u = getTextureWrapMode(wrap_mode_u);
@@ -358,7 +362,7 @@ namespace Poulpe
           aiTextureMapMode wrap_mode_v { aiTextureMapMode_Clamp };
 
           if (mat->GetTexture(aiTextureType_BASE_COLOR, 0, &texture_path) == aiReturn_SUCCESS) {
-              material.name_texture_base_color = AssimpLoader::cleanName(texture_path.C_Str());
+              material.name_texture_base_color = AssimpLoader::cleanName(texture_path.C_Str(), texture_prefix);
           }
           if (mat->Get(AI_MATKEY_MAPPINGMODE_U(aiTextureType_BASE_COLOR, 0), wrap_mode_u) == aiReturn_SUCCESS) {
             material.texture_base_color_wrap_mode_u = getTextureWrapMode(wrap_mode_u);
@@ -373,7 +377,7 @@ namespace Poulpe
           aiTextureMapMode wrap_mode_v { aiTextureMapMode_Clamp };
           
           if (mat->GetTexture(aiTextureType_TRANSMISSION, 0, &texture_path) == aiReturn_SUCCESS) {
-              material.name_texture_transmission = AssimpLoader::cleanName(texture_path.C_Str());
+              material.name_texture_transmission = AssimpLoader::cleanName(texture_path.C_Str(), texture_prefix);
           }
           if (mat->Get(AI_MATKEY_MAPPINGMODE_U(aiTextureType_TRANSMISSION, 0), wrap_mode_u) == aiReturn_SUCCESS) {
             material.texture_transmission_wrap_mode_u = getTextureWrapMode(wrap_mode_u);
@@ -480,7 +484,7 @@ namespace Poulpe
     glm::mat4 const global_transform = ConvertMatrixToGLMFormat(scene->mRootNode->mTransformation);
 
     std::vector<PlpMeshData> mesh_data{};
-    process(scene->mRootNode, scene, mesh_data, global_transform, flip_Y);
+    process(scene->mRootNode, scene, mesh_data, global_transform, texture_prefix, flip_Y);
 
     size_t id{ mesh_data.size() };
     for (auto& data : mesh_data) {
@@ -490,7 +494,7 @@ namespace Poulpe
     }
   }
 
-  std::string const AssimpLoader::cleanName(std::string const & name)
+  std::string const AssimpLoader::cleanName(std::string const & name, std::string const& prefix)
   {
     std::string cleaned{};
 
@@ -504,7 +508,7 @@ namespace Poulpe
 
     //PLP_DEBUG("asset: {} -> {}", name, cleaned);
 
-    return cleaned;
+    return prefix + cleaned;
   }
 
   void AssimpLoader::process(
@@ -512,6 +516,7 @@ namespace Poulpe
     const aiScene *scene,
     std::vector<PlpMeshData>& data,
     glm::mat4 const& global_transform,
+    std::string const& texture_prefix,
     bool const flip_Y)
   {
     glm::mat4 local_transform = ConvertMatrixToGLMFormat(node->mTransformation);
@@ -524,6 +529,8 @@ namespace Poulpe
 
       aiMesh const* mesh = scene->mMeshes[node->mMeshes[i]];
       mesh_data.name = mesh->mName.C_Str() + std::to_string(i);
+      mesh_data.texture_prefix = texture_prefix;
+
       unsigned int count{ 0 };
 
       //@todo check if it's ok
@@ -713,7 +720,7 @@ namespace Poulpe
     }
 
     for (unsigned int i{ 0 }; i < node->mNumChildren; i++) {
-      process(node->mChildren[i], scene, data, global_transform, flip_Y);
+      process(node->mChildren[i], scene, data, global_transform, texture_prefix, flip_Y);
     }
   }
 

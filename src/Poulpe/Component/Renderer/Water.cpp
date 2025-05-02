@@ -13,7 +13,7 @@ namespace Poulpe
 
   void Water::createDescriptorSet(Mesh* mesh)
   {
-    Texture tex { _texture_manager->getWaterTexture()};
+    Texture tex { _texture_manager->getTextures()[PLP_EMPTY]};
     
     tex.setSampler(_renderer->getAPI()->createKTXSampler(
       TextureWrapMode::WRAP,
@@ -21,29 +21,27 @@ namespace Poulpe
       0));
 
     if (tex.getWidth() == 0) {
-      tex = _texture_manager->getTextures()["_plp_empty"];
+      tex = _texture_manager->getTextures()[PLP_EMPTY];
     }
 
-    std::string const normal{ "_water_normal" };
-    Texture texture_normal{ _texture_manager->getTextures()[normal] };
+    Texture texture_normal{ _texture_manager->getTextures()[PLP_WATER_NORMAL_1] };
      texture_normal.setSampler(_renderer->getAPI()->createKTXSampler(
       mesh->getMaterial().texture_bump_wrap_mode_u,
       mesh->getMaterial().texture_bump_wrap_mode_v,
       1));
 
     if (texture_normal.getWidth() == 0) {
-      texture_normal = _texture_manager->getTextures()["_plp_empty"];
+      texture_normal = _texture_manager->getTextures()[PLP_EMPTY];
     }
 
-    std::string const normal2{ "_water_normal2" };
-    Texture texture_normal2{ _texture_manager->getTextures()[normal2] };
+    Texture texture_normal2{ _texture_manager->getTextures()[PLP_WATER_NORMAL_2] };
      texture_normal2.setSampler(_renderer->getAPI()->createKTXSampler(
       mesh->getMaterial().texture_bump_wrap_mode_u,
       mesh->getMaterial().texture_bump_wrap_mode_v,
       1));
 
     if (texture_normal2.getWidth() == 0) {
-      texture_normal2 = _texture_manager->getTextures()["_plp_empty"];
+      texture_normal2 = _texture_manager->getTextures()[PLP_EMPTY];
 
     }
 

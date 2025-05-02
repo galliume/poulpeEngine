@@ -10,6 +10,17 @@
 
 namespace Poulpe
 {
+  //default textures const, needs a real assets management (unique id etc.)
+  std::string const PLP_EMPTY{ "_plp_empty" };
+  std::string const PLP_SAND{ "sand" };
+  std::string const PLP_GRASS{ "grass" };
+  std::string const PLP_GROUND{ "ground" };
+  std::string const PLP_LOW_NOISE{ "low_noise" };
+  std::string const PLP_HI_NOISE { "hi_noise" };
+  std::string const PLP_SNOW{ "snow" };
+  std::string const PLP_WATER_NORMAL_1{ "_water_normal" };
+  std::string const PLP_WATER_NORMAL_2{ "_water_normal2" };
+
   class DeviceMemory;
 
   struct CameraUBO {
@@ -219,6 +230,7 @@ namespace Poulpe
   //@todo needs huge refactoring
   struct Data {
     std::string _name;
+    std::string _texture_prefix;
     std::vector<std::string> _textures;
     std::string _specular_map;
     std::string _bump_map;
@@ -302,6 +314,7 @@ namespace Poulpe
   struct PlpMeshData
   {
     std::string name{};
+    std::string texture_prefix{};
     unsigned int id{};
     uint32_t material_ID{ 0 };
     std::vector<uint32_t> face_material_ID{};

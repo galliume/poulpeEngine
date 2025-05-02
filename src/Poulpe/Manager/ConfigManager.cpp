@@ -94,34 +94,38 @@ namespace Poulpe
     std::ranges::for_each(_entity_config["entities"].items(), [&](auto const& entities) {
       auto const& textures = entities.value();
       
+      //@todo fix this ugly fix. Needs a real asset unique ID
+      std::filesystem::path file_name{ textures["mesh"] };
+      auto const& texture_prefix{ file_name.stem().string() + "_"};
+
       if (textures.contains("textures")) {
         for (auto const& [key, data] : textures["textures"].items()) {
-          _textures_config["textures"][key] = data;
+          _textures_config["textures"][texture_prefix + key] = data;
         }
       }
       if (textures.contains("mr")) {
         for (auto const& [key, data] : textures["mr"].items()) {
-          _textures_config["mr"][key] = data;
+          _textures_config["mr"][texture_prefix + key] = data;
         }
       }
       if (textures.contains("normal")) {
         for (auto const& [key, data] : textures["normal"].items()) {
-          _textures_config["normal"][key] = data;
+          _textures_config["normal"][texture_prefix + key] = data;
         }
       }
       if (textures.contains("emissive")) {
         for (auto const& [key, data] : textures["emissive"].items()) {
-          _textures_config["emissive"][key] = data;
+          _textures_config["emissive"][texture_prefix + key] = data;
         }
       }
       if (textures.contains("ao")) {
         for (auto const& [key, data] : textures["ao"].items()) {
-          _textures_config["ao"][key] = data;
+          _textures_config["ao"][texture_prefix + key] = data;
         }
       }
       if (textures.contains("transmission")) {
         for (auto const& [key, data] : textures["transmission"].items()) {
-          _textures_config["transmission"][key] = data;
+          _textures_config["transmission"][texture_prefix + key] = data;
         }
       }
     });
