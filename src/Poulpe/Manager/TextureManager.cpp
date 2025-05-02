@@ -200,9 +200,11 @@ namespace Poulpe
         add(key, texture_data, VK_IMAGE_ASPECT_COLOR_BIT, TEXTURE_TYPE::EMISSIVE);
       }
       for (auto& [key, texture_data] : _texture_config["terrain"].items()) {
-        add(_terrain_name, texture_data, VK_IMAGE_ASPECT_COLOR_BIT, TEXTURE_TYPE::HEIGHT);
+        setTerrainName(key);
+        add(key, texture_data, VK_IMAGE_ASPECT_COLOR_BIT, TEXTURE_TYPE::HEIGHT);
       }
       for (auto& [key, texture_data] : _texture_config["water"].items()) {
+        setWaterName(key);
         add(_water_name, texture_data, VK_IMAGE_ASPECT_COLOR_BIT, TEXTURE_TYPE::DIFFUSE);
       }
       count_down.count_down();
@@ -245,7 +247,7 @@ namespace Poulpe
       ktx_format = "R32G32B32_SFLOAT";
     }
 
-    if (name == "_plp_empty") {
+    if (name == PLP_EMPTY) {
       transcoding = KTX_TTF_BC7_RGBA;
     }
     switch (texture_type) {

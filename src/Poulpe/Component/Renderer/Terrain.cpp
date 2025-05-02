@@ -21,10 +21,11 @@ namespace Poulpe
       0));
 
     if (height_map.getWidth() == 0) {
-      height_map = _texture_manager->getTextures()["_plp_empty"];
-
+      height_map = _texture_manager->getTextures()[PLP_EMPTY];
     }
-    Texture ground { _texture_manager->getTextures()["terrain_ground"]};
+
+    //@todo fix this ugly fix. Needs a real asset unique ID
+    Texture ground { _texture_manager->getTextures()[PLP_GROUND]};
     
     ground.setSampler(_renderer->getAPI()->createKTXSampler(
       TextureWrapMode::WRAP,
@@ -32,10 +33,10 @@ namespace Poulpe
       0));
 
     if (ground.getWidth() == 0) {
-      ground = _texture_manager->getTextures()["_plp_empty"];
+      ground = _texture_manager->getTextures()[PLP_EMPTY];
     }
 
-    Texture grass { _texture_manager->getTextures()["terrain_grass"]};
+    Texture grass { _texture_manager->getTextures()[PLP_GRASS]};
     
     grass.setSampler(_renderer->getAPI()->createKTXSampler(
       TextureWrapMode::WRAP,
@@ -43,10 +44,10 @@ namespace Poulpe
       0));
 
     if (grass.getWidth() == 0) {
-      grass = _texture_manager->getTextures()["_plp_empty"];
+      grass = _texture_manager->getTextures()[PLP_EMPTY];
     }
 
-    Texture snow { _texture_manager->getTextures()["terrain_snow"]};
+    Texture snow { _texture_manager->getTextures()[PLP_SNOW]};
     
     snow.setSampler(_renderer->getAPI()->createKTXSampler(
       TextureWrapMode::WRAP,
@@ -54,10 +55,10 @@ namespace Poulpe
       0));
 
     if (snow.getWidth() == 0) {
-      snow = _texture_manager->getTextures()["_plp_empty"];
+      snow = _texture_manager->getTextures()[PLP_EMPTY];
     }
 
-    Texture sand { _texture_manager->getTextures()["terrain_sand"]};
+    Texture sand { _texture_manager->getTextures()[PLP_SAND]};
 
     sand.setSampler(_renderer->getAPI()->createKTXSampler(
       TextureWrapMode::WRAP,
@@ -65,10 +66,10 @@ namespace Poulpe
       0));
 
     if (sand.getWidth() == 0) {
-      sand = _texture_manager->getTextures()["_plp_empty"];
+      sand = _texture_manager->getTextures()[PLP_EMPTY];
     }
 
-    Texture low_noise { _texture_manager->getTextures()["terrain_low_noise"]};
+    Texture low_noise { _texture_manager->getTextures()[PLP_LOW_NOISE]};
 
     low_noise.setSampler(_renderer->getAPI()->createKTXSampler(
       TextureWrapMode::WRAP,
@@ -76,10 +77,10 @@ namespace Poulpe
       0));
 
     if (low_noise.getWidth() == 0) {
-      low_noise = _texture_manager->getTextures()["_plp_empty"];
+      low_noise = _texture_manager->getTextures()[PLP_EMPTY];
     }
 
-    Texture hi_noise { _texture_manager->getTextures()["terrain_hi_noise"]};
+    Texture hi_noise { _texture_manager->getTextures()[PLP_HI_NOISE]};
 
     hi_noise.setSampler(_renderer->getAPI()->createKTXSampler(
       TextureWrapMode::WRAP,
@@ -87,7 +88,7 @@ namespace Poulpe
       0));
 
     if (hi_noise.getWidth() == 0) {
-      hi_noise = _texture_manager->getTextures()["_plp_empty"];
+      hi_noise = _texture_manager->getTextures()[PLP_EMPTY];
     }
 
     std::vector<VkDescriptorImageInfo> image_infos{};

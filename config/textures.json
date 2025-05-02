@@ -6,22 +6,22 @@
 		"_plp_empty": {
 			"path": "assets/texture/_plp_empty.ktx2"
 		},
-		"terrain_grass": {
+		"grass": {
 			"path": "assets/texture/terrain/grass.ktx2"
 		},
-		"terrain_snow": {
+		"snow": {
 			"path": "assets/texture/terrain/snow.ktx2"
 		},
-		"terrain_ground": {
+		"ground": {
 			"path": "assets/texture/terrain/ground.ktx2"
 		},
-		"terrain_sand": {
+		"sand": {
 			"path": "assets/texture/terrain/sand.ktx2"
 		},
-		"terrain_low_noise": {
+		"low_noise": {
 			"path": "assets/texture/terrain/low_noise.ktx2"
 		},
-		"terrain_hi_noise": {
+		"hi_noise": {
 			"path": "assets/texture/terrain/hi_noise.ktx2"
 		}
 	},

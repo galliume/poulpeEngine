@@ -22,7 +22,7 @@ namespace Poulpe
       0));
 
     if (atlas.getWidth() == 0) {
-      atlas = _texture_manager->getTextures()["_plp_empty"];
+      atlas = _texture_manager->getTextures()[PLP_EMPTY];
     }
 
     auto const sampler = _renderer->getAPI()->createKTXSampler(

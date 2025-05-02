@@ -24,11 +24,12 @@ namespace Poulpe
         std::unordered_map<std::string, std::vector<std::vector<Poulpe::Scale>>> const scales)> callback);
 
   private:
-     static std::string const cleanName(std::string const& name);
+     static std::string const cleanName(std::string const& name, std::string const& prefix);
      static void process(aiNode* node,
        const aiScene *scene,
        std::vector<PlpMeshData>& mesh_data,
        glm::mat4 const& global_transform,
+       std::string const& texture_prefix,
        bool const flip_Y);
     static TextureWrapMode getTextureWrapMode(aiTextureMapMode const wrap_mode);
     static AnimInterpolation AssimpLoader::getInterpolation(aiAnimInterpolation const assimp_interpolation);

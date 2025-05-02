@@ -180,15 +180,15 @@ namespace Poulpe
 
       unsigned int const tex1ID = _data.materials_ID.at(0);
 
-      std::string name_texture{ "_plp_empty" };
-      std::string name_specular_map{ "_plp_empty" };
-      std::string name_bump_map{ "_plp_empty" };
-      std::string name_alpha_map{ "_plp_empty" };
-      std::string name_texture_metal_roughness{ "_plp_empty" };
-      std::string name_texture_emissive{ "_plp_empty" };
-      std::string name_texture_ao{ "_plp_empty" };
-      std::string name_texture_base_color{ "_plp_empty" };
-      std::string name_texture_transmission{ "_plp_empty" };
+      std::string name_texture{ PLP_EMPTY };
+      std::string name_specular_map{ PLP_EMPTY };
+      std::string name_bump_map{ PLP_EMPTY };
+      std::string name_alpha_map{ PLP_EMPTY };
+      std::string name_texture_metal_roughness{ PLP_EMPTY };
+      std::string name_texture_emissive{ PLP_EMPTY };
+      std::string name_texture_ao{ PLP_EMPTY };
+      std::string name_texture_base_color{ PLP_EMPTY };
+      std::string name_texture_transmission{ PLP_EMPTY };
       float alpha_mode{ 0.0 };
 
       if (!materials.empty()) {
@@ -196,7 +196,7 @@ namespace Poulpe
         auto const& mat = materials.at(_data.material_ID);
         alpha_mode = mat.alpha_mode;
 
-        //@todo should not in mesh, but just an ID pointing to the material
+        //@todo should not be in mesh, but just an ID pointing to the material
         mesh->setMaterial(mat);
 
         //@todo temp
@@ -241,6 +241,7 @@ namespace Poulpe
 
       Data data{};
       data._name = _data.name + '_' + name_texture;
+      data._texture_prefix = _data.texture_prefix;
       data._textures.emplace_back(name_texture);
       data._specular_map = name_specular_map;
       data._bump_map = name_bump_map;
@@ -384,9 +385,11 @@ namespace Poulpe
             root_mesh_entity_node->getEntity()->getID(), std::move(boneAnimationScript));
           }
 
-          std::shared_lock guard(_mutex_shared);
-          root_mesh_entity_node->setIsLoaded(true);
-          _world_node->addChild(root_mesh_entity_node);
+          {
+            //std::shared_lock guard(_mutex_shared);
+            root_mesh_entity_node->setIsLoaded(true);
+            _world_node->addChild(root_mesh_entity_node);
+          }
         }
       }
     };

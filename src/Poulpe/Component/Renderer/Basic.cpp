@@ -26,7 +26,7 @@ namespace Poulpe
       1));
 
     if (texture_bump.getWidth() == 0) {
-      texture_bump = _texture_manager->getTextures()["_plp_empty"];
+      texture_bump = _texture_manager->getTextures()[PLP_EMPTY];
     }
 
     std::string specular_map_name{ mesh->getData()->_specular_map };
@@ -37,7 +37,7 @@ namespace Poulpe
     texture_specular.getMipLevels()));
 
     if (texture_specular.getWidth() == 0) {
-      texture_specular = _texture_manager->getTextures()["_plp_empty"];
+      texture_specular = _texture_manager->getTextures()[PLP_EMPTY];
     }
 
     std::string metal_roughness_map_name{ mesh->getData()->_metal_roughness};
@@ -48,7 +48,7 @@ namespace Poulpe
     texture_metal_roughness.getMipLevels()));
 
     if (texture_metal_roughness.getWidth() == 0) {
-      texture_metal_roughness = _texture_manager->getTextures()["_plp_empty"];
+      texture_metal_roughness = _texture_manager->getTextures()[PLP_EMPTY];
     }
 
     std::string emissive_map_name{ mesh->getData()->_emissive};
@@ -59,7 +59,7 @@ namespace Poulpe
     texture_emissive.getMipLevels()));
 
     if (texture_emissive.getWidth() == 0) {
-      texture_emissive = _texture_manager->getTextures()["_plp_empty"];
+      texture_emissive = _texture_manager->getTextures()[PLP_EMPTY];
     }
 
     std::string ao_map_name{ mesh->getData()->_ao};
@@ -70,7 +70,7 @@ namespace Poulpe
     texture_ao.getMipLevels()));
 
     if (texture_ao.getWidth() == 0) {
-      texture_ao = _texture_manager->getTextures()["_plp_empty"];
+      texture_ao = _texture_manager->getTextures()[PLP_EMPTY];
 
     }
  
@@ -82,7 +82,7 @@ namespace Poulpe
     texture_base_color.getMipLevels()));
 
     if (texture_base_color.getWidth() == 0) {
-      texture_base_color = _texture_manager->getTextures()["_plp_empty"];
+      texture_base_color = _texture_manager->getTextures()[PLP_EMPTY];
     }
 
     //VkDescriptorImageInfo shadowMapSpot{};
@@ -109,7 +109,7 @@ namespace Poulpe
       0));
 
     if (texture_environment.getWidth() == 0) {
-      texture_environment = _texture_manager->getTextures()["_plp_empty"];
+      texture_environment = _texture_manager->getTextures()[PLP_EMPTY];
     }
     cubemap_info.emplace_back(texture_environment.getSampler(), texture_environment.getImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 

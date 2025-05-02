@@ -43,6 +43,8 @@ namespace Poulpe
     std::function<void(std::latch& count_down)> load();
     std::function<void(std::latch& count_down)> loadSkybox(std::string_view skybox);
     Texture getTerrainTexture() { return _textures[_terrain_name]; }
+    void setTerrainName(std::string const& terrain_name) { _terrain_name = terrain_name; }
+    void setWaterName(std::string const& water_name) { _water_name = water_name; }
     Texture getWaterTexture() { return _textures[_water_name]; }
     void addTexture(Texture texture) { _textures[texture.getName()] = std::move(texture); }
 
@@ -58,8 +60,8 @@ namespace Poulpe
 
     Renderer* _renderer{ nullptr };
     std::string _skybox_name;
-    std::string const _terrain_name {"_plp_terrain"};
-    std::string const _water_name {"_plp_water"};
+    std::string _terrain_name {"_plp_terrain"};
+    std::string _water_name {"_plp_water"};
     nlohmann::json _texture_config;
 
     std::unordered_map<std::string, std::string> _paths;
