@@ -48,6 +48,7 @@ namespace Poulpe
     //if (!_move_init) {
     if (_moves.empty() && !_animations.empty()) {
 
+      _anim_id = 0;
       auto const& anim{ _animations.at(_anim_id) };
       auto const duration{ (anim.duration / anim.ticks_per_s) * 1000.0f };//ms
       //_elapsed_time = std::clamp(_elapsed_time, 0.f, duration);
@@ -55,22 +56,32 @@ namespace Poulpe
       //PLP_DEBUG("_elapsed_time {} duration {} ", _elapsed_time, duration);
       //PLP_DEBUG("anim {} elapased time {} duration {} delta {}", anim.name, _elapsed_time, duration, delta_time);
 
-      _bone_matrices.clear();
       _bone_matrices.resize(_data->_bones.size());
       //_elapsed_time = fmod(_elapsed_time, duration);
-
-      updateBoneTransforms(anim, _data->_root_bone_name, glm::mat4(1.0f), duration);
+      
+      auto const& root_bone = _data->_bones[_data->_root_bone_name];
+      updateBoneTransforms(anim, root_bone.name, root_bone.t_pose, duration);
 
       for (auto& vertex : _data->_vertices) {
-        glm::vec4 result = glm::vec4(0.0f);
-        for (auto i{ 0 }; i < 4; ++i) {
-          auto bone_id{ vertex.bone_ids[i] };
-          auto w{ vertex.bone_weights[i] };
-          if (w > 0.0f) {
+        float const total_weight {
+          vertex.bone_weights[0]
+          + vertex.bone_weights[1]
+          + vertex.bone_weights[2]
+          + vertex.bone_weights[3] };
+
+        if (total_weight > 0.f) {
+          glm::vec4 result = glm::vec4(0.0f);
+          for (auto i{ 0 }; i < 4; ++i) {
+            auto const bone_id{ vertex.bone_ids[i] };
+            auto const w{ vertex.bone_weights[i] };
+            if (w > 0.f) {
               result += _bone_matrices[bone_id] * glm::vec4(vertex.original_pos, 1.0f) * w;
+            }
           }
+          vertex.pos = glm::vec3(result);
+        } else {
+          vertex.pos = vertex.original_pos;
         }
-        vertex.pos = glm::vec3(result);
       }
 
       if (_elapsed_time >= duration) {
@@ -78,10 +89,10 @@ namespace Poulpe
         //t = 1.f;
         //mesh->setIsDirty(false);
         //_done = true;
-        _anim_id += 1;
-        if (_anim_id >= _animations.size()) {
-          _anim_id = 0;
-        }
+        //_anim_id += 1;
+        //if (_anim_id >= _animations.size()) {
+        //  _anim_id = 0;
+        //}
       } else {
         mesh->setIsDirty();
         _elapsed_time += delta_time * 1000.0f;
@@ -99,7 +110,7 @@ namespace Poulpe
 
     auto new_scale{ glm::vec3(1.0f) };
     auto new_position{ glm::vec3(1.0f) };
-    auto new_rotation{ glm::quat(0, 0, 0, 0) };
+    auto new_rotation{  glm::identity<glm::quat>() };
 
     //PLP_DEBUG("bone: {}", bone.name);
     auto const& scale_bone_node { _scales[bone.name] };
@@ -134,8 +145,6 @@ namespace Poulpe
         Rotation rotation_start;
         Rotation rotation_end;
         std::tie(rotation_start, rotation_end) = findKeyframe<Rotation>(rotations_data, _elapsed_time, duration);
-
-        if (glm::dot(rotation_start.value, rotation_end.value) < 0.0f) rotation_end.value = -rotation_end.value;
         new_rotation = interpolate<Rotation>(rotation_start, rotation_end, _elapsed_time);
       };
     }
@@ -147,7 +156,7 @@ namespace Poulpe
 
     glm::mat4 global = parent_transform * transform;
 
-    glm::mat4 final_transform = _data->_inverse_transform_matrix * global * bone.offset_matrix;
+    glm::mat4 final_transform = global * bone.offset_matrix;
     _bone_matrices[bone.id] = final_transform;
 
     for (auto child : bone.children) {

@@ -630,44 +630,52 @@ namespace Poulpe
 
       if (mesh->HasBones()) {
 
-        Bone bone_data{};
+        for (auto i{ 0 }; i < mesh->mNumBones; ++i) {
+          auto const& bone_name = mesh->mBones[i]->mName.C_Str();
+          auto* node = scene->mRootNode->FindNode(bone_name);
 
-        for (auto b{ 0 }; b < mesh->mNumBones; b++) {
+          while (node && bones_map.contains(node->mName.C_Str())) {
+              node = node->mParent;
+          }
+
+          if (node && mesh_data.root_bone_name.empty()) {
+            mesh_data.root_bone_name = node->mChildren[0]->mName.C_Str();
+          }
+        }
+
+        std::unordered_map<unsigned int, std::vector<std::pair<unsigned int, float>>> vertex_weight_map{};
+
+        for (auto b{ 1 }; b < mesh->mNumBones; b++) {
           aiBone const* bone = mesh->mBones[b];
 
           std::string const& bone_name{ bone->mName.C_Str() };
-          if (b == 0) mesh_data.root_bone_name = bone_name;
           aiNode const* bone_node = scene->mRootNode->FindNode(bone_name.c_str());
-          bone_data.id = b;
-          bone_data.name = bone_name;
-          bone_data.offset_matrix = ConvertMatrixToGLMFormat(bone->mOffsetMatrix);
 
-          glm::mat4 local_transform = glm::mat4(1.0f);
+          auto const bone_id{ b - 1 };
+
+          Bone bone_data{};
+          bone_data.id = bone_id;
+          bone_data.transform = ConvertMatrixToGLMFormat(bone_node->mTransformation);
+          bone_data.offset_matrix = ConvertMatrixToGLMFormat(bone->mOffsetMatrix);
+          bone_data.name = bone_name;
+          
+          glm::mat4 t_pose = glm::mat4(1.0f);
           aiNode const* current = bone_node;
 
           while (current) {
-            local_transform = ConvertMatrixToGLMFormat(current->mTransformation) * local_transform;
+            t_pose = ConvertMatrixToGLMFormat(current->mTransformation) * t_pose;
             current = current->mParent;
           }
-          bone_data.bind_pose_transform = local_transform;
-          bone_data.local_transform = local_transform;
-
-          std::unordered_map<unsigned int, float> weights{};
+          bone_data.t_pose = t_pose;
 
           for (auto w{ 0 }; w < bone->mNumWeights; w++) {
             aiVertexWeight const& aiWeight = bone->mWeights[w];
             bone_data.weights.emplace_back(aiWeight.mVertexId, aiWeight.mWeight);
+            
+            auto& data = vertex_weight_map[aiWeight.mVertexId];
+            data.emplace_back(bone_id, aiWeight.mWeight);
           }
-          for (auto& weight : bone_data.weights) {
-            auto& vertex = mesh_data.vertices.at(weight.vertex_id);
-            for (int i = 0; i < 4; ++i) {
-              if (vertex.bone_weights[i] == 0.0f) {
-                vertex.bone_ids[i] = bone_data.id;
-                vertex.bone_weights[i] = weight.weight;
-                break;
-              }
-            }
-          }
+
           for (auto i{ 0 }; i < bone_node->mNumChildren; i++) {
             aiNode* child = bone_node->mChildren[i];
             if (child) {
@@ -678,6 +686,28 @@ namespace Poulpe
           bones_map[bone_data.name] = std::move(bone_data);
         }
         mesh_data.bones = bones_map;
+
+        for (auto& vertex_map : vertex_weight_map) {
+          unsigned int vertex_id = vertex_map.first;
+          auto& vertex = mesh_data.vertices.at(vertex_id);
+
+          auto& data{ vertex_map.second };
+
+          std::sort(data.begin(), data.end(),
+            [](auto const& a, auto const& b) { return a.second > b.second; });
+            
+          float total_weight{ 0.0f };
+          for (int i{ 0 }; i < 4 && i < static_cast<int>(data.size()); ++i) {
+            vertex.bone_ids[i] = data[i].first;
+            vertex.bone_weights[i] = data[i].second;
+            total_weight += data[i].second;
+          }
+
+          //if (total_weight > 0.0f) {
+          //  for (int i{ 0 }; i < 4; ++i)
+          //  vertex.bone_weights[i] /= total_weight;
+          //}
+        }
       }
       data.emplace_back(mesh_data);
     }

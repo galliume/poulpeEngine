@@ -209,8 +209,8 @@ namespace Poulpe
   struct Bone {
     unsigned int id;
     std::string name{};
-    glm::mat4 bind_pose_transform{};
-    glm::mat4 local_transform{};
+    glm::mat4 transform{};
+    glm::mat4 t_pose{};
     glm::mat4 offset_matrix{};
     std::vector<BoneWeight> weights{};
     std::vector<std::string> children{};
