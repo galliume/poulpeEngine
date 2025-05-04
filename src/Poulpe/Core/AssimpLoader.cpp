@@ -635,30 +635,24 @@ namespace Poulpe
 
       std::unordered_map<std::string, Bone> bones_map{};
 
+      std::unordered_set<std::string>bones_list{};
+      auto const dummy_node_name{ "_rootJoint" };
+
       if (mesh->HasBones()) {
-
-        for (auto i{ 0 }; i < mesh->mNumBones; ++i) {
-          auto const& bone_name = mesh->mBones[i]->mName.C_Str();
-          auto* node = scene->mRootNode->FindNode(bone_name);
-
-          while (node && bones_map.contains(node->mName.C_Str())) {
-              node = node->mParent;
-          }
-
-          if (node && mesh_data.root_bone_name.empty()) {
-            mesh_data.root_bone_name = node->mChildren[0]->mName.C_Str();
-          }
-        }
-
+        auto bone_id{ 0 };
         std::unordered_map<unsigned int, std::vector<std::pair<unsigned int, float>>> vertex_weight_map{};
 
-        for (auto b{ 1 }; b < mesh->mNumBones; b++) {
+        for (auto b{ 0 }; b < mesh->mNumBones; b++) {
           aiBone const* bone = mesh->mBones[b];
 
           std::string const& bone_name{ bone->mName.C_Str() };
-          aiNode const* bone_node = scene->mRootNode->FindNode(bone_name.c_str());
 
-          auto const bone_id{ b - 1 };
+          if (bone_name == dummy_node_name) {
+            continue;
+          }
+          bones_list.insert(bone_name);
+
+          aiNode const* bone_node = scene->mRootNode->FindNode(bone_name.c_str());
 
           Bone bone_data{};
           bone_data.id = bone_id;
@@ -670,7 +664,9 @@ namespace Poulpe
           aiNode const* current = bone_node;
 
           while (current) {
-            t_pose = ConvertMatrixToGLMFormat(current->mTransformation) * t_pose;
+            if (current->mName.C_Str() != dummy_node_name) {
+              t_pose = ConvertMatrixToGLMFormat(current->mTransformation) * t_pose;
+            }
             current = current->mParent;
           }
           bone_data.t_pose = t_pose;
@@ -691,8 +687,15 @@ namespace Poulpe
             }
           }
           bones_map[bone_data.name] = std::move(bone_data);
+          bone_id += 1;
         }
         mesh_data.bones = bones_map;
+
+        auto const root_bone = FindRootBone(scene->mRootNode, bones_list);
+
+        if (root_bone) {
+          mesh_data.root_bone_name = root_bone->mName.C_Str();
+        }
 
         for (auto& vertex_map : vertex_weight_map) {
           unsigned int vertex_id = vertex_map.first;
@@ -710,10 +713,10 @@ namespace Poulpe
             total_weight += data[i].second;
           }
 
-          //if (total_weight > 0.0f) {
-          //  for (int i{ 0 }; i < 4; ++i)
-          //  vertex.bone_weights[i] /= total_weight;
-          //}
+          if (total_weight > 0.0f) {
+            for (int i{ 0 }; i < 4; ++i)
+            vertex.bone_weights[i] /= total_weight;
+          }
         }
       }
       data.emplace_back(mesh_data);
@@ -755,4 +758,24 @@ namespace Poulpe
     }
     return interpolation;
   }
+
+   aiNode const* AssimpLoader::FindRootBone(
+    aiNode const* node,
+    std::unordered_set<std::string> const& bone_names)
+   {
+    if (bone_names.count(node->mName.C_Str())) {
+      aiNode const* parent = node->mParent;
+      if (!parent || !bone_names.count(parent->mName.C_Str())) {
+        return node;
+      }
+    }
+
+    for (auto i{ 0 }; i < node->mNumChildren; ++i) {
+      if (auto const* result = FindRootBone(node->mChildren[i], bone_names)) {
+        return result;
+      }
+    }
+
+    return nullptr;
+}
 }
