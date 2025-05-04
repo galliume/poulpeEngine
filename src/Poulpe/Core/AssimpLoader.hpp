@@ -33,5 +33,8 @@ namespace Poulpe
        bool const flip_Y);
     static TextureWrapMode getTextureWrapMode(aiTextureMapMode const wrap_mode);
     static AnimInterpolation AssimpLoader::getInterpolation(aiAnimInterpolation const assimp_interpolation);
+    static aiNode const* AssimpLoader::FindRootBone(
+      aiNode const* node,
+      std::unordered_set<std::string> const& bone_names);
   };
 }
