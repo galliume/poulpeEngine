@@ -95,6 +95,8 @@ namespace Poulpe
     std::vector<Buffer> _uniform_buffers{};
     ObjectBuffer _object_buffer;
 
+    unsigned int _default_anim{};
+
     Data _data{};
     VkDescriptorSet _descset{};
     VkDescriptorSet _shadowmap_descset{};
