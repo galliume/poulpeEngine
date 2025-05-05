@@ -220,8 +220,12 @@ namespace Poulpe
   struct Bone {
     unsigned int id;
     std::string name{};
+    std::string parent_name{};
     glm::mat4 transform{};
     glm::mat4 t_pose{};
+    glm::vec3 t_pose_position{};
+    glm::vec3 t_pose_scale{};
+    glm::quat t_pose_rotation;
     glm::mat4 offset_matrix{};
     std::vector<BoneWeight> weights{};
     std::vector<std::string> children{};
@@ -293,8 +297,8 @@ namespace Poulpe
   };
 
   struct AnimOperation {
-    unsigned int id;
-    unsigned int animation_ID;
+    int id;
+    int animation_ID;
     float time;
     AnimInterpolation interpolation;
   };
