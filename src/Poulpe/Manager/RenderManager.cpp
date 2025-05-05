@@ -96,10 +96,11 @@ namespace Poulpe
     if (!_camera->isInit()) {
       auto const& lvl_config{ configManager->lvlConfig() };
       auto const& camera{ lvl_config["camera"] };
-      glm::vec3 const start_pos = {
-        camera["position"]["x"].template get<float>(),
-        camera["position"]["y"].template get<float>(),
-        camera["position"]["z"].template get<float>() };
+
+      glm::vec3 const start_pos{
+        camera["position"]["x"].get<float>(),
+        camera["position"]["y"].get<float>(),
+        camera["position"]["z"].get<float>() };
 
       _camera->init(start_pos);
     }

@@ -264,6 +264,7 @@ namespace Poulpe
     glm::mat4 _inverse_transform_matrix;
     std::unordered_map<std::string, Bone> _bones{};
     std::string _root_bone_name{};
+    unsigned int _default_anim{};
   };
 
   struct EntityOptions
@@ -280,6 +281,7 @@ namespace Poulpe
     bool flip_Y{ false };
     bool is_indexed{ false };
     bool debug_normal{ false };
+    unsigned int default_anim{ 0 };
   };
 
   struct Animation {
@@ -329,6 +331,7 @@ namespace Poulpe
     glm::mat4 inverse_transform_matrix{};
     std::unordered_map<std::string, Bone> bones{};
     std::string root_bone_name{};
+    unsigned int default_anim{};
   };
 
   enum class SocketStatus {
