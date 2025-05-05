@@ -57,7 +57,7 @@ namespace Poulpe
       //PLP_DEBUG("anim {} elapased time {} duration {} delta {}", anim.name, _elapsed_time, duration, delta_time);
 
       _bone_matrices.resize(_data->_bones.size());
-      //_elapsed_time = fmod(_elapsed_time, duration);
+      _elapsed_time = fmod(_elapsed_time, duration);
       
       auto const& root_bone = _data->_bones[_data->_root_bone_name];
       updateBoneTransforms(anim, root_bone.name, root_bone.t_pose, duration);
@@ -108,9 +108,9 @@ namespace Poulpe
   {
     auto const& bone = _data->_bones[bone_name];
 
-    auto new_scale{ glm::vec3(1.0f) };
-    auto new_position{ glm::vec3(1.0f) };
-    auto new_rotation{  glm::identity<glm::quat>() };
+    auto new_scale{ bone.t_pose_scale };
+    auto new_position{ bone.t_pose_position };
+    auto new_rotation{ bone.t_pose_rotation };
 
     //PLP_DEBUG("bone: {}", bone.name);
     auto const& scale_bone_node { _scales[bone.name] };
@@ -146,8 +146,9 @@ namespace Poulpe
         Rotation rotation_end;
         std::tie(rotation_start, rotation_end) = findKeyframe<Rotation>(rotations_data, _elapsed_time, duration);
         new_rotation = interpolate<Rotation>(rotation_start, rotation_end, _elapsed_time);
-      };
+      }
     }
+
 
     glm::mat4 const S = glm::scale(glm::mat4(1.0f), new_scale);
     glm::mat4 const R = glm::toMat4(new_rotation);
@@ -155,7 +156,6 @@ namespace Poulpe
     glm::mat4 const transform = T * R * S;
 
     glm::mat4 global = parent_transform * transform;
-
     glm::mat4 final_transform = global * bone.offset_matrix;
     _bone_matrices[bone.id] = final_transform;
 

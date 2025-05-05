@@ -6,6 +6,8 @@
 
 #include <assimp/GltfMaterial.h>
 
+#include <glm/gtx/matrix_decompose.hpp>
+
 #include <filesystem>
 
 namespace Poulpe
@@ -413,31 +415,31 @@ namespace Poulpe
     std::unordered_map<std::string, std::vector<std::vector<Scale>>> scales{};
 
     animations.reserve(scene->mNumAnimations);
+    rotations.reserve(scene->mNumAnimations);
+    positions.reserve(scene->mNumAnimations);
+    scales.reserve(scene->mNumAnimations);
 
-    for (unsigned int i{ 0 }; i < scene->mNumAnimations; i++) {
+    for (auto i{ 0 }; i < scene->mNumAnimations; i++) {
 
       aiAnimation const* animation = scene->mAnimations[i];
 
       auto const ticks_per_s = (animation->mTicksPerSecond > 0) ? animation->mTicksPerSecond : 25.0;
       animations.emplace_back(i, animation->mName.C_Str(), animation->mDuration, ticks_per_s);
 
-      //PLP_DEBUG("Animation {}, duration {}", animation->mName.C_Str(), animation->mDuration);
-      for (unsigned int j{ 0 }; j < animation->mNumChannels; j++) {
-        aiNodeAnim const* node = animation->mChannels[j];
-        std::string const node_name{ node->mNodeName.C_Str() };
-        rotations[node_name].reserve(scene->mNumAnimations);
-        positions[node_name].reserve(scene->mNumAnimations);
-        scales[node_name].reserve(scene->mNumAnimations);
+      for (auto j{ 0 }; j < animation->mNumChannels; j++) {
+
+        auto const* node{ animation->mChannels[j] };
+        auto const node_name{ node->mNodeName.C_Str() };
 
         std::vector<Rotation>rots{};
         rots.reserve(node->mNumRotationKeys);
-        unsigned int id{ 0 };
-        for (unsigned int r{ 0 }; r < node->mNumRotationKeys; r++) {
-          aiQuatKey const& rotation_key = node->mRotationKeys[r];
+
+        for (auto r{ 0 }; r < node->mNumRotationKeys; r++) {
+
+          auto const& rotation_key{ node->mRotationKeys[r] };
           auto const interpolation{ getInterpolation(rotation_key.mInterpolation) };
-          //PLP_DEBUG("rot {} x {} y {} z {}", rotation_key.mTime, rotation_key.mValue.x, rotation_key.mValue.y, rotation_key.mValue.z);
-          rots.emplace_back(Rotation{ id, i, static_cast<float>(rotation_key.mTime), interpolation, GetGLMQuat(rotation_key.mValue) });
-          id += 1;
+
+          rots.emplace_back(Rotation{ r, i, static_cast<float>(rotation_key.mTime), interpolation, GetGLMQuat(rotation_key.mValue) });
         }
         //auto rot_duplicate = rots.front();
         //rot_duplicate.id = rots.size() + 1;
@@ -445,16 +447,14 @@ namespace Poulpe
         //rots.emplace_back(rot_duplicate);
         rotations[node_name].push_back(rots);
 
-        id = 0;
         std::vector<Position> pos{};
-        pos.reserve(node->mNumPositionKeys + 1);
-        for (unsigned int p{ 0 }; p < node->mNumPositionKeys; p++) {
-          aiVectorKey const& pos_key = node->mPositionKeys[p];
+        pos.reserve(node->mNumPositionKeys);
+
+        for (auto p{ 0 }; p < node->mNumPositionKeys; p++) {
+          auto const& pos_key = node->mPositionKeys[p];
           auto const interpolation{ getInterpolation(pos_key.mInterpolation) };
 
-          //PLP_DEBUG("pos {} x {} y {} z {}", pos_key.mTime, pos_key.mValue.x, pos_key.mValue.y, pos_key.mValue.z);
-          pos.emplace_back(Position{ id, i, static_cast<float>(pos_key.mTime), interpolation, GetGLMVec(pos_key.mValue) });
-          id += 1;
+          pos.emplace_back(Position{ p, i, static_cast<float>(pos_key.mTime), interpolation, GetGLMVec(pos_key.mValue) });
         }
         //auto pos_duplicate = pos.front();
         //pos_duplicate.id = pos.size() + 1;
@@ -462,16 +462,14 @@ namespace Poulpe
         //pos.emplace_back(pos_duplicate);
         positions[node_name].push_back(pos);
 
-        id = 0;
         std::vector<Scale> sc{};
         sc.reserve(node->mNumScalingKeys);
-        for (unsigned int s{ 0 }; s < node->mNumScalingKeys; s++) {
-          aiVectorKey const& scale_key = node->mScalingKeys[s];
+
+        for (auto s{ 0 }; s < node->mNumScalingKeys; s++) {
+          auto const& scale_key = node->mScalingKeys[s];
           auto const interpolation{ getInterpolation(scale_key.mInterpolation) };
 
-          //PLP_DEBUG("scale {} x {} y {} z {}", scale_key.mTime, scale_key.mValue.x, scale_key.mValue.y, scale_key.mValue.z);
-          sc.emplace_back(Scale{ id, i, static_cast<float>(scale_key.mTime), interpolation, GetGLMVec(scale_key.mValue) });
-          id += 1;
+          sc.emplace_back(Scale{ s, i, static_cast<float>(scale_key.mTime), interpolation, GetGLMVec(scale_key.mValue) });
         }
         //auto sc_duplicate = sc.front();
         //sc_duplicate.id = sc.size() + 1;
@@ -636,21 +634,15 @@ namespace Poulpe
       std::unordered_map<std::string, Bone> bones_map{};
 
       std::unordered_set<std::string>bones_list{};
-      auto const dummy_node_name{ "_rootJoint" };
 
       if (mesh->HasBones()) {
-        auto bone_id{ 0 };
         std::unordered_map<unsigned int, std::vector<std::pair<unsigned int, float>>> vertex_weight_map{};
 
         for (auto b{ 0 }; b < mesh->mNumBones; b++) {
+          auto bone_id{ b };
           aiBone const* bone = mesh->mBones[b];
 
           std::string const& bone_name{ bone->mName.C_Str() };
-
-          if (bone_name == dummy_node_name) {
-            continue;
-          }
-          bones_list.insert(bone_name);
 
           aiNode const* bone_node = scene->mRootNode->FindNode(bone_name.c_str());
 
@@ -658,18 +650,20 @@ namespace Poulpe
           bone_data.id = bone_id;
           bone_data.transform = ConvertMatrixToGLMFormat(bone_node->mTransformation);
           bone_data.offset_matrix = ConvertMatrixToGLMFormat(bone->mOffsetMatrix);
-          bone_data.name = bone_name;
-          
-          glm::mat4 t_pose = glm::mat4(1.0f);
-          aiNode const* current = bone_node;
+          bone_data.name = bone_node->mName.C_Str();
+          bones_list.insert(bone_data.name);
+          bone_data.parent_name = bone_node->mParent->mName.C_Str();
 
-          while (current) {
-            if (current->mName.C_Str() != dummy_node_name) {
-              t_pose = ConvertMatrixToGLMFormat(current->mTransformation) * t_pose;
-            }
-            current = current->mParent;
-          }
-          bone_data.t_pose = t_pose;
+          glm::vec3 skew;
+          glm::vec4 perspective;
+
+          glm::decompose(
+            bone_data.transform,
+            bone_data.t_pose_scale,
+            bone_data.t_pose_rotation,
+            bone_data.t_pose_position,
+            skew,
+            perspective);
 
           for (auto w{ 0 }; w < bone->mNumWeights; w++) {
             aiVertexWeight const& aiWeight = bone->mWeights[w];
@@ -686,8 +680,17 @@ namespace Poulpe
               bone_data.children.emplace_back(child_name);
             }
           }
+
+          glm::mat4 t_pose = glm::mat4(1.0f);
+          aiNode const* current = bone_node;
+
+          while (current) {
+            t_pose = ConvertMatrixToGLMFormat(current->mTransformation) * t_pose;
+            current = current->mParent;
+          }
+          bone_data.t_pose = t_pose;
+
           bones_map[bone_data.name] = std::move(bone_data);
-          bone_id += 1;
         }
         mesh_data.bones = bones_map;
 
@@ -755,6 +758,8 @@ namespace Poulpe
       break;
       case aiAnimInterpolation_Cubic_Spline:
         interpolation = AnimInterpolation::CUBIC_SPLINE;
+      default:
+        interpolation = AnimInterpolation::LINEAR;
     }
     return interpolation;
   }

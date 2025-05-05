@@ -137,12 +137,11 @@ namespace Poulpe
           return start.value;
 
         case AnimInterpolation::SPHERICAL_LINEAR:
+        default:
           return glm::normalize(glm::slerp(start.value, end.value, t));
 
         case AnimInterpolation::CUBIC_SPLINE:
           //@todo
-          return start.value;
-        default:
           return start.value;
         }
       } else {
