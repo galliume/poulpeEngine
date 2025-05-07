@@ -62,27 +62,28 @@ namespace Poulpe
       auto const& root_bone = _data->_bones[_data->_root_bone_name];
       updateBoneTransforms(anim, root_bone.name, root_bone.t_pose, duration);
 
-      for (auto& vertex : _data->_vertices) {
-        float const total_weight {
-          vertex.bone_weights[0]
-          + vertex.bone_weights[1]
-          + vertex.bone_weights[2]
-          + vertex.bone_weights[3] };
+      _data->_bone_matrices = std::move(_bone_matrices);
+      //for (auto& vertex : _data->_vertices) {
+      //  float const total_weight {
+      //    vertex.bone_weights[0]
+      //    + vertex.bone_weights[1]
+      //    + vertex.bone_weights[2]
+      //    + vertex.bone_weights[3] };
 
-        if (total_weight > 0.f) {
-          glm::vec4 result = glm::vec4(0.0f);
-          for (auto i{ 0 }; i < 4; ++i) {
-            auto const bone_id{ vertex.bone_ids[i] };
-            auto const w{ vertex.bone_weights[i] };
-            if (w > 0.f) {
-              result += _bone_matrices[bone_id] * glm::vec4(vertex.original_pos, 1.0f) * w;
-            }
-          }
-          vertex.pos = glm::vec3(result);
-        } else {
-          vertex.pos = vertex.original_pos;
-        }
-      }
+      //  if (total_weight > 0.f) {
+      //    glm::vec4 result = glm::vec4(0.0f);
+      //    for (auto i{ 0 }; i < 4; ++i) {
+      //      auto const bone_id{ vertex.bone_ids[i] };
+      //      auto const w{ vertex.bone_weights[i] };
+      //      if (w > 0.f) {
+      //        result += _bone_matrices[bone_id] * glm::vec4(vertex.original_pos, 1.0f) * w;
+      //      }
+      //    }
+      //    vertex.pos = glm::vec3(result);
+      //  } else {
+      //    vertex.pos = vertex.original_pos;
+      //  }
+      //}
 
       if (_elapsed_time >= duration) {
         _elapsed_time = 0.0f;
@@ -148,7 +149,6 @@ namespace Poulpe
         new_rotation = interpolate<Rotation>(rotation_start, rotation_end, _elapsed_time);
       }
     }
-
 
     glm::mat4 const S = glm::scale(glm::mat4(1.0f), new_scale);
     glm::mat4 const R = glm::toMat4(new_rotation);

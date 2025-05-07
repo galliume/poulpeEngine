@@ -203,21 +203,17 @@ namespace Poulpe
             auto* boneAnimationComponent = _component_manager->get<BoneAnimationComponent>(leaf_node->getEntity()->getID());
             if (boneAnimationComponent) {
               (*boneAnimationComponent)(delta_time, mesh);
-              //mesh->setIsDirty(true);
+              mesh->setIsDirty(true);
 
+              auto buffer{ mesh->getObjectStorageBuffer() };
+             if (buffer) {
+                BonesBuffer* bones_buffer = mesh->getBonesBuffer();
+                //bones_buffer->bone_matrices = mesh->getData()->_bone_matrices;
+                bones_buffer->bone_matrices = {glm::mat4(1.0f), glm::mat4(231.0f)};
 
-
-
-              /*if (mesh->hasBufferStorage()) {
-                auto buffer{ mesh->getStorageBuffers()->at(0) };
-                ObjectBuffer* objectBuffer = mesh->getObjectBuffer();
-
-                objectBuffer->boneIds = {};
-                objectBuffer->weights = {};
-
-                _renderer->updateStorageBuffer(buffer, *objectBuffer);
-              }*/
+                //_renderer->getAPI()->updateStorageBuffer<BonesBuffer>(*buffer, *bones_buffer);
               }
+            }
           }
         });
       });

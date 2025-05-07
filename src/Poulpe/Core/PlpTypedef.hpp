@@ -88,13 +88,22 @@ namespace Poulpe
     alignas(16) glm::vec3 strength{ 1.0 };//x: normal strength, y occlusion strength
   };
 
-  struct ObjectBuffer
+  struct StorageBuffer
+  {
+
+  };
+
+  struct ObjectBuffer : public StorageBuffer
   {
     Light sun_light;
     std::array<Light, 2> point_lights;
     Light spot_light;
     Material material;
-    std::vector<glm::mat4>bone_matrices;
+  };
+
+  struct BonesBuffer : public StorageBuffer
+  {
+    std::array<glm::mat4, 2> bone_matrices;
   };
 
   enum class TextureWrapMode {
@@ -265,6 +274,7 @@ namespace Poulpe
     std::unordered_map<std::string, Bone> _bones{};
     std::string _root_bone_name{};
     unsigned int _default_anim{};
+    std::vector<glm::mat4> _bone_matrices{};
   };
 
   struct EntityOptions

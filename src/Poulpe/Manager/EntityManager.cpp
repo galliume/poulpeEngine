@@ -334,13 +334,6 @@ namespace Poulpe
       entity->setName(_data.name);
 
       auto basicRdrImpl = RendererFactory::create<Basic>();
-
-      basicRdrImpl->init(_renderer, _texture_manager, _light_manager);
-      double const delta_time{ 0.0 };
-      (*basicRdrImpl)(delta_time, mesh.get());
-
-      _component_manager->add<RenderComponent>(entity->getID(), std::move(basicRdrImpl));
-      _component_manager->add<MeshComponent>(entity->getID(), std::move(mesh));
       auto* entityNode = root_mesh_entity_node->addChild(new EntityNode(entity));
       
       //_renderer->addEntity(entityNode->getEntity(), is_last);
@@ -367,6 +360,11 @@ namespace Poulpe
             auto boneAnimationScript = std::make_unique<BoneAnimationScript>(animations, positions, rotations, scales);
             _component_manager->add<BoneAnimationComponent>(
             root_mesh_entity_node->getEntity()->getID(), std::move(boneAnimationScript));
+            
+            auto* boneAnimationComponent = _component_manager->get<BoneAnimationComponent>(root_mesh_entity_node->getEntity()->getID());
+            if (boneAnimationComponent) {
+              (*boneAnimationComponent)(0.0, mesh.get());
+            }
           }
 
           {
@@ -376,6 +374,13 @@ namespace Poulpe
           }
         }
       }
+      
+      basicRdrImpl->init(_renderer, _texture_manager, _light_manager);
+      double const delta_time{ 0.0 };
+      (*basicRdrImpl)(delta_time, mesh.get());
+
+      _component_manager->add<RenderComponent>(entity->getID(), std::move(basicRdrImpl));
+      _component_manager->add<MeshComponent>(entity->getID(), std::move(mesh));
     };
     AssimpLoader::loadData(path, flip_Y, callback);
   }

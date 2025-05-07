@@ -23,11 +23,15 @@ namespace Poulpe
     material_t& getMaterial() { return _material; }
     std::string const getName() const { return _name; }
     inline const std::string getShaderName() const { return _shader_name; }
-    std::vector<Buffer>* getStorageBuffers() { return & _storage_buffers; }
+    Buffer* getObjectStorageBuffer() { return & _object_storage_buffer; }
+    Buffer* getBonesStorageBuffer() { return & _bones_storage_buffer; }
     inline std::vector<Buffer>* getUniformBuffers() { return & _uniform_buffers; }
     ObjectBuffer* getObjectBuffer() { return &_object_buffer; };
+    BonesBuffer* getBonesBuffer() { return &_bones_buffer; };
 
-    void addStorageBuffer(Buffer& buffer) { _storage_buffers.emplace_back(std::move(buffer)); }
+    void addObjectStorageBuffer(Buffer& buffer) { _object_storage_buffer = std::move(buffer); }
+    void addBonesStorageBuffer(Buffer& buffer) { _bones_storage_buffer = std::move(buffer); }
+    
     void init(
           Renderer* const renderer,
           TextureManager* const texture_manager,
@@ -44,13 +48,13 @@ namespace Poulpe
     void setData(Data data) { _data = std::move(data); }
     void setDescSet(VkDescriptorSet descset) { _descset = descset; }
     void setShadowMapDescSet(VkDescriptorSet descset) { _shadowmap_descset = descset; }
-    void setHasBufferStorage(bool has = true) { _has_storage_buffer = has; }
     void setHasPushConstants(bool has = true) { _has_push_contants = has; }
     void setIsDirty(bool dirty = true) { _is_dirty.store(dirty); }
     void setDebugNormal(bool const debug) { _debug_normal = debug; }
     void setName(std::string const& name) { _name = name; }
     inline void setShaderName(std::string_view name) { _shader_name = name; }
-    void setObjectBuffer(ObjectBuffer objectBuffer) { _object_buffer = std::move(objectBuffer); }
+    void setObjectBuffer(ObjectBuffer& buffer) { _object_buffer = std::move(buffer); }
+    void setBonesBuffer(BonesBuffer& buffer) { _bones_buffer = std::move(buffer); }
 
     void addUbos(std::vector<std::vector<UniformBufferObject>> const& ubos);
 
@@ -60,7 +64,6 @@ namespace Poulpe
     VkDescriptorSet* getShadowMapDescSet() { return & _shadowmap_descset; }
 
     bool hasAnimation() const { return _has_animation; }
-    bool hasBufferStorage() const { return _has_storage_buffer; }
     bool hasPushConstants() const { return _has_push_contants; }
     bool hasShadow() const { return _has_shadow; }
     bool debugNormal() const { return _debug_normal; }
@@ -85,15 +88,18 @@ namespace Poulpe
 
     bool _has_animation{ true };
     bool _has_push_contants{ false };
-    bool _has_storage_buffer{ false };
     bool _is_indexed{ true };
     bool _is_point_light{ false };
     bool _has_shadow{ false };
     bool _debug_normal{ false };
 
-    std::vector<Buffer> _storage_buffers{};
     std::vector<Buffer> _uniform_buffers{};
-    ObjectBuffer _object_buffer;
+
+    ObjectBuffer _object_buffer{};
+    Buffer _object_storage_buffer{};
+    
+    BonesBuffer _bones_buffer;
+    Buffer _bones_storage_buffer;
 
     unsigned int _default_anim{};
 

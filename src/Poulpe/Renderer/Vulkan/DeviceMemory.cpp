@@ -18,7 +18,6 @@ namespace Poulpe
             _max_size = max_size;
             allocateToMemory();
         }
-        _buffer_offsets.emplace_back(0);
     }
 
     VkDeviceMemory* DeviceMemory::getMemory()
@@ -65,11 +64,14 @@ namespace Poulpe
       {
         std::lock_guard guard(_mutex_memory);
 
-        auto const remainder {_offset % offset};
+        //auto const remainder {_offset % offset};
 
-        if (remainder != 0) {
-          _offset += (offset - remainder);
-        }
+        //if (remainder > 0) {
+        //  auto const alignment{ offset - remainder };
+        //  if (alignment > 0) {
+        //    offset += alignment;
+        //  }
+        //}
 
         VkResult result = vkBindBufferMemory(_device, buffer, *_memory, _offset);
 
@@ -95,10 +97,10 @@ namespace Poulpe
       {
         std::lock_guard guard(_mutex_memory);
 
-        auto const remainder {_offset % offset};
-        if (remainder != 0) {
-          _offset += (offset - remainder);
-        }
+        //auto const remainder {_offset % offset};
+        //if (_offset > 0 && remainder != 0) {
+        //  _offset += (offset - remainder);
+        //}
 
         VkResult result = vkBindImageMemory(_device, image, *_memory, _offset);
 

@@ -138,12 +138,20 @@ namespace Poulpe
       cubemap_binding.pImmutableSamplers = nullptr;
       cubemap_binding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 
+      VkDescriptorSetLayoutBinding bones_storage_binding{};
+      bones_storage_binding.binding = 5;
+      bones_storage_binding.descriptorCount = 1;
+      bones_storage_binding.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+      bones_storage_binding.pImmutableSamplers = nullptr;
+      bones_storage_binding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+
       bindings = {
         ubo_binding,
         sampler_binding,
         storage_binding,
         depth_map_binding,
-        cubemap_binding };
+        cubemap_binding,
+        bones_storage_binding};
 
     } else if constexpr (T == DescSetLayoutType::Text) {
       VkDescriptorSetLayoutBinding ubo_binding{};
@@ -474,7 +482,7 @@ namespace Poulpe
     VkPipelineVertexInputStateCreateInfo* vertex_input_info = new VkPipelineVertexInputStateCreateInfo();
 
     if constexpr (T == VertexBindingType::Vertex3D) {
-      std::array<VkVertexInputAttributeDescription, 5>* attDesc = new std::array<VkVertexInputAttributeDescription, 5>(Vertex::getAttributeDescriptions());
+      std::array<VkVertexInputAttributeDescription, 7>* attDesc = new std::array<VkVertexInputAttributeDescription, 7>(Vertex::getAttributeDescriptions());
       VkVertexInputBindingDescription* bDesc = new VkVertexInputBindingDescription(Vertex::getBindingDescription());
 
       vertex_input_info->sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;

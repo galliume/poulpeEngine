@@ -171,7 +171,7 @@ void main()
   float depth_factor = smoothstep(0.0, 10.0, depth_diff);
   //float foam_factor = smoothstep(0.0, 0.5, depth_diff);
 
-  vec4 color = vec4(mix(shallow_color, deep_color, depth_factor), 1.0);
+  vec4 color = vec4(mix(shallow_color, deep_color, depth_factor), 0.7);
 
   if(depth_diff < falloff_distance * edge_falloff)
   {
@@ -285,7 +285,7 @@ void main()
   C_sun.rgb += clamp(edge - vec3(mask), 0.0, color.a);
   vec3 C_ambient = vec3(0.03) * deep_color;
   vec3 result = (C_ambient + C_sun);
-  //result *= PI;
+  result *= PI;
 
   float exposure = 1.0;
   result.rgb = vec3(1.0) - exp(-result.rgb* exposure);

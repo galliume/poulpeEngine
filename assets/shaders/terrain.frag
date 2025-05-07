@@ -196,7 +196,7 @@ void main()
   vec3 C_sun = (kD * diffuse + specular) * light_color * NdL;
   vec3 C_ambient = vec3(0.03) * vec3(1.0);
   vec3 result = (C_ambient + C_sun);
-
+  //result *= PI;
 //  vec3 i = normalize(in_position - pc.view_position);
 //
 //  vec3 r = reflect(i, normalize(norm));
@@ -214,7 +214,7 @@ void main()
 //
 //  vec3 result = (ambient + diffuse + specular) * color;
 
-  float exposure = 0.3;
+  float exposure = 0.7;
   result.rgb = vec3(1.0) - exp(-result.rgb* exposure);
 
   //@todo check how to get the precise value
