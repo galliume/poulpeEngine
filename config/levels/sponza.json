@@ -325,6 +325,7 @@
       "animationScripts": {
         "anim0": "assets/scripts/animation/helmet/anim0.lua"
       },
+      "defaultAnim": 1,
       "hasShadow": true,
       "isIndexed": true,
       "debugNormal": true
@@ -377,6 +378,7 @@
       "animationScripts": {
         "anim0": "assets/scripts/animation/helmet/anim0.lua"
       },
+      "defaultAnim": 5,
       "hasShadow": true,
       "isIndexed": true,
       "debugNormal": true

@@ -94,7 +94,7 @@ namespace Poulpe
     std::array<Light, 2> point_lights;
     Light spot_light;
     Material material;
-    std::vector<glm::mat4>bone_matrices;
+    std::vector<glm::mat4> bone_matrices;
   };
 
   enum class TextureWrapMode {
@@ -264,6 +264,8 @@ namespace Poulpe
     glm::mat4 _inverse_transform_matrix;
     std::unordered_map<std::string, Bone> _bones{};
     std::string _root_bone_name{};
+    unsigned int _default_anim{};
+    std::vector<glm::mat4> _bone_matrices{};
   };
 
   struct EntityOptions
@@ -280,6 +282,7 @@ namespace Poulpe
     bool flip_Y{ false };
     bool is_indexed{ false };
     bool debug_normal{ false };
+    unsigned int default_anim{ 0 };
   };
 
   struct Animation {
@@ -329,6 +332,7 @@ namespace Poulpe
     glm::mat4 inverse_transform_matrix{};
     std::unordered_map<std::string, Bone> bones{};
     std::string root_bone_name{};
+    unsigned int default_anim{};
   };
 
   enum class SocketStatus {

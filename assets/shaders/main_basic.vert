@@ -25,6 +25,8 @@ layout(location = 1) in vec3 normal;
 layout(location = 2) in vec2 texture_coord;
 layout(location = 3) in vec4 tangent;
 layout(location = 4) in vec4 color;
+layout(location = 5) in uvec4 bone_ids;
+layout(location = 6) in vec4 bone_weights;
 
 layout(location = 0) out FRAG_VAR {
   vec3 frag_pos;
@@ -88,6 +90,7 @@ layout(set = 0, binding = 2) readonly buffer ObjectBuffer {
   Light point_lights[NR_POINT_LIGHTS];
   Light spot_light;
   Material material;
+  mat4 bone_matrices[];
 };
 
 const mat4 biasMat = mat4(
@@ -98,6 +101,12 @@ const mat4 biasMat = mat4(
 
 void main()
 {
+  mat4 skin_mat =
+    bone_weights.x * bone_matrices[bone_ids.x] +
+    bone_weights.y * bone_matrices[bone_ids.y] +
+    bone_weights.z * bone_matrices[bone_ids.z] +
+    bone_weights.w * bone_matrices[bone_ids.w];
+
   mat3 normal_matrix = transpose(inverse(mat3(ubo.model)));
   vec3 norm = normalize(normal_matrix * normal);
 
