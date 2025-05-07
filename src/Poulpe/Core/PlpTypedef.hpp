@@ -94,7 +94,7 @@ namespace Poulpe
     std::array<Light, 2> point_lights;
     Light spot_light;
     Material material;
-    std::vector<glm::mat4>bone_matrices;
+    std::vector<glm::mat4> bone_matrices;
   };
 
   enum class TextureWrapMode {
@@ -265,6 +265,7 @@ namespace Poulpe
     std::unordered_map<std::string, Bone> _bones{};
     std::string _root_bone_name{};
     unsigned int _default_anim{};
+    std::vector<glm::mat4> _bone_matrices{};
   };
 
   struct EntityOptions

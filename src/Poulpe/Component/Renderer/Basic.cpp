@@ -289,6 +289,7 @@ namespace Poulpe
       objectBuffer.spot_light = _light_manager->getSpotLights().at(0);
       objectBuffer.sun_light = _light_manager->getSunLight();
       objectBuffer.material = material;
+      objectBuffer.bone_matrices = data->_bone_matrices;
 
       auto storageBuffer{ _renderer->getAPI()->createStorageBuffers(objectBuffer, cmd_pool) };
 
