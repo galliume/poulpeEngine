@@ -42,7 +42,7 @@
         "common",
         "vendor-common",
         "GENERATOR_NINJA",
-        "CCACHE_OFF",
+        "CCACHE_ON",
         "C_COMPILER_GCC",
         "CXX_COMPILER_GCC"
       ],

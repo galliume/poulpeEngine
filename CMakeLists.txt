@@ -30,6 +30,7 @@ message(STATUS "CMAKE_BUILD_TYPE: ${CMAKE_BUILD_TYPE}")
 
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules ${CMAKE_MODULE_PATH})
 include(gitSubModule)
+include(FetchContent)
 
 add_executable(${PROJECT_NAME} src/Poulpe.cpp)
 
@@ -67,8 +68,8 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
   #target_link_options(${PROJECT_NAME} PRIVATE $<$<CONFIG:RELEASE>:/LTCG>)
   target_compile_options(${PROJECT_NAME} PRIVATE $<$<CONFIG:DEBUG>:/GA /Wall -Wno-c++98-compat -Wno-old-style-cast>)
 else()
-  list(APPEND DEBUG_OPTIONS -O0 -std=c++23 -Wall)
-  list(APPEND RELEASE_OPTIONS -O3 -std=c++23 -Wall)
+  list(APPEND DEBUG_OPTIONS -O0 -Wall)
+  list(APPEND RELEASE_OPTIONS -O3 -Wall)
 endif()
 
 target_compile_options(${PROJECT_NAME} PRIVATE $<$<CONFIG:DEBUG>:${DEBUG_OPTIONS}>)
@@ -92,15 +93,6 @@ else()
   message(FATAL_ERROR "The env var VULKAN_SDK nor VULKAN_SDK_ACTIONS not found.")
 endif()
 
-cmake_path(SET KTX_PATH "")
-
-if (DEFINED ENV{KTX_SDK})
-  cmake_path(SET KTX_PATH "$ENV{KTX_SDK}/include")
-  message(STATUS "Found KTX include dir: ${KTX_PATH}")
-  
-  find_package(KTX REQUIRED)
-endif()
-  
 target_include_directories(${PROJECT_NAME} PRIVATE "${PROJECT_SOURCE_DIR}/vendor/sqlite")
 
 target_include_directories(${PROJECT_NAME} PRIVATE
@@ -171,6 +163,10 @@ add_library(
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
   list(APPEND EXTRA_LIBS Ws2_32 user32)
+else()
+  set(THREADS_PREFER_PTHREAD_FLAG ON)
+  find_package(Threads REQUIRED)
+  list(APPEND EXTRA_LIBS Threads::Threads)
 endif()
 
 list(APPEND EXTRA_LIBS fmt)
@@ -182,9 +178,17 @@ list(APPEND EXTRA_LIBS nlohmann_json)
 list(APPEND EXTRA_LIBS volk)
 list(APPEND EXTRA_LIBS assimp::assimp)
 
-#@todo find a way to install KTX on github server
-list(APPEND EXTRA_LIBS KTX::ktx)
-list(APPEND EXTRA_LIBS ${PROJECT_SOURCE_DIR}/vendor/sqlite/sqlite3.lib)
+message(NOTICE "Fetching LibKTX from https://github.com/KhronosGroup/KTX-Software ...")
+FetchContent_Declare(
+  fetch_ktx
+  GIT_REPOSITORY https://github.com/KhronosGroup/KTX-Software
+  GIT_TAG  v4.4.0
+)
+FetchContent_MakeAvailable(fetch_ktx)
+list(APPEND EXTRA_LIBS ktx)
+target_include_directories(${PROJECT_NAME} PRIVATE ${fetch_ktx_SOURCE_DIR}/include)
+
+find_package(SQLite3 REQUIRED)
 
 target_link_libraries(${PROJECT_NAME} PRIVATE ${EXTRA_LIBS} poulpe)
 
