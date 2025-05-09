@@ -24,7 +24,7 @@ jobs:
         path: main
 
     - name: Install dependancies
-      run: sudo apt-get update && sudo apt-get install build-essential xorg-dev libglu1-mesa-dev libvulkan1 mesa-vulkan-drivers clang ninja-build
+      run: sudo apt-get update && sudo apt-get install build-essential xorg-dev libglu1-mesa-dev libvulkan1 mesa-vulkan-drivers clang ninja-build sqlite3 libsqlite3-dev
 
     - name: Set env variable VULKAN_SDK_ACTIONS
       run: echo "VULKAN_SDK_ACTIONS=${{ github.workspace }}/external/include" >> $GITHUB_ENV

@@ -1,0 +1,24 @@
+set(KTX_FEATURE_TESTS OFF CACHE BOOL "" FORCE)
+set(KTX_FEATURE_TOOLS OFF CACHE BOOL "" FORCE)
+set(BUILD_SHARED_LIBS ON CACHE BOOL "" FORCE)
+
+message(NOTICE "Fetching LibKTX from https://github.com/KhronosGroup/KTX-Software ...")
+FetchContent_Declare(
+  fetch_ktx
+  GIT_REPOSITORY https://github.com/KhronosGroup/KTX-Software
+  GIT_TAG main
+  GIT_SHALLOW FALSE
+  GIT_PROGRESS TRUE
+  UPDATE_DISCONNECTED TRUE
+)
+FetchContent_MakeAvailable(fetch_ktx)
+
+target_include_directories(${PROJECT_NAME} PRIVATE ${fetch_ktx_SOURCE_DIR}/include)
+
+target_link_libraries(${PROJECT_NAME} PRIVATE ktx)
+
+set_target_properties(ktx PROPERTIES
+  LIBRARY_OUTPUT_DIRECTORY ${PLP_BIN_DIR}
+  RUNTIME_OUTPUT_DIRECTORY ${PLP_BIN_DIR}
+  ARCHIVE_OUTPUT_DIRECTORY ${PLP_BIN_DIR}
+)

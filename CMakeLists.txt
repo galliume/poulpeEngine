@@ -28,9 +28,8 @@ message(STATUS "CMAKE_CXX_STANDARD: ${CMAKE_CXX_STANDARD}")
 message(STATUS "CMAKE_CXX_STANDARD_REQUIRED: ${CMAKE_CXX_STANDARD_REQUIRED}")
 message(STATUS "CMAKE_BUILD_TYPE: ${CMAKE_BUILD_TYPE}")
 
+set(CMAKE_BUILD_TYPE "${CMAKE_BUILD_TYPE}" CACHE STRING "Build type" FORCE)
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules ${CMAKE_MODULE_PATH})
-include(gitSubModule)
-include(FetchContent)
 
 add_executable(${PROJECT_NAME} src/Poulpe.cpp)
 
@@ -62,104 +61,24 @@ set(DEBUG_OPTIONS -g)
 set(RELEASE_OPTIONS )
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+
+  set(USE_CCACHE OFF CACHE BOOL "" FORCE)
+  set(CMAKE_CXX_COMPILER_LAUNCHER "")
+  set(CMAKE_C_COMPILER_LAUNCHER "")
+
   list(APPEND DEBUG_OPTIONS /MDd /Od /Ob0 /RTC1 /Zi /Zc:__cplusplus /EHsc)
   list(APPEND RELEASE_OPTIONS /Ox /MD /Zc:__cplusplus /EHsc)
 
   #target_link_options(${PROJECT_NAME} PRIVATE $<$<CONFIG:RELEASE>:/LTCG>)
   target_compile_options(${PROJECT_NAME} PRIVATE $<$<CONFIG:DEBUG>:/GA /Wall -Wno-c++98-compat -Wno-old-style-cast>)
 else()
-  list(APPEND DEBUG_OPTIONS -O0 -Wall)
-  list(APPEND RELEASE_OPTIONS -O3 -Wall)
+    list(APPEND DEBUG_OPTIONS -O0 -Wall)
+    list(APPEND RELEASE_OPTIONS -O3 -Wall)
 endif()
 
 target_compile_options(${PROJECT_NAME} PRIVATE $<$<CONFIG:DEBUG>:${DEBUG_OPTIONS}>)
 target_compile_options(${PROJECT_NAME} PRIVATE $<$<CONFIG:RELEASE>:${RELEASE_OPTIONS}>)
 target_compile_definitions(${PROJECT_NAME} PRIVATE $<$<CONFIG:DEBUG>:PLP_DEBUG_BUILD>)
-
-#########################################################
-
-#########################################################
-##################### External libs #####################
-#########################################################
-if (DEFINED ENV{VULKAN_SDK})
-  cmake_path(SET VULKAN_PATH "$ENV{VULKAN_SDK}/Include")
-  message(STATUS "Found Vulkan include dir: ${VULKAN_PATH}")
-  find_package(Vulkan REQUIRED)
-elseif (DEFINED ENV{VULKAN_SDK_ACTIONS})
-  cmake_path(SET VULKAN_PATH "$ENV{VULKAN_SDK_ACTIONS}")
-  message(STATUS "Found Vulkan via GitHub Actions include dir: ${VULKAN_PATH}")
-  set(LOAD_VULKAN_LIB false)
-else()
-  message(FATAL_ERROR "The env var VULKAN_SDK nor VULKAN_SDK_ACTIONS not found.")
-endif()
-
-target_include_directories(${PROJECT_NAME} PRIVATE "${PROJECT_SOURCE_DIR}/vendor/sqlite")
-
-target_include_directories(${PROJECT_NAME} PRIVATE
-          ${PROJECT_SOURCE_DIR}/vendor/assimp/include
-          ${PROJECT_SOURCE_DIR}/vendor/fmt/include
-          ${PROJECT_SOURCE_DIR}/vendor/freeType/include
-          ${PROJECT_SOURCE_DIR}/vendor/glm
-          ${PROJECT_SOURCE_DIR}/vendor/lua
-          ${PROJECT_SOURCE_DIR}/vendor/miniaudio
-          ${PROJECT_SOURCE_DIR}/vendor/nlohmann/include
-          ${PROJECT_SOURCE_DIR}/vendor/stb
-          ${VULKAN_PATH}
-          ${KTX_PATH})
-
-add_subdirectory(${PROJECT_SOURCE_DIR}/vendor/assimp)
-add_subdirectory(${PROJECT_SOURCE_DIR}/vendor/fmt)
-add_subdirectory(${PROJECT_SOURCE_DIR}/vendor/freeType)
-add_subdirectory(${PROJECT_SOURCE_DIR}/vendor/glfw)
-add_subdirectory(${PROJECT_SOURCE_DIR}/vendor/glm)
-add_subdirectory(${PROJECT_SOURCE_DIR}/vendor/nlohmann)
-add_subdirectory(${PROJECT_SOURCE_DIR}/vendor/volk)
-
-#if (CMAKE_BUILD_TYPE STREQUAL "Debug")
-#target_compile_options(assimp_viewer PRIVATE -w -Wno-error)
-#endif()
-
-#@todo include only used .c
-add_library(
-  lua STATIC
-  ${PROJECT_SOURCE_DIR}/vendor/lua/lapi.c
-  ${PROJECT_SOURCE_DIR}/vendor/lua/lauxlib.c
-  ${PROJECT_SOURCE_DIR}/vendor/lua/lbaselib.c
-  ${PROJECT_SOURCE_DIR}/vendor/lua/lcode.c
-  ${PROJECT_SOURCE_DIR}/vendor/lua/lcorolib.c
-  ${PROJECT_SOURCE_DIR}/vendor/lua/lctype.c
-  ${PROJECT_SOURCE_DIR}/vendor/lua/ldblib.c
-  ${PROJECT_SOURCE_DIR}/vendor/lua/ldebug.c
-  ${PROJECT_SOURCE_DIR}/vendor/lua/ldo.c
-  ${PROJECT_SOURCE_DIR}/vendor/lua/ldump.c
-  ${PROJECT_SOURCE_DIR}/vendor/lua/lfunc.c
-  ${PROJECT_SOURCE_DIR}/vendor/lua/lgc.c
-  ${PROJECT_SOURCE_DIR}/vendor/lua/linit.c
-  ${PROJECT_SOURCE_DIR}/vendor/lua/liolib.c
-  ${PROJECT_SOURCE_DIR}/vendor/lua/llex.c
-  ${PROJECT_SOURCE_DIR}/vendor/lua/lmathlib.c
-  ${PROJECT_SOURCE_DIR}/vendor/lua/lmem.c
-  ${PROJECT_SOURCE_DIR}/vendor/lua/loadlib.c
-  ${PROJECT_SOURCE_DIR}/vendor/lua/lobject.c
-  ${PROJECT_SOURCE_DIR}/vendor/lua/lopcodes.c
-  ${PROJECT_SOURCE_DIR}/vendor/lua/loslib.c
-  ${PROJECT_SOURCE_DIR}/vendor/lua/lparser.c
-  ${PROJECT_SOURCE_DIR}/vendor/lua/lstate.c
-  ${PROJECT_SOURCE_DIR}/vendor/lua/lstring.c
-  ${PROJECT_SOURCE_DIR}/vendor/lua/lstrlib.c
-  ${PROJECT_SOURCE_DIR}/vendor/lua/ltable.c
-  ${PROJECT_SOURCE_DIR}/vendor/lua/ltablib.c
-  ${PROJECT_SOURCE_DIR}/vendor/lua/ltests.c
-  ${PROJECT_SOURCE_DIR}/vendor/lua/ltm.c
-  ${PROJECT_SOURCE_DIR}/vendor/lua/lundump.c
-  ${PROJECT_SOURCE_DIR}/vendor/lua/lutf8lib.c
-  ${PROJECT_SOURCE_DIR}/vendor/lua/lvm.c
-  ${PROJECT_SOURCE_DIR}/vendor/lua/lzio.c
-  ${PROJECT_SOURCE_DIR}/vendor/lua/lauxlib.h
-  ${PROJECT_SOURCE_DIR}/vendor/lua/lua.h
-  ${PROJECT_SOURCE_DIR}/vendor/lua/luaconf.h
-  ${PROJECT_SOURCE_DIR}/vendor/lua/lualib.h
-)
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
   list(APPEND EXTRA_LIBS Ws2_32 user32)
@@ -169,75 +88,25 @@ else()
   list(APPEND EXTRA_LIBS Threads::Threads)
 endif()
 
-list(APPEND EXTRA_LIBS fmt)
-list(APPEND EXTRA_LIBS freetype)
-list(APPEND EXTRA_LIBS glfw)
-list(APPEND EXTRA_LIBS glm::glm)
-list(APPEND EXTRA_LIBS lua)
-list(APPEND EXTRA_LIBS nlohmann_json)
-list(APPEND EXTRA_LIBS volk)
-list(APPEND EXTRA_LIBS assimp::assimp)
+#########################################################
 
-message(NOTICE "Fetching LibKTX from https://github.com/KhronosGroup/KTX-Software ...")
-FetchContent_Declare(
-  fetch_ktx
-  GIT_REPOSITORY https://github.com/KhronosGroup/KTX-Software
-  GIT_TAG  v4.4.0
-)
-FetchContent_MakeAvailable(fetch_ktx)
-list(APPEND EXTRA_LIBS ktx)
-target_include_directories(${PROJECT_NAME} PRIVATE ${fetch_ktx_SOURCE_DIR}/include)
+#########################################################
+##################### External libs #####################
+#########################################################
+find_package(Vulkan REQUIRED)
+list(APPEND EXTRA_LIBS Vulkan::Vulkan)
 
-find_package(SQLite3 REQUIRED)
+set(PLP_LIB_DIR "$<TARGET_FILE_DIR:${PROJECT_NAME}>/lib")
+set(PLP_BIN_DIR "$<TARGET_FILE_DIR:${PROJECT_NAME}>")
+
+set(FETCHCONTENT_QUIET OFF)
+include(fetchDeps)
 
 target_link_libraries(${PROJECT_NAME} PRIVATE ${EXTRA_LIBS} poulpe)
 
 list(APPEND LIB_DEBUG_OPTIONS ${DEBUG_OPTIONS})
 list(APPEND LIB_RELEASE_OPTIONS ${RELEASE_OPTIONS})
 
-target_compile_options(assimp PRIVATE $<$<CONFIG:DEBUG>:${LIB_DEBUG_OPTIONS}>)
-target_compile_options(assimp PRIVATE $<$<CONFIG:RELEASE>:${LIB_RELEASE_OPTIONS}>)
-
-target_compile_options(fmt PRIVATE $<$<CONFIG:DEBUG>:${LIB_DEBUG_OPTIONS}>)
-target_compile_options(fmt PRIVATE $<$<CONFIG:RELEASE>:${LIB_RELEASE_OPTIONS}>)
-
-set(PLP_LIB_DIR "$<TARGET_FILE_DIR:${PROJECT_NAME}>/lib")
-set(PLP_BIN_DIR "$<TARGET_FILE_DIR:${PROJECT_NAME}>")
-
-set_target_properties(assimp PROPERTIES
-  LIBRARY_OUTPUT_DIRECTORY ${PLP_BIN_DIR}
-  RUNTIME_OUTPUT_DIRECTORY ${PLP_BIN_DIR}
-  ARCHIVE_OUTPUT_DIRECTORY ${PLP_BIN_DIR}
-)
-
-set_target_properties(glfw PROPERTIES
-  LIBRARY_OUTPUT_DIRECTORY ${PLP_BIN_DIR}
-  RUNTIME_OUTPUT_DIRECTORY ${PLP_BIN_DIR}
-  ARCHIVE_OUTPUT_DIRECTORY ${PLP_BIN_DIR}
-)
-set_target_properties(lua PROPERTIES
-  LIBRARY_OUTPUT_DIRECTORY ${PLP_BIN_DIR}
-  RUNTIME_OUTPUT_DIRECTORY ${PLP_BIN_DIR}
-  ARCHIVE_OUTPUT_DIRECTORY ${PLP_BIN_DIR}
-)
-
-set_target_properties(volk PROPERTIES
-  LIBRARY_OUTPUT_DIRECTORY ${PLP_BIN_DIR}
-  RUNTIME_OUTPUT_DIRECTORY ${PLP_BIN_DIR}
-  ARCHIVE_OUTPUT_DIRECTORY ${PLP_BIN_DIR}
-)
-
-set_target_properties(freetype PROPERTIES
-  LIBRARY_OUTPUT_DIRECTORY ${PLP_BIN_DIR}
-  RUNTIME_OUTPUT_DIRECTORY ${PLP_BIN_DIR}
-  ARCHIVE_OUTPUT_DIRECTORY ${PLP_BIN_DIR}
-)
-
-set_target_properties(fmt PROPERTIES
-  LIBRARY_OUTPUT_DIRECTORY ${PLP_BIN_DIR}
-  RUNTIME_OUTPUT_DIRECTORY ${PLP_BIN_DIR}
-  ARCHIVE_OUTPUT_DIRECTORY ${PLP_BIN_DIR}
-)
 #########################################################
 
 #########################################################
