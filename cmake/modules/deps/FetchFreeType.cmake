@@ -2,10 +2,10 @@ message(NOTICE "Fetching FreeType from https://gitlab.freedesktop.org/freetype/f
 FetchContent_Declare(
   fetch_freetype
   GIT_REPOSITORY https://gitlab.freedesktop.org/freetype/freetype
-  GIT_TAG  VER-2-13-3
-  GIT_SHALLOW FALSE
-  GIT_PROGRESS TRUE
-  UPDATE_DISCONNECTED TRUE
+  GIT_TAG ${FREETYPE_TAG}
+  GIT_SHALLOW ${FETCH_GIT_SHALLOW}
+  GIT_PROGRESS ${FETCH_GIT_PROGRESS}
+  UPDATE_DISCONNECTED ${FETCH_UPDATE_DISCONNECTED}
 )
 FetchContent_MakeAvailable(fetch_freetype)
 

@@ -61,10 +61,7 @@ set(DEBUG_OPTIONS -g)
 set(RELEASE_OPTIONS )
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
-
-  set(USE_CCACHE OFF CACHE BOOL "" FORCE)
-  set(CMAKE_CXX_COMPILER_LAUNCHER "")
-  set(CMAKE_C_COMPILER_LAUNCHER "")
+  set(CMAKE_LINKER lld-link)
 
   list(APPEND DEBUG_OPTIONS /MDd /Od /Ob0 /RTC1 /Zi /Zc:__cplusplus /EHsc)
   list(APPEND RELEASE_OPTIONS /Ox /MD /Zc:__cplusplus /EHsc)
@@ -106,6 +103,26 @@ target_link_libraries(${PROJECT_NAME} PRIVATE ${EXTRA_LIBS} poulpe)
 
 list(APPEND LIB_DEBUG_OPTIONS ${DEBUG_OPTIONS})
 list(APPEND LIB_RELEASE_OPTIONS ${RELEASE_OPTIONS})
+
+#########################################################
+
+#########################################################
+##################### Install ###########################
+#########################################################
+
+# install(TARGETS
+#   ${PROJECT_NAME}
+# RUNTIME
+#   COMPONENT Runtime
+# LIBRARY
+#   COMPONENT Runtime
+#   NAMELINK_COMPONENT Development
+# ARCHIVE
+#   COMPONENT Development
+#   DESTINATION lib/static
+# FILE_SET HEADERS
+#   COMPONENT Development
+# )
 
 #########################################################
 

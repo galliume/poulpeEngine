@@ -9,10 +9,10 @@ endif()
 FetchContent_Declare(
   fetch_fmt
   GIT_REPOSITORY https://github.com/fmtlib/fmt
-  GIT_TAG 11.2.0
-  GIT_SHALLOW FALSE
-  GIT_PROGRESS TRUE
-  UPDATE_DISCONNECTED TRUE
+  GIT_TAG ${FMT_TAG}
+  GIT_SHALLOW ${FETCH_GIT_SHALLOW}
+  GIT_PROGRESS ${FETCH_GIT_PROGRESS}
+  UPDATE_DISCONNECTED ${FETCH_UPDATE_DISCONNECTED}
 )
 FetchContent_MakeAvailable(fetch_fmt)
 

@@ -2,10 +2,10 @@ message(NOTICE "Fetching LUA from https://github.com/lua/lua ...")
 FetchContent_Declare(
   fetch_lua
   GIT_REPOSITORY https://github.com/lua/lua
-  GIT_TAG  v5.4.7
-  GIT_SHALLOW FALSE
-  GIT_PROGRESS TRUE
-  UPDATE_DISCONNECTED TRUE
+  GIT_TAG ${LUA_TAG}
+  GIT_SHALLOW ${FETCH_GIT_SHALLOW}
+  GIT_PROGRESS ${FETCH_GIT_PROGRESS}
+  UPDATE_DISCONNECTED ${FETCH_UPDATE_DISCONNECTED}
 )
 FetchContent_MakeAvailable(fetch_lua)
 

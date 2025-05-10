@@ -62,18 +62,22 @@ set(ASSIMP_NO_EXPORT ON CACHE BOOL "" FORCE)
 set(BUILD_SHARED_LIBS ON CACHE BOOL "" FORCE)
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+  set(CMAKE_LINKER lld-link)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /EHsc")
-  set(WIN32_RESOURCES "")
-endif()
+  endif()
+  
+#fix unicode issue with rc file
+set(assimp_patch git apply ${CMAKE_CURRENT_SOURCE_DIR}/cmake/patch/assimp.patch)
 
 message(NOTICE "Fetching Assimp from https://github.com/assimp/assimp ...")
 FetchContent_Declare(
   fetch_assimp
   GIT_REPOSITORY https://github.com/assimp/assimp
-  GIT_TAG  v5.4.3
-  GIT_SHALLOW FALSE
-  GIT_PROGRESS TRUE
-  UPDATE_DISCONNECTED TRUE
+  GIT_TAG ${ASSIMP_TAG}
+  PATCH_COMMAND ${assimp_patch}
+  GIT_SHALLOW ${FETCH_GIT_SHALLOW}
+  GIT_PROGRESS ${FETCH_GIT_PROGRESS}
+  UPDATE_DISCONNECTED ${FETCH_UPDATE_DISCONNECTED}
 )
 FetchContent_MakeAvailable(fetch_assimp)
 
