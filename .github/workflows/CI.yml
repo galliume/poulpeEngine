@@ -14,13 +14,12 @@ jobs:
   build:
     strategy:
       matrix:
-        os: [ubuntu-latest]
-        language: [cpp]
-        cmake_preset: [linux-release]
         include:
           - os: ubuntu-latest
             cmake_preset: linux-release
-
+          - os: windows-latest
+            cmake_preset: windows-release
+            
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -43,13 +42,29 @@ jobs:
           sudo apt update
           sudo apt install vulkan-sdk
 
+      - name: Install VulkanSDK (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $client = New-Object System.Net.WebClient
+          $client.DownloadFile("https://sdk.lunarg.com/sdk/download/latest/windows/vulkan_sdk.exe", "$env:RUNNER_TEMP\vulkan_sdk.exe")
+          Start-Process -FilePath "$env:RUNNER_TEMP\vulkan_sdk.exe" -ArgumentList "/S" -Wait
+          $vulkanPath = Get-ChildItem "C:\VulkanSDK" | Sort-Object Name -Descending | Select-Object -First 1
+          $env:VULKAN_SDK = "$($vulkanPath.FullName)\Bin"
+          $env:PATH = "$env:VULKAN_SDK;$env:PATH"
+
+      - name: Install CMake and Clang (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          choco install -y cmake --installargs 'ADD_CMAKE_TO_PATH=System'
+          choco install -y llvm
+
       - name: Check VulkanSDK
         run: vulkaninfo
 
       - name: Checks
         run: |
           clang --version
-          gcc --version
           cmake --version
 
       - name: List Presets

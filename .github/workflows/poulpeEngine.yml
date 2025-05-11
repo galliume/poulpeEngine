@@ -1,0 +1,55 @@
+name: PoulpeEngine
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+
+    steps:
+    
+    - uses: actions/checkout@v3
+      with:
+        repository: KhronosGroup/Vulkan-Headers
+        path: external
+        cache: true
+        
+    - uses: actions/checkout@v3
+      with:
+        path: main
+
+    - name: Install dependancies
+      run: sudo apt-get update && sudo apt-get install build-essential xorg-dev libglu1-mesa-dev libvulkan1 mesa-vulkan-drivers clang ninja-build sqlite3 libsqlite3-dev
+
+    - name: Set env variable VULKAN_SDK_ACTIONS
+      run: echo "VULKAN_SDK_ACTIONS=${{ github.workspace }}/external/include" >> $GITHUB_ENV
+    
+    - name: Install VulkanSDK
+      run: |
+        wget -qO- https://packages.lunarg.com/lunarg-signing-key-pub.asc | sudo tee /etc/apt/trusted.gpg.d/lunarg.asc
+        sudo wget -qO /etc/apt/sources.list.d/lunarg-vulkan-noble.list http://packages.lunarg.com/vulkan/lunarg-vulkan-noble.list
+        sudo apt update
+        sudo apt install vulkan-sdk
+
+    - name: Check VulkanSDK
+      run: vulkaninfo
+
+    - name: Checks
+      run: |
+        clang --version
+        gcc --version
+        cmake --version
+
+    - name: List Presets
+      run: cd main && cmake --list-presets
+    
+    - name: Configure
+      run: cd main && cmake --preset linux-release
+
+    - name: Build
+      run: cd main && cmake --build --preset linux-release
