@@ -35,10 +35,7 @@ add_executable(${PROJECT_NAME} src/Poulpe.cpp)
 
 configure_file(PoulpeEngineConfig.h.in PoulpeEngineConfig.h)
 
-add_definitions(-DVK_NO_PROTOTYPES
-                -DVOLK_STATIC_DEFINES
-                -D_CRT_SECURE_NO_WARNINGS
-                -DDWIN32_LEAN_AND_MEAN)
+add_definitions(-DVK_NO_PROTOTYPES)
 
 target_precompile_headers(${PROJECT_NAME} PRIVATE include/Poulpepch.hpp.pch)
 
@@ -61,6 +58,12 @@ set(DEBUG_OPTIONS -g)
 set(RELEASE_OPTIONS )
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+
+  add_definitions(
+    -DVOLK_STATIC_DEFINES
+    -D_CRT_SECURE_NO_WARNINGS
+    -DDWIN32_LEAN_AND_MEAN)
+
   set(CMAKE_LINKER lld-link)
 
   list(APPEND DEBUG_OPTIONS /MDd /Od /Ob0 /RTC1 /Zi /Zc:__cplusplus /EHsc)
@@ -69,8 +72,8 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
   #target_link_options(${PROJECT_NAME} PRIVATE $<$<CONFIG:RELEASE>:/LTCG>)
   target_compile_options(${PROJECT_NAME} PRIVATE $<$<CONFIG:DEBUG>:/GA /Wall -Wno-c++98-compat -Wno-old-style-cast>)
 else()
-    list(APPEND DEBUG_OPTIONS -O0 -Wall)
-    list(APPEND RELEASE_OPTIONS -O3 -Wall)
+  list(APPEND DEBUG_OPTIONS -O0 -Wall)
+  list(APPEND RELEASE_OPTIONS -O3 -Wall)
 endif()
 
 target_compile_options(${PROJECT_NAME} PRIVATE $<$<CONFIG:DEBUG>:${DEBUG_OPTIONS}>)
