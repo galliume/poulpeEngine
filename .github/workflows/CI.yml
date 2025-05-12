@@ -61,9 +61,18 @@ jobs:
       - name: Perform CodeQL init
         uses: github/codeql-action/init@v3
         with:
-          config-file: main/.github/workflows/codeql/codeql-config.yml
+          config-file: main/.github/codeql/codeql-config.yml
           languages: ${{ matrix.language }}
           build-mode: manual
+          paths: main/src/
+          paths-ignore:
+            main/assets/
+            main/bin/
+            main/cmake/
+            main/config/
+            main/screenshots/
+            main/build/linux-release/_deps/
+            main/build/windows-release/_deps/
 
       - name: Build PoulpeEngine
         run: cd main && cmake --build --preset ${{ matrix.cmake_preset }}
