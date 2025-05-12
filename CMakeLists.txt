@@ -31,7 +31,7 @@ message(STATUS "CMAKE_BUILD_TYPE: ${CMAKE_BUILD_TYPE}")
 set(CMAKE_BUILD_TYPE "${CMAKE_BUILD_TYPE}" CACHE STRING "Build type" FORCE)
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules ${CMAKE_MODULE_PATH})
 
-add_executable(${PROJECT_NAME} src/Poulpe.cpp)
+add_executable(${PROJECT_NAME} src/Poulpe.cpp poulpeEngine.rc)
 
 configure_file(PoulpeEngineConfig.h.in PoulpeEngineConfig.h)
 
@@ -82,6 +82,9 @@ target_compile_definitions(${PROJECT_NAME} PRIVATE $<$<CONFIG:DEBUG>:PLP_DEBUG_B
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
   list(APPEND EXTRA_LIBS Ws2_32 user32)
+  if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+    list(APPEND EXTRA_LIBS msvcrtd.lib)
+  endif()
 else()
   set(THREADS_PREFER_PTHREAD_FLAG ON)
   find_package(Threads REQUIRED)
@@ -93,13 +96,24 @@ endif()
 #########################################################
 ##################### External libs #####################
 #########################################################
+install(TARGETS ${PROJECT_NAME}
+    EXPORT PoulpeEngineTargets
+    RUNTIME DESTINATION bin
+    LIBRARY DESTINATION lib
+    ARCHIVE DESTINATION lib
+)
+
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+  COMMAND ${CMAKE_COMMAND} -E copy -t $<TARGET_FILE_DIR:${PROJECT_NAME}> $<TARGET_RUNTIME_DLLS:${PROJECT_NAME}>
+  COMMAND_EXPAND_LISTS
+)
+
 find_package(Vulkan REQUIRED)
 list(APPEND EXTRA_LIBS Vulkan::Vulkan)
 
 set(PLP_LIB_DIR "$<TARGET_FILE_DIR:${PROJECT_NAME}>/lib")
 set(PLP_BIN_DIR "$<TARGET_FILE_DIR:${PROJECT_NAME}>")
 
-set(FETCHCONTENT_QUIET OFF)
 include(fetchDeps)
 
 target_link_libraries(${PROJECT_NAME} PRIVATE ${EXTRA_LIBS} poulpe)

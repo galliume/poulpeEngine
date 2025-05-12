@@ -1,3 +1,16 @@
 name: PoulpeEngine CodeQL config
 
-languages: cpp
+languages: 
+  - cpp
+
+paths: 
+  - main/src/
+
+paths-ignore: # not working for c/c++...
+  - main/assets/
+  - main/bin/
+  - main/cmake/
+  - main/config/
+  - main/screenshots/
+  - main/build/linux-release/_deps/
+  - main/build/windows-release/_deps/

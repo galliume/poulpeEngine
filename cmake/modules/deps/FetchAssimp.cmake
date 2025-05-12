@@ -62,7 +62,6 @@ set(ASSIMP_NO_EXPORT ON CACHE BOOL "" FORCE)
 set(BUILD_SHARED_LIBS ON CACHE BOOL "" FORCE)
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
-  set(CMAKE_LINKER lld-link)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /EHsc")
   endif()
   
@@ -86,10 +85,3 @@ target_include_directories(${PROJECT_NAME} PRIVATE
    ${fetch_assimp_BINARY_DIR}/include)
 
 target_link_libraries(${PROJECT_NAME} PRIVATE assimp)
-
-set_target_properties(assimp PROPERTIES
-  OUTPUT_NAME "assimp"
-  LIBRARY_OUTPUT_DIRECTORY ${PLP_BIN_DIR}
-  RUNTIME_OUTPUT_DIRECTORY ${PLP_BIN_DIR}
-  ARCHIVE_OUTPUT_DIRECTORY ${PLP_BIN_DIR}
-)

@@ -14,9 +14,3 @@ target_include_directories(${PROJECT_NAME} PRIVATE
   ${fetch_volk_BINARY_DIR})
 
 target_link_libraries(${PROJECT_NAME} PRIVATE volk)
-
-set_target_properties(volk PROPERTIES
-  LIBRARY_OUTPUT_DIRECTORY ${PLP_BIN_DIR}
-  RUNTIME_OUTPUT_DIRECTORY ${PLP_BIN_DIR}
-  ARCHIVE_OUTPUT_DIRECTORY ${PLP_BIN_DIR}
-)

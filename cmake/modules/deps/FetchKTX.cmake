@@ -6,6 +6,9 @@ set(KTX_FEATURE_PY OFF CACHE BOOL "" FORCE)
 set(KTX_FEATURE_TOOLS_CTS OFF CACHE BOOL "" FORCE)
 set(BUILD_SHARED_LIBS ON CACHE BOOL "" FORCE)
 
+set(CMAKE_BINARY_DIR_RESET ${CMAKE_BINARY_DIR})
+set(CMAKE_BINARY_DIR ${fetch_ktx_BINARY_DIR} CACHE PATH "" FORCE)
+
 message(NOTICE "Fetching LibKTX from https://github.com/KhronosGroup/KTX-Software ...")
 FetchContent_Declare(
   fetch_ktx
@@ -21,8 +24,4 @@ target_include_directories(${PROJECT_NAME} PRIVATE ${fetch_ktx_SOURCE_DIR}/inclu
 
 target_link_libraries(${PROJECT_NAME} PRIVATE ktx)
 
-set_target_properties(ktx PROPERTIES
-  LIBRARY_OUTPUT_DIRECTORY ${PLP_BIN_DIR}
-  RUNTIME_OUTPUT_DIRECTORY ${PLP_BIN_DIR}
-  ARCHIVE_OUTPUT_DIRECTORY ${PLP_BIN_DIR}
-)
+set(CMAKE_BINARY_DIR ${CMAKE_BINARY_DIR_RESET} CACHE PATH "" FORCE)

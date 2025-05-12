@@ -53,9 +53,3 @@ add_library(
 )
 
 target_link_libraries(${PROJECT_NAME} PRIVATE lua)
-
-set_target_properties(lua PROPERTIES
-  LIBRARY_OUTPUT_DIRECTORY ${PLP_BIN_DIR}
-  RUNTIME_OUTPUT_DIRECTORY ${PLP_BIN_DIR}
-  ARCHIVE_OUTPUT_DIRECTORY ${PLP_BIN_DIR}
-)
