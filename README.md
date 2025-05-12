@@ -3,8 +3,7 @@
 
 | **CI Service** | Build Status |
 |:---------------|-------------:|
-| GitHub Actions | [![CMake](https://github.com/galliume/poulpeEngine/actions/workflows/cmake.yml/badge.svg?branch=main)](https://github.com/galliume/poulpeEngine/actions/workflows/cmake.yml)
-
+| GitHub Actions | [![PoulpeEngine](https://github.com/galliume/poulpeEngine/actions/workflows/CI.yml/badge.svg)](https://github.com/galliume/poulpeEngine/actions/workflows/CI.yml)
 
 ### This project is a never ending educationnal exercice about game engine and vulkan.
 
