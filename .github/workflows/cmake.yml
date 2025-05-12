@@ -1,4 +1,6 @@
 name: PoulpeEngine
+permissions:
+  contents: read
 
 on:
   push:
