@@ -12,9 +12,3 @@ FetchContent_MakeAvailable(fetch_freetype)
 target_include_directories(${PROJECT_NAME} PRIVATE ${fetch_freetype_SOURCE_DIR}/include)
 
 target_link_libraries(${PROJECT_NAME} PRIVATE freetype)
-
-set_target_properties(freetype PROPERTIES
-  LIBRARY_OUTPUT_DIRECTORY ${PLP_BIN_DIR}
-  RUNTIME_OUTPUT_DIRECTORY ${PLP_BIN_DIR}
-  ARCHIVE_OUTPUT_DIRECTORY ${PLP_BIN_DIR}
-)

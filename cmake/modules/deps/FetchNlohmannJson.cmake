@@ -12,9 +12,3 @@ FetchContent_MakeAvailable(fetch_nlohmann_json)
 target_include_directories(${PROJECT_NAME} PRIVATE ${fetch_nlohmann_json_SOURCE_DIR}/include)
 
 target_link_libraries(${PROJECT_NAME} PRIVATE nlohmann_json)
-
-set_target_properties(nlohmann_json PROPERTIES
-  LIBRARY_OUTPUT_DIRECTORY ${PLP_BIN_DIR}
-  RUNTIME_OUTPUT_DIRECTORY ${PLP_BIN_DIR}
-  ARCHIVE_OUTPUT_DIRECTORY ${PLP_BIN_DIR}
-)

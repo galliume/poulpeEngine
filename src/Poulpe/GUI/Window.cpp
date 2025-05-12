@@ -2,7 +2,7 @@
 
 //#define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
-
+#include <stb_image.h>
 namespace Poulpe
 {
   bool Window::_FramebufferResized = false;
@@ -14,10 +14,10 @@ namespace Poulpe
 
   void Window::init(std::string_view window_title)
   {
-    const int WIDTH = 2560;
-    const int HEIGHT = 1440;
-    //const int WIDTH = 1024;
-    //const int HEIGHT = 720;
+    int const WIDTH = 2560;
+    int const HEIGHT = 1440;
+    // int const WIDTH = 1024;
+    // int const HEIGHT = 720;
 
     glfwInit();
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
@@ -41,6 +41,13 @@ namespace Poulpe
 
    /* const int maxWidth = mode->width;
     const int maxHeight = mode->height;*/
+
+    GLFWimage icon[1];
+    stbi_set_flip_vertically_on_load(true);
+    icon[0].pixels = stbi_load("./mpoulpe.png", &icon[0].width, &icon[0].height, 0, 4);
+
+    glfwSetWindowIcon(_window, 1, icon);
+    stbi_image_free(icon[0].pixels);
 
     //glfwSetWindowMonitor(_window, nullptr, (maxWidth/2)-(WIDTH/2), (maxHeight/2) - (HEIGHT/2), WIDTH, HEIGHT, GLFW_DONT_CARE);
     glfwSetWindowUserPointer(_window, this);

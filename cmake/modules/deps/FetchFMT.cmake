@@ -21,9 +21,3 @@ target_include_directories(${PROJECT_NAME} PRIVATE
   ${fetch_fmt_BUILD_DIR}/include)
 
 target_link_libraries(${PROJECT_NAME} PRIVATE fmt)
-
-set_target_properties(fmt PROPERTIES
-  LIBRARY_OUTPUT_DIRECTORY ${PLP_BIN_DIR}
-  RUNTIME_OUTPUT_DIRECTORY ${PLP_BIN_DIR}
-  ARCHIVE_OUTPUT_DIRECTORY ${PLP_BIN_DIR}
-)

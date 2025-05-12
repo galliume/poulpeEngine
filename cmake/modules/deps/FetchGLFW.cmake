@@ -19,9 +19,3 @@ FetchContent_MakeAvailable(fetch_glfw)
 target_include_directories(${PROJECT_NAME} PRIVATE ${fetch_glfw_SOURCE_DIR}/include)
 
 target_link_libraries(${PROJECT_NAME} PRIVATE glfw)
-
-set_target_properties(glfw PROPERTIES
-  LIBRARY_OUTPUT_DIRECTORY ${PLP_BIN_DIR}
-  RUNTIME_OUTPUT_DIRECTORY ${PLP_BIN_DIR}
-  ARCHIVE_OUTPUT_DIRECTORY ${PLP_BIN_DIR}
-)

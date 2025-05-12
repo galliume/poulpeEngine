@@ -1,4 +1,4 @@
-include(FetchContent)
+set(FETCHCONTENT_QUIET OFF)
 
 set(ASSIMP_TAG v5.4.3)
 set(FREETYPE_TAG VER-2-13-3)
@@ -16,6 +16,8 @@ set(VOLK_TAG 1.4.304)
 set(FETCH_GIT_SHALLOW TRUE)
 set(FETCH_GIT_PROGRESS TRUE)
 set(FETCH_UPDATE_DISCONNECTED TRUE)
+
+include(FetchContent)
 
 include(deps/FetchAssimp)
 include(deps/FetchFreeType)
