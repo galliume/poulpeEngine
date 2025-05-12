@@ -1,0 +1,15 @@
+name: PoulpeEngine CodeQL config
+
+paths:
+  - main/build/src/
+
+paths-ignore:
+  - main/build/assets/
+  - main/build/bin/
+  - main/build/cmake/
+  - main/build/config/
+  - main/build/screenshots/
+  - main/build/linux-release/_deps/
+  - main/build/windows-release/_deps/
+
+languages: cpp

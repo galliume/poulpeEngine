@@ -1,0 +1,74 @@
+name: PoulpeEngine
+permissions:
+  contents: read
+  security-events: write
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+        language: [cpp]
+        cmake_preset: [linux-release]
+        include:
+          - os: ubuntu-latest
+            cmake_preset: linux-release
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          path: main
+
+      - name: Install Dependencies (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install build-essential xorg-dev libglu1-mesa-dev \
+            libvulkan1 mesa-vulkan-drivers clang ninja-build sqlite3 libsqlite3-dev
+
+      - name: Install VulkanSDK (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          wget -qO- https://packages.lunarg.com/lunarg-signing-key-pub.asc | sudo tee /etc/apt/trusted.gpg.d/lunarg.asc
+          sudo wget -qO /etc/apt/sources.list.d/lunarg-vulkan-noble.list http://packages.lunarg.com/vulkan/lunarg-vulkan-noble.list
+          sudo apt update
+          sudo apt install vulkan-sdk
+
+      - name: Check VulkanSDK
+        run: vulkaninfo
+
+      - name: Checks
+        run: |
+          clang --version
+          gcc --version
+          cmake --version
+
+      - name: List Presets
+        run: cd main && cmake --list-presets
+
+      - name: Configure preset
+        run: cd main && cmake --preset ${{ matrix.cmake_preset }}
+
+      - name: Perform CodeQL init
+        uses: github/codeql-action/init@v3
+        with:
+          config-file: .github/codeql/codeql-config.yml
+          languages: ${{ matrix.language }}
+          build-mode: manual
+
+      - name: Build PoulpeEngine
+        run: cd main && cmake --build --preset ${{ matrix.cmake_preset }}
+
+      - name: Perform CodeQL analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:${{ matrix.language }}"
