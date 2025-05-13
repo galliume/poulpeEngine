@@ -4,7 +4,7 @@
 
 #include "Poulpe/Component/MeshComponent.hpp"
 
-#include "Poulpe/GUI/Window.hpp"
+//#include "Poulpe/GUI/Window.hpp"
 
 #include "Poulpe/Manager/ComponentManager.hpp"
 
@@ -16,6 +16,8 @@
 #include <future>
 #include <memory>
 #include <volk.h>
+
+import GUI;
 
 namespace Poulpe
 {

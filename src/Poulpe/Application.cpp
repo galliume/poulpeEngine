@@ -4,7 +4,7 @@
 
 #include "Core/CommandQueue.hpp"
 
-#include "GUI/Window.hpp"
+//#include "GUI/Window.hpp"
 
 #include "Poulpe/Manager/ConfigManager.hpp"
 #include "Poulpe/Manager/DbManager.hpp"
@@ -18,6 +18,8 @@
 #include <miniaudio.h>
 
 #include <thread>
+
+import GUI;
 
 namespace Poulpe
 {

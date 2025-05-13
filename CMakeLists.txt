@@ -3,6 +3,13 @@
 #########################################################
 cmake_minimum_required(VERSION 3.28.0)
 
+project(PoulpeEngine
+  VERSION 0.1.1
+  DESCRIPTION "Game Engine with a vulkan renderer"
+  HOMEPAGE_URL "https://github.com/galliume/poulpeEngine"
+  LANGUAGES C CXX
+)
+
 if (USE_CCACHE)
   find_program(CCACHE_PROGRAM ccache)
   if(CCACHE_PROGRAM)
@@ -12,13 +19,6 @@ if (USE_CCACHE)
 else()
   message(WARNING "ccache deactivated")
 endif()
-
-project(PoulpeEngine
-  VERSION 0.1.1
-  DESCRIPTION "Game Engine with a vulkan renderer"
-  HOMEPAGE_URL "https://github.com/galliume/poulpeEngine"
-  LANGUAGES C CXX
-)
 
 add_library(poulpe INTERFACE)
 
@@ -91,6 +91,16 @@ else()
   list(APPEND EXTRA_LIBS Threads::Threads)
 endif()
 
+set_target_properties(${PROJECT_NAME} PROPERTIES 
+  CXX_STANDARD 23
+  CXX_STANDARD_REQUIRED ON
+  CXX_EXTENSIONS OFF)
+
+target_sources(${PROJECT_NAME}
+  PUBLIC
+    FILE_SET cxx_modules TYPE CXX_MODULES FILES
+    ${PROJECT_SOURCE_DIR}/src/Poulpe/GUI/Window.cppm)
+
 #########################################################
 
 #########################################################
@@ -101,7 +111,7 @@ install(TARGETS ${PROJECT_NAME}
     RUNTIME DESTINATION bin
     LIBRARY DESTINATION lib
     ARCHIVE DESTINATION lib
-)
+    FILE_SET cxx_modules DESTINATION include)
 
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
   COMMAND ${CMAKE_COMMAND} -E copy -t $<TARGET_FILE_DIR:${PROJECT_NAME}> $<TARGET_RUNTIME_DLLS:${PROJECT_NAME}>

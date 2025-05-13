@@ -95,7 +95,7 @@ namespace Poulpe
       auto const& textures = entities.value();
       
       //@todo fix this ugly fix. Needs a real asset unique ID
-      std::filesystem::path file_name{ textures["mesh"] };
+      std::filesystem::path file_name{ textures["mesh"].get<std::string>()};
       auto const& texture_prefix{ file_name.stem().string() + "_"};
 
       if (textures.contains("textures")) {

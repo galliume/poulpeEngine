@@ -8,7 +8,6 @@ namespace Poulpe
 {
   class CommandQueue;
   class Renderer;
-  class Window;
 
   class Application
   {

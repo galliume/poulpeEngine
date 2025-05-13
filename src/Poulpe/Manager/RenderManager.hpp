@@ -15,9 +15,11 @@
 
 #include "Poulpe/Renderer/Vulkan/Renderer.hpp"
 
-#include "Poulpe/GUI/Window.hpp"
+//#include "Poulpe/GUI/Window.hpp"
 
 #include <vulkan/vulkan.h>
+
+import GUI;
 
 namespace Poulpe
 {
