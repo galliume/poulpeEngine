@@ -12,7 +12,7 @@
       "binaryDir": "${sourceDir}/build/${presetName}",
       "inherits": [
         "common",
-        "GENERATOR_NINJA",
+        "GENERATOR_VS_17_2022",
         "CCACHE_OFF",
         "C_COMPILER_CLANG_CL",
         "CXX_COMPILER_CLANG_CL"

@@ -1,4 +1,5 @@
 message(NOTICE "Fetching LUA from https://github.com/lua/lua ...")
+
 FetchContent_Declare(
   fetch_lua
   GIT_REPOSITORY https://github.com/lua/lua
@@ -9,7 +10,9 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(fetch_lua)
 
-target_include_directories(${PROJECT_NAME} PRIVATE ${fetch_lua_SOURCE_DIR})
+target_include_directories(${PROJECT_NAME}
+PRIVATE
+  ${fetch_lua_SOURCE_DIR})
 
 add_library(
   lua STATIC
@@ -52,4 +55,6 @@ add_library(
   ${fetch_lua_SOURCE_DIR}/lualib.h
 )
 
-target_link_libraries(${PROJECT_NAME} PRIVATE lua)
+target_link_libraries(${PROJECT_NAME}
+PRIVATE
+  lua)

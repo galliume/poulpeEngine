@@ -347,7 +347,7 @@ namespace Poulpe {
 
     inline VkPhysicalDeviceFeatures getDeviceFeatures() const { return _device_features; }
 
-    inline bool isFramebufferResized() { return _FramebufferResized; }
+    inline bool isFramebufferResized() { return false; }
 
     inline VkExtent2D getSwapChainExtent() const { return _swapchain_extent; }
 
@@ -453,7 +453,7 @@ namespace Poulpe {
       float const mip_lvl);
 
   public:
-    bool _FramebufferResized = false;
+    //bool _FramebufferResized = false;
 
     //VK_COLOR_SPACE_HDR10_ST2084_EXT
     VkColorSpaceKHR PLP_VK_COLOR_SPACE{ VK_COLOR_SPACE_HDR10_ST2084_EXT };

@@ -7,13 +7,26 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(fetch_sqlite)
 
 #ugly fix
-file(REMOVE ${fetch_sqlite_SOURCE_DIR}/VERSION)
+file(REMOVE 
+  ${fetch_sqlite_SOURCE_DIR}/VERSION)
 
-add_library(sqlite3 SHARED
+add_library(sqlite3
+SHARED
   ${fetch_sqlite_SOURCE_DIR}/sqlite3.c
   ${fetch_sqlite_SOURCE_DIR}/sqlite3.h
   ${fetch_sqlite_SOURCE_DIR}/sqlite3ext.h
 )
 
-target_include_directories(sqlite3 PUBLIC ${fetch_sqlite_SOURCE_DIR})
-target_link_libraries(${PROJECT_NAME} PRIVATE sqlite3)
+target_include_directories(sqlite3 
+PUBLIC 
+  ${fetch_sqlite_SOURCE_DIR})
+
+target_link_libraries(${PROJECT_NAME}
+PRIVATE
+  sqlite3)
+
+if (CMAKE_CXX_COMPILER STREQUAL "MSVC")
+  set_target_properties(sqlite3
+  PROPERTIES
+    LINK_FLAGS "/DEF:${fetch_sqlite_SOURCE_DIR}/auto.def")
+endif()

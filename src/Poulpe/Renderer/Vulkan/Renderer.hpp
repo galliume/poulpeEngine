@@ -1,11 +1,10 @@
 #pragma once
-#pragma once
 
 #include "Poulpe/Component/Camera.hpp"
 
 #include "Poulpe/Core/PlpTypedef.hpp"
 
-#include "Poulpe/GUI/Window.hpp"
+//#include "Poulpe/GUI/Window.hpp"
 
 #include "Poulpe/Manager/EntityManager.hpp"
 #include "Poulpe/Manager/LightManager.hpp"

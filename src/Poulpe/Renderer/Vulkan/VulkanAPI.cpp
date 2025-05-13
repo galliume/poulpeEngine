@@ -1,6 +1,6 @@
 #include "VulkanAPI.hpp"
 
-#include "Poulpe/GUI/Window.hpp"
+//#include "Poulpe/GUI/Window.hpp"
 
 #include "Poulpe/Manager/FontManager.hpp"
 
@@ -11,6 +11,8 @@
 #include <filesystem>
 #include <fstream>
 #include <set>
+
+import GUI;
 
 //@todo this class needs a huge clean up
 namespace Poulpe {

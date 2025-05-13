@@ -2,7 +2,10 @@
 
 #include "Poulpe/Component/Camera.hpp"
 
-#include "Poulpe/GUI/Window.hpp"
+#include <GLFW/glfw3.h>
+
+import GUI;
+//#include "Poulpe/GUI/Window.hpp"
 
 namespace Poulpe
 {
