@@ -63,8 +63,8 @@ void main()
 
   p.y += 5.f;
 
-  float L = 12.0f;
-  float A = 0.05f * L;
+  float L = 3.0f;
+  float A = 0.01f * L;
   const float g = 9.81f;
   float w = 2.0f / L;
   float w_pic = 0.1f;
@@ -89,7 +89,7 @@ void main()
   float w_factor = 1.18;
   float l_factor = 0.75;
 
-  const int waves_count = 16;
+  const int waves_count = 32;
   for (int i = 0; i < waves_count; i++) {
     //speed
     //S *= A/A_pic;

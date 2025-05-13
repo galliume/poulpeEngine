@@ -20,7 +20,8 @@ namespace Poulpe
 
       _renderer->getAPI()->updateDescriptorSets(
         *mesh->getUniformBuffers(),
-        *mesh->getStorageBuffers(),
+        *mesh->getObjectStorageBuffer(),
+        *mesh->getBonesStorageBuffer(),
         descset,
         image_infos,
         depth_map_image_infos,

@@ -8,6 +8,7 @@
 #include <assimp/GltfMaterial.h>
 
 #include <glm/gtx/matrix_decompose.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 #include <filesystem>
 
@@ -545,8 +546,6 @@ namespace Poulpe
         aiVector3D vertices = mesh->mVertices[v];
 
         Vertex vertex{};
-        vertex.bone_ids.resize(4, 0);
-        vertex.bone_weights.resize(4, 0.0f);
 
         vertex.pos = { vertices.x, vertices.y, vertices.z };
         if (flip_Y) vertex.pos.y *= -1.0f;
@@ -711,16 +710,22 @@ namespace Poulpe
             [](auto const& a, auto const& b) { return a.second > b.second; });
             
           float total_weight{ 0.0f };
+          std::vector<int> bone_ids(4);
+          std::vector<float> bone_weights(4);
+
           for (int i{ 0 }; i < 4 && i < static_cast<int>(data.size()); ++i) {
-            vertex.bone_ids[i] = data[i].first;
-            vertex.bone_weights[i] = data[i].second;
+            bone_ids[i] = data[i].first;
+            bone_weights[i] = data[i].second;
             total_weight += data[i].second;
           }
 
           if (total_weight > 0.0f) {
             for (int i{ 0 }; i < 4; ++i)
-            vertex.bone_weights[i] /= total_weight;
+            bone_weights[i] /= total_weight;
           }
+
+          vertex.bone_ids = glm::make_vec4(bone_ids.data());
+          vertex.bone_weights = glm::make_vec4(bone_weights.data());
         }
       }
       data.emplace_back(mesh_data);

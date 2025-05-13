@@ -124,7 +124,8 @@ namespace Poulpe
 
       _renderer->getAPI()->updateDescriptorSets(
         *mesh->getUniformBuffers(),
-        *mesh->getStorageBuffers(),
+        *mesh->getObjectStorageBuffer(),
+        *mesh->getBonesStorageBuffer(),
         descset, image_info, depth_map_image_info, cubemap_info);
     }
 
@@ -147,15 +148,11 @@ namespace Poulpe
     auto const& shadow_map_pipeline = _renderer->getPipeline("shadowMap");
     VkDescriptorSet shadow_map_descset = _renderer->getAPI()->createDescriptorSets(shadow_map_pipeline->desc_pool, { shadow_map_pipeline->descset_layout }, 1);
 
-    std::for_each(std::begin(*mesh->getStorageBuffers()), std::end(*mesh->getStorageBuffers()),
-      [&buffer_storage_infos](const Buffer& storageBuffers)
-      {
-        VkDescriptorBufferInfo buffer_info{};
-        buffer_info.buffer = storageBuffers.buffer;
-        buffer_info.offset = 0;
-        buffer_info.range = VK_WHOLE_SIZE;
-        buffer_storage_infos.emplace_back(buffer_info);
-      });
+    VkDescriptorBufferInfo buffer_info{};
+    buffer_info.buffer = mesh->getObjectStorageBuffer()->buffer;
+    buffer_info.offset = 0;
+    buffer_info.range = VK_WHOLE_SIZE;
+    buffer_storage_infos.emplace_back(buffer_info);
 
     descset_writes[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
     descset_writes[0].dstSet = shadow_map_descset;
@@ -238,7 +235,7 @@ namespace Poulpe
       });
     }
 
-    if (mesh->getStorageBuffers()->empty()) {
+    if (mesh->getObjectStorageBuffer()) {
 
       Material material{};
       material.base_color = mesh->getMaterial().base_color;
@@ -283,20 +280,28 @@ namespace Poulpe
       //PLP_DEBUG("specular {}",  material.specular.r);
       //PLP_DEBUG("shi_ior_diss {} {}", material.shi_ior_diss.x, material.shi_ior_diss.y);
 
-      ObjectBuffer objectBuffer{};
-      objectBuffer.point_lights[0] = _light_manager->getPointLights().at(0);
-      objectBuffer.point_lights[1] = _light_manager->getPointLights().at(1);
-      objectBuffer.spot_light = _light_manager->getSpotLights().at(0);
-      objectBuffer.sun_light = _light_manager->getSunLight();
-      objectBuffer.material = material;
+      ObjectBuffer object_buffer{};
+      object_buffer.point_lights[0] = _light_manager->getPointLights().at(0);
+      object_buffer.point_lights[1] = _light_manager->getPointLights().at(1);
+      object_buffer.spot_light = _light_manager->getSpotLights().at(0);
+      object_buffer.sun_light = _light_manager->getSunLight();
+      object_buffer.material = material;
 
-      auto storageBuffer{ _renderer->getAPI()->createStorageBuffers(objectBuffer, cmd_pool) };
+      auto object_storage { _renderer->getAPI()->createStorageBuffers<ObjectBuffer>(object_buffer, cmd_pool) };
 
-      mesh->setObjectBuffer(objectBuffer);
-      mesh->addStorageBuffer(storageBuffer);
-      mesh->setHasBufferStorage();
+      mesh->setObjectBuffer(object_buffer);
+      mesh->addObjectStorageBuffer(object_storage);
 
-      //_renderer->updateStorageBuffer(mesh->getStorageBuffers()->at(0), objectBuffer);
+      if (data->_bone_matrices.size() > 0) {
+        BonesBuffer bones_buffer{};
+        //bones_buffer.bone_matrices = std::move(data->_bone_matrices);
+        bones_buffer.bone_matrices = {glm::mat4(2.0f), glm::mat4(4.0f)};
+
+        auto bones_storage{ _renderer->getAPI()->createStorageBuffers<BonesBuffer>(bones_buffer, cmd_pool) };
+
+        mesh->setBonesBuffer(bones_buffer);
+        mesh->addBonesStorageBuffer(bones_storage);
+      }
     }
 
     unsigned int min{ 0 };

@@ -1347,15 +1347,17 @@ namespace Poulpe {
 
   void VulkanAPI::updateDescriptorSets(
     std::vector<Buffer>& uniform_buffers,
-    std::vector<Buffer>& storage_buffers,
+    Buffer& object_storage_buffer,
+    Buffer& bones_storage_buffer,
     VkDescriptorSet& descset,
     std::vector<VkDescriptorImageInfo>& image_info,
     std::vector<VkDescriptorImageInfo>& depth_map_image_info,
     std::vector<VkDescriptorImageInfo>& cube_map_image_info)
   {
-    std::array<VkWriteDescriptorSet, 5> desc_writes{};
+    std::array<VkWriteDescriptorSet, 6> desc_writes{};
     std::vector<VkDescriptorBufferInfo> buffer_infos;
-    std::vector<VkDescriptorBufferInfo> storage_buffer_infos;
+    std::vector<VkDescriptorBufferInfo> object_infos;
+    std::vector<VkDescriptorBufferInfo> bones_infos;
 
     std::for_each(std::begin(uniform_buffers), std::end(uniform_buffers),
     [&buffer_infos](const Buffer& buffer)
@@ -1367,15 +1369,17 @@ namespace Poulpe {
       buffer_infos.emplace_back(buffer_info);
     });
 
-    std::for_each(std::begin(storage_buffers), std::end(storage_buffers),
-    [&storage_buffer_infos](const Buffer& buffer)
-    {
-      VkDescriptorBufferInfo buffer_info{};
-      buffer_info.buffer = buffer.buffer;
-      buffer_info.offset = 0;
-      buffer_info.range = VK_WHOLE_SIZE;
-      storage_buffer_infos.emplace_back(buffer_info);
-    });
+    VkDescriptorBufferInfo object_buffer_info{};
+    object_buffer_info.buffer = object_storage_buffer.buffer;
+    object_buffer_info.offset = 0;
+    object_buffer_info.range = VK_WHOLE_SIZE;
+    object_infos.emplace_back(object_buffer_info);
+
+    VkDescriptorBufferInfo bones_buffer_info{};
+    bones_buffer_info.buffer = bones_storage_buffer.buffer;
+    bones_buffer_info.offset = 0;
+    bones_buffer_info.range = VK_WHOLE_SIZE;
+    bones_infos.emplace_back(bones_buffer_info);
 
     desc_writes[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
     desc_writes[0].dstSet = descset;
@@ -1398,8 +1402,8 @@ namespace Poulpe {
     desc_writes[2].dstBinding = 2;
     desc_writes[2].dstArrayElement = 0;
     desc_writes[2].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-    desc_writes[2].descriptorCount = storage_buffer_infos.size();
-    desc_writes[2].pBufferInfo = storage_buffer_infos.data();
+    desc_writes[2].descriptorCount = object_infos.size();
+    desc_writes[2].pBufferInfo = object_infos.data();
 
     desc_writes[3].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
     desc_writes[3].dstSet = descset;
@@ -1417,11 +1421,19 @@ namespace Poulpe {
     desc_writes[4].descriptorCount = cube_map_image_info.size();
     desc_writes[4].pImageInfo = cube_map_image_info.data();
 
+    desc_writes[5].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    desc_writes[5].dstSet = descset;
+    desc_writes[5].dstBinding = 5;
+    desc_writes[5].dstArrayElement = 0;
+    desc_writes[5].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+    desc_writes[5].descriptorCount = bones_infos.size();
+    desc_writes[5].pBufferInfo = bones_infos.data();
+
     vkUpdateDescriptorSets(_device, static_cast<uint32_t>(desc_writes.size()), desc_writes.data(), 0, nullptr);
   }
 
   void VulkanAPI::updateStorageDescriptorSets(
-    std::vector<Buffer> &uniform_buffers,
+    std::vector<Buffer>& uniform_buffers,
     VkDescriptorSet& desc_set,
     VkDescriptorType const type)
   {
@@ -1874,61 +1886,6 @@ namespace Poulpe {
     return uniform_buffer;
   }
 
-  Buffer VulkanAPI::createStorageBuffers(
-    ObjectBuffer const& storage_buffer,
-    VkCommandPool& command_pool)
-  {
-    VkDeviceSize buffer_size { sizeof(storage_buffer) };
-
-    VkBuffer staging_buffer{};
-    VkDeviceMemory staging_device_memory{};
-
-    createBuffer(buffer_size, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-      VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, staging_buffer, staging_device_memory);
-
-    void* data;
-    vkMapMemory(_device, staging_device_memory, 0, buffer_size, 0, &data);
-    memcpy(data, &storage_buffer, static_cast<size_t>(buffer_size));
-    vkUnmapMemory(_device, staging_device_memory);
-
-    VkBuffer buffer = createBuffer(buffer_size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT);
-    VkMemoryRequirements mem_requirements;
-    vkGetBufferMemoryRequirements(_device, buffer, & mem_requirements);
-
-    auto memoryType = findMemoryType(mem_requirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-
-    uint32_t const size = mem_requirements.size;
-
-    uint32_t const bind_offset = align_to(size, mem_requirements.alignment);
-
-    auto const flags { VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT };
-
-    auto device_memory = _device_memory_pool->get(
-      _device,
-      size,
-      memoryType,
-      flags,
-      mem_requirements.alignment,
-      DeviceMemoryPool::DeviceBufferType::STAGING);
-
-    auto const offset { device_memory->getOffset() };
-    auto const index{ device_memory->bindBufferToMemory(buffer, bind_offset) };
-
-    copyBuffer(command_pool, staging_buffer, buffer, buffer_size);
-
-    Buffer uniform_buffer;
-    uniform_buffer.buffer = std::move(buffer);
-    uniform_buffer.memory = device_memory;
-    uniform_buffer.offset = offset;
-    uniform_buffer.size = size;
-    uniform_buffer.index = index;
-
-    vkDestroyBuffer(_device, staging_buffer, nullptr);
-    vkFreeMemory(_device, staging_device_memory, nullptr);
-
-    return uniform_buffer;
-  }
-
   //@todo fix create buffer (see ktx image creation)
   Buffer VulkanAPI::createIndirectCommandsBuffer(std::vector<VkDrawIndexedIndirectCommand> const& draw_cmds)
   {
@@ -2031,27 +1988,12 @@ namespace Poulpe {
     }
   }
 
-  void VulkanAPI::updateStorageBuffer(Buffer& buffer, ObjectBuffer& object_buffer)
-  {
-    {
-      buffer.memory->lock();
-
-      auto memory = buffer.memory->getMemory();
-      void* data;
-      vkMapMemory(_device, *memory, buffer.offset, buffer.size, 0, &data);
-      memcpy(data, & object_buffer, buffer.size);
-      vkUnmapMemory(_device, *memory);
-
-      buffer.memory->unLock();
-    }
-  }
-
   void VulkanAPI::copyBuffer(
     VkCommandPool& cmd_pool,
     VkBuffer& src_buffer,
     VkBuffer& dst_buffer,
     VkDeviceSize const size,
-    VkDeviceSize dst_offset,
+    VkDeviceSize const dst_offset,
     int const queue_index)//@todo check if transfer queue is really used...
   {
     VkCommandBufferAllocateInfo alloc_info{};

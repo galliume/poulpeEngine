@@ -11,6 +11,9 @@
 
 namespace Poulpe {
 
+  template <typename T>
+  concept isStorageBuffer = std::derived_from<T, StorageBuffer>;
+
   VkResult CreateDebugUtilsMessengerEXT(
     VkInstance instance,
     VkDebugUtilsMessengerCreateInfoEXT const * pCreateInfo,
@@ -86,7 +89,8 @@ namespace Poulpe {
 
     void updateDescriptorSets(
       std::vector<Buffer>& uniformBuffers,
-      std::vector<Buffer>& storageBuffers,
+      Buffer& object_storage_buffer,
+      Buffer& bones_storage_buffer,
       VkDescriptorSet& descriptorSet,
       std::vector<VkDescriptorImageInfo>& imageInfo,
       std::vector<VkDescriptorImageInfo>& depth_map_image_info,
@@ -172,7 +176,7 @@ namespace Poulpe {
       VkBuffer& src_buffer,
       VkBuffer& dst_buffer,
       VkDeviceSize const size,
-      VkDeviceSize dst_offset = 0,
+      VkDeviceSize const dst_offset = 0,
       int const queue_index = 0);
 
     bool souldResizeSwapChain();
@@ -236,14 +240,8 @@ namespace Poulpe {
 
     void initMemoryPool();
 
-    Buffer createStorageBuffers(
-      ObjectBuffer const& storage_buffer,
-      VkCommandPool& command_pool);
-
     Buffer createIndirectCommandsBuffer(
       std::vector<VkDrawIndexedIndirectCommand> const& drawCommands);
-
-    void updateStorageBuffer(Buffer& buffer, ObjectBuffer& object_buffer);
 
     void setResolution(unsigned int const width, unsigned int const height);
 
@@ -467,6 +465,113 @@ namespace Poulpe {
     //VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT
     VkFormat PLP_VK_FORMAT_DEPTH_STENCIL { VK_FORMAT_D32_SFLOAT_S8_UINT };
     VkFormat PLP_VK_FORMAT_FONT{ VK_FORMAT_R8_UNORM };
+
+    template <isStorageBuffer T>
+    Buffer createStorageBuffers(
+      T const& storage_buffer,
+      VkCommandPool& command_pool)
+    {
+      VkDeviceSize buffer_size{ 0 };
+
+      if constexpr (std::is_same_v<T, BonesBuffer>) {
+        buffer_size = sizeof(glm::mat4) * storage_buffer.bone_matrices.size();
+      } else if constexpr (std::is_same_v<T, ObjectBuffer>){
+        buffer_size = sizeof(Light) * 4 + sizeof(Material);
+      }
+
+      VkBuffer staging_buffer{};
+      VkDeviceMemory staging_device_memory{};
+
+      createBuffer(buffer_size, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, staging_buffer, staging_device_memory);
+
+      void* data;
+      vkMapMemory(_device, staging_device_memory, 0, buffer_size, 0, &data);
+      
+      if constexpr (std::is_same_v<T, BonesBuffer>) {
+        memcpy(data, &storage_buffer.bone_matrices, static_cast<size_t>(buffer_size));
+      } else if constexpr (std::is_same_v<T, ObjectBuffer>) {
+        memcpy(data, &storage_buffer, static_cast<size_t>(buffer_size));
+      }
+      
+      vkUnmapMemory(_device, staging_device_memory);
+
+      VkBuffer buffer = createBuffer(buffer_size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT);
+      VkMemoryRequirements mem_requirements;
+      vkGetBufferMemoryRequirements(_device, buffer, & mem_requirements);
+
+      auto memoryType = findMemoryType(mem_requirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+      uint32_t const size = mem_requirements.size;
+
+      auto const flags { VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT };
+
+      auto device_memory = _device_memory_pool->get(
+        _device,
+        size,
+        memoryType,
+        flags,
+        mem_requirements.alignment,
+        DeviceMemoryPool::DeviceBufferType::STAGING);
+
+      auto const offset { device_memory->getOffset() };
+      auto const index{ device_memory->bindBufferToMemory(buffer, size) };
+
+      copyBuffer(command_pool, staging_buffer, buffer, buffer_size);
+
+      Buffer uniform_buffer;
+      uniform_buffer.buffer = std::move(buffer);
+      uniform_buffer.memory = device_memory;
+      uniform_buffer.offset = offset;
+      uniform_buffer.size = size;
+      uniform_buffer.index = index;
+
+      vkDestroyBuffer(_device, staging_buffer, nullptr);
+      vkFreeMemory(_device, staging_device_memory, nullptr);
+
+      return uniform_buffer;
+    }
+
+    template <isStorageBuffer T>
+    void updateStorageBuffer(
+      Buffer& buffer,
+      T& object_buffer)
+    {
+      {
+        buffer.memory->lock();
+
+        VkDeviceMemory staging_device_memory{};
+        VkDeviceSize buffer_size = sizeof(object_buffer);
+        VkBuffer staging_buffer{};
+
+        createBuffer(
+          buffer_size,
+          VK_BUFFER_USAGE_STORAGE_BUFFER_BIT
+            | VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+          VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT
+            | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+          staging_buffer,
+          staging_device_memory);
+
+        void* data;
+        vkMapMemory(_device, staging_device_memory, 0, buffer_size, 0, &data);
+        memcpy(data, &object_buffer, static_cast<size_t>(buffer_size));
+        vkUnmapMemory(_device, staging_device_memory);
+
+        auto cmd_pool = createCommandPool();
+
+        copyBuffer(
+          cmd_pool,
+          staging_buffer,
+          buffer.buffer,
+          buffer_size,
+          0);
+
+        vkDestroyBuffer(getDevice(), staging_buffer, nullptr);
+        vkFreeMemory(getDevice(), staging_device_memory, nullptr);
+        vkDestroyCommandPool(getDevice(), cmd_pool, nullptr);
+        buffer.memory->unLock();
+      }
+    }
 
 private:
     bool isDeviceSuitable(VkPhysicalDevice& device);
