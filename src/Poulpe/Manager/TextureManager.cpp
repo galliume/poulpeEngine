@@ -1,15 +1,20 @@
-module Poulpe.Manager;
+module;
+#include <ktx.h>
+#include <stb_image.h>
+#include <volk.h>
 
-import RenderManager;
+#include <array>
+#include <cmath>
+#include <filesystem>
+#include <string>
+#include <vector>
 
-import <filesystem>;
-//@todo tmp
-immport <cstdlib>;
+module Poulpe.Manager.TextureManager;
 
 std::vector<std::array<float, 3>> TextureManager::addNormalMapTexture(std::string const& name)
 {
   if (!_textures.contains(name)) {
-    PLP_TRACE("Texture {} does not exists, can't create normal map", name);
+    Logger::trace("Texture {} does not exists, can't create normal map", name);
     return {};
   }
 
@@ -24,7 +29,7 @@ std::vector<std::array<float, 3>> TextureManager::addNormalMapTexture(std::strin
   stbi_uc* pixels = stbi_load(path.c_str(), &tex_width, &tex_height, &tex_channels, STBI_rgb_alpha);
 
   if (!pixels) {
-    PLP_FATAL("failed to load texture image %s", name);
+    Logger::error("failed to load texture image %s", name);
     return {};
   }
 
@@ -104,7 +109,7 @@ void TextureManager::addSkyBox(
       "ktx create  --format " + ktx_format + " --assign-oetf " + oetf + " --convert-oetf " + oetf \
       + " --cubemap " + files + " " + path
     };
-    PLP_DEBUG("{}", cmd);
+    Logger::debug("{}", cmd);
     std::system(cmd.c_str());
   }
 
@@ -119,12 +124,12 @@ void TextureManager::addKTXTexture(
   bool const is_public)
 {
   if (!std::filesystem::exists(path.c_str())) {
-    PLP_FATAL("texture file {} does not exits.", path);
+    Logger::critical("texture file {} does not exits.", path);
     //return;
   }
 
   if (0 != _textures.count(name.c_str())) {
-    PLP_TRACE("Texture {} already imported", name);
+    Logger::trace("Texture {} already imported", name);
     return;
   }
 
@@ -134,7 +139,7 @@ void TextureManager::addKTXTexture(
   KTX_error_code result = ktxTexture_CreateFromNamedFile(path.c_str(), KTX_TEXTURE_CREATE_LOAD_IMAGE_DATA_BIT, (ktxTexture**)&ktx_texture);
 
   if (result != KTX_SUCCESS) {
-    PLP_WARN("Error while loading KTX file: {} error: {}", path, ktxErrorString(result));
+    Logger::warn("Error while loading KTX file: {} error: {}", path, ktxErrorString(result));
   }
 
   if (ktxTexture2_NeedsTranscoding(ktx_texture)) {
@@ -142,7 +147,7 @@ void TextureManager::addKTXTexture(
   }
 
   if (result != KTX_SUCCESS) {
-    PLP_WARN("Error while transcoding KTX file: {} error: {}", path, ktxErrorString(result));
+    Logger::warn("Error while transcoding KTX file: {} error: {}", path, ktxErrorString(result));
   }
 
   VkCommandPool cmd_pool = _renderer->getAPI()->createCommandPool();
@@ -287,7 +292,7 @@ void TextureManager::add(
       "ktx create  --format " + ktx_format + " --assign-oetf " + oetf  \
       + options + " \"" + original_name + "\" \"" + path + "\" "
     };
-    PLP_DEBUG("{}", cmd);
+    Logger::debug("{}", cmd);
     std::system(cmd.c_str());
   }
 

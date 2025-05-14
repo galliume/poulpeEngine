@@ -1,5 +1,17 @@
-export module Poulpe:Application;
+module;
+#include "PoulpeEngineConfig.h"
 
+#define MINIAUDIO_IMPLEMENTATION
+#include <miniaudio.h>
+#include <GLFW/glfw3.h>
+#include <thread>
+
+export module Application;
+
+//import Poulpe.Core.CommandQueueLocator;
+import Poulpe.Core.ConfigManagerLocator;
+import Poulpe.Core.InputManagerLocator;
+import Poulpe.GUI.Window;
 import Poulpe.Manager.APIManager;
 import Poulpe.Manager.NetworkManager;
 import Poulpe.Manager.RenderManager;

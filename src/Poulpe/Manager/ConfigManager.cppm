@@ -1,7 +1,11 @@
-export module Poulpe.Manager:ConfigManager;
+module;
 
 #include <nlohmann/json.hpp>
 #include <mutex>
+
+export module Poulpe.Manager.ConfigManager;
+
+import Poulpe.Core.Logger;
 
 export class ConfigManager
 {

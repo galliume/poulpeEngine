@@ -1,4 +1,11 @@
-module Poulpe.Manager;
+module;
+
+#include <miniaudio.h>
+#include <nlohmann/json.hpp>
+
+#include <string>
+
+module Poulpe.Manager.AudioManager;
 
 AudioManager::~AudioManager()
 {
@@ -13,7 +20,7 @@ std::string const AudioManager::getState()
   } else if (State::STOP == _state) {
     return "stoped";
   } else {
-    PLP_ERROR("AudioManager in an unknown states");
+    Logger::error("AudioManager in an unknown states");
     return "error";
   }
 }
@@ -38,7 +45,7 @@ void AudioManager::startAmbient(unsigned int const index)
       _ambient_sound_index = index;
     }
   } catch (std::out_of_range const&) {
-    PLP_WARN("Ambient sound index {} does not exists.", index);
+    Logger::warn("Ambient sound index {} does not exists.", index);
   }
 }
 
@@ -76,7 +83,7 @@ void AudioManager::init()
   result = ma_engine_init(nullptr, & _engine);
 
   if (MA_SUCCESS != result) {
-    PLP_WARN("Cannot init mini audio {}", static_cast<int>(result));
+    Logger::warn("Cannot init mini audio {}", static_cast<int>(result));
   }
 }
 
@@ -88,7 +95,7 @@ void AudioManager::start(std::string const & soundPath, ma_sound & sound)
   result = ma_sound_init_from_file(& _engine, soundPath.c_str(), flags, nullptr, nullptr, & sound);
 
   if (result != MA_SUCCESS) {
-    PLP_ERROR("Cannot init sound {}", soundPath.c_str());
+    Logger::error("Cannot init sound {}", soundPath.c_str());
     _state = State::ERR;
     return;
   }

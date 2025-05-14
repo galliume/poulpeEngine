@@ -10,6 +10,8 @@ project(PoulpeEngine
   LANGUAGES C CXX
 )
 
+add_executable(${PROJECT_NAME} src/Poulpe.cpp poulpeEngine.rc)
+
 if (USE_CCACHE)
   find_program(CCACHE_PROGRAM ccache)
   if(CCACHE_PROGRAM)
@@ -31,13 +33,9 @@ message(STATUS "CMAKE_BUILD_TYPE: ${CMAKE_BUILD_TYPE}")
 set(CMAKE_BUILD_TYPE "${CMAKE_BUILD_TYPE}" CACHE STRING "Build type" FORCE)
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules ${CMAKE_MODULE_PATH})
 
-add_executable(${PROJECT_NAME} src/Poulpe.cpp poulpeEngine.rc)
-
 configure_file(PoulpeEngineConfig.h.in PoulpeEngineConfig.h)
 
 add_definitions(-DVK_NO_PROTOTYPES)
-
-target_precompile_headers(${PROJECT_NAME} PRIVATE include/Poulpepch.hpp.pch)
 
 include_directories(${PROJECT_SOURCE_DIR}/src)
 
@@ -85,7 +83,7 @@ endif()
 
 target_compile_options(${PROJECT_NAME} PRIVATE $<$<CONFIG:DEBUG>:${DEBUG_OPTIONS}>)
 target_compile_options(${PROJECT_NAME} PRIVATE $<$<CONFIG:RELEASE>:${RELEASE_OPTIONS}>)
-target_compile_definitions(${PROJECT_NAME} PRIVATE $<$<CONFIG:DEBUG>:PLP_DEBUG_BUILD>)
+target_compile_definitions(${PROJECT_NAME} PRIVATE $<$<CONFIG:DEBUG>:Logger::debug_BUILD>)
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
   list(APPEND EXTRA_LIBS 
@@ -184,6 +182,7 @@ add_custom_target(
         CompilShaders ${CMAKE_CURRENT_SOURCE_DIR}/bin/shadersCompilation.sh
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 
+include(CMakeGraphVizOptions)
 #add_custom_target(graphviz ALL
 #    COMMAND ${CMAKE_COMMAND} "--graphviz=graph/plp.dot" ..
 #    COMMAND dot -Tsvg graph/plp.dot -o graph/plp.svg

@@ -1,11 +1,10 @@
-export module Poulpe.Components:AnimationScript;
+module;
 
-import Mesh;
+#include <chrono>
 
-import Poulpe.Core.PlpTypedef;
-import Poulpe.Utils.LuaScript;
+export module Poulpe.Component.Animations.AnimationScript;
 
-import <chrono>;
+import Poulpe.Utils;
 
 class LightManager;
 class Renderer;

@@ -1,20 +1,6 @@
-module Poulpe.Renderer.Vulkan;
+module Poulpe.Renderer.Vulkan.Renderer;
 
-import VulkanAPI;
-
-import Poulpe.Component.MeshComponent;
-import Poulpe.GUI.Window;
-import Poulpe.Manager.ComponentManager;
-
-#include <volk.h>
-
-import <algorithm>;
-import <cfenv>;
-import <exception>;
-import <future>;
-import <memory>;
-
-Renderer::;Renderer(
+Renderer::Renderer(
   Window* const window,
   EntityManager* const entity_manager,
   ComponentManager* const component_manager,
@@ -202,17 +188,17 @@ void Renderer::init()
 
   for (size_t i { 0 }; i < _MAX_RENDER_THREAD; ++i) {
     result = vkCreateSemaphore(_vulkan->getDevice(), &sema_create_info, nullptr, &_entities_sema_finished[i]);
-    if (VK_SUCCESS != result) PLP_ERROR("can't create _entities_sema_finished semaphore");
+    if (VK_SUCCESS != result) Logger::error("can't create _entities_sema_finished semaphore");
   }
   for (size_t i { 0 }; i < _MAX_FRAMES_IN_FLIGHT; ++i) {
     result = vkCreateSemaphore(_vulkan->getDevice(), &sema_create_info, nullptr, &_image_available[i]);
-    if (VK_SUCCESS != result) PLP_ERROR("can't create _image_available semaphore");
+    if (VK_SUCCESS != result) Logger::error("can't create _image_available semaphore");
 
     result = vkCreateFence(_vulkan->getDevice(), &fence_info, nullptr, &_images_in_flight[i]);
-    if (VK_SUCCESS != result) PLP_ERROR("can't create _images_in_flight fence");
+    if (VK_SUCCESS != result) Logger::error("can't create _images_in_flight fence");
 
     result = vkCreateFence(_vulkan->getDevice(), &fence_info, nullptr, &_fences_in_flight[i]);
-    if (VK_SUCCESS != result) PLP_ERROR("can't create _fences_in_flight fence");
+    if (VK_SUCCESS != result) Logger::error("can't create _fences_in_flight fence");
   }
 }
 
@@ -451,7 +437,7 @@ void Renderer::draw(
   //});
 
   //auto indirectBuffer = _API->createIndirectCommandsBuffer(drawCommands);
-  auto * const config_manager = Poulpe::Locator::getConfigManager();
+  auto * const config_manager = Locator::getConfigManager();
 
   size_t num{ 0 };
   std::vector<VkBool32> blend_enable{ VK_FALSE };

@@ -1,4 +1,6 @@
-module Poulpe.Components.Renderer;
+module Poulpe.Component.Renderer.Terrain;
+
+import Poulpe.Component.Texture;
 
 struct constants;
 

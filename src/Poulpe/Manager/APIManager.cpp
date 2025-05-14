@@ -1,15 +1,4 @@
-module Poulpe.Manager;
-
-import Poulpe.Core.PlpTypedef;
-
-import Poulpe.Component.MeshComponent;
-import Poulpe.Component.RenderComponent;
-import Poulpe.Core.Command;
-import Poulpe.Core.Locator;
-
-import <latch>;
-import <ranges>;
-import <variant>;
+module Poulpe.Manager.APIManager;
 
 APIManager::APIManager(RenderManager* renderManager)
   : _render_manager(renderManager)
@@ -18,7 +7,7 @@ APIManager::APIManager(RenderManager* renderManager)
 }
 void APIManager::received(std::string const& message)
 {
-  PLP_TRACE("received: {}", message);
+  Logger::trace("received: {}", message);
 
   /*
   *   @todo: improve first naive draft
@@ -34,7 +23,7 @@ void APIManager::received(std::string const& message)
   */
   size_t funcNamePos = message.find("_");
   std::string funcName = message.substr(0, funcNamePos);
-  PLP_TRACE("funcName: {}", funcName);
+  Logger::trace("funcName: {}", funcName);
 
   std::vector<std::string> params;
   std::string buffer;
@@ -53,7 +42,7 @@ void APIManager::received(std::string const& message)
   if (funcName == "updateSkybox") {
     updateSkybox(params);
   } else {
-    PLP_ERROR("Unknown API func: {}", funcName);
+    Logger::error("Unknown API func: {}", funcName);
   }
 }
 
@@ -64,7 +53,7 @@ void APIManager::updateSkybox(std::vector<std::string> const & params)
   std::string skyboxName = params.at(0);
 
   std::function<void()> request = [this, skyboxName]() {
-    PLP_TRACE("skyboxName: {}", skyboxName);
+    Logger::trace("skyboxName: {}", skyboxName);
     std::latch count_down{ 1 };
 
     //@todo why threaded ?...
@@ -89,6 +78,6 @@ void APIManager::updateSkybox(std::vector<std::string> const & params)
     (*meshRenderer)(delta_time, mesh);
   };
 
-  Command cmd{request};
-  Poulpe::Locator::getCommandQueue()->add(cmd);
+  //Command cmd{request};
+  //Locator::getCommandQueue()->add(cmd);
 }

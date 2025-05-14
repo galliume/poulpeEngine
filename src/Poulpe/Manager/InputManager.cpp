@@ -1,11 +1,8 @@
-module Poulpe.Manager;
+module;
+#include "GLFW/glfw3.h"
+#include "nlohmann/json.hpp"
 
-import Poulpe.Component.Camera;
-import Poulpe.GUI.Window;
-
-#include <GLFW/glfw3.h>
-
-//#include "Poulpe/GUI/Window.hpp"
+module Poulpe.Manager.InputManager;
 
 bool InputManager::_can_move_camera = false;
 bool InputManager::_first_move_mouse = true;
@@ -64,17 +61,17 @@ void InputManager::init(nlohmann::json const& input_config)
   glfwSetWindowUserPointer(_window->get(), this);
 
   glfwSetKeyCallback(_window->get(), []( GLFWwindow* window, int key, int scan_code, int action, int mods) {
-    InputManager* input_manager = Locator::getInputManager();
+    InputManager* input_manager = InputManagerLocator::get();
     input_manager->key(key, scan_code, action, mods);
   });
 
   glfwSetCursorPosCallback(_window->get(), []( GLFWwindow* window, double x_pos, double y_pos) {
-    InputManager* input_manager = Locator::getInputManager();
+    InputManager* input_manager = InputManagerLocator::get();
     input_manager->updateMousePos(x_pos, y_pos);
   });
 
   glfwSetMouseButtonCallback(_window->get(), []( GLFWwindow* window, int button, int action, int mods) {
-    InputManager* input_manager = Locator::getInputManager();
+    InputManager* input_manager = InputManagerLocator::get();
     input_manager->mouseButton(button, action, mods);
   });
 }
@@ -113,16 +110,16 @@ void InputManager::key(
         _camera->down();
       } else if (key == _keyboard_keys[config["unlockFPS"]])
       {
-        Poulpe::Locator::getConfigManager()->updateConfig<unsigned int>("fpsLimit", 0);
+        ConfigManagerLocator::get()->updateConfig<unsigned int>("fpsLimit", 0);
       } else if (key == _keyboard_keys[config["reloadShader"]])
       {
-        Poulpe::Locator::getConfigManager()->setReloadShaders(true);
+        ConfigManagerLocator::get()->setReloadShaders(true);
       } else if (key == _keyboard_keys[config["normalDebug"]])
       {
-        Poulpe::Locator::getConfigManager()->setNormalDebug();
+        ConfigManagerLocator::get()->setNormalDebug();
       } else if (key == _keyboard_keys[config["reload"]])
       {
-        Poulpe::Locator::getConfigManager()->setReload(true);
+        ConfigManagerLocator::get()->setReload(true);
       }
 
       break;

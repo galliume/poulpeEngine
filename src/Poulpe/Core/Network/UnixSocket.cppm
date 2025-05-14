@@ -1,4 +1,4 @@
-export module Poulpe.Core.Network:UnixSocket;
+export module Poulpe.Core.Network.UnixSocket;
 
 export class UnixSocket
 {

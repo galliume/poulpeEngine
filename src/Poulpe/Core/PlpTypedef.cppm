@@ -1,11 +1,25 @@
-export module Poulpe.Core:PlpTypedef;
+module;
+
+#define GLM_FORCE_LEFT_HANDED
+#define GLM_FORCE_DEFAULT_ALIGNED_GENTYPES
+#define GLM_FORCE_DEPTH_ZERO_TO_ONE
+#define GLM_ENABLE_EXPERIMENTAL
+
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtx/hash.hpp>
+#include <glm/gtx/quaternion.hpp>
+#include <glm/fwd.hpp>
+
+#include <vulkan/vulkan.h>
+#include <string>
+#include <array>
+#include <vector>
+#include <unordered_map>
+
+export module Poulpe.Core.PlpTypedef;
 
 import Poulpe.Component.Vertex;
-
-#include <glm/fwd.hpp>
-#include <vulkan/vulkan.h>
-
-import <unordered_map>;
 
 //default textures const, needs a real assets management (unique id etc.)
 export std::string const PLP_EMPTY{ "_plp_empty" };
@@ -328,16 +342,6 @@ export struct PlpMeshData
   std::string root_bone_name{};
 };
 
-export enum class SocketStatus {
-  NOT_CONNECTED,
-  CONNECTED
-};
-
-export enum class ServerStatus {
-  NOT_RUNNING,
-  RUNNING
-};
-
 export struct VulkanShaders
 {
   std::unordered_map<std::string, std::unordered_map<std::string, VkShaderModule>> shaders;
@@ -354,4 +358,26 @@ export struct VulkanPipeline
   VkPipeline pipeline_bis;
 
   std::vector<VkPipelineShaderStageCreateInfo> shaders{};
+};
+
+export enum class SocketStatus {
+  NOT_CONNECTED,
+  CONNECTED
+};
+
+export enum class ServerStatus {
+  NOT_RUNNING,
+  RUNNING
+};
+
+export struct FontCharacter {
+  unsigned int index;
+  glm::ivec2 size;
+  glm::ivec2 bearing;
+  long advance;
+  unsigned int mem_size{ 0 };
+  std::vector<int8_t> buffer;
+  int pitch{ 0 };
+  int x_offset{ 0 };
+  int y_offset{ 0 };
 };

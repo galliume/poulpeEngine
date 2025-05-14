@@ -1,6 +1,8 @@
-export module Poulpe.Components:Camera;
-
+module;
 #include <glm/glm.hpp>
+#include <numbers>
+
+export module Poulpe.Component.Camera;
 
 export class Camera
 {

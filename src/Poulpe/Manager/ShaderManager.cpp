@@ -1,8 +1,12 @@
-module Poulpe.Manager;
+module;
+#include <volk.h>
 
-import Poulpe.Core.Log;
-import Poulpe.Core.Tools;
-import Poulpe.Component.Vertex;
+#include <filesystem>
+#include <functional>
+#include <memory>
+#include <string>
+
+module Poulpe.Manager.ShaderManager;
 
 ShaderManager::ShaderManager()
 {
@@ -19,12 +23,12 @@ void ShaderManager::addShader(
 {
 
   if (!std::filesystem::exists(vert_path)) {
-    PLP_FATAL("vertex shader file {} does not exits.", vert_path);
+    Logger::critical("vertex shader file {} does not exits.", vert_path);
     return;
   }
 
   if (!std::filesystem::exists(frag_path)) {
-    PLP_FATAL("fragment shader file {} does not exits.", frag_path);
+    Logger::critical("fragment shader file {} does not exits.", frag_path);
     return;
   }
 
@@ -43,7 +47,7 @@ void ShaderManager::addShader(
     VkShaderModule geom_module = _renderer->getAPI()->createShaderModule(geom_shader);
     _shaders->shaders[name]["geom"] = geom_module;
   } else {
-    PLP_WARN("geometry shader file {} does not exits.", geom_path);
+    Logger::warn("geometry shader file {} does not exits.", geom_path);
     }
 
   if (!tese_path.empty() && std::filesystem::exists(tese_path)) {
@@ -52,7 +56,7 @@ void ShaderManager::addShader(
     VkShaderModule tese_module = _renderer->getAPI()->createShaderModule(tese_shader);
     _shaders->shaders[name]["tese"] = tese_module;
   } else {
-    PLP_WARN("tese shader file {} does not exits.", tese_path);
+    Logger::warn("tese shader file {} does not exits.", tese_path);
   }
 
   if (!tesc_path.empty() && std::filesystem::exists(tesc_path)) {
@@ -61,7 +65,7 @@ void ShaderManager::addShader(
     VkShaderModule tesc_module = _renderer->getAPI()->createShaderModule(tesc_shader);
     _shaders->shaders[name]["tesc"] = tesc_module;
   } else {
-    PLP_WARN("tesc shader file {} does not exits.", tesc_path);
+    Logger::warn("tesc shader file {} does not exits.", tesc_path);
   }
 
   createGraphicPipeline(name);
@@ -264,7 +268,7 @@ VkDescriptorSetLayout ShaderManager::createDescriptorSetLayout()
 
     bindings = { ubo_binding, sampler_binding };
   } else {
-    PLP_FATAL("unknown descSetLayoutType");
+    Logger::critical("unknown descSetLayoutType");
     throw std::runtime_error("unknown descSetLayoutType");
   }
 

@@ -1,6 +1,9 @@
-export module Poulpe.Utils:ScopedTimer;
+module;
 
-import <iostream>;
+#include <iostream>
+#include <chrono>
+
+export module Poulpe.Utils.ScopedTimer;
 
 export class ScopedTimer
 {

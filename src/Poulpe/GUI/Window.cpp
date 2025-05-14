@@ -1,10 +1,14 @@
-module Poulpe.GUI;
+module;
 
 #include <GLFW/glfw3.h>
+#include <string_view>
 #include <stb_image.h>
+
+module Poulpe.GUI.Window;
+
 //bool _FramebufferResized = false;
 
-GLFWwindow* Window::get() { return _window; }
+GLFWwindow* Window::get() const { return _window; }
 
 void Window::setVSync(bool active) { _ActiveVSync = active; }
 

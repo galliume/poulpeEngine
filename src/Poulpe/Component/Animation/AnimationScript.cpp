@@ -1,8 +1,4 @@
-module Poulpe.Components;
-
-import Mesh;
-
-import Poulpe.Core.Log;
+module Poulpe.Component.Animations.AnimationScript;
 
 static int wrapMove(lua_State* L)
 {
@@ -31,7 +27,7 @@ static int wrapRotate(lua_State* L)
   float angle_y = static_cast<float>(lua_tonumber(L, 5));
   float angle_z = static_cast<float>(lua_tonumber(L, 6));
 
-  //PLP_DEBUG("delta time {} duration {} x {} y {} z {}", delta_time, duration, angle_x, angle_y, angle_z);
+  //Logger::debug("delta time {} duration {} x {} y {} z {}", delta_time, duration, angle_x, angle_y, angle_z);
 
   glm::quat qx = glm::angleAxis(glm::radians(angle_x), glm::vec3(1, 0, 0));
   glm::quat qy = glm::angleAxis(glm::radians(angle_y), glm::vec3(0, 1, 0));
@@ -56,7 +52,7 @@ static int wrapWave(lua_State* L)
   float amplitude = static_cast<float>(lua_tonumber(L, 4));
   float lambda = static_cast<float>(lua_tonumber(L, 5));
 
-  PLP_DEBUG("delta time {} duration {} amplitude {} lambda {}", delta_time, duration, amplitude, lambda);
+  Logger::debug("delta time {} duration {} amplitude {} lambda {}", delta_time, duration, amplitude, lambda);
 
   animScript->wave(
     animScript->getMesh(),
@@ -73,7 +69,7 @@ AnimationScript::AnimationScript(std::string const& scriptPath)
   _script_path = "./" + scriptPath;
 
   if (!std::filesystem::exists(_script_path)) {
-    PLP_FATAL("script file {} does not exits.", _script_path);
+    Logger::critical("script file {} does not exits.", _script_path);
     return;
   }
 
@@ -100,8 +96,8 @@ void AnimationScript::move(Data* data, double delta_time, float duration, glm::v
     data->_origin_pos.y + target_move.y,
     data->_origin_pos.z + target_move.z);
 
-  //PLP_TRACE("START at {}/{}/{}", data->_origin_pos.x, data->_origin_pos.y, data->_origin_pos.z);
-  //PLP_TRACE("TO {}/{}/{}", anim->target.x, anim->target.y, anim->target.z);
+  //Logger::trace("START at {}/{}/{}", data->_origin_pos.x, data->_origin_pos.y, data->_origin_pos.z);
+  //Logger::trace("TO {}/{}/{}", anim->target.x, anim->target.y, anim->target.z);
 
   anim->update = [](AnimationMove* anim, Data* data, double delta_time) {
 
@@ -114,7 +110,7 @@ void AnimationScript::move(Data* data, double delta_time, float duration, glm::v
     }
 
     glm::vec3 target = glm::mix(data->_origin_pos, anim->target, t);
-    //PLP_TRACE("MOVING at {}/{}/{}", data->_current_pos.x, data->_current_pos.y, data->_current_pos.z);
+    //Logger::trace("MOVING at {}/{}/{}", data->_current_pos.x, data->_current_pos.y, data->_current_pos.z);
 
     glm::mat4 model = glm::mat4(1.0f);
     model = glm::scale(model, data->_origin_scale);
@@ -133,7 +129,7 @@ void AnimationScript::move(Data* data, double delta_time, float duration, glm::v
 
     if (done) {
       data->_origin_pos = target;
-      //PLP_TRACE("DONE at {}/{}/{}", data->_origin_pos.x, data->_origin_pos.y, data->_origin_pos.z);
+      //Logger::trace("DONE at {}/{}/{}", data->_origin_pos.x, data->_origin_pos.y, data->_origin_pos.z);
     }
     anim->done = done;
   };
@@ -147,8 +143,8 @@ void AnimationScript::rotate(Data* data, double delta_time, float duration, glm:
   anim->duration = duration;
   anim->angle = angle;
 
-  //PLP_DEBUG("START at {}/{}/{}", data->_origin_rotation.x, data->_origin_rotation.y, data->_origin_rotation.z);
-  //PLP_DEBUG("TO {}/{}/{}", anim->angle.x, anim->angle.y, anim->angle.z);
+  //Logger::debug("START at {}/{}/{}", data->_origin_rotation.x, data->_origin_rotation.y, data->_origin_rotation.z);
+  //Logger::debug("TO {}/{}/{}", anim->angle.x, anim->angle.y, anim->angle.z);
 
   anim->update = [](AnimationRotate* anim, Data* data, double delta_time) {
 
@@ -192,8 +188,8 @@ void AnimationScript::wave(Mesh* mesh, double const delta_time, float const dura
   anim->update = [](AnimationWave* anim, double delta_time) {
     float t{ glm::clamp(anim->elapsedTime / anim->duration, 0.0f, 1.0f) };
     
-    //PLP_DEBUG("elapsed: {} duration: {} t: {}", anim->elapsedTime, anim->duration, t);
-    //PLP_DEBUG("amplitude: {} lambda: {}", anim->amplitude, anim->lambda);
+    //Logger::debug("elapsed: {} duration: {} t: {}", anim->elapsedTime, anim->duration, t);
+    //Logger::debug("amplitude: {} lambda: {}", anim->amplitude, anim->lambda);
     bool done{ false };
 
     if (anim->elapsedTime >= anim->duration) {
@@ -214,7 +210,7 @@ void AnimationScript::wave(Mesh* mesh, double const delta_time, float const dura
     anim->mesh->setOptions({x, y, 0.0, 0.0});
 
     anim->done = done;
-    //PLP_DEBUG("y: {}", y);
+    //Logger::debug("y: {}", y);
   };
 
   anim->update(anim.get(), delta_time);
@@ -321,7 +317,7 @@ void AnimationScript::operator()(double const delta_time, Mesh* mesh)
   //  lua_getglobal(L, "a");
   //  if (lua_isnumber(L, -1)) {
   //    float result = static_cast<float>(lua_tonumber(L, -1));
-  //    PLP_WARN("LUA result: {}", result);
+  //    Logger::warn("LUA result: {}", result);
   //  }
   //}
 
@@ -331,7 +327,7 @@ void AnimationScript::operator()(double const delta_time, Mesh* mesh)
   //  lua_pushnumber(L, 6);
 
   //  if (checkLua(L, lua_pcall(L, 2, 1, 0))) {
-  //    PLP_WARN("test {}", static_cast<int>(lua_tonumber(L, -1)));
+  //    Logger::warn("test {}", static_cast<int>(lua_tonumber(L, -1)));
   //  }
   //}
 
@@ -342,7 +338,7 @@ void AnimationScript::operator()(double const delta_time, Mesh* mesh)
   //  lua_pushnumber(L, 20);
 
   //  if (checkLua(L, lua_pcall(L, 2, 1, 0))) {
-  //    PLP_WARN("cpptest {}", static_cast<int>(lua_tonumber(L, -1)));
+  //    Logger::warn("cpptest {}", static_cast<int>(lua_tonumber(L, -1)));
   //  }
   //}
   //lua_close(L);

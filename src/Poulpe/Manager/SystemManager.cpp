@@ -1,2 +1,2 @@
-module Poulpe.Manager;
+module Poulpe.Manager.SystemManager;
 

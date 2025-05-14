@@ -1,7 +1,17 @@
-export module Poulpe.Manager:NetworkManager;
+module;
 
-class Server;
-class APIManager;
+#include <memory>
+#include <string>
+
+export module Poulpe.Manager.NetworkManager;
+
+//@todo detect Unix
+// #if defined(_WIN32) || defined(WIN32)
+
+// #endif
+
+import Poulpe.Manager.APIManager;
+import Poulpe.Core.Network.Server;
 
 export class NetworkManager
 {
@@ -14,4 +24,4 @@ public:
 private:
   std::shared_ptr<Server> _Server;
   APIManager* _api_manager;
-}
+};

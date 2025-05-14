@@ -1,10 +1,4 @@
-module Poulpe.Core.Network;
-
-#if defined(_WIN32) || defined(WIN32)
-
-//https://learn.microsoft.com/en-us/windows/win32/api/winsock2/
-#include <WinSock2.h>
-#include <WS2tcpip.h>
+module Poulpe.Core.Network.WinSocket;
 
 WinSocket::WinSocket()
 {
@@ -26,7 +20,7 @@ WinSocket::~WinSocket()
 void WinSocket::close()
 {
   if (_Status == SocketStatus::NOT_CONNECTED) {
-    PLP_TRACE("socket already disconnected");
+    Logger::trace("socket already disconnected");
     return;
   }
 
@@ -35,7 +29,7 @@ void WinSocket::close()
   int status = WSAGetLastError();
 
   if (0 != status) {
-    PLP_ERROR("Close socket failed {}", status);
+    Logger::error("Close socket failed {}", status);
   }
 
   _Status = SocketStatus::NOT_CONNECTED;
@@ -52,7 +46,7 @@ void WinSocket::bind(std::string const& ip, unsigned short const port)
   int status = WSAGetLastError();
 
   if (0 != status) {
-    PLP_ERROR("bind socket failed {}", status);
+    Logger::error("bind socket failed {}", status);
   }
 
   _IP = ip;
@@ -66,10 +60,10 @@ void WinSocket::connect()
   int status = WSAGetLastError();
 
   if (0 != status) {
-    PLP_ERROR("connect socket failed {}", status);
+    Logger::error("connect socket failed {}", status);
   }
 
-  PLP_TRACE("ClientSocket Connected");
+  Logger::trace("ClientSocket Connected");
 }
 
 void WinSocket::listen()
@@ -86,12 +80,10 @@ void WinSocket::read()
 
   do {
     status = ::recv(_Socket, recvbuf, recvbuflen, 0);
-    PLP_TRACE("bytes received {}", status);
-    PLP_TRACE("received {}", recvbuf);
+    Logger::trace("bytes received {}", status);
+    Logger::trace("received {}", recvbuf);
   } while (status > 0);
 
   closesocket(_Socket);
   WSACleanup();
 }
-
-#endif

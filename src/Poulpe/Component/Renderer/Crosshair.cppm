@@ -1,13 +1,14 @@
-export module Poulpe.Components.Renderer:Crosshair;
-
-import Poulpe.Core.PlpTypedef;
-import Poulpe.Manager.LightManager;
-import Poulpe.Manager.TextureManagr;
-import Poulpe.Renderer.Vulkan.Renderer;
+module;
 
 #include <vulkan/vulkan.h>
+#include <chrono>
 
-import <chrono>;
+export module Poulpe.Component.Renderer.Crosshair;
+
+import Poulpe.Component.Mesh;
+import Poulpe.Manager.LightManager;
+import Poulpe.Manager.TextureManager;
+import Poulpe.Renderer.Vulkan.Renderer;
 
 export class Crosshair
 {

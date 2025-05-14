@@ -1,15 +1,15 @@
-export module Poulpe.Components:BoneAnimationScript;
+module;
 
-import Poulpe.Core.PlpTypedef;
+#include <chrono>
 
-import <chrono>;
+export module Poulpe.Component.Animations.BoneAnimationScript;
 
 class LightManager;
 class Mesh;
 class Renderer;
 class TextureManager;
 
-export truct BoneAnimation
+export struct BoneAnimation
 {
   bool done{ false };
   float duration{ 0.0f };

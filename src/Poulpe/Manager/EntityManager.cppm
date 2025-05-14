@@ -1,18 +1,21 @@
-export module Poulpe.Manager:EntityManager;
-
-import LightManager;
-import TextureManager;
-
-import Poulpe.Component.EntityNode;
+module;
 
 #include <nlohmann/json.hpp>
+#include <set>
+#include <shared_mutex>
+#include "glm/glm.hpp"
+#include <filesystem>
+#include <future>
 
-import <set>;
-import <shared_mutex>;
+export module Poulpe.Manager.EntityManager;
 
-class ComponentManager;
-class Entity;
-class Renderer;
+import Poulpe.Component.Entity;
+
+import Poulpe.Manager.ComponentManager;
+import Poulpe.Manager.EntityNode;
+import Poulpe.Manager.LightManager;
+import Poulpe.Manager.Renderer;
+import Poulpe.Manager.TextureManager;
 
 export class EntityManager
 {

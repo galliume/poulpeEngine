@@ -1,4 +1,7 @@
-module Poulpe.Core.Network;
+module;
+#include <memory>
+
+module Poulpe.Core.Network.Socket;
 
 Socket::Socket(Socket* socket)
 {

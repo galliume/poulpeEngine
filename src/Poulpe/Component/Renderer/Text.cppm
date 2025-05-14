@@ -1,12 +1,16 @@
-export module Poulpe.Components.Renderer:Text;
+module;
 
-import Poulpe.Core.PlpTypedef;
-import Poulpe.Manager.FontManager;
+#include <chrono>
+#include <glm/glm.hpp>
+#include <string_view>
+#include <volk.h>
+
+export module Poulpe.Component.Renderer.Text;
+
+import Poulpe.Component.Mesh;
+import Poulpe.Manager.LightManager;
+import Poulpe.Manager.TextureManager;
 import Poulpe.Renderer.Vulkan.Renderer;
-
-#include <vulkan/vulkan.h>
-
-import <chrono>;
 
 export class Text
 {

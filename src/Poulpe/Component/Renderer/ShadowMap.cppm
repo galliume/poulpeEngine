@@ -1,13 +1,14 @@
-export module Poulpe.Components.Renderer:ShadowMap;
+module;
 
-import Poulpe.Core.PlpTypedef;
+#include <vulkan/vulkan.h>
+#include <chrono>
+
+export module Poulpe.Component.Renderer.ShadowMap;
+
+import Poulpe.Component.Mesh;
 import Poulpe.Manager.LightManager;
 import Poulpe.Manager.TextureManager;
 import Poulpe.Renderer.Vulkan.Renderer;
-
-#include <vulkan/vulkan.h>
-
-import <chrono>;
 
 export  class ShadowMap
 {

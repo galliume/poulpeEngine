@@ -16,6 +16,7 @@
         "CCACHE_ON",
         "WIN_C_COMPILER_CLANG",
         "WIN_CXX_COMPILER_CLANG",
+        "WIN_RC_COMPILER",
         "LINKER_TYPE",
         "C_USING_LINKER_CLANG",
         "CXX_USING_LINKER_CLANG",
@@ -210,7 +211,7 @@
       "hidden": true,
       "cacheVariables": {
         "CMAKE_C_COMPILER": {
-          "type": "STRING",
+          "type": "PATH",
           "value": "C:\\Program Files\\LLVM\\bin\\clang.exe"
         }
       }
@@ -220,8 +221,18 @@
       "hidden": true,
       "cacheVariables": {
         "CMAKE_CXX_COMPILER": {
-          "type": "STRING",
+          "type": "PATH",
           "value": "C:\\Program Files\\LLVM\\bin\\clang++.exe"
+        }
+      }
+    },
+    {
+      "name": "WIN_RC_COMPILER",
+      "hidden": true,
+      "cacheVariables": {
+        "CMAKE_RC_COMPILER": {
+          "type": "PATH",
+          "value": "C:\\Program Files\\LLVM\\bin\\llvm-rc.exe"
         }
       }
     },

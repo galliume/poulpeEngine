@@ -1,20 +1,4 @@
-module Poulpe;
-
-#include "PoulpeEngineConfig.h"
-
-import Poulpe.Core.CommandQueue;
-import Poulpe.GUI.Window;
-import Poulpe.Manager.ConfigManager;
-import Poulpe.Manager.DbManager;
-import Poulpe.Manager.InputManager;
-import Poulpe.Renderer.Vulkan.Renderer;
-
-#include <GLFW/glfw3.h>
-
-#define MINIAUDIO_IMPLEMENTATION
-#include <miniaudio.h>
-
-import <thread>;
+module Application;
 
 Application* Application::_instance{ nullptr };
 
@@ -32,7 +16,9 @@ void Application::init()
   auto* window = new Window();
   window->init("PoulpeEngine");
 
-  Poulpe::Locator::init(window);
+  CommandQueueManagerLocator::init();
+  ConfigManagerLocator::init(window);
+  InputManagerLocator::init();
 
   _render_manager = std::make_unique<RenderManager>(window);
   _render_manager->init();
@@ -50,7 +36,7 @@ void Application::run()
   double const loaded_time{ duration<double>(
     steady_clock::now() - _start_run).count()};
 
-  PLP_TRACE("Started in {} seconds", loaded_time);
+  Logger::trace("Started in {} seconds", loaded_time);
 
   duration<double> const title_rate{1.0};
   duration<double> title_update{ title_rate};
@@ -127,7 +113,7 @@ void Application::run()
     //Locator::getCommandQueue()->execPostRequest();
 
     auto const _elapsed_time{ duration<double>(steady_clock::now() - _start_run).count() };
-    Poulpe::Locator::getConfigManager()->setElapsedTime(_elapsed_time);
+    ConfigManagerLocator::get()->setElapsedTime(_elapsed_time);
 
     //@todo check if it's correct with accumulator method...
     if ((duration<double>(steady_clock::now() - last_time_debug_updated)).count() > 1.0) {
@@ -147,10 +133,10 @@ void Application::run()
 
     current_time = new_time;
 
-    if (Poulpe::Locator::getConfigManager()->reload()) {
+    if (ConfigManagerLocator::get()->reload()) {
       _render_manager->cleanUp();
       _render_manager->init();
-      Poulpe::Locator::getConfigManager()->setReload(false);
+      ConfigManagerLocator::get()->setReload(false);
     }
   }
   _render_manager->cleanUp();

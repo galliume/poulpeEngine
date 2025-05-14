@@ -1,11 +1,13 @@
-export module Poulpe.Utils:IDHelper;
+module;
 
-import <chrono>;
-import <cstdint>;
-import <random>;
+#include <chrono>
+#include <cstdint>
+#include <random>
 
-using IDType = std::uint64_t;
-using ComponentTypeID = IDType;
+export module Poulpe.Utils.IDHelper;
+
+export using IDType = std::uint64_t;
+export using ComponentTypeID = IDType;
 
 //Unique ID for Entity
 export class GUIDGenerator
@@ -29,8 +31,8 @@ public:
 };
 
 //Unique ID for Archetype
-template<class T>
-export class TypeIdGenerator
+export template<class T>
+ class TypeIdGenerator
 {
 private:
 

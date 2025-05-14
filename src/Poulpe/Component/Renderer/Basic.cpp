@@ -1,4 +1,4 @@
-module Poulpe.Components.Renderer;
+module Poulpe.Component.Renderer.Basic;
 
 struct constants;
 
@@ -276,10 +276,10 @@ void Basic::operator()(double const delta_time, Mesh* mesh)
 
     material.strength = { mesh->getMaterial().normal_strength, mesh->getMaterial().occlusion_strength, 0.0 };//x normal strength, y occlusion strength
 
-    //PLP_DEBUG("ambient {}",  material.ambient.r);
-    //PLP_DEBUG("diffuse {}",  material.diffuse.r);
-    //PLP_DEBUG("specular {}",  material.specular.r);
-    //PLP_DEBUG("shi_ior_diss {} {}", material.shi_ior_diss.x, material.shi_ior_diss.y);
+    //Logger::debug("ambient {}",  material.ambient.r);
+    //Logger::debug("diffuse {}",  material.diffuse.r);
+    //Logger::debug("specular {}",  material.specular.r);
+    //Logger::debug("shi_ior_diss {} {}", material.shi_ior_diss.x, material.shi_ior_diss.y);
 
     ObjectBuffer objectBuffer{};
     objectBuffer.point_lights[0] = _light_manager->getPointLights().at(0);

@@ -1,19 +1,33 @@
-export module Poulpe.Renderer.Vulkan:Renderer;
+module;
 
-import VulkanAPI;
+#include <glm/glm.hpp>
+#include <stb_image.h>
+#include <volk.h>
+
+#include <algorithm>
+#include <cfenv>
+#include <exception>
+#include <future>
+#include <latch>
+#include <memory>
+#include <unordered_map>
+#include <vector>
+
+export module Poulpe.Renderer.Vulkan.Renderer;
+
+import Poulpe.Renderer.Vulkan.VulkanAPI;
 
 import Poulpe.Component.Camera;
+import Poulpe.Component.Entity;
+import Poulpe.Component.Vertex;
 import Poulpe.Core.PlpTypedef;
 import Poulpe.GUI.Window;
-import Poulpe.Manager.EntityManager;
-import Poulpe.Manager.LightManager;
-import Poulpe.Manager.TextureManager;
+import Poulpe.Renderer.Vulkan.DeviceMemoryPool;
 
-#include <vulkan/vulkan.h>
-#include <stb_image.h>
-
-import <future>;
-import <latch>;
+class ComponentManager;
+class EntityManager;
+class LightManager;
+class TextureManager;
 
 export struct DrawCommands {
 
@@ -78,12 +92,6 @@ export struct DrawCommands {
     std::mutex _m;
     size_t _size;
 };
-
-class ComponentManager;
-class DeviceMemoryPool;
-class Entity;
-class Vertex2D;
-class VulkanPipeline;
 
 export class Renderer: public std::enable_shared_from_this<Renderer>
 {

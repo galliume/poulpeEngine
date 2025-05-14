@@ -1,9 +1,8 @@
-export module Poulpe.Components:MeshComponent;
+export module Poulpe.Component.MeshComponent;
 
-import Component;
-import Component.Mesh;
+import :Component;
 
-class MeshComponent : public Component<MeshComponent>
+export class MeshComponent : public Component<MeshComponent>
 {
 
 };

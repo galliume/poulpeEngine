@@ -1,12 +1,4 @@
-﻿module Poulpe.Components.Renderer;
-
-#include <ft2build.h>
-#include FT_FREETYPE_H
-
-#include <fmt/format.h>
-#include <glm/glm.hpp>
-
-import <algorithm>;
+﻿module Poulpe.Component.Renderer.Text;
 
 struct constants;
 
@@ -82,7 +74,7 @@ void Text::setPushConstants(Mesh* mesh)
     
     glm::vec4 options{
       meshS->getOptions().x,
-      Poulpe::Locator::getConfigManager()->getElapsedTime(), 0.0f, 0.0f};
+      ConfigManagerLocator::get()->getElapsedTime(), 0.0f, 0.0f};
 
     constants constants{};
     constants.view = renderer->getCamera()->lookAt();

@@ -1,11 +1,20 @@
-export module Poulpe.Manager:ShaderManager;
+module;
 
-import Poulpe.Core.PlpTypedef;
-import Poulpe.Renderer.Vulkan.Renderer;
-
+#include <nlohmann/json.hpp>
 #include "vulkan/vulkan.h"
 
-import <latch>;
+#include <functional>
+#include <latch>
+#include <memory>
+#include <string>
+#include <vector>
+
+export module Poulpe.Manager.ShaderManager;
+
+import Poulpe.Core.PlpTypedef;
+import Poulpe.Core.Logger;
+import Poulpe.Core.Tools;
+import Poulpe.Renderer.Vulkan.Renderer;
 
 export enum class DescSetLayoutType {
     Skybox, HUD, Entity,

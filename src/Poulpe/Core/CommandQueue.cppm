@@ -1,15 +1,17 @@
-export module Poulpe.Core:CommandQueue;
+module;
 
-import Command;
+#include <memory>
+#include <mutex>
+#include <queue>
 
-import <memory>;
-import <mutex>;
-import <queue>;
+export module Poulpe.Core.CommandQueue;
+
+import Poulpe.Core.Command;
 
 export class CommandQueue
 {
 public:
-    CommandQueue();
+    CommandQueue() = default;
     ~CommandQueue() = default;
 
     void add(Command& cmd);
@@ -17,7 +19,7 @@ public:
     void execPreRequest();
 
 private:
-    mutable std::mutex _Mutex;
+    std::mutex _Mutex;
 
     std::queue<std::shared_ptr<Command>> _PostCmdQueue;
     std::queue<std::shared_ptr<Command>> _PreCmdQueue;

@@ -1,9 +1,12 @@
-export module Poulpe.Components:Vertex;
-
-import <array>;
+module;
 
 #include <glm/glm.hpp>
+#include <vulkan/vulkan.h>
 
+#include <array>
+#include <vector>
+
+export module Poulpe.Component.Vertex;
 /*
   format:
   float : VK_FORMAT_R32_SFLOAT
@@ -84,8 +87,8 @@ export struct Vertex
 };
 
 //namespace std {
-//  template<> struct hash<Poulpe::Vertex> {
-//    size_t operator()(Poulpe::Vertex const& vertex) const {
+//  template<> struct hash<Vertex> {
+//    size_t operator()(Vertex const& vertex) const {
 //      return ((((((((hash<glm::vec3>()(vertex.pos) ^
 //        (hash<glm::vec3>()(vertex.normal) << 1)) >> 1) ^
 //        (hash<glm::vec2>()(vertex.texture_coord) << 1)) >> 1) ^
@@ -139,8 +142,8 @@ export struct Vertex2D
 };
 
 // namespace std {
-//     template<> struct hash<Poulpe::Vertex2D> {
-//         size_t operator()(Poulpe::Vertex2D const& vertex) const {
+//     template<> struct hash<Vertex2D> {
+//         size_t operator()(Vertex2D const& vertex) const {
 //             return ((hash<glm::vec2>()(vertex.pos) ^
 //                 (hash<glm::vec3>()(vertex.normal) << 1)) >> 1) ^
 //                 (hash<glm::vec2>()(vertex.texCoord) << 1);

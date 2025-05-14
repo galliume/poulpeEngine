@@ -1,6 +1,10 @@
-export module Poulpe.GUI:Window;
+module;
 
 #include <GLFW/glfw3.h>
+#include <string_view>
+#include <stb_image.h>
+
+export module Poulpe.GUI.Window;
 
 export class Window
 {
@@ -8,7 +12,7 @@ public:
   Window() = default;
   //_window: delete is done in Application.cpp with glfwFunction
 
-  GLFWwindow* get();
+  GLFWwindow* get() const;
 
   void setVSync(bool active);
 

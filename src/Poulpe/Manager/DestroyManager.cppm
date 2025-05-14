@@ -1,12 +1,18 @@
-export module Poulpe.Manager:DestroyManager;
+module;
+#include <concepts>
+#include <memory>
+#include <unordered_map>
+#include <vector>
+#include <vulkan/vulkan.h>
 
-import Poulpe.Component.Entity;
-import Poulpe.Component.Mesh;
+export module Poulpe.Manager.DestroyManager;
 
+import Poulpe.Component.Texture;
 import Poulpe.Renderer.Vulkan.Renderer;
 
 //@TODO refactor all destroy system...
 class DeviceMemoryPool;
+class Entity;
 
 export class DestroyManager
 {

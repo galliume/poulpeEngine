@@ -1,4 +1,4 @@
-module Poulpe.Manager;
+module Poulpe.Manager.DbManager;
 
 DbManager::DbManager()
 {

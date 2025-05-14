@@ -1,6 +1,14 @@
-export module Poulpe.Renderer.Vulkan:DeviceMemoryPool;
 
-import DeviceMemory;
+module;
+#include <vulkan/vulkan.h>
+#include <unordered_map>
+#include <vector>
+#include <memory>
+
+export module Poulpe.Renderer.Vulkan.DeviceMemoryPool;
+
+import Poulpe.Core.Logger;
+import Poulpe.Renderer.Vulkan.DeviceMemory;
 
 //@todo manage memory fragmentation
 export class DeviceMemoryPool

@@ -1,28 +1,19 @@
-export module Poulpe.Manager:FontManager;
-
-import Poulpe.Component.Texture;
+module;
 
 #include <ft2build.h>
 #include FT_FREETYPE_H
-
+#include <freetype/ttnameid.h>
 #include <glm/glm.hpp>
 #include <volk.h>
+#include <vector>
+#include <string>
+#include <unordered_map>
 
-import <unordered_map>;
+export module Poulpe.Manager.FontManager;
 
-class Renderer;
-
-export struct FontCharacter {
-  unsigned int index;
-  glm::ivec2 size;
-  glm::ivec2 bearing;
-  long advance;
-  unsigned int mem_size{ 0 };
-  std::vector<int8_t> buffer;
-  int pitch{ 0 };
-  int x_offset{ 0 };
-  int y_offset{ 0 };
-};
+import Poulpe.Component.Texture;
+import Poulpe.Core.PlpTypedef;
+import Poulpe.Renderer.Vulkan.Renderer;
 
 export class FontManager
 {

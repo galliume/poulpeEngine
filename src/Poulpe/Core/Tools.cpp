@@ -1,7 +1,11 @@
-module Poulpe.Core;
+module;
 
-import <fstream>;
-import <vector>;
+#include <fstream>
+#include <stdexcept>
+#include <string>
+#include <vector>
+
+module Poulpe.Core.Tools;
 
 std::vector<char> Tools::readFile(const std::string & filename)
 {

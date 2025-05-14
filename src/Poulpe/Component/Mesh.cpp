@@ -1,4 +1,7 @@
-module Poulpe.Components;
+module;
+#include <vector>
+
+module Poulpe.Component.Mesh;
 
 void Mesh::addUbos(std::vector<std::vector<UniformBufferObject>> const& ubos)
 {

@@ -1,6 +1,12 @@
-export module Poulpe.Components:Texture;
+module;
 
 #include <volk.h>
+
+#include <array>
+#include <string>
+#include <vector>
+
+export module Poulpe.Component.Texture;
 
 export class Texture
 {

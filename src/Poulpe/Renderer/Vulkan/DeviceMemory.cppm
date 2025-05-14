@@ -1,6 +1,13 @@
-export module Poulpe.Renderer.Vulkan:DeviceMemory;
+module;
 
 #include <volk.h>
+#include <vector>
+#include <mutex>
+#include <memory>
+
+export module Poulpe.Renderer.Vulkan.DeviceMemory;
+
+import Poulpe.Core.Logger;
 
 export class DeviceMemory
 {

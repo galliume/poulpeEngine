@@ -1,10 +1,16 @@
-export module Poulpe.Manager:InputManager;
+module;
 
-import Poulpe.GUI.Window;
-
+#include <GLFW/glfw3.h>
 #include <nlohmann/json.hpp>
 
-class Camera;
+#include <unordered_map>
+#include <string>
+
+export module Poulpe.Manager.InputManager;
+
+import Poulpe.Component.Camera;
+import Poulpe.Core.ConfigManagerLocator;
+import Poulpe.GUI.Window;
 
 export class InputManager
 {

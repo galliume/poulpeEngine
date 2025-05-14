@@ -1,14 +1,21 @@
-export module Poulpe.Manager:TextureManager;
-
-import Poulpe.Component.Texture;
+module;
 
 #include <ktx.h>
 #include <nlohmann/json.hpp>
 #include <stb_image.h>
+#include <volk.h>
 
-import <latch>;
+#include <cstdlib>
+#include <filesystem>
+#include <latch>
+#include <string>
+#include <vector>
 
-class Renderer;
+export module Poulpe.Manager.TextureManager;
+
+import Poulpe.Component.Texture;
+import Poulpe.Core.Logger;
+import Poulpe.Renderer.Vulkan.Renderer;
 
 export enum class TEXTURE_TYPE {
   DIFFUSE,

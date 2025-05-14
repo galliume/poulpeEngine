@@ -1,8 +1,4 @@
-module Poulpe.Manager;
-
-import Poulpe.Renderer.Vulkan.Renderer;
-
-#include <freetype/ttnameid.h>
+module Poulpe.Manager.FontManager;
 
 Texture FontManager::load()
 {
@@ -10,15 +6,15 @@ Texture FontManager::load()
 
   if (FT_Init_FreeType(&_ft))
   {
-    PLP_ERROR("FREETYPE: Could not init FreeType Library");
+    Logger::error("FREETYPE: Could not init FreeType Library");
     return texture;
   }
 
-  auto const font{Poulpe::Locator::getConfigManager()->appConfig()["font"].get<std::string>()};
+  auto const font{ConfigManagerLocator::get()->appConfig()["font"].get<std::string>()};
 
   if (FT_New_Face(_ft, font.c_str(), 0, &_face))
   {
-    PLP_ERROR("FREETYPE: Failed to load font {}", font.c_str());
+    Logger::error("FREETYPE: Failed to load font {}", font.c_str());
     return texture;
   }
   
@@ -35,12 +31,12 @@ Texture FontManager::load()
   }
 
   if (!found) {
-    PLP_ERROR("FREETYTPE: Failed to find Unicode charmap");
+    Logger::error("FREETYTPE: Failed to find Unicode charmap");
     return texture;
   }
 
   if (FT_Set_Charmap(_face, found)) {
-    PLP_ERROR("FREETYTPE: Failed to set Unicode charmap");
+    Logger::error("FREETYTPE: Failed to set Unicode charmap");
     return texture;
   }
 
@@ -48,7 +44,7 @@ Texture FontManager::load()
 
   if (FT_Load_Char(_face, 'X', FT_LOAD_RENDER))
   {
-    PLP_ERROR("FREETYTPE: Failed to load Glyph");
+    Logger::error("FREETYTPE: Failed to load Glyph");
     return texture;
   }
 
@@ -73,19 +69,19 @@ Texture FontManager::load()
 
     glyph_index = FT_Get_Char_Index(_face, c);
     if (FT_Load_Glyph(_face, glyph_index, FT_LOAD_RENDER)) {
-      PLP_DEBUG("FREETYTPE: Failed to load Glyph");
+      Logger::debug("FREETYTPE: Failed to load Glyph");
       renderable = false;
     }
 
     if (FT_Render_Glyph(_face->glyph, FT_RENDER_MODE_SDF)) {
-      PLP_DEBUG("FREETYTPE: Failed to render Glyph");
+      Logger::debug("FREETYTPE: Failed to render Glyph");
       renderable = false;
     }
 
     if (_face->glyph->bitmap.buffer == NULL
       || _face->glyph->bitmap.width == 0
       || _face->glyph->bitmap.rows == 0) {
-      PLP_DEBUG("FREETYPE: non-renderable glyph {}", glyph_index);
+      Logger::debug("FREETYPE: non-renderable glyph {}", glyph_index);
       renderable = false;
     }
 

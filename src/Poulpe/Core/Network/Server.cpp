@@ -1,4 +1,7 @@
-module Poulpe.Core.Network;
+module;
+#include <string>
+
+module Poulpe.Core.Network.Server;
 
 void Server::bind(std::string const& port)
 {

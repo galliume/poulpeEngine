@@ -1,13 +1,18 @@
-export module Poulpe.Manager:ComponentManager;
+module;
 
-import Poulpe.Components.AnimationComponent;
-import Poulpe.Components.BoneAnimationComponent;
-import Poulpe.Components.MeshComponent;
-import Poulpe.Components.RenderComponent;
+#include <cstdint>
+#include <memory>
+#include <optional>
+#include <variant>
 
-import <cstdint>;
-import <optional>;
-import <variant>;
+export module Poulpe.Manager.ComponentManager;
+
+import Poulpe.Utils.IDHelper;
+
+import Poulpe.Component.Animation.AnimationComponent;
+import Poulpe.Component.Animation.BoneAnimationComponent;
+import Poulpe.Component.MeshComponent;
+import Poulpe.Component.RenderComponent;
 
 export class ComponentManager
 {

@@ -1,14 +1,4 @@
-module Poulpe.Manager;
-
-import Poulpe.Component.AnimationComponent;
-import Poulpe.Component.BoneAnimationComponent;
-import Poulpe.Component.MeshComponent;
-import Poulpe.Component.RenderComponent;
-import Poulpe.Component.Renderer.RendererFactory;
-import Poulpe.GUI.Window;
-import Poulpe.Renderer.Vulkan.Renderer;
-
-import <latch>;
+module Poulpe.Manager.RenderManager;
 
 RenderManager::RenderManager(Window* const window)
 {
@@ -69,7 +59,7 @@ void RenderManager::cleanUp()
 
 void RenderManager::init()
 {
-  auto * const configManager = Poulpe::Locator::getConfigManager();
+  auto * const configManager = Locator::getConfigManager();
 
   nlohmann::json const& appConfig = configManager->appConfig();
 
@@ -79,7 +69,7 @@ void RenderManager::init()
   Locator::getInputManager()->init(appConfig["input"]);
   
   if (appConfig["defaultLevel"].empty()) {
-    PLP_WARN("defaultLevel conf not set.");
+    Logger::warn("defaultLevel conf not set.");
   }
 
   _current_level = appConfig["defaultLevel"].get<std::string>();
@@ -130,7 +120,7 @@ void RenderManager::updateScene(double const delta_time)
   {
     std::lock_guard guard(_entity_manager->lockWorldNode());
 
-    auto * const config_manager = Poulpe::Locator::getConfigManager();
+    auto * const config_manager = Locator::getConfigManager();
 
     //@todo improve this draft for simple shader hot reload
     if (config_manager->reloadShaders()) {
@@ -233,7 +223,7 @@ void RenderManager::renderScene()
 
 void RenderManager::loadData(std::string const & level)
 {
-  auto * const config_manager = Poulpe::Locator::getConfigManager();
+  auto * const config_manager = Locator::getConfigManager();
 
   nlohmann::json const& app_config = config_manager->appConfig();
 

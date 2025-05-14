@@ -1,13 +1,20 @@
-export module Poulpe.Components:Component;
+module;
+#include <variant>
 
-import AnimationScript;
-import BoneAnimationScript;
-import Mesh;
+export module Poulpe.Component.Component;
 
-import Poulpe.Component.Renderer;
+import Poulpe.Component.Mesh;
+import Poulpe.Component.Animation.Animationscript;
+import Poulpe.Component.Animation.BoneAnimationScript;
+import Poulpe.Component.Renderer.Basic;
+import Poulpe.Component.Renderer.Crosshair;
+import Poulpe.Component.Renderer.Grid;
+import Poulpe.Component.Renderer.ShadowMap;
+import Poulpe.Component.Renderer.Skybox;
+import Poulpe.Component.Renderer.Terrain;
+import Poulpe.Component.Renderer.Text;
+import Poulpe.Component.Renderer.Water;
 import Poulpe.Utils.IDHelper;
-
-import <variant>
 
 template<typename T>
 concept hasCallOperator = requires(T t, double const delta_time, Mesh * mesh) {
@@ -30,14 +37,14 @@ public:
     std::unique_ptr<Terrain>,
     std::unique_ptr<Text>,
     std::unique_ptr<Water>>;
-
-  IDType getID() const { return _ID; }
+  
+  IDType getID() const { return _id; }
   IDType getOwner() const { return _owner; }
 
   template <typename T>
   void init(std::unique_ptr<T> componentImpl)
   {
-    _ID = GUIDGenerator::getGUID();
+    _id = GUIDGenerator::getGUID();
     _pimpl.emplace<std::unique_ptr<T>>(std::move(componentImpl));
   }
 
@@ -49,21 +56,10 @@ public:
     return nullptr;
   }
 
-  void setOwner(IDType owner) { _owner = owner; }
-
-  void operator()(double const delta_time, Mesh * mesh)
-  {
-    std::visit([&](auto& component) {
-      if constexpr (hasCallOperator<decltype(*component)>) {
-        (*component)(delta_time, mesh);
-      }
-    }, _pimpl);
-  }
-
 protected:
   ComponentImpl _pimpl;
 
 private:
-  IDType _ID{ 0 };
+  IDType _id{ 0 };
   IDType _owner{ 0 };
 };

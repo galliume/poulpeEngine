@@ -1,19 +1,29 @@
-export module Poulpe.Manager:RenderManager;
+module;
 
-import AudioManager;
-import ComponentManager;
-import DestroyManager;
-import EntityManager;
-import FontManager;
-import LightManager;
-import ShaderManager;
-import TextureManager;
+#include <glm/glm.hpp>
+#include <vulkan/vulkan.h>
+
+#include <latch>
+#include <memory>
+#include <unordered_map>
+#include <string>
+#include <vector>
+
+export module Poulpe.Manager.RenderManager;
+
+import Poulpe.Manager.FontManager;
+import Poulpe.Utils;
 
 import Poulpe.Component.Camera;
 import Poulpe.GUI.Window;
+import Poulpe.Manager.AudioManager;
+import Poulpe.Manager.ComponentManager;
+import Poulpe.Manager.DestroyManager;
+import Poulpe.Manager.EntityManager;
+import Poulpe.Manager.LightManager;
+import Poulpe.Manager.ShaderManager;
+import Poulpe.Manager.TextureManager;
 import Poulpe.Renderer.Vulkan.Renderer;
-
-#include <vulkan/vulkan.h>
 
 //@todo rename to SceneManager?
 export class RenderManager

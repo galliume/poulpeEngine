@@ -1,9 +1,12 @@
-export module Poulpe.Core:LockFreeStack;
+module;
 
-import <atomic>;
+#include <atomic>
+#include <memory>
 
-template<typename T>
-export class LockFreeStack
+export module Poulpe.Core.LockFreeStack;
+
+export template<typename T>
+class LockFreeStack
 {
 public:
   void push(T data)

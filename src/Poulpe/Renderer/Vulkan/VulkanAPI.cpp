@@ -1,15 +1,16 @@
-module Poulpe.Renderer.Vulkan;
-
-import Poulpe.GUI.Window;
-import Poulpe.Manager.FontManager;
-
+module;
 #include <GLFW/glfw3.h>
 #include <volk.h>
 
-import <iostream>;
-import <filesystem>;
-import <fstream>;
-import <set>;
+#include <iostream>
+#include <memory>
+#include <set>
+#include <stdexcept>
+#include <string>
+#include <unordered_map>  
+#include <vector>
+
+module Poulpe.Renderer.Vulkan.VulkanAPI;
 
 VkResult CreateDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerCreateInfoEXT const * create_info,
     VkAllocationCallbacks const * allocattor, VkDebugUtilsMessengerEXT* callback)
@@ -44,19 +45,19 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL DebugCallback(
   {
     case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT:
     {
-        PLP_FATAL("{} : {}", type, data->pMessage);
+        Logger::critical("{} : {}", type, data->pMessage);
         break;
     }
     case VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT:
     {
-        PLP_WARN("{} : {}", type, data->pMessage);
+        Logger::warn("{} : {}", type, data->pMessage);
         break;
     }
     case VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT:
     case VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT:
     case VK_DEBUG_UTILS_MESSAGE_SEVERITY_FLAG_BITS_MAX_ENUM_EXT:
     {
-        PLP_TRACE("{} : {}", type, data->pMessage);
+        Logger::trace("{} : {}", type, data->pMessage);
     }
   }
   return VK_FALSE;
@@ -66,7 +67,7 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL DebugCallback(
 VulkanAPI::VulkanAPI(Window* window)
   : _window(window)
 {
-#ifdef PLP_DEBUG_BUILD
+#ifdef Logger::debug_BUILD
   _enable_validation_layers = true;
 #else
   _enable_validation_layers = false;
@@ -137,7 +138,7 @@ void VulkanAPI::createInstance()
   std::string message;
 
   if (!isValidationLayersEnabled() && !checkValidationLayerSupport()) {
-      PLP_WARN("Validations layers not available !");
+      Logger::warn("Validations layers not available !");
   }
 
   VkApplicationInfo app_info{};
@@ -169,9 +170,9 @@ void VulkanAPI::createInstance()
     create_info.enabledLayerCount = static_cast<uint32_t>(_validation_layers.size());
     create_info.ppEnabledLayerNames = _validation_layers.data();
     create_info.pNext = (VkDebugUtilsMessengerCreateInfoEXT*)&debug_create_info;
-    PLP_TRACE("Validations enabled");
+    Logger::trace("Validations enabled");
   } else {
-    PLP_TRACE("Validations disabled");
+    Logger::trace("Validations disabled");
     create_info.enabledLayerCount = 0;
   }
 
@@ -180,7 +181,7 @@ void VulkanAPI::createInstance()
   result = vkCreateInstance(& create_info, nullptr, &_instance);
 
   if (VK_SUCCESS != result) {
-    PLP_FATAL("Can't create VK instance : {}", static_cast<int>(result));
+    Logger::critical("Can't create VK instance : {}", static_cast<int>(result));
     throw std::runtime_error("Can't create VK instance.");
   }
 
@@ -263,7 +264,7 @@ void VulkanAPI::setupDebugMessenger()
   create_info.pUserData = nullptr;
 
   if (CreateDebugUtilsMessengerEXT(_instance, & create_info, nullptr, &_debug_msg_callback) != VK_SUCCESS) {
-    PLP_ERROR("Can't create debug messenger.");
+    Logger::error("Can't create debug messenger.");
   }
 }
 
@@ -273,7 +274,7 @@ void VulkanAPI::pickPhysicalDevice()
   vkEnumeratePhysicalDevices(_instance, & device_count, nullptr);
 
   if (device_count == 0) {
-    PLP_FATAL("failed to find GPUs with Vulkan support!");
+    Logger::critical("failed to find GPUs with Vulkan support!");
     exit(-1);
   }
 
@@ -308,7 +309,7 @@ void VulkanAPI::pickPhysicalDevice()
     }
   }
   if (_physical_device == VK_NULL_HANDLE) {
-    PLP_FATAL("failed to find a suitable GPU");
+    Logger::critical("failed to find a suitable GPU");
     exit(-1);
   }
 }
@@ -440,7 +441,7 @@ void VulkanAPI::createLogicalDevice()
   create_info.pNext = &ext_dynamic_state;
 
   if (vkCreateDevice(_physical_device, & create_info, nullptr, &_device) != VK_SUCCESS) {
-    PLP_FATAL("failed to create logical device!");
+    Logger::critical("failed to create logical device!");
     return;
   }
 
@@ -458,7 +459,7 @@ void VulkanAPI::createSurface()
   VkResult result = glfwCreateWindowSurface(_instance, _window->get(), nullptr, & _surface);
 
   if (result != VK_SUCCESS) {
-    PLP_FATAL("failed to create window surface!");
+    Logger::critical("failed to create window surface!");
     throw std::runtime_error("failed to create window surface!");
   }
 }
@@ -580,7 +581,7 @@ VkSwapchainKHR VulkanAPI::createSwapChain(
   result = vkCreateSwapchainKHR(_device, & create_info, nullptr, & swapchain);
 
   if (result != VK_SUCCESS) {
-      PLP_FATAL("Swap chain failed {}", static_cast<int>(result));
+      Logger::critical("Swap chain failed {}", static_cast<int>(result));
   }
   vkGetSwapchainImagesKHR(_device, swapchain, &image_count, nullptr);
   swapchain_images.resize(image_count);
@@ -640,7 +641,7 @@ VkImageView VulkanAPI::createImageView(
   result = vkCreateImageView(_device, &create_info, nullptr, &swapchain_image_view);
 
   if (result != VK_SUCCESS) {
-    PLP_ERROR("failed to create image views!");
+    Logger::error("failed to create image views!");
   }
   return swapchain_image_view;
 }
@@ -682,7 +683,7 @@ VkPipelineLayout VulkanAPI::createPipelineLayout(
   VkResult result = vkCreatePipelineLayout(_device, &pipeline_layout_info, nullptr, &graphics_pipeline_layout);
 
   if (result != VK_SUCCESS) {
-      PLP_ERROR("failed to create pipeline layout!");
+      Logger::error("failed to create pipeline layout!");
   }
   return graphics_pipeline_layout;
 }
@@ -851,7 +852,7 @@ VkPipeline VulkanAPI::createGraphicsPipeline(PipeLineCreateInfo const& pipeline_
       fStream.read(p_read_file.data(), cache_file_size);
       fStream.close();
     } else {
-      //PLP_TRACE("Pipeline cache miss!");
+      //Logger::trace("Pipeline cache miss!");
       bad_cache = true;
     }
 
@@ -860,9 +861,9 @@ VkPipeline VulkanAPI::createGraphicsPipeline(PipeLineCreateInfo const& pipeline_
       cache_file_data = p_read_file.data();
 
       if (cache_file_data == nullptr) {
-        PLP_WARN("Cannot allocate memory to pipeline cache");
+        Logger::warn("Cannot allocate memory to pipeline cache");
       }
-      //PLP_TRACE("Pipeline cache HIT from {}", cache_filename);
+      //Logger::trace("Pipeline cache HIT from {}", cache_filename);
     }
 
     if (cache_file_data != nullptr) {
@@ -880,22 +881,22 @@ VkPipeline VulkanAPI::createGraphicsPipeline(PipeLineCreateInfo const& pipeline_
 
       if (header_length <= 0) {
         bad_cache = true;
-        PLP_ERROR("Bad header length in {} - {}", cache_filename, header_length);
+        Logger::error("Bad header length in {} - {}", cache_filename, header_length);
       }
       if (cache_header_version != VK_PIPELINE_CACHE_HEADER_VERSION_ONE) {
         bad_cache = true;
-        PLP_ERROR("Unsupported cache header version in {} got {}", cache_filename, cache_header_version);
+        Logger::error("Unsupported cache header version in {} got {}", cache_filename, cache_header_version);
       }
       if (vendor_ID != static_cast<uint32_t>(_device_props.vendorID)) {
         bad_cache = true;
-        PLP_ERROR("Vendor ID mismatch in {} got {} expect {}", cache_filename, vendor_ID, _device_props.vendorID);
+        Logger::error("Vendor ID mismatch in {} got {} expect {}", cache_filename, vendor_ID, _device_props.vendorID);
       }
       if (device_ID != static_cast<uint32_t>(_device_props.deviceID)) {
         bad_cache = true;
-        PLP_ERROR("Device ID mismatch in {} got {} expect {}", cache_filename, device_ID, _device_props.deviceID);
+        Logger::error("Device ID mismatch in {} got {} expect {}", cache_filename, device_ID, _device_props.deviceID);
       }
       if (memcmp(pipeline_cache_UUID,  _device_props.pipelineCacheUUID, sizeof(pipeline_cache_UUID)) != 0) {
-        PLP_ERROR("UUID mismatch in {} got {} expect {}", cache_filename, *pipeline_cache_UUID, *_device_props.pipelineCacheUUID);
+        Logger::error("UUID mismatch in {} got {} expect {}", cache_filename, *pipeline_cache_UUID, *_device_props.pipelineCacheUUID);
       }
 
       if (bad_cache) {
@@ -903,10 +904,10 @@ VkPipeline VulkanAPI::createGraphicsPipeline(PipeLineCreateInfo const& pipeline_
         cache_file_size = 0;
         cache_file_data = nullptr;
 
-        PLP_TRACE("Deleting cache entry {} to repopulate.", cache_filename);
+        Logger::trace("Deleting cache entry {} to repopulate.", cache_filename);
 
         if (remove(cache_filename.c_str()) != 0) {
-          PLP_ERROR("Reading error");
+          Logger::error("Reading error");
         }
       }
     }
@@ -920,12 +921,12 @@ VkPipeline VulkanAPI::createGraphicsPipeline(PipeLineCreateInfo const& pipeline_
     VkResult result = vkCreatePipelineCache(_device, & p_create_info, nullptr, & pipeline_cache);
 
     if (result != VK_SUCCESS) {
-      PLP_ERROR("failed to get graphics pipeline cache size!");
+      Logger::error("failed to get graphics pipeline cache size!");
     }
     result = vkCreateGraphicsPipelines(_device, VK_NULL_HANDLE, 1, & pipeline_info, nullptr, & graphics_pipeline);
 
     if (result != VK_SUCCESS) {
-      PLP_ERROR("failed to create graphics pipeline cache!");
+      Logger::error("failed to create graphics pipeline cache!");
     }
     if (result == VK_SUCCESS && bad_cache) {
       size_t p_data_size = 0;
@@ -935,12 +936,12 @@ VkPipeline VulkanAPI::createGraphicsPipeline(PipeLineCreateInfo const& pipeline_
       result = vkGetPipelineCacheData(_device, pipeline_cache, & p_data_size, nullptr);
 
       if (result != VK_SUCCESS) {
-        PLP_ERROR("failed to get graphics pipeline cache size!");
+        Logger::error("failed to get graphics pipeline cache size!");
       }
       data = (char*)malloc(sizeof(char) * p_data_size);
 
       if (!data) {
-        PLP_ERROR("failed to resize cache buffer!");
+        Logger::error("failed to resize cache buffer!");
       } else {
         result = vkGetPipelineCacheData(_device, pipeline_cache, & p_data_size, data);
 
@@ -949,7 +950,7 @@ VkPipeline VulkanAPI::createGraphicsPipeline(PipeLineCreateInfo const& pipeline_
           std::ofstream ostrm(cache_filename, std::ios::binary);
           ostrm.write(static_cast<const char*>(data), p_data_size);
           ostrm.close();
-          PLP_TRACE("cacheData written to {}", cache_filename);
+          Logger::trace("cacheData written to {}", cache_filename);
         }
       }
     }
@@ -970,7 +971,7 @@ VkShaderModule VulkanAPI::createShaderModule(std::vector<char> const& code)
   result = vkCreateShaderModule(_device, &create_info, nullptr, &shader_module);
 
   if (result != VK_SUCCESS) {
-      PLP_ERROR("failed to create shader module!");
+      Logger::error("failed to create shader module!");
   }
   return shader_module;
 }
@@ -1054,7 +1055,7 @@ VkRenderPass* VulkanAPI::createRenderPass(VkSampleCountFlagBits const& msaaSampl
   VkResult result = vkCreateRenderPass(_device, & rdr_pass_info, nullptr, rdr_pass);
 
   if (result != VK_SUCCESS) {
-    PLP_FATAL("failed to create render pass!");
+    Logger::critical("failed to create render pass!");
   }
   return rdr_pass;
 }
@@ -1089,7 +1090,7 @@ std::vector<VkFramebuffer> VulkanAPI::createFramebuffers(
     VkResult result = vkCreateFramebuffer(_device, & frame_buffer_info, nullptr, & swapchain_framebuffers[i]);
 
     if (result != VK_SUCCESS) {
-      PLP_ERROR("failed to create framebuffer!");
+      Logger::error("failed to create framebuffer!");
     }
   }
   return swapchain_framebuffers;
@@ -1109,7 +1110,7 @@ VkCommandPool VulkanAPI::createCommandPool()
   VkResult result = vkCreateCommandPool(_device, & poolInfo, nullptr, & cmd_pool);
 
   if (result != VK_SUCCESS) {
-    PLP_ERROR("failed to create command pool!");
+    Logger::error("failed to create command pool!");
   }
   return cmd_pool;
 }
@@ -1131,7 +1132,7 @@ std::vector<VkCommandBuffer> VulkanAPI::allocateCommandBuffers(
   VkResult result = vkAllocateCommandBuffers(_device, & alloc_info, cmd_buffers.data());
 
   if (result != VK_SUCCESS) {
-    PLP_ERROR("failed to allocate command buffers!");
+    Logger::error("failed to allocate command buffers!");
   }
   return cmd_buffers;
 }
@@ -1639,7 +1640,7 @@ void VulkanAPI::createBuffer(
   VkResult result = vkBindBufferMemory(_device, buffer, device_memory, 0);
 
   if (result != VK_SUCCESS) {
-    PLP_ERROR("Memory binding failed in createBuffer");
+    Logger::error("Memory binding failed in createBuffer");
   }
 }
 
@@ -2085,7 +2086,7 @@ void VulkanAPI::copyBuffer(
     VkResult result = vkQueueSubmit(_graphics_queues[queue_index], 1, & submit_info, _fence_buffer);
 
     if (result != VK_SUCCESS) {
-      PLP_ERROR("failed to copy buffer.");
+      Logger::error("failed to copy buffer.");
     }
 
     vkWaitForFences(_device, 1, &_fence_buffer, VK_TRUE, UINT32_MAX);
@@ -2252,7 +2253,7 @@ VkImageView VulkanAPI::createDepthMapImageView(VkImage& image)
   result = vkCreateImageView(_device, &create_info, nullptr, &depth_map_imageview);
 
   if (result != VK_SUCCESS) {
-    PLP_ERROR("failed to create depth map image view.");
+    Logger::error("failed to create depth map image view.");
   }
   return depth_map_imageview;
 }
@@ -2301,7 +2302,7 @@ void VulkanAPI::createDepthMapFrameBuffer(
   VkResult result = vkCreateFramebuffer(_device, &frame_buffer_info, nullptr, & frame_buffer);
 
   if (result != VK_SUCCESS) {
-    PLP_ERROR("failed to create framebuffer for depth map");
+    Logger::error("failed to create framebuffer for depth map");
   }
 }
 
@@ -2574,7 +2575,7 @@ VkSampleCountFlagBits VulkanAPI::getMaxUsableSampleCount()
 
 VulkanAPI::~VulkanAPI()
 {
-  PLP_TRACE("VulkanAPI deleted.");
+  Logger::trace("VulkanAPI deleted.");
 }
 
 void VulkanAPI::startMarker(
@@ -2585,7 +2586,7 @@ void VulkanAPI::startMarker(
   float const b,
   float const a)
 {
-#ifdef PLP_DEBUG_BUILD
+#ifdef Logger::debug_BUILD
   VkDebugUtilsLabelEXT label;
   label.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_LABEL_EXT;
   label.pLabelName = name.c_str();
@@ -2601,7 +2602,7 @@ void VulkanAPI::startMarker(
 
 void VulkanAPI::endMarker(VkCommandBuffer& buffer)
 {
-#ifdef PLP_DEBUG_BUILD
+#ifdef Logger::debug_BUILD
   vkCmdEndDebugUtilsLabelEXT(buffer);
 #endif
 }
@@ -2755,13 +2756,13 @@ void VulkanAPI::submit(
     VkResult result = vkQueueSubmit(queue, submit_infos.size(), submit_infos.data(), fence);
 
     if (result != VK_SUCCESS) {
-      PLP_ERROR("Error on queue submit: {}", static_cast<int>(result));
+      Logger::error("Error on queue submit: {}", static_cast<int>(result));
     }
 
     result = vkQueuePresentKHR(queue, &present_info);
 
     if (result != VK_SUCCESS) {
-      PLP_ERROR("Error on queue present: {}", static_cast<int>(result));
+      Logger::error("Error on queue present: {}", static_cast<int>(result));
     }
 
     //vkQueueWaitIdle(queue);
@@ -2955,7 +2956,7 @@ VkImageView VulkanAPI::createKTXImageView(
   result = vkCreateImageView(_device, &create_info, nullptr, &image_view);
 
   if (result != VK_SUCCESS) {
-    PLP_ERROR("failed to create image view.");
+    Logger::error("failed to create image view.");
   }
 
   return image_view;
@@ -3014,7 +3015,7 @@ VkDeviceSize VulkanAPI::align_to(VkDeviceSize const size, VkDeviceSize const ali
   //VkDeviceSize const offset { (size + alignment - 1) & ~(alignment - 1)};
   auto const remainder = size % alignment;
 
-  //PLP_DEBUG("size: {} alignment: {} ", size, alignment);
+  //Logger::debug("size: {} alignment: {} ", size, alignment);
   if (remainder == 0) return size;
   VkDeviceSize const offset {size + (alignment - remainder)};
 
@@ -3189,7 +3190,7 @@ VkImageView VulkanAPI::createFontImageView(
   result = vkCreateImageView(_device, &create_info, nullptr, &image_view);
 
   if (result != VK_SUCCESS) {
-    PLP_ERROR("failed to create image view.");
+    Logger::error("failed to create image view.");
   }
 
   return image_view;

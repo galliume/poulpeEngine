@@ -1,8 +1,10 @@
-export module Poulpe.Components:EntityNode;
+module;
+#include <vector>
+#include <memory>
 
-import Entity;
+export module Poulpe.Component.Components.EntityNode;
 
-import <vector>,
+import Poulpe.Component.Entity;
 
 export class EntityNode 
 {

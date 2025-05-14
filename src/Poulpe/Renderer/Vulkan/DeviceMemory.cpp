@@ -1,4 +1,10 @@
-module Poulpe.Renderer.Vulkan;
+module;
+
+#include <volk.h>
+
+#include <memory>
+
+module Poulpe.Renderer.Vulkan.DeviceMemory;
 
 DeviceMemory::DeviceMemory(
     VkDevice device,
@@ -21,15 +27,15 @@ DeviceMemory::DeviceMemory(
 
 VkDeviceMemory* DeviceMemory::getMemory()
 {
-    if (!_memory) {
-        _memory = std::make_unique<VkDeviceMemory>();
-        _offset = 0;
-        _is_full = false;
-        _is_allocated = false;
-        allocateToMemory();
-    }
+  if (!_memory) {
+    _memory = std::make_unique<VkDeviceMemory>();
+    _offset = 0;
+    _is_full = false;
+    _is_allocated = false;
+    allocateToMemory();
+  }
 
-    return _memory.get();
+  return _memory.get();
 }
 
 void DeviceMemory::allocateToMemory()
@@ -46,14 +52,14 @@ void DeviceMemory::allocateToMemory()
 
         if (VK_SUCCESS != result) {
           //@todo use fmt::format specifier
-          PLP_FATAL("error while allocating memory {}", static_cast<int>(result));
+          Logger::critical("error while allocating memory {}", static_cast<int>(result));
           throw std::runtime_error("failed to allocate buffer memory!");
         }
 
         _is_allocated = true;
       }
       else {
-        PLP_WARN("trying to re allocate memory already allocated.");
+        Logger::warn("trying to re allocate memory already allocated.");
       }
     }
   }
@@ -72,7 +78,7 @@ void DeviceMemory::allocateToMemory()
       VkResult result = vkBindBufferMemory(_device, buffer, *_memory, _offset);
 
       if (VK_SUCCESS != result) {
-        PLP_DEBUG("BindBuffer memory failed in bindBufferToMemory");
+        Logger::debug("BindBuffer memory failed in bindBufferToMemory");
       }
 
       _buffer_offsets.emplace_back(_offset);
@@ -101,7 +107,7 @@ void DeviceMemory::allocateToMemory()
       VkResult result = vkBindImageMemory(_device, image, *_memory, _offset);
 
       if (VK_SUCCESS != result) {
-        PLP_DEBUG("BindImageMemory failed in bindImageToMemory");
+        Logger::debug("BindImageMemory failed in bindImageToMemory");
       }
 
       _offset += offset;
@@ -126,7 +132,7 @@ void DeviceMemory::allocateToMemory()
 
       bool has_enought_space_left { _max_size - offset > size };
 
-      //PLP_DEBUG("max size: {} offset: {} size {} :{}", _max_size, offset, size, (_max_size - offset));
+      //Logger::debug("max size: {} offset: {} size {} :{}", _max_size, offset, size, (_max_size - offset));
       if (!has_enought_space_left) _is_full = true;
 
       return has_enought_space_left;

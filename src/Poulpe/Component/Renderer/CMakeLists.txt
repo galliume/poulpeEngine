@@ -1,24 +1,23 @@
 target_sources(${PROJECT_NAME}
   PUBLIC
     FILE_SET cxx_modules TYPE CXX_MODULES
+      BASE_DIRS ${PROJECT_SOURCE_DIR}/src/Poulpe
       FILES
-        ${CMAKE_CURRENT_SOURCE_DIR}/Renderer.cppm
-        ${CMAKE_CURRENT_SOURCE_DIR}/Crosshair.cppm
-        ${CMAKE_CURRENT_SOURCE_DIR}/Basic.cppm
-        ${CMAKE_CURRENT_SOURCE_DIR}/Grid.cppm
-        ${CMAKE_CURRENT_SOURCE_DIR}/Skybox.cppm
-        ${CMAKE_CURRENT_SOURCE_DIR}/ShadowMap.cppm
-        ${CMAKE_CURRENT_SOURCE_DIR}/Terrain.cppm
-        ${CMAKE_CURRENT_SOURCE_DIR}/Water.cppm
-        ${CMAKE_CURRENT_SOURCE_DIR}/Text.cppm
-        ${CMAKE_CURRENT_SOURCE_DIR}/RendererFactory.cppm
+        Basic.cppm
+        Crosshair.cppm
+        Grid.cppm
+        RendererFactory.cppm
+        Skybox.cppm
+        ShadowMap.cppm
+        Terrain.cppm
+        Text.cppm
+        Water.cppm
   PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/Crosshair.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/Basic.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/Grid.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/Skybox.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/ShadowMap.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/Terrain.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/Water.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/Text.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/RendererFactory.cpp)
+    Basic.cpp
+    Crosshair.cpp
+    Grid.cpp
+    Skybox.cpp
+    ShadowMap.cpp
+    Terrain.cpp
+    Text.cpp
+    Water.cpp)

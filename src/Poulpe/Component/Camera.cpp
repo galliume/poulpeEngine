@@ -1,6 +1,9 @@
-module Poulpe.Components;
+module;
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <numbers>
 
-import <numbers>;
+module Poulpe.Component.Camera;
 
 void Camera::init(glm::vec3 const& start_pos)
 {

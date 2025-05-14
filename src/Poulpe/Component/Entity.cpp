@@ -1,16 +1,16 @@
-module Poulpe.Components;
+module;
+#include <glm/glm.hpp>
 
-import <chrono>;
-#import <random>;
+module Poulpe.Component.Entity;
 
 Entity::Entity()
 {
-    _ID = GUIDGenerator::getGUID();
+    _id = GUIDGenerator::getGUID();
 }
 
 bool Entity::isHit(glm::vec3 point)
 {
-    //PLP_DEBUG(
+    //Logger::debug(
     //   "BBOX maxX:{} minX{} maxY:{} minY:{} maxZ:{} minZ{}",
     //   GetBBox()->maxX,
     //   GetBBox()->minX,
@@ -31,7 +31,7 @@ bool Entity::isHit(glm::vec3 point)
     //glm::vec3 rayWor = glm::vec3(tmp.x, tmp.y, tmp.z);
     //_RayPick = glm::normalize(rayWor);
 
-    PLP_DEBUG("point x:{} y{} z:{}", point.x, point.y, point.z);
+    Logger::debug("point x:{} y{} z:{}", point.x, point.y, point.z);
 
     //return (
     //    point.x >= GetBBox()->minX &&

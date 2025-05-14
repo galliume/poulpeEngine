@@ -1,8 +1,10 @@
-export module Poulpe.Manager:LightManager;
+module;
+
+#include <chrono>
+
+export module Poulpe.Manager.LightManager;
 
 import Poulpe.Core.PlpTypedef;
-
-import <chrono>;
 
 export class LightManager
 {

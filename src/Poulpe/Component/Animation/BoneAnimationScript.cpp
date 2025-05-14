@@ -1,10 +1,4 @@
-module Poulpe.Components;
-
-import Mesh;
-
-import Poulpe.Core.Log;
-
-import <ranges>;
+module Poulpe.Component.Animations.BoneAnimationScript;
 
 BoneAnimationScript::BoneAnimationScript(
   std::vector<Animation> const& animations,
@@ -51,8 +45,8 @@ void BoneAnimationScript::operator()(double const delta_time, Mesh* mesh)
     auto const duration{ (anim.duration / anim.ticks_per_s) * 1000.0f };//ms
     //_elapsed_time = std::clamp(_elapsed_time, 0.f, duration);
 
-    //PLP_DEBUG("_elapsed_time {} duration {} ", _elapsed_time, duration);
-    //PLP_DEBUG("anim {} elapased time {} duration {} delta {}", anim.name, _elapsed_time, duration, delta_time);
+    //Logger::debug("_elapsed_time {} duration {} ", _elapsed_time, duration);
+    //Logger::debug("anim {} elapased time {} duration {} delta {}", anim.name, _elapsed_time, duration, delta_time);
 
     _bone_matrices.resize(_data->_bones.size());
     _elapsed_time = fmod(_elapsed_time, duration);
@@ -110,7 +104,7 @@ void BoneAnimationScript::updateBoneTransforms(
   auto new_position{ bone.t_pose_position };
   auto new_rotation{ bone.t_pose_rotation };
 
-  //PLP_DEBUG("bone: {}", bone.name);
+  //Logger::debug("bone: {}", bone.name);
   auto const& scale_bone_node { _scales[bone.name] };
   if (!scale_bone_node.empty() && scale_bone_node.size() >= _anim_id) {
     auto const& scales_data{ scale_bone_node.at(_anim_id) };

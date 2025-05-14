@@ -1,8 +1,5 @@
-export module Poulpe.Components:AnimationComponent;
-
-import Component;
+export module Poulpe.Component.Animations.AnimationComponent;
 
 export class AnimationComponent : public Component<AnimationComponent>
 {
 };
-

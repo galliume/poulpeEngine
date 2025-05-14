@@ -1,7 +1,11 @@
-module Poulpe.Manager;
+module;
 
-import <filesystem>;
-import <fstream>;
+#include <nlohmann/json.hpp>
+
+#include <filesystem>
+#include <fstream>
+
+module Poulpe.Manager.ConfigManager;
 
 namespace fs = std::filesystem;
 
@@ -78,7 +82,7 @@ nlohmann::json ConfigManager::loadLevelData(std::string const & levelName)
     if (f.is_open()) _entity_config = nlohmann::json::parse(f);
   }
   catch (nlohmann::json::parse_error& ex) {
-    PLP_ERROR("Parse error at byte {}", ex.byte);
+    Logger::error("Parse error at byte {}", ex.byte);
   }
 
   f.close();

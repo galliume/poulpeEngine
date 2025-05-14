@@ -1,6 +1,12 @@
-export module Poulpe.Manager:APIManager;
+module;
 
-import RenderManager;
+#include <latch>
+#include <ranges>
+#include <variant>
+
+export module Poulpe.Manager.APIManager;
+
+import Poulpe.Manager.RenderManager;
 
 export class APIManager
 {

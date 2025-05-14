@@ -1,4 +1,4 @@
-module Poulpe.Components.Renderer;
+module Poulpe.Component.Renderer.ShadowMap;
 
 struct constants;
 

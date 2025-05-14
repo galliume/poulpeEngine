@@ -1,4 +1,10 @@
-module Poulpe.Renderer.Vulkan;
+module;
+#include <volk.h>
+
+#include <memory>
+#include <stdexcept>
+
+module Poulpe.Renderer.Vulkan.DeviceMemoryPool;
 
 DeviceMemoryPool::DeviceMemoryPool(
   VkPhysicalDeviceProperties2 device_props,
@@ -50,7 +56,7 @@ DeviceMemory* DeviceMemoryPool::get(
     break;
   }
   
-  //PLP_DEBUG("type: {} {} allocated size: {} size: {} buffer size: {} max: {}", buffer_type_debug, memory_type, _memory_allocation_size.at(memory_type), size, buffer_size, max_buffer_size);
+  //Logger::debug("type: {} {} allocated size: {} size: {} buffer size: {} max: {}", buffer_type_debug, memory_type, _memory_allocation_size.at(memory_type), size, buffer_size, max_buffer_size);
 
   auto pool_type = _pool.find(memory_type);
 
@@ -60,11 +66,11 @@ DeviceMemory* DeviceMemoryPool::get(
       for (size_t i{ 0 }; i < poolUsage->second.size(); ++i) {
         auto& dm = poolUsage->second.at(i);
         if (!dm->isFull() && dm->hasEnoughSpaceLeft(size)) {
-          //  PLP_DEBUG("DM REUSE OK: id {}, {}, type {} usage {} size {}/{}",
+          //  Logger::debug("DM REUSE OK: id {}, {}, type {} usage {} size {}/{}",
           //    dm.get()->getID(), buffer_type_debug, memory_type, usage, size, dm->getSpaceLeft());
           return dm.get();
         } else {
-          //  PLP_DEBUG("DM REUSE KO: id {}, {}, type {} usage {} size {}/{}",
+          //  Logger::debug("DM REUSE KO: id {}, {}, type {} usage {} size {}/{}",
           //    dm.get()->getID(), buffer_type_debug, memory_type, usage, size, dm->getSpaceLeft());
         }
       }
@@ -72,7 +78,7 @@ DeviceMemory* DeviceMemoryPool::get(
 
 
     if (_memory_allocation_size.at(memory_type) + buffer_size > max_buffer_size) {
-      PLP_DEBUG("type: {} {} allocated size: {} size: {} buffer size: {} max: {}", buffer_type_debug, memory_type, _memory_allocation_size.at(memory_type), size, buffer_size, max_buffer_size);
+      Logger::debug("type: {} {} allocated size: {} size: {} buffer size: {} max: {}", buffer_type_debug, memory_type, _memory_allocation_size.at(memory_type), size, buffer_size, max_buffer_size);
       throw std::runtime_error("Max size of memory allocation reached");
     }
 
@@ -80,7 +86,7 @@ DeviceMemory* DeviceMemoryPool::get(
       device, memory_type, buffer_size, _device_memory_count, alignment));
     _memory_allocation_count += 1;
     _memory_allocation_size.at(memory_type) += buffer_size;
-    //PLP_DEBUG("DM CREATION: id {}, {}, type {} usage {} size {}", _device_memory_count, buffer_type_debug, memory_type, usage, buffer_size);
+    //Logger::debug("DM CREATION: id {}, {}, type {} usage {} size {}", _device_memory_count, buffer_type_debug, memory_type, usage, buffer_size);
     _device_memory_count += 1;
     _memory_size_allocated += size;
     return _pool[memory_type][usage].back().get();
@@ -94,7 +100,7 @@ DeviceMemory* DeviceMemoryPool::get(
       device, memory_type, buffer_size, _device_memory_count, alignment));
     _memory_allocation_count += 1;
     _memory_allocation_size.at(memory_type) += buffer_size;
-    //PLP_DEBUG("DM CREATION: id {}, {}, type {} usage {} size {}", _device_memory_count, buffer_type_debug, memory_type, usage, buffer_size);
+    //Logger::debug("DM CREATION: id {}, {}, type {} usage {} size {}", _device_memory_count, buffer_type_debug, memory_type, usage, buffer_size);
     _device_memory_count += 1;
     _memory_size_allocated += size;
     return _pool[memory_type][usage].back().get();
@@ -103,7 +109,7 @@ DeviceMemory* DeviceMemoryPool::get(
 
 void DeviceMemoryPool::clear()
 {
-  PLP_WARN("MEMORY POOL CLEANING");
+  Logger::warn("MEMORY POOL CLEANING");
 
   for (auto& memory_type : _pool) {
     for (auto& usage : memory_type.second) {
@@ -127,5 +133,5 @@ void DeviceMemoryPool::clear(DeviceMemory * deviceMemory)
   _memory_allocation_count -= 1;
   _device_memory_count -= 1;
   deviceMemory->clear();
-  PLP_DEBUG("Clearing device memory id {}. {} left", deviceMemory->getID(), _device_memory_count);
+  Logger::debug("Clearing device memory id {}. {} left", deviceMemory->getID(), _device_memory_count);
 }

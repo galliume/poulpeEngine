@@ -1,7 +1,11 @@
-export module Poulpe.Manager:AudioManager;
+module;
 
 #include <miniaudio.h>
 #include <nlohmann/json.hpp>
+
+export module Poulpe.Manager.AudioManager;
+
+import Poulpe.Core.Logger;
 
 export class AudioManager
 {

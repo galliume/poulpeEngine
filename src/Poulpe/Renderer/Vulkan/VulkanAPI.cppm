@@ -1,12 +1,25 @@
-export module Poulpe.Renderer.Vulkan:VulkanAPI;
+module;
 
-import DeviceMemoryPool;
-
-import Poulpe.Component.Vertex;
-import Poulpe.Core.PlpTypedef;
-
+#include <GLFW/glfw3.h>
 #include <ktx.h>
 #include <stb_image.h>
+#include <volk.h>
+
+#include <filesystem>
+#include <fstream>
+#include <iostream>
+#include <mutex>
+#include <unordered_map>
+#include <string>
+#include <vector>
+
+export module Poulpe.Renderer.Vulkan.VulkanAPI;
+
+import Poulpe.Component.Vertex;
+import Poulpe.Core.Logger;
+import Poulpe.Core.PlpTypedef;
+import Poulpe.GUI.Window;
+import Poulpe.Renderer.Vulkan.DeviceMemoryPool;
 
 VkResult CreateDebugUtilsMessengerEXT(
   VkInstance instance,
@@ -47,8 +60,6 @@ export struct PipeLineCreateInfo
   bool has_stencil_test{ false };
   bool is_patch_list{ false };
 };
-
-struct FontCharacter;
 
 export class VulkanAPI
 {

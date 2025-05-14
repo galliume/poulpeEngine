@@ -1,12 +1,17 @@
-export module Poulpe.Components:Mesh;
+module;
 
-import Texture;
-import Vertex;
+#include <glm/glm.hpp>
+#include <vulkan/vulkan.h>
 
+#include <atomic>
+#include <functional>
+#include <string>
+#include <string_view>
+
+export module Poulpe.Component.Mesh;
+
+import Poulpe.Component.Vertex;
 import Poulpe.Core.PlpTypedef;
-
-import <atomic>;
-import <functional>;
 
 class LightManager;
 class Renderer;

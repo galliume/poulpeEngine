@@ -1,11 +1,15 @@
-export module Poulpe.Core.Network:WinSocket;
-
-#if defined(_WIN32) || defined(WIN32)
-
-import Poulpe.Core.PlpTypedef;
+module;
 
 #include <WinSock2.h>
 #include <WS2tcpip.h>
+#include <minwindef.h>
+
+#include <string>
+
+export module Poulpe.Core.Network.WinSocket;
+
+import Poulpe.Core.Network.Server;
+import Poulpe.Core.PlpTypedef;
 
 export class WinSocket
 {
@@ -30,5 +34,3 @@ private:
   std::string _IP;
   unsigned short _Port;
 };
-
-#endif

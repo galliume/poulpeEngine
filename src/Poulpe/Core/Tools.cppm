@@ -1,6 +1,9 @@
-export module Poulpe.Core:Tools;
+module;
 
-import <string>;
+#include <string>
+#include <vector>
+
+export module Poulpe.Core.Tools;
 
 export class Tools
 {

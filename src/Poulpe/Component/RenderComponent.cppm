@@ -1,8 +1,8 @@
-export module Poulpe.Components:RenderComponent;
+export module Poulpe.Component.RenderComponent;
 
-import Component;
+import Poulpe.Component.Component;
 
-class RenderComponent : public Component<RenderComponent>
+export class RenderComponent : public Component<RenderComponent>
 {
 
 };

@@ -1,14 +1,17 @@
-module Poulpe.Core;
-
+module;
 #include <assimp/config.h>
-#include <assimp/Importer.hpp>
-#include <assimp/postprocess.h>
-
 #include <assimp/GltfMaterial.h>
+#include <assimp/Importer.hpp>
+#include <assimp/scene.h>
+#include <glm/glm.hpp>
 
+#define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/matrix_decompose.hpp>
 
-import <filesystem>;
+#include <functional>
+#include <filesystem>
+
+module Poulpe.Core.AssimpLoader;
 
 //helper from learnopengl
 static inline glm::mat4 ConvertMatrixToGLMFormat(const aiMatrix4x4& from)
@@ -61,7 +64,7 @@ void AssimpLoader::loadData(
   const aiScene* scene = importer.ReadFile(path, flags);
 
   if (nullptr == scene) {
-    PLP_ERROR("Error while importing file {}: {}", path, importer.GetErrorString());
+    Logger::error("Error while importing file {}: {}", path, importer.GetErrorString());
     return;
   }
 
@@ -84,7 +87,7 @@ void AssimpLoader::loadData(
       if(auto texture = scene->GetEmbeddedTexture(texture_file.C_Str())) {
         //returned pointer is not null, read texture from memory
       }
-      //PLP_DEBUG("texture_file {}", texture_file.C_Str());
+      //Logger::debug("texture_file {}", texture_file.C_Str());
       material.name = mat->GetName().C_Str();
 
       aiColor4D baseColor(1.f);
@@ -502,7 +505,7 @@ std::string const AssimpLoader::cleanName(std::string const & name, std::string 
     std::replace(cleaned.begin(), cleaned.end(), '/', '_');
   }
 
-  //PLP_DEBUG("asset: {} -> {}", name, cleaned);
+  //Logger::debug("asset: {} -> {}", name, cleaned);
 
   return prefix + cleaned;
 }
@@ -557,7 +560,7 @@ void AssimpLoader::process(
         n = vertex.normal;
         //if (flip_Y) vertex.normal.y = 1.0f - vertex.normal.y;
       } else {
-        PLP_WARN("NO NORMAL");
+        Logger::warn("NO NORMAL");
       }
 
       glm::vec4 tangent(0.f);

@@ -1,4 +1,8 @@
-export module Poulpe.Core.Network:Socket;
+module;
+#include <string>
+#include <memory>
+
+export module Poulpe.Core.Network.Socket;
 
 export class Socket
 {
