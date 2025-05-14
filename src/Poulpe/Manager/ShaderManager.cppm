@@ -1,50 +1,62 @@
-export module Poulpe.Manager:ShaderManager;
+module;
 
-import Poulpe.Core.PlpTypedef;
-import Poulpe.Renderer.Vulkan.Renderer;
-
+#include <nlohmann/json.hpp>
 #include "vulkan/vulkan.h"
 
-import <latch>;
+#include <functional>
+#include <latch>
+#include <memory>
+#include <string>
+#include <vector>
 
-export enum class DescSetLayoutType {
-    Skybox, HUD, Entity,
-    Offscreen, Terrain, Water,
-    Text
-};
-export enum class VertexBindingType {
-    Vertex2D, Vertex3D
-};
+export module Poulpe.Manager.ShaderManager;
 
-export class ShaderManager
+import Poulpe.Core.PlpTypedef;
+import Poulpe.Core.Logger;
+import Poulpe.Core.Tools;
+import Poulpe.Renderer.Vulkan.Renderer;
+
+namespace Poulpe
 {
-public:
-  ShaderManager();
+  export enum class DescSetLayoutType {
+      Skybox, HUD, Entity,
+      Offscreen, Terrain, Water,
+      Text
+  };
+  export enum class VertexBindingType {
+      Vertex2D, Vertex3D
+  };
 
-  inline void addRenderer(Renderer* const renderer)  { _renderer = renderer; }
-  void addShader(
-    std::string const& name,
-    std::string const& vert_path,
-    std::string const& frag_path,
-    std::string const& geom_path,
-    std::string const& tese_path,
-    std::string const& tesc_path);
-  
-  void clear();
-  inline VulkanShaders* getShaders() const  { return _shaders.get(); }
-  std::function<void(std::latch& count_down)> load(nlohmann::json config) ;
+  export class ShaderManager
+  {
+  public:
+    ShaderManager();
 
-private:
-  template <DescSetLayoutType T>
-  VkDescriptorSetLayout createDescriptorSetLayout();
-  void createGraphicPipeline(std::string const & shaderName);
+    inline void addRenderer(Renderer* const renderer)  { _renderer = renderer; }
+    void addShader(
+      std::string const& name,
+      std::string const& vert_path,
+      std::string const& frag_path,
+      std::string const& geom_path,
+      std::string const& tese_path,
+      std::string const& tesc_path);
+    
+    void clear();
+    inline VulkanShaders* getShaders() const  { return _shaders.get(); }
+    std::function<void(std::latch& count_down)> load(nlohmann::json config) ;
 
-  std::vector<VkPipelineShaderStageCreateInfo> getShadersInfo(std::string const & shaderName, bool offscreen = false);
+  private:
+    template <DescSetLayoutType T>
+    VkDescriptorSetLayout createDescriptorSetLayout();
+    void createGraphicPipeline(std::string const & shaderName);
 
-  template <VertexBindingType T>
-  VkPipelineVertexInputStateCreateInfo* getVertexInputState();
+    std::vector<VkPipelineShaderStageCreateInfo> getShadersInfo(std::string const & shaderName, bool offscreen = false);
 
-  nlohmann::json _config;
-  Renderer* _renderer{ nullptr };
-  std::unique_ptr<VulkanShaders> _shaders{ nullptr };
-};
+    template <VertexBindingType T>
+    VkPipelineVertexInputStateCreateInfo* getVertexInputState();
+
+    nlohmann::json _config;
+    Renderer* _renderer{ nullptr };
+    std::unique_ptr<VulkanShaders> _shaders{ nullptr };
+  };
+}

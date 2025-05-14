@@ -1,17 +1,30 @@
-export module Poulpe.Manager:NetworkManager;
+module;
 
-class Server;
-class APIManager;
+#include <memory>
+#include <string>
 
-export class NetworkManager
+export module Poulpe.Manager.NetworkManager;
+
+namespace Poulpe
 {
-public:
-  NetworkManager(APIManager* apiManager);
+  //@todo detect Unix
+  // #if defined(_WIN32) || defined(WIN32)
 
-  void received(std::string const& notification);
-  void startServer(std::string const& port);
+  // #endif
 
-private:
-  std::shared_ptr<Server> _Server;
-  APIManager* _api_manager;
+  import Poulpe.Manager.APIManager;
+  import Poulpe.Core.Network.Server;
+
+  export class NetworkManager
+  {
+  public:
+    NetworkManager(APIManager* apiManager);
+
+    void received(std::string const& notification);
+    void startServer(std::string const& port);
+
+  private:
+    std::shared_ptr<Server> _Server;
+    APIManager* _api_manager;
+  };
 }

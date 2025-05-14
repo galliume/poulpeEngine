@@ -1,8 +1,11 @@
-export module Poulpe.Manager:SystemManager;
+export module Poulpe.Manager.SystemManager;
 
-export class SystemManager
+namespace Poulpe
 {
+  export class SystemManager
+  {
 
-private:
+  private:
 
-};
+  };
+}

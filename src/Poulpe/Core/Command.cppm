@@ -1,21 +1,27 @@
-export module Poulpe.Core:Command;
+module;
+#include <functional>
 
-export enum class WhenToExecute {PRE_RENDERING, POST_RENDERING};
+export module Poulpe.Core.Command;
 
-export struct Response
+namespace Poulpe
 {
+  export enum class WhenToExecute {PRE_RENDERING, POST_RENDERING};
 
-};
+  export struct Response
+  {
 
-export class Command
-{
-public:
+  };
+
+  export class Command
+  {
+  public:
     Command(std::function<void()> request, WhenToExecute w = WhenToExecute::PRE_RENDERING);
 
     Response execRequest();
-    WhenToExecute getWhenToExecute() const { return _When; };
+    WhenToExecute getWhenToExecute() const;
 
-private:
-    std::function<void()> _Request;
-    WhenToExecute _When;
-};
+  private:
+    std::function<void()> _request;
+    WhenToExecute _when;
+  };
+}

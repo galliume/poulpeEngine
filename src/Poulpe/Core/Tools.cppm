@@ -1,9 +1,15 @@
-export module Poulpe.Core:Tools;
+module;
 
-import <string>;
+#include <string>
+#include <vector>
 
-export class Tools
+export module Poulpe.Core.Tools;
+
+namespace Poulpe
 {
-public:
-    static std::vector<char> readFile(const std::string & filename);
-};
+  export class Tools
+  {
+  public:
+      static std::vector<char> readFile(const std::string & filename);
+  };
+}

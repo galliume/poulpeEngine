@@ -1,35 +1,44 @@
-export module Poulpe.Manager:InputManager;
+module;
 
-import Poulpe.GUI.Window;
-
+#include <GLFW/glfw3.h>
 #include <nlohmann/json.hpp>
 
-class Camera;
+#include <unordered_map>
+#include <string>
 
-export class InputManager
+export module Poulpe.Manager.InputManager;
+
+import Poulpe.Component.Camera;
+import Poulpe.Core.ConfigManagerLocator;
+import Poulpe.GUI.Window;
+
+namespace Poulpe
 {
-public:
-  explicit InputManager(Window const * const window);
+  export class InputManager
+  {
+  public:
+    explicit InputManager(Window const * const window);
 
-  virtual void init(nlohmann::json const& input_config) ;
+    virtual void init(nlohmann::json const& input_config) ;
 
-  void key(int key, int scan_code, int action, int mods);
-  void mouseButton(int button, int action, int mods);
-  void saveLastMousePos(double x_pos, double y_pos);
-  void inline setCamera(Camera * const camera) { _camera = camera; };
-  void updateMousePos(double x_pos, double y_pos);
+    void key(int key, int scan_code, int action, int mods);
+    void mouseButton(int button, int action, int mods);
+    void saveLastMousePos(double x_pos, double y_pos);
+    void inline setCamera(Camera * const camera) { _camera = camera; };
+    void updateMousePos(double x_pos, double y_pos);
 
-  static bool _can_move_camera;
-  static bool _first_move_mouse;
+    static bool _can_move_camera;
+    static bool _first_move_mouse;
 
-private:
-  double _last_x{ 0 };
-  double _last_y{ 0 };
+  private:
+    double _last_x{ 0 };
+    double _last_y{ 0 };
 
-  //@todo clean this
-  Camera * _camera;
-  Window const * const _window;
+    //@todo clean this
+    Camera * _camera;
+    Window const * const _window;
 
-  nlohmann::json _input_config;
-  std::unordered_map<std::string, int> _keyboard_keys{};
-};
+    nlohmann::json _input_config;
+    std::unordered_map<std::string, int> _keyboard_keys{};
+  };
+}

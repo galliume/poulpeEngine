@@ -1,28 +1,36 @@
-export module Poulpe.Components:Entity;
+module;
+#include <glm/glm.hpp>
 
-import Mesh;
+#include <memory>
+#include <string>
 
+export module Poulpe.Component.Entity;
+
+import Poulpe.Core.PlpTypedef;
+import Poulpe.Core.Logger;
 import Poulpe.Utils.IDHelper;
 
-export class Entity : public std::enable_shared_from_this<Entity>
+namespace Poulpe
 {
+  export class Entity : public std::enable_shared_from_this<Entity>
+  {
+  public:
+    Entity();
 
-public:
-  Entity();
+    IDType getID() const { return _id; }
+    std::string getName() const { return _name; }
 
-  IDType getID() const { return _ID; }
-  std::string getName() const { return _name; }
+    void setName(std::string const & name) { _name = name; }
+    void setVisible(bool const visible) { _is_visible = visible; }
 
-  void setName(std::string const & name) { _name = name; }
-  void setVisible(bool const visible) { _is_visible = visible; }
+    bool isDirty() const { return true; }
+    bool isHit(glm::vec3 point);
+    bool isVisible() const { return _is_visible; }
 
-  bool isDirty() const { return true; }
-  bool isHit(glm::vec3 point);
-  bool isVisible() const { return _is_visible; }
+  private:
+    IDType _id{ 0 };
+    std::string _name{};
 
-private:
-  IDType _ID{ 0 };
-  std::string _name{};
-
-  bool _is_visible{ true };
-};
+    bool _is_visible{ true };
+  };
+}

@@ -1,67 +1,75 @@
-export module Poulpe.Core:ThreadPool;
+module;
 
-import JoinThreads;
-import LockFreeStack;
-import ThreadSafeQueue;
+#include <functional>
+#include <string_view>
+#include <thread>
+#include <atomic>
 
-import <functional>;
+export module Poulpe.Core.ThreadPool;
 
-export class ThreadPool
+import Poulpe.Core.JoinThreads;
+import Poulpe.Core.LockFreeStack;
+import Poulpe.Core.ThreadSafeQueue;
+
+namespace Poulpe
 {
-public:
-
-  ThreadPool() : _Done(false), _Joiner(_Threads)
+  export class ThreadPool
   {
-    unsigned const threadCount = std::thread::hardware_concurrency();
+  public:
 
-    try {
-      for (unsigned i{ 0 }; i < threadCount; ++i) {
-        _Threads.emplace_back(std::thread(&ThreadPool::WorkerThreads, this));
+    ThreadPool() : _done(false), _joiner(_threads)
+    {
+      unsigned const threadCount = std::thread::hardware_concurrency();
+
+      try {
+        for (unsigned i{ 0 }; i < threadCount; ++i) {
+          _threads.emplace_back(std::thread(&ThreadPool::WorkerThreads, this));
+        }
+      }
+      catch (...) {
+        _done = true;
+
+        throw;
       }
     }
-    catch (...) {
-      _Done = true;
 
-      throw;
+    template<typename FunctionType>
+    void submit(FunctionType f)
+    {
+      _workQueue.push(std::function<void()>(f));
     }
-  }
 
-  template<typename FunctionType>
-  void submit(FunctionType f)
-  {
-    _WorkQueue.push(std::function<void()>(f));
-  }
+    bool isPoolEmpty()
+    {
+      //return (_WorkQueue.contains(poolName)) ? _WorkQueue[poolName].empty() : true;
+      return false;
+    }
 
-  bool isPoolEmpty(std::string_view poolName)
-  {
-    //return (_WorkQueue.contains(poolName)) ? _WorkQueue[poolName].empty() : true;
-    return false;
-  }
+    ~ThreadPool()
+    {
+      _done = true;
+    }
 
-  ~ThreadPool()
-  {
-    _Done = true;
-  }
+  private:
+    void WorkerThreads()
+    {
+      while (!_done) {
+        //@todo add priority order
+        auto task{ _workQueue.pop() };
 
-private:
-  void WorkerThreads()
-  {
-    while (!_Done) {
-      //@todo add priority order
-      auto task{ _WorkQueue.pop() };
-
-      if (task) {
-        (*task.get())();
-      } else {
-        std::this_thread::yield();
+        if (task) {
+          (*task.get())();
+        } else {
+          std::this_thread::yield();
+        }
       }
     }
-  }
 
-private:
-  std::atomic_bool _Done;
-  //std::unordered_map<std::string_view, ThreadSafeQueue<std::function<void()>>> _WorkQueue;
-  LockFreeStack<std::function<void()>> _WorkQueue;
-  std::vector<std::thread> _Threads;
-  joinThreads _Joiner;
-};
+  private:
+    std::atomic_bool _done;
+    //std::unordered_map<std::string_view, ThreadSafeQueue<std::function<void()>>> _WorkQueue;
+    LockFreeStack<std::function<void()>> _workQueue;
+    std::vector<std::thread> _threads;
+    JoinThreads _joiner;
+  };
+}

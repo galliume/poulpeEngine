@@ -1,16 +1,31 @@
-module Poulpe.Renderer.Vulkan;
-
-import Poulpe.GUI.Window;
-import Poulpe.Manager.FontManager;
-
+module;
+#define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
+#include <ktx.h>
+#include <stb_image.h>
 #include <volk.h>
 
-import <iostream>;
-import <filesystem>;
-import <fstream>;
-import <set>;
+#include <array>
+#include <cstring>
+#include <filesystem>
+#include <fstream>
+#include <iostream>
+#include <memory>
+#include <mutex>
+#include <optional>
+#include <unordered_map>
+#include <set>
+#include <string>
+#include <string_view>
+#include <vector>
 
+
+module Poulpe.Renderer.Vulkan.VulkanAPI;
+
+import Poulpe.Core.PlpTypedef;
+
+namespace Poulpe
+{
 VkResult CreateDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerCreateInfoEXT const * create_info,
     VkAllocationCallbacks const * allocattor, VkDebugUtilsMessengerEXT* callback)
 {
@@ -44,19 +59,19 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL DebugCallback(
   {
     case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT:
     {
-        PLP_FATAL("{} : {}", type, data->pMessage);
+        //Logger::critical("{} : {}", type, data->pMessage);
         break;
     }
     case VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT:
     {
-        PLP_WARN("{} : {}", type, data->pMessage);
+        //Logger::warn("{} : {}", type, data->pMessage);
         break;
     }
     case VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT:
     case VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT:
     case VK_DEBUG_UTILS_MESSAGE_SEVERITY_FLAG_BITS_MAX_ENUM_EXT:
     {
-        PLP_TRACE("{} : {}", type, data->pMessage);
+        //Logger::trace("{} : {}", type, data->pMessage);
     }
   }
   return VK_FALSE;
@@ -137,7 +152,7 @@ void VulkanAPI::createInstance()
   std::string message;
 
   if (!isValidationLayersEnabled() && !checkValidationLayerSupport()) {
-      PLP_WARN("Validations layers not available !");
+      //Logger::warn("Validations layers not available !");
   }
 
   VkApplicationInfo app_info{};
@@ -169,9 +184,9 @@ void VulkanAPI::createInstance()
     create_info.enabledLayerCount = static_cast<uint32_t>(_validation_layers.size());
     create_info.ppEnabledLayerNames = _validation_layers.data();
     create_info.pNext = (VkDebugUtilsMessengerCreateInfoEXT*)&debug_create_info;
-    PLP_TRACE("Validations enabled");
+    //Logger::trace("Validations enabled");
   } else {
-    PLP_TRACE("Validations disabled");
+    //Logger::trace("Validations disabled");
     create_info.enabledLayerCount = 0;
   }
 
@@ -180,7 +195,7 @@ void VulkanAPI::createInstance()
   result = vkCreateInstance(& create_info, nullptr, &_instance);
 
   if (VK_SUCCESS != result) {
-    PLP_FATAL("Can't create VK instance : {}", static_cast<int>(result));
+    //Logger::critical("Can't create VK instance : {}", static_cast<int>(result));
     throw std::runtime_error("Can't create VK instance.");
   }
 
@@ -218,7 +233,7 @@ bool VulkanAPI::checkValidationLayerSupport()
     bool founded = false;
 
     for (auto const & layer_props : available_layers) {
-      if (strcmp(layer_name.c_str(), layer_props.layerName) == 0) {
+      if (layer_name.c_str() == layer_props.layerName) {
         founded = true;
         break;
       }
@@ -263,7 +278,7 @@ void VulkanAPI::setupDebugMessenger()
   create_info.pUserData = nullptr;
 
   if (CreateDebugUtilsMessengerEXT(_instance, & create_info, nullptr, &_debug_msg_callback) != VK_SUCCESS) {
-    PLP_ERROR("Can't create debug messenger.");
+    //Logger::error("Can't create debug messenger.");
   }
 }
 
@@ -273,7 +288,7 @@ void VulkanAPI::pickPhysicalDevice()
   vkEnumeratePhysicalDevices(_instance, & device_count, nullptr);
 
   if (device_count == 0) {
-    PLP_FATAL("failed to find GPUs with Vulkan support!");
+    //Logger::critical("failed to find GPUs with Vulkan support!");
     exit(-1);
   }
 
@@ -308,7 +323,7 @@ void VulkanAPI::pickPhysicalDevice()
     }
   }
   if (_physical_device == VK_NULL_HANDLE) {
-    PLP_FATAL("failed to find a suitable GPU");
+    //Logger::critical("failed to find a suitable GPU");
     exit(-1);
   }
 }
@@ -440,7 +455,7 @@ void VulkanAPI::createLogicalDevice()
   create_info.pNext = &ext_dynamic_state;
 
   if (vkCreateDevice(_physical_device, & create_info, nullptr, &_device) != VK_SUCCESS) {
-    PLP_FATAL("failed to create logical device!");
+    //Logger::critical("failed to create logical device!");
     return;
   }
 
@@ -458,7 +473,7 @@ void VulkanAPI::createSurface()
   VkResult result = glfwCreateWindowSurface(_instance, _window->get(), nullptr, & _surface);
 
   if (result != VK_SUCCESS) {
-    PLP_FATAL("failed to create window surface!");
+    //Logger::critical("failed to create window surface!");
     throw std::runtime_error("failed to create window surface!");
   }
 }
@@ -580,7 +595,7 @@ VkSwapchainKHR VulkanAPI::createSwapChain(
   result = vkCreateSwapchainKHR(_device, & create_info, nullptr, & swapchain);
 
   if (result != VK_SUCCESS) {
-      PLP_FATAL("Swap chain failed {}", static_cast<int>(result));
+      //Logger::critical("Swap chain failed {}", static_cast<int>(result));
   }
   vkGetSwapchainImagesKHR(_device, swapchain, &image_count, nullptr);
   swapchain_images.resize(image_count);
@@ -640,7 +655,7 @@ VkImageView VulkanAPI::createImageView(
   result = vkCreateImageView(_device, &create_info, nullptr, &swapchain_image_view);
 
   if (result != VK_SUCCESS) {
-    PLP_ERROR("failed to create image views!");
+    //Logger::error("failed to create image views!");
   }
   return swapchain_image_view;
 }
@@ -682,7 +697,7 @@ VkPipelineLayout VulkanAPI::createPipelineLayout(
   VkResult result = vkCreatePipelineLayout(_device, &pipeline_layout_info, nullptr, &graphics_pipeline_layout);
 
   if (result != VK_SUCCESS) {
-      PLP_ERROR("failed to create pipeline layout!");
+      //Logger::error("failed to create pipeline layout!");
   }
   return graphics_pipeline_layout;
 }
@@ -851,7 +866,7 @@ VkPipeline VulkanAPI::createGraphicsPipeline(PipeLineCreateInfo const& pipeline_
       fStream.read(p_read_file.data(), cache_file_size);
       fStream.close();
     } else {
-      //PLP_TRACE("Pipeline cache miss!");
+      ////Logger::trace("Pipeline cache miss!");
       bad_cache = true;
     }
 
@@ -860,9 +875,9 @@ VkPipeline VulkanAPI::createGraphicsPipeline(PipeLineCreateInfo const& pipeline_
       cache_file_data = p_read_file.data();
 
       if (cache_file_data == nullptr) {
-        PLP_WARN("Cannot allocate memory to pipeline cache");
+        //Logger::warn("Cannot allocate memory to pipeline cache");
       }
-      //PLP_TRACE("Pipeline cache HIT from {}", cache_filename);
+      ////Logger::trace("Pipeline cache HIT from {}", cache_filename);
     }
 
     if (cache_file_data != nullptr) {
@@ -880,22 +895,22 @@ VkPipeline VulkanAPI::createGraphicsPipeline(PipeLineCreateInfo const& pipeline_
 
       if (header_length <= 0) {
         bad_cache = true;
-        PLP_ERROR("Bad header length in {} - {}", cache_filename, header_length);
+        //Logger::error("Bad header length in {} - {}", cache_filename, header_length);
       }
       if (cache_header_version != VK_PIPELINE_CACHE_HEADER_VERSION_ONE) {
         bad_cache = true;
-        PLP_ERROR("Unsupported cache header version in {} got {}", cache_filename, cache_header_version);
+        //Logger::error("Unsupported cache header version in {} got {}", cache_filename, cache_header_version);
       }
       if (vendor_ID != static_cast<uint32_t>(_device_props.vendorID)) {
         bad_cache = true;
-        PLP_ERROR("Vendor ID mismatch in {} got {} expect {}", cache_filename, vendor_ID, _device_props.vendorID);
+        //Logger::error("Vendor ID mismatch in {} got {} expect {}", cache_filename, vendor_ID, _device_props.vendorID);
       }
       if (device_ID != static_cast<uint32_t>(_device_props.deviceID)) {
         bad_cache = true;
-        PLP_ERROR("Device ID mismatch in {} got {} expect {}", cache_filename, device_ID, _device_props.deviceID);
+        //Logger::error("Device ID mismatch in {} got {} expect {}", cache_filename, device_ID, _device_props.deviceID);
       }
       if (memcmp(pipeline_cache_UUID,  _device_props.pipelineCacheUUID, sizeof(pipeline_cache_UUID)) != 0) {
-        PLP_ERROR("UUID mismatch in {} got {} expect {}", cache_filename, *pipeline_cache_UUID, *_device_props.pipelineCacheUUID);
+        //Logger::error("UUID mismatch in {} got {} expect {}", cache_filename, *pipeline_cache_UUID, *_device_props.pipelineCacheUUID);
       }
 
       if (bad_cache) {
@@ -903,10 +918,10 @@ VkPipeline VulkanAPI::createGraphicsPipeline(PipeLineCreateInfo const& pipeline_
         cache_file_size = 0;
         cache_file_data = nullptr;
 
-        PLP_TRACE("Deleting cache entry {} to repopulate.", cache_filename);
+        //Logger::trace("Deleting cache entry {} to repopulate.", cache_filename);
 
         if (remove(cache_filename.c_str()) != 0) {
-          PLP_ERROR("Reading error");
+          //Logger::error("Reading error");
         }
       }
     }
@@ -920,12 +935,12 @@ VkPipeline VulkanAPI::createGraphicsPipeline(PipeLineCreateInfo const& pipeline_
     VkResult result = vkCreatePipelineCache(_device, & p_create_info, nullptr, & pipeline_cache);
 
     if (result != VK_SUCCESS) {
-      PLP_ERROR("failed to get graphics pipeline cache size!");
+      //Logger::error("failed to get graphics pipeline cache size!");
     }
     result = vkCreateGraphicsPipelines(_device, VK_NULL_HANDLE, 1, & pipeline_info, nullptr, & graphics_pipeline);
 
     if (result != VK_SUCCESS) {
-      PLP_ERROR("failed to create graphics pipeline cache!");
+      //Logger::error("failed to create graphics pipeline cache!");
     }
     if (result == VK_SUCCESS && bad_cache) {
       size_t p_data_size = 0;
@@ -935,12 +950,12 @@ VkPipeline VulkanAPI::createGraphicsPipeline(PipeLineCreateInfo const& pipeline_
       result = vkGetPipelineCacheData(_device, pipeline_cache, & p_data_size, nullptr);
 
       if (result != VK_SUCCESS) {
-        PLP_ERROR("failed to get graphics pipeline cache size!");
+        //Logger::error("failed to get graphics pipeline cache size!");
       }
       data = (char*)malloc(sizeof(char) * p_data_size);
 
       if (!data) {
-        PLP_ERROR("failed to resize cache buffer!");
+        //Logger::error("failed to resize cache buffer!");
       } else {
         result = vkGetPipelineCacheData(_device, pipeline_cache, & p_data_size, data);
 
@@ -949,7 +964,7 @@ VkPipeline VulkanAPI::createGraphicsPipeline(PipeLineCreateInfo const& pipeline_
           std::ofstream ostrm(cache_filename, std::ios::binary);
           ostrm.write(static_cast<const char*>(data), p_data_size);
           ostrm.close();
-          PLP_TRACE("cacheData written to {}", cache_filename);
+          //Logger::trace("cacheData written to {}", cache_filename);
         }
       }
     }
@@ -970,7 +985,7 @@ VkShaderModule VulkanAPI::createShaderModule(std::vector<char> const& code)
   result = vkCreateShaderModule(_device, &create_info, nullptr, &shader_module);
 
   if (result != VK_SUCCESS) {
-      PLP_ERROR("failed to create shader module!");
+      //Logger::error("failed to create shader module!");
   }
   return shader_module;
 }
@@ -1054,7 +1069,7 @@ VkRenderPass* VulkanAPI::createRenderPass(VkSampleCountFlagBits const& msaaSampl
   VkResult result = vkCreateRenderPass(_device, & rdr_pass_info, nullptr, rdr_pass);
 
   if (result != VK_SUCCESS) {
-    PLP_FATAL("failed to create render pass!");
+    //Logger::critical("failed to create render pass!");
   }
   return rdr_pass;
 }
@@ -1089,7 +1104,7 @@ std::vector<VkFramebuffer> VulkanAPI::createFramebuffers(
     VkResult result = vkCreateFramebuffer(_device, & frame_buffer_info, nullptr, & swapchain_framebuffers[i]);
 
     if (result != VK_SUCCESS) {
-      PLP_ERROR("failed to create framebuffer!");
+      //Logger::error("failed to create framebuffer!");
     }
   }
   return swapchain_framebuffers;
@@ -1109,7 +1124,7 @@ VkCommandPool VulkanAPI::createCommandPool()
   VkResult result = vkCreateCommandPool(_device, & poolInfo, nullptr, & cmd_pool);
 
   if (result != VK_SUCCESS) {
-    PLP_ERROR("failed to create command pool!");
+    //Logger::error("failed to create command pool!");
   }
   return cmd_pool;
 }
@@ -1131,7 +1146,7 @@ std::vector<VkCommandBuffer> VulkanAPI::allocateCommandBuffers(
   VkResult result = vkAllocateCommandBuffers(_device, & alloc_info, cmd_buffers.data());
 
   if (result != VK_SUCCESS) {
-    PLP_ERROR("failed to allocate command buffers!");
+    //Logger::error("failed to allocate command buffers!");
   }
   return cmd_buffers;
 }
@@ -1639,7 +1654,7 @@ void VulkanAPI::createBuffer(
   VkResult result = vkBindBufferMemory(_device, buffer, device_memory, 0);
 
   if (result != VK_SUCCESS) {
-    PLP_ERROR("Memory binding failed in createBuffer");
+    //Logger::error("Memory binding failed in createBuffer");
   }
 }
 
@@ -2085,7 +2100,7 @@ void VulkanAPI::copyBuffer(
     VkResult result = vkQueueSubmit(_graphics_queues[queue_index], 1, & submit_info, _fence_buffer);
 
     if (result != VK_SUCCESS) {
-      PLP_ERROR("failed to copy buffer.");
+      //Logger::error("failed to copy buffer.");
     }
 
     vkWaitForFences(_device, 1, &_fence_buffer, VK_TRUE, UINT32_MAX);
@@ -2252,7 +2267,7 @@ VkImageView VulkanAPI::createDepthMapImageView(VkImage& image)
   result = vkCreateImageView(_device, &create_info, nullptr, &depth_map_imageview);
 
   if (result != VK_SUCCESS) {
-    PLP_ERROR("failed to create depth map image view.");
+    //Logger::error("failed to create depth map image view.");
   }
   return depth_map_imageview;
 }
@@ -2301,7 +2316,7 @@ void VulkanAPI::createDepthMapFrameBuffer(
   VkResult result = vkCreateFramebuffer(_device, &frame_buffer_info, nullptr, & frame_buffer);
 
   if (result != VK_SUCCESS) {
-    PLP_ERROR("failed to create framebuffer for depth map");
+    //Logger::error("failed to create framebuffer for depth map");
   }
 }
 
@@ -2507,690 +2522,691 @@ VkSampler VulkanAPI::createTextureSampler(uint32_t const mip_lvl)
   sample_info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
   sample_info.magFilter = VK_FILTER_LINEAR;
   sample_info.minFilter = VK_FILTER_LINEAR;
-  sample_info.addressModeU = VK_SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT;
-  sample_info.addressModeV = sample_info.addressModeU;
-  sample_info.addressModeW = sample_info.addressModeU;
-  sample_info.maxAnisotropy = _device_props.limits.maxSamplerAnisotropy;
-  sample_info.unnormalizedCoordinates = VK_FALSE;
-  sample_info.compareEnable = VK_FALSE;
-  sample_info.compareOp = VK_COMPARE_OP_LESS;
-  sample_info.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
-  sample_info.minLod = 0.0f;
-  sample_info.maxLod = static_cast<float>(mip_lvl);
-  sample_info.mipLodBias = 0.0f;
-  sample_info.borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE;
+    sample_info.addressModeU = VK_SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT;
+    sample_info.addressModeV = sample_info.addressModeU;
+    sample_info.addressModeW = sample_info.addressModeU;
+    sample_info.maxAnisotropy = _device_props.limits.maxSamplerAnisotropy;
+    sample_info.unnormalizedCoordinates = VK_FALSE;
+    sample_info.compareEnable = VK_FALSE;
+    sample_info.compareOp = VK_COMPARE_OP_LESS;
+    sample_info.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+    sample_info.minLod = 0.0f;
+    sample_info.maxLod = static_cast<float>(mip_lvl);
+    sample_info.mipLodBias = 0.0f;
+    sample_info.borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE;
 
-  if (vkCreateSampler(_device, & sample_info, nullptr, & texture_sampler) != VK_SUCCESS) {
-    throw std::runtime_error("failed to create texture sampler!");
-  }
-  return texture_sampler;
-}
-
-VkFormat VulkanAPI::findDepthFormat()
-{
-  return findSupportedFormat({ PLP_VK_FORMAT_DEPTH, PLP_VK_FORMAT_DEPTH_STENCIL },
-    VK_IMAGE_TILING_OPTIMAL, VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT);
-}
-
-VkFormat VulkanAPI::findSupportedFormat(
-  std::vector<VkFormat>const& candidates,
-  VkImageTiling const tiling,
-  VkFormatFeatureFlags const features)
-{
-  for (VkFormat format : candidates) {
-    VkFormatProperties props;
-    vkGetPhysicalDeviceFormatProperties(_physical_device, format, & props);
-
-    if (tiling == VK_IMAGE_TILING_OPTIMAL && (props.optimalTilingFeatures & features) == features) {
-      return format;
-    } else if (tiling == VK_IMAGE_TILING_LINEAR && (props.linearTilingFeatures & features) == features) {
-      return format;
+    if (vkCreateSampler(_device, & sample_info, nullptr, & texture_sampler) != VK_SUCCESS) {
+      throw std::runtime_error("failed to create texture sampler!");
     }
-  }
-  throw std::runtime_error("failed to find supported format!");
-}
-
-bool VulkanAPI::hasStencilComponent(VkFormat const format)
-{
-  return format == PLP_VK_FORMAT_DEPTH || format == PLP_VK_FORMAT_DEPTH_STENCIL;
-}
-
-VkSampleCountFlagBits VulkanAPI::getMaxUsableSampleCount()
-{
-  VkPhysicalDeviceProperties physical_device_props;
-  vkGetPhysicalDeviceProperties(_physical_device, & physical_device_props);
-
-  VkSampleCountFlags counts = physical_device_props.limits.framebufferColorSampleCounts
-    & physical_device_props.limits.framebufferDepthSampleCounts;
-
-  if (counts & VK_SAMPLE_COUNT_64_BIT) { return VK_SAMPLE_COUNT_64_BIT; }
-  if (counts & VK_SAMPLE_COUNT_32_BIT) { return VK_SAMPLE_COUNT_32_BIT; }
-  if (counts & VK_SAMPLE_COUNT_16_BIT) { return VK_SAMPLE_COUNT_16_BIT; }
-  if (counts & VK_SAMPLE_COUNT_8_BIT) { return VK_SAMPLE_COUNT_8_BIT; }
-  if (counts & VK_SAMPLE_COUNT_4_BIT) { return VK_SAMPLE_COUNT_4_BIT; }
-  if (counts & VK_SAMPLE_COUNT_2_BIT) { return VK_SAMPLE_COUNT_2_BIT; }
-  return VK_SAMPLE_COUNT_1_BIT;
-}
-
-VulkanAPI::~VulkanAPI()
-{
-  PLP_TRACE("VulkanAPI deleted.");
-}
-
-void VulkanAPI::startMarker(
-  VkCommandBuffer& buffer,
-  std::string const& name,
-  float const r,
-  float const g,
-  float const b,
-  float const a)
-{
-#ifdef PLP_DEBUG_BUILD
-  VkDebugUtilsLabelEXT label;
-  label.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_LABEL_EXT;
-  label.pLabelName = name.c_str();
-  label.pNext = VK_NULL_HANDLE;
-  label.color[0] = r;
-  label.color[1] = g;
-  label.color[2] = b;
-  label.color[3] = a;
-
-  vkCmdBeginDebugUtilsLabelEXT(buffer, &label);
-#endif
-}
-
-void VulkanAPI::endMarker(VkCommandBuffer& buffer)
-{
-#ifdef PLP_DEBUG_BUILD
-  vkCmdEndDebugUtilsLabelEXT(buffer);
-#endif
-}
-
-void VulkanAPI::waitIdle()
-{
-  vkQueueWaitIdle(_present_queues[0]);
-  vkDeviceWaitIdle(_device);
-}
-
-void VulkanAPI::setResolution(unsigned int const width, unsigned int const height)
-{
-  _width = width;
-  _height = height;
-}
-
-void VulkanAPI::transitionImageLayout(
-  VkCommandBuffer& cmd_buffer,
-  VkImage& image,
-  VkImageLayout const old_layout,
-  VkImageLayout const new_layout,
-  VkImageAspectFlags const aspect_flags)
-{
-  VkImageMemoryBarrier barrier{};
-  barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-  barrier.oldLayout = old_layout;
-  barrier.newLayout = new_layout;
-  barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-  barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-  barrier.image = image;
-  barrier.subresourceRange.aspectMask = aspect_flags;
-  barrier.subresourceRange.baseMipLevel = 0;
-  barrier.subresourceRange.levelCount = 1;
-  barrier.subresourceRange.baseArrayLayer = 0;
-  barrier.subresourceRange.layerCount = 1;
-
-  VkPipelineStageFlags source_stage;
-  VkPipelineStageFlags destination_stage;
-
-  if (old_layout == VK_IMAGE_LAYOUT_UNDEFINED && new_layout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL) {
-    barrier.srcAccessMask = 0;
-    barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-
-    source_stage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
-    destination_stage = VK_PIPELINE_STAGE_TRANSFER_BIT;
-
-  } else if (old_layout == VK_IMAGE_LAYOUT_GENERAL && new_layout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL) {
-    barrier.srcAccessMask = 0;
-    barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-
-    source_stage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
-    destination_stage = VK_PIPELINE_STAGE_TRANSFER_BIT;
-
-  } else if (old_layout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL && new_layout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL) {
-    barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-    barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
-
-    source_stage = VK_PIPELINE_STAGE_TRANSFER_BIT;
-    destination_stage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
-
-  } else if (old_layout == VK_IMAGE_LAYOUT_UNDEFINED && new_layout == VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL) {
-    barrier.srcAccessMask = 0;
-    barrier.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-
-    source_stage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-    destination_stage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-
-  } else if (old_layout == VK_IMAGE_LAYOUT_UNDEFINED && new_layout == VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL) {
-    barrier.srcAccessMask = 0;
-    barrier.dstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
-
-    source_stage = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
-    destination_stage = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
-  }
-  else if (old_layout == VK_IMAGE_LAYOUT_GENERAL && new_layout == VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL) {
-    barrier.srcAccessMask = 0;
-    barrier.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-
-    source_stage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-    destination_stage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-
-  } else if (old_layout == VK_IMAGE_LAYOUT_GENERAL && new_layout == VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL) {
-    barrier.srcAccessMask = 0;
-    barrier.dstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
-
-    source_stage = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
-    destination_stage = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
-  } else if (old_layout == VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL && new_layout == VK_IMAGE_LAYOUT_PRESENT_SRC_KHR) {
-    barrier.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-    barrier.dstAccessMask = 0;
-
-    source_stage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-    destination_stage = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
-
-  } else if (old_layout == VK_IMAGE_LAYOUT_UNDEFINED && new_layout == VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL) {
-    barrier.srcAccessMask = 0;
-    barrier.dstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
-
-    source_stage = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
-    destination_stage = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
-
-  } else if (old_layout == VK_IMAGE_LAYOUT_GENERAL && new_layout == VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL) {
-    barrier.srcAccessMask = 0;
-    barrier.dstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
-
-    source_stage = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
-    destination_stage = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
-
-  } else if (old_layout == VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL && new_layout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL) {
-    barrier.srcAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
-    barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
-
-    source_stage = VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
-    destination_stage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
-  } else if (old_layout == VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL && new_layout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL) {
-    barrier.srcAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
-    barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
-
-    source_stage = VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
-    destination_stage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
-  } else if (old_layout == VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL && new_layout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL) {
-    barrier.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-    barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
-
-    source_stage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-    destination_stage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
-  }else {
-    throw std::invalid_argument("unsupported layout transition");
+    return texture_sampler;
   }
 
-  vkCmdPipelineBarrier(
-    cmd_buffer,
-    source_stage, destination_stage,
-    0,
-    0, nullptr,
-    0, nullptr,
-    1, &barrier
-  );
-}
-
-void VulkanAPI::submit(
-  VkQueue& queue,
-  std::vector<VkSubmitInfo> const& submit_infos,
-  VkPresentInfoKHR const& present_info,
-  VkFence& fence)
-{
+  VkFormat VulkanAPI::findDepthFormat()
   {
-    //SCOPED_TIMER();
+    return findSupportedFormat({ PLP_VK_FORMAT_DEPTH, PLP_VK_FORMAT_DEPTH_STENCIL },
+      VK_IMAGE_TILING_OPTIMAL, VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT);
+  }
 
-    std::lock_guard<std::mutex> guard(_mutex_queue_submit);
-    VkResult result = vkQueueSubmit(queue, submit_infos.size(), submit_infos.data(), fence);
+  VkFormat VulkanAPI::findSupportedFormat(
+    std::vector<VkFormat>const& candidates,
+    VkImageTiling const tiling,
+    VkFormatFeatureFlags const features)
+  {
+    for (VkFormat format : candidates) {
+      VkFormatProperties props;
+      vkGetPhysicalDeviceFormatProperties(_physical_device, format, & props);
+
+      if (tiling == VK_IMAGE_TILING_OPTIMAL && (props.optimalTilingFeatures & features) == features) {
+        return format;
+      } else if (tiling == VK_IMAGE_TILING_LINEAR && (props.linearTilingFeatures & features) == features) {
+        return format;
+      }
+    }
+    throw std::runtime_error("failed to find supported format!");
+  }
+
+  bool VulkanAPI::hasStencilComponent(VkFormat const format)
+  {
+    return format == PLP_VK_FORMAT_DEPTH || format == PLP_VK_FORMAT_DEPTH_STENCIL;
+  }
+
+  VkSampleCountFlagBits VulkanAPI::getMaxUsableSampleCount()
+  {
+    VkPhysicalDeviceProperties physical_device_props;
+    vkGetPhysicalDeviceProperties(_physical_device, & physical_device_props);
+
+    VkSampleCountFlags counts = physical_device_props.limits.framebufferColorSampleCounts
+      & physical_device_props.limits.framebufferDepthSampleCounts;
+
+    if (counts & VK_SAMPLE_COUNT_64_BIT) { return VK_SAMPLE_COUNT_64_BIT; }
+    if (counts & VK_SAMPLE_COUNT_32_BIT) { return VK_SAMPLE_COUNT_32_BIT; }
+    if (counts & VK_SAMPLE_COUNT_16_BIT) { return VK_SAMPLE_COUNT_16_BIT; }
+    if (counts & VK_SAMPLE_COUNT_8_BIT) { return VK_SAMPLE_COUNT_8_BIT; }
+    if (counts & VK_SAMPLE_COUNT_4_BIT) { return VK_SAMPLE_COUNT_4_BIT; }
+    if (counts & VK_SAMPLE_COUNT_2_BIT) { return VK_SAMPLE_COUNT_2_BIT; }
+    return VK_SAMPLE_COUNT_1_BIT;
+  }
+
+  VulkanAPI::~VulkanAPI()
+  {
+    //Logger::trace("VulkanAPI deleted.");
+  }
+
+  void VulkanAPI::startMarker(
+    VkCommandBuffer& buffer,
+    std::string const& name,
+    float const r,
+    float const g,
+    float const b,
+    float const a)
+  {
+  #ifdef PLP_DEBUG_BUILD
+    VkDebugUtilsLabelEXT label;
+    label.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_LABEL_EXT;
+    label.pLabelName = name.c_str();
+    label.pNext = VK_NULL_HANDLE;
+    label.color[0] = r;
+    label.color[1] = g;
+    label.color[2] = b;
+    label.color[3] = a;
+
+    vkCmdBeginDebugUtilsLabelEXT(buffer, &label);
+  #endif
+  }
+
+  void VulkanAPI::endMarker(VkCommandBuffer& buffer)
+  {
+  #ifdef PLP_DEBUG_BUILD
+    vkCmdEndDebugUtilsLabelEXT(buffer);
+  #endif
+  }
+
+  void VulkanAPI::waitIdle()
+  {
+    vkQueueWaitIdle(_present_queues[0]);
+    vkDeviceWaitIdle(_device);
+  }
+
+  void VulkanAPI::setResolution(unsigned int const width, unsigned int const height)
+  {
+    _width = width;
+    _height = height;
+  }
+
+  void VulkanAPI::transitionImageLayout(
+    VkCommandBuffer& cmd_buffer,
+    VkImage& image,
+    VkImageLayout const old_layout,
+    VkImageLayout const new_layout,
+    VkImageAspectFlags const aspect_flags)
+  {
+    VkImageMemoryBarrier barrier{};
+    barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+    barrier.oldLayout = old_layout;
+    barrier.newLayout = new_layout;
+    barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+    barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+    barrier.image = image;
+    barrier.subresourceRange.aspectMask = aspect_flags;
+    barrier.subresourceRange.baseMipLevel = 0;
+    barrier.subresourceRange.levelCount = 1;
+    barrier.subresourceRange.baseArrayLayer = 0;
+    barrier.subresourceRange.layerCount = 1;
+
+    VkPipelineStageFlags source_stage;
+    VkPipelineStageFlags destination_stage;
+
+    if (old_layout == VK_IMAGE_LAYOUT_UNDEFINED && new_layout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL) {
+      barrier.srcAccessMask = 0;
+      barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+
+      source_stage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+      destination_stage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+
+    } else if (old_layout == VK_IMAGE_LAYOUT_GENERAL && new_layout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL) {
+      barrier.srcAccessMask = 0;
+      barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+
+      source_stage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+      destination_stage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+
+    } else if (old_layout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL && new_layout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL) {
+      barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+      barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+
+      source_stage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+      destination_stage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+
+    } else if (old_layout == VK_IMAGE_LAYOUT_UNDEFINED && new_layout == VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL) {
+      barrier.srcAccessMask = 0;
+      barrier.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+
+      source_stage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+      destination_stage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+
+    } else if (old_layout == VK_IMAGE_LAYOUT_UNDEFINED && new_layout == VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL) {
+      barrier.srcAccessMask = 0;
+      barrier.dstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+
+      source_stage = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
+      destination_stage = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+    }
+    else if (old_layout == VK_IMAGE_LAYOUT_GENERAL && new_layout == VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL) {
+      barrier.srcAccessMask = 0;
+      barrier.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+
+      source_stage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+      destination_stage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+
+    } else if (old_layout == VK_IMAGE_LAYOUT_GENERAL && new_layout == VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL) {
+      barrier.srcAccessMask = 0;
+      barrier.dstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+
+      source_stage = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
+      destination_stage = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+    } else if (old_layout == VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL && new_layout == VK_IMAGE_LAYOUT_PRESENT_SRC_KHR) {
+      barrier.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+      barrier.dstAccessMask = 0;
+
+      source_stage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+      destination_stage = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
+
+    } else if (old_layout == VK_IMAGE_LAYOUT_UNDEFINED && new_layout == VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL) {
+      barrier.srcAccessMask = 0;
+      barrier.dstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+
+      source_stage = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
+      destination_stage = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+
+    } else if (old_layout == VK_IMAGE_LAYOUT_GENERAL && new_layout == VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL) {
+      barrier.srcAccessMask = 0;
+      barrier.dstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+
+      source_stage = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
+      destination_stage = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+
+    } else if (old_layout == VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL && new_layout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL) {
+      barrier.srcAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+      barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+
+      source_stage = VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
+      destination_stage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+    } else if (old_layout == VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL && new_layout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL) {
+      barrier.srcAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+      barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+
+      source_stage = VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
+      destination_stage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+    } else if (old_layout == VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL && new_layout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL) {
+      barrier.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+      barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+
+      source_stage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+      destination_stage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+    }else {
+      throw std::invalid_argument("unsupported layout transition");
+    }
+
+    vkCmdPipelineBarrier(
+      cmd_buffer,
+      source_stage, destination_stage,
+      0,
+      0, nullptr,
+      0, nullptr,
+      1, &barrier
+    );
+  }
+
+  void VulkanAPI::submit(
+    VkQueue& queue,
+    std::vector<VkSubmitInfo> const& submit_infos,
+    VkPresentInfoKHR const& present_info,
+    VkFence& fence)
+  {
+    {
+      //SCOPED_TIMER();
+
+      std::lock_guard<std::mutex> guard(_mutex_queue_submit);
+      VkResult result = vkQueueSubmit(queue, submit_infos.size(), submit_infos.data(), fence);
+
+      if (result != VK_SUCCESS) {
+        //Logger::error("Error on queue submit: {}", static_cast<int>(result));
+      }
+
+      result = vkQueuePresentKHR(queue, &present_info);
+
+      if (result != VK_SUCCESS) {
+        //Logger::error("Error on queue present: {}", static_cast<int>(result));
+      }
+
+      //vkQueueWaitIdle(queue);
+      //vkDeviceWaitIdle(_device);
+    }
+  }
+
+  void VulkanAPI::createKTXImage(
+    VkCommandBuffer& cmd_buffer,
+    ktxTexture2 * ktx_texture,
+    VkImage& image)
+  {
+    VkBuffer buffer;
+    VkDeviceMemory staging_device_memory;
+
+      createBuffer(
+      ktx_texture->dataSize,
+      VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+      VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT,
+      buffer,
+      staging_device_memory);
+
+    VkMemoryRequirements mem_requirements;
+
+    vkGetBufferMemoryRequirements(_device, buffer, &mem_requirements);
+
+    auto memory_type = findMemoryType(mem_requirements.memoryTypeBits,
+                                      VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+
+    VkDeviceSize const size { mem_requirements.size};
+
+    void* data;
+    vkMapMemory(_device, staging_device_memory, 0, size, 0, &data);
+    memcpy(data, ktx_texture->pData, static_cast<size_t>(size));
+    vkUnmapMemory(_device, staging_device_memory);
+
+    VkFormat const format = (VkFormat) ktx_texture->vkFormat;
+    
+    auto const width { static_cast<uint32_t>(ktx_texture->baseWidth) };
+    auto const height { static_cast<uint32_t>(ktx_texture->baseHeight) };
+    auto const mip_lvl{ ktx_texture->numLevels };
+
+    VkImageType image_type{VK_IMAGE_TYPE_1D};
+
+    if (ktx_texture->numDimensions == 2) {
+      image_type = VK_IMAGE_TYPE_2D;
+    } else if (ktx_texture->numDimensions == 3) {
+      image_type = VK_IMAGE_TYPE_3D;
+    }
+
+    VkImageCreateInfo image_info{};
+    image_info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+    image_info.imageType = image_type;
+    image_info.extent.width = width;
+    image_info.extent.height = height;
+    image_info.extent.depth = 1;
+    image_info.mipLevels = mip_lvl;
+    image_info.arrayLayers = 1;
+    image_info.format = format;
+    image_info.tiling = VK_IMAGE_TILING_OPTIMAL;
+    image_info.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+    image_info.usage = VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+    image_info.samples = VK_SAMPLE_COUNT_1_BIT;
+    image_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+
+    if (ktx_texture->isCubemap) {
+      image_info.flags = VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT;
+      image_info.arrayLayers = 6;
+    }
+
+    VkResult result{ VK_SUCCESS };
+    result = vkCreateImage(_device, & image_info, nullptr, &image);
 
     if (result != VK_SUCCESS) {
-      PLP_ERROR("Error on queue submit: {}", static_cast<int>(result));
+      throw std::runtime_error("failed to create image!");
     }
 
-    result = vkQueuePresentKHR(queue, &present_info);
+    VkMemoryRequirements image_mem_requirements;
+    vkGetImageMemoryRequirements(_device, image, & image_mem_requirements);
+    memory_type = findMemoryType(image_mem_requirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+    uint32_t const image_size = image_mem_requirements.size;
+
+    uint32_t const image_bind_offset = align_to(image_size, image_mem_requirements.alignment);
+
+    auto device_memory = _device_memory_pool->get(
+      _device,
+      image_size,
+      memory_type,
+      VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+      image_mem_requirements.alignment,
+      DeviceMemoryPool::DeviceBufferType::STAGING);
+
+    device_memory->bindImageToMemory(image, image_bind_offset);
+
+    auto rdr_barrier = setupImageMemoryBarrier(
+      image, 0, VK_ACCESS_TRANSFER_WRITE_BIT, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+
+    if (ktx_texture->isCubemap) {
+      rdr_barrier.subresourceRange.layerCount = 6;
+      rdr_barrier.subresourceRange.baseMipLevel = 0;
+      rdr_barrier.subresourceRange.levelCount = mip_lvl;
+    }
+
+    std::vector<VkImageMemoryBarrier> barrier{ rdr_barrier };
+
+    beginCommandBuffer(cmd_buffer);
+
+    addPipelineBarriers(cmd_buffer,
+                        barrier,
+                        VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
+                        VK_PIPELINE_STAGE_TRANSFER_BIT,
+                        VK_DEPENDENCY_BY_REGION_BIT);
+
+    std::vector<VkBufferImageCopy> buffer_copy_regions;
+
+    auto const layer_size{ image_size / ktx_texture->numFaces };
+
+    for (auto i { 0 }; i < ktx_texture->numFaces; i++) {
+      for (auto mip{ 0 }; mip < mip_lvl; mip++) {
+        VkBufferImageCopy region{};
+        region.bufferOffset = layer_size * i;
+        region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        region.imageSubresource.mipLevel = mip;
+        region.imageSubresource.baseArrayLayer = i;
+        region.imageSubresource.layerCount = 1;
+        region.imageExtent.width =  width >> mip;
+        region.imageExtent.height = height >> mip;
+        region.imageExtent.depth = 1;
+
+        buffer_copy_regions.emplace_back(region);
+      }
+    }
+
+    vkCmdCopyBufferToImage(
+      cmd_buffer,
+      buffer,
+      image,
+      VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+      buffer_copy_regions.size(),
+      buffer_copy_regions.data());
+
+    generateMipmaps(cmd_buffer, format, image, width, height, mip_lvl);
+
+    endCommandBuffer(cmd_buffer);
+    queueSubmit(cmd_buffer);
+    
+    vkFreeMemory(_device, staging_device_memory, nullptr);
+    vkDestroyBuffer(_device, buffer, nullptr);
+
+    //_device_memory_pool->clear(device_memory);
+  }
+
+  VkImageView VulkanAPI::createKTXImageView(
+    ktxTexture2 * ktx_texture,
+    VkImage& image,
+    VkImageAspectFlags aspect_flags)
+  {
+    VkFormat const format = (VkFormat) ktx_texture->vkFormat;
+
+    VkImageViewCreateInfo create_info{};
+    create_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+    create_info.image = image;
+    
+    if (ktx_texture->numDimensions == 1) {
+      create_info.viewType = VK_IMAGE_VIEW_TYPE_1D;
+    } else if (ktx_texture->numDimensions == 2) {
+      create_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
+    } else if (ktx_texture->numDimensions == 3) {
+      create_info.viewType = VK_IMAGE_VIEW_TYPE_3D;
+    }
+    if (ktx_texture->isCubemap == true) {
+      create_info.viewType = VK_IMAGE_VIEW_TYPE_CUBE;
+    }
+
+    create_info.format = format;
+    create_info.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
+    create_info.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
+    create_info.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
+    create_info.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
+
+    create_info.subresourceRange.aspectMask = aspect_flags;
+    create_info.subresourceRange.baseMipLevel = 0;
+    create_info.subresourceRange.levelCount = ktx_texture->numLevels;
+    create_info.subresourceRange.baseArrayLayer = 0;
+    create_info.subresourceRange.layerCount = ktx_texture->numFaces;
+
+
+    VkResult result{ VK_SUCCESS };
+    VkImageView image_view{};
+
+    result = vkCreateImageView(_device, &create_info, nullptr, &image_view);
 
     if (result != VK_SUCCESS) {
-      PLP_ERROR("Error on queue present: {}", static_cast<int>(result));
+      //Logger::error("failed to create image view.");
     }
 
-    //vkQueueWaitIdle(queue);
-    //vkDeviceWaitIdle(_device);
-  }
-}
-
-void VulkanAPI::createKTXImage(
-  VkCommandBuffer& cmd_buffer,
-  ktxTexture2 * ktx_texture,
-  VkImage& image)
-{
-  VkBuffer buffer;
-  VkDeviceMemory staging_device_memory;
-
-    createBuffer(
-    ktx_texture->dataSize,
-    VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-    VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT,
-    buffer,
-    staging_device_memory);
-
-  VkMemoryRequirements mem_requirements;
-
-  vkGetBufferMemoryRequirements(_device, buffer, &mem_requirements);
-
-  auto memory_type = findMemoryType(mem_requirements.memoryTypeBits,
-                                    VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-
-  VkDeviceSize const size { mem_requirements.size};
-
-  void* data;
-  vkMapMemory(_device, staging_device_memory, 0, size, 0, &data);
-  memcpy(data, ktx_texture->pData, static_cast<size_t>(size));
-  vkUnmapMemory(_device, staging_device_memory);
-
-  VkFormat const format = (VkFormat) ktx_texture->vkFormat;
-  
-  auto const width { static_cast<uint32_t>(ktx_texture->baseWidth) };
-  auto const height { static_cast<uint32_t>(ktx_texture->baseHeight) };
-  auto const mip_lvl{ ktx_texture->numLevels };
-
-  VkImageType image_type{VK_IMAGE_TYPE_1D};
-
-  if (ktx_texture->numDimensions == 2) {
-    image_type = VK_IMAGE_TYPE_2D;
-  } else if (ktx_texture->numDimensions == 3) {
-    image_type = VK_IMAGE_TYPE_3D;
+    return image_view;
   }
 
-  VkImageCreateInfo image_info{};
-  image_info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
-  image_info.imageType = image_type;
-  image_info.extent.width = width;
-  image_info.extent.height = height;
-  image_info.extent.depth = 1;
-  image_info.mipLevels = mip_lvl;
-  image_info.arrayLayers = 1;
-  image_info.format = format;
-  image_info.tiling = VK_IMAGE_TILING_OPTIMAL;
-  image_info.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-  image_info.usage = VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
-  image_info.samples = VK_SAMPLE_COUNT_1_BIT;
-  image_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-
-  if (ktx_texture->isCubemap) {
-    image_info.flags = VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT;
-    image_info.arrayLayers = 6;
-  }
-
-  VkResult result{ VK_SUCCESS };
-  result = vkCreateImage(_device, & image_info, nullptr, &image);
-
-  if (result != VK_SUCCESS) {
-    throw std::runtime_error("failed to create image!");
-  }
-
-  VkMemoryRequirements image_mem_requirements;
-  vkGetImageMemoryRequirements(_device, image, & image_mem_requirements);
-  memory_type = findMemoryType(image_mem_requirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-  uint32_t const image_size = image_mem_requirements.size;
-
-  uint32_t const image_bind_offset = align_to(image_size, image_mem_requirements.alignment);
-
-  auto device_memory = _device_memory_pool->get(
-    _device,
-    image_size,
-    memory_type,
-    VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-    image_mem_requirements.alignment,
-    DeviceMemoryPool::DeviceBufferType::STAGING);
-
-  device_memory->bindImageToMemory(image, image_bind_offset);
-
-  auto rdr_barrier = setupImageMemoryBarrier(
-    image, 0, VK_ACCESS_TRANSFER_WRITE_BIT, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
-
-  if (ktx_texture->isCubemap) {
-    rdr_barrier.subresourceRange.layerCount = 6;
-    rdr_barrier.subresourceRange.baseMipLevel = 0;
-    rdr_barrier.subresourceRange.levelCount = mip_lvl;
-  }
-
-  std::vector<VkImageMemoryBarrier> barrier{ rdr_barrier };
-
-  beginCommandBuffer(cmd_buffer);
-
-  addPipelineBarriers(cmd_buffer,
-                      barrier,
-                      VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
-                      VK_PIPELINE_STAGE_TRANSFER_BIT,
-                      VK_DEPENDENCY_BY_REGION_BIT);
-
-  std::vector<VkBufferImageCopy> buffer_copy_regions;
-
-  auto const layer_size{ image_size / ktx_texture->numFaces };
-
-  for (auto i { 0 }; i < ktx_texture->numFaces; i++) {
-    for (auto mip{ 0 }; mip < mip_lvl; mip++) {
-      VkBufferImageCopy region{};
-      region.bufferOffset = layer_size * i;
-      region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-      region.imageSubresource.mipLevel = mip;
-      region.imageSubresource.baseArrayLayer = i;
-      region.imageSubresource.layerCount = 1;
-      region.imageExtent.width =  width >> mip;
-      region.imageExtent.height = height >> mip;
-      region.imageExtent.depth = 1;
-
-      buffer_copy_regions.emplace_back(region);
+  VkSamplerAddressMode VulkanAPI::getSamplerAddressMode(TextureWrapMode mode)
+  {
+    switch (mode)
+    {
+    case TextureWrapMode::WRAP:
+      return VK_SAMPLER_ADDRESS_MODE_REPEAT;
+    case TextureWrapMode::CLAMP_TO_EDGE:
+      return VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+    case TextureWrapMode::MIRROR_REPEAT:
+    default:
+      return VK_SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT;
     }
   }
 
-  vkCmdCopyBufferToImage(
-    cmd_buffer,
-    buffer,
-    image,
-    VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-    buffer_copy_regions.size(),
-    buffer_copy_regions.data());
+  VkSampler VulkanAPI::createKTXSampler(
+    TextureWrapMode const wrap_mode_u,
+    TextureWrapMode const wrap_mode_v,
+    float const mip_lvl)
+  {
+    VkSampler texture_sampler{};
 
-  generateMipmaps(cmd_buffer, format, image, width, height, mip_lvl);
+    VkSamplerAddressMode mode_u { getSamplerAddressMode(wrap_mode_u) };
+    VkSamplerAddressMode mode_v { getSamplerAddressMode(wrap_mode_v) };
 
-  endCommandBuffer(cmd_buffer);
-  queueSubmit(cmd_buffer);
-  
-  vkFreeMemory(_device, staging_device_memory, nullptr);
-  vkDestroyBuffer(_device, buffer, nullptr);
+    VkSamplerCreateInfo sampler_info{};
+    sampler_info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+    sampler_info.magFilter = VK_FILTER_LINEAR;
+    sampler_info.minFilter = VK_FILTER_LINEAR;
+    sampler_info.addressModeU = mode_u;
+    sampler_info.addressModeV = mode_v;
+    sampler_info.addressModeW = mode_v;
+    sampler_info.unnormalizedCoordinates = VK_FALSE;
+    sampler_info.compareEnable = VK_FALSE;
+    sampler_info.compareOp = VK_COMPARE_OP_LESS;
+    sampler_info.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+    sampler_info.minLod = 0.0f;
+    sampler_info.maxLod = mip_lvl;
+    sampler_info.mipLodBias = 0.0f;
+    sampler_info.borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE;
+    sampler_info.anisotropyEnable = VK_FALSE;
+    sampler_info.maxAnisotropy = 1;
+    
+    if (vkCreateSampler(_device, & sampler_info, nullptr, & texture_sampler) != VK_SUCCESS) {
+      throw std::runtime_error("failed to create texture sampler!");
+    }
+    return texture_sampler;
+  }
 
-  //_device_memory_pool->clear(device_memory);
-}
+  VkDeviceSize VulkanAPI::align_to(VkDeviceSize const size, VkDeviceSize const alignment)
+  {
+    //VkDeviceSize const offset { (size + alignment - 1) & ~(alignment - 1)};
+    auto const remainder = size % alignment;
 
-VkImageView VulkanAPI::createKTXImageView(
-  ktxTexture2 * ktx_texture,
-  VkImage& image,
-  VkImageAspectFlags aspect_flags)
-{
-  VkFormat const format = (VkFormat) ktx_texture->vkFormat;
+    ////Logger::debug("size: {} alignment: {} ", size, alignment);
+    if (remainder == 0) return size;
+    VkDeviceSize const offset {size + (alignment - remainder)};
 
-  VkImageViewCreateInfo create_info{};
-  create_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-  create_info.image = image;
-  
-  if (ktx_texture->numDimensions == 1) {
-    create_info.viewType = VK_IMAGE_VIEW_TYPE_1D;
-  } else if (ktx_texture->numDimensions == 2) {
+    return offset;
+  }
+
+  void VulkanAPI::createFontImage(
+    VkCommandBuffer& cmd_buffer,
+    std::unordered_map<unsigned int, FontCharacter> const& characters,
+    size_t const width,
+    size_t const height,
+    VkImage& image)
+  {;
+
+    auto const data_size{ width * height };
+
+    VkBuffer buffer;
+    VkDeviceMemory staging_device_memory;
+
+      createBuffer(
+      data_size,
+      VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+      VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT,
+      buffer,
+      staging_device_memory);
+
+    VkMemoryRequirements mem_requirements;
+
+    vkGetBufferMemoryRequirements(_device, buffer, &mem_requirements);
+
+    auto memory_type = findMemoryType(mem_requirements.memoryTypeBits,
+                                      VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+
+    VkDeviceSize const size { mem_requirements.size};
+
+    unsigned char* data;
+
+    vkMapMemory(_device, staging_device_memory, 0, size, 0, (void**) & data);
+    
+    int offset {0};
+
+    for (auto const& [name, character] : characters) {
+
+      auto const glyph_width{ character.size.x };
+      auto const glyph_height{ character.size.y };
+      auto buffer = character.buffer.data();
+
+      for (int y{ 0 }; y < glyph_height; y++) {
+        memcpy(
+          data + ((y + character.y_offset) * width + character.x_offset) ,
+          buffer + (y * glyph_width),
+          glyph_width
+        );
+      }
+    }
+
+    vkUnmapMemory(_device, staging_device_memory);
+    
+    auto const mip_lvl{ 1 };
+
+    VkImageCreateInfo image_info{};
+    image_info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+    image_info.imageType = VK_IMAGE_TYPE_2D;
+    image_info.extent.width = width;
+    image_info.extent.height = height;
+    image_info.extent.depth = 1;
+    image_info.mipLevels = mip_lvl;
+    image_info.arrayLayers = 1;
+    image_info.format = PLP_VK_FORMAT_FONT;
+    image_info.tiling = VK_IMAGE_TILING_OPTIMAL;
+    image_info.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+    image_info.usage = VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+    image_info.samples = VK_SAMPLE_COUNT_1_BIT;
+    image_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+    
+    VkResult result{ VK_SUCCESS };
+    result = vkCreateImage(_device, & image_info, nullptr, &image);
+
+    if (result != VK_SUCCESS) {
+      throw std::runtime_error("failed to create image!");
+    }
+
+    VkMemoryRequirements image_mem_requirements;
+    vkGetImageMemoryRequirements(_device, image, & image_mem_requirements);
+    memory_type = findMemoryType(image_mem_requirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+    uint32_t const image_size = image_mem_requirements.size;
+
+    uint32_t const image_bind_offset = align_to(image_size, image_mem_requirements.alignment);
+
+    auto device_memory = _device_memory_pool->get(
+      _device,
+      image_size,
+      memory_type,
+      VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+      image_mem_requirements.alignment,
+      DeviceMemoryPool::DeviceBufferType::STAGING);
+
+    device_memory->bindImageToMemory(image, image_bind_offset);
+
+    auto rdr_barrier = setupImageMemoryBarrier(
+      image, 0, VK_ACCESS_TRANSFER_WRITE_BIT, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+
+    std::vector<VkImageMemoryBarrier> barrier{ rdr_barrier };
+
+    beginCommandBuffer(cmd_buffer);
+
+    addPipelineBarriers(cmd_buffer,
+                        barrier,
+                        VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
+                        VK_PIPELINE_STAGE_TRANSFER_BIT,
+                        VK_DEPENDENCY_BY_REGION_BIT);
+
+    std::vector<VkBufferImageCopy> buffer_copy_regions;
+
+    VkBufferImageCopy region{};
+    region.bufferOffset = 0;
+    region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+    region.imageSubresource.mipLevel = 0;
+    region.imageSubresource.baseArrayLayer = 0;
+    region.imageSubresource.layerCount = 1;
+    region.imageExtent.width =  width;
+    region.imageExtent.height = height;
+    region.imageExtent.depth = 1;
+    region.bufferRowLength = width;
+    region.bufferImageHeight = height;
+    region.imageOffset = { 0, 0, 0 };
+
+    buffer_copy_regions.emplace_back(region);
+
+    vkCmdCopyBufferToImage(
+      cmd_buffer,
+      buffer,
+      image,
+      VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+      buffer_copy_regions.size(),
+      buffer_copy_regions.data());
+
+    endCommandBuffer(cmd_buffer);
+    queueSubmit(cmd_buffer);
+    
+    vkFreeMemory(_device, staging_device_memory, nullptr);
+    vkDestroyBuffer(_device, buffer, nullptr);
+
+    //_device_memory_pool->clear(device_memory);
+  }
+
+  VkImageView VulkanAPI::createFontImageView(
+    VkImage& image,
+    VkImageAspectFlags aspect_flags)
+  {
+    VkImageViewCreateInfo create_info{};
+    create_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+    create_info.image = image;
     create_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
-  } else if (ktx_texture->numDimensions == 3) {
-    create_info.viewType = VK_IMAGE_VIEW_TYPE_3D;
-  }
-  if (ktx_texture->isCubemap == true) {
-    create_info.viewType = VK_IMAGE_VIEW_TYPE_CUBE;
-  }
 
-  create_info.format = format;
-  create_info.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
-  create_info.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
-  create_info.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
-  create_info.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
+    create_info.format = PLP_VK_FORMAT_FONT;
+    create_info.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
+    create_info.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
+    create_info.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
+    create_info.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
 
-  create_info.subresourceRange.aspectMask = aspect_flags;
-  create_info.subresourceRange.baseMipLevel = 0;
-  create_info.subresourceRange.levelCount = ktx_texture->numLevels;
-  create_info.subresourceRange.baseArrayLayer = 0;
-  create_info.subresourceRange.layerCount = ktx_texture->numFaces;
+    create_info.subresourceRange.aspectMask = aspect_flags;
+    create_info.subresourceRange.baseMipLevel = 0;
+    create_info.subresourceRange.levelCount = 1;
+    create_info.subresourceRange.baseArrayLayer = 0;
+    create_info.subresourceRange.layerCount = 1;
 
 
-  VkResult result{ VK_SUCCESS };
-  VkImageView image_view{};
+    VkResult result{ VK_SUCCESS };
+    VkImageView image_view{};
 
-  result = vkCreateImageView(_device, &create_info, nullptr, &image_view);
+    result = vkCreateImageView(_device, &create_info, nullptr, &image_view);
 
-  if (result != VK_SUCCESS) {
-    PLP_ERROR("failed to create image view.");
-  }
-
-  return image_view;
-}
-
-VkSamplerAddressMode VulkanAPI::getSamplerAddressMode(TextureWrapMode mode)
-{
-  switch (mode)
-  {
-  case TextureWrapMode::WRAP:
-    return VK_SAMPLER_ADDRESS_MODE_REPEAT;
-  case TextureWrapMode::CLAMP_TO_EDGE:
-    return VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
-  case TextureWrapMode::MIRROR_REPEAT:
-  default:
-    return VK_SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT;
-  }
-}
-
-VkSampler VulkanAPI::createKTXSampler(
-  TextureWrapMode const wrap_mode_u,
-  TextureWrapMode const wrap_mode_v,
-  float const mip_lvl)
-{
-  VkSampler texture_sampler{};
-
-  VkSamplerAddressMode mode_u { getSamplerAddressMode(wrap_mode_u) };
-  VkSamplerAddressMode mode_v { getSamplerAddressMode(wrap_mode_v) };
-
-  VkSamplerCreateInfo sampler_info{};
-  sampler_info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
-  sampler_info.magFilter = VK_FILTER_LINEAR;
-  sampler_info.minFilter = VK_FILTER_LINEAR;
-  sampler_info.addressModeU = mode_u;
-  sampler_info.addressModeV = mode_v;
-  sampler_info.addressModeW = mode_v;
-  sampler_info.unnormalizedCoordinates = VK_FALSE;
-  sampler_info.compareEnable = VK_FALSE;
-  sampler_info.compareOp = VK_COMPARE_OP_LESS;
-  sampler_info.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
-  sampler_info.minLod = 0.0f;
-  sampler_info.maxLod = mip_lvl;
-  sampler_info.mipLodBias = 0.0f;
-  sampler_info.borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE;
-  sampler_info.anisotropyEnable = VK_FALSE;
-  sampler_info.maxAnisotropy = 1;
-  
-  if (vkCreateSampler(_device, & sampler_info, nullptr, & texture_sampler) != VK_SUCCESS) {
-    throw std::runtime_error("failed to create texture sampler!");
-  }
-  return texture_sampler;
-}
-
-VkDeviceSize VulkanAPI::align_to(VkDeviceSize const size, VkDeviceSize const alignment)
-{
-  //VkDeviceSize const offset { (size + alignment - 1) & ~(alignment - 1)};
-  auto const remainder = size % alignment;
-
-  //PLP_DEBUG("size: {} alignment: {} ", size, alignment);
-  if (remainder == 0) return size;
-  VkDeviceSize const offset {size + (alignment - remainder)};
-
-  return offset;
-}
-
-void VulkanAPI::createFontImage(
-  VkCommandBuffer& cmd_buffer,
-  std::unordered_map<unsigned int, FontCharacter> const& characters,
-  size_t const width,
-  size_t const height,
-  VkImage& image)
-{;
-
-  auto const data_size{ width * height };
-
-  VkBuffer buffer;
-  VkDeviceMemory staging_device_memory;
-
-    createBuffer(
-    data_size,
-    VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-    VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT,
-    buffer,
-    staging_device_memory);
-
-  VkMemoryRequirements mem_requirements;
-
-  vkGetBufferMemoryRequirements(_device, buffer, &mem_requirements);
-
-  auto memory_type = findMemoryType(mem_requirements.memoryTypeBits,
-                                    VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-
-  VkDeviceSize const size { mem_requirements.size};
-
-  unsigned char* data;
-
-  vkMapMemory(_device, staging_device_memory, 0, size, 0, (void**) & data);
-  
-  int offset {0};
-
-  for (auto const& [name, character] : characters) {
-
-    auto const glyph_width{ character.size.x };
-    auto const glyph_height{ character.size.y };
-    auto buffer = character.buffer.data();
-
-    for (int y{ 0 }; y < glyph_height; y++) {
-      memcpy(
-        data + ((y + character.y_offset) * width + character.x_offset) ,
-        buffer + (y * glyph_width),
-        glyph_width
-      );
+    if (result != VK_SUCCESS) {
+      //Logger::error("failed to create image view.");
     }
+
+    return image_view;
   }
-
-  vkUnmapMemory(_device, staging_device_memory);
-  
-  auto const mip_lvl{ 1 };
-
-  VkImageCreateInfo image_info{};
-  image_info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
-  image_info.imageType = VK_IMAGE_TYPE_2D;
-  image_info.extent.width = width;
-  image_info.extent.height = height;
-  image_info.extent.depth = 1;
-  image_info.mipLevels = mip_lvl;
-  image_info.arrayLayers = 1;
-  image_info.format = PLP_VK_FORMAT_FONT;
-  image_info.tiling = VK_IMAGE_TILING_OPTIMAL;
-  image_info.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-  image_info.usage = VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
-  image_info.samples = VK_SAMPLE_COUNT_1_BIT;
-  image_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-  
-  VkResult result{ VK_SUCCESS };
-  result = vkCreateImage(_device, & image_info, nullptr, &image);
-
-  if (result != VK_SUCCESS) {
-    throw std::runtime_error("failed to create image!");
-  }
-
-  VkMemoryRequirements image_mem_requirements;
-  vkGetImageMemoryRequirements(_device, image, & image_mem_requirements);
-  memory_type = findMemoryType(image_mem_requirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-  uint32_t const image_size = image_mem_requirements.size;
-
-  uint32_t const image_bind_offset = align_to(image_size, image_mem_requirements.alignment);
-
-  auto device_memory = _device_memory_pool->get(
-    _device,
-    image_size,
-    memory_type,
-    VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-    image_mem_requirements.alignment,
-    DeviceMemoryPool::DeviceBufferType::STAGING);
-
-  device_memory->bindImageToMemory(image, image_bind_offset);
-
-  auto rdr_barrier = setupImageMemoryBarrier(
-    image, 0, VK_ACCESS_TRANSFER_WRITE_BIT, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
-
-  std::vector<VkImageMemoryBarrier> barrier{ rdr_barrier };
-
-  beginCommandBuffer(cmd_buffer);
-
-  addPipelineBarriers(cmd_buffer,
-                      barrier,
-                      VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
-                      VK_PIPELINE_STAGE_TRANSFER_BIT,
-                      VK_DEPENDENCY_BY_REGION_BIT);
-
-  std::vector<VkBufferImageCopy> buffer_copy_regions;
-
-  VkBufferImageCopy region{};
-  region.bufferOffset = 0;
-  region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-  region.imageSubresource.mipLevel = 0;
-  region.imageSubresource.baseArrayLayer = 0;
-  region.imageSubresource.layerCount = 1;
-  region.imageExtent.width =  width;
-  region.imageExtent.height = height;
-  region.imageExtent.depth = 1;
-  region.bufferRowLength = width;
-  region.bufferImageHeight = height;
-  region.imageOffset = { 0, 0, 0 };
-
-  buffer_copy_regions.emplace_back(region);
-
-  vkCmdCopyBufferToImage(
-    cmd_buffer,
-    buffer,
-    image,
-    VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-    buffer_copy_regions.size(),
-    buffer_copy_regions.data());
-
-  endCommandBuffer(cmd_buffer);
-  queueSubmit(cmd_buffer);
-  
-  vkFreeMemory(_device, staging_device_memory, nullptr);
-  vkDestroyBuffer(_device, buffer, nullptr);
-
-  //_device_memory_pool->clear(device_memory);
-}
-
-VkImageView VulkanAPI::createFontImageView(
-  VkImage& image,
-  VkImageAspectFlags aspect_flags)
-{
-  VkImageViewCreateInfo create_info{};
-  create_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-  create_info.image = image;
-  create_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
-
-  create_info.format = PLP_VK_FORMAT_FONT;
-  create_info.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
-  create_info.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
-  create_info.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
-  create_info.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
-
-  create_info.subresourceRange.aspectMask = aspect_flags;
-  create_info.subresourceRange.baseMipLevel = 0;
-  create_info.subresourceRange.levelCount = 1;
-  create_info.subresourceRange.baseArrayLayer = 0;
-  create_info.subresourceRange.layerCount = 1;
-
-
-  VkResult result{ VK_SUCCESS };
-  VkImageView image_view{};
-
-  result = vkCreateImageView(_device, &create_info, nullptr, &image_view);
-
-  if (result != VK_SUCCESS) {
-    PLP_ERROR("failed to create image view.");
-  }
-
-  return image_view;
 }

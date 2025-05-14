@@ -1,16 +1,17 @@
-export module Poulpe.Components.Renderer:RendererFactory;
+module;
+#include <memory>
 
-import Basic;
-import Crosshair;
-import Grid;
-import Skybox;
-import Terrain;
-import Text;
-import Water;
+export module Poulpe.Component.Renderer.RendererFactory;
 
-export class RendererFactory
+namespace Poulpe
 {
-public:
-  template <typename T, typename... TArgs>
-  static std::unique_ptr<T> create(TArgs&&... args);
-};
+  export class RendererFactory
+  {
+  public:
+    template <typename T, typename... TArgs>
+    static std::unique_ptr<T> create(TArgs&&... args)
+    {
+      return std::make_unique<T>(T(std::forward<TArgs>(args)...));
+    }
+  };
+}

@@ -1,25 +1,24 @@
-export module Poulpe.Core.Network:Server;
+module;
+#include <string>
 
-//@todo fix Win/Linux impl
-import UnixServer;
-import WinServer;
+export module Poulpe.Core.Network.Server;
 
-import Poulpe.Core.PlpTypedef;
+import Poulpe.Core.Network.WinServer;
 
-export class Server
+namespace Poulpe
+{
+  export class Server
 {
 public:
-#if defined(_WIN32) || defined(WIN32)
   Server(WinServer* server)
     : _Pimpl(server)
   {
   }
-#else
-  Server(UnixServer* server)
-    : _Pimpl(server)
-  {
-  }
-#endif
+  // Server(UnixServer* server)
+  //   : _Pimpl(server)
+  // {
+  // }
+
 
   void bind(std::string const& port);
   void close();
@@ -29,10 +28,8 @@ public:
   void send(std::string message);
 
 private:
-  //@todo fixed pimpl...
-#if defined(_WIN32) || defined(WIN32)
+  
   WinServer* _Pimpl;
-#else
-  UnixServer* _Pimpl;
-#endif
+//   UnixServer* _Pimpl;
 };
+}

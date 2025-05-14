@@ -1,43 +1,52 @@
+module;
+#define NOMINMAX
+
+#define GLM_FORCE_LEFT_HANDED
+#define GLM_FORCE_DEFAULT_ALIGNED_GENTYPES
+#define GLM_FORCE_DEPTH_ZERO_TO_ONE
+#define GLM_ENABLE_EXPERIMENTAL
+
 #include "PoulpeEngineConfig.h"
 
-import Poulpe;
+import Application;
 
-#define STB_IMAGE_IMPLEMENTATION
-#include <stb_image.h>
-
-import <iostream>;
-
-int main(int argc, char** argv)
+namespace Poulpe
 {
-    std::cout << argv[0] << " Version " << PoulpeEngine_VERSION_MAJOR << "." << PoulpeEngine_VERSION_MINOR << std::endl;
+  #define STB_IMAGE_IMPLEMENTATION
+  #include <stb_image.h>
 
-    bool serverMode{ true };
-    std::string port{ "9371" };
+  int main(int argc, char** argv)
+  {
+      std::cout << argv[0] << " Version " << PoulpeEngine_VERSION_MAJOR << "." << PoulpeEngine_VERSION_MINOR << std::endl;
 
-    for (int i { 0 }; i < argc; ++i) {
-      std::string argument = argv[i];
-      if ("--server" == argument || "-S" == argument) {
-        serverMode = true;
-      } else if (argument.find("--port") != std::string::npos) {
-        std::size_t pos = argument.find("=");
-        if (pos == std::string::npos) {
-          PLP_WARN("bad argument {}", argument);
-        } else {
-          port = argument.substr(++pos, argument.size());
+      bool server_mode{ true };
+      std::string port{ "9371" };
+
+      for (int i { 0 }; i < argc; ++i) {
+        std::string argument = argv[i];
+        if ("--server" == argument || "-S" == argument) {
+          server_mode = true;
+        } else if (argument.find("--port") != std::string::npos) {
+          std::size_t pos = argument.find("=");
+          if (pos == std::string::npos) {
+            Logger::warn("bad argument {}", argument);
+          } else {
+            port = argument.substr(++pos, argument.size());
+          }
         }
       }
-    }
-    std::unique_ptr<Poulpe::Application> app = std::make_unique<Poulpe::Application>();
-    app->init();
+      std::unique_ptr<Application> app = std::make_unique<Application>();
+      app->init();
 
-    PLP_TRACE("serverMode {}", serverMode);
+      Logger::trace("server_mode {}", server_mode);
 
-    if (serverMode) {
-      PLP_TRACE("port {}", port);
-      app->startServer(port);
-    }
+      if (server_mode) {
+        Logger::trace("port {}", port);
+        app->startServer(port);
+      }
 
-    app->run();
+      app->run();
 
-    return 0;
+      return 0;
+  }
 }

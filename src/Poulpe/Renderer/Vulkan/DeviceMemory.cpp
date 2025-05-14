@@ -1,59 +1,68 @@
-module Poulpe.Renderer.Vulkan;
+module;
 
-DeviceMemory::DeviceMemory(
-    VkDevice device,
-    VkMemoryPropertyFlags memory_type,
-    VkDeviceSize max_size,
-    unsigned int index,
-    VkDeviceSize alignment
-) : _index(index),
-    _alignment(alignment),
-    _memory_type(memory_type),
-    _device(device)
+#include <volk.h>
+
+#include <memory>
+#include <mutex>
+#include <stdexcept>
+
+module Poulpe.Renderer.Vulkan.DeviceMemory;
+
+namespace Poulpe
 {
+  DeviceMemory::DeviceMemory(
+      VkDevice device,
+      VkMemoryPropertyFlags memory_type,
+      VkDeviceSize max_size,
+      unsigned int index,
+      VkDeviceSize alignment
+  ) : _index(index),
+      _alignment(alignment),
+      _memory_type(memory_type),
+      _device(device)
+  {
     if (!_memory) {
         _memory = std::make_unique<VkDeviceMemory>();
         _max_size = max_size;
         allocateToMemory();
     }
     _buffer_offsets.emplace_back(0);
-}
+  }
 
-VkDeviceMemory* DeviceMemory::getMemory()
-{
+  VkDeviceMemory* DeviceMemory::getMemory()
+  {
     if (!_memory) {
-        _memory = std::make_unique<VkDeviceMemory>();
-        _offset = 0;
-        _is_full = false;
-        _is_allocated = false;
-        allocateToMemory();
+      _memory = std::make_unique<VkDeviceMemory>();
+      _offset = 0;
+      _is_full = false;
+      _is_allocated = false;
+      allocateToMemory();
     }
 
     return _memory.get();
-}
+  }
 
-void DeviceMemory::allocateToMemory()
-{
+  void DeviceMemory::allocateToMemory()
   {
-    std::lock_guard guard(_mutex_memory);
-    if (!_is_allocated) {
-      VkMemoryAllocateInfo alloc_info{};
-      alloc_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-      alloc_info.allocationSize = _max_size;
+    {
+      std::lock_guard guard(_mutex_memory);
+      if (!_is_allocated) {
+        VkMemoryAllocateInfo alloc_info{};
+        alloc_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+        alloc_info.allocationSize = _max_size;
         alloc_info.memoryTypeIndex = _memory_type;
 
         VkResult result = vkAllocateMemory(_device, &alloc_info, nullptr, _memory.get());
 
         if (VK_SUCCESS != result) {
           //@todo use fmt::format specifier
-          PLP_FATAL("error while allocating memory {}", static_cast<int>(result));
+          //Logger::critical("error while allocating memory {}", static_cast<int>(result));
           throw std::runtime_error("failed to allocate buffer memory!");
         }
 
         _is_allocated = true;
-      }
-      else {
-        PLP_WARN("trying to re allocate memory already allocated.");
+      } else {
+        //Logger::warn("trying to re allocate memory already allocated.");
       }
     }
   }
@@ -72,7 +81,7 @@ void DeviceMemory::allocateToMemory()
       VkResult result = vkBindBufferMemory(_device, buffer, *_memory, _offset);
 
       if (VK_SUCCESS != result) {
-        PLP_DEBUG("BindBuffer memory failed in bindBufferToMemory");
+        //Logger::debug("BindBuffer memory failed in bindBufferToMemory");
       }
 
       _buffer_offsets.emplace_back(_offset);
@@ -101,7 +110,7 @@ void DeviceMemory::allocateToMemory()
       VkResult result = vkBindImageMemory(_device, image, *_memory, _offset);
 
       if (VK_SUCCESS != result) {
-        PLP_DEBUG("BindImageMemory failed in bindImageToMemory");
+        //Logger::debug("BindImageMemory failed in bindImageToMemory");
       }
 
       _offset += offset;
@@ -126,7 +135,7 @@ void DeviceMemory::allocateToMemory()
 
       bool has_enought_space_left { _max_size - offset > size };
 
-      //PLP_DEBUG("max size: {} offset: {} size {} :{}", _max_size, offset, size, (_max_size - offset));
+      //Logger::debug("max size: {} offset: {} size {} :{}", _max_size, offset, size, (_max_size - offset));
       if (!has_enought_space_left) _is_full = true;
 
       return has_enought_space_left;
@@ -135,18 +144,68 @@ void DeviceMemory::allocateToMemory()
 
   void DeviceMemory::clear()
   {
-      for (auto buffer : _buffer) {
-          if (VK_NULL_HANDLE != buffer)
-          {
-              vkDestroyBuffer(_device, buffer, nullptr);
-          }
+    for (auto buffer : _buffer) {
+      if (VK_NULL_HANDLE != buffer) {
+        vkDestroyBuffer(_device, buffer, nullptr);
       }
+    }
 
-      vkFreeMemory(_device, *_memory.get(), nullptr);
+    vkFreeMemory(_device, *_memory.get(), nullptr);
 
-      _max_size = 0;
-      _offset = 0;
-      _is_full = false;
+    _max_size = 0;
+    _offset = 0;
+    _is_full = false;
 
-      _memory.reset();
+    _memory.reset();
   }
+
+  unsigned int DeviceMemory::getID() const
+  { 
+    return _index;
+  }
+
+  uint32_t DeviceMemory::getOffset() const
+  { 
+    return _offset;
+  }
+
+  VkDeviceSize DeviceMemory::getSize() const
+  {
+    return _max_size;
+  }
+
+  VkDeviceSize DeviceMemory::getSpaceLeft() const
+  {
+    return _max_size - _offset;
+  }
+
+  VkMemoryPropertyFlags DeviceMemory::getType() const 
+  {
+    return _memory_type;
+  }
+
+  bool DeviceMemory::isFull() const
+  {
+    return _is_full;
+  }
+
+  void DeviceMemory::lock()
+  {
+    _mutex_memory.lock();
+  }
+  
+  void DeviceMemory::unLock()
+  {
+    _mutex_memory.unlock();
+  }
+
+  VkBuffer& DeviceMemory::getBuffer(unsigned int index)
+  {
+    return _buffer.at(index);
+  }
+
+  unsigned int DeviceMemory::getOffset(unsigned int index) const
+  {
+    return _buffer_offsets.at(index);
+  }
+}

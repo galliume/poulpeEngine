@@ -1,7 +1,10 @@
-module Poulpe.Manager;
+module Poulpe.Manager.ComponentManager;
 
-void ComponentManager::clear()
+namespace Poulpe
 {
-    _component_type_map.clear();
-    _components_entity_map.clear();
+  void ComponentManager::clear()
+  {
+      _component_type_map.clear();
+      _components_entity_map.clear();
+  }
 }

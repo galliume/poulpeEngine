@@ -1,18 +1,27 @@
-export module Poulpe.Manager:APIManager;
+module;
 
-import RenderManager;
+#include <latch>
+#include <ranges>
+#include <variant>
 
-export class APIManager
+export module Poulpe.Manager.APIManager;
+
+import Poulpe.Manager.RenderManager;
+
+namespace Poulpe
 {
-public:
-  APIManager(RenderManager* renderManager);
-  ~APIManager()  = default;
+  export class APIManager
+  {
+  public:
+    APIManager(RenderManager* renderManager);
+    ~APIManager()  = default;
 
-  void received(std::string const& message);
+    void received(std::string const& message);
 
-private:
-  void updateSkybox(std::vector<std::string> const & params);
+  private:
+    void updateSkybox(std::vector<std::string> const & params);
 
-private:
-  RenderManager* _render_manager{ nullptr };
-};
+  private:
+    RenderManager* _render_manager{ nullptr };
+  };
+}

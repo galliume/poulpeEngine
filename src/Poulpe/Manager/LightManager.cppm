@@ -1,24 +1,29 @@
-export module Poulpe.Manager:LightManager;
+module;
+
+#include <chrono>
+
+export module Poulpe.Manager.LightManager;
 
 import Poulpe.Core.PlpTypedef;
 
-import <chrono>;
-
-export class LightManager
+namespace Poulpe
 {
-public:
+  export class LightManager
+  {
+  public:
 
-  LightManager();
+    LightManager();
 
-  void animateAmbientLight(double const delta_time);
-  void animateSunLight(double const delta_time);
-  
-  inline Light getSunLight() { return _sun; }
-  inline std::vector<Light> getPointLights() { return _points; }
-  inline std::vector<Light> getSpotLights() { return _spots; }
+    void animateAmbientLight(double const delta_time);
+    void animateSunLight(double const delta_time);
+    
+    inline Light getSunLight() { return _sun; }
+    inline std::vector<Light> getPointLights() { return _points; }
+    inline std::vector<Light> getSpotLights() { return _spots; }
 
-private:
-  Light _sun{};
-  std::vector<Light> _points{};
-  std::vector<Light> _spots{};
-};
+  private:
+    Light _sun{};
+    std::vector<Light> _points{};
+    std::vector<Light> _spots{};
+  };
+}
