@@ -1,21 +1,24 @@
-set(SRC_LIST ${CMAKE_CURRENT_SOURCE_DIR}/Crosshair.cpp
-             ${CMAKE_CURRENT_SOURCE_DIR}/Crosshair.hpp
-             ${CMAKE_CURRENT_SOURCE_DIR}/Basic.cpp
-             ${CMAKE_CURRENT_SOURCE_DIR}/Basic.hpp
-             ${CMAKE_CURRENT_SOURCE_DIR}/Grid.cpp
-             ${CMAKE_CURRENT_SOURCE_DIR}/Grid.hpp
-             ${CMAKE_CURRENT_SOURCE_DIR}/Skybox.cpp
-             ${CMAKE_CURRENT_SOURCE_DIR}/Skybox.hpp
-             ${CMAKE_CURRENT_SOURCE_DIR}/ShadowMap.cpp
-             ${CMAKE_CURRENT_SOURCE_DIR}/ShadowMap.hpp
-             ${CMAKE_CURRENT_SOURCE_DIR}/Terrain.cpp
-             ${CMAKE_CURRENT_SOURCE_DIR}/Terrain.hpp
-             ${CMAKE_CURRENT_SOURCE_DIR}/Water.cpp
-             ${CMAKE_CURRENT_SOURCE_DIR}/Water.hpp
-             ${CMAKE_CURRENT_SOURCE_DIR}/Text.cpp
-             ${CMAKE_CURRENT_SOURCE_DIR}/Text.hpp
-             ${CMAKE_CURRENT_SOURCE_DIR}/RendererFactory.hpp)
-
-target_sources(PoulpeEngine PRIVATE ${SRC_LIST})
-
-source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${SRC_LIST})
+target_sources(${PROJECT_NAME}
+  PUBLIC
+    FILE_SET cxx_modules TYPE CXX_MODULES
+      FILES
+        ${CMAKE_CURRENT_SOURCE_DIR}/Renderer.cppm
+        ${CMAKE_CURRENT_SOURCE_DIR}/Crosshair.cppm
+        ${CMAKE_CURRENT_SOURCE_DIR}/Basic.cppm
+        ${CMAKE_CURRENT_SOURCE_DIR}/Grid.cppm
+        ${CMAKE_CURRENT_SOURCE_DIR}/Skybox.cppm
+        ${CMAKE_CURRENT_SOURCE_DIR}/ShadowMap.cppm
+        ${CMAKE_CURRENT_SOURCE_DIR}/Terrain.cppm
+        ${CMAKE_CURRENT_SOURCE_DIR}/Water.cppm
+        ${CMAKE_CURRENT_SOURCE_DIR}/Text.cppm
+        ${CMAKE_CURRENT_SOURCE_DIR}/RendererFactory.cppm
+  PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/Crosshair.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/Basic.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/Grid.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/Skybox.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/ShadowMap.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/Terrain.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/Water.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/Text.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/RendererFactory.cpp)

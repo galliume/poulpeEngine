@@ -1,11 +1,11 @@
 #include "PoulpeEngineConfig.h"
 
-#include "Poulpe/Application.hpp"
-
-#include <iostream>
+import Poulpe;
 
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
+
+import <iostream>;
 
 int main(int argc, char** argv)
 {
