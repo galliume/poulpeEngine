@@ -6,7 +6,6 @@ target_sources(${PROJECT_NAME}
   PUBLIC
     FILE_SET cxx_modules TYPE CXX_MODULES
       FILES
-        ${PROJECT_SOURCE_DIR}/src/Poulpe/GUI/GUI.cppm
-        ${PROJECT_SOURCE_DIR}/src/Poulpe/GUI/Window.cppm
+        Window.cppm
   PRIVATE
-    ${PROJECT_SOURCE_DIR}/src/Poulpe/GUI/Window.cpp)
+    Window.cpp)

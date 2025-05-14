@@ -1,8 +1,5 @@
-export module Poulpe.Utils:LuaScript;
-
-import Poulpe.Core.Log;
-
-import <string>;
+module;
+#include <string>
 
 extern "C" {
   #include <lua.h>
@@ -10,12 +7,10 @@ extern "C" {
   #include <lualib.h>
 }
 
-export static bool checkLua(lua_State* L, int r)
+
+export module Poulpe.Utils.LuaScript;
+
+namespace Poulpe
 {
-  if (r != LUA_OK) {
-    std::string err = lua_tostring(L, -1);
-    PLP_WARN("LUA error: {}", err);
-    return false;
-  }
-  return true;
+  export bool checkLua(lua_State* L, int r);
 }

@@ -1,19 +1,26 @@
-export module Poulpe.Core.Network:Socket;
+module;
+#include <string>
+#include <memory>
 
-export class Socket
+export module Poulpe.Core.Network.Socket;
+
+namespace Poulpe
 {
-public:
-  Socket(Socket* socket);
-  ~Socket();
+  export class Socket
+  {
+  public:
+    Socket(Socket* socket);
+    ~Socket();
 
-  void close();
-  void bind(std::string const& ip, unsigned short const port);
-  void connect();
-  inline std::string getIP() { return _Pimpl->getIP(); }
-  inline unsigned short getPort() { return _Pimpl->getPort(); }
-  void listen();
-  void read();
+    void close();
+    void bind(std::string const& ip, unsigned short const port);
+    void connect();
+    inline std::string getIP() { return _Pimpl->getIP(); }
+    inline unsigned short getPort() { return _Pimpl->getPort(); }
+    void listen();
+    void read();
 
-private:
-  std::unique_ptr<Socket> _Pimpl;
-};
+  private:
+    std::unique_ptr<Socket> _Pimpl;
+  };
+}

@@ -1,36 +1,42 @@
-module Poulpe.Core.Network;
+module;
+#include <memory>
 
-Socket::Socket(Socket* socket)
-{
-  _Pimpl = std::unique_ptr<Socket>(socket);
-}
+module Poulpe.Core.Network.Socket;
 
-Socket::~Socket()
+namespace Poulpe
 {
-  _Pimpl->close();
-}
+  Socket::Socket(Socket* socket)
+  {
+    _Pimpl = std::unique_ptr<Socket>(socket);
+  }
 
-void Socket::close()
-{
-  _Pimpl->close();
-}
+  Socket::~Socket()
+  {
+    _Pimpl->close();
+  }
 
-void Socket::bind(std::string const& ip, unsigned short const port)
-{
-  _Pimpl->bind(ip, port);
-}
+  void Socket::close()
+  {
+    _Pimpl->close();
+  }
 
-void Socket::connect()
-{
-  _Pimpl->connect();
-}
+  void Socket::bind(std::string const& ip, unsigned short const port)
+  {
+    _Pimpl->bind(ip, port);
+  }
 
-void Socket::listen()
-{
-  _Pimpl->listen();
-}
+  void Socket::connect()
+  {
+    _Pimpl->connect();
+  }
 
-void Socket::read()
-{
-  _Pimpl->read();
+  void Socket::listen()
+  {
+    _Pimpl->listen();
+  }
+
+  void Socket::read()
+  {
+    _Pimpl->read();
+  }
 }

@@ -1,36 +1,44 @@
-export module Poulpe.Manager:DestroyManager;
-
-import Poulpe.Component.Entity;
-import Poulpe.Component.Mesh;
-
-import Poulpe.Renderer.Vulkan.Renderer;
+module;
+#include <concepts>
+#include <memory>
+#include <unordered_map>
+#include <vector>
+#include <vulkan/vulkan.h>
 
 //@TODO refactor all destroy system...
-class DeviceMemoryPool;
+export module Poulpe.Manager.DestroyManager;
 
-export class DestroyManager
+import Poulpe.Component.Entity;
+import Poulpe.Component.Texture;
+import Poulpe.Renderer.Vulkan.DeviceMemoryPool;
+import Poulpe.Renderer.Vulkan.Renderer;
+
+namespace Poulpe
 {
-public:
-    DestroyManager() = default;
+  export class DestroyManager
+  {
+  public:
+      DestroyManager() = default;
 
-    inline void addMemoryPool(DeviceMemoryPool* const deviceMemoryPool) { _device_memory_pool = deviceMemoryPool; }
-    void cleanDeviceMemory();
+      inline void addMemoryPool(DeviceMemoryPool* const deviceMemoryPool) { _device_memory_pool = deviceMemoryPool; }
+      void cleanDeviceMemory();
 
-    template<std::derived_from<Entity> T>
-    void cleanEntity(T* entity);
+      template<std::derived_from<Entity> T>
+      void cleanEntity(T* entity);
 
-    template<std::derived_from<Entity> T>
-    void cleanEntities(std::vector<std::unique_ptr<T>> & entities);
+      template<std::derived_from<Entity> T>
+      void cleanEntities(std::vector<std::unique_ptr<T>> & entities);
 
-    template<std::derived_from<Entity> T>
-    void cleanEntities(std::vector<T*> & entities);
+      template<std::derived_from<Entity> T>
+      void cleanEntities(std::vector<T*> & entities);
 
-    void cleanShaders(std::unordered_map<std::string, std::unordered_map<std::string, VkShaderModule>> shaders);
-    void cleanTexture(Texture textures);
-    void cleanTextures(std::unordered_map<std::string, Texture> textures);
-    void setRenderer(Renderer* renderer);
+      void cleanShaders(std::unordered_map<std::string, std::unordered_map<std::string, VkShaderModule>> shaders);
+      void cleanTexture(Texture textures);
+      void cleanTextures(std::unordered_map<std::string, Texture> textures);
+      void setRenderer(Renderer* renderer);
 
-private:
-    DeviceMemoryPool* _device_memory_pool;
-    Renderer* _renderer;
-};
+  private:
+      DeviceMemoryPool* _device_memory_pool;
+      Renderer* _renderer;
+  };
+}

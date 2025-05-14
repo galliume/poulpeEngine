@@ -1,8 +1,10 @@
-export module Poulpe.Components:AnimationComponent;
+export module Poulpe.Component.AnimationComponent;
 
-import Component;
+import Poulpe.Component.Component;
 
-export class AnimationComponent : public Component<AnimationComponent>
+namespace Poulpe
 {
-};
-
+  export class AnimationComponent : public Component<AnimationComponent>
+  {
+  };
+}

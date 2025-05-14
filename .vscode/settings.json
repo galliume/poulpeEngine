@@ -98,6 +98,7 @@
     "xutility": "cpp",
     "numbers": "cpp",
     "source_location": "cpp",
-    "typeindex": "cpp"
+    "typeindex": "cpp",
+    "*.rh": "cpp"
   },
 }

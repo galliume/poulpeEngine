@@ -1,26 +1,32 @@
-module Poulpe.Core.Network;
+module;
+#include <string>
 
-void Server::bind(std::string const& port)
-{
-  _Pimpl->bind(port);
-}
+module Poulpe.Core.Network.Server;
 
-void Server::close()
+namespace Poulpe
 {
-  _Pimpl->close();
-}
+  void Server::bind(std::string const& port)
+  {
+    _Pimpl->bind(port);
+  }
 
-void Server::listen()
-{
-  _Pimpl->listen();
-}
+  void Server::close()
+  {
+    _Pimpl->close();
+  }
 
-void Server::read()
-{
-  _Pimpl->read();
-}
+  void Server::listen()
+  {
+    _Pimpl->listen();
+  }
 
-void Server::send(std::string message)
-{
-  _Pimpl->send(message);
+  void Server::read()
+  {
+    _Pimpl->read();
+  }
+
+  void Server::send(std::string message)
+  {
+    _Pimpl->send(message);
+  }
 }

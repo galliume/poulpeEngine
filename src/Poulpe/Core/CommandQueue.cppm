@@ -1,24 +1,30 @@
-export module Poulpe.Core:CommandQueue;
+module;
 
-import Command;
+#include <memory>
+#include <mutex>
+#include <vector>
 
-import <memory>;
-import <mutex>;
-import <queue>;
+export module Poulpe.Core.CommandQueue;
 
-export class CommandQueue
+import Poulpe.Core.Command;
+
+namespace Poulpe
 {
-public:
-    CommandQueue();
-    ~CommandQueue() = default;
+  export class CommandQueue
+  {
+  public:
+    // CommandQueue() = default;
+    // ~CommandQueue() = default;
 
-    void add(Command& cmd);
-    void execPostRequest();
-    void execPreRequest();
+    // void add(Command& cmd);
+    // void execPostRequest();
+    // void execPreRequest();
 
-private:
-    mutable std::mutex _Mutex;
+  private:
+    std::mutex _mutex;
 
-    std::queue<std::shared_ptr<Command>> _PostCmdQueue;
-    std::queue<std::shared_ptr<Command>> _PreCmdQueue;
-};
+    //@todo why std::queue does not work since module?
+    // std::vector<std::shared_ptr<Command>> _postCmdQueue;
+    // std::vector<std::shared_ptr<Command>> _preCmdQueue;
+  };
+}

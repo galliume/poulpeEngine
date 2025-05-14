@@ -2,36 +2,34 @@ target_sources(${PROJECT_NAME}
   PUBLIC
     FILE_SET cxx_modules TYPE CXX_MODULES
       FILES
-        ${CMAKE_CURRENT_SOURCE_DIR}/Manager.cppm
-        ${CMAKE_CURRENT_SOURCE_DIR}/AudioManager.cppm
-        ${CMAKE_CURRENT_SOURCE_DIR}/ConfigManager.cppm
-        ${CMAKE_CURRENT_SOURCE_DIR}/DestroyManager.cppm
-        ${CMAKE_CURRENT_SOURCE_DIR}/EntityManager.cppm
-        ${CMAKE_CURRENT_SOURCE_DIR}/InputManager.cppm
-        ${CMAKE_CURRENT_SOURCE_DIR}/RenderManager.cppm
-        ${CMAKE_CURRENT_SOURCE_DIR}/ShaderManager.cppm
-        ${CMAKE_CURRENT_SOURCE_DIR}/TextureManager.cppm
-        ${CMAKE_CURRENT_SOURCE_DIR}/ComponentManager.cppm
-        ${CMAKE_CURRENT_SOURCE_DIR}/SystemManager.cppm
-        ${CMAKE_CURRENT_SOURCE_DIR}/LightManager.cppm
-        ${CMAKE_CURRENT_SOURCE_DIR}/NetworkManager.cppm
-        ${CMAKE_CURRENT_SOURCE_DIR}/APIManager.cppm
-        ${CMAKE_CURRENT_SOURCE_DIR}/FontManager.cppm
-        ${CMAKE_CURRENT_SOURCE_DIR}/DbManager.cppm
+        APIManager.cppm
+        AudioManager.cppm
+        ComponentManager.cppm
+        ConfigManager.cppm
+        DbManager.cppm
+        DestroyManager.cppm
+        EntityManager.cppm
+        FontManager.cppm
+        InputManager.cppm
+        LightManager.cppm
+        NetworkManager.cppm
+        RenderManager.cppm
+        ShaderManager.cppm
+        SystemManager.cppm
+        TextureManager.cppm
 
   PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/AudioManager.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/ConfigManager.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/DestroyManager.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/EntityManager.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/InputManager.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/RenderManager.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/ShaderManager.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/TextureManager.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/ComponentManager.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/SystemManager.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/LightManager.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/NetworkManager.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/APIManager.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/FontManager.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/DbManager.cpp)
+    APIManager.cpp
+    AudioManager.cpp
+    ComponentManager.cpp
+    DbManager.cpp
+    DestroyManager.cpp
+    EntityManager.cpp
+    FontManager.cpp
+    InputManager.cpp
+    LightManager.cpp
+    NetworkManager.cpp
+    RenderManager.cpp
+    ShaderManager.cpp
+    SystemManager.cpp
+    TextureManager.cpp)

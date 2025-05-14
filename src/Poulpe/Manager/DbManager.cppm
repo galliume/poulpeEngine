@@ -1,9 +1,14 @@
-export module Poulpe.Manager:DbManager;
+module;
 
 #include <sqlite3.h>
 
-export class DbManager
+export module Poulpe.Manager.DbManager;
+
+namespace Poulpe
 {
-public:
-  explicit DbManager();
-};
+  export class DbManager
+  {
+  public:
+    explicit DbManager();
+  };
+}

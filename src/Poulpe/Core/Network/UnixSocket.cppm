@@ -1,8 +1,11 @@
-export module Poulpe.Core.Network:UnixSocket;
+export module Poulpe.Core.Network.UnixSocket;
 
-export class UnixSocket
+namespace Poulpe
 {
-public:
-  UnixSocket() = default;
-  ~UnixSocket() = default;
-};
+  export class UnixSocket
+  {
+  public:
+    UnixSocket() = default;
+    ~UnixSocket() = default;
+  };
+}

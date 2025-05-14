@@ -2,19 +2,24 @@ target_sources(${PROJECT_NAME}
   PUBLIC
     FILE_SET cxx_modules TYPE CXX_MODULES
       FILES
-        ${CMAKE_CURRENT_SOURCE_DIR}/Core.cppm
-        ${CMAKE_CURRENT_SOURCE_DIR}/PlpTypedef.cppm
-        ${CMAKE_CURRENT_SOURCE_DIR}/JoinThreads.cppm
-        ${CMAKE_CURRENT_SOURCE_DIR}/Locator.cppm
-        ${CMAKE_CURRENT_SOURCE_DIR}/Log.cppm
-        ${CMAKE_CURRENT_SOURCE_DIR}/ThreadPool.cppm
-        ${CMAKE_CURRENT_SOURCE_DIR}/ThreadSafeQueue.cppm
-        ${CMAKE_CURRENT_SOURCE_DIR}/AssimpLoader.cppm
-        ${CMAKE_CURRENT_SOURCE_DIR}/Tools.cppm
-        ${CMAKE_CURRENT_SOURCE_DIR}/Command.cppm
-        ${CMAKE_CURRENT_SOURCE_DIR}/CommandQueue.cppm
-        ${CMAKE_CURRENT_SOURCE_DIR}/LockFreeStack.cppm
-        ${CMAKE_CURRENT_SOURCE_DIR}/PlpArray.cppm
+        AssimpLoader.cppm
+        Command.cppm
+        CommandQueue.cppm
+        CommandQueueLocator.cppm
+        ConfigManagerLocator.cppm
+        JoinThreads.cppm
+        InputManagerLocator.cppm
+        LockFreeStack.cppm
+        Logger.cppm
+        PlpTypedef.cppm
+        ThreadPool.cppm
+        ThreadSafeQueue.cppm
+        Tools.cppm
   PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/AssimpLoader.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/Tools.cpp)
+    AssimpLoader.cpp
+    Command.cpp
+    CommandQueue.cpp
+    CommandQueueLocator.cpp
+    ConfigManagerLocator.cpp
+    InputManagerLocator.cpp
+    Tools.cpp)

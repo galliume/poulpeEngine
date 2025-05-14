@@ -1,11 +1,10 @@
-AnimationComponentexport module Poulpe.Components:BoneAnimationComponent;
+export module Poulpe.Component.BoneAnimationComponent;
 
-import BoneAnimationScript;
-import Component;
+import Poulpe.Component.Component;
 
 namespace Poulpe
 {
-  class BoneAnimationComponent : public Component<BoneAnimationComponent>
+  export class BoneAnimationComponent : public Component<BoneAnimationComponent>
   {
 
   };

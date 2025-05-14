@@ -1,1 +1,6 @@
-module Poulpe.Core.Network:UnixSocket;
+module Poulpe.Core.Network.UnixSocket;
+
+namespace Poulpe
+{
+  
+}

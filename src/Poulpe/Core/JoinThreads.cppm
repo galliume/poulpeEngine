@@ -1,19 +1,24 @@
-export module Poulpe.Core:joinThreads;
+module;
 
-import <vector>;
-import <thread>;
+#include <vector>
+#include <thread>
 
-export class joinThreads
+export module Poulpe.Core.JoinThreads;
+
+namespace Poulpe
 {
-public:
-    explicit joinThreads(std::vector<std::thread>& threads) : _Threads(threads) {};
-    ~joinThreads() {
-        for (unsigned long i{ 0 }; i < _Threads.size(); ++i) {
-            if (_Threads[i].joinable()) {
-                _Threads[i].join();
-            }
+  export class JoinThreads
+  {
+  public:
+    explicit JoinThreads(std::vector<std::thread>& threads) : _threads(threads) {}
+    ~JoinThreads() {
+      for (unsigned long i{ 0 }; i < _threads.size(); ++i) {
+        if (_threads[i].joinable()) {
+          _threads[i].join();
         }
+      }
     }
-private:
-    std::vector<std::thread>& _Threads;
-};
+  private:
+    std::vector<std::thread>& _threads;
+  };
+}

@@ -1,9 +1,11 @@
-export module Poulpe.Components:MeshComponent;
+export module Poulpe.Component.MeshComponent;
 
-import Component;
-import Component.Mesh;
+import Poulpe.Component.Component;
 
-class MeshComponent : public Component<MeshComponent>
+namespace Poulpe
 {
+  export class MeshComponent : public Component<MeshComponent>
+  {
 
-};
+  };
+}

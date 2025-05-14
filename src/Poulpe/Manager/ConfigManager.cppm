@@ -1,54 +1,62 @@
-export module Poulpe.Manager:ConfigManager;
+module;
 
 #include <nlohmann/json.hpp>
+
+#include <concepts>
 #include <mutex>
+#include <string>
+#include <vector>
 
-export class ConfigManager
+export module Poulpe.Manager.ConfigManager;
+
+//import Poulpe.Core.Logger;
+
+namespace Poulpe
 {
-public:
-  ConfigManager();
-  ~ConfigManager() = default;
-
-  void load();
-  nlohmann::json appConfig() const { return _app_config; }
-  std::vector<std::string> listLevels() const ;
-  std::vector<std::string> listSkybox() const ;
-  nlohmann::json loadLevelData(std::string const & levelName) ;
-  nlohmann::json shaderConfig() const { return _shader_config;  }
-  nlohmann::json soundConfig() const { return _sound_config ;}
-  nlohmann::json texturesConfig() const { return _textures_config; }
-  nlohmann::json lvlConfig() const { return _lvl_config; }
-
-  void setNormalDebug() { _normal_debug = !_normal_debug; }
-  void setReload(bool const reload) { _reload = reload; }
-  void setReloadShaders(bool const reload) { _reload_shaders = reload; }
-
-  bool normalDebug() const { return _normal_debug; }
-  bool reload() const { return _reload; }
-  bool reloadShaders() const { return _reload_shaders; }
-
-  template<typename T>
-  requires std::same_as<T, std::string> || std::same_as<T, unsigned int>
-  void updateConfig(std::string const & configName, T const & value)
+  export class ConfigManager
   {
-    _app_config[configName] = value;
-  }
+  public:
+    ConfigManager();
+    ~ConfigManager() = default;
 
-  void setElapsedTime(double const elapsed_time) { _elapsed_time = elapsed_time;}
-  double getElapsedTime() const { return _elapsed_time; }
+    void load();
+    double getElapsedTime();
+    bool normalDebug();
+    std::vector<std::string> listLevels();
+    std::vector<std::string> listSkybox();
+    bool reload();
+    bool reloadShaders();
+    void setElapsedTime(double const elapsed_time);
+    void setNormalDebug();
+    void setReload(bool const reload);
+    void setReloadShaders(bool const reload);
+    
+    nlohmann::json appConfig();
+    nlohmann::json loadLevelData(std::string const & levelName);
+    nlohmann::json lvlConfig();
+    nlohmann::json shaderConfig();
+    nlohmann::json soundConfig();
+    nlohmann::json texturesConfig();
+ 
+    template<typename T>
+    requires std::same_as<T, std::string> || std::same_as<T, unsigned int>
+    void updateConfig(std::string const & config_name, T const & value)
+    {
+      _app_config[config_name] = value;
+    }
 
-private:
-  std::string const _LevelPath{ "config/levels/" };
+  private:
+    std::string const _levelPath{ "config/levels/" };
+    bool _reload_shaders{ false };
+    bool _normal_debug{ false };
+    bool _reload{ false };
+    double _elapsed_time{ 0.0 };
 
-  nlohmann::json _app_config{};
-  nlohmann::json _entity_config{};
-  nlohmann::json _shader_config{};
-  nlohmann::json _sound_config{};
-  nlohmann::json _textures_config{};
-  nlohmann::json _lvl_config{};
-
-  bool _reload_shaders{ false };
-  bool _normal_debug{ false };
-  bool _reload{ false };
-  double _elapsed_time{ 0.0 };
-};
+    nlohmann::json _app_config;
+    nlohmann::json _entity_config;
+    nlohmann::json _shader_config;
+    nlohmann::json _sound_config;
+    nlohmann::json _textures_config;
+    nlohmann::json _lvl_config;
+  };
+}

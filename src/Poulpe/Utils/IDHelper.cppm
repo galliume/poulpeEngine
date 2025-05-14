@@ -1,48 +1,54 @@
-export module Poulpe.Utils:IDHelper;
+module;
 
-import <chrono>;
-import <cstdint>;
-import <random>;
+#include <chrono>
+#include <cstdint>
+#include <limits>
+#include <random>
 
-using IDType = std::uint64_t;
-using ComponentTypeID = IDType;
+export module Poulpe.Utils.IDHelper;
 
-//Unique ID for Entity
-export class GUIDGenerator
+namespace Poulpe
 {
-public:
-  using ms = std::chrono::milliseconds;
+  export using IDType = std::uint64_t;
+  export using ComponentTypeID = IDType;
 
-  static IDType getGUID()
+  //Unique ID for Entity
+  export class GUIDGenerator
   {
-    auto millis = static_cast<uint64_t>(std::chrono::duration_cast<ms>(
-      std::chrono::time_point_cast<ms>(std::chrono::system_clock::now()).time_since_epoch()
-    ).count());
+  public:
+    using ms = std::chrono::milliseconds;
 
-    std::random_device rd;
-    std::mt19937_64 gen(rd());
-    std::uniform_int_distribution<uint64_t> dis(0, std::numeric_limits<uint64_t>::max());
-    std::uint64_t rando_number = dis(gen);
+    static IDType getGUID()
+    {
+      auto millis = static_cast<uint64_t>(std::chrono::duration_cast<ms>(
+        std::chrono::time_point_cast<ms>(std::chrono::system_clock::now()).time_since_epoch()
+      ).count());
 
-    return millis + rando_number;
-  }
-};
+      std::random_device rd;
+      std::mt19937_64 gen(rd());
+      std::uniform_int_distribution<uint64_t> dis(0, std::numeric_limits<uint64_t>::max());
+      std::uint64_t rando_number = dis(gen);
 
-//Unique ID for Archetype
-template<class T>
-export class TypeIdGenerator
-{
-private:
+      return millis + rando_number;
+    }
+  };
 
-  static IDType _count;
-
-public:
-  template<class U>
-  static IDType GetNewID()
+  //Unique ID for Archetype
+  export template<class T>
+  class TypeIdGenerator
   {
-    static const IDType idCounter = _count++;
-    return idCounter;
-  }
-};
+  private:
 
-template<class T> IDType TypeIdGenerator<T>::_count = 0;
+    static IDType _count;
+
+  public:
+    template<class U>
+    static IDType GetNewID()
+    {
+      static const IDType idCounter = _count++;
+      return idCounter;
+    }
+  };
+
+  template<class T> IDType TypeIdGenerator<T>::_count = 0;
+}

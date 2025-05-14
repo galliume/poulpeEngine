@@ -1,38 +1,42 @@
-export module Poulpe.Core.Network:WinServer;
-
-#if defined(_WIN32) || defined(WIN32)
-
-import Poulpe.Core.PlpTypedef;
-import Poulpe.Manager.APIManager;
+module;
 
 #include <WinSock2.h>
 
-import <mutex>
+#include <stdexcept>
+#include <mutex>
 
-export class WinServer
+export module Poulpe.Core.Network.WinServer;
+
+import Poulpe.Core.Logger;
+import Poulpe.Core.PlpTypedef;
+
+import Poulpe.Manager.APIManager;
+
+namespace Poulpe
 {
-public:
-  WinServer(APIManager* APIManager);
-  ~WinServer();
+  export class WinServer
+  {
+  public:
+    WinServer(APIManager* APIManager);
+    ~WinServer();
 
-  void bind(std::string const& port);
-  void close();
-  inline ServerStatus getStatus() { return _Status; }
-  void listen();
-  void read();
-  void send(std::string message);
+    void bind(std::string const& port);
+    void close();
+    inline ServerStatus getStatus() { return _status; }
+    void listen();
+    void read();
+    void send(std::string message);
 
-private:
-  SOCKET _ServSocket;
-  WSADATA _data;
-  //sockaddr_in6 _SocketAddr;
+  private:
+    SOCKET _servSocket;
+    WSADATA _data;
+    //sockaddr_in6 _SocketAddr;
 
-  SOCKET _Socket{ 0 };
+    SOCKET _socket{ 0 };
 
-  std::mutex _MutexSockets;
+    std::mutex _mutexSockets;
 
-  ServerStatus _Status{ ServerStatus::NOT_RUNNING };
-  APIManager* _api_manager;
-};
-
-#endif
+    ServerStatus _status{ ServerStatus::NOT_RUNNING };
+    APIManager* _api_manager;
+  };
+}
