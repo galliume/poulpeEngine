@@ -1,19 +1,16 @@
-#include "Command.hpp"
+module Poulpe.Core;
 
-namespace Poulpe
+Command::Command(std::function<void()> request, WhenToExecute w)
+    : _Request(request), _When(w)
 {
-    Command::Command(std::function<void()> request, WhenToExecute w)
-        : _Request(request), _When(w)
-    {
-    }
+}
 
-    //@todo WIP
-    Response Command::execRequest()
-    {
-        Response response;
+//@todo WIP
+Response Command::execRequest()
+{
+Response response;
 
-        _Request();
+_Request();
 
-        return response;
-    }
+return response;
 }

@@ -12,10 +12,18 @@
       "binaryDir": "${sourceDir}/build/${presetName}",
       "inherits": [
         "common",
-        "GENERATOR_VS_17_2022",
-        "CCACHE_OFF",
-        "C_COMPILER_CLANG_CL",
-        "CXX_COMPILER_CLANG_CL"
+        "GENERATOR_NINJA",
+        "CCACHE_ON",
+        "WIN_C_COMPILER_CLANG",
+        "WIN_CXX_COMPILER_CLANG",
+        "LINKER_TYPE",
+        "C_USING_LINKER_CLANG",
+        "CXX_USING_LINKER_CLANG",
+        "C_FLAGS",
+        "CXX_FLAGS",
+        "EXE_LINKER_FLAGS",
+        "SHARED_LINKER_FLAGS",
+        "SYSROOT"
       ],
       "condition": {
         "type": "equals",
@@ -84,6 +92,16 @@
         "CMAKE_BUILD_TYPE": {
           "type": "STRING",
           "value": "Debug"
+        }
+      }
+    },
+    {
+      "name": "MINGW_CMAKE_TOOLCHAIN_FILE",
+      "hidden": true,
+      "cacheVariables": {
+        "CMAKE_TOOLCHAIN_FILE": {
+          "type": "PATH",
+          "value": "${sourceDir}/cmake/mingw-toolchain.cmake"
         }
       }
     },
@@ -167,7 +185,7 @@
         }
       }
     },
-    {
+        {
       "name": "C_COMPILER_CLANG",
       "hidden": true,
       "cacheVariables": {
@@ -184,6 +202,106 @@
         "CMAKE_CXX_COMPILER": {
           "type": "STRING",
           "value": "clang++"
+        }
+      }
+    },
+    {
+      "name": "WIN_C_COMPILER_CLANG",
+      "hidden": true,
+      "cacheVariables": {
+        "CMAKE_C_COMPILER": {
+          "type": "STRING",
+          "value": "C:\\Program Files\\LLVM\\bin\\clang.exe"
+        }
+      }
+    },
+    {
+      "name": "WIN_CXX_COMPILER_CLANG",
+      "hidden": true,
+      "cacheVariables": {
+        "CMAKE_CXX_COMPILER": {
+          "type": "STRING",
+          "value": "C:\\Program Files\\LLVM\\bin\\clang++.exe"
+        }
+      }
+    },
+    {
+      "name": "C_USING_LINKER_CLANG",
+      "hidden": true,
+      "cacheVariables": {
+        "CMAKE_C_USING_LINKER_CLANG": {
+          "type": "STRING",
+          "value": "C:\\Program Files\\LLVM\\bin\\ld.lld.exe"
+        }
+      }
+    },
+    {
+      "name": "CXX_USING_LINKER_CLANG",
+      "hidden": true,
+      "cacheVariables": {
+        "CMAKE_CXX_USING_LINKER_CLANG": {
+          "type": "STRING",
+          "value": "C:\\Program Files\\LLVM\\bin\\ld.lld.exe"
+        }
+      }
+    },    
+    {
+      "name": "LINKER_TYPE",
+      "hidden": true,
+      "cacheVariables": {
+        "CMAKE_LINKER_TYPE": {
+          "type": "STRING",
+          "value": "LLD"
+        }
+      }
+    },
+    {
+      "name": "C_FLAGS",
+      "hidden": true,
+      "cacheVariables": {
+        "CMAKE_C_FLAGS": {
+          "type": "STRING",
+          "value": "-target x86_64-w64-mingw32"
+        }
+      }
+    },
+    {
+      "name": "CXX_FLAGS",
+      "hidden": true,
+      "cacheVariables": {
+        "CMAKE_CXX_FLAGS": {
+          "type": "STRING",
+          "value": "-target x86_64-w64-mingw32"
+        }
+      }
+    },
+    {
+      "name": "EXE_LINKER_FLAGS",
+      "hidden": true,
+      "cacheVariables": {
+        "CMAKE_EXE_LINKER_FLAG": {
+          "type": "STRING",
+          "value": "-target x86_64-w64-mingw32 -fuse-ld=ld.lld"
+        }
+      }
+    },
+    {
+      "name": "SHARED_LINKER_FLAGS",
+      "hidden": true,
+      "cacheVariables": {
+        "CMAKE_SHARED_LINKER_FLAGS": {
+          "type": "STRING",
+          "value": "-target x86_64-w64-mingw32 -fuse-ld=ld.lld"
+        }
+      }
+    },
+    {
+      "name": "SYSROOT",
+      "hidden": true,
+      "cacheVariables": {
+        "CMAKE_SYSROOT": {
+          "type": "STRING",
+          "value": "G:\\mingw64"
         }
       }
     },

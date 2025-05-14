@@ -58,19 +58,26 @@ set(DEBUG_OPTIONS -g)
 set(RELEASE_OPTIONS )
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
-
   add_definitions(
     -DVOLK_STATIC_DEFINES
     -D_CRT_SECURE_NO_WARNINGS
     -DDWIN32_LEAN_AND_MEAN)
 
-  set(CMAKE_LINKER lld-link)
+  #todo finish clang windows support
+  if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
 
-  list(APPEND DEBUG_OPTIONS /MDd /Od /Ob0 /RTC1 /Zi /Zc:__cplusplus /EHsc)
-  list(APPEND RELEASE_OPTIONS /Ox /MD /Zc:__cplusplus /EHsc)
+    add_definitions(-D_USE_MATH_DEFINES)
+    list(APPEND DEBUG_OPTIONS -g -O0 -fno-inline -fno-inline-functions -fno-omit-frame-pointer -fno-strict-aliasing)
+    list(APPEND RELEASE_OPTIONS -O3 -fno-strict-aliasing)
+    target_compile_options(${PROJECT_NAME} PRIVATE $<$<CONFIG:DEBUG>:-Weverything -Wno-c++98-compat -Wno-old-style-cast>)
+  else()
 
-  #target_link_options(${PROJECT_NAME} PRIVATE $<$<CONFIG:RELEASE>:/LTCG>)
-  target_compile_options(${PROJECT_NAME} PRIVATE $<$<CONFIG:DEBUG>:/GA /Wall -Wno-c++98-compat -Wno-old-style-cast>)
+    list(APPEND DEBUG_OPTIONS /MDd /Od /Ob0 /RTC1 /Zi /Zc:__cplusplus /EHsc)
+    list(APPEND RELEASE_OPTIONS /Ox /MD /Zc:__cplusplus /EHsc)
+
+    #target_link_options(${PROJECT_NAME} PRIVATE $<$<CONFIG:RELEASE>:/LTCG>)
+    target_compile_options(${PROJECT_NAME} PRIVATE $<$<CONFIG:DEBUG>:/GA /Wall -Wno-c++98-compat -Wno-old-style-cast>)
+  endif()
 else()
   list(APPEND DEBUG_OPTIONS -O0 -Wall)
   list(APPEND RELEASE_OPTIONS -O3 -Wall)
@@ -81,9 +88,10 @@ target_compile_options(${PROJECT_NAME} PRIVATE $<$<CONFIG:RELEASE>:${RELEASE_OPT
 target_compile_definitions(${PROJECT_NAME} PRIVATE $<$<CONFIG:DEBUG>:PLP_DEBUG_BUILD>)
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
-  list(APPEND EXTRA_LIBS Ws2_32 user32)
+  list(APPEND EXTRA_LIBS 
+    Ws2_32 user32 gdi32 winspool shell32 ole32 oleaut32 uuid comdlg32 advapi32)
   if (CMAKE_BUILD_TYPE STREQUAL "Debug")
-    list(APPEND EXTRA_LIBS msvcrtd.lib)
+    list(APPEND EXTRA_LIBS msvcrtd)
   endif()
 else()
   set(THREADS_PREFER_PTHREAD_FLAG ON)
@@ -96,10 +104,7 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
   CXX_STANDARD_REQUIRED ON
   CXX_EXTENSIONS OFF)
 
-target_sources(${PROJECT_NAME}
-  PUBLIC
-    FILE_SET cxx_modules TYPE CXX_MODULES FILES
-    ${PROJECT_SOURCE_DIR}/src/Poulpe/GUI/Window.cppm)
+target_link_libraries(${PROJECT_NAME} PUBLIC PoulpeEngineTargets)
 
 #########################################################
 
@@ -111,6 +116,7 @@ install(TARGETS ${PROJECT_NAME}
     RUNTIME DESTINATION bin
     LIBRARY DESTINATION lib
     ARCHIVE DESTINATION lib
+    FILE_SET cxx_headers DESTINATION include
     FILE_SET cxx_modules DESTINATION include)
 
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD

@@ -1,4 +1,4 @@
-#include "WinSocket.hpp"
+module Poulpe.Core.Network;
 
 #if defined(_WIN32) || defined(WIN32)
 
@@ -6,95 +6,92 @@
 #include <WinSock2.h>
 #include <WS2tcpip.h>
 
-namespace Poulpe
+WinSocket::WinSocket()
 {
-  WinSocket::WinSocket()
-  {
-    WSAStartup(MAKEWORD(2, 2), &_data);
+  WSAStartup(MAKEWORD(2, 2), &_data);
 
-    _Socket = ::socket(AF_INET6, SOCK_STREAM, 0);
+  _Socket = ::socket(AF_INET6, SOCK_STREAM, 0);
 
-    if (INVALID_SOCKET == _Socket) {
-      throw std::runtime_error("Error while creating the socket");
-    }
+  if (INVALID_SOCKET == _Socket) {
+    throw std::runtime_error("Error while creating the socket");
+  }
+}
+
+WinSocket::~WinSocket()
+{
+  ::closesocket(_Socket);
+  ::WSACleanup();
+}
+
+void WinSocket::close()
+{
+  if (_Status == SocketStatus::NOT_CONNECTED) {
+    PLP_TRACE("socket already disconnected");
+    return;
   }
 
-  WinSocket::~WinSocket()
-  {
-   ::closesocket(_Socket);
-   ::WSACleanup();
+  closesocket(_Socket);
+
+  int status = WSAGetLastError();
+
+  if (0 != status) {
+    PLP_ERROR("Close socket failed {}", status);
   }
 
-  void WinSocket::close()
-  {
-    if (_Status == SocketStatus::NOT_CONNECTED) {
-      PLP_TRACE("socket already disconnected");
-      return;
-    }
+  _Status = SocketStatus::NOT_CONNECTED;
+}
 
-    closesocket(_Socket);
+void WinSocket::bind(std::string const& ip, unsigned short const port)
+{
+  ::inet_pton(AF_INET6, ip.c_str(), & _SockAddrIn.sin6_addr);
+  _SockAddrIn.sin6_family = AF_INET;
+  _SockAddrIn.sin6_port = ::htons(port);
 
-    int status = WSAGetLastError();
+  ::bind(_Socket, (SOCKADDR*)&_SockAddrIn, sizeof(_SockAddrIn));
 
-    if (0 != status) {
-      PLP_ERROR("Close socket failed {}", status);
-    }
+  int status = WSAGetLastError();
 
-    _Status = SocketStatus::NOT_CONNECTED;
+  if (0 != status) {
+    PLP_ERROR("bind socket failed {}", status);
   }
 
-  void WinSocket::bind(std::string const& ip, unsigned short const port)
-  {
-    ::inet_pton(AF_INET6, ip.c_str(), & _SockAddrIn.sin6_addr);
-    _SockAddrIn.sin6_family = AF_INET;
-    _SockAddrIn.sin6_port = ::htons(port);
+  _IP = ip;
+  _Port = port;
+}
 
-    ::bind(_Socket, (SOCKADDR*)&_SockAddrIn, sizeof(_SockAddrIn));
+void WinSocket::connect()
+{
+  ::connect(_Socket, (SOCKADDR*) & _SockAddrIn, sizeof(_SockAddrIn));
 
-    int status = WSAGetLastError();
+  int status = WSAGetLastError();
 
-    if (0 != status) {
-      PLP_ERROR("bind socket failed {}", status);
-    }
-
-    _IP = ip;
-    _Port = port;
+  if (0 != status) {
+    PLP_ERROR("connect socket failed {}", status);
   }
 
-  void WinSocket::connect()
-  {
-    ::connect(_Socket, (SOCKADDR*) & _SockAddrIn, sizeof(_SockAddrIn));
+  PLP_TRACE("ClientSocket Connected");
+}
 
-    int status = WSAGetLastError();
+void WinSocket::listen()
+{
+  ::listen(_Socket, 0); //@todo fix max connection?
+}
 
-    if (0 != status) {
-      PLP_ERROR("connect socket failed {}", status);
-    }
+void WinSocket::read()
+{
+  char recvbuf[512];
+  int recvbuflen = 512;
 
-    PLP_TRACE("ClientSocket Connected");
-  }
+  int status{ 0 };
 
-  void WinSocket::listen()
-  {
-    ::listen(_Socket, 0); //@todo fix max connection?
-  }
+  do {
+    status = ::recv(_Socket, recvbuf, recvbuflen, 0);
+    PLP_TRACE("bytes received {}", status);
+    PLP_TRACE("received {}", recvbuf);
+  } while (status > 0);
 
-  void WinSocket::read()
-  {
-    char recvbuf[512];
-    int recvbuflen = 512;
-
-    int status{ 0 };
-
-    do {
-      status = ::recv(_Socket, recvbuf, recvbuflen, 0);
-      PLP_TRACE("bytes received {}", status);
-      PLP_TRACE("received {}", recvbuf);
-    } while (status > 0);
-
-    closesocket(_Socket);
-    WSACleanup();
-  }
+  closesocket(_Socket);
+  WSACleanup();
 }
 
 #endif
