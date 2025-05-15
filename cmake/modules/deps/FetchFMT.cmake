@@ -16,8 +16,11 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(fetch_fmt)
 
-target_include_directories(${PROJECT_NAME} PRIVATE
+target_include_directories(${PROJECT_NAME}
+PRIVATE
   ${fetch_fmt_SOURCE_DIR}/include
   ${fetch_fmt_BUILD_DIR}/include)
 
-target_link_libraries(${PROJECT_NAME} PRIVATE fmt)
+target_link_libraries(${PROJECT_NAME} 
+PRIVATE
+  fmt)

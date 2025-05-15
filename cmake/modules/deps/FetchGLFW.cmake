@@ -16,6 +16,10 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(fetch_glfw)
 
-target_include_directories(${PROJECT_NAME} PRIVATE ${fetch_glfw_SOURCE_DIR}/include)
+target_include_directories(${PROJECT_NAME}
+PRIVATE
+  ${fetch_glfw_SOURCE_DIR}/include)
 
-target_link_libraries(${PROJECT_NAME} PRIVATE glfw)
+target_link_libraries(${PROJECT_NAME}
+PRIVATE
+  glfw)

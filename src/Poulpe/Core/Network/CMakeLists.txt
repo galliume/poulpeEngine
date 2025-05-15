@@ -1,14 +1,17 @@
-set(SRC_LIST ${CMAKE_CURRENT_SOURCE_DIR}/WinServer.cpp
-             ${CMAKE_CURRENT_SOURCE_DIR}/WinServer.hpp
-             ${CMAKE_CURRENT_SOURCE_DIR}/WinSocket.cpp
-             ${CMAKE_CURRENT_SOURCE_DIR}/WinSocket.hpp
-             ${CMAKE_CURRENT_SOURCE_DIR}/UnixServer.cpp
-             ${CMAKE_CURRENT_SOURCE_DIR}/UnixServer.hpp
-             ${CMAKE_CURRENT_SOURCE_DIR}/UnixSocket.cpp
-             ${CMAKE_CURRENT_SOURCE_DIR}/UnixSocket.hpp
-             ${CMAKE_CURRENT_SOURCE_DIR}/Socket.cpp
-             ${CMAKE_CURRENT_SOURCE_DIR}/Socket.hpp
-             ${CMAKE_CURRENT_SOURCE_DIR}/Server.cpp
-             ${CMAKE_CURRENT_SOURCE_DIR}/Server.hpp)
-
-target_sources(PoulpeEngine PRIVATE ${SRC_LIST})
+target_sources(${PROJECT_NAME}
+  PUBLIC
+    FILE_SET cxx_modules TYPE CXX_MODULES   
+      FILES
+        WinServer.cppm
+        WinSocket.cppm
+        UnixServer.cppm
+        UnixSocket.cppm
+        Socket.cppm
+        Server.cppm
+  PRIVATE 
+    WinServer.cpp
+    WinSocket.cpp
+    UnixServer.cpp
+    UnixSocket.cpp
+    Socket.cpp
+    Server.cpp)

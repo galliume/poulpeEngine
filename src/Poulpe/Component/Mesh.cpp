@@ -1,9 +1,9 @@
-#include "Mesh.hpp"
+module;
+#include <vector>
 
-namespace Poulpe
+module Poulpe.Component.Mesh;
+
+void Mesh::addUbos(std::vector<std::vector<UniformBufferObject>> const& ubos)
 {
-  void Mesh::addUbos(std::vector<std::vector<UniformBufferObject>> const& ubos)
-  {
-    _data._ubos.insert(_data._ubos.end(), ubos.begin(), ubos.end());
-  }
+  _data._ubos.insert(_data._ubos.end(), ubos.begin(), ubos.end());
 }
