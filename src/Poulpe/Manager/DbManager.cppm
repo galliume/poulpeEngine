@@ -2,7 +2,7 @@ module;
 
 #include <sqlite3.h>
 
-export module Poulpe.Manager.DbManager;
+export module Poulpe.Managers:DbManager;
 
 namespace Poulpe
 {

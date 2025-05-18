@@ -7,7 +7,6 @@ extern "C" {
   #include <lualib.h>
 }
 
-
 export module Poulpe.Utils.LuaScript;
 
 namespace Poulpe

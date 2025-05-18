@@ -99,6 +99,7 @@
     "numbers": "cpp",
     "source_location": "cpp",
     "typeindex": "cpp",
-    "*.rh": "cpp"
+    "*.rh": "cpp",
+    "string_view": "cpp"
   },
 }

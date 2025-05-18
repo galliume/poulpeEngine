@@ -14,26 +14,21 @@ module;
 #include <unordered_map>
 #include <vector>
 
-module Poulpe.Renderer.Vulkan.Renderer;
+module Poulpe.Renderer;
 
-import Poulpe.Manager.EntityManager;
-import Poulpe.Manager.TextureManager;
+import Poulpe.Component.Entity;
+import Poulpe.Core.Logger;
+import Poulpe.Component.Components;
+import Poulpe.GUI.Window;
+import Poulpe.Managers.ConfigManagerLocator;
+import Poulpe.Managers.RendererManagerTypes;
+import Poulpe.Renderer.Vulkan.Component.Mesh;
 
 namespace Poulpe
 {
-  Renderer::Renderer(
-    Window* const window,
-    EntityManager* const entity_manager,
-    ComponentManager* const component_manager,
-    LightManager* const light_manager,
-    TextureManager* const texture_manager)
-      : _window(window),
-        _entity_manager(entity_manager),
-        _component_manager(component_manager),
-        _light_manager(light_manager),
-        _texture_manager(texture_manager)
+  Renderer::Renderer(RendererInfo const& renderer_info)
+    : _renderer_info(renderer_info)
   {
-      _vulkan = std::make_unique<VulkanAPI>(window);
   }
 
   void Renderer::init()
@@ -308,7 +303,7 @@ namespace Poulpe
 
     //vkCmdSetDepthClampEnableEXT(cmd_buffer, VK_TRUE);
     //vkCmdSetDepthBias(cmd_buffer, depth_bias_constant, depth_bias_clamp, depth_bias_slope);
-    auto const view { _light_manager->getSunLight().view };
+    auto const view { _renderer_info.sun_light.view };
 
     //std::vector<VkBool32> blend_enable{ VK_TRUE, VK_TRUE};
     //vkCmdSetColorBlendEnableEXT(cmd_buffer, 0, 2, blend_enable.data());
@@ -328,7 +323,7 @@ namespace Poulpe
     vkCmdSetColorBlendEquationEXT(cmd_buffer, 0, 1, &colorBlendEquation);
 
     std::ranges::for_each(entities, [&](auto const& entity) {
-      auto mesh_component = _component_manager->get<MeshComponent>(entity->getID());
+      auto mesh_component = _renderer_info.component_manager->get<MeshComponent>(entity->getID());
       if (mesh_component) {
         Mesh* mesh = mesh_component->template has<Mesh>();
 
@@ -446,7 +441,7 @@ namespace Poulpe
 
     //unsigned int firstInstance { 0 };
     //std::ranges::for_each(_Entities, [&](auto const& entity) {
-    //  auto mesh_component = _component_manager->get<MeshComponent>(entity->getID());
+    //  auto mesh_component = component_manager->get<MeshComponent>(entity->getID());
     //  if (mesh_component) {
     //    Mesh* mesh = mesh_component->has<Mesh>();
 
@@ -458,8 +453,6 @@ namespace Poulpe
     //});
 
     //auto indirectBuffer = _API->createIndirectCommandsBuffer(drawCommands);
-    auto * const config_manager = ConfigManagerLocator::get();
-
     size_t num{ 0 };
     std::vector<VkBool32> blend_enable{ VK_FALSE };
     vkCmdSetColorBlendEnableEXT(cmd_buffer, 0, 1, blend_enable.data());
@@ -476,7 +469,7 @@ namespace Poulpe
     vkCmdSetColorBlendEquationEXT(cmd_buffer, 0, 1, &colorBlendEquation);
 
     std::ranges::for_each(entities, [&](auto const& entity) {
-      auto mesh_component = _component_manager->get<MeshComponent>(entity->getID());
+      auto mesh_component = _renderer_info.component_manager->get<MeshComponent>(entity->getID());
       if (mesh_component) {
 
         Mesh* mesh = mesh_component->template has<Mesh>();
@@ -489,7 +482,28 @@ namespace Poulpe
         }
 
         if (mesh->hasPushConstants()) {
-          mesh->applyPushConstants(cmd_buffer, pipeline->pipeline_layout, this, mesh);
+          //mesh->applyPushConstants(cmd_buffer, pipeline->pipeline_layout, this, mesh);
+            auto rdr_impl = _renderer_info.component_manager->get<RenderComponent>(entity->getID());
+            constants push_constants{};
+            push_constants.total_position = glm::vec4{
+               _renderer_info.elapsed_time,
+              0.0f, 0.0f, 0.0f};
+
+            if ("skybox" != mesh->getName()) {
+              push_constants.view = renderer->getCamera()->lookAt();
+              push_constants.view_position = renderer->getCamera()->getPos();
+            } else {
+              push_constants.view = glm::mat4(glm::mat3(renderer->getCamera()->lookAt()));
+              push_constants.view_position = renderer->getCamera()->getPos();
+            }
+
+            vkCmdPushConstants(
+              cmd_buffer, 
+              pipeline->pipeline_layout,
+              rdr_impl->stage_flag_bits,
+              0,
+              sizeof(constants),
+              &push_constants);
         }
 
         auto const alpha_mode{ mesh->getMaterial().alpha_mode };
@@ -524,7 +538,7 @@ namespace Poulpe
           1,
           sizeof(VkDrawIndexedIndirectCommand));*/
 
-        if (mesh->debugNormal() && config_manager->normalDebug()) {
+        if (mesh->debugNormal() &&  _renderer_info.config_manager->normalDebug()) {
           auto normal_pipeline = getPipeline("normal_debug");
 
           vkCmdBindDescriptorSets(
@@ -575,8 +589,8 @@ namespace Poulpe
     std::latch count_down{3};
 
     std::vector<Entity*> world{};
-    if (_entity_manager->getSkybox()) {
-      world.emplace_back(_entity_manager->getSkybox());
+    if (_skybox) {
+      world.emplace_back(_skybox);
     }
 
     if (!world.empty()) {
@@ -806,7 +820,7 @@ namespace Poulpe
 
   void Renderer::clear()
   {
-    _entity_manager->clear();
+    //_entity_manager->clear();
     //@todo clean memory
     //_vulkan->getDeviceMemoryPool()->clear();
   }
@@ -821,11 +835,11 @@ namespace Poulpe
 
   void Renderer::showGrid(bool const show)
   {
-    for (auto & hud : *_entity_manager->getHUD()) {
-      if ("grid" == hud->getName()) {
-        hud->setVisible(show);
-      }
-    }
+    // for (auto & hud : *_entity_manager->getHUD()) {
+    //   if ("grid" == hud->getName()) {
+    //     hud->setVisible(show);
+    //   }
+    // }
   }
 
   void Renderer::addPipeline(
@@ -853,6 +867,12 @@ namespace Poulpe
       _force_entities_buffer_swap = is_last;
     }
   }
+
+  void Renderer::addSkybox(Entity* entity)
+  {
+    _skybox = entity;
+  }
+  
   void Renderer::addTransparentEntity(Entity* entity, bool const is_last)
   {
     {

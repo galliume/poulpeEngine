@@ -9,7 +9,7 @@ module;
 #include <string>
 #include <vector>
 
-module Poulpe.Manager.ConfigManager;
+module Poulpe.Managers;
 
 namespace Poulpe
 {
@@ -210,15 +210,5 @@ namespace Poulpe
   bool ConfigManager::reloadShaders()
   {
     return _reload_shaders;
-  }
-
-  void ConfigManager::setElapsedTime(double const elapsed_time)
-  {
-    _elapsed_time = elapsed_time;
-  }
-
-  double ConfigManager::getElapsedTime()
-  {
-    return _elapsed_time;
   }
 }

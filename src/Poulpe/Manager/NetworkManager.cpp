@@ -1,4 +1,13 @@
-module Poulpe.Manager.NetworkManager;
+module;
+#include <memory>
+#include <string>
+#include <thread>
+
+module Poulpe.Managers;
+
+import Poulpe.Core.Logger;
+import Poulpe.Core.Network.Server;
+import Poulpe.Core.Network.WinServer;
 
 namespace Poulpe
 {
@@ -10,11 +19,12 @@ namespace Poulpe
 
   void NetworkManager::startServer(std::string const& port)
   {
-    _Server = std::make_shared<Server>(new WinServer(_api_manager));
+    //_server = std::make_shared<Server>(new WinServer(_api_manager));
+    _server = std::make_shared<Server>(new WinServer());
 
     std::jthread listen([this, &port]() {
-      _Server->bind(port);
-      _Server->listen();
+      _server->bind(port);
+      _server->listen();
     });
     listen.detach();
   }

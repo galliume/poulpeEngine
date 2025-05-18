@@ -6,10 +6,8 @@ target_sources(${PROJECT_NAME}
         Entity.cppm
         Texture.cppm
         Vertex.cppm
-        Mesh.cppm
-        Component.cppm
         EntityNode.cppm
+        Components.cppm
   PRIVATE
     Camera.cpp
-    Entity.cpp
-    Mesh.cpp)
+    Entity.cpp)

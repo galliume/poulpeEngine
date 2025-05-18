@@ -9,12 +9,10 @@ module;
 #include <string>
 #include <vector>
 
-export module Poulpe.Manager.ShaderManager;
+export module Poulpe.Managers:ShaderManager;
 
 import Poulpe.Core.PlpTypedef;
-import Poulpe.Core.Logger;
-import Poulpe.Core.Tools;
-import Poulpe.Renderer.Vulkan.Renderer;
+import Poulpe.Renderer;
 
 namespace Poulpe
 {

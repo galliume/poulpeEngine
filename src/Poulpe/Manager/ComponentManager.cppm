@@ -7,11 +7,11 @@ module;
 #include <variant>
 #include <vector>
 
-export module Poulpe.Manager.ComponentManager;
+export module Poulpe.Managers.ComponentManager;
 
+import Poulpe.Animation.AnimationScript;
+import Poulpe.Animation.BoneAnimationScript;
 import Poulpe.Utils.IDHelper;
-
-import Poulpe.Component.Component;
 
 namespace Poulpe
 {

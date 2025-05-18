@@ -2,6 +2,7 @@ target_sources(${PROJECT_NAME}
   PUBLIC
     FILE_SET cxx_modules TYPE CXX_MODULES
       FILES
+        Managers.cppm
         APIManager.cppm
         AudioManager.cppm
         ComponentManager.cppm
@@ -17,6 +18,8 @@ target_sources(${PROJECT_NAME}
         ShaderManager.cppm
         SystemManager.cppm
         TextureManager.cppm
+        ConfigManagerLocator.cppm
+        InputManagerLocator.cppm
 
   PRIVATE
     APIManager.cpp
@@ -32,4 +35,6 @@ target_sources(${PROJECT_NAME}
     RenderManager.cpp
     ShaderManager.cpp
     SystemManager.cpp
-    TextureManager.cpp)
+    TextureManager.cpp
+    ConfigManagerLocator.cpp
+    InputManagerLocator.cpp)

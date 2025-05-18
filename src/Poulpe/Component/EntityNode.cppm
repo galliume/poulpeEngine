@@ -2,7 +2,7 @@ module;
 #include <vector>
 #include <memory>
 
-export module Poulpe.Component.Components.EntityNode;
+export module Poulpe.Component.EntityNode;
 
 import Poulpe.Component.Entity;
 

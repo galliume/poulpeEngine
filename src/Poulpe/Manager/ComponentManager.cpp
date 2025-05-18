@@ -1,4 +1,4 @@
-module Poulpe.Manager.ComponentManager;
+module Poulpe.Managers.ComponentManager;
 
 namespace Poulpe
 {

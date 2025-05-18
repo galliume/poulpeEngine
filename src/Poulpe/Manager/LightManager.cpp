@@ -2,7 +2,9 @@ module;
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
-module Poulpe.Manager.LightManager;
+module Poulpe.Managers;
+
+import Poulpe.Core.PlpTypedef;
 
 namespace Poulpe
 {

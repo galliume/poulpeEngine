@@ -4,6 +4,7 @@ module;
 #include <ws2ipdef.h>
 #include <WinSock2.h>
 
+#include <cstring>
 #include <mutex>
 #include <string>
 
@@ -13,12 +14,6 @@ import Poulpe.Core.PlpTypedef;
 
 namespace Poulpe
 {
-  WinServer::WinServer(APIManager* APIManager):
-    _api_manager(APIManager)
-  {
-
-  }
-
   WinServer::~WinServer()
   {
     ::closesocket(_servSocket);
@@ -191,7 +186,7 @@ namespace Poulpe
   void WinServer::read()
   {
     std::array<pollfd, 1> sockets;
-    sockets[0].fd = _Socket;
+    sockets[0].fd = _socket;
     sockets[0].events = POLLIN;
     const int timeout{ 1000 };//1s
     bool hangup{ false };
@@ -217,7 +212,7 @@ namespace Poulpe
           message.clear();
 
           do {
-            recvstatus = ::recv(_Socket, buffer.data(), size, 0);
+            recvstatus = ::recv(_socket, buffer.data(), size, 0);
             message.append(buffer.data());
             if (std::strcmp(buffer.data(), "\0") == 0) {
               recvstatus = -1;
@@ -225,7 +220,9 @@ namespace Poulpe
             Logger::warn("status: {} msg: {}", recvstatus, message);
           } while (recvstatus > 0);
             if (message == "quit") hangup = true;
-            _api_manager->received(message);
+
+            //@todo should send a notification catch by the manager, api_manager should not be here
+            //_api_manager->received(message);
         } else {
           Logger::warn("unexpected events poll for socket id: {}", sockets[0].fd);
           perror("send");

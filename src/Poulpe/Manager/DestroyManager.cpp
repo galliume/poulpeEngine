@@ -6,11 +6,11 @@ module;
 #include <unordered_map>
 #include <vector>
 
-module Poulpe.Manager.DestroyManager;
+module Poulpe.Managers;
 
-import Poulpe.Renderer.Vulkan.DeviceMemoryPool;
 import Poulpe.Component.Entity;
-
+import Poulpe.Component.Texture;
+import Poulpe.Renderer;
 namespace Poulpe
 {
   void DestroyManager::cleanDeviceMemory()

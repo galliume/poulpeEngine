@@ -5,6 +5,8 @@ export module Poulpe.Core.Network.Server;
 
 import Poulpe.Core.Network.WinServer;
 
+import Poulpe.Core.PlpTypedef;
+
 namespace Poulpe
 {
   export class Server

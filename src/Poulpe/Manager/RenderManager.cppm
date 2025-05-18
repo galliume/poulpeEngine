@@ -3,27 +3,31 @@ module;
 #include <glm/glm.hpp>
 #include <vulkan/vulkan.h>
 
+#include <chrono>
 #include <latch>
 #include <memory>
 #include <unordered_map>
 #include <string>
 #include <vector>
 
-export module Poulpe.Manager.RenderManager;
+export module Poulpe.Managers:RenderManager;
 
-import Poulpe.Manager.FontManager;
-import Poulpe.Utils;
+import :AudioManager;
+import :DestroyManager;
+import :EntityManager;
+import :FontManager;
+import :LightManager;
+import :ShaderManager;
+import :TextureManager;
 
 import Poulpe.Component.Camera;
+import Poulpe.Core.PlpTypedef;
+import Poulpe.Core.Tools;
 import Poulpe.GUI.Window;
-import Poulpe.Manager.AudioManager;
-import Poulpe.Manager.ComponentManager;
-import Poulpe.Manager.DestroyManager;
-import Poulpe.Manager.EntityManager;
-import Poulpe.Manager.LightManager;
-import Poulpe.Manager.ShaderManager;
-import Poulpe.Manager.TextureManager;
-import Poulpe.Renderer.Vulkan.Renderer;
+import Poulpe.Managers.ComponentManager;
+import Poulpe.Renderer.RendererComponentFactory;
+import Poulpe.Renderer;
+import Poulpe.Utils.IDHelper;
 
 namespace Poulpe
 {
@@ -46,7 +50,7 @@ namespace Poulpe
     inline Renderer* getRenderer() { return _renderer.get(); }
     inline ShaderManager* getShaderManager() { return _shader_manager.get(); }
     inline TextureManager* getTextureManager() { return _texture_manager.get(); }
-    inline Window* getWindow();
+    Window* getWindow();
     void init();
     inline bool isLoaded()  { return _is_loaded; }
     void updateScene(double const delta_time);
