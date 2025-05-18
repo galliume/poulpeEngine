@@ -1,4 +1,4 @@
-module Poulpe.Manager.DbManager;
+module Poulpe.Managers;
 
 namespace Poulpe
 {

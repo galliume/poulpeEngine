@@ -16,13 +16,16 @@ module;
 #include <string_view>
 #include <vector>
 
-export module Poulpe.Renderer.Vulkan.VulkanAPI;
+export module Poulpe.Renderer:VulkanAPI;
+
+import :DeviceMemoryPool;
+import Poulpe.Renderer.Vulkan.DeviceMemory;
 
 import Poulpe.Component.Vertex;
 //import Poulpe.Core.Logger;
+import Poulpe.Core.MeshTypes;
 import Poulpe.Core.PlpTypedef;
 import Poulpe.GUI.Window;
-import Poulpe.Renderer.Vulkan.DeviceMemoryPool;
 
 namespace Poulpe
 {

@@ -3,7 +3,11 @@ module;
 #include <memory>
 #include <string>
 
-export module Poulpe.Manager.NetworkManager;
+export module Poulpe.Managers:NetworkManager;
+
+import :APIManager;
+
+import Poulpe.Core.Network.Server;
 
 namespace Poulpe
 {
@@ -11,10 +15,6 @@ namespace Poulpe
   // #if defined(_WIN32) || defined(WIN32)
 
   // #endif
-
-  import Poulpe.Manager.APIManager;
-  import Poulpe.Core.Network.Server;
-
   export class NetworkManager
   {
   public:
@@ -24,7 +24,7 @@ namespace Poulpe
     void startServer(std::string const& port);
 
   private:
-    std::shared_ptr<Server> _Server;
+    std::shared_ptr<Server> _server;
     APIManager* _api_manager;
   };
 }

@@ -6,10 +6,9 @@ module;
 #include <unordered_map>
 #include <string>
 
-export module Poulpe.Manager.InputManager;
+export module Poulpe.Managers:InputManager;
 
 import Poulpe.Component.Camera;
-import Poulpe.Core.ConfigManagerLocator;
 import Poulpe.GUI.Window;
 
 namespace Poulpe
@@ -21,7 +20,7 @@ namespace Poulpe
 
     virtual void init(nlohmann::json const& input_config) ;
 
-    void key(int key, int scan_code, int action, int mods);
+    void keyPress(int key, int scan_code, int action, int mods);
     void mouseButton(int button, int action, int mods);
     void saveLastMousePos(double x_pos, double y_pos);
     void inline setCamera(Camera * const camera) { _camera = camera; };

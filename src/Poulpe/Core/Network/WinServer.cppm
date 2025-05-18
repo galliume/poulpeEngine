@@ -10,14 +10,12 @@ export module Poulpe.Core.Network.WinServer;
 import Poulpe.Core.Logger;
 import Poulpe.Core.PlpTypedef;
 
-import Poulpe.Manager.APIManager;
-
 namespace Poulpe
 {
   export class WinServer
   {
   public:
-    WinServer(APIManager* APIManager);
+    WinServer() = default;
     ~WinServer();
 
     void bind(std::string const& port);
@@ -37,6 +35,5 @@ namespace Poulpe
     std::mutex _mutexSockets;
 
     ServerStatus _status{ ServerStatus::NOT_RUNNING };
-    APIManager* _api_manager;
   };
 }

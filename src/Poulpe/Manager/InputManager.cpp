@@ -2,9 +2,11 @@ module;
 #include "GLFW/glfw3.h"
 #include "nlohmann/json.hpp"
 
-module Poulpe.Manager.InputManager;
+module Poulpe.Managers;
 
-import Poulpe.Core.InputManagerLocator;
+import Poulpe.GUI.Window;
+import Poulpe.Managers.ConfigManagerLocator;
+import Poulpe.Managers.InputManagerLocator;
 
 namespace Poulpe
 {
@@ -66,7 +68,7 @@ namespace Poulpe
 
     glfwSetKeyCallback(_window->get(), []( GLFWwindow* window, int key, int scan_code, int action, int mods) {
       InputManager* input_manager = InputManagerLocator::get();
-      input_manager->key(key, scan_code, action, mods);
+      input_manager->keyPress(key, scan_code, action, mods);
     });
 
     glfwSetCursorPosCallback(_window->get(), []( GLFWwindow* window, double x_pos, double y_pos) {
@@ -80,7 +82,7 @@ namespace Poulpe
     });
   }
 
-  void InputManager::key(
+  void InputManager::keyPress(
     int const key,
     int const scan_code,
     int const action,

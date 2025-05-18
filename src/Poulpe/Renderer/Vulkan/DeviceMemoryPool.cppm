@@ -6,7 +6,7 @@ module;
 #include <unordered_map>
 #include <vector>
 
-export module Poulpe.Renderer.Vulkan.DeviceMemoryPool;
+export module Poulpe.Renderer:DeviceMemoryPool;
 
 //import Poulpe.Core.Logger;
 import Poulpe.Renderer.Vulkan.DeviceMemory;

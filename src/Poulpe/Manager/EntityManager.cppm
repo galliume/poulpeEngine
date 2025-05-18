@@ -7,15 +7,17 @@ module;
 #include <filesystem>
 #include <future>
 
-export module Poulpe.Manager.EntityManager;
+export module Poulpe.Managers:EntityManager;
+
+import :LightManager;
+import :TextureManager;
 
 import Poulpe.Component.Entity;
-
-import Poulpe.Manager.ComponentManager;
-import Poulpe.Manager.EntityNode;
-import Poulpe.Manager.LightManager;
-import Poulpe.Manager.Renderer;
-import Poulpe.Manager.TextureManager;
+import Poulpe.Component.EntityNode;
+import Poulpe.Core.PlpTypedef;
+import Poulpe.Managers.ComponentManager;
+import Poulpe.Renderer;
+import Poulpe.Renderer.RendererComponentFactory;
 
 namespace Poulpe
 {
@@ -28,11 +30,11 @@ namespace Poulpe
       LightManager* const light_manager,
       TextureManager* const texture_manager);
 
-    void inline addHUD(std::unique_ptr<Entity> entity) { _HUD.emplace_back(std::move(entity)); }
+    void inline addHUD(std::unique_ptr<Entity> entity) { _hud.emplace_back(std::move(entity)); }
     void inline addRenderer(Renderer* const renderer) { _renderer = renderer; }
     void clear();
     //inline std::vector<std::unique_ptr<Entity>>* getEntities() { return & _Entities; }
-    inline std::vector<std::unique_ptr<Entity>>* getHUD() { return & _HUD; }
+    inline std::vector<std::unique_ptr<Entity>>* getHUD() { return & _hud; }
     //inline size_t getInstancedCount() const { return _Entities.size(); }
     //inline std::unordered_map<std::string, std::array<uint32_t, 2>> getLoadedEntities() { return _LoadedEntities; }
     inline Entity* getSkybox() { return _skybox.get(); }
@@ -53,7 +55,7 @@ namespace Poulpe
     EntityNode * getWorldNode();
     void initMeshes(std::string const& name, nlohmann::json const& data);
     void initWorldGraph();
-    std::shared_mutex& lockWorldNode() { return _mutex_shared; };
+    std::shared_mutex& lockWorldNode() { return _mutex_shared; }
 
   private:
     ComponentManager* _component_manager;
@@ -61,7 +63,7 @@ namespace Poulpe
     TextureManager* _texture_manager;
 
     //std::vector<std::unique_ptr<Entity>> _Entities{};
-    std::vector<std::unique_ptr<Entity>> _HUD{};
+    std::vector<std::unique_ptr<Entity>> _hud{};
 
     nlohmann::json _lvl_config;
 

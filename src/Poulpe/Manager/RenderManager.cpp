@@ -1,4 +1,13 @@
-module Poulpe.Manager.RenderManager;
+module;
+#include <memory>
+
+module Poulpe.Managers;
+
+import Poulpe.GUI.Window;
+import Poulpe.Managers.ComponentManager;
+import Poulpe.Managers.ConfigManagerLocator;
+import Poulpe.Managers.InputManagerLocator;
+import Poulpe.Managers.RendererManagerTypes;
 
 namespace Poulpe
 {
@@ -13,12 +22,15 @@ namespace Poulpe
       _light_manager.get(),
       _texture_manager.get());
 
-    _renderer = std::make_unique<Renderer>(
-      _window.get(),
-      _entity_manager.get(),
-      _component_manager.get(),
-      _light_manager.get(),
-      _texture_manager.get());
+
+    RendererInfo renderer_info {
+      .window = window,
+      .component_manager = _component_manager.get(),
+      .config_manager = ConfigManagerLocator::get(),
+      .light_manager = light_manager.get(),
+    }
+
+    _renderer = std::make_unique<Renderer>(renderer_info);
 
     _audio_manager = std::make_unique<AudioManager>();
     _shader_manager = std::make_unique<ShaderManager>();
@@ -41,7 +53,7 @@ namespace Poulpe
     _entity_manager->addRenderer(_renderer.get());
     _shader_manager->addRenderer(_renderer.get());
 
-    Locator::getInputManager()->setCamera(_camera.get());
+    InputManagerLocator::get()->setCamera(_camera.get());
     //end @todo
   }
 
@@ -61,14 +73,14 @@ namespace Poulpe
 
   void RenderManager::init()
   {
-    auto * const configManager = Locator::getConfigManager();
+    auto * const configManager = ConfigManagerLocator::get();
 
     nlohmann::json const& appConfig = configManager->appConfig();
 
     _audio_manager->init();
     _audio_manager->load(configManager->soundConfig());
 
-    Locator::getInputManager()->init(appConfig["input"]);
+    InputManagerLocator::get()->init(appConfig["input"]);
     
     if (appConfig["defaultLevel"].empty()) {
       Logger::warn("defaultLevel conf not set.");
@@ -122,7 +134,7 @@ namespace Poulpe
     {
       std::lock_guard guard(_entity_manager->lockWorldNode());
 
-      auto * const config_manager = Locator::getConfigManager();
+      auto * const config_manager = ConfigManagerLocater::get();
 
       //@todo improve this draft for simple shader hot reload
       if (config_manager->reloadShaders()) {
@@ -143,7 +155,11 @@ namespace Poulpe
         if (mesh) {
           auto* animation_component = _component_manager->get<AnimationComponent>(entity->getID());
           if (animation_component) {
-            (*animation_component)(delta_time, mesh);
+            AnimationInfo animation_info {
+              .delta_time = delta_time,
+              .data = mesh->getData()
+            }
+            (*animation_component)(animation_info);
           }
         }
       }
@@ -155,7 +171,20 @@ namespace Poulpe
         if (mesh) {
           auto rdr_impl = _component_manager->get<RenderComponent>(entity->getID());
           if (mesh->isDirty() && rdr_impl) {
-            (*rdr_impl)(delta_time, mesh);
+            ComponentRenderingInfo rendering_info {
+              .font_manager = _font_manager.get(),
+              .light_manager = _light_manager.get(),
+              .mesh = mesh.get(),
+              .texture = _texture_manager.getTextures(),
+              .skybox_name = texture_manager.getSkyboxTexture(),
+              .terrain_name = texture_manager.getTerrainTexture(),
+              .water_name = texture_manager.getWaterTexture(),
+              .characters = _font_manager.getCharacters(),
+              .atlas_width = _font_manager.getAtlasWidth(),
+              .atlas_height = _font_manager.getAtlasHeight()
+            };
+            
+            (*rdr_impl)(_renderer.get(), rendering_info);
           }
         }
       });
@@ -180,22 +209,39 @@ namespace Poulpe
 
             auto rdr_impl = _component_manager->get<RenderComponent>(entity->getID());
             if (mesh->isDirty() && rdr_impl) {
-              (*rdr_impl)(delta_time, mesh);
+              ComponentRenderingInfo rendering_info {
+                .font_manager = _font_manager.get(),
+                .light_manager = _light_manager.get(),
+                .mesh = mesh.get(),
+                .texture = _texture_manager.getTextures(),
+                .skybox_name = texture_manager.getSkyboxTexture(),
+                .terrain_name = texture_manager.getTerrainTexture(),
+                .water_name = texture_manager.getWaterTexture(),
+                .characters = _font_manager.getCharacters(),
+                .atlas_width = _font_manager.getAtlasWidth(),
+                .atlas_height = _font_manager.getAtlasHeight()
+              };
+            
+              (*rdr_impl)(_renderer.get(), rendering_info);
             }
 
             auto* animation_component = _component_manager->get<AnimationComponent>(leaf_node->getEntity()->getID());
             if (animation_component && leaf_node->isLoaded()) {
-              (*animation_component)(delta_time, mesh);
+              AnimationInfo animation_info {
+                .delta_time = delta_time,
+                .data = mesh->getData()
+              }
+              (*animation_component)(animation_info);
             }
 
             auto* boneAnimationComponent = _component_manager->get<BoneAnimationComponent>(leaf_node->getEntity()->getID());
             if (boneAnimationComponent) {
-              (*boneAnimationComponent)(delta_time, mesh);
+              AnimationInfo animation_info {
+                .delta_time = delta_time,
+                .data = mesh->getData()
+              }
+              (*boneAnimationComponent)(animation_info);
               //mesh->setIsDirty(true);
-
-
-
-
               /*if (mesh->hasBufferStorage()) {
                 auto buffer{ mesh->getStorageBuffers()->at(0) };
                 ObjectBuffer* objectBuffer = mesh->getObjectBuffer();
@@ -220,12 +266,12 @@ namespace Poulpe
   }
   void RenderManager::renderScene()
   {
-    _renderer->renderScene();
+    _renderer->renderScene(_component_manager);
   }
 
   void RenderManager::loadData(std::string const & level)
   {
-    auto * const config_manager = Locator::getConfigManager();
+    auto * const config_manager = ConfigManagerLocator::get();
 
     nlohmann::json const& app_config = config_manager->appConfig();
 
@@ -237,9 +283,9 @@ namespace Poulpe
 
     std::latch count_down{ 3 };
 
-    std::jthread textures(std::move(std::bind(_texture_manager->load(), std::ref(count_down))));
+    std::jthread textures(std::move(std::bind(_texture_manager->load(_renderer.get()), std::ref(count_down))));
     textures.detach();
-    std::jthread skybox(std::move(std::bind(_texture_manager->loadSkybox(sb), std::ref(count_down))));
+    std::jthread skybox(std::move(std::bind(_texture_manager->loadSkybox(sb, _renderer.get()), std::ref(count_down))));
     skybox.detach();
     std::jthread shaders(std::move(std::bind(_shader_manager->load(config_manager->shaderConfig()), std::ref(count_down))));
     shaders.detach();
@@ -255,24 +301,47 @@ namespace Poulpe
   {
     double const delta_time{ 0.0 };
 
+    ComponentRenderingInfo rendering_info {
+      .light_manager = _light_manager.get(),
+      .mesh = mesh.get(),
+      .texture = _texture_manager.getTextures(),
+      .skybox_name = texture_manager.getSkyboxTexture(),
+      .terrain_name = texture_manager.getTerrainTexture(),
+      .water_name = texture_manager.getWaterTexture(),
+      .characters = _font_manager.getCharacters(),
+      .atlas_width = _font_manager.getAtlasWidth(),
+      .atlas_height = _font_manager.getAtlasHeight()
+    };
+
     auto grid_entity = std::make_unique<Entity>();
     auto grid_mesh = std::make_unique<Mesh>();
-    auto grid_rdr_impl{ RendererFactory::create<Grid>() };
-    grid_rdr_impl->init(_renderer.get(), _texture_manager.get(), nullptr);
-
-    (*grid_rdr_impl)(delta_time, grid_mesh.get());
+    auto grid_rdr_impl{ RendererRendererComponentFactory::create<Grid>() };
+    (*grid_rdr_impl)(_renderer.get(), rendering_info);
 
     _component_manager->add<RenderComponent>(grid_entity->getID(), std::move(grid_rdr_impl));
     _component_manager->add<MeshComponent>(grid_entity->getID(), std::move(grid_mesh));
 
     auto crosshair_entity = std::make_unique<Entity>();
-    auto crosshair_mesh = std::make_unique<Mesh>();
-    auto crosshair_rdr_impl{ RendererFactory::create<Crosshair>() };
-    crosshair_rdr_impl->init(_renderer.get(), _texture_manager.get(), nullptr);
+    auto mesh = std::make_unique<Mesh>();
 
-    (*crosshair_rdr_impl)(delta_time, crosshair_mesh.get());
+    ComponentRenderingInfo rendering_info {
+      .font_manager = _font_manager.get(),
+      .light_manager = _light_manager.get(),
+      .mesh = mesh.get(),
+      .texture = _texture_manager.getTextures(),
+      .skybox_name = texture_manager.getSkyboxTexture(),
+      .terrain_name = texture_manager.getTerrainTexture(),
+      .water_name = texture_manager.getWaterTexture(),
+      .characters = _font_manager.getCharacters(),
+      .atlas_width = _font_manager.getAtlasWidth(),
+      .atlas_height = _font_manager.getAtlasHeight()
+    };
+
+    auto crosshair_rdr_impl{ RendererRendererComponentFactory::create<Crosshair>() }; 
+    (*crosshair_rdr_impl)(_renderer.get(), rendering_info);
+
     _component_manager->add<RenderComponent>(crosshair_entity->getID(), std::move(crosshair_rdr_impl));
-    _component_manager->add<MeshComponent>(crosshair_entity->getID(), std::move(crosshair_mesh));
+    _component_manager->add<MeshComponent>(crosshair_entity->getID(), std::move(mesh));
 
     _entity_manager->addHUD(std::move(grid_entity));
     _entity_manager->addHUD(std::move(crosshair_entity));
@@ -282,18 +351,30 @@ namespace Poulpe
   {
     auto entity = std::make_unique<Entity>();
     auto mesh = std::make_unique<Mesh>();
+    mesh->setName("skybox");
     mesh->setHasShadow(false);
     mesh->setIsIndexed(false);
 
-    auto rdr_impl{ RendererFactory::create<Skybox>() };
-    rdr_impl->init(_renderer.get(), _texture_manager.get(), nullptr);
+    ComponentRenderingInfo rendering_info {
+      .font_manager = _font_manager.get(),
+      .light_manager = _light_manager.get(),
+      .mesh = mesh.get(),
+      .texture = _texture_manager.getTextures(),
+      .skybox_name = texture_manager.getSkyboxTexture(),
+      .terrain_name = texture_manager.getTerrainTexture(),
+      .water_name = texture_manager.getWaterTexture(),
+      .characters = _font_manager.getCharacters(),
+      .atlas_width = _font_manager.getAtlasWidth(),
+      .atlas_height = _font_manager.getAtlasHeight()
+    };
 
-    double const delta_time{ 0.0 };
-    (*rdr_impl)(delta_time, mesh.get());
+    auto rdr_impl{ RendererRendererComponentFactory::create<Skybox>() };
+    (*rdr_impl)(_renderer.get(), rendering_info);
 
     _component_manager->add<RenderComponent>(entity->getID(), std::move(rdr_impl));
     _component_manager->add<MeshComponent>(entity->getID(), std::move(mesh));
     _entity_manager->setSkybox(std::move(entity));
+    _renderer->addSkybox(_entity_manager->getSkybox());
   }
 
   void RenderManager::prepareTerrain()
@@ -303,11 +384,22 @@ namespace Poulpe
     mesh->setHasShadow(false);
     mesh->setIsIndexed(false);
     mesh->setShaderName("terrain");
-    auto rdr_impl{ RendererFactory::create<Terrain>() };
-    rdr_impl->init(_renderer.get(), _texture_manager.get(), nullptr);
+    
+    ComponentRenderingInfo rendering_info {
+      .font_manager = _font_manager.get(),
+      .light_manager = _light_manager.get(),
+      .mesh = mesh.get(),
+      .texture = _texture_manager.getTextures(),
+      .skybox_name = texture_manager.getSkyboxTexture(),
+      .terrain_name = texture_manager.getTerrainTexture(),
+      .water_name = texture_manager.getWaterTexture(),
+      .characters = _font_manager.getCharacters(),
+      .atlas_width = _font_manager.getAtlasWidth(),
+      .atlas_height = _font_manager.getAtlasHeight()
+    };
 
-    double const delta_time{ 0.0 };
-    (*rdr_impl)(delta_time, mesh.get());
+    auto rdr_impl{ RendererComponentFactory::create<Terrain>() };
+    (*rdr_impl)(_renderer.get(), rendering_info);
 
     _component_manager->add<RenderComponent>(entity->getID(), std::move(rdr_impl));
     _component_manager->add<MeshComponent>(entity->getID(), std::move(mesh));
@@ -325,11 +417,21 @@ namespace Poulpe
     mesh->setShaderName("water");
     mesh->setName("_plp_water");
 
-    auto rdr_impl{ RendererFactory::create<Water>() };
-    rdr_impl->init(_renderer.get(), _texture_manager.get(), nullptr);
-
-    double const delta_time{ 0.0 };
-    (*rdr_impl)(delta_time, mesh.get());
+    ComponentRenderingInfo rendering_info {
+      .font_manager = _font_manager.get(),
+      .light_manager = _light_manager.get(),
+      .mesh = mesh.get(),
+      .texture = _texture_manager.getTextures(),
+      .skybox_name = texture_manager.getSkyboxTexture(),
+      .terrain_name = texture_manager.getTerrainTexture(),
+      .water_name = texture_manager.getWaterTexture(),
+      .characters = _font_manager.getCharacters(),
+      .atlas_width = _font_manager.getAtlasWidth(),
+      .atlas_height = _font_manager.getAtlasHeight()
+    };
+    
+    auto rdr_impl{ RendererComponentFactory::create<Water>() };
+    (*rdr_impl)(_renderer.get(), rendering_info);
 
     _component_manager->add<RenderComponent>(entity->getID(), std::move(rdr_impl));
     _component_manager->add<MeshComponent>(entity->getID(), std::move(mesh));
@@ -352,7 +454,7 @@ namespace Poulpe
     mesh->setShaderName("text");
     mesh->setName("_plp_text_" + std::to_string(entity->getID()));
 
-    auto rdr_impl{ RendererFactory::create<Text>() };
+    auto rdr_impl{ RendererComponentFactory::create<Text>() };
     rdr_impl->init(_renderer.get(), _texture_manager.get(), nullptr);
     rdr_impl->addFontManager(_font_manager.get());
     rdr_impl->setText(text.text);
@@ -361,8 +463,21 @@ namespace Poulpe
     rdr_impl->setScale(text.scale);
     rdr_impl->setFlat(text.flat);
     
-    double const delta_time{ 0.0 };
-    (*rdr_impl)(delta_time, mesh.get());
+    ComponentRenderingInfo rendering_info {
+      .font_manager = _font_manager.get(),
+      .light_manager = _light_manager.get(),
+      .mesh = mesh.get(),
+      .texture = _texture_manager.getTextures(),
+      .skybox_name = texture_manager.getSkyboxTexture(),
+      .terrain_name = texture_manager.getTerrainTexture(),
+      .water_name = texture_manager.getWaterTexture(),
+      .characters = _font_manager.getCharacters(),
+      .face = _font_manager.getFace(),
+      .atlas_width = _font_manager.getAtlasWidth(),
+      .atlas_height = _font_manager.getAtlasHeight()
+    };
+
+    (*rdr_impl)(_renderer.get(), rendering_info);
 
     _component_manager->add<RenderComponent>(entity->getID(), std::move(rdr_impl));
     _component_manager->add<MeshComponent>(entity->getID(), std::move(mesh));

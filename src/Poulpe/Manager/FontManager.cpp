@@ -9,10 +9,12 @@ module;
 #include <string>
 #include <vector>
 
-module Poulpe.Manager.FontManager;
+module Poulpe.Managers;
 
-import Poulpe.Core.ConfigManagerLocator;
+import Poulpe.Component.Texture;
+import Poulpe.Managers.ConfigManagerLocator;
 import Poulpe.Core.Logger;
+import Poulpe.Core.PlpTypedef;
 
 namespace Poulpe
 {
@@ -146,7 +148,7 @@ namespace Poulpe
         character.y_offset = y_offset;
         x_offset += character.size.x + 1;
 
-        characters[glyph_index] = character;
+        _characters[glyph_index] = character;
 
         offset += _face->glyph->bitmap.width;
       }
@@ -156,7 +158,7 @@ namespace Poulpe
     _atlas_height += max_row_height + 50;
 
     VkImage image = nullptr;
-    _renderer->getAPI()->createFontImage(cmd_buffer, characters, _atlas_width, _atlas_height, image);
+    _renderer->getAPI()->createFontImage(cmd_buffer, _characters, _atlas_width, _atlas_height, image);
 
     VkImageView imageview = _renderer->getAPI()->createFontImageView(image, VK_IMAGE_ASPECT_COLOR_BIT);
 
@@ -175,7 +177,7 @@ namespace Poulpe
   {
     auto glyph_index = FT_Get_Char_Index(_face, c);
 
-    return characters[glyph_index];
+    return _characters[glyph_index];
   }
 
   FontManager::~FontManager()

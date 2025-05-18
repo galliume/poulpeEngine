@@ -9,11 +9,11 @@ module;
 #include <string>
 #include <unordered_map>
 
-export module Poulpe.Manager.FontManager;
+export module Poulpe.Managers:FontManager;
 
 import Poulpe.Component.Texture;
 import Poulpe.Core.PlpTypedef;
-import Poulpe.Renderer.Vulkan.Renderer;
+import Poulpe.Renderer;
 
 namespace Poulpe
 {
@@ -30,8 +30,9 @@ namespace Poulpe
       bool flat{true}; // flat: 2D UI text, not flat: 3D text
     };
 
-    std::unordered_map<unsigned int, FontCharacter> characters;
-
+    std::unordered_map<unsigned int, FontCharacter> getCharacters() { return _characters; }
+    FT_Face getFace() { return _face; }
+    
     unsigned int getAtlasWidth() const { return _atlas_width; }
     unsigned int getAtlasHeight() const { return _atlas_height; }
 
@@ -45,6 +46,8 @@ namespace Poulpe
     Texture load();
 
   private:
+    std::unordered_map<unsigned int, FontCharacter> _characters;
+
     Renderer* _renderer{ nullptr };
 
     unsigned int _atlas_width{ 0 };

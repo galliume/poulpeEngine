@@ -13,23 +13,17 @@ module;
 #include <unordered_map>
 #include <vector>
 
-class Component;
-class ComponentManager;
-class EntityManager;
-class TextureManager;
+export module Poulpe.Renderer:VulkanRenderer;
 
-export module Poulpe.Renderer.Vulkan.Renderer;
+import :DeviceMemoryPool;
+import :VulkanAPI;
 
-import Poulpe.Renderer.Vulkan.VulkanAPI;
-
-import Poulpe.Core.Logger;
-import Poulpe.Core.PlpTypedef;
 import Poulpe.Component.Camera;
 import Poulpe.Component.Entity;
 import Poulpe.Component.Vertex;
+import Poulpe.Core.PlpTypedef;
 import Poulpe.GUI.Window;
-import Poulpe.Manager.LightManager;
-import Poulpe.Renderer.Vulkan.DeviceMemoryPool;
+import Poulpe.Managers.RendererManagerTypes;
 
 namespace Poulpe
 {
@@ -102,13 +96,7 @@ namespace Poulpe
 
   public:
 
-    Renderer(
-      Window* const window,
-      EntityManager* const entity_manager,
-      ComponentManager* const component_manager,
-      LightManager* const light_manager,
-      TextureManager* const texture_manager
-    );
+    Renderer(RendererInfo const& renderer_info);
     ~Renderer()  = default;
 
     inline void addCamera(Camera* const camera) { _camera = camera; }
@@ -116,6 +104,7 @@ namespace Poulpe
     void addEntity(Entity* entity, bool const is_last);
     void addTransparentEntity(Entity* entity, bool const is_last);
     void addTextEntity(Entity* entity, bool const is_last);
+    void addSkybox(Entity* entity);
 
     void addPipeline(
       std::string const& shaderName,
@@ -232,11 +221,7 @@ namespace Poulpe
     std::pair<std::vector<VkBuffer>, std::vector<VkDeviceMemory>> _unifor_buffers{};
 
     Camera* _camera{ nullptr };
-    Window* _window{ nullptr };
-    EntityManager* _entity_manager{ nullptr };
-    ComponentManager* _component_manager{ nullptr };
-    LightManager* _light_manager{ nullptr };
-    TextureManager* _texture_manager{ nullptr };
+    RendererInfo _renderer_info;
 
     //@todo move to meshManager
     std::vector<VkImageView> _depth_imageviews{};
@@ -284,6 +269,7 @@ namespace Poulpe
     std::vector<VkSemaphore> _image_available;
     std::vector<VkSemaphore> _shadowmap_sema_img_available;
 
+    Entity* _skybox{};
     std::vector<Entity*> _entities{};
     std::vector<Entity*> _entities_buffer{};
     unsigned int const _entities_buffer_swap_treshold{ 50 };

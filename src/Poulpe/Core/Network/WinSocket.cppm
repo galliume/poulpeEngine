@@ -8,6 +8,7 @@ module;
 
 export module Poulpe.Core.Network.WinSocket;
 
+import Poulpe.Core.Logger;
 import Poulpe.Core.Network.Server;
 import Poulpe.Core.PlpTypedef;
 
@@ -22,18 +23,18 @@ namespace Poulpe
     void close();
     void bind(std::string const& ip, unsigned short const port);
     void connect();
-    inline std::string getIP() { return _IP; }
-    inline unsigned short getPort() { return _Port; }
+    inline std::string getIP() { return _ip; }
+    inline unsigned short getPort() { return _port; }
     void listen();
     void read();
 
   private:
     WSADATA _data;
-    SOCKET _Socket;
-    SOCKADDR_IN6 _SockAddrIn;
-    SocketStatus _Status{ SocketStatus::NOT_CONNECTED};
+    SOCKET _socket;
+    SOCKADDR_IN6 _sockAddrIn;
+    SocketStatus _status{ SocketStatus::NOT_CONNECTED};
 
-    std::string _IP;
-    unsigned short _Port;
+    std::string _ip;
+    unsigned short _port;
   };
 }

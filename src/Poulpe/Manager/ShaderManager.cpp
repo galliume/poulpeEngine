@@ -8,10 +8,12 @@ module;
 #include <memory>
 #include <string>
 
-module Poulpe.Manager.ShaderManager;
+module Poulpe.Managers;
 
 import Poulpe.Component.Vertex;
+import Poulpe.Core.Logger;
 import Poulpe.Core.PlpTypedef;
+import Poulpe.Core.Tools;
 
 namespace Poulpe
 {

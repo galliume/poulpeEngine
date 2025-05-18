@@ -6,11 +6,10 @@ target_sources(${PROJECT_NAME}
         Command.cppm
         CommandQueue.cppm
         CommandQueueLocator.cppm
-        ConfigManagerLocator.cppm
         JoinThreads.cppm
-        InputManagerLocator.cppm
         LockFreeStack.cppm
         Logger.cppm
+        MeshTypes.cppm
         PlpTypedef.cppm
         ThreadPool.cppm
         ThreadSafeQueue.cppm
@@ -20,6 +19,4 @@ target_sources(${PROJECT_NAME}
     Command.cpp
     CommandQueue.cpp
     CommandQueueLocator.cpp
-    ConfigManagerLocator.cpp
-    InputManagerLocator.cpp
     Tools.cpp)

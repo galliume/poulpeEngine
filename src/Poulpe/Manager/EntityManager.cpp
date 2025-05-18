@@ -1,4 +1,26 @@
-module Poulpe.Manager.EntityManager;
+module;
+#include <functional>
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/glm.hpp>
+#include <glm/gtx/quaternion.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <nlohmann/json.hpp>
+
+#include <thread>
+
+module Poulpe.Managers;
+
+import Poulpe.Animation.AnimationScript;
+import Poulpe.Animation.BoneAnimationScript;
+import Poulpe.Component.Entity;
+import Poulpe.Component.EntityNode;
+import Poulpe.Core.AssimpLoader;
+import Poulpe.Core.MeshTypes;
+import Poulpe.Core.PlpTypedef;
+import Poulpe.Managers.ComponentManager;
+import Poulpe.Renderer;
+import Poulpe.Renderer.Mesh;
+import Poulpe.Renderer.RendererComponentFactory;
 
 namespace Poulpe
 {
@@ -334,11 +356,23 @@ namespace Poulpe
       auto* entity = new Entity();
       entity->setName(_data.name);
 
-      auto basicRdrImpl = RendererFactory::create<Basic>();
+      ComponentRenderingInfo rendering_info {
+        .sun_light = _light_manager->getSunLight(),
+        .point_lights = _light_manager->getPointLights(),
+        .spot_lights = _light_manager->getSpotLights(),
+        .mesh = mesh.get(),
+        .textures = _texture_manager->getTextures(),
+        .skybox_name = _texture_manager->getSkyboxTexture(),
+        .terrain_name = _texture_manager->getTerrainTexture(),
+        .water_name = _texture_manager->getWaterTexture(),
+        .characters = {},
+        .face = nullptr,
+        .atlas_width = 0,
+        .atlas_height = 0
+      };
 
-      basicRdrImpl->init(_renderer, _texture_manager, _light_manager);
-      double const delta_time{ 0.0 };
-      (*basicRdrImpl)(delta_time, mesh.get());
+      auto basicRdrImpl = RendererComponentFactory::create<Basic>();
+      (*basicRdrImpl)(_renderer, rendering_info);
 
       _component_manager->add<RenderComponent>(entity->getID(), std::move(basicRdrImpl));
       _component_manager->add<MeshComponent>(entity->getID(), std::move(mesh));
@@ -359,7 +393,6 @@ namespace Poulpe
             //@todo temp until lua scripting
             for (auto& anim : entity_opts.animation_scripts) {
               auto animationScript = std::make_unique<AnimationScript>(anim);
-              animationScript->init(_renderer, nullptr, nullptr);
               _component_manager->add<AnimationComponent>(root_mesh_entity_node->getEntity()->getID(), std::move(animationScript));
             }
           }

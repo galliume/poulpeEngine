@@ -6,12 +6,11 @@ module;
 #include <vulkan/vulkan.h>
 
 //@TODO refactor all destroy system...
-export module Poulpe.Manager.DestroyManager;
+export module Poulpe.Managers:DestroyManager;
 
 import Poulpe.Component.Entity;
 import Poulpe.Component.Texture;
-import Poulpe.Renderer.Vulkan.DeviceMemoryPool;
-import Poulpe.Renderer.Vulkan.Renderer;
+import Poulpe.Renderer;
 
 namespace Poulpe
 {

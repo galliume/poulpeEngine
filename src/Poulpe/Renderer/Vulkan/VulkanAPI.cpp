@@ -20,7 +20,7 @@ module;
 #include <vector>
 
 
-module Poulpe.Renderer.Vulkan.VulkanAPI;
+module Poulpe.Renderer;
 
 import Poulpe.Core.PlpTypedef;
 

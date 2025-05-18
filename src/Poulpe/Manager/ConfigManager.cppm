@@ -7,7 +7,7 @@ module;
 #include <string>
 #include <vector>
 
-export module Poulpe.Manager.ConfigManager;
+export module Poulpe.Managers:ConfigManager;
 
 //import Poulpe.Core.Logger;
 
@@ -20,13 +20,11 @@ namespace Poulpe
     ~ConfigManager() = default;
 
     void load();
-    double getElapsedTime();
     bool normalDebug();
     std::vector<std::string> listLevels();
     std::vector<std::string> listSkybox();
     bool reload();
     bool reloadShaders();
-    void setElapsedTime(double const elapsed_time);
     void setNormalDebug();
     void setReload(bool const reload);
     void setReloadShaders(bool const reload);
@@ -50,7 +48,6 @@ namespace Poulpe
     bool _reload_shaders{ false };
     bool _normal_debug{ false };
     bool _reload{ false };
-    double _elapsed_time{ 0.0 };
 
     nlohmann::json _app_config;
     nlohmann::json _entity_config;

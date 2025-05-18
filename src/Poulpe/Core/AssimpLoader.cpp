@@ -759,10 +759,11 @@ namespace Poulpe
     case aiAnimInterpolation_Spherical_Linear :
       interpolation = AnimInterpolation::SPHERICAL_LINEAR;
       break;
-      case aiAnimInterpolation_Cubic_Spline:
-        interpolation = AnimInterpolation::CUBIC_SPLINE;
-      default:
-        interpolation = AnimInterpolation::LINEAR;
+    case aiAnimInterpolation_Cubic_Spline:
+      interpolation = AnimInterpolation::CUBIC_SPLINE;
+    break;
+    default:
+      interpolation = AnimInterpolation::LINEAR;
     }
     return interpolation;
   }
