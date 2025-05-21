@@ -17,7 +17,8 @@ namespace Poulpe
   export class DeviceMemoryPool
   {
   public:
-    enum class DeviceBufferType {
+    enum class DeviceBufferType : uint8_t
+    {
       UNIFORM, STAGING
     };
 

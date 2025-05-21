@@ -13,9 +13,9 @@ module;
 
 module Poulpe.Renderer;
 
+import Poulpe.Component.Components;
 import Poulpe.Component.Texture;
 import Poulpe.Component.Vertex;
-
 
 namespace Poulpe
 {

@@ -108,10 +108,8 @@ namespace Poulpe
         accumulator -= dt;
         total_time += dt;
       }
-      _render_manager->updateScene(frame_time);
-
       //Locator::getCommandQueue()->execPreRequest();
-      _render_manager->renderScene();
+      _render_manager->renderScene(frame_time);
       //Locator::getCommandQueue()->execPostRequest();
 
       auto const _elapsed_time{ duration<double>(steady_clock::now() - _start_run).count() };

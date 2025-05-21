@@ -38,6 +38,7 @@ namespace Poulpe
     std::string buffer_type_debug;
 
     switch (buffer_type) {
+      default:
       case DeviceBufferType::UNIFORM:
         buffer_size = max_buffer_size;
 

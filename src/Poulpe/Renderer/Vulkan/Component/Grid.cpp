@@ -13,13 +13,13 @@ module;
 
 module Poulpe.Renderer;
 
-
+import Poulpe.Component.Components;
 
 namespace Poulpe
 {
   void Grid::createDescriptorSet(
     Renderer *const renderer,
-    ComponentRenderingInfo const& component_rendering_info)
+    ComponentRenderingInfo const&)
   {
     //Texture const ctex{ _texture_manager->getTextures()["mpoulpe"] };
 
@@ -36,7 +36,7 @@ namespace Poulpe
 
   void Grid::operator()(
     Renderer *const renderer,
-    ComponentRenderingInfo const& component_rendering_info)
+    ComponentRenderingInfo const&)
   {
   //  if (!mesh && !mesh->isDirty()) return;
 

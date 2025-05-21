@@ -13,10 +13,10 @@ module;
 
 module Poulpe.Renderer;
 
-import Poulpe.Core.PlpTypedef;
+import Poulpe.Component.Components;
 import Poulpe.Component.Texture;
 import Poulpe.Component.Vertex;
-
+import Poulpe.Core.PlpTypedef;
 
 namespace Poulpe
 {

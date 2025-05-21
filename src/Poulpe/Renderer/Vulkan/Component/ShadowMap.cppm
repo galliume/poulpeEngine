@@ -7,7 +7,6 @@ import :VulkanRenderer;
 
 import Poulpe.Component.Components;
 
-
 namespace Poulpe
 {
   export class ShadowMap : public RendererComponentConcept

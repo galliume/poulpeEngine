@@ -16,12 +16,14 @@ import Poulpe.Renderer;
 
 namespace Poulpe
 {
-  export enum class DescSetLayoutType {
+  export enum class DescSetLayoutType : uint8_t
+  {
       Skybox, HUD, Entity,
       Offscreen, Terrain, Water,
       Text
   };
-  export enum class VertexBindingType {
+  export enum class VertexBindingType : uint8_t
+  {
       Vertex2D, Vertex3D
   };
 

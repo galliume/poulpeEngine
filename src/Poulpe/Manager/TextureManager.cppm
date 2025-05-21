@@ -18,7 +18,8 @@ import Poulpe.Renderer;
 
 namespace Poulpe
 {
-  export enum class TEXTURE_TYPE {
+  export enum class TEXTURE_TYPE : uint8_t
+  {
     DIFFUSE,
     NORMAL,
     MR,//metalRoughness

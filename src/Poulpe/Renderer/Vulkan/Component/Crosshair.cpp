@@ -13,13 +13,13 @@ module;
 
 module Poulpe.Renderer;
 
-
+import Poulpe.Component.Components;
 
 namespace Poulpe
 {
   void Crosshair::createDescriptorSet(
     Renderer *const renderer,
-    ComponentRenderingInfo const& component_rendering_info)
+    ComponentRenderingInfo const&)
   {
     //Texture const tex{ _texture_manager->getTextures()["crosshair_1"] };
     //Texture const tex2{ _texture_manager->getTextures()["crosshair_2"] };
@@ -39,7 +39,7 @@ namespace Poulpe
 
   void Crosshair::operator()(
     Renderer *const renderer,
-    ComponentRenderingInfo const& component_rendering_info)
+    ComponentRenderingInfo const&)
   {
     /* if (!mesh && !mesh->isDirty()) return;
 

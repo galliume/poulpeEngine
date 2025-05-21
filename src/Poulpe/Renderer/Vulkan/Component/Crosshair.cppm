@@ -6,7 +6,6 @@ import :VulkanRenderer;
 
 import Poulpe.Component.Components;
 
-
 namespace Poulpe
 {
   export class Crosshair : public RendererComponentConcept

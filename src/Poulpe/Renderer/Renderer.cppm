@@ -1,9 +1,9 @@
 export module Poulpe.Renderer;
 
 import Poulpe.Renderer.Vulkan.DeviceMemory;
+export import :VulkanRenderer;
 
 export import :DeviceMemoryPool;
-export import :VulkanRenderer;
 
 export import :Basic;
 export import :Crosshair;
@@ -15,4 +15,3 @@ export import :Text;
 export import :Water;
 
 import :VulkanAPI;
-

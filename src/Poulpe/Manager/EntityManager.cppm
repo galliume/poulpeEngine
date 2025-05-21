@@ -48,8 +48,11 @@ namespace Poulpe
     inline void setTerrain(std::unique_ptr<Entity> terrain) { _terrain = std::move(terrain); }
     inline void setWater(std::unique_ptr<Entity> water) { _water = std::move(water); }
     inline int addText(std::unique_ptr<Entity> text) { _texts.emplace_back(std::move(text)); return _texts.size() - 1; }
-    
-    
+      
+    void addEntity(Entity* entity, bool const is_last);
+    void addTransparentEntity(Entity* entity, bool const is_last);
+    void addTextEntity(Entity* entity, bool const is_last);
+
     //void addEntity(Mesh* meshes);
     //inline size_t getTotalEntities() const { return _Entities.size(); }
     EntityNode * getWorldNode();
@@ -72,7 +75,12 @@ namespace Poulpe
     std::unique_ptr<Entity> _skybox{nullptr};
     std::unique_ptr<Entity> _terrain{nullptr};
     std::unique_ptr<Entity> _water{nullptr};
+
     std::vector<std::unique_ptr<Entity>> _texts;
+
+    std::vector<Entity*> _entities{};
+    std::vector<Entity*> _transparent_entities{};
+    std::vector<Entity*> _text_entities{};
 
     std::unique_ptr<EntityNode> _world_node;
 
