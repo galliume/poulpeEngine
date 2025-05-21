@@ -13,9 +13,9 @@ module;
 
 module Poulpe.Renderer;
 
+import Poulpe.Component.Components;
 import Poulpe.Component.Texture;
 import Poulpe.Core.PlpTypedef;
-
 
 namespace Poulpe
 {
@@ -43,7 +43,7 @@ namespace Poulpe
 
     vkDestroyCommandPool(renderer->getDevice(), cmd_pool, nullptr);
 
-    for (auto i{ 0 }; i < mesh->getData()->_ubos.size(); i++) {
+    for (size_t i{ 0 }; i < mesh->getData()->_ubos.size(); i++) {
       std::ranges::for_each(mesh->getData()->_ubos.at(i), [&](auto& ubo) {
         ubo.projection = renderer->getPerspective();
       });

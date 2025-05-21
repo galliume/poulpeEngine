@@ -10,22 +10,19 @@ module;
 #include <variant>
 #include <vector>
 
+class Renderer;
+
 export module Poulpe.Component.Components;
 
 import Poulpe.Animation.AnimationTypes;
+import Poulpe.Component.Camera;
 import Poulpe.Component.Texture;
 import Poulpe.Core.PlpTypedef;
 import Poulpe.GUI.Window;
-import Poulpe.Managers.ComponentManager;
 import Poulpe.Renderer.Mesh;
 import Poulpe.Utils.IDHelper;
 
 namespace Poulpe {
-
-  export class AnimationComponent : public Component<AnimationComponent> {};
-  export class BoneAnimationComponent : public Component<BoneAnimationComponent> {};
-  export class MeshComponent : public Component<MeshComponent> {};
-  export class RenderComponent : public Component<RenderComponent> {};
 
   export struct ComponentRenderingInfo
   {
@@ -43,16 +40,23 @@ namespace Poulpe {
     unsigned int const atlas_height{0};
   };
 
-  export struct RendererInfo
+  export class RendererComponentConcept
   {
-    ComponentManager* const component_manager;
-    Light const& sun_light;
-    std::vector<Light> const& point_lights;
-    std::vector<Light> const& spot_lights;
-    double elapsed_time{0.0};
+    public:
+      virtual ~RendererComponentConcept();
+      virtual void operator()(Renderer *const renderer, ComponentRenderingInfo const& rendering_info) = 0;
   };
 
-module: private;
+  RendererComponentConcept::~RendererComponentConcept() = default;
+
+  export class AnimationComponentConcept
+  {
+    public:
+      virtual ~AnimationComponentConcept();
+      virtual void operator()(AnimationInfo const& animation_info) = 0;
+  };
+
+  AnimationComponentConcept::~AnimationComponentConcept() = default;
 
   template<typename T>
   concept isRendererComponentConcept = std::derived_from<T, RendererComponentConcept>;
@@ -66,8 +70,7 @@ module: private;
   public:
     using ComponentsType = std::variant<
       std::unique_ptr<RendererComponentConcept>,
-      std::unique_ptr<AnimationComponentConcept>
-    >;
+      std::unique_ptr<AnimationComponentConcept>>;
 
     IDType getID() const { return _id; }
     IDType getOwner() const { return _owner; }
@@ -109,21 +112,20 @@ module: private;
     IDType _owner{ 0 };
   };
 
-  export class RendererComponentConcept
+  export class AnimationComponent : public Component<AnimationComponent> {};
+  export class BoneAnimationComponent : public Component<BoneAnimationComponent> {};
+  export class MeshComponent : public Component<MeshComponent> {};
+  export class RenderComponent : public Component<RenderComponent> {};
+
+  export struct RendererInfo
   {
-    public:
-      virtual ~RendererComponentConcept();
-      virtual void operator()(Renderer *const renderer, ComponentRenderingInfo const& rendering_info) = 0;
+    Mesh* const mesh{nullptr};
+    Camera* const camera{nullptr};
+    Light const& sun_light;
+    std::vector<Light> const& point_lights;
+    std::vector<Light> const& spot_lights;
+    double elapsed_time{0.0};
+    RenderComponent * const render_component;
+    bool const normal_debug {false};
   };
-
-  RendererComponentConcept::~RendererComponentConcept() = default;
-
-  export class AnimationComponentConcept
-  {
-    public:
-      virtual ~AnimationComponentConcept();
-      virtual void operator()(AnimationInfo const& animation_info) = 0;
-  };
-
-  AnimationComponentConcept::~AnimationComponentConcept() = default;
 }

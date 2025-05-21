@@ -9,10 +9,9 @@ import :VulkanRenderer;
 
 import Poulpe.Component.Components;
 
-
 namespace Poulpe
 {
-  export class Water : RendererComponentConcept
+  export class Water : public RendererComponentConcept
   {
   public:
     ~Water() override;

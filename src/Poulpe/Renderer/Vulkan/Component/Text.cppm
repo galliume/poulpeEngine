@@ -11,10 +11,9 @@ import :VulkanRenderer;
 
 import Poulpe.Component.Components;
 
-
 namespace Poulpe
 {
-  export class Text : RendererComponentConcept
+  export class Text : public RendererComponentConcept
   {
   public:
     ~Text() override;
@@ -31,7 +30,7 @@ namespace Poulpe
     void setScale(float const scale) { _scale = scale; }
     void setFlat(bool const is_flat = true) { _is_flat = is_flat; }
   
-  bool const isFlat() const { return _is_flat; }
+  bool isFlat() const { return _is_flat; }
   
   private:
     void createDescriptorSet(

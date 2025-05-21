@@ -9,7 +9,6 @@ import :VulkanRenderer;
 
 import Poulpe.Component.Components;
 
-
 namespace Poulpe
 {
   export class Terrain : public RendererComponentConcept

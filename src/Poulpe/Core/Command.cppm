@@ -1,11 +1,16 @@
 module;
 #include <functional>
+#include <cstdint>
 
 export module Poulpe.Core.Command;
 
 namespace Poulpe
 {
-  export enum class WhenToExecute {PRE_RENDERING, POST_RENDERING};
+  export enum class WhenToExecute : uint8_t  
+  {
+    PRE_RENDERING,
+    POST_RENDERING
+  };
 
   export struct Response
   {

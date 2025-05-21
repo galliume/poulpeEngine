@@ -32,7 +32,7 @@ import Poulpe.Utils.IDHelper;
 namespace Poulpe
 {
   //@todo rename to SceneManager?
-  export class RenderManager
+  export class RenderManager : public std::enable_shared_from_this<RenderManager>
   {
   public:
     RenderManager(Window* window);
@@ -53,8 +53,8 @@ namespace Poulpe
     Window* getWindow();
     void init();
     inline bool isLoaded()  { return _is_loaded; }
-    void updateScene(double const delta_time);
-    void renderScene();
+    //void updateScene(double const delta_time);
+    void renderScene(double const delta_time);
     inline void setIsLoaded(bool loaded = true) { _is_loaded = loaded; }
     void addText(FontManager::Text const& text);
 

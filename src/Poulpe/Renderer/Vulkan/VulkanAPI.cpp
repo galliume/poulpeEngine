@@ -1848,7 +1848,7 @@ Buffer VulkanAPI::createVertex2DBuffer(
 }
 
 Buffer VulkanAPI::createUniformBuffers(
-  uint32_t const uniform_buffers_count,
+  uint64_t const uniform_buffers_count,
   VkCommandPool& cmd_pool)
 {
   VkDeviceSize buffer_size = sizeof(UniformBufferObject) * uniform_buffers_count;
@@ -1860,9 +1860,8 @@ Buffer VulkanAPI::createUniformBuffers(
     mem_requirements.memoryTypeBits,
     VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 
-  uint32_t const size = mem_requirements.size;
-
-  uint32_t const bind_offset = align_to(size, mem_requirements.alignment);
+  uint64_t const size = mem_requirements.size;
+  uint64_t const bind_offset = align_to(size, mem_requirements.alignment);
 
   auto device_memory = _device_memory_pool->get(
     _device,

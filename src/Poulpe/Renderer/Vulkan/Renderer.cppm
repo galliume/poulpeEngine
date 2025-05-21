@@ -18,12 +18,10 @@ export module Poulpe.Renderer:VulkanRenderer;
 import :DeviceMemoryPool;
 import :VulkanAPI;
 
-import Poulpe.Component.Camera;
-import Poulpe.Component.Entity;
-import Poulpe.Component.Vertex;
+import Poulpe.Component.Components;
 import Poulpe.Core.PlpTypedef;
 import Poulpe.GUI.Window;
-import Poulpe.Managers.RendererManagerTypes;
+import Poulpe.Renderer.Vulkan.Component.Mesh;
 
 namespace Poulpe
 {
@@ -91,20 +89,13 @@ namespace Poulpe
       size_t _size;
   };
 
-  export class Renderer: public std::enable_shared_from_this<Renderer>
+  export class Renderer
   {
 
   public:
 
-    Renderer(RendererInfo const& renderer_info);
+    Renderer() = default;
     ~Renderer()  = default;
-
-    inline void addCamera(Camera* const camera) { _camera = camera; }
-    void addEntities(std::vector<Entity*> entities);
-    void addEntity(Entity* entity, bool const is_last);
-    void addTransparentEntity(Entity* entity, bool const is_last);
-    void addTextEntity(Entity* entity, bool const is_last);
-    void addSkybox(Entity* entity);
 
     void addPipeline(
       std::string const& shaderName,
@@ -113,30 +104,36 @@ namespace Poulpe
     void clear();
     void destroy();
 
-    void draw(
-      VkCommandBuffer& cmd_buffer,
-      DrawCommands& draw_cmds,
-      VkImageView& colorview,
-      VkImage& color,
-      VkImageView& depthview,
-      VkImage& depth,
-      std::vector<Entity*> const& entities,
-      VkAttachmentLoadOp const load_op,
-      VkAttachmentStoreOp const store_op,
-      std::latch& count_down,
-      unsigned int const thread_id,
-      bool const is_attachment = false,
-      bool const has_depth_attachment = true,
-      bool const has_alpha_blend = true);
+    void startRender();
 
-    void drawShadowMap(
-      VkCommandBuffer& cmd_buffer,
-      DrawCommands& draw_cmds,
-      VkImageView& depthview,
-      VkImage& depth,
-      std::vector<Entity*> const& entities,
-      std::latch& count_down,
-      unsigned int const thread_id);
+    void draw(RendererInfo const& renderer_info);
+
+    void endRender();
+
+    // void draw(
+    //   VkCommandBuffer& cmd_buffer,
+    //   DrawCommands& draw_cmds,
+    //   VkImageView& colorview,
+    //   VkImage& color,
+    //   VkImageView& depthview,
+    //   VkImage& depth,
+    //   std::vector<Entity*> const& entities,
+    //   VkAttachmentLoadOp const load_op,
+    //   VkAttachmentStoreOp const store_op,
+    //   std::latch& count_down,
+    //   unsigned int const thread_id,
+    //   bool const is_attachment = false,
+    //   bool const has_depth_attachment = true,
+    //   bool const has_alpha_blend = true);
+
+    // void drawShadowMap(
+    //   VkCommandBuffer& cmd_buffer,
+    //   DrawCommands& draw_cmds,
+    //   VkImageView& depthview,
+    //   VkImage& depth,
+    //   std::vector<Entity*> const& entities,
+    //   std::latch& count_down,
+    //   unsigned int const thread_id);
 
     void endRendering(
       VkCommandBuffer& cmd_buffer,
@@ -145,7 +142,6 @@ namespace Poulpe
       bool const is_attachment,
       bool const has_depth_attachment = true);
 
-    inline Camera* getCamera() { return _camera; }
     inline uint32_t getCurrentFrameIndex() const { return _current_frame; }
     inline VkSampler getCurrentSampler() { return _samplers[_previous_frame]; }
     inline VkImageView getCurrentImageView() { return _imageviews[_previous_frame]; }
@@ -162,7 +158,7 @@ namespace Poulpe
     VulkanPipeline* getPipeline(std::string const & shaderName) { return & _pipelines[shaderName]; }
     void immediateSubmit(std::function<void(VkCommandBuffer cmd)> && function, int queueIndex = 0) ;
     void init();
-    void renderScene();
+    //void renderScene();
 
     void setDeltatime(float const delta_time);
 
@@ -172,8 +168,6 @@ namespace Poulpe
       float const z,
       int const width,
       int const height);
-
-    void showGrid(bool const show);
 
     VulkanAPI * const getAPI() const { return _vulkan.get(); }
 
@@ -186,10 +180,6 @@ namespace Poulpe
     void onFinishRender();
     void setPerspective();
     void submit(DrawCommands const& drawCmds);
-
-    void swapBufferEntities();
-    void swapBufferTransparentEntities();
-    void swapBufferTextEntities();
 
   private:
     std::unique_ptr<VulkanAPI> _vulkan{ nullptr };
@@ -219,9 +209,6 @@ namespace Poulpe
     uint32_t _previous_frame{ 0 };
     uint32_t _image_index;
     std::pair<std::vector<VkBuffer>, std::vector<VkDeviceMemory>> _unifor_buffers{};
-
-    Camera* _camera{ nullptr };
-    RendererInfo _renderer_info;
 
     //@todo move to meshManager
     std::vector<VkImageView> _depth_imageviews{};
@@ -268,26 +255,6 @@ namespace Poulpe
 
     std::vector<VkSemaphore> _image_available;
     std::vector<VkSemaphore> _shadowmap_sema_img_available;
-
-    Entity* _skybox{};
-    std::vector<Entity*> _entities{};
-    std::vector<Entity*> _entities_buffer{};
-    unsigned int const _entities_buffer_swap_treshold{ 50 };
-    bool _force_entities_buffer_swap{ false };
-    std::mutex _mutex_entity_submit;
-    
-    std::vector<Entity*> _transparent_entities{};
-    std::vector<Entity*> _transparent_entities_buffer{};
-    unsigned int const _transparent_entities_buffer_swap_treshold{ 50 };
-    bool _force_transparent_entities_buffer_swap{ false };
-    std::mutex _mutex_transparent_entity_submit;
-
-    std::vector<Entity*> _text_entities{};
-    std::vector<Entity*> _text_entities_buffer{};
-    unsigned int const _text_entities_buffer_swap_treshold{ 50 };
-    bool _force_text_entities_buffer_swap{ false };
-    std::mutex _mutex_text_entities_submit;
-
     std::vector<VkSemaphore> _entities_sema_finished;
 
     std::vector<VkFence> _images_in_flight{};

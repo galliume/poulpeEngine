@@ -11,6 +11,7 @@ export module Poulpe.Managers.ComponentManager;
 
 import Poulpe.Animation.AnimationScript;
 import Poulpe.Animation.BoneAnimationScript;
+import Poulpe.Component.Components;
 import Poulpe.Utils.IDHelper;
 
 namespace Poulpe

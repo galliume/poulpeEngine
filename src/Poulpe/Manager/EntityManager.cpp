@@ -12,6 +12,7 @@ module Poulpe.Managers;
 
 import Poulpe.Animation.AnimationScript;
 import Poulpe.Animation.BoneAnimationScript;
+import Poulpe.Component.Components;
 import Poulpe.Component.Entity;
 import Poulpe.Component.EntityNode;
 import Poulpe.Core.AssimpLoader;
@@ -381,9 +382,9 @@ namespace Poulpe
       //_renderer->addEntity(entityNode->getEntity(), is_last);
 
       if (alpha_mode == 2.0) {
-        _renderer->addTransparentEntity(entityNode->getEntity(), is_last);
+        addTransparentEntity(entityNode->getEntity(), is_last);
       } else {
-        _renderer->addEntity(entityNode->getEntity(), is_last);
+        addEntity(entityNode->getEntity(), is_last);
       }
 
       if (is_last) {
@@ -421,5 +422,20 @@ namespace Poulpe
     _World->setVisible(false);
 
     _world_node = std::make_unique<EntityNode>(_World);
+  }
+
+  void EntityManager::addEntity(Entity* entity, bool const is_last)
+  {
+    _entities.emplace_back(entity);
+  }
+  
+  void EntityManager::addTransparentEntity(Entity* entity, bool const is_last)
+  {
+    _transparent_entities.emplace_back(entity);
+  }
+
+  void EntityManager::addTextEntity(Entity* entity, bool const is_last)
+  {
+    _text_entities.emplace_back(entity);
   }
 }

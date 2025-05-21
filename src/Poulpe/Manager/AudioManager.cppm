@@ -12,7 +12,8 @@ namespace Poulpe
 {
   export class AudioManager
   {
-    enum class State {
+    enum class State : uint8_t
+    {
       STOP,
       PLAY,
       ERR
