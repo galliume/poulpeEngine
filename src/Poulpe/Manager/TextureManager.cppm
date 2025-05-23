@@ -2,7 +2,6 @@ module;
 
 #include <ktx.h>
 #include <nlohmann/json.hpp>
-#include <stb_image.h>
 #include <volk.h>
 
 #include <cstdlib>

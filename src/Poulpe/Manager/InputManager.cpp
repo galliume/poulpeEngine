@@ -116,7 +116,7 @@ namespace Poulpe
           _camera->down();
         } else if (key == _keyboard_keys[config["unlockFPS"]])
         {
-          ConfigManagerLocator::get()->updateConfig<unsigned int>("fpsLimit", 0);
+          ConfigManagerLocator::get()->updateConfig<uint32_t>("fpsLimit", 0);
         } else if (key == _keyboard_keys[config["reloadShader"]])
         {
           ConfigManagerLocator::get()->setReloadShaders(true);

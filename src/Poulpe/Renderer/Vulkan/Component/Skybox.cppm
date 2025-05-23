@@ -4,19 +4,17 @@ module;
 export module Poulpe.Renderer:Skybox;
 
 import :VulkanRenderer;
-
-import Poulpe.Component.Components;
+import :RendererComponent;
 
 namespace Poulpe
 {
   export class Skybox : public RendererComponentConcept
   {
   public:
-    ~Skybox() override;
+    ~Skybox() override = default;
     void operator()(
       Renderer *const renderer,
-      ComponentRenderingInfo const& component_rendering_info);
-    VkShaderStageFlags const stage_flag_bits { VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT};
+      ComponentRenderingInfo const& component_rendering_info) override;
 
   private:
     void createDescriptorSet(
@@ -24,5 +22,4 @@ namespace Poulpe
       ComponentRenderingInfo const& component_rendering_info);
   };
 
-  Skybox::~Skybox() = default;
 }

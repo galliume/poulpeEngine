@@ -31,8 +31,6 @@ namespace Poulpe
     void addStorageBuffer(Buffer& buffer);
     bool isDirty() { return _is_dirty.load(); }
 
-    virtual ~Mesh();
-
     void setData(Data data) { _data = std::move(data); }
     void setDescSet(VkDescriptorSet descset) { _descset = descset; }
     void setShadowMapDescSet(VkDescriptorSet descset) { _shadowmap_descset = descset; }

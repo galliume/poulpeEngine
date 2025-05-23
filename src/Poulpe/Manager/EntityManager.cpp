@@ -64,7 +64,7 @@ namespace Poulpe
     return _world_node.get();
   }
 
-  void EntityManager::initMeshes(std::string const& name, nlohmann::json const& data)
+  void EntityManager::initMeshes(std::string const& name, nlohmann::json const& raw_data)
   {
     //std::vector<Mesh*> meshes{};
     //if (_ObjLoaded.contains(path)) return meshes;
@@ -78,19 +78,19 @@ namespace Poulpe
 
     EntityNode* root_mesh_entity_node = new EntityNode(root_mesh_entity);
 
-    auto const& path = data["mesh"].template get<std::string>();
-    auto const flip_Y = data["flipY"].template get<bool>();
+    auto const& path = raw_data["mesh"].template get<std::string>();
+    auto const flip_Y = raw_data["flipY"].template get<bool>();
 
-    auto callback = [this, data, path, root_mesh_entity_node](
+    auto callback = [this, raw_data, path, root_mesh_entity_node](
       PlpMeshData const _data,
       std::vector<material_t> const materials,
-      bool const exists,
+      bool const,
       std::vector<Animation> const animations,
       std::unordered_map<std::string, std::vector<std::vector<Position>>> const positions,
       std::unordered_map<std::string, std::vector<std::vector<Rotation>>> const rotations,
       std::unordered_map<std::string, std::vector<std::vector<Scale>>> const scales) {
 
-    auto const& positionData = data["positions"].at(0);
+    auto const& positionData = raw_data["positions"].at(0);
 
     glm::vec3 position{};
     position = glm::vec3(
@@ -99,8 +99,8 @@ namespace Poulpe
       positionData["z"].template get<float>()
     );
 
-    auto const& scale_data = data["scales"].at(0);
-    auto const& rotation_data = data["rotations"].at(0);
+    auto const& scale_data = raw_data["scales"].at(0);
+    auto const& rotation_data = raw_data["rotations"].at(0);
 
     glm::vec3 const scale = glm::vec3(
       scale_data["x"].template get<float>(),
@@ -115,64 +115,64 @@ namespace Poulpe
 
     std::vector<std::string> textures{};
 
-    if (data.contains("textures")) {
-      for (auto& [keyTex, pathTex] : data["textures"].items()) {
+    if (raw_data.contains("textures")) {
+      for (auto& [keyTex, pathTex] : raw_data["textures"].items()) {
         textures.emplace_back(static_cast<std::string>(keyTex));
       }
     }
 
-    if (data.contains("normal")) {
-      for (auto& [keyTex, pathTex] : data["normal"].items()) {
+    if (raw_data.contains("normal")) {
+      for (auto& [keyTex, pathTex] : raw_data["normal"].items()) {
         textures.emplace_back(static_cast<std::string>(keyTex));
       }
     }
 
-    if (data.contains("mr")) {
-      for (auto& [keyTex, pathTex] : data["mr"].items()) {
+    if (raw_data.contains("mr")) {
+      for (auto& [keyTex, pathTex] : raw_data["mr"].items()) {
         textures.emplace_back(static_cast<std::string>(keyTex));
       }
     }
 
-    if (data.contains("ao")) {
-      for (auto& [keyTex, pathTex] : data["emissive"].items()) {
+    if (raw_data.contains("ao")) {
+      for (auto& [keyTex, pathTex] : raw_data["emissive"].items()) {
         textures.emplace_back(static_cast<std::string>(keyTex));
       }
     }
 
-    if (data.contains("ao")) {
-      for (auto& [keyTex, pathTex] : data["ao"].items()) {
+    if (raw_data.contains("ao")) {
+      for (auto& [keyTex, pathTex] : raw_data["ao"].items()) {
         textures.emplace_back(static_cast<std::string>(keyTex));
       }
     }
 
-    if (data.contains("transmission")) {
-      for (auto& [keyTex, pathTex] : data["transmission"].items()) {
+    if (raw_data.contains("transmission")) {
+      for (auto& [keyTex, pathTex] : raw_data["transmission"].items()) {
         textures.emplace_back(static_cast<std::string>(keyTex));
       }
     }
 
-    bool const has_bbox = data["hasBbox"].template get<bool>();
-    bool const has_animation = data["hasAnimation"].template get<bool>();
-    bool const is_point_light = data["isPointLight"].template get<bool>();
+    //bool const has_bbox = raw_data["hasBbox"].template get<bool>();
+    bool const has_animation = raw_data["hasAnimation"].template get<bool>();
+    //bool const is_point_light = raw_data["isPointLight"].template get<bool>();
 
     std::vector<std::string> animation_scripts{};
-    animation_scripts.reserve(data["animationScripts"].size());
-    for (auto& [key_anim, path_anim] : data["animationScripts"].items()) {
+    animation_scripts.reserve(raw_data["animationScripts"].size());
+    for (auto& [key_anim, path_anim] : raw_data["animationScripts"].items()) {
       animation_scripts.emplace_back(static_cast<std::string>(path_anim));
     }
 
-    auto shader = data["shader"].template get<std::string>();
+    auto shader = raw_data["shader"].template get<std::string>();
 
     EntityOptions entity_opts = {
       shader, position, scale, glm::quat(rotation),
-      data["hasBbox"].template get<bool>(),
-      data["hasAnimation"].template get<bool>(),
-      data["isPointLight"].template get<bool>(),
+      raw_data["hasBbox"].template get<bool>(),
+      raw_data["hasAnimation"].template get<bool>(),
+      raw_data["isPointLight"].template get<bool>(),
       animation_scripts,
-      data["hasShadow"].template get<bool>(),
-      data["flipY"].template get<bool>(),
-      data["isIndexed"].template get<bool>(),
-      data["debugNormal"].template get<bool>()
+      raw_data["hasShadow"].template get<bool>(),
+      raw_data["flipY"].template get<bool>(),
+      raw_data["isIndexed"].template get<bool>(),
+      raw_data["debugNormal"].template get<bool>()
     };
 
 
@@ -186,7 +186,7 @@ namespace Poulpe
       //std::vector<Mesh::BBox> bboxs{};
       mesh->setDebugNormal(entity_opts.debug_normal);
 
-      unsigned int const tex1ID = _data.materials_ID.at(0);
+      uint32_t const tex1ID = _data.materials_ID.at(0);
 
       std::string name_texture{ PLP_EMPTY };
       std::string name_specular_map{ PLP_EMPTY };
@@ -305,8 +305,8 @@ namespace Poulpe
       data._ubos = ubos;
       data._original_ubo = ubo;
 
-      glm::vec3 center = glm::vec3(0.0);
-      glm::vec3 size = glm::vec3(0.0);
+      // glm::vec3 center = glm::vec3(0.0);
+      // glm::vec3 size = glm::vec3(0.0);
 
       //if (data._vertices.size() > 0) {
       //  float xMax = data._vertices.at(0).pos.x;
@@ -358,21 +358,21 @@ namespace Poulpe
       entity->setName(_data.name);
 
       ComponentRenderingInfo rendering_info {
-        .sun_light = _light_manager->getSunLight(),
-        .point_lights = _light_manager->getPointLights(),
-        .spot_lights = _light_manager->getSpotLights(),
         .mesh = mesh.get(),
         .textures = _texture_manager->getTextures(),
         .skybox_name = _texture_manager->getSkyboxTexture(),
         .terrain_name = _texture_manager->getTerrainTexture(),
         .water_name = _texture_manager->getWaterTexture(),
+        .sun_light = _light_manager->getSunLight(),
+        .point_lights = _light_manager->getPointLights(),
+        .spot_lights = _light_manager->getSpotLights(),
         .characters = {},
         .face = nullptr,
         .atlas_width = 0,
         .atlas_height = 0
       };
 
-      auto basicRdrImpl = RendererComponentFactory::create<Basic>();
+      auto basicRdrImpl { RendererComponentFactory::create<Basic>() };
       (*basicRdrImpl)(_renderer, rendering_info);
 
       _component_manager->add<RenderComponent>(entity->getID(), std::move(basicRdrImpl));
@@ -382,9 +382,9 @@ namespace Poulpe
       //_renderer->addEntity(entityNode->getEntity(), is_last);
 
       if (alpha_mode == 2.0) {
-        addTransparentEntity(entityNode->getEntity(), is_last);
+        addTransparentEntity(entityNode->getEntity());
       } else {
-        addEntity(entityNode->getEntity(), is_last);
+        addEntity(entityNode->getEntity());
       }
 
       if (is_last) {
@@ -424,17 +424,17 @@ namespace Poulpe
     _world_node = std::make_unique<EntityNode>(_World);
   }
 
-  void EntityManager::addEntity(Entity* entity, bool const is_last)
+  void EntityManager::addEntity(Entity* entity)
   {
     _entities.emplace_back(entity);
   }
   
-  void EntityManager::addTransparentEntity(Entity* entity, bool const is_last)
+  void EntityManager::addTransparentEntity(Entity* entity)
   {
     _transparent_entities.emplace_back(entity);
   }
 
-  void EntityManager::addTextEntity(Entity* entity, bool const is_last)
+  void EntityManager::addTextEntity(Entity* entity)
   {
     _text_entities.emplace_back(entity);
   }

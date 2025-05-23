@@ -38,16 +38,16 @@ namespace Poulpe
     std::string buffer_type_debug;
 
     switch (buffer_type) {
-      default:
       case DeviceBufferType::UNIFORM:
-        buffer_size = max_buffer_size;
+      buffer_size = max_buffer_size;
 
-        if (buffer_size > _device_props.properties.limits.maxUniformBufferRange) {
-          buffer_size = _device_props.properties.limits.maxUniformBufferRange;
-        }
-
-        buffer_type_debug = "UNIFORM";
+      if (buffer_size > _device_props.properties.limits.maxUniformBufferRange) {
+        buffer_size = _device_props.properties.limits.maxUniformBufferRange;
+      }
+      
+      buffer_type_debug = "UNIFORM";
       break;
+      default:
       case DeviceBufferType::STAGING:
 
         buffer_size = max_buffer_size / _max_staging;

@@ -1,7 +1,6 @@
 module;
 
 #include <glm/glm.hpp>
-#include <stb_image.h>
 #include <volk.h>
 
 #include <algorithm>
@@ -18,7 +17,7 @@ export module Poulpe.Renderer:VulkanRenderer;
 import :DeviceMemoryPool;
 import :VulkanAPI;
 
-import Poulpe.Component.Components;
+import Poulpe.Component.Camera;
 import Poulpe.Core.PlpTypedef;
 import Poulpe.GUI.Window;
 import Poulpe.Renderer.Vulkan.Component.Mesh;
@@ -42,12 +41,12 @@ namespace Poulpe
       void insert(
         VkCommandBuffer* cmd_buffer,
         VkSemaphore* semaphore,
-        unsigned int const thread_id,
+        uint32_t const thread_id,
         bool const is_attachment,
         std::vector<VkPipelineStageFlags> flags = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT })
       {
         {
-          std::lock_guard guard(_m);
+          std::lock_guard<std::mutex> guard(_m);
           cmd_buffers[thread_id] = cmd_buffer;
           stage_flags[thread_id] = flags;
           semaphores[thread_id] = semaphore;
@@ -89,6 +88,18 @@ namespace Poulpe
       size_t _size;
   };
 
+  export struct RendererInfo
+  {
+    Mesh* const mesh{nullptr};
+    Camera* const camera{nullptr};
+    Light const& sun_light;
+    std::vector<Light> const& point_lights;
+    std::vector<Light> const& spot_lights;
+    double elapsed_time{0.0};
+    VkShaderStageFlags const stage_flag_bits;
+    bool const normal_debug {false};
+  };
+
   export class Renderer
   {
 
@@ -121,7 +132,7 @@ namespace Poulpe
     //   VkAttachmentLoadOp const load_op,
     //   VkAttachmentStoreOp const store_op,
     //   std::latch& count_down,
-    //   unsigned int const thread_id,
+    //   uint32_t const thread_id,
     //   bool const is_attachment = false,
     //   bool const has_depth_attachment = true,
     //   bool const has_alpha_blend = true);
@@ -133,7 +144,7 @@ namespace Poulpe
     //   VkImage& depth,
     //   std::vector<Entity*> const& entities,
     //   std::latch& count_down,
-    //   unsigned int const thread_id);
+    //   uint32_t const thread_id);
 
     void endRendering(
       VkCommandBuffer& cmd_buffer,
@@ -169,13 +180,13 @@ namespace Poulpe
       int const width,
       int const height);
 
-    VulkanAPI * const getAPI() const { return _vulkan.get(); }
+    VulkanAPI * getAPI() const { return _vulkan.get(); }
 
     void clearScreen();
 
   private:
-    const uint32_t _MAX_FRAMES_IN_FLIGHT{ 2 };
-    const size_t _MAX_RENDER_THREAD{ 3 };
+    const uint32_t _max_frames_in_flight{ 2 };
+    const size_t _max_render_thread{ 3 };
 
     void onFinishRender();
     void setPerspective();
@@ -262,6 +273,6 @@ namespace Poulpe
 
     std::mutex _mutex_queue_submit;
 
-    DrawCommands _draw_cmds{_MAX_RENDER_THREAD};
+    DrawCommands _draw_cmds{_max_render_thread};
   };
 }

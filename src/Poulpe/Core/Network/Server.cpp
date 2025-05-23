@@ -7,26 +7,26 @@ namespace Poulpe
 {
   void Server::bind(std::string const& port)
   {
-    _Pimpl->bind(port);
+    _pimpl->bind(port);
   }
 
   void Server::close()
   {
-    _Pimpl->close();
+    _pimpl->close();
   }
 
   void Server::listen()
   {
-    _Pimpl->listen();
+    _pimpl->listen();
   }
 
   void Server::read()
   {
-    _Pimpl->read();
+    _pimpl->read();
   }
 
   void Server::send(std::string message)
   {
-    _Pimpl->send(message);
+    _pimpl->send(message);
   }
 }

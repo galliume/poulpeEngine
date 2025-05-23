@@ -422,7 +422,7 @@ namespace Poulpe
     pipeline.descset_layout = descset_layout;
     pipeline.shaders = shaders;
 
-    if (shader_name == "shadowMap" || shader_name == "shadowMapSpot" || "normal_debug") {
+    if (shader_name == "shadowMap" || shader_name == "shadowMapSpot") {
       pipeline.descset = _renderer->getAPI()->createDescriptorSets(pipeline.desc_pool, { pipeline.descset_layout }, 1);
     }
     _renderer->addPipeline(shader_name, pipeline);

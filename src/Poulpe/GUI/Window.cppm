@@ -2,7 +2,6 @@ module;
 
 #include <GLFW/glfw3.h>
 #include <string_view>
-#include <stb_image.h>
 
 export module Poulpe.GUI.Window;
 
@@ -24,11 +23,11 @@ namespace Poulpe
     void quit();
     void wait();
 
-    static bool _FramebufferResized;
+    //static bool _FramebufferResized;
 
   private:
-    bool _ActiveVSync = true;
-    GLFWwindow* _window = nullptr;
-    GLFWmonitor* _monitor = nullptr;
+    bool _active_vsync { true};
+    GLFWwindow* _window { nullptr };
+    GLFWmonitor* _monitor { nullptr };
   };
 }

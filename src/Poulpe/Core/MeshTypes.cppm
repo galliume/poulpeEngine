@@ -17,9 +17,9 @@ namespace Poulpe {
   export struct Buffer {
     VkBuffer buffer{ VK_NULL_HANDLE };
     DeviceMemory* memory;
-    uint32_t offset;
-    unsigned long long size;
-    unsigned int index{ 0 };
+    uint64_t offset;
+    uint64_t size;
+    uint32_t index{ 0 };
   };
 
     //@todo needs huge refactoring

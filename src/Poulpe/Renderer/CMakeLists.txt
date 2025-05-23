@@ -6,4 +6,5 @@ target_sources(${PROJECT_NAME}
       FILES
         Mesh.cppm
         Renderer.cppm
+        RendererComponent.cppm
         RendererComponentFactory.cppm)

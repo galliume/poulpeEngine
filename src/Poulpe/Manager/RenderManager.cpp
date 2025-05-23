@@ -1,4 +1,5 @@
 module;
+#include <latch>
 #include <memory>
 
 module Poulpe.Managers;

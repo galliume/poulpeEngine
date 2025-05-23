@@ -1,6 +1,5 @@
 export module Poulpe.Renderer;
 
-import Poulpe.Renderer.Vulkan.DeviceMemory;
 export import :VulkanRenderer;
 
 export import :DeviceMemoryPool;
@@ -14,4 +13,7 @@ export import :Terrain;
 export import :Text;
 export import :Water;
 
+export import :RendererComponent;
+
 import :VulkanAPI;
+import Poulpe.Renderer.Vulkan.DeviceMemory;

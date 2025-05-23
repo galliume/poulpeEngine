@@ -11,6 +11,9 @@ namespace Poulpe
   export class InputManagerLocator
   {
   public:
+    InputManagerLocator() = default;
+    ~InputManagerLocator() = default;
+    
     static InputManager* get();
     static void init(Window const * const window);
 

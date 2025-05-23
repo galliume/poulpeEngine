@@ -24,12 +24,12 @@ namespace Poulpe
     ~AudioManager();
 
     std::vector<std::string> const getAmbientSound()  { return _ambient_sounds; }
-    unsigned int getAmbientSoundIndex()  { return _ambient_sound_index; }
+    uint32_t getAmbientSoundIndex()  { return _ambient_sound_index; }
     std::string getCurrentAmbientSound()  { return _ambient_sounds[_ambient_sound_index]; }
     std::string const getState() ;
 
     void load(nlohmann::json config) ;
-    void startAmbient(unsigned int const index = 0) ;
+    void startAmbient(uint32_t const index = 0) ;
     void stopAmbient() ;
     void toggleLooping() ;
 
@@ -40,7 +40,7 @@ namespace Poulpe
     void start(std::string const & sound_path, ::ma_sound & sound);
     void stop(::ma_sound sound);
 
-    unsigned int _ambient_sound_index{ 0 };
+    uint32_t _ambient_sound_index{ 0 };
 
     bool _loop = true;
 

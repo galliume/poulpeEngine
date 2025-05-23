@@ -1,6 +1,8 @@
 module;
 #include <ktx.h>
 #include <nlohmann/json.hpp>
+
+#define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 #include <volk.h>
 
@@ -86,8 +88,8 @@ namespace Poulpe
     bool is_hdr{false};
 
     for (auto const& image : skybox_images) {
-      std::string const path{ p.string() + "/" + image };
-      std::filesystem::path file_name{ path };
+      std::string const image_path{ p.string() + "/" + image };
+      std::filesystem::path file_name{ image_path };
       std::string original_name{ file_name.string()};
 
       if (std::filesystem::exists(file_name.replace_extension("hdr"))) {

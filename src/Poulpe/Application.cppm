@@ -6,7 +6,7 @@ module;
 #include <GLFW/glfw3.h>
 #include <thread>
 
-export module Application;
+export module Poulpe.Application;
 
 //import Poulpe.Core.CommandQueueLocator;
 import Poulpe.Managers.ConfigManagerLocator;

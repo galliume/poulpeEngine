@@ -1,4 +1,7 @@
-module Application;
+module;
+#include <chrono>
+
+module Poulpe.Application;
 
 namespace Poulpe
 {
@@ -18,8 +21,8 @@ namespace Poulpe
     auto* window = new Window();
     window->init("PoulpeEngine");
 
-    CommandQueueManagerLocator::init();
-    ConfigManagerLocator::init(window);
+    //CommandQueueManagerLocator::init();
+    ConfigManagerLocator::init();
     InputManagerLocator::init();
 
     _render_manager = std::make_unique<RenderManager>(window);

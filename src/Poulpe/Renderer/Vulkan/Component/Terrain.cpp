@@ -31,6 +31,12 @@ namespace Poulpe
     Renderer *const renderer,
     ComponentRenderingInfo const& component_rendering_info)
   {
+     stage_flag_bits =
+      VK_SHADER_STAGE_VERTEX_BIT 
+      | VK_SHADER_STAGE_FRAGMENT_BIT
+      | VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT
+      | VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT;
+
     auto const& mesh = component_rendering_info.mesh;
 
     if (!mesh && !mesh->isDirty()) return;
@@ -38,31 +44,35 @@ namespace Poulpe
     Texture const& tex { component_rendering_info.textures.at(component_rendering_info.terrain_name) };
 
     std::vector<Vertex> vertices;
-    int const width{ static_cast<int>(tex.getWidth()) };
-    int const height{ static_cast<int>(tex.getHeight())};
+    uint32_t const width{ tex.getWidth() };
+    uint32_t const height{ tex.getHeight()};
 
-    unsigned int const rez{ 20 };
+    uint32_t const rez{ 20 };
 
-    for(auto i = 0; i < rez - 1; i++) {
-      for(auto j = 0; j < rez - 1; j++) {
+    for(size_t i = 0; i < rez - 1; i++) {
+      for(size_t j = 0; j < rez - 1; j++) {
 
         float const y{ 0.0f };
 
         Vertex v{ 
           { -width/2.0f + width*i/(float)rez, y, -height/2.0f + height*j/(float)rez },
-          {1.0f, 1.0f, 0.0f}, {i / (float)rez, j / (float)rez }, {0.0f, 0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}};
+          {1.0f, 1.0f, 0.0f}, {i / (float)rez, j / (float)rez }, {0.0f, 0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f},
+          glm::vec3{0.0f}, {}, {}};
 
         Vertex v2{ 
           {-width/2.0f + width*(i+1)/(float)rez, y, -height/2.0f + height*j/(float)rez },
-          {1.0f, 1.0f, 0.0f}, {(i+1) / (float)rez, j / (float)rez }, {0.0f, 0.0f, 0.0f, 0.0f}, { 0.0f, 0.0f, 0.0f, 0.0f } };
+          {1.0f, 1.0f, 0.0f}, {(i+1) / (float)rez, j / (float)rez }, {0.0f, 0.0f, 0.0f, 0.0f}, { 0.0f, 0.0f, 0.0f, 0.0f },
+          glm::vec3{0.0f}, {}, {} };
 
         Vertex v3{ 
           {-width/2.0f + width*i/(float)rez, y, -height/2.0f + height*(j+1)/(float)rez },
-          {1.0f, 1.0f, 0.0f}, {i / (float)rez, (j+1) / (float)rez }, {0.0f, 0.0f, 0.0f, 0.0f}, { 0.0f, 0.0f, 0.0f, 0.0f } };
+          {1.0f, 1.0f, 0.0f}, {i / (float)rez, (j+1) / (float)rez }, {0.0f, 0.0f, 0.0f, 0.0f}, { 0.0f, 0.0f, 0.0f, 0.0f },
+          glm::vec3{0.0f}, {}, {}};
 
         Vertex v4{ 
           {-width/2.0f + width*(i+1)/(float)rez, y, -height/2.0f + height*(j+1)/(float)rez },
-          {1.0f, 1.0f, 0.0f}, {(i+1) / (float)rez, (j+1) / (float)rez }, {0.0f, 0.0f, 0.0f, 0.0f}, { 0.0f, 0.0f, 0.0f, 0.0f } };
+          {1.0f, 1.0f, 0.0f}, {(i+1) / (float)rez, (j+1) / (float)rez }, {0.0f, 0.0f, 0.0f, 0.0f}, { 0.0f, 0.0f, 0.0f, 0.0f },
+          glm::vec3{0.0f}, {}, {} };
 
         vertices.push_back(v);
         vertices.push_back(v2);
@@ -89,9 +99,9 @@ namespace Poulpe
     mesh->getData()->_ubos_offset.emplace_back(1);
     mesh->getUniformBuffers()->emplace_back(renderer->getAPI()->createUniformBuffers(1, commandPool));
 
-    for (auto i{ 0 }; i < mesh->getData()->_ubos.size(); i++) {
-      std::ranges::for_each(mesh->getData()->_ubos.at(i), [&](auto& ubo) {
-        ubo.projection = renderer->getPerspective();
+    for (size_t i{ 0 }; i < mesh->getData()->_ubos.size(); i++) {
+      std::ranges::for_each(mesh->getData()->_ubos.at(i), [&](auto& data_ubo) {
+        data_ubo.projection = renderer->getPerspective();
       });
     }
 
@@ -236,7 +246,7 @@ namespace Poulpe
     desc_writes[1].dstBinding = 1;
     desc_writes[1].dstArrayElement = 0;
     desc_writes[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-    desc_writes[1].descriptorCount = image_infos.size();
+    desc_writes[1].descriptorCount = static_cast<uint32_t>(image_infos.size());
     desc_writes[1].pImageInfo = image_infos.data();
 
     desc_writes[2].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
@@ -244,7 +254,7 @@ namespace Poulpe
     desc_writes[2].dstBinding = 2;
     desc_writes[2].dstArrayElement = 0;
     desc_writes[2].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-    desc_writes[2].descriptorCount = env_image_infos.size();
+    desc_writes[2].descriptorCount = static_cast<uint32_t>(env_image_infos.size());
     desc_writes[2].pImageInfo = env_image_infos.data();
 
     vkUpdateDescriptorSets(

@@ -1,20 +1,12 @@
-module;
-#define NOMINMAX
-
-#define GLM_FORCE_LEFT_HANDED
-#define GLM_FORCE_DEFAULT_ALIGNED_GENTYPES
-#define GLM_FORCE_DEPTH_ZERO_TO_ONE
-#define GLM_ENABLE_EXPERIMENTAL
-
 #include "PoulpeEngineConfig.h"
+#include <iostream>
+#include <memory>
 
-import Application;
+import Poulpe.Application;
+import Poulpe.Core.Logger;
 
 namespace Poulpe
 {
-  #define STB_IMAGE_IMPLEMENTATION
-  #include <stb_image.h>
-
   int main(int argc, char** argv)
   {
       std::cout << argv[0] << " Version " << PoulpeEngine_VERSION_MAJOR << "." << PoulpeEngine_VERSION_MINOR << std::endl;

@@ -37,7 +37,7 @@ namespace Poulpe
     nlohmann::json texturesConfig();
  
     template<typename T>
-    requires std::same_as<T, std::string> || std::same_as<T, unsigned int>
+    requires std::same_as<T, std::string> || std::same_as<T, uint32_t>
     void updateConfig(std::string const & config_name, T const & value)
     {
       _app_config[config_name] = value;

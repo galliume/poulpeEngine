@@ -12,6 +12,7 @@ export module Poulpe.Managers.ComponentManager;
 import Poulpe.Animation.AnimationScript;
 import Poulpe.Animation.BoneAnimationScript;
 import Poulpe.Component.Components;
+import Poulpe.Renderer;
 import Poulpe.Utils.IDHelper;
 
 namespace Poulpe
@@ -33,7 +34,7 @@ namespace Poulpe
     void add(IDType entityID, Component component_impl)
     {
       {
-        std::lock_guard guard(_mutex);
+        std::lock_guard<std::mutex> guard(_mutex);
 
         auto new_component = std::make_unique<T>();
         new_component->init(std::move(component_impl));
@@ -47,7 +48,7 @@ namespace Poulpe
     template <typename T>
     T* get(IDType entity_ID) {
       {
-        std::lock_guard guard(_mutex);
+        std::lock_guard<std::mutex> guard(_mutex);
         auto it = std::ranges::find_if(_component_type_map[&typeid(T)], [&entity_ID](auto& component) {
           if (auto ptr = std::get_if<std::unique_ptr<T>>(&component)) {
             if (ptr) {
