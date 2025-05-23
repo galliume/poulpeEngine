@@ -30,7 +30,7 @@ namespace Poulpe
     alignas(16) glm::vec4 color;
 
     glm::vec3 original_pos;
-    std::vector<int> bone_ids;
+    std::vector<uint32_t> bone_ids;
     std::vector<float> bone_weights;
 
     static VkVertexInputBindingDescription getBindingDescription()

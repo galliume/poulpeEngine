@@ -40,7 +40,7 @@ namespace Poulpe
     inline Entity* getSkybox() { return _skybox.get(); }
     inline Entity* getTerrain() { return _terrain.get(); }
     inline Entity* getWater() { return _water.get(); }
-    inline Entity* getText(unsigned int const index) { return _texts.at(index).get(); }
+    inline Entity* getText(uint32_t const index) { return _texts.at(index).get(); }
     inline std::vector<std::unique_ptr<Entity>>& getTexts() { return _texts; }
 
     std::function<void()> load(nlohmann::json const& lvl_config);

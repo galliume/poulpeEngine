@@ -8,10 +8,10 @@ import Poulpe.Component.Components;
 
 namespace Poulpe
 {
-  export class Grid : public RendererComponentConcept
+  export class Grid : public RenderComponent
   {
   public:
-    ~Grid() override;
+    ~Grid();
     void operator()(
       Renderer *const renderer,
       ComponentRenderingInfo const& component_rendering_info);

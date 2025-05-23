@@ -51,7 +51,7 @@ namespace Poulpe
     }
   }
 
-  void APIManager::updateSkybox(std::vector<std::string> const & params)
+  void APIManager::updateSkybox(std::vector<std::string> const &)
   {
     //@todo should not be using _render_manager
     // if (params.size() == 0 || params.size() > 1) return;

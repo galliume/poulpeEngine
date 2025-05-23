@@ -14,7 +14,7 @@ namespace Poulpe
       VkDevice device,
       VkMemoryPropertyFlags memory_type,
       VkDeviceSize max_size,
-      unsigned int index,
+      uint32_t index,
       VkDeviceSize alignment
   ) : _index(index),
       _alignment(alignment),
@@ -45,7 +45,7 @@ namespace Poulpe
   void DeviceMemory::allocateToMemory()
   {
     {
-      std::lock_guard guard(_mutex_memory);
+      std::lock_guard<std::mutex> guard(_mutex_memory);
       if (!_is_allocated) {
         VkMemoryAllocateInfo alloc_info{};
         alloc_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
@@ -67,10 +67,10 @@ namespace Poulpe
     }
   }
 
-  unsigned int DeviceMemory::bindBufferToMemory(VkBuffer & buffer, VkDeviceSize const offset)
+  uint32_t DeviceMemory::bindBufferToMemory(VkBuffer & buffer, VkDeviceSize const offset)
   {
     {
-      std::lock_guard guard(_mutex_memory);
+      std::lock_guard<std::mutex> guard(_mutex_memory);
 
       auto const remainder {_offset % offset};
 
@@ -100,7 +100,7 @@ namespace Poulpe
   void DeviceMemory::bindImageToMemory(VkImage & image, VkDeviceSize const offset)
   {
     {
-      std::lock_guard guard(_mutex_memory);
+      std::lock_guard<std::mutex> guard(_mutex_memory);
 
       auto const remainder {_offset % offset};
       if (remainder != 0) {
@@ -124,7 +124,7 @@ namespace Poulpe
   bool DeviceMemory::hasEnoughSpaceLeft(VkDeviceSize size)
   {
     {
-      std::lock_guard guard(_mutex_memory);
+      std::lock_guard<std::mutex> guard(_mutex_memory);
       auto offset { _offset };
 
       auto const remainder {offset % size};
@@ -159,12 +159,12 @@ namespace Poulpe
     _memory.reset();
   }
 
-  unsigned int DeviceMemory::getID() const
+  VkDeviceSize DeviceMemory::getID() const
   { 
     return _index;
   }
 
-  uint32_t DeviceMemory::getOffset() const
+  VkDeviceSize DeviceMemory::getOffset() const
   { 
     return _offset;
   }
@@ -199,12 +199,12 @@ namespace Poulpe
     _mutex_memory.unlock();
   }
 
-  VkBuffer& DeviceMemory::getBuffer(unsigned int index)
+  VkBuffer& DeviceMemory::getBuffer(size_t index)
   {
     return _buffer.at(index);
   }
 
-  unsigned int DeviceMemory::getOffset(unsigned int index) const
+  uint32_t DeviceMemory::getOffset(size_t index) const
   {
     return _buffer_offsets.at(index);
   }

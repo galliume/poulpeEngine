@@ -186,7 +186,7 @@ namespace Poulpe
       //std::vector<Mesh::BBox> bboxs{};
       mesh->setDebugNormal(entity_opts.debug_normal);
 
-      unsigned int const tex1ID = _data.materials_ID.at(0);
+      uint32_t const tex1ID = _data.materials_ID.at(0);
 
       std::string name_texture{ PLP_EMPTY };
       std::string name_specular_map{ PLP_EMPTY };

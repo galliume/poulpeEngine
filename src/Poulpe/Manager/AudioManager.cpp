@@ -37,7 +37,7 @@ namespace Poulpe
     }
   }
 
-  void AudioManager::startAmbient(unsigned int const index)
+  void AudioManager::startAmbient(uint32_t const index)
   {
     try {
       if (State::PLAY == _state) {

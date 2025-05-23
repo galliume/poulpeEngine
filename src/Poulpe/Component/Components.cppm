@@ -2,6 +2,7 @@ module;
 #include <ft2build.h>
 #include FT_FREETYPE_H
 #include <freetype/ttnameid.h>
+#include <volk.h>
 
 #include <concepts>
 #include <memory>
@@ -9,8 +10,6 @@ module;
 #include <unordered_map>
 #include <variant>
 #include <vector>
-
-class Renderer;
 
 export module Poulpe.Component.Components;
 
@@ -34,10 +33,10 @@ namespace Poulpe {
     Light const& sun_light;
     std::vector<Light> const& point_lights;
     std::vector<Light> const& spot_lights;
-    std::unordered_map<unsigned int, FontCharacter> const& characters;
+    std::unordered_map<uint32_t, FontCharacter> const& characters;
     FT_Face const& face;
-    unsigned int const atlas_width{0};
-    unsigned int const atlas_height{0};
+    uint32_t const atlas_width{0};
+    uint32_t const atlas_height{0};
   };
 
   export class RendererComponentConcept
@@ -115,7 +114,11 @@ namespace Poulpe {
   export class AnimationComponent : public Component<AnimationComponent> {};
   export class BoneAnimationComponent : public Component<BoneAnimationComponent> {};
   export class MeshComponent : public Component<MeshComponent> {};
-  export class RenderComponent : public Component<RenderComponent> {};
+  export class RenderComponent : public Component<RenderComponent> 
+  {
+    public:
+      VkShaderStageFlags stage_flag_bits { VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT};
+  };
 
   export struct RendererInfo
   {

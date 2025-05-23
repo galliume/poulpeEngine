@@ -184,20 +184,20 @@ namespace Poulpe
     sema_create_info.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
     sema_create_info.pNext = &sema_type_info;
 
-    _fences_in_flight.resize(_MAX_FRAMES_IN_FLIGHT);
-    _images_in_flight.resize(_MAX_FRAMES_IN_FLIGHT, VK_NULL_HANDLE);
+    _fences_in_flight.resize(_max_frames_in_flight);
+    _images_in_flight.resize(_max_frames_in_flight, VK_NULL_HANDLE);
 
     VkFenceCreateInfo fence_info{};
     fence_info.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
     fence_info.flags = VK_FENCE_CREATE_SIGNALED_BIT;
-    _entities_sema_finished.resize(_MAX_RENDER_THREAD);
-    _image_available.resize(_MAX_RENDER_THREAD);
+    _entities_sema_finished.resize(_max_render_thread);
+    _image_available.resize(_max_render_thread);
 
-    for (size_t i { 0 }; i < _MAX_RENDER_THREAD; ++i) {
+    for (size_t i { 0 }; i < _max_render_thread; ++i) {
       result = vkCreateSemaphore(_vulkan->getDevice(), &sema_create_info, nullptr, &_entities_sema_finished[i]);
       if (VK_SUCCESS != result) Logger::error("can't create _entities_sema_finished semaphore");
     }
-    for (size_t i { 0 }; i < _MAX_FRAMES_IN_FLIGHT; ++i) {
+    for (size_t i { 0 }; i < _max_frames_in_flight; ++i) {
       result = vkCreateSemaphore(_vulkan->getDevice(), &sema_create_info, nullptr, &_image_available[i]);
       if (VK_SUCCESS != result) Logger::error("can't create _image_available semaphore");
 
@@ -230,7 +230,7 @@ namespace Poulpe
   //   VkImage& depth,
   //   std::vector<Entity*> const& entities,
   //   std::latch& count_down,
-  //   unsigned int const thread_id
+  //   uint32_t const thread_id
   // )
   // {
   //   std::string const pipeline_name{ "shadowMap" };
@@ -398,7 +398,7 @@ namespace Poulpe
     VkImageLayout const undefined_layout{ VK_IMAGE_LAYOUT_UNDEFINED };
     VkImageLayout const begin_color_layout{ VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL };
     VkImageLayout const begin_depth_layout{ VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL };
-    VkImageLayout const general { VK_IMAGE_LAYOUT_GENERAL };
+    //VkImageLayout const general { VK_IMAGE_LAYOUT_GENERAL };
     VkImageAspectFlagBits const color_aspect { VK_IMAGE_ASPECT_COLOR_BIT };
     VkImageAspectFlagBits const depth_aspect{ VK_IMAGE_ASPECT_DEPTH_BIT };
 
@@ -406,7 +406,7 @@ namespace Poulpe
       _vulkan->transitionImageLayout(cmd_buffer, color, undefined_layout, begin_color_layout, color_aspect);
     }
     
-    if (has_depth_attachment && thread_id == 0 || thread_id == 3) {
+    if ((has_depth_attachment && thread_id == 0) || thread_id == 3) {
       _vulkan->transitionImageLayout(cmd_buffer, depthimage, undefined_layout, begin_depth_layout, depth_aspect);
     }
 
@@ -431,7 +431,6 @@ namespace Poulpe
       "drawing_" + std::to_string(thread_id), 
       marker_color_r, marker_color_g, marker_color_b);
 
-    size_t num{ 0 };
     std::vector<VkBool32> blend_enable{ VK_FALSE };
     vkCmdSetColorBlendEnableEXT(cmd_buffer, 0, 1, blend_enable.data());
     VkColorBlendEquationEXT colorBlendEquation{};
@@ -532,11 +531,7 @@ namespace Poulpe
     }
   }
 
-  void Renderer::endRender(
-    bool const is_attachment,
-    bool const has_depth_attachment,
-    VkImage const& color
-  )
+  void Renderer::endRender()
   {
     auto& cmd_buffer = _cmd_buffer_entities[_current_frame];
     auto& color = _images[_current_frame];
@@ -567,7 +562,7 @@ namespace Poulpe
   //   VkAttachmentLoadOp const load_op,
   //   VkAttachmentStoreOp const store_op,
   //   std::latch& count_down,
-  //   unsigned int const thread_id,
+  //   uint32_t const thread_id,
   //   bool const is_attachment,
   //   bool const has_depth_attachment,
   //   bool const has_alpha_blend)
@@ -618,7 +613,7 @@ namespace Poulpe
   //   //std::vector<VkDrawIndexedIndirectCommand> drawCommands{};
   //   //drawCommands.reserve(_Entities.size());
 
-  //   //unsigned int firstInstance { 0 };
+  //   //uint32_t firstInstance { 0 };
   //   //std::ranges::for_each(_Entities, [&](auto const& entity) {
   //   //  auto mesh_component = component_manager->get<MeshComponent>(entity->getID());
   //   //  if (mesh_component) {
@@ -965,7 +960,7 @@ namespace Poulpe
     _vulkan->submit(queue, submit_infos, present_info, _fences_in_flight[_current_frame]);
 
     _previous_frame = _current_frame;
-    _current_frame = (_current_frame + _MAX_FRAMES_IN_FLIGHT - 1) % _MAX_FRAMES_IN_FLIGHT;
+    _current_frame = (_current_frame + _max_frames_in_flight - 1) % _max_frames_in_flight;
 
     _draw_cmds.clear();
     onFinishRender();

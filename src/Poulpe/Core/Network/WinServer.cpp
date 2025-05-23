@@ -54,7 +54,7 @@ namespace Poulpe
     hints.ai_socktype = SOCK_STREAM;
     hints.ai_flags = AI_PASSIVE;
 
-    status = ::getaddrinfo(NULL, port.c_str(), &hints, &servInfo);
+    status = ::getaddrinfo(nullptr, port.c_str(), &hints, &servInfo);
 
     if (status != 0) {
       Logger::error("getaddrinfo failed with error: {} {}", gai_strerrorA(status), port);
@@ -157,7 +157,7 @@ namespace Poulpe
         Logger::trace("Client connected");
 
         {
-          std::lock_guard guard(_mutexSockets);
+          std::lock_guard<std::mutex> guard(_mutexSockets);
           _socket = socket;
         }
         send("Connected to PoulpeEngine!\0");
@@ -173,7 +173,7 @@ namespace Poulpe
   void WinServer::send(std::string message)
   {
     {
-      std::lock_guard guard(_mutexSockets);
+      std::lock_guard<std::mutex> guard(_mutexSockets);
       int status = ::send(_socket, message.data(), static_cast<int>(message.size()), 0);
       if (status == -1) {
         int err = WSAGetLastError();

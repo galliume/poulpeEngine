@@ -50,13 +50,13 @@ namespace Poulpe
     };
 
     AnimationScript(std::string const & scriptPath);
-    ~AnimationScript();
+    ~AnimationScript() override;
 
     Data* getData();
 
     void move(Data* data, double delta_time, float duration, glm::vec3 target);
     void rotate(Data* data, double delta_time, float duration, glm::quat angle);
-    void operator()(AnimationInfo const& animation_info);
+    void operator()(AnimationInfo const& animation_info) override;
 
   private:
     std::string _script_path;

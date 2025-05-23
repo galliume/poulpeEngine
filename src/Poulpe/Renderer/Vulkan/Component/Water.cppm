@@ -11,18 +11,14 @@ import Poulpe.Component.Components;
 
 namespace Poulpe
 {
-  export class Water : public RendererComponentConcept
+  export class Water : public RenderComponent
   {
   public:
-    ~Water() override;
+    ~Water();
     void operator()(
       Renderer *const renderer,
       ComponentRenderingInfo const& component_rendering_info);
-    VkShaderStageFlags const stage_flag_bits { 
-      VK_SHADER_STAGE_VERTEX_BIT 
-      | VK_SHADER_STAGE_FRAGMENT_BIT
-      | VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT
-      | VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT};
+
   private:
     void createDescriptorSet(
       Renderer *const renderer,

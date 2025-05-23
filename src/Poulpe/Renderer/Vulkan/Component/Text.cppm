@@ -13,17 +13,14 @@ import Poulpe.Component.Components;
 
 namespace Poulpe
 {
-  export class Text : public RendererComponentConcept
+  export class Text : public RenderComponent
   {
   public:
-    ~Text() override;
+    ~Text();
     void operator()(
       Renderer *const renderer,
       ComponentRenderingInfo const& component_rendering_info);
-    VkShaderStageFlags const stage_flag_bits { 
-      VK_SHADER_STAGE_VERTEX_BIT 
-      | VK_SHADER_STAGE_FRAGMENT_BIT};
-
+    
     void setText(std::string_view text) { _text = text; }
     void setPosition(glm::vec3 const& position) { _position = position; }
     void setColor(glm::vec3 const& color) { _color = color; }

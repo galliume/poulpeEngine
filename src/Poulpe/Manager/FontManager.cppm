@@ -1,5 +1,6 @@
 module;
 
+#include <cstdint>
 #include <ft2build.h>
 #include FT_FREETYPE_H
 #include <freetype/ttnameid.h>
@@ -30,34 +31,34 @@ namespace Poulpe
       bool flat{true}; // flat: 2D UI text, not flat: 3D text
     };
 
-    std::unordered_map<unsigned int, FontCharacter> getCharacters() { return _characters; }
+    std::unordered_map<uint32_t, FontCharacter> getCharacters() { return _characters; }
     FT_Face getFace() { return _face; }
     
-    unsigned int getAtlasWidth() const { return _atlas_width; }
-    unsigned int getAtlasHeight() const { return _atlas_height; }
+    uint32_t getAtlasWidth() const { return _atlas_width; }
+    uint32_t getAtlasHeight() const { return _atlas_height; }
 
     FontManager() = default;
     ~FontManager();
 
     inline void addRenderer(Renderer* renderer) { _renderer = renderer; }
 
-    FontCharacter get(unsigned int c);
+    FontCharacter get(uint32_t c);
 
     Texture load();
 
   private:
-    std::unordered_map<unsigned int, FontCharacter> _characters;
+    std::unordered_map<uint32_t, FontCharacter> _characters;
 
     Renderer* _renderer{ nullptr };
 
-    unsigned int _atlas_width{ 0 };
-    unsigned int _atlas_height{ 0 };
+    uint32_t _atlas_width{ 0 };
+    uint32_t _atlas_height{ 0 };
 
     FT_Face _face;
     FT_Library _ft;
 
     //@todo move to config
-    unsigned int FONT_HEIGHT{ 768 };
-    unsigned int FONT_RESOLUTION{ 512 };
+    FT_F26Dot6 FONT_HEIGHT{ 768 };
+    FT_F26Dot6 FONT_RESOLUTION{ 512 };
   };
 }

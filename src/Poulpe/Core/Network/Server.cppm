@@ -13,7 +13,7 @@ namespace Poulpe
 {
 public:
   Server(WinServer* server)
-    : _Pimpl(server)
+    : _pimpl(server)
   {
   }
   // Server(UnixServer* server)
@@ -24,14 +24,14 @@ public:
 
   void bind(std::string const& port);
   void close();
-  inline ServerStatus getStatus() { return _Pimpl->getStatus(); }
+  inline ServerStatus getStatus() { return _pimpl->getStatus(); }
   void listen();
   void read();
   void send(std::string message);
 
 private:
   
-  WinServer* _Pimpl;
+  WinServer* _pimpl;
 //   UnixServer* _Pimpl;
 };
 }

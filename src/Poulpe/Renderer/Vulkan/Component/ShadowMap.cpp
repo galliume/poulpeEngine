@@ -23,6 +23,8 @@ namespace Poulpe
     Renderer *const renderer,
     ComponentRenderingInfo const& component_rendering_info)
   {
+    stage_flag_bits = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+
     auto const& mesh = component_rendering_info.mesh;
 
     if (!mesh && !mesh->isDirty()) return;

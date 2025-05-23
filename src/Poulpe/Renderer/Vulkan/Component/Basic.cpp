@@ -23,6 +23,8 @@ namespace Poulpe
     Renderer *const renderer,
     ComponentRenderingInfo const& component_rendering_info)
   {
+    stage_flag_bits = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+
     auto const& mesh = component_rendering_info.mesh;
 
     if (!mesh && !mesh->isDirty()) return;
@@ -30,9 +32,9 @@ namespace Poulpe
     auto cmd_pool = renderer->getAPI()->createCommandPool();
 
     if (mesh->getUniformBuffers()->empty()) {
-      std::ranges::for_each(mesh->getData()->_bones, [&](auto const& bone) {
+      std::ranges::for_each(mesh->getData()->_bones, [&](auto const&) {
         
-        auto const& b{ bone.second };
+        //auto const& b{ bone.second };
 
         Buffer uniformBuffer = renderer->getAPI()->createUniformBuffers(1, cmd_pool);
         mesh->getUniformBuffers()->emplace_back(std::move(uniformBuffer));
@@ -59,7 +61,7 @@ namespace Poulpe
       }
     }
 
-    for (auto i{ 0 }; i < mesh->getData()->_ubos.size(); i++) {
+    for (size_t i{ 0 }; i < mesh->getData()->_ubos.size(); i++) {
       std::ranges::for_each(mesh->getData()->_ubos.at(i), [&](auto& ubo) {
         ubo.projection = renderer->getPerspective();
       });
@@ -126,9 +128,6 @@ namespace Poulpe
       //renderer->updateStorageBuffer(mesh->getStorageBuffers()->at(0), objectBuffer);
     }
 
-    unsigned int min{ 0 };
-    unsigned int max{ 0 };
-
     for (size_t i{ 0 }; i < mesh->getUniformBuffers()->size(); ++i) {
 
       auto& ubos{ mesh->getUniformBuffers()->at(i) };
@@ -137,7 +136,7 @@ namespace Poulpe
       renderer->getAPI()->updateUniformBuffer(ubos, &ubos_data);
     }
 
-    if (*mesh->getDescSet() == NULL) {
+    if (*mesh->getDescSet() == nullptr) {
       createDescriptorSet(renderer, component_rendering_info);
     }
     mesh->setIsDirty(false);

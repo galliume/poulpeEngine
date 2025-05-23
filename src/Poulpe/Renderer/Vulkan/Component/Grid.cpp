@@ -18,7 +18,7 @@ import Poulpe.Component.Components;
 namespace Poulpe
 {
   void Grid::createDescriptorSet(
-    Renderer *const renderer,
+    Renderer *const,
     ComponentRenderingInfo const&)
   {
     //Texture const ctex{ _texture_manager->getTextures()["mpoulpe"] };
@@ -35,7 +35,7 @@ namespace Poulpe
   }
 
   void Grid::operator()(
-    Renderer *const renderer,
+    Renderer *const,
     ComponentRenderingInfo const&)
   {
   //  if (!mesh && !mesh->isDirty()) return;

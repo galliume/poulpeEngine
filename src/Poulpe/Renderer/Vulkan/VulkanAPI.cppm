@@ -175,7 +175,7 @@ namespace Poulpe
     bool souldResizeSwapChain();
 
     Buffer createUniformBuffers(
-      uint32_t const uniform_buffers_count,
+      uint64_t const uniform_buffers_count,
       VkCommandPool& cmd_pool);
 
     Buffer createCubeUniformBuffers(uint32_t const uniform_buffers_count);
@@ -197,7 +197,7 @@ namespace Poulpe
       VkImage& image,
       VkFormat const format,
       uint32_t const mip_lvl,
-      unsigned int scale,
+      uint32_t scale,
       VkImageAspectFlags const aspect_flags = VK_IMAGE_ASPECT_COLOR_BIT);
 
     void createTextureImage(
@@ -208,7 +208,7 @@ namespace Poulpe
       uint32_t const mip_lvl,
       VkImage& texture_image,
       VkFormat const format,
-      unsigned int const scale);
+      uint32_t const scale);
 
     void copyBufferToImage(
       VkCommandBuffer& cmd_buffer,
@@ -242,7 +242,7 @@ namespace Poulpe
 
     void updateStorageBuffer(Buffer& buffer, ObjectBuffer& object_buffer);
 
-    void setResolution(unsigned int const width, unsigned int const height);
+    void setResolution(uint32_t const width, uint32_t const height);
 
     /**
     * Vulkan drawing functions, in main loop
@@ -288,7 +288,7 @@ namespace Poulpe
       bool const is_indexed = true,
       uint32_t const index = 0);
 
-    VkResult queueSubmit(VkCommandBuffer& cmd_buffer, int const queue_index = 0);
+    VkResult queueSubmit(VkCommandBuffer& cmd_buffer, size_t const queue_index = 0);
 
     void submit(
       VkQueue& queue,
@@ -434,7 +434,7 @@ namespace Poulpe
     //Font
     void createFontImage(
       VkCommandBuffer& cmd_buffer,
-      std::unordered_map<unsigned int, FontCharacter> const& characters,
+      std::unordered_map<uint32_t, FontCharacter> const& characters,
       size_t const width,
       size_t const height,
       VkImage& image);
@@ -447,7 +447,7 @@ namespace Poulpe
     VkSampler createKTXSampler(
       TextureWrapMode const wrap_mode_u,
       TextureWrapMode const wrap_mode_v,
-      float const mip_lvl);
+      uint32_t const mip_lvl);
 
   public:
     //bool _FramebufferResized = false;
@@ -544,10 +544,10 @@ namespace Poulpe
     VkFence _fence_buffer{};
 
     //@todo move to config file
-    //unsigned int _width{ 800 };
-    //unsigned int _height{ 600 };
-      unsigned int _width{ 2560 };
-      unsigned int _height{ 1440 };
+    //uint32_t _width{ 800 };
+    //uint32_t _height{ 600 };
+      uint32_t _width{ 2560 };
+      uint32_t _height{ 1440 };
 
     //VkMemoryRequirements _MemRequirements;
   };
