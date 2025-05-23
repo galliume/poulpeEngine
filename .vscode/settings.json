@@ -95,6 +95,12 @@
     "xstring": "cpp",
     "xtr1common": "cpp",
     "xtree": "cpp",
-    "xutility": "cpp"
+    "xutility": "cpp",
+    "numbers": "cpp",
+    "source_location": "cpp",
+    "typeindex": "cpp",
+    "*.rh": "cpp",
+    "string_view": "cpp"
   },
+  "C_Cpp.default.compilerPath": "C:/Program Files/LLVM/bin/clang++.exe",
 }

@@ -21,7 +21,7 @@ int main(int argc, char** argv)
       } else if (argument.find("--port") != std::string::npos) {
         std::size_t pos = argument.find("=");
         if (pos == std::string::npos) {
-          PLP_WARN("bad argument {}", argument);
+          Logger::warn("bad argument {}", argument);
         } else {
           port = argument.substr(++pos, argument.size());
         }
@@ -30,10 +30,10 @@ int main(int argc, char** argv)
     std::unique_ptr<Poulpe::Application> app = std::make_unique<Poulpe::Application>();
     app->init();
 
-    PLP_TRACE("serverMode {}", serverMode);
+    Logger::trace("serverMode {}", serverMode);
 
     if (serverMode) {
-      PLP_TRACE("port {}", port);
+      Logger::trace("port {}", port);
       app->startServer(port);
     }
 

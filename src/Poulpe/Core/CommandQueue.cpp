@@ -1,58 +1,59 @@
-#include "CommandQueue.hpp"
+module;
+#include <queue>
+#include <memory>
+#include <mutex>
+#include <thread>
+
+module Poulpe.Core.CommandQueue;
 
 namespace Poulpe
 {
-  CommandQueue::CommandQueue()
-  {
+  // void CommandQueue::add(Command& cmd)
+  // {
+  //   {
+  //     std::lock_guard<std::mutex> lock(_mutex);
+  //     std::shared_ptr<Command> cmdToQueue(std::make_shared<Command>(std::move(cmd)));
 
-  }
+  //     if (cmd.getWhenToExecute() == WhenToExecute::PRE_RENDERING) _preCmdQueue.insert(_preCmdQueue.begin(), cmdToQueue);
+  //     else if (cmd.getWhenToExecute() == WhenToExecute::POST_RENDERING) _postCmdQueue.insert(_preCmdQueue.begin(), cmdToQueue);
+  //   }
+  // }
 
-  void CommandQueue::add(Command& cmd)
-  {
-    {
-      std::lock_guard<std::mutex> lock(_Mutex);
-      std::shared_ptr<Command> cmdToQueue(std::make_shared<Command>(std::move(cmd)));
+  // void CommandQueue::execPostRequest()
+  // {
+  //   if (_postCmdQueue.empty()) return;
 
-      if (cmd.getWhenToExecute() == WhenToExecute::PRE_RENDERING) _PreCmdQueue.push(cmdToQueue);
-      else if (cmd.getWhenToExecute() == WhenToExecute::POST_RENDERING) _PostCmdQueue.push(cmdToQueue);
-    }
-  }
+  //   std::jthread command([this]() {
+  //     {
+  //       std::lock_guard guard(_mutex);
 
-  void CommandQueue::execPostRequest()
-  {
-    if (_PostCmdQueue.empty()) return;
+  //       while (!_postCmdQueue.empty())
+  //       {
+  //         std::shared_ptr<Command> cmd = _postCmdQueue.back();
+  //         cmd->execRequest();
+  //         _postCmdQueue.pop_back();
+  //       }
+  //     }
+  //   });
+  //   command.detach();
+  // }
 
-    std::jthread command([this]() {
-      {
-        std::lock_guard guard(_Mutex);
+  // void CommandQueue::execPreRequest()
+  // {
+  //   if (_preCmdQueue.empty()) return;
 
-        while (!_PostCmdQueue.empty())
-        {
-          std::shared_ptr<Command> cmd = _PostCmdQueue.front();
-          cmd->execRequest();
-          _PostCmdQueue.pop();
-        }
-      }
-    });
-    command.detach();
-  }
+  //   std::jthread command([this]() {
+  //     {
+  //       std::lock_guard guard(_mutex);
 
-  void CommandQueue::execPreRequest()
-  {
-    if (_PreCmdQueue.empty()) return;
-
-    std::jthread command([this]() {
-      {
-        std::lock_guard guard(_Mutex);
-
-        while (!_PreCmdQueue.empty())
-        {
-          std::shared_ptr<Command> cmd = _PreCmdQueue.front();
-          cmd->execRequest();
-          _PreCmdQueue.pop();
-        }
-      }
-    });
-    command.detach();
-  }
+  //       while (!_preCmdQueue.empty())
+  //       {
+  //         std::shared_ptr<Command> cmd = _preCmdQueue.back();
+  //         cmd->execRequest();
+  //         _preCmdQueue.pop_back();
+  //       }
+  //     }
+  //   });
+  //   command.detach();
+  // }
 }

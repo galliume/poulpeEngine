@@ -1,19 +1,27 @@
-#include "EntityManager.hpp"
+module;
+#include <functional>
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/glm.hpp>
+#include <glm/gtx/quaternion.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <nlohmann/json.hpp>
 
-#include "Poulpe/Component/AnimationComponent.hpp"
-#include "Poulpe/Component/AnimationScript.hpp"
-#include "Poulpe/Component/BoneAnimationComponent.hpp"
-#include "Poulpe/Component/BoneAnimationScript.hpp"
-#include "Poulpe/Component/Renderer/RendererFactory.hpp"
+#include <thread>
 
-#include "Poulpe/Core/AssimpLoader.hpp"
+module Poulpe.Managers;
 
-#include "Poulpe/Manager/ComponentManager.hpp"
-
-#include "glm/glm.hpp"
-
-#include <filesystem>
-#include <future>
+import Poulpe.Animation.AnimationScript;
+import Poulpe.Animation.BoneAnimationScript;
+import Poulpe.Component.Components;
+import Poulpe.Component.Entity;
+import Poulpe.Component.EntityNode;
+import Poulpe.Core.AssimpLoader;
+import Poulpe.Core.MeshTypes;
+import Poulpe.Core.PlpTypedef;
+import Poulpe.Managers.ComponentManager;
+import Poulpe.Renderer;
+import Poulpe.Renderer.Mesh;
+import Poulpe.Renderer.RendererComponentFactory;
 
 namespace Poulpe
 {
@@ -178,7 +186,7 @@ namespace Poulpe
       //std::vector<Mesh::BBox> bboxs{};
       mesh->setDebugNormal(entity_opts.debug_normal);
 
-      unsigned int const tex1ID = _data.materials_ID.at(0);
+      uint32_t const tex1ID = _data.materials_ID.at(0);
 
       std::string name_texture{ PLP_EMPTY };
       std::string name_specular_map{ PLP_EMPTY };
@@ -349,11 +357,23 @@ namespace Poulpe
       auto* entity = new Entity();
       entity->setName(_data.name);
 
-      auto basicRdrImpl = RendererFactory::create<Basic>();
+      ComponentRenderingInfo rendering_info {
+        .sun_light = _light_manager->getSunLight(),
+        .point_lights = _light_manager->getPointLights(),
+        .spot_lights = _light_manager->getSpotLights(),
+        .mesh = mesh.get(),
+        .textures = _texture_manager->getTextures(),
+        .skybox_name = _texture_manager->getSkyboxTexture(),
+        .terrain_name = _texture_manager->getTerrainTexture(),
+        .water_name = _texture_manager->getWaterTexture(),
+        .characters = {},
+        .face = nullptr,
+        .atlas_width = 0,
+        .atlas_height = 0
+      };
 
-      basicRdrImpl->init(_renderer, _texture_manager, _light_manager);
-      double const delta_time{ 0.0 };
-      (*basicRdrImpl)(delta_time, mesh.get());
+      auto basicRdrImpl = RendererComponentFactory::create<Basic>();
+      (*basicRdrImpl)(_renderer, rendering_info);
 
       _component_manager->add<RenderComponent>(entity->getID(), std::move(basicRdrImpl));
       _component_manager->add<MeshComponent>(entity->getID(), std::move(mesh));
@@ -362,9 +382,9 @@ namespace Poulpe
       //_renderer->addEntity(entityNode->getEntity(), is_last);
 
       if (alpha_mode == 2.0) {
-        _renderer->addTransparentEntity(entityNode->getEntity(), is_last);
+        addTransparentEntity(entityNode->getEntity(), is_last);
       } else {
-        _renderer->addEntity(entityNode->getEntity(), is_last);
+        addEntity(entityNode->getEntity(), is_last);
       }
 
       if (is_last) {
@@ -374,7 +394,6 @@ namespace Poulpe
             //@todo temp until lua scripting
             for (auto& anim : entity_opts.animation_scripts) {
               auto animationScript = std::make_unique<AnimationScript>(anim);
-              animationScript->init(_renderer, nullptr, nullptr);
               _component_manager->add<AnimationComponent>(root_mesh_entity_node->getEntity()->getID(), std::move(animationScript));
             }
           }
@@ -403,5 +422,20 @@ namespace Poulpe
     _World->setVisible(false);
 
     _world_node = std::make_unique<EntityNode>(_World);
+  }
+
+  void EntityManager::addEntity(Entity* entity, bool const is_last)
+  {
+    _entities.emplace_back(entity);
+  }
+  
+  void EntityManager::addTransparentEntity(Entity* entity, bool const is_last)
+  {
+    _transparent_entities.emplace_back(entity);
+  }
+
+  void EntityManager::addTextEntity(Entity* entity, bool const is_last)
+  {
+    _text_entities.emplace_back(entity);
   }
 }

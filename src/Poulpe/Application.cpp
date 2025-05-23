@@ -1,23 +1,4 @@
-#include "Application.hpp"
-
-#include "PoulpeEngineConfig.h"
-
-#include "Core/CommandQueue.hpp"
-
-#include "GUI/Window.hpp"
-
-#include "Poulpe/Manager/ConfigManager.hpp"
-#include "Poulpe/Manager/DbManager.hpp"
-#include "Poulpe/Manager/InputManager.hpp"
-
-#include "Renderer/Vulkan/Renderer.hpp"
-
-#include <GLFW/glfw3.h>
-
-#define MINIAUDIO_IMPLEMENTATION
-#include <miniaudio.h>
-
-#include <thread>
+module Application;
 
 namespace Poulpe
 {
@@ -37,7 +18,9 @@ namespace Poulpe
     auto* window = new Window();
     window->init("PoulpeEngine");
 
-    Poulpe::Locator::init(window);
+    CommandQueueManagerLocator::init();
+    ConfigManagerLocator::init(window);
+    InputManagerLocator::init();
 
     _render_manager = std::make_unique<RenderManager>(window);
     _render_manager->init();
@@ -55,7 +38,7 @@ namespace Poulpe
     double const loaded_time{ duration<double>(
       steady_clock::now() - _start_run).count()};
 
-    PLP_TRACE("Started in {} seconds", loaded_time);
+    Logger::trace("Started in {} seconds", loaded_time);
 
     duration<double> const title_rate{1.0};
     duration<double> title_update{ title_rate};
@@ -125,14 +108,12 @@ namespace Poulpe
         accumulator -= dt;
         total_time += dt;
       }
-      _render_manager->updateScene(frame_time);
-
       //Locator::getCommandQueue()->execPreRequest();
-      _render_manager->renderScene();
+      _render_manager->renderScene(frame_time);
       //Locator::getCommandQueue()->execPostRequest();
 
       auto const _elapsed_time{ duration<double>(steady_clock::now() - _start_run).count() };
-      Poulpe::Locator::getConfigManager()->setElapsedTime(_elapsed_time);
+      ConfigManagerLocator::get()->setElapsedTime(_elapsed_time);
 
       //@todo check if it's correct with accumulator method...
       if ((duration<double>(steady_clock::now() - last_time_debug_updated)).count() > 1.0) {
@@ -144,7 +125,7 @@ namespace Poulpe
       _render_manager->updateText("_plp_ms_counter", std::format("{:<.2f}ms {:<.2f}fps", ms_count, fps_count));
       _render_manager->updateText("_plp_frame_counter", std::format("Frame {:<}", frame_count));
       _render_manager->updateText("_plp_elapsed_time", std::format("Elapsed time {:<.2f}", _elapsed_time));
- 
+
       auto const& camera_pos = _render_manager->getCamera()->getPos();
       _render_manager->updateText("_plp_camera_pos", std::format("Position x: {:<.2f} y: {:<.2f} z: {:<.2f}", camera_pos.x, camera_pos.y, camera_pos.z));
 
@@ -152,10 +133,10 @@ namespace Poulpe
 
       current_time = new_time;
 
-      if (Poulpe::Locator::getConfigManager()->reload()) {
+      if (ConfigManagerLocator::get()->reload()) {
         _render_manager->cleanUp();
         _render_manager->init();
-        Poulpe::Locator::getConfigManager()->setReload(false);
+        ConfigManagerLocator::get()->setReload(false);
       }
     }
     _render_manager->cleanUp();

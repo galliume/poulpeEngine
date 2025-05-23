@@ -1,15 +1,17 @@
-#include "AssimpLoader.hpp"
-#include "AssimpLoader.hpp"
-
+module;
 #include <assimp/config.h>
-#include <assimp/Importer.hpp>
-#include <assimp/postprocess.h>
-
 #include <assimp/GltfMaterial.h>
+#include <assimp/Importer.hpp>
+#include <assimp/scene.h>
+#include <glm/glm.hpp>
 
+#define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/matrix_decompose.hpp>
 
+#include <functional>
 #include <filesystem>
+
+module Poulpe.Core.AssimpLoader;
 
 namespace Poulpe
 {
@@ -64,7 +66,7 @@ namespace Poulpe
     const aiScene* scene = importer.ReadFile(path, flags);
 
     if (nullptr == scene) {
-      PLP_ERROR("Error while importing file {}: {}", path, importer.GetErrorString());
+      Logger::error("Error while importing file {}: {}", path, importer.GetErrorString());
       return;
     }
 
@@ -76,7 +78,7 @@ namespace Poulpe
 
     if (scene->HasMaterials()) {
 
-      for (auto i{ 0 }; i < scene->mNumMaterials; ++i) {
+      for (size_t i{ 0 }; i < scene->mNumMaterials; ++i) {
 
         auto const& mat = scene->mMaterials[i];
 
@@ -84,10 +86,10 @@ namespace Poulpe
 
         aiString texture_file;
         mat->Get(AI_MATKEY_TEXTURE(aiTextureType_DIFFUSE, 0), texture_file);
-        if(auto texture = scene->GetEmbeddedTexture(texture_file.C_Str())) {
+        //if(auto texture = scene->GetEmbeddedTexture(texture_file.C_Str())) {
           //returned pointer is not null, read texture from memory
-        }
-        //PLP_DEBUG("texture_file {}", texture_file.C_Str());
+        //}
+        //Logger::debug("texture_file {}", texture_file.C_Str());
         material.name = mat->GetName().C_Str();
 
         aiColor4D baseColor(1.f);
@@ -178,9 +180,9 @@ namespace Poulpe
           }
           aiUVTransform transform{};
           if (mat->Get(AI_MATKEY_UVTRANSFORM(aiTextureType_AMBIENT, 0), transform) == aiReturn_SUCCESS) {
-             material.ambient_translation = glm::vec3(transform.mTranslation.x, transform.mTranslation.y, 1.0);
-             material.ambient_scale = glm::vec3(transform.mScaling.x, transform.mScaling.y, 1.0);
-             material.ambient_rotation = glm::vec2(transform.mRotation, 1.0);
+              material.ambient_translation = glm::vec3(transform.mTranslation.x, transform.mTranslation.y, 1.0);
+              material.ambient_scale = glm::vec3(transform.mScaling.x, transform.mScaling.y, 1.0);
+              material.ambient_rotation = glm::vec2(transform.mRotation, 1.0);
           }
         }
         if (mat->GetTextureCount(aiTextureType_DIFFUSE) > 0) {
@@ -280,7 +282,7 @@ namespace Poulpe
               material.normal_scale = glm::vec3(transform.mScaling.x, transform.mScaling.y, 1.0);
               material.normal_rotation = glm::vec2(transform.mRotation, 1.0);
             }
-            float strength{ 1.0 };
+            //float strength{ 1.0 };
             //if (mat->Get(AI_MATKEY_UVTRANSFORM(aiTextureType_NORMALS, 0), strength) == aiReturn_SUCCESS) {
             //  material.normal_strength = strength;
             //}
@@ -420,14 +422,14 @@ namespace Poulpe
     positions.reserve(scene->mNumAnimations);
     scales.reserve(scene->mNumAnimations);
 
-    for (auto i{ 0 }; i < scene->mNumAnimations; i++) {
+    for (uint32_t i{ 0 }; i < scene->mNumAnimations; i++) {
 
       aiAnimation const* animation = scene->mAnimations[i];
 
       auto const ticks_per_s = (animation->mTicksPerSecond > 0) ? animation->mTicksPerSecond : 25.0;
       animations.emplace_back(i, animation->mName.C_Str(), animation->mDuration, ticks_per_s);
 
-      for (auto j{ 0 }; j < animation->mNumChannels; j++) {
+      for (uint32_t j{ 0 }; j < animation->mNumChannels; j++) {
 
         auto const* node{ animation->mChannels[j] };
         auto const node_name{ node->mNodeName.C_Str() };
@@ -435,12 +437,12 @@ namespace Poulpe
         std::vector<Rotation>rots{};
         rots.reserve(node->mNumRotationKeys);
 
-        for (auto r{ 0 }; r < node->mNumRotationKeys; r++) {
+        for (uint32_t r{ 0 }; r < node->mNumRotationKeys; r++) {
 
           auto const& rotation_key{ node->mRotationKeys[r] };
           auto const interpolation{ getInterpolation(rotation_key.mInterpolation) };
 
-          rots.emplace_back(Rotation{ r, i, static_cast<float>(rotation_key.mTime), interpolation, GetGLMQuat(rotation_key.mValue) });
+          rots.emplace_back(Rotation{ {r, i, static_cast<float>(rotation_key.mTime), interpolation}, GetGLMQuat(rotation_key.mValue) });
         }
         //auto rot_duplicate = rots.front();
         //rot_duplicate.id = rots.size() + 1;
@@ -451,11 +453,11 @@ namespace Poulpe
         std::vector<Position> pos{};
         pos.reserve(node->mNumPositionKeys);
 
-        for (auto p{ 0 }; p < node->mNumPositionKeys; p++) {
+        for (uint32_t p{ 0 }; p < node->mNumPositionKeys; p++) {
           auto const& pos_key = node->mPositionKeys[p];
           auto const interpolation{ getInterpolation(pos_key.mInterpolation) };
 
-          pos.emplace_back(Position{ p, i, static_cast<float>(pos_key.mTime), interpolation, GetGLMVec(pos_key.mValue) });
+          pos.emplace_back(Position{ { p, i, static_cast<float>(pos_key.mTime), interpolation }, GetGLMVec(pos_key.mValue) });
         }
         //auto pos_duplicate = pos.front();
         //pos_duplicate.id = pos.size() + 1;
@@ -466,11 +468,11 @@ namespace Poulpe
         std::vector<Scale> sc{};
         sc.reserve(node->mNumScalingKeys);
 
-        for (auto s{ 0 }; s < node->mNumScalingKeys; s++) {
+        for (uint32_t s{ 0 }; s < node->mNumScalingKeys; s++) {
           auto const& scale_key = node->mScalingKeys[s];
           auto const interpolation{ getInterpolation(scale_key.mInterpolation) };
 
-          sc.emplace_back(Scale{ s, i, static_cast<float>(scale_key.mTime), interpolation, GetGLMVec(scale_key.mValue) });
+          sc.emplace_back(Scale{ {s, i, static_cast<float>(scale_key.mTime), interpolation }, GetGLMVec(scale_key.mValue) });
         }
         //auto sc_duplicate = sc.front();
         //sc_duplicate.id = sc.size() + 1;
@@ -485,7 +487,7 @@ namespace Poulpe
     std::vector<PlpMeshData> mesh_data{};
     process(scene->mRootNode, scene, mesh_data, global_transform, texture_prefix, flip_Y);
 
-    size_t id{ mesh_data.size() };
+    uint64_t id{ mesh_data.size() };
     for (auto& data : mesh_data) {
       --id;
       data.id = id;
@@ -505,7 +507,7 @@ namespace Poulpe
       std::replace(cleaned.begin(), cleaned.end(), '/', '_');
     }
 
-    //PLP_DEBUG("asset: {} -> {}", name, cleaned);
+    //Logger::debug("asset: {} -> {}", name, cleaned);
 
     return prefix + cleaned;
   }
@@ -521,7 +523,7 @@ namespace Poulpe
     glm::mat4 local_transform = ConvertMatrixToGLMFormat(node->mTransformation);
     auto transform_matrix = global_transform * local_transform;
 
-    for (unsigned int i{ 0 }; i < node->mNumMeshes; i++) {
+    for (uint32_t i{ 0 }; i < node->mNumMeshes; i++) {
       PlpMeshData mesh_data{};
       mesh_data.transform_matrix = transform_matrix;
       mesh_data.inverse_transform_matrix = glm::inverse(global_transform);
@@ -529,8 +531,6 @@ namespace Poulpe
       aiMesh const* mesh = scene->mMeshes[node->mMeshes[i]];
       mesh_data.name = mesh->mName.C_Str() + std::to_string(i);
       mesh_data.texture_prefix = texture_prefix;
-
-      unsigned int count{ 0 };
 
       //@todo check if it's ok
       //fallback to last normal or tangent if none is found
@@ -540,7 +540,7 @@ namespace Poulpe
 
       mesh_data.vertices.reserve(mesh->mNumVertices);
 
-      for (unsigned int v{ 0 }; v < mesh->mNumVertices; v++) {
+      for (uint32_t v{ 0 }; v < mesh->mNumVertices; v++) {
 
         aiVector3D vertices = mesh->mVertices[v];
 
@@ -560,7 +560,7 @@ namespace Poulpe
           n = vertex.normal;
           //if (flip_Y) vertex.normal.y = 1.0f - vertex.normal.y;
         } else {
-          PLP_WARN("NO NORMAL");
+          Logger::warn("NO NORMAL");
         }
 
         glm::vec4 tangent(0.f);
@@ -597,9 +597,9 @@ namespace Poulpe
         glm::vec4 color{ 0.0f };
 
         auto nb_colors{ 0 };
-        for (auto i{ 0 }; i < AI_MAX_NUMBER_OF_COLOR_SETS; i++) {
-          if (mesh->HasVertexColors(i)) {
-            auto const& v_color = mesh->mColors[i][v];
+        for (uint32_t x{ 0 }; x < AI_MAX_NUMBER_OF_COLOR_SETS; x++) {
+          if (mesh->HasVertexColors(x)) {
+            auto const& v_color = mesh->mColors[x][v];
               color += glm::vec4(
                 v_color.r,
                 v_color.g,
@@ -620,12 +620,12 @@ namespace Poulpe
         mesh_data.vertices.emplace_back(std::move(vertex));
       }
 
-      for (unsigned int f{ 0 }; f < mesh->mNumFaces; f++) {
+      for (uint32_t f{ 0 }; f < mesh->mNumFaces; f++) {
         aiFace const* face = &mesh->mFaces[f];
 
         mesh_data.indices.reserve(face->mNumIndices);
 
-        for (unsigned int j{ 0 }; j < face->mNumIndices; j++) {
+        for (uint32_t j{ 0 }; j < face->mNumIndices; j++) {
           mesh_data.indices.push_back(face->mIndices[j]);
         }
         mesh_data.material_ID = mesh->mMaterialIndex;
@@ -637,9 +637,9 @@ namespace Poulpe
       std::unordered_set<std::string>bones_list{};
 
       if (mesh->HasBones()) {
-        std::unordered_map<unsigned int, std::vector<std::pair<unsigned int, float>>> vertex_weight_map{};
+        std::unordered_map<uint32_t, std::vector<std::pair<uint32_t, float>>> vertex_weight_map{};
 
-        for (auto b{ 0 }; b < mesh->mNumBones; b++) {
+        for (uint32_t b{ 0 }; b < mesh->mNumBones; b++) {
           auto bone_id{ b };
           aiBone const* bone = mesh->mBones[b];
 
@@ -666,16 +666,16 @@ namespace Poulpe
             skew,
             perspective);
 
-          for (auto w{ 0 }; w < bone->mNumWeights; w++) {
+          for (uint32_t w{ 0 }; w < bone->mNumWeights; w++) {
             aiVertexWeight const& aiWeight = bone->mWeights[w];
             bone_data.weights.emplace_back(aiWeight.mVertexId, aiWeight.mWeight);
             
-            auto& data = vertex_weight_map[aiWeight.mVertexId];
-            data.emplace_back(bone_id, aiWeight.mWeight);
+            auto& data_weight = vertex_weight_map[aiWeight.mVertexId];
+            data_weight.emplace_back(bone_id, aiWeight.mWeight);
           }
 
-          for (auto i{ 0 }; i < bone_node->mNumChildren; i++) {
-            aiNode* child = bone_node->mChildren[i];
+          for (size_t z{ 0 }; z < bone_node->mNumChildren; z++) {
+            aiNode* child = bone_node->mChildren[z];
             if (child) {
               std::string const& child_name{ child->mName.C_Str() };
               bone_data.children.emplace_back(child_name);
@@ -702,31 +702,31 @@ namespace Poulpe
         }
 
         for (auto& vertex_map : vertex_weight_map) {
-          unsigned int vertex_id = vertex_map.first;
+          uint32_t vertex_id = vertex_map.first;
           auto& vertex = mesh_data.vertices.at(vertex_id);
 
-          auto& data{ vertex_map.second };
+          auto& data_vertex{ vertex_map.second };
 
-          std::sort(data.begin(), data.end(),
+          std::sort(data_vertex.begin(), data_vertex.end(),
             [](auto const& a, auto const& b) { return a.second > b.second; });
             
           float total_weight{ 0.0f };
-          for (int i{ 0 }; i < 4 && i < static_cast<int>(data.size()); ++i) {
-            vertex.bone_ids[i] = data[i].first;
-            vertex.bone_weights[i] = data[i].second;
-            total_weight += data[i].second;
+          for (size_t y{ 0 }; i < 4 && y < data_vertex.size(); ++y) {
+            vertex.bone_ids[y] = data_vertex[y].first;
+            vertex.bone_weights[y] = data_vertex[y].second;
+            total_weight += data_vertex[y].second;
           }
 
           if (total_weight > 0.0f) {
-            for (int i{ 0 }; i < 4; ++i)
-            vertex.bone_weights[i] /= total_weight;
+            for (size_t w{ 0 }; w < 4; ++w)
+            vertex.bone_weights[w] /= total_weight;
           }
         }
       }
       data.emplace_back(mesh_data);
     }
 
-    for (unsigned int i{ 0 }; i < node->mNumChildren; i++) {
+    for (uint32_t i{ 0 }; i < node->mNumChildren; i++) {
       process(node->mChildren[i], scene, data, global_transform, texture_prefix, flip_Y);
     }
   }
@@ -735,18 +735,20 @@ namespace Poulpe
   {
     switch (wrap_mode)
     {
-    case 1:
+    case aiTextureMapMode_Clamp:
       return TextureWrapMode::CLAMP_TO_EDGE;
-    case 2:
+    case aiTextureMapMode_Mirror:
       return TextureWrapMode::MIRROR_REPEAT;
-      break;
-    case 0:
+    case aiTextureMapMode_Wrap:
+      return TextureWrapMode::WRAP;
+    case _aiTextureMapMode_Force32Bit:
+    case aiTextureMapMode_Decal:
+      return TextureWrapMode::WRAP;
     default:
       return TextureWrapMode::WRAP;
-      break;
     }
   }
-  
+
   AnimInterpolation AssimpLoader::getInterpolation(aiAnimInterpolation const assimp_interpolation)
   {
     AnimInterpolation interpolation{ AnimInterpolation::STEP };
@@ -757,18 +759,23 @@ namespace Poulpe
     case aiAnimInterpolation_Spherical_Linear :
       interpolation = AnimInterpolation::SPHERICAL_LINEAR;
       break;
-      case aiAnimInterpolation_Cubic_Spline:
-        interpolation = AnimInterpolation::CUBIC_SPLINE;
-      default:
-        interpolation = AnimInterpolation::LINEAR;
+    case aiAnimInterpolation_Cubic_Spline:
+      interpolation = AnimInterpolation::CUBIC_SPLINE;
+      break;
+    case aiAnimInterpolation_Step:
+    case _aiAnimInterpolation_Force32Bit:
+      interpolation = AnimInterpolation::LINEAR;
+      break;
+    default:
+      interpolation = AnimInterpolation::LINEAR;
     }
     return interpolation;
   }
 
-   aiNode const* AssimpLoader::FindRootBone(
+    aiNode const* AssimpLoader::FindRootBone(
     aiNode const* node,
     std::unordered_set<std::string> const& bone_names)
-   {
+    {
     if (bone_names.count(node->mName.C_Str())) {
       aiNode const* parent = node->mParent;
       if (!parent || !bone_names.count(parent->mName.C_Str())) {
@@ -776,12 +783,12 @@ namespace Poulpe
       }
     }
 
-    for (auto i{ 0 }; i < node->mNumChildren; ++i) {
+    for (uint32_t i{ 0 }; i < node->mNumChildren; ++i) {
       if (auto const* result = FindRootBone(node->mChildren[i], bone_names)) {
         return result;
       }
     }
 
     return nullptr;
-}
+  }
 }

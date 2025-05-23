@@ -1,8 +1,20 @@
-#include "FontManager.hpp"
-
-#include "Poulpe/Renderer/Vulkan/Renderer.hpp"
-
+module;
+#include <ft2build.h>
+#include FT_FREETYPE_H
 #include <freetype/ttnameid.h>
+#include <glm/glm.hpp>
+#include <volk.h>
+
+#include <unordered_map>
+#include <string>
+#include <vector>
+
+module Poulpe.Managers;
+
+import Poulpe.Component.Texture;
+import Poulpe.Managers.ConfigManagerLocator;
+import Poulpe.Core.Logger;
+import Poulpe.Core.PlpTypedef;
 
 namespace Poulpe
 {
@@ -12,19 +24,19 @@ namespace Poulpe
 
     if (FT_Init_FreeType(&_ft))
     {
-      PLP_ERROR("FREETYPE: Could not init FreeType Library");
+      Logger::error("FREETYPE: Could not init FreeType Library");
       return texture;
     }
 
-    auto const font{Poulpe::Locator::getConfigManager()->appConfig()["font"].get<std::string>()};
+    auto const font{ConfigManagerLocator::get()->appConfig()["font"].get<std::string>()};
 
     if (FT_New_Face(_ft, font.c_str(), 0, &_face))
     {
-      PLP_ERROR("FREETYPE: Failed to load font {}", font.c_str());
+      Logger::error("FREETYPE: Failed to load font {}", font.c_str());
       return texture;
     }
     
-    FT_CharMap found = 0;
+    FT_CharMap found {nullptr};
     FT_CharMap charmap;
 
     for (auto n{ 0 }; n < _face->num_charmaps; n++) {
@@ -37,12 +49,12 @@ namespace Poulpe
     }
 
     if (!found) {
-      PLP_ERROR("FREETYTPE: Failed to find Unicode charmap");
+      Logger::error("FREETYTPE: Failed to find Unicode charmap");
       return texture;
     }
 
     if (FT_Set_Charmap(_face, found)) {
-      PLP_ERROR("FREETYTPE: Failed to set Unicode charmap");
+      Logger::error("FREETYTPE: Failed to set Unicode charmap");
       return texture;
     }
 
@@ -50,13 +62,13 @@ namespace Poulpe
 
     if (FT_Load_Char(_face, 'X', FT_LOAD_RENDER))
     {
-      PLP_ERROR("FREETYTPE: Failed to load Glyph");
+      Logger::error("FREETYTPE: Failed to load Glyph");
       return texture;
     }
 
     VkCommandPool cmd_pool = _renderer->getAPI()->createCommandPool();
     VkCommandBuffer cmd_buffer = _renderer->getAPI()->allocateCommandBuffers(cmd_pool)[0];
- 
+
     auto offset{0.0f};
     int x_offset{ 0 };
     int y_offset{ 0 };
@@ -75,19 +87,19 @@ namespace Poulpe
 
       glyph_index = FT_Get_Char_Index(_face, c);
       if (FT_Load_Glyph(_face, glyph_index, FT_LOAD_RENDER)) {
-        PLP_DEBUG("FREETYTPE: Failed to load Glyph");
+        Logger::debug("FREETYTPE: Failed to load Glyph");
         renderable = false;
       }
 
       if (FT_Render_Glyph(_face->glyph, FT_RENDER_MODE_SDF)) {
-        PLP_DEBUG("FREETYTPE: Failed to render Glyph");
+        Logger::debug("FREETYTPE: Failed to render Glyph");
         renderable = false;
       }
 
-      if (_face->glyph->bitmap.buffer == NULL
+      if (_face->glyph->bitmap.buffer == nullptr
         || _face->glyph->bitmap.width == 0
         || _face->glyph->bitmap.rows == 0) {
-        PLP_DEBUG("FREETYPE: non-renderable glyph {}", glyph_index);
+        Logger::debug("FREETYPE: non-renderable glyph {}", glyph_index);
         renderable = false;
       }
 
@@ -103,9 +115,9 @@ namespace Poulpe
         auto buffer = _face->glyph->bitmap.buffer;
         int index{ 0 };
 
-        for (auto y{ 0 }; y < glyph_height; y++) {
+        for (size_t y{ 0 }; y < glyph_height; y++) {
           int8_t const * row_buffer = reinterpret_cast<int8_t const *>(buffer) + y * glyph_pitch;
-          for (auto x{ 0 }; x < glyph_width; x++) {
+          for (size_t x{ 0 }; x < glyph_width; x++) {
             int8_t sdf = row_buffer[x];
             r_buffer[index++] = sdf;
           }
@@ -136,7 +148,7 @@ namespace Poulpe
         character.y_offset = y_offset;
         x_offset += character.size.x + 1;
 
-        characters[glyph_index] = character;
+        _characters[glyph_index] = character;
 
         offset += _face->glyph->bitmap.width;
       }
@@ -146,7 +158,7 @@ namespace Poulpe
     _atlas_height += max_row_height + 50;
 
     VkImage image = nullptr;
-    _renderer->getAPI()->createFontImage(cmd_buffer, characters, _atlas_width, _atlas_height, image);
+    _renderer->getAPI()->createFontImage(cmd_buffer, _characters, _atlas_width, _atlas_height, image);
 
     VkImageView imageview = _renderer->getAPI()->createFontImageView(image, VK_IMAGE_ASPECT_COLOR_BIT);
 
@@ -161,11 +173,11 @@ namespace Poulpe
     return texture;
   }
 
-  FontCharacter FontManager::get(unsigned int c)
+  FontCharacter FontManager::get(uint32_t c)
   {
     auto glyph_index = FT_Get_Char_Index(_face, c);
 
-    return characters[glyph_index];
+    return _characters[glyph_index];
   }
 
   FontManager::~FontManager()

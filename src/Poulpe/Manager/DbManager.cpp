@@ -1,4 +1,4 @@
-#include "DbManager.hpp"
+module Poulpe.Managers;
 
 namespace Poulpe
 {

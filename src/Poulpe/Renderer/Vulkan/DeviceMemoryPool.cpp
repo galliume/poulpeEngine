@@ -1,4 +1,11 @@
-#include "DeviceMemoryPool.hpp"
+module;
+#include <volk.h>
+
+#include <memory>
+#include <stdexcept>
+#include <string>
+
+module Poulpe.Renderer;
 
 namespace Poulpe
 {
@@ -32,14 +39,15 @@ namespace Poulpe
 
     switch (buffer_type) {
       case DeviceBufferType::UNIFORM:
-        buffer_size = max_buffer_size;
+      buffer_size = max_buffer_size;
 
-        if (buffer_size > _device_props.properties.limits.maxUniformBufferRange) {
-          buffer_size = _device_props.properties.limits.maxUniformBufferRange;
-        }
-
-        buffer_type_debug = "UNIFORM";
+      if (buffer_size > _device_props.properties.limits.maxUniformBufferRange) {
+        buffer_size = _device_props.properties.limits.maxUniformBufferRange;
+      }
+      
+      buffer_type_debug = "UNIFORM";
       break;
+      default:
       case DeviceBufferType::STAGING:
 
         buffer_size = max_buffer_size / _max_staging;
@@ -52,7 +60,7 @@ namespace Poulpe
       break;
     }
     
-    //PLP_DEBUG("type: {} {} allocated size: {} size: {} buffer size: {} max: {}", buffer_type_debug, memory_type, _memory_allocation_size.at(memory_type), size, buffer_size, max_buffer_size);
+    //Logger::debug("type: {} {} allocated size: {} size: {} buffer size: {} max: {}", buffer_type_debug, memory_type, _memory_allocation_size.at(memory_type), size, buffer_size, max_buffer_size);
 
     auto pool_type = _pool.find(memory_type);
 
@@ -62,11 +70,11 @@ namespace Poulpe
         for (size_t i{ 0 }; i < poolUsage->second.size(); ++i) {
           auto& dm = poolUsage->second.at(i);
           if (!dm->isFull() && dm->hasEnoughSpaceLeft(size)) {
-            //  PLP_DEBUG("DM REUSE OK: id {}, {}, type {} usage {} size {}/{}",
+            //  Logger::debug("DM REUSE OK: id {}, {}, type {} usage {} size {}/{}",
             //    dm.get()->getID(), buffer_type_debug, memory_type, usage, size, dm->getSpaceLeft());
             return dm.get();
           } else {
-            //  PLP_DEBUG("DM REUSE KO: id {}, {}, type {} usage {} size {}/{}",
+            //  Logger::debug("DM REUSE KO: id {}, {}, type {} usage {} size {}/{}",
             //    dm.get()->getID(), buffer_type_debug, memory_type, usage, size, dm->getSpaceLeft());
           }
         }
@@ -74,7 +82,7 @@ namespace Poulpe
 
 
       if (_memory_allocation_size.at(memory_type) + buffer_size > max_buffer_size) {
-        PLP_DEBUG("type: {} {} allocated size: {} size: {} buffer size: {} max: {}", buffer_type_debug, memory_type, _memory_allocation_size.at(memory_type), size, buffer_size, max_buffer_size);
+        //Logger::debug("type: {} {} allocated size: {} size: {} buffer size: {} max: {}", buffer_type_debug, memory_type, _memory_allocation_size.at(memory_type), size, buffer_size, max_buffer_size);
         throw std::runtime_error("Max size of memory allocation reached");
       }
 
@@ -82,7 +90,7 @@ namespace Poulpe
         device, memory_type, buffer_size, _device_memory_count, alignment));
       _memory_allocation_count += 1;
       _memory_allocation_size.at(memory_type) += buffer_size;
-      //PLP_DEBUG("DM CREATION: id {}, {}, type {} usage {} size {}", _device_memory_count, buffer_type_debug, memory_type, usage, buffer_size);
+      //Logger::debug("DM CREATION: id {}, {}, type {} usage {} size {}", _device_memory_count, buffer_type_debug, memory_type, usage, buffer_size);
       _device_memory_count += 1;
       _memory_size_allocated += size;
       return _pool[memory_type][usage].back().get();
@@ -96,7 +104,7 @@ namespace Poulpe
         device, memory_type, buffer_size, _device_memory_count, alignment));
       _memory_allocation_count += 1;
       _memory_allocation_size.at(memory_type) += buffer_size;
-      //PLP_DEBUG("DM CREATION: id {}, {}, type {} usage {} size {}", _device_memory_count, buffer_type_debug, memory_type, usage, buffer_size);
+      //Logger::debug("DM CREATION: id {}, {}, type {} usage {} size {}", _device_memory_count, buffer_type_debug, memory_type, usage, buffer_size);
       _device_memory_count += 1;
       _memory_size_allocated += size;
       return _pool[memory_type][usage].back().get();
@@ -105,7 +113,7 @@ namespace Poulpe
 
   void DeviceMemoryPool::clear()
   {
-    PLP_WARN("MEMORY POOL CLEANING");
+    //Logger::warn("MEMORY POOL CLEANING");
 
     for (auto& memory_type : _pool) {
       for (auto& usage : memory_type.second) {
@@ -129,6 +137,6 @@ namespace Poulpe
     _memory_allocation_count -= 1;
     _device_memory_count -= 1;
     deviceMemory->clear();
-    PLP_DEBUG("Clearing device memory id {}. {} left", deviceMemory->getID(), _device_memory_count);
+    //Logger::debug("Clearing device memory id {}. {} left", deviceMemory->getID(), _device_memory_count);
   }
 }

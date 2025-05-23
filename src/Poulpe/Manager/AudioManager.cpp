@@ -1,11 +1,21 @@
-#include "AudioManager.hpp"
+module;
+
+#include <miniaudio.h>
+#include <nlohmann/json.hpp>
+
+#include <stdexcept>
+#include <string>
+
+module Poulpe.Managers;
+
+import Poulpe.Core.Logger;
 
 namespace Poulpe
 {
   AudioManager::~AudioManager()
   {
-    ma_engine_stop(& _engine);
-    ma_engine_uninit(& _engine);
+    ::ma_engine_stop(& _engine);
+    ::ma_engine_uninit(& _engine);
   }
 
   std::string const AudioManager::getState()
@@ -15,7 +25,7 @@ namespace Poulpe
     } else if (State::STOP == _state) {
       return "stoped";
     } else {
-      PLP_ERROR("AudioManager in an unknown states");
+      Logger::error("AudioManager in an unknown states");
       return "error";
     }
   }
@@ -27,7 +37,7 @@ namespace Poulpe
     }
   }
 
-  void AudioManager::startAmbient(unsigned int const index)
+  void AudioManager::startAmbient(uint32_t const index)
   {
     try {
       if (State::PLAY == _state) {
@@ -40,7 +50,7 @@ namespace Poulpe
         _ambient_sound_index = index;
       }
     } catch (std::out_of_range const&) {
-      PLP_WARN("Ambient sound index {} does not exists.", index);
+      Logger::warn("Ambient sound index {} does not exists.", index);
     }
   }
 
@@ -51,11 +61,11 @@ namespace Poulpe
 
   void AudioManager::toggleLooping()
   {
-    if (ma_sound_is_looping(&_ambient_sound)) {
-      ma_sound_set_looping(&_ambient_sound, false);
+    if (::ma_sound_is_looping(&_ambient_sound)) {
+      ::ma_sound_set_looping(&_ambient_sound, false);
     }
     else {
-      ma_sound_set_looping(&_ambient_sound, true);
+      ::ma_sound_set_looping(&_ambient_sound, true);
     }
   }
 
@@ -63,8 +73,8 @@ namespace Poulpe
   {
     if (State::PLAY == _state) {
       stopAmbient();
-      ma_engine_stop(&_engine);
-      ma_engine_uninit(&_engine);
+      ::ma_engine_stop(&_engine);
+      ::ma_engine_uninit(&_engine);
     }
 
     _ambient_sounds.clear();
@@ -73,47 +83,47 @@ namespace Poulpe
   void AudioManager::init()
   {
     _state = State::STOP;
-    ma_result result{ MA_ERROR };
+    ::ma_result result{ ::MA_ERROR };
 
-    result = ma_engine_init(nullptr, & _engine);
+    result = ::ma_engine_init(nullptr, & _engine);
 
-    if (MA_SUCCESS != result) {
-      PLP_WARN("Cannot init mini audio {}", static_cast<int>(result));
+    if (::MA_SUCCESS != result) {
+      Logger::warn("Cannot init mini audio {}", static_cast<int>(result));
     }
   }
 
-  void AudioManager::start(std::string const & soundPath, ma_sound & sound)
+  void AudioManager::start(std::string const & soundPath, ::ma_sound & sound)
   {
-    ma_result result{ MA_ERROR };
-    ma_uint32 flags{ MA_SOUND_FLAG_ASYNC };
+    ::ma_result result{ ::MA_ERROR };
+    ::ma_uint32 flags{ ::MA_SOUND_FLAG_ASYNC };
 
-    result = ma_sound_init_from_file(& _engine, soundPath.c_str(), flags, nullptr, nullptr, & sound);
+    result = ::ma_sound_init_from_file(& _engine, soundPath.c_str(), flags, nullptr, nullptr, & sound);
 
-    if (result != MA_SUCCESS) {
-      PLP_ERROR("Cannot init sound {}", soundPath.c_str());
+    if (result != ::MA_SUCCESS) {
+      Logger::error("Cannot init sound {}", soundPath.c_str());
       _state = State::ERR;
       return;
     }
 
     if (_loop) {
-      ma_sound_set_looping(& sound, true);
+      ::ma_sound_set_looping(& sound, true);
     }
 
-    _state = (MA_SUCCESS == ma_sound_start(& sound)) ? State::PLAY : State::ERR;
+    _state = (::MA_SUCCESS == ::ma_sound_start(& sound)) ? State::PLAY : State::ERR;
   }
 
-  void AudioManager::stop(ma_sound sound)
+  void AudioManager::stop(::ma_sound sound)
   {
     if (State::PLAY != _state) {
       return;
     }
 
-    if (MA_SUCCESS == ma_sound_stop(& sound)) {
+    if (::MA_SUCCESS == ::ma_sound_stop(& sound)) {
       _state = State::STOP;
     } else {
       _state = State::ERR;
     }
 
-    ma_sound_uninit(& sound);
+    ::ma_sound_uninit(& sound);
   }
 }

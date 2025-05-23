@@ -1,18 +1,29 @@
-#include "TextureManager.hpp"
+module;
+#include <ktx.h>
+#include <nlohmann/json.hpp>
+#include <stb_image.h>
+#include <volk.h>
 
-#include "RenderManager.hpp"
-
+#include <array>
+#include <cmath>
 #include <filesystem>
+#include <latch>
+#include <string>
+#include <vector>
 
-//@todo tmp
-#include <cstdlib>
+module Poulpe.Managers;
+
+import Poulpe.Component.Texture;
+import Poulpe.Core.Logger;
+import Poulpe.Core.PlpTypedef;
+import Poulpe.Renderer;
 
 namespace Poulpe
 {
   std::vector<std::array<float, 3>> TextureManager::addNormalMapTexture(std::string const& name)
   {
     if (!_textures.contains(name)) {
-      PLP_TRACE("Texture {} does not exists, can't create normal map", name);
+      Logger::trace("Texture {} does not exists, can't create normal map", name);
       return {};
     }
 
@@ -27,7 +38,7 @@ namespace Poulpe
     stbi_uc* pixels = stbi_load(path.c_str(), &tex_width, &tex_height, &tex_channels, STBI_rgb_alpha);
 
     if (!pixels) {
-      PLP_FATAL("failed to load texture image %s", name);
+      Logger::error("failed to load texture image %s", name);
       return {};
     }
 
@@ -65,7 +76,8 @@ namespace Poulpe
 
   void TextureManager::addSkyBox(
     std::string const& skybox_name,
-    std::vector<std::string> const& skybox_images)
+    std::vector<std::string> const& skybox_images,
+    Renderer* const renderer)
   {
     std::filesystem::path p{ std::filesystem::current_path()};
 
@@ -107,11 +119,11 @@ namespace Poulpe
         "ktx create  --format " + ktx_format + " --assign-oetf " + oetf + " --convert-oetf " + oetf \
         + " --cubemap " + files + " " + path
       };
-      PLP_DEBUG("{}", cmd);
+      Logger::debug("{}", cmd);
       std::system(cmd.c_str());
     }
 
-    addKTXTexture(skybox_name, path, VK_IMAGE_ASPECT_COLOR_BIT, transcoding, true);
+    addKTXTexture(skybox_name, path, VK_IMAGE_ASPECT_COLOR_BIT, transcoding, renderer, true);
   }
 
   void TextureManager::addKTXTexture(
@@ -119,15 +131,16 @@ namespace Poulpe
     std::string const& path,
     VkImageAspectFlags const aspect_flags,
     ktx_transcode_fmt_e const transcoding,
+    Renderer* const renderer,
     bool const is_public)
   {
     if (!std::filesystem::exists(path.c_str())) {
-      PLP_FATAL("texture file {} does not exits.", path);
+      Logger::critical("texture file {} does not exits.", path);
       //return;
     }
 
     if (0 != _textures.count(name.c_str())) {
-      PLP_TRACE("Texture {} already imported", name);
+      Logger::trace("Texture {} already imported", name);
       return;
     }
 
@@ -137,7 +150,7 @@ namespace Poulpe
     KTX_error_code result = ktxTexture_CreateFromNamedFile(path.c_str(), KTX_TEXTURE_CREATE_LOAD_IMAGE_DATA_BIT, (ktxTexture**)&ktx_texture);
 
     if (result != KTX_SUCCESS) {
-      PLP_WARN("Error while loading KTX file: {} error: {}", path, ktxErrorString(result));
+      Logger::warn("Error while loading KTX file: {} error: {}", path, ktxErrorString(result));
     }
 
     if (ktxTexture2_NeedsTranscoding(ktx_texture)) {
@@ -145,16 +158,16 @@ namespace Poulpe
     }
 
     if (result != KTX_SUCCESS) {
-      PLP_WARN("Error while transcoding KTX file: {} error: {}", path, ktxErrorString(result));
+      Logger::warn("Error while transcoding KTX file: {} error: {}", path, ktxErrorString(result));
     }
 
-    VkCommandPool cmd_pool = _renderer->getAPI()->createCommandPool();
-    VkCommandBuffer cmd_buffer = _renderer->getAPI()->allocateCommandBuffers(cmd_pool)[0];
+    VkCommandPool cmd_pool = renderer->getAPI()->createCommandPool();
+    VkCommandBuffer cmd_buffer = renderer->getAPI()->allocateCommandBuffers(cmd_pool)[0];
     VkImage texture_image = nullptr;
 
-    _renderer->getAPI()->createKTXImage(cmd_buffer, ktx_texture, texture_image);
+    renderer->getAPI()->createKTXImage(cmd_buffer, ktx_texture, texture_image);
 
-    VkImageView texture_imageview = _renderer->getAPI()->createKTXImageView(ktx_texture, texture_image, aspect_flags);
+    VkImageView texture_imageview = renderer->getAPI()->createKTXImageView(ktx_texture, texture_image, aspect_flags);
 
     Texture texture;
     texture.setName(name);
@@ -168,8 +181,8 @@ namespace Poulpe
 
     _textures.emplace(name, texture);
 
-    vkFreeCommandBuffers(_renderer->getDevice(), cmd_pool, 1, &cmd_buffer);
-    vkDestroyCommandPool(_renderer->getDevice(), cmd_pool, nullptr);
+    vkFreeCommandBuffers(renderer->getDevice(), cmd_pool, 1, &cmd_buffer);
+    vkDestroyCommandPool(renderer->getDevice(), cmd_pool, nullptr);
   }
 
   void TextureManager::clear()
@@ -178,34 +191,34 @@ namespace Poulpe
     _texture_config.clear();
   }
 
-  std::function<void(std::latch& count_down)> TextureManager::load()
+  std::function<void(std::latch& count_down)> TextureManager::load(Renderer * const renderer)
   {
-    return [this](std::latch& count_down) {
+    return [this, renderer](std::latch& count_down) {
       for (auto& [key, texture_data] : _texture_config["textures"].items()) {
-        add(key, texture_data, VK_IMAGE_ASPECT_COLOR_BIT, TEXTURE_TYPE::DIFFUSE);
+        add(key, texture_data, VK_IMAGE_ASPECT_COLOR_BIT, TEXTURE_TYPE::DIFFUSE, renderer);
       }
       for (auto& [key, texture_data] : _texture_config["normal"].items()) {
-        add(key, texture_data, VK_IMAGE_ASPECT_COLOR_BIT, TEXTURE_TYPE::NORMAL);
+        add(key, texture_data, VK_IMAGE_ASPECT_COLOR_BIT, TEXTURE_TYPE::NORMAL, renderer);
       }
       for (auto& [key, texture_data] : _texture_config["mr"].items()) {
-        add(key, texture_data, VK_IMAGE_ASPECT_COLOR_BIT, TEXTURE_TYPE::MR);
+        add(key, texture_data, VK_IMAGE_ASPECT_COLOR_BIT, TEXTURE_TYPE::MR, renderer);
       }
       for (auto& [key, texture_data] : _texture_config["emissive"].items()) {
-        add(key, texture_data, VK_IMAGE_ASPECT_COLOR_BIT, TEXTURE_TYPE::EMISSIVE);
+        add(key, texture_data, VK_IMAGE_ASPECT_COLOR_BIT, TEXTURE_TYPE::EMISSIVE, renderer);
       }
       for (auto& [key, texture_data] : _texture_config["ao"].items()) {
-        add(key, texture_data, VK_IMAGE_ASPECT_COLOR_BIT, TEXTURE_TYPE::AO);
+        add(key, texture_data, VK_IMAGE_ASPECT_COLOR_BIT, TEXTURE_TYPE::AO, renderer);
       }
       for (auto& [key, texture_data] : _texture_config["transmission"].items()) {
-        add(key, texture_data, VK_IMAGE_ASPECT_COLOR_BIT, TEXTURE_TYPE::EMISSIVE);
+        add(key, texture_data, VK_IMAGE_ASPECT_COLOR_BIT, TEXTURE_TYPE::EMISSIVE, renderer);
       }
       for (auto& [key, texture_data] : _texture_config["terrain"].items()) {
         setTerrainName(key);
-        add(key, texture_data, VK_IMAGE_ASPECT_COLOR_BIT, TEXTURE_TYPE::HEIGHT);
+        add(key, texture_data, VK_IMAGE_ASPECT_COLOR_BIT, TEXTURE_TYPE::HEIGHT, renderer);
       }
       for (auto& [key, texture_data] : _texture_config["water"].items()) {
         setWaterName(key);
-        add(_water_name, texture_data, VK_IMAGE_ASPECT_COLOR_BIT, TEXTURE_TYPE::DIFFUSE);
+        add(_water_name, texture_data, VK_IMAGE_ASPECT_COLOR_BIT, TEXTURE_TYPE::DIFFUSE, renderer);
       }
       count_down.count_down();
     };
@@ -215,7 +228,8 @@ namespace Poulpe
     std::string const& name,
     nlohmann::json const& data,
     VkImageAspectFlags const aspect_flags,
-    TEXTURE_TYPE texture_type)
+    TEXTURE_TYPE texture_type,
+    Renderer* const renderer)
   {
     std::filesystem::path p{ std::filesystem::current_path()};
     std::string const path{ p.string() + "/" + data.at("path").get<std::string>() };
@@ -290,25 +304,28 @@ namespace Poulpe
         "ktx create  --format " + ktx_format + " --assign-oetf " + oetf  \
         + options + " \"" + original_name + "\" \"" + path + "\" "
       };
-      PLP_DEBUG("{}", cmd);
+      Logger::debug("{}", cmd);
       std::system(cmd.c_str());
     }
 
-    addKTXTexture(name, path, aspect_flags, transcoding, true);
+    addKTXTexture(name, path, aspect_flags, transcoding, renderer, true);
   }
 
-  std::function<void(std::latch& count_down)> TextureManager::loadSkybox(std::string_view skybox)
+  std::function<void(std::latch& count_down)> TextureManager::loadSkybox(
+    std::string_view skybox,
+    Renderer* const renderer
+  )
   {
     _skybox_name = skybox;
 
-    return [this](std::latch& count_down) {
+    return [this, renderer](std::latch& count_down) {
       std::vector<std::string>skybox_images;
 
       for (auto& texture : _texture_config["skybox"][_skybox_name].items()) {
         skybox_images.emplace_back(texture.value());
       }
 
-      addSkyBox(_skybox_name, skybox_images);
+      addSkyBox(_skybox_name, skybox_images, renderer);
       count_down.arrive_and_wait();
     };
   }

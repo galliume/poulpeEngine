@@ -1,13 +1,13 @@
-#include "NetworkManager.hpp"
+module;
+#include <memory>
+#include <string>
+#include <thread>
 
-#include "Poulpe/Core/Network/Server.hpp"
-#include "Poulpe/Core/Network/Socket.hpp"
+module Poulpe.Managers;
 
-//@todo detect Unix
-#if defined(_WIN32) || defined(WIN32)
-#include "Poulpe/Core/Network/WinServer.hpp"
-#include "Poulpe/Core/Network/WinSocket.hpp"
-#endif
+import Poulpe.Core.Logger;
+import Poulpe.Core.Network.Server;
+import Poulpe.Core.Network.WinServer;
 
 namespace Poulpe
 {
@@ -19,19 +19,18 @@ namespace Poulpe
 
   void NetworkManager::startServer(std::string const& port)
   {
-    #if defined(_WIN32) || defined(WIN32)
-    _Server = std::make_shared<Server>(new WinServer(_api_manager));
+    //_server = std::make_shared<Server>(new WinServer(_api_manager));
+    _server = std::make_shared<Server>(new WinServer());
 
     std::jthread listen([this, &port]() {
-      _Server->bind(port);
-      _Server->listen();
+      _server->bind(port);
+      _server->listen();
     });
     listen.detach();
-    #endif
   }
 
   void NetworkManager::received(std::string const& message)
   {
-    PLP_TRACE("received {}", message);
+    Logger::trace("received {}", message);
   }
 }

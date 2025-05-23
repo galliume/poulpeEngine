@@ -1,4 +1,10 @@
-#include "LightManager.hpp"
+module;
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+
+module Poulpe.Managers;
+
+import Poulpe.Core.PlpTypedef;
 
 namespace Poulpe
 {
@@ -16,7 +22,7 @@ namespace Poulpe
       glm::vec3(0.0f, 0.0f, 0.0f),
       glm::vec3(0.0f, 1.0f, 0.0f));
 
-   float near_plane = 1.f, far_plane = 7.5f;
+    float near_plane = 1.f, far_plane = 7.5f;
 
     //auto projection = glm::perspective(glm::radians(45.f),
     //    static_cast<float>(2560) / static_cast<float>(1440),
@@ -71,17 +77,17 @@ namespace Poulpe
   void LightManager::animateAmbientLight(double const delta_time)
   {
     auto& light1 = _points.at(0);
-    light1.position.x += cos(glm::radians(delta_time * 360.0f));
-    light1.position.z += sin(glm::radians(delta_time * 360.0f));
+    light1.position.x += static_cast<float>(cos(glm::radians(delta_time * 360.0)));
+    light1.position.z += static_cast<float>(sin(glm::radians(delta_time * 360.0)));
     light1.color *= delta_time;
   }
 
   void LightManager::animateSunLight(double const delta_time)
   {
-    _sun.position.x += cos(glm::radians(delta_time * 360.0f));
-    _sun.direction.x += cos(glm::radians(delta_time * 360.0f));
-    _sun.position.z += sin(glm::radians(delta_time * 360.0f));
-    _sun.direction.z += sin(glm::radians(delta_time * 360.0f));
+    _sun.position.x += static_cast<float>(cos(glm::radians(delta_time * 360.0)));
+    _sun.direction.x += static_cast<float>(cos(glm::radians(delta_time * 360.0)));
+    _sun.position.z += static_cast<float>(sin(glm::radians(delta_time * 360.0)));
+    _sun.direction.z += static_cast<float>(sin(glm::radians(delta_time * 360.0)));
 
     _sun.view = glm::lookAt(
       _sun.position,

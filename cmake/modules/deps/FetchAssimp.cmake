@@ -61,10 +61,6 @@ set(ASSIMP_BUILD_DEBUG OFF CACHE BOOL "" FORCE)
 set(ASSIMP_NO_EXPORT ON CACHE BOOL "" FORCE)
 set(BUILD_SHARED_LIBS ON CACHE BOOL "" FORCE)
 
-if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /EHsc")
-  endif()
-  
 #fix unicode issue with rc file
 set(assimp_patch git apply ${CMAKE_CURRENT_SOURCE_DIR}/cmake/patch/assimp.patch)
 
@@ -80,8 +76,11 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(fetch_assimp)
 
-target_include_directories(${PROJECT_NAME} PRIVATE
-   ${fetch_assimp_SOURCE_DIR}/include
-   ${fetch_assimp_BINARY_DIR}/include)
+target_include_directories(${PROJECT_NAME} 
+PRIVATE
+  ${fetch_assimp_SOURCE_DIR}/include
+  ${fetch_assimp_BINARY_DIR}/include)
 
-target_link_libraries(${PROJECT_NAME} PRIVATE assimp)
+target_link_libraries(${PROJECT_NAME}
+PRIVATE
+  assimp)

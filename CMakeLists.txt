@@ -3,6 +3,15 @@
 #########################################################
 cmake_minimum_required(VERSION 3.28.0)
 
+project(PoulpeEngine
+  VERSION 0.1.1
+  DESCRIPTION "Game Engine with a vulkan renderer"
+  HOMEPAGE_URL "https://github.com/galliume/poulpeEngine"
+  LANGUAGES C CXX
+)
+
+add_executable(${PROJECT_NAME} src/Poulpe.cpp poulpeEngine.rc)
+
 if (USE_CCACHE)
   find_program(CCACHE_PROGRAM ccache)
   if(CCACHE_PROGRAM)
@@ -12,13 +21,6 @@ if (USE_CCACHE)
 else()
   message(WARNING "ccache deactivated")
 endif()
-
-project(PoulpeEngine
-  VERSION 0.1.1
-  DESCRIPTION "Game Engine with a vulkan renderer"
-  HOMEPAGE_URL "https://github.com/galliume/poulpeEngine"
-  LANGUAGES C CXX
-)
 
 add_library(poulpe INTERFACE)
 
@@ -31,25 +33,22 @@ message(STATUS "CMAKE_BUILD_TYPE: ${CMAKE_BUILD_TYPE}")
 set(CMAKE_BUILD_TYPE "${CMAKE_BUILD_TYPE}" CACHE STRING "Build type" FORCE)
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules ${CMAKE_MODULE_PATH})
 
-add_executable(${PROJECT_NAME} src/Poulpe.cpp poulpeEngine.rc)
-
 configure_file(PoulpeEngineConfig.h.in PoulpeEngineConfig.h)
 
 add_definitions(-DVK_NO_PROTOTYPES)
 
-target_precompile_headers(${PROJECT_NAME} PRIVATE include/Poulpepch.hpp.pch)
-
 include_directories(${PROJECT_SOURCE_DIR}/src)
 
 add_subdirectory(${PROJECT_SOURCE_DIR}/src/Poulpe)
+add_subdirectory(${PROJECT_SOURCE_DIR}/src/Poulpe/Animation)
 add_subdirectory(${PROJECT_SOURCE_DIR}/src/Poulpe/Component)
-add_subdirectory(${PROJECT_SOURCE_DIR}/src/Poulpe/Component/Renderer)
 add_subdirectory(${PROJECT_SOURCE_DIR}/src/Poulpe/Core)
 add_subdirectory(${PROJECT_SOURCE_DIR}/src/Poulpe/Core/Network)
 add_subdirectory(${PROJECT_SOURCE_DIR}/src/Poulpe/GUI)
 add_subdirectory(${PROJECT_SOURCE_DIR}/src/Poulpe/Manager)
 add_subdirectory(${PROJECT_SOURCE_DIR}/src/Poulpe/Renderer)
 add_subdirectory(${PROJECT_SOURCE_DIR}/src/Poulpe/Renderer/Vulkan)
+add_subdirectory(${PROJECT_SOURCE_DIR}/src/Poulpe/Renderer/Vulkan/Component)
 add_subdirectory(${PROJECT_SOURCE_DIR}/src/Poulpe/Utils)
 
 target_include_directories(${PROJECT_NAME} PRIVATE "${PROJECT_BINARY_DIR}")
@@ -58,19 +57,27 @@ set(DEBUG_OPTIONS -g)
 set(RELEASE_OPTIONS )
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
-
   add_definitions(
     -DVOLK_STATIC_DEFINES
     -D_CRT_SECURE_NO_WARNINGS
     -DDWIN32_LEAN_AND_MEAN)
 
-  set(CMAKE_LINKER lld-link)
+  #todo finish clang windows support
+  if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
 
-  list(APPEND DEBUG_OPTIONS /MDd /Od /Ob0 /RTC1 /Zi /Zc:__cplusplus /EHsc)
-  list(APPEND RELEASE_OPTIONS /Ox /MD /Zc:__cplusplus /EHsc)
+    add_definitions(-D_USE_MATH_DEFINES)
+    #-v -ftime-trace -Xclang -fmodules-debuginfo
+    list(APPEND DEBUG_OPTIONS -g -O0 -fno-inline -fno-inline-functions -fno-omit-frame-pointer -fno-strict-aliasing -Wno-padded -Wno-documentation -Wno-documentation-unknown-command -Wno-decls-in-multiple-modules -Wno-unsafe-buffer-usage -Wno-c++98-compat -Wno-c++98-compat-pedantic)
+    list(APPEND RELEASE_OPTIONS -O3 -fno-strict-aliasing -Wno-decls-in-multiple-modules -Wno-unsafe-buffer-usage -Wno-c++98-compat -Wno-c++98-compat-pedantic -Wno-padded -Wno-documentation -Wno-documentation-unknown-command)
+    target_compile_options(${PROJECT_NAME} PRIVATE $<$<CONFIG:DEBUG>:-Weverything -Wno-c++98-compat -Wno-old-style-cast>)
+  else()
 
-  #target_link_options(${PROJECT_NAME} PRIVATE $<$<CONFIG:RELEASE>:/LTCG>)
-  target_compile_options(${PROJECT_NAME} PRIVATE $<$<CONFIG:DEBUG>:/GA /Wall -Wno-c++98-compat -Wno-old-style-cast>)
+    list(APPEND DEBUG_OPTIONS /MDd /Od /Ob0 /RTC1 /Zi /Zc:__cplusplus /EHsc)
+    list(APPEND RELEASE_OPTIONS /Ox /MD /Zc:__cplusplus /EHsc)
+
+    #target_link_options(${PROJECT_NAME} PRIVATE $<$<CONFIG:RELEASE>:/LTCG>)
+    target_compile_options(${PROJECT_NAME} PRIVATE $<$<CONFIG:DEBUG>:/GA /Wall -Wno-c++98-compat -Wno-old-style-cast>)
+  endif()
 else()
   list(APPEND DEBUG_OPTIONS -O0 -Wall)
   list(APPEND RELEASE_OPTIONS -O3 -Wall)
@@ -81,15 +88,23 @@ target_compile_options(${PROJECT_NAME} PRIVATE $<$<CONFIG:RELEASE>:${RELEASE_OPT
 target_compile_definitions(${PROJECT_NAME} PRIVATE $<$<CONFIG:DEBUG>:PLP_DEBUG_BUILD>)
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
-  list(APPEND EXTRA_LIBS Ws2_32 user32)
+  list(APPEND EXTRA_LIBS 
+    Ws2_32 user32 gdi32 winspool shell32 ole32 oleaut32 uuid comdlg32 advapi32)
   if (CMAKE_BUILD_TYPE STREQUAL "Debug")
-    list(APPEND EXTRA_LIBS msvcrtd.lib)
+    list(APPEND EXTRA_LIBS msvcrtd)
   endif()
 else()
   set(THREADS_PREFER_PTHREAD_FLAG ON)
   find_package(Threads REQUIRED)
   list(APPEND EXTRA_LIBS Threads::Threads)
 endif()
+
+set_target_properties(${PROJECT_NAME} PROPERTIES 
+  CXX_STANDARD 23
+  CXX_STANDARD_REQUIRED ON
+  CXX_EXTENSIONS OFF)
+
+target_link_libraries(${PROJECT_NAME} PUBLIC PoulpeEngineTargets)
 
 #########################################################
 
@@ -101,7 +116,8 @@ install(TARGETS ${PROJECT_NAME}
     RUNTIME DESTINATION bin
     LIBRARY DESTINATION lib
     ARCHIVE DESTINATION lib
-)
+    FILE_SET cxx_headers DESTINATION include
+    FILE_SET cxx_modules DESTINATION include)
 
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
   COMMAND ${CMAKE_COMMAND} -E copy -t $<TARGET_FILE_DIR:${PROJECT_NAME}> $<TARGET_RUNTIME_DLLS:${PROJECT_NAME}>
@@ -168,6 +184,7 @@ add_custom_target(
         CompilShaders ${CMAKE_CURRENT_SOURCE_DIR}/bin/shadersCompilation.sh
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 
+include(graphVizOptions)
 #add_custom_target(graphviz ALL
 #    COMMAND ${CMAKE_COMMAND} "--graphviz=graph/plp.dot" ..
 #    COMMAND dot -Tsvg graph/plp.dot -o graph/plp.svg

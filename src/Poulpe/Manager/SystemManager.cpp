@@ -1,6 +1,6 @@
-#include "SystemManager.hpp"
+module Poulpe.Managers;
 
 namespace Poulpe
 {
-
+  
 }

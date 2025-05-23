@@ -1,7 +1,11 @@
-#include "Tools.hpp"
+module;
 
 #include <fstream>
+#include <stdexcept>
+#include <string>
 #include <vector>
+
+module Poulpe.Core.Tools;
 
 namespace Poulpe
 {

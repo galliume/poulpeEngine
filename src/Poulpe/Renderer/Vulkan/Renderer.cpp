@@ -1,43 +1,31 @@
-#include "Renderer.hpp"
+module;
 
-#include "VulkanAPI.hpp"
-
-#include "Poulpe/Component/MeshComponent.hpp"
-
-#include "Poulpe/GUI/Window.hpp"
-
-#include "Poulpe/Manager/ComponentManager.hpp"
-
-#include "Poulpe/Renderer/Vulkan/VulkanAPI.hpp"
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <stb_image.h>
+#include <volk.h>
 
 #include <algorithm>
 #include <cfenv>
 #include <exception>
 #include <future>
+#include <latch>
 #include <memory>
-#include <volk.h>
+#include <unordered_map>
+#include <vector>
+
+module Poulpe.Renderer;
+
+import Poulpe.Component.Components;
+import Poulpe.Core.Logger;
+import Poulpe.GUI.Window;
+import Poulpe.Managers.ConfigManagerLocator;
+import Poulpe.Renderer.Vulkan.Component.Mesh;
 
 namespace Poulpe
 {
-  Renderer::Renderer(
-    Window* const window,
-    EntityManager* const entity_manager,
-    ComponentManager* const component_manager,
-    LightManager* const light_manager,
-    TextureManager* const texture_manager)
-      : _window(window),
-        _entity_manager(entity_manager),
-        _component_manager(component_manager),
-        _light_manager(light_manager),
-        _texture_manager(texture_manager)
-  {
-      _vulkan = std::make_unique<VulkanAPI>(window);
-  }
-
   void Renderer::init()
   {
-    _entities_buffer.reserve(_entities_buffer_swap_treshold);
-
     setPerspective();
 
     _swapchain = _vulkan->createSwapChain(_images);
@@ -196,28 +184,28 @@ namespace Poulpe
     sema_create_info.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
     sema_create_info.pNext = &sema_type_info;
 
-    _fences_in_flight.resize(_MAX_FRAMES_IN_FLIGHT);
-    _images_in_flight.resize(_MAX_FRAMES_IN_FLIGHT, VK_NULL_HANDLE);
+    _fences_in_flight.resize(_max_frames_in_flight);
+    _images_in_flight.resize(_max_frames_in_flight, VK_NULL_HANDLE);
 
     VkFenceCreateInfo fence_info{};
     fence_info.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
     fence_info.flags = VK_FENCE_CREATE_SIGNALED_BIT;
-    _entities_sema_finished.resize(_MAX_RENDER_THREAD);
-    _image_available.resize(_MAX_RENDER_THREAD);
+    _entities_sema_finished.resize(_max_render_thread);
+    _image_available.resize(_max_render_thread);
 
-    for (size_t i { 0 }; i < _MAX_RENDER_THREAD; ++i) {
+    for (size_t i { 0 }; i < _max_render_thread; ++i) {
       result = vkCreateSemaphore(_vulkan->getDevice(), &sema_create_info, nullptr, &_entities_sema_finished[i]);
-      if (VK_SUCCESS != result) PLP_ERROR("can't create _entities_sema_finished semaphore");
+      if (VK_SUCCESS != result) Logger::error("can't create _entities_sema_finished semaphore");
     }
-    for (size_t i { 0 }; i < _MAX_FRAMES_IN_FLIGHT; ++i) {
+    for (size_t i { 0 }; i < _max_frames_in_flight; ++i) {
       result = vkCreateSemaphore(_vulkan->getDevice(), &sema_create_info, nullptr, &_image_available[i]);
-      if (VK_SUCCESS != result) PLP_ERROR("can't create _image_available semaphore");
+      if (VK_SUCCESS != result) Logger::error("can't create _image_available semaphore");
 
       result = vkCreateFence(_vulkan->getDevice(), &fence_info, nullptr, &_images_in_flight[i]);
-      if (VK_SUCCESS != result) PLP_ERROR("can't create _images_in_flight fence");
+      if (VK_SUCCESS != result) Logger::error("can't create _images_in_flight fence");
 
       result = vkCreateFence(_vulkan->getDevice(), &fence_info, nullptr, &_fences_in_flight[i]);
-      if (VK_SUCCESS != result) PLP_ERROR("can't create _fences_in_flight fence");
+      if (VK_SUCCESS != result) Logger::error("can't create _fences_in_flight fence");
     }
   }
 
@@ -227,7 +215,7 @@ namespace Poulpe
       glm::radians(45.0f),
       static_cast<float>(_vulkan->getSwapChainExtent().width) / static_cast<float>(_vulkan->getSwapChainExtent().height),
       0.1f, 1000.f);
-     _perspective[1][1] *= -1;
+      _perspective[1][1] *= -1;
   }
 
   void Renderer::setDeltatime(float delta_time)
@@ -235,178 +223,182 @@ namespace Poulpe
     _delta_time = delta_time;
   }
 
-  void Renderer::drawShadowMap(
-    VkCommandBuffer& cmd_buffer,
-    DrawCommands& draw_cmds,
-    VkImageView& depthview,
-    VkImage& depth,
-    std::vector<Entity*> const& entities,
-    std::latch& count_down,
-    unsigned int const thread_id
-  )
+  // void Renderer::drawShadowMap(
+  //   VkCommandBuffer& cmd_buffer,
+  //   DrawCommands& draw_cmds,
+  //   VkImageView& depthview,
+  //   VkImage& depth,
+  //   std::vector<Entity*> const& entities,
+  //   std::latch& count_down,
+  //   uint32_t const thread_id
+  // )
+  // {
+  //   std::string const pipeline_name{ "shadowMap" };
+  //   auto const& pipeline = getPipeline(pipeline_name);
+
+  //   _vulkan->beginCommandBuffer(cmd_buffer);
+  //   _vulkan->startMarker(cmd_buffer, "shadow_map", 0.1f, 0.2f, 0.3f);
+
+  //   _vulkan->transitionImageLayout(cmd_buffer, depth,
+  //     VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL, VK_IMAGE_ASPECT_DEPTH_BIT);
+
+  //   VkClearColorValue color_clear = {};
+  //   color_clear.float32[0] = 1.0f;
+  //   color_clear.float32[1] = 1.0f;
+  //   color_clear.float32[2] = 1.0f;
+  //   color_clear.float32[3] = 1.0f;
+
+  //   VkClearDepthStencilValue depth_stencil = { 1.f, 0 };
+
+  //   VkRenderingAttachmentInfo depth_attachment_info{ };
+  //   depth_attachment_info.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
+  //   depth_attachment_info.imageView = depthview;
+  //   depth_attachment_info.imageLayout = VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL;
+  //   depth_attachment_info.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+  //   depth_attachment_info.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+  //   depth_attachment_info.clearValue.depthStencil = depth_stencil;
+  //   depth_attachment_info.clearValue.color = color_clear;
+
+  //   uint32_t const width{ _vulkan->getSwapChainExtent().width * 2 };
+  //   uint32_t const height{ _vulkan->getSwapChainExtent().height * 2 };
+  //   //uint32_t const width{ 2048 };
+  //   //uint32_t const height{ 2048 };
+
+  //   VkRenderingInfo  rendering_info{ };
+  //   rendering_info.sType = VK_STRUCTURE_TYPE_RENDERING_INFO;
+  //   rendering_info.renderArea.extent.width = width;
+  //   rendering_info.renderArea.extent.height = height;
+  //   rendering_info.layerCount = 1;
+  //   rendering_info.pDepthAttachment = &depth_attachment_info;
+  //   rendering_info.colorAttachmentCount = 0;
+  //   //rendering_info.flags = VK_SUBPASS_CONTENTS_INLINE;
+
+  //   vkCmdBeginRenderingKHR(cmd_buffer, &rendering_info);
+
+  //   VkViewport viewport;
+  //   viewport.x = 0;
+  //   viewport.y = 0;
+  //   viewport.width = width;
+  //   viewport.height = height;
+  //   viewport.minDepth = 0.0f;
+  //   viewport.maxDepth = 1.0f;
+
+  //   vkCmdSetViewport(cmd_buffer, 0, 1, &viewport);
+  //   VkRect2D scissor = { { 0, 0 }, { width, height } };
+
+  //   vkCmdSetScissor(cmd_buffer, 0, 1, &scissor);
+
+  //   //float const depth_bias_constant{ 1.0f };
+  //   //float const depth_bias_slope{ 1.5f };
+  //   //float const depth_bias_clamp{ 0.0f };
+
+  //   //vkCmdSetDepthClampEnableEXT(cmd_buffer, VK_TRUE);
+  //   //vkCmdSetDepthBias(cmd_buffer, depth_bias_constant, depth_bias_clamp, depth_bias_slope);
+  //   auto const view { _renderer_info.sun_light.view };
+
+  //   //std::vector<VkBool32> blend_enable{ VK_TRUE, VK_TRUE};
+  //   //vkCmdSetColorBlendEnableEXT(cmd_buffer, 0, 2, blend_enable.data());
+
+  //   std::vector<VkBool32> blend_enable{ VK_FALSE };
+  //   vkCmdSetColorBlendEnableEXT(cmd_buffer, 0, 1, blend_enable.data());
+  //   VkColorBlendEquationEXT colorBlendEquation{};
+
+  //   colorBlendEquation.colorBlendOp = VK_BLEND_OP_ADD;
+  //   colorBlendEquation.colorBlendOp = VK_BLEND_OP_ADD;
+  //   colorBlendEquation.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
+  //   colorBlendEquation.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
+  //   colorBlendEquation.alphaBlendOp = VK_BLEND_OP_ADD;
+  //   colorBlendEquation.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
+  //   colorBlendEquation.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
+        
+  //   vkCmdSetColorBlendEquationEXT(cmd_buffer, 0, 1, &colorBlendEquation);
+
+  //   std::ranges::for_each(entities, [&](auto const& entity) {
+  //     auto mesh_component = _component_manager->get<MeshComponent>(entity->getID());
+  //     if (mesh_component) {
+  //       Mesh* mesh = mesh_component->template has<Mesh>();
+
+  //       if (mesh->hasShadow()) {
+
+  //         shadowMapConstants push_constants{};
+  //         push_constants.view = view;
+
+  //         vkCmdPushConstants(
+  //           cmd_buffer,
+  //           pipeline->pipeline_layout,
+  //           VK_SHADER_STAGE_VERTEX_BIT,
+  //           0,
+  //           sizeof(shadowMapConstants),
+  //           &push_constants);
+
+  //         vkCmdBindDescriptorSets(
+  //           cmd_buffer,
+  //           VK_PIPELINE_BIND_POINT_GRAPHICS,
+  //           pipeline->pipeline_layout,
+  //           0, 1, mesh->getShadowMapDescSet(), 0, nullptr);
+
+  //         _vulkan->bindPipeline(cmd_buffer, pipeline->pipeline);
+
+  //         _vulkan->draw(
+  //           cmd_buffer,
+  //           *mesh->getShadowMapDescSet(),
+  //           *pipeline,
+  //           mesh->getData(),
+  //           mesh->getData()->_ubos.size(),
+  //           mesh->is_indexed());
+  //       }
+  //     }
+  //   });
+
+  //   _vulkan->endMarker(cmd_buffer);
+  //   _vulkan->endRendering(cmd_buffer);
+
+  //     _vulkan->transitionImageLayout(cmd_buffer, depth,
+  //       VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_IMAGE_ASPECT_DEPTH_BIT);
+  // /*     _vulkan->transitionImageLayout(cmd_buffer, depth,
+  //       VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR, VK_IMAGE_ASPECT_DEPTH_BIT);*/
+
+  //   _vulkan->endCommandBuffer(cmd_buffer);
+
+  //   std::vector<VkPipelineStageFlags> flags { VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL };
+  //   //VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL
+  //   _draw_cmds.insert(&cmd_buffer, &_entities_sema_finished[thread_id], thread_id, false, flags);
+
+  //   _update_shadow_map = false;
+  //   count_down.count_down();
+  // }
+
+  void Renderer::startRender()
   {
-    std::string const pipeline_name{ "shadowMap" };
-    auto const& pipeline = getPipeline(pipeline_name);
+    auto& cmd_buffer = _cmd_buffer_entities[_current_frame];
+    auto& colorview = _imageviews[_current_frame];
+    auto& color = _images[_current_frame];
+    auto& depthview = _depth_imageviews[_current_frame];
+    auto& depthimage = _depth_images[_current_frame];
+    auto const load_op = VK_ATTACHMENT_LOAD_OP_CLEAR;
+    auto const store_op = VK_ATTACHMENT_STORE_OP_STORE;
+    auto const thread_id {0};
+    auto const has_depth_attachment {true};
+  
+    vkWaitForFences(_vulkan->getDevice(), 1, &_fences_in_flight[_current_frame], VK_TRUE, UINT64_MAX);
 
-    _vulkan->beginCommandBuffer(cmd_buffer);
-    _vulkan->startMarker(cmd_buffer, "shadow_map", 0.1f, 0.2f, 0.3f);
-
-    _vulkan->transitionImageLayout(cmd_buffer, depth,
-      VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL, VK_IMAGE_ASPECT_DEPTH_BIT);
-
-    VkClearColorValue color_clear = {};
-    color_clear.float32[0] = 1.0f;
-    color_clear.float32[1] = 1.0f;
-    color_clear.float32[2] = 1.0f;
-    color_clear.float32[3] = 1.0f;
-
-    VkClearDepthStencilValue depth_stencil = { 1.f, 0 };
-
-    VkRenderingAttachmentInfo depth_attachment_info{ };
-    depth_attachment_info.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
-    depth_attachment_info.imageView = depthview;
-    depth_attachment_info.imageLayout = VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL;
-    depth_attachment_info.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-    depth_attachment_info.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-    depth_attachment_info.clearValue.depthStencil = depth_stencil;
-    depth_attachment_info.clearValue.color = color_clear;
-
-    uint32_t const width{ _vulkan->getSwapChainExtent().width * 2 };
-    uint32_t const height{ _vulkan->getSwapChainExtent().height * 2 };
-    //uint32_t const width{ 2048 };
-    //uint32_t const height{ 2048 };
-
-    VkRenderingInfo  rendering_info{ };
-    rendering_info.sType = VK_STRUCTURE_TYPE_RENDERING_INFO;
-    rendering_info.renderArea.extent.width = width;
-    rendering_info.renderArea.extent.height = height;
-    rendering_info.layerCount = 1;
-    rendering_info.pDepthAttachment = &depth_attachment_info;
-    rendering_info.colorAttachmentCount = 0;
-    //rendering_info.flags = VK_SUBPASS_CONTENTS_INLINE;
-
-    vkCmdBeginRenderingKHR(cmd_buffer, &rendering_info);
-
-    VkViewport viewport;
-    viewport.x = 0;
-    viewport.y = 0;
-    viewport.width = width;
-    viewport.height = height;
-    viewport.minDepth = 0.0f;
-    viewport.maxDepth = 1.0f;
-
-    vkCmdSetViewport(cmd_buffer, 0, 1, &viewport);
-    VkRect2D scissor = { { 0, 0 }, { width, height } };
-
-    vkCmdSetScissor(cmd_buffer, 0, 1, &scissor);
-
-    //float const depth_bias_constant{ 1.0f };
-    //float const depth_bias_slope{ 1.5f };
-    //float const depth_bias_clamp{ 0.0f };
-
-    //vkCmdSetDepthClampEnableEXT(cmd_buffer, VK_TRUE);
-    //vkCmdSetDepthBias(cmd_buffer, depth_bias_constant, depth_bias_clamp, depth_bias_slope);
-    auto const view { _light_manager->getSunLight().view };
-
-    //std::vector<VkBool32> blend_enable{ VK_TRUE, VK_TRUE};
-    //vkCmdSetColorBlendEnableEXT(cmd_buffer, 0, 2, blend_enable.data());
-
-    std::vector<VkBool32> blend_enable{ VK_FALSE };
-    vkCmdSetColorBlendEnableEXT(cmd_buffer, 0, 1, blend_enable.data());
-    VkColorBlendEquationEXT colorBlendEquation{};
-
-		colorBlendEquation.colorBlendOp = VK_BLEND_OP_ADD;
-    colorBlendEquation.colorBlendOp = VK_BLEND_OP_ADD;
-    colorBlendEquation.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
-    colorBlendEquation.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
-    colorBlendEquation.alphaBlendOp = VK_BLEND_OP_ADD;
-    colorBlendEquation.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
-    colorBlendEquation.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
-				
-		vkCmdSetColorBlendEquationEXT(cmd_buffer, 0, 1, &colorBlendEquation);
-
-    std::ranges::for_each(entities, [&](auto const& entity) {
-      auto mesh_component = _component_manager->get<MeshComponent>(entity->getID());
-      if (mesh_component) {
-        Mesh* mesh = mesh_component->template has<Mesh>();
-
-        if (mesh->hasShadow()) {
-
-          shadowMapConstants push_constants{};
-          push_constants.view = view;
-
-          vkCmdPushConstants(
-            cmd_buffer,
-            pipeline->pipeline_layout,
-            VK_SHADER_STAGE_VERTEX_BIT,
-            0,
-            sizeof(shadowMapConstants),
-            &push_constants);
-
-          vkCmdBindDescriptorSets(
-            cmd_buffer,
-            VK_PIPELINE_BIND_POINT_GRAPHICS,
-            pipeline->pipeline_layout,
-            0, 1, mesh->getShadowMapDescSet(), 0, nullptr);
-
-          _vulkan->bindPipeline(cmd_buffer, pipeline->pipeline);
-
-          _vulkan->draw(
-            cmd_buffer,
-            *mesh->getShadowMapDescSet(),
-            *pipeline,
-            mesh->getData(),
-            mesh->getData()->_ubos.size(),
-            mesh->is_indexed());
-        }
-      }
-    });
-
-    _vulkan->endMarker(cmd_buffer);
-    _vulkan->endRendering(cmd_buffer);
-
-     _vulkan->transitionImageLayout(cmd_buffer, depth,
-       VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_IMAGE_ASPECT_DEPTH_BIT);
- /*     _vulkan->transitionImageLayout(cmd_buffer, depth,
-        VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR, VK_IMAGE_ASPECT_DEPTH_BIT);*/
-
-    _vulkan->endCommandBuffer(cmd_buffer);
-
-    std::vector<VkPipelineStageFlags> flags { VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL };
-    //VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL
-    _draw_cmds.insert(&cmd_buffer, &_entities_sema_finished[thread_id], thread_id, false, flags);
-
-    _update_shadow_map = false;
-    count_down.count_down();
-  }
-
-  void Renderer::draw(
-    VkCommandBuffer& cmd_buffer,
-    DrawCommands& draw_cmds,
-    VkImageView& colorview,
-    VkImage& color,
-    VkImageView& depthview,
-    VkImage& depth,
-    std::vector<Entity*> const& entities,
-    VkAttachmentLoadOp const load_op,
-    VkAttachmentStoreOp const store_op,
-    std::latch& count_down,
-    unsigned int const thread_id,
-    bool const is_attachment,
-    bool const has_depth_attachment,
-    bool const has_alpha_blend)
-  {
-    if (entities.empty()) {
-      count_down.count_down();
+    VkResult result = vkAcquireNextImageKHR(_vulkan->getDevice(), _swapchain, UINT64_MAX, _image_available[_current_frame], VK_NULL_HANDLE, &_image_index);
+    if (result == VK_ERROR_OUT_OF_DATE_KHR) {
       return;
+    } else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
+      throw std::runtime_error("failed to acquire swap chain image!");
     }
+
+    vkResetFences(_vulkan->getDevice(), 1, &_fences_in_flight[_current_frame]);
+
+    clearScreen();
 
     _vulkan->beginCommandBuffer(cmd_buffer);
 
     VkImageLayout const undefined_layout{ VK_IMAGE_LAYOUT_UNDEFINED };
     VkImageLayout const begin_color_layout{ VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL };
     VkImageLayout const begin_depth_layout{ VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL };
-    VkImageLayout const general { VK_IMAGE_LAYOUT_GENERAL };
+    //VkImageLayout const general { VK_IMAGE_LAYOUT_GENERAL };
     VkImageAspectFlagBits const color_aspect { VK_IMAGE_ASPECT_COLOR_BIT };
     VkImageAspectFlagBits const depth_aspect{ VK_IMAGE_ASPECT_DEPTH_BIT };
 
@@ -414,8 +406,8 @@ namespace Poulpe
       _vulkan->transitionImageLayout(cmd_buffer, color, undefined_layout, begin_color_layout, color_aspect);
     }
     
-    if (has_depth_attachment && thread_id == 0 || thread_id == 3) {
-      _vulkan->transitionImageLayout(cmd_buffer, depth, undefined_layout, begin_depth_layout, depth_aspect);
+    if ((has_depth_attachment && thread_id == 0) || thread_id == 3) {
+      _vulkan->transitionImageLayout(cmd_buffer, depthimage, undefined_layout, begin_depth_layout, depth_aspect);
     }
 
     _vulkan->beginRendering(
@@ -439,31 +431,11 @@ namespace Poulpe
       "drawing_" + std::to_string(thread_id), 
       marker_color_r, marker_color_g, marker_color_b);
 
-    //std::vector<VkDrawIndexedIndirectCommand> drawCommands{};
-    //drawCommands.reserve(_Entities.size());
-
-    //unsigned int firstInstance { 0 };
-    //std::ranges::for_each(_Entities, [&](auto const& entity) {
-    //  auto mesh_component = _component_manager->get<MeshComponent>(entity->getID());
-    //  if (mesh_component) {
-    //    Mesh* mesh = mesh_component->has<Mesh>();
-
-    //    drawCommands.emplace_back(
-    //       mesh->getData()->_vertices.size(),
-    //       1, 0, 0, firstInstance);
-    //    firstInstance += 1;
-    //  }
-    //});
-
-    //auto indirectBuffer = _API->createIndirectCommandsBuffer(drawCommands);
-    auto * const config_manager = Poulpe::Locator::getConfigManager();
-
-    size_t num{ 0 };
     std::vector<VkBool32> blend_enable{ VK_FALSE };
     vkCmdSetColorBlendEnableEXT(cmd_buffer, 0, 1, blend_enable.data());
     VkColorBlendEquationEXT colorBlendEquation{};
 
-		colorBlendEquation.colorBlendOp = VK_BLEND_OP_ADD;
+    colorBlendEquation.colorBlendOp = VK_BLEND_OP_ADD;
     colorBlendEquation.colorBlendOp = VK_BLEND_OP_ADD;
     colorBlendEquation.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
     colorBlendEquation.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
@@ -471,195 +443,413 @@ namespace Poulpe
     colorBlendEquation.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
     colorBlendEquation.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
 
-		vkCmdSetColorBlendEquationEXT(cmd_buffer, 0, 1, &colorBlendEquation);
+    vkCmdSetColorBlendEquationEXT(cmd_buffer, 0, 1, &colorBlendEquation);
+  }
 
-    std::ranges::for_each(entities, [&](auto const& entity) {
-      auto mesh_component = _component_manager->get<MeshComponent>(entity->getID());
-      if (mesh_component) {
+  void Renderer::draw(RendererInfo const& renderer_info)
+  {
+    auto& cmd_buffer = _cmd_buffer_entities[_current_frame];
+    auto const& mesh = renderer_info.mesh;
+    auto const& camera = renderer_info.camera;
+    auto const& render_component = renderer_info.render_component;
+    auto const pipeline = getPipeline(mesh->getShaderName());
+    auto const has_alpha_blend{false};
 
-        Mesh* mesh = mesh_component->template has<Mesh>();
-        auto pipeline = getPipeline(mesh->getShaderName());
-
-        if (!mesh->getUniformBuffers()->empty()) {
-          for (size_t i{ 0 }; i < mesh->getUniformBuffers()->size(); ++i) {
-            _vulkan->updateUniformBuffer(mesh->getUniformBuffers()->at(i), &mesh->getData()->_ubos.at(i));
-          }
-        }
-
-        if (mesh->hasPushConstants()) {
-          mesh->applyPushConstants(cmd_buffer, pipeline->pipeline_layout, this, mesh);
-        }
-
-        auto const alpha_mode{ mesh->getMaterial().alpha_mode };
-
-        if (has_alpha_blend && alpha_mode > 0.0f) {
-          std::vector<VkBool32> blend_enable{ VK_TRUE };
-          vkCmdSetColorBlendEnableEXT(cmd_buffer, 0, 1, blend_enable.data());
-        }
-
-        vkCmdBindDescriptorSets(
-          cmd_buffer,
-          VK_PIPELINE_BIND_POINT_GRAPHICS,
-          pipeline->pipeline_layout,
-          0, 1, mesh->getDescSet(), 0, nullptr);
-
-        if (mesh->getMaterial().double_sided == true && pipeline->pipeline_bis != VK_NULL_HANDLE) {
-          _vulkan->bindPipeline(cmd_buffer, pipeline->pipeline_bis);
-        } else {
-          _vulkan->bindPipeline(cmd_buffer, pipeline->pipeline);
-        }
-
-        _vulkan->draw(
-          cmd_buffer,
-          *mesh->getDescSet(),
-          *pipeline,
-          mesh->getData(),
-          mesh->is_indexed());
-        /*vkCmdDrawIndexedIndirect(
-          _CommandBuffersEntities[_current_frame],
-          indirectBuffer.buffer,
-          0,
-          1,
-          sizeof(VkDrawIndexedIndirectCommand));*/
-
-        if (mesh->debugNormal() && config_manager->normalDebug()) {
-          auto normal_pipeline = getPipeline("normal_debug");
-
-          vkCmdBindDescriptorSets(
-            cmd_buffer,
-            VK_PIPELINE_BIND_POINT_GRAPHICS,
-            normal_pipeline->pipeline_layout,
-            0, 1, mesh->getDescSet(), 0, nullptr);
-
-          _vulkan->bindPipeline(cmd_buffer, normal_pipeline->pipeline);
-
-          _vulkan->draw(
-            cmd_buffer,
-            normal_pipeline->descset,
-            *normal_pipeline,
-            mesh->getData(),
-            mesh->is_indexed());
-        }
-
-        num += 1;
+    if (!mesh->getUniformBuffers()->empty()) {
+      for (size_t i{ 0 }; i < mesh->getUniformBuffers()->size(); ++i) {
+        _vulkan->updateUniformBuffer(mesh->getUniformBuffers()->at(i), &mesh->getData()->_ubos.at(i));
       }
-    });
+    }
+
+    if (mesh->hasPushConstants()) {
+      constants push_constants{};
+      push_constants.total_position = glm::vec4{
+        renderer_info.elapsed_time,
+        0.0f, 0.0f, 0.0f};
+
+      if ("skybox" != mesh->getName()) {
+        push_constants.view = camera->lookAt();
+        push_constants.view_position = camera->getPos();
+      } else {
+        push_constants.view = glm::mat4(glm::mat3(camera->lookAt()));
+        push_constants.view_position = camera->getPos();
+      }
+
+      vkCmdPushConstants(
+        cmd_buffer, 
+        pipeline->pipeline_layout,
+        render_component->stage_flag_bits,
+        0,
+        sizeof(constants),
+        &push_constants);
+    }
+
+    auto const alpha_mode{ mesh->getMaterial().alpha_mode };
+
+    if (has_alpha_blend && alpha_mode > 0.0f) {
+      std::vector<VkBool32> blend_enable{ VK_TRUE };
+      vkCmdSetColorBlendEnableEXT(cmd_buffer, 0, 1, blend_enable.data());
+    }
+
+    vkCmdBindDescriptorSets(
+      cmd_buffer,
+      VK_PIPELINE_BIND_POINT_GRAPHICS,
+      pipeline->pipeline_layout,
+      0, 1, mesh->getDescSet(), 0, nullptr);
+
+    if (mesh->getMaterial().double_sided == true && pipeline->pipeline_bis != VK_NULL_HANDLE) {
+      _vulkan->bindPipeline(cmd_buffer, pipeline->pipeline_bis);
+    } else {
+      _vulkan->bindPipeline(cmd_buffer, pipeline->pipeline);
+    }
+
+    _vulkan->draw(
+      cmd_buffer,
+      *mesh->getDescSet(),
+      *pipeline,
+      mesh->getData(),
+      mesh->is_indexed());
+
+    if (mesh->debugNormal() &&  renderer_info.normal_debug) {
+      auto const normal_pipeline = getPipeline("normal_debug");
+
+      vkCmdBindDescriptorSets(
+        cmd_buffer,
+        VK_PIPELINE_BIND_POINT_GRAPHICS,
+        normal_pipeline->pipeline_layout,
+        0, 1, mesh->getDescSet(), 0, nullptr);
+
+      _vulkan->bindPipeline(cmd_buffer, normal_pipeline->pipeline);
+
+      _vulkan->draw(
+        cmd_buffer,
+        normal_pipeline->descset,
+        *normal_pipeline,
+        mesh->getData(),
+        mesh->is_indexed());
+      }
+    }
+  }
+
+  void Renderer::endRender()
+  {
+    auto& cmd_buffer = _cmd_buffer_entities[_current_frame];
+    auto& color = _images[_current_frame];
+    auto& depthimage = _depth_images[_current_frame];
+    auto const thread_id {0};
+    auto const is_attachment {false};
+    auto const has_depth_attachment {true};
+
     _vulkan->endMarker(cmd_buffer);
-    endRendering(cmd_buffer, color, depth, is_attachment, has_depth_attachment);
+    endRendering(cmd_buffer, color, depthimage, is_attachment, has_depth_attachment);
 
     std::vector<VkPipelineStageFlags> flags { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
     if (has_depth_attachment) flags.emplace_back(VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
 
     _draw_cmds.insert(&cmd_buffer, &_entities_sema_finished[thread_id], thread_id, is_attachment, flags);
 
-    count_down.count_down();
-  }
-
-  void Renderer::renderScene()
-  {
-    vkWaitForFences(_vulkan->getDevice(), 1, &_fences_in_flight[_current_frame], VK_TRUE, UINT64_MAX);
-
-    VkResult result = vkAcquireNextImageKHR(_vulkan->getDevice(), _swapchain, UINT64_MAX, _image_available[_current_frame], VK_NULL_HANDLE, &_image_index);
-    if (result == VK_ERROR_OUT_OF_DATE_KHR) {
-      return;
-    } else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
-      throw std::runtime_error("failed to acquire swap chain image!");
-    }
-
-    vkResetFences(_vulkan->getDevice(), 1, &_fences_in_flight[_current_frame]);
-
-    clearScreen();
-
-    std::latch count_down{3};
-
-    std::vector<Entity*> world{};
-    if (_entity_manager->getSkybox()) {
-      world.emplace_back(_entity_manager->getSkybox());
-    }
-
-    if (!world.empty()) {
-      draw(
-        _cmd_buffer_entities2[_current_frame],
-        _draw_cmds,
-        _imageviews[_current_frame],
-        _images[_current_frame],
-        _depth_imageviews[_current_frame],
-        _depth_images[_current_frame],
-        world,
-        VK_ATTACHMENT_LOAD_OP_CLEAR,
-        VK_ATTACHMENT_STORE_OP_STORE,
-        count_down,
-        0, false, false);
-    } else {
-      count_down.count_down();
-    }
-
-    if (_entities.size() > 0) {
-      _update_shadow_map = true;
-      if (_update_shadow_map) {
-        std::jthread shadow_map_thread([&]() {
-          drawShadowMap(
-            _cmd_buffer_entities3[_current_frame],
-            _draw_cmds,
-            _depthmap_imageviews[_current_frame],
-            _depthmap_images[_current_frame],
-            _entities,
-            count_down,
-            1
-          );
-        });
-        shadow_map_thread.detach();
-      } else {
-        count_down.count_down();
-      }
-
-      std::jthread entities_thread([&]() {
-
-        //@todo find a cleaner way to do this
-        auto entities{ _entities };
-        if (!_transparent_entities.empty()) {
-          std::copy(_transparent_entities.begin(), _transparent_entities.end(), std::back_inserter(entities));
-        }
-        if (!_text_entities.empty()) {
-          std::copy(_text_entities.begin(), _text_entities.end(), std::back_inserter(entities));
-        }
-
-        draw(
-         _cmd_buffer_entities4[_current_frame],
-         _draw_cmds,
-         _imageviews[_current_frame],
-         _images[_current_frame],
-         _depth_imageviews[_current_frame],
-         _depth_images[_current_frame],
-         entities,
-         VK_ATTACHMENT_LOAD_OP_LOAD,
-         VK_ATTACHMENT_STORE_OP_STORE,
-         count_down,
-         2, true, true
-        );
-      });
-      entities_thread.detach();
-
-      //@todo add post process (alpha blending, etc.)
-    } else {
-      count_down.count_down();
-      count_down.count_down();
-    }
-
-    count_down.wait();
-
     submit(_draw_cmds);
-
-    if (_entities.size() <= 0) {
-      swapBufferEntities();
-    };
-    if (_transparent_entities.size() <= 0) {
-      swapBufferTransparentEntities();
-    };
-    if (_text_entities.size() <= 0) {
-      swapBufferTextEntities();
-    };
   }
+
+  // void Renderer::draw(
+  //   VkCommandBuffer& cmd_buffer,
+  //   DrawCommands& draw_cmds,
+  //   VkImageView& colorview,
+  //   VkImage& color,
+  //   VkImageView& depthview,
+  //   VkImage& depth,
+  //   std::vector<Entity*> const& entities,
+  //   VkAttachmentLoadOp const load_op,
+  //   VkAttachmentStoreOp const store_op,
+  //   std::latch& count_down,
+  //   uint32_t const thread_id,
+  //   bool const is_attachment,
+  //   bool const has_depth_attachment,
+  //   bool const has_alpha_blend)
+  // {
+  //   if (entities.empty()) {
+  //     count_down.count_down();
+  //     return;
+  //   }
+
+  //   _vulkan->beginCommandBuffer(cmd_buffer);
+
+  //   VkImageLayout const undefined_layout{ VK_IMAGE_LAYOUT_UNDEFINED };
+  //   VkImageLayout const begin_color_layout{ VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL };
+  //   VkImageLayout const begin_depth_layout{ VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL };
+  //   VkImageLayout const general { VK_IMAGE_LAYOUT_GENERAL };
+  //   VkImageAspectFlagBits const color_aspect { VK_IMAGE_ASPECT_COLOR_BIT };
+  //   VkImageAspectFlagBits const depth_aspect{ VK_IMAGE_ASPECT_DEPTH_BIT };
+
+  //   if (thread_id == 0) {
+  //     _vulkan->transitionImageLayout(cmd_buffer, color, undefined_layout, begin_color_layout, color_aspect);
+  //   }
+    
+  //   if (has_depth_attachment && thread_id == 0 || thread_id == 3) {
+  //     _vulkan->transitionImageLayout(cmd_buffer, depth, undefined_layout, begin_depth_layout, depth_aspect);
+  //   }
+
+  //   _vulkan->beginRendering(
+  //     cmd_buffer,
+  //     colorview,
+  //     depthview,
+  //     load_op,
+  //     store_op,
+  //     begin_color_layout,
+  //     has_depth_attachment);
+
+  //   _vulkan->setViewPort(cmd_buffer);
+  //   _vulkan->setScissor(cmd_buffer);
+
+  //   float const marker_color_r {static_cast<float>(rand() % 255) / 255.0f};
+  //   float const marker_color_g { static_cast<float>(rand() % 255) / 255.0f };
+  //   float const marker_color_b { static_cast<float>(rand() % 255) / 255.0f };
+
+  //   _vulkan->startMarker(
+  //     cmd_buffer, 
+  //     "drawing_" + std::to_string(thread_id), 
+  //     marker_color_r, marker_color_g, marker_color_b);
+
+  //   //std::vector<VkDrawIndexedIndirectCommand> drawCommands{};
+  //   //drawCommands.reserve(_Entities.size());
+
+  //   //uint32_t firstInstance { 0 };
+  //   //std::ranges::for_each(_Entities, [&](auto const& entity) {
+  //   //  auto mesh_component = component_manager->get<MeshComponent>(entity->getID());
+  //   //  if (mesh_component) {
+  //   //    Mesh* mesh = mesh_component->has<Mesh>();
+
+  //   //    drawCommands.emplace_back(
+  //   //       mesh->getData()->_vertices.size(),
+  //   //       1, 0, 0, firstInstance);
+  //   //    firstInstance += 1;
+  //   //  }
+  //   //});
+
+  //   //auto indirectBuffer = _API->createIndirectCommandsBuffer(drawCommands);
+  //   size_t num{ 0 };
+  //   std::vector<VkBool32> blend_enable{ VK_FALSE };
+  //   vkCmdSetColorBlendEnableEXT(cmd_buffer, 0, 1, blend_enable.data());
+  //   VkColorBlendEquationEXT colorBlendEquation{};
+
+  //   colorBlendEquation.colorBlendOp = VK_BLEND_OP_ADD;
+  //   colorBlendEquation.colorBlendOp = VK_BLEND_OP_ADD;
+  //   colorBlendEquation.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
+  //   colorBlendEquation.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
+  //   colorBlendEquation.alphaBlendOp = VK_BLEND_OP_ADD;
+  //   colorBlendEquation.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
+  //   colorBlendEquation.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
+
+  //   vkCmdSetColorBlendEquationEXT(cmd_buffer, 0, 1, &colorBlendEquation);
+
+  //   std::ranges::for_each(entities, [&](auto const& entity) {
+  //     auto mesh_component = _component_manager->get<MeshComponent>(entity->getID());
+  //     if (mesh_component) {
+
+  //       Mesh* mesh = mesh_component->template has<Mesh>();
+  //       auto pipeline = getPipeline(mesh->getShaderName());
+
+  //       if (!mesh->getUniformBuffers()->empty()) {
+  //         for (size_t i{ 0 }; i < mesh->getUniformBuffers()->size(); ++i) {
+  //           _vulkan->updateUniformBuffer(mesh->getUniformBuffers()->at(i), &mesh->getData()->_ubos.at(i));
+  //         }
+  //       }
+
+  //       if (mesh->hasPushConstants()) {
+  //         //mesh->applyPushConstants(cmd_buffer, pipeline->pipeline_layout, this, mesh);
+  //           auto rdr_impl = _component_manager->get<RenderComponent>(entity->getID());
+  //           constants push_constants{};
+  //           push_constants.total_position = glm::vec4{
+  //              _renderer_info.elapsed_time,
+  //             0.0f, 0.0f, 0.0f};
+
+  //           if ("skybox" != mesh->getName()) {
+  //             push_constants.view = renderer->getCamera()->lookAt();
+  //             push_constants.view_position = renderer->getCamera()->getPos();
+  //           } else {
+  //             push_constants.view = glm::mat4(glm::mat3(renderer->getCamera()->lookAt()));
+  //             push_constants.view_position = renderer->getCamera()->getPos();
+  //           }
+
+  //           vkCmdPushConstants(
+  //             cmd_buffer, 
+  //             pipeline->pipeline_layout,
+  //             rdr_impl->stage_flag_bits,
+  //             0,
+  //             sizeof(constants),
+  //             &push_constants);
+  //       }
+
+  //       auto const alpha_mode{ mesh->getMaterial().alpha_mode };
+
+  //       if (has_alpha_blend && alpha_mode > 0.0f) {
+  //         std::vector<VkBool32> blend_enable{ VK_TRUE };
+  //         vkCmdSetColorBlendEnableEXT(cmd_buffer, 0, 1, blend_enable.data());
+  //       }
+
+  //       vkCmdBindDescriptorSets(
+  //         cmd_buffer,
+  //         VK_PIPELINE_BIND_POINT_GRAPHICS,
+  //         pipeline->pipeline_layout,
+  //         0, 1, mesh->getDescSet(), 0, nullptr);
+
+  //       if (mesh->getMaterial().double_sided == true && pipeline->pipeline_bis != VK_NULL_HANDLE) {
+  //         _vulkan->bindPipeline(cmd_buffer, pipeline->pipeline_bis);
+  //       } else {
+  //         _vulkan->bindPipeline(cmd_buffer, pipeline->pipeline);
+  //       }
+
+  //       _vulkan->draw(
+  //         cmd_buffer,
+  //         *mesh->getDescSet(),
+  //         *pipeline,
+  //         mesh->getData(),
+  //         mesh->is_indexed());
+  //       /*vkCmdDrawIndexedIndirect(
+  //         _CommandBuffersEntities[_current_frame],
+  //         indirectBuffer.buffer,
+  //         0,
+  //         1,
+  //         sizeof(VkDrawIndexedIndirectCommand));*/
+
+  //       if (mesh->debugNormal() &&  _renderer_info.config_manager->normalDebug()) {
+  //         auto normal_pipeline = getPipeline("normal_debug");
+
+  //         vkCmdBindDescriptorSets(
+  //           cmd_buffer,
+  //           VK_PIPELINE_BIND_POINT_GRAPHICS,
+  //           normal_pipeline->pipeline_layout,
+  //           0, 1, mesh->getDescSet(), 0, nullptr);
+
+  //         _vulkan->bindPipeline(cmd_buffer, normal_pipeline->pipeline);
+
+  //         _vulkan->draw(
+  //           cmd_buffer,
+  //           normal_pipeline->descset,
+  //           *normal_pipeline,
+  //           mesh->getData(),
+  //           mesh->is_indexed());
+  //       }
+
+  //       num += 1;
+  //     }
+  //   });
+  //   _vulkan->endMarker(cmd_buffer);
+  //   endRendering(cmd_buffer, color, depth, is_attachment, has_depth_attachment);
+
+  //   std::vector<VkPipelineStageFlags> flags { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
+  //   if (has_depth_attachment) flags.emplace_back(VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
+
+  //   _draw_cmds.insert(&cmd_buffer, &_entities_sema_finished[thread_id], thread_id, is_attachment, flags);
+
+  //   count_down.count_down();
+  // }
+
+  // void Renderer::renderScene()
+  // {
+  //   vkWaitForFences(_vulkan->getDevice(), 1, &_fences_in_flight[_current_frame], VK_TRUE, UINT64_MAX);
+
+  //   VkResult result = vkAcquireNextImageKHR(_vulkan->getDevice(), _swapchain, UINT64_MAX, _image_available[_current_frame], VK_NULL_HANDLE, &_image_index);
+  //   if (result == VK_ERROR_OUT_OF_DATE_KHR) {
+  //     return;
+  //   } else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
+  //     throw std::runtime_error("failed to acquire swap chain image!");
+  //   }
+
+  //   vkResetFences(_vulkan->getDevice(), 1, &_fences_in_flight[_current_frame]);
+
+  //   clearScreen();
+
+  //   std::latch count_down{3};
+
+  //   std::vector<Entity*> world{};
+  //   if (_skybox) {
+  //     world.emplace_back(_skybox);
+  //   }
+
+  //   if (!world.empty()) {
+  //     draw(
+  //       _cmd_buffer_entities2[_current_frame],
+  //       _draw_cmds,
+  //       _imageviews[_current_frame],
+  //       _images[_current_frame],
+  //       _depth_imageviews[_current_frame],
+  //       _depth_images[_current_frame],
+  //       world,
+  //       VK_ATTACHMENT_LOAD_OP_CLEAR,
+  //       VK_ATTACHMENT_STORE_OP_STORE,
+  //       count_down,
+  //       0, false, false);
+  //   } else {
+  //     count_down.count_down();
+  //   }
+
+  //   if (_entities.size() > 0) {
+  //     _update_shadow_map = true;
+  //     if (_update_shadow_map) {
+  //       std::jthread shadow_map_thread([&]() {
+  //         drawShadowMap(
+  //           _cmd_buffer_entities3[_current_frame],
+  //           _draw_cmds,
+  //           _depthmap_imageviews[_current_frame],
+  //           _depthmap_images[_current_frame],
+  //           _entities,
+  //           count_down,
+  //           1
+  //         );
+  //       });
+  //       shadow_map_thread.detach();
+  //     } else {
+  //       count_down.count_down();
+  //     }
+
+  //     std::jthread entities_thread([&]() {
+
+  //       //@todo find a cleaner way to do this
+  //       auto entities{ _entities };
+  //       if (!_transparent_entities.empty()) {
+  //         std::copy(_transparent_entities.begin(), _transparent_entities.end(), std::back_inserter(entities));
+  //       }
+  //       if (!_text_entities.empty()) {
+  //         std::copy(_text_entities.begin(), _text_entities.end(), std::back_inserter(entities));
+  //       }
+
+  //       draw(
+  //         _cmd_buffer_entities4[_current_frame],
+  //         _draw_cmds,
+  //         _imageviews[_current_frame],
+  //         _images[_current_frame],
+  //         _depth_imageviews[_current_frame],
+  //         _depth_images[_current_frame],
+  //         entities,
+  //         VK_ATTACHMENT_LOAD_OP_LOAD,
+  //         VK_ATTACHMENT_STORE_OP_STORE,
+  //         count_down,
+  //         2, true, true
+  //       );
+  //     });
+  //     entities_thread.detach();
+
+  //     //@todo add post process (alpha blending, etc.)
+  //   } else {
+  //     count_down.count_down();
+  //     count_down.count_down();
+  //   }
+
+  //   count_down.wait();
+
+  //   submit(_draw_cmds);
+
+  //   if (_entities.size() <= 0) {
+  //     swapBufferEntities();
+  //   };
+  //   if (_transparent_entities.size() <= 0) {
+  //     swapBufferTransparentEntities();
+  //   };
+  //   if (_text_entities.size() <= 0) {
+  //     swapBufferTextEntities();
+  //   };
+  // }
 
   void Renderer::destroy()
   {
@@ -770,20 +960,10 @@ namespace Poulpe
     _vulkan->submit(queue, submit_infos, present_info, _fences_in_flight[_current_frame]);
 
     _previous_frame = _current_frame;
-    _current_frame = (_current_frame + _MAX_FRAMES_IN_FLIGHT - 1) % _MAX_FRAMES_IN_FLIGHT;
+    _current_frame = (_current_frame + _max_frames_in_flight - 1) % _max_frames_in_flight;
 
     _draw_cmds.clear();
     onFinishRender();
-
-    if (!_entities_buffer.empty()) {
-      swapBufferEntities();
-    }
-    if (!_transparent_entities_buffer.empty()) {
-      swapBufferTransparentEntities();
-    }
-    if (!_text_entities_buffer.empty()) {
-      swapBufferTextEntities();
-    }
   }
 
   void Renderer::setRayPick(
@@ -804,7 +984,7 @@ namespace Poulpe
 
   void Renderer::clear()
   {
-    _entity_manager->clear();
+    //_entity_manager->clear();
     //@todo clean memory
     //_vulkan->getDeviceMemoryPool()->clear();
   }
@@ -817,103 +997,11 @@ namespace Poulpe
     //}
   }
 
-  void Renderer::showGrid(bool const show)
-  {
-    for (auto & hud : *_entity_manager->getHUD()) {
-      if ("grid" == hud->getName()) {
-        hud->setVisible(show);
-      }
-    }
-  }
-
   void Renderer::addPipeline(
     std::string const& shaderName,
     VulkanPipeline& pipeline)
   {
     _pipelines[shaderName] = std::move(pipeline);
-  }
-
-  void Renderer::addEntities(std::vector<Entity*> entities)
-  {
-    {
-      std::lock_guard guard(_mutex_entity_submit);
-      copy(entities.begin(), entities.end(), back_inserter(_entities_buffer));
-    }
-  }
-
-  void Renderer::addEntity(Entity* entity, bool const is_last)
-  {
-    {
-      std::lock_guard guard(_mutex_entity_submit);
-
-      _entities_buffer.emplace_back(entity);
-
-      _force_entities_buffer_swap = is_last;
-    }
-  }
-  void Renderer::addTransparentEntity(Entity* entity, bool const is_last)
-  {
-    {
-      std::lock_guard guard(_mutex_transparent_entity_submit);
-
-      _transparent_entities_buffer.emplace_back(entity);
-
-      _force_transparent_entities_buffer_swap = is_last;
-    }
-  }
-
-  void Renderer::addTextEntity(Entity* entity, bool const is_last)
-  {
-    {
-      std::lock_guard guard(_mutex_text_entities_submit);
-
-      _text_entities_buffer.emplace_back(entity);
-
-      _force_text_entities_buffer_swap = is_last;
-    }
-  }
-
-  void Renderer::swapBufferEntities()
-  {
-    if (_entities_buffer.size() < _entities_buffer_swap_treshold
-        && !_force_entities_buffer_swap) return;
-
-    {
-      std::lock_guard guard(_mutex_entity_submit);
-      copy(_entities_buffer.begin(), _entities_buffer.end(), back_inserter(_entities));
-      _entities_buffer.clear();
-
-      _update_shadow_map = true;
-      _force_entities_buffer_swap = false;
-    }
-  }
-
-  void Renderer::swapBufferTransparentEntities()
-  {
-    if (_transparent_entities_buffer.size() < _transparent_entities_buffer_swap_treshold
-        && !_force_transparent_entities_buffer_swap) return;
-
-    {
-      copy(_transparent_entities_buffer.begin(), _transparent_entities_buffer.end(), back_inserter(_transparent_entities));
-      _transparent_entities_buffer.clear();
-
-      _update_shadow_map = true;
-      _force_transparent_entities_buffer_swap = false;
-    }
-  }
-
-  void Renderer::swapBufferTextEntities()
-  {
-    if (_text_entities_buffer.size() < _text_entities_buffer_swap_treshold
-        && !_force_text_entities_buffer_swap) return;
-
-    {
-      copy(_text_entities_buffer.begin(), _text_entities_buffer.end(), back_inserter(_text_entities));
-      _text_entities_buffer.clear();
-
-      _update_shadow_map = true;
-      _force_text_entities_buffer_swap = false;
-    }
   }
 
   void Renderer::clearScreen()

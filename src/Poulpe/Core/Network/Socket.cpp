@@ -1,4 +1,7 @@
-#include "Socket.hpp"
+module;
+#include <memory>
+
+module Poulpe.Core.Network.Socket;
 
 namespace Poulpe
 {

@@ -1,11 +1,17 @@
-#include "Poulpe/GUI/Window.hpp"
+module;
 
-//#define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
+#include <string_view>
 #include <stb_image.h>
+
+module Poulpe.GUI.Window;
+
+//bool _FramebufferResized = false;
 namespace Poulpe
 {
-  bool Window::_FramebufferResized = false;
+  GLFWwindow* Window::get() const { return _window; }
+
+  void Window::setVSync(bool active) { _ActiveVSync = active; }
 
   void Window::hide()
   {
@@ -28,7 +34,7 @@ namespace Poulpe
 
     //@todo check HDR support with GLFW ?
     auto _monitor = glfwGetPrimaryMonitor();
-    const GLFWvidmode * mode = glfwGetVideoMode(_monitor);
+    const GLFWvidmode* mode = glfwGetVideoMode(_monitor);
 
     glfwWindowHint(GLFW_RED_BITS, mode->redBits);
     glfwWindowHint(GLFW_GREEN_BITS, mode->greenBits);
@@ -39,7 +45,7 @@ namespace Poulpe
     _window = glfwCreateWindow(WIDTH, HEIGHT, window_title.data(), NULL, nullptr);
     //glfwSetWindowSizeLimits(_window, 800, 600, 2560, 1440);
 
-   /* const int maxWidth = mode->width;
+  /* const int maxWidth = mode->width;
     const int maxHeight = mode->height;*/
 
     GLFWimage icon[1];
@@ -52,10 +58,10 @@ namespace Poulpe
     //glfwSetWindowMonitor(_window, nullptr, (maxWidth/2)-(WIDTH/2), (maxHeight/2) - (HEIGHT/2), WIDTH, HEIGHT, GLFW_DONT_CARE);
     glfwSetWindowUserPointer(_window, this);
 
-    glfwSetFramebufferSizeCallback(_window, []( GLFWwindow*, int, int) {
-        Window::_FramebufferResized = true;
+    glfwSetFramebufferSizeCallback(_window, [](GLFWwindow*, int, int) {
+      //_FramebufferResized = true;
     });
-    
+
     glfwSwapInterval(1);
 
     //glfwSetInputMode(_window, GLFW_STICKY_MOUSE_BUTTONS, GLFW_TRUE);
@@ -79,4 +85,6 @@ namespace Poulpe
   {
     glfwWaitEvents();
   }
+
+  //static bool _FramebufferResized;
 }

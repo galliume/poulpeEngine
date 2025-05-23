@@ -1,9 +1,19 @@
-#include "ShaderManager.hpp"
+module;
+#include <nlohmann/json.hpp>
+#include <volk.h>
 
-#include "Poulpe/Core/Log.hpp"
-#include "Poulpe/Core/Tools.hpp"
+#include <filesystem>
+#include <functional>
+#include <latch>
+#include <memory>
+#include <string>
 
-#include "Poulpe/Component/Vertex2D.hpp"
+module Poulpe.Managers;
+
+import Poulpe.Component.Vertex;
+import Poulpe.Core.Logger;
+import Poulpe.Core.PlpTypedef;
+import Poulpe.Core.Tools;
 
 namespace Poulpe
 {
@@ -22,12 +32,12 @@ namespace Poulpe
   {
 
     if (!std::filesystem::exists(vert_path)) {
-      PLP_FATAL("vertex shader file {} does not exits.", vert_path);
+      Logger::critical("vertex shader file {} does not exits.", vert_path);
       return;
     }
 
     if (!std::filesystem::exists(frag_path)) {
-      PLP_FATAL("fragment shader file {} does not exits.", frag_path);
+      Logger::critical("fragment shader file {} does not exits.", frag_path);
       return;
     }
 
@@ -46,8 +56,8 @@ namespace Poulpe
       VkShaderModule geom_module = _renderer->getAPI()->createShaderModule(geom_shader);
       _shaders->shaders[name]["geom"] = geom_module;
     } else {
-      PLP_WARN("geometry shader file {} does not exits.", geom_path);
-     }
+      Logger::warn("geometry shader file {} does not exits.", geom_path);
+      }
 
     if (!tese_path.empty() && std::filesystem::exists(tese_path)) {
       auto tese_shader = Tools::readFile(tese_path);
@@ -55,7 +65,7 @@ namespace Poulpe
       VkShaderModule tese_module = _renderer->getAPI()->createShaderModule(tese_shader);
       _shaders->shaders[name]["tese"] = tese_module;
     } else {
-      PLP_WARN("tese shader file {} does not exits.", tese_path);
+      Logger::warn("tese shader file {} does not exits.", tese_path);
     }
 
     if (!tesc_path.empty() && std::filesystem::exists(tesc_path)) {
@@ -64,7 +74,7 @@ namespace Poulpe
       VkShaderModule tesc_module = _renderer->getAPI()->createShaderModule(tesc_shader);
       _shaders->shaders[name]["tesc"] = tesc_module;
     } else {
-      PLP_WARN("tesc shader file {} does not exits.", tesc_path);
+      Logger::warn("tesc shader file {} does not exits.", tesc_path);
     }
 
     createGraphicPipeline(name);
@@ -267,7 +277,7 @@ namespace Poulpe
 
       bindings = { ubo_binding, sampler_binding };
     } else {
-      PLP_FATAL("unknown descSetLayoutType");
+      Logger::critical("unknown descSetLayoutType");
       throw std::runtime_error("unknown descSetLayoutType");
     }
 
@@ -387,7 +397,7 @@ namespace Poulpe
         need_bis = false;
       }
     }
-   
+    
     pipeline_layout = _renderer->getAPI()->createPipelineLayout({ descset_layout }, { push_constants });
 
     pipeline_create_infos.shaders_create_info = shaders;
