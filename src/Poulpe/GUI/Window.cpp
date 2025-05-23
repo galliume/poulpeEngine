@@ -2,6 +2,8 @@ module;
 
 #include <GLFW/glfw3.h>
 #include <string_view>
+
+#define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
 module Poulpe.GUI.Window;
@@ -11,7 +13,7 @@ namespace Poulpe
 {
   GLFWwindow* Window::get() const { return _window; }
 
-  void Window::setVSync(bool active) { _ActiveVSync = active; }
+  void Window::setVSync(bool active) { _active_vsync = active; }
 
   void Window::hide()
   {

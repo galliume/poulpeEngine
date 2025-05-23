@@ -28,7 +28,7 @@ module Poulpe.Animation.AnimationScript;
 
 namespace Poulpe
 {
-  int wrapMove(lua_State* L)
+  static int wrapMove(lua_State* L)
   {
     AnimationScript* animScript = static_cast<AnimationScript*>(lua_touserdata(L, 1));
     double const delta_time{ static_cast<double>(lua_tonumber(L, 2)) };
@@ -106,39 +106,39 @@ namespace Poulpe
     //Logger::trace("START at {}/{}/{}", data->_origin_pos.x, data->_origin_pos.y, data->_origin_pos.z);
     //Logger::trace("TO {}/{}/{}", anim->target.x, anim->target.y, anim->target.z);
 
-    anim->update = [](AnimationMove* anim, Data* data, double delta_time) {
+    anim->update = [](AnimationMove* anim_move, Data* data_move, double dt) {
 
-      float t = anim->elapsedTime / anim->duration;
+      float t = anim_move->elapsedTime / anim_move->duration;
       bool done{ false };
 
-      if (anim->elapsedTime >= anim->duration) {
+      if (anim_move->elapsedTime >= anim_move->duration) {
         done = true;
         t = 1.f;
       }
 
-      glm::vec3 target = glm::mix(data->_origin_pos, anim->target, t);
+      glm::vec3 target = glm::mix(data_move->_origin_pos, anim_move->target, t);
       //Logger::trace("MOVING at {}/{}/{}", data->_current_pos.x, data->_current_pos.y, data->_current_pos.z);
 
       glm::mat4 model = glm::mat4(1.0f);
-      model = glm::scale(model, data->_origin_scale);
+      model = glm::scale(model, data_move->_origin_scale);
       model = glm::translate(model, target);
-      model = glm::rotate(model, glm::radians(data->_origin_rotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
-      model = glm::rotate(model, glm::radians(data->_origin_rotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
-      model = glm::rotate(model, glm::radians(data->_origin_rotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
+      model = glm::rotate(model, glm::radians(data_move->_origin_rotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
+      model = glm::rotate(model, glm::radians(data_move->_origin_rotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
+      model = glm::rotate(model, glm::radians(data_move->_origin_rotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
 
-      for (auto i{ 0 }; i < data->_ubos.size(); i++) {
-        std::ranges::for_each(data->_ubos.at(i), [&model](auto& ubo) {
+      for (size_t i{ 0 }; i < data_move->_ubos.size(); i++) {
+        std::ranges::for_each(data_move->_ubos.at(i), [&model](auto& ubo) {
           ubo.model = model;
         });
       }
 
-      anim->elapsedTime += delta_time;
+      anim_move->elapsedTime += static_cast<float>(dt);
 
       if (done) {
-        data->_origin_pos = target;
+        data_move->_origin_pos = target;
         //Logger::trace("DONE at {}/{}/{}", data->_origin_pos.x, data->_origin_pos.y, data->_origin_pos.z);
       }
-      anim->done = done;
+      anim_move->done = done;
     };
     anim->update(anim.get(), data, delta_time);
     _new_moves.emplace_back(std::move(anim));
@@ -153,32 +153,32 @@ namespace Poulpe
     //Logger::debug("START at {}/{}/{}", data->_origin_rotation.x, data->_origin_rotation.y, data->_origin_rotation.z);
     //Logger::debug("TO {}/{}/{}", anim->angle.x, anim->angle.y, anim->angle.z);
 
-    anim->update = [](AnimationRotate* anim, Data* data, double delta_time) {
+    anim->update = [](AnimationRotate* anim_rotate, Data* data_rotate, double dt) {
 
-      float t{ glm::clamp(anim->elapsedTime / anim->duration, 0.0f, 1.0f) };
+      float t{ glm::clamp(anim_rotate->elapsedTime / anim_rotate->duration, 0.0f, 1.0f) };
       bool done{ false };
 
 
-      if (anim->elapsedTime >= anim->duration) {
+      if (anim_rotate->elapsedTime >= anim_rotate->duration) {
         done = true;
         t = 1.f;
       }
-      anim->elapsedTime += delta_time;
+      anim_rotate->elapsedTime += static_cast<float>(dt);
 
-      data->_current_rotation = glm::mix(data->_origin_rotation, anim->angle, t);
+      data_rotate->_current_rotation = glm::mix(data_rotate->_origin_rotation, anim_rotate->angle, t);
 
       glm::mat4 model = glm::mat4(1.0f);
-      model = glm::scale(model, data->_current_scale);
-      model = glm::translate(model, data->_current_pos);
-      model *= glm::mat4_cast(data->_current_rotation);
+      model = glm::scale(model, data_rotate->_current_scale);
+      model = glm::translate(model, data_rotate->_current_pos);
+      model *= glm::mat4_cast(data_rotate->_current_rotation);
 
-      for (auto i{ 0 }; i < data->_ubos.size(); i++) {
-        std::ranges::for_each(data->_ubos.at(i), [&model](auto& ubo) {
+      for (size_t i{ 0 }; i < data_rotate->_ubos.size(); i++) {
+        std::ranges::for_each(data_rotate->_ubos.at(i), [&model](auto& ubo) {
           ubo.model = model;
         });
       }
 
-      anim->done = done;
+      anim_rotate->done = done;
     };
     anim->update(anim.get(), data, delta_time);
     _new_rotates.emplace_back(std::move(anim));

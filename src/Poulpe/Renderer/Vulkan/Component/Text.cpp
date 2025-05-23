@@ -30,6 +30,8 @@ namespace Poulpe
     Renderer *const renderer,
     ComponentRenderingInfo const& component_rendering_info)
   {
+    stage_flag_bits = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+
     auto const& mesh = component_rendering_info.mesh;
 
     if (!mesh && !mesh->isDirty()) return;
@@ -196,7 +198,7 @@ namespace Poulpe
       renderer->getAPI()->updateUniformBuffer(mesh->getUniformBuffers()->at(0), &mesh->getData()->_ubos.at(0));
     }
     
-    if (*mesh->getDescSet() == NULL) {
+    if (*mesh->getDescSet() == nullptr) {
       createDescriptorSet(renderer, component_rendering_info);
     } 
     mesh->setIsDirty(false);

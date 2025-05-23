@@ -40,7 +40,7 @@ namespace Poulpe
     inline Entity* getSkybox() { return _skybox.get(); }
     inline Entity* getTerrain() { return _terrain.get(); }
     inline Entity* getWater() { return _water.get(); }
-    inline Entity* getText(unsigned int const index) { return _texts.at(index).get(); }
+    inline Entity* getText(uint32_t const index) { return _texts.at(index).get(); }
     inline std::vector<std::unique_ptr<Entity>>& getTexts() { return _texts; }
 
     std::function<void()> load(nlohmann::json const& lvl_config);
@@ -49,14 +49,14 @@ namespace Poulpe
     inline void setWater(std::unique_ptr<Entity> water) { _water = std::move(water); }
     inline int addText(std::unique_ptr<Entity> text) { _texts.emplace_back(std::move(text)); return _texts.size() - 1; }
       
-    void addEntity(Entity* entity, bool const is_last);
-    void addTransparentEntity(Entity* entity, bool const is_last);
-    void addTextEntity(Entity* entity, bool const is_last);
+    void addEntity(Entity* entity);
+    void addTransparentEntity(Entity* entity);
+    void addTextEntity(Entity* entity);
 
     //void addEntity(Mesh* meshes);
     //inline size_t getTotalEntities() const { return _Entities.size(); }
     EntityNode * getWorldNode();
-    void initMeshes(std::string const& name, nlohmann::json const& data);
+    void initMeshes(std::string const& name, nlohmann::json const& raw_data);
     void initWorldGraph();
     std::shared_mutex& lockWorldNode() { return _mutex_shared; }
 

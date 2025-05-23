@@ -19,7 +19,7 @@ namespace Poulpe
   }
 
   template<std::derived_from<Entity> T>
-  void DestroyManager::cleanEntity( T* const entity)
+  void DestroyManager::cleanEntity( T* const)
   {
       /*for (auto buffer : *entity->getMesh()->getUniformBuffers()) {
           _renderer->destroyBuffer(buffer.buffer);

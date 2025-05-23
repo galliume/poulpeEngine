@@ -8,22 +8,18 @@ module;
 export module Poulpe.Renderer:Text;
 
 import :VulkanRenderer;
-
-import Poulpe.Component.Components;
+import :RendererComponent;
 
 namespace Poulpe
 {
   export class Text : public RendererComponentConcept
   {
   public:
-    ~Text() override;
+    ~Text() override = default;
     void operator()(
       Renderer *const renderer,
-      ComponentRenderingInfo const& component_rendering_info);
-    VkShaderStageFlags const stage_flag_bits { 
-      VK_SHADER_STAGE_VERTEX_BIT 
-      | VK_SHADER_STAGE_FRAGMENT_BIT};
-
+      ComponentRenderingInfo const& component_rendering_info) override;
+    
     void setText(std::string_view text) { _text = text; }
     void setPosition(glm::vec3 const& position) { _position = position; }
     void setColor(glm::vec3 const& color) { _color = color; }
@@ -44,5 +40,4 @@ namespace Poulpe
     bool _is_flat{true};
   };
 
-  Text::~Text() = default;
 }

@@ -22,8 +22,11 @@ import Poulpe.Core.PlpTypedef;
 
 namespace Poulpe
 {
-  export struct BoneAnimation : public AnimationComponentConcept
+  export struct BoneAnimation
   {
+    BoneAnimation() = default;
+    ~BoneAnimation() = default;
+
     bool done{ false };
     float duration{ 0.0f };
     float elapsedTime{ 0.0f };
@@ -31,6 +34,9 @@ namespace Poulpe
 
   export struct BoneAnimationMove : public BoneAnimation
   {
+    BoneAnimationMove() = default;
+    ~BoneAnimationMove() = default;
+
     glm::vec3 pos{ 0.0f };
     glm::vec3 rot{ 0.0f };
     glm::vec3 scale{ 0.0f };
@@ -46,7 +52,7 @@ namespace Poulpe
   template <typename T>
   concept isAnimOperation = std::derived_from<T, AnimOperation>;
 
-  export class BoneAnimationScript
+  export class BoneAnimationScript : public AnimationComponentConcept
   {
   public:
     BoneAnimationScript(
@@ -54,12 +60,12 @@ namespace Poulpe
       std::unordered_map<std::string, std::vector<std::vector<Position>>> const& positions,
       std::unordered_map<std::string, std::vector<std::vector<Rotation>>> const& rotations,
       std::unordered_map<std::string, std::vector<std::vector<Scale>>> const& scales);
-    ~BoneAnimationScript();
+    ~BoneAnimationScript() override = default;
 
     Data* getData();
     void move(Data* dataMove, double delta_timeMove);
 
-    void operator()(AnimationInfo const& animation_info);
+    void operator()(AnimationInfo const& animation_info) override;
 
   private:
     Data* _data;
@@ -67,7 +73,7 @@ namespace Poulpe
 
     bool _move_init{ false };
     bool _done{false};
-    unsigned int _anim_id{ 0 };
+    uint32_t _anim_id{ 0 };
 
     std::vector<std::unique_ptr<BoneAnimationMove>> _moves{};
     std::vector<std::unique_ptr<BoneAnimationMove>> _new_moves{};
@@ -89,7 +95,7 @@ namespace Poulpe
     std::pair<T, T> findKeyframe(
       std::vector<T> const& key_frames,
       float const time,
-      float const duration) {
+      float const) {
 
       if (key_frames.size() == 1) {
         return { key_frames[0], key_frames[0] };

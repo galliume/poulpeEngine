@@ -24,15 +24,15 @@ import Poulpe.Component.Vertex;
 namespace Poulpe
 {
   //default textures const, needs a real assets management (unique id etc.)
-  export std::string const PLP_EMPTY{ "_plp_empty" };
-  export std::string const PLP_SAND{ "sand" };
-  export std::string const PLP_GRASS{ "grass" };
-  export std::string const PLP_GROUND{ "ground" };
-  export std::string const PLP_LOW_NOISE{ "low_noise" };
-  export std::string const PLP_HI_NOISE { "hi_noise" };
-  export std::string const PLP_SNOW{ "snow" };
-  export std::string const PLP_WATER_NORMAL_1{ "_water_normal" };
-  export std::string const PLP_WATER_NORMAL_2{ "_water_normal2" };
+  export auto const PLP_EMPTY{ "_plp_empty" };
+  export auto const PLP_SAND{ "sand" };
+  export auto const PLP_GRASS{ "grass" };
+  export auto const PLP_GROUND{ "ground" };
+  export auto const PLP_LOW_NOISE{ "low_noise" };
+  export auto const PLP_HI_NOISE { "hi_noise" };
+  export auto const PLP_SNOW{ "snow" };
+  export auto const PLP_WATER_NORMAL_1{ "_water_normal" };
+  export auto const PLP_WATER_NORMAL_2{ "_water_normal2" };
 
   export struct CameraUBO {
     alignas(16) glm::mat4 view;
@@ -216,12 +216,12 @@ namespace Poulpe
   };
 
   export struct BoneWeight {
-    unsigned int vertex_id;
+    uint32_t vertex_id;
     float weight;
   };
 
   export struct Bone {
-    unsigned int id;
+    uint32_t id;
     std::string name{};
     std::string parent_name{};
     glm::mat4 transform{};
@@ -251,10 +251,10 @@ namespace Poulpe
   };
 
   export struct Animation {
-    unsigned int id;
+    uint32_t id;
     std::string name{};
-    float duration{ 0.0 };
-    float ticks_per_s{ 25.0 };
+    float duration{ 0.0f };
+    float ticks_per_s{ 25.0f };
   };
 
   export enum class AnimInterpolation {
@@ -265,8 +265,8 @@ namespace Poulpe
   };
 
   export struct AnimOperation {
-    int id;
-    int animation_ID;
+    uint32_t id;
+    uint32_t animation_ID;
     float time;
     AnimInterpolation interpolation;
   };
@@ -287,7 +287,7 @@ namespace Poulpe
   {
     std::string name{};
     std::string texture_prefix{};
-    unsigned int id{};
+    uint64_t id{};
     uint32_t material_ID{ 0 };
     std::vector<uint32_t> face_material_ID{};
     std::vector<uint32_t> indices{};
@@ -328,11 +328,11 @@ namespace Poulpe
   };
 
   export struct FontCharacter {
-    unsigned int index;
+    uint32_t index;
     glm::ivec2 size;
     glm::ivec2 bearing;
     long advance;
-    unsigned int mem_size{ 0 };
+    uint32_t mem_size{ 0 };
     std::vector<int8_t> buffer;
     int pitch{ 0 };
     int x_offset{ 0 };

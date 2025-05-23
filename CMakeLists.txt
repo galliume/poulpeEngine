@@ -53,8 +53,8 @@ add_subdirectory(${PROJECT_SOURCE_DIR}/src/Poulpe/Utils)
 
 target_include_directories(${PROJECT_NAME} PRIVATE "${PROJECT_BINARY_DIR}")
 
-set(DEBUG_OPTIONS -g)
-set(RELEASE_OPTIONS )
+set(DEBUG_OPTIONS -g -Wno-reserved-identifier -Wno-covered-switch-default -Wno-disabled-macro-expansion -Wno-double-promotion)#silence stbimage, nlohmann::json warnings
+set(RELEASE_OPTIONS -Wno-reserved-identifier -Wno-covered-switch-default -Wno-disabled-macro-expansion -Wno-double-promotion)
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
   add_definitions(

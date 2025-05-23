@@ -36,7 +36,7 @@ namespace Poulpe
       return texture;
     }
     
-    FT_CharMap found = 0;
+    FT_CharMap found {nullptr};
     FT_CharMap charmap;
 
     for (auto n{ 0 }; n < _face->num_charmaps; n++) {
@@ -96,7 +96,7 @@ namespace Poulpe
         renderable = false;
       }
 
-      if (_face->glyph->bitmap.buffer == NULL
+      if (_face->glyph->bitmap.buffer == nullptr
         || _face->glyph->bitmap.width == 0
         || _face->glyph->bitmap.rows == 0) {
         Logger::debug("FREETYPE: non-renderable glyph {}", glyph_index);
@@ -115,9 +115,9 @@ namespace Poulpe
         auto buffer = _face->glyph->bitmap.buffer;
         int index{ 0 };
 
-        for (auto y{ 0 }; y < glyph_height; y++) {
+        for (size_t y{ 0 }; y < glyph_height; y++) {
           int8_t const * row_buffer = reinterpret_cast<int8_t const *>(buffer) + y * glyph_pitch;
-          for (auto x{ 0 }; x < glyph_width; x++) {
+          for (size_t x{ 0 }; x < glyph_width; x++) {
             int8_t sdf = row_buffer[x];
             r_buffer[index++] = sdf;
           }
@@ -173,7 +173,7 @@ namespace Poulpe
     return texture;
   }
 
-  FontCharacter FontManager::get(unsigned int c)
+  FontCharacter FontManager::get(uint32_t c)
   {
     auto glyph_index = FT_Get_Char_Index(_face, c);
 

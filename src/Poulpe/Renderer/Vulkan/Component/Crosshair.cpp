@@ -18,7 +18,7 @@ import Poulpe.Component.Components;
 namespace Poulpe
 {
   void Crosshair::createDescriptorSet(
-    Renderer *const renderer,
+    Renderer *const,
     ComponentRenderingInfo const&)
   {
     //Texture const tex{ _texture_manager->getTextures()["crosshair_1"] };
@@ -38,7 +38,7 @@ namespace Poulpe
   }
 
   void Crosshair::operator()(
-    Renderer *const renderer,
+    Renderer *const,
     ComponentRenderingInfo const&)
   {
     /* if (!mesh && !mesh->isDirty()) return;

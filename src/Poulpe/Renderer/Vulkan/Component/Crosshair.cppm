@@ -3,18 +3,17 @@ module;
 export module Poulpe.Renderer:Crosshair;
 
 import :VulkanRenderer;
-
-import Poulpe.Component.Components;
+import :RendererComponent;
 
 namespace Poulpe
 {
   export class Crosshair : public RendererComponentConcept
   {
   public:
-    ~Crosshair() override;
+    ~Crosshair() override = default;
     void operator()(
       Renderer *const renderer,
-      ComponentRenderingInfo const& component_rendering_info);
+      ComponentRenderingInfo const& component_rendering_info) override;
   
   private:
     void createDescriptorSet(
@@ -22,5 +21,4 @@ namespace Poulpe
       ComponentRenderingInfo const& component_rendering_info);
   };
 
-  Crosshair::~Crosshair() = default;
 }

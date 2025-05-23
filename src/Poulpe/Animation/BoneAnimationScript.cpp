@@ -32,14 +32,9 @@ namespace Poulpe
 
   }
 
-  BoneAnimationScript::~BoneAnimationScript()
-  {
-
-  }
-
   void BoneAnimationScript::move(
-    Data* dataMove,
-    double delta_timeMove)
+    Data*,
+    double)
   {
 
   }
@@ -83,7 +78,7 @@ namespace Poulpe
 
         if (total_weight > 0.f) {
           glm::vec4 result = glm::vec4(0.0f);
-          for (auto i{ 0 }; i < 4; ++i) {
+          for (size_t i{ 0 }; i < 4; ++i) {
             auto const bone_id{ vertex.bone_ids[i] };
             auto const w{ vertex.bone_weights[i] };
             if (w > 0.f) {

@@ -1,14 +1,15 @@
+module;
 #include "PoulpeEngineConfig.h"
-
-#include "Poulpe/Application.hpp"
 
 #include <iostream>
 
-#define STB_IMAGE_IMPLEMENTATION
-#include <stb_image.h>
+export module Poulpe;
 
-int main(int argc, char** argv)
-{
+import Poulpe.Application;
+
+namesapce Poulpe {
+  int main(int argc, char** argv)
+  {
     std::cout << argv[0] << " Version " << PoulpeEngine_VERSION_MAJOR << "." << PoulpeEngine_VERSION_MINOR << std::endl;
 
     bool serverMode{ false };
@@ -40,4 +41,5 @@ int main(int argc, char** argv)
     app->run();
 
     return 0;
+  }
 }
