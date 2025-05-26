@@ -11,9 +11,10 @@ module;
 #include <vector>
 #include <volk.h>
 
-module Poulpe.Renderer;
+module Poulpe.Renderer.Vulkan.Crosshair;
 
 import Poulpe.Component.Components;
+import Poulpe.Renderer.RendererComponentTypes;
 
 namespace Poulpe
 {

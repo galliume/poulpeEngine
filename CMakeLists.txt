@@ -53,8 +53,8 @@ add_subdirectory(${PROJECT_SOURCE_DIR}/src/Poulpe/Utils)
 
 target_include_directories(${PROJECT_NAME} PRIVATE "${PROJECT_BINARY_DIR}")
 
-set(DEBUG_OPTIONS -g -Wno-reserved-identifier -Wno-covered-switch-default -Wno-disabled-macro-expansion -Wno-double-promotion)#silence stbimage, nlohmann::json warnings
-set(RELEASE_OPTIONS -Wno-reserved-identifier -Wno-covered-switch-default -Wno-disabled-macro-expansion -Wno-double-promotion)
+set(DEBUG_OPTIONS -g -Wno-covered-switch-default)
+set(RELEASE_OPTIONS -Wno-covered-switch-default)
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
   add_definitions(
@@ -90,9 +90,6 @@ target_compile_definitions(${PROJECT_NAME} PRIVATE $<$<CONFIG:DEBUG>:PLP_DEBUG_B
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
   list(APPEND EXTRA_LIBS 
     Ws2_32 user32 gdi32 winspool shell32 ole32 oleaut32 uuid comdlg32 advapi32)
-  if (CMAKE_BUILD_TYPE STREQUAL "Debug")
-    list(APPEND EXTRA_LIBS msvcrtd)
-  endif()
 else()
   set(THREADS_PREFER_PTHREAD_FLAG ON)
   find_package(Threads REQUIRED)
@@ -103,8 +100,6 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
   CXX_STANDARD 23
   CXX_STANDARD_REQUIRED ON
   CXX_EXTENSIONS OFF)
-
-target_link_libraries(${PROJECT_NAME} PUBLIC PoulpeEngineTargets)
 
 #########################################################
 

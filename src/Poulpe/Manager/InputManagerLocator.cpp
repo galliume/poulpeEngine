@@ -7,11 +7,11 @@ namespace Poulpe
 {
   InputManager* InputManagerLocator::get()
   {
-    return _inputManager.get();
+    return _input_manager.get();
   }
 
   void InputManagerLocator::init(Window const * const window)
   {
-    _inputManager = std::make_unique<InputManager>(window);
+    _input_manager = std::make_unique<InputManager>(window);
   }
 }

@@ -5,7 +5,7 @@ module;
 #include <stdexcept>
 #include <string>
 
-module Poulpe.Renderer;
+module Poulpe.Renderer.VulkanDeviceMemoryPool;
 
 namespace Poulpe
 {

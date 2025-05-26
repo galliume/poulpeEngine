@@ -23,11 +23,11 @@ namespace Poulpe
 
     glm::mat4 frustumProj(float fovy, float s, float n, float f);
     glm::mat4 lookAt();
-    void updateDeltaTime(double const delta_time) { _delta_time = delta_time; };
+    void updateDeltaTime(double const delta_time) { _delta_time = delta_time; }
     void updateAngle(double const x_offset, double const y_offset);
     void move();
 
-    bool const isInit() { return _init; };
+    bool isInit() const { return _init; }
 
     glm::vec3 getDeltaTime();
 

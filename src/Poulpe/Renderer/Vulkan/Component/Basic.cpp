@@ -11,11 +11,13 @@ module;
 #include <vector>
 #include <volk.h>
 
-module Poulpe.Renderer;
+module Poulpe.Renderer.Vulkan.Basic;
 
 import Poulpe.Component.Components;
 import Poulpe.Component.Texture;
+import Poulpe.Core.MeshTypes;
 import Poulpe.Core.PlpTypedef;
+import Poulpe.Renderer.RendererComponentTypes;
 
 namespace Poulpe
 {

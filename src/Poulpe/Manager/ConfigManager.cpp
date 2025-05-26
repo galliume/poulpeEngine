@@ -157,15 +157,16 @@ namespace Poulpe
     return _entity_config;
   }
 
+  nlohmann::json ConfigManager::shaderConfig()
+  {
+    return _shader_config;
+  }
+
   nlohmann::json ConfigManager::appConfig()
   {
     return _app_config;
   }
 
-  nlohmann::json ConfigManager::shaderConfig()
-  {
-    return _shader_config;
-  }
 
   nlohmann::json ConfigManager::soundConfig()
   {

@@ -24,15 +24,15 @@ import Poulpe.Component.Vertex;
 namespace Poulpe
 {
   //default textures const, needs a real assets management (unique id etc.)
-  export auto const PLP_EMPTY{ "_plp_empty" };
-  export auto const PLP_SAND{ "sand" };
-  export auto const PLP_GRASS{ "grass" };
-  export auto const PLP_GROUND{ "ground" };
-  export auto const PLP_LOW_NOISE{ "low_noise" };
-  export auto const PLP_HI_NOISE { "hi_noise" };
-  export auto const PLP_SNOW{ "snow" };
-  export auto const PLP_WATER_NORMAL_1{ "_water_normal" };
-  export auto const PLP_WATER_NORMAL_2{ "_water_normal2" };
+  export inline constexpr std::string PLP_EMPTY{ "_plp_empty" };
+  export inline constexpr std::string PLP_SAND{ "sand" };
+  export inline constexpr std::string PLP_GRASS{ "grass" };
+  export inline constexpr std::string PLP_GROUND{ "ground" };
+  export inline constexpr std::string PLP_LOW_NOISE{ "low_noise" };
+  export inline constexpr std::string PLP_HI_NOISE { "hi_noise" };
+  export inline constexpr std::string PLP_SNOW{ "snow" };
+  export inline constexpr std::string PLP_WATER_NORMAL_1{ "_water_normal" };
+  export inline constexpr std::string PLP_WATER_NORMAL_2{ "_water_normal2" };
 
   export struct CameraUBO {
     alignas(16) glm::mat4 view;
@@ -329,8 +329,8 @@ namespace Poulpe
 
   export struct FontCharacter {
     uint32_t index;
-    glm::ivec2 size;
-    glm::ivec2 bearing;
+    glm::fvec2 size;
+    glm::fvec2 bearing;
     long advance;
     uint32_t mem_size{ 0 };
     std::vector<int8_t> buffer;
@@ -338,23 +338,23 @@ namespace Poulpe
     int x_offset{ 0 };
     int y_offset{ 0 };
   };
+
+  export struct PipeLineCreateInfo
+  {
+    VkPipelineLayout pipeline_layout;
+    std::string_view name;
+    std::vector<VkPipelineShaderStageCreateInfo> shaders_create_info;
+    VkPipelineVertexInputStateCreateInfo* vertex_input_info;
+    VkCullModeFlagBits cull_mode = VK_CULL_MODE_BACK_BIT;
+    VkPrimitiveTopology topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+    VkPolygonMode polygone_mode = VK_POLYGON_MODE_FILL;
+  
+    bool has_color_attachment{ false };
+    bool has_depth_test{ false };
+    bool has_depth_write{ false };
+    bool has_dynamic_culling{ false };
+    bool has_dynamic_depth_bias{ false };
+    bool has_stencil_test{ false };
+    bool is_patch_list{ false };
+  };
 }
-
-export struct PipeLineCreateInfo
-{
-  VkPipelineLayout pipeline_layout;
-  std::string_view name;
-  std::vector<VkPipelineShaderStageCreateInfo> shaders_create_info;
-  VkPipelineVertexInputStateCreateInfo* vertex_input_info;
-  VkCullModeFlagBits cull_mode = VK_CULL_MODE_BACK_BIT;
-  VkPrimitiveTopology topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
-  VkPolygonMode polygone_mode = VK_POLYGON_MODE_FILL;
-
-  bool has_color_attachment{ false };
-  bool has_depth_test{ false };
-  bool has_depth_write{ false };
-  bool has_dynamic_culling{ false };
-  bool has_dynamic_depth_bias{ false };
-  bool has_stencil_test{ false };
-  bool is_patch_list{ false };
-};

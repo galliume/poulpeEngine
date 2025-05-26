@@ -14,13 +14,13 @@ module;
 #include <unordered_map>
 #include <vector>
 
-module Poulpe.Renderer;
+module Poulpe.Renderer.VulkanRenderer;
 
 import Poulpe.Component.Components;
 import Poulpe.Core.Logger;
 import Poulpe.GUI.Window;
 import Poulpe.Managers.ConfigManagerLocator;
-import Poulpe.Renderer.Vulkan.Component.Mesh;
+import Poulpe.Renderer.Vulkan.Mesh;
 
 namespace Poulpe
 {
@@ -655,7 +655,7 @@ namespace Poulpe
 
   //       if (mesh->hasPushConstants()) {
   //         //mesh->applyPushConstants(cmd_buffer, pipeline->pipeline_layout, this, mesh);
-  //           auto rdr_impl = _component_manager->get<RenderComponent>(entity->getID());
+  //           auto rdr_impl = _component_manager->get<RendererComponent>(entity->getID());
   //           constants push_constants{};
   //           push_constants.total_position = glm::vec4{
   //              _renderer_info.elapsed_time,

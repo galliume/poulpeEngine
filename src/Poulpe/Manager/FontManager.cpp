@@ -28,7 +28,10 @@ namespace Poulpe
       return texture;
     }
 
-    auto const font{ConfigManagerLocator::get()->appConfig()["font"].get<std::string>()};
+    auto const& config_manager = ConfigManagerLocator::get();
+    auto const& app_config = config_manager->appConfig();
+
+    auto const font{app_config["font"].get<std::string>()};
 
     if (FT_New_Face(_ft, font.c_str(), 0, &_face))
     {
@@ -58,7 +61,7 @@ namespace Poulpe
       return texture;
     }
 
-    FT_Set_Char_Size(_face, 0, FONT_HEIGHT, FONT_RESOLUTION, FONT_RESOLUTION);
+    FT_Set_Char_Size(_face, FONT_WIDTH, FONT_HEIGHT, FONT_RESOLUTION, FONT_RESOLUTION);
 
     if (FT_Load_Char(_face, 'X', FT_LOAD_RENDER))
     {
@@ -69,11 +72,11 @@ namespace Poulpe
     VkCommandPool cmd_pool = _renderer->getAPI()->createCommandPool();
     VkCommandBuffer cmd_buffer = _renderer->getAPI()->allocateCommandBuffers(cmd_pool)[0];
 
-    auto offset{0.0f};
-    int x_offset{ 0 };
-    int y_offset{ 0 };
+    //float offset{0.0f};
+    float x_offset{ 0.f };
+    float y_offset{ 0.f };
     int const max_row_width{ 2048 };
-    int max_row_height{ 0 };
+    float max_row_height{ 0.f };
     
     _atlas_width = max_row_width;
 
@@ -113,11 +116,11 @@ namespace Poulpe
         r_buffer.resize(glyph_width * glyph_height, 0x000);
 
         auto buffer = _face->glyph->bitmap.buffer;
-        int index{ 0 };
+        uint32_t index{ 0 };
 
-        for (size_t y{ 0 }; y < glyph_height; y++) {
-          int8_t const * row_buffer = reinterpret_cast<int8_t const *>(buffer) + y * glyph_pitch;
-          for (size_t x{ 0 }; x < glyph_width; x++) {
+        for (uint32_t y{ 0 }; y < glyph_height; y++) {
+          int8_t const * row_buffer = reinterpret_cast<int8_t const *>(buffer) + y * static_cast<uint32_t>(glyph_pitch);
+          for (uint32_t x{ 0 }; x < glyph_width; x++) {
             int8_t sdf = row_buffer[x];
             r_buffer[index++] = sdf;
           }
@@ -139,23 +142,23 @@ namespace Poulpe
 
         if (x_offset + character.size.x >= max_row_width) {
           x_offset = 0;
-          y_offset += max_row_height + 1;
-          _atlas_height += max_row_height + 1;
+          y_offset += max_row_height + 1.f;
+          _atlas_height += static_cast<uint32_t>(max_row_height) + 1;
           max_row_height = 0;
         }
 
-        character.x_offset = x_offset;
-        character.y_offset = y_offset;
-        x_offset += character.size.x + 1;
+        character.x_offset = static_cast<int>(x_offset);
+        character.y_offset = static_cast<int>(y_offset);
+        x_offset += character.size.x + 1.f;
 
         _characters[glyph_index] = character;
 
-        offset += _face->glyph->bitmap.width;
+        //offset += _face->glyph->bitmap.width;
       }
       c = FT_Get_Next_Char(_face, c, &glyph_index);
     }
 
-    _atlas_height += max_row_height + 50;
+    _atlas_height += static_cast<uint32_t>(max_row_height) + 50;
 
     VkImage image = nullptr;
     _renderer->getAPI()->createFontImage(cmd_buffer, _characters, _atlas_width, _atlas_height, image);

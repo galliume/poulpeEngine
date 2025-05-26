@@ -61,6 +61,9 @@ namespace Poulpe
     void updateText(std::string const& name, std::string const& text);
     void updateTextColor(std::string const& name, glm::vec3 const& color);
 
+    void setElapsedTime(double const elapsed_time) { _elapsed_time = elapsed_time;}
+    double getElapsedTime() const { return _elapsed_time; }
+
   private:
     void loadData(std::string const & level);
 
@@ -76,7 +79,7 @@ namespace Poulpe
 
     bool _is_loaded{ false };
     bool _refresh{ false };
-
+    double _elapsed_time{ 0.0 };
     std::unique_ptr<Camera> _camera;
     std::unique_ptr<Renderer> _renderer;
     std::unique_ptr<Window> _window;

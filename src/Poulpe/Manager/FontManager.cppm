@@ -58,7 +58,8 @@ namespace Poulpe
     FT_Library _ft;
 
     //@todo move to config
+    FT_F26Dot6 FONT_WIDTH{0};
     FT_F26Dot6 FONT_HEIGHT{ 768 };
-    FT_F26Dot6 FONT_RESOLUTION{ 512 };
+    FT_UInt FONT_RESOLUTION{ 512 };
   };
 }

@@ -8,7 +8,7 @@ module;
 #include <string>
 #include <string_view>
 
-export module Poulpe.Renderer.Vulkan.Component.Mesh;
+export module Poulpe.Renderer.Vulkan.Mesh;
 
 import Poulpe.Core.MeshTypes;
 import Poulpe.Core.PlpTypedef;
@@ -66,6 +66,8 @@ namespace Poulpe
 
     glm::vec4 getOptions() { return _options; }
     void setOptions(glm::vec4 options) { _options = options; }
+
+    VkShaderStageFlags stage_flag_bits { VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT};
 
   private:
     std::string _name{};

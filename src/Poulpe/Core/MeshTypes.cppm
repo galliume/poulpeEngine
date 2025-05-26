@@ -8,7 +8,7 @@ module;
 
 export module Poulpe.Core.MeshTypes;
 
-import Poulpe.Renderer.Vulkan.DeviceMemory;
+import Poulpe.Renderer.VulkanDeviceMemory;
 
 import Poulpe.Component.Vertex;
 import Poulpe.Core.PlpTypedef;

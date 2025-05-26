@@ -18,7 +18,7 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(fetch_glm)
 
 target_include_directories(${PROJECT_NAME} 
-  PRIVATE ${fetch_glm_SOURCE_DIR}
-  PRIVATE ${fetch_glm_BINARY_DIR})
+  SYSTEM PRIVATE ${fetch_glm_SOURCE_DIR}
+  SYSTEM PRIVATE ${fetch_glm_BINARY_DIR})
 
 #target_link_libraries(${PROJECT_NAME} PRIVATE glm::glm)

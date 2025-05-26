@@ -2,7 +2,6 @@ module;
 #include <ktx.h>
 #include <nlohmann/json.hpp>
 
-#define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 #include <volk.h>
 
@@ -238,7 +237,7 @@ namespace Poulpe
     std::filesystem::path file_name{ path };
     std::string original_name{ file_name.string()};
 
-    bool has_alpha{ false };
+    //bool has_alpha{ false };
     bool is_hdr{ false };
     std::string oetf{ "srgb" };
     std::string options { " --encode basis-lz --clevel 3 --qlevel 126 " };
@@ -254,7 +253,7 @@ namespace Poulpe
       original_name = file_name.string();
     } else if (std::filesystem::exists(file_name.replace_extension("png"))) {
       original_name = file_name.string();
-      has_alpha = true;
+      //has_alpha = true;
       transcoding = KTX_TTF_BC7_RGBA;
     }
 

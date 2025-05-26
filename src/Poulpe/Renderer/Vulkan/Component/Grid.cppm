@@ -1,20 +1,22 @@
 module;
+#include <vulkan/vulkan.h>
 
-export module Poulpe.Renderer:Grid;
+export module Poulpe.Renderer.Vulkan.Grid;
 
-import :VulkanRenderer;
-import :RendererComponent;
+import Poulpe.Renderer;
+import Poulpe.Renderer.RendererComponentTypes;
 
 namespace Poulpe
 {
-  export class Grid : public RendererComponentConcept
+  export class Grid
   {
   public:
-    ~Grid() override = default;
     void operator()(
       Renderer *const renderer,
-      ComponentRenderingInfo const& component_rendering_info) override;
-  
+      ComponentRenderingInfo const& component_rendering_info);
+
+      VkShaderStageFlags stage_flag_bits { VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT};
+
   private:
     void createDescriptorSet(
       Renderer *const renderer,

@@ -138,10 +138,10 @@ namespace Poulpe
           return attributeDescriptions;
       }
 
-      bool operator==(const Vertex2D& other) const
-      {
-          return pos == other.pos && normal == other.normal && texCoord == other.texCoord;
-      }
+      // bool operator==(const Vertex2D& other) const
+      // {
+      //     return pos == other.pos && normal == other.normal && texCoord == other.texCoord;
+      // }
   };
 
   // namespace std {

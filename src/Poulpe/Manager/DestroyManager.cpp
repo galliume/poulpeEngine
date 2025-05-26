@@ -58,16 +58,16 @@ namespace Poulpe
       }
   }
 
-  void  DestroyManager::cleanTexture(Texture textures)
+  void  DestroyManager::cleanTexture(Texture& textures)
   {
       vkDestroySampler(_renderer->getDevice(), textures.getSampler(), nullptr);
       vkDestroyImage(_renderer->getDevice(), textures.getImage(), nullptr);
       vkDestroyImageView(_renderer->getDevice(), textures.getImageView(), nullptr);
   }
 
-  void DestroyManager::cleanTextures(std::unordered_map<std::string, Texture> textures)
+  void DestroyManager::cleanTextures(std::unordered_map<std::string, Texture>& textures)
   {
-      for (auto texture : textures) {
+      for (auto& texture : textures) {
           cleanTexture(texture.second);
       }
   }

@@ -20,8 +20,11 @@ import Poulpe.Core.MeshTypes;
 import Poulpe.Core.PlpTypedef;
 import Poulpe.Managers.ComponentManager;
 import Poulpe.Renderer;
+import Poulpe.Renderer.Renderers;
 import Poulpe.Renderer.Mesh;
+import Poulpe.Renderer.RendererComponent;
 import Poulpe.Renderer.RendererComponentFactory;
+import Poulpe.Renderer.RendererComponentTypes;
 
 namespace Poulpe
 {
@@ -375,13 +378,13 @@ namespace Poulpe
       auto basicRdrImpl { RendererComponentFactory::create<Basic>() };
       (*basicRdrImpl)(_renderer, rendering_info);
 
-      _component_manager->add<RenderComponent>(entity->getID(), std::move(basicRdrImpl));
+      _component_manager->add<RendererComponent>(entity->getID(), std::move(basicRdrImpl));
       _component_manager->add<MeshComponent>(entity->getID(), std::move(mesh));
       auto* entityNode = root_mesh_entity_node->addChild(new EntityNode(entity));
       
       //_renderer->addEntity(entityNode->getEntity(), is_last);
 
-      if (alpha_mode == 2.0) {
+      if (alpha_mode == 2.0f) {
         addTransparentEntity(entityNode->getEntity());
       } else {
         addEntity(entityNode->getEntity());
@@ -417,11 +420,11 @@ namespace Poulpe
 
   void EntityManager::initWorldGraph()
   {
-    Entity* _World = new Entity();
-    _World->setName("_PLPWorld");
-    _World->setVisible(false);
+    Entity* _world = new Entity();
+    _world->setName("_PLPWorld");
+    _world->setVisible(false);
 
-    _world_node = std::make_unique<EntityNode>(_World);
+    _world_node = std::make_unique<EntityNode>(_world);
   }
 
   void EntityManager::addEntity(Entity* entity)

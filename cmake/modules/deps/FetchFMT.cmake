@@ -17,7 +17,7 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(fetch_fmt)
 
 target_include_directories(${PROJECT_NAME}
-PRIVATE
+SYSTEM PRIVATE
   ${fetch_fmt_SOURCE_DIR}/include)
 
 target_link_libraries(${PROJECT_NAME} 

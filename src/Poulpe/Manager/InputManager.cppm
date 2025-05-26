@@ -18,12 +18,12 @@ namespace Poulpe
   public:
     explicit InputManager(Window const * const window);
 
-    virtual void init(nlohmann::json const& input_config) ;
+    void init(nlohmann::json const& input_config) ;
 
     void keyPress(int key, int scan_code, int action, int mods);
     void mouseButton(int button, int action, int mods);
     void saveLastMousePos(double x_pos, double y_pos);
-    void inline setCamera(Camera * const camera) { _camera = camera; };
+    void inline setCamera(Camera * const camera) { _camera = camera; }
     void updateMousePos(double x_pos, double y_pos);
 
     static bool _can_move_camera;

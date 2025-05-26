@@ -66,17 +66,17 @@ namespace Poulpe
 
     glfwSetWindowUserPointer(_window->get(), this);
 
-    glfwSetKeyCallback(_window->get(), []( GLFWwindow* window, int key, int scan_code, int action, int mods) {
+    glfwSetKeyCallback(_window->get(), [](GLFWwindow*, int key, int scan_code, int action, int mods) {
       InputManager* input_manager = InputManagerLocator::get();
       input_manager->keyPress(key, scan_code, action, mods);
     });
 
-    glfwSetCursorPosCallback(_window->get(), []( GLFWwindow* window, double x_pos, double y_pos) {
+    glfwSetCursorPosCallback(_window->get(), []( GLFWwindow*, double x_pos, double y_pos) {
       InputManager* input_manager = InputManagerLocator::get();
       input_manager->updateMousePos(x_pos, y_pos);
     });
 
-    glfwSetMouseButtonCallback(_window->get(), []( GLFWwindow* window, int button, int action, int mods) {
+    glfwSetMouseButtonCallback(_window->get(), []( GLFWwindow*, int button, int action, int mods) {
       InputManager* input_manager = InputManagerLocator::get();
       input_manager->mouseButton(button, action, mods);
     });
@@ -84,9 +84,9 @@ namespace Poulpe
 
   void InputManager::keyPress(
     int const key,
-    int const scan_code,
+    int const,
     int const action,
-    int const mods)
+    int const)
   {
     const auto config = _input_config[_input_config["current"]];
 
@@ -133,14 +133,18 @@ namespace Poulpe
       case GLFW_RELEASE:
       {
         //nothing, yet.
+        break;
       }
+      default:
+      //nothing, yet.
+      break;
     }
   }
 
   void InputManager::mouseButton(
     int const button,
-    int const action,
-    int const mods)
+    int const,
+    int const)
   {
     if (GLFW_MOUSE_BUTTON_LEFT == button) {
       int width, height;

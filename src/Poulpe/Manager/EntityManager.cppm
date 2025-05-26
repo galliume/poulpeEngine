@@ -47,7 +47,7 @@ namespace Poulpe
     inline void setSkybox(std::unique_ptr<Entity> skybox) { _skybox = std::move(skybox); }
     inline void setTerrain(std::unique_ptr<Entity> terrain) { _terrain = std::move(terrain); }
     inline void setWater(std::unique_ptr<Entity> water) { _water = std::move(water); }
-    inline int addText(std::unique_ptr<Entity> text) { _texts.emplace_back(std::move(text)); return _texts.size() - 1; }
+    inline size_t addText(std::unique_ptr<Entity> text) { _texts.emplace_back(std::move(text)); return _texts.size() - 1; }
       
     void addEntity(Entity* entity);
     void addTransparentEntity(Entity* entity);

@@ -12,15 +12,15 @@ module;
 #include <unordered_map>
 #include <vector>
 
-export module Poulpe.Renderer:VulkanRenderer;
+export module Poulpe.Renderer.VulkanRenderer;
 
-import :DeviceMemoryPool;
-import :VulkanAPI;
+import Poulpe.Renderer.VulkanDeviceMemoryPool;
+import Poulpe.Renderer.VulkanAPI;
 
 import Poulpe.Component.Camera;
 import Poulpe.Core.PlpTypedef;
 import Poulpe.GUI.Window;
-import Poulpe.Renderer.Vulkan.Component.Mesh;
+import Poulpe.Renderer.Vulkan.Mesh;
 
 namespace Poulpe
 {
@@ -90,14 +90,14 @@ namespace Poulpe
 
   export struct RendererInfo
   {
-    Mesh* const mesh{nullptr};
-    Camera* const camera{nullptr};
+    Mesh* const mesh;
+    Camera* const camera;
     Light const& sun_light;
     std::vector<Light> const& point_lights;
     std::vector<Light> const& spot_lights;
     double elapsed_time{0.0};
     VkShaderStageFlags const stage_flag_bits;
-    bool const normal_debug {false};
+    bool const normal_debug;
   };
 
   export class Renderer

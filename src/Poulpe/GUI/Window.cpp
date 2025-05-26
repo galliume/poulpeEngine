@@ -35,7 +35,7 @@ namespace Poulpe
     glfwWindowHint(GLFW_SRGB_CAPABLE, GLFW_TRUE);
 
     //@todo check HDR support with GLFW ?
-    auto _monitor = glfwGetPrimaryMonitor();
+    _monitor = glfwGetPrimaryMonitor();
     const GLFWvidmode* mode = glfwGetVideoMode(_monitor);
 
     glfwWindowHint(GLFW_RED_BITS, mode->redBits);
@@ -44,7 +44,7 @@ namespace Poulpe
     glfwWindowHint(GLFW_REFRESH_RATE, mode->refreshRate);
 
     //_window = glfwCreateWindow(mode->width, mode->height, window_title.data(), _monitor, nullptr);
-    _window = glfwCreateWindow(WIDTH, HEIGHT, window_title.data(), NULL, nullptr);
+    _window = glfwCreateWindow(WIDTH, HEIGHT, window_title.data(), nullptr, nullptr);
     //glfwSetWindowSizeLimits(_window, 800, 600, 2560, 1440);
 
   /* const int maxWidth = mode->width;
@@ -52,7 +52,7 @@ namespace Poulpe
 
     GLFWimage icon[1];
     stbi_set_flip_vertically_on_load(true);
-    icon[0].pixels = stbi_load("./mpoulpe.png", &icon[0].width, &icon[0].height, 0, 4);
+    icon[0].pixels = stbi_load("./mpoulpe.png", &icon[0].width, &icon[0].height, nullptr, 4);
 
     glfwSetWindowIcon(_window, 1, icon);
     stbi_image_free(icon[0].pixels);

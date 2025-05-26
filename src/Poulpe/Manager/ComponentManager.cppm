@@ -13,6 +13,8 @@ import Poulpe.Animation.AnimationScript;
 import Poulpe.Animation.BoneAnimationScript;
 import Poulpe.Component.Components;
 import Poulpe.Renderer;
+import Poulpe.Renderer.RendererComponent;
+import Poulpe.Renderer.Mesh;
 import Poulpe.Utils.IDHelper;
 
 namespace Poulpe
@@ -25,7 +27,7 @@ namespace Poulpe
       std::unique_ptr<AnimationComponent>,
       std::unique_ptr<BoneAnimationComponent>,
       std::unique_ptr<MeshComponent>,
-      std::unique_ptr<RenderComponent>>;
+      std::unique_ptr<RendererComponent>>;
 
     ComponentManager() = default;
     ~ComponentManager() = default;

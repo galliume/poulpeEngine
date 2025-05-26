@@ -11,5 +11,5 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(fetch_stb)
 
 target_include_directories(${PROJECT_NAME}
-PRIVATE
+SYSTEM PRIVATE
   ${fetch_stb_SOURCE_DIR})
