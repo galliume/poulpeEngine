@@ -101,7 +101,7 @@ namespace Poulpe
         return { key_frames[0], key_frames[0] };
       }
 
-      for (auto i{ 0 }; i < key_frames.size() - 1; ++i) {
+      for (size_t i{ 0 }; i < key_frames.size() - 1; ++i) {
         if (time >= key_frames[i].time && time <= key_frames[i + 1].time) {
           return { key_frames[i], key_frames[i + 1] };
         }
@@ -132,27 +132,32 @@ namespace Poulpe
             std::lerp(start.value.z, end.value.z, t)
           };
 
+        case AnimInterpolation::SPHERICAL_LINEAR:
+          return start.value;
         case AnimInterpolation::CUBIC_SPLINE:
           //@todo
           return start.value;
+        default:
+          return start.value;
         }
-        return start.value;
       } else if constexpr (std::same_as<decltype(start.value), glm::quat>) {
         switch (start.interpolation) {
         case AnimInterpolation::STEP:
           return start.value;
-
+        case AnimInterpolation::LINEAR:
+          return start.value;
         case AnimInterpolation::SPHERICAL_LINEAR:
-        default:
           return glm::normalize(glm::slerp(start.value, end.value, t));
-
         case AnimInterpolation::CUBIC_SPLINE:
           //@todo
+          return start.value;
+        default:
           return start.value;
         }
       } else {
         static_assert(false, "Unsupported value type in interpolate()");
       }
+      return start.value;
     }
   };
 }

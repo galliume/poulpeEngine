@@ -11,7 +11,7 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(fetch_nlohmann_json)
 
 target_include_directories(${PROJECT_NAME}
-PRIVATE
+SYSTEM PRIVATE
   ${fetch_nlohmann_json_SOURCE_DIR}/include)
 
 target_link_libraries(${PROJECT_NAME}

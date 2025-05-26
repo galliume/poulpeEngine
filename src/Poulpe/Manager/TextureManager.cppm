@@ -44,7 +44,7 @@ namespace Poulpe
       Renderer *const renderer,
       bool const is_public = false);
     void clear();
-    std::string getSkyboxTexture() const& {_skybox_name; }
+    std::string getSkyboxTexture() const& { return _skybox_name; }
     std::unordered_map<std::string, std::string> const& getPaths() const { return _paths; }
     std::unordered_map<std::string, Texture> const& getTextures() const { return _textures; }
     std::string const& getTerrainTexture() { return _terrain_name; }

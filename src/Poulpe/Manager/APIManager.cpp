@@ -69,7 +69,7 @@ namespace Poulpe
 
     //   auto skybox = _render_manager->getEntityManager()->getSkybox();
     //   auto* mesh_component = _render_manager->getManager()->get<MeshComponent>(skybox->getID());
-    //   auto* meshRenderer = _render_manager->getManager()->get<RenderComponent>(skybox->getID());
+    //   auto* meshRenderer = _render_manager->getManager()->get<RendererComponent>(skybox->getID());
 
     //   if (mesh_component != nullptr) return;
 

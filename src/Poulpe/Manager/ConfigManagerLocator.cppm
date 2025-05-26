@@ -14,6 +14,6 @@ namespace Poulpe
     static void init();
 
   private:
-    static std::unique_ptr<ConfigManager> _configManager;
+    static std::unique_ptr<ConfigManager> _config_manager;
   };
 }

@@ -16,13 +16,13 @@ module;
 #include <string_view>
 #include <vector>
 
-export module Poulpe.Renderer:VulkanAPI;
+export module Poulpe.Renderer.VulkanAPI;
 
-import :DeviceMemoryPool;
-import Poulpe.Renderer.Vulkan.DeviceMemory;
+import Poulpe.Renderer.VulkanDeviceMemoryPool;
+import Poulpe.Renderer.VulkanDeviceMemory;
 
 import Poulpe.Component.Vertex;
-//import Poulpe.Core.Logger;
+import Poulpe.Core.Logger;
 import Poulpe.Core.MeshTypes;
 import Poulpe.Core.PlpTypedef;
 import Poulpe.GUI.Window;
@@ -170,7 +170,7 @@ namespace Poulpe
       VkBuffer& dst_buffer,
       VkDeviceSize const size,
       VkDeviceSize dst_offset = 0,
-      int const queue_index = 0);
+      size_t const queue_index = 0);
 
     bool souldResizeSwapChain();
 
@@ -435,8 +435,8 @@ namespace Poulpe
     void createFontImage(
       VkCommandBuffer& cmd_buffer,
       std::unordered_map<uint32_t, FontCharacter> const& characters,
-      size_t const width,
-      size_t const height,
+      uint32_t const width,
+      uint32_t const height,
       VkImage& image);
 
     VkImageView createFontImageView(

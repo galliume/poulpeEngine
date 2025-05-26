@@ -32,8 +32,8 @@ namespace Poulpe
       void cleanEntities(std::vector<T*> & entities);
 
       void cleanShaders(std::unordered_map<std::string, std::unordered_map<std::string, VkShaderModule>> shaders);
-      void cleanTexture(Texture textures);
-      void cleanTextures(std::unordered_map<std::string, Texture> textures);
+      void cleanTexture(Texture& textures);
+      void cleanTextures(std::unordered_map<std::string, Texture>& textures);
       void setRenderer(Renderer* renderer);
 
   private:

@@ -7,7 +7,7 @@ module;
 #include <stdexcept>
 #include <vector>
 
-export module Poulpe.Renderer.Vulkan.DeviceMemory;
+export module Poulpe.Renderer.VulkanDeviceMemory;
 
 namespace Poulpe
 {
@@ -36,7 +36,7 @@ namespace Poulpe
     void lock();
     void unLock();
     VkBuffer& getBuffer(size_t index);
-    uint32_t getOffset(size_t index) const;
+    size_t getOffset(size_t index) const;
 
   private:
     void allocateToMemory();

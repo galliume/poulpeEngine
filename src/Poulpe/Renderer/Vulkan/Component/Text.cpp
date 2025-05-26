@@ -17,12 +17,14 @@
 #include <vector>
 #include <volk.h>
 
-module Poulpe.Renderer;
+module Poulpe.Renderer.Vulkan.Text;
 
 import Poulpe.Component.Components;
 import Poulpe.Component.Texture;
 import Poulpe.Component.Vertex;
+import Poulpe.Core.MeshTypes;
 import Poulpe.Core.PlpTypedef;
+import Poulpe.Renderer.RendererComponentTypes;
 
 namespace Poulpe
 {
@@ -38,8 +40,8 @@ namespace Poulpe
   
     std::vector<Vertex> vertices;
 
-    auto x { _position.x };
-    auto y { _position.y };
+    float x { _position.x };
+    float y { _position.y };
 
     auto const utf16_text{ fmt::detail::utf8_to_utf16(_text).str() };
 
@@ -48,8 +50,9 @@ namespace Poulpe
       auto const glyph_index = FT_Get_Char_Index(component_rendering_info.face, *c);
       auto const ch = component_rendering_info.characters.at(glyph_index);
 
-      if (ch.size.x == 0 && ch.size.y == 0) {
-        x += 5;
+      constexpr float epsilon = 1e-6f;
+      if (std::abs(ch.size.x) < epsilon && std::abs(ch.size.y) < epsilon) {
+        x += 5.f;
         continue;
       }
 
@@ -71,37 +74,49 @@ namespace Poulpe
         { xpos, ypos + h, 0.0f},
         _color, { u0, v0 },
         {0.0f, 0.0f, 0.0f, 0.0f},
-        { 0.0, 0.0f, 0.0f, 0.0f} };
+        {0.0f, 0.0f, 0.0f, 0.0f},
+        {0.0f, 0.0f, 0.0f},
+        {}, {}};
 
       Vertex vertex_2{
         { xpos, ypos, 0.0f},
         _color, { u0, v1 },
         {0.0f, 0.0f, 0.0f, 0.0f},
-        { 0.0, 0.0f, 0.0f, 0.0f} };
+        {0.0f, 0.0f, 0.0f, 0.0f},
+        {0.0f, 0.0f, 0.0f},
+        {}, {}};
 
       Vertex vertex_3{
         { xpos + w, ypos, 0.0f},
         _color, { u1, v1 },
         {0.0f, 0.0f, 0.0f, 0.0f},
-        { 0.0, 0.0f, 0.0f, 0.0f} };
+        {0.0f, 0.0f, 0.0f, 0.0f},
+        {0.0f, 0.0f, 0.0f},
+        {}, {}};
 
       Vertex vertex_4{
         { xpos, ypos + h, 0.0f},
         _color, { u0, v0 },
         {0.0f, 0.0f, 0.0f, 0.0f},
-        { 0.0, 0.0f, 0.0f, 0.0f} };
+        {0.0f, 0.0f, 0.0f, 0.0f},
+        {0.0f, 0.0f, 0.0f},
+        {}, {}};
 
       Vertex vertex_5{
         { xpos + w, ypos, 0.0f},
         _color, { u1, v1 },
         {0.0f, 0.0f, 0.0f, 0.0f},
-        { 0.0, 0.0f, 0.0f, 0.0f} };
+        {0.0, 0.0f, 0.0f, 0.0f},
+        {0.0f, 0.0f, 0.0f},
+        {}, {}};
 
       Vertex vertex_6{
         { xpos + w, ypos + h, 0.0f},
         _color, { u1, v0 },
         {0.0f, 0.0f, 0.0f, 0.0f},
-        { 0.0, 0.0f, 0.0f, 0.0f} };
+        {0.0f, 0.0f, 0.0f, 0.0f},
+        { 0.0f, 0.0f, 0.0f},
+        {}, {}};
 
       vertices.emplace_back(vertex_1);
       vertices.emplace_back(vertex_2);
@@ -110,7 +125,7 @@ namespace Poulpe
       vertices.emplace_back(vertex_5);
       vertices.emplace_back(vertex_6);
 
-      x += (ch.advance >> 6) * _scale;
+      x += static_cast<float>((ch.advance >> 6)) * _scale;
     }
 
     auto const width{
@@ -156,9 +171,9 @@ namespace Poulpe
       mesh->getUniformBuffers()->emplace_back(renderer->getAPI()->createUniformBuffers(1, cmd_pool));
       mesh->getMaterial().alpha_mode = 1.0;
 
-      for (auto i{ 0 }; i < mesh->getData()->_ubos.size(); i++) {
-        std::ranges::for_each(mesh->getData()->_ubos.at(i), [&](auto& ubo) {
-          ubo.projection = projection;
+      for (size_t i{ 0 }; i < mesh->getData()->_ubos.size(); i++) {
+        std::ranges::for_each(mesh->getData()->_ubos.at(i), [&](auto& data_ubo) {
+          data_ubo.projection = projection;
         });
       }
     } 
@@ -258,7 +273,7 @@ namespace Poulpe
     desc_writes[1].dstBinding = 1;
     desc_writes[1].dstArrayElement = 0;
     desc_writes[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-    desc_writes[1].descriptorCount = image_infos.size();
+    desc_writes[1].descriptorCount = static_cast<uint32_t>(image_infos.size());
     desc_writes[1].pImageInfo = image_infos.data();
 
     vkUpdateDescriptorSets(

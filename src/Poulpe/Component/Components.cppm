@@ -33,6 +33,13 @@ namespace Poulpe {
   template<typename T>
   concept isAnimationComponentConcept = std::derived_from<T, AnimationComponentConcept>;
 
+  template<typename T>
+  concept hasCallOperator = requires(
+    T t,
+    AnimationInfo const& animation_info) {
+    { t(animation_info) };
+  };
+
   template<typename Class>
   class Component
   {
@@ -50,7 +57,11 @@ namespace Poulpe {
     void init(std::unique_ptr<T> impl)
     {
       _id = GUIDGenerator::getGUID();
-      _component.emplace<std::unique_ptr<T>>(std::move(impl));
+      if constexpr (isAnimationComponentConcept<T>) {
+          _component.emplace<std::unique_ptr<AnimationComponentConcept>>(std::move(impl));
+      } else {
+          _component.emplace<std::unique_ptr<Mesh>>(std::move(impl));
+      }
     }
 
     template<typename T>
@@ -65,11 +76,12 @@ namespace Poulpe {
 
     void setOwner(IDType owner) { _owner = owner; }
 
-    template<typename T>
-    void operator()(T&& arg)
+    void operator()(AnimationInfo const& animation_info)
     {
-      std::visit([&](auto& ptr) {
-        (*ptr)(std::forward<T>(arg));
+      std::visit([&](auto& component) {
+        if constexpr (hasCallOperator<decltype(*component)>) {
+          (*component)(animation_info);
+        }
       }, _component);
     }
     

@@ -5,6 +5,8 @@ target_sources(${PROJECT_NAME}
     FILE_SET cxx_modules TYPE CXX_MODULES
       FILES
         Mesh.cppm
+        Renderers.cppm
         Renderer.cppm
+        RendererComponentTypes.cppm
         RendererComponent.cppm
         RendererComponentFactory.cppm)

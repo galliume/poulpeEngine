@@ -9,7 +9,9 @@ namespace Poulpe
 {
   void Camera::init(glm::vec3 const& start_pos)
   {
-    _next_front = glm::normalize(glm::vec3(1.0, 0.0, 1.0) * glm::vec3(2.0 * std::numbers::pi / 1000.0));
+    _next_front = glm::normalize(
+      glm::vec3(1.0f, 0.0f, 1.0f) * glm::vec3(2.0f * static_cast<float>(std::numbers::pi) / 1000.0f));
+      
     _camera_pos = _next_pos = start_pos;
     _camera_up = glm::vec3(0.0f, 1.0f,  0.0f);
     _camera_front = glm::vec3(0.0f, 0.0f, -1.0f);
@@ -117,7 +119,7 @@ namespace Poulpe
 
   glm::vec3 Camera::getDeltaTime()
   {
-    return glm::vec3(_delta_time);
+    return glm::vec3(static_cast<float>(_delta_time));
   }
 
   glm::mat4 Camera::lookAt()
@@ -143,7 +145,7 @@ namespace Poulpe
     direction.y = static_cast<float>(_acceleration * sin(glm::radians(_pitch)));
     direction.z = static_cast<float>(_acceleration * sin(glm::radians(_yaw)) * cos(glm::radians(_pitch)));
 
-    _next_front = glm::normalize(direction * glm::vec3(2.0 * std::numbers::pi / 1000.0));
+    _next_front = glm::normalize(direction * glm::vec3(2.0f * static_cast<float>(std::numbers::pi) / 1000.0f));
   }
 
   void Camera::move()

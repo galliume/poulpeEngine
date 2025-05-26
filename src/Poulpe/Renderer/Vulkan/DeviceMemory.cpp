@@ -6,7 +6,7 @@ module;
 #include <mutex>
 #include <stdexcept>
 
-module Poulpe.Renderer.Vulkan.DeviceMemory;
+module Poulpe.Renderer.VulkanDeviceMemory;
 
 namespace Poulpe
 {
@@ -204,7 +204,7 @@ namespace Poulpe
     return _buffer.at(index);
   }
 
-  uint32_t DeviceMemory::getOffset(size_t index) const
+  size_t DeviceMemory::getOffset(size_t index) const
   {
     return _buffer_offsets.at(index);
   }

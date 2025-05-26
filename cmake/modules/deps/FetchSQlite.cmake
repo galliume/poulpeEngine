@@ -18,7 +18,7 @@ SHARED
 )
 
 target_include_directories(sqlite3 
-PUBLIC 
+SYSTEM PUBLIC
   ${fetch_sqlite_SOURCE_DIR})
 
 target_link_libraries(${PROJECT_NAME}

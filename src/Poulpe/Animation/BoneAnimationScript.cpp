@@ -57,14 +57,14 @@ namespace Poulpe
 
       _anim_id = 2;
       auto const& anim{ _animations.at(_anim_id) };
-      auto const duration{ (anim.duration / anim.ticks_per_s) * 1000.0f };//ms
+      float const duration{ (anim.duration / anim.ticks_per_s) * 1000.0f };//ms
       //_elapsed_time = std::clamp(_elapsed_time, 0.f, duration);
 
       //Logger::debug("_elapsed_time {} duration {} ", _elapsed_time, duration);
       //Logger::debug("anim {} elapased time {} duration {} delta {}", anim.name, _elapsed_time, duration, delta_time);
 
       _bone_matrices.resize(_data->_bones.size());
-      _elapsed_time = fmod(_elapsed_time, duration);
+      _elapsed_time = fmodf(_elapsed_time, duration);
       
       auto const& root_bone = _data->_bones[_data->_root_bone_name];
       updateBoneTransforms(anim, root_bone.name, root_bone.t_pose, duration);
@@ -102,7 +102,7 @@ namespace Poulpe
         //}
       } else {
         //mesh->setIsDirty();
-        _elapsed_time += delta_time * 1000.0f;
+        _elapsed_time += static_cast<float>(delta_time) * 1000.0f;
       }
     }
   }

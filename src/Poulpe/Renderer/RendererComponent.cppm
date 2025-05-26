@@ -11,60 +11,43 @@ module;
 #include <variant>
 #include <vector>
 
-export module Poulpe.Renderer:RendererComponent;
+export module Poulpe.Renderer.RendererComponent;
 
-import :VulkanRenderer;
-
-import Poulpe.Component.Texture;
 import Poulpe.Renderer.Mesh;
+import Poulpe.Renderer.Renderers;
+import Poulpe.Renderer.RendererComponentTypes;
+import Poulpe.Renderer.VulkanRenderer;
 import Poulpe.Utils.IDHelper;
 
 namespace Poulpe {
 
-  export struct ComponentRenderingInfo
-  {
-    Mesh* const mesh{nullptr};
-    std::unordered_map<std::string, Texture>const& textures;
-    std::string const& skybox_name;
-    std::string const& terrain_name;
-    std::string const& water_name;
-    Light const& sun_light;
-    std::vector<Light> const& point_lights;
-    std::vector<Light> const& spot_lights;
-    std::unordered_map<uint32_t, FontCharacter> const& characters;
-    FT_Face const& face;
-    uint32_t const atlas_width{0};
-    uint32_t const atlas_height{0};
-  };
-  
-  export class RendererComponentConcept
-  {
-    public:
-      virtual ~RendererComponentConcept();
-      virtual void operator()(
-        Renderer *const renderer,
-        ComponentRenderingInfo const& rendering_info) = 0;
-
-      VkShaderStageFlags stage_flag_bits { VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT};
-  };
-
-  RendererComponentConcept::~RendererComponentConcept() = default;
-
   template<typename T>
-  concept isRendererComponentConcept = std::derived_from<T, RendererComponentConcept>;
+  concept hasCallOperator = requires(
+    T t,
+    Renderer *const renderer,
+    ComponentRenderingInfo const& component_rendering_info) {
+    { t(renderer, component_rendering_info) };
+  };
 
   template<typename Class>
-  class RendererComponent
+  class RenderComponent
   {
   public:
     using ComponentsType = std::variant<
-      std::unique_ptr<RendererComponentConcept>>;
+      std::unique_ptr<Basic>,
+      std::unique_ptr<Crosshair>,
+      std::unique_ptr<Grid>,
+      std::unique_ptr<Mesh>,
+      std::unique_ptr<ShadowMap>,
+      std::unique_ptr<Skybox>,
+      std::unique_ptr<Terrain>,
+      std::unique_ptr<Text>,
+      std::unique_ptr<Water>>;
 
     IDType getID() const { return _id; }
     IDType getOwner() const { return _owner; }
 
     template <typename T>
-    requires isRendererComponentConcept<T>
     void init(std::unique_ptr<T> impl)
     {
       _id = GUIDGenerator::getGUID();
@@ -72,7 +55,6 @@ namespace Poulpe {
     }
 
     template<typename T>
-    requires isRendererComponentConcept<T>
     T* has() const {
       if (auto ptr = std::get_if<std::unique_ptr<T>>(&_component)) {
         return ptr->get();
@@ -82,14 +64,27 @@ namespace Poulpe {
 
     void setOwner(IDType owner) { _owner = owner; }
 
-    template<typename T>
-    void operator()(T&& arg)
+    void operator()(
+      Renderer *const renderer,
+      ComponentRenderingInfo const& component_rendering_info)
     {
-      std::visit([&](auto& ptr) {
-        (*ptr)(std::forward<T>(arg));
+      std::visit([&](auto& component) {
+        if constexpr (hasCallOperator<decltype(*component)>) {
+          (*component)(renderer, component_rendering_info);
+        }
       }, _component);
     }
-    
+
+    VkShaderStageFlags getShaderStageFlags() const
+    {
+      return std::visit([](auto& ptr) -> VkShaderStageFlags {
+        if (ptr) {
+            return ptr->stage_flag_bits; 
+        }
+        return VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+      }, _component);
+    }
+
   protected:
     ComponentsType _component;
 
@@ -98,7 +93,8 @@ namespace Poulpe {
     IDType _owner{ 0 };
   };
 
-  export class RenderComponent : public RendererComponent<RenderComponent> 
+  export class RendererComponent : public RenderComponent<RendererComponent>
   {
+
   };
 }

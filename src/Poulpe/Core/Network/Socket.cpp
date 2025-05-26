@@ -5,38 +5,38 @@ module Poulpe.Core.Network.Socket;
 
 namespace Poulpe
 {
-  Socket::Socket(Socket* socket)
+  Socket::Socket(WinSocket* socket)
   {
-    _Pimpl = std::unique_ptr<Socket>(socket);
+    _pimpl = std::unique_ptr<WinSocket>(socket);
   }
 
   Socket::~Socket()
   {
-    _Pimpl->close();
+    _pimpl->close();
   }
 
   void Socket::close()
   {
-    _Pimpl->close();
+    _pimpl->close();
   }
 
   void Socket::bind(std::string const& ip, unsigned short const port)
   {
-    _Pimpl->bind(ip, port);
+    _pimpl->bind(ip, port);
   }
 
   void Socket::connect()
   {
-    _Pimpl->connect();
+    _pimpl->connect();
   }
 
   void Socket::listen()
   {
-    _Pimpl->listen();
+    _pimpl->listen();
   }
 
   void Socket::read()
   {
-    _Pimpl->read();
+    _pimpl->read();
   }
 }

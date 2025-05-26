@@ -1,7 +1,7 @@
 module;
 #include <vector>
 
-module Poulpe.Renderer.Vulkan.Component.Mesh;
+module Poulpe.Renderer.Vulkan.Mesh;
 
 namespace Poulpe
 {

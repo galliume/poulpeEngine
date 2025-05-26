@@ -186,8 +186,8 @@ namespace Poulpe
 
   void AnimationScript::operator()(AnimationInfo const& animation_info)
   {
+    _data = animation_info.data;
     auto const delta_time = animation_info.delta_time;
-    auto _data = animation_info.data;
 
     std::ranges::for_each(_new_moves, [&](auto& anim) {
       _moves.emplace_back(std::move(anim));
@@ -248,6 +248,12 @@ namespace Poulpe
     std::erase_if(_moves, [](auto& anim) { return anim->done; });
     std::erase_if(_rotates, [](auto& anim) { return anim->done; });
   }
+
+  Data* AnimationScript::getData()
+  {
+    return _data;
+  }
+  
     //lua_State* L = luaL_newstate();
     //luaL_openlibs(L);
 

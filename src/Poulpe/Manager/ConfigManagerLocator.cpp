@@ -7,11 +7,11 @@ namespace Poulpe
 {
   ConfigManager* ConfigManagerLocator::get()
   {
-    return _configManager.get();
+    return _config_manager.get();
   }
 
   void ConfigManagerLocator::init()
   {
-    _configManager = std::make_unique<ConfigManager>();
+    _config_manager = std::make_unique<ConfigManager>();
   }
 }

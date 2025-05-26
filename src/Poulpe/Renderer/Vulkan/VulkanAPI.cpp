@@ -3,7 +3,6 @@ module;
 #include <GLFW/glfw3.h>
 #include <ktx.h>
 
-#define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 #include <volk.h>
 
@@ -22,7 +21,7 @@ module;
 #include <vector>
 
 
-module Poulpe.Renderer;
+module Poulpe.Renderer.VulkanAPI;
 
 import Poulpe.Core.Logger;
 import Poulpe.Core.PlpTypedef;
@@ -32,7 +31,10 @@ namespace Poulpe
 VkResult CreateDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerCreateInfoEXT const * create_info,
     VkAllocationCallbacks const * allocattor, VkDebugUtilsMessengerEXT* callback)
 {
-  auto func = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT");
+  #pragma GCC diagnostic push
+  #pragma GCC diagnostic ignored "-Wcast-function-type-strict"
+    auto func = reinterpret_cast<PFN_vkCreateDebugUtilsMessengerEXT>(vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT"));
+  #pragma GCC diagnostic pop
 
   if (func != nullptr) {
     return func(instance, create_info, allocattor, callback);
@@ -135,7 +137,10 @@ std::string VulkanAPI::getAPIVersion()
     uint32_t version = VK_API_VERSION_1_4;
 
     //@todo fix unused ?
-    auto tmp = PFN_vkEnumerateInstanceVersion(vkGetInstanceProcAddr(nullptr, "vkEnumerateInstanceVersion"));
+    #pragma GCC diagnostic push
+    #pragma GCC diagnostic ignored "-Wcast-function-type-strict"
+    auto tmp = reinterpret_cast<PFN_vkEnumerateInstanceVersion>(vkGetInstanceProcAddr(nullptr, "vkEnumerateInstanceVersion"));
+    #pragma GCC diagnostic pop
     (void)tmp;
 
     if (vkEnumerateInstanceVersion) {
@@ -867,7 +872,7 @@ VkPipeline VulkanAPI::createGraphicsPipeline(PipeLineCreateInfo const& pipeline_
       std::ifstream fStream(cache_filename, std::ios::in | std::ios::binary);
       cache_file_size = std::filesystem::file_size(cache_filename);
       p_read_file.resize(cache_file_size);
-      fStream.read(p_read_file.data(), cache_file_size);
+      fStream.read(p_read_file.data(), static_cast<intmax_t>(cache_file_size));
       fStream.close();
     } else {
       ////Logger::trace("Pipeline cache miss!");
@@ -966,7 +971,7 @@ VkPipeline VulkanAPI::createGraphicsPipeline(PipeLineCreateInfo const& pipeline_
         //@todo move to a FileManager
         if (result == VK_SUCCESS) {
           std::ofstream ostrm(cache_filename, std::ios::binary);
-          ostrm.write(static_cast<const char*>(data), p_data_size);
+          ostrm.write(static_cast<const char*>(data), static_cast<intmax_t>(p_data_size));
           ostrm.close();
           //Logger::trace("cacheData written to {}", cache_filename);
         }
@@ -1354,7 +1359,7 @@ void VulkanAPI::updateDescriptorSet(
   desc_writes[2].dstBinding = 2;
   desc_writes[2].dstArrayElement = 0;
   desc_writes[2].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-  desc_writes[2].descriptorCount = storage_buffer_infos.size();
+  desc_writes[2].descriptorCount = static_cast<uint32_t>(storage_buffer_infos.size());
   desc_writes[2].pBufferInfo = storage_buffer_infos.data();
 
   vkUpdateDescriptorSets(_device, static_cast<uint32_t>(desc_writes.size()), desc_writes.data(), 0, nullptr);
@@ -1681,9 +1686,8 @@ Buffer VulkanAPI::createIndexBuffer(
   VkBuffer buffer = createBuffer(buffer_size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT);
   VkMemoryRequirements mem_requirements;
   vkGetBufferMemoryRequirements(_device, buffer, & mem_requirements);
-  uint32_t const size = mem_requirements.size;
-
-  uint32_t const bind_offset = align_to(size, mem_requirements.alignment);
+  VkDeviceSize const size = mem_requirements.size;
+  VkDeviceSize const bind_offset = align_to(size, mem_requirements.alignment);
 
   auto memory_type = findMemoryType(mem_requirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
   auto device_memory = _device_memory_pool->get(
@@ -1742,9 +1746,8 @@ Buffer VulkanAPI::createVertexBuffer(
   vkGetBufferMemoryRequirements(_device, buffer, & mem_requirements);
 
   auto memory_type = findMemoryType(mem_requirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-  uint32_t const size = mem_requirements.size;
-
-  uint32_t const bind_offset = align_to(size, mem_requirements.alignment);
+  VkDeviceSize const size = mem_requirements.size;
+  VkDeviceSize const bind_offset = align_to(size, mem_requirements.alignment);
 
   auto device_memory = _device_memory_pool->get(
     _device,
@@ -1754,7 +1757,7 @@ Buffer VulkanAPI::createVertexBuffer(
     mem_requirements.alignment,
     DeviceMemoryPool::DeviceBufferType::STAGING);
 
-  auto const offset { device_memory->getOffset() };
+  //auto const offset { device_memory->getOffset() };
   auto const index{ device_memory->bindBufferToMemory(buffer, bind_offset) };
 
   copyBuffer(commandPool, staging_buffer, buffer, buffer_size);
@@ -1821,9 +1824,8 @@ Buffer VulkanAPI::createVertex2DBuffer(
   vkGetBufferMemoryRequirements(_device, buffer, &mem_requirements);
 
   auto memory_type = findMemoryType(mem_requirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-  uint32_t const size = mem_requirements.size;
-
-  uint32_t const bind_offset = align_to(size, mem_requirements.alignment);
+  VkDeviceSize const size = mem_requirements.size;
+  VkDeviceSize const bind_offset = align_to(size, mem_requirements.alignment);
 
   auto device_memory = _device_memory_pool->get(
     _device,
@@ -1853,7 +1855,7 @@ Buffer VulkanAPI::createVertex2DBuffer(
 
 Buffer VulkanAPI::createUniformBuffers(
   uint64_t const uniform_buffers_count,
-  VkCommandPool& cmd_pool)
+  VkCommandPool&)
 {
   VkDeviceSize buffer_size = sizeof(UniformBufferObject) * uniform_buffers_count;
   VkBuffer buffer = createBuffer(buffer_size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT);
@@ -1910,10 +1912,8 @@ Buffer VulkanAPI::createStorageBuffers(
   vkGetBufferMemoryRequirements(_device, buffer, & mem_requirements);
 
   auto memoryType = findMemoryType(mem_requirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-
-  uint32_t const size = mem_requirements.size;
-
-  uint32_t const bind_offset = align_to(size, mem_requirements.alignment);
+  VkDeviceSize const size = mem_requirements.size;
+  VkDeviceSize const bind_offset = align_to(size, mem_requirements.alignment);
 
   auto const flags { VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT };
 
@@ -1964,9 +1964,8 @@ Buffer VulkanAPI::createIndirectCommandsBuffer(std::vector<VkDrawIndexedIndirect
   vkGetBufferMemoryRequirements(_device, buffer, & mem_requirements);
 
   auto const memory_type{ findMemoryType(mem_requirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT | VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT) };
-  auto const size{ mem_requirements.size };
-
-  uint32_t const bind_offset = align_to(size, mem_requirements.alignment);
+  VkDeviceSize const size{ mem_requirements.size };
+  VkDeviceSize const bind_offset = align_to(size, mem_requirements.alignment);
 
   auto device_memory{ _device_memory_pool->get(
     _device,
@@ -2002,9 +2001,8 @@ Buffer VulkanAPI::createCubeUniformBuffers(uint32_t const uniform_buffers_count)
   VkMemoryRequirements mem_requirements;
   vkGetBufferMemoryRequirements(_device, buffer, &mem_requirements);
 
-  uint32_t const size = mem_requirements.size;
-
-  uint32_t const bind_offset = align_to(size, mem_requirements.alignment);
+  VkDeviceSize const size = mem_requirements.size;
+  VkDeviceSize const bind_offset = align_to(size, mem_requirements.alignment);
 
   auto memory_type = findMemoryType(mem_requirements.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT
     | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
@@ -2066,7 +2064,7 @@ void VulkanAPI::copyBuffer(
   VkBuffer& dst_buffer,
   VkDeviceSize const size,
   VkDeviceSize dst_offset,
-  int const queue_index)//@todo check if transfer queue is really used...
+  size_t const queue_index)//@todo check if transfer queue is really used...
 {
   VkCommandBufferAllocateInfo alloc_info{};
   alloc_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
@@ -2234,9 +2232,8 @@ void VulkanAPI::createDepthMapImage(VkImage& image)
   VkMemoryRequirements mem_requirements;
   vkGetImageMemoryRequirements(_device, image, & mem_requirements);
   auto memoryType = findMemoryType(mem_requirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-  uint32_t size = mem_requirements.size;
-
-  uint32_t const offset = align_to(size, mem_requirements.alignment);
+  VkDeviceSize size = mem_requirements.size;
+  VkDeviceSize const offset = align_to(size, mem_requirements.alignment);
 
   auto device_memory = _device_memory_pool->get(
     _device,
@@ -2348,9 +2345,9 @@ void VulkanAPI::createTextureImage(
   VkMemoryRequirements mem_requirements;
   vkGetBufferMemoryRequirements(_device, buffer, & mem_requirements);
 
-  auto memory_type = findMemoryType(
-    mem_requirements.memoryTypeBits,
-    VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+  // auto memory_type = findMemoryType(
+  //   mem_requirements.memoryTypeBits,
+  //   VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 
   VkDeviceSize const size { mem_requirements.size};
 
@@ -2471,7 +2468,7 @@ void VulkanAPI::copyBufferToImage(
   VkImage & image,
   uint32_t const width,
   uint32_t const height,
-  uint32_t const mip_lvl)
+  uint32_t const)
 {
   VkBufferImageCopy region{};
   region.bufferOffset = 0;
@@ -2770,7 +2767,7 @@ VkSampler VulkanAPI::createTextureSampler(uint32_t const mip_lvl)
       //SCOPED_TIMER();
 
       std::lock_guard<std::mutex> guard(_mutex_queue_submit);
-      VkResult result = vkQueueSubmit(queue, submit_infos.size(), submit_infos.data(), fence);
+      VkResult result = vkQueueSubmit(queue, static_cast<uint32_t>(submit_infos.size()), submit_infos.data(), fence);
 
       if (result != VK_SUCCESS) {
         //Logger::error("Error on queue submit: {}", static_cast<int>(result));
@@ -2860,9 +2857,8 @@ VkSampler VulkanAPI::createTextureSampler(uint32_t const mip_lvl)
     VkMemoryRequirements image_mem_requirements;
     vkGetImageMemoryRequirements(_device, image, & image_mem_requirements);
     memory_type = findMemoryType(image_mem_requirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-    uint32_t const image_size = image_mem_requirements.size;
-
-    uint32_t const image_bind_offset = align_to(image_size, image_mem_requirements.alignment);
+    VkDeviceSize const image_size = image_mem_requirements.size;
+    VkDeviceSize const image_bind_offset = align_to(image_size, image_mem_requirements.alignment);
 
     auto device_memory = _device_memory_pool->get(
       _device,
@@ -2897,8 +2893,8 @@ VkSampler VulkanAPI::createTextureSampler(uint32_t const mip_lvl)
 
     auto const layer_size{ image_size / ktx_texture->numFaces };
 
-    for (auto i { 0 }; i < ktx_texture->numFaces; i++) {
-      for (auto mip{ 0 }; mip < mip_lvl; mip++) {
+    for (uint32_t i { 0 }; i < ktx_texture->numFaces; i++) {
+      for (uint32_t mip{ 0 }; mip < mip_lvl; mip++) {
         VkBufferImageCopy region{};
         region.bufferOffset = layer_size * i;
         region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
@@ -2918,7 +2914,7 @@ VkSampler VulkanAPI::createTextureSampler(uint32_t const mip_lvl)
       buffer,
       image,
       VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-      buffer_copy_regions.size(),
+      static_cast<uint32_t>(buffer_copy_regions.size()),
       buffer_copy_regions.data());
 
     generateMipmaps(cmd_buffer, format, image, width, height, mip_lvl);
@@ -3015,7 +3011,7 @@ VkSampler VulkanAPI::createTextureSampler(uint32_t const mip_lvl)
     sampler_info.compareOp = VK_COMPARE_OP_LESS;
     sampler_info.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
     sampler_info.minLod = 0.0f;
-    sampler_info.maxLod = mip_lvl;
+    sampler_info.maxLod = static_cast<float>(mip_lvl);//@todo check why float ? is this really mip_lvl ?
     sampler_info.mipLodBias = 0.0f;
     sampler_info.borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE;
     sampler_info.anisotropyEnable = VK_FALSE;
@@ -3042,11 +3038,10 @@ VkSampler VulkanAPI::createTextureSampler(uint32_t const mip_lvl)
   void VulkanAPI::createFontImage(
     VkCommandBuffer& cmd_buffer,
     std::unordered_map<uint32_t, FontCharacter> const& characters,
-    size_t const width,
-    size_t const height,
+    uint32_t const width,
+    uint32_t const height,
     VkImage& image)
-  {;
-
+  {
     auto const data_size{ width * height };
 
     VkBuffer buffer;
@@ -3072,18 +3067,16 @@ VkSampler VulkanAPI::createTextureSampler(uint32_t const mip_lvl)
 
     vkMapMemory(_device, staging_device_memory, 0, size, 0, (void**) & data);
     
-    int offset {0};
-
     for (auto const& [name, character] : characters) {
 
-      auto const glyph_width{ character.size.x };
-      auto const glyph_height{ character.size.y };
-      auto buffer = character.buffer.data();
+      uint32_t const glyph_width{ static_cast<uint32_t>(character.size.x) };
+      uint32_t const glyph_height{ static_cast<uint32_t>(character.size.y) };
+      auto data_buffer = character.buffer.data();
 
-      for (int y{ 0 }; y < glyph_height; y++) {
+      for (uint32_t y{ 0 }; y < glyph_height; y++) {
         memcpy(
-          data + ((y + character.y_offset) * width + character.x_offset) ,
-          buffer + (y * glyph_width),
+          data + ((y + static_cast<uint32_t>(character.y_offset)) * width + static_cast<uint32_t>(character.x_offset)),
+          data_buffer + (y * glyph_width),
           glyph_width
         );
       }
@@ -3118,9 +3111,8 @@ VkSampler VulkanAPI::createTextureSampler(uint32_t const mip_lvl)
     VkMemoryRequirements image_mem_requirements;
     vkGetImageMemoryRequirements(_device, image, & image_mem_requirements);
     memory_type = findMemoryType(image_mem_requirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-    uint32_t const image_size = image_mem_requirements.size;
-
-    uint32_t const image_bind_offset = align_to(image_size, image_mem_requirements.alignment);
+    VkDeviceSize const image_size = image_mem_requirements.size;
+    VkDeviceSize const image_bind_offset = align_to(image_size, image_mem_requirements.alignment);
 
     auto device_memory = _device_memory_pool->get(
       _device,
@@ -3167,7 +3159,7 @@ VkSampler VulkanAPI::createTextureSampler(uint32_t const mip_lvl)
       buffer,
       image,
       VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-      buffer_copy_regions.size(),
+      static_cast<uint32_t>(buffer_copy_regions.size()),
       buffer_copy_regions.data());
 
     endCommandBuffer(cmd_buffer);

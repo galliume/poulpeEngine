@@ -59,6 +59,7 @@ namespace Poulpe
     void operator()(AnimationInfo const& animation_info) override;
 
   private:
+    Data* _data;
     std::string _script_path;
     lua_State* _lua_State;
     bool _move_init{ false };

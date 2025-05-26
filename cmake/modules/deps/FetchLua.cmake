@@ -11,7 +11,7 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(fetch_lua)
 
 target_include_directories(${PROJECT_NAME}
-PRIVATE
+SYSTEM PRIVATE
   ${fetch_lua_SOURCE_DIR})
 
 add_library(

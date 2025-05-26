@@ -1,24 +1,25 @@
 module;
 
-#include <chrono>
 #include <glm/glm.hpp>
-#include <string_view>
 #include <volk.h>
+#include <vulkan/vulkan.h>
 
-export module Poulpe.Renderer:Text;
+#include <chrono>
+#include <string_view>
 
-import :VulkanRenderer;
-import :RendererComponent;
+export module Poulpe.Renderer.Vulkan.Text;
+
+import Poulpe.Renderer;
+import Poulpe.Renderer.RendererComponentTypes;
 
 namespace Poulpe
 {
-  export class Text : public RendererComponentConcept
+  export class Text
   {
   public:
-    ~Text() override = default;
     void operator()(
       Renderer *const renderer,
-      ComponentRenderingInfo const& component_rendering_info) override;
+      ComponentRenderingInfo const& component_rendering_info);
     
     void setText(std::string_view text) { _text = text; }
     void setPosition(glm::vec3 const& position) { _position = position; }
@@ -28,6 +29,8 @@ namespace Poulpe
   
   bool isFlat() const { return _is_flat; }
   
+      VkShaderStageFlags stage_flag_bits { VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT};
+
   private:
     void createDescriptorSet(
       Renderer *const renderer,
