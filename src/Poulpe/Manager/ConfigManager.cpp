@@ -11,6 +11,8 @@ module;
 
 module Poulpe.Managers;
 
+import Poulpe.Core.Logger;
+
 namespace Poulpe
 {
   namespace fs = std::filesystem;
@@ -68,12 +70,8 @@ namespace Poulpe
     return skybox;
   }
 
-  nlohmann::json ConfigManager::loadLevelData(std::string const & levelName)
+  nlohmann::json const& ConfigManager::loadLevelData(std::string const & levelName)
   {
-    _entity_config.clear();
-    _textures_config.clear();
-    _lvl_config.clear();
-
     fs::path path{};
     std::ifstream f;
     path = "config/textures.json";
@@ -155,32 +153,6 @@ namespace Poulpe
     });
 
     return _entity_config;
-  }
-
-  nlohmann::json ConfigManager::shaderConfig()
-  {
-    return _shader_config;
-  }
-
-  nlohmann::json ConfigManager::appConfig()
-  {
-    return _app_config;
-  }
-
-
-  nlohmann::json ConfigManager::soundConfig()
-  {
-    return _sound_config;
-  }
-
-  nlohmann::json ConfigManager::texturesConfig()
-  {
-    return _textures_config;
-  }
-
-  nlohmann::json ConfigManager::lvlConfig()
-  {
-    return _lvl_config;
   }
 
   void ConfigManager::setNormalDebug()

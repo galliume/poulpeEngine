@@ -18,6 +18,6 @@ namespace Poulpe
     static void init(Window const * const window);
 
   private:
-    static std::unique_ptr<InputManager> _inputManager;
+    static std::unique_ptr<InputManager> _input_manager;
   };
 }

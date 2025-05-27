@@ -10,7 +10,7 @@ namespace Poulpe
   export class ConfigManagerLocator
   {
   public:
-    static ConfigManager* get();
+    static ConfigManager * get();
     static void init();
 
   private:

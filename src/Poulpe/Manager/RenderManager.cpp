@@ -84,7 +84,7 @@ namespace Poulpe
   void RenderManager::init()
   {
     auto * const configManager = ConfigManagerLocator::get();
-    nlohmann::json const& appConfig = configManager->appConfig();
+    auto const& appConfig { configManager->appConfig() };
 
     _audio_manager->init();
     _audio_manager->load(configManager->soundConfig());
@@ -302,7 +302,7 @@ namespace Poulpe
   void RenderManager::loadData(std::string const & level)
   {
     auto * const config_manager = ConfigManagerLocator::get();
-    nlohmann::json const& app_config = config_manager->appConfig();
+    auto const& app_config{ config_manager->appConfig() };
 
     auto const& lvl_data = config_manager->loadLevelData(level);
     _texture_manager->addConfig(config_manager->texturesConfig());

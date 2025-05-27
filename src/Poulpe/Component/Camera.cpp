@@ -130,20 +130,20 @@ namespace Poulpe
 
   void Camera::updateAngle(double const xoffset, double const yoffset)
   {
-    _yaw -= static_cast<float>(xoffset);
-    _pitch += static_cast<float>(yoffset);
+    _yaw -= xoffset;
+    _pitch += yoffset;
 
-    if (_pitch > 89.0f) {
-      _pitch = 89.0f;
+    if (_pitch > 89.0) {
+      _pitch = 89.0;
     }
-    if (_pitch < -89.0f) {
-      _pitch = -89.0f;
+    if (_pitch < -89.0) {
+      _pitch = -89.0;
     }
 
     glm::vec3 direction{};
-    direction.x = static_cast<float>(_acceleration * cos(glm::radians(_yaw)) * cos(glm::radians(_pitch)));
-    direction.y = static_cast<float>(_acceleration * sin(glm::radians(_pitch)));
-    direction.z = static_cast<float>(_acceleration * sin(glm::radians(_yaw)) * cos(glm::radians(_pitch)));
+    direction.x = static_cast<float>(static_cast<double>(_acceleration) * cos(glm::radians(_yaw)) * cos(glm::radians(_pitch)));
+    direction.y = static_cast<float>(static_cast<double>(_acceleration) * sin(glm::radians(_pitch)));
+    direction.z = static_cast<float>(static_cast<double>(_acceleration) * sin(glm::radians(_yaw)) * cos(glm::radians(_pitch)));
 
     _next_front = glm::normalize(direction * glm::vec3(2.0f * static_cast<float>(std::numbers::pi) / 1000.0f));
   }

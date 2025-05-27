@@ -36,5 +36,6 @@ target_sources(${PROJECT_NAME}
     ShaderManager.cpp
     SystemManager.cpp
     TextureManager.cpp
+    ConfigManager.cpp
     ConfigManagerLocator.cpp
     InputManagerLocator.cpp)

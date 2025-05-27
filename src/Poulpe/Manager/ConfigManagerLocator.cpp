@@ -3,8 +3,12 @@ module;
 
 module Poulpe.Managers.ConfigManagerLocator;
 
+import Poulpe.Managers;
+
 namespace Poulpe
 {
+  [[clang::no_destroy]] std::unique_ptr<ConfigManager> ConfigManagerLocator::_config_manager;
+
   ConfigManager* ConfigManagerLocator::get()
   {
     return _config_manager.get();
