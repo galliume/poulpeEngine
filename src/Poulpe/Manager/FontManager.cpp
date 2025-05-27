@@ -29,7 +29,7 @@ namespace Poulpe
     }
 
     auto const& config_manager = ConfigManagerLocator::get();
-    auto const& app_config = config_manager->appConfig();
+    auto const& app_config { config_manager->appConfig() };
 
     auto const font{app_config["font"].get<std::string>()};
 

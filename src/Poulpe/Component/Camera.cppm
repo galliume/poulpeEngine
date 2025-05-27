@@ -49,8 +49,8 @@ namespace Poulpe
 
     glm::mat4 _view;
 
-    float _pitch;
-    float _yaw{ -90.0f };
+    double _pitch;
+    double _yaw{ -90.0 };
     float const _acceleration{ 100.f };
     double _delta_time{ 0.0 };
 

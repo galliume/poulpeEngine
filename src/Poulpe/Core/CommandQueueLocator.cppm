@@ -14,6 +14,6 @@ namespace Poulpe
     static void init();
 
   private:
-    static std::unique_ptr<CommandQueue> _commandQueue;
+    static std::unique_ptr<CommandQueue> _cmd_queue;
   };
 }

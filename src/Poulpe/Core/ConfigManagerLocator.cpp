@@ -5,13 +5,15 @@ module Poulpe.Core.ConfigManagerLocator;
 
 namespace Poulpe
 {
+  std::unique_ptr<Poulpe::ConfigManager> Poulpe::ConfigManagerLocator::_config_manager;
+
   ConfigManager* ConfigManagerLocator::get()
   {
-    return _configManager.get();
+    return _config_manager.get();
   }
 
   void ConfigManagerLocator::init()
   {
-    _configManager = std::make_unique<ConfigManager>();
+    _config_manager = std::make_unique<ConfigManager>();
   }
 }

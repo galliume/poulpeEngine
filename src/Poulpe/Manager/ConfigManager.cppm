@@ -29,12 +29,13 @@ namespace Poulpe
     void setReload(bool const reload);
     void setReloadShaders(bool const reload);
     
-    nlohmann::json appConfig();
-    nlohmann::json loadLevelData(std::string const & levelName);
-    nlohmann::json lvlConfig();
-    nlohmann::json shaderConfig();
-    nlohmann::json soundConfig();
-    nlohmann::json texturesConfig();
+    nlohmann::json const& loadLevelData(std::string const & levelName);
+    
+    nlohmann::json const& appConfig() const { return _app_config; }
+    nlohmann::json const& lvlConfig() const { return _lvl_config; }
+    nlohmann::json const& shaderConfig() const { return _shader_config; }
+    nlohmann::json const& soundConfig() const { return _sound_config; }
+    nlohmann::json const&  texturesConfig() const { return _textures_config; }
  
     template<typename T>
     requires std::same_as<T, std::string> || std::same_as<T, uint32_t>

@@ -18,7 +18,6 @@ namespace Poulpe
 {
   export class Application
   {
-
   public:
     Application();
 
