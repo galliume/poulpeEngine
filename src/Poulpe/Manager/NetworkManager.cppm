@@ -11,10 +11,6 @@ import Poulpe.Core.Network.Server;
 
 namespace Poulpe
 {
-  //@todo detect Unix
-  // #if defined(_WIN32) || defined(WIN32)
-
-  // #endif
   export class NetworkManager
   {
   public:

@@ -3,28 +3,31 @@
 #########################################################
 cmake_minimum_required(VERSION 3.28.0)
 
+#https://www.kitware.com/import-std-in-cmake-3-30/
+set(CMAKE_EXPERIMENTAL_CXX_IMPORT_STD
+  "0e5b6991-d74f-4b3d-a41c-cf096e0b2508")
+
 project(PoulpeEngine
   VERSION 0.1.1
   DESCRIPTION "Game Engine with a vulkan renderer"
   HOMEPAGE_URL "https://github.com/galliume/poulpeEngine"
   LANGUAGES C CXX
-)
+  )
 
 add_executable(${PROJECT_NAME} src/Poulpe.cpp poulpeEngine.rc)
 
 if (USE_CCACHE)
-  find_program(CCACHE_PROGRAM ccache)
-  if(CCACHE_PROGRAM)
-    message(STATUS "Found ccache: ${CCACHE_PROGRAM}")
-    set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE "${CCACHE_PROGRAM}")
-  endif()
+find_program(CCACHE_PROGRAM ccache)
+if(CCACHE_PROGRAM)
+message(STATUS "Found ccache: ${CCACHE_PROGRAM}")
+set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE "${CCACHE_PROGRAM}")
+endif()
 else()
-  message(WARNING "ccache deactivated")
+message(WARNING "ccache deactivated")
 endif()
 
 add_library(poulpe INTERFACE)
 
-#target_compile_features(poulpe INTERFACE cxx_std_20)
 message(STATUS "Generated with config types: ${CMAKE_CONFIGURATION_TYPES}")
 message(STATUS "CMAKE_CXX_STANDARD: ${CMAKE_CXX_STANDARD}")
 message(STATUS "CMAKE_CXX_STANDARD_REQUIRED: ${CMAKE_CXX_STANDARD_REQUIRED}")
@@ -53,8 +56,8 @@ add_subdirectory(${PROJECT_SOURCE_DIR}/src/Poulpe/Utils)
 
 target_include_directories(${PROJECT_NAME} PRIVATE "${PROJECT_BINARY_DIR}")
 
-set(DEBUG_OPTIONS -g -Wno-covered-switch-default)
-set(RELEASE_OPTIONS -Wno-covered-switch-default)
+set(DEBUG_OPTIONS -g -Wno-covered-switch-default -Wno-deprecated-declarations)
+set(RELEASE_OPTIONS -Wno-covered-switch-default -Wno-deprecated-declarations)
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
   add_definitions(
@@ -88,7 +91,7 @@ target_compile_options(${PROJECT_NAME} PRIVATE $<$<CONFIG:RELEASE>:${RELEASE_OPT
 target_compile_definitions(${PROJECT_NAME} PRIVATE $<$<CONFIG:DEBUG>:PLP_DEBUG_BUILD>)
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
-  list(APPEND EXTRA_LIBS 
+  list(APPEND EXTRA_LIBS
     Ws2_32 user32 gdi32 winspool shell32 ole32 oleaut32 uuid comdlg32 advapi32)
 else()
   set(THREADS_PREFER_PTHREAD_FLAG ON)
@@ -96,11 +99,15 @@ else()
   list(APPEND EXTRA_LIBS Threads::Threads)
 endif()
 
-set_target_properties(${PROJECT_NAME} PROPERTIES 
+set_target_properties(${PROJECT_NAME} PROPERTIES
+  CMAKE_CXX_MODULE_STD 1
   CXX_STANDARD 23
   CXX_STANDARD_REQUIRED ON
-  CXX_EXTENSIONS OFF)
+  CXX_EXTENSIONS ON)
 
+target_compile_features(${PROJECT_NAME}
+  PRIVATE   cxx_std_23
+  INTERFACE cxx_std_23)
 #########################################################
 
 #########################################################

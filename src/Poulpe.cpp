@@ -11,8 +11,6 @@ int main(int argc, char** argv)
 
   bool server_mode{ true };
   std::string port{ "9371" };
-  
-  std::cout << __LINE__ << "\n";
 
   for (int i { 0 }; i < argc; ++i) {
     std::string argument = argv[i];
@@ -27,14 +25,9 @@ int main(int argc, char** argv)
       }
     }
   }
-  std::cout << __LINE__ << "\n";
-
   std::unique_ptr<Poulpe::Application> app = std::make_unique<Poulpe::Application>();
-  
-  std::cout << __LINE__ << "\n";
 
   app->init();
-  std::cout << __LINE__ << "\n";
 
   Poulpe::Logger::trace("server_mode {}", server_mode);
 
@@ -42,7 +35,6 @@ int main(int argc, char** argv)
     Poulpe::Logger::trace("port {}", port);
     app->startServer(port);
   }
-  std::cout << __LINE__ << "\n";
 
   app->run();
 
