@@ -7,7 +7,6 @@ module Poulpe.Managers;
 
 import Poulpe.Core.Logger;
 import Poulpe.Core.Network.Server;
-import Poulpe.Core.Network.WinServer;
 
 namespace Poulpe
 {
@@ -20,7 +19,11 @@ namespace Poulpe
   void NetworkManager::startServer(std::string const& port)
   {
     //_server = std::make_shared<Server>(new WinServer(_api_manager));
-    _server = std::make_shared<Server>(new WinServer());
+    #if defined(_WIN64)
+      _server = std::make_shared<Server>(new WinServer());
+    #else
+      _server = std::make_shared<Server>(new UnixServer());
+    #endif
 
     std::jthread listen([this, &port]() {
       _server->bind(port);

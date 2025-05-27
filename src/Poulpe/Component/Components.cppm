@@ -24,10 +24,12 @@ namespace Poulpe {
   export class AnimationComponentConcept
   {
     public:
+      AnimationComponentConcept();
       virtual ~AnimationComponentConcept();
       virtual void operator()(AnimationInfo const& animation_info) = 0;
   };
 
+  AnimationComponentConcept::AnimationComponentConcept() = default;
   AnimationComponentConcept::~AnimationComponentConcept() = default;
 
   template<typename T>
@@ -84,7 +86,7 @@ namespace Poulpe {
         }
       }, _component);
     }
-    
+
   protected:
     ComponentsType _component;
 

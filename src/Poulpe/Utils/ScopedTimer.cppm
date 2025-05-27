@@ -13,7 +13,7 @@ namespace Poulpe
     using ClockType = std::chrono::steady_clock;
 
     ScopedTimer(const char* func)
-      : _FunctionName(func), _Start(ClockType::now()) {};
+      : _function_name(func), _start(ClockType::now()) {}
 
     ScopedTimer(const ScopedTimer&) = delete;
     ScopedTimer(ScopedTimer&&) = delete;
@@ -24,15 +24,15 @@ namespace Poulpe
     ~ScopedTimer()
     {
       auto stop = ClockType::now();
-      auto duration = (stop - _Start);
+      auto duration = (stop - _start);
       auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
 
-      std::cout << ms << " ms " << _FunctionName << "\n";
+      std::cout << ms << " ms " << _function_name << "\n";
     }
 
   private:
-    const char* _FunctionName{};
-    const ClockType::time_point _Start{};
+    const char* _function_name{};
+    const ClockType::time_point _start{};
   };
 
   #define USE_SCOPED_TIMER 1

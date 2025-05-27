@@ -26,30 +26,21 @@ namespace Poulpe
 
   void Application::init()
   {
-      std::cout << __LINE__ << "\n";
-
     _start_run = std::chrono::steady_clock::now();
-  std::cout << __LINE__ << "\n";
 
     auto* window = new Window();
     window->init("PoulpeEngine");
-      std::cout << __LINE__ << "\n";
 
     //CommandQueueManagerLocator::init();
     ConfigManagerLocator::init();
-      std::cout << __LINE__ << "\n";
 
     _render_manager = std::make_unique<RenderManager>(window);
-    std::cout << __LINE__ << "\n";
     _render_manager->init();
-      std::cout << __LINE__ << "\n";
 
     InputManagerLocator::init(_render_manager->getWindow());
-  std::cout << __LINE__ << "\n";
 
     _api_manager = std::make_unique<APIManager>();
     _network_manager = std::make_unique<NetworkManager>(_api_manager.get());
-  std::cout << __LINE__ << "\n";
 
     auto db_manager = std::make_unique<DbManager>();
   }
@@ -148,7 +139,7 @@ namespace Poulpe
       _render_manager->updateText("_plp_frame_counter", std::format("Frame {:<}", frame_count));
       _render_manager->updateText("_plp_elapsed_time", std::format("Elapsed time {:<.2f}", _elapsed_time));
       _render_manager->setElapsedTime(_elapsed_time);
-      
+
       auto const& current_camera_pos = _render_manager->getCamera()->getPos();
       _render_manager->updateText(
         "_plp_camera_pos",
