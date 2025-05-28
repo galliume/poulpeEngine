@@ -284,7 +284,7 @@ namespace Poulpe
       VkCommandBuffer& cmd_buffer,
       VkDescriptorSet& descset,
       VulkanPipeline& pipeline,
-      Data* data,
+      Data const * data,
       bool const is_indexed = true,
       uint32_t const index = 0);
 
@@ -434,7 +434,7 @@ namespace Poulpe
     //Font
     void createFontImage(
       VkCommandBuffer& cmd_buffer,
-      std::unordered_map<uint32_t, FontCharacter> const& characters,
+      std::vector<FontCharacter> const& characters,
       uint32_t const width,
       uint32_t const height,
       VkImage& image);

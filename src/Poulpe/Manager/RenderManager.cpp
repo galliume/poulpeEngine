@@ -11,7 +11,7 @@ module;
 #include <shared_mutex>
 #include <thread>
 
-module Poulpe.Managers;
+module Poulpe.Managers.RenderManager;
 
 import Poulpe.Animation.AnimationScript;
 import Poulpe.Animation.AnimationTypes;
@@ -35,7 +35,7 @@ namespace Poulpe
   RenderManager::RenderManager(Window* const window)
   {
     _window = std::unique_ptr<Window>(window);
-    _renderer = std::make_unique<Renderer>();
+    _renderer = std::make_unique<Renderer>(_window.get());
 
     _component_manager = std::make_unique<ComponentManager>();
     _light_manager = std::make_unique<LightManager>();

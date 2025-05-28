@@ -10,7 +10,7 @@ module;
 #include <string>
 #include <unordered_map>
 
-export module Poulpe.Managers:FontManager;
+export module Poulpe.Managers.FontManager;
 
 import Poulpe.Component.Texture;
 import Poulpe.Core.PlpTypedef;
@@ -31,25 +31,25 @@ namespace Poulpe
       bool flat{true}; // flat: 2D UI text, not flat: 3D text
     };
 
-    std::unordered_map<uint32_t, FontCharacter> getCharacters() { return _characters; }
-    FT_Face getFace() { return _face; }
+    FontManager() = default;
+    ~FontManager();
+
+    std::vector<FontCharacter> const& getCharacters() { return _characters; }
+    FT_Face getFace() const& { return _face; }
     
     uint32_t getAtlasWidth() const { return _atlas_width; }
     uint32_t getAtlasHeight() const { return _atlas_height; }
 
-    FontManager() = default;
-    ~FontManager();
+    inline void addRenderer(Renderer const * renderer) { _renderer = renderer; }
 
-    inline void addRenderer(Renderer* renderer) { _renderer = renderer; }
-
-    FontCharacter get(uint32_t c);
+    FontCharacter const& get(uint32_t const c);
 
     Texture load();
 
   private:
-    std::unordered_map<uint32_t, FontCharacter> _characters;
+    std::vector<FontCharacter> _characters;
 
-    Renderer* _renderer{ nullptr };
+    Renderer const * _renderer;
 
     uint32_t _atlas_width{ 0 };
     uint32_t _atlas_height{ 0 };

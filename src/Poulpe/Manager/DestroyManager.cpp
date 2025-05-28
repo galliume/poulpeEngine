@@ -6,7 +6,7 @@ module;
 #include <unordered_map>
 #include <vector>
 
-module Poulpe.Managers;
+module Poulpe.Managers.DestroyManager;
 
 import Poulpe.Component.Entity;
 import Poulpe.Component.Texture;

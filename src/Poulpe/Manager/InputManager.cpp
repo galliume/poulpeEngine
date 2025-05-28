@@ -2,7 +2,7 @@ module;
 #include "GLFW/glfw3.h"
 #include "nlohmann/json.hpp"
 
-module Poulpe.Managers;
+module Poulpe.Managers.InputManager;
 
 import Poulpe.GUI.Window;
 import Poulpe.Managers.ConfigManagerLocator;

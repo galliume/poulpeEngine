@@ -9,7 +9,7 @@ module;
 #include <string>
 #include <vector>
 
-module Poulpe.Managers;
+module Poulpe.Managers.FontManager;
 
 import Poulpe.Component.Texture;
 import Poulpe.Managers.ConfigManagerLocator;
@@ -33,8 +33,7 @@ namespace Poulpe
 
     auto const font{app_config["font"].get<std::string>()};
 
-    if (FT_New_Face(_ft, font.c_str(), 0, &_face))
-    {
+    if (FT_New_Face(_ft, font.c_str(), 0, &_face)) {
       Logger::error("FREETYPE: Failed to load font {}", font.c_str());
       return texture;
     }
@@ -71,6 +70,8 @@ namespace Poulpe
 
     VkCommandPool cmd_pool = _renderer->getAPI()->createCommandPool();
     VkCommandBuffer cmd_buffer = _renderer->getAPI()->allocateCommandBuffers(cmd_pool)[0];
+
+    _characters.resize(static_cast<size_t>(_face->num_glyphs));
 
     //float offset{0.0f};
     float x_offset{ 0.f };
@@ -176,7 +177,7 @@ namespace Poulpe
     return texture;
   }
 
-  FontCharacter FontManager::get(uint32_t c)
+  FontCharacter const& FontManager::get(uint32_t const c)
   {
     auto glyph_index = FT_Get_Char_Index(_face, c);
 

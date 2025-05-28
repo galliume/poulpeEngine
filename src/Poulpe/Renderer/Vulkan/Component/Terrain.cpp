@@ -99,7 +99,7 @@ namespace Poulpe
     data->_ubos[0] = ubos;
 
     mesh->getData()->_ubos_offset.emplace_back(1);
-    mesh->getUniformBuffers()->emplace_back(renderer->getAPI()->createUniformBuffers(1, commandPool));
+    mesh->getUniformBuffers().emplace_back(renderer->getAPI()->createUniformBuffers(1, commandPool));
 
     for (size_t i{ 0 }; i < mesh->getData()->_ubos.size(); i++) {
       std::ranges::for_each(mesh->getData()->_ubos.at(i), [&](auto& data_ubo) {
@@ -110,7 +110,7 @@ namespace Poulpe
     vkDestroyCommandPool(renderer->getDevice(), commandPool, nullptr);
 
     if (!mesh->getData()->_ubos.empty()) {
-      renderer->getAPI()->updateUniformBuffer(mesh->getUniformBuffers()->at(0), &mesh->getData()->_ubos.at(0));
+      renderer->getAPI()->updateUniformBuffer(mesh->getUniformBuffers().at(0), &mesh->getData()->_ubos.at(0));
     }
 
     createDescriptorSet(renderer, component_rendering_info);
@@ -225,7 +225,7 @@ namespace Poulpe
     std::array<VkWriteDescriptorSet, 3> desc_writes{};
     std::vector<VkDescriptorBufferInfo> buffer_infos;
 
-    std::for_each(std::begin(*mesh->getUniformBuffers()), std::end(*mesh->getUniformBuffers()),
+    std::for_each(std::begin(mesh->getUniformBuffers()), std::end(mesh->getUniformBuffers()),
     [& buffer_infos](const Buffer & uniformBuffer)
     {
       VkDescriptorBufferInfo buffer_info{};

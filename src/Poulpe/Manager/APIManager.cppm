@@ -5,7 +5,7 @@ module;
 #include <vector>
 #include <variant>
 
-export module Poulpe.Managers:APIManager;
+export module Poulpe.Managers.APIManager;
 
 namespace Poulpe
 {

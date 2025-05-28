@@ -2,7 +2,7 @@ module;
 
 #include <chrono>
 
-export module Poulpe.Managers:LightManager;
+export module Poulpe.Managers.LightManager;
 
 import Poulpe.Core.PlpTypedef;
 

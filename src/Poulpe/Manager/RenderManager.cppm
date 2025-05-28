@@ -10,21 +10,20 @@ module;
 #include <string>
 #include <vector>
 
-export module Poulpe.Managers:RenderManager;
-
-import :AudioManager;
-import :DestroyManager;
-import :EntityManager;
-import :FontManager;
-import :LightManager;
-import :ShaderManager;
-import :TextureManager;
+export module Poulpe.Managers.RenderManager;
 
 import Poulpe.Component.Camera;
 import Poulpe.Core.PlpTypedef;
 import Poulpe.Core.Tools;
 import Poulpe.GUI.Window;
+import Poulpe.Managers.AudioManager;
 import Poulpe.Managers.ComponentManager;
+import Poulpe.Managers.DestroyManager;
+import Poulpe.Managers.EntityManager;
+import Poulpe.Managers.FontManager;
+import Poulpe.Managers.LightManager;
+import Poulpe.Managers.ShaderManager;
+import Poulpe.Managers.TextureManager;
 import Poulpe.Renderer.RendererComponentFactory;
 import Poulpe.Renderer;
 import Poulpe.Utils.IDHelper;

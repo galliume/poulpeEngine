@@ -68,3 +68,5 @@ CMakeUserPresets.json
 *.ktx2
 *.checksum
 *.sqlite
+html/
+graph/

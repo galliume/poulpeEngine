@@ -28,7 +28,7 @@ namespace Poulpe {
     Light const& sun_light;
     std::vector<Light> const& point_lights;
     std::vector<Light> const& spot_lights;
-    std::unordered_map<uint32_t, FontCharacter> const& characters;
+    std::vector<FontCharacter> const& characters;
     FT_Face const& face;
     uint32_t const atlas_width{0};
     uint32_t const atlas_height{0};

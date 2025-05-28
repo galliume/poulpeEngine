@@ -6,7 +6,7 @@ module;
 #include <unordered_map>
 #include <string>
 
-export module Poulpe.Managers:InputManager;
+export module Poulpe.Managers.InputManager;
 
 import Poulpe.Component.Camera;
 import Poulpe.GUI.Window;

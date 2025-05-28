@@ -7,7 +7,7 @@ module;
 #include <string>
 #include <vector>
 
-export module Poulpe.Managers:ConfigManager;
+export module Poulpe.Managers.ConfigManager;
 
 //import Poulpe.Core.Logger;
 

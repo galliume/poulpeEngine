@@ -3,7 +3,7 @@ module;
 #include <string>
 #include <thread>
 
-module Poulpe.Managers;
+module Poulpe.Managers.NetworkManager;
 
 import Poulpe.Core.Logger;
 import Poulpe.Core.Network.Server;

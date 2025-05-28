@@ -12,7 +12,9 @@ export module Poulpe.Application;
 import Poulpe.Managers.ConfigManagerLocator;
 import Poulpe.Managers.InputManagerLocator;
 import Poulpe.GUI.Window;
-import Poulpe.Managers;
+import Poulpe.Managers.APIManager;
+import Poulpe.Managers.NetworkManager;
+import Poulpe.Managers.RenderManager;
 
 namespace Poulpe
 {

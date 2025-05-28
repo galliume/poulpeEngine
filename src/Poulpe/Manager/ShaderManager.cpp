@@ -8,7 +8,7 @@ module;
 #include <memory>
 #include <string>
 
-module Poulpe.Managers;
+module Poulpe.Managers.ShaderManager;
 
 import Poulpe.Component.Vertex;
 import Poulpe.Core.Logger;

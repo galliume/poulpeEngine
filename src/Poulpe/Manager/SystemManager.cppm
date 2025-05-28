@@ -1,4 +1,4 @@
-export module Poulpe.Managers:SystemManager;
+export module Poulpe.Managers.SystemManager;
 
 namespace Poulpe
 {

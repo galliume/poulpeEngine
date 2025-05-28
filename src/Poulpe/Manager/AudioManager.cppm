@@ -6,7 +6,7 @@ module;
 #include <string>
 #include <vector>
 
-export module Poulpe.Managers:AudioManager;
+export module Poulpe.Managers.AudioManager;
 
 namespace Poulpe
 {

@@ -13,6 +13,7 @@ module;
 #include <memory>
 #include <unordered_map>
 #include <vector>
+#include <iostream>
 
 module Poulpe.Renderer.VulkanRenderer;
 
@@ -24,10 +25,14 @@ import Poulpe.Renderer.Vulkan.Mesh;
 
 namespace Poulpe
 {
+  Renderer::Renderer(Window* const window)
+  {
+    _vulkan = std::make_unique<VulkanAPI>(window);
+  }
+
   void Renderer::init()
   {
     setPerspective();
-
     _swapchain = _vulkan->createSwapChain(_images);
 
     _imageviews.resize(_images.size());
@@ -454,9 +459,9 @@ namespace Poulpe
     auto const pipeline = getPipeline(mesh->getShaderName());
     auto const has_alpha_blend{false};
 
-    if (!mesh->getUniformBuffers()->empty()) {
-      for (size_t i{ 0 }; i < mesh->getUniformBuffers()->size(); ++i) {
-        _vulkan->updateUniformBuffer(mesh->getUniformBuffers()->at(i), &mesh->getData()->_ubos.at(i));
+    if (!mesh->getUniformBuffers().empty()) {
+      for (size_t i{ 0 }; i < mesh->getUniformBuffers().size(); ++i) {
+        _vulkan->updateUniformBuffer(mesh->getUniformBuffers().at(i), &mesh->getData()->_ubos.at(i));
       }
     }
 
@@ -647,9 +652,9 @@ namespace Poulpe
   //       Mesh* mesh = mesh_component->template has<Mesh>();
   //       auto pipeline = getPipeline(mesh->getShaderName());
 
-  //       if (!mesh->getUniformBuffers()->empty()) {
-  //         for (size_t i{ 0 }; i < mesh->getUniformBuffers()->size(); ++i) {
-  //           _vulkan->updateUniformBuffer(mesh->getUniformBuffers()->at(i), &mesh->getData()->_ubos.at(i));
+  //       if (!mesh->getUniformBuffers().empty()) {
+  //         for (size_t i{ 0 }; i < mesh->getUniformBuffers().size(); ++i) {
+  //           _vulkan->updateUniformBuffer(mesh->getUniformBuffers().at(i), &mesh->getData()->_ubos.at(i));
   //         }
   //       }
 

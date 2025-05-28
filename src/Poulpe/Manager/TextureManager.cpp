@@ -12,7 +12,7 @@ module;
 #include <string>
 #include <vector>
 
-module Poulpe.Managers;
+module Poulpe.Managers.TextureManager;
 
 import Poulpe.Component.Texture;
 import Poulpe.Core.Logger;

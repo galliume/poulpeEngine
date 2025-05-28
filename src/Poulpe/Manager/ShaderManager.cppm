@@ -9,7 +9,7 @@ module;
 #include <string>
 #include <vector>
 
-export module Poulpe.Managers:ShaderManager;
+export module Poulpe.Managers.ShaderManager;
 
 import Poulpe.Core.PlpTypedef;
 import Poulpe.Renderer;
