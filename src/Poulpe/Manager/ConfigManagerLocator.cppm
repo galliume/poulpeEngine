@@ -3,7 +3,7 @@ module;
 
 export module Poulpe.Managers.ConfigManagerLocator;
 
-import Poulpe.Managers;
+import Poulpe.Managers.ConfigManager;
 
 namespace Poulpe
 {

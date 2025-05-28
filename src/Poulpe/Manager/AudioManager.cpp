@@ -6,7 +6,7 @@ module;
 #include <stdexcept>
 #include <string>
 
-module Poulpe.Managers;
+module Poulpe.Managers.AudioManager;
 
 import Poulpe.Core.Logger;
 

@@ -11,7 +11,9 @@ module;
 module Poulpe.Application;
 
 import Poulpe.Core.Logger;
-import Poulpe.Managers;
+
+import Poulpe.Managers.DbManager;
+import Poulpe.Managers.FontManager;
 
 namespace Poulpe
 {
@@ -33,11 +35,10 @@ namespace Poulpe
 
     //CommandQueueManagerLocator::init();
     ConfigManagerLocator::init();
+    InputManagerLocator::init(window);
 
     _render_manager = std::make_unique<RenderManager>(window);
     _render_manager->init();
-
-    InputManagerLocator::init(_render_manager->getWindow());
 
     _api_manager = std::make_unique<APIManager>();
     _network_manager = std::make_unique<NetworkManager>(_api_manager.get());

@@ -68,15 +68,15 @@ namespace Poulpe
 
     mesh->setName("crosshair");
     mesh->setShaderName("2d");
-    mesh->getUniformBuffers()->emplace_back(_renderer->getAPI()->createUniformBuffers(1, commandPool));
+    mesh->getUniformBuffers().emplace_back(_renderer->getAPI()->createUniformBuffers(1, commandPool));
 
     vkDestroyCommandPool(_renderer->getDevice(), commandPool, nullptr);
     setPushConstants(mesh);
 
-    for (uint32_t i{ 0 }; i < mesh->getUniformBuffers()->size(); i++) {
+    for (uint32_t i{ 0 }; i < mesh->getUniformBuffers().size(); i++) {
       data._ubos[i].projection = _renderer->getPerspective();
 
-      _renderer->getAPI()->updateUniformBuffer(mesh->getUniformBuffers()->at(i), &data._ubos);
+      _renderer->getAPI()->updateUniformBuffer(mesh->getUniformBuffers().at(i), &data._ubos);
     }
 
     createDescriptorSet(mesh);

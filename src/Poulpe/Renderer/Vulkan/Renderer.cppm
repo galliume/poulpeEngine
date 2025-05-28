@@ -105,7 +105,7 @@ namespace Poulpe
 
   public:
 
-    Renderer() = default;
+    Renderer(Window* const window);
     ~Renderer()  = default;
 
     void addPipeline(

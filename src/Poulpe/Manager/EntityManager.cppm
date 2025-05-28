@@ -7,15 +7,14 @@ module;
 #include <filesystem>
 #include <future>
 
-export module Poulpe.Managers:EntityManager;
-
-import :LightManager;
-import :TextureManager;
+export module Poulpe.Managers.EntityManager;
 
 import Poulpe.Component.Entity;
 import Poulpe.Component.EntityNode;
 import Poulpe.Core.PlpTypedef;
 import Poulpe.Managers.ComponentManager;
+import Poulpe.Managers.LightManager;
+import Poulpe.Managers.TextureManager;
 import Poulpe.Renderer;
 import Poulpe.Renderer.RendererComponentFactory;
 

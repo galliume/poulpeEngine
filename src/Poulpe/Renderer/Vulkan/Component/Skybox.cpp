@@ -95,14 +95,14 @@ namespace Poulpe
     data._texture_index = 0;
 
     Buffer uniform_buffer = renderer->getAPI()->createUniformBuffers(1, cmd_pool);
-    mesh->getUniformBuffers()->emplace_back(uniform_buffer);
+    mesh->getUniformBuffers().emplace_back(uniform_buffer);
 
     vkDestroyCommandPool(renderer->getDevice(), cmd_pool, nullptr);
 
     mesh->setName("skybox");
     mesh->setShaderName("skybox");
 
-    renderer->getAPI()->updateUniformBuffer(mesh->getUniformBuffers()->at(0), &data._ubos.at(0));
+    renderer->getAPI()->updateUniformBuffer(mesh->getUniformBuffers().at(0), &data._ubos.at(0));
 
     createDescriptorSet(renderer, component_rendering_info);
     mesh->setData(data);
@@ -127,7 +127,7 @@ namespace Poulpe
     auto const pipeline = renderer->getPipeline(mesh->getShaderName());
     VkDescriptorSet descset = renderer->getAPI()->createDescriptorSets(pipeline->desc_pool, { pipeline->descset_layout }, 1);
 
-    renderer->getAPI()->updateDescriptorSets(*mesh->getUniformBuffers(), descset, image_infos);
+    renderer->getAPI()->updateDescriptorSets(mesh->getUniformBuffers(), descset, image_infos);
 
     mesh->setDescSet(descset);
   }

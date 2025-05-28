@@ -10,7 +10,7 @@ module;
 #include <string>
 #include <vector>
 
-export module Poulpe.Managers:TextureManager;
+export module Poulpe.Managers.TextureManager;
 
 import Poulpe.Component.Texture;
 import Poulpe.Renderer;

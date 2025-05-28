@@ -1584,7 +1584,7 @@ void VulkanAPI::draw(
   VkCommandBuffer& cmd_buffer,
   VkDescriptorSet&,
   VulkanPipeline &,
-  Data * data,
+  Data const * data,
   bool const is_indexed,
   uint32_t const index)
 {
@@ -3037,7 +3037,7 @@ VkSampler VulkanAPI::createTextureSampler(uint32_t const mip_lvl)
 
   void VulkanAPI::createFontImage(
     VkCommandBuffer& cmd_buffer,
-    std::unordered_map<uint32_t, FontCharacter> const& characters,
+    std::vector<FontCharacter> const& characters,
     uint32_t const width,
     uint32_t const height,
     VkImage& image)
@@ -3067,7 +3067,7 @@ VkSampler VulkanAPI::createTextureSampler(uint32_t const mip_lvl)
 
     vkMapMemory(_device, staging_device_memory, 0, size, 0, (void**) & data);
     
-    for (auto const& [name, character] : characters) {
+    for (auto const& character : characters) {
 
       uint32_t const glyph_width{ static_cast<uint32_t>(character.size.x) };
       uint32_t const glyph_height{ static_cast<uint32_t>(character.size.y) };

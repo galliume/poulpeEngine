@@ -9,7 +9,7 @@ module;
 #include <string>
 #include <vector>
 
-module Poulpe.Managers;
+module Poulpe.Managers.ConfigManager;
 
 import Poulpe.Core.Logger;
 

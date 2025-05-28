@@ -25,7 +25,7 @@ namespace Poulpe
     std::string const getName() const { return _name; }
     inline const std::string getShaderName() const { return _shader_name; }
     std::vector<Buffer>* getStorageBuffers() { return & _storage_buffers; }
-    inline std::vector<Buffer>* getUniformBuffers() { return & _uniform_buffers; }
+    inline std::vector<Buffer>& getUniformBuffers() { return _uniform_buffers; }
     ObjectBuffer* getObjectBuffer() { return &_object_buffer; }
 
     void addStorageBuffer(Buffer& buffer);

@@ -4,7 +4,7 @@ module;
 #include <string>
 #include <thread>
 
-module Poulpe.Managers;
+module Poulpe.Managers.APIManager;
 
 import Poulpe.Core.Logger;
 

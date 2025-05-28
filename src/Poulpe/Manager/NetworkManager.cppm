@@ -3,11 +3,10 @@ module;
 #include <memory>
 #include <string>
 
-export module Poulpe.Managers:NetworkManager;
-
-import :APIManager;
+export module Poulpe.Managers.NetworkManager;
 
 import Poulpe.Core.Network.Server;
+import Poulpe.Managers.APIManager;
 
 namespace Poulpe
 {

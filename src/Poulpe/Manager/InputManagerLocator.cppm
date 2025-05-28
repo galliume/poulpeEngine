@@ -4,7 +4,7 @@ module;
 export module Poulpe.Managers.InputManagerLocator;
 
 import Poulpe.GUI.Window;
-import Poulpe.Managers;
+import Poulpe.Managers.InputManager;
 
 namespace Poulpe
 {

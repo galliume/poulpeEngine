@@ -36,7 +36,7 @@ namespace Poulpe
 
     for (size_t i{ 0 }; i < ubo_count; ++i) {
       Buffer uniformBuffer = renderer->getAPI()->createUniformBuffers(1, cmd_pool);
-      mesh->getUniformBuffers()->emplace_back(uniformBuffer);
+      mesh->getUniformBuffers().emplace_back(uniformBuffer);
     }
     
     auto const& data = mesh->getData();
@@ -59,7 +59,7 @@ namespace Poulpe
         auto const& b{ bone.second };
 
         Buffer uniformBuffer = renderer->getAPI()->createUniformBuffers(b.weights.size(), cmd_pool);
-        mesh->getUniformBuffers()->emplace_back(uniformBuffer);
+        mesh->getUniformBuffers().emplace_back(uniformBuffer);
       });
     }
 
@@ -82,10 +82,10 @@ namespace Poulpe
     auto const pipeline = renderer->getPipeline(mesh->getShaderName());
     VkDescriptorSet descset = renderer->getAPI()->createDescriptorSets(pipeline->desc_pool, { pipeline->descset_layout }, 1);
 
-    for (size_t i{ 0 }; i < mesh->getUniformBuffers()->size(); ++i) {
+    for (size_t i{ 0 }; i < mesh->getUniformBuffers().size(); ++i) {
 
       renderer->getAPI()->updateDescriptorSets(
-        *mesh->getUniformBuffers(),
+        mesh->getUniformBuffers(),
         *mesh->getStorageBuffers(),
         descset,
         image_infos,

@@ -33,18 +33,18 @@ namespace Poulpe
 
     auto cmd_pool = renderer->getAPI()->createCommandPool();
 
-    if (mesh->getUniformBuffers()->empty()) {
+    if (mesh->getUniformBuffers().empty()) {
       std::ranges::for_each(mesh->getData()->_bones, [&](auto const&) {
         
         //auto const& b{ bone.second };
 
         Buffer uniformBuffer = renderer->getAPI()->createUniformBuffers(1, cmd_pool);
-        mesh->getUniformBuffers()->emplace_back(std::move(uniformBuffer));
+        mesh->getUniformBuffers().emplace_back(std::move(uniformBuffer));
       });
     }
-    if (mesh->getUniformBuffers()->empty()) { //no bones
+    if (mesh->getUniformBuffers().empty()) { //no bones
       Buffer uniformBuffer = renderer->getAPI()->createUniformBuffers(1, cmd_pool);
-      mesh->getUniformBuffers()->emplace_back(std::move(uniformBuffer));
+      mesh->getUniformBuffers().emplace_back(std::move(uniformBuffer));
     }
 
     auto const& data = mesh->getData();
@@ -130,9 +130,9 @@ namespace Poulpe
       //renderer->updateStorageBuffer(mesh->getStorageBuffers()->at(0), objectBuffer);
     }
 
-    for (size_t i{ 0 }; i < mesh->getUniformBuffers()->size(); ++i) {
+    for (size_t i{ 0 }; i < mesh->getUniformBuffers().size(); ++i) {
 
-      auto& ubos{ mesh->getUniformBuffers()->at(i) };
+      auto& ubos{ mesh->getUniformBuffers().at(i) };
       auto& ubos_data{ mesh->getData()->_ubos.at(i) };
 
       renderer->getAPI()->updateUniformBuffer(ubos, &ubos_data);
@@ -266,10 +266,10 @@ namespace Poulpe
     auto const& pipeline = renderer->getPipeline(mesh->getShaderName());
     VkDescriptorSet descset{ renderer->getAPI()->createDescriptorSets(pipeline->desc_pool, { pipeline->descset_layout }, 1) };
 
-    for (size_t i{ 0 }; i < mesh->getUniformBuffers()->size(); ++i) {
+    for (size_t i{ 0 }; i < mesh->getUniformBuffers().size(); ++i) {
 
       renderer->getAPI()->updateDescriptorSets(
-        *mesh->getUniformBuffers(),
+        mesh->getUniformBuffers(),
         *mesh->getStorageBuffers(),
         descset, image_info, depth_map_image_info, cubemap_info);
     }
@@ -280,7 +280,7 @@ namespace Poulpe
     std::vector<VkDescriptorBufferInfo> buffer_infos;
     std::vector<VkDescriptorBufferInfo> buffer_storage_infos;
 
-    std::for_each(std::begin(*mesh->getUniformBuffers()), std::end(*mesh->getUniformBuffers()),
+    std::for_each(std::begin(mesh->getUniformBuffers()), std::end(mesh->getUniformBuffers()),
       [&buffer_infos](const Buffer& uniformBuffer)
       {
         VkDescriptorBufferInfo buffer_info{};

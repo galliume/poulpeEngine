@@ -6,9 +6,10 @@ module;
 #include <glm/gtc/matrix_transform.hpp>
 #include <nlohmann/json.hpp>
 
+#include <shared_mutex>
 #include <thread>
 
-module Poulpe.Managers;
+module Poulpe.Managers.EntityManager;
 
 import Poulpe.Animation.AnimationScript;
 import Poulpe.Animation.BoneAnimationScript;
@@ -392,6 +393,7 @@ namespace Poulpe
 
       if (is_last) {
         {
+          std::lock_guard<std::shared_mutex> guard(lockWorldNode());
           //lua scripted animation
           if (has_animation) {
             //@todo temp until lua scripting
@@ -406,12 +408,9 @@ namespace Poulpe
             _component_manager->add<BoneAnimationComponent>(
             root_mesh_entity_node->getEntity()->getID(), std::move(boneAnimationScript));
           }
-
-          {
-            //std::shared_lock guard(_mutex_shared);
-            root_mesh_entity_node->setIsLoaded(true);
-            _world_node->addChild(root_mesh_entity_node);
-          }
+          //std::shared_lock guard(_mutex_shared);
+          root_mesh_entity_node->setIsLoaded(true);
+          _world_node->addChild(root_mesh_entity_node);
         }
       }
     };

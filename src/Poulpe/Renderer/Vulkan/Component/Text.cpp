@@ -47,8 +47,8 @@ namespace Poulpe
 
     for (auto c = utf16_text.begin(); c != utf16_text.end(); c++) {
 
-      auto const glyph_index = FT_Get_Char_Index(component_rendering_info.face, *c);
-      auto const ch = component_rendering_info.characters.at(glyph_index);
+      auto const& glyph_index { FT_Get_Char_Index(component_rendering_info.face, *c) };
+      auto const& ch { component_rendering_info.characters.at(glyph_index)} ;
 
       constexpr float epsilon = 1e-6f;
       if (std::abs(ch.size.x) < epsilon && std::abs(ch.size.y) < epsilon) {
@@ -168,7 +168,7 @@ namespace Poulpe
       data->_ubos[0] = ubos;
 
       mesh->getData()->_ubos_offset.emplace_back(1);
-      mesh->getUniformBuffers()->emplace_back(renderer->getAPI()->createUniformBuffers(1, cmd_pool));
+      mesh->getUniformBuffers().emplace_back(renderer->getAPI()->createUniformBuffers(1, cmd_pool));
       mesh->getMaterial().alpha_mode = 1.0;
 
       for (size_t i{ 0 }; i < mesh->getData()->_ubos.size(); i++) {
@@ -210,7 +210,7 @@ namespace Poulpe
     vkDestroyCommandPool(renderer->getDevice(), cmd_pool, nullptr);
 
     if (!mesh->getData()->_ubos.empty()) {
-      renderer->getAPI()->updateUniformBuffer(mesh->getUniformBuffers()->at(0), &mesh->getData()->_ubos.at(0));
+      renderer->getAPI()->updateUniformBuffer(mesh->getUniformBuffers().at(0), &mesh->getData()->_ubos.at(0));
     }
     
     if (*mesh->getDescSet() == nullptr) {
@@ -250,7 +250,7 @@ namespace Poulpe
     std::array<VkWriteDescriptorSet, 2> desc_writes{};
     std::vector<VkDescriptorBufferInfo> buffer_infos;
 
-    std::for_each(std::begin(*mesh->getUniformBuffers()), std::end(*mesh->getUniformBuffers()),
+    std::for_each(std::begin(mesh->getUniformBuffers()), std::end(mesh->getUniformBuffers()),
     [& buffer_infos](const Buffer & uniformBuffer)
     {
       VkDescriptorBufferInfo buffer_info{};
