@@ -36,10 +36,10 @@ namespace Poulpe
     inline std::vector<std::unique_ptr<Entity>>* getHUD() { return & _hud; }
     //inline size_t getInstancedCount() const { return _Entities.size(); }
     //inline std::unordered_map<std::string, std::array<uint32_t, 2>> getLoadedEntities() { return _LoadedEntities; }
-    inline Entity* getSkybox() { return _skybox.get(); }
-    inline Entity* getTerrain() { return _terrain.get(); }
-    inline Entity* getWater() { return _water.get(); }
-    inline Entity* getText(uint32_t const index) { return _texts.at(index).get(); }
+    inline Entity const * getSkybox() { return _skybox.get(); }
+    inline Entity const * getTerrain() { return _terrain.get(); }
+    inline Entity const * getWater() { return _water.get(); }
+    inline Entity const * getText(uint32_t const index) { return _texts.at(index).get(); }
     inline std::vector<std::unique_ptr<Entity>>& getTexts() { return _texts; }
 
     std::function<void()> load(nlohmann::json const& lvl_config);
@@ -51,6 +51,8 @@ namespace Poulpe
     void addEntity(Entity* entity);
     void addTransparentEntity(Entity* entity);
     void addTextEntity(Entity* entity);
+
+    EntityNode const * addEntityToWorld(Entity * entity);
 
     //void addEntity(Mesh* meshes);
     //inline size_t getTotalEntities() const { return _Entities.size(); }

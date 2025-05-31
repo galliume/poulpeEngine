@@ -1,12 +1,20 @@
 module;
+
+#define GLM_FORCE_LEFT_HANDED
+#define GLM_FORCE_DEFAULT_ALIGNED_GENTYPES
+#define GLM_FORCE_DEPTH_ZERO_TO_ONE
+#define GLM_ENABLE_EXPERIMENTAL
+
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtx/hash.hpp>
+#include <glm/gtx/quaternion.hpp>
+#include <glm/fwd.hpp>
+
 #include <algorithm>
 #include <array>
 #include <chrono>
 #include <functional>
-#define GLM_ENABLE_EXPERIMENTAL
-#include <glm/glm.hpp>
-#include <glm/gtx/quaternion.hpp>
-#include <glm/gtc/matrix_transform.hpp>
 #include <string_view>
 #include <vector>
 #include <volk.h>
@@ -84,14 +92,12 @@ void Water::operator()(
     auto cmd_pool = renderer->getAPI()->createCommandPool();
 
     std::vector<UniformBufferObject> ubos{};
-    ubos.reserve(1);
     UniformBufferObject ubo{};
     ubo.model = glm::mat4(1.0f);
     ubo.projection = renderer->getPerspective();
     ubos.push_back(ubo);
 
-    data->_ubos.resize(1);
-    data->_ubos[0] = ubos;
+    data->_ubos.push_back(ubos);
     data->_vertices = vertices;
     data->_vertex_buffer = renderer->getAPI()->createVertexBuffer(cmd_pool, vertices);
     data->_texture_index = 0;
@@ -151,7 +157,6 @@ void Water::operator()(
 
     if (texture_normal2.getWidth() == 0) {
       texture_normal2 = component_rendering_info.textures.at(PLP_EMPTY);
-
     }
 
     Texture env { component_rendering_info.textures.at(component_rendering_info.skybox_name) };
@@ -161,14 +166,25 @@ void Water::operator()(
     env.getMipLevels()));
 
     std::vector<VkDescriptorImageInfo> image_infos{};
-    image_infos.emplace_back(tex.getSampler(), tex.getImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-    image_infos.emplace_back(renderer->getDepthSamplers(), renderer->getDepthImageViews(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-    image_infos.emplace_back(texture_normal.getSampler(), texture_normal.getImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-    image_infos.emplace_back(texture_normal2.getSampler(), texture_normal2.getImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-    image_infos.emplace_back(renderer->getCurrentSampler(), renderer->getCurrentImageView(), VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
-    
+    image_infos.emplace_back(tex.getSampler(), tex.getImageView(), VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL);
+    image_infos.emplace_back(renderer->getDepthSamplers(), renderer->getDepthImageViews(), VK_IMAGE_LAYOUT_DEPTH_READ_ONLY_OPTIMAL);
+    image_infos.emplace_back(texture_normal.getSampler(), texture_normal.getImageView(), VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL);
+    image_infos.emplace_back(texture_normal2.getSampler(), texture_normal2.getImageView(), VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL);
+    image_infos.emplace_back(renderer->getCurrentSampler(), renderer->getCurrentImageView(), VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL);
+
+    // VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMALVK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+    // VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+    // VK_IMAGE_LAYOUT_GENERAL
+    // VK_IMAGE_LAYOUT_DEPTH_READ_ONLY_STENCIL_ATTACHMENT_OPTIMAL
+    // VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_STENCIL_READ_ONLY_OPTIMAL
+    // VK_IMAGE_LAYOUT_READ_ONLY_OPTIMAL
+    // VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL
+    // VK_IMAGE_LAYOUT_DEPTH_READ_ONLY_OPTIMAL
+    // VK_IMAGE_LAYOUT_STENCIL_READ_ONLY_OPTIMAL
+    // VK_IMAGE_LAYOUT_RENDERING_LOCAL_READ
+
     std::vector<VkDescriptorImageInfo> env_image_infos{};
-    env_image_infos.emplace_back(env.getSampler(), env.getImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+    env_image_infos.emplace_back(env.getSampler(), env.getImageView(), VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL );
 
     auto const pipeline = renderer->getPipeline(mesh->getShaderName());
     VkDescriptorSet descset = renderer->getAPI()->createDescriptorSets(pipeline->desc_pool, { pipeline->descset_layout }, 1);

@@ -20,7 +20,7 @@ import Poulpe.Renderer.Mesh;
 namespace Poulpe {
   export struct ComponentRenderingInfo
   {
-    Mesh* const mesh;
+    Mesh* mesh;
     std::unordered_map<std::string, Texture>const& textures;
     std::string const& skybox_name;
     std::string const& terrain_name;
