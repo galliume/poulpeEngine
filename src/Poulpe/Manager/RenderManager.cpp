@@ -1,6 +1,16 @@
 module;
 
+#define GLM_FORCE_LEFT_HANDED
+#define GLM_FORCE_DEFAULT_ALIGNED_GENTYPES
+#define GLM_FORCE_DEPTH_ZERO_TO_ONE
+#define GLM_ENABLE_EXPERIMENTAL
+
 #include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtx/hash.hpp>
+#include <glm/gtx/quaternion.hpp>
+#include <glm/fwd.hpp>
+
 #include <nlohmann/json_fwd.hpp>
 
 #include <algorithm>
@@ -139,6 +149,31 @@ namespace Poulpe
   {
     //@todo animate light
     //_light_manager->animateAmbientLight(delta_time);
+    RendererInfo renderer_info {
+      .mesh = nullptr,
+      .camera = getCamera(),
+      .sun_light = _light_manager->getSunLight(),
+      .point_lights = _light_manager->getPointLights(),
+      .spot_lights = _light_manager->getSpotLights(),
+      .elapsed_time = _elapsed_time,
+      .stage_flag_bits = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
+      .normal_debug = false
+    };
+
+    ComponentRenderingInfo rendering_info {
+      .mesh = nullptr,
+      .textures = _texture_manager->getTextures(),
+      .skybox_name = _texture_manager->getSkyboxTexture(),
+      .terrain_name = _texture_manager->getTerrainTexture(),
+      .water_name = _texture_manager->getWaterTexture(),
+      .sun_light = _light_manager->getSunLight(),
+      .point_lights = _light_manager->getPointLights(),
+      .spot_lights = _light_manager->getSpotLights(),
+      .characters = _font_manager->getCharacters(),
+      .face = _font_manager->getFace(),
+      .atlas_width = _font_manager->getAtlasWidth(),
+      .atlas_height = _font_manager->getAtlasHeight()
+    };
 
     {
       std::lock_guard<std::shared_mutex> guard(_entity_manager->lockWorldNode());
@@ -157,19 +192,20 @@ namespace Poulpe
         config_manager->setReloadShaders(false);
       }
 
-      auto entity = _entity_manager->getWater();
-      if (entity != nullptr) {
-        auto* mesh_component = _component_manager->get<MeshComponent>(entity->getID());
+      _renderer->startRender();
+
+      auto water_entity = _entity_manager->getWater();
+      if (water_entity != nullptr) {
+        auto* mesh_component = _component_manager->get<MeshComponent>(water_entity->getID());
         auto mesh = mesh_component->template has<Mesh>();
         if (mesh) {
-          auto* animation_component = _component_manager->get<AnimationComponent>(entity->getID());
-          if (animation_component) {
-            AnimationInfo animation_info {
-              .delta_time = delta_time,
-              .data = mesh->getData()
-            };
-            (*animation_component)(animation_info);
+          auto rdr_impl = _component_manager->get<RendererComponent>(water_entity->getID());
+          renderer_info.stage_flag_bits = rdr_impl->getShaderStageFlags();
+          renderer_info.mesh = mesh;
+          if (mesh->isDirty() && rdr_impl) {
+            (*rdr_impl)(_renderer.get(), rendering_info);
           }
+          _renderer->draw(renderer_info);
         }
       }
 
@@ -178,30 +214,18 @@ namespace Poulpe
         auto mesh = mesh_component->template has<Mesh>();
 
         if (mesh) {
-          ComponentRenderingInfo const rendering_info {
-            .mesh = mesh,
-            .textures = _texture_manager->getTextures(),
-            .skybox_name = _texture_manager->getSkyboxTexture(),
-            .terrain_name = _texture_manager->getTerrainTexture(),
-            .water_name = _texture_manager->getWaterTexture(),
-            .sun_light = _light_manager->getSunLight(),
-            .point_lights = _light_manager->getPointLights(),
-            .spot_lights = _light_manager->getSpotLights(),
-            .characters = _font_manager->getCharacters(),
-            .face = _font_manager->getFace(),
-            .atlas_width = _font_manager->getAtlasWidth(),
-            .atlas_height = _font_manager->getAtlasHeight()
-          };
-
           auto rdr_impl = _component_manager->get<RendererComponent>(data_entity->getID());
+          
+          rendering_info.mesh = mesh;
+          renderer_info.mesh = mesh;
+          renderer_info.stage_flag_bits = rdr_impl->getShaderStageFlags();
+
           if (mesh->isDirty() && rdr_impl) {
-            
             (*rdr_impl)(_renderer.get(), rendering_info);
           }
+          _renderer->draw(renderer_info);
         }
       });
-
-      _renderer->startRender();
 
       auto* world_node = _entity_manager->getWorldNode();
 
@@ -214,6 +238,13 @@ namespace Poulpe
           auto mesh = mesh_component->template has<Mesh>();
 
           if (mesh) {
+            rendering_info.mesh = mesh;
+            renderer_info.mesh = mesh;
+
+            AnimationInfo const animation_info {
+              .delta_time = delta_time,
+              .data = mesh->getData()
+            };
             //if (mesh->hasBufferStorage()) {
             //  auto objectBuffer = mesh->getObjectBuffer();
             //  objectBuffer->point_lights[0] = _light_manager->getPointLights().at(0);
@@ -223,39 +254,17 @@ namespace Poulpe
 
             auto rdr_impl = _component_manager->get<RendererComponent>(data_entity->getID());
             if (mesh->isDirty() && rdr_impl) {
-              ComponentRenderingInfo const rendering_info {
-                .mesh = mesh,
-                .textures = _texture_manager->getTextures(),
-                .skybox_name = _texture_manager->getSkyboxTexture(),
-                .terrain_name = _texture_manager->getTerrainTexture(),
-                .water_name = _texture_manager->getWaterTexture(),
-                .sun_light = _light_manager->getSunLight(),
-                .point_lights = _light_manager->getPointLights(),
-                .spot_lights = _light_manager->getSpotLights(),
-                .characters = _font_manager->getCharacters(),
-                .face = _font_manager->getFace(),
-                .atlas_width = _font_manager->getAtlasWidth(),
-                .atlas_height = _font_manager->getAtlasHeight()
-              };
-
               (*rdr_impl)(_renderer.get(), rendering_info);
             }
 
             auto* animation_component = _component_manager->get<AnimationComponent>(leaf_node->getEntity()->getID());
             if (animation_component && leaf_node->isLoaded()) {
-              AnimationInfo const animation_info {
-                .delta_time = delta_time,
-                .data = mesh->getData()
-              };
               (*animation_component)(animation_info);
             }
 
             auto* boneAnimationComponent = _component_manager->get<BoneAnimationComponent>(leaf_node->getEntity()->getID());
             if (boneAnimationComponent) {
-              AnimationInfo const animation_info {
-                .delta_time = delta_time,
-                .data = mesh->getData()
-              };
+
               (*boneAnimationComponent)(animation_info);
               //mesh->setIsDirty(true);
               /*if (mesh->hasBufferStorage()) {
@@ -270,16 +279,8 @@ namespace Poulpe
             }
 
             if (rdr_impl) {
-              RendererInfo const renderer_info {
-                .mesh = mesh,
-                .camera = getCamera(),
-                .sun_light = _light_manager->getSunLight(),
-                .point_lights = _light_manager->getPointLights(),
-                .spot_lights = _light_manager->getSpotLights(),
-                .elapsed_time = _elapsed_time,
-                .stage_flag_bits = rdr_impl->getShaderStageFlags(),
-                .normal_debug = false
-              };
+              renderer_info.stage_flag_bits = rdr_impl->getShaderStageFlags();
+              renderer_info.mesh = mesh;
               _renderer->draw(renderer_info);
             }
           }
@@ -323,7 +324,7 @@ namespace Poulpe
     setIsLoaded();
 
     std::jthread entities(_entity_manager->load(lvl_data));
-    entities.detach();
+    //entities.detach();
   }
 
   void RenderManager::prepareHUD()

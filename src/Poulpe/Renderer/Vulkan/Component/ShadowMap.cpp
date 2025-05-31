@@ -1,12 +1,19 @@
 module;
+#define GLM_FORCE_LEFT_HANDED
+#define GLM_FORCE_DEFAULT_ALIGNED_GENTYPES
+#define GLM_FORCE_DEPTH_ZERO_TO_ONE
+#define GLM_ENABLE_EXPERIMENTAL
+
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtx/hash.hpp>
+#include <glm/gtx/quaternion.hpp>
+#include <glm/fwd.hpp>
+
 #include <algorithm>
 #include <array>
 #include <chrono>
 #include <functional>
-#define GLM_ENABLE_EXPERIMENTAL
-#include <glm/glm.hpp>
-#include <glm/gtx/quaternion.hpp>
-#include <glm/gtc/matrix_transform.hpp>
 #include <string_view>
 #include <vector>
 #include <volk.h>
@@ -75,7 +82,7 @@ namespace Poulpe
     auto const& tex{ component_rendering_info.textures.at(mesh->getData()->_textures.at(0)) };
 
     std::vector<VkDescriptorImageInfo> image_infos{};
-    image_infos.emplace_back(tex.getSampler(), tex.getImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+    image_infos.emplace_back(tex.getSampler(), tex.getImageView(), VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL);
     std::vector<VkDescriptorImageInfo> depth_map_image_infos{};
     std::vector<VkDescriptorImageInfo> cube_maps_infos{};
 

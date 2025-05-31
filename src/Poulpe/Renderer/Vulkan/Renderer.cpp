@@ -1,8 +1,16 @@
 module;
 
+#define GLM_FORCE_LEFT_HANDED
+#define GLM_FORCE_DEFAULT_ALIGNED_GENTYPES
+#define GLM_FORCE_DEPTH_ZERO_TO_ONE
+#define GLM_ENABLE_EXPERIMENTAL
+
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-#include <stb_image.h>
+#include <glm/gtx/hash.hpp>
+#include <glm/gtx/quaternion.hpp>
+#include <glm/fwd.hpp>
+
 #include <volk.h>
 
 #include <algorithm>
@@ -402,18 +410,13 @@ namespace Poulpe
 
     VkImageLayout const undefined_layout{ VK_IMAGE_LAYOUT_UNDEFINED };
     VkImageLayout const begin_color_layout{ VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL };
-    VkImageLayout const begin_depth_layout{ VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL };
+    VkImageLayout const begin_depth_layout{ VK_IMAGE_LAYOUT_DEPTH_READ_ONLY_OPTIMAL };
     //VkImageLayout const general { VK_IMAGE_LAYOUT_GENERAL };
     VkImageAspectFlagBits const color_aspect { VK_IMAGE_ASPECT_COLOR_BIT };
     VkImageAspectFlagBits const depth_aspect{ VK_IMAGE_ASPECT_DEPTH_BIT };
 
-    if (thread_id == 0) {
-      _vulkan->transitionImageLayout(cmd_buffer, color, undefined_layout, begin_color_layout, color_aspect);
-    }
-    
-    if ((has_depth_attachment && thread_id == 0) || thread_id == 3) {
-      _vulkan->transitionImageLayout(cmd_buffer, depthimage, undefined_layout, begin_depth_layout, depth_aspect);
-    }
+    _vulkan->transitionImageLayout(cmd_buffer, color, undefined_layout, begin_color_layout, color_aspect);
+    _vulkan->transitionImageLayout(cmd_buffer, depthimage, undefined_layout, begin_depth_layout, depth_aspect);
 
     _vulkan->beginRendering(
       cmd_buffer,
@@ -465,29 +468,27 @@ namespace Poulpe
       }
     }
 
-    if (mesh->hasPushConstants()) {
-      constants push_constants{};
+    constants push_constants{};
+    
+    if ("skybox" == mesh->getName()) {
+      push_constants.view = camera->lookAt();
+      push_constants.view_position = camera->getPos();
+    } else {
+      push_constants.view = camera->lookAt();
+      push_constants.view_position = camera->getPos();
       push_constants.total_position = glm::vec4{
         renderer_info.elapsed_time,
         0.0f, 0.0f, 0.0f};
-
-      if ("skybox" != mesh->getName()) {
-        push_constants.view = camera->lookAt();
-        push_constants.view_position = camera->getPos();
-      } else {
-        push_constants.view = glm::mat4(glm::mat3(camera->lookAt()));
-        push_constants.view_position = camera->getPos();
-      }
-
-      vkCmdPushConstants(
-        cmd_buffer, 
-        pipeline->pipeline_layout,
-        renderer_info.stage_flag_bits,
-        0,
-        sizeof(constants),
-        &push_constants);
     }
 
+    vkCmdPushConstants(
+      cmd_buffer, 
+      pipeline->pipeline_layout,
+      renderer_info.stage_flag_bits,
+      0,
+      sizeof(constants),
+      &push_constants);
+      
     auto const alpha_mode{ mesh->getMaterial().alpha_mode };
 
     if (has_alpha_blend && alpha_mode > 0.0f) {
@@ -547,8 +548,6 @@ namespace Poulpe
     endRendering(cmd_buffer, color, depthimage, is_attachment, has_depth_attachment);
 
     std::vector<VkPipelineStageFlags> flags { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
-    if (has_depth_attachment) flags.emplace_back(VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
-
     _draw_cmds.insert(&cmd_buffer, &_entities_sema_finished[thread_id], thread_id, is_attachment, flags);
 
     submit(_draw_cmds);
@@ -899,7 +898,7 @@ namespace Poulpe
   {
     _vulkan->endRendering(cmd_buffer);
 
-    VkImageLayout final = (is_attachment) ? VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL: VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+    VkImageLayout final = (is_attachment) ? VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL: VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
     _vulkan->transitionImageLayout(cmd_buffer, image,
       VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, final, VK_IMAGE_ASPECT_COLOR_BIT);
 

@@ -1,6 +1,16 @@
 module;
 
+#define GLM_FORCE_LEFT_HANDED
+#define GLM_FORCE_DEFAULT_ALIGNED_GENTYPES
+#define GLM_FORCE_DEPTH_ZERO_TO_ONE
+#define GLM_ENABLE_EXPERIMENTAL
+
 #include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtx/hash.hpp>
+#include <glm/gtx/quaternion.hpp>
+#include <glm/fwd.hpp>
+
 #include <volk.h>
 
 #include <algorithm>
@@ -90,13 +100,13 @@ namespace Poulpe
 
   export struct RendererInfo
   {
-    Mesh* const mesh;
+    Mesh* mesh;
     Camera* const camera;
     Light const& sun_light;
     std::vector<Light> const& point_lights;
     std::vector<Light> const& spot_lights;
     double elapsed_time{0.0};
-    VkShaderStageFlags const stage_flag_bits;
+    VkShaderStageFlags stage_flag_bits;
     bool const normal_debug;
   };
 

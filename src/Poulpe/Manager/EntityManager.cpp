@@ -1,11 +1,19 @@
 module;
-#include <functional>
+
+#define GLM_FORCE_LEFT_HANDED
+#define GLM_FORCE_DEFAULT_ALIGNED_GENTYPES
+#define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #define GLM_ENABLE_EXPERIMENTAL
+
 #include <glm/glm.hpp>
-#include <glm/gtx/quaternion.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtx/hash.hpp>
+#include <glm/gtx/quaternion.hpp>
+#include <glm/fwd.hpp>
+
 #include <nlohmann/json.hpp>
 
+#include <functional>
 #include <shared_mutex>
 #include <thread>
 
@@ -55,10 +63,7 @@ namespace Poulpe
         auto const& key = conf.key();
         auto const& data = conf.value();
 
-        std::jthread entity([&]() {
-          initMeshes(key, data);
-        });
-        entity.detach();
+        initMeshes(key, data);
       });
     };
   }
@@ -424,6 +429,11 @@ namespace Poulpe
     _world->setVisible(false);
 
     _world_node = std::make_unique<EntityNode>(_world);
+  }
+
+  EntityNode const * EntityManager::addEntityToWorld(Entity * entity)
+  {
+    return _world_node->addChild(new EntityNode(entity));
   }
 
   void EntityManager::addEntity(Entity* entity)
