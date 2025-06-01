@@ -1,8 +1,5 @@
 module;
 
-#define GLM_FORCE_LEFT_HANDED
-#define GLM_FORCE_DEFAULT_ALIGNED_GENTYPES
-#define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #define GLM_ENABLE_EXPERIMENTAL
 
 #include <glm/glm.hpp>
@@ -42,7 +39,7 @@ namespace Poulpe
     ComponentRenderingInfo const& component_rendering_info)
   {
      stage_flag_bits =
-      VK_SHADER_STAGE_VERTEX_BIT 
+      VK_SHADER_STAGE_VERTEX_BIT
       | VK_SHADER_STAGE_FRAGMENT_BIT
       | VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT
       | VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT;

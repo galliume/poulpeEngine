@@ -750,7 +750,7 @@ VkPipeline VulkanAPI::createGraphicsPipeline(PipeLineCreateInfo const& pipeline_
   rasterizer.polygonMode = pipeline_create_info.polygone_mode;
   rasterizer.lineWidth = 1.0f;
   rasterizer.cullMode = pipeline_create_info.cull_mode;
-  rasterizer.frontFace = VK_FRONT_FACE_CLOCKWISE;
+  rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;//VK_FRONT_FACE_CLOCKWISE;
   rasterizer.depthBiasEnable = VK_FALSE;
   rasterizer.depthBiasConstantFactor = 0.f;
   rasterizer.depthBiasClamp = 0.0f;
@@ -2670,12 +2670,12 @@ VkSampler VulkanAPI::createTextureSampler(uint32_t const mip_lvl)
       source_stage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
       destination_stage = VK_PIPELINE_STAGE_TRANSFER_BIT;
 
-    }  else if (old_layout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL && new_layout == VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL) {
+    } else if (old_layout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL && new_layout == VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL) {
       barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-      barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+      barrier.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
 
-      source_stage = VK_PIPELINE_STAGE_TRANSFER_BIT;
-      destination_stage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+      source_stage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+      destination_stage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
 
     } else if (old_layout == VK_IMAGE_LAYOUT_UNDEFINED && new_layout == VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL) {
       barrier.srcAccessMask = 0;
@@ -3149,6 +3149,24 @@ VkSampler VulkanAPI::createTextureSampler(uint32_t const mip_lvl)
       VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
       static_cast<uint32_t>(buffer_copy_regions.size()),
       buffer_copy_regions.data());
+
+    VkImageMemoryBarrier final_barrier{};
+    final_barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+    final_barrier.image = image;
+    final_barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+    final_barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+    final_barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+    final_barrier.subresourceRange.baseArrayLayer = 0;
+    final_barrier.subresourceRange.layerCount = VK_REMAINING_ARRAY_LAYERS;
+    final_barrier.subresourceRange.levelCount = 1;
+    final_barrier.subresourceRange.baseMipLevel = mip_lvl - 1;
+    final_barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+    final_barrier.newLayout = VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL;
+    final_barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+    final_barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+
+    vkCmdPipelineBarrier(cmd_buffer, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0,
+      0, nullptr, 0, nullptr, 1, & final_barrier);
 
     endCommandBuffer(cmd_buffer);
     queueSubmit(cmd_buffer);

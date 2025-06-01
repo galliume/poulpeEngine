@@ -1,5 +1,5 @@
 module;
-#define GLM_FORCE_LEFT_HANDED
+
 #define GLM_FORCE_DEFAULT_ALIGNED_GENTYPES
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #define GLM_ENABLE_EXPERIMENTAL
@@ -46,12 +46,12 @@ namespace Poulpe
 
   void Camera::left()
   {
-    _next_pos += glm::normalize(glm::cross(_camera_front, _camera_up)) * _acceleration * getDeltaTime();
+    _next_pos -= glm::normalize(glm::cross(_camera_front, _camera_up)) * _acceleration * getDeltaTime();
   }
 
   void Camera::right()
   {
-    _next_pos -= glm::normalize(glm::cross(_camera_front, _camera_up)) * _acceleration * getDeltaTime();
+    _next_pos += glm::normalize(glm::cross(_camera_front, _camera_up)) * _acceleration * getDeltaTime();
   }
 
   void Camera::up()
@@ -139,7 +139,7 @@ namespace Poulpe
 
   void Camera::updateAngle(double const xoffset, double const yoffset)
   {
-    _yaw -= xoffset;
+    _yaw += xoffset;
     _pitch += yoffset;
 
     if (_pitch > 89.0) {

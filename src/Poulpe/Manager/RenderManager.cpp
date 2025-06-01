@@ -157,7 +157,8 @@ namespace Poulpe
       .spot_lights = _light_manager->getSpotLights(),
       .elapsed_time = _elapsed_time,
       .stage_flag_bits = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
-      .normal_debug = false
+      .normal_debug = ConfigManagerLocator::get()->normalDebug(),
+      .has_alpha_blend = false
     };
 
     ComponentRenderingInfo rendering_info {
@@ -194,6 +195,36 @@ namespace Poulpe
 
       _renderer->startRender();
 
+      auto skybox_entity = _entity_manager->getSkybox();
+      if (skybox_entity != nullptr) {
+        auto* mesh_component = _component_manager->get<MeshComponent>(skybox_entity->getID());
+        auto mesh = mesh_component->template has<Mesh>();
+        if (mesh) {
+          auto rdr_impl = _component_manager->get<RendererComponent>(skybox_entity->getID());
+          renderer_info.stage_flag_bits = rdr_impl->getShaderStageFlags();
+          renderer_info.mesh = mesh;
+          if (mesh->isDirty() && rdr_impl) {
+            (*rdr_impl)(_renderer.get(), rendering_info);
+          }
+          _renderer->draw(renderer_info);
+        }
+      }
+
+      auto terrain_entity = _entity_manager->getTerrain();
+      if (terrain_entity != nullptr) {
+        auto* mesh_component = _component_manager->get<MeshComponent>(terrain_entity->getID());
+        auto mesh = mesh_component->template has<Mesh>();
+        if (mesh) {
+          auto rdr_impl = _component_manager->get<RendererComponent>(terrain_entity->getID());
+          renderer_info.stage_flag_bits = rdr_impl->getShaderStageFlags();
+          renderer_info.mesh = mesh;
+          if (mesh->isDirty() && rdr_impl) {
+            (*rdr_impl)(_renderer.get(), rendering_info);
+          }
+          _renderer->draw(renderer_info);
+        }
+      }
+
       auto water_entity = _entity_manager->getWater();
       if (water_entity != nullptr) {
         auto* mesh_component = _component_manager->get<MeshComponent>(water_entity->getID());
@@ -205,7 +236,7 @@ namespace Poulpe
           if (mesh->isDirty() && rdr_impl) {
             (*rdr_impl)(_renderer.get(), rendering_info);
           }
-          _renderer->draw(renderer_info);
+          //_renderer->draw(renderer_info);
         }
       }
 
@@ -218,6 +249,7 @@ namespace Poulpe
           
           rendering_info.mesh = mesh;
           renderer_info.mesh = mesh;
+          renderer_info.has_alpha_blend = true;
           renderer_info.stage_flag_bits = rdr_impl->getShaderStageFlags();
 
           if (mesh->isDirty() && rdr_impl) {
@@ -281,7 +313,7 @@ namespace Poulpe
             if (rdr_impl) {
               renderer_info.stage_flag_bits = rdr_impl->getShaderStageFlags();
               renderer_info.mesh = mesh;
-              _renderer->draw(renderer_info);
+              //_renderer->draw(renderer_info);
             }
           }
         });
@@ -324,7 +356,7 @@ namespace Poulpe
     setIsLoaded();
 
     std::jthread entities(_entity_manager->load(lvl_data));
-    //entities.detach();
+    entities.detach();
   }
 
   void RenderManager::prepareHUD()
