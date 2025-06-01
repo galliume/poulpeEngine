@@ -21,7 +21,7 @@ layout(location = 0) in vec3 position;
 layout(location = 1) in vec3 normal;
 layout(location = 2) in vec2 texture_coord;
 layout(location = 3) in vec4 tangent;
-layout(location = 4) in vec4 weights;
+layout(location = 4) in vec4 color;
 
 layout(binding = 1) uniform sampler2D tex_sampler[5];
 
@@ -30,10 +30,8 @@ layout(location = 1) out vec3 out_position;
 
 void main()
 {
-  vec4 p = vec4(position, 1.0);
-
   out_texture_coord = texture_coord;
   out_position = position;
 
-  gl_Position = p;
+  gl_Position = vec4(position, 1.0);
 }

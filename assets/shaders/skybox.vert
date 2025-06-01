@@ -7,12 +7,11 @@ layout(set = 0, binding = 0) readonly uniform UniformBufferObject {
     mat4 projection;
 } ubo;
 
-layout(location = 0) in vec3 pos;
+layout(location = 0) in vec3 position;
 layout(location = 1) in vec3 normal;
-layout(location = 2) in vec2 texCoord;
+layout(location = 2) in vec2 texture_coord;
 layout(location = 3) in vec4 tangent;
-layout(location = 4) in vec4 fidtidBB;
-layout(location = 5) in vec3 vColor;
+layout(location = 4) in vec4 color;
 
 layout(location = 0) out vec3 fTexCoord;
 layout(location = 1) out vec4 fCameraPos;
@@ -26,9 +25,9 @@ layout(push_constant) uniform constants
 
 void main() 
 {
-  fTexCoord = pos.xyz;
+  fTexCoord = position;
   //gl_Position = vec4(pos.xyz, 1.0);
-  vec4 p = ubo.projection * pc.view * vec4(pos, 1.0);
+  vec4 p = ubo.projection * pc.view * vec4(position, 1.0);
   gl_Position = p.xyww;
   fModelPos = gl_Position;
   fCameraPos = ubo.projection * pc.view * ubo.model * vec4(pc.view_position, 1.0);

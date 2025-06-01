@@ -219,6 +219,6 @@ void main()
 
   //@todo check how to get the precise value
   float white_point = 350;
-  final_color = vec4(0.0, 0.0, 0.0, 1.0);
-  final_color.rgb = linear_to_hdr10(result.rgb, white_point);
+  final_color = vec4(0.81, 1.0, 0.04, 1.0);
+  //final_color.rgb = linear_to_hdr10(result.rgb, white_point);
 }

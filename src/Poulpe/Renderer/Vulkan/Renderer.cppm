@@ -1,7 +1,6 @@
 module;
 
-#define GLM_FORCE_LEFT_HANDED
-#define GLM_FORCE_DEFAULT_ALIGNED_GENTYPES
+ #define GLM_FORCE_DEFAULT_ALIGNED_GENTYPES
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #define GLM_ENABLE_EXPERIMENTAL
 
@@ -108,6 +107,7 @@ namespace Poulpe
     double elapsed_time{0.0};
     VkShaderStageFlags stage_flag_bits;
     bool const normal_debug;
+    bool has_alpha_blend {false};
   };
 
   export class Renderer
