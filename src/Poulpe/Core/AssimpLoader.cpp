@@ -662,6 +662,7 @@ namespace Poulpe
           bone_data.name = bone_node->mName.C_Str();
           bones_list.insert(bone_data.name);
           bone_data.parent_name = bone_node->mParent->mName.C_Str();
+          bone_data.weights.resize(bone->mNumWeights);
 
           glm::vec3 skew;
           glm::vec4 perspective;
@@ -677,7 +678,7 @@ namespace Poulpe
           for (uint32_t w{ 0 }; w < bone->mNumWeights; w++) {
             aiVertexWeight const& aiWeight = bone->mWeights[w];
             bone_data.weights.emplace_back(aiWeight.mVertexId, aiWeight.mWeight);
-            
+
             auto& data_weight = vertex_weight_map[aiWeight.mVertexId];
             data_weight.emplace_back(bone_id, aiWeight.mWeight);
           }
@@ -717,9 +718,9 @@ namespace Poulpe
 
           std::sort(data_vertex.begin(), data_vertex.end(),
             [](auto const& a, auto const& b) { return a.second > b.second; });
-            
+          
           float total_weight{ 0.0f };
-          for (size_t y{ 0 }; i < 4 && y < data_vertex.size(); ++y) {
+          for (size_t y{ 0 }; y < 4 && y < data_vertex.size(); ++y) {
             vertex.bone_ids[y] = data_vertex[y].first;
             vertex.bone_weights[y] = data_vertex[y].second;
             total_weight += data_vertex[y].second;

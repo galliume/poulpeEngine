@@ -13,6 +13,7 @@ module;
 export module Poulpe.Managers.RenderManager;
 
 import Poulpe.Component.Camera;
+import Poulpe.Component.EntityNode;
 import Poulpe.Core.PlpTypedef;
 import Poulpe.Core.Tools;
 import Poulpe.GUI.Window;
@@ -62,6 +63,15 @@ namespace Poulpe
 
     void setElapsedTime(double const elapsed_time) { _elapsed_time = elapsed_time;}
     double getElapsedTime() const { return _elapsed_time; }
+
+    void renderEntity(
+      IDType const entity_id,
+      double const delta_time,
+      EntityNode const * entity_node = nullptr);
+
+    void drawEntity(
+      IDType const entity_id,
+      bool const has_alpha_blend = false);
 
   private:
     void loadData(std::string const & level);

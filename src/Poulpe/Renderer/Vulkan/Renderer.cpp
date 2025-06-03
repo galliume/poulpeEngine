@@ -203,10 +203,10 @@ namespace Poulpe
     VkFenceCreateInfo fence_info{};
     fence_info.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
     fence_info.flags = VK_FENCE_CREATE_SIGNALED_BIT;
-    _entities_sema_finished.resize(_max_render_thread);
+    _entities_sema_finished.resize(_max_frames_in_flight);
     _image_available.resize(_max_render_thread);
 
-    for (size_t i { 0 }; i < _max_render_thread; ++i) {
+    for (size_t i { 0 }; i < _max_frames_in_flight; ++i) {
       result = vkCreateSemaphore(_vulkan->getDevice(), &sema_create_info, nullptr, &_entities_sema_finished[i]);
       if (VK_SUCCESS != result) Logger::error("can't create _entities_sema_finished semaphore");
     }
@@ -323,16 +323,16 @@ namespace Poulpe
     }
 
     constants push_constants{};
-    
+    push_constants.options = mesh->getOptions();
+    push_constants.view_position = camera->getPos();
+    // push_constants.options = glm::vec4{
+    //     renderer_info.elapsed_time,
+    //     0.0f, 0.0f, 0.0f};
+
     if ("skybox" == mesh->getName()) {
       push_constants.view = glm::mat4(glm::mat3(camera->lookAt()));
-      push_constants.view_position = camera->getPos();
     } else {
       push_constants.view = camera->lookAt();
-      push_constants.view_position = camera->getPos();
-      push_constants.total_position = glm::vec4{
-        renderer_info.elapsed_time,
-        0.0f, 0.0f, 0.0f};
     }
 
     vkCmdPushConstants(
@@ -402,7 +402,7 @@ namespace Poulpe
     endRendering(cmd_buffer, color, depthimage, is_attachment, has_depth_attachment);
 
     std::vector<VkPipelineStageFlags> flags { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
-    _draw_cmds.insert(&cmd_buffer, &_entities_sema_finished[thread_id], thread_id, is_attachment, flags);
+    _draw_cmds.insert(&cmd_buffer, &_entities_sema_finished[_current_frame], thread_id, is_attachment, flags);
 
     submit(_draw_cmds);
   }

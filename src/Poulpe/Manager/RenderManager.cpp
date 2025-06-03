@@ -149,33 +149,6 @@ namespace Poulpe
   {
     //@todo animate light
     //_light_manager->animateAmbientLight(delta_time);
-    RendererInfo renderer_info {
-      .mesh = nullptr,
-      .camera = getCamera(),
-      .sun_light = _light_manager->getSunLight(),
-      .point_lights = _light_manager->getPointLights(),
-      .spot_lights = _light_manager->getSpotLights(),
-      .elapsed_time = _elapsed_time,
-      .stage_flag_bits = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
-      .normal_debug = ConfigManagerLocator::get()->normalDebug(),
-      .has_alpha_blend = false
-    };
-
-    ComponentRenderingInfo rendering_info {
-      .mesh = nullptr,
-      .textures = _texture_manager->getTextures(),
-      .skybox_name = _texture_manager->getSkyboxTexture(),
-      .terrain_name = _texture_manager->getTerrainTexture(),
-      .water_name = _texture_manager->getWaterTexture(),
-      .sun_light = _light_manager->getSunLight(),
-      .point_lights = _light_manager->getPointLights(),
-      .spot_lights = _light_manager->getSpotLights(),
-      .characters = _font_manager->getCharacters(),
-      .face = _font_manager->getFace(),
-      .atlas_width = _font_manager->getAtlasWidth(),
-      .atlas_height = _font_manager->getAtlasHeight()
-    };
-
     {
       std::lock_guard<std::shared_mutex> guard(_entity_manager->lockWorldNode());
 
@@ -197,125 +170,34 @@ namespace Poulpe
 
       auto skybox_entity = _entity_manager->getSkybox();
       if (skybox_entity != nullptr) {
-        auto* mesh_component = _component_manager->get<MeshComponent>(skybox_entity->getID());
-        auto mesh = mesh_component->template has<Mesh>();
-        if (mesh) {
-          auto rdr_impl = _component_manager->get<RendererComponent>(skybox_entity->getID());
-          renderer_info.stage_flag_bits = rdr_impl->getShaderStageFlags();
-          renderer_info.mesh = mesh;
-          if (mesh->isDirty() && rdr_impl) {
-            (*rdr_impl)(_renderer.get(), rendering_info);
-          }
-          _renderer->draw(renderer_info);
-        }
+        renderEntity(skybox_entity->getID(), delta_time);
+        drawEntity(skybox_entity->getID());
       }
 
       auto terrain_entity = _entity_manager->getTerrain();
       if (terrain_entity != nullptr) {
-        auto* mesh_component = _component_manager->get<MeshComponent>(terrain_entity->getID());
-        auto mesh = mesh_component->template has<Mesh>();
-        if (mesh) {
-          auto rdr_impl = _component_manager->get<RendererComponent>(terrain_entity->getID());
-          renderer_info.stage_flag_bits = rdr_impl->getShaderStageFlags();
-          renderer_info.mesh = mesh;
-          if (mesh->isDirty() && rdr_impl) {
-            (*rdr_impl)(_renderer.get(), rendering_info);
-          }
-          _renderer->draw(renderer_info);
-        }
+        renderEntity(terrain_entity->getID(), delta_time);
+        drawEntity(terrain_entity->getID());
       }
 
       auto water_entity = _entity_manager->getWater();
       if (water_entity != nullptr) {
-        auto* mesh_component = _component_manager->get<MeshComponent>(water_entity->getID());
-        auto mesh = mesh_component->template has<Mesh>();
-        if (mesh) {
-          auto rdr_impl = _component_manager->get<RendererComponent>(water_entity->getID());
-          renderer_info.stage_flag_bits = rdr_impl->getShaderStageFlags();
-          renderer_info.mesh = mesh;
-          if (mesh->isDirty() && rdr_impl) {
-            (*rdr_impl)(_renderer.get(), rendering_info);
-          }
-          //_renderer->draw(renderer_info);
-        }
+        renderEntity(water_entity->getID(), delta_time);
+        drawEntity(water_entity->getID());
       }
 
-      std::ranges::for_each(_entity_manager->getTexts(), [&](auto const& data_entity) {
-        auto* mesh_component = _component_manager->get<MeshComponent>(data_entity->getID());
-        auto mesh = mesh_component->template has<Mesh>();
-
-        if (mesh) {
-          auto rdr_impl = _component_manager->get<RendererComponent>(data_entity->getID());
-          
-          rendering_info.mesh = mesh;
-          renderer_info.mesh = mesh;
-          renderer_info.has_alpha_blend = true;
-          renderer_info.stage_flag_bits = rdr_impl->getShaderStageFlags();
-
-          if (mesh->isDirty() && rdr_impl) {
-            (*rdr_impl)(_renderer.get(), rendering_info);
-          }
-          _renderer->draw(renderer_info);
-        }
+      std::ranges::for_each(_entity_manager->getTexts(), [&](auto const& text_entity) {
+        renderEntity(text_entity->getID(), delta_time);
+        drawEntity(text_entity->getID(), true);
       });
 
       auto* world_node = _entity_manager->getWorldNode();
 
       std::ranges::for_each(world_node->getChildren(), [&](const auto& leaf_node) {
         std::ranges::for_each(leaf_node->getChildren(), [&](const auto& entity_node) {
-
           auto const& data_entity = entity_node->getEntity();
-
-          auto* mesh_component = _component_manager->get<MeshComponent>(data_entity->getID());
-          auto mesh = mesh_component->template has<Mesh>();
-
-          if (mesh) {
-            rendering_info.mesh = mesh;
-            renderer_info.mesh = mesh;
-
-            AnimationInfo const animation_info {
-              .delta_time = delta_time,
-              .data = mesh->getData()
-            };
-            //if (mesh->hasBufferStorage()) {
-            //  auto objectBuffer = mesh->getObjectBuffer();
-            //  objectBuffer->point_lights[0] = _light_manager->getPointLights().at(0);
-
-            //  _renderer->getAPI()->updateStorageBuffer(mesh->getStorageBuffers()->at(0), *objectBuffer);
-            //}
-
-            auto rdr_impl = _component_manager->get<RendererComponent>(data_entity->getID());
-            if (mesh->isDirty() && rdr_impl) {
-              (*rdr_impl)(_renderer.get(), rendering_info);
-            }
-
-            auto* animation_component = _component_manager->get<AnimationComponent>(leaf_node->getEntity()->getID());
-            if (animation_component && leaf_node->isLoaded()) {
-              (*animation_component)(animation_info);
-            }
-
-            auto* boneAnimationComponent = _component_manager->get<BoneAnimationComponent>(leaf_node->getEntity()->getID());
-            if (boneAnimationComponent) {
-
-              (*boneAnimationComponent)(animation_info);
-              //mesh->setIsDirty(true);
-              /*if (mesh->hasBufferStorage()) {
-                auto buffer{ mesh->getStorageBuffers()->at(0) };
-                ObjectBuffer* objectBuffer = mesh->getObjectBuffer();
-
-                objectBuffer->boneIds = {};
-                objectBuffer->weights = {};
-
-                _renderer->updateStorageBuffer(buffer, *objectBuffer);
-              }*/
-            }
-
-            if (rdr_impl) {
-              renderer_info.stage_flag_bits = rdr_impl->getShaderStageFlags();
-              renderer_info.mesh = mesh;
-              //_renderer->draw(renderer_info);
-            }
-          }
+          renderEntity(data_entity->getID(), delta_time, leaf_node);
+          drawEntity(data_entity->getID(), true);
         });
       });
 
@@ -327,10 +209,83 @@ namespace Poulpe
     //  _refresh = false;
     //}
   }
-  // void RenderManager::renderScene()
-  // {
-  //   _renderer->renderScene(_component_manager);
-  // }
+
+  void RenderManager::renderEntity(
+    IDType const entity_id,
+    double const delta_time,
+    EntityNode const * entity_node
+  )
+  {
+    auto* mesh_component = _component_manager->get<MeshComponent>(entity_id);
+    auto mesh = mesh_component->template has<Mesh>();
+    auto rdr_impl = _component_manager->get<RendererComponent>(entity_id);
+
+    if (mesh && rdr_impl) {
+
+      ComponentRenderingInfo rendering_info {
+        .mesh = mesh,
+        .textures = _texture_manager->getTextures(),
+        .skybox_name = _texture_manager->getSkyboxTexture(),
+        .terrain_name = _texture_manager->getTerrainTexture(),
+        .water_name = _texture_manager->getWaterTexture(),
+        .sun_light = _light_manager->getSunLight(),
+        .point_lights = _light_manager->getPointLights(),
+        .spot_lights = _light_manager->getSpotLights(),
+        .characters = _font_manager->getCharacters(),
+        .face = _font_manager->getFace(),
+        .atlas_width = _font_manager->getAtlasWidth(),
+        .atlas_height = _font_manager->getAtlasHeight()
+      };
+
+      if (mesh->isDirty()) {
+        (*rdr_impl)(_renderer.get(), rendering_info);
+      }
+
+      AnimationInfo const animation_info {
+        .delta_time = delta_time,
+        .data = mesh->getData()
+      };
+
+      if (entity_node) {
+        auto* animation_component = _component_manager->get<AnimationComponent>(entity_node->getEntity()->getID());
+        if (animation_component && entity_node->isLoaded()) {
+          (*animation_component)(animation_info);
+        }
+
+        auto* boneAnimationComponent = _component_manager->get<BoneAnimationComponent>(entity_node->getEntity()->getID());
+        if (boneAnimationComponent) {
+
+          (*boneAnimationComponent)(animation_info);
+          mesh->setIsDirty(true);
+        }
+      }
+    }
+  }
+
+  void RenderManager::drawEntity(
+    IDType const entity_id,
+    bool const has_alpha_blend)
+  {
+    auto* mesh_component = _component_manager->get<MeshComponent>(entity_id);
+    auto mesh = mesh_component->template has<Mesh>();
+    auto rdr_impl = _component_manager->get<RendererComponent>(entity_id);
+
+    if (mesh && rdr_impl) {
+      RendererInfo renderer_info {
+        .mesh = mesh,
+        .camera = getCamera(),
+        .sun_light = _light_manager->getSunLight(),
+        .point_lights = _light_manager->getPointLights(),
+        .spot_lights = _light_manager->getSpotLights(),
+        .elapsed_time = _elapsed_time,
+        .stage_flag_bits = rdr_impl->getShaderStageFlags(),
+        .normal_debug = ConfigManagerLocator::get()->normalDebug(),
+        .has_alpha_blend = has_alpha_blend
+      };
+
+      _renderer->draw(renderer_info);
+    }
+  }
 
   void RenderManager::loadData(std::string const & level)
   {

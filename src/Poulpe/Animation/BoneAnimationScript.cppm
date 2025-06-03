@@ -132,35 +132,32 @@ namespace Poulpe
         switch (start.interpolation) {
         case AnimInterpolation::STEP:
           return start.value;
-
         case AnimInterpolation::LINEAR:
+        default:
           return glm::vec3{
             std::lerp(start.value.x, end.value.x, t),
             std::lerp(start.value.y, end.value.y, t),
             std::lerp(start.value.z, end.value.z, t)
           };
-
         case AnimInterpolation::SPHERICAL_LINEAR:
           return start.value;
         case AnimInterpolation::CUBIC_SPLINE:
           //@todo
           return start.value;
-        default:
-          return start.value;
         }
+        return start.value;
       } else if constexpr (std::same_as<decltype(start.value), glm::quat>) {
         switch (start.interpolation) {
         case AnimInterpolation::STEP:
           return start.value;
         case AnimInterpolation::LINEAR:
           return start.value;
-        case AnimInterpolation::SPHERICAL_LINEAR:
-          return glm::normalize(glm::slerp(start.value, end.value, t));
-        case AnimInterpolation::CUBIC_SPLINE:
+          case AnimInterpolation::CUBIC_SPLINE:
           //@todo
           return start.value;
+        case AnimInterpolation::SPHERICAL_LINEAR:
         default:
-          return start.value;
+          return glm::normalize(glm::slerp(start.value, end.value, t));
         }
       } else {
         static_assert(false, "Unsupported value type in interpolate()");
