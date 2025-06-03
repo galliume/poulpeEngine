@@ -143,13 +143,16 @@ namespace Poulpe
     
     glm::vec4 options{ 0.0f };
     
+    //@todo isFlat is not obvious
     if (!isFlat()) {
       projection = renderer->getPerspective();
-
+      
       options.x = 1.0f;
-      mesh->getMaterial().double_sided = true;
     }
-    
+
+    mesh->getMaterial().double_sided = true;
+
+    //@todo rename to
     mesh->setOptions(options);
 
     auto const& data = mesh->getData();

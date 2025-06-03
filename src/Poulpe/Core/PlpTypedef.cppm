@@ -207,7 +207,7 @@ namespace Poulpe
   {
     alignas(16) glm::mat4 view;
     alignas(16) glm::vec3 view_position;
-    alignas(16) glm::vec4 total_position{ 1.0 };
+    alignas(16) glm::vec4 options{ 0.0 };
   };
 
   export struct shadowMapConstants
