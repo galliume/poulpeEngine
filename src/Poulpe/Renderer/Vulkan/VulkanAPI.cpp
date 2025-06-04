@@ -1514,10 +1514,10 @@ void VulkanAPI::beginRendering(
 
   VkClearColorValue color_clear = {};
 
-  color_clear.float32[0] = 0.0f;
-  color_clear.float32[1] = 0.0f;
-  color_clear.float32[2] = 0.0f;
-  color_clear.float32[3] = 0.0f;
+  color_clear.float32[0] = 0.2f;
+  color_clear.float32[1] = 0.4f;
+  color_clear.float32[2] = 0.3f;
+  color_clear.float32[3] = 0.6f;
 
   VkRenderingAttachmentInfo color_attachment{ };
   color_attachment.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;

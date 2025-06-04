@@ -70,9 +70,10 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
 
     add_definitions(-D_USE_MATH_DEFINES)
     #-v -ftime-trace -Xclang -fmodules-debuginfo
-    list(APPEND DEBUG_OPTIONS -g -O0 -fno-inline -fno-inline-functions -fno-omit-frame-pointer -fno-strict-aliasing -Wno-padded -Wno-documentation -Wno-documentation-unknown-command -Wno-decls-in-multiple-modules -Wno-unsafe-buffer-usage -Wno-c++98-compat -Wno-c++98-compat-pedantic)
-    list(APPEND RELEASE_OPTIONS -O3 -fno-strict-aliasing -Wno-decls-in-multiple-modules -Wno-unsafe-buffer-usage -Wno-c++98-compat -Wno-c++98-compat-pedantic -Wno-padded -Wno-documentation -Wno-documentation-unknown-command)
+    list(APPEND DEBUG_OPTIONS -g -O0 -pthread -femulated-tls -fno-inline -fno-inline-functions -fno-omit-frame-pointer -fno-strict-aliasing -Wno-padded -Wno-documentation -Wno-documentation-unknown-command -Wno-decls-in-multiple-modules -Wno-unsafe-buffer-usage -Wno-c++98-compat -Wno-c++98-compat-pedantic)
+    list(APPEND RELEASE_OPTIONS -O3 -pthread -femulated-tls -fno-strict-aliasing -Wno-decls-in-multiple-modules -Wno-unsafe-buffer-usage -Wno-c++98-compat -Wno-c++98-compat-pedantic -Wno-padded -Wno-documentation -Wno-documentation-unknown-command)
     target_compile_options(${PROJECT_NAME} PRIVATE $<$<CONFIG:DEBUG>:-Weverything -Wno-c++98-compat -Wno-old-style-cast>)
+    target_link_options(${PROJECT_NAME} PRIVATE -pthread -femulated-tls)
   else()
 
     list(APPEND DEBUG_OPTIONS /MDd /Od /Ob0 /RTC1 /Zi /Zc:__cplusplus /EHsc)

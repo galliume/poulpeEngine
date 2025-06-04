@@ -152,10 +152,10 @@ void main()
   //sun directionnal light
   vec3 light_pos = vec3(0.0, 100000.0, 0.0);
 
-  //vec3 norm = normalize(in_normal.xyz);
-  vec3 x = dFdx(in_position);
-  vec3 y = dFdy(in_position);
-  vec3 in_normal = in_inverse_model * normalize(cross(x, y));
+  vec3 normal = normalize(in_normal.xyz);
+  //vec3 x = dFdx(in_position);
+  //vec3 y = dFdy(in_position);
+  //vec3 in_normal = in_inverse_model * normalize(cross(x, y));
 
   vec3 p = in_position;
   vec3 v = normalize(pc.view_position - p);
@@ -165,9 +165,9 @@ void main()
   vec3 h = normalize(v + l);
 
   float HdV = max(dot(h, v), 0.0);
-  float NdH = max(dot(in_normal, h), 0.0);
-  float NdL = max(dot(in_normal, l), 0.0);
-  float NdV = max(dot(in_normal, v), 0.0);
+  float NdH = max(dot(normal, h), 0.0);
+  float NdL = max(dot(normal, l), 0.0);
+  float NdV = max(dot(normal, v), 0.0);
 
   vec3 F0 = vec3(0.02);
   vec3 F90 = vec3(1.0);
@@ -219,6 +219,6 @@ void main()
 
   //@todo check how to get the precise value
   float white_point = 350;
-  final_color = vec4(0.81, 1.0, 0.04, 1.0);
-  //final_color.rgb = linear_to_hdr10(result.rgb, white_point);
+  final_color = vec4(0.0, 0.0, 0.0, 1.0);
+  final_color.rgb = linear_to_hdr10(result.rgb, white_point);
 }

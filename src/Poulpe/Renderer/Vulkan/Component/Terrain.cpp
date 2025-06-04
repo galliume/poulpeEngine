@@ -51,35 +51,34 @@ namespace Poulpe
     Texture const& tex { component_rendering_info.textures.at(component_rendering_info.terrain_name) };
 
     std::vector<Vertex> vertices;
-    uint32_t const width{ tex.getWidth() };
-    uint32_t const height{ tex.getHeight()};
+    int32_t const width{ static_cast<int32_t>(tex.getWidth()) };
+    int32_t const height{ static_cast<int32_t>(tex.getHeight())};
+    int32_t const rez{ 20 };
 
-    uint32_t const rez{ 20 };
-
-    for(size_t i = 0; i < rez - 1; i++) {
-      for(size_t j = 0; j < rez - 1; j++) {
+    for(int32_t i = 0; i < rez - 1; i++) {
+      for(int32_t j = 0; j < rez - 1; j++) {
 
         float const y{ 0.0f };
 
         Vertex v{ 
-          { -width/2.0f + width*i/(float)rez, y, -height/2.0f + height*j/(float)rez },
-          {1.0f, 1.0f, 0.0f}, {i / (float)rez, j / (float)rez }, {0.0f, 0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f},
-          glm::vec3{0.0f}, {}, {}};
+          { -width/2.0f + width*i/static_cast<float>(rez), y, -height/2.0f + height*j/static_cast<float>(rez) },
+          { 1.0f, 1.0f, 0.0f}, {i / static_cast<float>(rez), j / static_cast<float>(rez) }, {0.0f, 0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f},
+           glm::vec3{0.0f}, {}, {} };
 
         Vertex v2{ 
-          {-width/2.0f + width*(i+1)/(float)rez, y, -height/2.0f + height*j/(float)rez },
-          {1.0f, 1.0f, 0.0f}, {(i+1) / (float)rez, j / (float)rez }, {0.0f, 0.0f, 0.0f, 0.0f}, { 0.0f, 0.0f, 0.0f, 0.0f },
-          glm::vec3{0.0f}, {}, {} };
+          {-width/2.0f + width*(i+1)/static_cast<float>(rez), y, -height/2.0f + height*j/static_cast<float>(rez) },
+          {1.0f, 1.0f, 0.0f}, {(i+1) / static_cast<float>(rez), j / static_cast<float>(rez) }, {0.0f, 0.0f, 0.0f, 0.0f}, { 0.0f, 0.0f, 0.0f, 0.0f },
+           glm::vec3{0.0f}, {}, {} };
 
         Vertex v3{ 
-          {-width/2.0f + width*i/(float)rez, y, -height/2.0f + height*(j+1)/(float)rez },
-          {1.0f, 1.0f, 0.0f}, {i / (float)rez, (j+1) / (float)rez }, {0.0f, 0.0f, 0.0f, 0.0f}, { 0.0f, 0.0f, 0.0f, 0.0f },
-          glm::vec3{0.0f}, {}, {}};
+          {-width/2.0f + width*i/static_cast<float>(rez), y, -height/2.0f + height*(j+1)/static_cast<float>(rez) },
+          {1.0f, 1.0f, 0.0f}, {i / static_cast<float>(rez), (j+1) / static_cast<float>(rez) }, {0.0f, 0.0f, 0.0f, 0.0f}, { 0.0f, 0.0f, 0.0f, 0.0f },
+           glm::vec3{0.0f}, {}, {} };
 
         Vertex v4{ 
-          {-width/2.0f + width*(i+1)/(float)rez, y, -height/2.0f + height*(j+1)/(float)rez },
-          {1.0f, 1.0f, 0.0f}, {(i+1) / (float)rez, (j+1) / (float)rez }, {0.0f, 0.0f, 0.0f, 0.0f}, { 0.0f, 0.0f, 0.0f, 0.0f },
-          glm::vec3{0.0f}, {}, {} };
+          {-width/2.0f + width*(i+1)/static_cast<float>(rez), y, -height/2.0f + height*(j+1)/static_cast<float>(rez) },
+          {1.0f, 1.0f, 0.0f}, {(i+1) / static_cast<float>(rez), (j+1) / static_cast<float>(rez) }, {0.0f, 0.0f, 0.0f, 0.0f}, { 0.0f, 0.0f, 0.0f, 0.0f },
+           glm::vec3{0.0f}, {}, {} };
 
         vertices.push_back(v);
         vertices.push_back(v2);
@@ -87,7 +86,7 @@ namespace Poulpe
         vertices.push_back(v4);
       }
     }
-    auto const& data = mesh->getData();
+    auto data = mesh->getData();
     auto commandPool = renderer->getAPI()->createCommandPool();
 
     std::vector<UniformBufferObject> ubos{};

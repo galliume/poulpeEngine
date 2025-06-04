@@ -18,6 +18,7 @@ layout(push_constant) uniform constants
 {
   mat4 view;
   vec3 view_position;
+  vec4 options;
 } pc;
 
 layout(binding = 1) uniform sampler2D tex_sampler[5];
@@ -59,10 +60,10 @@ void main()
 
   float height = texture(tex_sampler[0], texCoord).r;
 
-  out_weights.x = attenuation(-0.5f, 0.2f, height);
-  out_weights.y = attenuation(0.1f, 0.3f, height);
-  out_weights.z = attenuation(0.2f, 0.9f, height);
-  out_weights.w = attenuation(0.7f, 1.2f, height);
+  out_weights.x = attenuation(0.0f, 0.2f, height);
+  out_weights.y = attenuation(0.15f, 0.3f, height);
+  out_weights.z = attenuation(0.25f, 0.9f, height);
+  out_weights.w = attenuation(0.85f, 1.0f, height);
 
   height *= 50.0f;
 

@@ -96,6 +96,7 @@ namespace Poulpe
     FT_UInt glyph_index;
     c = FT_Get_First_Char(_face, &glyph_index);
 
+    //@todo do we need to import all glyphs ?
     while (glyph_index != 0) {
 
       bool renderable{true};

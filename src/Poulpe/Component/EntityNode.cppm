@@ -16,7 +16,7 @@ namespace Poulpe
 
     Entity* getEntity() const { return _entity.get(); }
     EntityNode* getParent() const { return _parent.get(); }
-    std::vector<EntityNode*> getChildren() { return _children; }
+    std::vector<EntityNode*> const& getChildren() const { return _children; }
 
     EntityNode* addChild(EntityNode* child) {
       child->setParent(this);
