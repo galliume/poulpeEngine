@@ -210,8 +210,9 @@ namespace Poulpe
       ubo_binding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
       ubo_binding.pImmutableSamplers = nullptr;
       ubo_binding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT
-                                    | VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT
-                                    | VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT;
+                              | VK_SHADER_STAGE_FRAGMENT_BIT
+                              | VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT
+                              | VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT;
 
       VkDescriptorSetLayoutBinding sampler_binding{};
       sampler_binding.binding = 1;
@@ -219,9 +220,9 @@ namespace Poulpe
       sampler_binding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
       sampler_binding.pImmutableSamplers = nullptr;
       sampler_binding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT 
-                                        | VK_SHADER_STAGE_FRAGMENT_BIT
-                                        | VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT
-                                        | VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT;
+                                  | VK_SHADER_STAGE_FRAGMENT_BIT
+                                  | VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT
+                                  | VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT;
 
       VkDescriptorSetLayoutBinding env_sampler_binding{};
       env_sampler_binding.binding = 2;
@@ -393,7 +394,7 @@ namespace Poulpe
 
         descset_layout = createDescriptorSetLayout<DescSetLayoutType::Offscreen>();
         push_constants.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-        push_constants.size = sizeof(shadowMapConstants);
+        push_constants.size = sizeof(constants);
         need_bis = false;
       }
     }

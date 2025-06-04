@@ -36,8 +36,8 @@ namespace Poulpe
     ~BoneAnimation() = default;
 
     bool done{ false };
-    float duration{ 0.0f };
-    float elapsedTime{ 0.0f };
+    double duration{ 0.0 };
+    double elapsedTime{ 0.0 };
   };
 
   export struct BoneAnimationMove : public BoneAnimation
@@ -45,9 +45,9 @@ namespace Poulpe
     BoneAnimationMove() = default;
     ~BoneAnimationMove() = default;
 
-    glm::vec3 pos{ 0.0f };
-    glm::vec3 rot{ 0.0f };
-    glm::vec3 scale{ 0.0f };
+    glm::vec3 pos{ 0.0 };
+    glm::vec3 rot{ 0.0 };
+    glm::vec3 scale{ 0.0 };
     std::function<void(
       Data* data,
       double delta_time,
@@ -77,7 +77,7 @@ namespace Poulpe
 
   private:
     Data* _data;
-    float _elapsed_time{ 0.0f };
+    double _elapsed_time{ 0.0 };
 
     bool _move_init{ false };
     bool _done{false};
@@ -97,13 +97,12 @@ namespace Poulpe
       Animation const& anim,
       std::string const& bone_name,
       glm::mat4 const& parent_transform,
-      float const duration);
+      double const duration);
 
     template<isAnimOperation T>
     std::pair<T, T> findKeyframe(
       std::vector<T> const& key_frames,
-      float const time,
-      float const) {
+      double const time) {
 
       if (key_frames.size() == 1) {
         return { key_frames[0], key_frames[0] };
@@ -122,11 +121,11 @@ namespace Poulpe
     auto interpolate(
       T const& start,
       T const& end,
-      float current_time)
+      double current_time)
     {
-      float duration = end.time - start.time;
-      float t = (duration == 0.0f) ? 0.0f : (current_time - start.time) / duration;
-      t = std::clamp(t, 0.0f, 1.0f);
+      double duration = end.time - start.time;
+      double t = (duration == 0.0) ? 0.0 : (current_time - start.time) / duration;
+      t = std::clamp(t, 0.0, 1.0);
 
       if constexpr (std::same_as<decltype(start.value), glm::vec3>) {
         switch (start.interpolation) {
@@ -146,7 +145,7 @@ namespace Poulpe
           return start.value;
         }
         return start.value;
-      } else if constexpr (std::same_as<decltype(start.value), glm::quat>) {
+      } else if constexpr (std::same_as<decltype(start.value), glm::dquat>) {
         switch (start.interpolation) {
         case AnimInterpolation::STEP:
           return start.value;

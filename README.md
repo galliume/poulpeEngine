@@ -20,6 +20,10 @@
 
 ### To compile && execute 
 
+You will need a recent version of Clang (20.x) and CMake (3.31 or 4.x), c++23 is needed.
+
+For Windows you will need mingw64 https://www.mingw-w64.org/ and add the bin folder into your PATH. (you do not need any MSVC stuff.)
+
 Install the latest Vulkan SDK https://vulkan.lunarg.com/ and be sure to have the env variable VULKAN_SDK properly set to your Vulkan SDK installation folder.
 
 Compile shaders (Windows && Linux) : 
@@ -39,17 +43,17 @@ cmake --list-presets
 
 Configure with a preset
 ```
-cmake --preset windows-release
+cmake --preset windows-debug
 ``` 
 
 Compile with a preset
 ```
-cmake --build --preset windows-release
+cmake --build --preset windows-debug
 ```
 
 Launch from the root directory
 ```
-build/windows-release/PoulpeEngine
+build/windows-debug/PoulpeEngine
 ```
 
 Or open the project with a cmake able IDE (VS 2022, VS Code...)

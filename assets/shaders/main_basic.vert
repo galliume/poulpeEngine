@@ -17,7 +17,7 @@ layout(push_constant) uniform constants
 {
   mat4 view;
   vec3 view_position;
-  vec4 total_position;
+  vec4 options;
 } pc;
 
 layout(location = 0) in vec3 position;

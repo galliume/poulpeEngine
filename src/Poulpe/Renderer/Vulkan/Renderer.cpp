@@ -325,9 +325,6 @@ namespace Poulpe
     constants push_constants{};
     push_constants.options = mesh->getOptions();
     push_constants.view_position = camera->getPos();
-    // push_constants.options = glm::vec4{
-    //     renderer_info.elapsed_time,
-    //     0.0f, 0.0f, 0.0f};
 
     if ("skybox" == mesh->getName()) {
       push_constants.view = glm::mat4(glm::mat3(camera->lookAt()));

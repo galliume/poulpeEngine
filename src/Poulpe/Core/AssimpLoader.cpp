@@ -450,12 +450,12 @@ namespace Poulpe
           auto const& rotation_key{ node->mRotationKeys[r] };
           auto const interpolation{ getInterpolation(rotation_key.mInterpolation) };
 
-          rots.emplace_back(Rotation{ {r, i, static_cast<float>(rotation_key.mTime), interpolation}, GetGLMQuat(rotation_key.mValue) });
+          rots.emplace_back(Rotation{ {r, i, rotation_key.mTime, interpolation}, GetGLMQuat(rotation_key.mValue) });
         }
-        //auto rot_duplicate = rots.front();
-        //rot_duplicate.id = rots.size() + 1;
-        //rot_duplicate.time = animation->mDuration;
-        //rots.emplace_back(rot_duplicate);
+        auto rot_duplicate = rots.front();
+        rot_duplicate.id = rots.size() + 1;
+        rot_duplicate.time = animation->mDuration;
+        rots.emplace_back(rot_duplicate);
         rotations[node_name].push_back(rots);
 
         std::vector<Position> pos{};
@@ -465,12 +465,12 @@ namespace Poulpe
           auto const& pos_key = node->mPositionKeys[p];
           auto const interpolation{ getInterpolation(pos_key.mInterpolation) };
 
-          pos.emplace_back(Position{ { p, i, static_cast<float>(pos_key.mTime), interpolation }, GetGLMVec(pos_key.mValue) });
+          pos.emplace_back(Position{ { p, i, pos_key.mTime, interpolation }, GetGLMVec(pos_key.mValue) });
         }
-        //auto pos_duplicate = pos.front();
-        //pos_duplicate.id = pos.size() + 1;
-        //pos_duplicate.time = animation->mDuration;
-        //pos.emplace_back(pos_duplicate);
+        auto pos_duplicate = pos.front();
+        pos_duplicate.id = pos.size() + 1;
+        pos_duplicate.time = animation->mDuration;
+        pos.emplace_back(pos_duplicate);
         positions[node_name].push_back(pos);
 
         std::vector<Scale> sc{};
@@ -480,12 +480,12 @@ namespace Poulpe
           auto const& scale_key = node->mScalingKeys[s];
           auto const interpolation{ getInterpolation(scale_key.mInterpolation) };
 
-          sc.emplace_back(Scale{ {s, i, static_cast<float>(scale_key.mTime), interpolation }, GetGLMVec(scale_key.mValue) });
+          sc.emplace_back(Scale{ {s, i, scale_key.mTime, interpolation }, GetGLMVec(scale_key.mValue) });
         }
-        //auto sc_duplicate = sc.front();
-        //sc_duplicate.id = sc.size() + 1;
-        //sc_duplicate.time = animation->mDuration;
-        //sc.emplace_back(sc_duplicate);
+        auto sc_duplicate = sc.front();
+        sc_duplicate.id = sc.size() + 1;
+        sc_duplicate.time = animation->mDuration;
+        sc.emplace_back(sc_duplicate);
         scales[node_name].push_back(sc);
       }
     }

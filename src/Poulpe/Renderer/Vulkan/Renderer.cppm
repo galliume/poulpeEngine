@@ -175,7 +175,7 @@ namespace Poulpe
     inline VkImageView getVisibleDepthImageView() { return _visible_depth_imageview; }
     inline std::vector<VkDescriptorSetLayout>* getDescriptorSetLayouts() { return & _descriptorset_layouts; }
     inline VkDevice getDevice()  { return _vulkan->getDevice(); }
-    inline glm::mat4 getPerspective()  { return _perspective; }
+    inline glm::mat4 getPerspective() { return _perspective; }
     VulkanPipeline* getPipeline(std::string const & shaderName) { return & _pipelines[shaderName]; }
     void immediateSubmit(std::function<void(VkCommandBuffer cmd)> && function, int queueIndex = 0) ;
     void init();

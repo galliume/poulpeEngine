@@ -54,14 +54,15 @@ void Water::operator()(
     Texture const& tex { component_rendering_info.textures.at(component_rendering_info.terrain_name)};
 
     std::vector<Vertex> vertices;
-    uint32_t const width{ tex.getWidth() };
-    uint32_t const height{ tex.getHeight() };
+    int const width{ static_cast<int>(tex.getWidth()) };
+    int const height{ static_cast<int>(tex.getHeight()) };
 
-    uint32_t const rez{ 50 };
-    uint32_t index{ 0 };
+    int const rez{ 50 };
+    int index{ 0 };
 
-    for(uint32_t i = 0; i < rez - 1; i++) {
-      for(uint32_t j = 0; j < rez - 1; j++) {
+
+    for(auto i = 0; i < rez - 1; i++) {
+      for(auto j = 0; j < rez - 1; j++) {
 
         index = i + j;
         float const y{ 0.0f };

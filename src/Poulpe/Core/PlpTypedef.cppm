@@ -253,8 +253,8 @@ namespace Poulpe
   export struct Animation {
     uint32_t id;
     std::string name{};
-    float duration{ 0.0f };
-    float ticks_per_s{ 25.0f };
+    double duration{ 0.0 };
+    double ticks_per_s{ 25.0 };
   };
 
   export enum class AnimInterpolation {
@@ -267,12 +267,12 @@ namespace Poulpe
   export struct AnimOperation {
     uint32_t id;
     uint32_t animation_ID;
-    float time;
+    double time;
     AnimInterpolation interpolation;
   };
 
   export struct Rotation : public AnimOperation {
-    glm::quat value;
+    glm::dquat value;
   };
 
   export struct Position : public AnimOperation {

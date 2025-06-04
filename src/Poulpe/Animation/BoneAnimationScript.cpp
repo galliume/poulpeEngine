@@ -63,14 +63,14 @@ namespace Poulpe
 
       _anim_id = 2;
       auto const& anim{ _animations.at(_anim_id) };
-      float const duration{ (anim.duration / anim.ticks_per_s) * 1000.0f };//ms
+      double const duration{ (anim.duration / anim.ticks_per_s) * 1000.0 };//ms
       //_elapsed_time = std::clamp(_elapsed_time, 0.f, duration);
 
       //Logger::debug("_elapsed_time {} duration {} ", _elapsed_time, duration);
       //Logger::debug("anim {} elapased time {} duration {} delta {}", anim.name, _elapsed_time, duration, delta_time);
 
       _bone_matrices.resize(_data->_bones.size());
-      _elapsed_time = fmodf(_elapsed_time, duration);
+      _elapsed_time = fmod(_elapsed_time, duration);
       
       auto const& root_bone = _data->_bones[_data->_root_bone_name];
       updateBoneTransforms(anim, root_bone.name, root_bone.t_pose, duration);
@@ -98,7 +98,7 @@ namespace Poulpe
       }
 
       if (_elapsed_time >= duration) {
-        _elapsed_time = 0.0f;
+        _elapsed_time = 0.0;
         //t = 1.f;
         //mesh->setIsDirty(false);
         //_done = true;
@@ -108,7 +108,7 @@ namespace Poulpe
         //}
       } else {
         //mesh->setIsDirty();
-        _elapsed_time += static_cast<float>(delta_time) * 1000.0f;
+        _elapsed_time += delta_time * 1000.0;
       }
     }
   }
@@ -117,7 +117,7 @@ namespace Poulpe
     Animation const& anim,
     std::string const& bone_name,
     glm::mat4 const& parent_transform,
-    float const duration)
+    double const duration)
   {
     auto const& bone = _data->_bones[bone_name];
 
@@ -133,7 +133,7 @@ namespace Poulpe
       if (!scales_data.empty()) {
         Scale scale_start;
         Scale scale_end;
-        std::tie(scale_start, scale_end) = findKeyframe<Scale>(scales_data, _elapsed_time, duration);
+        std::tie(scale_start, scale_end) = findKeyframe<Scale>(scales_data, _elapsed_time);
         new_scale = interpolate<Scale>(scale_start, scale_end, _elapsed_time);
       }
     }
@@ -145,7 +145,7 @@ namespace Poulpe
       if (!positions_data.empty()) {
         Position position_start;
         Position position_end;
-        std::tie(position_start, position_end) = findKeyframe<Position>(positions_data, _elapsed_time, duration);
+        std::tie(position_start, position_end) = findKeyframe<Position>(positions_data, _elapsed_time);
         new_position = interpolate<Position>(position_start, position_end, _elapsed_time);
       }
     }
@@ -157,11 +157,10 @@ namespace Poulpe
       if (!rotations_data.empty()) {
         Rotation rotation_start;
         Rotation rotation_end;
-        std::tie(rotation_start, rotation_end) = findKeyframe<Rotation>(rotations_data, _elapsed_time, duration);
+        std::tie(rotation_start, rotation_end) = findKeyframe<Rotation>(rotations_data, _elapsed_time);
         new_rotation = interpolate<Rotation>(rotation_start, rotation_end, _elapsed_time);
       }
     }
-
 
     glm::mat4 const S = glm::scale(glm::mat4(1.0f), new_scale);
     glm::mat4 const R = glm::toMat4(new_rotation);

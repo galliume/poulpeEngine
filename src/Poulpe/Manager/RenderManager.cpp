@@ -17,6 +17,7 @@ module;
 #include <latch>
 #include <filesystem>
 #include <functional>
+#include <future>
 #include <memory>
 #include <shared_mutex>
 #include <thread>
@@ -39,6 +40,7 @@ import Poulpe.Renderer.RendererComponent;
 import Poulpe.Renderer.RendererComponentTypes;
 import Poulpe.Renderer.RendererComponentFactory;
 import Poulpe.Renderer.Vulkan.Mesh;
+import Poulpe.Utils.ScopedTimer;
 
 namespace Poulpe
 {
@@ -152,6 +154,13 @@ namespace Poulpe
     {
       std::lock_guard<std::shared_mutex> guard(_entity_manager->lockWorldNode());
 
+      std::future<void> async_skybox_render;
+      std::future<void> async_water_render;
+      std::future<void> async_terrain_render;
+      std::vector<std::future<void>> async_texts_render{};
+      async_texts_render.reserve(_entity_manager->getTexts().size());
+      std::vector<std::future<void>> async_entities_render;
+
       auto * const config_manager = ConfigManagerLocator::get();
 
       //@todo improve this draft for simple shader hot reload
@@ -168,46 +177,76 @@ namespace Poulpe
 
       _renderer->startRender();
 
-      auto skybox_entity = _entity_manager->getSkybox();
+      auto const skybox_entity = _entity_manager->getSkybox();
       if (skybox_entity != nullptr) {
-        renderEntity(skybox_entity->getID(), delta_time);
-        drawEntity(skybox_entity->getID());
+        async_skybox_render = std::async(std::launch::deferred, [&]() { renderEntity(skybox_entity->getID(), delta_time);});
+      }
+      auto const terrain_entity = _entity_manager->getTerrain();
+      if (terrain_entity != nullptr) {
+        async_terrain_render = std::async(std::launch::deferred, [&]() { renderEntity(terrain_entity->getID(), delta_time);});
+      }
+      auto const water_entity = _entity_manager->getWater();
+      if (water_entity != nullptr) {
+        auto* mesh_component = _component_manager->get<MeshComponent>(water_entity->getID());
+        auto mesh = mesh_component->template has<Mesh>();
+       if (mesh) {
+          glm::vec4 options{ getElapsedTime(), 0.0f, 0.0f, 0.0f};
+          mesh->setOptions(options);
+        }
+        async_water_render = std::async(std::launch::deferred, [&]() { renderEntity(water_entity->getID(), delta_time);});
       }
 
-      auto terrain_entity = _entity_manager->getTerrain();
+      auto const * world_node = _entity_manager->getWorldNode();
+      auto const& children = world_node->getChildren();
+
+      std::ranges::for_each(children, [&](const auto& leaf_node) {
+        std::ranges::for_each(leaf_node->getChildren(), [&](const auto& entity_node) {
+          async_entities_render.push_back(std::async(std::launch::deferred, [&]() {
+            renderEntity(entity_node->getEntity()->getID(), delta_time, leaf_node);
+          }));
+        });
+      });
+
+      std::ranges::for_each(_entity_manager->getTexts(), [&](auto const& text_entity) {
+        async_texts_render.push_back(
+          std::async(std::launch::deferred, [&]() {
+            renderEntity(text_entity->getID(), delta_time);
+        }));
+      });
+
+      if (skybox_entity != nullptr) {
+        async_skybox_render.wait();
+        drawEntity(skybox_entity->getID());
+      }
+      for (auto& future : async_entities_render) {
+        future.wait();
+      }
+
+      std::ranges::for_each(children, [&](const auto& leaf_node) {
+        std::ranges::for_each(leaf_node->getChildren(), [&](const auto& entity_node) {
+          drawEntity(entity_node->getEntity()->getID(), true);
+        });
+      });
+      
       if (terrain_entity != nullptr) {
-        renderEntity(terrain_entity->getID(), delta_time);
+        async_terrain_render.wait();
         drawEntity(terrain_entity->getID());
       }
 
-      auto water_entity = _entity_manager->getWater();
       if (water_entity != nullptr) {
-        renderEntity(water_entity->getID(), delta_time);
+        async_water_render.wait();
         drawEntity(water_entity->getID());
       }
 
+      for (auto& future : async_texts_render) {
+        future.wait();
+      }
       std::ranges::for_each(_entity_manager->getTexts(), [&](auto const& text_entity) {
-        renderEntity(text_entity->getID(), delta_time);
         drawEntity(text_entity->getID(), true);
-      });
-
-      auto* world_node = _entity_manager->getWorldNode();
-
-      std::ranges::for_each(world_node->getChildren(), [&](const auto& leaf_node) {
-        std::ranges::for_each(leaf_node->getChildren(), [&](const auto& entity_node) {
-          auto const& data_entity = entity_node->getEntity();
-          renderEntity(data_entity->getID(), delta_time, leaf_node);
-          drawEntity(data_entity->getID(), true);
-        });
       });
 
       _renderer->endRender();
     }
-
-    //if (_refresh) {
-    //  init();
-    //  _refresh = false;
-    //}
   }
 
   void RenderManager::renderEntity(

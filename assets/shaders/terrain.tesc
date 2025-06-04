@@ -18,6 +18,7 @@ layout(push_constant) uniform constants
 {
   mat4 view;
   vec3 view_position;
+  vec4 options;
 } pc;
 
 layout(location = 0) in vec2 in_texture_coord[];
