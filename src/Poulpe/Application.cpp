@@ -108,9 +108,16 @@ namespace Poulpe
     };
     _render_manager->addText(camera_pos);
 
+    bool release_build { true };
+
+  #ifdef PLP_DEBUG_BUILD
+    release_build = false;
+  #endif
+
     std::stringstream title;
     title << "PoulpeEngine v" << PoulpeEngine_VERSION_MAJOR << "." << PoulpeEngine_VERSION_MINOR
-      << " Vulkan version: " << _render_manager->getRenderer()->getAPI()->getAPIVersion();
+      << " Vulkan version: " << _render_manager->getRenderer()->getAPI()->getAPIVersion()
+      << ((release_build) ? " Release build" : " Debug build");
     glfwSetWindowTitle(_render_manager->getWindow()->get(), title.str().c_str());
 
     while (!glfwWindowShouldClose(_render_manager->getWindow()->get())) {

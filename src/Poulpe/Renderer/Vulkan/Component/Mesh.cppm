@@ -29,7 +29,8 @@ namespace Poulpe
   export class Mesh
   {
   public:
-    Data* getData() { return & _data; }
+    Data * getData() { return & _data; }
+    Data const * getData() const { return & _data; }
     VkDescriptorSet* getDescSet() { return & _descset; }
     material_t& getMaterial() { return _material; }
     std::string const getName() const { return _name; }
@@ -57,7 +58,7 @@ namespace Poulpe
     template<typename... TArgs>
     void applyPushConstants(TArgs&&... args) { _apply_push_constants(std::forward<TArgs>(args)...); }
 
-    VkDescriptorSet* getShadowMapDescSet() { return & _shadowmap_descset; }
+    VkDescriptorSet const * getShadowMapDescSet() const { return & _shadowmap_descset; }
 
     bool hasAnimation() const { return _has_animation; }
     bool hasBufferStorage() const { return _has_storage_buffer; }

@@ -4,9 +4,6 @@ module;
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 
-#define GLM_FORCE_LEFT_HANDED
-#define GLM_FORCE_DEFAULT_ALIGNED_GENTYPES
-#define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #define GLM_ENABLE_EXPERIMENTAL
 
 #include <glm/glm.hpp>
@@ -452,10 +449,10 @@ namespace Poulpe
 
           rots.emplace_back(Rotation{ {r, i, rotation_key.mTime, interpolation}, GetGLMQuat(rotation_key.mValue) });
         }
-        auto rot_duplicate = rots.front();
-        rot_duplicate.id = rots.size() + 1;
-        rot_duplicate.time = animation->mDuration;
-        rots.emplace_back(rot_duplicate);
+        // auto rot_duplicate = rots.front();
+        // rot_duplicate.id = rots.size() + 1;
+        // rot_duplicate.time = animation->mDuration;
+        // rots.emplace_back(rot_duplicate);
         rotations[node_name].push_back(rots);
 
         std::vector<Position> pos{};
@@ -467,10 +464,10 @@ namespace Poulpe
 
           pos.emplace_back(Position{ { p, i, pos_key.mTime, interpolation }, GetGLMVec(pos_key.mValue) });
         }
-        auto pos_duplicate = pos.front();
-        pos_duplicate.id = pos.size() + 1;
-        pos_duplicate.time = animation->mDuration;
-        pos.emplace_back(pos_duplicate);
+        // auto pos_duplicate = pos.front();
+        // pos_duplicate.id = pos.size() + 1;
+        // pos_duplicate.time = animation->mDuration;
+        // pos.emplace_back(pos_duplicate);
         positions[node_name].push_back(pos);
 
         std::vector<Scale> sc{};
@@ -482,10 +479,10 @@ namespace Poulpe
 
           sc.emplace_back(Scale{ {s, i, scale_key.mTime, interpolation }, GetGLMVec(scale_key.mValue) });
         }
-        auto sc_duplicate = sc.front();
-        sc_duplicate.id = sc.size() + 1;
-        sc_duplicate.time = animation->mDuration;
-        sc.emplace_back(sc_duplicate);
+        // auto sc_duplicate = sc.front();
+        // sc_duplicate.id = sc.size() + 1;
+        // sc_duplicate.time = animation->mDuration;
+        // sc.emplace_back(sc_duplicate);
         scales[node_name].push_back(sc);
       }
     }
