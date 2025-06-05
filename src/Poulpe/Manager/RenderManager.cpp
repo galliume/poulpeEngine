@@ -175,8 +175,6 @@ namespace Poulpe
         config_manager->setReloadShaders(false);
       }
 
-      _renderer->startRender();
-
       auto const skybox_entity = _entity_manager->getSkybox();
       if (skybox_entity != nullptr) {
         async_skybox_render = std::async(std::launch::deferred, [&]() { renderEntity(skybox_entity->getID(), delta_time);});
@@ -214,12 +212,35 @@ namespace Poulpe
         }));
       });
 
-      if (skybox_entity != nullptr) {
-        async_skybox_render.wait();
-        drawEntity(skybox_entity->getID());
-      }
+      async_skybox_render.wait();
+      async_terrain_render.wait();
+      async_water_render.wait();
+      
       for (auto& future : async_entities_render) {
         future.wait();
+      }
+      for (auto& future : async_texts_render) {
+        future.wait();
+      }
+
+      _renderer->start();
+      _renderer->startShadowMap();
+
+      std::ranges::for_each(children, [&](const auto& leaf_node) {
+        std::ranges::for_each(leaf_node->getChildren(), [&](const auto& entity_node) {
+          auto* mesh_component = _component_manager->get<MeshComponent>(entity_node->getEntity()->getID());
+          auto mesh = mesh_component->template has<Mesh>();
+          if (mesh->hasShadow()) {
+            _renderer->drawShadowMap(mesh, _light_manager->getSunLight().view);
+          }
+        });
+      });
+      _renderer->endShadowMap();
+
+      _renderer->startRender();
+
+      if (skybox_entity != nullptr) {
+        drawEntity(skybox_entity->getID());
       }
 
       std::ranges::for_each(children, [&](const auto& leaf_node) {
@@ -229,23 +250,19 @@ namespace Poulpe
       });
       
       if (terrain_entity != nullptr) {
-        async_terrain_render.wait();
         drawEntity(terrain_entity->getID());
       }
-
+      
       if (water_entity != nullptr) {
-        async_water_render.wait();
         drawEntity(water_entity->getID());
       }
 
-      for (auto& future : async_texts_render) {
-        future.wait();
-      }
       std::ranges::for_each(_entity_manager->getTexts(), [&](auto const& text_entity) {
         drawEntity(text_entity->getID(), true);
       });
 
       _renderer->endRender();
+      _renderer->submit();
     }
   }
 

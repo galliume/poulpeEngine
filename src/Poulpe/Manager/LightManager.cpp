@@ -18,7 +18,7 @@ namespace Poulpe
     _sun.clq = glm::vec3(0.0f);
 
     _sun.view = glm::lookAt(
-      glm::vec3(0.1f, 40.0f, 0.1f),
+      glm::vec3(0.1f, 250.0f, 0.1f),
       glm::vec3(0.0f, 0.0f, 0.0f),
       glm::vec3(0.0f, 1.0f, 0.0f));
 

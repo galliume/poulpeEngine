@@ -125,43 +125,25 @@ namespace Poulpe
     void clear();
     void destroy();
 
+    void start();
+
     void startRender();
+    void startShadowMap();
 
     void draw(RendererInfo const& renderer_info);
-
+    void drawShadowMap(Mesh const * mesh, glm::mat4 const& light_view);
+    
     void endRender();
-
-    // void draw(
-    //   VkCommandBuffer& cmd_buffer,
-    //   DrawCommands& draw_cmds,
-    //   VkImageView& colorview,
-    //   VkImage& color,
-    //   VkImageView& depthview,
-    //   VkImage& depth,
-    //   std::vector<Entity*> const& entities,
-    //   VkAttachmentLoadOp const load_op,
-    //   VkAttachmentStoreOp const store_op,
-    //   std::latch& count_down,
-    //   uint32_t const thread_id,
-    //   bool const is_attachment = false,
-    //   bool const has_depth_attachment = true,
-    //   bool const has_alpha_blend = true);
-
-    // void drawShadowMap(
-    //   VkCommandBuffer& cmd_buffer,
-    //   DrawCommands& draw_cmds,
-    //   VkImageView& depthview,
-    //   VkImage& depth,
-    //   std::vector<Entity*> const& entities,
-    //   std::latch& count_down,
-    //   uint32_t const thread_id);
-
+    void endShadowMap();
+    
     void endRendering(
       VkCommandBuffer& cmd_buffer,
       VkImage& image,
       VkImage& depth_image,
       bool const is_attachment,
       bool const has_depth_attachment = true);
+
+    void submit();
 
     inline uint32_t getCurrentFrameIndex() const { return _current_frame; }
     inline VkSampler getCurrentSampler() { return _samplers[_previous_frame]; }
@@ -200,7 +182,6 @@ namespace Poulpe
 
     void onFinishRender();
     void setPerspective();
-    void submit(DrawCommands const& drawCmds);
 
   private:
     std::unique_ptr<VulkanAPI> _vulkan{ nullptr };

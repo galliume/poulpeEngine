@@ -282,8 +282,6 @@ namespace Poulpe
 
     void draw(
       VkCommandBuffer& cmd_buffer,
-      VkDescriptorSet& descset,
-      VulkanPipeline& pipeline,
       Data const * data,
       bool const is_indexed = true,
       uint32_t const index = 0);

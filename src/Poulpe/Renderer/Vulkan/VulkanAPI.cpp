@@ -1582,8 +1582,6 @@ void VulkanAPI::resetCommandPool(VkCommandPool& cmd_pool)
 
 void VulkanAPI::draw(
   VkCommandBuffer& cmd_buffer,
-  VkDescriptorSet&,
-  VulkanPipeline &,
   Data const * data,
   bool const is_indexed,
   uint32_t const index)
@@ -2730,6 +2728,12 @@ VkSampler VulkanAPI::createTextureSampler(uint32_t const mip_lvl)
       barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
 
       source_stage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+      destination_stage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+    } else if (old_layout == VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL && new_layout == VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL) {
+      barrier.srcAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+      barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+
+      source_stage = VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
       destination_stage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
     } else {
       throw std::invalid_argument("unsupported layout transition");
