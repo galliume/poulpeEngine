@@ -24,7 +24,12 @@
         "CXX_FLAGS",
         "EXE_LINKER_FLAGS",
         "SHARED_LINKER_FLAGS",
-        "SYSROOT"
+        "SYSROOT",
+        "TCL_TCLSH",
+        "TCL_LIBRARY",
+        "TCL_INCLUDE_PATH",
+        "TK_LIBRARY",
+        "TK_INCLUDE_PATH"
       ],
       "condition": {
         "type": "equals",
@@ -87,6 +92,56 @@
       }
     },
     {
+      "name": "TCL_TCLSH",
+      "hidden": true,
+      "cacheVariables": {
+        "TCL_TCLSH": {
+          "type": "PATH",
+          "value": "G:\\tcltk\\Tcl\\bin\\tclsh90.exe"
+        }
+      }
+    },
+    {
+      "name": "TCL_LIBRARY",
+      "hidden": true,
+      "cacheVariables": {
+        "TCL_LIBRARY": {
+          "type": "PATH",
+          "value": "G:\\tcltk\\Tcl\\lib\\tcl90.lib"
+        }
+      }
+    },
+    {
+      "name": "TCL_INCLUDE_PATH",
+      "hidden": true,
+      "cacheVariables": {
+        "TCL_INCLUDE_PATH": {
+          "type": "PATH",
+          "value": "G:\\tcltk\\Tcl\\include"
+        }
+      }
+    },
+        {
+      "name": "TK_LIBRARY",
+      "hidden": true,
+      "cacheVariables": {
+        "TK_LIBRARY": {
+          "type": "PATH",
+          "value": "G:\\tcltk\\Tcl\\lib\\tcl9tk90.lib"
+        }
+      }
+    },
+    {
+      "name": "TK_INCLUDE_PATH",
+      "hidden": true,
+      "cacheVariables": {
+        "TK_INCLUDE_PATH": {
+          "type": "PATH",
+          "value": "G:\\tcltk\\Tcl\\include"
+        }
+      }
+    },
+    {
       "name": "DEBUG_BUILD_TYPE",
       "hidden": true,
       "cacheVariables": {
@@ -132,7 +187,7 @@
       "cacheVariables": {
         "USE_CCACHE": {
           "type": "BOOL",
-          "value": "FALSE"
+          "value": "TRUE"
         }
       }
     },
