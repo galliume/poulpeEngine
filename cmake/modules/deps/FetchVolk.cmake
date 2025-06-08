@@ -12,8 +12,7 @@ FetchContent_MakeAvailable(fetch_volk)
 
 target_include_directories(${PROJECT_NAME}
 PRIVATE
-  ${fetch_volk_SOURCE_DIR}
-  ${fetch_volk_BINARY_DIR})
+  ${fetch_volk_SOURCE_DIR})
 
 target_link_libraries(${PROJECT_NAME}
 PRIVATE

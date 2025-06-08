@@ -2,8 +2,8 @@
 #include <iostream>
 #include <memory>
 
-import Poulpe.Application;
-import Poulpe.Core.Logger;
+import Engine.Application;
+import Engine.Core.Logger;
 
 int main(int argc, char** argv)
 {

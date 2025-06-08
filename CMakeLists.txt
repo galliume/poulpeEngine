@@ -1,14 +1,12 @@
-#########################################################
 ##################### PoulpeEngine Project ##############
-#########################################################
-cmake_minimum_required(VERSION 3.28.0)
+
+cmake_minimum_required(VERSION 3.31.0)
 
 #https://www.kitware.com/import-std-in-cmake-3-30/
-set(CMAKE_EXPERIMENTAL_CXX_IMPORT_STD
-  "0e5b6991-d74f-4b3d-a41c-cf096e0b2508")
+#set(CMAKE_EXPERIMENTAL_CXX_IMPORT_STD "0e5b6991-d74f-4b3d-a41c-cf096e0b2508")
 
 project(PoulpeEngine
-  VERSION 0.1.1
+  VERSION 0.2.1
   DESCRIPTION "Game Engine with a vulkan renderer"
   HOMEPAGE_URL "https://github.com/galliume/poulpeEngine"
   LANGUAGES C CXX
@@ -16,15 +14,12 @@ project(PoulpeEngine
 
 add_executable(${PROJECT_NAME} src/Poulpe.cpp poulpeEngine.rc)
 
-if (USE_CCACHE)
 find_program(CCACHE_PROGRAM ccache)
 if(CCACHE_PROGRAM)
-message(STATUS "Found ccache: ${CCACHE_PROGRAM}")
-set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE "${CCACHE_PROGRAM}")
+  message(STATUS "Found ccache: ${CCACHE_PROGRAM}")
+  set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE "${CCACHE_PROGRAM}")
 endif()
-else()
-message(WARNING "ccache deactivated")
-endif()
+
 
 add_library(poulpe INTERFACE)
 
@@ -38,70 +33,86 @@ set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules ${CMAKE_MODULE_P
 
 configure_file(PoulpeEngineConfig.h.in PoulpeEngineConfig.h)
 
-add_definitions(-DVK_NO_PROTOTYPES)
-
 include_directories(${PROJECT_SOURCE_DIR}/src)
 
-add_subdirectory(${PROJECT_SOURCE_DIR}/src/Poulpe)
-add_subdirectory(${PROJECT_SOURCE_DIR}/src/Poulpe/Animation)
-add_subdirectory(${PROJECT_SOURCE_DIR}/src/Poulpe/Component)
-add_subdirectory(${PROJECT_SOURCE_DIR}/src/Poulpe/Core)
-add_subdirectory(${PROJECT_SOURCE_DIR}/src/Poulpe/Core/Network)
-add_subdirectory(${PROJECT_SOURCE_DIR}/src/Poulpe/GUI)
-add_subdirectory(${PROJECT_SOURCE_DIR}/src/Poulpe/Manager)
-add_subdirectory(${PROJECT_SOURCE_DIR}/src/Poulpe/Renderer)
-add_subdirectory(${PROJECT_SOURCE_DIR}/src/Poulpe/Renderer/Vulkan)
-add_subdirectory(${PROJECT_SOURCE_DIR}/src/Poulpe/Renderer/Vulkan/Component)
-add_subdirectory(${PROJECT_SOURCE_DIR}/src/Poulpe/Utils)
+add_subdirectory(${PROJECT_SOURCE_DIR}/src/Engine)
+add_subdirectory(${PROJECT_SOURCE_DIR}/src/Engine/Animation)
+add_subdirectory(${PROJECT_SOURCE_DIR}/src/Engine/Component)
+add_subdirectory(${PROJECT_SOURCE_DIR}/src/Engine/Core)
+add_subdirectory(${PROJECT_SOURCE_DIR}/src/Engine/Core/Network)
+add_subdirectory(${PROJECT_SOURCE_DIR}/src/Engine/GUI)
+add_subdirectory(${PROJECT_SOURCE_DIR}/src/Engine/Manager)
+add_subdirectory(${PROJECT_SOURCE_DIR}/src/Engine/Renderer)
+add_subdirectory(${PROJECT_SOURCE_DIR}/src/Engine/Renderer/Vulkan)
+add_subdirectory(${PROJECT_SOURCE_DIR}/src/Engine/Renderer/Vulkan/Component)
+add_subdirectory(${PROJECT_SOURCE_DIR}/src/Engine/Utils)
 
-target_include_directories(${PROJECT_NAME} PRIVATE "${PROJECT_BINARY_DIR}")
+add_subdirectory(${PROJECT_SOURCE_DIR}/src/Editor)
+add_subdirectory(${PROJECT_SOURCE_DIR}/src/Editor/Manager)
 
-set(DEBUG_OPTIONS -g -Wno-covered-switch-default -Wno-deprecated-declarations)
-set(RELEASE_OPTIONS -Wno-covered-switch-default -Wno-deprecated-declarations)
+set(DEBUG_OPTIONS
+  -g
+  -O0
+  -pthread
+  -femulated-tls
+  -Weverything
+  -fno-inline -fno-inline-functions
+  -fno-omit-frame-pointer
+  -fno-strict-aliasing
+  -Wno-c++98-compat
+  -Wno-old-style-cast
+  -Wno-padded
+  -Wno-documentation
+  -Wno-documentation-unknown-command
+  -Wno-decls-in-multiple-modules
+  -Wno-unsafe-buffer-usage
+  -Wno-c++98-compat
+  -Wno-c++98-compat-pedantic
+  -Wno-covered-switch-default
+  -Wno-deprecated-declarations)
+
+set(RELEASE_OPTIONS
+  -O3
+  -pthread
+  -femulated-tls
+  -march=x86-64
+  -DNDEBUG
+  -Weverything
+  -Wno-c++98-compat
+  -Wno-old-style-cast
+  -Wno-padded
+  -Wno-documentation
+  -Wno-documentation-unknown-command
+  -Wno-decls-in-multiple-modules
+  -Wno-unsafe-buffer-usage
+  -Wno-c++98-compat
+  -Wno-c++98-compat-pedantic
+  -Wno-covered-switch-default
+  -Wno-deprecated-declarations)
+
+#include(CheckIPOSupported)
+#check_ipo_supported(RESULT ipo_supported OUTPUT ipo_error)
+#if(ipo_supported)
+#  message(STATUS "ipo_supported")
+#  set_target_properties(${PROJECT_NAME} PROPERTIES INTERPROCEDURAL_OPTIMIZATION TRUE)
+#endif()
+
+set(LINK_OPTIONS
+  -pthread
+  -femulated-tls)
+
+add_definitions(
+  -DVK_NO_PROTOTYPES
+  -D_USE_MATH_DEFINES)
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
   add_definitions(
     -DVOLK_STATIC_DEFINES
     -D_CRT_SECURE_NO_WARNINGS
     -DDWIN32_LEAN_AND_MEAN)
-
-  #todo finish clang windows support
-  if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-
-    add_definitions(-D_USE_MATH_DEFINES)
-    #-v -ftime-trace -Xclang -fmodules-debuginfo
-    list(APPEND DEBUG_OPTIONS -g -O0 -pthread -femulated-tls -fno-inline -fno-inline-functions -fno-omit-frame-pointer -fno-strict-aliasing -Wno-padded -Wno-documentation -Wno-documentation-unknown-command -Wno-decls-in-multiple-modules -Wno-unsafe-buffer-usage -Wno-c++98-compat -Wno-c++98-compat-pedantic)
-    list(APPEND RELEASE_OPTIONS -O3 -pthread -femulated-tls -fno-strict-aliasing -Wno-decls-in-multiple-modules -Wno-unsafe-buffer-usage -Wno-c++98-compat -Wno-c++98-compat-pedantic -Wno-padded -Wno-documentation -Wno-documentation-unknown-command)
-    target_compile_options(${PROJECT_NAME} PRIVATE $<$<CONFIG:DEBUG>:-Weverything -Wno-c++98-compat -Wno-old-style-cast>)
-    target_link_options(${PROJECT_NAME} PRIVATE -pthread -femulated-tls)
-  else()
-
-    list(APPEND DEBUG_OPTIONS /MDd /Od /Ob0 /RTC1 /Zi /Zc:__cplusplus /EHsc)
-    list(APPEND RELEASE_OPTIONS /Ox /MD /Zc:__cplusplus /EHsc)
-
-    #target_link_options(${PROJECT_NAME} PRIVATE $<$<CONFIG:RELEASE>:/LTCG>)
-    target_compile_options(${PROJECT_NAME} PRIVATE $<$<CONFIG:DEBUG>:/GA /Wall -Wno-c++98-compat -Wno-old-style-cast>)
-  endif()
-else()
-  list(APPEND DEBUG_OPTIONS -O0 -Wall)
-  list(APPEND RELEASE_OPTIONS -O3 -Wall)
-endif()
-
-target_compile_options(${PROJECT_NAME} PRIVATE $<$<CONFIG:DEBUG>:${DEBUG_OPTIONS}>)
-target_compile_options(${PROJECT_NAME} PRIVATE $<$<CONFIG:RELEASE>:${RELEASE_OPTIONS}>)
-target_compile_definitions(${PROJECT_NAME} PRIVATE $<$<CONFIG:DEBUG>:PLP_DEBUG_BUILD>)
-
-if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
-  list(APPEND EXTRA_LIBS
-    Ws2_32 user32 gdi32 winspool shell32 ole32 oleaut32 uuid comdlg32 advapi32)
-else()
-  set(THREADS_PREFER_PTHREAD_FLAG ON)
-  find_package(Threads REQUIRED)
-  list(APPEND EXTRA_LIBS Threads::Threads)
 endif()
 
 set_target_properties(${PROJECT_NAME} PROPERTIES
-  CMAKE_CXX_MODULE_STD 1
   CXX_STANDARD 23
   CXX_STANDARD_REQUIRED ON
   CXX_EXTENSIONS ON)
@@ -109,23 +120,25 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
 target_compile_features(${PROJECT_NAME}
   PRIVATE   cxx_std_23
   INTERFACE cxx_std_23)
-#########################################################
 
-#########################################################
-##################### External libs #####################
-#########################################################
-install(TARGETS ${PROJECT_NAME}
-    EXPORT PoulpeEngineTargets
-    RUNTIME DESTINATION bin
-    LIBRARY DESTINATION lib
-    ARCHIVE DESTINATION lib
-    FILE_SET cxx_headers DESTINATION include
-    FILE_SET cxx_modules DESTINATION include)
+target_include_directories(${PROJECT_NAME} PRIVATE ${PROJECT_BINARY_DIR})
 
-add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-  COMMAND ${CMAKE_COMMAND} -E copy -t $<TARGET_FILE_DIR:${PROJECT_NAME}> $<TARGET_RUNTIME_DLLS:${PROJECT_NAME}>
-  COMMAND_EXPAND_LISTS
-)
+target_link_options(${PROJECT_NAME} PRIVATE $<$<CONFIG:DEBUG>:${LINK_OPTIONS}>)
+target_link_options(${PROJECT_NAME} PRIVATE $<$<CONFIG:RELEASE>:${LINK_OPTIONS}>)
+
+target_compile_options(${PROJECT_NAME} PRIVATE $<$<CONFIG:DEBUG>:${DEBUG_OPTIONS}>)
+target_compile_options(${PROJECT_NAME} PRIVATE $<$<CONFIG:RELEASE>:${RELEASE_OPTIONS}>)
+
+target_compile_definitions(${PROJECT_NAME} PRIVATE $<$<CONFIG:DEBUG>:PLP_DEBUG_BUILD>)
+
+if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+  list(APPEND EXTRA_LIBS
+    Ws2_32 user32 gdi32 winspool shell32 ole32 oleaut32 uuid comdlg32 advapi32)
+endif()
+
+set(THREADS_PREFER_PTHREAD_FLAG ON)
+find_package(Threads REQUIRED)
+list(APPEND EXTRA_LIBS Threads::Threads)
 
 find_package(Vulkan REQUIRED)
 list(APPEND EXTRA_LIBS Vulkan::Vulkan)
@@ -135,16 +148,33 @@ set(PLP_BIN_DIR "$<TARGET_FILE_DIR:${PROJECT_NAME}>")
 
 include(fetchDeps)
 
-target_link_libraries(${PROJECT_NAME} PRIVATE ${EXTRA_LIBS} poulpe)
+message(STATUS "EXTRA_LIBS: ${EXTRA_LIBS}")
+target_link_libraries(${PROJECT_NAME} PRIVATE ${EXTRA_LIBS})
 
-list(APPEND LIB_DEBUG_OPTIONS ${DEBUG_OPTIONS})
-list(APPEND LIB_RELEASE_OPTIONS ${RELEASE_OPTIONS})
+install(TARGETS ${PROJECT_NAME}
+    EXPORT PoulpeEngineTargets
+    RUNTIME DESTINATION bin
+    LIBRARY DESTINATION lib
+    ARCHIVE DESTINATION lib
+    FILE_SET cxx_headers DESTINATION include
+    FILE_SET cxx_modules DESTINATION include)
 
-#########################################################
+find_package(TCL 9 REQUIRED)
 
-#########################################################
+message(STATUS "TCL_INCLUDE_PATH = ${TCL_INCLUDE_PATH}")
+message(STATUS "TCL_LIBRARY = ${TCL_LIBRARY}")
+message(STATUS "TCL_TCLSH = ${TCL_TCLSH}")
+
+#todo: add flag to activate or not the tcl/tk editor
+target_include_directories(${PROJECT_NAME} PRIVATE ${TCL_INCLUDE_PATH} ${TK_INCLUDE_PATH})
+target_link_libraries(${PROJECT_NAME} PRIVATE ${TCL_LIBRARY} ${TK_LIBRARY})
+
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+  COMMAND ${CMAKE_COMMAND} -E copy -t $<TARGET_FILE_DIR:${PROJECT_NAME}> $<TARGET_RUNTIME_DLLS:${PROJECT_NAME}>
+  COMMAND_EXPAND_LISTS
+)
+
 ##################### Install ###########################
-#########################################################
 
 # install(TARGETS
 #   ${PROJECT_NAME}
@@ -160,27 +190,6 @@ list(APPEND LIB_RELEASE_OPTIONS ${RELEASE_OPTIONS})
 #   COMPONENT Development
 # )
 
-#########################################################
-
-#########################################################
-##################### Miscellaneous #####################
-#########################################################
-#Filters for visual studio structure
-file(GLOB_RECURSE _source_list "${PROJECT_SOURCE_DIR}/src/**/*.cpp" "${PROJECT_SOURCE_DIR}/src/**/*.hpp")
-file(GLOB_RECURSE _source_list "${PROJECT_SOURCE_DIR}/src/*.cpp" "${PROJECT_SOURCE_DIR}/src/*.hpp")
-foreach(_source IN ITEMS ${_source_list})
-    get_filename_component(_source_path "${_source}" PATH)
-    string(REPLACE "${CMAKE_SOURCE_DIR}" "" _group_path "${_source_path}")
-    string(REPLACE "/" "\\" _group_path "${_group_path}")
-    source_group("${_group_path}" FILES "${_source}")
-  list(APPEND TIDY_SRC "${_source}")
-endforeach()
-
-set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreadedDebugDLL$<$<CONFIG:Debug>:Debug>")
-
-set_property(DIRECTORY ${PROJECT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT ${PROJECT_NAME})
-set_property(TARGET ${PROJECT_NAME} PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}")
-
 find_program(CLANG_TIDY_EXE NAMES "clang-tidy")
 
 add_custom_target(
@@ -188,9 +197,3 @@ add_custom_target(
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 
 include(graphVizOptions)
-#add_custom_target(graphviz ALL
-#    COMMAND ${CMAKE_COMMAND} "--graphviz=graph/plp.dot" ..
-#    COMMAND dot -Tsvg graph/plp.dot -o graph/plp.svg
-#    WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
-#)
-#########################################################

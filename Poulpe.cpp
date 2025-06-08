@@ -1,14 +1,18 @@
 module;
 #include "PoulpeEngineConfig.h"
 
+#include <tcl.h>
+
 #include <iostream>
 
 export module Poulpe;
 
-import Poulpe.Application;
+import Engine.Application;
 
 int main(int argc, char** argv)
 {
+  Tcl_FindExecutable(argv[0]);
+
   std::cout << argv[0] << " Version " << PoulpeEngine_VERSION_MAJOR << "." << PoulpeEngine_VERSION_MINOR << std::endl;
 
   bool serverMode{ false };
