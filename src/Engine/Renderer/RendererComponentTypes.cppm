@@ -20,6 +20,12 @@ import Engine.Renderer.Mesh;
 namespace Poulpe {
   export struct ComponentRenderingInfo
   {
+    //@todo find a better name
+    enum class MODE {
+      CREATION,
+      UPDATE
+    };
+
     Mesh* mesh;
     std::unordered_map<std::string, Texture>const& textures;
     std::string const& skybox_name;
@@ -32,5 +38,6 @@ namespace Poulpe {
     FT_Face const& face;
     uint32_t const atlas_width{0};
     uint32_t const atlas_height{0};
+    MODE mode {MODE::CREATION};
   };
 }

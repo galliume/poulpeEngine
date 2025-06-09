@@ -34,8 +34,7 @@ jobs:
           sudo add-apt-repository universe || true
           sudo apt-get update
           sudo apt-get install -y build-essential xorg-dev libglu1-mesa-dev \
-            libvulkan1 mesa-vulkan-drivers clang ninja-build sqlite3 libsqlite3-dev \
-            tcl9.0 tcl9.0-dev tk9.0
+            libvulkan1 mesa-vulkan-drivers clang ninja-build sqlite3 libsqlite3-dev
 
       - name: Install VulkanSDK (Linux)
         if: runner.os == 'Linux'
@@ -53,8 +52,8 @@ jobs:
           clang --version
           gcc --version
           cmake --version
-          tclsh9.0 <<< 'info patchlevel'
-          wish9.0 <<< 'puts $tk_version'
+          tclsh <<< 'info patchlevel'
+          wish <<< 'puts $tk_version'
 
       - name: List Presets
         run: cd main && cmake --list-presets
