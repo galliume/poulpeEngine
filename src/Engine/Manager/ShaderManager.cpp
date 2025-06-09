@@ -292,7 +292,7 @@ namespace Poulpe
 
     PipeLineCreateInfo pipeline_create_infos{};
     pipeline_create_infos.name = shader_name;
-    pipeline_create_infos.cull_mode = VK_CULL_MODE_BACK_BIT;
+    pipeline_create_infos.cull_mode = VK_CULL_MODE_FRONT_BIT;
     pipeline_create_infos.has_depth_test = true;
     pipeline_create_infos.has_depth_write = true;
     pipeline_create_infos.has_stencil_test = true;
@@ -349,8 +349,10 @@ namespace Poulpe
       pipeline_create_infos.has_depth_test = false;
       pipeline_create_infos.has_depth_write = false;
       pipeline_create_infos.has_stencil_test = false;
-      pipeline_create_infos.has_color_attachment = false;
+      pipeline_create_infos.has_color_attachment = true;
       pipeline_create_infos.has_dynamic_depth_bias = false;
+      pipeline_create_infos.cull_mode = VK_CULL_MODE_NONE;
+      pipeline_create_infos.polygone_mode = VK_POLYGON_MODE_FILL;
 
     } else if (shader_name == "terrain" || shader_name == "water") {
       if (shader_name == "water") {
@@ -388,7 +390,7 @@ namespace Poulpe
       descset_layout = createDescriptorSetLayout<DescSetLayoutType::Entity>();
 
       if (shader_name == "shadowMap" || shader_name == "shadowMapSpot") {
-        pipeline_create_infos.cull_mode = VK_CULL_MODE_FRONT_BIT;
+        pipeline_create_infos.cull_mode = VK_CULL_MODE_BACK_BIT;
         pipeline_create_infos.has_color_attachment = false;
         pipeline_create_infos.has_dynamic_depth_bias = true;
 

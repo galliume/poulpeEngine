@@ -1,6 +1,5 @@
 module;
 
-#define GLM_FORCE_LEFT_HANDED
 #define GLM_FORCE_DEFAULT_ALIGNED_GENTYPES
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #define GLM_ENABLE_EXPERIMENTAL
@@ -56,7 +55,6 @@ namespace Poulpe
     _imageviews2.resize(_images.size());
     _images2.resize(_images.size());
     _samplers2.resize(_images.size());
-
     _imageviews3.resize(_images.size());
     _images3.resize(_images.size());
     _samplers3.resize(_images.size());
@@ -328,11 +326,10 @@ namespace Poulpe
     constants push_constants{};
     push_constants.options = mesh->getOptions();
     push_constants.view_position = camera->getPos();
+    push_constants.view = camera->lookAt();
 
     if ("skybox" == mesh->getName()) {
       push_constants.view = glm::mat4(glm::mat3(camera->lookAt()));
-    } else {
-      push_constants.view = camera->lookAt();
     }
 
     vkCmdPushConstants(

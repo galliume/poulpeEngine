@@ -4,7 +4,6 @@ module;
 
 #include <GLFW/glfw3.h>
 
-#define GLM_FORCE_LEFT_HANDED
 #define GLM_FORCE_DEFAULT_ALIGNED_GENTYPES
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #define GLM_ENABLE_EXPERIMENTAL
@@ -27,21 +26,12 @@ import Engine.Managers.FontManager;
 
 namespace Poulpe
 {
-  Application* Application::_instance{ nullptr };
-
-  Application::Application()
-  {
-    if (_instance == nullptr) {
-      _instance = this;
-    }
-  }
-
-  void Application::init()
+  void Application::init(bool const editor_mode)
   {
     _start_run = std::chrono::steady_clock::now();
 
     auto* window = new Window();
-    window->init("PoulpeEngine");
+    window->init("PoulpeEngine", editor_mode);
 
     //CommandQueueManagerLocator::init();
     ConfigManagerLocator::init();
@@ -54,9 +44,12 @@ namespace Poulpe
     _network_manager = std::make_unique<NetworkManager>(_api_manager.get());
 
     //auto db_manager = std::make_unique<DbManager>();
+    if (!editor_mode) {
+      _render_manager->getWindow()->show();
+    }
   }
 
-  void Application::run()
+  void Application::run() const
   {
     using namespace std::chrono;
 

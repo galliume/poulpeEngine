@@ -26,7 +26,7 @@ For Windows you will need mingw64 https://www.mingw-w64.org/ and add the bin fol
 
 Install the latest Vulkan SDK https://vulkan.lunarg.com/ and be sure to have the env variable VULKAN_SDK properly set to your Vulkan SDK installation folder.
 
-The editor is using TCL/TK 9.0, the easiest installation for Windows is to install via the [https://www.magicsplat.com/tcl-installer/index.html](MagicSplat installer).
+The editor (Windows only for the moment) is using TCL/TK 9.0, the easiest installation for Windows is to install via the [https://www.magicsplat.com/tcl-installer/index.html](MagicSplat installer).
 
 Or [https://www.tcl-lang.org/software/tcltk/9.0.html](download) the source and compile it yourself.
 
@@ -60,6 +60,12 @@ cmake --build --preset windows-debug
 Launch from the root directory
 ```
 build/windows-debug/PoulpeEngine
+```
+
+or to run the editor (Windows only)
+
+```
+build/windows-debug/PoulpeEngine -E
 ```
 
 Or open the project with a cmake able IDE (VS 2022, VS Code...)

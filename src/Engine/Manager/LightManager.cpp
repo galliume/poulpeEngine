@@ -1,4 +1,9 @@
 module;
+
+#define GLM_FORCE_DEFAULT_ALIGNED_GENTYPES
+#define GLM_FORCE_DEPTH_ZERO_TO_ONE
+#define GLM_ENABLE_EXPERIMENTAL
+
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
@@ -30,7 +35,7 @@ namespace Poulpe
 
     auto projection = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, near_plane, far_plane);
 
-    //projection[1][1] *= -1;
+    projection[1][1] *= -1;
 
     _sun.projection = projection;
     _sun.light_space_matrix = _sun.projection * _sun.view;

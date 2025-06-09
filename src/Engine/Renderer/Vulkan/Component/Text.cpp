@@ -3,9 +3,7 @@
 #include FT_FREETYPE_H
 #include <freetype/ttnameid.h>
 
-#define GLM_FORCE_LEFT_HANDED
 #define GLM_FORCE_DEFAULT_ALIGNED_GENTYPES
-#define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #define GLM_ENABLE_EXPERIMENTAL
 
 #include <glm/glm.hpp>
@@ -45,6 +43,11 @@ namespace Poulpe
     if (!mesh && !mesh->isDirty()) return;
   
     std::vector<Vertex> vertices;
+
+    auto const screen_width{
+        static_cast<float>(renderer->getAPI()->getSwapChainExtent().width)};
+    auto const screen_height{
+      -static_cast<float>(renderer->getAPI()->getSwapChainExtent().height) };
 
     float x { _position.x };
     float y { _position.y };
@@ -134,12 +137,7 @@ namespace Poulpe
       x += static_cast<float>((ch.advance >> 6)) * _scale;
     }
 
-    auto const width{
-        static_cast<float>(renderer->getAPI()->getSwapChainExtent().width)};
-    auto const height{
-      static_cast<float>(renderer->getAPI()->getSwapChainExtent().height) };
-
-    glm::mat4 projection{ glm::ortho(0.0f, width, 0.0f, height) };
+    glm::mat4 projection{ glm::ortho(0.0f, screen_width, 0.0f, screen_height) };
     
     glm::vec4 options{ 0.0f };
     

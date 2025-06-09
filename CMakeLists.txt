@@ -47,8 +47,11 @@ add_subdirectory(${PROJECT_SOURCE_DIR}/src/Engine/Renderer/Vulkan)
 add_subdirectory(${PROJECT_SOURCE_DIR}/src/Engine/Renderer/Vulkan/Component)
 add_subdirectory(${PROJECT_SOURCE_DIR}/src/Engine/Utils)
 
+#todo tcl/tk editor for Linux
+if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
 add_subdirectory(${PROJECT_SOURCE_DIR}/src/Editor)
 add_subdirectory(${PROJECT_SOURCE_DIR}/src/Editor/Manager)
+endif()
 
 set(DEBUG_OPTIONS
   -g
@@ -56,7 +59,8 @@ set(DEBUG_OPTIONS
   -pthread
   -femulated-tls
   -Weverything
-  -fno-inline -fno-inline-functions
+  -fno-inline
+  -fno-inline-functions
   -fno-omit-frame-pointer
   -fno-strict-aliasing
   -Wno-c++98-compat
@@ -158,16 +162,6 @@ install(TARGETS ${PROJECT_NAME}
     ARCHIVE DESTINATION lib
     FILE_SET cxx_headers DESTINATION include
     FILE_SET cxx_modules DESTINATION include)
-
-find_package(TCL 9 REQUIRED)
-
-message(STATUS "TCL_INCLUDE_PATH = ${TCL_INCLUDE_PATH}")
-message(STATUS "TCL_LIBRARY = ${TCL_LIBRARY}")
-message(STATUS "TCL_TCLSH = ${TCL_TCLSH}")
-
-#todo: add flag to activate or not the tcl/tk editor
-target_include_directories(${PROJECT_NAME} PRIVATE ${TCL_INCLUDE_PATH} ${TK_INCLUDE_PATH})
-target_link_libraries(${PROJECT_NAME} PRIVATE ${TCL_LIBRARY} ${TK_LIBRARY})
 
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
   COMMAND ${CMAKE_COMMAND} -E copy -t $<TARGET_FILE_DIR:${PROJECT_NAME}> $<TARGET_RUNTIME_DLLS:${PROJECT_NAME}>

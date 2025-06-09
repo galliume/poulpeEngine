@@ -17,8 +17,10 @@ namespace Poulpe
 
     void setVSync(bool active);
 
-    void hide();
-    void init(std::string_view windowTitle);
+    void show();
+    void init(
+      std::string_view windowTitle,
+      bool const editor_mode = false);
     bool isMinimized();
     void quit();
     void wait();

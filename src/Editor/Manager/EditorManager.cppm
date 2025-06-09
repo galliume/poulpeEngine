@@ -2,24 +2,29 @@ module;
 
 #include <tcl.h>
 
+#include <functional>
+#include <memory>
+
 export module Editor.Managers.EditorManager;
 
-import Engine.Managers.RenderManager;
+import Editor.Managers.LevelManager;
+
+import Engine.Application;
 
 namespace Poulpe {
 
   export class EditorManager
   {
     public:
-      EditorManager(RenderManager const * render_manager);
-      ~EditorManager();
+      EditorManager(Application const * app);
 
-      void run();
+        ~EditorManager();
 
     private:
       bool _init {false};
       Tcl_Interp* _tcl_interp;
 
-      RenderManager const * _render_manager;
+      Application const * _app;
+      std::unique_ptr<LevelManager> _level_manager;
   };
 }

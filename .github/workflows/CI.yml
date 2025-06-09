@@ -52,8 +52,6 @@ jobs:
           clang --version
           gcc --version
           cmake --version
-          tclsh <<< 'info patchlevel'
-          wish <<< 'puts $tk_version'
 
       - name: List Presets
         run: cd main && cmake --list-presets
@@ -69,7 +67,7 @@ jobs:
           build-mode: manual
 
       - name: Build PoulpeEngine
-        run: cd main && cmake --build --preset ${{ matrix.cmake_preset }}
+        run: cd main && cmake --build --preset ${{ matrix.cmake_preset }} -- -j8
 
       - name: Perform CodeQL analysis
         uses: github/codeql-action/analyze@v3
