@@ -2,6 +2,7 @@
 
 #include <tcl.h>
 
+#include <functional>
 #include <iostream>
 #include <memory>
 #include <thread>
@@ -39,7 +40,7 @@ int main(int argc, char** argv)
 
   std::unique_ptr<Poulpe::Application> app = std::make_unique<Poulpe::Application>();
 
-  app->init();
+  app->init(editor_mode);
 
   Poulpe::Logger::trace("server_mode {}", server_mode);
 
@@ -53,11 +54,7 @@ int main(int argc, char** argv)
   if (editor_mode) {
     Tcl_FindExecutable(argv[0]);
 
-    std::thread engine([&]() {
-      app->run();
-    });
-    auto _editor_manager = std::make_unique<Poulpe::EditorManager>(app->getRenderManager());
-    engine.join();
+    auto _editor_manager = std::make_unique<Poulpe::EditorManager>(app.get());
   } else {
     app->run();
   }

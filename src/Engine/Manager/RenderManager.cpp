@@ -263,6 +263,7 @@ namespace Poulpe
 
       _renderer->endRender();
       _renderer->submit();
+      //_renderer->copyToOffscreenImage();
     }
   }
 

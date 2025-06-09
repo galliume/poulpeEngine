@@ -146,6 +146,7 @@ namespace Poulpe
     void submit();
 
     inline uint32_t getCurrentFrameIndex() const { return _current_frame; }
+    inline std::vector<uint8_t> getOffscreenImage() { return _offscreen_image; }
     inline VkSampler getCurrentSampler() { return _samplers[_previous_frame]; }
     inline VkImageView getCurrentImageView() { return _imageviews[_previous_frame]; }
     inline VkImageView getDepthMapImageViews() { return  _depthmap_imageviews.at(_current_frame); }
@@ -162,6 +163,8 @@ namespace Poulpe
     void immediateSubmit(std::function<void(VkCommandBuffer cmd)> && function, int queueIndex = 0) ;
     void init();
     //void renderScene();
+
+    void copyToOffscreenImage();
 
     void setDeltatime(float const delta_time);
 
@@ -186,6 +189,8 @@ namespace Poulpe
   private:
     std::unique_ptr<VulkanAPI> _vulkan{ nullptr };
     VkSwapchainKHR _swapchain{ nullptr };
+
+    std::vector<uint8_t> _offscreen_image{};
 
     std::vector<VkImage> _images{};
     std::vector<VkImageView> _imageviews{};

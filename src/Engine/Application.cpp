@@ -27,16 +27,7 @@ import Engine.Managers.FontManager;
 
 namespace Poulpe
 {
-  Application* Application::_instance{ nullptr };
-
-  Application::Application()
-  {
-    if (_instance == nullptr) {
-      _instance = this;
-    }
-  }
-
-  void Application::init()
+  void Application::init(bool const editor_mode)
   {
     _start_run = std::chrono::steady_clock::now();
 
@@ -54,9 +45,12 @@ namespace Poulpe
     _network_manager = std::make_unique<NetworkManager>(_api_manager.get());
 
     //auto db_manager = std::make_unique<DbManager>();
+    if (!editor_mode) {
+      _render_manager->getWindow()->show();
+    }
   }
 
-  void Application::run()
+  void Application::run() const
   {
     using namespace std::chrono;
 

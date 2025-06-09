@@ -2735,6 +2735,12 @@ VkSampler VulkanAPI::createTextureSampler(uint32_t const mip_lvl)
 
       source_stage = VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
       destination_stage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+    } else if (old_layout == VK_IMAGE_LAYOUT_PRESENT_SRC_KHR && new_layout == VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL) {
+      barrier.srcAccessMask = 0;
+      barrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+
+      source_stage = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
+      destination_stage = VK_PIPELINE_STAGE_TRANSFER_BIT;
     } else {
       throw std::invalid_argument("unsupported layout transition");
     }

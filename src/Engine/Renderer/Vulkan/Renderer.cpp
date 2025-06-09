@@ -56,7 +56,6 @@ namespace Poulpe
     _imageviews2.resize(_images.size());
     _images2.resize(_images.size());
     _samplers2.resize(_images.size());
-
     _imageviews3.resize(_images.size());
     _images3.resize(_images.size());
     _samplers3.resize(_images.size());
@@ -736,5 +735,61 @@ namespace Poulpe
     vkBeginCommandBuffer(_cmd_buffer_entities4[_current_frame], &begin_info);
     vkCmdClearColorImage(_cmd_buffer_entities4[_current_frame], _images[_current_frame], VK_IMAGE_LAYOUT_GENERAL, &clear_color, 1, &image_range);
     vkEndCommandBuffer(_cmd_buffer_entities4[_current_frame]);
+  }
+
+  void Renderer::copyToOffscreenImage()
+  {
+    auto& cmd_buffer = _cmd_buffer_entities2[_current_frame];
+    auto& color = _images[_current_frame];
+    VkImageLayout const begin_color_layout{ VK_IMAGE_LAYOUT_PRESENT_SRC_KHR };
+    VkImageLayout const end_color_layout{ VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL };
+    VkImageAspectFlagBits const color_aspect { VK_IMAGE_ASPECT_COLOR_BIT };
+    
+    VkImageSubresourceLayers subresource = {};
+    subresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+    subresource.mipLevel = 0;
+    subresource.baseArrayLayer = 0;
+    subresource.layerCount = 1;
+
+    auto const width { 2048 };
+    auto const height { 1080 };
+
+    VkBufferImageCopy region = {};
+    region.bufferOffset = 0;
+    region.bufferRowLength = 0;
+    region.bufferImageHeight = 0;
+    region.imageSubresource = subresource;
+    region.imageOffset = {0, 0, 0};
+    region.imageExtent = { width, height, 1 };
+
+    VkCommandBufferBeginInfo begin_info{};
+    begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+    begin_info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+
+    auto const size {width * height * 4 };
+    VkBuffer staging_buffer;
+    VkDeviceMemory staging_device_memory;
+
+    vkBeginCommandBuffer(cmd_buffer, &begin_info);
+    _vulkan->transitionImageLayout(cmd_buffer, color, begin_color_layout, end_color_layout, color_aspect);
+
+    _vulkan->createBuffer(size,
+      VK_BUFFER_USAGE_TRANSFER_DST_BIT,
+      VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+      staging_buffer,
+      staging_device_memory);
+
+    vkCmdCopyImageToBuffer(cmd_buffer, color, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, staging_buffer, 1, &region);
+
+    vkEndCommandBuffer(cmd_buffer);
+
+    _offscreen_image.resize(size);
+
+    void* data;
+    vkMapMemory(_vulkan->getDevice(), staging_device_memory, 0, size, 0, &data);
+    memcpy(_offscreen_image.data(), data, static_cast<size_t>(size));
+    vkUnmapMemory(_vulkan->getDevice(), staging_device_memory);
+
+    vkDestroyBuffer(_vulkan->getDevice(), staging_buffer, nullptr);
   }
 }
