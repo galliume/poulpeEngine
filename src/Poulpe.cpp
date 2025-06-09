@@ -1,7 +1,11 @@
 #include "PoulpeEngineConfig.h"
 
+//@todo tcl/tk editor for Linux
+#if defined(_WIN64)
 #include <tcl.h>
+#endif
 
+#include <functional>
 #include <iostream>
 #include <memory>
 #include <thread>
@@ -9,7 +13,10 @@
 import Engine.Application;
 import Engine.Core.Logger;
 
+//@todo tcl/tk editor for Linux
+#if defined(_WIN64)
 import Editor.Managers.EditorManager;
+#endif
 
 int main(int argc, char** argv)
 {
@@ -39,7 +46,7 @@ int main(int argc, char** argv)
 
   std::unique_ptr<Poulpe::Application> app = std::make_unique<Poulpe::Application>();
 
-  app->init();
+  app->init(editor_mode);
 
   Poulpe::Logger::trace("server_mode {}", server_mode);
 
@@ -50,17 +57,17 @@ int main(int argc, char** argv)
 
   Poulpe::Logger::trace("editor_mode : {}", editor_mode);
 
+  #if defined(_WIN64)
   if (editor_mode) {
     Tcl_FindExecutable(argv[0]);
 
-    std::thread engine([&]() {
-      app->run();
-    });
-    auto _editor_manager = std::make_unique<Poulpe::EditorManager>(app->getRenderManager());
-    engine.join();
+    auto _editor_manager = std::make_unique<Poulpe::EditorManager>(app.get());
   } else {
     app->run();
   }
+  #else
+    app->run();
+  #endif
   
   return 0;
 }

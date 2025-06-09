@@ -1,10 +1,12 @@
 module;
+#define GLM_FORCE_DEFAULT_ALIGNED_GENTYPES
+#define GLM_FORCE_DEPTH_ZERO_TO_ONE
+#define GLM_ENABLE_EXPERIMENTAL
+
 #include <assimp/config.h>
 #include <assimp/GltfMaterial.h>
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
-
-#define GLM_ENABLE_EXPERIMENTAL
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -56,7 +58,6 @@ namespace Poulpe
           std::unordered_map<std::string, std::vector<std::vector<Scale>>> const scales)> callback)
   {
     Assimp::Importer importer;
-
 
     auto flags {
         aiProcess_Triangulate
@@ -554,7 +555,7 @@ namespace Poulpe
         vertex.bone_weights.resize(4, 0.0f);
 
         vertex.pos = { vertices.x, vertices.y, vertices.z };
-        if (flip_Y) vertex.pos.y *= -1.0f;
+        //if (flip_Y) vertex.pos.y *= -1.0f;
         vertex.original_pos = vertex.pos;
 
         vertex.normal = n;

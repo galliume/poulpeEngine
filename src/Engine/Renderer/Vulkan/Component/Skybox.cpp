@@ -1,6 +1,5 @@
 module;
 
-#define GLM_FORCE_LEFT_HANDED
 #define GLM_FORCE_DEFAULT_ALIGNED_GENTYPES
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #define GLM_ENABLE_EXPERIMENTAL
@@ -24,6 +23,7 @@ module Engine.Renderer.Vulkan.Skybox;
 import Engine.Component.Components;
 import Engine.Component.Texture;
 import Engine.Component.Vertex;
+import Engine.Core.Logger;
 import Engine.Core.MeshTypes;
 import Engine.Core.PlpTypedef;
 import Engine.Renderer.RendererComponentTypes;
@@ -39,6 +39,7 @@ namespace Poulpe
     auto const& mesh = component_rendering_info.mesh;
 
     if (!mesh && !mesh->isDirty()) return;
+
 
     std::vector<Vertex> const vertices {
       {{-1.0f,  1.0f, -1.0f }, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, glm::vec3(0.0f), {}, {}},
@@ -115,12 +116,14 @@ namespace Poulpe
 
     mesh->setName("skybox");
     mesh->setShaderName("skybox");
+    mesh->setIsIndexed(false);
+    mesh->setData(data);
+    mesh->setIsDirty(false);
+    mesh->setHasShadow(false);
 
     renderer->getAPI()->updateUniformBuffer(mesh->getUniformBuffers().at(0), &data._ubos.at(0));
 
     createDescriptorSet(renderer, component_rendering_info);
-    mesh->setData(data);
-    mesh->setIsDirty(false);
   }
   
   void Skybox::createDescriptorSet(

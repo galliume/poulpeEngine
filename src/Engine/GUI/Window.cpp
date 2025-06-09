@@ -15,17 +15,19 @@ namespace Poulpe
 
   void Window::setVSync(bool active) { _active_vsync = active; }
 
-  void Window::hide()
+  void Window::show()
   {
-    glfwWindowHint(GLFW_VISIBLE, GLFW_TRUE);
+    glfwShowWindow(_window);
   }
 
-  void Window::init(std::string_view window_title)
+  void Window::init(
+    std::string_view window_title,
+    bool const editor_mode)
   {
     // int const WIDTH = 2560;
     // int const HEIGHT = 1440;
     int const WIDTH = 2048;
-    int const HEIGHT = 1080;
+    int const HEIGHT = 1152;
 
     glfwInit();
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
@@ -33,6 +35,11 @@ namespace Poulpe
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_SRGB_CAPABLE, GLFW_TRUE);
+    glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
+
+    if (editor_mode) {
+      glfwWindowHint(GLFW_DECORATED, GLFW_FALSE);
+    }
 
     //@todo check HDR support with GLFW ?
     _monitor = glfwGetPrimaryMonitor();

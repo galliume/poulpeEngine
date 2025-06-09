@@ -2,7 +2,7 @@
 #extension GL_ARB_separate_shader_objects : enable
 #extension GL_EXT_nonuniform_qualifier : enable
 
-layout(set = 0, binding = 0) readonly uniform UniformBufferObject {
+layout(std140, binding = 0) readonly uniform UniformBufferObject {
     mat4 model;
     mat4 projection;
 } ubo;
@@ -17,13 +17,14 @@ layout(location = 0) out vec3 fTexCoord;
 layout(location = 1) out vec4 fCameraPos;
 layout(location = 2) out vec4 fModelPos;
 
-layout(push_constant) uniform constants
+layout(std140, push_constant) uniform constants
 {
-    mat4 view;
-    vec3 view_position;
+  mat4 view;
+  vec3 view_position;
+  vec4 options;
 } pc;
 
-void main() 
+void main()
 {
   fTexCoord = position;
   //gl_Position = vec4(pos.xyz, 1.0);

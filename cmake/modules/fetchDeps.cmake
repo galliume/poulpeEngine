@@ -12,7 +12,7 @@ set(NH_JSON_TAG v3.12.0)
 set(STB_TAG master)
 set(SQLITE_TAG version-3.49.2)
 set(VOLK_TAG 1.4.304)
-set(WxWidget_TAG v3.3.0)
+#set(WxWidget_TAG v3.3.0)
 
 set(FETCH_GIT_SHALLOW TRUE)
 set(FETCH_GIT_PROGRESS TRUE)
@@ -31,5 +31,11 @@ include(deps/FetchMiniAudio)
 include(deps/FetchNlohmannJson)
 include(deps/FetchSTB)
 include(deps/FetchSQlite)
+
+#todo tcl/tk editor for Linux
+if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+include(deps/FetchTclTk)
+endif()
+
 include(deps/FetchVolk)
 #include(deps/FetchWxWidgets)

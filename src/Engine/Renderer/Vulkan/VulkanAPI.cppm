@@ -244,6 +244,9 @@ namespace Poulpe
 
     void setResolution(uint32_t const width, uint32_t const height);
 
+    uint32_t getWidth() { return _width; }
+    uint32_t getHeight() { return _height; }
+    
     /**
     * Vulkan drawing functions, in main loop
     **/
@@ -544,8 +547,8 @@ namespace Poulpe
     //@todo move to config file
     //uint32_t _width{ 800 };
     //uint32_t _height{ 600 };
-      uint32_t _width{ 2560 };
-      uint32_t _height{ 1440 };
+      uint32_t _width{ 2048 };
+      uint32_t _height{ 1152 };
 
     //VkMemoryRequirements _MemRequirements;
   };

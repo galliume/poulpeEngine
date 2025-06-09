@@ -1,6 +1,5 @@
 module;
 
-#define GLM_FORCE_LEFT_HANDED
 #define GLM_FORCE_DEFAULT_ALIGNED_GENTYPES
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #define GLM_ENABLE_EXPERIMENTAL
@@ -243,15 +242,16 @@ namespace Poulpe
         drawEntity(skybox_entity->getID());
       }
 
-      std::ranges::for_each(children, [&](const auto& leaf_node) {
-        std::ranges::for_each(leaf_node->getChildren(), [&](const auto& entity_node) {
-          drawEntity(entity_node->getEntity()->getID(), true);
-        });
-      });
-      
       if (terrain_entity != nullptr) {
         drawEntity(terrain_entity->getID());
       }
+      
+      std::ranges::for_each(children, [&](const auto& leaf_node) {
+        std::ranges::for_each(leaf_node->getChildren(), [&](const auto& entity_node) {
+          drawEntity(entity_node->getEntity()->getID(), true);
+      
+        });
+      });
       
       if (water_entity != nullptr) {
         drawEntity(water_entity->getID());
@@ -429,8 +429,6 @@ namespace Poulpe
     auto entity = std::make_unique<Entity>();
     auto mesh = std::make_unique<Mesh>();
     mesh->setName("skybox");
-    mesh->setHasShadow(false);
-    mesh->setIsIndexed(false);
 
     ComponentRenderingInfo rendering_info {
       .mesh = mesh.get(),

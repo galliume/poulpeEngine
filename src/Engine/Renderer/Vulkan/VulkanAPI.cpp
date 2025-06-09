@@ -750,7 +750,7 @@ VkPipeline VulkanAPI::createGraphicsPipeline(PipeLineCreateInfo const& pipeline_
   rasterizer.polygonMode = pipeline_create_info.polygone_mode;
   rasterizer.lineWidth = 1.0f;
   rasterizer.cullMode = pipeline_create_info.cull_mode;
-  rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;//VK_FRONT_FACE_CLOCKWISE;
+  rasterizer.frontFace = VK_FRONT_FACE_CLOCKWISE;//VK_FRONT_FACE_CLOCKWISE;
   rasterizer.depthBiasEnable = VK_FALSE;
   rasterizer.depthBiasConstantFactor = 0.f;
   rasterizer.depthBiasClamp = 0.0f;
@@ -1180,8 +1180,8 @@ void VulkanAPI::beginCommandBuffer(
 void VulkanAPI::setViewPort(VkCommandBuffer& cmd_buffer)
 {
   VkViewport viewport;
-  viewport.x = 0;
-  viewport.y = 0;
+  viewport.x = 0.f;
+  viewport.y = 0.f;
   viewport.width = static_cast<float>(_swapchain_extent.width);
   viewport.height = static_cast<float>(_swapchain_extent.height);
   viewport.minDepth = 0.0f;
@@ -2735,6 +2735,12 @@ VkSampler VulkanAPI::createTextureSampler(uint32_t const mip_lvl)
 
       source_stage = VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
       destination_stage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+    } else if (old_layout == VK_IMAGE_LAYOUT_PRESENT_SRC_KHR && new_layout == VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL) {
+      barrier.srcAccessMask = 0;
+      barrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+
+      source_stage = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
+      destination_stage = VK_PIPELINE_STAGE_TRANSFER_BIT;
     } else {
       throw std::invalid_argument("unsupported layout transition");
     }
