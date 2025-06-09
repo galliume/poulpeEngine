@@ -28,6 +28,8 @@ namespace Poulpe
     void run();
     void startServer(std::string const& port);
 
+    RenderManager const * getRenderManager() { return _render_manager.get(); }
+
   private:
     static Application* _instance;
 

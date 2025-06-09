@@ -25,8 +25,6 @@ import Engine.Core.Logger;
 import Engine.Managers.DbManager;
 import Engine.Managers.FontManager;
 
-import Editor.Managers.EditorManager;
-
 namespace Poulpe
 {
   Application* Application::_instance{ nullptr };
@@ -56,8 +54,6 @@ namespace Poulpe
     _network_manager = std::make_unique<NetworkManager>(_api_manager.get());
 
     //auto db_manager = std::make_unique<DbManager>();
-    auto _editor_manager = std::make_unique<EditorManager>();
-
   }
 
   void Application::run()

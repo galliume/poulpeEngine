@@ -100,7 +100,9 @@
     "source_location": "cpp",
     "typeindex": "cpp",
     "*.rh": "cpp",
-    "string_view": "cpp"
+    "string_view": "cpp",
+    "cwctype": "cpp",
+    "semaphore": "cpp"
   },
   "C_Cpp.default.compilerPath": "C:/Program Files/LLVM/bin/clang++.exe",
 }
