@@ -84,15 +84,24 @@ namespace Poulpe
       {{ 1.0f, -1.0f,  1.0f }, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, glm::vec3(0.0f), {}, {} }
     };
 
+    auto cmd_pool = renderer->getAPI()->createCommandPool();
+
     std::vector<UniformBufferObject> ubos{};
     ubos.reserve(1);
 
-    UniformBufferObject ubo{};
-    ubo.model = glm::mat4(0.0f);
-    //ubo.view = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
-    ubo.projection = renderer->getPerspective();
-    ubos.push_back({ ubo });
-    auto cmd_pool = renderer->getAPI()->createCommandPool();
+    if (component_rendering_info.mode == ComponentRenderingInfo::MODE::CREATION) {
+      UniformBufferObject ubo{};
+      ubo.model = glm::mat4(0.0f);
+      //ubo.view = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
+      ubo.projection = renderer->getPerspective();
+      ubos.push_back({ ubo });
+
+      Buffer uniform_buffer = renderer->getAPI()->createUniformBuffers(1, cmd_pool);
+      mesh->getUniformBuffers().emplace_back(uniform_buffer);
+    } else {
+      auto const& mesh_data = mesh->getData();
+      ubos = mesh_data->_ubos[0];
+    }
 
     Data data{};
     data._textures.emplace_back("skybox");
@@ -101,9 +110,6 @@ namespace Poulpe
     data._ubos.resize(1);
     data._ubos[0] = ubos;
     data._texture_index = 0;
-
-    Buffer uniform_buffer = renderer->getAPI()->createUniformBuffers(1, cmd_pool);
-    mesh->getUniformBuffers().emplace_back(uniform_buffer);
 
     vkDestroyCommandPool(renderer->getDevice(), cmd_pool, nullptr);
 
