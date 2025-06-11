@@ -78,8 +78,7 @@ FetchContent_MakeAvailable(fetch_assimp)
 
 target_include_directories(${PROJECT_NAME} 
 SYSTEM PRIVATE
-  ${fetch_assimp_SOURCE_DIR}/include
-  ${fetch_assimp_BINARY_DIR}/include)
+  ${fetch_assimp_SOURCE_DIR}/include)
 
 target_link_libraries(${PROJECT_NAME}
 PRIVATE
