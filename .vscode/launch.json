@@ -8,7 +8,8 @@
             "program": "${workspaceFolder}/build/windows-debug/PoulpeEngine.exe",
             "cwd": "${workspaceFolder}",
             "relativePathBase": "${workspaceFolder}",
-            "console": "externalTerminal"
+            "console": "externalTerminal",
+            "args": ["-E"]
         }
     ],
     "inputs": [
