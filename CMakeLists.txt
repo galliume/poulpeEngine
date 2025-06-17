@@ -57,7 +57,6 @@ set(DEBUG_OPTIONS
   -g
   -O0
   -pthread
-  -femulated-tls
   -Weverything
   -fno-inline
   -fno-inline-functions
@@ -78,7 +77,6 @@ set(DEBUG_OPTIONS
 set(RELEASE_OPTIONS
   -O3
   -pthread
-  -femulated-tls
   -march=x86-64
   -DNDEBUG
   -Weverything
@@ -102,8 +100,7 @@ set(RELEASE_OPTIONS
 #endif()
 
 set(LINK_OPTIONS
-  -pthread
-  -femulated-tls)
+  -pthread)
 
 add_definitions(
   -DVK_NO_PROTOTYPES
@@ -114,6 +111,10 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
     -DVOLK_STATIC_DEFINES
     -D_CRT_SECURE_NO_WARNINGS
     -DDWIN32_LEAN_AND_MEAN)
+
+  LIST(APPEND DEBUG_OPTIONS -femulated-tls)
+  LIST(APPEND RELEASE_OPTIONS -femulated-tls)
+  LIST(APPEND LINK_OPTIONS -femulated-tls)
 endif()
 
 set_target_properties(${PROJECT_NAME} PROPERTIES
