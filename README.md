@@ -11,12 +11,10 @@
 
 [State of the project](https://github.com/users/galliume/projects/4/views/1)
 
-[In video](https://www.youtube.com/watch?v=C7p9z6LhAig&list=PL4-Os8BWDCPmZt5HvJrSo6QDHkD9J4fJF)
+[In video](https://www.youtube.com/@galliume8395/videos)
 
 <img src="https://github.com/galliume/poulpeEngine/blob/main/screenshots/sponza.png" width="800" height="600">
 <img src="https://github.com/galliume/poulpeEngine/blob/main/screenshots/helmet.png" width="800" height="450">
-
-[PoulpeEdit](https://github.com/galliume/poulpeEdit) will be the GUI editor that will use PoulpeEngine to edit a level, coming soon.
 
 ### To compile && execute 
 
@@ -26,9 +24,10 @@ For Windows you will need mingw64 https://www.mingw-w64.org/ and add the bin fol
 
 Install the latest Vulkan SDK https://vulkan.lunarg.com/ and be sure to have the env variable VULKAN_SDK properly set to your Vulkan SDK installation folder.
 
-The editor (Windows only for the moment) is using TCL/TK 9.0, the easiest installation for Windows is to install via the [https://www.magicsplat.com/tcl-installer/index.html](MagicSplat installer).
+The editor (Windows only for the moment) is using TCL/TK 9.0, the easiest installation for Windows is to install via the 
+[MagicSplat installer](https://www.magicsplat.com/tcl-installer/index.html)
 
-Or [https://www.tcl-lang.org/software/tcltk/9.0.html](download) the source and compile it yourself.
+Or [download](https://www.tcl-lang.org/software/tcltk/9.0.html) the source and compile it yourself.
 
 On Linux you can install it easily via your favorite package manager.
 

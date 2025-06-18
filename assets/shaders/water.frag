@@ -124,8 +124,8 @@ float SmithGeometryGGX(float roughness, float theta)
 
 vec3 Diffuse(vec3 diffuse, vec3 F0, float NdL, float NdV)
 {
-  float a = 1.0 - pow(1.0 - max(NdL, 0.0), 5);
-  float b = 1.0 - pow(1.0 - max(NdV, 0.0), 5);
+  float a = 1.0 - pow(1.0 - max(NdL, 0.001), 5);
+  float b = 1.0 - pow(1.0 - max(NdV, 0.001), 5);
 
   return (21.0 / (20.0 * PI)) * (1.0 - F0) * diffuse * a * b;
 }
@@ -211,10 +211,10 @@ void main()
   vec3 l = normalize(light_pos - p);
   vec3 h = normalize(v + l);
 
-  float HdV = max(dot(h, v), 0.0);
-  float NdH = max(dot(normal, h), 0.0);
-  float NdL = max(dot(normal, l), 0.0);
-  float NdV = max(dot(normal, v), 0.0);
+  float HdV = max(dot(h, v), 0.001);
+  float NdH = max(dot(normal, h), 0.001);
+  float NdL = max(dot(normal, l), 0.001);
+  float NdV = max(dot(normal, v), 0.001);
 
   vec3 F0 = vec3(0.02);
   vec3 F90 = vec3(1.0);

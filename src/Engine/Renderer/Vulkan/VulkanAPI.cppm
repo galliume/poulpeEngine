@@ -547,8 +547,8 @@ namespace Poulpe
     //@todo move to config file
     //uint32_t _width{ 800 };
     //uint32_t _height{ 600 };
-      uint32_t _width{ 2048 };
-      uint32_t _height{ 1152 };
+      uint32_t _width{ 2560 };
+      uint32_t _height{ 1440 };
 
     //VkMemoryRequirements _MemRequirements;
   };

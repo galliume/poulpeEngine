@@ -132,7 +132,7 @@ namespace Poulpe
     FontManager::Text text {
       .name = "_plp_title",
       .text = "@ € $ 0 7 é è ù ü ä ö π ∞ β Æ ‰ Ü Γ Đ Ặ Ω ! ₲ ◀ MrPoulpe ▶™",
-      .position = glm::vec3(-200.0f, -100.0f, 0.0f), //@todo fix this -
+      .position = glm::vec3(0.0f, 100.0f, 0.0f),
       .color = glm::vec3(1.0f, 0.2f, 0.6f),
       .scale = 0.2f,
       .flat = false

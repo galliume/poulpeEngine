@@ -64,7 +64,6 @@ namespace Poulpe
       | aiProcess_OptimizeMeshes
       | aiProcess_GenNormals
       | aiProcess_CalcTangentSpace
-      | aiProcess_MakeLeftHanded
       | aiProcess_FlipWindingOrder
       | aiProcess_FlipUVs
     };
@@ -541,8 +540,8 @@ namespace Poulpe
       //@todo check if it's ok
       //fallback to last normal or tangent if none is found
       //gives some artifacts but better than nothing
-      glm::vec3 n{ 0.5f, 0.5f, 1.0f };
-      glm::vec4 t{ 0.5f, 0.5f, 1.0f, 1.0f };
+      glm::vec3 n{ 0.f, 0.f, 1.0f };
+      glm::vec4 t{ 0.f, 0.f, 0.f, 1.0f };
 
       mesh_data.vertices.reserve(mesh->mNumVertices);
 
@@ -573,9 +572,9 @@ namespace Poulpe
         glm::vec4 bitangent(0.f);
 
         if (mesh->HasTangentsAndBitangents()) {
-          tangent.x += mesh->mTangents[v].x;
-          tangent.y += mesh->mTangents[v].y;
-          tangent.z += mesh->mTangents[v].z;
+          tangent.x = mesh->mTangents[v].x;
+          tangent.y = mesh->mTangents[v].y;
+          tangent.z = mesh->mTangents[v].z;
 
           bitangent = glm::vec4(
             mesh->mBitangents[v].x,
@@ -590,7 +589,7 @@ namespace Poulpe
               glm::vec3(bitangent.x, bitangent.y, bitangent.z)),
             vertex.normal) < 0.0f ? -1.0f : 1.0f;
             t = tangent;
-        } 
+        }
         vertex.tangent = tangent;
         //vertex.bitangent = bitangent;
 

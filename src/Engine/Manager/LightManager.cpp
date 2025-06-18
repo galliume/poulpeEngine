@@ -2,7 +2,6 @@ module;
 
 #define GLM_FORCE_DEFAULT_ALIGNED_GENTYPES
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
-#define GLM_ENABLE_EXPERIMENTAL
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -16,16 +15,16 @@ namespace Poulpe
   LightManager::LightManager()
   {
     _sun.color = glm::vec3(1.f, 1.f, 1.f);
-    _sun.position = glm::vec3(0.f, 200.f, 0.f);
-    _sun.direction =  glm::vec3(-0.2f, -1.0f, -0.3f);
+    _sun.position = glm::vec3(-80.f, 190.f, -8.f);
+    _sun.direction =  glm::vec3(0.f, 0.0f, 0.f);
     //ambient diffuse specular
     _sun.ads = glm::vec3(10.f, 0.5f, 1.f);
     _sun.clq = glm::vec3(0.0f);
 
     _sun.view = glm::lookAt(
-      glm::vec3(0.1f, 250.0f, 0.1f),
-      glm::vec3(0.0f, 0.0f, 0.0f),
-      glm::vec3(0.0f, 1.0f, 0.0f));
+      glm::vec3(_sun.position),
+      glm::vec3(_sun.direction),
+      glm::vec3(0.0f, 0.0f, -1.0f));
 
     float near_plane = 1.f, far_plane = 7.5f;
 
@@ -33,9 +32,9 @@ namespace Poulpe
     //    static_cast<float>(2560) / static_cast<float>(1440),
     //    near_plane, far_plane);
 
-    auto projection = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, near_plane, far_plane);
+    auto projection = glm::ortho(-10.0f, 10.0f, 10.0f, -10.0f, near_plane, far_plane);
 
-    projection[1][1] *= -1;
+    //projection[1][1] *= -1;
 
     _sun.projection = projection;
     _sun.light_space_matrix = _sun.projection * _sun.view;
@@ -50,7 +49,7 @@ namespace Poulpe
     Light light2;
     light2.color = glm::vec3(1.0f);
     //light2.position = glm::vec3(-1.2f, 0.1f, 0.4f);
-    light2.position = glm::vec3(4.f, 25.0f, -1.5f);
+    light2.position = glm::vec3(0.f, 25.0f, 1.f);
     light2.direction = glm::vec3(-0.1f, -1.0, 0.0);
     light2.ads = glm::vec3(1.2f, 1.2f, 1.4f);
     light2.clq = glm::vec3(1.0f, 0.7f, 1.8f);
@@ -73,7 +72,7 @@ namespace Poulpe
       glm::vec3( 0.0f, 1.0f,  0.0f));
 
     light3.projection = glm::perspective(glm::radians(45.0f), 2560.f / 1440.f, 1.f, 100.f);
-    light3.projection[1][1] *= -1;
+    //light3.projection[1][1] *= -1;
     light3.light_space_matrix = light3.view * light3.projection;
 
     _spots.emplace_back(light3);
@@ -95,13 +94,12 @@ namespace Poulpe
     _sun.direction.z += static_cast<float>(sin(glm::radians(delta_time * 360.0)));
 
     _sun.view = glm::lookAt(
-      _sun.position,
-      _sun.position + _sun.direction,
-      glm::vec3(0.0f, 1.0f,  0.0f));
+      glm::vec3(_sun.position),
+      glm::vec3(_sun.direction),
+      glm::vec3(0.0f, 0.0f, -1.0f));
 
     float near_plane = 1.f, far_plane = 7.5f;
-    _sun.projection = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, near_plane, far_plane);
-    _sun.projection[1][1] *= -1;
+    _sun.projection = glm::ortho(-10.0f, 10.0f, 10.0f, -10.0f, near_plane, far_plane);
 
     _sun.light_space_matrix = _sun.projection * _sun.view;
   }
