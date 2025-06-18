@@ -292,7 +292,7 @@ namespace Poulpe
 
     PipeLineCreateInfo pipeline_create_infos{};
     pipeline_create_infos.name = shader_name;
-    pipeline_create_infos.cull_mode = VK_CULL_MODE_FRONT_BIT;
+    pipeline_create_infos.cull_mode = VK_CULL_MODE_BACK_BIT;
     pipeline_create_infos.has_depth_test = true;
     pipeline_create_infos.has_depth_write = true;
     pipeline_create_infos.has_stencil_test = true;
@@ -369,7 +369,8 @@ namespace Poulpe
                                   | VK_SHADER_STAGE_FRAGMENT_BIT
                                   | VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT
                                   | VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT;
-
+      
+      pipeline_create_infos.cull_mode = VK_CULL_MODE_NONE;
       pipeline_create_infos.has_depth_test = true;
       pipeline_create_infos.has_stencil_test = false;
       pipeline_create_infos.has_dynamic_depth_bias = false;
@@ -400,7 +401,7 @@ namespace Poulpe
         need_bis = false;
       }
     }
-    
+
     pipeline_layout = _renderer->getAPI()->createPipelineLayout({ descset_layout }, { push_constants });
 
     pipeline_create_infos.shaders_create_info = shaders;

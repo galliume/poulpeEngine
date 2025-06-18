@@ -20,7 +20,6 @@ module;
 #include <string_view>
 #include <vector>
 
-
 module Engine.Renderer.VulkanAPI;
 
 import Engine.Core.Logger;
@@ -721,9 +720,9 @@ VkPipeline VulkanAPI::createGraphicsPipeline(PipeLineCreateInfo const& pipeline_
 
   VkViewport viewport{};
   viewport.x = 0.0f;
-  viewport.y = 0.0f;
+  viewport.y = static_cast<float>(_swapchain_extent.height);
   viewport.width = static_cast<float>(_swapchain_extent.width);
-  viewport.height = static_cast<float>(_swapchain_extent.height);
+  viewport.height = -static_cast<float>(_swapchain_extent.height);
   viewport.minDepth = 0.0f;
   viewport.maxDepth = 1.0f;
 
@@ -1181,9 +1180,9 @@ void VulkanAPI::setViewPort(VkCommandBuffer& cmd_buffer)
 {
   VkViewport viewport;
   viewport.x = 0.f;
-  viewport.y = 0.f;
+  viewport.y = static_cast<float>(_swapchain_extent.height);
   viewport.width = static_cast<float>(_swapchain_extent.width);
-  viewport.height = static_cast<float>(_swapchain_extent.height);
+  viewport.height = -static_cast<float>(_swapchain_extent.height);
   viewport.minDepth = 0.0f;
   viewport.maxDepth = 1.0f;
 
@@ -2525,7 +2524,7 @@ VkSampler VulkanAPI::createTextureSampler(uint32_t const mip_lvl)
     sample_info.addressModeW = sample_info.addressModeU;
     sample_info.maxAnisotropy = _device_props.limits.maxSamplerAnisotropy;
     sample_info.unnormalizedCoordinates = VK_FALSE;
-    sample_info.compareEnable = VK_FALSE;
+    sample_info.compareEnable = VK_TRUE;
     sample_info.compareOp = VK_COMPARE_OP_LESS;
     sample_info.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
     sample_info.minLod = 0.0f;
@@ -3005,7 +3004,7 @@ VkSampler VulkanAPI::createTextureSampler(uint32_t const mip_lvl)
     sampler_info.addressModeV = mode_v;
     sampler_info.addressModeW = mode_v;
     sampler_info.unnormalizedCoordinates = VK_FALSE;
-    sampler_info.compareEnable = VK_FALSE;
+    sampler_info.compareEnable = VK_TRUE;
     sampler_info.compareOp = VK_COMPARE_OP_LESS;
     sampler_info.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
     sampler_info.minLod = 0.0f;

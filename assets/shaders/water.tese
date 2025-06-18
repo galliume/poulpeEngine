@@ -61,7 +61,7 @@ void main()
   vec4 p1 = (p11 - p10) * u + p10;
   vec4 p = (p1 - p0) * v + p0;
 
-  p.y += 5.f;
+  //p.y += 5.f;
 
   float L = 12.0f;
   float A = 0.05f * L;
@@ -137,7 +137,7 @@ void main()
     steepness *= clamp(steepness_factor, 0.0, 1.0);
   }
 
-  p.y += 2.5+displacement.y;
+  //p.y += 2.5+displacement.y;
 
   mat4 trans_model = transpose(inverse(ubo.model));
   vec3 bitangent = normalize(trans_model * vec4(1.0 - bi.x, bi.y, -bi.z, 1.0)).xyz;

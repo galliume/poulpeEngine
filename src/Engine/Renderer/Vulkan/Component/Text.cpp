@@ -4,6 +4,7 @@
 #include <freetype/ttnameid.h>
 
 #define GLM_FORCE_DEFAULT_ALIGNED_GENTYPES
+#define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #define GLM_ENABLE_EXPERIMENTAL
 
 #include <glm/glm.hpp>
@@ -47,12 +48,14 @@ namespace Poulpe
     auto const screen_width{
         static_cast<float>(renderer->getAPI()->getSwapChainExtent().width)};
     auto const screen_height{
-      -static_cast<float>(renderer->getAPI()->getSwapChainExtent().height) };
+      static_cast<float>(renderer->getAPI()->getSwapChainExtent().height) };
 
     float x { _position.x };
     float y { _position.y };
 
     auto const utf16_text{ fmt::detail::utf8_to_utf16(_text).str() };
+    float const width{ static_cast<float>(component_rendering_info.atlas_width) };
+    float const height{ static_cast<float>(component_rendering_info.atlas_height) };
 
     for (auto c = utf16_text.begin(); c != utf16_text.end(); c++) {
 
@@ -66,13 +69,13 @@ namespace Poulpe
       }
 
       float xpos = x + ch.bearing.x * _scale;
-      float ypos = y - ch.bearing.y * _scale;
+      float ypos = isFlat()
+        ? y - ch.bearing.y * _scale
+        : y + ch.bearing.y * _scale;
 
       float w = ch.size.x * _scale;
       float h = ch.size.y * _scale;
-
-      float const width{ static_cast<float>(component_rendering_info.atlas_width) };
-      float const height{ static_cast<float>(component_rendering_info.atlas_height) };
+      if (!isFlat()) h = -h;
 
       float u0{ ch.x_offset / width };
       float v0{ (ch.y_offset + ch.size.y) / height };
@@ -137,8 +140,11 @@ namespace Poulpe
       x += static_cast<float>((ch.advance >> 6)) * _scale;
     }
 
-    glm::mat4 projection{ glm::ortho(0.0f, screen_width, 0.0f, screen_height) };
-    
+    glm::mat4 projection = glm::ortho(
+      0.0f, screen_width,
+      screen_height, 0.0f
+    );
+
     glm::vec4 options{ 0.0f };
     
     //@todo isFlat is not obvious

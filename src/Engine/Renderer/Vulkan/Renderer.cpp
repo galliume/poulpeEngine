@@ -226,7 +226,7 @@ namespace Poulpe
       glm::radians(45.0f),
       static_cast<float>(_vulkan->getSwapChainExtent().width) / static_cast<float>(_vulkan->getSwapChainExtent().height),
       0.1f, 1000.f);
-      _perspective[1][1] *= -1;
+      //_perspective[1][1] *= -1;
   }
 
   void Renderer::setDeltatime(float delta_time)
@@ -429,9 +429,9 @@ namespace Poulpe
 
     VkViewport viewport;
     viewport.x = 0.0f;
-    viewport.y = 0.0f;
+    viewport.y = static_cast<float>(height);
     viewport.width = static_cast<float>(width);
-    viewport.height = static_cast<float>(height);
+    viewport.height = -static_cast<float>(height);
     viewport.minDepth = 0.0f;
     viewport.maxDepth = 1.0f;
 
@@ -440,20 +440,20 @@ namespace Poulpe
 
     vkCmdSetScissor(cmd_buffer, 0, 1, &scissor);
 
-    //float const depth_bias_constant{ 1.0f };
-    //float const depth_bias_slope{ 1.5f };
-    //float const depth_bias_clamp{ 0.0f };
+    float const depth_bias_constant{ 1.0f };
+    float const depth_bias_slope{ 1.5f };
+    float const depth_bias_clamp{ 0.0f };
 
-    //vkCmdSetDepthClampEnableEXT(cmd_buffer, VK_TRUE);
-    //vkCmdSetDepthBias(cmd_buffer, depth_bias_constant, depth_bias_clamp, depth_bias_slope);
+    vkCmdSetDepthClampEnableEXT(cmd_buffer, VK_TRUE);
+    vkCmdSetDepthBias(cmd_buffer, depth_bias_constant, depth_bias_clamp, depth_bias_slope);
 
-    //std::vector<VkBool32> blend_enable{ VK_TRUE, VK_TRUE};
-    //vkCmdSetColorBlendEnableEXT(cmd_buffer, 0, 2, blend_enable.data());
+    std::vector<VkBool32> blend_enable{ VK_TRUE, VK_TRUE};
+    vkCmdSetColorBlendEnableEXT(cmd_buffer, 0, 2, blend_enable.data());
 
-    std::vector<VkBool32> blend_enable{ VK_FALSE };
-    vkCmdSetColorBlendEnableEXT(cmd_buffer, 0, 1, blend_enable.data());
+    //std::vector<VkBool32> blend_enable{ VK_FALSE };
+    //vkCmdSetColorBlendEnableEXT(cmd_buffer, 0, 1, blend_enable.data());
+
     VkColorBlendEquationEXT colorBlendEquation{};
-
     colorBlendEquation.colorBlendOp = VK_BLEND_OP_ADD;
     colorBlendEquation.colorBlendOp = VK_BLEND_OP_ADD;
     colorBlendEquation.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
