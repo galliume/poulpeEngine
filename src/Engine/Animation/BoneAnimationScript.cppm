@@ -113,7 +113,7 @@ namespace Poulpe
         }
       }
 
-      return { key_frames.back(), key_frames.front() };
+      return { key_frames.front(), key_frames.back() };
     }
 
     template<isAnimOperation T>
@@ -163,4 +163,31 @@ namespace Poulpe
       return start.value;
     }
   };
+
+   template auto BoneAnimationScript::interpolate<Rotation>(
+    Rotation const& start,
+    Rotation const& end,
+    double current_time);
+
+  template std::pair<Rotation, Rotation> BoneAnimationScript::findKeyframe<Rotation>(
+    std::vector<Rotation> const& key_frames,
+    double const time);
+
+  template auto BoneAnimationScript::interpolate<Position>(
+    Position const& start,
+    Position const& end,
+    double current_time);
+
+  template std::pair<Position, Position> BoneAnimationScript::findKeyframe<Position>(
+    std::vector<Position> const& key_frames,
+    double const time);
+
+  template auto BoneAnimationScript::interpolate<Scale>(
+    Scale const& start,
+    Scale const& end,
+    double current_time);
+
+  template std::pair<Scale, Scale> BoneAnimationScript::findKeyframe<Scale>(
+    std::vector<Scale> const& key_frames,
+    double const time);
 }

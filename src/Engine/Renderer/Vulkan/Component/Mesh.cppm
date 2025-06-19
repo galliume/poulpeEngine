@@ -53,10 +53,7 @@ namespace Poulpe
     void setObjectBuffer(ObjectBuffer objectBuffer) { _object_buffer = std::move(objectBuffer); }
 
     void addUbos(std::vector<std::vector<UniformBufferObject>> const& ubos);
-
-    template<typename... TArgs>
-    void applyPushConstants(TArgs&&... args) { _apply_push_constants(std::forward<TArgs>(args)...); }
-
+    
     VkDescriptorSet const * getShadowMapDescSet() const { return & _shadowmap_descset; }
 
     bool hasAnimation() const { return _has_animation; }

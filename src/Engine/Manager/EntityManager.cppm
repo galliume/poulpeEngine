@@ -52,6 +52,9 @@ namespace Poulpe
     void addTransparentEntity(Entity* entity);
     void addTextEntity(Entity* entity);
 
+    std::vector<Entity*> getEntities() { return _entities;}
+    std::vector<Entity*> getTransparentEntities() { return _transparent_entities;}
+    
     EntityNode const * addEntityToWorld(Entity * entity);
 
     //void addEntity(Mesh* meshes);

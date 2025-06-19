@@ -9,7 +9,7 @@
             "cwd": "${workspaceFolder}",
             "relativePathBase": "${workspaceFolder}",
             "console": "externalTerminal",
-            "args": ["-E"]
+            "args": []
         }
     ],
     "inputs": [

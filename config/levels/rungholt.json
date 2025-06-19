@@ -1,0 +1,143 @@
+{
+  "terrain": {
+    "height_map_1": {
+      "path": "assets/texture/terrain/height_map_1.ktx2"
+    }
+  },
+  "water": {
+    "_water_foam": {
+      "path": "assets/texture/water/_water_foam.ktx2"
+    },
+    "_water_normal": {
+      "path": "assets/texture/water/_water_normal.ktx2"
+    },
+    "_water_normal2": {
+      "path": "assets/texture/water/_water_normal2.ktx2"
+    }
+  },
+  "camera": {
+    "position": {
+      "x": -38.0,
+      "y": 18.0,
+      "z": -3.0
+    }
+  },
+	"entities": {
+		"rungholt": {
+			"mesh": "assets/mesh/rungholt/rungholt.obj",
+			"textures": {
+				"rungholt-RGB": {
+					"path" : "assets/mesh/rungholt/rungholt-RGB.ktx2"
+				},
+				"rungholt-RGBA": {
+					"path": "assets/mesh/rungholt/rungholt-RGBA.ktx2"
+				},
+				"rungholt-Alpha": {
+					"path" : "assets/mesh/rungholt/rungholt-Alpha.ktx2"
+				}
+			},
+			"normal": {
+
+			},
+			"ao": {
+
+			},
+			"emissive": {
+
+			},
+			"mr": {
+
+			},
+			"shader": "main_basic",
+			"positions": [
+				{
+					"x": 0.0,
+					"y": 0.0,
+					"z": 0.0
+				}
+			],
+			"scales": [
+				{
+					"x": 1.0,
+					"y": 1.0,
+					"z": 1.0
+				}
+			],
+			"rotations": [
+				{
+					"x": 0.0,
+					"y": 0.0,
+					"z": 0.0
+				}
+			],
+			"flipY": false,
+			"count": 1,
+			"hasBbox": false,
+			"hasAnimation": false,
+			"isPointLight": false,
+			"animationScripts": {
+			},
+			"hasShadow": true,
+			"isIndexed": true,
+			"debugNormal": true
+		},
+		"house": {
+			"mesh": "assets/mesh/rungholt/house.obj",
+			"textures": {
+				"house-RGB": {
+					"path": "assets/mesh/rungholt/house-RGB.ktx2"
+				},
+				"house-RGBA": {
+					"path": "assets/mesh/rungholt/house-RGBA.ktx2"
+				},
+				"house-Alpha": {
+					"path": "assets/mesh/rungholt/house-Alpha.ktx2"
+				}
+			},
+			"normal": {
+
+			},
+			"ao": {
+
+			},
+			"emissive": {
+
+			},
+			"mr": {
+
+			},
+			"shader": "main_basic",
+			"positions": [
+				{
+					"x": 0.0,
+					"y": 0.0,
+					"z": 0.0
+				}
+			],
+			"scales": [
+				{
+					"x": 1.0,
+					"y": 1.0,
+					"z": 1.0
+				}
+			],
+			"rotations": [
+				{
+					"x": 0.0,
+					"y": 0.0,
+					"z": 0.0
+				}
+			],
+			"flipY": false,
+			"count": 1,
+			"hasBbox": false,
+			"hasAnimation": false,
+			"isPointLight": false,
+			"animationScripts": {
+			},
+			"hasShadow": true,
+			"isIndexed": true,
+			"debugNormal": true
+		}
+	}
+}

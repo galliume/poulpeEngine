@@ -96,6 +96,7 @@ namespace Poulpe
     alignas(16) glm::vec3 transmission_scale{ 1.0 };
     alignas(16) glm::vec3 transmission_rotation{ 0.0 };
     alignas(16) glm::vec3 strength{ 1.0 };//x: normal strength, y occlusion strength
+    alignas(16) glm::vec4 emissive_color{0.0};
   };
 
   export struct ObjectBuffer
@@ -200,6 +201,8 @@ namespace Poulpe
     float normal_strength{ 1.0 };
     float occlusion_strength{ 1.0 };
     float transmission_strength{ 1.0 };
+
+    glm::vec4 emissive_color {0.0};
   };
 
   export struct constants
@@ -293,6 +296,7 @@ namespace Poulpe
     std::vector<uint32_t> materials_ID{};
     std::vector<Vertex> vertices{};
     glm::mat4 transform_matrix{};
+    glm::mat4 local_transform{};
     glm::mat4 inverse_transform_matrix{};
     std::unordered_map<std::string, Bone> bones{};
     std::string root_bone_name{};

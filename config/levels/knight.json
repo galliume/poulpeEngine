@@ -76,9 +76,9 @@
       ],
       "scales": [
         {
-          "x": 1.0,
-          "y": 1.0,
-          "z": 1.0
+          "x": 0.5,
+          "y": 0.5,
+          "z": 0.5
         }
       ],
       "rotations": [
@@ -91,7 +91,7 @@
       "flipY": false,
       "count": 1,
       "hasBbox": false,
-      "hasAnimation": false,
+      "hasAnimation": true,
       "isPointLight": false,
       "animationScripts": {
         "anim0": "assets/scripts/animation/backpack/anim0.lua"

@@ -86,6 +86,7 @@ struct Material
   vec3 transmission_scale;
   vec3 transmission_rotation;
   vec3 strength;//x: normal strength, y occlusion strength
+  vec4 emissive_color;
 };
 
 layout(binding = 1) uniform sampler2D tex_sampler[TEXTURE_COUNT];
@@ -110,7 +111,7 @@ float InverseSquareAttenuation(vec3 l)
   atten_const.y = (r_max * r_max);
 
   float r2 = dot(l, l);
-  return max(atten_const.x * (atten_const.y / r2 - 1.0), 0.001);
+  return max(atten_const.x * (atten_const.y / r2 - 1.0), 0.0001);
 }
 
 float ExponentialAttenuation(vec3 l)
@@ -125,7 +126,7 @@ float ExponentialAttenuation(vec3 l)
   atten_const.z = exp_k_neg_square / (1.0 - exp_k_neg_square);
 
   float r2 = dot(l, l);
-  return max(exp(r2 * atten_const.x) * atten_const.y - atten_const.z, 0.001);
+  return max(exp(r2 * atten_const.x) * atten_const.y - atten_const.z, 0.0001);
 }
 
 float SmoothAttenuation(vec3 l, float r_max)
@@ -135,7 +136,7 @@ float SmoothAttenuation(vec3 l, float r_max)
   atten_const.y = 2.0 / r_max;
 
   float r2 = dot(l, l);
-  return max(r2 * atten_const.x * (sqrt(r2) * atten_const.y - 3.0) + 1.0, 0.001);
+  return max(r2 * atten_const.x * (sqrt(r2) * atten_const.y - 3.0) + 1.0, 0.0001);
 }
 
 float linear_to_sRGB(float color)
@@ -156,7 +157,7 @@ float ShadowCalculation(vec4 light_space, float NdL)
   ivec2 size = textureSize(tex_shadow_sampler[SHADOW_MAP_INDEX], 0);
   float shadow_xoffset = 1.0 / float(size.x);
   float shadow_yoffset = 1.0 / float(size.y);
-  float bias = max(0.00001, 0.00001 * (1.0 - NdL));
+  float bias = 0.000001;
   
   p.x -= shadow_xoffset;
   p.y -= shadow_yoffset;
@@ -193,7 +194,7 @@ vec2 transform_uv(vec3 t, vec3 s, vec3 r, vec2 c)
 
 vec3 FresnelSchlick(vec3 F0, vec3 F90, float NdH, float P)
 {
-  vec3 F = F0 + (F90 - F0) * pow(max(1.0 - NdH, 0.001), 1/P);
+  vec3 F = F0 + (F90 - F0) * pow(max(1.0 - NdH, 0.0001), 1/P);
 
   return F;
 }
@@ -261,8 +262,8 @@ vec3 srgb_to_linear(vec3 color)
 
 vec3 Diffuse(vec3 diffuse, vec3 F0, float NdL, float NdV)
 {
-  float a = 1.0 - pow(1.0 - max(NdL, 0.001), 5);
-  float b = 1.0 - pow(1.0 - max(NdV, 0.001), 5);
+  float a = 1.0 - pow(1.0 - max(NdL, 0.0001), 5);
+  float b = 1.0 - pow(1.0 - max(NdV, 0.0001), 5);
 
   return (21.0 / (20.0 * PI)) * (1.0 - F0) * diffuse * a * b;
 }
@@ -291,10 +292,10 @@ void main()
   //@todo use bitmask
   ivec2 normal_size = textureSize(tex_sampler[NORMAL_INDEX], 0);
   if (normal_size.x <= 2.0) {
-    //normal = var.norm;
+    normal = var.norm;
   }
 
-  //normal = normalize(normal);
+  normal = normalize(normal);
 
   vec2 mr_coord = transform_uv(
     material.mr_translation,
@@ -303,13 +304,13 @@ void main()
     var.texture_coord);
 
   vec3 metal_roughness = texture(tex_sampler[METAL_ROUGHNESS_INDEX], mr_coord).rgb;
-  float metallic = metal_roughness.x * material.mre_factor.b;
-  float roughness = metal_roughness.y * material.mre_factor.g;
+  float metallic = metal_roughness.x * material.mre_factor.g;
+  float roughness = metal_roughness.y * material.mre_factor.b;
 
   ivec2 mr_size = textureSize(tex_sampler[METAL_ROUGHNESS_INDEX], 0);
   if (mr_size.x <= 2.0) {
-    metallic = material.mre_factor.x;
-    roughness = material.mre_factor.y;
+    //metallic = material.mre_factor.x;
+    //roughness = material.mre_factor.y;
   }
 
   vec2 transmission_coord = transform_uv(
@@ -328,7 +329,7 @@ void main()
   
   float ao = texture(tex_sampler[AO_INDEX], var.texture_coord).r;
   ivec2 ao_size = textureSize(tex_sampler[AO_INDEX], 0);
-  if (ao_size.x == 1 && ao_size.y == 1) {
+  if (ao_size.x < 2.0) {
     ao = 1.0;
   }
   ao *= material.strength.y;//occlusion strength
@@ -364,7 +365,7 @@ void main()
   vec4 C_specular = material.specular;
   
   //@todo looks good but is it ok?
-  float P = material.mre_factor.y * (1.0 - roughness); 
+  float P = material.mre_factor.y;// * (1.0 - roughness); 
 
   vec3 out_lights = vec3(0.0);
 
@@ -377,10 +378,10 @@ void main()
   float radius = d * tan(0.00463);//sun approx angle
   vec3 l = normalize((sun_light.position - p) / d);
   vec3 h = normalize(l + v);
-  float NdL = max(dot(normal, l), 0.001);
-  float HdV = max(dot(h, v), 0.001);
-  float NdV = max(dot(normal, v), 0.001);
-  float NdH = max(dot(normal, h), 0.001);
+  float NdL = max(dot(normal, l), 0.00001);
+  float HdV = max(dot(h, v), 0.00001);
+  float NdV = max(dot(normal, v), 0.00001);
+  float NdH = max(dot(normal, h), 0.00001);
 
   float f = ReflectionBounce(F0);
   vec3 F = FresnelSchlick(F0, F90, HdV, P) * f;
@@ -399,11 +400,10 @@ void main()
 
   vec3 radiance = (((radius * radius) / d) + 0.0001) * vec3(sun_light.color);
   radiance *= ((NdL + 1.0) / 2.0) * ((NdL + 1.0) / 2.0);
-  radiance *= ao;
 
    //vec3 radiance = vec3(1.0) * ao;
-  vec3 C_sun = (kD * diffuse + specular) * radiance;
-  vec3 C_ambient = albedo.xyz * ao * 0.1;
+  vec3 C_sun = (kD * diffuse + specular) * radiance * 0.01;
+  vec3 C_ambient = albedo.xyz * 0.1;
 
   for (int i = 1; i < NR_POINT_LIGHTS; ++i) {
 
@@ -412,16 +412,16 @@ void main()
 
     //@todo check thoses attenuation functions
     //float d = length(light_pos - p);
-    float attenuation = SmoothAttenuation(l, 2.0);
+    float attenuation = SmoothAttenuation(l, 50.0);
     //float attenuation = 1.0 / (point_lights[i].clq.x + point_lights[i].clq.y * d + point_lights[i].clq.z * (d * d));
     //vec3 C_light = srgb_to_linear(point_lights[i].color.rgb) * attenuation;
     vec3 C_light = point_lights[i].color.rgb * attenuation;
    
     vec3 h = normalize(l + v);
-    float NdL = max(dot(normal, l), 0.001);
-    float NdH = max(dot(normal, h), 0.001);
-    float NdV = max(dot(normal, v), 0.001);
-    float HdV = max(dot(h, v), 0.001);
+    float NdL = max(dot(normal, l), 0.00001);
+    float NdH = max(dot(normal, h), 0.00001);
+    float NdV = max(dot(normal, v), 0.00001);
+    float HdV = max(dot(h, v), 0.00001);
 
     float f = ReflectionBounce(F0);
     vec3 F = FresnelSchlick(F0, F90, HdV, P) * f;
@@ -446,8 +446,9 @@ void main()
   vec4 color = vec4(C_ambient + C_sun + out_lights, color_alpha);
 
   float shadow = ShadowCalculation(var.light_space, NdL);
-  float shadowFactor = mix(0.1, 1.0, shadow);
+  float shadowFactor = mix(0.01, 1.0, shadow);
   color.xyz *= shadowFactor;
+  color.xyz *= ao;
   color.xyz *= PI;
 
   vec2 emissive_coord = transform_uv(
@@ -464,7 +465,8 @@ void main()
   if (emissive_color_size.x != 1 && emissive_color_size.y != 1) {
     color += material.mre_factor.z * emissive_color;
   }
-//
+  color += color * (material.mre_factor.z * material.emissive_color);
+
   float exposure = 1.0;
   color.rgb = vec3(1.0) - exp(-color.rgb * exposure);
 //

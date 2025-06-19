@@ -34,9 +34,7 @@ void main()
   
   if (pc.options.x > 0.5) {
     options.x = 1.0;
-    vec3 tmp = position;
-    tmp = 1.0-tmp;
-    p = ubo.projection * pc.view * ubo.model * vec4(tmp, 1.0);
+    p = ubo.projection * pc.view * ubo.model * vec4(position, 1.0);
   }
 
   gl_Position = p;

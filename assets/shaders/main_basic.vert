@@ -81,6 +81,7 @@ struct Material
   vec3 transmission_scale;
   vec3 transmission_rotation;
   vec3 strength;//x: normal strength, y occlusion strength
+  vec4 emissive_color;
 };
 
 layout(set = 0, binding = 2) readonly buffer ObjectBuffer {
