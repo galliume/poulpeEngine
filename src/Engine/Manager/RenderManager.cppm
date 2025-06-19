@@ -71,8 +71,7 @@ namespace Poulpe
 
     void renderEntity(
       IDType const entity_id,
-      double const delta_time,
-      EntityNode const * entity_node = nullptr);
+      double const delta_time);
 
     void drawEntity(
       IDType const entity_id,

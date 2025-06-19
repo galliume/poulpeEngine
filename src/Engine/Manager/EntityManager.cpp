@@ -278,84 +278,37 @@ namespace Poulpe
       data._inverse_transform_matrix = _data.inverse_transform_matrix;
       data._bones = _data.bones;
       data._root_bone_name = _data.root_bone_name;
+      data._local_transform = _data.local_transform;
 
       glm::mat4 const S = glm::scale(glm::mat4(1.0f), entity_opts.scale);
       glm::mat4 const R = glm::toMat4(entity_opts.rotation);
       glm::mat4 const T = glm::translate(glm::mat4(1.0f), entity_opts.pos);
       glm::mat4 const transform = T * R * S;
 
-      UniformBufferObject ubo{};
-      ubo.model = transform;
-
-      //ubo.model *= _data.transform_matrix;
-      data._transform_matrix = ubo.model;
-      //ubo.inversed_model = glm::inverse(ubo.model);
-
-      //ubo.view = glm::mat4(1.0f);
-      
       std::vector<std::vector<UniformBufferObject>> ubos{};
-      ubos.reserve(data._bones.size());
+      UniformBufferObject ubo{};
+      ubo.model = transform * data._local_transform;
 
-      std::ranges::for_each(data._bones, [&](auto& bone) {
-        
-        auto const& b{ bone.second };
-        std::vector<UniformBufferObject> tmp_ubos{ };
-        tmp_ubos.resize(b.weights.size());
+      if (!data._bones.empty()) {
+        auto const& root_bone = data._bones[data._root_bone_name];
+        ubo.model = root_bone.t_pose * transform  ;
+        ubos.reserve(data._bones.size());
 
-        std::fill(tmp_ubos.begin(), tmp_ubos.end(), ubo);
-        ubos.push_back(tmp_ubos);
-      });
-
-      if (ubos.empty()) { //no bones
+        std::ranges::for_each(data._bones, [&](auto& bone) {
+          auto const& b{ bone.second };
+          std::vector<UniformBufferObject> tmp_ubos{ };
+          tmp_ubos.resize(b.weights.size());
+  
+          std::fill(tmp_ubos.begin(), tmp_ubos.end(), ubo);
+          ubos.push_back(tmp_ubos);
+        });
+      } else {
         ubos.push_back({ ubo });
       }
 
+      data._transform_matrix = ubo.model;
       data._ubos = ubos;
       data._original_ubo = ubo;
-
-      // glm::vec3 center = glm::vec3(0.0);
-      // glm::vec3 size = glm::vec3(0.0);
-
-      //if (data._vertices.size() > 0) {
-      //  float xMax = data._vertices.at(0).pos.x;
-      //  float yMax = data._vertices.at(0).pos.y;
-      //  float zMax = data._vertices.at(0).pos.z;
-
-      //  float xMin = xMax;
-      //  float yMin = yMax;
-      //  float zMin = zMax;
-
-      //  for (size_t j = 0; j < data._vertices.size(); j++) {
-
-      //    glm::vec3 vertex = glm::vec4(data._vertices.at(j).pos, 1.0f);
-
-      //    float x = vertex.x;
-      //    float y = vertex.y;
-      //    float z = vertex.z;
-
-      //    if (x > xMax) xMax = x;
-      //    if (x < xMin) xMin = x;
-      //    if (y < yMin) yMin = y;
-      //    if (y > yMax) yMax = y;
-      //    if (z > zMax) zMax = z;
-      //    if (z < zMin) zMin = z;
-      //  }
-
-      //  center = glm::vec3((xMin + xMax) / 2, (yMin + yMax) / 2, (zMin + zMax) / 2);
-      //  size = glm::vec3((xMax - xMin) / 2, (yMax - yMin) / 2, (zMax - zMin) / 2);
-      //}
-
-      /*BBox* box = new BBox();
-      box->position = data._ubos.at(0).model;
-      box->center = center;
-      box->size = size;
-      box->mesh = std::make_unique<Mesh>();
-      box->maxX = xMax;
-      box->minX = xMin;
-      box->maxY = yMax;
-      box->minY = yMin;
-      box->maxZ = zMax;
-      box->minZ = zMin;*/
 
       mesh->setData(data);
       //mesh->addBBox(box);
@@ -403,14 +356,14 @@ namespace Poulpe
             //@todo temp until lua scripting
             for (auto& anim : entity_opts.animation_scripts) {
               auto animationScript = std::make_unique<AnimationScript>(anim);
-              _component_manager->add<AnimationComponent>(root_mesh_entity_node->getEntity()->getID(), std::move(animationScript));
+              _component_manager->add<AnimationComponent>(entity->getID(), std::move(animationScript));
             }
           }
           //skeleton animation
           if (!animations.empty()) {
             auto boneAnimationScript = std::make_unique<BoneAnimationScript>(animations, positions, rotations, scales);
             _component_manager->add<BoneAnimationComponent>(
-            root_mesh_entity_node->getEntity()->getID(), std::move(boneAnimationScript));
+            entity->getID(), std::move(boneAnimationScript));
           }
           //std::shared_lock guard(_mutex_shared);
           root_mesh_entity_node->setIsLoaded(true);

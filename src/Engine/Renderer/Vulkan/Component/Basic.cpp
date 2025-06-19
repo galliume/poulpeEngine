@@ -85,6 +85,7 @@ namespace Poulpe
       material.specular = mesh->getMaterial().specular;
       material.transmittance = mesh->getMaterial().transmittance;
       material.mre_factor = mesh->getMaterial().mre_factor;
+      material.emissive_color = mesh->getMaterial().emissive_color;
 
       material.shi_ior_diss = glm::vec3(
         mesh->getMaterial().shininess,

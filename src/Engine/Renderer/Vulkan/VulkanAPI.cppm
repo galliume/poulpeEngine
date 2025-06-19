@@ -545,10 +545,10 @@ namespace Poulpe
     VkFence _fence_buffer{};
 
     //@todo move to config file
-    //uint32_t _width{ 800 };
-    //uint32_t _height{ 600 };
-      uint32_t _width{ 2560 };
-      uint32_t _height{ 1440 };
+    uint32_t _width{ 2560 };
+    uint32_t _height{ 1440 };
+      // uint32_t _width{ 1600 };
+      // uint32_t _height{ 900 };
 
     //VkMemoryRequirements _MemRequirements;
   };
