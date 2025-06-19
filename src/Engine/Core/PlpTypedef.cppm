@@ -53,7 +53,7 @@ namespace Poulpe
 
   export struct Light
   {
-    alignas(16) glm::mat4 light_space_matrix;
+    alignas(16) glm::mat4 light_space_matrix;//used also as light_space_matrix_front
     alignas(16) glm::mat4 projection;
     alignas(16) glm::mat4 view;
     //ambiance diffuse specular
@@ -65,6 +65,11 @@ namespace Poulpe
     alignas(16) glm::vec3 color;
     alignas(16) glm::vec3 direction;
     alignas(16) glm::vec3 position;
+    alignas(16) glm::mat4 light_space_matrix_left;
+    alignas(16) glm::mat4 light_space_matrix_top;
+    alignas(16) glm::mat4 light_space_matrix_right;
+    alignas(16) glm::mat4 light_space_matrix_bottom;
+    alignas(16) glm::mat4 light_space_matrix_back;
   };
 
   export struct Material

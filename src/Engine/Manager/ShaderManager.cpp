@@ -200,7 +200,7 @@ namespace Poulpe
       storage_binding.descriptorCount = 1;
       storage_binding.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
       storage_binding.pImmutableSamplers = nullptr;
-      storage_binding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+      storage_binding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_GEOMETRY_BIT;
 
       bindings = { ubo_bingind, storage_binding };
     } else if constexpr (T == DescSetLayoutType::Terrain) {
@@ -445,38 +445,36 @@ namespace Poulpe
     vertex_info.pName = "main";
     shaders_infos.emplace_back(vertex_info);
 
-    if (!offscreen) {
-      VkPipelineShaderStageCreateInfo frag_info{};
-      frag_info.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-      frag_info.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
-      frag_info.module = _shaders->shaders[shader_name]["frag"];
-      frag_info.pName = "main";
-      shaders_infos.emplace_back(frag_info);
+    VkPipelineShaderStageCreateInfo frag_info{};
+    frag_info.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+    frag_info.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
+    frag_info.module = _shaders->shaders[shader_name]["frag"];
+    frag_info.pName = "main";
+    shaders_infos.emplace_back(frag_info);
 
-      if (_shaders->shaders[shader_name].contains("geom")) {
-        VkPipelineShaderStageCreateInfo geom_info{};
-        geom_info.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-        geom_info.stage = VK_SHADER_STAGE_GEOMETRY_BIT;
-        geom_info.module = _shaders->shaders[shader_name]["geom"];
-        geom_info.pName = "main";
-        shaders_infos.emplace_back(geom_info);
-      }
-      if (_shaders->shaders[shader_name].contains("tese")) {
-        VkPipelineShaderStageCreateInfo tese_info{};
-        tese_info.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-        tese_info.stage = VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT;
-        tese_info.module = _shaders->shaders[shader_name]["tese"];
-        tese_info.pName = "main";
-        shaders_infos.emplace_back(tese_info);
-      }
-      if (_shaders->shaders[shader_name].contains("tesc")) {
-        VkPipelineShaderStageCreateInfo tesc_info{};
-        tesc_info.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-        tesc_info.stage = VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT;
-        tesc_info.module = _shaders->shaders[shader_name]["tesc"];
-        tesc_info.pName = "main";
-        shaders_infos.emplace_back(tesc_info);
-      }
+    if (_shaders->shaders[shader_name].contains("geom")) {
+      VkPipelineShaderStageCreateInfo geom_info{};
+      geom_info.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+      geom_info.stage = VK_SHADER_STAGE_GEOMETRY_BIT;
+      geom_info.module = _shaders->shaders[shader_name]["geom"];
+      geom_info.pName = "main";
+      shaders_infos.emplace_back(geom_info);
+    }
+    if (_shaders->shaders[shader_name].contains("tese")) {
+      VkPipelineShaderStageCreateInfo tese_info{};
+      tese_info.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+      tese_info.stage = VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT;
+      tese_info.module = _shaders->shaders[shader_name]["tese"];
+      tese_info.pName = "main";
+      shaders_infos.emplace_back(tese_info);
+    }
+    if (_shaders->shaders[shader_name].contains("tesc")) {
+      VkPipelineShaderStageCreateInfo tesc_info{};
+      tesc_info.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+      tesc_info.stage = VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT;
+      tesc_info.module = _shaders->shaders[shader_name]["tesc"];
+      tesc_info.pName = "main";
+      shaders_infos.emplace_back(tesc_info);
     }
 
     return shaders_infos;

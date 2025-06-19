@@ -81,7 +81,7 @@ for shader in ${shaders[@]}; do
     compile ${shader} "frag"
 done
 
-geom_shaders=("normal" "terrain")
+geom_shaders=("normal" "terrain" "shadowMap")
 for shader in ${geom_shaders[@]}; do
     compile ${shader} "geom"
 done
