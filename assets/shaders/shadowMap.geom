@@ -1,14 +1,12 @@
 #version 450
-#extension GL_EXT_nonuniform_qualifier : enable
 
+layout (triangles) in;
+layout (triangle_strip, max_vertices=18) out;
+ 
 struct UBO
 {
   mat4 model;
   mat4 projection;
-};
-
-layout(set = 0, binding = 0) readonly uniform UniformBufferObject {
-  UBO ubo;
 };
 
 struct Material
@@ -72,33 +70,50 @@ layout(set = 0, binding = 1) readonly buffer ObjectBuffer {
   Material material;
 };
 
-layout(location = 0) in vec3 position;
-layout(location = 1) in vec3 normal;
-// layout(location = 2) in vec2 texture_coord;
-// layout(location = 3) in vec4 tangent;
-// layout(location = 4) in vec4 color;
+layout(set = 0, binding = 0) readonly uniform UniformBufferObject {
+  UBO ubo;
+};
 
-layout(push_constant) uniform constants
-{
-  mat4 view;
-  vec3 view_position;
-  vec4 options;
-} pc;
-
-layout(location = 0) out FRAG_VAR {
+layout(location = 0) in FRAG_VAR {
   vec3 light_pos;
   float far_plane;
   vec4 position;
-} var;
+} var[];
+
+layout(location = 0) out OUT_VAR {
+  vec3 light_pos;
+  float far_plane;
+  vec4 position;
+} out_var;
 
 void main()
 {
   Light light = point_lights[1];
 
-  var.light_pos = light.position;
-  var.far_plane = 25.0f;
-
-  //vec4 p = ubo.projection * pc.view * vec4(position, 1.0);
-  //gl_Position = p.xyww;
-  gl_Position = (ubo.model * vec4(position, 1.0));
-} 
+  for(int face = 0; face < 6; ++face)
+  {
+    gl_Layer = face;
+    for(int i = 0; i < 3; ++i)
+    {
+      //@todo fix ?
+      if (i == 0) {
+        gl_Position = light.light_space_matrix * var[i].position;
+      } else if (i == 1) {
+        gl_Position = light.light_space_matrix_left * var[i].position;
+      } else if (i == 2) {
+        gl_Position = light.light_space_matrix_top * var[i].position;
+      } else if (i == 3) {
+        gl_Position = light.light_space_matrix_bottom * var[i].position;
+      } else if (i == 4) {
+        gl_Position = light.light_space_matrix_right * var[i].position;
+      } else if (i == 5) {
+        gl_Position = light.light_space_matrix_back * var[i].position;
+      }
+      out_var.position = gl_in[i].gl_Position;
+      out_var.light_pos = var[i].light_pos;
+      out_var.far_plane = var[i].far_plane;
+      EmitVertex();
+    }
+    EndPrimitive();
+  }
+}

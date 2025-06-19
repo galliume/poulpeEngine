@@ -2199,16 +2199,17 @@ void VulkanAPI::createImage(
   device_memory->bindImageToMemory(image, offset);
 }
 
-void VulkanAPI::createDepthMapImage(VkImage& image)
+void VulkanAPI::createDepthMapImage(
+  VkImage& image,
+  bool const is_cube_map)
 {
-  uint32_t const width{ getSwapChainExtent().width * 2 };
-  uint32_t const height{ getSwapChainExtent().height * 2 };
+  uint32_t const width{ getSwapChainExtent().width };
 
   VkImageCreateInfo image_info{};
   image_info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
   image_info.imageType = VK_IMAGE_TYPE_2D;
   image_info.extent.width = width;
-  image_info.extent.height = height;
+  image_info.extent.height = width;
   image_info.extent.depth = 1;
   image_info.mipLevels = 1;
   image_info.arrayLayers = 1;
@@ -2219,6 +2220,11 @@ void VulkanAPI::createDepthMapImage(VkImage& image)
       | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
   image_info.samples = VK_SAMPLE_COUNT_1_BIT;
   image_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+
+  if (is_cube_map) {
+    image_info.flags = VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT;
+    image_info.arrayLayers = 6;
+  }
 
   VkResult result = vkCreateImage(getDevice(), & image_info, nullptr, & image);
 
@@ -2243,7 +2249,9 @@ void VulkanAPI::createDepthMapImage(VkImage& image)
   device_memory->bindImageToMemory(image, offset);
 }
 
-VkImageView VulkanAPI::createDepthMapImageView(VkImage& image)
+VkImageView VulkanAPI::createDepthMapImageView(
+  VkImage& image,
+  bool const is_cube_map)
 {
   VkImageView depth_map_imageview{};
 
@@ -2259,6 +2267,10 @@ VkImageView VulkanAPI::createDepthMapImageView(VkImage& image)
   create_info.subresourceRange.baseArrayLayer = 0;
   create_info.subresourceRange.layerCount = 1;
 
+  if (is_cube_map) {
+    create_info.viewType = VK_IMAGE_VIEW_TYPE_CUBE;
+    create_info.subresourceRange.layerCount = 6;
+  }
   VkResult result{ VK_SUCCESS };
 
   result = vkCreateImageView(_device, &create_info, nullptr, &depth_map_imageview);

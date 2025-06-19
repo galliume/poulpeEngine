@@ -98,7 +98,7 @@ layout(binding = 2) readonly buffer ObjectBuffer {
   Material material;
 };
 
-layout(binding = 3) uniform sampler2DShadow tex_shadow_sampler[1];
+layout(binding = 3) uniform samplerCubeShadow tex_shadow_sampler;
 
 layout(binding = 4) uniform samplerCube cube_maps[1];
 
@@ -152,24 +152,24 @@ float ShadowCalculation(vec4 light_space, float NdL)
 {
   vec3 p = light_space.xyz / light_space.w;
   //p = p * 0.5 + 0.5;
-  float light = texture(tex_shadow_sampler[SHADOW_MAP_INDEX], p);
+  // float light = texture(tex_shadow_sampler[SHADOW_MAP_INDEX], p);
   
-  ivec2 size = textureSize(tex_shadow_sampler[SHADOW_MAP_INDEX], 0);
-  float shadow_xoffset = 1.0 / float(size.x);
-  float shadow_yoffset = 1.0 / float(size.y);
-  float bias = 0.000001;
+  // ivec2 size = textureSize(tex_shadow_sampler[SHADOW_MAP_INDEX], 0);
+  // float shadow_xoffset = 1.0 / float(size.x);
+  // float shadow_yoffset = 1.0 / float(size.y);
+  // float bias = 0.000001;
   
-  p.x -= shadow_xoffset;
-  p.y -= shadow_yoffset;
-  light += texture(tex_shadow_sampler[SHADOW_MAP_INDEX], vec3(p.xy, p.z - bias));
-  p.x += shadow_xoffset * 2.0;
-  light += texture(tex_shadow_sampler[SHADOW_MAP_INDEX], vec3(p.xy, p.z - bias));
-  p.y += shadow_yoffset * 2.0;
-  light += texture(tex_shadow_sampler[SHADOW_MAP_INDEX], vec3(p.xy, p.z - bias));
-  p.x -= shadow_xoffset * 2.0;
-  light += texture(tex_shadow_sampler[SHADOW_MAP_INDEX], vec3(p.xy, p.z - bias));
+  // p.x -= shadow_xoffset;
+  // p.y -= shadow_yoffset;
+  // light += texture(tex_shadow_sampler[SHADOW_MAP_INDEX], vec3(p.xy, p.z - bias));
+  // p.x += shadow_xoffset * 2.0;
+  // light += texture(tex_shadow_sampler[SHADOW_MAP_INDEX], vec3(p.xy, p.z - bias));
+  // p.y += shadow_yoffset * 2.0;
+  // light += texture(tex_shadow_sampler[SHADOW_MAP_INDEX], vec3(p.xy, p.z - bias));
+  // p.x -= shadow_xoffset * 2.0;
+  // light += texture(tex_shadow_sampler[SHADOW_MAP_INDEX], vec3(p.xy, p.z - bias));
 
-  light *= 0.2;
+  float light = 1.0;
 
   return light;
 }
@@ -405,7 +405,7 @@ void main()
   vec3 C_sun = (kD * diffuse + specular) * radiance * 0.01;
   vec3 C_ambient = albedo.xyz * 0.1;
 
-  for (int i = 1; i < NR_POINT_LIGHTS; ++i) {
+  for (int i = 2; i < NR_POINT_LIGHTS; ++i) {
 
     vec3 light_pos = point_lights[i].position;
     vec3 l = normalize(light_pos - p);
@@ -446,8 +446,8 @@ void main()
   vec4 color = vec4(C_ambient + C_sun + out_lights, color_alpha);
 
   float shadow = ShadowCalculation(var.light_space, NdL);
-  float shadowFactor = mix(0.01, 1.0, shadow);
-  color.xyz *= shadowFactor;
+  float shadowFactor = max(shadow, 0.01);
+  //color.xyz *= shadowFactor;
   color.xyz *= ao;
   color.xyz *= PI;
 

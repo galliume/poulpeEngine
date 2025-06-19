@@ -389,9 +389,13 @@ namespace Poulpe
 
     void waitIdle();
 
-    void createDepthMapImage(VkImage& image);
+    void createDepthMapImage(
+      VkImage& image,
+      bool const is_cube_map = false);
 
-    VkImageView createDepthMapImageView(VkImage& image);
+    VkImageView createDepthMapImageView(
+      VkImage& image,
+      bool const is_cube_map = false);
 
     VkSampler createDepthMapSampler();
 

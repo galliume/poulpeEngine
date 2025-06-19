@@ -24,7 +24,7 @@
     "shadowMap": {
       "vert": "assets/shaders/spv/shadowMap_vert.spv",
       "frag": "assets/shaders/spv/shadowMap_frag.spv",
-      "geom": "",
+      "geom": "assets/shaders/spv/shadowMap_geom.spv",
       "tesc": "",
       "tese": ""
     },

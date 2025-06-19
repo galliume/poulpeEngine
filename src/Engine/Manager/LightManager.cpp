@@ -22,8 +22,8 @@ namespace Poulpe
     _sun.clq = glm::vec3(0.0f);
 
     _sun.view = glm::lookAt(
-      glm::vec3(_sun.position),
-      glm::vec3(_sun.direction),
+      _sun.position,
+      _sun.direction,
       glm::vec3(0.0f, 0.0f, -1.0f));
 
     float near_plane = 1.f, far_plane = 7.5f;
@@ -45,6 +45,39 @@ namespace Poulpe
     light.direction = glm::vec3(-0.1f, -1.0, 0.0);
     light.ads = glm::vec3(10.0f, 30.0f, 40.0f);
     light.clq = glm::vec3(1.0f, 0.7f, 1.8f);
+
+    float aspect = (2560.f) / (1440.f);
+    light.projection = glm::perspective(glm::radians(90.0f), aspect, 1.f, 100.0f);
+
+    light.light_space_matrix = glm::lookAt(
+      light.position,
+      light.position + glm::vec3(1.0, 0.0, 0.0),
+      glm::vec3(0.0f, 0.0f, -1.0f)) * light.projection;//used as light_space_matrix_front
+
+    light.light_space_matrix_left = glm::lookAt(
+      light.position,
+      light.position + glm::vec3(-1.0, 0.0, 0.0),
+      glm::vec3(0.0f, 0.0f, -1.0f)) * light.projection;
+
+    light.light_space_matrix_top = glm::lookAt(
+      light.position,
+      light.position + glm::vec3(0.0, 1.0, 0.0),
+      glm::vec3(0.0f, 1.0f, 0.0f)) * light.projection;
+
+    light.light_space_matrix_right = glm::lookAt(
+      light.position,
+      light.position + glm::vec3(0.0, -1.0, 0.0),
+      glm::vec3(0.0f, -1.0f, 0.0f)) * light.projection;
+
+    light.light_space_matrix_bottom = glm::lookAt(
+      light.position,
+      light.position + glm::vec3(0.0, 0.0, 1.0),
+      glm::vec3(0.0f, 0.0f, -1.0f)) * light.projection;
+
+    light.light_space_matrix_back = glm::lookAt(
+      light.position,
+      light.position + glm::vec3(0.0, 0.0, -1.0),
+      glm::vec3(0.0f, 0.0f, -1.0f)) * light.projection;
 
     Light light2;
     light2.color = glm::vec3(1.0f);

@@ -243,7 +243,7 @@ namespace Poulpe
           auto* mesh_component = _component_manager->get<MeshComponent>(entity->getID());
           auto mesh = mesh_component->template has<Mesh>();
           if (mesh->hasShadow()) {
-            _renderer->drawShadowMap(mesh, _light_manager->getSunLight().view);
+            _renderer->drawShadowMap(mesh, _light_manager->getPointLights().at(1).view);
           }
       });
       _renderer->endShadowMap();

@@ -59,6 +59,21 @@ namespace Poulpe
       });
     }
 
+      Material material{};
+
+      ObjectBuffer objectBuffer{};
+      objectBuffer.point_lights[0] = component_rendering_info.point_lights.at(0);
+      objectBuffer.point_lights[1] = component_rendering_info.point_lights.at(1);
+      objectBuffer.spot_light = component_rendering_info.spot_lights.at(0);
+      objectBuffer.sun_light = component_rendering_info.sun_light;
+      objectBuffer.material = material;
+
+      auto storageBuffer{ renderer->getAPI()->createStorageBuffers(objectBuffer, cmd_pool) };
+
+      mesh->setObjectBuffer(objectBuffer);
+      mesh->addStorageBuffer(storageBuffer);
+      mesh->setHasBufferStorage();
+
     if (mesh->getData()->_ubos_offset.empty()) {
       std::ranges::for_each(mesh->getData()->_bones, [&](auto const& bone) {
         

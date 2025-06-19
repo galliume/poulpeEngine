@@ -177,9 +177,9 @@ namespace Poulpe
 
     for (size_t i { 0 }; i < _images.size(); ++i) {
       VkImage image{};
-      _vulkan->createDepthMapImage(image);
+      _vulkan->createDepthMapImage(image, true);
       _depthmap_images.emplace_back(image);
-      _depthmap_imageviews.emplace_back(_vulkan->createDepthMapImageView(image));
+      _depthmap_imageviews.emplace_back(_vulkan->createDepthMapImageView(image, true));
       _depthmap_samplers.emplace_back(_vulkan->createDepthMapSampler());
     }
 
@@ -411,7 +411,7 @@ namespace Poulpe
     depth_attachment_info.clearValue.depthStencil = depth_stencil;
     depth_attachment_info.clearValue.color = color_clear;
 
-    uint32_t const width{ _vulkan->getSwapChainExtent().width * 2 };
+    uint32_t const width{ _vulkan->getSwapChainExtent().width };
     uint32_t const height{ _vulkan->getSwapChainExtent().height * 2 };
     //uint32_t const width{ 2048 };
     //uint32_t const height{ 2048 };
@@ -419,7 +419,7 @@ namespace Poulpe
     VkRenderingInfo  rendering_info{ };
     rendering_info.sType = VK_STRUCTURE_TYPE_RENDERING_INFO;
     rendering_info.renderArea.extent.width = width;
-    rendering_info.renderArea.extent.height = height;
+    rendering_info.renderArea.extent.height = width;
     rendering_info.layerCount = 1;
     rendering_info.pDepthAttachment = &depth_attachment_info;
     rendering_info.colorAttachmentCount = 0;
@@ -429,14 +429,14 @@ namespace Poulpe
 
     VkViewport viewport;
     viewport.x = 0.0f;
-    viewport.y = static_cast<float>(height);
+    viewport.y = static_cast<float>(width);
     viewport.width = static_cast<float>(width);
-    viewport.height = -static_cast<float>(height);
+    viewport.height = -static_cast<float>(width);
     viewport.minDepth = 0.0f;
     viewport.maxDepth = 1.0f;
 
     vkCmdSetViewport(cmd_buffer, 0, 1, &viewport);
-    VkRect2D scissor = { { 0, 0 }, { width, height } };
+    VkRect2D scissor = { { 0, 0 }, { width, width } };
 
     vkCmdSetScissor(cmd_buffer, 0, 1, &scissor);
 

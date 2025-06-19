@@ -329,58 +329,6 @@
       "isIndexed": true,
       "debugNormal": true
     },
-    "Woman": {
-      "mesh": "assets/mesh/woman/Woman.gltf",
-      "textures": {
-        "Woman": {
-          "path": "assets/mesh/woman/Woman.ktx2"
-        }
-      },
-      "ao": {
-      },
-      "mr": {
-
-      },
-      "emissive": {
-
-      },
-      "normal": {
-
-      },
-      "shader": "main_basic",
-      "positions": [
-        {
-          "x": 0.0,
-          "y": 7.0,
-          "z": 0.0
-        }
-      ],
-      "scales": [
-        {
-          "x": 200.0,
-          "y": 200.0,
-          "z": 200.0
-        }
-      ],
-      "rotations": [
-        {
-          "x": 0.0,
-          "y": 0.0,
-          "z": 0.0
-        }
-      ],
-      "flipY": false,
-      "count": 1,
-      "hasBbox": false,
-      "hasAnimation": false,
-      "isPointLight": false,
-      "animationScripts": {
-        "anim0": "assets/scripts/animation/helmet/anim0.lua"
-      },
-      "hasShadow": true,
-      "isIndexed": true,
-      "debugNormal": true
-    },
     "Shine_Sprite": {
       "mesh": "assets/mesh/Shine_Sprite.gltf",
       "textures": {
@@ -458,7 +406,7 @@
 			"positions": [
 				{
 					"x": 0.0,
-					"y": 50.0,
+					"y": 45.0,
 					"z": 0.0
 				}
 			],
