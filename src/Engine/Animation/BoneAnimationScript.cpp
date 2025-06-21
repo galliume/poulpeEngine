@@ -60,7 +60,7 @@ namespace Poulpe
     //if (!_move_init) {
     if (_moves.empty() && !_animations.empty()) {
 
-      _anim_id = 1;
+      _anim_id = 0;
       auto const& anim{ _animations.at(_anim_id) };
       double const duration{ (anim.duration / anim.ticks_per_s) * 1000.0 };//ms
       //_elapsed_time = std::clamp(_elapsed_time, 0.f, duration);
@@ -91,8 +91,6 @@ namespace Poulpe
             }
           }
           vertex.pos = glm::vec3(result);
-        } else {
-          vertex.pos = vertex.original_pos;
         }
       }
 

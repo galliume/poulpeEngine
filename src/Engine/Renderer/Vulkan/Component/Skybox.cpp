@@ -97,7 +97,7 @@ namespace Poulpe
       ubo.projection = renderer->getPerspective();
       ubos.push_back({ ubo });
 
-      Buffer uniform_buffer = renderer->getAPI()->createUniformBuffers(1, cmd_pool);
+      Buffer uniform_buffer = renderer->getAPI()->createUniformBuffers(1);
       mesh->getUniformBuffers().emplace_back(uniform_buffer);
     } else {
       auto const& mesh_data = mesh->getData();
@@ -107,7 +107,7 @@ namespace Poulpe
     Data data{};
     data._textures.emplace_back("skybox");
     data._vertices = vertices;
-    data._vertex_buffer = renderer->getAPI()->createVertexBuffer(cmd_pool, vertices);
+    data._vertex_buffer = renderer->getAPI()->createVertexBuffer(vertices);
     data._ubos.resize(1);
     data._ubos[0] = ubos;
     data._texture_index = 0;

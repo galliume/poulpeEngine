@@ -98,4 +98,8 @@ namespace Poulpe {
   export class AnimationComponent : public Component<AnimationComponent> {};
   export class BoneAnimationComponent : public Component<BoneAnimationComponent> {};
   export class MeshComponent : public Component<MeshComponent> {};
+
+  template class Component<AnimationComponent>;
+  template class Component<BoneAnimationComponent>;
+  template class Component<MeshComponent>;
 }

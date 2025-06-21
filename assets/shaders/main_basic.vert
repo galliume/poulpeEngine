@@ -50,6 +50,11 @@ struct Light {
   vec3 color;
   vec3 direction;
   vec3 position;
+  mat4 light_space_matrix_left;
+  mat4 light_space_matrix_top;
+  mat4 light_space_matrix_right;
+  mat4 light_space_matrix_bottom;
+  mat4 light_space_matrix_back;
 };
 
 struct Material
@@ -81,6 +86,7 @@ struct Material
   vec3 transmission_scale;
   vec3 transmission_rotation;
   vec3 strength;//x: normal strength, y occlusion strength
+  vec4 emissive_color;
 };
 
 layout(set = 0, binding = 2) readonly buffer ObjectBuffer {
@@ -115,7 +121,7 @@ void main()
   vec4 world_pos = ubo.model * vec4(position, 1.0f);
   frag_var.frag_pos = world_pos.xyz;
   frag_var.view_pos = pc.view_position;
-  frag_var.light_space = biasMat * ubo.projection * sun_light.view * ubo.model * vec4(position, 1.0);
+  frag_var.light_space = biasMat * ubo.projection * point_lights[1].view * ubo.model * vec4(position, 1.0);
   frag_var.texture_coord = texture_coord;
   frag_var.norm = norm;
   frag_var.color = color;

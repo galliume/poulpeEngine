@@ -97,23 +97,23 @@ namespace Poulpe
         //Logger::debug("texture_file {}", texture_file.C_Str());
         material.name = mat->GetName().C_Str();
 
-        aiColor4D baseColor(1.f);
+        aiColor4D baseColor(0.f);
         if (mat->Get(AI_MATKEY_BASE_COLOR, baseColor) == aiReturn_SUCCESS) {
           material.base_color = { baseColor.r, baseColor.g, baseColor.b, baseColor.a };
         }
-        aiColor4D ambientColor(1.f);
+        aiColor4D ambientColor(0.f);
         if (mat->Get(AI_MATKEY_COLOR_AMBIENT, ambientColor) == aiReturn_SUCCESS) {
           material.ambient = { ambientColor.r, ambientColor.g, ambientColor.b, ambientColor.a };
         }
-        aiColor4D diffuseColor(1.f);
+        aiColor4D diffuseColor(0.f);
         if (mat->Get(AI_MATKEY_COLOR_DIFFUSE, diffuseColor) == aiReturn_SUCCESS) {
           material.diffuse = { diffuseColor.r, diffuseColor.g, diffuseColor.b, diffuseColor.a };
         }
-        aiColor4D specularColor(1.f);
+        aiColor4D specularColor(0.f);
         if (mat->Get(AI_MATKEY_COLOR_SPECULAR, specularColor) == aiReturn_SUCCESS) {
           material.specular = { specularColor.r, specularColor.g, specularColor.b, specularColor.a };
         }
-        aiColor3D transmittanceColor(1.f);
+        aiColor3D transmittanceColor(0.f);
         if (mat->Get(AI_MATKEY_COLOR_TRANSPARENT, transmittanceColor) == aiReturn_SUCCESS) {
           material.transmittance = { transmittanceColor.r, transmittanceColor.g, transmittanceColor.b };
         }
@@ -243,8 +243,9 @@ namespace Poulpe
         }
 
         bool const is_obj {std::filesystem::path(path).extension() == ".obj"};
+        bool const is_fbx {std::filesystem::path(path).extension() == ".fbx"};
 
-        if (is_obj) {
+        if (is_obj || is_fbx) {
           if (mat->GetTextureCount(aiTextureType_HEIGHT) > 0) {
             aiString texture_path;
             aiTextureMapMode wrap_mode_u { aiTextureMapMode_Clamp };
@@ -349,7 +350,13 @@ namespace Poulpe
             material.emissive_scale = glm::vec3(transform.mScaling.x, transform.mScaling.y, 1.0);
             material.emissive_rotation = glm::vec2(transform.mRotation, 1.0);
           }
+        } 
+
+        aiColor4D emissive_color(1.f);
+        if (mat->Get(AI_MATKEY_COLOR_EMISSIVE, emissive_color) == aiReturn_SUCCESS) {
+          material.emissive_color = { emissive_color.r, emissive_color.g, emissive_color.b, emissive_color.a };
         }
+
         if (mat->GetTextureCount(aiTextureType_LIGHTMAP) > 0) {
           aiString texture_path;
           aiTextureMapMode wrap_mode_u { aiTextureMapMode_Clamp };
@@ -532,6 +539,7 @@ namespace Poulpe
       PlpMeshData mesh_data{};
       mesh_data.transform_matrix = transform_matrix;
       mesh_data.inverse_transform_matrix = glm::inverse(global_transform);
+      mesh_data.local_transform = local_transform;
 
       aiMesh const* mesh = scene->mMeshes[node->mMeshes[i]];
       mesh_data.name = mesh->mName.C_Str() + std::to_string(i);

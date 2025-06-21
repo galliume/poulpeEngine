@@ -125,6 +125,7 @@ namespace Poulpe
       _camera->init(start_pos);
     }
 
+    prepareShadowMap();
     prepareSkybox();
     prepareTerrain();
     prepareWater();
@@ -159,6 +160,7 @@ namespace Poulpe
       std::vector<std::future<void>> async_texts_render{};
       async_texts_render.reserve(_entity_manager->getTexts().size());
       std::vector<std::future<void>> async_entities_render;
+      std::vector<std::future<void>> async_transparent_entities_render;
 
       auto * const config_manager = ConfigManagerLocator::get();
 
@@ -176,11 +178,15 @@ namespace Poulpe
 
       auto const skybox_entity = _entity_manager->getSkybox();
       if (skybox_entity != nullptr) {
-        async_skybox_render = std::async(std::launch::deferred, [&]() { renderEntity(skybox_entity->getID(), delta_time);});
+        async_skybox_render = std::async(std::launch::deferred, [&]() {
+          renderEntity(skybox_entity->getID(), delta_time);
+        });
       }
       auto const terrain_entity = _entity_manager->getTerrain();
       if (terrain_entity != nullptr) {
-        async_terrain_render = std::async(std::launch::deferred, [&]() { renderEntity(terrain_entity->getID(), delta_time);});
+        async_terrain_render = std::async(std::launch::deferred, [&]() {
+          renderEntity(terrain_entity->getID(), delta_time);
+        });
       }
       auto const water_entity = _entity_manager->getWater();
       if (water_entity != nullptr) {
@@ -190,18 +196,24 @@ namespace Poulpe
           glm::vec4 options{ getElapsedTime(), 0.0f, 0.0f, 0.0f};
           mesh->setOptions(options);
         }
-        async_water_render = std::async(std::launch::deferred, [&]() { renderEntity(water_entity->getID(), delta_time);});
+        async_water_render = std::async(std::launch::deferred, [&]() {
+          renderEntity(water_entity->getID(), delta_time);
+        });
       }
 
-      auto const * world_node = _entity_manager->getWorldNode();
-      auto const& children = world_node->getChildren();
+      auto const& entities = _entity_manager->getEntities();
+      auto const& transparent_entities = _entity_manager->getTransparentEntities();
 
-      std::ranges::for_each(children, [&](const auto& leaf_node) {
-        std::ranges::for_each(leaf_node->getChildren(), [&](const auto& entity_node) {
-          async_entities_render.push_back(std::async(std::launch::deferred, [&]() {
-            renderEntity(entity_node->getEntity()->getID(), delta_time, leaf_node);
-          }));
-        });
+      std::ranges::for_each(entities, [&](const auto& entity) {
+        async_entities_render.push_back(std::async(std::launch::deferred, [&]() {
+          renderEntity(entity->getID(), delta_time);
+        }));
+      });
+
+      std::ranges::for_each(transparent_entities, [&](const auto& entity) {
+        async_transparent_entities_render.push_back(std::async(std::launch::deferred, [&]() {
+          renderEntity(entity->getID(), delta_time);
+        }));
       });
 
       std::ranges::for_each(_entity_manager->getTexts(), [&](auto const& text_entity) {
@@ -218,6 +230,9 @@ namespace Poulpe
       for (auto& future : async_entities_render) {
         future.wait();
       }
+      for (auto& future : async_transparent_entities_render) {
+        future.wait();
+      }
       for (auto& future : async_texts_render) {
         future.wait();
       }
@@ -225,14 +240,8 @@ namespace Poulpe
       _renderer->start();
       _renderer->startShadowMap();
 
-      std::ranges::for_each(children, [&](const auto& leaf_node) {
-        std::ranges::for_each(leaf_node->getChildren(), [&](const auto& entity_node) {
-          auto* mesh_component = _component_manager->get<MeshComponent>(entity_node->getEntity()->getID());
-          auto mesh = mesh_component->template has<Mesh>();
-          if (mesh->hasShadow()) {
-            _renderer->drawShadowMap(mesh, _light_manager->getSunLight().view);
-          }
-        });
+      std::ranges::for_each(entities, [&](const auto& entity) {
+            drawShadowMap(entity->getID());
       });
       _renderer->endShadowMap();
 
@@ -246,13 +255,13 @@ namespace Poulpe
         drawEntity(terrain_entity->getID());
       }
       
-      std::ranges::for_each(children, [&](const auto& leaf_node) {
-        std::ranges::for_each(leaf_node->getChildren(), [&](const auto& entity_node) {
-          drawEntity(entity_node->getEntity()->getID(), true);
-      
-        });
+      std::ranges::for_each(entities, [&](const auto& entity) {
+        drawEntity(entity->getID(), true);
       });
-      
+      std::ranges::for_each(transparent_entities, [&](const auto& entity) {
+        drawEntity(entity->getID(), true);
+      });
+
       if (water_entity != nullptr) {
         drawEntity(water_entity->getID());
       }
@@ -268,8 +277,7 @@ namespace Poulpe
 
   void RenderManager::renderEntity(
     IDType const entity_id,
-    double const delta_time,
-    EntityNode const * entity_node
+    double const delta_time
   )
   {
     auto* mesh_component = _component_manager->get<MeshComponent>(entity_id);
@@ -302,18 +310,15 @@ namespace Poulpe
         .data = mesh->getData()
       };
 
-      if (entity_node) {
-        auto* animation_component = _component_manager->get<AnimationComponent>(entity_node->getEntity()->getID());
-        if (animation_component && entity_node->isLoaded()) {
-          (*animation_component)(animation_info);
-        }
+      auto* animation_component = _component_manager->get<AnimationComponent>(entity_id);
+      if (animation_component) {
+        (*animation_component)(animation_info);
+      }
 
-        auto* boneAnimationComponent = _component_manager->get<BoneAnimationComponent>(entity_node->getEntity()->getID());
-        if (boneAnimationComponent) {
-
-          (*boneAnimationComponent)(animation_info);
-          mesh->setIsDirty(true);
-        }
+      auto* boneAnimationComponent = _component_manager->get<BoneAnimationComponent>(entity_id);
+      if (boneAnimationComponent) {
+        (*boneAnimationComponent)(animation_info);
+        mesh->setIsDirty(true);
       }
     }
   }
@@ -340,6 +345,36 @@ namespace Poulpe
       };
 
       _renderer->draw(renderer_info);
+    }
+  }
+
+    void RenderManager::drawShadowMap(
+    IDType const entity_id,
+    bool const has_alpha_blend)
+  {
+    auto* mesh_component = _component_manager->get<MeshComponent>(entity_id);
+    auto mesh = mesh_component->template has<Mesh>();
+
+    if (!mesh->hasShadow()) {
+      return;
+    }
+    
+    auto rdr_impl = _component_manager->get<RendererComponent>(entity_id);
+
+    if (mesh && rdr_impl) {
+      RendererInfo renderer_info {
+        .mesh = mesh,
+        .camera = getCamera(),
+        .sun_light = _light_manager->getSunLight(),
+        .point_lights = _light_manager->getPointLights(),
+        .spot_lights = _light_manager->getSpotLights(),
+        .elapsed_time = _elapsed_time,
+        .stage_flag_bits = rdr_impl->getShaderStageFlags(),
+        .normal_debug = ConfigManagerLocator::get()->normalDebug(),
+        .has_alpha_blend = has_alpha_blend
+      };
+
+      _renderer->drawShadowMap(renderer_info);
     }
   }
 
@@ -514,6 +549,37 @@ namespace Poulpe
     _component_manager->add<RendererComponent>(entity->getID(), std::move(rdr_impl));
     _component_manager->add<MeshComponent>(entity->getID(), std::move(mesh));
     _entity_manager->setWater(std::move(entity));
+  }
+
+  void RenderManager::prepareShadowMap()
+  {
+    auto entity = std::make_unique<Entity>();
+    auto mesh = std::make_unique<Mesh>();
+    mesh->setHasShadow(false);
+    mesh->setIsIndexed(false);
+    mesh->setShaderName("shadow_map");
+    mesh->setName("_plp_shadow_map");
+
+    ComponentRenderingInfo rendering_info {
+      .mesh = mesh.get(),
+      .textures = _texture_manager->getTextures(),
+      .skybox_name = _texture_manager->getSkyboxTexture(),
+      .terrain_name = _texture_manager->getTerrainTexture(),
+      .water_name = _texture_manager->getWaterTexture(),
+      .sun_light = _light_manager->getSunLight(),
+      .point_lights = _light_manager->getPointLights(),
+      .spot_lights = _light_manager->getSpotLights(),
+      .characters = _font_manager->getCharacters(),
+      .face = _font_manager->getFace(),
+      .atlas_width = _font_manager->getAtlasWidth(),
+      .atlas_height = _font_manager->getAtlasHeight()
+    };
+    
+    auto rdr_impl{ RendererComponentFactory::create<ShadowMap>() };
+    (*rdr_impl)(_renderer.get(), rendering_info);
+
+
+    _entity_manager->setShadowMap(std::move(entity));
   }
 
   void RenderManager::addText(FontManager::Text const& text)

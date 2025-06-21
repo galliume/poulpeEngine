@@ -26,6 +26,7 @@ module Engine.Renderer.VulkanRenderer;
 
 import Engine.Component.Components;
 import Engine.Core.Logger;
+import Engine.Core.MeshTypes;
 import Engine.GUI.Window;
 import Engine.Managers.ConfigManagerLocator;
 import Engine.Renderer.Vulkan.Mesh;
@@ -177,9 +178,9 @@ namespace Poulpe
 
     for (size_t i { 0 }; i < _images.size(); ++i) {
       VkImage image{};
-      _vulkan->createDepthMapImage(image);
+      _vulkan->createDepthMapImage(image, true);
       _depthmap_images.emplace_back(image);
-      _depthmap_imageviews.emplace_back(_vulkan->createDepthMapImageView(image));
+      _depthmap_imageviews.emplace_back(_vulkan->createDepthMapImageView(image, true));
       _depthmap_samplers.emplace_back(_vulkan->createDepthMapSampler());
     }
 
@@ -202,11 +203,16 @@ namespace Poulpe
     fence_info.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
     fence_info.flags = VK_FENCE_CREATE_SIGNALED_BIT;
     _entities_sema_finished.resize(_max_frames_in_flight);
+    _shadowmap_sema_img_available.resize(_max_frames_in_flight);
     _image_available.resize(_max_render_thread);
 
     for (size_t i { 0 }; i < _max_frames_in_flight; ++i) {
       result = vkCreateSemaphore(_vulkan->getDevice(), &sema_create_info, nullptr, &_entities_sema_finished[i]);
       if (VK_SUCCESS != result) Logger::error("can't create _entities_sema_finished semaphore");
+    }
+    for (size_t i { 0 }; i < _max_frames_in_flight; ++i) {
+      result = vkCreateSemaphore(_vulkan->getDevice(), &sema_create_info, nullptr, &_shadowmap_sema_img_available[i]);
+      if (VK_SUCCESS != result) Logger::error("can't create _shadowmap_sema_img_available semaphore");
     }
     for (size_t i { 0 }; i < _max_frames_in_flight; ++i) {
       result = vkCreateSemaphore(_vulkan->getDevice(), &sema_create_info, nullptr, &_image_available[i]);
@@ -218,6 +224,19 @@ namespace Poulpe
       result = vkCreateFence(_vulkan->getDevice(), &fence_info, nullptr, &_fences_in_flight[i]);
       if (VK_SUCCESS != result) Logger::error("can't create _fences_in_flight fence");
     }
+
+    VkSemaphoreTypeCreateInfo timelineCreateInfo{};
+    timelineCreateInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_TYPE_CREATE_INFO;
+    timelineCreateInfo.semaphoreType = VK_SEMAPHORE_TYPE_TIMELINE;
+    timelineCreateInfo.initialValue = 0;
+
+    VkSemaphoreCreateInfo semaphoreCreateInfo{};
+    semaphoreCreateInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+    semaphoreCreateInfo.pNext = &timelineCreateInfo;
+
+    result = vkCreateSemaphore(_vulkan->getDevice(), &semaphoreCreateInfo, nullptr, &_timeline_semaphore);
+
+    if (VK_SUCCESS != result) Logger::error("can't create _fences_in_flight fence");
   }
 
   void Renderer::setPerspective()
@@ -411,7 +430,7 @@ namespace Poulpe
     depth_attachment_info.clearValue.depthStencil = depth_stencil;
     depth_attachment_info.clearValue.color = color_clear;
 
-    uint32_t const width{ _vulkan->getSwapChainExtent().width * 2 };
+    uint32_t const width{ _vulkan->getSwapChainExtent().width };
     uint32_t const height{ _vulkan->getSwapChainExtent().height * 2 };
     //uint32_t const width{ 2048 };
     //uint32_t const height{ 2048 };
@@ -419,7 +438,7 @@ namespace Poulpe
     VkRenderingInfo  rendering_info{ };
     rendering_info.sType = VK_STRUCTURE_TYPE_RENDERING_INFO;
     rendering_info.renderArea.extent.width = width;
-    rendering_info.renderArea.extent.height = height;
+    rendering_info.renderArea.extent.height = width;
     rendering_info.layerCount = 1;
     rendering_info.pDepthAttachment = &depth_attachment_info;
     rendering_info.colorAttachmentCount = 0;
@@ -429,14 +448,14 @@ namespace Poulpe
 
     VkViewport viewport;
     viewport.x = 0.0f;
-    viewport.y = static_cast<float>(height);
+    viewport.y = static_cast<float>(width);
     viewport.width = static_cast<float>(width);
-    viewport.height = -static_cast<float>(height);
+    viewport.height = -static_cast<float>(width);
     viewport.minDepth = 0.0f;
     viewport.maxDepth = 1.0f;
 
     vkCmdSetViewport(cmd_buffer, 0, 1, &viewport);
-    VkRect2D scissor = { { 0, 0 }, { width, height } };
+    VkRect2D scissor = { { 0, 0 }, { width, width } };
 
     vkCmdSetScissor(cmd_buffer, 0, 1, &scissor);
 
@@ -465,28 +484,74 @@ namespace Poulpe
     vkCmdSetColorBlendEquationEXT(cmd_buffer, 0, 1, &colorBlendEquation);
   }
 
-  void Renderer::drawShadowMap(Mesh const * mesh, glm::mat4 const& light_view)
+  void Renderer::drawShadowMap(RendererInfo const& renderer_info)
   {
     auto &cmd_buffer = _cmd_buffer_entities3[_current_frame];
-    std::string const pipeline_name{ "shadowMap" };
+    std::string const pipeline_name{ "shadow_map" };
     auto const& pipeline = getPipeline(pipeline_name);
+    auto const& mesh = renderer_info.mesh;
+    auto const& camera = renderer_info.camera;
 
-    shadowMapConstants push_constants{};
-    push_constants.view = light_view;
-
-    vkCmdPushConstants(
-      cmd_buffer,
-      pipeline->pipeline_layout,
-      VK_SHADER_STAGE_VERTEX_BIT,
-      0,
-      sizeof(shadowMapConstants),
-      &push_constants);
+    constants push_constants{};
+    push_constants.options = mesh->getOptions();
+    push_constants.view_position = camera->getPos();
+    push_constants.view = renderer_info.point_lights.at(1).view;
 
     vkCmdBindDescriptorSets(
       cmd_buffer,
       VK_PIPELINE_BIND_POINT_GRAPHICS,
       pipeline->pipeline_layout,
-      0, 1, mesh->getShadowMapDescSet(), 0, nullptr);
+      0, 1, &pipeline->descset, 0, nullptr);
+
+    vkCmdPushConstants(
+      cmd_buffer, 
+      pipeline->pipeline_layout,
+      VK_SHADER_STAGE_VERTEX_BIT,
+      0,
+      sizeof(constants),
+      &push_constants);
+
+    std::array<VkWriteDescriptorSet, 2> descset_writes{};
+    std::vector<VkDescriptorBufferInfo> buffer_infos;
+    std::vector<VkDescriptorBufferInfo> buffer_storage_infos;
+
+    std::for_each(std::begin(mesh->getUniformBuffers()), std::end(mesh->getUniformBuffers()),
+      [&buffer_infos](const Buffer& uniformBuffer)
+      {
+        VkDescriptorBufferInfo buffer_info{};
+        buffer_info.buffer = uniformBuffer.buffer;
+        buffer_info.offset = 0;
+        buffer_info.range = VK_WHOLE_SIZE;
+        buffer_infos.emplace_back(buffer_info);
+      });
+
+    std::for_each(std::begin(*mesh->getStorageBuffers()), std::end(*mesh->getStorageBuffers()),
+      [&buffer_storage_infos](const Buffer& storageBuffers)
+      {
+        VkDescriptorBufferInfo buffer_info{};
+        buffer_info.buffer = storageBuffers.buffer;
+        buffer_info.offset = 0;
+        buffer_info.range = VK_WHOLE_SIZE;
+        buffer_storage_infos.emplace_back(buffer_info);
+      });
+
+    descset_writes[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    descset_writes[0].dstSet = pipeline->descset;
+    descset_writes[0].dstBinding = 0;
+    descset_writes[0].dstArrayElement = 0;
+    descset_writes[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    descset_writes[0].descriptorCount = 1;
+    descset_writes[0].pBufferInfo = buffer_infos.data();
+
+    descset_writes[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    descset_writes[1].dstSet = pipeline->descset;
+    descset_writes[1].dstBinding = 1;
+    descset_writes[1].dstArrayElement = 0;
+    descset_writes[1].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+    descset_writes[1].descriptorCount = static_cast<uint32_t>(buffer_storage_infos.size());
+    descset_writes[1].pBufferInfo = buffer_storage_infos.data();
+
+    vkUpdateDescriptorSets(_vulkan->getDevice(), static_cast<uint32_t>(descset_writes.size()), descset_writes.data(), 0, nullptr);
 
     _vulkan->bindPipeline(cmd_buffer, pipeline->pipeline);
 
@@ -515,7 +580,7 @@ namespace Poulpe
 
     std::vector<VkPipelineStageFlags> flags { VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT };
     //VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL
-    _draw_cmds.insert(&cmd_buffer, &_entities_sema_finished[thread_id], thread_id, false, flags);
+    _draw_cmds.insert(cmd_buffer, _shadowmap_sema_img_available[_image_index], thread_id, false, flags);
 
     _update_shadow_map = false;
   }
@@ -533,7 +598,7 @@ namespace Poulpe
     endRendering(cmd_buffer, color, depthimage, is_attachment, has_depth_attachment);
 
     std::vector<VkPipelineStageFlags> flags { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
-    _draw_cmds.insert(&cmd_buffer, &_entities_sema_finished[thread_id], thread_id, is_attachment, flags);
+    _draw_cmds.insert(cmd_buffer, _entities_sema_finished[_image_index], thread_id, is_attachment, flags);
   }
 
   void Renderer::destroy()
@@ -598,14 +663,17 @@ namespace Poulpe
     auto const& draw_cmds { _draw_cmds };
 
     if (!draw_cmds.has_cmd()) {
+      vkWaitForFences(_vulkan->getDevice(), 1, &_fences_in_flight[_current_frame], VK_TRUE, UINT64_MAX);
       vkResetFences(_vulkan->getDevice(), 1, &_fences_in_flight[_current_frame]);
       return;
     }
 
-    std::vector<VkSubmitInfo> submit_infos{};
-    bool has_semaphore{ false };
+    _current_timeline_value = _current_frame * 3;
 
-    std::vector<VkSemaphore*> semaphores{ };
+    std::vector<VkSubmitInfo> submit_infos{};
+    std::vector<VkSemaphore> semaphores{ };
+    VkSemaphore wait_semaphores1[2] = { _image_available[_current_frame], _timeline_semaphore };
+    VkSemaphore wait_semaphores2[1] = { _timeline_semaphore };
 
     for (size_t i{ 0 }; i < draw_cmds.cmd_buffers.size(); ++i) {
 
@@ -613,35 +681,69 @@ namespace Poulpe
 
       VkSubmitInfo submit_info{};
       submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-      submit_info.pCommandBuffers = draw_cmds.cmd_buffers.at(i);
+      submit_info.pCommandBuffers = &draw_cmds.cmd_buffers.at(i);
       submit_info.commandBufferCount = 1;
-      submit_info.pWaitDstStageMask = draw_cmds.stage_flags.at(i).data();
-      submit_info.signalSemaphoreCount = 1;
-      submit_info.pSignalSemaphores = draw_cmds.semaphores.at(i);
+      
+      VkTimelineSemaphoreSubmitInfo timeline_submit_info{};
+      timeline_submit_info.sType = VK_STRUCTURE_TYPE_TIMELINE_SEMAPHORE_SUBMIT_INFO;
+      
+      if (i == 0) {
+        uint64_t wait_values[2] = { 0, _current_timeline_value };
+        uint64_t signal_value = _current_timeline_value + 1;
+        
+        timeline_submit_info.waitSemaphoreValueCount = 2;
+        timeline_submit_info.pWaitSemaphoreValues = wait_values;
+        timeline_submit_info.signalSemaphoreValueCount = 1;
+        timeline_submit_info.pSignalSemaphoreValues = &signal_value;
+        
+        submit_info.waitSemaphoreCount = 2;
+        submit_info.pSignalSemaphores = &_timeline_semaphore;
+        submit_info.pWaitSemaphores = wait_semaphores1;
+        submit_info.signalSemaphoreCount = 1;
 
-      //@todo ugly but works ?
-      if (!has_semaphore) {
-        submit_info.waitSemaphoreCount = 1;
-        submit_info.pWaitSemaphores = &_image_available[_current_frame];
-        has_semaphore = true;
+        VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, VK_PIPELINE_STAGE_VERTEX_SHADER_BIT };
+        submit_info.pWaitDstStageMask = waitStages;
+
+      } else if (i == 1) {
+        uint64_t wait_value = _current_timeline_value + 1;
+        uint64_t signal_value = _current_timeline_value + 2;
+
+        timeline_submit_info.waitSemaphoreValueCount = 1;
+        timeline_submit_info.pWaitSemaphoreValues = &wait_value;
+        timeline_submit_info.signalSemaphoreValueCount = 1;
+        timeline_submit_info.pSignalSemaphoreValues = &signal_value;
+
+        submit_info.waitSemaphoreCount = 2;
+        submit_info.pWaitSemaphores = wait_semaphores2;
+        submit_info.signalSemaphoreCount = 1;
+        submit_info.pSignalSemaphores = &_timeline_semaphore;
+
+        VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
+        submit_info.pWaitDstStageMask = waitStages;
       }
-      submit_infos.emplace_back(submit_info);
 
-      semaphores.push_back(draw_cmds.semaphores.at(i));
+      submit_info.pNext = &timeline_submit_info;
+      submit_infos.emplace_back(submit_info);
     }
 
     auto queue = _vulkan->getGraphicsQueues().at(0);
 
     std::vector<VkSwapchainKHR> swapchains{ _swapchain };
 
+    uint64_t present_wait_value = _current_timeline_value + 2;
+
+    VkSemaphoreSubmitInfoKHR sema_wait_info{};
+    sema_wait_info.sType = VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO_KHR;
+    sema_wait_info.semaphore = _timeline_semaphore;
+    sema_wait_info.value = present_wait_value;
+
     VkPresentInfoKHR present_info{};
     present_info.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
-    present_info.waitSemaphoreCount = static_cast<uint32_t>(semaphores.size());
-    present_info.pWaitSemaphores = *semaphores.data();
+    present_info.waitSemaphoreCount = 1;
+    present_info.pWaitSemaphores = &_timeline_semaphore;
     present_info.swapchainCount = 1;
     present_info.pSwapchains = swapchains.data();
     present_info.pImageIndices = &_image_index;
-
     present_info.pResults = nullptr;
 
     _vulkan->submit(queue, submit_infos, present_info, _fences_in_flight[_current_frame]);

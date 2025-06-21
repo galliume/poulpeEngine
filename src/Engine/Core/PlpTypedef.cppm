@@ -53,7 +53,7 @@ namespace Poulpe
 
   export struct Light
   {
-    alignas(16) glm::mat4 light_space_matrix;
+    alignas(16) glm::mat4 light_space_matrix;//used also as light_space_matrix_front
     alignas(16) glm::mat4 projection;
     alignas(16) glm::mat4 view;
     //ambiance diffuse specular
@@ -65,6 +65,11 @@ namespace Poulpe
     alignas(16) glm::vec3 color;
     alignas(16) glm::vec3 direction;
     alignas(16) glm::vec3 position;
+    alignas(16) glm::mat4 light_space_matrix_left;
+    alignas(16) glm::mat4 light_space_matrix_top;
+    alignas(16) glm::mat4 light_space_matrix_right;
+    alignas(16) glm::mat4 light_space_matrix_bottom;
+    alignas(16) glm::mat4 light_space_matrix_back;
   };
 
   export struct Material
@@ -96,6 +101,7 @@ namespace Poulpe
     alignas(16) glm::vec3 transmission_scale{ 1.0 };
     alignas(16) glm::vec3 transmission_rotation{ 0.0 };
     alignas(16) glm::vec3 strength{ 1.0 };//x: normal strength, y occlusion strength
+    alignas(16) glm::vec4 emissive_color{0.0};
   };
 
   export struct ObjectBuffer
@@ -200,6 +206,8 @@ namespace Poulpe
     float normal_strength{ 1.0 };
     float occlusion_strength{ 1.0 };
     float transmission_strength{ 1.0 };
+
+    glm::vec4 emissive_color {0.0};
   };
 
   export struct constants
@@ -293,6 +301,7 @@ namespace Poulpe
     std::vector<uint32_t> materials_ID{};
     std::vector<Vertex> vertices{};
     glm::mat4 transform_matrix{};
+    glm::mat4 local_transform{};
     glm::mat4 inverse_transform_matrix{};
     std::unordered_map<std::string, Bone> bones{};
     std::string root_bone_name{};

@@ -56,6 +56,7 @@ namespace Poulpe {
     glm::vec3 _current_scale;
     glm::vec3 _tangeant;
     glm::mat4 _transform_matrix;
+    glm::mat4 _local_transform;
     glm::mat4 _inverse_transform_matrix;
     std::unordered_map<std::string, Bone> _bones{};
     std::string _root_bone_name{};

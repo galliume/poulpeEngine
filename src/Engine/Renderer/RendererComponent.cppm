@@ -97,4 +97,14 @@ namespace Poulpe {
   {
 
   };
+
+  template class RenderComponent<Basic>;
+  template class RenderComponent<Crosshair>;
+  template class RenderComponent<Grid>;
+  template class RenderComponent<Mesh>;
+  template class RenderComponent<ShadowMap>;
+  template class RenderComponent<Skybox>;
+  template class RenderComponent<Terrain>;
+  template class RenderComponent<Text>;
+  template class RenderComponent<Water>;
 }
