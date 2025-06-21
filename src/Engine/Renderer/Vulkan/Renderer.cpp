@@ -238,9 +238,6 @@ namespace Poulpe
       result = vkCreateSemaphore(_vulkan->getDevice(), &semaphore_create_info, nullptr, &_timeline_semaphores[i]);
       if (VK_SUCCESS != result) Logger::error("can't create _fences_in_flight fence");
     }
-
-
-
   }
 
   void Renderer::setPerspective()
@@ -584,7 +581,7 @@ namespace Poulpe
 
     std::vector<VkPipelineStageFlags> flags { VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT };
     //VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL
-    _draw_cmds.insert(cmd_buffer, _sema_present_completes[_image_index], thread_id, false, flags);
+    _draw_cmds.insert(cmd_buffer, _sema_present_completes[_current_frame], thread_id, false, flags);
 
     _update_shadow_map = false;
   }
@@ -602,7 +599,7 @@ namespace Poulpe
     endRendering(cmd_buffer, color, depthimage, is_attachment, has_depth_attachment);
 
     std::vector<VkPipelineStageFlags> flags { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
-    _draw_cmds.insert(cmd_buffer, _sema_render_completes[_image_index], thread_id, is_attachment, flags);
+    _draw_cmds.insert(cmd_buffer, _sema_render_completes[_current_frame], thread_id, is_attachment, flags);
   }
 
   void Renderer::destroy()
@@ -667,7 +664,7 @@ namespace Poulpe
     auto const& draw_cmds { _draw_cmds };
 
     if (!draw_cmds.has_cmd()) {
-      vkResetFences(_vulkan->getDevice(), 1, &_fences_in_flight[_current_frame]);
+      //vkResetFences(_vulkan->getDevice(), 1, &_fences_in_flight[_current_frame]);
       return;
     }
 
@@ -685,15 +682,14 @@ namespace Poulpe
     auto &timeline_semaphore = _timeline_semaphores[_current_frame];
 
     auto &_current_timeline_value = _current_timeline_values[_current_frame];
-    uint64_t const shadowmap_finished = _current_timeline_value;
     uint64_t const entities_finished = _current_timeline_value + 1;
-    uint64_t const finished = _current_timeline_value + 2;
+    uint64_t const finished = _current_timeline_value + 3;
     std::array<uint64_t, 1> wait_values = { 0 };
     std::array<uint64_t, 2> signal_values = { entities_finished, 0 };
 
     VkPipelineStageFlags wait_stage_mask = VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT;
     std::array<VkPipelineStageFlags, 2> graphics_wait_stage_masks = { VK_PIPELINE_STAGE_VERTEX_INPUT_BIT, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
-    std::array<VkSemaphore, 2> graphics_wait_semaphores = { timeline_semaphore, _image_available[_current_frame] };
+    std::array<VkSemaphore, 2> graphics_wait_semaphores = { _image_available[_current_frame] };
     std::array<VkSemaphore, 2> graphics_signal_semaphores = { timeline_semaphore, semaphore_render_complete };
 
     VkTimelineSemaphoreSubmitInfoKHR timeline_submit_info{};
@@ -705,9 +701,9 @@ namespace Poulpe
 
     VkSubmitInfo submit_info{};
     submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-    submit_info.commandBufferCount = 1;
+    submit_info.commandBufferCount = static_cast<uint32_t>(cmds_buffer.size());
     submit_info.pCommandBuffers = cmds_buffer.data();
-    submit_info.waitSemaphoreCount = 2;
+    submit_info.waitSemaphoreCount = 1;
     submit_info.pWaitSemaphores = graphics_wait_semaphores.data();
     submit_info.pWaitDstStageMask = graphics_wait_stage_masks.data();
     submit_info.signalSemaphoreCount = 2;
@@ -732,8 +728,7 @@ namespace Poulpe
     _current_timeline_value = finished;
 
     _previous_frame = _current_frame;
-    _current_frame = (_current_frame + _max_frames_in_flight - 1) % _max_frames_in_flight;
-
+    _current_frame = (_current_frame + 1) % _max_frames_in_flight;
     _draw_cmds.clear();
     onFinishRender();
   }
