@@ -238,12 +238,12 @@ namespace Poulpe
       }
 
       _renderer->start();
-      // _renderer->startShadowMap();
+      _renderer->startShadowMap();
 
-      // std::ranges::for_each(entities, [&](const auto& entity) {
-      //       drawShadowMap(entity->getID());
-      // });
-      // _renderer->endShadowMap();
+      std::ranges::for_each(entities, [&](const auto& entity) {
+            drawShadowMap(entity->getID());
+      });
+      _renderer->endShadowMap();
 
       _renderer->startRender();
 
