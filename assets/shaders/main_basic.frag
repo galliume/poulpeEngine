@@ -55,6 +55,11 @@ struct Light {
   vec3 color;
   vec3 direction;
   vec3 position;
+  mat4 light_space_matrix_left;
+  mat4 light_space_matrix_top;
+  mat4 light_space_matrix_right;
+  mat4 light_space_matrix_bottom;
+  mat4 light_space_matrix_back;  
 };
 
 struct Material

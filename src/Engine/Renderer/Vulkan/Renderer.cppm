@@ -36,9 +36,9 @@ namespace Poulpe
   export struct DrawCommands {
 
     public:
-      std::vector<VkCommandBuffer*> cmd_buffers{};
+      std::vector<VkCommandBuffer> cmd_buffers{};
       std::vector<std::vector<VkPipelineStageFlags>> stage_flags{};
-      std::vector<VkSemaphore*> semaphores{};
+      std::vector<VkSemaphore> semaphores{};
       std::vector<bool> is_attachments{ };
 
       DrawCommands(size_t const size)
@@ -48,8 +48,8 @@ namespace Poulpe
       }
 
       void insert(
-        VkCommandBuffer* cmd_buffer,
-        VkSemaphore* semaphore,
+        VkCommandBuffer& cmd_buffer,
+        VkSemaphore& semaphore,
         uint32_t const thread_id,
         bool const is_attachment,
         std::vector<VkPipelineStageFlags> flags = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT })
@@ -131,7 +131,7 @@ namespace Poulpe
     void startShadowMap();
 
     void draw(RendererInfo const& renderer_info);
-    void drawShadowMap(Mesh const * mesh, glm::mat4 const& light_view);
+    void drawShadowMap(RendererInfo const& renderer_info);
     
     void endRender();
     void endShadowMap();
@@ -265,5 +265,8 @@ namespace Poulpe
     std::mutex _mutex_queue_submit;
 
     DrawCommands _draw_cmds{_max_render_thread};
+
+    VkSemaphore _timeline_semaphore;
+    uint64_t _current_timeline_value{0};
   };
 }

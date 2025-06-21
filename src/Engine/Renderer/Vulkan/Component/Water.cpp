@@ -99,12 +99,12 @@ void Water::operator()(
 
     data->_ubos.push_back(ubos);
     data->_vertices = vertices;
-    data->_vertex_buffer = renderer->getAPI()->createVertexBuffer(cmd_pool, vertices);
+    data->_vertex_buffer = renderer->getAPI()->createVertexBuffer(vertices);
     data->_texture_index = 0;
 
     mesh->getMaterial().alpha_mode = 2.0;//BLEND
     mesh->getData()->_ubos_offset.emplace_back(1);
-    mesh->getUniformBuffers().emplace_back(renderer->getAPI()->createUniformBuffers(1, cmd_pool));
+    mesh->getUniformBuffers().emplace_back(renderer->getAPI()->createUniformBuffers(1));
 
     for (size_t i{ 0 }; i < mesh->getData()->_ubos.size(); i++) {
       std::ranges::for_each(mesh->getData()->_ubos.at(i), [&](auto& data_ubo) {

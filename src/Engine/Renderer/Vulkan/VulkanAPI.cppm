@@ -12,6 +12,7 @@ module;
 #include <mutex>
 #include <optional>
 #include <unordered_map>
+#include <shared_mutex>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -38,6 +39,7 @@ namespace Poulpe
   export struct QueueFamilyIndices {
     std::optional<uint32_t> graphicsFamily;
     std::optional<uint32_t> presentFamily;
+    std::optional<uint32_t> transferFamily;
 
     bool isComplete() {
       return graphicsFamily.has_value() && presentFamily.has_value();
@@ -139,20 +141,16 @@ namespace Poulpe
       VkDeviceMemory& device_memory);
 
     Buffer createVertexBuffer(
-      VkCommandPool& commandPool,
       std::vector<Vertex> const& vertices);
 
     void updateVertexBuffer(
-      VkCommandPool& commandPool,
       std::vector<Vertex> const& new_vertices,
       VkBuffer& buffer_to_update);
 
     Buffer createVertex2DBuffer(
-      VkCommandPool& cmd_pool,
       std::vector<Vertex2D> const& vertices);
 
     Buffer createIndexBuffer(
-      VkCommandPool& cmd_pool,
       std::vector<uint32_t> const& indices);
 
     VkImageMemoryBarrier setupImageMemoryBarrier(
@@ -165,18 +163,15 @@ namespace Poulpe
       VkImageAspectFlags const aspect_mask = VK_IMAGE_ASPECT_COLOR_BIT);
 
     void copyBuffer(
-      VkCommandPool& cmd_pool,
       VkBuffer& src_buffer,
       VkBuffer& dst_buffer,
       VkDeviceSize const size,
-      VkDeviceSize dst_offset = 0,
-      size_t const queue_index = 0);
+      VkDeviceSize dst_offset = 0);
 
     bool souldResizeSwapChain();
 
     Buffer createUniformBuffers(
-      uint64_t const uniform_buffers_count,
-      VkCommandPool& cmd_pool);
+      uint64_t const uniform_buffers_count);
 
     Buffer createCubeUniformBuffers(uint32_t const uniform_buffers_count);
 
@@ -234,8 +229,7 @@ namespace Poulpe
     void initMemoryPool();
 
     Buffer createStorageBuffers(
-      ObjectBuffer const& storage_buffer,
-      VkCommandPool& command_pool);
+      ObjectBuffer const& storage_buffer);
 
     Buffer createIndirectCommandsBuffer(
       std::vector<VkDrawIndexedIndirectCommand> const& drawCommands);
@@ -481,6 +475,7 @@ namespace Poulpe
     void createLogicalDevice();
     void pickPhysicalDevice();
     void createSurface();
+    void createTransferCmdPool();
 
     QueueFamilyIndices findQueueFamilies(VkPhysicalDevice& device);
     VkSurfaceFormatKHR chooseSwapSurfaceFormat(std::vector<VkSurfaceFormatKHR> const& availableFormats);
@@ -522,6 +517,7 @@ namespace Poulpe
     VkDevice _device{ VK_NULL_HANDLE };
     std::vector<VkQueue> _graphics_queues{};
     std::vector<VkQueue> _present_queues{};
+    std::vector<VkQueue> _transfer_queues{};
     VkSurfaceKHR _surface{ VK_NULL_HANDLE };
     VkFormat _swapchain_iImage_format{};
     VkExtent2D _swapchain_extent{};
@@ -540,7 +536,8 @@ namespace Poulpe
     VkSampleCountFlagBits _sample_count{ VK_SAMPLE_COUNT_8_BIT };
 
     std::mutex _mutex_queue_submit{};
-
+    std::shared_mutex _mutex_copy_buffer{};
+    
     VkDeviceSize _max_memory_heap{};
     std::unique_ptr<DeviceMemoryPool> _device_memory_pool{ nullptr };
 
@@ -549,11 +546,13 @@ namespace Poulpe
     VkFence _fence_buffer{};
 
     //@todo move to config file
-    uint32_t _width{ 2560 };
-    uint32_t _height{ 1440 };
-      // uint32_t _width{ 1600 };
-      // uint32_t _height{ 900 };
+    // uint32_t _width{ 2560 };
+    // uint32_t _height{ 1440 };
+      uint32_t _width{ 1600 };
+      uint32_t _height{ 900 };
 
     //VkMemoryRequirements _MemRequirements;
+    VkCommandPool _transfer_cmd_pool{};
+    VkCommandBuffer _transfer_cmd_buffer{};
   };
 }

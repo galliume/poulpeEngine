@@ -167,7 +167,7 @@ namespace Poulpe
     auto cmd_pool = renderer->getAPI()->createCommandPool();
 
     if (data->_ubos.empty()) {
-      data->_vertex_buffer = renderer->getAPI()->createVertexBuffer(cmd_pool, vertices);
+      data->_vertex_buffer = renderer->getAPI()->createVertexBuffer(vertices);
 
       std::vector<UniformBufferObject> ubos{};
       ubos.reserve(1);
@@ -181,7 +181,7 @@ namespace Poulpe
       data->_ubos[0] = ubos;
 
       mesh->getData()->_ubos_offset.emplace_back(1);
-      mesh->getUniformBuffers().emplace_back(renderer->getAPI()->createUniformBuffers(1, cmd_pool));
+      mesh->getUniformBuffers().emplace_back(renderer->getAPI()->createUniformBuffers(1));
       mesh->getMaterial().alpha_mode = 1.0;
 
       for (size_t i{ 0 }; i < mesh->getData()->_ubos.size(); i++) {
@@ -210,7 +210,6 @@ namespace Poulpe
       vkUnmapMemory(renderer->getDevice(), staging_device_memory);
 
       renderer->getAPI()->copyBuffer(
-        cmd_pool,
         staging_buffer,
         data->_vertex_buffer.buffer,
         buffer_size,
