@@ -200,7 +200,7 @@ namespace Poulpe
       storage_binding.descriptorCount = 1;
       storage_binding.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
       storage_binding.pImmutableSamplers = nullptr;
-      storage_binding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_GEOMETRY_BIT;
+      storage_binding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
 
       bindings = { ubo_bingind, storage_binding };
     } else if constexpr (T == DescSetLayoutType::Terrain) {
@@ -287,7 +287,7 @@ namespace Poulpe
 
   void ShaderManager::createGraphicPipeline(std::string const & shader_name)
   {
-    bool offscreen = (shader_name == "shadowMap") ? true : false;
+    bool offscreen = (shader_name == "shadow_map") ? true : false;
     bool need_bis{ false };
 
     PipeLineCreateInfo pipeline_create_infos{};
@@ -376,6 +376,26 @@ namespace Poulpe
       pipeline_create_infos.has_dynamic_depth_bias = false;
       pipeline_create_infos.is_patch_list = true;
       pipeline_create_infos.topology = VK_PRIMITIVE_TOPOLOGY_PATCH_LIST;
+    } else if (shader_name == "shadow_map") {
+      
+      pipeline_create_infos.cull_mode = VK_CULL_MODE_BACK_BIT;
+      pipeline_create_infos.has_color_attachment = false;
+      pipeline_create_infos.has_dynamic_depth_bias = true;
+      
+      descset_layout = createDescriptorSetLayout<DescSetLayoutType::Offscreen>();
+      push_constants.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+      push_constants.size = sizeof(constants);
+      need_bis = false;
+      
+      VkDescriptorPoolSize dpsSB;
+      dpsSB.type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+      dpsSB.descriptorCount = 10;
+
+      poolSizes.emplace_back(dpsSB);
+
+      push_constants.offset = 0;
+      push_constants.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+      push_constants.size = sizeof(constants);
     } else {
       VkDescriptorPoolSize dpsSB;
       dpsSB.type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
@@ -389,17 +409,6 @@ namespace Poulpe
 
       need_bis = true;
       descset_layout = createDescriptorSetLayout<DescSetLayoutType::Entity>();
-
-      if (shader_name == "shadowMap" || shader_name == "shadowMapSpot") {
-        pipeline_create_infos.cull_mode = VK_CULL_MODE_BACK_BIT;
-        pipeline_create_infos.has_color_attachment = false;
-        pipeline_create_infos.has_dynamic_depth_bias = true;
-
-        descset_layout = createDescriptorSetLayout<DescSetLayoutType::Offscreen>();
-        push_constants.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-        push_constants.size = sizeof(constants);
-        need_bis = false;
-      }
     }
 
     pipeline_layout = _renderer->getAPI()->createPipelineLayout({ descset_layout }, { push_constants });
@@ -408,6 +417,7 @@ namespace Poulpe
     pipeline_create_infos.vertex_input_info = std::move(vertex_input_info);
     pipeline_create_infos.pipeline_layout = pipeline_layout;
 
+    Logger::debug("shader_name: {}", shader_name);
     graphic_pipeline = _renderer->getAPI()->createGraphicsPipeline(pipeline_create_infos);
     auto descriptorPool = _renderer->getAPI()->createDescriptorPool(poolSizes, 1000);
 
@@ -426,7 +436,7 @@ namespace Poulpe
     pipeline.descset_layout = descset_layout;
     pipeline.shaders = shaders;
 
-    if (shader_name == "shadowMap" || shader_name == "shadowMapSpot") {
+    if (shader_name == "shadow_map" || shader_name == "shadow_mapSpot") {
       pipeline.descset = _renderer->getAPI()->createDescriptorSets(pipeline.desc_pool, { pipeline.descset_layout }, 1);
     }
     _renderer->addPipeline(shader_name, pipeline);

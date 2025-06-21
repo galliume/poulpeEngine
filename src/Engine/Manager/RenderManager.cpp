@@ -125,6 +125,7 @@ namespace Poulpe
       _camera->init(start_pos);
     }
 
+    prepareShadowMap();
     prepareSkybox();
     prepareTerrain();
     prepareWater();
@@ -240,11 +241,7 @@ namespace Poulpe
       _renderer->startShadowMap();
 
       std::ranges::for_each(entities, [&](const auto& entity) {
-          auto* mesh_component = _component_manager->get<MeshComponent>(entity->getID());
-          auto mesh = mesh_component->template has<Mesh>();
-          if (mesh->hasShadow()) {
-            _renderer->drawShadowMap(mesh, _light_manager->getPointLights().at(1).view);
-          }
+            drawShadowMap(entity->getID());
       });
       _renderer->endShadowMap();
 
@@ -348,6 +345,36 @@ namespace Poulpe
       };
 
       _renderer->draw(renderer_info);
+    }
+  }
+
+    void RenderManager::drawShadowMap(
+    IDType const entity_id,
+    bool const has_alpha_blend)
+  {
+    auto* mesh_component = _component_manager->get<MeshComponent>(entity_id);
+    auto mesh = mesh_component->template has<Mesh>();
+
+    if (!mesh->hasShadow()) {
+      return;
+    }
+    
+    auto rdr_impl = _component_manager->get<RendererComponent>(entity_id);
+
+    if (mesh && rdr_impl) {
+      RendererInfo renderer_info {
+        .mesh = mesh,
+        .camera = getCamera(),
+        .sun_light = _light_manager->getSunLight(),
+        .point_lights = _light_manager->getPointLights(),
+        .spot_lights = _light_manager->getSpotLights(),
+        .elapsed_time = _elapsed_time,
+        .stage_flag_bits = rdr_impl->getShaderStageFlags(),
+        .normal_debug = ConfigManagerLocator::get()->normalDebug(),
+        .has_alpha_blend = has_alpha_blend
+      };
+
+      _renderer->drawShadowMap(renderer_info);
     }
   }
 
@@ -522,6 +549,37 @@ namespace Poulpe
     _component_manager->add<RendererComponent>(entity->getID(), std::move(rdr_impl));
     _component_manager->add<MeshComponent>(entity->getID(), std::move(mesh));
     _entity_manager->setWater(std::move(entity));
+  }
+
+  void RenderManager::prepareShadowMap()
+  {
+    auto entity = std::make_unique<Entity>();
+    auto mesh = std::make_unique<Mesh>();
+    mesh->setHasShadow(false);
+    mesh->setIsIndexed(false);
+    mesh->setShaderName("shadow_map");
+    mesh->setName("_plp_shadow_map");
+
+    ComponentRenderingInfo rendering_info {
+      .mesh = mesh.get(),
+      .textures = _texture_manager->getTextures(),
+      .skybox_name = _texture_manager->getSkyboxTexture(),
+      .terrain_name = _texture_manager->getTerrainTexture(),
+      .water_name = _texture_manager->getWaterTexture(),
+      .sun_light = _light_manager->getSunLight(),
+      .point_lights = _light_manager->getPointLights(),
+      .spot_lights = _light_manager->getSpotLights(),
+      .characters = _font_manager->getCharacters(),
+      .face = _font_manager->getFace(),
+      .atlas_width = _font_manager->getAtlasWidth(),
+      .atlas_height = _font_manager->getAtlasHeight()
+    };
+    
+    auto rdr_impl{ RendererComponentFactory::create<ShadowMap>() };
+    (*rdr_impl)(_renderer.get(), rendering_info);
+
+
+    _entity_manager->setShadowMap(std::move(entity));
   }
 
   void RenderManager::addText(FontManager::Text const& text)

@@ -39,6 +39,7 @@ namespace Poulpe
     inline Entity const * getSkybox() { return _skybox.get(); }
     inline Entity const * getTerrain() { return _terrain.get(); }
     inline Entity const * getWater() { return _water.get(); }
+    inline Entity const * getShadowMap() { return _shadow_map.get(); }
     inline Entity const * getText(uint32_t const index) { return _texts.at(index).get(); }
     inline std::vector<std::unique_ptr<Entity>>& getTexts() { return _texts; }
 
@@ -46,6 +47,7 @@ namespace Poulpe
     inline void setSkybox(std::unique_ptr<Entity> skybox) { _skybox = std::move(skybox); }
     inline void setTerrain(std::unique_ptr<Entity> terrain) { _terrain = std::move(terrain); }
     inline void setWater(std::unique_ptr<Entity> water) { _water = std::move(water); }
+    inline void setShadowMap(std::unique_ptr<Entity> shadow_map) { _shadow_map = std::move(shadow_map); }
     inline size_t addText(std::unique_ptr<Entity> text) { _texts.emplace_back(std::move(text)); return _texts.size() - 1; }
       
     void addEntity(Entity* entity);
@@ -79,6 +81,7 @@ namespace Poulpe
     std::unique_ptr<Entity> _skybox{nullptr};
     std::unique_ptr<Entity> _terrain{nullptr};
     std::unique_ptr<Entity> _water{nullptr};
+    std::unique_ptr<Entity> _shadow_map{nullptr};
 
     std::vector<std::unique_ptr<Entity>> _texts;
 
