@@ -256,17 +256,17 @@ namespace Poulpe
     std::unordered_map<std::string, VulkanPipeline> _pipelines;
 
     std::vector<VkSemaphore> _image_available;
-    std::vector<VkSemaphore> _shadowmap_sema_img_available;
-    std::vector<VkSemaphore> _entities_sema_finished;
+    std::vector<VkSemaphore> _sema_present_completes;
+    std::vector<VkSemaphore> _sema_render_completes;
 
     std::vector<VkFence> _images_in_flight{};
     std::vector<VkFence> _fences_in_flight{};
 
     std::mutex _mutex_queue_submit;
 
-    DrawCommands _draw_cmds{_max_render_thread};
+    DrawCommands _draw_cmds{2};
 
-    VkSemaphore _timeline_semaphore;
-    uint64_t _current_timeline_value{0};
+    std::vector<VkSemaphore> _timeline_semaphores;
+    std::vector<uint64_t> _current_timeline_values;
   };
 }

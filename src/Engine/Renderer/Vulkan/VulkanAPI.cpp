@@ -474,6 +474,11 @@ void VulkanAPI::createLogicalDevice()
   device12_features.timelineSemaphore  = true;
   device12_features.pNext = &ext_dynamic_state;
 
+  VkPhysicalDevicePresentWaitFeaturesKHR present_wait_feature{};
+  present_wait_feature.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PRESENT_WAIT_FEATURES_KHR;
+  present_wait_feature.presentWait = true;
+  present_wait_feature.pNext = &device12_features;
+
   VkDeviceCreateInfo create_info{};
   create_info.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
   create_info.queueCreateInfoCount = static_cast<uint32_t>(queue_create_infos.size());
@@ -481,7 +486,7 @@ void VulkanAPI::createLogicalDevice()
   create_info.pEnabledFeatures = &device_features;
   create_info.enabledExtensionCount = static_cast<uint32_t>(_device_extensions.size());
   create_info.ppEnabledExtensionNames = _device_extensions.data();
-  create_info.pNext = &device12_features;
+  create_info.pNext = &present_wait_feature;
 
   if (vkCreateDevice(_physical_device, & create_info, nullptr, &_device) != VK_SUCCESS) {
     //Logger::critical("failed to create logical device!");
