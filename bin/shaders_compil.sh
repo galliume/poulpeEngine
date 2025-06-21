@@ -50,14 +50,14 @@ compile()
     type=$2
 
     if  md5sum --status -c ./assets/shaders/${shader}.${type}.checksum; then
-        print_success "Shader [${shader}.${type}] already up to date"
+        print_text "Shader [${shader}.${type}] already up to date"
     else
         ${GLSLC_BIN} -O ./assets/shaders/${shader}.${type} -o ./assets/shaders/spv/${shader}_${type}.spv
         retval=$?
         
         if [ "$retval" != 0 ]
         then
-            print_error "Shader [${shader}.$type] not compiled"
+            print_error "Compilation failed for shader [${shader}.$type]"
         else
             md5sum ./assets/shaders/${shader}.$type > ./assets/shaders/${shader}.${type}.checksum
             print_success "Shader [${shader}.$type] compiled"
@@ -73,7 +73,7 @@ print_text "Compiling shaders"
 
 #@todo read from config/shaders.json
 shaders=("main_basic" "main_basic_no_texture" "skybox"
-        "shadowMap" "shadowMapSpot" "normal" "terrain"
+        "shadow_map" "shadowMapSpot" "normal" "terrain"
         "water" "text")
 
 for shader in ${shaders[@]}; do
@@ -81,7 +81,7 @@ for shader in ${shaders[@]}; do
     compile ${shader} "frag"
 done
 
-geom_shaders=("normal" "terrain" "shadowMap")
+geom_shaders=("normal" "terrain" "shadow_map")
 for shader in ${geom_shaders[@]}; do
     compile ${shader} "geom"
 done

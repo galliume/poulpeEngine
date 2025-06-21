@@ -113,7 +113,7 @@ namespace Poulpe
         }
       }
 
-      return { key_frames.front(), key_frames.back() };
+      return { key_frames.back(), key_frames.front() };
     }
 
     template<isAnimOperation T>

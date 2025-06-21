@@ -16,6 +16,7 @@ module;
 #include <optional>
 #include <unordered_map>
 #include <set>
+#include <shared_mutex>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -109,6 +110,7 @@ VulkanAPI::VulkanAPI(Window* window)
   createLogicalDevice();
   initDetails();
   initMemoryPool();
+  createTransferCmdPool();
 
   VkFenceCreateInfo fence_info{};
   fence_info.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
@@ -391,6 +393,16 @@ QueueFamilyIndices VulkanAPI::findQueueFamilies(VkPhysicalDevice& device)
     }
     i++;
   }
+
+  for (uint32_t x = 0; x < queue_family_count; ++x) {
+    if (queue_families[x].queueFlags & VK_QUEUE_TRANSFER_BIT &&
+        !(queue_families[x].queueFlags & VK_QUEUE_GRAPHICS_BIT) &&
+        !(queue_families[x].queueFlags & VK_QUEUE_COMPUTE_BIT)) {
+      _queue_family_indices.transferFamily = x;
+      break;
+    }
+  }
+
   return _queue_family_indices;
 }
 
@@ -399,11 +411,15 @@ void VulkanAPI::createLogicalDevice()
   QueueFamilyIndices indices = findQueueFamilies(_physical_device);
 
   std::vector<VkDeviceQueueCreateInfo> queue_create_infos;
-  std::set<uint32_t> unique_queue_families = { indices.graphicsFamily.value(), indices.presentFamily.value() };
+  std::set<uint32_t> unique_queue_families = {
+    indices.graphicsFamily.value(),
+    indices.presentFamily.value(),
+    indices.transferFamily.value() };
 
   float queue_priority{ 1.0f };
   _graphics_queues.resize(_queue_count);
   _present_queues.resize(_queue_count);
+  _transfer_queues.resize(_queue_count);
 
   for (uint32_t queue_family : unique_queue_families) {
     VkDeviceQueueCreateInfo queueCreateInfo{};
@@ -437,7 +453,7 @@ void VulkanAPI::createLogicalDevice()
   vulkan_features13.dynamicRendering = VK_TRUE;
   vulkan_features13.synchronization2 = VK_TRUE;
   vulkan_features13.pipelineCreationCacheControl = VK_TRUE;
-  vulkan_features13.pNext = &descriptor_indexing;
+  //vulkan_features13.pNext = &descriptor_indexing;
 
   VkPhysicalDeviceShaderDrawParametersFeatures shader_draw_parameters_features = {};
   shader_draw_parameters_features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_DRAW_PARAMETERS_FEATURES;
@@ -453,6 +469,11 @@ void VulkanAPI::createLogicalDevice()
 
   ext_dynamic_state.pNext = &shader_draw_parameters_features;
 
+  VkPhysicalDeviceVulkan12Features device12_features{};
+  device12_features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES;
+  device12_features.timelineSemaphore  = true;
+  device12_features.pNext = &ext_dynamic_state;
+
   VkDeviceCreateInfo create_info{};
   create_info.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
   create_info.queueCreateInfoCount = static_cast<uint32_t>(queue_create_infos.size());
@@ -460,7 +481,7 @@ void VulkanAPI::createLogicalDevice()
   create_info.pEnabledFeatures = &device_features;
   create_info.enabledExtensionCount = static_cast<uint32_t>(_device_extensions.size());
   create_info.ppEnabledExtensionNames = _device_extensions.data();
-  create_info.pNext = &ext_dynamic_state;
+  create_info.pNext = &device12_features;
 
   if (vkCreateDevice(_physical_device, & create_info, nullptr, &_device) != VK_SUCCESS) {
     //Logger::critical("failed to create logical device!");
@@ -470,8 +491,10 @@ void VulkanAPI::createLogicalDevice()
   for (uint32_t i { 0 }; i < _queue_count; i++) {
     _graphics_queues[i] = VK_NULL_HANDLE;
     _present_queues[i] = VK_NULL_HANDLE;
+    _transfer_queues[i] = VK_NULL_HANDLE;
     vkGetDeviceQueue(_device, indices.graphicsFamily.value(), 0, & _graphics_queues[i]);
     vkGetDeviceQueue(_device, indices.presentFamily.value(), 0, & _present_queues[i]);
+    vkGetDeviceQueue(_device, indices.transferFamily.value(), 0, & _transfer_queues[i]);
   }
   volkLoadDevice(_device);
 }
@@ -1665,7 +1688,6 @@ void VulkanAPI::createBuffer(
 }
 
 Buffer VulkanAPI::createIndexBuffer(
-  VkCommandPool& cmd_pool,
   std::vector<uint32_t> const& indices)
 {
   VkDeviceSize buffer_size = sizeof(indices[0]) * indices.size();
@@ -1698,7 +1720,7 @@ Buffer VulkanAPI::createIndexBuffer(
   auto const offset { device_memory->getOffset() };
   auto const index{ device_memory->bindBufferToMemory(buffer, bind_offset) };
 
-  copyBuffer(cmd_pool, staging_buffer, buffer, buffer_size);
+  copyBuffer(staging_buffer, buffer, buffer_size);
 
   Buffer mesh_buffer;
   mesh_buffer.buffer = std::move(buffer);
@@ -1714,7 +1736,6 @@ Buffer VulkanAPI::createIndexBuffer(
 }
 
 Buffer VulkanAPI::createVertexBuffer(
-  VkCommandPool& commandPool,
   std::vector<Vertex> const& vertices)
 {
   VkDeviceSize buffer_size = sizeof(Vertex) * vertices.size();
@@ -1757,7 +1778,7 @@ Buffer VulkanAPI::createVertexBuffer(
   //auto const offset { device_memory->getOffset() };
   auto const index{ device_memory->bindBufferToMemory(buffer, bind_offset) };
 
-  copyBuffer(commandPool, staging_buffer, buffer, buffer_size);
+  copyBuffer(staging_buffer, buffer, buffer_size);
 
   Buffer mesh_buffer;
   mesh_buffer.buffer = std::move(buffer);
@@ -1773,7 +1794,6 @@ Buffer VulkanAPI::createVertexBuffer(
 }
 
 void VulkanAPI::updateVertexBuffer(
-    VkCommandPool& commandPool,
     std::vector<Vertex> const& new_vertices,
     VkBuffer& buffer_to_update)
 {
@@ -1794,14 +1814,13 @@ void VulkanAPI::updateVertexBuffer(
   memcpy(data, new_vertices.data(), static_cast<size_t>(buffer_size));
   vkUnmapMemory(_device, staging_device_memory);
 
-  copyBuffer(commandPool, staging_buffer, buffer_to_update, buffer_size);
+  copyBuffer(staging_buffer, buffer_to_update, buffer_size);
 
   vkDestroyBuffer(_device, staging_buffer, nullptr);
   vkFreeMemory(_device, staging_device_memory, nullptr);
 }
 
 Buffer VulkanAPI::createVertex2DBuffer(
-  VkCommandPool& cmd_pool,
   std::vector<Vertex2D> const& vertices)
 {
   VkDeviceSize buffer_size = sizeof(Vertex2D) * vertices.size();
@@ -1835,7 +1854,7 @@ Buffer VulkanAPI::createVertex2DBuffer(
   auto const offset { device_memory->getOffset() };
   auto const index{ device_memory->bindBufferToMemory(buffer, bind_offset) };
 
-  copyBuffer(cmd_pool, staging_buffer, buffer, buffer_size);
+  copyBuffer(staging_buffer, buffer, buffer_size);
 
   Buffer mesh_buffer;
   mesh_buffer.buffer = std::move(buffer);
@@ -1851,8 +1870,7 @@ Buffer VulkanAPI::createVertex2DBuffer(
 }
 
 Buffer VulkanAPI::createUniformBuffers(
-  uint64_t const uniform_buffers_count,
-  VkCommandPool&)
+  uint64_t const uniform_buffers_count)
 {
   VkDeviceSize buffer_size = sizeof(UniformBufferObject) * uniform_buffers_count;
   VkBuffer buffer = createBuffer(buffer_size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT);
@@ -1888,8 +1906,7 @@ Buffer VulkanAPI::createUniformBuffers(
 }
 
 Buffer VulkanAPI::createStorageBuffers(
-  ObjectBuffer const& storage_buffer,
-  VkCommandPool& command_pool)
+  ObjectBuffer const& storage_buffer)
 {
   VkDeviceSize buffer_size { sizeof(storage_buffer) };
 
@@ -1925,7 +1942,7 @@ Buffer VulkanAPI::createStorageBuffers(
   auto const offset { device_memory->getOffset() };
   auto const index{ device_memory->bindBufferToMemory(buffer, bind_offset) };
 
-  copyBuffer(command_pool, staging_buffer, buffer, buffer_size);
+  copyBuffer(staging_buffer, buffer, buffer_size);
 
   Buffer uniform_buffer;
   uniform_buffer.buffer = std::move(buffer);
@@ -2055,54 +2072,64 @@ void VulkanAPI::updateStorageBuffer(Buffer& buffer, ObjectBuffer& object_buffer)
   }
 }
 
-void VulkanAPI::copyBuffer(
-  VkCommandPool& cmd_pool,
-  VkBuffer& src_buffer,
-  VkBuffer& dst_buffer,
-  VkDeviceSize const size,
-  VkDeviceSize dst_offset,
-  size_t const queue_index)//@todo check if transfer queue is really used...
+void VulkanAPI::createTransferCmdPool()
 {
+  VkCommandPoolCreateInfo poolInfo{};
+  poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+  poolInfo.queueFamilyIndex = _queue_family_indices.transferFamily.value();
+  poolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+
+  VkResult result = vkCreateCommandPool(_device, & poolInfo, nullptr, & _transfer_cmd_pool);
+
+  if (result != VK_SUCCESS) {
+    Logger::error("failed to create command pool!");
+  }
+
   VkCommandBufferAllocateInfo alloc_info{};
   alloc_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
   alloc_info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-  alloc_info.commandPool = cmd_pool;
+  alloc_info.commandPool = _transfer_cmd_pool;
   alloc_info.commandBufferCount = 1;
 
-  VkCommandBuffer cmd_buffer{};
-  vkAllocateCommandBuffers(_device, & alloc_info, & cmd_buffer);
+  vkAllocateCommandBuffers(_device, & alloc_info, & _transfer_cmd_buffer);
+}
 
-  VkCommandBufferBeginInfo begin_info{};
-  begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-  begin_info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-
-  vkBeginCommandBuffer(cmd_buffer, &begin_info);
-
-  VkBufferCopy copy_region{};
-  copy_region.srcOffset = 0;
-  copy_region.dstOffset = dst_offset;
-  copy_region.size = size;
-
-  vkCmdCopyBuffer(cmd_buffer, src_buffer, dst_buffer, 1, & copy_region);
-  vkEndCommandBuffer(cmd_buffer);
-
-  VkSubmitInfo submit_info{};
-  submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-  submit_info.commandBufferCount = 1;
-  submit_info.pCommandBuffers = &cmd_buffer;
-
+void VulkanAPI::copyBuffer(
+  VkBuffer& src_buffer,
+  VkBuffer& dst_buffer,
+  VkDeviceSize const size,
+  VkDeviceSize dst_offset)
+{
   {
-    std::lock_guard<std::mutex> guard(_mutex_queue_submit);
+    std::lock_guard<std::shared_mutex> guard(_mutex_copy_buffer);
+
+    VkCommandBufferBeginInfo begin_info{};
+    begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+    begin_info.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
+
+    vkBeginCommandBuffer(_transfer_cmd_buffer, &begin_info);
+
+    VkBufferCopy copy_region{};
+    copy_region.srcOffset = 0;
+    copy_region.dstOffset = dst_offset;
+    copy_region.size = size;
+
+    vkCmdCopyBuffer(_transfer_cmd_buffer, src_buffer, dst_buffer, 1, & copy_region);
+    vkEndCommandBuffer(_transfer_cmd_buffer);
+
+    VkSubmitInfo submit_info{};
+    submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+    submit_info.commandBufferCount = 1;
+    submit_info.pCommandBuffers = &_transfer_cmd_buffer;
+
     vkResetFences(_device, 1, &_fence_buffer);
-
-    VkResult result = vkQueueSubmit(_graphics_queues[queue_index], 1, & submit_info, _fence_buffer);
-
+    VkResult result = vkQueueSubmit(_transfer_queues[0], 1, & submit_info, _fence_buffer);
+    
     if (result != VK_SUCCESS) {
-      //Logger::error("failed to copy buffer.");
+      Logger::error("failed to copy buffer.");
     }
-
+    
     vkWaitForFences(_device, 1, &_fence_buffer, VK_TRUE, UINT32_MAX);
-    vkFreeCommandBuffers(_device, cmd_pool, 1, & cmd_buffer);
     //vkQueueWaitIdle(_graphics_queues[queue_index]);
   }
 }
@@ -2779,13 +2806,13 @@ VkSampler VulkanAPI::createTextureSampler(uint32_t const mip_lvl)
       VkResult result = vkQueueSubmit(queue, static_cast<uint32_t>(submit_infos.size()), submit_infos.data(), fence);
 
       if (result != VK_SUCCESS) {
-        //Logger::error("Error on queue submit: {}", static_cast<int>(result));
+        Logger::error("Error on queue submit: {}", static_cast<int>(result));
       }
 
       result = vkQueuePresentKHR(queue, &present_info);
 
       if (result != VK_SUCCESS) {
-        //Logger::error("Error on queue present: {}", static_cast<int>(result));
+        Logger::error("Error on queue present: {}", static_cast<int>(result));
       }
 
       //vkQueueWaitIdle(queue);

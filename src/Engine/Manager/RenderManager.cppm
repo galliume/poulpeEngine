@@ -77,6 +77,10 @@ namespace Poulpe
       IDType const entity_id,
       bool const has_alpha_blend = false);
 
+    void drawShadowMap(
+      IDType const entity_id,
+      bool const has_alpha_blend = false);
+
   private:
     void loadData(std::string const & level);
 
@@ -85,6 +89,7 @@ namespace Poulpe
     void prepareSkybox();
     void prepareTerrain();
     void prepareWater();
+    void prepareShadowMap();
 
   private:
     std::string _current_level;

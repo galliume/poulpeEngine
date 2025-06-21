@@ -46,12 +46,12 @@ namespace Poulpe
     light.ads = glm::vec3(10.0f, 30.0f, 40.0f);
     light.clq = glm::vec3(1.0f, 0.7f, 1.8f);
 
-    float aspect = (2560.f) / (1440.f);
-    light.projection = glm::perspective(glm::radians(90.0f), aspect, 1.f, 100.0f);
+    float aspect = (2560.f) / (2560.f);
+    light.projection = glm::ortho(-10.0f, 10.0f, 10.0f, -10.0f, near_plane, far_plane);
 
     light.light_space_matrix = glm::lookAt(
       light.position,
-      light.position + glm::vec3(1.0, 0.0, 0.0),
+      glm::vec3(0.0, 0.0, 0.0),
       glm::vec3(0.0f, 0.0f, -1.0f)) * light.projection;//used as light_space_matrix_front
 
     light.light_space_matrix_left = glm::lookAt(

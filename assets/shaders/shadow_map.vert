@@ -86,19 +86,34 @@ layout(push_constant) uniform constants
 } pc;
 
 layout(location = 0) out FRAG_VAR {
-  vec3 light_pos;
   float far_plane;
-  vec4 position;
+  vec4 frag_position;
+  vec3 light_position;
+  mat4 light_space_matrix;
+  mat4 light_space_matrix_left;
+  mat4 light_space_matrix_top;
+  mat4 light_space_matrix_right;
+  mat4 light_space_matrix_bottom;
+  mat4 light_space_matrix_back;
 } var;
 
 void main()
 {
   Light light = point_lights[1];
 
-  var.light_pos = light.position;
+  var.light_position = light.position;
+  var.light_space_matrix = light.light_space_matrix;
+  var.light_space_matrix_left = light.light_space_matrix_left;
+  var.light_space_matrix_top = light.light_space_matrix_top;
+  var.light_space_matrix_right = light.light_space_matrix_right;
+  var.light_space_matrix_bottom = light.light_space_matrix_bottom;
+  var.light_space_matrix_back = light.light_space_matrix_back;
+
   var.far_plane = 25.0f;
 
   //vec4 p = ubo.projection * pc.view * vec4(position, 1.0);
   //gl_Position = p.xyww;
-  gl_Position = (ubo.model * vec4(position, 1.0));
+  gl_Position = pc.view * ubo.model * vec4(position, 1.0);
+
+  var.frag_position = gl_Position;
 } 
