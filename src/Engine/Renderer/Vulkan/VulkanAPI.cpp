@@ -435,7 +435,6 @@ void VulkanAPI::createLogicalDevice()
   device_features.samplerAnisotropy = VK_TRUE;
   device_features.sampleRateShading = VK_TRUE;
   device_features.imageCubeArray = VK_TRUE;
-  device_features.geometryShader = VK_TRUE;
   device_features.depthBiasClamp = VK_TRUE;
   device_features.depthClamp = VK_TRUE;
   device_features.geometryShader = VK_TRUE;
@@ -447,6 +446,7 @@ void VulkanAPI::createLogicalDevice()
   descriptor_indexing.runtimeDescriptorArray = VK_TRUE;
   descriptor_indexing.descriptorBindingVariableDescriptorCount = VK_TRUE;
   descriptor_indexing.descriptorBindingPartiallyBound = VK_TRUE;
+  descriptor_indexing.descriptorBindingUniformBufferUpdateAfterBind = VK_TRUE;
 
   VkPhysicalDeviceVulkan13Features vulkan_features13 = {};
   vulkan_features13.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES;
@@ -471,7 +471,10 @@ void VulkanAPI::createLogicalDevice()
 
   VkPhysicalDeviceVulkan12Features device12_features{};
   device12_features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES;
-  device12_features.timelineSemaphore  = true;
+  device12_features.timelineSemaphore  = VK_TRUE;
+  device12_features.descriptorBindingUniformBufferUpdateAfterBind = VK_TRUE;
+  device12_features.descriptorBindingSampledImageUpdateAfterBind = VK_TRUE;
+  device12_features.descriptorBindingStorageBufferUpdateAfterBind = VK_TRUE;
   device12_features.pNext = &ext_dynamic_state;
 
   VkPhysicalDevicePresentWaitFeaturesKHR present_wait_feature{};
@@ -699,16 +702,26 @@ VkImageView VulkanAPI::createImageView(
 VkDescriptorSetLayout VulkanAPI::createDescriptorSetLayout(
   std::vector<VkDescriptorSetLayoutBinding> const& bindings)
 {
+  auto const bindings_count {static_cast<uint32_t>(bindings.size())};
+
+  std::vector<VkDescriptorBindingFlags> binding_flags{};
+  binding_flags.resize(bindings_count, VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT);
+
+  VkDescriptorSetLayoutBindingFlagsCreateInfo flags{};
+  flags.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_BINDING_FLAGS_CREATE_INFO;
+  flags.bindingCount = bindings_count;
+  flags.pBindingFlags = binding_flags.data();
+
   VkDescriptorSetLayout descset_layout{};
 
   VkDescriptorSetLayoutCreateInfo layout_info{};
   layout_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-  layout_info.bindingCount = static_cast<uint32_t>(bindings.size());
+  layout_info.bindingCount = bindings_count;
   layout_info.pBindings = bindings.data();
   layout_info.flags = VK_DESCRIPTOR_SET_LAYOUT_CREATE_UPDATE_AFTER_BIND_POOL_BIT;
-  //VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT
-  if (vkCreateDescriptorSetLayout(_device, &layout_info, nullptr, &descset_layout) != VK_SUCCESS)
-  {
+  layout_info.pNext = &flags;
+
+  if (vkCreateDescriptorSetLayout(_device, &layout_info, nullptr, &descset_layout) != VK_SUCCESS) {
     throw std::runtime_error("failed to create descriptor set layout!");
   }
   return descset_layout;
@@ -2806,8 +2819,7 @@ VkSampler VulkanAPI::createTextureSampler(uint32_t const mip_lvl)
   {
     {
       //SCOPED_TIMER();
-
-      std::lock_guard<std::mutex> guard(_mutex_queue_submit);
+      //std::lock_guard<std::mutex> guard(_mutex_queue_submit);
       VkResult result = vkQueueSubmit(queue, static_cast<uint32_t>(submit_infos.size()), submit_infos.data(), fence);
 
       if (result != VK_SUCCESS) {

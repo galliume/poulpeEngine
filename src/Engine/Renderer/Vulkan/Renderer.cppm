@@ -38,7 +38,6 @@ namespace Poulpe
     public:
       std::vector<VkCommandBuffer> cmd_buffers{};
       std::vector<std::vector<VkPipelineStageFlags>> stage_flags{};
-      std::vector<VkSemaphore> semaphores{};
       std::vector<bool> is_attachments{ };
 
       DrawCommands(size_t const size)
@@ -49,7 +48,6 @@ namespace Poulpe
 
       void insert(
         VkCommandBuffer& cmd_buffer,
-        VkSemaphore& semaphore,
         uint32_t const thread_id,
         bool const is_attachment,
         std::vector<VkPipelineStageFlags> flags = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT })
@@ -58,7 +56,6 @@ namespace Poulpe
           std::lock_guard<std::mutex> guard(_m);
           cmd_buffers[thread_id] = cmd_buffer;
           stage_flags[thread_id] = flags;
-          semaphores[thread_id] = semaphore;
           is_attachments[thread_id] = is_attachment;
         }
       }
@@ -67,7 +64,6 @@ namespace Poulpe
       {
         cmd_buffers.clear();
         stage_flags.clear();
-        semaphores.clear();
 
         init();
       }
@@ -89,7 +85,6 @@ namespace Poulpe
       {
         cmd_buffers.resize(_size, nullptr);
         stage_flags.resize(_size, { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT });
-        semaphores.resize(_size, nullptr);
         is_attachments.resize(_size, false);
       }
 
@@ -257,7 +252,7 @@ namespace Poulpe
 
     std::vector<VkSemaphore> _image_available;
     std::vector<VkSemaphore> _sema_present_completes;
-    std::vector<VkSemaphore> _sema_render_completes;
+    std::vector<std::vector<VkSemaphore>> _sema_render_completes;
 
     std::vector<VkFence> _images_in_flight{};
     std::vector<VkFence> _fences_in_flight{};
