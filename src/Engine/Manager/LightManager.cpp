@@ -39,45 +39,50 @@ namespace Poulpe
     _sun.projection = projection;
     _sun.light_space_matrix = _sun.projection * _sun.view;
 
+    float aspect = 1600.f / 900.f;
+    float fov = glm::radians(90.0f);
+    glm::mat4 shadow_cubemap_projection = glm::perspective(fov, 1.0f, 1.0f, 50.f);
+    shadow_cubemap_projection[1][1] *= -1;
+
     Light light;
     light.color = glm::vec3(255.f/255.f, 100.f/255.f, 0.f);
     light.position = glm::vec3(0.0f, 50.f, 0.0f);
-    light.direction = glm::vec3(-0.1f, -1.0, 0.0);
+    light.direction = glm::vec3(-0.1f, -1.0f, 0.0f);
     light.ads = glm::vec3(10.0f, 30.0f, 40.0f);
     light.clq = glm::vec3(1.0f, 0.7f, 1.8f);
-
-    float aspect = (2560.f) / (2560.f);
-    light.projection = glm::ortho(-10.0f, 10.0f, 10.0f, -10.0f, near_plane, far_plane);
-
-    light.light_space_matrix = glm::lookAt(
+    
+    light.projection = shadow_cubemap_projection;//glm::ortho(-10.0f, 10.0f, 10.0f, -10.0f, near_plane, far_plane);
+    light.light_space_matrix_right = light.projection * glm::lookAt(
       light.position,
-      glm::vec3(0.0, 0.0, 0.0),
-      glm::vec3(0.0f, 0.0f, -1.0f)) * light.projection;//used as light_space_matrix_front
+      light.position + glm::vec3(1.0f, 0.0f, 0.0f),
+      glm::vec3(0.0f, -1.0f, 0.0f));
 
-    light.light_space_matrix_left = glm::lookAt(
+    light.light_space_matrix_left = light.projection * glm::lookAt(
       light.position,
-      light.position + glm::vec3(-1.0, 0.0, 0.0),
-      glm::vec3(0.0f, 0.0f, -1.0f)) * light.projection;
+      light.position + glm::vec3(-1.0f, 0.0f, 0.0f),
+      glm::vec3(0.0f, -1.0f, 0.0f));
 
-    light.light_space_matrix_top = glm::lookAt(
+    light.light_space_matrix_top = light.projection * glm::lookAt(
       light.position,
-      light.position + glm::vec3(0.0, 1.0, 0.0),
-      glm::vec3(0.0f, 1.0f, 0.0f)) * light.projection;
+      light.position + glm::vec3(0.0f, 1.0f, 0.0f),
+      glm::vec3(0.0f, 0.0f, 1.0f));
 
-    light.light_space_matrix_right = glm::lookAt(
+    light.light_space_matrix_bottom = light.projection * glm::lookAt(
       light.position,
-      light.position + glm::vec3(0.0, -1.0, 0.0),
-      glm::vec3(0.0f, -1.0f, 0.0f)) * light.projection;
+      light.position + glm::vec3(0.0f, -1.0f, 0.0f),
+      glm::vec3(0.0f, 0.0f, -1.0f));
 
-    light.light_space_matrix_bottom = glm::lookAt(
+    light.light_space_matrix = light.projection * glm::lookAt(
       light.position,
-      light.position + glm::vec3(0.0, 0.0, 1.0),
-      glm::vec3(0.0f, 0.0f, -1.0f)) * light.projection;
+      light.position + glm::vec3(0.0f, 0.0f, 1.0f),
+      glm::vec3(0.0f, -1.0f, 0.0f)); //used as light_space_matrix_front
 
-    light.light_space_matrix_back = glm::lookAt(
+    light.light_space_matrix_back = light.projection * glm::lookAt(
       light.position,
-      light.position + glm::vec3(0.0, 0.0, -1.0),
-      glm::vec3(0.0f, 0.0f, -1.0f)) * light.projection;
+      light.position + glm::vec3(0.0f, 0.0f, -1.0f),
+      glm::vec3(0.0f, -1.0f, 0.0f));
+
+    light.view = light.light_space_matrix;
 
     Light light2;
     light2.color = glm::vec3(1.0f);

@@ -7,13 +7,6 @@
       "tesc": "",
       "tese": ""
     },
-    "main_basic_no_texture": {
-      "vert": "assets/shaders/spv/main_basic_no_texture_vert.spv",
-      "frag": "assets/shaders/spv/main_basic_no_texture_frag.spv",
-      "geom": "",
-      "tesc": "",
-      "tese": ""
-    },
     "skybox": {
       "vert": "assets/shaders/spv/skybox_vert.spv",
       "frag": "assets/shaders/spv/skybox_frag.spv",

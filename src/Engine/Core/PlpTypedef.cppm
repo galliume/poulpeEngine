@@ -356,7 +356,8 @@ namespace Poulpe
     VkCullModeFlagBits cull_mode = VK_CULL_MODE_BACK_BIT;
     VkPrimitiveTopology topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
     VkPolygonMode polygone_mode = VK_POLYGON_MODE_FILL;
-  
+    VkCompareOp compare_op = VK_COMPARE_OP_LESS_OR_EQUAL;
+
     bool has_color_attachment{ false };
     bool has_depth_test{ false };
     bool has_depth_write{ false };

@@ -283,51 +283,51 @@ namespace Poulpe
 
     mesh->setDescSet(descset);
 
-    // std::array<VkWriteDescriptorSet, 2> descset_writes{};
-    // std::vector<VkDescriptorBufferInfo> buffer_infos;
-    // std::vector<VkDescriptorBufferInfo> buffer_storage_infos;
+    std::array<VkWriteDescriptorSet, 2> descset_writes{};
+    std::vector<VkDescriptorBufferInfo> buffer_infos;
+    std::vector<VkDescriptorBufferInfo> buffer_storage_infos;
 
-    // std::for_each(std::begin(mesh->getUniformBuffers()), std::end(mesh->getUniformBuffers()),
-    //   [&buffer_infos](const Buffer& uniformBuffer)
-    //   {
-    //     VkDescriptorBufferInfo buffer_info{};
-    //     buffer_info.buffer = uniformBuffer.buffer;
-    //     buffer_info.offset = 0;
-    //     buffer_info.range = VK_WHOLE_SIZE;
-    //     buffer_infos.emplace_back(buffer_info);
-    //   });
+    std::for_each(std::begin(mesh->getUniformBuffers()), std::end(mesh->getUniformBuffers()),
+      [&buffer_infos](const Buffer& uniformBuffer)
+      {
+        VkDescriptorBufferInfo buffer_info{};
+        buffer_info.buffer = uniformBuffer.buffer;
+        buffer_info.offset = 0;
+        buffer_info.range = VK_WHOLE_SIZE;
+        buffer_infos.emplace_back(buffer_info);
+      });
 
-    // auto const& shadow_map_pipeline = renderer->getPipeline("shadowMap");
-    // VkDescriptorSet shadow_map_descset = renderer->getAPI()->createDescriptorSets(shadow_map_pipeline->desc_pool, { shadow_map_pipeline->descset_layout }, 1);
+    auto const& shadow_map_pipeline = renderer->getPipeline("shadow_map");
+    VkDescriptorSet shadow_map_descset = renderer->getAPI()->createDescriptorSets(shadow_map_pipeline->desc_pool, { shadow_map_pipeline->descset_layout }, 1);
 
-    // std::for_each(std::begin(*mesh->getStorageBuffers()), std::end(*mesh->getStorageBuffers()),
-    //   [&buffer_storage_infos](const Buffer& storageBuffers)
-    //   {
-    //     VkDescriptorBufferInfo buffer_info{};
-    //     buffer_info.buffer = storageBuffers.buffer;
-    //     buffer_info.offset = 0;
-    //     buffer_info.range = VK_WHOLE_SIZE;
-    //     buffer_storage_infos.emplace_back(buffer_info);
-    //   });
+    std::for_each(std::begin(*mesh->getStorageBuffers()), std::end(*mesh->getStorageBuffers()),
+      [&buffer_storage_infos](const Buffer& storageBuffers)
+      {
+        VkDescriptorBufferInfo buffer_info{};
+        buffer_info.buffer = storageBuffers.buffer;
+        buffer_info.offset = 0;
+        buffer_info.range = VK_WHOLE_SIZE;
+        buffer_storage_infos.emplace_back(buffer_info);
+      });
 
-    // descset_writes[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-    // descset_writes[0].dstSet = shadow_map_descset;
-    // descset_writes[0].dstBinding = 0;
-    // descset_writes[0].dstArrayElement = 0;
-    // descset_writes[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-    // descset_writes[0].descriptorCount = 1;
-    // descset_writes[0].pBufferInfo = buffer_infos.data();
+    descset_writes[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    descset_writes[0].dstSet = shadow_map_descset;
+    descset_writes[0].dstBinding = 0;
+    descset_writes[0].dstArrayElement = 0;
+    descset_writes[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    descset_writes[0].descriptorCount = 1;
+    descset_writes[0].pBufferInfo = buffer_infos.data();
 
-    // descset_writes[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-    // descset_writes[1].dstSet = shadow_map_descset;
-    // descset_writes[1].dstBinding = 1;
-    // descset_writes[1].dstArrayElement = 0;
-    // descset_writes[1].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-    // descset_writes[1].descriptorCount = static_cast<uint32_t>(buffer_storage_infos.size());
-    // descset_writes[1].pBufferInfo = buffer_storage_infos.data();
+    descset_writes[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    descset_writes[1].dstSet = shadow_map_descset;
+    descset_writes[1].dstBinding = 1;
+    descset_writes[1].dstArrayElement = 0;
+    descset_writes[1].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+    descset_writes[1].descriptorCount = static_cast<uint32_t>(buffer_storage_infos.size());
+    descset_writes[1].pBufferInfo = buffer_storage_infos.data();
 
-    // vkUpdateDescriptorSets(renderer->getDevice(), static_cast<uint32_t>(descset_writes.size()), descset_writes.data(), 0, nullptr);
+    vkUpdateDescriptorSets(renderer->getDevice(), static_cast<uint32_t>(descset_writes.size()), descset_writes.data(), 0, nullptr);
 
-    // mesh->setShadowMapDescSet(shadow_map_descset);
+    mesh->setShadowMapDescSet(shadow_map_descset);
   }
 }

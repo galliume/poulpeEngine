@@ -89,8 +89,8 @@ namespace Poulpe
   }
 
   void ShadowMap::createDescriptorSet(
-    Renderer *const renderer,
-    ComponentRenderingInfo const& component_rendering_info)
+    Renderer *const,
+    ComponentRenderingInfo const&)
   {
     // auto const& mesh = component_rendering_info.mesh;
     // auto const& tex{ component_rendering_info.textures.at(mesh->getData()->_textures.at(0)) };

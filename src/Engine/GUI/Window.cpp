@@ -24,10 +24,11 @@ namespace Poulpe
     std::string_view window_title,
     bool const editor_mode)
   {
-    // int const WIDTH = 2560;
-    // int const HEIGHT = 1440;
-     int const WIDTH = 1600;
-     int const HEIGHT = 900;
+
+    int const WIDTH = 1600;
+    int const HEIGHT = 900;
+    //  int const WIDTH = 800;
+    //  int const HEIGHT = 600;
 
     glfwInit();
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);

@@ -1,0 +1,137 @@
+{
+  "terrain": {
+    "height_map_1": {
+      "path": "assets/texture/terrain/height_map_1.ktx2"
+    }
+  },
+  "water": {
+    "_water_foam": {
+      "path": "assets/texture/water/_water_foam.ktx2"
+    },
+    "_water_normal": {
+      "path": "assets/texture/water/_water_normal.ktx2"
+    },
+    "_water_normal2": {
+      "path": "assets/texture/water/_water_normal2.ktx2"
+    }
+  },
+  "camera": {
+    "position": {
+      "x": -38.0,
+      "y": 18.0,
+      "z": -3.0
+    }
+  },
+  "entities": {
+    "backpack" : {
+      "mesh": "assets/mesh/backpack/backpack.obj",
+      "textures": {
+        "diffuse": {
+          "path" : "assets/mesh/backpack/diffuse.ktx2"
+        },
+        "specular": { 
+          "path" : "assets/mesh/backpack/specular.ktx2"
+        }
+      },
+      "ao": {
+        "ao": {
+          "path" : "assets/mesh/backpack/ao.ktx2"
+        }
+      },
+      "mr": {
+        "roughness": {
+          "path" : "assets/mesh/backpack/roughness.ktx2"
+        }
+      },
+      "emissive": {
+      },
+      "normal": {
+        "normal": {
+          "path" : "assets/mesh/backpack/normal.ktx2"
+        }
+      },
+      "shader": "main_basic",
+      "positions": [
+        {
+          "x": -5.0,
+          "y": 2.5,
+          "z": 0.0
+        }
+      ],
+      "scales": [
+        {
+          "x": 1.0,
+          "y": 1.0,
+          "z": 1.0
+        }
+      ],
+      "rotations": [
+        {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
+        }
+      ],
+      "flipY": true,
+      "count": 1,
+      "hasBbox": false,
+      "hasAnimation": true,
+      "isPointLight": false,
+      "animationScripts": {
+        "anim0" : "assets/scripts/animation/backpack/anim0.lua"
+      },
+      "hasShadow": true,
+      "isIndexed": true,
+      "debugNormal": true
+    },
+    "Grass_Block" : {
+      "mesh": "assets/mesh/minecraft/Grass_Block.obj",
+      "textures": {
+        "Grass_Block_TEX": {
+          "path" : "assets/mesh/minecraft/Grass_Block_TEX.ktx2"
+        }
+      },
+      "ao": {
+      },
+      "mr": {
+      },
+      "emissive": {
+      },
+      "normal": {
+      },
+      "shader": "main_basic",
+      "positions": [
+        {
+          "x": 0.3,
+          "y": 1.0,
+          "z": 0.0
+        }
+      ],
+      "scales": [
+        {
+          "x": 1.0,
+          "y": 1.0,
+          "z": 1.0
+        }
+      ],
+      "rotations": [
+        {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
+        }
+      ],
+      "flipY": false,
+      "count": 1,
+      "hasBbox": false,
+      "hasAnimation": true,
+      "animationScripts": {
+        "anim0" : "assets/scripts/animation/grassBlock/anim0.lua"
+      },
+      "isPointLight": false,
+      "hasShadow": true,
+      "isIndexed": true,
+      "debugNormal": true
+    }
+  }
+}

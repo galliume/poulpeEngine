@@ -236,7 +236,8 @@ namespace Poulpe
     //std::vector<IObserver*> _Observers{};
 
     std::vector<VkImage> _depthmap_images;
-    std::vector<VkImageView> _depthmap_imageviews;
+    std::vector<VkImageView> _depthmap_imageviews;//sampling
+    std::vector<VkImageView> _depthmap_imageviews_rendering;
     std::vector<VkSampler> _depthmap_samplers;
 
     std::vector<VkImage> _depthmap_images2;

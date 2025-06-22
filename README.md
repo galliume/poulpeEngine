@@ -48,23 +48,23 @@ cmake --list-presets
 
 Configure with a preset
 ```
-cmake --preset windows-debug
+cmake --preset windows-release
 ``` 
 
 Compile with a preset
 ```
-cmake --build --preset windows-debug
+cmake --build --preset windows-dereleasebug
 ```
 
 Launch from the root directory
 ```
-build/windows-debug/PoulpeEngine
+build/windows-release/PoulpeEngine.exe
 ```
 
 or to run the editor (Windows only)
 
 ```
-build/windows-debug/PoulpeEngine -E
+build/windows-release/PoulpeEngine.exe -E
 ```
 
 Or open the project with a cmake able IDE (VS 2022, VS Code...)

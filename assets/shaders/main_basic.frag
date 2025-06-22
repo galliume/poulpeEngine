@@ -59,7 +59,7 @@ struct Light {
   mat4 light_space_matrix_top;
   mat4 light_space_matrix_right;
   mat4 light_space_matrix_bottom;
-  mat4 light_space_matrix_back;  
+  mat4 light_space_matrix_back;
 };
 
 struct Material
@@ -153,28 +153,41 @@ float linear_to_sRGB(float color)
   }
 }
 
-float ShadowCalculation(vec4 light_space, float NdL)
+float ShadowCalculation(vec3 light_coord, Light l, float NdL)
 {
-  vec3 p = light_space.xyz / light_space.w;
-  //p = p * 0.5 + 0.5;
-  // float light = texture(tex_shadow_sampler[SHADOW_MAP_INDEX], p);
-  
-  // ivec2 size = textureSize(tex_shadow_sampler[SHADOW_MAP_INDEX], 0);
-  // float shadow_xoffset = 1.0 / float(size.x);
-  // float shadow_yoffset = 1.0 / float(size.y);
-  // float bias = 0.000001;
-  
-  // p.x -= shadow_xoffset;
-  // p.y -= shadow_yoffset;
-  // light += texture(tex_shadow_sampler[SHADOW_MAP_INDEX], vec3(p.xy, p.z - bias));
-  // p.x += shadow_xoffset * 2.0;
-  // light += texture(tex_shadow_sampler[SHADOW_MAP_INDEX], vec3(p.xy, p.z - bias));
-  // p.y += shadow_yoffset * 2.0;
-  // light += texture(tex_shadow_sampler[SHADOW_MAP_INDEX], vec3(p.xy, p.z - bias));
-  // p.x -= shadow_xoffset * 2.0;
-  // light += texture(tex_shadow_sampler[SHADOW_MAP_INDEX], vec3(p.xy, p.z - bias));
+  vec3 p = light_coord;
+  float shadow_offset = 2.f/3200.f;
+  vec2 depth_transform = vec2(l.projection[2][2], l.projection[2][3]);
 
-  float light = 1.0;
+  vec3 absq = abs(p);
+  float mxy = max(absq.x, absq.y);
+  float m = max(mxy, absq.z);
+
+  float offset = shadow_offset * m;
+  float dxy  = (mxy > absq.z) ? offset : 0.0;
+  float dx  = (absq.x > absq.y) ? dxy : 0.0;
+  vec2 oxy = vec2(offset - dx, dx);
+  vec2 oyz = vec2(offset - dxy, dxy);
+
+  vec3 limit = vec3(m, m, m);
+  limit.xy -= oxy * (1.0 / 3200);
+  limit.yz -= oyz * (1.0 / 3200);
+
+  //float depth = depth_transform.x + depth_transform.y / m;
+  float depth = length(p) / 50.0f;//far plane
+  float light = texture(tex_shadow_sampler, vec4(p, depth));
+
+  p.xy -= oxy;
+  p.yz -= oyz;
+  light += texture(tex_shadow_sampler, vec4(clamp(p.xyz, -limit, limit), depth));
+  p.xy += oxy * 2.0;
+  light += texture(tex_shadow_sampler, vec4(clamp(p.xyz, -limit, limit), depth));
+  p.yz += oyz * 2.0;
+  light += texture(tex_shadow_sampler, vec4(clamp(p.xyz, -limit, limit), depth));
+  p.xy -= oxy * 2.0;
+  light += texture(tex_shadow_sampler, vec4(clamp(p.xyz, -limit, limit), depth));
+
+  light *= 0.2;
 
   return light;
 }
@@ -408,19 +421,19 @@ void main()
 
    //vec3 radiance = vec3(1.0) * ao;
   vec3 C_sun = (kD * diffuse + specular) * radiance * 0.01;
-  vec3 C_ambient = albedo.xyz * 0.1;
+  vec3 C_ambient = albedo.xyz * 0.01;
 
-  for (int i = 2; i < NR_POINT_LIGHTS; ++i) {
+  for (int i = 1; i < NR_POINT_LIGHTS; ++i) {
 
     vec3 light_pos = point_lights[i].position;
     vec3 l = normalize(light_pos - p);
 
     //@todo check thoses attenuation functions
     //float d = length(light_pos - p);
-    float attenuation = SmoothAttenuation(l, 50.0);
+    float attenuation = SmoothAttenuation(l, 1.5);
     //float attenuation = 1.0 / (point_lights[i].clq.x + point_lights[i].clq.y * d + point_lights[i].clq.z * (d * d));
     //vec3 C_light = srgb_to_linear(point_lights[i].color.rgb) * attenuation;
-    vec3 C_light = point_lights[i].color.rgb * attenuation;
+    vec3 C_light = point_lights[i].color.rgb * attenuation * 2.0;
    
     vec3 h = normalize(l + v);
     float NdL = max(dot(normal, l), 0.00001);
@@ -450,9 +463,10 @@ void main()
 
   vec4 color = vec4(C_ambient + C_sun + out_lights, color_alpha);
 
-  float shadow = ShadowCalculation(var.light_space, NdL);
-  float shadowFactor = max(shadow, 0.01);
-  //color.xyz *= shadowFactor;
+  vec3 frag_to_light = p - point_lights[1].position;
+  float shadow = ShadowCalculation(frag_to_light, point_lights[1], NdL);
+  float shadowFactor = max(shadow, 0.1);
+  color.xyz *= shadowFactor;
   color.xyz *= ao;
   color.xyz *= PI;
 

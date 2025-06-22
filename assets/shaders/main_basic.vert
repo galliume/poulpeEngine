@@ -121,7 +121,7 @@ void main()
   vec4 world_pos = ubo.model * vec4(position, 1.0f);
   frag_var.frag_pos = world_pos.xyz;
   frag_var.view_pos = pc.view_position;
-  frag_var.light_space = biasMat * ubo.projection * point_lights[1].view * ubo.model * vec4(position, 1.0);
+  frag_var.light_space = ubo.projection * point_lights[1].view * ubo.model * vec4(position, 1.0);
   frag_var.texture_coord = texture_coord;
   frag_var.norm = norm;
   frag_var.color = color;
