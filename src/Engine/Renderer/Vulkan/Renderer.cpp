@@ -181,6 +181,8 @@ namespace Poulpe
       _vulkan->createDepthMapImage(image, true);
       _depthmap_images.emplace_back(image);
       _depthmap_imageviews.emplace_back(_vulkan->createDepthMapImageView(image, true));
+      _depthmap_imageviews_rendering.emplace_back(_vulkan->createDepthMapImageView(image, true, false));
+
       _depthmap_samplers.emplace_back(_vulkan->createDepthMapSampler());
     }
 
@@ -434,7 +436,7 @@ namespace Poulpe
     depth_attachment_info.clearValue.depthStencil = depth_stencil;
     depth_attachment_info.clearValue.color = color_clear;
 
-    uint32_t const width{ _vulkan->getSwapChainExtent().width };
+    uint32_t const width{ _vulkan->getSwapChainExtent().width * 2 };
     //uint32_t const height{ _vulkan->getSwapChainExtent().height * 2 };
     //uint32_t const width{ 2048 };
     //uint32_t const height{ 2048 };
@@ -443,7 +445,7 @@ namespace Poulpe
     rendering_info.sType = VK_STRUCTURE_TYPE_RENDERING_INFO;
     rendering_info.renderArea.extent.width = width;
     rendering_info.renderArea.extent.height = width;
-    rendering_info.layerCount = 1;
+    rendering_info.layerCount = 6;
     rendering_info.pDepthAttachment = &depth_attachment_info;
     rendering_info.colorAttachmentCount = 0;
     //rendering_info.flags = VK_SUBPASS_CONTENTS_INLINE;
@@ -470,11 +472,8 @@ namespace Poulpe
     vkCmdSetDepthClampEnableEXT(cmd_buffer, VK_TRUE);
     vkCmdSetDepthBias(cmd_buffer, depth_bias_constant, depth_bias_clamp, depth_bias_slope);
 
-    std::vector<VkBool32> blend_enable{ VK_TRUE, VK_TRUE};
-    vkCmdSetColorBlendEnableEXT(cmd_buffer, 0, 2, blend_enable.data());
-
-    //std::vector<VkBool32> blend_enable{ VK_FALSE };
-    //vkCmdSetColorBlendEnableEXT(cmd_buffer, 0, 1, blend_enable.data());
+    std::vector<VkBool32> blend_enable{ VK_FALSE };
+    vkCmdSetColorBlendEnableEXT(cmd_buffer, 0, 1, blend_enable.data());
 
     VkColorBlendEquationEXT colorBlendEquation{};
     colorBlendEquation.colorBlendOp = VK_BLEND_OP_ADD;
@@ -496,68 +495,30 @@ namespace Poulpe
     auto const& mesh = renderer_info.mesh;
     auto const& camera = renderer_info.camera;
 
+    glm::vec4 options{0.0f};
+    options.x = 50.f;
+
     constants push_constants{};
-    push_constants.options = mesh->getOptions();
+    push_constants.options = options;
     push_constants.view_position = camera->getPos();
     push_constants.view = renderer_info.point_lights.at(1).view;
 
-    vkCmdBindDescriptorSets(
-      cmd_buffer,
-      VK_PIPELINE_BIND_POINT_GRAPHICS,
-      pipeline->pipeline_layout,
-      0, 1, &pipeline->descset, 0, nullptr);
-
     vkCmdPushConstants(
-      cmd_buffer, 
+      cmd_buffer,
       pipeline->pipeline_layout,
-      VK_SHADER_STAGE_VERTEX_BIT,
+      VK_SHADER_STAGE_VERTEX_BIT
+      | VK_SHADER_STAGE_FRAGMENT_BIT,
       0,
       sizeof(constants),
       &push_constants);
 
-    std::array<VkWriteDescriptorSet, 2> descset_writes{};
-    std::vector<VkDescriptorBufferInfo> buffer_infos;
-    std::vector<VkDescriptorBufferInfo> buffer_storage_infos;
-
-    std::for_each(std::begin(mesh->getUniformBuffers()), std::end(mesh->getUniformBuffers()),
-      [&buffer_infos](const Buffer& uniformBuffer)
-      {
-        VkDescriptorBufferInfo buffer_info{};
-        buffer_info.buffer = uniformBuffer.buffer;
-        buffer_info.offset = 0;
-        buffer_info.range = VK_WHOLE_SIZE;
-        buffer_infos.emplace_back(buffer_info);
-      });
-
-    std::for_each(std::begin(*mesh->getStorageBuffers()), std::end(*mesh->getStorageBuffers()),
-      [&buffer_storage_infos](const Buffer& storageBuffers)
-      {
-        VkDescriptorBufferInfo buffer_info{};
-        buffer_info.buffer = storageBuffers.buffer;
-        buffer_info.offset = 0;
-        buffer_info.range = VK_WHOLE_SIZE;
-        buffer_storage_infos.emplace_back(buffer_info);
-      });
-
-    descset_writes[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-    descset_writes[0].dstSet = pipeline->descset;
-    descset_writes[0].dstBinding = 0;
-    descset_writes[0].dstArrayElement = 0;
-    descset_writes[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-    descset_writes[0].descriptorCount = 1;
-    descset_writes[0].pBufferInfo = buffer_infos.data();
-
-    descset_writes[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-    descset_writes[1].dstSet = pipeline->descset;
-    descset_writes[1].dstBinding = 1;
-    descset_writes[1].dstArrayElement = 0;
-    descset_writes[1].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-    descset_writes[1].descriptorCount = static_cast<uint32_t>(buffer_storage_infos.size());
-    descset_writes[1].pBufferInfo = buffer_storage_infos.data();
+   vkCmdBindDescriptorSets(
+      cmd_buffer,
+      VK_PIPELINE_BIND_POINT_GRAPHICS,
+      pipeline->pipeline_layout,
+      0, 1, mesh->getShadowMapDescSet(), 0, nullptr);
 
     _vulkan->bindPipeline(cmd_buffer, pipeline->pipeline);
-
-    vkUpdateDescriptorSets(_vulkan->getDevice(), static_cast<uint32_t>(descset_writes.size()), descset_writes.data(), 0, nullptr);
 
     _vulkan->draw(
       cmd_buffer,

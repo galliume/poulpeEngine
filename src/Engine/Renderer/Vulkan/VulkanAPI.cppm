@@ -389,7 +389,8 @@ namespace Poulpe
 
     VkImageView createDepthMapImageView(
       VkImage& image,
-      bool const is_cube_map = false);
+      bool const is_cube_map = false,
+      bool const is_sampling = true);
 
     VkSampler createDepthMapSampler();
 

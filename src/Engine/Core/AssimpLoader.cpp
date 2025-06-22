@@ -604,7 +604,7 @@ namespace Poulpe
         if (mesh->mNumUVComponents[0] > 0) {
           aiVector3D texture_coord = mesh->mTextureCoords[0][v];
           vertex.texture_coord = { texture_coord.x, texture_coord.y };
-          //if (flip_Y) vertex.texture_coord.y *= -1.0f;
+          if (flip_Y) vertex.texture_coord.y *= -1.0f;
         }
 
         glm::vec4 color{ 0.0f };

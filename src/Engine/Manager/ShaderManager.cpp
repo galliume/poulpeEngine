@@ -200,7 +200,10 @@ namespace Poulpe
       storage_binding.descriptorCount = 1;
       storage_binding.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
       storage_binding.pImmutableSamplers = nullptr;
-      storage_binding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+      storage_binding.stageFlags =
+        VK_SHADER_STAGE_VERTEX_BIT
+        | VK_SHADER_STAGE_GEOMETRY_BIT
+        | VK_SHADER_STAGE_FRAGMENT_BIT;
 
       bindings = { ubo_bingind, storage_binding };
     } else if constexpr (T == DescSetLayoutType::Terrain) {
@@ -381,9 +384,12 @@ namespace Poulpe
       pipeline_create_infos.cull_mode = VK_CULL_MODE_BACK_BIT;
       pipeline_create_infos.has_color_attachment = false;
       pipeline_create_infos.has_dynamic_depth_bias = true;
-      
+      pipeline_create_infos.has_depth_test = true;
+      pipeline_create_infos.has_depth_write = true;
+
       descset_layout = createDescriptorSetLayout<DescSetLayoutType::Offscreen>();
-      push_constants.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+      push_constants.offset = 0;
+      push_constants.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
       push_constants.size = sizeof(constants);
       need_bis = false;
       
@@ -392,10 +398,6 @@ namespace Poulpe
       dpsSB.descriptorCount = 10;
 
       poolSizes.emplace_back(dpsSB);
-
-      push_constants.offset = 0;
-      push_constants.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-      push_constants.size = sizeof(constants);
     } else {
       VkDescriptorPoolSize dpsSB;
       dpsSB.type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
@@ -442,7 +444,7 @@ namespace Poulpe
     _renderer->addPipeline(shader_name, pipeline);
   }
 
-  std::vector<VkPipelineShaderStageCreateInfo> ShaderManager::getShadersInfo(std::string const & shader_name, bool offscreen)
+  std::vector<VkPipelineShaderStageCreateInfo> ShaderManager::getShadersInfo(std::string const & shader_name, bool)
   {
     std::vector<VkPipelineShaderStageCreateInfo> shaders_infos;
 

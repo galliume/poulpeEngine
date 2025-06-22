@@ -810,7 +810,7 @@ VkPipeline VulkanAPI::createGraphicsPipeline(PipeLineCreateInfo const& pipeline_
   depth_stencil.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
   depth_stencil.depthTestEnable = (pipeline_create_info.has_depth_test == true) ? VK_TRUE : VK_FALSE;
   depth_stencil.depthWriteEnable = (pipeline_create_info.has_depth_write == true) ? VK_TRUE : VK_FALSE;
-  depth_stencil.depthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL;
+  depth_stencil.depthCompareOp = pipeline_create_info.compare_op;
   depth_stencil.depthBoundsTestEnable = VK_FALSE;
   depth_stencil.minDepthBounds = 0.0f;
   depth_stencil.maxDepthBounds = 1.0f;
@@ -2248,7 +2248,8 @@ void VulkanAPI::createDepthMapImage(
   VkImage& image,
   bool const is_cube_map)
 {
-  uint32_t const width{ getSwapChainExtent().width };
+  uint32_t const width{ getSwapChainExtent().width * 2 };
+  uint32_t const height{ getSwapChainExtent().height };
 
   VkImageCreateInfo image_info{};
   image_info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
@@ -2261,8 +2262,11 @@ void VulkanAPI::createDepthMapImage(
   image_info.format = PLP_VK_FORMAT_DEPTH;
   image_info.tiling = VK_IMAGE_TILING_OPTIMAL;
   image_info.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-  image_info.usage = VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT
-      | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
+  image_info.usage = 
+    VK_IMAGE_USAGE_SAMPLED_BIT
+    | VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT
+    | VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
+  
   image_info.samples = VK_SAMPLE_COUNT_1_BIT;
   image_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
@@ -2296,7 +2300,8 @@ void VulkanAPI::createDepthMapImage(
 
 VkImageView VulkanAPI::createDepthMapImageView(
   VkImage& image,
-  bool const is_cube_map)
+  bool const is_cube_map,
+  bool const is_sampling)
 {
   VkImageView depth_map_imageview{};
 
@@ -2313,7 +2318,7 @@ VkImageView VulkanAPI::createDepthMapImageView(
   create_info.subresourceRange.layerCount = 1;
 
   if (is_cube_map) {
-    create_info.viewType = VK_IMAGE_VIEW_TYPE_CUBE;
+    create_info.viewType = (is_sampling) ? VK_IMAGE_VIEW_TYPE_CUBE : VK_IMAGE_VIEW_TYPE_2D_ARRAY;
     create_info.subresourceRange.layerCount = 6;
   }
   VkResult result{ VK_SUCCESS };
