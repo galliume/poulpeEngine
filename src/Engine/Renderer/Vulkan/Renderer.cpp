@@ -218,8 +218,11 @@ namespace Poulpe
     semaphore_create_info.pNext = &timeline_create_info;
 
     for (size_t i { 0 }; i < _max_frames_in_flight; ++i) {
-      result = vkCreateSemaphore(_vulkan->getDevice(), &sema_create_info, nullptr, &_sema_render_completes[i]);
-      if (VK_SUCCESS != result) Logger::error("can't create _sema_render_completes semaphore");
+      _sema_render_completes[i].resize(_max_frames_in_flight);
+      for (size_t x { 0 }; x < _max_frames_in_flight; ++x) {
+        result = vkCreateSemaphore(_vulkan->getDevice(), &sema_create_info, nullptr, &_sema_render_completes[i][x]);
+        if (VK_SUCCESS != result) Logger::error("can't create _sema_render_completes semaphore");
+      }
     }
     for (size_t i { 0 }; i < _max_frames_in_flight; ++i) {
       result = vkCreateSemaphore(_vulkan->getDevice(), &sema_create_info, nullptr, &_sema_present_completes[i]);
@@ -359,7 +362,7 @@ namespace Poulpe
       0,
       sizeof(constants),
       &push_constants);
-      
+
     auto const alpha_mode{ mesh->getMaterial().alpha_mode };
 
     if (renderer_info.has_alpha_blend && alpha_mode > 0.0f) {
@@ -432,7 +435,7 @@ namespace Poulpe
     depth_attachment_info.clearValue.color = color_clear;
 
     uint32_t const width{ _vulkan->getSwapChainExtent().width };
-    uint32_t const height{ _vulkan->getSwapChainExtent().height * 2 };
+    //uint32_t const height{ _vulkan->getSwapChainExtent().height * 2 };
     //uint32_t const width{ 2048 };
     //uint32_t const height{ 2048 };
 
@@ -581,7 +584,7 @@ namespace Poulpe
 
     std::vector<VkPipelineStageFlags> flags { VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT };
     //VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL
-    _draw_cmds.insert(cmd_buffer, _sema_present_completes[_current_frame], thread_id, false, flags);
+    _draw_cmds.insert(cmd_buffer, thread_id, false, flags);
 
     _update_shadow_map = false;
   }
@@ -599,7 +602,7 @@ namespace Poulpe
     endRendering(cmd_buffer, color, depthimage, is_attachment, has_depth_attachment);
 
     std::vector<VkPipelineStageFlags> flags { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
-    _draw_cmds.insert(cmd_buffer, _sema_render_completes[_current_frame], thread_id, is_attachment, flags);
+    _draw_cmds.insert(cmd_buffer, thread_id, is_attachment, flags);
   }
 
   void Renderer::destroy()
@@ -663,11 +666,6 @@ namespace Poulpe
   {
     auto const& draw_cmds { _draw_cmds };
 
-    if (!draw_cmds.has_cmd()) {
-      //vkResetFences(_vulkan->getDevice(), 1, &_fences_in_flight[_current_frame]);
-      return;
-    }
-
     std::vector<VkCommandBuffer> cmds_buffer{};
 
     for (size_t i{ 0 }; i < draw_cmds.cmd_buffers.size(); ++i) {
@@ -675,10 +673,14 @@ namespace Poulpe
       cmds_buffer.push_back(draw_cmds.cmd_buffers.at(i));
     }
 
-    if (cmds_buffer.empty()) return;
+    if (cmds_buffer.empty()) {
+      vkResetFences(_vulkan->getDevice(), 1, &_fences_in_flight[_image_index]);
+      _current_frame = (_current_frame + 1) % _max_frames_in_flight;
+      return;
+    }
 
-    auto &semaphore_present_complete = _sema_present_completes[_current_frame];
-    auto &semaphore_render_complete = _sema_render_completes[_current_frame];
+    //auto &semaphore_present_complete = _sema_present_completes[_current_frame];
+    auto &semaphore_render_complete = _sema_render_completes[_current_frame][_image_index];
     auto &timeline_semaphore = _timeline_semaphores[_current_frame];
 
     auto &_current_timeline_value = _current_timeline_values[_current_frame];
@@ -687,9 +689,9 @@ namespace Poulpe
     std::array<uint64_t, 1> wait_values = { 0 };
     std::array<uint64_t, 2> signal_values = { entities_finished, 0 };
 
-    VkPipelineStageFlags wait_stage_mask = VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT;
+    //VkPipelineStageFlags wait_stage_mask = VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT;
     std::array<VkPipelineStageFlags, 2> graphics_wait_stage_masks = { VK_PIPELINE_STAGE_VERTEX_INPUT_BIT, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
-    std::array<VkSemaphore, 2> graphics_wait_semaphores = { _image_available[_current_frame] };
+    std::array<VkSemaphore, 1> graphics_wait_semaphores = { _image_available[_current_frame] };
     std::array<VkSemaphore, 2> graphics_signal_semaphores = { timeline_semaphore, semaphore_render_complete };
 
     VkTimelineSemaphoreSubmitInfoKHR timeline_submit_info{};
