@@ -13,7 +13,7 @@
 
 [In video](https://www.youtube.com/@galliume8395/videos)
 
-<img src="https://github.com/galliume/poulpeEngine/blob/main/screenshots/sponza.png" width="800" height="600">
+<img src="https://github.com/galliume/poulpeEngine/blob/main/screenshots/plp.png" width="800" height="600">
 <img src="https://github.com/galliume/poulpeEngine/blob/main/screenshots/helmet.png" width="800" height="450">
 
 ### To compile && execute 
