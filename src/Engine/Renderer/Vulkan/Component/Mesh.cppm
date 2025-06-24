@@ -44,6 +44,7 @@ namespace Poulpe
     void setData(Data data) { _data = std::move(data); }
     void setDescSet(VkDescriptorSet descset) { _descset = descset; }
     void setShadowMapDescSet(VkDescriptorSet descset) { _shadowmap_descset = descset; }
+    void setCSMDescSet(VkDescriptorSet descset) { _csm_descset = descset; }
     void setHasBufferStorage(bool has = true) { _has_storage_buffer = has; }
     void setHasPushConstants(bool has = true) { _has_push_contants = has; }
     void setIsDirty(bool dirty = true) { _is_dirty.store(dirty); }
@@ -55,6 +56,7 @@ namespace Poulpe
     void addUbos(std::vector<std::vector<UniformBufferObject>> const& ubos);
     
     VkDescriptorSet const * getShadowMapDescSet() const { return & _shadowmap_descset; }
+    VkDescriptorSet const * getCSMDescSet() const { return & _csm_descset; }
 
     bool hasAnimation() const { return _has_animation; }
     bool hasBufferStorage() const { return _has_storage_buffer; }
@@ -97,6 +99,7 @@ namespace Poulpe
     Data _data{};
     VkDescriptorSet _descset{};
     VkDescriptorSet _shadowmap_descset{};
+    VkDescriptorSet _csm_descset{};
     material_t _material{};
 
     glm::vec4 _options{ 0.0 }; //used for options as push constants

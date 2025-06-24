@@ -11,47 +11,12 @@ layout(set = 0, binding = 0) readonly uniform UniformBufferObject {
   UBO ubo;
 };
 
-struct Material
-{
-  vec4 base_color;
-  vec4 ambient;
-  vec4 diffuse;
-  vec4 specular;
-  vec3 transmittance;
-  vec3 shi_ior_diss; //shininess, ior, diss
-  vec3 alpha;
-  vec3 mre_factor;
-  vec3 normal_translation;
-  vec3 normal_scale;
-  vec3 normal_rotation;
-  vec3 ambient_translation;
-  vec3 ambient_scale;
-  vec3 ambient_rotation;
-  vec3 diffuse_translation;
-  vec3 diffuse_scale;
-  vec3 diffuse_rotation;
-  vec3 emissive_translation;
-  vec3 emissive_scale;
-  vec3 emissive_rotation;
-  vec3 mr_translation;
-  vec3 mr_scale;
-  vec3 mr_rotation;
-  vec3 transmission_translation;
-  vec3 transmission_scale;
-  vec3 transmission_rotation;
-  vec3 strength;//x: normal strength, y occlusion strength
-  vec4 emissive_color;
-};
-
 struct Light {
   mat4 light_space_matrix;
   mat4 projection;
   mat4 view;
-  //ambiance diffuse specular
   vec3 ads;
-  //constant, linear, quadratiq
   vec3 clq;
-  //cutOff, outerCutoff, Blank
   vec3 coB;
   vec3 color;
   vec3 direction;
@@ -61,6 +26,13 @@ struct Light {
   mat4 light_space_matrix_right;
   mat4 light_space_matrix_bottom;
   mat4 light_space_matrix_back;
+  mat4 cascade_scale_offset;
+  mat4 cascade_scale_offset1;
+  mat4 cascade_scale_offset2;
+  mat4 cascade_scale_offset3;
+  vec4 cascade_min_splits;
+  vec4 cascade_max_splits;
+  vec4 cascade_texel_size;
 };
 
 #define NR_POINT_LIGHTS 2
@@ -69,7 +41,6 @@ layout(set = 0, binding = 1) readonly buffer ObjectBuffer {
   Light sun_light;
   Light point_lights[NR_POINT_LIGHTS];
   Light spot_light;
-  Material material;
 };
 
 layout(location = 0) in vec3 position;

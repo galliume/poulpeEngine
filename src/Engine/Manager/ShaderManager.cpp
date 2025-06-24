@@ -96,7 +96,7 @@ namespace Poulpe
         auto data = shader.value();
 
         addShader(
-          key, 
+          key,
           data["vert"],
           data["frag"],
           data["geom"],
@@ -129,7 +129,7 @@ namespace Poulpe
 
       VkDescriptorSetLayoutBinding storage_binding{};
       storage_binding.binding = 2;
-      storage_binding.descriptorCount = 1;
+      storage_binding.descriptorCount = 2;
       storage_binding.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
       storage_binding.pImmutableSamplers = nullptr;
       storage_binding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
@@ -148,12 +148,28 @@ namespace Poulpe
       cubemap_binding.pImmutableSamplers = nullptr;
       cubemap_binding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 
+      VkDescriptorSetLayoutBinding light_storage_binding{};
+      light_storage_binding.binding = 5;
+      light_storage_binding.descriptorCount = 1;
+      light_storage_binding.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+      light_storage_binding.pImmutableSamplers = nullptr;
+      light_storage_binding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+
+      VkDescriptorSetLayoutBinding csm_binding{};
+      csm_binding.binding = 6;
+      csm_binding.descriptorCount = 1;
+      csm_binding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+      csm_binding.pImmutableSamplers = nullptr;
+      csm_binding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
       bindings = {
         ubo_binding,
         sampler_binding,
         storage_binding,
         depth_map_binding,
-        cubemap_binding };
+        cubemap_binding,
+        light_storage_binding,
+        csm_binding };
 
     } else if constexpr (T == DescSetLayoutType::Text) {
       VkDescriptorSetLayoutBinding ubo_binding{};
@@ -188,12 +204,12 @@ namespace Poulpe
 
       bindings = { ubo_binding, sampler_binding };
     } else if constexpr (T == DescSetLayoutType::Offscreen) {
-      VkDescriptorSetLayoutBinding ubo_bingind{};
-      ubo_bingind.binding = 0;
-      ubo_bingind.descriptorCount = 1;
-      ubo_bingind.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-      ubo_bingind.pImmutableSamplers = nullptr;
-      ubo_bingind.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+      VkDescriptorSetLayoutBinding ubo_binding{};
+      ubo_binding.binding = 0;
+      ubo_binding.descriptorCount = 1;
+      ubo_binding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+      ubo_binding.pImmutableSamplers = nullptr;
+      ubo_binding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
 
       VkDescriptorSetLayoutBinding storage_binding{};
       storage_binding.binding = 1;
@@ -205,7 +221,7 @@ namespace Poulpe
         | VK_SHADER_STAGE_GEOMETRY_BIT
         | VK_SHADER_STAGE_FRAGMENT_BIT;
 
-      bindings = { ubo_bingind, storage_binding };
+      bindings = { ubo_binding, storage_binding };
     } else if constexpr (T == DescSetLayoutType::Terrain) {
       VkDescriptorSetLayoutBinding ubo_binding{};
       ubo_binding.binding = 0;
@@ -222,7 +238,7 @@ namespace Poulpe
       sampler_binding.descriptorCount = 7;
       sampler_binding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
       sampler_binding.pImmutableSamplers = nullptr;
-      sampler_binding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT 
+      sampler_binding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT
                                   | VK_SHADER_STAGE_FRAGMENT_BIT
                                   | VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT
                                   | VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT;
@@ -234,7 +250,16 @@ namespace Poulpe
       env_sampler_binding.pImmutableSamplers = nullptr;
       env_sampler_binding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 
-      bindings = { ubo_binding, sampler_binding, env_sampler_binding };
+    VkDescriptorSetLayoutBinding storage_binding{};
+      storage_binding.binding = 3;
+      storage_binding.descriptorCount = 1;
+      storage_binding.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+      storage_binding.pImmutableSamplers = nullptr;
+      storage_binding.stageFlags =
+        VK_SHADER_STAGE_VERTEX_BIT
+        | VK_SHADER_STAGE_FRAGMENT_BIT;
+
+      bindings = { ubo_binding, sampler_binding, env_sampler_binding, storage_binding };
     }
     else if constexpr (T == DescSetLayoutType::Water) {
       VkDescriptorSetLayoutBinding ubo_binding{};
@@ -263,7 +288,16 @@ namespace Poulpe
       env_sampler_binding.pImmutableSamplers = nullptr;
       env_sampler_binding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 
-      bindings = { ubo_binding, sampler_binding, env_sampler_binding };
+      VkDescriptorSetLayoutBinding storage_binding{};
+      storage_binding.binding = 3;
+      storage_binding.descriptorCount = 1;
+      storage_binding.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+      storage_binding.pImmutableSamplers = nullptr;
+      storage_binding.stageFlags =
+        VK_SHADER_STAGE_VERTEX_BIT
+        | VK_SHADER_STAGE_FRAGMENT_BIT;
+
+      bindings = { ubo_binding, sampler_binding, env_sampler_binding, storage_binding };
     } else if constexpr (T == DescSetLayoutType::Text) {
       VkDescriptorSetLayoutBinding ubo_binding{};
       ubo_binding.binding = 0;
@@ -325,7 +359,7 @@ namespace Poulpe
     VkDescriptorSetLayout descset_layout{VK_NULL_HANDLE};
     VkPipelineVertexInputStateCreateInfo* vertex_input_info{nullptr};
     VkPushConstantRange push_constants{};
-    
+
     vertex_input_info = getVertexInputState<VertexBindingType::Vertex3D>();
 
     //@todo replace shader_name == with a shader_type ==
@@ -368,20 +402,20 @@ namespace Poulpe
       }
       push_constants.offset = 0;
       push_constants.size = sizeof(constants);
-      push_constants.stageFlags = VK_SHADER_STAGE_VERTEX_BIT 
+      push_constants.stageFlags = VK_SHADER_STAGE_VERTEX_BIT
                                   | VK_SHADER_STAGE_FRAGMENT_BIT
                                   | VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT
                                   | VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT;
-      
+
       pipeline_create_infos.cull_mode = VK_CULL_MODE_NONE;
       pipeline_create_infos.has_depth_test = true;
       pipeline_create_infos.has_stencil_test = false;
       pipeline_create_infos.has_dynamic_depth_bias = false;
       pipeline_create_infos.is_patch_list = true;
       pipeline_create_infos.topology = VK_PRIMITIVE_TOPOLOGY_PATCH_LIST;
-    } else if (shader_name == "shadow_map") {
-      
-      pipeline_create_infos.cull_mode = VK_CULL_MODE_BACK_BIT;
+    } else if (shader_name == "shadow_map" || shader_name == "csm") {
+
+      pipeline_create_infos.cull_mode = VK_CULL_MODE_FRONT_BIT;
       pipeline_create_infos.has_color_attachment = false;
       pipeline_create_infos.has_dynamic_depth_bias = true;
       pipeline_create_infos.has_depth_test = true;
@@ -392,7 +426,7 @@ namespace Poulpe
       push_constants.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
       push_constants.size = sizeof(constants);
       need_bis = false;
-      
+
       VkDescriptorPoolSize dpsSB;
       dpsSB.type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
       dpsSB.descriptorCount = 10;
@@ -438,7 +472,7 @@ namespace Poulpe
     pipeline.descset_layout = descset_layout;
     pipeline.shaders = shaders;
 
-    if (shader_name == "shadow_map" || shader_name == "shadow_mapSpot") {
+    if (shader_name == "shadow_map" || shader_name == "csm") {
       pipeline.descset = _renderer->getAPI()->createDescriptorSets(pipeline.desc_pool, { pipeline.descset_layout }, 1);
     }
     _renderer->addPipeline(shader_name, pipeline);

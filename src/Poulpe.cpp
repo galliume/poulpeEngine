@@ -1,9 +1,6 @@
 #include "PoulpeEngineConfig.h"
 
-//@todo tcl/tk editor for Linux
-#if defined(_WIN64)
 #include <tcl.h>
-#endif
 
 #include <functional>
 #include <iostream>
@@ -13,10 +10,7 @@
 import Engine.Application;
 import Engine.Core.Logger;
 
-//@todo tcl/tk editor for Linux
-#if defined(_WIN64)
 import Editor.Managers.EditorManager;
-#endif
 
 int main(int argc, char** argv)
 {
@@ -57,7 +51,6 @@ int main(int argc, char** argv)
 
   Poulpe::Logger::trace("editor_mode : {}", editor_mode);
 
-  #if defined(_WIN64)
   if (editor_mode) {
     Tcl_FindExecutable(argv[0]);
 
@@ -65,9 +58,6 @@ int main(int argc, char** argv)
   } else {
     app->run();
   }
-  #else
-    app->run();
-  #endif
-  
+
   return 0;
 }

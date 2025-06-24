@@ -48,6 +48,13 @@
       "geom": "",
       "tesc": "",
       "tese": ""
+    },
+    "csm": {
+      "vert": "assets/shaders/spv/csm_vert.spv",
+      "frag": "assets/shaders/spv/csm_frag.spv",
+      "geom": "assets/shaders/spv/csm_geom.spv",
+      "tesc": "",
+      "tese": ""
     }
   }
 }

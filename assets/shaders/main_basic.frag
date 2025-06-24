@@ -40,17 +40,23 @@ layout(location = 0) in FRAG_VAR {
   mat3 TBN;
   vec4 light_space;
   mat4 model;
+  vec4 cascade_coord;
+  vec4 cascade_coord1;
+  vec4 cascade_coord2;
+  vec4 cascade_coord3;
+  float depth;
+  float u1;
+  float u2;
+  float u3;
+  vec3 n;
 } var;
 
 struct Light {
   mat4 light_space_matrix;
   mat4 projection;
   mat4 view;
-  //ambiance diffuse specular
   vec3 ads;
-  //constant, linear, quadratiq
   vec3 clq;
-  //cutOff, outerCutoff, Blank
   vec3 coB;
   vec3 color;
   vec3 direction;
@@ -60,6 +66,13 @@ struct Light {
   mat4 light_space_matrix_right;
   mat4 light_space_matrix_bottom;
   mat4 light_space_matrix_back;
+  mat4 cascade_scale_offset;
+  mat4 cascade_scale_offset1;
+  mat4 cascade_scale_offset2;
+  mat4 cascade_scale_offset3;
+  vec4 cascade_min_splits;
+  vec4 cascade_max_splits;
+  vec4 cascade_texel_size;
 };
 
 struct Material
@@ -97,15 +110,20 @@ struct Material
 layout(binding = 1) uniform sampler2D tex_sampler[TEXTURE_COUNT];
 
 layout(binding = 2) readonly buffer ObjectBuffer {
-  Light sun_light;
-  Light point_lights[NR_POINT_LIGHTS];
-  Light spot_light;
   Material material;
 };
 
 layout(binding = 3) uniform samplerCubeShadow tex_shadow_sampler;
 
 layout(binding = 4) uniform samplerCube cube_maps[1];
+
+layout(binding = 5) readonly buffer LightObjectBuffer {
+  Light sun_light;
+  Light point_lights[NR_POINT_LIGHTS];
+  Light spot_light;
+};
+
+layout(binding = 6) uniform sampler2DArrayShadow csm;
 
 float InverseSquareAttenuation(vec3 l)
 {
@@ -156,7 +174,7 @@ float linear_to_sRGB(float color)
 float ShadowCalculation(vec3 light_coord, Light l, float NdL)
 {
   vec3 p = light_coord;
-  float shadow_offset = 2.f/3200.f;
+  float shadow_offset = 2.f/1024.f;//@todo push constant
   vec2 depth_transform = vec2(l.projection[2][2], l.projection[2][3]);
 
   vec3 absq = abs(p);
@@ -170,8 +188,8 @@ float ShadowCalculation(vec3 light_coord, Light l, float NdL)
   vec2 oyz = vec2(offset - dxy, dxy);
 
   vec3 limit = vec3(m, m, m);
-  limit.xy -= oxy * (1.0 / 3200);
-  limit.yz -= oyz * (1.0 / 3200);
+  limit.xy -= oxy * (1.f / 1024.f);
+  limit.yz -= oyz * (1.f / 1024.f);
 
   //float depth = depth_transform.x + depth_transform.y / m;
   float depth = length(p) / 50.0f;//far plane
@@ -190,6 +208,59 @@ float ShadowCalculation(vec3 light_coord, Light l, float NdL)
   light *= 0.2;
 
   return light;
+}
+
+float CalculateInfiniteShadow(vec3 cascade_coord0, vec3 cascade_blend, float NdL)
+{
+  vec3 cascade_coord1 = var.cascade_coord1.xyz / var.cascade_coord1.w;
+  vec3 cascade_coord2 = var.cascade_coord2.xyz / var.cascade_coord2.w;
+  vec3 cascade_coord3 = var.cascade_coord3.xyz / var.cascade_coord3.w;
+
+  vec3 blend = clamp(cascade_blend, 0.0, 1.0);
+  float cascade_index;
+  if (var.depth < sun_light.cascade_max_splits.x) {
+    cascade_index = 0.0;
+  } else if (var.depth < sun_light.cascade_max_splits.y) {
+    cascade_index = 1.0;
+  } else if (var.depth < sun_light.cascade_max_splits.z) {
+    cascade_index = 2.0;
+  } else {
+    cascade_index = 3.0;
+  }
+  float weight = 0.0;
+  vec3 shadow_coord1, shadow_coord2;
+
+  if (cascade_index == 0.0) { shadow_coord1 = cascade_coord0; shadow_coord2 = cascade_coord1; weight = blend.x; }
+  if (cascade_index == 1.0) { shadow_coord1 = cascade_coord1; shadow_coord2 = cascade_coord2; weight = blend.y; }
+  if (cascade_index == 2.0) { shadow_coord1 = cascade_coord2; shadow_coord2 = cascade_coord3; weight = blend.z; }
+  if (cascade_index == 3.0) { shadow_coord1 = cascade_coord3; shadow_coord2 = cascade_coord3; weight = 1.0; }
+
+  float delta = 3.0f / 16.0f * (1.0f / 2048.f);
+  vec4 shadow_offset[2] = vec4[2](
+    vec4(-delta, -3.0 * delta, 3.0 * delta, -delta),
+    vec4(delta, 3.0 * delta, -3.0 * delta, delta)
+  );
+
+  float max_bias = 0.005;
+  float min_bias = 0.0005;
+  float bias = max(max_bias * (1.0 - NdL), min_bias);
+
+  float light1 = 0.0;
+  light1 += texture(csm, vec4(shadow_coord1.xy + shadow_offset[0].xy, cascade_index, shadow_coord1.z - bias));
+  light1 += texture(csm, vec4(shadow_coord1.xy + shadow_offset[0].zw, cascade_index, shadow_coord1.z - bias));
+  light1 += texture(csm, vec4(shadow_coord1.xy + shadow_offset[1].xy, cascade_index, shadow_coord1.z - bias));
+  light1 += texture(csm, vec4(shadow_coord1.xy + shadow_offset[1].zw, cascade_index, shadow_coord1.z - bias));
+
+  float light2 = light1;
+  if (cascade_index < 3.0) {
+    light2 = 0.0;
+    light2 += texture(csm, vec4(shadow_coord2.xy + shadow_offset[0].xy, cascade_index + 1.0, shadow_coord2.z - bias));
+    light2 += texture(csm, vec4(shadow_coord2.xy + shadow_offset[0].zw, cascade_index + 1.0, shadow_coord2.z - bias));
+    light2 += texture(csm, vec4(shadow_coord2.xy + shadow_offset[1].xy, cascade_index + 1.0, shadow_coord2.z - bias));
+    light2 += texture(csm, vec4(shadow_coord2.xy + shadow_offset[1].zw, cascade_index + 1.0, shadow_coord2.z - bias));
+  }
+
+  return mix(light1, light2, weight) * 0.25;
 }
 
 //https://github.com/KhronosGroup/glTF/blob/main/extensions/2.0/Khronos/KHR_texture_transform/README.md
@@ -270,7 +341,7 @@ vec3 linear_to_hdr10(vec3 color, float white_point)
 }
 
 vec3 srgb_to_linear(vec3 color)
-{ 
+{
   float gamma        = 2.4f; // The sRGB curve for mid tones to high lights resembles a gamma of 2.4
   vec3 linear_low  = color / 12.92;
   vec3 linear_high = pow((color + 0.055) / 1.055, vec3(gamma));
@@ -294,7 +365,7 @@ void main()
   if (alpha_size.x != 1 && alpha_size.y != 1) {
     if (material.alpha.x == 1.0 && alpha_color.r < material.alpha.y) discard;
   }
- 
+
   vec2 normal_coord = transform_uv(
     material.normal_translation,
     material.normal_scale,
@@ -344,7 +415,7 @@ void main()
   if (transmission_size.x <= 2.0) {
     transmission = vec2(1.0) * material.strength.z;
   }
-  
+
   float ao = texture(tex_sampler[AO_INDEX], var.texture_coord).r;
   ivec2 ao_size = textureSize(tex_sampler[AO_INDEX], 0);
   if (ao_size.x < 2.0) {
@@ -357,13 +428,13 @@ void main()
     material.diffuse_scale,
     material.diffuse_rotation,
     var.texture_coord);
-  
+
   vec4 albedo = texture(tex_sampler[DIFFUSE_INDEX], diffuse_coord);
   //albedo.xyz = srgb_to_linear(albedo.xyz);
   albedo.xyz = albedo.xyz;
 
   float color_alpha = albedo.a;
-  
+
   if (material.alpha.x == 1.0 && color_alpha < material.alpha.y) discard;
   if (material.base_color.a < material.alpha.y) discard;
 
@@ -381,9 +452,9 @@ void main()
 
   vec4 C_diffuse = albedo / PI;
   vec4 C_specular = material.specular;
-  
+
   //@todo looks good but is it ok?
-  float P = material.mre_factor.y;// * (1.0 - roughness); 
+  float P = material.mre_factor.y;// * (1.0 - roughness);
 
   vec3 out_lights = vec3(0.0);
 
@@ -423,7 +494,7 @@ void main()
   vec3 C_sun = (kD * diffuse + specular) * radiance * 0.01;
   vec3 C_ambient = albedo.xyz * 0.01;
 
-  for (int i = 1; i < NR_POINT_LIGHTS; ++i) {
+  for (int i = 0; i < NR_POINT_LIGHTS; ++i) {
 
     vec3 light_pos = point_lights[i].position;
     vec3 l = normalize(light_pos - p);
@@ -434,7 +505,7 @@ void main()
     //float attenuation = 1.0 / (point_lights[i].clq.x + point_lights[i].clq.y * d + point_lights[i].clq.z * (d * d));
     //vec3 C_light = srgb_to_linear(point_lights[i].color.rgb) * attenuation;
     vec3 C_light = point_lights[i].color.rgb * attenuation * 2.0;
-   
+
     vec3 h = normalize(l + v);
     float NdL = max(dot(normal, l), 0.00001);
     float NdH = max(dot(normal, h), 0.00001);
@@ -462,13 +533,20 @@ void main()
   }
 
   vec4 color = vec4(C_ambient + C_sun + out_lights, color_alpha);
+  color.xyz *= ao;
+  color.xyz *= PI;
+
+  vec3 csm_coords = var.cascade_coord.xyz / var.cascade_coord.w;
+  vec3 cascade_blend = vec3(var.u1, var.u2, var.u3);
+
+  float csm_shadow = CalculateInfiniteShadow(csm_coords, cascade_blend, NdL);
+  float csm_factor = max(csm_shadow, 0.01);
+  color.xyz *= csm_factor;
 
   vec3 frag_to_light = p - point_lights[1].position;
   float shadow = ShadowCalculation(frag_to_light, point_lights[1], NdL);
-  float shadowFactor = max(shadow, 0.1);
-  color.xyz *= shadowFactor;
-  color.xyz *= ao;
-  color.xyz *= PI;
+  float shadow_factor = max(shadow, 0.01);
+  color.xyz *= shadow_factor;
 
   vec2 emissive_coord = transform_uv(
     material.emissive_translation,
@@ -498,8 +576,46 @@ void main()
   float white_point = 350;
   final_color = vec4(0.0, 0.0, 0.0, 1.0);
   final_color.rgb = linear_to_hdr10(color.rgb, white_point);
-
   if (material.alpha.x == 2.0) {
     final_color = vec4(linear_to_hdr10(color.rgb, white_point), color_alpha);
   }
+
+   // Determine which cascade we're in
+    // if (var.depth < sun_light.cascade_max_splits.x) {
+    //   final_color *= vec4(1.0, 0.0, 0.0, 0.1); // Red - Cascade 0
+    // } else if (var.depth < sun_light.cascade_max_splits.y) {
+    //   final_color *= vec4(0.0, 1.0, 0.0, 0.1); // Green - Cascade 1
+    // } else if (var.depth < sun_light.cascade_max_splits.z) {
+    //   final_color *= vec4(0.0, 0.0, 1.0, 0.1); // Blue - Cascade 2
+    // } else if (var.depth < sun_light.cascade_max_splits.w) {
+    //   final_color *= vec4(1.0, 1.0, 0.0, 0.1); // Yellow - Cascade 3
+    // } else {
+    //   final_color *=  vec4(1.0, 0.0, 1.0, 0.1); // Magenta - Beyond cascades
+    // }
+  //   vec3 cascade_coord0 = var.cascade_coord.xyz / var.cascade_coord.w;
+  // // Visualize the coordinates
+  // if (cascade_coord0.x < 0.0 || cascade_coord0.x > 1.0 ||
+  //     cascade_coord0.y < 0.0 || cascade_coord0.y > 1.0) {
+  //     final_color = vec4(1, 0, 0, 1);  // Red if out of range
+  //     return;
+  // }
+    // final_color = vec4(cascade_coord0.xy, 0, 1);  // Show UV as color
+// vec3 cascade_coord0 = var.cascade_coord.xyz / var.cascade_coord.w;
+
+// // Check if outside shadow map bounds
+// if (cascade_coord0.x < 0.0 || cascade_coord0.x > 1.0 ||
+//     cascade_coord0.y < 0.0 || cascade_coord0.y > 1.0) {
+//     final_color = vec4(1, 0, 0, 1);  // RED = outside bounds
+//     return;
+// }
+
+// // Sample shadow map
+// float result = texture(csm, vec4(cascade_coord0.xy, 0.0, cascade_coord0.z));
+
+// // Show result
+// if (result > 0.5) {
+//     final_color = vec4(1, 1, 1, 1);  // WHITE = lit
+// } else {
+//     final_color = vec4(0, 0, 1, 1);  // BLUE = shadowed
+// }
 }

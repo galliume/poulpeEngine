@@ -123,10 +123,6 @@ namespace Poulpe
       //Logger::debug("shi_ior_diss {} {}", material.shi_ior_diss.x, material.shi_ior_diss.y);
 
       ObjectBuffer objectBuffer{};
-      objectBuffer.point_lights[0] = component_rendering_info.point_lights.at(0);
-      objectBuffer.point_lights[1] = component_rendering_info.point_lights.at(1);
-      objectBuffer.spot_light = component_rendering_info.spot_lights.at(0);
-      objectBuffer.sun_light = component_rendering_info.sun_light;
       objectBuffer.material = material;
 
       auto storageBuffer{ renderer->getAPI()->createStorageBuffers(objectBuffer) };
@@ -270,15 +266,25 @@ namespace Poulpe
     depth_map_image_info.emplace_back(renderer->getDepthMapSamplers(), renderer->getDepthMapImageViews(), VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL);
     //image_info.emplace_back(shadowMapSpot);
 
+    std::vector<VkDescriptorImageInfo> csm_image_info{};
+    csm_image_info.emplace_back(renderer->getCSMSamplers(), renderer->getCSMImageViews(), VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL);
+
     auto const& pipeline = renderer->getPipeline(mesh->getShaderName());
     VkDescriptorSet descset{ renderer->getAPI()->createDescriptorSets(pipeline->desc_pool, { pipeline->descset_layout }, 1) };
+
+    auto light_buffer {component_rendering_info.light_buffer};
 
     for (size_t i{ 0 }; i < mesh->getUniformBuffers().size(); ++i) {
 
       renderer->getAPI()->updateDescriptorSets(
         mesh->getUniformBuffers(),
         *mesh->getStorageBuffers(),
-        descset, image_info, depth_map_image_info, env_info);
+        descset,
+        image_info,
+        depth_map_image_info,
+        env_info,
+        light_buffer,
+        csm_image_info);
     }
 
     mesh->setDescSet(descset);
@@ -300,15 +306,11 @@ namespace Poulpe
     auto const& shadow_map_pipeline = renderer->getPipeline("shadow_map");
     VkDescriptorSet shadow_map_descset = renderer->getAPI()->createDescriptorSets(shadow_map_pipeline->desc_pool, { shadow_map_pipeline->descset_layout }, 1);
 
-    std::for_each(std::begin(*mesh->getStorageBuffers()), std::end(*mesh->getStorageBuffers()),
-      [&buffer_storage_infos](const Buffer& storageBuffers)
-      {
-        VkDescriptorBufferInfo buffer_info{};
-        buffer_info.buffer = storageBuffers.buffer;
-        buffer_info.offset = 0;
-        buffer_info.range = VK_WHOLE_SIZE;
-        buffer_storage_infos.emplace_back(buffer_info);
-      });
+    VkDescriptorBufferInfo buffer_info{};
+    buffer_info.buffer = light_buffer.buffer;
+    buffer_info.offset = 0;
+    buffer_info.range = VK_WHOLE_SIZE;
+    buffer_storage_infos.emplace_back(buffer_info);
 
     descset_writes[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
     descset_writes[0].dstSet = shadow_map_descset;
@@ -329,5 +331,38 @@ namespace Poulpe
     vkUpdateDescriptorSets(renderer->getDevice(), static_cast<uint32_t>(descset_writes.size()), descset_writes.data(), 0, nullptr);
 
     mesh->setShadowMapDescSet(shadow_map_descset);
+
+    auto const& csm_pipeline = renderer->getPipeline("csm");
+    VkDescriptorSet csm_descset = renderer->getAPI()->createDescriptorSets(csm_pipeline->desc_pool, { csm_pipeline->descset_layout }, 1);
+
+    std::array<VkWriteDescriptorSet, 2> csm_descset_writes{};
+    std::vector<VkDescriptorBufferInfo> csm_buffer_infos;
+    std::vector<VkDescriptorBufferInfo> csm_buffer_storage_infos;
+
+    VkDescriptorBufferInfo csm_buffer_info{};
+    csm_buffer_info.buffer = light_buffer.buffer;
+    csm_buffer_info.offset = 0;
+    csm_buffer_info.range = VK_WHOLE_SIZE;
+    csm_buffer_storage_infos.emplace_back(csm_buffer_info);
+
+    csm_descset_writes[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    csm_descset_writes[0].dstSet = csm_descset;
+    csm_descset_writes[0].dstBinding = 0;
+    csm_descset_writes[0].dstArrayElement = 0;
+    csm_descset_writes[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    csm_descset_writes[0].descriptorCount = 1;
+    csm_descset_writes[0].pBufferInfo = buffer_infos.data();
+
+    csm_descset_writes[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    csm_descset_writes[1].dstSet = csm_descset;
+    csm_descset_writes[1].dstBinding = 1;
+    csm_descset_writes[1].dstArrayElement = 0;
+    csm_descset_writes[1].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+    csm_descset_writes[1].descriptorCount = static_cast<uint32_t>(csm_buffer_storage_infos.size());
+    csm_descset_writes[1].pBufferInfo = csm_buffer_storage_infos.data();
+
+    vkUpdateDescriptorSets(renderer->getDevice(), static_cast<uint32_t>(csm_descset_writes.size()), csm_descset_writes.data(), 0, nullptr);
+
+    mesh->setCSMDescSet(csm_descset);
   }
 }

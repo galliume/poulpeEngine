@@ -30,7 +30,7 @@
       ]
     },
     {
-      "name": "windows-release-with-debug",
+      "name": "windows-release-dbg",
       "displayName": "Release with debug symbols",
       "description": "Windows Release with debug symbols",
       "inherits": [
@@ -59,7 +59,7 @@
       ]
     },
     {
-      "name": "linux-release-with-debug",
+      "name": "linux-release-dbg",
       "displayName": "Release with debug symbols",
       "description": "Linux Release with debug symbols",
       "inherits": [
@@ -80,9 +80,9 @@
       "configurePreset": "windows-release"
     },
     {
-      "name": "windows-release-with-debug",
+      "name": "windows-release-dbg",
       "displayName": "ReleaseWithDebSymbols",
-      "configurePreset": "windows-release-with-debug"
+      "configurePreset": "windows-release-dbg"
     },
     {
       "name": "linux-debug",
@@ -95,9 +95,9 @@
       "configurePreset": "linux-release"
     },
     {
-      "name": "linux-release-with-debug",
+      "name": "linux-release-dbg",
       "displayName": "ReleaseWithDebSymbols",
-      "configurePreset": "linux-release-with-debug"
+      "configurePreset": "linux-release-dbg"
     }
   ]
 }

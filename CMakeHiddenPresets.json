@@ -142,6 +142,56 @@
       }
     },
     {
+      "name": "LINUX_TCL_TCLSH",
+      "hidden": true,
+      "cacheVariables": {
+        "TCL_TCLSH": {
+          "type": "PATH",
+          "value": "/usr/bin/tclsh"
+        }
+      }
+    },
+    {
+      "name": "LINUX_TCL_LIBRARY",
+      "hidden": true,
+      "cacheVariables": {
+        "TCL_LIBRARY": {
+          "type": "PATH",
+          "value": "/lib64/libtcl.so"
+        }
+      }
+    },
+    {
+      "name": "LINUX_TCL_INCLUDE_PATH",
+      "hidden": true,
+      "cacheVariables": {
+        "TCL_INCLUDE_PATH": {
+          "type": "PATH",
+          "value": "/usr/include/"
+        }
+      }
+    },
+        {
+      "name": "LINUX_TK_LIBRARY",
+      "hidden": true,
+      "cacheVariables": {
+        "TK_LIBRARY": {
+          "type": "PATH",
+          "value": "/lib64/libtk.so"
+        }
+      }
+    },
+    {
+      "name": "LINUX_TK_INCLUDE_PATH",
+      "hidden": true,
+      "cacheVariables": {
+        "TK_INCLUDE_PATH": {
+          "type": "PATH",
+          "value": "/usr/include/"
+        }
+      }
+    },
+    {
       "name": "DEBUG_BUILD_TYPE",
       "hidden": true,
       "cacheVariables": {
@@ -310,7 +360,7 @@
           "value": "C:\\Program Files\\LLVM\\bin\\ld.lld.exe"
         }
       }
-    },    
+    },
     {
       "name": "LINKER_TYPE",
       "hidden": true,

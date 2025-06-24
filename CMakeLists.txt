@@ -20,9 +20,6 @@ if(CCACHE_PROGRAM)
   set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE "${CCACHE_PROGRAM}")
 endif()
 
-
-add_library(poulpe INTERFACE)
-
 message(STATUS "Generated with config types: ${CMAKE_CONFIGURATION_TYPES}")
 message(STATUS "CMAKE_CXX_STANDARD: ${CMAKE_CXX_STANDARD}")
 message(STATUS "CMAKE_CXX_STANDARD_REQUIRED: ${CMAKE_CXX_STANDARD_REQUIRED}")
@@ -33,7 +30,9 @@ set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules ${CMAKE_MODULE_P
 
 configure_file(PoulpeEngineConfig.h.in PoulpeEngineConfig.h)
 
-include_directories(${PROJECT_SOURCE_DIR}/src)
+target_include_directories(${PROJECT_NAME}
+PRIVATE
+  ${PROJECT_SOURCE_DIR}/src)
 
 add_subdirectory(${PROJECT_SOURCE_DIR}/src/Engine)
 add_subdirectory(${PROJECT_SOURCE_DIR}/src/Engine/Animation)
@@ -47,11 +46,8 @@ add_subdirectory(${PROJECT_SOURCE_DIR}/src/Engine/Renderer/Vulkan)
 add_subdirectory(${PROJECT_SOURCE_DIR}/src/Engine/Renderer/Vulkan/Component)
 add_subdirectory(${PROJECT_SOURCE_DIR}/src/Engine/Utils)
 
-#todo tcl/tk editor for Linux
-if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
 add_subdirectory(${PROJECT_SOURCE_DIR}/src/Editor)
 add_subdirectory(${PROJECT_SOURCE_DIR}/src/Editor/Manager)
-endif()
 
 set(DEBUG_OPTIONS
   -g
@@ -72,7 +68,8 @@ set(DEBUG_OPTIONS
   -Wno-c++98-compat
   -Wno-c++98-compat-pedantic
   -Wno-covered-switch-default
-  -Wno-deprecated-declarations)
+  -Wno-deprecated-declarations
+  -Wno-c++20-compat)
 
 set(RELEASE_OPTIONS
   -O3
@@ -90,7 +87,8 @@ set(RELEASE_OPTIONS
   -Wno-c++98-compat
   -Wno-c++98-compat-pedantic
   -Wno-covered-switch-default
-  -Wno-deprecated-declarations)
+  -Wno-deprecated-declarations
+  -Wno-c++20-compat)
 
 #include(CheckIPOSupported)
 #check_ipo_supported(RESULT ipo_supported OUTPUT ipo_error)
@@ -102,25 +100,25 @@ set(RELEASE_OPTIONS
 set(LINK_OPTIONS
   -pthread)
 
-add_definitions(
-  -DVK_NO_PROTOTYPES
-  -D_USE_MATH_DEFINES)
+target_compile_definitions(${PROJECT_NAME}
+  PRIVATE
+    VK_NO_PROTOTYPES)
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
-  add_definitions(
-    -DVOLK_STATIC_DEFINES
-    -D_CRT_SECURE_NO_WARNINGS
-    -DDWIN32_LEAN_AND_MEAN)
+  # target_include_directories(${PROJECT_NAME}
+  #   SYSTEM PRIVATE
+  #     "G:/mingw64/x86_64-w64-mingw32/include")
+  include_directories(SYSTEM "G:/mingw64/x86_64-w64-mingw32/include")
+
+  target_compile_definitions(${PROJECT_NAME} PRIVATE
+      VOLK_STATIC_DEFINES
+      _CRT_SECURE_NO_WARNINGS
+      WIN32_LEAN_AND_MEAN)
 
   LIST(APPEND DEBUG_OPTIONS -femulated-tls)
   LIST(APPEND RELEASE_OPTIONS -femulated-tls)
   LIST(APPEND LINK_OPTIONS -femulated-tls)
 endif()
-
-set_target_properties(${PROJECT_NAME} PROPERTIES
-  CXX_STANDARD 23
-  CXX_STANDARD_REQUIRED ON
-  CXX_EXTENSIONS ON)
 
 target_compile_features(${PROJECT_NAME}
   PRIVATE   cxx_std_23
@@ -146,15 +144,16 @@ find_package(Threads REQUIRED)
 list(APPEND EXTRA_LIBS Threads::Threads)
 
 find_package(Vulkan REQUIRED)
-list(APPEND EXTRA_LIBS Vulkan::Vulkan)
+#list(APPEND EXTRA_LIBS Vulkan::Vulkan) done by volk
 
 set(PLP_LIB_DIR "$<TARGET_FILE_DIR:${PROJECT_NAME}>/lib")
 set(PLP_BIN_DIR "$<TARGET_FILE_DIR:${PROJECT_NAME}>")
 
-include(fetchDeps)
-
 message(STATUS "EXTRA_LIBS: ${EXTRA_LIBS}")
 target_link_libraries(${PROJECT_NAME} PRIVATE ${EXTRA_LIBS})
+
+message(STATUS "Fetching dependancies")
+include(fetchDeps)
 
 install(TARGETS ${PROJECT_NAME}
     EXPORT PoulpeEngineTargets

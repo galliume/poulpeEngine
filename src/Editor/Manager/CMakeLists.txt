@@ -4,7 +4,9 @@ target_sources(${PROJECT_NAME}
       FILES
         EditorManager.cppm
         LevelManager.cppm
+        ExplorerManager.cppm
 
   PRIVATE
     EditorManager.cpp
-    LevelManager.cpp)
+    LevelManager.cpp
+    ExplorerManager.cpp)

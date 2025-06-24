@@ -36,11 +36,11 @@ namespace Poulpe
   Renderer::Renderer(Window* const window)
   {
     _vulkan = std::make_unique<VulkanAPI>(window);
+    setPerspective();
   }
 
   void Renderer::init()
   {
-    setPerspective();
     _swapchain = _vulkan->createSwapChain(_images);
 
     _imageviews.resize(_images.size());
@@ -83,7 +83,7 @@ namespace Poulpe
       VkImage image2;
 
       _vulkan->createImage(
-        _vulkan->getSwapChainExtent().width, 
+        _vulkan->getSwapChainExtent().width,
         _vulkan->getSwapChainExtent().height, 1,
         VK_SAMPLE_COUNT_1_BIT,
         _vulkan->PLP_VK_FORMAT_COLOR,
@@ -185,6 +185,15 @@ namespace Poulpe
 
       _depthmap_samplers.emplace_back(_vulkan->createDepthMapSampler());
     }
+    for (size_t i { 0 }; i < _images.size(); ++i) {
+      VkImage image{};
+      _vulkan->createDepthMapImage(image, false, 4);
+      _csm_images.emplace_back(image);
+      _csm_imageviews.emplace_back(_vulkan->createDepthMapImageView(image, false, false, 4));
+      _csm_imageviews_rendering.emplace_back(_vulkan->createDepthMapImageView(image, false, false, 4));
+
+      _csm_samplers.emplace_back(_vulkan->createDepthMapSampler());
+    }
 
     VkResult result{};
 
@@ -284,7 +293,7 @@ namespace Poulpe
     auto& depthimage = _depth_images[_current_frame];
     auto const load_op = VK_ATTACHMENT_LOAD_OP_CLEAR;
     auto const store_op = VK_ATTACHMENT_STORE_OP_STORE;
-    auto const thread_id {1};
+    uint32_t const thread_id {1};
     auto const has_depth_attachment {true};
 
     _vulkan->beginCommandBuffer(cmd_buffer);
@@ -316,8 +325,8 @@ namespace Poulpe
     float const marker_color_b { static_cast<float>(rand() % 255) / 255.0f };
 
     _vulkan->startMarker(
-      cmd_buffer, 
-      "drawing_" + std::to_string(thread_id), 
+      cmd_buffer,
+      "drawing_" + std::to_string(thread_id),
       marker_color_r, marker_color_g, marker_color_b);
 
     std::vector<VkBool32> blend_enable{ VK_FALSE };
@@ -342,23 +351,17 @@ namespace Poulpe
     auto const& camera = renderer_info.camera;
     auto const pipeline = getPipeline(mesh->getShaderName());
 
-    if (!mesh->getUniformBuffers().empty()) {
-      for (size_t i{ 0 }; i < mesh->getUniformBuffers().size(); ++i) {
-        _vulkan->updateUniformBuffer(mesh->getUniformBuffers().at(i), &mesh->getData()->_ubos.at(i));
-      }
-    }
-
     constants push_constants{};
     push_constants.options = mesh->getOptions();
     push_constants.view_position = camera->getPos();
-    push_constants.view = camera->lookAt();
+    push_constants.view = renderer_info.camera_view;
 
     if ("skybox" == mesh->getName()) {
       push_constants.view = glm::mat4(glm::mat3(camera->lookAt()));
     }
 
     vkCmdPushConstants(
-      cmd_buffer, 
+      cmd_buffer,
       pipeline->pipeline_layout,
       renderer_info.stage_flag_bits,
       0,
@@ -407,17 +410,38 @@ namespace Poulpe
     }
   }
 
-  void Renderer::startShadowMap()
+  void Renderer::startShadowMap(SHADOW_TYPE const shadow_type)
   {
-    auto &cmd_buffer = _cmd_buffer_entities3[_current_frame];
-    auto &depth = _depthmap_images[_current_frame];
-    auto &depthview = _depthmap_imageviews[_current_frame];
+    VkCommandBuffer cmd_buffer;
+    VkImage depth;
+    VkImageView depthview;
+    std::string marker_name {"shadow_map"};
+    glm::vec3 marker_color { 0.1f, 0.2f, 0.3f };
+
+    if (shadow_type == SHADOW_TYPE::CSM) {
+      cmd_buffer = _cmd_buffer_shadowmap[_current_frame];
+      depth = _csm_images[_current_frame];
+      depthview = _csm_imageviews[_current_frame];
+      marker_name = "csm";
+    } else {
+      cmd_buffer = _cmd_buffer_entities3[_current_frame];
+      depth = _depthmap_images[_current_frame];
+      depthview = _depthmap_imageviews[_current_frame];
+      marker_color = {0.4, 0.2, 0.6};
+    }
+
+    uint32_t const layer_count = (shadow_type == SHADOW_TYPE::CSM) ? 4 : 6;
 
     _vulkan->beginCommandBuffer(cmd_buffer);
-    _vulkan->startMarker(cmd_buffer, "shadow_map", 0.1f, 0.2f, 0.3f);
+    _vulkan->startMarker(cmd_buffer, marker_name, marker_color.x, marker_color.y, marker_color.z);
 
-    _vulkan->transitionImageLayout(cmd_buffer, depth,
-      VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL, VK_IMAGE_ASPECT_DEPTH_BIT);
+    _vulkan->transitionImageLayout(
+      cmd_buffer,
+      depth,
+      VK_IMAGE_LAYOUT_UNDEFINED,
+      VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL,
+      VK_IMAGE_ASPECT_DEPTH_BIT,
+      layer_count);
 
     VkClearColorValue color_clear = {};
     color_clear.float32[0] = 1.0f;
@@ -436,16 +460,14 @@ namespace Poulpe
     depth_attachment_info.clearValue.depthStencil = depth_stencil;
     depth_attachment_info.clearValue.color = color_clear;
 
-    uint32_t const width{ _vulkan->getSwapChainExtent().width * 2 };
-    //uint32_t const height{ _vulkan->getSwapChainExtent().height * 2 };
-    //uint32_t const width{ 2048 };
-    //uint32_t const height{ 2048 };
+    auto const& appConfig { ConfigManagerLocator::get()->appConfig()["shadow_resolution"] };
+    auto const width { appConfig["width"].get<uint32_t>() }; 
 
     VkRenderingInfo  rendering_info{ };
     rendering_info.sType = VK_STRUCTURE_TYPE_RENDERING_INFO;
     rendering_info.renderArea.extent.width = width;
     rendering_info.renderArea.extent.height = width;
-    rendering_info.layerCount = 6;
+    rendering_info.layerCount = (shadow_type == SHADOW_TYPE::CSM) ? 4 : 6;
     rendering_info.pDepthAttachment = &depth_attachment_info;
     rendering_info.colorAttachmentCount = 0;
     //rendering_info.flags = VK_SUBPASS_CONTENTS_INLINE;
@@ -465,12 +487,12 @@ namespace Poulpe
 
     vkCmdSetScissor(cmd_buffer, 0, 1, &scissor);
 
-    float const depth_bias_constant{ 1.0f };
-    float const depth_bias_slope{ 1.5f };
-    float const depth_bias_clamp{ 0.0f };
+    // float const depth_bias_constant{ 1.0f };
+    // float const depth_bias_slope{ 1.5f };
+    // float const depth_bias_clamp{ 0.0f };
 
-    vkCmdSetDepthClampEnableEXT(cmd_buffer, VK_TRUE);
-    vkCmdSetDepthBias(cmd_buffer, depth_bias_constant, depth_bias_clamp, depth_bias_slope);
+    //vkCmdSetDepthClampEnableEXT(cmd_buffer, VK_TRUE);
+    //vkCmdSetDepthBias(cmd_buffer, depth_bias_constant, depth_bias_clamp, depth_bias_slope);
 
     std::vector<VkBool32> blend_enable{ VK_FALSE };
     vkCmdSetColorBlendEnableEXT(cmd_buffer, 0, 1, blend_enable.data());
@@ -487,11 +509,22 @@ namespace Poulpe
     vkCmdSetColorBlendEquationEXT(cmd_buffer, 0, 1, &colorBlendEquation);
   }
 
-  void Renderer::drawShadowMap(RendererInfo const& renderer_info)
+  void Renderer::drawShadowMap(
+    RendererInfo const& renderer_info,
+    SHADOW_TYPE const shadow_type,
+    VkBuffer const& light_buffer)
   {
-    auto &cmd_buffer = _cmd_buffer_entities3[_current_frame];
-    std::string const pipeline_name{ "shadow_map" };
+    VkCommandBuffer cmd_buffer;
+    std::string pipeline_name {"shadow_map"};
+
+    if (shadow_type == SHADOW_TYPE::CSM) {
+      cmd_buffer = _cmd_buffer_shadowmap[_current_frame];
+      pipeline_name = "csm";
+    } else {
+      cmd_buffer = _cmd_buffer_entities3[_current_frame];
+    }
     auto const& pipeline = getPipeline(pipeline_name);
+
     auto const& mesh = renderer_info.mesh;
     auto const& camera = renderer_info.camera;
 
@@ -501,7 +534,7 @@ namespace Poulpe
     constants push_constants{};
     push_constants.options = options;
     push_constants.view_position = camera->getPos();
-    push_constants.view = renderer_info.point_lights.at(1).view;
+    push_constants.view = renderer_info.camera_view;
 
     vkCmdPushConstants(
       cmd_buffer,
@@ -512,12 +545,19 @@ namespace Poulpe
       sizeof(constants),
       &push_constants);
 
-   vkCmdBindDescriptorSets(
-      cmd_buffer,
-      VK_PIPELINE_BIND_POINT_GRAPHICS,
-      pipeline->pipeline_layout,
-      0, 1, mesh->getShadowMapDescSet(), 0, nullptr);
-
+    if (shadow_type == SHADOW_TYPE::CSM) {
+      vkCmdBindDescriptorSets(
+        cmd_buffer,
+        VK_PIPELINE_BIND_POINT_GRAPHICS,
+        pipeline->pipeline_layout,
+        0, 1, mesh->getCSMDescSet(), 0, nullptr);
+    } else {
+      vkCmdBindDescriptorSets(
+        cmd_buffer,
+        VK_PIPELINE_BIND_POINT_GRAPHICS,
+        pipeline->pipeline_layout,
+        0, 1, mesh->getShadowMapDescSet(), 0, nullptr);
+    }
     _vulkan->bindPipeline(cmd_buffer, pipeline->pipeline);
 
     _vulkan->draw(
@@ -527,17 +567,32 @@ namespace Poulpe
       mesh->is_indexed());
   }
 
-  void Renderer::endShadowMap()
+  void Renderer::endShadowMap(SHADOW_TYPE const shadow_type)
   {
-    auto &cmd_buffer = _cmd_buffer_entities3[_current_frame];
-    auto &depth = _depthmap_images[_current_frame];
-    auto const thread_id {0};
+    VkCommandBuffer cmd_buffer;
+    VkImage depth;
+    uint32_t thread_id {0};
+
+    if (shadow_type == SHADOW_TYPE::CSM) {
+      cmd_buffer = _cmd_buffer_shadowmap[_current_frame];
+      depth = _csm_images[_current_frame];
+      thread_id = 1;
+    } else {
+      cmd_buffer = _cmd_buffer_entities3[_current_frame];
+      depth = _depthmap_images[_current_frame];
+    }
 
     _vulkan->endMarker(cmd_buffer);
     _vulkan->endRendering(cmd_buffer);
 
-     _vulkan->transitionImageLayout(cmd_buffer, depth,
-       VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL, VK_IMAGE_ASPECT_DEPTH_BIT);
+      uint32_t const layer_count = (shadow_type == SHADOW_TYPE::CSM) ? 4 : 6;
+
+     _vulkan->transitionImageLayout(cmd_buffer,
+      depth,
+       VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL,
+       VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+       VK_IMAGE_ASPECT_DEPTH_BIT,
+      layer_count);
  /*     _vulkan->transitionImageLayout(cmd_buffer, depth,
         VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR, VK_IMAGE_ASPECT_DEPTH_BIT);*/
 
@@ -555,7 +610,7 @@ namespace Poulpe
     auto& cmd_buffer = _cmd_buffer_entities[_current_frame];
     auto& color = _images[_current_frame];
     auto& depthimage = _depth_images[_current_frame];
-    auto const thread_id {1};
+    uint32_t const thread_id {2};
     auto const is_attachment {false};
     auto const has_depth_attachment {true};
 
@@ -625,6 +680,9 @@ namespace Poulpe
 
   void Renderer::submit()
   {
+    if (_sema_render_completes[_current_frame].size() - 1 < _image_index) {
+      return;
+    }
     auto const& draw_cmds { _draw_cmds };
 
     std::vector<VkCommandBuffer> cmds_buffer{};
@@ -645,10 +703,10 @@ namespace Poulpe
     auto &timeline_semaphore = _timeline_semaphores[_current_frame];
 
     auto &_current_timeline_value = _current_timeline_values[_current_frame];
-    uint64_t const entities_finished = _current_timeline_value + 1;
+    uint64_t const draw_finished = _current_timeline_value + 1;
     uint64_t const finished = _current_timeline_value + 3;
     std::array<uint64_t, 1> wait_values = { 0 };
-    std::array<uint64_t, 2> signal_values = { entities_finished, 0 };
+    std::array<uint64_t, 2> signal_values = { draw_finished, 0 };
 
     //VkPipelineStageFlags wait_stage_mask = VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT;
     std::array<VkPipelineStageFlags, 2> graphics_wait_stage_masks = { VK_PIPELINE_STAGE_VERTEX_INPUT_BIT, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
@@ -695,7 +753,7 @@ namespace Poulpe
     _draw_cmds.clear();
     onFinishRender();
   }
-  
+
   void Renderer::setRayPick(
     float const,
     float const,

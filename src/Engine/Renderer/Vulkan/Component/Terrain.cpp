@@ -62,22 +62,22 @@ namespace Poulpe
 
         float const y{ 0.0f };
 
-        Vertex v{ 
+        Vertex v{
           { -width/2.0f + width*i/static_cast<float>(rez), y, -height/2.0f + height*j/static_cast<float>(rez) },
           { 1.0f, 1.0f, 0.0f}, {i / static_cast<float>(rez), j / static_cast<float>(rez) }, {0.0f, 0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f},
            glm::vec3{0.0f}, {}, {} };
 
-        Vertex v2{ 
+        Vertex v2{
           {-width/2.0f + width*(i+1)/static_cast<float>(rez), y, -height/2.0f + height*j/static_cast<float>(rez) },
           {1.0f, 1.0f, 0.0f}, {(i+1) / static_cast<float>(rez), j / static_cast<float>(rez) }, {0.0f, 0.0f, 0.0f, 0.0f}, { 0.0f, 0.0f, 0.0f, 0.0f },
            glm::vec3{0.0f}, {}, {} };
 
-        Vertex v3{ 
+        Vertex v3{
           {-width/2.0f + width*i/static_cast<float>(rez), y, -height/2.0f + height*(j+1)/static_cast<float>(rez) },
           {1.0f, 1.0f, 0.0f}, {i / static_cast<float>(rez), (j+1) / static_cast<float>(rez) }, {0.0f, 0.0f, 0.0f, 0.0f}, { 0.0f, 0.0f, 0.0f, 0.0f },
            glm::vec3{0.0f}, {}, {} };
 
-        Vertex v4{ 
+        Vertex v4{
           {-width/2.0f + width*(i+1)/static_cast<float>(rez), y, -height/2.0f + height*(j+1)/static_cast<float>(rez) },
           {1.0f, 1.0f, 0.0f}, {(i+1) / static_cast<float>(rez), (j+1) / static_cast<float>(rez) }, {0.0f, 0.0f, 0.0f, 0.0f}, { 0.0f, 0.0f, 0.0f, 0.0f },
            glm::vec3{0.0f}, {}, {} };
@@ -129,7 +129,7 @@ namespace Poulpe
   {
     auto const& mesh = component_rendering_info.mesh;
     auto height_map { component_rendering_info.textures.at(component_rendering_info.terrain_name)};
-    
+
     height_map.setSampler(renderer->getAPI()->createKTXSampler(
       TextureWrapMode::WRAP,
       TextureWrapMode::WRAP,
@@ -141,7 +141,7 @@ namespace Poulpe
 
     //@todo fix this ugly fix. Needs a real asset unique ID
     Texture ground { component_rendering_info.textures.at(PLP_GROUND)};
-    
+
     ground.setSampler(renderer->getAPI()->createKTXSampler(
       TextureWrapMode::WRAP,
       TextureWrapMode::WRAP,
@@ -152,7 +152,7 @@ namespace Poulpe
     }
 
     Texture grass { component_rendering_info.textures.at(PLP_GRASS)};
-    
+
     grass.setSampler(renderer->getAPI()->createKTXSampler(
       TextureWrapMode::WRAP,
       TextureWrapMode::WRAP,
@@ -163,7 +163,7 @@ namespace Poulpe
     }
 
     Texture snow { component_rendering_info.textures.at(PLP_SNOW)};
-    
+
     snow.setSampler(renderer->getAPI()->createKTXSampler(
       TextureWrapMode::WRAP,
       TextureWrapMode::WRAP,
@@ -227,8 +227,10 @@ namespace Poulpe
     auto const pipeline = renderer->getPipeline(mesh->getShaderName());
     VkDescriptorSet descset = renderer->getAPI()->createDescriptorSets(pipeline->desc_pool, { pipeline->descset_layout }, 1);
 
+    auto light_buffer {component_rendering_info.light_buffer};
+
     //renderer->getAPI()->updateDescriptorSets(*mesh->getUniformBuffers(), descset, image_infos);
-    std::array<VkWriteDescriptorSet, 3> desc_writes{};
+    std::array<VkWriteDescriptorSet, 4> desc_writes{};
     std::vector<VkDescriptorBufferInfo> buffer_infos;
 
     std::for_each(std::begin(mesh->getUniformBuffers()), std::end(mesh->getUniformBuffers()),
@@ -240,6 +242,13 @@ namespace Poulpe
       buffer_info.range = VK_WHOLE_SIZE;
       buffer_infos.emplace_back(buffer_info);
     });
+
+    std::array<VkDescriptorBufferInfo, 1> light_buffer_infos;
+    VkDescriptorBufferInfo light_buffer_info{};
+    light_buffer_info.buffer = light_buffer.buffer;
+    light_buffer_info.offset = 0;
+    light_buffer_info.range = VK_WHOLE_SIZE;
+    light_buffer_infos[0] = light_buffer_info;
 
     desc_writes[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
     desc_writes[0].dstSet = descset;
@@ -264,6 +273,14 @@ namespace Poulpe
     desc_writes[2].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
     desc_writes[2].descriptorCount = static_cast<uint32_t>(env_image_infos.size());
     desc_writes[2].pImageInfo = env_image_infos.data();
+
+    desc_writes[3].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    desc_writes[3].dstSet = descset;
+    desc_writes[3].dstBinding = 3;
+    desc_writes[3].dstArrayElement = 0;
+    desc_writes[3].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+    desc_writes[3].descriptorCount = static_cast<uint32_t>(light_buffer_infos.size());
+    desc_writes[3].pBufferInfo = light_buffer_infos.data();
 
     vkUpdateDescriptorSets(
       renderer->getAPI()->getDevice(),

@@ -39,12 +39,12 @@ namespace Poulpe
 
     switch (buffer_type) {
       case DeviceBufferType::UNIFORM:
-      buffer_size = max_buffer_size;
+      buffer_size = max_buffer_size / 10;
 
       if (buffer_size > _device_props.properties.limits.maxUniformBufferRange) {
         buffer_size = _device_props.properties.limits.maxUniformBufferRange;
       }
-      
+
       buffer_type_debug = "UNIFORM";
       break;
       default:
@@ -59,7 +59,7 @@ namespace Poulpe
         buffer_type_debug = "STAGING";
       break;
     }
-    
+
     //Logger::debug("type: {} {} allocated size: {} size: {} buffer size: {} max: {}", buffer_type_debug, memory_type, _memory_allocation_size.at(memory_type), size, buffer_size, max_buffer_size);
 
     auto pool_type = _pool.find(memory_type);

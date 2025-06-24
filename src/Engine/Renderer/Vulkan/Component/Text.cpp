@@ -189,8 +189,7 @@ namespace Poulpe
           data_ubo.projection = projection;
         });
       }
-    } 
-    else {
+    } else {
       VkDeviceMemory staging_device_memory{};
       VkDeviceSize buffer_size = sizeof(Vertex) * vertices.size();
 

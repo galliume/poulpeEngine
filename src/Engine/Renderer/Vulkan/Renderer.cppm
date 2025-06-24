@@ -95,19 +95,25 @@ namespace Poulpe
   export struct RendererInfo
   {
     Mesh* mesh;
-    Camera* const camera;
-    Light const& sun_light;
-    std::vector<Light> const& point_lights;
-    std::vector<Light> const& spot_lights;
+    Camera* camera{};
+    glm::mat4 camera_view{};
+    Light sun_light{};
+    std::vector<Light> point_lights{};
+    std::vector<Light> spot_lights{};
     double elapsed_time{0.0};
     VkShaderStageFlags stage_flag_bits;
-    bool const normal_debug;
+    bool normal_debug{};
     bool has_alpha_blend {false};
+  };
+
+  export enum class SHADOW_TYPE {
+    SPOT_LIGHT,
+    POINT_LIGHT,
+    CSM
   };
 
   export class Renderer
   {
-
   public:
 
     Renderer(Window* const window);
@@ -123,14 +129,17 @@ namespace Poulpe
     void start();
 
     void startRender();
-    void startShadowMap();
+    void startShadowMap(SHADOW_TYPE const shadow_type);
 
     void draw(RendererInfo const& renderer_info);
-    void drawShadowMap(RendererInfo const& renderer_info);
-    
+    void drawShadowMap(
+      RendererInfo const& renderer_info,
+      SHADOW_TYPE const shadow_type,
+      VkBuffer const& light_buffer);
+
     void endRender();
-    void endShadowMap();
-    
+    void endShadowMap(SHADOW_TYPE const shadow_type);
+
     void endRendering(
       VkCommandBuffer& cmd_buffer,
       VkImage& image,
@@ -141,15 +150,17 @@ namespace Poulpe
     void submit();
 
     inline uint32_t getCurrentFrameIndex() const { return _current_frame; }
-    inline VkSampler getCurrentSampler() { return _samplers[_previous_frame]; }
-    inline VkImageView getCurrentImageView() { return _imageviews[_previous_frame]; }
-    inline VkImageView getDepthMapImageViews() { return  _depthmap_imageviews.at(_current_frame); }
-    inline VkSampler getDepthMapSamplers() { return _depthmap_samplers.at(_current_frame); }
-    inline VkImageView getDepthImageViews() { return _depth_imageviews.at(_current_frame); }
-    inline VkImageView getDepthImageViews2() { return _depth_imageviews2.at(_current_frame); }
-    inline VkSampler getDepthSamplers() { return  _depth_samplers.at(_current_frame); }
-    inline VkSampler getDepthSamplers2() { return  _depth_samplers2.at(_current_frame); }
-    inline VkImageView getVisibleDepthImageView() { return _visible_depth_imageview; }
+    inline VkSampler& getCurrentSampler() { return _samplers[_previous_frame]; }
+    inline VkImageView& getCurrentImageView() { return _imageviews[_previous_frame]; }
+    inline VkImageView& getDepthMapImageViews() { return  _depthmap_imageviews.at(_current_frame); }
+    inline VkSampler& getDepthMapSamplers() { return _depthmap_samplers.at(_current_frame); }
+    inline VkImageView& getDepthImageViews() { return _depth_imageviews.at(_current_frame); }
+    inline VkImageView& getDepthImageViews2() { return _depth_imageviews2.at(_current_frame); }
+    inline VkSampler& getDepthSamplers() { return  _depth_samplers.at(_current_frame); }
+    inline VkSampler& getDepthSamplers2() { return  _depth_samplers2.at(_current_frame); }
+    inline VkImageView& getVisibleDepthImageView() { return _visible_depth_imageview; }
+    inline VkSampler& getCSMSamplers() { return _csm_samplers.at(_current_frame); }
+    inline VkImageView& getCSMImageViews() { return _csm_imageviews.at(_current_frame); }
     inline std::vector<VkDescriptorSetLayout>* getDescriptorSetLayouts() { return & _descriptorset_layouts; }
     inline VkDevice getDevice()  { return _vulkan->getDevice(); }
     inline glm::mat4 getPerspective() { return _perspective; }
@@ -240,9 +251,10 @@ namespace Poulpe
     std::vector<VkImageView> _depthmap_imageviews_rendering;
     std::vector<VkSampler> _depthmap_samplers;
 
-    std::vector<VkImage> _depthmap_images2;
-    std::vector<VkImageView> _depthmap_imageviews2;
-    std::vector<VkSampler> _depthmap_samplers2;
+    std::vector<VkImage> _csm_images;
+    std::vector<VkImageView> _csm_imageviews;
+    std::vector<VkImageView> _csm_imageviews_rendering;
+    std::vector<VkSampler> _csm_samplers;
 
     std::vector<VkImage> _depthmap_Images3;
     std::vector<VkImageView> _depthmap_imageviews3;
@@ -260,7 +272,7 @@ namespace Poulpe
 
     std::mutex _mutex_queue_submit;
 
-    DrawCommands _draw_cmds{2};
+    DrawCommands _draw_cmds{3};
 
     std::vector<VkSemaphore> _timeline_semaphores;
     std::vector<uint64_t> _current_timeline_values;

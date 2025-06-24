@@ -11,6 +11,7 @@ export module Engine.Managers.EntityManager;
 
 import Engine.Component.Entity;
 import Engine.Component.EntityNode;
+import Engine.Core.MeshTypes;
 import Engine.Core.PlpTypedef;
 import Engine.Managers.ComponentManager;
 import Engine.Managers.LightManager;
@@ -27,7 +28,8 @@ namespace Poulpe
     explicit EntityManager(
       ComponentManager* const component_manager,
       LightManager* const light_manager,
-      TextureManager* const texture_manager);
+      TextureManager* const texture_manager,
+      Buffer& light_buffer);
 
     void inline addHUD(std::unique_ptr<Entity> entity) { _hud.emplace_back(std::move(entity)); }
     void inline addRenderer(Renderer* const renderer) { _renderer = renderer; }
@@ -92,5 +94,6 @@ namespace Poulpe
     std::unique_ptr<EntityNode> _world_node;
 
     mutable std::shared_mutex _mutex_shared;
+    Buffer _light_buffer;
   };
 }

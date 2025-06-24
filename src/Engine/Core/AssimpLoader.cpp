@@ -7,6 +7,7 @@ module;
 #include <assimp/GltfMaterial.h>
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
+#include <assimp/postprocess.h>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -267,6 +268,7 @@ namespace Poulpe
               material.normal_rotation = glm::vec2(transform.mRotation, 1.0);
             }
           }
+          material.double_sided = true;
         } else {
           if (mat->GetTextureCount(aiTextureType_NORMALS) > 0) {
             aiString texture_path;

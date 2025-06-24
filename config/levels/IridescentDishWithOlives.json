@@ -1,0 +1,122 @@
+{
+    "terrain": {
+        "46_016_3_028_13_512_512": {
+            "path": "assets/texture/terrain/height_map_1.ktx2"
+        }
+    },
+    "water": {
+        "_water_foam": {
+            "path": "assets/texture/water/_water_foam.ktx2"
+        },
+        "_water_normal": {
+            "path": "assets/texture/water/_water_normal.ktx2"
+        },
+        "_water_normal2": {
+            "path": "assets/texture/water/_water_normal2.ktx2"
+        }
+    },
+    "camera": {
+        "position": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+        }
+    },
+    "entities": {
+        "IridescentDishWithOlives": {
+            "mesh": "assets/mesh/IridescentDishWithOlives/glTF/IridescentDishWithOlives.gltf",
+            "textures": {
+                "glasscover_irid" : {
+                    "path": "assets/mesh/IridescentDishWithOlives/glTF/glasscover_irid.ktx2"
+                },
+                "glasscover_thick" : {
+                    "path": "assets/mesh/IridescentDishWithOlives/glTF/glasscover_thick.ktx2"
+                },
+                "goldleaf_col" : {
+                    "path": "assets/mesh/IridescentDishWithOlives/glTF/goldleaf_col.ktx2"
+                },
+                "olives_col" : {
+                    "path": "assets/mesh/IridescentDishWithOlives/glTF/olives_col.ktx2"
+                }
+            },
+            "mr": {
+                "glasscover_orm" : {
+                    "path": "assets/mesh/IridescentDishWithOlives/glTF/glasscover_orm.ktx2"
+                },
+                "goldleaf_orm" : {
+                    "path": "assets/mesh/IridescentDishWithOlives/glTF/goldleaf_orm.ktx2"
+                },
+                "olives_orm" : {
+                    "path": "assets/mesh/IridescentDishWithOlives/glTF/olives_orm.ktx2"
+                }
+            },
+            "emissive": {
+                "glassdish_irid" : {
+                    "path": "assets/mesh/IridescentDishWithOlives/glTF/glassdish_irid.ktx2"
+                }
+            },
+            "ao": {
+                "glasscover_orm" : {
+                    "path": "assets/mesh/IridescentDishWithOlives/glTF/glasscover_orm.ktx2"
+                },
+                "goldleaf_orm" : {
+                    "path": "assets/mesh/IridescentDishWithOlives/glTF/goldleaf_orm.ktx2"
+                },
+                "olives_orm" : {
+                    "path": "assets/mesh/IridescentDishWithOlives/glTF/olives_orm.ktx2"
+                }
+            },
+            "normal": {
+                "glasscover_nrm" : {
+                    "path": "assets/mesh/IridescentDishWithOlives/glTF/glasscover_nrm.ktx2"
+                },
+                "goldleaf_nrm" : {
+                    "path": "assets/mesh/IridescentDishWithOlives/glTF/goldleaf_nrm.ktx2"
+                },
+                "olives_nrm" : {
+                    "path": "assets/mesh/IridescentDishWithOlives/glTF/olives_nrm.ktx2"
+                }
+            },
+            "specular": {
+                "glasscover_spec" : {
+                    "path": "assets/mesh/IridescentDishWithOlives/glTF/glasscover_spec.ktx2"
+                },
+                "glassdish_spec" : {
+                    "path": "assets/mesh/IridescentDishWithOlives/glTF/glassdish_spec.ktx2"
+                }
+            },
+            "shader": "main_basic",
+            "positions": [
+                {
+                    "x": 0.0,
+                    "y": 50.0,
+                    "z": 0.0
+                }
+            ],
+            "scales": [
+                {
+                    "x": 100.0,
+                    "y": 100.0,
+                    "z": 100.0
+                }
+            ],
+            "rotations": [
+                {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                }
+            ],
+            "flipY": false,
+            "count": 1,
+            "hasBbox": false,
+            "hasAnimation": false,
+            "isPointLight": false,
+            "animationScripts": {
+            },
+            "hasShadow": true,
+            "isIndexed": true,
+            "debugNormal": true
+        }
+    }
+}

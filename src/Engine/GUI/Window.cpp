@@ -22,14 +22,10 @@ namespace Poulpe
 
   void Window::init(
     std::string_view window_title,
+    uint16_t const width,
+    uint16_t const height,
     bool const editor_mode)
   {
-
-    int const WIDTH = 1600;
-    int const HEIGHT = 900;
-    //  int const WIDTH = 800;
-    //  int const HEIGHT = 600;
-
     glfwInit();
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
     glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
@@ -46,13 +42,13 @@ namespace Poulpe
     _monitor = glfwGetPrimaryMonitor();
     const GLFWvidmode* mode = glfwGetVideoMode(_monitor);
 
-    glfwWindowHint(GLFW_RED_BITS, mode->redBits);
-    glfwWindowHint(GLFW_GREEN_BITS, mode->greenBits);
-    glfwWindowHint(GLFW_BLUE_BITS, mode->blueBits);
-    glfwWindowHint(GLFW_REFRESH_RATE, mode->refreshRate);
+    // glfwWindowHint(GLFW_RED_BITS, mode->redBits);
+    // glfwWindowHint(GLFW_GREEN_BITS, mode->greenBits);
+    // glfwWindowHint(GLFW_BLUE_BITS, mode->blueBits);
+    // glfwWindowHint(GLFW_REFRESH_RATE, mode->refreshRate);
 
     //_window = glfwCreateWindow(mode->width, mode->height, window_title.data(), _monitor, nullptr);
-    _window = glfwCreateWindow(WIDTH, HEIGHT, window_title.data(), nullptr, nullptr);
+    _window = glfwCreateWindow(width, height, window_title.data(), nullptr, nullptr);
     //glfwSetWindowSizeLimits(_window, 800, 600, 2560, 1440);
 
   /* const int maxWidth = mode->width;

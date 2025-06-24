@@ -1,3 +1,5 @@
+set(MINIAUDIO_NO_EXTRA_NODES ON CACHE BOOL "" FORCE)
+
 message(NOTICE "Fetching MiniAudio from https://github.com/mackron/miniaudio ...")
 
 FetchContent_Declare(

@@ -30,11 +30,16 @@ namespace Poulpe
   {
     _start_run = std::chrono::steady_clock::now();
 
-    auto* window = new Window();
-    window->init("PoulpeEngine", editor_mode);
-
     //CommandQueueManagerLocator::init();
     ConfigManagerLocator::init();
+    auto const& appConfig { ConfigManagerLocator::get()->appConfig()["resolution"] };
+
+    auto* window = new Window();
+    window->init("PoulpeEngine",
+      appConfig["width"].get<uint16_t>(),
+      appConfig["height"].get<uint16_t>(),
+      editor_mode);
+
     InputManagerLocator::init(window);
 
     _render_manager = std::make_unique<RenderManager>(window);
@@ -112,7 +117,7 @@ namespace Poulpe
       << " Vulkan version: " << _render_manager->getRenderer()->getAPI()->getAPIVersion()
       << ((release_build) ? " Release build" : " Debug build");
     glfwSetWindowTitle(_render_manager->getWindow()->get(), title.str().c_str());
-
+    
     while (!glfwWindowShouldClose(_render_manager->getWindow()->get())) {
 
       glfwPollEvents();

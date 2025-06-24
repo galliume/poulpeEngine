@@ -51,6 +51,7 @@ namespace Poulpe
     int index;
   };
 
+  //@todo clean alignas and padding for std...
   export struct Light
   {
     alignas(16) glm::mat4 light_space_matrix;//used also as light_space_matrix_front
@@ -70,6 +71,13 @@ namespace Poulpe
     alignas(16) glm::mat4 light_space_matrix_right;
     alignas(16) glm::mat4 light_space_matrix_bottom;
     alignas(16) glm::mat4 light_space_matrix_back;
+    alignas(16) glm::mat4 cascade_scale_offset;
+    alignas(16) glm::mat4 cascade_scale_offset1;
+    alignas(16) glm::mat4 cascade_scale_offset2;
+    alignas(16) glm::mat4 cascade_scale_offset3;
+    alignas(16) glm::vec4 cascade_min_splits;
+    alignas(16) glm::vec4 cascade_max_splits;
+    alignas(16) glm::vec4 cascade_texel_size;
   };
 
   export struct Material
@@ -104,13 +112,17 @@ namespace Poulpe
     alignas(16) glm::vec4 emissive_color{0.0};
   };
 
-  export struct ObjectBuffer
+  export struct alignas(16) ObjectBuffer
+  {
+    Material material;
+    std::vector<glm::mat4>bone_matrices;
+  };
+
+  export struct alignas(16) LightObjectBuffer
   {
     Light sun_light;
     std::array<Light, 2> point_lights;
     Light spot_light;
-    Material material;
-    std::vector<glm::mat4>bone_matrices;
   };
 
   export enum class TextureWrapMode {

@@ -35,7 +35,7 @@ layout(location = 3) out mat3 out_TBN;
 layout(location = 6) out vec3 out_normal;
 
 void main()
-{  
+{
   float u = gl_TessCoord.x;
   float v = gl_TessCoord.y;
 
@@ -64,20 +64,20 @@ void main()
   //p.y += 5.f;
 
   float L = 12.0f;
-  float A = 0.005f * L;
+  float A = 0.009f * L;
   const float g = 9.81f;
   float w = 2.0f / L;
   float w_pic = 0.1f;
   float L_pic = w_pic / 2.0f;
   float A_pic = 0.1f * L_pic;
   //float w = sqrt(9.8 * ((2.0 * PI) / L));
-  float S = 3.0f; //m/s
+  float S = 5.0f; //m/s
   float t = pc.options.x;
 
   vec3 bi = vec3(0.0);
   vec3 ta = vec3(0.0);
   vec3 n = vec3(0.0);
-  
+
   //@todo improve seed
   float seed = PI;
   float previous_dx = 0.0;
@@ -99,7 +99,7 @@ void main()
     seed = fract(sin(seed * 43758.5453 + i) * 43758.5453);
     float angle = seed * 2.0f*PI;
     vec2 D = vec2(cos(angle), sin(angle));
-  
+
     //phase
     float phase = seed * (2.0 * PI);
 
@@ -115,7 +115,7 @@ void main()
     bi.x += steepness * (D.x * D.x) * WA * S;
     bi.z += steepness * (D.x * D.y) * WA * S;
     bi.y += D.x * WA * C;
-    
+
     //tangent
     ta.x += steepness * (D.x * D.y) * WA * S;
     ta.z += steepness * (D.y * D.y) * WA * S;
@@ -137,7 +137,7 @@ void main()
     steepness *= clamp(steepness_factor, 0.0, 1.0);
   }
 
-  p.y += 2.5+displacement.y;
+  p.y += 2.0f + displacement.y;
 
   mat4 trans_model = transpose(inverse(ubo.model));
   vec3 bitangent = normalize(trans_model * vec4(1.0 - bi.x, bi.y, -bi.z, 1.0)).xyz;

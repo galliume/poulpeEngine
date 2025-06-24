@@ -17,6 +17,7 @@ export module Engine.Managers.RenderManager;
 
 import Engine.Component.Camera;
 import Engine.Component.EntityNode;
+import Engine.Core.MeshTypes;
 import Engine.Core.PlpTypedef;
 import Engine.Core.Tools;
 import Engine.GUI.Window;
@@ -30,6 +31,8 @@ import Engine.Managers.ShaderManager;
 import Engine.Managers.TextureManager;
 import Engine.Renderer.RendererComponentFactory;
 import Engine.Renderer;
+import Engine.Renderer.Vulkan.Mesh;
+import Engine.Renderer.RendererComponentTypes;
 import Engine.Utils.IDHelper;
 
 namespace Poulpe
@@ -68,17 +71,28 @@ namespace Poulpe
     void setElapsedTime(double const elapsed_time) { _elapsed_time = elapsed_time;}
     double getElapsedTime() const { return _elapsed_time; }
 
+    Buffer getLightBuffer();
+
     void renderEntity(
       IDType const entity_id,
       double const delta_time);
 
     void drawEntity(
       IDType const entity_id,
+      glm::mat4 const& camera_view_matrix,
       bool const has_alpha_blend = false);
 
     void drawShadowMap(
       IDType const entity_id,
+      SHADOW_TYPE const shadow_type,
+      glm::mat4 const& camera_view_matrix,
       bool const has_alpha_blend = false);
+
+      ComponentRenderingInfo& getComponentRenderingInfo(Mesh * mesh);
+      void updateComponentRenderingInfo();
+
+      RendererInfo& getRendererInfo(Mesh * mesh = nullptr, glm::mat4 const& camera_view = glm::mat4(1.0f));
+      void updateRendererInfo(glm::mat4 const& camera_view);
 
   private:
     void loadData(std::string const & level);
@@ -115,5 +129,10 @@ namespace Poulpe
     std::vector<VkDescriptorPool> _descriptor_pools;
 
     std::chrono::time_point<std::chrono::system_clock> _last_reload;
+
+    std::vector<Buffer> _light_buffers;
+
+    ComponentRenderingInfo _rendering_info;
+    RendererInfo _renderer_info;
   };
 }

@@ -4,12 +4,37 @@
 
 #define GAMMA_TRESHOLD 0.0031308
 #define PI 3.141592653589793238462643383279
+#define NR_POINT_LIGHTS 2
 
 #define DIFFUSE_INDEX 0
 #define DEPTH_INDEX 1
 #define NORMAL_INDEX 2
 #define NORMAL2_INDEX 3
 #define ENV_INDEX 5
+
+struct Light {
+  mat4 light_space_matrix;
+  mat4 projection;
+  mat4 view;
+  vec3 ads;
+  vec3 clq;
+  vec3 coB;
+  vec3 color;
+  vec3 direction;
+  vec3 position;
+  mat4 light_space_matrix_left;
+  mat4 light_space_matrix_top;
+  mat4 light_space_matrix_right;
+  mat4 light_space_matrix_bottom;
+  mat4 light_space_matrix_back;
+  mat4 cascade_scale_offset;
+  mat4 cascade_scale_offset1;
+  mat4 cascade_scale_offset2;
+  mat4 cascade_scale_offset3;
+  vec4 cascade_min_splits;
+  vec4 cascade_max_splits;
+  vec4 cascade_texel_size;
+};
 
 layout(location = 0) out vec4 final_color;
 
@@ -28,6 +53,12 @@ layout(push_constant) uniform constants
   vec3 view_position;
   vec4 options;
 } pc;
+
+layout(binding = 3) readonly buffer LightObjectBuffer {
+  Light sun_light;
+  Light point_lights[NR_POINT_LIGHTS];
+  Light spot_light;
+};
 
 float linear_to_sRGB(float color)
 {
@@ -65,7 +96,7 @@ vec3 linear_to_hdr10(vec3 color, float white_point)
 }
 
 vec3 srgb_to_linear(vec3 color)
-{ 
+{
   float gamma        = 2.4f; // The sRGB curve for mid tones to high lights resembles a gamma of 2.4
   vec3 linear_low  = color / 12.92;
   vec3 linear_high = pow((color + 0.055) / 1.055, vec3(gamma));
@@ -83,7 +114,7 @@ vec3 tex_color(int index)
   return color;
 }
 
-float LinearizeDepth(float depth) 
+float LinearizeDepth(float depth)
 {
   float z = depth * 2.0 - 1.0;
   float near = 0.1;
@@ -137,6 +168,16 @@ vec3 blend_rnm(vec3 n1, vec3 n2)
   vec3 u = n2.xyz * vec3(-2, -2, 2) + vec3( 1,  1, -1);
   vec3 r = t * dot(t, u) - u * t.z;
   return normalize(r);
+}
+
+float SmoothAttenuation(vec3 l, float r_max)
+{
+  vec2 atten_const = vec2(1.0);
+  atten_const.x = 1.0 / (r_max * r_max);
+  atten_const.y = 2.0 / r_max;
+
+  float r2 = dot(l, l);
+  return max(r2 * atten_const.x * (sqrt(r2) * atten_const.y - 3.0) + 1.0, 0.0001);
 }
 
 void main()
@@ -198,7 +239,7 @@ void main()
   normal2 = normalize(in_TBN * normal2);
 
   vec3 normal = in_normal;//blend_rnm(normal1, normal2);
-  
+
   //@todo a point lights...
   //sun directionnal light
   vec3 light_pos = vec3(100000.0, 100000.0, 0.0);
@@ -218,9 +259,9 @@ void main()
 
   vec3 F0 = vec3(0.02);
   vec3 F90 = vec3(1.0);
-  float metallic = 0.0;
+  float metallic = 0.9;
   float P = 1.0;
-  float roughness = 0.4;
+  float roughness = 0.9;
 
   float D = GGXDistribution(NdH, roughness);
   float G1 = SmithGeometryGGX(roughness, NdV);
@@ -241,13 +282,53 @@ void main()
   vec3 extinct_coeff = absorption_coeff + scaterring_coeff;
   vec3 transmittance = exp(-depth_diff * extinct_coeff);
 
-  
+
   vec3 r = reflect(i, normalize(in_normal));
   vec3 env_color = vec3(texture(env_sampler[0], r).rgb);
-  
-  diffuse =  mix(env_color, diffuse, 0.3);
+
+  diffuse = mix(env_color, diffuse, 0.3);
 
   vec3 C_sun = (kD * diffuse + specular) * light_color * NdL;
+
+  vec3 out_lights = vec3(0.0);
+
+  for (int i = 0; i < NR_POINT_LIGHTS; ++i) {
+
+    vec3 light_pos = point_lights[i].position;
+    vec3 l = normalize(light_pos - p);
+
+    //@todo check thoses attenuation functions
+    //float d = length(light_pos - p);
+    float attenuation = SmoothAttenuation(l, 1.5);
+    //float attenuation = 1.0 / (point_lights[i].clq.x + point_lights[i].clq.y * d + point_lights[i].clq.z * (d * d));
+    //vec3 C_light = srgb_to_linear(point_lights[i].color.rgb) * attenuation;
+    vec3 C_light = point_lights[i].color.rgb * attenuation * 2.0;
+
+    vec3 h = normalize(l + v);
+    float NdL = max(dot(normal, l), 0.00001);
+    float NdH = max(dot(normal, h), 0.00001);
+    float NdV = max(dot(normal, v), 0.00001);
+    float HdV = max(dot(h, v), 0.00001);
+
+    float f = ReflectionBounce(F0);
+    vec3 F = FresnelSchlick(F0, F90, HdV, P) * f;
+
+    float D = GGXDistribution(NdH, roughness);
+
+    float G1 = SmithGeometryGGX(roughness, NdV);
+    float G2 = SmithGeometryGGX(roughness, NdL);
+
+    float G = G1 * G2;
+
+    vec3 specular = (D * G * F) / ((4.0 * NdV * NdL));
+
+    vec3 kD = vec3(1.0) - F;
+    kD *= 1.0 - metallic;
+
+    vec3 diff = diffuse.xyz + Diffuse(diffuse.xyz, F0, NdL, NdV);
+
+    out_lights += (kD * diff + specular) * C_light * NdL;
+  }
 
   //ray marching for transmittance and scaterring
   int max_step = 10;
@@ -284,11 +365,12 @@ void main()
 //  vec3 C_sun = (kD * diffuse + specular) * radiance * NdL;
   C_sun.rgb += clamp(edge - vec3(mask), 0.0, color.a);
   vec3 C_ambient = vec3(0.03) * deep_color;
-  vec3 result = (C_ambient + C_sun);
+  vec3 result = (C_ambient + C_sun + out_lights);
   //result *= PI;
+  //result *= 0.01;
 
   float exposure = 1.0;
-  result.rgb = vec3(1.0) - exp(-result.rgb* exposure);
+  //result.rgb = vec3(1.0) - exp(-result.rgb* exposure);
 
   //@todo check how to get the precise value
   float white_point = 350;

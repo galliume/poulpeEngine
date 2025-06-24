@@ -52,12 +52,12 @@ namespace Poulpe
     export class UnixServer
     {
     public:
-      void bind(std::string const& port) {};
-      void close() {};
-      inline ServerStatus getStatus() { return _status; };
-      void listen() {};
-      void read() {};
-      void send(std::string message) {};
+      void bind(std::string const& port) {}
+      void close() {}
+      inline ServerStatus getStatus() { return _status; }
+      void listen() {}
+      void read() {}
+      void send(std::string message) {}
 
       ServerStatus _status{ ServerStatus::NOT_RUNNING };
 

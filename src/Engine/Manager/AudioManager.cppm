@@ -28,10 +28,10 @@ namespace Poulpe
     std::string getCurrentAmbientSound()  { return _ambient_sounds[_ambient_sound_index]; }
     std::string const getState() ;
 
-    void load(nlohmann::json config) ;
-    void startAmbient(uint32_t const index = 0) ;
-    void stopAmbient() ;
-    void toggleLooping() ;
+    void load(nlohmann::json config);
+    void startAmbient(uint32_t const index = 0);
+    void stopAmbient();
+    void toggleLooping();
 
     void clear();
     void init();

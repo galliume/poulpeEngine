@@ -1,23 +1,30 @@
 {
-	"defaultLevel": "sponza",
-	"defaultSkybox": "desert_road",
-	"ambientMusic": false,
-	"fpsLimit": 30,
-	"font": "./assets/fonts/bitter/BitterPro-Regular.ttf",
-	"input": {
-		"current": "keyboard",
-		"keyboard": {
-			"unlockCamera": "c",
-			"forward": "w",
-			"backward": "s",
-			"left": "a",
-			"right": "d",
-			"up": "q",
-			"down": "e",
-			"unlockFPS": "0",
-			"reloadShader": "1",
-			"normalDebug": "2",
-			"reload": "r"
-		}
-	}
+  "defaultLevel": "outdoors",
+  "defaultSkybox": "desert_road",
+  "ambientMusic": false,
+  "fpsLimit": 30,
+  "resolution": {
+    "width": 1920,
+    "height": 1080
+  },
+  "shadow_resolution": {
+    "width": 2048
+  },
+  "font": "./assets/fonts/bitter/BitterPro-Regular.ttf",
+  "input": {
+    "current": "keyboard",
+    "keyboard": {
+      "unlockCamera": "c",
+      "forward": "w",
+      "backward": "s",
+      "left": "a",
+      "right": "d",
+      "up": "q",
+      "down": "e",
+      "unlockFPS": "0",
+      "reloadShader": "1",
+      "normalDebug": "2",
+      "reload": "r"
+    }
+  }
 }
