@@ -7,6 +7,7 @@ module;
 
 export module Editor.Managers.EditorManager;
 
+import Editor.Managers.ExplorerManager;
 import Editor.Managers.LevelManager;
 
 import Engine.Application;
@@ -26,5 +27,6 @@ namespace Poulpe {
 
       Application const * _app;
       std::unique_ptr<LevelManager> _level_manager;
+      std::unique_ptr<ExplorerManager> _explorer_manager;
   };
 }

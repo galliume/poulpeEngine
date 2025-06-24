@@ -39,10 +39,12 @@ namespace Poulpe
   EntityManager::EntityManager(
     ComponentManager* const component_manager,
     LightManager* const light_manager,
-    TextureManager* const texture_manager)
+    TextureManager* const texture_manager,
+    Buffer& light_buffer)
     : _component_manager(component_manager)
     , _light_manager(light_manager)
     , _texture_manager(texture_manager)
+    , _light_buffer(light_buffer)
   {
     initWorldGraph();
   }
@@ -330,7 +332,8 @@ namespace Poulpe
         .characters = {},
         .face = nullptr,
         .atlas_width = 0,
-        .atlas_height = 0
+        .atlas_height = 0,
+        .light_buffer = _light_buffer
       };
 
       auto basicRdrImpl { RendererComponentFactory::create<Basic>() };

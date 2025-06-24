@@ -41,7 +41,7 @@ void Water::operator()(
   ComponentRenderingInfo const& component_rendering_info)
   {
     stage_flag_bits =
-      VK_SHADER_STAGE_VERTEX_BIT 
+      VK_SHADER_STAGE_VERTEX_BIT
       | VK_SHADER_STAGE_FRAGMENT_BIT
       | VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT
       | VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT;
@@ -66,19 +66,19 @@ void Water::operator()(
         index = i + j;
         float const y{ 0.0f };
 
-        Vertex v{ 
+        Vertex v{
           { -width/2.0f + width*i/(float)rez, y, -height/2.0f + height*j/(float)rez },
           {1.0f, 1.0f, 0.0f}, {i / (float)rez, j / (float)rez }, {0.0f, 0.0f, 0.0f, 0.0f}, { index, 0.0f, 0.0f, 0.0f}, glm::vec3(0.0f), {}, {}};
 
-        Vertex v2{ 
+        Vertex v2{
           {-width/2.0f + width*(i+1)/(float)rez, y, -height/2.0f + height*j/(float)rez },
           {1.0f, 1.0f, 0.0f}, {(i+1) / (float)rez, j / (float)rez }, {0.0f, 0.0f, 0.0f, 0.0f}, { index, 0.0f, 0.0f, 0.0f }, glm::vec3(0.0f), {}, {}};
 
-        Vertex v3{ 
+        Vertex v3{
           {-width/2.0f + width*i/(float)rez, y, -height/2.0f + height*(j+1)/(float)rez },
           {1.0f, 1.0f, 0.0f}, {i / (float)rez, (j+1) / (float)rez }, {0.0f, 0.0f, 0.0f, 0.0f}, { index, 0.0f, 0.0f, 0.0f }, glm::vec3(0.0f), {}, {}};
 
-        Vertex v4{ 
+        Vertex v4{
           {-width/2.0f + width*(i+1)/(float)rez, y, -height/2.0f + height*(j+1)/(float)rez },
           {1.0f, 1.0f, 0.0f}, {(i+1) / (float)rez, (j+1) / (float)rez }, {0.0f, 0.0f, 0.0f, 0.0f}, { index, 0.0f, 0.0f, 0.0f }, glm::vec3(0.0f), {}, {}};
 
@@ -121,7 +121,7 @@ void Water::operator()(
     createDescriptorSet(renderer, component_rendering_info);
     mesh->setIsDirty(false);
   }
-  
+
   void Water::createDescriptorSet(
     Renderer *const renderer,
     ComponentRenderingInfo const& component_rendering_info)
@@ -129,7 +129,7 @@ void Water::operator()(
     auto const& mesh = component_rendering_info.mesh;
 
     Texture tex { component_rendering_info.textures.at(PLP_EMPTY)};
-    
+
     tex.setSampler(renderer->getAPI()->createKTXSampler(
       TextureWrapMode::WRAP,
       TextureWrapMode::WRAP,
@@ -188,10 +188,11 @@ void Water::operator()(
 
     auto const pipeline = renderer->getPipeline(mesh->getShaderName());
     VkDescriptorSet descset = renderer->getAPI()->createDescriptorSets(pipeline->desc_pool, { pipeline->descset_layout }, 1);
+    auto light_buffer {component_rendering_info.light_buffer};
 
     //renderer->getAPI()->updateDescriptorSets(*mesh->getUniformBuffers(), descset, image_infos);
 
-    std::array<VkWriteDescriptorSet, 3> desc_writes{};
+    std::array<VkWriteDescriptorSet, 4> desc_writes{};
     std::vector<VkDescriptorBufferInfo> buffer_infos;
 
     std::for_each(std::begin(mesh->getUniformBuffers()), std::end(mesh->getUniformBuffers()),
@@ -203,6 +204,13 @@ void Water::operator()(
       buffer_info.range = VK_WHOLE_SIZE;
       buffer_infos.emplace_back(buffer_info);
     });
+
+    std::array<VkDescriptorBufferInfo, 1> light_buffer_infos;
+    VkDescriptorBufferInfo light_buffer_info{};
+    light_buffer_info.buffer = light_buffer.buffer;
+    light_buffer_info.offset = 0;
+    light_buffer_info.range = VK_WHOLE_SIZE;
+    light_buffer_infos[0] = light_buffer_info;
 
     desc_writes[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
     desc_writes[0].dstSet = descset;
@@ -227,6 +235,14 @@ void Water::operator()(
     desc_writes[2].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
     desc_writes[2].descriptorCount = static_cast<uint32_t>(env_image_infos.size());
     desc_writes[2].pImageInfo = env_image_infos.data();
+
+    desc_writes[3].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    desc_writes[3].dstSet = descset;
+    desc_writes[3].dstBinding = 3;
+    desc_writes[3].dstArrayElement = 0;
+    desc_writes[3].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+    desc_writes[3].descriptorCount = static_cast<uint32_t>(light_buffer_infos.size());
+    desc_writes[3].pBufferInfo = light_buffer_infos.data();
 
     vkUpdateDescriptorSets(
       renderer->getAPI()->getDevice(),

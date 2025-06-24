@@ -15,6 +15,7 @@ export module Engine.Renderer.RendererComponentTypes;
 
 import Engine.Component.Texture;
 import Engine.Core.PlpTypedef;
+import Engine.Core.MeshTypes;
 import Engine.Renderer.Mesh;
 
 namespace Poulpe {
@@ -27,17 +28,18 @@ namespace Poulpe {
     };
 
     Mesh* mesh;
-    std::unordered_map<std::string, Texture>const& textures;
-    std::string const& skybox_name;
-    std::string const& terrain_name;
-    std::string const& water_name;
-    Light const& sun_light;
-    std::vector<Light> const& point_lights;
-    std::vector<Light> const& spot_lights;
-    std::vector<FontCharacter> const& characters;
-    FT_Face const& face;
-    uint32_t const atlas_width{0};
-    uint32_t const atlas_height{0};
+    std::unordered_map<std::string, Texture> textures{};
+    std::string skybox_name{};
+    std::string terrain_name{};
+    std::string water_name{};
+    Light sun_light{};
+    std::vector<Light> point_lights{};
+    std::vector<Light> spot_lights{};
+    std::vector<FontCharacter> characters{};
+    FT_Face face{};
+    uint32_t atlas_width{0};
+    uint32_t atlas_height{0};
     MODE mode {MODE::CREATION};
+    Buffer light_buffer{};
   };
 }

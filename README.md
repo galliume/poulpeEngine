@@ -5,7 +5,7 @@
 |:---------------|-------------:|
 | GitHub Actions | [![PoulpeEngine](https://github.com/galliume/poulpeEngine/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/galliume/poulpeEngine/actions/workflows/CI.yml)
 
-### This project is a never ending educationnal exercice about game engine and vulkan.
+### This project is a never-ending educational exercise, covering various topics such as C++, Vulkan, graphics, build systems, mathematics, and more.
 
 [Mr Poulpe blog](https://mrpoulpe.substack.com/)
 
@@ -16,25 +16,25 @@
 <img src="https://github.com/galliume/poulpeEngine/blob/main/screenshots/plp.png" width="800" height="600">
 <img src="https://github.com/galliume/poulpeEngine/blob/main/screenshots/helmet.png" width="800" height="450">
 
-### To compile && execute 
+### To compile && execute
 
 You will need a recent version of Clang (20.x) and CMake (3.31 or 4.x), c++23 is needed.
 
-For Windows you will need mingw64 https://www.mingw-w64.org/ and add the bin folder into your PATH. (you do not need any MSVC stuff.)
+For Windows you will need mingw64 https://www.mingw-w64.org/ or from https://github.com/niXman/mingw-builds-binaries/releases and add the bin folder into your PATH. (you do not need any MSVC stuff.)
 
 Install the latest Vulkan SDK https://vulkan.lunarg.com/ and be sure to have the env variable VULKAN_SDK properly set to your Vulkan SDK installation folder.
 
-The editor (Windows only for the moment) is using TCL/TK 9.0, the easiest installation for Windows is to install via the 
+The editor (Windows only for the moment) is using TCL/TK 9.0, the easiest installation for Windows is to install via the
 [MagicSplat installer](https://www.magicsplat.com/tcl-installer/index.html)
 
 Or [download](https://www.tcl-lang.org/software/tcltk/9.0.html) the source and compile it yourself.
 
 On Linux you can install it easily via your favorite package manager.
 
-Compile shaders (Windows && Linux) : 
+Compile shaders (Windows && Linux) :
 ```
 bin/shaders_compil.sh
-```	
+```
 
 List existing presets
 ```
@@ -49,11 +49,11 @@ cmake --list-presets
 Configure with a preset
 ```
 cmake --preset windows-release
-``` 
+```
 
 Compile with a preset
 ```
-cmake --build --preset windows-dereleasebug
+cmake --build --preset windows-release
 ```
 
 Launch from the root directory
@@ -89,7 +89,7 @@ To change the level update config/poulpeEngine.json key defaultLevel, copy/paste
 
 free / lock mouse : left ctrl
 
-forward : Z 
+forward : Z
 
 backward : Q
 

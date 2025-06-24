@@ -1,6 +1,11 @@
 module;
 
+//@todo check X11 too
+#ifdef __unix__
+#define GLFW_EXPOSE_NATIVE_WAYLAND
+#else
 #define GLFW_EXPOSE_NATIVE_WIN32
+#endif
 #include <GLFW/glfw3.h>
 #include <GLFW/glfw3native.h>
 
@@ -15,6 +20,7 @@ module;
 
 module Editor.Managers.EditorManager;
 
+import Editor.Managers.ExplorerManager;
 import Editor.Managers.LevelManager;
 
 import Engine.Application;
@@ -52,7 +58,19 @@ namespace Poulpe {
     Tcl_Obj *const objv[])
   {
     auto * render_manager = static_cast<RenderManager*>(clientData);
+
+#ifdef __unix__
+    // wl_surface* surface = glfwGetWaylandWindow(render_manager->getWindow()->get());
+
+    // int tcl_surface;
+    // Tcl_GetIntFromObj(interp, objv[1], (int*)&tcl_surface);
+
+    // struct wl_compositor *compositor;
+    // struct wl_surface* child = wl_compositor_create_surface(compositor);
+    //struct wl_subsurface* subsurface = wl_subcompositor_get_subsurface(subcompositor, child, parent);
+#else
     HWND glfw_hwnd = glfwGetWin32Window(render_manager->getWindow()->get());
+
     HWND tk_hwnd;
     Tcl_GetIntFromObj(interp, objv[1], (int*)&tk_hwnd);
 
@@ -66,6 +84,7 @@ namespace Poulpe {
 
     SetParent(glfw_hwnd, tk_hwnd);
     SetWindowPos(glfw_hwnd, HWND_TOP, 0, 0, glfw_width, glfw_height, SWP_SHOWWINDOW);
+#endif
 
     return TCL_OK;
   }
@@ -93,6 +112,9 @@ namespace Poulpe {
 
     _level_manager = std::make_unique<LevelManager>();
     _level_manager->registerCommand(_tcl_interp, _app->getRenderManager());
+
+    _explorer_manager = std::make_unique<ExplorerManager>();
+    _explorer_manager->registerCommand(_tcl_interp, _app->getRenderManager());
 
     Tcl_CreateObjCommand(_tcl_interp,
                   "plp_test_callback",

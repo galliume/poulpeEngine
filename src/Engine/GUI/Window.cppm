@@ -20,6 +20,8 @@ namespace Poulpe
     void show();
     void init(
       std::string_view windowTitle,
+      uint16_t const width,
+      uint16_t const height,
       bool const editor_mode = false);
     bool isMinimized();
     void quit();

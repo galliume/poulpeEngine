@@ -1,19 +1,18 @@
 set(FETCHCONTENT_QUIET OFF)
 
-set(ASSIMP_TAG v6.0.1)
-set(FREETYPE_TAG VER-2-13-3)
-set(FMT_TAG 11.2.0)
-set(GLFW_TAG 3.4)
-set(GLM_TAG 1.0.1)
-set(KTX_TAG main)
-set(LUA_TAG v5.4.7)
-set(MINIAUDIO_TAG  0.11.22)
-set(NH_JSON_TAG v3.12.0)
-set(STB_TAG master)
-set(SQLITE_TAG version-3.49.2)
-set(VOLK_TAG 1.4.304)
+set(ASSIMP_TAG v6.0.2) #https://github.com/assimp/assimp/tags
+set(FREETYPE_TAG VER-2-14-1) #https://github.com/freetype/freetype/tags
+set(FMT_TAG 12.0.0) #https://github.com/fmtlib/fmt/tags
+set(GLFW_TAG 3.4) #https://github.com/glfw/glfw/tags
+set(GLM_TAG 1.0.2) #https://github.com/g-truc/glm/tags
+set(KTX_TAG v4.4.2) #https://github.com/KhronosGroup/KTX-Software/tags
+set(LUA_TAG v5.4.8) #https://github.com/lua/lua/tags
+set(MINIAUDIO_TAG  0.11.23) #https://github.com/mackron/miniaudio/tags
+set(NH_JSON_TAG v3.12.0) #https://github.com/nlohmann/json/tags
+set(STB_TAG master) #https://github.com/nothings/stb
+set(SQLITE_TAG 3510000) #https://www.sqlite.org/download.html https://github.com/sqlite/sqlite/tags
+set(VOLK_TAG vulkan-sdk-1.4.328.1) #https://github.com/zeux/volk/tags
 #set(WxWidget_TAG v3.3.0)
-
 set(FETCH_GIT_SHALLOW TRUE)
 set(FETCH_GIT_PROGRESS TRUE)
 set(FETCH_UPDATE_DISCONNECTED TRUE)
@@ -31,11 +30,6 @@ include(deps/FetchMiniAudio)
 include(deps/FetchNlohmannJson)
 include(deps/FetchSTB)
 include(deps/FetchSQlite)
-
-#todo tcl/tk editor for Linux
-if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
 include(deps/FetchTclTk)
-endif()
-
 include(deps/FetchVolk)
 #include(deps/FetchWxWidgets)

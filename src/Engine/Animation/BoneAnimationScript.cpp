@@ -47,7 +47,7 @@ namespace Poulpe
   void BoneAnimationScript::operator()(AnimationInfo const& animation_info)
   {
     if (_done) return;
-    
+
     _data = animation_info.data;
     auto const delta_time = animation_info.delta_time;
 
@@ -60,7 +60,7 @@ namespace Poulpe
     //if (!_move_init) {
     if (_moves.empty() && !_animations.empty()) {
 
-      _anim_id = 0;
+      _anim_id = 1;
       auto const& anim{ _animations.at(_anim_id) };
       double const duration{ (anim.duration / anim.ticks_per_s) * 1000.0 };//ms
       //_elapsed_time = std::clamp(_elapsed_time, 0.f, duration);
@@ -70,7 +70,7 @@ namespace Poulpe
 
       _bone_matrices.resize(_data->_bones.size());
       _elapsed_time = fmod(_elapsed_time, duration);
-      
+
       auto const& root_bone = _data->_bones[_data->_root_bone_name];
       updateBoneTransforms(anim, root_bone.name, root_bone.t_pose, duration);
 
@@ -172,7 +172,7 @@ namespace Poulpe
       updateBoneTransforms(anim, child, global, duration);
     }
   }
-  
+
   Data* BoneAnimationScript::getData()
   {
     return _data;

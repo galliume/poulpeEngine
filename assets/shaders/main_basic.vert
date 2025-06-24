@@ -35,17 +35,23 @@ layout(location = 0) out FRAG_VAR {
   mat3 TBN;
   vec4 light_space;
   mat4 model;
+  vec4 cascade_coord;
+  vec4 cascade_coord1;
+  vec4 cascade_coord2;
+  vec4 cascade_coord3;
+  float depth;
+  float u1;
+  float u2;
+  float u3;
+  vec3 n;
 } frag_var;
 
 struct Light {
   mat4 light_space_matrix;
   mat4 projection;
   mat4 view;
-  //ambiance diffuse specular
   vec3 ads;
-  //constant, linear, quadratiq
   vec3 clq;
-  //cutOff, outerCutoff, Blank
   vec3 coB;
   vec3 color;
   vec3 direction;
@@ -55,6 +61,13 @@ struct Light {
   mat4 light_space_matrix_right;
   mat4 light_space_matrix_bottom;
   mat4 light_space_matrix_back;
+  mat4 cascade_scale_offset;
+  mat4 cascade_scale_offset1;
+  mat4 cascade_scale_offset2;
+  mat4 cascade_scale_offset3;
+  vec4 cascade_min_splits;
+  vec4 cascade_max_splits;
+  vec4 cascade_texel_size;
 };
 
 struct Material
@@ -90,18 +103,21 @@ struct Material
 };
 
 layout(set = 0, binding = 2) readonly buffer ObjectBuffer {
+  Material material;
+};
+
+layout(binding = 5) readonly buffer LightObjectBuffer {
   Light sun_light;
   Light point_lights[NR_POINT_LIGHTS];
   Light spot_light;
-  Material material;
 };
 
 const mat4 biasMat = mat4(
   0.5, 0.0, 0.0, 0.0,
-  0.0, -0.5, 0.0, 0.0,
+  0.0, 0.5, 0.0, 0.0,
   0.0, 0.0, 1.0, 0.0,
   0.5, 0.5, 0.0, 1.0);
-
+  
 void main()
 {
   mat3 normal_matrix = transpose(inverse(mat3(ubo.model)));
@@ -121,11 +137,33 @@ void main()
   vec4 world_pos = ubo.model * vec4(position, 1.0f);
   frag_var.frag_pos = world_pos.xyz;
   frag_var.view_pos = pc.view_position;
-  frag_var.light_space = ubo.projection * point_lights[1].view * ubo.model * vec4(position, 1.0);
+  frag_var.light_space = ubo.projection * point_lights[1].view * world_pos;
   frag_var.texture_coord = texture_coord;
   frag_var.norm = norm;
   frag_var.color = color;
   frag_var.model = ubo.model;
+  vec4 viewPos = pc.view * world_pos;
+  frag_var.depth = -viewPos.z;
+
+  vec4 cascade_coord0 = (sun_light.cascade_scale_offset * world_pos);
+  frag_var.cascade_coord = cascade_coord0;
+  frag_var.cascade_coord1 = (sun_light.cascade_scale_offset1 * cascade_coord0);
+  frag_var.cascade_coord2 = (sun_light.cascade_scale_offset2 * cascade_coord0);
+  frag_var.cascade_coord3 = (sun_light.cascade_scale_offset3 * cascade_coord0);
+
+  vec4 view_plane = vec4(0.0, 0.0, -1.0, 0.0);
+
+  float inv_z_dist0 = 1.0 / (sun_light.cascade_max_splits.x - sun_light.cascade_min_splits.y);
+  float inv_z_dist1 = 1.0 / (sun_light.cascade_max_splits.y - sun_light.cascade_min_splits.z);
+  float inv_z_dist2 = 1.0 / (sun_light.cascade_max_splits.z - sun_light.cascade_min_splits.w);
+
+  vec4 d1 = inv_z_dist0 * (view_plane - vec4(0,0,0, sun_light.cascade_min_splits.y));
+  vec4 d2 = inv_z_dist1 * (view_plane - vec4(0,0,0, sun_light.cascade_min_splits.z));
+  vec4 d3 = inv_z_dist2 * (view_plane - vec4(0,0,0, sun_light.cascade_min_splits.w));
+
+  frag_var.u1 = dot(d1, viewPos);
+  frag_var.u2 = dot(d2, viewPos);
+  frag_var.u3 = dot(d3, viewPos);
 
   gl_Position = ubo.projection * pc.view * world_pos;
 } 

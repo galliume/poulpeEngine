@@ -6,6 +6,7 @@ set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 set(GLFW_LIBRARY_TYPE SHARED CACHE STRING "" FORCE)
 
 message(NOTICE "Fetching GLFW from https://github.com/glfw/glfw ...")
+
 FetchContent_Declare(
   fetch_glfw
   GIT_REPOSITORY https://github.com/glfw/glfw

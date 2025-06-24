@@ -27,8 +27,9 @@ namespace Poulpe
     void right();
     void up();
 
-    inline glm::vec3 getPos() { return _camera_pos; }
-    inline glm::mat4 getView() { return _view; }
+    inline glm::vec3 getPos() const { return _pos; }
+    inline glm::mat4 getView() const { return glm::lookAt(_pos, _pos + _front, _up); }
+    inline glm::vec3 getDirection() const { return _front; }
 
     glm::mat4 frustumProj(float fovy, float s, float n, float f);
     glm::mat4 lookAt();
@@ -49,9 +50,11 @@ namespace Poulpe
     glm::vec3 mat4_up();
 
   private:
-    glm::vec3 _camera_front;
-    glm::vec3 _camera_up;
-    glm::vec3 _camera_pos;
+    glm::vec3 _front { 1.0f, 1.0f, 1.0f };
+    glm::vec3 _up { 0.0f, 1.0f, 0.0f };
+    glm::vec3 _world_up { 1.0f, 1.0f, 1.0f };
+    glm::vec3 _right { 1.0f, 1.0f, 1.0f };
+    glm::vec3 _pos { 1.0f, 1.0f, 1.0f };
 
     glm::vec3 _next_pos;
     glm::vec3 _next_front;
@@ -60,7 +63,7 @@ namespace Poulpe
 
     double _pitch;
     double _yaw{ -90.0 };
-    float const _acceleration{ 100.f };
+    float const _acceleration{ 200.f };
     double _delta_time{ 0.0 };
 
     bool _init{ false };

@@ -76,7 +76,7 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(fetch_assimp)
 
-target_include_directories(${PROJECT_NAME} 
+target_include_directories(${PROJECT_NAME}
 SYSTEM PRIVATE
   ${fetch_assimp_SOURCE_DIR}/include)
 

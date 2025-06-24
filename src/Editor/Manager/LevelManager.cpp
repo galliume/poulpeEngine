@@ -64,7 +64,8 @@ namespace Poulpe {
       .face = font_manager->getFace(),
       .atlas_width = font_manager->getAtlasWidth(),
       .atlas_height = font_manager->getAtlasHeight(),
-      .mode = ComponentRenderingInfo::MODE::UPDATE
+      .mode = ComponentRenderingInfo::MODE::UPDATE,
+      .light_buffer = render_manager->getLightBuffer()
     };
 
     (*rdr_impl)(renderer, rendering_info);

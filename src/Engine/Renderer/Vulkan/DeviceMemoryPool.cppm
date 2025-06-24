@@ -52,6 +52,6 @@ namespace Poulpe
     std::vector<VkDeviceSize> _memory_allocation_size{0};
 
     uint32_t _device_memory_count{ 0 };
-    uint32_t const _max_staging{ 16 };
+    uint32_t const _max_staging{ 8 };
   };
 }

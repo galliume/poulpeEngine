@@ -10,7 +10,7 @@
             "isDefault": true
         },
         "problemMatcher": []
-        }
+    }
     ],
     "inputs": [
         {
@@ -20,10 +20,10 @@
           "options": [
             "windows-debug",
             "windows-release",
-            "windows-release-with-debug",
+            "windows-release-dbg",
             "linux-debug",
             "linux-release",
-            "linux-release-with-debug",
+            "linux-release-dbg",
         ],
           "default": "windows-debug"
         },

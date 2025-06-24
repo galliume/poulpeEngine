@@ -51,7 +51,7 @@ namespace Poulpe
       ~UnixSocket() = default;
 
       void close() {}
-      void bind(std::string const& ip, unsigned short const port) {}
+      void bind(std::string const&, unsigned short const) {}
       void connect() {}
       inline std::string getIP() { return _ip; }
       inline unsigned short getPort() { return _port; }

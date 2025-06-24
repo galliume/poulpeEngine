@@ -5,6 +5,7 @@ module;
 #include <stb_image.h>
 #include <volk.h>
 
+#include <cstring>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
@@ -30,6 +31,9 @@ import Engine.GUI.Window;
 
 namespace Poulpe
 {
+  template <typename T>
+  concept IsObjectBufferOrLightBuffer = std::same_as<T, ObjectBuffer> || std::same_as<T, LightObjectBuffer>;
+
   export VkResult CreateDebugUtilsMessengerEXT(
     VkInstance instance,
     VkDebugUtilsMessengerCreateInfoEXT const * pCreateInfo,
@@ -89,7 +93,9 @@ namespace Poulpe
       VkDescriptorSet& descriptorSet,
       std::vector<VkDescriptorImageInfo>& imageInfo,
       std::vector<VkDescriptorImageInfo>& depth_map_image_info,
-      std::vector<VkDescriptorImageInfo>& cube_map_image_info);
+      std::vector<VkDescriptorImageInfo>& cube_map_image_info,
+      Buffer& light_storage_buffer,
+      std::vector<VkDescriptorImageInfo>& csm_image_info);
 
     void updateDescriptorSet(
       Buffer& uniform_buffer,
@@ -228,19 +234,92 @@ namespace Poulpe
 
     void initMemoryPool();
 
+    template <IsObjectBufferOrLightBuffer T>
     Buffer createStorageBuffers(
-      ObjectBuffer const& storage_buffer);
+      T const& storage_buffer)
+    {
+      VkDeviceSize buffer_size { sizeof(T) };
+
+      VkBuffer staging_buffer{};
+      VkDeviceMemory staging_device_memory{};
+
+      createBuffer(buffer_size, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, staging_buffer, staging_device_memory);
+
+      void* data;
+      vkMapMemory(_device, staging_device_memory, 0, buffer_size, 0, &data);
+      memcpy(data, &storage_buffer, static_cast<size_t>(buffer_size));
+      vkUnmapMemory(_device, staging_device_memory);
+
+      VkBuffer buffer = createBuffer(buffer_size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT);
+      VkMemoryRequirements mem_requirements;
+      vkGetBufferMemoryRequirements(_device, buffer, & mem_requirements);
+
+      auto memoryType = findMemoryType(mem_requirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+      VkDeviceSize const size = mem_requirements.size;
+      VkDeviceSize const bind_offset = align_to(size, mem_requirements.alignment);
+
+      auto const flags { VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT };
+
+      auto device_memory = _device_memory_pool->get(
+        _device,
+        size,
+        memoryType,
+        flags,
+        mem_requirements.alignment,
+        DeviceMemoryPool::DeviceBufferType::STAGING);
+
+      auto const offset { device_memory->getOffset() };
+      auto const index{ device_memory->bindBufferToMemory(buffer, bind_offset) };
+
+      copyBuffer(staging_buffer, buffer, buffer_size);
+
+      Buffer uniform_buffer;
+      uniform_buffer.buffer = std::move(buffer);
+      uniform_buffer.memory = device_memory;
+      uniform_buffer.offset = offset;
+      uniform_buffer.size = size;
+      uniform_buffer.index = index;
+
+      vkDestroyBuffer(_device, staging_buffer, nullptr);
+      vkFreeMemory(_device, staging_device_memory, nullptr);
+
+      return uniform_buffer;
+    }
 
     Buffer createIndirectCommandsBuffer(
       std::vector<VkDrawIndexedIndirectCommand> const& drawCommands);
 
-    void updateStorageBuffer(Buffer& buffer, ObjectBuffer& object_buffer);
+    template <IsObjectBufferOrLightBuffer T>
+    void updateStorageBuffer(Buffer& buffer, T& object_buffer)
+    {
+      VkDeviceMemory staging_device_memory{};
+      VkDeviceSize buffer_size { sizeof(object_buffer) };
 
-    void setResolution(uint32_t const width, uint32_t const height);
+      VkBuffer staging_buffer{};
 
-    uint32_t getWidth() { return _width; }
-    uint32_t getHeight() { return _height; }
-    
+      createBuffer(
+        buffer_size,
+        VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT
+          | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+        staging_buffer, staging_device_memory);
+
+      void* void_data;
+      vkMapMemory(_device, staging_device_memory, 0, buffer_size, 0, &void_data);
+      memcpy(void_data, &object_buffer, static_cast<size_t>(buffer_size));
+      vkUnmapMemory(_device, staging_device_memory);
+
+      copyBuffer(
+        staging_buffer,
+        buffer.buffer,
+        buffer_size,
+        0);
+
+      vkDestroyBuffer(_device, staging_buffer, nullptr);
+      vkFreeMemory(_device, staging_device_memory, nullptr);
+    }
+
     /**
     * Vulkan drawing functions, in main loop
     **/
@@ -385,12 +464,14 @@ namespace Poulpe
 
     void createDepthMapImage(
       VkImage& image,
-      bool const is_cube_map = false);
+      bool const is_cube_map = false,
+      size_t const array_size = 0);
 
     VkImageView createDepthMapImageView(
       VkImage& image,
       bool const is_cube_map = false,
-      bool const is_sampling = true);
+      bool const is_sampling = true,
+      size_t const array_size = 0);
 
     VkSampler createDepthMapSampler();
 
@@ -417,8 +498,8 @@ namespace Poulpe
       VkImage& image,
       VkImageLayout const old_layout,
       VkImageLayout const new_layout,
-      VkImageAspectFlags const aspect_flags);
-
+      VkImageAspectFlags const aspect_flags,
+      uint32_t layer_count = 1);
 
     //KTX
     void createKTXImage(
@@ -538,19 +619,13 @@ namespace Poulpe
 
     std::mutex _mutex_queue_submit{};
     std::shared_mutex _mutex_copy_buffer{};
-    
+
     VkDeviceSize _max_memory_heap{};
     std::unique_ptr<DeviceMemoryPool> _device_memory_pool{ nullptr };
 
     VkFence _fence_acquire_image{};
     VkFence _fence_submit{};
     VkFence _fence_buffer{};
-
-    //@todo move to config file
-    // uint32_t _width{ 2560 };
-    // uint32_t _height{ 1440 };
-      uint32_t _width{ 1600 };
-      uint32_t _height{ 900 };
 
     //VkMemoryRequirements _MemRequirements;
     VkCommandPool _transfer_cmd_pool{};

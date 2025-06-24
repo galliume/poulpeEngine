@@ -1,9 +1,13 @@
 module;
 
+#include <glm/glm.hpp>
+
 #include <chrono>
+#include <vector>
 
 export module Engine.Managers.LightManager;
 
+import Engine.Component.Camera;
 import Engine.Core.PlpTypedef;
 
 namespace Poulpe
@@ -16,14 +20,24 @@ namespace Poulpe
 
     void animateAmbientLight(double const delta_time);
     void animateSunLight(double const delta_time);
-    
+
+    std::tuple<glm::mat4, glm::mat4, float> getLightSpaceMatrix(
+    float const near_plane,
+    float const far_plane,
+    glm::mat4 const & M_camera,
+    glm::mat4 const & projection);
+
     inline Light getSunLight() { return _sun; }
     inline std::vector<Light> getPointLights() { return _points; }
     inline std::vector<Light> getSpotLights() { return _spots; }
+
+    void computeCSM(glm::mat4 const & camera_view, glm::mat4 const & projection);
+    glm::vec3 hsv2rgb(float h, float s, float v);
 
   private:
     Light _sun{};
     std::vector<Light> _points{};
     std::vector<Light> _spots{};
+    float _ambient_hue { 0.0f};
   };
 }

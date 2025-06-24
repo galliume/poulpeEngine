@@ -1,9 +1,6 @@
 {
-	"splash": [
-		"assets/sounds/splash/splash.mp3"
-	],
-	"ambient": [
-		"assets/sounds/ambient/wind__artic__cold-6195.mp3",
-		"assets/sounds/ambient/67884__benboncan__lake-waves-2.wav"
-	]
+  "ambient": [
+    "assets/sounds/ambient/wind__artic__cold-6195.mp3",
+    "assets/sounds/ambient/67884__benboncan__lake-waves-2.wav"
+  ]
 }

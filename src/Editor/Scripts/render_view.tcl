@@ -1,8 +1,8 @@
 namespace eval RenderView {
 
-  ttk::frame .c.render_view -style Infos.TFrame -width 1600 -height 900
+  ttk::frame .c.render_view -style Infos.TFrame -width 800 -height 600
   ttk::frame .c.render_view.g
-  frame .c.render_view.g.scene -width 1600 -height 900
+  frame .c.render_view.g.scene -width 800 -height 600
 
   grid .c.render_view -column 1 -row 0 -rowspan 2 -sticky nwes -pady $::grid_pady -padx $::grid_padx
   grid .c.render_view.g -column 0 -row 0 -sticky nwes
