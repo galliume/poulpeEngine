@@ -192,7 +192,8 @@ float ShadowCalculation(vec3 light_coord, Light l, float NdL)
   limit.yz -= oyz * (1.f / 1024.f);
 
   //float depth = depth_transform.x + depth_transform.y / m;
-  float depth = length(p) / 50.0f;//far plane
+  float far_plane = -l.projection[3][2] / (l.projection[2][2] - 1.0f);
+  float depth = length(p) / far_plane;
   float light = texture(tex_shadow_sampler, vec4(p, depth));
 
   p.xy -= oxy;
@@ -243,7 +244,7 @@ float CalculateInfiniteShadow(vec3 cascade_coord0, vec3 cascade_blend, float NdL
 
   float max_bias = 0.005;
   float min_bias = 0.0005;
-  float bias = max(max_bias * (1.0 - NdL), min_bias);
+  float bias = 0.0;//0.001;max(max_bias * (1.0 - NdL), min_bias);
 
   float light1 = 0.0;
   light1 += texture(csm, vec4(shadow_coord1.xy + shadow_offset[0].xy, cascade_index, shadow_coord1.z - bias));
@@ -357,6 +358,15 @@ vec3 Diffuse(vec3 diffuse, vec3 F0, float NdL, float NdV)
   return (21.0 / (20.0 * PI)) * (1.0 - F0) * diffuse * a * b;
 }
 
+vec3 ApplyFog(vec3 shadedColor, vec3 v)
+{
+  float fogDensity = 0.001;
+  vec3 fogColor = vec3(0.0, 0.0, 0.1);
+
+  float f = exp(-fogDensity * length(v));
+  return (mix(fogColor, shadedColor, f));
+}
+
 void main()
 {
   vec4 alpha_color = texture(tex_sampler[ALPHA_INDEX], var.texture_coord);
@@ -445,7 +455,7 @@ void main()
   }
 
   vec3 p = var.frag_pos;
-  vec3 v = normalize(var.view_pos - p);
+  vec3 v = normalize(var.view_pos);
 
   //vec3 irradiance = texture(cube_maps[ENVIRONMENT_MAP_INDEX], normal).rgb;
   vec3 F0 = mix(vec3(0.04), albedo.xyz, metallic);
@@ -490,11 +500,10 @@ void main()
   vec3 radiance = (((radius * radius) / d) + 0.0001) * vec3(sun_light.color);
   radiance *= ((NdL + 1.0) / 2.0) * ((NdL + 1.0) / 2.0);
 
-   //vec3 radiance = vec3(1.0) * ao;
-  vec3 C_sun = (kD * diffuse + specular) * radiance * 0.01;
-  vec3 C_ambient = albedo.xyz * 0.01;
+  vec3 C_sun = (kD * diffuse + specular) * radiance;
+  vec3 C_ambient = albedo.xyz * 0.001;
 
-  for (int i = 0; i < NR_POINT_LIGHTS; ++i) {
+  for (int i = 1; i < NR_POINT_LIGHTS; ++i) {
 
     vec3 light_pos = point_lights[i].position;
     vec3 l = normalize(light_pos - p);
@@ -504,7 +513,7 @@ void main()
     float attenuation = SmoothAttenuation(l, 1.5);
     //float attenuation = 1.0 / (point_lights[i].clq.x + point_lights[i].clq.y * d + point_lights[i].clq.z * (d * d));
     //vec3 C_light = srgb_to_linear(point_lights[i].color.rgb) * attenuation;
-    vec3 C_light = point_lights[i].color.rgb * attenuation * 2.0;
+    vec3 C_light = point_lights[i].color.rgb * attenuation * 2.0 ;
 
     vec3 h = normalize(l + v);
     float NdL = max(dot(normal, l), 0.00001);
@@ -528,25 +537,28 @@ void main()
     kD *= 1.0 - metallic;
 
     vec3 diffuse = C_diffuse.xyz + Diffuse(C_diffuse.xyz, F0, NdL, NdV);
+    vec3 light_contribution = (kD * diffuse + specular) * C_light * NdL;
 
-    out_lights += (kD * diffuse + specular) * C_light * NdL;
+    // vec3 frag_to_light = p - point_lights[i].position;
+    // float shadow = ShadowCalculation(frag_to_light, point_lights[i], NdL);
+    // light_contribution *= shadow;
+
+    out_lights += light_contribution;
   }
-
-  vec4 color = vec4(C_ambient + C_sun + out_lights, color_alpha);
-  color.xyz *= ao;
-  color.xyz *= PI;
 
   vec3 csm_coords = var.cascade_coord.xyz / var.cascade_coord.w;
   vec3 cascade_blend = vec3(var.u1, var.u2, var.u3);
 
   float csm_shadow = CalculateInfiniteShadow(csm_coords, cascade_blend, NdL);
-  float csm_factor = max(csm_shadow, 0.01);
-  color.xyz *= csm_factor;
+  //C_sun *= csm_shadow;
 
   vec3 frag_to_light = p - point_lights[1].position;
   float shadow = ShadowCalculation(frag_to_light, point_lights[1], NdL);
-  float shadow_factor = max(shadow, 0.01);
-  color.xyz *= shadow_factor;
+
+  vec4 color = vec4(C_ambient + C_sun + out_lights, color_alpha);
+  color.xyz *= ao;
+  color.xyz *= PI;
+  color.xyz *= shadow;
 
   vec2 emissive_coord = transform_uv(
     material.emissive_translation,
@@ -563,6 +575,7 @@ void main()
     color += material.mre_factor.z * emissive_color;
   }
   color += color * (material.mre_factor.z * material.emissive_color);
+  //color.rgb = ApplyFog(color.rgb, var.view_pos);
 
   float exposure = 1.0;
   color.rgb = vec3(1.0) - exp(-color.rgb * exposure);
@@ -576,46 +589,8 @@ void main()
   float white_point = 350;
   final_color = vec4(0.0, 0.0, 0.0, 1.0);
   final_color.rgb = linear_to_hdr10(color.rgb, white_point);
+
   if (material.alpha.x == 2.0) {
     final_color = vec4(linear_to_hdr10(color.rgb, white_point), color_alpha);
   }
-
-   // Determine which cascade we're in
-    // if (var.depth < sun_light.cascade_max_splits.x) {
-    //   final_color *= vec4(1.0, 0.0, 0.0, 0.1); // Red - Cascade 0
-    // } else if (var.depth < sun_light.cascade_max_splits.y) {
-    //   final_color *= vec4(0.0, 1.0, 0.0, 0.1); // Green - Cascade 1
-    // } else if (var.depth < sun_light.cascade_max_splits.z) {
-    //   final_color *= vec4(0.0, 0.0, 1.0, 0.1); // Blue - Cascade 2
-    // } else if (var.depth < sun_light.cascade_max_splits.w) {
-    //   final_color *= vec4(1.0, 1.0, 0.0, 0.1); // Yellow - Cascade 3
-    // } else {
-    //   final_color *=  vec4(1.0, 0.0, 1.0, 0.1); // Magenta - Beyond cascades
-    // }
-  //   vec3 cascade_coord0 = var.cascade_coord.xyz / var.cascade_coord.w;
-  // // Visualize the coordinates
-  // if (cascade_coord0.x < 0.0 || cascade_coord0.x > 1.0 ||
-  //     cascade_coord0.y < 0.0 || cascade_coord0.y > 1.0) {
-  //     final_color = vec4(1, 0, 0, 1);  // Red if out of range
-  //     return;
-  // }
-    // final_color = vec4(cascade_coord0.xy, 0, 1);  // Show UV as color
-// vec3 cascade_coord0 = var.cascade_coord.xyz / var.cascade_coord.w;
-
-// // Check if outside shadow map bounds
-// if (cascade_coord0.x < 0.0 || cascade_coord0.x > 1.0 ||
-//     cascade_coord0.y < 0.0 || cascade_coord0.y > 1.0) {
-//     final_color = vec4(1, 0, 0, 1);  // RED = outside bounds
-//     return;
-// }
-
-// // Sample shadow map
-// float result = texture(csm, vec4(cascade_coord0.xy, 0.0, cascade_coord0.z));
-
-// // Show result
-// if (result > 0.5) {
-//     final_color = vec4(1, 1, 1, 1);  // WHITE = lit
-// } else {
-//     final_color = vec4(0, 0, 1, 1);  // BLUE = shadowed
-// }
 }

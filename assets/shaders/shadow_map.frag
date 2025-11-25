@@ -45,7 +45,7 @@ layout(location = 0) in vec4 position;
 
 void main()
 {
-  Light light = point_lights[1];
+   Light light = point_lights[1];
 
   float light_distance = length(position.xyz - light.position);
   light_distance = light_distance / pc.options.x;

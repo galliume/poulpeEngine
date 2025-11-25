@@ -44,8 +44,23 @@ layout(location = 2) in vec3 in_view_position;
 layout(location = 3) in mat3 in_TBN;
 layout(location = 6) in vec3 in_normal;
 
+// CSM inputs from tessellation shader
+layout(location = 7) in float in_depth;
+layout(location = 8) in vec4 in_cascade_coord;
+layout(location = 9) in vec4 in_cascade_coord1;
+layout(location = 10) in vec4 in_cascade_coord2;
+layout(location = 11) in vec4 in_cascade_coord3;
+layout(location = 12) in vec3 in_cascade_blend;
+
 layout(binding = 1) uniform sampler2D tex_sampler[5];
 layout(binding = 2) uniform samplerCube env_sampler[];
+layout(binding = 3) readonly buffer LightObjectBuffer {
+  Light sun_light;
+  Light point_lights[NR_POINT_LIGHTS];
+  Light spot_light;
+};
+
+layout(binding = 4) uniform sampler2DArrayShadow csm;
 
 layout(push_constant) uniform constants
 {
@@ -53,12 +68,6 @@ layout(push_constant) uniform constants
   vec3 view_position;
   vec4 options;
 } pc;
-
-layout(binding = 3) readonly buffer LightObjectBuffer {
-  Light sun_light;
-  Light point_lights[NR_POINT_LIGHTS];
-  Light spot_light;
-};
 
 float linear_to_sRGB(float color)
 {
@@ -180,6 +189,55 @@ float SmoothAttenuation(vec3 l, float r_max)
   return max(r2 * atten_const.x * (sqrt(r2) * atten_const.y - 3.0) + 1.0, 0.0001);
 }
 
+vec3 ApplyFog(vec3 shadedColor, vec3 v)
+{
+  float fogDensity = 0.001;
+  vec3 fogColor = vec3(0.0, 0.0, 0.1);
+
+  float f = exp(-fogDensity * length(v));
+  return (mix(fogColor, shadedColor, f));
+}
+
+float CalculateInfiniteShadow(vec3 cascade_coord0, vec3 cascade_blend, float NdL)
+{
+  vec3 cascade_coord1 = in_cascade_coord1.xyz / in_cascade_coord1.w;
+  vec3 cascade_coord2 = in_cascade_coord2.xyz / in_cascade_coord2.w;
+  vec3 cascade_coord3 = in_cascade_coord3.xyz / in_cascade_coord3.w;
+
+  vec3 blend = clamp(cascade_blend, 0.0, 1.0);
+  float cascade_index;
+  if (in_depth < sun_light.cascade_max_splits.x) {
+    cascade_index = 0.0;
+  } else if (in_depth < sun_light.cascade_max_splits.y) {
+    cascade_index = 1.0;
+  } else if (in_depth < sun_light.cascade_max_splits.z) {
+    cascade_index = 2.0;
+  } else {
+    cascade_index = 3.0;
+  }
+  float weight = 0.0;
+  vec3 shadow_coord1, shadow_coord2;
+
+  if (cascade_index == 0.0) { shadow_coord1 = cascade_coord0; shadow_coord2 = cascade_coord1; weight = blend.x; }
+  if (cascade_index == 1.0) { shadow_coord1 = cascade_coord1; shadow_coord2 = cascade_coord2; weight = blend.y; }
+  if (cascade_index == 2.0) { shadow_coord1 = cascade_coord2; shadow_coord2 = cascade_coord3; weight = blend.z; }
+  if (cascade_index == 3.0) { shadow_coord1 = cascade_coord3; shadow_coord2 = cascade_coord3; weight = 1.0; }
+
+  // Use a slope-scale bias to reduce shadow artifacts
+  float slope_scale_bias = 0.05;
+  float constant_bias = 0.005;
+  float bias = constant_bias + tan(acos(NdL)) * slope_scale_bias;
+
+  float light1 = texture(csm, vec4(shadow_coord1.xy, cascade_index, shadow_coord1.z - bias));
+
+  float light2 = light1;
+  if (cascade_index < 3.0) {
+    light2 = texture(csm, vec4(shadow_coord2.xy, cascade_index + 1.0, shadow_coord2.z - bias));
+  }
+
+  return mix(light1, light2, weight);
+}
+
 void main()
 {
   vec3 deep_color = vec3(3.0 / 255.0, 84.0 / 255.0, 139.0 / 255.0);
@@ -242,14 +300,13 @@ void main()
 
   //@todo a point lights...
   //sun directionnal light
-  vec3 light_pos = vec3(100000.0, 100000.0, 0.0);
-  vec3 light_color = vec3(1.0);
+  vec3 light_color = sun_light.color.rgb;
 
   vec3 p = in_position;
   vec3 v = normalize(pc.view_position - p);
   vec3 i = normalize(p - pc.view_position);
 
-  vec3 l = normalize(light_pos - p);
+  vec3 l = normalize(-sun_light.direction);
   vec3 h = normalize(v + l);
 
   float HdV = max(dot(h, v), 0.001);
@@ -259,9 +316,9 @@ void main()
 
   vec3 F0 = vec3(0.02);
   vec3 F90 = vec3(1.0);
-  float metallic = 0.9;
+  float metallic = 0.0; // Water is a dielectric
   float P = 1.0;
-  float roughness = 0.9;
+  float roughness = 0.1; // Lower roughness for sharper reflections
 
   float D = GGXDistribution(NdH, roughness);
   float G1 = SmithGeometryGGX(roughness, NdV);
@@ -271,8 +328,8 @@ void main()
   float f = ReflectionBounce(F0);
   vec3 F = FresnelSchlick(F0, F90, HdV, P);
 
-  vec3 specular = (D * G * F) / (4.0 * NdV * NdL + 0.0001);
-  vec3 diffuse = color.rgb + Diffuse(color.rgb, F0, NdL, NdV);
+  vec3 specular = (D * G * F) / (4.0 * NdV * NdL + 0.0001); // Specular BRDF
+  vec3 diffuse = color.rgb; // Diffuse is the refracted color from below
 
   vec3 kD = vec3(1.0) - F;
   kD *= 1.0 - metallic;
@@ -286,9 +343,14 @@ void main()
   vec3 r = reflect(i, normalize(in_normal));
   vec3 env_color = vec3(texture(env_sampler[0], r).rgb);
 
-  diffuse = mix(env_color, diffuse, 0.3);
+  // Final color is a mix of reflected sky and refracted scene color, controlled by Fresnel
+  vec3 surface_color = mix(diffuse, env_color, F);
 
-  vec3 C_sun = (kD * diffuse + specular) * light_color * NdL;
+  vec3 C_sun = (surface_color + specular) * light_color * NdL;
+
+  vec3 csm_coords = in_cascade_coord.xyz / in_cascade_coord.w;
+  float csm_shadow = CalculateInfiniteShadow(csm_coords, in_cascade_blend, NdL);
+  C_sun *= max(csm_shadow, 0.1); 
 
   vec3 out_lights = vec3(0.0);
 
@@ -298,11 +360,9 @@ void main()
     vec3 l = normalize(light_pos - p);
 
     //@todo check thoses attenuation functions
-    //float d = length(light_pos - p);
-    float attenuation = SmoothAttenuation(l, 1.5);
-    //float attenuation = 1.0 / (point_lights[i].clq.x + point_lights[i].clq.y * d + point_lights[i].clq.z * (d * d));
-    //vec3 C_light = srgb_to_linear(point_lights[i].color.rgb) * attenuation;
-    vec3 C_light = point_lights[i].color.rgb * attenuation * 2.0;
+    float d = length(light_pos - p);
+    float attenuation = 1.0 / (d * d);
+    vec3 C_light = point_lights[i].color.rgb * attenuation;
 
     vec3 h = normalize(l + v);
     float NdL = max(dot(normal, l), 0.00001);
@@ -325,9 +385,10 @@ void main()
     vec3 kD = vec3(1.0) - F;
     kD *= 1.0 - metallic;
 
-    vec3 diff = diffuse.xyz + Diffuse(diffuse.xyz, F0, NdL, NdV);
+    // For point lights, we just add their contribution. The diffuse color is already determined.
+    vec3 diff = surface_color.xyz;
 
-    out_lights += (kD * diff + specular) * C_light * NdL;
+    out_lights += (diff + specular) * C_light * NdL;
   }
 
   //ray marching for transmittance and scaterring
@@ -365,9 +426,7 @@ void main()
 //  vec3 C_sun = (kD * diffuse + specular) * radiance * NdL;
   C_sun.rgb += clamp(edge - vec3(mask), 0.0, color.a);
   vec3 C_ambient = vec3(0.03) * deep_color;
-  vec3 result = (C_ambient + C_sun + out_lights);
-  //result *= PI;
-  //result *= 0.01;
+  vec3 result = C_ambient + C_sun + out_lights;
 
   float exposure = 1.0;
   //result.rgb = vec3(1.0) - exp(-result.rgb* exposure);
@@ -376,6 +435,8 @@ void main()
   float white_point = 350;
   final_color = vec4(0.0, 0.0, 0.0, color.a);
   final_color = vec4(linear_to_hdr10(result.rgb, white_point), color.a);
+  //final_color.rgb = ApplyFog(final_color.rgb, in_view_position);
+
   //final_color = vec4(specular, 1.0);
   //final_color = vec4(normal, 1.0);
   //final_color = vec4(vec3(LinearizeDepth(gl_FragCoord.z)), 1.0);

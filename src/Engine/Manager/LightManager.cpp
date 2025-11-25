@@ -155,7 +155,7 @@ namespace Poulpe
 
     auto const camera_up = glm::normalize(glm::vec3(M_camera_inv[1]));
     auto const M_light { glm::lookAt(
-        glm::vec3(center) - glm::normalize(_sun.direction) * 100.f,
+        glm::vec3(center) - glm::normalize(_sun.direction),
         glm::vec3(center),
         camera_up) };
 
@@ -189,7 +189,7 @@ namespace Poulpe
     auto p_cascade { glm::ortho(
         min_x, max_x, // left, right
         min_y, max_y, // bottom, to
-        -1000.f, 1000.f) }; // near, far
+        min_z - 500.f, max_z + 500.f) };
 
     glm::mat4 const bias(
         0.5, 0.0, 0.0, 0.0,

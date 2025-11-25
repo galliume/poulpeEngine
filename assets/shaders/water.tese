@@ -5,6 +5,31 @@
 layout(quads, fractional_odd_spacing, ccw) in;
 
 #define PI 3.141592653589793238462643383279
+#define NR_POINT_LIGHTS 2
+
+struct Light {
+  mat4 light_space_matrix;
+  mat4 projection;
+  mat4 view;
+  vec3 ads;
+  vec3 clq;
+  vec3 coB;
+  vec3 color;
+  vec3 direction;
+  vec3 position;
+  mat4 light_space_matrix_left;
+  mat4 light_space_matrix_top;
+  mat4 light_space_matrix_right;
+  mat4 light_space_matrix_bottom;
+  mat4 light_space_matrix_back;
+  mat4 cascade_scale_offset;
+  mat4 cascade_scale_offset1;
+  mat4 cascade_scale_offset2;
+  mat4 cascade_scale_offset3;
+  vec4 cascade_min_splits;
+  vec4 cascade_max_splits;
+  vec4 cascade_texel_size;
+};
 
 struct UBO
 {
@@ -25,6 +50,12 @@ layout(push_constant) uniform constants
 
 layout(binding = 1) uniform sampler2D tex_sampler[1];
 
+layout(binding = 3) readonly buffer LightObjectBuffer {
+  Light sun_light;
+  Light point_lights[NR_POINT_LIGHTS];
+  Light spot_light;
+};
+
 layout(location = 0) in vec2 in_texture_coord[];
 layout(location = 1) in vec4 in_options[];
 
@@ -33,6 +64,14 @@ layout(location = 1) out vec3 out_position;
 layout(location = 2) out vec3 out_view_position;
 layout(location = 3) out mat3 out_TBN;
 layout(location = 6) out vec3 out_normal;
+
+// CSM outputs for the fragment shader
+layout(location = 7) out float out_depth;
+layout(location = 8) out vec4 out_cascade_coord;
+layout(location = 9) out vec4 out_cascade_coord1;
+layout(location = 10) out vec4 out_cascade_coord2;
+layout(location = 11) out vec4 out_cascade_coord3;
+layout(location = 12) out vec3 out_cascade_blend;
 
 void main()
 {
@@ -151,7 +190,32 @@ void main()
   out_position = (ubo.model * vec4(p.xyz, 1.0)).xyz;
   out_normal = N;
   out_texture_coord = texCoord;
-  out_view_position = pc.view_position;
+  out_view_position = pc.view_position - out_position;
 
-  gl_Position = ubo.projection * pc.view * ubo.model * p;
+  vec4 world_pos = ubo.model * p;
+  vec4 view_pos = pc.view * world_pos;
+  out_depth = -view_pos.z;
+
+  // Calculate CSM coordinates and blend factors
+  vec4 cascade_coord0 = (sun_light.cascade_scale_offset * world_pos);
+  out_cascade_coord = cascade_coord0;
+  out_cascade_coord1 = (sun_light.cascade_scale_offset1 * cascade_coord0);
+  out_cascade_coord2 = (sun_light.cascade_scale_offset2 * cascade_coord0);
+  out_cascade_coord3 = (sun_light.cascade_scale_offset3 * cascade_coord0);
+
+  vec4 view_plane = vec4(0.0, 0.0, -1.0, 0.0);
+
+  float inv_z_dist0 = 1.0 / (sun_light.cascade_max_splits.x - sun_light.cascade_min_splits.y);
+  float inv_z_dist1 = 1.0 / (sun_light.cascade_max_splits.y - sun_light.cascade_min_splits.z);
+  float inv_z_dist2 = 1.0 / (sun_light.cascade_max_splits.z - sun_light.cascade_min_splits.w);
+
+  vec4 d1 = inv_z_dist0 * (view_plane - vec4(0,0,0, sun_light.cascade_min_splits.y));
+  vec4 d2 = inv_z_dist1 * (view_plane - vec4(0,0,0, sun_light.cascade_min_splits.z));
+  vec4 d3 = inv_z_dist2 * (view_plane - vec4(0,0,0, sun_light.cascade_min_splits.w));
+
+  out_cascade_blend.x = dot(d1, view_pos);
+  out_cascade_blend.y = dot(d2, view_pos);
+  out_cascade_blend.z = dot(d3, view_pos);
+
+  gl_Position = ubo.projection * view_pos;
 }

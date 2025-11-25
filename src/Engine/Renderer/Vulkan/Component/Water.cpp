@@ -181,13 +181,16 @@ void Water::operator()(
     std::vector<VkDescriptorImageInfo> env_image_infos{};
     env_image_infos.emplace_back(env.getSampler(), env.getImageView(), VK_IMAGE_LAYOUT_GENERAL );
 
+    std::vector<VkDescriptorImageInfo> csm_image_info{};
+    csm_image_info.emplace_back(renderer->getCSMSamplers(), renderer->getCSMImageViews(), VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL);
+
     auto const pipeline = renderer->getPipeline(mesh->getShaderName());
     VkDescriptorSet descset = renderer->getAPI()->createDescriptorSets(pipeline->desc_pool, { pipeline->descset_layout }, 1);
     auto light_buffer {component_rendering_info.light_buffer};
 
     //renderer->getAPI()->updateDescriptorSets(*mesh->getUniformBuffers(), descset, image_infos);
 
-    std::array<VkWriteDescriptorSet, 4> desc_writes{};
+    std::array<VkWriteDescriptorSet, 5> desc_writes{};
     std::vector<VkDescriptorBufferInfo> buffer_infos;
 
     std::for_each(std::begin(mesh->getUniformBuffers()), std::end(mesh->getUniformBuffers()),
@@ -238,6 +241,14 @@ void Water::operator()(
     desc_writes[3].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
     desc_writes[3].descriptorCount = static_cast<uint32_t>(light_buffer_infos.size());
     desc_writes[3].pBufferInfo = light_buffer_infos.data();
+
+    desc_writes[4].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    desc_writes[4].dstSet = descset;
+    desc_writes[4].dstBinding = 4;
+    desc_writes[4].dstArrayElement = 0;
+    desc_writes[4].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    desc_writes[4].descriptorCount = static_cast<uint32_t>(csm_image_info.size());
+    desc_writes[4].pImageInfo = csm_image_info.data();
 
     vkUpdateDescriptorSets(
       renderer->getAPI()->getDevice(),
