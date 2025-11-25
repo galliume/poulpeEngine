@@ -273,7 +273,7 @@ namespace Poulpe
 
     vkResetFences(_vulkan->getDevice(), 1, &_fences_in_flight[_current_frame]);
 
-    clearScreen();
+    //clearScreen();
   }
 
   void Renderer::startRender()
@@ -479,12 +479,12 @@ namespace Poulpe
 
     vkCmdSetScissor(cmd_buffer, 0, 1, &scissor);
 
-    // float const depth_bias_constant{ 1.0f };
-    // float const depth_bias_slope{ 1.5f };
-    // float const depth_bias_clamp{ 0.0f };
+    float const depth_bias_constant{ 1.25f };
+    float const depth_bias_slope{ 1.75f };
+    float const depth_bias_clamp{ 0.0f };
 
     //vkCmdSetDepthClampEnableEXT(cmd_buffer, VK_TRUE);
-    //vkCmdSetDepthBias(cmd_buffer, depth_bias_constant, depth_bias_clamp, depth_bias_slope);
+    vkCmdSetDepthBias(cmd_buffer, depth_bias_constant, depth_bias_clamp, depth_bias_slope);
 
     std::vector<VkBool32> blend_enable{ VK_FALSE };
     vkCmdSetColorBlendEnableEXT(cmd_buffer, 0, 1, blend_enable.data());

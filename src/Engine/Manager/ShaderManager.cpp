@@ -256,9 +256,18 @@ namespace Poulpe
       storage_binding.pImmutableSamplers = nullptr;
       storage_binding.stageFlags =
         VK_SHADER_STAGE_VERTEX_BIT
-        | VK_SHADER_STAGE_FRAGMENT_BIT;
+        | VK_SHADER_STAGE_FRAGMENT_BIT
+        | VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT;
 
-      bindings = { ubo_binding, sampler_binding, env_sampler_binding, storage_binding };
+      VkDescriptorSetLayoutBinding csm_binding{};
+      csm_binding.binding = 4;
+      csm_binding.descriptorCount = 1;
+      csm_binding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+      csm_binding.pImmutableSamplers = nullptr;
+      csm_binding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+      bindings = { ubo_binding, sampler_binding, env_sampler_binding, storage_binding, csm_binding };
+
     }
     else if constexpr (T == DescSetLayoutType::Water) {
       VkDescriptorSetLayoutBinding ubo_binding{};
@@ -294,9 +303,18 @@ namespace Poulpe
       storage_binding.pImmutableSamplers = nullptr;
       storage_binding.stageFlags =
         VK_SHADER_STAGE_VERTEX_BIT
-        | VK_SHADER_STAGE_FRAGMENT_BIT;
+        | VK_SHADER_STAGE_FRAGMENT_BIT
+        | VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT;
 
-      bindings = { ubo_binding, sampler_binding, env_sampler_binding, storage_binding };
+      VkDescriptorSetLayoutBinding csm_binding{};
+      csm_binding.binding = 4;
+      csm_binding.descriptorCount = 1;
+      csm_binding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+      csm_binding.pImmutableSamplers = nullptr;
+      csm_binding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+      bindings = { ubo_binding, sampler_binding, env_sampler_binding, storage_binding, csm_binding };
+
     } else if constexpr (T == DescSetLayoutType::Text) {
       VkDescriptorSetLayoutBinding ubo_binding{};
       ubo_binding.binding = 0;
@@ -416,9 +434,15 @@ namespace Poulpe
       pipeline_create_infos.cull_mode = VK_CULL_MODE_NONE;
       pipeline_create_infos.has_depth_test = true;
       pipeline_create_infos.has_stencil_test = false;
-      pipeline_create_infos.has_dynamic_depth_bias = false;
+      pipeline_create_infos.has_dynamic_depth_bias = true;
       pipeline_create_infos.is_patch_list = true;
       pipeline_create_infos.topology = VK_PRIMITIVE_TOPOLOGY_PATCH_LIST;
+
+      VkDescriptorPoolSize dpsSB;
+      dpsSB.type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+      dpsSB.descriptorCount = 10;
+
+      poolSizes.emplace_back(dpsSB);
     } else if (shader_name == "shadow_map" || shader_name == "csm") {
 
       pipeline_create_infos.cull_mode = VK_CULL_MODE_FRONT_BIT;

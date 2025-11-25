@@ -127,8 +127,7 @@ namespace Poulpe
     void draw(RendererInfo const& renderer_info);
     void drawShadowMap(
       RendererInfo const& renderer_info,
-      SHADOW_TYPE const shadow_type,
-      VkBuffer const& light_buffer);
+      SHADOW_TYPE const shadow_type);
 
     void endRender();
     void endShadowMap(SHADOW_TYPE const shadow_type);

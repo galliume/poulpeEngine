@@ -389,7 +389,7 @@ namespace Poulpe
 
       auto const component_rendering_info { getComponentRenderingInfo(mesh) };
 
-      _renderer->drawShadowMap(renderer_info, shadow_type, _light_buffers[_renderer->getCurrentFrameIndex()].buffer);
+      _renderer->drawShadowMap(renderer_info, shadow_type);
     }
   }
 

@@ -54,14 +54,21 @@ layout(location = 3) in vec3 in_position;
 layout(location = 4) in vec3 in_view_position;
 layout(location = 5) in mat3 in_inverse_model;
 
+layout(location = 8) in float in_depth;
+layout(location = 9) in vec4 in_cascade_coord;
+layout(location = 10) in vec4 in_cascade_coord1;
+layout(location = 11) in vec4 in_cascade_coord2;
+layout(location = 12) in vec4 in_cascade_coord3;
+layout(location = 13) in vec3 in_cascade_blend;
+
+layout(binding = 1) uniform sampler2D tex_sampler[7];
 layout(binding = 3) readonly buffer LightObjectBuffer {
   Light sun_light;
   Light point_lights[NR_POINT_LIGHTS];
   Light spot_light;
 };
-
-layout(binding = 1) uniform sampler2D tex_sampler[7];
 layout(binding = 2) uniform samplerCube env_sampler[];
+layout(binding = 4) uniform sampler2DArrayShadow csm;
 
 float linear_to_sRGB(float color)
 {
@@ -174,71 +181,104 @@ float SmoothAttenuation(vec3 l, float r_max)
 //    t += abs(noise(x, y, z, f) / f);
 //  return t;
 //}
+vec3 ApplyFog(vec3 shadedColor, vec3 v)
+{
+  float fogDensity = 0.001;
+  vec3 fogColor = vec3(0.0, 0.0, 0.1);
+
+  float f = exp(-fogDensity * length(v));
+  return (mix(fogColor, shadedColor, f));
+}
+
+float CalculateInfiniteShadow(vec3 cascade_coord0, vec3 cascade_blend, float NdL)
+{
+  vec3 cascade_coord1 = in_cascade_coord1.xyz / in_cascade_coord1.w;
+  vec3 cascade_coord2 = in_cascade_coord2.xyz / in_cascade_coord2.w;
+  vec3 cascade_coord3 = in_cascade_coord3.xyz / in_cascade_coord3.w;
+
+  vec3 blend = clamp(cascade_blend, 0.0, 1.0);
+  float cascade_index;
+  if (in_depth < sun_light.cascade_max_splits.x) {
+    cascade_index = 0.0;
+  } else if (in_depth < sun_light.cascade_max_splits.y) {
+    cascade_index = 1.0;
+  } else if (in_depth < sun_light.cascade_max_splits.z) {
+    cascade_index = 2.0;
+  } else {
+    cascade_index = 3.0;
+  }
+  float weight = 0.0;
+  vec3 shadow_coord1, shadow_coord2;
+
+  if (cascade_index == 0.0) { shadow_coord1 = cascade_coord0; shadow_coord2 = cascade_coord1; weight = blend.x; }
+  if (cascade_index == 1.0) { shadow_coord1 = cascade_coord1; shadow_coord2 = cascade_coord2; weight = blend.y; }
+  if (cascade_index == 2.0) { shadow_coord1 = cascade_coord2; shadow_coord2 = cascade_coord3; weight = blend.z; }
+  if (cascade_index == 3.0) { shadow_coord1 = cascade_coord3; shadow_coord2 = cascade_coord3; weight = 1.0; }
+
+  float max_bias = 0.005;
+  float min_bias = 0.0005;
+  float bias = max(max_bias * (1.0 - NdL), min_bias);
+
+  float light1 = texture(csm, vec4(shadow_coord1.xy, cascade_index, shadow_coord1.z - bias));
+
+  float light2 = light1;
+  if (cascade_index < 3.0) {
+    light2 = texture(csm, vec4(shadow_coord2.xy, cascade_index + 1.0, shadow_coord2.z - bias));
+  }
+
+  return mix(light1, light2, weight);
+}
 
 void main()
 {
-  //@todo do PBR for terrain ?
   vec4 albedo = vec4(0.0);
 
-  albedo += tex_color(TERRAIN_SAND) * in_weights.x;
-  albedo += tex_color(TERRAIN_GROUND) * in_weights.y;
-  albedo += tex_color(TERRAIN_GRASS) * in_weights.z;
-  albedo += tex_color(TERRAIN_SNOW) * in_weights.w;
+  // Texture splatting for albedo
+  albedo += texture(tex_sampler[TERRAIN_SAND], in_texture_coord) * in_weights.x;
+  albedo += texture(tex_sampler[TERRAIN_GROUND], in_texture_coord) * in_weights.y;
+  albedo += texture(tex_sampler[TERRAIN_GRASS], in_texture_coord) * in_weights.z;
+  albedo += texture(tex_sampler[TERRAIN_SNOW], in_texture_coord) * in_weights.w;
 
   vec3 p = in_position;
   vec3 v = normalize(pc.view_position - p);
-  vec3 i = normalize(p - pc.view_position);
   vec3 normal = normalize(in_normal.xyz);
 
-  float metallic = 0.9;
-  float roughness = 0.9;
+  // PBR material properties for terrain (dielectric)
+  float metallic = 0.0;
+  float roughness = 0.9; // Terrain is generally very rough
 
-  //vec3 irradiance = texture(cube_maps[ENVIRONMENT_MAP_INDEX], normal).rgb;
+  // Base reflectivity for a non-metal
   vec3 F0 = mix(vec3(0.04), albedo.xyz, metallic);
-
-  vec4 C_diffuse = albedo / PI;
-  vec4 C_specular = vec4(1.0);
-
-  //@todo looks good but is it ok?
-  float P = 1.0 - roughness;// * (1.0 - roughness);
-
-  vec3 out_lights = vec3(0.0);
-
+  float P = 1.0; // Fresnel power
   vec3 F90 = vec3(1.0);
 
-  //directional sun light
-  //vec3 l = normalize(-sun_light.direction);
-  float d = length(sun_light.position - p) * length(sun_light.position - p);
-  //float d = 100000.0;//sun distance approx ?
-  float radius = d * tan(0.00463);//sun approx angle
-  vec3 l = normalize((sun_light.position - p) / d);
+  // Sun light calculation
+  vec3 l = normalize(-sun_light.direction);
   vec3 h = normalize(l + v);
   float NdL = max(dot(normal, l), 0.00001);
   float HdV = max(dot(h, v), 0.00001);
   float NdV = max(dot(normal, v), 0.00001);
   float NdH = max(dot(normal, h), 0.00001);
 
-  float f = ReflectionBounce(F0);
-  vec3 F = FresnelSchlick(F0, F90, HdV, P) * f;
-  float sun_roughness = roughness + (radius / (2 * d));
+  vec3 F = FresnelSchlick(F0, F90, HdV, P);
   float D = GGXDistribution(NdH, roughness);
   float G1 = SmithGeometryGGX(roughness, NdV);
   float G2 = SmithGeometryGGX(roughness, NdL);
   float G = G1 * G2;
 
+  // Energy conservation for diffuse/specular
   vec3 kD = vec3(1.0) - F;
   kD *= 1.0 - metallic;
 
   vec3 specular = (D * G * F) / ((4.0 * NdL * NdV));
-  //vec3 radiance = srgb_to_linear(sun_light.color.rgb) * ao;
-  vec3 diffuse = C_diffuse.xyz + Diffuse(C_diffuse.xyz, F0, NdL, NdV);
+  vec3 diffuse = Diffuse(albedo.xyz, F0, NdL, NdV);
 
-  vec3 radiance = (((radius * radius) / d) + 0.0001) * vec3(sun_light.color);
-  radiance *= ((NdL + 1.0) / 2.0) * ((NdL + 1.0) / 2.0);
+  vec3 radiance = sun_light.color.rgb;
+  vec3 C_sun = (kD * diffuse + specular) * radiance * NdL;
+  vec3 C_ambient = albedo.xyz * 0.03; // Basic ambient term
 
-   //vec3 radiance = vec3(1.0) * ao;
-  vec3 C_sun = (kD * diffuse + specular) * radiance * 0.01;
-  vec3 C_ambient = albedo.xyz * 0.01;
+  // Point lights calculation
+  vec3 out_lights = vec3(0.0);
 
   for (int i = 0; i < NR_POINT_LIGHTS; ++i) {
 
@@ -246,11 +286,9 @@ void main()
     vec3 l = normalize(light_pos - p);
 
     //@todo check thoses attenuation functions
-    //float d = length(light_pos - p);
-    float attenuation = SmoothAttenuation(l, 1.5);
-    //float attenuation = 1.0 / (point_lights[i].clq.x + point_lights[i].clq.y * d + point_lights[i].clq.z * (d * d));
-    //vec3 C_light = srgb_to_linear(point_lights[i].color.rgb) * attenuation;
-    vec3 C_light = point_lights[i].color.rgb * attenuation * 2.0;
+    float d = length(light_pos - p);
+    float attenuation = 1.0 / (d * d); // Physically correct inverse-square falloff
+    vec3 C_light = point_lights[i].color.rgb * attenuation;
 
     vec3 h = normalize(l + v);
     float NdL = max(dot(normal, l), 0.00001);
@@ -258,14 +296,10 @@ void main()
     float NdV = max(dot(normal, v), 0.00001);
     float HdV = max(dot(h, v), 0.00001);
 
-    float f = ReflectionBounce(F0);
-    vec3 F = FresnelSchlick(F0, F90, HdV, P) * f;
-
+    vec3 F = FresnelSchlick(F0, F90, HdV, P);
     float D = GGXDistribution(NdH, roughness);
-
     float G1 = SmithGeometryGGX(roughness, NdV);
     float G2 = SmithGeometryGGX(roughness, NdL);
-
     float G = G1 * G2;
 
     vec3 specular = (D * G * F) / ((4.0 * NdV * NdL));
@@ -273,21 +307,15 @@ void main()
     vec3 kD = vec3(1.0) - F;
     kD *= 1.0 - metallic;
 
-    vec3 diffuse = C_diffuse.xyz + Diffuse(C_diffuse.xyz, F0, NdL, NdV);
+    vec3 diffuse = Diffuse(albedo.xyz, F0, NdL, NdV);
 
     out_lights += (kD * diffuse + specular) * C_light * NdL;
   }
 
-  vec4 color = vec4(C_ambient + C_sun + out_lights, 1.0);
+  vec3 csm_coords = in_cascade_coord.xyz / in_cascade_coord.w;
+  float csm_shadow = CalculateInfiniteShadow(csm_coords, in_cascade_blend, NdL);
+  C_sun *= max(csm_shadow, 0.1);
 
-  // float near = sun_light.near_far.x;
-  // float far = sun_light.near_far.y;
-
-  // float cascade_blend = clamp((var.depth - near) / (far - near), 0.0, 1.0);
-  // float csm_shadow = CalculateInfiniteShadow(sun_light.light_space_matrix, cascade_blend);
-  // float csm_factor = max(csm_shadow, 0.1);
-  // color.xyz *= csm_factor;
-  color.xyz *= PI;
   // vec3 light_color = vec3(1.0);
   // vec3 ambient = 0.1 * light_color;
 
@@ -358,11 +386,15 @@ void main()
 //
 //  vec3 result = (ambient + diffuse + specular) * color;
 
-  float exposure = 0.3;
-  //color.rgb = vec3(1.0) - exp(-color.rgb* exposure);
+  vec4 color = vec4(C_ambient + C_sun + out_lights, 1.0);
+
+
+  float exposure = 1.0;
+  color.rgb = vec3(1.0) - exp(-color.rgb* exposure);
 
   //@todo check how to get the precise value
   float white_point = 350;
   final_color = vec4(0.0, 0.0, 0.0, 1.0);
   final_color.rgb = linear_to_hdr10(color.rgb, white_point);
+  final_color.rgb = ApplyFog(final_color.rgb, in_view_position);
 }

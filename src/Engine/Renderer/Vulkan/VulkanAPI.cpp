@@ -977,9 +977,9 @@ VkPipeline VulkanAPI::createGraphicsPipeline(PipeLineCreateInfo const& pipeline_
   rasterizer.lineWidth = 1.0f;
   rasterizer.cullMode = pipeline_create_info.cull_mode;
   rasterizer.frontFace = VK_FRONT_FACE_CLOCKWISE;//VK_FRONT_FACE_CLOCKWISE;
-  rasterizer.depthBiasEnable = VK_FALSE;
-  rasterizer.depthBiasConstantFactor = 0.f;
-  rasterizer.depthBiasClamp = 0.0f;
+  rasterizer.depthBiasEnable = pipeline_create_info.has_dynamic_depth_bias ? VK_TRUE : VK_FALSE;
+  rasterizer.depthBiasConstantFactor = 1.5f;
+  rasterizer.depthBiasClamp = 1.75f;
   rasterizer.depthBiasSlopeFactor = 0.0f;
   rasterizer.pNext = &depth_clip_state;
 
