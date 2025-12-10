@@ -20,7 +20,7 @@
 
 You will need a recent version of Clang (20.x) and CMake (3.31 or 4.x), c++23 is needed.
 
-For Windows you will need mingw64 https://www.mingw-w64.org/ or from https://github.com/niXman/mingw-builds-binaries/releases and add the bin folder into your PATH. (you do not need any MSVC stuff.)
+For Windows you will need llvm-mingw https://github.com/mstorsjo/llvm-mingw/releases), add the bin folder into your $PATH and set CMAKE_SYSROOT (or update mingw-toolchain.cmake directly)
 
 Install the latest Vulkan SDK https://vulkan.lunarg.com/ and be sure to have the env variable VULKAN_SDK properly set to your Vulkan SDK installation folder.
 

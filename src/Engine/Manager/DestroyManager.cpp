@@ -1,16 +1,14 @@
 module;
 #include <volk.h>
 
-#include <concepts>
-#include <memory>
-#include <unordered_map>
-#include <vector>
-
 module Engine.Managers.DestroyManager;
+
+import std;
 
 import Engine.Component.Entity;
 import Engine.Component.Texture;
 import Engine.Renderer;
+
 namespace Poulpe
 {
   void DestroyManager::cleanDeviceMemory()

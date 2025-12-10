@@ -1,11 +1,6 @@
-module;
-
-#include <chrono>
-#include <cstdint>
-#include <limits>
-#include <random>
-
 export module Engine.Utils.IDHelper;
+
+import std;
 
 namespace Poulpe
 {
@@ -20,13 +15,13 @@ namespace Poulpe
 
     static IDType getGUID()
     {
-      auto millis = static_cast<uint64_t>(std::chrono::duration_cast<ms>(
+      auto millis = static_cast<std::uint64_t>(std::chrono::duration_cast<ms>(
         std::chrono::time_point_cast<ms>(std::chrono::system_clock::now()).time_since_epoch()
       ).count());
 
       std::random_device rd;
       std::mt19937_64 gen(rd());
-      std::uniform_int_distribution<uint64_t> dis(0, std::numeric_limits<uint64_t>::max());
+      std::uniform_int_distribution<std::uint64_t> dis(0, std::numeric_limits<std::uint64_t>::max());
       std::uint64_t rando_number = dis(gen);
 
       return millis + rando_number;

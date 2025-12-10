@@ -4,19 +4,15 @@ module;
 #include <freetype/ttnameid.h>
 #include <volk.h>
 
-#include <concepts>
-#include <memory>
-#include <string>
-#include <unordered_map>
-#include <variant>
-#include <vector>
-
 export module Engine.Renderer.RendererComponent;
+
+import std;
 
 import Engine.Renderer.Mesh;
 import Engine.Renderer.Renderers;
 import Engine.Renderer.RendererComponentTypes;
 import Engine.Renderer.VulkanRenderer;
+
 import Engine.Utils.IDHelper;
 
 namespace Poulpe {

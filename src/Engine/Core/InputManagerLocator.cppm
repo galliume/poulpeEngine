@@ -1,7 +1,6 @@
-module;
-#include <memory>
-
 export module Engine.Core.InputManagerLocator;
+
+import std;
 
 import Engine.GUI.Window;
 import Engine.Manager.InputManager;
@@ -13,7 +12,7 @@ namespace Poulpe
   public:
     InputManagerLocator() = default;
     ~InputManagerLocator() = default;
-    
+
     static InputManager* get();
     static void init(Window const * const window);
 

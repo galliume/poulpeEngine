@@ -1,8 +1,5 @@
 module;
 
-#define GLM_FORCE_DEFAULT_ALIGNED_GENTYPES
-#define GLM_FORCE_DEPTH_ZERO_TO_ONE
-#define GLM_ENABLE_EXPERIMENTAL
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -12,11 +9,9 @@ module;
 
 #include <nlohmann/json.hpp>
 
-#include <functional>
-#include <shared_mutex>
-#include <thread>
-
 module Engine.Managers.EntityManager;
+
+import std;
 
 import Engine.Animation.AnimationScript;
 import Engine.Animation.BoneAnimationScript;
@@ -300,7 +295,7 @@ namespace Poulpe
           auto const& b{ bone.second };
           std::vector<UniformBufferObject> tmp_ubos{ };
           tmp_ubos.resize(b.weights.size());
-  
+
           std::fill(tmp_ubos.begin(), tmp_ubos.end(), ubo);
           ubos.push_back(tmp_ubos);
         });
@@ -342,7 +337,7 @@ namespace Poulpe
       _component_manager->add<RendererComponent>(entity->getID(), std::move(basicRdrImpl));
       _component_manager->add<MeshComponent>(entity->getID(), std::move(mesh));
       auto* entityNode = root_mesh_entity_node->addChild(new EntityNode(entity));
-      
+
       //_renderer->addEntity(entityNode->getEntity(), is_last);
 
       if (alpha_mode == 2.0f) {
@@ -395,7 +390,7 @@ namespace Poulpe
   {
     _entities.emplace_back(entity);
   }
-  
+
   void EntityManager::addTransparentEntity(Entity* entity)
   {
     _transparent_entities.emplace_back(entity);

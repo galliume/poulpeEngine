@@ -1,16 +1,12 @@
 module;
-#define GLM_FORCE_DEFAULT_ALIGNED_GENTYPES
-#define GLM_FORCE_DEPTH_ZERO_TO_ONE
-#define GLM_ENABLE_EXPERIMENTAL
 
 #include <glm/glm.hpp>
 
-#include <string>
-#include <unordered_map>
-#include <vector>
 #include <volk.h>
 
 export module Engine.Core.MeshTypes;
+
+import std;
 
 import Engine.Renderer.VulkanDeviceMemory;
 
@@ -21,8 +17,8 @@ namespace Poulpe {
   export struct Buffer {
     VkBuffer buffer{ VK_NULL_HANDLE };
     DeviceMemory* memory;
-    uint64_t offset;
-    uint64_t size;
+    std::uint64_t offset;
+    std::uint64_t size;
     uint32_t index{ 0 };
   };
 

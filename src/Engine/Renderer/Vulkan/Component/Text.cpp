@@ -3,9 +3,7 @@
 #include FT_FREETYPE_H
 #include <freetype/ttnameid.h>
 
-#define GLM_FORCE_DEFAULT_ALIGNED_GENTYPES
-#define GLM_FORCE_DEPTH_ZERO_TO_ONE
-#define GLM_ENABLE_EXPERIMENTAL
+
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -14,21 +12,19 @@
 #include <glm/fwd.hpp>
 #include <fmt/format.h>
 
-#include <algorithm>
-#include <array>
-#include <chrono>
-#include <functional>
-#include <string_view>
-#include <vector>
 #include <volk.h>
 
 module Engine.Renderer.Vulkan.Text;
 
+import std;
+
 import Engine.Component.Components;
 import Engine.Component.Texture;
 import Engine.Component.Vertex;
+
 import Engine.Core.MeshTypes;
 import Engine.Core.PlpTypedef;
+
 import Engine.Renderer.RendererComponentTypes;
 
 namespace Poulpe
@@ -42,7 +38,7 @@ namespace Poulpe
     auto const& mesh = component_rendering_info.mesh;
 
     if (!mesh && !mesh->isDirty()) return;
-  
+
     std::vector<Vertex> vertices;
 
     auto const screen_width{
@@ -81,7 +77,7 @@ namespace Poulpe
       float v0{ (ch.y_offset + ch.size.y) / height };
       float u1{ (ch.x_offset + ch.size.x) / width };
       float v1{ ch.y_offset / height };
-      
+
       Vertex vertex_1{
         { xpos, ypos + h, 0.0f},
         _color, { u0, v0 },
@@ -146,11 +142,11 @@ namespace Poulpe
     );
 
     glm::vec4 options{ 0.0f };
-    
+
     //@todo isFlat is not obvious
     if (!isFlat()) {
       projection = renderer->getPerspective();
-      
+
       options.x = 1.0f;
     }
 
@@ -184,7 +180,7 @@ namespace Poulpe
       mesh->getUniformBuffers().emplace_back(renderer->getAPI()->createUniformBuffers(1));
       mesh->getMaterial().alpha_mode = 1.0;
 
-      for (size_t i{ 0 }; i < mesh->getData()->_ubos.size(); i++) {
+      for (std::size_t i{ 0 }; i < mesh->getData()->_ubos.size(); i++) {
         std::ranges::for_each(mesh->getData()->_ubos.at(i), [&](auto& data_ubo) {
           data_ubo.projection = projection;
         });
@@ -205,7 +201,7 @@ namespace Poulpe
 
       void* void_data;
       vkMapMemory(renderer->getDevice(), staging_device_memory, 0, buffer_size, 0, &void_data);
-      memcpy(void_data, vertices.data(), static_cast<size_t>(buffer_size));
+      std::memcpy(void_data, vertices.data(), static_cast<std::size_t>(buffer_size));
       vkUnmapMemory(renderer->getDevice(), staging_device_memory);
 
       renderer->getAPI()->copyBuffer(
@@ -223,10 +219,10 @@ namespace Poulpe
     if (!mesh->getData()->_ubos.empty()) {
       renderer->getAPI()->updateUniformBuffer(mesh->getUniformBuffers().at(0), &mesh->getData()->_ubos.at(0));
     }
-    
+
     if (*mesh->getDescSet() == nullptr) {
       createDescriptorSet(renderer, component_rendering_info);
-    } 
+    }
     mesh->setIsDirty(false);
   }
 
@@ -237,7 +233,7 @@ namespace Poulpe
     auto const& mesh = component_rendering_info.mesh;
 
     Texture atlas { component_rendering_info.textures.at("_plp_font_atlas")};
-    
+
     atlas.setSampler(renderer->getAPI()->createKTXSampler(
       TextureWrapMode::WRAP,
       TextureWrapMode::WRAP,
@@ -251,7 +247,7 @@ namespace Poulpe
       TextureWrapMode::CLAMP_TO_EDGE,
       TextureWrapMode::CLAMP_TO_EDGE,
       1);
- 
+
     std::vector<VkDescriptorImageInfo> image_infos{};
     image_infos.emplace_back(sampler, atlas.getImageView(), VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL);
 

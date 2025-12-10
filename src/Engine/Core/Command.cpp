@@ -1,7 +1,6 @@
-module;
-#include <functional>
-
 module Engine.Core.Command;
+
+import std;
 
 namespace Poulpe
 {
@@ -22,7 +21,7 @@ namespace Poulpe
     return response;
   }
 
-  WhenToExecute Command::getWhenToExecute() const 
+  WhenToExecute Command::getWhenToExecute() const
   {
     return _when;
   }

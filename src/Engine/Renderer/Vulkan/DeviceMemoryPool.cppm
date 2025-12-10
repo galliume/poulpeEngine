@@ -2,11 +2,9 @@
 module;
 #include <volk.h>
 
-#include <memory>
-#include <unordered_map>
-#include <vector>
-
 export module Engine.Renderer.VulkanDeviceMemoryPool;
+
+import std;
 
 //import Engine.Core.Logger;
 import Engine.Renderer.VulkanDeviceMemory;
@@ -17,7 +15,7 @@ namespace Poulpe
   export class DeviceMemoryPool
   {
   public:
-    enum class DeviceBufferType : uint8_t
+    enum class DeviceBufferType : std::uint8_t
     {
       UNIFORM, STAGING
     };

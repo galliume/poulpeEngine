@@ -1,9 +1,4 @@
 module;
-
-#define GLM_FORCE_DEFAULT_ALIGNED_GENTYPES
-#define GLM_FORCE_DEPTH_ZERO_TO_ONE
-#define GLM_ENABLE_EXPERIMENTAL
-
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/hash.hpp>
@@ -12,23 +7,19 @@ module;
 
 #include <volk.h>
 
-#include <algorithm>
-#include <cfenv>
-#include <exception>
-#include <future>
-#include <latch>
-#include <memory>
-#include <unordered_map>
-#include <vector>
-#include <iostream>
-
 module Engine.Renderer.VulkanRenderer;
 
+import std;
+
 import Engine.Component.Components;
+
 import Engine.Core.Logger;
 import Engine.Core.MeshTypes;
+
 import Engine.GUI.Window;
+
 import Engine.Managers.ConfigManagerLocator;
+
 import Engine.Renderer.Vulkan.Mesh;
 
 namespace Poulpe
@@ -60,7 +51,7 @@ namespace Poulpe
     _images3.resize(_images.size());
     _samplers3.resize(_images.size());
 
-    for (size_t i{ 0 }; i < _images.size(); ++i) {
+    for (std::size_t i{ 0 }; i < _images.size(); ++i) {
       VkImage image;
 
       _vulkan->createImage(
@@ -176,7 +167,7 @@ namespace Poulpe
     _cmd_buffer_shadowmap = _vulkan->allocateCommandBuffers(_cmd_pool_shadowmap,
       static_cast<uint32_t>(_imageviews.size()));
 
-    for (size_t i { 0 }; i < _images.size(); ++i) {
+    for (std::size_t i { 0 }; i < _images.size(); ++i) {
       VkImage image{};
       _vulkan->createDepthMapImage(image, true);
       _depthmap_images.emplace_back(image);
@@ -185,7 +176,7 @@ namespace Poulpe
 
       _depthmap_samplers.emplace_back(_vulkan->createDepthMapSampler());
     }
-    for (size_t i { 0 }; i < _images.size(); ++i) {
+    for (std::size_t i { 0 }; i < _images.size(); ++i) {
       VkImage image{};
       _vulkan->createDepthMapImage(image, false, 4);
       _csm_images.emplace_back(image);
@@ -228,18 +219,18 @@ namespace Poulpe
     semaphore_create_info.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
     semaphore_create_info.pNext = &timeline_create_info;
 
-    for (size_t i { 0 }; i < _max_frames_in_flight; ++i) {
+    for (std::size_t i { 0 }; i < _max_frames_in_flight; ++i) {
       _sema_render_completes[i].resize(_max_frames_in_flight);
-      for (size_t x { 0 }; x < _max_frames_in_flight; ++x) {
+      for (std::size_t x { 0 }; x < _max_frames_in_flight; ++x) {
         result = vkCreateSemaphore(_vulkan->getDevice(), &sema_create_info, nullptr, &_sema_render_completes[i][x]);
         if (VK_SUCCESS != result) Logger::error("can't create _sema_render_completes semaphore");
       }
     }
-    for (size_t i { 0 }; i < _max_frames_in_flight; ++i) {
+    for (std::size_t i { 0 }; i < _max_frames_in_flight; ++i) {
       result = vkCreateSemaphore(_vulkan->getDevice(), &sema_create_info, nullptr, &_sema_present_completes[i]);
       if (VK_SUCCESS != result) Logger::error("can't create _sema_present_completes semaphore");
     }
-    for (size_t i { 0 }; i < _max_frames_in_flight; ++i) {
+    for (std::size_t i { 0 }; i < _max_frames_in_flight; ++i) {
       result = vkCreateSemaphore(_vulkan->getDevice(), &sema_create_info, nullptr, &_image_available[i]);
       if (VK_SUCCESS != result) Logger::error("can't create _image_available semaphore");
 
@@ -320,9 +311,9 @@ namespace Poulpe
     _vulkan->setViewPort(cmd_buffer);
     _vulkan->setScissor(cmd_buffer);
 
-    float const marker_color_r {static_cast<float>(rand() % 255) / 255.0f};
-    float const marker_color_g { static_cast<float>(rand() % 255) / 255.0f };
-    float const marker_color_b { static_cast<float>(rand() % 255) / 255.0f };
+    float const marker_color_r {static_cast<float>(std::rand() % 255) / 255.0f};
+    float const marker_color_g { static_cast<float>(std::rand() % 255) / 255.0f };
+    float const marker_color_b { static_cast<float>(std::rand() % 255) / 255.0f };
 
     _vulkan->startMarker(
       cmd_buffer,
@@ -461,7 +452,7 @@ namespace Poulpe
     depth_attachment_info.clearValue.color = color_clear;
 
     auto const& appConfig { ConfigManagerLocator::get()->appConfig()["shadow_resolution"] };
-    auto const width { appConfig["width"].get<uint32_t>() }; 
+    auto const width { appConfig["width"].get<uint32_t>() };
 
     VkRenderingInfo  rendering_info{ };
     rendering_info.sType = VK_STRUCTURE_TYPE_RENDERING_INFO;
@@ -687,7 +678,7 @@ namespace Poulpe
 
     std::vector<VkCommandBuffer> cmds_buffer{};
 
-    for (size_t i{ 0 }; i < draw_cmds.cmd_buffers.size(); ++i) {
+    for (std::size_t i{ 0 }; i < draw_cmds.cmd_buffers.size(); ++i) {
       if (draw_cmds.cmd_buffers.at(i) == nullptr) continue;
       cmds_buffer.push_back(draw_cmds.cmd_buffers.at(i));
     }
@@ -703,10 +694,10 @@ namespace Poulpe
     auto &timeline_semaphore = _timeline_semaphores[_current_frame];
 
     auto &_current_timeline_value = _current_timeline_values[_current_frame];
-    uint64_t const draw_finished = _current_timeline_value + 1;
-    uint64_t const finished = _current_timeline_value + 3;
-    std::array<uint64_t, 1> wait_values = { 0 };
-    std::array<uint64_t, 2> signal_values = { draw_finished, 0 };
+    std::uint64_t const draw_finished = _current_timeline_value + 1;
+    std::uint64_t const finished = _current_timeline_value + 3;
+    std::array<std::uint64_t, 1> wait_values = { 0 };
+    std::array<std::uint64_t, 2> signal_values = { draw_finished, 0 };
 
     //VkPipelineStageFlags wait_stage_mask = VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT;
     std::array<VkPipelineStageFlags, 2> graphics_wait_stage_masks = { VK_PIPELINE_STAGE_VERTEX_INPUT_BIT, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };

@@ -10,7 +10,7 @@ namespace Poulpe
   export class Logger
   {
   public:
-    
+
     template <typename... Args>
     static void critical(fmt::format_string<Args...> fmt_str, Args&&... args)
     {

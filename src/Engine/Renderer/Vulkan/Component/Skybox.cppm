@@ -23,5 +23,4 @@ namespace Poulpe
       Renderer *const renderer,
       ComponentRenderingInfo const& component_rendering_info);
   };
-
 }

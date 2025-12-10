@@ -1,12 +1,7 @@
 module;
-
 #include "PoulpeEngineConfig.h"
 
 #include <GLFW/glfw3.h>
-
-#define GLM_FORCE_DEFAULT_ALIGNED_GENTYPES
-#define GLM_FORCE_DEPTH_ZERO_TO_ONE
-#define GLM_ENABLE_EXPERIMENTAL
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -14,10 +9,9 @@ module;
 #include <glm/gtx/quaternion.hpp>
 #include <glm/fwd.hpp>
 
-#include <iostream>
-#include <chrono>
-
 module Engine.Application;
+
+import std;
 
 import Engine.Core.Logger;
 
@@ -74,7 +68,7 @@ namespace Poulpe
 
     double ms_count{0.0};
     double fps_count{0.0};
-    size_t frame_count{ 0 };
+    std::size_t frame_count{ 0 };
     auto last_time_debug_updated{ steady_clock::now() };
 
     FontManager::Text frame_counter {
@@ -112,12 +106,13 @@ namespace Poulpe
     release_build = false;
   #endif
 
-    std::stringstream title;
-    title << "PoulpeEngine v" << PoulpeEngine_VERSION_MAJOR << "." << PoulpeEngine_VERSION_MINOR
-      << " Vulkan version: " << _render_manager->getRenderer()->getAPI()->getAPIVersion()
-      << ((release_build) ? " Release build" : " Debug build");
-    glfwSetWindowTitle(_render_manager->getWindow()->get(), title.str().c_str());
-    
+    std::string const title { std::format("PoulpeEngine v{}.{} Vulkan version: {} {}",
+      PoulpeEngine_VERSION_MAJOR, PoulpeEngine_VERSION_MINOR,
+      _render_manager->getRenderer()->getAPI()->getAPIVersion(),
+      (release_build ? "Release build" : "Debug build")) };
+
+      glfwSetWindowTitle(_render_manager->getWindow()->get(), title.c_str());
+
     while (!glfwWindowShouldClose(_render_manager->getWindow()->get())) {
 
       glfwPollEvents();

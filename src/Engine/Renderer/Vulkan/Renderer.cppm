@@ -1,8 +1,5 @@
 module;
 
-#define GLM_FORCE_DEFAULT_ALIGNED_GENTYPES
-#define GLM_FORCE_DEPTH_ZERO_TO_ONE
-#define GLM_ENABLE_EXPERIMENTAL
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -12,23 +9,19 @@ module;
 
 #include <volk.h>
 
-#include <algorithm>
-#include <cfenv>
-#include <exception>
-#include <future>
-#include <latch>
-#include <memory>
-#include <unordered_map>
-#include <vector>
-
 export module Engine.Renderer.VulkanRenderer;
+
+import std;
 
 import Engine.Renderer.VulkanDeviceMemoryPool;
 import Engine.Renderer.VulkanAPI;
 
 import Engine.Component.Camera;
+
 import Engine.Core.PlpTypedef;
+
 import Engine.GUI.Window;
+
 import Engine.Renderer.Vulkan.Mesh;
 
 namespace Poulpe
@@ -40,7 +33,7 @@ namespace Poulpe
       std::vector<std::vector<VkPipelineStageFlags>> stage_flags{};
       std::vector<bool> is_attachments{ };
 
-      DrawCommands(size_t const size)
+      DrawCommands(std::size_t const size)
         : _size(size)
       {
         init();
@@ -89,7 +82,7 @@ namespace Poulpe
       }
 
       std::mutex _m;
-      size_t _size;
+      std::size_t _size;
   };
 
   export struct RendererInfo
@@ -184,7 +177,7 @@ namespace Poulpe
 
   private:
     const uint32_t _max_frames_in_flight{ 2 };
-    const size_t _max_render_thread{ 3 };
+    const std::size_t _max_render_thread{ 3 };
 
     void onFinishRender();
     void setPerspective();
@@ -275,6 +268,6 @@ namespace Poulpe
     DrawCommands _draw_cmds{3};
 
     std::vector<VkSemaphore> _timeline_semaphores;
-    std::vector<uint64_t> _current_timeline_values;
+    std::vector<std::uint64_t> _current_timeline_values;
   };
 }

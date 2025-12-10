@@ -14,17 +14,6 @@
         "common",
         "GENERATOR_NINJA",
         "CCACHE_ON",
-        "WIN_C_COMPILER_CLANG",
-        "WIN_CXX_COMPILER_CLANG",
-        "WIN_RC_COMPILER",
-        "LINKER_TYPE",
-        "C_USING_LINKER_CLANG",
-        "CXX_USING_LINKER_CLANG",
-        "C_FLAGS",
-        "CXX_FLAGS",
-        "EXE_LINKER_FLAGS",
-        "SHARED_LINKER_FLAGS",
-        "SYSROOT",
         "TCL_TCLSH",
         "TCL_LIBRARY",
         "TCL_INCLUDE_PATH",
@@ -40,6 +29,9 @@
         "microsoft.com/VisualStudioSettings/CMake/1.0": {
           "intelliSenseMode": "windows-clang-x64"
         }
+      },
+      "cacheVariables": {
+        "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/cmake/mingw-toolchain.cmake"
       }
     },
     {
@@ -54,14 +46,15 @@
       "inherits": [
         "common",
         "GENERATOR_NINJA",
-        "CCACHE_ON",
-        "C_COMPILER_CLANG",
-        "CXX_COMPILER_CLANG"
+        "CCACHE_ON"
       ],
       "condition": {
         "type": "equals",
         "lhs": "${hostSystemName}",
         "rhs": "Linux"
+      },
+      "cacheVariables": {
+        "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/cmake/linux-toolchain.cmake"
       }
     },
     {
@@ -202,16 +195,6 @@
       }
     },
     {
-      "name": "MINGW_CMAKE_TOOLCHAIN_FILE",
-      "hidden": true,
-      "cacheVariables": {
-        "CMAKE_TOOLCHAIN_FILE": {
-          "type": "PATH",
-          "value": "${sourceDir}/cmake/mingw-toolchain.cmake"
-        }
-      }
-    },
-    {
       "name": "RELEASE_BUILD_TYPE",
       "hidden": true,
       "cacheVariables": {
@@ -252,26 +235,6 @@
       }
     },
     {
-      "name": "C_COMPILER_CLANG_CL",
-      "hidden": true,
-      "cacheVariables": {
-        "CMAKE_C_COMPILER": {
-          "type": "STRING",
-          "value": "clang-cl"
-        }
-      }
-    },
-    {
-      "name": "CXX_COMPILER_CLANG_CL",
-      "hidden": true,
-      "cacheVariables": {
-        "CMAKE_CXX_COMPILER": {
-          "type": "STRING",
-          "value": "clang-cl"
-        }
-      }
-    },
-    {
       "name": "DEBUG_CMAKE_C_FLAGS",
       "hidden": true,
       "cacheVariables": {
@@ -291,156 +254,6 @@
         }
       }
     },
-        {
-      "name": "C_COMPILER_CLANG",
-      "hidden": true,
-      "cacheVariables": {
-        "CMAKE_C_COMPILER": {
-          "type": "STRING",
-          "value": "clang"
-        }
-      }
-    },
-    {
-      "name": "CXX_COMPILER_CLANG",
-      "hidden": true,
-      "cacheVariables": {
-        "CMAKE_CXX_COMPILER": {
-          "type": "STRING",
-          "value": "clang++"
-        }
-      }
-    },
-    {
-      "name": "WIN_C_COMPILER_CLANG",
-      "hidden": true,
-      "cacheVariables": {
-        "CMAKE_C_COMPILER": {
-          "type": "PATH",
-          "value": "C:\\Program Files\\LLVM\\bin\\clang.exe"
-        }
-      }
-    },
-    {
-      "name": "WIN_CXX_COMPILER_CLANG",
-      "hidden": true,
-      "cacheVariables": {
-        "CMAKE_CXX_COMPILER": {
-          "type": "PATH",
-          "value": "C:\\Program Files\\LLVM\\bin\\clang++.exe"
-        }
-      }
-    },
-    {
-      "name": "WIN_RC_COMPILER",
-      "hidden": true,
-      "cacheVariables": {
-        "CMAKE_RC_COMPILER": {
-          "type": "PATH",
-          "value": "C:\\Program Files\\LLVM\\bin\\llvm-rc.exe"
-        }
-      }
-    },
-    {
-      "name": "C_USING_LINKER_CLANG",
-      "hidden": true,
-      "cacheVariables": {
-        "CMAKE_C_USING_LINKER_CLANG": {
-          "type": "STRING",
-          "value": "C:\\Program Files\\LLVM\\bin\\ld.lld.exe"
-        }
-      }
-    },
-    {
-      "name": "CXX_USING_LINKER_CLANG",
-      "hidden": true,
-      "cacheVariables": {
-        "CMAKE_CXX_USING_LINKER_CLANG": {
-          "type": "STRING",
-          "value": "C:\\Program Files\\LLVM\\bin\\ld.lld.exe"
-        }
-      }
-    },
-    {
-      "name": "LINKER_TYPE",
-      "hidden": true,
-      "cacheVariables": {
-        "CMAKE_LINKER_TYPE": {
-          "type": "STRING",
-          "value": "LLD"
-        }
-      }
-    },
-    {
-      "name": "C_FLAGS",
-      "hidden": true,
-      "cacheVariables": {
-        "CMAKE_C_FLAGS": {
-          "type": "STRING",
-          "value": "-target x86_64-w64-mingw64"
-        }
-      }
-    },
-    {
-      "name": "CXX_FLAGS",
-      "hidden": true,
-      "cacheVariables": {
-        "CMAKE_CXX_FLAGS": {
-          "type": "STRING",
-          "value": "-target x86_64-w64-mingw64"
-        }
-      }
-    },
-    {
-      "name": "EXE_LINKER_FLAGS",
-      "hidden": true,
-      "cacheVariables": {
-        "CMAKE_EXE_LINKER_FLAG": {
-          "type": "STRING",
-          "value": "-target x86_64-w64-mingw64 -fuse-ld=ld.lld"
-        }
-      }
-    },
-    {
-      "name": "SHARED_LINKER_FLAGS",
-      "hidden": true,
-      "cacheVariables": {
-        "CMAKE_SHARED_LINKER_FLAGS": {
-          "type": "STRING",
-          "value": "-target x86_64-w64-mingw64 -fuse-ld=ld.lld"
-        }
-      }
-    },
-    {
-      "name": "SYSROOT",
-      "hidden": true,
-      "cacheVariables": {
-        "CMAKE_SYSROOT": {
-          "type": "STRING",
-          "value": "G:\\mingw64"
-        }
-      }
-    },
-    {
-      "name": "C_COMPILER_GCC",
-      "hidden": true,
-      "cacheVariables": {
-        "CMAKE_C_COMPILER": {
-          "type": "STRING",
-          "value": "gcc"
-        }
-      }
-    },
-    {
-      "name": "CXX_COMPILER_GCC",
-      "hidden": true,
-      "cacheVariables": {
-        "CMAKE_CXX_COMPILER": {
-          "type": "STRING",
-          "value": "g++"
-        }
-      }
-    },
     {
       "name": "GENERATOR_NINJA",
       "hidden": true,
@@ -450,26 +263,6 @@
       "name": "GENERATOR_VS_17_2022",
       "hidden": true,
       "generator": "Visual Studio 17 2022"
-    },
-    {
-      "name": "CLANGCL_TOOLCHAIN_FILE",
-      "hidden": true,
-      "cacheVariables": {
-        "toolchainFile": {
-          "type": "STRING",
-          "value": "clangcl-toolchain.cmake"
-        }
-      }
-    },
-    {
-      "name": "CLANG_TOOLCHAIN_FILE",
-      "hidden": true,
-      "cacheVariables": {
-        "toolchainFile": {
-          "type": "STRING",
-          "value": "clang-toolchain.cmake"
-        }
-      }
     },
     {
       "name": "ASAN_LIBRARY_PATH",

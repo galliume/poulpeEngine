@@ -1,9 +1,6 @@
-module;
-
-#include <iostream>
-#include <chrono>
-
 export module Engine.Utils.ScopedTimer;
+
+import std;
 
 namespace Poulpe
 {

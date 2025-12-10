@@ -1,7 +1,4 @@
 module;
-#define GLM_FORCE_DEFAULT_ALIGNED_GENTYPES
-#define GLM_FORCE_DEPTH_ZERO_TO_ONE
-#define GLM_ENABLE_EXPERIMENTAL
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -11,10 +8,9 @@ module;
 
 #include <vulkan/vulkan.h>
 
-#include <array>
-#include <vector>
-
 export module Engine.Component.Vertex;
+
+import std;
 
 namespace Poulpe
 {
@@ -99,7 +95,7 @@ namespace Poulpe
 
   //namespace std {
   //  template<> struct hash<Vertex> {
-  //    size_t operator()(Vertex const& vertex) const {
+  //    std::size_t operator()(Vertex const& vertex) const {
   //      return ((((((((hash<glm::vec3>()(vertex.pos) ^
   //        (hash<glm::vec3>()(vertex.normal) << 1)) >> 1) ^
   //        (hash<glm::vec2>()(vertex.texture_coord) << 1)) >> 1) ^
@@ -154,7 +150,7 @@ namespace Poulpe
 
   // namespace std {
   //     template<> struct hash<Vertex2D> {
-  //         size_t operator()(Vertex2D const& vertex) const {
+  //         std::size_t operator()(Vertex2D const& vertex) const {
   //             return ((hash<glm::vec2>()(vertex.pos) ^
   //                 (hash<glm::vec3>()(vertex.normal) << 1)) >> 1) ^
   //                 (hash<glm::vec2>()(vertex.texCoord) << 1);

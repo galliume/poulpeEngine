@@ -1,7 +1,6 @@
-module;
-#include <memory>
-
 export module Engine.Managers.ConfigManagerLocator;
+
+import std;
 
 import Engine.Managers.ConfigManager;
 

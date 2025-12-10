@@ -1,23 +1,19 @@
 module;
-
 #include <ktx.h>
 #include <nlohmann/json.hpp>
 #include <volk.h>
 
-#include <cstdlib>
-#include <filesystem>
-#include <latch>
-#include <string>
-#include <vector>
-
 export module Engine.Managers.TextureManager;
 
+import std;
+
 import Engine.Component.Texture;
+
 import Engine.Renderer;
 
 namespace Poulpe
 {
-  export enum class TEXTURE_TYPE : uint8_t
+  export enum class TEXTURE_TYPE : std::uint8_t
   {
     DIFFUSE,
     NORMAL,

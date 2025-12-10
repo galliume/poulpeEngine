@@ -1,12 +1,9 @@
 module;
-
 #include <tcl.h>
 
-#include <latch>
-#include <string>
-#include <iostream>
-
 module Editor.Managers.ExplorerManager;
+
+import std;
 
 import Engine.Core.Logger;
 import Engine.Component.Components;
@@ -52,7 +49,7 @@ namespace Poulpe {
     auto * audio_manager = render_manager->getAudioManager();
     auto * config_manager = ConfigManagerLocator::get();
 
-    uint8_t sound_index{0};
+    std::uint8_t sound_index{0};
     Tcl_GetIntFromObj(interp, objv[1], (int*)&sound_index);
 
     audio_manager->startAmbient(sound_index);

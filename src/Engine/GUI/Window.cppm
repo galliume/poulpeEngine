@@ -1,9 +1,9 @@
 module;
-
 #include <GLFW/glfw3.h>
-#include <string_view>
 
 export module Engine.GUI.Window;
+
+import std;
 
 namespace Poulpe
 {

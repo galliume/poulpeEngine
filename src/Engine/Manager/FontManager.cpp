@@ -3,9 +3,7 @@ module;
 #include FT_FREETYPE_H
 #include <freetype/ttnameid.h>
 
-#define GLM_FORCE_DEFAULT_ALIGNED_GENTYPES
-#define GLM_FORCE_DEPTH_ZERO_TO_ONE
-#define GLM_ENABLE_EXPERIMENTAL
+
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -15,16 +13,16 @@ module;
 
 #include <volk.h>
 
-#include <unordered_map>
-#include <string>
-#include <vector>
-
 module Engine.Managers.FontManager;
 
+import std;
+
 import Engine.Component.Texture;
-import Engine.Managers.ConfigManagerLocator;
+
 import Engine.Core.Logger;
 import Engine.Core.PlpTypedef;
+
+import Engine.Managers.ConfigManagerLocator;
 
 namespace Poulpe
 {
@@ -47,7 +45,7 @@ namespace Poulpe
       Logger::error("FREETYPE: Failed to load font {}", font.c_str());
       return texture;
     }
-    
+
     FT_CharMap found {nullptr};
     FT_CharMap charmap;
 
@@ -81,14 +79,14 @@ namespace Poulpe
     VkCommandPool cmd_pool = _renderer->getAPI()->createCommandPool();
     VkCommandBuffer cmd_buffer = _renderer->getAPI()->allocateCommandBuffers(cmd_pool)[0];
 
-    _characters.resize(static_cast<size_t>(_face->num_glyphs));
+    _characters.resize(static_cast<std::size_t>(_face->num_glyphs));
 
     //float offset{0.0f};
     float x_offset{ 0.f };
     float y_offset{ 0.f };
     int const max_row_width{ 2048 };
     float max_row_height{ 0.f };
-    
+
     _atlas_width = max_row_width;
 
     FT_ULong c;
@@ -120,7 +118,7 @@ namespace Poulpe
 
       if (renderable) {
         std::vector<int8_t> r_buffer{};
-      
+
         auto const glyph_width{ _face->glyph->bitmap.width };
         auto const glyph_height{ _face->glyph->bitmap.rows };
         auto const glyph_pitch{ _face->glyph->bitmap.pitch };

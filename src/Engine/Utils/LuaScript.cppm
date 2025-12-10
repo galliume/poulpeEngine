@@ -1,6 +1,4 @@
 module;
-#include <string>
-
 extern "C" {
   #include <lua.h>
   #include <lauxlib.h>
@@ -8,6 +6,8 @@ extern "C" {
 }
 
 export module Engine.Utils.LuaScript;
+
+import std;
 
 namespace Poulpe
 {

@@ -6,25 +6,13 @@ module;
 #include <stb_image.h>
 #include <volk.h>
 
-#include <array>
-#include <cstring>
-#include <filesystem>
-#include <fstream>
-#include <iostream>
-#include <memory>
-#include <mutex>
-#include <optional>
-#include <unordered_map>
-#include <set>
-#include <shared_mutex>
-#include <string>
-#include <string_view>
-#include <vector>
-
 module Engine.Renderer.VulkanAPI;
+
+import std;
 
 import Engine.Core.Logger;
 import Engine.Core.PlpTypedef;
+
 import Engine.Managers.ConfigManagerLocator;
 
 namespace Poulpe
@@ -948,13 +936,13 @@ VkPipeline VulkanAPI::createGraphicsPipeline(PipeLineCreateInfo const& pipeline_
       uint32_t cache_header_version{ 0 };
       uint32_t vendor_ID{ 0 };
       uint32_t device_ID{ 0 };
-      uint8_t pipeline_cache_UUID[VK_UUID_SIZE] = {};
+      std::uint8_t pipeline_cache_UUID[VK_UUID_SIZE] = {};
 
-      memcpy(& header_length, static_cast<uint8_t*>(cache_file_data) + 0, 4);
-      memcpy(& cache_header_version, static_cast<uint8_t*>(cache_file_data) + 4, 4);
-      memcpy(& vendor_ID, static_cast<uint8_t*>(cache_file_data) + 8, 4);
-      memcpy(& device_ID, static_cast<uint8_t*>(cache_file_data) + 12, 4);
-      memcpy(& pipeline_cache_UUID, static_cast<uint8_t*>(cache_file_data) + 16, VK_UUID_SIZE);
+      std::memcpy(& header_length, static_cast<std::uint8_t*>(cache_file_data) + 0, 4);
+      std::memcpy(& cache_header_version, static_cast<std::uint8_t*>(cache_file_data) + 4, 4);
+      std::memcpy(& vendor_ID, static_cast<std::uint8_t*>(cache_file_data) + 8, 4);
+      std::memcpy(& device_ID, static_cast<std::uint8_t*>(cache_file_data) + 12, 4);
+      std::memcpy(& pipeline_cache_UUID, static_cast<std::uint8_t*>(cache_file_data) + 16, VK_UUID_SIZE);
 
       if (header_length <= 0) {
         bad_cache = true;
@@ -972,7 +960,7 @@ VkPipeline VulkanAPI::createGraphicsPipeline(PipeLineCreateInfo const& pipeline_
         bad_cache = true;
         //Logger::error("Device ID mismatch in {} got {} expect {}", cache_filename, device_ID, _device_props.deviceID);
       }
-      if (memcmp(pipeline_cache_UUID,  _device_props.pipelineCacheUUID, sizeof(pipeline_cache_UUID)) != 0) {
+      if (std::memcmp(pipeline_cache_UUID,  _device_props.pipelineCacheUUID, sizeof(pipeline_cache_UUID)) != 0) {
         //Logger::error("UUID mismatch in {} got {} expect {}", cache_filename, *pipeline_cache_UUID, *_device_props.pipelineCacheUUID);
       }
 
@@ -1006,7 +994,7 @@ VkPipeline VulkanAPI::createGraphicsPipeline(PipeLineCreateInfo const& pipeline_
       //Logger::error("failed to create graphics pipeline cache!");
     }
     if (result == VK_SUCCESS && bad_cache) {
-      size_t p_data_size = 0;
+      std::size_t p_data_size = 0;
       void* data = nullptr;
 
       //first call to get cache size with nullptr
@@ -1147,7 +1135,7 @@ std::vector<VkFramebuffer> VulkanAPI::createFramebuffers(
 
   swapchain_framebuffers.resize(swapchain_image_views.size());
 
-  for (size_t i { 0 }; i < swapchain_image_views.size(); i++) {
+  for (std::size_t i { 0 }; i < swapchain_image_views.size(); i++) {
 
     std::array<VkImageView, 3> attachments {
         *colorImageView.data(),
@@ -1636,7 +1624,7 @@ void VulkanAPI::endCommandBuffer(VkCommandBuffer& cmd_buffer)
   vkEndCommandBuffer(cmd_buffer);
 }
 
-VkResult VulkanAPI::queueSubmit(VkCommandBuffer& cmd_buffer, size_t const queue_index)
+VkResult VulkanAPI::queueSubmit(VkCommandBuffer& cmd_buffer, std::size_t const queue_index)
 {
   VkSubmitInfo submit_info{};
   submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -1758,7 +1746,7 @@ Buffer VulkanAPI::createIndexBuffer(
 
   void* data;
   vkMapMemory(_device, staging_device_memory, 0, buffer_size, 0, &data);
-  memcpy(data, indices.data(), static_cast<size_t>(buffer_size));
+  std::memcpy(data, indices.data(), static_cast<std::size_t>(buffer_size));
   vkUnmapMemory(_device, staging_device_memory);
 
   VkBuffer buffer = createBuffer(buffer_size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT);
@@ -1811,7 +1799,7 @@ Buffer VulkanAPI::createVertexBuffer(
 
   void* data;
   vkMapMemory(_device, staging_device_memory, 0, buffer_size, 0, &data);
-  memcpy(data, vertices.data(), static_cast<size_t>(buffer_size));
+  std::memcpy(data, vertices.data(), static_cast<std::size_t>(buffer_size));
   vkUnmapMemory(_device, staging_device_memory);
 
   VkBuffer buffer = createBuffer(
@@ -1870,7 +1858,7 @@ void VulkanAPI::updateVertexBuffer(
 
   void* data;
   vkMapMemory(_device, staging_device_memory, 0, buffer_size, 0, &data);
-  memcpy(data, new_vertices.data(), static_cast<size_t>(buffer_size));
+  std::memcpy(data, new_vertices.data(), static_cast<std::size_t>(buffer_size));
   vkUnmapMemory(_device, staging_device_memory);
 
   copyBuffer(staging_buffer, buffer_to_update, buffer_size);
@@ -1891,7 +1879,7 @@ Buffer VulkanAPI::createVertex2DBuffer(
 
   void* data;
   vkMapMemory(_device, staging_device_memory, 0, buffer_size, 0, &data);
-  memcpy(data, vertices.data(), static_cast<size_t>(buffer_size));
+  std::memcpy(data, vertices.data(), static_cast<std::size_t>(buffer_size));
   vkUnmapMemory(_device, staging_device_memory);
 
   VkBuffer buffer = createBuffer(buffer_size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT);
@@ -1929,7 +1917,7 @@ Buffer VulkanAPI::createVertex2DBuffer(
 }
 
 Buffer VulkanAPI::createUniformBuffers(
-  uint64_t const uniform_buffers_count)
+  std::uint64_t const uniform_buffers_count)
 {
   VkDeviceSize buffer_size = sizeof(UniformBufferObject) * uniform_buffers_count;
   VkBuffer buffer = createBuffer(buffer_size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT);
@@ -1940,8 +1928,8 @@ Buffer VulkanAPI::createUniformBuffers(
     mem_requirements.memoryTypeBits,
     VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 
-  uint64_t const size = mem_requirements.size;
-  uint64_t const bind_offset = align_to(size, mem_requirements.alignment);
+  std::uint64_t const size = mem_requirements.size;
+  std::uint64_t const bind_offset = align_to(size, mem_requirements.alignment);
 
   auto device_memory = _device_memory_pool->get(
     _device,
@@ -2007,7 +1995,7 @@ Buffer VulkanAPI::createIndirectCommandsBuffer(std::vector<VkDrawIndexedIndirect
     auto memory{ indirect_buffer.memory->getMemory() };
     void* data;
     vkMapMemory(_device, *memory, indirect_buffer.offset, indirect_buffer.size, 0, &data);
-    memcpy(data, draw_cmds.data(), indirect_buffer.size);
+    std::memcpy(data, draw_cmds.data(), indirect_buffer.size);
     vkUnmapMemory(_device, *memory);
 
     indirect_buffer.memory->unLock();
@@ -2057,7 +2045,7 @@ void VulkanAPI::updateUniformBuffer(Buffer& buffer, std::vector<UniformBufferObj
     auto memory = buffer.memory->getMemory();
     void* data;
     vkMapMemory(_device, *memory, buffer.offset, buffer.size, 0, & data);
-    memcpy(data, uniform_buffer_objects->data(), buffer.size);
+    std::memcpy(data, uniform_buffer_objects->data(), buffer.size);
     vkUnmapMemory(_device, *memory);
 
     buffer.memory->unLock();
@@ -2221,7 +2209,7 @@ void VulkanAPI::createImage(
 void VulkanAPI::createDepthMapImage(
   VkImage& image,
   bool const is_cube_map,
-  size_t const array_size)
+  std::size_t const array_size)
 {
   auto const& appConfig { ConfigManagerLocator::get()->appConfig()["shadow_resolution"] };
   auto const width { appConfig["width"].get<uint32_t>() };
@@ -2280,7 +2268,7 @@ VkImageView VulkanAPI::createDepthMapImageView(
   VkImage& image,
   bool const is_cube_map,
   bool const is_sampling,
-  size_t const array_size)
+  std::size_t const array_size)
 {
   VkImageView depth_map_imageview{};
 
@@ -2398,7 +2386,7 @@ void VulkanAPI::createTextureImage(
 
   void* data;
   vkMapMemory(_device, staging_device_memory, 0, size, 0, &data);
-  memcpy(data, pixels, static_cast<size_t>(size));
+  std::memcpy(data, pixels, static_cast<std::size_t>(size));
   vkUnmapMemory(_device, staging_device_memory);
 
   stbi_image_free(pixels);
@@ -2855,7 +2843,7 @@ VkSampler VulkanAPI::createTextureSampler(uint32_t const mip_lvl)
 
     void* data;
     vkMapMemory(_device, staging_device_memory, 0, size, 0, &data);
-    memcpy(data, ktx_texture->pData, static_cast<size_t>(size));
+    std::memcpy(data, ktx_texture->pData, static_cast<std::size_t>(size));
     vkUnmapMemory(_device, staging_device_memory);
 
     VkFormat const format = (VkFormat) ktx_texture->vkFormat;
@@ -3119,7 +3107,7 @@ VkSampler VulkanAPI::createTextureSampler(uint32_t const mip_lvl)
       auto data_buffer = character.buffer.data();
 
       for (uint32_t y{ 0 }; y < glyph_height; y++) {
-        memcpy(
+        std::memcpy(
           data + ((y + static_cast<uint32_t>(character.y_offset)) * width + static_cast<uint32_t>(character.x_offset)),
           data_buffer + (y * glyph_width),
           glyph_width

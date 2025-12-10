@@ -2,15 +2,12 @@ module;
 #include <nlohmann/json.hpp>
 #include <volk.h>
 
-#include <filesystem>
-#include <functional>
-#include <latch>
-#include <memory>
-#include <string>
-
 module Engine.Managers.ShaderManager;
 
+import std;
+
 import Engine.Component.Vertex;
+
 import Engine.Core.Logger;
 import Engine.Core.PlpTypedef;
 import Engine.Core.Tools;
@@ -49,7 +46,6 @@ namespace Poulpe
 
     _shaders->shaders[name]["vert"] = vertex_module;
     _shaders->shaders[name]["frag"] = frag_module;
-
     if (!geom_path.empty() && std::filesystem::exists(geom_path)) {
       auto geom_shader = Tools::readFile(geom_path);
 

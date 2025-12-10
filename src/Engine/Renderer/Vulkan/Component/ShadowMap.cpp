@@ -1,7 +1,4 @@
 module;
-#define GLM_FORCE_DEFAULT_ALIGNED_GENTYPES
-#define GLM_FORCE_DEPTH_ZERO_TO_ONE
-#define GLM_ENABLE_EXPERIMENTAL
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -9,20 +6,18 @@ module;
 #include <glm/gtx/quaternion.hpp>
 #include <glm/fwd.hpp>
 
-#include <algorithm>
-#include <array>
-#include <chrono>
-#include <functional>
-#include <string_view>
-#include <vector>
 #include <volk.h>
 
 module Engine.Renderer.Vulkan.ShadowMap;
 
+import std;
+
 import Engine.Component.Components;
 import Engine.Component.Texture;
+
 import Engine.Core.MeshTypes;
 import Engine.Core.PlpTypedef;
+
 import Engine.Renderer.RendererComponentTypes;
 
 namespace Poulpe
@@ -40,11 +35,11 @@ namespace Poulpe
     // auto cmd_pool = renderer->getAPI()->createCommandPool();
     // auto const ubo_count { 1 };
 
-    // for (size_t i{ 0 }; i < ubo_count; ++i) {
+    // for (std::size_t i{ 0 }; i < ubo_count; ++i) {
     //   Buffer uniformBuffer = renderer->getAPI()->createUniformBuffers(1, cmd_pool);
     //   mesh->getUniformBuffers().emplace_back(uniformBuffer);
     // }
-    
+
     // auto const& data = mesh->getData();
 
     // data->_vertex_buffer = renderer->getAPI()->createVertexBuffer(cmd_pool, data->_vertices);
@@ -53,7 +48,7 @@ namespace Poulpe
 
     // vkDestroyCommandPool(renderer->getDevice(), cmd_pool, nullptr);
 
-    // for (size_t i{ 0 }; i < mesh->getData()->_ubos.size(); i++) {
+    // for (std::size_t i{ 0 }; i < mesh->getData()->_ubos.size(); i++) {
     //   std::ranges::for_each(mesh->getData()->_ubos.at(i), [&](auto& ubo) {
     //     ubo.projection = renderer->getPerspective();
     //   });
@@ -76,7 +71,7 @@ namespace Poulpe
 
     // if (mesh->getData()->_ubos_offset.empty()) {
     //   std::ranges::for_each(mesh->getData()->_bones, [&](auto const& bone) {
-        
+
     //     auto const& b{ bone.second };
 
     //     Buffer uniformBuffer = renderer->getAPI()->createUniformBuffers(b.weights.size(), cmd_pool);
@@ -103,7 +98,7 @@ namespace Poulpe
     // auto const pipeline = renderer->getPipeline(mesh->getShaderName());
     // VkDescriptorSet descset = renderer->getAPI()->createDescriptorSets(pipeline->desc_pool, { pipeline->descset_layout }, 1);
 
-    // for (size_t i{ 0 }; i < mesh->getUniformBuffers().size(); ++i) {
+    // for (std::size_t i{ 0 }; i < mesh->getUniformBuffers().size(); ++i) {
 
     //   renderer->getAPI()->updateDescriptorSets(
     //     mesh->getUniformBuffers(),

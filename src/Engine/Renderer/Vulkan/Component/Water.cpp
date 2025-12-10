@@ -1,8 +1,5 @@
 module;
 
-#define GLM_FORCE_DEFAULT_ALIGNED_GENTYPES
-#define GLM_FORCE_DEPTH_ZERO_TO_ONE
-#define GLM_ENABLE_EXPERIMENTAL
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -10,21 +7,19 @@ module;
 #include <glm/gtx/quaternion.hpp>
 #include <glm/fwd.hpp>
 
-#include <algorithm>
-#include <array>
-#include <chrono>
-#include <functional>
-#include <string_view>
-#include <vector>
 #include <volk.h>
 
 module Engine.Renderer.Vulkan.Water;
 
+import std;
+
 import Engine.Component.Components;
 import Engine.Component.Texture;
 import Engine.Component.Vertex;
+
 import Engine.Core.MeshTypes;
 import Engine.Core.PlpTypedef;
+
 import Engine.Renderer.RendererComponentTypes;
 
 namespace Poulpe
@@ -106,7 +101,7 @@ void Water::operator()(
     mesh->getData()->_ubos_offset.emplace_back(1);
     mesh->getUniformBuffers().emplace_back(renderer->getAPI()->createUniformBuffers(1));
 
-    for (size_t i{ 0 }; i < mesh->getData()->_ubos.size(); i++) {
+    for (std::size_t i{ 0 }; i < mesh->getData()->_ubos.size(); i++) {
       std::ranges::for_each(mesh->getData()->_ubos.at(i), [&](auto& data_ubo) {
         data_ubo.projection = renderer->getPerspective();
       });

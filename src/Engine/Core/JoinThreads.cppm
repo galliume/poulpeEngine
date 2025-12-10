@@ -1,9 +1,6 @@
-module;
-
-#include <vector>
-#include <thread>
-
 export module Engine.Core.JoinThreads;
+
+import std;
 
 namespace Poulpe
 {

@@ -5,18 +5,15 @@ module;
 #include <stb_image.h>
 #include <volk.h>
 
-#include <array>
-#include <cmath>
-#include <filesystem>
-#include <latch>
-#include <string>
-#include <vector>
-
 module Engine.Managers.TextureManager;
 
+import std;
+
 import Engine.Component.Texture;
+
 import Engine.Core.Logger;
 import Engine.Core.PlpTypedef;
+
 import Engine.Renderer;
 
 namespace Poulpe

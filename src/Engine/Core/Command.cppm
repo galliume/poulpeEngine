@@ -1,12 +1,10 @@
-module;
-#include <functional>
-#include <cstdint>
-
 export module Engine.Core.Command;
+
+import std;
 
 namespace Poulpe
 {
-  export enum class WhenToExecute : uint8_t
+  export enum class WhenToExecute : std::uint8_t
   {
     PRE_RENDERING,
     POST_RENDERING

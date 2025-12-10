@@ -1,5 +1,4 @@
 module;
-
 #if defined(_WIN64)
   #include <winsock2.h>
   #include <ws2tcpip.h>
@@ -8,10 +7,9 @@ module;
   //@todo linux impl
 #endif
 
-#include <string>
-#include <memory>
-
 export module Engine.Core.Network.Socket;
+
+import std;
 
 import Engine.Core.Logger;
 import Engine.Core.PlpTypedef;

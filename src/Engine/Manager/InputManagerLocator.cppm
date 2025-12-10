@@ -1,9 +1,9 @@
-module;
-#include <memory>
-
 export module Engine.Managers.InputManagerLocator;
 
+import std;
+
 import Engine.GUI.Window;
+
 import Engine.Managers.InputManager;
 
 namespace Poulpe

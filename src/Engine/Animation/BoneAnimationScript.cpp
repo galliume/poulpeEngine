@@ -1,7 +1,4 @@
 module;
-#define GLM_FORCE_DEFAULT_ALIGNED_GENTYPES
-#define GLM_FORCE_DEPTH_ZERO_TO_ONE
-#define GLM_ENABLE_EXPERIMENTAL
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -9,18 +6,9 @@ module;
 #include <glm/gtx/quaternion.hpp>
 #include <glm/fwd.hpp>
 
-#include <algorithm>
-#include <chrono>
-#include <concepts>
-#include <functional>
-#include <memory>
-#include <unordered_map>
-#include <utility>
-#include <ranges>
-#include <string>
-#include <vector>
-
 module Engine.Animation.BoneAnimationScript;
+
+import std;
 
 namespace Poulpe
 {
@@ -83,7 +71,7 @@ namespace Poulpe
 
         if (total_weight > 0.f) {
           glm::vec4 result = glm::vec4(0.0f);
-          for (size_t i{ 0 }; i < 4; ++i) {
+          for (std::size_t i{ 0 }; i < 4; ++i) {
             auto const bone_id{ vertex.bone_ids[i] };
             auto const w{ vertex.bone_weights[i] };
             if (w > 0.f) {

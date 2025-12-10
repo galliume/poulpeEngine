@@ -2,8 +2,23 @@
 
 cmake_minimum_required(VERSION 3.31.0)
 
-#https://www.kitware.com/import-std-in-cmake-3-30/
-#set(CMAKE_EXPERIMENTAL_CXX_IMPORT_STD "0e5b6991-d74f-4b3d-a41c-cf096e0b2508")
+if(CMAKE_VERSION VERSION_GREATER_EQUAL "4.0")
+  set(CMAKE_EXPERIMENTAL_CXX_IMPORT_STD
+    "d0edc3af-4c50-42ea-a356-e2862fe7a444")
+else()
+  set(CMAKE_EXPERIMENTAL_CXX_IMPORT_STD
+    "0e5b6991-d74f-4b3d-a41c-cf096e0b2508")
+endif()
+
+set(CMAKE_CXX_MODULE_STD 1)
+
+if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
+  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -pthread")
+else()
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++ -pthread")
+  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -stdlib=libc++ -lc++abi -pthread")
+endif()
 
 project(PoulpeEngine
   VERSION 0.2.1
@@ -51,8 +66,45 @@ add_subdirectory(${PROJECT_SOURCE_DIR}/src/Editor/Manager)
 
 set(DEBUG_OPTIONS
   -g
-  -O0
-  -pthread
+  -O0)
+
+set(RELEASE_OPTIONS
+  -O3
+  -DNDEBUG)
+
+#include(CheckIPOSupported)
+#check_ipo_supported(RESULT ipo_supported OUTPUT ipo_error)
+#if(ipo_supported)
+#  message(STATUS "ipo_supported")
+#  set_target_properties(${PROJECT_NAME} PROPERTIES INTERPROCEDURAL_OPTIMIZATION TRUE)
+#endif()
+
+set(LINK_OPTIONS
+  -pthread)
+
+target_compile_definitions(${PROJECT_NAME}
+  PRIVATE
+    VK_NO_PROTOTYPES
+    GLM_FORCE_DEFAULT_ALIGNED_GENTYPES
+    GLM_FORCE_DEPTH_ZERO_TO_ONE
+    GLM_ENABLE_EXPERIMENTAL)
+
+if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+  target_compile_definitions(${PROJECT_NAME} PRIVATE
+      VOLK_STATIC_DEFINES
+      _CRT_SECURE_NO_WARNINGS
+      WIN32_LEAN_AND_MEAN)
+endif()
+
+target_compile_features(${PROJECT_NAME}
+  PRIVATE   cxx_std_23
+  INTERFACE cxx_std_23)
+
+target_include_directories(${PROJECT_NAME} PRIVATE ${PROJECT_BINARY_DIR})
+
+target_compile_options(${PROJECT_NAME} PRIVATE
+  $<$<CONFIG:DEBUG>:${DEBUG_OPTIONS}>
+  $<$<CONFIG:RELEASE>:${RELEASE_OPTIONS}>
   -Weverything
   -fno-inline
   -fno-inline-functions
@@ -71,61 +123,6 @@ set(DEBUG_OPTIONS
   -Wno-deprecated-declarations
   -Wno-c++20-compat)
 
-set(RELEASE_OPTIONS
-  -O3
-  -pthread
-  -march=x86-64
-  -DNDEBUG
-  -Weverything
-  -Wno-c++98-compat
-  -Wno-old-style-cast
-  -Wno-padded
-  -Wno-documentation
-  -Wno-documentation-unknown-command
-  -Wno-decls-in-multiple-modules
-  -Wno-unsafe-buffer-usage
-  -Wno-c++98-compat
-  -Wno-c++98-compat-pedantic
-  -Wno-covered-switch-default
-  -Wno-deprecated-declarations
-  -Wno-c++20-compat)
-
-#include(CheckIPOSupported)
-#check_ipo_supported(RESULT ipo_supported OUTPUT ipo_error)
-#if(ipo_supported)
-#  message(STATUS "ipo_supported")
-#  set_target_properties(${PROJECT_NAME} PROPERTIES INTERPROCEDURAL_OPTIMIZATION TRUE)
-#endif()
-
-set(LINK_OPTIONS
-  -pthread)
-
-target_compile_definitions(${PROJECT_NAME}
-  PRIVATE
-    VK_NO_PROTOTYPES)
-
-if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
-  # target_include_directories(${PROJECT_NAME}
-  #   SYSTEM PRIVATE
-  #     "G:/mingw64/x86_64-w64-mingw32/include")
-  include_directories(SYSTEM "G:/mingw64/x86_64-w64-mingw32/include")
-
-  target_compile_definitions(${PROJECT_NAME} PRIVATE
-      VOLK_STATIC_DEFINES
-      _CRT_SECURE_NO_WARNINGS
-      WIN32_LEAN_AND_MEAN)
-
-  LIST(APPEND DEBUG_OPTIONS -femulated-tls)
-  LIST(APPEND RELEASE_OPTIONS -femulated-tls)
-  LIST(APPEND LINK_OPTIONS -femulated-tls)
-endif()
-
-target_compile_features(${PROJECT_NAME}
-  PRIVATE   cxx_std_23
-  INTERFACE cxx_std_23)
-
-target_include_directories(${PROJECT_NAME} PRIVATE ${PROJECT_BINARY_DIR})
-
 target_link_options(${PROJECT_NAME} PRIVATE $<$<CONFIG:DEBUG>:${LINK_OPTIONS}>)
 target_link_options(${PROJECT_NAME} PRIVATE $<$<CONFIG:RELEASE>:${LINK_OPTIONS}>)
 
@@ -143,7 +140,7 @@ set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
 list(APPEND EXTRA_LIBS Threads::Threads)
 
-find_package(Vulkan REQUIRED)
+#find_package(Vulkan REQUIRED)
 #list(APPEND EXTRA_LIBS Vulkan::Vulkan) done by volk
 
 set(PLP_LIB_DIR "$<TARGET_FILE_DIR:${PROJECT_NAME}>/lib")

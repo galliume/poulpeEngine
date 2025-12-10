@@ -1,28 +1,24 @@
 module;
-
 #include <nlohmann/json.hpp>
 #include "vulkan/vulkan.h"
 
-#include <functional>
-#include <latch>
-#include <memory>
-#include <string>
-#include <vector>
-
 export module Engine.Managers.ShaderManager;
 
+import std;
+
 import Engine.Core.PlpTypedef;
+
 import Engine.Renderer;
 
 namespace Poulpe
 {
-  export enum class DescSetLayoutType : uint8_t
+  export enum class DescSetLayoutType : std::uint8_t
   {
       Skybox, HUD, Entity,
       Offscreen, Terrain, Water,
       Text
   };
-  export enum class VertexBindingType : uint8_t
+  export enum class VertexBindingType : std::uint8_t
   {
       Vertex2D, Vertex3D
   };
@@ -40,7 +36,7 @@ namespace Poulpe
       std::string const& geom_path,
       std::string const& tese_path,
       std::string const& tesc_path);
-    
+
     void clear();
     inline VulkanShaders* getShaders() const  { return _shaders.get(); }
     std::function<void(std::latch& count_down)> load(nlohmann::json config) ;

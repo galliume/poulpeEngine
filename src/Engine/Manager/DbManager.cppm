@@ -1,5 +1,4 @@
 module;
-
 #include <sqlite3.h>
 
 export module Engine.Managers.DbManager;

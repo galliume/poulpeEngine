@@ -1,21 +1,18 @@
 module;
 
-#define GLM_FORCE_DEFAULT_ALIGNED_GENTYPES
-#define GLM_FORCE_DEPTH_ZERO_TO_ONE
-#define GLM_ENABLE_EXPERIMENTAL
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/string_cast.hpp>
 
-#include <algorithm>
-#include <numeric>
-#include <vector>
 
 module Engine.Managers.LightManager;
 
+import std;
+
 import Engine.Core.Logger;
 import Engine.Core.PlpTypedef;
+
 import Engine.Managers.ConfigManagerLocator;
 
 namespace Poulpe
@@ -117,7 +114,7 @@ namespace Poulpe
     glm::mat4 const & projection)
 {
     auto const& appConfig { ConfigManagerLocator::get()->appConfig()["shadow_resolution"] };
-    auto const shadow_resolution { static_cast<float>(appConfig["width"].get<uint32_t>()) }; 
+    auto const shadow_resolution { static_cast<float>(appConfig["width"].get<uint32_t>()) };
 
     auto const g { projection[1][1] };
     auto const s { 1.0f };
@@ -148,7 +145,7 @@ namespace Poulpe
         M_camera_inv * glm::vec4(far_v2, 1.0f),
         M_camera_inv * glm::vec4(far_v3, 1.0f)
     };
-    
+
     for (auto& v : cascade_frustum) {
         v /= v.w;
     }
@@ -176,7 +173,7 @@ namespace Poulpe
         min_y = std::min(min_y, Lv.y);
         max_y = std::max(max_y, Lv.y);
         min_z = std::min(min_z, Lv.z);
-        max_z = std::max(max_z, Lv.z); 
+        max_z = std::max(max_z, Lv.z);
     }
 
     auto const d { std::max(max_x - min_x, max_y - min_y) };
@@ -224,12 +221,12 @@ namespace Poulpe
     std::array<glm::mat4, 4> scales_offsets{};
     std::array<float, 4> cascades_size{};
 
-    for (uint8_t i { 0 }; i < cascade_splits.size(); ++i) {
+    for (std::uint8_t i { 0 }; i < cascade_splits.size(); ++i) {
       std::tie(matrices[i], shadows[i], cascades_size[i]) =
         getLightSpaceMatrix(cascade_splits[i].x, cascade_splits[i].y, camera_view, projection);
     }
 
-    for (uint8_t i { 0 }; i < 4; ++i) {
+    for (std::uint8_t i { 0 }; i < 4; ++i) {
       scales_offsets[i] = shadows[i] * glm::inverse(shadows[0]);
     }
 

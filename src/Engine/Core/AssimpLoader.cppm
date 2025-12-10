@@ -1,8 +1,5 @@
 module;
 
-#define GLM_FORCE_DEFAULT_ALIGNED_GENTYPES
-#define GLM_FORCE_DEPTH_ZERO_TO_ONE
-#define GLM_ENABLE_EXPERIMENTAL
 
 #include <assimp/config.h>
 #include <assimp/scene.h>
@@ -15,12 +12,9 @@ module;
 #include <glm/gtx/quaternion.hpp>
 #include <glm/fwd.hpp>
 
-#include <functional>
-#include <string>
-#include <unordered_map>
-#include <vector>
-
 export module Engine.Core.AssimpLoader;
+
+import std;
 
 import Engine.Component.Vertex;
 import Engine.Core.PlpTypedef;

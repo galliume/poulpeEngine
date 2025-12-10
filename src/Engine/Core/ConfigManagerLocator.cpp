@@ -1,7 +1,6 @@
-module;
-#include <memory>
-
 module Engine.Core.ConfigManagerLocator;
+
+import std;
 
 namespace Poulpe
 {

@@ -1,12 +1,9 @@
 module;
-
 #include <volk.h>
 
-#include <memory>
-#include <mutex>
-#include <stdexcept>
-
 module Engine.Renderer.VulkanDeviceMemory;
+
+import std;
 
 namespace Poulpe
 {
@@ -144,11 +141,11 @@ namespace Poulpe
 
   void DeviceMemory::clear()
   {
-    for (auto buffer : _buffer) {
-      if (VK_NULL_HANDLE != buffer) {
-        vkDestroyBuffer(_device, buffer, nullptr);
-      }
-    }
+    // for (auto buffer : _buffer) {
+    //   if (VK_NULL_HANDLE != buffer) {
+    //     vkDestroyBuffer(_device, buffer, nullptr);
+    //   }
+    // }
 
     vkFreeMemory(_device, *_memory.get(), nullptr);
 
@@ -160,12 +157,12 @@ namespace Poulpe
   }
 
   VkDeviceSize DeviceMemory::getID() const
-  { 
+  {
     return _index;
   }
 
   VkDeviceSize DeviceMemory::getOffset() const
-  { 
+  {
     return _offset;
   }
 
@@ -179,7 +176,7 @@ namespace Poulpe
     return _max_size - _offset;
   }
 
-  VkMemoryPropertyFlags DeviceMemory::getType() const 
+  VkMemoryPropertyFlags DeviceMemory::getType() const
   {
     return _memory_type;
   }
@@ -193,18 +190,18 @@ namespace Poulpe
   {
     _mutex_memory.lock();
   }
-  
+
   void DeviceMemory::unLock()
   {
     _mutex_memory.unlock();
   }
 
-  VkBuffer& DeviceMemory::getBuffer(size_t index)
+  VkBuffer& DeviceMemory::getBuffer(std::size_t index)
   {
     return _buffer.at(index);
   }
 
-  size_t DeviceMemory::getOffset(size_t index) const
+  std::size_t DeviceMemory::getOffset(std::size_t index) const
   {
     return _buffer_offsets.at(index);
   }

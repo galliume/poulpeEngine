@@ -1,7 +1,6 @@
-module;
-#include <memory>
-
 export module Engine.Renderer.RendererComponentFactory;
+
+import std;
 
 namespace Poulpe
 {

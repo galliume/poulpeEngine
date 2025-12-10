@@ -1,15 +1,9 @@
 module;
-
 #include <nlohmann/json.hpp>
 
-#include <algorithm>
-#include <filesystem>
-#include <fstream>
-#include <ranges>
-#include <string>
-#include <vector>
-
 module Engine.Managers.ConfigManager;
+
+import std;
 
 import Engine.Core.Logger;
 
@@ -99,7 +93,7 @@ namespace Poulpe
 
     std::ranges::for_each(_entity_config["entities"].items(), [&](auto const& entities) {
       auto const& textures = entities.value();
-      
+
       //@todo fix this ugly fix. Needs a real asset unique ID
       std::filesystem::path file_name{ textures["mesh"]};
       auto const& texture_prefix{ file_name.stem().string() + "_"};

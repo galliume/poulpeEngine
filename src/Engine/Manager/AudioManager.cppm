@@ -1,18 +1,16 @@
 module;
-
 #include <miniaudio.h>
 #include <nlohmann/json.hpp>
 
-#include <string>
-#include <vector>
-
 export module Engine.Managers.AudioManager;
+
+import std;
 
 namespace Poulpe
 {
   export class AudioManager
   {
-    enum class State : uint8_t
+    enum class State : std::uint8_t
     {
       STOP,
       PLAY,
