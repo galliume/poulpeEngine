@@ -13,8 +13,8 @@ namespace Poulpe
     return _config_manager.get();
   }
 
-  void ConfigManagerLocator::init()
+  void ConfigManagerLocator::init(std::string const& root_path)
   {
-    _config_manager = std::make_unique<ConfigManager>();
+    _config_manager = std::make_unique<ConfigManager>(root_path);
   }
 }

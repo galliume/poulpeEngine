@@ -14,6 +14,8 @@ import Engine.Component.Texture;
 import Engine.Core.Logger;
 import Engine.Core.PlpTypedef;
 
+import Engine.Managers.ConfigManagerLocator;
+
 import Engine.Renderer;
 
 namespace Poulpe
@@ -77,14 +79,14 @@ namespace Poulpe
     std::vector<std::string> const& skybox_images,
     Renderer* const renderer)
   {
-    std::filesystem::path p{ std::filesystem::current_path()};
+    auto const root_path { ConfigManagerLocator::get()->rootPath() };
 
-    std::string path { p.string() + "/assets/texture/" + skybox_name + ".ktx2"};
+    std::string path { root_path + "/assets/texture/" + skybox_name + ".ktx2"};
     std::string files {};
     bool is_hdr{false};
 
     for (auto const& image : skybox_images) {
-      std::string const image_path{ p.string() + "/" + image };
+      std::string const image_path{ root_path + "/" + image };
       std::filesystem::path file_name{ image_path };
       std::string original_name{ file_name.string()};
 
@@ -229,8 +231,8 @@ namespace Poulpe
     TEXTURE_TYPE texture_type,
     Renderer* const renderer)
   {
-    std::filesystem::path p{ std::filesystem::current_path()};
-    std::string const path{ p.string() + "/" + data.at("path").get<std::string>() };
+    auto const root_path { ConfigManagerLocator::get()->rootPath() };
+    std::string const path{ root_path + "/" + data.at("path").get<std::string>() };
     std::filesystem::path file_name{ path };
     std::string original_name{ file_name.string()};
 
@@ -315,12 +317,13 @@ namespace Poulpe
   )
   {
     _skybox_name = skybox;
+    auto const root_path { ConfigManagerLocator::get()->rootPath() };
 
-    return [this, renderer](std::latch& count_down) {
+    return [this, renderer, root_path](std::latch& count_down) {
       std::vector<std::string>skybox_images;
 
       for (auto& texture : _texture_config["skybox"][_skybox_name].items()) {
-        skybox_images.emplace_back(texture.value());
+        skybox_images.emplace_back(root_path + "/" + texture.value().get<std::string>());
       }
 
       addSkyBox(_skybox_name, skybox_images, renderer);

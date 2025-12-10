@@ -15,13 +15,18 @@ import std;
 
 import Engine.Animation.AnimationScript;
 import Engine.Animation.BoneAnimationScript;
+
 import Engine.Component.Components;
 import Engine.Component.Entity;
 import Engine.Component.EntityNode;
+
 import Engine.Core.AssimpLoader;
 import Engine.Core.MeshTypes;
 import Engine.Core.PlpTypedef;
+
 import Engine.Managers.ComponentManager;
+import Engine.Managers.ConfigManagerLocator;
+
 import Engine.Renderer;
 import Engine.Renderer.Renderers;
 import Engine.Renderer.Mesh;
@@ -83,7 +88,9 @@ namespace Poulpe
 
     EntityNode* root_mesh_entity_node = new EntityNode(root_mesh_entity);
 
-    auto const& path = raw_data["mesh"].template get<std::string>();
+    auto const root_path { ConfigManagerLocator::get()->rootPath() };
+
+    auto const& path = root_path + "/" + raw_data["mesh"].template get<std::string>();
     auto const flip_Y = raw_data["flipY"].template get<bool>();
 
     auto callback = [this, raw_data, path, root_mesh_entity_node](
@@ -369,6 +376,7 @@ namespace Poulpe
         }
       }
     };
+
     AssimpLoader::loadData(path, flip_Y, callback);
   }
 

@@ -8,6 +8,8 @@ module Engine.GUI.Window;
 
 import std;
 
+import Engine.Managers.ConfigManagerLocator;
+
 //bool _FramebufferResized = false;
 namespace Poulpe
 {
@@ -26,6 +28,9 @@ namespace Poulpe
     uint16_t const height,
     bool const editor_mode)
   {
+    auto const& root_path { ConfigManagerLocator::get()->rootPath() };
+    auto const icon_path {  root_path + "/mpoulpe.png" };
+
     glfwInit();
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
     glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
@@ -56,7 +61,7 @@ namespace Poulpe
 
     GLFWimage icon[1];
     stbi_set_flip_vertically_on_load(false);
-    icon[0].pixels = stbi_load("./mpoulpe.png", &icon[0].width, &icon[0].height, nullptr, 4);
+    icon[0].pixels = stbi_load(icon_path.c_str(), &icon[0].width, &icon[0].height, nullptr, 4);
 
     glfwSetWindowIcon(_window, 1, icon);
     stbi_image_free(icon[0].pixels);

@@ -2054,24 +2054,33 @@ void VulkanAPI::updateUniformBuffer(Buffer& buffer, std::vector<UniformBufferObj
 
 void VulkanAPI::createTransferCmdPool()
 {
-  VkCommandPoolCreateInfo poolInfo{};
-  poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-  poolInfo.queueFamilyIndex = _queue_family_indices.transferFamily.value();
-  poolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+  VkCommandPoolCreateInfo const pool_info {
+    .sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,
+    .pNext = nullptr,
+    .flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT,
+    .queueFamilyIndex = _queue_family_indices.transferFamily.value()
+  };
 
-  VkResult result = vkCreateCommandPool(_device, & poolInfo, nullptr, & _transfer_cmd_pool);
+  VkResult result { vkCreateCommandPool(_device, & pool_info, nullptr, & _transfer_cmd_pool) };
 
   if (result != VK_SUCCESS) {
     Logger::error("failed to create command pool!");
+    return;
   }
+    
+  VkCommandBufferAllocateInfo const alloc_info {
+    .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
+    .pNext = nullptr,
+    .commandPool = _transfer_cmd_pool,
+    .level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
+    .commandBufferCount = 1
+  };
+  
+  result = vkAllocateCommandBuffers(_device, & alloc_info, & _transfer_cmd_buffer);
 
-  VkCommandBufferAllocateInfo alloc_info{};
-  alloc_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-  alloc_info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-  alloc_info.commandPool = _transfer_cmd_pool;
-  alloc_info.commandBufferCount = 1;
-
-  vkAllocateCommandBuffers(_device, & alloc_info, & _transfer_cmd_buffer);
+  if (result != VK_SUCCESS) {
+    Logger::error("failed to allocate cmd buffer.");
+  }
 }
 
 void VulkanAPI::copyBuffer(
