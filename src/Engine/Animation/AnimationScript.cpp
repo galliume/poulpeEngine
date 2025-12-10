@@ -1,27 +1,10 @@
 module;
 
-#define GLM_FORCE_DEFAULT_ALIGNED_GENTYPES
-#define GLM_FORCE_DEPTH_ZERO_TO_ONE
-#define GLM_ENABLE_EXPERIMENTAL
-
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/hash.hpp>
 #include <glm/gtx/quaternion.hpp>
 #include <glm/fwd.hpp>
-
-#include <algorithm>
-#include <chrono>
-#include <cmath>
-#include <concepts>
-#include <filesystem>
-#include <functional>
-#include <memory>
-#include <unordered_map>
-#include <utility>
-#include <ranges>
-#include <string>
-#include <vector>
 
 extern "C" {
   #include <lua.h>
@@ -30,6 +13,8 @@ extern "C" {
 }
 
 module Engine.Animation.AnimationScript;
+
+import std;
 
 namespace Poulpe
 {
@@ -65,7 +50,7 @@ namespace Poulpe
     glm::quat qx = glm::angleAxis(glm::radians(angle_x), glm::vec3(1, 0, 0));
     glm::quat qy = glm::angleAxis(glm::radians(angle_y), glm::vec3(0, 1, 0));
     glm::quat qz = glm::angleAxis(glm::radians(angle_z), glm::vec3(0, 0, 1));
-    
+
     glm::quat rotation = qx * qy * qz;
 
     animScript->rotate(
@@ -131,7 +116,7 @@ namespace Poulpe
       model = glm::rotate(model, glm::radians(data_move->_origin_rotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
       model = glm::rotate(model, glm::radians(data_move->_origin_rotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
 
-      for (size_t i{ 0 }; i < data_move->_ubos.size(); i++) {
+      for (std::size_t i{ 0 }; i < data_move->_ubos.size(); i++) {
         std::ranges::for_each(data_move->_ubos.at(i), [&model](auto& ubo) {
           ubo.model = model;
         });
@@ -177,7 +162,7 @@ namespace Poulpe
       model = glm::translate(model, data_rotate->_current_pos);
       model *= glm::mat4_cast(data_rotate->_current_rotation);
 
-      for (size_t i{ 0 }; i < data_rotate->_ubos.size(); i++) {
+      for (std::size_t i{ 0 }; i < data_rotate->_ubos.size(); i++) {
         std::ranges::for_each(data_rotate->_ubos.at(i), [&model](auto& ubo) {
           ubo.model = model;
         });
@@ -258,7 +243,7 @@ namespace Poulpe
   {
     return _data;
   }
-  
+
     //lua_State* L = luaL_newstate();
     //luaL_openlibs(L);
 

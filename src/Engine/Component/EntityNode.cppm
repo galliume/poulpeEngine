@@ -1,14 +1,12 @@
-module;
-#include <vector>
-#include <memory>
-
 export module Engine.Component.EntityNode;
 
 import Engine.Component.Entity;
 
+import std;
+
 namespace Poulpe
 {
-  export class EntityNode 
+  export class EntityNode
   {
 
   public:
@@ -29,7 +27,7 @@ namespace Poulpe
 
     bool isLoaded() const { return _is_loaded; }
     bool hasChildren() { return !_children.empty(); }
-    size_t size() const { return _children.size(); }
+    std::size_t size() const { return _children.size(); }
 
     void clear() { _children.clear(); }
 

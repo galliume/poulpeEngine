@@ -1,11 +1,9 @@
-module;
-
-#include <memory>
-#include <string>
-
 export module Engine.Managers.NetworkManager;
 
+import std;
+
 import Engine.Core.Network.Server;
+
 import Engine.Managers.APIManager;
 
 namespace Poulpe

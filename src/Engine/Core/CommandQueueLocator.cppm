@@ -1,7 +1,6 @@
-module;
-#include <memory>
-
 export module Engine.Core.CommandQueueLocator;
+
+import std;
 
 import Engine.Core.CommandQueue;
 

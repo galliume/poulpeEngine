@@ -1,8 +1,5 @@
 module;
 
-#define GLM_FORCE_DEFAULT_ALIGNED_GENTYPES
-#define GLM_FORCE_DEPTH_ZERO_TO_ONE
-#define GLM_ENABLE_EXPERIMENTAL
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -12,15 +9,13 @@ module;
 
 #include <vulkan/vulkan.h>
 
-#include <atomic>
-#include <functional>
-#include <string>
-#include <string_view>
-
 export module Engine.Renderer.Vulkan.Mesh;
+
+import std;
 
 import Engine.Core.MeshTypes;
 import Engine.Core.PlpTypedef;
+
 import Engine.Component.Vertex;
 
 namespace Poulpe
@@ -54,7 +49,7 @@ namespace Poulpe
     void setObjectBuffer(ObjectBuffer objectBuffer) { _object_buffer = std::move(objectBuffer); }
 
     void addUbos(std::vector<std::vector<UniformBufferObject>> const& ubos);
-    
+
     VkDescriptorSet const * getShadowMapDescSet() const { return & _shadowmap_descset; }
     VkDescriptorSet const * getCSMDescSet() const { return & _csm_descset; }
 

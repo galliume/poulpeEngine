@@ -1,10 +1,6 @@
-module;
-#include <queue>
-#include <memory>
-#include <mutex>
-#include <thread>
-
 module Engine.Core.CommandQueue;
+
+import std;
 
 namespace Poulpe
 {

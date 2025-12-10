@@ -4,14 +4,9 @@ module;
 #include <freetype/ttnameid.h>
 #include <volk.h>
 
-#include <concepts>
-#include <memory>
-#include <string>
-#include <unordered_map>
-#include <variant>
-#include <vector>
-
 export module Engine.Component.Components;
+
+import std;
 
 import Engine.Animation.AnimationTypes;
 import Engine.Core.PlpTypedef;

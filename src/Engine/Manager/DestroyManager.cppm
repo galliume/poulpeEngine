@@ -1,12 +1,10 @@
 module;
-#include <concepts>
-#include <memory>
-#include <unordered_map>
-#include <vector>
 #include <vulkan/vulkan.h>
 
 //@TODO refactor all destroy system...
 export module Engine.Managers.DestroyManager;
+
+import std;
 
 import Engine.Component.Entity;
 import Engine.Component.Texture;

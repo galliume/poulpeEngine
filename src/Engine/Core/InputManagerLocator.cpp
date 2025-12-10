@@ -1,7 +1,6 @@
-module;
-#include <memory>
-
 module Engine.Core.InputManagerLocator;
+
+import std;
 
 namespace Poulpe
 {

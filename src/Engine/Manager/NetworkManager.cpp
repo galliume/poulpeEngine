@@ -1,11 +1,9 @@
-module;
-#include <memory>
-#include <string>
-#include <thread>
-
 module Engine.Managers.NetworkManager;
 
+import std;
+
 import Engine.Core.Logger;
+
 import Engine.Core.Network.Server;
 
 namespace Poulpe

@@ -1,9 +1,6 @@
-module;
-
-#include <atomic>
-#include <memory>
-
 export module Engine.Core.LockFreeStack;
+
+import std;
 
 namespace Poulpe
 {

@@ -1,8 +1,5 @@
 module;
 
-#define GLM_FORCE_DEFAULT_ALIGNED_GENTYPES
-#define GLM_FORCE_DEPTH_ZERO_TO_ONE
-#define GLM_ENABLE_EXPERIMENTAL
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -11,12 +8,10 @@ module;
 #include <glm/fwd.hpp>
 
 #include <vulkan/vulkan.h>
-#include <string>
-#include <array>
-#include <vector>
-#include <unordered_map>
 
 export module Engine.Core.PlpTypedef;
+
+import std;
 
 import Engine.Component.Vertex;
 
@@ -202,7 +197,7 @@ namespace Poulpe
     glm::vec3 diffuse_translation{ 0.0 };
     glm::vec3 diffuse_scale{ 1.0 };
     glm::vec2 diffuse_rotation{ 0.0 };
-    
+
     glm::vec3 emissive_translation{ 0.0 };
     glm::vec3 emissive_scale{ 1.0 };
     glm::vec2 emissive_rotation{ 0.0 };
@@ -306,7 +301,7 @@ namespace Poulpe
   {
     std::string name{};
     std::string texture_prefix{};
-    uint64_t id{};
+    std::uint64_t id{};
     uint32_t material_ID{ 0 };
     std::vector<uint32_t> face_material_ID{};
     std::vector<uint32_t> indices{};

@@ -1,7 +1,4 @@
 module;
-#define GLM_FORCE_DEFAULT_ALIGNED_GENTYPES
-#define GLM_FORCE_DEPTH_ZERO_TO_ONE
-#define GLM_ENABLE_EXPERIMENTAL
 
 #include <assimp/config.h>
 #include <assimp/GltfMaterial.h>
@@ -16,10 +13,9 @@ module;
 #include <glm/gtx/quaternion.hpp>
 #include <glm/fwd.hpp>
 
-#include <functional>
-#include <filesystem>
-
 module Engine.Core.AssimpLoader;
+
+import std;
 
 namespace Poulpe
 {
@@ -84,7 +80,7 @@ namespace Poulpe
 
     if (scene->HasMaterials()) {
 
-      for (size_t i{ 0 }; i < scene->mNumMaterials; ++i) {
+      for (std::size_t i{ 0 }; i < scene->mNumMaterials; ++i) {
 
         auto const& mat = scene->mMaterials[i];
 
@@ -168,7 +164,7 @@ namespace Poulpe
         if (mat->Get(AI_MATKEY_SHININESS_STRENGTH, glossiness) == aiReturn_SUCCESS) {
           material.shininess = glossiness;
         }
-        
+
 
         if (mat->GetTextureCount(aiTextureType_AMBIENT) > 0) {
           aiString texture_path;
@@ -336,7 +332,7 @@ namespace Poulpe
           aiString texture_path;
           aiTextureMapMode wrap_mode_u { aiTextureMapMode_Clamp };
           aiTextureMapMode wrap_mode_v { aiTextureMapMode_Clamp };
-          
+
           if (mat->GetTexture(aiTextureType_EMISSIVE, 0, &texture_path) == aiReturn_SUCCESS) {
               material.name_texture_emissive = AssimpLoader::cleanName(texture_path.C_Str(), texture_prefix);
           }
@@ -352,7 +348,7 @@ namespace Poulpe
             material.emissive_scale = glm::vec3(transform.mScaling.x, transform.mScaling.y, 1.0);
             material.emissive_rotation = glm::vec2(transform.mRotation, 1.0);
           }
-        } 
+        }
 
         aiColor4D emissive_color(1.f);
         if (mat->Get(AI_MATKEY_COLOR_EMISSIVE, emissive_color) == aiReturn_SUCCESS) {
@@ -394,7 +390,7 @@ namespace Poulpe
           aiString texture_path;
           aiTextureMapMode wrap_mode_u { aiTextureMapMode_Clamp };
           aiTextureMapMode wrap_mode_v { aiTextureMapMode_Clamp };
-          
+
           if (mat->GetTexture(aiTextureType_TRANSMISSION, 0, &texture_path) == aiReturn_SUCCESS) {
               material.name_texture_transmission = AssimpLoader::cleanName(texture_path.C_Str(), texture_prefix);
           }
@@ -501,7 +497,7 @@ namespace Poulpe
     std::vector<PlpMeshData> mesh_data{};
     process(scene->mRootNode, scene, mesh_data, global_transform, texture_prefix, flip_Y);
 
-    uint64_t id{ mesh_data.size() };
+    std::uint64_t id{ mesh_data.size() };
     for (auto& data : mesh_data) {
       --id;
       data.id = id;
@@ -514,7 +510,7 @@ namespace Poulpe
     std::string cleaned{};
 
     if (name.size() > 0) {
-      size_t lastindex = name.find_last_of(".");
+      std::size_t lastindex = name.find_last_of(".");
       cleaned = name.substr(0, lastindex);
 
       std::replace(cleaned.begin(), cleaned.end(), '\\', '_');
@@ -629,7 +625,7 @@ namespace Poulpe
         } else {
           color /= static_cast<float>(nb_colors);
         }
-        
+
         vertex.color = color;
 
         mesh_data.vertices.emplace_back(std::move(vertex));
@@ -690,7 +686,7 @@ namespace Poulpe
             data_weight.emplace_back(bone_id, aiWeight.mWeight);
           }
 
-          for (size_t z{ 0 }; z < bone_node->mNumChildren; z++) {
+          for (std::size_t z{ 0 }; z < bone_node->mNumChildren; z++) {
             aiNode* child = bone_node->mChildren[z];
             if (child) {
               std::string const& child_name{ child->mName.C_Str() };
@@ -725,16 +721,16 @@ namespace Poulpe
 
           std::sort(data_vertex.begin(), data_vertex.end(),
             [](auto const& a, auto const& b) { return a.second > b.second; });
-          
+
           float total_weight{ 0.0f };
-          for (size_t y{ 0 }; y < 4 && y < data_vertex.size(); ++y) {
+          for (std::size_t y{ 0 }; y < 4 && y < data_vertex.size(); ++y) {
             vertex.bone_ids[y] = data_vertex[y].first;
             vertex.bone_weights[y] = data_vertex[y].second;
             total_weight += data_vertex[y].second;
           }
 
           if (total_weight > 0.0f) {
-            for (size_t w{ 0 }; w < 4; ++w)
+            for (std::size_t w{ 0 }; w < 4; ++w)
             vertex.bone_weights[w] /= total_weight;
           }
         }

@@ -1,32 +1,22 @@
 module;
-
 #include <GLFW/glfw3.h>
 #include <ktx.h>
 #include <stb_image.h>
 #include <volk.h>
 
-#include <cstring>
-#include <filesystem>
-#include <fstream>
-#include <iostream>
-#include <memory>
-#include <mutex>
-#include <optional>
-#include <unordered_map>
-#include <shared_mutex>
-#include <string>
-#include <string_view>
-#include <vector>
-
 export module Engine.Renderer.VulkanAPI;
+
+import std;
 
 import Engine.Renderer.VulkanDeviceMemoryPool;
 import Engine.Renderer.VulkanDeviceMemory;
 
 import Engine.Component.Vertex;
+
 import Engine.Core.Logger;
 import Engine.Core.MeshTypes;
 import Engine.Core.PlpTypedef;
+
 import Engine.GUI.Window;
 
 namespace Poulpe
@@ -177,7 +167,7 @@ namespace Poulpe
     bool souldResizeSwapChain();
 
     Buffer createUniformBuffers(
-      uint64_t const uniform_buffers_count);
+      std::uint64_t const uniform_buffers_count);
 
     Buffer createCubeUniformBuffers(uint32_t const uniform_buffers_count);
 
@@ -248,7 +238,7 @@ namespace Poulpe
 
       void* data;
       vkMapMemory(_device, staging_device_memory, 0, buffer_size, 0, &data);
-      memcpy(data, &storage_buffer, static_cast<size_t>(buffer_size));
+      std::memcpy(data, &storage_buffer, static_cast<std::size_t>(buffer_size));
       vkUnmapMemory(_device, staging_device_memory);
 
       VkBuffer buffer = createBuffer(buffer_size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT);
@@ -307,7 +297,7 @@ namespace Poulpe
 
       void* void_data;
       vkMapMemory(_device, staging_device_memory, 0, buffer_size, 0, &void_data);
-      memcpy(void_data, &object_buffer, static_cast<size_t>(buffer_size));
+      std::memcpy(void_data, &object_buffer, static_cast<std::size_t>(buffer_size));
       vkUnmapMemory(_device, staging_device_memory);
 
       copyBuffer(
@@ -362,7 +352,7 @@ namespace Poulpe
       bool const is_indexed = true,
       uint32_t const index = 0);
 
-    VkResult queueSubmit(VkCommandBuffer& cmd_buffer, size_t const queue_index = 0);
+    VkResult queueSubmit(VkCommandBuffer& cmd_buffer, std::size_t const queue_index = 0);
 
     void submit(
       VkQueue& queue,
@@ -465,13 +455,13 @@ namespace Poulpe
     void createDepthMapImage(
       VkImage& image,
       bool const is_cube_map = false,
-      size_t const array_size = 0);
+      std::size_t const array_size = 0);
 
     VkImageView createDepthMapImageView(
       VkImage& image,
       bool const is_cube_map = false,
       bool const is_sampling = true,
-      size_t const array_size = 0);
+      std::size_t const array_size = 0);
 
     VkSampler createDepthMapSampler();
 

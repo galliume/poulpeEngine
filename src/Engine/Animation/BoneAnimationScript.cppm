@@ -1,8 +1,5 @@
 module;
 
-#define GLM_FORCE_DEFAULT_ALIGNED_GENTYPES
-#define GLM_FORCE_DEPTH_ZERO_TO_ONE
-#define GLM_ENABLE_EXPERIMENTAL
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -10,16 +7,9 @@ module;
 #include <glm/gtx/quaternion.hpp>
 #include <glm/fwd.hpp>
 
-#include <chrono>
-#include <concepts>
-#include <functional>
-#include <memory>
-#include <unordered_map>
-#include <utility>
-#include <string>
-#include <vector>
-
 export module Engine.Animation.BoneAnimationScript;
+
+import std;
 
 import Engine.Animation.AnimationTypes;
 import Engine.Component.Components;
@@ -107,7 +97,7 @@ namespace Poulpe
         return { key_frames[0], key_frames[0] };
       }
 
-      for (size_t i{ 0 }; i < key_frames.size() - 1; ++i) {
+      for (std::size_t i{ 0 }; i < key_frames.size() - 1; ++i) {
         if (time >= key_frames[i].time && time <= key_frames[i + 1].time) {
           return { key_frames[i], key_frames[i + 1] };
         }

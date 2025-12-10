@@ -1,9 +1,6 @@
-module;
-
-#include <condition_variable>
-#include <queue>
-
 export module Engine.Core.ThreadSafeQueue;
+
+import std;
 
 namespace Poulpe
 {

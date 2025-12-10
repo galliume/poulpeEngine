@@ -1,12 +1,9 @@
 module;
-
 #include <volk.h>
 
-#include <array>
-#include <string>
-#include <vector>
-
 export module Engine.Component.Texture;
+
+import std;
 
 namespace Poulpe
 {

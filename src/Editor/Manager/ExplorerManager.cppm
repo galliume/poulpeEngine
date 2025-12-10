@@ -1,5 +1,4 @@
 module;
-
 #include <tcl.h>
 
 export module Editor.Managers.ExplorerManager;

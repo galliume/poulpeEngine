@@ -1,5 +1,4 @@
 module;
-
 //@todo check X11 too
 #ifdef __unix__
 #define GLFW_EXPOSE_NATIVE_WAYLAND
@@ -12,13 +11,9 @@ module;
 #include <tcl.h>
 #include <tk.h>
 
-#include <functional>
-#include <iostream>
-#include <latch>
-#include <string>
-#include <thread>
-
 module Editor.Managers.EditorManager;
+
+import std;
 
 import Editor.Managers.ExplorerManager;
 import Editor.Managers.LevelManager;

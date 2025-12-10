@@ -1,8 +1,5 @@
 module;
 
-#define GLM_FORCE_DEFAULT_ALIGNED_GENTYPES
-#define GLM_FORCE_DEPTH_ZERO_TO_ONE
-#define GLM_ENABLE_EXPERIMENTAL
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -10,20 +7,18 @@ module;
 #include <glm/gtx/quaternion.hpp>
 #include <glm/fwd.hpp>
 
-#include <algorithm>
-#include <array>
-#include <chrono>
-#include <functional>
-#include <string_view>
-#include <vector>
 #include <volk.h>
 
 module Engine.Renderer.Vulkan.Basic;
 
+import std;
+
 import Engine.Component.Components;
 import Engine.Component.Texture;
+
 import Engine.Core.MeshTypes;
 import Engine.Core.PlpTypedef;
+
 import Engine.Renderer.RendererComponentTypes;
 
 namespace Poulpe
@@ -42,7 +37,7 @@ namespace Poulpe
 
     if (mesh->getUniformBuffers().empty()) {
       std::ranges::for_each(mesh->getData()->_bones, [&](auto const&) {
-        
+
         //auto const& b{ bone.second };
 
         Buffer uniformBuffer = renderer->getAPI()->createUniformBuffers(1);
@@ -70,7 +65,7 @@ namespace Poulpe
       }
     }
 
-    for (size_t i{ 0 }; i < mesh->getData()->_ubos.size(); i++) {
+    for (std::size_t i{ 0 }; i < mesh->getData()->_ubos.size(); i++) {
       std::ranges::for_each(mesh->getData()->_ubos.at(i), [&](auto& ubo) {
         ubo.projection = renderer->getPerspective();
       });
@@ -134,7 +129,7 @@ namespace Poulpe
       //renderer->updateStorageBuffer(mesh->getStorageBuffers()->at(0), objectBuffer);
     }
 
-    for (size_t i{ 0 }; i < mesh->getUniformBuffers().size(); ++i) {
+    for (std::size_t i{ 0 }; i < mesh->getUniformBuffers().size(); ++i) {
 
       auto& ubos{ mesh->getUniformBuffers().at(i) };
       auto& ubos_data{ mesh->getData()->_ubos.at(i) };
@@ -149,7 +144,7 @@ namespace Poulpe
 
     vkDestroyCommandPool(renderer->getDevice(), cmd_pool, nullptr);
   }
-  
+
   void Basic::createDescriptorSet(
     Renderer *const renderer,
     ComponentRenderingInfo const& component_rendering_info)
@@ -274,7 +269,7 @@ namespace Poulpe
 
     auto light_buffer {component_rendering_info.light_buffer};
 
-    for (size_t i{ 0 }; i < mesh->getUniformBuffers().size(); ++i) {
+    for (std::size_t i{ 0 }; i < mesh->getUniformBuffers().size(); ++i) {
 
       renderer->getAPI()->updateDescriptorSets(
         mesh->getUniformBuffers(),

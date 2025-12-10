@@ -2,10 +2,7 @@
 
 #include <tcl.h>
 
-#include <functional>
-#include <iostream>
-#include <memory>
-#include <thread>
+import std;
 
 import Engine.Application;
 import Engine.Core.Logger;

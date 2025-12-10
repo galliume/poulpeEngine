@@ -1,26 +1,21 @@
 module;
 
-#define GLM_FORCE_DEFAULT_ALIGNED_GENTYPES
-#define GLM_FORCE_DEPTH_ZERO_TO_ONE
-
 #include <glm/glm.hpp>
 #include <vulkan/vulkan.h>
 
-#include <chrono>
-#include <latch>
-#include <memory>
-#include <unordered_map>
-#include <string>
-#include <vector>
-
 export module Engine.Managers.RenderManager;
+
+import std;
 
 import Engine.Component.Camera;
 import Engine.Component.EntityNode;
+
 import Engine.Core.MeshTypes;
 import Engine.Core.PlpTypedef;
 import Engine.Core.Tools;
+
 import Engine.GUI.Window;
+
 import Engine.Managers.AudioManager;
 import Engine.Managers.ComponentManager;
 import Engine.Managers.DestroyManager;
@@ -29,10 +24,12 @@ import Engine.Managers.FontManager;
 import Engine.Managers.LightManager;
 import Engine.Managers.ShaderManager;
 import Engine.Managers.TextureManager;
+
 import Engine.Renderer.RendererComponentFactory;
 import Engine.Renderer;
 import Engine.Renderer.Vulkan.Mesh;
 import Engine.Renderer.RendererComponentTypes;
+
 import Engine.Utils.IDHelper;
 
 namespace Poulpe

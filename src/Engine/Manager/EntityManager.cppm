@@ -1,21 +1,21 @@
 module;
-
 #include <nlohmann/json.hpp>
-#include <set>
-#include <shared_mutex>
 #include "glm/glm.hpp"
-#include <filesystem>
-#include <future>
 
 export module Engine.Managers.EntityManager;
 
+import std;
+
 import Engine.Component.Entity;
 import Engine.Component.EntityNode;
+
 import Engine.Core.MeshTypes;
 import Engine.Core.PlpTypedef;
+
 import Engine.Managers.ComponentManager;
 import Engine.Managers.LightManager;
 import Engine.Managers.TextureManager;
+
 import Engine.Renderer;
 import Engine.Renderer.RendererComponentFactory;
 
@@ -36,7 +36,7 @@ namespace Poulpe
     void clear();
     //inline std::vector<std::unique_ptr<Entity>>* getEntities() { return & _Entities; }
     inline std::vector<std::unique_ptr<Entity>>* getHUD() { return & _hud; }
-    //inline size_t getInstancedCount() const { return _Entities.size(); }
+    //inline std::size_t getInstancedCount() const { return _Entities.size(); }
     //inline std::unordered_map<std::string, std::array<uint32_t, 2>> getLoadedEntities() { return _LoadedEntities; }
     inline Entity const * getSkybox() { return _skybox.get(); }
     inline Entity const * getTerrain() { return _terrain.get(); }
@@ -50,19 +50,19 @@ namespace Poulpe
     inline void setTerrain(std::unique_ptr<Entity> terrain) { _terrain = std::move(terrain); }
     inline void setWater(std::unique_ptr<Entity> water) { _water = std::move(water); }
     inline void setShadowMap(std::unique_ptr<Entity> shadow_map) { _shadow_map = std::move(shadow_map); }
-    inline size_t addText(std::unique_ptr<Entity> text) { _texts.emplace_back(std::move(text)); return _texts.size() - 1; }
-      
+    inline std::size_t addText(std::unique_ptr<Entity> text) { _texts.emplace_back(std::move(text)); return _texts.size() - 1; }
+
     void addEntity(Entity* entity);
     void addTransparentEntity(Entity* entity);
     void addTextEntity(Entity* entity);
 
     std::vector<Entity*> getEntities() { return _entities;}
     std::vector<Entity*> getTransparentEntities() { return _transparent_entities;}
-    
+
     EntityNode const * addEntityToWorld(Entity * entity);
 
     //void addEntity(Mesh* meshes);
-    //inline size_t getTotalEntities() const { return _Entities.size(); }
+    //inline std::size_t getTotalEntities() const { return _Entities.size(); }
     EntityNode * getWorldNode();
     void initMeshes(std::string const& name, nlohmann::json const& raw_data);
     void initWorldGraph();

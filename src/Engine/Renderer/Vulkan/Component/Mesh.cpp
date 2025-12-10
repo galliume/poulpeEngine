@@ -1,7 +1,6 @@
-module;
-#include <vector>
-
 module Engine.Renderer.Vulkan.Mesh;
+
+import std;
 
 namespace Poulpe
 {

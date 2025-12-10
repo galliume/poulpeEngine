@@ -4,17 +4,19 @@ module;
 #define MINIAUDIO_IMPLEMENTATION
 #include <miniaudio.h>
 #include <GLFW/glfw3.h>
-#include <thread>
 
 export module Engine.Application;
 
+import std;
+
 //import Engine.Core.CommandQueueLocator;
+import Engine.Managers.APIManager;
 import Engine.Managers.ConfigManagerLocator;
 import Engine.Managers.InputManagerLocator;
-import Engine.GUI.Window;
-import Engine.Managers.APIManager;
 import Engine.Managers.NetworkManager;
 import Engine.Managers.RenderManager;
+
+import Engine.GUI.Window;
 
 namespace Poulpe
 {

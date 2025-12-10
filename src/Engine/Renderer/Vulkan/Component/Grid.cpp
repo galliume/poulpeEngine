@@ -1,8 +1,5 @@
 module;
 
-#define GLM_FORCE_DEFAULT_ALIGNED_GENTYPES
-#define GLM_FORCE_DEPTH_ZERO_TO_ONE
-#define GLM_ENABLE_EXPERIMENTAL
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -10,17 +7,14 @@ module;
 #include <glm/gtx/quaternion.hpp>
 #include <glm/fwd.hpp>
 
-#include <algorithm>
-#include <array>
-#include <chrono>
-#include <functional>
-#include <string_view>
-#include <vector>
 #include <volk.h>
 
 module Engine.Renderer.Vulkan.Grid;
 
+import std;
+
 import Engine.Component.Components;
+
 import Engine.Renderer.RendererComponentTypes;
 
 namespace Poulpe

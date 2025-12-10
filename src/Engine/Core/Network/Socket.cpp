@@ -6,11 +6,9 @@ module;
   //@todo linux impl
 #endif
 
-#include <memory>
-#include <stdexcept>
-#include <string>
-
 module Engine.Core.Network.Socket;
+
+import std;
 
 namespace Poulpe
 {

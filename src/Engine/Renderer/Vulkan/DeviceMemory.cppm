@@ -1,13 +1,9 @@
 module;
-
 #include <volk.h>
 
-#include <memory>
-#include <mutex>
-#include <stdexcept>
-#include <vector>
-
 export module Engine.Renderer.VulkanDeviceMemory;
+
+import std;
 
 namespace Poulpe
 {
@@ -35,8 +31,8 @@ namespace Poulpe
     bool isFull() const;
     void lock();
     void unLock();
-    VkBuffer& getBuffer(size_t index);
-    size_t getOffset(size_t index) const;
+    VkBuffer& getBuffer(std::size_t index);
+    std::size_t getOffset(std::size_t index) const;
 
   private:
     void allocateToMemory();

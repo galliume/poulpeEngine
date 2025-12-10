@@ -1,10 +1,6 @@
-module;
-#include <functional>
-#include <latch>
-#include <string>
-#include <thread>
-
 module Engine.Managers.APIManager;
+
+import std;
 
 import Engine.Core.Logger;
 
@@ -26,7 +22,7 @@ namespace Poulpe
     *   message: loadSkybox_bluesky
     *   function to call loadSkybox with param bluesky
     */
-    size_t funcNamePos = message.find("_");
+    std::size_t funcNamePos = message.find("_");
     std::string funcName = message.substr(0, funcNamePos);
     Logger::trace("funcName: {}", funcName);
 

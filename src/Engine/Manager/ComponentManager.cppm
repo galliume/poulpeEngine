@@ -1,20 +1,15 @@
-module;
-
-#include <cstdint>
-#include <memory>
-#include <optional>
-#include <unordered_map>
-#include <variant>
-#include <vector>
-
 export module Engine.Managers.ComponentManager;
+
+import std;
 
 import Engine.Animation.AnimationScript;
 import Engine.Animation.BoneAnimationScript;
+
 import Engine.Component.Components;
 import Engine.Renderer;
 import Engine.Renderer.RendererComponent;
 import Engine.Renderer.Mesh;
+
 import Engine.Utils.IDHelper;
 
 namespace Poulpe

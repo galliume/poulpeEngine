@@ -1,11 +1,6 @@
-module;
-
-#include <fstream>
-#include <stdexcept>
-#include <string>
-#include <vector>
-
 module Engine.Core.Tools;
+
+import std;
 
 namespace Poulpe
 {

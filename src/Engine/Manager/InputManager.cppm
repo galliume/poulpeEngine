@@ -1,14 +1,13 @@
 module;
-
 #include <GLFW/glfw3.h>
 #include <nlohmann/json.hpp>
 
-#include <unordered_map>
-#include <string>
-
 export module Engine.Managers.InputManager;
 
+import std;
+
 import Engine.Component.Camera;
+
 import Engine.GUI.Window;
 
 namespace Poulpe

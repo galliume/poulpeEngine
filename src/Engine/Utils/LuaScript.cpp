@@ -1,7 +1,4 @@
 module;
-
-#include <string>
-
 extern "C" {
   #include <lua.h>
   #include <lauxlib.h>
@@ -9,6 +6,8 @@ extern "C" {
 }
 
 module Engine.Utils.LuaScript;
+
+import std;
 
 import Engine.Core.Logger;
 

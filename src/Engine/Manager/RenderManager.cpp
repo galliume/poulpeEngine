@@ -1,8 +1,5 @@
 module;
 
-#define GLM_FORCE_DEFAULT_ALIGNED_GENTYPES
-#define GLM_FORCE_DEPTH_ZERO_TO_ONE
-#define GLM_ENABLE_EXPERIMENTAL
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -12,33 +9,32 @@ module;
 
 #include <nlohmann/json_fwd.hpp>
 
-#include <algorithm>
-#include <latch>
-#include <filesystem>
-#include <functional>
-#include <future>
-#include <memory>
-#include <shared_mutex>
-#include <thread>
-
 module Engine.Managers.RenderManager;
+
+import std;
 
 import Engine.Animation.AnimationScript;
 import Engine.Animation.AnimationTypes;
+
 import Engine.Component.Camera;
 import Engine.Component.Components;
 import Engine.Component.Entity;
+
 import Engine.Core.Logger;
+
 import Engine.GUI.Window;
+
 import Engine.Managers.ComponentManager;
 import Engine.Managers.ConfigManagerLocator;
 import Engine.Managers.InputManagerLocator;
+
 import Engine.Renderer;
 import Engine.Renderer.Renderers;
 import Engine.Renderer.RendererComponent;
 import Engine.Renderer.RendererComponentTypes;
 import Engine.Renderer.RendererComponentFactory;
 import Engine.Renderer.Vulkan.Mesh;
+
 import Engine.Utils.ScopedTimer;
 
 namespace Poulpe
@@ -63,7 +59,7 @@ namespace Poulpe
     _destroy_manager->addMemoryPool(_renderer->getAPI()->getDeviceMemoryPool());
 
     _light_buffers.resize(2);
-    for (size_t i = 0; i < _light_buffers.size(); ++i) {
+    for (std::size_t i = 0; i < _light_buffers.size(); ++i) {
         LightObjectBuffer light_object_buffer{};
         _light_buffers[i] = _renderer->getAPI()->createStorageBuffers(light_object_buffer);
     }
@@ -178,7 +174,7 @@ namespace Poulpe
 
       _light_manager->computeCSM(camera_view_matrix, _renderer->getPerspective());
       //Logger::debug("x {} y {} z {}", camera_pos.x, camera_pos.y, camera_pos.z);
-      
+
       updateComponentRenderingInfo();
       updateRendererInfo(camera_view_matrix);
 
@@ -189,7 +185,7 @@ namespace Poulpe
       light_object_buffer.point_lights[1] = _light_manager->getPointLights().at(1);
       light_object_buffer.spot_light = _light_manager->getSpotLights().at(0);
       light_object_buffer.sun_light = _light_manager->getSunLight();
-      
+
       _renderer->getAPI()->updateStorageBuffer(
         _light_buffers[_renderer->getCurrentFrameIndex()], light_object_buffer);
 

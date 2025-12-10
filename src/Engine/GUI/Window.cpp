@@ -1,12 +1,12 @@
 module;
-
 #include <GLFW/glfw3.h>
-#include <string_view>
 
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
 module Engine.GUI.Window;
+
+import std;
 
 //bool _FramebufferResized = false;
 namespace Poulpe

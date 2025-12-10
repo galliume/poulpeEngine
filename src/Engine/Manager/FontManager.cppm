@@ -1,19 +1,19 @@
 module;
-
-#include <cstdint>
 #include <ft2build.h>
 #include FT_FREETYPE_H
 #include <freetype/ttnameid.h>
 #include <glm/glm.hpp>
 #include <volk.h>
-#include <vector>
-#include <string>
-#include <unordered_map>
+
 
 export module Engine.Managers.FontManager;
 
+import std;
+
 import Engine.Component.Texture;
+
 import Engine.Core.PlpTypedef;
+
 import Engine.Renderer;
 
 namespace Poulpe
@@ -36,7 +36,7 @@ namespace Poulpe
 
     std::vector<FontCharacter> const& getCharacters() { return _characters; }
     FT_Face getFace() const& { return _face; }
-    
+
     uint32_t getAtlasWidth() const { return _atlas_width; }
     uint32_t getAtlasHeight() const { return _atlas_height; }
 

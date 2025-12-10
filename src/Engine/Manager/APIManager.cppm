@@ -1,11 +1,6 @@
-module;
-
-#include <latch>
-#include <ranges>
-#include <vector>
-#include <variant>
-
 export module Engine.Managers.APIManager;
+
+import std;
 
 namespace Poulpe
 {
