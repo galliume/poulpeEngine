@@ -2,6 +2,8 @@ module Engine.Core.Tools;
 
 import std;
 
+import Engine.Core.Logger;
+
 namespace Poulpe
 {
   std::vector<char> Tools::readFile(const std::string & filename)
@@ -9,7 +11,8 @@ namespace Poulpe
     std::ifstream file(filename, std::ios::ate | std::ios::binary);
 
     if (!file.is_open()) {
-      throw std::runtime_error("failed to open file!");
+      Logger::error("failed to open file: {}", filename);
+      return {};
     }
 
     std::streamsize file_size = file.tellg();

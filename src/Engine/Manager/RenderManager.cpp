@@ -49,7 +49,6 @@ namespace Poulpe
     _light_manager = std::make_unique<LightManager>();
     _texture_manager = std::make_unique<TextureManager>();
 
-
     _audio_manager = std::make_unique<AudioManager>();
     _shader_manager = std::make_unique<ShaderManager>();
     _destroy_manager = std::make_unique<DestroyManager>();
@@ -105,7 +104,6 @@ namespace Poulpe
   {
     auto * const configManager = ConfigManagerLocator::get();
     auto const& appConfig { configManager->appConfig() };
-
     _audio_manager->init();
     _audio_manager->load(configManager->soundConfig());
 

@@ -25,7 +25,10 @@ namespace Poulpe
     _start_run = std::chrono::steady_clock::now();
 
     //CommandQueueManagerLocator::init();
-    ConfigManagerLocator::init();
+    //@todo ugly fix
+    auto const root_path { std::filesystem::absolute(__FILE__).parent_path().parent_path().parent_path().string() };
+
+    ConfigManagerLocator::init(root_path);
     auto const& appConfig { ConfigManagerLocator::get()->appConfig()["resolution"] };
 
     auto* window = new Window();

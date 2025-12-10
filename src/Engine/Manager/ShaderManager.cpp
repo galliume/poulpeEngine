@@ -12,6 +12,8 @@ import Engine.Core.Logger;
 import Engine.Core.PlpTypedef;
 import Engine.Core.Tools;
 
+import Engine.Managers.ConfigManagerLocator;
+
 namespace Poulpe
 {
   ShaderManager::ShaderManager()
@@ -38,37 +40,36 @@ namespace Poulpe
       return;
     }
 
-    auto vert_shader = Tools::readFile(vert_path);
-    auto frag_shader = Tools::readFile(frag_path);
+    auto const vert_shader { Tools::readFile(vert_path) };
+    auto const frag_shader { Tools::readFile(frag_path) };
 
-    VkShaderModule vertex_module = _renderer->getAPI()->createShaderModule(vert_shader);
-    VkShaderModule frag_module = _renderer->getAPI()->createShaderModule(frag_shader);
-
-    _shaders->shaders[name]["vert"] = vertex_module;
-    _shaders->shaders[name]["frag"] = frag_module;
+    _shaders->shaders[name]["vert"] = _renderer->getAPI()->createShaderModule(vert_shader);
+    _shaders->shaders[name]["frag"] = _renderer->getAPI()->createShaderModule(frag_shader);
     if (!geom_path.empty() && std::filesystem::exists(geom_path)) {
-      auto geom_shader = Tools::readFile(geom_path);
+      auto const geom_shader { Tools::readFile(geom_path) };
 
-      VkShaderModule geom_module = _renderer->getAPI()->createShaderModule(geom_shader);
-      _shaders->shaders[name]["geom"] = geom_module;
+      if (!geom_shader.empty()) {
+        _shaders->shaders[name]["geom"] = _renderer->getAPI()->createShaderModule(geom_shader);
+      }
     } else {
       Logger::warn("geometry shader file {} does not exits.", geom_path);
       }
 
     if (!tese_path.empty() && std::filesystem::exists(tese_path)) {
-      auto tese_shader = Tools::readFile(tese_path);
-
-      VkShaderModule tese_module = _renderer->getAPI()->createShaderModule(tese_shader);
-      _shaders->shaders[name]["tese"] = tese_module;
+      auto const tese_shader { Tools::readFile(tese_path) };
+      if (!tese_shader.empty()) {
+        _shaders->shaders[name]["tese"] =  _renderer->getAPI()->createShaderModule(tese_shader);
+      }
     } else {
       Logger::warn("tese shader file {} does not exits.", tese_path);
     }
 
     if (!tesc_path.empty() && std::filesystem::exists(tesc_path)) {
-      auto tesc_shader = Tools::readFile(tesc_path);
+      auto const tesc_shader { Tools::readFile(tesc_path) };
 
-      VkShaderModule tesc_module = _renderer->getAPI()->createShaderModule(tesc_shader);
-      _shaders->shaders[name]["tesc"] = tesc_module;
+      if (!tesc_shader.empty()) {
+        _shaders->shaders[name]["tesc"] = _renderer->getAPI()->createShaderModule(tesc_shader);
+      }
     } else {
       Logger::warn("tesc shader file {} does not exits.", tesc_path);
     }
@@ -85,7 +86,9 @@ namespace Poulpe
   {
     _config = config;
 
-    return [this](std::latch& count_down) {
+    auto const root_path { ConfigManagerLocator::get()->rootPath() };
+
+    return [this, root_path](std::latch& count_down) {
       for (auto & shader : _config["shader"].items()) {
 
         auto key = static_cast<std::string>(shader.key());
@@ -93,11 +96,11 @@ namespace Poulpe
 
         addShader(
           key,
-          data["vert"],
-          data["frag"],
-          data["geom"],
-          data["tese"],
-          data["tesc"]);
+          root_path + "/" + data["vert"].get<std::string>(),
+          root_path + "/" + data["frag"].get<std::string>(),
+          root_path + "/" + data["geom"].get<std::string>(),
+          root_path + "/" + data["tese"].get<std::string>(),
+          root_path + "/" + data["tesc"].get<std::string>());
       }
       count_down.count_down();
     };

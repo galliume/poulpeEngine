@@ -12,12 +12,12 @@ import Editor.Managers.EditorManager;
 int main(int argc, char** argv)
 {
   std::cout << argv[0] << " Version " << PoulpeEngine_VERSION_MAJOR << "." << PoulpeEngine_VERSION_MINOR << std::endl;
-
+  
   bool server_mode{ false };
   std::string port{ "9371" };
-
+  
   bool editor_mode { false };
-
+  
   for (int i { 0 }; i < argc; ++i) {
     std::string argument = argv[i];
     if ("--server" == argument || "-S" == argument) {
@@ -35,8 +35,8 @@ int main(int argc, char** argv)
     }
   }
 
-  std::unique_ptr<Poulpe::Application> app = std::make_unique<Poulpe::Application>();
-
+  
+  auto app { std::make_unique<Poulpe::Application>() };
   app->init(editor_mode);
 
   Poulpe::Logger::trace("server_mode {}", server_mode);

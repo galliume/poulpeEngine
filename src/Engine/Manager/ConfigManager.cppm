@@ -12,7 +12,7 @@ namespace Poulpe
   export class ConfigManager
   {
   public:
-    ConfigManager();
+    ConfigManager(std::string const& root_path);
     ~ConfigManager() = default;
 
     void load();
@@ -40,8 +40,11 @@ namespace Poulpe
       _app_config[config_name] = value;
     }
 
+    std::string const& rootPath() const { return _root_path; }
+
   private:
-    std::string const _levelPath{ "config/levels/" };
+    std::string const _root_path{};
+    std::string const _level_path{};
     bool _reload_shaders{ false };
     bool _normal_debug{ false };
     bool _reload{ false };

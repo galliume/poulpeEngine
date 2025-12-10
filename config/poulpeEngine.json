@@ -10,7 +10,7 @@
   "shadow_resolution": {
     "width": 2048
   },
-  "font": "./assets/fonts/bitter/BitterPro-Regular.ttf",
+  "font": "assets/fonts/bitter/BitterPro-Regular.ttf",
   "input": {
     "current": "keyboard",
     "keyboard": {

@@ -37,9 +37,9 @@ namespace Poulpe
     }
 
     auto const& config_manager = ConfigManagerLocator::get();
-    auto const& app_config { config_manager->appConfig() };
+    auto const& app_config { ConfigManagerLocator::get()->appConfig() };
 
-    auto const font{app_config["font"].get<std::string>()};
+    auto const font{ config_manager->rootPath() + "/" + app_config["font"].get<std::string>()};
 
     if (FT_New_Face(_ft, font.c_str(), 0, &_face)) {
       Logger::error("FREETYPE: Failed to load font {}", font.c_str());

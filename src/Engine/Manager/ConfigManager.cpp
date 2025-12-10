@@ -11,7 +11,9 @@ namespace Poulpe
 {
   namespace fs = std::filesystem;
 
-  ConfigManager::ConfigManager()
+  ConfigManager::ConfigManager(std::string const& root_path)
+  : _root_path(root_path)
+  , _level_path(root_path + "/config/levels/")
   {
     load();
   }
@@ -21,17 +23,18 @@ namespace Poulpe
     fs::path path{};
     std::ifstream f;
 
-    path = "config/poulpeEngine.json";
+    path = _root_path + "/config/poulpeEngine.json";
+
     f.open(fs::absolute(path));
     if (f.is_open()) _app_config = nlohmann::json::parse(f);
     f.close();
 
-    path = "config/sounds.json";
+    path = _root_path + "/config/sounds.json";
     f.open(fs::absolute(path));
     if (f.is_open()) _sound_config = nlohmann::json::parse(f);
     f.close();
 
-    path = "config/shaders.json";
+    path = _root_path + "/config/shaders.json";
     f.open(fs::absolute(path));
     if (f.is_open()) _shader_config = nlohmann::json::parse(f);
     f.close();
@@ -41,7 +44,7 @@ namespace Poulpe
   {
     std::vector<std::string> levels;
 
-    auto entries = fs::directory_iterator(_levelPath);
+    auto entries = fs::directory_iterator(_level_path);
 
     std::ranges::for_each(entries, [&levels](auto& entry) {
       levels.emplace_back(entry.path().stem().string());
@@ -54,7 +57,7 @@ namespace Poulpe
   {
     std::vector<std::string> skybox;
 
-    std::string path = "assets/texture/skybox/";
+    std::string path = _root_path + "/assets/texture/skybox/";
     auto entries = fs::directory_iterator(path);
 
     std::ranges::for_each(entries, [&skybox](auto& entry) {
@@ -68,13 +71,13 @@ namespace Poulpe
   {
     fs::path path{};
     std::ifstream f;
-    path = "config/textures.json";
+    path = _root_path + "/config/textures.json";
 
     f.open(fs::absolute(path));
     if (f.is_open()) _textures_config = nlohmann::json::parse(f);
     f.close();
 
-    fs::path level{ _levelPath + levelName + ".json" };
+    fs::path level{ _level_path + levelName + ".json" };
     try {
       f.open(fs::absolute(level), std::ios_base::in);
       if (f.is_open()) _entity_config = nlohmann::json::parse(f);
