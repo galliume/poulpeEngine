@@ -195,12 +195,13 @@ namespace Poulpe
       std::vector<std::future<void>> async_entities_render;
       std::vector<std::future<void>> async_transparent_entities_render;
 
-      auto * const config_manager = ConfigManagerLocator::get();
+      auto * const config_manager { ConfigManagerLocator::get() };
+      auto const & root_path { config_manager->rootPath() };
 
       //@todo improve this draft for simple shader hot reload
       if (config_manager->reloadShaders()) {
         std::filesystem::path p = std::filesystem::current_path();
-        auto cmd{ p.string() + "/bin/shaders_compil.sh" };
+        auto cmd{ root_path + "/bin/shaders_compil.sh" };
         std::system(cmd.c_str());
 
         std::latch count_down{ 1 };

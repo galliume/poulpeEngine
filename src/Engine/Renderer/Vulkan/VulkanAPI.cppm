@@ -625,7 +625,7 @@ namespace Poulpe
     VkSampleCountFlagBits _sample_count{ VK_SAMPLE_COUNT_8_BIT };
 
     std::mutex _mutex_queue_submit{};
-    std::shared_mutex _mutex_copy_buffer{};
+    std::mutex _mutex_copy_buffer{};
 
     VkDeviceSize _max_memory_heap{};
     std::unique_ptr<DeviceMemoryPool> _device_memory_pool{ nullptr };
