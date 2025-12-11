@@ -1,0 +1,21 @@
+message(STATUS "Setting packages.")
+
+set(THREADS_PREFER_PTHREAD_FLAG ON)
+find_package(Threads REQUIRED)
+
+if(DEFINED ENV{VULKAN_SDK})
+  set(VULKAN_SDK $ENV{VULKAN_SDK})
+  set(CMAKE_PREFIX_PATH ${VULKAN_SDK} ${CMAKE_PREFIX_PATH})
+endif()
+if(DEFINED ENV{Vulkan_LIBRARY})
+  set(Vulkan_LIBRARY $ENV{Vulkan_LIBRARY})
+  set(CMAKE_PREFIX_PATH ${Vulkan_LIBRARY} ${CMAKE_PREFIX_PATH})
+endif()
+if(DEFINED ENV{Vulkan_INCLUDE_DIR})
+  set(Vulkan_INCLUDE_DIR $ENV{Vulkan_INCLUDE_DIR})
+  set(CMAKE_PREFIX_PATH ${Vulkan_INCLUDE_DIR} ${CMAKE_PREFIX_PATH})
+endif()
+
+find_package(Vulkan REQUIRED)
+
+message(STATUS "packages OK.")

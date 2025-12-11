@@ -22,7 +22,7 @@ You will need a recent version of Clang (20.x) and CMake (3.31 or 4.x), c++23 is
 
 For Windows you will need llvm-mingw https://github.com/mstorsjo/llvm-mingw/releases), add the bin folder into your $PATH and set CMAKE_SYSROOT (or update mingw-toolchain.cmake directly)
 
-Install the latest Vulkan SDK https://vulkan.lunarg.com/ and be sure to have the env variable VULKAN_SDK properly set to your Vulkan SDK installation folder.
+Install the latest Vulkan SDK https://vulkan.lunarg.com/ and be sure to have the env variables VULKAN_SDK, Vulkan_LIBRARY and Vulkan_INCLUDE_DIR properly set to your Vulkan SDK installation folder.
 
 The editor (Windows only for the moment) is using TCL/TK 9.0, the easiest installation for Windows is to install via the
 [MagicSplat installer](https://www.magicsplat.com/tcl-installer/index.html)
