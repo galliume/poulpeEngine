@@ -235,14 +235,14 @@ namespace Poulpe
     //shadowMapSpot.sampler = renderer->getDepthMapSamplers()->at(1);
     std::vector<VkDescriptorImageInfo> image_info{};
     image_info.reserve(7);
-    image_info.emplace_back(tex.getSampler(), tex.getImageView(), VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL);
-    image_info.emplace_back(alpha.getSampler(), alpha.getImageView(), VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL);
-    image_info.emplace_back(texture_bump.getSampler(), texture_bump.getImageView(), VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL);
-    image_info.emplace_back(texture_specular.getSampler(), texture_specular.getImageView(), VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL);
-    image_info.emplace_back(texture_metal_roughness.getSampler(), texture_metal_roughness.getImageView(), VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL);
-    image_info.emplace_back(texture_emissive.getSampler(), texture_emissive.getImageView(), VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL);
-    image_info.emplace_back(texture_ao.getSampler(), texture_ao.getImageView(), VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL);
-    image_info.emplace_back(tex.getSampler(), tex.getImageView(), VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL);
+    image_info.emplace_back(tex.getSampler(), tex.getImageView(), VK_IMAGE_LAYOUT_GENERAL);
+    image_info.emplace_back(alpha.getSampler(), alpha.getImageView(), VK_IMAGE_LAYOUT_GENERAL);
+    image_info.emplace_back(texture_bump.getSampler(), texture_bump.getImageView(), VK_IMAGE_LAYOUT_GENERAL);
+    image_info.emplace_back(texture_specular.getSampler(), texture_specular.getImageView(), VK_IMAGE_LAYOUT_GENERAL);
+    image_info.emplace_back(texture_metal_roughness.getSampler(), texture_metal_roughness.getImageView(), VK_IMAGE_LAYOUT_GENERAL);
+    image_info.emplace_back(texture_emissive.getSampler(), texture_emissive.getImageView(), VK_IMAGE_LAYOUT_GENERAL);
+    image_info.emplace_back(texture_ao.getSampler(), texture_ao.getImageView(), VK_IMAGE_LAYOUT_GENERAL);
+    image_info.emplace_back(tex.getSampler(), tex.getImageView(), VK_IMAGE_LAYOUT_GENERAL);
 
     std::vector<VkDescriptorImageInfo> env_info{};
 
@@ -255,14 +255,14 @@ namespace Poulpe
     if (texture_environment.getWidth() == 0) {
       texture_environment = component_rendering_info.textures.at(PLP_EMPTY);
     }
-    env_info.emplace_back(texture_environment.getSampler(), texture_environment.getImageView(), VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL);
+    env_info.emplace_back(texture_environment.getSampler(), texture_environment.getImageView(), VK_IMAGE_LAYOUT_GENERAL);
 
     std::vector<VkDescriptorImageInfo> depth_map_image_info{};
-    depth_map_image_info.emplace_back(renderer->getDepthMapSamplers(), renderer->getDepthMapImageViews(), VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL);
+    depth_map_image_info.emplace_back(renderer->getDepthMapSamplers(), renderer->getDepthMapImageViews(), VK_IMAGE_LAYOUT_GENERAL);
     //image_info.emplace_back(shadowMapSpot);
 
     std::vector<VkDescriptorImageInfo> csm_image_info{};
-    csm_image_info.emplace_back(renderer->getCSMSamplers(), renderer->getCSMImageViews(), VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL);
+    csm_image_info.emplace_back(renderer->getCSMSamplers(), renderer->getCSMImageViews(), VK_IMAGE_LAYOUT_GENERAL);
 
     auto const& pipeline = renderer->getPipeline(mesh->getShaderName());
     VkDescriptorSet descset{ renderer->getAPI()->createDescriptorSets(pipeline->desc_pool, { pipeline->descset_layout }, 1) };

@@ -290,8 +290,8 @@ namespace Poulpe
     _vulkan->beginCommandBuffer(cmd_buffer);
 
     VkImageLayout const undefined_layout{ VK_IMAGE_LAYOUT_UNDEFINED };
-    VkImageLayout const begin_color_layout{ VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL };
-    VkImageLayout const begin_depth_layout{ VK_IMAGE_LAYOUT_DEPTH_READ_ONLY_OPTIMAL };
+    VkImageLayout const begin_color_layout{ VK_IMAGE_LAYOUT_GENERAL };
+    VkImageLayout const begin_depth_layout{ VK_IMAGE_LAYOUT_GENERAL };
     //VkImageLayout const general { VK_IMAGE_LAYOUT_GENERAL };
     VkImageAspectFlagBits const color_aspect { VK_IMAGE_ASPECT_COLOR_BIT };
     VkImageAspectFlagBits const depth_aspect{ VK_IMAGE_ASPECT_DEPTH_BIT };
@@ -430,7 +430,7 @@ namespace Poulpe
       cmd_buffer,
       depth,
       VK_IMAGE_LAYOUT_UNDEFINED,
-      VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL,
+      VK_IMAGE_LAYOUT_GENERAL,
       VK_IMAGE_ASPECT_DEPTH_BIT,
       layer_count);
 
@@ -445,7 +445,7 @@ namespace Poulpe
     VkRenderingAttachmentInfo depth_attachment_info{ };
     depth_attachment_info.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
     depth_attachment_info.imageView = depthview;
-    depth_attachment_info.imageLayout = VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL;
+    depth_attachment_info.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
     depth_attachment_info.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
     depth_attachment_info.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
     depth_attachment_info.clearValue.depthStencil = depth_stencil;
@@ -578,14 +578,14 @@ namespace Poulpe
 
       uint32_t const layer_count = (shadow_type == SHADOW_TYPE::CSM) ? 4 : 6;
 
-     _vulkan->transitionImageLayout(cmd_buffer,
-      depth,
-       VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL,
-       VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
-       VK_IMAGE_ASPECT_DEPTH_BIT,
-      layer_count);
+    //  _vulkan->transitionImageLayout(cmd_buffer,
+    //   depth,
+    //    VK_IMAGE_LAYOUT_GENERAL,
+    //    VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+    //    VK_IMAGE_ASPECT_DEPTH_BIT,
+    //   layer_count);
  /*     _vulkan->transitionImageLayout(cmd_buffer, depth,
-        VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR, VK_IMAGE_ASPECT_DEPTH_BIT);*/
+        VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR, VK_IMAGE_ASPECT_DEPTH_BIT);*/
 
     _vulkan->endCommandBuffer(cmd_buffer);
 
@@ -657,14 +657,14 @@ namespace Poulpe
   {
     _vulkan->endRendering(cmd_buffer);
 
-    VkImageLayout final = (is_attachment) ? VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL: VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+    // VkImageLayout final = (is_attachment) ? VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL: VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
     _vulkan->transitionImageLayout(cmd_buffer, image,
-      VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, final, VK_IMAGE_ASPECT_COLOR_BIT);
+      VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR, VK_IMAGE_ASPECT_COLOR_BIT);
 
-    //if (has_depth_attachment) {
+    // if (has_depth_attachment) {
     //  _vulkan->transitionImageLayout(cmd_buffer, depth_image,
-    //    VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT);
-    //}
+    //    VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR, VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT);
+    // }
 
     _vulkan->endCommandBuffer(cmd_buffer);
   }

@@ -161,11 +161,11 @@ void Water::operator()(
     env.getMipLevels()));
 
     std::vector<VkDescriptorImageInfo> image_infos{};
-    image_infos.emplace_back(tex.getSampler(), tex.getImageView(), VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL);
+    image_infos.emplace_back(tex.getSampler(), tex.getImageView(), VK_IMAGE_LAYOUT_GENERAL);
     image_infos.emplace_back(renderer->getDepthSamplers(), renderer->getDepthImageViews(), VK_IMAGE_LAYOUT_DEPTH_READ_ONLY_OPTIMAL);
-    image_infos.emplace_back(texture_normal.getSampler(), texture_normal.getImageView(), VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL);
-    image_infos.emplace_back(texture_normal2.getSampler(), texture_normal2.getImageView(), VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL);
-    image_infos.emplace_back(renderer->getCurrentSampler(), renderer->getCurrentImageView(), VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL);
+    image_infos.emplace_back(texture_normal.getSampler(), texture_normal.getImageView(), VK_IMAGE_LAYOUT_GENERAL);
+    image_infos.emplace_back(texture_normal2.getSampler(), texture_normal2.getImageView(), VK_IMAGE_LAYOUT_GENERAL);
+    image_infos.emplace_back(renderer->getCurrentSampler(), renderer->getCurrentImageView(), VK_IMAGE_LAYOUT_GENERAL);
 
     // VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMALVK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
     // VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
@@ -179,7 +179,7 @@ void Water::operator()(
     // VK_IMAGE_LAYOUT_RENDERING_LOCAL_READ
 
     std::vector<VkDescriptorImageInfo> env_image_infos{};
-    env_image_infos.emplace_back(env.getSampler(), env.getImageView(), VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL );
+    env_image_infos.emplace_back(env.getSampler(), env.getImageView(), VK_IMAGE_LAYOUT_GENERAL );
 
     auto const pipeline = renderer->getPipeline(mesh->getShaderName());
     VkDescriptorSet descset = renderer->getAPI()->createDescriptorSets(pipeline->desc_pool, { pipeline->descset_layout }, 1);
