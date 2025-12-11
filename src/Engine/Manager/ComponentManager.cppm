@@ -31,7 +31,8 @@ namespace Poulpe
     void add(IDType entityID, Component component_impl)
     {
       {
-        std::lock_guard<std::mutex> guard(_mutex);
+        //@todo useful ?
+        //std::lock_guard<std::mutex> guard(_mutex);
 
         auto new_component = std::make_unique<T>();
         new_component->init(std::move(component_impl));

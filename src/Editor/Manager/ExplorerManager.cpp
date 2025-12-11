@@ -13,15 +13,14 @@ import Engine.Managers.ConfigManagerLocator;
 
 namespace Poulpe {
   static int plp_list_ambient_sound (
-    ClientData clientData,
+    ClientData,
     Tcl_Interp* interp,
     int,
     Tcl_Obj *const [])
   {
-    auto * render_manager = static_cast<RenderManager*>(clientData);
-    auto * config_manager = ConfigManagerLocator::get();
-
-    auto const sounds = config_manager->soundConfig()["ambient"];
+    //auto * render_manager = static_cast<RenderManager*>(clientData);
+    auto const * const config_manager { ConfigManagerLocator::get() };
+    auto const sounds { config_manager->soundConfig()["ambient"] };
 
     Tcl_Obj* sounds_list = Tcl_NewListObj(0, nullptr);
     Tcl_ListObjAppendElement(interp, sounds_list, Tcl_NewStringObj(".c.ambient.ambient_sounds", -1));
@@ -45,11 +44,11 @@ namespace Poulpe {
     int,
     Tcl_Obj *const objv[])
   {
-    auto * render_manager = static_cast<RenderManager*>(clientData);
-    auto * audio_manager = render_manager->getAudioManager();
-    auto * config_manager = ConfigManagerLocator::get();
+    auto * const render_manager { static_cast<RenderManager*>(clientData) };
+    auto * const audio_manager { render_manager->getAudioManager() };
+    //auto * const config_manager { ConfigManagerLocator::get() };
 
-    std::uint8_t sound_index{0};
+    std::uint32_t sound_index{0};
     Tcl_GetIntFromObj(interp, objv[1], (int*)&sound_index);
 
     audio_manager->startAmbient(sound_index);

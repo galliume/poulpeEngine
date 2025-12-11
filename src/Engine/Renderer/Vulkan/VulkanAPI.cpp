@@ -148,10 +148,8 @@ std::string VulkanAPI::getAPIVersion()
 
 void VulkanAPI::createInstance()
 {
-  std::string message;
-
   if (!isValidationLayersEnabled() && !checkValidationLayerSupport()) {
-      //Logger::warn("Validations layers not available !");
+    Logger::warn("Validations layers not available !");
   }
 
   VkApplicationInfo app_info{};
@@ -168,25 +166,30 @@ void VulkanAPI::createInstance()
 
   create_info.enabledExtensionCount = static_cast<uint32_t>(_required_extensions.size());
   create_info.ppEnabledExtensionNames = _required_extensions.data();
-
-  VkDebugUtilsMessengerCreateInfoEXT debug_create_info{};
-
+  create_info.enabledLayerCount = 0;
+  create_info.pNext = VK_NULL_HANDLE;
+  
   if (_enable_validation_layers) {
+    VkDebugUtilsMessengerCreateInfoEXT debug_create_info{};
+
     debug_create_info.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
-    debug_create_info.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT
-        | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
-    debug_create_info.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT
-        | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
+    debug_create_info.messageSeverity =
+          VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT
+        | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT
+        | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
+
+    debug_create_info.messageType =
+          VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT
+        | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT
+        | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
     debug_create_info.pfnUserCallback = DebugCallback;
+
     debug_create_info.pUserData = nullptr;
 
     create_info.enabledLayerCount = static_cast<uint32_t>(_validation_layers.size());
     create_info.ppEnabledLayerNames = _validation_layers.data();
-    create_info.pNext = (VkDebugUtilsMessengerCreateInfoEXT*)&debug_create_info;
+    create_info.pNext = (VkDebugUtilsMessengerCreateInfoEXT*) & debug_create_info;
     //Logger::trace("Validations enabled");
-  } else {
-    //Logger::trace("Validations disabled");
-    create_info.enabledLayerCount = 0;
   }
 
   VkResult result = VK_SUCCESS;
@@ -440,7 +443,8 @@ void VulkanAPI::createLogicalDevice()
   VkPhysicalDeviceUnifiedImageLayoutsFeaturesKHR unified_image_layouts = {
     .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_UNIFIED_IMAGE_LAYOUTS_FEATURES_KHR,
     .pNext = nullptr,
-    .unifiedImageLayouts = VK_TRUE
+    .unifiedImageLayouts = VK_TRUE,
+    .unifiedImageLayoutsVideo = VK_TRUE
   };
 
   VkPhysicalDeviceVulkan13Features vulkan_features13 = {
@@ -463,30 +467,31 @@ void VulkanAPI::createLogicalDevice()
     .maintenance4 = VK_FALSE,
   };
 
-  VkPhysicalDeviceDescriptorIndexingFeatures descriptor_indexing = {
-    .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES,
-    .pNext = nullptr,
-    .shaderInputAttachmentArrayDynamicIndexing = VK_FALSE,
-    .shaderUniformTexelBufferArrayDynamicIndexing = VK_FALSE,
-    .shaderStorageTexelBufferArrayDynamicIndexing = VK_FALSE,
-    .shaderUniformBufferArrayNonUniformIndexing = VK_FALSE,
-    .shaderSampledImageArrayNonUniformIndexing = VK_TRUE,
-    .shaderStorageBufferArrayNonUniformIndexing = VK_FALSE,
-    .shaderStorageImageArrayNonUniformIndexing = VK_FALSE,
-    .shaderInputAttachmentArrayNonUniformIndexing = VK_FALSE,
-    .shaderUniformTexelBufferArrayNonUniformIndexing = VK_FALSE,
-    .shaderStorageTexelBufferArrayNonUniformIndexing = VK_FALSE,
-    .descriptorBindingUniformBufferUpdateAfterBind = VK_TRUE,
-    .descriptorBindingSampledImageUpdateAfterBind = VK_FALSE,
-    .descriptorBindingStorageImageUpdateAfterBind = VK_FALSE,
-    .descriptorBindingStorageBufferUpdateAfterBind = VK_FALSE,
-    .descriptorBindingUniformTexelBufferUpdateAfterBind = VK_FALSE,
-    .descriptorBindingStorageTexelBufferUpdateAfterBind = VK_FALSE,
-    .descriptorBindingUpdateUnusedWhilePending = VK_FALSE,
-    .descriptorBindingPartiallyBound = VK_TRUE,
-    .descriptorBindingVariableDescriptorCount = VK_TRUE, 
-    .runtimeDescriptorArray = VK_TRUE,
-  };
+  //@todo became useless ?
+  // VkPhysicalDeviceDescriptorIndexingFeatures descriptor_indexing = {
+  //   .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES,
+  //   .pNext = nullptr,
+  //   .shaderInputAttachmentArrayDynamicIndexing = VK_FALSE,
+  //   .shaderUniformTexelBufferArrayDynamicIndexing = VK_FALSE,
+  //   .shaderStorageTexelBufferArrayDynamicIndexing = VK_FALSE,
+  //   .shaderUniformBufferArrayNonUniformIndexing = VK_FALSE,
+  //   .shaderSampledImageArrayNonUniformIndexing = VK_TRUE,
+  //   .shaderStorageBufferArrayNonUniformIndexing = VK_FALSE,
+  //   .shaderStorageImageArrayNonUniformIndexing = VK_FALSE,
+  //   .shaderInputAttachmentArrayNonUniformIndexing = VK_FALSE,
+  //   .shaderUniformTexelBufferArrayNonUniformIndexing = VK_FALSE,
+  //   .shaderStorageTexelBufferArrayNonUniformIndexing = VK_FALSE,
+  //   .descriptorBindingUniformBufferUpdateAfterBind = VK_TRUE,
+  //   .descriptorBindingSampledImageUpdateAfterBind = VK_FALSE,
+  //   .descriptorBindingStorageImageUpdateAfterBind = VK_FALSE,
+  //   .descriptorBindingStorageBufferUpdateAfterBind = VK_FALSE,
+  //   .descriptorBindingUniformTexelBufferUpdateAfterBind = VK_FALSE,
+  //   .descriptorBindingStorageTexelBufferUpdateAfterBind = VK_FALSE,
+  //   .descriptorBindingUpdateUnusedWhilePending = VK_FALSE,
+  //   .descriptorBindingPartiallyBound = VK_TRUE,
+  //   .descriptorBindingVariableDescriptorCount = VK_TRUE, 
+  //   .runtimeDescriptorArray = VK_TRUE,
+  // };
 
   VkPhysicalDeviceShaderDrawParametersFeatures shader_draw_parameters_features = {
     .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_DRAW_PARAMETERS_FEATURES,
@@ -497,10 +502,37 @@ void VulkanAPI::createLogicalDevice()
   VkPhysicalDeviceExtendedDynamicState3FeaturesEXT ext_dynamic_state = {
     .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_EXTENDED_DYNAMIC_STATE_3_FEATURES_EXT,
     .pNext = nullptr,
+    .extendedDynamicState3TessellationDomainOrigin = VK_TRUE,
     .extendedDynamicState3DepthClampEnable = VK_TRUE,
+    .extendedDynamicState3PolygonMode = VK_FALSE,
     .extendedDynamicState3RasterizationSamples = VK_TRUE,
+    .extendedDynamicState3SampleMask = VK_FALSE,
+    .extendedDynamicState3AlphaToCoverageEnable = VK_FALSE,
+    .extendedDynamicState3AlphaToOneEnable = VK_FALSE,
+    .extendedDynamicState3LogicOpEnable = VK_FALSE,
     .extendedDynamicState3ColorBlendEnable = VK_TRUE,
     .extendedDynamicState3ColorBlendEquation = VK_TRUE,
+    .extendedDynamicState3ColorWriteMask = VK_FALSE,
+    .extendedDynamicState3RasterizationStream = VK_FALSE,
+    .extendedDynamicState3ConservativeRasterizationMode = VK_FALSE,
+    .extendedDynamicState3ExtraPrimitiveOverestimationSize = VK_FALSE,
+    .extendedDynamicState3DepthClipEnable = VK_FALSE,
+    .extendedDynamicState3SampleLocationsEnable = VK_FALSE,
+    .extendedDynamicState3ColorBlendAdvanced = VK_FALSE,
+    .extendedDynamicState3ProvokingVertexMode = VK_FALSE,
+    .extendedDynamicState3LineRasterizationMode = VK_FALSE,
+    .extendedDynamicState3LineStippleEnable = VK_FALSE,
+    .extendedDynamicState3DepthClipNegativeOneToOne = VK_FALSE,
+    .extendedDynamicState3ViewportWScalingEnable = VK_FALSE,
+    .extendedDynamicState3ViewportSwizzle = VK_FALSE,
+    .extendedDynamicState3CoverageToColorEnable = VK_FALSE,
+    .extendedDynamicState3CoverageToColorLocation = VK_FALSE,
+    .extendedDynamicState3CoverageModulationMode = VK_FALSE,
+    .extendedDynamicState3CoverageModulationTableEnable = VK_FALSE,
+    .extendedDynamicState3CoverageModulationTable = VK_FALSE,
+    .extendedDynamicState3CoverageReductionMode = VK_FALSE,
+    .extendedDynamicState3RepresentativeFragmentTestEnable = VK_FALSE,
+    .extendedDynamicState3ShadingRateImageEnable = VK_FALSE,
   };
 
   VkPhysicalDeviceVulkan12Features device12_features = {
@@ -595,6 +627,7 @@ void VulkanAPI::createLogicalDevice()
       .shaderTessellationAndGeometryPointSize = VK_FALSE,
       .shaderImageGatherExtended = VK_FALSE,
       .shaderStorageImageExtendedFormats = VK_FALSE,
+      .shaderStorageImageMultisample = VK_FALSE,
       .shaderStorageImageReadWithoutFormat = VK_FALSE,
       .shaderStorageImageWriteWithoutFormat = VK_FALSE,
       .shaderUniformBufferArrayDynamicIndexing = VK_FALSE,
@@ -637,11 +670,11 @@ void VulkanAPI::createLogicalDevice()
     .flags = 0,
     .queueCreateInfoCount = static_cast<uint32_t>(queue_create_infos.size()),
     .pQueueCreateInfos = queue_create_infos.data(),
-    .pEnabledFeatures = nullptr,
-    .enabledExtensionCount = static_cast<uint32_t>(_device_extensions.size()),
-    .ppEnabledExtensionNames = _device_extensions.data(),
     .enabledLayerCount = 0,
     .ppEnabledLayerNames = nullptr,
+    .enabledExtensionCount = static_cast<uint32_t>(_device_extensions.size()),
+    .ppEnabledExtensionNames = _device_extensions.data(),
+    .pEnabledFeatures = nullptr,
   };
 
   if (vkCreateDevice(_physical_device, & create_info, nullptr, &_device) != VK_SUCCESS) {
@@ -1784,7 +1817,7 @@ VkResult VulkanAPI::queueSubmit(VkCommandBuffer& cmd_buffer, std::size_t const q
 
   VkResult result = VK_SUCCESS;
   {
-    std::lock_guard<std::mutex> guard(_mutex_queue_submit);
+    //std::lock_guard<std::mutex> guard(_mutex_queue_submit);
     vkResetFences(_device, 1, &_fence_submit);
 
     result = vkQueueSubmit(_graphics_queues[queue_index], 1, &submit_info, _fence_submit);
@@ -2241,7 +2274,7 @@ void VulkanAPI::copyBuffer(
   VkDeviceSize dst_offset)
 {
   {
-    std::lock_guard<std::shared_mutex> guard(_mutex_copy_buffer);
+    std::lock_guard<std::mutex> guard(_mutex_copy_buffer);
 
     VkCommandBufferBeginInfo begin_info{};
     begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -2786,15 +2819,15 @@ VkSampler VulkanAPI::createTextureSampler(uint32_t const mip_lvl)
   }
 
   void VulkanAPI::startMarker(
-    VkCommandBuffer& buffer,
+    [[maybe_unused]] VkCommandBuffer& buffer,
     std::string const& name,
     float const r,
     float const g,
     float const b,
     float const a)
   {
-  #ifdef PLP_DEBUG_BUILD
-    VkDebugUtilsLabelEXT label;
+    //unused in Release
+    [[maybe_unused]] VkDebugUtilsLabelEXT label;
     label.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_LABEL_EXT;
     label.pLabelName = name.c_str();
     label.pNext = VK_NULL_HANDLE;
@@ -2802,12 +2835,13 @@ VkSampler VulkanAPI::createTextureSampler(uint32_t const mip_lvl)
     label.color[1] = g;
     label.color[2] = b;
     label.color[3] = a;
-
+    
+  #ifdef PLP_DEBUG_BUILD
     vkCmdBeginDebugUtilsLabelEXT(buffer, &label);
   #endif
   }
 
-  void VulkanAPI::endMarker(VkCommandBuffer& buffer)
+  void VulkanAPI::endMarker([[maybe_unused]] VkCommandBuffer& buffer)
   {
   #ifdef PLP_DEBUG_BUILD
     vkCmdEndDebugUtilsLabelEXT(buffer);

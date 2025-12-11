@@ -395,6 +395,13 @@ namespace Poulpe
         descset_layout = createDescriptorSetLayout<DescSetLayoutType::Water>();
         //pipeline_create_infos.polygone_mode = VK_POLYGON_MODE_LINE;
         pipeline_create_infos.has_depth_write = false;
+      
+        VkDescriptorPoolSize dpsSB;
+        dpsSB.type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+        dpsSB.descriptorCount = 10;
+
+        poolSizes.emplace_back(dpsSB);
+        
       } else {
         descset_layout = createDescriptorSetLayout<DescSetLayoutType::Terrain>();
         pipeline_create_infos.has_depth_write = true;

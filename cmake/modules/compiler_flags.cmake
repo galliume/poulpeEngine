@@ -6,7 +6,7 @@ target_compile_features(${PROJECT_NAME}
 
 set(DEBUG_OPTIONS
   -g
-  -O0
+  -Og
   -fno-inline
   -fno-inline-functions
   -fno-omit-frame-pointer)

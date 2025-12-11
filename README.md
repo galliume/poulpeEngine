@@ -1,174 +1,163 @@
-# Poulpe Engine
-## Game Engine with a vulkan renderer
+# 🐙 Poulpe Engine: A Modern C++23 Vulkan Game Engine
+
+A continuously evolving, cross-platform game engine built from the ground up using **C++23** and powered by the **Vulkan** graphics API. This project is a never-ending educational exercise, covering various advanced topics such as graphics pipeline development, modern C++ patterns, low-level mathematics, and robust build systems.
+
+## ✨ Project Status & Highlights
 
 | **CI Service** | Build Status |
 |:---------------|-------------:|
 | GitHub Actions | [![PoulpeEngine](https://github.com/galliume/poulpeEngine/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/galliume/poulpeEngine/actions/workflows/CI.yml)
 
-### This project is a never-ending educational exercise, covering various topics such as C++, Vulkan, graphics, build systems, mathematics, and more.
+### Key Features
 
-[Mr Poulpe blog](https://mrpoulpe.substack.com/)
+* **Modern C++23:** Leveraging the latest C++ standard for clean, efficient, and expressive code.
+* **Vulkan Renderer:** Utilizing the high-performance, explicit graphics API for unparalleled control over the GPU.
+* **Advanced Rendering:** Includes support for modern features like **glTF 2.0 asset loading** and an extensible rendering pipeline.
+* **Unified Image Layouts:** Implements the `VK_KHR_UNIFIED_IMAGE_LAYOUTS_EXTENSION_NAME` for streamlined texture and image management.
+* **Cross-Platform Ready:** Designed to compile and run on Windows and Linux (with editor support currently focused on Windows).
 
-[State of the project](https://github.com/users/galliume/projects/4/views/1)
+### Media & Development
 
-[In video](https://www.youtube.com/@galliume8395/videos)
+* **Development Blog:** Follow the journey and technical deep-dives on [Mr Poulpe blog](https://mrpoulpe.substack.com/).
+* **Project Kanban:** See what's next and the current development state on the [Project Board](https://github.com/users/galliume/projects/4/views/1).
+* **Video Showcase:** Watch the engine in action on [YouTube](https://www.youtube.com/@galliume8395/videos).
 
-<img src="https://github.com/galliume/poulpeEngine/blob/main/screenshots/plp.png" width="800" height="600">
-<img src="https://github.com/galliume/poulpeEngine/blob/main/screenshots/helmet.png" width="800" height="450">
+### Screenshots
 
-### To compile && execute
+See the engine rendering advanced glTF assets:
 
-You will need a recent version of Clang (20.x) and CMake (3.31 or 4.x), c++23 is needed.
+| Basic Scene | PBR Materials Test |
+| :---: | :---: |
+| <img src="https://github.com/galliume/poulpeEngine/blob/main/screenshots/plp.png" width="400"> | <img src="https://github.com/galliume/poulpeEngine/blob/main/screenshots/helmet.png" width="400"> |
 
-For Windows you will need llvm-mingw https://github.com/mstorsjo/llvm-mingw/releases), add the bin folder into your $PATH and set CMAKE_SYSROOT (or update mingw-toolchain.cmake directly)
+---
 
-Install the latest Vulkan SDK https://vulkan.lunarg.com/ and be sure to have the env variables VULKAN_SDK, Vulkan_LIBRARY and Vulkan_INCLUDE_DIR properly set to your Vulkan SDK installation folder.
+## 🛠️ Compilation & Execution
 
-The editor (Windows only for the moment) is using TCL/TK 9.0, the easiest installation for Windows is to install via the
-[MagicSplat installer](https://www.magicsplat.com/tcl-installer/index.html)
+### Prerequisites
 
-Or [download](https://www.tcl-lang.org/software/tcltk/9.0.html) the source and compile it yourself.
+To build and run the Poulpe Engine, you need recent and specific tooling:
 
-On Linux you can install it easily via your favorite package manager.
+1.  **C++ Compiler:** A recent version of **Clang (20.x)** with full C++23 support.
+2.  **Build System:** **CMake (3.31 or 4.x)**.
+3.  **Vulkan SDK:** The latest official [Vulkan SDK](https://vulkan.lunarg.com/).
+    * Ensure the environment variables **`VULKAN_SDK`**, **`Vulkan_LIBRARY`**, and **`Vulkan_INCLUDE_DIR`** are correctly configured.
+4.  **GPU:** A recent GPU with support for the **`VK_KHR_UNIFIED_IMAGE_LAYOUTS_EXTENSION_NAME`** extension, as this is currently used without fallback.
 
-Compile shaders (Windows && Linux) :
-```
-bin/shaders_compil.sh
-```
+### Platform-Specific Setup
 
-List existing presets
-```
-cmake --list-presets
+#### 💻 Windows
+* **Toolchain:** Use **`llvm-mingw`** from [mstorsjo/llvm-mingw](https://github.com/mstorsjo/llvm-mingw/releases).
+    * Add the `bin` folder to your `$PATH`.
+    * Set the `CMAKE_SYSROOT` variable (or update `mingw-toolchain.cmake` directly).
+* **Editor:** The engine editor relies on **Tcl/Tk 9.0**.
+    * **Recommended:** Install via the [MagicSplat installer](https://www.magicsplat.com/tcl-installer/index.html).
+    * Alternatively: [Download](https://www.tcl-lang.org/software/tcltk/9.0.html) the source and compile manually.
 
-"windows-debug"              - Debug
-"windows-release"            - Release
-"linux-debug"                - Debug
-"linux-release"              - Release
-```
+#### 🐧 Linux
+* Tcl/Tk can be installed easily via your distribution's favorite package manager.
 
-Configure with a preset
-```
-cmake --preset windows-release
-```
+### Build Steps
 
-Compile with a preset
-```
-cmake --build --preset windows-release
-```
+1.  **Compile Shaders** (Windows & Linux):
+    ```bash
+    bin/shaders_compil.sh
+    ```
 
-Launch from the root directory
-```
-build/windows-release/PoulpeEngine.exe
-```
+2.  **List Presets:** Check available build configurations.
+    ```bash
+    cmake --list-presets
+    # Available presets:
+    # "windows-debug"   - Debug
+    # "windows-release" - Release
+    # "linux-debug"     - Debug
+    # "linux-release"   - Release
+    ```
 
-or to run the editor (Windows only)
+3.  **Configure:** Use a preset to set up the build environment (Example: Windows Release).
+    ```bash
+    cmake --preset windows-release
+    ```
 
-```
-build/windows-release/PoulpeEngine.exe -E
-```
+4.  **Compile:** Build the project.
+    ```bash
+    cmake --build --preset windows-release
+    ```
 
-Or open the project with a cmake able IDE (VS 2022, VS Code...)
+### Running the Engine
 
-### All meshes can be found here:
+| Target | Command | Notes |
+| :--- | :--- | :--- |
+| **Engine** | `build/windows-release/PoulpeEngine.exe` | Run from the root directory. |
+| **Editor** | `build/windows-release/PoulpeEngine.exe -E` | Windows only for the moment. |
+| **IDE** | Open the project with a CMake-compatible IDE (VS 2022, VS Code, etc.). | |
 
-glTF samples can be fetch here: [glTF-Sample-Assets](https://github.com/KhronosGroup/glTF-Sample-Assets)
+---
 
-or
+## 🎨 Content & Configuration
 
-from Morgan McGuire's [Computer Graphics Archive](https://casual-effects.com/data)
+### Level & Asset Setup
 
-Just download, unzip and copy paste in assets/mesh.
+1.  **Assets:** Download glTF samples from [glTF-Sample-Assets](https://github.com/KhronosGroup/glTF-Sample-Assets) or meshes from Morgan McGuire's [Computer Graphics Archive](https://casual-effects.com/data).
+2.  **Placement:** Unzip and copy/paste assets into the **`assets/mesh`** directory.
+3.  **Level Configuration:** Levels are defined in **`config/levels`**.
+4.  **Default Level:** To change the level loaded on startup, edit `config/poulpeEngine.json` and update the `defaultLevel` key with the target level filename.
 
-All levels are described in config/levels, for those meshes they should be fine as it is.
+> ℹ️ **Need Help?** A detailed environment configuration guide is available on the [Wiki](https://github.com/galliume/poulpeEngine/wiki/Env-config).
 
-To change the level update config/poulpeEngine.json key defaultLevel, copy/paste the file name of the level to be loaded.
+### 🕹️ Keyboard Shortcuts (AZERTY Layout)
 
-[help to configure the project](https://github.com/galliume/poulpeEngine/wiki/Env-config)
+| Action | Key |
+| :--- | :--- |
+| **Free / Lock Mouse** | `Left Ctrl` |
+| **Forward** | `Z` |
+| **Backward** | `S` (Changed from Q to S for standard WASD-to-AZERTY mapping) |
+| **Strafe Left** | `Q` |
+| **Strafe Right** | `D` |
+| **Up** | `E` |
+| **Down** | `A` |
 
-### Keyboard shortcuts (azerty)
+---
 
-free / lock mouse : left ctrl
+## ✅ glTF 2.0 Feature Conformance
 
-forward : Z
+The engine is actively tested against the official glTF sample assets to ensure correct rendering and feature implementation.
 
-backward : Q
+| Feature Area | Supported | Feature Area | Supported | Feature Area | Supported |
+| :--- | :---: | :--- | :---: | :--- | :---: |
+| AlphaBlendModeTest | **[x]** | CompareIor | [ ] | MorphPrimitivesTest | [ ] |
+| AnisotropyRotationTest | [ ] | CompareIridescence | [ ] | MorphStressTest | [ ] |
+| AnisotropyStrengthTest | [ ] | CompareMetallic | [ ] | MultiUVTest | [ ] |
+| ClearCoatTest | [ ] | CompareNormal | **[x]** | NegativeScaleTest | [ ] |
+| CompareAlphaCoverage | [ ] | CompareRoughness | [ ] | NodePerformanceTest | [ ] |
+| CompareAmbientOcclusion | [ ] | CompareSheen | [ ] | NormalTangentMirrorTest | **[x]** |
+| CompareAnisotropy | [ ] | CompareSpecular | [ ] | NormalTangentTest | **[x]** |
+| CompareBaseColor | **[x]** | CompareTransmission | [ ] | OrientationTest | **[x]** |
+| CompareClearcoat | [ ] | CompareVolume | [ ] | PlaysetLightTest | [ ] |
+| CompareDispersion | [ ] | DispersionTest | [ ] | PrimitiveModeNormalsTest | [ ] |
+| CompareEmissiveStrength | [ ] | EmissiveStrengthTest | [ ] | SheenTestGrid | [ ] |
+| EnvironmentTest | [ ] | InterpolationTest | [ ] | SpecularTest | [ ] |
+| IORTestGrid | [ ] | TextureCoordinateTest | **[x]** | TextureEncodingTest | [ ] |
+| TextureLinearInterpolationTest | [ ] | TextureSettingsTest | **[x]** | TextureTransformMultiTest | [ ] |
+| TextureTransformTest | [ ] | TransmissionRoughnessTest | [ ] | TransmissionTest | [ ] |
+| TransmissionThinwallTestGrid | [ ] | UnlitTest | [ ] |
 
-left : Q
+---
 
-right : D
+## 📚 Further Learning & Resources
 
-up : E
+This project stands on the shoulders of giants. Here is a list of recommended resources that have informed the engine's development and will be invaluable for contributors:
 
-down : A
-
-### glTF tests
-
-- [x] AlphaBlendModeTest
-- [ ] AnisotropyRotationTest
-- [ ] AnisotropyStrengthTest
-- [ ] ClearCoatTest
-- [ ] CompareAlphaCoverage
-- [ ] CompareAmbientOcclusion
-- [ ] CompareAnisotropy
-- [x] CompareBaseColor
-- [ ] CompareClearcoat
-- [ ] CompareDispersion
-- [ ] CompareEmissiveStrength
-- [ ] CompareIor
-- [ ] CompareIridescence
-- [ ] CompareMetallic
-- [x] CompareNormal
-- [ ] CompareRoughness
-- [ ] CompareSheen
-- [ ] CompareSpecular
-- [ ] CompareTransmission
-- [ ] CompareVolume
-- [ ] DispersionTest
-- [ ] EmissiveStrengthTest
-- [ ] EnvironmentTest
-- [ ] InterpolationTest
-- [ ] IORTestGrid
-- [ ] MorphPrimitivesTest
-- [ ] MorphStressTest
-- [ ] MultiUVTest
-- [ ] NegativeScaleTest
-- [ ] NodePerformanceTest
-- [x] NormalTangentMirrorTest
-- [x] NormalTangentTest
-- [x] OrientationTest
-- [ ] PlaysetLightTest
-- [ ] PrimitiveModeNormalsTest
-- [ ] SheenTestGrid
-- [ ] SpecularTest
-- [x] TextureCoordinateTest
-- [ ] TextureEncodingTest
-- [ ] TextureLinearInterpolationTest
-- [x] TextureSettingsTest
-- [ ] TextureTransformMultiTest
-- [ ] TextureTransformTest
-- [ ] TransmissionRoughnessTest
-- [ ] TransmissionTest
-- [ ] TransmissionThinwallTestGrid
-- [ ] UnlitTest
-
-### Resources
-
-[Vulkan Programming Guide](https://www.amazon.fr/Vulkan-Programming-Guide-Official-Learning/dp/0134464540/)
-
-[Game Engine Architecture](https://www.amazon.fr/Engine-Architecture-Third-Jason-Gregory/dp/1138035459/)
-
-[Vulkan API](https://www.khronos.org/registry/vulkan/specs/1.2-extensions/html/index.html)
-
-[Vulkan API Samples](https://github.com/LunarG/VulkanSamples/tree/master/API-Samples)
-
-[LunarG Vulkan](https://vulkan.lunarg.com/doc/sdk/1.2.162.1/linux/tutorial/html/00-intro.html)
-
-[Foundations of Game Engine Development (vol 1&2)](https://foundationsofgameenginedev.com/)
-
-[Vulkan Tutorial](https://vulkan-tutorial.com/)
-
-[Efficient Vulkan Renderer](https://zeux.io/2020/02/27/writing-an-efficient-vulkan-renderer/)
-
-[Vulkan in 30 minutes](https://renderdoc.org/vulkan-in-30-minutes.html)
-
-[Do's and Don't](https://developer.nvidia.com/blog/vulkan-dos-donts/)
+* **Vulkan Official:**
+    * [Vulkan API Specification](https://www.khronos.org/registry/vulkan/specs/1.2-extensions/html/index.html)
+    * [LunarG Vulkan Documentation](https://vulkan.lunarg.com/doc/sdk/1.2.162.1/linux/tutorial/html/00-intro.html)
+    * [Vulkan API Samples (LunarG)](https://github.com/LunarG/VulkanSamples/tree/master/API-Samples)
+* **Tutorials & Best Practices:**
+    * [Vulkan Tutorial (vulkan-tutorial.com)](https://vulkan-tutorial.com/)
+    * [Efficient Vulkan Renderer (zeux.io)](https://zeux.io/2020/02/27/writing-an-efficient-vulkan-renderer/)
+    * [Vulkan in 30 minutes (RenderDoc)](https://renderdoc.org/vulkan-in-30-minutes.html)
+    * [Vulkan Dos and Don'ts (NVIDIA)](https://developer.nvidia.com/blog/vulkan-dos-donts/)
+* **Books:**
+    * [Vulkan Programming Guide](https://www.amazon.fr/Vulkan-Programming-Guide-Official-Learning/dp/0134464540/)
+    * [Game Engine Architecture (Third Edition)](https://www.amazon.fr/Engine-Architecture-Third-Jason-Gregory/dp/1138035459/)
+    * [Foundations of Game Engine Development (Vol 1 & 2)](https://foundationsofgameenginedev.com/)
