@@ -354,6 +354,11 @@ bool VulkanAPI::checkDeviceExtensionSupport(VkPhysicalDevice& device)
   for (auto const & extension : available_ext) {
       required_ext.erase(extension.extensionName);
   }
+  if (!required_ext.empty()) {
+    for (auto const & ext : required_ext) {
+      Logger::critical("Missing mandatory extension {}", ext);
+    }
+  }
   return required_ext.empty();
 }
 
