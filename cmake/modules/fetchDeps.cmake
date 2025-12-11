@@ -1,3 +1,5 @@
+message(STATUS "Fetching dependancies.")
+
 set(FETCHCONTENT_QUIET OFF)
 
 set(ASSIMP_TAG v6.0.2) #https://github.com/assimp/assimp/tags
@@ -33,3 +35,5 @@ include(deps/FetchSQlite)
 include(deps/FetchTclTk)
 include(deps/FetchVolk)
 #include(deps/FetchWxWidgets)
+
+message(STATUS "dependancies OK.")
