@@ -91,7 +91,7 @@ namespace Poulpe
     // auto const& tex{ component_rendering_info.textures.at(mesh->getData()->_textures.at(0)) };
 
     // std::vector<VkDescriptorImageInfo> image_infos{};
-    // image_infos.emplace_back(tex.getSampler(), tex.getImageView(), VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL);
+    // image_infos.emplace_back(tex.getSampler(), tex.getImageView(), VK_IMAGE_LAYOUT_GENERAL);
     // std::vector<VkDescriptorImageInfo> depth_map_image_infos{};
     // std::vector<VkDescriptorImageInfo> cube_maps_infos{};
 

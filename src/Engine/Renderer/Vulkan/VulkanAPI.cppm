@@ -46,6 +46,22 @@ namespace Poulpe
     std::vector<VkPresentModeKHR> presentModes;
   };
 
+  struct TransitionSyncData {
+    VkAccessFlags srcAccessMask;
+    VkAccessFlags dstAccessMask;
+    VkPipelineStageFlags source_stage;
+    VkPipelineStageFlags destination_stage;
+  };
+
+  struct LayoutPair {
+    VkImageLayout oldLayout;
+    VkImageLayout newLayout;
+      bool operator<(const LayoutPair& other) const {
+      if (oldLayout != other.oldLayout) return oldLayout < other.oldLayout;
+      return newLayout < other.newLayout;
+    }
+  };
+
   export class VulkanAPI
   {
   public:
@@ -573,7 +589,8 @@ namespace Poulpe
         VK_KHR_MAINTENANCE_4_EXTENSION_NAME,
         VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME,
         VK_KHR_SYNCHRONIZATION_2_EXTENSION_NAME,
-        VK_EXT_DEPTH_CLIP_ENABLE_EXTENSION_NAME
+        VK_EXT_DEPTH_CLIP_ENABLE_EXTENSION_NAME,
+        VK_KHR_UNIFIED_IMAGE_LAYOUTS_EXTENSION_NAME
     };
 
     bool _instance_created{ false };

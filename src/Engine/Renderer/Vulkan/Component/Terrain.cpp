@@ -202,13 +202,13 @@ namespace Poulpe
     }
 
     std::vector<VkDescriptorImageInfo> image_infos{};
-    image_infos.emplace_back(height_map.getSampler(), height_map.getImageView(), VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL);
-    image_infos.emplace_back(ground.getSampler(), ground.getImageView(), VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL);
-    image_infos.emplace_back(grass.getSampler(), grass.getImageView(), VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL);
-    image_infos.emplace_back(snow.getSampler(), snow.getImageView(), VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL);
-    image_infos.emplace_back(sand.getSampler(), sand.getImageView(), VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL);
-    image_infos.emplace_back(hi_noise.getSampler(), hi_noise.getImageView(), VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL);
-    image_infos.emplace_back(low_noise.getSampler(), low_noise.getImageView(), VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL);
+    image_infos.emplace_back(height_map.getSampler(), height_map.getImageView(), VK_IMAGE_LAYOUT_GENERAL);
+    image_infos.emplace_back(ground.getSampler(), ground.getImageView(), VK_IMAGE_LAYOUT_GENERAL);
+    image_infos.emplace_back(grass.getSampler(), grass.getImageView(), VK_IMAGE_LAYOUT_GENERAL);
+    image_infos.emplace_back(snow.getSampler(), snow.getImageView(), VK_IMAGE_LAYOUT_GENERAL);
+    image_infos.emplace_back(sand.getSampler(), sand.getImageView(), VK_IMAGE_LAYOUT_GENERAL);
+    image_infos.emplace_back(hi_noise.getSampler(), hi_noise.getImageView(), VK_IMAGE_LAYOUT_GENERAL);
+    image_infos.emplace_back(low_noise.getSampler(), low_noise.getImageView(), VK_IMAGE_LAYOUT_GENERAL);
 
     Texture env { component_rendering_info.textures.at(component_rendering_info.skybox_name) };
     env.setSampler(renderer->getAPI()->createKTXSampler(
@@ -217,7 +217,7 @@ namespace Poulpe
     env.getMipLevels()));
 
     std::vector<VkDescriptorImageInfo> env_image_infos{};
-    env_image_infos.emplace_back(env.getSampler(), env.getImageView(), VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL);
+    env_image_infos.emplace_back(env.getSampler(), env.getImageView(), VK_IMAGE_LAYOUT_GENERAL);
 
     auto const pipeline = renderer->getPipeline(mesh->getShaderName());
     VkDescriptorSet descset = renderer->getAPI()->createDescriptorSets(pipeline->desc_pool, { pipeline->descset_layout }, 1);

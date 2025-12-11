@@ -432,66 +432,212 @@ void VulkanAPI::createLogicalDevice()
     queue_create_infos.push_back(queueCreateInfo);
   }
 
-  VkPhysicalDeviceFeatures device_features{};
-  device_features.fillModeNonSolid =  VK_TRUE;
-  device_features.samplerAnisotropy = VK_TRUE;
-  device_features.sampleRateShading = VK_TRUE;
-  device_features.imageCubeArray = VK_TRUE;
-  device_features.depthBiasClamp = VK_TRUE;
-  device_features.depthClamp = VK_TRUE;
-  device_features.geometryShader = VK_TRUE;
-  device_features.tessellationShader = VK_TRUE;
+  VkPhysicalDeviceUnifiedImageLayoutsFeaturesKHR unified_image_layouts = {
+    .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_UNIFIED_IMAGE_LAYOUTS_FEATURES_KHR,
+    .pNext = nullptr,
+    .unifiedImageLayouts = VK_TRUE
+  };
 
-  VkPhysicalDeviceDescriptorIndexingFeatures descriptor_indexing{};
-  descriptor_indexing.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES;
-  descriptor_indexing.shaderSampledImageArrayNonUniformIndexing = VK_TRUE;
-  descriptor_indexing.runtimeDescriptorArray = VK_TRUE;
-  descriptor_indexing.descriptorBindingVariableDescriptorCount = VK_TRUE;
-  descriptor_indexing.descriptorBindingPartiallyBound = VK_TRUE;
-  descriptor_indexing.descriptorBindingUniformBufferUpdateAfterBind = VK_TRUE;
+  VkPhysicalDeviceVulkan13Features vulkan_features13 = {
+    .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES,
+    .pNext = nullptr,
+    .robustImageAccess = VK_FALSE,
+    .inlineUniformBlock = VK_FALSE,
+    .descriptorBindingInlineUniformBlockUpdateAfterBind = VK_FALSE,
+    .pipelineCreationCacheControl = VK_TRUE,
+    .privateData = VK_FALSE,
+    .shaderDemoteToHelperInvocation = VK_FALSE,
+    .shaderTerminateInvocation = VK_FALSE,
+    .subgroupSizeControl = VK_FALSE,
+    .computeFullSubgroups = VK_FALSE,
+    .synchronization2 = VK_TRUE,
+    .textureCompressionASTC_HDR = VK_FALSE,
+    .shaderZeroInitializeWorkgroupMemory = VK_FALSE,
+    .dynamicRendering = VK_TRUE,
+    .shaderIntegerDotProduct = VK_FALSE,
+    .maintenance4 = VK_FALSE,
+  };
 
-  VkPhysicalDeviceVulkan13Features vulkan_features13 = {};
-  vulkan_features13.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES;
-  vulkan_features13.dynamicRendering = VK_TRUE;
-  vulkan_features13.synchronization2 = VK_TRUE;
-  vulkan_features13.pipelineCreationCacheControl = VK_TRUE;
-  //vulkan_features13.pNext = &descriptor_indexing;
+  VkPhysicalDeviceDescriptorIndexingFeatures descriptor_indexing = {
+    .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES,
+    .pNext = nullptr,
+    .shaderInputAttachmentArrayDynamicIndexing = VK_FALSE,
+    .shaderUniformTexelBufferArrayDynamicIndexing = VK_FALSE,
+    .shaderStorageTexelBufferArrayDynamicIndexing = VK_FALSE,
+    .shaderUniformBufferArrayNonUniformIndexing = VK_FALSE,
+    .shaderSampledImageArrayNonUniformIndexing = VK_TRUE,
+    .shaderStorageBufferArrayNonUniformIndexing = VK_FALSE,
+    .shaderStorageImageArrayNonUniformIndexing = VK_FALSE,
+    .shaderInputAttachmentArrayNonUniformIndexing = VK_FALSE,
+    .shaderUniformTexelBufferArrayNonUniformIndexing = VK_FALSE,
+    .shaderStorageTexelBufferArrayNonUniformIndexing = VK_FALSE,
+    .descriptorBindingUniformBufferUpdateAfterBind = VK_TRUE,
+    .descriptorBindingSampledImageUpdateAfterBind = VK_FALSE,
+    .descriptorBindingStorageImageUpdateAfterBind = VK_FALSE,
+    .descriptorBindingStorageBufferUpdateAfterBind = VK_FALSE,
+    .descriptorBindingUniformTexelBufferUpdateAfterBind = VK_FALSE,
+    .descriptorBindingStorageTexelBufferUpdateAfterBind = VK_FALSE,
+    .descriptorBindingUpdateUnusedWhilePending = VK_FALSE,
+    .descriptorBindingPartiallyBound = VK_TRUE,
+    .descriptorBindingVariableDescriptorCount = VK_TRUE, 
+    .runtimeDescriptorArray = VK_TRUE,
+  };
 
-  VkPhysicalDeviceShaderDrawParametersFeatures shader_draw_parameters_features = {};
-  shader_draw_parameters_features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_DRAW_PARAMETERS_FEATURES;
-  shader_draw_parameters_features.pNext = &vulkan_features13;
-  shader_draw_parameters_features.shaderDrawParameters = VK_TRUE;
+  VkPhysicalDeviceShaderDrawParametersFeatures shader_draw_parameters_features = {
+    .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_DRAW_PARAMETERS_FEATURES,
+    .pNext = nullptr,
+    .shaderDrawParameters = VK_TRUE,
+  };
 
-  VkPhysicalDeviceExtendedDynamicState3FeaturesEXT ext_dynamic_state{};
-  ext_dynamic_state.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_EXTENDED_DYNAMIC_STATE_3_FEATURES_EXT;
-  ext_dynamic_state.extendedDynamicState3DepthClampEnable = VK_TRUE;
-  ext_dynamic_state.extendedDynamicState3RasterizationSamples = VK_TRUE;
-  ext_dynamic_state.extendedDynamicState3ColorBlendEnable = VK_TRUE;
-  ext_dynamic_state.extendedDynamicState3ColorBlendEquation = VK_TRUE;
+  VkPhysicalDeviceExtendedDynamicState3FeaturesEXT ext_dynamic_state = {
+    .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_EXTENDED_DYNAMIC_STATE_3_FEATURES_EXT,
+    .pNext = nullptr,
+    .extendedDynamicState3DepthClampEnable = VK_TRUE,
+    .extendedDynamicState3RasterizationSamples = VK_TRUE,
+    .extendedDynamicState3ColorBlendEnable = VK_TRUE,
+    .extendedDynamicState3ColorBlendEquation = VK_TRUE,
+  };
 
-  ext_dynamic_state.pNext = &shader_draw_parameters_features;
+  VkPhysicalDeviceVulkan12Features device12_features = {
+    .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES,
+    .pNext = nullptr,
+    .samplerMirrorClampToEdge = VK_FALSE,
+    .drawIndirectCount = VK_FALSE,
+    .storageBuffer8BitAccess = VK_FALSE,
+    .uniformAndStorageBuffer8BitAccess = VK_FALSE,
+    .storagePushConstant8 = VK_FALSE,
+    .shaderBufferInt64Atomics = VK_FALSE,
+    .shaderSharedInt64Atomics = VK_FALSE,
+    .shaderFloat16 = VK_FALSE,
+    .shaderInt8 = VK_FALSE,
+    .descriptorIndexing = VK_FALSE,
+    .shaderInputAttachmentArrayDynamicIndexing = VK_FALSE,
+    .shaderUniformTexelBufferArrayDynamicIndexing = VK_FALSE,
+    .shaderStorageTexelBufferArrayDynamicIndexing = VK_FALSE,
+    .shaderUniformBufferArrayNonUniformIndexing = VK_FALSE,
+    .shaderSampledImageArrayNonUniformIndexing = VK_FALSE,
+    .shaderStorageBufferArrayNonUniformIndexing = VK_FALSE,
+    .shaderStorageImageArrayNonUniformIndexing = VK_FALSE,
+    .shaderInputAttachmentArrayNonUniformIndexing = VK_FALSE,
+    .shaderUniformTexelBufferArrayNonUniformIndexing = VK_FALSE,
+    .shaderStorageTexelBufferArrayNonUniformIndexing = VK_FALSE,
+    .descriptorBindingUniformBufferUpdateAfterBind = VK_TRUE,
+    .descriptorBindingSampledImageUpdateAfterBind = VK_TRUE,
+    .descriptorBindingStorageImageUpdateAfterBind = VK_FALSE,
+    .descriptorBindingStorageBufferUpdateAfterBind = VK_TRUE,
+    .descriptorBindingUniformTexelBufferUpdateAfterBind = VK_FALSE,
+    .descriptorBindingStorageTexelBufferUpdateAfterBind = VK_FALSE,
+    .descriptorBindingUpdateUnusedWhilePending = VK_FALSE,
+    .descriptorBindingPartiallyBound = VK_FALSE,
+    .descriptorBindingVariableDescriptorCount = VK_FALSE,
+    .runtimeDescriptorArray = VK_FALSE,
+    .samplerFilterMinmax = VK_FALSE,
+    .scalarBlockLayout = VK_FALSE,
+    .imagelessFramebuffer = VK_FALSE,
+    .uniformBufferStandardLayout = VK_FALSE,
+    .shaderSubgroupExtendedTypes = VK_FALSE,
+    .separateDepthStencilLayouts = VK_FALSE,
+    .hostQueryReset = VK_FALSE,
+    .timelineSemaphore = VK_TRUE,
+    .bufferDeviceAddress = VK_FALSE,
+    .bufferDeviceAddressCaptureReplay = VK_FALSE,
+    .bufferDeviceAddressMultiDevice = VK_FALSE,
+    .vulkanMemoryModel = VK_FALSE,
+    .vulkanMemoryModelDeviceScope = VK_FALSE,
+    .vulkanMemoryModelAvailabilityVisibilityChains = VK_FALSE,
+    .shaderOutputViewportIndex = VK_FALSE,
+    .shaderOutputLayer = VK_FALSE,
+    .subgroupBroadcastDynamicId = VK_FALSE,
+  };
 
-  VkPhysicalDeviceVulkan12Features device12_features{};
-  device12_features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES;
-  device12_features.timelineSemaphore  = VK_TRUE;
-  device12_features.descriptorBindingUniformBufferUpdateAfterBind = VK_TRUE;
-  device12_features.descriptorBindingSampledImageUpdateAfterBind = VK_TRUE;
-  device12_features.descriptorBindingStorageBufferUpdateAfterBind = VK_TRUE;
-  device12_features.pNext = &ext_dynamic_state;
+  VkPhysicalDevicePresentWaitFeaturesKHR present_wait_feature = {
+    .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PRESENT_WAIT_FEATURES_KHR,
+    .pNext = nullptr,
+    .presentWait = VK_TRUE,
+  };
 
-  VkPhysicalDevicePresentWaitFeaturesKHR present_wait_feature{};
-  present_wait_feature.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PRESENT_WAIT_FEATURES_KHR;
-  present_wait_feature.presentWait = true;
+  VkPhysicalDeviceFeatures2 features2 = {
+    .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2,
+    .pNext = nullptr,
+    .features = {
+      .robustBufferAccess = VK_FALSE,
+      .fullDrawIndexUint32 = VK_FALSE,
+      .imageCubeArray = VK_TRUE,
+      .independentBlend = VK_FALSE,
+      .geometryShader = VK_TRUE,
+      .tessellationShader = VK_TRUE,
+      .sampleRateShading = VK_TRUE,
+      .dualSrcBlend = VK_FALSE,
+      .logicOp = VK_FALSE,
+      .multiDrawIndirect = VK_FALSE,
+      .drawIndirectFirstInstance = VK_FALSE,
+      .depthClamp = VK_TRUE,
+      .depthBiasClamp = VK_TRUE,
+      .fillModeNonSolid = VK_TRUE,
+      .depthBounds = VK_FALSE,
+      .wideLines = VK_FALSE,
+      .largePoints = VK_FALSE,
+      .alphaToOne = VK_FALSE,
+      .multiViewport = VK_FALSE,
+      .samplerAnisotropy = VK_TRUE,
+      .textureCompressionETC2 = VK_FALSE,
+      .textureCompressionASTC_LDR = VK_FALSE,
+      .textureCompressionBC = VK_FALSE,
+      .occlusionQueryPrecise = VK_FALSE,
+      .pipelineStatisticsQuery = VK_FALSE,
+      .vertexPipelineStoresAndAtomics = VK_FALSE,
+      .fragmentStoresAndAtomics = VK_FALSE,
+      .shaderTessellationAndGeometryPointSize = VK_FALSE,
+      .shaderImageGatherExtended = VK_FALSE,
+      .shaderStorageImageExtendedFormats = VK_FALSE,
+      .shaderStorageImageReadWithoutFormat = VK_FALSE,
+      .shaderStorageImageWriteWithoutFormat = VK_FALSE,
+      .shaderUniformBufferArrayDynamicIndexing = VK_FALSE,
+      .shaderSampledImageArrayDynamicIndexing = VK_FALSE,
+      .shaderStorageBufferArrayDynamicIndexing = VK_FALSE,
+      .shaderStorageImageArrayDynamicIndexing = VK_FALSE,
+      .shaderClipDistance = VK_FALSE,
+      .shaderCullDistance = VK_FALSE,
+      .shaderFloat64 = VK_FALSE,
+      .shaderInt64 = VK_FALSE,
+      .shaderInt16 = VK_FALSE,
+      .shaderResourceResidency = VK_FALSE,
+      .shaderResourceMinLod = VK_FALSE,
+      .sparseBinding = VK_FALSE,
+      .sparseResidencyBuffer = VK_FALSE,
+      .sparseResidencyImage2D = VK_FALSE,
+      .sparseResidencyImage3D = VK_FALSE,
+      .sparseResidency2Samples = VK_FALSE,
+      .sparseResidency4Samples = VK_FALSE,
+      .sparseResidency8Samples = VK_FALSE,
+      .sparseResidency16Samples = VK_FALSE,
+      .sparseResidencyAliased = VK_FALSE,
+      .variableMultisampleRate = VK_FALSE,
+      .inheritedQueries = VK_FALSE,
+    },
+  };
+
   present_wait_feature.pNext = &device12_features;
-
-  VkDeviceCreateInfo create_info{};
-  create_info.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
-  create_info.queueCreateInfoCount = static_cast<uint32_t>(queue_create_infos.size());
-  create_info.pQueueCreateInfos = queue_create_infos.data();
-  create_info.pEnabledFeatures = &device_features;
-  create_info.enabledExtensionCount = static_cast<uint32_t>(_device_extensions.size());
-  create_info.ppEnabledExtensionNames = _device_extensions.data();
-  create_info.pNext = &present_wait_feature;
+  device12_features.pNext = &ext_dynamic_state;
+  ext_dynamic_state.pNext = &shader_draw_parameters_features;
+  shader_draw_parameters_features.pNext = &vulkan_features13;
+  //descriptor_indexing.pNext = &vulkan_features13;
+  vulkan_features13.pNext = &unified_image_layouts;
+  unified_image_layouts.pNext = nullptr;
+  features2.pNext = &present_wait_feature;
+  
+  VkDeviceCreateInfo create_info {
+    .sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
+    .pNext = &features2, 
+    .flags = 0,
+    .queueCreateInfoCount = static_cast<uint32_t>(queue_create_infos.size()),
+    .pQueueCreateInfos = queue_create_infos.data(),
+    .pEnabledFeatures = nullptr,
+    .enabledExtensionCount = static_cast<uint32_t>(_device_extensions.size()),
+    .ppEnabledExtensionNames = _device_extensions.data(),
+    .enabledLayerCount = 0,
+    .ppEnabledLayerNames = nullptr,
+  };
 
   if (vkCreateDevice(_physical_device, & create_info, nullptr, &_device) != VK_SUCCESS) {
     //Logger::critical("failed to create logical device!");
@@ -1056,11 +1202,11 @@ VkRenderPass* VulkanAPI::createRenderPass(VkSampleCountFlagBits const& msaaSampl
   color_attachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
   color_attachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_STORE;
   color_attachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-  color_attachment.finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+  color_attachment.finalLayout = VK_IMAGE_LAYOUT_GENERAL;
 
   VkAttachmentReference color_attachment_ref{};
   color_attachment_ref.attachment = 0;
-  color_attachment_ref.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+  color_attachment_ref.layout = VK_IMAGE_LAYOUT_GENERAL;
 
   VkAttachmentDescription color_attachment_resolve{};
   color_attachment_resolve.format = surface_format.format;
@@ -1074,7 +1220,7 @@ VkRenderPass* VulkanAPI::createRenderPass(VkSampleCountFlagBits const& msaaSampl
 
   VkAttachmentReference color_attachment_resolve_ref{};
   color_attachment_resolve_ref.attachment = 2;
-  color_attachment_resolve_ref.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+  color_attachment_resolve_ref.layout = VK_IMAGE_LAYOUT_GENERAL;
 
   VkSubpassDependency dependency{};
   dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
@@ -1601,7 +1747,7 @@ void VulkanAPI::beginRendering(
   VkRenderingAttachmentInfo depth_attachment{ };
   depth_attachment.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
   depth_attachment.imageView = depth_imageview;
-  depth_attachment.imageLayout = VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL;
+  depth_attachment.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
   depth_attachment.loadOp = load_op;
   depth_attachment.storeOp = store_op;
   depth_attachment.clearValue.color = color_clear;
@@ -2483,7 +2629,7 @@ void VulkanAPI::generateMipmaps(
         VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &blit, VK_FILTER_LINEAR);
     }
     barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
-    barrier.newLayout = VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL;
+    barrier.newLayout = VK_IMAGE_LAYOUT_GENERAL;
     barrier.srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
     barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
 
@@ -2496,7 +2642,7 @@ void VulkanAPI::generateMipmaps(
 
   barrier.subresourceRange.baseMipLevel = mip_lvl - 1;
   barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-  barrier.newLayout = VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL;
+  barrier.newLayout = VK_IMAGE_LAYOUT_GENERAL;
   barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
   barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
 
@@ -2677,6 +2823,66 @@ VkSampler VulkanAPI::createTextureSampler(uint32_t const mip_lvl)
     VkImageAspectFlags const aspect_flags,
     uint32_t layer_count)
   {
+    std::map<LayoutPair, TransitionSyncData> const g_transition_map {
+    {
+        {VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL},
+        {
+            .srcAccessMask = 0,
+            .dstAccessMask = VK_ACCESS_SHADER_READ_BIT | VK_ACCESS_SHADER_WRITE_BIT | 
+                             VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_TRANSFER_WRITE_BIT |
+                             VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
+            .source_stage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
+            .destination_stage = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT
+        }
+    },
+    {
+        {VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR},
+        {
+            .srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_TRANSFER_READ_BIT | 
+                             VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT | VK_ACCESS_SHADER_WRITE_BIT,
+            .dstAccessMask = 0,
+            .source_stage = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
+            .destination_stage = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT
+        }
+    },
+    {
+        {VK_IMAGE_LAYOUT_PRESENT_SRC_KHR, VK_IMAGE_LAYOUT_GENERAL},
+        {
+            .srcAccessMask = 0,
+            .dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_SHADER_READ_BIT | 
+                             VK_ACCESS_TRANSFER_WRITE_BIT,
+            .source_stage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
+            .destination_stage = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT
+        }
+    },
+    
+    {
+        {VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL},
+        {
+            .srcAccessMask = 0,
+            .dstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
+            .source_stage = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT,
+            .destination_stage = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT
+        }
+    }
+};
+
+    if (old_layout == new_layout) {
+        return;
+    }
+
+    LayoutPair key = {old_layout, new_layout};
+    auto it = g_transition_map.find(key);
+
+    if (it == g_transition_map.end()) {
+        throw std::invalid_argument(
+            "Unsupported image layout transition for unified layouts. "
+            "Only UNDEFINED <-> GENERAL and GENERAL <-> PRESENT_SRC_KHR transitions are explicitly supported."
+        );
+    }
+
+    const TransitionSyncData& sync_data = it->second;
+
     VkImageMemoryBarrier barrier{};
     barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
     barrier.oldLayout = old_layout;
@@ -2690,113 +2896,16 @@ VkSampler VulkanAPI::createTextureSampler(uint32_t const mip_lvl)
     barrier.subresourceRange.baseArrayLayer = 0;
     barrier.subresourceRange.layerCount = layer_count;
 
-    VkPipelineStageFlags source_stage;
-    VkPipelineStageFlags destination_stage;
-
-    if (old_layout == VK_IMAGE_LAYOUT_UNDEFINED && new_layout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL) {
-      barrier.srcAccessMask = 0;
-      barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-
-      source_stage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
-      destination_stage = VK_PIPELINE_STAGE_TRANSFER_BIT;
-
-    } else if (old_layout == VK_IMAGE_LAYOUT_GENERAL && new_layout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL) {
-      barrier.srcAccessMask = 0;
-      barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-
-      source_stage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
-      destination_stage = VK_PIPELINE_STAGE_TRANSFER_BIT;
-
-    } else if (old_layout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL && new_layout == VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL) {
-      barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-      barrier.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-
-      source_stage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-      destination_stage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-
-    } else if (old_layout == VK_IMAGE_LAYOUT_UNDEFINED && new_layout == VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL) {
-      barrier.srcAccessMask = 0;
-      barrier.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-
-      source_stage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-      destination_stage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-
-    } else if (old_layout == VK_IMAGE_LAYOUT_UNDEFINED && new_layout == VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL) {
-      barrier.srcAccessMask = 0;
-      barrier.dstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
-
-      source_stage = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
-      destination_stage = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
-    }
-    else if (old_layout == VK_IMAGE_LAYOUT_GENERAL && new_layout == VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL) {
-      barrier.srcAccessMask = 0;
-      barrier.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-
-      source_stage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-      destination_stage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-
-    } else if (old_layout == VK_IMAGE_LAYOUT_GENERAL && new_layout == VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL) {
-      barrier.srcAccessMask = 0;
-      barrier.dstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
-
-      source_stage = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
-      destination_stage = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
-    } else if (old_layout == VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL && new_layout == VK_IMAGE_LAYOUT_PRESENT_SRC_KHR) {
-      barrier.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-      barrier.dstAccessMask = 0;
-
-      source_stage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-      destination_stage = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
-
-    } else if (old_layout == VK_IMAGE_LAYOUT_UNDEFINED && new_layout == VK_IMAGE_LAYOUT_DEPTH_READ_ONLY_OPTIMAL) {
-      barrier.srcAccessMask = 0;
-      barrier.dstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
-
-      source_stage = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
-      destination_stage = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
-
-    } else if (old_layout == VK_IMAGE_LAYOUT_GENERAL && new_layout == VK_IMAGE_LAYOUT_DEPTH_READ_ONLY_OPTIMAL) {
-      barrier.srcAccessMask = 0;
-      barrier.dstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
-
-      source_stage = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
-      destination_stage = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
-
-    }  else if (old_layout == VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL && new_layout == VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL) {
-      barrier.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-      barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
-
-      source_stage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-      destination_stage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
-    } else if (old_layout == VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL && new_layout == VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL) {
-      barrier.srcAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
-      barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
-
-      source_stage = VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
-      destination_stage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
-    } else if (old_layout == VK_IMAGE_LAYOUT_PRESENT_SRC_KHR && new_layout == VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL) {
-      barrier.srcAccessMask = 0;
-      barrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
-
-      source_stage = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
-      destination_stage = VK_PIPELINE_STAGE_TRANSFER_BIT;
-    } else if (old_layout == VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL && new_layout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL) {
-      barrier.srcAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
-      barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
-
-      source_stage = VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
-      destination_stage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
-    } else {
-      throw std::invalid_argument("unsupported layout transition");
-    }
+    barrier.srcAccessMask = sync_data.srcAccessMask;
+    barrier.dstAccessMask = sync_data.dstAccessMask;
 
     vkCmdPipelineBarrier(
-      cmd_buffer,
-      source_stage, destination_stage,
-      0,
-      0, nullptr,
-      0, nullptr,
-      1, &barrier
+        cmd_buffer,
+        sync_data.source_stage, sync_data.destination_stage,
+        0,
+        0, nullptr,
+        0, nullptr,
+        1, &barrier
     );
   }
 
@@ -3215,7 +3324,7 @@ VkSampler VulkanAPI::createTextureSampler(uint32_t const mip_lvl)
     final_barrier.subresourceRange.levelCount = 1;
     final_barrier.subresourceRange.baseMipLevel = mip_lvl - 1;
     final_barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-    final_barrier.newLayout = VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL;
+    final_barrier.newLayout = VK_IMAGE_LAYOUT_GENERAL;
     final_barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
     final_barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
 
