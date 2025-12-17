@@ -38,6 +38,12 @@ namespace Poulpe
 
     glm::vec3 getDeltaTime();
 
+    void savePreviousState() { _pos_previous = _pos; };
+    void interpolate(double alpha) {
+          // PositionAffichée = (1 - alpha) * Passé + alpha * Présent
+          _pos_rendered = glm::mix(_pos_previous, _pos, alpha);
+      };
+
   private:
     glm::vec3 mat4_backward();
     glm::vec3 mat4_down();
@@ -52,6 +58,9 @@ namespace Poulpe
     glm::vec3 _world_up { 1.0f, 1.0f, 1.0f };
     glm::vec3 _right { 1.0f, 1.0f, 1.0f };
     glm::vec3 _pos { 1.0f, 1.0f, 1.0f };
+
+    glm::vec3 _pos_previous;
+    glm::vec3 _pos_rendered;
 
     glm::vec3 _next_pos;
     glm::vec3 _next_front;

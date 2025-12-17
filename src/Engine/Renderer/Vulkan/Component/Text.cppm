@@ -42,5 +42,4 @@ namespace Poulpe
     float _scale{1.0f};
     bool _is_flat{true};
   };
-
 }

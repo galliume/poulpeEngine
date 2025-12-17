@@ -126,7 +126,7 @@ namespace Poulpe
 
   glm::mat4 Camera::lookAt()
   {
-    _view = glm::lookAt(_pos, _pos + _front, _up);
+    _view = glm::lookAt(_pos_rendered, _pos_rendered + _front, _up);
     return _view;
   }
 

@@ -18,22 +18,31 @@ set(RELEASE_OPTIONS
   -fvisibility=hidden
   -DNDEBUG)
 
+set(RELWITHDEBINFO_OPTIONS
+  -g
+  -O3
+  #-ffast-math
+  -march=native
+  -fvisibility=hidden
+  -fno-omit-frame-pointer
+  -DNDEBUG)
+
 target_compile_options(${PROJECT_NAME} PRIVATE
   $<$<CONFIG:DEBUG>:${DEBUG_OPTIONS}>
   $<$<CONFIG:RELEASE>:${RELEASE_OPTIONS}>
+  $<$<CONFIG:RELWITHDEBINFO>:${RELWITHDEBINFO_OPTIONS}>
   -Weverything
   -fno-strict-aliasing
   -Wno-c++98-compat
+  -Wno-c++98-compat-pedantic
+  -Wno-c++20-compat
   -Wno-old-style-cast
   -Wno-padded
   -Wno-documentation
   -Wno-documentation-unknown-command
   -Wno-decls-in-multiple-modules
   -Wno-unsafe-buffer-usage
-  -Wno-c++98-compat
-  -Wno-c++98-compat-pedantic
   -Wno-covered-switch-default
-  -Wno-deprecated-declarations
-  -Wno-c++20-compat)
+  -Wno-deprecated-declarations)
 
 message(STATUS "compiler definitions OK.")

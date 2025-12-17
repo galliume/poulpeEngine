@@ -30,9 +30,9 @@ namespace Poulpe {
     std::string terrain_name{};
     std::string water_name{};
     Light sun_light{};
-    std::vector<Light> point_lights{};
-    std::vector<Light> spot_lights{};
-    std::vector<FontCharacter> characters{};
+    std::span<Light, std::dynamic_extent> point_lights{};
+    std::span<Light, std::dynamic_extent> spot_lights{};
+    std::span<FontCharacter, std::dynamic_extent> characters{};
     FT_Face face{};
     uint32_t atlas_width{0};
     uint32_t atlas_height{0};

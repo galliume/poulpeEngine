@@ -179,9 +179,9 @@ namespace Poulpe
       auto renderer_info { getRendererInfo() };
 
       LightObjectBuffer light_object_buffer{};
-      light_object_buffer.point_lights[0] = _light_manager->getPointLights().at(0);
-      light_object_buffer.point_lights[1] = _light_manager->getPointLights().at(1);
-      light_object_buffer.spot_light = _light_manager->getSpotLights().at(0);
+      light_object_buffer.point_lights[0] = _light_manager->getPointLights()[0];
+      light_object_buffer.point_lights[1] = _light_manager->getPointLights()[1];
+      light_object_buffer.spot_light = _light_manager->getSpotLights()[0];
       light_object_buffer.sun_light = _light_manager->getSunLight();
 
       _renderer->getAPI()->updateStorageBuffer(

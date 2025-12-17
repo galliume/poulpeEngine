@@ -738,7 +738,7 @@ VkSurfaceFormatKHR VulkanAPI::chooseSwapSurfaceFormat(std::vector<VkSurfaceForma
 
 VkPresentModeKHR VulkanAPI::chooseSwapPresentMode(std::vector<VkPresentModeKHR> const &)
 {
-  return VK_PRESENT_MODE_FIFO_KHR;
+  return VK_PRESENT_MODE_IMMEDIATE_KHR;//VK_PRESENT_MODE_MAILBOX_KHR;
 }
 
 VkExtent2D VulkanAPI::chooseSwapExtent( VkSurfaceCapabilitiesKHR const & capabilities)
