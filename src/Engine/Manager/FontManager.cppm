@@ -34,7 +34,7 @@ namespace Poulpe
     FontManager() = default;
     ~FontManager();
 
-    std::vector<FontCharacter> const& getCharacters() { return _characters; }
+    std::span<FontCharacter> getCharacters() { return std::span<FontCharacter, std::dynamic_extent>(_characters); }
     FT_Face getFace() const& { return _face; }
 
     uint32_t getAtlasWidth() const { return _atlas_width; }

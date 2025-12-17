@@ -130,23 +130,28 @@ namespace Poulpe
 
       //cf https://gafferongames.com/post/fix_your_timestep/
       while (accumulator >= dt) {
+        _render_manager->getCamera()->savePreviousState();
         _render_manager->getCamera()->updateDeltaTime(dt);
         _render_manager->getCamera()->move();
 
         accumulator -= dt;
         //total_time += dt;
       }
+
+      double const alpha { accumulator / dt };
+      _render_manager->getCamera()->interpolate(alpha);
       //Locator::getCommandQueue()->execPreRequest();
       _render_manager->renderScene(frame_time);
       //Locator::getCommandQueue()->execPostRequest();
 
-      auto const _elapsed_time{ duration<double>(steady_clock::now() - _start_run).count() };
+      auto const _elapsed_time{ duration<double>(new_time - _start_run).count() };
 
       //@todo check if it's correct with accumulator method...
-      if ((duration<double>(steady_clock::now() - last_time_debug_updated)).count() > 1.0) {
-        ms_count = frame_time * 1000.;
-        fps_count = 1 / frame_time;
-        last_time_debug_updated = steady_clock::now();
+      if ((duration<double>(new_time - last_time_debug_updated)).count() > 1.0) {
+        fps_count = frame_count;
+        ms_count = 1000.0 / std::max(1.0, static_cast<double>(frame_count));
+        last_time_debug_updated = new_time;
+        frame_count = 0;
       }
 
       _render_manager->updateText("_plp_ms_counter", std::format("{:<.2f}ms {:<.2f}fps", ms_count, fps_count));

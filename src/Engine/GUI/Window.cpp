@@ -73,7 +73,7 @@ namespace Poulpe
       //_FramebufferResized = true;
     });
 
-    glfwSwapInterval(1);
+    //glfwSwapInterval(1);
 
     //glfwSetInputMode(_window, GLFW_STICKY_MOUSE_BUTTONS, GLFW_TRUE);
     //glfwSetInputMode(_window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);

@@ -26,9 +26,9 @@ namespace Poulpe
     glm::mat4 const & M_camera,
     glm::mat4 const & projection);
 
-    inline Light getSunLight() { return _sun; }
-    inline std::vector<Light> getPointLights() { return _points; }
-    inline std::vector<Light> getSpotLights() { return _spots; }
+    Light getSunLight() { return _sun; }
+    std::span<Light> getPointLights() { return _points; }
+    std::span<Light> getSpotLights() { return _spots; }
 
     void computeCSM(glm::mat4 const & camera_view, glm::mat4 const & projection);
     glm::vec3 hsv2rgb(float h, float s, float v);

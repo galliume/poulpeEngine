@@ -33,25 +33,26 @@ namespace Poulpe
   void Renderer::init()
   {
     _swapchain = _vulkan->createSwapChain(_images);
+    auto const buffer_size {_images.size()};
 
-    _imageviews.resize(_images.size());
-    _samplers.resize(_images.size());
-    _depth_images.resize(_images.size());
-    _depth_imageviews.resize(_images.size());
-    _depth_samplers.resize(_images.size());
+    _imageviews.resize(buffer_size);
+    _samplers.resize(buffer_size);
+    _depth_images.resize(buffer_size);
+    _depth_imageviews.resize(buffer_size);
+    _depth_samplers.resize(buffer_size);
 
-    _depth_images2.resize(_images.size());
-    _depth_imageviews2.resize(_images.size());
-    _depth_samplers2.resize(_images.size());
+    _depth_images2.resize(buffer_size);
+    _depth_imageviews2.resize(buffer_size);
+    _depth_samplers2.resize(buffer_size);
 
-    _imageviews2.resize(_images.size());
-    _images2.resize(_images.size());
-    _samplers2.resize(_images.size());
-    _imageviews3.resize(_images.size());
-    _images3.resize(_images.size());
-    _samplers3.resize(_images.size());
+    _imageviews2.resize(buffer_size);
+    _images2.resize(buffer_size);
+    _samplers2.resize(buffer_size);
+    _imageviews3.resize(buffer_size);
+    _images3.resize(buffer_size);
+    _samplers3.resize(buffer_size);
 
-    for (std::size_t i{ 0 }; i < _images.size(); ++i) {
+    for (std::size_t i{ 0 }; i < buffer_size; ++i) {
       VkImage image;
 
       _vulkan->createImage(
@@ -167,7 +168,7 @@ namespace Poulpe
     _cmd_buffer_shadowmap = _vulkan->allocateCommandBuffers(_cmd_pool_shadowmap,
       static_cast<uint32_t>(_imageviews.size()));
 
-    for (std::size_t i { 0 }; i < _images.size(); ++i) {
+    for (std::size_t i { 0 }; i < buffer_size; ++i) {
       VkImage image{};
       _vulkan->createDepthMapImage(image, true);
       _depthmap_images.emplace_back(image);
@@ -176,7 +177,7 @@ namespace Poulpe
 
       _depthmap_samplers.emplace_back(_vulkan->createDepthMapSampler());
     }
-    for (std::size_t i { 0 }; i < _images.size(); ++i) {
+    for (std::size_t i { 0 }; i < buffer_size; ++i) {
       VkImage image{};
       _vulkan->createDepthMapImage(image, false, 4);
       _csm_images.emplace_back(image);
@@ -198,17 +199,17 @@ namespace Poulpe
     sema_create_info.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
     sema_create_info.pNext = &sema_type_info;
 
-    _fences_in_flight.resize(_max_frames_in_flight);
-    _images_in_flight.resize(_max_frames_in_flight, VK_NULL_HANDLE);
-    _timeline_semaphores.resize(_max_frames_in_flight, VK_NULL_HANDLE);
+    _fences_in_flight.resize(buffer_size);
+    _images_in_flight.resize(buffer_size, VK_NULL_HANDLE);
+    _timeline_semaphores.resize(buffer_size, VK_NULL_HANDLE);
 
     VkFenceCreateInfo fence_info{};
     fence_info.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
     fence_info.flags = VK_FENCE_CREATE_SIGNALED_BIT;
-    _sema_render_completes.resize(_max_frames_in_flight);
-    _sema_present_completes.resize(_max_frames_in_flight);
-    _image_available.resize(_max_render_thread);
-    _current_timeline_values.resize(_max_render_thread);
+    _sema_render_completes.resize(buffer_size);
+    _sema_present_completes.resize(buffer_size);
+    _image_available.resize(buffer_size);
+    _current_timeline_values.resize(buffer_size);
 
     VkSemaphoreTypeCreateInfo timeline_create_info{};
     timeline_create_info.sType = VK_STRUCTURE_TYPE_SEMAPHORE_TYPE_CREATE_INFO;
@@ -219,18 +220,18 @@ namespace Poulpe
     semaphore_create_info.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
     semaphore_create_info.pNext = &timeline_create_info;
 
-    for (std::size_t i { 0 }; i < _max_frames_in_flight; ++i) {
-      _sema_render_completes[i].resize(_max_frames_in_flight);
-      for (std::size_t x { 0 }; x < _max_frames_in_flight; ++x) {
+    for (std::size_t i { 0 }; i < buffer_size; ++i) {
+      _sema_render_completes[i].resize(buffer_size);
+      for (std::size_t x { 0 }; x < buffer_size; ++x) {
         result = vkCreateSemaphore(_vulkan->getDevice(), &sema_create_info, nullptr, &_sema_render_completes[i][x]);
         if (VK_SUCCESS != result) Logger::error("can't create _sema_render_completes semaphore");
       }
     }
-    for (std::size_t i { 0 }; i < _max_frames_in_flight; ++i) {
+    for (std::size_t i { 0 }; i < buffer_size; ++i) {
       result = vkCreateSemaphore(_vulkan->getDevice(), &sema_create_info, nullptr, &_sema_present_completes[i]);
       if (VK_SUCCESS != result) Logger::error("can't create _sema_present_completes semaphore");
     }
-    for (std::size_t i { 0 }; i < _max_frames_in_flight; ++i) {
+    for (std::size_t i { 0 }; i < buffer_size; ++i) {
       result = vkCreateSemaphore(_vulkan->getDevice(), &sema_create_info, nullptr, &_image_available[i]);
       if (VK_SUCCESS != result) Logger::error("can't create _image_available semaphore");
 

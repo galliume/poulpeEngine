@@ -56,7 +56,7 @@ namespace Poulpe
     for (auto c = utf16_text.begin(); c != utf16_text.end(); c++) {
 
       auto const& glyph_index { FT_Get_Char_Index(component_rendering_info.face, *c) };
-      auto const& ch { component_rendering_info.characters.at(glyph_index)} ;
+      auto const& ch { component_rendering_info.characters[glyph_index]} ;
 
       constexpr float epsilon = 1e-6f;
       if (std::abs(ch.size.x) < epsilon && std::abs(ch.size.y) < epsilon) {

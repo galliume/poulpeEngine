@@ -91,8 +91,8 @@ namespace Poulpe
     Camera* camera{};
     glm::mat4 camera_view{};
     Light sun_light{};
-    std::vector<Light> point_lights{};
-    std::vector<Light> spot_lights{};
+    std::span<Light, std::dynamic_extent> point_lights{};
+    std::span<Light, std::dynamic_extent> spot_lights{};
     double elapsed_time{0.0};
     VkShaderStageFlags stage_flag_bits;
     bool normal_debug{};
@@ -177,7 +177,7 @@ namespace Poulpe
 
   private:
     const uint32_t _max_frames_in_flight{ 2 };
-    const std::size_t _max_render_thread{ 3 };
+    //const std::size_t _max_render_thread{ 4 };
 
     void onFinishRender();
     void setPerspective();
@@ -265,7 +265,7 @@ namespace Poulpe
 
     std::mutex _mutex_queue_submit;
 
-    DrawCommands _draw_cmds{3};
+    DrawCommands _draw_cmds{4};
 
     std::vector<VkSemaphore> _timeline_semaphores;
     std::vector<std::uint64_t> _current_timeline_values;
