@@ -504,7 +504,7 @@ namespace Poulpe
   void Renderer::drawShadowMap(
     RendererInfo const& renderer_info,
     SHADOW_TYPE const shadow_type,
-    VkBuffer const& light_buffer)
+    VkBuffer const&)
   {
     VkCommandBuffer cmd_buffer;
     std::string pipeline_name {"shadow_map"};
@@ -562,22 +562,22 @@ namespace Poulpe
   void Renderer::endShadowMap(SHADOW_TYPE const shadow_type)
   {
     VkCommandBuffer cmd_buffer;
-    VkImage depth;
+    //VkImage depth;
     uint32_t thread_id {0};
 
     if (shadow_type == SHADOW_TYPE::CSM) {
       cmd_buffer = _cmd_buffer_shadowmap[_current_frame];
-      depth = _csm_images[_current_frame];
+      //depth = _csm_images[_current_frame];
       thread_id = 1;
     } else {
       cmd_buffer = _cmd_buffer_entities3[_current_frame];
-      depth = _depthmap_images[_current_frame];
+      //depth = _depthmap_images[_current_frame];
     }
 
     _vulkan->endMarker(cmd_buffer);
     _vulkan->endRendering(cmd_buffer);
 
-      uint32_t const layer_count = (shadow_type == SHADOW_TYPE::CSM) ? 4 : 6;
+    //uint32_t const layer_count = (shadow_type == SHADOW_TYPE::CSM) ? 4 : 6;
 
     //  _vulkan->transitionImageLayout(cmd_buffer,
     //   depth,
@@ -653,7 +653,7 @@ namespace Poulpe
     VkCommandBuffer& cmd_buffer,
     VkImage& image,
     VkImage&,
-    bool const is_attachment,
+    bool const,
     bool const)
   {
     _vulkan->endRendering(cmd_buffer);

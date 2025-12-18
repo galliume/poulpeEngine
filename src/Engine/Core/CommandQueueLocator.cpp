@@ -6,15 +6,17 @@ import Engine.Core.CommandQueue;
 
 namespace Poulpe
 {
-  std::unique_ptr<Poulpe::CommandQueue> Poulpe::CommandQueueLocator::_cmd_queue;
+  Poulpe::CommandQueue* Poulpe::CommandQueueLocator::_cmd_queue = nullptr;
 
   CommandQueue* CommandQueueLocator::get()
   {
-    return _cmd_queue.get();
+    return _cmd_queue;
   }
-
+  
   void CommandQueueLocator::init()
   {
-    _cmd_queue = std::make_unique<CommandQueue>();
+    if (!_cmd_queue) {
+      _cmd_queue = new Poulpe::CommandQueue();
+    }
   }
 }

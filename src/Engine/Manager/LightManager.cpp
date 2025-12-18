@@ -178,8 +178,8 @@ namespace Poulpe
 
     auto const d { std::max(max_x - min_x, max_y - min_y) };
     auto const T { d / shadow_resolution };
-    auto const dx { min_x };
-    auto const dy { min_y };
+    // auto const dx { min_x };
+    // auto const dy { min_y };
 
     min_x = std::floor(min_x / T) * T;
     min_y = std::floor(min_y / T) * T;

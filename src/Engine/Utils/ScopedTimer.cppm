@@ -32,11 +32,11 @@ namespace Poulpe
     const ClockType::time_point _start{};
   };
 
-  #define USE_SCOPED_TIMER 1
+  //#define USE_SCOPED_TIMER 1
 
-  #if USE_SCOPED_TIMER
-  #define SCOPED_TIMER() ScopedTimer timer{__func__}
-  #else
-  #define SCOPED_TIMER()
-  #endif
+  // #if USE_SCOPED_TIMER
+  // #define SCOPED_TIMER() ScopedTimer timer{__func__}
+  // #else
+  // #define SCOPED_TIMER()
+  // #endif
 }

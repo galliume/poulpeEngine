@@ -71,7 +71,7 @@ namespace Poulpe
 
     double ms_count{0.0};
     double fps_count{0.0};
-    std::size_t frame_count{ 0 };
+    double frame_count{ 0.0 };
     auto last_time_debug_updated{ steady_clock::now() };
 
     FontManager::Text frame_counter {

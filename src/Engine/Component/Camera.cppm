@@ -38,11 +38,10 @@ namespace Poulpe
 
     glm::vec3 getDeltaTime();
 
-    void savePreviousState() { _pos_previous = _pos; };
+    void savePreviousState() { _pos_previous = _pos; }
     void interpolate(double alpha) {
-          // PositionAffichée = (1 - alpha) * Passé + alpha * Présent
           _pos_rendered = glm::mix(_pos_previous, _pos, alpha);
-      };
+      }
 
   private:
     glm::vec3 mat4_backward();
