@@ -503,8 +503,7 @@ namespace Poulpe
 
   void Renderer::drawShadowMap(
     RendererInfo const& renderer_info,
-    SHADOW_TYPE const shadow_type,
-    VkBuffer const&)
+    SHADOW_TYPE const shadow_type)
   {
     VkCommandBuffer cmd_buffer;
     std::string pipeline_name {"shadow_map"};

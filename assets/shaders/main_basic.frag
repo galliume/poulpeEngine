@@ -550,7 +550,7 @@ void main()
   vec3 cascade_blend = vec3(var.u1, var.u2, var.u3);
 
   float csm_shadow = CalculateInfiniteShadow(csm_coords, cascade_blend, NdL);
-  //C_sun *= csm_shadow;
+  C_sun *= csm_shadow;
 
   vec3 frag_to_light = p - point_lights[1].position;
   float shadow = ShadowCalculation(frag_to_light, point_lights[1], NdL);

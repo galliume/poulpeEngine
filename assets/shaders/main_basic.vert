@@ -142,8 +142,8 @@ void main()
   frag_var.norm = norm;
   frag_var.color = color;
   frag_var.model = ubo.model;
-  vec4 viewPos = pc.view * world_pos;
-  frag_var.depth = -viewPos.z;
+  vec4 view_pos = pc.view * world_pos;
+  frag_var.depth = -view_pos.z;
 
   vec4 cascade_coord0 = (sun_light.cascade_scale_offset * world_pos);
   frag_var.cascade_coord = cascade_coord0;
@@ -161,9 +161,9 @@ void main()
   vec4 d2 = inv_z_dist1 * (view_plane - vec4(0,0,0, sun_light.cascade_min_splits.z));
   vec4 d3 = inv_z_dist2 * (view_plane - vec4(0,0,0, sun_light.cascade_min_splits.w));
 
-  frag_var.u1 = dot(d1, viewPos);
-  frag_var.u2 = dot(d2, viewPos);
-  frag_var.u3 = dot(d3, viewPos);
+  frag_var.u1 = dot(d1, view_pos);
+  frag_var.u2 = dot(d2, view_pos);
+  frag_var.u3 = dot(d3, view_pos);
 
   gl_Position = ubo.projection * pc.view * world_pos;
 } 

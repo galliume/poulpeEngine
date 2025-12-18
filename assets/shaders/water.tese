@@ -196,7 +196,6 @@ void main()
   vec4 view_pos = pc.view * world_pos;
   out_depth = -view_pos.z;
 
-  // Calculate CSM coordinates and blend factors
   vec4 cascade_coord0 = (sun_light.cascade_scale_offset * world_pos);
   out_cascade_coord = cascade_coord0;
   out_cascade_coord1 = (sun_light.cascade_scale_offset1 * cascade_coord0);

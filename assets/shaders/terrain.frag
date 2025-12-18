@@ -215,18 +215,32 @@ float CalculateInfiniteShadow(vec3 cascade_coord0, vec3 cascade_blend, float NdL
   if (cascade_index == 2.0) { shadow_coord1 = cascade_coord2; shadow_coord2 = cascade_coord3; weight = blend.z; }
   if (cascade_index == 3.0) { shadow_coord1 = cascade_coord3; shadow_coord2 = cascade_coord3; weight = 1.0; }
 
+  float delta = 3.0f / 16.0f * (1.0f / 2048.f);
+  vec4 shadow_offset[2] = vec4[2](
+    vec4(-delta, -3.0 * delta, 3.0 * delta, -delta),
+    vec4(delta, 3.0 * delta, -3.0 * delta, delta)
+  );
+
   float max_bias = 0.005;
   float min_bias = 0.0005;
-  float bias = max(max_bias * (1.0 - NdL), min_bias);
+  float bias = 0.0;//0.001;max(max_bias * (1.0 - NdL), min_bias);
 
-  float light1 = texture(csm, vec4(shadow_coord1.xy, cascade_index, shadow_coord1.z - bias));
+  float light1 = 0.0;
+  light1 += texture(csm, vec4(shadow_coord1.xy + shadow_offset[0].xy, cascade_index, shadow_coord1.z - bias));
+  light1 += texture(csm, vec4(shadow_coord1.xy + shadow_offset[0].zw, cascade_index, shadow_coord1.z - bias));
+  light1 += texture(csm, vec4(shadow_coord1.xy + shadow_offset[1].xy, cascade_index, shadow_coord1.z - bias));
+  light1 += texture(csm, vec4(shadow_coord1.xy + shadow_offset[1].zw, cascade_index, shadow_coord1.z - bias));
 
   float light2 = light1;
   if (cascade_index < 3.0) {
-    light2 = texture(csm, vec4(shadow_coord2.xy, cascade_index + 1.0, shadow_coord2.z - bias));
+    light2 = 0.0;
+    light2 += texture(csm, vec4(shadow_coord2.xy + shadow_offset[0].xy, cascade_index + 1.0, shadow_coord2.z - bias));
+    light2 += texture(csm, vec4(shadow_coord2.xy + shadow_offset[0].zw, cascade_index + 1.0, shadow_coord2.z - bias));
+    light2 += texture(csm, vec4(shadow_coord2.xy + shadow_offset[1].xy, cascade_index + 1.0, shadow_coord2.z - bias));
+    light2 += texture(csm, vec4(shadow_coord2.xy + shadow_offset[1].zw, cascade_index + 1.0, shadow_coord2.z - bias));
   }
 
-  return mix(light1, light2, weight);
+  return mix(light1, light2, weight) * 0.25;
 }
 
 void main()
@@ -315,76 +329,6 @@ void main()
   vec3 csm_coords = in_cascade_coord.xyz / in_cascade_coord.w;
   float csm_shadow = CalculateInfiniteShadow(csm_coords, in_cascade_blend, NdL);
   C_sun *= max(csm_shadow, 0.1);
-
-  // vec3 light_color = vec3(1.0);
-  // vec3 ambient = 0.1 * light_color;
-
-  // //@todo a point lights...
-
-  // //sun directionnal light
-  // vec3 light_pos = vec3(0.0, 500.0, 0.0);
-
-  // vec3 normal = normalize(in_normal.xyz);
-  // //vec3 x = dFdx(in_position);
-  // //vec3 y = dFdy(in_position);
-  // //vec3 in_normal = in_inverse_model * normalize(cross(x, y));
-
-  // vec3 p = in_position;
-  // vec3 v = normalize(pc.view_position - p);
-  // vec3 i = normalize(p - pc.view_position);
-
-  // vec3 l = normalize(light_pos - p);
-  // vec3 h = normalize(v + l);
-
-  // float HdV = max(dot(h, v), 0.00001);
-  // float NdH = max(dot(normal, h), 0.00001);
-  // float NdL = max(dot(normal, l), 0.00001);
-  // float NdV = max(dot(normal, v), 0.00001);
-
-  // vec3 F0 = vec3(0.02);
-  // vec3 F90 = vec3(1.0);
-  // float metallic = 0.2;
-  // float P = 1.0;
-  // float roughness = 0.0;
-
-  // float D = GGXDistribution(NdH, roughness);
-  // float G1 = SmithGeometryGGX(roughness, NdV);
-  // float G2 = SmithGeometryGGX(roughness, NdL);
-  // float G = G1 * G2;
-
-  // float f = ReflectionBounce(F0);
-  // vec3 F = FresnelSchlick(F0, F90, HdV, P);
-
-  // vec3 specular = (D * G * F) / (4.0 * NdV * NdL);
-  // vec3 diffuse = color.rgb + Diffuse(color.rgb, F0, NdL, NdV);
-
-  // vec3 kD = vec3(1.0) - F;
-  // kD *= 1.0 - metallic;
-
-  // //vec3 r = reflect(i, normalize(in_normal));
-  // //vec3 env_color = vec3(texture(env_sampler[0], r).rgb);
-  // //diffuse =  mix(env_color, diffuse, 1.0);
-
-  // vec3 C_sun = (kD * diffuse + specular) * light_color * NdL;
-  // vec3 C_ambient = vec3(0.03) * vec3(1.0);
-  // vec3 result = (C_ambient + C_sun);
-
-//  vec3 i = normalize(in_position - pc.view_position);
-//
-//  vec3 r = reflect(i, normalize(norm));
-//  vec3 env_color = vec3(texture(env_sampler[0], r).rgb);
-//
-//  vec3 light_dir = normalize(light_pos - in_position);
-//  float diff = max(dot(norm, light_dir), 0.0);
-//  vec3 diffuse = diff * light_color;
-//  diffuse =  mix(env_color, diffuse, 1.0);
-//
-//  vec3 view_dir = normalize(in_view_position - in_position);
-//  vec3 reflect_dir = reflect(-light_dir, norm);
-//  float spec = pow(max(dot(view_dir, reflect_dir), 0.0), 32);
-//  vec3 specular = 0.5 * spec * light_color;
-//
-//  vec3 result = (ambient + diffuse + specular) * color;
 
   vec4 color = vec4(C_ambient + C_sun + out_lights, 1.0);
 
