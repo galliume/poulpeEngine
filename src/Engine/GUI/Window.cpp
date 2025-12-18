@@ -45,7 +45,7 @@ namespace Poulpe
 
     //@todo check HDR support with GLFW ?
     _monitor = glfwGetPrimaryMonitor();
-    const GLFWvidmode* mode = glfwGetVideoMode(_monitor);
+    //const GLFWvidmode* mode = glfwGetVideoMode(_monitor);
 
     // glfwWindowHint(GLFW_RED_BITS, mode->redBits);
     // glfwWindowHint(GLFW_GREEN_BITS, mode->greenBits);

@@ -46,7 +46,7 @@ namespace Poulpe
         std::vector<VkPipelineStageFlags> flags = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT })
       {
         {
-          std::lock_guard<std::mutex> guard(_m);
+          //std::lock_guard<std::mutex> guard(_m);
           cmd_buffers[thread_id] = cmd_buffer;
           stage_flags[thread_id] = flags;
           is_attachments[thread_id] = is_attachment;

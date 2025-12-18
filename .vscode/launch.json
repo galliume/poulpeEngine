@@ -5,7 +5,7 @@
             "name": "(lldb) Start Windows",
             "type": "lldb",
             "request": "launch",
-            "program": "${workspaceFolder}/build/windows-debug/PoulpeEngine.exe",
+            "program": "${workspaceFolder}/build/windows-release-dbg/PoulpeEngine.exe",
             "cwd": "${workspaceFolder}",
             "relativePathBase": "${workspaceFolder}",
             "console": "externalTerminal",
@@ -15,7 +15,7 @@
             "name": "(lldb) Start linux",
             "type": "lldb",
             "request": "launch",
-            "program": "${workspaceFolder}/build/linux-debug/PoulpeEngine",
+            "program": "${workspaceFolder}/build/linux-release-dbg/PoulpeEngine",
             "cwd": "${workspaceFolder}",
             "relativePathBase": "${workspaceFolder}",
             "console": "externalTerminal",
@@ -35,7 +35,7 @@
             "linux-release",
             "linux-release-dbg",
         ],
-          "default": "windows-debug"
+          "default": "windows-release-dbg"
         },
       ]
 }

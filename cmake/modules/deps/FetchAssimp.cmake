@@ -76,6 +76,11 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(fetch_assimp)
 
+if(TARGET assimp)
+  set_target_properties(assimp PROPERTIES INTERFACE_SYSTEM_INCLUDE_DIRECTORIES 
+    $<TARGET_PROPERTY:assimp,INTERFACE_INCLUDE_DIRECTORIES>)
+endif()
+
 target_include_directories(${PROJECT_NAME}
 SYSTEM PRIVATE
   ${fetch_assimp_SOURCE_DIR}/include)

@@ -21,6 +21,7 @@ set(RELEASE_OPTIONS
 set(RELWITHDEBINFO_OPTIONS
   -g
   -O3
+  -Werror
   #-ffast-math
   -march=native
   -fvisibility=hidden

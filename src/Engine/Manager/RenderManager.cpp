@@ -176,7 +176,7 @@ namespace Poulpe
       updateComponentRenderingInfo();
       updateRendererInfo(camera_view_matrix);
 
-      auto renderer_info { getRendererInfo() };
+      //auto renderer_info { getRendererInfo() };
 
       LightObjectBuffer light_object_buffer{};
       light_object_buffer.point_lights[0] = _light_manager->getPointLights()[0];

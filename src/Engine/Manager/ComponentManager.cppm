@@ -46,7 +46,7 @@ namespace Poulpe
     template <typename T>
     T* get(IDType entity_ID) {
       {
-        std::lock_guard<std::mutex> guard(_mutex);
+        //std::lock_guard<std::mutex> guard(_mutex);
         auto it = std::ranges::find_if(_component_type_map[&typeid(T)], [&entity_ID](auto& component) {
           if (auto ptr = std::get_if<std::unique_ptr<T>>(&component)) {
             if (ptr) {
