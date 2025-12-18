@@ -7,12 +7,14 @@ target_compile_features(${PROJECT_NAME}
 set(DEBUG_OPTIONS
   -g
   -Og
+  -Werror
   -fno-inline
   -fno-inline-functions
   -fno-omit-frame-pointer)
 
 set(RELEASE_OPTIONS
   -O3
+  -Werror
   -ffast-math
   -march=native
   -fvisibility=hidden

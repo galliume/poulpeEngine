@@ -79,6 +79,18 @@ FetchContent_MakeAvailable(fetch_assimp)
 if(TARGET assimp)
   set_target_properties(assimp PROPERTIES INTERFACE_SYSTEM_INCLUDE_DIRECTORIES 
     $<TARGET_PROPERTY:assimp,INTERFACE_INCLUDE_DIRECTORIES>)
+  target_compile_options(assimp PRIVATE
+    $<$<C_COMPILER_ID:Clang>:-Wno-nan-infinity-disabled>
+    $<$<C_COMPILER_ID:AppleClang>:-Wno-nan-infinity-disabled>
+    $<$<C_COMPILER_ID:GNU>:-Wno-nan-infinity-disabled>
+  )
+endif()
+
+if(TARGET zlibstatic)
+  target_compile_options(zlibstatic PRIVATE
+    $<$<C_COMPILER_ID:Clang>:-Wno-deprecated-non-prototype>
+    $<$<C_COMPILER_ID:AppleClang>:-Wno-deprecated-non-prototype>
+  )
 endif()
 
 target_include_directories(${PROJECT_NAME}

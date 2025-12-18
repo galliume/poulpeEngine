@@ -46,24 +46,25 @@ namespace Poulpe {
     return TCL_OK;
   }
 
+  //@todo fix unused when linux is implemented  
   static int plp_get_scene(
-    ClientData clientData,
-    Tcl_Interp* interp,
+    [[maybe_unused]]ClientData clientData,
+    [[maybe_unused]]Tcl_Interp* interp,
     int,
-    Tcl_Obj *const objv[])
+    [[maybe_unused]]Tcl_Obj *const objv[])
   {
-    auto * render_manager = static_cast<RenderManager*>(clientData);
-
-#ifdef __unix__
+    
+    #ifdef __unix__
     // wl_surface* surface = glfwGetWaylandWindow(render_manager->getWindow()->get());
-
+    
     // int tcl_surface;
     // Tcl_GetIntFromObj(interp, objv[1], (int*)&tcl_surface);
-
+    
     // struct wl_compositor *compositor;
     // struct wl_surface* child = wl_compositor_create_surface(compositor);
     //struct wl_subsurface* subsurface = wl_subcompositor_get_subsurface(subcompositor, child, parent);
-#else
+    #else
+    auto * render_manager = static_cast<RenderManager*>(clientData);
     HWND glfw_hwnd = glfwGetWin32Window(render_manager->getWindow()->get());
 
     HWND tk_hwnd;

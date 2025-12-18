@@ -178,7 +178,7 @@ namespace Poulpe
       VkBuffer& src_buffer,
       VkBuffer& dst_buffer,
       VkDeviceSize const size,
-      VkDeviceSize dst_offset = 0);
+      VkDeviceSize dst_offset = 0) __attribute__((no_thread_safety_analysis));
 
     bool souldResizeSwapChain();
 

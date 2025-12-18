@@ -53,9 +53,11 @@ namespace Poulpe
     float const width{ static_cast<float>(component_rendering_info.atlas_width) };
     float const height{ static_cast<float>(component_rendering_info.atlas_height) };
 
-    for (auto c = utf16_text.begin(); c != utf16_text.end(); c++) {
+    for (auto c { utf16_text.begin() }; c != utf16_text.end(); c++) {
 
-      auto const& glyph_index { FT_Get_Char_Index(component_rendering_info.face, *c) };
+      FT_ULong const ft_char { static_cast<FT_ULong>(*c) };
+
+      auto const& glyph_index { FT_Get_Char_Index(component_rendering_info.face, ft_char) };
       auto const& ch { component_rendering_info.characters[glyph_index]} ;
 
       constexpr float epsilon = 1e-6f;
