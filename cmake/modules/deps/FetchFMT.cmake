@@ -16,6 +16,14 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(fetch_fmt)
 
+if(TARGET fmt)
+  target_compile_options(fmt PRIVATE
+    $<$<C_COMPILER_ID:Clang>:-Wno-nan-infinity-disabled>
+    $<$<C_COMPILER_ID:AppleClang>:-Wno-nan-infinity-disabled>
+    $<$<C_COMPILER_ID:GNU>:-Wno-nan-infinity-disabled>
+  )
+endif()
+
 target_include_directories(${PROJECT_NAME}
 SYSTEM PRIVATE
   ${fetch_fmt_SOURCE_DIR}/include)
