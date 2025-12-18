@@ -223,19 +223,32 @@ float CalculateInfiniteShadow(vec3 cascade_coord0, vec3 cascade_blend, float NdL
   if (cascade_index == 2.0) { shadow_coord1 = cascade_coord2; shadow_coord2 = cascade_coord3; weight = blend.z; }
   if (cascade_index == 3.0) { shadow_coord1 = cascade_coord3; shadow_coord2 = cascade_coord3; weight = 1.0; }
 
-  // Use a slope-scale bias to reduce shadow artifacts
-  float slope_scale_bias = 0.05;
-  float constant_bias = 0.005;
-  float bias = constant_bias + tan(acos(NdL)) * slope_scale_bias;
+  float delta = 3.0f / 16.0f * (1.0f / 2048.f);
+  vec4 shadow_offset[2] = vec4[2](
+    vec4(-delta, -3.0 * delta, 3.0 * delta, -delta),
+    vec4(delta, 3.0 * delta, -3.0 * delta, delta)
+  );
 
-  float light1 = texture(csm, vec4(shadow_coord1.xy, cascade_index, shadow_coord1.z - bias));
+  float max_bias = 0.005;
+  float min_bias = 0.0005;
+  float bias = 0.0;//0.001;max(max_bias * (1.0 - NdL), min_bias);
+
+  float light1 = 0.0;
+  light1 += texture(csm, vec4(shadow_coord1.xy + shadow_offset[0].xy, cascade_index, shadow_coord1.z - bias));
+  light1 += texture(csm, vec4(shadow_coord1.xy + shadow_offset[0].zw, cascade_index, shadow_coord1.z - bias));
+  light1 += texture(csm, vec4(shadow_coord1.xy + shadow_offset[1].xy, cascade_index, shadow_coord1.z - bias));
+  light1 += texture(csm, vec4(shadow_coord1.xy + shadow_offset[1].zw, cascade_index, shadow_coord1.z - bias));
 
   float light2 = light1;
   if (cascade_index < 3.0) {
-    light2 = texture(csm, vec4(shadow_coord2.xy, cascade_index + 1.0, shadow_coord2.z - bias));
+    light2 = 0.0;
+    light2 += texture(csm, vec4(shadow_coord2.xy + shadow_offset[0].xy, cascade_index + 1.0, shadow_coord2.z - bias));
+    light2 += texture(csm, vec4(shadow_coord2.xy + shadow_offset[0].zw, cascade_index + 1.0, shadow_coord2.z - bias));
+    light2 += texture(csm, vec4(shadow_coord2.xy + shadow_offset[1].xy, cascade_index + 1.0, shadow_coord2.z - bias));
+    light2 += texture(csm, vec4(shadow_coord2.xy + shadow_offset[1].zw, cascade_index + 1.0, shadow_coord2.z - bias));
   }
 
-  return mix(light1, light2, weight);
+  return mix(light1, light2, weight) * 0.25;
 }
 
 void main()
