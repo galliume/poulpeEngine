@@ -110,10 +110,19 @@ namespace Poulpe
     auto interpolate(
       T const& start,
       T const& end,
-      double current_time)
+      double current_time,
+      double anim_duration)
     {
-      double duration = end.time - start.time;
-      double t = (duration == 0.0) ? 0.0 : (current_time - start.time) / duration;
+      double start_time { start.time };
+      double end_time { end.time };
+
+      if (end_time < start_time) {
+          end_time += anim_duration;
+      }
+
+      double duration = end_time - start_time;
+
+      double t = (duration == 0.0) ? 0.0 : (current_time - start_time) / duration;
       t = std::clamp(t, 0.0, 1.0);
 
       if constexpr (std::same_as<decltype(start.value), glm::vec3>) {
@@ -157,7 +166,8 @@ namespace Poulpe
    template auto BoneAnimationScript::interpolate<Rotation>(
     Rotation const& start,
     Rotation const& end,
-    double current_time);
+    double current_time,
+    double anim_duration);
 
   template std::pair<Rotation, Rotation> BoneAnimationScript::findKeyframe<Rotation>(
     std::vector<Rotation> const& key_frames,
@@ -166,7 +176,8 @@ namespace Poulpe
   template auto BoneAnimationScript::interpolate<Position>(
     Position const& start,
     Position const& end,
-    double current_time);
+    double current_time,
+    double anim_duration);
 
   template std::pair<Position, Position> BoneAnimationScript::findKeyframe<Position>(
     std::vector<Position> const& key_frames,
@@ -175,7 +186,8 @@ namespace Poulpe
   template auto BoneAnimationScript::interpolate<Scale>(
     Scale const& start,
     Scale const& end,
-    double current_time);
+    double current_time,
+    double anim_duration);
 
   template std::pair<Scale, Scale> BoneAnimationScript::findKeyframe<Scale>(
     std::vector<Scale> const& key_frames,

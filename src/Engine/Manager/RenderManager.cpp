@@ -84,7 +84,7 @@ namespace Poulpe
 
     //end @todo
 
-    //_audio_manager->startAmbient(0);s
+    //_audio_manager->startAmbient(1);
   }
 
   void RenderManager::cleanUp()
@@ -146,7 +146,7 @@ namespace Poulpe
 
     FontManager::Text text {
       .name = "_plp_title",
-      .text = "@ € $ 0 7 é è ù ü ä ö π ∞ β Æ ‰ Ü Γ Đ Ặ Ω ! ₲ ◀ MrPoulpe ▶™",
+      .text = "Poulpe Engine ™",
       .position = glm::vec3(0.0f, 100.0f, 0.0f),
       .color = glm::vec3(1.0f, 0.2f, 0.6f),
       .scale = 0.2f,
@@ -163,9 +163,9 @@ namespace Poulpe
 
   void RenderManager::renderScene(double const delta_time)
   {
-    //@todo animate light
-    //_light_manager->animateAmbientLight(delta_time);
     {
+      //@todo animate light
+      //_light_manager->animateAmbientLight(delta_time);
       auto const camera_view_matrix = _camera->getView();
 
       std::lock_guard<std::shared_mutex> guard(_entity_manager->lockWorldNode());

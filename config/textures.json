@@ -6,6 +6,9 @@
 		"_plp_empty": {
 			"path": "assets/texture/_plp_empty.ktx2"
 		},
+		"_plp_error": {
+			"path": "assets/texture/_plp_error.ktx2"
+		},
 		"grass": {
 			"path": "assets/texture/terrain/grass.ktx2"
 		},

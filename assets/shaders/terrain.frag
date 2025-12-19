@@ -69,6 +69,7 @@ layout(binding = 3) readonly buffer LightObjectBuffer {
 };
 layout(binding = 2) uniform samplerCube env_sampler[];
 layout(binding = 4) uniform sampler2DArrayShadow csm;
+layout(binding = 5) uniform samplerCubeShadow tex_shadow_sampler;
 
 float linear_to_sRGB(float color)
 {
@@ -124,9 +125,12 @@ vec4 tex_color(int index)
   return color;
 }
 
-vec3 FresnelSchlick(vec3 F0, vec3 F90, float NdH, float P)
+vec3 FresnelSchlick(float cosTheta, vec3 F0)
 {
-  return F0 + (F90 - F0) * pow(clamp(1.0 - NdH, 0.0, 1.0), 5);
+  // vec3 F = F0 + (F90 - F0) * pow(max(1.0 - NdH, 0.0001), 1/P);
+
+  // return F;
+  return F0 + (1.0 - F0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0);
 }
 
 float ReflectionBounce(vec3 F0)
@@ -172,6 +176,18 @@ float SmoothAttenuation(vec3 l, float r_max)
   return max(r2 * atten_const.x * (sqrt(r2) * atten_const.y - 3.0) + 1.0, 0.0001);
 }
 
+float InverseSquareAttenuation(vec3 l)
+{
+  float r = 20.0;
+  float r_max = 100.0;
+  vec2 atten_const = vec2(1.0);
+  atten_const.x = (r * r) / (r_max * r_max - r * r);
+  atten_const.y = (r_max * r_max);
+
+  float r2 = dot(l, l);
+  return max(atten_const.x * (atten_const.y / r2 - 1.0), 0.0001);
+}
+
 //double turbulence(double x, double y, double z, double f)
 //{
 //  const int W = 256;
@@ -184,7 +200,7 @@ float SmoothAttenuation(vec3 l, float r_max)
 vec3 ApplyFog(vec3 shadedColor, vec3 v)
 {
   float fogDensity = 0.001;
-  vec3 fogColor = vec3(0.0, 0.0, 0.1);
+  vec3 fogColor = vec3(0.4, 0.45, 0.5);
 
   float f = exp(-fogDensity * length(v));
   return (mix(fogColor, shadedColor, f));
@@ -243,6 +259,45 @@ float CalculateInfiniteShadow(vec3 cascade_coord0, vec3 cascade_blend, float NdL
   return mix(light1, light2, weight) * 0.25;
 }
 
+float ShadowCalculation(vec3 light_coord, Light l, float NdL)
+{
+  vec3 p = light_coord;
+  float shadow_offset = 2.f/1024.f;//@todo push constant
+  vec2 depth_transform = vec2(l.projection[2][2], l.projection[2][3]);
+
+  vec3 absq = abs(p);
+  float mxy = max(absq.x, absq.y);
+  float m = max(mxy, absq.z);
+
+  float offset = shadow_offset * m;
+  float dxy  = (mxy > absq.z) ? offset : 0.0;
+  float dx  = (absq.x > absq.y) ? dxy : 0.0;
+  vec2 oxy = vec2(offset - dx, dx);
+  vec2 oyz = vec2(offset - dxy, dxy);
+
+  vec3 limit = vec3(m, m, m);
+  limit.xy -= oxy * (1.f / 1024.f);
+  limit.yz -= oyz * (1.f / 1024.f);
+
+  //float depth = depth_transform.x + depth_transform.y / m;
+  float depth = length(p) / 50.0f;//far plane
+  float light = texture(tex_shadow_sampler, vec4(p, depth));
+
+  p.xy -= oxy;
+  p.yz -= oyz;
+  light += texture(tex_shadow_sampler, vec4(clamp(p.xyz, -limit, limit), depth));
+  p.xy += oxy * 2.0;
+  light += texture(tex_shadow_sampler, vec4(clamp(p.xyz, -limit, limit), depth));
+  p.yz += oyz * 2.0;
+  light += texture(tex_shadow_sampler, vec4(clamp(p.xyz, -limit, limit), depth));
+  p.xy -= oxy * 2.0;
+  light += texture(tex_shadow_sampler, vec4(clamp(p.xyz, -limit, limit), depth));
+
+  light *= 0.2;
+
+  return light;
+}
+
 void main()
 {
   vec4 albedo = vec4(0.0);
@@ -254,11 +309,12 @@ void main()
   albedo += texture(tex_sampler[TERRAIN_SNOW], in_texture_coord) * in_weights.w;
 
   vec3 p = in_position;
-  vec3 v = normalize(pc.view_position - p);
+  vec3 v = in_view_position;
+  vec3 V = normalize(v);
   vec3 normal = normalize(in_normal.xyz);
 
   // PBR material properties for terrain (dielectric)
-  float metallic = 0.0;
+  float metallic = 0.1;
   float roughness = 0.9; // Terrain is generally very rough
 
   // Base reflectivity for a non-metal
@@ -267,14 +323,14 @@ void main()
   vec3 F90 = vec3(1.0);
 
   // Sun light calculation
-  vec3 l = normalize(-sun_light.direction);
-  vec3 h = normalize(l + v);
-  float NdL = max(dot(normal, l), 0.00001);
-  float HdV = max(dot(h, v), 0.00001);
-  float NdV = max(dot(normal, v), 0.00001);
-  float NdH = max(dot(normal, h), 0.00001);
+  vec3 L = normalize(sun_light.position);
+  vec3 H = normalize(L + V);
+  float NdL = max(dot(normal, L), 0.0);
+  float NdV = max(dot(normal, V), 0.0001);
+  float NdH = max(dot(normal, H), 0.0);
+  float HdV = max(dot(H, V), 0.0);
 
-  vec3 F = FresnelSchlick(F0, F90, HdV, P);
+  vec3 F  = FresnelSchlick(HdV, F0);
   float D = GGXDistribution(NdH, roughness);
   float G1 = SmithGeometryGGX(roughness, NdV);
   float G2 = SmithGeometryGGX(roughness, NdL);
@@ -285,11 +341,19 @@ void main()
   kD *= 1.0 - metallic;
 
   vec3 specular = (D * G * F) / ((4.0 * NdL * NdV));
+  specular = clamp(specular, 0.0, 10.0);
   vec3 diffuse = Diffuse(albedo.xyz, F0, NdL, NdV);
 
+  float d = length(sun_light.position - p) * length(sun_light.position - p);
+  //float d = 100000.0;//sun distance approx ?
   vec3 radiance = sun_light.color.rgb;
-  vec3 C_sun = (kD * diffuse + specular) * radiance * NdL;
-  vec3 C_ambient = albedo.xyz * 0.03; // Basic ambient term
+  vec3 C_sun = (kD * (diffuse / PI) + specular) * radiance * NdL;
+  vec3 csm_coords = in_cascade_coord.xyz / in_cascade_coord.w;
+  float csm_shadow = CalculateInfiniteShadow(csm_coords, in_cascade_blend, NdL);
+  
+  C_sun *= max(csm_shadow, 0.1);
+
+  vec3 C_ambient = albedo.xyz * 0.001;
 
   // Point lights calculation
   vec3 out_lights = vec3(0.0);
@@ -297,48 +361,52 @@ void main()
   for (int i = 0; i < NR_POINT_LIGHTS; ++i) {
 
     vec3 light_pos = point_lights[i].position;
-    vec3 l = normalize(light_pos - p);
+    vec3 l = light_pos - p;
 
     //@todo check thoses attenuation functions
     float d = length(light_pos - p);
-    float attenuation = 1.0 / (d * d); // Physically correct inverse-square falloff
+    float attenuation = InverseSquareAttenuation(l);
     vec3 C_light = point_lights[i].color.rgb * attenuation;
 
-    vec3 h = normalize(l + v);
-    float NdL = max(dot(normal, l), 0.00001);
-    float NdH = max(dot(normal, h), 0.00001);
-    float NdV = max(dot(normal, v), 0.00001);
-    float HdV = max(dot(h, v), 0.00001);
+    vec3 H = normalize(normalize(l) + V);
+    float NdL = max(dot(normal, L), 0.0);
+    float NdV = max(dot(normal, V), 0.0001);
+    float NdH = max(dot(normal, H), 0.0);
+    float HdV = max(dot(H, V), 0.0);
 
-    vec3 F = FresnelSchlick(F0, F90, HdV, P);
+    vec3 F  = FresnelSchlick(HdV, F0);
     float D = GGXDistribution(NdH, roughness);
-    float G1 = SmithGeometryGGX(roughness, NdV);
-    float G2 = SmithGeometryGGX(roughness, NdL);
-    float G = G1 * G2;
+    float G = SmithGeometryGGX(roughness, NdV) * SmithGeometryGGX(roughness, NdL);
 
-    vec3 specular = (D * G * F) / ((4.0 * NdV * NdL));
+    vec3 numerator    = D * G * F;
+    float denominator = 4.0 * max(NdV, 0.001) * max(NdL, 0.001) + 0.0001;
+    vec3 specular     = numerator / denominator;
+    specular = clamp(specular, 0.0, 10.0);
 
-    vec3 kD = vec3(1.0) - F;
+    vec3 kS = F;
+    vec3 kD = vec3(1.0) - kS;
     kD *= 1.0 - metallic;
 
-    vec3 diffuse = Diffuse(albedo.xyz, F0, NdL, NdV);
+    vec3 curr = (kD * diffuse + specular) * C_light * NdL;
 
-    out_lights += (kD * diffuse + specular) * C_light * NdL;
+    //@temp
+    if(i == 1) {
+      vec3 frag_to_light = p - point_lights[i].position;
+      float shadow = ShadowCalculation(frag_to_light, point_lights[i], NdL);
+      curr *= shadow;
+    }
+
+    out_lights += curr;
   }
 
-  vec3 csm_coords = in_cascade_coord.xyz / in_cascade_coord.w;
-  float csm_shadow = CalculateInfiniteShadow(csm_coords, in_cascade_blend, NdL);
-  C_sun *= max(csm_shadow, 0.1);
-
   vec4 color = vec4(C_ambient + C_sun + out_lights, 1.0);
-
-
-  float exposure = 1.0;
-  color.rgb = vec3(1.0) - exp(-color.rgb* exposure);
+  //color.rgb = ApplyFog(color.rgb, v);
 
   //@todo check how to get the precise value
   float white_point = 350;
   final_color = vec4(0.0, 0.0, 0.0, 1.0);
   final_color.rgb = linear_to_hdr10(color.rgb, white_point);
-  final_color.rgb = ApplyFog(final_color.rgb, in_view_position);
+  
+  float exposure = 2.0;
+  final_color.rgb = vec3(1.0) - exp(-final_color.rgb* exposure);
 }

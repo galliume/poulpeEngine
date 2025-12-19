@@ -90,101 +90,84 @@ namespace Poulpe
 
     auto const root_path { ConfigManagerLocator::get()->rootPath() };
 
-    auto const& path = root_path + "/" + raw_data["mesh"].template get<std::string>();
-    auto const flip_Y = raw_data["flipY"].template get<bool>();
+    auto const& path { raw_data.value("mesh", "") };
+    auto const flip_Y { raw_data.value("flipY", false) };
 
-    auto callback = [this, raw_data, path, root_mesh_entity_node](
-      PlpMeshData const _data,
+    auto callback = [&](
+
+      PlpMeshData _data,
       std::vector<material_t> const materials,
-      bool const,
       std::vector<Animation> const animations,
       std::unordered_map<std::string, std::vector<std::vector<Position>>> const positions,
       std::unordered_map<std::string, std::vector<std::vector<Rotation>>> const rotations,
       std::unordered_map<std::string, std::vector<std::vector<Scale>>> const scales) {
 
-    auto const& positionData = raw_data["positions"].at(0);
+    auto const& p = raw_data["positions"].at(0);
+    glm::vec3 position{ p["x"].get<float>(), p["y"].get<float>(), p["z"].get<float>() };
+    
+    auto const& s = raw_data["scales"].at(0);
+    glm::vec3 scale{ s["x"].get<float>(), s["y"].get<float>(), s["z"].get<float>() };
 
-    glm::vec3 position{};
-    position = glm::vec3(
-      positionData["x"].template get<float>(),
-      positionData["y"].template get<float>(),
-      positionData["z"].template get<float>()
-    );
-
-    auto const& scale_data = raw_data["scales"].at(0);
-    auto const& rotation_data = raw_data["rotations"].at(0);
-
-    glm::vec3 const scale = glm::vec3(
-      scale_data["x"].template get<float>(),
-      scale_data["y"].template get<float>(),
-      scale_data["z"].template get<float>()
-    );
-    glm::vec3 const rotation = glm::vec3(
-      glm::radians(rotation_data["x"].template get<float>()),
-      glm::radians(rotation_data["y"].template get<float>()),
-      glm::radians(rotation_data["z"].template get<float>())
-    );
-
+    auto const& r = raw_data["rotations"].at(0);
+    glm::vec3 rotation{ r["x"].get<float>(), r["y"].get<float>(), r["z"].get<float>() };
+   
     std::vector<std::string> textures{};
 
     if (raw_data.contains("textures")) {
       for (auto& [keyTex, pathTex] : raw_data["textures"].items()) {
-        textures.emplace_back(static_cast<std::string>(keyTex));
+        textures.emplace_back(keyTex);
       }
     }
 
     if (raw_data.contains("normal")) {
       for (auto& [keyTex, pathTex] : raw_data["normal"].items()) {
-        textures.emplace_back(static_cast<std::string>(keyTex));
+        textures.emplace_back(keyTex);
       }
     }
 
     if (raw_data.contains("mr")) {
       for (auto& [keyTex, pathTex] : raw_data["mr"].items()) {
-        textures.emplace_back(static_cast<std::string>(keyTex));
+        textures.emplace_back(keyTex);
       }
     }
 
     if (raw_data.contains("ao")) {
       for (auto& [keyTex, pathTex] : raw_data["emissive"].items()) {
-        textures.emplace_back(static_cast<std::string>(keyTex));
+        textures.emplace_back(keyTex);
       }
     }
 
     if (raw_data.contains("ao")) {
       for (auto& [keyTex, pathTex] : raw_data["ao"].items()) {
-        textures.emplace_back(static_cast<std::string>(keyTex));
+        textures.emplace_back(keyTex);
       }
     }
 
     if (raw_data.contains("transmission")) {
       for (auto& [keyTex, pathTex] : raw_data["transmission"].items()) {
-        textures.emplace_back(static_cast<std::string>(keyTex));
+        textures.emplace_back(keyTex);
       }
     }
-
-    //bool const has_bbox = raw_data["hasBbox"].template get<bool>();
-    bool const has_animation = raw_data["hasAnimation"].template get<bool>();
-    //bool const is_point_light = raw_data["isPointLight"].template get<bool>();
 
     std::vector<std::string> animation_scripts{};
     animation_scripts.reserve(raw_data["animationScripts"].size());
     for (auto& [key_anim, path_anim] : raw_data["animationScripts"].items()) {
-      animation_scripts.emplace_back(static_cast<std::string>(path_anim));
+      animation_scripts.emplace_back(path_anim);
     }
 
-    auto shader = raw_data["shader"].template get<std::string>();
+    auto shader = raw_data.value("shader", "");
 
     EntityOptions entity_opts = {
       shader, position, scale, glm::quat(rotation),
-      raw_data["hasBbox"].template get<bool>(),
-      raw_data["hasAnimation"].template get<bool>(),
-      raw_data["isPointLight"].template get<bool>(),
+      raw_data.value("hasBbox", false),
+      raw_data.value("hasAnimation", false),
+      raw_data.value("isPointLight", false),
       animation_scripts,
-      raw_data["hasShadow"].template get<bool>(),
-      raw_data["flipY"].template get<bool>(),
-      raw_data["isIndexed"].template get<bool>(),
-      raw_data["debugNormal"].template get<bool>()
+      raw_data.value("hasShadow", false),
+      raw_data.value("flipY", false),
+      raw_data.value("isIndexed", false),
+      raw_data.value("debugNormal", false),
+      raw_data.value("defaultAnim", 0u)
     };
 
 
@@ -283,7 +266,8 @@ namespace Poulpe
       data._bones = _data.bones;
       data._root_bone_name = _data.root_bone_name;
       data._local_transform = _data.local_transform;
-
+      data._default_anim = entity_opts.default_anim;
+      
       glm::mat4 const S = glm::scale(glm::mat4(1.0f), entity_opts.scale);
       glm::mat4 const R = glm::toMat4(entity_opts.rotation);
       glm::mat4 const T = glm::translate(glm::mat4(1.0f), entity_opts.pos);
@@ -357,7 +341,7 @@ namespace Poulpe
         {
           std::lock_guard<std::shared_mutex> guard(lockWorldNode());
           //lua scripted animation
-          if (has_animation) {
+          if (entity_opts.has_animation) {
             //@todo temp until lua scripting
             for (auto& anim : entity_opts.animation_scripts) {
               auto animationScript = std::make_unique<AnimationScript>(anim);

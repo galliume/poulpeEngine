@@ -98,6 +98,7 @@ namespace Poulpe
     material_t _material{};
 
     glm::vec4 _options{ 0.0 }; //used for options as push constants
+    std::uint32_t _default_anim{};
   };
 
   //@todo should be reversed and Mesh rename to Mesh3D...

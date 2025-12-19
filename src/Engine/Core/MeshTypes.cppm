@@ -56,5 +56,6 @@ namespace Poulpe {
     glm::mat4 _inverse_transform_matrix;
     std::unordered_map<std::string, Bone> _bones{};
     std::string _root_bone_name{};
+    std::uint32_t _default_anim{};
   };
 }

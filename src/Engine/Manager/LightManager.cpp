@@ -19,7 +19,7 @@ namespace Poulpe
 {
   LightManager::LightManager()
   {
-    _sun.color = glm::vec3(1.f, 1.f, 1.f);
+    _sun.color = glm::vec3(0.5, 0.7, 1.0);//moonish color ?
     _sun.position = glm::vec3(0.f, 500.f, 0.f);
     _sun.direction =  glm::vec3(1.0f, -1.0f, 1.0f);
     //ambient diffuse specular
@@ -36,7 +36,7 @@ namespace Poulpe
     shadow_cubemap_projection[1][1] *= -1;
 
     Light light;
-    light.color = glm::vec3(255.f/255.f, 100.f/255.f, 0.f);
+    light.color = glm::vec3(1.0, 0.6, 0.1);
     light.position = glm::vec3(0.0f, 50.f, 0.0f);
     light.direction = glm::vec3(-0.1f, -1.0f, 0.0f);
     light.ads = glm::vec3(10.0f, 30.0f, 40.0f);
@@ -78,7 +78,7 @@ namespace Poulpe
     Light light2;
     light2.color = glm::vec3(1.0f);
     //light2.position = glm::vec3(-1.2f, 0.1f, 0.4f);
-    light2.position = glm::vec3(0.f, 25.0f, 1.f);
+    light2.position = glm::vec3(5.f, 25.0f, 3.f);
     light2.direction = glm::vec3(0.0f, -1.0, 0.0);
     light2.ads = glm::vec3(1.2f, 1.2f, 1.4f);
     light2.clq = glm::vec3(1.0f, 0.7f, 1.8f);

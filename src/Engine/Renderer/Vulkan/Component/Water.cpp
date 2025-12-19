@@ -182,7 +182,10 @@ void Water::operator()(
     env_image_infos.emplace_back(env.getSampler(), env.getImageView(), VK_IMAGE_LAYOUT_GENERAL );
 
     std::vector<VkDescriptorImageInfo> csm_image_info{};
-    csm_image_info.emplace_back(renderer->getCSMSamplers(), renderer->getCSMImageViews(), VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL);
+    csm_image_info.emplace_back(renderer->getCSMSamplers(), renderer->getCSMImageViews(), VK_IMAGE_LAYOUT_GENERAL);
+
+    std::vector<VkDescriptorImageInfo> depth_map_image_info{};
+    depth_map_image_info.emplace_back(renderer->getDepthMapSamplers(), renderer->getDepthMapImageViews(), VK_IMAGE_LAYOUT_GENERAL);
 
     auto const pipeline = renderer->getPipeline(mesh->getShaderName());
     VkDescriptorSet descset = renderer->getAPI()->createDescriptorSets(pipeline->desc_pool, { pipeline->descset_layout }, 1);
@@ -190,7 +193,7 @@ void Water::operator()(
 
     //renderer->getAPI()->updateDescriptorSets(*mesh->getUniformBuffers(), descset, image_infos);
 
-    std::array<VkWriteDescriptorSet, 5> desc_writes{};
+    std::array<VkWriteDescriptorSet, 6> desc_writes{};
     std::vector<VkDescriptorBufferInfo> buffer_infos;
 
     std::for_each(std::begin(mesh->getUniformBuffers()), std::end(mesh->getUniformBuffers()),
@@ -249,6 +252,14 @@ void Water::operator()(
     desc_writes[4].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
     desc_writes[4].descriptorCount = static_cast<uint32_t>(csm_image_info.size());
     desc_writes[4].pImageInfo = csm_image_info.data();
+
+    desc_writes[5].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    desc_writes[5].dstSet = descset;
+    desc_writes[5].dstBinding = 5;
+    desc_writes[5].dstArrayElement = 0;
+    desc_writes[5].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    desc_writes[5].descriptorCount = static_cast<uint32_t>(depth_map_image_info.size());
+    desc_writes[5].pImageInfo = depth_map_image_info.data();
 
     vkUpdateDescriptorSets(
       renderer->getAPI()->getDevice(),

@@ -266,7 +266,14 @@ namespace Poulpe
       csm_binding.pImmutableSamplers = nullptr;
       csm_binding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 
-      bindings = { ubo_binding, sampler_binding, env_sampler_binding, storage_binding, csm_binding };
+      VkDescriptorSetLayoutBinding depth_map_binding{};
+      depth_map_binding.binding = 5;
+      depth_map_binding.descriptorCount = 1;
+      depth_map_binding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+      depth_map_binding.pImmutableSamplers = nullptr;
+      depth_map_binding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+      bindings = { ubo_binding, sampler_binding, env_sampler_binding, storage_binding, csm_binding, depth_map_binding };
 
     }
     else if constexpr (T == DescSetLayoutType::Water) {
@@ -313,7 +320,15 @@ namespace Poulpe
       csm_binding.pImmutableSamplers = nullptr;
       csm_binding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 
-      bindings = { ubo_binding, sampler_binding, env_sampler_binding, storage_binding, csm_binding };
+      
+      VkDescriptorSetLayoutBinding depth_map_binding{};
+      depth_map_binding.binding = 5;
+      depth_map_binding.descriptorCount = 1;
+      depth_map_binding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+      depth_map_binding.pImmutableSamplers = nullptr;
+      depth_map_binding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+      bindings = { ubo_binding, sampler_binding, env_sampler_binding, storage_binding, csm_binding, depth_map_binding };
 
     } else if constexpr (T == DescSetLayoutType::Text) {
       VkDescriptorSetLayoutBinding ubo_binding{};
@@ -413,7 +428,7 @@ namespace Poulpe
         descset_layout = createDescriptorSetLayout<DescSetLayoutType::Water>();
         //pipeline_create_infos.polygone_mode = VK_POLYGON_MODE_LINE;
         pipeline_create_infos.has_depth_write = false;
-      
+        pipeline_create_infos.has_dynamic_depth_bias = false;
         VkDescriptorPoolSize dpsSB;
         dpsSB.type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
         dpsSB.descriptorCount = 10;
@@ -423,6 +438,7 @@ namespace Poulpe
       } else {
         descset_layout = createDescriptorSetLayout<DescSetLayoutType::Terrain>();
         pipeline_create_infos.has_depth_write = true;
+        pipeline_create_infos.has_dynamic_depth_bias = false;
       }
       push_constants.offset = 0;
       push_constants.size = sizeof(constants);
@@ -434,7 +450,6 @@ namespace Poulpe
       pipeline_create_infos.cull_mode = VK_CULL_MODE_NONE;
       pipeline_create_infos.has_depth_test = true;
       pipeline_create_infos.has_stencil_test = false;
-      pipeline_create_infos.has_dynamic_depth_bias = true;
       pipeline_create_infos.is_patch_list = true;
       pipeline_create_infos.topology = VK_PRIMITIVE_TOPOLOGY_PATCH_LIST;
 

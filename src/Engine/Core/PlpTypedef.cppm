@@ -19,6 +19,7 @@ namespace Poulpe
 {
   //default textures const, needs a real assets management (unique id etc.)
   export inline constexpr std::string PLP_EMPTY{ "_plp_empty" };
+  export inline constexpr std::string PLP_ERROR{ "_plp_error" };
   export inline constexpr std::string PLP_SAND{ "sand" };
   export inline constexpr std::string PLP_GRASS{ "grass" };
   export inline constexpr std::string PLP_GROUND{ "ground" };
@@ -262,13 +263,15 @@ namespace Poulpe
     bool flip_Y{ false };
     bool is_indexed{ false };
     bool debug_normal{ false };
+    std::uint32_t default_anim{ 0 };
   };
 
   export struct Animation {
-    uint32_t id;
+    std::uint32_t id;
     std::string name{};
     double duration{ 0.0 };
     double ticks_per_s{ 25.0 };
+    std::uint32_t default_anim{};
   };
 
   export enum class AnimInterpolation {
@@ -302,7 +305,7 @@ namespace Poulpe
     std::string name{};
     std::string texture_prefix{};
     std::uint64_t id{};
-    uint32_t material_ID{ 0 };
+    std::uint32_t material_ID{ 0 };
     std::vector<uint32_t> face_material_ID{};
     std::vector<uint32_t> indices{};
     std::vector<uint32_t> materials_ID{};
@@ -312,6 +315,7 @@ namespace Poulpe
     glm::mat4 inverse_transform_matrix{};
     std::unordered_map<std::string, Bone> bones{};
     std::string root_bone_name{};
+    std::uint32_t _default_anim{};
   };
 
   export struct VulkanShaders

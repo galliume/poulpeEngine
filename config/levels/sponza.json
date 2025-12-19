@@ -327,7 +327,8 @@
       },
       "hasShadow": true,
       "isIndexed": true,
-      "debugNormal": true
+      "debugNormal": true,
+      "defaultAnim": 1
     },
     "Shine_Sprite": {
       "mesh": "assets/mesh/Shine_Sprite.gltf",

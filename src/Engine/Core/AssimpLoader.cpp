@@ -48,7 +48,6 @@ namespace Poulpe
         std::function<void(
           PlpMeshData const _data,
           std::vector<material_t> const materials,
-          bool const exists,
           std::vector<Animation> const animations,
           std::unordered_map<std::string, std::vector<std::vector<Position>>> const positions,
           std::unordered_map<std::string, std::vector<std::vector<Rotation>>> const rotations,
@@ -501,7 +500,7 @@ namespace Poulpe
     for (auto& data : mesh_data) {
       --id;
       data.id = id;
-      callback(data, materials, false, animations, positions, rotations, scales);
+      callback(data, materials, animations, positions, rotations, scales);
     }
   }
 
@@ -723,16 +722,22 @@ namespace Poulpe
             [](auto const& a, auto const& b) { return a.second > b.second; });
 
           float total_weight{ 0.0f };
-          for (std::size_t y{ 0 }; y < 4 && y < data_vertex.size(); ++y) {
-            vertex.bone_ids[y] = data_vertex[y].first;
-            vertex.bone_weights[y] = data_vertex[y].second;
+          std::vector<std::size_t> bone_ids(4);
+          std::vector<float> bone_weights(4);
+
+          for (std::size_t y{ 0 }; i < 4 && y < data_vertex.size(); ++y) {
+            bone_ids[y] = data_vertex[y].first;
+            bone_weights[y] = data_vertex[y].second;
             total_weight += data_vertex[y].second;
           }
 
           if (total_weight > 0.0f) {
-            for (std::size_t w{ 0 }; w < 4; ++w)
-            vertex.bone_weights[w] /= total_weight;
+            for (std::size_t y{ 0 }; y < 4; ++y)
+            bone_weights[y] /= total_weight;
           }
+
+          vertex.bone_ids = bone_ids;
+          vertex.bone_weights = bone_weights;
         }
       }
       data.emplace_back(mesh_data);

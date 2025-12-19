@@ -2,11 +2,10 @@
 #extension GL_ARB_separate_shader_objects : enable
 #extension GL_EXT_nonuniform_qualifier : enable
 
-layout(location = 0) out vec4 fColor;
+layout(location = 0) out vec4 final_color;
 
-layout(location = 0) in vec3 fTexCoord;
-layout(location = 1) in vec4 cameraPos;
-layout(location = 2) in vec4 fModelPos;
+layout(location = 0) in vec3 tex_coord;
+layout(location = 1) in vec3 view_pos;
 
 layout(binding = 1) uniform samplerCube texSampler[];
 
@@ -45,15 +44,24 @@ vec3 srgb_to_linear(vec3 color)
   return mix(linear_low, linear_high, is_high);
 }
 
+vec3 ApplyFog(vec3 shadedColor, vec3 v)
+{
+  float fogDensity = 0.001;
+  vec3 fogColor = vec3(0.55, 0.63, 0.72);
+
+  float f = exp(-fogDensity * length(v));
+  return (mix(fogColor, shadedColor, f));
+}
+
 void main()
 {
-  vec4 result = texture(texSampler[0], fTexCoord);
-
-  float exposure = 1.0;
-  result.rgb = vec3(1.0) - exp(-result.rgb* exposure);
+  vec4 color = texture(texSampler[0], tex_coord);
+  //color.rgb = ApplyFog(color.rgb, view_pos);
 
   //@todo check how to get the precise value
   float white_point = 350;
-  fColor = vec4(0.0, 0.0, 0.0, 1.0);
-  fColor.rgb = linear_to_hdr10(result.rgb, white_point);
+  final_color = vec4(0.0, 0.0, 0.0, 1.0);
+  final_color.rgb = linear_to_hdr10(color.rgb, white_point);
+  float exposure = 2.0;
+  final_color.rgb = vec3(1.0) - exp(-final_color.rgb * exposure);
 }
