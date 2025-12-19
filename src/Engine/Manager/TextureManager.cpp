@@ -95,6 +95,8 @@ namespace Poulpe
         is_hdr = true;
       } else if (std::filesystem::exists(file_name.replace_extension("jpg"))) {
         original_name = file_name.string();
+      } else if (std::filesystem::exists(file_name.replace_extension("jpeg"))) {
+        original_name = file_name.string();
       } else if (std::filesystem::exists(file_name.replace_extension("png"))) {
         original_name = file_name.string();
       }
@@ -249,6 +251,8 @@ namespace Poulpe
       original_name = file_name.string();
       is_hdr = true;
     } else if (std::filesystem::exists(file_name.replace_extension("jpg"))) {
+      original_name = file_name.string();
+    } else if (std::filesystem::exists(file_name.replace_extension("jpeg"))) {
       original_name = file_name.string();
     } else if (std::filesystem::exists(file_name.replace_extension("png"))) {
       original_name = file_name.string();

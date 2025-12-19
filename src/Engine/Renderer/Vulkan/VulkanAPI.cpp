@@ -20,10 +20,9 @@ namespace Poulpe
 VkResult CreateDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerCreateInfoEXT const * create_info,
     VkAllocationCallbacks const * allocattor, VkDebugUtilsMessengerEXT* callback)
 {
-  #pragma GCC diagnostic push
-  #pragma GCC diagnostic ignored "-Wcast-function-type-strict"
-    auto func = reinterpret_cast<PFN_vkCreateDebugUtilsMessengerEXT>(vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT"));
-  #pragma GCC diagnostic pop
+  auto func = reinterpret_cast<PFN_vkCreateDebugUtilsMessengerEXT>(
+      reinterpret_cast<void*>(vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT"))
+  );
 
   if (func != nullptr) {
     return func(instance, create_info, allocattor, callback);
@@ -125,13 +124,9 @@ std::string VulkanAPI::getAPIVersion()
 {
   if (_api_version.empty()) {
     uint32_t version = VK_API_VERSION_1_4;
-
-    //@todo fix unused ?
-    #pragma GCC diagnostic push
-    #pragma GCC diagnostic ignored "-Wcast-function-type-strict"
-    auto tmp = reinterpret_cast<PFN_vkEnumerateInstanceVersion>(vkGetInstanceProcAddr(nullptr, "vkEnumerateInstanceVersion"));
-    #pragma GCC diagnostic pop
-    (void)tmp;
+    [[maybe_unused]] auto tmp { reinterpret_cast<PFN_vkEnumerateInstanceVersion>(
+        reinterpret_cast<void*>(vkGetInstanceProcAddr(nullptr, "vkEnumerateInstanceVersion"))
+    ) };
 
     if (vkEnumerateInstanceVersion) {
         vkEnumerateInstanceVersion(&version);
@@ -1170,12 +1165,12 @@ VkPipeline VulkanAPI::createGraphicsPipeline(PipeLineCreateInfo const& pipeline_
     VkResult result = vkCreatePipelineCache(_device, & p_create_info, nullptr, & pipeline_cache);
 
     if (result != VK_SUCCESS) {
-      //Logger::error("failed to get graphics pipeline cache size!");
+      Logger::error("failed to get graphics pipeline cache size!");
     }
     result = vkCreateGraphicsPipelines(_device, VK_NULL_HANDLE, 1, & pipeline_info, nullptr, & graphics_pipeline);
 
     if (result != VK_SUCCESS) {
-      //Logger::error("failed to create graphics pipeline cache!");
+      Logger::error("failed to create graphics pipeline cache!");
     }
     if (result == VK_SUCCESS && bad_cache) {
       std::size_t p_data_size = 0;
@@ -1185,7 +1180,7 @@ VkPipeline VulkanAPI::createGraphicsPipeline(PipeLineCreateInfo const& pipeline_
       result = vkGetPipelineCacheData(_device, pipeline_cache, & p_data_size, nullptr);
 
       if (result != VK_SUCCESS) {
-        //Logger::error("failed to get graphics pipeline cache size!");
+        Logger::error("failed to get graphics pipeline cache size!");
       }
       data = (char*)malloc(sizeof(char) * p_data_size);
 
@@ -1199,7 +1194,7 @@ VkPipeline VulkanAPI::createGraphicsPipeline(PipeLineCreateInfo const& pipeline_
           std::ofstream ostrm(cache_filename, std::ios::binary);
           ostrm.write(static_cast<const char*>(data), static_cast<intmax_t>(p_data_size));
           ostrm.close();
-          //Logger::trace("cacheData written to {}", cache_filename);
+          Logger::trace("cacheData written to {}", cache_filename);
         }
       }
     }

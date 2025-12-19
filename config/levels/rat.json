@@ -1,0 +1,94 @@
+{
+  "terrain": {
+    "height_map_1": {
+      "path": "assets/texture/terrain/height_map_1.ktx2"
+    }
+  },
+  "water": {
+    "_water_foam": {
+      "path": "assets/texture/water/_water_foam.ktx2"
+    },
+    "_water_normal": {
+      "path": "assets/texture/water/_water_normal.ktx2"
+    },
+    "_water_normal2": {
+      "path": "assets/texture/water/_water_normal2.ktx2"
+    }
+  },
+  "camera": {
+    "position": {
+      "x": -38.0,
+      "y": 18.0,
+      "z": -3.0
+    }
+  },
+  "entities": {
+  "rat": {
+      "mesh": "assets/mesh/rat/rat.gltf",
+      "textures": {
+        "textures_Material_0_baseColor": {
+          "path": "assets/mesh/rat/textures/Material_0_baseColor.ktx2"
+        },
+        "textures_Rat_Knife_01default_baseColor": {
+          "path": "assets/mesh/rat/textures/Rat_Knife_01default_baseColor.ktx2"
+        }
+      },
+      "ao": {
+      },
+      "mr": {
+        "textures_Material_0_metallicRoughness": {
+          "path": "assets/mesh/rat/textures/Material_0_metallicRoughness.ktx2"
+        },
+        "textures_Rat_Knife_01default_metallicRoughness": {
+          "path": "assets/mesh/rat/textures/Rat_Knife_01default_metallicRoughness.ktx2"
+        }
+      },
+      "emissive": {
+        "textures_Material_0_emissive": {
+          "path": "assets/mesh/rat/textures/Material_0_emissive.ktx2"
+        }
+      },
+      "normal": {
+        "textures_Material_0_normal": {
+          "path": "assets/mesh/rat/textures/Material_0_normal.ktx2"
+        },
+      "textures_Rat_Knife_01default_normal": {
+          "path": "assets/mesh/rat/textures/Rat_Knife_01default_normal.ktx2"
+        }
+      },
+      "shader": "main_basic",
+      "positions": [
+        {
+          "x": 20.0,
+          "y": 10.0,
+          "z": -5.0
+        }
+      ],
+      "scales": [
+        {
+          "x": 0.1,
+          "y": 0.1,
+          "z": 0.1
+        }
+      ],
+      "rotations": [
+        {
+          "x": 0.0,
+          "y": 45.0,
+          "z": 0.0
+        }
+      ],
+      "flipY": false,
+      "count": 1,
+      "hasBbox": false,
+      "hasAnimation": false,
+      "isPointLight": false,
+      "animationScripts": {
+        "anim0": "assets/scripts/animation/helmet/anim0.lua"
+      },
+      "hasShadow": true,
+      "isIndexed": true,
+      "debugNormal": true
+    }
+  }
+}

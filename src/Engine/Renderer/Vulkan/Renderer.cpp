@@ -321,7 +321,14 @@ namespace Poulpe
       "drawing_" + std::to_string(thread_id),
       marker_color_r, marker_color_g, marker_color_b);
 
-    std::vector<VkBool32> blend_enable{ VK_FALSE };
+    // float const depth_bias_constant{ 1.25f };
+    // float const depth_bias_slope{ 1.75f };
+    // float const depth_bias_clamp{ 0.0f };
+
+    // //vkCmdSetDepthClampEnableEXT(cmd_buffer, VK_TRUE);
+    // vkCmdSetDepthBias(cmd_buffer, depth_bias_constant, depth_bias_clamp, depth_bias_slope);
+
+    std::vector<VkBool32> blend_enable{ VK_TRUE };
     vkCmdSetColorBlendEnableEXT(cmd_buffer, 0, 1, blend_enable.data());
     VkColorBlendEquationEXT colorBlendEquation{};
 
@@ -377,6 +384,14 @@ namespace Poulpe
       _vulkan->bindPipeline(cmd_buffer, pipeline->pipeline_bis);
       } else {
       _vulkan->bindPipeline(cmd_buffer, pipeline->pipeline);
+    }
+
+    std::string const& shader_name = mesh->getShaderName();
+    if (shader_name != "skybox" && shader_name != "text" && shader_name != "terrain" && shader_name != "water") {
+        float const depth_bias_constant{ 1.25f };
+        float const depth_bias_slope{ 1.75f };
+        float const depth_bias_clamp{ 0.0f };
+        vkCmdSetDepthBias(cmd_buffer, depth_bias_constant, depth_bias_clamp, depth_bias_slope);
     }
 
     _vulkan->draw(

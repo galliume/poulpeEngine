@@ -47,8 +47,7 @@ namespace Poulpe
 
     //if (!_move_init) {
     if (_moves.empty() && !_animations.empty()) {
-
-      _anim_id = 1;
+      _anim_id = _data->_default_anim;
       auto const& anim{ _animations.at(_anim_id) };
       double const duration{ (anim.duration / anim.ticks_per_s) * 1000.0 };//ms
       //_elapsed_time = std::clamp(_elapsed_time, 0.f, duration);
@@ -119,7 +118,7 @@ namespace Poulpe
         Scale scale_start;
         Scale scale_end;
         std::tie(scale_start, scale_end) = findKeyframe<Scale>(scales_data, _elapsed_time);
-        new_scale = interpolate<Scale>(scale_start, scale_end, _elapsed_time);
+        new_scale = interpolate<Scale>(scale_start, scale_end, _elapsed_time, duration);
       }
     }
 
@@ -131,7 +130,7 @@ namespace Poulpe
         Position position_start;
         Position position_end;
         std::tie(position_start, position_end) = findKeyframe<Position>(positions_data, _elapsed_time);
-        new_position = interpolate<Position>(position_start, position_end, _elapsed_time);
+        new_position = interpolate<Position>(position_start, position_end, _elapsed_time, duration);
       }
     }
 
@@ -143,7 +142,7 @@ namespace Poulpe
         Rotation rotation_start;
         Rotation rotation_end;
         std::tie(rotation_start, rotation_end) = findKeyframe<Rotation>(rotations_data, _elapsed_time);
-        new_rotation = interpolate<Rotation>(rotation_start, rotation_end, _elapsed_time);
+        new_rotation = interpolate<Rotation>(rotation_start, rotation_end, _elapsed_time, duration);
       }
     }
 

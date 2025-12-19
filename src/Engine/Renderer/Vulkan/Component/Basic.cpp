@@ -16,6 +16,7 @@ import std;
 import Engine.Component.Components;
 import Engine.Component.Texture;
 
+import Engine.Core.Logger;
 import Engine.Core.MeshTypes;
 import Engine.Core.PlpTypedef;
 
@@ -150,21 +151,19 @@ namespace Poulpe
     ComponentRenderingInfo const& component_rendering_info)
   {
     auto const& mesh = component_rendering_info.mesh;
-
-    Texture tex { component_rendering_info.textures.at(mesh->getData()->_textures.at(0)) };
+    Texture tex { getTexture(component_rendering_info, mesh->getData()->_textures.at(0)) };
     tex.setSampler(renderer->getAPI()->createKTXSampler(
       mesh->getMaterial().texture_diffuse_wrap_mode_u,
       mesh->getMaterial().texture_diffuse_wrap_mode_v,
       tex.getMipLevels()));
 
-    Texture alpha { component_rendering_info.textures.at(mesh->getData()->_alpha) };
+    Texture alpha { getTexture(component_rendering_info, mesh->getData()->_alpha) };
     alpha.setSampler(renderer->getAPI()->createKTXSampler(
       mesh->getMaterial().texture_alpha_wrap_mode_u,
       mesh->getMaterial().texture_alpha_wrap_mode_v,
       alpha.getMipLevels()));
 
-    std::string const bump_map_name{ mesh->getData()->_bump_map };
-    Texture texture_bump{ component_rendering_info.textures.at(bump_map_name) };
+    Texture texture_bump{ getTexture(component_rendering_info, mesh->getData()->_bump_map) };
       texture_bump.setSampler(renderer->getAPI()->createKTXSampler(
       mesh->getMaterial().texture_bump_wrap_mode_u,
       mesh->getMaterial().texture_bump_wrap_mode_v,
@@ -174,8 +173,7 @@ namespace Poulpe
       texture_bump = component_rendering_info.textures.at(PLP_EMPTY);
     }
 
-    std::string specular_map_name{ mesh->getData()->_specular_map };
-    Texture texture_specular{ component_rendering_info.textures.at(specular_map_name)};
+    Texture texture_specular{ getTexture(component_rendering_info, mesh->getData()->_specular_map)};
     texture_specular.setSampler(renderer->getAPI()->createKTXSampler(
     mesh->getMaterial().texture_specular_wrap_mode_u,
     mesh->getMaterial().texture_specular_wrap_mode_v,
@@ -185,8 +183,7 @@ namespace Poulpe
       texture_specular = component_rendering_info.textures.at(PLP_EMPTY);
     }
 
-    std::string metal_roughness_map_name{ mesh->getData()->_metal_roughness};
-    Texture texture_metal_roughness { component_rendering_info.textures.at(metal_roughness_map_name) };
+    Texture texture_metal_roughness { getTexture(component_rendering_info, mesh->getData()->_metal_roughness) };
     texture_metal_roughness.setSampler(renderer->getAPI()->createKTXSampler(
     mesh->getMaterial().texture_metal_roughness_wrap_mode_u,
     mesh->getMaterial().texture_metal_roughness_wrap_mode_v,
@@ -196,8 +193,7 @@ namespace Poulpe
       texture_metal_roughness = component_rendering_info.textures.at(PLP_EMPTY);
     }
 
-    std::string emissive_map_name{ mesh->getData()->_emissive};
-    Texture texture_emissive { component_rendering_info.textures.at(emissive_map_name) };
+    Texture texture_emissive { getTexture(component_rendering_info, mesh->getData()->_emissive) };
     texture_emissive.setSampler(renderer->getAPI()->createKTXSampler(
     mesh->getMaterial().texture_emissive_wrap_mode_u,
     mesh->getMaterial().texture_emissive_wrap_mode_v,
@@ -207,8 +203,7 @@ namespace Poulpe
       texture_emissive = component_rendering_info.textures.at(PLP_EMPTY);
     }
 
-    std::string ao_map_name{ mesh->getData()->_ao};
-    Texture texture_ao { component_rendering_info.textures.at(ao_map_name) };
+    Texture texture_ao { getTexture(component_rendering_info, mesh->getData()->_ao) };
     texture_ao.setSampler(renderer->getAPI()->createKTXSampler(
     mesh->getMaterial().texture_ao_wrap_mode_u,
     mesh->getMaterial().texture_ao_wrap_mode_v,
@@ -218,8 +213,7 @@ namespace Poulpe
       texture_ao = component_rendering_info.textures.at(PLP_EMPTY);
     }
 
-    std::string base_color_map_name{ mesh->getData()->_base_color};
-    Texture texture_base_color { component_rendering_info.textures.at(base_color_map_name) };
+    Texture texture_base_color { getTexture(component_rendering_info, mesh->getData()->_base_color) };
     texture_base_color.setSampler(renderer->getAPI()->createKTXSampler(
     mesh->getMaterial().texture_base_color_wrap_mode_u,
     mesh->getMaterial().texture_base_color_wrap_mode_v,
@@ -246,7 +240,7 @@ namespace Poulpe
 
     std::vector<VkDescriptorImageInfo> env_info{};
 
-    Texture texture_environment{ component_rendering_info.textures.at(component_rendering_info.skybox_name) };
+    Texture texture_environment{ getTexture(component_rendering_info, component_rendering_info.skybox_name) };
     texture_environment.setSampler(renderer->getAPI()->createKTXSampler(
       TextureWrapMode::CLAMP_TO_EDGE,
       TextureWrapMode::CLAMP_TO_EDGE,
@@ -359,5 +353,18 @@ namespace Poulpe
     vkUpdateDescriptorSets(renderer->getDevice(), static_cast<uint32_t>(csm_descset_writes.size()), csm_descset_writes.data(), 0, nullptr);
 
     mesh->setCSMDescSet(csm_descset);
+  }
+
+  Texture const& Basic::getTexture(
+    ComponentRenderingInfo const& component_rendering_info,
+    std::string const& name) const
+  {
+    auto tex_name { name };
+    if (!component_rendering_info.textures.contains(name)) {
+      Logger::warn("Cannot load texture : {}", name);
+      tex_name = PLP_ERROR;
+    }
+
+    return component_rendering_info.textures.at(tex_name);
   }
 }

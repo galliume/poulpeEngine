@@ -31,7 +31,6 @@ namespace Poulpe
       std::function<void(
         PlpMeshData const _data,
         std::vector<material_t> const materials,
-        bool const exists,
         std::vector<Animation> const animations,
         std::unordered_map<std::string, std::vector<std::vector<Position>>> const positions,
         std::unordered_map<std::string, std::vector<std::vector<Rotation>>> const rotations,

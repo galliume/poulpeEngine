@@ -13,9 +13,8 @@ layout(location = 2) in vec2 texture_coord;
 layout(location = 3) in vec4 tangent;
 layout(location = 4) in vec4 color;
 
-layout(location = 0) out vec3 fTexCoord;
-layout(location = 1) out vec4 fCameraPos;
-layout(location = 2) out vec4 fModelPos;
+layout(location = 0) out vec3 tex_coord;
+layout(location = 1) out vec3 view_pos;
 
 layout(std140, push_constant) uniform constants
 {
@@ -26,10 +25,9 @@ layout(std140, push_constant) uniform constants
 
 void main()
 {
-  fTexCoord = position;
+  tex_coord = position;
   //gl_Position = vec4(pos.xyz, 1.0);
   vec4 p = ubo.projection * pc.view * vec4(position, 1.0);
   gl_Position = p.xyww;
-  fModelPos = gl_Position;
-  fCameraPos = ubo.projection * pc.view * ubo.model * vec4(pc.view_position, 1.0);
+  view_pos = pc.view_position - gl_Position.xyz;
 }
