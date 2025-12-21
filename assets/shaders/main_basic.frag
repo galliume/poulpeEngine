@@ -243,7 +243,7 @@ float CalculateInfiniteShadow(vec3 cascade_coord0, vec3 cascade_blend, float NdL
 
   float max_bias = 0.005;
   float min_bias = 0.0005;
-  float bias = max(max_bias * (1.0 - NdL), min_bias);
+  float bias = 0.0;//0.001;max(max_bias * (1.0 - NdL), min_bias);
 
   float light1 = 0.0;
   light1 += texture(csm, vec4(shadow_coord1.xy + shadow_offset[0].xy, cascade_index, shadow_coord1.z - bias));
@@ -499,6 +499,12 @@ void main()
   specular = clamp(specular, 0.0, 10.0);
   vec3 radiance = sun_light.color.rgb;
   vec3 C_sun = (kD * (albedo.rgb / PI) + specular) * radiance * NdL;
+
+  vec3 csm_coords = var.cascade_coord.xyz / var.cascade_coord.w;
+  vec3 cascade_blend = vec3(var.u1, var.u2, var.u3);
+  float csm_shadow = CalculateInfiniteShadow(csm_coords, cascade_blend, NdL);
+  C_sun *= csm_shadow;
+
   vec3 C_ambient = albedo.xyz * ao * 0.01;
 
   for (int i = 1; i < NR_POINT_LIGHTS; ++i) {
@@ -541,11 +547,6 @@ void main()
     out_lights += curr;
   }
 
-  vec3 csm_coords = var.cascade_coord.xyz / var.cascade_coord.w;
-  vec3 cascade_blend = vec3(var.u1, var.u2, var.u3);
-  float csm_shadow = CalculateInfiniteShadow(csm_coords, cascade_blend, NdL);
-  C_sun *= csm_shadow;
-  
   vec4 color = vec4(C_ambient + C_sun + out_lights, color_alpha);
   //color.xyz *= PI;
   

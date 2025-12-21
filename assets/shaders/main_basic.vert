@@ -151,7 +151,7 @@ void main()
   frag_var.cascade_coord2 = (sun_light.cascade_scale_offset2 * cascade_coord0);
   frag_var.cascade_coord3 = (sun_light.cascade_scale_offset3 * cascade_coord0);
 
-  vec4 view_plane = vec4(0.0, 0.0, -1.0, 0.0);
+  vec4 view_plane = vec4(0.0, 1.0, 0.0, 0.0);
 
   float inv_z_dist0 = 1.0 / (sun_light.cascade_max_splits.x - sun_light.cascade_min_splits.y);
   float inv_z_dist1 = 1.0 / (sun_light.cascade_max_splits.y - sun_light.cascade_min_splits.z);

@@ -62,6 +62,13 @@ namespace Poulpe
     }
   };
 
+  export struct BufferCopyRequest {
+    VkBuffer src;
+    VkBuffer dst;
+    VkDeviceSize size;
+    VkDeviceSize offset;
+  };
+
   export class VulkanAPI
   {
   public:
@@ -368,13 +375,13 @@ namespace Poulpe
       bool const is_indexed = true,
       uint32_t const index = 0);
 
-    VkResult queueSubmit(VkCommandBuffer& cmd_buffer, std::size_t const queue_index = 0);
+    VkResult queueSubmit(VkCommandBuffer& cmd_buffer, std::size_t const queue_index = 0) __attribute__((no_thread_safety_analysis));
 
     void submit(
       VkQueue& queue,
       std::vector<VkSubmitInfo> const& submit_infos,
       VkPresentInfoKHR const& present_info,
-      VkFence& fence);
+      VkFence& fence) __attribute__((no_thread_safety_analysis));
 
     void addPipelineBarriers(
       VkCommandBuffer& cmd_buffer,

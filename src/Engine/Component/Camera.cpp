@@ -14,7 +14,7 @@ namespace Poulpe
   void Camera::init(glm::vec3 const& start_pos)
   {
     _world_up = glm::vec3(0.0f, 1.0f, 0.0f);
-    _front = start_pos;
+    _front = glm::vec3(0.0f, 0.0f, 1.0f);
     _pitch = 0.0;
     _yaw = 0.0;
     _init = true;

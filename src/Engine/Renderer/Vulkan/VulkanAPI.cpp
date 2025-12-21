@@ -971,7 +971,7 @@ VkPipeline VulkanAPI::createGraphicsPipeline(PipeLineCreateInfo const& pipeline_
   rasterizer.polygonMode = pipeline_create_info.polygone_mode;
   rasterizer.lineWidth = 1.0f;
   rasterizer.cullMode = pipeline_create_info.cull_mode;
-  rasterizer.frontFace = VK_FRONT_FACE_CLOCKWISE;//VK_FRONT_FACE_CLOCKWISE;
+  rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;//VK_FRONT_FACE_CLOCKWISE;
   rasterizer.depthBiasEnable = pipeline_create_info.has_dynamic_depth_bias ? VK_TRUE : VK_FALSE;
   rasterizer.depthBiasConstantFactor = 1.5f;
   rasterizer.depthBiasClamp = 1.75f;
@@ -1812,7 +1812,7 @@ VkResult VulkanAPI::queueSubmit(VkCommandBuffer& cmd_buffer, std::size_t const q
 
   VkResult result = VK_SUCCESS;
   {
-    //std::lock_guard<std::mutex> guard(_mutex_queue_submit);
+    std::lock_guard<std::mutex> guard(_mutex_queue_submit);
     vkResetFences(_device, 1, &_fence_submit);
 
     result = vkQueueSubmit(_graphics_queues[queue_index], 1, &submit_info, _fence_submit);
@@ -2951,7 +2951,7 @@ VkSampler VulkanAPI::createTextureSampler(uint32_t const mip_lvl)
   {
     {
       //SCOPED_TIMER();
-      //std::lock_guard<std::mutex> guard(_mutex_queue_submit);
+      std::lock_guard<std::mutex> guard(_mutex_queue_submit);
       VkResult result = vkQueueSubmit(queue, static_cast<uint32_t>(submit_infos.size()), submit_infos.data(), fence);
 
       if (result != VK_SUCCESS) {

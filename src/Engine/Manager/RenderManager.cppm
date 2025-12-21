@@ -70,6 +70,10 @@ namespace Poulpe
 
     Buffer getLightBuffer();
 
+    bool isClipped(
+      IDType const entity_id,
+      std::vector<glm::vec4> const& frustum_planes);
+
     void renderEntity(
       IDType const entity_id,
       double const delta_time);

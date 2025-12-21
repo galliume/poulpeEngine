@@ -339,7 +339,7 @@ void main()
   float depth_factor = smoothstep(0.0, 10.0, depth_diff);
   //float foam_factor = smoothstep(0.0, 0.5, depth_diff);
 
-  vec4 color = vec4(mix(shallow_color, deep_color, depth_factor), 0.4);
+  vec4 color = vec4(mix(shallow_color, deep_color, depth_factor), 0.8);
 
   if(depth_diff < falloff_distance * edge_falloff)
   {
