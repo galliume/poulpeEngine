@@ -166,11 +166,11 @@ namespace Poulpe
     {
       //@todo animate light
       //_light_manager->animateAmbientLight(delta_time);
-      auto const camera_view_matrix = _camera->getView();
-
+      auto const& camera_view_matrix { _camera->getView() };
+      auto const& perspective { _renderer->getPerspective() };
       std::lock_guard<std::shared_mutex> guard(_entity_manager->lockWorldNode());
 
-      _light_manager->computeCSM(camera_view_matrix, _renderer->getPerspective());
+      _light_manager->computeCSM(camera_view_matrix, perspective);
       //Logger::debug("x {} y {} z {}", camera_pos.x, camera_pos.y, camera_pos.z);
 
       updateComponentRenderingInfo();
@@ -197,6 +197,120 @@ namespace Poulpe
 
       auto * const config_manager { ConfigManagerLocator::get() };
       auto const & root_path { config_manager->rootPath() };
+
+      glm::mat4 const vp { perspective * camera_view_matrix };
+
+      std::vector<glm::vec4> frustum_planes(6);
+
+      frustum_planes[0].x = vp[0].w + vp[0].x;
+      frustum_planes[0].y = vp[1].w + vp[1].x;
+      frustum_planes[0].z = vp[2].w + vp[2].x;
+      frustum_planes[0].w = vp[3].w + vp[3].x;
+
+      frustum_planes[1].x = vp[0].w - vp[0].x;
+      frustum_planes[1].y = vp[1].w - vp[1].x;
+      frustum_planes[1].z = vp[2].w - vp[2].x;
+      frustum_planes[1].w = vp[3].w - vp[3].x;
+
+      frustum_planes[2].x = vp[0].w - vp[0].y;
+      frustum_planes[2].y = vp[1].w - vp[1].y;
+      frustum_planes[2].z = vp[2].w - vp[2].y;
+      frustum_planes[2].w = vp[3].w - vp[3].y;
+
+      frustum_planes[3].x = vp[0].w + vp[0].y;
+      frustum_planes[3].y = vp[1].w + vp[1].y;
+      frustum_planes[3].z = vp[2].w + vp[2].y;
+      frustum_planes[3].w = vp[3].w + vp[3].y;
+
+      frustum_planes[4].x = vp[0].w + vp[0].z;
+      frustum_planes[4].y = vp[1].w + vp[1].z;
+      frustum_planes[4].z = vp[2].w + vp[2].z;
+      frustum_planes[4].w = vp[3].w + vp[3].z;
+
+      frustum_planes[5].x = vp[0].w - vp[0].z;
+      frustum_planes[5].y = vp[1].w - vp[1].z;
+      frustum_planes[5].z = vp[2].w - vp[2].z;
+      frustum_planes[5].w = vp[3].w - vp[3].z;
+
+      // for (std::size_t i { 0 }; i < frustum_planes.size(); i++)
+      // {
+      //   float length = sqrtf(frustum_planes[i].x * frustum_planes[i].x + frustum_planes[i].y * frustum_planes[i].y + frustum_planes[i].z * frustum_planes[i].z);
+      //   frustum_planes[i] /= length;
+      // }
+
+      for (auto& plane : frustum_planes) {
+        plane /= glm::length(glm::vec3(plane));
+      }
+      // auto const& appConfig { config_manager->appConfig()["resolution"] };
+      // auto const g { perspective[1][1] };
+      // auto const s { appConfig["width"].get<uint32_t>() / appConfig["height"].get<uint32_t>() };
+      // auto const near_plane { 0.0001f };
+      // auto const far_plane { 1000.f };
+
+      // auto const M_camera_inv { glm::inverse(camera_view_matrix) };
+
+      // auto const near_h { near_plane / g };
+      // auto const near_w { near_h * s };
+      // auto const near_v0 { glm::vec3(-near_w, -near_h, near_plane) };
+      // auto const near_v1 { glm::vec3(-near_w, near_h, near_plane) };
+      // auto const near_v2 { glm::vec3(near_w, near_h, near_plane) };
+      // auto const near_v3 { glm::vec3(near_w, -near_h, near_plane) };
+
+      // auto const far_h { far_plane / g };
+      // auto const far_w { far_h * s };
+      // auto const far_v0 { glm::vec3(-far_w, -far_h, far_plane) };
+      // auto const far_v1 { glm::vec3(-far_w, far_h, far_plane) };
+      // auto const far_v2 { glm::vec3(far_w, far_h, far_plane) };
+      // auto const far_v3 { glm::vec3(far_w, -far_h, far_plane) };
+
+      // std::vector<glm::vec4> frustum_planes {
+      //     M_camera_inv * glm::vec4(near_v0, 1.0f),
+      //     M_camera_inv * glm::vec4(near_v1, 1.0f),
+      //     M_camera_inv * glm::vec4(near_v2, 1.0f),
+      //     M_camera_inv * glm::vec4(near_v3, 1.0f),
+      //     M_camera_inv * glm::vec4(far_v0, 1.0f),
+      //     M_camera_inv * glm::vec4(far_v1, 1.0f),
+      //     M_camera_inv * glm::vec4(far_v2, 1.0f),
+      //     M_camera_inv * glm::vec4(far_v3, 1.0f)
+      // };
+
+      // for (auto& v : frustum_planes) {
+      //     v /= v.w;
+      // }
+      // const auto inv { glm::inverse(perspective * camera_view_matrix) };
+      
+      // std::vector<glm::vec4> frustum_planes;
+      // for (unsigned int x = 0; x < 2; ++x) {
+      //   for (unsigned int y = 0; y < 2; ++y) {
+      //     for (unsigned int z = 0; z < 2; ++z) {
+      //       const glm::vec4 pt = 
+      //         inv * glm::vec4(
+      //             2.0f * static_cast<float>(x) - 1.0f,
+      //             2.0f * static_cast<float>(y) - 1.0f,
+      //             2.0f * static_cast<float>(z) - 1.0f,
+      //             1.0f);
+      //       frustum_planes.push_back(pt / pt.w);
+      //     }
+      //   }
+      // }
+    
+      auto const& entities = _entity_manager->getEntities();
+      auto const& transparent_entities = _entity_manager->getTransparentEntities();
+
+      std::vector<IDType> sorted_entities{};
+      std::vector<IDType> sorted_transparent_entities{};
+
+      std::ranges::for_each(entities, [&](const auto& entity) {
+        if (!isClipped(entity->getID(), frustum_planes)) {
+          sorted_entities.emplace_back(entity->getID());
+        }
+      });
+
+      std::ranges::for_each(transparent_entities, [&](const auto& entity) {
+        if (!isClipped(entity->getID(), frustum_planes)) {
+          sorted_transparent_entities.emplace_back(entity->getID());
+        }
+      });
 
       //@todo improve this draft for simple shader hot reload
       if (config_manager->reloadShaders()) {
@@ -235,18 +349,15 @@ namespace Poulpe
         });
       }
 
-      auto const& entities = _entity_manager->getEntities();
-      auto const& transparent_entities = _entity_manager->getTransparentEntities();
-
-      std::ranges::for_each(entities, [&](const auto& entity) {
+      std::ranges::for_each(sorted_entities, [&](const auto& entity) {
         async_entities_render.push_back(std::async(std::launch::deferred, [&]() {
-          renderEntity(entity->getID(), delta_time);
+          renderEntity(entity, delta_time);
         }));
       });
 
-      std::ranges::for_each(transparent_entities, [&](const auto& entity) {
+      std::ranges::for_each(sorted_transparent_entities, [&](const auto& entity) {
         async_transparent_entities_render.push_back(std::async(std::launch::deferred, [&]() {
-          renderEntity(entity->getID(), delta_time);
+          renderEntity(entity, delta_time);
         }));
       });
 
@@ -274,16 +385,16 @@ namespace Poulpe
       _renderer->start();
       _renderer->startShadowMap(SHADOW_TYPE::CSM);
 
-      std::ranges::for_each(entities, [&](const auto& entity) {
-        drawShadowMap(entity->getID(), SHADOW_TYPE::CSM, camera_view_matrix);
+      std::ranges::for_each(sorted_entities, [&](const auto& entity) {
+        drawShadowMap(entity, SHADOW_TYPE::CSM, camera_view_matrix);
       });
       _renderer->endShadowMap(SHADOW_TYPE::CSM);
 
 
       _renderer->startShadowMap(SHADOW_TYPE::SPOT_LIGHT);
 
-      std::ranges::for_each(entities, [&](const auto& entity) {
-        drawShadowMap(entity->getID(), SHADOW_TYPE::SPOT_LIGHT, camera_view_matrix);
+      std::ranges::for_each(sorted_entities, [&](const auto& entity) {
+        drawShadowMap(entity, SHADOW_TYPE::SPOT_LIGHT, camera_view_matrix);
       });
       _renderer->endShadowMap(SHADOW_TYPE::SPOT_LIGHT);
 
@@ -297,11 +408,11 @@ namespace Poulpe
         drawEntity(terrain_entity->getID(), camera_view_matrix);
       }
 
-      std::ranges::for_each(entities, [&](const auto& entity) {
-        drawEntity(entity->getID(), camera_view_matrix, true);
+      std::ranges::for_each(sorted_entities, [&](const auto& entity) {
+        drawEntity(entity, camera_view_matrix, true);
       });
-      std::ranges::for_each(transparent_entities, [&](const auto& entity) {
-        drawEntity(entity->getID(), camera_view_matrix, true);
+      std::ranges::for_each(sorted_transparent_entities, [&](const auto& entity) {
+        drawEntity(entity, camera_view_matrix, true);
       });
 
       if (water_entity != nullptr) {
@@ -317,14 +428,41 @@ namespace Poulpe
     }
   }
 
+  bool RenderManager::isClipped(
+    IDType const entity_id,
+    std::vector<glm::vec4> const& frustum_planes)
+  {
+    auto* mesh_component { _component_manager->get<MeshComponent>(entity_id) };
+    auto mesh { mesh_component->template has<Mesh>() };
+
+    if (mesh->hasBbox()) {
+      glm::vec3 bmin { glm::vec3(glm::vec4(mesh->getData()->_bbox_min, 1.0f)) };
+      glm::vec3 bmax { glm::vec3(glm::vec4(mesh->getData()->_bbox_max, 1.0f)) };
+      auto inv = mesh->getData()->_inverse_transform_matrix;
+
+      for (auto const& K : frustum_planes) {
+        auto K_local { inv * K };
+        glm::vec3 pos_side { bmin };
+        if (K_local.x >= 0) pos_side.x = bmax.x;
+        if (K_local.y >= 0) pos_side.y = bmax.y;
+        if (K_local.z >= 0) pos_side.z = bmax.z;
+
+        if (glm::dot(K_local, glm::vec4(pos_side, 1.0f)) < 0) {
+          //Logger::debug("clipped : {}", mesh->getName());
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
   void RenderManager::renderEntity(
     IDType const entity_id,
-    double const delta_time
-  )
+    double const delta_time)
   {
-    auto* mesh_component = _component_manager->get<MeshComponent>(entity_id);
-    auto mesh = mesh_component->template has<Mesh>();
-    auto rdr_impl = _component_manager->get<RendererComponent>(entity_id);
+    auto* mesh_component { _component_manager->get<MeshComponent>(entity_id) };
+    auto mesh { mesh_component->template has<Mesh>() };
+    auto rdr_impl { _component_manager->get<RendererComponent>(entity_id) };
 
     if (mesh && rdr_impl) {
       if (mesh->isDirty()) {
@@ -362,7 +500,6 @@ namespace Poulpe
       RendererInfo renderer_info  = getRendererInfo(mesh, camera_view_matrix);
       renderer_info.stage_flag_bits = rdr_impl->getShaderStageFlags();
       renderer_info.has_alpha_blend = has_alpha_blend;
-
       _renderer->draw(renderer_info);
     }
   }

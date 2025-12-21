@@ -73,6 +73,12 @@ namespace Poulpe
 
     VkShaderStageFlags stage_flag_bits { VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT};
 
+    bool isClipped() const { return _is_clipped; }
+    void clipped(bool clipped) { _is_clipped = clipped; }
+
+    bool hasBbox() const { return _has_bbox; }
+    void bbox(bool bbox) { _has_bbox = bbox; }
+
   private:
     std::string _name{};
     std::string _shader_name{};
@@ -86,6 +92,8 @@ namespace Poulpe
     bool _is_point_light{ false };
     bool _has_shadow{ false };
     bool _debug_normal{ false };
+    bool _is_clipped { false };
+    bool _has_bbox { false };
 
     std::vector<Buffer> _storage_buffers;
     std::vector<Buffer> _uniform_buffers;

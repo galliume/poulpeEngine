@@ -119,8 +119,8 @@ void main()
   vec4 p0 = (p01 - p00) * u + p00;
   vec4 p1 = (p11 - p10) * u + p10;
   vec4 p = (p1 - p0) * v + p0;
+  p.y -= 2.5f;
   p += normal * height;
-  p.y -= 1.5f;
 
   vec4 world_pos = ubo.model * p;
   vec4 view_pos = pc.view * world_pos;

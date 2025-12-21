@@ -316,6 +316,8 @@ namespace Poulpe
     std::unordered_map<std::string, Bone> bones{};
     std::string root_bone_name{};
     std::uint32_t _default_anim{};
+    glm::vec3 bbox_min{};
+    glm::vec3 bbox_max{};
   };
 
   export struct VulkanShaders
