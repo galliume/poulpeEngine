@@ -57,11 +57,12 @@ namespace Poulpe
 
     auto flags {
         aiProcess_Triangulate
-      | aiProcess_OptimizeMeshes
       | aiProcess_GenNormals
       | aiProcess_CalcTangentSpace
       | aiProcess_FlipWindingOrder
       | aiProcess_FlipUVs
+      | aiProcess_MakeLeftHanded
+      | aiProcess_GenBoundingBoxes
     };
 
     const aiScene* scene = importer.ReadFile(path, flags);
@@ -541,6 +542,9 @@ namespace Poulpe
       aiMesh const* mesh = scene->mMeshes[node->mMeshes[i]];
       mesh_data.name = mesh->mName.C_Str() + std::to_string(i);
       mesh_data.texture_prefix = texture_prefix;
+
+      mesh_data.bbox_min = glm::vec3(mesh->mAABB.mMin.x, mesh->mAABB.mMin.y, mesh->mAABB.mMin.z);
+      mesh_data.bbox_max = glm::vec3(mesh->mAABB.mMax.x, mesh->mAABB.mMax.y, mesh->mAABB.mMax.z);
 
       //@todo check if it's ok
       //fallback to last normal or tangent if none is found

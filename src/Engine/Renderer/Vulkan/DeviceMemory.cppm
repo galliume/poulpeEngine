@@ -18,8 +18,8 @@ namespace Poulpe
       VkDeviceSize alignment
     );
 
-    uint32_t bindBufferToMemory(VkBuffer& buffer, VkDeviceSize const offset);
-    void bindImageToMemory(VkImage& image, VkDeviceSize const offset);
+    uint32_t bindBufferToMemory(VkBuffer& buffer, VkDeviceSize const offset) __attribute__((no_thread_safety_analysis));
+    void bindImageToMemory(VkImage& image, VkDeviceSize const offset) __attribute__((no_thread_safety_analysis));
     void clear();
     VkDeviceSize getID() const;
     VkDeviceMemory* getMemory();
@@ -27,7 +27,7 @@ namespace Poulpe
     VkDeviceSize getSize() const;
     VkDeviceSize getSpaceLeft() const;
     VkMemoryPropertyFlags getType() const;
-    bool hasEnoughSpaceLeft(VkDeviceSize size);
+    bool hasEnoughSpaceLeft(VkDeviceSize size) __attribute__((no_thread_safety_analysis));
     bool isFull() const;
     void lock();
     void unLock();
@@ -35,7 +35,7 @@ namespace Poulpe
     std::size_t getOffset(std::size_t index) const;
 
   private:
-    void allocateToMemory();
+    void allocateToMemory() __attribute__((no_thread_safety_analysis));
 
     uint32_t _index{0};
 

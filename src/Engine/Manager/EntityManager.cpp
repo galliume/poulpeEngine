@@ -90,11 +90,10 @@ namespace Poulpe
 
     auto const root_path { ConfigManagerLocator::get()->rootPath() };
 
-    auto const& path { raw_data.value("mesh", "") };
+    auto const& path { root_path + "/" + raw_data.value("mesh", "") };
     auto const flip_Y { raw_data.value("flipY", false) };
 
     auto callback = [&](
-
       PlpMeshData _data,
       std::vector<material_t> const materials,
       std::vector<Animation> const animations,
@@ -262,20 +261,23 @@ namespace Poulpe
       data._current_scale = entity_opts.scale;
       data._origin_rotation = entity_opts.rotation;
       data._current_rotation = entity_opts.rotation;
-      data._inverse_transform_matrix = _data.inverse_transform_matrix;
       data._bones = _data.bones;
       data._root_bone_name = _data.root_bone_name;
       data._local_transform = _data.local_transform;
       data._default_anim = entity_opts.default_anim;
+      data._bbox_min = _data.bbox_min;
+      data._bbox_max = _data.bbox_max;
       
       glm::mat4 const S = glm::scale(glm::mat4(1.0f), entity_opts.scale);
       glm::mat4 const R = glm::toMat4(entity_opts.rotation);
       glm::mat4 const T = glm::translate(glm::mat4(1.0f), entity_opts.pos);
       glm::mat4 const transform = T * R * S;
-
+      
       std::vector<std::vector<UniformBufferObject>> ubos{};
       UniformBufferObject ubo{};
       ubo.model = transform * data._local_transform;
+      
+      data._inverse_transform_matrix = glm::transpose(ubo.model);
 
       if (!data._bones.empty()) {
         auto const& root_bone = data._bones[data._root_bone_name];
@@ -299,7 +301,7 @@ namespace Poulpe
       data._original_ubo = ubo;
 
       mesh->setData(data);
-      //mesh->addBBox(box);
+      mesh->bbox(true);
 
       bool const is_last{ (_data.id == 0) ? true : false };
 

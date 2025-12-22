@@ -42,7 +42,7 @@ namespace Poulpe
   void DeviceMemory::allocateToMemory()
   {
     {
-      //std::lock_guard<std::mutex> guard(_mutex_memory);
+      std::lock_guard<std::mutex> guard(_mutex_memory);
       if (!_is_allocated) {
         VkMemoryAllocateInfo alloc_info{};
         alloc_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
@@ -67,7 +67,7 @@ namespace Poulpe
   uint32_t DeviceMemory::bindBufferToMemory(VkBuffer & buffer, VkDeviceSize const offset)
   {
     {
-      //std::lock_guard<std::mutex> guard(_mutex_memory);
+      std::lock_guard<std::mutex> guard(_mutex_memory);
 
       auto const remainder {_offset % offset};
 
@@ -97,7 +97,7 @@ namespace Poulpe
   void DeviceMemory::bindImageToMemory(VkImage & image, VkDeviceSize const offset)
   {
     {
-      //std::lock_guard<std::mutex> guard(_mutex_memory);
+      std::lock_guard<std::mutex> guard(_mutex_memory);
 
       auto const remainder {_offset % offset};
       if (remainder != 0) {
@@ -121,7 +121,7 @@ namespace Poulpe
   bool DeviceMemory::hasEnoughSpaceLeft(VkDeviceSize size)
   {
     {
-      //std::lock_guard<std::mutex> guard(_mutex_memory);
+      std::lock_guard<std::mutex> guard(_mutex_memory);
       auto offset { _offset };
 
       auto const remainder {offset % size};

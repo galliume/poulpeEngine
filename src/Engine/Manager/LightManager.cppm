@@ -11,6 +11,19 @@ import Engine.Core.PlpTypedef;
 
 namespace Poulpe
 {
+  struct CSM
+  {
+    float d;
+    float texel_size;
+    float z_max;
+    float z_min;
+    glm::vec3 s;
+    glm::vec3 scale;
+    glm::vec3 offset;
+    glm::mat4 render;
+    glm::mat4 sampling;
+  };
+
   export class LightManager
   {
   public:
@@ -20,7 +33,7 @@ namespace Poulpe
     void animateAmbientLight(double const delta_time);
     void animateSunLight(double const delta_time);
 
-    std::tuple<glm::mat4, glm::mat4, float> getLightSpaceMatrix(
+    CSM getLightSpaceMatrix(
     float const near_plane,
     float const far_plane,
     glm::mat4 const & M_camera,
