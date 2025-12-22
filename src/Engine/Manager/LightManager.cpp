@@ -107,17 +107,17 @@ namespace Poulpe
     _spots.emplace_back(light3);
   }
 
-  std::tuple<glm::mat4, glm::mat4, float> LightManager::getLightSpaceMatrix(
+  CSM LightManager::getLightSpaceMatrix(
     float const near_plane,
     float const far_plane,
     glm::mat4 const & M_camera,
     glm::mat4 const & projection)
-{
+  {
     auto const& appConfig { ConfigManagerLocator::get()->appConfig()["shadow_resolution"] };
     auto const shadow_resolution { static_cast<float>(appConfig["width"].get<uint32_t>()) };
 
     auto const g { projection[1][1] };
-    auto const s { 1.0f };
+    auto const s { g / projection[0][0] };
 
     auto const M_camera_inv { glm::inverse(M_camera) };
 
@@ -136,28 +136,27 @@ namespace Poulpe
     auto const far_v3 { glm::vec3(-far_w, far_h, -far_plane) };
 
     std::vector<glm::vec4> cascade_frustum {
-        M_camera_inv * glm::vec4(near_v0, 1.0f),
-        M_camera_inv * glm::vec4(near_v1, 1.0f),
-        M_camera_inv * glm::vec4(near_v2, 1.0f),
-        M_camera_inv * glm::vec4(near_v3, 1.0f),
-        M_camera_inv * glm::vec4(far_v0, 1.0f),
-        M_camera_inv * glm::vec4(far_v1, 1.0f),
-        M_camera_inv * glm::vec4(far_v2, 1.0f),
-        M_camera_inv * glm::vec4(far_v3, 1.0f)
+      M_camera_inv * glm::vec4(near_v0, 1.0f),
+      M_camera_inv * glm::vec4(near_v1, 1.0f),
+      M_camera_inv * glm::vec4(near_v2, 1.0f),
+      M_camera_inv * glm::vec4(near_v3, 1.0f),
+      M_camera_inv * glm::vec4(far_v0, 1.0f),
+      M_camera_inv * glm::vec4(far_v1, 1.0f),
+      M_camera_inv * glm::vec4(far_v2, 1.0f),
+      M_camera_inv * glm::vec4(far_v3, 1.0f)
     };
 
     for (auto& v : cascade_frustum) {
-        v /= v.w;
+      v /= v.w;
     }
 
     auto center { std::accumulate(cascade_frustum.begin(), cascade_frustum.end(), glm::vec4(0.0f)) };
     center /= cascade_frustum.size();
 
-    auto const camera_up = glm::normalize(glm::vec3(M_camera_inv[1]));
     auto const M_light { glm::lookAt(
-        glm::vec3(center) - glm::normalize(_sun.direction),
+        glm::vec3(center) - glm::normalize(_sun.direction) * 500.0f,
         glm::vec3(center),
-        camera_up) };
+        glm::vec3(0.0f, 1.0f, 0.0f)) };
 
     auto min_x { std::numeric_limits<float>::max() };
     auto max_x { std::numeric_limits<float>::lowest() };
@@ -167,73 +166,131 @@ namespace Poulpe
     auto max_z { std::numeric_limits<float>::lowest() };
 
     for (auto const& v : cascade_frustum) {
-        auto const Lv { M_light * v };
-        min_x = std::min(min_x, Lv.x);
-        max_x = std::max(max_x, Lv.x);
-        min_y = std::min(min_y, Lv.y);
-        max_y = std::max(max_y, Lv.y);
-        min_z = std::min(min_z, Lv.z);
-        max_z = std::max(max_z, Lv.z);
+      auto const Lv { M_light * v };
+      min_x = std::min(min_x, Lv.x);
+      max_x = std::max(max_x, Lv.x);
+      min_y = std::min(min_y, Lv.y);
+      max_y = std::max(max_y, Lv.y);
+      min_z = std::min(min_z, Lv.z);
+      max_z = std::max(max_z, Lv.z);
     }
 
-    auto const d { std::max(max_x - min_x, max_y - min_y) };
+    auto const d {
+      static_cast<std::uint32_t>(
+      std::max(
+        std::ceil(glm::length(cascade_frustum[0] - cascade_frustum[6])),
+        std::ceil(glm::length(cascade_frustum[4] - cascade_frustum[6])))) };
+
     auto const T { d / shadow_resolution };
-    // auto const dx { min_x };
-    // auto const dy { min_y };
 
-    min_x = std::floor(min_x / T) * T;
-    min_y = std::floor(min_y / T) * T;
-    max_x = min_x + d;
-    max_y = min_y + d;
+    auto const snapped_world_center {
+      glm::vec3(
+        std::floorf((max_x + min_x) / (2.0f * T)) * T,
+        std::floorf((max_y + min_y) / (2.0f * T)) * T,
+        (min_z + max_z) * 0.5f)
+    };
 
-    auto p_cascade { glm::ortho(
-        min_x, max_x, // left, right
-        min_y, max_y, // bottom, to
-        min_z - 500.f, max_z + 500.f) };
+    glm::mat3 const R { M_light };
+    glm::mat4 m_cascade { glm::transpose(R) };
+    m_cascade[3] = glm::vec4(-snapped_world_center, 1.0f);
 
-    glm::mat4 const bias(
-        0.5, 0.0, 0.0, 0.0,
-        0.0, -0.5, 0.0, 0.0,
-        0.0, 0.0, 1.0, 0.0,
-        0.5, 0.5, 0.0, 1.0);
+    // glm::mat4 const m_cascade { glm::lookAt(
+    //     snapped_world_center - glm::normalize(_sun.direction) * 100.0f,
+    //     snapped_world_center,
+    //     glm::vec3(0.0f, 1.0f, 0.0f)) };
 
-    auto const p_shadow { bias * p_cascade };
-    auto const render_mvp { p_cascade * M_light };
-    auto const sampling_mvp { p_shadow * M_light };
+    min_z = std::numeric_limits<float>::max();
+    max_z = std::numeric_limits<float>::lowest();
 
-    return std::make_tuple(render_mvp, sampling_mvp, d);
-}
+    for (auto const& v : cascade_frustum) {
+        float z = (m_cascade * v).z;
+        min_z = std::min(min_z, z);
+        max_z = std::max(max_z, z);
+    }
+
+    min_z -= 1000.0f;
+    max_z += 1000.0f;
+
+    auto const df {static_cast<float>(d) * 0.5f };
+    auto const z_range { max_z - min_z };
+
+    glm::mat4 p_cascade { glm::mat4(0.0f) };
+    p_cascade[0][0] = 1.0f / df;
+    p_cascade[1][1] = 1.0f / df;
+    p_cascade[2][2] = -1.0f / z_range;
+    p_cascade[3][2] = max_z / z_range;
+    p_cascade[3][3] = 1.0f;
+
+    glm::mat4 p_shadow { glm::mat4(0.0f) };
+    p_shadow[0][0] = 0.5f / df;
+    p_shadow[1][1] = -0.5f / df;
+    p_shadow[2][2] = -1.0f / z_range;
+    p_shadow[3][0] = 0.5f;
+    p_shadow[3][1] = 0.5f;
+    p_shadow[3][2] = max_z / z_range;
+    p_shadow[3][3] = 1.0f;
+
+    auto const render_mvp { p_cascade * m_cascade };
+    auto const sampling_mvp { p_shadow * m_cascade };
+
+    CSM csm {
+      .d = static_cast<float>(d),
+      .texel_size = (3.0f / 16.0f * (1.0f / shadow_resolution)),
+      .z_max = max_z,
+      .z_min = min_z,
+      .s = snapped_world_center,
+      .scale = glm::vec3(1.0f),
+      .offset = glm::vec3(0.0f),
+      .render = render_mvp,
+      .sampling = sampling_mvp
+    };
+
+    return csm;
+  }
 
   void LightManager::computeCSM(glm::mat4 const & camera_view, glm::mat4 const & projection)
   {
-    float const near { 0.0f };
-    float const far { 1000.f };
+    float const near { -0.0f };
+    float const far { -500.f };
 
   std::array<glm::vec2, 4> const cascade_splits {
-      glm::vec2(near, 150.f),
-      glm::vec2(140.f, 280.f),
-      glm::vec2(270.f, 420.f),
-      glm::vec2(410.f, far)
+      glm::vec2(near, -150.f),
+      glm::vec2(-140.f, -280.f),
+      glm::vec2(-270.f, -420.f),
+      glm::vec2(-410.f, far)
   };
 
-    std::array<glm::mat4, 4> matrices{};//csm buffer
-    std::array<glm::mat4, 4> shadows{};//sampling matrix
-    std::array<glm::mat4, 4> scales_offsets{};
-    std::array<float, 4> cascades_size{};
+    std::vector<CSM> csms{};
 
     for (std::uint8_t i { 0 }; i < cascade_splits.size(); ++i) {
-      std::tie(matrices[i], shadows[i], cascades_size[i]) =
-        getLightSpaceMatrix(cascade_splits[i].x, cascade_splits[i].y, camera_view, projection);
+      csms.emplace_back(
+        getLightSpaceMatrix(cascade_splits[i].x, cascade_splits[i].y, camera_view, projection));
     }
 
-    for (std::uint8_t i { 0 }; i < 4; ++i) {
-      scales_offsets[i] = shadows[i] * glm::inverse(shadows[0]);
+    auto const d0 { csms.at(0).d };
+    auto const s0 { csms.at(0).s };
+    auto const z0 {  csms.at(0).z_max  - csms.at(0).z_min };
+    //auto const rot { glm::mat3(camera_view) };
+
+    for (std::uint8_t i { 1 }; i < 4; ++i) {
+      auto & csm { csms.at(i) };
+
+      auto const z { csms.at(i).z_max  - csms.at(i).z_min };
+
+      auto const scaleX { d0 / csm.d };
+      auto const scaleZ { z0 / z };
+
+      glm::vec3 world_delta { (s0 - csm.s) };
+
+      auto const offsetX { world_delta.x / csm.d - (d0 / (2.f * csm.d)) + 0.5f };
+      auto const offsetY { world_delta.y / csm.d - (d0 / (2.f * csm.d)) + 0.5f };
+      auto const offsetZ { world_delta.z / z };
+
+      csm.scale = glm::vec3(scaleX, scaleX, scaleZ);
+      csm.offset = glm::vec3(offsetX, offsetY, offsetZ);
     }
 
-    _sun.cascade_texel_size.x = cascades_size[0];
-    _sun.cascade_texel_size.y = cascades_size[1];
-    _sun.cascade_texel_size.z = cascades_size[2];
-    _sun.cascade_texel_size.w = cascades_size[3];
+    _sun.cascade_texel_size = csms.at(0).texel_size;
 
     _sun.cascade_min_splits.x = cascade_splits[0].x;
     _sun.cascade_min_splits.y = cascade_splits[1].x;
@@ -245,15 +302,19 @@ namespace Poulpe
     _sun.cascade_max_splits.z = cascade_splits[2].y;
     _sun.cascade_max_splits.w = cascade_splits[3].y;
 
-    _sun.cascade_scale_offset  = shadows[0];
-    _sun.cascade_scale_offset1 = scales_offsets[1];
-    _sun.cascade_scale_offset2 = scales_offsets[2];
-    _sun.cascade_scale_offset3 = scales_offsets[3];
+    _sun.cascade0  = csms.at(0).sampling;
+    _sun.cascade_scale1 = csms.at(1).scale;
+    _sun.cascade_scale2 = csms.at(2).scale;
+    _sun.cascade_scale3 = csms.at(3).scale;
 
-    _sun.light_space_matrix = matrices[0];
-    _sun.light_space_matrix_left = matrices[1];
-    _sun.light_space_matrix_top = matrices[2];
-    _sun.light_space_matrix_right = matrices[3];
+    _sun.cascade_offset1 = csms.at(1).offset;
+    _sun.cascade_offset2 = csms.at(2).offset;
+    _sun.cascade_offset3 = csms.at(3).offset;
+    
+    _sun.light_space_matrix = csms.at(0).render;
+    _sun.light_space_matrix_left = csms.at(1).render;
+    _sun.light_space_matrix_top = csms.at(2).render;
+    _sun.light_space_matrix_right = csms.at(3).render;
     _sun.light_space_matrix_bottom = _sun.light_space_matrix;//unused
     _sun.light_space_matrix_back = _sun.light_space_matrix;//unused
   }

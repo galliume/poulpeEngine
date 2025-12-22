@@ -244,24 +244,24 @@ namespace Poulpe
       // auto const& appConfig { config_manager->appConfig()["resolution"] };
       // auto const g { perspective[1][1] };
       // auto const s { appConfig["width"].get<uint32_t>() / appConfig["height"].get<uint32_t>() };
-      // auto const near_plane { 0.0001f };
+      // auto const near_plane { 0.01f };
       // auto const far_plane { 1000.f };
 
-      // auto const M_camera_inv { glm::inverse(camera_view_matrix) };
+      // auto const M_camera_inv { perspective * camera_view_matrix };
 
       // auto const near_h { near_plane / g };
       // auto const near_w { near_h * s };
-      // auto const near_v0 { glm::vec3(-near_w, -near_h, near_plane) };
-      // auto const near_v1 { glm::vec3(-near_w, near_h, near_plane) };
-      // auto const near_v2 { glm::vec3(near_w, near_h, near_plane) };
-      // auto const near_v3 { glm::vec3(near_w, -near_h, near_plane) };
+      // auto const near_v0 { glm::vec3(-near_w, near_h, -near_plane) };
+      // auto const near_v1 { glm::vec3(near_w, near_h, -near_plane) };
+      // auto const near_v2 { glm::vec3(near_w, -near_h, -near_plane) };
+      // auto const near_v3 { glm::vec3(-near_w, -near_h, -near_plane) };
 
       // auto const far_h { far_plane / g };
       // auto const far_w { far_h * s };
-      // auto const far_v0 { glm::vec3(-far_w, -far_h, far_plane) };
-      // auto const far_v1 { glm::vec3(-far_w, far_h, far_plane) };
-      // auto const far_v2 { glm::vec3(far_w, far_h, far_plane) };
-      // auto const far_v3 { glm::vec3(far_w, -far_h, far_plane) };
+      // auto const far_v0 { glm::vec3(-far_w, far_h, -far_plane) };
+      // auto const far_v1 { glm::vec3(far_w, far_h, -far_plane) };
+      // auto const far_v2 { glm::vec3(far_w, -far_h, -far_plane) };
+      // auto const far_v3 { glm::vec3(-far_w, -far_h, -far_plane) };
 
       // std::vector<glm::vec4> frustum_planes {
       //     M_camera_inv * glm::vec4(near_v0, 1.0f),

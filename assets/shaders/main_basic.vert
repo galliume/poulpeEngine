@@ -36,13 +36,8 @@ layout(location = 0) out FRAG_VAR {
   vec4 light_space;
   mat4 model;
   vec4 cascade_coord;
-  vec4 cascade_coord1;
-  vec4 cascade_coord2;
-  vec4 cascade_coord3;
   float depth;
-  float u1;
-  float u2;
-  float u3;
+  vec3 blend;
   vec3 n;
 } frag_var;
 
@@ -61,13 +56,16 @@ struct Light {
   mat4 light_space_matrix_right;
   mat4 light_space_matrix_bottom;
   mat4 light_space_matrix_back;
-  mat4 cascade_scale_offset;
-  mat4 cascade_scale_offset1;
-  mat4 cascade_scale_offset2;
-  mat4 cascade_scale_offset3;
+  mat4 cascade0;
+  vec3 cascade_scale1;
+  vec3 cascade_scale2;
+  vec3 cascade_scale3;
+  vec3 cascade_offset1;
+  vec3 cascade_offset2;
+  vec3 cascade_offset3;
   vec4 cascade_min_splits;
   vec4 cascade_max_splits;
-  vec4 cascade_texel_size;
+  float cascade_texel_size;
 };
 
 struct Material
@@ -112,12 +110,6 @@ layout(binding = 5) readonly buffer LightObjectBuffer {
   Light spot_light;
 };
 
-const mat4 biasMat = mat4(
-  0.5, 0.0, 0.0, 0.0,
-  0.0, 0.5, 0.0, 0.0,
-  0.0, 0.0, 1.0, 0.0,
-  0.5, 0.5, 0.0, 1.0);
-  
 void main()
 {
   mat3 normal_matrix = transpose(inverse(mat3(ubo.model)));
@@ -135,6 +127,8 @@ void main()
   frag_var.TBN = TBN;
 
   vec4 world_pos = ubo.model * vec4(position, 1.0f);
+  vec4 local_space = vec4(position, 1.0f);
+
   frag_var.frag_pos = world_pos.xyz;
   frag_var.view_pos = pc.view_position - world_pos.xyz;
   frag_var.light_space = ubo.projection * point_lights[1].view * world_pos;
@@ -145,25 +139,21 @@ void main()
   vec4 view_pos = pc.view * world_pos;
   frag_var.depth = -view_pos.z;
 
-  vec4 cascade_coord0 = (sun_light.cascade_scale_offset * world_pos);
-  frag_var.cascade_coord = cascade_coord0;
-  frag_var.cascade_coord1 = (sun_light.cascade_scale_offset1 * cascade_coord0);
-  frag_var.cascade_coord2 = (sun_light.cascade_scale_offset2 * cascade_coord0);
-  frag_var.cascade_coord3 = (sun_light.cascade_scale_offset3 * cascade_coord0);
+  frag_var.cascade_coord = sun_light.cascade0 * world_pos;
 
-  vec4 view_plane = vec4(0.0, 1.0, 0.0, 0.0);
+  mat4 camera_inverse = inverse(pc.view);
+  vec3 n = -camera_inverse[2].xyz;
+  vec3 c = camera_inverse[3].xyz;
 
   float inv_z_dist0 = 1.0 / (sun_light.cascade_max_splits.x - sun_light.cascade_min_splits.y);
   float inv_z_dist1 = 1.0 / (sun_light.cascade_max_splits.y - sun_light.cascade_min_splits.z);
   float inv_z_dist2 = 1.0 / (sun_light.cascade_max_splits.z - sun_light.cascade_min_splits.w);
 
-  vec4 d1 = inv_z_dist0 * (view_plane - vec4(0,0,0, sun_light.cascade_min_splits.y));
-  vec4 d2 = inv_z_dist1 * (view_plane - vec4(0,0,0, sun_light.cascade_min_splits.z));
-  vec4 d3 = inv_z_dist2 * (view_plane - vec4(0,0,0, sun_light.cascade_min_splits.w));
+  vec4 d1 = (inv_z_dist0 * (vec4(n, (-dot(n, c) - sun_light.cascade_min_splits.y))));
+  vec4 d2 = (inv_z_dist1 * (vec4(n, (-dot(n, c) - sun_light.cascade_min_splits.z))));
+  vec4 d3 = (inv_z_dist2 * (vec4(n, (-dot(n, c) - sun_light.cascade_min_splits.w))));
 
-  frag_var.u1 = dot(d1, view_pos);
-  frag_var.u2 = dot(d2, view_pos);
-  frag_var.u3 = dot(d3, view_pos);
+  frag_var.blend = vec3(dot(d1, world_pos), dot(d2, world_pos), dot(d3, world_pos));
 
   gl_Position = ubo.projection * pc.view * world_pos;
 } 
