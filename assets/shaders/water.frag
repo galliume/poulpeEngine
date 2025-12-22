@@ -27,13 +27,16 @@ struct Light {
   mat4 light_space_matrix_right;
   mat4 light_space_matrix_bottom;
   mat4 light_space_matrix_back;
-  mat4 cascade_scale_offset;
-  mat4 cascade_scale_offset1;
-  mat4 cascade_scale_offset2;
-  mat4 cascade_scale_offset3;
+  mat4 cascade0;
+  vec3 cascade_scale1;
+  vec3 cascade_scale2;
+  vec3 cascade_scale3;
+  vec3 cascade_offset1;
+  vec3 cascade_offset2;
+  vec3 cascade_offset3;
   vec4 cascade_min_splits;
   vec4 cascade_max_splits;
-  vec4 cascade_texel_size;
+  float cascade_texel_size;
 };
 
 layout(location = 0) out vec4 final_color;
@@ -47,10 +50,7 @@ layout(location = 6) in vec3 in_normal;
 // CSM inputs from tessellation shader
 layout(location = 7) in float in_depth;
 layout(location = 8) in vec4 in_cascade_coord;
-layout(location = 9) in vec4 in_cascade_coord1;
-layout(location = 10) in vec4 in_cascade_coord2;
-layout(location = 11) in vec4 in_cascade_coord3;
-layout(location = 12) in vec3 in_cascade_blend;
+layout(location = 12) in vec3 in_blend;
 
 layout(binding = 1) uniform sampler2D tex_sampler[5];
 layout(binding = 2) uniform samplerCube env_sampler[];
@@ -214,57 +214,54 @@ vec3 ApplyFog(vec3 shadedColor, vec3 v)
   return (mix(fogColor, shadedColor, f));
 }
 
-float CalculateInfiniteShadow(vec3 cascade_coord0, vec3 cascade_blend, float NdL)
+float CalculateInfiniteShadow(vec3 cascade_coord0, vec3 cascade_blend)
 {
-  vec3 cascade_coord1 = in_cascade_coord1.xyz / in_cascade_coord1.w;
-  vec3 cascade_coord2 = in_cascade_coord2.xyz / in_cascade_coord2.w;
-  vec3 cascade_coord3 = in_cascade_coord3.xyz / in_cascade_coord3.w;
+  vec3 p1, p2;
+  vec3 cascade_coord1 = cascade_coord0 * sun_light.cascade_scale1 + sun_light.cascade_offset1;
+  vec3 cascade_coord2 = cascade_coord0 * sun_light.cascade_scale2 + sun_light.cascade_offset2;
+  vec3 cascade_coord3 = cascade_coord0 * sun_light.cascade_scale3 + sun_light.cascade_offset3;
+
+  bool beyond_cascade2 = (cascade_blend.y >= 0.0);
+  bool beyond_cascade3 = (cascade_blend.z >= 0.0);
+  p1.z = float(beyond_cascade2) * 2.0;
+  p2.z = float(beyond_cascade3) * 2.0 + 1.0;
+
+  vec2 shadow_coord1 = (beyond_cascade2) ? cascade_coord2.xy : cascade_coord0.xy;
+  vec2 shadow_coord2 = (beyond_cascade3) ? cascade_coord3.xy : cascade_coord1.xy;
+
+  float depth1 = (beyond_cascade2) ? cascade_coord2.z : cascade_coord0.z;
+  float depth2 = (beyond_cascade3) ? clamp(cascade_coord3.z, 0.0, 1.0) : cascade_coord1.z;
 
   vec3 blend = clamp(cascade_blend, 0.0, 1.0);
-  float cascade_index;
-  if (in_depth < sun_light.cascade_max_splits.x) {
-    cascade_index = 0.0;
-  } else if (in_depth < sun_light.cascade_max_splits.y) {
-    cascade_index = 1.0;
-  } else if (in_depth < sun_light.cascade_max_splits.z) {
-    cascade_index = 2.0;
-  } else {
-    cascade_index = 3.0;
-  }
-  float weight = 0.0;
-  vec3 shadow_coord1, shadow_coord2;
+  float weight = (beyond_cascade2) ? blend.y - blend.z : 1.0 - blend.x;
 
-  if (cascade_index == 0.0) { shadow_coord1 = cascade_coord0; shadow_coord2 = cascade_coord1; weight = blend.x; }
-  if (cascade_index == 1.0) { shadow_coord1 = cascade_coord1; shadow_coord2 = cascade_coord2; weight = blend.y; }
-  if (cascade_index == 2.0) { shadow_coord1 = cascade_coord2; shadow_coord2 = cascade_coord3; weight = blend.z; }
-  if (cascade_index == 3.0) { shadow_coord1 = cascade_coord3; shadow_coord2 = cascade_coord3; weight = 1.0; }
+  float texel_size1 = sun_light.cascade_texel_size;
+  float delta = 3.0 * texel_size1;
 
-  float delta = 3.0f / 16.0f * (1.0f / 2048.f);
   vec4 shadow_offset[2] = vec4[2](
-    vec4(-delta, -3.0 * delta, 3.0 * delta, -delta),
-    vec4(delta, 3.0 * delta, -3.0 * delta, delta)
+    vec4(-texel_size1, -delta, delta, -texel_size1),
+    vec4(texel_size1, delta, -delta, texel_size1)
   );
 
-  float max_bias = 0.005;
-  float min_bias = 0.0005;
-  float bias = 0.0;//0.001;max(max_bias * (1.0 - NdL), min_bias);
+  p1.xy = shadow_coord1 + shadow_offset[0].xy;
+  float light1 = texture(csm, vec4(p1.xy, p1.z, depth1));
+  p1.xy = shadow_coord1 + shadow_offset[0].zw;
+  light1 += texture(csm, vec4(p1.xy, p1.z, depth1));
+  p1.xy = shadow_coord1 + shadow_offset[1].xy;
+  light1 += texture(csm, vec4(p1.xy, p1.z, depth1));
+  p1.xy = shadow_coord1 + shadow_offset[1].zw;
+  light1 += texture(csm, vec4(p1.xy, p1.z, depth1));
 
-  float light1 = 0.0;
-  light1 += texture(csm, vec4(shadow_coord1.xy + shadow_offset[0].xy, cascade_index, shadow_coord1.z - bias));
-  light1 += texture(csm, vec4(shadow_coord1.xy + shadow_offset[0].zw, cascade_index, shadow_coord1.z - bias));
-  light1 += texture(csm, vec4(shadow_coord1.xy + shadow_offset[1].xy, cascade_index, shadow_coord1.z - bias));
-  light1 += texture(csm, vec4(shadow_coord1.xy + shadow_offset[1].zw, cascade_index, shadow_coord1.z - bias));
+  p2.xy = shadow_coord2 + shadow_offset[0].xy;
+  float light2 = texture(csm, vec4(p2.xy, p2.z, depth2));
+  p2.xy = shadow_coord2 + shadow_offset[0].zw;
+  light2 += texture(csm, vec4(p2.xy, p2.z, depth2));
+  p2.xy = shadow_coord2 + shadow_offset[1].xy;
+  light2 += texture(csm, vec4(p2.xy, p2.z, depth2));
+  p2.xy = shadow_coord2 + shadow_offset[1].zw;
+  light2 += texture(csm, vec4(p2.xy, p2.z, depth2));
 
-  float light2 = light1;
-  if (cascade_index < 3.0) {
-    light2 = 0.0;
-    light2 += texture(csm, vec4(shadow_coord2.xy + shadow_offset[0].xy, cascade_index + 1.0, shadow_coord2.z - bias));
-    light2 += texture(csm, vec4(shadow_coord2.xy + shadow_offset[0].zw, cascade_index + 1.0, shadow_coord2.z - bias));
-    light2 += texture(csm, vec4(shadow_coord2.xy + shadow_offset[1].xy, cascade_index + 1.0, shadow_coord2.z - bias));
-    light2 += texture(csm, vec4(shadow_coord2.xy + shadow_offset[1].zw, cascade_index + 1.0, shadow_coord2.z - bias));
-  }
-
-  return mix(light1, light2, weight) * 0.25;
+  return (mix(light1, light2, weight) * 0.25);
 }
 
 float ShadowCalculation(vec3 light_coord, Light l, float NdL)
@@ -423,8 +420,8 @@ void main()
   vec3 radiance = sun_light.color.rgb;
   vec3 C_sun = (kD * (diffuse / PI) + specular) * radiance * NdL;
   vec3 csm_coords = in_cascade_coord.xyz / in_cascade_coord.w;
-  float csm_shadow = CalculateInfiniteShadow(csm_coords, in_cascade_blend, NdL);
-  C_sun *= max(csm_shadow, 0.1); 
+  float csm_shadow = CalculateInfiniteShadow(csm_coords, in_blend);
+  C_sun *= csm_shadow;
 
   vec3 out_lights = vec3(0.0);
 

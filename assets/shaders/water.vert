@@ -18,13 +18,16 @@ struct Light {
   mat4 light_space_matrix_right;
   mat4 light_space_matrix_bottom;
   mat4 light_space_matrix_back;
-  mat4 cascade_scale_offset;
-  mat4 cascade_scale_offset1;
-  mat4 cascade_scale_offset2;
-  mat4 cascade_scale_offset3;
+  mat4 cascade0;
+  vec3 cascade_scale1;
+  vec3 cascade_scale2;
+  vec3 cascade_scale3;
+  vec3 cascade_offset1;
+  vec3 cascade_offset2;
+  vec3 cascade_offset3;
   vec4 cascade_min_splits;
   vec4 cascade_max_splits;
-  vec4 cascade_texel_size;
+  float cascade_texel_size;
 };
 
 struct UBO

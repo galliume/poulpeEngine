@@ -67,13 +67,16 @@ namespace Poulpe
     alignas(16) glm::mat4 light_space_matrix_right;
     alignas(16) glm::mat4 light_space_matrix_bottom;
     alignas(16) glm::mat4 light_space_matrix_back;
-    alignas(16) glm::mat4 cascade_scale_offset;
-    alignas(16) glm::mat4 cascade_scale_offset1;
-    alignas(16) glm::mat4 cascade_scale_offset2;
-    alignas(16) glm::mat4 cascade_scale_offset3;
+    alignas(16) glm::mat4 cascade0;
+    alignas(16) glm::vec3 cascade_scale1;
+    alignas(16) glm::vec3 cascade_scale2;
+    alignas(16) glm::vec3 cascade_scale3;
+    alignas(16) glm::vec3 cascade_offset1;
+    alignas(16) glm::vec3 cascade_offset2;
+    alignas(16) glm::vec3 cascade_offset3;
     alignas(16) glm::vec4 cascade_min_splits;
     alignas(16) glm::vec4 cascade_max_splits;
-    alignas(16) glm::vec4 cascade_texel_size;
+    alignas(4)  float cascade_texel_size;
   };
 
   export struct Material
