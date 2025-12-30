@@ -12,6 +12,8 @@
 #define NORMAL2_INDEX 3
 #define ENV_INDEX 5
 
+#define HAS_FOG 0
+
 struct Light {
   mat4 light_space_matrix;
   mat4 projection;
@@ -66,8 +68,9 @@ layout(binding = 5) uniform samplerCubeShadow tex_shadow_sampler;
 layout(push_constant) uniform constants
 {
   mat4 view;
-  vec3 view_position;
-  vec4 options;
+  vec4 view_position;
+  layout(offset = 80) uint env_options;
+  layout(offset = 96) uint options;
 } pc;
 
 float linear_to_sRGB(float color)
@@ -261,7 +264,7 @@ float CalculateInfiniteShadow(vec3 cascade_coord0, vec3 cascade_blend)
   p2.xy = shadow_coord2 + shadow_offset[1].zw;
   light2 += texture(csm, vec4(p2.xy, p2.z, depth2));
 
-  return (mix(light1, light2, weight) * 0.25);
+  return (mix(light2, light1, weight) * 0.25);
 }
 
 float ShadowCalculation(vec3 light_coord, Light l, float NdL)
@@ -336,7 +339,7 @@ void main()
   float depth_factor = smoothstep(0.0, 10.0, depth_diff);
   //float foam_factor = smoothstep(0.0, 0.5, depth_diff);
 
-  vec4 color = vec4(mix(shallow_color, deep_color, depth_factor), 0.8);
+  vec4 color = vec4(mix(shallow_color, deep_color, depth_factor), 1.0);
 
   if(depth_diff < falloff_distance * edge_falloff)
   {
@@ -371,7 +374,7 @@ void main()
   vec3 p = in_position;
   vec3 v = in_view_position;
   vec3 V = normalize(v);
-  vec3 i = normalize(p - pc.view_position);
+  vec3 i = normalize(p - vec3(pc.view_position));
 
   vec3 L = normalize(sun_light.position);
   vec3 H = normalize(V + L);
@@ -501,7 +504,9 @@ void main()
   C_sun.rgb += clamp(edge - vec3(mask), 0.0, color.a);
   vec3 C_ambient = vec3(0.03) * deep_color * 0.0;
   vec3 result = C_ambient + C_sun + out_lights;
-  //result.rgb = ApplyFog(result.rgb, v);
+
+  vec3 fog = ((pc.env_options >> HAS_FOG) & 1u) * ApplyFog(result.rgb, v);
+  result.rgb += fog;
 
   //@todo check how to get the precise value
   float white_point = 350;

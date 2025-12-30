@@ -47,8 +47,9 @@ layout(set = 0, binding = 0) readonly uniform UniformBufferObject {
 layout(push_constant) uniform constants
 {
   mat4 view;
-  vec3 view_position;
-  vec4 options;
+  vec4 view_position;
+  layout(offset = 80) uint env_options;
+  layout(offset = 96) uint options;
 } pc;
 
 layout(binding = 1) uniform sampler2D tex_sampler[1];
@@ -111,7 +112,7 @@ void main()
   float A_pic = 0.1f * L_pic;
   //float w = sqrt(9.8 * ((2.0 * PI) / L));
   float S = 5.0f; //m/s
-  float t = pc.options.x;
+  float t = pc.options;
 
   vec3 bi = vec3(0.0);
   vec3 ta = vec3(0.0);
@@ -190,7 +191,7 @@ void main()
   out_position = (ubo.model * vec4(p.xyz, 1.0)).xyz;
   out_normal = N;
   out_texture_coord = texCoord;
-  out_view_position = pc.view_position - out_position;
+  out_view_position = vec3(pc.view_position) - out_position;
 
   vec4 world_pos = ubo.model * p;
   vec4 view_pos = pc.view * world_pos;

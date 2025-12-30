@@ -154,7 +154,7 @@ namespace Poulpe
     center /= cascade_frustum.size();
 
     auto const M_light { glm::lookAt(
-        glm::vec3(center) - glm::normalize(_sun.direction) * 500.0f,
+        glm::vec3(center) - glm::normalize(_sun.direction),
         glm::vec3(center),
         glm::vec3(0.0f, 1.0f, 0.0f)) };
 

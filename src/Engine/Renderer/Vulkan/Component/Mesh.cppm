@@ -68,8 +68,8 @@ namespace Poulpe
     bool is_indexed() const { return _is_indexed; }
     bool is_point_light() const { return _is_point_light; }
 
-    glm::vec4 getOptions() { return _options; }
-    void setOptions(glm::vec4 options) { _options = options; }
+    std::uint32_t getOptions() { return _options; }
+    void setOptions(std::uint32_t options) { _options = options; }
 
     VkShaderStageFlags stage_flag_bits { VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT};
 
@@ -78,6 +78,9 @@ namespace Poulpe
 
     bool hasBbox() const { return _has_bbox; }
     void bbox(bool bbox) { _has_bbox = bbox; }
+
+    bool isSkybox() { return _is_skybox; }
+    void isSkybox(bool is_skybox) { _is_skybox = is_skybox; }
 
   private:
     std::string _name{};
@@ -94,6 +97,7 @@ namespace Poulpe
     bool _debug_normal{ false };
     bool _is_clipped { false };
     bool _has_bbox { false };
+    bool _is_skybox { false };
 
     std::vector<Buffer> _storage_buffers;
     std::vector<Buffer> _uniform_buffers;
@@ -105,7 +109,7 @@ namespace Poulpe
     VkDescriptorSet _csm_descset{};
     material_t _material{};
 
-    glm::vec4 _options{ 0.0 }; //used for options as push constants
+    std::uint32_t _options{ 0 }; //used for options as push constants
     std::uint32_t _default_anim{};
   };
 

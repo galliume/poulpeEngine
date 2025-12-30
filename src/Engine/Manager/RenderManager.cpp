@@ -13,6 +13,8 @@ module Engine.Managers.RenderManager;
 
 import std;
 
+import Engine.Core.PlpTypedef;
+
 import Engine.Animation.AnimationScript;
 import Engine.Animation.AnimationTypes;
 
@@ -341,8 +343,7 @@ namespace Poulpe
         auto* mesh_component = _component_manager->get<MeshComponent>(water_entity->getID());
         auto mesh = mesh_component->template has<Mesh>();
        if (mesh) {
-          glm::vec4 options{ getElapsedTime(), 0.0f, 0.0f, 0.0f};
-          mesh->setOptions(options);
+          mesh->setOptions(static_cast<std::uint32_t>(getElapsedTime()));
         }
         async_water_render = std::async(std::launch::deferred, [&]() {
           renderEntity(water_entity->getID(), delta_time);
@@ -536,6 +537,11 @@ namespace Poulpe
     auto const& app_config{ config_manager->appConfig() };
 
     auto const& lvl_data = config_manager->loadLevelData(level);
+
+    if (lvl_data["hasFog"]) {
+      _env_options |= PLP_ENV_OPTIONS::HAS_FOG;
+    }
+
     _texture_manager->addConfig(config_manager->texturesConfig());
 
     std::string const sb{ (_current_skybox.empty()) ? static_cast<std::string>(app_config["defaultSkybox"])
@@ -586,7 +592,8 @@ namespace Poulpe
     auto entity = std::make_unique<Entity>();
     auto mesh = std::make_unique<Mesh>();
     mesh->setName("skybox");
-
+    mesh->isSkybox(true);
+    
     auto rdr_impl{ RendererComponentFactory::create<Skybox>() };
     (*rdr_impl)(_renderer.get(), getComponentRenderingInfo(mesh.get()));
 
@@ -754,6 +761,7 @@ namespace Poulpe
   {
     _renderer_info.mesh = mesh;
     _renderer_info.camera_view = camera_view;
+    _renderer_info.env_options = _env_options;
     return _renderer_info;
   }
 

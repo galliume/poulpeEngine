@@ -4,6 +4,8 @@
 
 #define TEXTURE_COUNT 8
 
+#define HAS_FOG 0 //(<< 0)
+
 //texture map index
 #define DIFFUSE_INDEX 0
 #define ALPHA_INDEX 1
@@ -122,6 +124,14 @@ layout(binding = 5) readonly buffer LightObjectBuffer {
 };
 
 layout(binding = 6) uniform sampler2DArrayShadow csm;
+
+layout(push_constant) uniform constants
+{
+  mat4 view;
+  vec4 view_position;
+  layout(offset = 80) uint env_options;
+  layout(offset = 96) uint options;
+} pc;
 
 float InverseSquareAttenuation(vec3 l)
 {
@@ -255,7 +265,7 @@ float CalculateInfiniteShadow(vec3 cascade_coord0, vec3 cascade_blend)
   p2.xy = shadow_coord2 + shadow_offset[1].zw;
   light2 += texture(csm, vec4(p2.xy, p2.z, depth2));
 
-  return (mix(light1, light2, weight) * 0.25);
+  return (mix(light2, light1, weight) * 0.25);
 }
 
 //https://github.com/KhronosGroup/glTF/blob/main/extensions/2.0/Khronos/KHR_texture_transform/README.md
@@ -559,7 +569,9 @@ void main()
     color += material.mre_factor.z * emissive_color;
     color += color * (material.mre_factor.z * material.emissive_color);
   }
-  //color.rgb = ApplyFog(color.rgb, v);
+
+  vec3 fog = ((pc.env_options >> HAS_FOG) & 1u) * ApplyFog(color.rgb, v);
+  color.rgb += fog;
 
 //
 //  color.r = linear_to_sRGB(color.r);
@@ -576,6 +588,6 @@ void main()
   }
   float exposure = 2.0;
   final_color.rgb = vec3(1.0) - exp(-final_color.rgb * exposure);
-
+//final_color *= var.env_options;
   //final_color.rgb = vec3(csm_coords.x, csm_coords.y, 0.0f);
 }

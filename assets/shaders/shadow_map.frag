@@ -40,8 +40,9 @@ layout(set = 0, binding = 1) readonly buffer ObjectBuffer {
 layout(push_constant) uniform constants
 {
   mat4 view;
-  vec3 view_position;
-  vec4 options;
+  vec4 view_position;
+  layout(offset = 80) uint env_options;
+  layout(offset = 96) uint options;
 } pc;
 
 layout(location = 0) in vec4 position;
@@ -51,6 +52,7 @@ void main()
    Light light = point_lights[1];
 
   float light_distance = length(position.xyz - light.position);
-  light_distance = light_distance / pc.options.x;
+  //@todo why ? don't remember...
+  light_distance = light_distance / 50.f;
   gl_FragDepth = light_distance;
 }

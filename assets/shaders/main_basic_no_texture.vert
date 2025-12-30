@@ -17,8 +17,9 @@ layout(set = 0, binding = 0) readonly uniform UniformBufferObject {
 layout(push_constant) uniform constants
 {
   mat4 view;
-  vec3 view_position;
-  vec4 options;
+  vec4 view_position;
+  layout(offset = 80) uint env_options;
+  layout(offset = 96) uint options;
 } pc;
 
 layout(location = 0) in vec3 position;
@@ -111,5 +112,5 @@ void main()
     //fNormal = mat3(transpose(inverse(ubos[gl_InstanceIndex].model))) * normal;
     frag_var.frag_pos = vec3(ubos[gl_InstanceIndex].model * vec4(position, 1.0));
     frag_var.texture_coord = texture_coord;
-    frag_var.view_pos = pc.view_position;
+    frag_var.view_pos = vec3(pc.view_position);
 } 

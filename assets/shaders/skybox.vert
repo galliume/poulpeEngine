@@ -19,8 +19,9 @@ layout(location = 1) out vec3 view_pos;
 layout(std140, push_constant) uniform constants
 {
   mat4 view;
-  vec3 view_position;
-  vec4 options;
+  vec4 view_position;
+  layout(offset = 80) uint env_options;
+  layout(offset = 96) uint options;
 } pc;
 
 void main()
@@ -29,5 +30,5 @@ void main()
   //gl_Position = vec4(pos.xyz, 1.0);
   vec4 p = ubo.projection * pc.view * vec4(position, 1.0);
   gl_Position = p.xyww;
-  view_pos = pc.view_position - gl_Position.xyz;
+  view_pos = vec3(pc.view_position) - gl_Position.xyz;
 }
