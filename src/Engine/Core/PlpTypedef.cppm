@@ -29,6 +29,10 @@ namespace Poulpe
   export inline constexpr std::string PLP_WATER_NORMAL_1{ "_water_normal" };
   export inline constexpr std::string PLP_WATER_NORMAL_2{ "_water_normal2" };
 
+  export enum PLP_ENV_OPTIONS : std::uint32_t {
+    HAS_FOG = 1 << 0
+  };
+
   export struct CameraUBO {
     alignas(16) glm::mat4 view;
     alignas(16) glm::mat4 proj;
@@ -224,8 +228,9 @@ namespace Poulpe
   export struct constants
   {
     alignas(16) glm::mat4 view;
-    alignas(16) glm::vec3 view_position;
-    alignas(16) glm::vec4 options{ 0.0 };
+    alignas(16) glm::vec4 view_position;
+    alignas(16) std::uint32_t env_options{ 0 };
+    alignas(16) std::uint32_t options{ 0 };
   };
 
   export struct shadowMapConstants

@@ -94,6 +94,10 @@ namespace Poulpe
       _lvl_config["camera"][key] = data;
     });
 
+    if (_entity_config.contains("hasFog")) {
+      _lvl_config["hasFog"] = _entity_config.value("hasFog", false);
+    }
+
     std::ranges::for_each(_entity_config["entities"].items(), [&](auto const& entities) {
       auto const& textures = entities.value();
 

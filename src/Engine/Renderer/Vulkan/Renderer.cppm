@@ -97,7 +97,12 @@ namespace Poulpe
     VkShaderStageFlags stage_flag_bits;
     bool normal_debug{};
     bool has_alpha_blend {false};
+    std::uint32_t env_options{}; //env options, see below
   };
+
+  /** env options config :
+    HAS_FOG << 0
+  **/
 
   export enum class SHADOW_TYPE {
     SPOT_LIGHT,

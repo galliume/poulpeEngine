@@ -46,8 +46,9 @@ layout(set = 0, binding = 0) readonly uniform UniformBufferObject {
 layout(push_constant) uniform constants
 {
   mat4 view;
-  vec3 view_position;
-  vec4 options;
+  vec4 view_position;
+  layout(offset = 80) uint env_options;
+  layout(offset = 96) uint options;
 } pc;
 
 layout(binding = 1) uniform sampler2D tex_sampler[5];
@@ -127,7 +128,7 @@ void main()
 
   out_normal = normal;
   out_position = world_pos.xyz;
-  out_view_position = pc.view_position - out_position;
+  out_view_position = vec3(pc.view_position) - out_position;
   out_inverse_model = inverse(mat3(ubo.model));
   out_depth = -view_pos.z;
 

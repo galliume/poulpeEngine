@@ -22,6 +22,7 @@
       "z": -3.0
     }
   },
+  "hasFog": true,
   "entities": {
     "Sponza": {
       "mesh": "assets/mesh/Sponza/glTF/Sponza.gltf",

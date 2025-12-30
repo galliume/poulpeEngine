@@ -350,12 +350,14 @@ namespace Poulpe
     auto const& camera = renderer_info.camera;
     auto const pipeline = getPipeline(mesh->getShaderName());
 
-    constants push_constants{};
-    push_constants.options = mesh->getOptions();
-    push_constants.view_position = camera->getPos();
-    push_constants.view = renderer_info.camera_view;
+    constants push_constants {
+      .view = renderer_info.camera_view,
+      .view_position = glm::vec4(camera->getPos(), 1.0f),
+      .env_options = renderer_info.env_options,
+      .options = mesh->getOptions()
+    };
 
-    if ("skybox" == mesh->getName()) {
+    if (mesh->isSkybox()) {
       push_constants.view = glm::mat4(glm::mat3(camera->lookAt()));
     }
 
@@ -534,13 +536,12 @@ namespace Poulpe
     auto const& mesh = renderer_info.mesh;
     auto const& camera = renderer_info.camera;
 
-    glm::vec4 options{0.0f};
-    options.x = 50.f;
-
-    constants push_constants{};
-    push_constants.options = options;
-    push_constants.view_position = camera->getPos();
-    push_constants.view = renderer_info.camera_view;
+    constants const push_constants {
+      .view = renderer_info.camera_view,
+      .view_position = glm::vec4(camera->getPos(), 1.0f),
+      .env_options = renderer_info.env_options,
+      .options = mesh->getOptions()
+    };
 
     vkCmdPushConstants(
       cmd_buffer,

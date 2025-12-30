@@ -14,6 +14,8 @@
 #define HI_NOISE 5
 #define LOW_NOISE 6
 
+#define HAS_FOG 0 //(<< 0)
+
 struct Light {
   mat4 light_space_matrix;
   mat4 projection;
@@ -44,8 +46,9 @@ struct Light {
 layout(push_constant) uniform constants
 {
   mat4 view;
-  vec3 view_position;
-  vec4 options;
+  vec4 view_position;
+  layout(offset = 80) uint env_options;
+  layout(offset = 96) uint options;
 } pc;
 
 layout(location = 0) out vec4 final_color;
@@ -253,7 +256,7 @@ float CalculateInfiniteShadow(vec3 cascade_coord0, vec3 cascade_blend)
   p2.xy = shadow_coord2 + shadow_offset[1].zw;
   light2 += texture(csm, vec4(p2.xy, p2.z, depth2));
 
-  return (mix(light1, light2, weight) * 0.25);
+  return (mix(light2, light1, weight) * 0.25);
 }
 
 float ShadowCalculation(vec3 light_coord, Light l, float NdL)
@@ -397,8 +400,9 @@ void main()
   }
 
   vec4 color = vec4(C_ambient + C_sun + out_lights, 1.0);
-  //color.rgb = ApplyFog(color.rgb, v);
-
+  vec3 fog = ((pc.env_options >> HAS_FOG) & 1u) * ApplyFog(color.rgb, v);
+  color.rgb += fog;
+  
   //@todo check how to get the precise value
   float white_point = 350;
   final_color = vec4(0.0, 0.0, 0.0, 1.0);

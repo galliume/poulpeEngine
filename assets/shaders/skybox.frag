@@ -2,12 +2,22 @@
 #extension GL_ARB_separate_shader_objects : enable
 #extension GL_EXT_nonuniform_qualifier : enable
 
+#define HAS_FOG 0 //(<< 0)
+
 layout(location = 0) out vec4 final_color;
 
 layout(location = 0) in vec3 tex_coord;
 layout(location = 1) in vec3 view_pos;
 
 layout(binding = 1) uniform samplerCube texSampler[];
+
+layout(std140, push_constant) uniform constants
+{
+  mat4 view;
+  vec4 view_position;
+  layout(offset = 80) uint env_options;
+  layout(offset = 96) uint options;
+} pc;
 
 vec3 linear_to_hdr10(vec3 color, float white_point)
 {
@@ -56,7 +66,9 @@ vec3 ApplyFog(vec3 shadedColor, vec3 v)
 void main()
 {
   vec4 color = texture(texSampler[0], tex_coord);
-  //color.rgb = ApplyFog(color.rgb, view_pos);
+
+  vec3 fog = ((pc.env_options >> HAS_FOG) & 1u) * ApplyFog(color.rgb,view_pos);
+  color.rgb += fog;
 
   //@todo check how to get the precise value
   float white_point = 350;

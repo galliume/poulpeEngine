@@ -143,13 +143,12 @@ namespace Poulpe
       screen_height, 0.0f
     );
 
-    glm::vec4 options{ 0.0f };
+    std::uint32_t options{ 0 };
 
-    //@todo isFlat is not obvious
+    //@todo isFlat is not obvious as a name
     if (!isFlat()) {
       projection = renderer->getPerspective();
-
-      options.x = 1.0f;
+      options |= 1 << 0;
     }
 
     mesh->getMaterial().double_sided = true;

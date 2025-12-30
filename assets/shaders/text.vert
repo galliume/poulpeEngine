@@ -11,8 +11,9 @@ struct UBO
 layout(push_constant) uniform constants
 {
   mat4 view;
-  vec3 view_position;
-  vec4 options;
+  vec4 view_position;
+  layout(offset = 80) uint env_options;
+  layout(offset = 96) uint options;
 } pc;
 
 layout(set = 0, binding = 0) uniform UniformBufferObject {
@@ -32,7 +33,7 @@ void main()
   vec3 options = vec3(0.0, 0.0, 1.0);
   vec4 p = ubo.projection * vec4(position, 1.0);
   
-  if (pc.options.x > 0.5) {
+  if (bool((pc.options >> 0u) & 1u)) {
     options.x = 1.0;
     p = ubo.projection * pc.view * ubo.model * vec4(position, 1.0);
   }

@@ -108,6 +108,7 @@ namespace Poulpe
   private:
     std::string _current_level;
     std::string _current_skybox;
+    std::uint32_t _env_options {0};
 
     bool _is_loaded{ false };
     bool _refresh{ false };
