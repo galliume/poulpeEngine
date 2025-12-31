@@ -76,9 +76,9 @@ namespace Poulpe
     light.view = light.light_space_matrix;
 
     Light light2;
-    light2.color = glm::vec3(1.0f);
+    light2.color = glm::vec3(247.f / 255.f, 240.f / 255.f, 157.f / 255.f);
     //light2.position = glm::vec3(-1.2f, 0.1f, 0.4f);
-    light2.position = glm::vec3(5.f, 25.0f, 3.f);
+    light2.position = glm::vec3(117.f, 25.0f, -168.f);
     light2.direction = glm::vec3(0.0f, -1.0, 0.0);
     light2.ads = glm::vec3(1.2f, 1.2f, 1.4f);
     light2.clq = glm::vec3(1.0f, 0.7f, 1.8f);
@@ -154,7 +154,7 @@ namespace Poulpe
     center /= cascade_frustum.size();
 
     auto const M_light { glm::lookAt(
-        glm::vec3(center) - glm::normalize(_sun.direction),
+        glm::vec3(center) - glm::normalize(_sun.direction) * 100.0f,
         glm::vec3(center),
         glm::vec3(0.0f, 1.0f, 0.0f)) };
 

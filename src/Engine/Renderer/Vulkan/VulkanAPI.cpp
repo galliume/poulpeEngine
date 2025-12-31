@@ -3076,19 +3076,23 @@ VkSampler VulkanAPI::createTextureSampler(uint32_t const mip_lvl)
 
     std::vector<VkBufferImageCopy> buffer_copy_regions;
 
-    auto const layer_size{ image_size / ktx_texture->numFaces };
+    //auto const layer_size{ image_size / ktx_texture->numFaces };
 
-    for (uint32_t i { 0 }; i < ktx_texture->numFaces; i++) {
-      for (uint32_t mip{ 0 }; mip < mip_lvl; mip++) {
+    for (std::uint32_t mip { 0 }; mip < ktx_texture->numLevels; mip++) {
+      for (std::uint32_t face { 0 }; face < ktx_texture->numFaces; face++) {
+        ktx_size_t offset;
+        ktxTexture_GetImageOffset(ktxTexture(ktx_texture), mip, 0, face, &offset);
+
         VkBufferImageCopy region{};
-        region.bufferOffset = layer_size * i;
+        region.bufferOffset = offset;
         region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
         region.imageSubresource.mipLevel = mip;
-        region.imageSubresource.baseArrayLayer = i;
+        region.imageSubresource.baseArrayLayer = face;
         region.imageSubresource.layerCount = 1;
-        region.imageExtent.width =  width >> mip;
-        region.imageExtent.height = height >> mip;
-        region.imageExtent.depth = 1;
+        
+        region.imageExtent.width  = std::max(1u, ktx_texture->baseWidth >> mip);
+        region.imageExtent.height = std::max(1u, ktx_texture->baseHeight >> mip);
+        region.imageExtent.depth  = 1;
 
         buffer_copy_regions.emplace_back(region);
       }
@@ -3102,7 +3106,7 @@ VkSampler VulkanAPI::createTextureSampler(uint32_t const mip_lvl)
       static_cast<uint32_t>(buffer_copy_regions.size()),
       buffer_copy_regions.data());
 
-    generateMipmaps(cmd_buffer, format, image, width, height, mip_lvl);
+    //generateMipmaps(cmd_buffer, format, image, width, height, mip_lvl);
 
     endCommandBuffer(cmd_buffer);
     queueSubmit(cmd_buffer);
@@ -3177,7 +3181,8 @@ VkSampler VulkanAPI::createTextureSampler(uint32_t const mip_lvl)
   VkSampler VulkanAPI::createKTXSampler(
     TextureWrapMode const wrap_mode_u,
     TextureWrapMode const wrap_mode_v,
-    uint32_t const mip_lvl)
+    uint32_t const,
+    bool const compare_enable)
   {
     VkSampler texture_sampler{};
 
@@ -3192,15 +3197,15 @@ VkSampler VulkanAPI::createTextureSampler(uint32_t const mip_lvl)
     sampler_info.addressModeV = mode_v;
     sampler_info.addressModeW = mode_v;
     sampler_info.unnormalizedCoordinates = VK_FALSE;
-    sampler_info.compareEnable = VK_TRUE;
+    sampler_info.compareEnable = compare_enable;
     sampler_info.compareOp = VK_COMPARE_OP_LESS;
     sampler_info.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
     sampler_info.minLod = 0.0f;
-    sampler_info.maxLod = static_cast<float>(mip_lvl);//@todo check why float ? is this really mip_lvl ?
+    sampler_info.maxLod = VK_LOD_CLAMP_NONE;
     sampler_info.mipLodBias = 0.0f;
     sampler_info.borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE;
-    sampler_info.anisotropyEnable = VK_FALSE;
-    sampler_info.maxAnisotropy = 1;
+    sampler_info.anisotropyEnable = VK_TRUE;
+    sampler_info.maxAnisotropy = 16.0f;
 
     if (vkCreateSampler(_device, & sampler_info, nullptr, & texture_sampler) != VK_SUCCESS) {
       throw std::runtime_error("failed to create texture sampler!");

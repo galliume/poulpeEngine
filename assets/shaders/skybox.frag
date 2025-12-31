@@ -56,7 +56,7 @@ vec3 srgb_to_linear(vec3 color)
 
 vec3 ApplyFog(vec3 shadedColor, vec3 v)
 {
-  float fogDensity = 0.001;
+  float fogDensity = 0.009;
   vec3 fogColor = vec3(0.55, 0.63, 0.72);
 
   float f = exp(-fogDensity * length(v));
@@ -70,6 +70,7 @@ void main()
   vec3 fog = ((pc.env_options >> HAS_FOG) & 1u) * ApplyFog(color.rgb,view_pos);
   color.rgb += fog;
 
+  //color *= 0.05;
   //@todo check how to get the precise value
   float white_point = 350;
   final_color = vec4(0.0, 0.0, 0.0, 1.0);

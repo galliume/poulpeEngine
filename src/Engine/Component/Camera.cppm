@@ -43,6 +43,8 @@ namespace Poulpe
           _pos_rendered = glm::mix(_pos_previous, _pos, alpha);
       }
 
+    std::vector<glm::vec4> getFrustumPlanes(glm::mat4 const vp);
+
   private:
     glm::vec3 mat4_backward();
     glm::vec3 mat4_down();

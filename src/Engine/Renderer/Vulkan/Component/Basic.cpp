@@ -151,7 +151,15 @@ namespace Poulpe
     ComponentRenderingInfo const& component_rendering_info)
   {
     auto const& mesh = component_rendering_info.mesh;
-    Texture tex { getTexture(component_rendering_info, mesh->getData()->_textures.at(0)) };
+
+    auto const & main_texture_name {
+      (!mesh->getData()->_base_color.empty()
+      && mesh->getData()->_base_color != PLP_EMPTY)
+        ? mesh->getData()->_base_color
+        : mesh->getData()->_textures.at(0)
+    };
+
+    Texture tex { getTexture(component_rendering_info, main_texture_name) };
     tex.setSampler(renderer->getAPI()->createKTXSampler(
       mesh->getMaterial().texture_diffuse_wrap_mode_u,
       mesh->getMaterial().texture_diffuse_wrap_mode_v,
@@ -165,8 +173,8 @@ namespace Poulpe
 
     Texture texture_bump{ getTexture(component_rendering_info, mesh->getData()->_bump_map) };
       texture_bump.setSampler(renderer->getAPI()->createKTXSampler(
-      mesh->getMaterial().texture_bump_wrap_mode_u,
-      mesh->getMaterial().texture_bump_wrap_mode_v,
+      TextureWrapMode::WRAP,
+      TextureWrapMode::WRAP,
       1));
 
     if (texture_bump.getWidth() == 0) {
@@ -213,15 +221,15 @@ namespace Poulpe
       texture_ao = component_rendering_info.textures.at(PLP_EMPTY);
     }
 
-    Texture texture_base_color { getTexture(component_rendering_info, mesh->getData()->_base_color) };
-    texture_base_color.setSampler(renderer->getAPI()->createKTXSampler(
-    mesh->getMaterial().texture_base_color_wrap_mode_u,
-    mesh->getMaterial().texture_base_color_wrap_mode_v,
-    texture_base_color.getMipLevels()));
+    // Texture texture_base_color { getTexture(component_rendering_info, mesh->getData()->_base_color) };
+    // texture_base_color.setSampler(renderer->getAPI()->createKTXSampler(
+    // mesh->getMaterial().texture_base_color_wrap_mode_u,
+    // mesh->getMaterial().texture_base_color_wrap_mode_v,
+    // texture_base_color.getMipLevels()));
 
-    if (texture_base_color.getWidth() == 0) {
-      texture_base_color = component_rendering_info.textures.at(PLP_EMPTY);
-    }
+    // if (texture_base_color.getWidth() == 0) {
+    //   texture_base_color = component_rendering_info.textures.at(PLP_EMPTY);
+    // }
 
     //VkDescriptorImageInfo shadowMapSpot{};
     //shadowMapSpot.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;

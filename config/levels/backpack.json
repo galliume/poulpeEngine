@@ -22,6 +22,7 @@
       "z": -3.0
     }
   },
+  "hasFog" : false,
   "entities": {
     "backpack" : {
       "mesh": "assets/mesh/backpack/backpack.obj",

@@ -17,11 +17,12 @@
   },
   "camera": {
     "position": {
-      "x": -570.0,
+      "x": 0.0,
       "y": 50.0,
-      "z": 280.0
+      "z": 0.0
     }
   },
+  "hasFog" : false,
   "entities": {
     "DamagedHelmet": {
       "mesh": "assets/mesh/DamagedHelmet/glTF/DamagedHelmet.gltf",

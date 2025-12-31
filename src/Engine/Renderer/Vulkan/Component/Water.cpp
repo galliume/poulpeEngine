@@ -136,8 +136,8 @@ void Water::operator()(
 
     Texture texture_normal{ component_rendering_info.textures.at(PLP_WATER_NORMAL_1) };
       texture_normal.setSampler(renderer->getAPI()->createKTXSampler(
-      mesh->getMaterial().texture_bump_wrap_mode_u,
-      mesh->getMaterial().texture_bump_wrap_mode_v,
+      TextureWrapMode::WRAP,
+      TextureWrapMode::WRAP,
       1));
 
     if (texture_normal.getWidth() == 0) {
@@ -146,8 +146,8 @@ void Water::operator()(
 
     Texture texture_normal2{ component_rendering_info.textures.at(PLP_WATER_NORMAL_2) };
       texture_normal2.setSampler(renderer->getAPI()->createKTXSampler(
-      mesh->getMaterial().texture_bump_wrap_mode_u,
-      mesh->getMaterial().texture_bump_wrap_mode_v,
+      TextureWrapMode::WRAP,
+      TextureWrapMode::WRAP,
       1));
 
     if (texture_normal2.getWidth() == 0) {

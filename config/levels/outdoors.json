@@ -130,34 +130,43 @@
       "debugNormal": true,
       "defaultAnim": 1
     },
-    "Shine_Sprite": {
-      "mesh": "assets/mesh/Shine_Sprite.gltf",
+    "Lantern": {
+      "mesh": "assets/mesh/Lantern/glTF/Lantern.gltf",
       "textures": {
+        "Lantern_baseColor" : {
+          "path" : "assets/mesh/Lantern/glTF/Lantern_baseColor.ktx2"
+        }
       },
       "ao": {
       },
       "mr": {
-
+        "Lantern_roughnessMetallic" : {
+          "path" : "assets/mesh/Lantern/glTF/Lantern_roughnessMetallic.ktx2"
+        }
       },
       "emissive": {
-
+        "Lantern_emissive" : {
+          "path" : "assets/mesh/Lantern/glTF/Lantern_emissive.ktx2"
+        }
       },
       "normal": {
-
+        "Lantern_normal" : {
+          "path" : "assets/mesh/Lantern/glTF/Lantern_normal.ktx2"
+        }
       },
       "shader": "main_basic",
       "positions": [
         {
           "x": 127.0,
-          "y": 20.0,
+          "y": 7.0,
           "z": -168.0
         }
       ],
       "scales": [
         {
-          "x": 5.0,
-          "y": 5.0,
-          "z": 5.0
+          "x": 1.0,
+          "y": 1.0,
+          "z": 1.0
         }
       ],
       "rotations": [

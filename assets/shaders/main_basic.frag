@@ -4,7 +4,19 @@
 
 #define TEXTURE_COUNT 8
 
+//env options
 #define HAS_FOG 0 //(<< 0)
+#define HAS_IRRADIANCE 1
+
+//mesh options
+#define HAS_BASE_COLOR 0
+#define HAS_SPECULAR 1
+#define HAS_NORMAL 2
+#define HAS_ALPHA 3
+#define HAS_MR 4
+#define HAS_EMISSIVE 5
+#define HAS_AO 6
+#define HAS_TRANSMISSION 7
 
 //texture map index
 #define DIFFUSE_INDEX 0
@@ -40,7 +52,8 @@ layout(location = 0) in FRAG_VAR {
   vec3 norm;
   vec4 color;
   mat3 TBN;
-  vec4 light_space;
+  float tangent_w;
+  mat4 sun_light;
   mat4 model;
   vec4 cascade_coord;
   float depth;
@@ -115,7 +128,7 @@ layout(binding = 2) readonly buffer ObjectBuffer {
 
 layout(binding = 3) uniform samplerCubeShadow tex_shadow_sampler;
 
-layout(binding = 4) uniform samplerCube cube_maps[1];
+layout(binding = 4) uniform samplerCube env_sampler[];
 
 layout(binding = 5) readonly buffer LightObjectBuffer {
   Light sun_light;
@@ -235,6 +248,8 @@ float CalculateInfiniteShadow(vec3 cascade_coord0, vec3 cascade_blend)
 
   float depth1 = (beyond_cascade2) ? cascade_coord2.z : cascade_coord0.z;
   float depth2 = (beyond_cascade3) ? clamp(cascade_coord3.z, 0.0, 1.0) : cascade_coord1.z;
+  depth1 += 0.0001;
+  depth2 += 0.0001;
 
   vec3 blend = clamp(cascade_blend, 0.0, 1.0);
   float weight = (beyond_cascade2) ? blend.y - blend.z : 1.0 - blend.x;
@@ -288,10 +303,15 @@ vec2 transform_uv(vec3 t, vec3 s, vec3 r, vec2 c)
 
 vec3 FresnelSchlick(float cosTheta, vec3 F0)
 {
-  // vec3 F = F0 + (F90 - F0) * pow(max(1.0 - NdH, 0.0001), 1/P);
-
-  // return F;
   return F0 + (1.0 - F0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0);
+}
+
+vec3 FresnelSchlickRoughness(float cosTheta, vec3 F0, float roughness)
+{
+  float P = 5.0;
+  vec3 F = F0 + (max(vec3(1.0 - roughness), F0) - F0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), P);
+
+  return F;
 }
 
 float ReflectionBounce(vec3 F0)
@@ -363,22 +383,21 @@ vec3 Diffuse(vec3 diffuse, vec3 F0, float NdL, float NdV)
   return (21.0 / (20.0 * PI)) * (1.0 - F0) * diffuse * a * b;
 }
 
-vec3 ApplyFog(vec3 shadedColor, vec3 v)
+vec3 ApplyFog(vec3 shaded_color, vec3 v, float height)
 {
-  float fogDensity = 0.001;
-  vec3 fogColor = vec3(0.4, 0.45, 0.5);
+  float fog_density = 0.09;
+  float height_falloff = 0.4;
+  vec3 fog_color = vec3(0.4, 0.45, 0.5);
 
-  float f = exp(-fogDensity * length(v));
-  return (mix(fogColor, shadedColor, f));
+  float f = exp(-fog_density * length(v) * exp(-height_falloff * height));
+  return (mix(fog_color, shaded_color, f));
 }
 
 void main()
 {
-  vec4 alpha_color = texture(tex_sampler[ALPHA_INDEX], var.texture_coord);
-  ivec2 alpha_size = textureSize(tex_sampler[ALPHA_INDEX], 0);
-
-  if (alpha_size.x != 1 && alpha_size.y != 1) {
-    if (material.alpha.x == 1.0 && alpha_color.r < material.alpha.y) discard;
+  if (bool((pc.options >> HAS_ALPHA) & 1u) && material.alpha.x == 1.0) {
+    vec4 alpha_color = texture(tex_sampler[ALPHA_INDEX], var.texture_coord);
+    if (alpha_color.r < material.alpha.y) discard;
   }
 
   vec2 normal_coord = transform_uv(
@@ -387,18 +406,19 @@ void main()
     material.normal_rotation,
     var.texture_coord);
 
+  vec3 N_local = normalize(var.norm);
+  vec3 T_local = normalize(var.TBN[0]);
+  T_local = normalize(T_local - dot(T_local, N_local) * N_local);
+  vec3 B_local = cross(N_local, T_local) * var.tangent_w;
+  mat3 pureTBN = mat3(T_local, B_local, N_local);
+
   vec2 xy = texture(tex_sampler[NORMAL_INDEX], normal_coord).rg * 2.0 - 1.0;
-  //xy.y = -xy.y;
-  float z = sqrt(max(0.001, 1.0 - dot(xy, xy)));
-  vec3 normal = normalize(vec3(xy, z));
-  normal = normalize(var.TBN * normal);
+  xy.y = -xy.y;
+  float z = sqrt(max(0.0, 1.0 - dot(xy, xy)));
+  vec3 texture_normal = pureTBN * vec3(xy, z);
 
-  //@todo use bitmask
-  ivec2 normal_size = textureSize(tex_sampler[NORMAL_INDEX], 0);
-  if (normal_size.x <= 2.0) {
-    normal = var.norm;
-  }
-
+  float has_normal = ((pc.options >> HAS_NORMAL) & 1u);
+  vec3 normal = mix(var.norm, texture_normal, has_normal);
   normal = normalize(normal);
 
   vec2 mr_coord = transform_uv(
@@ -407,36 +427,33 @@ void main()
     material.mr_rotation,
     var.texture_coord);
 
-  vec3 metal_roughness = texture(tex_sampler[METAL_ROUGHNESS_INDEX], mr_coord).rgb;
-  float metallic = metal_roughness.x * material.mre_factor.b;
-  float roughness = max(metal_roughness.y * material.mre_factor.g, 0.04);
+  float metallic = material.mre_factor.x;
+  float roughness = material.mre_factor.y;
 
-  // ivec2 mr_size = textureSize(tex_sampler[METAL_ROUGHNESS_INDEX], 0);
-  // if (mr_size.x <= 2.0) {
-  //   //metallic = material.mre_factor.x;
-  //   //roughness = material.mre_factor.y;
-  // }
-
-  vec2 transmission_coord = transform_uv(
-    material.transmission_translation,
-    material.transmission_scale,
-    material.transmission_rotation,
-    var.texture_coord);
-
-  vec2 transmission = texture(tex_sampler[TRANSMISSION_INDEX], transmission_coord).bg;
-  transmission.xy *= material.strength.z;
-
-  ivec2 transmission_size = textureSize(tex_sampler[TRANSMISSION_INDEX], 0);
-  if (transmission_size.x <= 2.0) {
-    transmission = vec2(1.0) * material.strength.z;
+  if (bool((pc.options >> HAS_MR) & 1u)) {
+    vec3 mr = texture(tex_sampler[METAL_ROUGHNESS_INDEX], mr_coord).rgb;
+    metallic = mr.b;
+    roughness = mr.g;
   }
 
-  float ao = texture(tex_sampler[AO_INDEX], var.texture_coord).r;
-  ivec2 ao_size = textureSize(tex_sampler[AO_INDEX], 0);
-  if (ao_size.x < 2.0) {
-    ao = 0.1;
+  roughness = max(roughness, 0.04);
+
+  // vec2 transmission_coord = transform_uv(
+  //   material.transmission_translation,
+  //   material.transmission_scale,
+  //   material.transmission_rotation,
+  //   var.texture_coord);
+
+  // vec2 transmission = texture(tex_sampler[TRANSMISSION_INDEX], transmission_coord).bg;
+  // transmission.xy *= material.strength.z;
+  // transmission *= float((pc.options >> HAS_TRANSMISSION) & 1u);
+
+  float ao = material.strength.y;
+  if (bool((pc.options >> HAS_AO) & 1u))
+  {
+    float ao_rate = texture(tex_sampler[AO_INDEX], var.texture_coord).r;
+    ao = ao_rate;
   }
-  ao *= material.strength.y;//occlusion strength
 
   vec2 diffuse_coord = transform_uv(
     material.diffuse_translation,
@@ -444,33 +461,23 @@ void main()
     material.diffuse_rotation,
     var.texture_coord);
 
-  vec4 albedo = texture(tex_sampler[DIFFUSE_INDEX], diffuse_coord);
-  //albedo.xyz = srgb_to_linear(albedo.xyz);
-  albedo.xyz = albedo.xyz;
-
-  float color_alpha = albedo.a;
+  float has_base_color = ((pc.options >> HAS_BASE_COLOR) & 1u);
+  vec4 C_diffuse = mix(material.base_color, texture(tex_sampler[DIFFUSE_INDEX], diffuse_coord), has_base_color);
+  float color_alpha = C_diffuse.a;
 
   if (material.alpha.x == 1.0 && color_alpha < material.alpha.y) discard;
   if (material.base_color.a < material.alpha.y) discard;
-
-  albedo *= material.base_color * var.color;
-  ivec2 albedo_size = textureSize(tex_sampler[DIFFUSE_INDEX], 0);
-  if (albedo_size.x == 1 && albedo_size.y == 1) {
-    albedo = material.base_color * var.color;
-  }
 
   vec3 p = var.frag_pos;
   vec3 v = var.view_pos;
   vec3 V = normalize(v);
 
-  //vec3 irradiance = texture(cube_maps[ENVIRONMENT_MAP_INDEX], normal).rgb;
-  vec3 F0 = mix(vec3(0.04), albedo.xyz, metallic);
+  vec3 F0 = mix(vec3(0.04), C_diffuse.xyz, metallic);
 
-  vec4 C_diffuse = albedo;
-  vec4 C_specular = material.specular;
-
-  //@todo looks good but is it ok?
-  float P = material.mre_factor.y;// * (1.0 - roughness);
+  // vec4 C_specular = material.specular;
+  // if (bool((pc.options >> HAS_SPECULAR) & 1u)) {
+  //   C_specular = texture(tex_sampler[SPECULAR_INDEX], var.texture_coord);
+  // };
 
   vec3 out_lights = vec3(0.0);
 
@@ -499,19 +506,34 @@ void main()
   vec3 kD = vec3(1.0) - F;
   kD *= 1.0 - metallic;
 
-  vec3 diffuse = C_diffuse.xyz;
-  vec3 specular = (D * G * F) / ((4.0 * NdL * NdV));
+  vec3 numerator    = D * G * F;
+  float denominator = 4.0 * max(NdV, 0.04) * max(NdL, 0.04);
+  vec3 specular     = numerator / denominator;
   specular = clamp(specular, 0.0, 10.0);
   vec3 radiance = sun_light.color.rgb;
-  vec3 C_sun = (kD * (albedo.rgb / PI) + specular) * radiance * NdL;
 
   vec3 csm_coords = var.cascade_coord.xyz / var.cascade_coord.w;
   float csm_shadow = CalculateInfiniteShadow(csm_coords, var.blend);
-  C_sun *= csm_shadow;
+  vec3 C_sun = (kD * (C_diffuse.rgb / PI) + specular) * radiance * NdL * csm_shadow;
 
-  vec3 C_ambient = albedo.xyz * ao * 0.01;
+  vec3 kS_amb = FresnelSchlickRoughness(max(dot(normal, V), 0.0), F0, roughness);
+  vec3 kD_amb = (1.0 - kS_amb) * (1.0 - metallic);
 
-  for (int i = 1; i < NR_POINT_LIGHTS; ++i) {
+  vec3 diff_irradiance = vec3(0.0);
+  vec3 spec_irradiance = vec3(0.0);
+
+  if (bool((pc.env_options >> HAS_IRRADIANCE) & 1u))
+  {
+    float lod = 9.0;
+    vec3 r = reflect(-V, normal);
+    diff_irradiance = textureLod(env_sampler[ENVIRONMENT_MAP_INDEX], normal, lod).rgb;
+    spec_irradiance = textureLod(env_sampler[ENVIRONMENT_MAP_INDEX], r, roughness * lod).rgb;
+    //irradiance = srgb_to_linear(irradiance);
+  }
+  
+  vec3 C_ambient = ((kD_amb * C_diffuse.rgb * diff_irradiance) + (kS_amb * spec_irradiance)) * ao * NdV;
+
+  for (int i = 0; i < NR_POINT_LIGHTS; ++i) {
 
     vec3 light_pos = point_lights[i].position;
     vec3 l = light_pos - p;
@@ -521,7 +543,7 @@ void main()
     float attenuation = InverseSquareAttenuation(l);
     //float attenuation = 1.0 / (point_lights[i].clq.x + point_lights[i].clq.y * d + point_lights[i].clq.z * (d * d));
     //vec3 C_light = srgb_to_linear(point_lights[i].color.rgb) * attenuation;
-    vec3 C_light = point_lights[i].color.rgb * attenuation;
+    vec3 C_light = vec3(1.0f) * attenuation;
 
     vec3 L = normalize(normalize(l));
     vec3 H = normalize(V + L);
@@ -535,7 +557,7 @@ void main()
     float G = SmithGeometryGGX(roughness, NdV) * SmithGeometryGGX(roughness, NdL);
 
     vec3 numerator    = D * G * F;
-    float denominator = 4.0 * max(NdV, 0.001) * max(NdL, 0.001) + 0.0001;
+    float denominator = 4.0 * max(NdV, 0.04) * max(NdL, 0.04);
     vec3 specular     = numerator / denominator;
     specular = clamp(specular, 0.0, 10.0);
 
@@ -543,14 +565,18 @@ void main()
     vec3 kD = vec3(1.0) - kS;
     kD *= 1.0 - metallic;
 
-    vec3 curr = (kD * diffuse + specular) * C_light * NdL;
+    vec3 curr = (kD * (C_diffuse.rgb) + specular) * C_light * NdL;
 
-    vec3 frag_to_light = p - point_lights[i].position;
-    float shadow = ShadowCalculation(frag_to_light, point_lights[i], NdL);
-    curr *= shadow;
+    if (i == 1) {
+      vec3 frag_to_light = p - point_lights[i].position;
+      float shadow = ShadowCalculation(frag_to_light, point_lights[i], NdL);
+      curr *= max(shadow, 0.1);
+    }
     out_lights += curr;
   }
 
+  // C_sun *= 0.05;
+  // C_ambient *= 0.05;
   vec4 color = vec4(C_ambient + C_sun + out_lights, color_alpha);
   //color.xyz *= PI;
   
@@ -561,18 +587,13 @@ void main()
     var.texture_coord);
 
   vec4 emissive_color = texture(tex_sampler[EMISSIVE_INDEX], emissive_coord);
-  //emissive_color.xyz = srgb_to_linear(emissive_color.xyz);
-  emissive_color.xyz = emissive_color.xyz;
 
-  ivec2 emissive_color_size = textureSize(tex_sampler[EMISSIVE_INDEX], 0);
-  if (emissive_color_size.x != 1 && emissive_color_size.y != 1) {
-    color += material.mre_factor.z * emissive_color;
-    color += color * (material.mre_factor.z * material.emissive_color);
-  }
+  vec3 emissive = ((pc.options >> HAS_EMISSIVE) & 1u) * emissive_color.xyz;
+  emissive *= material.mre_factor.z * 10;
+  color.rgb += emissive;
 
-  vec3 fog = ((pc.env_options >> HAS_FOG) & 1u) * ApplyFog(color.rgb, v);
-  color.rgb += fog;
-
+  float has_fog = ((pc.env_options >> HAS_FOG) & 1u);
+  color.rgb = mix(color.rgb, ApplyFog(color.rgb, v, p.y), has_fog);
 //
 //  color.r = linear_to_sRGB(color.r);
 //  color.g = linear_to_sRGB(color.g);
@@ -581,13 +602,16 @@ void main()
   //final_color = color;
   //@todo check how to get the precise value
   float white_point = 350;
-  final_color = vec4(0.0, 0.0, 0.0, 1.0);
+  final_color = vec4(0.0, 0.0, 0.0, color_alpha);
   final_color.rgb = linear_to_hdr10(color.rgb, white_point);
   if (material.alpha.x == 2.0) {
     final_color = vec4(linear_to_hdr10(color.rgb, white_point), color_alpha);
   }
-  float exposure = 2.0;
-  final_color.rgb = vec3(1.0) - exp(-final_color.rgb * exposure);
+      vec3 r = reflect(-V, normal);
+
+  //float exposure = 1.0;
+  //final_color.rgb = vec3(1.0) - exp(-final_color.rgb * exposure);
+  //final_color = vec4(normal * 0.5 + 0.5, 1.0);
 //final_color *= var.env_options;
   //final_color.rgb = vec3(csm_coords.x, csm_coords.y, 0.0f);
 }

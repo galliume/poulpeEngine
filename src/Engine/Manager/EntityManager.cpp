@@ -130,7 +130,7 @@ namespace Poulpe
       }
     }
 
-    if (raw_data.contains("ao")) {
+    if (raw_data.contains("emissive")) {
       for (auto& [keyTex, pathTex] : raw_data["emissive"].items()) {
         textures.emplace_back(keyTex);
       }
@@ -193,6 +193,8 @@ namespace Poulpe
       std::string name_texture_transmission{ PLP_EMPTY };
       float alpha_mode{ 0.0 };
 
+      std::uint32_t options {0};
+
       if (!materials.empty()) {
 
         auto const& mat = materials.at(_data.material_ID);
@@ -207,37 +209,50 @@ namespace Poulpe
 
         if (!tex1.name_texture_ambient.empty()) {
           name_texture = tex1.name_texture_ambient;
+          options |= PLP_MESH_OPTIONS::HAS_BASE_COLOR;
         } else if (!tex1.name_texture_diffuse.empty()) {
           name_texture = tex1.name_texture_diffuse;
+          options |= PLP_MESH_OPTIONS::HAS_BASE_COLOR;
         }
-
 
         if (!mat.name_texture_specular.empty()) {
           name_specular_map = mat.name_texture_specular;
+          options |= PLP_MESH_OPTIONS::HAS_SPECULAR;
         }
 
         if (!mat.name_texture_bump.empty()) {
           name_bump_map = mat.name_texture_bump;
+          options |= PLP_MESH_OPTIONS::HAS_NORMAL;
         }
 
         if (!mat.name_texture_alpha.empty()) {
           name_alpha_map = mat.name_texture_alpha;
+          options |= PLP_MESH_OPTIONS::HAS_ALPHA;
         }
 
         if (!mat.name_texture_metal_roughness.empty()) {
           name_texture_metal_roughness = mat.name_texture_metal_roughness;
+          options |= PLP_MESH_OPTIONS::HAS_MR;
         }
+
         if (!mat.name_texture_emissive.empty()) {
           name_texture_emissive = mat.name_texture_emissive;
+          options |= PLP_MESH_OPTIONS::HAS_EMISSIVE;
         }
+
         if (!mat.name_texture_ao.empty()) {
           name_texture_ao = mat.name_texture_ao;
+          options |= PLP_MESH_OPTIONS::HAS_AO;
         }
+
         if (!mat.name_texture_base_color.empty()) {
           name_texture_base_color = mat.name_texture_base_color;
+          options |= PLP_MESH_OPTIONS::HAS_BASE_COLOR;
         }
+
         if (!mat.name_texture_transmission.empty()) {
           name_texture_transmission = mat.name_texture_transmission;
+          options |= PLP_MESH_OPTIONS::HAS_TRANSMISSION;
         }
       }
 
@@ -302,7 +317,7 @@ namespace Poulpe
 
       mesh->setData(data);
       mesh->bbox(true);
-
+      mesh->setOptions(options);
       bool const is_last{ (_data.id == 0) ? true : false };
 
       auto* entity = new Entity();
