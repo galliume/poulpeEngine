@@ -103,7 +103,7 @@ void main()
 
   //p.y += 5.f;
 
-  float L = 12.0f;
+  float L = 2.0f;
   float A = 0.01 * L;
   const float g = 9.81f;
   float w = 2.0f / L;
@@ -111,8 +111,8 @@ void main()
   float L_pic = w_pic / 2.0f;
   float A_pic = 0.1f * L_pic;
   //float w = sqrt(9.8 * ((2.0 * PI) / L));
-  float S = 5.0f; //m/s
-  float t = pc.options;
+  float S = 10.0f; //m/s
+  float t = uintBitsToFloat(pc.options);
 
   vec3 bi = vec3(0.0);
   vec3 ta = vec3(0.0);
@@ -123,13 +123,16 @@ void main()
   float previous_dx = 0.0;
   vec4 displacement = vec4(0.0, 0.0, 0.0, 1.0);
 
-  float steepness = 2.5;
+  float steepness = 0.4;
   float steepness_factor = 0.66;
-  float A_factor = 0.82;
-  float w_factor = 1.18;
+  float A_factor = 0.5;
+  float w_factor = 1.5;
   float l_factor = 0.75;
 
-  const int waves_count = 16;
+  vec2 main_dir = vec2(0.0, 1.0); 
+  float spread = 0.5;
+
+  const int waves_count = 32;
   for (int i = 0; i < waves_count; i++) {
     //speed
     //S *= A/A_pic;
@@ -137,8 +140,11 @@ void main()
 
     //direction
     seed = fract(sin(seed * 43758.5453 + i) * 43758.5453);
-    float angle = seed * 2.0f*PI;
-    vec2 D = vec2(cos(angle), sin(angle));
+    float angle = (seed - 0.5) * spread;
+    vec2 D = normalize(vec2(
+        main_dir.x * cos(angle) - main_dir.y * sin(angle),
+        main_dir.x * sin(angle) + main_dir.y * cos(angle)
+    ));
 
     //phase
     float phase = seed * (2.0 * PI);
@@ -179,17 +185,18 @@ void main()
 
   p.y += 2.0f + displacement.y;
 
-  mat4 trans_model = transpose(inverse(ubo.model));
-  vec3 bitangent = normalize(trans_model * vec4(1.0 - bi.x, bi.y, -bi.z, 1.0)).xyz;
-  vec3 tangent = normalize(trans_model * vec4(-ta.x, ta.y, 1.0 - ta.z, 1.0)).xyz;
-  vec3 N = normalize(trans_model * vec4(-n.x, 1.0 - n.y, -n.z, 1.0)).xyz;
-  //vec3 N = normalize(cross(tangent, bitangent));
+  vec3 base_bitangent = vec3(1.0, 0.0, 0.0);
+  vec3 base_tangent    = vec3(0.0, 0.0, 1.0);
 
-  mat3 TBN = mat3(tangent, bitangent, N);
+  // Modify them based on the Gerstner derivatives
+  vec3 binormal = vec3(1.0 - bi.x, bi.y, -bi.z);
+  vec3 tangent  = vec3(-ta.x, ta.y, 1.0 - ta.z);
 
-  out_TBN = TBN;
+  // Transformed into world space
+  out_normal = normalize(cross(tangent, binormal));
+  out_TBN = mat3(normalize(tangent), normalize(binormal), out_normal);
+
   out_position = (ubo.model * vec4(p.xyz, 1.0)).xyz;
-  out_normal = N;
   out_texture_coord = texCoord;
   out_view_position = vec3(pc.view_position) - out_position;
 

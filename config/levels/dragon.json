@@ -22,55 +22,56 @@
       "z": -3.0
     }
   },
-	"entities": {
-		"dragon" : {
-			"mesh": "assets/mesh/dragon/dragon.obj",
-			"textures": {
-			},
-			"mr": {
+  "hasFog" : false,
+  "entities": {
+    "dragon" : {
+      "mesh": "assets/mesh/dragon/dragon.obj",
+      "textures": {
+      },
+      "mr": {
 
-			},
-			"emissive": {
+      },
+      "emissive": {
 
-			},
-			"ao": {
+      },
+      "ao": {
 
-			},
-			"normal": {
+      },
+      "normal": {
 
-			},
-			"shader": "main_basic",
-			"positions": [
-				{
+      },
+      "shader": "main_basic",
+      "positions": [
+        {
           "x": 1.5,
           "y": 10.0,
           "z": -3.0
-				}
-			],
-			"scales": [
-				{
-					"x": 10.0,
-					"y": 10.0,
-					"z": 10.0
-				}
-			],
-			"rotations": [
-				{
-					"x": 0.0,
-					"y": 0.0,
-					"z": 0.0
-				}
-			],
-			"flipY": false,
-			"count": 1,
-			"hasBbox": false,
-			"hasAnimation": false,
-			"isPointLight": false,
-			"animationScripts": {
-			},
-			"hasShadow": true,
-			"isIndexed": true,
-			"debugNormal": true
-		}
-	}
+        }
+      ],
+      "scales": [
+        {
+          "x": 10.0,
+          "y": 10.0,
+          "z": 10.0
+        }
+      ],
+      "rotations": [
+        {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
+        }
+      ],
+      "flipY": false,
+      "count": 1,
+      "hasBbox": false,
+      "hasAnimation": false,
+      "isPointLight": false,
+      "animationScripts": {
+      },
+      "hasShadow": true,
+      "isIndexed": true,
+      "debugNormal": true
+    }
+  }
 }

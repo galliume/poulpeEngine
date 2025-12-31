@@ -577,7 +577,7 @@ namespace Poulpe
           Logger::warn("NO NORMAL");
         }
 
-        glm::vec4 tangent(0.f);
+        glm::vec4 tangent(1.0f, 0.0f, 0.0f, 1.0f);
         glm::vec4 bitangent(0.f);
 
         if (mesh->HasTangentsAndBitangents()) {
@@ -598,6 +598,8 @@ namespace Poulpe
               glm::vec3(bitangent.x, bitangent.y, bitangent.z)),
             vertex.normal) < 0.0f ? -1.0f : 1.0f;
             t = tangent;
+        } else {
+          //Logger::warn("No tangent, computing manually.");
         }
         vertex.tangent = tangent;
         //vertex.bitangent = bitangent;

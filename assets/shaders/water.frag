@@ -12,7 +12,22 @@
 #define NORMAL2_INDEX 3
 #define ENV_INDEX 5
 
-#define HAS_FOG 0
+//env options
+#define HAS_FOG 0 //(<< 0)
+#define HAS_IRRADIANCE 1
+
+//mesh options
+#define HAS_BASE_COLOR 0
+#define HAS_SPECULAR 1
+#define HAS_NORMAL 2
+#define HAS_ALPHA 3
+#define HAS_MR 4
+#define HAS_EMISSIVE 5
+#define HAS_AO 6
+#define HAS_TRANSMISSION 7
+
+//cube maps index
+#define ENVIRONMENT_MAP_INDEX 0
 
 struct Light {
   mat4 light_space_matrix;
@@ -55,7 +70,7 @@ layout(location = 8) in vec4 in_cascade_coord;
 layout(location = 12) in vec3 in_blend;
 
 layout(binding = 1) uniform sampler2D tex_sampler[5];
-layout(binding = 2) uniform samplerCube env_sampler[];
+layout(binding = 2) uniform samplerCube env_sampler[1];
 layout(binding = 3) readonly buffer LightObjectBuffer {
   Light sun_light;
   Light point_lights[NR_POINT_LIGHTS];
@@ -138,10 +153,15 @@ float LinearizeDepth(float depth)
 
 vec3 FresnelSchlick(float cosTheta, vec3 F0)
 {
-  // vec3 F = F0 + (F90 - F0) * pow(max(1.0 - NdH, 0.0001), 1/P);
-
-  // return F;
   return F0 + (1.0 - F0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0);
+}
+
+vec3 FresnelSchlickRoughness(float cosTheta, vec3 F0, float roughness)
+{
+  float P = 5.0;
+  vec3 F = F0 + (max(vec3(1.0 - roughness), F0) - F0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), P);
+
+  return F;
 }
 
 float ReflectionBounce(vec3 F0)
@@ -180,9 +200,8 @@ vec3 Diffuse(vec3 diffuse, vec3 F0, float NdL, float NdV)
 //https://blog.selfshadow.com/publications/blending-in-detail/
 vec3 blend_rnm(vec3 n1, vec3 n2)
 {
-  vec3 t = n1.xyz * vec3( 2,  2, 2) + vec3(-1, -1,  0);
-  vec3 u = n2.xyz * vec3(-2, -2, 2) + vec3( 1,  1, -1);
-  vec3 r = t * dot(t, u) - u * t.z;
+  float z_val = max(n1.z, 0.0001); 
+  vec3 r = n1 * dot(n1, n2) / z_val - n2;
   return normalize(r);
 }
 
@@ -208,13 +227,14 @@ float InverseSquareAttenuation(vec3 l)
   return max(atten_const.x * (atten_const.y / r2 - 1.0), 0.0001);
 }
 
-vec3 ApplyFog(vec3 shadedColor, vec3 v)
+vec3 ApplyFog(vec3 shaded_color, vec3 v, float height)
 {
-  float fogDensity = 0.001;
-  vec3 fogColor = vec3(0.4, 0.45, 0.5);
+  float fog_density = 0.009;
+  float height_falloff = 1.0;
+  vec3 fog_color = vec3(0.4, 0.45, 0.5);
 
-  float f = exp(-fogDensity * length(v));
-  return (mix(fogColor, shadedColor, f));
+  float f = exp(-fog_density * length(v) * exp(-height_falloff * height));
+  return (mix(fog_color, shaded_color, f));
 }
 
 float CalculateInfiniteShadow(vec3 cascade_coord0, vec3 cascade_blend)
@@ -309,9 +329,9 @@ float ShadowCalculation(vec3 light_coord, Light l, float NdL)
 
 void main()
 {
-  vec3 deep_color = vec3(0.02, 0.05, 0.12); 
-  vec3 shallow_color = vec3(0.3, 0.6, 0.65);
-  vec4 foam_color = vec4(1.0, 1.0, 1.0, 1.0);
+  vec3 deep_color = vec3(0.01, 0.02, 0.015);    // Near black-green
+  vec3 shallow_color = vec3(0.05, 0.08, 0.06); // Murky olive
+  vec4 foam_color = vec4(94/255, 112/255, 106/255, 1.0);
 
   ivec2 tex_size = textureSize(tex_sampler[DEPTH_INDEX], 0);
   vec2 depth_coord = vec2(gl_FragCoord.x, gl_FragCoord.y);
@@ -321,11 +341,15 @@ void main()
   float t = pc.options.x;
   vec2 foam_coord = in_texture_coord;
   vec2 scaledUVFoam = foam_coord;
-  vec2 scaledUV = foam_coord ;
+  vec2 scaledUV = foam_coord;
   float scroll = pc.options.x ;
 
-  float channelA = texture(tex_sampler[DIFFUSE_INDEX], scaledUVFoam - vec2(scroll, cos(foam_coord.x))).r;
-  float channelB = texture(tex_sampler[DIFFUSE_INDEX], scaledUVFoam * 0.5 + vec2(sin(foam_coord.y), scroll)).b;
+  vec2 scrollVec = vec2(scroll, scroll * 0.2); 
+  vec2 uv1 = scaledUV + scrollVec;
+  vec2 uv2 = scaledUV * 0.5 - scrollVec * 0.8;
+
+  float channelA = texture(tex_sampler[DIFFUSE_INDEX], uv1).r;
+  float channelB = texture(tex_sampler[DIFFUSE_INDEX], uv2).b;
 
   float mask = (channelA + channelB) * 0.95;
   mask = pow(mask, 2);
@@ -339,7 +363,7 @@ void main()
   float depth_factor = smoothstep(0.0, 10.0, depth_diff);
   //float foam_factor = smoothstep(0.0, 0.5, depth_diff);
 
-  vec4 color = vec4(mix(shallow_color, deep_color, depth_factor), 1.0);
+  vec4 color = vec4(mix(shallow_color, deep_color, depth_factor), 0.7);
 
   if(depth_diff < falloff_distance * edge_falloff)
   {
@@ -353,19 +377,17 @@ void main()
   vec3 edge = foam_color.rgb * fall_off * foam_color.a;
 
 //  //@todo do PBR for water ?
-  vec2 xy = texture(tex_sampler[NORMAL_INDEX], scaledUV - vec2(scroll, cos(foam_coord.x))).xy;
-  xy = xy.xy * 2.0 - 1.0;
-  float z = sqrt(1 - dot(xy, xy));
+  vec2 xy = texture(tex_sampler[NORMAL_INDEX], uv1).xy * 2.0 - 1.0;
+  float z = sqrt(max(0.0, 1.0 - dot(xy, xy)));
   vec3 normal1 = vec3(xy, z);
   normal1 = normalize(in_TBN * normal1);
 
-  vec2 xy2 = texture(tex_sampler[NORMAL2_INDEX], scaledUV + vec2(sin(foam_coord.y), scroll)).xy;
-  xy2 = xy2.xy * 2.0 - 1.0;
-  float z2 = sqrt(1 - dot(xy2, xy2));
+  vec2 xy2 = texture(tex_sampler[NORMAL2_INDEX], uv2).xy * 2.0 - 1.0;
+  float z2 = sqrt(max(0.0, 1.0 - dot(xy2, xy2)));
   vec3 normal2 = vec3(xy2, z2);
   normal2 = normalize(in_TBN * normal2);
 
-  vec3 normal = in_normal;//blend_rnm(normal1, normal2);
+  vec3 normal = blend_rnm(normal1, normal2);
 
   //@todo a point lights...
   //sun directionnal light
@@ -384,13 +406,17 @@ void main()
   float NdH = max(dot(normal, H), 0.0);
   float HdV = max(dot(H, V), 0.0);
 
-  color.rgb = color.rgb + (shallow_color * NdL * 0.5);
+  //color.rgb = color.rgb + (shallow_color * NdL * 0.5);
+
+  float foam_mask = clamp(fall_off - mask, 0.0, 1.0);
+  color.rgb = mix(foam_color.rgb, color.rgb, foam_mask);
+  //float final_roughness = mix(roughness, 0.8, foam_mask);
 
   vec3 F0 = vec3(0.02);
   vec3 F90 = vec3(1.0);
-  float metallic = 0.1; // Water is a dielectric
+  float metallic = 0.0; // Water is a dielectric
   float P = 1.0;
-  float roughness = 0.2; // Lower roughness for sharper reflections
+  float roughness = 0.25; // Lower roughness for sharper reflections
 
   float D = GGXDistribution(NdH, roughness);
   float G1 = SmithGeometryGGX(roughness, NdV);
@@ -400,10 +426,6 @@ void main()
   float f = ReflectionBounce(F0);
   vec3 F = FresnelSchlick(HdV, F0);
 
-  vec3 specular = (D * G * F) / (4.0 * NdV * NdL + 0.0001); // Specular BRDF
-  specular = clamp(specular, 0.0, 10.0);
-  vec3 diffuse = color.rgb; // Diffuse is the refracted color from below
-
   vec3 kD = vec3(1.0) - F;
   kD *= 1.0 - metallic;
 
@@ -411,17 +433,14 @@ void main()
   vec3 scaterring_coeff = vec3(0.003);
   vec3 extinct_coeff = absorption_coeff + scaterring_coeff;
   vec3 transmittance = exp(-depth_diff * extinct_coeff);
-
-  vec3 r = reflect(i, normalize(in_normal));
-  vec3 env_color = vec3(texture(env_sampler[0], r).rgb);
-
-  // Final color is a mix of reflected sky and refracted scene color, controlled by Fresnel
-  vec3 surface_color = mix(diffuse, env_color, F);
-
-  float d = length(sun_light.position - p) * length(sun_light.position - p);
-  //float d = 100000.0;//sun distance approx ?
+  
+  vec3 numerator    = D * G * F;
+  float denominator = 4.0 * max(NdV, 0.0) * max(NdL, 0.0) + 0.0001;
+  vec3 specular     = numerator / denominator;
+  specular = clamp(specular, 0.0, 10.0);
   vec3 radiance = sun_light.color.rgb;
-  vec3 C_sun = (kD * (diffuse / PI) + specular) * radiance * NdL;
+  vec3 C_sun = (kD * (deep_color / PI) + specular) * radiance * NdL;
+
   vec3 csm_coords = in_cascade_coord.xyz / in_cascade_coord.w;
   float csm_shadow = CalculateInfiniteShadow(csm_coords, in_blend);
   C_sun *= csm_shadow;
@@ -449,14 +468,14 @@ void main()
     float G = SmithGeometryGGX(roughness, NdV) * SmithGeometryGGX(roughness, NdL);
 
     vec3 numerator    = D * G * F;
-    float denominator = 4.0 * max(NdV, 0.001) * max(NdL, 0.001) + 0.0001;
+    float denominator = 4.0 * max(NdV, 0.0) * max(NdL, 0.0) + 0.0001;
     vec3 specular     = numerator / denominator;
     specular = clamp(specular, 0.0, 10.0);
 
     vec3 kD = vec3(1.0) - F;
     kD *= 1.0 - metallic;
 
-    vec3 curr = (kD * diffuse + specular) * C_light * NdL;
+    vec3 curr = (kD * deep_color + specular) * C_light * NdL;
 
     //@temp
     if(i == 1) {
@@ -501,19 +520,49 @@ void main()
 //  vec3 radiance =  light_color * 3.0;
 //
 //  vec3 C_sun = (kD * diffuse + specular) * radiance * NdL;
-  C_sun.rgb += clamp(edge - vec3(mask), 0.0, color.a);
-  vec3 C_ambient = vec3(0.03) * deep_color * 0.0;
+  //C_sun.rgb = mix(edge - vec3(mask), C_sun.rgb, color.a);
+  
+  // vec3 irradiance = vec3(1.0);
+
+  // if (bool((pc.env_options >> HAS_IRRADIANCE) & 1u))
+  // {
+  //   vec3 r = reflect(i, normalize(in_normal));
+  //   vec3 irradiance = texture(env_sampler[ENVIRONMENT_MAP_INDEX], r).rgb;
+  //   deep_color *= irradiance;
+  // }
+
+  // vec3 C_ambient = (kD * deep_color);
+  vec3 F_ambient = FresnelSchlickRoughness(max(dot(normal, V), 0.0), F0, roughness);
+  vec3 kS_amb = F_ambient;
+  vec3 kD_amb = (1.0 - kS_amb) * (1.0 - metallic);
+
+  vec3 diff_irradiance = vec3(1.0);
+  vec3 spec_irradiance = vec3(0.0);
+
+  if (bool((pc.env_options >> HAS_IRRADIANCE) & 1u))
+  {
+    float lod = 9.0;
+    vec3 r = reflect(-V, normal);
+    diff_irradiance = textureLod(env_sampler[ENVIRONMENT_MAP_INDEX], normal, lod).rgb;
+    spec_irradiance = textureLod(env_sampler[ENVIRONMENT_MAP_INDEX], r, roughness * lod).rgb;
+    //irradiance = srgb_to_linear(irradiance);
+  }
+  
+  vec3 C_ambient = ((kD_amb * deep_color * diff_irradiance) + (kS_amb * spec_irradiance)) * NdV;
+
+  // C_sun *= 0.05;
+  // C_ambient *= 0.05;
   vec3 result = C_ambient + C_sun + out_lights;
 
-  vec3 fog = ((pc.env_options >> HAS_FOG) & 1u) * ApplyFog(result.rgb, v);
-  result.rgb += fog;
+  float has_fog = ((pc.env_options >> HAS_FOG) & 1u);
+  result.rgb = mix(result.rgb, ApplyFog(result.rgb, v, p.y), has_fog);
 
   //@todo check how to get the precise value
   float white_point = 350;
   final_color = vec4(0.0, 0.0, 0.0, color.a);
   final_color = vec4(linear_to_hdr10(result.rgb, white_point), color.a);
-  float exposure = 2.0;
-  final_color.rgb = vec3(1.0) - exp(-final_color.rgb* exposure);
+  // float exposure = 1.0;
+  // final_color.rgb = vec3(1.0) - exp(-final_color.rgb* exposure);
 
   //final_color = vec4(specular, 1.0);
   //final_color = vec4(normal, 1.0);

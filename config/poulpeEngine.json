@@ -1,6 +1,6 @@
 {
   "defaultLevel": "sponza",
-  "defaultSkybox": "night",
+  "defaultSkybox": "desert_road",
   "ambientMusic": false,
   "fpsLimit": 30,
   "resolution": {

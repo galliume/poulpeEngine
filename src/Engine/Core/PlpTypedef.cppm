@@ -30,7 +30,19 @@ namespace Poulpe
   export inline constexpr std::string PLP_WATER_NORMAL_2{ "_water_normal2" };
 
   export enum PLP_ENV_OPTIONS : std::uint32_t {
-    HAS_FOG = 1 << 0
+    HAS_FOG = 1 << 0,
+    HAS_IRRADIANCE = 1 << 1
+  };
+  
+  export enum PLP_MESH_OPTIONS : std::uint32_t {
+    HAS_BASE_COLOR = 1 << 0,
+    HAS_SPECULAR = 1 << 1,
+    HAS_NORMAL = 1 << 2,
+    HAS_ALPHA = 1 << 3,
+    HAS_MR = 1 << 4,
+    HAS_EMISSIVE = 1 << 5,
+    HAS_AO = 1 << 6,
+    HAS_TRANSMISSION = 1 << 7
   };
 
   export struct CameraUBO {
@@ -141,7 +153,7 @@ namespace Poulpe
     glm::vec4 diffuse{ 1.0 };
     glm::vec4 specular{ 1.0 };
     glm::vec3 transmittance{ 1.0 };
-    glm::vec3 mre_factor{ 0.0, 0.0, 1.0 };//x:metallic, y:roughness, z: blank
+    glm::vec3 mre_factor{ 1.0, 1.0, 1.0 };//x:metallic, y:roughness, z: blank
     float shininess{ 0.0 };
     float ior{ 0.0 };       // index of refraction
     float dissolve{ 1.0 };  // 1 == opaque; 0 == fully transparent

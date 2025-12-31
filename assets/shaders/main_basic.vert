@@ -34,7 +34,8 @@ layout(location = 0) out FRAG_VAR {
   vec3 norm;
   vec4 color;
   mat3 TBN;
-  vec4 light_space;
+  float tangent_w;
+  mat4 sun_light;
   mat4 model;
   vec4 cascade_coord;
   float depth;
@@ -113,28 +114,33 @@ layout(binding = 5) readonly buffer LightObjectBuffer {
 
 void main()
 {
-  mat3 normal_matrix = transpose(inverse(mat3(ubo.model)));
+  // mat3 normal_matrix = transpose(inverse(mat3(ubo.model)));
+  mat3 normal_matrix = mat3(ubo.model);
   vec3 norm = normalize(normal_matrix * normal);
 
   vec3 T = normalize(normal_matrix * tangent.xyz);
   vec3 N = norm;
   T = normalize(T - dot(T, N) * N);
-  vec3 B = normalize(cross(N, T));
-
-  if (tangent.w < 0.0) B = -B;
-
+  vec3 B = normalize(cross(N, T)) * tangent.w;
+  //if (tangent.w < 0.0) B = -B;
   mat3 TBN = mat3(T, B, N);
 
   frag_var.TBN = TBN;
+  frag_var.tangent_w = tangent.w;
+
+  // mat3 normal_matrix = mat3(pc.view * ubo.model);
+  // frag_var.norm = normalize(normal_matrix * normal);
+  // frag_var.tang = normalize(normal_matrix * tangent.xyz);
+  // frag_var.tang_w = tangent.w;
 
   vec4 world_pos = ubo.model * vec4(position, 1.0f);
   vec4 local_space = vec4(position, 1.0f);
 
+  frag_var.norm = norm;
   frag_var.frag_pos = world_pos.xyz;
   frag_var.view_pos = vec3(pc.view_position) - world_pos.xyz;
-  frag_var.light_space = ubo.projection * point_lights[1].view * world_pos;
+  frag_var.sun_light = sun_light.view;
   frag_var.texture_coord = texture_coord;
-  frag_var.norm = norm;
   frag_var.color = color;
   frag_var.model = ubo.model;
   vec4 view_pos = pc.view * world_pos;

@@ -541,7 +541,8 @@ namespace Poulpe
     VkSampler createKTXSampler(
       TextureWrapMode const wrap_mode_u,
       TextureWrapMode const wrap_mode_v,
-      uint32_t const mip_lvl);
+      uint32_t const mip_lvl,
+      bool const compare_enable = VK_FALSE);
 
   public:
     //bool _FramebufferResized = false;
