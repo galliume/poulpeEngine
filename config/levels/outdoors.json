@@ -22,6 +22,7 @@
       "z": -3.0
     }
   },
+  "hasFog": false,
   "entities": {
     "SnowTerrain": {
       "mesh": "assets/mesh/SnowTerrain/terrain.gltf",
@@ -128,7 +129,7 @@
       "hasShadow": true,
       "isIndexed": true,
       "debugNormal": true,
-      "defaultAnim": 1
+      "defaultAnim": 2
     },
     "Lantern": {
       "mesh": "assets/mesh/Lantern/glTF/Lantern.gltf",
@@ -245,6 +246,165 @@
       "hasShadow": true,
       "isIndexed": true,
       "debugNormal": true
+    },
+    "Woman": {
+      "mesh": "assets/mesh/woman/Woman.gltf",
+      "textures": {
+        "Woman": {
+          "path": "assets/mesh/woman/Woman.ktx2"
+        }
+      },
+      "ao": {
+      },
+      "mr": {
+      },
+      "emissive": {
+      },
+      "normal": {
+      },
+      "shader": "main_basic",
+      "positions": [
+        {
+          "x": 11000.0,
+          "y": 1500.0,
+          "z": -15000.0
+        }
+      ],
+      "scales": [
+        {
+          "x": 1.5,
+          "y": 1.5,
+          "z": 1.5
+        }
+      ],
+      "rotations": [
+        {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
+        }
+      ],
+      "flipY": false,
+      "count": 1,
+      "hasBbox": false,
+      "hasAnimation": false,
+      "isPointLight": false,
+      "animationScripts": {
+      },
+      "hasShadow": true,
+      "isIndexed": true,
+      "debugNormal": true,
+      "defaultAnim": 0
+    },
+    "kakashi": {
+      "mesh": "assets/mesh/kakashi/kakashi.fbx",
+      "textures": {
+        "texture_badan": {
+          "path": "assets/mesh/kakashi/texture/badan.ktx2"
+        },
+        "texture_mata": {
+          "path": "assets/mesh/kakashi/texture/mata.ktx2"
+        },
+        "texture_sharingan": {
+          "path": "assets/mesh/kakashi/texture/sharingan.ktx2"
+        },
+        "texture_tangan": {
+          "path": "assets/mesh/kakashi/texture/tangan.ktx2"
+        }
+      },
+      "ao": {
+      },
+      "mr": {
+      },
+      "emissive": {
+      },
+      "normal": {
+      },
+      "shader": "main_basic",
+      "positions": [
+        {
+          "x": -110.0,
+          "y": 20.0,
+          "z": 150.0
+        }
+      ],
+      "scales": [
+        {
+          "x": 1.0,
+          "y": 1.0,
+          "z": 1.0
+        }
+      ],
+      "rotations": [
+        {
+          "x": 2.0,
+          "y": 0.0,
+          "z": 0.0
+        }
+      ],
+      "flipY": false,
+      "count": 1,
+      "hasBbox": false,
+      "hasAnimation": false,
+      "isPointLight": false,
+      "animationScripts": {
+      },
+      "hasShadow": true,
+      "isIndexed": true,
+      "debugNormal": true,
+      "defaultAnim": 0
+    },
+    "scene": {
+      "mesh": "assets/mesh/anime_nature_tree_01/scene.gltf",
+      "textures": {
+        "textures_trunk_M_diffuse": {
+          "path": "assets/mesh/anime_nature_tree_01/textures/trunk_M_diffuse.ktx2"
+        },
+        "textures_Leaves_M_diffuse": {
+          "path": "assets/mesh/anime_nature_tree_01/textures/Leaves_M_diffuse.ktx2"
+        }
+      },
+      "ao": {
+      },
+      "mr": {
+      },
+      "emissive": {
+      },
+      "normal": {
+      },
+      "shader": "main_basic",
+      "positions": [
+        {
+          "x": -110.0,
+          "y": 20.0,
+          "z": 150.0
+        }
+      ],
+      "scales": [
+        {
+          "x": 1.0,
+          "y": 1.0,
+          "z": 1.0
+        }
+      ],
+      "rotations": [
+        {
+          "x": 2.0,
+          "y": 0.0,
+          "z": 0.0
+        }
+      ],
+      "flipY": false,
+      "count": 1,
+      "hasBbox": false,
+      "hasAnimation": false,
+      "isPointLight": false,
+      "animationScripts": {
+      },
+      "hasShadow": true,
+      "isIndexed": true,
+      "debugNormal": true,
+      "defaultAnim": 0
     }
   }
 }

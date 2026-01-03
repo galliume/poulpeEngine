@@ -455,7 +455,7 @@ namespace Poulpe
           rots.emplace_back(Rotation{ {r, i, rotation_key.mTime, interpolation}, GetGLMQuat(rotation_key.mValue) });
         }
         // auto rot_duplicate = rots.front();
-        // rot_duplicate.id = rots.size() + 1;
+        // rot_duplicate.id = static_cast<std::uint32_t>(rots.size()) + 1ull;
         // rot_duplicate.time = animation->mDuration;
         // rots.emplace_back(rot_duplicate);
         rotations[node_name].push_back(rots);
@@ -470,7 +470,7 @@ namespace Poulpe
           pos.emplace_back(Position{ { p, i, pos_key.mTime, interpolation }, GetGLMVec(pos_key.mValue) });
         }
         // auto pos_duplicate = pos.front();
-        // pos_duplicate.id = pos.size() + 1;
+        // pos_duplicate.id = static_cast<std::uint32_t>(pos.size()) + 1ull;
         // pos_duplicate.time = animation->mDuration;
         // pos.emplace_back(pos_duplicate);
         positions[node_name].push_back(pos);
@@ -484,8 +484,9 @@ namespace Poulpe
 
           sc.emplace_back(Scale{ {s, i, scale_key.mTime, interpolation }, GetGLMVec(scale_key.mValue) });
         }
+        
         // auto sc_duplicate = sc.front();
-        // sc_duplicate.id = sc.size() + 1;
+        // sc_duplicate.id = static_cast<std::uint32_t>(sc.size()) + 1ull;
         // sc_duplicate.time = animation->mDuration;
         // sc.emplace_back(sc_duplicate);
         scales[node_name].push_back(sc);
@@ -719,8 +720,8 @@ namespace Poulpe
         }
 
         for (auto& vertex_map : vertex_weight_map) {
-          uint32_t vertex_id = vertex_map.first;
-          auto& vertex = mesh_data.vertices.at(vertex_id);
+          uint32_t const vertex_id { vertex_map.first };
+          auto& vertex { mesh_data.vertices.at(vertex_id) };
 
           auto& data_vertex{ vertex_map.second };
 
@@ -731,7 +732,7 @@ namespace Poulpe
           std::vector<std::size_t> bone_ids(4);
           std::vector<float> bone_weights(4);
 
-          for (std::size_t y{ 0 }; i < 4 && y < data_vertex.size(); ++y) {
+          for (std::size_t y{ 0 }; y < 4 && y < data_vertex.size(); ++y) {
             bone_ids[y] = data_vertex[y].first;
             bone_weights[y] = data_vertex[y].second;
             total_weight += data_vertex[y].second;
@@ -795,7 +796,7 @@ namespace Poulpe
     return interpolation;
   }
 
-    aiNode const* AssimpLoader::FindRootBone(
+  aiNode const* AssimpLoader::FindRootBone(
     aiNode const* node,
     std::unordered_set<std::string> const& bone_names)
     {
