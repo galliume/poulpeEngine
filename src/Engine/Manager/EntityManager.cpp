@@ -21,6 +21,7 @@ import Engine.Component.Entity;
 import Engine.Component.EntityNode;
 
 import Engine.Core.AssimpLoader;
+import Engine.Core.Logger;
 import Engine.Core.MeshTypes;
 import Engine.Core.PlpTypedef;
 
@@ -283,10 +284,10 @@ namespace Poulpe
       data._bbox_min = _data.bbox_min;
       data._bbox_max = _data.bbox_max;
       
-      glm::mat4 const S = glm::scale(glm::mat4(1.0f), entity_opts.scale);
-      glm::mat4 const R = glm::toMat4(entity_opts.rotation);
-      glm::mat4 const T = glm::translate(glm::mat4(1.0f), entity_opts.pos);
-      glm::mat4 const transform = T * R * S;
+      auto const S { glm::scale(glm::mat4(1.0f), entity_opts.scale) };
+      auto const R { glm::toMat4(entity_opts.rotation) };
+      auto const T { glm::translate(glm::mat4(1.0f), entity_opts.pos) };
+      auto const transform  { T * R * S };
       
       std::vector<std::vector<UniformBufferObject>> ubos{};
       UniformBufferObject ubo{};
