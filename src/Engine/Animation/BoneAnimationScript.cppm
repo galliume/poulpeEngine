@@ -72,6 +72,10 @@ namespace Poulpe
     bool _done{false};
     uint32_t _anim_id{ 0 };
 
+    bool _first_loop_done {false};
+
+    std::unordered_map<double, std::vector<glm::vec3>> _transform_cache{};
+    
     std::vector<std::unique_ptr<BoneAnimationMove>> _moves{};
     std::vector<std::unique_ptr<BoneAnimationMove>> _new_moves{};
 
@@ -111,14 +115,10 @@ namespace Poulpe
       T const& start,
       T const& end,
       double current_time,
-      double anim_duration)
+      double)
     {
       double start_time { start.time };
       double end_time { end.time };
-
-      if (end_time < start_time) {
-          end_time += anim_duration;
-      }
 
       double duration = end_time - start_time;
 
@@ -127,8 +127,9 @@ namespace Poulpe
 
       if constexpr (std::same_as<decltype(start.value), glm::vec3>) {
         switch (start.interpolation) {
+        case AnimInterpolation::CUBIC_SPLINE:
+        case AnimInterpolation::SPHERICAL_LINEAR:
         case AnimInterpolation::STEP:
-          return start.value;
         case AnimInterpolation::LINEAR:
         default:
           return glm::vec3{
@@ -136,22 +137,13 @@ namespace Poulpe
             std::lerp(start.value.y, end.value.y, t),
             std::lerp(start.value.z, end.value.z, t)
           };
-        case AnimInterpolation::SPHERICAL_LINEAR:
-          return start.value;
-        case AnimInterpolation::CUBIC_SPLINE:
-          //@todo
-          return start.value;
         }
         return start.value;
       } else if constexpr (std::same_as<decltype(start.value), glm::dquat>) {
         switch (start.interpolation) {
         case AnimInterpolation::STEP:
-          return start.value;
         case AnimInterpolation::LINEAR:
-          return start.value;
-          case AnimInterpolation::CUBIC_SPLINE:
-          //@todo
-          return start.value;
+        case AnimInterpolation::CUBIC_SPLINE:
         case AnimInterpolation::SPHERICAL_LINEAR:
         default:
           return glm::normalize(glm::slerp(start.value, end.value, t));

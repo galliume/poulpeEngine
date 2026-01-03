@@ -50,50 +50,47 @@ namespace Poulpe
       _anim_id = _data->_default_anim;
       auto const& anim{ _animations.at(_anim_id) };
       double const duration{ (anim.duration / anim.ticks_per_s) * 1000.0 };//ms
-      //_elapsed_time = std::clamp(_elapsed_time, 0.f, duration);
 
-      //Logger::debug("_elapsed_time {} duration {} ", _elapsed_time, duration);
-      //Logger::debug("anim {} elapased time {} duration {} delta {}", anim.name, _elapsed_time, duration, delta_time);
+      if (!_first_loop_done) {
+        _bone_matrices.resize(_data->_bones.size());
+      }
 
-      _bone_matrices.resize(_data->_bones.size());
-      _elapsed_time = fmod(_elapsed_time, duration);
+      _elapsed_time = fmod(_elapsed_time + delta_time, duration);
+      auto const cache_key { std::trunc(_elapsed_time) };
 
-      auto const& root_bone = _data->_bones[_data->_root_bone_name];
-      updateBoneTransforms(anim, root_bone.name, root_bone.t_pose, duration);
+      if (_transform_cache.contains(cache_key)) {
+        auto const& cache {_transform_cache[cache_key]};
+        for (std::size_t i { 0 }; i < _data->_vertices.size(); i++) {
+          _data->_vertices[i].pos = cache[i];
+        }
+      } else {
+        auto const& root_bone = _data->_bones[_data->_root_bone_name];
+        updateBoneTransforms(anim, root_bone.name, glm::mat4(1.0f), duration);
 
-      for (auto& vertex : _data->_vertices) {
-        float const total_weight {
-          vertex.bone_weights[0]
-          + vertex.bone_weights[1]
-          + vertex.bone_weights[2]
-          + vertex.bone_weights[3] };
+        for (auto& vertex : _data->_vertices) {
+          float const total_weight {
+            vertex.bone_weights[0]
+            + vertex.bone_weights[1]
+            + vertex.bone_weights[2]
+            + vertex.bone_weights[3] };
 
-        if (total_weight > 0.f) {
-          glm::vec4 result = glm::vec4(0.0f);
-          for (std::size_t i{ 0 }; i < 4; ++i) {
-            auto const bone_id{ vertex.bone_ids[i] };
-            auto const w{ vertex.bone_weights[i] };
-            if (w > 0.f) {
-              result += _bone_matrices[bone_id] * glm::vec4(vertex.original_pos, 1.0f) * w;
+          if (total_weight > 0.f) {
+            glm::vec4 result = glm::vec4(0.0f);
+            for (std::size_t i{ 0 }; i < 4; ++i) {
+              auto const bone_id{ vertex.bone_ids[i] };
+              auto const w{ vertex.bone_weights[i] };
+              if (w > 0.f) {
+                result += _bone_matrices[bone_id] * glm::vec4(vertex.original_pos, 1.0f) * w;
+              }
             }
+            vertex.pos = glm::vec3(result);
+            _transform_cache[cache_key].emplace_back(result);
+          } else {
+            vertex.pos = vertex.original_pos;
           }
-          vertex.pos = glm::vec3(result);
         }
       }
-
-      if (_elapsed_time >= duration) {
-        _elapsed_time = 0.0;
-        //t = 1.f;
-        //mesh->setIsDirty(false);
-        //_done = true;
-        //_anim_id += 1;
-        //if (_anim_id >= _animations.size()) {
-        //  _anim_id = 0;
-        //}
-      } else {
-        //mesh->setIsDirty();
-        _elapsed_time += delta_time * 1000.0;
-      }
+      _elapsed_time += delta_time * 1000.0;
     }
   }
 

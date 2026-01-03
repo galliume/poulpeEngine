@@ -22,6 +22,7 @@
       "z": 0.0
     }
   },
+  "hasFog": false,
   "entities": {
     "knight": {
       "mesh": "assets/mesh/pkg_e_knight_anim/Exports/FBX/Knight_USD_002.fbx",
@@ -91,10 +92,9 @@
       "flipY": false,
       "count": 1,
       "hasBbox": false,
-      "hasAnimation": true,
+      "hasAnimation": false,
       "isPointLight": false,
       "animationScripts": {
-        "anim0": "assets/scripts/animation/backpack/anim0.lua"
       },
       "hasShadow": true,
       "isIndexed": true,
