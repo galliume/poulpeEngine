@@ -56,7 +56,8 @@ namespace Poulpe
       std::unordered_map<std::string, std::vector<Animation>> const& animations,
       std::unordered_map<std::string, std::unordered_map<std::string, std::vector<std::vector<Position>>>> const& positions,
       std::unordered_map<std::string, std::unordered_map<std::string, std::vector<std::vector<Rotation>>>> const& rotations,
-      std::unordered_map<std::string, std::unordered_map<std::string, std::vector<std::vector<Scale>>>> const& scales);
+      std::unordered_map<std::string, std::unordered_map<std::string, std::vector<std::vector<Scale>>>> const& scales,
+      std::uint32_t anim_id);
     ~BoneAnimationScript() override = default;
 
     Data* getData();
@@ -64,18 +65,22 @@ namespace Poulpe
 
     void operator()(AnimationInfo const& animation_info) override;
 
+    void done() override { _done = true; }
+    void reset() override { _done = false; }
+    void setAnimId(std::uint32_t id) override { _anim_id = id; }
+
   private:
     Data* _data;
     std::unordered_map<std::string, double> _elapsed_time{ };
 
     bool _move_init{ false };
     bool _done{false};
-    uint32_t _anim_id{ 0 };
 
     bool _first_loop_done {false};
+    bool _looping { true };
 
     std::map<std::string, std::map<double, std::vector<glm::vec3>>> _transform_cache{};
-    
+
     std::vector<std::unique_ptr<BoneAnimationMove>> _moves{};
     std::vector<std::unique_ptr<BoneAnimationMove>> _new_moves{};
 
@@ -83,6 +88,8 @@ namespace Poulpe
     std::unordered_map<std::string, std::unordered_map<std::string, std::vector<std::vector<Position>>>> _positions{};
     std::unordered_map<std::string, std::unordered_map<std::string, std::vector<std::vector<Rotation>>>> _rotations{};
     std::unordered_map<std::string, std::unordered_map<std::string, std::vector<std::vector<Scale>>>> _scales{};
+
+    uint32_t _anim_id{ 0 };
 
     std::vector<glm::mat4> _bone_matrices;
 

@@ -54,13 +54,19 @@ namespace Poulpe
     void rotate(Data* data, double delta_time, float duration, glm::quat angle);
     void operator()(AnimationInfo const& animation_info) override;
 
+    void done() override { _done = true; }
+    void reset() override { _done = false; }
+    void setAnimId(std::uint32_t id) override { _anim_id = id; }
+
   private:
     Data* _data;
     std::string _script_path;
     lua_State* _lua_State;
     bool _move_init{ false };
     bool _rotate_init{ false };
-
+    bool _done{false};
+    uint32_t _anim_id{ 0 };
+    
     std::vector<std::unique_ptr<AnimationMove>> _moves{};
     std::vector<std::unique_ptr<AnimationMove>> _new_moves{};
     std::vector<std::unique_ptr<AnimationRotate>> _rotates{};

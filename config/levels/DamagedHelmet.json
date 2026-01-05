@@ -23,6 +23,7 @@
     }
   },
   "hasFog" : false,
+  "player": "",
   "entities": {
     "DamagedHelmet": {
       "mesh": "assets/mesh/DamagedHelmet/glTF/DamagedHelmet.gltf",

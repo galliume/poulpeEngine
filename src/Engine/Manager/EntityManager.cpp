@@ -382,7 +382,8 @@ namespace Poulpe
               std::move(_animations),
               std::move(_positions),
               std::move(_rotations),
-              std::move(_scales));
+              std::move(_scales),
+              entity_opts.default_anim);
 
             _component_manager->add<BoneAnimationComponent>(
             entity->getID(), std::move(boneAnimationScript));

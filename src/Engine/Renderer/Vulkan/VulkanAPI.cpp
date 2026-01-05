@@ -109,6 +109,28 @@ VulkanAPI::VulkanAPI(Window* window)
   vkCreateFence(_device, & fence_info, nullptr, & _fence_acquire_image);
   vkCreateFence(_device, & fence_info, nullptr, & _fence_submit);
   vkCreateFence(_device, & fence_info, nullptr, & _fence_buffer);
+
+  VkBufferCreateInfo bufferInfo{};
+  bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+  bufferInfo.size = 64 * 1024 * 1024; // 64MB staging area
+  bufferInfo.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+  bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+
+  vkCreateBuffer(_device, &bufferInfo, nullptr, &_staging_buffer);
+  
+  VkMemoryRequirements memRequirements;
+  vkGetBufferMemoryRequirements(_device, _staging_buffer, &memRequirements);
+
+  VkMemoryAllocateInfo allocInfo{};
+  allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+  allocInfo.allocationSize = memRequirements.size;
+  allocInfo.memoryTypeIndex = findMemoryType(memRequirements.memoryTypeBits, 
+      VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+
+  vkAllocateMemory(_device, &allocInfo, nullptr, &_staging_device_memory);
+  vkBindBufferMemory(_device, _staging_buffer, _staging_device_memory, 0);
+
+  vkMapMemory(_device, _staging_device_memory, 0, bufferInfo.size, 0, &_staging_data_ptr);
 }
 
 void VulkanAPI::initMemoryPool()
@@ -2025,25 +2047,51 @@ void VulkanAPI::updateVertexBuffer(
 {
   VkDeviceSize buffer_size = sizeof(Vertex) * new_vertices.size();
 
-  VkBuffer staging_buffer{};
-  VkDeviceMemory staging_device_memory{};
+  // VkBuffer staging_buffer{};
+  // VkDeviceMemory staging_device_memory{};
 
-  createBuffer(
-    buffer_size,
-    VK_BUFFER_USAGE_VERTEX_BUFFER_BIT
-      | VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-      VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-    staging_buffer, staging_device_memory);
+  // createBuffer(
+  //   buffer_size,
+  //   VK_BUFFER_USAGE_VERTEX_BUFFER_BIT
+  //     | VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+  //     VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+  //   staging_buffer, staging_device_memory);
 
-  void* data;
-  vkMapMemory(_device, staging_device_memory, 0, buffer_size, 0, &data);
-  std::memcpy(data, new_vertices.data(), static_cast<std::size_t>(buffer_size));
-  vkUnmapMemory(_device, staging_device_memory);
+  // void* data;
+  // vkMapMemory(_device, staging_device_memory, 0, buffer_size, 0, &data);
+  std::memcpy(_staging_data_ptr, new_vertices.data(), static_cast<std::size_t>(buffer_size));
+  //vkUnmapMemory(_device, staging_device_memory);
 
-  copyBuffer(staging_buffer, buffer_to_update, buffer_size);
+  VkCommandBufferBeginInfo begin_info{};
+  begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+  begin_info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
 
-  vkDestroyBuffer(_device, staging_buffer, nullptr);
-  vkFreeMemory(_device, staging_device_memory, nullptr);
+  vkBeginCommandBuffer(_transfer_cmd_buffer, &begin_info);
+
+  VkBufferCopy copy_region{};
+  copy_region.srcOffset = 0;
+  copy_region.dstOffset = 0;
+  copy_region.size = buffer_size;
+
+  vkCmdCopyBuffer(_transfer_cmd_buffer, _staging_buffer, buffer_to_update, 1, & copy_region);
+  vkEndCommandBuffer(_transfer_cmd_buffer);
+
+  VkSubmitInfo submit_info{};
+  submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+  submit_info.commandBufferCount = 1;
+  submit_info.pCommandBuffers = &_transfer_cmd_buffer;
+
+  vkResetFences(_device, 1, &_fence_buffer);
+  VkResult result = vkQueueSubmit(_transfer_queues[0], 1, & submit_info, _fence_buffer);
+
+  if (result != VK_SUCCESS) {
+    Logger::error("failed to copy buffer.");
+  }
+
+  vkWaitForFences(_device, 1, &_fence_buffer, VK_TRUE, UINT32_MAX);
+
+  // vkDestroyBuffer(_device, staging_buffer, nullptr);
+  // vkFreeMemory(_device, staging_device_memory, nullptr);
 }
 
 Buffer VulkanAPI::createVertex2DBuffer(
@@ -2058,7 +2106,7 @@ Buffer VulkanAPI::createVertex2DBuffer(
 
   void* data;
   vkMapMemory(_device, staging_device_memory, 0, buffer_size, 0, &data);
-  std::memcpy(data, vertices.data(), static_cast<std::size_t>(buffer_size));
+  std::memcpy(_staging_data_ptr, vertices.data(), static_cast<std::size_t>(buffer_size));
   vkUnmapMemory(_device, staging_device_memory);
 
   VkBuffer buffer = createBuffer(buffer_size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT);
@@ -2219,7 +2267,7 @@ Buffer VulkanAPI::createCubeUniformBuffers(uint32_t const uniform_buffers_count)
 void VulkanAPI::updateUniformBuffer(Buffer& buffer, std::vector<UniformBufferObject>* uniform_buffer_objects)
 {
   {
-    buffer.memory->lock();
+    //buffer.memory->lock();
 
     auto memory = buffer.memory->getMemory();
     void* data;
@@ -2227,7 +2275,7 @@ void VulkanAPI::updateUniformBuffer(Buffer& buffer, std::vector<UniformBufferObj
     std::memcpy(data, uniform_buffer_objects->data(), buffer.size);
     vkUnmapMemory(_device, *memory);
 
-    buffer.memory->unLock();
+    //buffer.memory->unLock();
   }
 }
 

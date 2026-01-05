@@ -23,6 +23,7 @@
     }
   },
   "hasFog": false,
+  "player": "",
   "entities": {
     "knight": {
       "mesh": "assets/mesh/pkg_e_knight_anim/Exports/FBX/Knight_USD_002.fbx",

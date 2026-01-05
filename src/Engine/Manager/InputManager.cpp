@@ -4,7 +4,10 @@ module;
 
 module Engine.Managers.InputManager;
 
+import Engine.Core.Logger;
+
 import Engine.GUI.Window;
+
 import Engine.Managers.ConfigManagerLocator;
 import Engine.Managers.InputManagerLocator;
 
@@ -80,6 +83,12 @@ namespace Poulpe
       InputManager* input_manager = InputManagerLocator::get();
       input_manager->mouseButton(button, action, mods);
     });
+
+    int present { glfwJoystickIsGamepad(GLFW_JOYSTICK_1) };
+    if (present) {
+      _has_gamepad = true;
+      Logger::debug("GLFW_JOYSTICK_1: {}",  glfwGetGamepadName(GLFW_JOYSTICK_1));
+    }
   }
 
   void InputManager::keyPress(
@@ -188,5 +197,30 @@ namespace Poulpe
     y_offset *= sensitivity;
 
     _camera->updateAngle(x_offset, y_offset);
+  }
+
+  void InputManager::processGamepad(PlayerManager * player_manager)
+  {
+    if (!_has_gamepad) {
+      return;
+    }
+
+    // int count;
+    // const unsigned char* hats = glfwGetJoystickHats(GLFW_JOYSTICK_1, &count);
+    // if (hats[2] & GLFW_HAT_RIGHT)
+    // {
+    //   Logger::debug("right");
+    // }
+
+    GLFWgamepadstate state;
+    if (glfwGetGamepadState(GLFW_JOYSTICK_1, &state))
+    {
+      if (state.buttons[GLFW_GAMEPAD_BUTTON_A])
+      {
+        player_manager->jump();
+      }
+
+      //Logger::debug("left x/y : {},{}", state.axes[GLFW_GAMEPAD_AXIS_LEFT_X], state.axes[GLFW_GAMEPAD_AXIS_LEFT_Y]);
+    }
   }
 }

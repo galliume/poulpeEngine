@@ -166,6 +166,8 @@ namespace Poulpe
   void RenderManager::renderScene(double const delta_time)
   {
     {
+      InputManagerLocator::get()->processGamepad(_player_manager.get());
+
       //@todo animate light
       //_light_manager->animateAmbientLight(delta_time);
       auto const& camera_view_matrix { _camera->getView() };
@@ -379,10 +381,16 @@ namespace Poulpe
     auto rdr_impl { _component_manager->get<RendererComponent>(entity_id) };
 
     if (mesh->isRoot()) {
-      AnimationInfo const animation_info {
+      AnimationInfo animation_info {
         .delta_time = delta_time,
         .data = mesh->getData()
       };
+      
+      //@todo temp
+      if (mesh->getName() == _player_manager->getPlayerName()) {
+        _player_manager->setPlayerId(entity_id);
+        animation_info.looping = false;
+      }
 
       auto* animation_component { _component_manager->get<AnimationComponent>(entity_id) };
       if (animation_component) {
@@ -399,9 +407,10 @@ namespace Poulpe
         auto* child_mesh_component { _component_manager->get<MeshComponent>(id) };
         auto child_mesh { child_mesh_component->template has<Mesh>() };
         if (child_mesh && boneAnimationComponent) {
-          AnimationInfo const child_animation_info {
+          AnimationInfo child_animation_info {
             .delta_time = delta_time,
-            .data = child_mesh->getData()
+            .data = child_mesh->getData(),
+            .looping = animation_info.looping
           };
           (*boneAnimationComponent)(child_animation_info);
           child_mesh->setIsDirty(true);
@@ -472,7 +481,10 @@ namespace Poulpe
       _env_options |= PLP_ENV_OPTIONS::HAS_FOG;
     }
     if (lvl_data.contains("player")) {
-      _player_manager = std::make_unique<PlayerManager>(lvl_data["player"].get<std::string>());
+      _player_manager = std::make_unique<PlayerManager>(
+        _component_manager.get(),
+        lvl_data["player"].get<std::string>()
+      );
     }
     _texture_manager->addConfig(config_manager->texturesConfig());
 
