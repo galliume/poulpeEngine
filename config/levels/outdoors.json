@@ -23,7 +23,7 @@
     }
   },
   "hasFog": false,
-  "player" : "Fox",
+  "player" : "WomanMesh0",
   "entities": {
      "SnowTerrain": {
       "mesh": "assets/mesh/SnowTerrain/terrain.gltf",

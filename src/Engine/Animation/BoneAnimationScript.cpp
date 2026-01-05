@@ -16,11 +16,14 @@ namespace Poulpe
     std::unordered_map<std::string, std::vector<Animation>> const& animations,
     std::unordered_map<std::string, std::unordered_map<std::string, std::vector<std::vector<Position>>>> const& positions,
     std::unordered_map<std::string, std::unordered_map<std::string, std::vector<std::vector<Rotation>>>> const& rotations,
-    std::unordered_map<std::string, std::unordered_map<std::string, std::vector<std::vector<Scale>>>> const& scales)
+    std::unordered_map<std::string, std::unordered_map<std::string, std::vector<std::vector<Scale>>>> const& scales,
+    std::uint32_t anim_id
+  )
     : _animations(std::move(animations))
     , _positions(std::move(positions))
     , _rotations(std::move(rotations))
     , _scales(std::move(scales))
+    , _anim_id(anim_id)
   {
 
   }
@@ -47,7 +50,6 @@ namespace Poulpe
 
     //if (!_move_init) {
     if (_moves.empty() && !_animations[_data->_name].empty()) {
-      _anim_id = _data->_default_anim;
       auto const& anim{ _animations[_data->_name].at(_anim_id) };
       double const duration{ (anim.duration / anim.ticks_per_s) * 1000.0 };//ms
 
@@ -94,6 +96,11 @@ namespace Poulpe
             vertex.pos = vertex.original_pos;
           }
         }
+      }
+
+
+      if (!animation_info.looping && duration < elapsed_time + 10) {
+        _done = true;
       }
     }
   }

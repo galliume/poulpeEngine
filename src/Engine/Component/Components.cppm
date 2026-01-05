@@ -22,6 +22,9 @@ namespace Poulpe {
       AnimationComponentConcept();
       virtual ~AnimationComponentConcept();
       virtual void operator()(AnimationInfo const& animation_info) = 0;
+      virtual void done() = 0;
+      virtual void reset() = 0;
+      virtual void setAnimId(std::uint32_t id) = 0;
   };
 
   AnimationComponentConcept::AnimationComponentConcept() = default;
@@ -78,6 +81,35 @@ namespace Poulpe {
       std::visit([&](auto& component) {
         if constexpr (hasCallOperator<decltype(*component)>) {
           (*component)(animation_info);
+        }
+      }, _component);
+    }
+
+    void done()
+    {
+      std::visit([&](auto& component) {
+        using T = std::decay_t<decltype(component)>;
+        if constexpr (!std::is_same_v<T, std::unique_ptr<Mesh>>) {
+          (*component).done();
+        }
+      }, _component);
+    }
+
+    void reset() {
+      std::visit([&](auto& component) {
+        using T = std::decay_t<decltype(component)>;
+        if constexpr (!std::is_same_v<T, std::unique_ptr<Mesh>>) {
+        (*component).reset();
+        }
+      }, _component);
+    }
+
+    void setAnimId(std::uint32_t id)
+    {
+      std::visit([&](auto& component) {
+        using T = std::decay_t<decltype(component)>;
+        if constexpr (!std::is_same_v<T, std::unique_ptr<Mesh>>) {
+          (*component).setAnimId(id);
         }
       }, _component);
     }

@@ -59,10 +59,10 @@ namespace Poulpe
     } else {
       //suppose we have to update data
       {
-        data->_vertex_buffer.memory->lock();
+        //data->_vertex_buffer.memory->lock();
         auto *buffer { data->_vertex_buffer.memory->getBuffer(data->_vertex_buffer.index) };
         renderer->getAPI()->updateVertexBuffer(data->_vertices, buffer);
-        data->_vertex_buffer.memory->unLock();
+        //data->_vertex_buffer.memory->unLock();
       }
     }
 

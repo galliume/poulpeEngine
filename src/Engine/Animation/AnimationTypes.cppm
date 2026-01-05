@@ -7,5 +7,6 @@ namespace Poulpe {
   {
     double const delta_time{0.0};
     Data* const data {};
+    bool looping { true };
   };
 }

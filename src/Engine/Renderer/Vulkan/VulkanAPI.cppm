@@ -645,5 +645,9 @@ namespace Poulpe
     //VkMemoryRequirements _MemRequirements;
     VkCommandPool _transfer_cmd_pool{};
     VkCommandBuffer _transfer_cmd_buffer{};
+
+    VkDeviceMemory _staging_device_memory;
+    VkBuffer _staging_buffer;
+    void* _staging_data_ptr;
   };
 }

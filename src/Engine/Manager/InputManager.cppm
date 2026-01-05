@@ -8,6 +8,8 @@ import std;
 
 import Engine.Component.Camera;
 
+import Engine.Managers.PlayerManager;
+
 import Engine.GUI.Window;
 
 namespace Poulpe
@@ -24,6 +26,7 @@ namespace Poulpe
     void saveLastMousePos(double x_pos, double y_pos);
     void inline setCamera(Camera * const camera) { _camera = camera; }
     void updateMousePos(double x_pos, double y_pos);
+    void processGamepad(PlayerManager * player_manager);
 
     static bool _can_move_camera;
     static bool _first_move_mouse;
@@ -38,5 +41,7 @@ namespace Poulpe
 
     nlohmann::json _input_config;
     std::unordered_map<std::string, int> _keyboard_keys{};
+
+    bool _has_gamepad { false };
   };
 }
