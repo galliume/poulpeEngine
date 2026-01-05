@@ -19,6 +19,8 @@ import Engine.Managers.TextureManager;
 import Engine.Renderer;
 import Engine.Renderer.RendererComponentFactory;
 
+import Engine.Utils.IDHelper;
+
 namespace Poulpe
 {
   export class EntityManager
@@ -95,5 +97,11 @@ namespace Poulpe
 
     mutable std::shared_mutex _mutex_shared;
     Buffer _light_buffer;
+
+    std::vector<IDType> _entity_children{};
+    std::unordered_map<std::string, std::vector<Animation>> _animations{};
+    std::unordered_map<std::string, std::unordered_map<std::string, std::vector<std::vector<Rotation>>>> _rotations{};
+    std::unordered_map<std::string, std::unordered_map<std::string, std::vector<std::vector<Position>>>> _positions{};
+    std::unordered_map<std::string, std::unordered_map<std::string, std::vector<std::vector<Scale>>>> _scales{};
   };
 }

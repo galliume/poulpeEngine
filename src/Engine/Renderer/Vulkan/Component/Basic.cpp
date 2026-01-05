@@ -36,15 +36,15 @@ namespace Poulpe
 
     auto cmd_pool = renderer->getAPI()->createCommandPool();
 
-    if (mesh->getUniformBuffers().empty()) {
-      std::ranges::for_each(mesh->getData()->_bones, [&](auto const&) {
+    // if (mesh->getUniformBuffers().empty()) {
+    //   std::ranges::for_each(mesh->getData()->_bones, [&](auto const&) {
 
-        //auto const& b{ bone.second };
+    //     //auto const& b{ bone.second };
 
-        Buffer uniformBuffer = renderer->getAPI()->createUniformBuffers(1);
-        mesh->getUniformBuffers().emplace_back(std::move(uniformBuffer));
-      });
-    }
+    //     Buffer uniformBuffer = renderer->getAPI()->createUniformBuffers(1);
+    //     mesh->getUniformBuffers().emplace_back(std::move(uniformBuffer));
+    //   });
+    // }
     if (mesh->getUniformBuffers().empty()) { //no bones
       Buffer uniformBuffer = renderer->getAPI()->createUniformBuffers(1);
       mesh->getUniformBuffers().emplace_back(std::move(uniformBuffer));
