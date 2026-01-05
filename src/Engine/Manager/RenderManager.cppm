@@ -22,6 +22,7 @@ import Engine.Managers.DestroyManager;
 import Engine.Managers.EntityManager;
 import Engine.Managers.FontManager;
 import Engine.Managers.LightManager;
+import Engine.Managers.PlayerManager;
 import Engine.Managers.ShaderManager;
 import Engine.Managers.TextureManager;
 
@@ -123,6 +124,7 @@ namespace Poulpe
     std::unique_ptr<EntityManager> _entity_manager;
     std::unique_ptr<FontManager> _font_manager;
     std::unique_ptr<LightManager> _light_manager;
+    std::unique_ptr<PlayerManager> _player_manager;
     std::unique_ptr<ShaderManager> _shader_manager;
     std::unique_ptr<TextureManager> _texture_manager;
 

@@ -258,7 +258,7 @@ namespace Poulpe
       }
 
       Data data{};
-      data._name = _data.name + '_' + name_texture;
+      data._name = _data.name;
       data._texture_prefix = _data.texture_prefix;
       data._textures.emplace_back(name_texture);
       data._specular_map = name_specular_map;
@@ -291,28 +291,25 @@ namespace Poulpe
       
       std::vector<std::vector<UniformBufferObject>> ubos{};
       UniformBufferObject ubo{};
-      ubo.model = transform * data._local_transform;
-      
-      data._inverse_transform_matrix = glm::transpose(ubo.model);
+      ubo.model = transform * _data.inverse_transform_matrix * _data.transform_matrix;
 
-      if (!data._bones.empty()) {
-        auto const& root_bone = data._bones[data._root_bone_name];
-        ubo.model = root_bone.t_pose * transform  ;
-        ubos.reserve(data._bones.size());
+      data._inverse_transform_matrix = _data.inverse_transform_matrix;
 
-        std::ranges::for_each(data._bones, [&](auto& bone) {
-          auto const& b{ bone.second };
-          std::vector<UniformBufferObject> tmp_ubos{ };
-          tmp_ubos.resize(b.weights.size());
+      // if (!data._bones.empty()) {
+      //   ubos.reserve(data._bones.size());
+      //   std::ranges::for_each(data._bones, [&](auto& bone) {
+      //     auto const& b{ bone.second };
+      //     std::vector<UniformBufferObject> tmp_ubos{ };
+      //     tmp_ubos.resize(b.weights.size());
 
-          std::fill(tmp_ubos.begin(), tmp_ubos.end(), ubo);
-          ubos.push_back(tmp_ubos);
-        });
-      } else {
+      //     std::fill(tmp_ubos.begin(), tmp_ubos.end(), ubo);
+      //     ubos.push_back(tmp_ubos);
+      //   });
+      // } else {
         ubos.push_back({ ubo });
-      }
+      //}
 
-      data._transform_matrix = ubo.model;
+      data._transform_matrix = _data.transform_matrix;
       data._ubos = ubos;
       data._original_ubo = ubo;
 
@@ -323,6 +320,19 @@ namespace Poulpe
 
       auto* entity = new Entity();
       entity->setName(_data.name);
+
+      if (is_last) {
+        mesh->setRoot();
+        for (auto child : _entity_children) {
+          mesh->addChild(child);
+        }
+      } else {
+        _entity_children.emplace_back(entity->getID());
+      }
+      _animations[mesh->getName()] = animations;
+      _rotations [mesh->getName()] = rotations;
+      _positions[mesh->getName()] = positions;
+      _scales[mesh->getName()] = scales;
 
       ComponentRenderingInfo rendering_info {
         .mesh = mesh.get(),
@@ -341,7 +351,7 @@ namespace Poulpe
       };
 
       auto basicRdrImpl { RendererComponentFactory::create<Basic>() };
-      (*basicRdrImpl)(_renderer, rendering_info);
+      //(*basicRdrImpl)(_renderer, rendering_info);
 
       _component_manager->add<RendererComponent>(entity->getID(), std::move(basicRdrImpl));
       _component_manager->add<MeshComponent>(entity->getID(), std::move(mesh));
@@ -357,7 +367,6 @@ namespace Poulpe
 
       if (is_last) {
         {
-          std::lock_guard<std::shared_mutex> guard(lockWorldNode());
           //lua scripted animation
           if (entity_opts.has_animation) {
             //@todo temp until lua scripting
@@ -366,12 +375,25 @@ namespace Poulpe
               _component_manager->add<AnimationComponent>(entity->getID(), std::move(animationScript));
             }
           }
+
           //skeleton animation
           if (!animations.empty()) {
-            auto boneAnimationScript = std::make_unique<BoneAnimationScript>(animations, positions, rotations, scales);
+            auto boneAnimationScript = std::make_unique<BoneAnimationScript>(
+              std::move(_animations),
+              std::move(_positions),
+              std::move(_rotations),
+              std::move(_scales));
+
             _component_manager->add<BoneAnimationComponent>(
             entity->getID(), std::move(boneAnimationScript));
+            _entity_children.clear();
+            _animations.clear();
+            _rotations.clear();
+            _positions.clear();
+            _scales.clear();
           }
+
+          std::lock_guard<std::shared_mutex> guard(lockWorldNode());
           //std::shared_lock guard(_mutex_shared);
           root_mesh_entity_node->setIsLoaded(true);
           _world_node->addChild(root_mesh_entity_node);

@@ -267,6 +267,7 @@ namespace Poulpe
     glm::mat4 offset_matrix{};
     std::vector<BoneWeight> weights{};
     std::vector<std::string> children{};
+    bool is_weightless { false };
   };
 
   export struct EntityOptions

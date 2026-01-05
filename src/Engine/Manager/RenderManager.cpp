@@ -378,25 +378,42 @@ namespace Poulpe
     auto mesh { mesh_component->template has<Mesh>() };
     auto rdr_impl { _component_manager->get<RendererComponent>(entity_id) };
 
-    if (mesh && rdr_impl) {
-      if (mesh->isDirty()) {
-        (*rdr_impl)(_renderer.get(), getComponentRenderingInfo(mesh));
-      }
-
+    if (mesh->isRoot()) {
       AnimationInfo const animation_info {
         .delta_time = delta_time,
         .data = mesh->getData()
       };
 
-      auto* animation_component = _component_manager->get<AnimationComponent>(entity_id);
+      auto* animation_component { _component_manager->get<AnimationComponent>(entity_id) };
       if (animation_component) {
         (*animation_component)(animation_info);
       }
 
-      auto* boneAnimationComponent = _component_manager->get<BoneAnimationComponent>(entity_id);
+      auto* boneAnimationComponent { _component_manager->get<BoneAnimationComponent>(entity_id) };
       if (boneAnimationComponent) {
         (*boneAnimationComponent)(animation_info);
         mesh->setIsDirty(true);
+      }
+
+      for (auto const& id : mesh->getChildren()) {
+        auto* child_mesh_component { _component_manager->get<MeshComponent>(id) };
+        auto child_mesh { child_mesh_component->template has<Mesh>() };
+        if (child_mesh && boneAnimationComponent) {
+          AnimationInfo const child_animation_info {
+            .delta_time = delta_time,
+            .data = child_mesh->getData()
+          };
+          (*boneAnimationComponent)(child_animation_info);
+          child_mesh->setIsDirty(true);
+          // auto child_rdr_impl { _component_manager->get<RendererComponent>(id) };
+          // (*child_rdr_impl)(_renderer.get(), getComponentRenderingInfo(child_mesh));
+        }
+      }
+    }
+
+    if (mesh && rdr_impl) {
+      if (mesh->isDirty()) {
+        (*rdr_impl)(_renderer.get(), getComponentRenderingInfo(mesh));
       }
     }
   }
@@ -431,7 +448,7 @@ namespace Poulpe
       return;
     }
 
-    auto rdr_impl = _component_manager->get<RendererComponent>(entity_id);
+    auto rdr_impl { _component_manager->get<RendererComponent>(entity_id) };
 
     if (mesh && rdr_impl) {
       RendererInfo renderer_info  = getRendererInfo(mesh, camera_view_matrix);
@@ -446,15 +463,17 @@ namespace Poulpe
 
   void RenderManager::loadData(std::string const & level)
   {
-    auto * const config_manager = ConfigManagerLocator::get();
-    auto const& app_config{ config_manager->appConfig() };
+    auto * const config_manager { ConfigManagerLocator::get() };
+    auto const& app_config { config_manager->appConfig() };
 
-    auto const& lvl_data = config_manager->loadLevelData(level);
+    auto const& lvl_data { config_manager->loadLevelData(level) };
 
     if (lvl_data.contains("hasFog") && lvl_data["hasFog"]) {
       _env_options |= PLP_ENV_OPTIONS::HAS_FOG;
     }
-
+    if (lvl_data.contains("player")) {
+      _player_manager = std::make_unique<PlayerManager>(lvl_data["player"].get<std::string>());
+    }
     _texture_manager->addConfig(config_manager->texturesConfig());
 
     std::string const sb{ (_current_skybox.empty()) ? static_cast<std::string>(app_config["defaultSkybox"])
@@ -573,7 +592,8 @@ namespace Poulpe
     mesh->setIsIndexed(false);
     mesh->setShaderName("text");
     mesh->setName("_plp_text_" + std::to_string(entity->getID()));
-
+    mesh->setRoot();
+    
     auto rdr_impl{ RendererComponentFactory::create<Text>() };
     rdr_impl->setText(text.text);
     rdr_impl->setPosition(text.position);

@@ -53,10 +53,10 @@ namespace Poulpe
   {
   public:
     BoneAnimationScript(
-      std::vector<Animation> const& animations,
-      std::unordered_map<std::string, std::vector<std::vector<Position>>> const& positions,
-      std::unordered_map<std::string, std::vector<std::vector<Rotation>>> const& rotations,
-      std::unordered_map<std::string, std::vector<std::vector<Scale>>> const& scales);
+      std::unordered_map<std::string, std::vector<Animation>> const& animations,
+      std::unordered_map<std::string, std::unordered_map<std::string, std::vector<std::vector<Position>>>> const& positions,
+      std::unordered_map<std::string, std::unordered_map<std::string, std::vector<std::vector<Rotation>>>> const& rotations,
+      std::unordered_map<std::string, std::unordered_map<std::string, std::vector<std::vector<Scale>>>> const& scales);
     ~BoneAnimationScript() override = default;
 
     Data* getData();
@@ -66,7 +66,7 @@ namespace Poulpe
 
   private:
     Data* _data;
-    double _elapsed_time{ 0.0 };
+    std::unordered_map<std::string, double> _elapsed_time{ };
 
     bool _move_init{ false };
     bool _done{false};
@@ -74,15 +74,15 @@ namespace Poulpe
 
     bool _first_loop_done {false};
 
-    std::unordered_map<double, std::vector<glm::vec3>> _transform_cache{};
+    std::map<std::string, std::map<double, std::vector<glm::vec3>>> _transform_cache{};
     
     std::vector<std::unique_ptr<BoneAnimationMove>> _moves{};
     std::vector<std::unique_ptr<BoneAnimationMove>> _new_moves{};
 
-    std::vector<Animation> _animations{};
-    std::unordered_map<std::string, std::vector<std::vector<Position>>> _positions{};
-    std::unordered_map<std::string, std::vector<std::vector<Rotation>>> _rotations{};
-    std::unordered_map<std::string, std::vector<std::vector<Scale>>> _scales{};
+    std::unordered_map<std::string, std::vector<Animation>> _animations{};
+    std::unordered_map<std::string, std::unordered_map<std::string, std::vector<std::vector<Position>>>> _positions{};
+    std::unordered_map<std::string, std::unordered_map<std::string, std::vector<std::vector<Rotation>>>> _rotations{};
+    std::unordered_map<std::string, std::unordered_map<std::string, std::vector<std::vector<Scale>>>> _scales{};
 
     std::vector<glm::mat4> _bone_matrices;
 
@@ -90,7 +90,8 @@ namespace Poulpe
       Animation const& anim,
       std::string const& bone_name,
       glm::mat4 const& parent_transform,
-      double const duration);
+      double const duration,
+      double const elapsed_time);
 
     template<isAnimOperation T>
     std::pair<T, T> findKeyframe(
@@ -146,6 +147,11 @@ namespace Poulpe
         case AnimInterpolation::CUBIC_SPLINE:
         case AnimInterpolation::SPHERICAL_LINEAR:
         default:
+          //@todo valid ?
+          glm::dquat end_quat = end.value;
+          if (glm::dot(start.value, end_quat) < 0.0) {
+              end_quat = -end_quat;
+          }
           return glm::normalize(glm::slerp(start.value, end.value, t));
         }
       } else {

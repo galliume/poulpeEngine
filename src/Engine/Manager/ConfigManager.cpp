@@ -98,6 +98,10 @@ namespace Poulpe
       _lvl_config["hasFog"] = _entity_config.value("hasFog", false);
     }
 
+    if (_entity_config.contains("player")) {
+      _lvl_config["player"] = _entity_config.value("player", "");
+    }
+
     std::ranges::for_each(_entity_config["entities"].items(), [&](auto const& entities) {
       auto const& textures = entities.value();
 

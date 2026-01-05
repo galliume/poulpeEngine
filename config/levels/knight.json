@@ -92,13 +92,14 @@
       "flipY": false,
       "count": 1,
       "hasBbox": false,
-      "hasAnimation": false,
+      "hasAnimation": true,
       "isPointLight": false,
       "animationScripts": {
       },
       "hasShadow": true,
       "isIndexed": true,
-      "debugNormal": true
+      "debugNormal": true,
+      "defaultAnim": 1
     }
   }
 }

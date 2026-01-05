@@ -23,8 +23,9 @@
     }
   },
   "hasFog": false,
+  "player" : "Fox",
   "entities": {
-    "SnowTerrain": {
+     "SnowTerrain": {
       "mesh": "assets/mesh/SnowTerrain/terrain.gltf",
       "textures": {
         "snowterrain": {
@@ -265,16 +266,16 @@
       "shader": "main_basic",
       "positions": [
         {
-          "x": 11000.0,
-          "y": 1500.0,
-          "z": -15000.0
+          "x": 110.0,
+          "y": 15.0,
+          "z": -150.0
         }
       ],
       "scales": [
         {
-          "x": 1.5,
-          "y": 1.5,
-          "z": 1.5
+          "x": 1.0,
+          "y": 1.0,
+          "z": 1.0
         }
       ],
       "rotations": [
@@ -337,7 +338,7 @@
       ],
       "rotations": [
         {
-          "x": 2.0,
+          "x": 0.0,
           "y": 0.0,
           "z": 0.0
         }
@@ -354,14 +355,11 @@
       "debugNormal": true,
       "defaultAnim": 0
     },
-    "scene": {
-      "mesh": "assets/mesh/anime_nature_tree_01/scene.gltf",
+    "Man": {
+      "mesh": "assets/mesh/man/Man.gltf",
       "textures": {
-        "textures_trunk_M_diffuse": {
-          "path": "assets/mesh/anime_nature_tree_01/textures/trunk_M_diffuse.ktx2"
-        },
-        "textures_Leaves_M_diffuse": {
-          "path": "assets/mesh/anime_nature_tree_01/textures/Leaves_M_diffuse.ktx2"
+        "Man": {
+          "path": "assets/mesh/man/Man.ktx2"
         }
       },
       "ao": {
@@ -375,9 +373,9 @@
       "shader": "main_basic",
       "positions": [
         {
-          "x": -110.0,
-          "y": 20.0,
-          "z": 150.0
+          "x": 11.0,
+          "y": 15.0,
+          "z": -15.0
         }
       ],
       "scales": [
@@ -389,7 +387,74 @@
       ],
       "rotations": [
         {
-          "x": 2.0,
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
+        }
+      ],
+      "flipY": false,
+      "count": 1,
+      "hasBbox": false,
+      "hasAnimation": true,
+      "isPointLight": false,
+      "animationScripts": {
+      },
+      "hasShadow": true,
+      "isIndexed": true,
+      "debugNormal": true,
+      "defaultAnim": 3
+    },
+    "rat": {
+      "mesh": "assets/mesh/rat/rat.gltf",
+      "textures": {
+        "textures_Material_0_baseColor": {
+          "path": "assets/mesh/rat/textures/Material_0_baseColor.ktx2"
+        },
+        "textures_Rat_Knife_01default_baseColor": {
+          "path": "assets/mesh/rat/textures/Rat_Knife_01default_baseColor.ktx2"
+        }
+      },
+      "ao": {
+      },
+      "mr": {
+        "textures_Material_0_metallicRoughness": {
+          "path": "assets/mesh/rat/textures/Material_0_metallicRoughness.ktx2"
+        },
+        "textures_Rat_Knife_01default_metallicRoughness": {
+          "path": "assets/mesh/rat/textures/Rat_Knife_01default_metallicRoughness.ktx2"
+        }
+      },
+      "emissive": {
+        "textures_Material_0_emissive": {
+          "path": "assets/mesh/rat/textures/Material_0_emissive.ktx2"
+        }
+      },
+      "normal": {
+        "textures_Material_0_normal": {
+          "path": "assets/mesh/rat/textures/Material_0_normal.ktx2"
+        },
+      "textures_Rat_Knife_01default_normal": {
+          "path": "assets/mesh/rat/textures/Rat_Knife_01default_normal.ktx2"
+        }
+      },
+      "shader": "main_basic",
+      "positions": [
+        {
+          "x": 100.0,
+          "y": 15.0,
+          "z": -120.0
+        }
+      ],
+      "scales": [
+        {
+          "x": 0.1,
+          "y": 0.1,
+          "z": 0.1
+        }
+      ],
+      "rotations": [
+        {
+          "x": 45.0,
           "y": 0.0,
           "z": 0.0
         }
@@ -400,6 +465,7 @@
       "hasAnimation": false,
       "isPointLight": false,
       "animationScripts": {
+        "anim0": "assets/scripts/animation/helmet/anim0.lua"
       },
       "hasShadow": true,
       "isIndexed": true,
