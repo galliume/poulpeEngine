@@ -1,5 +1,7 @@
 #version 450
 #extension GL_EXT_nonuniform_qualifier : enable
+//#extension GL_ARB_shader_viewport_index_layer : enable
+#extension GL_NV_viewport_array2 : enable
 
 struct UBO
 {
@@ -54,9 +56,29 @@ layout(push_constant) uniform constants
   layout(offset = 96) uint options;
 } pc;
 
-layout(location = 0) in vec3 position;
+layout(location = 0) in vec4 tangent;
+layout(location = 1) in vec4 color;
+layout(location = 2) in vec3 position;
+layout(location = 3) in vec3 normal;
+layout(location = 4) in vec3 original_pos;
+layout(location = 5) in vec2 texture_coord;
+layout(location = 6) in ivec4 bone_ids;
+layout(location = 7) in vec4 bone_weights;
+layout(location = 8) in float total_weight;
 
 void main()
 {
-  gl_Position = ubo.model * vec4(position, 1.0);
+  int face = gl_InstanceIndex;
+  gl_Layer = face;
+
+  Light light = sun_light;
+  mat4 light_matrices[4] = mat4[4](
+    light.light_space_matrix,          // slice 0
+    light.light_space_matrix_left,     // slice 1
+    light.light_space_matrix_top,      // slice 2
+    light.light_space_matrix_right     // slice 3
+  );
+
+  gl_Position = light_matrices[face] * ubo.model * vec4(position, 1.0);
+  gl_Position.z / gl_Position.w;
 }

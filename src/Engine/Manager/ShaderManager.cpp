@@ -117,6 +117,65 @@ namespace Poulpe
       ubo_binding.descriptorCount = 1;
       ubo_binding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
       ubo_binding.pImmutableSamplers = nullptr;
+      ubo_binding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+
+      VkDescriptorSetLayoutBinding sampler_binding{};
+      sampler_binding.binding = 1;
+      sampler_binding.descriptorCount = 8;
+      sampler_binding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+      sampler_binding.pImmutableSamplers = nullptr;
+      sampler_binding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+      VkDescriptorSetLayoutBinding storage_binding{};
+      storage_binding.binding = 2;
+      storage_binding.descriptorCount = 2;
+      storage_binding.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+      storage_binding.pImmutableSamplers = nullptr;
+      storage_binding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+
+      VkDescriptorSetLayoutBinding depth_map_binding{};
+      depth_map_binding.binding = 3;
+      depth_map_binding.descriptorCount = 1;
+      depth_map_binding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+      depth_map_binding.pImmutableSamplers = nullptr;
+      depth_map_binding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+      VkDescriptorSetLayoutBinding cubemap_binding{};
+      cubemap_binding.binding = 4;
+      cubemap_binding.descriptorCount = 1;
+      cubemap_binding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+      cubemap_binding.pImmutableSamplers = nullptr;
+      cubemap_binding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+      VkDescriptorSetLayoutBinding light_storage_binding{};
+      light_storage_binding.binding = 5;
+      light_storage_binding.descriptorCount = 1;
+      light_storage_binding.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+      light_storage_binding.pImmutableSamplers = nullptr;
+      light_storage_binding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+
+      VkDescriptorSetLayoutBinding csm_binding{};
+      csm_binding.binding = 6;
+      csm_binding.descriptorCount = 1;
+      csm_binding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+      csm_binding.pImmutableSamplers = nullptr;
+      csm_binding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+      bindings = {
+        ubo_binding,
+        sampler_binding,
+        storage_binding,
+        depth_map_binding,
+        cubemap_binding,
+        light_storage_binding,
+        csm_binding };
+
+    } else if constexpr (T == DescSetLayoutType::Debug) {
+      VkDescriptorSetLayoutBinding ubo_binding{};
+      ubo_binding.binding = 0;
+      ubo_binding.descriptorCount = 1;
+      ubo_binding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+      ubo_binding.pImmutableSamplers = nullptr;
       ubo_binding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_GEOMETRY_BIT;
 
       VkDescriptorSetLayoutBinding sampler_binding{};
@@ -217,7 +276,6 @@ namespace Poulpe
       storage_binding.pImmutableSamplers = nullptr;
       storage_binding.stageFlags =
         VK_SHADER_STAGE_VERTEX_BIT
-        | VK_SHADER_STAGE_GEOMETRY_BIT
         | VK_SHADER_STAGE_FRAGMENT_BIT;
 
       bindings = { ubo_binding, storage_binding };
@@ -477,6 +535,19 @@ namespace Poulpe
       dpsSB.descriptorCount = 10;
 
       poolSizes.emplace_back(dpsSB);
+    } else if (shader_name == "normal_debug") { 
+      VkDescriptorPoolSize dpsSB;
+      dpsSB.type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+      dpsSB.descriptorCount = 10;
+
+      poolSizes.emplace_back(dpsSB);
+
+      push_constants.offset = 0;
+      push_constants.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_GEOMETRY_BIT;
+      push_constants.size = sizeof(constants);
+
+      need_bis = true;
+      descset_layout = createDescriptorSetLayout<DescSetLayoutType::Debug>();
     } else {
       VkDescriptorPoolSize dpsSB;
       dpsSB.type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
@@ -498,7 +569,6 @@ namespace Poulpe
     pipeline_create_infos.vertex_input_info = std::move(vertex_input_info);
     pipeline_create_infos.pipeline_layout = pipeline_layout;
 
-    Logger::debug("shader_name: {}", shader_name);
     graphic_pipeline = _renderer->getAPI()->createGraphicsPipeline(pipeline_create_infos);
     auto descriptorPool = _renderer->getAPI()->createDescriptorPool(poolSizes, 1000);
 
@@ -577,7 +647,7 @@ namespace Poulpe
     VkPipelineVertexInputStateCreateInfo* vertex_input_info = new VkPipelineVertexInputStateCreateInfo();
 
     if constexpr (T == VertexBindingType::Vertex3D) {
-      std::array<VkVertexInputAttributeDescription, 5>* attDesc = new std::array<VkVertexInputAttributeDescription, 5>(Vertex::getAttributeDescriptions());
+      std::array<VkVertexInputAttributeDescription, 9>* attDesc = new std::array<VkVertexInputAttributeDescription, 9>(Vertex::getAttributeDescriptions());
       VkVertexInputBindingDescription* bDesc = new VkVertexInputBindingDescription(Vertex::getBindingDescription());
 
       vertex_input_info->sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;

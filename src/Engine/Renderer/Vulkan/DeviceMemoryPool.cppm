@@ -17,7 +17,7 @@ namespace Poulpe
   public:
     enum class DeviceBufferType : std::uint8_t
     {
-      UNIFORM, STAGING
+      UNIFORM, STAGING, VERTEX
     };
 
     DeviceMemoryPool(
@@ -28,7 +28,7 @@ namespace Poulpe
     DeviceMemory* get(
       VkDevice const & device,
       VkDeviceSize const size,
-      VkMemoryPropertyFlags  const memory_type,
+      uint32_t  const memory_type,
       VkBufferUsageFlags const usage,
       VkDeviceSize const alignment,
       DeviceBufferType const buffer_type,

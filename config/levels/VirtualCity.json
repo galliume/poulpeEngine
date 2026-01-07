@@ -1,132 +1,135 @@
 {
-	"terrain": {
-		"46_016_3_028_13_512_512": {
-			"path": "assets/texture/terrain/height_map_1.ktx2"
-		}
-	},
-	"water": {
-		"_water_foam": {
-			"path": "assets/texture/water/_water_foam.ktx2"
-		},
-		"_water_normal": {
-			"path": "assets/texture/water/_water_normal.ktx2"
-		},
-		"_water_normal2": {
-			"path": "assets/texture/water/_water_normal2.ktx2"
-		}
-	},
-	"camera": {
-		"position": {
-			"x": 0.0,
-			"y": 0.0,
-			"z": 0.0
-		}
-	},
-	"entities": {
-		"VirtualCity": {
-			"mesh": "assets/mesh/VirtualCity/glTF/VirtualCity.gltf",
-			"textures": {
-				"001": {
-					"path": "assets/mesh/VirtualCity/glTF/001.ktx2"
-				},
-				"002": {
-					"path": "assets/mesh/VirtualCity/glTF/002.ktx2"
-				},
-				"5": {
-					"path": "assets/mesh/VirtualCity/glTF/5.ktx2"
-				},
-				"11": {
-					"path": "assets/mesh/VirtualCity/glTF/11.ktx2"
-				},
-				"cockpit-map": {
-					"path": "assets/mesh/VirtualCity/glTF/cockpit-map.ktx2"
-				},
-				"f22": {
-					"path": "assets/mesh/VirtualCity/glTF/f22.ktx2"
-				},
-				"heli": {
-					"path": "assets/mesh/VirtualCity/glTF/heli.ktx2"
-				},
-				"machine": {
-					"path": "assets/mesh/VirtualCity/glTF/machine.ktx2"
-				},
-				"O21": {
-					"path": "assets/mesh/VirtualCity/glTF/O21.ktx2"
-				},
-				"prop128": {
-					"path": "assets/mesh/VirtualCity/glTF/prop128.ktx2"
-				},
-				"s_01": {
-					"path": "assets/mesh/VirtualCity/glTF/s_01.ktx2"
-				},
-				"s_02": {
-					"path": "assets/mesh/VirtualCity/glTF/s_02.ktx2"
-				},
-				"s_03": {
-					"path": "assets/mesh/VirtualCity/glTF/s_03.ktx2"
-				},
-				"s_04": {
-					"path": "assets/mesh/VirtualCity/glTF/s_04.ktx2"
-				},
-				"s_05": {
-					"path": "assets/mesh/VirtualCity/glTF/s_05.ktx2"
-				},
-				"s_06": {
-					"path": "assets/mesh/VirtualCity/glTF/s_06.ktx2"
-				},
-				"s_07": {
-					"path": "assets/mesh/VirtualCity/glTF/s_06.ktx2"
-				},
-				"s_08": {
-					"path": "assets/mesh/VirtualCity/glTF/s_06.ktx2"
-				},
-				"scrapsurf03-red": {
-					"path": "assets/mesh/VirtualCity/glTF/s_06.ktx2"
-				},
-				"surface01": {
-					"path": "assets/mesh/VirtualCity/glTF/s_06.ktx2"
-				}
-			},
-			"mr": {
-			},
-			"emissive": {
-			},
-			"ao": {
-			},
-			"normal": {
-			},
-			"shader": "main_basic",
-			"positions": [
-				{
-					"x": 0.0,
-					"y": 0.0,
-					"z": 0.0
-				}
-			],
-			"scales": [
-				{
-					"x": 1.0,
-					"y": 1.0,
-					"z": 1.0
-				}
-			],
-			"rotations": [
-				{
-					"x": 0.0,
-					"y": 0.0,
-					"z": 0.0
-				}
-			],
-			"flipY": false,
-			"count": 1,
-			"hasBbox": false,
-			"hasAnimation": false,
-			"isPointLight": false,
-			"animationScripts": {
-			},
-			"hasShadow": true,
-			"isIndexed": true,
-			"debugNormal": true
-		}
-	}
+  "terrain": {
+    "46_016_3_028_13_512_512": {
+      "path": "assets/texture/terrain/height_map_1.ktx2"
+    }
+  },
+  "water": {
+    "_water_foam": {
+      "path": "assets/texture/water/_water_foam.ktx2"
+    },
+    "_water_normal": {
+      "path": "assets/texture/water/_water_normal.ktx2"
+    },
+    "_water_normal2": {
+      "path": "assets/texture/water/_water_normal2.ktx2"
+    }
+  },
+  "camera": {
+    "position": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0
+    }
+  },
+  "hasFog": false,
+  "player" : "WomanMesh0",
+  "entities": {
+    "VirtualCity": {
+      "mesh": "assets/mesh/VirtualCity/glTF/VirtualCity.gltf",
+      "textures": {
+        "001": {
+          "path": "assets/mesh/VirtualCity/glTF/001.ktx2"
+        },
+        "002": {
+          "path": "assets/mesh/VirtualCity/glTF/002.ktx2"
+        },
+        "5": {
+          "path": "assets/mesh/VirtualCity/glTF/5.ktx2"
+        },
+        "11": {
+          "path": "assets/mesh/VirtualCity/glTF/11.ktx2"
+        },
+        "cockpit-map": {
+          "path": "assets/mesh/VirtualCity/glTF/cockpit-map.ktx2"
+        },
+        "f22": {
+          "path": "assets/mesh/VirtualCity/glTF/f22.ktx2"
+        },
+        "heli": {
+          "path": "assets/mesh/VirtualCity/glTF/heli.ktx2"
+        },
+        "machine": {
+          "path": "assets/mesh/VirtualCity/glTF/machine.ktx2"
+        },
+        "O21": {
+          "path": "assets/mesh/VirtualCity/glTF/O21.ktx2"
+        },
+        "prop128": {
+          "path": "assets/mesh/VirtualCity/glTF/prop128.ktx2"
+        },
+        "s_01": {
+          "path": "assets/mesh/VirtualCity/glTF/s_01.ktx2"
+        },
+        "s_02": {
+          "path": "assets/mesh/VirtualCity/glTF/s_02.ktx2"
+        },
+        "s_03": {
+          "path": "assets/mesh/VirtualCity/glTF/s_03.ktx2"
+        },
+        "s_04": {
+          "path": "assets/mesh/VirtualCity/glTF/s_04.ktx2"
+        },
+        "s_05": {
+          "path": "assets/mesh/VirtualCity/glTF/s_05.ktx2"
+        },
+        "s_06": {
+          "path": "assets/mesh/VirtualCity/glTF/s_06.ktx2"
+        },
+        "s_07": {
+          "path": "assets/mesh/VirtualCity/glTF/s_06.ktx2"
+        },
+        "s_08": {
+          "path": "assets/mesh/VirtualCity/glTF/s_06.ktx2"
+        },
+        "scrapsurf03-red": {
+          "path": "assets/mesh/VirtualCity/glTF/s_06.ktx2"
+        },
+        "surface01": {
+          "path": "assets/mesh/VirtualCity/glTF/s_06.ktx2"
+        }
+      },
+      "mr": {
+      },
+      "emissive": {
+      },
+      "ao": {
+      },
+      "normal": {
+      },
+      "shader": "main_basic",
+      "positions": [
+        {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
+        }
+      ],
+      "scales": [
+        {
+          "x": 1.0,
+          "y": 1.0,
+          "z": 1.0
+        }
+      ],
+      "rotations": [
+        {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
+        }
+      ],
+      "flipY": false,
+      "count": 1,
+      "hasBbox": false,
+      "hasAnimation": true,
+      "isPointLight": false,
+      "animationScripts": {
+      },
+      "hasShadow": true,
+      "isIndexed": true,
+      "debugNormal": true,
+      "defaultAnim": 0
+    }
+  }
 }

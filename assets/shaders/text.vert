@@ -20,9 +20,15 @@ layout(set = 0, binding = 0) uniform UniformBufferObject {
   UBO ubo;
 };
 
-layout(location = 0) in vec3 position;
-layout(location = 1) in vec3 color;
-layout(location = 2) in vec2 texture_coord;
+layout(location = 0) in vec4 tangent;
+layout(location = 1) in vec4 color;
+layout(location = 2) in vec3 position;
+layout(location = 3) in vec3 normal;
+layout(location = 4) in vec3 original_pos;
+layout(location = 5) in vec2 texture_coord;
+layout(location = 6) in ivec4 bone_ids;
+layout(location = 7) in vec4 bone_weights;
+layout(location = 8) in float total_weight;
 
 layout(location = 0) out vec2 out_tex_coords;
 layout(location = 1) out vec3 out_color;
@@ -32,7 +38,7 @@ void main()
 {
   vec3 options = vec3(0.0, 0.0, 1.0);
   vec4 p = ubo.projection * vec4(position, 1.0);
-  
+
   if (bool((pc.options >> 0u) & 1u)) {
     options.x = 1.0;
     p = ubo.projection * pc.view * ubo.model * vec4(position, 1.0);
@@ -40,6 +46,6 @@ void main()
 
   gl_Position = p;
   out_tex_coords = texture_coord;
-  out_color = color;
+  out_color = color.rgb;
   out_options = options;
 }

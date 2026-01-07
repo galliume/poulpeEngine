@@ -53,6 +53,9 @@ void Water::operator()(
 
     int const rez{ 50 };
     int index{ 0 };
+    const float fRez = static_cast<float>(rez);
+    const glm::vec4 tangentDefault{0.0f, 0.0f, 0.0f, 0.0f};
+    const glm::vec3 normalDefault{1.0f, 1.0f, 0.0f};
 
 
     for(auto i = 0; i < rez - 1; i++) {
@@ -61,21 +64,57 @@ void Water::operator()(
         index = i + j;
         float const y{ 0.0f };
 
+        // Vertex v1
         Vertex v{
-          { -width/2.0f + width*i/(float)rez, y, -height/2.0f + height*j/(float)rez },
-          {1.0f, 1.0f, 0.0f}, {i / (float)rez, j / (float)rez }, {0.0f, 0.0f, 0.0f, 0.0f}, { index, 0.0f, 0.0f, 0.0f}, glm::vec3(0.0f), {}, {}};
+            tangentDefault,                      // tangent (vec4 - 16 bytes)
+            { (float)index, 0.0f, 0.0f, 0.0f },  // color (vec4 - 16 bytes)
+            { -width/2.0f + width*i/fRez, y, -height/2.0f + height*j/fRez }, // pos (vec3)
+            normalDefault,                       // normal (vec3)
+            glm::vec3(0.0f),                     // original_pos (vec3)
+            { i / fRez, j / fRez },              // texture_coord (vec2)
+            { 0, 0, 0, 0 },                      // bone_ids[4] (int32_t[4])
+            { 0.0f, 0.0f, 0.0f, 0.0f },          // bone_weights[4] (float[4])
+            0.0f                                 // total_weight (float)
+        };
 
+        // Vertex v2
         Vertex v2{
-          {-width/2.0f + width*(i+1)/(float)rez, y, -height/2.0f + height*j/(float)rez },
-          {1.0f, 1.0f, 0.0f}, {(i+1) / (float)rez, j / (float)rez }, {0.0f, 0.0f, 0.0f, 0.0f}, { index, 0.0f, 0.0f, 0.0f }, glm::vec3(0.0f), {}, {}};
+            tangentDefault,
+            { (float)index, 0.0f, 0.0f, 0.0f },
+            { -width/2.0f + width*(i+1)/fRez, y, -height/2.0f + height*j/fRez },
+            normalDefault,
+            glm::vec3(0.0f),
+            { (i+1) / fRez, j / fRez },
+            { 0, 0, 0, 0 },
+            { 0.0f, 0.0f, 0.0f, 0.0f },
+            0.0f
+        };
 
+        // Vertex v3
         Vertex v3{
-          {-width/2.0f + width*i/(float)rez, y, -height/2.0f + height*(j+1)/(float)rez },
-          {1.0f, 1.0f, 0.0f}, {i / (float)rez, (j+1) / (float)rez }, {0.0f, 0.0f, 0.0f, 0.0f}, { index, 0.0f, 0.0f, 0.0f }, glm::vec3(0.0f), {}, {}};
+            tangentDefault,
+            { (float)index, 0.0f, 0.0f, 0.0f },
+            { -width/2.0f + width*i/fRez, y, -height/2.0f + height*(j+1)/fRez },
+            normalDefault,
+            glm::vec3(0.0f),
+            { i / fRez, (j+1) / fRez },
+            { 0, 0, 0, 0 },
+            { 0.0f, 0.0f, 0.0f, 0.0f },
+            0.0f
+        };
 
+        // Vertex v4
         Vertex v4{
-          {-width/2.0f + width*(i+1)/(float)rez, y, -height/2.0f + height*(j+1)/(float)rez },
-          {1.0f, 1.0f, 0.0f}, {(i+1) / (float)rez, (j+1) / (float)rez }, {0.0f, 0.0f, 0.0f, 0.0f}, { index, 0.0f, 0.0f, 0.0f }, glm::vec3(0.0f), {}, {}};
+            tangentDefault,
+            { (float)index, 0.0f, 0.0f, 0.0f },
+            { -width/2.0f + width*(i+1)/fRez, y, -height/2.0f + height*(j+1)/fRez },
+            normalDefault,
+            glm::vec3(0.0f),
+            { (i+1) / fRez, (j+1) / fRez },
+            { 0, 0, 0, 0 },
+            { 0.0f, 0.0f, 0.0f, 0.0f },
+            0.0f
+        };
 
         vertices.push_back(v);
         vertices.push_back(v2);
@@ -99,7 +138,7 @@ void Water::operator()(
 
     mesh->getMaterial().alpha_mode = 2.0;//BLEND
     mesh->getData()->_ubos_offset.emplace_back(1);
-    mesh->getUniformBuffers().emplace_back(renderer->getAPI()->createUniformBuffers(1));
+    mesh->getUniformBuffers().emplace_back(renderer->getAPI()->createUniformBuffers(1, renderer->getCurrentFrameIndex()));
 
     for (std::size_t i{ 0 }; i < mesh->getData()->_ubos.size(); i++) {
       std::ranges::for_each(mesh->getData()->_ubos.at(i), [&](auto& data_ubo) {
@@ -110,7 +149,7 @@ void Water::operator()(
     vkDestroyCommandPool(renderer->getDevice(), cmd_pool, nullptr);
 
     if (!mesh->getData()->_ubos.empty()) {
-      renderer->getAPI()->updateUniformBuffer(mesh->getUniformBuffers().at(0), &mesh->getData()->_ubos.at(0));
+      renderer->getAPI()->updateUniformBuffer(mesh->getUniformBuffers().at(0), &mesh->getData()->_ubos.at(0), renderer->getCurrentFrameIndex());
     }
 
     createDescriptorSet(renderer, component_rendering_info);

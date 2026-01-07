@@ -17,6 +17,7 @@ import Engine.Component.Components;
 import Engine.Component.Texture;
 import Engine.Component.Vertex;
 
+import Engine.Core.Logger;
 import Engine.Core.MeshTypes;
 import Engine.Core.PlpTypedef;
 
@@ -51,31 +52,66 @@ namespace Poulpe
     int32_t const width{ static_cast<int32_t>(tex.getWidth()) };
     int32_t const height{ static_cast<int32_t>(tex.getHeight())};
     int32_t const rez{ 20 };
+    const float fRez = static_cast<float>(rez);
+    const glm::vec4 zeroVec4{0.0f, 0.0f, 0.0f, 0.0f};
+    const glm::vec3 defaultNormal{1.0f, 1.0f, 0.0f};
 
     for(int32_t i = 0; i < rez - 1; i++) {
       for(int32_t j = 0; j < rez - 1; j++) {
 
         float const y{ 0.0f };
 
+        // Vertex v1
         Vertex v{
-          { -width/2.0f + width*i/static_cast<float>(rez), y, -height/2.0f + height*j/static_cast<float>(rez) },
-          { 1.0f, 1.0f, 0.0f}, {i / static_cast<float>(rez), j / static_cast<float>(rez) }, {0.0f, 0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f},
-           glm::vec3{0.0f}, {}, {} };
+            zeroVec4, // tangent
+            zeroVec4, // color
+            { -width/2.0f + width*i/fRez, y, -height/2.0f + height*j/fRez }, // pos
+            defaultNormal, // normal
+            glm::vec3{0.0f}, // original_pos
+            { i / fRez, j / fRez }, // texture_coord
+            { 0, 0, 0, 0 }, // bone_ids[4]
+            { 0.0f, 0.0f, 0.0f, 0.0f }, // bone_weights[4]
+            0.0f // total_weight
+        };
 
+        // Vertex v2
         Vertex v2{
-          {-width/2.0f + width*(i+1)/static_cast<float>(rez), y, -height/2.0f + height*j/static_cast<float>(rez) },
-          {1.0f, 1.0f, 0.0f}, {(i+1) / static_cast<float>(rez), j / static_cast<float>(rez) }, {0.0f, 0.0f, 0.0f, 0.0f}, { 0.0f, 0.0f, 0.0f, 0.0f },
-           glm::vec3{0.0f}, {}, {} };
+            zeroVec4, 
+            zeroVec4,
+            { -width/2.0f + width*(i+1)/fRez, y, -height/2.0f + height*j/fRez },
+            defaultNormal,
+            glm::vec3{0.0f},
+            { (i+1) / fRez, j / fRez },
+            { 0, 0, 0, 0 },
+            { 0.0f, 0.0f, 0.0f, 0.0f },
+            0.0f
+        };
 
+        // Vertex v3
         Vertex v3{
-          {-width/2.0f + width*i/static_cast<float>(rez), y, -height/2.0f + height*(j+1)/static_cast<float>(rez) },
-          {1.0f, 1.0f, 0.0f}, {i / static_cast<float>(rez), (j+1) / static_cast<float>(rez) }, {0.0f, 0.0f, 0.0f, 0.0f}, { 0.0f, 0.0f, 0.0f, 0.0f },
-           glm::vec3{0.0f}, {}, {} };
+            zeroVec4,
+            zeroVec4,
+            { -width/2.0f + width*i/fRez, y, -height/2.0f + height*(j+1)/fRez },
+            defaultNormal,
+            glm::vec3{0.0f},
+            { i / fRez, (j+1) / fRez },
+            { 0, 0, 0, 0 },
+            { 0.0f, 0.0f, 0.0f, 0.0f },
+            0.0f
+        };
 
+        // Vertex v4
         Vertex v4{
-          {-width/2.0f + width*(i+1)/static_cast<float>(rez), y, -height/2.0f + height*(j+1)/static_cast<float>(rez) },
-          {1.0f, 1.0f, 0.0f}, {(i+1) / static_cast<float>(rez), (j+1) / static_cast<float>(rez) }, {0.0f, 0.0f, 0.0f, 0.0f}, { 0.0f, 0.0f, 0.0f, 0.0f },
-           glm::vec3{0.0f}, {}, {} };
+            zeroVec4,
+            zeroVec4,
+            { -width/2.0f + width*(i+1)/fRez, y, -height/2.0f + height*(j+1)/fRez },
+            defaultNormal,
+            glm::vec3{0.0f},
+            { (i+1) / fRez, (j+1) / fRez },
+            { 0, 0, 0, 0 },
+            { 0.0f, 0.0f, 0.0f, 0.0f },
+            0.0f
+        };
 
         vertices.push_back(v);
         vertices.push_back(v2);
@@ -100,7 +136,7 @@ namespace Poulpe
     data->_ubos[0] = ubos;
 
     mesh->getData()->_ubos_offset.emplace_back(1);
-    mesh->getUniformBuffers().emplace_back(renderer->getAPI()->createUniformBuffers(1));
+    mesh->getUniformBuffers().emplace_back(renderer->getAPI()->createUniformBuffers(1, renderer->getCurrentFrameIndex()));
 
     for (std::size_t i{ 0 }; i < mesh->getData()->_ubos.size(); i++) {
       std::ranges::for_each(mesh->getData()->_ubos.at(i), [&](auto& data_ubo) {
@@ -111,7 +147,7 @@ namespace Poulpe
     vkDestroyCommandPool(renderer->getDevice(), commandPool, nullptr);
 
     if (!mesh->getData()->_ubos.empty()) {
-      renderer->getAPI()->updateUniformBuffer(mesh->getUniformBuffers().at(0), &mesh->getData()->_ubos.at(0));
+      renderer->getAPI()->updateUniformBuffer(mesh->getUniformBuffers().at(0), &mesh->getData()->_ubos.at(0), renderer->getCurrentFrameIndex());
     }
 
     createDescriptorSet(renderer, component_rendering_info);

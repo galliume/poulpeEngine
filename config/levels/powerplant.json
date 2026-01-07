@@ -22,6 +22,8 @@
       "z": -3.0
     }
   },
+  "hasFog": false,
+  "player" : "",
   "entities": {
     "powerplant" : {
       "mesh": "assets/mesh/powerplant/powerplant.obj",
@@ -55,9 +57,12 @@
       "hasAnimation": false,
       "isPointLight": false,
       "animationScripts": {
+        "anim0": "assets/scripts/animation/helmet/anim0.lua"
       },
       "hasShadow": true,
-      "isIndexed": true
+      "isIndexed": true,
+      "debugNormal": true,
+      "defaultAnim": 0
     }
   }
 }

@@ -1,0 +1,104 @@
+{
+  "terrain": {
+    "height_map_1": {
+      "path": "assets/texture/terrain/height_map_1.ktx2"
+    }
+  },
+  "water": {
+    "_water_foam": {
+      "path": "assets/texture/water/_water_foam.ktx2"
+    },
+    "_water_normal": {
+      "path": "assets/texture/water/_water_normal.ktx2"
+    },
+    "_water_normal2": {
+      "path": "assets/texture/water/_water_normal2.ktx2"
+    }
+  },
+  "camera": {
+    "position": {
+      "x": -38.0,
+      "y": 18.0,
+      "z": -3.0
+    }
+  },
+  "hasFog": false,
+  "player" : "",
+  "entities": {
+     "midpoly_town_house_01": {
+      "mesh": "assets/mesh/house/midpoly_town_house_01.obj",
+      "textures": {
+        "textures_rocks_rock_bc": {
+          "path": "assets/mesh/house/textures/rocks/rock_bc.ktx2"
+        },
+        "textures_rooftiles_T_darkwood_basecolor": {
+          "path": "assets/mesh/house/textures/rooftiles/T_darkwood_basecolor.ktx2"
+        },
+        "textures_wood_T_brightwood_basecolor": {
+          "path": "assets/mesh/house/textures/wood/T_brightwood_basecolor.ktx2"
+        },
+        "textures_wood_T_darkwood_basecolor": {
+          "path": "assets/mesh/house/textures/wood/T_darkwood_basecolor.ktx2"
+        }
+      },
+      "ao": {
+      },
+      "mr": {
+        "textures_rocks_rock_r": {
+          "path": "assets/mesh/house/textures/rocks/rock_r.ktx2"
+        },
+        "textures_rooftiles_T_wood_roughness": {
+          "path": "assets/mesh/house/textures/rooftiles/T_wood_roughness.ktx2"
+        },
+        "textures_wood_T_wood_roughness": {
+          "path": "assets/mesh/house/textures/wood/T_wood_roughness.ktx2"
+        }
+      },
+      "emissive": {
+      },
+      "normal": {
+        "textures_rocks_rock_n": {
+          "path": "assets/mesh/house/textures/rocks/rock_n.ktx2"
+        },
+        "textures_rooftiles_T_wood_normal": {
+          "path": "assets/mesh/house/textures/rooftiles/T_wood_normal.ktx2"
+        },
+        "textures_wood_T_wood_normal": {
+          "path": "assets/mesh/house/textures/wood/T_wood_normal.ktx2"
+        }
+      },
+      "shader": "main_basic",
+      "positions": [
+        {
+          "x": 0.0,
+          "y": 10.0,
+          "z": 0.0
+        }
+      ],
+      "scales": [
+        {
+          "x": 10.0,
+          "y": 10.0,
+          "z": 10.0
+        }
+      ],
+      "rotations": [
+        {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
+        }
+      ],
+      "flipY": false,
+      "count": 1,
+      "hasBbox": false,
+      "hasAnimation": false,
+      "isPointLight": false,
+      "animationScripts": {
+      },
+      "hasShadow": true,
+      "isIndexed": true,
+      "debugNormal": true
+    }
+  }
+}

@@ -153,7 +153,7 @@ namespace Poulpe
     glm::vec4 diffuse{ 1.0 };
     glm::vec4 specular{ 1.0 };
     glm::vec3 transmittance{ 1.0 };
-    glm::vec3 mre_factor{ 1.0, 1.0, 1.0 };//x:metallic, y:roughness, z: blank
+    glm::vec3 mre_factor{ 0.0, 0.0, 1.0 };//x:metallic, y:roughness, z: blank
     float shininess{ 0.0 };
     float ior{ 0.0 };       // index of refraction
     float dissolve{ 1.0 };  // 1 == opaque; 0 == fully transparent

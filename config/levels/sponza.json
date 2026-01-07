@@ -433,7 +433,6 @@
       "hasAnimation": false,
       "isPointLight": false,
       "animationScripts": {
-        "anim0": "assets/scripts/animation/helmet/anim0.lua"
       },
       "hasShadow": true,
       "isIndexed": true,

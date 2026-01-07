@@ -26,7 +26,7 @@ namespace Poulpe
     void saveLastMousePos(double x_pos, double y_pos);
     void inline setCamera(Camera * const camera) { _camera = camera; }
     void updateMousePos(double x_pos, double y_pos);
-    void processGamepad(PlayerManager * player_manager);
+    void processGamepad(PlayerManager * player_manager, double const delta_time);
 
     static bool _can_move_camera;
     static bool _first_move_mouse;

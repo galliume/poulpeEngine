@@ -48,11 +48,15 @@ layout(push_constant) uniform constants
   layout(offset = 96) uint options;
 } pc;
 
-layout(location = 0) in vec3 position;
-layout(location = 1) in vec3 normal;
-layout(location = 2) in vec2 texture_coord;
-layout(location = 3) in vec4 tangent;
-layout(location = 4) in vec4 color;
+layout(location = 0) in vec4 tangent;
+layout(location = 1) in vec4 color;
+layout(location = 2) in vec3 position;
+layout(location = 3) in vec3 normal;
+layout(location = 4) in vec3 original_pos;
+layout(location = 5) in vec2 texture_coord;
+layout(location = 6) in ivec4 bone_ids;
+layout(location = 7) in vec4 bone_weights;
+layout(location = 8) in float total_weight;
 
 layout(binding = 1) uniform sampler2D tex_sampler[5];
 

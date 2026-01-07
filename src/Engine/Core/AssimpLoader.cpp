@@ -587,8 +587,6 @@ namespace Poulpe
         aiVector3D vertices = mesh->mVertices[v];
 
         Vertex vertex{};
-        vertex.bone_ids.resize(4, 0);
-        vertex.bone_weights.resize(4, 0.0f);
 
         vertex.pos = { vertices.x, vertices.y, vertices.z };
         //if (flip_Y) vertex.pos.y *= -1.0f;
@@ -748,24 +746,19 @@ namespace Poulpe
             [](auto const& a, auto const& b) { return a.second > b.second; });
 
           float total_weight{ 0.0f };
-          std::vector<std::size_t> bone_ids(4);
-          std::vector<float> bone_weights(4);
 
           for (std::size_t y{ 0 }; y < 4 && y < data_vertex.size(); ++y) {
-            bone_ids[y] = data_vertex[y].first;
-            bone_weights[y] = data_vertex[y].second;
+            vertex.bone_ids[y] = static_cast<std::int32_t>(data_vertex[y].first);
+            vertex.bone_weights[y] = data_vertex[y].second;
             total_weight += data_vertex[y].second;
           }
 
           if (total_weight > 0.0f) {
             for (std::size_t y{ 0 }; y < 4; ++y) {
-              bone_weights[y] /= total_weight;
-              vertex.total_weight += bone_weights[y]; 
+              vertex.bone_weights[y] /= total_weight;
+              vertex.total_weight += vertex.bone_weights[y]; 
             }
           }
-
-          vertex.bone_ids = bone_ids;
-          vertex.bone_weights = bone_weights;
         }
       }
       data.emplace_back(mesh_data);

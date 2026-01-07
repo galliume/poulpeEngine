@@ -65,19 +65,20 @@ namespace Poulpe
       LightObjectBuffer light_object_buffer{};
       _light_buffers[i] = _renderer->getAPI()->createStorageBuffers(light_object_buffer, _renderer->getCurrentFrameIndex());
     }
-    _renderer->getAPI()->endCopyBuffer(_renderer->getCurrentFrameIndex());
-
+    
     _entity_manager = std::make_unique<EntityManager>(
       _component_manager.get(),
       _light_manager.get(),
       _texture_manager.get(),
       _light_buffers.at(0)
     );
-
+    
     _font_manager = std::make_unique<FontManager>();
     _font_manager->addRenderer(_renderer.get());
     auto atlas = _font_manager->load();
 
+    _renderer->getAPI()->endCopyBuffer(_renderer->getCurrentFrameIndex());
+    
     _texture_manager->addTexture(atlas);
 
     //@todo, those managers should not have the usage of the renderer...
@@ -172,7 +173,7 @@ namespace Poulpe
   void RenderManager::renderScene(double const delta_time)
   {
     {
-      InputManagerLocator::get()->processGamepad(_player_manager.get());
+      InputManagerLocator::get()->processGamepad(_player_manager.get(), delta_time);
 
       //@todo animate light
       //_light_manager->animateAmbientLight(delta_time);
@@ -405,6 +406,7 @@ namespace Poulpe
       auto* animation_component { _component_manager->get<AnimationComponent>(entity_id) };
       if (animation_component) {
         (*animation_component)(animation_info);
+        mesh->setIsDirty(true);
       }
 
       auto* boneAnimationComponent { _component_manager->get<BoneAnimationComponent>(entity_id) };

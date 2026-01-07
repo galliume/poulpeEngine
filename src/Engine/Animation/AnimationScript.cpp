@@ -21,11 +21,11 @@ namespace Poulpe
   static int wrapMove(lua_State* L)
   {
     AnimationScript* animScript = static_cast<AnimationScript*>(lua_touserdata(L, 1));
-    double const delta_time{ static_cast<double>(lua_tonumber(L, 2)) };
-    float duration = static_cast<float>(lua_tonumber(L, 3));
-    float targetX = static_cast<float>(lua_tonumber(L, 4));
-    float targetY = static_cast<float>(lua_tonumber(L, 5));
-    float targetZ = static_cast<float>(lua_tonumber(L, 6));
+    double const delta_time { static_cast<double>(lua_tonumber(L, 2)) };
+    auto const duration { static_cast<float>(lua_tonumber(L, 3)) };
+    auto const targetX { static_cast<float>(lua_tonumber(L, 4)) };
+    auto const targetY { static_cast<float>(lua_tonumber(L, 5)) };
+    auto const targetZ { static_cast<float>(lua_tonumber(L, 6)) };
 
     animScript->move(
       animScript->getData(),
@@ -40,10 +40,10 @@ namespace Poulpe
   {
     AnimationScript* animScript = static_cast<AnimationScript*>(lua_touserdata(L, 1));
     double const delta_time{ static_cast<double>(lua_tonumber(L, 2)) };
-    float duration = static_cast<float>(lua_tonumber(L, 3));
-    float angle_x = static_cast<float>(lua_tonumber(L, 4));
-    float angle_y = static_cast<float>(lua_tonumber(L, 5));
-    float angle_z = static_cast<float>(lua_tonumber(L, 6));
+    auto const duration { static_cast<float>(lua_tonumber(L, 3)) };
+    auto const angle_x { static_cast<float>(lua_tonumber(L, 4)) };
+    auto const angle_y { static_cast<float>(lua_tonumber(L, 5)) };
+    auto const angle_z { static_cast<float>(lua_tonumber(L, 6)) };
 
     //Logger::debug("delta time {} duration {} x {} y {} z {}", delta_time, duration, angle_x, angle_y, angle_z);
 
@@ -148,26 +148,30 @@ namespace Poulpe
       float t{ glm::clamp(anim_rotate->elapsedTime / anim_rotate->duration, 0.0f, 1.0f) };
       bool done{ false };
 
-
+      anim_rotate->elapsedTime += static_cast<float>(dt);
       if (anim_rotate->elapsedTime >= anim_rotate->duration) {
         done = true;
         t = 1.f;
       }
-      anim_rotate->elapsedTime += static_cast<float>(dt);
+      //Logger::debug("anim_rotate->elapsedTime {}, dt {}, t {}", anim_rotate->elapsedTime, dt, t);
 
-      data_rotate->_current_rotation = glm::mix(data_rotate->_origin_rotation, anim_rotate->angle, t);
+      data_rotate->_current_rotation = glm::slerp(data_rotate->_origin_rotation, anim_rotate->angle, t);
 
-      glm::mat4 model = glm::mat4(1.0f);
-      model = glm::scale(model, data_rotate->_current_scale);
-      model = glm::translate(model, data_rotate->_current_pos);
-      model *= glm::mat4_cast(data_rotate->_current_rotation);
+      auto const T { glm::translate(glm::mat4(1.0f), data_rotate->_current_pos) };
+      auto const R { glm::mat4_cast(data_rotate->_current_rotation) };
+      auto const S { glm::scale(glm::mat4(1.0f), data_rotate->_current_scale) };
+
+      auto const transform  { T * R * S };
 
       for (std::size_t i{ 0 }; i < data_rotate->_ubos.size(); i++) {
-        std::ranges::for_each(data_rotate->_ubos.at(i), [&model](auto& ubo) {
-          ubo.model = model;
+        std::ranges::for_each(data_rotate->_ubos.at(i), [&transform](auto& ubo) {
+          ubo.model = transform;
         });
       }
 
+      if (done) {
+        data_rotate->_current_rotation = data_rotate->_origin_rotation;
+      }
       anim_rotate->done = done;
     };
     anim->update(anim.get(), data, delta_time);

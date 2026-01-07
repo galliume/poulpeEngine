@@ -45,7 +45,9 @@ layout(push_constant) uniform constants
   layout(offset = 96) uint options;
 } pc;
 
-layout(location = 0) in vec4 position;
+layout(location = 0) in vec4 tangent;
+layout(location = 1) in vec4 color;
+layout(location = 2) in vec3 position;
 
 void main()
 {
@@ -53,6 +55,6 @@ void main()
 
   float light_distance = length(position.xyz - light.position);
   //@todo why ? don't remember...
-  light_distance = light_distance / 50.f;
+  light_distance = light_distance / 69.f;
   gl_FragDepth = light_distance;
 }

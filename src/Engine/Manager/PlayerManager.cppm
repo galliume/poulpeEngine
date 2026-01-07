@@ -2,8 +2,6 @@ export module Engine.Managers.PlayerManager;
 
 import std;
 
-import Engine.Core.Logger;
-
 import Engine.Managers.ComponentManager;
 
 import Engine.Renderer.Mesh;
@@ -28,6 +26,8 @@ namespace Poulpe
       void setPlayerId(IDType id) { _player_id = id; _is_init = true; }
       void jump();
       bool isInit() { return _is_init; }
+
+      void move(float const x, float const y, double const delta_time);
 
     private:
       ComponentManager * _component_manager;

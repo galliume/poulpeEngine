@@ -90,7 +90,7 @@ namespace Poulpe
           if (vertex.total_weight > 0.f) {
             glm::vec4 result = glm::vec4(0.0f);
             for (std::size_t i{ 0 }; i < 4; ++i) {
-              auto const bone_id{ vertex.bone_ids[i] };
+              auto const bone_id{ static_cast<std::size_t>(vertex.bone_ids[i]) };
               auto const w { vertex.bone_weights[i] };
               if (w > 0.f) {
                 result += _bone_matrices[bone_id] * glm::vec4(vertex.original_pos, 1.0f) * w;
@@ -98,8 +98,6 @@ namespace Poulpe
             }
             vertex.pos = glm::vec3(result);
             //vertex_cache.emplace_back(result);
-          } else {
-            vertex.pos = vertex.original_pos;
           }
         }
       }

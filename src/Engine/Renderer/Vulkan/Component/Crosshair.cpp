@@ -77,7 +77,7 @@ namespace Poulpe
     for (uint32_t i{ 0 }; i < mesh->getUniformBuffers().size(); i++) {
       data._ubos[i].projection = _renderer->getPerspective();
 
-      _renderer->getAPI()->updateUniformBuffer(mesh->getUniformBuffers().at(i), &data._ubos);
+      _renderer->getAPI()->updateUniformBuffer(mesh->getUniformBuffers().at(i), &data._ubos, renderer->getCurrentFrameIndex());
     }
 
     createDescriptorSet(mesh);
