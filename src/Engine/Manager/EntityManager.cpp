@@ -313,14 +313,13 @@ namespace Poulpe
       data._ubos = ubos;
       data._original_ubo = ubo;
 
-      mesh->setData(data);
       mesh->bbox(true);
       mesh->setOptions(options);
       bool const is_last{ (_data.id == 0) ? true : false };
-
+      
       auto* entity = new Entity();
       entity->setName(_data.name);
-
+      
       if (is_last) {
         mesh->setRoot();
         for (auto child : _entity_children) {
@@ -329,10 +328,13 @@ namespace Poulpe
       } else {
         _entity_children.emplace_back(entity->getID());
       }
-      _animations[mesh->getName()] = animations;
-      _rotations [mesh->getName()] = rotations;
-      _positions[mesh->getName()] = positions;
-      _scales[mesh->getName()] = scales;
+      data._id = entity->getID();
+      mesh->setData(data);
+
+      _animations[data._id] = animations;
+      _rotations [data._id] = rotations;
+      _positions[data._id] = positions;
+      _scales[data._id] = scales;
 
       ComponentRenderingInfo rendering_info {
         .mesh = mesh.get(),

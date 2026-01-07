@@ -36,6 +36,7 @@ namespace Poulpe
     glm::vec3 original_pos;
     std::vector<std::size_t> bone_ids;
     std::vector<float> bone_weights;
+    float total_weight {0.f};
 
     static VkVertexInputBindingDescription getBindingDescription()
     {

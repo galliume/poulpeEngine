@@ -164,7 +164,7 @@ namespace Poulpe
     auto cmd_pool = renderer->getAPI()->createCommandPool();
 
     if (data->_ubos.empty()) {
-      data->_vertex_buffer = renderer->getAPI()->createVertexBuffer(vertices);
+      data->_vertex_buffer = renderer->getAPI()->createVertexBuffer(vertices, renderer->getCurrentFrameIndex());
 
       std::vector<UniformBufferObject> ubos{};
       ubos.reserve(1);
@@ -187,32 +187,26 @@ namespace Poulpe
         });
       }
     } else {
-      VkDeviceMemory staging_device_memory{};
-      VkDeviceSize buffer_size = sizeof(Vertex) * vertices.size();
+      auto const image_index { renderer->getCurrentFrameIndex() };
+      auto const current_offset { renderer->getAPI()->getCurrentStagingMemoryOffset(image_index) };
+      //VkDeviceMemory staging_device_memory{ renderer->getAPI()->getStagingMemory(renderer->getCurrentFrameIndex()) };
+      VkBuffer staging_buffer { renderer->getAPI()->getStagingBuffer(image_index) };
+      VkDeviceSize const buffer_size { sizeof(Vertex) * vertices.size() };
+      renderer->getAPI()->updateCurrentStagingMemoryOffset(buffer_size, image_index);
 
-      VkBuffer staging_buffer{};
-
-      renderer->getAPI()->createBuffer(
-       buffer_size,
-       VK_BUFFER_USAGE_VERTEX_BUFFER_BIT
-         | VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-       VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT
-         | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-       staging_buffer, staging_device_memory);
-
-      void* void_data;
-      vkMapMemory(renderer->getDevice(), staging_device_memory, 0, buffer_size, 0, &void_data);
-      std::memcpy(void_data, vertices.data(), static_cast<std::size_t>(buffer_size));
-      vkUnmapMemory(renderer->getDevice(), staging_device_memory);
+      void* void_data { renderer->getAPI()->getStagingMemoryPtr(image_index) };
+      std::memcpy(static_cast<char*>(void_data) + current_offset, vertices.data(), static_cast<std::size_t>(buffer_size));
 
       renderer->getAPI()->copyBuffer(
         staging_buffer,
         data->_vertex_buffer.buffer,
         buffer_size,
-        0);
+        current_offset,
+        0,
+        renderer->getCurrentFrameIndex());
 
-      vkDestroyBuffer(renderer->getDevice(), staging_buffer, nullptr);
-      vkFreeMemory(renderer->getDevice(), staging_device_memory, nullptr);
+        data->_is_dirty = true;
+        renderer->updateVertexBuffer(data, renderer->getCurrentFrameIndex());
     }
 
     vkDestroyCommandPool(renderer->getDevice(), cmd_pool, nullptr);
@@ -233,7 +227,7 @@ namespace Poulpe
   {
     auto const& mesh = component_rendering_info.mesh;
 
-    Texture atlas { component_rendering_info.textures.at("_plp_font_atlas")};
+    Texture atlas { component_rendering_info.textures->at("_plp_font_atlas")};
 
     atlas.setSampler(renderer->getAPI()->createKTXSampler(
       TextureWrapMode::WRAP,
@@ -241,7 +235,7 @@ namespace Poulpe
       0));
 
     if (atlas.getWidth() == 0) {
-      atlas = component_rendering_info.textures.at(PLP_EMPTY);
+      atlas = component_rendering_info.textures->at(PLP_EMPTY);
     }
 
     auto const sampler = renderer->getAPI()->createKTXSampler(

@@ -13,10 +13,10 @@ import std;
 namespace Poulpe
 {
   BoneAnimationScript::BoneAnimationScript(
-    std::unordered_map<std::string, std::vector<Animation>> const& animations,
-    std::unordered_map<std::string, std::unordered_map<std::string, std::vector<std::vector<Position>>>> const& positions,
-    std::unordered_map<std::string, std::unordered_map<std::string, std::vector<std::vector<Rotation>>>> const& rotations,
-    std::unordered_map<std::string, std::unordered_map<std::string, std::vector<std::vector<Scale>>>> const& scales,
+    std::unordered_map<std::size_t, std::vector<Animation>> const& animations,
+    std::unordered_map<std::size_t, std::unordered_map<std::string, std::vector<std::vector<Position>>>> const& positions,
+    std::unordered_map<std::size_t, std::unordered_map<std::string, std::vector<std::vector<Rotation>>>> const& rotations,
+    std::unordered_map<std::size_t, std::unordered_map<std::string, std::vector<std::vector<Scale>>>> const& scales,
     std::uint32_t anim_id
   )
     : _animations(std::move(animations))
@@ -49,23 +49,27 @@ namespace Poulpe
     _new_moves.clear();
 
     //if (!_move_init) {
-    if (_moves.empty() && !_animations[_data->_name].empty()) {
-      auto const& anim{ _animations[_data->_name].at(_anim_id) };
+    if (_moves.empty() && !_animations[_data->_id].empty()) {
+      auto const& anim{ _animations[_data->_id].at(_anim_id) };
       double const duration{ (anim.duration / anim.ticks_per_s) * 1000.0 };//ms
 
       if (!_first_loop_done) {
         _bone_matrices.resize(_data->_bones.size());
       }
 
-      auto & elapsed_time = _elapsed_time[_data->_name];
+      auto & elapsed_time = _elapsed_time[_data->_id];
 
       elapsed_time = fmod(elapsed_time + delta_time * 1000.0, duration);
-      auto const cache_key { std::trunc(elapsed_time) };
+      auto const cache_key { static_cast<int>(std::trunc(elapsed_time)) };
+      auto const& transform_cache { _transform_cache.find(_data->_id) };
+      
+      if (transform_cache != _transform_cache.end()) {
+        auto const& cache { transform_cache->second.find(cache_key) };
 
-      if (_transform_cache.contains(_data->_name) && _transform_cache[_data->_name].contains(cache_key)) {
-        auto const& cache {_transform_cache[_data->_name][cache_key]};
-        for (std::size_t i { 0 }; i < _data->_vertices.size(); i++) {
-          _data->_vertices[i].pos = cache[i];
+        if (cache != transform_cache->second.end() && !cache->second.empty()) {
+          for (std::size_t i { 0 }; i < _data->_vertices.size(); i++) {
+            _data->_vertices[i].pos = cache->second[i];
+          }
         }
       } else {
         //if (_transform_cache[cache_key].empty()) {
@@ -74,14 +78,16 @@ namespace Poulpe
         auto const& root_bone = _data->_bones[_data->_root_bone_name];
         updateBoneTransforms(anim, root_bone.name, glm::mat4(1.0f), duration, elapsed_time);
 
+        //auto & vertex_cache { _transform_cache[_data->_id][cache_key] };
+        
         for (auto& vertex : _data->_vertices) {
-          float const total_weight {
-            vertex.bone_weights[0]
-            + vertex.bone_weights[1]
-            + vertex.bone_weights[2]
-            + vertex.bone_weights[3] };
+          // float const total_weight {
+          //   vertex.bone_weights[0]
+          //   + vertex.bone_weights[1]
+          //   + vertex.bone_weights[2]
+          //   + vertex.bone_weights[3] };
 
-          if (total_weight > 0.f) {
+          if (vertex.total_weight > 0.f) {
             glm::vec4 result = glm::vec4(0.0f);
             for (std::size_t i{ 0 }; i < 4; ++i) {
               auto const bone_id{ vertex.bone_ids[i] };
@@ -91,13 +97,12 @@ namespace Poulpe
               }
             }
             vertex.pos = glm::vec3(result);
-            _transform_cache[_data->_name][cache_key].emplace_back(result);
+            //vertex_cache.emplace_back(result);
           } else {
             vertex.pos = vertex.original_pos;
           }
         }
       }
-
 
       if (!animation_info.looping && duration < elapsed_time + 10) {
         _done = true;
@@ -119,7 +124,7 @@ namespace Poulpe
     auto new_rotation { bone.t_pose_rotation };
 
     //Logger::debug("bone: {}", bone.name);
-    auto const& scale_bone_node { _scales[_data->_name][bone.name] };
+    auto const& scale_bone_node { _scales[_data->_id][bone.name] };
     if (!scale_bone_node.empty() && scale_bone_node.size() >= _anim_id) {
       auto const& scales_data{ scale_bone_node.at(_anim_id) };
 
@@ -131,7 +136,7 @@ namespace Poulpe
       }
     }
 
-    auto const& position_bone_node { _positions[_data->_name][bone.name] };
+    auto const& position_bone_node { _positions[_data->_id][bone.name] };
     if (!position_bone_node.empty() && position_bone_node.size() >= _anim_id) {
       auto const& positions_data = position_bone_node.at(_anim_id);
 
@@ -143,7 +148,7 @@ namespace Poulpe
       }
     }
 
-    auto const& rotation_bone_node { _rotations[_data->_name][bone.name] };
+    auto const& rotation_bone_node { _rotations[_data->_id][bone.name] };
     if (!rotation_bone_node.empty() && rotation_bone_node.size() >= _anim_id) {
       auto const& rotations_data{ rotation_bone_node.at(_anim_id) };
 

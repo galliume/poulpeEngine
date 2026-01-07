@@ -23,6 +23,7 @@ namespace Poulpe
   public:
     struct Text
     {
+      std::size_t id;
       std::string name;//must be unique, not robust for the moment
       std::string const text;
       glm::vec3 position { 0.0f };

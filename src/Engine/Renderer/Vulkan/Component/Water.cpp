@@ -45,7 +45,7 @@ void Water::operator()(
 
     if (!mesh && !mesh->isDirty()) return;
 
-    Texture const& tex { component_rendering_info.textures.at(component_rendering_info.terrain_name)};
+    Texture const& tex { component_rendering_info.textures->at(component_rendering_info.terrain_name)};
 
     std::vector<Vertex> vertices;
     int const width{ static_cast<int>(tex.getWidth()) };
@@ -94,7 +94,7 @@ void Water::operator()(
 
     data->_ubos.push_back(ubos);
     data->_vertices = vertices;
-    data->_vertex_buffer = renderer->getAPI()->createVertexBuffer(vertices);
+    data->_vertex_buffer = renderer->getAPI()->createVertexBuffer(vertices, renderer->getCurrentFrameIndex());
     data->_texture_index = 0;
 
     mesh->getMaterial().alpha_mode = 2.0;//BLEND
@@ -123,7 +123,7 @@ void Water::operator()(
   {
     auto const& mesh = component_rendering_info.mesh;
 
-    Texture tex { component_rendering_info.textures.at(PLP_EMPTY)};
+    Texture tex { component_rendering_info.textures->at(PLP_EMPTY)};
 
     tex.setSampler(renderer->getAPI()->createKTXSampler(
       TextureWrapMode::WRAP,
@@ -131,30 +131,30 @@ void Water::operator()(
       0));
 
     if (tex.getWidth() == 0) {
-      tex = component_rendering_info.textures.at(PLP_EMPTY);
+      tex = component_rendering_info.textures->at(PLP_EMPTY);
     }
 
-    Texture texture_normal{ component_rendering_info.textures.at(PLP_WATER_NORMAL_1) };
+    Texture texture_normal{ component_rendering_info.textures->at(PLP_WATER_NORMAL_1) };
       texture_normal.setSampler(renderer->getAPI()->createKTXSampler(
       TextureWrapMode::WRAP,
       TextureWrapMode::WRAP,
       1));
 
     if (texture_normal.getWidth() == 0) {
-      texture_normal = component_rendering_info.textures.at(PLP_EMPTY);
+      texture_normal = component_rendering_info.textures->at(PLP_EMPTY);
     }
 
-    Texture texture_normal2{ component_rendering_info.textures.at(PLP_WATER_NORMAL_2) };
+    Texture texture_normal2{ component_rendering_info.textures->at(PLP_WATER_NORMAL_2) };
       texture_normal2.setSampler(renderer->getAPI()->createKTXSampler(
       TextureWrapMode::WRAP,
       TextureWrapMode::WRAP,
       1));
 
     if (texture_normal2.getWidth() == 0) {
-      texture_normal2 = component_rendering_info.textures.at(PLP_EMPTY);
+      texture_normal2 = component_rendering_info.textures->at(PLP_EMPTY);
     }
 
-    Texture env { component_rendering_info.textures.at(component_rendering_info.skybox_name) };
+    Texture env { component_rendering_info.textures->at(component_rendering_info.skybox_name) };
     env.setSampler(renderer->getAPI()->createKTXSampler(
     TextureWrapMode::CLAMP_TO_EDGE,
     TextureWrapMode::CLAMP_TO_EDGE,

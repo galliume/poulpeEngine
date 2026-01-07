@@ -54,14 +54,15 @@ namespace Poulpe
     data->_texture_index = 0;
 
     if (data->_vertex_buffer.buffer == VK_NULL_HANDLE) {
-      data->_vertex_buffer = renderer->getAPI()->createVertexBuffer(data->_vertices);
-      data->_indices_buffer = renderer->getAPI()->createIndexBuffer(data->_indices);
+      data->_vertex_buffer = renderer->getAPI()->createVertexBuffer(data->_vertices, renderer->getCurrentFrameIndex());
+      data->_indices_buffer = renderer->getAPI()->createIndexBuffer(data->_indices, renderer->getCurrentFrameIndex());
     } else {
       //suppose we have to update data
       {
+        data->_is_dirty = true;
         //data->_vertex_buffer.memory->lock();
-        auto *buffer { data->_vertex_buffer.memory->getBuffer(data->_vertex_buffer.index) };
-        renderer->getAPI()->updateVertexBuffer(data->_vertices, buffer);
+        //auto *buffer { data->_vertex_buffer.memory->getBuffer(data->_vertex_buffer.index) };
+        renderer->updateVertexBuffer(data, renderer->getCurrentFrameIndex());
         //data->_vertex_buffer.memory->unLock();
       }
     }
@@ -121,7 +122,7 @@ namespace Poulpe
       ObjectBuffer objectBuffer{};
       objectBuffer.material = material;
 
-      auto storageBuffer{ renderer->getAPI()->createStorageBuffers(objectBuffer) };
+      auto storageBuffer{ renderer->getAPI()->createStorageBuffers(objectBuffer, renderer->getCurrentFrameIndex()) };
 
       mesh->setObjectBuffer(objectBuffer);
       mesh->addStorageBuffer(storageBuffer);
@@ -178,7 +179,7 @@ namespace Poulpe
       1));
 
     if (texture_bump.getWidth() == 0) {
-      texture_bump = component_rendering_info.textures.at(PLP_EMPTY);
+      texture_bump = component_rendering_info.textures->at(PLP_EMPTY);
     }
 
     Texture texture_specular{ getTexture(component_rendering_info, mesh->getData()->_specular_map)};
@@ -188,7 +189,7 @@ namespace Poulpe
     texture_specular.getMipLevels()));
 
     if (texture_specular.getWidth() == 0) {
-      texture_specular = component_rendering_info.textures.at(PLP_EMPTY);
+      texture_specular = component_rendering_info.textures->at(PLP_EMPTY);
     }
 
     Texture texture_metal_roughness { getTexture(component_rendering_info, mesh->getData()->_metal_roughness) };
@@ -198,7 +199,7 @@ namespace Poulpe
     texture_metal_roughness.getMipLevels()));
 
     if (texture_metal_roughness.getWidth() == 0) {
-      texture_metal_roughness = component_rendering_info.textures.at(PLP_EMPTY);
+      texture_metal_roughness = component_rendering_info.textures->at(PLP_EMPTY);
     }
 
     Texture texture_emissive { getTexture(component_rendering_info, mesh->getData()->_emissive) };
@@ -208,7 +209,7 @@ namespace Poulpe
     texture_emissive.getMipLevels()));
 
     if (texture_emissive.getWidth() == 0) {
-      texture_emissive = component_rendering_info.textures.at(PLP_EMPTY);
+      texture_emissive = component_rendering_info.textures->at(PLP_EMPTY);
     }
 
     Texture texture_ao { getTexture(component_rendering_info, mesh->getData()->_ao) };
@@ -218,7 +219,7 @@ namespace Poulpe
     texture_ao.getMipLevels()));
 
     if (texture_ao.getWidth() == 0) {
-      texture_ao = component_rendering_info.textures.at(PLP_EMPTY);
+      texture_ao = component_rendering_info.textures->at(PLP_EMPTY);
     }
 
     // Texture texture_base_color { getTexture(component_rendering_info, mesh->getData()->_base_color) };
@@ -228,7 +229,7 @@ namespace Poulpe
     // texture_base_color.getMipLevels()));
 
     // if (texture_base_color.getWidth() == 0) {
-    //   texture_base_color = component_rendering_info.textures.at(PLP_EMPTY);
+    //   texture_base_color = component_rendering_info.textures->at(PLP_EMPTY);
     // }
 
     //VkDescriptorImageInfo shadowMapSpot{};
@@ -255,7 +256,7 @@ namespace Poulpe
       0));
 
     if (texture_environment.getWidth() == 0) {
-      texture_environment = component_rendering_info.textures.at(PLP_EMPTY);
+      texture_environment = component_rendering_info.textures->at(PLP_EMPTY);
     }
     env_info.emplace_back(texture_environment.getSampler(), texture_environment.getImageView(), VK_IMAGE_LAYOUT_GENERAL);
 
@@ -368,11 +369,13 @@ namespace Poulpe
     std::string const& name) const
   {
     auto tex_name { name };
-    if (!component_rendering_info.textures.contains(name)) {
+    auto const& it { component_rendering_info.textures->find(name) };
+
+    if (it == component_rendering_info.textures->end()) {
       Logger::warn("Cannot load texture : {}", name);
-      tex_name = PLP_ERROR;
+      return component_rendering_info.textures->at(PLP_ERROR);
     }
 
-    return component_rendering_info.textures.at(tex_name);
+    return it->second;
   }
 }

@@ -45,7 +45,7 @@ namespace Poulpe
 
     if (!mesh && !mesh->isDirty()) return;
 
-    Texture const& tex { component_rendering_info.textures.at(component_rendering_info.terrain_name) };
+    Texture const& tex { component_rendering_info.textures->at(component_rendering_info.terrain_name) };
 
     std::vector<Vertex> vertices;
     int32_t const width{ static_cast<int32_t>(tex.getWidth()) };
@@ -94,7 +94,7 @@ namespace Poulpe
     ubos.push_back(ubo);
 
     data->_vertices = vertices;
-    data->_vertex_buffer = renderer->getAPI()->createVertexBuffer(vertices);
+    data->_vertex_buffer = renderer->getAPI()->createVertexBuffer(vertices, renderer->getCurrentFrameIndex());
     data->_texture_index = 0;
     data->_ubos.resize(1);
     data->_ubos[0] = ubos;
@@ -123,7 +123,7 @@ namespace Poulpe
     ComponentRenderingInfo const& component_rendering_info)
   {
     auto const& mesh = component_rendering_info.mesh;
-    auto height_map { component_rendering_info.textures.at(component_rendering_info.terrain_name)};
+    auto height_map { component_rendering_info.textures->at(component_rendering_info.terrain_name)};
 
     height_map.setSampler(renderer->getAPI()->createKTXSampler(
       TextureWrapMode::WRAP,
@@ -131,11 +131,11 @@ namespace Poulpe
       0));
 
     if (height_map.getWidth() == 0) {
-      height_map = component_rendering_info.textures.at(PLP_EMPTY);
+      height_map = component_rendering_info.textures->at(PLP_EMPTY);
     }
 
     //@todo fix this ugly fix. Needs a real asset unique ID
-    Texture ground { component_rendering_info.textures.at(PLP_GROUND)};
+    Texture ground { component_rendering_info.textures->at(PLP_GROUND)};
 
     ground.setSampler(renderer->getAPI()->createKTXSampler(
       TextureWrapMode::WRAP,
@@ -143,10 +143,10 @@ namespace Poulpe
       0));
 
     if (ground.getWidth() == 0) {
-      ground = component_rendering_info.textures.at(PLP_EMPTY);
+      ground = component_rendering_info.textures->at(PLP_EMPTY);
     }
 
-    Texture grass { component_rendering_info.textures.at(PLP_GRASS)};
+    Texture grass { component_rendering_info.textures->at(PLP_GRASS)};
 
     grass.setSampler(renderer->getAPI()->createKTXSampler(
       TextureWrapMode::WRAP,
@@ -154,10 +154,10 @@ namespace Poulpe
       0));
 
     if (grass.getWidth() == 0) {
-      grass = component_rendering_info.textures.at(PLP_EMPTY);
+      grass = component_rendering_info.textures->at(PLP_EMPTY);
     }
 
-    Texture snow { component_rendering_info.textures.at(PLP_SNOW)};
+    Texture snow { component_rendering_info.textures->at(PLP_SNOW)};
 
     snow.setSampler(renderer->getAPI()->createKTXSampler(
       TextureWrapMode::WRAP,
@@ -165,10 +165,10 @@ namespace Poulpe
       0));
 
     if (snow.getWidth() == 0) {
-      snow = component_rendering_info.textures.at(PLP_EMPTY);
+      snow = component_rendering_info.textures->at(PLP_EMPTY);
     }
 
-    Texture sand { component_rendering_info.textures.at(PLP_SAND)};
+    Texture sand { component_rendering_info.textures->at(PLP_SAND)};
 
     sand.setSampler(renderer->getAPI()->createKTXSampler(
       TextureWrapMode::WRAP,
@@ -176,10 +176,10 @@ namespace Poulpe
       0));
 
     if (sand.getWidth() == 0) {
-      sand = component_rendering_info.textures.at(PLP_EMPTY);
+      sand = component_rendering_info.textures->at(PLP_EMPTY);
     }
 
-    Texture low_noise { component_rendering_info.textures.at(PLP_LOW_NOISE)};
+    Texture low_noise { component_rendering_info.textures->at(PLP_LOW_NOISE)};
 
     low_noise.setSampler(renderer->getAPI()->createKTXSampler(
       TextureWrapMode::WRAP,
@@ -187,10 +187,10 @@ namespace Poulpe
       0));
 
     if (low_noise.getWidth() == 0) {
-      low_noise = component_rendering_info.textures.at(PLP_EMPTY);
+      low_noise = component_rendering_info.textures->at(PLP_EMPTY);
     }
 
-    Texture hi_noise { component_rendering_info.textures.at(PLP_HI_NOISE)};
+    Texture hi_noise { component_rendering_info.textures->at(PLP_HI_NOISE)};
 
     hi_noise.setSampler(renderer->getAPI()->createKTXSampler(
       TextureWrapMode::WRAP,
@@ -198,7 +198,7 @@ namespace Poulpe
       0));
 
     if (hi_noise.getWidth() == 0) {
-      hi_noise = component_rendering_info.textures.at(PLP_EMPTY);
+      hi_noise = component_rendering_info.textures->at(PLP_EMPTY);
     }
 
     std::vector<VkDescriptorImageInfo> image_infos{};
@@ -210,7 +210,7 @@ namespace Poulpe
     image_infos.emplace_back(hi_noise.getSampler(), hi_noise.getImageView(), VK_IMAGE_LAYOUT_GENERAL);
     image_infos.emplace_back(low_noise.getSampler(), low_noise.getImageView(), VK_IMAGE_LAYOUT_GENERAL);
 
-    Texture env { component_rendering_info.textures.at(component_rendering_info.skybox_name) };
+    Texture env { component_rendering_info.textures->at(component_rendering_info.skybox_name) };
     env.setSampler(renderer->getAPI()->createKTXSampler(
     TextureWrapMode::CLAMP_TO_EDGE,
     TextureWrapMode::CLAMP_TO_EDGE,

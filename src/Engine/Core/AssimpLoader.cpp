@@ -758,9 +758,11 @@ namespace Poulpe
           }
 
           if (total_weight > 0.0f) {
-            for (std::size_t y{ 0 }; y < 4; ++y)
+            for (std::size_t y{ 0 }; y < 4; ++y) {
               bone_weights[y] /= total_weight;
+              vertex.total_weight += bone_weights[y]; 
             }
+          }
 
           vertex.bone_ids = bone_ids;
           vertex.bone_weights = bone_weights;
