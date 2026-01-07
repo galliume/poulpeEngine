@@ -12,6 +12,7 @@ module Engine.Renderer.VulkanRenderer;
 import std;
 
 import Engine.Component.Components;
+import Engine.Component.Vertex;
 
 import Engine.Core.Logger;
 import Engine.Core.MeshTypes;
@@ -33,7 +34,7 @@ namespace Poulpe
   void Renderer::init()
   {
     _swapchain = _vulkan->createSwapChain(_images);
-    auto const buffer_size {_images.size()};
+    auto const buffer_size { _max_frames_in_flight };
 
     _imageviews.resize(buffer_size);
     _samplers.resize(buffer_size);
@@ -51,6 +52,8 @@ namespace Poulpe
     _imageviews3.resize(buffer_size);
     _images3.resize(buffer_size);
     _samplers3.resize(buffer_size);
+
+    _vertices_to_update.resize(3);
 
     for (std::size_t i{ 0 }; i < buffer_size; ++i) {
       VkImage image;
@@ -278,6 +281,31 @@ namespace Poulpe
 
   void Renderer::startRender()
   {
+    auto &vertices_to_update { _vertices_to_update.at(_current_frame) };
+
+    _vulkan->startUpdateVertexBuffer(_current_frame);
+
+    for (std::size_t y { 0 }; y < vertices_to_update.size(); y++) {
+      
+      Data * data { vertices_to_update.at(y) };
+      
+      if (!data->_is_dirty) continue;
+
+      auto * buffer { data->_vertex_buffer.memory->getBuffer(data->_vertex_buffer.index) };
+
+      _vulkan->updateVertexBuffer(
+        data->_vertices,
+        buffer,
+        _current_frame
+      );
+
+      data->_is_dirty = false;
+    }
+
+    _vulkan->submitVertexUpdate(_sema_present_completes[_current_frame], _current_frame);
+
+    vertices_to_update.clear();
+
     auto& cmd_buffer = _cmd_buffer_entities[_current_frame];
     auto& colorview = _imageviews[_current_frame];
     auto& color = _images[_current_frame];
@@ -712,17 +740,17 @@ namespace Poulpe
     auto &_current_timeline_value = _current_timeline_values[_current_frame];
     std::uint64_t const draw_finished = _current_timeline_value + 1;
     std::uint64_t const finished = _current_timeline_value + 3;
-    std::array<std::uint64_t, 1> wait_values = { 0 };
+    std::array<std::uint64_t, 2> wait_values = { 0, 0 };
     std::array<std::uint64_t, 2> signal_values = { draw_finished, 0 };
 
     //VkPipelineStageFlags wait_stage_mask = VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT;
-    std::array<VkPipelineStageFlags, 2> graphics_wait_stage_masks = { VK_PIPELINE_STAGE_VERTEX_INPUT_BIT, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
-    std::array<VkSemaphore, 1> graphics_wait_semaphores = { _image_available[_current_frame] };
+    std::array<VkPipelineStageFlags, 2> graphics_wait_stage_masks = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, VK_PIPELINE_STAGE_VERTEX_INPUT_BIT };
+    std::array<VkSemaphore, 2> graphics_wait_semaphores = { _image_available[_current_frame], _sema_present_completes[_current_frame] };
     std::array<VkSemaphore, 2> graphics_signal_semaphores = { timeline_semaphore, semaphore_render_complete };
 
     VkTimelineSemaphoreSubmitInfoKHR timeline_submit_info{};
     timeline_submit_info.sType = VK_STRUCTURE_TYPE_TIMELINE_SEMAPHORE_SUBMIT_INFO_KHR;
-    timeline_submit_info.waitSemaphoreValueCount = 1;
+    timeline_submit_info.waitSemaphoreValueCount = 2;
     timeline_submit_info.pWaitSemaphoreValues = wait_values.data();
     timeline_submit_info.signalSemaphoreValueCount = 2;
     timeline_submit_info.pSignalSemaphoreValues = signal_values.data();
@@ -731,14 +759,14 @@ namespace Poulpe
     submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
     submit_info.commandBufferCount = static_cast<uint32_t>(cmds_buffer.size());
     submit_info.pCommandBuffers = cmds_buffer.data();
-    submit_info.waitSemaphoreCount = 1;
+    submit_info.waitSemaphoreCount = 2;
     submit_info.pWaitSemaphores = graphics_wait_semaphores.data();
     submit_info.pWaitDstStageMask = graphics_wait_stage_masks.data();
     submit_info.signalSemaphoreCount = 2;
     submit_info.pSignalSemaphores = graphics_signal_semaphores.data();
     submit_info.pNext = &timeline_submit_info;
 
-    auto queue = _vulkan->getGraphicsQueues().at(0);
+    auto queue = _vulkan->getGraphicsQueues().at(_current_frame);
 
     std::vector<VkSwapchainKHR> swapchains{ _swapchain };
 
@@ -841,5 +869,12 @@ namespace Poulpe
     vkBeginCommandBuffer(_cmd_buffer_entities4[_current_frame], &begin_info);
     vkCmdClearColorImage(_cmd_buffer_entities4[_current_frame], _images[_current_frame], VK_IMAGE_LAYOUT_GENERAL, &clear_color, 1, &image_range);
     vkEndCommandBuffer(_cmd_buffer_entities4[_current_frame]);
+  }
+
+  void Renderer::updateVertexBuffer(
+    Data * data,
+    std::size_t const image_index)
+  {
+    _vertices_to_update[image_index].push_back(data);
   }
 }

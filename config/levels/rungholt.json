@@ -23,6 +23,7 @@
     }
   },
   "hasFog": true,
+  "player": "",
   "entities": {
     "rungholt": {
       "mesh": "assets/mesh/rungholt/rungholt.obj",

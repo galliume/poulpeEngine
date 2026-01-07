@@ -24,6 +24,7 @@ namespace Poulpe {
 
     //@todo needs huge refactoring
   export struct Data {
+    std::size_t _id;
     std::string _name;
     std::string _texture_prefix;
     std::vector<std::string> _textures;
@@ -59,5 +60,6 @@ namespace Poulpe {
     std::uint32_t _default_anim{};
     glm::vec3 _bbox_min{};
     glm::vec3 _bbox_max{};
+    bool _is_dirty {false};
   };
 }

@@ -106,31 +106,41 @@ VulkanAPI::VulkanAPI(Window* window)
   fence_info.flags = VK_FENCE_CREATE_SIGNALED_BIT;
   //VkFence fence;
 
-  vkCreateFence(_device, & fence_info, nullptr, & _fence_acquire_image);
-  vkCreateFence(_device, & fence_info, nullptr, & _fence_submit);
-  vkCreateFence(_device, & fence_info, nullptr, & _fence_buffer);
+  _fence_submit.resize(3);
+  _fence_buffer.resize(3);
 
-  VkBufferCreateInfo bufferInfo{};
-  bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-  bufferInfo.size = 64 * 1024 * 1024; // 64MB staging area
-  bufferInfo.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
-  bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+  _staging_buffer.resize(3);
+  _staging_data_ptr.resize(3);
+  _staging_device_memory.resize(3);
 
-  vkCreateBuffer(_device, &bufferInfo, nullptr, &_staging_buffer);
-  
-  VkMemoryRequirements memRequirements;
-  vkGetBufferMemoryRequirements(_device, _staging_buffer, &memRequirements);
+  _update_vertex_offsets.resize(3);
 
-  VkMemoryAllocateInfo allocInfo{};
-  allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-  allocInfo.allocationSize = memRequirements.size;
-  allocInfo.memoryTypeIndex = findMemoryType(memRequirements.memoryTypeBits, 
-      VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+  for (std::size_t i {0}; i < 3; i++) {
+    vkCreateFence(_device, & fence_info, nullptr, & _fence_submit[i]);
+    vkCreateFence(_device, & fence_info, nullptr, & _fence_buffer[i]);
 
-  vkAllocateMemory(_device, &allocInfo, nullptr, &_staging_device_memory);
-  vkBindBufferMemory(_device, _staging_buffer, _staging_device_memory, 0);
+    VkBufferCreateInfo bufferInfo{};
+    bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+    bufferInfo.size = 512 * 1024 * 1024; // staging area
+    bufferInfo.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+    bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-  vkMapMemory(_device, _staging_device_memory, 0, bufferInfo.size, 0, &_staging_data_ptr);
+    vkCreateBuffer(_device, &bufferInfo, nullptr, &_staging_buffer[i]);
+
+    VkMemoryRequirements memRequirements;
+    vkGetBufferMemoryRequirements(_device, _staging_buffer[i], &memRequirements);
+
+    VkMemoryAllocateInfo allocInfo{};
+    allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+    allocInfo.allocationSize = memRequirements.size;
+    allocInfo.memoryTypeIndex = findMemoryType(memRequirements.memoryTypeBits,
+        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+
+    vkAllocateMemory(_device, &allocInfo, nullptr, &_staging_device_memory[i]);
+    vkBindBufferMemory(_device, _staging_buffer[i], _staging_device_memory[i], 0);
+
+    vkMapMemory(_device, _staging_device_memory[i], 0, bufferInfo.size, 0, &_staging_data_ptr[i]);
+  }
 }
 
 void VulkanAPI::initMemoryPool()
@@ -185,7 +195,7 @@ void VulkanAPI::createInstance()
   create_info.ppEnabledExtensionNames = _required_extensions.data();
   create_info.enabledLayerCount = 0;
   create_info.pNext = VK_NULL_HANDLE;
-  
+
   if (_enable_validation_layers) {
     VkDebugUtilsMessengerCreateInfoEXT debug_create_info{};
 
@@ -506,7 +516,7 @@ void VulkanAPI::createLogicalDevice()
   //   .descriptorBindingStorageTexelBufferUpdateAfterBind = VK_FALSE,
   //   .descriptorBindingUpdateUnusedWhilePending = VK_FALSE,
   //   .descriptorBindingPartiallyBound = VK_TRUE,
-  //   .descriptorBindingVariableDescriptorCount = VK_TRUE, 
+  //   .descriptorBindingVariableDescriptorCount = VK_TRUE,
   //   .runtimeDescriptorArray = VK_TRUE,
   // };
 
@@ -680,10 +690,10 @@ void VulkanAPI::createLogicalDevice()
   vulkan_features13.pNext = &unified_image_layouts;
   unified_image_layouts.pNext = nullptr;
   features2.pNext = &present_wait_feature;
-  
+
   VkDeviceCreateInfo create_info {
     .sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
-    .pNext = &features2, 
+    .pNext = &features2,
     .flags = 0,
     .queueCreateInfoCount = static_cast<uint32_t>(queue_create_infos.size()),
     .pQueueCreateInfos = queue_create_infos.data(),
@@ -1362,16 +1372,24 @@ std::vector<VkFramebuffer> VulkanAPI::createFramebuffers(
   return swapchain_framebuffers;
 }
 
-VkCommandPool VulkanAPI::createCommandPool()
+VkCommandPool VulkanAPI::createCommandPool(bool transfer_queue)
 {
   VkCommandPool cmd_pool;
 
   QueueFamilyIndices queue_family_indices = findQueueFamilies(_physical_device);
 
+  auto const queue_family = (transfer_queue)
+    ? queue_family_indices.transferFamily.value()
+    : queue_family_indices.graphicsFamily.value();
+
+  auto const flags = (transfer_queue)
+    ? VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT
+    : VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+
   VkCommandPoolCreateInfo poolInfo{};
   poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-  poolInfo.queueFamilyIndex = queue_family_indices.graphicsFamily.value();
-  poolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+  poolInfo.queueFamilyIndex = queue_family;
+  poolInfo.flags = flags;
 
   VkResult result = vkCreateCommandPool(_device, & poolInfo, nullptr, & cmd_pool);
 
@@ -1825,22 +1843,27 @@ void VulkanAPI::endCommandBuffer(VkCommandBuffer& cmd_buffer)
   vkEndCommandBuffer(cmd_buffer);
 }
 
-VkResult VulkanAPI::queueSubmit(VkCommandBuffer& cmd_buffer, std::size_t const queue_index)
+VkResult VulkanAPI::queueSubmit(
+  VkCommandBuffer& cmd_buffer,
+  std::size_t const queue_index,
+  std::size_t const image_index)
 {
   VkSubmitInfo submit_info{};
   submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
   submit_info.commandBufferCount = 1;
   submit_info.pCommandBuffers = &cmd_buffer;
 
+  auto &fence_submit { _fence_submit[image_index] };
+
   VkResult result = VK_SUCCESS;
   {
-    std::lock_guard<std::mutex> guard(_mutex_queue_submit);
-    vkResetFences(_device, 1, &_fence_submit);
+    //std::lock_guard<std::mutex> guard(_mutex_queue_submit);
+    vkWaitForFences(_device, 1, & fence_submit, VK_TRUE, UINT32_MAX);
+    vkResetFences(_device, 1, &fence_submit);
 
-    result = vkQueueSubmit(_graphics_queues[queue_index], 1, &submit_info, _fence_submit);
-    vkWaitForFences(_device, 1, & _fence_submit, VK_TRUE, UINT32_MAX);
-    vkResetCommandBuffer(cmd_buffer, VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
+    result = vkQueueSubmit(_graphics_queues[queue_index], 1, &submit_info, fence_submit);
     //vkQueueWaitIdle(_graphics_queues[queue_index]);
+    //vkResetCommandBuffer(cmd_buffer, VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
   }
   return result;
 }
@@ -1936,7 +1959,8 @@ void VulkanAPI::createBuffer(
 }
 
 Buffer VulkanAPI::createIndexBuffer(
-  std::vector<uint32_t> const& indices)
+  std::vector<uint32_t> const& indices,
+  std::size_t const image_index)
 {
   VkDeviceSize buffer_size = sizeof(indices[0]) * indices.size();
 
@@ -1968,7 +1992,7 @@ Buffer VulkanAPI::createIndexBuffer(
   auto const offset { device_memory->getOffset() };
   auto const index{ device_memory->bindBufferToMemory(buffer, bind_offset) };
 
-  copyBuffer(staging_buffer, buffer, buffer_size);
+  copyBuffer(staging_buffer, buffer, buffer_size, 0, 0, image_index);
 
   Buffer mesh_buffer;
   mesh_buffer.buffer = std::move(buffer);
@@ -1977,19 +2001,18 @@ Buffer VulkanAPI::createIndexBuffer(
   mesh_buffer.size = size;
   mesh_buffer.index = index;
 
-  vkDestroyBuffer(_device, staging_buffer, nullptr);
-  vkFreeMemory(_device, staging_device_memory, nullptr);
-
   return mesh_buffer;
 }
 
 Buffer VulkanAPI::createVertexBuffer(
-  std::vector<Vertex> const& vertices)
+  std::vector<Vertex> const& vertices,
+  std::size_t const image_index)
 {
   VkDeviceSize buffer_size = sizeof(Vertex) * vertices.size();
 
   VkBuffer staging_buffer{};
   VkDeviceMemory staging_device_memory{};
+  VkDeviceMemory buffer_device_memory{};
 
   createBuffer(
     buffer_size,
@@ -2003,10 +2026,14 @@ Buffer VulkanAPI::createVertexBuffer(
   std::memcpy(data, vertices.data(), static_cast<std::size_t>(buffer_size));
   vkUnmapMemory(_device, staging_device_memory);
 
-  VkBuffer buffer = createBuffer(
+  VkBuffer buffer;
+  createBuffer(
     buffer_size,
     VK_BUFFER_USAGE_TRANSFER_DST_BIT
-    | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT);
+    | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+    VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+    buffer,
+    buffer_device_memory);
 
   VkMemoryRequirements mem_requirements;
   vkGetBufferMemoryRequirements(_device, buffer, & mem_requirements);
@@ -2026,7 +2053,7 @@ Buffer VulkanAPI::createVertexBuffer(
   //auto const offset { device_memory->getOffset() };
   auto const index{ device_memory->bindBufferToMemory(buffer, bind_offset) };
 
-  copyBuffer(staging_buffer, buffer, buffer_size);
+  copyBuffer(staging_buffer, buffer, buffer_size, 0, 0, image_index);
 
   Buffer mesh_buffer;
   mesh_buffer.buffer = std::move(buffer);
@@ -2035,125 +2062,74 @@ Buffer VulkanAPI::createVertexBuffer(
   mesh_buffer.size = size;
   mesh_buffer.index = index;
 
-  vkDestroyBuffer(_device, staging_buffer, nullptr);
-  vkFreeMemory(_device, staging_device_memory, nullptr);
-
   return mesh_buffer;
 }
 
-void VulkanAPI::updateVertexBuffer(
-    std::vector<Vertex> const& new_vertices,
-    VkBuffer& buffer_to_update)
+void VulkanAPI::startUpdateVertexBuffer(std::size_t const image_index)
 {
-  VkDeviceSize buffer_size = sizeof(Vertex) * new_vertices.size();
-
-  // VkBuffer staging_buffer{};
-  // VkDeviceMemory staging_device_memory{};
-
-  // createBuffer(
-  //   buffer_size,
-  //   VK_BUFFER_USAGE_VERTEX_BUFFER_BIT
-  //     | VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-  //     VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-  //   staging_buffer, staging_device_memory);
-
-  // void* data;
-  // vkMapMemory(_device, staging_device_memory, 0, buffer_size, 0, &data);
-  std::memcpy(_staging_data_ptr, new_vertices.data(), static_cast<std::size_t>(buffer_size));
-  //vkUnmapMemory(_device, staging_device_memory);
+  auto &transfer_cmd_buffer = _transfer_cmd_buffer[image_index];
 
   VkCommandBufferBeginInfo begin_info{};
   begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
   begin_info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
 
-  vkBeginCommandBuffer(_transfer_cmd_buffer, &begin_info);
+  vkBeginCommandBuffer(transfer_cmd_buffer, &begin_info);
+}
+
+void VulkanAPI::updateVertexBuffer(
+    std::vector<Vertex> const& new_vertices,
+    VkBuffer& buffer_to_update,
+    std::size_t const image_index)
+{
+  VkDeviceSize buffer_size = sizeof(Vertex) * new_vertices.size();
+  auto &transfer_cmd_buffer = _transfer_cmd_buffer[image_index];
+  std::size_t const current_offset { _update_vertex_offsets[image_index] };
+
+  std::memcpy(static_cast<char*>(_staging_data_ptr[image_index]) + current_offset, new_vertices.data(), static_cast<std::size_t>(buffer_size));
 
   VkBufferCopy copy_region{};
-  copy_region.srcOffset = 0;
+  copy_region.srcOffset = current_offset;
   copy_region.dstOffset = 0;
   copy_region.size = buffer_size;
 
-  vkCmdCopyBuffer(_transfer_cmd_buffer, _staging_buffer, buffer_to_update, 1, & copy_region);
-  vkEndCommandBuffer(_transfer_cmd_buffer);
+  vkCmdCopyBuffer(transfer_cmd_buffer, _staging_buffer[image_index], buffer_to_update, 1, & copy_region);
+
+  _update_vertex_offsets[image_index] += buffer_size;
+}
+
+void VulkanAPI::submitVertexUpdate(VkSemaphore & semaphore, std::size_t const image_index)
+{
+  auto &transfer_cmd_buffer = _transfer_cmd_buffer[image_index];
+
+  vkEndCommandBuffer(transfer_cmd_buffer);
 
   VkSubmitInfo submit_info{};
   submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
   submit_info.commandBufferCount = 1;
-  submit_info.pCommandBuffers = &_transfer_cmd_buffer;
+  submit_info.pCommandBuffers = &transfer_cmd_buffer;
+  submit_info.signalSemaphoreCount = 1;
+  submit_info.pSignalSemaphores = &semaphore;
 
-  vkResetFences(_device, 1, &_fence_buffer);
-  VkResult result = vkQueueSubmit(_transfer_queues[0], 1, & submit_info, _fence_buffer);
+  VkResult result = vkQueueSubmit(_transfer_queues[image_index], 1, & submit_info, VK_NULL_HANDLE);
+
+  _update_vertex_offsets[image_index] = 0;
 
   if (result != VK_SUCCESS) {
-    Logger::error("failed to copy buffer.");
+    Logger::error("failed to copy buffer in updateVertexBuffer.");
   }
-
-  vkWaitForFences(_device, 1, &_fence_buffer, VK_TRUE, UINT32_MAX);
-
-  // vkDestroyBuffer(_device, staging_buffer, nullptr);
-  // vkFreeMemory(_device, staging_device_memory, nullptr);
-}
-
-Buffer VulkanAPI::createVertex2DBuffer(
-  std::vector<Vertex2D> const& vertices)
-{
-  VkDeviceSize buffer_size = sizeof(Vertex2D) * vertices.size();
-  VkBuffer staging_buffer{};
-  VkDeviceMemory staging_device_memory{};
-
-  createBuffer(buffer_size, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-    VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, staging_buffer, staging_device_memory);
-
-  void* data;
-  vkMapMemory(_device, staging_device_memory, 0, buffer_size, 0, &data);
-  std::memcpy(_staging_data_ptr, vertices.data(), static_cast<std::size_t>(buffer_size));
-  vkUnmapMemory(_device, staging_device_memory);
-
-  VkBuffer buffer = createBuffer(buffer_size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT);
-  VkMemoryRequirements mem_requirements;
-  vkGetBufferMemoryRequirements(_device, buffer, &mem_requirements);
-
-  auto memory_type = findMemoryType(mem_requirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-  VkDeviceSize const size = mem_requirements.size;
-  VkDeviceSize const bind_offset = align_to(size, mem_requirements.alignment);
-
-  auto device_memory = _device_memory_pool->get(
-    _device,
-    size,
-    memory_type,
-    VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-    mem_requirements.alignment,
-    DeviceMemoryPool::DeviceBufferType::UNIFORM);
-
-  auto const offset { device_memory->getOffset() };
-  auto const index{ device_memory->bindBufferToMemory(buffer, bind_offset) };
-
-  copyBuffer(staging_buffer, buffer, buffer_size);
-
-  Buffer mesh_buffer;
-  mesh_buffer.buffer = std::move(buffer);
-  mesh_buffer.memory = device_memory;
-  mesh_buffer.offset = offset;
-  mesh_buffer.size = size;
-  mesh_buffer.index = index;
-
-  vkDestroyBuffer(_device, staging_buffer, nullptr);
-  vkFreeMemory(_device, staging_device_memory, nullptr);
-
-  return mesh_buffer;
 }
 
 Buffer VulkanAPI::createUniformBuffers(
   std::uint64_t const uniform_buffers_count)
 {
   VkDeviceSize buffer_size = sizeof(UniformBufferObject) * uniform_buffers_count;
-  VkBuffer buffer = createBuffer(buffer_size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT);
+  VkBuffer buffer = createBuffer(buffer_size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT);
   VkMemoryRequirements mem_requirements;
   vkGetBufferMemoryRequirements(_device, buffer, &mem_requirements);
 
   auto memoryType = findMemoryType(
     mem_requirements.memoryTypeBits,
-    VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+    VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT | VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 
   std::uint64_t const size = mem_requirements.size;
   std::uint64_t const bind_offset = align_to(size, mem_requirements.alignment);
@@ -2162,7 +2138,7 @@ Buffer VulkanAPI::createUniformBuffers(
     _device,
     size,
     memoryType,
-    VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+    VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
     mem_requirements.alignment,
     DeviceMemoryPool::DeviceBufferType::UNIFORM);
 
@@ -2185,16 +2161,6 @@ Buffer VulkanAPI::createIndirectCommandsBuffer(std::vector<VkDrawIndexedIndirect
   VkBuffer buffer{ createBuffer(
     sizeof(VkDrawIndexedIndirectCommand) * draw_cmds.size(),
     VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT) };
-
-  // VkBuffer buffer;
-  // VkDeviceMemory staging_device_memory;
-
-  //  createBuffer(
-  //   ktx_texture->dataSize,
-  //   VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-  //   VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT,
-  //   buffer,
-  //   staging_device_memory);
 
   VkMemoryRequirements mem_requirements;
   vkGetBufferMemoryRequirements(_device, buffer, & mem_requirements);
@@ -2281,73 +2247,109 @@ void VulkanAPI::updateUniformBuffer(Buffer& buffer, std::vector<UniformBufferObj
 
 void VulkanAPI::createTransferCmdPool()
 {
-  VkCommandPoolCreateInfo const pool_info {
-    .sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,
-    .pNext = nullptr,
-    .flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT,
-    .queueFamilyIndex = _queue_family_indices.transferFamily.value()
-  };
+  _transfer_cmd_buffer.resize(3);
+  _transfer_cmd_pool.resize(3);
 
-  VkResult result { vkCreateCommandPool(_device, & pool_info, nullptr, & _transfer_cmd_pool) };
+  _copy_cmd_buffer.resize(3);
+  _copy_cmd_pool.resize(3);
+
+  for (std::size_t i {0}; i < 3; i++) {
+    VkCommandPoolCreateInfo const pool_info {
+      .sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,
+      .pNext = nullptr,
+      .flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT,
+      .queueFamilyIndex = _queue_family_indices.transferFamily.value()
+    };
+
+    VkResult result { vkCreateCommandPool(_device, & pool_info, nullptr, & _transfer_cmd_pool[i]) };
+
+    if (result != VK_SUCCESS) {
+      Logger::error("failed to create transfer command pool!");
+      return;
+    }
+
+    result = vkCreateCommandPool(_device, & pool_info, nullptr, & _copy_cmd_pool[i]);
+
+    if (result != VK_SUCCESS) {
+      Logger::error("failed to create copy command pool!");
+      return;
+
+    }
+    VkCommandBufferAllocateInfo const alloc_info {
+      .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
+      .pNext = nullptr,
+      .commandPool = _copy_cmd_pool[i],
+      .level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
+      .commandBufferCount = 1
+    };
+
+    result = vkAllocateCommandBuffers(_device, & alloc_info, & _transfer_cmd_buffer[i]);
+
+    if (result != VK_SUCCESS) {
+      Logger::error("failed to allocate transfer cmd buffer.");
+    }
+
+    result = vkAllocateCommandBuffers(_device, & alloc_info, & _copy_cmd_buffer[i]);
+
+    if (result != VK_SUCCESS) {
+      Logger::error("failed to allocate copy cmd buffer.");
+    }
+  }
+}
+
+void VulkanAPI::startCopyBuffer(std::size_t const image_index)
+{
+  auto & fence_buffer { _fence_buffer[image_index] };
+  vkWaitForFences(_device, 1, &fence_buffer, VK_TRUE, UINT32_MAX);
+
+  vkResetFences(_device, 1, &fence_buffer);
+  vkResetCommandBuffer(_copy_cmd_buffer[image_index], 0);
+
+  VkCommandBufferBeginInfo begin_info{};
+  begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+  begin_info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+
+  VkResult result { vkBeginCommandBuffer(_copy_cmd_buffer[image_index], &begin_info) };
 
   if (result != VK_SUCCESS) {
-    Logger::error("failed to create command pool!");
-    return;
+    Logger::error("vkBeginCommandBuffer failed in startCopyBuffer");
   }
-    
-  VkCommandBufferAllocateInfo const alloc_info {
-    .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
-    .pNext = nullptr,
-    .commandPool = _transfer_cmd_pool,
-    .level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
-    .commandBufferCount = 1
-  };
-  
-  result = vkAllocateCommandBuffers(_device, & alloc_info, & _transfer_cmd_buffer);
+}
+
+void VulkanAPI::endCopyBuffer(std::size_t const image_index)
+{
+  vkEndCommandBuffer(_copy_cmd_buffer[image_index]);
+
+  auto & fence_buffer { _fence_buffer[image_index] };
+
+  VkSubmitInfo submit_info{};
+  submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+  submit_info.commandBufferCount = 1;
+  submit_info.pCommandBuffers = &_copy_cmd_buffer[image_index];
+
+  VkResult result { vkQueueSubmit(_transfer_queues[image_index], 1, & submit_info, fence_buffer) };
 
   if (result != VK_SUCCESS) {
-    Logger::error("failed to allocate cmd buffer.");
+    Logger::error("failed to copy buffer in copyBuffer");
   }
+
+  //vkQueueWaitIdle(_transfer_queues[image_index]);
 }
 
 void VulkanAPI::copyBuffer(
   VkBuffer& src_buffer,
   VkBuffer& dst_buffer,
   VkDeviceSize const size,
-  VkDeviceSize dst_offset)
+  VkDeviceSize src_offset,
+  VkDeviceSize dst_offset,
+  std::size_t const image_index)
 {
-  {
-    std::lock_guard<std::mutex> guard(_mutex_copy_buffer);
+  VkBufferCopy copy_region{};
+  copy_region.srcOffset = src_offset;
+  copy_region.dstOffset = dst_offset;
+  copy_region.size = size;
 
-    VkCommandBufferBeginInfo begin_info{};
-    begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-    begin_info.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
-
-    vkBeginCommandBuffer(_transfer_cmd_buffer, &begin_info);
-
-    VkBufferCopy copy_region{};
-    copy_region.srcOffset = 0;
-    copy_region.dstOffset = dst_offset;
-    copy_region.size = size;
-
-    vkCmdCopyBuffer(_transfer_cmd_buffer, src_buffer, dst_buffer, 1, & copy_region);
-    vkEndCommandBuffer(_transfer_cmd_buffer);
-
-    VkSubmitInfo submit_info{};
-    submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-    submit_info.commandBufferCount = 1;
-    submit_info.pCommandBuffers = &_transfer_cmd_buffer;
-
-    vkResetFences(_device, 1, &_fence_buffer);
-    VkResult result = vkQueueSubmit(_transfer_queues[0], 1, & submit_info, _fence_buffer);
-
-    if (result != VK_SUCCESS) {
-      Logger::error("failed to copy buffer.");
-    }
-
-    vkWaitForFences(_device, 1, &_fence_buffer, VK_TRUE, UINT32_MAX);
-    //vkQueueWaitIdle(_graphics_queues[queue_index]);
-  }
+  vkCmdCopyBuffer(_copy_cmd_buffer[image_index], src_buffer, dst_buffer, 1, & copy_region);
 }
 
 VkImageMemoryBarrier VulkanAPI::setupImageMemoryBarrier(
@@ -2597,7 +2599,8 @@ void VulkanAPI::createTextureImage(
   uint32_t const mip_lvl,
   VkImage& texture_image,
   VkFormat const format,
-  uint32_t const scale)
+  uint32_t const scale,
+  std::size_t const)
 {
   VkDeviceSize image_size { tex_width * tex_height * scale };
 
@@ -2646,9 +2649,6 @@ void VulkanAPI::createTextureImage(
 
   endCommandBuffer(cmd_buffer);
   queueSubmit(cmd_buffer);
-  //_device_memory_pool->clear(device_memory);
-  vkFreeMemory(_device, staging_device_memory, nullptr);
-  vkDestroyBuffer(_device, buffer, nullptr);
 }
 
 void VulkanAPI::generateMipmaps(
@@ -2878,7 +2878,7 @@ VkSampler VulkanAPI::createTextureSampler(uint32_t const mip_lvl)
     label.color[1] = g;
     label.color[2] = b;
     label.color[3] = a;
-    
+
   #ifdef PLP_DEBUG_BUILD
     vkCmdBeginDebugUtilsLabelEXT(buffer, &label);
   #endif
@@ -2910,7 +2910,7 @@ VkSampler VulkanAPI::createTextureSampler(uint32_t const mip_lvl)
         {VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL},
         {
             .srcAccessMask = 0,
-            .dstAccessMask = VK_ACCESS_SHADER_READ_BIT | VK_ACCESS_SHADER_WRITE_BIT | 
+            .dstAccessMask = VK_ACCESS_SHADER_READ_BIT | VK_ACCESS_SHADER_WRITE_BIT |
                              VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_TRANSFER_WRITE_BIT |
                              VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
             .source_stage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
@@ -2920,7 +2920,7 @@ VkSampler VulkanAPI::createTextureSampler(uint32_t const mip_lvl)
     {
         {VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR},
         {
-            .srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_TRANSFER_READ_BIT | 
+            .srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_TRANSFER_READ_BIT |
                              VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT | VK_ACCESS_SHADER_WRITE_BIT,
             .dstAccessMask = 0,
             .source_stage = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
@@ -2931,13 +2931,13 @@ VkSampler VulkanAPI::createTextureSampler(uint32_t const mip_lvl)
         {VK_IMAGE_LAYOUT_PRESENT_SRC_KHR, VK_IMAGE_LAYOUT_GENERAL},
         {
             .srcAccessMask = 0,
-            .dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_SHADER_READ_BIT | 
+            .dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_SHADER_READ_BIT |
                              VK_ACCESS_TRANSFER_WRITE_BIT,
             .source_stage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
             .destination_stage = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT
         }
     },
-    
+
     {
         {VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL},
         {
@@ -2999,7 +2999,7 @@ VkSampler VulkanAPI::createTextureSampler(uint32_t const mip_lvl)
   {
     {
       //SCOPED_TIMER();
-      std::lock_guard<std::mutex> guard(_mutex_queue_submit);
+      //std::lock_guard<std::mutex> guard(_mutex_queue_submit);
       VkResult result = vkQueueSubmit(queue, static_cast<uint32_t>(submit_infos.size()), submit_infos.data(), fence);
 
       if (result != VK_SUCCESS) {
@@ -3020,12 +3020,13 @@ VkSampler VulkanAPI::createTextureSampler(uint32_t const mip_lvl)
   void VulkanAPI::createKTXImage(
     VkCommandBuffer& cmd_buffer,
     ktxTexture2 * ktx_texture,
-    VkImage& image)
+    VkImage& image,
+    std::size_t const image_index)
   {
     VkBuffer buffer;
     VkDeviceMemory staging_device_memory;
 
-      createBuffer(
+    createBuffer(
       ktx_texture->dataSize,
       VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
       VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT,
@@ -3114,7 +3115,14 @@ VkSampler VulkanAPI::createTextureSampler(uint32_t const mip_lvl)
 
     std::vector<VkImageMemoryBarrier> barrier{ rdr_barrier };
 
-    beginCommandBuffer(cmd_buffer);
+    //@todo make it batchable
+    VkCommandBufferBeginInfo begin_info{};
+    begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+    begin_info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+
+    if (VK_SUCCESS != vkBeginCommandBuffer(cmd_buffer, & begin_info)) {
+      throw std::runtime_error("failed to create descriptor pool");
+    }
 
     addPipelineBarriers(cmd_buffer,
                         barrier,
@@ -3157,12 +3165,26 @@ VkSampler VulkanAPI::createTextureSampler(uint32_t const mip_lvl)
     //generateMipmaps(cmd_buffer, format, image, width, height, mip_lvl);
 
     endCommandBuffer(cmd_buffer);
-    queueSubmit(cmd_buffer);
+
+    VkSubmitInfo submit_info{};
+    submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+    submit_info.commandBufferCount = 1;
+    submit_info.pCommandBuffers = &cmd_buffer;
+
+    auto &fence_submit { _fence_submit[image_index] };
+    vkWaitForFences(_device, 1, & fence_submit, VK_TRUE, UINT32_MAX);
+    vkResetFences(_device, 1, &fence_submit);
+
+    result = vkQueueSubmit(_transfer_queues[image_index], 1, &submit_info, fence_submit);
+
+    if (result != VK_SUCCESS) {
+      Logger::error("Can't transfer ktx image.");
+    }
+
+    vkQueueWaitIdle(_transfer_queues[image_index]);
 
     vkFreeMemory(_device, staging_device_memory, nullptr);
     vkDestroyBuffer(_device, buffer, nullptr);
-
-    //_device_memory_pool->clear(device_memory);
   }
 
   VkImageView VulkanAPI::createKTXImageView(
@@ -3278,9 +3300,10 @@ VkSampler VulkanAPI::createTextureSampler(uint32_t const mip_lvl)
     std::vector<FontCharacter> const& characters,
     uint32_t const width,
     uint32_t const height,
-    VkImage& image)
+    VkImage& image,
+    std::size_t const)
   {
-    auto const data_size{ width * height };
+     auto const data_size{ width * height };
 
     VkBuffer buffer;
     VkDeviceMemory staging_device_memory;
@@ -3420,11 +3443,6 @@ VkSampler VulkanAPI::createTextureSampler(uint32_t const mip_lvl)
 
     endCommandBuffer(cmd_buffer);
     queueSubmit(cmd_buffer);
-
-    vkFreeMemory(_device, staging_device_memory, nullptr);
-    vkDestroyBuffer(_device, buffer, nullptr);
-
-    //_device_memory_pool->clear(device_memory);
   }
 
   VkImageView VulkanAPI::createFontImageView(

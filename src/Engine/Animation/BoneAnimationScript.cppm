@@ -53,10 +53,10 @@ namespace Poulpe
   {
   public:
     BoneAnimationScript(
-      std::unordered_map<std::string, std::vector<Animation>> const& animations,
-      std::unordered_map<std::string, std::unordered_map<std::string, std::vector<std::vector<Position>>>> const& positions,
-      std::unordered_map<std::string, std::unordered_map<std::string, std::vector<std::vector<Rotation>>>> const& rotations,
-      std::unordered_map<std::string, std::unordered_map<std::string, std::vector<std::vector<Scale>>>> const& scales,
+      std::unordered_map<std::size_t, std::vector<Animation>> const& animations,
+      std::unordered_map<std::size_t, std::unordered_map<std::string, std::vector<std::vector<Position>>>> const& positions,
+      std::unordered_map<std::size_t, std::unordered_map<std::string, std::vector<std::vector<Rotation>>>> const& rotations,
+      std::unordered_map<std::size_t, std::unordered_map<std::string, std::vector<std::vector<Scale>>>> const& scales,
       std::uint32_t anim_id);
     ~BoneAnimationScript() override = default;
 
@@ -71,7 +71,7 @@ namespace Poulpe
 
   private:
     Data* _data;
-    std::unordered_map<std::string, double> _elapsed_time{ };
+    std::unordered_map<std::size_t, double> _elapsed_time{ };
 
     bool _move_init{ false };
     bool _done{false};
@@ -79,15 +79,15 @@ namespace Poulpe
     bool _first_loop_done {false};
     bool _looping { true };
 
-    std::map<std::string, std::map<double, std::vector<glm::vec3>>> _transform_cache{};
+    std::unordered_map<std::size_t, std::unordered_map<int, std::vector<glm::vec3>>> _transform_cache{};
 
     std::vector<std::unique_ptr<BoneAnimationMove>> _moves{};
     std::vector<std::unique_ptr<BoneAnimationMove>> _new_moves{};
 
-    std::unordered_map<std::string, std::vector<Animation>> _animations{};
-    std::unordered_map<std::string, std::unordered_map<std::string, std::vector<std::vector<Position>>>> _positions{};
-    std::unordered_map<std::string, std::unordered_map<std::string, std::vector<std::vector<Rotation>>>> _rotations{};
-    std::unordered_map<std::string, std::unordered_map<std::string, std::vector<std::vector<Scale>>>> _scales{};
+    std::unordered_map<std::size_t, std::vector<Animation>> _animations{};
+    std::unordered_map<std::size_t, std::unordered_map<std::string, std::vector<std::vector<Position>>>> _positions{};
+    std::unordered_map<std::size_t, std::unordered_map<std::string, std::vector<std::vector<Rotation>>>> _rotations{};
+    std::unordered_map<std::size_t, std::unordered_map<std::string, std::vector<std::vector<Scale>>>> _scales{};
 
     uint32_t _anim_id{ 0 };
 

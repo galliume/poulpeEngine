@@ -171,7 +171,12 @@ namespace Poulpe
     _atlas_height += static_cast<uint32_t>(max_row_height) + 50;
 
     VkImage image = nullptr;
-    _renderer->getAPI()->createFontImage(cmd_buffer, _characters, _atlas_width, _atlas_height, image);
+    _renderer->getAPI()->createFontImage(
+      cmd_buffer,
+      _characters,
+      _atlas_width,
+      _atlas_height, image,
+      _renderer->getCurrentFrameIndex());
 
     VkImageView imageview = _renderer->getAPI()->createFontImageView(image, VK_IMAGE_ASPECT_COLOR_BIT);
 

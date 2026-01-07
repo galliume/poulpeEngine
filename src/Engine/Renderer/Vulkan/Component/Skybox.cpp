@@ -102,7 +102,7 @@ namespace Poulpe
     Data data{};
     data._textures.emplace_back("skybox");
     data._vertices = vertices;
-    data._vertex_buffer = renderer->getAPI()->createVertexBuffer(vertices);
+    data._vertex_buffer = renderer->getAPI()->createVertexBuffer(vertices, renderer->getCurrentFrameIndex());
     data._ubos.resize(1);
     data._ubos[0] = ubos;
     data._texture_index = 0;
@@ -127,7 +127,7 @@ namespace Poulpe
   {
     auto const& mesh = component_rendering_info.mesh;
 
-    Texture tex{ component_rendering_info.textures.at(component_rendering_info.skybox_name) };
+    Texture tex{ component_rendering_info.textures->at(component_rendering_info.skybox_name) };
     tex.setSampler(renderer->getAPI()->createKTXSampler(
     TextureWrapMode::CLAMP_TO_EDGE,
     TextureWrapMode::CLAMP_TO_EDGE,

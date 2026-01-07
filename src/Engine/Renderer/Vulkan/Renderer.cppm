@@ -17,7 +17,9 @@ import Engine.Renderer.VulkanDeviceMemoryPool;
 import Engine.Renderer.VulkanAPI;
 
 import Engine.Component.Camera;
+import Engine.Component.Vertex;
 
+import Engine.Core.MeshTypes;
 import Engine.Core.PlpTypedef;
 
 import Engine.GUI.Window;
@@ -179,6 +181,10 @@ namespace Poulpe
 
     void clearScreen();
 
+    void updateVertexBuffer(
+      Data * data,
+      std::size_t const image_index);
+
   private:
     const uint32_t _max_frames_in_flight{ 2 };
     //const std::size_t _max_render_thread{ 4 };
@@ -187,6 +193,9 @@ namespace Poulpe
     void setPerspective();
 
   private:
+
+    std::vector<std::vector<Data*>> _vertices_to_update{};
+
     std::unique_ptr<VulkanAPI> _vulkan{ nullptr };
     VkSwapchainKHR _swapchain{ nullptr };
 

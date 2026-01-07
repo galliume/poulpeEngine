@@ -99,9 +99,9 @@ namespace Poulpe
     Buffer _light_buffer;
 
     std::vector<IDType> _entity_children{};
-    std::unordered_map<std::string, std::vector<Animation>> _animations{};
-    std::unordered_map<std::string, std::unordered_map<std::string, std::vector<std::vector<Rotation>>>> _rotations{};
-    std::unordered_map<std::string, std::unordered_map<std::string, std::vector<std::vector<Position>>>> _positions{};
-    std::unordered_map<std::string, std::unordered_map<std::string, std::vector<std::vector<Scale>>>> _scales{};
+    std::unordered_map<std::size_t, std::vector<Animation>> _animations{};
+    std::unordered_map<std::size_t, std::unordered_map<std::string, std::vector<std::vector<Rotation>>>> _rotations{};
+    std::unordered_map<std::size_t, std::unordered_map<std::string, std::vector<std::vector<Position>>>> _positions{};
+    std::unordered_map<std::size_t, std::unordered_map<std::string, std::vector<std::vector<Scale>>>> _scales{};
   };
 }
