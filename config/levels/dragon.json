@@ -23,6 +23,7 @@
     }
   },
   "hasFog" : false,
+  "player": "",
   "entities": {
     "dragon" : {
       "mesh": "assets/mesh/dragon/dragon.obj",

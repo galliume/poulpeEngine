@@ -11,7 +11,7 @@ namespace Poulpe
     std::ifstream file(filename, std::ios::ate | std::ios::binary);
 
     if (!file.is_open()) {
-      Logger::warn("failed to open file: {}", filename);
+      //Logger::warn("failed to open file: {}", filename);
       return {};
     }
 

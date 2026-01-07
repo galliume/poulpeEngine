@@ -41,12 +41,12 @@ namespace Poulpe
 
     //     //auto const& b{ bone.second };
 
-    //     Buffer uniformBuffer = renderer->getAPI()->createUniformBuffers(1);
+    //     Buffer uniformBuffer = renderer->getAPI()->createUniformBuffers(1, renderer->getCurrentFrameIndex());
     //     mesh->getUniformBuffers().emplace_back(std::move(uniformBuffer));
     //   });
     // }
     if (mesh->getUniformBuffers().empty()) { //no bones
-      Buffer uniformBuffer = renderer->getAPI()->createUniformBuffers(1);
+      Buffer uniformBuffer = renderer->getAPI()->createUniformBuffers(1, renderer->getCurrentFrameIndex());
       mesh->getUniformBuffers().emplace_back(std::move(uniformBuffer));
     }
 
@@ -136,7 +136,7 @@ namespace Poulpe
       auto& ubos{ mesh->getUniformBuffers().at(i) };
       auto& ubos_data{ mesh->getData()->_ubos.at(i) };
 
-      renderer->getAPI()->updateUniformBuffer(ubos, &ubos_data);
+      renderer->getAPI()->updateUniformBuffer(ubos, &ubos_data, renderer->getCurrentFrameIndex());
     }
 
     if (*mesh->getDescSet() == nullptr) {

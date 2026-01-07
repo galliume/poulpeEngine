@@ -199,7 +199,7 @@ namespace Poulpe
     _camera->updateAngle(x_offset, y_offset);
   }
 
-  void InputManager::processGamepad(PlayerManager * player_manager)
+  void InputManager::processGamepad(PlayerManager * player_manager, double const delta_time)
   {
     if (!_has_gamepad) {
       return;
@@ -220,7 +220,16 @@ namespace Poulpe
         player_manager->jump();
       }
 
-      //Logger::debug("left x/y : {},{}", state.axes[GLFW_GAMEPAD_AXIS_LEFT_X], state.axes[GLFW_GAMEPAD_AXIS_LEFT_Y]);
+      float lx { state.axes[GLFW_GAMEPAD_AXIS_LEFT_X] };
+      float ly { state.axes[GLFW_GAMEPAD_AXIS_LEFT_Y] };
+      float const deadzone { 0.2f };
+
+      if (std::abs(lx) < deadzone) lx = 0.0f;
+      if (std::abs(ly) < deadzone) ly = 0.0f;
+
+      if (lx != 0.0f || ly != 0.0f) {
+        player_manager->move(lx, ly, delta_time);
+      }
     }
   }
 }

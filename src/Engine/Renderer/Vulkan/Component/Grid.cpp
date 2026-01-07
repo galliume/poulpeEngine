@@ -78,7 +78,7 @@ namespace Poulpe
   //    //gridData._ubos[i].view = _renderer->GetCamera()->LookAt();
   //      gridData._ubos[i].projection = _renderer->getPerspective();
 
-  //    _renderer->getAPI()->updateUniformBuffer(mesh->getUniformBuffers().at(i), &gridData._ubos);
+  //    _renderer->getAPI()->updateUniformBuffer(mesh->getUniformBuffers().at(i), &gridData._ubos, renderer->getCurrentFrameIndex());
   //  }
 
   //  createDescriptorSet(mesh);

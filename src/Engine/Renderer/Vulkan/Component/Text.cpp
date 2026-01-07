@@ -53,6 +53,9 @@ namespace Poulpe
     float const width{ static_cast<float>(component_rendering_info.atlas_width) };
     float const height{ static_cast<float>(component_rendering_info.atlas_height) };
 
+    const glm::vec4 zeroVec4{0.0f, 0.0f, 0.0f, 0.0f};
+    const glm::vec3 zeroVec3{0.0f, 0.0f, 0.0f};
+
     for (auto c { utf16_text.begin() }; c != utf16_text.end(); c++) {
 
       FT_ULong const ft_char { static_cast<FT_ULong>(*c) };
@@ -81,52 +84,46 @@ namespace Poulpe
       float v1{ ch.y_offset / height };
 
       Vertex vertex_1{
-        { xpos, ypos + h, 0.0f},
-        _color, { u0, v0 },
-        {0.0f, 0.0f, 0.0f, 0.0f},
-        {0.0f, 0.0f, 0.0f, 0.0f},
-        {0.0f, 0.0f, 0.0f},
-        {}, {}};
+          zeroVec4,           // tangent
+          _color,             // color (vec4)
+          {xpos, ypos+h, 0.f},// pos (vec3)
+          zeroVec3,           // normal
+          zeroVec3,           // original_pos
+          {u0, v0},           // texture_coord (vec2)
+          {0,0,0,0},          // bone_ids
+          {0.f,0.f,0.f,0.f},  // bone_weights
+          0.0f                // total_weight
+      };
 
       Vertex vertex_2{
-        { xpos, ypos, 0.0f},
-        _color, { u0, v1 },
-        {0.0f, 0.0f, 0.0f, 0.0f},
-        {0.0f, 0.0f, 0.0f, 0.0f},
-        {0.0f, 0.0f, 0.0f},
-        {}, {}};
+          zeroVec4, _color, {xpos, ypos, 0.f}, 
+          zeroVec3, zeroVec3, {u0, v1}, 
+          {0,0,0,0}, {0.f,0.f,0.f,0.f}, 0.0f
+      };
 
       Vertex vertex_3{
-        { xpos + w, ypos, 0.0f},
-        _color, { u1, v1 },
-        {0.0f, 0.0f, 0.0f, 0.0f},
-        {0.0f, 0.0f, 0.0f, 0.0f},
-        {0.0f, 0.0f, 0.0f},
-        {}, {}};
+          zeroVec4, _color, {xpos+w, ypos, 0.f}, 
+          zeroVec3, zeroVec3, {u1, v1}, 
+          {0,0,0,0}, {0.f,0.f,0.f,0.f}, 0.0f
+      };
 
       Vertex vertex_4{
-        { xpos, ypos + h, 0.0f},
-        _color, { u0, v0 },
-        {0.0f, 0.0f, 0.0f, 0.0f},
-        {0.0f, 0.0f, 0.0f, 0.0f},
-        {0.0f, 0.0f, 0.0f},
-        {}, {}};
+          zeroVec4, _color, {xpos, ypos+h, 0.f}, 
+          zeroVec3, zeroVec3, {u0, v0}, 
+          {0,0,0,0}, {0.f,0.f,0.f,0.f}, 0.0f
+      };
 
       Vertex vertex_5{
-        { xpos + w, ypos, 0.0f},
-        _color, { u1, v1 },
-        {0.0f, 0.0f, 0.0f, 0.0f},
-        {0.0, 0.0f, 0.0f, 0.0f},
-        {0.0f, 0.0f, 0.0f},
-        {}, {}};
+          zeroVec4, _color, {xpos+w, ypos, 0.f}, 
+          zeroVec3, zeroVec3, {u1, v1}, 
+          {0,0,0,0}, {0.f,0.f,0.f,0.f}, 0.0f
+      };
 
       Vertex vertex_6{
-        { xpos + w, ypos + h, 0.0f},
-        _color, { u1, v0 },
-        {0.0f, 0.0f, 0.0f, 0.0f},
-        {0.0f, 0.0f, 0.0f, 0.0f},
-        { 0.0f, 0.0f, 0.0f},
-        {}, {}};
+          zeroVec4, _color, {xpos+w, ypos+h, 0.f}, 
+          zeroVec3, zeroVec3, {u1, v0}, 
+          {0,0,0,0}, {0.f,0.f,0.f,0.f}, 0.0f
+      };
 
       vertices.emplace_back(vertex_1);
       vertices.emplace_back(vertex_2);
@@ -178,7 +175,7 @@ namespace Poulpe
       data->_ubos[0] = ubos;
 
       mesh->getData()->_ubos_offset.emplace_back(1);
-      mesh->getUniformBuffers().emplace_back(renderer->getAPI()->createUniformBuffers(1));
+      mesh->getUniformBuffers().emplace_back(renderer->getAPI()->createUniformBuffers(1, renderer->getCurrentFrameIndex()));
       mesh->getMaterial().alpha_mode = 1.0;
 
       for (std::size_t i{ 0 }; i < mesh->getData()->_ubos.size(); i++) {
@@ -212,7 +209,7 @@ namespace Poulpe
     vkDestroyCommandPool(renderer->getDevice(), cmd_pool, nullptr);
 
     if (!mesh->getData()->_ubos.empty()) {
-      renderer->getAPI()->updateUniformBuffer(mesh->getUniformBuffers().at(0), &mesh->getData()->_ubos.at(0));
+      renderer->getAPI()->updateUniformBuffer(mesh->getUniformBuffers().at(0), &mesh->getData()->_ubos.at(0), renderer->getCurrentFrameIndex());
     }
 
     if (*mesh->getDescSet() == nullptr) {

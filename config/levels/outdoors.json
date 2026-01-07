@@ -73,7 +73,6 @@
       "hasAnimation": false,
       "isPointLight": false,
       "animationScripts": {
-        "anim0": "assets/scripts/animation/backpack/anim0.lua"
       },
       "hasShadow": false,
       "isIndexed": true,
@@ -89,13 +88,10 @@
       "ao": {
       },
       "mr": {
-
       },
       "emissive": {
-
       },
       "normal": {
-
       },
       "shader": "main_basic",
       "positions": [
@@ -125,7 +121,6 @@
       "hasAnimation": false,
       "isPointLight": false,
       "animationScripts": {
-        "anim0": "assets/scripts/animation/helmet/anim0.lua"
       },
       "hasShadow": true,
       "isIndexed": true,
@@ -184,7 +179,6 @@
       "hasAnimation": false,
       "isPointLight": false,
       "animationScripts": {
-        "anim0": "assets/scripts/animation/backpack/anim0.lua"
       },
       "hasShadow": true,
       "isIndexed": true,
@@ -242,7 +236,6 @@
       "hasAnimation": false,
       "isPointLight": false,
       "animationScripts": {
-        "anim0": "assets/scripts/animation/helmet/anim0.lua"
       },
       "hasShadow": true,
       "isIndexed": true,
@@ -465,12 +458,187 @@
       "hasAnimation": false,
       "isPointLight": false,
       "animationScripts": {
-        "anim0": "assets/scripts/animation/helmet/anim0.lua"
       },
       "hasShadow": true,
       "isIndexed": true,
       "debugNormal": true,
       "defaultAnim": 0
+    },
+    "DamagedHelmet": {
+      "mesh": "assets/mesh/DamagedHelmet/glTF/DamagedHelmet.gltf",
+      "textures": {
+        "Default_albedo": {
+          "path": "assets/mesh/DamagedHelmet/glTF/Default_albedo.ktx2"
+        }
+      },
+      "ao": {
+        "Default_AO": {
+          "path": "assets/mesh/DamagedHelmet/glTF/Default_AO.ktx2"
+        }
+      },
+      "mr": {
+        "Default_metalRoughness": {
+          "path": "assets/mesh/DamagedHelmet/glTF/Default_metalRoughness.ktx2"
+        }
+      },
+      "emissive": {
+        "Default_emissive": {
+          "path": "assets/mesh/DamagedHelmet/glTF/Default_emissive.ktx2"
+        }
+      },
+      "normal": {
+        "Default_normal": {
+          "path": "assets/mesh/DamagedHelmet/glTF/Default_normal.ktx2"
+        }
+      },
+      "shader": "main_basic",
+      "positions": [
+        {
+          "x": 280.0,
+          "y": 50.0,
+          "z": 300.0
+        }
+      ],
+      "scales": [
+        {
+          "x": 10.0,
+          "y": 10.0,
+          "z": 10.0
+        }
+      ],
+      "rotations": [
+        {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
+        }
+      ],
+      "flipY": false,
+      "count": 1,
+      "hasBbox": false,
+      "hasAnimation": true,
+      "isPointLight": false,
+      "animationScripts": {
+        "anim0": "assets/scripts/animation/helmet/anim0.lua"
+      },
+      "hasShadow": true,
+      "isIndexed": true,
+      "debugNormal": true
+    },
+    "table": {
+      "mesh": "assets/mesh/DamagedHelmet/glTF/modern_coffee_table_02_4k.gltf",
+      "textures": {
+        "textures_modern_coffee_table_02_base_diff_4k": {
+          "path": "assets/mesh/DamagedHelmet/glTF/textures/modern_coffee_table_02_base_diff_4k.ktx2"
+        },
+        "textures_modern_coffee_table_02_wood_diff_4k": {
+          "path": "assets/mesh/DamagedHelmet/glTF/textures/modern_coffee_table_02_wood_diff_4k.ktx2"
+        }
+      },
+      "ao": {
+      },
+      "mr": {
+        "textures_modern_coffee_table_02_base_rough_4k": {
+          "path": "assets/mesh/DamagedHelmet/glTF/textures/modern_coffee_table_02_base_rough_4k.ktx2"
+        },
+        "textures_modern_coffee_table_02_wood_rough_4k": {
+          "path": "assets/mesh/DamagedHelmet/glTF/textures/modern_coffee_table_02_wood_rough_4k.ktx2"
+        }
+      },
+      "emissive": {
+      },
+      "normal": {
+        "textures_modern_coffee_table_02_base_nor_gl_4k": {
+          "path": "assets/mesh/DamagedHelmet/glTF/textures/modern_coffee_table_02_base_nor_gl_4k.ktx2"
+        },
+        "textures_modern_coffee_table_02_wood_nor_gl_4k": {
+          "path": "assets/mesh/DamagedHelmet/glTF/textures/modern_coffee_table_02_wood_nor_gl_4k.ktx2"
+        }
+      },
+      "shader": "main_basic",
+      "positions": [
+        {
+          "x": 280.0,
+          "y": 15.0,
+          "z": 300.0
+        }
+      ],
+      "scales": [
+        {
+          "x": 50.0,
+          "y": 50.0,
+          "z": 50.0
+        }
+      ],
+      "rotations": [
+        {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
+        }
+      ],
+      "flipY": false,
+      "count": 1,
+      "hasBbox": false,
+      "hasAnimation": false,
+      "isPointLight": false,
+      "animationScripts": {
+      },
+      "hasShadow": true,
+      "isIndexed": true,
+      "debugNormal": true
+    },
+    "Grass_Block": {
+      "mesh": "assets/mesh/minecraft/Grass_Block.obj",
+      "textures": {
+        "Grass_Block_TEX": {
+          "path": "assets/mesh/minecraft/Grass_Block_TEX.ktx2"
+        },
+        "water": {
+          "path": "assets/mesh/minecraft/water.ktx2"
+        }
+      },
+      "ao": {
+      },
+      "mr": {
+      },
+      "emissive": {
+      },
+      "normal": {
+      },
+      "shader": "main_basic",
+      "positions": [
+        {
+          "x": -280.0,
+          "y": 15.0,
+          "z": -300.0
+        }
+      ],
+      "scales": [
+        {
+          "x": 1.0,
+          "y": 1.0,
+          "z": 1.0
+        }
+      ],
+      "rotations": [
+        {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
+        }
+      ],
+      "flipY": false,
+      "count": 1,
+      "hasBbox": false,
+      "hasAnimation": true,
+      "isPointLight": false,
+      "animationScripts": {
+        "anim0": "assets/scripts/animation/grassBlock/anim0.lua"
+      },
+      "hasShadow": true,
+      "isIndexed": true,
+      "debugNormal": true
     }
   }
 }

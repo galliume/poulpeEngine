@@ -17,7 +17,7 @@
     "shadow_map": {
       "vert": "assets/shaders/spv/shadow_map_vert.spv",
       "frag": "assets/shaders/spv/shadow_map_frag.spv",
-      "geom": "assets/shaders/spv/shadow_map_geom.spv",
+      "geom": "",
       "tesc": "",
       "tese": ""
     },
@@ -52,7 +52,7 @@
     "csm": {
       "vert": "assets/shaders/spv/csm_vert.spv",
       "frag": "assets/shaders/spv/csm_frag.spv",
-      "geom": "assets/shaders/spv/csm_geom.spv",
+      "geom": "",
       "tesc": "",
       "tese": ""
     }

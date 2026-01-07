@@ -1,5 +1,7 @@
 #version 450
 #extension GL_EXT_nonuniform_qualifier : enable
+//#extension GL_ARB_shader_viewport_index_layer : enable
+#extension GL_NV_viewport_array2 : enable
 
 struct UBO
 {
@@ -46,11 +48,22 @@ layout(set = 0, binding = 1) readonly buffer ObjectBuffer {
   Light spot_light;
 };
 
-layout(location = 0) in vec3 position;
-layout(location = 1) in vec3 normal;
+layout(location = 0) in vec4 tangent;
+layout(location = 1) in vec4 color;
+layout(location = 2) in vec3 position;
+layout(location = 3) in vec3 normal;
+layout(location = 4) in vec3 original_pos;
+layout(location = 5) in vec2 texture_coord;
+layout(location = 6) in ivec4 bone_ids;
+layout(location = 7) in vec4 bone_weights;
+layout(location = 8) in float total_weight;
 // layout(location = 2) in vec2 texture_coord;
 // layout(location = 3) in vec4 tangent;
 // layout(location = 4) in vec4 color;
+
+layout(location = 0) out vec4 out_tangent;
+layout(location = 1) out vec4 out_color;
+layout(location = 2) out vec3 out_position;
 
 layout(push_constant) uniform constants
 {
@@ -62,8 +75,27 @@ layout(push_constant) uniform constants
 
 void main()
 {
+  int face = gl_InstanceIndex;
+
+  gl_Layer = face;
+
+  out_tangent = tangent;
+  out_color = color;
+  out_position = position;
+  
+  Light light = point_lights[1];
+  mat4 light_matrices[6] = mat4[6](
+    light.light_space_matrix_right,  // face 0
+    light.light_space_matrix_left,   // face 1
+    light.light_space_matrix_top,    // face 2
+    light.light_space_matrix_bottom, // face 3
+    light.light_space_matrix,        // face 4 (front)
+    light.light_space_matrix_back    // face 5
+  );
+
   //vec4 p = ubo.projection * pc.view * vec4(position, 1.0);
   //gl_Position = p.xyww;
   //gl_Position = pc.view * ubo.model * vec4(position, 1.0);
-  gl_Position =  ubo.model * vec4(position, 1.0);
+  gl_Position =  light_matrices[face] * ubo.model * vec4(position, 1.0);
+  gl_Position.z / gl_Position.w;
 } 

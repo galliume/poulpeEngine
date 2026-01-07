@@ -552,10 +552,12 @@ namespace Poulpe
   {
     VkCommandBuffer cmd_buffer;
     std::string pipeline_name {"shadow_map"};
+    std::uint32_t instance_count {6};
 
     if (shadow_type == SHADOW_TYPE::CSM) {
       cmd_buffer = _cmd_buffer_shadowmap[_current_frame];
       pipeline_name = "csm";
+      instance_count = 4;
     } else {
       cmd_buffer = _cmd_buffer_entities3[_current_frame];
     }
@@ -598,8 +600,9 @@ namespace Poulpe
     _vulkan->draw(
       cmd_buffer,
       mesh->getData(),
-      mesh->getData()->_ubos.size(),
-      mesh->is_indexed());
+      mesh->is_indexed(),
+      0,
+      instance_count);
   }
 
   void Renderer::endShadowMap(SHADOW_TYPE const shadow_type)

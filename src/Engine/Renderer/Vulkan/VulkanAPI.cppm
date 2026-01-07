@@ -199,11 +199,13 @@ namespace Poulpe
     bool souldResizeSwapChain();
 
     Buffer createUniformBuffers(
-      std::uint64_t const uniform_buffers_count);
+      std::uint64_t const uniform_buffers_count,
+      std::size_t const image_index);
 
-    Buffer createCubeUniformBuffers(uint32_t const uniform_buffers_count);
-
-    void updateUniformBuffer(Buffer& buffer, std::vector<UniformBufferObject>* uniform_buffer_objects);
+    void updateUniformBuffer(
+      Buffer& buffer,
+      std::vector<UniformBufferObject>* uniform_buffer_objects,
+      std::size_t const image_index);
 
     void createImage(
       uint32_t const width,
@@ -279,7 +281,7 @@ namespace Poulpe
       VkDeviceSize const size = mem_requirements.size;
       VkDeviceSize const bind_offset = align_to(size, mem_requirements.alignment);
 
-      auto const flags { VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT };
+      auto const flags { VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT };
 
       auto device_memory = _device_memory_pool->get(
         _device,
@@ -367,7 +369,8 @@ namespace Poulpe
       VkCommandBuffer& cmd_buffer,
       Data const * data,
       bool const is_indexed = true,
-      uint32_t const index = 0);
+      uint32_t const index = 0,
+      std::uint32_t const instance_coun = 1);
 
     VkResult queueSubmit(
       VkCommandBuffer& cmd_buffer,
@@ -603,7 +606,8 @@ namespace Poulpe
         VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME,
         VK_KHR_SYNCHRONIZATION_2_EXTENSION_NAME,
         VK_EXT_DEPTH_CLIP_ENABLE_EXTENSION_NAME,
-        VK_KHR_UNIFIED_IMAGE_LAYOUTS_EXTENSION_NAME
+        VK_KHR_UNIFIED_IMAGE_LAYOUTS_EXTENSION_NAME,
+        VK_EXT_SHADER_VIEWPORT_INDEX_LAYER_EXTENSION_NAME
     };
 
     bool _instance_created{ false };
@@ -656,6 +660,7 @@ namespace Poulpe
     std::vector<VkDeviceMemory> _staging_device_memory;
     std::vector<VkBuffer> _staging_buffer;
     std::vector<void*> _staging_data_ptr;
+    std::size_t _staging_size { 512 * 1024 * 1024 };
 
     std::vector<VkDeviceSize> _update_vertex_offsets{};
   };

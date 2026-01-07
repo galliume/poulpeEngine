@@ -77,10 +77,73 @@
       "flipY": false,
       "count": 1,
       "hasBbox": false,
-      "hasAnimation": false,
+      "hasAnimation": true,
       "isPointLight": false,
       "animationScripts": {
         "anim0": "assets/scripts/animation/helmet/anim0.lua"
+      },
+      "hasShadow": true,
+      "isIndexed": true,
+      "debugNormal": true
+    },
+        "table": {
+      "mesh": "assets/mesh/DamagedHelmet/glTF/modern_coffee_table_02_4k.gltf",
+      "textures": {
+        "textures_modern_coffee_table_02_base_diff_4k": {
+          "path": "assets/mesh/DamagedHelmet/glTF/textures/modern_coffee_table_02_base_diff_4k.ktx2"
+        },
+        "textures_modern_coffee_table_02_wood_diff_4k": {
+          "path": "assets/mesh/DamagedHelmet/glTF/textures/modern_coffee_table_02_wood_diff_4k.ktx2"
+        }
+      },
+      "ao": {
+      },
+      "mr": {
+        "textures_modern_coffee_table_02_base_rough_4k": {
+          "path": "assets/mesh/DamagedHelmet/glTF/textures/modern_coffee_table_02_base_rough_4k.ktx2"
+        },
+        "textures_modern_coffee_table_02_wood_rough_4k": {
+          "path": "assets/mesh/DamagedHelmet/glTF/textures/modern_coffee_table_02_wood_rough_4k.ktx2"
+        }
+      },
+      "emissive": {
+      },
+      "normal": {
+        "textures_modern_coffee_table_02_base_nor_gl_4k": {
+          "path": "assets/mesh/DamagedHelmet/glTF/textures/modern_coffee_table_02_base_nor_gl_4k.ktx2"
+        },
+        "textures_modern_coffee_table_02_wood_nor_gl_4k": {
+          "path": "assets/mesh/DamagedHelmet/glTF/textures/modern_coffee_table_02_wood_nor_gl_4k.ktx2"
+        }
+      },
+      "shader": "main_basic",
+      "positions": [
+        {
+          "x": 1.5,
+          "y": 5.0,
+          "z": -3.0
+        }
+      ],
+      "scales": [
+        {
+          "x": 10.0,
+          "y": 10.0,
+          "z": 10.0
+        }
+      ],
+      "rotations": [
+        {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
+        }
+      ],
+      "flipY": false,
+      "count": 1,
+      "hasBbox": false,
+      "hasAnimation": false,
+      "isPointLight": false,
+      "animationScripts": {
       },
       "hasShadow": true,
       "isIndexed": true,

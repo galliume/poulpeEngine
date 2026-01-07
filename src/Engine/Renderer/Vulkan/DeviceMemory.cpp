@@ -5,6 +5,8 @@ module Engine.Renderer.VulkanDeviceMemory;
 
 import std;
 
+import Engine.Core.Logger;
+
 namespace Poulpe
 {
   DeviceMemory::DeviceMemory(
@@ -77,8 +79,9 @@ namespace Poulpe
 
       VkResult result = vkBindBufferMemory(_device, buffer, *_memory, _offset);
 
-      if (VK_SUCCESS != result) {
-        //Logger::debug("BindBuffer memory failed in bindBufferToMemory");
+      if (result != VK_SUCCESS) {
+        Logger::error("BindBuffer memory failed in bindBufferToMemory");
+        throw std::runtime_error("BindBuffer memory failed in bindBufferToMemory");
       }
 
       _buffer_offsets.emplace_back(_offset);
