@@ -109,8 +109,10 @@ namespace Poulpe
     glm::vec3 scale{ s["x"].get<float>(), s["y"].get<float>(), s["z"].get<float>() };
 
     auto const& r = raw_data["rotations"].at(0);
-    glm::vec3 rotation{ r["x"].get<float>(), r["y"].get<float>(), r["z"].get<float>() };
-   
+    glm::quat rotation { glm::quat(glm::vec3(glm::radians(r["x"].get<float>()),
+                                  glm::radians(r["y"].get<float>()),
+                                  glm::radians(r["z"].get<float>()))) };
+
     std::vector<std::string> textures{};
 
     if (raw_data.contains("textures")) {
@@ -158,7 +160,7 @@ namespace Poulpe
     auto shader = raw_data.value("shader", "");
 
     EntityOptions entity_opts = {
-      shader, position, scale, glm::quat(rotation),
+      shader, position, scale, rotation,
       raw_data.value("hasBbox", false),
       raw_data.value("hasAnimation", false),
       raw_data.value("isPointLight", false),
@@ -285,7 +287,7 @@ namespace Poulpe
       data._bbox_max = _data.bbox_max;
       
       auto const S { glm::scale(glm::mat4(1.0f), entity_opts.scale) };
-      auto const R { glm::toMat4(entity_opts.rotation) };
+      auto const R { glm::mat4_cast(entity_opts.rotation) };
       auto const T { glm::translate(glm::mat4(1.0f), entity_opts.pos) };
       auto const transform  { T * R * S };
       

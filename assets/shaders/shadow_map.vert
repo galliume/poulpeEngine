@@ -63,7 +63,7 @@ layout(location = 8) in float total_weight;
 
 layout(location = 0) out vec4 out_tangent;
 layout(location = 1) out vec4 out_color;
-layout(location = 2) out vec3 out_position;
+layout(location = 2) out vec4 out_position;
 
 layout(push_constant) uniform constants
 {
@@ -81,7 +81,7 @@ void main()
 
   out_tangent = tangent;
   out_color = color;
-  out_position = position;
+  out_position = ubo.model * vec4(position, 1.0);
   
   Light light = point_lights[1];
   mat4 light_matrices[6] = mat4[6](
@@ -96,6 +96,6 @@ void main()
   //vec4 p = ubo.projection * pc.view * vec4(position, 1.0);
   //gl_Position = p.xyww;
   //gl_Position = pc.view * ubo.model * vec4(position, 1.0);
-  gl_Position =  light_matrices[face] * ubo.model * vec4(position, 1.0);
+  gl_Position =  light_matrices[face] * out_position;
   gl_Position.z / gl_Position.w;
 } 

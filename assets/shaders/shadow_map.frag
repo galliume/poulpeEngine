@@ -47,14 +47,13 @@ layout(push_constant) uniform constants
 
 layout(location = 0) in vec4 tangent;
 layout(location = 1) in vec4 color;
-layout(location = 2) in vec3 position;
+layout(location = 2) in vec4 position;
 
 void main()
 {
    Light light = point_lights[1];
 
   float light_distance = length(position.xyz - light.position);
-  //@todo why ? don't remember...
-  light_distance = light_distance / 69.f;
+  light_distance = light_distance / 500.f;
   gl_FragDepth = light_distance;
 }

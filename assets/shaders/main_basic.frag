@@ -195,7 +195,7 @@ float linear_to_sRGB(float color)
 float ShadowCalculation(vec3 light_coord, Light l, float NdL)
 {
   vec3 p = light_coord;
-  float shadow_offset = 2.f/1024.f;//@todo push constant
+  float shadow_offset = 2.f/2048.f;//@todo push constant
   vec2 depth_transform = vec2(l.projection[2][2], l.projection[2][3]);
 
   vec3 absq = abs(p);
@@ -209,11 +209,11 @@ float ShadowCalculation(vec3 light_coord, Light l, float NdL)
   vec2 oyz = vec2(offset - dxy, dxy);
 
   vec3 limit = vec3(m, m, m);
-  limit.xy -= oxy * (1.f / 1024.f);
-  limit.yz -= oyz * (1.f / 1024.f);
+  limit.xy -= oxy * (1.f / 2048.f);
+  limit.yz -= oyz * (1.f / 2048.f);
 
   //float depth = depth_transform.x + depth_transform.y / m;
-  float depth = length(p) / 50.0f;//far plane
+  float depth = length(p) / 500.0f;//far plane
   float light = texture(tex_shadow_sampler, vec4(p, depth));
 
   p.xy -= oxy;
@@ -514,7 +514,7 @@ void main()
 
   vec3 csm_coords = var.cascade_coord.xyz / var.cascade_coord.w;
   float csm_shadow = CalculateInfiniteShadow(csm_coords, var.blend);
-  vec3 C_sun = (kD * (C_diffuse.rgb / PI) + specular) * radiance * NdL * csm_shadow;
+  vec3 C_sun = (kD * (C_diffuse.rgb / PI) + specular) * radiance * NdL * csm_shadow * 0.01;
 
   vec3 kS_amb = FresnelSchlickRoughness(max(dot(normal, V), 0.0), F0, roughness);
   vec3 kD_amb = (1.0 - kS_amb) * (1.0 - metallic);
@@ -531,7 +531,7 @@ void main()
     //irradiance = srgb_to_linear(irradiance);
   }
   
-  vec3 C_ambient = ((kD_amb * C_diffuse.rgb * diff_irradiance) + (kS_amb * spec_irradiance)) * ao * NdV;
+  vec3 C_ambient = ((kD_amb * C_diffuse.rgb * diff_irradiance) + (kS_amb * spec_irradiance)) * ao * NdV * 0.01;
 
   for (int i = 0; i < NR_POINT_LIGHTS; ++i) {
 
@@ -607,8 +607,6 @@ void main()
   if (material.alpha.x == 2.0) {
     final_color = vec4(linear_to_hdr10(color.rgb, white_point), color_alpha);
   }
-      vec3 r = reflect(-V, normal);
-
   //float exposure = 1.0;
   //final_color.rgb = vec3(1.0) - exp(-final_color.rgb * exposure);
   //final_color = vec4(normal * 0.5 + 0.5, 1.0);

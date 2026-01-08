@@ -30,10 +30,8 @@ namespace Poulpe
     float const app_width { static_cast<float>(appConfig["width"].get<uint16_t>()) };
     float const app_height { static_cast<float>(appConfig["height"].get<uint16_t>()) };
 
-    //float aspect = 1600.f / 900.f;
-    float fov = glm::radians(90.0f);
-    glm::mat4 shadow_cubemap_projection = glm::perspective(fov, 1.0f, 1.0f, 50.f);
-    shadow_cubemap_projection[1][1] *= -1;
+    float const fov { glm::radians(90.0f) };
+    glm::mat4 const shadow_cubemap_projection { glm::perspective(fov, 1.0f, 0.1f, 500.f) };
 
     Light light;
     light.color = glm::vec3(1.0, 0.6, 0.1);
@@ -43,35 +41,16 @@ namespace Poulpe
     light.clq = glm::vec3(1.0f, 0.7f, 1.8f);
 
     light.projection = shadow_cubemap_projection;//glm::ortho(-10.0f, 10.0f, 10.0f, -10.0f, near_plane, far_plane);
-    light.light_space_matrix_right = light.projection * glm::lookAt(
-      light.position,
-      light.position + glm::vec3(1.0f, 0.0f, 0.0f),
-      glm::vec3(0.0f, -1.0f, 0.0f));
+    light.projection[1][1] *= -1.f;
 
-    light.light_space_matrix_left = light.projection * glm::lookAt(
-      light.position,
-      light.position + glm::vec3(-1.0f, 0.0f, 0.0f),
-      glm::vec3(0.0f, -1.0f, 0.0f));
+    glm::vec3 vUp = glm::vec3(0.0f, -1.0f, 0.0f);
 
-    light.light_space_matrix_top = light.projection * glm::lookAt(
-      light.position,
-      light.position + glm::vec3(0.0f, 1.0f, 0.0f),
-      glm::vec3(0.0f, 0.0f, 1.0f));
-
-    light.light_space_matrix_bottom = light.projection * glm::lookAt(
-      light.position,
-      light.position + glm::vec3(0.0f, -1.0f, 0.0f),
-      glm::vec3(0.0f, 0.0f, -1.0f));
-
-    light.light_space_matrix = light.projection * glm::lookAt(
-      light.position,
-      light.position + glm::vec3(0.0f, 0.0f, 1.0f),
-      glm::vec3(0.0f, -1.0f, 0.0f)); //used as light_space_matrix_front
-
-    light.light_space_matrix_back = light.projection * glm::lookAt(
-      light.position,
-      light.position + glm::vec3(0.0f, 0.0f, -1.0f),
-      glm::vec3(0.0f, -1.0f, 0.0f));
+    light.light_space_matrix_right = light.projection * glm::lookAt(light.position, light.position + glm::vec3( 1, 0, 0), vUp);
+    light.light_space_matrix_left = light.projection * glm::lookAt(light.position, light.position + glm::vec3(-1, 0, 0), vUp);
+    light.light_space_matrix_top = light.projection * glm::lookAt(light.position, light.position + glm::vec3( 0, 1, 0), glm::vec3(0, 0, 1));
+    light.light_space_matrix_bottom = light.projection * glm::lookAt(light.position, light.position + glm::vec3( 0,-1, 0), glm::vec3(0, 0,-1));
+    light.light_space_matrix = light.projection * glm::lookAt(light.position, light.position + glm::vec3( 0, 0, 1), vUp);
+    light.light_space_matrix_back = light.projection * glm::lookAt(light.position, light.position + glm::vec3( 0, 0,-1), vUp);
 
     light.view = light.light_space_matrix;
 
@@ -154,7 +133,7 @@ namespace Poulpe
     center /= cascade_frustum.size();
 
     auto const M_light { glm::lookAt(
-        glm::vec3(center) - glm::normalize(_sun.direction) * 100.0f,
+        glm::vec3(center) - glm::normalize(_sun.direction) * 500.0f,
         glm::vec3(center),
         glm::vec3(0.0f, 1.0f, 0.0f)) };
 
@@ -328,7 +307,7 @@ namespace Poulpe
 
      float fov = glm::radians(90.0f);
     glm::mat4 shadow_cubemap_projection = glm::perspective(fov, 1.0f, 1.0f, 50.f);
-    shadow_cubemap_projection[1][1] *= -1;
+    //shadow_cubemap_projection[1][1] *= -1;
 
     light1.projection = shadow_cubemap_projection;
 

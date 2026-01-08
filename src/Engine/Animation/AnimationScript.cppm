@@ -41,7 +41,8 @@ namespace Poulpe
     };
     struct AnimationRotate : public Animation
     {
-      glm::quat angle;
+      glm::vec3 target_angle;
+      glm::vec3 start_angle;
       std::function<void(AnimationRotate* anim, Data* data, double delta_time)> update;
     };
 
@@ -51,7 +52,7 @@ namespace Poulpe
     Data* getData();
 
     void move(Data* data, double delta_time, float duration, glm::vec3 target);
-    void rotate(Data* data, double delta_time, float duration, glm::quat angle);
+    void rotate(Data* data, double delta_time, float duration, glm::vec3 angle);
     void operator()(AnimationInfo const& animation_info) override;
 
     void done() override { _done = true; }

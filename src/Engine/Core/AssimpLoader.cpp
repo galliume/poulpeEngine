@@ -61,7 +61,6 @@ namespace Poulpe
       | aiProcess_CalcTangentSpace
       | aiProcess_FlipWindingOrder
       | aiProcess_FlipUVs
-      | aiProcess_MakeLeftHanded
       | aiProcess_GenBoundingBoxes
     };
 

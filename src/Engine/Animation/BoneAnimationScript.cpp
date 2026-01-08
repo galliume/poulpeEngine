@@ -159,7 +159,7 @@ namespace Poulpe
     }
 
     glm::mat4 const S { glm::scale(glm::mat4(1.0f), new_scale) };
-    glm::mat4 const R { glm::toMat4(new_rotation) };
+    glm::mat4 const R { glm::mat4_cast(new_rotation) };
     glm::mat4 const T { glm::translate(glm::mat4(1.0f), new_position) };
     glm::mat4 const transform { T * R * S };
 
