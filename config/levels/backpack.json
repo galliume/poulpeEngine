@@ -23,6 +23,7 @@
     }
   },
   "hasFog" : false,
+  "player": "",
   "entities": {
     "backpack" : {
       "mesh": "assets/mesh/backpack/backpack.obj",

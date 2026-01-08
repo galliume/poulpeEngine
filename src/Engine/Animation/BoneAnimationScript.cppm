@@ -137,6 +137,7 @@ namespace Poulpe
         switch (start.interpolation) {
         case AnimInterpolation::CUBIC_SPLINE:
         case AnimInterpolation::SPHERICAL_LINEAR:
+          return glm::normalize(glm::mix(start.value, end.value, t));
         case AnimInterpolation::STEP:
         case AnimInterpolation::LINEAR:
         default:

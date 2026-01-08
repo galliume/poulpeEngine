@@ -22,7 +22,7 @@
       "z": -3.0
     }
   },
-  "hasFog": false,
+  "hasFog": true,
   "player": "",
   "entities": {
     "Sponza": {
@@ -424,7 +424,7 @@
         {
           "x": 0.0,
           "y": 0.0,
-          "z": 45.0
+          "z": 0.0
         }
       ],
       "flipY": false,
@@ -433,6 +433,7 @@
       "hasAnimation": false,
       "isPointLight": false,
       "animationScripts": {
+          "anim0": "assets/scripts/animation/cage_lamp/anim0.lua"
       },
       "hasShadow": true,
       "isIndexed": true,

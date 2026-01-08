@@ -414,6 +414,7 @@ namespace Poulpe
 
   void ShaderManager::createGraphicPipeline(std::string const & shader_name)
   {
+    //Logger::debug("shader_name {}", shader_name);
     bool offscreen = (shader_name == "shadow_map") ? true : false;
     bool need_bis{ false };
 

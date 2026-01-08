@@ -1,88 +1,90 @@
 {
-	"terrain": {
-		"46_016_3_028_13_512_512": {
-			"path": "assets/texture/terrain/height_map_1.ktx2"
-		}
-	},
-	"water": {
-		"_water_foam": {
-			"path": "assets/texture/water/_water_foam.ktx2"
-		},
-		"_water_normal": {
-			"path": "assets/texture/water/_water_normal.ktx2"
-		},
-		"_water_normal2": {
-			"path": "assets/texture/water/_water_normal2.ktx2"
-		}
-	},
-	"camera": {
-		"position": {
-			"x": 20.0,
-			"y": 20.0,
-			"z": 20.0
-		}
-	},
-	"entities": {
-		"CompareAmbientOcclusion": {
-			"mesh": "assets/mesh/CompareAmbientOcclusion/gLTF/CompareAmbientOcclusion.gltf",
-			"textures": {
-				"FruitBaseColor": {
-					"path": "assets/mesh/CompareAmbientOcclusion/glTF/FruitBaseColor.ktx2"
-				}
-			},
-			"ao": {
-				"BasketORM": {
-					"path": "assets/mesh/CompareAmbientOcclusion/glTF/BasketORM.ktx2"
-				},
-				"FruitORM": {
-					"path": "assets/mesh/CompareAmbientOcclusion/glTF/FruitORM.ktx2"
-				}
-			},
-			"mr": {
-				"BasketORM": {
-					"path": "assets/mesh/CompareAmbientOcclusion/glTF/BasketORM.ktx2"
-				},
-				"FruitORM": {
-					"path": "assets/mesh/CompareAmbientOcclusion/glTF/FruitORM.ktx2"
-				}
-			},
-			"emissive": {
+  "terrain": {
+    "46_016_3_028_13_512_512": {
+      "path": "assets/texture/terrain/height_map_1.ktx2"
+    }
+  },
+  "water": {
+    "_water_foam": {
+      "path": "assets/texture/water/_water_foam.ktx2"
+    },
+    "_water_normal": {
+      "path": "assets/texture/water/_water_normal.ktx2"
+    },
+    "_water_normal2": {
+      "path": "assets/texture/water/_water_normal2.ktx2"
+    }
+  },
+  "camera": {
+    "position": {
+      "x": 20.0,
+      "y": 20.0,
+      "z": 20.0
+    }
+  },
+  "hasFog": true,
+  "player": "",
+  "entities": {
+    "CompareAmbientOcclusion": {
+      "mesh": "assets/mesh/CompareAmbientOcclusion/gLTF/CompareAmbientOcclusion.gltf",
+      "textures": {
+        "FruitBaseColor": {
+          "path": "assets/mesh/CompareAmbientOcclusion/glTF/FruitBaseColor.ktx2"
+        }
+      },
+      "ao": {
+        "BasketORM": {
+          "path": "assets/mesh/CompareAmbientOcclusion/glTF/BasketORM.ktx2"
+        },
+        "FruitORM": {
+          "path": "assets/mesh/CompareAmbientOcclusion/glTF/FruitORM.ktx2"
+        }
+      },
+      "mr": {
+        "BasketORM": {
+          "path": "assets/mesh/CompareAmbientOcclusion/glTF/BasketORM.ktx2"
+        },
+        "FruitORM": {
+          "path": "assets/mesh/CompareAmbientOcclusion/glTF/FruitORM.ktx2"
+        }
+      },
+      "emissive": {
 
-			},
-			"normal": {
-			},
-			"shader": "main_basic",
-			"positions": [
-				{
-					"x": 20.0,
-					"y": 20.0,
-					"z": 20.0
-				}
-			],
-			"scales": [
-				{
-					"x": 10.0,
-					"y": 10.0,
-					"z": 10.0
-				}
-			],
-			"rotations": [
-				{
-					"x": 0.0,
-					"y": 0.0,
-					"z": 0.0
-				}
-			],
-			"flipY": false,
-			"count": 1,
-			"hasBbox": false,
-			"hasAnimation": false,
-			"isPointLight": false,
-			"animationScripts": {
-			},
-			"hasShadow": true,
-			"isIndexed": true,
-			"debugNormal": true
-		}
-	}
+      },
+      "normal": {
+      },
+      "shader": "main_basic",
+      "positions": [
+        {
+          "x": 20.0,
+          "y": 20.0,
+          "z": 20.0
+        }
+      ],
+      "scales": [
+        {
+          "x": 10.0,
+          "y": 10.0,
+          "z": 10.0
+        }
+      ],
+      "rotations": [
+        {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
+        }
+      ],
+      "flipY": true,
+      "count": 1,
+      "hasBbox": false,
+      "hasAnimation": false,
+      "isPointLight": false,
+      "animationScripts": {
+      },
+      "hasShadow": true,
+      "isIndexed": true,
+      "debugNormal": true
+    }
+  }
 }
