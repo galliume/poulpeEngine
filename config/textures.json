@@ -1,49 +1,49 @@
 {
-	"textures": {
-		"mpoulpe": {
-			"path": "assets/texture/mpoulpe.ktx2"
-		},
-		"_plp_empty": {
-			"path": "assets/texture/_plp_empty.ktx2"
-		},
-		"_plp_error": {
-			"path": "assets/texture/_plp_error.ktx2"
-		},
-		"grass": {
-			"path": "assets/texture/terrain/grass.ktx2"
-		},
-		"snow": {
-			"path": "assets/texture/terrain/snow.ktx2"
-		},
-		"ground": {
-			"path": "assets/texture/terrain/ground.ktx2"
-		},
-		"sand": {
-			"path": "assets/texture/terrain/sand.ktx2"
-		},
-		"low_noise": {
-			"path": "assets/texture/terrain/low_noise.ktx2"
-		},
-		"hi_noise": {
-			"path": "assets/texture/terrain/hi_noise.ktx2"
-		}
-	},
-	"skybox": {
+  "textures": {
+    "mpoulpe": {
+      "path": "assets/texture/mpoulpe.ktx2"
+    },
+    "_plp_empty": {
+      "path": "assets/texture/_plp_empty.ktx2"
+    },
+    "_plp_error": {
+      "path": "assets/texture/_plp_error.ktx2"
+    },
+    "grass": {
+      "path": "assets/texture/terrain/grass.ktx2"
+    },
+    "snow": {
+      "path": "assets/texture/terrain/snow.ktx2"
+    },
+    "ground": {
+      "path": "assets/texture/terrain/ground.ktx2"
+    },
+    "sand": {
+      "path": "assets/texture/terrain/sand.ktx2"
+    },
+    "low_noise": {
+      "path": "assets/texture/terrain/low_noise.ktx2"
+    },
+    "hi_noise": {
+      "path": "assets/texture/terrain/hi_noise.ktx2"
+    }
+  },
+  "skybox": {
     "night": [
-			"assets/texture/skybox/night/night.png",
-			"assets/texture/skybox/night/night.png",
-			"assets/texture/skybox/night/night.png",
-			"assets/texture/skybox/night/night.png",
-			"assets/texture/skybox/night/night.png",
-			"assets/texture/skybox/night/night.png"
-		],
-		"desert_road": [
-			"assets/texture/skybox/desert_road/right.png",
-			"assets/texture/skybox/desert_road/left.png",
-			"assets/texture/skybox/desert_road/top.png",
-			"assets/texture/skybox/desert_road/bottom.png",
-			"assets/texture/skybox/desert_road/front.png",
-			"assets/texture/skybox/desert_road/back.png"
-		]
-	}
+      "assets/texture/skybox/night/night.png",
+      "assets/texture/skybox/night/night.png",
+      "assets/texture/skybox/night/night.png",
+      "assets/texture/skybox/night/night.png",
+      "assets/texture/skybox/night/night.png",
+      "assets/texture/skybox/night/night.png"
+    ],
+    "desert_road": [
+      "assets/texture/skybox/desert_road/right.png",
+      "assets/texture/skybox/desert_road/left.png",
+      "assets/texture/skybox/desert_road/top.png",
+      "assets/texture/skybox/desert_road/bottom.png",
+      "assets/texture/skybox/desert_road/front.png",
+      "assets/texture/skybox/desert_road/back.png"
+    ]
+  }
 }

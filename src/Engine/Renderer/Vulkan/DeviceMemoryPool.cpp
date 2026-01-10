@@ -41,7 +41,7 @@ namespace Poulpe
         buffer_type_debug = "VERTEX";
       break;
       case DeviceBufferType::UNIFORM:
-      buffer_size = max_buffer_size / 10;
+      buffer_size = size;
 
       if (buffer_size > _device_props.properties.limits.maxUniformBufferRange) {
         buffer_size = _device_props.properties.limits.maxUniformBufferRange;
@@ -52,7 +52,7 @@ namespace Poulpe
       default:
       case DeviceBufferType::STAGING:
 
-        buffer_size = max_buffer_size / _max_staging;
+        buffer_size = size;
 
         if (buffer_size >= _device_props.properties.limits.maxStorageBufferRange) {
           buffer_size = _device_props.properties.limits.maxStorageBufferRange / _max_staging;

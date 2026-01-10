@@ -80,20 +80,22 @@ namespace Poulpe
 
         //auto & vertex_cache { _transform_cache[_data->_id][cache_key] };
         
-        for (auto& vertex : _data->_vertices) {
+        for (std::size_t v {0}; v < _data->_vertices.size(); v++) {
+          auto &vertex { _data->_vertices.at(v) };
+          auto &vertex_bones { _data->_vertices_bones.at(v) };
           // float const total_weight {
           //   vertex.bone_weights[0]
           //   + vertex.bone_weights[1]
           //   + vertex.bone_weights[2]
           //   + vertex.bone_weights[3] };
 
-          if (vertex.total_weight > 0.f) {
+          if (vertex_bones.total_weight > 0.f) {
             glm::vec4 result = glm::vec4(0.0f);
             for (std::size_t i{ 0 }; i < 4; ++i) {
-              auto const bone_id{ static_cast<std::size_t>(vertex.bone_ids[i]) };
-              auto const w { vertex.bone_weights[i] };
+              auto const bone_id { static_cast<std::size_t>(vertex_bones.bone_ids[i]) };
+              auto const w { vertex_bones.bone_weights[i] };
               if (w > 0.f) {
-                result += _bone_matrices[bone_id] * glm::vec4(vertex.original_pos, 1.0f) * w;
+                result += _bone_matrices[bone_id] * glm::vec4(vertex_bones.original_pos, 1.0f) * w;
               }
             }
             vertex.pos = glm::vec3(result);

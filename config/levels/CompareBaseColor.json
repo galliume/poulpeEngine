@@ -1,79 +1,64 @@
 {
-	"terrain": {
-		"46_016_3_028_13_512_512": {
-			"path": "assets/texture/terrain/height_map_1.ktx2"
-		}
-	},
-	"water": {
-		"_water_foam": {
-			"path": "assets/texture/water/_water_foam.ktx2"
-		},
-		"_water_normal": {
-			"path": "assets/texture/water/_water_normal.ktx2"
-		},
-		"_water_normal2": {
-			"path": "assets/texture/water/_water_normal2.ktx2"
-		}
-	},
-	"camera": {
-		"position": {
-			"x": 0.0,
-			"y": 0.0,
-			"z": 0.0
-		}
-	},
-	"entities": {
-		"CompareBaseColor": {
-			"mesh": "assets/mesh/CompareBaseColor/glTF/CompareBaseColor.gltf",
-			"textures": {
-				"Compare_Basecolor_img1": {
-					"path": "assets/mesh/CompareBaseColor/glTF/Compare_Basecolor_img1.ktx2"
-				}
-			},
-			"mr": {
-			},
-			"emissive": {
-				"Compare_Basecolor_img0": {
-					"path": "assets/mesh/CompareBaseColor/glTF/Compare_Basecolor_img0.ktx2"
-				}
-			},
-			"ao": {
-
-			},
-			"normal": {
-			},
-			"shader": "main_basic",
-			"positions": [
-				{
-					"x": 20.0,
-					"y": 20.0,
-					"z": 20.0
-				}
-			],
-			"scales": [
-				{
-					"x": 1.0,
-					"y": 1.0,
-					"z": 1.0
-				}
-			],
-			"rotations": [
-				{
-					"x": 0.0,
-					"y": 0.0,
-					"z": 0.0
-				}
-			],
-			"flipY": false,
-			"count": 1,
-			"hasBbox": false,
-			"hasAnimation": false,
-			"isPointLight": false,
-			"animationScripts": {
-			},
-			"hasShadow": true,
-			"isIndexed": true,
-			"debugNormal": true
-		}
-	}
+  "terrain": {
+    "46_016_3_028_13_512_512": {
+      "path": "assets/texture/terrain/height_map_1.ktx2"
+    }
+  },
+  "water": {
+    "_water_foam": {
+      "path": "assets/texture/water/_water_foam.ktx2"
+    },
+    "_water_normal": {
+      "path": "assets/texture/water/_water_normal.ktx2"
+    },
+    "_water_normal2": {
+      "path": "assets/texture/water/_water_normal2.ktx2"
+    }
+  },
+  "camera": {
+    "position": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0
+    }
+  },
+  "hasFog" : false,
+  "player": "",
+  "entities": {
+    "CompareBaseColor": {
+      "mesh": "assets/mesh/CompareBaseColor/glTF/CompareBaseColor.gltf",
+      "shader": "main_basic",
+      "positions": [
+        {
+          "x": 20.0,
+          "y": 20.0,
+          "z": 20.0
+        }
+      ],
+      "scales": [
+        {
+          "x": 1.0,
+          "y": 1.0,
+          "z": 1.0
+        }
+      ],
+      "rotations": [
+        {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
+        }
+      ],
+      "flipY": false,
+      "count": 1,
+      "hasBbox": false,
+      "hasAnimation": false,
+      "isPointLight": false,
+      "animationScripts": {
+      },
+      "hasShadow": true,
+      "isIndexed": true,
+      "debugNormal": true
+    }
+  }
 }

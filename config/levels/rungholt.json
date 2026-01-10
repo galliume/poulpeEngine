@@ -27,29 +27,6 @@
   "entities": {
     "rungholt": {
       "mesh": "assets/mesh/rungholt/rungholt.obj",
-      "textures": {
-        "rungholt-RGB": {
-          "path" : "assets/mesh/rungholt/rungholt-RGB.ktx2"
-        },
-        "rungholt-RGBA": {
-          "path": "assets/mesh/rungholt/rungholt-RGBA.ktx2"
-        },
-        "rungholt-Alpha": {
-          "path" : "assets/mesh/rungholt/rungholt-Alpha.ktx2"
-        }
-      },
-      "normal": {
-
-      },
-      "ao": {
-
-      },
-      "emissive": {
-
-      },
-      "mr": {
-
-      },
       "shader": "main_basic",
       "positions": [
         {
@@ -85,29 +62,6 @@
     },
     "house": {
       "mesh": "assets/mesh/rungholt/house.obj",
-      "textures": {
-        "house-RGB": {
-          "path": "assets/mesh/rungholt/house-RGB.ktx2"
-        },
-        "house-RGBA": {
-          "path": "assets/mesh/rungholt/house-RGBA.ktx2"
-        },
-        "house-Alpha": {
-          "path": "assets/mesh/rungholt/house-Alpha.ktx2"
-        }
-      },
-      "normal": {
-
-      },
-      "ao": {
-
-      },
-      "emissive": {
-
-      },
-      "mr": {
-
-      },
       "shader": "main_basic",
       "positions": [
         {

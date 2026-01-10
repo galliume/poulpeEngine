@@ -88,41 +88,32 @@ namespace Poulpe
           _color,             // color (vec4)
           {xpos, ypos+h, 0.f},// pos (vec3)
           zeroVec3,           // normal
-          zeroVec3,           // original_pos
-          {u0, v0},           // texture_coord (vec2)
-          {0,0,0,0},          // bone_ids
-          {0.f,0.f,0.f,0.f},  // bone_weights
-          0.0f                // total_weight
+          {u0, v0}           // texture_coord (vec2)
       };
 
       Vertex vertex_2{
-          zeroVec4, _color, {xpos, ypos, 0.f}, 
-          zeroVec3, zeroVec3, {u0, v1}, 
-          {0,0,0,0}, {0.f,0.f,0.f,0.f}, 0.0f
+          zeroVec4, _color, {xpos, ypos, 0.f},
+          zeroVec3, {u0, v1}
       };
 
       Vertex vertex_3{
-          zeroVec4, _color, {xpos+w, ypos, 0.f}, 
-          zeroVec3, zeroVec3, {u1, v1}, 
-          {0,0,0,0}, {0.f,0.f,0.f,0.f}, 0.0f
+          zeroVec4, _color, {xpos+w, ypos, 0.f},
+          zeroVec3, {u1, v1}
       };
 
       Vertex vertex_4{
-          zeroVec4, _color, {xpos, ypos+h, 0.f}, 
-          zeroVec3, zeroVec3, {u0, v0}, 
-          {0,0,0,0}, {0.f,0.f,0.f,0.f}, 0.0f
+          zeroVec4, _color, {xpos, ypos+h, 0.f},
+          zeroVec3, {u0, v0}
       };
 
       Vertex vertex_5{
-          zeroVec4, _color, {xpos+w, ypos, 0.f}, 
-          zeroVec3, zeroVec3, {u1, v1}, 
-          {0,0,0,0}, {0.f,0.f,0.f,0.f}, 0.0f
+          zeroVec4, _color, {xpos+w, ypos, 0.f},
+          zeroVec3, {u1, v1}
       };
 
       Vertex vertex_6{
-          zeroVec4, _color, {xpos+w, ypos+h, 0.f}, 
-          zeroVec3, zeroVec3, {u1, v0}, 
-          {0,0,0,0}, {0.f,0.f,0.f,0.f}, 0.0f
+          zeroVec4, _color, {xpos+w, ypos+h, 0.f},
+          zeroVec3, {u1, v0},
       };
 
       vertices.emplace_back(vertex_1);

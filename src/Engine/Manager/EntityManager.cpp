@@ -1,6 +1,5 @@
 module;
 
-
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/hash.hpp>
@@ -8,6 +7,8 @@ module;
 #include <glm/fwd.hpp>
 
 #include <nlohmann/json.hpp>
+
+#include <volk.h>
 
 module Engine.Managers.EntityManager;
 
@@ -183,17 +184,15 @@ namespace Poulpe
       //std::vector<Mesh::BBox> bboxs{};
       mesh->setDebugNormal(entity_opts.debug_normal);
 
-      uint32_t const tex1ID = _data.materials_ID.at(0);
-
-      std::string name_texture{ PLP_EMPTY };
-      std::string name_specular_map{ PLP_EMPTY };
-      std::string name_bump_map{ PLP_EMPTY };
-      std::string name_alpha_map{ PLP_EMPTY };
-      std::string name_texture_metal_roughness{ PLP_EMPTY };
-      std::string name_texture_emissive{ PLP_EMPTY };
-      std::string name_texture_ao{ PLP_EMPTY };
-      std::string name_texture_base_color{ PLP_EMPTY };
-      std::string name_texture_transmission{ PLP_EMPTY };
+      std::string name_texture { PLP_EMPTY };
+      std::string name_specular_map { PLP_EMPTY };
+      std::string name_bump_map { PLP_EMPTY };
+      std::string name_alpha_map { PLP_EMPTY };
+      std::string name_texture_metal_roughness { PLP_EMPTY };
+      std::string name_texture_emissive { PLP_EMPTY };
+      std::string name_texture_ao { PLP_EMPTY };
+      std::string name_texture_base_color { PLP_EMPTY };
+      std::string name_texture_transmission { PLP_EMPTY };
       float alpha_mode{ 0.0 };
 
       std::uint32_t options {0};
@@ -206,56 +205,61 @@ namespace Poulpe
         //@todo should not be in mesh, but just an ID pointing to the material
         mesh->setMaterial(mat);
 
-        //@todo temp
-        //@todo separate into 2 storage buffer of 3 texSample
-        auto const& tex1 = materials.at(tex1ID);
-
-        if (!tex1.name_texture_ambient.empty()) {
-          name_texture = tex1.name_texture_ambient;
+        if (!mat.name_texture_diffuse.empty()) {
+          name_texture = mat.name_texture_diffuse;
+          _texture_manager->add(name_texture, mat.name_texture_diffuse_path, VK_IMAGE_ASPECT_COLOR_BIT, TEXTURE_TYPE::DIFFUSE, _renderer);
+        } else if (!mat.name_texture_ambient.empty()) {
+          name_texture = mat.name_texture_ambient;
           options |= PLP_MESH_OPTIONS::HAS_BASE_COLOR;
-        } else if (!tex1.name_texture_diffuse.empty()) {
-          name_texture = tex1.name_texture_diffuse;
-          options |= PLP_MESH_OPTIONS::HAS_BASE_COLOR;
+          _texture_manager->add(name_texture, mat.name_texture_ambient_path, VK_IMAGE_ASPECT_COLOR_BIT, TEXTURE_TYPE::DIFFUSE, _renderer);
         }
 
         if (!mat.name_texture_specular.empty()) {
           name_specular_map = mat.name_texture_specular;
           options |= PLP_MESH_OPTIONS::HAS_SPECULAR;
+          _texture_manager->add(name_specular_map, mat.name_texture_specular_path, VK_IMAGE_ASPECT_COLOR_BIT, TEXTURE_TYPE::AO, _renderer);
         }
 
         if (!mat.name_texture_bump.empty()) {
           name_bump_map = mat.name_texture_bump;
           options |= PLP_MESH_OPTIONS::HAS_NORMAL;
+          _texture_manager->add(name_bump_map, mat.name_texture_bump_path, VK_IMAGE_ASPECT_COLOR_BIT, TEXTURE_TYPE::NORMAL, _renderer);
         }
 
         if (!mat.name_texture_alpha.empty()) {
           name_alpha_map = mat.name_texture_alpha;
           options |= PLP_MESH_OPTIONS::HAS_ALPHA;
+          _texture_manager->add(name_alpha_map, mat.name_texture_alpha_path, VK_IMAGE_ASPECT_COLOR_BIT, TEXTURE_TYPE::AO, _renderer);
         }
 
         if (!mat.name_texture_metal_roughness.empty()) {
           name_texture_metal_roughness = mat.name_texture_metal_roughness;
           options |= PLP_MESH_OPTIONS::HAS_MR;
+          _texture_manager->add(name_texture_metal_roughness, mat.name_texture_metal_roughness_path, VK_IMAGE_ASPECT_COLOR_BIT, TEXTURE_TYPE::MR, _renderer);
         }
 
         if (!mat.name_texture_emissive.empty()) {
           name_texture_emissive = mat.name_texture_emissive;
           options |= PLP_MESH_OPTIONS::HAS_EMISSIVE;
+          _texture_manager->add(name_texture_emissive, mat.name_texture_emissive_path, VK_IMAGE_ASPECT_COLOR_BIT, TEXTURE_TYPE::EMISSIVE, _renderer);
         }
 
         if (!mat.name_texture_ao.empty()) {
           name_texture_ao = mat.name_texture_ao;
           options |= PLP_MESH_OPTIONS::HAS_AO;
+          _texture_manager->add(name_texture_ao, mat.name_texture_ao_path, VK_IMAGE_ASPECT_COLOR_BIT, TEXTURE_TYPE::AO, _renderer);
         }
 
         if (!mat.name_texture_base_color.empty()) {
           name_texture_base_color = mat.name_texture_base_color;
           options |= PLP_MESH_OPTIONS::HAS_BASE_COLOR;
+          _texture_manager->add(name_texture_base_color, mat.name_texture_base_color_path, VK_IMAGE_ASPECT_COLOR_BIT, TEXTURE_TYPE::DIFFUSE, _renderer);
         }
 
         if (!mat.name_texture_transmission.empty()) {
           name_texture_transmission = mat.name_texture_transmission;
           options |= PLP_MESH_OPTIONS::HAS_TRANSMISSION;
+          _texture_manager->add(name_texture_transmission, mat.name_texture_transmission_path, VK_IMAGE_ASPECT_COLOR_BIT, TEXTURE_TYPE::EMISSIVE, _renderer);
         }
       }
 
@@ -271,7 +275,8 @@ namespace Poulpe
       data._ao = name_texture_ao;
       data._base_color = name_texture_base_color;
       data._transmission = name_texture_transmission;
-      data._vertices = _data.vertices;
+      data._vertices = std::move(_data.vertices);
+      data._vertices_bones = std::move(_data.vertices_bones);
       data._indices = _data.indices;
       data._origin_pos = entity_opts.pos;
       data._current_pos = entity_opts.pos;
@@ -338,24 +343,7 @@ namespace Poulpe
       _positions[data._id] = positions;
       _scales[data._id] = scales;
 
-      ComponentRenderingInfo rendering_info {
-        .mesh = mesh.get(),
-        .textures = _texture_manager->getTextures(),
-        .skybox_name = _texture_manager->getSkyboxTexture(),
-        .terrain_name = _texture_manager->getTerrainTexture(),
-        .water_name = _texture_manager->getWaterTexture(),
-        .sun_light = _light_manager->getSunLight(),
-        .point_lights = _light_manager->getPointLights(),
-        .spot_lights = _light_manager->getSpotLights(),
-        .characters = {},
-        .face = nullptr,
-        .atlas_width = 0,
-        .atlas_height = 0,
-        .light_buffer = _light_buffer
-      };
-
       auto basicRdrImpl { RendererComponentFactory::create<Basic>() };
-      //(*basicRdrImpl)(_renderer, rendering_info);
 
       _component_manager->add<RendererComponent>(entity->getID(), std::move(basicRdrImpl));
       _component_manager->add<MeshComponent>(entity->getID(), std::move(mesh));

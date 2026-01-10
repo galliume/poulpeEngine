@@ -179,7 +179,7 @@ namespace Poulpe
       //_light_manager->animateAmbientLight(delta_time);
       auto const& camera_view_matrix { _camera->getView() };
       auto const& perspective { _renderer->getPerspective() };
-      std::lock_guard<std::shared_mutex> guard(_entity_manager->lockWorldNode());
+      //std::lock_guard<std::shared_mutex> guard(_entity_manager->lockWorldNode());
 
       _light_manager->computeCSM(camera_view_matrix, perspective);
       //Logger::debug("x {} y {} z {}", camera_pos.x, camera_pos.y, camera_pos.z);
@@ -199,6 +199,9 @@ namespace Poulpe
 
       _renderer->getAPI()->updateStorageBuffer(
         _light_buffers[_renderer->getCurrentFrameIndex()], light_object_buffer, _renderer->getCurrentFrameIndex());
+      _renderer->getAPI()->endCopyBuffer(_renderer->getCurrentFrameIndex());
+
+      _renderer->getAPI()->startCopyBuffer(_renderer->getCurrentFrameIndex());
 
       std::future<void> async_skybox_render;
       std::future<void> async_water_render;
@@ -513,10 +516,10 @@ namespace Poulpe
     shaders.detach();
     count_down.wait();
 
-    setIsLoaded();
-
     std::jthread entities(_entity_manager->load(lvl_data));
     entities.detach();
+    setIsLoaded();
+
   }
 
   void RenderManager::prepareHUD()

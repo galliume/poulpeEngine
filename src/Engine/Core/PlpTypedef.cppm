@@ -92,7 +92,7 @@ namespace Poulpe
     alignas(16) glm::vec3 cascade_offset3;
     alignas(16) glm::vec4 cascade_min_splits;
     alignas(16) glm::vec4 cascade_max_splits;
-    alignas(4)  float cascade_texel_size;
+    alignas(16) glm::vec4 cascade_texel_sizes;
   };
 
   export struct Material
@@ -163,46 +163,57 @@ namespace Poulpe
     float alpha_cut_off{ 1.0 };
 
     std::string name_texture_ambient;             // map_Ka
+    std::string name_texture_ambient_path;
     TextureWrapMode texture_ambient_wrap_mode_u;
     TextureWrapMode texture_ambient_wrap_mode_v;
 
     std::string name_texture_diffuse;             // map_Kd
+    std::string name_texture_diffuse_path;
     TextureWrapMode texture_diffuse_wrap_mode_u;
     TextureWrapMode texture_diffuse_wrap_mode_v;
 
     std::string name_texture_specular;            // map_Ks
+    std::string name_texture_specular_path;
     TextureWrapMode texture_specular_wrap_mode_u;
     TextureWrapMode texture_specular_wrap_mode_v;
 
     std::string name_texture_specular_highlight;  // map_Ns
+    std::string name_texture_specular_highlight_path;
     TextureWrapMode texture_specular_highlight_wrap_mode_u;
     TextureWrapMode texture_specular_highlight_wrap_mode_v;
 
     std::string name_texture_bump;                // map_bump, map_Bump, bump
+    std::string name_texture_bump_path;
     TextureWrapMode texture_bump_wrap_mode_u;
     TextureWrapMode texture_bump_wrap_mode_v;
 
     std::string name_texture_alpha; // map_d
+    std::string name_texture_alpha_path;
     TextureWrapMode texture_alpha_wrap_mode_u;
     TextureWrapMode texture_alpha_wrap_mode_v;
 
     std::string name_texture_metal_roughness; //metal roughness
+    std::string name_texture_metal_roughness_path;
     TextureWrapMode texture_metal_roughness_wrap_mode_u;
     TextureWrapMode texture_metal_roughness_wrap_mode_v;
 
     std::string name_texture_emissive;
+    std::string name_texture_emissive_path;
     TextureWrapMode texture_emissive_wrap_mode_u;
     TextureWrapMode texture_emissive_wrap_mode_v;
 
     std::string name_texture_ao;
+    std::string name_texture_ao_path;
     TextureWrapMode texture_ao_wrap_mode_u;
     TextureWrapMode texture_ao_wrap_mode_v;
 
     std::string name_texture_base_color;
+    std::string name_texture_base_color_path;
     TextureWrapMode texture_base_color_wrap_mode_u;
     TextureWrapMode texture_base_color_wrap_mode_v;
 
     std::string name_texture_transmission;
+    std::string name_texture_transmission_path;
     TextureWrapMode texture_transmission_wrap_mode_u;
     TextureWrapMode texture_transmission_wrap_mode_v;
 
@@ -331,6 +342,7 @@ namespace Poulpe
     std::vector<uint32_t> indices{};
     std::vector<uint32_t> materials_ID{};
     std::vector<Vertex> vertices{};
+    std::vector<VertexBones> vertices_bones{};
     glm::mat4 transform_matrix{};
     glm::mat4 local_transform{};
     glm::mat4 inverse_transform_matrix{};

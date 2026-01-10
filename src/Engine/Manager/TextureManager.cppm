@@ -53,10 +53,9 @@ namespace Poulpe
       void setWaterName(std::string const& water_name) { _water_name = water_name; }
       void addTexture(Texture texture) { _textures[texture.getName()] = std::move(texture); }
 
-  private:
     void add(
       std::string const& name,
-      nlohmann::json const& data,
+      std::string const& file_path,
       VkImageAspectFlags const aspect_flags,
       TEXTURE_TYPE texture_type,
       Renderer* const renderer);

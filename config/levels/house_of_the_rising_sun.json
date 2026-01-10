@@ -25,48 +25,124 @@
   "hasFog": false,
   "player" : "",
   "entities": {
-     "midpoly_town_house_01": {
+    "dog" : {
+      "mesh": "assets/mesh/dog/dog.obj",
+      "shader": "main_basic",
+      "positions": [
+        { "x": 0.8, "y": 0.40, "z": -1.2 }
+      ],
+      "scales": [
+        { "x": 1.0, "y": 1.0, "z": 1.0 }
+      ],
+      "rotations": [
+        {"x": 0.0, "y": 0.0, "z": 0.0}
+      ],
+      "flipY": false,
+      "count": 1,
+      "hasBbox": false,
+      "hasAnimation": false,
+      "isPointLight": false,
+      "animationScripts": {
+      },
+      "hasShadow": true,
+      "isIndexed": true,
+      "debugNormal": true
+    },
+    "Campfire" : {
+      "mesh": "assets/mesh/campfire/Campfire.obj",
+      "shader": "main_basic",
+      "positions": [
+        { "x": 0.8, "y": 0.2, "z": -0.4 }
+      ],
+      "scales": [
+        { "x": 1.0, "y": 1.0, "z": 1.0 }
+      ],
+      "rotations": [
+        { "x": 0.0, "y": 0.0, "z": 0.0 }
+      ],
+      "flipY": false,
+      "count": 1,
+      "hasBbox": false,
+      "hasAnimation": false,
+      "isPointLight": false,
+      "animationScripts": {
+      },
+      "hasShadow": true,
+      "isIndexed": true,
+      "debugNormal": true
+    },
+    "dead_tree" : {
+      "mesh": "assets/mesh/tree/dead_tree.obj",
+      "shader": "main_basic",
+      "positions": [
+        { "x": -1.0, "y": 0.19, "z": -1.4 }
+      ],
+      "scales": [
+        { "x": 1.0, "y": 1.0, "z": 1.0 }
+      ],
+      "rotations": [
+        { "x": 0.0, "y": 0.0, "z": 0.0 }
+      ],
+      "flipY": false,
+      "count": 1,
+      "hasBbox": false,
+      "hasAnimation": false,
+      "isPointLight": false,
+      "animationScripts": {
+      },
+      "hasShadow": true,
+      "isIndexed": true,
+      "debugNormal": true
+    },
+    "moon" : {
+      "mesh": "assets/mesh/moon/moon.obj",
+      "shader": "main_basic",
+      "positions": [
+        { "x": 0.5, "y": 4.5, "z": -3.00 }
+      ],
+      "scales": [
+        { "x": 1.0, "y": 1.0, "z": 1.0 }
+      ],
+      "rotations": [
+        { "x": 0.0, "y": 0.0, "z": 0.0 }
+      ],
+      "flipY": false,
+      "count": 1,
+      "hasBbox": false,
+      "hasAnimation": false,
+      "isPointLight": false,
+      "animationScripts": {
+      },
+      "hasShadow": true,
+      "isIndexed": true,
+      "debugNormal": true
+    },
+    "doghouse0908" : {
+      "mesh": "assets/mesh/doghouse/doghouse0908.obj",
+      "textures": ["dog_base_color"],
+      "shader": "main",
+      "positions": [
+        { "x": 0.7, "y": 0.20, "z": -2.00 }
+      ],
+      "scales": [
+        { "x": 1.0, "y": 1.0, "z": 1.0 }
+      ],
+      "rotations": [
+        { "x": 0.0, "y": -30.0, "z": 0.0 }
+      ],
+      "flipY": false,
+      "count": 1,
+      "hasBbox": false,
+      "hasAnimation": false,
+      "isPointLight": false,
+      "animationScripts": {
+      },
+      "hasShadow": true,
+      "isIndexed": true,
+      "debugNormal": true
+    },
+    "midpoly_town_house_01": {
       "mesh": "assets/mesh/house/midpoly_town_house_01.obj",
-      "textures": {
-        "textures_rocks_rock_bc": {
-          "path": "assets/mesh/house/textures/rocks/rock_bc.ktx2"
-        },
-        "textures_rooftiles_T_darkwood_basecolor": {
-          "path": "assets/mesh/house/textures/rooftiles/T_darkwood_basecolor.ktx2"
-        },
-        "textures_wood_T_brightwood_basecolor": {
-          "path": "assets/mesh/house/textures/wood/T_brightwood_basecolor.ktx2"
-        },
-        "textures_wood_T_darkwood_basecolor": {
-          "path": "assets/mesh/house/textures/wood/T_darkwood_basecolor.ktx2"
-        }
-      },
-      "ao": {
-      },
-      "mr": {
-        "textures_rocks_rock_r": {
-          "path": "assets/mesh/house/textures/rocks/rock_r.ktx2"
-        },
-        "textures_rooftiles_T_wood_roughness": {
-          "path": "assets/mesh/house/textures/rooftiles/T_wood_roughness.ktx2"
-        },
-        "textures_wood_T_wood_roughness": {
-          "path": "assets/mesh/house/textures/wood/T_wood_roughness.ktx2"
-        }
-      },
-      "emissive": {
-      },
-      "normal": {
-        "textures_rocks_rock_n": {
-          "path": "assets/mesh/house/textures/rocks/rock_n.ktx2"
-        },
-        "textures_rooftiles_T_wood_normal": {
-          "path": "assets/mesh/house/textures/rooftiles/T_wood_normal.ktx2"
-        },
-        "textures_wood_T_wood_normal": {
-          "path": "assets/mesh/house/textures/wood/T_wood_normal.ktx2"
-        }
-      },
       "shader": "main_basic",
       "positions": [
         {

@@ -70,11 +70,7 @@ void Water::operator()(
             { (float)index, 0.0f, 0.0f, 0.0f },  // color (vec4 - 16 bytes)
             { -width/2.0f + width*i/fRez, y, -height/2.0f + height*j/fRez }, // pos (vec3)
             normalDefault,                       // normal (vec3)
-            glm::vec3(0.0f),                     // original_pos (vec3)
-            { i / fRez, j / fRez },              // texture_coord (vec2)
-            { 0, 0, 0, 0 },                      // bone_ids[4] (int32_t[4])
-            { 0.0f, 0.0f, 0.0f, 0.0f },          // bone_weights[4] (float[4])
-            0.0f                                 // total_weight (float)
+            { i / fRez, j / fRez }              // texture_coord (vec2)
         };
 
         // Vertex v2
@@ -83,11 +79,7 @@ void Water::operator()(
             { (float)index, 0.0f, 0.0f, 0.0f },
             { -width/2.0f + width*(i+1)/fRez, y, -height/2.0f + height*j/fRez },
             normalDefault,
-            glm::vec3(0.0f),
-            { (i+1) / fRez, j / fRez },
-            { 0, 0, 0, 0 },
-            { 0.0f, 0.0f, 0.0f, 0.0f },
-            0.0f
+            { (i+1) / fRez, j / fRez }
         };
 
         // Vertex v3
@@ -96,11 +88,7 @@ void Water::operator()(
             { (float)index, 0.0f, 0.0f, 0.0f },
             { -width/2.0f + width*i/fRez, y, -height/2.0f + height*(j+1)/fRez },
             normalDefault,
-            glm::vec3(0.0f),
-            { i / fRez, (j+1) / fRez },
-            { 0, 0, 0, 0 },
-            { 0.0f, 0.0f, 0.0f, 0.0f },
-            0.0f
+            { i / fRez, (j+1) / fRez }
         };
 
         // Vertex v4
@@ -109,11 +97,7 @@ void Water::operator()(
             { (float)index, 0.0f, 0.0f, 0.0f },
             { -width/2.0f + width*(i+1)/fRez, y, -height/2.0f + height*(j+1)/fRez },
             normalDefault,
-            glm::vec3(0.0f),
-            { (i+1) / fRez, (j+1) / fRez },
-            { 0, 0, 0, 0 },
-            { 0.0f, 0.0f, 0.0f, 0.0f },
-            0.0f
+            { (i+1) / fRez, (j+1) / fRez }
         };
 
         vertices.push_back(v);

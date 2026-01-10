@@ -22,40 +22,11 @@
       "z": -3.0
     }
   },
+  "hasFog" : false,
+  "player": "",
   "entities": {
   "rat": {
       "mesh": "assets/mesh/rat/rat.gltf",
-      "textures": {
-        "textures_Material_0_baseColor": {
-          "path": "assets/mesh/rat/textures/Material_0_baseColor.ktx2"
-        },
-        "textures_Rat_Knife_01default_baseColor": {
-          "path": "assets/mesh/rat/textures/Rat_Knife_01default_baseColor.ktx2"
-        }
-      },
-      "ao": {
-      },
-      "mr": {
-        "textures_Material_0_metallicRoughness": {
-          "path": "assets/mesh/rat/textures/Material_0_metallicRoughness.ktx2"
-        },
-        "textures_Rat_Knife_01default_metallicRoughness": {
-          "path": "assets/mesh/rat/textures/Rat_Knife_01default_metallicRoughness.ktx2"
-        }
-      },
-      "emissive": {
-        "textures_Material_0_emissive": {
-          "path": "assets/mesh/rat/textures/Material_0_emissive.ktx2"
-        }
-      },
-      "normal": {
-        "textures_Material_0_normal": {
-          "path": "assets/mesh/rat/textures/Material_0_normal.ktx2"
-        },
-      "textures_Rat_Knife_01default_normal": {
-          "path": "assets/mesh/rat/textures/Rat_Knife_01default_normal.ktx2"
-        }
-      },
       "shader": "main_basic",
       "positions": [
         {

@@ -44,7 +44,7 @@ struct Light {
   vec3 cascade_offset3;
   vec4 cascade_min_splits;
   vec4 cascade_max_splits;
-  float cascade_texel_size;
+  vec4 cascade_texel_sizes;
 };
 
 layout(push_constant) uniform constants
@@ -60,7 +60,7 @@ layout(location = 0) out vec4 final_color;
 layout(location = 0) in vec2 in_texture_coord;
 layout(location = 1) in vec4 in_weights;
 layout(location = 2) in vec4 in_normal;
-layout(location = 3) in vec3 in_position;
+layout(location = 3) in vec4 in_position;
 layout(location = 4) in vec3 in_view_position;
 layout(location = 5) in mat3 in_inverse_model;
 
@@ -240,7 +240,7 @@ float CalculateInfiniteShadow(vec3 cascade_coord0, vec3 cascade_blend)
   vec3 blend = clamp(cascade_blend, 0.0, 1.0);
   float weight = (beyond_cascade2) ? blend.y - blend.z : 1.0 - blend.x;
 
-  float texel_size1 = sun_light.cascade_texel_size;
+  float texel_size1 = 1.0f / 2048.f;
   float delta = 3.0 * texel_size1;
 
   vec4 shadow_offset[2] = vec4[2](
@@ -272,7 +272,7 @@ float CalculateInfiniteShadow(vec3 cascade_coord0, vec3 cascade_blend)
 float ShadowCalculation(vec3 light_coord, Light l, float NdL)
 {
   vec3 p = light_coord;
-  float shadow_offset = 2.f/1024.f;//@todo push constant
+  float shadow_offset = 2.f/2048.f;//@todo push constant
   vec2 depth_transform = vec2(l.projection[2][2], l.projection[2][3]);
 
   vec3 absq = abs(p);
@@ -286,11 +286,11 @@ float ShadowCalculation(vec3 light_coord, Light l, float NdL)
   vec2 oyz = vec2(offset - dxy, dxy);
 
   vec3 limit = vec3(m, m, m);
-  limit.xy -= oxy * (1.f / 1024.f);
-  limit.yz -= oyz * (1.f / 1024.f);
+  limit.xy -= oxy * (1.f / 2048.f);
+  limit.yz -= oyz * (1.f / 2048.f);
 
   //float depth = depth_transform.x + depth_transform.y / m;
-  float depth = length(p) / 50.0f;//far plane
+  float depth = length(p) / 500.0f;//far plane
   float light = texture(tex_shadow_sampler, vec4(p, depth));
 
   p.xy -= oxy;
@@ -318,7 +318,7 @@ void main()
   C_diffuse += texture(tex_sampler[TERRAIN_GRASS], in_texture_coord) * in_weights.z;
   C_diffuse += texture(tex_sampler[TERRAIN_SNOW], in_texture_coord) * in_weights.w;
 
-  vec3 p = in_position;
+  vec3 p = in_position.xyz;
   vec3 v = in_view_position;
   vec3 V = normalize(v);
   vec3 normal = normalize(in_normal.xyz);
@@ -425,7 +425,7 @@ void main()
 
   // C_sun *= 0.05;
   // C_ambient *= 0.05;
-  vec4 color = vec4(C_ambient + C_sun + out_lights, 1.0);
+  vec4 color = vec4(C_sun , 1.0);
   
   float has_fog = ((pc.env_options >> HAS_FOG) & 1u);
   color.rgb = mix(color.rgb, ApplyFog(color.rgb, v, p.y), has_fog);

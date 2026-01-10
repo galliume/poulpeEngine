@@ -22,14 +22,11 @@
       "z": -3.0
     }
   },
+  "hasFog" : false,
+  "player": "",
   "entities": {
     "gallery" : {
       "mesh": "assets/mesh/gallery/gallery.obj",
-      "textures": {
-        "gallery": {
-          "path" : "assets/mesh/gallery/gallery.ktx2"
-        }
-      },
       "shader": "main_basic",
       "positions": [
         {
