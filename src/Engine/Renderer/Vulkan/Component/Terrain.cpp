@@ -67,24 +67,16 @@ namespace Poulpe
             zeroVec4, // color
             { -width/2.0f + width*i/fRez, y, -height/2.0f + height*j/fRez }, // pos
             defaultNormal, // normal
-            glm::vec3{0.0f}, // original_pos
-            { i / fRez, j / fRez }, // texture_coord
-            { 0, 0, 0, 0 }, // bone_ids[4]
-            { 0.0f, 0.0f, 0.0f, 0.0f }, // bone_weights[4]
-            0.0f // total_weight
+            { i / fRez, j / fRez } // texture_coord
         };
 
         // Vertex v2
         Vertex v2{
-            zeroVec4, 
+            zeroVec4,
             zeroVec4,
             { -width/2.0f + width*(i+1)/fRez, y, -height/2.0f + height*j/fRez },
             defaultNormal,
-            glm::vec3{0.0f},
-            { (i+1) / fRez, j / fRez },
-            { 0, 0, 0, 0 },
-            { 0.0f, 0.0f, 0.0f, 0.0f },
-            0.0f
+            { (i+1) / fRez, j / fRez }
         };
 
         // Vertex v3
@@ -93,11 +85,7 @@ namespace Poulpe
             zeroVec4,
             { -width/2.0f + width*i/fRez, y, -height/2.0f + height*(j+1)/fRez },
             defaultNormal,
-            glm::vec3{0.0f},
-            { i / fRez, (j+1) / fRez },
-            { 0, 0, 0, 0 },
-            { 0.0f, 0.0f, 0.0f, 0.0f },
-            0.0f
+            { i / fRez, (j+1) / fRez }
         };
 
         // Vertex v4
@@ -106,11 +94,7 @@ namespace Poulpe
             zeroVec4,
             { -width/2.0f + width*(i+1)/fRez, y, -height/2.0f + height*(j+1)/fRez },
             defaultNormal,
-            glm::vec3{0.0f},
-            { (i+1) / fRez, (j+1) / fRez },
-            { 0, 0, 0, 0 },
-            { 0.0f, 0.0f, 0.0f, 0.0f },
-            0.0f
+            { (i+1) / fRez, (j+1) / fRez }
         };
 
         vertices.push_back(v);

@@ -27,31 +27,6 @@
   "entities": {
     "DamagedHelmet": {
       "mesh": "assets/mesh/DamagedHelmet/glTF/DamagedHelmet.gltf",
-      "textures": {
-        "Default_albedo": {
-          "path": "assets/mesh/DamagedHelmet/glTF/Default_albedo.ktx2"
-        }
-      },
-      "ao": {
-        "Default_AO": {
-          "path": "assets/mesh/DamagedHelmet/glTF/Default_AO.ktx2"
-        }
-      },
-      "mr": {
-        "Default_metalRoughness": {
-          "path": "assets/mesh/DamagedHelmet/glTF/Default_metalRoughness.ktx2"
-        }
-      },
-      "emissive": {
-        "Default_emissive": {
-          "path": "assets/mesh/DamagedHelmet/glTF/Default_emissive.ktx2"
-        }
-      },
-      "normal": {
-        "Default_normal": {
-          "path": "assets/mesh/DamagedHelmet/glTF/Default_normal.ktx2"
-        }
-      },
       "shader": "main_basic",
       "positions": [
         {
@@ -86,36 +61,8 @@
       "isIndexed": true,
       "debugNormal": true
     },
-        "table": {
+    "table": {
       "mesh": "assets/mesh/DamagedHelmet/glTF/modern_coffee_table_02_4k.gltf",
-      "textures": {
-        "textures_modern_coffee_table_02_base_diff_4k": {
-          "path": "assets/mesh/DamagedHelmet/glTF/textures/modern_coffee_table_02_base_diff_4k.ktx2"
-        },
-        "textures_modern_coffee_table_02_wood_diff_4k": {
-          "path": "assets/mesh/DamagedHelmet/glTF/textures/modern_coffee_table_02_wood_diff_4k.ktx2"
-        }
-      },
-      "ao": {
-      },
-      "mr": {
-        "textures_modern_coffee_table_02_base_rough_4k": {
-          "path": "assets/mesh/DamagedHelmet/glTF/textures/modern_coffee_table_02_base_rough_4k.ktx2"
-        },
-        "textures_modern_coffee_table_02_wood_rough_4k": {
-          "path": "assets/mesh/DamagedHelmet/glTF/textures/modern_coffee_table_02_wood_rough_4k.ktx2"
-        }
-      },
-      "emissive": {
-      },
-      "normal": {
-        "textures_modern_coffee_table_02_base_nor_gl_4k": {
-          "path": "assets/mesh/DamagedHelmet/glTF/textures/modern_coffee_table_02_base_nor_gl_4k.ktx2"
-        },
-        "textures_modern_coffee_table_02_wood_nor_gl_4k": {
-          "path": "assets/mesh/DamagedHelmet/glTF/textures/modern_coffee_table_02_wood_nor_gl_4k.ktx2"
-        }
-      },
       "shader": "main_basic",
       "positions": [
         {

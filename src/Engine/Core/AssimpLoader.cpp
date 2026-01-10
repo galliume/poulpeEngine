@@ -76,6 +76,7 @@ namespace Poulpe
 
     std::filesystem::path file_name{ path };
     auto const& texture_prefix{ file_name.stem().string() + "_"};
+    auto const& root_path { file_name.parent_path().string() + "/" };
 
     if (scene->HasMaterials()) {
 
@@ -90,7 +91,6 @@ namespace Poulpe
         //if(auto texture = scene->GetEmbeddedTexture(texture_file.C_Str())) {
           //returned pointer is not null, read texture from memory
         //}
-        //Logger::debug("texture_file {}", texture_file.C_Str());
         material.name = mat->GetName().C_Str();
 
         aiColor4D baseColor(0.f);
@@ -172,6 +172,7 @@ namespace Poulpe
 
           if (mat->GetTexture(aiTextureType_AMBIENT, 0, &texture_path) == aiReturn_SUCCESS) {
               material.name_texture_ambient = AssimpLoader::cleanName(texture_path.C_Str(), texture_prefix);
+              material.name_texture_ambient_path = root_path + texture_path.C_Str();
           }
           if (mat->Get(AI_MATKEY_MAPPINGMODE_U(aiTextureType_AMBIENT, 0), wrap_mode_u) == aiReturn_SUCCESS) {
             material.texture_ambient_wrap_mode_u = getTextureWrapMode(wrap_mode_u);
@@ -193,6 +194,7 @@ namespace Poulpe
 
           if (mat->GetTexture(aiTextureType_DIFFUSE, 0, &texture_path) == aiReturn_SUCCESS) {
               material.name_texture_diffuse = AssimpLoader::cleanName(texture_path.C_Str(), texture_prefix);
+              material.name_texture_diffuse_path = root_path + texture_path.C_Str();
           }
           if (mat->Get(AI_MATKEY_MAPPINGMODE_U(aiTextureType_DIFFUSE, 0), wrap_mode_u) == aiReturn_SUCCESS) {
             material.texture_diffuse_wrap_mode_u = getTextureWrapMode(wrap_mode_u);
@@ -214,6 +216,7 @@ namespace Poulpe
 
           if (mat->GetTexture(aiTextureType_SPECULAR, 0, &texture_path) == aiReturn_SUCCESS) {
               material.name_texture_specular = AssimpLoader::cleanName(texture_path.C_Str(), texture_prefix);
+              material.name_texture_specular_path = root_path + texture_path.C_Str();
           }
           if (mat->Get(AI_MATKEY_MAPPINGMODE_U(aiTextureType_SPECULAR, 0), wrap_mode_u) == aiReturn_SUCCESS) {
             material.texture_specular_wrap_mode_u = getTextureWrapMode(wrap_mode_u);
@@ -229,6 +232,7 @@ namespace Poulpe
 
           if (mat->GetTexture(aiTextureType_SHININESS, 0, &texture_path) == aiReturn_SUCCESS) {
               material.name_texture_specular_highlight = AssimpLoader::cleanName(texture_path.C_Str(), texture_prefix);
+              material.name_texture_specular_highlight_path = root_path + texture_path.C_Str();
           }
           if (mat->Get(AI_MATKEY_MAPPINGMODE_U(aiTextureType_SHININESS, 0), wrap_mode_u) == aiReturn_SUCCESS) {
             material.texture_specular_highlight_wrap_mode_u = getTextureWrapMode(wrap_mode_u);
@@ -249,6 +253,7 @@ namespace Poulpe
 
             if (mat->GetTexture(aiTextureType_HEIGHT, 0, &texture_path) == aiReturn_SUCCESS) {
                 material.name_texture_bump = AssimpLoader::cleanName(texture_path.C_Str(), texture_prefix);
+                material.name_texture_bump_path = root_path + texture_path.C_Str();
             }
             if (mat->Get(AI_MATKEY_MAPPINGMODE_U(aiTextureType_HEIGHT, 0), wrap_mode_u) == aiReturn_SUCCESS) {
               material.texture_bump_wrap_mode_u = getTextureWrapMode(wrap_mode_u);
@@ -272,6 +277,7 @@ namespace Poulpe
 
             if (mat->GetTexture(aiTextureType_NORMALS, 0, &texture_path) == aiReturn_SUCCESS) {
                 material.name_texture_bump = AssimpLoader::cleanName(texture_path.C_Str(), texture_prefix);
+                material.name_texture_bump_path = root_path + texture_path.C_Str();
             }
             if (mat->Get(AI_MATKEY_MAPPINGMODE_U(aiTextureType_NORMALS, 0), wrap_mode_u) == aiReturn_SUCCESS) {
               material.texture_bump_wrap_mode_u = getTextureWrapMode(wrap_mode_u);
@@ -298,6 +304,7 @@ namespace Poulpe
 
           if (mat->GetTexture(aiTextureType_OPACITY, 0, &texture_path) == aiReturn_SUCCESS) {
               material.name_texture_alpha = AssimpLoader::cleanName(texture_path.C_Str(), texture_prefix);
+              material.name_texture_alpha_path = root_path + texture_path.C_Str();
           }
           if (mat->Get(AI_MATKEY_MAPPINGMODE_U(aiTextureType_OPACITY, 0), wrap_mode_u) == aiReturn_SUCCESS) {
             material.texture_alpha_wrap_mode_u = getTextureWrapMode(wrap_mode_u);
@@ -313,6 +320,7 @@ namespace Poulpe
 
           if (mat->GetTexture(aiTextureType_UNKNOWN, 0, &texture_path) == aiReturn_SUCCESS) {
               material.name_texture_metal_roughness = AssimpLoader::cleanName(texture_path.C_Str(), texture_prefix);
+              material.name_texture_metal_roughness_path = root_path + texture_path.C_Str();
           }
           if (mat->Get(AI_MATKEY_MAPPINGMODE_U(aiTextureType_UNKNOWN, 0), wrap_mode_u) == aiReturn_SUCCESS) {
             material.texture_metal_roughness_wrap_mode_u = getTextureWrapMode(wrap_mode_u);
@@ -334,6 +342,7 @@ namespace Poulpe
 
           if (mat->GetTexture(aiTextureType_EMISSIVE, 0, &texture_path) == aiReturn_SUCCESS) {
               material.name_texture_emissive = AssimpLoader::cleanName(texture_path.C_Str(), texture_prefix);
+              material.name_texture_emissive_path = root_path + texture_path.C_Str();
           }
           if (mat->Get(AI_MATKEY_MAPPINGMODE_U(aiTextureType_EMISSIVE, 0), wrap_mode_u) == aiReturn_SUCCESS) {
             material.texture_emissive_wrap_mode_u = getTextureWrapMode(wrap_mode_u);
@@ -361,6 +370,7 @@ namespace Poulpe
 
           if (mat->GetTexture(aiTextureType_LIGHTMAP, 0, &texture_path) == aiReturn_SUCCESS) {
               material.name_texture_ao = AssimpLoader::cleanName(texture_path.C_Str(), texture_prefix);
+              material.name_texture_ao_path = root_path + texture_path.C_Str();
           }
           if (mat->Get(AI_MATKEY_MAPPINGMODE_U(aiTextureType_LIGHTMAP, 0), wrap_mode_u) == aiReturn_SUCCESS) {
             material.texture_ao_wrap_mode_u = getTextureWrapMode(wrap_mode_u);
@@ -377,6 +387,7 @@ namespace Poulpe
 
           if (mat->GetTexture(aiTextureType_BASE_COLOR, 0, &texture_path) == aiReturn_SUCCESS) {
               material.name_texture_base_color = AssimpLoader::cleanName(texture_path.C_Str(), texture_prefix);
+              material.name_texture_base_color_path = root_path + texture_path.C_Str();
           }
           if (mat->Get(AI_MATKEY_MAPPINGMODE_U(aiTextureType_BASE_COLOR, 0), wrap_mode_u) == aiReturn_SUCCESS) {
             material.texture_base_color_wrap_mode_u = getTextureWrapMode(wrap_mode_u);
@@ -392,6 +403,7 @@ namespace Poulpe
 
           if (mat->GetTexture(aiTextureType_TRANSMISSION, 0, &texture_path) == aiReturn_SUCCESS) {
               material.name_texture_transmission = AssimpLoader::cleanName(texture_path.C_Str(), texture_prefix);
+              material.name_texture_transmission_path = root_path + texture_path.C_Str();
           }
           if (mat->Get(AI_MATKEY_MAPPINGMODE_U(aiTextureType_TRANSMISSION, 0), wrap_mode_u) == aiReturn_SUCCESS) {
             material.texture_transmission_wrap_mode_u = getTextureWrapMode(wrap_mode_u);
@@ -589,8 +601,6 @@ namespace Poulpe
 
         vertex.pos = { vertices.x, vertices.y, vertices.z };
         //if (flip_Y) vertex.pos.y *= -1.0f;
-        vertex.original_pos = vertex.pos;
-
         vertex.normal = n;
 
         if (mesh->HasNormals()) {
@@ -674,6 +684,7 @@ namespace Poulpe
       }
 
       if (mesh->HasBones()) {
+        mesh_data.vertices_bones.resize(mesh->mNumVertices, {});
         std::unordered_map<uint32_t, std::vector<std::pair<uint32_t, float>>> vertex_weight_map{};
 
         for (uint32_t b{ 0 }; b < mesh->mNumBones; b++) {
@@ -738,26 +749,28 @@ namespace Poulpe
         for (auto& vertex_map : vertex_weight_map) {
           uint32_t const vertex_id { vertex_map.first };
           auto& vertex { mesh_data.vertices.at(vertex_id) };
-
-          auto& data_vertex{ vertex_map.second };
-
+          VertexBones vertex_bones { };
+          auto& data_vertex { vertex_map.second };
+          vertex_bones.original_pos = vertex.pos;
+          
           std::sort(data_vertex.begin(), data_vertex.end(),
             [](auto const& a, auto const& b) { return a.second > b.second; });
 
           float total_weight{ 0.0f };
 
           for (std::size_t y{ 0 }; y < 4 && y < data_vertex.size(); ++y) {
-            vertex.bone_ids[y] = static_cast<std::int32_t>(data_vertex[y].first);
-            vertex.bone_weights[y] = data_vertex[y].second;
+            vertex_bones.bone_ids[y] = static_cast<std::int32_t>(data_vertex[y].first);
+            vertex_bones.bone_weights[y] = data_vertex[y].second;
             total_weight += data_vertex[y].second;
           }
 
           if (total_weight > 0.0f) {
             for (std::size_t y{ 0 }; y < 4; ++y) {
-              vertex.bone_weights[y] /= total_weight;
-              vertex.total_weight += vertex.bone_weights[y]; 
+              vertex_bones.bone_weights[y] /= total_weight;
+              vertex_bones.total_weight += vertex_bones.bone_weights[y]; 
             }
           }
+          mesh_data.vertices_bones[vertex_id] = std::move(vertex_bones);
         }
       }
       data.emplace_back(mesh_data);

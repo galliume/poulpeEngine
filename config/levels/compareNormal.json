@@ -27,20 +27,6 @@
   "entities": {
     "compareNormal": {
       "mesh": "assets/mesh/CompareNormal/glTF/CompareNormal.gltf",
-      "textures": {
-      },
-      "mr": {
-      },
-      "emissive": {
-
-      },
-      "ao": {
-      },
-      "normal": {
-        "Compare_Normal_img0": {
-          "path": "assets/mesh/CompareNormal/glTF/Compare_Normal_img0.ktx2"
-        }
-      },
       "shader": "main_basic",
       "positions": [
         {

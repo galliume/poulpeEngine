@@ -53,7 +53,7 @@ struct Light {
   vec3 cascade_offset3;
   vec4 cascade_min_splits;
   vec4 cascade_max_splits;
-  float cascade_texel_size;
+  vec4 cascade_texel_sizes;
 };
 
 layout(location = 0) out vec4 final_color;
@@ -258,7 +258,7 @@ float CalculateInfiniteShadow(vec3 cascade_coord0, vec3 cascade_blend)
   vec3 blend = clamp(cascade_blend, 0.0, 1.0);
   float weight = (beyond_cascade2) ? blend.y - blend.z : 1.0 - blend.x;
 
-  float texel_size1 = sun_light.cascade_texel_size;
+  float texel_size1 = 1.0f/2048.f;//sun_light.cascade_texel_size;
   float delta = 3.0 * texel_size1;
 
   vec4 shadow_offset[2] = vec4[2](

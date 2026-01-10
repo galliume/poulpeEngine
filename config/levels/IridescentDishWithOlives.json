@@ -22,69 +22,11 @@
             "z": 0.0
         }
     },
+  "hasFog" : false,
+  "player": "",
     "entities": {
         "IridescentDishWithOlives": {
             "mesh": "assets/mesh/IridescentDishWithOlives/glTF/IridescentDishWithOlives.gltf",
-            "textures": {
-                "glasscover_irid" : {
-                    "path": "assets/mesh/IridescentDishWithOlives/glTF/glasscover_irid.ktx2"
-                },
-                "glasscover_thick" : {
-                    "path": "assets/mesh/IridescentDishWithOlives/glTF/glasscover_thick.ktx2"
-                },
-                "goldleaf_col" : {
-                    "path": "assets/mesh/IridescentDishWithOlives/glTF/goldleaf_col.ktx2"
-                },
-                "olives_col" : {
-                    "path": "assets/mesh/IridescentDishWithOlives/glTF/olives_col.ktx2"
-                }
-            },
-            "mr": {
-                "glasscover_orm" : {
-                    "path": "assets/mesh/IridescentDishWithOlives/glTF/glasscover_orm.ktx2"
-                },
-                "goldleaf_orm" : {
-                    "path": "assets/mesh/IridescentDishWithOlives/glTF/goldleaf_orm.ktx2"
-                },
-                "olives_orm" : {
-                    "path": "assets/mesh/IridescentDishWithOlives/glTF/olives_orm.ktx2"
-                }
-            },
-            "emissive": {
-                "glassdish_irid" : {
-                    "path": "assets/mesh/IridescentDishWithOlives/glTF/glassdish_irid.ktx2"
-                }
-            },
-            "ao": {
-                "glasscover_orm" : {
-                    "path": "assets/mesh/IridescentDishWithOlives/glTF/glasscover_orm.ktx2"
-                },
-                "goldleaf_orm" : {
-                    "path": "assets/mesh/IridescentDishWithOlives/glTF/goldleaf_orm.ktx2"
-                },
-                "olives_orm" : {
-                    "path": "assets/mesh/IridescentDishWithOlives/glTF/olives_orm.ktx2"
-                }
-            },
-            "normal": {
-                "glasscover_nrm" : {
-                    "path": "assets/mesh/IridescentDishWithOlives/glTF/glasscover_nrm.ktx2"
-                },
-                "goldleaf_nrm" : {
-                    "path": "assets/mesh/IridescentDishWithOlives/glTF/goldleaf_nrm.ktx2"
-                },
-                "olives_nrm" : {
-                    "path": "assets/mesh/IridescentDishWithOlives/glTF/olives_nrm.ktx2"
-                }
-            },
-            "specular": {
-                "glasscover_spec" : {
-                    "path": "assets/mesh/IridescentDishWithOlives/glTF/glasscover_spec.ktx2"
-                },
-                "glassdish_spec" : {
-                    "path": "assets/mesh/IridescentDishWithOlives/glTF/glassdish_spec.ktx2"
-                }
-            },
             "shader": "main_basic",
             "positions": [
                 {

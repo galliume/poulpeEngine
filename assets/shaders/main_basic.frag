@@ -56,6 +56,9 @@ layout(location = 0) in FRAG_VAR {
   mat4 sun_light;
   mat4 model;
   vec4 cascade_coord;
+  vec3 cascade_coord1;
+  vec3 cascade_coord2;
+  vec3 cascade_coord3;
   float depth;
   vec3 blend;
   vec3 n;
@@ -85,7 +88,7 @@ struct Light {
   vec3 cascade_offset3;
   vec4 cascade_min_splits;
   vec4 cascade_max_splits;
-  float cascade_texel_size;
+  vec4 cascade_texel_sizes;
 };
 
 struct Material
@@ -234,9 +237,9 @@ float ShadowCalculation(vec3 light_coord, Light l, float NdL)
 float CalculateInfiniteShadow(vec3 cascade_coord0, vec3 cascade_blend)
 {
   vec3 p1, p2;
-  vec3 cascade_coord1 = cascade_coord0 * sun_light.cascade_scale1 + sun_light.cascade_offset1;
-  vec3 cascade_coord2 = cascade_coord0 * sun_light.cascade_scale2 + sun_light.cascade_offset2;
-  vec3 cascade_coord3 = cascade_coord0 * sun_light.cascade_scale3 + sun_light.cascade_offset3;
+  vec3 cascade_coord1 = var.cascade_coord1;
+  vec3 cascade_coord2 = var.cascade_coord2;
+  vec3 cascade_coord3 = var.cascade_coord3;
 
   bool beyond_cascade2 = (cascade_blend.y >= 0.0);
   bool beyond_cascade3 = (cascade_blend.z >= 0.0);
@@ -248,39 +251,48 @@ float CalculateInfiniteShadow(vec3 cascade_coord0, vec3 cascade_blend)
 
   float depth1 = (beyond_cascade2) ? cascade_coord2.z : cascade_coord0.z;
   float depth2 = (beyond_cascade3) ? clamp(cascade_coord3.z, 0.0, 1.0) : cascade_coord1.z;
-  depth1 += 0.0001;
-  depth2 += 0.0001;
+
 
   vec3 blend = clamp(cascade_blend, 0.0, 1.0);
   float weight = (beyond_cascade2) ? blend.y - blend.z : 1.0 - blend.x;
 
-  float texel_size1 = sun_light.cascade_texel_size;
-  float delta = 3.0 * texel_size1;
+//(3.0f / 16.0f * (1.0f / shadow_resolution))
+  // float texel_size1 = (beyond_cascade2) ? sun_light.cascade_texel_sizes.z : sun_light.cascade_texel_sizes.x;
+  // float texel_size2 = (beyond_cascade3) ? sun_light.cascade_texel_sizes.w : sun_light.cascade_texel_sizes.y;
+  
+  float texel1 = (3.0f / 16.0f * (1.0f / 2048.f));
+  float texel2 = (3.0f / 16.0f * (1.0f / 2048.f));
+  float delta1 = 3.0f * texel1;
+  float delta2 = 3.0f * texel2;
 
-  vec4 shadow_offset[2] = vec4[2](
-    vec4(-texel_size1, -delta, delta, -texel_size1),
-    vec4(texel_size1, delta, -delta, texel_size1)
+  vec4 shadow_offse1[2] = vec4[2](
+    vec4(-texel1, -delta1, delta1, -texel1),
+    vec4(texel1, delta1, -delta1, texel1)
   );
+  // vec4 shadow_offse2[2] = vec4[2](
+  //   vec4(-texel2, -delta2, delta2, -texel2),
+  //   vec4(texel2, delta2, -delta2, texel2)
+  // );
 
-  p1.xy = shadow_coord1 + shadow_offset[0].xy;
+  p1.xy = shadow_coord1 + shadow_offse1[0].xy;
   float light1 = texture(csm, vec4(p1.xy, p1.z, depth1));
-  p1.xy = shadow_coord1 + shadow_offset[0].zw;
+  p1.xy = shadow_coord1 + shadow_offse1[0].zw;
   light1 += texture(csm, vec4(p1.xy, p1.z, depth1));
-  p1.xy = shadow_coord1 + shadow_offset[1].xy;
+  p1.xy = shadow_coord1 + shadow_offse1[1].xy;
   light1 += texture(csm, vec4(p1.xy, p1.z, depth1));
-  p1.xy = shadow_coord1 + shadow_offset[1].zw;
+  p1.xy = shadow_coord1 + shadow_offse1[1].zw;
   light1 += texture(csm, vec4(p1.xy, p1.z, depth1));
 
-  p2.xy = shadow_coord2 + shadow_offset[0].xy;
+  p2.xy = shadow_coord2 + shadow_offse1[0].xy;
   float light2 = texture(csm, vec4(p2.xy, p2.z, depth2));
-  p2.xy = shadow_coord2 + shadow_offset[0].zw;
+  p2.xy = shadow_coord2 + shadow_offse1[0].zw;
   light2 += texture(csm, vec4(p2.xy, p2.z, depth2));
-  p2.xy = shadow_coord2 + shadow_offset[1].xy;
+  p2.xy = shadow_coord2 + shadow_offse1[1].xy;
   light2 += texture(csm, vec4(p2.xy, p2.z, depth2));
-  p2.xy = shadow_coord2 + shadow_offset[1].zw;
+  p2.xy = shadow_coord2 + shadow_offse1[1].zw;
   light2 += texture(csm, vec4(p2.xy, p2.z, depth2));
 
-  return (mix(light2, light1, weight) * 0.25);
+  return (mix(light1, light2, weight) * 0.25);
 }
 
 //https://github.com/KhronosGroup/glTF/blob/main/extensions/2.0/Khronos/KHR_texture_transform/README.md

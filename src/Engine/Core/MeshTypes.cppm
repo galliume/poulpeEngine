@@ -38,6 +38,7 @@ namespace Poulpe {
     std::string _base_color;
     std::string _transmission;
     std::vector<Vertex> _vertices;
+    std::vector<VertexBones> _vertices_bones;
     std::vector<uint32_t> _indices;
     std::vector<std::vector<UniformBufferObject>> _ubos;
     UniformBufferObject _original_ubo;

@@ -27,7 +27,7 @@ struct Light {
   vec3 cascade_offset3;
   vec4 cascade_min_splits;
   vec4 cascade_max_splits;
-  float cascade_texel_size;
+  vec4 cascade_texel_sizes;
 };
 
 struct UBO
@@ -52,11 +52,10 @@ layout(location = 0) in vec4 tangent;
 layout(location = 1) in vec4 color;
 layout(location = 2) in vec3 position;
 layout(location = 3) in vec3 normal;
-layout(location = 4) in vec3 original_pos;
-layout(location = 5) in vec2 texture_coord;
-layout(location = 6) in ivec4 bone_ids;
-layout(location = 7) in vec4 bone_weights;
-layout(location = 8) in float total_weight;
+layout(location = 4) in vec2 texture_coord;
+//layout(location = 6) in ivec4 bone_ids;
+//layout(location = 7) in vec4 bone_weights;
+//layout(location = 8) in float total_weight;
 
 layout(binding = 3) readonly buffer LightObjectBuffer {
   Light sun_light;

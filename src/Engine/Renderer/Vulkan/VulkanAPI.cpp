@@ -1997,8 +1997,8 @@ Buffer VulkanAPI::createIndexBuffer(
     mem_requirements.alignment,
     DeviceMemoryPool::DeviceBufferType::STAGING);
 
-  auto const offset { device_memory->getOffset() };
-  auto const index{ device_memory->bindBufferToMemory(buffer, bind_offset) };
+    auto const index { device_memory->bindBufferToMemory(buffer, bind_offset) };
+    auto const offset { device_memory->getOffset(index) };
 
   copyBuffer(staging_buffer, buffer, buffer_size, current_offset, 0, image_index);
 
@@ -2017,7 +2017,6 @@ Buffer VulkanAPI::createVertexBuffer(
   std::size_t const image_index)
 {
   VkDeviceSize buffer_size = sizeof(Vertex) * vertices.size();
-
   auto & staging_buffer = _staging_buffer[image_index];
   std::size_t const current_offset { _update_vertex_offsets[image_index] };
 
@@ -2044,15 +2043,15 @@ Buffer VulkanAPI::createVertexBuffer(
     mem_requirements.alignment,
     DeviceMemoryPool::DeviceBufferType::VERTEX);
 
-  //auto const offset { device_memory->getOffset() };
-  auto const index{ device_memory->bindBufferToMemory(buffer, bind_offset) };
+  auto const index { device_memory->bindBufferToMemory(buffer, bind_offset) };
+  auto const offset { device_memory->getOffset(index) };
 
   copyBuffer(staging_buffer, buffer, buffer_size, current_offset, 0, image_index);
 
   Buffer mesh_buffer;
   mesh_buffer.buffer = std::move(buffer);
   mesh_buffer.memory = device_memory;
-  mesh_buffer.offset = bind_offset;
+  mesh_buffer.offset = offset;
   mesh_buffer.size = size;
   mesh_buffer.index = index;
 
@@ -2103,9 +2102,12 @@ void VulkanAPI::submitVertexUpdate(VkSemaphore & semaphore, std::size_t const im
   submit_info.pCommandBuffers = &transfer_cmd_buffer;
   submit_info.signalSemaphoreCount = 1;
   submit_info.pSignalSemaphores = &semaphore;
+  VkResult result;
 
-  VkResult result = vkQueueSubmit(_transfer_queues[image_index], 1, & submit_info, VK_NULL_HANDLE);
-
+  {
+    std::lock_guard<std::mutex> guard(_mutex_queue_submit);
+    result = vkQueueSubmit(_transfer_queues[image_index], 1, & submit_info, VK_NULL_HANDLE);
+  }
   _update_vertex_offsets[image_index] = 0;
 
   if (result != VK_SUCCESS) {
@@ -2147,15 +2149,15 @@ Buffer VulkanAPI::createUniformBuffers(
     mem_requirements.alignment,
     DeviceMemoryPool::DeviceBufferType::UNIFORM);
 
-  //auto const offset { device_memory->getOffset() };
-  auto const index{ device_memory->bindBufferToMemory(buffer, bind_offset) };
+  auto const index { device_memory->bindBufferToMemory(buffer, bind_offset) };
+  auto const offset { device_memory->getOffset(index) };
 
   copyBuffer(staging_buffer, buffer, buffer_size, current_offset, 0, image_index);
 
   Buffer uniform_buffer;
   uniform_buffer.buffer = std::move(buffer);
   uniform_buffer.memory = device_memory;
-  uniform_buffer.offset = bind_offset;
+  uniform_buffer.offset = offset;
   uniform_buffer.size = size;
   uniform_buffer.index = index;
 
@@ -2218,8 +2220,8 @@ Buffer VulkanAPI::createIndirectCommandsBuffer(std::vector<VkDrawIndexedIndirect
     mem_requirements.alignment,
     DeviceMemoryPool::DeviceBufferType::STAGING) };
 
-  auto const offset { device_memory->getOffset() };
-  auto const index{ device_memory->bindBufferToMemory(buffer, bind_offset) };
+  auto const index { device_memory->bindBufferToMemory(buffer, bind_offset) };
+  auto const offset { device_memory->getOffset(index) };
 
   Buffer indirect_buffer{ std::move(buffer), device_memory, offset, size, index };
 
@@ -2350,14 +2352,17 @@ void VulkanAPI::endCopyBuffer(std::size_t const image_index)
   submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
   submit_info.commandBufferCount = 1;
   submit_info.pCommandBuffers = &_copy_cmd_buffer[image_index];
-
-  VkResult result { vkQueueSubmit(_transfer_queues[image_index], 1, & submit_info, fence_buffer) };
+  
+  VkResult result;
+  {
+    std::lock_guard<std::mutex> guard(_mutex_queue_submit);
+    result = vkQueueSubmit(_transfer_queues[image_index], 1, & submit_info, fence_buffer);
+  }
 
   if (result != VK_SUCCESS) {
     Logger::error("failed to copy buffer in copyBuffer : {}", string_VkResult(result));
     throw std::runtime_error("failed to copy buffer in endCopyBuffer");
   }
-
   //vkQueueWaitIdle(_transfer_queues[image_index]);
 }
 
@@ -2369,6 +2374,11 @@ void VulkanAPI::copyBuffer(
   VkDeviceSize dst_offset,
   std::size_t const image_index)
 {
+  if (_update_vertex_offsets[image_index] + size > _staging_size) {
+    endCopyBuffer(image_index);
+    startCopyBuffer(image_index);
+  }
+
   VkBufferCopy copy_region{};
   copy_region.srcOffset = src_offset;
   copy_region.dstOffset = dst_offset;
@@ -3204,7 +3214,10 @@ VkSampler VulkanAPI::createTextureSampler(uint32_t const mip_lvl)
     vkWaitForFences(_device, 1, & fence_submit, VK_TRUE, UINT32_MAX);
     vkResetFences(_device, 1, &fence_submit);
 
-    result = vkQueueSubmit(_transfer_queues[image_index], 1, &submit_info, fence_submit);
+    {
+      std::lock_guard<std::mutex> guard(_mutex_queue_submit);
+      result = vkQueueSubmit(_transfer_queues[image_index], 1, &submit_info, fence_submit);
+    }
 
     if (result != VK_SUCCESS) {
       Logger::error("Can't transfer ktx image.");

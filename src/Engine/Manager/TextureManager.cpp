@@ -143,7 +143,7 @@ namespace Poulpe
     }
 
     if (0 != _textures.count(name.c_str())) {
-      Logger::trace("Texture {} already imported", name);
+      //Logger::trace("Texture {} already imported", name);
       return;
     }
 
@@ -193,32 +193,30 @@ namespace Poulpe
 
   std::function<void(std::latch& count_down)> TextureManager::load(Renderer * const renderer)
   {
-    return [this, renderer](std::latch& count_down) {
+
+    auto const root_path { ConfigManagerLocator::get()->rootPath() };
+    return [this, renderer, root_path](std::latch& count_down) {
+      
       for (auto& [key, texture_data] : _texture_config["textures"].items()) {
-        add(key, texture_data, VK_IMAGE_ASPECT_COLOR_BIT, TEXTURE_TYPE::DIFFUSE, renderer);
+        auto const path { root_path + "/" + texture_data.at("path").get<std::string>() };
+        add(key, path, VK_IMAGE_ASPECT_COLOR_BIT, TEXTURE_TYPE::DIFFUSE, renderer);
       }
-      for (auto& [key, texture_data] : _texture_config["normal"].items()) {
-        add(key, texture_data, VK_IMAGE_ASPECT_COLOR_BIT, TEXTURE_TYPE::NORMAL, renderer);
-      }
-      for (auto& [key, texture_data] : _texture_config["mr"].items()) {
-        add(key, texture_data, VK_IMAGE_ASPECT_COLOR_BIT, TEXTURE_TYPE::MR, renderer);
-      }
-      for (auto& [key, texture_data] : _texture_config["emissive"].items()) {
-        add(key, texture_data, VK_IMAGE_ASPECT_COLOR_BIT, TEXTURE_TYPE::EMISSIVE, renderer);
-      }
-      for (auto& [key, texture_data] : _texture_config["ao"].items()) {
-        add(key, texture_data, VK_IMAGE_ASPECT_COLOR_BIT, TEXTURE_TYPE::AO, renderer);
-      }
-      for (auto& [key, texture_data] : _texture_config["transmission"].items()) {
-        add(key, texture_data, VK_IMAGE_ASPECT_COLOR_BIT, TEXTURE_TYPE::EMISSIVE, renderer);
-      }
+
       for (auto& [key, texture_data] : _texture_config["terrain"].items()) {
         setTerrainName(key);
-        add(key, texture_data, VK_IMAGE_ASPECT_COLOR_BIT, TEXTURE_TYPE::HEIGHT, renderer);
+        auto const path { root_path + "/" + texture_data.at("path").get<std::string>() };
+        add(key, path, VK_IMAGE_ASPECT_COLOR_BIT, TEXTURE_TYPE::HEIGHT, renderer);
       }
+
+      for (auto& [key, texture_data] : _texture_config["normal"].items()) {
+        auto const path { root_path + "/" + texture_data.at("path").get<std::string>() };
+        add(key, path, VK_IMAGE_ASPECT_COLOR_BIT, TEXTURE_TYPE::NORMAL, renderer);
+      }
+
       for (auto& [key, texture_data] : _texture_config["water"].items()) {
         setWaterName(key);
-        add(_water_name, texture_data, VK_IMAGE_ASPECT_COLOR_BIT, TEXTURE_TYPE::DIFFUSE, renderer);
+        auto const path { root_path + "/" + texture_data.at("path").get<std::string>() };
+        add(_water_name, path, VK_IMAGE_ASPECT_COLOR_BIT, TEXTURE_TYPE::DIFFUSE, renderer);
       }
       count_down.count_down();
     };
@@ -226,35 +224,32 @@ namespace Poulpe
 
   void TextureManager::add(
     std::string const& name,
-    nlohmann::json const& data,
+    std::string const& file_path,
     VkImageAspectFlags const aspect_flags,
     TEXTURE_TYPE texture_type,
     Renderer* const renderer)
   {
-    auto const root_path { ConfigManagerLocator::get()->rootPath() };
-    std::string const path{ root_path + "/" + data.at("path").get<std::string>() };
-    std::filesystem::path file_name{ path };
-    std::string original_name{ file_name.string()};
+    std::filesystem::path const file_name{ file_path };
 
-    //bool has_alpha{ false };
-    bool is_hdr{ false };
-    std::string oetf{ "srgb" };
+    if (!std::filesystem::exists(file_name)) {
+      Logger::warn("Texture named {} does not exists, path {}", name, file_name.string());
+      return;
+    }
+
+    auto file_name_ktx { file_name };
+    file_name_ktx.replace_extension("ktx2");
+
+    bool is_hdr { false };
+    std::string oetf { "srgb" };
     std::string options { " --encode basis-lz --clevel 3 " };
 
     //https://github.khronos.org/KTX-Software/libktx/ktx_8h.html#a30cc58c576392303d9a5a54b57ef29b5
     std::string  ktx_format{ "R8G8B8A8_SRGB" }; //diffuse default
     ktx_transcode_fmt_e transcoding { KTX_TTF_BC1_RGB };//diffuse default
 
-    if (std::filesystem::exists(file_name.replace_extension("hdr"))) {
-      original_name = file_name.string();
+    if (file_name.extension() == "hdr") {
       is_hdr = true;
-    } else if (std::filesystem::exists(file_name.replace_extension("jpg"))) {
-      original_name = file_name.string();
-    } else if (std::filesystem::exists(file_name.replace_extension("jpeg"))) {
-      original_name = file_name.string();
-    } else if (std::filesystem::exists(file_name.replace_extension("png"))) {
-      original_name = file_name.string();
-      //has_alpha = true;
+    } else if (file_name.extension() == "png") {
       transcoding = KTX_TTF_BC7_RGBA;
     }
 
@@ -305,16 +300,16 @@ namespace Poulpe
         break;
     }
 
-    if (!std::filesystem::exists(path)) {
+    if (!std::filesystem::exists(file_name_ktx)) {
       std::string cmd{
         "ktx create  --format " + ktx_format + " --assign-oetf " + oetf  \
-        + options + " \"" + original_name + "\" \"" + path + "\" "
+        + options + " \"" + file_name.string() + "\" \"" + file_name_ktx.string() + "\" "
       };
       Logger::debug("{}", cmd);
       std::system(cmd.c_str());
     }
 
-    addKTXTexture(name, path, aspect_flags, transcoding, renderer, true);
+    addKTXTexture(name, file_name_ktx.string(), aspect_flags, transcoding, renderer, true);
   }
 
   std::function<void(std::latch& count_down)> TextureManager::loadSkybox(

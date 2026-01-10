@@ -1,25 +1,25 @@
 {
   "terrain": {
     "height_map_1": {
-      "path": "assets/texture/terrain/height_map_1.ktx2"
+      "path": "assets/texture/terrain/height_map_1.png"
     }
   },
   "water": {
     "_water_foam": {
-      "path": "assets/texture/water/_water_foam.ktx2"
+      "path": "assets/texture/water/_water_foam.png"
     },
     "_water_normal": {
-      "path": "assets/texture/water/_water_normal.ktx2"
+      "path": "assets/texture/water/_water_normal.png"
     },
     "_water_normal2": {
-      "path": "assets/texture/water/_water_normal2.ktx2"
+      "path": "assets/texture/water/_water_normal2.png"
     }
   },
   "camera": {
     "position": {
-      "x": -38.0,
-      "y": 18.0,
-      "z": -3.0
+      "x": -110.0,
+      "y": 20.0,
+      "z": 150.0
     }
   },
   "hasFog": true,
@@ -27,24 +27,6 @@
   "entities": {
      "SnowTerrain": {
       "mesh": "assets/mesh/SnowTerrain/terrain.gltf",
-      "textures": {
-        "snowterrain": {
-          "path": "assets/mesh/SnowTerrain/snowterrain.ktx2"
-        }
-      },
-      "ao": {
-      },
-      "mr": {
-
-      },
-      "emissive": {
-
-      },
-      "normal": {
-        "NormalMap": {
-          "path": "assets/mesh/SnowTerrain/NormalMap.ktx2"
-        }
-      },
       "shader": "main_basic",
       "positions": [
         {
@@ -80,19 +62,6 @@
     },
     "Fox": {
       "mesh": "assets/mesh/Fox/glTF/Fox.gltf",
-      "textures": {
-        "Texture": {
-          "path": "assets/mesh/Fox/glTF/Texture.ktx2"
-        }
-      },
-      "ao": {
-      },
-      "mr": {
-      },
-      "emissive": {
-      },
-      "normal": {
-      },
       "shader": "main_basic",
       "positions": [
         {
@@ -129,28 +98,6 @@
     },
     "Lantern": {
       "mesh": "assets/mesh/Lantern/glTF/Lantern.gltf",
-      "textures": {
-        "Lantern_baseColor" : {
-          "path" : "assets/mesh/Lantern/glTF/Lantern_baseColor.ktx2"
-        }
-      },
-      "ao": {
-      },
-      "mr": {
-        "Lantern_roughnessMetallic" : {
-          "path" : "assets/mesh/Lantern/glTF/Lantern_roughnessMetallic.ktx2"
-        }
-      },
-      "emissive": {
-        "Lantern_emissive" : {
-          "path" : "assets/mesh/Lantern/glTF/Lantern_emissive.ktx2"
-        }
-      },
-      "normal": {
-        "Lantern_normal" : {
-          "path" : "assets/mesh/Lantern/glTF/Lantern_normal.ktx2"
-        }
-      },
       "shader": "main_basic",
       "positions": [
         {
@@ -186,28 +133,6 @@
     },
     "cage_lamp": {
       "mesh": "assets/mesh/cage_lamp/scene.gltf",
-      "textures": {
-        "textures_CageCandle_lp_5_lp_default_baseColor": {
-          "path": "assets/mesh/cage_lamp/textures/CageCandle_lp_5_lp_default_baseColor.ktx2"
-        }
-      },
-      "ao": {
-      },
-      "mr": {
-        "textures_CageCandle_lp_5_lp_default_metallicRoughness": {
-          "path": "assets/mesh/cage_lamp/textures/CageCandle_lp_5_lp_default_metallicRoughness.ktx2"
-        }
-      },
-      "emissive": {
-        "textures_CageCandle_lp_5_lp_default_emissive": {
-          "path": "assets/mesh/cage_lamp/textures/CageCandle_lp_5_lp_default_emissive.ktx2"
-        }
-      },
-      "normal": {
-        "textures_CageCandle_lp_5_lp_default_normal": {
-          "path": "assets/mesh/cage_lamp/textures/CageCandle_lp_5_lp_default_normal.ktx2"
-        }
-      },
       "shader": "main_basic",
       "positions": [
         {
@@ -243,19 +168,6 @@
     },
     "Woman": {
       "mesh": "assets/mesh/woman/Woman.gltf",
-      "textures": {
-        "Woman": {
-          "path": "assets/mesh/woman/Woman.ktx2"
-        }
-      },
-      "ao": {
-      },
-      "mr": {
-      },
-      "emissive": {
-      },
-      "normal": {
-      },
       "shader": "main_basic",
       "positions": [
         {
@@ -292,28 +204,6 @@
     },
     "kakashi": {
       "mesh": "assets/mesh/kakashi/kakashi.fbx",
-      "textures": {
-        "texture_badan": {
-          "path": "assets/mesh/kakashi/texture/badan.ktx2"
-        },
-        "texture_mata": {
-          "path": "assets/mesh/kakashi/texture/mata.ktx2"
-        },
-        "texture_sharingan": {
-          "path": "assets/mesh/kakashi/texture/sharingan.ktx2"
-        },
-        "texture_tangan": {
-          "path": "assets/mesh/kakashi/texture/tangan.ktx2"
-        }
-      },
-      "ao": {
-      },
-      "mr": {
-      },
-      "emissive": {
-      },
-      "normal": {
-      },
       "shader": "main_basic",
       "positions": [
         {
@@ -350,19 +240,6 @@
     },
     "Man": {
       "mesh": "assets/mesh/man/Man.gltf",
-      "textures": {
-        "Man": {
-          "path": "assets/mesh/man/Man.ktx2"
-        }
-      },
-      "ao": {
-      },
-      "mr": {
-      },
-      "emissive": {
-      },
-      "normal": {
-      },
       "shader": "main_basic",
       "positions": [
         {
@@ -399,37 +276,6 @@
     },
     "rat": {
       "mesh": "assets/mesh/rat/rat.gltf",
-      "textures": {
-        "textures_Material_0_baseColor": {
-          "path": "assets/mesh/rat/textures/Material_0_baseColor.ktx2"
-        },
-        "textures_Rat_Knife_01default_baseColor": {
-          "path": "assets/mesh/rat/textures/Rat_Knife_01default_baseColor.ktx2"
-        }
-      },
-      "ao": {
-      },
-      "mr": {
-        "textures_Material_0_metallicRoughness": {
-          "path": "assets/mesh/rat/textures/Material_0_metallicRoughness.ktx2"
-        },
-        "textures_Rat_Knife_01default_metallicRoughness": {
-          "path": "assets/mesh/rat/textures/Rat_Knife_01default_metallicRoughness.ktx2"
-        }
-      },
-      "emissive": {
-        "textures_Material_0_emissive": {
-          "path": "assets/mesh/rat/textures/Material_0_emissive.ktx2"
-        }
-      },
-      "normal": {
-        "textures_Material_0_normal": {
-          "path": "assets/mesh/rat/textures/Material_0_normal.ktx2"
-        },
-      "textures_Rat_Knife_01default_normal": {
-          "path": "assets/mesh/rat/textures/Rat_Knife_01default_normal.ktx2"
-        }
-      },
       "shader": "main_basic",
       "positions": [
         {
@@ -466,31 +312,6 @@
     },
     "DamagedHelmet": {
       "mesh": "assets/mesh/DamagedHelmet/glTF/DamagedHelmet.gltf",
-      "textures": {
-        "Default_albedo": {
-          "path": "assets/mesh/DamagedHelmet/glTF/Default_albedo.ktx2"
-        }
-      },
-      "ao": {
-        "Default_AO": {
-          "path": "assets/mesh/DamagedHelmet/glTF/Default_AO.ktx2"
-        }
-      },
-      "mr": {
-        "Default_metalRoughness": {
-          "path": "assets/mesh/DamagedHelmet/glTF/Default_metalRoughness.ktx2"
-        }
-      },
-      "emissive": {
-        "Default_emissive": {
-          "path": "assets/mesh/DamagedHelmet/glTF/Default_emissive.ktx2"
-        }
-      },
-      "normal": {
-        "Default_normal": {
-          "path": "assets/mesh/DamagedHelmet/glTF/Default_normal.ktx2"
-        }
-      },
       "shader": "main_basic",
       "positions": [
         {
@@ -527,34 +348,6 @@
     },
     "table": {
       "mesh": "assets/mesh/DamagedHelmet/glTF/modern_coffee_table_02_4k.gltf",
-      "textures": {
-        "textures_modern_coffee_table_02_base_diff_4k": {
-          "path": "assets/mesh/DamagedHelmet/glTF/textures/modern_coffee_table_02_base_diff_4k.ktx2"
-        },
-        "textures_modern_coffee_table_02_wood_diff_4k": {
-          "path": "assets/mesh/DamagedHelmet/glTF/textures/modern_coffee_table_02_wood_diff_4k.ktx2"
-        }
-      },
-      "ao": {
-      },
-      "mr": {
-        "textures_modern_coffee_table_02_base_rough_4k": {
-          "path": "assets/mesh/DamagedHelmet/glTF/textures/modern_coffee_table_02_base_rough_4k.ktx2"
-        },
-        "textures_modern_coffee_table_02_wood_rough_4k": {
-          "path": "assets/mesh/DamagedHelmet/glTF/textures/modern_coffee_table_02_wood_rough_4k.ktx2"
-        }
-      },
-      "emissive": {
-      },
-      "normal": {
-        "textures_modern_coffee_table_02_base_nor_gl_4k": {
-          "path": "assets/mesh/DamagedHelmet/glTF/textures/modern_coffee_table_02_base_nor_gl_4k.ktx2"
-        },
-        "textures_modern_coffee_table_02_wood_nor_gl_4k": {
-          "path": "assets/mesh/DamagedHelmet/glTF/textures/modern_coffee_table_02_wood_nor_gl_4k.ktx2"
-        }
-      },
       "shader": "main_basic",
       "positions": [
         {
@@ -590,22 +383,6 @@
     },
     "Grass_Block": {
       "mesh": "assets/mesh/minecraft/Grass_Block.obj",
-      "textures": {
-        "Grass_Block_TEX": {
-          "path": "assets/mesh/minecraft/Grass_Block_TEX.ktx2"
-        },
-        "water": {
-          "path": "assets/mesh/minecraft/water.ktx2"
-        }
-      },
-      "ao": {
-      },
-      "mr": {
-      },
-      "emissive": {
-      },
-      "normal": {
-      },
       "shader": "main_basic",
       "positions": [
         {

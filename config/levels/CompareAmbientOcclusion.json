@@ -27,32 +27,6 @@
   "entities": {
     "CompareAmbientOcclusion": {
       "mesh": "assets/mesh/CompareAmbientOcclusion/gLTF/CompareAmbientOcclusion.gltf",
-      "textures": {
-        "FruitBaseColor": {
-          "path": "assets/mesh/CompareAmbientOcclusion/glTF/FruitBaseColor.ktx2"
-        }
-      },
-      "ao": {
-        "BasketORM": {
-          "path": "assets/mesh/CompareAmbientOcclusion/glTF/BasketORM.ktx2"
-        },
-        "FruitORM": {
-          "path": "assets/mesh/CompareAmbientOcclusion/glTF/FruitORM.ktx2"
-        }
-      },
-      "mr": {
-        "BasketORM": {
-          "path": "assets/mesh/CompareAmbientOcclusion/glTF/BasketORM.ktx2"
-        },
-        "FruitORM": {
-          "path": "assets/mesh/CompareAmbientOcclusion/glTF/FruitORM.ktx2"
-        }
-      },
-      "emissive": {
-
-      },
-      "normal": {
-      },
       "shader": "main_basic",
       "positions": [
         {

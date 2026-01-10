@@ -170,7 +170,7 @@ namespace Poulpe
       VkBuffer& buffer_to_update,
       std::size_t const image_index);
 
-    void submitVertexUpdate(VkSemaphore & semaphore, std::size_t const image_index);
+    void submitVertexUpdate(VkSemaphore & semaphore, std::size_t const image_index) __attribute__((no_thread_safety_analysis));
 
     Buffer createIndexBuffer(
       std::vector<uint32_t> const& indices,
@@ -186,7 +186,7 @@ namespace Poulpe
       VkImageAspectFlags const aspect_mask = VK_IMAGE_ASPECT_COLOR_BIT);
 
     void startCopyBuffer(std::size_t const image_index);
-    void endCopyBuffer(std::size_t const image_index);
+    void endCopyBuffer(std::size_t const image_index) __attribute__((no_thread_safety_analysis));
 
     void copyBuffer(
       VkBuffer& src_buffer,
@@ -291,8 +291,8 @@ namespace Poulpe
         mem_requirements.alignment,
         DeviceMemoryPool::DeviceBufferType::STAGING);
 
-      auto const offset { device_memory->getOffset() };
-      auto const index{ device_memory->bindBufferToMemory(buffer, bind_offset) };
+      auto const index { device_memory->bindBufferToMemory(buffer, bind_offset) };
+      auto const offset { device_memory->getOffset(index) };
 
       copyBuffer(staging_buffer, buffer, buffer_size, current_offset, 0, image_index);
 
@@ -312,7 +312,7 @@ namespace Poulpe
     template <IsObjectBufferOrLightBuffer T>
     void updateStorageBuffer(Buffer& buffer, T& object_buffer, std::size_t const image_index)
     {
-      VkDeviceSize buffer_size { sizeof(object_buffer) };
+      VkDeviceSize buffer_size { sizeof(T) };
       std::size_t const current_offset { _update_vertex_offsets[image_index] };
 
       auto & staging_buffer = _staging_buffer[image_index];
@@ -325,7 +325,7 @@ namespace Poulpe
         buffer.buffer,
         buffer_size,
         current_offset,
-        0,
+        buffer.offset,
         image_index);
     }
 
@@ -519,7 +519,7 @@ namespace Poulpe
       VkCommandBuffer& cmd_buffer,
       ktxTexture2* ktx_texture,
       VkImage& image,
-      std::size_t const image_index);
+      std::size_t const image_index) __attribute__((no_thread_safety_analysis));
 
     VkImageView createKTXImageView(
       ktxTexture2* ktx_texture,

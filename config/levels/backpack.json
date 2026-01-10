@@ -27,31 +27,6 @@
   "entities": {
     "backpack" : {
       "mesh": "assets/mesh/backpack/backpack.obj",
-      "textures": {
-        "diffuse": {
-          "path" : "assets/mesh/backpack/diffuse.ktx2"
-        },
-        "specular": { 
-          "path" : "assets/mesh/backpack/specular.ktx2"
-        }
-      },
-      "ao": {
-        "ao": {
-          "path" : "assets/mesh/backpack/ao.ktx2"
-        }
-      },
-      "mr": {
-        "roughness": {
-          "path" : "assets/mesh/backpack/roughness.ktx2"
-        }
-      },
-      "emissive": {
-      },
-      "normal": {
-        "normal": {
-          "path" : "assets/mesh/backpack/normal.ktx2"
-        }
-      },
       "shader": "main_basic",
       "positions": [
         {
@@ -88,19 +63,6 @@
     },
     "Grass_Block" : {
       "mesh": "assets/mesh/minecraft/Grass_Block.obj",
-      "textures": {
-        "Grass_Block_TEX": {
-          "path" : "assets/mesh/minecraft/Grass_Block_TEX.ktx2"
-        }
-      },
-      "ao": {
-      },
-      "mr": {
-      },
-      "emissive": {
-      },
-      "normal": {
-      },
       "shader": "main_basic",
       "positions": [
         {

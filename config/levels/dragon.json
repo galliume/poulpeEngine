@@ -27,20 +27,6 @@
   "entities": {
     "dragon" : {
       "mesh": "assets/mesh/dragon/dragon.obj",
-      "textures": {
-      },
-      "mr": {
-
-      },
-      "emissive": {
-
-      },
-      "ao": {
-
-      },
-      "normal": {
-
-      },
       "shader": "main_basic",
       "positions": [
         {

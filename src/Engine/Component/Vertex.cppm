@@ -26,21 +26,25 @@ namespace Poulpe
     vec3/vec4/mat4 alignas(16)
     */
   #pragma pack(push, 1)
+  export struct VertexBones
+  {
+    int32_t bone_ids[4];        // 16 bytes
+    float   bone_weights[4];    // 16 bytes
+
+    glm::vec3 original_pos;     // 12 bytes
+    
+    float total_weight;         // 4 bytes
+  };
+
   export struct Vertex
   {
     glm::vec4 tangent;          // 16 bytes
     glm::vec4 color;            // 16 bytes
-    
+
     glm::vec3 pos;              // 12 bytes
     glm::vec3 normal;           // 12 bytes
-    glm::vec3 original_pos;     // 12 bytes
-    
+
     glm::vec2 texture_coord;    // 8 bytes
-    
-    int32_t bone_ids[4];        // 16 bytes
-    float   bone_weights[4];    // 16 bytes
-    
-    float total_weight;         // 4 bytes
 
     static VkVertexInputBindingDescription getBindingDescription()
     {
@@ -52,9 +56,9 @@ namespace Poulpe
       return bindingDescription;
     }
 
-    static std::array<VkVertexInputAttributeDescription,  9> getAttributeDescriptions()
+    static std::array<VkVertexInputAttributeDescription,  5> getAttributeDescriptions()
     {
-      std::array<VkVertexInputAttributeDescription, 9> attributeDescriptions{};
+      std::array<VkVertexInputAttributeDescription, 5> attributeDescriptions{};
       attributeDescriptions[0].binding = 0;
       attributeDescriptions[0].location = 0;
       attributeDescriptions[0].format = VK_FORMAT_R32G32B32A32_SFLOAT;
@@ -79,34 +83,34 @@ namespace Poulpe
       attributeDescriptions[3].offset = offsetof(Vertex, normal);
 
       // Location 4: Original Position (vec3)
-      attributeDescriptions[4].binding = 0;
-      attributeDescriptions[4].location = 4;
-      attributeDescriptions[4].format = VK_FORMAT_R32G32B32_SFLOAT;
-      attributeDescriptions[4].offset = offsetof(Vertex, original_pos);
+      // attributeDescriptions[4].binding = 0;
+      // attributeDescriptions[4].location = 4;
+      // attributeDescriptions[4].format = VK_FORMAT_R32G32B32_SFLOAT;
+      // attributeDescriptions[4].offset = offsetof(Vertex, original_pos);
 
       // Location 5: Texture Coord (vec2)
-      attributeDescriptions[5].binding = 0;
-      attributeDescriptions[5].location = 5;
-      attributeDescriptions[5].format = VK_FORMAT_R32G32_SFLOAT;
-      attributeDescriptions[5].offset = offsetof(Vertex, texture_coord);
+      attributeDescriptions[4].binding = 0;
+      attributeDescriptions[4].location = 4;
+      attributeDescriptions[4].format = VK_FORMAT_R32G32_SFLOAT;
+      attributeDescriptions[4].offset = offsetof(Vertex, texture_coord);
 
-      // Location 6: Bone IDs (ivec4) - Note the _SINT format
-      attributeDescriptions[6].binding = 0;
-      attributeDescriptions[6].location = 6;
-      attributeDescriptions[6].format = VK_FORMAT_R32G32B32A32_SINT; 
-      attributeDescriptions[6].offset = offsetof(Vertex, bone_ids);
+      // // Location 6: Bone IDs (ivec4) - Note the _SINT format
+      // attributeDescriptions[6].binding = 0;
+      // attributeDescriptions[6].location = 6;
+      // attributeDescriptions[6].format = VK_FORMAT_R32G32B32A32_SINT; 
+      // attributeDescriptions[6].offset = offsetof(Vertex, bone_ids);
 
-      // Location 7: Bone Weights (vec4)
-      attributeDescriptions[7].binding = 0;
-      attributeDescriptions[7].location = 7;
-      attributeDescriptions[7].format = VK_FORMAT_R32G32B32A32_SFLOAT;
-      attributeDescriptions[7].offset = offsetof(Vertex, bone_weights);
+      // // Location 7: Bone Weights (vec4)
+      // attributeDescriptions[7].binding = 0;
+      // attributeDescriptions[7].location = 7;
+      // attributeDescriptions[7].format = VK_FORMAT_R32G32B32A32_SFLOAT;
+      // attributeDescriptions[7].offset = offsetof(Vertex, bone_weights);
 
-      // Location 8: Total Weight (float)
-      attributeDescriptions[8].binding = 0;
-      attributeDescriptions[8].location = 8;
-      attributeDescriptions[8].format = VK_FORMAT_R32_SFLOAT;
-      attributeDescriptions[8].offset = offsetof(Vertex, total_weight);
+      // // Location 8: Total Weight (float)
+      // attributeDescriptions[8].binding = 0;
+      // attributeDescriptions[8].location = 8;
+      // attributeDescriptions[8].format = VK_FORMAT_R32_SFLOAT;
+      // attributeDescriptions[8].offset = offsetof(Vertex, total_weight);
 
       return attributeDescriptions;
     }
