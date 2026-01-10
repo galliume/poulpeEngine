@@ -22,6 +22,7 @@ import Engine.Managers.DestroyManager;
 import Engine.Managers.EntityManager;
 import Engine.Managers.FontManager;
 import Engine.Managers.LightManager;
+import Engine.Managers.PlayerManager;
 import Engine.Managers.ShaderManager;
 import Engine.Managers.TextureManager;
 
@@ -60,10 +61,10 @@ namespace Poulpe
     //void updateScene(double const delta_time);
     void renderScene(double const delta_time);
     inline void setIsLoaded(bool loaded = true) { _is_loaded = loaded; }
-    void addText(FontManager::Text const& text);
+    void addText(FontManager::Text & text);
 
-    void updateText(std::string const& name, std::string const& text);
-    void updateTextColor(std::string const& name, glm::vec3 const& color);
+    void updateText(IDType const entity_id, std::string const& text);
+    void updateTextColor(IDType const entity_id, glm::vec3 const& color);
 
     void setElapsedTime(double const elapsed_time) { _elapsed_time = elapsed_time;}
     double getElapsedTime() const { return _elapsed_time; }
@@ -123,10 +124,9 @@ namespace Poulpe
     std::unique_ptr<EntityManager> _entity_manager;
     std::unique_ptr<FontManager> _font_manager;
     std::unique_ptr<LightManager> _light_manager;
+    std::unique_ptr<PlayerManager> _player_manager;
     std::unique_ptr<ShaderManager> _shader_manager;
     std::unique_ptr<TextureManager> _texture_manager;
-
-    std::unordered_map<std::string, IDType> _texts;
 
     std::vector<VkDescriptorPool> _descriptor_pools;
 

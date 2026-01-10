@@ -1,82 +1,62 @@
 {
-	"terrain": {
-		"46_016_3_028_13_512_512": {
-			"path": "assets/texture/terrain/height_map_1.ktx2"
-		}
-	},
-	"water": {
-		"_water_foam": {
-			"path": "assets/texture/water/_water_foam.ktx2"
-		},
-		"_water_normal": {
-			"path": "assets/texture/water/_water_normal.ktx2"
-		},
-		"_water_normal2": {
-			"path": "assets/texture/water/_water_normal2.ktx2"
-		}
-	},
-	"camera": {
-		"position": {
-			"x": 0.0,
-			"y": 0.0,
-			"z": 0.0
-		}
-	},
-	"entities": {
-		"AttenuationTest": {
-			"mesh": "assets/mesh/AttenuationTest/glTF/AttenuationTest.gltf",
-			"textures": {
-				"AttenuationLabels": {
-					"path": "assets/mesh/AttenuationTest/glTF/AttenuationLabels.ktx2"
-				},
-				"PlainGrid": {
-					"path": "assets/mesh/AttenuationTest/glTF/PlainGrid.ktx2"
-				},
-				"ThicknessTexture": {
-					"path": "assets/mesh/AttenuationTest/glTF/ThicknessTexture.ktx2"
-				}
-			},
-			"mr": {
-			},
-			"emissive": {
-			},
-			"ao": {
-
-			},
-			"normal": {
-			},
-			"shader": "main_basic",
-			"positions": [
-				{
-					"x": 0.0,
-					"y": 50.0,
-					"z": 0.0
-				}
-			],
-			"scales": [
-				{
-					"x": 10.0,
-					"y": 10.0,
-					"z": 10.0
-				}
-			],
-			"rotations": [
-				{
-					"x": 0.0,
-					"y": 0.0,
-					"z": 0.0
-				}
-			],
-			"flipY": false,
-			"count": 1,
-			"hasBbox": false,
-			"hasAnimation": false,
-			"isPointLight": false,
-			"animationScripts": {
-			},
-			"hasShadow": true,
-			"isIndexed": true,
-			"debugNormal": true
-		}
-	}
+  "terrain": {
+    "46_016_3_028_13_512_512": {
+      "path": "assets/texture/terrain/height_map_1.ktx2"
+    }
+  },
+  "water": {
+    "_water_foam": {
+      "path": "assets/texture/water/_water_foam.ktx2"
+    },
+    "_water_normal": {
+      "path": "assets/texture/water/_water_normal.ktx2"
+    },
+    "_water_normal2": {
+      "path": "assets/texture/water/_water_normal2.ktx2"
+    }
+  },
+  "camera": {
+    "position": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0
+    }
+  },
+  "entities": {
+    "AttenuationTest": {
+      "mesh": "assets/mesh/AttenuationTest/glTF/AttenuationTest.gltf",
+      "shader": "main_basic",
+      "positions": [
+        {
+          "x": 0.0,
+          "y": 50.0,
+          "z": 0.0
+        }
+      ],
+      "scales": [
+        {
+          "x": 10.0,
+          "y": 10.0,
+          "z": 10.0
+        }
+      ],
+      "rotations": [
+        {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
+        }
+      ],
+      "flipY": false,
+      "count": 1,
+      "hasBbox": false,
+      "hasAnimation": false,
+      "isPointLight": false,
+      "animationScripts": {
+      },
+      "hasShadow": true,
+      "isIndexed": true,
+      "debugNormal": true
+    }
+  }
 }

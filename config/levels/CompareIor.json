@@ -1,87 +1,64 @@
 {
-	"terrain": {
-		"46_016_3_028_13_512_512": {
-			"path": "assets/texture/terrain/height_map_1.ktx2"
-		}
-	},
-	"water": {
-		"_water_foam": {
-			"path": "assets/texture/water/_water_foam.ktx2"
-		},
-		"_water_normal": {
-			"path": "assets/texture/water/_water_normal.ktx2"
-		},
-		"_water_normal2": {
-			"path": "assets/texture/water/_water_normal2.ktx2"
-		}
-	},
-	"camera": {
-		"position": {
-			"x": 0.0,
-			"y": 0.0,
-			"z": 0.0
-		}
-	},
-	"entities": {
-		"CompareIor": {
-			"mesh": "assets/mesh/CompareIor/gLTF/CompareIor.gltf",
-			"textures": {
-				"Compare_Ior_img0": {
-					"path": "assets/mesh/CompareIor/glTF/Compare_Ior_img0.ktx2"
-				},
-				"Compare_Ior_img1": {
-					"path": "assets/mesh/CompareIor/glTF/Compare_Ior_img1.ktx2"
-				}
-			},
-			"ao": {
-			},
-			"mr": {
-				"Compare_Ior_img2": {
-					"path": "assets/mesh/CompareIor/glTF/Compare_Ior_img2.ktx2"
-				}
-			},
-			"emissive": {
-
-			},
-			"normal": {
-			},
-			"transmission": {
-				"Compare_Ior_img3": {
-					"path": "assets/mesh/CompareIor/glTF/Compare_Ior_img3.ktx2"
-				}
-			},
-			"shader": "main_basic",
-			"positions": [
-				{
-					"x": 0.0,
-					"y": -1.0,
-					"z": -2.0
-				}
-			],
-			"scales": [
-				{
-					"x": 1.0,
-					"y": 1.0,
-					"z": 1.0
-				}
-			],
-			"rotations": [
-				{
-					"x": 180.0,
-					"y": 0.0,
-					"z": 180.0
-				}
-			],
-			"flipY": false,
-			"count": 1,
-			"hasBbox": false,
-			"hasAnimation": false,
-			"isPointLight": false,
-			"animationScripts": {
-			},
-			"hasShadow": true,
-			"isIndexed": true,
-			"debugNormal": true
-		}
-	}
+  "terrain": {
+    "46_016_3_028_13_512_512": {
+      "path": "assets/texture/terrain/height_map_1.ktx2"
+    }
+  },
+  "water": {
+    "_water_foam": {
+      "path": "assets/texture/water/_water_foam.ktx2"
+    },
+    "_water_normal": {
+      "path": "assets/texture/water/_water_normal.ktx2"
+    },
+    "_water_normal2": {
+      "path": "assets/texture/water/_water_normal2.ktx2"
+    }
+  },
+  "camera": {
+    "position": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0
+    }
+  },
+  "hasFog" : false,
+  "player": "",
+  "entities": {
+    "CompareIor": {
+      "mesh": "assets/mesh/CompareIor/gLTF/CompareIor.gltf",
+      "shader": "main_basic",
+      "positions": [
+        {
+          "x": 0.0,
+          "y": -1.0,
+          "z": -2.0
+        }
+      ],
+      "scales": [
+        {
+          "x": 1.0,
+          "y": 1.0,
+          "z": 1.0
+        }
+      ],
+      "rotations": [
+        {
+          "x": 180.0,
+          "y": 0.0,
+          "z": 180.0
+        }
+      ],
+      "flipY": false,
+      "count": 1,
+      "hasBbox": false,
+      "hasAnimation": false,
+      "isPointLight": false,
+      "animationScripts": {
+      },
+      "hasShadow": true,
+      "isIndexed": true,
+      "debugNormal": true
+    }
+  }
 }

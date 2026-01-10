@@ -18,6 +18,8 @@ import Engine.Core.PlpTypedef;
 
 import Engine.Component.Vertex;
 
+import Engine.Utils.IDHelper;
+
 namespace Poulpe
 {
   export class Mesh
@@ -81,8 +83,13 @@ namespace Poulpe
 
     bool isSkybox() { return _is_skybox; }
     void isSkybox(bool is_skybox) { _is_skybox = is_skybox; }
+    void addChild(IDType id) { _children.emplace_back(id); }
+    std::vector<IDType> getChildren() { return _children; }
 
-  private:
+    void setRoot() { _is_root = true; }
+    bool isRoot() { return _is_root ;}
+    
+    private:
     std::string _name{};
     std::string _shader_name{};
 
@@ -111,6 +118,9 @@ namespace Poulpe
 
     std::uint32_t _options{ 0 }; //used for options as push constants
     std::uint32_t _default_anim{};
+
+    std::vector<IDType> _children{};
+    bool _is_root { false };
   };
 
   //@todo should be reversed and Mesh rename to Mesh3D...

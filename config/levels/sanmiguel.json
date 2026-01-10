@@ -1,6 +1,6 @@
 {
   "terrain": {
-    "46_016_3_028_13_512_512": {
+    "height_map_1": {
       "path": "assets/texture/terrain/height_map_1.ktx2"
     }
   },
@@ -17,21 +17,22 @@
   },
   "camera": {
     "position": {
-      "x": 0.0,
-      "y": 0.0,
-      "z": 0.0
+      "x": -38.0,
+      "y": 18.0,
+      "z": -3.0
     }
   },
-  "hasFog" : false,
+  "hasFog": true,
+  "player": "",
   "entities": {
-    "CompareAlphaCoverage": {
-      "mesh": "assets/mesh/CompareAlphaCoverage/glTF/CompareAlphaCoverage.gltf",
+    "san-miguel": {
+      "mesh": "assets/mesh/San_Miguel/san-miguel-low-poly.obj",
       "shader": "main_basic",
       "positions": [
         {
-          "x": 20.0,
-          "y": 20.0,
-          "z": 20.0
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
         }
       ],
       "scales": [

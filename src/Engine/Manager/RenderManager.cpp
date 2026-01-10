@@ -60,22 +60,25 @@ namespace Poulpe
     _destroy_manager->addMemoryPool(_renderer->getAPI()->getDeviceMemoryPool());
 
     _light_buffers.resize(2);
+      _renderer->getAPI()->startCopyBuffer(_renderer->getCurrentFrameIndex());
     for (std::size_t i = 0; i < _light_buffers.size(); ++i) {
-        LightObjectBuffer light_object_buffer{};
-        _light_buffers[i] = _renderer->getAPI()->createStorageBuffers(light_object_buffer);
+      LightObjectBuffer light_object_buffer{};
+      _light_buffers[i] = _renderer->getAPI()->createStorageBuffers(light_object_buffer, _renderer->getCurrentFrameIndex());
     }
-
+    
     _entity_manager = std::make_unique<EntityManager>(
       _component_manager.get(),
       _light_manager.get(),
       _texture_manager.get(),
       _light_buffers.at(0)
     );
-
+    
     _font_manager = std::make_unique<FontManager>();
     _font_manager->addRenderer(_renderer.get());
     auto atlas = _font_manager->load();
 
+    _renderer->getAPI()->endCopyBuffer(_renderer->getCurrentFrameIndex());
+    
     _texture_manager->addTexture(atlas);
 
     //@todo, those managers should not have the usage of the renderer...
@@ -141,12 +144,14 @@ namespace Poulpe
     updateComponentRenderingInfo();
     updateRendererInfo(camera_view_matrix);
 
+    _renderer->getAPI()->startCopyBuffer(_renderer->getCurrentFrameIndex());
     prepareShadowMap();
     prepareSkybox();
     prepareTerrain();
     prepareWater();
 
     FontManager::Text text {
+      .id = 0,
       .name = "_plp_title",
       .text = "Poulpe Engine ™",
       .position = glm::vec3(0.0f, 100.0f, 0.0f),
@@ -155,6 +160,8 @@ namespace Poulpe
       .flat = false
     };
     addText(text);
+    _renderer->getAPI()->endCopyBuffer(_renderer->getCurrentFrameIndex());
+    
     //prepareHUD();
   }
 
@@ -166,11 +173,13 @@ namespace Poulpe
   void RenderManager::renderScene(double const delta_time)
   {
     {
+      InputManagerLocator::get()->processGamepad(_player_manager.get(), delta_time);
+
       //@todo animate light
       //_light_manager->animateAmbientLight(delta_time);
       auto const& camera_view_matrix { _camera->getView() };
       auto const& perspective { _renderer->getPerspective() };
-      std::lock_guard<std::shared_mutex> guard(_entity_manager->lockWorldNode());
+      //std::lock_guard<std::shared_mutex> guard(_entity_manager->lockWorldNode());
 
       _light_manager->computeCSM(camera_view_matrix, perspective);
       //Logger::debug("x {} y {} z {}", camera_pos.x, camera_pos.y, camera_pos.z);
@@ -186,8 +195,13 @@ namespace Poulpe
       light_object_buffer.spot_light = _light_manager->getSpotLights()[0];
       light_object_buffer.sun_light = _light_manager->getSunLight();
 
+      _renderer->getAPI()->startCopyBuffer(_renderer->getCurrentFrameIndex());
+
       _renderer->getAPI()->updateStorageBuffer(
-        _light_buffers[_renderer->getCurrentFrameIndex()], light_object_buffer);
+        _light_buffers[_renderer->getCurrentFrameIndex()], light_object_buffer, _renderer->getCurrentFrameIndex());
+      _renderer->getAPI()->endCopyBuffer(_renderer->getCurrentFrameIndex());
+
+      _renderer->getAPI()->startCopyBuffer(_renderer->getCurrentFrameIndex());
 
       std::future<void> async_skybox_render;
       std::future<void> async_water_render;
@@ -286,6 +300,7 @@ namespace Poulpe
       async_terrain_render.wait();
       async_water_render.wait();
 
+      
       for (auto& future : async_entities_render) {
         future.wait();
       }
@@ -295,18 +310,19 @@ namespace Poulpe
       for (auto& future : async_texts_render) {
         future.wait();
       }
+      _renderer->getAPI()->endCopyBuffer(_renderer->getCurrentFrameIndex());
 
       _renderer->start();
       _renderer->startShadowMap(SHADOW_TYPE::CSM);
-
+      
       std::ranges::for_each(sorted_entities, [&](const auto& entity) {
         drawShadowMap(entity, SHADOW_TYPE::CSM, camera_view_matrix);
       });
       _renderer->endShadowMap(SHADOW_TYPE::CSM);
-
-
+      
+      
       _renderer->startShadowMap(SHADOW_TYPE::SPOT_LIGHT);
-
+      
       std::ranges::for_each(sorted_entities, [&](const auto& entity) {
         drawShadowMap(entity, SHADOW_TYPE::SPOT_LIGHT, camera_view_matrix);
       });
@@ -378,25 +394,50 @@ namespace Poulpe
     auto mesh { mesh_component->template has<Mesh>() };
     auto rdr_impl { _component_manager->get<RendererComponent>(entity_id) };
 
-    if (mesh && rdr_impl) {
-      if (mesh->isDirty()) {
-        (*rdr_impl)(_renderer.get(), getComponentRenderingInfo(mesh));
-      }
-
-      AnimationInfo const animation_info {
+    if (mesh->isRoot()) {
+      AnimationInfo animation_info {
         .delta_time = delta_time,
         .data = mesh->getData()
       };
-
-      auto* animation_component = _component_manager->get<AnimationComponent>(entity_id);
-      if (animation_component) {
-        (*animation_component)(animation_info);
+      
+      //@todo temp
+      if (mesh->getName() == _player_manager->getPlayerName()) {
+        _player_manager->setPlayerId(entity_id);
+        animation_info.looping = false;
       }
 
-      auto* boneAnimationComponent = _component_manager->get<BoneAnimationComponent>(entity_id);
+      auto* animation_component { _component_manager->get<AnimationComponent>(entity_id) };
+      if (animation_component) {
+        (*animation_component)(animation_info);
+        mesh->setIsDirty(true);
+      }
+
+      auto* boneAnimationComponent { _component_manager->get<BoneAnimationComponent>(entity_id) };
       if (boneAnimationComponent) {
         (*boneAnimationComponent)(animation_info);
         mesh->setIsDirty(true);
+      }
+
+      for (auto const& id : mesh->getChildren()) {
+        auto* child_mesh_component { _component_manager->get<MeshComponent>(id) };
+        auto child_mesh { child_mesh_component->template has<Mesh>() };
+        if (child_mesh && boneAnimationComponent) {
+          AnimationInfo child_animation_info {
+            .delta_time = delta_time,
+            .data = child_mesh->getData(),
+            .looping = animation_info.looping
+          };
+          (*boneAnimationComponent)(child_animation_info);
+          child_mesh->setIsDirty(true);
+          // auto child_rdr_impl { _component_manager->get<RendererComponent>(id) };
+          // (*child_rdr_impl)(_renderer.get(), getComponentRenderingInfo(child_mesh));
+        }
+      }
+    }
+
+    if (mesh && rdr_impl) {
+      if (mesh->isDirty()) {
+        (*rdr_impl)(_renderer.get(), getComponentRenderingInfo(mesh));
       }
     }
   }
@@ -431,7 +472,7 @@ namespace Poulpe
       return;
     }
 
-    auto rdr_impl = _component_manager->get<RendererComponent>(entity_id);
+    auto rdr_impl { _component_manager->get<RendererComponent>(entity_id) };
 
     if (mesh && rdr_impl) {
       RendererInfo renderer_info  = getRendererInfo(mesh, camera_view_matrix);
@@ -446,15 +487,20 @@ namespace Poulpe
 
   void RenderManager::loadData(std::string const & level)
   {
-    auto * const config_manager = ConfigManagerLocator::get();
-    auto const& app_config{ config_manager->appConfig() };
+    auto * const config_manager { ConfigManagerLocator::get() };
+    auto const& app_config { config_manager->appConfig() };
 
-    auto const& lvl_data = config_manager->loadLevelData(level);
+    auto const& lvl_data { config_manager->loadLevelData(level) };
 
     if (lvl_data.contains("hasFog") && lvl_data["hasFog"]) {
       _env_options |= PLP_ENV_OPTIONS::HAS_FOG;
     }
-
+    if (lvl_data.contains("player")) {
+      _player_manager = std::make_unique<PlayerManager>(
+        _component_manager.get(),
+        lvl_data["player"].get<std::string>()
+      );
+    }
     _texture_manager->addConfig(config_manager->texturesConfig());
 
     std::string const sb{ (_current_skybox.empty()) ? static_cast<std::string>(app_config["defaultSkybox"])
@@ -470,10 +516,10 @@ namespace Poulpe
     shaders.detach();
     count_down.wait();
 
-    setIsLoaded();
-
     std::jthread entities(_entity_manager->load(lvl_data));
     entities.detach();
+    setIsLoaded();
+
   }
 
   void RenderManager::prepareHUD()
@@ -510,7 +556,7 @@ namespace Poulpe
     _env_options |= PLP_ENV_OPTIONS::HAS_IRRADIANCE;//@todo finish IBL with real map
 
     auto rdr_impl{ RendererComponentFactory::create<Skybox>() };
-    (*rdr_impl)(_renderer.get(), getComponentRenderingInfo(mesh.get()));
+    //(*rdr_impl)(_renderer.get(), getComponentRenderingInfo(mesh.get()));
 
     _component_manager->add<RendererComponent>(entity->getID(), std::move(rdr_impl));
     _component_manager->add<MeshComponent>(entity->getID(), std::move(mesh));
@@ -526,7 +572,7 @@ namespace Poulpe
     mesh->setShaderName("terrain");
 
     auto rdr_impl{ RendererComponentFactory::create<Terrain>() };
-    (*rdr_impl)(_renderer.get(), getComponentRenderingInfo(mesh.get()));
+    //(*rdr_impl)(_renderer.get(), getComponentRenderingInfo(mesh.get()));
 
     _component_manager->add<RendererComponent>(entity->getID(), std::move(rdr_impl));
     _component_manager->add<MeshComponent>(entity->getID(), std::move(mesh));
@@ -543,7 +589,7 @@ namespace Poulpe
     mesh->setName("_plp_water");
 
     auto rdr_impl{ RendererComponentFactory::create<Water>() };
-    (*rdr_impl)(_renderer.get(), getComponentRenderingInfo(mesh.get()));
+    //(*rdr_impl)(_renderer.get(), getComponentRenderingInfo(mesh.get()));
 
     _component_manager->add<RendererComponent>(entity->getID(), std::move(rdr_impl));
     _component_manager->add<MeshComponent>(entity->getID(), std::move(mesh));
@@ -565,7 +611,7 @@ namespace Poulpe
     // _entity_manager->setShadowMap(std::move(entity));
   }
 
-  void RenderManager::addText(FontManager::Text const& text)
+  void RenderManager::addText(FontManager::Text & text)
   {
     auto entity = std::make_unique<Entity>();
     auto mesh = std::make_unique<Mesh>();
@@ -573,7 +619,8 @@ namespace Poulpe
     mesh->setIsIndexed(false);
     mesh->setShaderName("text");
     mesh->setName("_plp_text_" + std::to_string(entity->getID()));
-
+    mesh->setRoot();
+    
     auto rdr_impl{ RendererComponentFactory::create<Text>() };
     rdr_impl->setText(text.text);
     rdr_impl->setPosition(text.position);
@@ -581,20 +628,18 @@ namespace Poulpe
     rdr_impl->setScale(text.scale);
     rdr_impl->setFlat(text.flat);
 
-    (*rdr_impl)(_renderer.get(), getComponentRenderingInfo(mesh.get()));
+    //(*rdr_impl)(_renderer.get(), getComponentRenderingInfo(mesh.get()));
 
     _component_manager->add<RendererComponent>(entity->getID(), std::move(rdr_impl));
     _component_manager->add<MeshComponent>(entity->getID(), std::move(mesh));
 
-    _texts[text.name] = entity->getID();
-
+    text.id = entity->getID();
+   
     _entity_manager->addText(std::move(entity));
   }
 
-  void RenderManager::updateText(std::string const& name, std::string const& text)
+  void RenderManager::updateText(IDType const entity_id, std::string const& text)
   {
-    auto const entity_id = _texts[name];
-
     auto mesh_component = _component_manager->get<MeshComponent>(entity_id);
     if (mesh_component) {
       auto mesh = mesh_component->has<Mesh>();
@@ -611,10 +656,8 @@ namespace Poulpe
   }
 
   //@todo better way to update text
-  void RenderManager::updateTextColor(std::string const& name, glm::vec3 const& color)
+  void RenderManager::updateTextColor(IDType const entity_id, glm::vec3 const& color)
   {
-    auto const entity_id = _texts[name];
-
     auto mesh_component = _component_manager->get<MeshComponent>(entity_id);
     if (mesh_component) {
       auto mesh = mesh_component->has<Mesh>();

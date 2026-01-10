@@ -30,10 +30,8 @@ namespace Poulpe
     float const app_width { static_cast<float>(appConfig["width"].get<uint16_t>()) };
     float const app_height { static_cast<float>(appConfig["height"].get<uint16_t>()) };
 
-    //float aspect = 1600.f / 900.f;
-    float fov = glm::radians(90.0f);
-    glm::mat4 shadow_cubemap_projection = glm::perspective(fov, 1.0f, 1.0f, 50.f);
-    shadow_cubemap_projection[1][1] *= -1;
+    float const fov { glm::radians(90.0f) };
+    glm::mat4 const shadow_cubemap_projection { glm::perspective(fov, 1.0f, 0.1f, 500.f) };
 
     Light light;
     light.color = glm::vec3(1.0, 0.6, 0.1);
@@ -43,35 +41,16 @@ namespace Poulpe
     light.clq = glm::vec3(1.0f, 0.7f, 1.8f);
 
     light.projection = shadow_cubemap_projection;//glm::ortho(-10.0f, 10.0f, 10.0f, -10.0f, near_plane, far_plane);
-    light.light_space_matrix_right = light.projection * glm::lookAt(
-      light.position,
-      light.position + glm::vec3(1.0f, 0.0f, 0.0f),
-      glm::vec3(0.0f, -1.0f, 0.0f));
+    light.projection[1][1] *= -1.f;
 
-    light.light_space_matrix_left = light.projection * glm::lookAt(
-      light.position,
-      light.position + glm::vec3(-1.0f, 0.0f, 0.0f),
-      glm::vec3(0.0f, -1.0f, 0.0f));
+    glm::vec3 vUp = glm::vec3(0.0f, -1.0f, 0.0f);
 
-    light.light_space_matrix_top = light.projection * glm::lookAt(
-      light.position,
-      light.position + glm::vec3(0.0f, 1.0f, 0.0f),
-      glm::vec3(0.0f, 0.0f, 1.0f));
-
-    light.light_space_matrix_bottom = light.projection * glm::lookAt(
-      light.position,
-      light.position + glm::vec3(0.0f, -1.0f, 0.0f),
-      glm::vec3(0.0f, 0.0f, -1.0f));
-
-    light.light_space_matrix = light.projection * glm::lookAt(
-      light.position,
-      light.position + glm::vec3(0.0f, 0.0f, 1.0f),
-      glm::vec3(0.0f, -1.0f, 0.0f)); //used as light_space_matrix_front
-
-    light.light_space_matrix_back = light.projection * glm::lookAt(
-      light.position,
-      light.position + glm::vec3(0.0f, 0.0f, -1.0f),
-      glm::vec3(0.0f, -1.0f, 0.0f));
+    light.light_space_matrix_right = light.projection * glm::lookAt(light.position, light.position + glm::vec3( 1, 0, 0), vUp);
+    light.light_space_matrix_left = light.projection * glm::lookAt(light.position, light.position + glm::vec3(-1, 0, 0), vUp);
+    light.light_space_matrix_top = light.projection * glm::lookAt(light.position, light.position + glm::vec3( 0, 1, 0), glm::vec3(0, 0, 1));
+    light.light_space_matrix_bottom = light.projection * glm::lookAt(light.position, light.position + glm::vec3( 0,-1, 0), glm::vec3(0, 0,-1));
+    light.light_space_matrix = light.projection * glm::lookAt(light.position, light.position + glm::vec3( 0, 0, 1), vUp);
+    light.light_space_matrix_back = light.projection * glm::lookAt(light.position, light.position + glm::vec3( 0, 0,-1), vUp);
 
     light.view = light.light_space_matrix;
 
@@ -154,7 +133,7 @@ namespace Poulpe
     center /= cascade_frustum.size();
 
     auto const M_light { glm::lookAt(
-        glm::vec3(center) - glm::normalize(_sun.direction) * 100.0f,
+        glm::vec3(center) - glm::normalize(_sun.direction) * 500.0f,
         glm::vec3(center),
         glm::vec3(0.0f, 1.0f, 0.0f)) };
 
@@ -175,6 +154,19 @@ namespace Poulpe
       max_z = std::max(max_z, Lv.z);
     }
 
+    // min_z = std::numeric_limits<float>::max();
+    // max_z = std::numeric_limits<float>::lowest();
+
+    // for (auto const& v : cascade_frustum) {
+    //     float z = (m_cascade * v).z;
+    //     min_z = std::min(min_z, z);
+    //     max_z = std::max(max_z, z);
+    // }
+
+    min_z -= 1000.0f;
+    max_z += 1000.0f;
+
+
     auto const d {
       static_cast<std::uint32_t>(
       std::max(
@@ -183,33 +175,30 @@ namespace Poulpe
 
     auto const T { d / shadow_resolution };
 
-    auto const snapped_world_center {
+    auto const snapped_center_light {
       glm::vec3(
         std::floorf((max_x + min_x) / (2.0f * T)) * T,
         std::floorf((max_y + min_y) / (2.0f * T)) * T,
         (min_z + max_z) * 0.5f)
     };
+    auto const M_light_inv { glm::inverse(M_light) };
 
-    glm::mat3 const R { M_light };
-    glm::mat4 m_cascade { glm::transpose(R) };
-    m_cascade[3] = glm::vec4(-snapped_world_center, 1.0f);
+    auto const snapped_world_center { 
+      glm::vec3(M_light_inv * glm::vec4(snapped_center_light, 1.0f))
+    };
+
+    glm::mat4 const m_cascade { glm::lookAt(
+        snapped_world_center - glm::normalize(_sun.direction) * 500.0f,
+        snapped_world_center,
+        glm::vec3(0.0f, 1.0f, 0.0f)) };
+    // glm::mat3 const R { M_light };
+    // glm::mat4 m_cascade { glm::transpose(R) };
+    // m_cascade[3] = glm::vec4(-snapped_world_center, 1.0f);
 
     // glm::mat4 const m_cascade { glm::lookAt(
     //     snapped_world_center - glm::normalize(_sun.direction) * 100.0f,
     //     snapped_world_center,
     //     glm::vec3(0.0f, 1.0f, 0.0f)) };
-
-    min_z = std::numeric_limits<float>::max();
-    max_z = std::numeric_limits<float>::lowest();
-
-    for (auto const& v : cascade_frustum) {
-        float z = (m_cascade * v).z;
-        min_z = std::min(min_z, z);
-        max_z = std::max(max_z, z);
-    }
-
-    min_z -= 1000.0f;
-    max_z += 1000.0f;
 
     auto const df {static_cast<float>(d) * 0.5f };
     auto const z_range { max_z - min_z };
@@ -235,7 +224,7 @@ namespace Poulpe
 
     CSM csm {
       .d = static_cast<float>(d),
-      .texel_size = (3.0f / 16.0f * (1.0f / shadow_resolution)),
+      .texel_size = static_cast<float>(d) / shadow_resolution,
       .z_max = max_z,
       .z_min = min_z,
       .s = snapped_world_center,
@@ -250,14 +239,14 @@ namespace Poulpe
 
   void LightManager::computeCSM(glm::mat4 const & camera_view, glm::mat4 const & projection)
   {
-    float const near { -0.0f };
-    float const far { -500.f };
+    float const near { 0.0f };
+    float const far { 1000.f };
 
   std::array<glm::vec2, 4> const cascade_splits {
-      glm::vec2(near, -150.f),
-      glm::vec2(-140.f, -280.f),
-      glm::vec2(-270.f, -420.f),
-      glm::vec2(-410.f, far)
+      glm::vec2(near, 150.f),
+      glm::vec2(140.f, 280.f),
+      glm::vec2(270.f, 420.f),
+      glm::vec2(410.f, far)
   };
 
     std::vector<CSM> csms{};
@@ -290,7 +279,11 @@ namespace Poulpe
       csm.offset = glm::vec3(offsetX, offsetY, offsetZ);
     }
 
-    _sun.cascade_texel_size = csms.at(0).texel_size;
+    _sun.cascade_texel_sizes = glm::vec4(
+      csms.at(0).texel_size,
+      csms.at(1).texel_size,
+      csms.at(2).texel_size,
+      csms.at(3).texel_size);
 
     _sun.cascade_min_splits.x = cascade_splits[0].x;
     _sun.cascade_min_splits.y = cascade_splits[1].x;
@@ -328,7 +321,7 @@ namespace Poulpe
 
      float fov = glm::radians(90.0f);
     glm::mat4 shadow_cubemap_projection = glm::perspective(fov, 1.0f, 1.0f, 50.f);
-    shadow_cubemap_projection[1][1] *= -1;
+    //shadow_cubemap_projection[1][1] *= -1;
 
     light1.projection = shadow_cubemap_projection;
 

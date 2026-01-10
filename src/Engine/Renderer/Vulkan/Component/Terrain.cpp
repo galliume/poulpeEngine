@@ -17,6 +17,7 @@ import Engine.Component.Components;
 import Engine.Component.Texture;
 import Engine.Component.Vertex;
 
+import Engine.Core.Logger;
 import Engine.Core.MeshTypes;
 import Engine.Core.PlpTypedef;
 
@@ -45,37 +46,56 @@ namespace Poulpe
 
     if (!mesh && !mesh->isDirty()) return;
 
-    Texture const& tex { component_rendering_info.textures.at(component_rendering_info.terrain_name) };
+    Texture const& tex { component_rendering_info.textures->at(component_rendering_info.terrain_name) };
 
     std::vector<Vertex> vertices;
     int32_t const width{ static_cast<int32_t>(tex.getWidth()) };
     int32_t const height{ static_cast<int32_t>(tex.getHeight())};
     int32_t const rez{ 20 };
+    const float fRez = static_cast<float>(rez);
+    const glm::vec4 zeroVec4{0.0f, 0.0f, 0.0f, 0.0f};
+    const glm::vec3 defaultNormal{1.0f, 1.0f, 0.0f};
 
     for(int32_t i = 0; i < rez - 1; i++) {
       for(int32_t j = 0; j < rez - 1; j++) {
 
         float const y{ 0.0f };
 
+        // Vertex v1
         Vertex v{
-          { -width/2.0f + width*i/static_cast<float>(rez), y, -height/2.0f + height*j/static_cast<float>(rez) },
-          { 1.0f, 1.0f, 0.0f}, {i / static_cast<float>(rez), j / static_cast<float>(rez) }, {0.0f, 0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f},
-           glm::vec3{0.0f}, {}, {} };
+            zeroVec4, // tangent
+            zeroVec4, // color
+            { -width/2.0f + width*i/fRez, y, -height/2.0f + height*j/fRez }, // pos
+            defaultNormal, // normal
+            { i / fRez, j / fRez } // texture_coord
+        };
 
+        // Vertex v2
         Vertex v2{
-          {-width/2.0f + width*(i+1)/static_cast<float>(rez), y, -height/2.0f + height*j/static_cast<float>(rez) },
-          {1.0f, 1.0f, 0.0f}, {(i+1) / static_cast<float>(rez), j / static_cast<float>(rez) }, {0.0f, 0.0f, 0.0f, 0.0f}, { 0.0f, 0.0f, 0.0f, 0.0f },
-           glm::vec3{0.0f}, {}, {} };
+            zeroVec4,
+            zeroVec4,
+            { -width/2.0f + width*(i+1)/fRez, y, -height/2.0f + height*j/fRez },
+            defaultNormal,
+            { (i+1) / fRez, j / fRez }
+        };
 
+        // Vertex v3
         Vertex v3{
-          {-width/2.0f + width*i/static_cast<float>(rez), y, -height/2.0f + height*(j+1)/static_cast<float>(rez) },
-          {1.0f, 1.0f, 0.0f}, {i / static_cast<float>(rez), (j+1) / static_cast<float>(rez) }, {0.0f, 0.0f, 0.0f, 0.0f}, { 0.0f, 0.0f, 0.0f, 0.0f },
-           glm::vec3{0.0f}, {}, {} };
+            zeroVec4,
+            zeroVec4,
+            { -width/2.0f + width*i/fRez, y, -height/2.0f + height*(j+1)/fRez },
+            defaultNormal,
+            { i / fRez, (j+1) / fRez }
+        };
 
+        // Vertex v4
         Vertex v4{
-          {-width/2.0f + width*(i+1)/static_cast<float>(rez), y, -height/2.0f + height*(j+1)/static_cast<float>(rez) },
-          {1.0f, 1.0f, 0.0f}, {(i+1) / static_cast<float>(rez), (j+1) / static_cast<float>(rez) }, {0.0f, 0.0f, 0.0f, 0.0f}, { 0.0f, 0.0f, 0.0f, 0.0f },
-           glm::vec3{0.0f}, {}, {} };
+            zeroVec4,
+            zeroVec4,
+            { -width/2.0f + width*(i+1)/fRez, y, -height/2.0f + height*(j+1)/fRez },
+            defaultNormal,
+            { (i+1) / fRez, (j+1) / fRez }
+        };
 
         vertices.push_back(v);
         vertices.push_back(v2);
@@ -94,13 +114,13 @@ namespace Poulpe
     ubos.push_back(ubo);
 
     data->_vertices = vertices;
-    data->_vertex_buffer = renderer->getAPI()->createVertexBuffer(vertices);
+    data->_vertex_buffer = renderer->getAPI()->createVertexBuffer(vertices, renderer->getCurrentFrameIndex());
     data->_texture_index = 0;
     data->_ubos.resize(1);
     data->_ubos[0] = ubos;
 
     mesh->getData()->_ubos_offset.emplace_back(1);
-    mesh->getUniformBuffers().emplace_back(renderer->getAPI()->createUniformBuffers(1));
+    mesh->getUniformBuffers().emplace_back(renderer->getAPI()->createUniformBuffers(1, renderer->getCurrentFrameIndex()));
 
     for (std::size_t i{ 0 }; i < mesh->getData()->_ubos.size(); i++) {
       std::ranges::for_each(mesh->getData()->_ubos.at(i), [&](auto& data_ubo) {
@@ -111,7 +131,7 @@ namespace Poulpe
     vkDestroyCommandPool(renderer->getDevice(), commandPool, nullptr);
 
     if (!mesh->getData()->_ubos.empty()) {
-      renderer->getAPI()->updateUniformBuffer(mesh->getUniformBuffers().at(0), &mesh->getData()->_ubos.at(0));
+      renderer->getAPI()->updateUniformBuffer(mesh->getUniformBuffers().at(0), &mesh->getData()->_ubos.at(0), renderer->getCurrentFrameIndex());
     }
 
     createDescriptorSet(renderer, component_rendering_info);
@@ -123,7 +143,7 @@ namespace Poulpe
     ComponentRenderingInfo const& component_rendering_info)
   {
     auto const& mesh = component_rendering_info.mesh;
-    auto height_map { component_rendering_info.textures.at(component_rendering_info.terrain_name)};
+    auto height_map { component_rendering_info.textures->at(component_rendering_info.terrain_name)};
 
     height_map.setSampler(renderer->getAPI()->createKTXSampler(
       TextureWrapMode::WRAP,
@@ -131,11 +151,11 @@ namespace Poulpe
       0));
 
     if (height_map.getWidth() == 0) {
-      height_map = component_rendering_info.textures.at(PLP_EMPTY);
+      height_map = component_rendering_info.textures->at(PLP_EMPTY);
     }
 
     //@todo fix this ugly fix. Needs a real asset unique ID
-    Texture ground { component_rendering_info.textures.at(PLP_GROUND)};
+    Texture ground { component_rendering_info.textures->at(PLP_GROUND)};
 
     ground.setSampler(renderer->getAPI()->createKTXSampler(
       TextureWrapMode::WRAP,
@@ -143,10 +163,10 @@ namespace Poulpe
       0));
 
     if (ground.getWidth() == 0) {
-      ground = component_rendering_info.textures.at(PLP_EMPTY);
+      ground = component_rendering_info.textures->at(PLP_EMPTY);
     }
 
-    Texture grass { component_rendering_info.textures.at(PLP_GRASS)};
+    Texture grass { component_rendering_info.textures->at(PLP_GRASS)};
 
     grass.setSampler(renderer->getAPI()->createKTXSampler(
       TextureWrapMode::WRAP,
@@ -154,10 +174,10 @@ namespace Poulpe
       0));
 
     if (grass.getWidth() == 0) {
-      grass = component_rendering_info.textures.at(PLP_EMPTY);
+      grass = component_rendering_info.textures->at(PLP_EMPTY);
     }
 
-    Texture snow { component_rendering_info.textures.at(PLP_SNOW)};
+    Texture snow { component_rendering_info.textures->at(PLP_SNOW)};
 
     snow.setSampler(renderer->getAPI()->createKTXSampler(
       TextureWrapMode::WRAP,
@@ -165,10 +185,10 @@ namespace Poulpe
       0));
 
     if (snow.getWidth() == 0) {
-      snow = component_rendering_info.textures.at(PLP_EMPTY);
+      snow = component_rendering_info.textures->at(PLP_EMPTY);
     }
 
-    Texture sand { component_rendering_info.textures.at(PLP_SAND)};
+    Texture sand { component_rendering_info.textures->at(PLP_SAND)};
 
     sand.setSampler(renderer->getAPI()->createKTXSampler(
       TextureWrapMode::WRAP,
@@ -176,10 +196,10 @@ namespace Poulpe
       0));
 
     if (sand.getWidth() == 0) {
-      sand = component_rendering_info.textures.at(PLP_EMPTY);
+      sand = component_rendering_info.textures->at(PLP_EMPTY);
     }
 
-    Texture low_noise { component_rendering_info.textures.at(PLP_LOW_NOISE)};
+    Texture low_noise { component_rendering_info.textures->at(PLP_LOW_NOISE)};
 
     low_noise.setSampler(renderer->getAPI()->createKTXSampler(
       TextureWrapMode::WRAP,
@@ -187,10 +207,10 @@ namespace Poulpe
       0));
 
     if (low_noise.getWidth() == 0) {
-      low_noise = component_rendering_info.textures.at(PLP_EMPTY);
+      low_noise = component_rendering_info.textures->at(PLP_EMPTY);
     }
 
-    Texture hi_noise { component_rendering_info.textures.at(PLP_HI_NOISE)};
+    Texture hi_noise { component_rendering_info.textures->at(PLP_HI_NOISE)};
 
     hi_noise.setSampler(renderer->getAPI()->createKTXSampler(
       TextureWrapMode::WRAP,
@@ -198,7 +218,7 @@ namespace Poulpe
       0));
 
     if (hi_noise.getWidth() == 0) {
-      hi_noise = component_rendering_info.textures.at(PLP_EMPTY);
+      hi_noise = component_rendering_info.textures->at(PLP_EMPTY);
     }
 
     std::vector<VkDescriptorImageInfo> image_infos{};
@@ -210,7 +230,7 @@ namespace Poulpe
     image_infos.emplace_back(hi_noise.getSampler(), hi_noise.getImageView(), VK_IMAGE_LAYOUT_GENERAL);
     image_infos.emplace_back(low_noise.getSampler(), low_noise.getImageView(), VK_IMAGE_LAYOUT_GENERAL);
 
-    Texture env { component_rendering_info.textures.at(component_rendering_info.skybox_name) };
+    Texture env { component_rendering_info.textures->at(component_rendering_info.skybox_name) };
     env.setSampler(renderer->getAPI()->createKTXSampler(
     TextureWrapMode::CLAMP_TO_EDGE,
     TextureWrapMode::CLAMP_TO_EDGE,

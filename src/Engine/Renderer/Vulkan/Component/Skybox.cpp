@@ -34,52 +34,56 @@ namespace Poulpe
     auto const& mesh = component_rendering_info.mesh;
 
     if (!mesh && !mesh->isDirty()) return;
-
-
     std::vector<Vertex> const vertices {
-      {{-1.0f,  1.0f, -1.0f }, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, glm::vec3(0.0f), {}, {}},
-      {{-1.0f, -1.0f, -1.0f }, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, glm::vec3(0.0f), {}, {}},
-      {{ 1.0f, -1.0f, -1.0f }, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, glm::vec3(0.0f), {}, {}},
-      {{ 1.0f, -1.0f, -1.0f }, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, glm::vec3(0.0f), {}, {}},
-      {{ 1.0f,  1.0f, -1.0f }, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, glm::vec3(0.0f), {}, {}},
-      {{-1.0f,  1.0f, -1.0f }, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, glm::vec3(0.0f), {}, {}},
+        // 16-byte vec4s | 12-byte vec3s (Pos, Normal, Orig) | 8-byte UV | Bones/Weights/Total
+        // Back face
+        {{0.f,0.f,0.f,0.f}, {0.f,0.f,0.f,0.f}, {-1.f, 1.f,-1.f}, {1.f,0.f,0.f}, {1.f,0.f} },
+        {{0.f,0.f,0.f,0.f}, {0.f,0.f,0.f,0.f}, {-1.f,-1.f,-1.f}, {1.f,0.f,0.f}, {1.f,0.f} },
+        {{0.f,0.f,0.f,0.f}, {0.f,0.f,0.f,0.f}, { 1.f,-1.f,-1.f}, {1.f,0.f,0.f}, {1.f,0.f} },
+        {{0.f,0.f,0.f,0.f}, {0.f,0.f,0.f,0.f}, { 1.f,-1.f,-1.f}, {1.f,0.f,0.f}, {1.f,0.f} },
+        {{0.f,0.f,0.f,0.f}, {0.f,0.f,0.f,0.f}, { 1.f, 1.f,-1.f}, {1.f,0.f,0.f}, {1.f,0.f} },
+        {{0.f,0.f,0.f,0.f}, {0.f,0.f,0.f,0.f}, {-1.f, 1.f,-1.f}, {1.f,0.f,0.f}, {1.f,0.f} },
 
-      {{-1.0f, -1.0f,  1.0f }, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, glm::vec3(0.0f), {}, {} },
-      {{-1.0f, -1.0f, -1.0f }, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, glm::vec3(0.0f), {}, {} },
-      {{-1.0f,  1.0f, -1.0f }, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, glm::vec3(0.0f), {}, {} },
-      {{-1.0f,  1.0f, -1.0f }, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, glm::vec3(0.0f), {}, {} },
-      {{-1.0f,  1.0f,  1.0f }, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, glm::vec3(0.0f), {}, {} },
-      {{-1.0f, -1.0f,  1.0f }, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, glm::vec3(0.0f), {}, {} },
+        // Left face
+        {{0.f,0.f,0.f,0.f}, {0.f,0.f,0.f,0.f}, {-1.f,-1.f, 1.f}, {1.f,0.f,0.f}, {1.f,0.f} },
+        {{0.f,0.f,0.f,0.f}, {0.f,0.f,0.f,0.f}, {-1.f,-1.f,-1.f}, {1.f,0.f,0.f}, {1.f,0.f} },
+        {{0.f,0.f,0.f,0.f}, {0.f,0.f,0.f,0.f}, {-1.f, 1.f,-1.f}, {1.f,0.f,0.f}, {1.f,0.f} },
+        {{0.f,0.f,0.f,0.f}, {0.f,0.f,0.f,0.f}, {-1.f, 1.f,-1.f}, {1.f,0.f,0.f}, {1.f,0.f} },
+        {{0.f,0.f,0.f,0.f}, {0.f,0.f,0.f,0.f}, {-1.f, 1.f, 1.f}, {1.f,0.f,0.f}, {1.f,0.f} },
+        {{0.f,0.f,0.f,0.f}, {0.f,0.f,0.f,0.f}, {-1.f,-1.f, 1.f}, {1.f,0.f,0.f}, {1.f,0.f} },
 
-      {{ 1.0f, -1.0f, -1.0f }, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, glm::vec3(0.0f), {}, {} },
-      {{ 1.0f, -1.0f,  1.0f }, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, glm::vec3(0.0f), {}, {} },
-      {{ 1.0f,  1.0f,  1.0f }, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, glm::vec3(0.0f), {}, {} },
-      {{ 1.0f,  1.0f,  1.0f }, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, glm::vec3(0.0f), {}, {} },
-      {{ 1.0f,  1.0f, -1.0f }, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, glm::vec3(0.0f), {}, {} },
-      {{ 1.0f, -1.0f, -1.0f }, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, glm::vec3(0.0f), {}, {} },
+        // Right face
+        {{0.f,0.f,0.f,0.f}, {0.f,0.f,0.f,0.f}, { 1.f,-1.f,-1.f}, {1.f,0.f,0.f}, {1.f,0.f} },
+        {{0.f,0.f,0.f,0.f}, {0.f,0.f,0.f,0.f}, { 1.f,-1.f, 1.f}, {1.f,0.f,0.f}, {1.f,0.f} },
+        {{0.f,0.f,0.f,0.f}, {0.f,0.f,0.f,0.f}, { 1.f, 1.f, 1.f}, {1.f,0.f,0.f}, {1.f,0.f} },
+        {{0.f,0.f,0.f,0.f}, {0.f,0.f,0.f,0.f}, { 1.f, 1.f, 1.f}, {1.f,0.f,0.f}, {1.f,0.f} },
+        {{0.f,0.f,0.f,0.f}, {0.f,0.f,0.f,0.f}, { 1.f, 1.f,-1.f}, {1.f,0.f,0.f}, {1.f,0.f} },
+        {{0.f,0.f,0.f,0.f}, {0.f,0.f,0.f,0.f}, { 1.f,-1.f,-1.f}, {1.f,0.f,0.f}, {1.f,0.f} },
 
-      {{-1.0f, -1.0f,  1.0f }, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, glm::vec3(0.0f), {}, {} },
-      {{-1.0f,  1.0f,  1.0f }, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, glm::vec3(0.0f), {}, {} },
-      {{ 1.0f,  1.0f,  1.0f }, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, glm::vec3(0.0f), {}, {} },
-      {{ 1.0f,  1.0f,  1.0f }, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, glm::vec3(0.0f), {}, {} },
-      {{ 1.0f, -1.0f,  1.0f }, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, glm::vec3(0.0f), {}, {} },
-      {{-1.0f, -1.0f,  1.0f }, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, glm::vec3(0.0f), {}, {} },
+        // Front face
+        {{0.f,0.f,0.f,0.f}, {0.f,0.f,0.f,0.f}, {-1.f,-1.f, 1.f}, {1.f,0.f,0.f}, {1.f,0.f} },
+        {{0.f,0.f,0.f,0.f}, {0.f,0.f,0.f,0.f}, {-1.f, 1.f, 1.f}, {1.f,0.f,0.f}, {1.f,0.f} },
+        {{0.f,0.f,0.f,0.f}, {0.f,0.f,0.f,0.f}, { 1.f, 1.f, 1.f}, {1.f,0.f,0.f}, {1.f,0.f} },
+        {{0.f,0.f,0.f,0.f}, {0.f,0.f,0.f,0.f}, { 1.f, 1.f, 1.f}, {1.f,0.f,0.f}, {1.f,0.f} },
+        {{0.f,0.f,0.f,0.f}, {0.f,0.f,0.f,0.f}, { 1.f,-1.f, 1.f}, {1.f,0.f,0.f}, {1.f,0.f} },
+        {{0.f,0.f,0.f,0.f}, {0.f,0.f,0.f,0.f}, {-1.f,-1.f, 1.f}, {1.f,0.f,0.f}, {1.f,0.f} },
 
-      {{-1.0f,  1.0f, -1.0f }, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, glm::vec3(0.0f), {}, {} },
-      {{ 1.0f,  1.0f, -1.0f }, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, glm::vec3(0.0f), {}, {} },
-      {{ 1.0f,  1.0f,  1.0f }, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, glm::vec3(0.0f), {}, {} },
-      {{ 1.0f,  1.0f,  1.0f }, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, glm::vec3(0.0f), {}, {} },
-      {{-1.0f,  1.0f,  1.0f }, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, glm::vec3(0.0f), {}, {} },
-      {{-1.0f,  1.0f, -1.0f }, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, glm::vec3(0.0f), {}, {} },
+        // Top face
+        {{0.f,0.f,0.f,0.f}, {0.f,0.f,0.f,0.f}, {-1.f, 1.f,-1.f}, {1.f,0.f,0.f}, {1.f,0.f} },
+        {{0.f,0.f,0.f,0.f}, {0.f,0.f,0.f,0.f}, { 1.f, 1.f,-1.f}, {1.f,0.f,0.f}, {1.f,0.f} },
+        {{0.f,0.f,0.f,0.f}, {0.f,0.f,0.f,0.f}, { 1.f, 1.f, 1.f}, {1.f,0.f,0.f}, {1.f,0.f} },
+        {{0.f,0.f,0.f,0.f}, {0.f,0.f,0.f,0.f}, { 1.f, 1.f, 1.f}, {1.f,0.f,0.f}, {1.f,0.f} },
+        {{0.f,0.f,0.f,0.f}, {0.f,0.f,0.f,0.f}, {-1.f, 1.f, 1.f}, {1.f,0.f,0.f}, {1.f,0.f} },
+        {{0.f,0.f,0.f,0.f}, {0.f,0.f,0.f,0.f}, {-1.f, 1.f,-1.f}, {1.f,0.f,0.f}, {1.f,0.f} },
 
-      {{-1.0f, -1.0f, -1.0f }, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, glm::vec3(0.0f), {}, {} },
-      {{-1.0f, -1.0f,  1.0f }, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, glm::vec3(0.0f), {}, {} },
-      {{ 1.0f, -1.0f, -1.0f }, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, glm::vec3(0.0f), {}, {} },
-      {{ 1.0f, -1.0f, -1.0f }, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, glm::vec3(0.0f), {}, {} },
-      {{-1.0f, -1.0f,  1.0f }, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, glm::vec3(0.0f), {}, {} },
-      {{ 1.0f, -1.0f,  1.0f }, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, glm::vec3(0.0f), {}, {} }
+        // Bottom face
+        {{0.f,0.f,0.f,0.f}, {0.f,0.f,0.f,0.f}, {-1.f,-1.f,-1.f}, {1.f,0.f,0.f}, {1.f,0.f} },
+        {{0.f,0.f,0.f,0.f}, {0.f,0.f,0.f,0.f}, {-1.f,-1.f, 1.f}, {1.f,0.f,0.f}, {1.f,0.f} },
+        {{0.f,0.f,0.f,0.f}, {0.f,0.f,0.f,0.f}, { 1.f,-1.f,-1.f}, {1.f,0.f,0.f}, {1.f,0.f} },
+        {{0.f,0.f,0.f,0.f}, {0.f,0.f,0.f,0.f}, { 1.f,-1.f,-1.f}, {1.f,0.f,0.f}, {1.f,0.f} },
+        {{0.f,0.f,0.f,0.f}, {0.f,0.f,0.f,0.f}, {-1.f,-1.f, 1.f}, {1.f,0.f,0.f}, {1.f,0.f} },
+        {{0.f,0.f,0.f,0.f}, {0.f,0.f,0.f,0.f}, { 1.f,-1.f, 1.f}, {1.f,0.f,0.f}, {1.f,0.f} }
     };
-
     auto cmd_pool = renderer->getAPI()->createCommandPool();
 
     std::vector<UniformBufferObject> ubos{};
@@ -92,7 +96,7 @@ namespace Poulpe
       ubo.projection = renderer->getPerspective();
       ubos.push_back({ ubo });
 
-      Buffer uniform_buffer = renderer->getAPI()->createUniformBuffers(1);
+      Buffer uniform_buffer = renderer->getAPI()->createUniformBuffers(1, renderer->getCurrentFrameIndex());
       mesh->getUniformBuffers().emplace_back(uniform_buffer);
     } else {
       auto const& mesh_data = mesh->getData();
@@ -102,7 +106,7 @@ namespace Poulpe
     Data data{};
     data._textures.emplace_back("skybox");
     data._vertices = vertices;
-    data._vertex_buffer = renderer->getAPI()->createVertexBuffer(vertices);
+    data._vertex_buffer = renderer->getAPI()->createVertexBuffer(vertices, renderer->getCurrentFrameIndex());
     data._ubos.resize(1);
     data._ubos[0] = ubos;
     data._texture_index = 0;
@@ -116,7 +120,7 @@ namespace Poulpe
     mesh->setIsDirty(false);
     mesh->setHasShadow(false);
 
-    renderer->getAPI()->updateUniformBuffer(mesh->getUniformBuffers().at(0), &data._ubos.at(0));
+    renderer->getAPI()->updateUniformBuffer(mesh->getUniformBuffers().at(0), &data._ubos.at(0), renderer->getCurrentFrameIndex());
 
     createDescriptorSet(renderer, component_rendering_info);
   }
@@ -127,7 +131,7 @@ namespace Poulpe
   {
     auto const& mesh = component_rendering_info.mesh;
 
-    Texture tex{ component_rendering_info.textures.at(component_rendering_info.skybox_name) };
+    Texture tex{ component_rendering_info.textures->at(component_rendering_info.skybox_name) };
     tex.setSampler(renderer->getAPI()->createKTXSampler(
     TextureWrapMode::CLAMP_TO_EDGE,
     TextureWrapMode::CLAMP_TO_EDGE,

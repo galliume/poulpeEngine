@@ -25,7 +25,7 @@ namespace Poulpe {
     };
 
     Mesh* mesh;
-    std::unordered_map<std::string, Texture> textures{};
+    std::unordered_map<std::string, Texture> const * textures{nullptr};
     std::string skybox_name{};
     std::string terrain_name{};
     std::string water_name{};

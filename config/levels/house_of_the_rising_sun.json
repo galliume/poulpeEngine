@@ -22,16 +22,132 @@
       "z": -3.0
     }
   },
-  "hasFog": true,
-  "player": "",
+  "hasFog": false,
+  "player" : "",
   "entities": {
-    "Sponza": {
-      "mesh": "assets/mesh/Sponza/glTF/Sponza.gltf",
+    "dog" : {
+      "mesh": "assets/mesh/dog/dog.obj",
+      "shader": "main_basic",
+      "positions": [
+        { "x": 0.8, "y": 0.40, "z": -1.2 }
+      ],
+      "scales": [
+        { "x": 1.0, "y": 1.0, "z": 1.0 }
+      ],
+      "rotations": [
+        {"x": 0.0, "y": 0.0, "z": 0.0}
+      ],
+      "flipY": false,
+      "count": 1,
+      "hasBbox": false,
+      "hasAnimation": false,
+      "isPointLight": false,
+      "animationScripts": {
+      },
+      "hasShadow": true,
+      "isIndexed": true,
+      "debugNormal": true
+    },
+    "Campfire" : {
+      "mesh": "assets/mesh/campfire/Campfire.obj",
+      "shader": "main_basic",
+      "positions": [
+        { "x": 0.8, "y": 0.2, "z": -0.4 }
+      ],
+      "scales": [
+        { "x": 1.0, "y": 1.0, "z": 1.0 }
+      ],
+      "rotations": [
+        { "x": 0.0, "y": 0.0, "z": 0.0 }
+      ],
+      "flipY": false,
+      "count": 1,
+      "hasBbox": false,
+      "hasAnimation": false,
+      "isPointLight": false,
+      "animationScripts": {
+      },
+      "hasShadow": true,
+      "isIndexed": true,
+      "debugNormal": true
+    },
+    "dead_tree" : {
+      "mesh": "assets/mesh/tree/dead_tree.obj",
+      "shader": "main_basic",
+      "positions": [
+        { "x": -1.0, "y": 0.19, "z": -1.4 }
+      ],
+      "scales": [
+        { "x": 1.0, "y": 1.0, "z": 1.0 }
+      ],
+      "rotations": [
+        { "x": 0.0, "y": 0.0, "z": 0.0 }
+      ],
+      "flipY": false,
+      "count": 1,
+      "hasBbox": false,
+      "hasAnimation": false,
+      "isPointLight": false,
+      "animationScripts": {
+      },
+      "hasShadow": true,
+      "isIndexed": true,
+      "debugNormal": true
+    },
+    "moon" : {
+      "mesh": "assets/mesh/moon/moon.obj",
+      "shader": "main_basic",
+      "positions": [
+        { "x": 0.5, "y": 4.5, "z": -3.00 }
+      ],
+      "scales": [
+        { "x": 1.0, "y": 1.0, "z": 1.0 }
+      ],
+      "rotations": [
+        { "x": 0.0, "y": 0.0, "z": 0.0 }
+      ],
+      "flipY": false,
+      "count": 1,
+      "hasBbox": false,
+      "hasAnimation": false,
+      "isPointLight": false,
+      "animationScripts": {
+      },
+      "hasShadow": true,
+      "isIndexed": true,
+      "debugNormal": true
+    },
+    "doghouse0908" : {
+      "mesh": "assets/mesh/doghouse/doghouse0908.obj",
+      "textures": ["dog_base_color"],
+      "shader": "main",
+      "positions": [
+        { "x": 0.7, "y": 0.20, "z": -2.00 }
+      ],
+      "scales": [
+        { "x": 1.0, "y": 1.0, "z": 1.0 }
+      ],
+      "rotations": [
+        { "x": 0.0, "y": -30.0, "z": 0.0 }
+      ],
+      "flipY": false,
+      "count": 1,
+      "hasBbox": false,
+      "hasAnimation": false,
+      "isPointLight": false,
+      "animationScripts": {
+      },
+      "hasShadow": true,
+      "isIndexed": true,
+      "debugNormal": true
+    },
+    "midpoly_town_house_01": {
+      "mesh": "assets/mesh/house/midpoly_town_house_01.obj",
       "shader": "main_basic",
       "positions": [
         {
           "x": 0.0,
-          "y": 7.0,
+          "y": 10.0,
           "z": 0.0
         }
       ],
@@ -45,78 +161,6 @@
       "rotations": [
         {
           "x": 0.0,
-          "y": 180.0,
-          "z": 0.0
-        }
-      ],
-      "flipY": false,
-      "count": 1,
-      "hasBbox": false,
-      "hasAnimation": false,
-      "isPointLight": false,
-      "animationScripts": {
-      },
-      "hasShadow": true,
-      "isIndexed": true,
-      "debugNormal": true
-    },
-    "Fox": {
-      "mesh": "assets/mesh/Fox/glTF/Fox.gltf",
-      "shader": "main_basic",
-      "positions": [
-        {
-          "x": 10.0,
-          "y": 7.0,
-          "z": -5.0
-        }
-      ],
-      "scales": [
-        {
-          "x": 0.1,
-          "y": 0.1,
-          "z": 0.1
-        }
-      ],
-      "rotations": [
-        {
-          "x": 0.0,
-          "y": 45.0,
-          "z": 0.0
-        }
-      ],
-      "flipY": false,
-      "count": 1,
-      "hasBbox": false,
-      "hasAnimation": false,
-      "isPointLight": false,
-      "animationScripts": {
-        "anim0": "assets/scripts/animation/helmet/anim0.lua"
-      },
-      "hasShadow": true,
-      "isIndexed": true,
-      "debugNormal": true,
-      "defaultAnim": 1
-    },
-    "Shine_Sprite": {
-      "mesh": "assets/mesh/Shine_Sprite.gltf",
-      "shader": "main_basic",
-      "positions": [
-        {
-          "x": 288.0,
-          "y": 40.0,
-          "z": 12.0
-        }
-      ],
-      "scales": [
-        {
-          "x": 1.0,
-          "y": 1.0,
-          "z": 1.0
-        }
-      ],
-      "rotations": [
-        {
-          "x": 0.0,
           "y": 0.0,
           "z": 0.0
         }
@@ -127,43 +171,6 @@
       "hasAnimation": false,
       "isPointLight": false,
       "animationScripts": {
-        "anim0": "assets/scripts/animation/backpack/anim0.lua"
-      },
-      "hasShadow": true,
-      "isIndexed": true,
-      "debugNormal": true
-    },
-    "cage_lamp": {
-      "mesh": "assets/mesh/cage_lamp/scene.gltf",
-      "shader": "main_basic",
-      "positions": [
-        {
-          "x": 0.0,
-          "y": 46.0,
-          "z": 0.0
-        }
-      ],
-      "scales": [
-        {
-          "x": 0.1,
-          "y": 0.1,
-          "z": 0.1
-        }
-      ],
-      "rotations": [
-        {
-          "x": 0.0,
-          "y": 0.0,
-          "z": 0.0
-        }
-      ],
-      "flipY": false,
-      "count": 1,
-      "hasBbox": false,
-      "hasAnimation": false,
-      "isPointLight": false,
-      "animationScripts": {
-          "anim0": "assets/scripts/animation/cage_lamp/anim0.lua"
       },
       "hasShadow": true,
       "isIndexed": true,

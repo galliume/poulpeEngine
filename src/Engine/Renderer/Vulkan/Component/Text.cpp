@@ -53,6 +53,9 @@ namespace Poulpe
     float const width{ static_cast<float>(component_rendering_info.atlas_width) };
     float const height{ static_cast<float>(component_rendering_info.atlas_height) };
 
+    const glm::vec4 zeroVec4{0.0f, 0.0f, 0.0f, 0.0f};
+    const glm::vec3 zeroVec3{0.0f, 0.0f, 0.0f};
+
     for (auto c { utf16_text.begin() }; c != utf16_text.end(); c++) {
 
       FT_ULong const ft_char { static_cast<FT_ULong>(*c) };
@@ -81,52 +84,37 @@ namespace Poulpe
       float v1{ ch.y_offset / height };
 
       Vertex vertex_1{
-        { xpos, ypos + h, 0.0f},
-        _color, { u0, v0 },
-        {0.0f, 0.0f, 0.0f, 0.0f},
-        {0.0f, 0.0f, 0.0f, 0.0f},
-        {0.0f, 0.0f, 0.0f},
-        {}, {}};
+          zeroVec4,           // tangent
+          _color,             // color (vec4)
+          {xpos, ypos+h, 0.f},// pos (vec3)
+          zeroVec3,           // normal
+          {u0, v0}           // texture_coord (vec2)
+      };
 
       Vertex vertex_2{
-        { xpos, ypos, 0.0f},
-        _color, { u0, v1 },
-        {0.0f, 0.0f, 0.0f, 0.0f},
-        {0.0f, 0.0f, 0.0f, 0.0f},
-        {0.0f, 0.0f, 0.0f},
-        {}, {}};
+          zeroVec4, _color, {xpos, ypos, 0.f},
+          zeroVec3, {u0, v1}
+      };
 
       Vertex vertex_3{
-        { xpos + w, ypos, 0.0f},
-        _color, { u1, v1 },
-        {0.0f, 0.0f, 0.0f, 0.0f},
-        {0.0f, 0.0f, 0.0f, 0.0f},
-        {0.0f, 0.0f, 0.0f},
-        {}, {}};
+          zeroVec4, _color, {xpos+w, ypos, 0.f},
+          zeroVec3, {u1, v1}
+      };
 
       Vertex vertex_4{
-        { xpos, ypos + h, 0.0f},
-        _color, { u0, v0 },
-        {0.0f, 0.0f, 0.0f, 0.0f},
-        {0.0f, 0.0f, 0.0f, 0.0f},
-        {0.0f, 0.0f, 0.0f},
-        {}, {}};
+          zeroVec4, _color, {xpos, ypos+h, 0.f},
+          zeroVec3, {u0, v0}
+      };
 
       Vertex vertex_5{
-        { xpos + w, ypos, 0.0f},
-        _color, { u1, v1 },
-        {0.0f, 0.0f, 0.0f, 0.0f},
-        {0.0, 0.0f, 0.0f, 0.0f},
-        {0.0f, 0.0f, 0.0f},
-        {}, {}};
+          zeroVec4, _color, {xpos+w, ypos, 0.f},
+          zeroVec3, {u1, v1}
+      };
 
       Vertex vertex_6{
-        { xpos + w, ypos + h, 0.0f},
-        _color, { u1, v0 },
-        {0.0f, 0.0f, 0.0f, 0.0f},
-        {0.0f, 0.0f, 0.0f, 0.0f},
-        { 0.0f, 0.0f, 0.0f},
-        {}, {}};
+          zeroVec4, _color, {xpos+w, ypos+h, 0.f},
+          zeroVec3, {u1, v0},
+      };
 
       vertices.emplace_back(vertex_1);
       vertices.emplace_back(vertex_2);
@@ -164,7 +152,7 @@ namespace Poulpe
     auto cmd_pool = renderer->getAPI()->createCommandPool();
 
     if (data->_ubos.empty()) {
-      data->_vertex_buffer = renderer->getAPI()->createVertexBuffer(vertices);
+      data->_vertex_buffer = renderer->getAPI()->createVertexBuffer(vertices, renderer->getCurrentFrameIndex());
 
       std::vector<UniformBufferObject> ubos{};
       ubos.reserve(1);
@@ -178,7 +166,7 @@ namespace Poulpe
       data->_ubos[0] = ubos;
 
       mesh->getData()->_ubos_offset.emplace_back(1);
-      mesh->getUniformBuffers().emplace_back(renderer->getAPI()->createUniformBuffers(1));
+      mesh->getUniformBuffers().emplace_back(renderer->getAPI()->createUniformBuffers(1, renderer->getCurrentFrameIndex()));
       mesh->getMaterial().alpha_mode = 1.0;
 
       for (std::size_t i{ 0 }; i < mesh->getData()->_ubos.size(); i++) {
@@ -187,38 +175,32 @@ namespace Poulpe
         });
       }
     } else {
-      VkDeviceMemory staging_device_memory{};
-      VkDeviceSize buffer_size = sizeof(Vertex) * vertices.size();
+      auto const image_index { renderer->getCurrentFrameIndex() };
+      auto const current_offset { renderer->getAPI()->getCurrentStagingMemoryOffset(image_index) };
+      //VkDeviceMemory staging_device_memory{ renderer->getAPI()->getStagingMemory(renderer->getCurrentFrameIndex()) };
+      VkBuffer staging_buffer { renderer->getAPI()->getStagingBuffer(image_index) };
+      VkDeviceSize const buffer_size { sizeof(Vertex) * vertices.size() };
+      renderer->getAPI()->updateCurrentStagingMemoryOffset(buffer_size, image_index);
 
-      VkBuffer staging_buffer{};
-
-      renderer->getAPI()->createBuffer(
-       buffer_size,
-       VK_BUFFER_USAGE_VERTEX_BUFFER_BIT
-         | VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-       VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT
-         | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-       staging_buffer, staging_device_memory);
-
-      void* void_data;
-      vkMapMemory(renderer->getDevice(), staging_device_memory, 0, buffer_size, 0, &void_data);
-      std::memcpy(void_data, vertices.data(), static_cast<std::size_t>(buffer_size));
-      vkUnmapMemory(renderer->getDevice(), staging_device_memory);
+      void* void_data { renderer->getAPI()->getStagingMemoryPtr(image_index) };
+      std::memcpy(static_cast<char*>(void_data) + current_offset, vertices.data(), static_cast<std::size_t>(buffer_size));
 
       renderer->getAPI()->copyBuffer(
         staging_buffer,
         data->_vertex_buffer.buffer,
         buffer_size,
-        0);
+        current_offset,
+        0,
+        renderer->getCurrentFrameIndex());
 
-      vkDestroyBuffer(renderer->getDevice(), staging_buffer, nullptr);
-      vkFreeMemory(renderer->getDevice(), staging_device_memory, nullptr);
+        data->_is_dirty = true;
+        renderer->updateVertexBuffer(data, renderer->getCurrentFrameIndex());
     }
 
     vkDestroyCommandPool(renderer->getDevice(), cmd_pool, nullptr);
 
     if (!mesh->getData()->_ubos.empty()) {
-      renderer->getAPI()->updateUniformBuffer(mesh->getUniformBuffers().at(0), &mesh->getData()->_ubos.at(0));
+      renderer->getAPI()->updateUniformBuffer(mesh->getUniformBuffers().at(0), &mesh->getData()->_ubos.at(0), renderer->getCurrentFrameIndex());
     }
 
     if (*mesh->getDescSet() == nullptr) {
@@ -233,7 +215,7 @@ namespace Poulpe
   {
     auto const& mesh = component_rendering_info.mesh;
 
-    Texture atlas { component_rendering_info.textures.at("_plp_font_atlas")};
+    Texture atlas { component_rendering_info.textures->at("_plp_font_atlas")};
 
     atlas.setSampler(renderer->getAPI()->createKTXSampler(
       TextureWrapMode::WRAP,
@@ -241,7 +223,7 @@ namespace Poulpe
       0));
 
     if (atlas.getWidth() == 0) {
-      atlas = component_rendering_info.textures.at(PLP_EMPTY);
+      atlas = component_rendering_info.textures->at(PLP_EMPTY);
     }
 
     auto const sampler = renderer->getAPI()->createKTXSampler(

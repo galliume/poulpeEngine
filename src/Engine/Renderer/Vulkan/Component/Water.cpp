@@ -45,7 +45,7 @@ void Water::operator()(
 
     if (!mesh && !mesh->isDirty()) return;
 
-    Texture const& tex { component_rendering_info.textures.at(component_rendering_info.terrain_name)};
+    Texture const& tex { component_rendering_info.textures->at(component_rendering_info.terrain_name)};
 
     std::vector<Vertex> vertices;
     int const width{ static_cast<int>(tex.getWidth()) };
@@ -53,6 +53,9 @@ void Water::operator()(
 
     int const rez{ 50 };
     int index{ 0 };
+    const float fRez = static_cast<float>(rez);
+    const glm::vec4 tangentDefault{0.0f, 0.0f, 0.0f, 0.0f};
+    const glm::vec3 normalDefault{1.0f, 1.0f, 0.0f};
 
 
     for(auto i = 0; i < rez - 1; i++) {
@@ -61,21 +64,41 @@ void Water::operator()(
         index = i + j;
         float const y{ 0.0f };
 
+        // Vertex v1
         Vertex v{
-          { -width/2.0f + width*i/(float)rez, y, -height/2.0f + height*j/(float)rez },
-          {1.0f, 1.0f, 0.0f}, {i / (float)rez, j / (float)rez }, {0.0f, 0.0f, 0.0f, 0.0f}, { index, 0.0f, 0.0f, 0.0f}, glm::vec3(0.0f), {}, {}};
+            tangentDefault,                      // tangent (vec4 - 16 bytes)
+            { (float)index, 0.0f, 0.0f, 0.0f },  // color (vec4 - 16 bytes)
+            { -width/2.0f + width*i/fRez, y, -height/2.0f + height*j/fRez }, // pos (vec3)
+            normalDefault,                       // normal (vec3)
+            { i / fRez, j / fRez }              // texture_coord (vec2)
+        };
 
+        // Vertex v2
         Vertex v2{
-          {-width/2.0f + width*(i+1)/(float)rez, y, -height/2.0f + height*j/(float)rez },
-          {1.0f, 1.0f, 0.0f}, {(i+1) / (float)rez, j / (float)rez }, {0.0f, 0.0f, 0.0f, 0.0f}, { index, 0.0f, 0.0f, 0.0f }, glm::vec3(0.0f), {}, {}};
+            tangentDefault,
+            { (float)index, 0.0f, 0.0f, 0.0f },
+            { -width/2.0f + width*(i+1)/fRez, y, -height/2.0f + height*j/fRez },
+            normalDefault,
+            { (i+1) / fRez, j / fRez }
+        };
 
+        // Vertex v3
         Vertex v3{
-          {-width/2.0f + width*i/(float)rez, y, -height/2.0f + height*(j+1)/(float)rez },
-          {1.0f, 1.0f, 0.0f}, {i / (float)rez, (j+1) / (float)rez }, {0.0f, 0.0f, 0.0f, 0.0f}, { index, 0.0f, 0.0f, 0.0f }, glm::vec3(0.0f), {}, {}};
+            tangentDefault,
+            { (float)index, 0.0f, 0.0f, 0.0f },
+            { -width/2.0f + width*i/fRez, y, -height/2.0f + height*(j+1)/fRez },
+            normalDefault,
+            { i / fRez, (j+1) / fRez }
+        };
 
+        // Vertex v4
         Vertex v4{
-          {-width/2.0f + width*(i+1)/(float)rez, y, -height/2.0f + height*(j+1)/(float)rez },
-          {1.0f, 1.0f, 0.0f}, {(i+1) / (float)rez, (j+1) / (float)rez }, {0.0f, 0.0f, 0.0f, 0.0f}, { index, 0.0f, 0.0f, 0.0f }, glm::vec3(0.0f), {}, {}};
+            tangentDefault,
+            { (float)index, 0.0f, 0.0f, 0.0f },
+            { -width/2.0f + width*(i+1)/fRez, y, -height/2.0f + height*(j+1)/fRez },
+            normalDefault,
+            { (i+1) / fRez, (j+1) / fRez }
+        };
 
         vertices.push_back(v);
         vertices.push_back(v2);
@@ -94,12 +117,12 @@ void Water::operator()(
 
     data->_ubos.push_back(ubos);
     data->_vertices = vertices;
-    data->_vertex_buffer = renderer->getAPI()->createVertexBuffer(vertices);
+    data->_vertex_buffer = renderer->getAPI()->createVertexBuffer(vertices, renderer->getCurrentFrameIndex());
     data->_texture_index = 0;
 
     mesh->getMaterial().alpha_mode = 2.0;//BLEND
     mesh->getData()->_ubos_offset.emplace_back(1);
-    mesh->getUniformBuffers().emplace_back(renderer->getAPI()->createUniformBuffers(1));
+    mesh->getUniformBuffers().emplace_back(renderer->getAPI()->createUniformBuffers(1, renderer->getCurrentFrameIndex()));
 
     for (std::size_t i{ 0 }; i < mesh->getData()->_ubos.size(); i++) {
       std::ranges::for_each(mesh->getData()->_ubos.at(i), [&](auto& data_ubo) {
@@ -110,7 +133,7 @@ void Water::operator()(
     vkDestroyCommandPool(renderer->getDevice(), cmd_pool, nullptr);
 
     if (!mesh->getData()->_ubos.empty()) {
-      renderer->getAPI()->updateUniformBuffer(mesh->getUniformBuffers().at(0), &mesh->getData()->_ubos.at(0));
+      renderer->getAPI()->updateUniformBuffer(mesh->getUniformBuffers().at(0), &mesh->getData()->_ubos.at(0), renderer->getCurrentFrameIndex());
     }
 
     createDescriptorSet(renderer, component_rendering_info);
@@ -123,7 +146,7 @@ void Water::operator()(
   {
     auto const& mesh = component_rendering_info.mesh;
 
-    Texture tex { component_rendering_info.textures.at(PLP_EMPTY)};
+    Texture tex { component_rendering_info.textures->at(PLP_EMPTY)};
 
     tex.setSampler(renderer->getAPI()->createKTXSampler(
       TextureWrapMode::WRAP,
@@ -131,30 +154,30 @@ void Water::operator()(
       0));
 
     if (tex.getWidth() == 0) {
-      tex = component_rendering_info.textures.at(PLP_EMPTY);
+      tex = component_rendering_info.textures->at(PLP_EMPTY);
     }
 
-    Texture texture_normal{ component_rendering_info.textures.at(PLP_WATER_NORMAL_1) };
+    Texture texture_normal{ component_rendering_info.textures->at(PLP_WATER_NORMAL_1) };
       texture_normal.setSampler(renderer->getAPI()->createKTXSampler(
       TextureWrapMode::WRAP,
       TextureWrapMode::WRAP,
       1));
 
     if (texture_normal.getWidth() == 0) {
-      texture_normal = component_rendering_info.textures.at(PLP_EMPTY);
+      texture_normal = component_rendering_info.textures->at(PLP_EMPTY);
     }
 
-    Texture texture_normal2{ component_rendering_info.textures.at(PLP_WATER_NORMAL_2) };
+    Texture texture_normal2{ component_rendering_info.textures->at(PLP_WATER_NORMAL_2) };
       texture_normal2.setSampler(renderer->getAPI()->createKTXSampler(
       TextureWrapMode::WRAP,
       TextureWrapMode::WRAP,
       1));
 
     if (texture_normal2.getWidth() == 0) {
-      texture_normal2 = component_rendering_info.textures.at(PLP_EMPTY);
+      texture_normal2 = component_rendering_info.textures->at(PLP_EMPTY);
     }
 
-    Texture env { component_rendering_info.textures.at(component_rendering_info.skybox_name) };
+    Texture env { component_rendering_info.textures->at(component_rendering_info.skybox_name) };
     env.setSampler(renderer->getAPI()->createKTXSampler(
     TextureWrapMode::CLAMP_TO_EDGE,
     TextureWrapMode::CLAMP_TO_EDGE,

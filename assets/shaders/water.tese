@@ -31,7 +31,7 @@ struct Light {
   vec3 cascade_offset3;
   vec4 cascade_min_splits;
   vec4 cascade_max_splits;
-  float cascade_texel_size;
+  vec4 cascade_texel_sizes;
 };
 
 struct UBO

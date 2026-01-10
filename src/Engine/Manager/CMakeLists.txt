@@ -13,6 +13,7 @@ target_sources(${PROJECT_NAME}
         InputManager.cppm
         LightManager.cppm
         NetworkManager.cppm
+        PlayerManager.cppm
         RenderManager.cppm
         ShaderManager.cppm
         SystemManager.cppm
@@ -31,6 +32,7 @@ target_sources(${PROJECT_NAME}
     InputManager.cpp
     LightManager.cpp
     NetworkManager.cpp
+    PlayerManager.cpp
     RenderManager.cpp
     ShaderManager.cpp
     SystemManager.cpp

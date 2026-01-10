@@ -100,19 +100,19 @@ namespace Poulpe
 
       glyph_index = FT_Get_Char_Index(_face, c);
       if (FT_Load_Glyph(_face, glyph_index, FT_LOAD_RENDER)) {
-        Logger::debug("FREETYTPE: Failed to load Glyph");
+        Logger::warn("FREETYTPE: Failed to load Glyph");
         renderable = false;
       }
 
       if (FT_Render_Glyph(_face->glyph, FT_RENDER_MODE_SDF)) {
-        Logger::debug("FREETYTPE: Failed to render Glyph");
+        Logger::warn("FREETYTPE: Failed to render Glyph");
         renderable = false;
       }
 
       if (_face->glyph->bitmap.buffer == nullptr
         || _face->glyph->bitmap.width == 0
         || _face->glyph->bitmap.rows == 0) {
-        Logger::debug("FREETYPE: non-renderable glyph {}", glyph_index);
+        //Logger::debug("FREETYPE: non-renderable glyph {}", glyph_index);
         renderable = false;
       }
 
@@ -171,7 +171,12 @@ namespace Poulpe
     _atlas_height += static_cast<uint32_t>(max_row_height) + 50;
 
     VkImage image = nullptr;
-    _renderer->getAPI()->createFontImage(cmd_buffer, _characters, _atlas_width, _atlas_height, image);
+    _renderer->getAPI()->createFontImage(
+      cmd_buffer,
+      _characters,
+      _atlas_width,
+      _atlas_height, image,
+      _renderer->getCurrentFrameIndex());
 
     VkImageView imageview = _renderer->getAPI()->createFontImageView(image, VK_IMAGE_ASPECT_COLOR_BIT);
 

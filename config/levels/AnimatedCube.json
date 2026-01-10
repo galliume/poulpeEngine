@@ -26,19 +26,6 @@
   "entities": {
     "AnimatedCube": {
       "mesh": "assets/mesh/AnimatedCube/glTF/AnimatedCube.gltf",
-      "textures": {
-        "AnimatedCube_BaseColor": {
-          "path": "assets/mesh/AnimatedCube/glTF/AnimatedCube_BaseColor.ktx2"
-        }
-      },
-      "mr": {
-      },
-      "emissive": {
-      },
-      "ao": {
-      },
-      "normal": {
-      },
       "shader": "main_basic",
       "positions": [
         {

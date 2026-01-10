@@ -1,6 +1,6 @@
 {
   "terrain": {
-    "46_016_3_028_13_512_512": {
+    "height_map_1": {
       "path": "assets/texture/terrain/height_map_1.ktx2"
     }
   },
@@ -17,21 +17,22 @@
   },
   "camera": {
     "position": {
-      "x": 0.0,
-      "y": 0.0,
-      "z": 0.0
+      "x": -38.0,
+      "y": 18.0,
+      "z": -3.0
     }
   },
   "hasFog" : false,
+  "player": "",
   "entities": {
-    "CompareAlphaCoverage": {
-      "mesh": "assets/mesh/CompareAlphaCoverage/glTF/CompareAlphaCoverage.gltf",
+  "Arcade": {
+      "mesh": "assets/mesh/Arcade/Arcade.gltf",
       "shader": "main_basic",
       "positions": [
         {
           "x": 20.0,
-          "y": 20.0,
-          "z": 20.0
+          "y": 10.0,
+          "z": -5.0
         }
       ],
       "scales": [
@@ -44,7 +45,7 @@
       "rotations": [
         {
           "x": 0.0,
-          "y": 0.0,
+          "y": 45.0,
           "z": 0.0
         }
       ],
@@ -54,6 +55,7 @@
       "hasAnimation": false,
       "isPointLight": false,
       "animationScripts": {
+        "anim0": "assets/scripts/animation/helmet/anim0.lua"
       },
       "hasShadow": true,
       "isIndexed": true,

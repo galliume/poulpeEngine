@@ -16,7 +16,7 @@ namespace Poulpe
   {
       Skybox, HUD, Entity,
       Offscreen, Terrain, Water,
-      Text
+      Text, Debug
   };
   export enum class VertexBindingType : std::uint8_t
   {

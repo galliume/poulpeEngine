@@ -21,7 +21,7 @@ namespace Poulpe
   DeviceMemory* DeviceMemoryPool::get(
     VkDevice const & device,
     VkDeviceSize const size,
-    VkMemoryPropertyFlags const memory_type,
+    uint32_t const memory_type,
     VkBufferUsageFlags const usage,
     VkDeviceSize const alignment,
     DeviceBufferType const buffer_type,
@@ -36,8 +36,12 @@ namespace Poulpe
     std::string buffer_type_debug;
 
     switch (buffer_type) {
+      case DeviceBufferType::VERTEX:
+        buffer_size = size;
+        buffer_type_debug = "VERTEX";
+      break;
       case DeviceBufferType::UNIFORM:
-      buffer_size = max_buffer_size / 10;
+      buffer_size = size;
 
       if (buffer_size > _device_props.properties.limits.maxUniformBufferRange) {
         buffer_size = _device_props.properties.limits.maxUniformBufferRange;
@@ -48,7 +52,7 @@ namespace Poulpe
       default:
       case DeviceBufferType::STAGING:
 
-        buffer_size = max_buffer_size / _max_staging;
+        buffer_size = size;
 
         if (buffer_size >= _device_props.properties.limits.maxStorageBufferRange) {
           buffer_size = _device_props.properties.limits.maxStorageBufferRange / _max_staging;

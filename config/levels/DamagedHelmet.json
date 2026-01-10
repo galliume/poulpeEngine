@@ -23,34 +23,10 @@
     }
   },
   "hasFog" : false,
+  "player": "",
   "entities": {
     "DamagedHelmet": {
       "mesh": "assets/mesh/DamagedHelmet/glTF/DamagedHelmet.gltf",
-      "textures": {
-        "Default_albedo": {
-          "path": "assets/mesh/DamagedHelmet/glTF/Default_albedo.ktx2"
-        }
-      },
-      "ao": {
-        "Default_AO": {
-          "path": "assets/mesh/DamagedHelmet/glTF/Default_AO.ktx2"
-        }
-      },
-      "mr": {
-        "Default_metalRoughness": {
-          "path": "assets/mesh/DamagedHelmet/glTF/Default_metalRoughness.ktx2"
-        }
-      },
-      "emissive": {
-        "Default_emissive": {
-          "path": "assets/mesh/DamagedHelmet/glTF/Default_emissive.ktx2"
-        }
-      },
-      "normal": {
-        "Default_normal": {
-          "path": "assets/mesh/DamagedHelmet/glTF/Default_normal.ktx2"
-        }
-      },
       "shader": "main_basic",
       "positions": [
         {
@@ -76,10 +52,45 @@
       "flipY": false,
       "count": 1,
       "hasBbox": false,
-      "hasAnimation": false,
+      "hasAnimation": true,
       "isPointLight": false,
       "animationScripts": {
         "anim0": "assets/scripts/animation/helmet/anim0.lua"
+      },
+      "hasShadow": true,
+      "isIndexed": true,
+      "debugNormal": true
+    },
+    "table": {
+      "mesh": "assets/mesh/DamagedHelmet/glTF/modern_coffee_table_02_4k.gltf",
+      "shader": "main_basic",
+      "positions": [
+        {
+          "x": 1.5,
+          "y": 5.0,
+          "z": -3.0
+        }
+      ],
+      "scales": [
+        {
+          "x": 10.0,
+          "y": 10.0,
+          "z": 10.0
+        }
+      ],
+      "rotations": [
+        {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
+        }
+      ],
+      "flipY": false,
+      "count": 1,
+      "hasBbox": false,
+      "hasAnimation": false,
+      "isPointLight": false,
+      "animationScripts": {
       },
       "hasShadow": true,
       "isIndexed": true,

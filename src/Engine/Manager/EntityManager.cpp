@@ -1,6 +1,5 @@
 module;
 
-
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/hash.hpp>
@@ -8,6 +7,8 @@ module;
 #include <glm/fwd.hpp>
 
 #include <nlohmann/json.hpp>
+
+#include <volk.h>
 
 module Engine.Managers.EntityManager;
 
@@ -109,8 +110,10 @@ namespace Poulpe
     glm::vec3 scale{ s["x"].get<float>(), s["y"].get<float>(), s["z"].get<float>() };
 
     auto const& r = raw_data["rotations"].at(0);
-    glm::vec3 rotation{ r["x"].get<float>(), r["y"].get<float>(), r["z"].get<float>() };
-   
+    glm::quat rotation { glm::quat(glm::vec3(glm::radians(r["x"].get<float>()),
+                                  glm::radians(r["y"].get<float>()),
+                                  glm::radians(r["z"].get<float>()))) };
+
     std::vector<std::string> textures{};
 
     if (raw_data.contains("textures")) {
@@ -158,7 +161,7 @@ namespace Poulpe
     auto shader = raw_data.value("shader", "");
 
     EntityOptions entity_opts = {
-      shader, position, scale, glm::quat(rotation),
+      shader, position, scale, rotation,
       raw_data.value("hasBbox", false),
       raw_data.value("hasAnimation", false),
       raw_data.value("isPointLight", false),
@@ -181,17 +184,15 @@ namespace Poulpe
       //std::vector<Mesh::BBox> bboxs{};
       mesh->setDebugNormal(entity_opts.debug_normal);
 
-      uint32_t const tex1ID = _data.materials_ID.at(0);
-
-      std::string name_texture{ PLP_EMPTY };
-      std::string name_specular_map{ PLP_EMPTY };
-      std::string name_bump_map{ PLP_EMPTY };
-      std::string name_alpha_map{ PLP_EMPTY };
-      std::string name_texture_metal_roughness{ PLP_EMPTY };
-      std::string name_texture_emissive{ PLP_EMPTY };
-      std::string name_texture_ao{ PLP_EMPTY };
-      std::string name_texture_base_color{ PLP_EMPTY };
-      std::string name_texture_transmission{ PLP_EMPTY };
+      std::string name_texture { PLP_EMPTY };
+      std::string name_specular_map { PLP_EMPTY };
+      std::string name_bump_map { PLP_EMPTY };
+      std::string name_alpha_map { PLP_EMPTY };
+      std::string name_texture_metal_roughness { PLP_EMPTY };
+      std::string name_texture_emissive { PLP_EMPTY };
+      std::string name_texture_ao { PLP_EMPTY };
+      std::string name_texture_base_color { PLP_EMPTY };
+      std::string name_texture_transmission { PLP_EMPTY };
       float alpha_mode{ 0.0 };
 
       std::uint32_t options {0};
@@ -204,61 +205,66 @@ namespace Poulpe
         //@todo should not be in mesh, but just an ID pointing to the material
         mesh->setMaterial(mat);
 
-        //@todo temp
-        //@todo separate into 2 storage buffer of 3 texSample
-        auto const& tex1 = materials.at(tex1ID);
-
-        if (!tex1.name_texture_ambient.empty()) {
-          name_texture = tex1.name_texture_ambient;
+        if (!mat.name_texture_diffuse.empty()) {
+          name_texture = mat.name_texture_diffuse;
+          _texture_manager->add(name_texture, mat.name_texture_diffuse_path, VK_IMAGE_ASPECT_COLOR_BIT, TEXTURE_TYPE::DIFFUSE, _renderer);
+        } else if (!mat.name_texture_ambient.empty()) {
+          name_texture = mat.name_texture_ambient;
           options |= PLP_MESH_OPTIONS::HAS_BASE_COLOR;
-        } else if (!tex1.name_texture_diffuse.empty()) {
-          name_texture = tex1.name_texture_diffuse;
-          options |= PLP_MESH_OPTIONS::HAS_BASE_COLOR;
+          _texture_manager->add(name_texture, mat.name_texture_ambient_path, VK_IMAGE_ASPECT_COLOR_BIT, TEXTURE_TYPE::DIFFUSE, _renderer);
         }
 
         if (!mat.name_texture_specular.empty()) {
           name_specular_map = mat.name_texture_specular;
           options |= PLP_MESH_OPTIONS::HAS_SPECULAR;
+          _texture_manager->add(name_specular_map, mat.name_texture_specular_path, VK_IMAGE_ASPECT_COLOR_BIT, TEXTURE_TYPE::AO, _renderer);
         }
 
         if (!mat.name_texture_bump.empty()) {
           name_bump_map = mat.name_texture_bump;
           options |= PLP_MESH_OPTIONS::HAS_NORMAL;
+          _texture_manager->add(name_bump_map, mat.name_texture_bump_path, VK_IMAGE_ASPECT_COLOR_BIT, TEXTURE_TYPE::NORMAL, _renderer);
         }
 
         if (!mat.name_texture_alpha.empty()) {
           name_alpha_map = mat.name_texture_alpha;
           options |= PLP_MESH_OPTIONS::HAS_ALPHA;
+          _texture_manager->add(name_alpha_map, mat.name_texture_alpha_path, VK_IMAGE_ASPECT_COLOR_BIT, TEXTURE_TYPE::AO, _renderer);
         }
 
         if (!mat.name_texture_metal_roughness.empty()) {
           name_texture_metal_roughness = mat.name_texture_metal_roughness;
           options |= PLP_MESH_OPTIONS::HAS_MR;
+          _texture_manager->add(name_texture_metal_roughness, mat.name_texture_metal_roughness_path, VK_IMAGE_ASPECT_COLOR_BIT, TEXTURE_TYPE::MR, _renderer);
         }
 
         if (!mat.name_texture_emissive.empty()) {
           name_texture_emissive = mat.name_texture_emissive;
           options |= PLP_MESH_OPTIONS::HAS_EMISSIVE;
+          _texture_manager->add(name_texture_emissive, mat.name_texture_emissive_path, VK_IMAGE_ASPECT_COLOR_BIT, TEXTURE_TYPE::EMISSIVE, _renderer);
         }
 
         if (!mat.name_texture_ao.empty()) {
           name_texture_ao = mat.name_texture_ao;
           options |= PLP_MESH_OPTIONS::HAS_AO;
+          _texture_manager->add(name_texture_ao, mat.name_texture_ao_path, VK_IMAGE_ASPECT_COLOR_BIT, TEXTURE_TYPE::AO, _renderer);
         }
 
         if (!mat.name_texture_base_color.empty()) {
           name_texture_base_color = mat.name_texture_base_color;
           options |= PLP_MESH_OPTIONS::HAS_BASE_COLOR;
+          _texture_manager->add(name_texture_base_color, mat.name_texture_base_color_path, VK_IMAGE_ASPECT_COLOR_BIT, TEXTURE_TYPE::DIFFUSE, _renderer);
         }
 
         if (!mat.name_texture_transmission.empty()) {
           name_texture_transmission = mat.name_texture_transmission;
           options |= PLP_MESH_OPTIONS::HAS_TRANSMISSION;
+          _texture_manager->add(name_texture_transmission, mat.name_texture_transmission_path, VK_IMAGE_ASPECT_COLOR_BIT, TEXTURE_TYPE::EMISSIVE, _renderer);
         }
       }
 
       Data data{};
-      data._name = _data.name + '_' + name_texture;
+      data._name = _data.name;
       data._texture_prefix = _data.texture_prefix;
       data._textures.emplace_back(name_texture);
       data._specular_map = name_specular_map;
@@ -269,7 +275,8 @@ namespace Poulpe
       data._ao = name_texture_ao;
       data._base_color = name_texture_base_color;
       data._transmission = name_texture_transmission;
-      data._vertices = _data.vertices;
+      data._vertices = std::move(_data.vertices);
+      data._vertices_bones = std::move(_data.vertices_bones);
       data._indices = _data.indices;
       data._origin_pos = entity_opts.pos;
       data._current_pos = entity_opts.pos;
@@ -285,63 +292,58 @@ namespace Poulpe
       data._bbox_max = _data.bbox_max;
       
       auto const S { glm::scale(glm::mat4(1.0f), entity_opts.scale) };
-      auto const R { glm::toMat4(entity_opts.rotation) };
+      auto const R { glm::mat4_cast(entity_opts.rotation) };
       auto const T { glm::translate(glm::mat4(1.0f), entity_opts.pos) };
       auto const transform  { T * R * S };
       
       std::vector<std::vector<UniformBufferObject>> ubos{};
       UniformBufferObject ubo{};
-      ubo.model = transform * data._local_transform;
-      
-      data._inverse_transform_matrix = glm::transpose(ubo.model);
+      ubo.model = transform * _data.inverse_transform_matrix * _data.transform_matrix;
 
-      if (!data._bones.empty()) {
-        auto const& root_bone = data._bones[data._root_bone_name];
-        ubo.model = root_bone.t_pose * transform  ;
-        ubos.reserve(data._bones.size());
+      data._inverse_transform_matrix = _data.inverse_transform_matrix;
 
-        std::ranges::for_each(data._bones, [&](auto& bone) {
-          auto const& b{ bone.second };
-          std::vector<UniformBufferObject> tmp_ubos{ };
-          tmp_ubos.resize(b.weights.size());
+      // if (!data._bones.empty()) {
+      //   ubos.reserve(data._bones.size());
+      //   std::ranges::for_each(data._bones, [&](auto& bone) {
+      //     auto const& b{ bone.second };
+      //     std::vector<UniformBufferObject> tmp_ubos{ };
+      //     tmp_ubos.resize(b.weights.size());
 
-          std::fill(tmp_ubos.begin(), tmp_ubos.end(), ubo);
-          ubos.push_back(tmp_ubos);
-        });
-      } else {
+      //     std::fill(tmp_ubos.begin(), tmp_ubos.end(), ubo);
+      //     ubos.push_back(tmp_ubos);
+      //   });
+      // } else {
         ubos.push_back({ ubo });
-      }
+      //}
 
-      data._transform_matrix = ubo.model;
+      data._transform_matrix = _data.transform_matrix;
       data._ubos = ubos;
       data._original_ubo = ubo;
 
-      mesh->setData(data);
       mesh->bbox(true);
       mesh->setOptions(options);
       bool const is_last{ (_data.id == 0) ? true : false };
-
+      
       auto* entity = new Entity();
       entity->setName(_data.name);
+      
+      if (is_last) {
+        mesh->setRoot();
+        for (auto child : _entity_children) {
+          mesh->addChild(child);
+        }
+      } else {
+        _entity_children.emplace_back(entity->getID());
+      }
+      data._id = entity->getID();
+      mesh->setData(data);
 
-      ComponentRenderingInfo rendering_info {
-        .mesh = mesh.get(),
-        .textures = _texture_manager->getTextures(),
-        .skybox_name = _texture_manager->getSkyboxTexture(),
-        .terrain_name = _texture_manager->getTerrainTexture(),
-        .water_name = _texture_manager->getWaterTexture(),
-        .sun_light = _light_manager->getSunLight(),
-        .point_lights = _light_manager->getPointLights(),
-        .spot_lights = _light_manager->getSpotLights(),
-        .characters = {},
-        .face = nullptr,
-        .atlas_width = 0,
-        .atlas_height = 0,
-        .light_buffer = _light_buffer
-      };
+      _animations[data._id] = animations;
+      _rotations [data._id] = rotations;
+      _positions[data._id] = positions;
+      _scales[data._id] = scales;
 
       auto basicRdrImpl { RendererComponentFactory::create<Basic>() };
-      (*basicRdrImpl)(_renderer, rendering_info);
 
       _component_manager->add<RendererComponent>(entity->getID(), std::move(basicRdrImpl));
       _component_manager->add<MeshComponent>(entity->getID(), std::move(mesh));
@@ -357,7 +359,6 @@ namespace Poulpe
 
       if (is_last) {
         {
-          std::lock_guard<std::shared_mutex> guard(lockWorldNode());
           //lua scripted animation
           if (entity_opts.has_animation) {
             //@todo temp until lua scripting
@@ -366,12 +367,26 @@ namespace Poulpe
               _component_manager->add<AnimationComponent>(entity->getID(), std::move(animationScript));
             }
           }
+
           //skeleton animation
           if (!animations.empty()) {
-            auto boneAnimationScript = std::make_unique<BoneAnimationScript>(animations, positions, rotations, scales);
+            auto boneAnimationScript = std::make_unique<BoneAnimationScript>(
+              std::move(_animations),
+              std::move(_positions),
+              std::move(_rotations),
+              std::move(_scales),
+              entity_opts.default_anim);
+
             _component_manager->add<BoneAnimationComponent>(
             entity->getID(), std::move(boneAnimationScript));
+            _entity_children.clear();
+            _animations.clear();
+            _rotations.clear();
+            _positions.clear();
+            _scales.clear();
           }
+
+          std::lock_guard<std::shared_mutex> guard(lockWorldNode());
           //std::shared_lock guard(_mutex_shared);
           root_mesh_entity_node->setIsLoaded(true);
           _world_node->addChild(root_mesh_entity_node);

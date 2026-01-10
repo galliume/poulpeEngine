@@ -143,7 +143,7 @@ namespace Poulpe
       std::vector<VkImageView>& depth_imageview,
       std::vector<VkImageView>& color_image_view);
 
-    VkCommandPool createCommandPool();
+    VkCommandPool createCommandPool(bool transfer_queue = false);
 
     std::vector<VkCommandBuffer> allocateCommandBuffers(
       VkCommandPool& cmd_pool,
@@ -160,17 +160,21 @@ namespace Poulpe
       VkDeviceMemory& device_memory);
 
     Buffer createVertexBuffer(
-      std::vector<Vertex> const& vertices);
+      std::vector<Vertex> const& vertices,
+      std::size_t const image_index);
+
+    void startUpdateVertexBuffer(std::size_t const image_index);
 
     void updateVertexBuffer(
       std::vector<Vertex> const& new_vertices,
-      VkBuffer& buffer_to_update);
+      VkBuffer& buffer_to_update,
+      std::size_t const image_index);
 
-    Buffer createVertex2DBuffer(
-      std::vector<Vertex2D> const& vertices);
+    void submitVertexUpdate(VkSemaphore & semaphore, std::size_t const image_index) __attribute__((no_thread_safety_analysis));
 
     Buffer createIndexBuffer(
-      std::vector<uint32_t> const& indices);
+      std::vector<uint32_t> const& indices,
+      std::size_t const image_index);
 
     VkImageMemoryBarrier setupImageMemoryBarrier(
       VkImage& image,
@@ -181,20 +185,27 @@ namespace Poulpe
       uint32_t const mip_lvl = VK_REMAINING_MIP_LEVELS,
       VkImageAspectFlags const aspect_mask = VK_IMAGE_ASPECT_COLOR_BIT);
 
+    void startCopyBuffer(std::size_t const image_index);
+    void endCopyBuffer(std::size_t const image_index) __attribute__((no_thread_safety_analysis));
+
     void copyBuffer(
       VkBuffer& src_buffer,
       VkBuffer& dst_buffer,
       VkDeviceSize const size,
-      VkDeviceSize dst_offset = 0) __attribute__((no_thread_safety_analysis));
+      VkDeviceSize src_offset = 0,
+      VkDeviceSize dst_offset = 0,
+      std::size_t const image_index = 0) __attribute__((no_thread_safety_analysis));
 
     bool souldResizeSwapChain();
 
     Buffer createUniformBuffers(
-      std::uint64_t const uniform_buffers_count);
+      std::uint64_t const uniform_buffers_count,
+      std::size_t const image_index);
 
-    Buffer createCubeUniformBuffers(uint32_t const uniform_buffers_count);
-
-    void updateUniformBuffer(Buffer& buffer, std::vector<UniformBufferObject>* uniform_buffer_objects);
+    void updateUniformBuffer(
+      Buffer& buffer,
+      std::vector<UniformBufferObject>* uniform_buffer_objects,
+      std::size_t const image_index);
 
     void createImage(
       uint32_t const width,
@@ -222,7 +233,8 @@ namespace Poulpe
       uint32_t const mip_lvl,
       VkImage& texture_image,
       VkFormat const format,
-      uint32_t const scale);
+      uint32_t const scale,
+      std::size_t const image_index);
 
     void copyBufferToImage(
       VkCommandBuffer& cmd_buffer,
@@ -247,22 +259,19 @@ namespace Poulpe
 
     void initMemoryPool();
 
+    //@todo make it batchable
     template <IsObjectBufferOrLightBuffer T>
     Buffer createStorageBuffers(
-      T const& storage_buffer)
+      T const& storage_buffer,
+      std::size_t const image_index)
     {
       VkDeviceSize buffer_size { sizeof(T) };
 
-      VkBuffer staging_buffer{};
-      VkDeviceMemory staging_device_memory{};
+      auto & staging_buffer = _staging_buffer[image_index];
+      std::size_t const current_offset { _update_vertex_offsets[image_index] };
 
-      createBuffer(buffer_size, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, staging_buffer, staging_device_memory);
-
-      void* data;
-      vkMapMemory(_device, staging_device_memory, 0, buffer_size, 0, &data);
-      std::memcpy(data, &storage_buffer, static_cast<std::size_t>(buffer_size));
-      vkUnmapMemory(_device, staging_device_memory);
+      std::memcpy(static_cast<char*>(_staging_data_ptr[image_index]) + current_offset, &storage_buffer, static_cast<std::size_t>(buffer_size));
+      _update_vertex_offsets[image_index] += buffer_size;
 
       VkBuffer buffer = createBuffer(buffer_size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT);
       VkMemoryRequirements mem_requirements;
@@ -272,7 +281,7 @@ namespace Poulpe
       VkDeviceSize const size = mem_requirements.size;
       VkDeviceSize const bind_offset = align_to(size, mem_requirements.alignment);
 
-      auto const flags { VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT };
+      auto const flags { VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT };
 
       auto device_memory = _device_memory_pool->get(
         _device,
@@ -282,10 +291,10 @@ namespace Poulpe
         mem_requirements.alignment,
         DeviceMemoryPool::DeviceBufferType::STAGING);
 
-      auto const offset { device_memory->getOffset() };
-      auto const index{ device_memory->bindBufferToMemory(buffer, bind_offset) };
+      auto const index { device_memory->bindBufferToMemory(buffer, bind_offset) };
+      auto const offset { device_memory->getOffset(index) };
 
-      copyBuffer(staging_buffer, buffer, buffer_size);
+      copyBuffer(staging_buffer, buffer, buffer_size, current_offset, 0, image_index);
 
       Buffer uniform_buffer;
       uniform_buffer.buffer = std::move(buffer);
@@ -294,9 +303,6 @@ namespace Poulpe
       uniform_buffer.size = size;
       uniform_buffer.index = index;
 
-      vkDestroyBuffer(_device, staging_buffer, nullptr);
-      vkFreeMemory(_device, staging_device_memory, nullptr);
-
       return uniform_buffer;
     }
 
@@ -304,33 +310,23 @@ namespace Poulpe
       std::vector<VkDrawIndexedIndirectCommand> const& drawCommands);
 
     template <IsObjectBufferOrLightBuffer T>
-    void updateStorageBuffer(Buffer& buffer, T& object_buffer)
+    void updateStorageBuffer(Buffer& buffer, T& object_buffer, std::size_t const image_index)
     {
-      VkDeviceMemory staging_device_memory{};
-      VkDeviceSize buffer_size { sizeof(object_buffer) };
+      VkDeviceSize buffer_size { sizeof(T) };
+      std::size_t const current_offset { _update_vertex_offsets[image_index] };
 
-      VkBuffer staging_buffer{};
+      auto & staging_buffer = _staging_buffer[image_index];
 
-      createBuffer(
-        buffer_size,
-        VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT
-          | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-        staging_buffer, staging_device_memory);
-
-      void* void_data;
-      vkMapMemory(_device, staging_device_memory, 0, buffer_size, 0, &void_data);
-      std::memcpy(void_data, &object_buffer, static_cast<std::size_t>(buffer_size));
-      vkUnmapMemory(_device, staging_device_memory);
+      std::memcpy(static_cast<char*>(_staging_data_ptr[image_index]) + current_offset, &object_buffer, static_cast<std::size_t>(buffer_size));
+      _update_vertex_offsets[image_index] += buffer_size;
 
       copyBuffer(
         staging_buffer,
         buffer.buffer,
         buffer_size,
-        0);
-
-      vkDestroyBuffer(_device, staging_buffer, nullptr);
-      vkFreeMemory(_device, staging_device_memory, nullptr);
+        current_offset,
+        buffer.offset,
+        image_index);
     }
 
     /**
@@ -373,9 +369,13 @@ namespace Poulpe
       VkCommandBuffer& cmd_buffer,
       Data const * data,
       bool const is_indexed = true,
-      uint32_t const index = 0);
+      uint32_t const index = 0,
+      std::uint32_t const instance_coun = 1);
 
-    VkResult queueSubmit(VkCommandBuffer& cmd_buffer, std::size_t const queue_index = 0) __attribute__((no_thread_safety_analysis));
+    VkResult queueSubmit(
+      VkCommandBuffer& cmd_buffer,
+      std::size_t const queue_index = 0,
+      std::size_t const image_index = 0) __attribute__((no_thread_safety_analysis));
 
     void submit(
       VkQueue& queue,
@@ -518,7 +518,8 @@ namespace Poulpe
     void createKTXImage(
       VkCommandBuffer& cmd_buffer,
       ktxTexture2* ktx_texture,
-      VkImage& image);
+      VkImage& image,
+      std::size_t const image_index) __attribute__((no_thread_safety_analysis));
 
     VkImageView createKTXImageView(
       ktxTexture2* ktx_texture,
@@ -531,7 +532,8 @@ namespace Poulpe
       std::vector<FontCharacter> const& characters,
       uint32_t const width,
       uint32_t const height,
-      VkImage& image);
+      VkImage& image,
+      std::size_t const image_index);
 
     VkImageView createFontImageView(
       VkImage& image,
@@ -560,6 +562,12 @@ namespace Poulpe
     VkFormat PLP_VK_FORMAT_DEPTH_STENCIL { VK_FORMAT_D32_SFLOAT_S8_UINT };
     VkFormat PLP_VK_FORMAT_FONT{ VK_FORMAT_R8_UNORM };
 
+    VkBuffer getStagingBuffer(std::size_t const image_index) { return _staging_buffer[image_index]; }
+    VkDeviceMemory getStagingMemory(std::size_t const image_index) { return _staging_device_memory[image_index]; }
+    void* getStagingMemoryPtr(std::size_t const image_index) { return _staging_data_ptr[image_index]; }
+    std::size_t getCurrentStagingMemoryOffset(std::size_t const image_index) { return _update_vertex_offsets[image_index]; }
+    void updateCurrentStagingMemoryOffset(std::size_t offset, std::size_t const image_index) { _update_vertex_offsets[image_index] += offset; }
+
   private:
     bool isDeviceSuitable(VkPhysicalDevice& device);
     bool checkDeviceExtensionSupport(VkPhysicalDevice& device);
@@ -584,7 +592,7 @@ namespace Poulpe
     int32_t _current_frame{ 0 };
     uint32_t _extension_count;
     std::string _api_version;
-    const uint32_t _queue_count{ 1 };
+    const uint32_t _queue_count{ 2 };
 
     Window* _window{ nullptr };
 
@@ -598,7 +606,8 @@ namespace Poulpe
         VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME,
         VK_KHR_SYNCHRONIZATION_2_EXTENSION_NAME,
         VK_EXT_DEPTH_CLIP_ENABLE_EXTENSION_NAME,
-        VK_KHR_UNIFIED_IMAGE_LAYOUTS_EXTENSION_NAME
+        VK_KHR_UNIFIED_IMAGE_LAYOUTS_EXTENSION_NAME,
+        VK_EXT_SHADER_VIEWPORT_INDEX_LAYER_EXTENSION_NAME
     };
 
     bool _instance_created{ false };
@@ -638,12 +647,21 @@ namespace Poulpe
     VkDeviceSize _max_memory_heap{};
     std::unique_ptr<DeviceMemoryPool> _device_memory_pool{ nullptr };
 
-    VkFence _fence_acquire_image{};
-    VkFence _fence_submit{};
-    VkFence _fence_buffer{};
+    std::vector<VkFence> _fence_submit{};
+    std::vector<VkFence> _fence_buffer{};
 
     //VkMemoryRequirements _MemRequirements;
-    VkCommandPool _transfer_cmd_pool{};
-    VkCommandBuffer _transfer_cmd_buffer{};
+    std::vector<VkCommandPool> _transfer_cmd_pool{};
+    std::vector<VkCommandBuffer> _transfer_cmd_buffer{};
+    
+    std::vector<VkCommandPool> _copy_cmd_pool{};
+    std::vector<VkCommandBuffer> _copy_cmd_buffer{};
+
+    std::vector<VkDeviceMemory> _staging_device_memory;
+    std::vector<VkBuffer> _staging_buffer;
+    std::vector<void*> _staging_data_ptr;
+    std::size_t _staging_size { 512 * 1024 * 1024 };
+
+    std::vector<VkDeviceSize> _update_vertex_offsets{};
   };
 }

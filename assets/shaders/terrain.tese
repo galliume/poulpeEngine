@@ -30,7 +30,7 @@ struct Light {
   vec3 cascade_offset3;
   vec4 cascade_min_splits;
   vec4 cascade_max_splits;
-  float cascade_texel_size;
+  vec4 cascade_texel_sizes;
 };
 
 struct UBO
@@ -64,7 +64,7 @@ layout(location = 0) in vec2 in_texture_coord[];
 layout(location = 0) out vec2 out_texture_coord;
 layout(location = 1) out vec4 out_weights;
 layout(location = 2) out vec4 out_normal;
-layout(location = 3) out vec3 out_position;
+layout(location = 3) out vec4 out_position;
 layout(location = 4) out vec3 out_view_position;
 layout(location = 5) out mat3 out_inverse_model;
 
@@ -127,8 +127,8 @@ void main()
   vec4 view_pos = pc.view * world_pos;
 
   out_normal = normal;
-  out_position = world_pos.xyz;
-  out_view_position = vec3(pc.view_position) - out_position;
+  out_position = world_pos;
+  out_view_position = vec3(pc.view_position - out_position);
   out_inverse_model = inverse(mat3(ubo.model));
   out_depth = -view_pos.z;
 

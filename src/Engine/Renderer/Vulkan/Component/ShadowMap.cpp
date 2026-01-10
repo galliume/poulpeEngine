@@ -88,7 +88,7 @@ namespace Poulpe
     ComponentRenderingInfo const&)
   {
     // auto const& mesh = component_rendering_info.mesh;
-    // auto const& tex{ component_rendering_info.textures.at(mesh->getData()->_textures.at(0)) };
+    // auto const& tex{ component_rendering_info.textures->at(mesh->getData()->_textures.at(0)) };
 
     // std::vector<VkDescriptorImageInfo> image_infos{};
     // image_infos.emplace_back(tex.getSampler(), tex.getImageView(), VK_IMAGE_LAYOUT_GENERAL);

@@ -75,6 +75,6 @@ void main()
   float white_point = 350;
   final_color = vec4(0.0, 0.0, 0.0, 1.0);
   final_color.rgb = linear_to_hdr10(color.rgb, white_point);
-  float exposure = 2.0;
-  final_color.rgb = vec3(1.0) - exp(-final_color.rgb * exposure);
+  //float exposure = 1.0;
+  //final_color.rgb = vec3(1.0) - exp(-final_color.rgb * exposure);
 }

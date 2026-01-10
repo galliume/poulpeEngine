@@ -1,49 +1,32 @@
 {
   "terrain": {
     "height_map_1": {
-      "path": "assets/texture/terrain/height_map_1.ktx2"
+      "path": "assets/texture/terrain/height_map_1.png"
     }
   },
   "water": {
     "_water_foam": {
-      "path": "assets/texture/water/_water_foam.ktx2"
+      "path": "assets/texture/water/_water_foam.png"
     },
     "_water_normal": {
-      "path": "assets/texture/water/_water_normal.ktx2"
+      "path": "assets/texture/water/_water_normal.png"
     },
     "_water_normal2": {
-      "path": "assets/texture/water/_water_normal2.ktx2"
+      "path": "assets/texture/water/_water_normal2.png"
     }
   },
   "camera": {
     "position": {
-      "x": -38.0,
-      "y": 18.0,
-      "z": -3.0
+      "x": -110.0,
+      "y": 20.0,
+      "z": 150.0
     }
   },
-  "hasFog": false,
+  "hasFog": true,
+  "player" : "WomanMesh0",
   "entities": {
-    "SnowTerrain": {
+     "SnowTerrain": {
       "mesh": "assets/mesh/SnowTerrain/terrain.gltf",
-      "textures": {
-        "snowterrain": {
-          "path": "assets/mesh/SnowTerrain/snowterrain.ktx2"
-        }
-      },
-      "ao": {
-      },
-      "mr": {
-
-      },
-      "emissive": {
-
-      },
-      "normal": {
-        "NormalMap": {
-          "path": "assets/mesh/SnowTerrain/NormalMap.ktx2"
-        }
-      },
       "shader": "main_basic",
       "positions": [
         {
@@ -72,7 +55,6 @@
       "hasAnimation": false,
       "isPointLight": false,
       "animationScripts": {
-        "anim0": "assets/scripts/animation/backpack/anim0.lua"
       },
       "hasShadow": false,
       "isIndexed": true,
@@ -80,22 +62,6 @@
     },
     "Fox": {
       "mesh": "assets/mesh/Fox/glTF/Fox.gltf",
-      "textures": {
-        "Texture": {
-          "path": "assets/mesh/Fox/glTF/Texture.ktx2"
-        }
-      },
-      "ao": {
-      },
-      "mr": {
-
-      },
-      "emissive": {
-
-      },
-      "normal": {
-
-      },
       "shader": "main_basic",
       "positions": [
         {
@@ -124,7 +90,6 @@
       "hasAnimation": false,
       "isPointLight": false,
       "animationScripts": {
-        "anim0": "assets/scripts/animation/helmet/anim0.lua"
       },
       "hasShadow": true,
       "isIndexed": true,
@@ -133,28 +98,6 @@
     },
     "Lantern": {
       "mesh": "assets/mesh/Lantern/glTF/Lantern.gltf",
-      "textures": {
-        "Lantern_baseColor" : {
-          "path" : "assets/mesh/Lantern/glTF/Lantern_baseColor.ktx2"
-        }
-      },
-      "ao": {
-      },
-      "mr": {
-        "Lantern_roughnessMetallic" : {
-          "path" : "assets/mesh/Lantern/glTF/Lantern_roughnessMetallic.ktx2"
-        }
-      },
-      "emissive": {
-        "Lantern_emissive" : {
-          "path" : "assets/mesh/Lantern/glTF/Lantern_emissive.ktx2"
-        }
-      },
-      "normal": {
-        "Lantern_normal" : {
-          "path" : "assets/mesh/Lantern/glTF/Lantern_normal.ktx2"
-        }
-      },
       "shader": "main_basic",
       "positions": [
         {
@@ -183,7 +126,6 @@
       "hasAnimation": false,
       "isPointLight": false,
       "animationScripts": {
-        "anim0": "assets/scripts/animation/backpack/anim0.lua"
       },
       "hasShadow": true,
       "isIndexed": true,
@@ -191,28 +133,6 @@
     },
     "cage_lamp": {
       "mesh": "assets/mesh/cage_lamp/scene.gltf",
-      "textures": {
-        "textures_CageCandle_lp_5_lp_default_baseColor": {
-          "path": "assets/mesh/cage_lamp/textures/CageCandle_lp_5_lp_default_baseColor.ktx2"
-        }
-      },
-      "ao": {
-      },
-      "mr": {
-        "textures_CageCandle_lp_5_lp_default_metallicRoughness": {
-          "path": "assets/mesh/cage_lamp/textures/CageCandle_lp_5_lp_default_metallicRoughness.ktx2"
-        }
-      },
-      "emissive": {
-        "textures_CageCandle_lp_5_lp_default_emissive": {
-          "path": "assets/mesh/cage_lamp/textures/CageCandle_lp_5_lp_default_emissive.ktx2"
-        }
-      },
-      "normal": {
-        "textures_CageCandle_lp_5_lp_default_normal": {
-          "path": "assets/mesh/cage_lamp/textures/CageCandle_lp_5_lp_default_normal.ktx2"
-        }
-      },
       "shader": "main_basic",
       "positions": [
         {
@@ -241,7 +161,6 @@
       "hasAnimation": false,
       "isPointLight": false,
       "animationScripts": {
-        "anim0": "assets/scripts/animation/helmet/anim0.lua"
       },
       "hasShadow": true,
       "isIndexed": true,
@@ -249,32 +168,19 @@
     },
     "Woman": {
       "mesh": "assets/mesh/woman/Woman.gltf",
-      "textures": {
-        "Woman": {
-          "path": "assets/mesh/woman/Woman.ktx2"
-        }
-      },
-      "ao": {
-      },
-      "mr": {
-      },
-      "emissive": {
-      },
-      "normal": {
-      },
       "shader": "main_basic",
       "positions": [
         {
-          "x": 11000.0,
-          "y": 1500.0,
-          "z": -15000.0
+          "x": 110.0,
+          "y": 15.0,
+          "z": -150.0
         }
       ],
       "scales": [
         {
-          "x": 1.5,
-          "y": 1.5,
-          "z": 1.5
+          "x": 1.0,
+          "y": 1.0,
+          "z": 1.0
         }
       ],
       "rotations": [
@@ -298,28 +204,6 @@
     },
     "kakashi": {
       "mesh": "assets/mesh/kakashi/kakashi.fbx",
-      "textures": {
-        "texture_badan": {
-          "path": "assets/mesh/kakashi/texture/badan.ktx2"
-        },
-        "texture_mata": {
-          "path": "assets/mesh/kakashi/texture/mata.ktx2"
-        },
-        "texture_sharingan": {
-          "path": "assets/mesh/kakashi/texture/sharingan.ktx2"
-        },
-        "texture_tangan": {
-          "path": "assets/mesh/kakashi/texture/tangan.ktx2"
-        }
-      },
-      "ao": {
-      },
-      "mr": {
-      },
-      "emissive": {
-      },
-      "normal": {
-      },
       "shader": "main_basic",
       "positions": [
         {
@@ -337,7 +221,7 @@
       ],
       "rotations": [
         {
-          "x": 2.0,
+          "x": 0.0,
           "y": 0.0,
           "z": 0.0
         }
@@ -354,30 +238,14 @@
       "debugNormal": true,
       "defaultAnim": 0
     },
-    "scene": {
-      "mesh": "assets/mesh/anime_nature_tree_01/scene.gltf",
-      "textures": {
-        "textures_trunk_M_diffuse": {
-          "path": "assets/mesh/anime_nature_tree_01/textures/trunk_M_diffuse.ktx2"
-        },
-        "textures_Leaves_M_diffuse": {
-          "path": "assets/mesh/anime_nature_tree_01/textures/Leaves_M_diffuse.ktx2"
-        }
-      },
-      "ao": {
-      },
-      "mr": {
-      },
-      "emissive": {
-      },
-      "normal": {
-      },
+    "Man": {
+      "mesh": "assets/mesh/man/Man.gltf",
       "shader": "main_basic",
       "positions": [
         {
-          "x": -110.0,
-          "y": 20.0,
-          "z": 150.0
+          "x": 11.0,
+          "y": 15.0,
+          "z": -15.0
         }
       ],
       "scales": [
@@ -389,7 +257,43 @@
       ],
       "rotations": [
         {
-          "x": 2.0,
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
+        }
+      ],
+      "flipY": false,
+      "count": 1,
+      "hasBbox": false,
+      "hasAnimation": true,
+      "isPointLight": false,
+      "animationScripts": {
+      },
+      "hasShadow": true,
+      "isIndexed": true,
+      "debugNormal": true,
+      "defaultAnim": 3
+    },
+    "rat": {
+      "mesh": "assets/mesh/rat/rat.gltf",
+      "shader": "main_basic",
+      "positions": [
+        {
+          "x": 100.0,
+          "y": 15.0,
+          "z": -120.0
+        }
+      ],
+      "scales": [
+        {
+          "x": 0.1,
+          "y": 0.1,
+          "z": 0.1
+        }
+      ],
+      "rotations": [
+        {
+          "x": -90.0,
           "y": 0.0,
           "z": 0.0
         }
@@ -405,6 +309,113 @@
       "isIndexed": true,
       "debugNormal": true,
       "defaultAnim": 0
+    },
+    "DamagedHelmet": {
+      "mesh": "assets/mesh/DamagedHelmet/glTF/DamagedHelmet.gltf",
+      "shader": "main_basic",
+      "positions": [
+        {
+          "x": 280.0,
+          "y": 50.0,
+          "z": 300.0
+        }
+      ],
+      "scales": [
+        {
+          "x": 10.0,
+          "y": 10.0,
+          "z": 10.0
+        }
+      ],
+      "rotations": [
+        {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
+        }
+      ],
+      "flipY": false,
+      "count": 1,
+      "hasBbox": false,
+      "hasAnimation": true,
+      "isPointLight": false,
+      "animationScripts": {
+        "anim0": "assets/scripts/animation/helmet/anim0.lua"
+      },
+      "hasShadow": true,
+      "isIndexed": true,
+      "debugNormal": true
+    },
+    "table": {
+      "mesh": "assets/mesh/DamagedHelmet/glTF/modern_coffee_table_02_4k.gltf",
+      "shader": "main_basic",
+      "positions": [
+        {
+          "x": 280.0,
+          "y": 15.0,
+          "z": 300.0
+        }
+      ],
+      "scales": [
+        {
+          "x": 50.0,
+          "y": 50.0,
+          "z": 50.0
+        }
+      ],
+      "rotations": [
+        {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
+        }
+      ],
+      "flipY": false,
+      "count": 1,
+      "hasBbox": false,
+      "hasAnimation": false,
+      "isPointLight": false,
+      "animationScripts": {
+      },
+      "hasShadow": true,
+      "isIndexed": true,
+      "debugNormal": true
+    },
+    "Grass_Block": {
+      "mesh": "assets/mesh/minecraft/Grass_Block.obj",
+      "shader": "main_basic",
+      "positions": [
+        {
+          "x": -280.0,
+          "y": 15.0,
+          "z": -300.0
+        }
+      ],
+      "scales": [
+        {
+          "x": 1.0,
+          "y": 1.0,
+          "z": 1.0
+        }
+      ],
+      "rotations": [
+        {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
+        }
+      ],
+      "flipY": false,
+      "count": 1,
+      "hasBbox": false,
+      "hasAnimation": true,
+      "isPointLight": false,
+      "animationScripts": {
+        "anim0": "assets/scripts/animation/grassBlock/anim0.lua"
+      },
+      "hasShadow": true,
+      "isIndexed": true,
+      "debugNormal": true
     }
   }
 }

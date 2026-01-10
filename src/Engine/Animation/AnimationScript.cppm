@@ -41,7 +41,8 @@ namespace Poulpe
     };
     struct AnimationRotate : public Animation
     {
-      glm::quat angle;
+      glm::vec3 target_angle;
+      glm::vec3 start_angle;
       std::function<void(AnimationRotate* anim, Data* data, double delta_time)> update;
     };
 
@@ -51,8 +52,12 @@ namespace Poulpe
     Data* getData();
 
     void move(Data* data, double delta_time, float duration, glm::vec3 target);
-    void rotate(Data* data, double delta_time, float duration, glm::quat angle);
+    void rotate(Data* data, double delta_time, float duration, glm::vec3 angle);
     void operator()(AnimationInfo const& animation_info) override;
+
+    void done() override { _done = true; }
+    void reset() override { _done = false; }
+    void setAnimId(std::uint32_t id) override { _anim_id = id; }
 
   private:
     Data* _data;
@@ -60,7 +65,9 @@ namespace Poulpe
     lua_State* _lua_State;
     bool _move_init{ false };
     bool _rotate_init{ false };
-
+    bool _done{false};
+    uint32_t _anim_id{ 0 };
+    
     std::vector<std::unique_ptr<AnimationMove>> _moves{};
     std::vector<std::unique_ptr<AnimationMove>> _new_moves{};
     std::vector<std::unique_ptr<AnimationRotate>> _rotates{};

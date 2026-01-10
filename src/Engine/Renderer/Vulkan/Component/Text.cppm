@@ -23,7 +23,7 @@ namespace Poulpe
 
     void setText(std::string_view text) { _text = text; }
     void setPosition(glm::vec3 const& position) { _position = position; }
-    void setColor(glm::vec3 const& color) { _color = color; }
+    void setColor(glm::vec3 const& color) { _color = glm::vec4(color, 1.0f); }
     void setScale(float const scale) { _scale = scale; }
     void setFlat(bool const is_flat = true) { _is_flat = is_flat; }
 
@@ -38,7 +38,7 @@ namespace Poulpe
 
     std::string _text{};
     glm::vec3 _position{};
-    glm::vec3 _color{};
+    glm::vec4 _color{};
     float _scale{1.0f};
     bool _is_flat{true};
   };

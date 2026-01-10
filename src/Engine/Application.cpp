@@ -75,13 +75,15 @@ namespace Poulpe
     auto last_time_debug_updated{ steady_clock::now() };
 
     FontManager::Text frame_counter {
+      .id = 0,
       .name = "_plp_frame_counter",
       .text = "Frame 000000",
       .position = glm::vec3(10.0f, 20.0f, 0.0f),
       .color = glm::vec3(1.0f, 1.0f, 0.0f),
     };
     _render_manager->addText(frame_counter);
-    FontManager::Text elapsed_time{
+    FontManager::Text elapsed_time {
+      .id = 0,
       .name = "_plp_elapsed_time",
       .text = "Elapsed time 000000",
       .position = glm::vec3(200.0f, 20.0f, 0.0f),
@@ -89,6 +91,7 @@ namespace Poulpe
     };
     _render_manager->addText(elapsed_time);
     FontManager::Text ms_counter{
+      .id = 0,
       .name = "_plp_ms_counter",
       .text = "000.000 ms 000.000 fps",
       .position = glm::vec3(10.0f, 40.0f, 0.0f),
@@ -96,6 +99,7 @@ namespace Poulpe
     };
     _render_manager->addText(ms_counter);
     FontManager::Text camera_pos {
+      .id = 0,
       .name = "_plp_camera_pos",
       .text = "Position x: 000.000 y: 000.000 z: 000.000",
       .position = glm::vec3(10.0f, 60.0f, 0.0f),
@@ -154,14 +158,14 @@ namespace Poulpe
         frame_count = 0;
       }
 
-      _render_manager->updateText("_plp_ms_counter", std::format("{:<.2f}ms {:<.2f}fps", ms_count, fps_count));
-      _render_manager->updateText("_plp_frame_counter", std::format("Frame {:<}", frame_count));
-      _render_manager->updateText("_plp_elapsed_time", std::format("Elapsed time {:<.2f}", _elapsed_time));
+      _render_manager->updateText(ms_counter.id, std::format("{:<.2f}ms {:<.2f}fps", ms_count, fps_count));
+      _render_manager->updateText(frame_counter.id, std::format("Frame {:<}", frame_count));
+      _render_manager->updateText(elapsed_time.id, std::format("Elapsed time {:<.2f}", _elapsed_time));
       _render_manager->setElapsedTime(_elapsed_time);
 
       auto const& current_camera_pos = _render_manager->getCamera()->getPos();
       _render_manager->updateText(
-        "_plp_camera_pos",
+        camera_pos.id,
         std::format("Position x: {:<.2f} y: {:<.2f} z: {:<.2f}",
           current_camera_pos.x, current_camera_pos.y, current_camera_pos.z));
 

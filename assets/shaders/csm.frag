@@ -26,7 +26,7 @@ struct Light {
   vec3 cascade_offset3;
   vec4 cascade_min_splits;
   vec4 cascade_max_splits;
-  float cascade_texel_size;
+  vec4 cascade_texel_sizes;
 };
 
 #define NR_POINT_LIGHTS 2
@@ -52,6 +52,6 @@ void main()
   //  Light light = point_lights[1];
 
   // float light_distance = length(position.xyz - light.position);
-  // light_distance = light_distance / pc.options.x;
+  // light_distance = light_distance / 500.f;
   // gl_FragDepth = light_distance;
 }
