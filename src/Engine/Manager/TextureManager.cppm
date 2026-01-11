@@ -9,6 +9,8 @@ import std;
 
 import Engine.Component.Texture;
 
+import Engine.Core.PlpTypedef;
+
 import Engine.Renderer;
 
 namespace Poulpe
@@ -60,6 +62,8 @@ namespace Poulpe
       TEXTURE_TYPE texture_type,
       Renderer* const renderer);
 
+    void addMaterial(material_t material) { _materials.push_back(std::move(material)); }
+
   private:
     const uint32_t MAX_MIPLEVELS = 5;
 
@@ -70,5 +74,6 @@ namespace Poulpe
 
     std::unordered_map<std::string, std::string> _paths;
     std::unordered_map<std::string, Texture> _textures;
+    std::vector<material_t> _materials{};
   };
 }

@@ -73,46 +73,47 @@ namespace Poulpe
       });
     }
 
-    if (mesh->getStorageBuffers()->empty()) {
+    auto const& mat { mesh->getMaterials().at(data->_material_id) };
 
+    if (mesh->getStorageBuffers()->empty()) {
       Material material{};
-      material.base_color = mesh->getMaterial().base_color;
-      material.ambient = mesh->getMaterial().ambient;
-      material.diffuse = mesh->getMaterial().diffuse;
-      material.specular = mesh->getMaterial().specular;
-      material.transmittance = mesh->getMaterial().transmittance;
-      material.mre_factor = mesh->getMaterial().mre_factor;
-      material.emissive_color = mesh->getMaterial().emissive_color;
+      material.base_color = mat.base_color;
+      material.ambient = mat.ambient;
+      material.diffuse = mat.diffuse;
+      material.specular = mat.specular;
+      material.transmittance = mat.transmittance;
+      material.mre_factor = mat.mre_factor;
+      material.emissive_color = mat.emissive_color;
 
       material.shi_ior_diss = glm::vec3(
-        mesh->getMaterial().shininess,
-        mesh->getMaterial().ior,
-        mesh->getMaterial().dissolve);
+        mat.shininess,
+        mat.ior,
+        mat.dissolve);
 
-      material.alpha = glm::vec3(mesh->getMaterial().alpha_mode, mesh->getMaterial().alpha_cut_off, 1.0);
+      material.alpha = glm::vec3(mat.alpha_mode, mat.alpha_cut_off, 1.0);
 
       //@todo needed to modify assimp sources glTF2Asset.h textureTransformSupported = true (preview ?)
-      material.ambient_translation = mesh->getMaterial().ambient_translation;
-      material.ambient_scale = mesh->getMaterial().ambient_scale;
-      material.ambient_rotation = { mesh->getMaterial().ambient_rotation.x, mesh->getMaterial().ambient_rotation.y, 1.0 };
+      material.ambient_translation = mat.ambient_translation;
+      material.ambient_scale = mat.ambient_scale;
+      material.ambient_rotation = { mat.ambient_rotation.x, mat.ambient_rotation.y, 1.0 };
 
-      material.normal_translation = mesh->getMaterial().normal_translation;
-      material.normal_scale = mesh->getMaterial().normal_scale;
-      material.normal_rotation = { mesh->getMaterial().normal_rotation.x, mesh->getMaterial().normal_rotation.y, 1.0 };
+      material.normal_translation = mat.normal_translation;
+      material.normal_scale = mat.normal_scale;
+      material.normal_rotation = { mat.normal_rotation.x, mat.normal_rotation.y, 1.0 };
 
-      material.diffuse_translation = mesh->getMaterial().diffuse_translation;
-      material.diffuse_scale = mesh->getMaterial().diffuse_scale;
-      material.diffuse_rotation = { mesh->getMaterial().diffuse_rotation.x, mesh->getMaterial().diffuse_rotation.y, 1.0 };
+      material.diffuse_translation = mat.diffuse_translation;
+      material.diffuse_scale = mat.diffuse_scale;
+      material.diffuse_rotation = { mat.diffuse_rotation.x, mat.diffuse_rotation.y, 1.0 };
 
-      material.emissive_translation = mesh->getMaterial().emissive_translation;
-      material.emissive_scale = mesh->getMaterial().emissive_scale;
-      material.emissive_rotation = { mesh->getMaterial().emissive_rotation.x, mesh->getMaterial().emissive_rotation.y, 1.0 };
+      material.emissive_translation = mat.emissive_translation;
+      material.emissive_scale = mat.emissive_scale;
+      material.emissive_rotation = { mat.emissive_rotation.x, mat.emissive_rotation.y, 1.0 };
 
-      material.mr_translation = mesh->getMaterial().mr_translation;
-      material.mr_scale = mesh->getMaterial().mr_scale;
-      material.mr_rotation = { mesh->getMaterial().mr_rotation.x, mesh->getMaterial().mr_rotation.y, 1.0 };
+      material.mr_translation = mat.mr_translation;
+      material.mr_scale = mat.mr_scale;
+      material.mr_rotation = { mat.mr_rotation.x, mat.mr_rotation.y, 1.0 };
 
-      material.strength = { mesh->getMaterial().normal_strength, mesh->getMaterial().occlusion_strength, 0.0 };//x normal strength, y occlusion strength
+      material.strength = { mat.normal_strength, mat.occlusion_strength, 0.0 };//x normal strength, y occlusion strength
 
       //Logger::debug("ambient {}",  material.ambient.r);
       //Logger::debug("diffuse {}",  material.diffuse.r);
@@ -152,6 +153,7 @@ namespace Poulpe
     ComponentRenderingInfo const& component_rendering_info)
   {
     auto const& mesh = component_rendering_info.mesh;
+    auto const& mat { mesh->getMaterials().at(mesh->getData()->_material_id) };
 
     auto const & main_texture_name {
       (!mesh->getData()->_base_color.empty()
@@ -162,14 +164,14 @@ namespace Poulpe
 
     Texture tex { getTexture(component_rendering_info, main_texture_name) };
     tex.setSampler(renderer->getAPI()->createKTXSampler(
-      mesh->getMaterial().texture_diffuse_wrap_mode_u,
-      mesh->getMaterial().texture_diffuse_wrap_mode_v,
+      mat.texture_diffuse_wrap_mode_u,
+      mat.texture_diffuse_wrap_mode_v,
       tex.getMipLevels()));
 
     Texture alpha { getTexture(component_rendering_info, mesh->getData()->_alpha) };
     alpha.setSampler(renderer->getAPI()->createKTXSampler(
-      mesh->getMaterial().texture_alpha_wrap_mode_u,
-      mesh->getMaterial().texture_alpha_wrap_mode_v,
+      mat.texture_alpha_wrap_mode_u,
+      mat.texture_alpha_wrap_mode_v,
       alpha.getMipLevels()));
 
     Texture texture_bump{ getTexture(component_rendering_info, mesh->getData()->_bump_map) };
@@ -184,8 +186,8 @@ namespace Poulpe
 
     Texture texture_specular{ getTexture(component_rendering_info, mesh->getData()->_specular_map)};
     texture_specular.setSampler(renderer->getAPI()->createKTXSampler(
-    mesh->getMaterial().texture_specular_wrap_mode_u,
-    mesh->getMaterial().texture_specular_wrap_mode_v,
+    mat.texture_specular_wrap_mode_u,
+    mat.texture_specular_wrap_mode_v,
     texture_specular.getMipLevels()));
 
     if (texture_specular.getWidth() == 0) {
@@ -194,8 +196,8 @@ namespace Poulpe
 
     Texture texture_metal_roughness { getTexture(component_rendering_info, mesh->getData()->_metal_roughness) };
     texture_metal_roughness.setSampler(renderer->getAPI()->createKTXSampler(
-    mesh->getMaterial().texture_metal_roughness_wrap_mode_u,
-    mesh->getMaterial().texture_metal_roughness_wrap_mode_v,
+    mat.texture_metal_roughness_wrap_mode_u,
+    mat.texture_metal_roughness_wrap_mode_v,
     texture_metal_roughness.getMipLevels()));
 
     if (texture_metal_roughness.getWidth() == 0) {
@@ -204,8 +206,8 @@ namespace Poulpe
 
     Texture texture_emissive { getTexture(component_rendering_info, mesh->getData()->_emissive) };
     texture_emissive.setSampler(renderer->getAPI()->createKTXSampler(
-    mesh->getMaterial().texture_emissive_wrap_mode_u,
-    mesh->getMaterial().texture_emissive_wrap_mode_v,
+    mat.texture_emissive_wrap_mode_u,
+    mat.texture_emissive_wrap_mode_v,
     texture_emissive.getMipLevels()));
 
     if (texture_emissive.getWidth() == 0) {
@@ -214,8 +216,8 @@ namespace Poulpe
 
     Texture texture_ao { getTexture(component_rendering_info, mesh->getData()->_ao) };
     texture_ao.setSampler(renderer->getAPI()->createKTXSampler(
-    mesh->getMaterial().texture_ao_wrap_mode_u,
-    mesh->getMaterial().texture_ao_wrap_mode_v,
+    mat.texture_ao_wrap_mode_u,
+    mat.texture_ao_wrap_mode_v,
     texture_ao.getMipLevels()));
 
     if (texture_ao.getWidth() == 0) {
@@ -224,8 +226,8 @@ namespace Poulpe
 
     // Texture texture_base_color { getTexture(component_rendering_info, mesh->getData()->_base_color) };
     // texture_base_color.setSampler(renderer->getAPI()->createKTXSampler(
-    // mesh->getMaterial().texture_base_color_wrap_mode_u,
-    // mesh->getMaterial().texture_base_color_wrap_mode_v,
+    // mat.texture_base_color_wrap_mode_u,
+    // mat.texture_base_color_wrap_mode_v,
     // texture_base_color.getMipLevels()));
 
     // if (texture_base_color.getWidth() == 0) {

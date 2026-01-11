@@ -397,12 +397,13 @@ namespace Poulpe
       sizeof(constants),
       &push_constants);
 
-    auto const alpha_mode{ mesh->getMaterial().alpha_mode };
+    auto const& data { mesh->getData() };
+    auto const& material { mesh->getMaterials().at(data->_material_id) };
 
-    if (renderer_info.has_alpha_blend && alpha_mode > 0.0f) {
-      std::vector<VkBool32> blend_enable{ VK_TRUE };
-      vkCmdSetColorBlendEnableEXT(cmd_buffer, 0, 1, blend_enable.data());
-    }
+    VkBool32 blend_enable =
+      (renderer_info.has_alpha_blend && material.alpha_mode >= 1.0f) ? VK_TRUE : VK_FALSE;
+
+    vkCmdSetColorBlendEnableEXT(cmd_buffer, 0, 1, &blend_enable);
 
     vkCmdBindDescriptorSets(
       cmd_buffer,
@@ -410,7 +411,7 @@ namespace Poulpe
       pipeline->pipeline_layout,
       0, 1, mesh->getDescSet(), 0, nullptr);
 
-    if (mesh->getMaterial().double_sided == true && pipeline->pipeline_bis != VK_NULL_HANDLE) {
+    if (material.double_sided == true && pipeline->pipeline_bis != VK_NULL_HANDLE) {
       _vulkan->bindPipeline(cmd_buffer, pipeline->pipeline_bis);
       } else {
       _vulkan->bindPipeline(cmd_buffer, pipeline->pipeline);
@@ -426,7 +427,7 @@ namespace Poulpe
 
     _vulkan->draw(
       cmd_buffer,
-      mesh->getData(),
+      data,
       mesh->is_indexed());
 
     if (mesh->debugNormal() &&  renderer_info.normal_debug) {
@@ -442,7 +443,7 @@ namespace Poulpe
 
       _vulkan->draw(
         cmd_buffer,
-        mesh->getData(),
+        data,
         mesh->is_indexed());
     }
   }

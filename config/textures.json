@@ -1,31 +1,31 @@
 {
   "textures": {
     "mpoulpe": {
-      "path": "assets/texture/mpoulpe.ktx2"
+      "path": "assets/texture/mpoulpe.png"
     },
     "_plp_empty": {
-      "path": "assets/texture/_plp_empty.ktx2"
+      "path": "assets/texture/_plp_empty.png"
     },
     "_plp_error": {
-      "path": "assets/texture/_plp_error.ktx2"
+      "path": "assets/texture/_plp_error.png"
     },
     "grass": {
-      "path": "assets/texture/terrain/grass.ktx2"
+      "path": "assets/texture/terrain/grass.jpg"
     },
     "snow": {
-      "path": "assets/texture/terrain/snow.ktx2"
+      "path": "assets/texture/terrain/snow.jpg"
     },
     "ground": {
-      "path": "assets/texture/terrain/ground.ktx2"
+      "path": "assets/texture/terrain/ground.jpg"
     },
     "sand": {
-      "path": "assets/texture/terrain/sand.ktx2"
+      "path": "assets/texture/terrain/sand.png"
     },
     "low_noise": {
-      "path": "assets/texture/terrain/low_noise.ktx2"
+      "path": "assets/texture/terrain/low_noise.png"
     },
     "hi_noise": {
-      "path": "assets/texture/terrain/hi_noise.ktx2"
+      "path": "assets/texture/terrain/hi_noise.png"
     }
   },
   "skybox": {
