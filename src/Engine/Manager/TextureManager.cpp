@@ -247,9 +247,9 @@ namespace Poulpe
     std::string  ktx_format{ "R8G8B8A8_SRGB" }; //diffuse default
     ktx_transcode_fmt_e transcoding { KTX_TTF_BC1_RGB };//diffuse default
 
-    if (file_name.extension() == "hdr") {
+    if (file_name.extension().string() == ".hdr") {
       is_hdr = true;
-    } else if (file_name.extension() == "png") {
+    } else if (file_name.extension().string() == ".png") {
       transcoding = KTX_TTF_BC7_RGBA;
     }
 

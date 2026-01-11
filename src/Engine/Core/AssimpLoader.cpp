@@ -680,7 +680,6 @@ namespace Poulpe
           mesh_data.indices.push_back(face->mIndices[j]);
         }
         mesh_data.material_ID = mesh->mMaterialIndex;
-        mesh_data.materials_ID = { mesh->mMaterialIndex };
       }
 
       if (mesh->HasBones()) {

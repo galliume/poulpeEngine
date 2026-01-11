@@ -339,7 +339,7 @@ namespace Poulpe
       }
 
       std::ranges::for_each(sorted_entities, [&](const auto& entity) {
-        drawEntity(entity, camera_view_matrix, true);
+        drawEntity(entity, camera_view_matrix, false);
       });
       std::ranges::for_each(sorted_transparent_entities, [&](const auto& entity) {
         drawEntity(entity, camera_view_matrix, true);
@@ -552,6 +552,9 @@ namespace Poulpe
     auto mesh = std::make_unique<Mesh>();
     mesh->setName("skybox");
     mesh->isSkybox(true);
+    
+    material_t material{};
+    mesh->addMaterial(material);
 
     _env_options |= PLP_ENV_OPTIONS::HAS_IRRADIANCE;//@todo finish IBL with real map
 
@@ -570,6 +573,9 @@ namespace Poulpe
     mesh->setHasShadow(false);
     mesh->setIsIndexed(false);
     mesh->setShaderName("terrain");
+    
+    material_t material{};
+    mesh->addMaterial(material);
 
     auto rdr_impl{ RendererComponentFactory::create<Terrain>() };
     //(*rdr_impl)(_renderer.get(), getComponentRenderingInfo(mesh.get()));
@@ -587,6 +593,9 @@ namespace Poulpe
     mesh->setIsIndexed(false);
     mesh->setShaderName("water");
     mesh->setName("_plp_water");
+
+    material_t material{};
+    mesh->addMaterial(material);
 
     auto rdr_impl{ RendererComponentFactory::create<Water>() };
     //(*rdr_impl)(_renderer.get(), getComponentRenderingInfo(mesh.get()));
@@ -620,6 +629,9 @@ namespace Poulpe
     mesh->setShaderName("text");
     mesh->setName("_plp_text_" + std::to_string(entity->getID()));
     mesh->setRoot();
+
+    material_t material{};
+    mesh->addMaterial(material);
     
     auto rdr_impl{ RendererComponentFactory::create<Text>() };
     rdr_impl->setText(text.text);

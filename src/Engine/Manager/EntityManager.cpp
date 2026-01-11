@@ -202,9 +202,6 @@ namespace Poulpe
         auto const& mat = materials.at(_data.material_ID);
         alpha_mode = mat.alpha_mode;
 
-        //@todo should not be in mesh, but just an ID pointing to the material
-        mesh->setMaterial(mat);
-
         if (!mat.name_texture_diffuse.empty()) {
           name_texture = mat.name_texture_diffuse;
           _texture_manager->add(name_texture, mat.name_texture_diffuse_path, VK_IMAGE_ASPECT_COLOR_BIT, TEXTURE_TYPE::DIFFUSE, _renderer);
@@ -261,6 +258,9 @@ namespace Poulpe
           options |= PLP_MESH_OPTIONS::HAS_TRANSMISSION;
           _texture_manager->add(name_texture_transmission, mat.name_texture_transmission_path, VK_IMAGE_ASPECT_COLOR_BIT, TEXTURE_TYPE::EMISSIVE, _renderer);
         }
+        for (auto& material : materials) {
+          mesh->addMaterial(material);
+        }
       }
 
       Data data{};
@@ -290,7 +290,8 @@ namespace Poulpe
       data._default_anim = entity_opts.default_anim;
       data._bbox_min = _data.bbox_min;
       data._bbox_max = _data.bbox_max;
-      
+      data._material_id = _data.material_ID;
+
       auto const S { glm::scale(glm::mat4(1.0f), entity_opts.scale) };
       auto const R { glm::mat4_cast(entity_opts.rotation) };
       auto const T { glm::translate(glm::mat4(1.0f), entity_opts.pos) };
@@ -359,7 +360,7 @@ namespace Poulpe
 
       if (is_last) {
         {
-          //lua scripted animation
+          //lua scripted animation  
           if (entity_opts.has_animation) {
             //@todo temp until lua scripting
             for (auto& anim : entity_opts.animation_scripts) {

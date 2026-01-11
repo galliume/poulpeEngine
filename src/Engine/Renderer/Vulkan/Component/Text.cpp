@@ -139,7 +139,8 @@ namespace Poulpe
       options |= 1 << 0;
     }
 
-    mesh->getMaterial().double_sided = true;
+    auto& mat { mesh->getMaterials().at(0) };
+    mat.double_sided = true;
 
     //@todo rename to
     mesh->setOptions(options);
@@ -167,7 +168,8 @@ namespace Poulpe
 
       mesh->getData()->_ubos_offset.emplace_back(1);
       mesh->getUniformBuffers().emplace_back(renderer->getAPI()->createUniformBuffers(1, renderer->getCurrentFrameIndex()));
-      mesh->getMaterial().alpha_mode = 1.0;
+
+      mat.alpha_mode = 1.0;
 
       for (std::size_t i{ 0 }; i < mesh->getData()->_ubos.size(); i++) {
         std::ranges::for_each(mesh->getData()->_ubos.at(i), [&](auto& data_ubo) {

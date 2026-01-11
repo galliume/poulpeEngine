@@ -340,7 +340,6 @@ namespace Poulpe
     std::uint32_t material_ID{ 0 };
     std::vector<uint32_t> face_material_ID{};
     std::vector<uint32_t> indices{};
-    std::vector<uint32_t> materials_ID{};
     std::vector<Vertex> vertices{};
     std::vector<VertexBones> vertices_bones{};
     glm::mat4 transform_matrix{};

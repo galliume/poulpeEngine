@@ -62,5 +62,6 @@ namespace Poulpe {
     glm::vec3 _bbox_min{};
     glm::vec3 _bbox_max{};
     bool _is_dirty {false};
+    std::uint32_t _material_id {0};
   };
 }

@@ -28,7 +28,7 @@ namespace Poulpe
     Data * getData() { return & _data; }
     Data const * getData() const { return & _data; }
     VkDescriptorSet* getDescSet() { return & _descset; }
-    material_t& getMaterial() { return _material; }
+    std::vector<material_t>& getMaterials() { return _materials; }
     std::string const getName() const { return _name; }
     inline const std::string getShaderName() const { return _shader_name; }
     std::vector<Buffer>* getStorageBuffers() { return & _storage_buffers; }
@@ -64,7 +64,7 @@ namespace Poulpe
     void setHasAnimation(bool has = true) { _has_animation = has; }
     void setIsIndexed(bool indexed) { _is_indexed = indexed; }
     void setIsPointLight(bool is = true) { _is_point_light = is; }
-    void setMaterial(material_t material) { _material = material; }
+    void addMaterial(material_t material) { _materials.emplace_back(std::move(material)); }
     void setHasShadow(bool has_shadow) { _has_shadow = has_shadow; }
 
     bool is_indexed() const { return _is_indexed; }
@@ -114,7 +114,7 @@ namespace Poulpe
     VkDescriptorSet _descset{};
     VkDescriptorSet _shadowmap_descset{};
     VkDescriptorSet _csm_descset{};
-    material_t _material{};
+    std::vector<material_t> _materials{};
 
     std::uint32_t _options{ 0 }; //used for options as push constants
     std::uint32_t _default_anim{};

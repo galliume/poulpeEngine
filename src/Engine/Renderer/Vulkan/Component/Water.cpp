@@ -120,7 +120,9 @@ void Water::operator()(
     data->_vertex_buffer = renderer->getAPI()->createVertexBuffer(vertices, renderer->getCurrentFrameIndex());
     data->_texture_index = 0;
 
-    mesh->getMaterial().alpha_mode = 2.0;//BLEND
+    auto& mat { mesh->getMaterials().at(0) };
+    mat.alpha_mode = 2.0;//BLEND
+
     mesh->getData()->_ubos_offset.emplace_back(1);
     mesh->getUniformBuffers().emplace_back(renderer->getAPI()->createUniformBuffers(1, renderer->getCurrentFrameIndex()));
 
