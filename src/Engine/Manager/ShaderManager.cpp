@@ -656,15 +656,6 @@ namespace Poulpe
       vertex_input_info->vertexAttributeDescriptionCount = static_cast<uint32_t>(Vertex::getAttributeDescriptions().size());
       vertex_input_info->pVertexBindingDescriptions = bDesc;
       vertex_input_info->pVertexAttributeDescriptions = attDesc->data();
-    } else if constexpr (T == VertexBindingType::Vertex2D) {
-      std::array<VkVertexInputAttributeDescription, 3>* attDesc = new std::array<VkVertexInputAttributeDescription, 3>(Vertex2D::getAttributeDescriptions());
-      VkVertexInputBindingDescription* bDesc = new VkVertexInputBindingDescription(Vertex2D::getBindingDescription());
-
-      vertex_input_info->sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-      vertex_input_info->vertexBindingDescriptionCount = 1;
-      vertex_input_info->vertexAttributeDescriptionCount = static_cast<uint32_t>(Vertex2D::getAttributeDescriptions().size());
-      vertex_input_info->pVertexBindingDescriptions = bDesc;
-      vertex_input_info->pVertexAttributeDescriptions = attDesc->data();
     } else {
       throw std::runtime_error("unknown vertex input state type");
     }

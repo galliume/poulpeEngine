@@ -22,8 +22,8 @@ layout(set = 0, binding = 0) uniform UniformBufferObject {
 
 layout(location = 0) in vec4 tangent;
 layout(location = 1) in vec4 color;
-layout(location = 2) in vec3 position;
-layout(location = 3) in vec3 normal;
+layout(location = 2) in vec4 position;
+layout(location = 3) in vec4 normal;
 layout(location = 4) in vec2 texture_coord;
 //layout(location = 6) in ivec4 bone_ids;
 //layout(location = 7) in vec4 bone_weights;
@@ -36,11 +36,11 @@ layout(location = 2) out vec3 out_options;
 void main()
 {
   vec3 options = vec3(0.0, 0.0, 1.0);
-  vec4 p = ubo.projection * vec4(position, 1.0);
+  vec4 p = ubo.projection * position;
 
   if (bool((pc.options >> 0u) & 1u)) {
     options.x = 1.0;
-    p = ubo.projection * pc.view * ubo.model * vec4(position, 1.0);
+    p = ubo.projection * pc.view * ubo.model * position;
   }
 
   gl_Position = p;

@@ -224,7 +224,7 @@ namespace Poulpe
 
     CSM csm {
       .d = static_cast<float>(d),
-      .texel_size = static_cast<float>(d) / shadow_resolution,
+      .texel_size = static_cast<float>(T),
       .z_max = max_z,
       .z_min = min_z,
       .s = snapped_world_center,
@@ -256,7 +256,7 @@ namespace Poulpe
         getLightSpaceMatrix(cascade_splits[i].x, cascade_splits[i].y, camera_view, projection));
     }
 
-    auto const d0 { csms.at(0).d };
+    auto const d0 { csms.at(0).texel_size };
     auto const s0 { csms.at(0).s };
     auto const z0 {  csms.at(0).z_max  - csms.at(0).z_min };
     //auto const rot { glm::mat3(camera_view) };
@@ -266,13 +266,13 @@ namespace Poulpe
 
       auto const z { csms.at(i).z_max  - csms.at(i).z_min };
 
-      auto const scaleX { d0 / csm.d };
+      auto const scaleX { d0 / csm.texel_size };
       auto const scaleZ { z0 / z };
 
       glm::vec3 world_delta { (s0 - csm.s) };
 
-      auto const offsetX { world_delta.x / csm.d - (d0 / (2.f * csm.d)) + 0.5f };
-      auto const offsetY { world_delta.y / csm.d - (d0 / (2.f * csm.d)) + 0.5f };
+      auto const offsetX { world_delta.x / csm.texel_size - (d0 / (2.f * csm.texel_size)) + 0.5f };
+      auto const offsetY { world_delta.y / csm.texel_size - (d0 / (2.f * csm.texel_size)) + 0.5f };
       auto const offsetZ { world_delta.z / z };
 
       csm.scale = glm::vec3(scaleX, scaleX, scaleZ);

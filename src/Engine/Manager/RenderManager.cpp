@@ -631,6 +631,8 @@ namespace Poulpe
     mesh->setRoot();
 
     material_t material{};
+    material.double_sided = true;
+    material.alpha_mode = 1.0;
     mesh->addMaterial(material);
     
     auto rdr_impl{ RendererComponentFactory::create<Text>() };

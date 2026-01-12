@@ -50,8 +50,8 @@ layout(set = 0, binding = 1) readonly buffer ObjectBuffer {
 
 layout(location = 0) in vec4 tangent;
 layout(location = 1) in vec4 color;
-layout(location = 2) in vec3 position;
-layout(location = 3) in vec3 normal;
+layout(location = 2) in vec4 position;
+layout(location = 3) in vec4 normal;
 layout(location = 4) in vec2 texture_coord;
 //layout(location = 6) in ivec4 bone_ids;
 //layout(location = 7) in vec4 bone_weights;
@@ -80,7 +80,7 @@ void main()
 
   out_tangent = tangent;
   out_color = color;
-  out_position = ubo.model * vec4(position, 1.0);
+  out_position = ubo.model * position;
   
   Light light = point_lights[1];
   mat4 light_matrices[6] = mat4[6](
@@ -92,9 +92,9 @@ void main()
     light.light_space_matrix_back    // face 5
   );
 
-  //vec4 p = ubo.projection * pc.view * vec4(position, 1.0);
+  //vec4 p = ubo.projection * pc.view * position;
   //gl_Position = p.xyww;
-  //gl_Position = pc.view * ubo.model * vec4(position, 1.0);
+  //gl_Position = pc.view * ubo.model * position;
   gl_Position =  light_matrices[face] * out_position;
   gl_Position.z / gl_Position.w;
 } 

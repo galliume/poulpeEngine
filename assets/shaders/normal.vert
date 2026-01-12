@@ -22,8 +22,8 @@ layout(push_constant) uniform constants
 
 layout(location = 0) in vec4 tangent;
 layout(location = 1) in vec4 color;
-layout(location = 2) in vec3 position;
-layout(location = 3) in vec3 normal;
+layout(location = 2) in vec4 position;
+layout(location = 3) in vec4 normal;
 layout(location = 4) in vec2 texture_coord;
 //layout(location = 6) in ivec4 bone_ids;
 //layout(location = 7) in vec4 bone_weights;
@@ -31,5 +31,5 @@ layout(location = 4) in vec2 texture_coord;
 
 void main()
 {
-  gl_Position = pc.view * ubo.model * vec4(position, 1.0f);
+  gl_Position = pc.view * ubo.model * position;
 }

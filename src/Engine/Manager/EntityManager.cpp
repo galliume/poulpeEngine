@@ -205,6 +205,7 @@ namespace Poulpe
         if (!mat.name_texture_diffuse.empty()) {
           name_texture = mat.name_texture_diffuse;
           _texture_manager->add(name_texture, mat.name_texture_diffuse_path, VK_IMAGE_ASPECT_COLOR_BIT, TEXTURE_TYPE::DIFFUSE, _renderer);
+          options |= PLP_MESH_OPTIONS::HAS_BASE_COLOR;
         } else if (!mat.name_texture_ambient.empty()) {
           name_texture = mat.name_texture_ambient;
           options |= PLP_MESH_OPTIONS::HAS_BASE_COLOR;

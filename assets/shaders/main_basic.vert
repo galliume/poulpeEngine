@@ -23,8 +23,8 @@ layout(push_constant) uniform constants
 
 layout(location = 0) in vec4 tangent;
 layout(location = 1) in vec4 color;
-layout(location = 2) in vec3 position;
-layout(location = 3) in vec3 normal;
+layout(location = 2) in vec4 position;
+layout(location = 3) in vec4 normal;
 layout(location = 4) in vec2 texture_coord;
 //layout(location = 6) in ivec4 bone_ids;
 //layout(location = 7) in vec4 bone_weights;
@@ -37,13 +37,8 @@ layout(location = 0) out FRAG_VAR {
   vec3 norm;
   vec4 color;
   mat3 TBN;
-  float tangent_w;
   mat4 sun_light;
-  mat4 model;
   vec4 cascade_coord;
-  vec3 cascade_coord1;
-  vec3 cascade_coord2;
-  vec3 cascade_coord3;
   float depth;
   vec3 blend;
   vec3 n;
@@ -120,44 +115,31 @@ layout(binding = 5) readonly buffer LightObjectBuffer {
 
 void main()
 {
-  // mat3 normal_matrix = transpose(inverse(mat3(ubo.model)));
-  mat3 normal_matrix = mat3(ubo.model);
-  vec3 norm = normalize(normal_matrix * normal);
+  mat3 normal_matrix = mat3(transpose(inverse(ubo.model)));
+  //mat3 normal_matrix = mat3(ubo.model);
 
-  vec3 T = normalize(normal_matrix * tangent.xyz);
-  vec3 N = norm;
+  vec3 T = normalize(normal_matrix * normalize(tangent.xyz));
+  vec3 N = normalize(normal_matrix * normalize(normal.xyz));
   T = normalize(T - dot(T, N) * N);
   vec3 B = normalize(cross(N, T)) * tangent.w;
-  //if (tangent.w < 0.0) B = -B;
   mat3 TBN = mat3(T, B, N);
 
   frag_var.TBN = TBN;
-  frag_var.tangent_w = tangent.w;
 
-  // mat3 normal_matrix = mat3(pc.view * ubo.model);
-  // frag_var.norm = normalize(normal_matrix * normal);
-  // frag_var.tang = normalize(normal_matrix * tangent.xyz);
-  // frag_var.tang_w = tangent.w;
+  vec4 world_pos = ubo.model * position;
+  vec4 local_space = position;
 
-  vec4 world_pos = ubo.model * vec4(position, 1.0f);
-  vec4 local_space = vec4(position, 1.0f);
-
-  frag_var.norm = norm;
+  frag_var.norm = N;
   frag_var.frag_pos = world_pos.xyz;
   frag_var.view_pos = vec3(pc.view_position) - world_pos.xyz;
   frag_var.sun_light = sun_light.view;
   frag_var.texture_coord = texture_coord;
   frag_var.color = color;
-  frag_var.model = ubo.model;
   vec4 view_pos = pc.view * world_pos;
   frag_var.depth = -view_pos.z;
 
   frag_var.cascade_coord = sun_light.cascade0 * world_pos;
   vec3 cascade0 = frag_var.cascade_coord.xyz / frag_var.cascade_coord.w;
-  frag_var.cascade_coord1 = cascade0 * sun_light.cascade_scale1 + sun_light.cascade_offset1;
-  frag_var.cascade_coord2 = cascade0 * sun_light.cascade_scale2 + sun_light.cascade_offset2;
-  frag_var.cascade_coord3 = cascade0 * sun_light.cascade_scale3 + sun_light.cascade_offset3;
-
 
   mat4 camera_inverse = inverse(pc.view);
   vec3 n = -camera_inverse[2].xyz;

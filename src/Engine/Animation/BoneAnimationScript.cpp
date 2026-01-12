@@ -98,7 +98,7 @@ namespace Poulpe
                 result += _bone_matrices[bone_id] * glm::vec4(vertex_bones.original_pos, 1.0f) * w;
               }
             }
-            vertex.pos = glm::vec3(result);
+            vertex.pos = result;
             //vertex_cache.emplace_back(result);
           }
         }

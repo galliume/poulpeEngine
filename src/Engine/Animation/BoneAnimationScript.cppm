@@ -79,7 +79,7 @@ namespace Poulpe
     bool _first_loop_done {false};
     bool _looping { true };
 
-    std::unordered_map<std::size_t, std::unordered_map<int, std::vector<glm::vec3>>> _transform_cache{};
+    std::unordered_map<std::size_t, std::unordered_map<int, std::vector<glm::vec4>>> _transform_cache{};
 
     std::vector<std::unique_ptr<BoneAnimationMove>> _moves{};
     std::vector<std::unique_ptr<BoneAnimationMove>> _new_moves{};
