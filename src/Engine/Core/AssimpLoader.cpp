@@ -57,11 +57,12 @@ namespace Poulpe
 
     auto flags {
         aiProcess_Triangulate
-      | aiProcess_GenNormals
+      | aiProcess_GenSmoothNormals
       | aiProcess_CalcTangentSpace
       | aiProcess_FlipWindingOrder
       | aiProcess_FlipUVs
       | aiProcess_GenBoundingBoxes
+      | aiProcess_JoinIdenticalVertices
     };
 
     const aiScene* scene = importer.ReadFile(path, flags);
@@ -585,12 +586,6 @@ namespace Poulpe
       mesh_data.bbox_min = glm::vec3(mesh->mAABB.mMin.x, mesh->mAABB.mMin.y, mesh->mAABB.mMin.z);
       mesh_data.bbox_max = glm::vec3(mesh->mAABB.mMax.x, mesh->mAABB.mMax.y, mesh->mAABB.mMax.z);
 
-      //@todo check if it's ok
-      //fallback to last normal or tangent if none is found
-      //gives some artifacts but better than nothing
-      glm::vec3 n{ 0.f, 0.f, 1.0f };
-      glm::vec4 t{ 0.f, 0.f, 0.f, 1.0f };
-
       mesh_data.vertices.reserve(mesh->mNumVertices);
 
       for (uint32_t v{ 0 }; v < mesh->mNumVertices; v++) {
@@ -599,45 +594,33 @@ namespace Poulpe
 
         Vertex vertex{};
 
-        vertex.pos = { vertices.x, vertices.y, vertices.z };
+        vertex.pos = { vertices.x, vertices.y, vertices.z, 1.0f };
         //if (flip_Y) vertex.pos.y *= -1.0f;
-        vertex.normal = n;
 
         if (mesh->HasNormals()) {
           aiVector3D const& normal = mesh->mNormals[v];
-          vertex.normal = { normal.x, normal.y, normal.z };
-          n = vertex.normal;
+          vertex.normal = { normal.x, normal.y, normal.z, 1.0f };
           //if (flip_Y) vertex.normal.y = 1.0f - vertex.normal.y;
         } else {
-          Logger::warn("NO NORMAL");
+          vertex.normal = glm::vec4(0.0f, 1.0f, 0.0f, 1.0f);
         }
 
         glm::vec4 tangent(1.0f, 0.0f, 0.0f, 1.0f);
-        glm::vec4 bitangent(0.f);
+        //glm::vec4 bitangent(0.f);
 
         if (mesh->HasTangentsAndBitangents()) {
-          tangent.x = mesh->mTangents[v].x;
-          tangent.y = mesh->mTangents[v].y;
-          tangent.z = mesh->mTangents[v].z;
+          glm::vec3 const nn { vertex.normal };
+          glm::vec3 const tt { glm::vec3(mesh->mTangents[v].x, mesh->mTangents[v].y, mesh->mTangents[v].z) };
+          glm::vec3 const bb { glm::vec3(mesh->mBitangents[v].x, mesh->mBitangents[v].y, mesh->mBitangents[v].z) };
 
-          bitangent = glm::vec4(
-            mesh->mBitangents[v].x,
-            mesh->mBitangents[v].y,
-            mesh->mBitangents[v].z,
-            0.0f);
+          float ww = (glm::dot(glm::cross(nn, tt), bb) < 0.0f) ? -1.0f : 1.0f;
 
-          //handedness
-          tangent.w = glm::dot(
-            glm::cross(
-              glm::vec3(tangent.x, tangent.y, tangent.z),
-              glm::vec3(bitangent.x, bitangent.y, bitangent.z)),
-            vertex.normal) < 0.0f ? -1.0f : 1.0f;
-            t = tangent;
-        } else {
-          //Logger::warn("No tangent, computing manually.");
+          tangent = glm::vec4(tt, ww);
+        } else if (mesh->mTangents != nullptr) {
+          tangent = glm::vec4(mesh->mTangents[v].x, mesh->mTangents[v].y, mesh->mTangents[v].z, 1.0f);
+          Logger::debug("nullptr");
         }
         vertex.tangent = tangent;
-        //vertex.bitangent = bitangent;
 
         if (mesh->mNumUVComponents[0] > 0) {
           aiVector3D texture_coord = mesh->mTextureCoords[0][v];

@@ -53,8 +53,8 @@ namespace Poulpe
     float const width{ static_cast<float>(component_rendering_info.atlas_width) };
     float const height{ static_cast<float>(component_rendering_info.atlas_height) };
 
-    const glm::vec4 zeroVec4{0.0f, 0.0f, 0.0f, 0.0f};
-    const glm::vec3 zeroVec3{0.0f, 0.0f, 0.0f};
+    glm::vec4 const tangent { 1.0f, 0.0f, 0.0f, 1.0f };
+    glm::vec4 const normal { 0.0f, 1.0f, 0.0f, 0.0f };
 
     for (auto c { utf16_text.begin() }; c != utf16_text.end(); c++) {
 
@@ -84,36 +84,36 @@ namespace Poulpe
       float v1{ ch.y_offset / height };
 
       Vertex vertex_1{
-          zeroVec4,           // tangent
+          tangent,           // tangent
           _color,             // color (vec4)
-          {xpos, ypos+h, 0.f},// pos (vec3)
-          zeroVec3,           // normal
+          {xpos, ypos+h, 0.f, 1.f},// pos (vec3)
+          normal,           // normal
           {u0, v0}           // texture_coord (vec2)
       };
 
       Vertex vertex_2{
-          zeroVec4, _color, {xpos, ypos, 0.f},
-          zeroVec3, {u0, v1}
+          tangent, _color, {xpos, ypos, 0.f, 1.f},
+          normal, {u0, v1}
       };
 
       Vertex vertex_3{
-          zeroVec4, _color, {xpos+w, ypos, 0.f},
-          zeroVec3, {u1, v1}
+          tangent, _color, {xpos+w, ypos, 0.f, 1.f},
+          normal, {u1, v1}
       };
 
       Vertex vertex_4{
-          zeroVec4, _color, {xpos, ypos+h, 0.f},
-          zeroVec3, {u0, v0}
+          tangent, _color, {xpos, ypos+h, 0.f, 1.f},
+          normal, {u0, v0}
       };
 
       Vertex vertex_5{
-          zeroVec4, _color, {xpos+w, ypos, 0.f},
-          zeroVec3, {u1, v1}
+          tangent, _color, {xpos+w, ypos, 0.f, 1.f},
+          normal, {u1, v1}
       };
 
       Vertex vertex_6{
-          zeroVec4, _color, {xpos+w, ypos+h, 0.f},
-          zeroVec3, {u1, v0},
+          tangent, _color, {xpos+w, ypos+h, 0.f, 1.f},
+          normal, {u1, v0},
       };
 
       vertices.emplace_back(vertex_1);
@@ -141,6 +141,7 @@ namespace Poulpe
 
     auto& mat { mesh->getMaterials().at(0) };
     mat.double_sided = true;
+    mat.alpha_mode = 1.0;
 
     //@todo rename to
     mesh->setOptions(options);

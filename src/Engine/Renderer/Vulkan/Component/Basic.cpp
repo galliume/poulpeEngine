@@ -374,7 +374,7 @@ namespace Poulpe
     auto const& it { component_rendering_info.textures->find(name) };
 
     if (it == component_rendering_info.textures->end()) {
-      Logger::warn("Cannot load texture : {}", name);
+      //Logger::warn("Cannot load texture : {}", name);
       return component_rendering_info.textures->at(PLP_ERROR);
     }
 

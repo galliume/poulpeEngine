@@ -22,7 +22,7 @@
       "z": -3.0
     }
   },
-  "hasFog": true,
+  "hasFog": false,
   "player": "",
   "entities": {
     "Sponza": {

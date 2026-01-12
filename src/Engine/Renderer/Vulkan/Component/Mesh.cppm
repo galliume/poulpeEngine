@@ -122,11 +122,4 @@ namespace Poulpe
     std::vector<IDType> _children{};
     bool _is_root { false };
   };
-
-  //@todo should be reversed and Mesh rename to Mesh3D...
-  export class Mesh2D : public Mesh
-  {
-  public:
-      std::vector<Vertex2D> _vertices;
-  };
 }

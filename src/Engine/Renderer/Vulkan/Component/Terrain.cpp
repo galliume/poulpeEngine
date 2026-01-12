@@ -54,7 +54,7 @@ namespace Poulpe
     int32_t const rez{ 20 };
     const float fRez = static_cast<float>(rez);
     const glm::vec4 zeroVec4{0.0f, 0.0f, 0.0f, 0.0f};
-    const glm::vec3 defaultNormal{1.0f, 1.0f, 0.0f};
+    const glm::vec4 defaultNormal{1.0f, 1.0f, 0.0f, 0.0f};
 
     for(int32_t i = 0; i < rez - 1; i++) {
       for(int32_t j = 0; j < rez - 1; j++) {
@@ -65,7 +65,7 @@ namespace Poulpe
         Vertex v{
             zeroVec4, // tangent
             zeroVec4, // color
-            { -width/2.0f + width*i/fRez, y, -height/2.0f + height*j/fRez }, // pos
+            { -width/2.0f + width*i/fRez, y, -height/2.0f + height*j/fRez, 1.0f }, // pos
             defaultNormal, // normal
             { i / fRez, j / fRez } // texture_coord
         };
@@ -74,7 +74,7 @@ namespace Poulpe
         Vertex v2{
             zeroVec4,
             zeroVec4,
-            { -width/2.0f + width*(i+1)/fRez, y, -height/2.0f + height*j/fRez },
+            { -width/2.0f + width*(i+1)/fRez, y, -height/2.0f + height*j/fRez, 1.0f },
             defaultNormal,
             { (i+1) / fRez, j / fRez }
         };
@@ -83,7 +83,7 @@ namespace Poulpe
         Vertex v3{
             zeroVec4,
             zeroVec4,
-            { -width/2.0f + width*i/fRez, y, -height/2.0f + height*(j+1)/fRez },
+            { -width/2.0f + width*i/fRez, y, -height/2.0f + height*(j+1)/fRez, 1.0f },
             defaultNormal,
             { i / fRez, (j+1) / fRez }
         };
@@ -92,7 +92,7 @@ namespace Poulpe
         Vertex v4{
             zeroVec4,
             zeroVec4,
-            { -width/2.0f + width*(i+1)/fRez, y, -height/2.0f + height*(j+1)/fRez },
+            { -width/2.0f + width*(i+1)/fRez, y, -height/2.0f + height*(j+1)/fRez, 1.0f },
             defaultNormal,
             { (i+1) / fRez, (j+1) / fRez }
         };

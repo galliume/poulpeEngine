@@ -9,8 +9,8 @@ layout(std140, binding = 0) readonly uniform UniformBufferObject {
 
 layout(location = 0) in vec4 tangent;
 layout(location = 1) in vec4 color;
-layout(location = 2) in vec3 position;
-layout(location = 3) in vec3 normal;
+layout(location = 2) in vec4 position;
+layout(location = 3) in vec4 normal;
 layout(location = 4) in vec2 texture_coord;
 //layout(location = 6) in ivec4 bone_ids;
 //layout(location = 7) in vec4 bone_weights;
@@ -29,9 +29,9 @@ layout(std140, push_constant) uniform constants
 
 void main()
 {
-  tex_coord = position;
+  tex_coord = position.xyz;
   //gl_Position = vec4(pos.xyz, 1.0);
-  vec4 p = ubo.projection * pc.view * vec4(position, 1.0);
+  vec4 p = ubo.projection * pc.view * position;
   gl_Position = p.xyww;
   view_pos = vec3(pc.view_position) - gl_Position.xyz;
 }

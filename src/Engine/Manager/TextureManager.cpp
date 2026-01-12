@@ -232,7 +232,7 @@ namespace Poulpe
     std::filesystem::path const file_name{ file_path };
 
     if (!std::filesystem::exists(file_name)) {
-      Logger::warn("Texture named {} does not exists, path {}", name, file_name.string());
+      //Logger::warn("Texture named {} does not exists, path {}", name, file_name.string());
       return;
     }
 
@@ -241,16 +241,15 @@ namespace Poulpe
 
     bool is_hdr { false };
     std::string oetf { "srgb" };
-    std::string options { " --encode basis-lz --clevel 3 " };
+    std::string options { " --encode uastc --zstd 11 " };
+    auto quality { 2 };
 
     //https://github.khronos.org/KTX-Software/libktx/ktx_8h.html#a30cc58c576392303d9a5a54b57ef29b5
     std::string  ktx_format{ "R8G8B8A8_SRGB" }; //diffuse default
-    ktx_transcode_fmt_e transcoding { KTX_TTF_BC1_RGB };//diffuse default
+    ktx_transcode_fmt_e transcoding { KTX_TTF_BC7_RGBA };//diffuse default
 
     if (file_name.extension().string() == ".hdr") {
       is_hdr = true;
-    } else if (file_name.extension().string() == ".png") {
-      transcoding = KTX_TTF_BC7_RGBA;
     }
 
     if (is_hdr) {
@@ -258,51 +257,49 @@ namespace Poulpe
       ktx_format = "R32G32B32_SFLOAT";
     }
 
-    if (name == PLP_EMPTY) {
-      transcoding = KTX_TTF_BC7_RGBA;
-    }
     switch (texture_type) {
       case TEXTURE_TYPE::NORMAL:
         oetf = "linear";
-        options.append(" --normal-mode --qlevel 255 ");
+        options.append(" --normal-mode ");
         transcoding = KTX_TTF_BC5_RG;
         ktx_format = (is_hdr) ? "R32G32_SFLOAT" : "R8G8_UNORM";
         break;
       case TEXTURE_TYPE::MR:
         oetf = "linear";
-        options.append(" --qlevel 255 ");
-        transcoding = KTX_TTF_BC7_RGBA;
         ktx_format = (is_hdr) ? "R32G32B32A32_SFLOAT" : "R8G8B8A8_UNORM";
         break;
       case TEXTURE_TYPE::EMISSIVE:
         //@todo check if correct
         oetf = "srgb";
-        options.append(" --qlevel 200 ");
-        transcoding = KTX_TTF_BC7_RGBA;
+        quality = 3;
         ktx_format = (is_hdr) ? "R32G32B32_SFLOAT" : "R8G8B8A8_SRGB";
         if (!is_hdr) {
           options.append(" --assign-primaries bt2020 --convert-primaries bt2020 ");
         }
         break;
       case TEXTURE_TYPE::AO:
+        transcoding = KTX_TTF_BC4_R;
+        break;
       case TEXTURE_TYPE::HEIGHT:
         oetf = "linear";
-        options.append(" --qlevel 255 ");
-        transcoding = KTX_TTF_BC4_R ;
+        quality = 3;
+        transcoding = KTX_TTF_BC4_R;
         ktx_format = (is_hdr) ? "R32_SFLOAT" : "R8_UNORM";
         break;
       default:
       case TEXTURE_TYPE::DIFFUSE:
-        options.append(" --qlevel 200 ");
         if (!is_hdr) {
           options.append(" --assign-primaries bt2020 --convert-primaries bt2020 ");
         }
         break;
     }
 
+    options.append(" --uastc-quality " + std::to_string(quality));
+    options.append(" --assign-oetf " + oetf);
+
     if (!std::filesystem::exists(file_name_ktx)) {
       std::string cmd{
-        "ktx create  --format " + ktx_format + " --assign-oetf " + oetf  \
+        "ktx create  --format " + ktx_format \
         + options + " \"" + file_name.string() + "\" \"" + file_name_ktx.string() + "\" "
       };
       Logger::debug("{}", cmd);

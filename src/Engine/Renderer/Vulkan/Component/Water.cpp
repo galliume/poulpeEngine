@@ -53,9 +53,9 @@ void Water::operator()(
 
     int const rez{ 50 };
     int index{ 0 };
-    const float fRez = static_cast<float>(rez);
-    const glm::vec4 tangentDefault{0.0f, 0.0f, 0.0f, 0.0f};
-    const glm::vec3 normalDefault{1.0f, 1.0f, 0.0f};
+    float const fRez { static_cast<float>(rez) };
+    glm::vec4 const tangentDefault{ 1.0f, 0.0f, 0.0f, 1.0f };
+    glm::vec4 const normalDefault{ 0.0f, 1.0f, 0.0f, 0.0f };
 
 
     for(auto i = 0; i < rez - 1; i++) {
@@ -68,7 +68,7 @@ void Water::operator()(
         Vertex v{
             tangentDefault,                      // tangent (vec4 - 16 bytes)
             { (float)index, 0.0f, 0.0f, 0.0f },  // color (vec4 - 16 bytes)
-            { -width/2.0f + width*i/fRez, y, -height/2.0f + height*j/fRez }, // pos (vec3)
+            { -width/2.0f + width*i/fRez, y, -height/2.0f + height*j/fRez, 1.0f }, // pos (vec3)
             normalDefault,                       // normal (vec3)
             { i / fRez, j / fRez }              // texture_coord (vec2)
         };
@@ -77,7 +77,7 @@ void Water::operator()(
         Vertex v2{
             tangentDefault,
             { (float)index, 0.0f, 0.0f, 0.0f },
-            { -width/2.0f + width*(i+1)/fRez, y, -height/2.0f + height*j/fRez },
+            { -width/2.0f + width*(i+1)/fRez, y, -height/2.0f + height*j/fRez, 1.0f },
             normalDefault,
             { (i+1) / fRez, j / fRez }
         };
@@ -86,7 +86,7 @@ void Water::operator()(
         Vertex v3{
             tangentDefault,
             { (float)index, 0.0f, 0.0f, 0.0f },
-            { -width/2.0f + width*i/fRez, y, -height/2.0f + height*(j+1)/fRez },
+            { -width/2.0f + width*i/fRez, y, -height/2.0f + height*(j+1)/fRez, 1.0f },
             normalDefault,
             { i / fRez, (j+1) / fRez }
         };
@@ -95,7 +95,7 @@ void Water::operator()(
         Vertex v4{
             tangentDefault,
             { (float)index, 0.0f, 0.0f, 0.0f },
-            { -width/2.0f + width*(i+1)/fRez, y, -height/2.0f + height*(j+1)/fRez },
+            { -width/2.0f + width*(i+1)/fRez, y, -height/2.0f + height*(j+1)/fRez, 1.0f },
             normalDefault,
             { (i+1) / fRez, (j+1) / fRez }
         };
