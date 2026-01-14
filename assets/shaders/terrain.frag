@@ -21,30 +21,33 @@
 #define ENVIRONMENT_MAP_INDEX 0
 
 struct Light {
-  mat4 light_space_matrix;
-  mat4 projection;
-  mat4 view;
-  vec3 ads;
-  vec3 clq;
-  vec3 coB;
-  vec3 color;
-  vec3 direction;
-  vec3 position;
-  mat4 light_space_matrix_left;
-  mat4 light_space_matrix_top;
-  mat4 light_space_matrix_right;
-  mat4 light_space_matrix_bottom;
-  mat4 light_space_matrix_back;
-  mat4 cascade0;
-  vec3 cascade_scale1;
-  vec3 cascade_scale2;
-  vec3 cascade_scale3;
-  vec3 cascade_offset1;
-  vec3 cascade_offset2;
-  vec3 cascade_offset3;
-  vec4 cascade_min_splits;
-  vec4 cascade_max_splits;
-  vec4 cascade_texel_sizes;
+    mat4 light_space_matrix;
+    mat4 projection;
+    mat4 view;
+    mat4 light_space_matrix_left;
+    mat4 light_space_matrix_top;
+    mat4 light_space_matrix_right;
+    mat4 light_space_matrix_bottom;
+    mat4 light_space_matrix_back;
+    mat4 cascade0;
+
+    vec4 ads;
+    vec4 clq;
+    vec4 coB;
+    vec4 color;
+    vec4 direction;
+    vec4 position;
+
+    vec4 cascade_scale1;
+    vec4 cascade_scale2;
+    vec4 cascade_scale3;
+    vec4 cascade_offset1;
+    vec4 cascade_offset2;
+    vec4 cascade_offset3;
+
+    vec4 cascade_min_splits;
+    vec4 cascade_max_splits;
+    vec4 cascade_texel_sizes;
 };
 
 layout(push_constant) uniform constants
@@ -69,11 +72,9 @@ layout(location = 9) in vec4 in_cascade_coord;
 layout(location = 13) in vec3 in_blend;
 
 layout(binding = 1) uniform sampler2D tex_sampler[7];
-layout(binding = 3) readonly buffer LightObjectBuffer {
-  Light sun_light;
-  Light point_lights[NR_POINT_LIGHTS];
-  Light spot_light;
-};
+layout(std430, binding = 3) readonly buffer LightBuffer {
+    Light lights[];
+} lightData;
 layout(binding = 2) uniform samplerCube env_sampler[1];
 layout(binding = 4) uniform sampler2DArrayShadow csm;
 layout(binding = 5) uniform samplerCubeShadow tex_shadow_sampler;
@@ -260,10 +261,12 @@ float ShadowCalculation(vec3 light_coord, Light l, float NdL)
 
 float CalculateInfiniteShadow(vec3 cascade_coord0, vec3 cascade_blend)
 {
+  Light sun_light = lightData.lights[0];
+
   vec3 p1, p2;
-  vec3 cascade_coord1 = cascade_coord0 * sun_light.cascade_scale1 + sun_light.cascade_offset1;
-  vec3 cascade_coord2 = cascade_coord0 * sun_light.cascade_scale2 + sun_light.cascade_offset2;
-  vec3 cascade_coord3 = cascade_coord0 * sun_light.cascade_scale3 + sun_light.cascade_offset3;
+  vec3 cascade_coord1 = cascade_coord0 * sun_light.cascade_scale1.xyz + sun_light.cascade_offset1.xyz;
+  vec3 cascade_coord2 = cascade_coord0 * sun_light.cascade_scale2.xyz + sun_light.cascade_offset2.xyz;
+  vec3 cascade_coord3 = cascade_coord0 * sun_light.cascade_scale3.xyz + sun_light.cascade_offset3.xyz;
 
   bool beyond_cascade2 = (cascade_blend.y >= 0.0);
   bool beyond_cascade3 = (cascade_blend.z >= 0.0);
@@ -344,7 +347,9 @@ void main()
   vec3 F90 = vec3(1.0);
 
   // Sun light calculation
-  vec3 L = normalize(sun_light.position);
+  Light sun_light = lightData.lights[0];
+
+  vec3 L = normalize(sun_light.position.xyz);
   vec3 H = normalize(L + V);
   float NdL = max(dot(normal, L), 0.0);
   float NdV = max(dot(normal, V), 0.0);
@@ -377,13 +382,13 @@ void main()
 
   for (int i = 0; i < NR_POINT_LIGHTS; ++i) {
 
-    vec3 light_pos = point_lights[i].position;
+    vec3 light_pos = lightData.lights[i].position.xyz;
     vec3 l = light_pos - p;
 
     //@todo check thoses attenuation functions
     float d = length(light_pos - p);
     float attenuation = InverseSquareAttenuation(l);
-    vec3 C_light = point_lights[i].color.rgb * attenuation;
+    vec3 C_light = lightData.lights[i].color.rgb * attenuation;
 
     vec3 H = normalize(normalize(l) + V);
     float NdL = max(dot(normal, L), 0.0);
@@ -407,8 +412,8 @@ void main()
 
     //@temp
     if(i == 1) {
-      vec3 frag_to_light = p - point_lights[i].position;
-      float shadow = ShadowCalculation(frag_to_light, point_lights[i], NdL);
+      vec3 frag_to_light = p - lightData.lights[i].position.xyz;
+      float shadow = ShadowCalculation(frag_to_light, lightData.lights[i], NdL);
       curr *= shadow;
     }
 

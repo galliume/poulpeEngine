@@ -59,8 +59,9 @@ namespace Poulpe
     _destroy_manager->setRenderer(_renderer.get());
     _destroy_manager->addMemoryPool(_renderer->getAPI()->getDeviceMemoryPool());
 
-    _light_buffers.resize(2);
-      _renderer->getAPI()->startCopyBuffer(_renderer->getCurrentFrameIndex());
+    _light_buffers.resize(_renderer->getMaxFramesInFlight());
+
+    _renderer->getAPI()->startCopyBuffer(_renderer->getCurrentFrameIndex());
     for (std::size_t i = 0; i < _light_buffers.size(); ++i) {
       LightObjectBuffer light_object_buffer{};
       _light_buffers[i] = _renderer->getAPI()->createStorageBuffers(light_object_buffer, _renderer->getCurrentFrameIndex());
@@ -145,7 +146,6 @@ namespace Poulpe
     updateRendererInfo(camera_view_matrix);
 
     _renderer->getAPI()->startCopyBuffer(_renderer->getCurrentFrameIndex());
-    prepareShadowMap();
     prepareSkybox();
     prepareTerrain();
     prepareWater();
@@ -190,15 +190,15 @@ namespace Poulpe
       //auto renderer_info { getRendererInfo() };
 
       LightObjectBuffer light_object_buffer{};
-      light_object_buffer.point_lights[0] = _light_manager->getPointLights()[0];
-      light_object_buffer.point_lights[1] = _light_manager->getPointLights()[1];
-      light_object_buffer.spot_light = _light_manager->getSpotLights()[0];
-      light_object_buffer.sun_light = _light_manager->getSunLight();
+      //light_object_buffer.lights[0] = _light_manager->getSpotLights()[0];
+      light_object_buffer.lights[0] = _light_manager->getSunLight();
+      light_object_buffer.lights[1] = _light_manager->getPointLights()[1];
+      light_object_buffer.lights[2] = _light_manager->getPointLights()[0];
 
       _renderer->getAPI()->startCopyBuffer(_renderer->getCurrentFrameIndex());
 
       _renderer->getAPI()->updateStorageBuffer(
-        _light_buffers[_renderer->getCurrentFrameIndex()], light_object_buffer, _renderer->getCurrentFrameIndex());
+        _light_buffers.at(_renderer->getCurrentFrameIndex()), light_object_buffer, _renderer->getCurrentFrameIndex());
       _renderer->getAPI()->endCopyBuffer(_renderer->getCurrentFrameIndex());
 
       _renderer->getAPI()->startCopyBuffer(_renderer->getCurrentFrameIndex());
@@ -603,21 +603,6 @@ namespace Poulpe
     _component_manager->add<RendererComponent>(entity->getID(), std::move(rdr_impl));
     _component_manager->add<MeshComponent>(entity->getID(), std::move(mesh));
     _entity_manager->setWater(std::move(entity));
-  }
-
-  void RenderManager::prepareShadowMap()
-  {
-    // auto entity = std::make_unique<Entity>();
-    // auto mesh = std::make_unique<Mesh>();
-    // mesh->setHasShadow(false);
-    // mesh->setIsIndexed(false);
-    // mesh->setShaderName("shadow_map");
-    // mesh->setName("_plp_shadow_map");
-
-    // auto rdr_impl{ RendererComponentFactory::create<ShadowMap>() };
-    // (*rdr_impl)(_renderer.get(), getComponentRenderingInfo(mesh.get()));
-
-    // _entity_manager->setShadowMap(std::move(entity));
   }
 
   void RenderManager::addText(FontManager::Text & text)

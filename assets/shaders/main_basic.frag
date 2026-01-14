@@ -41,7 +41,7 @@
 #define INV_PI 1/PI
 
 #define GAMMA_TRESHOLD 0.0031308
-#define NR_POINT_LIGHTS 2
+#define NR_POINT_LIGHTS 3
 
 layout(location = 0) out vec4 final_color;
 
@@ -60,30 +60,33 @@ layout(location = 0) in FRAG_VAR {
 } var;
 
 struct Light {
-  mat4 light_space_matrix;
-  mat4 projection;
-  mat4 view;
-  vec3 ads;
-  vec3 clq;
-  vec3 coB;
-  vec3 color;
-  vec3 direction;
-  vec3 position;
-  mat4 light_space_matrix_left;
-  mat4 light_space_matrix_top;
-  mat4 light_space_matrix_right;
-  mat4 light_space_matrix_bottom;
-  mat4 light_space_matrix_back;
-  mat4 cascade0;
-  vec3 cascade_scale1;
-  vec3 cascade_scale2;
-  vec3 cascade_scale3;
-  vec3 cascade_offset1;
-  vec3 cascade_offset2;
-  vec3 cascade_offset3;
-  vec4 cascade_min_splits;
-  vec4 cascade_max_splits;
-  vec4 cascade_texel_sizes;
+    mat4 light_space_matrix;
+    mat4 projection;
+    mat4 view;
+    mat4 light_space_matrix_left;
+    mat4 light_space_matrix_top;
+    mat4 light_space_matrix_right;
+    mat4 light_space_matrix_bottom;
+    mat4 light_space_matrix_back;
+    mat4 cascade0;
+
+    vec4 ads;
+    vec4 clq;
+    vec4 coB;
+    vec4 color;
+    vec4 direction;
+    vec4 position;
+
+    vec4 cascade_scale1;
+    vec4 cascade_scale2;
+    vec4 cascade_scale3;
+    vec4 cascade_offset1;
+    vec4 cascade_offset2;
+    vec4 cascade_offset3;
+
+    vec4 cascade_min_splits;
+    vec4 cascade_max_splits;
+    vec4 cascade_texel_sizes;
 };
 
 struct Material
@@ -128,11 +131,9 @@ layout(binding = 3) uniform samplerCubeShadow tex_shadow_sampler;
 
 layout(binding = 4) uniform samplerCube env_sampler[];
 
-layout(binding = 5) readonly buffer LightObjectBuffer {
-  Light sun_light;
-  Light point_lights[NR_POINT_LIGHTS];
-  Light spot_light;
-};
+layout(std430, binding = 5) readonly buffer LightBuffer {
+    Light lights[];
+} lightData;
 
 layout(binding = 6) uniform sampler2DArrayShadow csm;
 
@@ -231,10 +232,12 @@ float ShadowCalculation(vec3 light_coord, Light l, float NdL)
 
 float CalculateInfiniteShadow(vec3 cascade_coord0, vec3 cascade_blend)
 {
+  Light sun_light = lightData.lights[0];
+
   vec3 p1, p2;
-  vec3 cascade_coord1 = cascade_coord0 * sun_light.cascade_scale1 + sun_light.cascade_offset1;
-  vec3 cascade_coord2 = cascade_coord0 * sun_light.cascade_scale2 + sun_light.cascade_offset2;
-  vec3 cascade_coord3 = cascade_coord0 * sun_light.cascade_scale3 + sun_light.cascade_offset3;
+  vec3 cascade_coord1 = cascade_coord0 * sun_light.cascade_scale1.xyz + sun_light.cascade_offset1.xyz;
+  vec3 cascade_coord2 = cascade_coord0 * sun_light.cascade_scale2.xyz + sun_light.cascade_offset2.xyz;
+  vec3 cascade_coord3 = cascade_coord0 * sun_light.cascade_scale3.xyz + sun_light.cascade_offset3.xyz;
 
   bool beyond_cascade2 = (cascade_blend.y >= 0.0);
   bool beyond_cascade3 = (cascade_blend.z >= 0.0);
@@ -260,7 +263,7 @@ float CalculateInfiniteShadow(vec3 cascade_coord0, vec3 cascade_blend)
   float delta1 = 3.0f * texel1;
   float delta2 = 3.0f * texel2;
 
-  vec4 shadow_offse1[2] = vec4[2](
+  vec4 shadow_offset[2] = vec4[2](
     vec4(-texel1, -delta1, delta1, -texel1),
     vec4(texel1, delta1, -delta1, texel1)
   );
@@ -269,25 +272,25 @@ float CalculateInfiniteShadow(vec3 cascade_coord0, vec3 cascade_blend)
   //   vec4(texel2, delta2, -delta2, texel2)
   // );
 
-  p1.xy = shadow_coord1 + shadow_offse1[0].xy;
+  p1.xy = shadow_coord1 + shadow_offset[0].xy;
   float light1 = texture(csm, vec4(p1.xy, p1.z, depth1));
-  p1.xy = shadow_coord1 + shadow_offse1[0].zw;
+  p1.xy = shadow_coord1 + shadow_offset[0].zw;
   light1 += texture(csm, vec4(p1.xy, p1.z, depth1));
-  p1.xy = shadow_coord1 + shadow_offse1[1].xy;
+  p1.xy = shadow_coord1 + shadow_offset[1].xy;
   light1 += texture(csm, vec4(p1.xy, p1.z, depth1));
-  p1.xy = shadow_coord1 + shadow_offse1[1].zw;
+  p1.xy = shadow_coord1 + shadow_offset[1].zw;
   light1 += texture(csm, vec4(p1.xy, p1.z, depth1));
 
-  p2.xy = shadow_coord2 + shadow_offse1[0].xy;
+  p2.xy = shadow_coord2 + shadow_offset[0].xy;
   float light2 = texture(csm, vec4(p2.xy, p2.z, depth2));
-  p2.xy = shadow_coord2 + shadow_offse1[0].zw;
+  p2.xy = shadow_coord2 + shadow_offset[0].zw;
   light2 += texture(csm, vec4(p2.xy, p2.z, depth2));
-  p2.xy = shadow_coord2 + shadow_offse1[1].xy;
+  p2.xy = shadow_coord2 + shadow_offset[1].xy;
   light2 += texture(csm, vec4(p2.xy, p2.z, depth2));
-  p2.xy = shadow_coord2 + shadow_offse1[1].zw;
+  p2.xy = shadow_coord2 + shadow_offset[1].zw;
   light2 += texture(csm, vec4(p2.xy, p2.z, depth2));
 
-  return (mix(light1, light2, weight) * 0.25);
+  return light1;//(mix(light1, light1, weight) * 0.25);
 }
 
 //https://github.com/KhronosGroup/glTF/blob/main/extensions/2.0/Khronos/KHR_texture_transform/README.md
@@ -431,6 +434,20 @@ void main()
   }
   normal = normal;
 
+  vec2 emissive_coord = transform_uv(
+    material.emissive_translation,
+    material.emissive_scale,
+    material.emissive_rotation,
+    var.texture_coord);
+
+
+  vec4 emissive = vec4(0.0f);
+
+  if (bool((pc.options >> HAS_EMISSIVE) & 1u)) {
+    emissive = texture(tex_sampler[EMISSIVE_INDEX], emissive_coord);
+    emissive *= material.mre_factor.z * 10;
+  }
+
   vec2 mr_coord = transform_uv(
     material.mr_translation,
     material.mr_scale,
@@ -497,7 +514,9 @@ void main()
 
   vec3 F90 = vec3(1.0);
 
-  vec3 L = normalize(-sun_light.direction);
+  Light sun_light = lightData.lights[0];
+
+  vec3 L = normalize(-sun_light.direction.xyz);
   vec3 H = normalize(L + V);
   float NdL = max(dot(normal, L), 0.0);
   float NdV = max(dot(normal, V), 0.0);
@@ -536,17 +555,17 @@ void main()
   
   vec3 C_ambient = ((kD_amb * (C_diffuse.rgb / PI) * diff_irradiance) + (kS_amb * spec_irradiance)) * ao * 0.01;
 
-  for (int i = 0; i < NR_POINT_LIGHTS; ++i) {
+  for (int i = 1; i < NR_POINT_LIGHTS; ++i) {
 
-    vec3 light_pos = point_lights[i].position;
+    vec3 light_pos = lightData.lights[i].position.xyz;
     vec3 l = light_pos - p;
 
     //@todo check thoses attenuation functions
     //float d = length(light_pos - p);
     float attenuation = InverseSquareAttenuation(l);
-    //float attenuation = 1.0 / (point_lights[i].clq.x + point_lights[i].clq.y * d + point_lights[i].clq.z * (d * d));
-    //vec3 C_light = srgb_to_linear(point_lights[i].color.rgb) * attenuation;
-    vec3 C_light = point_lights[i].color.rgb * attenuation;
+    //float attenuation = 1.0 / (lightData.lights[i].clq.x + lightData.lights[i].clq.y * d + lightData.lights[i].clq.z * (d * d));
+    //vec3 C_light = srgb_to_linear(lightData.lights[i].color.rgb) * attenuation;
+    vec3 C_light = lightData.lights[i].color.rgb * attenuation;
 
     vec3 L = normalize(l);
     vec3 H = normalize(L + V);
@@ -570,8 +589,8 @@ void main()
     vec3 curr = (kD * (C_diffuse.rgb / PI) + specular) * C_light * NdL;
 
     if (i == 1) {
-      vec3 frag_to_light = p - point_lights[i].position;
-      curr *= ShadowCalculation(frag_to_light, point_lights[i], NdL);
+      vec3 frag_to_light = p - lightData.lights[i].position.xyz;
+      curr *= ShadowCalculation(frag_to_light, lightData.lights[i], NdL);
     }
     out_lights += curr;
   }
@@ -581,17 +600,7 @@ void main()
   vec4 color = vec4(C_ambient + C_sun + out_lights, color_alpha);
   //color.xyz *= PI;
   
-  vec2 emissive_coord = transform_uv(
-    material.emissive_translation,
-    material.emissive_scale,
-    material.emissive_rotation,
-    var.texture_coord);
-
-  vec4 emissive_color = texture(tex_sampler[EMISSIVE_INDEX], emissive_coord);
-
-  vec3 emissive = ((pc.options >> HAS_EMISSIVE) & 1u) * emissive_color.xyz;
-  emissive *= material.mre_factor.z * 10;
-  color.rgb += emissive;
+  color.rgb += emissive.rgb;
 
   float has_fog = ((pc.env_options >> HAS_FOG) & 1u);
   color.rgb = mix(color.rgb, ApplyFog(color.rgb, v, p.y), has_fog);

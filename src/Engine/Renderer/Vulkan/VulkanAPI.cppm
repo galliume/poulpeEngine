@@ -69,6 +69,12 @@ namespace Poulpe
     VkDeviceSize offset;
   };
 
+  export struct ImageMemoryBarrier {
+    VkImageMemoryBarrier barrier;
+    VkPipelineStageFlags source_stage;
+    VkPipelineStageFlags destination_stage;
+  };
+
   export class VulkanAPI
   {
   public:
@@ -426,6 +432,7 @@ namespace Poulpe
     inline VkDevice getDevice() const { return _device; }
 
     inline std::vector<VkQueue> getGraphicsQueues() const { return _graphics_queues; }
+    VkQueue getCurrentGraphicsQueues() const { return _graphics_queues.at(_queue_index); }
 
     inline VkPhysicalDeviceProperties getDeviceProperties() const { return _device_props; }
 
@@ -506,8 +513,7 @@ namespace Poulpe
       return vendors[vendorID];
     }
 
-    void transitionImageLayout(
-      VkCommandBuffer& cmd_buffer,
+    ImageMemoryBarrier transitionImageLayout(
       VkImage& image,
       VkImageLayout const old_layout,
       VkImageLayout const new_layout,
@@ -568,6 +574,8 @@ namespace Poulpe
     std::size_t getCurrentStagingMemoryOffset(std::size_t const image_index) { return _update_vertex_offsets[image_index]; }
     void updateCurrentStagingMemoryOffset(std::size_t offset, std::size_t const image_index) { _update_vertex_offsets[image_index] += offset; }
 
+    void updateQueueIndex() { _queue_index = (_queue_index + 1) % _queue_count; }
+
   private:
     bool isDeviceSuitable(VkPhysicalDevice& device);
     bool checkDeviceExtensionSupport(VkPhysicalDevice& device);
@@ -592,7 +600,7 @@ namespace Poulpe
     int32_t _current_frame{ 0 };
     uint32_t _extension_count;
     std::string _api_version;
-    const uint32_t _queue_count{ 2 };
+    uint32_t _queue_count { 2 };
 
     Window* _window{ nullptr };
 
@@ -663,5 +671,49 @@ namespace Poulpe
     std::size_t _staging_size { 512 * 1024 * 1024 };
 
     std::vector<VkDeviceSize> _update_vertex_offsets{};
+    std::size_t _queue_index {0};
+  
+    std::map<LayoutPair, TransitionSyncData> const _transition_map {
+        {
+          {VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL},
+          {
+            .srcAccessMask = 0,
+            .dstAccessMask = VK_ACCESS_SHADER_READ_BIT | VK_ACCESS_SHADER_WRITE_BIT | 
+                            VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_TRANSFER_WRITE_BIT |
+                            VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
+            .source_stage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
+            .destination_stage = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT
+          }
+        },
+        {
+          {VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR},
+          {
+            .srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_TRANSFER_READ_BIT | 
+                            VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT | VK_ACCESS_SHADER_WRITE_BIT,
+            .dstAccessMask = 0,
+            .source_stage = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
+            .destination_stage = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT
+          }
+        },
+        {
+          {VK_IMAGE_LAYOUT_PRESENT_SRC_KHR, VK_IMAGE_LAYOUT_GENERAL},
+        {
+            .srcAccessMask = 0,
+            .dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_SHADER_READ_BIT | 
+                            VK_ACCESS_TRANSFER_WRITE_BIT,
+            .source_stage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
+            .destination_stage = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT
+          }
+        },
+        {
+          {VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL},
+          {
+            .srcAccessMask = 0,
+            .dstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
+            .source_stage = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT,
+            .destination_stage = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT
+          }
+        }
+    };
   };
 }

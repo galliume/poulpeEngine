@@ -31,15 +31,13 @@ namespace Poulpe
   export struct DrawCommands {
 
     public:
+      DrawCommands() = default;
+      DrawCommands(DrawCommands&& other) noexcept = default;
+      DrawCommands& operator=(DrawCommands&& other) noexcept = default;
+
       std::vector<VkCommandBuffer> cmd_buffers{};
       std::vector<std::vector<VkPipelineStageFlags>> stage_flags{};
       std::vector<bool> is_attachments{ };
-
-      DrawCommands(std::size_t const size)
-        : _size(size)
-      {
-        init();
-      }
 
       void insert(
         VkCommandBuffer& cmd_buffer,
@@ -60,7 +58,7 @@ namespace Poulpe
         cmd_buffers.clear();
         stage_flags.clear();
 
-        init();
+        init(_size);
       }
 
       bool has_cmd() const
@@ -74,16 +72,16 @@ namespace Poulpe
         });
         return has_cmd;
       }
-    private:
-
-      void init()
+      
+      void init(std::size_t const size)
       {
+        _size = size;
         cmd_buffers.resize(_size, nullptr);
         stage_flags.resize(_size, { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT });
         is_attachments.resize(_size, false);
       }
 
-      std::mutex _m;
+    private:
       std::size_t _size;
   };
 
@@ -185,8 +183,10 @@ namespace Poulpe
       Data * data,
       std::size_t const image_index);
 
+      std::uint32_t getMaxFramesInFlight() const { return _max_frames_in_flight; }
+
   private:
-    const uint32_t _max_frames_in_flight{ 2 };
+    std::uint32_t _max_frames_in_flight{ 3 };
     //const std::size_t _max_render_thread{ 4 };
 
     void onFinishRender();
@@ -278,7 +278,7 @@ namespace Poulpe
 
     std::mutex _mutex_queue_submit;
 
-    DrawCommands _draw_cmds{4};
+    std::vector<DrawCommands> _draw_cmds{};
 
     std::vector<VkSemaphore> _timeline_semaphores;
     std::vector<std::uint64_t> _current_timeline_values;

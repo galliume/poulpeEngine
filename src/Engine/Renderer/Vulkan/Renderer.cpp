@@ -34,8 +34,11 @@ namespace Poulpe
   void Renderer::init()
   {
     _swapchain = _vulkan->createSwapChain(_images);
+
+    _max_frames_in_flight = _vulkan->getImageCount();
     auto const buffer_size { _max_frames_in_flight };
 
+    _draw_cmds.resize(buffer_size);
     _imageviews.resize(buffer_size);
     _samplers.resize(buffer_size);
     _depth_images.resize(buffer_size);
@@ -53,9 +56,12 @@ namespace Poulpe
     _images3.resize(buffer_size);
     _samplers3.resize(buffer_size);
 
-    _vertices_to_update.resize(3);
+    _vertices_to_update.resize(buffer_size);
 
     for (std::size_t i{ 0 }; i < buffer_size; ++i) {
+
+      _draw_cmds[i].init(buffer_size);
+
       VkImage image;
 
       _vulkan->createImage(
@@ -325,8 +331,22 @@ namespace Poulpe
     VkImageAspectFlagBits const color_aspect { VK_IMAGE_ASPECT_COLOR_BIT };
     VkImageAspectFlagBits const depth_aspect{ VK_IMAGE_ASPECT_DEPTH_BIT };
 
-    _vulkan->transitionImageLayout(cmd_buffer, color, undefined_layout, begin_color_layout, color_aspect);
-    _vulkan->transitionImageLayout(cmd_buffer, depthimage, undefined_layout, begin_depth_layout, depth_aspect);
+    ImageMemoryBarrier const barrier_color { _vulkan->transitionImageLayout(color, undefined_layout, begin_color_layout, color_aspect) };
+    ImageMemoryBarrier const barrier_depth { _vulkan->transitionImageLayout(depthimage, undefined_layout, begin_depth_layout, depth_aspect) };
+    
+    std::array<VkImageMemoryBarrier, 2> barriers{};
+    barriers[0] = barrier_color.barrier;
+    barriers[1] = barrier_depth.barrier;
+
+    vkCmdPipelineBarrier(
+      cmd_buffer,
+      barrier_color.source_stage | barrier_depth.source_stage,
+      barrier_color.destination_stage | barrier_depth.destination_stage,
+      0,
+      0, nullptr,
+      0, nullptr,
+      2, barriers.data()
+    );
 
     _vulkan->beginRendering(
       cmd_buffer,
@@ -473,13 +493,27 @@ namespace Poulpe
     _vulkan->beginCommandBuffer(cmd_buffer);
     _vulkan->startMarker(cmd_buffer, marker_name, marker_color.x, marker_color.y, marker_color.z);
 
-    _vulkan->transitionImageLayout(
+    // _vulkan->transitionImageLayout(
+    //   cmd_buffer,
+    //   depth,
+    //   VK_IMAGE_LAYOUT_UNDEFINED,
+    //   VK_IMAGE_LAYOUT_GENERAL,
+    //   VK_IMAGE_ASPECT_DEPTH_BIT,
+    //   layer_count);
+    ImageMemoryBarrier const barrier_depth { _vulkan->transitionImageLayout(depth, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_ASPECT_DEPTH_BIT, layer_count) };
+    
+    std::array<VkImageMemoryBarrier, 1> barriers{};
+    barriers[0] = barrier_depth.barrier;
+
+    vkCmdPipelineBarrier(
       cmd_buffer,
-      depth,
-      VK_IMAGE_LAYOUT_UNDEFINED,
-      VK_IMAGE_LAYOUT_GENERAL,
-      VK_IMAGE_ASPECT_DEPTH_BIT,
-      layer_count);
+      barrier_depth.source_stage,
+      barrier_depth.destination_stage,
+      0,
+      0, nullptr,
+      0, nullptr,
+      1, barriers.data()
+    );
 
     VkClearColorValue color_clear = {};
     color_clear.float32[0] = 1.0f;
@@ -639,7 +673,7 @@ namespace Poulpe
 
     std::vector<VkPipelineStageFlags> flags { VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT };
     //VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL
-    _draw_cmds.insert(cmd_buffer, thread_id, false, flags);
+    _draw_cmds[_current_frame].insert(cmd_buffer, thread_id, false, flags);
 
     _update_shadow_map = false;
   }
@@ -657,7 +691,7 @@ namespace Poulpe
     endRendering(cmd_buffer, color, depthimage, is_attachment, has_depth_attachment);
 
     std::vector<VkPipelineStageFlags> flags { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
-    _draw_cmds.insert(cmd_buffer, thread_id, is_attachment, flags);
+    _draw_cmds[_current_frame].insert(cmd_buffer, thread_id, is_attachment, flags);
   }
 
   void Renderer::destroy()
@@ -706,13 +740,27 @@ namespace Poulpe
     _vulkan->endRendering(cmd_buffer);
 
     // VkImageLayout final = (is_attachment) ? VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL: VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
-    _vulkan->transitionImageLayout(cmd_buffer, image,
-      VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR, VK_IMAGE_ASPECT_COLOR_BIT);
+    // _vulkan->transitionImageLayout(cmd_buffer, image,
+    //   VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR, VK_IMAGE_ASPECT_COLOR_BIT);
 
     // if (has_depth_attachment) {
     //  _vulkan->transitionImageLayout(cmd_buffer, depth_image,
     //    VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR, VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT);
     // }
+    ImageMemoryBarrier const barrier_color { _vulkan->transitionImageLayout(image, VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR, VK_IMAGE_ASPECT_COLOR_BIT) };
+    
+    std::array<VkImageMemoryBarrier, 1> barriers{};
+    barriers[0] = barrier_color.barrier;
+
+    vkCmdPipelineBarrier(
+      cmd_buffer,
+      barrier_color.source_stage,
+      barrier_color.destination_stage,
+      0,
+      0, nullptr,
+      0, nullptr,
+      1, barriers.data()
+    );
 
     _vulkan->endCommandBuffer(cmd_buffer);
   }
@@ -722,7 +770,7 @@ namespace Poulpe
     if (_sema_render_completes[_current_frame].size() - 1 < _image_index) {
       return;
     }
-    auto const& draw_cmds { _draw_cmds };
+    auto const& draw_cmds { _draw_cmds[_current_frame] };
 
     std::vector<VkCommandBuffer> cmds_buffer{};
 
@@ -770,7 +818,7 @@ namespace Poulpe
     submit_info.pSignalSemaphores = graphics_signal_semaphores.data();
     submit_info.pNext = &timeline_submit_info;
 
-    auto queue = _vulkan->getGraphicsQueues().at(_current_frame);
+    auto queue = _vulkan->getCurrentGraphicsQueues();
 
     std::vector<VkSwapchainKHR> swapchains{ _swapchain };
 
@@ -789,8 +837,9 @@ namespace Poulpe
 
     _previous_frame = _current_frame;
     _current_frame = (_current_frame + 1) % _max_frames_in_flight;
-    _draw_cmds.clear();
+    _draw_cmds[_current_frame].clear();
     onFinishRender();
+    _vulkan->updateQueueIndex();
   }
 
   void Renderer::setRayPick(

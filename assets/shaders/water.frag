@@ -30,30 +30,33 @@
 #define ENVIRONMENT_MAP_INDEX 0
 
 struct Light {
-  mat4 light_space_matrix;
-  mat4 projection;
-  mat4 view;
-  vec3 ads;
-  vec3 clq;
-  vec3 coB;
-  vec3 color;
-  vec3 direction;
-  vec3 position;
-  mat4 light_space_matrix_left;
-  mat4 light_space_matrix_top;
-  mat4 light_space_matrix_right;
-  mat4 light_space_matrix_bottom;
-  mat4 light_space_matrix_back;
-  mat4 cascade0;
-  vec3 cascade_scale1;
-  vec3 cascade_scale2;
-  vec3 cascade_scale3;
-  vec3 cascade_offset1;
-  vec3 cascade_offset2;
-  vec3 cascade_offset3;
-  vec4 cascade_min_splits;
-  vec4 cascade_max_splits;
-  vec4 cascade_texel_sizes;
+    mat4 light_space_matrix;
+    mat4 projection;
+    mat4 view;
+    mat4 light_space_matrix_left;
+    mat4 light_space_matrix_top;
+    mat4 light_space_matrix_right;
+    mat4 light_space_matrix_bottom;
+    mat4 light_space_matrix_back;
+    mat4 cascade0;
+
+    vec4 ads;
+    vec4 clq;
+    vec4 coB;
+    vec4 color;
+    vec4 direction;
+    vec4 position;
+
+    vec4 cascade_scale1;
+    vec4 cascade_scale2;
+    vec4 cascade_scale3;
+    vec4 cascade_offset1;
+    vec4 cascade_offset2;
+    vec4 cascade_offset3;
+
+    vec4 cascade_min_splits;
+    vec4 cascade_max_splits;
+    vec4 cascade_texel_sizes;
 };
 
 layout(location = 0) out vec4 final_color;
@@ -71,11 +74,9 @@ layout(location = 12) in vec3 in_blend;
 
 layout(binding = 1) uniform sampler2D tex_sampler[5];
 layout(binding = 2) uniform samplerCube env_sampler[1];
-layout(binding = 3) readonly buffer LightObjectBuffer {
-  Light sun_light;
-  Light point_lights[NR_POINT_LIGHTS];
-  Light spot_light;
-};
+layout(std430, binding = 3) readonly buffer LightBuffer {
+    Light lights[];
+} lightData;
 
 layout(binding = 4) uniform sampler2DArrayShadow csm;
 layout(binding = 5) uniform samplerCubeShadow tex_shadow_sampler;
@@ -239,10 +240,12 @@ vec3 ApplyFog(vec3 shaded_color, vec3 v, float height)
 
 float CalculateInfiniteShadow(vec3 cascade_coord0, vec3 cascade_blend)
 {
-vec3 p1, p2;
-  vec3 cascade_coord1 = cascade_coord0 * sun_light.cascade_scale1 + sun_light.cascade_offset1;
-  vec3 cascade_coord2 = cascade_coord0 * sun_light.cascade_scale2 + sun_light.cascade_offset2;
-  vec3 cascade_coord3 = cascade_coord0 * sun_light.cascade_scale3 + sun_light.cascade_offset3;
+  Light sun_light = lightData.lights[0];
+
+  vec3 p1, p2;
+  vec3 cascade_coord1 = cascade_coord0 * sun_light.cascade_scale1.xyz + sun_light.cascade_offset1.xyz;
+  vec3 cascade_coord2 = cascade_coord0 * sun_light.cascade_scale2.xyz + sun_light.cascade_offset2.xyz;
+  vec3 cascade_coord3 = cascade_coord0 * sun_light.cascade_scale3.xyz + sun_light.cascade_offset3.xyz;
 
   bool beyond_cascade2 = (cascade_blend.y >= 0.0);
   bool beyond_cascade3 = (cascade_blend.z >= 0.0);
@@ -402,6 +405,8 @@ void main()
 
   //@todo a point lights...
   //sun directionnal light
+  Light sun_light = lightData.lights[0];
+
   vec3 light_color = sun_light.color.rgb;
 
   vec3 p = in_position;
@@ -409,7 +414,7 @@ void main()
   vec3 V = normalize(v);
   vec3 i = normalize(p - vec3(pc.view_position));
 
-  vec3 L = normalize(sun_light.position);
+  vec3 L = normalize(sun_light.position.xyz);
   vec3 H = normalize(V + L);
 
   float NdL = max(dot(normal, L), 0.0);
@@ -459,13 +464,13 @@ void main()
 
   for (int i = 0; i < NR_POINT_LIGHTS; ++i) {
 
-    vec3 light_pos = point_lights[i].position;
+    vec3 light_pos = lightData.lights[i].position.xyz;
     vec3 l = light_pos - p;
 
     //@todo check thoses attenuation functions
     float d = length(light_pos - p);
     float attenuation = InverseSquareAttenuation(l);
-    vec3 C_light = point_lights[i].color.rgb * attenuation;
+    vec3 C_light = lightData.lights[i].color.rgb * attenuation;
 
     vec3 H = normalize(normalize(l) + V);
     float NdL = max(dot(normal, L), 0.0);
@@ -488,8 +493,8 @@ void main()
 
     //@temp
     if(i == 1) {
-      vec3 frag_to_light = p - point_lights[i].position;
-      float shadow = ShadowCalculation(frag_to_light, point_lights[i], NdL);
+      vec3 frag_to_light = p - lightData.lights[i].position.xyz;
+      float shadow = ShadowCalculation(frag_to_light, lightData.lights[i], NdL);
       curr *= shadow;
     }
 
