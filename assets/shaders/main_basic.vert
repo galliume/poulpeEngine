@@ -45,30 +45,33 @@ layout(location = 0) out FRAG_VAR {
 } frag_var;
 
 struct Light {
-  mat4 light_space_matrix;
-  mat4 projection;
-  mat4 view;
-  vec3 ads;
-  vec3 clq;
-  vec3 coB;
-  vec3 color;
-  vec3 direction;
-  vec3 position;
-  mat4 light_space_matrix_left;
-  mat4 light_space_matrix_top;
-  mat4 light_space_matrix_right;
-  mat4 light_space_matrix_bottom;
-  mat4 light_space_matrix_back;
-  mat4 cascade0;
-  vec3 cascade_scale1;
-  vec3 cascade_scale2;
-  vec3 cascade_scale3;
-  vec3 cascade_offset1;
-  vec3 cascade_offset2;
-  vec3 cascade_offset3;
-  vec4 cascade_min_splits;
-  vec4 cascade_max_splits;
-  vec4 cascade_texel_sizes;
+    mat4 light_space_matrix;
+    mat4 projection;
+    mat4 view;
+    mat4 light_space_matrix_left;
+    mat4 light_space_matrix_top;
+    mat4 light_space_matrix_right;
+    mat4 light_space_matrix_bottom;
+    mat4 light_space_matrix_back;
+    mat4 cascade0;
+
+    vec4 ads;
+    vec4 clq;
+    vec4 coB;
+    vec4 color;
+    vec4 direction;
+    vec4 position;
+
+    vec4 cascade_scale1;
+    vec4 cascade_scale2;
+    vec4 cascade_scale3;
+    vec4 cascade_offset1;
+    vec4 cascade_offset2;
+    vec4 cascade_offset3;
+
+    vec4 cascade_min_splits;
+    vec4 cascade_max_splits;
+    vec4 cascade_texel_sizes;
 };
 
 struct Material
@@ -107,11 +110,9 @@ layout(set = 0, binding = 2) readonly buffer ObjectBuffer {
   Material material;
 };
 
-layout(binding = 5) readonly buffer LightObjectBuffer {
-  Light sun_light;
-  Light point_lights[NR_POINT_LIGHTS];
-  Light spot_light;
-};
+layout(std430, binding = 5) readonly buffer LightBuffer {
+    Light lights[];
+} lightData;
 
 void main()
 {
@@ -132,6 +133,9 @@ void main()
   frag_var.norm = N;
   frag_var.frag_pos = world_pos.xyz;
   frag_var.view_pos = vec3(pc.view_position) - world_pos.xyz;
+
+  Light sun_light = lightData.lights[0];
+
   frag_var.sun_light = sun_light.view;
   frag_var.texture_coord = texture_coord;
   frag_var.color = color;

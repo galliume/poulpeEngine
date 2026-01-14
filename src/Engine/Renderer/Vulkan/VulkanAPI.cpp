@@ -101,8 +101,8 @@ VulkanAPI::VulkanAPI(Window* window)
   setupDebugMessenger();
   createSurface();
   pickPhysicalDevice();
-  createLogicalDevice();
   initDetails();
+  createLogicalDevice();
   initMemoryPool();
   createTransferCmdPool();
 
@@ -112,16 +112,17 @@ VulkanAPI::VulkanAPI(Window* window)
   fence_info.flags = VK_FENCE_CREATE_SIGNALED_BIT;
   //VkFence fence;
 
-  _fence_submit.resize(3);
-  _fence_buffer.resize(3);
+  auto const buffer_size { getImageCount() };
+  _fence_submit.resize(buffer_size);
+  _fence_buffer.resize(buffer_size);
 
-  _staging_buffer.resize(3);
-  _staging_data_ptr.resize(3);
-  _staging_device_memory.resize(3);
+  _staging_buffer.resize(buffer_size);
+  _staging_data_ptr.resize(buffer_size);
+  _staging_device_memory.resize(buffer_size);
 
-  _update_vertex_offsets.resize(3);
+  _update_vertex_offsets.resize(buffer_size);
 
-  for (std::size_t i {0}; i < 3; i++) {
+  for (std::size_t i {0}; i < buffer_size; i++) {
     vkCreateFence(_device, & fence_info, nullptr, & _fence_submit[i]);
     vkCreateFence(_device, & fence_info, nullptr, & _fence_buffer[i]);
 
@@ -316,7 +317,7 @@ void VulkanAPI::setupDebugMessenger()
   create_info.pUserData = nullptr;
 
   if (CreateDebugUtilsMessengerEXT(_instance, & create_info, nullptr, &_debug_msg_callback) != VK_SUCCESS) {
-    //Logger::error("Can't create debug messenger.");
+    Logger::error("Can't create debug messenger.");
   }
 }
 
@@ -326,7 +327,7 @@ void VulkanAPI::pickPhysicalDevice()
   vkEnumeratePhysicalDevices(_instance, & device_count, nullptr);
 
   if (device_count == 0) {
-    //Logger::critical("failed to find GPUs with Vulkan support!");
+    Logger::critical("failed to find GPUs with Vulkan support!");
     exit(-1);
   }
 
@@ -361,7 +362,7 @@ void VulkanAPI::pickPhysicalDevice()
     }
   }
   if (_physical_device == VK_NULL_HANDLE) {
-    //Logger::critical("failed to find a suitable GPU");
+    Logger::critical("failed to find a suitable GPU");
     exit(-1);
   }
 }
@@ -462,6 +463,7 @@ void VulkanAPI::createLogicalDevice()
     indices.presentFamily.value(),
     indices.transferFamily.value() };
 
+  //@todo query the real size for each queue
   float queue_priority{ 1.0f };
   _graphics_queues.resize(_queue_count);
   _present_queues.resize(_queue_count);
@@ -799,12 +801,12 @@ VkExtent2D VulkanAPI::chooseSwapExtent( VkSurfaceCapabilitiesKHR const & capabil
 
 uint32_t VulkanAPI::getImageCount() const
 {
-  uint32_t image_count = _swapchain_support.capabilities.minImageCount;
+  uint32_t image_count = _swapchain_support.capabilities.minImageCount + 1;
 
-  if (_swapchain_support.capabilities.maxImageCount > 0
-    && image_count > _swapchain_support.capabilities.maxImageCount) {
+  if (image_count > _swapchain_support.capabilities.maxImageCount) {
     image_count = _swapchain_support.capabilities.maxImageCount;
   }
+
   return image_count;
 }
 
@@ -2086,7 +2088,6 @@ void VulkanAPI::updateVertexBuffer(
   copy_region.size = buffer_size;
 
   vkCmdCopyBuffer(transfer_cmd_buffer, _staging_buffer[image_index], buffer_to_update, 1, & copy_region);
-  
   _update_vertex_offsets[image_index] += buffer_size;
 }
 
@@ -2106,7 +2107,7 @@ void VulkanAPI::submitVertexUpdate(VkSemaphore & semaphore, std::size_t const im
 
   {
     std::lock_guard<std::mutex> guard(_mutex_queue_submit);
-    result = vkQueueSubmit(_transfer_queues[image_index], 1, & submit_info, VK_NULL_HANDLE);
+    result = vkQueueSubmit(_transfer_queues[_queue_index], 1, & submit_info, VK_NULL_HANDLE);
   }
   _update_vertex_offsets[image_index] = 0;
 
@@ -2257,7 +2258,7 @@ void VulkanAPI::updateUniformBuffer(
   copy_region.size = buffer_size;
 
   vkCmdCopyBuffer(copy_cmd_buffer, _staging_buffer[image_index], buffer.buffer, 1, & copy_region);
-  
+
   _update_vertex_offsets[image_index] += buffer_size;
     // //buffer.memory->lock();
 
@@ -2356,14 +2357,14 @@ void VulkanAPI::endCopyBuffer(std::size_t const image_index)
   VkResult result;
   {
     std::lock_guard<std::mutex> guard(_mutex_queue_submit);
-    result = vkQueueSubmit(_transfer_queues[image_index], 1, & submit_info, fence_buffer);
+    result = vkQueueSubmit(_transfer_queues[_queue_index], 1, & submit_info, fence_buffer);
   }
 
   if (result != VK_SUCCESS) {
     Logger::error("failed to copy buffer in copyBuffer : {}", string_VkResult(result));
     throw std::runtime_error("failed to copy buffer in endCopyBuffer");
   }
-  //vkQueueWaitIdle(_transfer_queues[image_index]);
+  //vkQueueWaitIdle(_transfer_queues[_queue_index]);
 }
 
 void VulkanAPI::copyBuffer(
@@ -2374,6 +2375,11 @@ void VulkanAPI::copyBuffer(
   VkDeviceSize dst_offset,
   std::size_t const image_index)
 {
+  if (VK_NULL_HANDLE == dst_buffer) {
+    Logger::warn("update an unitialized buffer");
+    return;
+  }
+
   if (_update_vertex_offsets[image_index] + size > _staging_size) {
     endCopyBuffer(image_index);
     startCopyBuffer(image_index);
@@ -2940,66 +2946,17 @@ VkSampler VulkanAPI::createTextureSampler(uint32_t const mip_lvl)
     vkDeviceWaitIdle(_device);
   }
 
-  void VulkanAPI::transitionImageLayout(
-    VkCommandBuffer& cmd_buffer,
+  ImageMemoryBarrier VulkanAPI::transitionImageLayout(
     VkImage& image,
     VkImageLayout const old_layout,
     VkImageLayout const new_layout,
     VkImageAspectFlags const aspect_flags,
     uint32_t layer_count)
   {
-    std::map<LayoutPair, TransitionSyncData> const g_transition_map {
-    {
-        {VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL},
-        {
-            .srcAccessMask = 0,
-            .dstAccessMask = VK_ACCESS_SHADER_READ_BIT | VK_ACCESS_SHADER_WRITE_BIT |
-                             VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_TRANSFER_WRITE_BIT |
-                             VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
-            .source_stage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
-            .destination_stage = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT
-        }
-    },
-    {
-        {VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR},
-        {
-            .srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_TRANSFER_READ_BIT |
-                             VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT | VK_ACCESS_SHADER_WRITE_BIT,
-            .dstAccessMask = 0,
-            .source_stage = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
-            .destination_stage = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT
-        }
-    },
-    {
-        {VK_IMAGE_LAYOUT_PRESENT_SRC_KHR, VK_IMAGE_LAYOUT_GENERAL},
-        {
-            .srcAccessMask = 0,
-            .dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_SHADER_READ_BIT |
-                             VK_ACCESS_TRANSFER_WRITE_BIT,
-            .source_stage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
-            .destination_stage = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT
-        }
-    },
-
-    {
-        {VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL},
-        {
-            .srcAccessMask = 0,
-            .dstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
-            .source_stage = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT,
-            .destination_stage = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT
-        }
-    }
-};
-
-    if (old_layout == new_layout) {
-        return;
-    }
-
     LayoutPair key = {old_layout, new_layout};
-    auto it = g_transition_map.find(key);
+    auto it = _transition_map.find(key);
 
-    if (it == g_transition_map.end()) {
+    if (it == _transition_map.end()) {
         throw std::invalid_argument(
             "Unsupported image layout transition for unified layouts. "
             "Only UNDEFINED <-> GENERAL and GENERAL <-> PRESENT_SRC_KHR transitions are explicitly supported."
@@ -3024,14 +2981,21 @@ VkSampler VulkanAPI::createTextureSampler(uint32_t const mip_lvl)
     barrier.srcAccessMask = sync_data.srcAccessMask;
     barrier.dstAccessMask = sync_data.dstAccessMask;
 
-    vkCmdPipelineBarrier(
-        cmd_buffer,
-        sync_data.source_stage, sync_data.destination_stage,
-        0,
-        0, nullptr,
-        0, nullptr,
-        1, &barrier
-    );
+    ImageMemoryBarrier plp_barrier {
+      .barrier = barrier,
+      .source_stage = sync_data.source_stage,
+      .destination_stage = sync_data.destination_stage
+    };
+
+    return plp_barrier;
+    // vkCmdPipelineBarrier(
+    //     cmd_buffer,
+    //     sync_data.source_stage, sync_data.destination_stage,
+    //     0,
+    //     0, nullptr,
+    //     0, nullptr,
+    //     1, &barrier
+    // );
   }
 
   void VulkanAPI::submit(
@@ -3216,14 +3180,14 @@ VkSampler VulkanAPI::createTextureSampler(uint32_t const mip_lvl)
 
     {
       std::lock_guard<std::mutex> guard(_mutex_queue_submit);
-      result = vkQueueSubmit(_transfer_queues[image_index], 1, &submit_info, fence_submit);
+      result = vkQueueSubmit(_transfer_queues[_queue_index], 1, &submit_info, fence_submit);
     }
 
     if (result != VK_SUCCESS) {
       Logger::error("Can't transfer ktx image.");
     }
 
-    vkQueueWaitIdle(_transfer_queues[image_index]);
+    vkQueueWaitIdle(_transfer_queues[_queue_index]);
 
     vkFreeMemory(_device, staging_device_memory, nullptr);
     vkDestroyBuffer(_device, buffer, nullptr);

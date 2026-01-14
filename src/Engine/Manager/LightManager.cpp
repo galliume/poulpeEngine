@@ -19,12 +19,12 @@ namespace Poulpe
 {
   LightManager::LightManager()
   {
-    _sun.color = glm::vec3(0.5, 0.7, 1.0);//moonish color ?
-    _sun.position = glm::vec3(0.f, 500.f, 0.f);
-    _sun.direction =  glm::vec3(1.0f, -1.0f, 1.0f);
+    _sun.color = glm::vec4(0.5f, 0.7f, 1.0f, 1.0f);//moonish color ?
+    _sun.position = glm::vec4(0.f, 500.f, 0.f, 1.0f);
+    _sun.direction =  glm::vec4(1.0f, -1.0f, 1.0f, 1.0f);
     //ambient diffuse specular
-    _sun.ads = glm::vec3(10.f, 0.5f, 1.f);
-    _sun.clq = glm::vec3(0.0f);
+    _sun.ads = glm::vec4(10.f, 0.5f, 1.f, 1.0f);
+    _sun.clq = glm::vec4(0.0f);
 
     auto const& appConfig { ConfigManagerLocator::get()->appConfig()["resolution"] };
     float const app_width { static_cast<float>(appConfig["width"].get<uint16_t>()) };
@@ -34,48 +34,49 @@ namespace Poulpe
     glm::mat4 const shadow_cubemap_projection { glm::perspective(fov, 1.0f, 0.1f, 500.f) };
 
     Light light;
-    light.color = glm::vec3(1.0, 0.6, 0.1);
-    light.position = glm::vec3(0.0f, 50.f, 0.0f);
-    light.direction = glm::vec3(-0.1f, -1.0f, 0.0f);
-    light.ads = glm::vec3(10.0f, 30.0f, 40.0f);
-    light.clq = glm::vec3(1.0f, 0.7f, 1.8f);
+    light.color = glm::vec4(1.0f, 0.6f, 0.1f, 1.0f);
+    light.position = glm::vec4(0.0f, 50.f, 0.0f, 1.0f);
+    light.direction = glm::vec4(-0.1f, -1.0f, 0.0f, 1.0f);
+    light.ads = glm::vec4(10.0f, 30.0f, 40.0f, 0.0f);
+    light.clq = glm::vec4(1.0f, 0.7f, 1.8f, 0.0f);
 
     light.projection = shadow_cubemap_projection;//glm::ortho(-10.0f, 10.0f, 10.0f, -10.0f, near_plane, far_plane);
     light.projection[1][1] *= -1.f;
 
-    glm::vec3 vUp = glm::vec3(0.0f, -1.0f, 0.0f);
+    auto const vUp { glm::vec3(0.0f, -1.0f, 0.0f) };
+    auto const light_pos { glm::vec3(light.position) };
 
-    light.light_space_matrix_right = light.projection * glm::lookAt(light.position, light.position + glm::vec3( 1, 0, 0), vUp);
-    light.light_space_matrix_left = light.projection * glm::lookAt(light.position, light.position + glm::vec3(-1, 0, 0), vUp);
-    light.light_space_matrix_top = light.projection * glm::lookAt(light.position, light.position + glm::vec3( 0, 1, 0), glm::vec3(0, 0, 1));
-    light.light_space_matrix_bottom = light.projection * glm::lookAt(light.position, light.position + glm::vec3( 0,-1, 0), glm::vec3(0, 0,-1));
-    light.light_space_matrix = light.projection * glm::lookAt(light.position, light.position + glm::vec3( 0, 0, 1), vUp);
-    light.light_space_matrix_back = light.projection * glm::lookAt(light.position, light.position + glm::vec3( 0, 0,-1), vUp);
+    light.light_space_matrix_right = light.projection * glm::lookAt(light_pos, light_pos + glm::vec3( 1.0f, 0.0f, 0.0f), vUp);
+    light.light_space_matrix_left = light.projection * glm::lookAt(light_pos, light_pos + glm::vec3(-1.0f, 0.0f, 0.0f), vUp);
+    light.light_space_matrix_top = light.projection * glm::lookAt(light_pos, light_pos + glm::vec3( 0.0f, 1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+    light.light_space_matrix_bottom = light.projection * glm::lookAt(light_pos, light_pos + glm::vec3(0.0f, -1.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f));
+    light.light_space_matrix = light.projection * glm::lookAt(light_pos, light_pos + glm::vec3(0.0f, 0.0f, 1.0f), vUp);
+    light.light_space_matrix_back = light.projection * glm::lookAt(light_pos, light_pos + glm::vec3(0.0f, 0.0f, -1.0f), vUp);
 
     light.view = light.light_space_matrix;
 
     Light light2;
-    light2.color = glm::vec3(247.f / 255.f, 240.f / 255.f, 157.f / 255.f);
+    light2.color = glm::vec4(247.f / 255.f, 240.f / 255.f, 157.f / 255.f, 1.0f);
     //light2.position = glm::vec3(-1.2f, 0.1f, 0.4f);
-    light2.position = glm::vec3(117.f, 25.0f, -168.f);
-    light2.direction = glm::vec3(0.0f, -1.0, 0.0);
-    light2.ads = glm::vec3(1.2f, 1.2f, 1.4f);
-    light2.clq = glm::vec3(1.0f, 0.7f, 1.8f);
+    light2.position = glm::vec4(117.f, 25.0f, -168.f, 0.0f);
+    light2.direction = glm::vec4(0.0f, -1.0f, 0.0f, 0.0f);
+    light2.ads = glm::vec4(1.2f, 1.2f, 1.4f, 0.0f);
+    light2.clq = glm::vec4(1.0f, 0.7f, 1.8f, 0.0f);
 
     _points.emplace_back(light2);
     _points.emplace_back(light);
 
     Light light3;
-    light3.color = glm::vec3(0.13f, 0.35f, 0.89f);
-    light3.position = glm::vec3(3.0f, 5.0f, 0.f);
-    light3.direction = glm::vec3(3.0f, 5.0f, 0.f);
-    light3.ads = glm::vec3(2.5f, 2.8f, 3.0f);
-    light3.clq = glm::vec3(1.0f, 0.9f, 0.032f);
+    light3.color = glm::vec4(0.13f, 0.35f, 0.89f, 0.0f);
+    light3.position = glm::vec4(3.0f, 5.0f, 0.0f, 0.0f);
+    light3.direction = glm::vec4(3.0f, 5.0f, 0.0f, 0.0f);
+    light3.ads = glm::vec4(2.5f, 2.8f, 3.0f, 0.0f);
+    light3.clq = glm::vec4(1.0f, 0.9f, 0.032f, 0.0f);
 
-    light3.coB = glm::vec3( glm::cos(glm::radians(12.5f)), glm::cos(glm::radians(15.0f)), 0.0f);
+    light3.coB = glm::vec4( glm::cos(glm::radians(12.5f)), glm::cos(glm::radians(15.0f)), 0.0f, 0.0f);
 
     light3.view = glm::lookAt(
-      light3.position,
+      glm::vec3(light3.position),
       glm::vec3( 0.0f, 0.0f, 0.0f),
       glm::vec3( 0.0f, 0.0f, -1.0f));
 
@@ -133,7 +134,7 @@ namespace Poulpe
     center /= cascade_frustum.size();
 
     auto const M_light { glm::lookAt(
-        glm::vec3(center) - glm::normalize(_sun.direction) * 500.0f,
+        glm::vec3(center) - glm::normalize(glm::vec3(_sun.direction)) * 500.0f,
         glm::vec3(center),
         glm::vec3(0.0f, 1.0f, 0.0f)) };
 
@@ -181,19 +182,19 @@ namespace Poulpe
         std::floorf((max_y + min_y) / (2.0f * T)) * T,
         (min_z + max_z) * 0.5f)
     };
-    auto const M_light_inv { glm::inverse(M_light) };
+    // auto const M_light_inv { glm::inverse(M_light) };
 
-    auto const snapped_world_center { 
-      glm::vec3(M_light_inv * glm::vec4(snapped_center_light, 1.0f))
-    };
+    // auto const snapped_world_center { 
+    //   glm::vec3(M_light_inv * glm::vec4(snapped_center_light, 1.0f))
+    // };
 
-    glm::mat4 const m_cascade { glm::lookAt(
-        snapped_world_center - glm::normalize(_sun.direction) * 500.0f,
-        snapped_world_center,
-        glm::vec3(0.0f, 1.0f, 0.0f)) };
-    // glm::mat3 const R { M_light };
-    // glm::mat4 m_cascade { glm::transpose(R) };
-    // m_cascade[3] = glm::vec4(-snapped_world_center, 1.0f);
+    // glm::mat4 const m_cascade { glm::lookAt(
+    //     snapped_world_center - glm::normalize(_sun.direction) * 500.0f,
+    //     snapped_world_center,
+    //     glm::vec3(0.0f, 1.0f, 0.0f)) };
+    glm::mat3 const R { M_light };
+    glm::mat4 m_cascade { glm::transpose(R) };
+    m_cascade[3] = glm::vec4(snapped_center_light, 1.0f);
 
     // glm::mat4 const m_cascade { glm::lookAt(
     //     snapped_world_center - glm::normalize(_sun.direction) * 100.0f,
@@ -227,9 +228,9 @@ namespace Poulpe
       .texel_size = static_cast<float>(T),
       .z_max = max_z,
       .z_min = min_z,
-      .s = snapped_world_center,
-      .scale = glm::vec3(1.0f),
-      .offset = glm::vec3(0.0f),
+      .s = glm::vec4(snapped_center_light, 0.0f),
+      .scale = glm::vec4(1.0f),
+      .offset = glm::vec4(0.0f),
       .render = render_mvp,
       .sampling = sampling_mvp
     };
@@ -275,8 +276,8 @@ namespace Poulpe
       auto const offsetY { world_delta.y / csm.texel_size - (d0 / (2.f * csm.texel_size)) + 0.5f };
       auto const offsetZ { world_delta.z / z };
 
-      csm.scale = glm::vec3(scaleX, scaleX, scaleZ);
-      csm.offset = glm::vec3(offsetX, offsetY, offsetZ);
+      csm.scale = glm::vec4(scaleX, scaleX, scaleZ, 1.0f);
+      csm.offset = glm::vec4(offsetX, offsetY, offsetZ, 1.0f);
     }
 
     _sun.cascade_texel_sizes = glm::vec4(
@@ -315,8 +316,8 @@ namespace Poulpe
   void LightManager::animateAmbientLight(double const delta_time)
   {
     auto& light1 = _points.at(1);
-    // light1.position.x += static_cast<float>(cos(glm::radians(delta_time * 360.0)));
-    // light1.position.z += static_cast<float>(sin(glm::radians(delta_time * 360.0)));
+    // light_position.x += static_cast<float>(cos(glm::radians(delta_time * 360.0)));
+    // light_position.z += static_cast<float>(sin(glm::radians(delta_time * 360.0)));
     //light1.color *= delta_time;
 
      float fov = glm::radians(90.0f);
@@ -328,7 +329,7 @@ namespace Poulpe
     _ambient_hue += static_cast<float>(delta_time) * 0.1f;
     if (_ambient_hue > 1.0f) _ambient_hue -= 1.0f;
 
-    light1.color = hsv2rgb(_ambient_hue, 1.0f, 1.0f);
+    light1.color = glm::vec4(hsv2rgb(_ambient_hue, 1.0f, 1.0f), 1.0f);
 
     static double t { 0.0 };
     t += delta_time * 0.2;
@@ -340,34 +341,36 @@ namespace Poulpe
     light1.position.z = radius * static_cast<float>(sin(t));
     light1.position.y = y;
 
+    auto const light_position { glm::vec3(light1.position) };
+
     light1.light_space_matrix_right = light1.projection * glm::lookAt(
-      light1.position,
-      light1.position + glm::vec3(1.0f, 0.0f, 0.0f),
+      light_position,
+      light_position + glm::vec3(1.0f, 0.0f, 0.0f),
       glm::vec3(0.0f, -1.0f, 0.0f));
 
     light1.light_space_matrix_left = light1.projection * glm::lookAt(
-      light1.position,
-      light1.position + glm::vec3(-1.0f, 0.0f, 0.0f),
+      light_position,
+      light_position + glm::vec3(-1.0f, 0.0f, 0.0f),
       glm::vec3(0.0f, -1.0f, 0.0f));
 
     light1.light_space_matrix_top = light1.projection * glm::lookAt(
-      light1.position,
-      light1.position + glm::vec3(0.0f, 1.0f, 0.0f),
+      light_position,
+      light_position + glm::vec3(0.0f, 1.0f, 0.0f),
       glm::vec3(0.0f, 0.0f, 1.0f));
 
     light1.light_space_matrix_bottom = light1.projection * glm::lookAt(
-      light1.position,
-      light1.position + glm::vec3(0.0f, -1.0f, 0.0f),
+      light_position,
+      light_position + glm::vec3(0.0f, -1.0f, 0.0f),
       glm::vec3(0.0f, 0.0f, -1.0f));
 
     light1.light_space_matrix = light1.projection * glm::lookAt(
-      light1.position,
-      light1.position + glm::vec3(0.0f, 0.0f, 1.0f),
+      light_position,
+      light_position + glm::vec3(0.0f, 0.0f, 1.0f),
       glm::vec3(0.0f, -1.0f, 0.0f)); //used as light_space_matrix_front
 
     light1.light_space_matrix_back = light1.projection * glm::lookAt(
-      light1.position,
-      light1.position + glm::vec3(0.0f, 0.0f, -1.0f),
+      light_position,
+      light_position + glm::vec3(0.0f, 0.0f, -1.0f),
       glm::vec3(0.0f, -1.0f, 0.0f));
 
     light1.view = light1.light_space_matrix;

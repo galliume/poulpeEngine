@@ -17,9 +17,9 @@ namespace Poulpe
     float texel_size;
     float z_max;
     float z_min;
-    glm::vec3 s;
-    glm::vec3 scale;
-    glm::vec3 offset;
+    glm::vec4 s;
+    glm::vec4 scale;
+    glm::vec4 offset;
     glm::mat4 render;
     glm::mat4 sampling;
   };

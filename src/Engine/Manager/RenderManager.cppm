@@ -104,7 +104,6 @@ namespace Poulpe
     void prepareSkybox();
     void prepareTerrain();
     void prepareWater();
-    void prepareShadowMap();
 
   private:
     std::string _current_level;

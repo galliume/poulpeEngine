@@ -4,30 +4,33 @@
 #define NR_POINT_LIGHTS 2
 
 struct Light {
-  mat4 light_space_matrix;
-  mat4 projection;
-  mat4 view;
-  vec3 ads;
-  vec3 clq;
-  vec3 coB;
-  vec3 color;
-  vec3 direction;
-  vec3 position;
-  mat4 light_space_matrix_left;
-  mat4 light_space_matrix_top;
-  mat4 light_space_matrix_right;
-  mat4 light_space_matrix_bottom;
-  mat4 light_space_matrix_back;
-  mat4 cascade0;
-  vec3 cascade_scale1;
-  vec3 cascade_scale2;
-  vec3 cascade_scale3;
-  vec3 cascade_offset1;
-  vec3 cascade_offset2;
-  vec3 cascade_offset3;
-  vec4 cascade_min_splits;
-  vec4 cascade_max_splits;
-  vec4 cascade_texel_sizes;
+    mat4 light_space_matrix;
+    mat4 projection;
+    mat4 view;
+    mat4 light_space_matrix_left;
+    mat4 light_space_matrix_top;
+    mat4 light_space_matrix_right;
+    mat4 light_space_matrix_bottom;
+    mat4 light_space_matrix_back;
+    mat4 cascade0;
+
+    vec4 ads;
+    vec4 clq;
+    vec4 coB;
+    vec4 color;
+    vec4 direction;
+    vec4 position;
+
+    vec4 cascade_scale1;
+    vec4 cascade_scale2;
+    vec4 cascade_scale3;
+    vec4 cascade_offset1;
+    vec4 cascade_offset2;
+    vec4 cascade_offset3;
+
+    vec4 cascade_min_splits;
+    vec4 cascade_max_splits;
+    vec4 cascade_texel_sizes;
 };
 
 struct UBO
@@ -57,11 +60,9 @@ layout(location = 4) in vec2 texture_coord;
 //layout(location = 7) in vec4 bone_weights;
 //layout(location = 8) in float total_weight;
 
-layout(binding = 3) readonly buffer LightObjectBuffer {
-  Light sun_light;
-  Light point_lights[NR_POINT_LIGHTS];
-  Light spot_light;
-};
+layout(std430, binding = 3) readonly buffer LightBuffer {
+    Light lights[];
+} lightData;
 
 layout(location = 0) out vec2 out_texture_coord;
 layout(location = 1) out vec4 out_options;
