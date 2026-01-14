@@ -168,40 +168,50 @@ namespace Poulpe
     max_z += 1000.0f;
 
 
-    auto const d {
-      static_cast<std::uint32_t>(
-      std::max(
-        std::ceil(glm::length(cascade_frustum[0] - cascade_frustum[6])),
-        std::ceil(glm::length(cascade_frustum[4] - cascade_frustum[6])))) };
+    glm::vec3 const corner_near(-near_w, -near_h, -near_plane);
+    glm::vec3 const corner_far(far_w, far_h, -far_plane);
+
+    float const d { std::ceil(glm::length(corner_far - corner_near)) };
+
+    // auto const d {
+    //   static_cast<std::uint32_t>(
+    //   std::max(
+    //     std::ceil(glm::length(cascade_frustum[0] - cascade_frustum[6])),
+    //     std::ceil(glm::length(cascade_frustum[4] - cascade_frustum[6])))) };
 
     auto const T { d / shadow_resolution };
+    auto const df {static_cast<float>(d) * 0.5f };
 
-    auto const snapped_center_light {
-      glm::vec3(
-        std::floorf((max_x + min_x) / (2.0f * T)) * T,
-        std::floorf((max_y + min_y) / (2.0f * T)) * T,
-        (min_z + max_z) * 0.5f)
+    min_x = -df;
+    max_x = df;
+    min_y = -df;
+    max_y = df;
+
+    auto const snapped_center_light = glm::vec3(
+        std::floor((max_x + min_x) / (2.0f * T)) * T,
+        std::floor((max_y + min_y) / (2.0f * T)) * T,
+        0.0f
+    );
+
+    auto const M_light_inv { glm::inverse(M_light) };
+
+    auto const snapped_world_center { 
+      glm::vec3(M_light_inv * glm::vec4(snapped_center_light, 1.0f))
     };
-    // auto const M_light_inv { glm::inverse(M_light) };
-
-    // auto const snapped_world_center { 
-    //   glm::vec3(M_light_inv * glm::vec4(snapped_center_light, 1.0f))
-    // };
 
     // glm::mat4 const m_cascade { glm::lookAt(
     //     snapped_world_center - glm::normalize(_sun.direction) * 500.0f,
     //     snapped_world_center,
     //     glm::vec3(0.0f, 1.0f, 0.0f)) };
-    glm::mat3 const R { M_light };
-    glm::mat4 m_cascade { glm::transpose(R) };
-    m_cascade[3] = glm::vec4(snapped_center_light, 1.0f);
+    // glm::mat4 m_cascade { M_light_inv };
+    // m_cascade[3] = glm::vec4(snapped_world_center, 1.0f);
 
-    // glm::mat4 const m_cascade { glm::lookAt(
-    //     snapped_world_center - glm::normalize(_sun.direction) * 100.0f,
-    //     snapped_world_center,
-    //     glm::vec3(0.0f, 1.0f, 0.0f)) };
+    glm::mat4 const m_cascade = glm::lookAt(
+      snapped_world_center - glm::normalize(glm::vec3(_sun.direction)) * 500.0f,
+      snapped_world_center,
+      glm::vec3(0.0f, 1.0f, 0.0f)
+    );
 
-    auto const df {static_cast<float>(d) * 0.5f };
     auto const z_range { max_z - min_z };
 
     glm::mat4 p_cascade { glm::mat4(0.0f) };
@@ -228,7 +238,7 @@ namespace Poulpe
       .texel_size = static_cast<float>(T),
       .z_max = max_z,
       .z_min = min_z,
-      .s = glm::vec4(snapped_center_light, 0.0f),
+      .s = glm::vec4(snapped_world_center, 0.0f),
       .scale = glm::vec4(1.0f),
       .offset = glm::vec4(0.0f),
       .render = render_mvp,
@@ -257,27 +267,22 @@ namespace Poulpe
         getLightSpaceMatrix(cascade_splits[i].x, cascade_splits[i].y, camera_view, projection));
     }
 
-    auto const d0 { csms.at(0).texel_size };
+    auto const d0 { csms.at(0).d };
     auto const s0 { csms.at(0).s };
-    auto const z0 {  csms.at(0).z_max  - csms.at(0).z_min };
     //auto const rot { glm::mat3(camera_view) };
 
     for (std::uint8_t i { 1 }; i < 4; ++i) {
       auto & csm { csms.at(i) };
 
-      auto const z { csms.at(i).z_max  - csms.at(i).z_min };
-
-      auto const scaleX { d0 / csm.texel_size };
-      auto const scaleZ { z0 / z };
+      auto const scale { d0 / csm.d };
 
       glm::vec3 world_delta { (s0 - csm.s) };
 
-      auto const offsetX { world_delta.x / csm.texel_size - (d0 / (2.f * csm.texel_size)) + 0.5f };
-      auto const offsetY { world_delta.y / csm.texel_size - (d0 / (2.f * csm.texel_size)) + 0.5f };
-      auto const offsetZ { world_delta.z / z };
+      auto const offsetX { world_delta.x / csm.d + (1.0f - scale) * 0.5f };
+      auto const offsetY { world_delta.y / csm.d + (1.0f - scale) * 0.5f };
 
-      csm.scale = glm::vec4(scaleX, scaleX, scaleZ, 1.0f);
-      csm.offset = glm::vec4(offsetX, offsetY, offsetZ, 1.0f);
+      csm.scale = glm::vec4(scale, scale, 1.0f, 1.0f);
+      csm.offset = glm::vec4(offsetX, offsetY, 0.0f, 1.0f);
     }
 
     _sun.cascade_texel_sizes = glm::vec4(

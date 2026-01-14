@@ -416,6 +416,41 @@
       "hasShadow": true,
       "isIndexed": true,
       "debugNormal": true
+    },
+    "head": {
+      "mesh": "assets/mesh/lpshead/head.obj",
+      "shader": "main_basic",
+      "positions": [
+        {
+          "x": 120.0,
+          "y": 30.0,
+          "z": -110.0
+        }
+      ],
+      "scales": [
+        {
+          "x": 50.0,
+          "y": 50.0,
+          "z": 50.0
+        }
+      ],
+      "rotations": [
+        {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
+        }
+      ],
+      "flipY": false,
+      "count": 1,
+      "hasBbox": false,
+      "hasAnimation": false,
+      "isPointLight": false,
+      "animationScripts": {
+      },
+      "hasShadow": true,
+      "isIndexed": true,
+      "debugNormal": true
     }
   }
 }
