@@ -290,7 +290,7 @@ float CalculateInfiniteShadow(vec3 cascade_coord0, vec3 cascade_blend)
   p2.xy = shadow_coord2 + shadow_offset[1].zw;
   light2 += texture(csm, vec4(p2.xy, p2.z, depth2));
 
-  return light1;//(mix(light1, light1, weight) * 0.25);
+  return (mix(light1, light2, weight) * 0.25);
 }
 
 //https://github.com/KhronosGroup/glTF/blob/main/extensions/2.0/Khronos/KHR_texture_transform/README.md
