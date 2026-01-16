@@ -24,7 +24,8 @@
       "unlockFPS": "0",
       "reloadShader": "1",
       "normalDebug": "2",
-      "reload": "r"
+      "reload": "r",
+      "switch_camera": "t"
     }
   }
 }
