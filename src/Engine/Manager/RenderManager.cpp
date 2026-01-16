@@ -44,7 +44,7 @@ namespace Poulpe
   RenderManager::RenderManager(Window* const window)
   {
     _window = std::unique_ptr<Window>(window);
-    _camera = std::make_unique<Camera>();
+    _cameras.emplace_back(std::make_unique<Camera>());
     _renderer = std::make_unique<Renderer>(_window.get());
 
     _component_manager = std::make_unique<ComponentManager>();
@@ -86,7 +86,7 @@ namespace Poulpe
     _entity_manager->addRenderer(_renderer.get());
     _shader_manager->addRenderer(_renderer.get());
 
-    InputManagerLocator::get()->setCamera(_camera.get());
+    InputManagerLocator::get()->setCamera(getCamera());
 
     //end @todo
 
@@ -127,7 +127,7 @@ namespace Poulpe
       _audio_manager->startAmbient();
     }
 
-    if (!_camera->isInit()) {
+    if (!getCamera()->isInit()) {
       auto const& lvl_config{ configManager->lvlConfig() };
       auto const& camera{ lvl_config["camera"] };
       glm::vec3 const start_pos = {
@@ -135,12 +135,12 @@ namespace Poulpe
         camera["position"]["y"].template get<float>(),
         camera["position"]["z"].template get<float>() };
 
-      _camera->init(start_pos);
-      _camera->forward();
-      _camera->move();
+      getCamera()->init(start_pos);
+      getCamera()->forward();
+      getCamera()->move();
     }
 
-    auto const camera_view_matrix = _camera->getView();
+    auto const camera_view_matrix = getCamera()->getView();
 
     updateComponentRenderingInfo();
     updateRendererInfo(camera_view_matrix);
@@ -173,11 +173,20 @@ namespace Poulpe
   void RenderManager::renderScene(double const delta_time)
   {
     {
+      auto * const config_manager { ConfigManagerLocator::get() };
+      auto const & root_path { config_manager->rootPath() };
+
+      auto const camera_index { config_manager->getCameraIndex() };
+      if (_current_camera != camera_index) {
+        _current_camera = camera_index;
+        InputManagerLocator::get()->setCamera(getCamera());
+      }
+
       InputManagerLocator::get()->processGamepad(_player_manager.get(), delta_time);
 
       //@todo animate light
       //_light_manager->animateAmbientLight(delta_time);
-      auto const& camera_view_matrix { _camera->getView() };
+      auto const& camera_view_matrix { getCamera()->getView() };
       auto const& perspective { _renderer->getPerspective() };
       //std::lock_guard<std::shared_mutex> guard(_entity_manager->lockWorldNode());
 
@@ -188,19 +197,6 @@ namespace Poulpe
       updateRendererInfo(camera_view_matrix);
 
       //auto renderer_info { getRendererInfo() };
-
-      LightObjectBuffer light_object_buffer{};
-      //light_object_buffer.lights[0] = _light_manager->getSpotLights()[0];
-      light_object_buffer.lights[0] = _light_manager->getSunLight();
-      light_object_buffer.lights[1] = _light_manager->getPointLights()[1];
-      light_object_buffer.lights[2] = _light_manager->getPointLights()[0];
-
-      _renderer->getAPI()->startCopyBuffer(_renderer->getCurrentFrameIndex());
-
-      _renderer->getAPI()->updateStorageBuffer(
-        _light_buffers.at(_renderer->getCurrentFrameIndex()), light_object_buffer, _renderer->getCurrentFrameIndex());
-      _renderer->getAPI()->endCopyBuffer(_renderer->getCurrentFrameIndex());
-
       _renderer->getAPI()->startCopyBuffer(_renderer->getCurrentFrameIndex());
 
       std::future<void> async_skybox_render;
@@ -211,11 +207,8 @@ namespace Poulpe
       std::vector<std::future<void>> async_entities_render;
       std::vector<std::future<void>> async_transparent_entities_render;
 
-      auto * const config_manager { ConfigManagerLocator::get() };
-      auto const & root_path { config_manager->rootPath() };
-
       glm::mat4 const vp { perspective * camera_view_matrix };
-      auto const frustum_planes { _camera->getFrustumPlanes(vp) };
+      auto const frustum_planes { getCamera()->getFrustumPlanes(vp) };
       
       auto const& entities = _entity_manager->getEntities();
       auto const& transparent_entities = _entity_manager->getTransparentEntities();
@@ -355,6 +348,18 @@ namespace Poulpe
 
       _renderer->endRender();
       _renderer->submit();
+
+      LightObjectBuffer light_object_buffer{};
+      //light_object_buffer.lights[0] = _light_manager->getSpotLights()[0];
+      light_object_buffer.lights[0] = _light_manager->getSunLight();
+      light_object_buffer.lights[1] = _light_manager->getPointLights()[1];
+      light_object_buffer.lights[2] = _light_manager->getPointLights()[0];
+
+      _renderer->getAPI()->startCopyBuffer(_renderer->getCurrentFrameIndex());
+
+      _renderer->getAPI()->updateStorageBuffer(
+        _light_buffers.at(_renderer->getCurrentFrameIndex()), light_object_buffer, _renderer->getCurrentFrameIndex());
+      _renderer->getAPI()->endCopyBuffer(_renderer->getCurrentFrameIndex());
     }
   }
 
@@ -498,8 +503,8 @@ namespace Poulpe
     if (lvl_data.contains("player")) {
       _player_manager = std::make_unique<PlayerManager>(
         _component_manager.get(),
-        lvl_data["player"].get<std::string>()
-      );
+        lvl_data["player"].get<std::string>());
+      _cameras.emplace_back(std::make_unique<Camera>());
     }
     _texture_manager->addConfig(config_manager->texturesConfig());
 
