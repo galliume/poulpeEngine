@@ -46,7 +46,7 @@ namespace Poulpe
     inline uint32_t getAppHeight() { return getRenderer()->getAPI()->getSwapChainExtent().height; }
     inline uint32_t getAppWidth() { return getRenderer()->getAPI()->getSwapChainExtent().width; }
     inline AudioManager* getAudioManager() { return _audio_manager.get(); }
-    inline Camera* getCamera() { return _camera.get(); }
+    inline Camera* getCamera() { return _cameras.at(_current_camera).get(); }
     inline ComponentManager* getComponentManager() { return _component_manager.get(); }
     inline DestroyManager* getDestroyManager() { return _destroy_manager.get(); }
     inline EntityManager* getEntityManager() { return _entity_manager.get(); }
@@ -113,7 +113,8 @@ namespace Poulpe
     bool _is_loaded{ false };
     bool _refresh{ false };
     double _elapsed_time{ 0.0 };
-    std::unique_ptr<Camera> _camera;
+    std::vector<std::unique_ptr<Camera>> _cameras;
+    std::size_t _current_camera { 0 };
     std::unique_ptr<Renderer> _renderer;
     std::unique_ptr<Window> _window;
 

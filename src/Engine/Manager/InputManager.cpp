@@ -136,6 +136,10 @@ namespace Poulpe
         {
           ConfigManagerLocator::get()->setReload(true);
         }
+        else if (key == _keyboard_keys[config["switch_camera"]])
+        {
+          ConfigManagerLocator::get()->switchCamera();
+        }
 
         break;
       }

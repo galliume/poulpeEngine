@@ -150,4 +150,14 @@ namespace Poulpe
   {
     return _reload_shaders;
   }
+
+  void ConfigManager::switchCamera()
+  {
+    //@todo expand for more cameras, and with a better way to do it
+    if (_camera_index == 0) {
+      _camera_index = 1;
+    } else {
+      _camera_index = 0;
+    }
+  }
 }
