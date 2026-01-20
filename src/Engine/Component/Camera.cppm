@@ -27,7 +27,7 @@ namespace Poulpe
     inline glm::vec3 getPos() const { return _pos; }
     inline glm::mat4 getView() const { return glm::lookAt(_pos, _pos + _front, _up); }
     inline glm::vec3 getDirection() const { return _front; }
-    void setPos(glm::vec3 const & pos) { _pos = pos; }
+    void setPos(glm::vec3 const & pos) { _pos = pos; _next_pos = pos; }
     glm::mat4 frustumProj(float fovy, float s, float n, float f);
     glm::mat4 lookAt();
     void updateDeltaTime(double const delta_time) { _delta_time = delta_time; }
