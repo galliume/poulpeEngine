@@ -25,15 +25,21 @@ namespace Poulpe
     }
   }
 
-  void PlayerManager::move(float const x, float const y, double const delta_time)
+  void PlayerManager::move(float const lx, float const ly, double const delta_time)
   {
+      auto* boneAnimationComponent { _component_manager->get<BoneAnimationComponent>(_player_id) };
+      if (boneAnimationComponent) {
+        (*boneAnimationComponent).setAnimId(0);
+        (*boneAnimationComponent).reset();
+      }
+
       auto* player { _component_manager->get<MeshComponent>(_player_id) };
       auto player_mesh { player->template has<Mesh>() };
       auto const& data { player_mesh->getData() };
 
-      float const speed { 5.0f };
-      data->_current_pos.x += x * speed * static_cast<float>(delta_time);
-      data->_current_pos.y += y * speed * static_cast<float>(delta_time);
+      float const speed { 10.0f };
+      data->_current_pos.x -= lx * speed * static_cast<float>(delta_time);
+      data->_current_pos.z -= ly * speed * static_cast<float>(delta_time);
 
       auto const T { glm::translate(glm::mat4(1.0f), data->_current_pos) };
       auto const R { glm::mat4_cast(data->_current_rotation) };
@@ -46,5 +52,19 @@ namespace Poulpe
           ubo.model = model;
         });
       }
+
+    _moved = true;
+
+    auto current_pos { data->_current_pos };
+
+    //current_pos.y += 10;
+    current_pos.z -= 20;
+
+    _third_person_camera_pos = current_pos;
+  }
+
+  glm::vec3 PlayerManager::getThirdPersonCameraPos() const
+  {
+    return _third_person_camera_pos;
   }
 }

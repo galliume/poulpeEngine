@@ -360,6 +360,12 @@ namespace Poulpe
       _renderer->getAPI()->updateStorageBuffer(
         _light_buffers.at(_renderer->getCurrentFrameIndex()), light_object_buffer, _renderer->getCurrentFrameIndex());
       _renderer->getAPI()->endCopyBuffer(_renderer->getCurrentFrameIndex());
+
+      if (_player_manager->hasMoved() && _current_camera == 1) {
+        getCamera()->setPos(_player_manager->getThirdPersonCameraPos());
+      }
+
+      _player_manager->reset();
     }
   }
 
@@ -404,11 +410,14 @@ namespace Poulpe
         .delta_time = delta_time,
         .data = mesh->getData()
       };
-      
-      //@todo temp
       if (mesh->getName() == _player_manager->getPlayerName()) {
         _player_manager->setPlayerId(entity_id);
         animation_info.looping = false;
+        if (_current_camera == 1 && !getCamera()->isInit()) {
+          getCamera()->init(_player_manager->getThirdPersonCameraPos());
+          getCamera()->forward();
+          getCamera()->move();
+        }
       }
 
       auto* animation_component { _component_manager->get<AnimationComponent>(entity_id) };
@@ -502,8 +511,9 @@ namespace Poulpe
     }
     if (lvl_data.contains("player")) {
       _player_manager = std::make_unique<PlayerManager>(
-        _component_manager.get(),
-        lvl_data["player"].get<std::string>());
+      _component_manager.get(),
+      lvl_data["player"].get<std::string>());
+
       _cameras.emplace_back(std::make_unique<Camera>());
     }
     _texture_manager->addConfig(config_manager->texturesConfig());

@@ -226,13 +226,23 @@ namespace Poulpe
 
       float lx { state.axes[GLFW_GAMEPAD_AXIS_LEFT_X] };
       float ly { state.axes[GLFW_GAMEPAD_AXIS_LEFT_Y] };
+      double rx { static_cast<double>(state.axes[GLFW_GAMEPAD_AXIS_RIGHT_X]) };
+      double ry { static_cast<double>(state.axes[GLFW_GAMEPAD_AXIS_RIGHT_Y]) };
       float const deadzone { 0.2f };
 
       if (std::abs(lx) < deadzone) lx = 0.0f;
       if (std::abs(ly) < deadzone) ly = 0.0f;
 
+      if (std::abs(rx) < 0.2) rx = 0.0;
+      if (std::abs(ry) < 0.2) ry = 0.0;
+
       if (lx != 0.0f || ly != 0.0f) {
         player_manager->move(lx, ly, delta_time);
+      }
+      if (rx != 0.0 || ry != 0.0) {
+        Logger::debug("rx {} ry {}", rx, ry);
+        InputManager::_can_move_camera = true;
+        updateMousePos(rx, ry);
       }
     }
   }

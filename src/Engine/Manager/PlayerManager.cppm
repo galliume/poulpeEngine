@@ -1,3 +1,11 @@
+module;
+
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtx/hash.hpp>
+#include <glm/gtx/quaternion.hpp>
+#include <glm/fwd.hpp>
+
 export module Engine.Managers.PlayerManager;
 
 import std;
@@ -26,14 +34,21 @@ namespace Poulpe
       void setPlayerId(IDType id) { _player_id = id; _is_init = true; }
       void jump();
       bool isInit() { return _is_init; }
+      bool hasMoved() const { return _moved; }
+      void reset() { _moved = false; }
 
-      void move(float const x, float const y, double const delta_time);
+      void move(float const lx, float const ly, double const delta_time);
+      glm::vec3 getThirdPersonCameraPos() const;
 
     private:
       ComponentManager * _component_manager;
 
       bool _is_init { false };
+      bool _moved { false };
+      
       std::string _player_name = "__PLP_NO_PLAYER";
       IDType _player_id = 0;
+
+      glm::vec3 _third_person_camera_pos {};
   };
 }
