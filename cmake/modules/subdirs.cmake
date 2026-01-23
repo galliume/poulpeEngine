@@ -9,12 +9,11 @@ set(ENGINE_SUBDIRS
   Engine/Animation
   Engine/Component
   Engine/Core
-  Engine/Core/Network
   Engine/GUI
   Engine/Manager
+  Engine/Network
   Engine/Renderer
   Engine/Renderer/Vulkan
-  Engine/Renderer/Vulkan/Component
   Engine/Utils
   Editor
   Editor/Manager

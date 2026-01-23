@@ -12,13 +12,11 @@ module Engine.Renderer.Vulkan.ShadowMap;
 
 import std;
 
-import Engine.Component.Components;
-import Engine.Component.Texture;
-
 import Engine.Core.MeshTypes;
 import Engine.Core.PlpTypedef;
 
 import Engine.Renderer.RendererComponentTypes;
+import Engine.Renderer.VulkanRenderer;
 
 namespace Poulpe
 {

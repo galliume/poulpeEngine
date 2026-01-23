@@ -4,7 +4,7 @@ import std;
 
 import Engine.Core.Logger;
 
-import Engine.Core.Network.Server;
+import Engine.Network.Server;
 
 namespace Poulpe
 {

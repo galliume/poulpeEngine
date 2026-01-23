@@ -19,8 +19,12 @@ import Editor.Managers.ExplorerManager;
 import Editor.Managers.LevelManager;
 
 import Engine.Application;
+
 import Engine.Core.Logger;
+
 import Engine.Component.Components;
+import Engine.Component.Mesh;
+
 import Engine.Managers.AudioManager;
 import Engine.Managers.ComponentManager;
 import Engine.Managers.DestroyManager;
@@ -30,7 +34,6 @@ import Engine.Managers.LightManager;
 import Engine.Managers.ShaderManager;
 import Engine.Managers.TextureManager;
 import Engine.Managers.RenderManager;
-import Engine.Renderer.Mesh;
 import Engine.Renderer.RendererComponent;
 import Engine.Renderer.RendererComponentTypes;
 
@@ -65,7 +68,7 @@ namespace Poulpe {
     //struct wl_subsurface* subsurface = wl_subcompositor_get_subsurface(subcompositor, child, parent);
     #else
     auto * render_manager = static_cast<RenderManager*>(clientData);
-    HWND glfw_hwnd = glfwGetWin32Window(render_manager->getWindow()->get());
+    HWND glfw_hwnd = glfwGetWin32Window(render_manager->getWindow()->getGlfwWindow());
 
     HWND tk_hwnd;
     Tcl_GetIntFromObj(interp, objv[1], (int*)&tk_hwnd);

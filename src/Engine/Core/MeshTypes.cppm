@@ -8,15 +8,13 @@ export module Engine.Core.MeshTypes;
 
 import std;
 
-import Engine.Renderer.VulkanDeviceMemory;
-
-import Engine.Component.Vertex;
+import Engine.Core.Vertex;
 import Engine.Core.PlpTypedef;
 
 namespace Poulpe {
   export struct Buffer {
     VkBuffer buffer{ VK_NULL_HANDLE };
-    DeviceMemory* memory;
+    void* memory; //@todo mmmh
     std::uint64_t offset;
     std::uint64_t size;
     uint32_t index{ 0 };

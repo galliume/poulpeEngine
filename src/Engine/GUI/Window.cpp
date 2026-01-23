@@ -8,12 +8,10 @@ module Engine.GUI.Window;
 
 import std;
 
-import Engine.Managers.ConfigManagerLocator;
-
 //bool _FramebufferResized = false;
 namespace Poulpe
 {
-  GLFWwindow* Window::get() const { return _window; }
+  GLFWwindow* Window::getGlfwWindow() const { return _window; }
 
   void Window::setVSync(bool active) { _active_vsync = active; }
 
@@ -24,13 +22,11 @@ namespace Poulpe
 
   void Window::init(
     std::string_view window_title,
+    std::string icon_path,
     uint16_t const width,
     uint16_t const height,
     bool const editor_mode)
   {
-    auto const& root_path { ConfigManagerLocator::get()->rootPath() };
-    auto const icon_path {  root_path + "/mpoulpe.png" };
-
     glfwInit();
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
     glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);

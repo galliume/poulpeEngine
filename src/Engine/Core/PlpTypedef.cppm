@@ -13,7 +13,7 @@ export module Engine.Core.PlpTypedef;
 
 import std;
 
-import Engine.Component.Vertex;
+import Engine.Core.Vertex;
 
 namespace Poulpe
 {

@@ -6,7 +6,7 @@ export module Engine.Managers.InputManager;
 
 import std;
 
-import Engine.Component.Camera;
+import Engine.Core.Camera;
 
 import Engine.Managers.PlayerManager;
 

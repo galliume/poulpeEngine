@@ -10,6 +10,6 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(fetch_stb)
 
-target_include_directories(${PROJECT_NAME}
-SYSTEM PRIVATE
-  ${fetch_stb_SOURCE_DIR})
+add_library(stb INTERFACE)
+target_include_directories(stb
+  SYSTEM INTERFACE ${fetch_stb_SOURCE_DIR})

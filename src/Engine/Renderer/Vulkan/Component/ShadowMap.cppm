@@ -4,10 +4,8 @@ module;
 
 export module Engine.Renderer.Vulkan.ShadowMap;
 
-import Engine.Core.MeshTypes;
-
-import Engine.Renderer;
 import Engine.Renderer.RendererComponentTypes;
+import Engine.Renderer.VulkanRenderer;
 
 namespace Poulpe
 {

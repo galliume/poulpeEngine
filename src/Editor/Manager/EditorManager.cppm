@@ -17,7 +17,7 @@ namespace Poulpe {
     public:
       EditorManager(Application const * app);
 
-        ~EditorManager();
+      ~EditorManager();
 
     private:
       bool _init {false};

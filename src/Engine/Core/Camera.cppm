@@ -6,12 +6,18 @@ module;
 #include <glm/gtx/quaternion.hpp>
 #include <glm/fwd.hpp>
 
-export module Engine.Component.Camera;
+export module Engine.Core.Camera;
 
 import std;
 
 namespace Poulpe
 {
+  export enum class CameraType : std::uint8_t
+  {
+    FREE,
+    THIRD_PERSON
+  };
+
   export class Camera
   {
   public:
@@ -26,10 +32,10 @@ namespace Poulpe
 
     inline glm::vec3 getPos() const { return _pos; }
     inline glm::mat4 getView() const { return glm::lookAt(_pos, _pos + _front, _up); }
+    glm::mat4 getView(glm::vec3 const& target) { return glm::lookAt(_pos, target, _up); }
     inline glm::vec3 getDirection() const { return _front; }
     void setPos(glm::vec3 const & pos) { _pos = pos; _next_pos = pos; }
     glm::mat4 frustumProj(float fovy, float s, float n, float f);
-    glm::mat4 lookAt();
     void updateDeltaTime(double const delta_time) { _delta_time = delta_time; }
     void updateAngle(double const x_offset, double const y_offset);
     void move();
@@ -45,7 +51,7 @@ namespace Poulpe
 
     std::vector<glm::vec4> getFrustumPlanes(glm::mat4 const vp);
 
-  private:
+    private:
     glm::vec3 mat4_backward();
     glm::vec3 mat4_down();
     glm::vec3 mat4_forward();

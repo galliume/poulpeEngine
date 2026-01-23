@@ -1,6 +1,5 @@
 module;
 
-
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/hash.hpp>
@@ -13,14 +12,14 @@ module Engine.Renderer.Vulkan.Basic;
 
 import std;
 
-import Engine.Component.Components;
-import Engine.Component.Texture;
+import Engine.Component.Mesh;
 
 import Engine.Core.Logger;
 import Engine.Core.MeshTypes;
 import Engine.Core.PlpTypedef;
 
 import Engine.Renderer.RendererComponentTypes;
+import Engine.Renderer.VulkanRenderer;
 
 namespace Poulpe
 {

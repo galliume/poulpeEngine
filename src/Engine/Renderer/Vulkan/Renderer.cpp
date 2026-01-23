@@ -1,4 +1,7 @@
 module;
+
+#include <GLFW/glfw3.h>
+
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/hash.hpp>
@@ -8,24 +11,18 @@ module;
 #include <volk.h>
 
 module Engine.Renderer.VulkanRenderer;
+import Engine.Renderer.VulkanDeviceMemory;
 
 import std;
 
-import Engine.Component.Components;
-import Engine.Component.Vertex;
+import Engine.Core.Vertex;
 
 import Engine.Core.Logger;
 import Engine.Core.MeshTypes;
 
-import Engine.GUI.Window;
-
-import Engine.Managers.ConfigManagerLocator;
-
-import Engine.Renderer.Vulkan.Mesh;
-
 namespace Poulpe
 {
-  Renderer::Renderer(Window* const window)
+  Renderer::Renderer(GLFWwindow* const window)
   {
     _vulkan = std::make_unique<VulkanAPI>(window);
     setPerspective();
@@ -179,16 +176,16 @@ namespace Poulpe
 
     for (std::size_t i { 0 }; i < buffer_size; ++i) {
       VkImage image{};
-      _vulkan->createDepthMapImage(image, true);
+      _vulkan->createDepthMapImage(image, _shadow_map_resolution, true);
       _depthmap_images.emplace_back(image);
-      _depthmap_imageviews.emplace_back(_vulkan->createDepthMapImageView(image, true));
-      _depthmap_imageviews_rendering.emplace_back(_vulkan->createDepthMapImageView(image, true, false));
+      _depthmap_imageviews.emplace_back(_vulkan->createDepthMapImageView(image, _shadow_map_resolution, true));
+      _depthmap_imageviews_rendering.emplace_back(_vulkan->createDepthMapImageView(image, _shadow_map_resolution, true, false));
 
       _depthmap_samplers.emplace_back(_vulkan->createDepthMapSampler());
     }
     for (std::size_t i { 0 }; i < buffer_size; ++i) {
       VkImage image{};
-      _vulkan->createDepthMapImage(image, false, 4);
+      _vulkan->createDepthMapImage(image, _shadow_map_resolution, false, 4);
       _csm_images.emplace_back(image);
       _csm_imageviews.emplace_back(_vulkan->createDepthMapImageView(image, false, false, 4));
       _csm_imageviews_rendering.emplace_back(_vulkan->createDepthMapImageView(image, false, false, 4));
@@ -297,7 +294,7 @@ namespace Poulpe
       
       if (!data->_is_dirty) continue;
 
-      auto * buffer { data->_vertex_buffer.memory->getBuffer(data->_vertex_buffer.index) };
+      auto * buffer { static_cast<DeviceMemory*>(data->_vertex_buffer.memory)->getBuffer(data->_vertex_buffer.index) };
 
       _vulkan->updateVertexBuffer(
         data->_vertices,
@@ -406,7 +403,7 @@ namespace Poulpe
     };
 
     if (mesh->isSkybox()) {
-      push_constants.view = glm::mat4(glm::mat3(camera->lookAt()));
+      push_constants.view = glm::mat4(glm::mat3(camera->getView()));
     }
 
     vkCmdPushConstants(
@@ -532,8 +529,7 @@ namespace Poulpe
     depth_attachment_info.clearValue.depthStencil = depth_stencil;
     depth_attachment_info.clearValue.color = color_clear;
 
-    auto const& appConfig { ConfigManagerLocator::get()->appConfig()["shadow_resolution"] };
-    auto const width { appConfig["width"].get<uint32_t>() };
+    auto const width { _shadow_map_resolution };
 
     VkRenderingInfo  rendering_info{ };
     rendering_info.sType = VK_STRUCTURE_TYPE_RENDERING_INFO;

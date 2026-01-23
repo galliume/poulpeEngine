@@ -11,12 +11,13 @@ message(STATUS "TK_INCLUDE_PATH = ${TK_INCLUDE_PATH}")
 message(STATUS "TK_LIBRARY = ${TK_LIBRARY}")
 
 #todo: add flag to activate or not the tcl/tk editor
-target_include_directories(${PROJECT_NAME}
-SYSTEM PRIVATE
-  ${TCL_INCLUDE_PATH}
-  ${TK_INCLUDE_PATH})
 
-target_link_libraries(${PROJECT_NAME}
-PRIVATE
-  ${TCL_LIBRARY}
-  ${TK_LIBRARY})
+add_library(tcl INTERFACE)
+target_include_directories(tcl
+  SYSTEM INTERFACE ${TCL_INCLUDE_PATH})
+target_link_libraries(tcl INTERFACE ${TCL_LIBRARY})
+
+add_library(tk INTERFACE)
+target_include_directories(tk
+  SYSTEM INTERFACE ${TK_INCLUDE_PATH})
+target_link_libraries(tk INTERFACE ${TK_LIBRARY})

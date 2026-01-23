@@ -19,8 +19,6 @@ import std;
 import Engine.Core.Logger;
 import Engine.Core.PlpTypedef;
 
-import Engine.Managers.ConfigManagerLocator;
-
 namespace Poulpe
 {
 VkResult CreateDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerCreateInfoEXT const * create_info,
@@ -78,7 +76,7 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL DebugCallback(
 }
 
 
-VulkanAPI::VulkanAPI(Window* window)
+VulkanAPI::VulkanAPI(GLFWwindow* window)
   : _window(window)
 {
 #ifdef PLP_DEBUG_BUILD
@@ -733,7 +731,7 @@ void VulkanAPI::createLogicalDevice()
 
 void VulkanAPI::createSurface()
 {
-  VkResult result = glfwCreateWindowSurface(_instance, _window->get(), nullptr, & _surface);
+  VkResult result = glfwCreateWindowSurface(_instance, _window, nullptr, & _surface);
 
   if (result != VK_SUCCESS) {
     //Logger::critical("failed to create window surface!");
@@ -786,7 +784,7 @@ VkExtent2D VulkanAPI::chooseSwapExtent( VkSurfaceCapabilitiesKHR const & capabil
   }
 
   int width, height;
-  glfwGetFramebufferSize(_window->get(), &width, &height);
+  glfwGetFramebufferSize(_window, &width, &height);
 
   VkExtent2D actual_extent = {
     static_cast<uint32_t>(width),
@@ -2227,15 +2225,15 @@ Buffer VulkanAPI::createIndirectCommandsBuffer(std::vector<VkDrawIndexedIndirect
   Buffer indirect_buffer{ std::move(buffer), device_memory, offset, size, index };
 
   {
-    indirect_buffer.memory->lock();
+    static_cast<DeviceMemory*>(indirect_buffer.memory)->lock();
+    auto memory{ static_cast<DeviceMemory*>(indirect_buffer.memory)->getMemory() };
 
-    auto memory{ indirect_buffer.memory->getMemory() };
     void* data;
     vkMapMemory(_device, *memory, indirect_buffer.offset, indirect_buffer.size, 0, &data);
     std::memcpy(data, draw_cmds.data(), indirect_buffer.size);
     vkUnmapMemory(_device, *memory);
 
-    indirect_buffer.memory->unLock();
+    static_cast<DeviceMemory*>(indirect_buffer.memory)->unLock();
   }
   return indirect_buffer;
 }
@@ -2499,11 +2497,11 @@ void VulkanAPI::createImage(
 
 void VulkanAPI::createDepthMapImage(
   VkImage& image,
+  std::uint32_t shadow_resolution,
   bool const is_cube_map,
   std::size_t const array_size)
 {
-  auto const& appConfig { ConfigManagerLocator::get()->appConfig()["shadow_resolution"] };
-  auto const width { appConfig["width"].get<uint32_t>() };
+  auto const width { shadow_resolution };
 
   VkImageCreateInfo image_info{};
   image_info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
@@ -2623,10 +2621,10 @@ VkSampler VulkanAPI::createDepthMapSampler()
 void VulkanAPI::createDepthMapFrameBuffer(
   VkRenderPass& rdr_pass,
   VkImageView& imageview,
-  VkFramebuffer& frame_buffer)
+  VkFramebuffer& frame_buffer,
+  std::uint32_t shadow_resolution)
 {
-  auto const& appConfig { ConfigManagerLocator::get()->appConfig()["shadow_resolution"] };
-  auto const width { appConfig["width"].get<uint32_t>() };
+  auto const width { shadow_resolution };
 
   VkFramebufferCreateInfo frame_buffer_info{};
   frame_buffer_info.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;

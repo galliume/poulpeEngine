@@ -5,7 +5,7 @@ export module Engine.Managers.ConfigManager;
 
 import std;
 
-//import Engine.Core.Logger;
+import Engine.Component.Mesh;
 
 namespace Poulpe
 {
@@ -25,7 +25,7 @@ namespace Poulpe
     void setReload(bool const reload);
     void setReloadShaders(bool const reload);
     void switchCamera();
-    std::size_t getCameraIndex() const { return _camera_index; }
+    std::uint8_t getCameraIndex() const { return _camera_index; }
 
     nlohmann::json const& loadLevelData(std::string const & levelName);
 
@@ -50,7 +50,7 @@ namespace Poulpe
     bool _reload_shaders{ false };
     bool _normal_debug{ false };
     bool _reload{ false };
-    std::size_t _camera_index{ 0 };
+    std::uint8_t _camera_index{ 0 };
 
     nlohmann::json _app_config;
     nlohmann::json _entity_config;

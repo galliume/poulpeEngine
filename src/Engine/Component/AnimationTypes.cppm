@@ -1,4 +1,4 @@
-export module Engine.Animation.AnimationTypes;
+export module Engine.Component.AnimationTypes;
 
 import Engine.Core.MeshTypes;
 

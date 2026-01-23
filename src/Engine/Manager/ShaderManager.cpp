@@ -6,7 +6,7 @@ module Engine.Managers.ShaderManager;
 
 import std;
 
-import Engine.Component.Vertex;
+import Engine.Core.Vertex;
 
 import Engine.Core.Logger;
 import Engine.Core.PlpTypedef;

@@ -5,7 +5,7 @@ module;
 #include <glm/gtx/quaternion.hpp>
 #include <glm/fwd.hpp>
 
-module Engine.Component.Camera;
+module Engine.Core.Camera;
 
 import std;
 
@@ -122,12 +122,6 @@ namespace Poulpe
   glm::vec3 Camera::getDeltaTime()
   {
     return glm::vec3(static_cast<float>(_delta_time));
-  }
-
-  glm::mat4 Camera::lookAt()
-  {
-    _view = glm::lookAt(_pos_rendered, _pos_rendered + _front, _up);
-    return _view;
   }
 
   void Camera::updateAngle(double const xoffset, double const yoffset)

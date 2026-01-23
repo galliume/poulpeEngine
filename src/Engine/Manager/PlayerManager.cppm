@@ -12,7 +12,7 @@ import std;
 
 import Engine.Managers.ComponentManager;
 
-import Engine.Renderer.Mesh;
+import Engine.Component.Mesh;
 
 import Engine.Utils.IDHelper;
 
@@ -38,7 +38,7 @@ namespace Poulpe
       void reset() { _moved = false; }
 
       void move(float const lx, float const ly, double const delta_time);
-      glm::vec3 getThirdPersonCameraPos() const;
+      glm::vec3 getPosition() const { return _position; }
 
     private:
       ComponentManager * _component_manager;
@@ -49,6 +49,6 @@ namespace Poulpe
       std::string _player_name = "__PLP_NO_PLAYER";
       IDType _player_id = 0;
 
-      glm::vec3 _third_person_camera_pos {};
+      glm::vec3 _position {};
   };
 }

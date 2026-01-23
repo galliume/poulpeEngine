@@ -33,6 +33,7 @@ namespace Poulpe
 
     auto* window = new Window();
     window->init("PoulpeEngine",
+      root_path + "/mpoulpe.png",
       appConfig["width"].get<uint16_t>(),
       appConfig["height"].get<uint16_t>(),
       editor_mode);
@@ -118,9 +119,9 @@ namespace Poulpe
       _render_manager->getRenderer()->getAPI()->getAPIVersion(),
       (release_build ? "Release build" : "Debug build")) };
 
-      glfwSetWindowTitle(_render_manager->getWindow()->get(), title.c_str());
+      glfwSetWindowTitle(_render_manager->getWindow()->getGlfwWindow(), title.c_str());
 
-    while (!glfwWindowShouldClose(_render_manager->getWindow()->get())) {
+    while (!glfwWindowShouldClose(_render_manager->getWindow()->getGlfwWindow())) {
 
       glfwPollEvents();
 

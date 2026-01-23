@@ -2,7 +2,7 @@ export module Engine.Managers.NetworkManager;
 
 import std;
 
-import Engine.Core.Network.Server;
+import Engine.Network.Server;
 
 import Engine.Managers.APIManager;
 

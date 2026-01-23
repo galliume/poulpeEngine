@@ -5,7 +5,7 @@ export module Engine.Managers.LightManager;
 
 import std;
 
-import Engine.Component.Camera;
+import Engine.Core.Camera;
 
 import Engine.Core.PlpTypedef;
 

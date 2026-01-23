@@ -8,7 +8,7 @@ module;
 
 #include <vulkan/vulkan.h>
 
-export module Engine.Component.Vertex;
+export module Engine.Core.Vertex;
 
 import std;
 

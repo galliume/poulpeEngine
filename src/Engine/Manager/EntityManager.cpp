@@ -20,6 +20,7 @@ import Engine.Animation.BoneAnimationScript;
 import Engine.Component.Components;
 import Engine.Component.Entity;
 import Engine.Component.EntityNode;
+import Engine.Component.Mesh;
 
 import Engine.Core.AssimpLoader;
 import Engine.Core.Logger;
@@ -30,11 +31,11 @@ import Engine.Managers.ComponentManager;
 import Engine.Managers.ConfigManagerLocator;
 
 import Engine.Renderer;
-import Engine.Renderer.Renderers;
-import Engine.Renderer.Mesh;
 import Engine.Renderer.RendererComponent;
 import Engine.Renderer.RendererComponentFactory;
 import Engine.Renderer.RendererComponentTypes;
+
+import Engine.Renderer.Vulkan.Basic;
 
 namespace Poulpe
 {

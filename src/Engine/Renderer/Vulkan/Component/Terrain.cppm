@@ -5,8 +5,8 @@ export module Engine.Renderer.Vulkan.Terrain;
 
 import std;
 
-import Engine.Renderer;
 import Engine.Renderer.RendererComponentTypes;
+import Engine.Renderer.VulkanRenderer;
 
 namespace Poulpe
 {

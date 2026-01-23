@@ -6,9 +6,8 @@ import Engine.Animation.AnimationScript;
 import Engine.Animation.BoneAnimationScript;
 
 import Engine.Component.Components;
-import Engine.Renderer;
+import Engine.Component.Mesh;
 import Engine.Renderer.RendererComponent;
-import Engine.Renderer.Mesh;
 
 import Engine.Utils.IDHelper;
 
