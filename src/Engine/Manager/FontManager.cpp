@@ -3,13 +3,7 @@ module;
 #include FT_FREETYPE_H
 #include <freetype/ttnameid.h>
 
-
-
 #include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtx/hash.hpp>
-#include <glm/gtx/quaternion.hpp>
-#include <glm/fwd.hpp>
 
 #include <volk.h>
 
@@ -20,7 +14,7 @@ import std;
 import Engine.Component.Texture;
 
 import Engine.Core.Logger;
-import Engine.Core.PlpTypedef;
+import Engine.Core.FontTypes;
 
 import Engine.Managers.ConfigManagerLocator;
 

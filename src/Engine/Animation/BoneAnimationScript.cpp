@@ -2,13 +2,13 @@ module;
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtx/hash.hpp>
 #include <glm/gtx/quaternion.hpp>
-#include <glm/fwd.hpp>
 
 module Engine.Animation.BoneAnimationScript;
 
 import std;
+
+import Engine.Core.MeshTypes;
 
 namespace Poulpe
 {
@@ -62,7 +62,7 @@ namespace Poulpe
       elapsed_time = fmod(elapsed_time + delta_time * 1000.0, duration);
       auto const cache_key { static_cast<int>(std::trunc(elapsed_time)) };
       auto const& transform_cache { _transform_cache.find(_data->_id) };
-      
+
       if (transform_cache != _transform_cache.end()) {
         auto const& cache { transform_cache->second.find(cache_key) };
 
@@ -79,7 +79,7 @@ namespace Poulpe
         updateBoneTransforms(anim, root_bone.name, glm::mat4(1.0f), duration, elapsed_time);
 
         //auto & vertex_cache { _transform_cache[_data->_id][cache_key] };
-        
+
         for (std::size_t v {0}; v < _data->_vertices.size(); v++) {
           auto &vertex { _data->_vertices.at(v) };
           auto &vertex_bones { _data->_vertices_bones.at(v) };
@@ -166,7 +166,7 @@ namespace Poulpe
     glm::mat4 const transform { T * R * S };
 
     glm::mat4 const global { parent_transform * transform };
-    
+
     if (!bone.is_weightless) {
       _bone_matrices[bone.id] = _data->_inverse_transform_matrix * global * bone.offset_matrix;
     }

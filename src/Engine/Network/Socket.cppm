@@ -11,8 +11,8 @@ export module Engine.Network.Socket;
 
 import std;
 
+import Engine.Core.Constants;
 import Engine.Core.Logger;
-import Engine.Core.PlpTypedef;
 
 namespace Poulpe
 {

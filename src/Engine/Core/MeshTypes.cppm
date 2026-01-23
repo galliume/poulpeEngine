@@ -8,10 +8,12 @@ export module Engine.Core.MeshTypes;
 
 import std;
 
+import Engine.Core.BoneTypes;
 import Engine.Core.Vertex;
 import Engine.Core.PlpTypedef;
 
-namespace Poulpe {
+namespace Poulpe
+{
   export struct Buffer {
     VkBuffer buffer{ VK_NULL_HANDLE };
     void* memory; //@todo mmmh
@@ -54,12 +56,20 @@ namespace Poulpe {
     glm::mat4 _transform_matrix;
     glm::mat4 _local_transform;
     glm::mat4 _inverse_transform_matrix;
-    std::unordered_map<std::string, Bone> _bones{};
+    std::unordered_map<std::string, Bone> _bones;
     std::string _root_bone_name{};
     std::uint32_t _default_anim{};
     glm::vec3 _bbox_min{};
     glm::vec3 _bbox_max{};
     bool _is_dirty {false};
     std::uint32_t _material_id {0};
+  };
+
+  //@todo move to AnimationTypes and fix Data dependancy
+  export struct AnimationInfo
+  {
+    double delta_time{0.0};
+    Data * data {};
+    bool looping { true };
   };
 }

@@ -1,11 +1,7 @@
 module;
 
-
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtx/hash.hpp>
-#include <glm/gtx/quaternion.hpp>
-#include <glm/fwd.hpp>
 
 #include <nlohmann/json_fwd.hpp>
 
@@ -13,17 +9,20 @@ module Engine.Managers.RenderManager;
 
 import std;
 
-import Engine.Core.PlpTypedef;
-
 import Engine.Animation.AnimationScript;
 
-import Engine.Core.Camera;
 import Engine.Component.Components;
 import Engine.Component.Entity;
-import Engine.Component.AnimationTypes;
 import Engine.Component.Mesh;
 
+import Engine.Core.AnimationTypes;
+import Engine.Core.Camera;
+import Engine.Core.Constants;
+import Engine.Core.LightTypes;
 import Engine.Core.Logger;
+import Engine.Core.MaterialTypes;
+import Engine.Core.MeshTypes;
+import Engine.Core.PlpTypedef;
 
 import Engine.GUI.Window;
 
@@ -36,12 +35,12 @@ import Engine.Renderer.RendererComponent;
 import Engine.Renderer.RendererComponentTypes;
 import Engine.Renderer.RendererComponentFactory;
 
-import Engine.Utils.ScopedTimer;
-
 import Engine.Renderer.Vulkan.Skybox;
 import Engine.Renderer.Vulkan.Terrain;
 import Engine.Renderer.Vulkan.Text;
 import Engine.Renderer.Vulkan.Water;
+
+import Engine.Utils.ScopedTimer;
 
 namespace Poulpe
 {

@@ -1,10 +1,6 @@
 module;
 
 #include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtx/hash.hpp>
-#include <glm/gtx/quaternion.hpp>
-#include <glm/fwd.hpp>
 
 #include <volk.h>
 
@@ -12,9 +8,10 @@ export module Engine.Component.Mesh;
 
 import std;
 
+import Engine.Core.AnimationTypes;
+import Engine.Core.MaterialTypes;
 import Engine.Core.MeshTypes;
 import Engine.Core.PlpTypedef;
-
 import Engine.Core.Vertex;
 
 import Engine.Utils.IDHelper;
@@ -87,7 +84,7 @@ namespace Poulpe
 
     void setRoot() { _is_root = true; }
     bool isRoot() { return _is_root ;}
-    
+
     private:
     std::string _name{};
     std::string _shader_name{};

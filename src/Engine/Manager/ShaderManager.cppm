@@ -6,7 +6,7 @@ export module Engine.Managers.ShaderManager;
 
 import std;
 
-import Engine.Core.PlpTypedef;
+import Engine.Core.VulkanTypes;
 
 import Engine.Renderer;
 

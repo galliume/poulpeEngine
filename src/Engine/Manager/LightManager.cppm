@@ -7,7 +7,7 @@ import std;
 
 import Engine.Core.Camera;
 
-import Engine.Core.PlpTypedef;
+import Engine.Core.LightTypes;
 
 namespace Poulpe
 {

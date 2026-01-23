@@ -12,7 +12,7 @@ import std;
 
 import Engine.Component.Texture;
 
-import Engine.Core.PlpTypedef;
+import Engine.Core.FontTypes;
 
 import Engine.Renderer;
 

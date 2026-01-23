@@ -1,4 +1,5 @@
 module;
+
 #include <GLFW/glfw3.h>
 #include <ktx.h>
 #include <stb_image.h>
@@ -8,14 +9,17 @@ export module Engine.Renderer.VulkanAPI;
 
 import std;
 
-import Engine.Renderer.VulkanDeviceMemoryPool;
-import Engine.Renderer.VulkanDeviceMemory;
-
-import Engine.Core.Vertex;
-
+import Engine.Core.Constants;
+import Engine.Core.FontTypes;
+import Engine.Core.LightTypes;
 import Engine.Core.Logger;
 import Engine.Core.MeshTypes;
 import Engine.Core.PlpTypedef;
+import Engine.Core.Vertex;
+import Engine.Core.VulkanTypes;
+
+import Engine.Renderer.VulkanDeviceMemoryPool;
+import Engine.Renderer.VulkanDeviceMemory;
 
 namespace Poulpe
 {
