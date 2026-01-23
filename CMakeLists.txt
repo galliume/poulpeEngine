@@ -26,10 +26,10 @@ message(STATUS "CMAKE_BUILD_TYPE: ${CMAKE_BUILD_TYPE}")
 configure_file(PoulpeEngineConfig.h.in PoulpeEngineConfig.h)
 
 include(packages)
-include(subdirs)
 include(compiler_definitions)
 include(compiler_flags)
 include(compiler_links)
+include(subdirs)
 include(fetchDeps)
 include(install)
 

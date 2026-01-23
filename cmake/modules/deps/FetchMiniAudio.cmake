@@ -12,6 +12,5 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(fetch_mini_audio)
 
-target_include_directories(${PROJECT_NAME}
-SYSTEM PRIVATE
-  ${fetch_mini_audio_SOURCE_DIR})
+target_include_directories(miniaudio
+  SYSTEM INTERFACE ${fetch_mini_audio_SOURCE_DIR})

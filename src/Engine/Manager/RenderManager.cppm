@@ -7,9 +7,10 @@ export module Engine.Managers.RenderManager;
 
 import std;
 
-import Engine.Component.Camera;
 import Engine.Component.EntityNode;
+import Engine.Component.Mesh;
 
+import Engine.Core.Camera;
 import Engine.Core.MeshTypes;
 import Engine.Core.PlpTypedef;
 import Engine.Core.Tools;
@@ -28,7 +29,6 @@ import Engine.Managers.TextureManager;
 
 import Engine.Renderer.RendererComponentFactory;
 import Engine.Renderer;
-import Engine.Renderer.Vulkan.Mesh;
 import Engine.Renderer.RendererComponentTypes;
 
 import Engine.Utils.IDHelper;
@@ -100,7 +100,6 @@ namespace Poulpe
     void loadData(std::string const & level);
 
     //@todo move to EntityManager
-    void prepareHUD();
     void prepareSkybox();
     void prepareTerrain();
     void prepareWater();
@@ -114,7 +113,7 @@ namespace Poulpe
     bool _refresh{ false };
     double _elapsed_time{ 0.0 };
     std::vector<std::unique_ptr<Camera>> _cameras;
-    std::size_t _current_camera { 0 };
+    std::uint8_t _current_camera { 0 };
     std::unique_ptr<Renderer> _renderer;
     std::unique_ptr<Window> _window;
 

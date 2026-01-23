@@ -55,6 +55,5 @@ add_library(
   ${fetch_lua_SOURCE_DIR}/lualib.h
 )
 
-target_link_libraries(${PROJECT_NAME}
-PRIVATE
-  lua)
+target_include_directories(lua
+  SYSTEM INTERFACE ${fetch_lua_SOURCE_DIR})

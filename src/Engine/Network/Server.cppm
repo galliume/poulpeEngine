@@ -8,7 +8,7 @@ module;
   //@todo linux impl
   #endif
 
-export module Engine.Core.Network.Server;
+export module Engine.Network.Server;
 
 import std;
 

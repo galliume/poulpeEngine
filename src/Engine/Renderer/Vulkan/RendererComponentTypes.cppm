@@ -8,12 +8,11 @@ export module Engine.Renderer.RendererComponentTypes;
 
 import std;
 
+import Engine.Component.Mesh;
 import Engine.Component.Texture;
 
 import Engine.Core.PlpTypedef;
 import Engine.Core.MeshTypes;
-
-import Engine.Renderer.Mesh;
 
 namespace Poulpe {
   export struct ComponentRenderingInfo

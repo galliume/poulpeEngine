@@ -19,7 +19,7 @@ namespace Poulpe
   InputManager::InputManager(Window const * const window) : _window(window)
   {
     int width, height;
-    glfwGetWindowSize(_window->get(), & width, & height);
+    glfwGetWindowSize(_window->getGlfwWindow(), & width, & height);
   }
 
   void InputManager::init(nlohmann::json const& input_config)
@@ -67,19 +67,19 @@ namespace Poulpe
       { "9", GLFW_KEY_9 },
     };
 
-    glfwSetWindowUserPointer(_window->get(), this);
+    glfwSetWindowUserPointer(_window->getGlfwWindow(), this);
 
-    glfwSetKeyCallback(_window->get(), [](GLFWwindow*, int key, int scan_code, int action, int mods) {
+    glfwSetKeyCallback(_window->getGlfwWindow(), [](GLFWwindow*, int key, int scan_code, int action, int mods) {
       InputManager* input_manager = InputManagerLocator::get();
       input_manager->keyPress(key, scan_code, action, mods);
     });
 
-    glfwSetCursorPosCallback(_window->get(), []( GLFWwindow*, double x_pos, double y_pos) {
+    glfwSetCursorPosCallback(_window->getGlfwWindow(), []( GLFWwindow*, double x_pos, double y_pos) {
       InputManager* input_manager = InputManagerLocator::get();
       input_manager->updateMousePos(x_pos, y_pos);
     });
 
-    glfwSetMouseButtonCallback(_window->get(), []( GLFWwindow*, int button, int action, int mods) {
+    glfwSetMouseButtonCallback(_window->getGlfwWindow(), []( GLFWwindow*, int button, int action, int mods) {
       InputManager* input_manager = InputManagerLocator::get();
       input_manager->mouseButton(button, action, mods);
     });
@@ -106,9 +106,9 @@ namespace Poulpe
       {
         if (key == _keyboard_keys[config["unlockCamera"]]) {
           if (!InputManager::_can_move_camera) {
-            glfwSetInputMode(_window->get(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+            glfwSetInputMode(_window->getGlfwWindow(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
           } else {
-            glfwSetInputMode(_window->get(), GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+            glfwSetInputMode(_window->getGlfwWindow(), GLFW_CURSOR, GLFW_CURSOR_NORMAL);
           }
           InputManager::_can_move_camera = !InputManager::_can_move_camera;
         } else if (key == _keyboard_keys[config["forward"]]) {
@@ -161,10 +161,10 @@ namespace Poulpe
   {
     if (GLFW_MOUSE_BUTTON_LEFT == button) {
       int width, height;
-      glfwGetWindowSize(_window->get(), &width, &height);
+      glfwGetWindowSize(_window->getGlfwWindow(), &width, &height);
 
       double x_pos, y_pos;
-      glfwGetCursorPos(_window->get(), &x_pos, &y_pos);
+      glfwGetCursorPos(_window->getGlfwWindow(), &x_pos, &y_pos);
     }
   }
 
@@ -226,23 +226,25 @@ namespace Poulpe
 
       float lx { state.axes[GLFW_GAMEPAD_AXIS_LEFT_X] };
       float ly { state.axes[GLFW_GAMEPAD_AXIS_LEFT_Y] };
-      double rx { static_cast<double>(state.axes[GLFW_GAMEPAD_AXIS_RIGHT_X]) };
-      double ry { static_cast<double>(state.axes[GLFW_GAMEPAD_AXIS_RIGHT_Y]) };
+      float rx { state.axes[GLFW_GAMEPAD_AXIS_RIGHT_X] };
+      float ry { state.axes[GLFW_GAMEPAD_AXIS_RIGHT_Y] };
       float const deadzone { 0.2f };
 
       if (std::abs(lx) < deadzone) lx = 0.0f;
       if (std::abs(ly) < deadzone) ly = 0.0f;
 
-      if (std::abs(rx) < 0.2) rx = 0.0;
-      if (std::abs(ry) < 0.2) ry = 0.0;
+      if (std::abs(rx) < deadzone) rx = 0.0f;
+      if (std::abs(ry) < deadzone) ry = 0.0f;
 
       if (lx != 0.0f || ly != 0.0f) {
         player_manager->move(lx, ly, delta_time);
       }
-      if (rx != 0.0 || ry != 0.0) {
-        Logger::debug("rx {} ry {}", rx, ry);
+      if (rx != 0.0f || ry != 0.0f) {
+        auto pos {_camera->getPos()};
+        pos.z -= 100;
+        _camera->setPos(pos);
         InputManager::_can_move_camera = true;
-        updateMousePos(rx, ry);
+        updateMousePos(static_cast<double>(rx) * delta_time, static_cast<double>(ry) * delta_time);
       }
     }
   }

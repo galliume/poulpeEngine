@@ -1,5 +1,6 @@
 module;
 
+#include <GLFW/glfw3.h>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -16,15 +17,14 @@ import std;
 import Engine.Renderer.VulkanDeviceMemoryPool;
 import Engine.Renderer.VulkanAPI;
 
-import Engine.Component.Camera;
-import Engine.Component.Vertex;
+import Engine.Component.Mesh;
+
+import Engine.Core.Camera;
+import Engine.Core.Vertex;
 
 import Engine.Core.MeshTypes;
 import Engine.Core.PlpTypedef;
 
-import Engine.GUI.Window;
-
-import Engine.Renderer.Vulkan.Mesh;
 
 namespace Poulpe
 {
@@ -114,7 +114,7 @@ namespace Poulpe
   {
   public:
 
-    Renderer(Window* const window);
+    Renderer(GLFWwindow* const window);
     ~Renderer()  = default;
 
     void addPipeline(
@@ -184,9 +184,12 @@ namespace Poulpe
       std::size_t const image_index);
 
       std::uint32_t getMaxFramesInFlight() const { return _max_frames_in_flight; }
+      
+      void setShadowMapResolution(uint32_t const resolution) { _shadow_map_resolution = resolution; }
 
   private:
     std::uint32_t _max_frames_in_flight{ 3 };
+    uint32_t _shadow_map_resolution { 2048 };
     //const std::size_t _max_render_thread{ 4 };
 
     void onFinishRender();

@@ -1,4 +1,4 @@
-module Engine.Renderer.Vulkan.Mesh;
+module Engine.Component.Mesh;
 
 import std;
 

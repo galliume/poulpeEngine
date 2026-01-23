@@ -8,6 +8,7 @@ import std;
 import Engine.Core.Logger;
 
 import Engine.Component.Components;
+import Engine.Component.Mesh;
 
 import Engine.Managers.AudioManager;
 import Engine.Managers.ComponentManager;
@@ -19,7 +20,6 @@ import Engine.Managers.ShaderManager;
 import Engine.Managers.TextureManager;
 import Engine.Managers.RenderManager;
 
-import Engine.Renderer.Mesh;
 import Engine.Renderer.RendererComponent;
 import Engine.Renderer.RendererComponentTypes;
 

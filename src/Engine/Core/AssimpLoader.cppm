@@ -16,7 +16,7 @@ export module Engine.Core.AssimpLoader;
 
 import std;
 
-import Engine.Component.Vertex;
+import Engine.Core.Vertex;
 import Engine.Core.PlpTypedef;
 import Engine.Core.Logger;
 

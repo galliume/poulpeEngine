@@ -1,22 +1,21 @@
 module;
 
-
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/hash.hpp>
 #include <glm/gtx/quaternion.hpp>
 #include <glm/fwd.hpp>
 
-#include <vulkan/vulkan.h>
+#include <volk.h>
 
-export module Engine.Renderer.Vulkan.Mesh;
+export module Engine.Component.Mesh;
 
 import std;
 
 import Engine.Core.MeshTypes;
 import Engine.Core.PlpTypedef;
 
-import Engine.Component.Vertex;
+import Engine.Core.Vertex;
 
 import Engine.Utils.IDHelper;
 

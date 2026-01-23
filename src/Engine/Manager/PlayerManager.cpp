@@ -53,18 +53,7 @@ namespace Poulpe
         });
       }
 
+    _position = data->_current_pos;
     _moved = true;
-
-    auto current_pos { data->_current_pos };
-
-    //current_pos.y += 10;
-    current_pos.z -= 20;
-
-    _third_person_camera_pos = current_pos;
-  }
-
-  glm::vec3 PlayerManager::getThirdPersonCameraPos() const
-  {
-    return _third_person_camera_pos;
   }
 }

@@ -4,8 +4,8 @@ module;
 
 export module Engine.Renderer.Vulkan.Skybox;
 
-import Engine.Renderer;
 import Engine.Renderer.RendererComponentTypes;
+import Engine.Renderer.VulkanRenderer;
 
 namespace Poulpe
 {

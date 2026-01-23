@@ -13,13 +13,14 @@ namespace Poulpe
     Window() = default;
     //_window: delete is done in Application.cpp with glfwFunction
 
-    GLFWwindow* get() const;
+    GLFWwindow* getGlfwWindow() const;
 
     void setVSync(bool active);
 
     void show();
     void init(
       std::string_view windowTitle,
+      std::string iconPath,
       uint16_t const width,
       uint16_t const height,
       bool const editor_mode = false);

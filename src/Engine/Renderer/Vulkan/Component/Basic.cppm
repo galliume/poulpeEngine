@@ -2,16 +2,14 @@ module;
 #include <volk.h>
 #include <vulkan/vulkan.h>
 
-// #include <chrono>
-
 export module Engine.Renderer.Vulkan.Basic;
 
 import std;
 
 import Engine.Component.Texture;
 
-import Engine.Renderer;
 import Engine.Renderer.RendererComponentTypes;
+import Engine.Renderer.VulkanRenderer;
 
 namespace Poulpe
 {

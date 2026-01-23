@@ -1,4 +1,6 @@
-target_sources(${PROJECT_NAME}
+add_library(EngineManagers STATIC)
+
+target_sources(EngineManagers
   PUBLIC
     FILE_SET cxx_modules TYPE CXX_MODULES
       FILES
@@ -40,3 +42,27 @@ target_sources(${PROJECT_NAME}
     ConfigManager.cpp
     ConfigManagerLocator.cpp
     InputManagerLocator.cpp)
+
+target_link_libraries(
+  EngineManagers
+
+  PRIVATE
+    Animation
+    Components
+    GUI
+    Network
+    Renderer
+
+  PUBLIC
+    fmt::fmt
+    glm
+    glfw
+    ktx
+    miniaudio
+    nlohmann_json
+    stb
+    sqlite3
+    volk)
+
+set_poulpe_definitions(EngineManagers)
+set_poulpe_links(EngineManagers)

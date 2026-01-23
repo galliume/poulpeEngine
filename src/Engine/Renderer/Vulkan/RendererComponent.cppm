@@ -2,16 +2,23 @@ module;
 #include <ft2build.h>
 #include FT_FREETYPE_H
 #include <freetype/ttnameid.h>
-#include <volk.h>
+#include <vulkan/vulkan_core.h>
 
 export module Engine.Renderer.RendererComponent;
 
 import std;
 
-import Engine.Renderer.Mesh;
-import Engine.Renderer.Renderers;
+import Engine.Component.Mesh;
+
 import Engine.Renderer.RendererComponentTypes;
 import Engine.Renderer.VulkanRenderer;
+
+import Engine.Renderer.Vulkan.Basic;
+import Engine.Renderer.Vulkan.ShadowMap;
+import Engine.Renderer.Vulkan.Skybox;
+import Engine.Renderer.Vulkan.Terrain;
+import Engine.Renderer.Vulkan.Text;
+import Engine.Renderer.Vulkan.Water;
 
 import Engine.Utils.IDHelper;
 
@@ -31,14 +38,14 @@ namespace Poulpe {
   public:
     using ComponentsType = std::variant<
       std::unique_ptr<Basic>,
-      std::unique_ptr<Crosshair>,
-      std::unique_ptr<Grid>,
       std::unique_ptr<Mesh>,
       std::unique_ptr<ShadowMap>,
       std::unique_ptr<Skybox>,
       std::unique_ptr<Terrain>,
       std::unique_ptr<Text>,
       std::unique_ptr<Water>>;
+
+    virtual ~RenderComponent();
 
     IDType getID() const { return _id; }
     IDType getOwner() const { return _owner; }
@@ -62,24 +69,9 @@ namespace Poulpe {
 
     void operator()(
       Renderer *const renderer,
-      ComponentRenderingInfo const& component_rendering_info)
-    {
-      std::visit([&](auto& component) {
-        if constexpr (hasCallOperator<decltype(*component)>) {
-          (*component)(renderer, component_rendering_info);
-        }
-      }, _component);
-    }
+      ComponentRenderingInfo const& component_rendering_info);
 
-    VkShaderStageFlags getShaderStageFlags() const
-    {
-      return std::visit([](auto& ptr) -> VkShaderStageFlags {
-        if (ptr) {
-            return ptr->stage_flag_bits; 
-        }
-        return VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
-      }, _component);
-    }
+    VkShaderStageFlags getShaderStageFlags() const;
 
   protected:
     ComponentsType _component;
@@ -91,16 +83,7 @@ namespace Poulpe {
 
   export class RendererComponent : public RenderComponent<RendererComponent>
   {
-
+  public:
+      ~RendererComponent() override;
   };
-
-  template class RenderComponent<Basic>;
-  template class RenderComponent<Crosshair>;
-  template class RenderComponent<Grid>;
-  template class RenderComponent<Mesh>;
-  template class RenderComponent<ShadowMap>;
-  template class RenderComponent<Skybox>;
-  template class RenderComponent<Terrain>;
-  template class RenderComponent<Text>;
-  template class RenderComponent<Water>;
 }

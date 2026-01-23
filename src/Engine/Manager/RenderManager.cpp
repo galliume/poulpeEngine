@@ -16,11 +16,12 @@ import std;
 import Engine.Core.PlpTypedef;
 
 import Engine.Animation.AnimationScript;
-import Engine.Animation.AnimationTypes;
 
-import Engine.Component.Camera;
+import Engine.Core.Camera;
 import Engine.Component.Components;
 import Engine.Component.Entity;
+import Engine.Component.AnimationTypes;
+import Engine.Component.Mesh;
 
 import Engine.Core.Logger;
 
@@ -31,13 +32,16 @@ import Engine.Managers.ConfigManagerLocator;
 import Engine.Managers.InputManagerLocator;
 
 import Engine.Renderer;
-import Engine.Renderer.Renderers;
 import Engine.Renderer.RendererComponent;
 import Engine.Renderer.RendererComponentTypes;
 import Engine.Renderer.RendererComponentFactory;
-import Engine.Renderer.Vulkan.Mesh;
 
 import Engine.Utils.ScopedTimer;
+
+import Engine.Renderer.Vulkan.Skybox;
+import Engine.Renderer.Vulkan.Terrain;
+import Engine.Renderer.Vulkan.Text;
+import Engine.Renderer.Vulkan.Water;
 
 namespace Poulpe
 {
@@ -45,7 +49,7 @@ namespace Poulpe
   {
     _window = std::unique_ptr<Window>(window);
     _cameras.emplace_back(std::make_unique<Camera>());
-    _renderer = std::make_unique<Renderer>(_window.get());
+    _renderer = std::make_unique<Renderer>(_window->getGlfwWindow());
 
     _component_manager = std::make_unique<ComponentManager>();
     _light_manager = std::make_unique<LightManager>();
@@ -114,6 +118,9 @@ namespace Poulpe
     _audio_manager->load(configManager->soundConfig());
 
     InputManagerLocator::get()->init(appConfig["input"]);
+    
+    auto const& shadowConfig { appConfig["shadow_resolution"] };
+    _renderer->setShadowMapResolution(shadowConfig["width"].get<uint32_t>());
 
     if (appConfig["defaultLevel"].empty()) {
       Logger::warn("defaultLevel conf not set.");
@@ -140,7 +147,9 @@ namespace Poulpe
       getCamera()->move();
     }
 
-    auto const camera_view_matrix = getCamera()->getView();
+    auto const camera_view_matrix = (_current_camera == std::to_underlying(CameraType::THIRD_PERSON))
+      ? getCamera()->getView(_player_manager->getPosition())
+      : getCamera()->getView();
 
     updateComponentRenderingInfo();
     updateRendererInfo(camera_view_matrix);
@@ -361,8 +370,8 @@ namespace Poulpe
         _light_buffers.at(_renderer->getCurrentFrameIndex()), light_object_buffer, _renderer->getCurrentFrameIndex());
       _renderer->getAPI()->endCopyBuffer(_renderer->getCurrentFrameIndex());
 
-      if (_player_manager->hasMoved() && _current_camera == 1) {
-        getCamera()->setPos(_player_manager->getThirdPersonCameraPos());
+      if (_player_manager->hasMoved() && _current_camera == std::to_underlying(CameraType::THIRD_PERSON)) {
+        getCamera()->setPos(_player_manager->getPosition());
       }
 
       _player_manager->reset();
@@ -413,8 +422,8 @@ namespace Poulpe
       if (mesh->getName() == _player_manager->getPlayerName()) {
         _player_manager->setPlayerId(entity_id);
         animation_info.looping = false;
-        if (_current_camera == 1 && !getCamera()->isInit()) {
-          getCamera()->init(_player_manager->getThirdPersonCameraPos());
+        if (_current_camera == std::to_underlying(CameraType::THIRD_PERSON) && !getCamera()->isInit()) {
+          getCamera()->init(_player_manager->getPosition());
           getCamera()->forward();
           getCamera()->move();
         }
@@ -535,30 +544,6 @@ namespace Poulpe
     entities.detach();
     setIsLoaded();
 
-  }
-
-  void RenderManager::prepareHUD()
-  {
-    auto grid_entity = std::make_unique<Entity>();
-    auto grid_mesh = std::make_unique<Mesh>();
-    auto grid_rdr_impl{ RendererComponentFactory::create<Grid>() };
-
-    (*grid_rdr_impl)(_renderer.get(), getComponentRenderingInfo(grid_mesh.get()));
-
-    _component_manager->add<RendererComponent>(grid_entity->getID(), std::move(grid_rdr_impl));
-    _component_manager->add<MeshComponent>(grid_entity->getID(), std::move(grid_mesh));
-
-    auto crosshair_entity = std::make_unique<Entity>();
-    auto mesh = std::make_unique<Mesh>();
-
-    auto crosshair_rdr_impl{ RendererComponentFactory::create<Crosshair>() };
-    (*crosshair_rdr_impl)(_renderer.get(), getComponentRenderingInfo(mesh.get()));
-
-    _component_manager->add<RendererComponent>(crosshair_entity->getID(), std::move(crosshair_rdr_impl));
-    _component_manager->add<MeshComponent>(crosshair_entity->getID(), std::move(mesh));
-
-    _entity_manager->addHUD(std::move(grid_entity));
-    _entity_manager->addHUD(std::move(crosshair_entity));
   }
 
   void RenderManager::prepareSkybox()

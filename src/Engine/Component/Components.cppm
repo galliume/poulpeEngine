@@ -8,10 +8,10 @@ export module Engine.Component.Components;
 
 import std;
 
-import Engine.Animation.AnimationTypes;
+import Engine.Component.Mesh;
+
+import Engine.Component.AnimationTypes;
 import Engine.Core.PlpTypedef;
-import Engine.GUI.Window;
-import Engine.Renderer.Mesh;
 import Engine.Utils.IDHelper;
 
 namespace Poulpe {

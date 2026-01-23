@@ -7,7 +7,7 @@ module;
   //@todo linux impl
 #endif
 
-export module Engine.Core.Network.Socket;
+export module Engine.Network.Socket;
 
 import std;
 

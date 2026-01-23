@@ -11,13 +11,11 @@ import std;
 import Engine.Renderer.VulkanDeviceMemoryPool;
 import Engine.Renderer.VulkanDeviceMemory;
 
-import Engine.Component.Vertex;
+import Engine.Core.Vertex;
 
 import Engine.Core.Logger;
 import Engine.Core.MeshTypes;
 import Engine.Core.PlpTypedef;
-
-import Engine.GUI.Window;
 
 namespace Poulpe
 {
@@ -78,7 +76,7 @@ namespace Poulpe
   export class VulkanAPI
   {
   public:
-    VulkanAPI(Window* window);
+    VulkanAPI(GLFWwindow* window);
     ~VulkanAPI();
 
     /**
@@ -304,7 +302,7 @@ namespace Poulpe
 
       Buffer uniform_buffer;
       uniform_buffer.buffer = std::move(buffer);
-      uniform_buffer.memory = device_memory;
+      uniform_buffer.memory = static_cast<void*>(device_memory);
       uniform_buffer.offset = offset;
       uniform_buffer.size = size;
       uniform_buffer.index = index;
@@ -484,6 +482,7 @@ namespace Poulpe
 
     void createDepthMapImage(
       VkImage& image,
+      std::uint32_t shadow_resolution,
       bool const is_cube_map = false,
       std::size_t const array_size = 0);
 
@@ -498,7 +497,8 @@ namespace Poulpe
     void createDepthMapFrameBuffer(
       VkRenderPass& rdr_pass,
       VkImageView& imageview,
-      VkFramebuffer& frame_buffer);
+      VkFramebuffer& frame_buffer,
+      std::uint32_t shadow_resolution);
 
     static const std::string getVendor(int vendorID)
     {
@@ -602,7 +602,7 @@ namespace Poulpe
     std::string _api_version;
     uint32_t _queue_count { 2 };
 
-    Window* _window{ nullptr };
+    GLFWwindow* _window{ nullptr };
 
     const std::vector<const char*> _validation_layers{ "VK_LAYER_KHRONOS_validation" };
     const std::vector<const char*> _device_extensions{

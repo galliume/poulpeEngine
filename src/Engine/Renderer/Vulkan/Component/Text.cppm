@@ -8,9 +8,8 @@ export module Engine.Renderer.Vulkan.Text;
 
 import std;
 
-import Engine.Renderer;
-
 import Engine.Renderer.RendererComponentTypes;
+import Engine.Renderer.VulkanRenderer;
 
 namespace Poulpe
 {

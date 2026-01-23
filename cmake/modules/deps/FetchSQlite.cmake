@@ -18,10 +18,6 @@ target_include_directories(sqlite3
 SYSTEM PUBLIC
   ${fetch_sqlite_SOURCE_DIR})
 
-target_link_libraries(${PROJECT_NAME}
-PRIVATE
-  sqlite3)
-
 if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
   set_target_properties(sqlite3
   PROPERTIES

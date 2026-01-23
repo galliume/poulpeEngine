@@ -11,7 +11,7 @@ export module Engine.Animation.BoneAnimationScript;
 
 import std;
 
-import Engine.Animation.AnimationTypes;
+import Engine.Component.AnimationTypes;
 import Engine.Component.Components;
 import Engine.Core.Logger;
 import Engine.Core.MeshTypes;
