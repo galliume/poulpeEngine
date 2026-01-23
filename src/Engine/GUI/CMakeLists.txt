@@ -12,11 +12,12 @@ target_link_libraries(
   GUI
 
   PRIVATE
+    EngineCommon
 
   PUBLIC
-    fmt::fmt
     glfw
     stb)
 
 set_poulpe_definitions(GUI)
 set_poulpe_links(GUI)
+set_poulpe_compiler_flags(GUI)

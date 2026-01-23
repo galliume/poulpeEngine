@@ -19,3 +19,4 @@ target_link_libraries(
 
 set_poulpe_definitions(Network)
 set_poulpe_links(Network)
+set_poulpe_compiler_flags(Network)

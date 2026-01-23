@@ -7,13 +7,6 @@ FetchContent_Declare(
   GIT_SHALLOW ${FETCH_GIT_SHALLOW}
   GIT_PROGRESS ${FETCH_GIT_PROGRESS}
   UPDATE_DISCONNECTED ${FETCH_UPDATE_DISCONNECTED}
+  SYSTEM
 )
 FetchContent_MakeAvailable(fetch_freetype)
-
-target_include_directories(${PROJECT_NAME}
-SYSTEM PRIVATE
-  ${fetch_freetype_SOURCE_DIR}/include)
-
-target_link_libraries(${PROJECT_NAME} 
-PRIVATE
-  freetype)

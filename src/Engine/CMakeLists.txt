@@ -18,15 +18,11 @@ target_link_libraries(
   PRIVATE
     miniaudio
     EngineManagers
+    EngineCommon
 
   PUBLIC
     tcl)
 
-target_link_libraries(
-  ${PROJECT_NAME}
-  PRIVATE
-    PoulpeEngineLib
-    EditorManagers)
-
 set_poulpe_definitions(PoulpeEngineLib)
 set_poulpe_links(PoulpeEngineLib)
+set_poulpe_compiler_flags(PoulpeEngineLib)

@@ -16,11 +16,11 @@ target_link_libraries(
   PRIVATE
     Components
     Core
+    EngineCommon
 
   PUBLIC
-    fmt::fmt
-    glm
     lua)
 
 set_poulpe_definitions(Animation)
 set_poulpe_links(Animation)
+set_poulpe_compiler_flags(Animation)

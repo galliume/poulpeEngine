@@ -1,5 +1,4 @@
 ##################### PoulpeEngine Project ##############
-
 cmake_minimum_required(VERSION 3.31.0)
 
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules ${CMAKE_MODULE_PATH})
@@ -11,8 +10,7 @@ project(PoulpeEngine
   VERSION 0.2.1
   DESCRIPTION "Game Engine with a vulkan renderer"
   HOMEPAGE_URL "https://github.com/galliume/poulpeEngine"
-  LANGUAGES C CXX
-  )
+  LANGUAGES C CXX)
 
 add_executable(${PROJECT_NAME} src/Poulpe.cpp poulpeEngine.rc)
 
@@ -26,6 +24,7 @@ message(STATUS "CMAKE_BUILD_TYPE: ${CMAKE_BUILD_TYPE}")
 configure_file(PoulpeEngineConfig.h.in PoulpeEngineConfig.h)
 
 include(packages)
+include(common_deps)
 include(compiler_definitions)
 include(compiler_flags)
 include(compiler_links)
@@ -35,6 +34,16 @@ include(install)
 
 include(custom_targets)
 include(graphVizOptions)
+
+target_link_libraries(
+  ${PROJECT_NAME}
+  PRIVATE
+    PoulpeEngineLib
+    EditorManagers)
+
+set_poulpe_definitions(${PROJECT_NAME})
+set_poulpe_links(${PROJECT_NAME})
+set_poulpe_compiler_flags(${PROJECT_NAME})
 
 #include(CheckIPOSupported)
 #check_ipo_supported(RESULT ipo_supported OUTPUT ipo_error)

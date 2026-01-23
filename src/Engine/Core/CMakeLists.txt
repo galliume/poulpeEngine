@@ -29,11 +29,12 @@ target_sources(Core
 target_link_libraries(
   Core
 
+  PRIVATE
+    EngineCommon
+
   PUBLIC
-    fmt::fmt
-    assimp::assimp
-    glm
-    volk)
+    assimp::assimp)
 
 set_poulpe_definitions(Core)
 set_poulpe_links(Core)
+set_poulpe_compiler_flags(Core)

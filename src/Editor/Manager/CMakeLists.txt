@@ -20,12 +20,13 @@ target_link_libraries(
     Components
     EngineManagers
     PoulpeEngineLib
+    EngineCommon
 
   PUBLIC
-    fmt::fmt
     glfw
     tcl
     tk)
 
 set_poulpe_definitions(EditorManagers)
 set_poulpe_links(EditorManagers)
+set_poulpe_compiler_flags(EditorManagers)

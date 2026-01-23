@@ -52,17 +52,16 @@ target_link_libraries(
     GUI
     Network
     Renderer
+    EngineCommon
 
   PUBLIC
-    fmt::fmt
-    glm
     glfw
     ktx
     miniaudio
     nlohmann_json
     stb
-    sqlite3
-    volk)
+    sqlite3)
 
 set_poulpe_definitions(EngineManagers)
 set_poulpe_links(EngineManagers)
+set_poulpe_compiler_flags(EngineManagers)

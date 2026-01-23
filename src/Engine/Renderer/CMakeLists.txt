@@ -16,12 +16,11 @@ target_link_libraries(
   PRIVATE
     Utils
     Vulkan
+    EngineCommon
 
   PUBLIC
-    fmt::fmt
-    freetype
-    glm
-    volk)
+    freetype)
 
 set_poulpe_definitions(Renderer)
 set_poulpe_links(Renderer)
+set_poulpe_compiler_flags(Renderer)
