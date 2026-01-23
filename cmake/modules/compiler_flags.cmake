@@ -1,51 +1,55 @@
-message(STATUS "Setting compiler flags.")
+function(set_poulpe_compiler_flags target)
 
-target_compile_features(${PROJECT_NAME}
-  PRIVATE   cxx_std_23
-  INTERFACE cxx_std_23)
+  message(STATUS "Setting compiler flags for ${target}.")
 
-set(DEBUG_OPTIONS
-  -g
-  -Og
-  -Werror
-  -fno-inline
-  -fno-inline-functions
-  -fno-omit-frame-pointer)
+  target_compile_features(${target}
+    PRIVATE   cxx_std_23
+    INTERFACE cxx_std_23)
 
-set(RELEASE_OPTIONS
-  -O3
-  -Werror
-  -ffast-math
-  -march=native
-  -fvisibility=hidden
-  -DNDEBUG)
+  set(DEBUG_OPTIONS
+    -g
+    -Og
+    -Werror
+    -fno-inline
+    -fno-inline-functions
+    -fno-omit-frame-pointer)
 
-set(RELWITHDEBINFO_OPTIONS
-  -g
-  -O3
-  -Werror
-  #-ffast-math
-  -march=native
-  -fvisibility=hidden
-  -fno-omit-frame-pointer
-  -DNDEBUG)
+  set(RELEASE_OPTIONS
+    -O3
+    -Werror
+    -ffast-math
+    -march=native
+    -fvisibility=hidden
+    -DNDEBUG)
 
-target_compile_options(${PROJECT_NAME} PRIVATE
-  $<$<CONFIG:DEBUG>:${DEBUG_OPTIONS}>
-  $<$<CONFIG:RELEASE>:${RELEASE_OPTIONS}>
-  $<$<CONFIG:RELWITHDEBINFO>:${RELWITHDEBINFO_OPTIONS}>
-  -Weverything
-  -fno-strict-aliasing
-  -Wno-c++98-compat
-  -Wno-c++98-compat-pedantic
-  -Wno-c++20-compat
-  -Wno-old-style-cast
-  -Wno-padded
-  -Wno-documentation
-  -Wno-documentation-unknown-command
-  -Wno-decls-in-multiple-modules
-  -Wno-unsafe-buffer-usage
-  -Wno-covered-switch-default
-  -Wno-deprecated-declarations)
+  set(RELWITHDEBINFO_OPTIONS
+    -g
+    -O3
+    -Werror
+    #-ffast-math
+    -march=native
+    -fvisibility=hidden
+    -fno-omit-frame-pointer
+    -DNDEBUG)
 
-message(STATUS "compiler definitions OK.")
+  target_compile_options(${target} PRIVATE
+    $<$<CONFIG:DEBUG>:${DEBUG_OPTIONS}>
+    $<$<CONFIG:RELEASE>:${RELEASE_OPTIONS}>
+    $<$<CONFIG:RELWITHDEBINFO>:${RELWITHDEBINFO_OPTIONS}>
+    -Weverything
+    -fno-strict-aliasing
+    -Wno-c++98-compat
+    -Wno-c++98-compat-pedantic
+    -Wno-c++20-compat
+    -Wno-old-style-cast
+    -Wno-padded
+    -Wno-documentation
+    -Wno-documentation-unknown-command
+    -Wno-decls-in-multiple-modules
+    -Wno-unsafe-buffer-usage
+    -Wno-covered-switch-default
+    -Wno-deprecated-declarations)
+
+  message(STATUS "compiler definitions OK.")
+
+endfunction()

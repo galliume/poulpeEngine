@@ -15,10 +15,11 @@ target_link_libraries(
 
   PRIVATE
     Core
+    EngineCommon
 
   PUBLIC
-    fmt::fmt
     lua)
 
 set_poulpe_definitions(Utils)
 set_poulpe_links(Utils)
+set_poulpe_compiler_flags(Utils)

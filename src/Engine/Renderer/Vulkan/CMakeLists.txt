@@ -2,7 +2,7 @@ add_library(Vulkan STATIC)
 
 target_sources(Vulkan
   PUBLIC
-    FILE_SET cxx_modules TYPE CXX_MODULES  
+    FILE_SET cxx_modules TYPE CXX_MODULES
       FILES
         DeviceMemory.cppm
         DeviceMemoryPool.cppm
@@ -23,7 +23,6 @@ target_sources(Vulkan
     DeviceMemoryPool.cpp
     Renderer.cpp
     VulkanAPI.cpp
-    RendererComponent.cpp
 
     Component/Basic.cpp
     Component/Skybox.cpp
@@ -38,14 +37,13 @@ target_link_libraries(
   PRIVATE
     Components
     Core
+    EngineCommon
 
   PUBLIC
-    fmt::fmt
     glfw
-    glm
     ktx
-    stb
-    volk)
+    stb)
 
 set_poulpe_definitions(Vulkan)
 set_poulpe_links(Vulkan)
+set_poulpe_compiler_flags(Vulkan)

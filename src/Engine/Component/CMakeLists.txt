@@ -19,12 +19,11 @@ target_link_libraries(
 
   PRIVATE
     Utils
+    EngineCommon
 
   PUBLIC
-    fmt::fmt
-    freetype
-    glm
-    volk)
+    freetype)
 
 set_poulpe_definitions(Components)
 set_poulpe_links(Components)
+set_poulpe_compiler_flags(Components)

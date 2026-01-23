@@ -13,21 +13,12 @@ FetchContent_Declare(
   GIT_SHALLOW ${FETCH_GIT_SHALLOW}
   GIT_PROGRESS ${FETCH_GIT_PROGRESS}
   UPDATE_DISCONNECTED ${FETCH_UPDATE_DISCONNECTED}
+  SYSTEM
 )
 FetchContent_MakeAvailable(fetch_fmt)
 
-if(TARGET fmt)
-  target_compile_options(fmt PRIVATE
-    $<$<C_COMPILER_ID:Clang>:-Wno-nan-infinity-disabled>
-    $<$<C_COMPILER_ID:AppleClang>:-Wno-nan-infinity-disabled>
-    $<$<C_COMPILER_ID:GNU>:-Wno-nan-infinity-disabled>
-  )
-endif()
-
-target_include_directories(${PROJECT_NAME}
-SYSTEM PRIVATE
-  ${fetch_fmt_SOURCE_DIR}/include)
-
-target_link_libraries(${PROJECT_NAME}
-PRIVATE
-  fmt::fmt)
+# # Mark fmt includes as SYSTEM to suppress warnings from third-party code
+# get_target_property(FMT_INC_DIR fmt INTERFACE_INCLUDE_DIRECTORIES)
+# if(FMT_INC_DIR)
+#   set_target_properties(fmt PROPERTIES INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${FMT_INC_DIR}")
+# endif()

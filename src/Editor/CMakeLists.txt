@@ -8,9 +8,11 @@ target_sources(Editor
 
 target_link_libraries(
   Editor
+  PRIVATE
+    EngineCommon
   PUBLIC
-    fmt::fmt
     tcl)
 
 set_poulpe_definitions(Editor)
 set_poulpe_links(Editor)
+set_poulpe_compiler_flags(Editor)
