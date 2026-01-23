@@ -17,8 +17,12 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(fetch_fmt)
 
-# # Mark fmt includes as SYSTEM to suppress warnings from third-party code
-# get_target_property(FMT_INC_DIR fmt INTERFACE_INCLUDE_DIRECTORIES)
-# if(FMT_INC_DIR)
-#   set_target_properties(fmt PROPERTIES INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${FMT_INC_DIR}")
-# endif()
+if(TARGET fmt)
+  set_target_properties(fmt PROPERTIES INTERFACE_SYSTEM_INCLUDE_DIRECTORIES
+    $<TARGET_PROPERTY:fmt,INTERFACE_INCLUDE_DIRECTORIES>)
+  target_compile_options(fmt PRIVATE
+    $<$<C_COMPILER_ID:Clang>:-Wno-nan-infinity-disabled>
+    $<$<C_COMPILER_ID:AppleClang>:-Wno-nan-infinity-disabled>
+    $<$<C_COMPILER_ID:GNU>:-Wno-nan-infinity-disabled>
+  )
+endif()

@@ -2,9 +2,6 @@ module;
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtx/hash.hpp>
-#include <glm/gtx/quaternion.hpp>
-#include <glm/fwd.hpp>
 
 #include <volk.h>
 
@@ -12,6 +9,8 @@ module Engine.Renderer.Vulkan.ShadowMap;
 
 import std;
 
+import Engine.Core.Constants;
+import Engine.Core.MaterialTypes;
 import Engine.Core.MeshTypes;
 import Engine.Core.PlpTypedef;
 

@@ -10,8 +10,10 @@ import std;
 
 import Engine.Component.Mesh;
 
-import Engine.Component.AnimationTypes;
+import Engine.Core.AnimationTypes;
+import Engine.Core.MeshTypes;
 import Engine.Core.PlpTypedef;
+
 import Engine.Utils.IDHelper;
 
 namespace Poulpe {

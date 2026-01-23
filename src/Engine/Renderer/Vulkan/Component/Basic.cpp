@@ -2,9 +2,6 @@ module;
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtx/hash.hpp>
-#include <glm/gtx/quaternion.hpp>
-#include <glm/fwd.hpp>
 
 #include <volk.h>
 
@@ -14,7 +11,9 @@ import std;
 
 import Engine.Component.Mesh;
 
+import Engine.Core.Constants;
 import Engine.Core.Logger;
+import Engine.Core.MaterialTypes;
 import Engine.Core.MeshTypes;
 import Engine.Core.PlpTypedef;
 

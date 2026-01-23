@@ -3,10 +3,6 @@ module;
 #include <GLFW/glfw3.h>
 
 #include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtx/hash.hpp>
-#include <glm/gtx/quaternion.hpp>
-#include <glm/fwd.hpp>
 
 #include <volk.h>
 
@@ -14,17 +10,17 @@ export module Engine.Renderer.VulkanRenderer;
 
 import std;
 
-import Engine.Renderer.VulkanDeviceMemoryPool;
-import Engine.Renderer.VulkanAPI;
-
 import Engine.Component.Mesh;
 
 import Engine.Core.Camera;
-import Engine.Core.Vertex;
-
+import Engine.Core.LightTypes;
 import Engine.Core.MeshTypes;
 import Engine.Core.PlpTypedef;
+import Engine.Core.Vertex;
+import Engine.Core.VulkanTypes;
 
+import Engine.Renderer.VulkanDeviceMemoryPool;
+import Engine.Renderer.VulkanAPI;
 
 namespace Poulpe
 {

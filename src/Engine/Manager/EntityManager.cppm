@@ -10,7 +10,7 @@ import Engine.Component.Entity;
 import Engine.Component.EntityNode;
 
 import Engine.Core.MeshTypes;
-import Engine.Core.PlpTypedef;
+import Engine.Core.AnimationTypes;
 
 import Engine.Managers.ComponentManager;
 import Engine.Managers.LightManager;

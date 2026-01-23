@@ -11,8 +11,10 @@ import std;
 import Engine.Component.Mesh;
 import Engine.Component.Texture;
 
-import Engine.Core.PlpTypedef;
+import Engine.Core.FontTypes;
+import Engine.Core.LightTypes;
 import Engine.Core.MeshTypes;
+import Engine.Core.PlpTypedef;
 
 namespace Poulpe {
   export struct ComponentRenderingInfo

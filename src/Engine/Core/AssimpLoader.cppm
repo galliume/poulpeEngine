@@ -7,17 +7,18 @@ module;
 #include <assimp/postprocess.h>
 #include <assimp/GltfMaterial.h>
 #include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtx/hash.hpp>
 #include <glm/gtx/quaternion.hpp>
-#include <glm/fwd.hpp>
 
 export module Engine.Core.AssimpLoader;
 
 import std;
 
-import Engine.Core.Vertex;
+import Engine.Core.AnimationTypes;
+import Engine.Core.BoneTypes;
+import Engine.Core.Constants;
+import Engine.Core.MaterialTypes;
 import Engine.Core.PlpTypedef;
+import Engine.Core.Vertex;
 import Engine.Core.Logger;
 
 namespace Poulpe
