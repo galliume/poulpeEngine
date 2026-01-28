@@ -1,12 +1,9 @@
-module;
-#include <GLFW/glfw3.h>
-
-#define STB_IMAGE_IMPLEMENTATION
-#include <stb_image.h>
-
 module Engine.GUI.Window;
 
 import std;
+
+import Engine.Core.GLFW;
+import Engine.Core.StbImage;
 
 //bool _FramebufferResized = false;
 namespace Poulpe
@@ -23,8 +20,8 @@ namespace Poulpe
   void Window::init(
     std::string_view window_title,
     std::string icon_path,
-    uint16_t const width,
-    uint16_t const height,
+    std::uint16_t const width,
+    std::uint16_t const height,
     bool const editor_mode)
   {
     glfwInit();

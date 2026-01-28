@@ -1,13 +1,9 @@
-module;
-
-#include <volk.h>
-#include <vulkan/vulkan.h>
-
 export module Engine.Renderer.Vulkan.Text;
 
 import std;
 
 import Engine.Core.GLM;
+import Engine.Core.Volk;
 
 import Engine.Renderer.RendererComponentTypes;
 import Engine.Renderer.VulkanRenderer;

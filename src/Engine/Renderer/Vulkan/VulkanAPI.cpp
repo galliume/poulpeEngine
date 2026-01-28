@@ -1,10 +1,6 @@
 module;
-#define GLFW_INCLUDE_VULKAN
-#include <GLFW/glfw3.h>
-#include <ktx.h>
 
-#include <stb_image.h>
-#include <volk.h>
+#include <stdlib.h>
 
 //@todo meh
 #pragma clang diagnostic push
@@ -16,8 +12,12 @@ module Engine.Renderer.VulkanAPI;
 
 import std;
 
+import Engine.Core.GLFW;
+import Engine.Core.KTX;
 import Engine.Core.Logger;
 import Engine.Core.PlpTypedef;
+import Engine.Core.StbImage;
+import Engine.Core.Volk;
 
 namespace Poulpe
 {
@@ -1410,7 +1410,7 @@ VkCommandPool VulkanAPI::createCommandPool(bool transfer_queue)
 
 std::vector<VkCommandBuffer> VulkanAPI::allocateCommandBuffers(
   VkCommandPool& cmd_pool,
-  std::uint32_t const size,
+  std::size_t const size,
   bool const is_secondary)
 {
   std::vector<VkCommandBuffer> cmd_buffers;
@@ -3138,7 +3138,7 @@ VkSampler VulkanAPI::createTextureSampler(std::uint32_t const mip_lvl)
     for (std::uint32_t mip { 0 }; mip < ktx_texture->numLevels; mip++) {
       for (std::uint32_t face { 0 }; face < ktx_texture->numFaces; face++) {
         ktx_size_t offset;
-        ktxTexture_GetImageOffset(ktxTexture(ktx_texture), mip, 0, face, &offset);
+        ktxTexture2_GetImageOffset(ktx_texture, mip, 0, face, &offset);
 
         VkBufferImageCopy region{};
         region.bufferOffset = offset;

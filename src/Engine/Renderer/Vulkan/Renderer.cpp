@@ -1,19 +1,15 @@
-module;
-
-#include <GLFW/glfw3.h>
-
-#include <volk.h>
-
 module Engine.Renderer.VulkanRenderer;
-import Engine.Renderer.VulkanDeviceMemory;
 
 import std;
 
-import Engine.Core.Vertex;
-
-import Engine.Core.Logger;
+import Engine.Core.GLFW;
 import Engine.Core.GLM;
+import Engine.Core.Logger;
 import Engine.Core.MeshTypes;
+import Engine.Core.Vertex;
+import Engine.Core.Volk;
+
+import Engine.Renderer.VulkanDeviceMemory;
 
 namespace Poulpe
 {
@@ -153,21 +149,13 @@ namespace Poulpe
     _cmd_pool_entities3 = _vulkan->createCommandPool();
     _cmd_pool_entities4 = _vulkan->createCommandPool();
 
-    _cmd_buffer_entities = _vulkan->allocateCommandBuffers(_cmd_pool_entities,
-      static_cast<std::uint32_t>(_imageviews.size()));
-
-    _cmd_buffer_entities2 = _vulkan->allocateCommandBuffers(_cmd_pool_entities2,
-      static_cast<std::uint32_t>(_imageviews.size()));
-
-    _cmd_buffer_entities3 = _vulkan->allocateCommandBuffers(_cmd_pool_entities3,
-      static_cast<std::uint32_t>(_imageviews.size()));
-
-    _cmd_buffer_entities4 = _vulkan->allocateCommandBuffers(_cmd_pool_entities4,
-      static_cast<std::uint32_t>(_imageviews.size()));
+    _cmd_buffer_entities = _vulkan->allocateCommandBuffers(_cmd_pool_entities, _imageviews.size(), false);
+    _cmd_buffer_entities2 = _vulkan->allocateCommandBuffers(_cmd_pool_entities2, _imageviews.size(), false);
+    _cmd_buffer_entities3 = _vulkan->allocateCommandBuffers(_cmd_pool_entities3, _imageviews.size(), false);
+    _cmd_buffer_entities4 = _vulkan->allocateCommandBuffers(_cmd_pool_entities4, _imageviews.size(), false);
 
     _cmd_pool_shadowmap = _vulkan->createCommandPool();
-    _cmd_buffer_shadowmap = _vulkan->allocateCommandBuffers(_cmd_pool_shadowmap,
-      static_cast<std::uint32_t>(_imageviews.size()));
+    _cmd_buffer_shadowmap = _vulkan->allocateCommandBuffers(_cmd_pool_shadowmap, _imageviews.size(), false);
 
     for (std::size_t i { 0 }; i < buffer_size; ++i) {
       VkImage image{};
@@ -263,9 +251,11 @@ namespace Poulpe
 
   void Renderer::start()
   {
-    vkWaitForFences(_vulkan->getDevice(), 1, &_fences_in_flight[_current_frame], VK_TRUE, UINT64_MAX);
+    auto constexpr max { std::numeric_limits<std::uint64_t>::max() };
 
-    VkResult result = vkAcquireNextImageKHR(_vulkan->getDevice(), _swapchain, UINT64_MAX, _image_available[_current_frame], VK_NULL_HANDLE, &_image_index);
+    vkWaitForFences(_vulkan->getDevice(), 1, &_fences_in_flight[_current_frame], VK_TRUE, max);
+
+    VkResult result = vkAcquireNextImageKHR(_vulkan->getDevice(), _swapchain, max, _image_available[_current_frame], VK_NULL_HANDLE, &_image_index);
     if (result == VK_ERROR_OUT_OF_DATE_KHR) {
       return;
     } else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
@@ -649,7 +639,7 @@ namespace Poulpe
     _vulkan->endMarker(cmd_buffer);
     _vulkan->endRendering(cmd_buffer);
 
-    //uint32_t const layer_count = (shadow_type == SHADOW_TYPE::CSM) ? 4 : 6;
+    //std::uint32_t const layer_count = (shadow_type == SHADOW_TYPE::CSM) ? 4 : 6;
 
     //  _vulkan->transitionImageLayout(cmd_buffer,
     //   depth,
@@ -713,7 +703,7 @@ namespace Poulpe
     int)
   {
     auto command_pool = _vulkan->createCommandPool();
-    VkCommandBuffer cmd = _vulkan->allocateCommandBuffers(command_pool)[0];
+    VkCommandBuffer cmd = _vulkan->allocateCommandBuffers(command_pool, 1, false)[0];
     _vulkan->beginCommandBuffer(cmd);
     function(cmd);
     _vulkan->endCommandBuffer(cmd);

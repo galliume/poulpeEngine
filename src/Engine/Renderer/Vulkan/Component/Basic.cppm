@@ -1,7 +1,3 @@
-module;
-#include <volk.h>
-#include <vulkan/vulkan.h>
-
 export module Engine.Renderer.Vulkan.Basic;
 
 import std;
@@ -10,6 +6,7 @@ import Engine.Component.Texture;
 
 import Engine.Renderer.RendererComponentTypes;
 import Engine.Renderer.VulkanRenderer;
+import Engine.Core.Volk;
 
 namespace Poulpe
 {

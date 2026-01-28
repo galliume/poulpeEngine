@@ -1,9 +1,3 @@
-module;
-#include <ft2build.h>
-#include FT_FREETYPE_H
-#include <freetype/ttnameid.h>
-#include <volk.h>
-
 export module Engine.Component.Components;
 
 import std;
@@ -11,8 +5,10 @@ import std;
 import Engine.Component.Mesh;
 
 import Engine.Core.AnimationTypes;
+import Engine.Core.FreeType;
 import Engine.Core.MeshTypes;
 import Engine.Core.PlpTypedef;
+import Engine.Core.Volk;
 
 import Engine.Utils.IDHelper;
 

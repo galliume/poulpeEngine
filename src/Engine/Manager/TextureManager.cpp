@@ -4,11 +4,6 @@ module;
 #include <nlohmann/json.hpp>
 #include <nlohmann/json_fwd.hpp>
 
-#include <ktx.h>
-
-#include <stb_image.h>
-#include <volk.h>
-
 module Engine.Managers.TextureManager;
 
 import std;
@@ -16,8 +11,11 @@ import std;
 import Engine.Component.Texture;
 
 import Engine.Core.Json;
+import Engine.Core.KTX;
 import Engine.Core.Logger;
 import Engine.Core.PlpTypedef;
+import Engine.Core.StbImage;
+import Engine.Core.Volk;
 
 import Engine.Managers.ConfigManagerLocator;
 
@@ -155,7 +153,7 @@ namespace Poulpe
     _paths.insert({ name, path });
 
     ktxTexture2 *ktx_texture;
-    KTX_error_code result = ktxTexture_CreateFromNamedFile(path.c_str(), KTX_TEXTURE_CREATE_LOAD_IMAGE_DATA_BIT, (ktxTexture**)&ktx_texture);
+    ktx_error_code_e result = ktxTexture_CreateFromNamedFile(path.c_str(), KTX_TEXTURE_CREATE_LOAD_IMAGE_DATA_BIT, (ktxTexture**)&ktx_texture);
 
     if (result != KTX_SUCCESS) {
       Logger::warn("Error while loading KTX file: {} error: {}", path, ktxErrorString(result));
@@ -170,7 +168,7 @@ namespace Poulpe
     }
 
     VkCommandPool cmd_pool = renderer->getAPI()->createCommandPool(true);
-    VkCommandBuffer cmd_buffer = renderer->getAPI()->allocateCommandBuffers(cmd_pool)[0];
+    VkCommandBuffer cmd_buffer = renderer->getAPI()->allocateCommandBuffers(cmd_pool, 1, false)[0];
     VkImage texture_image = nullptr;
 
     renderer->getAPI()->createKTXImage(cmd_buffer, ktx_texture, texture_image, renderer->getCurrentFrameIndex());

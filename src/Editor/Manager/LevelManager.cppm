@@ -1,7 +1,6 @@
-module;
-#include <tcl.h>
-
 export module Editor.Managers.LevelManager;
+
+import Engine.Core.TclTk;
 
 import Engine.Managers.RenderManager;
 

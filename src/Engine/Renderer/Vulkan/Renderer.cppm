@@ -1,9 +1,3 @@
-module;
-
-#include <GLFW/glfw3.h>
-
-#include <volk.h>
-
 export module Engine.Renderer.VulkanRenderer;
 
 import std;
@@ -12,11 +6,13 @@ import Engine.Component.Mesh;
 
 import Engine.Core.Camera;
 import Engine.Core.LightTypes;
+import Engine.Core.GLFW;
 import Engine.Core.GLM;
 import Engine.Core.MeshTypes;
 import Engine.Core.PlpTypedef;
 import Engine.Core.Vertex;
 import Engine.Core.VulkanTypes;
+import Engine.Core.Volk;
 
 import Engine.Renderer.VulkanDeviceMemoryPool;
 import Engine.Renderer.VulkanAPI;

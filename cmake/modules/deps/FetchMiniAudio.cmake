@@ -9,8 +9,8 @@ FetchContent_Declare(
   GIT_SHALLOW ${FETCH_GIT_SHALLOW}
   GIT_PROGRESS ${FETCH_GIT_PROGRESS}
   UPDATE_DISCONNECTED ${FETCH_UPDATE_DISCONNECTED}
-  SYSTEM
-)
+  SYSTEM)
+
 FetchContent_MakeAvailable(fetch_mini_audio)
 
 target_include_directories(miniaudio

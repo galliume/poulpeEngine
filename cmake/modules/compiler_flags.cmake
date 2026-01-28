@@ -6,6 +6,9 @@ function(set_poulpe_compiler_flags target)
     PRIVATE   cxx_std_26
     INTERFACE cxx_std_26)
 
+  set_target_properties(${target} PROPERTIES
+    CXX_SCAN_FOR_MODULES ON)
+
   set(DEBUG_OPTIONS
     -g
     -Og

@@ -1,12 +1,12 @@
 module;
-
-#include <vulkan/vulkan.h>
+#include <cstddef>//offsetof
 
 export module Engine.Core.Vertex;
 
 import std;
 
 import Engine.Core.GLM;
+import Engine.Core.Volk;
 
 namespace Poulpe
 {
@@ -23,7 +23,7 @@ namespace Poulpe
     */
   export struct VertexBones
   {
-    int32_t bone_ids[4];        // 16 bytes
+    std::int32_t bone_ids[4];        // 16 bytes
     float   bone_weights[4];    // 16 bytes
 
     glm::vec3 original_pos;     // 12 bytes

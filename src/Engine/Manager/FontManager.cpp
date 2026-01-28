@@ -1,19 +1,14 @@
-module;
-#include <ft2build.h>
-#include FT_FREETYPE_H
-#include <freetype/ttnameid.h>
-
-#include <volk.h>
-
 module Engine.Managers.FontManager;
 
 import std;
 
 import Engine.Component.Texture;
 
-import Engine.Core.Logger;
 import Engine.Core.FontTypes;
+import Engine.Core.FreeType;
 import Engine.Core.GLM;
+import Engine.Core.Logger;
+import Engine.Core.Volk;
 
 import Engine.Managers.ConfigManagerLocator;
 
@@ -70,7 +65,7 @@ namespace Poulpe
     }
 
     VkCommandPool cmd_pool = _renderer->getAPI()->createCommandPool();
-    VkCommandBuffer cmd_buffer = _renderer->getAPI()->allocateCommandBuffers(cmd_pool)[0];
+    VkCommandBuffer cmd_buffer = _renderer->getAPI()->allocateCommandBuffers(cmd_pool, 1, false)[0];
 
     _characters.resize(static_cast<std::size_t>(_face->num_glyphs));
 
@@ -110,7 +105,7 @@ namespace Poulpe
       }
 
       if (renderable) {
-        std::vector<int8_t> r_buffer{};
+        std::vector<std::int8_t> r_buffer{};
 
         auto const glyph_width{ _face->glyph->bitmap.width };
         auto const glyph_height{ _face->glyph->bitmap.rows };
@@ -122,9 +117,9 @@ namespace Poulpe
         std::uint32_t index{ 0 };
 
         for (std::uint32_t y{ 0 }; y < glyph_height; y++) {
-          int8_t const * row_buffer = reinterpret_cast<int8_t const *>(buffer) + y * static_cast<std::uint32_t>(glyph_pitch);
+          std::int8_t const * row_buffer = reinterpret_cast<std::int8_t const *>(buffer) + y * static_cast<std::uint32_t>(glyph_pitch);
           for (std::uint32_t x{ 0 }; x < glyph_width; x++) {
-            int8_t sdf = row_buffer[x];
+            std::int8_t sdf = row_buffer[x];
             r_buffer[index++] = sdf;
           }
         }

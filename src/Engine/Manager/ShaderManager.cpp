@@ -1,7 +1,3 @@
-module;
-
-#include <volk.h>
-
 module Engine.Managers.ShaderManager;
 
 import std;
@@ -12,6 +8,7 @@ import Engine.Core.Json;
 import Engine.Core.Logger;
 import Engine.Core.PlpTypedef;
 import Engine.Core.Tools;
+import Engine.Core.Volk;
 
 import Engine.Managers.ConfigManagerLocator;
 
@@ -572,7 +569,7 @@ namespace Poulpe
     pipeline_create_infos.pipeline_layout = pipeline_layout;
 
     graphic_pipeline = _renderer->getAPI()->createGraphicsPipeline(pipeline_create_infos);
-    auto descriptorPool = _renderer->getAPI()->createDescriptorPool(poolSizes, 1000);
+    auto descriptorPool = _renderer->getAPI()->createDescriptorPool(poolSizes, 1000u);
 
     if (need_bis) {
       pipeline_create_infos.cull_mode = VK_CULL_MODE_NONE;

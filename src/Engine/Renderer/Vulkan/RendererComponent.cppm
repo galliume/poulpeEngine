@@ -1,7 +1,5 @@
 module;
-#include <ft2build.h>
-#include FT_FREETYPE_H
-#include <freetype/ttnameid.h>
+
 #include <vulkan/vulkan_core.h>
 
 export module Engine.Renderer.RendererComponent;
@@ -9,6 +7,8 @@ export module Engine.Renderer.RendererComponent;
 import std;
 
 import Engine.Component.Mesh;
+
+import Engine.Core.FreeType;
 
 import Engine.Renderer.RendererComponentTypes;
 import Engine.Renderer.VulkanRenderer;

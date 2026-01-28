@@ -1,17 +1,14 @@
-module;
-
-#include <GLFW/glfw3.h>
-
 export module Engine.Managers.InputManager;
 
 import std;
 
-import Engine.Core.Json;
 import Engine.Core.Camera;
-
-import Engine.Managers.PlayerManager;
+import Engine.Core.GLFW;
+import Engine.Core.Json;
 
 import Engine.GUI.Window;
+
+import Engine.Managers.PlayerManager;
 
 namespace Poulpe
 {

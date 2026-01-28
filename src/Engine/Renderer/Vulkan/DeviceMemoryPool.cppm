@@ -1,10 +1,8 @@
-
-module;
-#include <volk.h>
-
 export module Engine.Renderer.VulkanDeviceMemoryPool;
 
 import std;
+
+import Engine.Core.Volk;
 
 //import Engine.Core.Logger;
 import Engine.Renderer.VulkanDeviceMemory;

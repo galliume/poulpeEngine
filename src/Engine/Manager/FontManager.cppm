@@ -1,10 +1,3 @@
-module;
-#include <ft2build.h>
-#include FT_FREETYPE_H
-#include <freetype/ttnameid.h>
-#include <volk.h>
-
-
 export module Engine.Managers.FontManager;
 
 import std;
@@ -12,7 +5,9 @@ import std;
 import Engine.Component.Texture;
 
 import Engine.Core.FontTypes;
+import Engine.Core.FreeType;
 import Engine.Core.GLM;
+import Engine.Core.Volk;
 
 import Engine.Renderer;
 

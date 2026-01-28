@@ -4,8 +4,6 @@ module;
 #include <nlohmann/json.hpp>
 #include <nlohmann/json_fwd.hpp>
 
-#include <volk.h>
-
 module Engine.Managers.EntityManager;
 
 import std;
@@ -27,6 +25,7 @@ import Engine.Core.MaterialTypes;
 import Engine.Core.GLM;
 import Engine.Core.MeshTypes;
 import Engine.Core.PlpTypedef;
+import Engine.Core.Volk;
 
 import Engine.Managers.ComponentManager;
 import Engine.Managers.ConfigManagerLocator;

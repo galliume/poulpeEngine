@@ -12,6 +12,7 @@ target_link_libraries(
   GUI
 
   PRIVATE
+    Core
     EngineCommon
 
   PUBLIC

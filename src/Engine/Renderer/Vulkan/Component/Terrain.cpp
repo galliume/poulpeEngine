@@ -1,7 +1,3 @@
-module;
-
-#include <volk.h>
-
 module Engine.Renderer.Vulkan.Terrain;
 
 import std;
@@ -16,6 +12,7 @@ import Engine.Core.GLM;
 import Engine.Core.MeshTypes;
 import Engine.Core.PlpTypedef;
 import Engine.Core.Vertex;
+import Engine.Core.Volk;
 
 import Engine.Renderer.RendererComponentTypes;
 import Engine.Renderer.VulkanRenderer;
@@ -46,15 +43,15 @@ namespace Poulpe
     Texture const& tex { component_rendering_info.textures->at(component_rendering_info.terrain_name) };
 
     std::vector<Vertex> vertices;
-    int32_t const width{ static_cast<int32_t>(tex.getWidth()) };
-    int32_t const height{ static_cast<int32_t>(tex.getHeight())};
-    int32_t const rez{ 20 };
+    std::uint32_t const width{ static_cast<std::uint32_t>(tex.getWidth()) };
+    std::uint32_t const height{ static_cast<std::uint32_t>(tex.getHeight())};
+    std::uint32_t const rez{ 20 };
     const float fRez = static_cast<float>(rez);
     const glm::vec4 zeroVec4{0.0f, 0.0f, 0.0f, 0.0f};
     const glm::vec4 defaultNormal{1.0f, 1.0f, 0.0f, 0.0f};
 
-    for(int32_t i = 0; i < rez - 1; i++) {
-      for(int32_t j = 0; j < rez - 1; j++) {
+    for(std::uint32_t i = 0; i < rez - 1; i++) {
+      for(std::uint32_t j = 0; j < rez - 1; j++) {
 
         float const y{ 0.0f };
 

@@ -1,11 +1,9 @@
-module;
-#include <tcl.h>
-
 module Editor.Managers.LevelManager;
 
 import std;
 
 import Engine.Core.Logger;
+import Engine.Core.TclTk;
 
 import Engine.Component.Components;
 import Engine.Component.Mesh;

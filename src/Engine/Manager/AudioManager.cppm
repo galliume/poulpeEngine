@@ -1,11 +1,9 @@
-module;
-#include <miniaudio.h>
-
 export module Engine.Managers.AudioManager;
 
 import std;
 
 import Engine.Core.Json;
+import Engine.Core.MiniAudio;
 
 namespace Poulpe
 {

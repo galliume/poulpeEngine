@@ -1,22 +1,19 @@
-module;
-
-#include <GLFW/glfw3.h>
-#include <ktx.h>
-#include <stb_image.h>
-#include <volk.h>
-
 export module Engine.Renderer.VulkanAPI;
 
 import std;
 
 import Engine.Core.Constants;
 import Engine.Core.FontTypes;
+import Engine.Core.GLFW;
+import Engine.Core.KTX;
 import Engine.Core.LightTypes;
 import Engine.Core.Logger;
 import Engine.Core.MeshTypes;
 import Engine.Core.PlpTypedef;
+import Engine.Core.StbImage;
 import Engine.Core.Vertex;
 import Engine.Core.VulkanTypes;
+import Engine.Core.Volk;
 
 import Engine.Renderer.VulkanDeviceMemoryPool;
 import Engine.Renderer.VulkanDeviceMemory;
@@ -155,8 +152,8 @@ namespace Poulpe
 
     std::vector<VkCommandBuffer> allocateCommandBuffers(
       VkCommandPool& cmd_pool,
-      std::uint32_t const size = 1,
-      bool const is_secondary = false);
+      std::size_t const size,
+      bool const is_secondary);
 
     VkBuffer createBuffer(VkDeviceSize const size, VkBufferUsageFlags const usage);
 
@@ -450,7 +447,7 @@ namespace Poulpe
 
     inline void resetCurrentFrameIndex() { _current_frame = 0; }
 
-    inline int32_t getCurrentFrame() const { return _current_frame; }
+    inline std::uint32_t getCurrentFrame() const { return _current_frame; }
 
     inline VkFormat getSwapChainImageFormat() const { return _swapchain_iImage_format; }
 
@@ -601,7 +598,7 @@ namespace Poulpe
 
     VkDeviceSize align_to(VkDeviceSize const size, VkDeviceSize const alignment);
 
-    int32_t _current_frame{ 0 };
+    std::uint32_t _current_frame{ 0 };
     std::uint32_t _extension_count;
     std::string _api_version;
     std::uint32_t _queue_count { 2 };

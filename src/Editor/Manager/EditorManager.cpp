@@ -1,16 +1,3 @@
-module;
-//@todo check X11 too
-#ifdef __unix__
-#define GLFW_EXPOSE_NATIVE_WAYLAND
-#else
-#define GLFW_EXPOSE_NATIVE_WIN32
-#endif
-#include <GLFW/glfw3.h>
-#include <GLFW/glfw3native.h>
-
-#include <tcl.h>
-#include <tk.h>
-
 module Editor.Managers.EditorManager;
 
 import std;
@@ -20,7 +7,9 @@ import Editor.Managers.LevelManager;
 
 import Engine.Application;
 
+import Engine.Core.GLFW;
 import Engine.Core.Logger;
+import Engine.Core.TclTk;
 
 import Engine.Component.Components;
 import Engine.Component.Mesh;

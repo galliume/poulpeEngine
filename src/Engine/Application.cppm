@@ -1,13 +1,12 @@
 module;
 #include "PoulpeEngineConfig.h"
 
-#define MINIAUDIO_IMPLEMENTATION
-#include <miniaudio.h>
-#include <GLFW/glfw3.h>
-
 export module Engine.Application;
 
 import std;
+
+import Engine.Core.GLFW;
+import Engine.Core.MiniAudio;
 
 //import Engine.Core.CommandQueueLocator;
 import Engine.Managers.APIManager;

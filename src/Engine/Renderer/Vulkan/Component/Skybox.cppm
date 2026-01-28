@@ -1,11 +1,8 @@
-module;
-#include <volk.h>
-#include <vulkan/vulkan.h>
-
 export module Engine.Renderer.Vulkan.Skybox;
 
 import Engine.Renderer.RendererComponentTypes;
 import Engine.Renderer.VulkanRenderer;
+import Engine.Core.Volk;
 
 namespace Poulpe
 {
