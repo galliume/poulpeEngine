@@ -1,8 +1,5 @@
 module;
 
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-
 #include <volk.h>
 
 module Engine.Renderer.Vulkan.Basic;
@@ -14,6 +11,7 @@ import Engine.Component.Mesh;
 import Engine.Core.Constants;
 import Engine.Core.Logger;
 import Engine.Core.MaterialTypes;
+import Engine.Core.GLM;
 import Engine.Core.MeshTypes;
 import Engine.Core.PlpTypedef;
 
@@ -323,10 +321,10 @@ namespace Poulpe
     descset_writes[1].dstBinding = 1;
     descset_writes[1].dstArrayElement = 0;
     descset_writes[1].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-    descset_writes[1].descriptorCount = static_cast<uint32_t>(buffer_storage_infos.size());
+    descset_writes[1].descriptorCount = static_cast<std::uint32_t>(buffer_storage_infos.size());
     descset_writes[1].pBufferInfo = buffer_storage_infos.data();
 
-    vkUpdateDescriptorSets(renderer->getDevice(), static_cast<uint32_t>(descset_writes.size()), descset_writes.data(), 0, nullptr);
+    vkUpdateDescriptorSets(renderer->getDevice(), static_cast<std::uint32_t>(descset_writes.size()), descset_writes.data(), 0, nullptr);
 
     mesh->setShadowMapDescSet(shadow_map_descset);
 
@@ -356,10 +354,10 @@ namespace Poulpe
     csm_descset_writes[1].dstBinding = 1;
     csm_descset_writes[1].dstArrayElement = 0;
     csm_descset_writes[1].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-    csm_descset_writes[1].descriptorCount = static_cast<uint32_t>(csm_buffer_storage_infos.size());
+    csm_descset_writes[1].descriptorCount = static_cast<std::uint32_t>(csm_buffer_storage_infos.size());
     csm_descset_writes[1].pBufferInfo = csm_buffer_storage_infos.data();
 
-    vkUpdateDescriptorSets(renderer->getDevice(), static_cast<uint32_t>(csm_descset_writes.size()), csm_descset_writes.data(), 0, nullptr);
+    vkUpdateDescriptorSets(renderer->getDevice(), static_cast<std::uint32_t>(csm_descset_writes.size()), csm_descset_writes.data(), 0, nullptr);
 
     mesh->setCSMDescSet(csm_descset);
   }

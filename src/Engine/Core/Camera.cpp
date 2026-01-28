@@ -1,12 +1,9 @@
-module;
-
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtx/quaternion.hpp>
-
 module Engine.Core.Camera;
 
 import std;
+
+import Engine.Core.Logger;
+import Engine.Core.GLM;
 
 namespace Poulpe
 {
@@ -49,6 +46,16 @@ namespace Poulpe
   void Camera::up()
   {
     _next_pos -= _up * (_acceleration * getDeltaTime());
+  }
+
+  glm::mat4 Camera::getView() const
+  {
+    return glm::lookAt(_pos, _pos + _front, _up);
+  }
+  
+  glm::mat4 Camera::getThirdPersonView(glm::vec3 const & player_pos)
+  {
+    return glm::lookAt(_pos, player_pos + _front, _up);
   }
 
   /**
@@ -136,9 +143,9 @@ namespace Poulpe
     }
 
     glm::vec3 const front {
-      static_cast<float>(cos(glm::radians(_yaw)) * cos(glm::radians(_pitch))),
-      static_cast<float>(sin(glm::radians(_pitch))),
-      static_cast<float>(sin(glm::radians(_yaw)) * cos(glm::radians(_pitch))) };
+      static_cast<float>(glm::cos(glm::radians(_yaw)) * glm::cos(glm::radians(_pitch))),
+      static_cast<float>(glm::sin(glm::radians(_pitch))),
+      static_cast<float>(glm::sin(glm::radians(_yaw)) * glm::cos(glm::radians(_pitch))) };
 
     _next_front = glm::normalize(front);
   }
@@ -247,7 +254,7 @@ namespace Poulpe
     return frustum_planes;
     // auto const& appConfig { config_manager->appConfig()["resolution"] };
     // auto const g { perspective[1][1] };
-    // auto const s { appConfig["width"].get<uint32_t>() / appConfig["height"].get<uint32_t>() };
+    // auto const s { appConfig["width"].get<std::uint32_t>() / appConfig["height"].get<std::uint32_t>() };
     // auto const near_plane { 0.01f };
     // auto const far_plane { 1000.f };
 

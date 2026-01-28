@@ -2,8 +2,6 @@ module;
 
 #include <GLFW/glfw3.h>
 
-#include <glm/glm.hpp>
-
 #include <volk.h>
 
 export module Engine.Renderer.VulkanRenderer;
@@ -14,6 +12,7 @@ import Engine.Component.Mesh;
 
 import Engine.Core.Camera;
 import Engine.Core.LightTypes;
+import Engine.Core.GLM;
 import Engine.Core.MeshTypes;
 import Engine.Core.PlpTypedef;
 import Engine.Core.Vertex;
@@ -37,7 +36,7 @@ namespace Poulpe
 
       void insert(
         VkCommandBuffer& cmd_buffer,
-        uint32_t const thread_id,
+        std::uint32_t const thread_id,
         bool const is_attachment,
         std::vector<VkPipelineStageFlags> flags = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT })
       {
@@ -142,7 +141,7 @@ namespace Poulpe
 
     void submit();
 
-    inline uint32_t getCurrentFrameIndex() const { return _current_frame; }
+    inline std::uint32_t getCurrentFrameIndex() const { return _current_frame; }
     inline VkSampler& getCurrentSampler() { return _samplers[_previous_frame]; }
     inline VkImageView& getCurrentImageView() { return _imageviews[_previous_frame]; }
     inline VkImageView& getDepthMapImageViews() { return  _depthmap_imageviews.at(_current_frame); }
@@ -181,11 +180,11 @@ namespace Poulpe
 
       std::uint32_t getMaxFramesInFlight() const { return _max_frames_in_flight; }
       
-      void setShadowMapResolution(uint32_t const resolution) { _shadow_map_resolution = resolution; }
+      void setShadowMapResolution(std::uint32_t const resolution) { _shadow_map_resolution = resolution; }
 
   private:
     std::uint32_t _max_frames_in_flight{ 3 };
-    uint32_t _shadow_map_resolution { 2048 };
+    std::uint32_t _shadow_map_resolution { 2048 };
     //const std::size_t _max_render_thread{ 4 };
 
     void onFinishRender();
@@ -218,9 +217,9 @@ namespace Poulpe
     VkCommandPool _cmd_pool_shadowmap{ nullptr };
     std::vector<VkCommandBuffer> _cmd_buffer_shadowmap{};
 
-    uint32_t _current_frame{ 0 };
-    uint32_t _previous_frame{ 0 };
-    uint32_t _image_index;
+    std::uint32_t _current_frame{ 0 };
+    std::uint32_t _previous_frame{ 0 };
+    std::uint32_t _image_index;
     std::pair<std::vector<VkBuffer>, std::vector<VkDeviceMemory>> _unifor_buffers{};
 
     //@todo move to meshManager

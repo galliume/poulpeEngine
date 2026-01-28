@@ -1,11 +1,12 @@
 module;
+
 #include <GLFW/glfw3.h>
-#include <nlohmann/json.hpp>
 
 export module Engine.Managers.InputManager;
 
 import std;
 
+import Engine.Core.Json;
 import Engine.Core.Camera;
 
 import Engine.Managers.PlayerManager;
@@ -19,7 +20,7 @@ namespace Poulpe
   public:
     explicit InputManager(Window const * const window);
 
-    void init(nlohmann::json const& input_config) ;
+    void init(json const& input_config) ;
 
     void keyPress(int key, int scan_code, int action, int mods);
     void mouseButton(int button, int action, int mods);
@@ -39,7 +40,7 @@ namespace Poulpe
     Camera * _camera;
     Window const * const _window;
 
-    nlohmann::json _input_config;
+    json _input_config;
     std::unordered_map<std::string, int> _keyboard_keys{};
 
     bool _has_gamepad { false };

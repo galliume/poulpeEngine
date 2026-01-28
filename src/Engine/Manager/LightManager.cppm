@@ -1,13 +1,10 @@
-module;
-#include <glm/glm.hpp>
-
 export module Engine.Managers.LightManager;
 
 import std;
 
 import Engine.Core.Camera;
-
 import Engine.Core.LightTypes;
+import Engine.Core.GLM;
 
 namespace Poulpe
 {

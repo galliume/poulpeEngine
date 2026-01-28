@@ -3,8 +3,6 @@ module;
 #include FT_FREETYPE_H
 #include <freetype/ttnameid.h>
 
-#include <glm/glm.hpp>
-
 #include <volk.h>
 
 module Engine.Managers.FontManager;
@@ -15,6 +13,7 @@ import Engine.Component.Texture;
 
 import Engine.Core.Logger;
 import Engine.Core.FontTypes;
+import Engine.Core.GLM;
 
 import Engine.Managers.ConfigManagerLocator;
 
@@ -120,11 +119,11 @@ namespace Poulpe
         r_buffer.resize(glyph_width * glyph_height, 0x000);
 
         auto buffer = _face->glyph->bitmap.buffer;
-        uint32_t index{ 0 };
+        std::uint32_t index{ 0 };
 
-        for (uint32_t y{ 0 }; y < glyph_height; y++) {
-          int8_t const * row_buffer = reinterpret_cast<int8_t const *>(buffer) + y * static_cast<uint32_t>(glyph_pitch);
-          for (uint32_t x{ 0 }; x < glyph_width; x++) {
+        for (std::uint32_t y{ 0 }; y < glyph_height; y++) {
+          int8_t const * row_buffer = reinterpret_cast<int8_t const *>(buffer) + y * static_cast<std::uint32_t>(glyph_pitch);
+          for (std::uint32_t x{ 0 }; x < glyph_width; x++) {
             int8_t sdf = row_buffer[x];
             r_buffer[index++] = sdf;
           }
@@ -147,7 +146,7 @@ namespace Poulpe
         if (x_offset + character.size.x >= max_row_width) {
           x_offset = 0;
           y_offset += max_row_height + 1.f;
-          _atlas_height += static_cast<uint32_t>(max_row_height) + 1;
+          _atlas_height += static_cast<std::uint32_t>(max_row_height) + 1;
           max_row_height = 0;
         }
 
@@ -162,7 +161,7 @@ namespace Poulpe
       c = FT_Get_Next_Char(_face, c, &glyph_index);
     }
 
-    _atlas_height += static_cast<uint32_t>(max_row_height) + 50;
+    _atlas_height += static_cast<std::uint32_t>(max_row_height) + 50;
 
     VkImage image = nullptr;
     _renderer->getAPI()->createFontImage(
@@ -178,14 +177,14 @@ namespace Poulpe
     texture.setImage(image);
     texture.setImageView(imageview);
     texture.setMipLevels(1);
-    texture.setWidth(static_cast<uint32_t>(x_offset));
-    texture.setHeight(static_cast<uint32_t>(y_offset));
+    texture.setWidth(static_cast<std::uint32_t>(x_offset));
+    texture.setHeight(static_cast<std::uint32_t>(y_offset));
     texture.setIsPublic(true);
 
     return texture;
   }
 
-  FontCharacter const& FontManager::get(uint32_t const c)
+  FontCharacter const& FontManager::get(std::uint32_t const c)
   {
     auto glyph_index = FT_Get_Char_Index(_face, c);
 

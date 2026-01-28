@@ -1,5 +1,5 @@
 module;
-#include <nlohmann/json.hpp>
+
 #include <volk.h>
 
 module Engine.Managers.ShaderManager;
@@ -8,6 +8,7 @@ import std;
 
 import Engine.Core.Vertex;
 
+import Engine.Core.Json;
 import Engine.Core.Logger;
 import Engine.Core.PlpTypedef;
 import Engine.Core.Tools;
@@ -82,7 +83,7 @@ namespace Poulpe
     _shaders->shaders.clear();
   }
 
-  std::function<void(std::latch& count_down)> ShaderManager::load(nlohmann::json config)
+  std::function<void(std::latch& count_down)> ShaderManager::load(json config)
   {
     _config = config;
 
@@ -653,7 +654,7 @@ namespace Poulpe
 
       vertex_input_info->sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
       vertex_input_info->vertexBindingDescriptionCount = 1;
-      vertex_input_info->vertexAttributeDescriptionCount = static_cast<uint32_t>(Vertex::getAttributeDescriptions().size());
+      vertex_input_info->vertexAttributeDescriptionCount = static_cast<std::uint32_t>(Vertex::getAttributeDescriptions().size());
       vertex_input_info->pVertexBindingDescriptions = bDesc;
       vertex_input_info->pVertexAttributeDescriptions = attDesc->data();
     } else {

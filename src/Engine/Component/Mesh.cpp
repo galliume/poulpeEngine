@@ -1,7 +1,5 @@
 module Engine.Component.Mesh;
 
-import std;
-
 namespace Poulpe
 {
   void Mesh::addUbos(std::vector<std::vector<UniformBufferObject>> const& ubos)

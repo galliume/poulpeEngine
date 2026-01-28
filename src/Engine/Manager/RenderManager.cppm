@@ -1,6 +1,5 @@
 module;
 
-#include <glm/glm.hpp>
 #include <vulkan/vulkan.h>
 
 export module Engine.Managers.RenderManager;
@@ -11,6 +10,7 @@ import Engine.Component.EntityNode;
 import Engine.Component.Mesh;
 
 import Engine.Core.Camera;
+import Engine.Core.GLM;
 import Engine.Core.MeshTypes;
 import Engine.Core.PlpTypedef;
 import Engine.Core.Tools;
@@ -43,8 +43,8 @@ namespace Poulpe
 
     void cleanUp();
     inline void forceRefresh() { _refresh = true; }
-    inline uint32_t getAppHeight() { return getRenderer()->getAPI()->getSwapChainExtent().height; }
-    inline uint32_t getAppWidth() { return getRenderer()->getAPI()->getSwapChainExtent().width; }
+    inline std::uint32_t getAppHeight() { return getRenderer()->getAPI()->getSwapChainExtent().height; }
+    inline std::uint32_t getAppWidth() { return getRenderer()->getAPI()->getSwapChainExtent().width; }
     inline AudioManager* getAudioManager() { return _audio_manager.get(); }
     inline Camera* getCamera() { return _cameras.at(_current_camera).get(); }
     inline ComponentManager* getComponentManager() { return _component_manager.get(); }

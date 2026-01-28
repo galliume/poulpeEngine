@@ -1,10 +1,3 @@
-module;
-
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-
-#include <nlohmann/json_fwd.hpp>
-
 module Engine.Managers.RenderManager;
 
 import std;
@@ -18,9 +11,11 @@ import Engine.Component.Mesh;
 import Engine.Core.AnimationTypes;
 import Engine.Core.Camera;
 import Engine.Core.Constants;
+import Engine.Core.Json;
 import Engine.Core.LightTypes;
 import Engine.Core.Logger;
 import Engine.Core.MaterialTypes;
+import Engine.Core.GLM;
 import Engine.Core.MeshTypes;
 import Engine.Core.PlpTypedef;
 
@@ -119,7 +114,7 @@ namespace Poulpe
     InputManagerLocator::get()->init(appConfig["input"]);
     
     auto const& shadowConfig { appConfig["shadow_resolution"] };
-    _renderer->setShadowMapResolution(shadowConfig["width"].get<uint32_t>());
+    _renderer->setShadowMapResolution(shadowConfig["width"].get<std::uint32_t>());
 
     if (appConfig["defaultLevel"].empty()) {
       Logger::warn("defaultLevel conf not set.");
@@ -147,7 +142,7 @@ namespace Poulpe
     }
 
     auto const camera_view_matrix = (_current_camera == std::to_underlying(CameraType::THIRD_PERSON))
-      ? getCamera()->getView(_player_manager->getPosition())
+      ? getCamera()->getThirdPersonView(_player_manager->getPosition())
       : getCamera()->getView();
 
     updateComponentRenderingInfo();
@@ -194,7 +189,9 @@ namespace Poulpe
 
       //@todo animate light
       //_light_manager->animateAmbientLight(delta_time);
-      auto const& camera_view_matrix { getCamera()->getView() };
+      auto const camera_view_matrix = (_current_camera == std::to_underlying(CameraType::THIRD_PERSON))
+        ? getCamera()->getThirdPersonView(_player_manager->getPosition())
+        : getCamera()->getView();
       auto const& perspective { _renderer->getPerspective() };
       //std::lock_guard<std::shared_mutex> guard(_entity_manager->lockWorldNode());
 
@@ -370,7 +367,10 @@ namespace Poulpe
       _renderer->getAPI()->endCopyBuffer(_renderer->getCurrentFrameIndex());
 
       if (_player_manager->hasMoved() && _current_camera == std::to_underlying(CameraType::THIRD_PERSON)) {
-        getCamera()->setPos(_player_manager->getPosition());
+        auto pos { _player_manager->getPosition() };
+        pos.y += 10;
+        pos.z -= 10;
+        getCamera()->setPos(pos);
       }
 
       _player_manager->reset();
@@ -547,7 +547,7 @@ namespace Poulpe
 
   void RenderManager::prepareSkybox()
   {
-    auto entity = std::make_unique<Entity>();
+    auto entity = std::make_shared<Entity>();
     auto mesh = std::make_unique<Mesh>();
     mesh->setName("skybox");
     mesh->isSkybox(true);
@@ -562,12 +562,12 @@ namespace Poulpe
 
     _component_manager->add<RendererComponent>(entity->getID(), std::move(rdr_impl));
     _component_manager->add<MeshComponent>(entity->getID(), std::move(mesh));
-    _entity_manager->setSkybox(std::move(entity));
+    _entity_manager->setSkybox(entity);
   }
 
   void RenderManager::prepareTerrain()
   {
-    auto entity = std::make_unique<Entity>();
+    auto entity = std::make_shared<Entity>();
     auto mesh = std::make_unique<Mesh>();
     mesh->setHasShadow(false);
     mesh->setIsIndexed(false);
@@ -581,12 +581,12 @@ namespace Poulpe
 
     _component_manager->add<RendererComponent>(entity->getID(), std::move(rdr_impl));
     _component_manager->add<MeshComponent>(entity->getID(), std::move(mesh));
-    _entity_manager->setTerrain(std::move(entity));
+    _entity_manager->setTerrain(entity);
   }
 
   void RenderManager::prepareWater()
   {
-    auto entity = std::make_unique<Entity>();
+    auto entity = std::make_shared<Entity>();
     auto mesh = std::make_unique<Mesh>();
     mesh->setHasShadow(false);
     mesh->setIsIndexed(false);
@@ -601,12 +601,12 @@ namespace Poulpe
 
     _component_manager->add<RendererComponent>(entity->getID(), std::move(rdr_impl));
     _component_manager->add<MeshComponent>(entity->getID(), std::move(mesh));
-    _entity_manager->setWater(std::move(entity));
+    _entity_manager->setWater(entity);
   }
 
   void RenderManager::addText(FontManager::Text & text)
   {
-    auto entity = std::make_unique<Entity>();
+    auto entity = std::make_shared<Entity>();
     auto mesh = std::make_unique<Mesh>();
     mesh->setHasShadow(false);
     mesh->setIsIndexed(false);
@@ -633,7 +633,7 @@ namespace Poulpe
 
     text.id = entity->getID();
    
-    _entity_manager->addText(std::move(entity));
+    _entity_manager->addText(entity);
   }
 
   void RenderManager::updateText(IDType const entity_id, std::string const& text)

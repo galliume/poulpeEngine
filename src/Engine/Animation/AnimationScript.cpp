@@ -1,9 +1,5 @@
 module;
 
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtx/quaternion.hpp>
-
 extern "C" {
   #include <lua.h>
   #include <lauxlib.h>
@@ -13,6 +9,8 @@ extern "C" {
 module Engine.Animation.AnimationScript;
 
 import std;
+
+import Engine.Core.GLM;
 
 namespace Poulpe
 {

@@ -3,14 +3,12 @@ module;
 
 #include <GLFW/glfw3.h>
 
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-
 module Engine.Application;
 
 import std;
 
 import Engine.Core.Logger;
+import Engine.Core.GLM;
 
 import Engine.Managers.DbManager;
 import Engine.Managers.FontManager;

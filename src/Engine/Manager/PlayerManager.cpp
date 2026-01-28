@@ -1,9 +1,3 @@
-module;
-
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtx/quaternion.hpp>
-
 module Engine.Managers.PlayerManager;
 
 import std;
@@ -11,7 +5,11 @@ import std;
 import Engine.Component.Components;
 
 import Engine.Core.Logger;
+import Engine.Core.GLM;
 
+/**
+ * @todo States machine for movements / animations
+ */
 namespace Poulpe
 {
   void PlayerManager::jump()

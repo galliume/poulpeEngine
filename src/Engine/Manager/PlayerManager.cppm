@@ -1,10 +1,7 @@
-module;
-
-#include <glm/glm.hpp>
-
 export module Engine.Managers.PlayerManager;
 
 import std;
+import Engine.Core.GLM;
 
 import Engine.Managers.ComponentManager;
 

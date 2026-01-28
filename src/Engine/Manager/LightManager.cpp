@@ -1,16 +1,9 @@
-module;
-
-
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtx/string_cast.hpp>
-
-
 module Engine.Managers.LightManager;
 
 import std;
 
 import Engine.Core.Logger;
+import Engine.Core.GLM;
 import Engine.Core.PlpTypedef;
 
 import Engine.Managers.ConfigManagerLocator;
@@ -27,8 +20,8 @@ namespace Poulpe
     _sun.clq = glm::vec4(0.0f);
 
     auto const& appConfig { ConfigManagerLocator::get()->appConfig()["resolution"] };
-    float const app_width { static_cast<float>(appConfig["width"].get<uint16_t>()) };
-    float const app_height { static_cast<float>(appConfig["height"].get<uint16_t>()) };
+    float const app_width { static_cast<float>(appConfig["width"].get<std::uint16_t>()) };
+    float const app_height { static_cast<float>(appConfig["height"].get<std::uint16_t>()) };
 
     float const fov { glm::radians(90.0f) };
     glm::mat4 const shadow_cubemap_projection { glm::perspective(fov, 1.0f, 0.1f, 500.f) };
@@ -94,7 +87,7 @@ namespace Poulpe
     glm::mat4 const & projection)
   {
     auto const& appConfig { ConfigManagerLocator::get()->appConfig()["shadow_resolution"] };
-    auto const shadow_resolution { static_cast<float>(appConfig["width"].get<uint32_t>()) };
+    auto const shadow_resolution { static_cast<float>(appConfig["width"].get<std::uint32_t>()) };
 
     auto const g { projection[1][1] };
     auto const s { g / projection[0][0] };
@@ -174,7 +167,7 @@ namespace Poulpe
     float const d { std::ceil(glm::length(corner_far - corner_near)) };
 
     // auto const d {
-    //   static_cast<std::uint32_t>(
+    //   static_cast<std::std::uint32_t>(
     //   std::max(
     //     std::ceil(glm::length(cascade_frustum[0] - cascade_frustum[6])),
     //     std::ceil(glm::length(cascade_frustum[4] - cascade_frustum[6])))) };
@@ -321,8 +314,8 @@ namespace Poulpe
   void LightManager::animateAmbientLight(double const delta_time)
   {
     auto& light1 = _points.at(1);
-    // light_position.x += static_cast<float>(cos(glm::radians(delta_time * 360.0)));
-    // light_position.z += static_cast<float>(sin(glm::radians(delta_time * 360.0)));
+    // light_position.x += static_cast<float>(glm::cos(glm::radians(delta_time * 360.0)));
+    // light_position.z += static_cast<float>(glm::sin(glm::radians(delta_time * 360.0)));
     //light1.color *= delta_time;
 
      float fov = glm::radians(90.0f);
@@ -342,8 +335,8 @@ namespace Poulpe
 
     float const radius { 3.0f };
     float const y { light1.position.y };
-    light1.position.x = radius * static_cast<float>(cos(t));
-    light1.position.z = radius * static_cast<float>(sin(t));
+    light1.position.x = radius * static_cast<float>(glm::cos(t));
+    light1.position.z = radius * static_cast<float>(glm::sin(t));
     light1.position.y = y;
 
     auto const light_position { glm::vec3(light1.position) };
@@ -384,7 +377,7 @@ namespace Poulpe
   glm::vec3 LightManager::hsv2rgb(float h, float s, float v)
   {
     float c = v * s;
-    float x = c * (1.f - fabsf(fmodf(h * 6.0f, 2.0f) - 1.f));
+    float x = c * (1.f - std::fabsf(std::fmodf(h * 6.0f, 2.0f) - 1.f));
     float m = v - c;
     glm::vec3 rgb;
 
@@ -400,10 +393,10 @@ namespace Poulpe
 
   void LightManager::animateSunLight(double const delta_time)
   {
-    _sun.position.x += static_cast<float>(cos(glm::radians(delta_time * 360.0)));
-    _sun.direction.x += static_cast<float>(cos(glm::radians(delta_time * 360.0)));
-    _sun.position.z += static_cast<float>(sin(glm::radians(delta_time * 360.0)));
-    _sun.direction.z += static_cast<float>(sin(glm::radians(delta_time * 360.0)));
+    _sun.position.x += static_cast<float>(glm::cos(glm::radians(delta_time * 360.0)));
+    _sun.direction.x += static_cast<float>(glm::cos(glm::radians(delta_time * 360.0)));
+    _sun.position.z += static_cast<float>(glm::sin(glm::radians(delta_time * 360.0)));
+    _sun.direction.z += static_cast<float>(glm::sin(glm::radians(delta_time * 360.0)));
 
     _sun.view = glm::lookAt(
       glm::vec3(_sun.position),

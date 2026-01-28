@@ -1,21 +1,18 @@
-module;
-
-#include <glm/glm.hpp>
-#include <glm/gtx/quaternion.hpp>
-
 export module Engine.Core.BoneTypes;
 
 import std;
 
+import Engine.Core.GLM;
+
 namespace Poulpe
 {
   export struct BoneWeight {
-    uint32_t vertex_id;
+    std::uint32_t vertex_id;
     float weight;
   };
 
   export struct Bone {
-    uint32_t id;
+    std::uint32_t id;
     std::string name{};
     std::string parent_name{};
     glm::mat4 transform{};

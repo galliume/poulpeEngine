@@ -28,7 +28,7 @@ namespace Poulpe
     DeviceMemory* get(
       VkDevice const & device,
       VkDeviceSize const size,
-      uint32_t  const memory_type,
+      std::uint32_t  const memory_type,
       VkBufferUsageFlags const usage,
       VkDeviceSize const alignment,
       DeviceBufferType const buffer_type,
@@ -49,7 +49,7 @@ namespace Poulpe
     VkDeviceSize _memory_size_allocated{ 0 };
     std::vector<VkDeviceSize> _memory_allocation_size{0};
 
-    uint32_t _device_memory_count{ 0 };
-    uint32_t const _max_staging{ 8 };
+    std::uint32_t _device_memory_count{ 0 };
+    std::uint32_t const _max_staging{ 8 };
   };
 }

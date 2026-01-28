@@ -2,7 +2,6 @@ module;
 #include <ft2build.h>
 #include FT_FREETYPE_H
 #include <freetype/ttnameid.h>
-#include <glm/glm.hpp>
 #include <volk.h>
 
 
@@ -13,6 +12,7 @@ import std;
 import Engine.Component.Texture;
 
 import Engine.Core.FontTypes;
+import Engine.Core.GLM;
 
 import Engine.Renderer;
 
@@ -38,12 +38,12 @@ namespace Poulpe
     std::span<FontCharacter> getCharacters() { return std::span<FontCharacter, std::dynamic_extent>(_characters); }
     FT_Face getFace() const& { return _face; }
 
-    uint32_t getAtlasWidth() const { return _atlas_width; }
-    uint32_t getAtlasHeight() const { return _atlas_height; }
+    std::uint32_t getAtlasWidth() const { return _atlas_width; }
+    std::uint32_t getAtlasHeight() const { return _atlas_height; }
 
     inline void addRenderer(Renderer const * renderer) { _renderer = renderer; }
 
-    FontCharacter const& get(uint32_t const c);
+    FontCharacter const& get(std::uint32_t const c);
 
     Texture load();
 
@@ -52,8 +52,8 @@ namespace Poulpe
 
     Renderer const * _renderer;
 
-    uint32_t _atlas_width{ 0 };
-    uint32_t _atlas_height{ 0 };
+    std::uint32_t _atlas_width{ 0 };
+    std::uint32_t _atlas_height{ 0 };
 
     FT_Face _face;
     FT_Library _ft;

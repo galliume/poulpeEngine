@@ -1,11 +1,7 @@
-module;
-
-#include <glm/glm.hpp>
-#include <glm/gtx/quaternion.hpp>
-
 export module Engine.Core.AnimationTypes;
 
 import std;
+import Engine.Core.GLM;
 
 import Engine.Core.BoneTypes;
 import Engine.Core.Constants;
@@ -21,8 +17,8 @@ namespace Poulpe
   };
 
   export struct AnimOperation {
-    uint32_t id;
-    uint32_t animation_ID;
+    std::uint32_t id;
+    std::uint32_t animation_ID;
     double time;
     AnimInterpolation interpolation;
   };

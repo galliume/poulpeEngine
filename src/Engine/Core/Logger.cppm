@@ -1,9 +1,12 @@
 module;
+
 #include <fmt/color.h>
 #include <fmt/chrono.h>
 #include <fmt/core.h>
 
 export module Engine.Core.Logger;
+
+import std;
 
 namespace Poulpe
 {

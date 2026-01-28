@@ -1,14 +1,9 @@
-module;
-
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtx/quaternion.hpp>
-
 module Engine.Animation.BoneAnimationScript;
 
 import std;
 
 import Engine.Core.MeshTypes;
+import Engine.Core.GLM;
 
 namespace Poulpe
 {
@@ -59,7 +54,7 @@ namespace Poulpe
 
       auto & elapsed_time = _elapsed_time[_data->_id];
 
-      elapsed_time = fmod(elapsed_time + delta_time * 1000.0, duration);
+      elapsed_time = std::fmod(elapsed_time + delta_time * 1000.0, duration);
       auto const cache_key { static_cast<int>(std::trunc(elapsed_time)) };
       auto const& transform_cache { _transform_cache.find(_data->_id) };
 

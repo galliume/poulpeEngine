@@ -6,7 +6,6 @@ function(set_poulpe_definitions target)
   target_compile_definitions(${target}
     PRIVATE
       VK_NO_PROTOTYPES
-      GLM_FORCE_DEFAULT_ALIGNED_GENTYPES
       GLM_FORCE_DEPTH_ZERO_TO_ONE
       GLM_ENABLE_EXPERIMENTAL)
 

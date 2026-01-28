@@ -22,10 +22,10 @@
       "z": -3.0
     }
   },
-  "hasFog" : false,
+  "hasFog": false,
   "player": "",
   "entities": {
-    "backpack" : {
+    "backpack": {
       "mesh": "assets/mesh/backpack/backpack.obj",
       "shader": "main_basic",
       "positions": [
@@ -52,16 +52,16 @@
       "flipY": true,
       "count": 1,
       "hasBbox": false,
-      "hasAnimation": true,
+      "hasAnimation": false,
       "isPointLight": false,
       "animationScripts": {
-        "anim0" : "assets/scripts/animation/backpack/anim0.lua"
+        "anim0": "assets/scripts/animation/backpack/anim0.lua"
       },
       "hasShadow": true,
       "isIndexed": true,
       "debugNormal": true
     },
-    "Grass_Block" : {
+    "Grass_Block": {
       "mesh": "assets/mesh/minecraft/Grass_Block.obj",
       "shader": "main_basic",
       "positions": [
@@ -90,7 +90,7 @@
       "hasBbox": false,
       "hasAnimation": true,
       "animationScripts": {
-        "anim0" : "assets/scripts/animation/grassBlock/anim0.lua"
+        "anim0": "assets/scripts/animation/grassBlock/anim0.lua"
       },
       "isPointLight": false,
       "hasShadow": true,

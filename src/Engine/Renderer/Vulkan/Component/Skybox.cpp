@@ -1,8 +1,5 @@
 module;
 
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-
 #include <volk.h>
 
 module Engine.Renderer.Vulkan.Skybox;
@@ -15,6 +12,7 @@ import Engine.Component.Texture;
 import Engine.Core.Constants;
 import Engine.Core.Logger;
 import Engine.Core.MaterialTypes;
+import Engine.Core.GLM;
 import Engine.Core.MeshTypes;
 import Engine.Core.PlpTypedef;
 import Engine.Core.Vertex;

@@ -4,9 +4,6 @@
 #include FT_FREETYPE_H
 #include <freetype/ttnameid.h>
 
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-
 #include <fmt/format.h>
 
 #include <volk.h>
@@ -20,6 +17,7 @@ import Engine.Component.Texture;
 
 import Engine.Core.Constants;
 import Engine.Core.MaterialTypes;
+import Engine.Core.GLM;
 import Engine.Core.MeshTypes;
 import Engine.Core.PlpTypedef;
 import Engine.Core.Vertex;
@@ -266,12 +264,12 @@ namespace Poulpe
     desc_writes[1].dstBinding = 1;
     desc_writes[1].dstArrayElement = 0;
     desc_writes[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-    desc_writes[1].descriptorCount = static_cast<uint32_t>(image_infos.size());
+    desc_writes[1].descriptorCount = static_cast<std::uint32_t>(image_infos.size());
     desc_writes[1].pImageInfo = image_infos.data();
 
     vkUpdateDescriptorSets(
       renderer->getAPI()->getDevice(),
-      static_cast<uint32_t>(desc_writes.size()),
+      static_cast<std::uint32_t>(desc_writes.size()),
       desc_writes.data(),
       0,
       nullptr);

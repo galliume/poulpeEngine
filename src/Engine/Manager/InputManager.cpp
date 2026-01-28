@@ -1,9 +1,10 @@
 module;
+
 #include "GLFW/glfw3.h"
-#include "nlohmann/json.hpp"
 
 module Engine.Managers.InputManager;
 
+import Engine.Core.Json;
 import Engine.Core.Logger;
 
 import Engine.GUI.Window;
@@ -22,7 +23,7 @@ namespace Poulpe
     glfwGetWindowSize(_window->getGlfwWindow(), & width, & height);
   }
 
-  void InputManager::init(nlohmann::json const& input_config)
+  void InputManager::init(json const& input_config)
   {
     _input_config = input_config;
 
@@ -125,7 +126,7 @@ namespace Poulpe
           _camera->down();
         } else if (key == _keyboard_keys[config["unlockFPS"]])
         {
-          ConfigManagerLocator::get()->updateConfig<uint32_t>("fpsLimit", 0);
+          ConfigManagerLocator::get()->updateConfig<std::uint32_t>("fpsLimit", 0);
         } else if (key == _keyboard_keys[config["reloadShader"]])
         {
           ConfigManagerLocator::get()->setReloadShaders(true);
@@ -201,6 +202,7 @@ namespace Poulpe
     y_offset *= sensitivity;
 
     _camera->updateAngle(x_offset, y_offset);
+    //saveLastMousePos(_last_x, _last_y);
   }
 
   void InputManager::processGamepad(PlayerManager * player_manager, double const delta_time)
@@ -240,11 +242,11 @@ namespace Poulpe
         player_manager->move(lx, ly, delta_time);
       }
       if (rx != 0.0f || ry != 0.0f) {
-        auto pos {_camera->getPos()};
-        pos.z -= 100;
-        _camera->setPos(pos);
         InputManager::_can_move_camera = true;
-        updateMousePos(static_cast<double>(rx) * delta_time, static_cast<double>(ry) * delta_time);
+        auto camera_pos { _camera->getPos() };
+        camera_pos.x += rx * static_cast<float>(delta_time) * 10.0f;
+        camera_pos.y += ry * static_cast<float>(delta_time) * 10.0f;
+        _camera->setPos(camera_pos);
       }
     }
   }

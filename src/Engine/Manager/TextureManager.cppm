@@ -1,7 +1,6 @@
 module;
 
 #include <ktx.h>
-#include <nlohmann/json.hpp>
 #include <volk.h>
 
 export module Engine.Managers.TextureManager;
@@ -11,6 +10,7 @@ import std;
 import Engine.Component.Texture;
 
 import Engine.Core.Constants;
+import Engine.Core.Json;
 import Engine.Core.MaterialTypes;
 
 import Engine.Renderer;
@@ -30,7 +30,7 @@ namespace Poulpe
   export class TextureManager
   {
   public:
-    inline void addConfig(nlohmann::json const& config) { _texture_config = config; }
+    inline void addConfig(json const& config) { _texture_config = config; }
     std::vector<std::array<float, 3>> addNormalMapTexture(std::string const& name);
     void addSkyBox(
       std::string const& skybox_name,
@@ -67,12 +67,12 @@ namespace Poulpe
     void addMaterial(material_t material) { _materials.push_back(std::move(material)); }
 
   private:
-    const uint32_t MAX_MIPLEVELS = 5;
+    const std::uint32_t MAX_MIPLEVELS = 5;
 
     std::string _skybox_name;
     std::string _terrain_name {"_plp_terrain"};
     std::string _water_name {"_plp_water"};
-    nlohmann::json _texture_config;
+    json _texture_config;
 
     std::unordered_map<std::string, std::string> _paths;
     std::unordered_map<std::string, Texture> _textures;

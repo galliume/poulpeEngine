@@ -1,12 +1,9 @@
-module;
-
-#include <glm/glm.hpp>
-
 export module Engine.Core.MaterialTypes;
-
+ 
 import std;
 
 import Engine.Core.Constants;
+import Engine.Core.GLM;
 
 namespace Poulpe
 {
@@ -19,7 +16,7 @@ namespace Poulpe
     alignas(16) glm::vec3 transmittance { 1 };
     alignas(16) glm::vec3 shi_ior_diss { 0 }; //shininess, ior, diss
     alignas(16) glm::vec3 alpha { 0 };//{x:alpha mode, y: cutoff);
-    alignas(16) glm::vec3 mre_factor{0.0, 0.0, 1.0};//x:metallic, y:roughness, z:emissive
+    alignas(16) glm::vec3 mre_factor{0.0, 1.0, 1.0};//x:metallic, y:roughness, z:emissive
     alignas(16) glm::vec3 normal_translation{ 0.0 };
     alignas(16) glm::vec3 normal_scale{ 1.0 };
     alignas(16) glm::vec3 normal_rotation{ 0.0 };
@@ -49,7 +46,7 @@ namespace Poulpe
     glm::vec4 diffuse{ 1.0 };
     glm::vec4 specular{ 1.0 };
     glm::vec3 transmittance{ 1.0 };
-    glm::vec3 mre_factor{ 0.0, 0.0, 1.0 };//x:metallic, y:roughness, z: blank
+    glm::vec3 mre_factor{ 0.0, 1.0, 1.0 };//x:metallic, y:roughness, z: blank
     float shininess{ 0.0 };
     float ior{ 0.0 };       // index of refraction
     float dissolve{ 1.0 };  // 1 == opaque; 0 == fully transparent

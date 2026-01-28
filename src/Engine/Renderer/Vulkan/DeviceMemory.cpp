@@ -13,7 +13,7 @@ namespace Poulpe
       VkDevice device,
       VkMemoryPropertyFlags memory_type,
       VkDeviceSize max_size,
-      uint32_t index,
+      std::uint32_t index,
       VkDeviceSize alignment
   ) : _index(index),
       _alignment(alignment),
@@ -66,7 +66,7 @@ namespace Poulpe
     }
   }
 
-  uint32_t DeviceMemory::bindBufferToMemory(VkBuffer & buffer, VkDeviceSize const offset)
+  std::uint32_t DeviceMemory::bindBufferToMemory(VkBuffer & buffer, VkDeviceSize const offset)
   {
     {
       std::lock_guard<std::mutex> guard(_mutex_memory);

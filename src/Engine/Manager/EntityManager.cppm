@@ -1,7 +1,3 @@
-module;
-#include <nlohmann/json.hpp>
-#include "glm/glm.hpp"
-
 export module Engine.Managers.EntityManager;
 
 import std;
@@ -9,8 +5,10 @@ import std;
 import Engine.Component.Entity;
 import Engine.Component.EntityNode;
 
-import Engine.Core.MeshTypes;
 import Engine.Core.AnimationTypes;
+import Engine.Core.Json;
+import Engine.Core.MeshTypes;
+import Engine.Core.GLM;
 
 import Engine.Managers.ComponentManager;
 import Engine.Managers.LightManager;
@@ -39,34 +37,34 @@ namespace Poulpe
     //inline std::vector<std::unique_ptr<Entity>>* getEntities() { return & _Entities; }
     inline std::vector<std::unique_ptr<Entity>>* getHUD() { return & _hud; }
     //inline std::size_t getInstancedCount() const { return _Entities.size(); }
-    //inline std::unordered_map<std::string, std::array<uint32_t, 2>> getLoadedEntities() { return _LoadedEntities; }
-    inline Entity const * getSkybox() { return _skybox.get(); }
-    inline Entity const * getTerrain() { return _terrain.get(); }
-    inline Entity const * getWater() { return _water.get(); }
-    inline Entity const * getShadowMap() { return _shadow_map.get(); }
-    inline Entity const * getText(uint32_t const index) { return _texts.at(index).get(); }
-    inline std::vector<std::unique_ptr<Entity>>& getTexts() { return _texts; }
+    //inline std::unordered_map<std::string, std::array<std::uint32_t, 2>> getLoadedEntities() { return _LoadedEntities; }
+    inline std::shared_ptr<Entity> const getSkybox() { return _skybox; }
+    inline std::shared_ptr<Entity> const getTerrain() { return _terrain; }
+    inline std::shared_ptr<Entity> const getWater() { return _water; }
+    inline std::shared_ptr<Entity> const getShadowMap() { return _shadow_map; }
+    inline std::shared_ptr<Entity> const getText(std::uint32_t const index) { return _texts.at(index); }
+    inline std::vector<std::shared_ptr<Entity>>& getTexts() { return _texts; }
 
-    std::function<void()> load(nlohmann::json const& lvl_config);
-    inline void setSkybox(std::unique_ptr<Entity> skybox) { _skybox = std::move(skybox); }
-    inline void setTerrain(std::unique_ptr<Entity> terrain) { _terrain = std::move(terrain); }
-    inline void setWater(std::unique_ptr<Entity> water) { _water = std::move(water); }
-    inline void setShadowMap(std::unique_ptr<Entity> shadow_map) { _shadow_map = std::move(shadow_map); }
-    inline std::size_t addText(std::unique_ptr<Entity> text) { _texts.emplace_back(std::move(text)); return _texts.size() - 1; }
+    std::function<void()> load(json const& lvl_config);
+    inline void setSkybox(std::shared_ptr<Entity> skybox) { _skybox = skybox; }
+    inline void setTerrain(std::shared_ptr<Entity> terrain) { _terrain = terrain; }
+    inline void setWater(std::shared_ptr<Entity> water) { _water = water; }
+    inline void setShadowMap(std::shared_ptr<Entity> shadow_map) { _shadow_map = shadow_map; }
+    inline std::size_t addText(std::shared_ptr<Entity> text) { _texts.emplace_back(text); return _texts.size() - 1; }
 
-    void addEntity(Entity* entity);
-    void addTransparentEntity(Entity* entity);
-    void addTextEntity(Entity* entity);
+    void addEntity(std::shared_ptr<Entity> entity);
+    void addTransparentEntity(std::shared_ptr<Entity> entity);
+    void addTextEntity(std::shared_ptr<Entity> entity);
 
-    std::vector<Entity*> getEntities() { return _entities;}
-    std::vector<Entity*> getTransparentEntities() { return _transparent_entities;}
+    std::vector<std::shared_ptr<Entity>> getEntities() { return _entities;}
+    std::vector<std::shared_ptr<Entity>> getTransparentEntities() { return _transparent_entities;}
 
-    EntityNode const * addEntityToWorld(Entity * entity);
+    std::shared_ptr<EntityNode> const addEntityToWorld(std::shared_ptr<Entity> entity);
 
     //void addEntity(Mesh* meshes);
     //inline std::size_t getTotalEntities() const { return _Entities.size(); }
     EntityNode * getWorldNode();
-    void initMeshes(std::string const& name, nlohmann::json const& raw_data);
+    void initMeshes(std::string const& name, json const& raw_data);
     void initWorldGraph();
     std::shared_mutex& lockWorldNode() { return _mutex_shared; }
 
@@ -78,22 +76,22 @@ namespace Poulpe
     //std::vector<std::unique_ptr<Entity>> _Entities{};
     std::vector<std::unique_ptr<Entity>> _hud{};
 
-    nlohmann::json _lvl_config;
+    json _lvl_config;
 
     Renderer* _renderer{nullptr};
 
-    std::unique_ptr<Entity> _skybox{nullptr};
-    std::unique_ptr<Entity> _terrain{nullptr};
-    std::unique_ptr<Entity> _water{nullptr};
-    std::unique_ptr<Entity> _shadow_map{nullptr};
+    std::shared_ptr<Entity> _skybox{nullptr};
+    std::shared_ptr<Entity> _terrain{nullptr};
+    std::shared_ptr<Entity> _water{nullptr};
+    std::shared_ptr<Entity> _shadow_map{nullptr};
 
-    std::vector<std::unique_ptr<Entity>> _texts;
+    std::vector<std::shared_ptr<Entity>> _texts;
 
-    std::vector<Entity*> _entities{};
-    std::vector<Entity*> _transparent_entities{};
-    std::vector<Entity*> _text_entities{};
+    std::vector<std::shared_ptr<Entity>> _entities{};
+    std::vector<std::shared_ptr<Entity>> _transparent_entities{};
+    std::vector<std::shared_ptr<Entity>> _text_entities{};
 
-    std::unique_ptr<EntityNode> _world_node;
+    std::shared_ptr<EntityNode> _world_node;
 
     mutable std::shared_mutex _mutex_shared;
     Buffer _light_buffer;

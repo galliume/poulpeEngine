@@ -3,8 +3,8 @@ function(set_poulpe_compiler_flags target)
   message(STATUS "Setting compiler flags for ${target}.")
 
   target_compile_features(${target}
-    PRIVATE   cxx_std_23
-    INTERFACE cxx_std_23)
+    PRIVATE   cxx_std_26
+    INTERFACE cxx_std_26)
 
   set(DEBUG_OPTIONS
     -g

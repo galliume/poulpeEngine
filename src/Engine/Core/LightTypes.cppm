@@ -1,8 +1,8 @@
-module;
-
-#include <glm/glm.hpp>
-
 export module Engine.Core.LightTypes;
+
+import std;
+
+import Engine.Core.GLM;
 
 namespace Poulpe
 {
