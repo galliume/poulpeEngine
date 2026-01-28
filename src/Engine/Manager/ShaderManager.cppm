@@ -1,11 +1,9 @@
-module;
-#include "vulkan/vulkan.h"
-
 export module Engine.Managers.ShaderManager;
 
 import std;
 
 import Engine.Core.Json;
+import Engine.Core.Volk;
 import Engine.Core.VulkanTypes;
 
 import Engine.Renderer;

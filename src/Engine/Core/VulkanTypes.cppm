@@ -1,10 +1,8 @@
-module;
-
-#include <volk.h>
-
 export module Engine.Core.VulkanTypes;
 
 import std;
+
+export import Engine.Core.Volk;
 
 namespace Poulpe
 {

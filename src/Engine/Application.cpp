@@ -1,14 +1,13 @@
 module;
 #include "PoulpeEngineConfig.h"
 
-#include <GLFW/glfw3.h>
-
 module Engine.Application;
 
 import std;
 
-import Engine.Core.Logger;
+import Engine.Core.GLFW;
 import Engine.Core.GLM;
+import Engine.Core.Logger;
 
 import Engine.Managers.DbManager;
 import Engine.Managers.FontManager;
@@ -29,8 +28,8 @@ namespace Poulpe
     auto* window = new Window();
     window->init("PoulpeEngine",
       root_path + "/mpoulpe.png",
-      appConfig["width"].get<uint16_t>(),
-      appConfig["height"].get<uint16_t>(),
+      appConfig["width"].get<std::uint16_t>(),
+      appConfig["height"].get<std::uint16_t>(),
       editor_mode);
 
     InputManagerLocator::init(window);

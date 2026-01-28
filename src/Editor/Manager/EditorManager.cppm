@@ -1,9 +1,8 @@
-module;
-#include <tcl.h>
-
 export module Editor.Managers.EditorManager;
 
 import std;
+
+import Engine.Core.TclTk;
 
 import Editor.Managers.ExplorerManager;
 import Editor.Managers.LevelManager;

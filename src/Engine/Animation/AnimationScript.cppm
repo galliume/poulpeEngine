@@ -1,11 +1,3 @@
-module;
-
-extern "C" {
-  #include <lua.h>
-  #include <lauxlib.h>
-  #include <lualib.h>
-}
-
 export module Engine.Animation.AnimationScript;
 
 import std;
@@ -16,6 +8,7 @@ import Engine.Core.AnimationTypes;
 import Engine.Core.Constants;
 import Engine.Core.Logger;
 import Engine.Core.GLM;
+import Engine.Core.LUA;
 import Engine.Core.MeshTypes;
 
 import Engine.Utils.LuaScript;

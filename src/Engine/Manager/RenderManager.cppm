@@ -1,7 +1,3 @@
-module;
-
-#include <vulkan/vulkan.h>
-
 export module Engine.Managers.RenderManager;
 
 import std;
@@ -14,6 +10,7 @@ import Engine.Core.GLM;
 import Engine.Core.MeshTypes;
 import Engine.Core.PlpTypedef;
 import Engine.Core.Tools;
+import Engine.Core.Volk;
 
 import Engine.GUI.Window;
 

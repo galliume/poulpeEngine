@@ -1,9 +1,6 @@
-module;
-
-#include "GLFW/glfw3.h"
-
 module Engine.Managers.InputManager;
 
+import Engine.Core.GLFW;
 import Engine.Core.Json;
 import Engine.Core.Logger;
 

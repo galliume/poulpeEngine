@@ -1,9 +1,3 @@
-module;
-#include <ft2build.h>
-#include FT_FREETYPE_H
-#include <freetype/ttnameid.h>
-#include <volk.h>
-
 export module Engine.Renderer.RendererComponentTypes;
 
 import std;
@@ -12,9 +6,11 @@ import Engine.Component.Mesh;
 import Engine.Component.Texture;
 
 import Engine.Core.FontTypes;
+import Engine.Core.FreeType;
 import Engine.Core.LightTypes;
 import Engine.Core.MeshTypes;
 import Engine.Core.PlpTypedef;
+import Engine.Core.Volk;
 
 namespace Poulpe {
   export struct ComponentRenderingInfo

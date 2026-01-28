@@ -1,7 +1,3 @@
-module;
-
-#include <volk.h>
-
 export module Engine.Core.MeshTypes;
 
 import std;
@@ -10,6 +6,7 @@ import Engine.Core.BoneTypes;
 import Engine.Core.GLM;
 import Engine.Core.Vertex;
 import Engine.Core.PlpTypedef;
+import Engine.Core.Volk;
 
 namespace Poulpe
 {

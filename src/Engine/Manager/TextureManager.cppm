@@ -1,8 +1,3 @@
-module;
-
-#include <ktx.h>
-#include <volk.h>
-
 export module Engine.Managers.TextureManager;
 
 import std;
@@ -11,7 +6,9 @@ import Engine.Component.Texture;
 
 import Engine.Core.Constants;
 import Engine.Core.Json;
+import Engine.Core.KTX;
 import Engine.Core.MaterialTypes;
+import Engine.Core.Volk;
 
 import Engine.Renderer;
 

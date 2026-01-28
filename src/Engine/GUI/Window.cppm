@@ -1,9 +1,8 @@
-module;
-#include <GLFW/glfw3.h>
-
 export module Engine.GUI.Window;
 
 import std;
+
+import Engine.Core.GLFW;
 
 namespace Poulpe
 {
@@ -21,8 +20,8 @@ namespace Poulpe
     void init(
       std::string_view windowTitle,
       std::string iconPath,
-      uint16_t const width,
-      uint16_t const height,
+      std::uint16_t const width,
+      std::uint16_t const height,
       bool const editor_mode = false);
     bool isMinimized();
     void quit();

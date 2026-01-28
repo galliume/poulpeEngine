@@ -1,7 +1,3 @@
-module;
-
-#include <volk.h>
-
 module Engine.Renderer.Vulkan.Basic;
 
 import std;
@@ -14,6 +10,7 @@ import Engine.Core.MaterialTypes;
 import Engine.Core.GLM;
 import Engine.Core.MeshTypes;
 import Engine.Core.PlpTypedef;
+import Engine.Core.Volk;
 
 import Engine.Renderer.RendererComponentTypes;
 import Engine.Renderer.VulkanRenderer;

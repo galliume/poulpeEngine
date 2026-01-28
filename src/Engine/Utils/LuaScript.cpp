@@ -1,14 +1,8 @@
-module;
-extern "C" {
-  #include <lua.h>
-  #include <lauxlib.h>
-  #include <lualib.h>
-}
-
 module Engine.Utils.LuaScript;
 
 import std;
 
+import Engine.Core.LUA;
 import Engine.Core.Logger;
 
 namespace Poulpe

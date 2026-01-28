@@ -12,8 +12,7 @@ add_library(sqlite3
 SHARED
   ${fetch_sqlite_SOURCE_DIR}/sqlite3.c
   ${fetch_sqlite_SOURCE_DIR}/sqlite3.h
-  ${fetch_sqlite_SOURCE_DIR}/sqlite3ext.h
-)
+  ${fetch_sqlite_SOURCE_DIR}/sqlite3ext.h)
 
 target_include_directories(sqlite3
 SYSTEM PUBLIC

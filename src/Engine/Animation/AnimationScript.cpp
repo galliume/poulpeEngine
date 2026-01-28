@@ -1,16 +1,9 @@
-module;
-
-extern "C" {
-  #include <lua.h>
-  #include <lauxlib.h>
-  #include <lualib.h>
-}
-
 module Engine.Animation.AnimationScript;
 
 import std;
 
 import Engine.Core.GLM;
+import Engine.Core.LUA;
 
 namespace Poulpe
 {

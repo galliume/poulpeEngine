@@ -12,20 +12,28 @@ target_sources(Core
         CommandQueue.cppm
         CommandQueueLocator.cppm
         Constants.cppm
+        FreeType.cppm
         FontTypes.cppm
+        GLFW.cppm
         JoinThreads.cppm
         Json.cppm
         LightTypes.cppm
         LockFreeStack.cppm
         Logger.cppm
+        Lua.cppm
         MaterialTypes.cppm
         GLM.cppm
+        ktx.cppm
         MeshTypes.cppm
+        MiniAudio.cppm
         PlpTypedef.cppm
+        StbImage.cppm
+        TclTk.cppm
         ThreadPool.cppm
         ThreadSafeQueue.cppm
         Tools.cppm
         Vertex.cppm
+        Volk.cppm
         VulkanTypes.cppm
   PRIVATE
     AssimpLoader.cpp
@@ -43,7 +51,16 @@ target_link_libraries(
 
   PUBLIC
     assimp::assimp
-    nlohmann_json)
+    freetype
+    glfw
+    ktx
+    lua
+    miniaudio
+    nlohmann_json
+    stb
+    tcl
+    tk
+    volk)
 
 set_poulpe_definitions(Core)
 set_poulpe_links(Core)

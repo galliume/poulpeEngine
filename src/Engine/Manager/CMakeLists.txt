@@ -49,10 +49,11 @@ target_link_libraries(
   PRIVATE
     Animation
     Components
+    Core
+    EngineCommon
     GUI
     Network
     Renderer
-    EngineCommon
 
   PUBLIC
     glfw

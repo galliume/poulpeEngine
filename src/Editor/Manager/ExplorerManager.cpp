@@ -1,12 +1,12 @@
-module;
-#include <tcl.h>
-
 module Editor.Managers.ExplorerManager;
 
 import std;
 
 import Engine.Core.Logger;
+import Engine.Core.TclTk;
+
 import Engine.Component.Components;
+
 import Engine.Managers.AudioManager;
 import Engine.Managers.TextureManager;
 import Engine.Managers.ConfigManagerLocator;

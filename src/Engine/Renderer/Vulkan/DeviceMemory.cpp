@@ -1,11 +1,9 @@
-module;
-#include <volk.h>
-
 module Engine.Renderer.VulkanDeviceMemory;
 
 import std;
 
 import Engine.Core.Logger;
+import Engine.Core.Volk;
 
 namespace Poulpe
 {

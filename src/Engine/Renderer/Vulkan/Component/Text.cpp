@@ -1,12 +1,6 @@
 ﻿module;
 
-#include <ft2build.h>
-#include FT_FREETYPE_H
-#include <freetype/ttnameid.h>
-
 #include <fmt/format.h>
-
-#include <volk.h>
 
 module Engine.Renderer.Vulkan.Text;
 
@@ -16,11 +10,13 @@ import Engine.Component.Mesh;
 import Engine.Component.Texture;
 
 import Engine.Core.Constants;
-import Engine.Core.MaterialTypes;
+import Engine.Core.FreeType;
 import Engine.Core.GLM;
+import Engine.Core.MaterialTypes;
 import Engine.Core.MeshTypes;
 import Engine.Core.PlpTypedef;
 import Engine.Core.Vertex;
+import Engine.Core.Volk;
 
 import Engine.Renderer.RendererComponentTypes;
 import Engine.Renderer.VulkanRenderer;
@@ -221,7 +217,7 @@ namespace Poulpe
     atlas.setSampler(renderer->getAPI()->createKTXSampler(
       TextureWrapMode::WRAP,
       TextureWrapMode::WRAP,
-      0));
+      1u));
 
     if (atlas.getWidth() == 0) {
       atlas = component_rendering_info.textures->at(PLP_EMPTY);

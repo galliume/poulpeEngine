@@ -1,9 +1,8 @@
-module;
-#include <vulkan/vulkan.h>
-
 export module Engine.Renderer.Vulkan.Water;
 
 import std;
+
+import Engine.Core.Volk;
 
 import Engine.Renderer.RendererComponentTypes;
 import Engine.Renderer.VulkanRenderer;
