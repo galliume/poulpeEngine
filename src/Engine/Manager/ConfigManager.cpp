@@ -1,10 +1,9 @@
-module;
-#include <nlohmann/json.hpp>
 
 module Engine.Managers.ConfigManager;
 
 import std;
 
+import Engine.Core.Json;
 import Engine.Core.Logger;
 
 namespace Poulpe
@@ -26,17 +25,17 @@ namespace Poulpe
     path = _root_path + "/config/poulpeEngine.json";
 
     f.open(fs::absolute(path));
-    if (f.is_open()) _app_config = nlohmann::json::parse(f);
+    if (f.is_open()) _app_config = json::parse(f);
     f.close();
 
     path = _root_path + "/config/sounds.json";
     f.open(fs::absolute(path));
-    if (f.is_open()) _sound_config = nlohmann::json::parse(f);
+    if (f.is_open()) _sound_config = json::parse(f);
     f.close();
 
     path = _root_path + "/config/shaders.json";
     f.open(fs::absolute(path));
-    if (f.is_open()) _shader_config = nlohmann::json::parse(f);
+    if (f.is_open()) _shader_config = json::parse(f);
     f.close();
   }
 
@@ -67,22 +66,22 @@ namespace Poulpe
     return skybox;
   }
 
-  nlohmann::json const& ConfigManager::loadLevelData(std::string const & levelName)
+  json const& ConfigManager::loadLevelData(std::string const & levelName)
   {
     fs::path path{};
     std::ifstream f;
     path = _root_path + "/config/textures.json";
 
     f.open(fs::absolute(path));
-    if (f.is_open()) _textures_config = nlohmann::json::parse(f);
+    if (f.is_open()) _textures_config = json::parse(f);
     f.close();
 
     fs::path level{ _level_path + levelName + ".json" };
     try {
       f.open(fs::absolute(level), std::ios_base::in);
-      if (f.is_open()) _entity_config = nlohmann::json::parse(f);
+      if (f.is_open()) _entity_config = json::parse(f);
     }
-    catch (nlohmann::json::parse_error& ex) {
+    catch (json::parse_error& ex) {
       Logger::error("Parse error at byte {}", ex.byte);
     }
 

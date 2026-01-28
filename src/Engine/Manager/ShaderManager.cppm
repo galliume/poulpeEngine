@@ -1,11 +1,11 @@
 module;
-#include <nlohmann/json.hpp>
 #include "vulkan/vulkan.h"
 
 export module Engine.Managers.ShaderManager;
 
 import std;
 
+import Engine.Core.Json;
 import Engine.Core.VulkanTypes;
 
 import Engine.Renderer;
@@ -39,7 +39,7 @@ namespace Poulpe
 
     void clear();
     inline VulkanShaders* getShaders() const  { return _shaders.get(); }
-    std::function<void(std::latch& count_down)> load(nlohmann::json config) ;
+    std::function<void(std::latch& count_down)> load(json config) ;
 
   private:
     template <DescSetLayoutType T>
@@ -51,7 +51,7 @@ namespace Poulpe
     template <VertexBindingType T>
     VkPipelineVertexInputStateCreateInfo* getVertexInputState();
 
-    nlohmann::json _config;
+    json _config;
     Renderer* _renderer{ nullptr };
     std::unique_ptr<VulkanShaders> _shaders{ nullptr };
   };

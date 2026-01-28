@@ -1,14 +1,10 @@
-module;
-
-#include <glm/glm.hpp>
-#include <glm/gtx/quaternion.hpp>
-
 export module Engine.Core.PlpTypedef;
 
 import std;
 
 import Engine.Core.BoneTypes;
 import Engine.Core.MaterialTypes;
+import Engine.Core.GLM;
 import Engine.Core.Vertex;
 
 
@@ -74,8 +70,8 @@ namespace Poulpe
     std::string texture_prefix{};
     std::uint64_t id{};
     std::uint32_t material_ID{ 0 };
-    std::vector<uint32_t> face_material_ID{};
-    std::vector<uint32_t> indices{};
+    std::vector<std::uint32_t> face_material_ID{};
+    std::vector<std::uint32_t> indices{};
     std::vector<Vertex> vertices{};
     std::vector<VertexBones> vertices_bones{};
     glm::mat4 transform_matrix{};

@@ -1,10 +1,8 @@
 module;
 
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtx/quaternion.hpp>
-
+//@todo find a way to encapsulate this in json.cppm
 #include <nlohmann/json.hpp>
+#include <nlohmann/json_fwd.hpp>
 
 #include <volk.h>
 
@@ -23,8 +21,10 @@ import Engine.Component.Mesh;
 import Engine.Core.AssimpLoader;
 import Engine.Core.AnimationTypes;
 import Engine.Core.Constants;
+import Engine.Core.Json;
 import Engine.Core.Logger;
 import Engine.Core.MaterialTypes;
+import Engine.Core.GLM;
 import Engine.Core.MeshTypes;
 import Engine.Core.PlpTypedef;
 
@@ -58,7 +58,7 @@ namespace Poulpe
     _world_node->clear();
   }
 
-  std::function<void()> EntityManager::load(nlohmann::json const& lvl_config)
+  std::function<void()> EntityManager::load(json const& lvl_config)
   {
     _lvl_config = lvl_config;
 
@@ -78,7 +78,7 @@ namespace Poulpe
     return _world_node.get();
   }
 
-  void EntityManager::initMeshes(std::string const& name, nlohmann::json const& raw_data)
+  void EntityManager::initMeshes(std::string const& name, json const& raw_data)
   {
     //std::vector<Mesh*> meshes{};
     //if (_ObjLoaded.contains(path)) return meshes;
@@ -86,11 +86,11 @@ namespace Poulpe
     //_ObjLoaded.insert(path);
 
     //@todo not reload an already loaded obj
-    Entity* root_mesh_entity = new Entity();
+    auto root_mesh_entity { std::make_shared<Entity>() };
     root_mesh_entity->setName(name);
     root_mesh_entity->setVisible(false);
 
-    EntityNode* root_mesh_entity_node = new EntityNode(root_mesh_entity);
+    auto root_mesh_entity_node { std::make_shared<EntityNode>(root_mesh_entity) };
 
     auto const root_path { ConfigManagerLocator::get()->rootPath() };
 
@@ -328,7 +328,7 @@ namespace Poulpe
       mesh->setOptions(options);
       bool const is_last{ (_data.id == 0) ? true : false };
       
-      auto* entity = new Entity();
+      auto entity { std::make_shared<Entity>() };
       entity->setName(_data.name);
       
       if (is_last) {
@@ -351,7 +351,7 @@ namespace Poulpe
 
       _component_manager->add<RendererComponent>(entity->getID(), std::move(basicRdrImpl));
       _component_manager->add<MeshComponent>(entity->getID(), std::move(mesh));
-      auto* entityNode = root_mesh_entity_node->addChild(new EntityNode(entity));
+      auto entityNode { root_mesh_entity_node->addChild(std::make_shared<EntityNode>(entity)) };
 
       //_renderer->addEntity(entityNode->getEntity(), is_last);
 
@@ -403,29 +403,29 @@ namespace Poulpe
 
   void EntityManager::initWorldGraph()
   {
-    Entity* _world = new Entity();
+    auto _world { std::make_shared<Entity>() };
     _world->setName("_PLPWorld");
     _world->setVisible(false);
 
-    _world_node = std::make_unique<EntityNode>(_world);
+    _world_node = std::make_shared<EntityNode>(_world);
   }
 
-  EntityNode const * EntityManager::addEntityToWorld(Entity * entity)
+  std::shared_ptr<EntityNode> const EntityManager::addEntityToWorld(std::shared_ptr<Entity> entity)
   {
-    return _world_node->addChild(new EntityNode(entity));
+    return _world_node->addChild(std::make_shared<EntityNode>(entity));
   }
 
-  void EntityManager::addEntity(Entity* entity)
+  void EntityManager::addEntity(std::shared_ptr<Entity> entity)
   {
     _entities.emplace_back(entity);
   }
 
-  void EntityManager::addTransparentEntity(Entity* entity)
+  void EntityManager::addTransparentEntity(std::shared_ptr<Entity> entity)
   {
     _transparent_entities.emplace_back(entity);
   }
 
-  void EntityManager::addTextEntity(Entity* entity)
+  void EntityManager::addTextEntity(std::shared_ptr<Entity> entity)
   {
     _text_entities.emplace_back(entity);
   }

@@ -38,8 +38,8 @@ See the engine rendering advanced glTF assets:
 
 To build and run the Poulpe Engine, you need recent and specific tooling:
 
-1.  **C++ Compiler:** A recent version of **Clang (20.x)** with full C++23 support.
-2.  **Build System:** **CMake (3.31 or 4.x)**.
+1.  **C++ Compiler:** A recent version of **Clang (22.x)** with C++26 support.
+2.  **Build System:** **CMake (4.x)**.
 3.  **Vulkan SDK:** The latest official [Vulkan SDK](https://vulkan.lunarg.com/).
     * Ensure the environment variables **`VULKAN_SDK`**, **`Vulkan_LIBRARY`**, and **`Vulkan_INCLUDE_DIR`** are correctly configured.
 4.  **GPU:** A recent GPU with support for the **`VK_KHR_UNIFIED_IMAGE_LAYOUTS_EXTENSION_NAME`** extension, as this is currently used without fallback.

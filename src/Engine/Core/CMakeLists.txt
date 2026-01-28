@@ -14,10 +14,12 @@ target_sources(Core
         Constants.cppm
         FontTypes.cppm
         JoinThreads.cppm
+        Json.cppm
         LightTypes.cppm
         LockFreeStack.cppm
         Logger.cppm
         MaterialTypes.cppm
+        GLM.cppm
         MeshTypes.cppm
         PlpTypedef.cppm
         ThreadPool.cppm
@@ -40,7 +42,8 @@ target_link_libraries(
     EngineCommon
 
   PUBLIC
-    assimp::assimp)
+    assimp::assimp
+    nlohmann_json)
 
 set_poulpe_definitions(Core)
 set_poulpe_links(Core)

@@ -1,7 +1,5 @@
 module;
 
-#include <glm/glm.hpp>
-
 #include <volk.h>
 
 export module Engine.Component.Mesh;
@@ -10,6 +8,7 @@ import std;
 
 import Engine.Core.AnimationTypes;
 import Engine.Core.MaterialTypes;
+import Engine.Core.GLM;
 import Engine.Core.MeshTypes;
 import Engine.Core.PlpTypedef;
 import Engine.Core.Vertex;

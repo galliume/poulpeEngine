@@ -33,9 +33,9 @@ namespace Poulpe
     VkDebugUtilsMessengerEXT* pCallback);
 
   export struct QueueFamilyIndices {
-    std::optional<uint32_t> graphicsFamily;
-    std::optional<uint32_t> presentFamily;
-    std::optional<uint32_t> transferFamily;
+    std::optional<std::uint32_t> graphicsFamily;
+    std::optional<std::uint32_t> presentFamily;
+    std::optional<std::uint32_t> transferFamily;
 
     bool isComplete() {
       return graphicsFamily.has_value() && presentFamily.has_value();
@@ -92,7 +92,7 @@ namespace Poulpe
 
     VkDescriptorPool createDescriptorPool(
       std::vector<VkDescriptorPoolSize> const& pool_sizes,
-      uint32_t const max_sets = 100,
+      std::uint32_t const max_sets = 100,
       VkDescriptorPoolCreateFlags const flags = VK_DESCRIPTOR_POOL_CREATE_UPDATE_AFTER_BIND_BIT);
 
     VkDescriptorSetLayout createDescriptorSetLayout(std::vector<VkDescriptorSetLayoutBinding> const& pBindings);
@@ -100,7 +100,7 @@ namespace Poulpe
     VkDescriptorSet createDescriptorSets(
       VkDescriptorPool const& descriptor_pool,
       std::vector<VkDescriptorSetLayout> const& descset_layout,
-      uint32_t const count = 100);
+      std::uint32_t const count = 100);
 
     void updateDescriptorSets(
       std::vector<Buffer>& uniform_buffers,
@@ -155,7 +155,7 @@ namespace Poulpe
 
     std::vector<VkCommandBuffer> allocateCommandBuffers(
       VkCommandPool& cmd_pool,
-      uint32_t const size = 1,
+      std::uint32_t const size = 1,
       bool const is_secondary = false);
 
     VkBuffer createBuffer(VkDeviceSize const size, VkBufferUsageFlags const usage);
@@ -181,7 +181,7 @@ namespace Poulpe
     void submitVertexUpdate(VkSemaphore & semaphore, std::size_t const image_index) __attribute__((no_thread_safety_analysis));
 
     Buffer createIndexBuffer(
-      std::vector<uint32_t> const& indices,
+      std::vector<std::uint32_t> const& indices,
       std::size_t const image_index);
 
     VkImageMemoryBarrier setupImageMemoryBarrier(
@@ -190,7 +190,7 @@ namespace Poulpe
       VkAccessFlags const dst_access_mask,
       VkImageLayout const old_layout,
       VkImageLayout const new_layout,
-      uint32_t const mip_lvl = VK_REMAINING_MIP_LEVELS,
+      std::uint32_t const mip_lvl = VK_REMAINING_MIP_LEVELS,
       VkImageAspectFlags const aspect_mask = VK_IMAGE_ASPECT_COLOR_BIT);
 
     void startCopyBuffer(std::size_t const image_index);
@@ -216,9 +216,9 @@ namespace Poulpe
       std::size_t const image_index);
 
     void createImage(
-      uint32_t const width,
-      uint32_t const height,
-      uint32_t const mip_lvl,
+      std::uint32_t const width,
+      std::uint32_t const height,
+      std::uint32_t const mip_lvl,
       VkSampleCountFlagBits const num_samples,
       VkFormat const format,
       VkImageTiling const tiling,
@@ -229,29 +229,29 @@ namespace Poulpe
     VkImageView createImageView(
       VkImage& image,
       VkFormat const format,
-      uint32_t const mip_lvl,
-      uint32_t scale,
+      std::uint32_t const mip_lvl,
+      std::uint32_t scale,
       VkImageAspectFlags const aspect_flags = VK_IMAGE_ASPECT_COLOR_BIT);
 
     void createTextureImage(
       VkCommandBuffer& cmd_buffer,
       stbi_uc* pixels,
-      uint32_t const tex_width,
-      uint32_t const tex_height,
-      uint32_t const mip_lvl,
+      std::uint32_t const tex_width,
+      std::uint32_t const tex_height,
+      std::uint32_t const mip_lvl,
       VkImage& texture_image,
       VkFormat const format,
-      uint32_t const scale,
+      std::uint32_t const scale,
       std::size_t const image_index);
 
     void copyBufferToImage(
       VkCommandBuffer& cmd_buffer,
       VkBuffer& buffer, VkImage& image,
-      uint32_t const width,
-      uint32_t const height,
-      uint32_t const mipLevels = 0);
+      std::uint32_t const width,
+      std::uint32_t const height,
+      std::uint32_t const mipLevels = 0);
 
-    VkSampler createTextureSampler(uint32_t const mip_lvl);
+    VkSampler createTextureSampler(std::uint32_t const mip_lvl);
     VkImageView createDepthResources(VkCommandBuffer& cmd_buffer);
 
     VkFormat findSupportedFormat(
@@ -377,7 +377,7 @@ namespace Poulpe
       VkCommandBuffer& cmd_buffer,
       Data const * data,
       bool const is_indexed = true,
-      uint32_t const index = 0,
+      std::uint32_t const index = 0,
       std::uint32_t const instance_coun = 1);
 
     VkResult queueSubmit(
@@ -402,10 +402,10 @@ namespace Poulpe
       VkCommandBuffer& cmd_buffer,
       VkFormat const image_format,
       VkImage& image,
-      uint32_t const tex_width,
-      uint32_t const tex_height,
-      uint32_t const mip_lvl,
-      uint32_t const layer_count = 1);
+      std::uint32_t const tex_width,
+      std::uint32_t const tex_height,
+      std::uint32_t const mip_lvl,
+      std::uint32_t const layer_count = 1);
 
     //@todo redo all detroying mechanism...
     void destroy();
@@ -423,9 +423,9 @@ namespace Poulpe
 
     inline bool isValidationLayersEnabled() const { return _enable_validation_layers; }
 
-    inline uint32_t getExtensionCount() const { return _extension_count; }
+    inline std::uint32_t getExtensionCount() const { return _extension_count; }
 
-    inline uint32_t getQueueFamily() const { return _queue_family_indices.graphicsFamily.value(); }
+    inline std::uint32_t getQueueFamily() const { return _queue_family_indices.graphicsFamily.value(); }
 
     inline VkInstance getInstance() const { return _instance; }
 
@@ -462,7 +462,7 @@ namespace Poulpe
 
     const SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice device) const;
 
-    uint32_t getImageCount() const;
+    std::uint32_t getImageCount() const;
 
     std::string getAPIVersion();
 
@@ -478,7 +478,7 @@ namespace Poulpe
 
     void endMarker(VkCommandBuffer& buffer);
 
-    uint32_t getQueueCount() { return _queue_count; }
+    std::uint32_t getQueueCount() { return _queue_count; }
 
     std::vector<VkQueue> getPresentQueue() { return _present_queues; }
 
@@ -522,7 +522,7 @@ namespace Poulpe
       VkImageLayout const old_layout,
       VkImageLayout const new_layout,
       VkImageAspectFlags const aspect_flags,
-      uint32_t layer_count = 1);
+      std::uint32_t layer_count = 1);
 
     //KTX
     void createKTXImage(
@@ -540,8 +540,8 @@ namespace Poulpe
     void createFontImage(
       VkCommandBuffer& cmd_buffer,
       std::vector<FontCharacter> const& characters,
-      uint32_t const width,
-      uint32_t const height,
+      std::uint32_t const width,
+      std::uint32_t const height,
       VkImage& image,
       std::size_t const image_index);
 
@@ -553,7 +553,7 @@ namespace Poulpe
     VkSampler createKTXSampler(
       TextureWrapMode const wrap_mode_u,
       TextureWrapMode const wrap_mode_v,
-      uint32_t const mip_lvl,
+      std::uint32_t const mip_lvl,
       bool const compare_enable = VK_FALSE);
 
   public:
@@ -596,15 +596,15 @@ namespace Poulpe
     QueueFamilyIndices findQueueFamilies(VkPhysicalDevice& device);
     VkSurfaceFormatKHR chooseSwapSurfaceFormat(std::vector<VkSurfaceFormatKHR> const& availableFormats);
     VkPresentModeKHR chooseSwapPresentMode(std::vector<VkPresentModeKHR> const& availablePresentModes);
-    uint32_t findMemoryType(uint32_t const type_filter, VkMemoryPropertyFlags const properties);
+    std::uint32_t findMemoryType(std::uint32_t const type_filter, VkMemoryPropertyFlags const properties);
     VkExtent2D chooseSwapExtent(VkSurfaceCapabilitiesKHR const& capabilities);
 
     VkDeviceSize align_to(VkDeviceSize const size, VkDeviceSize const alignment);
 
     int32_t _current_frame{ 0 };
-    uint32_t _extension_count;
+    std::uint32_t _extension_count;
     std::string _api_version;
-    uint32_t _queue_count { 2 };
+    std::uint32_t _queue_count { 2 };
 
     GLFWwindow* _window{ nullptr };
 

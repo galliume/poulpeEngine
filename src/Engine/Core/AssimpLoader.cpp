@@ -6,14 +6,11 @@ module;
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
 
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtx/matrix_decompose.hpp>
-#include <glm/gtx/quaternion.hpp>
-
 module Engine.Core.AssimpLoader;
 
 import std;
+
+import Engine.Core.GLM;
 
 namespace Poulpe
 {
@@ -442,14 +439,14 @@ namespace Poulpe
     positions.reserve(scene->mNumAnimations);
     scales.reserve(scene->mNumAnimations);
 
-    for (uint32_t i{ 0 }; i < scene->mNumAnimations; i++) {
+    for (std::uint32_t i{ 0 }; i < scene->mNumAnimations; i++) {
 
       aiAnimation const* animation = scene->mAnimations[i];
 
       auto const ticks_per_s = (animation->mTicksPerSecond > 0) ? animation->mTicksPerSecond : 25.0;
       animations.emplace_back(i, animation->mName.C_Str(), animation->mDuration, ticks_per_s);
 
-      for (uint32_t j{ 0 }; j < animation->mNumChannels; j++) {
+      for (std::uint32_t j{ 0 }; j < animation->mNumChannels; j++) {
 
         auto const* node{ animation->mChannels[j] };
         auto const node_name{ node->mNodeName.C_Str() };
@@ -457,7 +454,7 @@ namespace Poulpe
         std::vector<Rotation>rots{};
         rots.reserve(node->mNumRotationKeys);
 
-        for (uint32_t r{ 0 }; r < node->mNumRotationKeys; r++) {
+        for (std::uint32_t r{ 0 }; r < node->mNumRotationKeys; r++) {
 
           auto const& rotation_key{ node->mRotationKeys[r] };
           auto const interpolation{ getInterpolation(rotation_key.mInterpolation) };
@@ -473,7 +470,7 @@ namespace Poulpe
         std::vector<Position> pos{};
         pos.reserve(node->mNumPositionKeys);
 
-        for (uint32_t p{ 0 }; p < node->mNumPositionKeys; p++) {
+        for (std::uint32_t p{ 0 }; p < node->mNumPositionKeys; p++) {
           auto const& pos_key = node->mPositionKeys[p];
           auto const interpolation{ getInterpolation(pos_key.mInterpolation) };
 
@@ -487,7 +484,7 @@ namespace Poulpe
         std::vector<Scale> sc{};
         sc.reserve(node->mNumScalingKeys);
 
-        for (uint32_t s{ 0 }; s < node->mNumScalingKeys; s++) {
+        for (std::uint32_t s{ 0 }; s < node->mNumScalingKeys; s++) {
           auto const& scale_key = node->mScalingKeys[s];
           auto const interpolation{ getInterpolation(scale_key.mInterpolation) };
 
@@ -512,7 +509,7 @@ namespace Poulpe
     std::unordered_map<std::string, Bone> bones_map{};
 
     std::vector<PlpMeshData> mesh_data{};
-    uint32_t global_bone_count { 0 };
+    std::uint32_t global_bone_count { 0 };
 
     process(
       root_bone->mName.C_Str(),
@@ -566,12 +563,12 @@ namespace Poulpe
     std::string const& texture_prefix,
     bool const flip_Y,
     std::unordered_map<std::string, Bone> & bones_map,
-    uint32_t global_bone_count)
+    std::uint32_t global_bone_count)
   {
     auto const local_transform { ConvertMatrixToGLMFormat(node->mTransformation) };
     auto const transform_matrix { global_transform * local_transform };
 
-    for (uint32_t i{ 0 }; i < node->mNumMeshes; i++) {
+    for (std::uint32_t i{ 0 }; i < node->mNumMeshes; i++) {
       PlpMeshData mesh_data{};
       mesh_data.transform_matrix = transform_matrix;
       mesh_data.inverse_transform_matrix = inverse_global_transform;
@@ -586,7 +583,7 @@ namespace Poulpe
 
       mesh_data.vertices.reserve(mesh->mNumVertices);
 
-      for (uint32_t v{ 0 }; v < mesh->mNumVertices; v++) {
+      for (std::uint32_t v{ 0 }; v < mesh->mNumVertices; v++) {
 
         aiVector3D vertices = mesh->mVertices[v];
 
@@ -629,7 +626,7 @@ namespace Poulpe
         glm::vec4 color{ 0.0f };
 
         auto nb_colors{ 0 };
-        for (uint32_t x{ 0 }; x < AI_MAX_NUMBER_OF_COLOR_SETS; x++) {
+        for (std::uint32_t x{ 0 }; x < AI_MAX_NUMBER_OF_COLOR_SETS; x++) {
           if (mesh->HasVertexColors(x)) {
             auto const& v_color = mesh->mColors[x][v];
               color += glm::vec4(
@@ -652,12 +649,12 @@ namespace Poulpe
         mesh_data.vertices.emplace_back(std::move(vertex));
       }
 
-      for (uint32_t f{ 0 }; f < mesh->mNumFaces; f++) {
+      for (std::uint32_t f{ 0 }; f < mesh->mNumFaces; f++) {
         aiFace const* face = &mesh->mFaces[f];
 
         mesh_data.indices.reserve(face->mNumIndices);
 
-        for (uint32_t j{ 0 }; j < face->mNumIndices; j++) {
+        for (std::uint32_t j{ 0 }; j < face->mNumIndices; j++) {
           mesh_data.indices.push_back(face->mIndices[j]);
         }
         mesh_data.material_ID = mesh->mMaterialIndex;
@@ -665,9 +662,9 @@ namespace Poulpe
 
       if (mesh->HasBones()) {
         mesh_data.vertices_bones.resize(mesh->mNumVertices, {});
-        std::unordered_map<uint32_t, std::vector<std::pair<uint32_t, float>>> vertex_weight_map{};
+        std::unordered_map<std::uint32_t, std::vector<std::pair<std::uint32_t, float>>> vertex_weight_map{};
 
-        for (uint32_t b{ 0 }; b < mesh->mNumBones; b++) {
+        for (std::uint32_t b{ 0 }; b < mesh->mNumBones; b++) {
           auto bone_id{ global_bone_count };
           global_bone_count += 1;
 
@@ -696,7 +693,7 @@ namespace Poulpe
             skew,
             perspective);
 
-          for (uint32_t w{ 0 }; w < bone->mNumWeights; w++) {
+          for (std::uint32_t w{ 0 }; w < bone->mNumWeights; w++) {
             aiVertexWeight const& aiWeight = bone->mWeights[w];
             bone_data.weights.emplace_back(aiWeight.mVertexId, aiWeight.mWeight);
 
@@ -727,7 +724,7 @@ namespace Poulpe
           bones_map[bone_node->mName.C_Str()] = std::move(bone_data);
         }
         for (auto& vertex_map : vertex_weight_map) {
-          uint32_t const vertex_id { vertex_map.first };
+          std::uint32_t const vertex_id { vertex_map.first };
           auto& vertex { mesh_data.vertices.at(vertex_id) };
           VertexBones vertex_bones { };
           auto& data_vertex { vertex_map.second };
@@ -756,7 +753,7 @@ namespace Poulpe
       data.emplace_back(mesh_data);
     }
 
-    for (uint32_t i{ 0 }; i < node->mNumChildren; i++) {
+    for (std::uint32_t i{ 0 }; i < node->mNumChildren; i++) {
       process(root_bone, node->mChildren[i], scene, data, transform_matrix, inverse_global_transform, texture_prefix, flip_Y, bones_map, global_bone_count);
     }
   }
@@ -818,7 +815,7 @@ namespace Poulpe
         return current;
     }
 
-    for (uint32_t i = 0; i < node->mNumChildren; ++i) {
+    for (std::uint32_t i = 0; i < node->mNumChildren; ++i) {
         aiNode const* found = FindRootBone(scene, node->mChildren[i], bone_names);
         if (found) return found;
     }
@@ -835,7 +832,7 @@ namespace Poulpe
     }
   }
 
-  void AssimpLoader::addWeightlessBones(aiNode const * node, std::unordered_map<std::string, Bone>& bones_map, uint32_t global_bone_count)
+  void AssimpLoader::addWeightlessBones(aiNode const * node, std::unordered_map<std::string, Bone>& bones_map, std::uint32_t global_bone_count)
   {
     std::string const & name { node->mName.C_Str() };
 
@@ -861,7 +858,7 @@ namespace Poulpe
       if (node->mParent) 
           bone_data.parent_name = node->mParent->mName.C_Str();
 
-      for (uint32_t i = 0; i < node->mNumChildren; i++) {
+      for (std::uint32_t i = 0; i < node->mNumChildren; i++) {
           bone_data.children.push_back(node->mChildren[i]->mName.C_Str());
       }
       bones_map[name] = bone_data;

@@ -1,11 +1,10 @@
 module;
 
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-
 export module Engine.Core.Camera;
 
 import std;
+
+import Engine.Core.GLM;
 
 namespace Poulpe
 {
@@ -28,8 +27,8 @@ namespace Poulpe
     void up();
 
     inline glm::vec3 getPos() const { return _pos; }
-    inline glm::mat4 getView() const { return glm::lookAt(_pos, _pos + _front, _up); }
-    glm::mat4 getView(glm::vec3 const& target) { return glm::lookAt(_pos, target, _up); }
+    glm::mat4 getView() const;
+    glm::mat4 getThirdPersonView(glm::vec3 const & player_pos);
     inline glm::vec3 getDirection() const { return _front; }
     void setPos(glm::vec3 const & pos) { _pos = pos; _next_pos = pos; }
     glm::mat4 frustumProj(float fovy, float s, float n, float f);

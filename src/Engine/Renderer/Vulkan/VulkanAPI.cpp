@@ -163,7 +163,7 @@ void VulkanAPI::initMemoryPool()
 std::string VulkanAPI::getAPIVersion()
 {
   if (_api_version.empty()) {
-    uint32_t version = VK_API_VERSION_1_4;
+    std::uint32_t version = VK_API_VERSION_1_4;
     [[maybe_unused]] auto tmp { reinterpret_cast<PFN_vkEnumerateInstanceVersion>(
         reinterpret_cast<void*>(vkGetInstanceProcAddr(nullptr, "vkEnumerateInstanceVersion"))
     ) };
@@ -172,9 +172,9 @@ std::string VulkanAPI::getAPIVersion()
         vkEnumerateInstanceVersion(&version);
     }
 
-    uint32_t major = VK_VERSION_MAJOR(version);
-    uint32_t minor = VK_VERSION_MINOR(version);
-    uint32_t patch = VK_VERSION_PATCH(version);
+    std::uint32_t major = VK_VERSION_MAJOR(version);
+    std::uint32_t minor = VK_VERSION_MINOR(version);
+    std::uint32_t patch = VK_VERSION_PATCH(version);
 
     _api_version = std::to_string(major) + "." + std::to_string(minor) + "." + std::to_string(patch);
   }
@@ -199,7 +199,7 @@ void VulkanAPI::createInstance()
   create_info.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
   create_info.pApplicationInfo = &app_info;
 
-  create_info.enabledExtensionCount = static_cast<uint32_t>(_required_extensions.size());
+  create_info.enabledExtensionCount = static_cast<std::uint32_t>(_required_extensions.size());
   create_info.ppEnabledExtensionNames = _required_extensions.data();
   create_info.enabledLayerCount = 0;
   create_info.pNext = VK_NULL_HANDLE;
@@ -221,7 +221,7 @@ void VulkanAPI::createInstance()
 
     debug_create_info.pUserData = nullptr;
 
-    create_info.enabledLayerCount = static_cast<uint32_t>(_validation_layers.size());
+    create_info.enabledLayerCount = static_cast<std::uint32_t>(_validation_layers.size());
     create_info.ppEnabledLayerNames = _validation_layers.data();
     create_info.pNext = (VkDebugUtilsMessengerCreateInfoEXT*) & debug_create_info;
     //Logger::trace("Validations enabled");
@@ -260,7 +260,7 @@ void VulkanAPI::enumerateExtensions()
 
 bool VulkanAPI::checkValidationLayerSupport()
 {
-  uint32_t layer_count{ 0 };
+  std::uint32_t layer_count{ 0 };
   vkEnumerateInstanceLayerProperties(&layer_count, nullptr);
 
   std::vector<VkLayerProperties> available_layers(layer_count);
@@ -286,7 +286,7 @@ bool VulkanAPI::checkValidationLayerSupport()
 
 void VulkanAPI::loadRequiredExtensions()
 {
-  uint32_t glfw_ext_count{ 0 };
+  std::uint32_t glfw_ext_count{ 0 };
   char const ** glfw_ext;
   glfw_ext = glfwGetRequiredInstanceExtensions(& glfw_ext_count);
 
@@ -321,7 +321,7 @@ void VulkanAPI::setupDebugMessenger()
 
 void VulkanAPI::pickPhysicalDevice()
 {
-  uint32_t device_count{ 0 };
+  std::uint32_t device_count{ 0 };
   vkEnumeratePhysicalDevices(_instance, & device_count, nullptr);
 
   if (device_count == 0) {
@@ -381,7 +381,7 @@ bool VulkanAPI::isDeviceSuitable(VkPhysicalDevice& device)
 
 bool VulkanAPI::checkDeviceExtensionSupport(VkPhysicalDevice& device)
 {
-  uint32_t ext_count{ 0 };
+  std::uint32_t ext_count{ 0 };
   vkEnumerateDeviceExtensionProperties(device, nullptr, & ext_count, nullptr);
 
   std::vector<VkExtensionProperties> available_ext(ext_count);
@@ -402,13 +402,13 @@ bool VulkanAPI::checkDeviceExtensionSupport(VkPhysicalDevice& device)
 
 QueueFamilyIndices VulkanAPI::findQueueFamilies(VkPhysicalDevice& device)
 {
-  uint32_t queue_family_count{ 0 };
+  std::uint32_t queue_family_count{ 0 };
   vkGetPhysicalDeviceQueueFamilyProperties(device, & queue_family_count, nullptr);
 
   std::vector<VkQueueFamilyProperties> queue_families(queue_family_count);
   vkGetPhysicalDeviceQueueFamilyProperties(device, & queue_family_count, queue_families.data());
 
-  uint32_t i{ 0 };
+  std::uint32_t i{ 0 };
   for (auto const & queueFamily : queue_families) {
     if (queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT) {
         _queue_family_indices.graphicsFamily = i;
@@ -426,7 +426,7 @@ QueueFamilyIndices VulkanAPI::findQueueFamilies(VkPhysicalDevice& device)
     i++;
   }
 
-  for (uint32_t x = 0; x < queue_family_count; ++x) {
+  for (std::uint32_t x = 0; x < queue_family_count; ++x) {
     if (queue_families[x].queueFlags & VK_QUEUE_TRANSFER_BIT &&
         !(queue_families[x].queueFlags & VK_QUEUE_GRAPHICS_BIT) &&
         !(queue_families[x].queueFlags & VK_QUEUE_COMPUTE_BIT)) {
@@ -436,7 +436,7 @@ QueueFamilyIndices VulkanAPI::findQueueFamilies(VkPhysicalDevice& device)
   }
 
   if (!_queue_family_indices.transferFamily) {
-    for (uint32_t x = 0; x < queue_family_count; ++x) {
+    for (std::uint32_t x = 0; x < queue_family_count; ++x) {
       if (queue_families[x].queueFlags & VK_QUEUE_TRANSFER_BIT) {
         _queue_family_indices.transferFamily = x;
         break;
@@ -456,7 +456,7 @@ void VulkanAPI::createLogicalDevice()
   QueueFamilyIndices indices = findQueueFamilies(_physical_device);
 
   std::vector<VkDeviceQueueCreateInfo> queue_create_infos;
-  std::set<uint32_t> unique_queue_families = {
+  std::set<std::uint32_t> unique_queue_families = {
     indices.graphicsFamily.value(),
     indices.presentFamily.value(),
     indices.transferFamily.value() };
@@ -467,7 +467,7 @@ void VulkanAPI::createLogicalDevice()
   _present_queues.resize(_queue_count);
   _transfer_queues.resize(_queue_count);
 
-  for (uint32_t queue_family : unique_queue_families) {
+  for (std::uint32_t queue_family : unique_queue_families) {
     VkDeviceQueueCreateInfo queueCreateInfo{};
     queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
     queueCreateInfo.queueFamilyIndex = queue_family;
@@ -704,11 +704,11 @@ void VulkanAPI::createLogicalDevice()
     .sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
     .pNext = &features2,
     .flags = 0,
-    .queueCreateInfoCount = static_cast<uint32_t>(queue_create_infos.size()),
+    .queueCreateInfoCount = static_cast<std::uint32_t>(queue_create_infos.size()),
     .pQueueCreateInfos = queue_create_infos.data(),
     .enabledLayerCount = 0,
     .ppEnabledLayerNames = nullptr,
-    .enabledExtensionCount = static_cast<uint32_t>(_device_extensions.size()),
+    .enabledExtensionCount = static_cast<std::uint32_t>(_device_extensions.size()),
     .ppEnabledExtensionNames = _device_extensions.data(),
     .pEnabledFeatures = nullptr,
   };
@@ -718,7 +718,7 @@ void VulkanAPI::createLogicalDevice()
     return;
   }
 
-  for (uint32_t i { 0 }; i < _queue_count; i++) {
+  for (std::uint32_t i { 0 }; i < _queue_count; i++) {
     _graphics_queues[i] = VK_NULL_HANDLE;
     _present_queues[i] = VK_NULL_HANDLE;
     _transfer_queues[i] = VK_NULL_HANDLE;
@@ -744,14 +744,14 @@ const SwapChainSupportDetails VulkanAPI::querySwapChainSupport(VkPhysicalDevice 
   SwapChainSupportDetails details;
   vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, _surface, & details.capabilities);
 
-  uint32_t format_count;
+  std::uint32_t format_count;
   vkGetPhysicalDeviceSurfaceFormatsKHR(device, _surface, & format_count, nullptr);
 
   if (format_count != 0) {
     details.formats.resize(format_count);
     vkGetPhysicalDeviceSurfaceFormatsKHR(device, _surface, & format_count, details.formats.data());
   }
-  uint32_t present_mode_count;
+  std::uint32_t present_mode_count;
   vkGetPhysicalDeviceSurfacePresentModesKHR(device, _surface, & present_mode_count, nullptr);
 
   if (present_mode_count != 0) {
@@ -787,8 +787,8 @@ VkExtent2D VulkanAPI::chooseSwapExtent( VkSurfaceCapabilitiesKHR const & capabil
   glfwGetFramebufferSize(_window, &width, &height);
 
   VkExtent2D actual_extent = {
-    static_cast<uint32_t>(width),
-    static_cast<uint32_t>(height)
+    static_cast<std::uint32_t>(width),
+    static_cast<std::uint32_t>(height)
   };
 
   actual_extent.width = std::clamp(actual_extent.width, capabilities.minImageExtent.width, capabilities.maxImageExtent.width);
@@ -799,7 +799,7 @@ VkExtent2D VulkanAPI::chooseSwapExtent( VkSurfaceCapabilitiesKHR const & capabil
 
 uint32_t VulkanAPI::getImageCount() const
 {
-  uint32_t image_count = _swapchain_support.capabilities.minImageCount + 1;
+  std::uint32_t image_count = _swapchain_support.capabilities.minImageCount + 1;
 
   if (image_count > _swapchain_support.capabilities.maxImageCount) {
     image_count = _swapchain_support.capabilities.maxImageCount;
@@ -814,7 +814,7 @@ VkSwapchainKHR VulkanAPI::createSwapChain(
 {
   VkSwapchainKHR swapchain = VK_NULL_HANDLE;
 
-  uint32_t image_count = getImageCount();
+  std::uint32_t image_count = getImageCount();
 
   VkImageSubresourceLayers src_img_subrc_layers;
   src_img_subrc_layers.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
@@ -840,7 +840,7 @@ VkSwapchainKHR VulkanAPI::createSwapChain(
   create_info.oldSwapchain = old_swapchain;
 
   QueueFamilyIndices indices = findQueueFamilies(_physical_device);
-  uint32_t queue_family_indices[] = { indices.graphicsFamily.value(), indices.presentFamily.value() };
+  std::uint32_t queue_family_indices[] = { indices.graphicsFamily.value(), indices.presentFamily.value() };
 
   if (indices.graphicsFamily != indices.presentFamily) {
     create_info.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
@@ -874,8 +874,8 @@ bool VulkanAPI::souldResizeSwapChain()
   //VkPresentModeKHR presentMode = ChooseSwapPresentMode(swapchain_support.presentModes);
   VkExtent2D extent = chooseSwapExtent(swapchain_support.capabilities);
 
-  uint32_t width = extent.width;
-  uint32_t height = extent.height;
+  std::uint32_t width = extent.width;
+  std::uint32_t height = extent.height;
 
   return (current_extent.width == width && current_extent.height == height) ? false : true;
 }
@@ -883,8 +883,8 @@ bool VulkanAPI::souldResizeSwapChain()
 VkImageView VulkanAPI::createImageView(
   VkImage& image,
   VkFormat const format,
-  uint32_t const mip_lvl,
-  uint32_t scale,
+  std::uint32_t const mip_lvl,
+  std::uint32_t scale,
   VkImageAspectFlags const aspect_flags)
 {
   VkImageView swapchain_image_view{};
@@ -924,7 +924,7 @@ VkImageView VulkanAPI::createImageView(
 VkDescriptorSetLayout VulkanAPI::createDescriptorSetLayout(
   std::vector<VkDescriptorSetLayoutBinding> const& bindings)
 {
-  auto const bindings_count {static_cast<uint32_t>(bindings.size())};
+  auto const bindings_count {static_cast<std::uint32_t>(bindings.size())};
 
   std::vector<VkDescriptorBindingFlags> binding_flags{};
   binding_flags.resize(bindings_count, VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT);
@@ -959,10 +959,10 @@ VkPipelineLayout VulkanAPI::createPipelineLayout(
   pipeline_layout_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
 
   if (0 != push_const.size()) {
-    pipeline_layout_info.pushConstantRangeCount = static_cast<uint32_t>(push_const.size());
+    pipeline_layout_info.pushConstantRangeCount = static_cast<std::uint32_t>(push_const.size());
     pipeline_layout_info.pPushConstantRanges = push_const.data();
   }
-  pipeline_layout_info.setLayoutCount = static_cast<uint32_t>(descset_layouts.size());
+  pipeline_layout_info.setLayoutCount = static_cast<std::uint32_t>(descset_layouts.size());
   pipeline_layout_info.pSetLayouts = descset_layouts.data();
 
   VkResult result = vkCreatePipelineLayout(_device, &pipeline_layout_info, nullptr, &graphics_pipeline_layout);
@@ -1073,12 +1073,12 @@ VkPipeline VulkanAPI::createGraphicsPipeline(PipeLineCreateInfo const& pipeline_
 
   VkPipelineDynamicStateCreateInfo dynamic_state{};
   dynamic_state.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
-  dynamic_state.dynamicStateCount = static_cast<uint32_t>(dynamic_states.size());
+  dynamic_state.dynamicStateCount = static_cast<std::uint32_t>(dynamic_states.size());
   dynamic_state.pDynamicStates = dynamic_states.data();
 
   VkGraphicsPipelineCreateInfo pipeline_info{};
   pipeline_info.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
-  pipeline_info.stageCount = static_cast<uint32_t>(pipeline_create_info.shaders_create_info.size());
+  pipeline_info.stageCount = static_cast<std::uint32_t>(pipeline_create_info.shaders_create_info.size());
   pipeline_info.pStages = pipeline_create_info.shaders_create_info.data();
   pipeline_info.pVertexInputState = pipeline_create_info.vertex_input_info;
   pipeline_info.pInputAssemblyState = & input_assembly;
@@ -1152,10 +1152,10 @@ VkPipeline VulkanAPI::createGraphicsPipeline(PipeLineCreateInfo const& pipeline_
     }
 
     if (cache_file_data != nullptr) {
-      uint32_t header_length{ 0 };
-      uint32_t cache_header_version{ 0 };
-      uint32_t vendor_ID{ 0 };
-      uint32_t device_ID{ 0 };
+      std::uint32_t header_length{ 0 };
+      std::uint32_t cache_header_version{ 0 };
+      std::uint32_t vendor_ID{ 0 };
+      std::uint32_t device_ID{ 0 };
       std::uint8_t pipeline_cache_UUID[VK_UUID_SIZE] = {};
 
       std::memcpy(& header_length, static_cast<std::uint8_t*>(cache_file_data) + 0, 4);
@@ -1172,11 +1172,11 @@ VkPipeline VulkanAPI::createGraphicsPipeline(PipeLineCreateInfo const& pipeline_
         bad_cache = true;
         //Logger::error("Unsupported cache header version in {} got {}", cache_filename, cache_header_version);
       }
-      if (vendor_ID != static_cast<uint32_t>(_device_props.vendorID)) {
+      if (vendor_ID != static_cast<std::uint32_t>(_device_props.vendorID)) {
         bad_cache = true;
         //Logger::error("Vendor ID mismatch in {} got {} expect {}", cache_filename, vendor_ID, _device_props.vendorID);
       }
-      if (device_ID != static_cast<uint32_t>(_device_props.deviceID)) {
+      if (device_ID != static_cast<std::uint32_t>(_device_props.deviceID)) {
         bad_cache = true;
         //Logger::error("Device ID mismatch in {} got {} expect {}", cache_filename, device_ID, _device_props.deviceID);
       }
@@ -1248,7 +1248,7 @@ VkShaderModule VulkanAPI::createShaderModule(std::vector<char> const& code)
   VkShaderModuleCreateInfo create_info{};
   create_info.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
   create_info.codeSize = code.size();
-  create_info.pCode = reinterpret_cast<const uint32_t*>(code.data());
+  create_info.pCode = reinterpret_cast<const std::uint32_t*>(code.data());
 
   VkShaderModule shader_module{};
   VkResult result{ VK_SUCCESS };
@@ -1330,7 +1330,7 @@ VkRenderPass* VulkanAPI::createRenderPass(VkSampleCountFlagBits const& msaaSampl
 
   VkRenderPassCreateInfo rdr_pass_info{};
   rdr_pass_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-  rdr_pass_info.attachmentCount = static_cast<uint32_t>(attachments.size());
+  rdr_pass_info.attachmentCount = static_cast<std::uint32_t>(attachments.size());
   rdr_pass_info.pAttachments = attachments.data();
   rdr_pass_info.subpassCount = 1;
   rdr_pass_info.pSubpasses = & subpass;
@@ -1366,7 +1366,7 @@ std::vector<VkFramebuffer> VulkanAPI::createFramebuffers(
     VkFramebufferCreateInfo frame_buffer_info{};
     frame_buffer_info.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
     frame_buffer_info.renderPass = rdr_pass;
-    frame_buffer_info.attachmentCount = static_cast<uint32_t>(attachments.size());
+    frame_buffer_info.attachmentCount = static_cast<std::uint32_t>(attachments.size());
     frame_buffer_info.pAttachments = attachments.data();
     frame_buffer_info.width = _swapchain_extent.width;
     frame_buffer_info.height = _swapchain_extent.height;
@@ -1410,7 +1410,7 @@ VkCommandPool VulkanAPI::createCommandPool(bool transfer_queue)
 
 std::vector<VkCommandBuffer> VulkanAPI::allocateCommandBuffers(
   VkCommandPool& cmd_pool,
-  uint32_t const size,
+  std::uint32_t const size,
   bool const is_secondary)
 {
   std::vector<VkCommandBuffer> cmd_buffers;
@@ -1420,7 +1420,7 @@ std::vector<VkCommandBuffer> VulkanAPI::allocateCommandBuffers(
   alloc_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
   alloc_info.commandPool = cmd_pool;
   alloc_info.level = (!is_secondary) ? VK_COMMAND_BUFFER_LEVEL_PRIMARY : VK_COMMAND_BUFFER_LEVEL_SECONDARY;
-  alloc_info.commandBufferCount = static_cast<uint32_t>(cmd_buffers.size());
+  alloc_info.commandBufferCount = static_cast<std::uint32_t>(cmd_buffers.size());
 
   VkResult result = vkAllocateCommandBuffers(_device, & alloc_info, cmd_buffers.data());
 
@@ -1462,8 +1462,8 @@ void VulkanAPI::setViewPort(VkCommandBuffer& cmd_buffer)
 
 void VulkanAPI::setScissor(VkCommandBuffer& cmd_buffer)
 {
-  VkRect2D scissor = { { 0, 0 }, { static_cast<uint32_t>(_swapchain_extent.width),
-      static_cast<uint32_t>(_swapchain_extent.height) } };
+  VkRect2D scissor = { { 0, 0 }, { static_cast<std::uint32_t>(_swapchain_extent.width),
+      static_cast<std::uint32_t>(_swapchain_extent.height) } };
 
   vkCmdSetScissor(cmd_buffer, 0, 1, & scissor);
 }
@@ -1475,14 +1475,14 @@ void VulkanAPI::bindPipeline(VkCommandBuffer& cmd_buffer, VkPipeline& pipeline)
 
 VkDescriptorPool VulkanAPI::createDescriptorPool(
   std::vector<VkDescriptorPoolSize> const& pool_sizes,
-  uint32_t const max_sets,
+  std::uint32_t const max_sets,
   VkDescriptorPoolCreateFlags const flags)
 {
   VkDescriptorPool descriptor_pool{};
 
   VkDescriptorPoolCreateInfo pool_info{};
   pool_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-  pool_info.poolSizeCount = static_cast<uint32_t>(pool_sizes.size());
+  pool_info.poolSizeCount = static_cast<std::uint32_t>(pool_sizes.size());
   pool_info.pPoolSizes = pool_sizes.data();
   pool_info.maxSets = max_sets;
   pool_info.flags = flags;
@@ -1497,7 +1497,7 @@ VkDescriptorPool VulkanAPI::createDescriptorPool(
 VkDescriptorSet VulkanAPI::createDescriptorSets(
   VkDescriptorPool const& descriptor_pool,
   std::vector<VkDescriptorSetLayout> const& descset_layout,
-  uint32_t const count)
+  std::uint32_t const count)
 {
   VkDescriptorSet descset{};
   VkDescriptorSetAllocateInfo alloc_info{};
@@ -1546,10 +1546,10 @@ void VulkanAPI::updateDescriptorSets(
   desc_writes[1].dstBinding = 1;
   desc_writes[1].dstArrayElement = 0;
   desc_writes[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-  desc_writes[1].descriptorCount = static_cast<uint32_t>(image_info.size());
+  desc_writes[1].descriptorCount = static_cast<std::uint32_t>(image_info.size());
   desc_writes[1].pImageInfo = image_info.data();
 
-  vkUpdateDescriptorSets(_device, static_cast<uint32_t>(desc_writes.size()), desc_writes.data(), 0, nullptr);
+  vkUpdateDescriptorSets(_device, static_cast<std::uint32_t>(desc_writes.size()), desc_writes.data(), 0, nullptr);
 }
 
 void VulkanAPI::updateDescriptorSet(
@@ -1580,10 +1580,10 @@ void VulkanAPI::updateDescriptorSet(
   desc_writes[1].dstBinding = 1;
   desc_writes[1].dstArrayElement = 0;
   desc_writes[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-  desc_writes[1].descriptorCount = static_cast<uint32_t>(image_info.size());
+  desc_writes[1].descriptorCount = static_cast<std::uint32_t>(image_info.size());
   desc_writes[1].pImageInfo = image_info.data();
 
-  vkUpdateDescriptorSets(_device, static_cast<uint32_t>(desc_writes.size()), desc_writes.data(), 0, nullptr);
+  vkUpdateDescriptorSets(_device, static_cast<std::uint32_t>(desc_writes.size()), desc_writes.data(), 0, nullptr);
 }
 
 void VulkanAPI::updateDescriptorSet(
@@ -1621,7 +1621,7 @@ void VulkanAPI::updateDescriptorSet(
   desc_writes[1].dstBinding = 1;
   desc_writes[1].dstArrayElement = 0;
   desc_writes[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-  desc_writes[1].descriptorCount = static_cast<uint32_t>(image_info.size());
+  desc_writes[1].descriptorCount = static_cast<std::uint32_t>(image_info.size());
   desc_writes[1].pImageInfo = image_info.data();
 
   desc_writes[2].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
@@ -1629,10 +1629,10 @@ void VulkanAPI::updateDescriptorSet(
   desc_writes[2].dstBinding = 2;
   desc_writes[2].dstArrayElement = 0;
   desc_writes[2].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-  desc_writes[2].descriptorCount = static_cast<uint32_t>(storage_buffer_infos.size());
+  desc_writes[2].descriptorCount = static_cast<std::uint32_t>(storage_buffer_infos.size());
   desc_writes[2].pBufferInfo = storage_buffer_infos.data();
 
-  vkUpdateDescriptorSets(_device, static_cast<uint32_t>(desc_writes.size()), desc_writes.data(), 0, nullptr);
+  vkUpdateDescriptorSets(_device, static_cast<std::uint32_t>(desc_writes.size()), desc_writes.data(), 0, nullptr);
 }
 
 //@todo needs refactoring
@@ -1690,7 +1690,7 @@ void VulkanAPI::updateDescriptorSets(
   desc_writes[1].dstBinding = 1;
   desc_writes[1].dstArrayElement = 0;
   desc_writes[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-  desc_writes[1].descriptorCount = static_cast<uint32_t>(image_info.size());
+  desc_writes[1].descriptorCount = static_cast<std::uint32_t>(image_info.size());
   desc_writes[1].pImageInfo = image_info.data();
 
   desc_writes[2].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
@@ -1698,7 +1698,7 @@ void VulkanAPI::updateDescriptorSets(
   desc_writes[2].dstBinding = 2;
   desc_writes[2].dstArrayElement = 0;
   desc_writes[2].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-  desc_writes[2].descriptorCount = static_cast<uint32_t>(storage_buffer_infos.size());
+  desc_writes[2].descriptorCount = static_cast<std::uint32_t>(storage_buffer_infos.size());
   desc_writes[2].pBufferInfo = storage_buffer_infos.data();
 
   desc_writes[3].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
@@ -1706,7 +1706,7 @@ void VulkanAPI::updateDescriptorSets(
   desc_writes[3].dstBinding = 3;
   desc_writes[3].dstArrayElement = 0;
   desc_writes[3].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-  desc_writes[3].descriptorCount = static_cast<uint32_t>(depth_map_image_info.size());
+  desc_writes[3].descriptorCount = static_cast<std::uint32_t>(depth_map_image_info.size());
   desc_writes[3].pImageInfo = depth_map_image_info.data();
 
   desc_writes[4].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
@@ -1714,7 +1714,7 @@ void VulkanAPI::updateDescriptorSets(
   desc_writes[4].dstBinding = 4;
   desc_writes[4].dstArrayElement = 0;
   desc_writes[4].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-  desc_writes[4].descriptorCount = static_cast<uint32_t>(cube_map_image_info.size());
+  desc_writes[4].descriptorCount = static_cast<std::uint32_t>(cube_map_image_info.size());
   desc_writes[4].pImageInfo = cube_map_image_info.data();
 
   desc_writes[5].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
@@ -1722,7 +1722,7 @@ void VulkanAPI::updateDescriptorSets(
   desc_writes[5].dstBinding = 5;
   desc_writes[5].dstArrayElement = 0;
   desc_writes[5].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-  desc_writes[5].descriptorCount = static_cast<uint32_t>(light_buffer_infos.size());
+  desc_writes[5].descriptorCount = static_cast<std::uint32_t>(light_buffer_infos.size());
   desc_writes[5].pBufferInfo = light_buffer_infos.data();
 
   desc_writes[6].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
@@ -1730,11 +1730,11 @@ void VulkanAPI::updateDescriptorSets(
   desc_writes[6].dstBinding = 6;
   desc_writes[6].dstArrayElement = 0;
   desc_writes[6].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-  desc_writes[6].descriptorCount = static_cast<uint32_t>(csm_image_info.size());
+  desc_writes[6].descriptorCount = static_cast<std::uint32_t>(csm_image_info.size());
   desc_writes[6].pImageInfo = csm_image_info.data();
 
 
-  vkUpdateDescriptorSets(_device, static_cast<uint32_t>(desc_writes.size()), desc_writes.data(), 0, nullptr);
+  vkUpdateDescriptorSets(_device, static_cast<std::uint32_t>(desc_writes.size()), desc_writes.data(), 0, nullptr);
 }
 
 void VulkanAPI::updateStorageDescriptorSets(
@@ -1760,10 +1760,10 @@ void VulkanAPI::updateStorageDescriptorSets(
   desc_writes[0].dstBinding = 2;
   desc_writes[0].dstArrayElement = 0;
   desc_writes[0].descriptorType = type;
-  desc_writes[0].descriptorCount = static_cast<uint32_t>(buffer_infos.size());
+  desc_writes[0].descriptorCount = static_cast<std::uint32_t>(buffer_infos.size());
   desc_writes[0].pBufferInfo = buffer_infos.data();
 
-  vkUpdateDescriptorSets(_device, static_cast<uint32_t>(desc_writes.size()), desc_writes.data(), 0, nullptr);
+  vkUpdateDescriptorSets(_device, static_cast<std::uint32_t>(desc_writes.size()), desc_writes.data(), 0, nullptr);
 }
 
 void VulkanAPI::beginRenderPass(
@@ -1782,7 +1782,7 @@ void VulkanAPI::beginRenderPass(
   clear_value[0].color = { { 0.0f, 0.0f, 0.0f, 0.0f } };
   clear_value[1].depthStencil = { 1.0f, 0 };
 
-  rdr_pass_info.clearValueCount = static_cast<uint32_t>(clear_value.size());
+  rdr_pass_info.clearValueCount = static_cast<std::uint32_t>(clear_value.size());
   rdr_pass_info.pClearValues = clear_value.data();
 
   vkCmdBeginRenderPass(cmd_buffer, &rdr_pass_info, VK_SUBPASS_CONTENTS_INLINE);
@@ -1886,7 +1886,7 @@ void VulkanAPI::draw(
   VkCommandBuffer& cmd_buffer,
   Data const * data,
   bool const is_indexed,
-  uint32_t const index,
+  std::uint32_t const index,
   std::uint32_t const instance_count)
 {
   VkBuffer vertex_buffers[] = { data->_vertex_buffer.buffer };
@@ -1898,9 +1898,9 @@ void VulkanAPI::draw(
 
   if (is_indexed) {
     vkCmdBindIndexBuffer(cmd_buffer, data->_indices_buffer.buffer, 0, VK_INDEX_TYPE_UINT32);
-    vkCmdDrawIndexed(cmd_buffer, static_cast<uint32_t>(data->_indices.size()), instance_count, 0, 0, 0);
+    vkCmdDrawIndexed(cmd_buffer, static_cast<std::uint32_t>(data->_indices.size()), instance_count, 0, 0, 0);
   } else {
-    vkCmdDraw(cmd_buffer, static_cast<uint32_t>(data->_vertices.size()), instance_count, 0, index);
+    vkCmdDraw(cmd_buffer, static_cast<std::uint32_t>(data->_vertices.size()), instance_count, 0, index);
   }
 }
 
@@ -1913,7 +1913,7 @@ void VulkanAPI::addPipelineBarriers(
 {
   vkCmdPipelineBarrier(
     cmd_buffer, src_stage_mask, dst_stage_mask, depency_flags, 0, nullptr, 0, nullptr,
-    static_cast<uint32_t>(rdr_barriers.size()), rdr_barriers.data());
+    static_cast<std::uint32_t>(rdr_barriers.size()), rdr_barriers.data());
 }
 
 VkBuffer VulkanAPI::createBuffer(VkDeviceSize const size, VkBufferUsageFlags const usage)
@@ -1970,7 +1970,7 @@ void VulkanAPI::createBuffer(
 }
 
 Buffer VulkanAPI::createIndexBuffer(
-  std::vector<uint32_t> const& indices,
+  std::vector<std::uint32_t> const& indices,
   std::size_t const image_index)
 {
   VkDeviceSize buffer_size = sizeof(indices[0]) * indices.size();
@@ -2397,7 +2397,7 @@ VkImageMemoryBarrier VulkanAPI::setupImageMemoryBarrier(
   VkAccessFlags const dst_access_mask,
   VkImageLayout const old_layout,
   VkImageLayout const new_layout,
-  uint32_t const mip_lvl,
+  std::uint32_t const mip_lvl,
   VkImageAspectFlags const aspect_mask)
 {
   VkImageMemoryBarrier result = { };
@@ -2418,12 +2418,12 @@ VkImageMemoryBarrier VulkanAPI::setupImageMemoryBarrier(
   return result;
 }
 
-uint32_t VulkanAPI::findMemoryType(uint32_t const type_filter, VkMemoryPropertyFlags const properties)
+uint32_t VulkanAPI::findMemoryType(std::uint32_t const type_filter, VkMemoryPropertyFlags const properties)
 {
   VkPhysicalDeviceMemoryProperties mem_properties;
   vkGetPhysicalDeviceMemoryProperties(_physical_device, &mem_properties);
 
-  for (uint32_t i { 0 }; i < mem_properties.memoryTypeCount; i++) {
+  for (std::uint32_t i { 0 }; i < mem_properties.memoryTypeCount; i++) {
       if ((type_filter & (1 << i)) && 
           (mem_properties.memoryTypes[i].propertyFlags & properties) == properties) {
           
@@ -2436,7 +2436,7 @@ uint32_t VulkanAPI::findMemoryType(uint32_t const type_filter, VkMemoryPropertyF
       }
   }
 
-  for (uint32_t i = 0; i < mem_properties.memoryTypeCount; i++) {
+  for (std::uint32_t i = 0; i < mem_properties.memoryTypeCount; i++) {
     if ((type_filter & (1 << i)) && (mem_properties.memoryTypes[i].propertyFlags & properties) == properties) {
       return i;
     }
@@ -2445,9 +2445,9 @@ uint32_t VulkanAPI::findMemoryType(uint32_t const type_filter, VkMemoryPropertyF
 }
 
 void VulkanAPI::createImage(
-  uint32_t const width,
-  uint32_t const height,
-  uint32_t const mip_lvl,
+  std::uint32_t const width,
+  std::uint32_t const height,
+  std::uint32_t const mip_lvl,
   VkSampleCountFlagBits const num_samples,
   VkFormat const format,
   VkImageTiling const tiling,
@@ -2527,7 +2527,7 @@ void VulkanAPI::createDepthMapImage(
     image_info.arrayLayers = 6;
   } else if (array_size > 1) {
     image_info.imageType = VK_IMAGE_TYPE_2D;
-    image_info.arrayLayers = static_cast<uint32_t>(array_size);
+    image_info.arrayLayers = static_cast<std::uint32_t>(array_size);
   }
 
   VkResult result = vkCreateImage(getDevice(), & image_info, nullptr, & image);
@@ -2578,7 +2578,7 @@ VkImageView VulkanAPI::createDepthMapImageView(
     create_info.subresourceRange.layerCount = 6;
   } else if (array_size > 1) {
     create_info.viewType = VK_IMAGE_VIEW_TYPE_2D_ARRAY;
-    create_info.subresourceRange.layerCount = static_cast<uint32_t>(array_size);
+    create_info.subresourceRange.layerCount = static_cast<std::uint32_t>(array_size);
   }
 
   VkResult result{ VK_SUCCESS };
@@ -2645,12 +2645,12 @@ void VulkanAPI::createDepthMapFrameBuffer(
 void VulkanAPI::createTextureImage(
   VkCommandBuffer& cmd_buffer,
   stbi_uc* pixels,
-  uint32_t const tex_width,
-  uint32_t const tex_height,
-  uint32_t const mip_lvl,
+  std::uint32_t const tex_width,
+  std::uint32_t const tex_height,
+  std::uint32_t const mip_lvl,
   VkImage& texture_image,
   VkFormat const format,
-  uint32_t const scale,
+  std::uint32_t const scale,
   std::size_t const)
 {
   VkDeviceSize image_size { tex_width * tex_height * scale };
@@ -2689,8 +2689,8 @@ void VulkanAPI::createTextureImage(
   addPipelineBarriers(cmd_buffer, barrier, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT,
     VK_DEPENDENCY_BY_REGION_BIT);
 
-  copyBufferToImage(cmd_buffer, buffer, texture_image, static_cast<uint32_t>(tex_width),
-    static_cast<uint32_t>(tex_height), mip_lvl);
+  copyBufferToImage(cmd_buffer, buffer, texture_image, static_cast<std::uint32_t>(tex_width),
+    static_cast<std::uint32_t>(tex_height), mip_lvl);
 
   generateMipmaps(cmd_buffer, format, texture_image, tex_width, tex_height, mip_lvl);
 
@@ -2702,10 +2702,10 @@ void VulkanAPI::generateMipmaps(
   VkCommandBuffer& cmd_buffer,
   VkFormat const image_format,
   VkImage& image,
-  uint32_t const tex_width,
-  uint32_t const tex_height,
-  uint32_t const mip_lvl,
-  uint32_t const layer_count) {
+  std::uint32_t const tex_width,
+  std::uint32_t const tex_height,
+  std::uint32_t const mip_lvl,
+  std::uint32_t const layer_count) {
 
   VkFormatProperties format_props;
   vkGetPhysicalDeviceFormatProperties(_physical_device, image_format, & format_props);
@@ -2727,7 +2727,7 @@ void VulkanAPI::generateMipmaps(
   auto mip_width { static_cast<int32_t>(tex_width)};
   auto mip_height{ static_cast<int32_t>(tex_height) };
 
-  for (uint32_t i{ 1 }; i < mip_lvl; i++) {
+  for (std::uint32_t i{ 1 }; i < mip_lvl; i++) {
 
     barrier.subresourceRange.baseMipLevel = i - 1;
     barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
@@ -2782,9 +2782,9 @@ void VulkanAPI::copyBufferToImage(
   VkCommandBuffer& cmd_buffer,
   VkBuffer& buffer,
   VkImage & image,
-  uint32_t const width,
-  uint32_t const height,
-  uint32_t const)
+  std::uint32_t const width,
+  std::uint32_t const height,
+  std::uint32_t const)
 {
   VkBufferImageCopy region{};
   region.bufferOffset = 0;
@@ -2830,7 +2830,7 @@ VkImageView VulkanAPI::createDepthResources(VkCommandBuffer& cmd_buffer)
   return depth_imageview;
 }
 
-VkSampler VulkanAPI::createTextureSampler(uint32_t const mip_lvl)
+VkSampler VulkanAPI::createTextureSampler(std::uint32_t const mip_lvl)
 {
   VkSampler texture_sampler{};
 
@@ -2949,7 +2949,7 @@ VkSampler VulkanAPI::createTextureSampler(uint32_t const mip_lvl)
     VkImageLayout const old_layout,
     VkImageLayout const new_layout,
     VkImageAspectFlags const aspect_flags,
-    uint32_t layer_count)
+    std::uint32_t layer_count)
   {
     LayoutPair key = {old_layout, new_layout};
     auto it = _transition_map.find(key);
@@ -3005,7 +3005,7 @@ VkSampler VulkanAPI::createTextureSampler(uint32_t const mip_lvl)
     {
       //SCOPED_TIMER();
       //std::lock_guard<std::mutex> guard(_mutex_queue_submit);
-      VkResult result = vkQueueSubmit(queue, static_cast<uint32_t>(submit_infos.size()), submit_infos.data(), fence);
+      VkResult result = vkQueueSubmit(queue, static_cast<std::uint32_t>(submit_infos.size()), submit_infos.data(), fence);
 
       if (result != VK_SUCCESS) {
         Logger::error("Error on queue submit: {}", string_VkResult(result));
@@ -3051,8 +3051,8 @@ VkSampler VulkanAPI::createTextureSampler(uint32_t const mip_lvl)
 
     VkFormat const format = (VkFormat) ktx_texture->vkFormat;
 
-    auto const width { static_cast<uint32_t>(ktx_texture->baseWidth) };
-    auto const height { static_cast<uint32_t>(ktx_texture->baseHeight) };
+    auto const width { static_cast<std::uint32_t>(ktx_texture->baseWidth) };
+    auto const height { static_cast<std::uint32_t>(ktx_texture->baseHeight) };
     auto const mip_lvl{ ktx_texture->numLevels };
 
     VkImageType image_type{VK_IMAGE_TYPE_1D};
@@ -3160,7 +3160,7 @@ VkSampler VulkanAPI::createTextureSampler(uint32_t const mip_lvl)
       buffer,
       image,
       VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-      static_cast<uint32_t>(buffer_copy_regions.size()),
+      static_cast<std::uint32_t>(buffer_copy_regions.size()),
       buffer_copy_regions.data());
 
     //generateMipmaps(cmd_buffer, format, image, width, height, mip_lvl);
@@ -3255,7 +3255,7 @@ VkSampler VulkanAPI::createTextureSampler(uint32_t const mip_lvl)
   VkSampler VulkanAPI::createKTXSampler(
     TextureWrapMode const wrap_mode_u,
     TextureWrapMode const wrap_mode_v,
-    uint32_t const,
+    std::uint32_t const,
     bool const compare_enable)
   {
     VkSampler texture_sampler{};
@@ -3302,8 +3302,8 @@ VkSampler VulkanAPI::createTextureSampler(uint32_t const mip_lvl)
   void VulkanAPI::createFontImage(
     VkCommandBuffer& cmd_buffer,
     std::vector<FontCharacter> const& characters,
-    uint32_t const width,
-    uint32_t const height,
+    std::uint32_t const width,
+    std::uint32_t const height,
     VkImage& image,
     std::size_t const image_index)
   {
@@ -3311,14 +3311,14 @@ VkSampler VulkanAPI::createTextureSampler(uint32_t const mip_lvl)
 
     for (auto const& character : characters) {
 
-      uint32_t const glyph_width{ static_cast<uint32_t>(character.size.x) };
-      uint32_t const glyph_height{ static_cast<uint32_t>(character.size.y) };
+      std::uint32_t const glyph_width{ static_cast<std::uint32_t>(character.size.x) };
+      std::uint32_t const glyph_height{ static_cast<std::uint32_t>(character.size.y) };
       auto data_buffer = character.buffer.data();
 
-      for (uint32_t y{ 0 }; y < glyph_height; y++) {
+      for (std::uint32_t y{ 0 }; y < glyph_height; y++) {
 
         std::memcpy(
-          static_cast<char*>(_staging_data_ptr[image_index]) + ((y + static_cast<uint32_t>(character.y_offset)) * width + static_cast<uint32_t>(character.x_offset)),
+          static_cast<char*>(_staging_data_ptr[image_index]) + ((y + static_cast<std::uint32_t>(character.y_offset)) * width + static_cast<std::uint32_t>(character.x_offset)),
           data_buffer + (y * glyph_width),
           glyph_width
         );
@@ -3400,7 +3400,7 @@ VkSampler VulkanAPI::createTextureSampler(uint32_t const mip_lvl)
       staging_buffer,
       image,
       VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-      static_cast<uint32_t>(buffer_copy_regions.size()),
+      static_cast<std::uint32_t>(buffer_copy_regions.size()),
       buffer_copy_regions.data());
 
     VkImageMemoryBarrier final_barrier{};

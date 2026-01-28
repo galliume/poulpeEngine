@@ -1,13 +1,10 @@
-module;
-
-#include <glm/glm.hpp>
-
 export module Engine.Component.Entity;
 
 import std;
 
 import Engine.Core.PlpTypedef;
 import Engine.Core.Logger;
+import Engine.Core.GLM;
 import Engine.Utils.IDHelper;
 
 namespace Poulpe

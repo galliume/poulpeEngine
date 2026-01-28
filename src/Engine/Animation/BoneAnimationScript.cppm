@@ -1,8 +1,3 @@
-module;
-
-#include <glm/glm.hpp>
-#include <glm/gtx/quaternion.hpp>
-
 export module Engine.Animation.BoneAnimationScript;
 
 import std;
@@ -12,6 +7,7 @@ import Engine.Component.Components;
 import Engine.Core.AnimationTypes;
 import Engine.Core.Constants;
 import Engine.Core.Logger;
+import Engine.Core.GLM;
 import Engine.Core.MeshTypes;
 
 namespace Poulpe
@@ -86,7 +82,7 @@ namespace Poulpe
     std::unordered_map<std::size_t, std::unordered_map<std::string, std::vector<std::vector<Rotation>>>> _rotations{};
     std::unordered_map<std::size_t, std::unordered_map<std::string, std::vector<std::vector<Scale>>>> _scales{};
 
-    uint32_t _anim_id{ 0 };
+    std::uint32_t _anim_id{ 0 };
 
     std::vector<glm::mat4> _bone_matrices;
 

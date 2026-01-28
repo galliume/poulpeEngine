@@ -1,13 +1,10 @@
 module;
 
-
 #include <assimp/config.h>
 #include <assimp/scene.h>
 #include <assimp/Importer.hpp>
 #include <assimp/postprocess.h>
 #include <assimp/GltfMaterial.h>
-#include <glm/glm.hpp>
-#include <glm/gtx/quaternion.hpp>
 
 export module Engine.Core.AssimpLoader;
 
@@ -16,6 +13,7 @@ import std;
 import Engine.Core.AnimationTypes;
 import Engine.Core.BoneTypes;
 import Engine.Core.Constants;
+import Engine.Core.GLM;
 import Engine.Core.MaterialTypes;
 import Engine.Core.PlpTypedef;
 import Engine.Core.Vertex;
@@ -40,7 +38,7 @@ namespace Poulpe
   private:
       static void getBoneHierarchy(aiNode* node, std::unordered_set<std::string>& bone_names);
       static std::string const cleanName(std::string const& name, std::string const& prefix);
-      static void addWeightlessBones(aiNode const * node, std::unordered_map<std::string, Bone>& bones_map, uint32_t global_bone_count);
+      static void addWeightlessBones(aiNode const * node, std::unordered_map<std::string, Bone>& bones_map, std::uint32_t global_bone_count);
       static void process(
         std::string const& root_bone,
         aiNode* node,
@@ -51,7 +49,7 @@ namespace Poulpe
         std::string const& texture_prefix,
         bool const flip_Y,
         std::unordered_map<std::string, Bone> & bones_map,
-        uint32_t global_bone_count);
+        std::uint32_t global_bone_count);
     static TextureWrapMode getTextureWrapMode(aiTextureMapMode const wrap_mode);
     static AnimInterpolation getInterpolation(aiAnimInterpolation const assimp_interpolation);
     static aiNode const* FindRootBone(

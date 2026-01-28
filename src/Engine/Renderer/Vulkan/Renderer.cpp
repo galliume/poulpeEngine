@@ -2,9 +2,6 @@ module;
 
 #include <GLFW/glfw3.h>
 
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-
 #include <volk.h>
 
 module Engine.Renderer.VulkanRenderer;
@@ -15,6 +12,7 @@ import std;
 import Engine.Core.Vertex;
 
 import Engine.Core.Logger;
+import Engine.Core.GLM;
 import Engine.Core.MeshTypes;
 
 namespace Poulpe
@@ -156,20 +154,20 @@ namespace Poulpe
     _cmd_pool_entities4 = _vulkan->createCommandPool();
 
     _cmd_buffer_entities = _vulkan->allocateCommandBuffers(_cmd_pool_entities,
-      static_cast<uint32_t>(_imageviews.size()));
+      static_cast<std::uint32_t>(_imageviews.size()));
 
     _cmd_buffer_entities2 = _vulkan->allocateCommandBuffers(_cmd_pool_entities2,
-      static_cast<uint32_t>(_imageviews.size()));
+      static_cast<std::uint32_t>(_imageviews.size()));
 
     _cmd_buffer_entities3 = _vulkan->allocateCommandBuffers(_cmd_pool_entities3,
-      static_cast<uint32_t>(_imageviews.size()));
+      static_cast<std::uint32_t>(_imageviews.size()));
 
     _cmd_buffer_entities4 = _vulkan->allocateCommandBuffers(_cmd_pool_entities4,
-      static_cast<uint32_t>(_imageviews.size()));
+      static_cast<std::uint32_t>(_imageviews.size()));
 
     _cmd_pool_shadowmap = _vulkan->createCommandPool();
     _cmd_buffer_shadowmap = _vulkan->allocateCommandBuffers(_cmd_pool_shadowmap,
-      static_cast<uint32_t>(_imageviews.size()));
+      static_cast<std::uint32_t>(_imageviews.size()));
 
     for (std::size_t i { 0 }; i < buffer_size; ++i) {
       VkImage image{};
@@ -313,7 +311,7 @@ namespace Poulpe
     auto& depthimage = _depth_images[_current_frame];
     auto const load_op = VK_ATTACHMENT_LOAD_OP_CLEAR;
     auto const store_op = VK_ATTACHMENT_STORE_OP_STORE;
-    uint32_t const thread_id {1};
+    std::uint32_t const thread_id {1};
     auto const has_depth_attachment {true};
 
     _vulkan->beginCommandBuffer(cmd_buffer);
@@ -482,7 +480,7 @@ namespace Poulpe
       marker_color = {0.4, 0.2, 0.6};
     }
 
-    uint32_t const layer_count = (shadow_type == SHADOW_TYPE::CSM) ? 4 : 6;
+    std::uint32_t const layer_count = (shadow_type == SHADOW_TYPE::CSM) ? 4 : 6;
 
     _vulkan->beginCommandBuffer(cmd_buffer);
     _vulkan->startMarker(cmd_buffer, marker_name, marker_color.x, marker_color.y, marker_color.z);
@@ -637,7 +635,7 @@ namespace Poulpe
   {
     VkCommandBuffer cmd_buffer;
     //VkImage depth;
-    uint32_t thread_id {0};
+    std::uint32_t thread_id {0};
 
     if (shadow_type == SHADOW_TYPE::CSM) {
       cmd_buffer = _cmd_buffer_shadowmap[_current_frame];
@@ -676,7 +674,7 @@ namespace Poulpe
     auto& cmd_buffer = _cmd_buffer_entities[_current_frame];
     auto& color = _images[_current_frame];
     auto& depthimage = _depth_images[_current_frame];
-    uint32_t const thread_id {2};
+    std::uint32_t const thread_id {2};
     auto const is_attachment {false};
     auto const has_depth_attachment {true};
 
@@ -802,7 +800,7 @@ namespace Poulpe
 
     VkSubmitInfo submit_info{};
     submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-    submit_info.commandBufferCount = static_cast<uint32_t>(cmds_buffer.size());
+    submit_info.commandBufferCount = static_cast<std::uint32_t>(cmds_buffer.size());
     submit_info.pCommandBuffers = cmds_buffer.data();
     submit_info.waitSemaphoreCount = 2;
     submit_info.pWaitSemaphores = graphics_wait_semaphores.data();

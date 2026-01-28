@@ -1,12 +1,12 @@
 module;
 
-#include <glm/glm.hpp>
-
 #include <vulkan/vulkan.h>
 
 export module Engine.Core.Vertex;
 
 import std;
+
+import Engine.Core.GLM;
 
 namespace Poulpe
 {

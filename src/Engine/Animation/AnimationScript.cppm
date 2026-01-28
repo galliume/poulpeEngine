@@ -6,8 +6,6 @@ extern "C" {
   #include <lualib.h>
 }
 
-#include <glm/glm.hpp>
-
 export module Engine.Animation.AnimationScript;
 
 import std;
@@ -17,6 +15,7 @@ import Engine.Component.Components;
 import Engine.Core.AnimationTypes;
 import Engine.Core.Constants;
 import Engine.Core.Logger;
+import Engine.Core.GLM;
 import Engine.Core.MeshTypes;
 
 import Engine.Utils.LuaScript;
@@ -64,7 +63,7 @@ namespace Poulpe
     bool _move_init{ false };
     bool _rotate_init{ false };
     bool _done{false};
-    uint32_t _anim_id{ 0 };
+    std::uint32_t _anim_id{ 0 };
     
     std::vector<std::unique_ptr<AnimationMove>> _moves{};
     std::vector<std::unique_ptr<AnimationMove>> _new_moves{};

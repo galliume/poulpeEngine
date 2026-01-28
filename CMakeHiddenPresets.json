@@ -63,8 +63,8 @@
       "description": "common",
       "cacheVariables": {
         "CMAKE_CXX_STANDARD": {
-            "type": "STRING",
-            "value": "23"
+          "type": "STRING",
+          "value": "26"
         },
         "CMAKE_CXX_STANDARD_REQUIRED": {
           "type": "BOOL",
@@ -114,7 +114,7 @@
         }
       }
     },
-        {
+    {
       "name": "TK_LIBRARY",
       "hidden": true,
       "cacheVariables": {
@@ -164,7 +164,7 @@
         }
       }
     },
-        {
+    {
       "name": "LINUX_TK_LIBRARY",
       "hidden": true,
       "cacheVariables": {

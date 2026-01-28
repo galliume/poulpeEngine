@@ -1,6 +1,10 @@
 module;
-#include <ktx.h>
+
+//@todo find a way to encapsulate this in json.cppm
 #include <nlohmann/json.hpp>
+#include <nlohmann/json_fwd.hpp>
+
+#include <ktx.h>
 
 #include <stb_image.h>
 #include <volk.h>
@@ -11,6 +15,7 @@ import std;
 
 import Engine.Component.Texture;
 
+import Engine.Core.Json;
 import Engine.Core.Logger;
 import Engine.Core.PlpTypedef;
 
@@ -177,8 +182,8 @@ namespace Poulpe
     texture.setImage(texture_image);
     texture.setImageView(texture_imageview);
     texture.setMipLevels(ktx_texture->numLevels);
-    texture.setWidth(static_cast<uint32_t>(ktx_texture->baseWidth));
-    texture.setHeight(static_cast<uint32_t>(ktx_texture->baseHeight));
+    texture.setWidth(static_cast<std::uint32_t>(ktx_texture->baseWidth));
+    texture.setHeight(static_cast<std::uint32_t>(ktx_texture->baseHeight));
     texture.setIsPublic(is_public);
     texture.setPath(path);
 

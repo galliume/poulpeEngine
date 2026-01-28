@@ -35,8 +35,8 @@ namespace Poulpe {
     std::span<Light, std::dynamic_extent> spot_lights{};
     std::span<FontCharacter, std::dynamic_extent> characters{};
     FT_Face face{};
-    uint32_t atlas_width{0};
-    uint32_t atlas_height{0};
+    std::uint32_t atlas_width{0};
+    std::uint32_t atlas_height{0};
     MODE mode {MODE::CREATION};
     Buffer light_buffer{};
   };

@@ -1,11 +1,12 @@
 module;
 #include <miniaudio.h>
-#include <nlohmann/json.hpp>
+
 
 module Engine.Managers.AudioManager;
 
 import std;
 
+import Engine.Core.Json;
 import Engine.Core.Logger;
 
 namespace Poulpe
@@ -28,14 +29,14 @@ namespace Poulpe
     }
   }
 
-  void AudioManager::load(nlohmann::json config)
+  void AudioManager::load(json config)
   {
     for (auto const & sound : config["ambient"].items()) {
       _ambient_sounds.emplace_back(sound.value());
     }
   }
 
-  void AudioManager::startAmbient(uint32_t const index)
+  void AudioManager::startAmbient(std::uint32_t const index)
   {
     try {
       if (State::PLAY == _state) {

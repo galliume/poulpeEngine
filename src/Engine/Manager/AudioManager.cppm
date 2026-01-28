@@ -1,10 +1,11 @@
 module;
 #include <miniaudio.h>
-#include <nlohmann/json.hpp>
 
 export module Engine.Managers.AudioManager;
 
 import std;
+
+import Engine.Core.Json;
 
 namespace Poulpe
 {
@@ -22,12 +23,12 @@ namespace Poulpe
     ~AudioManager();
 
     std::vector<std::string> const getAmbientSound()  { return _ambient_sounds; }
-    uint32_t getAmbientSoundIndex()  { return _ambient_sound_index; }
+    std::uint32_t getAmbientSoundIndex()  { return _ambient_sound_index; }
     std::string getCurrentAmbientSound()  { return _ambient_sounds[_ambient_sound_index]; }
     std::string const getState() ;
 
-    void load(nlohmann::json config);
-    void startAmbient(uint32_t const index = 0);
+    void load(json config);
+    void startAmbient(std::uint32_t const index = 0);
     void stopAmbient();
     void toggleLooping();
 
@@ -38,7 +39,7 @@ namespace Poulpe
     void start(std::string const & sound_path, ::ma_sound & sound);
     void stop(::ma_sound sound);
 
-    uint32_t _ambient_sound_index{ 0 };
+    std::uint32_t _ambient_sound_index{ 0 };
 
     bool _loop = true;
 

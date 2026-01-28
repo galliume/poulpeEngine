@@ -1,7 +1,5 @@
 module;
 
-#include <glm/glm.hpp>
-
 #include <volk.h>
 
 export module Engine.Core.MeshTypes;
@@ -9,6 +7,7 @@ export module Engine.Core.MeshTypes;
 import std;
 
 import Engine.Core.BoneTypes;
+import Engine.Core.GLM;
 import Engine.Core.Vertex;
 import Engine.Core.PlpTypedef;
 
@@ -19,7 +18,7 @@ namespace Poulpe
     void* memory; //@todo mmmh
     std::uint64_t offset;
     std::uint64_t size;
-    uint32_t index{ 0 };
+    std::uint32_t index{ 0 };
   };
 
     //@todo needs huge refactoring
@@ -39,13 +38,13 @@ namespace Poulpe
     std::string _transmission;
     std::vector<Vertex> _vertices;
     std::vector<VertexBones> _vertices_bones;
-    std::vector<uint32_t> _indices;
+    std::vector<std::uint32_t> _indices;
     std::vector<std::vector<UniformBufferObject>> _ubos;
     UniformBufferObject _original_ubo;
-    std::vector<uint32_t> _ubos_offset;
+    std::vector<std::uint32_t> _ubos_offset;
     Buffer _vertex_buffer { nullptr, nullptr, 0, 0 };
     Buffer _indices_buffer { nullptr, nullptr, 0, 0 };
-    uint32_t _texture_index { 0 };
+    std::uint32_t _texture_index { 0 };
     glm::vec3 _origin_pos;
     glm::vec3 _origin_scale;
     glm::quat _origin_rotation;
