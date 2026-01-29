@@ -7,5 +7,3 @@ add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
 add_custom_target(
   CompilShaders ${CMAKE_CURRENT_SOURCE_DIR}/bin/shadersCompilation.sh
   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
-
-message(STATUS "compiler targets OK.")

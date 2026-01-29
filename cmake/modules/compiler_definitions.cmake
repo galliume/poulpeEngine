@@ -19,6 +19,4 @@ function(set_poulpe_definitions target)
   target_compile_definitions(${target} PRIVATE
     $<$<CONFIG:DEBUG>:PLP_DEBUG_BUILD>)
 
-  message(STATUS "compiler definitions OK")
-
 endfunction()
