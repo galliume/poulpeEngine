@@ -6,6 +6,8 @@ set(CMAKE_BUILD_TYPE "${CMAKE_BUILD_TYPE}" CACHE STRING "Build type" FORCE)
 
 include(cmake_checks)
 
+set(CMAKE_EXPERIMENTAL_CXX_IMPORT_STD "d0edc3af-4c50-42ea-a356-e2862fe7a444")
+
 project(PoulpeEngine
   VERSION 0.2.1
   DESCRIPTION "Game Engine with a vulkan renderer"

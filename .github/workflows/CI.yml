@@ -62,7 +62,7 @@ jobs:
 
       - name: Checks
         run: |
-          clang-22 --version
+          clang --version
           gcc --version
           cmake --version
           $CXX --version
@@ -81,6 +81,9 @@ jobs:
           key: ${{ runner.os }}-fetchcontent-${{ hashFiles('main/cmake/modules/fetchDeps.cmake') }}-${{ hashFiles('main/CMakeLists.txt') }}
           restore-keys: |
             ${{ runner.os }}-fetchcontent-
+
+      - name: Set CMake variable for module std
+        run: echo 'CMAKE_EXPERIMENTAL_CXX_MODULE_DYNDEP=ON' >> $GITHUB_ENV
 
       - name: List Presets
         run: cd main && cmake --list-presets
