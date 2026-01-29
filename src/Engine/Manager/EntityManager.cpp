@@ -366,7 +366,7 @@ namespace Poulpe
           if (entity_opts.has_animation) {
             //@todo temp until lua scripting
             for (auto& anim : entity_opts.animation_scripts) {
-              auto animationScript = std::make_unique<AnimationScript>(anim);
+              auto animationScript = std::make_unique<AnimationScript>(root_path + "/" + anim);
               _component_manager->add<AnimationComponent>(entity->getID(), std::move(animationScript));
             }
           }

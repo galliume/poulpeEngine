@@ -36,7 +36,7 @@ namespace Poulpe
       std::function<void(AnimationRotate* anim, Data* data, double delta_time)> update;
     };
 
-    AnimationScript(std::string const & scriptPath);
+    AnimationScript(std::string const & script_path);
     ~AnimationScript() override;
 
     Data* getData();

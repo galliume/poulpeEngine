@@ -49,10 +49,9 @@ namespace Poulpe
     return 0;
   }
 
-  AnimationScript::AnimationScript(std::string const& scriptPath)
+  AnimationScript::AnimationScript(std::string const& script_path)
+  : _script_path(script_path)
   {
-    _script_path = "./" + scriptPath;
-
     if (!std::filesystem::exists(_script_path)) {
       Logger::critical("script file {} does not exits.", _script_path);
       return;
