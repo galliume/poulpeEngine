@@ -7,8 +7,7 @@ function(set_poulpe_compiler_flags target)
     INTERFACE cxx_std_26)
 
   set_target_properties(${target} PROPERTIES
-    CXX_SCAN_FOR_MODULES ON
-    CMAKE_CXX_MODULE_STD ON)
+    CXX_SCAN_FOR_MODULES ON)
 
   set(DEBUG_OPTIONS
     -g
