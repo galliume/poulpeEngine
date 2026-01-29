@@ -9,5 +9,3 @@ if(CCACHE_PROGRAM)
 endif()
 
 find_program(CLANG_TIDY_EXE NAMES "clang-tidy")
-
-message(STATUS "programs OK.")

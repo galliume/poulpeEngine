@@ -1,3 +1,5 @@
+set(FMT_USE_CMAKE_MODULES ON CACHE BOOL "" FORCE)
+
 message(NOTICE "Fetching FMT from https://github.com/fmtlib/fmt ...")
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")

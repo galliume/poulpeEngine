@@ -17,5 +17,3 @@ if(DEFINED ENV{Vulkan_INCLUDE_DIR})
 endif()
 
 find_package(Vulkan REQUIRED)
-
-message(STATUS "packages OK.")

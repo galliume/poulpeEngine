@@ -53,6 +53,4 @@ function(set_poulpe_compiler_flags target)
     -Wno-covered-switch-default
     -Wno-deprecated-declarations)
 
-  message(STATUS "compiler definitions OK.")
-
 endfunction()

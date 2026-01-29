@@ -66,6 +66,21 @@ jobs:
           gcc --version
           cmake --version
           $CXX --version
+          echo "CC is $CC"
+          echo "CXX is $CXX"
+          which $CC
+          which $CXX
+
+      - name: Clean previous build
+        run: rm -rf main/build
+      
+      - name: Cache FetchContent dependencies
+        uses: actions/cache@v4
+        with:
+          path: main/build/_deps
+          key: ${{ runner.os }}-fetchcontent-${{ hashFiles('main/cmake/modules/fetchDeps.cmake') }}-${{ hashFiles('main/CMakeLists.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-fetchcontent-
 
       - name: List Presets
         run: cd main && cmake --list-presets

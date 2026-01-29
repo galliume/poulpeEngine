@@ -23,5 +23,3 @@ foreach(subdir ${ENGINE_SUBDIRS})
 endforeach()
 
 target_include_directories(${PROJECT_NAME} PRIVATE ${PROJECT_BINARY_DIR})
-
-message(STATUS "includes OK.")
