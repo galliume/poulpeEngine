@@ -2324,6 +2324,7 @@ void VulkanAPI::createTransferCmdPool()
 
 void VulkanAPI::startCopyBuffer(std::size_t const image_index)
 {
+  //@todo perf improvement to be done here (~+80fps on outdoors without the fence)
   auto & fence_buffer { _fence_buffer[image_index] };
   vkWaitForFences(_device, 1, &fence_buffer, VK_TRUE, UINT32_MAX);
 
