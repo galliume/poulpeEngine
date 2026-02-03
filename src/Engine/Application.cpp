@@ -8,6 +8,7 @@ import std;
 import Engine.Core.GLFW;
 import Engine.Core.GLM;
 import Engine.Core.Logger;
+import Engine.Core.TclTk;
 
 import Engine.Managers.DbManager;
 import Engine.Managers.FontManager;
@@ -44,6 +45,41 @@ namespace Poulpe
     if (!editor_mode) {
       _render_manager->getWindow()->show();
     }
+
+    auto tk_ui = [&, root_path]() {
+
+      #ifdef __unix__
+        //@todo unix
+      #else
+        HWND glfw_hwnd = glfwGetWin32Window(_render_manager->getWindow()->getGlfwWindow());
+        
+        //@todo meh
+        std::string const hwnd_str { std::format("0x{:x}", reinterpret_cast<std::uintptr_t>(glfw_hwnd)) };
+        Logger::debug("hwnd_str {}", hwnd_str);
+        //Tcl_SetVar2(_tcl_interp, "game_hwnd", nullptr, hwnd_str.c_str(), TCL_GLOBAL_ONLY);
+      #endif
+      
+      _tcl_interp = Tcl_CreateInterp();
+      
+      if (Tcl_Init(_tcl_interp) != TCL_OK) {
+        Logger::error("Could not init TCL : {}", Tcl_GetStringResult(_tcl_interp));
+        return;
+      }
+      if (Tk_Init(_tcl_interp) != TCL_OK) {
+        Logger::error("Could not init TK : {}", Tcl_GetStringResult(_tcl_interp));
+        return;
+      }
+      auto const& tk_scripts_path { root_path + "/src/Engine/GUI/Scripts/main.tcl" };
+      
+      if (Tcl_EvalFile(_tcl_interp, tk_scripts_path.c_str()) != TCL_OK) {
+        Logger::error("Could not init tcl_interp : {}", Tcl_GetStringResult(_tcl_interp));
+        return;
+      }
+      Tk_MainLoop();
+    };
+
+    std::thread tk_thread(tk_ui);
+    tk_thread.detach();
   }
 
   void Application::run() const
@@ -113,7 +149,7 @@ namespace Poulpe
       _render_manager->getRenderer()->getAPI()->getAPIVersion(),
       (release_build ? "Release build" : "Debug build")) };
 
-      glfwSetWindowTitle(_render_manager->getWindow()->getGlfwWindow(), title.c_str());
+    glfwSetWindowTitle(_render_manager->getWindow()->getGlfwWindow(), title.c_str());
 
     while (!glfwWindowShouldClose(_render_manager->getWindow()->getGlfwWindow())) {
 

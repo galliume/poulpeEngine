@@ -86,7 +86,7 @@ float attenuation(float min, float max, float x)
 }
 
 void main()
-{  
+{
   Light sun_light = lightData.lights[0];
 
   float u = gl_TessCoord.x;
