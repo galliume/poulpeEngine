@@ -308,7 +308,6 @@ namespace Poulpe
       for (auto& future : async_texts_render) {
         future.wait();
       }
-      _renderer->getAPI()->endCopyBuffer(_renderer->getCurrentFrameIndex());
 
       _renderer->start();
       _renderer->startShadowMap(SHADOW_TYPE::CSM);
@@ -350,6 +349,7 @@ namespace Poulpe
       std::ranges::for_each(_entity_manager->getTexts(), [&](auto const& text_entity) {
         drawEntity(text_entity->getID(), camera_view_matrix, true);
       });
+      _renderer->getAPI()->endCopyBuffer(_renderer->getCurrentFrameIndex());
 
       _renderer->endRender();
       _renderer->submit();
@@ -532,17 +532,12 @@ namespace Poulpe
     std::latch count_down{ 3 };
 
     std::jthread textures(std::bind(_texture_manager->load(_renderer.get()), std::ref(count_down)));
-    textures.detach();
     std::jthread skybox(std::bind(_texture_manager->loadSkybox(sb, _renderer.get()), std::ref(count_down)));
-    skybox.detach();
     std::jthread shaders(std::bind(_shader_manager->load(config_manager->shaderConfig()), std::ref(count_down)));
-    shaders.detach();
     count_down.wait();
 
     std::jthread entities(_entity_manager->load(lvl_data));
-    entities.detach();
     setIsLoaded();
-
   }
 
   void RenderManager::prepareSkybox()

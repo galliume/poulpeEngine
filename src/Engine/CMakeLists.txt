@@ -11,7 +11,6 @@ target_sources(PoulpeEngineLib
 
 target_include_directories(PoulpeEngineLib PRIVATE ${CMAKE_BINARY_DIR})
 
-
 target_link_libraries(
   PoulpeEngineLib
 
@@ -21,7 +20,8 @@ target_link_libraries(
     EngineCommon
 
   PUBLIC
-    tcl)
+    tcl
+    tk)
 
 set_poulpe_definitions(PoulpeEngineLib)
 set_poulpe_links(PoulpeEngineLib)

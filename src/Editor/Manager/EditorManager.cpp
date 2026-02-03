@@ -91,6 +91,7 @@ namespace Poulpe {
       Logger::error("Could not init TK : {}", Tcl_GetStringResult(_tcl_interp));
       return;
     }
+    //@todo fix root app path
     if (Tcl_EvalFile(_tcl_interp, "./src/Editor/Scripts/main.tcl") != TCL_OK) {
       Logger::error("Could not init tcl_interp : {}", Tcl_GetStringResult(_tcl_interp));
       return;
