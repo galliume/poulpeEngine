@@ -52,41 +52,28 @@ namespace Poulpe
         _bone_matrices.resize(_data->_bones.size());
       }
 
-      auto & elapsed_time = _elapsed_time[_data->_id];
-
+      auto & elapsed_time { _elapsed_time[_data->_id] };
       elapsed_time = std::fmod(elapsed_time + delta_time * 1000.0, duration);
+
       auto const cache_key { static_cast<int>(std::trunc(elapsed_time)) };
-      auto const& transform_cache { _transform_cache.find(_data->_id) };
+      auto & transform_cache { _transform_cache[_data->_id] };
+      auto & vertex_cache { transform_cache[cache_key] };
 
-      if (transform_cache != _transform_cache.end()) {
-        auto const& cache { transform_cache->second.find(cache_key) };
-
-        if (cache != transform_cache->second.end() && !cache->second.empty()) {
-          for (std::size_t i { 0 }; i < _data->_vertices.size(); i++) {
-            _data->_vertices[i].pos = cache->second[i];
-          }
+      if (!vertex_cache.empty()) {
+        //@todo improve copy... vertices should be more a SoA DD oriented instead of AoS <Vertex>
+        for (std::size_t i { 0 }; i < _data->_vertices.size(); i++) {
+          _data->_vertices[i].pos = vertex_cache[i];
         }
       } else {
-        //if (_transform_cache[cache_key].empty()) {
-          //_transform_cache[cache_key].resize(_data->_vertices.size());
-        //}
-        auto const& root_bone = _data->_bones[_data->_root_bone_name];
+        auto const& root_bone { _data->_bones[_data->_root_bone_name] };
         updateBoneTransforms(anim, root_bone.name, glm::mat4(1.0f), duration, elapsed_time);
-
-        //auto & vertex_cache { _transform_cache[_data->_id][cache_key] };
 
         for (std::size_t v {0}; v < _data->_vertices.size(); v++) {
           auto &vertex { _data->_vertices.at(v) };
           auto &vertex_bones { _data->_vertices_bones.at(v) };
-          // float const total_weight {
-          //   vertex.bone_weights[0]
-          //   + vertex.bone_weights[1]
-          //   + vertex.bone_weights[2]
-          //   + vertex.bone_weights[3] };
 
-          if (vertex_bones.total_weight > 0.f) {
-            glm::vec4 result = glm::vec4(0.0f);
-            for (std::size_t i{ 0 }; i < 4; ++i) {
+            glm::vec4 result { glm::vec4(0.0f) };
+            for (std::size_t i { 0 }; i < 4; ++i) {
               auto const bone_id { static_cast<std::size_t>(vertex_bones.bone_ids[i]) };
               auto const w { vertex_bones.bone_weights[i] };
               if (w > 0.f) {
@@ -94,8 +81,7 @@ namespace Poulpe
               }
             }
             vertex.pos = result;
-            //vertex_cache.emplace_back(result);
-          }
+            vertex_cache.emplace_back(result);
         }
       }
 

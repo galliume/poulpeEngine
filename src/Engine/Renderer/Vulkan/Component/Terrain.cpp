@@ -42,18 +42,18 @@ namespace Poulpe
 
     Texture const& tex { component_rendering_info.textures->at(component_rendering_info.terrain_name) };
 
-    std::vector<Vertex> vertices;
-    std::uint32_t const width{ static_cast<std::uint32_t>(tex.getWidth()) };
-    std::uint32_t const height{ static_cast<std::uint32_t>(tex.getHeight())};
-    std::uint32_t const rez{ 20 };
-    const float fRez = static_cast<float>(rez);
-    const glm::vec4 zeroVec4{0.0f, 0.0f, 0.0f, 0.0f};
-    const glm::vec4 defaultNormal{1.0f, 1.0f, 0.0f, 0.0f};
+    std::vector<Vertex> vertices {};
+    std::int32_t const width { static_cast<std::int32_t>(tex.getWidth()) };
+    std::int32_t const height { static_cast<std::int32_t>(tex.getHeight()) };
+    std::int32_t const rez { 20 };
+    float const fRez { static_cast<float>(rez) };
+    glm::vec4 const zeroVec4 { 0.0f, 0.0f, 0.0f, 0.0f };
+    glm::vec4 const defaultNormal { 1.0f, 1.0f, 0.0f, 0.0f };
 
-    for(std::uint32_t i = 0; i < rez - 1; i++) {
-      for(std::uint32_t j = 0; j < rez - 1; j++) {
+    for(std::int32_t i { 0 }; i < rez - 1; i++) {
+      for(std::int32_t j { 0 }; j < rez - 1; j++) {
 
-        float const y{ 0.0f };
+        float const y { 0.0f };
 
         // Vertex v1
         Vertex v{
