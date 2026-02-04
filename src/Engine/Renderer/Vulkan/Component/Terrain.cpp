@@ -136,7 +136,7 @@ namespace Poulpe
     Renderer *const renderer,
     ComponentRenderingInfo const& component_rendering_info)
   {
-    auto const& mesh = component_rendering_info.mesh;
+    auto const& mesh { component_rendering_info.mesh };
     auto height_map { component_rendering_info.textures->at(component_rendering_info.terrain_name)};
 
     height_map.setSampler(renderer->getAPI()->createKTXSampler(
@@ -149,7 +149,7 @@ namespace Poulpe
     }
 
     //@todo fix this ugly fix. Needs a real asset unique ID
-    Texture ground { component_rendering_info.textures->at(PLP_GROUND)};
+    Texture ground { component_rendering_info.textures->at(PLP_GROUND) };
 
     ground.setSampler(renderer->getAPI()->createKTXSampler(
       TextureWrapMode::WRAP,
@@ -160,7 +160,7 @@ namespace Poulpe
       ground = component_rendering_info.textures->at(PLP_EMPTY);
     }
 
-    Texture grass { component_rendering_info.textures->at(PLP_GRASS)};
+    Texture grass { component_rendering_info.textures->at(PLP_GRASS) };
 
     grass.setSampler(renderer->getAPI()->createKTXSampler(
       TextureWrapMode::WRAP,
@@ -171,7 +171,7 @@ namespace Poulpe
       grass = component_rendering_info.textures->at(PLP_EMPTY);
     }
 
-    Texture snow { component_rendering_info.textures->at(PLP_SNOW)};
+    Texture snow { component_rendering_info.textures->at(PLP_SNOW) };
 
     snow.setSampler(renderer->getAPI()->createKTXSampler(
       TextureWrapMode::WRAP,
@@ -182,7 +182,7 @@ namespace Poulpe
       snow = component_rendering_info.textures->at(PLP_EMPTY);
     }
 
-    Texture sand { component_rendering_info.textures->at(PLP_SAND)};
+    Texture sand { component_rendering_info.textures->at(PLP_SAND) };
 
     sand.setSampler(renderer->getAPI()->createKTXSampler(
       TextureWrapMode::WRAP,
@@ -193,7 +193,7 @@ namespace Poulpe
       sand = component_rendering_info.textures->at(PLP_EMPTY);
     }
 
-    Texture low_noise { component_rendering_info.textures->at(PLP_LOW_NOISE)};
+    Texture low_noise { component_rendering_info.textures->at(PLP_LOW_NOISE) };
 
     low_noise.setSampler(renderer->getAPI()->createKTXSampler(
       TextureWrapMode::WRAP,
@@ -204,7 +204,7 @@ namespace Poulpe
       low_noise = component_rendering_info.textures->at(PLP_EMPTY);
     }
 
-    Texture hi_noise { component_rendering_info.textures->at(PLP_HI_NOISE)};
+    Texture hi_noise { component_rendering_info.textures->at(PLP_HI_NOISE) };
 
     hi_noise.setSampler(renderer->getAPI()->createKTXSampler(
       TextureWrapMode::WRAP,
@@ -239,10 +239,10 @@ namespace Poulpe
     std::vector<VkDescriptorImageInfo> depth_map_image_info{};
     depth_map_image_info.emplace_back(renderer->getDepthMapSamplers(), renderer->getDepthMapImageViews(), VK_IMAGE_LAYOUT_GENERAL);
 
-    auto const pipeline = renderer->getPipeline(mesh->getShaderName());
-    VkDescriptorSet descset = renderer->getAPI()->createDescriptorSets(pipeline->desc_pool, { pipeline->descset_layout }, 1);
+    auto const pipeline { renderer->getPipeline(mesh->getShaderName()) };
+    VkDescriptorSet descset { renderer->getAPI()->createDescriptorSets(pipeline->desc_pool, { pipeline->descset_layout }, 1) };
 
-    auto light_buffer {component_rendering_info.light_buffer};
+    auto& light_buffer { component_rendering_info.light_buffer };
 
     //renderer->getAPI()->updateDescriptorSets(*mesh->getUniformBuffers(), descset, image_infos);
     std::array<VkWriteDescriptorSet, 6> desc_writes{};

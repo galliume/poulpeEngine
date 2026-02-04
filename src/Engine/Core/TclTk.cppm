@@ -16,6 +16,16 @@ extern "C" {
   inline char* PLP_Tcl_GetStringResult(Tcl_Interp *interp) {
     return Tcl_GetStringResult(interp);
   }
+
+  inline const char* PLP_Tcl_SetVar(
+    Tcl_Interp *interp,
+    const char *part1,
+    const char *part2,
+    const char *newValue,
+    int flags)
+  {
+    return Tcl_SetVar2(interp, part1, part2, newValue, flags);
+  }
 }
 
 export module Engine.Core.TclTk;
@@ -29,6 +39,7 @@ export module Engine.Core.TclTk;
 #undef TCL_VOLATILE
 #undef TCL_DYNAMIC
 #undef TCL_EVAL_DIRECT
+#undef TCL_GLOBAL_ONLY
 
 export
 {
@@ -60,6 +71,7 @@ export
   using ::Tcl_EvalObjEx;
   using ::Tcl_IncrRefCount;
   using ::Tcl_DecrRefCount;
+  using ::Tcl_SetVar2;
 }
 
 #undef Tcl_SetResult
@@ -78,6 +90,8 @@ export inline char* Tcl_GetStringResult(Tcl_Interp *interp) {
   return PLP_Tcl_GetStringResult(interp);
 }
 
+
+
 export {
 
   inline constexpr int TCL_OK = 0;
@@ -86,6 +100,7 @@ export {
   inline constexpr int TCL_BREAK = 3;
   inline constexpr int TCL_CONTINUE = 4;
   inline constexpr int TCL_EVAL_DIRECT = 0x040000;
+  inline constexpr int TCL_GLOBAL_ONLY = 1;
 
   inline Tcl_FreeProc* const TCL_STATIC = nullptr;
   inline Tcl_FreeProc* const TCL_VOLATILE = reinterpret_cast<Tcl_FreeProc*>(-1);

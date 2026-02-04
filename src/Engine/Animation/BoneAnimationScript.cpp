@@ -55,16 +55,16 @@ namespace Poulpe
       auto & elapsed_time { _elapsed_time[_data->_id] };
       elapsed_time = std::fmod(elapsed_time + delta_time * 1000.0, duration);
 
-      auto const cache_key { static_cast<int>(std::trunc(elapsed_time)) };
-      auto & transform_cache { _transform_cache[_data->_id] };
-      auto & vertex_cache { transform_cache[cache_key] };
+      //@todo improve copy... vertices should be more a SoA DD oriented instead of AoS <Vertex>
+      // auto const cache_key { static_cast<int>(std::trunc(elapsed_time)) };
+      // auto & transform_cache { _transform_cache[_data->_id] };
+      // auto & vertex_cache { transform_cache[cache_key] };
 
-      if (!vertex_cache.empty()) {
-        //@todo improve copy... vertices should be more a SoA DD oriented instead of AoS <Vertex>
-        for (std::size_t i { 0 }; i < _data->_vertices.size(); i++) {
-          _data->_vertices[i].pos = vertex_cache[i];
-        }
-      } else {
+      // if (!vertex_cache.empty()) {
+      //   for (std::size_t i { 0 }; i < _data->_vertices.size(); i++) {
+      //     _data->_vertices[i].pos = vertex_cache[i];
+      //   }
+      // } else {
         auto const& root_bone { _data->_bones[_data->_root_bone_name] };
         updateBoneTransforms(anim, root_bone.name, glm::mat4(1.0f), duration, elapsed_time);
 
@@ -81,9 +81,9 @@ namespace Poulpe
               }
             }
             vertex.pos = result;
-            vertex_cache.emplace_back(result);
+            //vertex_cache.emplace_back(result);
         }
-      }
+      //}
 
       if (!animation_info.looping && duration < elapsed_time + 10) {
         _done = true;
