@@ -27,7 +27,7 @@ namespace Poulpe
 
     auto* window = new Window();
     window->init("PoulpeEngine",
-      root_path + "/mpoulpe.png",
+      root_path + "/vampyropoda.jpg",
       appConfig["width"].get<std::uint16_t>(),
       appConfig["height"].get<std::uint16_t>(),
       editor_mode);
@@ -108,7 +108,7 @@ namespace Poulpe
     release_build = false;
   #endif
 
-    std::string const title { std::format("PoulpeEngine v{}.{} Vulkan version: {} {}",
+    std::string const title { std::format("PoulpeEngine v{}.{} Vulkan version: {} {} by Vampyropoda-Studio",
       PoulpeEngine_VERSION_MAJOR, PoulpeEngine_VERSION_MINOR,
       _render_manager->getRenderer()->getAPI()->getAPIVersion(),
       (release_build ? "Release build" : "Debug build")) };

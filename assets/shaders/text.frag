@@ -15,7 +15,7 @@ void main()
   vec4 base_color = vec4(in_color, 1.0);
   float dist_alpha_mask = texture(tex_sampler[0], in_tex_coords).r;
 
-  vec4 outline_color = vec4(0.0, 0.0, 0.0, 1.0);
+  vec4 outline_color = vec4(0.1, 0.1, 0.2, 1.0);
   float outline_min_value0 = 0.5;
   float outline_min_value1 = 0.5;
   float outline_max_value0 = 0.55;
@@ -47,7 +47,7 @@ void main()
     float outer_glow_max_dvalue = 0.5;
 
     if (dist_alpha_mask >= outer_glow_min_dvalue && dist_alpha_mask <= outer_glow_max_dvalue) {
-      vec4 outer_glow_color = vec4(1.0, 1.0, 0.0, 0.5)
+      vec4 outer_glow_color = vec4(1.0, 0.0, 0.0, 0.5)
            * smoothstep(outer_glow_min_dvalue, outer_glow_max_dvalue, dist_alpha_mask);
       base_color = mix(outer_glow_color, base_color, dist_alpha_mask);
     }

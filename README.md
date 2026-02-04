@@ -1,6 +1,6 @@
-# 🐙 Poulpe Engine: A Modern C++23 Vulkan Game Engine
+# 🐙 Poulpe Engine: A Modern C++26 Vulkan Game Engine
 
-A continuously evolving, cross-platform game engine built from the ground up using **C++23** and powered by the **Vulkan** graphics API. This project is a never-ending educational exercise, covering various advanced topics such as graphics pipeline development, modern C++ patterns, low-level mathematics, and robust build systems.
+A continuously evolving, cross-platform game engine built from the ground up using **C++26** and powered by the **Vulkan** graphics API. This project is a never-ending educational exercise, covering various advanced topics such as graphics pipeline development, modern C++ patterns, low-level mathematics, and robust build systems.
 
 ## ✨ Project Status & Highlights
 
@@ -10,7 +10,7 @@ A continuously evolving, cross-platform game engine built from the ground up usi
 
 ### Key Features
 
-* **Modern C++23:** Leveraging the latest C++ standard for clean, efficient, and expressive code.
+* **Modern C++26:** Leveraging the latest C++ standard for clean, efficient, and expressive code.
 * **Vulkan Renderer:** Utilizing the high-performance, explicit graphics API for unparalleled control over the GPU.
 * **Advanced Rendering:** Includes support for modern features like **glTF 2.0 asset loading** and an extensible rendering pipeline.
 * **Unified Image Layouts:** Implements the `VK_KHR_UNIFIED_IMAGE_LAYOUTS_EXTENSION_NAME` for streamlined texture and image management.
@@ -18,9 +18,9 @@ A continuously evolving, cross-platform game engine built from the ground up usi
 
 ### Media & Development
 
-* **Development Blog:** Follow the journey and technical deep-dives on [Mr Poulpe blog](https://mrpoulpe.substack.com/).
+* **Development Blog:** Follow the journey and technical deep-dives on [Vampyropoda-Studio](https://vampyropoda-studio.com/).
 * **Project Kanban:** See what's next and the current development state on the [Project Board](https://github.com/users/galliume/projects/4/views/1).
-* **Video Showcase:** Watch the engine in action on [YouTube](https://www.youtube.com/@galliume8395/videos).
+* **Video Showcase:** Watch the engine in action on [YouTube](https://www.youtube.com/@vampyropoda-studio).
 
 ### Screenshots
 

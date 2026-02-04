@@ -156,9 +156,9 @@ namespace Poulpe
     FontManager::Text text {
       .id = 0,
       .name = "_plp_title",
-      .text = "Poulpe Engine ™",
+      .text = "Vampyropoda-Studio ™",
       .position = glm::vec3(0.0f, 100.0f, 0.0f),
-      .color = glm::vec3(1.0f, 0.2f, 0.6f),
+      .color = glm::vec3(0.0f, 0.95, 1.f),
       .scale = 0.2f,
       .flat = false
     };
