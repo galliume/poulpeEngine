@@ -540,7 +540,7 @@ void main()
   vec3 csm_coords = var.cascade_coord.xyz / var.cascade_coord.w;
   float csm_shadow = CalculateInfiniteShadow(csm_coords, var.blend);
 
-  vec3 C_sun = (kD * (C_diffuse.rgb / PI) + specular) * sun_light.color.rgb * csm_shadow;
+  vec3 C_sun = (kD * (C_diffuse.rgb / PI) + specular) * sun_light.color.rgb * csm_shadow * 0.01;
 
   vec3 kS_amb = FresnelSchlickRoughness(max(dot(normal, V), 0.0), F0, roughness);
   vec3 kD_amb = (1.0 - kS_amb) * (1.0 - metallic);
@@ -557,7 +557,7 @@ void main()
     //irradiance = srgb_to_linear(irradiance);
   }
   
-  vec3 C_ambient = ((kD_amb * (C_diffuse.rgb / PI) * diff_irradiance) + (kS_amb * spec_irradiance)) * ao;
+  vec3 C_ambient = ((kD_amb * (C_diffuse.rgb / PI) * diff_irradiance) + (kS_amb * spec_irradiance)) * ao * 0.01;
 
   for (int i = 1; i < NR_POINT_LIGHTS; ++i) {
 

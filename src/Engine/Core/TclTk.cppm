@@ -40,6 +40,7 @@ export module Engine.Core.TclTk;
 #undef TCL_DYNAMIC
 #undef TCL_EVAL_DIRECT
 #undef TCL_GLOBAL_ONLY
+#undef TCL_DONT_WAIT
 
 export
 {
@@ -72,6 +73,7 @@ export
   using ::Tcl_IncrRefCount;
   using ::Tcl_DecrRefCount;
   using ::Tcl_SetVar2;
+  using ::Tcl_DoOneEvent;
 }
 
 #undef Tcl_SetResult
@@ -101,6 +103,7 @@ export {
   inline constexpr int TCL_CONTINUE = 4;
   inline constexpr int TCL_EVAL_DIRECT = 0x040000;
   inline constexpr int TCL_GLOBAL_ONLY = 1;
+  inline constexpr int TCL_DONT_WAIT = (1<<1);
 
   inline Tcl_FreeProc* const TCL_STATIC = nullptr;
   inline Tcl_FreeProc* const TCL_VOLATILE = reinterpret_cast<Tcl_FreeProc*>(-1);

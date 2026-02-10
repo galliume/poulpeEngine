@@ -18,7 +18,7 @@ namespace Poulpe {
     int,
     Tcl_Obj *const [])
   {
-    //auto * render_manager = static_cast<RenderManager*>(clientData);
+    //auto * render_manager = static_cast<RenderManager*>(client_data);
     auto const * const config_manager { ConfigManagerLocator::get() };
     auto const sounds { config_manager->soundConfig()["ambient"] };
 
@@ -39,12 +39,12 @@ namespace Poulpe {
   }
 
   static int plp_play_sound(
-    ClientData clientData,
+    ClientData client_data,
     Tcl_Interp* interp,
     int,
     Tcl_Obj *const objv[])
   {
-    auto * const render_manager { static_cast<RenderManager*>(clientData) };
+    auto * const render_manager { static_cast<RenderManager*>(client_data) };
     auto * const audio_manager { render_manager->getAudioManager() };
     //auto * const config_manager { ConfigManagerLocator::get() };
 

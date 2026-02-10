@@ -193,6 +193,8 @@ export
   using ::glfwSetKeyCallback;
   using ::glfwSetCursorPosCallback;
   using ::glfwSetMouseButtonCallback;
+  using ::glfwGetWindowPos;
+  using ::glfwSetWindowPosCallback;
 
   using ::glfwVulkanSupported;
   using ::glfwGetRequiredInstanceExtensions;
