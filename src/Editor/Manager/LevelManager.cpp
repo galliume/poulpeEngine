@@ -23,12 +23,12 @@ import Engine.Renderer.RendererComponentTypes;
 
 namespace Poulpe {
   static int plp_update_skybox(
-    ClientData clientData,
+    ClientData client_data,
     Tcl_Interp*,
     int,
     Tcl_Obj *const [])
   {
-    auto * render_manager = static_cast<RenderManager*>(clientData);
+    auto * render_manager = static_cast<RenderManager*>(client_data);
     auto * texture_manager = render_manager->getTextureManager();
     auto * light_manager = render_manager->getLightManager();
     auto * font_manager = render_manager->getFontManager();

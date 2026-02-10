@@ -9,7 +9,7 @@ namespace eval Explorer {
 
   tk::listbox .c.ambient.ambient_sounds -height 10 -width 1280
   tk::listbox .c.music.musics -height 10 -width 1280
-  image create photo img -file "./assets/texture/mpoulpe.png" -height 680
+  image create photo img -file "./assets/texture/vampyropoda.jpg" -height 680
   label .c.texture.textures -image img
 
   grid .c.ambient.ambient_sounds -column 0 -row 0 -sticky news -padx $::grid_padx -pady $::grid_pady

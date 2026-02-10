@@ -15,6 +15,18 @@ import Engine.Managers.FontManager;
 
 namespace Poulpe
 {
+  static int plp_quit_game (
+    ClientData client_data,
+    Tcl_Interp*,
+    int,
+    Tcl_Obj *const [])
+  {
+    auto * const window { static_cast<Window*>(client_data) };
+    window->quit();
+
+    return TCL_OK;
+  }
+
   void Application::init(bool const editor_mode)
   {
     _start_run = std::chrono::steady_clock::now();
@@ -48,19 +60,8 @@ namespace Poulpe
 
     auto tk_ui = [&, root_path]() {
 
-      #ifdef __unix__
-        //@todo unix
-      #else
-        HWND glfw_hwnd = glfwGetWin32Window(_render_manager->getWindow()->getGlfwWindow());
-        
-        //@todo meh
-        std::string const hwnd_str { std::format("0x{:x}", reinterpret_cast<std::uintptr_t>(glfw_hwnd)) };
-        Logger::debug("hwnd_str {}", hwnd_str);
-        //Tcl_SetVar2(_tcl_interp, "game_hwnd", nullptr, hwnd_str.c_str(), TCL_GLOBAL_ONLY);
-      #endif
-      
       _tcl_interp = Tcl_CreateInterp();
-      
+
       if (Tcl_Init(_tcl_interp) != TCL_OK) {
         Logger::error("Could not init TCL : {}", Tcl_GetStringResult(_tcl_interp));
         return;
@@ -69,6 +70,34 @@ namespace Poulpe
         Logger::error("Could not init TK : {}", Tcl_GetStringResult(_tcl_interp));
         return;
       }
+
+      Tcl_CreateObjCommand(
+        _tcl_interp,
+        "plp_quit_game",
+        plp_quit_game,
+        const_cast<Window*>(_render_manager->getWindow()),
+        nullptr);
+
+      int x, y;
+      glfwGetWindowPos(_render_manager->getWindow()->getGlfwWindow(), &x, &y);
+
+      glfwSetWindowUserPointer(_render_manager->getWindow()->getGlfwWindow(), this);
+
+      glfwSetWindowPosCallback(_render_manager->getWindow()->getGlfwWindow(),
+        [](GLFWwindow* glfw_window, int xpos, int ypos) {
+
+        auto* self { static_cast<Application*>(glfwGetWindowUserPointer(glfw_window)) };
+
+        std::string const cmd { std::format("update_ui_pos {} {}", std::to_string(xpos), std::to_string(ypos)) };
+
+        if (Tcl_Eval(self->_tcl_interp, cmd.c_str()) != TCL_OK) {
+          std::cout << std::format("Could not update ui pos : {} \n", Tcl_GetStringResult(self->_tcl_interp));
+        }
+      });
+
+      Tcl_SetVar2(_tcl_interp, "game_menu_x", nullptr, std::to_string(x).c_str(), TCL_GLOBAL_ONLY);
+      Tcl_SetVar2(_tcl_interp, "game_menu_y", nullptr, std::to_string(y).c_str(), TCL_GLOBAL_ONLY);
+
       auto const& tk_scripts_path { root_path + "/src/Engine/GUI/Scripts/main.tcl" };
       
       if (Tcl_EvalFile(_tcl_interp, tk_scripts_path.c_str()) != TCL_OK) {
@@ -85,11 +114,6 @@ namespace Poulpe
   void Application::run() const
   {
     using namespace std::chrono;
-
-    double const loaded_time{ duration<double>(
-      steady_clock::now() - _start_run).count()};
-
-    Logger::trace("Started in {} seconds", loaded_time);
 
     //duration<double> const title_rate{1.0};
     //duration<double> title_update{ title_rate};
@@ -144,14 +168,19 @@ namespace Poulpe
     release_build = false;
   #endif
 
-    std::string const title { std::format("PoulpeEngine v{}.{} Vulkan version: {} {} by Vampyropoda-Studio",
+    std::string const title { std::format("PoulpeEngine v{}.{} Vulkan version: {} {}",
       PoulpeEngine_VERSION_MAJOR, PoulpeEngine_VERSION_MINOR,
       _render_manager->getRenderer()->getAPI()->getAPIVersion(),
       (release_build ? "Release build" : "Debug build")) };
 
     glfwSetWindowTitle(_render_manager->getWindow()->getGlfwWindow(), title.c_str());
 
+    double const loaded_time { duration<double>(steady_clock::now() - _start_run).count() };
+    Logger::trace("Started in {} seconds", loaded_time);
+
     while (!glfwWindowShouldClose(_render_manager->getWindow()->getGlfwWindow())) {
+
+      while (Tcl_DoOneEvent(TCL_DONT_WAIT)) {}
 
       glfwPollEvents();
 

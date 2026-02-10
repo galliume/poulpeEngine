@@ -40,7 +40,7 @@ namespace Poulpe {
 
   //@todo fix unused when linux is implemented  
   static int plp_get_scene(
-    [[maybe_unused]]ClientData clientData,
+    [[maybe_unused]]ClientData client_data,
     [[maybe_unused]]Tcl_Interp* interp,
     int,
     [[maybe_unused]]Tcl_Obj *const objv[])
@@ -56,8 +56,8 @@ namespace Poulpe {
     // struct wl_surface* child = wl_compositor_create_surface(compositor);
     //struct wl_subsurface* subsurface = wl_subcompositor_get_subsurface(subcompositor, child, parent);
     #else
-    auto * render_manager = static_cast<RenderManager*>(clientData);
-    HWND glfw_hwnd = glfwGetWin32Window(render_manager->getWindow()->getGlfwWindow());
+    auto * const render_manager { static_cast<RenderManager*>(client_data) };
+    HWND glfw_hwnd { glfwGetWin32Window(render_manager->getWindow()->getGlfwWindow()) };
 
     HWND tk_hwnd;
     Tcl_GetIntFromObj(interp, objv[1], (int*)&tk_hwnd);
