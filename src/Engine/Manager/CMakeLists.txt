@@ -8,11 +8,13 @@ target_sources(EngineManagers
         AudioManager.cppm
         ComponentManager.cppm
         ConfigManager.cppm
+        ConfigManagerLocator.cppm
         DbManager.cppm
         DestroyManager.cppm
         EntityManager.cppm
         FontManager.cppm
         InputManager.cppm
+        InputManagerLocator.cppm
         LightManager.cppm
         NetworkManager.cppm
         PlayerManager.cppm
@@ -20,18 +22,20 @@ target_sources(EngineManagers
         ShaderManager.cppm
         SystemManager.cppm
         TextureManager.cppm
-        ConfigManagerLocator.cppm
-        InputManagerLocator.cppm
+        UIManager.cppm
 
   PRIVATE
     APIManager.cpp
     AudioManager.cpp
     ComponentManager.cpp
+    ConfigManager.cpp
+    ConfigManagerLocator.cpp
     DbManager.cpp
     DestroyManager.cpp
     EntityManager.cpp
     FontManager.cpp
     InputManager.cpp
+    InputManagerLocator.cpp
     LightManager.cpp
     NetworkManager.cpp
     PlayerManager.cpp
@@ -39,9 +43,7 @@ target_sources(EngineManagers
     ShaderManager.cpp
     SystemManager.cpp
     TextureManager.cpp
-    ConfigManager.cpp
-    ConfigManagerLocator.cpp
-    InputManagerLocator.cpp)
+    UIManager.cpp)
 
 target_link_libraries(
   EngineManagers

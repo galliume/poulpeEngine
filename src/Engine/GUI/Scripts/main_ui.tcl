@@ -10,6 +10,9 @@ namespace eval MainUI {
   grid [ttk::button .c.level.g.quit_button -text "Quit game" -command MainUI::quit_game] -column 0 -row 1 -sticky w
 
   proc quit_game {} {
-    plp_quit_game
+    
+    if {[tk_messageBox -type yesno -icon warning -title "Leave ?" -message "Leave ?"] eq "yes"} {
+      plp_quit_game
+    }
   }
 }
