@@ -87,11 +87,21 @@ namespace Poulpe
       glm::mat4 const& camera_view_matrix,
       bool const has_alpha_blend = false);
 
-      ComponentRenderingInfo& getComponentRenderingInfo(Mesh * mesh);
-      void updateComponentRenderingInfo();
+    ComponentRenderingInfo& getComponentRenderingInfo(Mesh * mesh);
+    void updateComponentRenderingInfo();
 
-      RendererInfo& getRendererInfo(Mesh * mesh = nullptr, glm::mat4 const& camera_view = glm::mat4(1.0f));
-      void updateRendererInfo(glm::mat4 const& camera_view);
+    RendererInfo& getRendererInfo(Mesh * mesh = nullptr, glm::mat4 const& camera_view = glm::mat4(1.0f));
+    void updateRendererInfo(glm::mat4 const& camera_view);
+
+    auto get_visible_ids(
+      std::ranges::range auto const& entities,
+      std::vector<glm::vec4> const& frustum_planes)
+      {
+        return entities
+            | std::views::filter([&](auto const& e) { return !isClipped(e->getID(), frustum_planes); })
+            | std::views::transform([](auto const& e) { return e->getID(); })
+            | std::ranges::to<std::vector>();
+      }
 
   private:
     void loadData(std::string const & level);

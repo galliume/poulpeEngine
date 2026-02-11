@@ -117,40 +117,41 @@ namespace Poulpe
 
     std::vector<std::string> textures{};
 
+    //@todo could candidate for reflection to read the json struct
     if (raw_data.contains("textures")) {
-      for (auto& [keyTex, pathTex] : raw_data["textures"].items()) {
-        textures.emplace_back(keyTex);
-      }
+      textures.append_range(
+        raw_data["textures"].items() 
+        | std::views::transform([](auto&& item) { return item.key(); }));
     }
 
     if (raw_data.contains("normal")) {
-      for (auto& [keyTex, pathTex] : raw_data["normal"].items()) {
-        textures.emplace_back(keyTex);
-      }
+      textures.append_range(
+        raw_data["normal"].items() 
+        | std::views::transform([](auto&& item) { return item.key(); }));
     }
 
     if (raw_data.contains("mr")) {
-      for (auto& [keyTex, pathTex] : raw_data["mr"].items()) {
-        textures.emplace_back(keyTex);
-      }
+      textures.append_range(
+        raw_data["mr"].items() 
+        | std::views::transform([](auto&& item) { return item.key(); }));
     }
 
     if (raw_data.contains("emissive")) {
-      for (auto& [keyTex, pathTex] : raw_data["emissive"].items()) {
-        textures.emplace_back(keyTex);
-      }
+      textures.append_range(
+        raw_data["emissive"].items() 
+        | std::views::transform([](auto&& item) { return item.key(); }));
     }
 
     if (raw_data.contains("ao")) {
-      for (auto& [keyTex, pathTex] : raw_data["ao"].items()) {
-        textures.emplace_back(keyTex);
-      }
+      textures.append_range(
+        raw_data["ao"].items() 
+        | std::views::transform([](auto&& item) { return item.key(); }));
     }
 
     if (raw_data.contains("transmission")) {
-      for (auto& [keyTex, pathTex] : raw_data["transmission"].items()) {
-        textures.emplace_back(keyTex);
-      }
+      textures.append_range(
+        raw_data["transmission"].items() 
+        | std::views::transform([](auto&& item) { return item.key(); }));
     }
 
     std::vector<std::string> animation_scripts{};

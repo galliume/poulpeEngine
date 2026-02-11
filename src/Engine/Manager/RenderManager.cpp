@@ -210,28 +210,13 @@ namespace Poulpe
       std::vector<std::future<void>> async_texts_render{};
       async_texts_render.reserve(_entity_manager->getTexts().size());
       std::vector<std::future<void>> async_entities_render;
-      std::vector<std::future<void>> async_transparent_entities_render;
+      std::vector<std::future<void>> async_transparent_ids_render;
 
       glm::mat4 const vp { perspective * camera_view_matrix };
       auto const frustum_planes { getCamera()->getFrustumPlanes(vp) };
-      
-      auto const& entities = _entity_manager->getEntities();
-      auto const& transparent_entities = _entity_manager->getTransparentEntities();
 
-      std::vector<IDType> sorted_entities{};
-      std::vector<IDType> sorted_transparent_entities{};
-
-      std::ranges::for_each(entities, [&](const auto& entity) {
-        if (!isClipped(entity->getID(), frustum_planes)) {
-          sorted_entities.emplace_back(entity->getID());
-        }
-      });
-
-      std::ranges::for_each(transparent_entities, [&](const auto& entity) {
-        if (!isClipped(entity->getID(), frustum_planes)) {
-          sorted_transparent_entities.emplace_back(entity->getID());
-        }
-      });
+      auto const visible_ids { get_visible_ids(_entity_manager->getEntities(), frustum_planes) };
+      auto const transparent_ids { get_visible_ids(_entity_manager->getTransparentEntities(), frustum_planes) };
 
       //@todo improve this draft for simple shader hot reload
       if (config_manager->reloadShaders()) {
@@ -245,22 +230,22 @@ namespace Poulpe
         config_manager->setReloadShaders(false);
       }
 
-      auto const skybox_entity = _entity_manager->getSkybox();
+      auto const skybox_entity { _entity_manager->getSkybox() };
       if (skybox_entity != nullptr) {
         async_skybox_render = std::async(std::launch::deferred, [&]() {
           renderEntity(skybox_entity->getID(), delta_time);
         });
       }
-      auto const terrain_entity = _entity_manager->getTerrain();
+      auto const terrain_entity { _entity_manager->getTerrain() };
       if (terrain_entity != nullptr) {
         async_terrain_render = std::async(std::launch::deferred, [&]() {
           renderEntity(terrain_entity->getID(), delta_time);
         });
       }
-      auto const water_entity = _entity_manager->getWater();
+      auto const water_entity { _entity_manager->getWater() };
       if (water_entity != nullptr) {
-        auto* mesh_component = _component_manager->get<MeshComponent>(water_entity->getID());
-        auto mesh = mesh_component->template has<Mesh>();
+        auto* mesh_component { _component_manager->get<MeshComponent>(water_entity->getID()) };
+        auto mesh { mesh_component->template has<Mesh>() };
         
         if (mesh) {
           float const narrowed { static_cast<float>(getElapsedTime()) };
@@ -275,14 +260,14 @@ namespace Poulpe
         });
       }
 
-      std::ranges::for_each(sorted_entities, [&](const auto& entity) {
+      std::ranges::for_each(visible_ids, [&](const auto& entity) {
         async_entities_render.push_back(std::async(std::launch::deferred, [&]() {
           renderEntity(entity, delta_time);
         }));
       });
 
-      std::ranges::for_each(sorted_transparent_entities, [&](const auto& entity) {
-        async_transparent_entities_render.push_back(std::async(std::launch::deferred, [&]() {
+      std::ranges::for_each(transparent_ids, [&](const auto& entity) {
+        async_transparent_ids_render.push_back(std::async(std::launch::deferred, [&]() {
           renderEntity(entity, delta_time);
         }));
       });
@@ -302,7 +287,7 @@ namespace Poulpe
       for (auto& future : async_entities_render) {
         future.wait();
       }
-      for (auto& future : async_transparent_entities_render) {
+      for (auto& future : async_transparent_ids_render) {
         future.wait();
       }
       for (auto& future : async_texts_render) {
@@ -312,7 +297,7 @@ namespace Poulpe
       _renderer->start();
       _renderer->startShadowMap(SHADOW_TYPE::CSM);
       
-      std::ranges::for_each(sorted_entities, [&](const auto& entity) {
+      std::ranges::for_each(visible_ids, [&](const auto& entity) {
         drawShadowMap(entity, SHADOW_TYPE::CSM, camera_view_matrix);
       });
       _renderer->endShadowMap(SHADOW_TYPE::CSM);
@@ -320,7 +305,7 @@ namespace Poulpe
       
       _renderer->startShadowMap(SHADOW_TYPE::SPOT_LIGHT);
       
-      std::ranges::for_each(sorted_entities, [&](const auto& entity) {
+      std::ranges::for_each(visible_ids, [&](const auto& entity) {
         drawShadowMap(entity, SHADOW_TYPE::SPOT_LIGHT, camera_view_matrix);
       });
       _renderer->endShadowMap(SHADOW_TYPE::SPOT_LIGHT);
@@ -335,10 +320,10 @@ namespace Poulpe
         drawEntity(terrain_entity->getID(), camera_view_matrix);
       }
 
-      std::ranges::for_each(sorted_entities, [&](const auto& entity) {
+      std::ranges::for_each(visible_ids, [&](const auto& entity) {
         drawEntity(entity, camera_view_matrix, false);
       });
-      std::ranges::for_each(sorted_transparent_entities, [&](const auto& entity) {
+      std::ranges::for_each(transparent_ids, [&](const auto& entity) {
         drawEntity(entity, camera_view_matrix, true);
       });
 
@@ -469,12 +454,12 @@ namespace Poulpe
     glm::mat4 const& camera_view_matrix,
     bool const has_alpha_blend)
   {
-    auto* mesh_component = _component_manager->get<MeshComponent>(entity_id);
-    auto mesh = mesh_component->template has<Mesh>();
-    auto rdr_impl = _component_manager->get<RendererComponent>(entity_id);
+    auto* mesh_component { _component_manager->get<MeshComponent>(entity_id) };
+    auto mesh { mesh_component->template has<Mesh>() };
+    auto rdr_impl { _component_manager->get<RendererComponent>(entity_id) };
 
     if (mesh && rdr_impl) {
-      RendererInfo renderer_info  = getRendererInfo(mesh, camera_view_matrix);
+      RendererInfo renderer_info { getRendererInfo(mesh, camera_view_matrix) };
       renderer_info.stage_flag_bits = rdr_impl->getShaderStageFlags();
       renderer_info.has_alpha_blend = has_alpha_blend;
       _renderer->draw(renderer_info);
@@ -497,7 +482,7 @@ namespace Poulpe
     auto rdr_impl { _component_manager->get<RendererComponent>(entity_id) };
 
     if (mesh && rdr_impl) {
-      RendererInfo renderer_info  = getRendererInfo(mesh, camera_view_matrix);
+      RendererInfo renderer_info { getRendererInfo(mesh, camera_view_matrix) };
       renderer_info.stage_flag_bits = rdr_impl->getShaderStageFlags();
       renderer_info.has_alpha_blend = has_alpha_blend;
 
@@ -633,12 +618,12 @@ namespace Poulpe
 
   void RenderManager::updateText(IDType const entity_id, std::string const& text)
   {
-    auto mesh_component = _component_manager->get<MeshComponent>(entity_id);
+    auto mesh_component { _component_manager->get<MeshComponent>(entity_id) };
     if (mesh_component) {
-      auto mesh = mesh_component->has<Mesh>();
-      auto rdr_impl = _component_manager->get<RendererComponent>(entity_id);
+      auto mesh { mesh_component->has<Mesh>() };
+      auto rdr_impl { _component_manager->get<RendererComponent>(entity_id) };
       if (rdr_impl) {
-        auto text_rdr = rdr_impl->has<Text>();
+        auto text_rdr { rdr_impl->has<Text>() };
 
         if (text_rdr) {
           text_rdr->setText(text);
@@ -651,12 +636,12 @@ namespace Poulpe
   //@todo better way to update text
   void RenderManager::updateTextColor(IDType const entity_id, glm::vec3 const& color)
   {
-    auto mesh_component = _component_manager->get<MeshComponent>(entity_id);
+    auto mesh_component { _component_manager->get<MeshComponent>(entity_id) };
     if (mesh_component) {
-      auto mesh = mesh_component->has<Mesh>();
-      auto rdr_impl = _component_manager->get<RendererComponent>(entity_id);
+      auto mesh { mesh_component->has<Mesh>() };
+      auto rdr_impl { _component_manager->get<RendererComponent>(entity_id) };
       if (rdr_impl) {
-        auto text_rdr = rdr_impl->has<Text>();
+        auto text_rdr { rdr_impl->has<Text>() };
 
         if (text_rdr) {
           text_rdr->setColor(color);

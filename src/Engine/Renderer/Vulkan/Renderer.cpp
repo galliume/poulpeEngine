@@ -751,14 +751,11 @@ namespace Poulpe
     if (_sema_render_completes[_current_frame].size() - 1 < _image_index) {
       return;
     }
-    auto const& draw_cmds { _draw_cmds[_current_frame] };
 
-    std::vector<VkCommandBuffer> cmds_buffer{};
-
-    for (std::size_t i{ 0 }; i < draw_cmds.cmd_buffers.size(); ++i) {
-      if (draw_cmds.cmd_buffers.at(i) == nullptr) continue;
-      cmds_buffer.push_back(draw_cmds.cmd_buffers.at(i));
-    }
+    std::vector<VkCommandBuffer> const cmds_buffer {
+        _draw_cmds[_current_frame].cmd_buffers
+        | std::views::filter([](auto const& cmd) { return cmd != nullptr; })
+        | std::ranges::to<std::vector>() };
 
     if (cmds_buffer.empty()) {
       vkResetFences(_vulkan->getDevice(), 1, &_fences_in_flight[_image_index]);
