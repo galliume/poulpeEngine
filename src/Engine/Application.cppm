@@ -7,7 +7,6 @@ import std;
 
 import Engine.Core.GLFW;
 import Engine.Core.MiniAudio;
-import Engine.Core.TclTk;
 
 //import Engine.Core.CommandQueueLocator;
 import Engine.Managers.APIManager;
@@ -15,6 +14,7 @@ import Engine.Managers.ConfigManagerLocator;
 import Engine.Managers.InputManagerLocator;
 import Engine.Managers.NetworkManager;
 import Engine.Managers.RenderManager;
+import Engine.Managers.UIManager;
 
 import Engine.GUI.Window;
 
@@ -36,8 +36,7 @@ namespace Poulpe
     std::unique_ptr<APIManager> _api_manager;
     std::unique_ptr<NetworkManager> _network_manager;
     std::unique_ptr<RenderManager> _render_manager;
+    std::unique_ptr<UIManager> _ui_manager;
     std::chrono::time_point<std::chrono::steady_clock> _start_run;
-
-    Tcl_Interp* _tcl_interp;
   };
 }
