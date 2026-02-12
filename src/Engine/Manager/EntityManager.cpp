@@ -63,11 +63,7 @@ namespace Poulpe
 
     return [this]() {
       std::ranges::for_each(_lvl_config["entities"].items(), [&](auto const& conf) {
-
-        auto const& key = conf.key();
-        auto const& data = conf.value();
-
-        initMeshes(key, data);
+        initMeshes(conf.key(), conf.value());
       });
     };
   }
@@ -104,53 +100,54 @@ namespace Poulpe
       std::unordered_map<std::string, std::vector<std::vector<Rotation>>> const rotations,
       std::unordered_map<std::string, std::vector<std::vector<Scale>>> const scales) {
 
-    auto const& p = raw_data["positions"].at(0);
+    auto const& p { raw_data["positions"].at(0) };
     glm::vec3 position{ p["x"].get<float>(), p["y"].get<float>(), p["z"].get<float>() };
     
-    auto const& s = raw_data["scales"].at(0);
+    auto const& s { raw_data["scales"].at(0) };
     glm::vec3 scale{ s["x"].get<float>(), s["y"].get<float>(), s["z"].get<float>() };
 
-    auto const& r = raw_data["rotations"].at(0);
+    auto const& r { raw_data["rotations"].at(0) };
     glm::quat rotation { glm::quat(glm::vec3(glm::radians(r["x"].get<float>()),
                                   glm::radians(r["y"].get<float>()),
                                   glm::radians(r["z"].get<float>()))) };
 
     std::vector<std::string> textures{};
 
+    //@todo could candidate for reflection to read the json struct
     if (raw_data.contains("textures")) {
-      for (auto& [keyTex, pathTex] : raw_data["textures"].items()) {
-        textures.emplace_back(keyTex);
-      }
+      textures.append_range(
+        raw_data["textures"].items() 
+        | std::views::transform([](auto&& item) { return item.key(); }));
     }
 
     if (raw_data.contains("normal")) {
-      for (auto& [keyTex, pathTex] : raw_data["normal"].items()) {
-        textures.emplace_back(keyTex);
-      }
+      textures.append_range(
+        raw_data["normal"].items() 
+        | std::views::transform([](auto&& item) { return item.key(); }));
     }
 
     if (raw_data.contains("mr")) {
-      for (auto& [keyTex, pathTex] : raw_data["mr"].items()) {
-        textures.emplace_back(keyTex);
-      }
+      textures.append_range(
+        raw_data["mr"].items() 
+        | std::views::transform([](auto&& item) { return item.key(); }));
     }
 
     if (raw_data.contains("emissive")) {
-      for (auto& [keyTex, pathTex] : raw_data["emissive"].items()) {
-        textures.emplace_back(keyTex);
-      }
+      textures.append_range(
+        raw_data["emissive"].items() 
+        | std::views::transform([](auto&& item) { return item.key(); }));
     }
 
     if (raw_data.contains("ao")) {
-      for (auto& [keyTex, pathTex] : raw_data["ao"].items()) {
-        textures.emplace_back(keyTex);
-      }
+      textures.append_range(
+        raw_data["ao"].items() 
+        | std::views::transform([](auto&& item) { return item.key(); }));
     }
 
     if (raw_data.contains("transmission")) {
-      for (auto& [keyTex, pathTex] : raw_data["transmission"].items()) {
-        textures.emplace_back(keyTex);
-      }
+      textures.append_range(
+        raw_data["transmission"].items() 
+        | std::views::transform([](auto&& item) { return item.key(); }));
     }
 
     std::vector<std::string> animation_scripts{};
@@ -159,9 +156,9 @@ namespace Poulpe
       animation_scripts.emplace_back(path_anim);
     }
 
-    auto shader = raw_data.value("shader", "");
+    auto const& shader { raw_data.value("shader", "") };
 
-    EntityOptions entity_opts = {
+    EntityOptions entity_opts {
       shader, position, scale, rotation,
       raw_data.value("hasBbox", false),
       raw_data.value("hasAnimation", false),
@@ -175,7 +172,7 @@ namespace Poulpe
     };
 
 
-      std::unique_ptr<Mesh>mesh = std::make_unique<Mesh>();
+      std::unique_ptr<Mesh>mesh { std::make_unique<Mesh>() };
       mesh->setName(_data.name);
       mesh->setShaderName(entity_opts.shader);
       mesh->setHasAnimation(entity_opts.has_animation);
@@ -200,7 +197,7 @@ namespace Poulpe
 
       if (!materials.empty()) {
 
-        auto const& mat = materials.at(_data.material_ID);
+        auto const& mat { materials.at(_data.material_ID) };
         alpha_mode = mat.alpha_mode;
 
         if (!mat.name_texture_diffuse.empty()) {
