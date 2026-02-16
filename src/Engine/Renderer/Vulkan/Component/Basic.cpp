@@ -18,57 +18,60 @@ import Engine.Renderer.VulkanRenderer;
 namespace Poulpe
 {
   void Basic::operator()(
-    Renderer *const renderer,
-    ComponentRenderingInfo const& component_rendering_info)
+    Renderer & renderer,
+    Mesh & mesh,
+    RendererContext const& render_context)
   {
     stage_flag_bits = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
 
-    auto const& mesh = component_rendering_info.mesh;
 
-    if (!mesh && !mesh->isDirty()) return;
+    if (!mesh.isDirty()) return;
 
-    auto cmd_pool = renderer->getAPI()->createCommandPool();
+    auto cmd_pool = renderer.getAPI()->createCommandPool();
 
-    // if (mesh->getUniformBuffers().empty()) {
-    //   std::ranges::for_each(mesh->getData()->_bones, [&](auto const&) {
+    // if (mesh.getUniformBuffers().empty()) {
+    //   std::ranges::for_each(mesh.getData()->_bones, [&](auto const&) {
 
     //     //auto const& b{ bone.second };
 
-    //     Buffer uniformBuffer = renderer->getAPI()->createUniformBuffers(1, renderer->getCurrentFrameIndex());
-    //     mesh->getUniformBuffers().emplace_back(std::move(uniformBuffer));
+    //     Buffer uniformBuffer = renderer.getAPI()->createUniformBuffers(1, renderer.getCurrentFrameIndex());
+    //     mesh.getUniformBuffers().emplace_back(std::move(uniformBuffer));
     //   });
     // }
-    if (mesh->getUniformBuffers().empty()) { //no bones
-      Buffer uniformBuffer = renderer->getAPI()->createUniformBuffers(1, renderer->getCurrentFrameIndex());
-      mesh->getUniformBuffers().emplace_back(std::move(uniformBuffer));
+    if (mesh.getUniformBuffers().empty()) { //no bones
+      Buffer uniformBuffer = renderer.getAPI()->createUniformBuffers(1, renderer.getCurrentFrameIndex());
+      mesh.getUniformBuffers().emplace_back(std::move(uniformBuffer));
     }
 
-    auto const& data = mesh->getData();
+    auto const& data = mesh.getData();
     data->_texture_index = 0;
 
     if (data->_vertex_buffer.buffer == VK_NULL_HANDLE) {
-      data->_vertex_buffer = renderer->getAPI()->createVertexBuffer(data->_vertices, renderer->getCurrentFrameIndex());
-      data->_indices_buffer = renderer->getAPI()->createIndexBuffer(data->_indices, renderer->getCurrentFrameIndex());
+      data->_vertex_buffer = renderer.getAPI()->createVertexBuffer(data->_vertices, renderer.getCurrentFrameIndex());
+      
+      if (!data->_indices.empty()) {
+        data->_indices_buffer = renderer.getAPI()->createIndexBuffer(data->_indices, renderer.getCurrentFrameIndex());
+      }
     } else {
       //suppose we have to update data
       {
         data->_is_dirty = true;
         //data->_vertex_buffer.memory->lock();
         //auto *buffer { data->_vertex_buffer.memory->getBuffer(data->_vertex_buffer.index) };
-        renderer->updateVertexBuffer(data, renderer->getCurrentFrameIndex());
+        renderer.updateVertexBuffer(data, renderer.getCurrentFrameIndex());
         //data->_vertex_buffer.memory->unLock();
       }
     }
 
-    for (std::size_t i{ 0 }; i < mesh->getData()->_ubos.size(); i++) {
-      std::ranges::for_each(mesh->getData()->_ubos.at(i), [&](auto& ubo) {
-        ubo.projection = renderer->getPerspective();
+    for (std::size_t i{ 0 }; i < mesh.getData()->_ubos.size(); i++) {
+      std::ranges::for_each(mesh.getData()->_ubos.at(i), [&](auto& ubo) {
+        ubo.projection = renderer.getPerspective();
       });
     }
 
-    auto const& mat { mesh->getMaterials().at(data->_material_id) };
+    auto const& mat { mesh.getMaterials().at(data->_material_id) };
 
-    if (mesh->getStorageBuffers()->empty()) {
+    if (mesh.getStorageBuffers()->empty()) {
       Material material{};
       material.base_color = mat.base_color;
       material.ambient = mat.ambient;
@@ -116,121 +119,121 @@ namespace Poulpe
       ObjectBuffer objectBuffer{};
       objectBuffer.material = material;
 
-      auto storageBuffer{ renderer->getAPI()->createStorageBuffers(objectBuffer, renderer->getCurrentFrameIndex()) };
+      auto storageBuffer{ renderer.getAPI()->createStorageBuffers(objectBuffer, renderer.getCurrentFrameIndex()) };
 
-      mesh->setObjectBuffer(objectBuffer);
-      mesh->addStorageBuffer(storageBuffer);
-      mesh->setHasBufferStorage();
+      mesh.setObjectBuffer(objectBuffer);
+      mesh.addStorageBuffer(storageBuffer);
+      mesh.setHasBufferStorage();
 
-      //renderer->updateStorageBuffer(mesh->getStorageBuffers()->at(0), objectBuffer);
+      //renderer.updateStorageBuffer(mesh.getStorageBuffers()->at(0), objectBuffer);
     }
 
-    for (std::size_t i{ 0 }; i < mesh->getUniformBuffers().size(); ++i) {
+    for (std::size_t i{ 0 }; i < mesh.getUniformBuffers().size(); ++i) {
 
-      auto& ubos{ mesh->getUniformBuffers().at(i) };
-      auto& ubos_data{ mesh->getData()->_ubos.at(i) };
+      auto& ubos{ mesh.getUniformBuffers().at(i) };
+      auto& ubos_data{ mesh.getData()->_ubos.at(i) };
 
-      renderer->getAPI()->updateUniformBuffer(ubos, &ubos_data, renderer->getCurrentFrameIndex());
+      renderer.getAPI()->updateUniformBuffer(ubos, &ubos_data, renderer.getCurrentFrameIndex());
     }
 
-    if (*mesh->getDescSet() == nullptr) {
-      createDescriptorSet(renderer, component_rendering_info);
+    if (*mesh.getDescSet() == nullptr) {
+      createDescriptorSet(renderer, mesh, render_context);
     }
-    mesh->setIsDirty(false);
+    mesh.setIsDirty(false);
 
-    vkDestroyCommandPool(renderer->getDevice(), cmd_pool, nullptr);
+    vkDestroyCommandPool(renderer.getDevice(), cmd_pool, nullptr);
   }
 
   void Basic::createDescriptorSet(
-    Renderer *const renderer,
-    ComponentRenderingInfo const& component_rendering_info)
+    Renderer & renderer,
+    Mesh & mesh,
+    RendererContext const& render_context)
   {
-    auto const& mesh = component_rendering_info.mesh;
-    auto const& mat { mesh->getMaterials().at(mesh->getData()->_material_id) };
+    auto const& mat { mesh.getMaterials().at(mesh.getData()->_material_id) };
 
     auto const & main_texture_name {
-      (!mesh->getData()->_base_color.empty()
-      && mesh->getData()->_base_color != PLP_EMPTY)
-        ? mesh->getData()->_base_color
-        : mesh->getData()->_textures.at(0)
+      (!mesh.getData()->_base_color.empty()
+      && mesh.getData()->_base_color != PLP_EMPTY)
+        ? mesh.getData()->_base_color
+        : mesh.getData()->_textures.at(0)
     };
 
-    Texture tex { getTexture(component_rendering_info, main_texture_name) };
-    tex.setSampler(renderer->getAPI()->createKTXSampler(
+    Texture tex { getTexture(render_context, main_texture_name) };
+    tex.setSampler(renderer.getAPI()->createKTXSampler(
       mat.texture_diffuse_wrap_mode_u,
       mat.texture_diffuse_wrap_mode_v,
       tex.getMipLevels()));
 
-    Texture alpha { getTexture(component_rendering_info, mesh->getData()->_alpha) };
-    alpha.setSampler(renderer->getAPI()->createKTXSampler(
+    Texture alpha { getTexture(render_context, mesh.getData()->_alpha) };
+    alpha.setSampler(renderer.getAPI()->createKTXSampler(
       mat.texture_alpha_wrap_mode_u,
       mat.texture_alpha_wrap_mode_v,
       alpha.getMipLevels()));
 
-    Texture texture_bump{ getTexture(component_rendering_info, mesh->getData()->_bump_map) };
-      texture_bump.setSampler(renderer->getAPI()->createKTXSampler(
+    Texture texture_bump{ getTexture(render_context, mesh.getData()->_bump_map) };
+      texture_bump.setSampler(renderer.getAPI()->createKTXSampler(
       TextureWrapMode::WRAP,
       TextureWrapMode::WRAP,
       1));
 
     if (texture_bump.getWidth() == 0) {
-      texture_bump = component_rendering_info.textures->at(PLP_EMPTY);
+      texture_bump = render_context.textures->at(PLP_EMPTY);
     }
 
-    Texture texture_specular{ getTexture(component_rendering_info, mesh->getData()->_specular_map)};
-    texture_specular.setSampler(renderer->getAPI()->createKTXSampler(
+    Texture texture_specular{ getTexture(render_context, mesh.getData()->_specular_map)};
+    texture_specular.setSampler(renderer.getAPI()->createKTXSampler(
     mat.texture_specular_wrap_mode_u,
     mat.texture_specular_wrap_mode_v,
     texture_specular.getMipLevels()));
 
     if (texture_specular.getWidth() == 0) {
-      texture_specular = component_rendering_info.textures->at(PLP_EMPTY);
+      texture_specular = render_context.textures->at(PLP_EMPTY);
     }
 
-    Texture texture_metal_roughness { getTexture(component_rendering_info, mesh->getData()->_metal_roughness) };
-    texture_metal_roughness.setSampler(renderer->getAPI()->createKTXSampler(
+    Texture texture_metal_roughness { getTexture(render_context, mesh.getData()->_metal_roughness) };
+    texture_metal_roughness.setSampler(renderer.getAPI()->createKTXSampler(
     mat.texture_metal_roughness_wrap_mode_u,
     mat.texture_metal_roughness_wrap_mode_v,
     texture_metal_roughness.getMipLevels()));
 
     if (texture_metal_roughness.getWidth() == 0) {
-      texture_metal_roughness = component_rendering_info.textures->at(PLP_EMPTY);
+      texture_metal_roughness = render_context.textures->at(PLP_EMPTY);
     }
 
-    Texture texture_emissive { getTexture(component_rendering_info, mesh->getData()->_emissive) };
-    texture_emissive.setSampler(renderer->getAPI()->createKTXSampler(
+    Texture texture_emissive { getTexture(render_context, mesh.getData()->_emissive) };
+    texture_emissive.setSampler(renderer.getAPI()->createKTXSampler(
     mat.texture_emissive_wrap_mode_u,
     mat.texture_emissive_wrap_mode_v,
     texture_emissive.getMipLevels()));
 
     if (texture_emissive.getWidth() == 0) {
-      texture_emissive = component_rendering_info.textures->at(PLP_EMPTY);
+      texture_emissive = render_context.textures->at(PLP_EMPTY);
     }
 
-    Texture texture_ao { getTexture(component_rendering_info, mesh->getData()->_ao) };
-    texture_ao.setSampler(renderer->getAPI()->createKTXSampler(
+    Texture texture_ao { getTexture(render_context, mesh.getData()->_ao) };
+    texture_ao.setSampler(renderer.getAPI()->createKTXSampler(
     mat.texture_ao_wrap_mode_u,
     mat.texture_ao_wrap_mode_v,
     texture_ao.getMipLevels()));
 
     if (texture_ao.getWidth() == 0) {
-      texture_ao = component_rendering_info.textures->at(PLP_EMPTY);
+      texture_ao = render_context.textures->at(PLP_EMPTY);
     }
 
-    // Texture texture_base_color { getTexture(component_rendering_info, mesh->getData()->_base_color) };
-    // texture_base_color.setSampler(renderer->getAPI()->createKTXSampler(
+    // Texture texture_base_color { getTexture(render_context, mesh.getData()->_base_color) };
+    // texture_base_color.setSampler(renderer.getAPI()->createKTXSampler(
     // mat.texture_base_color_wrap_mode_u,
     // mat.texture_base_color_wrap_mode_v,
     // texture_base_color.getMipLevels()));
 
     // if (texture_base_color.getWidth() == 0) {
-    //   texture_base_color = component_rendering_info.textures->at(PLP_EMPTY);
+    //   texture_base_color = render_context.textures->at(PLP_EMPTY);
     // }
 
     //VkDescriptorImageInfo shadowMapSpot{};
     //shadowMapSpot.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-    //shadowMapSpot.imageview = renderer->getDepthMapImageViews()->at(1);
-    //shadowMapSpot.sampler = renderer->getDepthMapSamplers()->at(1);
+    //shadowMapSpot.imageview = renderer.getDepthMapImageViews()->at(1);
+    //shadowMapSpot.sampler = renderer.getDepthMapSamplers()->at(1);
     std::vector<VkDescriptorImageInfo> image_info{};
     image_info.reserve(7);
     image_info.emplace_back(tex.getSampler(), tex.getImageView(), VK_IMAGE_LAYOUT_GENERAL);
@@ -244,34 +247,34 @@ namespace Poulpe
 
     std::vector<VkDescriptorImageInfo> env_info{};
 
-    Texture texture_environment{ getTexture(component_rendering_info, component_rendering_info.skybox_name) };
-    texture_environment.setSampler(renderer->getAPI()->createKTXSampler(
+    Texture texture_environment{ getTexture(render_context, render_context.skybox_name) };
+    texture_environment.setSampler(renderer.getAPI()->createKTXSampler(
       TextureWrapMode::CLAMP_TO_EDGE,
       TextureWrapMode::CLAMP_TO_EDGE,
       0));
 
     if (texture_environment.getWidth() == 0) {
-      texture_environment = component_rendering_info.textures->at(PLP_EMPTY);
+      texture_environment = render_context.textures->at(PLP_EMPTY);
     }
     env_info.emplace_back(texture_environment.getSampler(), texture_environment.getImageView(), VK_IMAGE_LAYOUT_GENERAL);
 
     std::vector<VkDescriptorImageInfo> depth_map_image_info{};
-    depth_map_image_info.emplace_back(renderer->getDepthMapSamplers(), renderer->getDepthMapImageViews(), VK_IMAGE_LAYOUT_GENERAL);
+    depth_map_image_info.emplace_back(renderer.getDepthMapSamplers(), renderer.getDepthMapImageViews(), VK_IMAGE_LAYOUT_GENERAL);
     //image_info.emplace_back(shadowMapSpot);
 
     std::vector<VkDescriptorImageInfo> csm_image_info{};
-    csm_image_info.emplace_back(renderer->getCSMSamplers(), renderer->getCSMImageViews(), VK_IMAGE_LAYOUT_GENERAL);
+    csm_image_info.emplace_back(renderer.getCSMSamplers(), renderer.getCSMImageViews(), VK_IMAGE_LAYOUT_GENERAL);
 
-    auto const& pipeline = renderer->getPipeline(mesh->getShaderName());
-    VkDescriptorSet descset{ renderer->getAPI()->createDescriptorSets(pipeline->desc_pool, { pipeline->descset_layout }, 1) };
+    auto const& pipeline = renderer.getPipeline(mesh.getShaderName());
+    VkDescriptorSet descset{ renderer.getAPI()->createDescriptorSets(pipeline->desc_pool, { pipeline->descset_layout }, 1) };
 
-    auto light_buffer {component_rendering_info.light_buffer};
+    auto light_buffer {render_context.light_buffer};
 
-    for (std::size_t i{ 0 }; i < mesh->getUniformBuffers().size(); ++i) {
+    for (std::size_t i{ 0 }; i < mesh.getUniformBuffers().size(); ++i) {
 
-      renderer->getAPI()->updateDescriptorSets(
-        mesh->getUniformBuffers(),
-        *mesh->getStorageBuffers(),
+      renderer.getAPI()->updateDescriptorSets(
+        mesh.getUniformBuffers(),
+        *mesh.getStorageBuffers(),
         descset,
         image_info,
         depth_map_image_info,
@@ -280,13 +283,13 @@ namespace Poulpe
         csm_image_info);
     }
 
-    mesh->setDescSet(descset);
+    mesh.setDescSet(descset);
 
     std::array<VkWriteDescriptorSet, 2> descset_writes{};
     std::vector<VkDescriptorBufferInfo> buffer_infos;
     std::vector<VkDescriptorBufferInfo> buffer_storage_infos;
 
-    std::for_each(std::begin(mesh->getUniformBuffers()), std::end(mesh->getUniformBuffers()),
+    std::for_each(std::begin(mesh.getUniformBuffers()), std::end(mesh.getUniformBuffers()),
       [&buffer_infos](const Buffer& uniformBuffer)
       {
         VkDescriptorBufferInfo buffer_info{};
@@ -296,8 +299,8 @@ namespace Poulpe
         buffer_infos.emplace_back(buffer_info);
       });
 
-    auto const& shadow_map_pipeline = renderer->getPipeline("shadow_map");
-    VkDescriptorSet shadow_map_descset = renderer->getAPI()->createDescriptorSets(shadow_map_pipeline->desc_pool, { shadow_map_pipeline->descset_layout }, 1);
+    auto const& shadow_map_pipeline = renderer.getPipeline("shadow_map");
+    VkDescriptorSet shadow_map_descset = renderer.getAPI()->createDescriptorSets(shadow_map_pipeline->desc_pool, { shadow_map_pipeline->descset_layout }, 1);
 
     VkDescriptorBufferInfo buffer_info{};
     buffer_info.buffer = light_buffer.buffer;
@@ -321,12 +324,12 @@ namespace Poulpe
     descset_writes[1].descriptorCount = static_cast<std::uint32_t>(buffer_storage_infos.size());
     descset_writes[1].pBufferInfo = buffer_storage_infos.data();
 
-    vkUpdateDescriptorSets(renderer->getDevice(), static_cast<std::uint32_t>(descset_writes.size()), descset_writes.data(), 0, nullptr);
+    vkUpdateDescriptorSets(renderer.getDevice(), static_cast<std::uint32_t>(descset_writes.size()), descset_writes.data(), 0, nullptr);
 
-    mesh->setShadowMapDescSet(shadow_map_descset);
+    mesh.setShadowMapDescSet(shadow_map_descset);
 
-    auto const& csm_pipeline = renderer->getPipeline("csm");
-    VkDescriptorSet csm_descset = renderer->getAPI()->createDescriptorSets(csm_pipeline->desc_pool, { csm_pipeline->descset_layout }, 1);
+    auto const& csm_pipeline = renderer.getPipeline("csm");
+    VkDescriptorSet csm_descset = renderer.getAPI()->createDescriptorSets(csm_pipeline->desc_pool, { csm_pipeline->descset_layout }, 1);
 
     std::array<VkWriteDescriptorSet, 2> csm_descset_writes{};
     std::vector<VkDescriptorBufferInfo> csm_buffer_infos;
@@ -354,21 +357,21 @@ namespace Poulpe
     csm_descset_writes[1].descriptorCount = static_cast<std::uint32_t>(csm_buffer_storage_infos.size());
     csm_descset_writes[1].pBufferInfo = csm_buffer_storage_infos.data();
 
-    vkUpdateDescriptorSets(renderer->getDevice(), static_cast<std::uint32_t>(csm_descset_writes.size()), csm_descset_writes.data(), 0, nullptr);
+    vkUpdateDescriptorSets(renderer.getDevice(), static_cast<std::uint32_t>(csm_descset_writes.size()), csm_descset_writes.data(), 0, nullptr);
 
-    mesh->setCSMDescSet(csm_descset);
+    mesh.setCSMDescSet(csm_descset);
   }
 
   Texture const& Basic::getTexture(
-    ComponentRenderingInfo const& component_rendering_info,
+    RendererContext const& render_context,
     std::string const& name) const
   {
     auto tex_name { name };
-    auto const& it { component_rendering_info.textures->find(name) };
+    auto const& it { render_context.textures->find(name) };
 
-    if (it == component_rendering_info.textures->end()) {
+    if (it == render_context.textures->end()) {
       //Logger::warn("Cannot load texture : {}", name);
-      return component_rendering_info.textures->at(PLP_ERROR);
+      return render_context.textures->at(PLP_ERROR);
     }
 
     return it->second;

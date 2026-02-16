@@ -27,9 +27,10 @@ namespace Poulpe {
   template<typename T>
   concept hasCallOperator = requires(
     T t,
-    Renderer *const renderer,
-    ComponentRenderingInfo const& component_rendering_info) {
-    { t(renderer, component_rendering_info) };
+    Renderer & renderer,
+    Mesh & mesh,
+    RendererContext const& render_context) {
+    { t(renderer, mesh, render_context) };
   };
 
   template<typename Class>
@@ -66,12 +67,13 @@ namespace Poulpe {
     void setOwner(IDType owner) { _owner = owner; }
 
     void operator()(
-      Renderer *const renderer,
-      ComponentRenderingInfo const& component_rendering_info)
+      Renderer & renderer,
+      Mesh & mesh,
+      RendererContext const& render_context)
     {
       std::visit([&](auto& component) {
         if constexpr (hasCallOperator<decltype(*component)>) {
-          (*component)(renderer, component_rendering_info);
+          (*component)(renderer, mesh, render_context);
         }
       }, _component);
     }

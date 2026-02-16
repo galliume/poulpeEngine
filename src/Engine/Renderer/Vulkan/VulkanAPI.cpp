@@ -142,8 +142,8 @@ VulkanAPI::VulkanAPI(GLFWwindow* window)
         VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 
     vkAllocateMemory(_device, &allocInfo, nullptr, &_staging_device_memory[i]);
-    
-    VkResult result = vkBindBufferMemory(_device, _staging_buffer[i], _staging_device_memory[i], 0);    
+
+    VkResult result = vkBindBufferMemory(_device, _staging_buffer[i], _staging_device_memory[i], 0);
     if (result != VK_SUCCESS) {
       Logger::debug("BindBuffer memory failed in constructor");
     }
@@ -183,8 +183,8 @@ std::string VulkanAPI::getAPIVersion()
 
 void VulkanAPI::createInstance()
 {
-  if (!isValidationLayersEnabled() && !checkValidationLayerSupport()) {
-    Logger::warn("Validations layers not available !");
+  if (isValidationLayersEnabled() && !checkValidationLayerSupport()) {
+    Logger::warn("Requesting validation layers, but some are missing!");
   }
 
   VkApplicationInfo app_info{};
@@ -266,22 +266,22 @@ bool VulkanAPI::checkValidationLayerSupport()
   std::vector<VkLayerProperties> available_layers(layer_count);
   vkEnumerateInstanceLayerProperties(&layer_count, available_layers.data());
 
-  for (std::string const layer_name : _validation_layers) {
-    bool founded = false;
+  for (auto const& layer_name : _validation_layers) {
+    bool layer_found = false;
 
-    for (auto const & layer_props : available_layers) {
-      if (layer_name.c_str() == layer_props.layerName) {
-        founded = true;
+    for (auto const& layer_props : available_layers) {
+      if (std::string_view(layer_name) == layer_props.layerName) {
+        layer_found = true;
         break;
       }
     }
-    if (!founded) {
+
+    if (!layer_found) {
       return false;
     }
   }
-  _layers_available = available_layers;
 
-  return false;
+  return true;
 }
 
 void VulkanAPI::loadRequiredExtensions()
@@ -1918,6 +1918,11 @@ void VulkanAPI::addPipelineBarriers(
 
 VkBuffer VulkanAPI::createBuffer(VkDeviceSize const size, VkBufferUsageFlags const usage)
 {
+  if (size == 0)
+  {
+    Logger::warn("size is 0");
+  }
+
   VkBuffer buffer{};
   VkBufferCreateInfo buffer_info{};
   buffer_info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -1925,9 +1930,8 @@ VkBuffer VulkanAPI::createBuffer(VkDeviceSize const size, VkBufferUsageFlags con
   buffer_info.usage = usage;
   buffer_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-  if (vkCreateBuffer(_device, & buffer_info, nullptr, & buffer) != VK_SUCCESS) {
-    Logger::error("failed to create buffer!");
-  }
+  vkCreateBuffer(_device, & buffer_info, nullptr, & buffer);
+
   return buffer;
 }
 
@@ -2352,7 +2356,7 @@ void VulkanAPI::endCopyBuffer(std::size_t const image_index)
   submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
   submit_info.commandBufferCount = 1;
   submit_info.pCommandBuffers = &_copy_cmd_buffer[image_index];
-  
+
   VkResult result;
   {
     std::lock_guard<std::mutex> guard(_mutex_queue_submit);
@@ -2425,10 +2429,10 @@ uint32_t VulkanAPI::findMemoryType(std::uint32_t const type_filter, VkMemoryProp
   vkGetPhysicalDeviceMemoryProperties(_physical_device, &mem_properties);
 
   for (std::uint32_t i { 0 }; i < mem_properties.memoryTypeCount; i++) {
-      if ((type_filter & (1 << i)) && 
+      if ((type_filter & (1 << i)) &&
           (mem_properties.memoryTypes[i].propertyFlags & properties) == properties) {
-          
-          if ((properties & VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT) && 
+
+          if ((properties & VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT) &&
               (mem_properties.memoryTypes[i].propertyFlags & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT)) {
               continue;
           }
@@ -3147,7 +3151,7 @@ VkSampler VulkanAPI::createTextureSampler(std::uint32_t const mip_lvl)
         region.imageSubresource.mipLevel = mip;
         region.imageSubresource.baseArrayLayer = face;
         region.imageSubresource.layerCount = 1;
-        
+
         region.imageExtent.width  = std::max(1u, ktx_texture->baseWidth >> mip);
         region.imageExtent.height = std::max(1u, ktx_texture->baseHeight >> mip);
         region.imageExtent.depth  = 1;

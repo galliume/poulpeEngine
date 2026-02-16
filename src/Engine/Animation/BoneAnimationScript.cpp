@@ -69,19 +69,19 @@ namespace Poulpe
         updateBoneTransforms(anim, root_bone.name, glm::mat4(1.0f), duration, elapsed_time);
 
         auto skinned_vertices { std::views::zip(_data->_vertices, _data->_vertices_bones) };
-        std::ranges::for_each(skinned_vertices, [&](auto&& tuple) {
-          auto& [vertex, bone_data] = tuple;
-          auto const weighted_sum_view { std::views::iota(0, 4)
-              | std::views::transform([&](int i) {
-                  auto const w { bone_data.bone_weights[i] };
-                  if (w <= 0.0f) return glm::vec4(0.0f);
-
-                  auto const id { static_cast<std::size_t>(bone_data.bone_ids[i]) };
-                  return _bone_matrices[id] * glm::vec4(bone_data.original_pos, 1.0f) * w;
-              }) };
-
-          vertex.pos = std::ranges::fold_left(weighted_sum_view, glm::vec4(0.0f), std::plus{});
-        });
+        
+        for(auto&& [vertex, bone_data] : skinned_vertices) {
+            glm::vec4 result { glm::vec4(0.0f) };
+            for (std::size_t i { 0 }; i < 4; ++i) {
+              auto const w { bone_data.bone_weights[i] };
+              if (w > 0.f) {
+                auto const bone_id { static_cast<std::size_t>(bone_data.bone_ids[i]) };
+                result += _bone_matrices[bone_id] * glm::vec4(bone_data.original_pos, 1.0f) * w;
+              }
+            }
+            vertex.pos = result;
+            //vertex_cache.emplace_back(result);
+        }
 
       if (!animation_info.looping && duration < elapsed_time + 10) {
         _done = true;

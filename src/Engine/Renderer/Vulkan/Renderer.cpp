@@ -373,37 +373,38 @@ namespace Poulpe
     vkCmdSetColorBlendEquationEXT(cmd_buffer, 0, 1, &colorBlendEquation);
   }
 
-  void Renderer::draw(RendererInfo const& renderer_info)
+  void Renderer::draw(
+    Mesh const& mesh,
+    RendererContext const& renderer_context)
   {
-    auto& cmd_buffer = _cmd_buffer_entities[_current_frame];
-    auto const& mesh = renderer_info.mesh;
-    auto const& camera = renderer_info.camera;
-    auto const pipeline = getPipeline(mesh->getShaderName());
+    auto& cmd_buffer { _cmd_buffer_entities[_current_frame] };
+    auto const& camera { renderer_context.camera };
+    auto const pipeline { getPipeline(mesh.getShaderName()) };
 
     constants push_constants {
-      .view = renderer_info.camera_view,
+      .view = renderer_context.camera_view,
       .view_position = glm::vec4(camera->getPos(), 1.0f),
-      .env_options = renderer_info.env_options,
-      .options = mesh->getOptions()
+      .env_options = renderer_context.env_options,
+      .options = mesh.getOptions()
     };
 
-    if (mesh->isSkybox()) {
+    if (mesh.isSkybox()) {
       push_constants.view = glm::mat4(glm::mat3(camera->getView()));
     }
 
     vkCmdPushConstants(
       cmd_buffer,
       pipeline->pipeline_layout,
-      renderer_info.stage_flag_bits,
+      renderer_context.stage_flag_bits,
       0,
       sizeof(constants),
       &push_constants);
 
-    auto const& data { mesh->getData() };
-    auto const& material { mesh->getMaterials().at(data->_material_id) };
+    auto const& data { mesh.getData() };
+    auto const& material { mesh.getMaterials().at(data->_material_id) };
 
     VkBool32 blend_enable =
-      (renderer_info.has_alpha_blend && material.alpha_mode >= 1.0f) ? VK_TRUE : VK_FALSE;
+      (renderer_context.has_alpha_blend && material.alpha_mode >= 1.0f) ? VK_TRUE : VK_FALSE;
 
     vkCmdSetColorBlendEnableEXT(cmd_buffer, 0, 1, &blend_enable);
 
@@ -411,7 +412,7 @@ namespace Poulpe
       cmd_buffer,
       VK_PIPELINE_BIND_POINT_GRAPHICS,
       pipeline->pipeline_layout,
-      0, 1, mesh->getDescSet(), 0, nullptr);
+      0, 1, mesh.getDescSet(), 0, nullptr);
 
     if (material.double_sided == true && pipeline->pipeline_bis != VK_NULL_HANDLE) {
       _vulkan->bindPipeline(cmd_buffer, pipeline->pipeline_bis);
@@ -419,7 +420,7 @@ namespace Poulpe
       _vulkan->bindPipeline(cmd_buffer, pipeline->pipeline);
     }
 
-    std::string const& shader_name = mesh->getShaderName();
+    std::string const& shader_name { mesh.getShaderName() };
     if (shader_name != "skybox" && shader_name != "text" && shader_name != "terrain" && shader_name != "water") {
         float const depth_bias_constant{ 1.25f };
         float const depth_bias_slope{ 1.75f };
@@ -430,23 +431,23 @@ namespace Poulpe
     _vulkan->draw(
       cmd_buffer,
       data,
-      mesh->is_indexed());
+      mesh.is_indexed());
 
-    if (mesh->debugNormal() &&  renderer_info.normal_debug) {
-      auto const normal_pipeline = getPipeline("normal_debug");
+    if (mesh.debugNormal() &&  renderer_context.normal_debug) {
+      auto const& normal_pipeline { getPipeline("normal_debug") };
 
       vkCmdBindDescriptorSets(
         cmd_buffer,
         VK_PIPELINE_BIND_POINT_GRAPHICS,
         normal_pipeline->pipeline_layout,
-        0, 1, mesh->getDescSet(), 0, nullptr);
+        0, 1, mesh.getDescSet(), 0, nullptr);
 
       _vulkan->bindPipeline(cmd_buffer, normal_pipeline->pipeline);
 
       _vulkan->draw(
         cmd_buffer,
         data,
-        mesh->is_indexed());
+        mesh.is_indexed());
     }
   }
 
@@ -563,7 +564,8 @@ namespace Poulpe
   }
 
   void Renderer::drawShadowMap(
-    RendererInfo const& renderer_info,
+    Mesh const& mesh,
+    RendererContext const& renderer_context,
     SHADOW_TYPE const shadow_type)
   {
     VkCommandBuffer cmd_buffer;
@@ -577,16 +579,13 @@ namespace Poulpe
     } else {
       cmd_buffer = _cmd_buffer_entities3[_current_frame];
     }
-    auto const& pipeline = getPipeline(pipeline_name);
-
-    auto const& mesh = renderer_info.mesh;
-    auto const& camera = renderer_info.camera;
+    auto const& pipeline { getPipeline(pipeline_name) };
 
     constants const push_constants {
-      .view = renderer_info.camera_view,
-      .view_position = glm::vec4(camera->getPos(), 1.0f),
-      .env_options = renderer_info.env_options,
-      .options = mesh->getOptions()
+      .view = renderer_context.camera_view,
+      .view_position = glm::vec4(renderer_context.camera->getPos(), 1.0f),
+      .env_options = renderer_context.env_options,
+      .options = mesh.getOptions()
     };
 
     vkCmdPushConstants(
@@ -603,20 +602,20 @@ namespace Poulpe
         cmd_buffer,
         VK_PIPELINE_BIND_POINT_GRAPHICS,
         pipeline->pipeline_layout,
-        0, 1, mesh->getCSMDescSet(), 0, nullptr);
+        0, 1, mesh.getCSMDescSet(), 0, nullptr);
     } else {
       vkCmdBindDescriptorSets(
         cmd_buffer,
         VK_PIPELINE_BIND_POINT_GRAPHICS,
         pipeline->pipeline_layout,
-        0, 1, mesh->getShadowMapDescSet(), 0, nullptr);
+        0, 1, mesh.getShadowMapDescSet(), 0, nullptr);
     }
     _vulkan->bindPipeline(cmd_buffer, pipeline->pipeline);
 
     _vulkan->draw(
       cmd_buffer,
-      mesh->getData(),
-      mesh->is_indexed(),
+      mesh.getData(),
+      mesh.is_indexed(),
       0,
       instance_count);
   }

@@ -145,8 +145,7 @@ namespace Poulpe
       ? getCamera()->getThirdPersonView(_player_manager->getPosition())
       : getCamera()->getView();
 
-    updateComponentRenderingInfo();
-    updateRendererInfo(camera_view_matrix);
+    updateRendererContext(camera_view_matrix);
 
     _renderer->getAPI()->startCopyBuffer(_renderer->getCurrentFrameIndex());
     prepareSkybox();
@@ -198,19 +197,12 @@ namespace Poulpe
       _light_manager->computeCSM(camera_view_matrix, perspective);
       //Logger::debug("x {} y {} z {}", camera_pos.x, camera_pos.y, camera_pos.z);
 
-      updateComponentRenderingInfo();
-      updateRendererInfo(camera_view_matrix);
+      updateRendererContext(camera_view_matrix);
 
-      //auto renderer_info { getRendererInfo() };
+      //auto renderer_info { getRendererContext() };
       _renderer->getAPI()->startCopyBuffer(_renderer->getCurrentFrameIndex());
 
-      std::future<void> async_skybox_render;
-      std::future<void> async_water_render;
-      std::future<void> async_terrain_render;
-      std::vector<std::future<void>> async_texts_render{};
-      async_texts_render.reserve(_entity_manager->getTexts().size());
-      std::vector<std::future<void>> async_entities_render;
-      std::vector<std::future<void>> async_transparent_ids_render;
+      std::vector<std::future<void>> tasks{};
 
       glm::mat4 const vp { perspective * camera_view_matrix };
       auto const frustum_planes { getCamera()->getFrustumPlanes(vp) };
@@ -232,15 +224,16 @@ namespace Poulpe
 
       auto const skybox_entity { _entity_manager->getSkybox() };
       if (skybox_entity != nullptr) {
-        async_skybox_render = std::async(std::launch::deferred, [&]() {
-          renderEntity(skybox_entity->getID(), delta_time);
-        });
+        tasks.push_back(std::async(std::launch::async, [this, skybox_entity, delta_time, camera_view_matrix]() {
+          renderEntity(skybox_entity->getID(), delta_time, camera_view_matrix);
+        }));
       }
+      std::ranges::for_each(tasks, &std::future<void>::wait);
       auto const terrain_entity { _entity_manager->getTerrain() };
       if (terrain_entity != nullptr) {
-        async_terrain_render = std::async(std::launch::deferred, [&]() {
-          renderEntity(terrain_entity->getID(), delta_time);
-        });
+        tasks.push_back(std::async(std::launch::async, [this, terrain_entity, delta_time, camera_view_matrix]() {
+          renderEntity(terrain_entity->getID(), delta_time, camera_view_matrix);
+        }));
       }
       auto const water_entity { _entity_manager->getWater() };
       if (water_entity != nullptr) {
@@ -255,44 +248,30 @@ namespace Poulpe
           mesh->setOptions(bitValue);
         }
 
-        async_water_render = std::async(std::launch::deferred, [&]() {
-          renderEntity(water_entity->getID(), delta_time);
-        });
+        tasks.push_back(std::async(std::launch::async, [this, water_entity, delta_time, camera_view_matrix]() {
+          renderEntity(water_entity->getID(), delta_time, camera_view_matrix);
+        }));
       }
 
       std::ranges::for_each(visible_ids, [&](const auto& entity) {
-        async_entities_render.push_back(std::async(std::launch::deferred, [&]() {
-          renderEntity(entity, delta_time);
+        tasks.push_back(std::async(std::launch::async, [this, entity, delta_time, camera_view_matrix]() {
+          renderEntity(entity, delta_time, camera_view_matrix);
         }));
       });
 
       std::ranges::for_each(transparent_ids, [&](const auto& entity) {
-        async_transparent_ids_render.push_back(std::async(std::launch::deferred, [&]() {
-          renderEntity(entity, delta_time);
+        tasks.push_back(std::async(std::launch::async, [this, entity, delta_time, camera_view_matrix]() {
+          renderEntity(entity, delta_time, camera_view_matrix);
         }));
       });
 
-      std::ranges::for_each(_entity_manager->getTexts(), [&](auto const& text_entity) {
-        async_texts_render.push_back(
-          std::async(std::launch::deferred, [&]() {
-            renderEntity(text_entity->getID(), delta_time);
+      std::ranges::for_each(_entity_manager->getTexts(), [&](auto const& entity) {
+        tasks.push_back(std::async(std::launch::async, [this, entity, delta_time, camera_view_matrix]() {
+          renderEntity(entity->getID(), delta_time, camera_view_matrix);
         }));
       });
 
-      async_skybox_render.wait();
-      async_terrain_render.wait();
-      async_water_render.wait();
-
-      
-      for (auto& future : async_entities_render) {
-        future.wait();
-      }
-      for (auto& future : async_transparent_ids_render) {
-        future.wait();
-      }
-      for (auto& future : async_texts_render) {
-        future.wait();
-      }
+      std::ranges::for_each(tasks, &std::future<void>::wait);
 
       _renderer->start();
       _renderer->startShadowMap(SHADOW_TYPE::CSM);
@@ -392,7 +371,8 @@ namespace Poulpe
 
   void RenderManager::renderEntity(
     IDType const entity_id,
-    double const delta_time)
+    double const delta_time,
+    glm::mat4 const& camera_view_matrix)
   {
     auto* mesh_component { _component_manager->get<MeshComponent>(entity_id) };
     auto mesh { mesh_component->template has<Mesh>() };
@@ -444,7 +424,7 @@ namespace Poulpe
 
     if (mesh && rdr_impl) {
       if (mesh->isDirty()) {
-        (*rdr_impl)(_renderer.get(), getComponentRenderingInfo(mesh));
+        (*rdr_impl)(*_renderer.get(), *mesh, getRendererContext(camera_view_matrix));
       }
     }
   }
@@ -459,10 +439,10 @@ namespace Poulpe
     auto rdr_impl { _component_manager->get<RendererComponent>(entity_id) };
 
     if (mesh && rdr_impl) {
-      RendererInfo renderer_info { getRendererInfo(mesh, camera_view_matrix) };
+      RendererContext renderer_info { getRendererContext(camera_view_matrix) };
       renderer_info.stage_flag_bits = rdr_impl->getShaderStageFlags();
       renderer_info.has_alpha_blend = has_alpha_blend;
-      _renderer->draw(renderer_info);
+      _renderer->draw(*mesh, renderer_info);
     }
   }
 
@@ -482,13 +462,11 @@ namespace Poulpe
     auto rdr_impl { _component_manager->get<RendererComponent>(entity_id) };
 
     if (mesh && rdr_impl) {
-      RendererInfo renderer_info { getRendererInfo(mesh, camera_view_matrix) };
-      renderer_info.stage_flag_bits = rdr_impl->getShaderStageFlags();
-      renderer_info.has_alpha_blend = has_alpha_blend;
+      RendererContext renderer_context { getRendererContext(camera_view_matrix) };
+      renderer_context.stage_flag_bits = rdr_impl->getShaderStageFlags();
+      renderer_context.has_alpha_blend = has_alpha_blend;
 
-      auto const component_rendering_info { getComponentRenderingInfo(mesh) };
-
-      _renderer->drawShadowMap(renderer_info, shadow_type);
+      _renderer->drawShadowMap(*mesh,renderer_context, shadow_type);
     }
   }
 
@@ -656,49 +634,33 @@ namespace Poulpe
     return _window.get();
   }
 
-  void RenderManager::updateComponentRenderingInfo()
+  void RenderManager::updateRendererContext(glm::mat4 const& camera_view)
   {
-    _rendering_info.mesh = nullptr;
-    _rendering_info.textures = _texture_manager->getTextures();
-    _rendering_info.skybox_name = _texture_manager->getSkyboxTexture();
-    _rendering_info.terrain_name = _texture_manager->getTerrainTexture();
-    _rendering_info.water_name = _texture_manager->getWaterTexture();
-    _rendering_info.sun_light = _light_manager->getSunLight();
-    _rendering_info.point_lights = _light_manager->getPointLights();
-    _rendering_info.spot_lights = _light_manager->getSpotLights();
-    _rendering_info.characters = _font_manager->getCharacters();
-    _rendering_info.face = _font_manager->getFace();
-    _rendering_info.atlas_width = _font_manager->getAtlasWidth();
-    _rendering_info.atlas_height = _font_manager->getAtlasHeight();
-    _rendering_info.light_buffer = _light_buffers[_renderer->getCurrentFrameIndex()];
+    _rendering_context.camera = getCamera();
+    _rendering_context.camera_view = camera_view;
+    _rendering_context.textures = _texture_manager->getTextures();
+    _rendering_context.skybox_name = _texture_manager->getSkyboxTexture();
+    _rendering_context.terrain_name = _texture_manager->getTerrainTexture();
+    _rendering_context.water_name = _texture_manager->getWaterTexture();
+    _rendering_context.sun_light = _light_manager->getSunLight();
+    _rendering_context.point_lights = _light_manager->getPointLights();
+    _rendering_context.spot_lights = _light_manager->getSpotLights();
+    _rendering_context.characters = _font_manager->getCharacters();
+    _rendering_context.face = _font_manager->getFace();
+    _rendering_context.atlas_width = _font_manager->getAtlasWidth();
+    _rendering_context.atlas_height = _font_manager->getAtlasHeight();
+    _rendering_context.elapsed_time = _elapsed_time;
+    _rendering_context.stage_flag_bits = 1 | 16;
+    _rendering_context.normal_debug = ConfigManagerLocator::get()->normalDebug();
+    _rendering_context.has_alpha_blend = false;
+    _rendering_context.light_buffer = _light_buffers[_renderer->getCurrentFrameIndex()];
   }
 
-  ComponentRenderingInfo& RenderManager::getComponentRenderingInfo(Mesh * mesh)
+  RendererContext& RenderManager::getRendererContext(glm::mat4 const& camera_view)
   {
-    _rendering_info.mesh = mesh;
-    return _rendering_info;
-  }
-
-  void RenderManager::updateRendererInfo(glm::mat4 const& camera_view)
-  {
-    _renderer_info.mesh = nullptr;
-    _renderer_info.camera = getCamera();
-    _renderer_info.camera_view = camera_view;
-    _renderer_info.sun_light = _light_manager->getSunLight();
-    _renderer_info.point_lights = _light_manager->getPointLights();
-    _renderer_info.spot_lights = _light_manager->getSpotLights();
-    _renderer_info.elapsed_time = _elapsed_time;
-    _renderer_info.stage_flag_bits = 1 | 16;
-    _renderer_info.normal_debug = ConfigManagerLocator::get()->normalDebug();
-    _renderer_info.has_alpha_blend = false;
-  }
-
-  RendererInfo& RenderManager::getRendererInfo(Mesh * mesh, glm::mat4 const& camera_view)
-  {
-    _renderer_info.mesh = mesh;
-    _renderer_info.camera_view = camera_view;
-    _renderer_info.env_options = _env_options;
-    return _renderer_info;
+    _rendering_context.camera_view = camera_view;
+    _rendering_context.env_options = _env_options;
+    return _rendering_context;
   }
 
   Buffer RenderManager::getLightBuffer()

@@ -2,6 +2,8 @@ export module Engine.Renderer.Vulkan.Text;
 
 import std;
 
+import Engine.Component.Mesh;
+
 import Engine.Core.GLM;
 import Engine.Core.Volk;
 
@@ -14,8 +16,9 @@ namespace Poulpe
   {
   public:
     void operator()(
-      Renderer *const renderer,
-      ComponentRenderingInfo const& component_rendering_info);
+      Renderer & renderer,
+      Mesh & mesh,
+      RendererContext const& render_context);
 
     void setText(std::string_view text) { _text = text; }
     void setPosition(glm::vec3 const& position) { _position = position; }
@@ -29,8 +32,9 @@ namespace Poulpe
 
   private:
     void createDescriptorSet(
-      Renderer *const renderer,
-      ComponentRenderingInfo const& component_rendering_info);
+    Renderer & renderer,
+    Mesh & mesh,
+    RendererContext const& render_context);
 
     std::string _text{};
     glm::vec3 _position{};

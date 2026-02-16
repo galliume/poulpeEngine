@@ -7,6 +7,7 @@ import Engine.Component.Mesh;
 
 import Engine.Core.Camera;
 import Engine.Core.GLM;
+import Engine.Core.LightTypes;
 import Engine.Core.MeshTypes;
 import Engine.Core.PlpTypedef;
 import Engine.Core.Tools;
@@ -74,7 +75,8 @@ namespace Poulpe
 
     void renderEntity(
       IDType const entity_id,
-      double const delta_time);
+      double const delta_time,
+      glm::mat4 const& camera_view_matrix);
 
     void drawEntity(
       IDType const entity_id,
@@ -87,11 +89,8 @@ namespace Poulpe
       glm::mat4 const& camera_view_matrix,
       bool const has_alpha_blend = false);
 
-    ComponentRenderingInfo& getComponentRenderingInfo(Mesh * mesh);
-    void updateComponentRenderingInfo();
-
-    RendererInfo& getRendererInfo(Mesh * mesh = nullptr, glm::mat4 const& camera_view = glm::mat4(1.0f));
-    void updateRendererInfo(glm::mat4 const& camera_view);
+    RendererContext& getRendererContext(glm::mat4 const& camera_view = glm::mat4(1.0f));
+    void updateRendererContext(glm::mat4 const& camera_view);
 
     auto get_visible_ids(
       std::ranges::range auto const& entities,
@@ -140,7 +139,6 @@ namespace Poulpe
 
     std::vector<Buffer> _light_buffers;
 
-    ComponentRenderingInfo _rendering_info;
-    RendererInfo _renderer_info;
+    RendererContext _rendering_context;
   };
 }

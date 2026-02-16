@@ -14,6 +14,7 @@ import Engine.Core.Vertex;
 import Engine.Core.VulkanTypes;
 import Engine.Core.Volk;
 
+import Engine.Renderer.RendererComponentTypes;
 import Engine.Renderer.VulkanDeviceMemoryPool;
 import Engine.Renderer.VulkanAPI;
 
@@ -76,31 +77,6 @@ namespace Poulpe
       std::size_t _size;
   };
 
-  export struct RendererInfo
-  {
-    Mesh* mesh;
-    Camera* camera{};
-    glm::mat4 camera_view{};
-    Light sun_light{};
-    std::span<Light, std::dynamic_extent> point_lights{};
-    std::span<Light, std::dynamic_extent> spot_lights{};
-    double elapsed_time{0.0};
-    VkShaderStageFlags stage_flag_bits;
-    bool normal_debug{};
-    bool has_alpha_blend {false};
-    std::uint32_t env_options{}; //env options, see below
-  };
-
-  /** env options config :
-    HAS_FOG << 0
-  **/
-
-  export enum class SHADOW_TYPE {
-    SPOT_LIGHT,
-    POINT_LIGHT,
-    CSM
-  };
-
   export class Renderer
   {
   public:
@@ -120,9 +96,13 @@ namespace Poulpe
     void startRender();
     void startShadowMap(SHADOW_TYPE const shadow_type);
 
-    void draw(RendererInfo const& renderer_info);
+    void draw(
+      Mesh const& mesh,
+      RendererContext const& renderer_context);
+
     void drawShadowMap(
-      RendererInfo const& renderer_info,
+Mesh const& mesh,
+      RendererContext const& renderer_context,
       SHADOW_TYPE const shadow_type);
 
     void endRender();

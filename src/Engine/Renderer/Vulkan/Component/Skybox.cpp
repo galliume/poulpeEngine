@@ -20,14 +20,13 @@ import Engine.Renderer.VulkanRenderer;
 namespace Poulpe
 {
   void Skybox::operator()(
-    Renderer *const renderer,
-    ComponentRenderingInfo const& component_rendering_info)
+    Renderer & renderer,
+    Mesh & mesh,
+    RendererContext const& render_context)
   {
     stage_flag_bits = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
 
-    auto const& mesh = component_rendering_info.mesh;
-
-    if (!mesh && !mesh->isDirty()) return;
+    if (!mesh.isDirty()) return;
     std::vector<Vertex> const vertices {
         // 16-byte vec4s | 12-byte vec3s (Pos, Normal, Orig) | 8-byte UV | Bones/Weights/Total
         // Back face
@@ -78,55 +77,58 @@ namespace Poulpe
         {{0.f,0.f,0.f,0.f}, {0.f,0.f,0.f,0.f}, {-1.f,-1.f, 1.f, 0.0f}, {1.f,0.f,0.f, 0.0f}, {1.f,0.f} },
         {{0.f,0.f,0.f,0.f}, {0.f,0.f,0.f,0.f}, { 1.f,-1.f, 1.f, 0.0f}, {1.f,0.f,0.f, 0.0f}, {1.f,0.f} }
     };
-    auto cmd_pool = renderer->getAPI()->createCommandPool();
+    auto cmd_pool = renderer.getAPI()->createCommandPool();
 
     std::vector<UniformBufferObject> ubos{};
     ubos.reserve(1);
 
-    if (component_rendering_info.mode == ComponentRenderingInfo::MODE::CREATION) {
+    if (render_context.mode == RendererContext::Mode::CREATION
+      || mesh.getUniformBuffers().empty()) {
       UniformBufferObject ubo{};
       ubo.model = glm::mat4(0.0f);
       //ubo.view = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
-      ubo.projection = renderer->getPerspective();
+      ubo.projection = renderer.getPerspective();
       ubos.push_back({ ubo });
 
-      Buffer uniform_buffer = renderer->getAPI()->createUniformBuffers(1, renderer->getCurrentFrameIndex());
-      mesh->getUniformBuffers().emplace_back(uniform_buffer);
+      mesh.getUniformBuffers().emplace_back(
+        renderer.getAPI()->createUniformBuffers(1, renderer.getCurrentFrameIndex()));
+      Logger::debug("over here");
     } else {
-      auto const& mesh_data = mesh->getData();
+      auto const& mesh_data = mesh.getData();
       ubos = mesh_data->_ubos[0];
     }
 
     Data data{};
     data._textures.emplace_back("skybox");
     data._vertices = vertices;
-    data._vertex_buffer = renderer->getAPI()->createVertexBuffer(vertices, renderer->getCurrentFrameIndex());
+    data._vertex_buffer = renderer.getAPI()->createVertexBuffer(vertices, renderer.getCurrentFrameIndex());
     data._ubos.resize(1);
     data._ubos[0] = ubos;
     data._texture_index = 0;
 
-    vkDestroyCommandPool(renderer->getDevice(), cmd_pool, nullptr);
+    vkDestroyCommandPool(renderer.getDevice(), cmd_pool, nullptr);
 
-    mesh->setName("skybox");
-    mesh->setShaderName("skybox");
-    mesh->setIsIndexed(false);
-    mesh->setData(data);
-    mesh->setIsDirty(false);
-    mesh->setHasShadow(false);
+    mesh.setName("skybox");
+    mesh.setShaderName("skybox");
+    mesh.setIsIndexed(false);
+    mesh.setData(data);
+    mesh.setIsDirty(false);
+    mesh.setHasShadow(false);
 
-    renderer->getAPI()->updateUniformBuffer(mesh->getUniformBuffers().at(0), &data._ubos.at(0), renderer->getCurrentFrameIndex());
+    Logger::debug("here");
+    renderer.getAPI()->updateUniformBuffer(mesh.getUniformBuffers().at(0), &data._ubos.at(0), renderer.getCurrentFrameIndex());
 
-    createDescriptorSet(renderer, component_rendering_info);
+    createDescriptorSet(renderer, mesh, render_context);
   }
 
   void Skybox::createDescriptorSet(
-    Renderer *const renderer,
-    ComponentRenderingInfo const& component_rendering_info)
+    Renderer & renderer,
+    Mesh & mesh,
+    RendererContext const& render_context)
   {
-    auto const& mesh = component_rendering_info.mesh;
 
-    Texture tex{ component_rendering_info.textures->at(component_rendering_info.skybox_name) };
-    tex.setSampler(renderer->getAPI()->createKTXSampler(
+    Texture tex{ render_context.textures->at(render_context.skybox_name) };
+    tex.setSampler(renderer.getAPI()->createKTXSampler(
     TextureWrapMode::CLAMP_TO_EDGE,
     TextureWrapMode::CLAMP_TO_EDGE,
     tex.getMipLevels()));
@@ -134,11 +136,11 @@ namespace Poulpe
     std::vector<VkDescriptorImageInfo> image_infos{};
     image_infos.emplace_back(tex.getSampler(), tex.getImageView(), VK_IMAGE_LAYOUT_GENERAL);
 
-    auto const pipeline = renderer->getPipeline(mesh->getShaderName());
-    VkDescriptorSet descset = renderer->getAPI()->createDescriptorSets(pipeline->desc_pool, { pipeline->descset_layout }, 1);
+    auto const pipeline = renderer.getPipeline(mesh.getShaderName());
+    VkDescriptorSet descset = renderer.getAPI()->createDescriptorSets(pipeline->desc_pool, { pipeline->descset_layout }, 1);
 
-    renderer->getAPI()->updateDescriptorSets(mesh->getUniformBuffers(), descset, image_infos);
+    renderer.getAPI()->updateDescriptorSets(mesh.getUniformBuffers(), descset, image_infos);
 
-    mesh->setDescSet(descset);
+    mesh.setDescSet(descset);
   }
 }
