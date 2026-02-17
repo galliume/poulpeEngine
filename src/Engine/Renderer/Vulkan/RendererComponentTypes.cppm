@@ -27,25 +27,25 @@ namespace Poulpe {
     glm::mat4 camera_view{ 1.0f };
     double elapsed_time{ 0.0 };
     std::uint32_t env_options{ 0 };
-    
+
     // Lighting
     Light sun_light{};
     std::span<Light> point_lights{};
     std::span<Light> spot_lights{};
     Buffer light_buffer{};
-    
+
     // Textures & Resources
     std::unordered_map<std::string, Texture> const* textures{ nullptr };
-    std::string skybox_name{};
-    std::string terrain_name{};
-    std::string water_name{};
-    
+    std::string_view skybox_name{};
+    std::string_view terrain_name{};
+    std::string_view water_name{};
+
     // UI & Fonts
     std::span<FontCharacter> characters{};
     FT_Face face{};
     std::uint32_t atlas_width{ 0 };
     std::uint32_t atlas_height{ 0 };
-    
+
     Mode mode{ Mode::CREATION };
 
     // Pass State

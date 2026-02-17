@@ -64,20 +64,20 @@ namespace Poulpe
       LightObjectBuffer light_object_buffer{};
       _light_buffers[i] = _renderer->getAPI()->createStorageBuffers(light_object_buffer, _renderer->getCurrentFrameIndex());
     }
-    
+
     _entity_manager = std::make_unique<EntityManager>(
       _component_manager.get(),
       _light_manager.get(),
       _texture_manager.get(),
       _light_buffers.at(0)
     );
-    
+
     _font_manager = std::make_unique<FontManager>();
     _font_manager->addRenderer(_renderer.get());
     auto atlas = _font_manager->load();
 
     _renderer->getAPI()->endCopyBuffer(_renderer->getCurrentFrameIndex());
-    
+
     _texture_manager->addTexture(atlas);
 
     //@todo, those managers should not have the usage of the renderer...
@@ -112,7 +112,7 @@ namespace Poulpe
     _audio_manager->load(configManager->soundConfig());
 
     InputManagerLocator::get()->init(appConfig["input"]);
-    
+
     auto const& shadowConfig { appConfig["shadow_resolution"] };
     _renderer->setShadowMapResolution(shadowConfig["width"].get<std::uint32_t>());
 
@@ -163,7 +163,7 @@ namespace Poulpe
     };
     addText(text);
     _renderer->getAPI()->endCopyBuffer(_renderer->getCurrentFrameIndex());
-    
+
     //prepareHUD();
   }
 
@@ -176,44 +176,28 @@ namespace Poulpe
   {
     {
       auto * const config_manager { ConfigManagerLocator::get() };
-      auto const & root_path { config_manager->rootPath() };
-
-      auto const camera_index { config_manager->getCameraIndex() };
-      if (_current_camera != camera_index) {
-        _current_camera = camera_index;
+      if (_current_camera != config_manager->getCameraIndex()) {
+        _current_camera = config_manager->getCameraIndex();
         InputManagerLocator::get()->setCamera(getCamera());
       }
 
-      InputManagerLocator::get()->processGamepad(_player_manager.get(), delta_time);
+      auto const frame_context { buildFrameContext(
+        config_manager->rootPath(),
+        _current_camera,
+        delta_time) };
 
-      //@todo animate light
-      //_light_manager->animateAmbientLight(delta_time);
-      auto const camera_view_matrix = (_current_camera == std::to_underlying(CameraType::THIRD_PERSON))
-        ? getCamera()->getThirdPersonView(_player_manager->getPosition())
-        : getCamera()->getView();
-      auto const& perspective { _renderer->getPerspective() };
-      //std::lock_guard<std::shared_mutex> guard(_entity_manager->lockWorldNode());
+      InputManagerLocator::get()->processGamepad(_player_manager.get(), frame_context.delta_time);
 
-      _light_manager->computeCSM(camera_view_matrix, perspective);
-      //Logger::debug("x {} y {} z {}", camera_pos.x, camera_pos.y, camera_pos.z);
+      _light_manager->computeCSM(frame_context.camera_view_matrix, frame_context.perspective);
 
-      updateRendererContext(camera_view_matrix);
+      updateRendererContext(frame_context.camera_view_matrix);
 
-      //auto renderer_info { getRendererContext() };
       _renderer->getAPI()->startCopyBuffer(_renderer->getCurrentFrameIndex());
-
-      std::vector<std::future<void>> tasks{};
-
-      glm::mat4 const vp { perspective * camera_view_matrix };
-      auto const frustum_planes { getCamera()->getFrustumPlanes(vp) };
-
-      auto const visible_ids { get_visible_ids(_entity_manager->getEntities(), frustum_planes) };
-      auto const transparent_ids { get_visible_ids(_entity_manager->getTransparentEntities(), frustum_planes) };
 
       //@todo improve this draft for simple shader hot reload
       if (config_manager->reloadShaders()) {
         std::filesystem::path p = std::filesystem::current_path();
-        auto cmd{ root_path + "/bin/shaders_compil.sh" };
+        auto cmd{ frame_context.root_path + "/bin/shaders_compil.sh" };
         std::system(cmd.c_str());
 
         std::latch count_down{ 1 };
@@ -222,128 +206,155 @@ namespace Poulpe
         config_manager->setReloadShaders(false);
       }
 
-      auto const skybox_entity { _entity_manager->getSkybox() };
-      if (skybox_entity != nullptr) {
-        tasks.push_back(std::async(std::launch::async, [this, skybox_entity, delta_time, camera_view_matrix]() {
-          renderEntity(skybox_entity->getID(), delta_time, camera_view_matrix);
-        }));
-      }
-      std::ranges::for_each(tasks, &std::future<void>::wait);
-      auto const terrain_entity { _entity_manager->getTerrain() };
-      if (terrain_entity != nullptr) {
-        tasks.push_back(std::async(std::launch::async, [this, terrain_entity, delta_time, camera_view_matrix]() {
-          renderEntity(terrain_entity->getID(), delta_time, camera_view_matrix);
-        }));
-      }
-      auto const water_entity { _entity_manager->getWater() };
-      if (water_entity != nullptr) {
-        auto* mesh_component { _component_manager->get<MeshComponent>(water_entity->getID()) };
-        auto mesh { mesh_component->template has<Mesh>() };
-        
-        if (mesh) {
-          float const narrowed { static_cast<float>(getElapsedTime()) };
-          std::uint32_t bitValue;
-          std::memcpy(&bitValue, &narrowed, sizeof(float));
+      updateEntities(frame_context);
+      renderShadowmap(frame_context);
+      renderEntities(frame_context);
 
-          mesh->setOptions(bitValue);
-        }
-
-        tasks.push_back(std::async(std::launch::async, [this, water_entity, delta_time, camera_view_matrix]() {
-          renderEntity(water_entity->getID(), delta_time, camera_view_matrix);
-        }));
-      }
-
-      std::ranges::for_each(visible_ids, [&](const auto& entity) {
-        tasks.push_back(std::async(std::launch::async, [this, entity, delta_time, camera_view_matrix]() {
-          renderEntity(entity, delta_time, camera_view_matrix);
-        }));
-      });
-
-      std::ranges::for_each(transparent_ids, [&](const auto& entity) {
-        tasks.push_back(std::async(std::launch::async, [this, entity, delta_time, camera_view_matrix]() {
-          renderEntity(entity, delta_time, camera_view_matrix);
-        }));
-      });
-
-      std::ranges::for_each(_entity_manager->getTexts(), [&](auto const& entity) {
-        tasks.push_back(std::async(std::launch::async, [this, entity, delta_time, camera_view_matrix]() {
-          renderEntity(entity->getID(), delta_time, camera_view_matrix);
-        }));
-      });
-
-      std::ranges::for_each(tasks, &std::future<void>::wait);
-
-      _renderer->start();
-      _renderer->startShadowMap(SHADOW_TYPE::CSM);
-      
-      std::ranges::for_each(visible_ids, [&](const auto& entity) {
-        drawShadowMap(entity, SHADOW_TYPE::CSM, camera_view_matrix);
-      });
-      _renderer->endShadowMap(SHADOW_TYPE::CSM);
-      
-      
-      _renderer->startShadowMap(SHADOW_TYPE::SPOT_LIGHT);
-      
-      std::ranges::for_each(visible_ids, [&](const auto& entity) {
-        drawShadowMap(entity, SHADOW_TYPE::SPOT_LIGHT, camera_view_matrix);
-      });
-      _renderer->endShadowMap(SHADOW_TYPE::SPOT_LIGHT);
-
-      _renderer->startRender();
-
-      if (skybox_entity != nullptr) {
-        drawEntity(skybox_entity->getID(), camera_view_matrix);
-      }
-
-      if (terrain_entity != nullptr) {
-        drawEntity(terrain_entity->getID(), camera_view_matrix);
-      }
-
-      std::ranges::for_each(visible_ids, [&](const auto& entity) {
-        drawEntity(entity, camera_view_matrix, false);
-      });
-      std::ranges::for_each(transparent_ids, [&](const auto& entity) {
-        drawEntity(entity, camera_view_matrix, true);
-      });
-
-      if (water_entity != nullptr) {
-        drawEntity(water_entity->getID(), camera_view_matrix);
-      }
-
-      std::ranges::for_each(_entity_manager->getTexts(), [&](auto const& text_entity) {
-        drawEntity(text_entity->getID(), camera_view_matrix, true);
-      });
-      _renderer->getAPI()->endCopyBuffer(_renderer->getCurrentFrameIndex());
-
-      _renderer->endRender();
       _renderer->submit();
 
-      LightObjectBuffer light_object_buffer{};
-      //light_object_buffer.lights[0] = _light_manager->getSpotLights()[0];
-      light_object_buffer.lights[0] = _light_manager->getSunLight();
-      light_object_buffer.lights[1] = _light_manager->getPointLights()[1];
-      light_object_buffer.lights[2] = _light_manager->getPointLights()[0];
+      updateBuffers();
+      updatePlayer();
+    }
+  }
 
-      _renderer->getAPI()->startCopyBuffer(_renderer->getCurrentFrameIndex());
+  void RenderManager::updatePlayer()
+  {
+    if (_player_manager->hasMoved() && _current_camera == std::to_underlying(CameraType::THIRD_PERSON)) {
+      auto pos { _player_manager->getPosition() };
+      pos.y += 10;
+      pos.z -= 10;
+      getCamera()->setPos(pos);
+    }
 
-      _renderer->getAPI()->updateStorageBuffer(
-        _light_buffers.at(_renderer->getCurrentFrameIndex()), light_object_buffer, _renderer->getCurrentFrameIndex());
-      _renderer->getAPI()->endCopyBuffer(_renderer->getCurrentFrameIndex());
+    _player_manager->reset();
+  }
 
-      if (_player_manager->hasMoved() && _current_camera == std::to_underlying(CameraType::THIRD_PERSON)) {
-        auto pos { _player_manager->getPosition() };
-        pos.y += 10;
-        pos.z -= 10;
-        getCamera()->setPos(pos);
+  void RenderManager::updateEntities(FrameContext const& frame_context)
+  {
+    _tasks.clear();
+
+    auto const optional_tasks {
+      (frame_context.skybox_entity ? 1u : 0u)
+      + (frame_context.terrain_entity ? 1u : 0u)
+      + (frame_context.water_entity ? 1u : 0u) };
+
+    _tasks.reserve(
+      optional_tasks
+      + static_cast<std::uint32_t>(frame_context.visible_ids.size())
+      + static_cast<std::uint32_t>(frame_context.transparent_ids.size())
+      + static_cast<std::uint32_t>(frame_context.texts.size()));
+
+    auto const delta_time { frame_context.delta_time };
+    auto const camera_view_matrix { frame_context.camera_view_matrix };
+
+    if (frame_context.skybox_entity != nullptr) {
+      auto const entity_id = frame_context.skybox_entity->getID();
+      _tasks.push_back(std::async(std::launch::async, [this, entity_id, delta_time, camera_view_matrix]() {
+        renderEntity(entity_id, delta_time, camera_view_matrix);
+      }));
+    }
+
+    if (frame_context.terrain_entity != nullptr) {
+      auto const entity_id { frame_context.terrain_entity->getID() };
+      _tasks.push_back(std::async(std::launch::async, [this, entity_id, delta_time, camera_view_matrix]() {
+        renderEntity(entity_id, delta_time, camera_view_matrix);
+      }));
+    }
+
+    if (frame_context.water_entity != nullptr) {
+      auto const entity_id { frame_context.water_entity->getID() };
+      auto* mesh_component { _component_manager->get<MeshComponent>(entity_id) };
+      auto mesh { mesh_component->template has<Mesh>() };
+
+      if (mesh) {
+        float const narrowed { static_cast<float>(getElapsedTime()) };
+        std::uint32_t bitValue;
+        std::memcpy(&bitValue, &narrowed, sizeof(float));
+
+        mesh->setOptions(bitValue);
       }
 
-      _player_manager->reset();
+      _tasks.push_back(std::async(std::launch::async, [this, entity_id, delta_time, camera_view_matrix]() {
+        renderEntity(entity_id, delta_time, camera_view_matrix);
+      }));
     }
+
+    std::ranges::for_each(frame_context.visible_ids, [&](const auto& entity) {
+      _tasks.push_back(std::async(std::launch::async, [this, entity, delta_time, camera_view_matrix]() {
+        renderEntity(entity, delta_time, camera_view_matrix);
+      }));
+    });
+
+    std::ranges::for_each(frame_context.transparent_ids, [&](const auto& entity) {
+      _tasks.push_back(std::async(std::launch::async, [this, entity, delta_time, camera_view_matrix]() {
+        renderEntity(entity, delta_time, camera_view_matrix);
+      }));
+    });
+
+    std::ranges::for_each(frame_context.texts, [&](auto const& entity) {
+      auto const entity_id { entity->getID() };
+      _tasks.push_back(std::async(std::launch::async, [this, entity_id, delta_time, camera_view_matrix]() {
+        renderEntity(entity_id, delta_time, camera_view_matrix);
+      }));
+    });
+
+    std::ranges::for_each(_tasks, &std::future<void>::wait);
+  }
+
+  void RenderManager::renderShadowmap(FrameContext const& frame_context)
+  {
+    _renderer->start();
+    _renderer->startShadowMap(SHADOW_TYPE::CSM);
+
+    std::ranges::for_each(frame_context.visible_ids, [&](const auto& entity) {
+      drawShadowMap(entity, SHADOW_TYPE::CSM, frame_context.camera_view_matrix);
+    });
+
+    _renderer->endShadowMap(SHADOW_TYPE::CSM);
+    _renderer->startShadowMap(SHADOW_TYPE::SPOT_LIGHT);
+
+    std::ranges::for_each(frame_context.visible_ids, [&](const auto& entity) {
+      drawShadowMap(entity, SHADOW_TYPE::SPOT_LIGHT, frame_context.camera_view_matrix);
+    });
+
+    _renderer->endShadowMap(SHADOW_TYPE::SPOT_LIGHT);
+  }
+
+  void RenderManager::renderEntities(FrameContext const& frame_context)
+  {
+    _renderer->startRender();
+
+    if (frame_context.skybox_entity != nullptr) {
+      drawEntity(frame_context.skybox_entity->getID(), frame_context.camera_view_matrix);
+    }
+
+    if (frame_context.terrain_entity != nullptr) {
+      drawEntity(frame_context.terrain_entity->getID(), frame_context.camera_view_matrix);
+    }
+
+    std::ranges::for_each(frame_context.visible_ids, [&](const auto& entity) {
+      drawEntity(entity, frame_context.camera_view_matrix, false);
+    });
+
+    std::ranges::for_each(frame_context.transparent_ids, [&](const auto& entity) {
+      drawEntity(entity, frame_context.camera_view_matrix, true);
+    });
+
+    if (frame_context.water_entity != nullptr) {
+      drawEntity(frame_context.water_entity->getID(), frame_context.camera_view_matrix);
+    }
+
+    std::ranges::for_each(frame_context.texts, [&](auto const& text_entity) {
+      drawEntity(text_entity->getID(), frame_context.camera_view_matrix, true);
+    });
+
+    _renderer->getAPI()->endCopyBuffer(_renderer->getCurrentFrameIndex());
+    _renderer->endRender();
   }
 
   bool RenderManager::isClipped(
     IDType const entity_id,
-    std::vector<glm::vec4> const& frustum_planes)
+    std::span<glm::vec4 const> frustum_planes) const
   {
     auto* mesh_component { _component_manager->get<MeshComponent>(entity_id) };
     auto mesh { mesh_component->template has<Mesh>() };
@@ -470,6 +481,21 @@ namespace Poulpe
     }
   }
 
+  void RenderManager::updateBuffers()
+  {
+    LightObjectBuffer light_object_buffer{};
+    //light_object_buffer.lights[0] = _light_manager->getSpotLights()[0];
+    light_object_buffer.lights[0] = _light_manager->getSunLight();
+    light_object_buffer.lights[1] = _light_manager->getPointLights()[1];
+    light_object_buffer.lights[2] = _light_manager->getPointLights()[0];
+
+    _renderer->getAPI()->startCopyBuffer(_renderer->getCurrentFrameIndex());
+
+    _renderer->getAPI()->updateStorageBuffer(
+      _light_buffers.at(_renderer->getCurrentFrameIndex()), light_object_buffer, _renderer->getCurrentFrameIndex());
+    _renderer->getAPI()->endCopyBuffer(_renderer->getCurrentFrameIndex());
+  }
+
   void RenderManager::loadData(std::string const & level)
   {
     auto * const config_manager { ConfigManagerLocator::get() };
@@ -509,7 +535,7 @@ namespace Poulpe
     auto mesh = std::make_unique<Mesh>();
     mesh->setName("skybox");
     mesh->isSkybox(true);
-    
+
     material_t material{};
     mesh->addMaterial(material);
 
@@ -530,7 +556,7 @@ namespace Poulpe
     mesh->setHasShadow(false);
     mesh->setIsIndexed(false);
     mesh->setShaderName("terrain");
-    
+
     material_t material{};
     mesh->addMaterial(material);
 
@@ -576,7 +602,7 @@ namespace Poulpe
     material.double_sided = true;
     material.alpha_mode = 1.0;
     mesh->addMaterial(material);
-    
+
     auto rdr_impl{ RendererComponentFactory::create<Text>() };
     rdr_impl->setText(text.text);
     rdr_impl->setPosition(text.position);
@@ -590,7 +616,7 @@ namespace Poulpe
     _component_manager->add<MeshComponent>(entity->getID(), std::move(mesh));
 
     text.id = entity->getID();
-   
+
     _entity_manager->addText(entity);
   }
 
@@ -638,7 +664,7 @@ namespace Poulpe
   {
     _rendering_context.camera = getCamera();
     _rendering_context.camera_view = camera_view;
-    _rendering_context.textures = _texture_manager->getTextures();
+    _rendering_context.textures = &_texture_manager->getTextures();
     _rendering_context.skybox_name = _texture_manager->getSkyboxTexture();
     _rendering_context.terrain_name = _texture_manager->getTerrainTexture();
     _rendering_context.water_name = _texture_manager->getWaterTexture();
@@ -666,5 +692,38 @@ namespace Poulpe
   Buffer RenderManager::getLightBuffer()
   {
     return _light_buffers[_renderer->getCurrentFrameIndex()];
+  }
+
+
+  FrameContext RenderManager::buildFrameContext(
+    std::string const& root_path,
+    std::uint8_t const camera_index,
+    double const delta_time) const
+  {
+    auto const& perspective { _renderer->getPerspective() };
+    auto const camera_view_matrix =
+      (_current_camera == std::to_underlying(CameraType::THIRD_PERSON))
+        ? getCamera()->getThirdPersonView(_player_manager->getPosition())
+        : getCamera()->getView();
+
+    auto const vp { perspective * camera_view_matrix };
+    auto const frustum_planes { getCamera()->getFrustumPlanes(vp) };
+    auto const visible_ids { get_visible_ids(_entity_manager->getEntities(), frustum_planes) };
+    auto const transparent_ids { get_visible_ids(_entity_manager->getTransparentEntities(), frustum_planes) };
+
+    return {
+      .delta_time = delta_time,
+      .root_path = root_path,
+      .camera_index = camera_index,
+      .camera_view_matrix = camera_view_matrix,
+      .perspective = perspective,
+      .frustum_planes = std::move(frustum_planes),
+      .visible_ids = std::move(visible_ids),
+      .transparent_ids = std::move(transparent_ids),
+      .skybox_entity = _entity_manager->getSkybox(),
+      .terrain_entity = _entity_manager->getTerrain(),
+      .water_entity = _entity_manager->getWater(),
+      .texts = _entity_manager->getTexts()
+    };
   }
 }

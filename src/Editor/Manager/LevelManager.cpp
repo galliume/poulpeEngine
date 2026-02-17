@@ -62,7 +62,7 @@ namespace Poulpe {
       .point_lights = light_manager->getPointLights(),
       .spot_lights = light_manager->getSpotLights(),
       .light_buffer = render_manager->getLightBuffer(),
-      .textures = texture_manager->getTextures(),
+      .textures = &texture_manager->getTextures(),
       .skybox_name = texture_manager->getSkyboxTexture(),
       .terrain_name = texture_manager->getTerrainTexture(),
       .water_name = texture_manager->getWaterTexture(),

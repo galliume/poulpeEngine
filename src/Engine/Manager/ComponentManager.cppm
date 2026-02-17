@@ -64,7 +64,7 @@ namespace Poulpe
       }
     }
 
-    std::vector<const std::type_info*> getEntityComponents(IDType entity_id) { return _components_entity_map[entity_id]; }
+    std::span<const std::type_info*> getEntityComponents(IDType entity_id) { return _components_entity_map[entity_id]; }
     void clear();
 
   private:

@@ -410,11 +410,11 @@ namespace Poulpe
     /*
     * Helper functions.
     */
-    inline const std::vector<const char*> getValidationLayers() const { return _validation_layers; }
+    inline std::span<const char* const> getValidationLayers() const { return _validation_layers; }
 
-    inline const std::vector<VkExtensionProperties> getExtensions() const { return _extensions; }
+    inline std::span<VkExtensionProperties const> getExtensions() const { return _extensions; }
 
-    inline const std::vector<VkLayerProperties> getLayersAvailable() const { return _layers_available; }
+    inline std::span<VkLayerProperties const> getLayersAvailable() const { return _layers_available; }
 
     inline bool isInstanceCreated() const { return _instance_created; }
 
@@ -430,7 +430,7 @@ namespace Poulpe
 
     inline VkDevice getDevice() const { return _device; }
 
-    inline std::vector<VkQueue> getGraphicsQueues() const { return _graphics_queues; }
+    inline std::span<VkQueue const> getGraphicsQueues() const { return _graphics_queues; }
     VkQueue getCurrentGraphicsQueues() const { return _graphics_queues.at(_queue_index); }
 
     inline VkPhysicalDeviceProperties getDeviceProperties() const { return _device_props; }
@@ -477,7 +477,7 @@ namespace Poulpe
 
     std::uint32_t getQueueCount() { return _queue_count; }
 
-    std::vector<VkQueue> getPresentQueue() { return _present_queues; }
+    std::span<VkQueue> getPresentQueue() { return _present_queues; }
 
     void waitIdle();
 

@@ -31,39 +31,36 @@ namespace Poulpe
       TextureManager* const texture_manager,
       Buffer& light_buffer);
 
-    void inline addHUD(std::unique_ptr<Entity> entity) { _hud.emplace_back(std::move(entity)); }
     void inline addRenderer(Renderer* const renderer) { _renderer = renderer; }
     void clear();
-    //inline std::vector<std::unique_ptr<Entity>>* getEntities() { return & _Entities; }
-    inline std::vector<std::unique_ptr<Entity>>* getHUD() { return & _hud; }
-    //inline std::size_t getInstancedCount() const { return _Entities.size(); }
-    //inline std::unordered_map<std::string, std::array<std::uint32_t, 2>> getLoadedEntities() { return _LoadedEntities; }
-    inline std::shared_ptr<Entity> const getSkybox() { return _skybox; }
-    inline std::shared_ptr<Entity> const getTerrain() { return _terrain; }
-    inline std::shared_ptr<Entity> const getWater() { return _water; }
-    inline std::shared_ptr<Entity> const getShadowMap() { return _shadow_map; }
-    inline std::shared_ptr<Entity> const getText(std::uint32_t const index) { return _texts.at(index); }
-    inline std::vector<std::shared_ptr<Entity>>& getTexts() { return _texts; }
+
+    inline std::shared_ptr<Entity> getSkybox() const { return _skybox; }
+    inline std::shared_ptr<Entity> getTerrain() const { return _terrain; }
+    inline std::shared_ptr<Entity> getWater() const { return _water; }
+    inline std::shared_ptr<Entity> getShadowMap() const { return _shadow_map; }
+    inline std::shared_ptr<Entity> getText(std::uint32_t const index) const { return _texts.at(index); }
+
+    inline std::span<std::shared_ptr<Entity>> getTexts() { return _texts; }
+    std::span<std::shared_ptr<Entity>> getEntities() { return _entities;}
+    std::span<std::shared_ptr<Entity>> getTransparentEntities() { return _transparent_entities;}
 
     std::function<void()> load(json const& lvl_config);
+
     inline void setSkybox(std::shared_ptr<Entity> skybox) { _skybox = skybox; }
     inline void setTerrain(std::shared_ptr<Entity> terrain) { _terrain = terrain; }
     inline void setWater(std::shared_ptr<Entity> water) { _water = water; }
     inline void setShadowMap(std::shared_ptr<Entity> shadow_map) { _shadow_map = shadow_map; }
-    inline std::size_t addText(std::shared_ptr<Entity> text) { _texts.emplace_back(text); return _texts.size() - 1; }
+
+    inline std::size_t addText(std::shared_ptr<Entity> text) { _texts.emplace_back(std::move(text)); return _texts.size() - 1; }
 
     void addEntity(std::shared_ptr<Entity> entity);
     void addTransparentEntity(std::shared_ptr<Entity> entity);
     void addTextEntity(std::shared_ptr<Entity> entity);
 
-    std::vector<std::shared_ptr<Entity>> getEntities() { return _entities;}
-    std::vector<std::shared_ptr<Entity>> getTransparentEntities() { return _transparent_entities;}
-
     std::shared_ptr<EntityNode> const addEntityToWorld(std::shared_ptr<Entity> entity);
 
-    //void addEntity(Mesh* meshes);
-    //inline std::size_t getTotalEntities() const { return _Entities.size(); }
     EntityNode * getWorldNode();
+
     void initMeshes(std::string const& name, json const& raw_data);
     void initWorldGraph();
     std::shared_mutex& lockWorldNode() { return _mutex_shared; }
@@ -72,9 +69,6 @@ namespace Poulpe
     ComponentManager* _component_manager;
     LightManager* _light_manager;
     TextureManager* _texture_manager;
-
-    //std::vector<std::unique_ptr<Entity>> _Entities{};
-    std::vector<std::unique_ptr<Entity>> _hud{};
 
     json _lvl_config;
 

@@ -1,6 +1,6 @@
 # PoulpeEngine Portfolio Upgrade Checklist
 
-This checklist is organized into **14** PR-sized steps to raise professional quality, performance, and modern C++ standards.
+This checklist is organized into **13** PR-sized steps to raise professional quality, performance, and modern C++ standards.
 Each item was validated against the actual codebase (audit date: Feb 2026).
 
 ---
@@ -32,13 +32,14 @@ Checklist:
 - [x] Fix the inverted condition at line 186: `isValidationLayersEnabled() && !checkValidationLayerSupport()`.
 - [x] Replace pointer comparison at line 274 with `strcmp` or `std::string` comparison.
 - [x] Rename `_has_push_contants` → `_has_push_constants` in member, setter, and getter (Mesh.cppm lines 40, 56, 95).
-- [ ] Run build preset and verify zero new warnings in touched files.
+- [x] Run build preset and verify zero new warnings in touched files.
 
 Done when:
 - Validation layer function has a correct passing path.
 - Validation layers are actually checked when enabled.
 - String layer names are compared by content.
 - No inconsistent push-constant naming remains in public API.
+- Build validates after fixes (`cmake --build --preset windows-release`).
 
 ---
 
@@ -93,29 +94,7 @@ Done when:
 
 ---
 
-## PR 4 — Warning policy professionalization
-
-Goal: keep strictness without making contributor experience brittle.
-
-Files:
-- cmake/modules/compiler_flags.cmake
-
-### Audit findings (status: partially already done)
-
-Warning flags are **already applied per-target** via `set_poulpe_compiler_flags(target)` using `target_compile_options`. The actionable gap: `-Werror` is enabled in **all** configurations, making local development brittle. Also, `-Weverything` is enabled globally (line 36) which is aggressive.
-
-Checklist:
-- [x] Scope warning flags per target — already done via `set_poulpe_compiler_flags()`.
-- [x] Gate `-Werror` behind a CMake option (e.g. `PLP_WERROR`, default OFF) so CI can enable it and local builds remain unbroken.
-- [x] Consider replacing `-Weverything` with `-Wall -Wextra -Wpedantic` + specific `-W` flags.
-- [x] Normalize compiler-specific flags (MSVC/Clang/GCC) with clear branches.
-
-Done when:
-- [x] Local dev build is robust; CI can still enforce strict mode via `-DPLP_WERROR=ON`.
-
----
-
-## PR 5 — Debug quality gates (sanitizers + presets)
+## PR 4 — Debug quality gates (sanitizers + presets)
 
 Goal: catch UB/memory issues early.
 
@@ -128,17 +107,18 @@ Files:
 No working sanitizer presets exist. There is an orphaned hidden preset `ASAN_LIBRARY_PATH` that is dead config.
 
 Checklist:
-- [ ] Remove or integrate the orphaned `ASAN_LIBRARY_PATH` preset.
-- [ ] Add a working debug preset with `-fsanitize=address,undefined` in both compile and link flags.
-- [ ] Ensure runtime flags (`ASAN_OPTIONS`, `UBSAN_OPTIONS`) are documented.
-- [ ] Test that the sanitizer preset configures and builds on at least one supported compiler (Clang recommended).
+- [x] Remove or integrate the orphaned `ASAN_LIBRARY_PATH` preset.
+- [x] Add a working debug preset with `-fsanitize=address,undefined` in both compile and link flags.
+- [x] Ensure runtime flags (`ASAN_OPTIONS`, `UBSAN_OPTIONS`) are documented.
+- [x] Test that the sanitizer preset configures and builds on at least one supported compiler (Clang recommended).
 
 Done when:
 - Sanitizer preset configures, builds, and runs successfully.
+- Sanitizer presets added and validated locally (`windows-debug-asan` / `linux-debug-asan`).
 
 ---
 
-## PR 6 — API cost reductions on hot paths
+## PR 5 — API cost reductions on hot paths
 
 Goal: reduce copies and improve frame-time consistency.
 
@@ -155,17 +135,18 @@ Many functions return `std::vector` by value (copies):
 - `AudioManager::getAmbientSound()`
 
 Checklist:
-- [ ] Change return types to `const&` for getters that expose internally-owned containers.
-- [ ] **[NEW]** Use `std::span<T>` (C++20) where callers only need a read-only view and data is contiguous, avoiding container coupling entirely.
-- [ ] Keep return-by-value only where callers genuinely need ownership transfer.
+- [x] Change return types to `const&` for getters that expose internally-owned containers.
+- [x] **[NEW]** Use `std::span<T>` (C++20) where callers only need a read-only view and data is contiguous, avoiding container coupling entirely.
+- [x] Keep return-by-value only where callers genuinely need ownership transfer.
 
 Done when:
 - Hot-path APIs avoid unnecessary allocations/copies.
 - `std::vector` is not exposed where `std::span` suffices.
+- Build validates after API changes (`cmake --build --preset windows-release`).
 
 ---
 
-## PR 7 — Minimal test harness
+## PR 6 — Minimal test harness
 
 Goal: demonstrate engineering discipline; reviewers notice the complete absence of tests.
 
@@ -180,14 +161,14 @@ Checklist:
 - [ ] Add a `tests/` directory with a lightweight test framework (Catch2 or GoogleTest via FetchContent).
 - [ ] Write at least 2-3 unit tests targeting non-GPU code (e.g. `EntityOptions` construction).
 - [ ] Integrate `ctest`.
-- [ ] **[NEW]** Add `Google Benchmark` to `tests/` for performance tracking (supports item 13).
+- [ ] **[NEW]** Add `Google Benchmark` to `tests/` for performance tracking (supports PR 12).
 
 Done when:
 - `ctest` runs and passes from a clean build.
 
 ---
 
-## PR 8 — Coupling reduction pass (architecture polish)
+## PR 7 — Coupling reduction pass (architecture polish)
 
 Goal: improve maintainability signal for portfolio reviewers.
 
@@ -206,7 +187,7 @@ Done when:
 
 ---
 
-## PR 9 — CI improvements
+## PR 8 — CI improvements
 
 Goal: show professional delivery process.
 
@@ -226,7 +207,7 @@ Done when:
 
 ---
 
-## PR 10 — Architecture documentation for evaluators
+## PR 9 — Architecture documentation for evaluators
 
 Goal: make your engine understandable in 3-5 minutes.
 
@@ -245,7 +226,7 @@ Done when:
 
 ---
 
-## PR 11 — Final portfolio hardening sweep
+## PR 10 — Final portfolio hardening sweep
 
 Goal: ship a clean, credible snapshot.
 
@@ -257,7 +238,7 @@ Checklist:
 
 ---
 
-## PR 12 — Modern C++23 Integration [NEW]
+## PR 11 — Modern C++23 Integration
 
 Goal: Leverage latest C++ features for cleaner, dependency-free code.
 
@@ -276,44 +257,72 @@ Done when:
 
 ---
 
-## PR 13 — Data-Oriented Design (DOD) Pass [NEW]
+## PR 12 — Functional + DOD C++26 Core Pass
 
-Goal: Improve cache locality and CPU performance.
+Goal: combine functional-style C++26 refactoring with data-oriented design improvements to improve maintainability and runtime performance together.
 
 Files:
 - src/Engine/Manager/EntityManager.cppm
 - src/Engine/Manager/ComponentManager.cppm
+- src/Engine/Manager/RenderManager.cpp
+- src/Engine/Core/*
 
-### Audit Findings
-`EntityManager` stores `std::vector<std::shared_ptr<Entity>>`. Iterating this involves double indirection and cache misses.
+### Top 3 starting spots (priority order)
+1. `RenderManager::renderScene` orchestration split (functional frame pipeline + frame-local buffers/preallocation).
+2. `ComponentManager::get<T>` lookup redesign (replace linear scan with direct/indexed lookup path).
+3. Culling + draw preparation path (`isClipped` / `renderEntity` / `drawEntity`) as pure transform stages over compact ID/data views.
+
+### Phase roadmap (for spot 1)
+- Phase 0: baseline and safe extraction (`FrameContext` builder + no behavior change in side-effect order).
+- Phase 1: split `renderScene` into explicit stage functions (gather -> cull -> update -> draw/submit).
+- Phase 2: functionalize stage boundaries (explicit input/output structs, reduced hidden shared state).
+- Phase 3: DOD pass inside frame loop (reusable frame-local buffers, reduced transient allocations/lookups).
+- Phase 4: targeted parallelism cleanup (batch tasks by stage, reduce tiny async task overhead).
+- Phase 5: benchmark and stabilize (before/after checks, regressions guard, code cleanup/documentation).
+
+### Focus Areas
+- Prefer pure transformation functions and immutable-by-default local flow in update/render preparation logic.
+- Replace ad-hoc loops with `std::ranges` pipelines where readability and safety improve.
+- Use stronger type-safe APIs (`std::span`, `std::expected`, `std::optional`, `std::variant`) instead of implicit sentinel/error flows.
+- Improve memory layout and iteration locality in hot paths (reduce pointer chasing, prefer contiguous storage/views where safe).
 
 Checklist:
-- [ ] Benchmark current iteration performance using the new `Google Benchmark` harness (from PR 7).
-- [ ] Refactor `EntityManager` to store entities/components more contiguously (e.g., `std::vector<Entity>` if possible, or flat Component arrays).
-- [ ] Remove `std::shared_ptr` usage in hot loops; use raw pointers or handles/IDs.
+- [ ] Identify 2-3 hot-path functions and refactor them into side-effect-light pipeline stages (input -> transform -> output).
+- [ ] Replace mutable temporary containers in those paths with views/ranges composition when possible.
+- [ ] Introduce explicit error/value flow (prefer `std::expected` for recoverable operations).
+- [ ] Apply one focused DOD refactor in a hot loop (contiguous data access, reduced indirection, or handle/index-based access where appropriate).
+- [ ] Use C++23/26 utilities already available in your toolchain (`std::to_underlying`, `std::print`, constrained templates/concepts, improved constexpr usage).
+- [ ] Keep performance guardrails: benchmark before/after using the PR6 benchmark harness.
 
 Done when:
-- Entity iteration is cache-friendly.
-- Benchmarks show measurable improvement.
+- Core update/render preparation paths are visibly more functional and compositional.
+- At least one hot path shows improved locality/data access pattern from DOD changes.
+- C++26-oriented APIs are used consistently in touched modules.
+- Benchmarks show no regression (or measurable improvement).
 
 ---
 
-## PR 14 — Vulkan Modernization (Dynamic Rendering) [NEW]
+## PR 13 — Vulkan Modernization (Bindless Textures)
 
-Goal: Simplify renderer and reduce VRAM overhead.
+Goal: reduce texture binding overhead and simplify material/texture management by moving to bindless texture access.
 
 Files:
 - src/Engine/Renderer/Vulkan/VulkanAPI.cpp
-- src/Engine/Renderer/Vulkan/Extension/ShadowMap.cpp
+- src/Engine/Renderer/Vulkan/Renderer.cppm
+- src/Engine/Manager/TextureManager.cppm
+- src/Engine/Manager/ShaderManager.cppm
 
 ### Audit Findings
-`VK_KHR_dynamic_rendering` is enabled (line 501 of VulkanAPI.cpp), but `vkCreateRenderPass` is still used (line 1340).
+Dynamic Rendering is already in place. The higher-value next step is bindless textures via descriptor indexing to avoid per-draw texture descriptor rebinding.
 
 Checklist:
-- [ ] Replace `VkRenderPass` and `VkFramebuffer` logic with `VkRenderingInfo` in command recording.
-- [ ] Remove `vkCreateRenderPass` and `vkCreateFramebuffer` calls.
-- [ ] Simplify pipeline creation (remove `renderPass` member from `VkGraphicsPipelineCreateInfo`).
+- [ ] Enable required Vulkan features/extensions for descriptor indexing (bindless) during device creation.
+- [ ] Introduce a global texture descriptor array (`VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT`, `UPDATE_AFTER_BIND`, variable descriptor count as needed).
+- [ ] Update texture/material data flow so draw calls pass texture indices instead of per-material descriptor sets.
+- [ ] Update shaders to sample from bindless arrays using texture indices.
+- [ ] Keep a fallback path or guard for devices without bindless support.
+- [ ] Rebuild and validate rendering path correctness with multiple materials/textures.
 
 Done when:
-- The engine uses pure Dynamic Rendering (modern Vulkan 1.3 standard).
-- Boilerplate code for RenderPasses is deleted.
+- Renderer uses bindless texture indexing in the main path.
+- Per-draw descriptor set churn for textures is removed or significantly reduced.

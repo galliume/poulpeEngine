@@ -41,11 +41,12 @@ namespace Poulpe
       Renderer *const renderer,
       bool const is_public = false);
     void clear();
-    std::string getSkyboxTexture() const& { return _skybox_name; }
+    std::string_view getSkyboxTexture() { return _skybox_name; }
+    std::string_view getSkyboxTexture() const & { return _skybox_name; }
     std::unordered_map<std::string, std::string> const& getPaths() const { return _paths; }
-    std::unordered_map<std::string, Texture> const* getTextures() const { return &_textures; }
-    std::string const& getTerrainTexture() { return _terrain_name; }
-    std::string const& getWaterTexture() { return _water_name; }
+    std::unordered_map<std::string, Texture> const& getTextures() const { return _textures; }
+    std::string_view getTerrainTexture() { return _terrain_name; }
+    std::string_view getWaterTexture() { return _water_name; }
     std::function<void(std::latch& count_down)> load(Renderer * const renderer);
     std::function<void(std::latch& count_down)> loadSkybox(
       std::string_view skybox,
