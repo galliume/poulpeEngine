@@ -46,6 +46,19 @@ namespace Poulpe {
       std::unique_ptr<Text>,
       std::unique_ptr<Water>>;
 
+    template <typename T>
+    RenderComponent(std::unique_ptr<T> impl)
+    {
+      init(std::move(impl));
+    }
+
+    RenderComponent() = default;
+    RenderComponent(RenderComponent&&) noexcept = default;
+    RenderComponent& operator=(RenderComponent&&) noexcept = default;
+    RenderComponent(const RenderComponent&) = delete;
+    RenderComponent& operator=(const RenderComponent&) = delete;
+    ~RenderComponent() = default;
+
     IDType getID() const { return _id; }
     IDType getOwner() const { return _owner; }
 
@@ -100,12 +113,12 @@ namespace Poulpe {
   {
   };
 
-  template class RenderComponent<Basic>;
-  template class RenderComponent<Mesh>;
-  template class RenderComponent<ShadowMap>;
-  template class RenderComponent<Skybox>;
-  template class RenderComponent<Terrain>;
-  template class RenderComponent<Text>;
-  template class RenderComponent<Water>;
-  template class RenderComponent<RendererComponent>;
+  export template class RenderComponent<Basic>;
+  export template class RenderComponent<Mesh>;
+  export template class RenderComponent<ShadowMap>;
+  export template class RenderComponent<Skybox>;
+  export template class RenderComponent<Terrain>;
+  export template class RenderComponent<Text>;
+  export template class RenderComponent<Water>;
+  export template class RenderComponent<RendererComponent>;
 }

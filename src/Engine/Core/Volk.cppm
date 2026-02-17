@@ -508,7 +508,10 @@ export
   using ::VkVertexInputBindingDescription;
   using ::VkViewport;
   using ::VkWriteDescriptorSet;
-
+  using ::vkFreeCommandBuffers;
+  using ::vkGetFenceStatus;
+  using ::vkDestroyFence;
+  
   // Functions
   using ::vkAcquireNextImageKHR;
   using ::vkAllocateCommandBuffers;

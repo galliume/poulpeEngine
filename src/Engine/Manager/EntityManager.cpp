@@ -57,13 +57,15 @@ namespace Poulpe
     _world_node->clear();
   }
 
-  std::function<void()> EntityManager::load(json const& lvl_config)
+  std::function<void()> EntityManager::load(
+    Renderer const& renderer,
+    json const& lvl_config)
   {
     _lvl_config = lvl_config;
 
-    return [this]() {
+    return [this, &renderer]() {
       std::ranges::for_each(_lvl_config["entities"].items(), [&](auto const& conf) {
-        initMeshes(conf.key(), conf.value());
+        initMeshes(renderer, conf.key(), conf.value());
       });
     };
   }
@@ -73,7 +75,10 @@ namespace Poulpe
     return _world_node.get();
   }
 
-  void EntityManager::initMeshes(std::string const& name, json const& raw_data)
+  void EntityManager::initMeshes(
+    Renderer const& renderer,
+    std::string const& name,
+    json const& raw_data)
   {
     //std::vector<Mesh*> meshes{};
     //if (_ObjLoaded.contains(path)) return meshes;
@@ -92,7 +97,7 @@ namespace Poulpe
     auto const& path { root_path + "/" + raw_data.value("mesh", "") };
     auto const flip_Y { raw_data.value("flipY", false) };
 
-    auto callback = [&](
+    auto callback = [this, &root_path, &root_mesh_entity_node, &raw_data, &renderer](
       PlpMeshData _data,
       std::vector<material_t> const materials,
       std::vector<Animation> const animations,
@@ -202,60 +207,60 @@ namespace Poulpe
 
         if (!mat.name_texture_diffuse.empty()) {
           name_texture = mat.name_texture_diffuse;
-          _texture_manager->add(name_texture, mat.name_texture_diffuse_path, VK_IMAGE_ASPECT_COLOR_BIT, TEXTURE_TYPE::DIFFUSE, _renderer);
+          _texture_manager->add(name_texture, mat.name_texture_diffuse_path, VK_IMAGE_ASPECT_COLOR_BIT, TEXTURE_TYPE::DIFFUSE, renderer);
           options |= PLP_MESH_OPTIONS::HAS_BASE_COLOR;
         } else if (!mat.name_texture_ambient.empty()) {
           name_texture = mat.name_texture_ambient;
           options |= PLP_MESH_OPTIONS::HAS_BASE_COLOR;
-          _texture_manager->add(name_texture, mat.name_texture_ambient_path, VK_IMAGE_ASPECT_COLOR_BIT, TEXTURE_TYPE::DIFFUSE, _renderer);
+          _texture_manager->add(name_texture, mat.name_texture_ambient_path, VK_IMAGE_ASPECT_COLOR_BIT, TEXTURE_TYPE::DIFFUSE, renderer);
         }
 
         if (!mat.name_texture_specular.empty()) {
           name_specular_map = mat.name_texture_specular;
           options |= PLP_MESH_OPTIONS::HAS_SPECULAR;
-          _texture_manager->add(name_specular_map, mat.name_texture_specular_path, VK_IMAGE_ASPECT_COLOR_BIT, TEXTURE_TYPE::AO, _renderer);
+          _texture_manager->add(name_specular_map, mat.name_texture_specular_path, VK_IMAGE_ASPECT_COLOR_BIT, TEXTURE_TYPE::AO, renderer);
         }
 
         if (!mat.name_texture_bump.empty()) {
           name_bump_map = mat.name_texture_bump;
           options |= PLP_MESH_OPTIONS::HAS_NORMAL;
-          _texture_manager->add(name_bump_map, mat.name_texture_bump_path, VK_IMAGE_ASPECT_COLOR_BIT, TEXTURE_TYPE::NORMAL, _renderer);
+          _texture_manager->add(name_bump_map, mat.name_texture_bump_path, VK_IMAGE_ASPECT_COLOR_BIT, TEXTURE_TYPE::NORMAL, renderer);
         }
 
         if (!mat.name_texture_alpha.empty()) {
           name_alpha_map = mat.name_texture_alpha;
           options |= PLP_MESH_OPTIONS::HAS_ALPHA;
-          _texture_manager->add(name_alpha_map, mat.name_texture_alpha_path, VK_IMAGE_ASPECT_COLOR_BIT, TEXTURE_TYPE::AO, _renderer);
+          _texture_manager->add(name_alpha_map, mat.name_texture_alpha_path, VK_IMAGE_ASPECT_COLOR_BIT, TEXTURE_TYPE::AO, renderer);
         }
 
         if (!mat.name_texture_metal_roughness.empty()) {
           name_texture_metal_roughness = mat.name_texture_metal_roughness;
           options |= PLP_MESH_OPTIONS::HAS_MR;
-          _texture_manager->add(name_texture_metal_roughness, mat.name_texture_metal_roughness_path, VK_IMAGE_ASPECT_COLOR_BIT, TEXTURE_TYPE::MR, _renderer);
+          _texture_manager->add(name_texture_metal_roughness, mat.name_texture_metal_roughness_path, VK_IMAGE_ASPECT_COLOR_BIT, TEXTURE_TYPE::MR, renderer);
         }
 
         if (!mat.name_texture_emissive.empty()) {
           name_texture_emissive = mat.name_texture_emissive;
           options |= PLP_MESH_OPTIONS::HAS_EMISSIVE;
-          _texture_manager->add(name_texture_emissive, mat.name_texture_emissive_path, VK_IMAGE_ASPECT_COLOR_BIT, TEXTURE_TYPE::EMISSIVE, _renderer);
+          _texture_manager->add(name_texture_emissive, mat.name_texture_emissive_path, VK_IMAGE_ASPECT_COLOR_BIT, TEXTURE_TYPE::EMISSIVE, renderer);
         }
 
         if (!mat.name_texture_ao.empty()) {
           name_texture_ao = mat.name_texture_ao;
           options |= PLP_MESH_OPTIONS::HAS_AO;
-          _texture_manager->add(name_texture_ao, mat.name_texture_ao_path, VK_IMAGE_ASPECT_COLOR_BIT, TEXTURE_TYPE::AO, _renderer);
+          _texture_manager->add(name_texture_ao, mat.name_texture_ao_path, VK_IMAGE_ASPECT_COLOR_BIT, TEXTURE_TYPE::AO, renderer);
         }
 
         if (!mat.name_texture_base_color.empty()) {
           name_texture_base_color = mat.name_texture_base_color;
           options |= PLP_MESH_OPTIONS::HAS_BASE_COLOR;
-          _texture_manager->add(name_texture_base_color, mat.name_texture_base_color_path, VK_IMAGE_ASPECT_COLOR_BIT, TEXTURE_TYPE::DIFFUSE, _renderer);
+          _texture_manager->add(name_texture_base_color, mat.name_texture_base_color_path, VK_IMAGE_ASPECT_COLOR_BIT, TEXTURE_TYPE::DIFFUSE, renderer);
         }
 
         if (!mat.name_texture_transmission.empty()) {
           name_texture_transmission = mat.name_texture_transmission;
           options |= PLP_MESH_OPTIONS::HAS_TRANSMISSION;
-          _texture_manager->add(name_texture_transmission, mat.name_texture_transmission_path, VK_IMAGE_ASPECT_COLOR_BIT, TEXTURE_TYPE::EMISSIVE, _renderer);
+          _texture_manager->add(name_texture_transmission, mat.name_texture_transmission_path, VK_IMAGE_ASPECT_COLOR_BIT, TEXTURE_TYPE::EMISSIVE, renderer);
         }
         for (auto& material : materials) {
           mesh->addMaterial(material);
@@ -348,8 +353,6 @@ namespace Poulpe
       _component_manager->add<RendererComponent>(entity->getID(), std::move(basicRdrImpl));
       _component_manager->add<MeshComponent>(entity->getID(), std::move(mesh));
       auto entityNode { root_mesh_entity_node->addChild(std::make_shared<EntityNode>(entity)) };
-
-      //_renderer->addEntity(entityNode->getEntity(), is_last);
 
       if (alpha_mode == 2.0f) {
         addTransparentEntity(entityNode->getEntity());

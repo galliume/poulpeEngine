@@ -39,7 +39,7 @@ namespace Poulpe {
     auto * renderer { const_cast<Renderer*>(render_manager->getRenderer()) };
 
     std::latch count_down{ 1 };
-    texture_manager->loadSkybox("bluesky", renderer)(count_down);
+    texture_manager->loadSkybox("bluesky", *renderer)(count_down);
     count_down.wait();
 
     auto skybox = entity_manager->getSkybox();
@@ -63,9 +63,9 @@ namespace Poulpe {
       .spot_lights = light_manager->getSpotLights(),
       .light_buffer = render_manager->getLightBuffer(),
       .textures = &texture_manager->getTextures(),
-      .skybox_name = texture_manager->getSkyboxTexture(),
-      .terrain_name = texture_manager->getTerrainTexture(),
-      .water_name = texture_manager->getWaterTexture(),
+      .terrain = &texture_manager->getTerrainTexture(),
+      .water = &texture_manager->getWaterTexture(),
+      .skybox = &texture_manager->getSkyboxTexture(),
       .characters = font_manager->getCharacters(),
       .face = font_manager->getFace(),
       .atlas_width = font_manager->getAtlasWidth(),

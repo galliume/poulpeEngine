@@ -36,9 +36,9 @@ namespace Poulpe {
 
     // Textures & Resources
     std::unordered_map<std::string, Texture> const* textures{ nullptr };
-    std::string_view skybox_name{};
-    std::string_view terrain_name{};
-    std::string_view water_name{};
+    Texture * terrain{ nullptr };
+    Texture * water{ nullptr };
+    Texture * skybox{ nullptr };
 
     // UI & Fonts
     std::span<FontCharacter> characters{};

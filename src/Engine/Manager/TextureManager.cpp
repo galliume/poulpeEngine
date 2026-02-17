@@ -77,10 +77,15 @@ namespace Poulpe
     return original_texture.getNormalMap();
   }
 
+  TextureManager::TextureManager(Renderer const& renderer)
+  {
+    _cmd_pool = renderer.getAPI()->createCommandPool(true);
+  }
+
   void TextureManager::addSkyBox(
     std::string const& skybox_name,
     std::vector<std::string> const& skybox_images,
-    Renderer* const renderer)
+    Renderer const& renderer)
   {
     auto const root_path { ConfigManagerLocator::get()->rootPath() };
 
@@ -137,7 +142,7 @@ namespace Poulpe
     std::string const& path,
     VkImageAspectFlags const aspect_flags,
     ktx_transcode_fmt_e const transcoding,
-    Renderer* const renderer,
+    Renderer const& renderer,
     bool const is_public)
   {
     if (!std::filesystem::exists(path.c_str())) {
@@ -167,13 +172,12 @@ namespace Poulpe
       Logger::warn("Error while transcoding KTX file: {} error: {}", path, ktxErrorString(result));
     }
 
-    VkCommandPool cmd_pool = renderer->getAPI()->createCommandPool(true);
-    VkCommandBuffer cmd_buffer = renderer->getAPI()->allocateCommandBuffers(cmd_pool, 1, false)[0];
-    VkImage texture_image = nullptr;
+    VkCommandBuffer cmd_buffer { renderer.getAPI()->allocateCommandBuffers(_cmd_pool, 1, false)[0] };
+    VkImage texture_image { nullptr };
 
-    renderer->getAPI()->createKTXImage(cmd_buffer, ktx_texture, texture_image, renderer->getCurrentFrameIndex());
+    renderer.getAPI()->createKTXImage(cmd_buffer, ktx_texture, texture_image, _cmd_pool);
 
-    VkImageView texture_imageview = renderer->getAPI()->createKTXImageView(ktx_texture, texture_image, aspect_flags);
+    VkImageView texture_imageview = renderer.getAPI()->createKTXImageView(ktx_texture, texture_image, aspect_flags);
 
     Texture texture;
     texture.setName(name);
@@ -194,11 +198,11 @@ namespace Poulpe
     _texture_config.clear();
   }
 
-  std::function<void(std::latch& count_down)> TextureManager::load(Renderer * const renderer)
+  std::function<void(std::latch& count_down)> TextureManager::load(Renderer const& renderer)
   {
 
     auto const root_path { ConfigManagerLocator::get()->rootPath() };
-    return [this, renderer, root_path](std::latch& count_down) {
+    return [this, &renderer, root_path](std::latch& count_down) {
       
       for (auto& [key, texture_data] : _texture_config["textures"].items()) {
         auto const path { root_path + "/" + texture_data.at("path").get<std::string>() };
@@ -230,7 +234,7 @@ namespace Poulpe
     std::string const& file_path,
     VkImageAspectFlags const aspect_flags,
     TEXTURE_TYPE texture_type,
-    Renderer* const renderer)
+    Renderer const& renderer)
   {
     std::filesystem::path const file_name{ file_path };
 
@@ -314,13 +318,13 @@ namespace Poulpe
 
   std::function<void(std::latch& count_down)> TextureManager::loadSkybox(
     std::string_view skybox,
-    Renderer* const renderer
+    Renderer const& renderer
   )
   {
     _skybox_name = skybox;
     auto const root_path { ConfigManagerLocator::get()->rootPath() };
 
-    return [this, renderer, root_path](std::latch& count_down) {
+    return [this, &renderer, root_path](std::latch& count_down) {
       std::vector<std::string>skybox_images;
 
       for (auto& texture : _texture_config["skybox"][_skybox_name].items()) {

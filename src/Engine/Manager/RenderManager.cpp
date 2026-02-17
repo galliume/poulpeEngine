@@ -43,17 +43,23 @@ namespace Poulpe
   {
     _window = std::unique_ptr<Window>(window);
     _cameras.emplace_back(std::make_unique<Camera>());
-    _renderer = std::make_unique<Renderer>(_window->getGlfwWindow());
+    _renderer = std::make_unique<Renderer>();
+    _renderer->init(_window->getGlfwWindow());
 
     _component_manager = std::make_unique<ComponentManager>();
+
+    _component_manager->registerComponent<MeshComponent>();
+    _component_manager->registerComponent<RendererComponent>();
+    _component_manager->registerComponent<BoneAnimationComponent>();
+    _component_manager->registerComponent<AnimationComponent>();
+
     _light_manager = std::make_unique<LightManager>();
-    _texture_manager = std::make_unique<TextureManager>();
+    _texture_manager = std::make_unique<TextureManager>(*_renderer);
 
     _audio_manager = std::make_unique<AudioManager>();
     _shader_manager = std::make_unique<ShaderManager>();
     _destroy_manager = std::make_unique<DestroyManager>();
 
-    _renderer->init();
     _destroy_manager->setRenderer(_renderer.get());
     _destroy_manager->addMemoryPool(_renderer->getAPI()->getDeviceMemoryPool());
 
@@ -65,13 +71,6 @@ namespace Poulpe
       _light_buffers[i] = _renderer->getAPI()->createStorageBuffers(light_object_buffer, _renderer->getCurrentFrameIndex());
     }
 
-    _entity_manager = std::make_unique<EntityManager>(
-      _component_manager.get(),
-      _light_manager.get(),
-      _texture_manager.get(),
-      _light_buffers.at(0)
-    );
-
     _font_manager = std::make_unique<FontManager>();
     _font_manager->addRenderer(_renderer.get());
     auto atlas = _font_manager->load();
@@ -81,8 +80,14 @@ namespace Poulpe
     _texture_manager->addTexture(atlas);
 
     //@todo, those managers should not have the usage of the renderer...
-    _entity_manager->addRenderer(_renderer.get());
     _shader_manager->addRenderer(_renderer.get());
+
+    _entity_manager = std::make_unique<EntityManager>(
+      _component_manager.get(),
+      _light_manager.get(),
+      _texture_manager.get(),
+      _light_buffers.at(0)
+    );
 
     InputManagerLocator::get()->setCamera(getCamera());
 
@@ -101,7 +106,7 @@ namespace Poulpe
     _shader_manager->clear();
     _renderer->clear();
 
-    _component_manager->clear();
+    //_component_manager->clear();
   }
 
   void RenderManager::init()
@@ -163,8 +168,6 @@ namespace Poulpe
     };
     addText(text);
     _renderer->getAPI()->endCopyBuffer(_renderer->getCurrentFrameIndex());
-
-    //prepareHUD();
   }
 
   template <typename T>
@@ -214,6 +217,8 @@ namespace Poulpe
 
       updateBuffers();
       updatePlayer();
+
+      _renderer->getAPI()->collectGarbage();
     }
   }
 
@@ -520,12 +525,12 @@ namespace Poulpe
 
     std::latch count_down{ 3 };
 
-    std::jthread textures(std::bind(_texture_manager->load(_renderer.get()), std::ref(count_down)));
-    std::jthread skybox(std::bind(_texture_manager->loadSkybox(sb, _renderer.get()), std::ref(count_down)));
+    std::jthread textures(std::bind(_texture_manager->load(*_renderer), std::ref(count_down)));
+    std::jthread skybox(std::bind(_texture_manager->loadSkybox(sb, *_renderer), std::ref(count_down)));
     std::jthread shaders(std::bind(_shader_manager->load(config_manager->shaderConfig()), std::ref(count_down)));
     count_down.wait();
 
-    std::jthread entities(_entity_manager->load(lvl_data));
+    std::jthread entities(_entity_manager->load(*_renderer, lvl_data));
     setIsLoaded();
   }
 
@@ -665,9 +670,9 @@ namespace Poulpe
     _rendering_context.camera = getCamera();
     _rendering_context.camera_view = camera_view;
     _rendering_context.textures = &_texture_manager->getTextures();
-    _rendering_context.skybox_name = _texture_manager->getSkyboxTexture();
-    _rendering_context.terrain_name = _texture_manager->getTerrainTexture();
-    _rendering_context.water_name = _texture_manager->getWaterTexture();
+    _rendering_context.skybox = &_texture_manager->getSkyboxTexture();
+    _rendering_context.terrain = &_texture_manager->getTerrainTexture();
+    _rendering_context.water = &_texture_manager->getWaterTexture();
     _rendering_context.sun_light = _light_manager->getSunLight();
     _rendering_context.point_lights = _light_manager->getPointLights();
     _rendering_context.spot_lights = _light_manager->getSpotLights();

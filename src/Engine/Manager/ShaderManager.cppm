@@ -44,7 +44,7 @@ namespace Poulpe
     VkDescriptorSetLayout createDescriptorSetLayout();
     void createGraphicPipeline(std::string const & shaderName);
 
-    std::span<VkPipelineShaderStageCreateInfo> getShadersInfo(std::string const & shaderName, bool offscreen = false);
+    std::vector<VkPipelineShaderStageCreateInfo> getShadersInfo(std::string const & shaderName, bool offscreen = false);
 
     template <VertexBindingType T>
     VkPipelineVertexInputStateCreateInfo* getVertexInputState();

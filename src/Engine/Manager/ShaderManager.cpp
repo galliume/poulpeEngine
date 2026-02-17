@@ -412,6 +412,7 @@ namespace Poulpe
 
   void ShaderManager::createGraphicPipeline(std::string const & shader_name)
   {
+    std::uint32_t pool_size { 1000 };
     Logger::debug("shader_name {}", shader_name);
     bool offscreen = (shader_name == "shadow_map") ? true : false;
     bool need_bis{ false };
@@ -430,11 +431,11 @@ namespace Poulpe
     std::vector<VkDescriptorPoolSize> poolSizes{};
     VkDescriptorPoolSize dpsUbo;
     dpsUbo.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-    dpsUbo.descriptorCount = 1000;
+    dpsUbo.descriptorCount = pool_size;
 
     VkDescriptorPoolSize dpsIS;
     dpsIS.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-    dpsIS.descriptorCount = 1000;
+    dpsIS.descriptorCount = pool_size;
 
     poolSizes.emplace_back(dpsUbo);
 
@@ -507,7 +508,7 @@ namespace Poulpe
 
       VkDescriptorPoolSize dpsSB;
       dpsSB.type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-      dpsSB.descriptorCount = 10;
+      dpsSB.descriptorCount = pool_size;
 
       poolSizes.emplace_back(dpsSB);
     } else if (shader_name == "shadow_map" || shader_name == "csm") {
@@ -526,13 +527,13 @@ namespace Poulpe
 
       VkDescriptorPoolSize dpsSB;
       dpsSB.type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-      dpsSB.descriptorCount = 10;
+      dpsSB.descriptorCount = pool_size;
 
       poolSizes.emplace_back(dpsSB);
     } else if (shader_name == "normal_debug") { 
       VkDescriptorPoolSize dpsSB;
       dpsSB.type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-      dpsSB.descriptorCount = 10;
+      dpsSB.descriptorCount = pool_size;
 
       poolSizes.emplace_back(dpsSB);
 
@@ -545,7 +546,7 @@ namespace Poulpe
     } else {
       VkDescriptorPoolSize dpsSB;
       dpsSB.type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-      dpsSB.descriptorCount = 10;
+      dpsSB.descriptorCount = pool_size;
 
       poolSizes.emplace_back(dpsSB);
 
@@ -559,12 +560,12 @@ namespace Poulpe
 
     pipeline_layout = _renderer->getAPI()->createPipelineLayout({ descset_layout }, { push_constants });
 
-    pipeline_create_infos.shaders_create_info = shaders;
+    pipeline_create_infos.shaders_create_info = std::move(shaders);
     pipeline_create_infos.vertex_input_info = std::move(vertex_input_info);
     pipeline_create_infos.pipeline_layout = pipeline_layout;
 
     graphic_pipeline = _renderer->getAPI()->createGraphicsPipeline(pipeline_create_infos);
-    auto descriptorPool = _renderer->getAPI()->createDescriptorPool(poolSizes, 1000u);
+    auto descriptorPool = _renderer->getAPI()->createDescriptorPool(poolSizes, pool_size);
 
     if (need_bis) {
       pipeline_create_infos.cull_mode = VK_CULL_MODE_NONE;

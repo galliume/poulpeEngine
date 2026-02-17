@@ -39,11 +39,9 @@ void Water::operator()(
 
     if (!mesh.isDirty()) return;
 
-    Texture const& tex { render_context.textures->at(render_context.terrain_name)};
-
     std::vector<Vertex> vertices;
-    int const width{ static_cast<int>(tex.getWidth()) };
-    int const height{ static_cast<int>(tex.getHeight()) };
+    int const width{ static_cast<int>(render_context.terrain->getWidth()) };
+    int const height{ static_cast<int>(render_context.terrain->getHeight()) };
 
     int const rez{ 50 };
     int index{ 0 };
@@ -173,11 +171,10 @@ void Water::operator()(
       texture_normal2 = render_context.textures->at(PLP_EMPTY);
     }
 
-    Texture env { render_context.textures->at(render_context.skybox_name) };
-    env.setSampler(renderer.getAPI()->createKTXSampler(
+    render_context.skybox->setSampler(renderer.getAPI()->createKTXSampler(
     TextureWrapMode::CLAMP_TO_EDGE,
     TextureWrapMode::CLAMP_TO_EDGE,
-    env.getMipLevels()));
+    render_context.skybox->getMipLevels()));
 
     std::vector<VkDescriptorImageInfo> image_infos{};
     image_infos.emplace_back(tex.getSampler(), tex.getImageView(), VK_IMAGE_LAYOUT_GENERAL);
@@ -198,7 +195,7 @@ void Water::operator()(
     // VK_IMAGE_LAYOUT_RENDERING_LOCAL_READ
 
     std::vector<VkDescriptorImageInfo> env_image_infos{};
-    env_image_infos.emplace_back(env.getSampler(), env.getImageView(), VK_IMAGE_LAYOUT_GENERAL );
+    env_image_infos.emplace_back(render_context.skybox->getSampler(), render_context.skybox->getImageView(), VK_IMAGE_LAYOUT_GENERAL );
 
     std::vector<VkDescriptorImageInfo> csm_image_info{};
     csm_image_info.emplace_back(renderer.getCSMSamplers(), renderer.getCSMImageViews(), VK_IMAGE_LAYOUT_GENERAL);

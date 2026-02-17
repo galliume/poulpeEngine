@@ -40,11 +40,9 @@ namespace Poulpe
 
     if (!mesh.isDirty()) return;
 
-    Texture const& tex { render_context.textures->at(render_context.terrain_name) };
-
     std::vector<Vertex> vertices {};
-    std::int32_t const width { static_cast<std::int32_t>(tex.getWidth()) };
-    std::int32_t const height { static_cast<std::int32_t>(tex.getHeight()) };
+    std::int32_t const width { static_cast<std::int32_t>( render_context.terrain->getWidth()) };
+    std::int32_t const height { static_cast<std::int32_t>( render_context.terrain->getHeight()) };
     std::int32_t const rez { 20 };
     float const fRez { static_cast<float>(rez) };
     glm::vec4 const zeroVec4 { 0.0f, 0.0f, 0.0f, 0.0f };
@@ -137,16 +135,12 @@ namespace Poulpe
     Mesh & mesh,
     RendererContext const& render_context)
   {
-    auto height_map { render_context.textures->at(render_context.terrain_name)};
+    auto& height_map { render_context.terrain };
 
-    height_map.setSampler(renderer.getAPI()->createKTXSampler(
+    height_map->setSampler(renderer.getAPI()->createKTXSampler(
       TextureWrapMode::WRAP,
       TextureWrapMode::WRAP,
       0));
-
-    if (height_map.getWidth() == 0) {
-      height_map = render_context.textures->at(PLP_EMPTY);
-    }
 
     //@todo fix this ugly fix. Needs a real asset unique ID
     Texture ground { render_context.textures->at(PLP_GROUND) };
@@ -216,7 +210,7 @@ namespace Poulpe
     }
 
     std::vector<VkDescriptorImageInfo> image_infos{};
-    image_infos.emplace_back(height_map.getSampler(), height_map.getImageView(), VK_IMAGE_LAYOUT_GENERAL);
+    image_infos.emplace_back(height_map->getSampler(), height_map->getImageView(), VK_IMAGE_LAYOUT_GENERAL);
     image_infos.emplace_back(ground.getSampler(), ground.getImageView(), VK_IMAGE_LAYOUT_GENERAL);
     image_infos.emplace_back(grass.getSampler(), grass.getImageView(), VK_IMAGE_LAYOUT_GENERAL);
     image_infos.emplace_back(snow.getSampler(), snow.getImageView(), VK_IMAGE_LAYOUT_GENERAL);
@@ -224,14 +218,13 @@ namespace Poulpe
     image_infos.emplace_back(hi_noise.getSampler(), hi_noise.getImageView(), VK_IMAGE_LAYOUT_GENERAL);
     image_infos.emplace_back(low_noise.getSampler(), low_noise.getImageView(), VK_IMAGE_LAYOUT_GENERAL);
 
-    Texture env { render_context.textures->at(render_context.skybox_name) };
-    env.setSampler(renderer.getAPI()->createKTXSampler(
+    render_context.terrain->setSampler(renderer.getAPI()->createKTXSampler(
     TextureWrapMode::CLAMP_TO_EDGE,
     TextureWrapMode::CLAMP_TO_EDGE,
-    env.getMipLevels()));
+    render_context.terrain->getMipLevels()));
 
     std::vector<VkDescriptorImageInfo> env_image_infos{};
-    env_image_infos.emplace_back(env.getSampler(), env.getImageView(), VK_IMAGE_LAYOUT_GENERAL);
+    env_image_infos.emplace_back(render_context.terrain->getSampler(), render_context.terrain->getImageView(), VK_IMAGE_LAYOUT_GENERAL);
 
     std::vector<VkDescriptorImageInfo> csm_image_info{};
     csm_image_info.emplace_back(renderer.getCSMSamplers(), renderer.getCSMImageViews(), VK_IMAGE_LAYOUT_GENERAL);

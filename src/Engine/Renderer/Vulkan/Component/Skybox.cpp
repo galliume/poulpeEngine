@@ -126,18 +126,16 @@ namespace Poulpe
     Mesh & mesh,
     RendererContext const& render_context)
   {
-
-    Texture tex{ render_context.textures->at(render_context.skybox_name) };
-    tex.setSampler(renderer.getAPI()->createKTXSampler(
+    render_context.skybox->setSampler(renderer.getAPI()->createKTXSampler(
     TextureWrapMode::CLAMP_TO_EDGE,
     TextureWrapMode::CLAMP_TO_EDGE,
-    tex.getMipLevels()));
+    render_context.skybox->getMipLevels()));
 
     std::vector<VkDescriptorImageInfo> image_infos{};
-    image_infos.emplace_back(tex.getSampler(), tex.getImageView(), VK_IMAGE_LAYOUT_GENERAL);
+    image_infos.emplace_back(render_context.skybox->getSampler(), render_context.skybox->getImageView(), VK_IMAGE_LAYOUT_GENERAL);
 
-    auto const pipeline = renderer.getPipeline(mesh.getShaderName());
-    VkDescriptorSet descset = renderer.getAPI()->createDescriptorSets(pipeline->desc_pool, { pipeline->descset_layout }, 1);
+    auto const pipeline { renderer.getPipeline(mesh.getShaderName()) };
+    VkDescriptorSet descset { renderer.getAPI()->createDescriptorSets(pipeline->desc_pool, { pipeline->descset_layout }, 1) };
 
     renderer.getAPI()->updateDescriptorSets(mesh.getUniformBuffers(), descset, image_infos);
 

@@ -142,6 +142,7 @@ VulkanAPI::VulkanAPI(GLFWwindow* window)
         VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 
     vkAllocateMemory(_device, &allocInfo, nullptr, &_staging_device_memory[i]);
+      Logger::error("{}",__LINE__);
 
     VkResult result = vkBindBufferMemory(_device, _staging_buffer[i], _staging_device_memory[i], 0);
     if (result != VK_SUCCESS) {
@@ -1489,7 +1490,7 @@ VkDescriptorPool VulkanAPI::createDescriptorPool(
 
   if (vkCreateDescriptorPool(_device, &pool_info, nullptr, & descriptor_pool) != VK_SUCCESS)
   {
-    throw std::runtime_error("failed to create descriptor pool");
+    Logger::error("failed to create descriptor pool.");
   }
   return descriptor_pool;
 }
@@ -1509,7 +1510,7 @@ VkDescriptorSet VulkanAPI::createDescriptorSets(
   VkResult result = vkAllocateDescriptorSets(_device, & alloc_info, & descset);
 
   if (result != VK_SUCCESS) {
-    throw std::runtime_error("failed to allocate descriptor sets");
+    Logger::error("failed to allocate descriptor sets.");
   }
   return descset;
 }
@@ -1866,14 +1867,13 @@ VkResult VulkanAPI::queueSubmit(
 
   VkResult result = VK_SUCCESS;
   {
-    //std::lock_guard<std::mutex> guard(_mutex_queue_submit);
+    std::lock_guard<std::mutex> guard(_mutex_queue_submit);
     vkWaitForFences(_device, 1, & fence_submit, VK_TRUE, UINT32_MAX);
     vkResetFences(_device, 1, &fence_submit);
 
     result = vkQueueSubmit(_graphics_queues[queue_index], 1, &submit_info, fence_submit);
-    //vkQueueWaitIdle(_graphics_queues[queue_index]);
-    //vkResetCommandBuffer(cmd_buffer, VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
   }
+
   return result;
 }
 
@@ -1964,7 +1964,9 @@ void VulkanAPI::createBuffer(
 
   if (vkAllocateMemory(_device, &alloc_info, nullptr, & device_memory) != VK_SUCCESS) {
     Logger::error("failed to allocate buffer memory!");
-  }
+  }      
+        Logger::error("{}",__LINE__);
+
   VkResult result = vkBindBufferMemory(_device, buffer, device_memory, 0);
 
   if (result != VK_SUCCESS) {
@@ -2330,7 +2332,7 @@ void VulkanAPI::startCopyBuffer(std::size_t const image_index)
 {
   //@todo perf improvement to be done here (~+80fps on outdoors without the fence)
   auto & fence_buffer { _fence_buffer[image_index] };
-  vkWaitForFences(_device, 1, &fence_buffer, VK_TRUE, UINT32_MAX);
+  vkWaitForFences(_device, 1, &fence_buffer, VK_TRUE, UINT64_MAX);
 
   vkResetFences(_device, 1, &fence_buffer);
   vkResetCommandBuffer(_copy_cmd_buffer[image_index], 0);
@@ -2365,9 +2367,7 @@ void VulkanAPI::endCopyBuffer(std::size_t const image_index)
 
   if (result != VK_SUCCESS) {
     Logger::error("failed to copy buffer in copyBuffer : {}", string_VkResult(result));
-    throw std::runtime_error("failed to copy buffer in endCopyBuffer");
   }
-  //vkQueueWaitIdle(_transfer_queues[_queue_index]);
 }
 
 void VulkanAPI::copyBuffer(
@@ -3010,6 +3010,7 @@ VkSampler VulkanAPI::createTextureSampler(std::uint32_t const mip_lvl)
     {
       //SCOPED_TIMER();
       //std::lock_guard<std::mutex> guard(_mutex_queue_submit);
+
       VkResult result = vkQueueSubmit(queue, static_cast<std::uint32_t>(submit_infos.size()), submit_infos.data(), fence);
 
       if (result != VK_SUCCESS) {
@@ -3031,7 +3032,7 @@ VkSampler VulkanAPI::createTextureSampler(std::uint32_t const mip_lvl)
     VkCommandBuffer& cmd_buffer,
     ktxTexture2 * ktx_texture,
     VkImage& image,
-    std::size_t const image_index)
+    VkCommandPool & cmd_pool)
   {
     VkBuffer buffer;
     VkDeviceMemory staging_device_memory;
@@ -3177,23 +3178,22 @@ VkSampler VulkanAPI::createTextureSampler(std::uint32_t const mip_lvl)
     submit_info.commandBufferCount = 1;
     submit_info.pCommandBuffers = &cmd_buffer;
 
-    auto &fence_submit { _fence_submit[image_index] };
-    vkWaitForFences(_device, 1, & fence_submit, VK_TRUE, UINT32_MAX);
-    vkResetFences(_device, 1, &fence_submit);
+    VkFence transfer_fence;
+    VkFenceCreateInfo fence_info {};
+    fence_info.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+
+    vkCreateFence(_device, &fence_info, nullptr, &transfer_fence);
 
     {
       std::lock_guard<std::mutex> guard(_mutex_queue_submit);
-      result = vkQueueSubmit(_transfer_queues[_queue_index], 1, &submit_info, fence_submit);
+      result = vkQueueSubmit(_transfer_queues[_queue_index], 1, &submit_info, transfer_fence);
     }
 
     if (result != VK_SUCCESS) {
       Logger::error("Can't transfer ktx image.");
     }
 
-    vkQueueWaitIdle(_transfer_queues[_queue_index]);
-
-    vkFreeMemory(_device, staging_device_memory, nullptr);
-    vkDestroyBuffer(_device, buffer, nullptr);
+    addToGarbage(transfer_fence, cmd_buffer, cmd_pool, buffer, staging_device_memory);
   }
 
   VkImageView VulkanAPI::createKTXImageView(
@@ -3237,7 +3237,7 @@ VkSampler VulkanAPI::createTextureSampler(std::uint32_t const mip_lvl)
     result = vkCreateImageView(_device, &create_info, nullptr, &image_view);
 
     if (result != VK_SUCCESS) {
-      //Logger::error("failed to create image view.");
+      Logger::error("failed to create image view.");
     }
 
     return image_view;
@@ -3462,5 +3462,45 @@ VkSampler VulkanAPI::createTextureSampler(std::uint32_t const mip_lvl)
     }
 
     return image_view;
+  }
+
+  void VulkanAPI::addToGarbage(
+    VkFence fence,
+    VkCommandBuffer cmd_buffer,
+    VkCommandPool cmd_pool,
+    VkBuffer buffer,
+    VkDeviceMemory mem)
+  {
+      std::lock_guard<std::mutex> guard(_garbage_collector.mutex);
+      
+      _garbage_collector.garbage.push_back({
+          .fence = fence,
+          .cmd_buffer = cmd_buffer,
+          .cmd_pool = cmd_pool,
+          .staging_buffer = buffer,
+          .staging_memory = mem
+      });
+  }
+
+  void VulkanAPI::collectGarbage()
+  {
+    std::lock_guard<std::mutex> guard(_garbage_collector.mutex);
+
+    int processed { 0 };
+
+    for (auto it = _garbage_collector.garbage.begin(); it != _garbage_collector.garbage.end() && processed < 5; ) {
+
+      if (vkGetFenceStatus(_device, it->fence) == VK_SUCCESS) {
+        vkDestroyBuffer(_device, it->staging_buffer, nullptr);
+        vkFreeMemory(_device, it->staging_memory, nullptr);
+        vkFreeCommandBuffers(_device, it->cmd_pool, 1, &it->cmd_buffer);
+        vkDestroyFence(_device, it->fence, nullptr);
+        
+        it = _garbage_collector.garbage.erase(it);
+        processed++;
+      } else {
+        ++it;
+      }
+    }
   }
 }

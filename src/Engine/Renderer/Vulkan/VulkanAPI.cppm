@@ -74,6 +74,20 @@ namespace Poulpe
     VkPipelineStageFlags destination_stage;
   };
 
+  struct GarbageBatch {
+    VkFence fence; 
+    
+    VkCommandBuffer cmd_buffer;
+    VkCommandPool cmd_pool;
+    VkBuffer staging_buffer;
+    VkDeviceMemory staging_memory;
+  };
+
+  struct GarbageCollector {
+      std::vector<GarbageBatch> garbage;
+      std::mutex mutex;
+  };
+
   export class VulkanAPI
   {
   public:
@@ -526,7 +540,7 @@ namespace Poulpe
       VkCommandBuffer& cmd_buffer,
       ktxTexture2* ktx_texture,
       VkImage& image,
-      std::size_t const image_index) __attribute__((no_thread_safety_analysis));
+      VkCommandPool& cmd_pool) __attribute__((no_thread_safety_analysis));
 
     VkImageView createKTXImageView(
       ktxTexture2* ktx_texture,
@@ -552,6 +566,15 @@ namespace Poulpe
       TextureWrapMode const wrap_mode_v,
       std::uint32_t const mip_lvl,
       bool const compare_enable = VK_FALSE);
+
+    void addToGarbage(
+      VkFence fence,
+      VkCommandBuffer cmd_buffer,
+      VkCommandPool cmd_pool,
+      VkBuffer buffer,
+      VkDeviceMemory mem);
+
+      void collectGarbage();
 
   public:
     //bool _FramebufferResized = false;
@@ -674,6 +697,8 @@ namespace Poulpe
     std::vector<VkDeviceSize> _update_vertex_offsets{};
     std::size_t _queue_index {0};
   
+    GarbageCollector _garbage_collector{};
+
     std::map<LayoutPair, TransitionSyncData> const _transition_map {
         {
           {VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL},

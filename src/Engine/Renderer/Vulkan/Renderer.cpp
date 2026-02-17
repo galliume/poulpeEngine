@@ -13,14 +13,10 @@ import Engine.Renderer.VulkanDeviceMemory;
 
 namespace Poulpe
 {
-  Renderer::Renderer(GLFWwindow* const window)
+  void Renderer::init(GLFWwindow* const window)
   {
     _vulkan = std::make_unique<VulkanAPI>(window);
     setPerspective();
-  }
-
-  void Renderer::init()
-  {
     _swapchain = _vulkan->createSwapChain(_images);
 
     _max_frames_in_flight = _vulkan->getImageCount();

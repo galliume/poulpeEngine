@@ -31,7 +31,6 @@ namespace Poulpe
       TextureManager* const texture_manager,
       Buffer& light_buffer);
 
-    void inline addRenderer(Renderer* const renderer) { _renderer = renderer; }
     void clear();
 
     inline std::shared_ptr<Entity> getSkybox() const { return _skybox; }
@@ -44,7 +43,7 @@ namespace Poulpe
     std::span<std::shared_ptr<Entity>> getEntities() { return _entities;}
     std::span<std::shared_ptr<Entity>> getTransparentEntities() { return _transparent_entities;}
 
-    std::function<void()> load(json const& lvl_config);
+    std::function<void()> load(Renderer const& renderer, json const& lvl_config);
 
     inline void setSkybox(std::shared_ptr<Entity> skybox) { _skybox = skybox; }
     inline void setTerrain(std::shared_ptr<Entity> terrain) { _terrain = terrain; }
@@ -61,7 +60,11 @@ namespace Poulpe
 
     EntityNode * getWorldNode();
 
-    void initMeshes(std::string const& name, json const& raw_data);
+    void initMeshes(
+      Renderer const& renderer,
+      std::string const& name,
+      json const& raw_data);
+
     void initWorldGraph();
     std::shared_mutex& lockWorldNode() { return _mutex_shared; }
 
@@ -71,8 +74,6 @@ namespace Poulpe
     TextureManager* _texture_manager;
 
     json _lvl_config;
-
-    Renderer* _renderer{nullptr};
 
     std::shared_ptr<Entity> _skybox{nullptr};
     std::shared_ptr<Entity> _terrain{nullptr};

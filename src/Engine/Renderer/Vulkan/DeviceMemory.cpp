@@ -75,6 +75,7 @@ namespace Poulpe
         _offset += (offset - remainder);
       }
 
+      Logger::error("{}",__LINE__);
       VkResult result = vkBindBufferMemory(_device, buffer, *_memory, _offset);
 
       if (result != VK_SUCCESS) {

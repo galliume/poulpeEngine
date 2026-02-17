@@ -54,8 +54,8 @@ namespace Poulpe
 
       FT_ULong const ft_char { static_cast<FT_ULong>(*c) };
 
-      auto const& glyph_index { FT_Get_Char_Index(render_context.face, ft_char) };
-      auto const& ch { render_context.characters[glyph_index]} ;
+      auto const glyph_index { FT_Get_Char_Index(render_context.face, ft_char) };
+      auto const ch { render_context.characters[glyph_index]} ;
 
       constexpr float epsilon = 1e-6f;
       if (std::abs(ch.size.x) < epsilon && std::abs(ch.size.y) < epsilon) {
