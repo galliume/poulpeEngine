@@ -1,3 +1,7 @@
+module;
+
+#include <cassert>
+
 module Engine.Renderer.VulkanRenderer;
 
 import std;
@@ -15,6 +19,8 @@ namespace Poulpe
 {
   void Renderer::init(GLFWwindow* const window)
   {
+    assert(window != nullptr && "Window creation failed before Renderer::init!");
+
     _vulkan = std::make_unique<VulkanAPI>(window);
     setPerspective();
     _swapchain = _vulkan->createSwapChain(_images);
@@ -375,7 +381,7 @@ namespace Poulpe
   {
     auto& cmd_buffer { _cmd_buffer_entities[_current_frame] };
     auto const& camera { renderer_context.camera };
-    auto const pipeline { getPipeline(mesh.getShaderName()) };
+    auto & pipeline { getPipeline(mesh.getShaderName()) };
 
     constants push_constants {
       .view = renderer_context.camera_view,
@@ -390,7 +396,7 @@ namespace Poulpe
 
     vkCmdPushConstants(
       cmd_buffer,
-      pipeline->pipeline_layout,
+      pipeline.pipeline_layout,
       renderer_context.stage_flag_bits,
       0,
       sizeof(constants),
@@ -407,13 +413,13 @@ namespace Poulpe
     vkCmdBindDescriptorSets(
       cmd_buffer,
       VK_PIPELINE_BIND_POINT_GRAPHICS,
-      pipeline->pipeline_layout,
+      pipeline.pipeline_layout,
       0, 1, mesh.getDescSet(), 0, nullptr);
 
-    if (material.double_sided == true && pipeline->pipeline_bis != VK_NULL_HANDLE) {
-      _vulkan->bindPipeline(cmd_buffer, pipeline->pipeline_bis);
+    if (material.double_sided == true && pipeline.pipeline_bis != VK_NULL_HANDLE) {
+      _vulkan->bindPipeline(cmd_buffer, pipeline.pipeline_bis);
       } else {
-      _vulkan->bindPipeline(cmd_buffer, pipeline->pipeline);
+      _vulkan->bindPipeline(cmd_buffer, pipeline.pipeline);
     }
 
     std::string const& shader_name { mesh.getShaderName() };
@@ -430,15 +436,15 @@ namespace Poulpe
       mesh.is_indexed());
 
     if (mesh.debugNormal() &&  renderer_context.normal_debug) {
-      auto const& normal_pipeline { getPipeline("normal_debug") };
+      auto & normal_pipeline { getPipeline("normal_debug") };
 
       vkCmdBindDescriptorSets(
         cmd_buffer,
         VK_PIPELINE_BIND_POINT_GRAPHICS,
-        normal_pipeline->pipeline_layout,
+        normal_pipeline.pipeline_layout,
         0, 1, mesh.getDescSet(), 0, nullptr);
 
-      _vulkan->bindPipeline(cmd_buffer, normal_pipeline->pipeline);
+      _vulkan->bindPipeline(cmd_buffer, normal_pipeline.pipeline);
 
       _vulkan->draw(
         cmd_buffer,
@@ -575,7 +581,7 @@ namespace Poulpe
     } else {
       cmd_buffer = _cmd_buffer_entities3[_current_frame];
     }
-    auto const& pipeline { getPipeline(pipeline_name) };
+    auto & pipeline { getPipeline(pipeline_name) };
 
     constants const push_constants {
       .view = renderer_context.camera_view,
@@ -586,7 +592,7 @@ namespace Poulpe
 
     vkCmdPushConstants(
       cmd_buffer,
-      pipeline->pipeline_layout,
+      pipeline.pipeline_layout,
       VK_SHADER_STAGE_VERTEX_BIT
       | VK_SHADER_STAGE_FRAGMENT_BIT,
       0,
@@ -597,16 +603,16 @@ namespace Poulpe
       vkCmdBindDescriptorSets(
         cmd_buffer,
         VK_PIPELINE_BIND_POINT_GRAPHICS,
-        pipeline->pipeline_layout,
+        pipeline.pipeline_layout,
         0, 1, mesh.getCSMDescSet(), 0, nullptr);
     } else {
       vkCmdBindDescriptorSets(
         cmd_buffer,
         VK_PIPELINE_BIND_POINT_GRAPHICS,
-        pipeline->pipeline_layout,
+        pipeline.pipeline_layout,
         0, 1, mesh.getShadowMapDescSet(), 0, nullptr);
     }
-    _vulkan->bindPipeline(cmd_buffer, pipeline->pipeline);
+    _vulkan->bindPipeline(cmd_buffer, pipeline.pipeline);
 
     _vulkan->draw(
       cmd_buffer,
@@ -850,7 +856,7 @@ namespace Poulpe
     std::string const& shaderName,
     VulkanPipeline& pipeline)
   {
-    _pipelines[shaderName] = std::move(pipeline);
+    _pipelines.insert_or_assign(shaderName, std::move(pipeline));
   }
 
   void Renderer::clearScreen()

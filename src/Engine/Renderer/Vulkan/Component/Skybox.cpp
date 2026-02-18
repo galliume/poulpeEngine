@@ -92,7 +92,6 @@ namespace Poulpe
 
       mesh.getUniformBuffers().emplace_back(
         renderer.getAPI()->createUniformBuffers(1, renderer.getCurrentFrameIndex()));
-      Logger::debug("over here");
     } else {
       auto const& mesh_data = mesh.getData();
       ubos = mesh_data->_ubos[0];
@@ -115,7 +114,6 @@ namespace Poulpe
     mesh.setIsDirty(false);
     mesh.setHasShadow(false);
 
-    Logger::debug("here");
     renderer.getAPI()->updateUniformBuffer(mesh.getUniformBuffers().at(0), &data._ubos.at(0), renderer.getCurrentFrameIndex());
 
     createDescriptorSet(renderer, mesh, render_context);

@@ -119,6 +119,10 @@ VulkanAPI::VulkanAPI(GLFWwindow* window)
   _staging_device_memory.resize(buffer_size);
 
   _update_vertex_offsets.resize(buffer_size);
+  _buffer_copy_request.resize(buffer_size);
+  for (auto& buffers : _buffer_copy_request) {
+    buffers.reserve(256); 
+  }
 
   for (std::size_t i {0}; i < buffer_size; i++) {
     vkCreateFence(_device, & fence_info, nullptr, & _fence_submit[i]);
@@ -1499,7 +1503,7 @@ VkDescriptorSet VulkanAPI::createDescriptorSets(
   std::uint32_t const count)
 {
   {
-    std::lock_guard<std::mutex> lock(pipeline.mutex);
+    std::lock_guard<std::mutex> lock(_mutex_pipeline);
 
     VkDescriptorSet descset{};
     VkDescriptorSetAllocateInfo alloc_info{};
@@ -1508,7 +1512,6 @@ VkDescriptorSet VulkanAPI::createDescriptorSets(
     alloc_info.descriptorSetCount = count;
     alloc_info.pSetLayouts = &pipeline.descset_layout;
 
-    Logger::debug("{}", __LINE__);
     VkResult result = vkAllocateDescriptorSets(_device, & alloc_info, & descset);
 
     if (result != VK_SUCCESS) {
@@ -2007,7 +2010,7 @@ Buffer VulkanAPI::createIndexBuffer(
     auto const index { device_memory->bindBufferToMemory(buffer, size, mem_requirements.alignment) };
     auto const offset { device_memory->getOffset(index) };
 
-  copyBuffer(staging_buffer, buffer, buffer_size, current_offset, 0, image_index);
+  addcopyBufferRequest(staging_buffer, buffer, buffer_size, image_index, offset, 0);
 
   Buffer mesh_buffer;
   mesh_buffer.buffer = std::move(buffer);
@@ -2052,7 +2055,7 @@ Buffer VulkanAPI::createVertexBuffer(
   auto const index { device_memory->bindBufferToMemory(buffer, size, mem_requirements.alignment) };
   auto const offset { device_memory->getOffset(index) };
 
-  copyBuffer(staging_buffer, buffer, buffer_size, current_offset, 0, image_index);
+  addcopyBufferRequest(staging_buffer, buffer, buffer_size, image_index, offset, 0);
 
   Buffer mesh_buffer;
   mesh_buffer.buffer = std::move(buffer);
@@ -2091,7 +2094,6 @@ void VulkanAPI::updateVertexBuffer(
   copy_region.dstOffset = 0;
   copy_region.size = buffer_size;
 
-    Logger::debug("{}", __LINE__);
   vkCmdCopyBuffer(transfer_cmd_buffer, _staging_buffer[image_index], buffer_to_update, 1, & copy_region);
   _update_vertex_offsets[image_index] += buffer_size;
 }
@@ -2157,7 +2159,7 @@ Buffer VulkanAPI::createUniformBuffers(
   auto const index { device_memory->bindBufferToMemory(buffer, size, mem_requirements.alignment) };
   auto const offset { device_memory->getOffset(index) };
 
-  copyBuffer(staging_buffer, buffer, buffer_size, current_offset, 0, image_index);
+  addcopyBufferRequest(staging_buffer, buffer, buffer_size, image_index, offset, 0);
 
   Buffer uniform_buffer;
   uniform_buffer.buffer = std::move(buffer);
@@ -2250,18 +2252,18 @@ void VulkanAPI::updateUniformBuffer(
 {
   {
   VkDeviceSize buffer_size = sizeof(UniformBufferObject) * uniform_buffer_objects->size();
-  auto &copy_cmd_buffer = _copy_cmd_buffer[image_index];
+  //auto &copy_cmd_buffer = _copy_cmd_buffer[image_index];
   std::size_t const current_offset { _update_vertex_offsets[image_index] };
 
   std::memcpy(static_cast<char*>(_staging_data_ptr[image_index]) + current_offset, uniform_buffer_objects->data(), static_cast<std::size_t>(buffer_size));
 
-  VkBufferCopy copy_region{};
-  copy_region.srcOffset = current_offset;
-  copy_region.dstOffset = 0;
-  copy_region.size = buffer_size;
+  // VkBufferCopy copy_region{};
+  // copy_region.srcOffset = current_offset;
+  // copy_region.dstOffset = 0;
+  // copy_region.size = buffer_size;
 
-  Logger::debug("{}", __LINE__);
-  vkCmdCopyBuffer(copy_cmd_buffer, _staging_buffer[image_index], buffer.buffer, 1, & copy_region);
+  //vkCmdCopyBuffer(copy_cmd_buffer, _staging_buffer[image_index], buffer.buffer, 1, & copy_region);
+  addcopyBufferRequest(_staging_buffer[image_index], buffer.buffer, buffer_size, image_index, current_offset, 0);
 
   _update_vertex_offsets[image_index] += buffer_size;
     // //buffer.memory->lock();
@@ -2328,9 +2330,28 @@ void VulkanAPI::createTransferCmdPool()
   }
 }
 
-void VulkanAPI::startCopyBuffer(std::size_t const image_index)
+void VulkanAPI::addcopyBufferRequest(
+  VkBuffer src_buffer,
+  VkBuffer dst_buffer,
+  VkDeviceSize size,
+  std::size_t const image_index,
+  VkDeviceSize src_offset,
+  VkDeviceSize dst_offset)
+  {
+    {
+      std::lock_guard<std::mutex> lock(_mutex_buffer_copy_request);
+      _buffer_copy_request[image_index].emplace_back(
+        src_buffer,
+        dst_buffer,
+        size,
+        src_offset,
+        dst_offset
+      );
+    }
+  }
+
+void VulkanAPI::commitCopyBuffer(std::size_t const image_index)
 {
-  //@todo perf improvement to be done here (~+80fps on outdoors without the fence)
   auto & fence_buffer { _fence_buffer[image_index] };
   vkWaitForFences(_device, 1, &fence_buffer, VK_TRUE, UINT64_MAX);
 
@@ -2346,20 +2367,24 @@ void VulkanAPI::startCopyBuffer(std::size_t const image_index)
   if (result != VK_SUCCESS) {
     Logger::error("vkBeginCommandBuffer failed in startCopyBuffer");
   }
-}
 
-void VulkanAPI::endCopyBuffer(std::size_t const image_index)
-{
+  for (auto const& buffer : _buffer_copy_request[image_index]) {
+    VkBufferCopy copy_region{};
+    copy_region.srcOffset = buffer.src_offset;
+    copy_region.dstOffset = buffer.dst_offset;
+    copy_region.size = buffer.size;
+    vkCmdCopyBuffer(_copy_cmd_buffer[image_index], buffer.src_buffer, buffer.dst_buffer, 1, & copy_region);
+  }
+
+  _buffer_copy_request[image_index].clear();
+
   vkEndCommandBuffer(_copy_cmd_buffer[image_index]);
-
-  auto & fence_buffer { _fence_buffer[image_index] };
 
   VkSubmitInfo submit_info{};
   submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
   submit_info.commandBufferCount = 1;
   submit_info.pCommandBuffers = &_copy_cmd_buffer[image_index];
 
-  VkResult result;
   {
     std::lock_guard<std::mutex> guard(_mutex_queue_submit);
     result = vkQueueSubmit(_transfer_queues[_queue_index], 1, & submit_info, fence_buffer);
@@ -2368,33 +2393,6 @@ void VulkanAPI::endCopyBuffer(std::size_t const image_index)
   if (result != VK_SUCCESS) {
     Logger::error("failed to copy buffer in copyBuffer : {}", string_VkResult(result));
   }
-}
-
-void VulkanAPI::copyBuffer(
-  VkBuffer& src_buffer,
-  VkBuffer& dst_buffer,
-  VkDeviceSize const size,
-  VkDeviceSize src_offset,
-  VkDeviceSize dst_offset,
-  std::size_t const image_index)
-{
-  if (VK_NULL_HANDLE == dst_buffer) {
-    Logger::warn("update an unitialized buffer");
-    return;
-  }
-
-  if (_update_vertex_offsets[image_index] + size > _staging_size) {
-    endCopyBuffer(image_index);
-    startCopyBuffer(image_index);
-  }
-
-  VkBufferCopy copy_region{};
-  copy_region.srcOffset = src_offset;
-  copy_region.dstOffset = dst_offset;
-  copy_region.size = size;
-  Logger::debug("{}", __LINE__);
-
-  vkCmdCopyBuffer(_copy_cmd_buffer[image_index], src_buffer, dst_buffer, 1, & copy_region);
 }
 
 VkImageMemoryBarrier VulkanAPI::setupImageMemoryBarrier(
@@ -3443,5 +3441,75 @@ VkSampler VulkanAPI::createTextureSampler(std::uint32_t const mip_lvl)
         ++it;
       }
     }
+  }
+
+  void VulkanAPI::startCopyBuffer(std::size_t const image_index)
+  {
+    //@todo perf improvement to be done here (~+80fps on outdoors without the fence)
+    auto & fence_buffer { _fence_buffer[image_index] };
+    vkWaitForFences(_device, 1, &fence_buffer, VK_TRUE, UINT32_MAX);
+
+    vkResetFences(_device, 1, &fence_buffer);
+    vkResetCommandBuffer(_copy_cmd_buffer[image_index], 0);
+
+    VkCommandBufferBeginInfo begin_info{};
+    begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+    begin_info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+
+    VkResult result { vkBeginCommandBuffer(_copy_cmd_buffer[image_index], &begin_info) };
+
+    if (result != VK_SUCCESS) {
+      Logger::error("vkBeginCommandBuffer failed in startCopyBuffer");
+    }
+  }
+
+  void VulkanAPI::endCopyBuffer(std::size_t const image_index)
+  {
+    vkEndCommandBuffer(_copy_cmd_buffer[image_index]);
+
+    auto & fence_buffer { _fence_buffer[image_index] };
+
+    VkSubmitInfo submit_info{};
+    submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+    submit_info.commandBufferCount = 1;
+    submit_info.pCommandBuffers = &_copy_cmd_buffer[image_index];
+    
+    VkResult result;
+    {
+      std::lock_guard<std::mutex> guard(_mutex_queue_submit);
+      result = vkQueueSubmit(_transfer_queues[_queue_index], 1, & submit_info, fence_buffer);
+    }
+
+    if (result != VK_SUCCESS) {
+      Logger::error("failed to copy buffer in copyBuffer : {}", string_VkResult(result));
+      throw std::runtime_error("failed to copy buffer in endCopyBuffer");
+    }
+    //vkQueueWaitIdle(_transfer_queues[_queue_index]);
+  }
+
+  void VulkanAPI::copyBuffer(
+    VkBuffer& src_buffer,
+    VkBuffer& dst_buffer,
+    VkDeviceSize const size,
+    VkDeviceSize src_offset,
+    VkDeviceSize dst_offset,
+    std::size_t const image_index)
+  {
+    if (VK_NULL_HANDLE == dst_buffer) {
+      Logger::warn("update an unitialized buffer");
+      return;
+    }
+
+    if (_update_vertex_offsets[image_index] + size > _staging_size) {
+      endCopyBuffer(image_index);
+      startCopyBuffer(image_index);
+    }
+
+    VkBufferCopy copy_region{};
+    copy_region.srcOffset = src_offset;
+    copy_region.dstOffset = dst_offset;
+    copy_region.size = size;
+
+    vkCmdCopyBuffer(_copy_cmd_buffer[image_index], src_buffer, dst_buffer, 1, & copy_region);
   }
 }

@@ -182,13 +182,12 @@ namespace Poulpe
       void* void_data { renderer.getAPI()->getStagingMemoryPtr(image_index) };
       std::memcpy(static_cast<char*>(void_data) + current_offset, vertices.data(), static_cast<std::size_t>(buffer_size));
 
-      renderer.getAPI()->copyBuffer(
+      renderer.getAPI()->addcopyBufferRequest(
         staging_buffer,
         data->_vertex_buffer.buffer,
         buffer_size,
-        current_offset,
-        0,
-        renderer.getCurrentFrameIndex());
+        renderer.getCurrentFrameIndex(),
+        current_offset);
 
         data->_is_dirty = true;
         renderer.updateVertexBuffer(data, renderer.getCurrentFrameIndex());

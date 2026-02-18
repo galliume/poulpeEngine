@@ -62,10 +62,11 @@ namespace Poulpe
   };
 
   export struct BufferCopyRequest {
-    VkBuffer src;
-    VkBuffer dst;
+    VkBuffer src_buffer;
+    VkBuffer dst_buffer;
     VkDeviceSize size;
-    VkDeviceSize offset;
+    VkDeviceSize src_offset;
+    VkDeviceSize dst_offset;
   };
 
   export struct ImageMemoryBarrier {
@@ -110,7 +111,7 @@ namespace Poulpe
 
     VkDescriptorSet createDescriptorSets(
       VulkanPipeline & pipeline,
-      std::uint32_t const count = 100);
+      std::uint32_t const count = 100) __attribute__((no_thread_safety_analysis));
 
     void updateDescriptorSets(
       std::vector<Buffer>& uniform_buffers,
@@ -203,16 +204,13 @@ namespace Poulpe
       std::uint32_t const mip_lvl = VK_REMAINING_MIP_LEVELS,
       VkImageAspectFlags const aspect_mask = VK_IMAGE_ASPECT_COLOR_BIT);
 
-    void startCopyBuffer(std::size_t const image_index);
-    void endCopyBuffer(std::size_t const image_index) __attribute__((no_thread_safety_analysis));
-
-    void copyBuffer(
-      VkBuffer& src_buffer,
-      VkBuffer& dst_buffer,
-      VkDeviceSize const size,
+    void addcopyBufferRequest(
+      VkBuffer src_buffer,
+      VkBuffer dst_buffer,
+      VkDeviceSize size,
+      std::size_t const image_index,
       VkDeviceSize src_offset = 0,
-      VkDeviceSize dst_offset = 0,
-      std::size_t const image_index = 0) __attribute__((no_thread_safety_analysis));
+      VkDeviceSize dst_offset = 0) __attribute__((no_thread_safety_analysis));
 
     bool souldResizeSwapChain();
 
@@ -562,8 +560,19 @@ namespace Poulpe
       VkDeviceMemory mem);
 
       void collectGarbage();
+      
+      void commitCopyBuffer(std::size_t const image_index) __attribute__((no_thread_safety_analysis));
+      void startCopyBuffer(std::size_t const image_index);
+      void endCopyBuffer(std::size_t const image_index) __attribute__((no_thread_safety_analysis));
 
-  public:
+      void copyBuffer(
+        VkBuffer& src_buffer,
+        VkBuffer& dst_buffer,
+        VkDeviceSize const size,
+        VkDeviceSize src_offset,
+        VkDeviceSize dst_offset,
+        std::size_t const image_index);
+  
     //bool _FramebufferResized = false;
 
     //VK_COLOR_SPACE_HDR10_ST2084_EXT
@@ -685,6 +694,9 @@ namespace Poulpe
     std::size_t _queue_index {0};
   
     GarbageCollector _garbage_collector{};
+    std::vector<std::vector<BufferCopyRequest>> _buffer_copy_request;
+    std::mutex _mutex_buffer_copy_request;
+    std::mutex _mutex_pipeline;
 
     std::map<LayoutPair, TransitionSyncData> const _transition_map {
         {

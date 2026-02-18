@@ -64,7 +64,6 @@ namespace Poulpe
     
     _light_buffers.resize(_renderer->getMaxFramesInFlight());
     
-    _renderer->getAPI()->startCopyBuffer(_renderer->getCurrentFrameIndex());
     for (std::size_t i = 0; i < _light_buffers.size(); ++i) {
       LightObjectBuffer light_object_buffer{};
       _light_buffers[i] = _renderer->getAPI()->createStorageBuffers(light_object_buffer, _renderer->getCurrentFrameIndex());
@@ -72,9 +71,7 @@ namespace Poulpe
     
     _font_manager = std::make_unique<FontManager>(*_renderer);
     auto atlas { _font_manager->load() };
-    
-    _renderer->getAPI()->endCopyBuffer(_renderer->getCurrentFrameIndex());
-    
+
     _texture_manager->addTexture(atlas);
     
     //@todo, those managers should not have the usage of the renderer...
@@ -149,7 +146,6 @@ namespace Poulpe
 
     updateRendererContext(camera_view_matrix);
 
-    _renderer->getAPI()->startCopyBuffer(_renderer->getCurrentFrameIndex());
     prepareSkybox();
     prepareTerrain();
     prepareWater();
@@ -164,7 +160,6 @@ namespace Poulpe
       .flat = false
     };
     addText(text);
-    _renderer->getAPI()->endCopyBuffer(_renderer->getCurrentFrameIndex());
   }
 
   template <typename T>
@@ -191,8 +186,6 @@ namespace Poulpe
       _light_manager->computeCSM(frame_context.camera_view_matrix, frame_context.perspective);
 
       updateRendererContext(frame_context.camera_view_matrix);
-
-      _renderer->getAPI()->startCopyBuffer(_renderer->getCurrentFrameIndex());
 
       //@todo improve this draft for simple shader hot reload
       if (config_manager->reloadShaders()) {
@@ -350,7 +343,7 @@ namespace Poulpe
       drawEntity(text_entity->getID(), frame_context.camera_view_matrix, true);
     });
 
-    _renderer->getAPI()->endCopyBuffer(_renderer->getCurrentFrameIndex());
+    _renderer->getAPI()->commitCopyBuffer(_renderer->getCurrentFrameIndex());
     _renderer->endRender();
   }
 
@@ -491,11 +484,8 @@ namespace Poulpe
     light_object_buffer.lights[1] = _light_manager->getPointLights()[1];
     light_object_buffer.lights[2] = _light_manager->getPointLights()[0];
 
-    _renderer->getAPI()->startCopyBuffer(_renderer->getCurrentFrameIndex());
-
     _renderer->getAPI()->updateStorageBuffer<LightObjectBuffer>(
       _light_buffers.at(_renderer->getCurrentFrameIndex()), light_object_buffer, _renderer->getCurrentFrameIndex());
-    _renderer->getAPI()->endCopyBuffer(_renderer->getCurrentFrameIndex());
   }
 
   void RenderManager::loadData(std::string const & level)
