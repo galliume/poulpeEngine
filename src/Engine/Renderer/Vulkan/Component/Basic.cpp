@@ -247,16 +247,12 @@ namespace Poulpe
 
     std::vector<VkDescriptorImageInfo> env_info{};
 
-    Texture texture_environment{ getTexture(render_context, render_context.skybox_name) };
-    texture_environment.setSampler(renderer.getAPI()->createKTXSampler(
+    render_context.skybox->setSampler(renderer.getAPI()->createKTXSampler(
       TextureWrapMode::CLAMP_TO_EDGE,
       TextureWrapMode::CLAMP_TO_EDGE,
       0));
 
-    if (texture_environment.getWidth() == 0) {
-      texture_environment = render_context.textures->at(PLP_EMPTY);
-    }
-    env_info.emplace_back(texture_environment.getSampler(), texture_environment.getImageView(), VK_IMAGE_LAYOUT_GENERAL);
+    env_info.emplace_back(render_context.skybox->getSampler(), render_context.skybox->getImageView(), VK_IMAGE_LAYOUT_GENERAL);
 
     std::vector<VkDescriptorImageInfo> depth_map_image_info{};
     depth_map_image_info.emplace_back(renderer.getDepthMapSamplers(), renderer.getDepthMapImageViews(), VK_IMAGE_LAYOUT_GENERAL);

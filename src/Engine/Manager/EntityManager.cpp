@@ -40,12 +40,10 @@ import Engine.Renderer.Vulkan.Basic;
 namespace Poulpe
 {
   EntityManager::EntityManager(
-    ComponentManager* const component_manager,
-    LightManager* const light_manager,
-    TextureManager* const texture_manager,
+    ComponentManager& component_manager,
+    TextureManager& texture_manager,
     Buffer& light_buffer)
     : _component_manager(component_manager)
-    , _light_manager(light_manager)
     , _texture_manager(texture_manager)
     , _light_buffer(light_buffer)
   {
@@ -207,60 +205,60 @@ namespace Poulpe
 
         if (!mat.name_texture_diffuse.empty()) {
           name_texture = mat.name_texture_diffuse;
-          _texture_manager->add(name_texture, mat.name_texture_diffuse_path, VK_IMAGE_ASPECT_COLOR_BIT, TEXTURE_TYPE::DIFFUSE, renderer);
+          _texture_manager.add(name_texture, mat.name_texture_diffuse_path, VK_IMAGE_ASPECT_COLOR_BIT, TEXTURE_TYPE::DIFFUSE, renderer);
           options |= PLP_MESH_OPTIONS::HAS_BASE_COLOR;
         } else if (!mat.name_texture_ambient.empty()) {
           name_texture = mat.name_texture_ambient;
           options |= PLP_MESH_OPTIONS::HAS_BASE_COLOR;
-          _texture_manager->add(name_texture, mat.name_texture_ambient_path, VK_IMAGE_ASPECT_COLOR_BIT, TEXTURE_TYPE::DIFFUSE, renderer);
+          _texture_manager.add(name_texture, mat.name_texture_ambient_path, VK_IMAGE_ASPECT_COLOR_BIT, TEXTURE_TYPE::DIFFUSE, renderer);
         }
 
         if (!mat.name_texture_specular.empty()) {
           name_specular_map = mat.name_texture_specular;
           options |= PLP_MESH_OPTIONS::HAS_SPECULAR;
-          _texture_manager->add(name_specular_map, mat.name_texture_specular_path, VK_IMAGE_ASPECT_COLOR_BIT, TEXTURE_TYPE::AO, renderer);
+          _texture_manager.add(name_specular_map, mat.name_texture_specular_path, VK_IMAGE_ASPECT_COLOR_BIT, TEXTURE_TYPE::AO, renderer);
         }
 
         if (!mat.name_texture_bump.empty()) {
           name_bump_map = mat.name_texture_bump;
           options |= PLP_MESH_OPTIONS::HAS_NORMAL;
-          _texture_manager->add(name_bump_map, mat.name_texture_bump_path, VK_IMAGE_ASPECT_COLOR_BIT, TEXTURE_TYPE::NORMAL, renderer);
+          _texture_manager.add(name_bump_map, mat.name_texture_bump_path, VK_IMAGE_ASPECT_COLOR_BIT, TEXTURE_TYPE::NORMAL, renderer);
         }
 
         if (!mat.name_texture_alpha.empty()) {
           name_alpha_map = mat.name_texture_alpha;
           options |= PLP_MESH_OPTIONS::HAS_ALPHA;
-          _texture_manager->add(name_alpha_map, mat.name_texture_alpha_path, VK_IMAGE_ASPECT_COLOR_BIT, TEXTURE_TYPE::AO, renderer);
+          _texture_manager.add(name_alpha_map, mat.name_texture_alpha_path, VK_IMAGE_ASPECT_COLOR_BIT, TEXTURE_TYPE::AO, renderer);
         }
 
         if (!mat.name_texture_metal_roughness.empty()) {
           name_texture_metal_roughness = mat.name_texture_metal_roughness;
           options |= PLP_MESH_OPTIONS::HAS_MR;
-          _texture_manager->add(name_texture_metal_roughness, mat.name_texture_metal_roughness_path, VK_IMAGE_ASPECT_COLOR_BIT, TEXTURE_TYPE::MR, renderer);
+          _texture_manager.add(name_texture_metal_roughness, mat.name_texture_metal_roughness_path, VK_IMAGE_ASPECT_COLOR_BIT, TEXTURE_TYPE::MR, renderer);
         }
 
         if (!mat.name_texture_emissive.empty()) {
           name_texture_emissive = mat.name_texture_emissive;
           options |= PLP_MESH_OPTIONS::HAS_EMISSIVE;
-          _texture_manager->add(name_texture_emissive, mat.name_texture_emissive_path, VK_IMAGE_ASPECT_COLOR_BIT, TEXTURE_TYPE::EMISSIVE, renderer);
+          _texture_manager.add(name_texture_emissive, mat.name_texture_emissive_path, VK_IMAGE_ASPECT_COLOR_BIT, TEXTURE_TYPE::EMISSIVE, renderer);
         }
 
         if (!mat.name_texture_ao.empty()) {
           name_texture_ao = mat.name_texture_ao;
           options |= PLP_MESH_OPTIONS::HAS_AO;
-          _texture_manager->add(name_texture_ao, mat.name_texture_ao_path, VK_IMAGE_ASPECT_COLOR_BIT, TEXTURE_TYPE::AO, renderer);
+          _texture_manager.add(name_texture_ao, mat.name_texture_ao_path, VK_IMAGE_ASPECT_COLOR_BIT, TEXTURE_TYPE::AO, renderer);
         }
 
         if (!mat.name_texture_base_color.empty()) {
           name_texture_base_color = mat.name_texture_base_color;
           options |= PLP_MESH_OPTIONS::HAS_BASE_COLOR;
-          _texture_manager->add(name_texture_base_color, mat.name_texture_base_color_path, VK_IMAGE_ASPECT_COLOR_BIT, TEXTURE_TYPE::DIFFUSE, renderer);
+          _texture_manager.add(name_texture_base_color, mat.name_texture_base_color_path, VK_IMAGE_ASPECT_COLOR_BIT, TEXTURE_TYPE::DIFFUSE, renderer);
         }
 
         if (!mat.name_texture_transmission.empty()) {
           name_texture_transmission = mat.name_texture_transmission;
           options |= PLP_MESH_OPTIONS::HAS_TRANSMISSION;
-          _texture_manager->add(name_texture_transmission, mat.name_texture_transmission_path, VK_IMAGE_ASPECT_COLOR_BIT, TEXTURE_TYPE::EMISSIVE, renderer);
+          _texture_manager.add(name_texture_transmission, mat.name_texture_transmission_path, VK_IMAGE_ASPECT_COLOR_BIT, TEXTURE_TYPE::EMISSIVE, renderer);
         }
         for (auto& material : materials) {
           mesh->addMaterial(material);
@@ -350,8 +348,8 @@ namespace Poulpe
 
       auto basicRdrImpl { RendererComponentFactory::create<Basic>() };
 
-      _component_manager->add<RendererComponent>(entity->getID(), std::move(basicRdrImpl));
-      _component_manager->add<MeshComponent>(entity->getID(), std::move(mesh));
+      _component_manager.add<RendererComponent>(entity->getID(), std::move(basicRdrImpl));
+      _component_manager.add<MeshComponent>(entity->getID(), std::move(mesh));
       auto entityNode { root_mesh_entity_node->addChild(std::make_shared<EntityNode>(entity)) };
 
       if (alpha_mode == 2.0f) {
@@ -367,7 +365,7 @@ namespace Poulpe
             //@todo temp until lua scripting
             for (auto& anim : entity_opts.animation_scripts) {
               auto animationScript = std::make_unique<AnimationScript>(root_path + "/" + anim);
-              _component_manager->add<AnimationComponent>(entity->getID(), std::move(animationScript));
+              _component_manager.add<AnimationComponent>(entity->getID(), std::move(animationScript));
             }
           }
 
@@ -380,7 +378,7 @@ namespace Poulpe
               std::move(_scales),
               entity_opts.default_anim);
 
-            _component_manager->add<BoneAnimationComponent>(
+            _component_manager.add<BoneAnimationComponent>(
             entity->getID(), std::move(boneAnimationScript));
             _entity_children.clear();
             _animations.clear();

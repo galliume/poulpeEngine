@@ -42,7 +42,7 @@ namespace Poulpe
       case DeviceBufferType::UNIFORM:
       buffer_size = size;
 
-      if (buffer_size > _device_props.properties.limits.maxUniformBufferRange) {
+      if (buffer_size < _device_props.properties.limits.maxUniformBufferRange) {
         buffer_size = _device_props.properties.limits.maxUniformBufferRange;
       }
 
@@ -53,7 +53,7 @@ namespace Poulpe
 
         buffer_size = size;
 
-        if (buffer_size >= _device_props.properties.limits.maxStorageBufferRange) {
+        if (buffer_size < _device_props.properties.limits.maxStorageBufferRange / _max_staging) {
           buffer_size = _device_props.properties.limits.maxStorageBufferRange / _max_staging;
         }
 
@@ -70,7 +70,7 @@ namespace Poulpe
       if (pool_type->second.end() != poolUsage) {
         for (std::size_t i{ 0 }; i < poolUsage->second.size(); ++i) {
           auto& dm = poolUsage->second.at(i);
-          if (!dm->isFull() && dm->hasEnoughSpaceLeft(size)) {
+          if (!dm->isFull() && dm->hasEnoughSpaceLeft(size, alignment)) {
             //  Logger::debug("DM REUSE OK: id {}, {}, type {} usage {} size {}/{}",
             //    dm.get()->getID(), buffer_type_debug, memory_type, usage, size, dm->getSpaceLeft());
             return dm.get();

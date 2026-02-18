@@ -7,7 +7,7 @@ namespace Poulpe
   export using IDType = std::uint64_t;
   export using ComponentTypeID = IDType;
 
-  inline std::atomic<IDType> _plp_component_type_global_counter{ 0 };
+  //inline std::atomic<IDType> _plp_component_type_global_counter{ 0 };
 
   //Unique ID for Entity
   export class GUIDGenerator
@@ -30,14 +30,14 @@ namespace Poulpe
     }
   };
 
-  export template<class T>
-  class TypeIdGenerator
-  {
-  public:
-    static IDType GetID()
-    {
-      static const IDType id = _plp_component_type_global_counter++;
-      return id;
-    }
-  };
+  // export template<class T>
+  // class TypeIdGenerator
+  // {
+  // public:
+  //   static IDType GetID()
+  //   {
+  //     static const IDType id = _plp_component_type_global_counter++;
+  //     return id;
+  //   }
+  // };
 }

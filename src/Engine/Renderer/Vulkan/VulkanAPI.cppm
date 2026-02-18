@@ -244,17 +244,6 @@ namespace Poulpe
       std::uint32_t scale,
       VkImageAspectFlags const aspect_flags = VK_IMAGE_ASPECT_COLOR_BIT);
 
-    void createTextureImage(
-      VkCommandBuffer& cmd_buffer,
-      stbi_uc* pixels,
-      std::uint32_t const tex_width,
-      std::uint32_t const tex_height,
-      std::uint32_t const mip_lvl,
-      VkImage& texture_image,
-      VkFormat const format,
-      std::uint32_t const scale,
-      std::size_t const image_index);
-
     void copyBufferToImage(
       VkCommandBuffer& cmd_buffer,
       VkBuffer& buffer, VkImage& image,
@@ -286,7 +275,7 @@ namespace Poulpe
     {
       VkDeviceSize buffer_size { sizeof(T) };
 
-      auto & staging_buffer = _staging_buffer[image_index];
+      auto & staging_buffer { _staging_buffer[image_index] };
       std::size_t const current_offset { _update_vertex_offsets[image_index] };
 
       std::memcpy(static_cast<char*>(_staging_data_ptr[image_index]) + current_offset, &storage_buffer, static_cast<std::size_t>(buffer_size));
@@ -297,20 +286,19 @@ namespace Poulpe
       vkGetBufferMemoryRequirements(_device, buffer, & mem_requirements);
 
       auto memoryType = findMemoryType(mem_requirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-      VkDeviceSize const size = mem_requirements.size;
-      VkDeviceSize const bind_offset = align_to(size, mem_requirements.alignment);
+      VkDeviceSize const size { mem_requirements.size };
 
       auto const flags { VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT };
 
-      auto device_memory = _device_memory_pool->get(
+      auto device_memory { _device_memory_pool->get(
         _device,
         size,
         memoryType,
         flags,
         mem_requirements.alignment,
-        DeviceMemoryPool::DeviceBufferType::STAGING);
+        DeviceMemoryPool::DeviceBufferType::STAGING) };
 
-      auto const index { device_memory->bindBufferToMemory(buffer, bind_offset) };
+      auto const index { device_memory->bindBufferToMemory(buffer, size, mem_requirements.alignment) };
       auto const offset { device_memory->getOffset(index) };
 
       copyBuffer(staging_buffer, buffer, buffer_size, current_offset, 0, image_index);
@@ -320,7 +308,7 @@ namespace Poulpe
       uniform_buffer.memory = static_cast<void*>(device_memory);
       uniform_buffer.offset = offset;
       uniform_buffer.size = size;
-      uniform_buffer.index = index;
+      uniform_buffer.index = index; 
 
       return uniform_buffer;
     }
@@ -742,4 +730,7 @@ namespace Poulpe
         }
     };
   };
+
+  export template Buffer VulkanAPI::createStorageBuffers<LightObjectBuffer>(LightObjectBuffer const&, std::size_t const);
+  export template Buffer VulkanAPI::createStorageBuffers<ObjectBuffer>(ObjectBuffer const&, std::size_t const);
 }

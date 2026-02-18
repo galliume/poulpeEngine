@@ -24,9 +24,8 @@ namespace Poulpe
   export class ShaderManager
   {
   public:
-    ShaderManager();
+    explicit ShaderManager(Renderer& renderer);
 
-    inline void addRenderer(Renderer* const renderer)  { _renderer = renderer; }
     void addShader(
       std::string const& name,
       std::string const& vert_path,
@@ -50,7 +49,7 @@ namespace Poulpe
     VkPipelineVertexInputStateCreateInfo* getVertexInputState();
 
     json _config;
-    Renderer* _renderer{ nullptr };
+    Renderer& _renderer;
     std::unique_ptr<VulkanShaders> _shaders{ nullptr };
   };
 }

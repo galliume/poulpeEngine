@@ -57,35 +57,32 @@ namespace Poulpe
     _texture_manager = std::make_unique<TextureManager>(*_renderer);
 
     _audio_manager = std::make_unique<AudioManager>();
-    _shader_manager = std::make_unique<ShaderManager>();
     _destroy_manager = std::make_unique<DestroyManager>();
-
+    
     _destroy_manager->setRenderer(_renderer.get());
     _destroy_manager->addMemoryPool(_renderer->getAPI()->getDeviceMemoryPool());
-
+    
     _light_buffers.resize(_renderer->getMaxFramesInFlight());
-
+    
     _renderer->getAPI()->startCopyBuffer(_renderer->getCurrentFrameIndex());
     for (std::size_t i = 0; i < _light_buffers.size(); ++i) {
       LightObjectBuffer light_object_buffer{};
       _light_buffers[i] = _renderer->getAPI()->createStorageBuffers(light_object_buffer, _renderer->getCurrentFrameIndex());
     }
-
-    _font_manager = std::make_unique<FontManager>();
-    _font_manager->addRenderer(_renderer.get());
-    auto atlas = _font_manager->load();
-
+    
+    _font_manager = std::make_unique<FontManager>(*_renderer);
+    auto atlas { _font_manager->load() };
+    
     _renderer->getAPI()->endCopyBuffer(_renderer->getCurrentFrameIndex());
-
+    
     _texture_manager->addTexture(atlas);
-
+    
     //@todo, those managers should not have the usage of the renderer...
-    _shader_manager->addRenderer(_renderer.get());
+    _shader_manager = std::make_unique<ShaderManager>(*_renderer);
 
     _entity_manager = std::make_unique<EntityManager>(
-      _component_manager.get(),
-      _light_manager.get(),
-      _texture_manager.get(),
+      *_component_manager,
+      *_texture_manager,
       _light_buffers.at(0)
     );
 
@@ -496,7 +493,7 @@ namespace Poulpe
 
     _renderer->getAPI()->startCopyBuffer(_renderer->getCurrentFrameIndex());
 
-    _renderer->getAPI()->updateStorageBuffer(
+    _renderer->getAPI()->updateStorageBuffer<LightObjectBuffer>(
       _light_buffers.at(_renderer->getCurrentFrameIndex()), light_object_buffer, _renderer->getCurrentFrameIndex());
     _renderer->getAPI()->endCopyBuffer(_renderer->getCurrentFrameIndex());
   }

@@ -26,9 +26,8 @@ namespace Poulpe
   public:
 
     explicit EntityManager(
-      ComponentManager* const component_manager,
-      LightManager* const light_manager,
-      TextureManager* const texture_manager,
+      ComponentManager& component_manager,
+      TextureManager& texture_manager,
       Buffer& light_buffer);
 
     void clear();
@@ -69,9 +68,8 @@ namespace Poulpe
     std::shared_mutex& lockWorldNode() { return _mutex_shared; }
 
   private:
-    ComponentManager* _component_manager;
-    LightManager* _light_manager;
-    TextureManager* _texture_manager;
+    ComponentManager& _component_manager;
+    TextureManager& _texture_manager;
 
     json _lvl_config;
 
