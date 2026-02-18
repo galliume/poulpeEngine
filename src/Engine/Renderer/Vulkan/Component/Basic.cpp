@@ -261,8 +261,8 @@ namespace Poulpe
     std::vector<VkDescriptorImageInfo> csm_image_info{};
     csm_image_info.emplace_back(renderer.getCSMSamplers(), renderer.getCSMImageViews(), VK_IMAGE_LAYOUT_GENERAL);
 
-    auto const& pipeline = renderer.getPipeline(mesh.getShaderName());
-    VkDescriptorSet descset{ renderer.getAPI()->createDescriptorSets(pipeline->desc_pool, { pipeline->descset_layout }, 1) };
+    VkDescriptorSet descset{
+      renderer.getAPI()->createDescriptorSets(renderer.getPipeline(mesh.getShaderName()), 1) };
 
     auto light_buffer {render_context.light_buffer};
 
@@ -295,8 +295,8 @@ namespace Poulpe
         buffer_infos.emplace_back(buffer_info);
       });
 
-    auto const& shadow_map_pipeline = renderer.getPipeline("shadow_map");
-    VkDescriptorSet shadow_map_descset = renderer.getAPI()->createDescriptorSets(shadow_map_pipeline->desc_pool, { shadow_map_pipeline->descset_layout }, 1);
+    VkDescriptorSet shadow_map_descset { 
+      renderer.getAPI()->createDescriptorSets(renderer.getPipeline("shadow_map"), 1) };
 
     VkDescriptorBufferInfo buffer_info{};
     buffer_info.buffer = light_buffer.buffer;
@@ -324,8 +324,8 @@ namespace Poulpe
 
     mesh.setShadowMapDescSet(shadow_map_descset);
 
-    auto const& csm_pipeline = renderer.getPipeline("csm");
-    VkDescriptorSet csm_descset = renderer.getAPI()->createDescriptorSets(csm_pipeline->desc_pool, { csm_pipeline->descset_layout }, 1);
+    VkDescriptorSet csm_descset {
+      renderer.getAPI()->createDescriptorSets(renderer.getPipeline("csm"), 1) };
 
     std::array<VkWriteDescriptorSet, 2> csm_descset_writes{};
     std::vector<VkDescriptorBufferInfo> csm_buffer_infos;

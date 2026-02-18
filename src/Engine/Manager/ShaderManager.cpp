@@ -584,7 +584,7 @@ namespace Poulpe
     pipeline.shaders = shaders;
 
     if (shader_name == "shadow_map" || shader_name == "csm") {
-      pipeline.descset = _renderer.getAPI()->createDescriptorSets(pipeline.desc_pool, { pipeline.descset_layout }, 1);
+      pipeline.descset = _renderer.getAPI()->createDescriptorSets(pipeline, 1);
     }
     _renderer.addPipeline(shader_name, pipeline);
   }

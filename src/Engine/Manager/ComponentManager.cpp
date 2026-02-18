@@ -4,9 +4,8 @@ import Engine.Component.Mesh;
 
 namespace Poulpe
 {
-	void ComponentManager::clear()
-	{
-		_component_pools.clear();
-	}
-
+  void ComponentManager::clear()
+  {
+    _component_pools.clear();
+  }
 }

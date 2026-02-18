@@ -20,6 +20,7 @@ namespace Poulpe
     VkPipelineCache pipeline_cache;
     VkPipeline pipeline;
     VkPipeline pipeline_bis;
+    std::mutex mutex;
 
     std::vector<VkPipelineShaderStageCreateInfo> shaders{};
   };

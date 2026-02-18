@@ -134,8 +134,8 @@ namespace Poulpe
     std::vector<VkDescriptorImageInfo> image_infos{};
     image_infos.emplace_back(render_context.skybox->getSampler(), render_context.skybox->getImageView(), VK_IMAGE_LAYOUT_GENERAL);
 
-    auto const pipeline { renderer.getPipeline(mesh.getShaderName()) };
-    VkDescriptorSet descset { renderer.getAPI()->createDescriptorSets(pipeline->desc_pool, { pipeline->descset_layout }, 1) };
+    VkDescriptorSet descset {
+      renderer.getAPI()->createDescriptorSets(renderer.getPipeline(mesh.getShaderName()), 1) };
 
     renderer.getAPI()->updateDescriptorSets(mesh.getUniformBuffers(), descset, image_infos);
 

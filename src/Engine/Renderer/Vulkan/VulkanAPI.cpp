@@ -1495,23 +1495,27 @@ VkDescriptorPool VulkanAPI::createDescriptorPool(
 }
 
 VkDescriptorSet VulkanAPI::createDescriptorSets(
-  VkDescriptorPool const& descriptor_pool,
-  std::vector<VkDescriptorSetLayout> const& descset_layout,
+  VulkanPipeline& pipeline,
   std::uint32_t const count)
 {
-  VkDescriptorSet descset{};
-  VkDescriptorSetAllocateInfo alloc_info{};
-  alloc_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-  alloc_info.descriptorPool = descriptor_pool;
-  alloc_info.descriptorSetCount = count;
-  alloc_info.pSetLayouts = descset_layout.data();
+  {
+    std::lock_guard<std::mutex> lock(pipeline.mutex);
 
-  VkResult result = vkAllocateDescriptorSets(_device, & alloc_info, & descset);
+    VkDescriptorSet descset{};
+    VkDescriptorSetAllocateInfo alloc_info{};
+    alloc_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+    alloc_info.descriptorPool = pipeline.desc_pool;
+    alloc_info.descriptorSetCount = count;
+    alloc_info.pSetLayouts = &pipeline.descset_layout;
 
-  if (result != VK_SUCCESS) {
-    Logger::error("failed to allocate descriptor sets.");
+    Logger::debug("{}", __LINE__);
+    VkResult result = vkAllocateDescriptorSets(_device, & alloc_info, & descset);
+
+    if (result != VK_SUCCESS) {
+      Logger::error("failed to allocate descriptor sets.");
+    }
+    return descset;
   }
-  return descset;
 }
 
 void VulkanAPI::updateDescriptorSets(
@@ -2087,6 +2091,7 @@ void VulkanAPI::updateVertexBuffer(
   copy_region.dstOffset = 0;
   copy_region.size = buffer_size;
 
+    Logger::debug("{}", __LINE__);
   vkCmdCopyBuffer(transfer_cmd_buffer, _staging_buffer[image_index], buffer_to_update, 1, & copy_region);
   _update_vertex_offsets[image_index] += buffer_size;
 }
@@ -2255,6 +2260,7 @@ void VulkanAPI::updateUniformBuffer(
   copy_region.dstOffset = 0;
   copy_region.size = buffer_size;
 
+  Logger::debug("{}", __LINE__);
   vkCmdCopyBuffer(copy_cmd_buffer, _staging_buffer[image_index], buffer.buffer, 1, & copy_region);
 
   _update_vertex_offsets[image_index] += buffer_size;
@@ -2386,6 +2392,7 @@ void VulkanAPI::copyBuffer(
   copy_region.srcOffset = src_offset;
   copy_region.dstOffset = dst_offset;
   copy_region.size = size;
+  Logger::debug("{}", __LINE__);
 
   vkCmdCopyBuffer(_copy_cmd_buffer[image_index], src_buffer, dst_buffer, 1, & copy_region);
 }

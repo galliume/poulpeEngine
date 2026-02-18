@@ -109,8 +109,7 @@ namespace Poulpe
     VkDescriptorSetLayout createDescriptorSetLayout(std::vector<VkDescriptorSetLayoutBinding> const& pBindings);
 
     VkDescriptorSet createDescriptorSets(
-      VkDescriptorPool const& descriptor_pool,
-      std::vector<VkDescriptorSetLayout> const& descset_layout,
+      VulkanPipeline & pipeline,
       std::uint32_t const count = 100);
 
     void updateDescriptorSets(

@@ -203,8 +203,9 @@ void Water::operator()(
     std::vector<VkDescriptorImageInfo> depth_map_image_info{};
     depth_map_image_info.emplace_back(renderer.getDepthMapSamplers(), renderer.getDepthMapImageViews(), VK_IMAGE_LAYOUT_GENERAL);
 
-    auto const pipeline = renderer.getPipeline(mesh.getShaderName());
-    VkDescriptorSet descset = renderer.getAPI()->createDescriptorSets(pipeline->desc_pool, { pipeline->descset_layout }, 1);
+    VkDescriptorSet descset {
+       renderer.getAPI()->createDescriptorSets(renderer.getPipeline(mesh.getShaderName()), 1) };
+
     auto light_buffer {render_context.light_buffer};
 
     //renderer.getAPI()->updateDescriptorSets(*mesh.getUniformBuffers(), descset, image_infos);

@@ -132,7 +132,7 @@ Mesh const& mesh,
     inline std::vector<VkDescriptorSetLayout>* getDescriptorSetLayouts() { return & _descriptorset_layouts; }
     inline VkDevice getDevice()  { return _vulkan->getDevice(); }
     inline glm::mat4 getPerspective() { return _perspective; }
-    VulkanPipeline* getPipeline(std::string const & shaderName) { return & _pipelines[shaderName]; }
+    VulkanPipeline& getPipeline(std::string const & shaderName) { return _pipelines[shaderName]; }
     void immediateSubmit(std::function<void(VkCommandBuffer cmd)> && function, int queueIndex = 0) ;
     void init(GLFWwindow* const window);
     //void renderScene();
