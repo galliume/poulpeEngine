@@ -51,6 +51,7 @@ function(set_poulpe_compiler_flags target)
     -Wno-decls-in-multiple-modules
     -Wno-unsafe-buffer-usage
     -Wno-covered-switch-default
-    -Wno-deprecated-declarations)
+    -Wno-deprecated-declarations
+    -Wno-thread-safety-negative)
 
 endfunction()

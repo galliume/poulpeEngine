@@ -52,17 +52,16 @@ namespace Poulpe
 
       _draw_cmds[i].init(buffer_size);
 
-      VkImage image;
-
-      _vulkan->createImage(
+      VkImage image { _vulkan->createImage(
         _vulkan->getSwapChainExtent().width,
         _vulkan->getSwapChainExtent().height, 1,
         VK_SAMPLE_COUNT_1_BIT,
         _vulkan->PLP_VK_FORMAT_COLOR,
         VK_IMAGE_TILING_OPTIMAL,
         VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
-        VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-        image);
+        VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT) };
+
+      _images[i] = std::move(image);
 
       _imageviews[i] = _vulkan->createImageView(
         _images[i],
@@ -71,17 +70,14 @@ namespace Poulpe
 
       _samplers[i] = _vulkan->createTextureSampler(1);
 
-      VkImage image2;
-
-      _vulkan->createImage(
+      VkImage image2 { _vulkan->createImage(
         _vulkan->getSwapChainExtent().width,
         _vulkan->getSwapChainExtent().height, 1,
         VK_SAMPLE_COUNT_1_BIT,
         _vulkan->PLP_VK_FORMAT_COLOR,
         VK_IMAGE_TILING_OPTIMAL,
         VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
-        VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-        image2);
+        VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT) };
 
       _images2[i] = std::move(image2);
 
@@ -92,9 +88,7 @@ namespace Poulpe
 
       _samplers2[i] = _vulkan->createTextureSampler(1);
 
-      VkImage depth_image;
-
-      _vulkan->createImage(
+      VkImage depth_image { _vulkan->createImage(
         _vulkan->getSwapChainExtent().width,
         _vulkan->getSwapChainExtent().height, 1,
         VK_SAMPLE_COUNT_1_BIT,
@@ -104,22 +98,20 @@ namespace Poulpe
         | VK_IMAGE_USAGE_TRANSFER_SRC_BIT
         | VK_IMAGE_USAGE_TRANSFER_DST_BIT
         | VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
-        VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-        depth_image);
+        VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT) };
 
-      VkImageView depth_imageview = _vulkan->createImageView(
+      VkImageView depth_imageview { _vulkan->createImageView(
         depth_image,
         _vulkan->PLP_VK_FORMAT_DEPTH,
         1,
         1,
-        VK_IMAGE_ASPECT_DEPTH_BIT);
+        VK_IMAGE_ASPECT_DEPTH_BIT) };
 
       _depth_images[i] = std::move(depth_image);
       _depth_imageviews[i] = std::move(depth_imageview);
       _depth_samplers[i] = std::move(_vulkan->createTextureSampler(1));
 
-      VkImage depth_image2;
-
+      VkImage depth_image2 {
       _vulkan->createImage(
         _vulkan->getSwapChainExtent().width,
         _vulkan->getSwapChainExtent().height,
@@ -131,15 +123,14 @@ namespace Poulpe
         | VK_IMAGE_USAGE_TRANSFER_SRC_BIT
         | VK_IMAGE_USAGE_TRANSFER_DST_BIT
         | VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
-        VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-        depth_image2);
+        VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT) };
 
-      VkImageView depth_imageview2 = _vulkan->createImageView(
+      VkImageView depth_imageview2 { _vulkan->createImageView(
         depth_image2,
         _vulkan->PLP_VK_FORMAT_DEPTH,
         1,
         1,
-        VK_IMAGE_ASPECT_DEPTH_BIT);
+        VK_IMAGE_ASPECT_DEPTH_BIT) };
 
       _depth_images2[i] = std::move(depth_image2);
       _depth_imageviews2[i] = std::move(depth_imageview2);
@@ -160,21 +151,17 @@ namespace Poulpe
     _cmd_buffer_shadowmap = _vulkan->allocateCommandBuffers(_cmd_pool_shadowmap, _imageviews.size(), false);
 
     for (std::size_t i { 0 }; i < buffer_size; ++i) {
-      VkImage image{};
-      _vulkan->createDepthMapImage(image, _shadow_map_resolution, true);
+      VkImage image{_vulkan->createDepthMapImage(_shadow_map_resolution, true) };
       _depthmap_images.emplace_back(image);
       _depthmap_imageviews.emplace_back(_vulkan->createDepthMapImageView(image, _shadow_map_resolution, true));
       _depthmap_imageviews_rendering.emplace_back(_vulkan->createDepthMapImageView(image, _shadow_map_resolution, true, false));
-
       _depthmap_samplers.emplace_back(_vulkan->createDepthMapSampler());
     }
     for (std::size_t i { 0 }; i < buffer_size; ++i) {
-      VkImage image{};
-      _vulkan->createDepthMapImage(image, _shadow_map_resolution, false, 4);
+      VkImage image { _vulkan->createDepthMapImage(_shadow_map_resolution, false, 4) };
       _csm_images.emplace_back(image);
       _csm_imageviews.emplace_back(_vulkan->createDepthMapImageView(image, false, false, 4));
       _csm_imageviews_rendering.emplace_back(_vulkan->createDepthMapImageView(image, false, false, 4));
-
       _csm_samplers.emplace_back(_vulkan->createDepthMapSampler());
     }
 
@@ -713,9 +700,9 @@ namespace Poulpe
   }
 
   void Renderer::endRendering(
-    VkCommandBuffer& cmd_buffer,
-    VkImage& image,
-    VkImage&,
+    VkCommandBuffer cmd_buffer,
+    VkImage image,
+    VkImage,
     bool const,
     bool const)
   {
@@ -833,7 +820,7 @@ namespace Poulpe
     // glm::vec4 rayEye = glm::inverse(getPerspective()) * rayClip;
     // rayEye = glm::vec4(rayEye.x, rayEye.y, -1.0, 0.0);
 
-    // glm::vec4 tmp = (glm::inverse(getCamera()->getView()) * rayEye);
+    // glm::vec4 tmp = (glm::inverse(getCamera().getView()) * rayEye);
     // glm::vec3 rayWor = glm::vec3(tmp.x, tmp.y, tmp.z);
   }
 

@@ -60,19 +60,19 @@ namespace Poulpe
 
     void cleanUp();
     inline void forceRefresh() { _refresh = true; }
-    inline std::uint32_t getAppHeight() { return getRenderer()->getAPI()->getSwapChainExtent().height; }
-    inline std::uint32_t getAppWidth() { return getRenderer()->getAPI()->getSwapChainExtent().width; }
-    inline AudioManager* getAudioManager() { return _audio_manager.get(); }
-    inline Camera* getCamera() const { return _cameras.at(_current_camera).get(); }
-    inline ComponentManager* getComponentManager() { return _component_manager.get(); }
-    inline DestroyManager* getDestroyManager() { return _destroy_manager.get(); }
-    inline EntityManager* getEntityManager() { return _entity_manager.get(); }
-    inline LightManager* getLightManager() { return _light_manager.get(); }
-    inline Renderer* getRenderer() { return _renderer.get(); }
-    inline ShaderManager* getShaderManager() { return _shader_manager.get(); }
-    inline FontManager* getFontManager() { return _font_manager.get(); }
-    inline TextureManager* getTextureManager() { return _texture_manager.get(); }
-    Window* getWindow();
+    inline std::uint32_t getAppHeight() { return getRenderer().getAPI().getSwapChainExtent().height; }
+    inline std::uint32_t getAppWidth() { return getRenderer().getAPI().getSwapChainExtent().width; }
+    inline AudioManager& getAudioManager() { return *_audio_manager; }
+    inline Camera& getCamera() const { return *_cameras.at(_current_camera); }
+    inline ComponentManager& getComponentManager() { return *_component_manager; }
+    inline DestroyManager& getDestroyManager() { return *_destroy_manager; }
+    inline EntityManager& getEntityManager() { return *_entity_manager; }
+    inline LightManager& getLightManager() { return *_light_manager; }
+    inline Renderer& getRenderer() { return *_renderer; }
+    inline ShaderManager& getShaderManager() { return *_shader_manager; }
+    inline FontManager& getFontManager() { return *_font_manager; }
+    inline TextureManager& getTextureManager() { return *_texture_manager; }
+    Window& getWindow();
     void init();
     inline bool isLoaded()  { return _is_loaded; }
     //void updateScene(double const delta_time);

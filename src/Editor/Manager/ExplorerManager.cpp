@@ -45,13 +45,13 @@ namespace Poulpe {
     Tcl_Obj *const objv[])
   {
     auto * const render_manager { static_cast<RenderManager*>(client_data) };
-    auto * const audio_manager { render_manager->getAudioManager() };
+    auto& audio_manager { render_manager->getAudioManager() };
     //auto * const config_manager { ConfigManagerLocator::get() };
 
     std::uint32_t sound_index{0};
     Tcl_GetIntFromObj(interp, objv[1], (int*)&sound_index);
 
-    audio_manager->startAmbient(sound_index);
+    audio_manager.startAmbient(sound_index);
 
     return TCL_OK;
   }

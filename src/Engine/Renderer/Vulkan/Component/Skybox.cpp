@@ -77,7 +77,7 @@ namespace Poulpe
         {{0.f,0.f,0.f,0.f}, {0.f,0.f,0.f,0.f}, {-1.f,-1.f, 1.f, 0.0f}, {1.f,0.f,0.f, 0.0f}, {1.f,0.f} },
         {{0.f,0.f,0.f,0.f}, {0.f,0.f,0.f,0.f}, { 1.f,-1.f, 1.f, 0.0f}, {1.f,0.f,0.f, 0.0f}, {1.f,0.f} }
     };
-    auto cmd_pool = renderer.getAPI()->createCommandPool();
+    auto cmd_pool = renderer.getAPI().createCommandPool();
 
     std::vector<UniformBufferObject> ubos{};
     ubos.reserve(1);
@@ -91,7 +91,7 @@ namespace Poulpe
       ubos.push_back({ ubo });
 
       mesh.getUniformBuffers().emplace_back(
-        renderer.getAPI()->createUniformBuffers(1, renderer.getCurrentFrameIndex()));
+        renderer.getAPI().createUniformBuffers(1, renderer.getCurrentFrameIndex()));
     } else {
       auto const& mesh_data = mesh.getData();
       ubos = mesh_data->_ubos[0];
@@ -100,7 +100,7 @@ namespace Poulpe
     Data data{};
     data._textures.emplace_back("skybox");
     data._vertices = vertices;
-    data._vertex_buffer = renderer.getAPI()->createVertexBuffer(vertices, renderer.getCurrentFrameIndex());
+    data._vertex_buffer = renderer.getAPI().createVertexBuffer(vertices, renderer.getCurrentFrameIndex());
     data._ubos.resize(1);
     data._ubos[0] = ubos;
     data._texture_index = 0;
@@ -114,7 +114,7 @@ namespace Poulpe
     mesh.setIsDirty(false);
     mesh.setHasShadow(false);
 
-    renderer.getAPI()->updateUniformBuffer(mesh.getUniformBuffers().at(0), &data._ubos.at(0), renderer.getCurrentFrameIndex());
+    renderer.getAPI().updateUniformBuffer(mesh.getUniformBuffers().at(0), &data._ubos.at(0), renderer.getCurrentFrameIndex());
 
     createDescriptorSet(renderer, mesh, render_context);
   }
@@ -124,7 +124,7 @@ namespace Poulpe
     Mesh & mesh,
     RendererContext const& render_context)
   {
-    render_context.skybox->setSampler(renderer.getAPI()->createKTXSampler(
+    render_context.skybox->setSampler(renderer.getAPI().createKTXSampler(
     TextureWrapMode::CLAMP_TO_EDGE,
     TextureWrapMode::CLAMP_TO_EDGE,
     render_context.skybox->getMipLevels()));
@@ -133,9 +133,9 @@ namespace Poulpe
     image_infos.emplace_back(render_context.skybox->getSampler(), render_context.skybox->getImageView(), VK_IMAGE_LAYOUT_GENERAL);
 
     VkDescriptorSet descset {
-      renderer.getAPI()->createDescriptorSets(renderer.getPipeline(mesh.getShaderName()), 1) };
+      renderer.getAPI().createDescriptorSets(renderer.getPipeline(mesh.getShaderName()), 1) };
 
-    renderer.getAPI()->updateDescriptorSets(mesh.getUniformBuffers(), descset, image_infos);
+    renderer.getAPI().updateDescriptorSets(mesh.getUniformBuffers(), descset, image_infos);
 
     mesh.setDescSet(descset);
   }

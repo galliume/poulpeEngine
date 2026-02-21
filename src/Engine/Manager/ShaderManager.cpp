@@ -42,13 +42,13 @@ namespace Poulpe
     auto const vert_shader { Tools::readFile(vert_path) };
     auto const frag_shader { Tools::readFile(frag_path) };
 
-    _shaders->shaders[name]["vert"] = _renderer.getAPI()->createShaderModule(vert_shader);
-    _shaders->shaders[name]["frag"] = _renderer.getAPI()->createShaderModule(frag_shader);
+    _shaders->shaders[name]["vert"] = _renderer.getAPI().createShaderModule(vert_shader);
+    _shaders->shaders[name]["frag"] = _renderer.getAPI().createShaderModule(frag_shader);
     if (!geom_path.empty() && std::filesystem::exists(geom_path)) {
       auto const geom_shader { Tools::readFile(geom_path) };
 
       if (!geom_shader.empty()) {
-        _shaders->shaders[name]["geom"] = _renderer.getAPI()->createShaderModule(geom_shader);
+        _shaders->shaders[name]["geom"] = _renderer.getAPI().createShaderModule(geom_shader);
       }
     } else {
       Logger::warn("geometry shader file {} does not exits.", geom_path);
@@ -57,7 +57,7 @@ namespace Poulpe
     if (!tese_path.empty() && std::filesystem::exists(tese_path)) {
       auto const tese_shader { Tools::readFile(tese_path) };
       if (!tese_shader.empty()) {
-        _shaders->shaders[name]["tese"] =  _renderer.getAPI()->createShaderModule(tese_shader);
+        _shaders->shaders[name]["tese"] =  _renderer.getAPI().createShaderModule(tese_shader);
       }
     } else {
       Logger::warn("tese shader file {} does not exits.", tese_path);
@@ -67,7 +67,7 @@ namespace Poulpe
       auto const tesc_shader { Tools::readFile(tesc_path) };
 
       if (!tesc_shader.empty()) {
-        _shaders->shaders[name]["tesc"] = _renderer.getAPI()->createShaderModule(tesc_shader);
+        _shaders->shaders[name]["tesc"] = _renderer.getAPI().createShaderModule(tesc_shader);
       }
     } else {
       Logger::warn("tesc shader file {} does not exits.", tesc_path);
@@ -408,7 +408,7 @@ namespace Poulpe
       throw std::runtime_error("unknown descSetLayoutType");
     }
 
-    return _renderer.getAPI()->createDescriptorSetLayout(bindings);
+    return _renderer.getAPI().createDescriptorSetLayout(bindings);
   }
 
   void ShaderManager::createGraphicPipeline(std::string const & shader_name)
@@ -559,20 +559,20 @@ namespace Poulpe
       descset_layout = createDescriptorSetLayout<DescSetLayoutType::Entity>();
     }
 
-    pipeline_layout = _renderer.getAPI()->createPipelineLayout({ descset_layout }, { push_constants });
+    pipeline_layout = _renderer.getAPI().createPipelineLayout({ descset_layout }, { push_constants });
 
     pipeline_create_infos.shaders_create_info = std::move(shaders);
     pipeline_create_infos.vertex_input_info = std::move(vertex_input_info);
     pipeline_create_infos.pipeline_layout = pipeline_layout;
 
-    graphic_pipeline = _renderer.getAPI()->createGraphicsPipeline(pipeline_create_infos);
-    auto descriptorPool = _renderer.getAPI()->createDescriptorPool(poolSizes, pool_size);
+    graphic_pipeline = _renderer.getAPI().createGraphicsPipeline(pipeline_create_infos);
+    auto descriptorPool = _renderer.getAPI().createDescriptorPool(poolSizes, pool_size);
 
     if (need_bis) {
       pipeline_create_infos.cull_mode = VK_CULL_MODE_NONE;
       pipeline_create_infos.polygone_mode = VK_POLYGON_MODE_FILL;
 
-      graphic_pipeline_bis = _renderer.getAPI()->createGraphicsPipeline(pipeline_create_infos);
+      graphic_pipeline_bis = _renderer.getAPI().createGraphicsPipeline(pipeline_create_infos);
     }
 
     VulkanPipeline pipeline{};
@@ -584,7 +584,7 @@ namespace Poulpe
     pipeline.shaders = shaders;
 
     if (shader_name == "shadow_map" || shader_name == "csm") {
-      pipeline.descset = _renderer.getAPI()->createDescriptorSets(pipeline, 1);
+      pipeline.descset = _renderer.getAPI().createDescriptorSets(pipeline, 1);
     }
     _renderer.addPipeline(shader_name, pipeline);
   }

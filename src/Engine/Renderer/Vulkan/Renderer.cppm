@@ -32,7 +32,7 @@ namespace Poulpe
       std::vector<bool> is_attachments{ };
 
       void insert(
-        VkCommandBuffer& cmd_buffer,
+        VkCommandBuffer cmd_buffer,
         std::uint32_t const thread_id,
         bool const is_attachment,
         std::vector<VkPipelineStageFlags> flags = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT })
@@ -109,26 +109,26 @@ Mesh const& mesh,
     void endShadowMap(SHADOW_TYPE const shadow_type);
 
     void endRendering(
-      VkCommandBuffer& cmd_buffer,
-      VkImage& image,
-      VkImage& depth_image,
+      VkCommandBuffer cmd_buffer,
+      VkImage image,
+      VkImage depth_image,
       bool const is_attachment,
       bool const has_depth_attachment = true);
 
     void submit();
 
     inline std::uint32_t getCurrentFrameIndex() const { return _current_frame; }
-    inline VkSampler& getCurrentSampler() { return _samplers[_previous_frame]; }
-    inline VkImageView& getCurrentImageView() { return _imageviews[_previous_frame]; }
-    inline VkImageView& getDepthMapImageViews() { return  _depthmap_imageviews.at(_current_frame); }
-    inline VkSampler& getDepthMapSamplers() { return _depthmap_samplers.at(_current_frame); }
-    inline VkImageView& getDepthImageViews() { return _depth_imageviews.at(_current_frame); }
-    inline VkImageView& getDepthImageViews2() { return _depth_imageviews2.at(_current_frame); }
-    inline VkSampler& getDepthSamplers() { return  _depth_samplers.at(_current_frame); }
-    inline VkSampler& getDepthSamplers2() { return  _depth_samplers2.at(_current_frame); }
-    inline VkImageView& getVisibleDepthImageView() { return _visible_depth_imageview; }
-    inline VkSampler& getCSMSamplers() { return _csm_samplers.at(_current_frame); }
-    inline VkImageView& getCSMImageViews() { return _csm_imageviews.at(_current_frame); }
+    inline VkSampler getCurrentSampler() { return _samplers[_previous_frame]; }
+    inline VkImageView getCurrentImageView() { return _imageviews[_previous_frame]; }
+    inline VkImageView getDepthMapImageViews() { return  _depthmap_imageviews.at(_current_frame); }
+    inline VkSampler getDepthMapSamplers() { return _depthmap_samplers.at(_current_frame); }
+    inline VkImageView getDepthImageViews() { return _depth_imageviews.at(_current_frame); }
+    inline VkImageView getDepthImageViews2() { return _depth_imageviews2.at(_current_frame); }
+    inline VkSampler getDepthSamplers() { return  _depth_samplers.at(_current_frame); }
+    inline VkSampler getDepthSamplers2() { return  _depth_samplers2.at(_current_frame); }
+    inline VkImageView getVisibleDepthImageView() { return _visible_depth_imageview; }
+    inline VkSampler getCSMSamplers() { return _csm_samplers.at(_current_frame); }
+    inline VkImageView getCSMImageViews() { return _csm_imageviews.at(_current_frame); }
     inline std::vector<VkDescriptorSetLayout>* getDescriptorSetLayouts() { return & _descriptorset_layouts; }
     inline VkDevice getDevice()  { return _vulkan->getDevice(); }
     inline glm::mat4 getPerspective() { return _perspective; }
@@ -146,7 +146,7 @@ Mesh const& mesh,
       int const width,
       int const height);
 
-    VulkanAPI * getAPI() const { return _vulkan.get(); }
+    VulkanAPI&  getAPI() const { return *_vulkan; }
 
     void clearScreen();
 
