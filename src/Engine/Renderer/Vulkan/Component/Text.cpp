@@ -36,9 +36,9 @@ namespace Poulpe
     std::vector<Vertex> vertices;
 
     auto const screen_width{
-        static_cast<float>(renderer.getAPI()->getSwapChainExtent().width)};
+        static_cast<float>(renderer.getAPI().getSwapChainExtent().width)};
     auto const screen_height{
-      static_cast<float>(renderer.getAPI()->getSwapChainExtent().height) };
+      static_cast<float>(renderer.getAPI().getSwapChainExtent().height) };
 
     float x { _position.x };
     float y { _position.y };
@@ -145,10 +145,10 @@ namespace Poulpe
     data->_vertices = vertices;
     data->_texture_index = 0;
 
-    auto cmd_pool = renderer.getAPI()->createCommandPool();
+    auto cmd_pool = renderer.getAPI().createCommandPool();
 
     if (data->_ubos.empty()) {
-      data->_vertex_buffer = renderer.getAPI()->createVertexBuffer(vertices, renderer.getCurrentFrameIndex());
+      data->_vertex_buffer = renderer.getAPI().createVertexBuffer(vertices, renderer.getCurrentFrameIndex());
 
       std::vector<UniformBufferObject> ubos{};
       ubos.reserve(1);
@@ -162,7 +162,7 @@ namespace Poulpe
       data->_ubos[0] = ubos;
 
       mesh.getData()->_ubos_offset.emplace_back(1);
-      mesh.getUniformBuffers().emplace_back(renderer.getAPI()->createUniformBuffers(1, renderer.getCurrentFrameIndex()));
+      mesh.getUniformBuffers().emplace_back(renderer.getAPI().createUniformBuffers(1, renderer.getCurrentFrameIndex()));
 
       mat.alpha_mode = 1.0;
 
@@ -173,30 +173,38 @@ namespace Poulpe
       }
     } else {
       auto const image_index { renderer.getCurrentFrameIndex() };
-      auto const current_offset { renderer.getAPI()->getCurrentStagingMemoryOffset(image_index) };
-      //VkDeviceMemory staging_device_memory{ renderer.getAPI()->getStagingMemory(renderer.getCurrentFrameIndex()) };
-      VkBuffer staging_buffer { renderer.getAPI()->getStagingBuffer(image_index) };
+      auto const current_offset { renderer.getAPI().getCurrentStagingMemoryOffset(image_index) };
+      //VkDeviceMemory staging_device_memory{ renderer.getAPI().getStagingMemory(renderer.getCurrentFrameIndex()) };
+      VkBuffer staging_buffer { renderer.getAPI().getStagingBuffer(image_index) };
       VkDeviceSize const buffer_size { sizeof(Vertex) * vertices.size() };
-      renderer.getAPI()->updateCurrentStagingMemoryOffset(buffer_size, image_index);
+      renderer.getAPI().updateCurrentStagingMemoryOffset(buffer_size, image_index);
 
-      void* void_data { renderer.getAPI()->getStagingMemoryPtr(image_index) };
+      void* void_data { renderer.getAPI().getStagingMemoryPtr(image_index) };
       std::memcpy(static_cast<char*>(void_data) + current_offset, vertices.data(), static_cast<std::size_t>(buffer_size));
+      
+      // renderer.getAPI().copyBuffer(
+      //   staging_buffer,
+      //   data->_vertex_buffer.buffer,
+      //   buffer_size,
+      //   current_offset,
+      //   0,
+      //   renderer.getCurrentFrameIndex());
 
-      renderer.getAPI()->addcopyBufferRequest(
+      renderer.getAPI().addCopyBufferRequest(
         staging_buffer,
         data->_vertex_buffer.buffer,
         buffer_size,
         renderer.getCurrentFrameIndex(),
         current_offset);
 
-        data->_is_dirty = true;
-        renderer.updateVertexBuffer(data, renderer.getCurrentFrameIndex());
+      //   data->_is_dirty = true;
+      //   renderer.updateVertexBuffer(data, renderer.getCurrentFrameIndex());
     }
 
     vkDestroyCommandPool(renderer.getDevice(), cmd_pool, nullptr);
 
     if (!mesh.getData()->_ubos.empty()) {
-      renderer.getAPI()->updateUniformBuffer(mesh.getUniformBuffers().at(0), &mesh.getData()->_ubos.at(0), renderer.getCurrentFrameIndex());
+      renderer.getAPI().updateUniformBuffer(mesh.getUniformBuffers().at(0), &mesh.getData()->_ubos.at(0), renderer.getCurrentFrameIndex());
     }
 
     if (*mesh.getDescSet() == nullptr) {
@@ -213,7 +221,7 @@ namespace Poulpe
 
     Texture atlas { render_context.textures->at("_plp_font_atlas")};
 
-    atlas.setSampler(renderer.getAPI()->createKTXSampler(
+    atlas.setSampler(renderer.getAPI().createKTXSampler(
       TextureWrapMode::WRAP,
       TextureWrapMode::WRAP,
       1u));
@@ -222,7 +230,7 @@ namespace Poulpe
       atlas = render_context.textures->at(PLP_EMPTY);
     }
 
-    auto const sampler = renderer.getAPI()->createKTXSampler(
+    auto const sampler = renderer.getAPI().createKTXSampler(
       TextureWrapMode::CLAMP_TO_EDGE,
       TextureWrapMode::CLAMP_TO_EDGE,
       1);
@@ -231,7 +239,7 @@ namespace Poulpe
     image_infos.emplace_back(sampler, atlas.getImageView(), VK_IMAGE_LAYOUT_GENERAL);
 
     VkDescriptorSet descset {
-      renderer.getAPI()->createDescriptorSets(renderer.getPipeline(mesh.getShaderName()), 1) };
+      renderer.getAPI().createDescriptorSets(renderer.getPipeline(mesh.getShaderName()), 1) };
 
     std::array<VkWriteDescriptorSet, 2> desc_writes{};
     std::vector<VkDescriptorBufferInfo> buffer_infos;
@@ -263,7 +271,7 @@ namespace Poulpe
     desc_writes[1].pImageInfo = image_infos.data();
 
     vkUpdateDescriptorSets(
-      renderer.getAPI()->getDevice(),
+      renderer.getAPI().getDevice(),
       static_cast<std::uint32_t>(desc_writes.size()),
       desc_writes.data(),
       0,

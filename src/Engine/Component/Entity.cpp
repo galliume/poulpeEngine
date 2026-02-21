@@ -28,7 +28,7 @@ namespace Poulpe
       //glm::vec4 rayEye = glm::inverse(GetPerspective()) * rayClip;
       //rayEye = glm::vec4(rayEye.x, rayEye.y, -1.0, 0.0);
 
-      //glm::vec4 tmp = (glm::inverse(GetCamera()->GetView()) * rayEye);
+      //glm::vec4 tmp = (glm::inverse(getCamera().GetView()) * rayEye);
       //glm::vec3 rayWor = glm::vec3(tmp.x, tmp.y, tmp.z);
       //_RayPick = glm::normalize(rayWor);
 

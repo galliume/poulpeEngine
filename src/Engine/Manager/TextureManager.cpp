@@ -79,7 +79,7 @@ namespace Poulpe
 
   TextureManager::TextureManager(Renderer const& renderer)
   {
-    _cmd_pool = renderer.getAPI()->createCommandPool(true);
+    _cmd_pool = renderer.getAPI().createCommandPool(true);
   }
 
   void TextureManager::addSkyBox(
@@ -172,12 +172,9 @@ namespace Poulpe
       Logger::warn("Error while transcoding KTX file: {} error: {}", path, ktxErrorString(result));
     }
 
-    VkCommandBuffer cmd_buffer { renderer.getAPI()->allocateCommandBuffers(_cmd_pool, 1, false)[0] };
-    VkImage texture_image { nullptr };
-
-    renderer.getAPI()->createKTXImage(cmd_buffer, ktx_texture, texture_image, _cmd_pool);
-
-    VkImageView texture_imageview = renderer.getAPI()->createKTXImageView(ktx_texture, texture_image, aspect_flags);
+    VkCommandBuffer cmd_buffer { renderer.getAPI().allocateCommandBuffers(_cmd_pool, 1, false)[0] };
+    VkImage texture_image { renderer.getAPI().createKTXImage(cmd_buffer, ktx_texture, _cmd_pool) };
+    VkImageView texture_imageview { renderer.getAPI().createKTXImageView(ktx_texture, texture_image, aspect_flags) };
 
     Texture texture;
     texture.setName(name);

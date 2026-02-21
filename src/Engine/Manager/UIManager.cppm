@@ -11,11 +11,12 @@ namespace Poulpe
   export class UIManager
   {
   public:
-    UIManager(Window * const window);
+    UIManager(Window & window);
     void init(std::string const& root_path);
 
   private:
-    Window * const _window;
-    Tcl_Interp * _tcl_interp;
+    Window & _window;
+    //@todo make unique
+    Tcl_Interp* _tcl_interp;
   };
 }

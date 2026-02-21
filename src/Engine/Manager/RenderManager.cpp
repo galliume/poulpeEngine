@@ -60,15 +60,16 @@ namespace Poulpe
     _destroy_manager = std::make_unique<DestroyManager>();
     
     _destroy_manager->setRenderer(_renderer.get());
-    _destroy_manager->addMemoryPool(_renderer->getAPI()->getDeviceMemoryPool());
+    _destroy_manager->addMemoryPool(_renderer->getAPI().getDeviceMemoryPool());
     
     _light_buffers.resize(_renderer->getMaxFramesInFlight());
     
-    for (std::size_t i = 0; i < _light_buffers.size(); ++i) {
+    for (std::size_t i { 0 }; i < _light_buffers.size(); ++i) {
       LightObjectBuffer light_object_buffer{};
-      _light_buffers[i] = _renderer->getAPI()->createStorageBuffers(light_object_buffer, _renderer->getCurrentFrameIndex());
+      _light_buffers[i] = _renderer->getAPI().createStorageBuffers(light_object_buffer, _renderer->getCurrentFrameIndex());
     }
-    
+    _renderer->getAPI().commitCopyBuffer(_renderer->getCurrentFrameIndex());
+
     _font_manager = std::make_unique<FontManager>(*_renderer);
     auto atlas { _font_manager->load() };
 
@@ -79,11 +80,9 @@ namespace Poulpe
 
     _entity_manager = std::make_unique<EntityManager>(
       *_component_manager,
-      *_texture_manager,
-      _light_buffers.at(0)
-    );
+      *_texture_manager);
 
-    InputManagerLocator::get()->setCamera(getCamera());
+    InputManagerLocator::get()->setCamera(&getCamera());
 
     //end @todo
 
@@ -127,7 +126,7 @@ namespace Poulpe
       _audio_manager->startAmbient();
     }
 
-    if (!getCamera()->isInit()) {
+    if (!getCamera().isInit()) {
       auto const& lvl_config{ configManager->lvlConfig() };
       auto const& camera{ lvl_config["camera"] };
       glm::vec3 const start_pos = {
@@ -135,14 +134,14 @@ namespace Poulpe
         camera["position"]["y"].template get<float>(),
         camera["position"]["z"].template get<float>() };
 
-      getCamera()->init(start_pos);
-      getCamera()->forward();
-      getCamera()->move();
+      getCamera().init(start_pos);
+      getCamera().forward();
+      getCamera().move();
     }
 
     auto const camera_view_matrix = (_current_camera == std::to_underlying(CameraType::THIRD_PERSON))
-      ? getCamera()->getThirdPersonView(_player_manager->getPosition())
-      : getCamera()->getView();
+      ? getCamera().getThirdPersonView(_player_manager->getPosition())
+      : getCamera().getView();
 
     updateRendererContext(camera_view_matrix);
 
@@ -173,7 +172,7 @@ namespace Poulpe
       auto * const config_manager { ConfigManagerLocator::get() };
       if (_current_camera != config_manager->getCameraIndex()) {
         _current_camera = config_manager->getCameraIndex();
-        InputManagerLocator::get()->setCamera(getCamera());
+        InputManagerLocator::get()->setCamera(&getCamera());
       }
 
       auto const frame_context { buildFrameContext(
@@ -200,15 +199,18 @@ namespace Poulpe
       }
 
       updateEntities(frame_context);
+      _renderer->getAPI().commitCopyBuffer(_renderer->getCurrentFrameIndex());
+
       renderShadowmap(frame_context);
       renderEntities(frame_context);
 
       _renderer->submit();
 
-      updateBuffers();
+      //updateBuffers();
       updatePlayer();
+      _renderer->getAPI().commitCopyBuffer(_renderer->getCurrentFrameIndex());
 
-      _renderer->getAPI()->collectGarbage();
+      _renderer->getAPI().collectGarbage();
     }
   }
 
@@ -218,7 +220,7 @@ namespace Poulpe
       auto pos { _player_manager->getPosition() };
       pos.y += 10;
       pos.z -= 10;
-      getCamera()->setPos(pos);
+      getCamera().setPos(pos);
     }
 
     _player_manager->reset();
@@ -343,7 +345,6 @@ namespace Poulpe
       drawEntity(text_entity->getID(), frame_context.camera_view_matrix, true);
     });
 
-    _renderer->getAPI()->commitCopyBuffer(_renderer->getCurrentFrameIndex());
     _renderer->endRender();
   }
 
@@ -392,10 +393,10 @@ namespace Poulpe
       if (mesh->getName() == _player_manager->getPlayerName()) {
         _player_manager->setPlayerId(entity_id);
         animation_info.looping = false;
-        if (_current_camera == std::to_underlying(CameraType::THIRD_PERSON) && !getCamera()->isInit()) {
-          getCamera()->init(_player_manager->getPosition());
-          getCamera()->forward();
-          getCamera()->move();
+        if (_current_camera == std::to_underlying(CameraType::THIRD_PERSON) && !getCamera().isInit()) {
+          getCamera().init(_player_manager->getPosition());
+          getCamera().forward();
+          getCamera().move();
         }
       }
 
@@ -484,7 +485,7 @@ namespace Poulpe
     light_object_buffer.lights[1] = _light_manager->getPointLights()[1];
     light_object_buffer.lights[2] = _light_manager->getPointLights()[0];
 
-    _renderer->getAPI()->updateStorageBuffer<LightObjectBuffer>(
+    _renderer->getAPI().updateStorageBuffer<LightObjectBuffer>(
       _light_buffers.at(_renderer->getCurrentFrameIndex()), light_object_buffer, _renderer->getCurrentFrameIndex());
   }
 
@@ -523,8 +524,8 @@ namespace Poulpe
 
   void RenderManager::prepareSkybox()
   {
-    auto entity = std::make_shared<Entity>();
-    auto mesh = std::make_unique<Mesh>();
+    auto entity { std::make_shared<Entity>() };
+    auto mesh { std::make_unique<Mesh>() };
     mesh->setName("skybox");
     mesh->isSkybox(true);
 
@@ -543,8 +544,8 @@ namespace Poulpe
 
   void RenderManager::prepareTerrain()
   {
-    auto entity = std::make_shared<Entity>();
-    auto mesh = std::make_unique<Mesh>();
+    auto entity { std::make_shared<Entity>() };
+    auto mesh { std::make_unique<Mesh>() };
     mesh->setHasShadow(false);
     mesh->setIsIndexed(false);
     mesh->setShaderName("terrain");
@@ -562,8 +563,8 @@ namespace Poulpe
 
   void RenderManager::prepareWater()
   {
-    auto entity = std::make_shared<Entity>();
-    auto mesh = std::make_unique<Mesh>();
+    auto entity { std::make_shared<Entity>() };
+    auto mesh { std::make_unique<Mesh>() };
     mesh->setHasShadow(false);
     mesh->setIsIndexed(false);
     mesh->setShaderName("water");
@@ -582,8 +583,8 @@ namespace Poulpe
 
   void RenderManager::addText(FontManager::Text & text)
   {
-    auto entity = std::make_shared<Entity>();
-    auto mesh = std::make_unique<Mesh>();
+    auto entity { std::make_shared<Entity>() };
+    auto mesh { std::make_unique<Mesh>() };
     mesh->setHasShadow(false);
     mesh->setIsIndexed(false);
     mesh->setShaderName("text");
@@ -647,14 +648,14 @@ namespace Poulpe
     }
   }
 
-  Window* RenderManager::getWindow()
+  Window& RenderManager::getWindow()
   {
-    return _window.get();
+    return *_window;
   }
 
   void RenderManager::updateRendererContext(glm::mat4 const& camera_view)
   {
-    _rendering_context.camera = getCamera();
+    _rendering_context.camera = &getCamera();
     _rendering_context.camera_view = camera_view;
     _rendering_context.textures = &_texture_manager->getTextures();
     _rendering_context.skybox = &_texture_manager->getSkyboxTexture();
@@ -695,11 +696,11 @@ namespace Poulpe
     auto const& perspective { _renderer->getPerspective() };
     auto const camera_view_matrix =
       (_current_camera == std::to_underlying(CameraType::THIRD_PERSON))
-        ? getCamera()->getThirdPersonView(_player_manager->getPosition())
-        : getCamera()->getView();
+        ? getCamera().getThirdPersonView(_player_manager->getPosition())
+        : getCamera().getView();
 
     auto const vp { perspective * camera_view_matrix };
-    auto const frustum_planes { getCamera()->getFrustumPlanes(vp) };
+    auto const frustum_planes { getCamera().getFrustumPlanes(vp) };
     auto const visible_ids { get_visible_ids(_entity_manager->getEntities(), frustum_planes) };
     auto const transparent_ids { get_visible_ids(_entity_manager->getTransparentEntities(), frustum_planes) };
 

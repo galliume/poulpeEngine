@@ -99,7 +99,7 @@ void Water::operator()(
       }
     }
     auto const& data = mesh.getData();
-    auto cmd_pool = renderer.getAPI()->createCommandPool();
+    auto cmd_pool = renderer.getAPI().createCommandPool();
 
     std::vector<UniformBufferObject> ubos{};
     UniformBufferObject ubo{};
@@ -109,14 +109,14 @@ void Water::operator()(
 
     data->_ubos.push_back(ubos);
     data->_vertices = vertices;
-    data->_vertex_buffer = renderer.getAPI()->createVertexBuffer(vertices, renderer.getCurrentFrameIndex());
+    data->_vertex_buffer = renderer.getAPI().createVertexBuffer(vertices, renderer.getCurrentFrameIndex());
     data->_texture_index = 0;
 
     auto& mat { mesh.getMaterials().at(0) };
     mat.alpha_mode = 2.0;//BLEND
 
     mesh.getData()->_ubos_offset.emplace_back(1);
-    mesh.getUniformBuffers().emplace_back(renderer.getAPI()->createUniformBuffers(1, renderer.getCurrentFrameIndex()));
+    mesh.getUniformBuffers().emplace_back(renderer.getAPI().createUniformBuffers(1, renderer.getCurrentFrameIndex()));
 
     for (std::size_t i{ 0 }; i < mesh.getData()->_ubos.size(); i++) {
       std::ranges::for_each(mesh.getData()->_ubos.at(i), [&](auto& data_ubo) {
@@ -127,7 +127,7 @@ void Water::operator()(
     vkDestroyCommandPool(renderer.getDevice(), cmd_pool, nullptr);
 
     if (!mesh.getData()->_ubos.empty()) {
-      renderer.getAPI()->updateUniformBuffer(mesh.getUniformBuffers().at(0), &mesh.getData()->_ubos.at(0), renderer.getCurrentFrameIndex());
+      renderer.getAPI().updateUniformBuffer(mesh.getUniformBuffers().at(0), &mesh.getData()->_ubos.at(0), renderer.getCurrentFrameIndex());
     }
 
     createDescriptorSet(renderer, mesh, render_context);
@@ -142,7 +142,7 @@ void Water::operator()(
 
     Texture tex { render_context.textures->at(PLP_EMPTY)};
 
-    tex.setSampler(renderer.getAPI()->createKTXSampler(
+    tex.setSampler(renderer.getAPI().createKTXSampler(
       TextureWrapMode::WRAP,
       TextureWrapMode::WRAP,
       0));
@@ -152,7 +152,7 @@ void Water::operator()(
     }
 
     Texture texture_normal{ render_context.textures->at(PLP_WATER_NORMAL_1) };
-      texture_normal.setSampler(renderer.getAPI()->createKTXSampler(
+      texture_normal.setSampler(renderer.getAPI().createKTXSampler(
       TextureWrapMode::WRAP,
       TextureWrapMode::WRAP,
       1));
@@ -162,7 +162,7 @@ void Water::operator()(
     }
 
     Texture texture_normal2{ render_context.textures->at(PLP_WATER_NORMAL_2) };
-      texture_normal2.setSampler(renderer.getAPI()->createKTXSampler(
+      texture_normal2.setSampler(renderer.getAPI().createKTXSampler(
       TextureWrapMode::WRAP,
       TextureWrapMode::WRAP,
       1));
@@ -171,7 +171,7 @@ void Water::operator()(
       texture_normal2 = render_context.textures->at(PLP_EMPTY);
     }
 
-    render_context.skybox->setSampler(renderer.getAPI()->createKTXSampler(
+    render_context.skybox->setSampler(renderer.getAPI().createKTXSampler(
     TextureWrapMode::CLAMP_TO_EDGE,
     TextureWrapMode::CLAMP_TO_EDGE,
     render_context.skybox->getMipLevels()));
@@ -204,11 +204,11 @@ void Water::operator()(
     depth_map_image_info.emplace_back(renderer.getDepthMapSamplers(), renderer.getDepthMapImageViews(), VK_IMAGE_LAYOUT_GENERAL);
 
     VkDescriptorSet descset {
-       renderer.getAPI()->createDescriptorSets(renderer.getPipeline(mesh.getShaderName()), 1) };
+       renderer.getAPI().createDescriptorSets(renderer.getPipeline(mesh.getShaderName()), 1) };
 
     auto light_buffer {render_context.light_buffer};
 
-    //renderer.getAPI()->updateDescriptorSets(*mesh.getUniformBuffers(), descset, image_infos);
+    //renderer.getAPI().updateDescriptorSets(*mesh.getUniformBuffers(), descset, image_infos);
 
     std::array<VkWriteDescriptorSet, 6> desc_writes{};
     std::vector<VkDescriptorBufferInfo> buffer_infos;
@@ -279,7 +279,7 @@ void Water::operator()(
     desc_writes[5].pImageInfo = depth_map_image_info.data();
 
     vkUpdateDescriptorSets(
-      renderer.getAPI()->getDevice(),
+      renderer.getAPI().getDevice(),
       static_cast<std::uint32_t>(desc_writes.size()),
       desc_writes.data(),
       0,

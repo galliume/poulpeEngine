@@ -96,7 +96,7 @@ namespace Poulpe
       }
     }
     auto data = mesh.getData();
-    auto commandPool = renderer.getAPI()->createCommandPool();
+    auto commandPool = renderer.getAPI().createCommandPool();
 
     std::vector<UniformBufferObject> ubos{};
     ubos.reserve(1);
@@ -106,13 +106,13 @@ namespace Poulpe
     ubos.push_back(ubo);
 
     data->_vertices = vertices;
-    data->_vertex_buffer = renderer.getAPI()->createVertexBuffer(vertices, renderer.getCurrentFrameIndex());
+    data->_vertex_buffer = renderer.getAPI().createVertexBuffer(vertices, renderer.getCurrentFrameIndex());
     data->_texture_index = 0;
     data->_ubos.resize(1);
     data->_ubos[0] = ubos;
 
     mesh.getData()->_ubos_offset.emplace_back(1);
-    mesh.getUniformBuffers().emplace_back(renderer.getAPI()->createUniformBuffers(1, renderer.getCurrentFrameIndex()));
+    mesh.getUniformBuffers().emplace_back(renderer.getAPI().createUniformBuffers(1, renderer.getCurrentFrameIndex()));
 
     for (std::size_t i{ 0 }; i < mesh.getData()->_ubos.size(); i++) {
       std::ranges::for_each(mesh.getData()->_ubos.at(i), [&](auto& data_ubo) {
@@ -123,7 +123,7 @@ namespace Poulpe
     vkDestroyCommandPool(renderer.getDevice(), commandPool, nullptr);
 
     if (!mesh.getData()->_ubos.empty()) {
-      renderer.getAPI()->updateUniformBuffer(mesh.getUniformBuffers().at(0), &mesh.getData()->_ubos.at(0), renderer.getCurrentFrameIndex());
+      renderer.getAPI().updateUniformBuffer(mesh.getUniformBuffers().at(0), &mesh.getData()->_ubos.at(0), renderer.getCurrentFrameIndex());
     }
 
     createDescriptorSet(renderer, mesh, render_context);
@@ -137,7 +137,7 @@ namespace Poulpe
   {
     auto& height_map { render_context.terrain };
 
-    height_map->setSampler(renderer.getAPI()->createKTXSampler(
+    height_map->setSampler(renderer.getAPI().createKTXSampler(
       TextureWrapMode::WRAP,
       TextureWrapMode::WRAP,
       0));
@@ -145,7 +145,7 @@ namespace Poulpe
     //@todo fix this ugly fix. Needs a real asset unique ID
     Texture ground { render_context.textures->at(PLP_GROUND) };
 
-    ground.setSampler(renderer.getAPI()->createKTXSampler(
+    ground.setSampler(renderer.getAPI().createKTXSampler(
       TextureWrapMode::WRAP,
       TextureWrapMode::WRAP,
       0));
@@ -156,7 +156,7 @@ namespace Poulpe
 
     Texture grass { render_context.textures->at(PLP_GRASS) };
 
-    grass.setSampler(renderer.getAPI()->createKTXSampler(
+    grass.setSampler(renderer.getAPI().createKTXSampler(
       TextureWrapMode::WRAP,
       TextureWrapMode::WRAP,
       0));
@@ -167,7 +167,7 @@ namespace Poulpe
 
     Texture snow { render_context.textures->at(PLP_SNOW) };
 
-    snow.setSampler(renderer.getAPI()->createKTXSampler(
+    snow.setSampler(renderer.getAPI().createKTXSampler(
       TextureWrapMode::WRAP,
       TextureWrapMode::WRAP,
       0));
@@ -178,7 +178,7 @@ namespace Poulpe
 
     Texture sand { render_context.textures->at(PLP_SAND) };
 
-    sand.setSampler(renderer.getAPI()->createKTXSampler(
+    sand.setSampler(renderer.getAPI().createKTXSampler(
       TextureWrapMode::WRAP,
       TextureWrapMode::WRAP,
       0));
@@ -189,7 +189,7 @@ namespace Poulpe
 
     Texture low_noise { render_context.textures->at(PLP_LOW_NOISE) };
 
-    low_noise.setSampler(renderer.getAPI()->createKTXSampler(
+    low_noise.setSampler(renderer.getAPI().createKTXSampler(
       TextureWrapMode::WRAP,
       TextureWrapMode::WRAP,
       0));
@@ -200,7 +200,7 @@ namespace Poulpe
 
     Texture hi_noise { render_context.textures->at(PLP_HI_NOISE) };
 
-    hi_noise.setSampler(renderer.getAPI()->createKTXSampler(
+    hi_noise.setSampler(renderer.getAPI().createKTXSampler(
       TextureWrapMode::WRAP,
       TextureWrapMode::WRAP,
       0));
@@ -218,7 +218,7 @@ namespace Poulpe
     image_infos.emplace_back(hi_noise.getSampler(), hi_noise.getImageView(), VK_IMAGE_LAYOUT_GENERAL);
     image_infos.emplace_back(low_noise.getSampler(), low_noise.getImageView(), VK_IMAGE_LAYOUT_GENERAL);
 
-    render_context.terrain->setSampler(renderer.getAPI()->createKTXSampler(
+    render_context.terrain->setSampler(renderer.getAPI().createKTXSampler(
     TextureWrapMode::CLAMP_TO_EDGE,
     TextureWrapMode::CLAMP_TO_EDGE,
     render_context.terrain->getMipLevels()));
@@ -233,11 +233,11 @@ namespace Poulpe
     depth_map_image_info.emplace_back(renderer.getDepthMapSamplers(), renderer.getDepthMapImageViews(), VK_IMAGE_LAYOUT_GENERAL);
 
     VkDescriptorSet descset {
-      renderer.getAPI()->createDescriptorSets(renderer.getPipeline(mesh.getShaderName()) , 1) };
+      renderer.getAPI().createDescriptorSets(renderer.getPipeline(mesh.getShaderName()) , 1) };
 
     auto& light_buffer { render_context.light_buffer };
 
-    //renderer.getAPI()->updateDescriptorSets(*mesh.getUniformBuffers(), descset, image_infos);
+    //renderer.getAPI().updateDescriptorSets(*mesh.getUniformBuffers(), descset, image_infos);
     std::array<VkWriteDescriptorSet, 6> desc_writes{};
     std::vector<VkDescriptorBufferInfo> buffer_infos;
 
@@ -307,7 +307,7 @@ namespace Poulpe
     desc_writes[5].pImageInfo = depth_map_image_info.data();
 
     vkUpdateDescriptorSets(
-      renderer.getAPI()->getDevice(),
+      renderer.getAPI().getDevice(),
       static_cast<std::uint32_t>(desc_writes.size()),
       desc_writes.data(),
       0,

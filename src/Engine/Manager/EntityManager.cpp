@@ -41,11 +41,9 @@ namespace Poulpe
 {
   EntityManager::EntityManager(
     ComponentManager& component_manager,
-    TextureManager& texture_manager,
-    Buffer& light_buffer)
+    TextureManager& texture_manager)
     : _component_manager(component_manager)
     , _texture_manager(texture_manager)
-    , _light_buffer(light_buffer)
   {
     initWorldGraph();
   }

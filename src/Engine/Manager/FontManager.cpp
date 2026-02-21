@@ -30,7 +30,7 @@ namespace Poulpe
       return texture;
     }
 
-    auto const& config_manager = ConfigManagerLocator::get();
+    auto const& config_manager { ConfigManagerLocator::get() };
     auto const& app_config { ConfigManagerLocator::get()->appConfig() };
 
     auto const font{ config_manager->rootPath() + "/" + app_config["font"].get<std::string>()};
@@ -70,8 +70,8 @@ namespace Poulpe
       return texture;
     }
 
-    VkCommandPool cmd_pool = _renderer.getAPI()->createCommandPool();
-    VkCommandBuffer cmd_buffer = _renderer.getAPI()->allocateCommandBuffers(cmd_pool, 1, false)[0];
+    VkCommandPool cmd_pool { _renderer.getAPI().createCommandPool() };
+    VkCommandBuffer cmd_buffer { _renderer.getAPI().allocateCommandBuffers(cmd_pool, 1, false)[0] };
 
     _characters.resize(static_cast<std::size_t>(_face->num_glyphs));
 
@@ -164,15 +164,15 @@ namespace Poulpe
 
     _atlas_height += static_cast<std::uint32_t>(max_row_height) + 50;
 
-    VkImage image = nullptr;
-    _renderer.getAPI()->createFontImage(
+    VkImage image {
+    _renderer.getAPI().createFontImage(
       cmd_buffer,
       _characters,
       _atlas_width,
-      _atlas_height, image,
-      _renderer.getCurrentFrameIndex());
+      _atlas_height,
+      _renderer.getCurrentFrameIndex()) };
 
-    VkImageView imageview = _renderer.getAPI()->createFontImageView(image, VK_IMAGE_ASPECT_COLOR_BIT);
+    VkImageView imageview { _renderer.getAPI().createFontImageView(image, VK_IMAGE_ASPECT_COLOR_BIT) };
 
     texture.setName("_plp_font_atlas");
     texture.setImage(image);

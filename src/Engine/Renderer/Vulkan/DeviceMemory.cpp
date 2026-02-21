@@ -63,7 +63,7 @@ namespace Poulpe
     }
   }
 
-  std::uint32_t DeviceMemory::bindBufferToMemory(VkBuffer& buffer, VkDeviceSize const size, VkDeviceSize const alignment)
+  std::uint32_t DeviceMemory::bindBufferToMemory(VkBuffer buffer, VkDeviceSize const size, VkDeviceSize const alignment)
   {
     {
       std::lock_guard<std::mutex> guard(_mutex_memory);
@@ -97,7 +97,7 @@ namespace Poulpe
     }
   }
 
-  void DeviceMemory::bindImageToMemory(VkImage & image, VkDeviceSize const size, VkDeviceSize const alignment)
+  void DeviceMemory::bindImageToMemory(VkImage image, VkDeviceSize const size, VkDeviceSize const alignment)
   {
     {
       std::lock_guard<std::mutex> guard(_mutex_memory);
@@ -202,7 +202,7 @@ namespace Poulpe
     //_mutex_memory.unlock();
   }
 
-  VkBuffer& DeviceMemory::getBuffer(std::size_t index)
+  VkBuffer DeviceMemory::getBuffer(std::size_t index)
   {
     return _buffer.at(index);
   }

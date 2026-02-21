@@ -2,6 +2,7 @@ module Engine.Renderer.VulkanDeviceMemoryPool;
 
 import std;
 
+import Engine.Core.Logger;
 import Engine.Core.Volk;
 
 namespace Poulpe
@@ -27,7 +28,7 @@ namespace Poulpe
     bool forceNew)
   {
     if (_memory_allocation_count > _device_props.properties.limits.maxMemoryAllocationCount) {
-      throw std::runtime_error("Max number of active allocations reached");
+      Logger::error("Max number of active allocations reached");
     }
 
     VkDeviceSize buffer_size;
@@ -63,13 +64,13 @@ namespace Poulpe
 
     //Logger::debug("type: {} {} allocated size: {} size: {} buffer size: {} max: {}", buffer_type_debug, memory_type, _memory_allocation_size.at(memory_type), size, buffer_size, max_buffer_size);
 
-    auto pool_type = _pool.find(memory_type);
+    auto pool_type { _pool.find(memory_type) };
 
     if (_pool.end() != pool_type && !forceNew) {
-      auto poolUsage = pool_type->second.find(usage);
+      auto poolUsage { pool_type->second.find(usage) };
       if (pool_type->second.end() != poolUsage) {
         for (std::size_t i{ 0 }; i < poolUsage->second.size(); ++i) {
-          auto& dm = poolUsage->second.at(i);
+          auto& dm { poolUsage->second.at(i) };
           if (!dm->isFull() && dm->hasEnoughSpaceLeft(size, alignment)) {
             //  Logger::debug("DM REUSE OK: id {}, {}, type {} usage {} size {}/{}",
             //    dm.get()->getID(), buffer_type_debug, memory_type, usage, size, dm->getSpaceLeft());
@@ -84,31 +85,40 @@ namespace Poulpe
 
       if (_memory_allocation_size.at(memory_type) + buffer_size > max_buffer_size) {
         //Logger::debug("type: {} {} allocated size: {} size: {} buffer size: {} max: {}", buffer_type_debug, memory_type, _memory_allocation_size.at(memory_type), size, buffer_size, max_buffer_size);
-        throw std::runtime_error("Max size of memory allocation reached");
+        Logger::error("Max size of memory allocation reached");
       }
 
-      _pool[memory_type][usage].emplace_back(std::make_unique<DeviceMemory>(
-        device, memory_type, buffer_size, _device_memory_count, alignment));
-      _memory_allocation_count += 1;
-      _memory_allocation_size.at(memory_type) += buffer_size;
-      //Logger::debug("DM CREATION: id {}, {}, type {} usage {} size {}", _device_memory_count, buffer_type_debug, memory_type, usage, buffer_size);
+      {
+        std::lock_guard<std::mutex> lock(_mutex);
+
+        _pool[memory_type][usage].emplace_back(std::make_unique<DeviceMemory>(
+          device, memory_type, buffer_size, _device_memory_count, alignment));
+        _memory_allocation_count += 1;
+        _memory_allocation_size.at(memory_type) += buffer_size;
+      }
+        //Logger::debug("DM CREATION: id {}, {}, type {} usage {} size {}", _device_memory_count, buffer_type_debug, memory_type, usage, buffer_size);
       _device_memory_count += 1;
       _memory_size_allocated += size;
       return _pool[memory_type][usage].back().get();
     } else {
 
       if (_memory_allocation_size.at(memory_type) + buffer_size > max_buffer_size) {
-        throw std::runtime_error("Max size of memory allocation reached");
+        Logger::error("Max size of memory allocation reached");
       }
 
-      _pool[memory_type][usage].emplace_back(std::make_unique<DeviceMemory>(
-        device, memory_type, buffer_size, _device_memory_count, alignment));
+      DeviceMemory* dm{};
+      {
+        std::lock_guard<std::mutex> lock(_mutex);
+        _pool[memory_type][usage].emplace_back(std::make_unique<DeviceMemory>(
+          device, memory_type, buffer_size, _device_memory_count, alignment));
+        dm = _pool[memory_type][usage].back().get();
+      }
       _memory_allocation_count += 1;
       _memory_allocation_size.at(memory_type) += buffer_size;
       //Logger::debug("DM CREATION: id {}, {}, type {} usage {} size {}", _device_memory_count, buffer_type_debug, memory_type, usage, buffer_size);
       _device_memory_count += 1;
       _memory_size_allocated += size;
-      return _pool[memory_type][usage].back().get();
+      return dm;
     }
   }
 
