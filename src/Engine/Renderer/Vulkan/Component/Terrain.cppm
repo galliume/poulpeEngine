@@ -2,6 +2,8 @@ export module Engine.Renderer.Vulkan.Terrain;
 
 import std;
 
+import Engine.Component.Mesh;
+
 import Engine.Core.Volk;
 
 import Engine.Renderer.RendererComponentTypes;
@@ -13,8 +15,9 @@ namespace Poulpe
   {
   public:
     void operator()(
-      Renderer *const renderer,
-      ComponentRenderingInfo const& component_rendering_info);
+      Renderer & renderer,
+      Mesh & mesh,
+      RendererContext const& render_context);
 
       VkShaderStageFlags stage_flag_bits {
         VK_SHADER_STAGE_VERTEX_BIT
@@ -24,8 +27,9 @@ namespace Poulpe
 
   private:
     void createDescriptorSet(
-      Renderer *const renderer,
-      ComponentRenderingInfo const& component_rendering_info);
+    Renderer & renderer,
+    Mesh & mesh,
+    RendererContext const& render_context);
   };
 
 }

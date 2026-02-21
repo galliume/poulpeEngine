@@ -53,8 +53,7 @@ namespace Poulpe
 
         if (VK_SUCCESS != result) {
           //@todo use fmt::format specifier
-          //Logger::critical("error while allocating memory {}", static_cast<int>(result));
-          throw std::runtime_error("failed to allocate buffer memory!");
+          Logger::critical("error while allocating memory {}", static_cast<int>(result));
         }
 
         _is_allocated = true;
@@ -64,26 +63,29 @@ namespace Poulpe
     }
   }
 
-  std::uint32_t DeviceMemory::bindBufferToMemory(VkBuffer & buffer, VkDeviceSize const offset)
+  std::uint32_t DeviceMemory::bindBufferToMemory(VkBuffer buffer, VkDeviceSize const size, VkDeviceSize const alignment)
   {
     {
       std::lock_guard<std::mutex> guard(_mutex_memory);
 
-      auto const remainder {_offset % offset};
+      auto const remainder {_offset % alignment};
 
       if (remainder != 0) {
-        _offset += (offset - remainder);
+        _offset += (alignment - remainder);
+      }
+
+      if (_offset + size > _max_size) {
+        Logger::error("DeviceMemory is full! Cannot bind buffer (requested size: {}, offset: {}, max: {})", size, _offset, _max_size);
       }
 
       VkResult result = vkBindBufferMemory(_device, buffer, *_memory, _offset);
 
       if (result != VK_SUCCESS) {
-        Logger::error("BindBuffer memory failed in bindBufferToMemory");
-        throw std::runtime_error("BindBuffer memory failed in bindBufferToMemory");
+        Logger::error("BindBuffer memory failed in bindBufferToMemory: {}", static_cast<int>(result));
       }
 
       _buffer_offsets.emplace_back(_offset);
-      _offset += offset;
+      _offset += size;
 
       if (_offset >= _max_size) {
         _is_full = true;
@@ -95,23 +97,27 @@ namespace Poulpe
     }
   }
 
-  void DeviceMemory::bindImageToMemory(VkImage & image, VkDeviceSize const offset)
+  void DeviceMemory::bindImageToMemory(VkImage image, VkDeviceSize const size, VkDeviceSize const alignment)
   {
     {
       std::lock_guard<std::mutex> guard(_mutex_memory);
 
-      auto const remainder {_offset % offset};
+      auto const remainder {_offset % alignment};
       if (remainder != 0) {
-        _offset += (offset - remainder);
+        _offset += (alignment - remainder);
+      }
+
+      if (_offset + size > _max_size) {
+        Logger::error("DeviceMemory is full! Cannot bind image (requested size: {}, offset: {}, max: {})", size, _offset, _max_size);
       }
 
       VkResult result = vkBindImageMemory(_device, image, *_memory, _offset);
 
       if (VK_SUCCESS != result) {
-        //Logger::debug("BindImageMemory failed in bindImageToMemory");
+         Logger::error("BindImage memory failed in bindImageToMemory: {}", static_cast<int>(result));
       }
 
-      _offset += offset;
+      _offset += size;
 
       if (_offset >= _max_size) {
           _is_full = true;
@@ -119,24 +125,23 @@ namespace Poulpe
     }
   }
 
-  bool DeviceMemory::hasEnoughSpaceLeft(VkDeviceSize size)
+  bool DeviceMemory::hasEnoughSpaceLeft(VkDeviceSize size, VkDeviceSize const alignment)
   {
     {
       std::lock_guard<std::mutex> guard(_mutex_memory);
       auto offset { _offset };
 
-      auto const remainder {offset % size};
+      auto const remainder {offset % alignment};
 
       if (remainder != 0) {
-        offset += (size - remainder);
+        offset += (alignment - remainder);
       }
 
-      bool has_enought_space_left { _max_size - offset > size };
+      bool has_enough_space_left { (offset + size) <= _max_size };
 
-      //Logger::debug("max size: {} offset: {} size {} :{}", _max_size, offset, size, (_max_size - offset));
-      if (!has_enought_space_left) _is_full = true;
+      if (!has_enough_space_left) _is_full = true;
 
-      return has_enought_space_left;
+      return has_enough_space_left;
     }
   }
 
@@ -197,7 +202,7 @@ namespace Poulpe
     //_mutex_memory.unlock();
   }
 
-  VkBuffer& DeviceMemory::getBuffer(std::size_t index)
+  VkBuffer DeviceMemory::getBuffer(std::size_t index)
   {
     return _buffer.at(index);
   }

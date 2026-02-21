@@ -2,16 +2,17 @@ export module Engine.Managers.RenderManager;
 
 import std;
 
+import Engine.Component.Entity;
 import Engine.Component.EntityNode;
 import Engine.Component.Mesh;
 
 import Engine.Core.Camera;
 import Engine.Core.GLM;
+import Engine.Core.LightTypes;
 import Engine.Core.MeshTypes;
 import Engine.Core.PlpTypedef;
 import Engine.Core.Tools;
 import Engine.Core.Volk;
-
 import Engine.GUI.Window;
 
 import Engine.Managers.AudioManager;
@@ -32,7 +33,26 @@ import Engine.Utils.IDHelper;
 
 namespace Poulpe
 {
-  //@todo rename to SceneManager?
+  struct FrameContext
+  {
+    double delta_time{};
+    std::string root_path{};
+    std::uint8_t camera_index{ 0 };
+
+    glm::mat4 camera_view_matrix{ 1.0f };
+    glm::mat4 perspective{ 1.0f };
+
+    std::vector<glm::vec4> frustum_planes{};
+    std::vector<IDType> visible_ids{};
+    std::vector<IDType> transparent_ids{};
+
+    std::shared_ptr<Entity> skybox_entity{};
+    std::shared_ptr<Entity> terrain_entity{};
+    std::shared_ptr<Entity> water_entity{};
+
+    std::span<std::shared_ptr<Entity>> texts{};
+  };
+
   export class RenderManager : public std::enable_shared_from_this<RenderManager>
   {
   public:
@@ -40,19 +60,19 @@ namespace Poulpe
 
     void cleanUp();
     inline void forceRefresh() { _refresh = true; }
-    inline std::uint32_t getAppHeight() { return getRenderer()->getAPI()->getSwapChainExtent().height; }
-    inline std::uint32_t getAppWidth() { return getRenderer()->getAPI()->getSwapChainExtent().width; }
-    inline AudioManager* getAudioManager() { return _audio_manager.get(); }
-    inline Camera* getCamera() { return _cameras.at(_current_camera).get(); }
-    inline ComponentManager* getComponentManager() { return _component_manager.get(); }
-    inline DestroyManager* getDestroyManager() { return _destroy_manager.get(); }
-    inline EntityManager* getEntityManager() { return _entity_manager.get(); }
-    inline LightManager* getLightManager() { return _light_manager.get(); }
-    inline Renderer* getRenderer() { return _renderer.get(); }
-    inline ShaderManager* getShaderManager() { return _shader_manager.get(); }
-    inline FontManager* getFontManager() { return _font_manager.get(); }
-    inline TextureManager* getTextureManager() { return _texture_manager.get(); }
-    Window* getWindow();
+    inline std::uint32_t getAppHeight() { return getRenderer().getAPI().getSwapChainExtent().height; }
+    inline std::uint32_t getAppWidth() { return getRenderer().getAPI().getSwapChainExtent().width; }
+    inline AudioManager& getAudioManager() { return *_audio_manager; }
+    inline Camera& getCamera() const { return *_cameras.at(_current_camera); }
+    inline ComponentManager& getComponentManager() { return *_component_manager; }
+    inline DestroyManager& getDestroyManager() { return *_destroy_manager; }
+    inline EntityManager& getEntityManager() { return *_entity_manager; }
+    inline LightManager& getLightManager() { return *_light_manager; }
+    inline Renderer& getRenderer() { return *_renderer; }
+    inline ShaderManager& getShaderManager() { return *_shader_manager; }
+    inline FontManager& getFontManager() { return *_font_manager; }
+    inline TextureManager& getTextureManager() { return *_texture_manager; }
+    Window& getWindow();
     void init();
     inline bool isLoaded()  { return _is_loaded; }
     //void updateScene(double const delta_time);
@@ -68,38 +88,57 @@ namespace Poulpe
 
     Buffer getLightBuffer();
 
-    bool isClipped(
-      IDType const entity_id,
-      std::vector<glm::vec4> const& frustum_planes);
-
-    void renderEntity(
-      IDType const entity_id,
-      double const delta_time);
-
-    void drawEntity(
-      IDType const entity_id,
-      glm::mat4 const& camera_view_matrix,
-      bool const has_alpha_blend = false);
-
-    void drawShadowMap(
-      IDType const entity_id,
-      SHADOW_TYPE const shadow_type,
-      glm::mat4 const& camera_view_matrix,
-      bool const has_alpha_blend = false);
-
-      ComponentRenderingInfo& getComponentRenderingInfo(Mesh * mesh);
-      void updateComponentRenderingInfo();
-
-      RendererInfo& getRendererInfo(Mesh * mesh = nullptr, glm::mat4 const& camera_view = glm::mat4(1.0f));
-      void updateRendererInfo(glm::mat4 const& camera_view);
+    RendererContext& getRendererContext(glm::mat4 const& camera_view = glm::mat4(1.0f));
+    void updateRendererContext(glm::mat4 const& camera_view);
 
   private:
     void loadData(std::string const & level);
+
+    bool isClipped(
+    IDType const entity_id,
+    std::span<glm::vec4 const> frustum_planes) const;
+
+  void renderEntity(
+    IDType const entity_id,
+    double const delta_time,
+    glm::mat4 const& camera_view_matrix);
+
+  void drawEntity(
+    IDType const entity_id,
+    glm::mat4 const& camera_view_matrix,
+    bool const has_alpha_blend = false);
+
+  void drawShadowMap(
+    IDType const entity_id,
+    SHADOW_TYPE const shadow_type,
+    glm::mat4 const& camera_view_matrix,
+    bool const has_alpha_blend = false);
+
+  auto get_visible_ids(
+    std::ranges::range auto const& entities,
+    std::vector<glm::vec4> const& frustum_planes) const
+    {
+      return entities
+          | std::views::filter([&](auto const& e) { return !isClipped(e->getID(), frustum_planes); })
+          | std::views::transform([](auto const& e) { return e->getID(); })
+          | std::ranges::to<std::vector>();
+    }
 
     //@todo move to EntityManager
     void prepareSkybox();
     void prepareTerrain();
     void prepareWater();
+
+    FrameContext buildFrameContext(
+      std::string const& root_path,
+      std::uint8_t const camera_index,
+      double const delta_time) const;
+
+    void updateEntities(FrameContext const& frame_context);
+    void renderShadowmap(FrameContext const& frame_context);
+    void renderEntities(FrameContext const& frame_context);
+    void updateBuffers();
+    void updatePlayer();
 
   private:
     std::string _current_level;
@@ -130,7 +169,8 @@ namespace Poulpe
 
     std::vector<Buffer> _light_buffers;
 
-    ComponentRenderingInfo _rendering_info;
-    RendererInfo _renderer_info;
+    RendererContext _rendering_context;
+
+    std::vector<std::future<void>> _tasks{};
   };
 }

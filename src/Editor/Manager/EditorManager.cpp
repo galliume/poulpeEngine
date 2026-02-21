@@ -47,7 +47,7 @@ namespace Poulpe {
   {
     
     #ifdef __unix__
-    // wl_surface* surface = glfwGetWaylandWindow(render_manager->getWindow()->get());
+    // wl_surface* surface = glfwGetWaylandWindow(render_manager->getWindow().get());
     
     // int tcl_surface;
     // Tcl_GetIntFromObj(interp, objv[1], (int*)&tcl_surface);
@@ -57,7 +57,7 @@ namespace Poulpe {
     //struct wl_subsurface* subsurface = wl_subcompositor_get_subsurface(subcompositor, child, parent);
     #else
     auto * const render_manager { static_cast<RenderManager*>(client_data) };
-    HWND glfw_hwnd { glfwGetWin32Window(render_manager->getWindow()->getGlfwWindow()) };
+    HWND glfw_hwnd { glfwGetWin32Window(render_manager->getWindow().getGlfwWindow()) };
 
     HWND tk_hwnd;
     Tcl_GetIntFromObj(interp, objv[1], (int*)&tk_hwnd);

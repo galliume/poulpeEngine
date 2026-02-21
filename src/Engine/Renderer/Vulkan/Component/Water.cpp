@@ -26,8 +26,9 @@ namespace Poulpe
   };
 
 void Water::operator()(
-  Renderer *const renderer,
-  ComponentRenderingInfo const& component_rendering_info)
+    Renderer & renderer,
+    Mesh & mesh,
+    RendererContext const& render_context)
   {
     stage_flag_bits =
       VK_SHADER_STAGE_VERTEX_BIT
@@ -35,15 +36,12 @@ void Water::operator()(
       | VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT
       | VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT;
 
-    auto const& mesh = component_rendering_info.mesh;
 
-    if (!mesh && !mesh->isDirty()) return;
-
-    Texture const& tex { component_rendering_info.textures->at(component_rendering_info.terrain_name)};
+    if (!mesh.isDirty()) return;
 
     std::vector<Vertex> vertices;
-    int const width{ static_cast<int>(tex.getWidth()) };
-    int const height{ static_cast<int>(tex.getHeight()) };
+    int const width{ static_cast<int>(render_context.terrain->getWidth()) };
+    int const height{ static_cast<int>(render_context.terrain->getHeight()) };
 
     int const rez{ 50 };
     int index{ 0 };
@@ -100,91 +98,90 @@ void Water::operator()(
         vertices.push_back(v4);
       }
     }
-    auto const& data = mesh->getData();
-    auto cmd_pool = renderer->getAPI()->createCommandPool();
+    auto const& data = mesh.getData();
+    auto cmd_pool = renderer.getAPI().createCommandPool();
 
     std::vector<UniformBufferObject> ubos{};
     UniformBufferObject ubo{};
     ubo.model = glm::mat4(1.0f);
-    ubo.projection = renderer->getPerspective();
+    ubo.projection = renderer.getPerspective();
     ubos.push_back(ubo);
 
     data->_ubos.push_back(ubos);
     data->_vertices = vertices;
-    data->_vertex_buffer = renderer->getAPI()->createVertexBuffer(vertices, renderer->getCurrentFrameIndex());
+    data->_vertex_buffer = renderer.getAPI().createVertexBuffer(vertices, renderer.getCurrentFrameIndex());
     data->_texture_index = 0;
 
-    auto& mat { mesh->getMaterials().at(0) };
+    auto& mat { mesh.getMaterials().at(0) };
     mat.alpha_mode = 2.0;//BLEND
 
-    mesh->getData()->_ubos_offset.emplace_back(1);
-    mesh->getUniformBuffers().emplace_back(renderer->getAPI()->createUniformBuffers(1, renderer->getCurrentFrameIndex()));
+    mesh.getData()->_ubos_offset.emplace_back(1);
+    mesh.getUniformBuffers().emplace_back(renderer.getAPI().createUniformBuffers(1, renderer.getCurrentFrameIndex()));
 
-    for (std::size_t i{ 0 }; i < mesh->getData()->_ubos.size(); i++) {
-      std::ranges::for_each(mesh->getData()->_ubos.at(i), [&](auto& data_ubo) {
-        data_ubo.projection = renderer->getPerspective();
+    for (std::size_t i{ 0 }; i < mesh.getData()->_ubos.size(); i++) {
+      std::ranges::for_each(mesh.getData()->_ubos.at(i), [&](auto& data_ubo) {
+        data_ubo.projection = renderer.getPerspective();
       });
     }
 
-    vkDestroyCommandPool(renderer->getDevice(), cmd_pool, nullptr);
+    vkDestroyCommandPool(renderer.getDevice(), cmd_pool, nullptr);
 
-    if (!mesh->getData()->_ubos.empty()) {
-      renderer->getAPI()->updateUniformBuffer(mesh->getUniformBuffers().at(0), &mesh->getData()->_ubos.at(0), renderer->getCurrentFrameIndex());
+    if (!mesh.getData()->_ubos.empty()) {
+      renderer.getAPI().updateUniformBuffer(mesh.getUniformBuffers().at(0), &mesh.getData()->_ubos.at(0), renderer.getCurrentFrameIndex());
     }
 
-    createDescriptorSet(renderer, component_rendering_info);
-    mesh->setIsDirty(false);
+    createDescriptorSet(renderer, mesh, render_context);
+    mesh.setIsDirty(false);
   }
 
   void Water::createDescriptorSet(
-    Renderer *const renderer,
-    ComponentRenderingInfo const& component_rendering_info)
+    Renderer & renderer,
+    Mesh & mesh,
+    RendererContext const& render_context)
   {
-    auto const& mesh = component_rendering_info.mesh;
 
-    Texture tex { component_rendering_info.textures->at(PLP_EMPTY)};
+    Texture tex { render_context.textures->at(PLP_EMPTY)};
 
-    tex.setSampler(renderer->getAPI()->createKTXSampler(
+    tex.setSampler(renderer.getAPI().createKTXSampler(
       TextureWrapMode::WRAP,
       TextureWrapMode::WRAP,
       0));
 
     if (tex.getWidth() == 0) {
-      tex = component_rendering_info.textures->at(PLP_EMPTY);
+      tex = render_context.textures->at(PLP_EMPTY);
     }
 
-    Texture texture_normal{ component_rendering_info.textures->at(PLP_WATER_NORMAL_1) };
-      texture_normal.setSampler(renderer->getAPI()->createKTXSampler(
+    Texture texture_normal{ render_context.textures->at(PLP_WATER_NORMAL_1) };
+      texture_normal.setSampler(renderer.getAPI().createKTXSampler(
       TextureWrapMode::WRAP,
       TextureWrapMode::WRAP,
       1));
 
     if (texture_normal.getWidth() == 0) {
-      texture_normal = component_rendering_info.textures->at(PLP_EMPTY);
+      texture_normal = render_context.textures->at(PLP_EMPTY);
     }
 
-    Texture texture_normal2{ component_rendering_info.textures->at(PLP_WATER_NORMAL_2) };
-      texture_normal2.setSampler(renderer->getAPI()->createKTXSampler(
+    Texture texture_normal2{ render_context.textures->at(PLP_WATER_NORMAL_2) };
+      texture_normal2.setSampler(renderer.getAPI().createKTXSampler(
       TextureWrapMode::WRAP,
       TextureWrapMode::WRAP,
       1));
 
     if (texture_normal2.getWidth() == 0) {
-      texture_normal2 = component_rendering_info.textures->at(PLP_EMPTY);
+      texture_normal2 = render_context.textures->at(PLP_EMPTY);
     }
 
-    Texture env { component_rendering_info.textures->at(component_rendering_info.skybox_name) };
-    env.setSampler(renderer->getAPI()->createKTXSampler(
+    render_context.skybox->setSampler(renderer.getAPI().createKTXSampler(
     TextureWrapMode::CLAMP_TO_EDGE,
     TextureWrapMode::CLAMP_TO_EDGE,
-    env.getMipLevels()));
+    render_context.skybox->getMipLevels()));
 
     std::vector<VkDescriptorImageInfo> image_infos{};
     image_infos.emplace_back(tex.getSampler(), tex.getImageView(), VK_IMAGE_LAYOUT_GENERAL);
-    image_infos.emplace_back(renderer->getDepthSamplers(), renderer->getDepthImageViews(), VK_IMAGE_LAYOUT_DEPTH_READ_ONLY_OPTIMAL);
+    image_infos.emplace_back(renderer.getDepthSamplers(), renderer.getDepthImageViews(), VK_IMAGE_LAYOUT_DEPTH_READ_ONLY_OPTIMAL);
     image_infos.emplace_back(texture_normal.getSampler(), texture_normal.getImageView(), VK_IMAGE_LAYOUT_GENERAL);
     image_infos.emplace_back(texture_normal2.getSampler(), texture_normal2.getImageView(), VK_IMAGE_LAYOUT_GENERAL);
-    image_infos.emplace_back(renderer->getCurrentSampler(), renderer->getCurrentImageView(), VK_IMAGE_LAYOUT_GENERAL);
+    image_infos.emplace_back(renderer.getCurrentSampler(), renderer.getCurrentImageView(), VK_IMAGE_LAYOUT_GENERAL);
 
     // VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMALVK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
     // VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
@@ -198,24 +195,25 @@ void Water::operator()(
     // VK_IMAGE_LAYOUT_RENDERING_LOCAL_READ
 
     std::vector<VkDescriptorImageInfo> env_image_infos{};
-    env_image_infos.emplace_back(env.getSampler(), env.getImageView(), VK_IMAGE_LAYOUT_GENERAL );
+    env_image_infos.emplace_back(render_context.skybox->getSampler(), render_context.skybox->getImageView(), VK_IMAGE_LAYOUT_GENERAL );
 
     std::vector<VkDescriptorImageInfo> csm_image_info{};
-    csm_image_info.emplace_back(renderer->getCSMSamplers(), renderer->getCSMImageViews(), VK_IMAGE_LAYOUT_GENERAL);
+    csm_image_info.emplace_back(renderer.getCSMSamplers(), renderer.getCSMImageViews(), VK_IMAGE_LAYOUT_GENERAL);
 
     std::vector<VkDescriptorImageInfo> depth_map_image_info{};
-    depth_map_image_info.emplace_back(renderer->getDepthMapSamplers(), renderer->getDepthMapImageViews(), VK_IMAGE_LAYOUT_GENERAL);
+    depth_map_image_info.emplace_back(renderer.getDepthMapSamplers(), renderer.getDepthMapImageViews(), VK_IMAGE_LAYOUT_GENERAL);
 
-    auto const pipeline = renderer->getPipeline(mesh->getShaderName());
-    VkDescriptorSet descset = renderer->getAPI()->createDescriptorSets(pipeline->desc_pool, { pipeline->descset_layout }, 1);
-    auto light_buffer {component_rendering_info.light_buffer};
+    VkDescriptorSet descset {
+       renderer.getAPI().createDescriptorSets(renderer.getPipeline(mesh.getShaderName()), 1) };
 
-    //renderer->getAPI()->updateDescriptorSets(*mesh->getUniformBuffers(), descset, image_infos);
+    auto light_buffer {render_context.light_buffer};
+
+    //renderer.getAPI().updateDescriptorSets(*mesh.getUniformBuffers(), descset, image_infos);
 
     std::array<VkWriteDescriptorSet, 6> desc_writes{};
     std::vector<VkDescriptorBufferInfo> buffer_infos;
 
-    std::for_each(std::begin(mesh->getUniformBuffers()), std::end(mesh->getUniformBuffers()),
+    std::for_each(std::begin(mesh.getUniformBuffers()), std::end(mesh.getUniformBuffers()),
     [& buffer_infos](const Buffer & uniformBuffer)
     {
       VkDescriptorBufferInfo buffer_info{};
@@ -281,12 +279,12 @@ void Water::operator()(
     desc_writes[5].pImageInfo = depth_map_image_info.data();
 
     vkUpdateDescriptorSets(
-      renderer->getAPI()->getDevice(),
+      renderer.getAPI().getDevice(),
       static_cast<std::uint32_t>(desc_writes.size()),
       desc_writes.data(),
       0,
       nullptr);
 
-    mesh->setDescSet(descset);
+    mesh.setDescSet(descset);
   }
 }

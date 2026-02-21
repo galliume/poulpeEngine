@@ -30,7 +30,7 @@ namespace Poulpe
       VkBufferUsageFlags const usage,
       VkDeviceSize const alignment,
       DeviceBufferType const buffer_type,
-      bool force_new = false);
+      bool force_new = false) __attribute__((no_thread_safety_analysis));
 
     std::unordered_map<VkMemoryPropertyFlags, std::unordered_map<VkBufferUsageFlags,
       std::vector<std::unique_ptr<DeviceMemory>>>>* getPool() { return & _pool; }
@@ -43,11 +43,12 @@ namespace Poulpe
     VkPhysicalDeviceProperties2 _device_props;
     VkPhysicalDeviceMaintenance3Properties _maintenance_props;
     VkPhysicalDeviceMemoryProperties _memory_props;
-    VkDeviceSize _memory_allocation_count{ 0 };
-    VkDeviceSize _memory_size_allocated{ 0 };
-    std::vector<VkDeviceSize> _memory_allocation_size{0};
+    std::atomic<VkDeviceSize> _memory_allocation_count{ 0 };
+    std::atomic<VkDeviceSize> _memory_size_allocated{ 0 };
+    std::vector<VkDeviceSize> _memory_allocation_size;
 
-    std::uint32_t _device_memory_count{ 0 };
+    std::atomic<std::uint32_t> _device_memory_count{ 0 };
     std::uint32_t const _max_staging{ 8 };
+    std::mutex _mutex;
   };
 }

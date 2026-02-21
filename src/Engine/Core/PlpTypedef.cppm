@@ -50,8 +50,8 @@ namespace Poulpe
   export struct EntityOptions
   {
     std::string_view shader{};
-    glm::vec3 const& pos{};
-    glm::vec3 const& scale{};
+    glm::vec3 pos{};
+    glm::vec3 scale{};
     glm::quat rotation;
     bool has_bbox{ false };
     bool has_animation{ false };

@@ -1,3 +1,7 @@
+module;
+
+#include <cassert>
+
 module Engine.Renderer.VulkanRenderer;
 
 import std;
@@ -13,14 +17,12 @@ import Engine.Renderer.VulkanDeviceMemory;
 
 namespace Poulpe
 {
-  Renderer::Renderer(GLFWwindow* const window)
+  void Renderer::init(GLFWwindow* const window)
   {
+    assert(window != nullptr && "Window creation failed before Renderer::init!");
+
     _vulkan = std::make_unique<VulkanAPI>(window);
     setPerspective();
-  }
-
-  void Renderer::init()
-  {
     _swapchain = _vulkan->createSwapChain(_images);
 
     _max_frames_in_flight = _vulkan->getImageCount();
@@ -50,17 +52,16 @@ namespace Poulpe
 
       _draw_cmds[i].init(buffer_size);
 
-      VkImage image;
-
-      _vulkan->createImage(
+      VkImage image { _vulkan->createImage(
         _vulkan->getSwapChainExtent().width,
         _vulkan->getSwapChainExtent().height, 1,
         VK_SAMPLE_COUNT_1_BIT,
         _vulkan->PLP_VK_FORMAT_COLOR,
         VK_IMAGE_TILING_OPTIMAL,
         VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
-        VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-        image);
+        VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT) };
+
+      _images[i] = std::move(image);
 
       _imageviews[i] = _vulkan->createImageView(
         _images[i],
@@ -69,17 +70,14 @@ namespace Poulpe
 
       _samplers[i] = _vulkan->createTextureSampler(1);
 
-      VkImage image2;
-
-      _vulkan->createImage(
+      VkImage image2 { _vulkan->createImage(
         _vulkan->getSwapChainExtent().width,
         _vulkan->getSwapChainExtent().height, 1,
         VK_SAMPLE_COUNT_1_BIT,
         _vulkan->PLP_VK_FORMAT_COLOR,
         VK_IMAGE_TILING_OPTIMAL,
         VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
-        VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-        image2);
+        VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT) };
 
       _images2[i] = std::move(image2);
 
@@ -90,9 +88,7 @@ namespace Poulpe
 
       _samplers2[i] = _vulkan->createTextureSampler(1);
 
-      VkImage depth_image;
-
-      _vulkan->createImage(
+      VkImage depth_image { _vulkan->createImage(
         _vulkan->getSwapChainExtent().width,
         _vulkan->getSwapChainExtent().height, 1,
         VK_SAMPLE_COUNT_1_BIT,
@@ -102,22 +98,20 @@ namespace Poulpe
         | VK_IMAGE_USAGE_TRANSFER_SRC_BIT
         | VK_IMAGE_USAGE_TRANSFER_DST_BIT
         | VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
-        VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-        depth_image);
+        VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT) };
 
-      VkImageView depth_imageview = _vulkan->createImageView(
+      VkImageView depth_imageview { _vulkan->createImageView(
         depth_image,
         _vulkan->PLP_VK_FORMAT_DEPTH,
         1,
         1,
-        VK_IMAGE_ASPECT_DEPTH_BIT);
+        VK_IMAGE_ASPECT_DEPTH_BIT) };
 
       _depth_images[i] = std::move(depth_image);
       _depth_imageviews[i] = std::move(depth_imageview);
       _depth_samplers[i] = std::move(_vulkan->createTextureSampler(1));
 
-      VkImage depth_image2;
-
+      VkImage depth_image2 {
       _vulkan->createImage(
         _vulkan->getSwapChainExtent().width,
         _vulkan->getSwapChainExtent().height,
@@ -129,15 +123,14 @@ namespace Poulpe
         | VK_IMAGE_USAGE_TRANSFER_SRC_BIT
         | VK_IMAGE_USAGE_TRANSFER_DST_BIT
         | VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
-        VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-        depth_image2);
+        VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT) };
 
-      VkImageView depth_imageview2 = _vulkan->createImageView(
+      VkImageView depth_imageview2 { _vulkan->createImageView(
         depth_image2,
         _vulkan->PLP_VK_FORMAT_DEPTH,
         1,
         1,
-        VK_IMAGE_ASPECT_DEPTH_BIT);
+        VK_IMAGE_ASPECT_DEPTH_BIT) };
 
       _depth_images2[i] = std::move(depth_image2);
       _depth_imageviews2[i] = std::move(depth_imageview2);
@@ -158,21 +151,17 @@ namespace Poulpe
     _cmd_buffer_shadowmap = _vulkan->allocateCommandBuffers(_cmd_pool_shadowmap, _imageviews.size(), false);
 
     for (std::size_t i { 0 }; i < buffer_size; ++i) {
-      VkImage image{};
-      _vulkan->createDepthMapImage(image, _shadow_map_resolution, true);
+      VkImage image{_vulkan->createDepthMapImage(_shadow_map_resolution, true) };
       _depthmap_images.emplace_back(image);
       _depthmap_imageviews.emplace_back(_vulkan->createDepthMapImageView(image, _shadow_map_resolution, true));
       _depthmap_imageviews_rendering.emplace_back(_vulkan->createDepthMapImageView(image, _shadow_map_resolution, true, false));
-
       _depthmap_samplers.emplace_back(_vulkan->createDepthMapSampler());
     }
     for (std::size_t i { 0 }; i < buffer_size; ++i) {
-      VkImage image{};
-      _vulkan->createDepthMapImage(image, _shadow_map_resolution, false, 4);
+      VkImage image { _vulkan->createDepthMapImage(_shadow_map_resolution, false, 4) };
       _csm_images.emplace_back(image);
       _csm_imageviews.emplace_back(_vulkan->createDepthMapImageView(image, false, false, 4));
       _csm_imageviews_rendering.emplace_back(_vulkan->createDepthMapImageView(image, false, false, 4));
-
       _csm_samplers.emplace_back(_vulkan->createDepthMapSampler());
     }
 
@@ -373,53 +362,54 @@ namespace Poulpe
     vkCmdSetColorBlendEquationEXT(cmd_buffer, 0, 1, &colorBlendEquation);
   }
 
-  void Renderer::draw(RendererInfo const& renderer_info)
+  void Renderer::draw(
+    Mesh const& mesh,
+    RendererContext const& renderer_context)
   {
-    auto& cmd_buffer = _cmd_buffer_entities[_current_frame];
-    auto const& mesh = renderer_info.mesh;
-    auto const& camera = renderer_info.camera;
-    auto const pipeline = getPipeline(mesh->getShaderName());
+    auto& cmd_buffer { _cmd_buffer_entities[_current_frame] };
+    auto const& camera { renderer_context.camera };
+    auto & pipeline { getPipeline(mesh.getShaderName()) };
 
     constants push_constants {
-      .view = renderer_info.camera_view,
+      .view = renderer_context.camera_view,
       .view_position = glm::vec4(camera->getPos(), 1.0f),
-      .env_options = renderer_info.env_options,
-      .options = mesh->getOptions()
+      .env_options = renderer_context.env_options,
+      .options = mesh.getOptions()
     };
 
-    if (mesh->isSkybox()) {
+    if (mesh.isSkybox()) {
       push_constants.view = glm::mat4(glm::mat3(camera->getView()));
     }
 
     vkCmdPushConstants(
       cmd_buffer,
-      pipeline->pipeline_layout,
-      renderer_info.stage_flag_bits,
+      pipeline.pipeline_layout,
+      renderer_context.stage_flag_bits,
       0,
       sizeof(constants),
       &push_constants);
 
-    auto const& data { mesh->getData() };
-    auto const& material { mesh->getMaterials().at(data->_material_id) };
+    auto const& data { mesh.getData() };
+    auto const& material { mesh.getMaterials().at(data->_material_id) };
 
     VkBool32 blend_enable =
-      (renderer_info.has_alpha_blend && material.alpha_mode >= 1.0f) ? VK_TRUE : VK_FALSE;
+      (renderer_context.has_alpha_blend && material.alpha_mode >= 1.0f) ? VK_TRUE : VK_FALSE;
 
     vkCmdSetColorBlendEnableEXT(cmd_buffer, 0, 1, &blend_enable);
 
     vkCmdBindDescriptorSets(
       cmd_buffer,
       VK_PIPELINE_BIND_POINT_GRAPHICS,
-      pipeline->pipeline_layout,
-      0, 1, mesh->getDescSet(), 0, nullptr);
+      pipeline.pipeline_layout,
+      0, 1, mesh.getDescSet(), 0, nullptr);
 
-    if (material.double_sided == true && pipeline->pipeline_bis != VK_NULL_HANDLE) {
-      _vulkan->bindPipeline(cmd_buffer, pipeline->pipeline_bis);
+    if (material.double_sided == true && pipeline.pipeline_bis != VK_NULL_HANDLE) {
+      _vulkan->bindPipeline(cmd_buffer, pipeline.pipeline_bis);
       } else {
-      _vulkan->bindPipeline(cmd_buffer, pipeline->pipeline);
+      _vulkan->bindPipeline(cmd_buffer, pipeline.pipeline);
     }
 
-    std::string const& shader_name = mesh->getShaderName();
+    std::string const& shader_name { mesh.getShaderName() };
     if (shader_name != "skybox" && shader_name != "text" && shader_name != "terrain" && shader_name != "water") {
         float const depth_bias_constant{ 1.25f };
         float const depth_bias_slope{ 1.75f };
@@ -430,23 +420,23 @@ namespace Poulpe
     _vulkan->draw(
       cmd_buffer,
       data,
-      mesh->is_indexed());
+      mesh.is_indexed());
 
-    if (mesh->debugNormal() &&  renderer_info.normal_debug) {
-      auto const normal_pipeline = getPipeline("normal_debug");
+    if (mesh.debugNormal() &&  renderer_context.normal_debug) {
+      auto & normal_pipeline { getPipeline("normal_debug") };
 
       vkCmdBindDescriptorSets(
         cmd_buffer,
         VK_PIPELINE_BIND_POINT_GRAPHICS,
-        normal_pipeline->pipeline_layout,
-        0, 1, mesh->getDescSet(), 0, nullptr);
+        normal_pipeline.pipeline_layout,
+        0, 1, mesh.getDescSet(), 0, nullptr);
 
-      _vulkan->bindPipeline(cmd_buffer, normal_pipeline->pipeline);
+      _vulkan->bindPipeline(cmd_buffer, normal_pipeline.pipeline);
 
       _vulkan->draw(
         cmd_buffer,
         data,
-        mesh->is_indexed());
+        mesh.is_indexed());
     }
   }
 
@@ -563,7 +553,8 @@ namespace Poulpe
   }
 
   void Renderer::drawShadowMap(
-    RendererInfo const& renderer_info,
+    Mesh const& mesh,
+    RendererContext const& renderer_context,
     SHADOW_TYPE const shadow_type)
   {
     VkCommandBuffer cmd_buffer;
@@ -577,21 +568,18 @@ namespace Poulpe
     } else {
       cmd_buffer = _cmd_buffer_entities3[_current_frame];
     }
-    auto const& pipeline = getPipeline(pipeline_name);
-
-    auto const& mesh = renderer_info.mesh;
-    auto const& camera = renderer_info.camera;
+    auto & pipeline { getPipeline(pipeline_name) };
 
     constants const push_constants {
-      .view = renderer_info.camera_view,
-      .view_position = glm::vec4(camera->getPos(), 1.0f),
-      .env_options = renderer_info.env_options,
-      .options = mesh->getOptions()
+      .view = renderer_context.camera_view,
+      .view_position = glm::vec4(renderer_context.camera->getPos(), 1.0f),
+      .env_options = renderer_context.env_options,
+      .options = mesh.getOptions()
     };
 
     vkCmdPushConstants(
       cmd_buffer,
-      pipeline->pipeline_layout,
+      pipeline.pipeline_layout,
       VK_SHADER_STAGE_VERTEX_BIT
       | VK_SHADER_STAGE_FRAGMENT_BIT,
       0,
@@ -602,21 +590,21 @@ namespace Poulpe
       vkCmdBindDescriptorSets(
         cmd_buffer,
         VK_PIPELINE_BIND_POINT_GRAPHICS,
-        pipeline->pipeline_layout,
-        0, 1, mesh->getCSMDescSet(), 0, nullptr);
+        pipeline.pipeline_layout,
+        0, 1, mesh.getCSMDescSet(), 0, nullptr);
     } else {
       vkCmdBindDescriptorSets(
         cmd_buffer,
         VK_PIPELINE_BIND_POINT_GRAPHICS,
-        pipeline->pipeline_layout,
-        0, 1, mesh->getShadowMapDescSet(), 0, nullptr);
+        pipeline.pipeline_layout,
+        0, 1, mesh.getShadowMapDescSet(), 0, nullptr);
     }
-    _vulkan->bindPipeline(cmd_buffer, pipeline->pipeline);
+    _vulkan->bindPipeline(cmd_buffer, pipeline.pipeline);
 
     _vulkan->draw(
       cmd_buffer,
-      mesh->getData(),
-      mesh->is_indexed(),
+      mesh.getData(),
+      mesh.is_indexed(),
       0,
       instance_count);
   }
@@ -712,9 +700,9 @@ namespace Poulpe
   }
 
   void Renderer::endRendering(
-    VkCommandBuffer& cmd_buffer,
-    VkImage& image,
-    VkImage&,
+    VkCommandBuffer cmd_buffer,
+    VkImage image,
+    VkImage,
     bool const,
     bool const)
   {
@@ -751,14 +739,11 @@ namespace Poulpe
     if (_sema_render_completes[_current_frame].size() - 1 < _image_index) {
       return;
     }
-    auto const& draw_cmds { _draw_cmds[_current_frame] };
 
-    std::vector<VkCommandBuffer> cmds_buffer{};
-
-    for (std::size_t i{ 0 }; i < draw_cmds.cmd_buffers.size(); ++i) {
-      if (draw_cmds.cmd_buffers.at(i) == nullptr) continue;
-      cmds_buffer.push_back(draw_cmds.cmd_buffers.at(i));
-    }
+    std::vector<VkCommandBuffer> const cmds_buffer {
+        _draw_cmds[_current_frame].cmd_buffers
+        | std::views::filter([](auto const& cmd) { return cmd != nullptr; })
+        | std::ranges::to<std::vector>() };
 
     if (cmds_buffer.empty()) {
       vkResetFences(_vulkan->getDevice(), 1, &_fences_in_flight[_image_index]);
@@ -835,7 +820,7 @@ namespace Poulpe
     // glm::vec4 rayEye = glm::inverse(getPerspective()) * rayClip;
     // rayEye = glm::vec4(rayEye.x, rayEye.y, -1.0, 0.0);
 
-    // glm::vec4 tmp = (glm::inverse(getCamera()->getView()) * rayEye);
+    // glm::vec4 tmp = (glm::inverse(getCamera().getView()) * rayEye);
     // glm::vec3 rayWor = glm::vec3(tmp.x, tmp.y, tmp.z);
   }
 
@@ -858,7 +843,7 @@ namespace Poulpe
     std::string const& shaderName,
     VulkanPipeline& pipeline)
   {
-    _pipelines[shaderName] = std::move(pipeline);
+    _pipelines.insert_or_assign(shaderName, std::move(pipeline));
   }
 
   void Renderer::clearScreen()

@@ -10,7 +10,8 @@ function(set_poulpe_links target)
 
   target_link_options(${target} PRIVATE
     $<$<CONFIG:DEBUG>:${LINK_OPTIONS}>
-    $<$<CONFIG:RELEASE>:${LINK_OPTIONS}>)
+    $<$<CONFIG:RELEASE>:${LINK_OPTIONS}>
+    $<$<CONFIG:RELWITHDEBINFO>:${LINK_OPTIONS}>)
 
   message(STATUS "EXTRA_LIBS: ${EXTRA_LIBS}")
   target_link_libraries(${target} PRIVATE ${EXTRA_LIBS})

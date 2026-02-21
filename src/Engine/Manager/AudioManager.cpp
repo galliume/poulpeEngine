@@ -14,7 +14,7 @@ namespace Poulpe
     ::ma_engine_uninit(& _engine);
   }
 
-  std::string const AudioManager::getState()
+  std::string_view AudioManager::getState() const
   {
     if (State::PLAY == _state) {
       return "playing";

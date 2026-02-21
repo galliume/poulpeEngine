@@ -22,17 +22,17 @@ namespace Poulpe
 
       inline bool isPublic() const { return _is_public; }
 
-      void setChannels(const std::uint32_t channels) { _channels = channels; }
-      void setHeight(const std::uint32_t height) { _height = height; }
-      void setImage(const VkImage& image) { _image = image; }
-      void setImageView(const VkImageView& imageview) { _imageview = imageview; }
+      void setChannels(std::uint32_t const channels) { _channels = channels; }
+      void setHeight(std::uint32_t const height) { _height = height; }
+      void setImage(VkImage const  image) { _image = image; }
+      void setImageView(VkImageView const  imageview) { _imageview = imageview; }
       void setIsPublic(bool isPublic) { _is_public = isPublic; }
-      void setMipLevels(const std::uint32_t mip_lvls) { _mip_lvls = mip_lvls; }
-      void setName(const std::string & name) { _name = name; }
+      void setMipLevels(std::uint32_t const mip_lvls) { _mip_lvls = mip_lvls; }
+      void setName(std::string const& name) { _name = name; }
       void setNormalMap(std::vector<std::array<float, 3>> normal_map_texture) { _normal_map_texture = normal_map_texture; }
       void setPath(std::string_view path) { _path = path; }
-      void setSampler(const VkSampler & sampler) { _sampler = sampler; }
-      void setWidth(const std::uint32_t width) { _width = width; }
+      void setSampler(VkSampler sampler) { _sampler = sampler; }
+      void setWidth(std::uint32_t const width) { _width = width; }
 
   private:
       std::uint32_t _channels;

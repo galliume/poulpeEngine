@@ -40,14 +40,10 @@ import Engine.Renderer.Vulkan.Basic;
 namespace Poulpe
 {
   EntityManager::EntityManager(
-    ComponentManager* const component_manager,
-    LightManager* const light_manager,
-    TextureManager* const texture_manager,
-    Buffer& light_buffer)
+    ComponentManager& component_manager,
+    TextureManager& texture_manager)
     : _component_manager(component_manager)
-    , _light_manager(light_manager)
     , _texture_manager(texture_manager)
-    , _light_buffer(light_buffer)
   {
     initWorldGraph();
   }
@@ -57,17 +53,15 @@ namespace Poulpe
     _world_node->clear();
   }
 
-  std::function<void()> EntityManager::load(json const& lvl_config)
+  std::function<void()> EntityManager::load(
+    Renderer const& renderer,
+    json const& lvl_config)
   {
     _lvl_config = lvl_config;
 
-    return [this]() {
+    return [this, &renderer]() {
       std::ranges::for_each(_lvl_config["entities"].items(), [&](auto const& conf) {
-
-        auto const& key = conf.key();
-        auto const& data = conf.value();
-
-        initMeshes(key, data);
+        initMeshes(renderer, conf.key(), conf.value());
       });
     };
   }
@@ -77,7 +71,10 @@ namespace Poulpe
     return _world_node.get();
   }
 
-  void EntityManager::initMeshes(std::string const& name, json const& raw_data)
+  void EntityManager::initMeshes(
+    Renderer const& renderer,
+    std::string const& name,
+    json const& raw_data)
   {
     //std::vector<Mesh*> meshes{};
     //if (_ObjLoaded.contains(path)) return meshes;
@@ -96,7 +93,7 @@ namespace Poulpe
     auto const& path { root_path + "/" + raw_data.value("mesh", "") };
     auto const flip_Y { raw_data.value("flipY", false) };
 
-    auto callback = [&](
+    auto callback = [this, &root_path, &root_mesh_entity_node, &raw_data, &renderer](
       PlpMeshData _data,
       std::vector<material_t> const materials,
       std::vector<Animation> const animations,
@@ -104,53 +101,54 @@ namespace Poulpe
       std::unordered_map<std::string, std::vector<std::vector<Rotation>>> const rotations,
       std::unordered_map<std::string, std::vector<std::vector<Scale>>> const scales) {
 
-    auto const& p = raw_data["positions"].at(0);
+    auto const& p { raw_data["positions"].at(0) };
     glm::vec3 position{ p["x"].get<float>(), p["y"].get<float>(), p["z"].get<float>() };
     
-    auto const& s = raw_data["scales"].at(0);
+    auto const& s { raw_data["scales"].at(0) };
     glm::vec3 scale{ s["x"].get<float>(), s["y"].get<float>(), s["z"].get<float>() };
 
-    auto const& r = raw_data["rotations"].at(0);
+    auto const& r { raw_data["rotations"].at(0) };
     glm::quat rotation { glm::quat(glm::vec3(glm::radians(r["x"].get<float>()),
                                   glm::radians(r["y"].get<float>()),
                                   glm::radians(r["z"].get<float>()))) };
 
     std::vector<std::string> textures{};
 
+    //@todo could candidate for reflection to read the json struct
     if (raw_data.contains("textures")) {
-      for (auto& [keyTex, pathTex] : raw_data["textures"].items()) {
-        textures.emplace_back(keyTex);
-      }
+      textures.append_range(
+        raw_data["textures"].items() 
+        | std::views::transform([](auto&& item) { return item.key(); }));
     }
 
     if (raw_data.contains("normal")) {
-      for (auto& [keyTex, pathTex] : raw_data["normal"].items()) {
-        textures.emplace_back(keyTex);
-      }
+      textures.append_range(
+        raw_data["normal"].items() 
+        | std::views::transform([](auto&& item) { return item.key(); }));
     }
 
     if (raw_data.contains("mr")) {
-      for (auto& [keyTex, pathTex] : raw_data["mr"].items()) {
-        textures.emplace_back(keyTex);
-      }
+      textures.append_range(
+        raw_data["mr"].items() 
+        | std::views::transform([](auto&& item) { return item.key(); }));
     }
 
     if (raw_data.contains("emissive")) {
-      for (auto& [keyTex, pathTex] : raw_data["emissive"].items()) {
-        textures.emplace_back(keyTex);
-      }
+      textures.append_range(
+        raw_data["emissive"].items() 
+        | std::views::transform([](auto&& item) { return item.key(); }));
     }
 
     if (raw_data.contains("ao")) {
-      for (auto& [keyTex, pathTex] : raw_data["ao"].items()) {
-        textures.emplace_back(keyTex);
-      }
+      textures.append_range(
+        raw_data["ao"].items() 
+        | std::views::transform([](auto&& item) { return item.key(); }));
     }
 
     if (raw_data.contains("transmission")) {
-      for (auto& [keyTex, pathTex] : raw_data["transmission"].items()) {
-        textures.emplace_back(keyTex);
-      }
+      textures.append_range(
+        raw_data["transmission"].items() 
+        | std::views::transform([](auto&& item) { return item.key(); }));
     }
 
     std::vector<std::string> animation_scripts{};
@@ -159,9 +157,9 @@ namespace Poulpe
       animation_scripts.emplace_back(path_anim);
     }
 
-    auto shader = raw_data.value("shader", "");
+    auto const& shader { raw_data.value("shader", "") };
 
-    EntityOptions entity_opts = {
+    EntityOptions entity_opts {
       shader, position, scale, rotation,
       raw_data.value("hasBbox", false),
       raw_data.value("hasAnimation", false),
@@ -175,7 +173,7 @@ namespace Poulpe
     };
 
 
-      std::unique_ptr<Mesh>mesh = std::make_unique<Mesh>();
+      std::unique_ptr<Mesh>mesh { std::make_unique<Mesh>() };
       mesh->setName(_data.name);
       mesh->setShaderName(entity_opts.shader);
       mesh->setHasAnimation(entity_opts.has_animation);
@@ -200,65 +198,65 @@ namespace Poulpe
 
       if (!materials.empty()) {
 
-        auto const& mat = materials.at(_data.material_ID);
+        auto const& mat { materials.at(_data.material_ID) };
         alpha_mode = mat.alpha_mode;
 
         if (!mat.name_texture_diffuse.empty()) {
           name_texture = mat.name_texture_diffuse;
-          _texture_manager->add(name_texture, mat.name_texture_diffuse_path, VK_IMAGE_ASPECT_COLOR_BIT, TEXTURE_TYPE::DIFFUSE, _renderer);
+          _texture_manager.add(name_texture, mat.name_texture_diffuse_path, VK_IMAGE_ASPECT_COLOR_BIT, TEXTURE_TYPE::DIFFUSE, renderer);
           options |= PLP_MESH_OPTIONS::HAS_BASE_COLOR;
         } else if (!mat.name_texture_ambient.empty()) {
           name_texture = mat.name_texture_ambient;
           options |= PLP_MESH_OPTIONS::HAS_BASE_COLOR;
-          _texture_manager->add(name_texture, mat.name_texture_ambient_path, VK_IMAGE_ASPECT_COLOR_BIT, TEXTURE_TYPE::DIFFUSE, _renderer);
+          _texture_manager.add(name_texture, mat.name_texture_ambient_path, VK_IMAGE_ASPECT_COLOR_BIT, TEXTURE_TYPE::DIFFUSE, renderer);
         }
 
         if (!mat.name_texture_specular.empty()) {
           name_specular_map = mat.name_texture_specular;
           options |= PLP_MESH_OPTIONS::HAS_SPECULAR;
-          _texture_manager->add(name_specular_map, mat.name_texture_specular_path, VK_IMAGE_ASPECT_COLOR_BIT, TEXTURE_TYPE::AO, _renderer);
+          _texture_manager.add(name_specular_map, mat.name_texture_specular_path, VK_IMAGE_ASPECT_COLOR_BIT, TEXTURE_TYPE::AO, renderer);
         }
 
         if (!mat.name_texture_bump.empty()) {
           name_bump_map = mat.name_texture_bump;
           options |= PLP_MESH_OPTIONS::HAS_NORMAL;
-          _texture_manager->add(name_bump_map, mat.name_texture_bump_path, VK_IMAGE_ASPECT_COLOR_BIT, TEXTURE_TYPE::NORMAL, _renderer);
+          _texture_manager.add(name_bump_map, mat.name_texture_bump_path, VK_IMAGE_ASPECT_COLOR_BIT, TEXTURE_TYPE::NORMAL, renderer);
         }
 
         if (!mat.name_texture_alpha.empty()) {
           name_alpha_map = mat.name_texture_alpha;
           options |= PLP_MESH_OPTIONS::HAS_ALPHA;
-          _texture_manager->add(name_alpha_map, mat.name_texture_alpha_path, VK_IMAGE_ASPECT_COLOR_BIT, TEXTURE_TYPE::AO, _renderer);
+          _texture_manager.add(name_alpha_map, mat.name_texture_alpha_path, VK_IMAGE_ASPECT_COLOR_BIT, TEXTURE_TYPE::AO, renderer);
         }
 
         if (!mat.name_texture_metal_roughness.empty()) {
           name_texture_metal_roughness = mat.name_texture_metal_roughness;
           options |= PLP_MESH_OPTIONS::HAS_MR;
-          _texture_manager->add(name_texture_metal_roughness, mat.name_texture_metal_roughness_path, VK_IMAGE_ASPECT_COLOR_BIT, TEXTURE_TYPE::MR, _renderer);
+          _texture_manager.add(name_texture_metal_roughness, mat.name_texture_metal_roughness_path, VK_IMAGE_ASPECT_COLOR_BIT, TEXTURE_TYPE::MR, renderer);
         }
 
         if (!mat.name_texture_emissive.empty()) {
           name_texture_emissive = mat.name_texture_emissive;
           options |= PLP_MESH_OPTIONS::HAS_EMISSIVE;
-          _texture_manager->add(name_texture_emissive, mat.name_texture_emissive_path, VK_IMAGE_ASPECT_COLOR_BIT, TEXTURE_TYPE::EMISSIVE, _renderer);
+          _texture_manager.add(name_texture_emissive, mat.name_texture_emissive_path, VK_IMAGE_ASPECT_COLOR_BIT, TEXTURE_TYPE::EMISSIVE, renderer);
         }
 
         if (!mat.name_texture_ao.empty()) {
           name_texture_ao = mat.name_texture_ao;
           options |= PLP_MESH_OPTIONS::HAS_AO;
-          _texture_manager->add(name_texture_ao, mat.name_texture_ao_path, VK_IMAGE_ASPECT_COLOR_BIT, TEXTURE_TYPE::AO, _renderer);
+          _texture_manager.add(name_texture_ao, mat.name_texture_ao_path, VK_IMAGE_ASPECT_COLOR_BIT, TEXTURE_TYPE::AO, renderer);
         }
 
         if (!mat.name_texture_base_color.empty()) {
           name_texture_base_color = mat.name_texture_base_color;
           options |= PLP_MESH_OPTIONS::HAS_BASE_COLOR;
-          _texture_manager->add(name_texture_base_color, mat.name_texture_base_color_path, VK_IMAGE_ASPECT_COLOR_BIT, TEXTURE_TYPE::DIFFUSE, _renderer);
+          _texture_manager.add(name_texture_base_color, mat.name_texture_base_color_path, VK_IMAGE_ASPECT_COLOR_BIT, TEXTURE_TYPE::DIFFUSE, renderer);
         }
 
         if (!mat.name_texture_transmission.empty()) {
           name_texture_transmission = mat.name_texture_transmission;
           options |= PLP_MESH_OPTIONS::HAS_TRANSMISSION;
-          _texture_manager->add(name_texture_transmission, mat.name_texture_transmission_path, VK_IMAGE_ASPECT_COLOR_BIT, TEXTURE_TYPE::EMISSIVE, _renderer);
+          _texture_manager.add(name_texture_transmission, mat.name_texture_transmission_path, VK_IMAGE_ASPECT_COLOR_BIT, TEXTURE_TYPE::EMISSIVE, renderer);
         }
         for (auto& material : materials) {
           mesh->addMaterial(material);
@@ -348,11 +346,9 @@ namespace Poulpe
 
       auto basicRdrImpl { RendererComponentFactory::create<Basic>() };
 
-      _component_manager->add<RendererComponent>(entity->getID(), std::move(basicRdrImpl));
-      _component_manager->add<MeshComponent>(entity->getID(), std::move(mesh));
+      _component_manager.add<RendererComponent>(entity->getID(), std::move(basicRdrImpl));
+      _component_manager.add<MeshComponent>(entity->getID(), std::move(mesh));
       auto entityNode { root_mesh_entity_node->addChild(std::make_shared<EntityNode>(entity)) };
-
-      //_renderer->addEntity(entityNode->getEntity(), is_last);
 
       if (alpha_mode == 2.0f) {
         addTransparentEntity(entityNode->getEntity());
@@ -367,7 +363,7 @@ namespace Poulpe
             //@todo temp until lua scripting
             for (auto& anim : entity_opts.animation_scripts) {
               auto animationScript = std::make_unique<AnimationScript>(root_path + "/" + anim);
-              _component_manager->add<AnimationComponent>(entity->getID(), std::move(animationScript));
+              _component_manager.add<AnimationComponent>(entity->getID(), std::move(animationScript));
             }
           }
 
@@ -380,7 +376,7 @@ namespace Poulpe
               std::move(_scales),
               entity_opts.default_anim);
 
-            _component_manager->add<BoneAnimationComponent>(
+            _component_manager.add<BoneAnimationComponent>(
             entity->getID(), std::move(boneAnimationScript));
             _entity_children.clear();
             _animations.clear();
