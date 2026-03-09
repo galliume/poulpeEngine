@@ -1,3 +1,8 @@
+
+#
+# Slowly moving the project to [codeberg](https://codeberg.org/galliume/vyroda-engine)
+#
+
 # 🐙 Poulpe Engine: A Modern C++26 Vulkan Game Engine
 
 A continuously evolving, cross-platform game engine built from the ground up using **C++26** and powered by the **Vulkan** graphics API. This project is a never-ending educational exercise, covering various advanced topics such as graphics pipeline development, modern C++ patterns, low-level mathematics, and robust build systems.
