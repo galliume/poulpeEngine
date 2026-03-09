@@ -1,6 +1,6 @@
 
 #
-# Slowly moving the project to [codeberg](https://codeberg.org/galliume/vyroda-engine)
+# Slowly moving the project to [codeberg](https://codeberg.org/Vampyropoda-Studio/vyroda-engine)
 #
 
 # 🐙 Poulpe Engine: A Modern C++26 Vulkan Game Engine
