@@ -9,67 +9,102 @@ import Engine.Component.Components;
 import Engine.Component.Mesh;
 import Engine.Renderer.RendererComponent;
 
+import Engine.Core.Logger;
+
 import Engine.Utils.IDHelper;
 
 namespace Poulpe
 {
+  struct TypeIdGenerator
+  {
+    inline static std::atomic<std::size_t> next_id{0};
+  };
+
+  template <typename T>
+  std::size_t getUniqueTypeId() {
+    static const std::size_t id = TypeIdGenerator::next_id++;
+    return id;
+  }
+
   export class ComponentManager
   {
-  public:
+    public:
+      ComponentManager() = default;
+      ComponentManager(const ComponentManager&) = delete;
+      ComponentManager& operator=(const ComponentManager&) = delete;
+      ComponentManager(ComponentManager&&) noexcept = default;
+      ComponentManager& operator=(ComponentManager&&) noexcept = default;
 
-    using Components = std::variant<
-      std::unique_ptr<AnimationComponent>,
-      std::unique_ptr<BoneAnimationComponent>,
-      std::unique_ptr<MeshComponent>,
-      std::unique_ptr<RendererComponent>>;
-
-    ComponentManager() = default;
-    ~ComponentManager() = default;
-
-    template <typename T, typename IDType, typename Component>
-    void add(IDType entityID, Component component_impl)
-    {
+      template <typename T>
+      void registerComponent()
       {
-        //@todo useful ?
-        //std::lock_guard<std::mutex> guard(_mutex);
-
-        auto new_component = std::make_unique<T>();
-        new_component->init(std::move(component_impl));
-        new_component->setOwner(entityID);
-
-        _component_type_map[&typeid(T)].emplace_back(std::move(new_component));
-        _components_entity_map[entityID].emplace_back(&typeid(T));
+        auto const type_id { getUniqueTypeId<T>() };
+        _component_pools[type_id] = std::make_unique<ComponentPool<T>>();
       }
-    }
 
-    template <typename T>
-    T* get(IDType entity_ID) {
+      template <typename T, typename... Args>
+      void add(IDType id, Args&&... args)
       {
-        //std::lock_guard<std::mutex> guard(_mutex);
-        auto it = std::ranges::find_if(_component_type_map[&typeid(T)], [&entity_ID](auto& component) {
-          if (auto ptr = std::get_if<std::unique_ptr<T>>(&component)) {
-            if (ptr) {
-              return (*ptr)->getOwner() == entity_ID;
-            }
-          }
-          return false;
-          });
+        auto* pool { getPool<T>() };
+        pool->set(id, std::forward<Args>(args)...);
+      }
 
-        if (it != _component_type_map[&typeid(T)].end()) {
-          if (auto ptr = std::get_if<std::unique_ptr<T>>(&*it)) {
-            return ptr->get();
-          }
+      template <typename T>
+      T* get(IDType id)
+      {
+        auto *pool { getPool<T>() };
+
+        if (pool == nullptr) {
+          return nullptr;
         }
-        return nullptr;
+
+        return pool->get(id);
       }
-    }
 
-    std::vector<const std::type_info*> getEntityComponents(IDType entity_id) { return _components_entity_map[entity_id]; }
-    void clear();
+      void clear();
 
-  private:
-    std::unordered_map<const std::type_info*, std::vector<Components>> _component_type_map;
-    std::unordered_map<IDType, std::vector<const std::type_info*>> _components_entity_map;
-    std::mutex _mutex;
-  };
+    private:
+        struct IPool
+        {
+          virtual ~IPool();
+        };
+
+        template <typename T>
+        class ComponentPool : public IPool
+        {
+          std::vector<T> dense_data;
+          std::flat_map<IDType, std::size_t> entity_to_index;
+
+        public:
+          template<typename... Args>
+          void set(IDType id, Args&&... args)
+          {
+            entity_to_index[id] = dense_data.size();
+            dense_data.emplace_back(std::forward<Args>(args)...);
+          }
+
+          T* get(IDType id)
+          {
+            auto it { entity_to_index.find(id) };
+            if (it == entity_to_index.end()) return nullptr;
+            return &dense_data[it->second];
+          }
+        };
+
+        template <typename T>
+        ComponentPool<T>* getPool()
+        {
+          auto const type_id { getUniqueTypeId<T>() };
+          auto const it { _component_pools.find(type_id) };
+          if (it == _component_pools.end()) {
+            return nullptr;
+          }
+
+          return static_cast<ComponentPool<T>*>(it->second.get());
+        }
+
+        std::unordered_map<std::size_t, std::unique_ptr<IPool>> _component_pools;
+    };
+
+    Poulpe::ComponentManager::IPool::~IPool() = default;
 }

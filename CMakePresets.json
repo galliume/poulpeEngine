@@ -39,6 +39,18 @@
       ]
     },
     {
+      "name": "windows-debug-asan",
+      "displayName": "Debug (ASan + UBSan)",
+      "description": "Windows Debug with Address and Undefined Behavior Sanitizers",
+      "inherits": [
+        "windows-common",
+        "DEBUG_BUILD_TYPE",
+        "DEBUG_CMAKE_C_FLAGS",
+        "DEBUG_CMAKE_CXX_FLAGS",
+        "WINDOWS_ASAN_FLAGS"
+      ]
+    },
+    {
       "name": "linux-debug",
       "displayName": "Debug",
       "description": "Linux Debug",
@@ -59,6 +71,18 @@
       ]
     },
     {
+      "name": "linux-debug-asan",
+      "displayName": "Debug (ASan + UBSan)",
+      "description": "Linux Debug with Address and Undefined Behavior Sanitizers",
+      "inherits": [
+        "linux-common",
+        "DEBUG_BUILD_TYPE",
+        "DEBUG_CMAKE_C_FLAGS",
+        "DEBUG_CMAKE_CXX_FLAGS",
+        "LINUX_ASAN_FLAGS"
+      ]
+    },
+    {
       "name": "linux-release-dbg",
       "displayName": "Release with debug symbols",
       "description": "Linux Release with debug symbols",
@@ -68,7 +92,7 @@
       ]
     }
   ],
-   "buildPresets": [
+  "buildPresets": [
     {
       "name": "windows-debug",
       "displayName": "Debug",
@@ -98,6 +122,16 @@
       "name": "linux-release-dbg",
       "displayName": "ReleaseWithDebSymbols",
       "configurePreset": "linux-release-dbg"
+    },
+    {
+      "name": "linux-debug-asan",
+      "displayName": "Debug (ASan + UBSan)",
+      "configurePreset": "linux-debug-asan"
+    },
+    {
+      "name": "windows-debug-asan",
+      "displayName": "Debug (ASan + UBSan)",
+      "configurePreset": "windows-debug-asan"
     }
   ]
 }

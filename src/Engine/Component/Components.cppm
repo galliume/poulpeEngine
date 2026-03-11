@@ -46,6 +46,21 @@ namespace Poulpe {
     std::unique_ptr<AnimationComponentConcept>,
     std::unique_ptr<Mesh>>;
 
+    Component() = default;
+
+    template <typename T>
+    requires isAnimationComponentConcept<T> || std::same_as<T, Mesh>
+    Component(std::unique_ptr<T> impl)
+    {
+      init(std::move(impl));
+    }
+
+    Component(Component&&) noexcept = default;
+    Component& operator=(Component&&) noexcept = default;
+
+    Component(const Component&) = delete;
+    Component& operator=(const Component&) = delete;
+
     IDType getID() const { return _id; }
     IDType getOwner() const { return _owner; }
 
@@ -124,7 +139,7 @@ namespace Poulpe {
   export class BoneAnimationComponent : public Component<BoneAnimationComponent> {};
   export class MeshComponent : public Component<MeshComponent> {};
 
-  template class Component<AnimationComponent>;
-  template class Component<BoneAnimationComponent>;
-  template class Component<MeshComponent>;
+  export template class Component<AnimationComponent>;
+  export template class Component<BoneAnimationComponent>;
+  export template class Component<MeshComponent>;
 }

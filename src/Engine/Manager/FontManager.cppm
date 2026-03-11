@@ -27,7 +27,7 @@ namespace Poulpe
       bool flat{true}; // flat: 2D UI text, not flat: 3D text
     };
 
-    FontManager() = default;
+    explicit FontManager(Renderer& renderer);
     ~FontManager();
 
     std::span<FontCharacter> getCharacters() { return std::span<FontCharacter, std::dynamic_extent>(_characters); }
@@ -36,8 +36,6 @@ namespace Poulpe
     std::uint32_t getAtlasWidth() const { return _atlas_width; }
     std::uint32_t getAtlasHeight() const { return _atlas_height; }
 
-    inline void addRenderer(Renderer const * renderer) { _renderer = renderer; }
-
     FontCharacter const& get(std::uint32_t const c);
 
     Texture load();
@@ -45,7 +43,7 @@ namespace Poulpe
   private:
     std::vector<FontCharacter> _characters;
 
-    Renderer const * _renderer;
+    Renderer& _renderer;
 
     std::uint32_t _atlas_width{ 0 };
     std::uint32_t _atlas_height{ 0 };

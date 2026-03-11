@@ -2,6 +2,7 @@ export module Engine.Renderer.Vulkan.Basic;
 
 import std;
 
+import Engine.Component.Mesh;
 import Engine.Component.Texture;
 
 import Engine.Renderer.RendererComponentTypes;
@@ -14,18 +15,20 @@ namespace Poulpe
   {
   public:
     void operator()(
-      Renderer *const renderer,
-      ComponentRenderingInfo const& component_rendering_info);
+      Renderer & renderer,
+      Mesh & mesh,
+      RendererContext const& render_context);
 
       VkShaderStageFlags stage_flag_bits { VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT };
 
   private:
     void createDescriptorSet(
-      Renderer *const renderer,
-      ComponentRenderingInfo const& component_rendering_info);
+    Renderer & renderer,
+    Mesh & mesh,
+    RendererContext const& render_context);
 
     Texture const& getTexture(
-      ComponentRenderingInfo const& component_rendering_info,
+      RendererContext const& render_context,
       std::string const& name) const;
   };
 }

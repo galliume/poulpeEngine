@@ -41,4 +41,10 @@ namespace Poulpe
   {
     std::array<Light, 3> lights;
   };
+
+  export enum class SHADOW_TYPE {
+    SPOT_LIGHT,
+    POINT_LIGHT,
+    CSM
+  };
 }

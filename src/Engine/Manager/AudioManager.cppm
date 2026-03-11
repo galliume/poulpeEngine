@@ -20,10 +20,10 @@ namespace Poulpe
     AudioManager() = default;
     ~AudioManager();
 
-    std::vector<std::string> const getAmbientSound()  { return _ambient_sounds; }
-    std::uint32_t getAmbientSoundIndex()  { return _ambient_sound_index; }
-    std::string getCurrentAmbientSound()  { return _ambient_sounds[_ambient_sound_index]; }
-    std::string const getState() ;
+    std::span<std::string const> getAmbientSound() const { return _ambient_sounds; }
+    std::uint32_t getAmbientSoundIndex() const { return _ambient_sound_index; }
+    std::string_view getCurrentAmbientSound() const { return _ambient_sounds[_ambient_sound_index]; }
+    std::string_view getState() const;
 
     void load(json config);
     void startAmbient(std::uint32_t const index = 0);

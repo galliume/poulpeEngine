@@ -14,6 +14,7 @@ import Engine.Core.Vertex;
 import Engine.Core.VulkanTypes;
 import Engine.Core.Volk;
 
+import Engine.Renderer.RendererComponentTypes;
 import Engine.Renderer.VulkanDeviceMemoryPool;
 import Engine.Renderer.VulkanAPI;
 
@@ -31,7 +32,7 @@ namespace Poulpe
       std::vector<bool> is_attachments{ };
 
       void insert(
-        VkCommandBuffer& cmd_buffer,
+        VkCommandBuffer cmd_buffer,
         std::uint32_t const thread_id,
         bool const is_attachment,
         std::vector<VkPipelineStageFlags> flags = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT })
@@ -76,36 +77,11 @@ namespace Poulpe
       std::size_t _size;
   };
 
-  export struct RendererInfo
-  {
-    Mesh* mesh;
-    Camera* camera{};
-    glm::mat4 camera_view{};
-    Light sun_light{};
-    std::span<Light, std::dynamic_extent> point_lights{};
-    std::span<Light, std::dynamic_extent> spot_lights{};
-    double elapsed_time{0.0};
-    VkShaderStageFlags stage_flag_bits;
-    bool normal_debug{};
-    bool has_alpha_blend {false};
-    std::uint32_t env_options{}; //env options, see below
-  };
-
-  /** env options config :
-    HAS_FOG << 0
-  **/
-
-  export enum class SHADOW_TYPE {
-    SPOT_LIGHT,
-    POINT_LIGHT,
-    CSM
-  };
-
   export class Renderer
   {
   public:
 
-    Renderer(GLFWwindow* const window);
+    Renderer() = default;
     ~Renderer()  = default;
 
     void addPipeline(
@@ -120,41 +96,45 @@ namespace Poulpe
     void startRender();
     void startShadowMap(SHADOW_TYPE const shadow_type);
 
-    void draw(RendererInfo const& renderer_info);
+    void draw(
+      Mesh const& mesh,
+      RendererContext const& renderer_context);
+
     void drawShadowMap(
-      RendererInfo const& renderer_info,
+Mesh const& mesh,
+      RendererContext const& renderer_context,
       SHADOW_TYPE const shadow_type);
 
     void endRender();
     void endShadowMap(SHADOW_TYPE const shadow_type);
 
     void endRendering(
-      VkCommandBuffer& cmd_buffer,
-      VkImage& image,
-      VkImage& depth_image,
+      VkCommandBuffer cmd_buffer,
+      VkImage image,
+      VkImage depth_image,
       bool const is_attachment,
       bool const has_depth_attachment = true);
 
     void submit();
 
     inline std::uint32_t getCurrentFrameIndex() const { return _current_frame; }
-    inline VkSampler& getCurrentSampler() { return _samplers[_previous_frame]; }
-    inline VkImageView& getCurrentImageView() { return _imageviews[_previous_frame]; }
-    inline VkImageView& getDepthMapImageViews() { return  _depthmap_imageviews.at(_current_frame); }
-    inline VkSampler& getDepthMapSamplers() { return _depthmap_samplers.at(_current_frame); }
-    inline VkImageView& getDepthImageViews() { return _depth_imageviews.at(_current_frame); }
-    inline VkImageView& getDepthImageViews2() { return _depth_imageviews2.at(_current_frame); }
-    inline VkSampler& getDepthSamplers() { return  _depth_samplers.at(_current_frame); }
-    inline VkSampler& getDepthSamplers2() { return  _depth_samplers2.at(_current_frame); }
-    inline VkImageView& getVisibleDepthImageView() { return _visible_depth_imageview; }
-    inline VkSampler& getCSMSamplers() { return _csm_samplers.at(_current_frame); }
-    inline VkImageView& getCSMImageViews() { return _csm_imageviews.at(_current_frame); }
+    inline VkSampler getCurrentSampler() { return _samplers[_previous_frame]; }
+    inline VkImageView getCurrentImageView() { return _imageviews[_previous_frame]; }
+    inline VkImageView getDepthMapImageViews() { return  _depthmap_imageviews.at(_current_frame); }
+    inline VkSampler getDepthMapSamplers() { return _depthmap_samplers.at(_current_frame); }
+    inline VkImageView getDepthImageViews() { return _depth_imageviews.at(_current_frame); }
+    inline VkImageView getDepthImageViews2() { return _depth_imageviews2.at(_current_frame); }
+    inline VkSampler getDepthSamplers() { return  _depth_samplers.at(_current_frame); }
+    inline VkSampler getDepthSamplers2() { return  _depth_samplers2.at(_current_frame); }
+    inline VkImageView getVisibleDepthImageView() { return _visible_depth_imageview; }
+    inline VkSampler getCSMSamplers() { return _csm_samplers.at(_current_frame); }
+    inline VkImageView getCSMImageViews() { return _csm_imageviews.at(_current_frame); }
     inline std::vector<VkDescriptorSetLayout>* getDescriptorSetLayouts() { return & _descriptorset_layouts; }
     inline VkDevice getDevice()  { return _vulkan->getDevice(); }
     inline glm::mat4 getPerspective() { return _perspective; }
-    VulkanPipeline* getPipeline(std::string const & shaderName) { return & _pipelines[shaderName]; }
+    VulkanPipeline& getPipeline(std::string const & shaderName) { return _pipelines[shaderName]; }
     void immediateSubmit(std::function<void(VkCommandBuffer cmd)> && function, int queueIndex = 0) ;
-    void init();
+    void init(GLFWwindow* const window);
     //void renderScene();
 
     void setDeltatime(float const delta_time);
@@ -166,7 +146,7 @@ namespace Poulpe
       int const width,
       int const height);
 
-    VulkanAPI * getAPI() const { return _vulkan.get(); }
+    VulkanAPI&  getAPI() const { return *_vulkan; }
 
     void clearScreen();
 

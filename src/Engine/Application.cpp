@@ -44,7 +44,7 @@ namespace Poulpe
 
     //auto db_manager = std::make_unique<DbManager>();
     if (!editor_mode) {
-      _render_manager->getWindow()->show();
+      _render_manager->getWindow().show();
     }
 
     _ui_manager = std::make_unique<UIManager>(_render_manager->getWindow());
@@ -110,15 +110,15 @@ namespace Poulpe
 
     std::string const title { std::format("PoulpeEngine v{}.{} Vulkan version: {} {}",
       PoulpeEngine_VERSION_MAJOR, PoulpeEngine_VERSION_MINOR,
-      _render_manager->getRenderer()->getAPI()->getAPIVersion(),
+      _render_manager->getRenderer().getAPI().getAPIVersion(),
       (release_build ? "Release build" : "Debug build")) };
 
-    glfwSetWindowTitle(_render_manager->getWindow()->getGlfwWindow(), title.c_str());
+    glfwSetWindowTitle(_render_manager->getWindow().getGlfwWindow(), title.c_str());
 
     double const loaded_time { duration<double>(steady_clock::now() - _start_run).count() };
     Logger::trace("Started in {} seconds", loaded_time);
 
-    while (!glfwWindowShouldClose(_render_manager->getWindow()->getGlfwWindow())) {
+    while (!glfwWindowShouldClose(_render_manager->getWindow().getGlfwWindow())) {
 
       while (Tcl_DoOneEvent(TCL_DONT_WAIT)) {}
 
@@ -134,16 +134,16 @@ namespace Poulpe
 
       //cf https://gafferongames.com/post/fix_your_timestep/
       while (accumulator >= dt) {
-        _render_manager->getCamera()->savePreviousState();
-        _render_manager->getCamera()->updateDeltaTime(dt);
-        _render_manager->getCamera()->move();
+        _render_manager->getCamera().savePreviousState();
+        _render_manager->getCamera().updateDeltaTime(dt);
+        _render_manager->getCamera().move();
 
         accumulator -= dt;
         //total_time += dt;
       }
 
       double const alpha { accumulator / dt };
-      _render_manager->getCamera()->interpolate(alpha);
+      _render_manager->getCamera().interpolate(alpha);
       //Locator::getCommandQueue()->execPreRequest();
       _render_manager->renderScene(frame_time);
       //Locator::getCommandQueue()->execPostRequest();
@@ -163,7 +163,7 @@ namespace Poulpe
       _render_manager->updateText(elapsed_time.id, std::format("Elapsed time {:<.2f}", _elapsed_time));
       _render_manager->setElapsedTime(_elapsed_time);
 
-      auto const& current_camera_pos = _render_manager->getCamera()->getPos();
+      auto const& current_camera_pos = _render_manager->getCamera().getPos();
       _render_manager->updateText(
         camera_pos.id,
         std::format("Position x: {:<.2f} y: {:<.2f} z: {:<.2f}",

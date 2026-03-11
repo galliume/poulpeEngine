@@ -21,7 +21,7 @@ namespace Poulpe
     return TCL_OK;
   }
 
-  UIManager::UIManager(Window * const window)
+  UIManager::UIManager(Window& window)
     : _window(window)
   {
 
@@ -46,15 +46,15 @@ namespace Poulpe
         _tcl_interp,
         "plp_quit_game",
         plp_quit_game,
-        const_cast<Window*>(_window),
+        const_cast<Window*>(&_window),
         nullptr);
 
       int x, y;
-      glfwGetWindowPos(_window->getGlfwWindow(), &x, &y);
+      glfwGetWindowPos(_window.getGlfwWindow(), &x, &y);
 
-      glfwSetWindowUserPointer(_window->getGlfwWindow(), this);
+      glfwSetWindowUserPointer(_window.getGlfwWindow(), this);
 
-      glfwSetWindowPosCallback(_window->getGlfwWindow(),
+      glfwSetWindowPosCallback(_window.getGlfwWindow(),
         [](GLFWwindow* glfw_window, int xpos, int ypos) {
 
         auto* self { static_cast<UIManager*>(glfwGetWindowUserPointer(glfw_window)) };

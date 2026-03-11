@@ -19,8 +19,10 @@ namespace Poulpe
   public:
     Data * getData() { return & _data; }
     Data const * getData() const { return & _data; }
-    VkDescriptorSet* getDescSet() { return & _descset; }
-    std::vector<material_t>& getMaterials() { return _materials; }
+    VkDescriptorSet const * getDescSet() const { return & _descset; }
+    VkDescriptorSet * getDescSet() { return & _descset; }
+    std::vector<material_t> const& getMaterials() const { return _materials; }
+    std::vector<material_t> & getMaterials() { return _materials; }
     std::string const getName() const { return _name; }
     inline const std::string getShaderName() const { return _shader_name; }
     std::vector<Buffer>* getStorageBuffers() { return & _storage_buffers; }
@@ -35,7 +37,7 @@ namespace Poulpe
     void setShadowMapDescSet(VkDescriptorSet descset) { _shadowmap_descset = descset; }
     void setCSMDescSet(VkDescriptorSet descset) { _csm_descset = descset; }
     void setHasBufferStorage(bool has = true) { _has_storage_buffer = has; }
-    void setHasPushConstants(bool has = true) { _has_push_contants = has; }
+    void setHasPushConstants(bool has = true) { _has_push_constants = has; }
     void setIsDirty(bool dirty = true) { _is_dirty.store(dirty); }
     void setDebugNormal(bool const debug) { _debug_normal = debug; }
     void setName(std::string const& name) { _name = name; }
@@ -45,11 +47,13 @@ namespace Poulpe
     void addUbos(std::vector<std::vector<UniformBufferObject>> const& ubos);
 
     VkDescriptorSet const * getShadowMapDescSet() const { return & _shadowmap_descset; }
+    VkDescriptorSet * getShadowMapDescSet() { return & _shadowmap_descset; }
     VkDescriptorSet const * getCSMDescSet() const { return & _csm_descset; }
+    VkDescriptorSet * getCSMDescSet() { return & _csm_descset; }
 
     bool hasAnimation() const { return _has_animation; }
     bool hasBufferStorage() const { return _has_storage_buffer; }
-    bool hasPushConstants() const { return _has_push_contants; }
+    bool hasPushConstants() const { return _has_push_constants; }
     bool hasShadow() const { return _has_shadow; }
     bool debugNormal() const { return _debug_normal; }
 
@@ -62,7 +66,7 @@ namespace Poulpe
     bool is_indexed() const { return _is_indexed; }
     bool is_point_light() const { return _is_point_light; }
 
-    std::uint32_t getOptions() { return _options; }
+    std::uint32_t getOptions() const { return _options; }
     void setOptions(std::uint32_t options) { _options = options; }
 
     VkShaderStageFlags stage_flag_bits { VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT};
@@ -73,7 +77,7 @@ namespace Poulpe
     bool hasBbox() const { return _has_bbox; }
     void bbox(bool bbox) { _has_bbox = bbox; }
 
-    bool isSkybox() { return _is_skybox; }
+    bool isSkybox() const { return _is_skybox; }
     void isSkybox(bool is_skybox) { _is_skybox = is_skybox; }
     void addChild(IDType id) { _children.emplace_back(id); }
     std::vector<IDType> getChildren() { return _children; }
@@ -88,7 +92,7 @@ namespace Poulpe
     std::atomic<bool> _is_dirty{ true };
 
     bool _has_animation{ true };
-    bool _has_push_contants{ false };
+    bool _has_push_constants{ false };
     bool _has_storage_buffer{ false };
     bool _is_indexed{ true };
     bool _is_point_light{ false };

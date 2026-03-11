@@ -17,6 +17,7 @@ function(set_poulpe_definitions target)
   endif()
 
   target_compile_definitions(${target} PRIVATE
-    $<$<CONFIG:DEBUG>:PLP_DEBUG_BUILD>)
+    $<$<CONFIG:DEBUG>:PLP_DEBUG_BUILD>
+    $<$<CONFIG:RELWITHDEBINFO>:PLP_DEBUG_BUILD>)
 
 endfunction()
